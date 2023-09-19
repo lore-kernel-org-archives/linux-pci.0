@@ -2,296 +2,362 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 662D0CD3445
-	for <linux-pci@archiver.kernel.org>; Tue, 19 Sep 2023 07:22:58 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2D1C6CD5486
+	for <linux-pci@archiver.kernel.org>; Tue, 19 Sep 2023 07:36:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231696AbjISHXB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 19 Sep 2023 03:23:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56032 "EHLO
+        id S231757AbjISHg6 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 19 Sep 2023 03:36:58 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49916 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231687AbjISHXB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Sep 2023 03:23:01 -0400
-Received: from JPN01-OS0-obe.outbound.protection.outlook.com (mail-os0jpn01on2130.outbound.protection.outlook.com [40.107.113.130])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F26A4FC;
-        Tue, 19 Sep 2023 00:22:53 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=GqvRiGA6OJ1f2JO62igtFbtm8WPFfPY9bVO8KqfZp/6vWxb6/A8JFDVtYZ/jDS4mXEYvI0XMoXJ3WRFh9R7LKs+sieyOq4eiQY17tQeV1d5uUbUleue3W+4BUNiSYbaw5TSVDJjirrhedRP6xSreQMpZzUZKVSy66c2Eh+Cl9JLOhZQWh8ytr4C/Ilkt8gmr7lybCWhyRwHUIBKlDHAxJmfbaCAqWwvNreC4jVTXVhZT+d/OY94Dtpq2NYDdpT3eQoK92+OgnwqqRwC8Zoyj2kWo51V52ls/YVMlZCsOIQQ+4AwTRe7HlHYy3aMwizm0RkmNwR3c2Ir1MuJmDu+/FQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=J917dF0zZRe8sGUZUDbmmzoexLsTCv1sGheFaLWx7tI=;
- b=XQZ/9zKDG9grlNk47DOmxSEwrGQSzuR5odh2dGB2QoXfMW1yTdTq74BdaqTq/UYBUTpFRRlBvax7ooGNkKlf91ONvBgKTHniB5uRxX/71BeY16GEyUQ0z7b/w8Pcj2HNjiuP8jHZdw3WBUCfMmt3u5Pn2w7l+G8yBmfYQH+g1uTitRpytQXBKC4Q1Zq1mJqA/IAuN87v3n9UJrqYs7/kUGu6sDzN76rKzR3TmjaDmmuTm9/FOBSuvoczQ5Ma+myEJPCizfcil2OY+aItLALpefHGvWRq2bO2Io+j+/FMGSO16AzR2huLNSlUEhLYHUThsr3Qu2GF0Aa40kJCpNY4Uw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=renesas.com; dmarc=pass action=none header.from=renesas.com;
- dkim=pass header.d=renesas.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=renesas.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=J917dF0zZRe8sGUZUDbmmzoexLsTCv1sGheFaLWx7tI=;
- b=KqzH1ZHdumieOVRXBketH8WZ9GWBl2y7XxpWEmHOu3mnvWnd7rHZqOqlPV5QzMt00CEybNsosJJaRgbjtWLAWrUurivTMNFp11/4hRoKiUszHkmYHLPds2MFsZIFRMFtkGdnsg7MgaOC5vQYzQh15bCWwkzyEC+68HKCCSrsbL4=
-Received: from TYBPR01MB5341.jpnprd01.prod.outlook.com
- (2603:1096:404:8028::13) by TYWPR01MB10709.jpnprd01.prod.outlook.com
- (2603:1096:400:2a5::8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6792.27; Tue, 19 Sep
- 2023 07:22:48 +0000
-Received: from TYBPR01MB5341.jpnprd01.prod.outlook.com
- ([fe80::e5cd:66a0:248f:1d30]) by TYBPR01MB5341.jpnprd01.prod.outlook.com
- ([fe80::e5cd:66a0:248f:1d30%4]) with mapi id 15.20.6792.026; Tue, 19 Sep 2023
- 07:22:48 +0000
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     "jingoohan1@gmail.com" <jingoohan1@gmail.com>,
-        "gustavo.pimentel@synopsys.com" <gustavo.pimentel@synopsys.com>,
-        "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-        "robh+dt@kernel.org" <robh+dt@kernel.org>,
-        "kw@linux.com" <kw@linux.com>,
-        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "kishon@kernel.org" <kishon@kernel.org>,
-        "krzysztof.kozlowski+dt@linaro.org" 
-        <krzysztof.kozlowski+dt@linaro.org>,
-        "conor+dt@kernel.org" <conor+dt@kernel.org>,
-        "marek.vasut+renesas@gmail.com" <marek.vasut+renesas@gmail.com>,
-        "fancer.lancer@gmail.com" <fancer.lancer@gmail.com>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-        "linux-renesas-soc@vger.kernel.org" 
-        <linux-renesas-soc@vger.kernel.org>
-Subject: RE: [PATCH v20 04/19] PCI: designware-ep: Add INTx IRQs support
-Thread-Topic: [PATCH v20 04/19] PCI: designware-ep: Add INTx IRQs support
-Thread-Index: AQHZ1zcOdRSM/H58w0WCrYWL3XR2drAZhliAgACMtyCAAnRgAIAFWa0w
-Date:   Tue, 19 Sep 2023 07:22:48 +0000
-Message-ID: <TYBPR01MB5341FBF030A8A4F35CA74B62D8FAA@TYBPR01MB5341.jpnprd01.prod.outlook.com>
-References: <TYBPR01MB534145152342F6E6808D98DCD8F7A@TYBPR01MB5341.jpnprd01.prod.outlook.com>
- <20230915212356.GA122696@bhelgaas>
-In-Reply-To: <20230915212356.GA122696@bhelgaas>
-Accept-Language: ja-JP, en-US
-Content-Language: ja-JP
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=renesas.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: TYBPR01MB5341:EE_|TYWPR01MB10709:EE_
-x-ms-office365-filtering-correlation-id: 550310c0-b141-4249-39ec-08dbb8e13a36
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;
-x-microsoft-antispam-message-info: V04zj7xMNqo9OgQgaMWxaWkQm7I9ce3qzAViLk296YLeZEDRYdg/jcE5MYFOAXv3F06UoawCACJ6vZHL474SB1LKSIogYifB1O3IE/3L1AZ8bMO3FvuKUpDP/g1KioXpbMSp/ZxbYtvPjkYmxLSQo70PT8UMZ28DuPyhutXSa2CFBMasBMzc4Bh7qotnQgJhnIBaG2LNiz8stI2H3NINVzN9odMBtxPE9BY2PY1vjq3IhltLSpM6G3F3RQNuLHaKmq4d/8G4yljNKn09eIoyV0SJWzyW2j640UAFAXeXmzOIIZYfRgyY8wPHUOnno7MDbLOueD5IrcihbimVzK2mBQSM0asie691dCp15veJbEy9AVrdS3pfj8/yqmT7CHRdVgwpKJT/QGy1z8EwnozoWItLaCwoxt5NrEtvRrZQujp7xOFiLSCwASruk9ULBvRSYo0IgkAbGM5pFCpNRY9xXluYWG/DsWkohFDVOuOC0ghQRSOeht7RWldZZp0PwmUd4UKTc3x6GxDW2uC8m2JVr/GgehGJH89Y/AnfFRJG1P22CU5LNk+1lDq2RJUcKzhJ0KeHCY/EpNtAM537PWhvfDsPz9Mv3p060pOZLleX0ydHJjbZLPeaF/+tMWL8CHXEv9sr3P50grW1rRCoc//Rcg==
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:TYBPR01MB5341.jpnprd01.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(346002)(396003)(376002)(136003)(39860400002)(366004)(451199024)(1800799009)(186009)(45080400002)(6506007)(478600001)(966005)(71200400001)(55016003)(316002)(86362001)(83380400001)(5660300002)(2906002)(7696005)(52536014)(122000001)(66946007)(54906003)(9686003)(76116006)(66476007)(64756008)(66446008)(6916009)(66556008)(41300700001)(38070700005)(4326008)(8936002)(38100700002)(8676002)(33656002)(7416002);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?Ljqtn1h1VeOhKvlIvr9pRmSWYmqwFO9uQUiKWW50m40voHNVj3WN0GRfcg1p?=
- =?us-ascii?Q?oO0bsKRMhrguz7Gl5N7nn/PjwJUuIQTah54lZd9vcCAopcHwiPm5d5ufPTQm?=
- =?us-ascii?Q?6sGlBNEC9FAg6GxDeYTYD4Q5C/fGf/6s2C1glENilsSTX7dmTl65rvCUvHy2?=
- =?us-ascii?Q?k+eldZFPjGQpvLFiuKoV1uGX564LbV9vfgp17rpVcaWP7YSBOwS2CDiXPfqR?=
- =?us-ascii?Q?yH5farw+my65WKEVLYtR0jJEQzfrR2ca+vIhUmY9IgcWJpwG/vHIDyBYzoqK?=
- =?us-ascii?Q?T66eNxi5D/XKYV45ot4XRgglTa5oMOJBO+JO+ToUWZHitpQQ+9RHbQQyftWm?=
- =?us-ascii?Q?vEEtWjW2E32HN5pdqiJ8Ugm0a+bFriV7X/EQYmdHXr14n82lDbO24hkaFf7n?=
- =?us-ascii?Q?7w9IdeqYaOslzZiij1eeUVMtVh+4KTouJCijwHBdsafvTFo4+NgfE6gV3Zru?=
- =?us-ascii?Q?8Qcgyh9tQSkC6vHrUuQSg/mYamcKBjw+6Sp657rLuMvZ+o1kmFbZh3ETfuXn?=
- =?us-ascii?Q?hz+Gz7FC3RMjPs7+8xqhJxXKxezZ44u4gJJEtc9Bi+r/tSbY5mQdd3YkO5Og?=
- =?us-ascii?Q?DCvw0Fu6kOsqLzYd3rGgQwYCzd9nhWP3s9NfYWB6FL1s1Igv85UNSMgHzl9m?=
- =?us-ascii?Q?kO4h0ftlCu+6NltYjuhalLE3X03LNcyNW6q8wiDv8Ol6QI80WCphKZ1h2HtC?=
- =?us-ascii?Q?Fgc4CZlBlZ22P6UiDImmzSGOy7cZRDuGeDJCteYRf8RTpVxdoh0vG9vg70zM?=
- =?us-ascii?Q?6H0usgDS2obn1NQ0aQg39MjKJ32lNgVun5fRO8RcIJBsYh5cZb21nJYi4gTh?=
- =?us-ascii?Q?MLzyAoCqrsm33kMCRsXh3MpaDkAsahwufkTwg356two6aO9h9onqIURW+i0v?=
- =?us-ascii?Q?7UxK39R05UnGnZ0pDfN5CGL8+P40gcM3DFJDRW3xq0N5UkAhfzS696wrnFd1?=
- =?us-ascii?Q?Ts7KK48CBl7km5BeSQn0yrige8xb3NNcBrsCpgSUYwQBqC2qEIWnY7ZQAABD?=
- =?us-ascii?Q?9AqkTVZa0EdK/soNzYPT2kVzMRujx4krqW0y+sMArIm5WGxfuHOqKMXi6tVr?=
- =?us-ascii?Q?nJnVGj+fE6QzkBxpAKZWM4TLbG32TRHFLJfyQk2cwLjX6UsF66MTmo7b3pj5?=
- =?us-ascii?Q?4uuXhSgN99ca1UOXwr7893A/d3s5DzzwoKp1SKMZUsgqmmEvehSldeedPkK3?=
- =?us-ascii?Q?uc/FPnch8bwzBmQzK7Co6R+drQJrecX8z1TuX2sJguGpWj9FOqu4Aca3q+EC?=
- =?us-ascii?Q?rq0/Ckaw0OdQ1RoH05AwpH4si9LcuDHIE3eWlAKH8z3wwlVUhcIswwJJSY1o?=
- =?us-ascii?Q?lRbXqG8ZkmlPMufUmGLNU80Eh+6GhDEJqp5ngA/peUcKb4PyU/nt6Y3j8Au/?=
- =?us-ascii?Q?enEGABmG99ZnZRbAuWThEf1meQPpsskOhB64kvqxaux0GTmTRM7Hfa5P01sz?=
- =?us-ascii?Q?IHflJ9xZD3ygN2HbhN82p2Dyqyi6rEj5Hp+TuZLNpWtOTyXBHSCucLYc5E7S?=
- =?us-ascii?Q?BoaBlmicLzNQ01rMvG2aoov7uZ8+vTtWK8id7SK40crzH8xwam5nTalUs6JX?=
- =?us-ascii?Q?yIJPc+IQJ4C7YeukeQ/p9oZmxR4Hy4nuZv8PCs/zK9ZzvyaBl4vt6Xhye+0t?=
- =?us-ascii?Q?mRHm385VSJIajtSC2NRTGORn7gk2S0nruionQJgsxv1IX6bxo9VW/DeXZLZJ?=
- =?us-ascii?Q?X2DCFA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+        with ESMTP id S231778AbjISHgy (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 19 Sep 2023 03:36:54 -0400
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DA157FC
+        for <linux-pci@vger.kernel.org>; Tue, 19 Sep 2023 00:36:46 -0700 (PDT)
+Received: from mail-io1-f70.google.com (mail-io1-f70.google.com [209.85.166.70])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 9A1123F684
+        for <linux-pci@vger.kernel.org>; Tue, 19 Sep 2023 07:36:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1695109005;
+        bh=MLRLAry2NlpMQaxof2G7yyxkoAcAjcPTZ7UlFboZNJM=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=v+DSnDfkbs3iBRGhVPGhmVv7wTV3c2ILVFSNCc2Pfp1lLz1/xvnfifo89jVzsqu4t
+         oaNnk+sFrRLzhsi7VIcSr50vSBVuh6oZ/XoHXp9uthKnnzER07+5umQb79mEtinuSh
+         tqplryLJ0fMVDjTyxvvlXeeT9SMN5hk12wCsjF5bLDK6oZfOJIq2QmMfhyuxAYJLjq
+         cZQMbJsdVtYd/BGv63urCIof1zIxH73hehB5/7xZLwxvgRA0iZaEJaqT3FrPq1gKb8
+         AI5QQqF8sgPqVvuwcJp7/MslRrCSCGUskaUaWdVAQGzbA0Z+JWYF1teDW12Mw98VID
+         ZfqQAYBPCO7+w==
+Received: by mail-io1-f70.google.com with SMTP id ca18e2360f4ac-7928a081f1bso469168639f.2
+        for <linux-pci@vger.kernel.org>; Tue, 19 Sep 2023 00:36:45 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695109000; x=1695713800;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MLRLAry2NlpMQaxof2G7yyxkoAcAjcPTZ7UlFboZNJM=;
+        b=YG3bNSC5p4H46Zs6/XUBsSnMRnb17mRFSujS9VBvPIezisVI/vgtFTLUd5w4wEnISh
+         E5zhgNrH1/XXtcZNPFD7uAj0He8Mul7fNIuBhpMededt87t+Y96KK5YrE5wgctqiTxuF
+         liq93wXFWl978q7Lk/XvrKNgtVACu5bmW/BphrszytQSICbQREaHUWZnme0QSBAvoR0v
+         SYdlPdTPmIejixE9COr7WSmBIB5DLBC9YrQZ3mm8LW5hoocjfX7szB5Nk9ii5Kxfnk0X
+         O/gjJMshxYOPsh+V5pjd0P70DietNC7ptDPECsCiIcCQigoQ1slHTHQVErbSC7qLPa+l
+         fVdA==
+X-Gm-Message-State: AOJu0YyvKBZiGUyrHqB9JybEat053Rxhzqb/2WszT2RBeMeL+QB25UYj
+        CYItkqiCgOJO5KJvq0F+loD8gWl0qp9ea9bB5OxJ9gGTWUKUgeV/yRlwwvSCCuAMQaH4DZkplnO
+        D2VN/KaQPTduTIHsf9NgqKBhhVvGrfZmankzgwB1BFUVwVcwCEsYXOQ==
+X-Received: by 2002:a92:a309:0:b0:34d:f0b9:97fd with SMTP id a9-20020a92a309000000b0034df0b997fdmr12317184ili.8.1695109000339;
+        Tue, 19 Sep 2023 00:36:40 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFtri+KycX7M4hWznMCNNys0wX8zYEKHaKuDUTL0tUNv3osCz1Z8lf8TJIPjKOLFz9JEBYy31Md7d0wA4KM3eY=
+X-Received: by 2002:a92:a309:0:b0:34d:f0b9:97fd with SMTP id
+ a9-20020a92a309000000b0034df0b997fdmr12317179ili.8.1695109000063; Tue, 19 Sep
+ 2023 00:36:40 -0700 (PDT)
 MIME-Version: 1.0
-X-OriginatorOrg: renesas.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: TYBPR01MB5341.jpnprd01.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 550310c0-b141-4249-39ec-08dbb8e13a36
-X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Sep 2023 07:22:48.6293
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 53d82571-da19-47e4-9cb4-625a166a4a2a
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8wMgB4i+TQirttgG1cVtf5ZN0aIrlUzit6+U93n5FbszOVJOsdF97SJAqVIRGEiyzMiJqY6X6a9ceOvAGQvN9FCsh0fTShPPkKMR8aWIYbsRfjZ3RbEMMq+r17KAlVGh
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYWPR01MB10709
+References: <20230914041806.816741-1-kai.heng.feng@canonical.com>
+ <7b45ac2ed091497b4e21a6a5c19956161175ba16.camel@linux.intel.com>
+ <SN6PR11MB26245C44E84C37C1B551260EF4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
+ <CAAd53p5ywMVKWzhn0nYzvBnW_Bc=sntgBttJdcVUuf_a4AnX5w@mail.gmail.com>
+ <SN6PR11MB262473E2BF4057F4D285A613F4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
+ <DM6PR11MB26184A8A3F955589F5FC6836F4FBA@DM6PR11MB2618.namprd11.prod.outlook.com>
+ <CAAd53p4o1pB-yzpvUCYsvuYEvQQK0my=u-ogrByRCx_Lvns=hw@mail.gmail.com> <bbbf36724d63f7532696a960a9d56d7ccd5a5bee.camel@linux.intel.com>
+In-Reply-To: <bbbf36724d63f7532696a960a9d56d7ccd5a5bee.camel@linux.intel.com>
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Tue, 19 Sep 2023 15:36:26 +0800
+Message-ID: <CAAd53p6MA9YLbcXxpC8=YEtbO6frFJk1LQ1BNUgPk=r1_uR8iw@mail.gmail.com>
+Subject: Re: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB wakeup
+To:     srinivas pandruvada <srinivas.pandruvada@linux.intel.com>
+Cc:     "Xu, Even" <even.xu@intel.com>,
+        "jikos@kernel.org" <jikos@kernel.org>,
+        "benjamin.tissoires@redhat.com" <benjamin.tissoires@redhat.com>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lee, Jian Hui" <jianhui.lee@canonical.com>,
+        "Zhang, Lixu" <lixu.zhang@intel.com>,
+        "Ba, Najumon" <najumon.ba@intel.com>,
+        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello Bjorn,
-
-> From: Bjorn Helgaas, Sent: Saturday, September 16, 2023 6:24 AM
->=20
-> On Thu, Sep 14, 2023 at 07:56:21AM +0000, Yoshihiro Shimoda wrote:
-> > > From: Bjorn Helgaas, Sent: Thursday, September 14, 2023 8:31 AM
-> > > On Fri, Aug 25, 2023 at 06:32:04PM +0900, Yoshihiro Shimoda wrote:
-> > > > Add support for triggering INTx IRQs by using outbound iATU.
-> > > > Outbound iATU is utilized to send assert and de-assert INTA TLPs
-> > > > as simulated edge IRQ for INTA. (Other INT[BCD] are not asserted.)
-> > > > This INTx support is optional (if there is no memory for INTx,
-> > > > probe will not fail).
-> > > >
-> > > > The message is generated based on the payloadless Msg TLP with type
-> > > > 0x14, where 0x4 is the routing code implying the Terminate at
-> > > > Receiver message. The message code is specified as b1000xx for
-> > > > the INTx assertion and b1001xx for the INTx de-assertion.
-> > > >
-> > > > Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> > > > Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-> > > > ---
-> > > >  .../pci/controller/dwc/pcie-designware-ep.c   | 70 +++++++++++++++=
-++--
-> > > >  drivers/pci/controller/dwc/pcie-designware.h  |  2 +
-> > > >  2 files changed, 68 insertions(+), 4 deletions(-)
-> > > >
-> > > > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/driv=
-ers/pci/controller/dwc/pcie-designware-ep.c
-> > > > index 747d5bc07222..91e3c4335031 100644
-> > > > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > > > @@ -6,9 +6,11 @@
-> > > >   * Author: Kishon Vijay Abraham I <kishon@ti.com>
-> > > >   */
-> > > >
-> > > > +#include <linux/delay.h>
-> > > >  #include <linux/of.h>
-> > > >  #include <linux/platform_device.h>
-> > > >
-> > > > +#include "../../pci.h"
-> > > >  #include "pcie-designware.h"
-> > > >  #include <linux/pci-epc.h>
-> > > >  #include <linux/pci-epf.h>
-> > > > @@ -484,14 +486,61 @@ static const struct pci_epc_ops epc_ops =3D {
-> > > >  	.get_features		=3D dw_pcie_ep_get_features,
-> > > >  };
-> > > >
-> > > > +static int dw_pcie_ep_send_msg(struct dw_pcie_ep *ep, u8 func_no, =
-u8 code,
-> > > > +			       u8 routing)
-> > > > +{
-> > > > +	struct dw_pcie_ob_atu_cfg atu =3D { 0 };
-> > > > +	struct pci_epc *epc =3D ep->epc;
-> > > > +	int ret;
-> > > > +
-> > > > +	atu.func_no =3D func_no;
-> > > > +	atu.code =3D code;
-> > > > +	atu.routing =3D routing;
-> > > > +	atu.type =3D PCIE_ATU_TYPE_MSG;
-> > > > +	atu.cpu_addr =3D ep->intx_mem_phys;
-> > > > +	atu.size =3D epc->mem->window.page_size;
-> > > > +
-> > > > +	ret =3D dw_pcie_ep_outbound_atu(ep, &atu);
-> > > > +	if (ret)
-> > > > +		return ret;
-> > > > +
-> > > > +	/* A dummy-write ep->intx_mem is converted to a Msg TLP */
-> > > > +	writel(0, ep->intx_mem);
-> > > > +
-> > > > +	dw_pcie_ep_unmap_addr(epc, func_no, 0, ep->intx_mem_phys);
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > >  int dw_pcie_ep_raise_legacy_irq(struct dw_pcie_ep *ep, u8 func_no)
-> > > >  {
-> > > >  	struct dw_pcie *pci =3D to_dw_pcie_from_ep(ep);
-> > > >  	struct device *dev =3D pci->dev;
-> > > > +	int ret;
-> > > >
-> > > > -	dev_err(dev, "EP cannot trigger legacy IRQs\n");
-> > > > +	if (!ep->intx_mem) {
-> > > > +		dev_err(dev, "legacy IRQs not supported\n");
-> > > > +		return -EOPNOTSUPP;
-> > > > +	}
-> > > >
-> > > > -	return -EINVAL;
-> > > > +	/*
-> > > > +	 * Even though the PCI bus specification implies the level-trigge=
-red
-> > > > +	 * INTx interrupts the kernel PCIe endpoint framework has a singl=
-e
-> > > > +	 * PCI_EPC_IRQ_INTx flag defined for the legacy IRQs simulation. =
-Thus
-> > > > +	 * this function sends the Deassert_INTx PCIe TLP after the Asser=
-t_INTx
-> > > > +	 * message with the 50 usec duration basically implementing the
-> > > > +	 * rising-edge triggering IRQ. Hopefully the interrupt controller=
- will
-> > > > +	 * still be able to register the incoming IRQ event...
-> > >
-> > > I'm not really convinced about this "assert INTA, wait 50us, deassert
-> > > INTA" thing.  All the INTx language in the spec is like this:
-> > >
-> > >   ... the virtual INTx wire must be asserted whenever and *as long as=
-*
-> > >   the following conditions are satisfied:
-> > >
-> > >     - The Interrupt Disable bit in the Command register is set to 0b.
-> > >
-> > >     - The <feature> Interrupt Enable bit in the <feature> Control
-> > >       Register is set to 1b.
-> > >
-> > >     - The <feature> Status bit in the <feature> Status register is
-> > >       set.
-> > >
-> > > E.g., sec PCIe r6.0, sec 5.5.6 (Link Activation), 6.1.6 (Native PME),
-> > > 6.2.4.1.2 (AER Interrupt Generation), 6.2.11.1 (DPC Interrupts),
-> > > 6.7.3.4 (Software Notification of Hot-Plug Events).
-> > >
-> > > So it seems to me like the endpoint needs an "interrupt status" bit,
-> > > and the Deassert_INTx message would be sent when the host interrupt
-> > > handler clears that bit.
+On Mon, Sep 18, 2023 at 11:57=E2=80=AFPM srinivas pandruvada
+<srinivas.pandruvada@linux.intel.com> wrote:
+>
+> Hi Kai-Heng,
+> On Mon, 2023-09-18 at 09:17 +0800, Kai-Heng Feng wrote:
+> > Hi Even,
 > >
-> > Thank you very much for your comments! About this topic,
-> > Frank also has a similar opinion before [1]. So, I asked Kishon
-> > about this, but I didn't get any comment from Kishon at that time.
-> > Anyway, to handle INTx on PCIe endpoint framework properly,
-> > we need to modify the PCIe Endpoint framework, IIUC.
+> > On Mon, Sep 18, 2023 at 8:33=E2=80=AFAM Xu, Even <even.xu@intel.com> wr=
+ote:
+> > >
+> > > Hi, Kai-Heng,
+> > >
+> > > I just got feedback, for testing EHL S5 wakeup feature, you need
+> > > several steps to setup and access
+> > > "https://portal.devicewise.com/things/browse" to trigger wake.
+> > > But currently, our test account of this website are all out of
+> > > data.
+> > > So maybe you need double check with the team who required you
+> > > preparing the patch for the verification.
 > >
-> > Should I modify the PCIe Endpoint framework at first?
-> > Or, can this patch be applied as-is?
-> > I guess that such modification of the PCIe Endpoint framework
-> > need much time. So, if I should modify the framework at first,
-> > I would like to drop adding INTx support [2] from my patch series
-> > because supporting INTx on my PCIe controller is not mandatory.
+> > The patch is to solve the GPE refcount overflow, while maintaining S5
+> > wakeup. I don't have any mean to test S5 wake.
 > >
-> > [1]
-> > https://lore.kernel.org/linux-pci/TYBPR01MB5341EFAC471AEBB9100D6051D871=
-9@TYBPR01MB5341.jpnprd01.prod.outlook.com/
+> The issue is not calling acpi_disable_gpe(). To reduce the scope of
+> change can we just add that instead of a adding new callbacks. This way
+> scope is reduced.
+
+This patch does exactly the same thing by letting PCI and ACPI handle
+the PME and GPE.
+Though the change seems to be bigger, it actually reduces the duped
+code, while keep the S5 wakeup ability intact.
+
+Kai-Heng
+
+>
+> Something like the attached
+>
+> Thanks,
+> Srinivas
+>
+>
+>
+>
+>
+>
+> > So if you also don't have ways to verify S5 wake functionality, maybe
+> > we can simply revert 2e23a70edabe  ("HID: intel-ish-hid: ipc: finish
+> > power flow for EHL OOB") as alternative?
 > >
-> > [2]
-> > The following patches are not needed if INTx support should be dropped:
+> > Kai-Heng
 > >
-> > eb185e1e628a PCI: designware-ep: Add INTx IRQs support
-> > 5d0e51f85b23 PCI: dwc: Add outbound MSG TLPs support
-> > 4758bef61cc2 PCI: dwc: Change arguments of dw_pcie_prog_outbound_atu()
-> > 44938b13046b PCI: Add INTx Mechanism Messages macros
->=20
-> Since INTx support isn't mandatory at this time, I think we should
-> drop these patches for now.  If/when somebody definitely needs INTx
-> support, we can resurrect them, and then we'll have more clarity on
-> how it should work and we'll be better able to test it.
-
-I got it.
-
-In this case, should I submit the patch series as v21? Or, like the previou=
-s
-time [1], should I submit some patches for squashing the controller/rcar br=
-anch?
-
-[1] https://lore.kernel.org/linux-pci/20230901131711.2861283-1-yoshihiro.sh=
-imoda.uh@renesas.com/
-
-Best regards,
-Yoshihiro Shimoda
-
-> Bjorn
+> > > Thanks!
+> > >
+> > > Best Regards,
+> > > Even Xu
+> > >
+> > > -----Original Message-----
+> > > From: Xu, Even
+> > > Sent: Friday, September 15, 2023 3:27 PM
+> > > To: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > > Cc: srinivas pandruvada <srinivas.pandruvada@linux.intel.com>;
+> > > jikos@kernel.org; benjamin.tissoires@redhat.com;
+> > > linux-pm@vger.kernel.org; linux-pci@vger.kernel.org; Lee, Jian Hui
+> > > <jianhui.lee@canonical.com>; Zhang, Lixu <Lixu.Zhang@intel.com>;
+> > > Ba, Najumon <najumon.ba@intel.com>; linux-input@vger.kernel.org;
+> > > linux-kernel@vger.kernel.org
+> > > Subject: RE: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB wakeup
+> > >
+> > > Hi, Kai-Heng,
+> > >
+> > > I am also not familiar with this S5 wakeup test case.
+> > > I already sent out mails to ask for help on it.
+> > > Will come back to you once I get feedback.
+> > > Thanks!
+> > >
+> > > Best Regards,
+> > > Even Xu
+> > >
+> > > -----Original Message-----
+> > > From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > > Sent: Friday, September 15, 2023 2:01 PM
+> > > To: Xu, Even <even.xu@intel.com>
+> > > Cc: srinivas pandruvada <srinivas.pandruvada@linux.intel.com>;
+> > > jikos@kernel.org; benjamin.tissoires@redhat.com;
+> > > linux-pm@vger.kernel.org; linux-pci@vger.kernel.org; Lee, Jian Hui
+> > > <jianhui.lee@canonical.com>; Zhang, Lixu <lixu.zhang@intel.com>;
+> > > Ba, Najumon <najumon.ba@intel.com>; linux-input@vger.kernel.org;
+> > > linux-kernel@vger.kernel.org
+> > > Subject: Re: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB wakeup
+> > >
+> > > Hi Even,
+> > >
+> > > On Fri, Sep 15, 2023 at 1:31=E2=80=AFPM Xu, Even <even.xu@intel.com> =
+wrote:
+> > > >
+> > > > Hi, Srinivas,
+> > > >
+> > > > Sure, I will test it.
+> > > > As long term not working on EHL, I doesn't have EHL board on hand
+> > > > right now, I can test this patch on other ISH related platforms.
+> > > > From the patch, it's focus on EHL platform, I assume Kai-Heng
+> > > > already verified the function on EHL board.
+> > >
+> > > I only made sure the GPE overflow issue is fixed by the patch, but
+> > > I didn't test the S5 wakeup.
+> > > That's because I don't know how to test it on the EHL system I
+> > > have.
+> > > I'll test it if you can let me know how to test the S5 wakeup.
+> > >
+> > > Kai-Heng
+> > >
+> > > > I don't think it will take effect on other platforms, anyway, I
+> > > > will test it on the platforms I have to provide cross platform
+> > > > verification.
+> > > >
+> > > > Thanks!
+> > > >
+> > > > Best Regards,
+> > > > Even Xu
+> > > >
+> > > > -----Original Message-----
+> > > > From: srinivas pandruvada <srinivas.pandruvada@linux.intel.com>
+> > > > Sent: Friday, September 15, 2023 12:11 AM
+> > > > To: Kai-Heng Feng <kai.heng.feng@canonical.com>;
+> > > > jikos@kernel.org;
+> > > > benjamin.tissoires@redhat.com
+> > > > Cc: linux-pm@vger.kernel.org; linux-pci@vger.kernel.org; Lee,
+> > > > Jian Hui
+> > > > <jianhui.lee@canonical.com>; Xu, Even <even.xu@intel.com>; Zhang,
+> > > > Lixu
+> > > > <lixu.zhang@intel.com>; Ba, Najumon <najumon.ba@intel.com>;
+> > > > linux-input@vger.kernel.org; linux-kernel@vger.kernel.org
+> > > > Subject: Re: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB
+> > > > wakeup
+> > > >
+> > > > Hi Even,
+> > > >
+> > > > On Thu, 2023-09-14 at 12:18 +0800, Kai-Heng Feng wrote:
+> > > > > System cannot suspend more than 255 times because the driver
+> > > > > doesn't
+> > > > > have corresponding acpi_disable_gpe() for acpi_enable_gpe(), so
+> > > > > the
+> > > > > GPE refcount overflows.
+> > > > >
+> > > > > Since PCI core and ACPI core already handles PCI PME wake and
+> > > > > GPE
+> > > > > wake when the device has wakeup capability, use
+> > > > > device_init_wakeup()
+> > > > > to let them do the wakeup setting work.
+> > > > >
+> > > > > Also add a shutdown callback which uses pci_prepare_to_sleep()
+> > > > > to
+> > > > > let PCI and ACPI set OOB wakeup for S5.
+> > > > >
+> > > > Please test this change.
+> > > >
+> > > > Thanks,
+> > > > Srinivas
+> > > >
+> > > > > Fixes: 2e23a70edabe ("HID: intel-ish-hid: ipc: finish power
+> > > > > flow for
+> > > > > EHL OOB")
+> > > > > Cc: Jian Hui Lee <jianhui.lee@canonical.com>
+> > > > > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > > > > ---
+> > > > >  drivers/hid/intel-ish-hid/ipc/pci-ish.c | 59
+> > > > > +++++++----------------
+> > > > > --
+> > > > >  1 file changed, 15 insertions(+), 44 deletions(-)
+> > > > >
+> > > > > diff --git a/drivers/hid/intel-ish-hid/ipc/pci-ish.c
+> > > > > b/drivers/hid/intel-ish-hid/ipc/pci-ish.c
+> > > > > index 55cb25038e63..65e7eeb2fa64 100644
+> > > > > --- a/drivers/hid/intel-ish-hid/ipc/pci-ish.c
+> > > > > +++ b/drivers/hid/intel-ish-hid/ipc/pci-ish.c
+> > > > > @@ -119,42 +119,6 @@ static inline bool
+> > > > > ish_should_leave_d0i3(struct
+> > > > > pci_dev *pdev)
+> > > > >         return !pm_resume_via_firmware() || pdev->device =3D=3D
+> > > > > CHV_DEVICE_ID;  }
+> > > > >
+> > > > > -static int enable_gpe(struct device *dev) -{ -#ifdef
+> > > > > CONFIG_ACPI
+> > > > > -       acpi_status acpi_sts;
+> > > > > -       struct acpi_device *adev;
+> > > > > -       struct acpi_device_wakeup *wakeup;
+> > > > > -
+> > > > > -       adev =3D ACPI_COMPANION(dev);
+> > > > > -       if (!adev) {
+> > > > > -               dev_err(dev, "get acpi handle failed\n");
+> > > > > -               return -ENODEV;
+> > > > > -       }
+> > > > > -       wakeup =3D &adev->wakeup;
+> > > > > -
+> > > > > -       acpi_sts =3D acpi_enable_gpe(wakeup->gpe_device, wakeup-
+> > > > > > gpe_number);
+> > > > > -       if (ACPI_FAILURE(acpi_sts)) {
+> > > > > -               dev_err(dev, "enable ose_gpe failed\n");
+> > > > > -               return -EIO;
+> > > > > -       }
+> > > > > -
+> > > > > -       return 0;
+> > > > > -#else
+> > > > > -       return -ENODEV;
+> > > > > -#endif
+> > > > > -}
+> > > > > -
+> > > > > -static void enable_pme_wake(struct pci_dev *pdev) -{
+> > > > > -       if ((pci_pme_capable(pdev, PCI_D0) ||
+> > > > > -            pci_pme_capable(pdev, PCI_D3hot) ||
+> > > > > -            pci_pme_capable(pdev, PCI_D3cold)) &&
+> > > > > !enable_gpe(&pdev-
+> > > > > > dev)) {
+> > > > > -               pci_pme_active(pdev, true);
+> > > > > -               dev_dbg(&pdev->dev, "ish ipc driver pme wake
+> > > > > enabled\n");
+> > > > > -       }
+> > > > > -}
+> > > > > -
+> > > > >  /**
+> > > > >   * ish_probe() - PCI driver probe callback
+> > > > >   * @pdev:      pci device
+> > > > > @@ -225,7 +189,7 @@ static int ish_probe(struct pci_dev *pdev,
+> > > > > const
+> > > > > struct pci_device_id *ent)
+> > > > >
+> > > > >         /* Enable PME for EHL */
+> > > > >         if (pdev->device =3D=3D EHL_Ax_DEVICE_ID)
+> > > > > -               enable_pme_wake(pdev);
+> > > > > +               device_init_wakeup(dev, true);
+> > > > >
+> > > > >         ret =3D ish_init(ishtp);
+> > > > >         if (ret)
+> > > > > @@ -248,6 +212,19 @@ static void ish_remove(struct pci_dev
+> > > > > *pdev)
+> > > > >         ish_device_disable(ishtp_dev);  }
+> > > > >
+> > > > > +
+> > > > > +/**
+> > > > > + * ish_shutdown() - PCI driver shutdown callback
+> > > > > + * @pdev:      pci device
+> > > > > + *
+> > > > > + * This function sets up wakeup for S5  */ static void
+> > > > > +ish_shutdown(struct pci_dev *pdev) {
+> > > > > +       if (pdev->device =3D=3D EHL_Ax_DEVICE_ID)
+> > > > > +               pci_prepare_to_sleep(pdev); }
+> > > > > +
+> > > > >  static struct device __maybe_unused *ish_resume_device;
+> > > > >
+> > > > >  /* 50ms to get resume response */
+> > > > > @@ -370,13 +347,6 @@ static int __maybe_unused
+> > > > > ish_resume(struct
+> > > > > device *device)
+> > > > >         struct pci_dev *pdev =3D to_pci_dev(device);
+> > > > >         struct ishtp_device *dev =3D pci_get_drvdata(pdev);
+> > > > >
+> > > > > -       /* add this to finish power flow for EHL */
+> > > > > -       if (dev->pdev->device =3D=3D EHL_Ax_DEVICE_ID) {
+> > > > > -               pci_set_power_state(pdev, PCI_D0);
+> > > > > -               enable_pme_wake(pdev);
+> > > > > -               dev_dbg(dev->devc, "set power state to D0 for
+> > > > > ehl\n");
+> > > > > -       }
+> > > > > -
+> > > > >         ish_resume_device =3D device;
+> > > > >         dev->resume_flag =3D 1;
+> > > > >
+> > > > > @@ -392,6 +362,7 @@ static struct pci_driver ish_driver =3D {
+> > > > >         .id_table =3D ish_pci_tbl,
+> > > > >         .probe =3D ish_probe,
+> > > > >         .remove =3D ish_remove,
+> > > > > +       .shutdown =3D ish_shutdown,
+> > > > >         .driver.pm =3D &ish_pm_ops,
+> > > > >  };
+> > > > >
+> > > >
+>
