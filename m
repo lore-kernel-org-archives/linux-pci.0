@@ -2,74 +2,58 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E8106CE79AC
-	for <linux-pci@archiver.kernel.org>; Wed, 20 Sep 2023 07:32:17 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 01238CE79B0
+	for <linux-pci@archiver.kernel.org>; Wed, 20 Sep 2023 07:52:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233756AbjITHcV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 20 Sep 2023 03:32:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51186 "EHLO
+        id S232960AbjITHwu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 20 Sep 2023 03:52:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35934 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233743AbjITHcT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2023 03:32:19 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 45CC8C9;
-        Wed, 20 Sep 2023 00:32:14 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B513C433C7;
-        Wed, 20 Sep 2023 07:32:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695195133;
-        bh=u4vRJ0fWq09I70IbE8AlVp8IxBCPKi9zruFPuhoW71I=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=Fzz+vHPmATbFrOQfMThFtGdHivljc/gBNrI4IvIM/humx6Cahew02s28qb9rd8/Pa
-         Qicu9H6EThaCTLLlO6LSEuBlakUaj1+KPJ1kQX9OIoT2RDTsNxSLZG3cSFaJo5U2Gc
-         /04IX4AI/oRwIKx+yzRQ+RAzMELckv9BAlq8u9jI6/7zqugirHxv3RF6f98LxkI8I8
-         Bc1bllvrlJzmC8+fNFCnukrUhDsk5AwtVSaEDO6CKM6h23Xr3PZ4RnXBSkiNUctfQB
-         NcS6QL/Q6Ax7OsDqB0n2DJgKPu2DZG2mN35VPJXBL0UVAyz8cLEMoKzWhBnz9dMzD1
-         oCXjIw9CFe8ZQ==
-Date:   Wed, 20 Sep 2023 10:32:10 +0300
-From:   Leon Romanovsky <leon@kernel.org>
-To:     Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/8] PCI/treewide: PCIe capability access cleanups
-Message-ID: <20230920073210.GI4494@unreal>
-References: <20230919125648.1920-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S232853AbjITHwt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 20 Sep 2023 03:52:49 -0400
+X-Greylist: delayed 371 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 20 Sep 2023 00:52:42 PDT
+Received: from mail.venturelinkage.com (mail.venturelinkage.com [80.211.143.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C33E0CE
+        for <linux-pci@vger.kernel.org>; Wed, 20 Sep 2023 00:52:42 -0700 (PDT)
+Received: by mail.venturelinkage.com (Postfix, from userid 1002)
+        id 6062482811; Wed, 20 Sep 2023 09:46:20 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=venturelinkage.com;
+        s=mail; t=1695195990;
+        bh=7iowqdzve/IIiUUjcEwx8j3uMrVqqiE7R9zbOCKRV9Q=;
+        h=Date:From:To:Subject:From;
+        b=H9Jr4xjg7CqCjqi+RUiX5RsqS6fI1NoC9csY1ApZQVBle0dYsCLzEA/FaUcdRHiek
+         PVK7Koqil4SG2YAeanuWLspYs90nTP+eASzMxTFLOtcI0MQi9Pd+JvLtjUaVIOV3Yn
+         5TbUf6qL378hwuCnIFjUNXXG6DxovjnhFM2/rXwF8TNFTcwYeuYtpKdV+OW6k7JZqO
+         J7aCFzHyv+B3YjzHCFYCVKuvaRfP/J8udqK+qJY6X+fEWgZUrfTSOdsWxZL4H+FrLs
+         aD5a+gaO+P+4EIda0mMBsuO4g0aBdpkmzVeY/02ei7oIuqMyXjbniTdIQbLjs+HMkQ
+         J9NLrWhvU0plA==
+Received: by mail.venturelinkage.com for <linux-pci@vger.kernel.org>; Wed, 20 Sep 2023 07:46:15 GMT
+Message-ID: <20230920084500-0.1.l.11z3.0.dfrpdnn093@venturelinkage.com>
+Date:   Wed, 20 Sep 2023 07:46:15 GMT
+From:   "Lukas Varga" <lukas.varga@venturelinkage.com>
+To:     <linux-pci@vger.kernel.org>
+Subject: =?UTF-8?Q?Popt=C3=A1vka?=
+X-Mailer: mail.venturelinkage.com
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20230919125648.1920-1-ilpo.jarvinen@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 19, 2023 at 03:56:40PM +0300, Ilpo Järvinen wrote:
-> Instead of custom code to extract the PCIe capabilities, make the code
-> more obvious using FIELD_GET/PREP().
-> 
-> Also cleanup some duplicated defines in e1000e.
-> 
-> This is just a step into the right direction, there's plenty of places
-> still to cleanup which will have to wait for another patch series.
-> 
-> v3:
-> - Remove applied patches (scsi)
-> - Use pci_pcie_cap() and tweak local variable (e1000e)
-> - Use the correct prefix for RDMA/hfi1
-> 
-> v2:
-> - Remove extract_width() and use FIELD_GET() directly (IB/hfi1)
-> - Convert other fields beside Link Width ones
-> - Remove useless u8 casts (scsi: esas2r)
-> - e1000e:
->         - Remove defines that duplicate pci_regs.h ones
->         - Convert to pcie_capability_read_word()
-> 
-> 
-> Ilpo Järvinen (8):
->   RDMA/hfi1: Use FIELD_GET() to extract Link Width
+Dobr=C3=A9 r=C3=A1no,
 
-Applied this patch to RDMA tree.
+Dovolil jsem si V=C3=A1s kontaktovat, proto=C5=BEe m=C3=A1m z=C3=A1jem ov=
+=C4=9B=C5=99it mo=C5=BEnost nav=C3=A1z=C3=A1n=C3=AD spolupr=C3=A1ce.
 
-Thanks
+Podporujeme firmy p=C5=99i z=C3=ADsk=C3=A1v=C3=A1n=C3=AD nov=C3=BDch obch=
+odn=C3=ADch z=C3=A1kazn=C3=ADk=C5=AF.
+
+M=C5=AF=C5=BEeme si promluvit a poskytnout podrobnosti?
+
+V p=C5=99=C3=ADpad=C4=9B z=C3=A1jmu V=C3=A1s bude kontaktovat n=C3=A1=C5=A1=
+ anglicky mluv=C3=ADc=C3=AD z=C3=A1stupce.
+
+
+Pozdravy
+Lukas Varga
