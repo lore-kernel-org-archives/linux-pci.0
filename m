@@ -2,196 +2,148 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8FD5EE7D0A4
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 19:01:16 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C25B3E7D0A6
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 19:27:20 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230424AbjIUTBU convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:01:20 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42452 "EHLO
+        id S229779AbjIUT1Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 15:27:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43402 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229699AbjIUTBF (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 15:01:05 -0400
-Received: from mail-oi1-f179.google.com (mail-oi1-f179.google.com [209.85.167.179])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 16441EE5B9;
-        Thu, 21 Sep 2023 11:45:50 -0700 (PDT)
-Received: by mail-oi1-f179.google.com with SMTP id 5614622812f47-3adbe273a0cso232690b6e.0;
-        Thu, 21 Sep 2023 11:45:50 -0700 (PDT)
+        with ESMTP id S229754AbjIUT1W (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 15:27:22 -0400
+Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FD7898A6C
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 10:56:52 -0700 (PDT)
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+        (No client certificate requested)
+        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 9EFF73F688
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 06:08:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+        s=20210705; t=1695276528;
+        bh=LGLvEUCLByX56ZHTlqmLlwmZ6pTbCna8gvztcJYDoU8=;
+        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+         To:Cc:Content-Type;
+        b=rauudwVUP8l7s8SwO4VSe69N7gnmCVEH1jsNY1fFoKehhXjOrLiPmAoeqI7widzy7
+         ZUxhg4oe+oHsZfKmL/AMw6mjza/a7C4z12xb4eiJ+dfy2KR5I2nipRDHlvAGbxCnWh
+         canQ+lz3VdI78sZMi0Yr86AqHTZJxAVIREWSg5gLp6dut/4Ne+d7F4W7G8Xtw5M+jq
+         IC6PBAWXzjBkgllANmR9e7E1ru5kZ0cJkRwgmeuSWpu/kP7PIlyLwPRCCZdh7Pb3Bs
+         Y3VCQo9nYSaSkQcZC2VDeulP1/JUSxlpXKP4s509rTW/mPkfmwJ0hUIp87GeLa6yEs
+         sEkFWaQd34ztQ==
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-27472e97c0bso384303a91.3
+        for <linux-pci@vger.kernel.org>; Wed, 20 Sep 2023 23:08:48 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695321949; x=1695926749;
+        d=1e100.net; s=20230601; t=1695276527; x=1695881327;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=mSC2Mx8lZwcBsu4ssGOLP2DR4kbz2MNqD+ptdUPWGs4=;
-        b=Ec/eKrMY/6jzKOTjojd1uhPAk7Lf3tN/nMEAasAVwCuBeTeADao+R1OZZSRLd/jIzE
-         ZrFoM4llkyPQHbDNk5MOdT/mecrBWpGshU8KRzPGLP1gl6XX4Rw4RDbl1RCnQ/CBJYrw
-         CyrzPQMUOAf7XygfjRGc4cDkvWP3JFXBdgyyMW6S5ucoZeMG+IGH56hd3qENpCGOFofI
-         KEzjdD5/KEYEguShD6MCA2dy6vN++fsi4uP5yRYFKTUy+8OSTmnes9J7PD/jes06Flgo
-         tYMJFzpYu4QR1E+VIXKcP/td0hv2E5aQZj4cjGKh3iXVQeDyv0PiZM2DOlB04jSvUnCQ
-         Y6XQ==
-X-Gm-Message-State: AOJu0Yzdu8v4AWQyXGdp7cHsMf5LgQxi1+LVpKgZIk+Dv+M3vBH1PkZ6
-        TZa9Vg/uh3UQhU+kVjoX7UcuqzJgBX7tc33wcQA=
-X-Google-Smtp-Source: AGHT+IHQOvwO1HCg1mAMiEkCzXok2CE6zEvjP3SkSyr60AQ/8kEpBnleecz/hKIvBiyPJ9jqrBg4+T2inrVGBJ83Dr8=
-X-Received: by 2002:a05:6808:2092:b0:3ad:af12:2fe0 with SMTP id
- s18-20020a056808209200b003adaf122fe0mr6862727oiw.3.1695321949259; Thu, 21 Sep
- 2023 11:45:49 -0700 (PDT)
+        bh=LGLvEUCLByX56ZHTlqmLlwmZ6pTbCna8gvztcJYDoU8=;
+        b=Sw5/smui6JqIPu7VZX1WK2FG99SYC024INCzqDo9OzV8bsxW9k7aLCVBOfTYMg8ori
+         EbhDQJ/cf7frP3hQ/NoGrsuQDwk1l+CDCLe7eje7VcY0RaIk4+sDscVzIqPj1q0lwpQ6
+         m+iFzWkq9qmiPFoMjNLUhlehDGvVPE0/s4wR2oytRrP5xGrsYdlOZhZZ89y7xPKFETxk
+         IwD7Jj3Bs1+6KPN9O4oRlVAWQ+xnLOsDO6NzF5IA483unRx1oAQ56GHGxgv6Y/EuXBK8
+         XFPJTOQ19L4xEe8BdwX06Zxq6sKmmAoh3Lkft9evQyq4wGfQ4cmS3mqUlo896CeZ8hoZ
+         MCHw==
+X-Gm-Message-State: AOJu0YzdPzNyxGDQDqR9gAHsKzUNwYui1F7DwTegJqgx0RB7F0I2OHaW
+        wJtBKTBwvFUGfQGuByHVwrEih9KHxCMor/mIXWes7YWQObPgyyJrFEypwS2cNQEodypKRhBjJoP
+        XCRP1I710DT/GjF7LHF3qKgeS7rEOamNge3xB2AHrE5evDjmVah4O8w==
+X-Received: by 2002:a17:90b:60f:b0:271:9237:a07f with SMTP id gb15-20020a17090b060f00b002719237a07fmr4869854pjb.32.1695276527090;
+        Wed, 20 Sep 2023 23:08:47 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH3mcQsaQ+FE/ji4v4nyF6aUsilUttOw7YcXgkdZG82nw6jvzjNPhHOMNN3PnauJxNw7lKirmfAfZZ+zIWZCFI=
+X-Received: by 2002:a17:90b:60f:b0:271:9237:a07f with SMTP id
+ gb15-20020a17090b060f00b002719237a07fmr4869844pjb.32.1695276526779; Wed, 20
+ Sep 2023 23:08:46 -0700 (PDT)
 MIME-Version: 1.0
-References: <20230920180337.809-1-shiju.jose@huawei.com>
-In-Reply-To: <20230920180337.809-1-shiju.jose@huawei.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 21 Sep 2023 20:45:38 +0200
-Message-ID: <CAJZ5v0j2qAakkcuMS0Np8Do5w4Np67ddt_EfqYY4br+p-WXV9w@mail.gmail.com>
-Subject: Re: [PATCH v3 1/1] ACPI / APEI: Fix for overwriting AER info when
- error status data has multiple sections
-To:     shiju.jose@huawei.com
-Cc:     helgaas@kernel.org, rafael@kernel.org, lenb@kernel.org,
-        tony.luck@intel.com, james.morse@arm.com, bp@alien8.de,
-        ying.huang@intel.com, linux-acpi@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, jonathan.cameron@huawei.com,
-        tanxiaofei@huawei.com, prime.zeng@hisilicon.com
+References: <20230914041806.816741-1-kai.heng.feng@canonical.com>
+ <7b45ac2ed091497b4e21a6a5c19956161175ba16.camel@linux.intel.com>
+ <SN6PR11MB26245C44E84C37C1B551260EF4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
+ <CAAd53p5ywMVKWzhn0nYzvBnW_Bc=sntgBttJdcVUuf_a4AnX5w@mail.gmail.com>
+ <SN6PR11MB262473E2BF4057F4D285A613F4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
+ <DM6PR11MB26184A8A3F955589F5FC6836F4FBA@DM6PR11MB2618.namprd11.prod.outlook.com>
+ <CAAd53p4o1pB-yzpvUCYsvuYEvQQK0my=u-ogrByRCx_Lvns=hw@mail.gmail.com>
+ <bbbf36724d63f7532696a960a9d56d7ccd5a5bee.camel@linux.intel.com>
+ <CAAd53p6MA9YLbcXxpC8=YEtbO6frFJk1LQ1BNUgPk=r1_uR8iw@mail.gmail.com>
+ <67c85f083201ed2cda2cab198b40141ad21912a2.camel@linux.intel.com> <CAJZ5v0iFLxpWHW=sDZ7=Wne3Yt=8_EwhW9SeCmRP6REpVqo8rA@mail.gmail.com>
+In-Reply-To: <CAJZ5v0iFLxpWHW=sDZ7=Wne3Yt=8_EwhW9SeCmRP6REpVqo8rA@mail.gmail.com>
+From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date:   Thu, 21 Sep 2023 14:08:33 +0800
+Message-ID: <CAAd53p67tiP0xXwhn=NviU_rvrSveSxbAhDieYG9AmUWF2e__Q@mail.gmail.com>
+Subject: Re: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB wakeup
+To:     "Rafael J. Wysocki" <rafael@kernel.org>
+Cc:     srinivas pandruvada <srinivas.pandruvada@linux.intel.com>,
+        "Xu, Even" <even.xu@intel.com>,
+        "jikos@kernel.org" <jikos@kernel.org>,
+        "benjamin.tissoires@redhat.com" <benjamin.tissoires@redhat.com>,
+        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "Lee, Jian Hui" <jianhui.lee@canonical.com>,
+        "Zhang, Lixu" <lixu.zhang@intel.com>,
+        "Ba, Najumon" <najumon.ba@intel.com>,
+        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 20, 2023 at 8:03 PM <shiju.jose@huawei.com> wrote:
+On Wed, Sep 20, 2023 at 2:00=E2=80=AFAM Rafael J. Wysocki <rafael@kernel.or=
+g> wrote:
 >
-> From: Shiju Jose <shiju.jose@huawei.com>
+> On Tue, Sep 19, 2023 at 6:54=E2=80=AFPM srinivas pandruvada
+> <srinivas.pandruvada@linux.intel.com> wrote:
+> >
+> > On Tue, 2023-09-19 at 15:36 +0800, Kai-Heng Feng wrote:
+> > > On Mon, Sep 18, 2023 at 11:57=E2=80=AFPM srinivas pandruvada
+> > > <srinivas.pandruvada@linux.intel.com> wrote:
+> > > >
+> > > > Hi Kai-Heng,
+> > > > On Mon, 2023-09-18 at 09:17 +0800, Kai-Heng Feng wrote:
+> > > > > Hi Even,
+> > > > >
+> > > > > On Mon, Sep 18, 2023 at 8:33=E2=80=AFAM Xu, Even <even.xu@intel.c=
+om>
+> > > > > wrote:
+> > > > > >
+> > > > > > Hi, Kai-Heng,
+> > > > > >
+> > > > > > I just got feedback, for testing EHL S5 wakeup feature, you
+> > > > > > need
+> > > > > > several steps to setup and access
+> > > > > > "https://portal.devicewise.com/things/browse" to trigger wake.
+> > > > > > But currently, our test account of this website are all out of
+> > > > > > data.
+> > > > > > So maybe you need double check with the team who required you
+> > > > > > preparing the patch for the verification.
+> > > > >
+> > > > > The patch is to solve the GPE refcount overflow, while
+> > > > > maintaining S5
+> > > > > wakeup. I don't have any mean to test S5 wake.
+> > > > >
+> > > > The issue is not calling acpi_disable_gpe(). To reduce the scope of
+> > > > change can we just add that instead of a adding new callbacks. This
+> > > > way
+> > > > scope is reduced.
+> > >
+> > > This patch does exactly the same thing by letting PCI and ACPI handle
+> > > the PME and GPE.
+> > > Though the change seems to be bigger, it actually reduces the duped
+> > > code, while keep the S5 wakeup ability intact.
+> > It may be doing the same. But with long chain of calls without
+> > verification, I am not comfortable.
+> > This can be another patch by itself to use the framework.
 >
-> ghes_handle_aer() passes AER data to the PCI core for logging and
-> recovery by calling aer_recover_queue() with a pointer to struct
-> aer_capability_regs.
+> I agree.
 >
-> The problem was that aer_recover_queue() queues the pointer directly
-> without copying the aer_capability_regs data.  The pointer was to
-> the ghes->estatus buffer, which could be reused before
-> aer_recover_work_func() reads the data.
+> Let's change one thing at a time.
 >
-> To avoid this problem, allocate a new aer_capability_regs structure
-> from the ghes_estatus_pool, copy the AER data from the ghes->estatus
-> buffer into it, pass a pointer to the new struct to
-> aer_recover_queue(), and free it after aer_recover_work_func() has
-> processed it.
+> > But you are targeting a fix for overflow issue, which is separate from
+> > the use of PCI/ACPI framework.
 >
-> Reported-by: Bjorn Helgaas <helgaas@kernel.org>
-> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
-> ---
-> Changes from v2 to v3:
-> 1. Add stub code for ghes_estatus_pool_region_free() to fix following
-> build error, reported by kernel test robot, if CONFIG_ACPI_APEI_GHES
-> is not enabled.
-> ld: drivers/pci/pcie/aer.o: in function `aer_recover_work_func':
-> aer.c:(.text+0xec5): undefined reference to `ghes_estatus_pool_region_free'
->
-> Changes from v1 to v2:
-> 1. Updated patch description with the description Bjorn has suggested.
-> 2. Add Acked-by: Bjorn Helgaas <bhelgaas@google.com>.
-> ---
->  drivers/acpi/apei/ghes.c | 23 ++++++++++++++++++++++-
->  drivers/pci/pcie/aer.c   | 10 ++++++++++
->  include/acpi/ghes.h      |  4 ++++
->  3 files changed, 36 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/acpi/apei/ghes.c b/drivers/acpi/apei/ghes.c
-> index ef59d6ea16da..63ad0541db38 100644
-> --- a/drivers/acpi/apei/ghes.c
-> +++ b/drivers/acpi/apei/ghes.c
-> @@ -209,6 +209,20 @@ int ghes_estatus_pool_init(unsigned int num_ghes)
->         return -ENOMEM;
->  }
->
-> +/**
-> + * ghes_estatus_pool_region_free - free previously allocated memory
-> + *                                from the ghes_estatus_pool.
-> + * @addr: address of memory to free.
-> + * @size: size of memory to free.
-> + *
-> + * Returns none.
-> + */
-> +void ghes_estatus_pool_region_free(unsigned long addr, u32 size)
-> +{
-> +       gen_pool_free(ghes_estatus_pool, addr, size);
-> +}
-> +EXPORT_SYMBOL_GPL(ghes_estatus_pool_region_free);
-> +
->  static int map_gen_v2(struct ghes *ghes)
->  {
->         return apei_map_generic_address(&ghes->generic_v2->read_ack_register);
-> @@ -564,6 +578,7 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
->             pcie_err->validation_bits & CPER_PCIE_VALID_AER_INFO) {
->                 unsigned int devfn;
->                 int aer_severity;
-> +               u8 *aer_info;
->
->                 devfn = PCI_DEVFN(pcie_err->device_id.device,
->                                   pcie_err->device_id.function);
-> @@ -577,11 +592,17 @@ static void ghes_handle_aer(struct acpi_hest_generic_data *gdata)
->                 if (gdata->flags & CPER_SEC_RESET)
->                         aer_severity = AER_FATAL;
->
-> +               aer_info = (void *)gen_pool_alloc(ghes_estatus_pool,
-> +                                                 sizeof(struct aer_capability_regs));
-> +               if (!aer_info)
-> +                       return;
-> +               memcpy(aer_info, pcie_err->aer_info, sizeof(struct aer_capability_regs));
-> +
->                 aer_recover_queue(pcie_err->device_id.segment,
->                                   pcie_err->device_id.bus,
->                                   devfn, aer_severity,
->                                   (struct aer_capability_regs *)
-> -                                 pcie_err->aer_info);
-> +                                 aer_info);
->         }
->  #endif
->  }
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index e85ff946e8c8..ba1ce820c141 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -29,6 +29,7 @@
->  #include <linux/kfifo.h>
->  #include <linux/slab.h>
->  #include <acpi/apei.h>
-> +#include <acpi/ghes.h>
->  #include <ras/ras_event.h>
->
->  #include "../pci.h"
-> @@ -996,6 +997,15 @@ static void aer_recover_work_func(struct work_struct *work)
->                         continue;
->                 }
->                 cper_print_aer(pdev, entry.severity, entry.regs);
-> +               /*
-> +                * Memory for aer_capability_regs(entry.regs) is being allocated from the
-> +                * ghes_estatus_pool to protect it from overwriting when multiple sections
-> +                * are present in the error status. Thus free the same after processing
-> +                * the data.
-> +                */
-> +               ghes_estatus_pool_region_free((unsigned long)entry.regs,
-> +                                             sizeof(struct aer_capability_regs));
-> +
->                 if (entry.severity == AER_NONFATAL)
->                         pcie_do_recovery(pdev, pci_channel_io_normal,
->                                          aer_root_reset);
-> diff --git a/include/acpi/ghes.h b/include/acpi/ghes.h
-> index 3c8bba9f1114..be1dd4c1a917 100644
-> --- a/include/acpi/ghes.h
-> +++ b/include/acpi/ghes.h
-> @@ -73,8 +73,12 @@ int ghes_register_vendor_record_notifier(struct notifier_block *nb);
->  void ghes_unregister_vendor_record_notifier(struct notifier_block *nb);
->
->  struct list_head *ghes_get_devices(void);
-> +
-> +void ghes_estatus_pool_region_free(unsigned long addr, u32 size);
->  #else
->  static inline struct list_head *ghes_get_devices(void) { return NULL; }
-> +
-> +static inline void ghes_estatus_pool_region_free(unsigned long addr, u32 size) { return; }
->  #endif
->
->  int ghes_estatus_pool_init(unsigned int num_ghes);
-> --
+> Yes, let's fix the bug first and make things look nicer separately.
 
-Applied as 6.7 material, thanks!
+Right, please use the fix from Srinivas and I'll send a separate patch
+to make things looks better.
+
+Kai-Heng
