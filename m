@@ -2,145 +2,88 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C15E7D0AA
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 20:44:22 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DFCB3E7D0AC
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 20:48:45 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231774AbjIUUoZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:44:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40318 "EHLO
+        id S232261AbjIUUst (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:48:49 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35694 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230410AbjIUUoN (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 16:44:13 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 794F5469A0
-        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 13:19:48 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3FFFC433C9;
-        Thu, 21 Sep 2023 20:19:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695327587;
-        bh=xWEIRWXj05GUTaD8qirv/QkW2FL2c9FXXdrXuuhf1C8=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=u+yrhG2icnDf4urB1Qsl6vbI2Lye4JaQj8ijGAq0kHJxImiRcXlMychggzJQP2zYT
-         wNJYhfVUezXtHQJZk2d8Zm11gsfyLyLnlaCIU8Wjn/5cJteNG6fFk71Um80cEjGHeE
-         rn6tU+SuJNy9/DjRreJlzShSG3yjUxQ4pYqH5RXm9F3XMprNqiFLbrz2V5R36Pmdeh
-         FVY9I8ud2KwDiqn/t3zx93AXdxkQRtVvozTobKYzskpU0KqkiXUvmF5lNqUNOWzSZy
-         C6LUFBcojNsKzvfcLUh93WXxLEIGNogUCuq6q4Dcjz/vB9XZQAiyYhDElZfw1ZtDDY
-         0jbmjaC/uzMHg==
-Date:   Thu, 21 Sep 2023 15:19:45 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Lukas Wunner <lukas@wunner.de>,
-        Mark Blakeney <mark.blakeney@bullet-systems.net>,
-        Kamil Paral <kparal@redhat.com>,
-        Chris Chiu <chris.chiu@canonical.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI/PM: Mark devices disconnected if their upstream PCIe
- link is down on resume
-Message-ID: <20230921201945.GA343804@bhelgaas>
+        with ESMTP id S232346AbjIUUs2 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 16:48:28 -0400
+Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ECC0B89D96
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 10:40:20 -0700 (PDT)
+Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
+ relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+ uk-mta-275-3ANp1ejCPpKMCXrfXPnzNA-1; Thu, 21 Sep 2023 14:20:59 +0100
+X-MC-Unique: 3ANp1ejCPpKMCXrfXPnzNA-1
+Received: from AcuMS.Aculab.com (10.202.163.6) by AcuMS.aculab.com
+ (10.202.163.6) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Thu, 21 Sep
+ 2023 14:20:58 +0100
+Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
+ id 15.00.1497.048; Thu, 21 Sep 2023 14:20:58 +0100
+From:   David Laight <David.Laight@ACULAB.COM>
+To:     'Shuai Xue' <xueshuai@linux.alibaba.com>,
+        Bjorn Helgaas <helgaas@kernel.org>
+CC:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+        Linux PCI <linux-pci@vger.kernel.org>,
+        "mahesh@linux.ibm.com" <mahesh@linux.ibm.com>,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "bp@alien8.de" <bp@alien8.de>,
+        Baolin Wang <baolin.wang@linux.alibaba.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        "bhelgaas@google.com" <bhelgaas@google.com>,
+        "james.morse@arm.com" <james.morse@arm.com>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "lenb@kernel.org" <lenb@kernel.org>
+Subject: RE: Questions: Should kernel panic when PCIe fatal error occurs?
+Thread-Topic: Questions: Should kernel panic when PCIe fatal error occurs?
+Thread-Index: AQHZ7ISwt0MI+BDoAEe5dUPUvfmXNrAlQDAw
+Date:   Thu, 21 Sep 2023 13:20:58 +0000
+Message-ID: <2e5870e416f84e8fad8340061ec303e2@AcuMS.aculab.com>
+References: <20230920230257.GA280837@bhelgaas>
+ <d84b6d17-7fe9-222a-c874-798af4d9faea@linux.alibaba.com>
+In-Reply-To: <d84b6d17-7fe9-222a-c874-798af4d9faea@linux.alibaba.com>
+Accept-Language: en-GB, en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+x-ms-exchange-transport-fromentityheader: Hosted
+x-originating-ip: [10.202.205.107]
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230918053041.1018876-1-mika.westerberg@linux.intel.com>
+X-Mimecast-Spam-Score: 0
+X-Mimecast-Originator: aculab.com
+Content-Language: en-US
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: base64
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-[+cc Kamil, Chris]
+Li4uDQpJJ3ZlIGdvdCBhIHRhcmdldCB0byBnZW5lcmF0ZSBBRVIgZXJyb3JzIGJ5IGdlbmVyYXRp
+bmcgcmVhZCBjeWNsZXMNCnRoYXQgYXJlIGluc2lkZSB0aGUgYWRkcmVzcyByYW5nZSB0aGF0IHRo
+ZSBicmlkZ2UgZm9yd2FyZHMgYnV0DQpvdXRzaWRlIG9mIGFueSBCQVIgYmVjYXVzZSB0aGVyZSBh
+cmUgMiBkaWZmZXJlbnQgc2l6ZWQgQkFScy4NCihQcmV0dHkgZWFzeSB0byBzZXR1cC4pDQpPbiB0
+aGUgc3lzdGVtIEkgd2FzIHVzaW5nIHRoZXkgZGlkbid0IGdldCBwcm9wYWdhdGVkIGFsbCB0aGUg
+d2F5DQp0byB0aGUgcm9vdCBicmlkZ2UgLSBidXQgd2VyZSB2aXNpYmxlIGluIHRoZSBsb3dlciBi
+cmlkZ2UuDQpJdCB3b3VsZCBiZSBuaWNlIGZvciBhIGRyaXZlciB0byBiZSBhYmxlIHRvIGRldGVj
+dC9jbGVhciBzdWNoDQphIGZsYWcgaWYgaXQgZ2V0cyBhbiB1bmV4cGVjdGVkIH4wdSByZWFkIHZh
+bHVlLg0KKEknbSBub3Qgc3VyZSBhbiBlcnJvciBjYWxsYmFjayBoZWxwcy4pDQoNCk9UT0ggYSAn
+bmVicyBjb21wbGlhbnQnIHNlcnZlciByb3V0ZWQgYW55IGtpbmQgb2YgUENJZSBsaW5rIGVycm9y
+DQp0aHJvdWdoIHRvIHNvbWUgJ3N5c3RlbSBtYW5hZ2VtZW50JyBsb2dpYyB0aGF0IHRoZW4gcmFp
+c2VkIGFuIE5NSS4NCkknbSBub3Qgc3VyZSB3aG8gdGhvdWdodCBhbiBOTUkgd2FzIGEgZ29vZCBp
+ZGVhIC0gdGhleSBhcmUgcHJldHR5DQppbXBvc3NpYmxlIHRvIGhhbmRsZSBpbiB0aGUga2VybmVs
+IGFuZCB0b28gbGF0ZSB0byBiZSBvZiB1c2UgdG8NCnRoZSBjb2RlIHBlcmZvcm1pbmcgdGhlIGFj
+Y2Vzcy4NCg0KSW4gYW55IGNhc2Ugd2Ugd2VyZSBnZXR0aW5nIG9uZSBhZnRlciAnZWNobyAxID54
+eHgvcmVtb3ZlJyBhbmQNCnRoZW4gdGFraW5nIHRoZSBQQ0llIGxpbmsgZG93biBieSByZXByb2dy
+YW1taW5nIHRoZSBmcGdhLg0KU28gdGhlIGxpbmsgZ29pbmcgZG93biB3YXMgZW50aXJlbHkgZXhw
+ZWN0ZWQsIGJ1dCB0aGVyZSBzZWVtZWQNCnRvIGJlIG5vdGhpbmcgd2UgY291bGQgZG8gdG8gc3Rv
+cCB0aGUga2VybmVsIGNyYXNoaW5nLg0KDQpJJ20gc3VyZSAnbmVicyBjb21wbGlhbnQnIG91Z2h0
+IHRvIGNvbnRhaW4gc29tZSByZXF1aXJlbWVudHMgZm9yDQpyZXNpbGllbmNlIHRvIGhhcmR3YXJl
+IGZhaWx1cmVzIQ0KDQoJRGF2aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBC
+cmFtbGV5IFJvYWQsIE1vdW50IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdp
+c3RyYXRpb24gTm86IDEzOTczODYgKFdhbGVzKQ0K
 
-On Mon, Sep 18, 2023 at 08:30:41AM +0300, Mika Westerberg wrote:
-> Mark Blakeney reported that when suspending system with a Thunderbolt
-> dock connected and then unplugging the dock before resume (which is
-> pretty normal flow with laptops), resuming takes long time.
-> 
-> What happens is that the PCIe link from the root port to the PCIe switch
-> inside the Thunderbolt device does not train (as expected, the link is
-> upplugged):
-> 
-> [   34.903158] pcieport 0000:00:07.2: restoring config space at offset 0x24 (was 0x3bf12001, writing 0x3bf12001)
-> [   34.903231] pcieport 0000:00:07.0: waiting 100 ms for downstream link
-> [   36.140616] pcieport 0000:01:00.0: not ready 1023ms after resume; giving up
-> 
-> However, at this point we still try the resume the devices below that
-> unplugged link:
-> 
-> [   36.140741] pcieport 0000:01:00.0: Unable to change power state from D3cold to D0, device inaccessible
-> ...
-> [   36.142235] pcieport 0000:01:00.0: restoring config space at offset 0x38 (was 0xffffffff, writing 0x0)
-> ...
-> [   36.144702] pcieport 0000:02:02.0: waiting 100 ms for downstream link, after activation
-> 
-> And this is the link from PCIe switch downstream port to the xHCI on the
-> dock:
-> 
-> [   38.380618] xhci_hcd 0000:03:00.0: not ready 1023ms after resume; waiting
-> [   39.420587] xhci_hcd 0000:03:00.0: not ready 2047ms after resume; waiting
-> [   41.527250] xhci_hcd 0000:03:00.0: not ready 4095ms after resume; waiting
-> [   45.793957] xhci_hcd 0000:03:00.0: not ready 8191ms after resume; waiting
-> [   54.113950] xhci_hcd 0000:03:00.0: not ready 16383ms after resume; waiting
-> [   71.180576] xhci_hcd 0000:03:00.0: not ready 32767ms after resume; waiting
-> ...
-> [  105.313963] xhci_hcd 0000:03:00.0: not ready 65535ms after resume; giving up
-> [  105.314037] xhci_hcd 0000:03:00.0: Unable to change power state from D3cold to D0, device inaccessible
-> [  105.315640] xhci_hcd 0000:03:00.0: restoring config space at offset 0x3c (was 0xffffffff, writing 0x1ff)
-> ...
-> 
-> This ends up slowing down the resume time considerably. For this reason
-> mark these devices as disconnected if the link above them did not train
-> properly.
-> 
-> Fixes: e8b908146d44 ("PCI/PM: Increase wait time after resume")
-> Reported-by: Mark Blakeney <mark.blakeney@bullet-systems.net>
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217915
-> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
-
-Applied with Lukas' Reviewed-by to pm for v6.7.
-
-e8b908146d44 appeared in v6.4.  Seems like maybe a candidate for
-stable?  IIUC, resume actually does work, but takes 65+ seconds longer
-than it should?
-
-Kamil also bisected a 60+ second resume delay to e8b908146d44
-(https://lore.kernel.org/r/CA+cBOTeWrsTyANjLZQ=bGoBQ_yOkkV1juyRvJq-C8GOrbW6t9Q@mail.gmail.com),
-but IIUC at
-https://lore.kernel.org/linux-pci/20230824114300.GU3465@black.fi.intel.com/T/#u
-you concluded that Kamil's issue was related to firmware and actually
-had nothing to do with e8b908146d44.
-
-Do you still think Kamil's issue is unrelated to e8b908146d44 and this
-patch?  If so, how do we handle Kamil's issue?  An answer like "users
-of v6.4+ must upgrade their Thunderbolt firmware" seems like it would
-be kind of a nightmare for users.
-
-> ---
->  drivers/pci/pci-driver.c | 14 +++++++++++++-
->  1 file changed, 13 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index a79c110c7e51..51ec9e7e784f 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -572,7 +572,19 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
->  
->  static void pci_pm_bridge_power_up_actions(struct pci_dev *pci_dev)
->  {
-> -	pci_bridge_wait_for_secondary_bus(pci_dev, "resume");
-> +	int ret;
-> +
-> +	ret = pci_bridge_wait_for_secondary_bus(pci_dev, "resume");
-> +	if (ret) {
-> +		/*
-> +		 * The downstream link failed to come up, so mark the
-> +		 * devices below as disconnected to make sure we don't
-> +		 * attempt to resume them.
-> +		 */
-> +		pci_walk_bus(pci_dev->subordinate, pci_dev_set_disconnected,
-> +			     NULL);
-> +		return;
-> +	}
->  
->  	/*
->  	 * When powering on a bridge from D3cold, the whole hierarchy may be
-> -- 
-> 2.40.1
-> 
