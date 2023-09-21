@@ -2,90 +2,98 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BCE59E7D0AB
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 22:23:02 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 7CEE4E7D0AF
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 22:27:07 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231814AbjIUWXG convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 18:23:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36504 "EHLO
+        id S232887AbjIUW1L (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 18:27:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59942 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233039AbjIUWWv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 18:22:51 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.86.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D534A3
-        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 15:22:30 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-195-nCruYfTANVavYpk8gD9WoQ-1; Thu, 21 Sep 2023 23:22:12 +0100
-X-MC-Unique: nCruYfTANVavYpk8gD9WoQ-1
-Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
- (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Thu, 21 Sep
- 2023 23:22:11 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.048; Thu, 21 Sep 2023 23:22:11 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Bjorn Helgaas' <helgaas@kernel.org>,
-        Shuai Xue <xueshuai@linux.alibaba.com>
-CC:     "lenb@kernel.org" <lenb@kernel.org>,
-        "james.morse@arm.com" <james.morse@arm.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        "bp@alien8.de" <bp@alien8.de>,
-        "mahesh@linux.ibm.com" <mahesh@linux.ibm.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        Baolin Wang <baolin.wang@linux.alibaba.com>
-Subject: RE: Questions: Should kernel panic when PCIe fatal error occurs?
-Thread-Topic: Questions: Should kernel panic when PCIe fatal error occurs?
-Thread-Index: AQHZ7Bag+I9/7O2gw0aXfXPFoWr8dLAl2OAA
-Date:   Thu, 21 Sep 2023 22:22:11 +0000
-Message-ID: <625cdd6c55994bf3a50efd8f79680029@AcuMS.aculab.com>
-References: <e486db16-d36d-9e14-4f10-dc755c0ef97d@linux.alibaba.com>
- <20230920230257.GA280837@bhelgaas>
-In-Reply-To: <20230920230257.GA280837@bhelgaas>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
-MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+        with ESMTP id S232417AbjIUW0w (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 18:26:52 -0400
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C3224A75DB
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 11:01:09 -0700 (PDT)
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout1.hostsharing.net (Postfix) with ESMTPS id 9417C100411AD;
+        Thu, 21 Sep 2023 16:23:37 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 67BE360DC7C4;
+        Thu, 21 Sep 2023 16:23:37 +0200 (CEST)
+X-Mailbox-Line: From 47727e792c7f0282dc144e3ec8ce8eb6e713394e Mon Sep 17 00:00:00 2001
+Message-Id: <47727e792c7f0282dc144e3ec8ce8eb6e713394e.1695304512.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Thu, 21 Sep 2023 16:23:34 +0200
+Subject: [PATCH] PCI: Lengthen reset delay for VideoPropulsion Torrent QN16e
+ card
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Chad Schroeder <CSchroeder@sonifi.com>, linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-> It would be nice if they worked the same, but I suspect that vendors
-> may rely on the fact that CPER_SEV_FATAL forces a restart/panic as
-> part of their system integrity story.
+Commit ac91e6980563 ("PCI: Unify delay handling for reset and resume")
+shortened an unconditional 1 sec delay after a Secondary Bus Reset to
+100 msec for PCIe (per PCIe r6.1 sec 6.6.1).  The 1 sec delay is only
+required for Conventional PCI.
 
-The file system errors created by a panic (especially an NMI panic)
-could easily be more problematic than a failed PCIe data transfer.
-Evan a read that returned ~0u - which can be checked for.
+But it turns out that there are PCIe devices which require a longer
+delay than prescribed before first config space access after reset
+recovery or resume from D3cold:
 
-Panicking a system that is converting TDM telephony to RTP for the
-911 emergency service because a PCIe cable/riser connecting one of the
-TDM board has become loose doesn't seem ideal.
-(Or because the TDM board's fpga has decided it isn't going to respond
-to any accesses until the BARs are setup again...)
+Chad reports that a "VideoPropulsion Torrent QN16e" MPEG QAM Modulator
+"raises a PCI system error (PERR), as reported by the IPMI event log,
+and the hardware itself would suffer a catastrophic event, cycling the
+server" unless the longer delay is observed.
 
-The system can carry on with some TDM connections disabled - but that
-is ok because they are all duplicated in case a cable gets cuit.
+The card is specified to conform to PCIe r1.0 and indeed only supports
+Gen1 speed (2.5 GT/s) according to lspci.  PCIe r1.0 sec 7.6 prescribes
+the same 100 msec delay as PCIe r6.1 sec 6.6.1:
 
-(Yes - that is a live system...)
+ "To allow components to perform internal initialization, system software
+  must wait for at least 100 ms from the end of a reset (cold/warm/hot)
+  before it is permitted to issue Configuration Requests"
 
-	David
+The behavior of the Torrent QN16e card thus appears to be a quirk.
+Treat it as such and lengthen the reset delay for this specific device.
 
--
-Registered Address Lakeside, Bramley Road, Mount Farm, Milton Keynes, MK1 1PT, UK
-Registration No: 1397386 (Wales)
+Fixes: ac91e6980563 ("PCI: Unify delay handling for reset and resume")
+Closes: https://lore.kernel.org/linux-pci/DM6PR16MB2844903E34CAB910082DF019B1FAA@DM6PR16MB2844.namprd16.prod.outlook.com/
+Reported-by: Chad Schroeder <CSchroeder@sonifi.com>
+Tested-by: Chad Schroeder <CSchroeder@sonifi.com>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Cc: stable@vger.kernel.org # v5.4+
+---
+ drivers/pci/quirks.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
+
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index eeec1d6f9023..91a15d79c7c4 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6188,3 +6188,15 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a31, dpc_log_size);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5020, of_pci_make_dev_node);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_XILINX, 0x5021, of_pci_make_dev_node);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_REDHAT, 0x0005, of_pci_make_dev_node);
++
++/*
++ * Devices known to require a longer delay before first config space access
++ * after reset recovery or resume from D3cold:
++ *
++ * VideoPropulsion (aka Genroco) Torrent QN16e MPEG QAM Modulator
++ */
++static void pci_fixup_d3cold_delay_1sec(struct pci_dev *pdev)
++{
++	pdev->d3cold_delay = 1000;
++}
++DECLARE_PCI_FIXUP_FINAL(0x5555, 0x0004, pci_fixup_d3cold_delay_1sec);
+-- 
+2.40.1
 
