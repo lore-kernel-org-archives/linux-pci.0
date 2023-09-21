@@ -2,134 +2,145 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A9B77E7D0A2
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 20:35:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 10C15E7D0AA
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 20:44:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231578AbjIUUfz convert rfc822-to-8bit (ORCPT
-        <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 16:35:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57944 "EHLO
+        id S231774AbjIUUoZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:44:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40318 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232256AbjIUUew (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 16:34:52 -0400
-Received: from mail-yw1-f173.google.com (mail-yw1-f173.google.com [209.85.128.173])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53AF473547;
-        Thu, 21 Sep 2023 10:33:03 -0700 (PDT)
-Received: by mail-yw1-f173.google.com with SMTP id 00721157ae682-59be81cf0d8so2356287b3.0;
-        Thu, 21 Sep 2023 10:33:03 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695317439; x=1695922239;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=n4u4Ae4qmn0j8vaZq8VmeR6efjSH5qgFemSVQPrsJHw=;
-        b=IeSZRoz0xYezONjfazpVXRNfgFOYVTLPNTLaRcSeMX/ChQiXY9rIR+q8jiG9UwewH3
-         urqstrUwTjnJJKLN58Ek6jzfbnEDLzTqDv4K5/DjmGQCdr+tFQvzbkDm6Xj0oaKuQpVo
-         P1gvp4jKK2Gtjx3F4COC6HMj/nHbxqWbQolYDkNQxrGrXqjNQ+uBa5GTjnWvFAnSGxgR
-         o04VYvGFj29h8LKfVRIliHwxjRodCr75sOEn5GgXMqTBFuc5AfoEENLuCfCs5jfmCPxI
-         vBAUhYEAu+WupKjrc8FRDAUnne6Gi4xO82pGXroFReESVshDgnnMvtgRpOKBuXQe3xTs
-         YUKA==
-X-Gm-Message-State: AOJu0YwOe6Zxht7KScDLO8EQKvne7TK9InHfxquIheCSxnN2zRQk5HaU
-        1z/CsGW9+AVR7m8/R1UutP9BkAe01+w1z9HVNooEMNlL
-X-Google-Smtp-Source: AGHT+IFqOKRaoSGisF4HxZ5+8mAFkH7uuxt1CiZ2fWObTP62x0ne77EscHn7VM8hUS0SM0xgt3WWxah+cm9vG27xjLg=
-X-Received: by 2002:a4a:2a4e:0:b0:573:3a3b:594b with SMTP id
- x14-20020a4a2a4e000000b005733a3b594bmr4666981oox.1.1695288795434; Thu, 21 Sep
- 2023 02:33:15 -0700 (PDT)
+        with ESMTP id S230410AbjIUUoN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 16:44:13 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 794F5469A0
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 13:19:48 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3FFFC433C9;
+        Thu, 21 Sep 2023 20:19:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695327587;
+        bh=xWEIRWXj05GUTaD8qirv/QkW2FL2c9FXXdrXuuhf1C8=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=u+yrhG2icnDf4urB1Qsl6vbI2Lye4JaQj8ijGAq0kHJxImiRcXlMychggzJQP2zYT
+         wNJYhfVUezXtHQJZk2d8Zm11gsfyLyLnlaCIU8Wjn/5cJteNG6fFk71Um80cEjGHeE
+         rn6tU+SuJNy9/DjRreJlzShSG3yjUxQ4pYqH5RXm9F3XMprNqiFLbrz2V5R36Pmdeh
+         FVY9I8ud2KwDiqn/t3zx93AXdxkQRtVvozTobKYzskpU0KqkiXUvmF5lNqUNOWzSZy
+         C6LUFBcojNsKzvfcLUh93WXxLEIGNogUCuq6q4Dcjz/vB9XZQAiyYhDElZfw1ZtDDY
+         0jbmjaC/uzMHg==
+Date:   Thu, 21 Sep 2023 15:19:45 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Mark Blakeney <mark.blakeney@bullet-systems.net>,
+        Kamil Paral <kparal@redhat.com>,
+        Chris Chiu <chris.chiu@canonical.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI/PM: Mark devices disconnected if their upstream PCIe
+ link is down on resume
+Message-ID: <20230921201945.GA343804@bhelgaas>
 MIME-Version: 1.0
-References: <20230914041806.816741-1-kai.heng.feng@canonical.com>
- <7b45ac2ed091497b4e21a6a5c19956161175ba16.camel@linux.intel.com>
- <SN6PR11MB26245C44E84C37C1B551260EF4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
- <CAAd53p5ywMVKWzhn0nYzvBnW_Bc=sntgBttJdcVUuf_a4AnX5w@mail.gmail.com>
- <SN6PR11MB262473E2BF4057F4D285A613F4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
- <DM6PR11MB26184A8A3F955589F5FC6836F4FBA@DM6PR11MB2618.namprd11.prod.outlook.com>
- <CAAd53p4o1pB-yzpvUCYsvuYEvQQK0my=u-ogrByRCx_Lvns=hw@mail.gmail.com>
- <bbbf36724d63f7532696a960a9d56d7ccd5a5bee.camel@linux.intel.com>
- <CAAd53p6MA9YLbcXxpC8=YEtbO6frFJk1LQ1BNUgPk=r1_uR8iw@mail.gmail.com>
- <67c85f083201ed2cda2cab198b40141ad21912a2.camel@linux.intel.com>
- <CAJZ5v0iFLxpWHW=sDZ7=Wne3Yt=8_EwhW9SeCmRP6REpVqo8rA@mail.gmail.com> <CAAd53p67tiP0xXwhn=NviU_rvrSveSxbAhDieYG9AmUWF2e__Q@mail.gmail.com>
-In-Reply-To: <CAAd53p67tiP0xXwhn=NviU_rvrSveSxbAhDieYG9AmUWF2e__Q@mail.gmail.com>
-From:   "Rafael J. Wysocki" <rafael@kernel.org>
-Date:   Thu, 21 Sep 2023 11:33:02 +0200
-Message-ID: <CAJZ5v0hzLNeDyFE=NTAAf1Uwj_kLxP_424T3riO2GG0LUmzpNw@mail.gmail.com>
-Subject: Re: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB wakeup
-To:     Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        srinivas pandruvada <srinivas.pandruvada@linux.intel.com>,
-        "Xu, Even" <even.xu@intel.com>,
-        "jikos@kernel.org" <jikos@kernel.org>,
-        "benjamin.tissoires@redhat.com" <benjamin.tissoires@redhat.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Lee, Jian Hui" <jianhui.lee@canonical.com>,
-        "Zhang, Lixu" <lixu.zhang@intel.com>,
-        "Ba, Najumon" <najumon.ba@intel.com>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230918053041.1018876-1-mika.westerberg@linux.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 21, 2023 at 8:08 AM Kai-Heng Feng
-<kai.heng.feng@canonical.com> wrote:
->
-> On Wed, Sep 20, 2023 at 2:00 AM Rafael J. Wysocki <rafael@kernel.org> wrote:
-> >
-> > On Tue, Sep 19, 2023 at 6:54 PM srinivas pandruvada
-> > <srinivas.pandruvada@linux.intel.com> wrote:
-> > >
-> > > On Tue, 2023-09-19 at 15:36 +0800, Kai-Heng Feng wrote:
-> > > > On Mon, Sep 18, 2023 at 11:57 PM srinivas pandruvada
-> > > > <srinivas.pandruvada@linux.intel.com> wrote:
-> > > > >
-> > > > > Hi Kai-Heng,
-> > > > > On Mon, 2023-09-18 at 09:17 +0800, Kai-Heng Feng wrote:
-> > > > > > Hi Even,
-> > > > > >
-> > > > > > On Mon, Sep 18, 2023 at 8:33 AM Xu, Even <even.xu@intel.com>
-> > > > > > wrote:
-> > > > > > >
-> > > > > > > Hi, Kai-Heng,
-> > > > > > >
-> > > > > > > I just got feedback, for testing EHL S5 wakeup feature, you
-> > > > > > > need
-> > > > > > > several steps to setup and access
-> > > > > > > "https://portal.devicewise.com/things/browse" to trigger wake.
-> > > > > > > But currently, our test account of this website are all out of
-> > > > > > > data.
-> > > > > > > So maybe you need double check with the team who required you
-> > > > > > > preparing the patch for the verification.
-> > > > > >
-> > > > > > The patch is to solve the GPE refcount overflow, while
-> > > > > > maintaining S5
-> > > > > > wakeup. I don't have any mean to test S5 wake.
-> > > > > >
-> > > > > The issue is not calling acpi_disable_gpe(). To reduce the scope of
-> > > > > change can we just add that instead of a adding new callbacks. This
-> > > > > way
-> > > > > scope is reduced.
-> > > >
-> > > > This patch does exactly the same thing by letting PCI and ACPI handle
-> > > > the PME and GPE.
-> > > > Though the change seems to be bigger, it actually reduces the duped
-> > > > code, while keep the S5 wakeup ability intact.
-> > > It may be doing the same. But with long chain of calls without
-> > > verification, I am not comfortable.
-> > > This can be another patch by itself to use the framework.
-> >
-> > I agree.
-> >
-> > Let's change one thing at a time.
-> >
-> > > But you are targeting a fix for overflow issue, which is separate from
-> > > the use of PCI/ACPI framework.
-> >
-> > Yes, let's fix the bug first and make things look nicer separately.
->
-> Right, please use the fix from Srinivas and I'll send a separate patch
-> to make things looks better.
+[+cc Kamil, Chris]
 
-OK
+On Mon, Sep 18, 2023 at 08:30:41AM +0300, Mika Westerberg wrote:
+> Mark Blakeney reported that when suspending system with a Thunderbolt
+> dock connected and then unplugging the dock before resume (which is
+> pretty normal flow with laptops), resuming takes long time.
+> 
+> What happens is that the PCIe link from the root port to the PCIe switch
+> inside the Thunderbolt device does not train (as expected, the link is
+> upplugged):
+> 
+> [   34.903158] pcieport 0000:00:07.2: restoring config space at offset 0x24 (was 0x3bf12001, writing 0x3bf12001)
+> [   34.903231] pcieport 0000:00:07.0: waiting 100 ms for downstream link
+> [   36.140616] pcieport 0000:01:00.0: not ready 1023ms after resume; giving up
+> 
+> However, at this point we still try the resume the devices below that
+> unplugged link:
+> 
+> [   36.140741] pcieport 0000:01:00.0: Unable to change power state from D3cold to D0, device inaccessible
+> ...
+> [   36.142235] pcieport 0000:01:00.0: restoring config space at offset 0x38 (was 0xffffffff, writing 0x0)
+> ...
+> [   36.144702] pcieport 0000:02:02.0: waiting 100 ms for downstream link, after activation
+> 
+> And this is the link from PCIe switch downstream port to the xHCI on the
+> dock:
+> 
+> [   38.380618] xhci_hcd 0000:03:00.0: not ready 1023ms after resume; waiting
+> [   39.420587] xhci_hcd 0000:03:00.0: not ready 2047ms after resume; waiting
+> [   41.527250] xhci_hcd 0000:03:00.0: not ready 4095ms after resume; waiting
+> [   45.793957] xhci_hcd 0000:03:00.0: not ready 8191ms after resume; waiting
+> [   54.113950] xhci_hcd 0000:03:00.0: not ready 16383ms after resume; waiting
+> [   71.180576] xhci_hcd 0000:03:00.0: not ready 32767ms after resume; waiting
+> ...
+> [  105.313963] xhci_hcd 0000:03:00.0: not ready 65535ms after resume; giving up
+> [  105.314037] xhci_hcd 0000:03:00.0: Unable to change power state from D3cold to D0, device inaccessible
+> [  105.315640] xhci_hcd 0000:03:00.0: restoring config space at offset 0x3c (was 0xffffffff, writing 0x1ff)
+> ...
+> 
+> This ends up slowing down the resume time considerably. For this reason
+> mark these devices as disconnected if the link above them did not train
+> properly.
+> 
+> Fixes: e8b908146d44 ("PCI/PM: Increase wait time after resume")
+> Reported-by: Mark Blakeney <mark.blakeney@bullet-systems.net>
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217915
+> Signed-off-by: Mika Westerberg <mika.westerberg@linux.intel.com>
 
-Srinivas, please resend the patch with a changelog etc.
+Applied with Lukas' Reviewed-by to pm for v6.7.
+
+e8b908146d44 appeared in v6.4.  Seems like maybe a candidate for
+stable?  IIUC, resume actually does work, but takes 65+ seconds longer
+than it should?
+
+Kamil also bisected a 60+ second resume delay to e8b908146d44
+(https://lore.kernel.org/r/CA+cBOTeWrsTyANjLZQ=bGoBQ_yOkkV1juyRvJq-C8GOrbW6t9Q@mail.gmail.com),
+but IIUC at
+https://lore.kernel.org/linux-pci/20230824114300.GU3465@black.fi.intel.com/T/#u
+you concluded that Kamil's issue was related to firmware and actually
+had nothing to do with e8b908146d44.
+
+Do you still think Kamil's issue is unrelated to e8b908146d44 and this
+patch?  If so, how do we handle Kamil's issue?  An answer like "users
+of v6.4+ must upgrade their Thunderbolt firmware" seems like it would
+be kind of a nightmare for users.
+
+> ---
+>  drivers/pci/pci-driver.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index a79c110c7e51..51ec9e7e784f 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -572,7 +572,19 @@ static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  
+>  static void pci_pm_bridge_power_up_actions(struct pci_dev *pci_dev)
+>  {
+> -	pci_bridge_wait_for_secondary_bus(pci_dev, "resume");
+> +	int ret;
+> +
+> +	ret = pci_bridge_wait_for_secondary_bus(pci_dev, "resume");
+> +	if (ret) {
+> +		/*
+> +		 * The downstream link failed to come up, so mark the
+> +		 * devices below as disconnected to make sure we don't
+> +		 * attempt to resume them.
+> +		 */
+> +		pci_walk_bus(pci_dev->subordinate, pci_dev_set_disconnected,
+> +			     NULL);
+> +		return;
+> +	}
+>  
+>  	/*
+>  	 * When powering on a bridge from D3cold, the whole hierarchy may be
+> -- 
+> 2.40.1
+> 
