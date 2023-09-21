@@ -2,148 +2,73 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C25B3E7D0A6
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 19:27:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EE805E7D0A6
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 20:12:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229779AbjIUT1Y (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 15:27:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43402 "EHLO
+        id S231241AbjIUUML (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 16:12:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52556 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229754AbjIUT1W (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 15:27:22 -0400
-Received: from smtp-relay-internal-0.canonical.com (smtp-relay-internal-0.canonical.com [185.125.188.122])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0FD7898A6C
-        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 10:56:52 -0700 (PDT)
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-        (No client certificate requested)
-        by smtp-relay-internal-0.canonical.com (Postfix) with ESMTPS id 9EFF73F688
-        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 06:08:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
-        s=20210705; t=1695276528;
-        bh=LGLvEUCLByX56ZHTlqmLlwmZ6pTbCna8gvztcJYDoU8=;
-        h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-         To:Cc:Content-Type;
-        b=rauudwVUP8l7s8SwO4VSe69N7gnmCVEH1jsNY1fFoKehhXjOrLiPmAoeqI7widzy7
-         ZUxhg4oe+oHsZfKmL/AMw6mjza/a7C4z12xb4eiJ+dfy2KR5I2nipRDHlvAGbxCnWh
-         canQ+lz3VdI78sZMi0Yr86AqHTZJxAVIREWSg5gLp6dut/4Ne+d7F4W7G8Xtw5M+jq
-         IC6PBAWXzjBkgllANmR9e7E1ru5kZ0cJkRwgmeuSWpu/kP7PIlyLwPRCCZdh7Pb3Bs
-         Y3VCQo9nYSaSkQcZC2VDeulP1/JUSxlpXKP4s509rTW/mPkfmwJ0hUIp87GeLa6yEs
-         sEkFWaQd34ztQ==
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-27472e97c0bso384303a91.3
-        for <linux-pci@vger.kernel.org>; Wed, 20 Sep 2023 23:08:48 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695276527; x=1695881327;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=LGLvEUCLByX56ZHTlqmLlwmZ6pTbCna8gvztcJYDoU8=;
-        b=Sw5/smui6JqIPu7VZX1WK2FG99SYC024INCzqDo9OzV8bsxW9k7aLCVBOfTYMg8ori
-         EbhDQJ/cf7frP3hQ/NoGrsuQDwk1l+CDCLe7eje7VcY0RaIk4+sDscVzIqPj1q0lwpQ6
-         m+iFzWkq9qmiPFoMjNLUhlehDGvVPE0/s4wR2oytRrP5xGrsYdlOZhZZ89y7xPKFETxk
-         IwD7Jj3Bs1+6KPN9O4oRlVAWQ+xnLOsDO6NzF5IA483unRx1oAQ56GHGxgv6Y/EuXBK8
-         XFPJTOQ19L4xEe8BdwX06Zxq6sKmmAoh3Lkft9evQyq4wGfQ4cmS3mqUlo896CeZ8hoZ
-         MCHw==
-X-Gm-Message-State: AOJu0YzdPzNyxGDQDqR9gAHsKzUNwYui1F7DwTegJqgx0RB7F0I2OHaW
-        wJtBKTBwvFUGfQGuByHVwrEih9KHxCMor/mIXWes7YWQObPgyyJrFEypwS2cNQEodypKRhBjJoP
-        XCRP1I710DT/GjF7LHF3qKgeS7rEOamNge3xB2AHrE5evDjmVah4O8w==
-X-Received: by 2002:a17:90b:60f:b0:271:9237:a07f with SMTP id gb15-20020a17090b060f00b002719237a07fmr4869854pjb.32.1695276527090;
-        Wed, 20 Sep 2023 23:08:47 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH3mcQsaQ+FE/ji4v4nyF6aUsilUttOw7YcXgkdZG82nw6jvzjNPhHOMNN3PnauJxNw7lKirmfAfZZ+zIWZCFI=
-X-Received: by 2002:a17:90b:60f:b0:271:9237:a07f with SMTP id
- gb15-20020a17090b060f00b002719237a07fmr4869844pjb.32.1695276526779; Wed, 20
- Sep 2023 23:08:46 -0700 (PDT)
+        with ESMTP id S230105AbjIUULs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 16:11:48 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6B0444EFD
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 10:22:32 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7F9FC58335;
+        Thu, 21 Sep 2023 16:27:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695313633;
+        bh=ni9QrQuh/sOoonctopzroRA9c1b83VxY5L4jnz7Nf7I=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=ezDengTOd9jiHgn7jWdQeip/VVrL7Zr5E+BMokFD2pCDS132ktyzwdl47x7QBLSUI
+         Aq1QB5g84+aaUmZmqOCRPdSQWImbsPafKgK4fYskZkgO0N8mL0oO8QOTAMNL2omJTs
+         5Ljg8PCQMDto2ueGODSLOO3EF2OWnFt3voxMy2m9NmTqVlQRWyZ9/s0atBlpOpZkaS
+         W6FL9wW/3QhaU7RSjNiSqCjo92JCTk7ZTlqjlo0AixDpIY1yMTyMd6SjRrhnnncDL4
+         lOsAcaBS9te3X/vKIoe29AW+OSegi5PYqE4Ypiy5GmJg+l0/oizzLZNtaqeVql0Ydq
+         8+rXWTtMpDH4A==
+Date:   Thu, 21 Sep 2023 11:27:10 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Lukas Wunner <lukas@wunner.de>
+Cc:     linux-pci@vger.kernel.org
+Subject: Re: Make Bjorn's life easier (and grease the path of your patch)
+Message-ID: <20230921162710.GA334709@bhelgaas>
 MIME-Version: 1.0
-References: <20230914041806.816741-1-kai.heng.feng@canonical.com>
- <7b45ac2ed091497b4e21a6a5c19956161175ba16.camel@linux.intel.com>
- <SN6PR11MB26245C44E84C37C1B551260EF4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
- <CAAd53p5ywMVKWzhn0nYzvBnW_Bc=sntgBttJdcVUuf_a4AnX5w@mail.gmail.com>
- <SN6PR11MB262473E2BF4057F4D285A613F4F6A@SN6PR11MB2624.namprd11.prod.outlook.com>
- <DM6PR11MB26184A8A3F955589F5FC6836F4FBA@DM6PR11MB2618.namprd11.prod.outlook.com>
- <CAAd53p4o1pB-yzpvUCYsvuYEvQQK0my=u-ogrByRCx_Lvns=hw@mail.gmail.com>
- <bbbf36724d63f7532696a960a9d56d7ccd5a5bee.camel@linux.intel.com>
- <CAAd53p6MA9YLbcXxpC8=YEtbO6frFJk1LQ1BNUgPk=r1_uR8iw@mail.gmail.com>
- <67c85f083201ed2cda2cab198b40141ad21912a2.camel@linux.intel.com> <CAJZ5v0iFLxpWHW=sDZ7=Wne3Yt=8_EwhW9SeCmRP6REpVqo8rA@mail.gmail.com>
-In-Reply-To: <CAJZ5v0iFLxpWHW=sDZ7=Wne3Yt=8_EwhW9SeCmRP6REpVqo8rA@mail.gmail.com>
-From:   Kai-Heng Feng <kai.heng.feng@canonical.com>
-Date:   Thu, 21 Sep 2023 14:08:33 +0800
-Message-ID: <CAAd53p67tiP0xXwhn=NviU_rvrSveSxbAhDieYG9AmUWF2e__Q@mail.gmail.com>
-Subject: Re: [PATCH] HID: intel-ish-hid: ipc: Rework EHL OOB wakeup
-To:     "Rafael J. Wysocki" <rafael@kernel.org>
-Cc:     srinivas pandruvada <srinivas.pandruvada@linux.intel.com>,
-        "Xu, Even" <even.xu@intel.com>,
-        "jikos@kernel.org" <jikos@kernel.org>,
-        "benjamin.tissoires@redhat.com" <benjamin.tissoires@redhat.com>,
-        "linux-pm@vger.kernel.org" <linux-pm@vger.kernel.org>,
-        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-        "Lee, Jian Hui" <jianhui.lee@canonical.com>,
-        "Zhang, Lixu" <lixu.zhang@intel.com>,
-        "Ba, Najumon" <najumon.ba@intel.com>,
-        "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230921151401.GA25512@wunner.de>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 20, 2023 at 2:00=E2=80=AFAM Rafael J. Wysocki <rafael@kernel.or=
-g> wrote:
->
-> On Tue, Sep 19, 2023 at 6:54=E2=80=AFPM srinivas pandruvada
-> <srinivas.pandruvada@linux.intel.com> wrote:
-> >
-> > On Tue, 2023-09-19 at 15:36 +0800, Kai-Heng Feng wrote:
-> > > On Mon, Sep 18, 2023 at 11:57=E2=80=AFPM srinivas pandruvada
-> > > <srinivas.pandruvada@linux.intel.com> wrote:
-> > > >
-> > > > Hi Kai-Heng,
-> > > > On Mon, 2023-09-18 at 09:17 +0800, Kai-Heng Feng wrote:
-> > > > > Hi Even,
-> > > > >
-> > > > > On Mon, Sep 18, 2023 at 8:33=E2=80=AFAM Xu, Even <even.xu@intel.c=
-om>
-> > > > > wrote:
-> > > > > >
-> > > > > > Hi, Kai-Heng,
-> > > > > >
-> > > > > > I just got feedback, for testing EHL S5 wakeup feature, you
-> > > > > > need
-> > > > > > several steps to setup and access
-> > > > > > "https://portal.devicewise.com/things/browse" to trigger wake.
-> > > > > > But currently, our test account of this website are all out of
-> > > > > > data.
-> > > > > > So maybe you need double check with the team who required you
-> > > > > > preparing the patch for the verification.
-> > > > >
-> > > > > The patch is to solve the GPE refcount overflow, while
-> > > > > maintaining S5
-> > > > > wakeup. I don't have any mean to test S5 wake.
-> > > > >
-> > > > The issue is not calling acpi_disable_gpe(). To reduce the scope of
-> > > > change can we just add that instead of a adding new callbacks. This
-> > > > way
-> > > > scope is reduced.
-> > >
-> > > This patch does exactly the same thing by letting PCI and ACPI handle
-> > > the PME and GPE.
-> > > Though the change seems to be bigger, it actually reduces the duped
-> > > code, while keep the S5 wakeup ability intact.
-> > It may be doing the same. But with long chain of calls without
-> > verification, I am not comfortable.
-> > This can be another patch by itself to use the framework.
->
-> I agree.
->
-> Let's change one thing at a time.
->
-> > But you are targeting a fix for overflow issue, which is separate from
-> > the use of PCI/ACPI framework.
->
-> Yes, let's fix the bug first and make things look nicer separately.
+On Thu, Sep 21, 2023 at 05:14:01PM +0200, Lukas Wunner wrote:
+> On Thu, Oct 26, 2017 at 05:37:01PM -0500, Bjorn Helgaas wrote:
+> ...
 
-Right, please use the fix from Srinivas and I'll send a separate patch
-to make things looks better.
+> I'm not sure where to insert the Closes tag, checkpatch wants it immediately
+> after the Reported-by, but since Closes is like Link, I'd assume that you'd
+> prefer it to precede the Reported-by.
 
-Kai-Heng
+I'd put it where checkpatch wants it.
+
+> I've pointed other folks to your message so that they know which guidelines
+> to observe when submitting to linux-pci.  I'd like to encourage you to
+> update it and (if you like) add it to the tree as a maintainer profile
+> (see Documentation/maintainer/maintainer-entry-profile.rst) so that it's
+> even easier to find.
+
+Yeah, I guess that makes sense.  I consider that periodically but I
+always hate the fact that we have a dozen different places for
+contributors to look for different people's preferences, and I feel
+like my preferences are mostly just generic or obvious guidance, so I
+hesitate to add another place.
+
+E.g., should we really have to write down that "if the whole file fits
+in 80 columns, and your patch adds 100-character lines, you're doing
+something wrong"?
+
+But I guess that's just my hubris, and my preferences are not obvious
+to everybody else, and having them buried in an old email is not a
+real solution, so I should probably just give up and make a maintainer
+profile ;)
+
+Bjorn
