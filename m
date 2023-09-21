@@ -2,125 +2,217 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 739CBE7D0B1
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 21:13:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 129B2E7D0AD
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 21:33:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231628AbjIUVNN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 17:13:13 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44306 "EHLO
+        id S231805AbjIUVdZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 17:33:25 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54142 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231891AbjIUVMu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 17:12:50 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6E572A9ED;
-        Thu, 21 Sep 2023 10:07:28 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5E79EC4E689;
-        Thu, 21 Sep 2023 12:21:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695298861;
-        bh=KjzToofit3Y0FeaIc14Emfkd61E5wMUffmNSlgfWlws=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=QYPRqg52qxooQYcthEAw6iPy3gYDm21MYLktLHDAFDD++GvQsqO3Pbl8kWx66N/k4
-         Ph1CAC1jiL8JbHCS47VNxUhcpRQYmEs1O/swIpxSAf2AIBRdwLCD/mCVMbTGWgQ/Mh
-         MnaAOkLhXGjOvwo584s9DUETmNucy7IQJPhqjP88A6fiibMY48yT58OyvlVMnxwOKQ
-         xpRwmKPmoncBvidVZz1wY5nHgntHNAdLpGnqyN0MTnCnOy5Y/+uHtfxuS02/m9zc+S
-         Y4e+hK97eCLA1c/pqsmEHfoHXoIMVj4vNPnxhgF4MR8n1V7KpY2ZRJ2HsOBzTW3MjB
-         mUCvSxGbx7mgg==
-Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-2bfea381255so14450931fa.3;
-        Thu, 21 Sep 2023 05:21:01 -0700 (PDT)
-X-Gm-Message-State: AOJu0Yxg6EfmUwUYQqqAT2nePFV5hcTFEIXnYMNzdwebgE1Qs8WlHyi6
-        SHBl0SS8JU5Oaru30ch/ShQY7CZeFQUdSihLww==
-X-Google-Smtp-Source: AGHT+IEoXQqtt9tbYjAQ7FzV0NWQLqTY9v9t3vyNONu7fH6AtTwCNEpI851pYP7RujJ8URZmSKpMv4HJsMK8Dv1j3xQ=
-X-Received: by 2002:a2e:9952:0:b0:2b9:3684:165 with SMTP id
- r18-20020a2e9952000000b002b936840165mr4739244ljj.8.1695298859522; Thu, 21 Sep
- 2023 05:20:59 -0700 (PDT)
+        with ESMTP id S232678AbjIUVdN (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 17:33:13 -0400
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05olkn2067.outbound.protection.outlook.com [40.92.90.67])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 36044B15F7;
+        Thu, 21 Sep 2023 14:09:21 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=RIK/aou300ANbOM+c0HfLH0k/e6VyzXzbUaQJ/Zbn1kD7XrVAzcNknt8fIbq9kmeq8GYQomZ8y4c6gHoXzOwuZD3WVJCFaq1u966Pm4rmgoiBvbVfhx+A1+k8ATrEh2FI2CrrGAURhIqlzN6w4USL222iJUKR0dPo+bgcF/vKfoby9kCjYHeAIL/SIy8k2sOemSnBV/I2CmsZlrLx338e8K/x3Xewldz9y3Rt4FGa/6Eo3SrMHR2TaRAJwDXKAzSw89+AwFjHQ2bWvRfJViaeDkKz1tdSGGNHajy6tf0fwrHCSF1FtFnURiHCEbuqW7vqGogz8HX+hApl3ct2sz8Sg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=IXRwHGBZPslqxScX8SAhmlZ5qGHbOKg7G2XwmGhIRy4=;
+ b=Hhg+oMVa41JUk6GjZIoiHqQbaoWAhl42FDqGWOewduSZo35q5TGfGLP7I/FUZNDjtqHlV++m64HEl1W+WB4TsgvqmeGZGss/rSYqrP+DCwDpic/ozKDifsj9IdcbjwguEPoFAskQ4DaPeJxeGy/ic0AvoKLGU/cHQ0TWkiuYRcMt0qUw5JgxKZVnhc0VklxwnsHnGm2zxYnEtHg1ipnG96wwrMPF/YUbbozQttc5mmT4uN7Beb6O0Z8Q3DegJr+iAQMMjcQW3mLbrOqj5v5Z8gjHTHHbCbW5jbHF9C2LEgA6o2Ms4JIwI8zcUs6vHIL3jYr+J1lZiFfSHLqDtefdQw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+Received: from DU0PR02MB7899.eurprd02.prod.outlook.com (2603:10a6:10:347::11)
+ by PA4PR02MB7134.eurprd02.prod.outlook.com (2603:10a6:102:10e::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.23; Thu, 21 Sep
+ 2023 21:09:18 +0000
+Received: from DU0PR02MB7899.eurprd02.prod.outlook.com
+ ([fe80::b753:178a:394e:af8e]) by DU0PR02MB7899.eurprd02.prod.outlook.com
+ ([fe80::b753:178a:394e:af8e%6]) with mapi id 15.20.6792.026; Thu, 21 Sep 2023
+ 21:09:18 +0000
+Date:   Thu, 21 Sep 2023 22:09:16 +0100
+From:   Cameron Williams <cang1@live.co.uk>
+To:     bhelgaas@google.com
+Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-serial@vger.kernel.org, sudipm.mukherjee@gmail.com,
+        gregkh@linuxfoundation.org
+Subject: [PATCH 1/4] PCI: Add device IDs for Brainboxes/Intashield PX/UC/UP
+ cards
+Message-ID: <DU0PR02MB789950E64D808DB57E9D7312C4F8A@DU0PR02MB7899.eurprd02.prod.outlook.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-TMN:  [ENOxRf0JsgXwZQaAyKCwWrJE4hv3P/H9]
+X-ClientProxiedBy: DUZPR01CA0006.eurprd01.prod.exchangelabs.com
+ (2603:10a6:10:3c3::13) To DU0PR02MB7899.eurprd02.prod.outlook.com
+ (2603:10a6:10:347::11)
+X-Microsoft-Original-Message-ID: <ZQyw_JWDO9akO7YT@CHIHIRO>
 MIME-Version: 1.0
-References: <1692120000-46900-1-git-send-email-lizhi.hou@amd.com>
- <ZP96feVs2ev7098Y@smile.fi.intel.com> <CAL_JsqKfQJFrd8MOdjW55cYdEb8yyPyR+P3ran9+X3dCwUgdyA@mail.gmail.com>
- <ZQGaSr+G5qu/8nJZ@smile.fi.intel.com> <20230915193008.6d87b8a0@bootlin.com> <ZQf5huX2AMuf9kHC@smile.fi.intel.com>
-In-Reply-To: <ZQf5huX2AMuf9kHC@smile.fi.intel.com>
-From:   Rob Herring <robh@kernel.org>
-Date:   Thu, 21 Sep 2023 07:20:46 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqKNC1Qv+fucobnzoXmxUYNockWR=BbGhds2tNAYZWqgOA@mail.gmail.com>
-Message-ID: <CAL_JsqKNC1Qv+fucobnzoXmxUYNockWR=BbGhds2tNAYZWqgOA@mail.gmail.com>
-Subject: Re: [PATCH V13 0/5] Generate device tree node for pci devices
-To:     Andy Shevchenko <andriy.shevchenko@intel.com>
-Cc:     Herve Codina <herve.codina@bootlin.com>,
-        Jonathan Cameron <jonathan.cameron@huawei.com>,
-        Lizhi Hou <lizhi.hou@amd.com>, Andrew Lunn <andrew@lunn.ch>,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, max.zhen@amd.com,
-        sonal.santan@amd.com, stefano.stabellini@xilinx.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DU0PR02MB7899:EE_|PA4PR02MB7134:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3693ad88-e628-4f7c-6c1c-08dbbae704e6
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: oKPcQulvrSt1iZjbPKRTE0hp9UmDNxSEsJcVyCgVO+ZVROfxeuQRIZuI2YcFZU0pZMlB8MtU7HAeInt5NnyBT4r/CjUAsyxhRWgIZ4vzwN0ILThhb/kLprYtkS0GgIsmxnLSBVdpI34T6HOh0pkepLA+Z8jTiOZINy3Z1U4olUxd/WtUJ3ha5uAw3NG9P5g0eoPV0SMNLmSHB3DEmF59qxy93ia8YsaSmEqG2CaS390Ptpmo4deAacgoDg4tBqtlvsA01UEivMRMnrfA4rIcvAFwixgG0qo2G8uBJtqC548DJQGhr/u0ssmAQ/03ADfh+D1BZcnHvB6+dUbt3gT0oJ/TUKCyo266JybJaA5xWv2p33L3+i0ngrRgk3A8IMIIYJ2FyhehOCuRXTYRSTk8VsN5ukxdyL0cmp4ot9hYq37jsKKioqj+68q/0p8HEmAP2uXsxTcMXHXtVqttLBbcWSWJnCmA3U2FtxJ4yVPJHy1jTUhuhgxYGuT2EZeLr5b/FFOt5JrX/swEsKPvEc11+dKG6Zc6i9nnWA3xoBZIsiC2uQugdmI06GNcSxMgNcFY
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?TA2Jn0SBwPWEYYq/o98SiEkKJlpaB0n/2semwOL/Ev+GHIuAeB+Y96W8zmyY?=
+ =?us-ascii?Q?1kd75rtGbqX4FEGZkfBBLOv7rrEddu+ylqBoCw95XCtI3v/O/yokFvXYvVTx?=
+ =?us-ascii?Q?aUkO4eJyhi+LeuwbutpQvQ/VhvzpqPGw7F9n9CyNA2zJHNNxW3TQYL9Xu1QR?=
+ =?us-ascii?Q?TWN1n3TS6ajZFJdcNlNnugwbj6fKWYi0A3g0v8yHQaS5WOliJ97IH0ra9g38?=
+ =?us-ascii?Q?gKTDd6XRKrm0JCMpDFfNlsh0BEVbQgxNNEBvL1IMEl4DFvep8b//X7UhxUam?=
+ =?us-ascii?Q?9j4Y6gR4nmFYGr7WRD+cU/p1bits9wF2T2txBv6Lm0D9p1P/obpvn8Hv/NiE?=
+ =?us-ascii?Q?f+HHm9nvnaPKEKUvo7FAIYM/lc/Zeses6wd60oq/6o7k+5HbOJu2fPkUVWaI?=
+ =?us-ascii?Q?GDxyNk4lxisVaICRN7h7Oev++GIDDLpRostYHCE9BT5jvdM8UcsGPdH5XQ/Y?=
+ =?us-ascii?Q?xTP6mtNlZ7vffmYPTOF5IK24yEWSyekfSco8QpS8zcbKoMn8k7U45/X69xDs?=
+ =?us-ascii?Q?fhMoUfBEvM6goU6pA0QxxAxv3PyX3rrYWR3HkqvOAXWg+JVTsSKqW51p153T?=
+ =?us-ascii?Q?luCTUOGn4ZZhaUdZM3OgiH7j8cvsHauJuArCq4iDAw7Eb4Aho0KNGNBRqisF?=
+ =?us-ascii?Q?ox5luicu689fM09P/BmQK+M3r8/x+dOV98wBCMJgmS0Hb7buHcjsnFUtFB8A?=
+ =?us-ascii?Q?eszSPKNy4QG55i5rgbwoeB4BEUPMBMG3aoX8o6njj19i1E+XANfRKvEHUtMJ?=
+ =?us-ascii?Q?YvH9bfZPDqHtnnxpJA3FwuYoIKIEHyYm+bslNDNyuW5ZP9j2x+oAdWX9wHNA?=
+ =?us-ascii?Q?g3tn/eNR1C4XhS9uiA6bTVhQyMw1uzIYUB1nu8NDe9VNMK+CcZJuKA27mFt7?=
+ =?us-ascii?Q?Mp00juqr7gMQqmVFmFJGocHpUvIESzsWj5zClfl5HKTnqm9WMGUtd9SbV5sy?=
+ =?us-ascii?Q?4y91cHsDX2sZAFn7O21PajWMnfiFYRUfKgkHCkenwCSouXKsRrLpTzIqC7P8?=
+ =?us-ascii?Q?yi/GWxZFCzXJ5av5gHabKSS2MgP3rbGx/YOKC42JO8LNSh3EouxK7zXSUiV+?=
+ =?us-ascii?Q?BQ75J3jgBrzpYy9JeG8afORLO4QYgnx8xyk/a0xZEndortumUT3StMNrigtP?=
+ =?us-ascii?Q?dcnK4/4HLM2wGjmpAvO2nPSb/OnUreeZT4Fh9jU+VWiOLyNslIOb5cUoLhur?=
+ =?us-ascii?Q?Cds05LKD98Qnop13KLbNjrhgP/y+o4wYQHgV+w=3D=3D?=
+X-OriginatorOrg: sct-15-20-4755-11-msonline-outlook-ab7de.templateTenant
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3693ad88-e628-4f7c-6c1c-08dbbae704e6
+X-MS-Exchange-CrossTenant-AuthSource: DU0PR02MB7899.eurprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Sep 2023 21:09:18.8460
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR02MB7134
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Mon, Sep 18, 2023 at 2:17=E2=80=AFAM Andy Shevchenko
-<andriy.shevchenko@intel.com> wrote:
->
-> On Fri, Sep 15, 2023 at 07:30:08PM +0200, Herve Codina wrote:
-> > On Wed, 13 Sep 2023 14:17:30 +0300
-> > Andy Shevchenko <andriy.shevchenko@intel.com> wrote:
-> > > On Tue, Sep 12, 2023 at 02:12:04PM -0500, Rob Herring wrote:
-> > > > On Mon, Sep 11, 2023 at 3:37=E2=80=AFPM Andy Shevchenko
-> > > > <andriy.shevchenko@intel.com> wrote:
-> > > > > On Tue, Aug 15, 2023 at 10:19:55AM -0700, Lizhi Hou wrote:
->
-> ...
->
-> > > > > Can you point out to the ACPI excerpt(s) of the description of an=
-ything related
-> > > > > to the device(s) in question?
-> > > >
-> > > > I don't understand what you are asking for.
-> > >
-> > > Through the email thread it was mentioned that this series was tested=
- on the
-> > > ACPI enabled platform, Jonathan (IIRC) asked why do we need to have a=
- shadow
-> > > DT for the something that ACPI already describes. That's why I'm tryi=
-ng to
-> > > understand if it's the case. and if so, how can we improve the approa=
-ch.
-> >
-> > Patches from Frank Rowand series [1] are needed to create an of_root_no=
-de if a DT
-> > was not provided by the firmware, bootloader, etc that run the kernel.
-> >
-> > [1]: https://lore.kernel.org/lkml/20220624034327.2542112-1-frowand.list=
-@gmail.com/
-> >
-> > Current Lizhi's series creates nodes from the PCI host node during the =
-PCI
-> > enumeration. It creates PCI-PCI bridge and PCI device nodes.
-> >
-> > I use these series on an ACPI system.
-> >
-> > I need one more missing component: the node related to the PCI host bri=
-dge
-> > This was the purpose of Clement's work. This work was not sent upstream=
- yet and I
-> > am working on it in order to have a full tree from the of_root to the P=
-CI device
-> > ie:
-> >  of_root                  <-- Frank Rowand series
-> >    + of_host_pci_bridge   <-- Clement's work
-> >        + pci_bridge       <-- Current Lizhi series
-> >            + pci_bridge   <-- Current Lizhi series
-> >             ...
-> >              + pci_dev    <-- Current Lizhi series
-> >
-> > Hope that this status helped.
->
-> Thanks for the explanation! I suppose it's better to have three series co=
-mbined
-> into one and being sent with a better cover letter to explain all this.
+Add device IDs for PCI/PCIe serial cards manufactured by
+Brainboxes (IS/IX/UC/UP/PX).
+Apologies if this file isn't strictly for your tree. All trees
+I am sending this patch series to use these PCI IDs, I was unsure
+if this was the correct way to go about it, and better safe than
+sorry. Thank you for understanding and please disregard if
+its not required.
 
-You can go back (years now) and see that. I asked for this to be split
-up into manageable chunks and not solve multiple problems at once. No
-point in trying to do DT on top of ACPI if DT on top of DT doesn't
-work first.
+Signed-off-by: Cameron Williams <cang1@live.co.uk>
+---
+ include/linux/pci_ids.h | 95 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 95 insertions(+)
 
-Rob
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 5fb3d4c393a9..82a64459c20e 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -1920,9 +1920,104 @@
+ #define PCI_VENDOR_ID_DOMEX		0x134a
+ #define PCI_DEVICE_ID_DOMEX_DMX3191D	0x0001
+ 
++/* Intashield or Brainboxes */
+ #define PCI_VENDOR_ID_INTASHIELD	0x135a
++#define PCI_DEVICE_ID_INTASHIELD_UC268	0x0841
++#define PCI_DEVICE_ID_INTASHIELD_UC257	0x0861 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC257R3	0x0862 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC257R4	0x0863 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC279	0x0881
++#define PCI_DEVICE_ID_INTASHIELD_UC313	0x08a1 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC313R3	0x08a2 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC313R4	0x08a3 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC310	0x08c1
++#define PCI_DEVICE_ID_INTASHIELD_UC302	0x08e1 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC302R3	0x08e2 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC302R4	0x08e3 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC431	0x0901
++#define PCI_DEVICE_ID_INTASHIELD_UC420	0x0921
++#define PCI_DEVICE_ID_INTASHIELD_UP400	0x0941
++#define PCI_DEVICE_ID_INTASHIELD_UP376	0x0961
++#define PCI_DEVICE_ID_INTASHIELD_UC475	0x0981 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC475R3	0x0982 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC607	0x09a1 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC607R3	0x09a2 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC607R4	0x09a3 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC324	0x0a61
++#define PCI_DEVICE_ID_INTASHIELD_UC357	0x0a81 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC357R3	0x0a82 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC357R4	0x0a83 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC246	0x0aa1 /* Revision 2*/
++#define PCI_DEVICE_ID_INTASHIELD_UC246R3	0x0aa2	/* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UP189	0x0ac1 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UP189R3	0x0ac2 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UP189R4	0x0ac3 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC346	0x0b01 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC346R3	0x0b02 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UP200	0x0b21 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UP200R3	0x0b22 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UP200R4	0x0b23 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC101	0x0ba1
++#define PCI_DEVICE_ID_INTASHIELD_UC203	0x0bc1 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UC203R3	0x0bc2 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UC146	0x0be1 /* Revision 2*/
++#define PCI_DEVICE_ID_INTASHIELD_UC146R3	0x0be2 /* Revision 3*/
++#define PCI_DEVICE_ID_INTASHIELD_UP869	0x0c01 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UP869R3	0x0c02 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UP869R4	0x0c03 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UP880	0x0c21 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_UP880R3	0x0c22 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_UP880R4	0x0c23 /* Revision 4 */
++#define PCI_DEVICE_ID_INTASHIELD_UC368	0x0c41
++#define PCI_DEVICE_ID_INTASHIELD_UC253	0x0ca1
++#define PCI_DEVICE_ID_INTASHIELD_UC260	0x0d21
++#define PCI_DEVICE_ID_INTASHIELD_UC836	0x0d41
++#define PCI_DEVICE_ID_INTASHIELD_IS100	0x0d60
+ #define PCI_DEVICE_ID_INTASHIELD_IS200	0x0d80
++#define PCI_DEVICE_ID_INTASHIELD_IS300	0x0da0
+ #define PCI_DEVICE_ID_INTASHIELD_IS400	0x0dc0
++#define PCI_DEVICE_ID_INTASHIELD_IS500	0x0de0
++#define PCI_DEVICE_ID_INTASHIELD_PX279	0x0e41
++#define PCI_DEVICE_ID_INTASHIELD_UC414	0x0e61
++#define PCI_DEVICE_ID_INTASHIELD_PX420	0x4000 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX431	0x4001 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX820	0x4002 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX831	0x4003 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX235	0x4004 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX101	0x4005 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX257	0x4006 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX257LPT	0x4007 /* Revision 2 LPT port */
++#define PCI_DEVICE_ID_INTASHIELD_PX835	0x4008 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX857	0x4009 /* Revision 2 */
++#define PCI_DEVICE_ID_INTASHIELD_PX260	0x400a
++#define PCI_DEVICE_ID_INTASHIELD_PX320	0x400b
++#define PCI_DEVICE_ID_INTASHIELD_PX313	0x400c
++#define PCI_DEVICE_ID_INTASHIELD_PX310	0x400e
++#define PCI_DEVICE_ID_INTASHIELD_PX346	0x400f
++#define PCI_DEVICE_ID_INTASHIELD_PX368	0x4010
++#define PCI_DEVICE_ID_INTASHIELD_PX420R3	0x4011 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX431R3	0x4012 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX820R3	0x4013 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX257R3	0x4015 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX831R3	0x4014 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX235R3	0x4016 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX835R3	0x4017 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX857R3	0x4018 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX101R3	0x4019 /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX146	0x401c
++#define PCI_DEVICE_ID_INTASHIELD_PX475	0x401d
++#define PCI_DEVICE_ID_INTASHIELD_PX803R3	0x401e /* Revision 3 */
++#define PCI_DEVICE_ID_INTASHIELD_PX475LPT   0x401f /* LPT port */
++#define PCI_DEVICE_ID_INTASHIELD_XC157	0x4020
++#define PCI_DEVICE_ID_INTASHIELD_XC475	0x4021
++#define PCI_DEVICE_ID_INTASHIELD_XC475LPT	0x4022 /* LPT port */
++#define PCI_DEVICE_ID_INTASHIELD_XC235	0x4026
++#define PCI_DEVICE_ID_INTASHIELD_IX100	0x4027
++#define PCI_DEVICE_ID_INTASHIELD_IX200	0x4028
++#define PCI_DEVICE_ID_INTASHIELD_IX400	0x4029
++#define PCI_DEVICE_ID_INTASHIELD_IX500	0x402a
++#define PCI_DEVICE_ID_INTASHIELD_PX263	0x402c
++#define PCI_DEVICE_ID_INTASHIELD_PX272	0x4100
+ 
+ #define PCI_VENDOR_ID_QUATECH		0x135C
+ #define PCI_DEVICE_ID_QUATECH_QSC100	0x0010
+-- 
+2.42.0
+
