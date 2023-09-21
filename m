@@ -2,162 +2,107 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 21DFCE7D0B7
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 23:20:19 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79730E7D0B8
+	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 23:20:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229745AbjIUXUX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 19:20:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42082 "EHLO
+        id S229969AbjIUXUY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 19:20:24 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42150 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229995AbjIUXUV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 19:20:21 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7462083326;
-        Thu, 21 Sep 2023 10:37:26 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7D23C116CB;
-        Thu, 21 Sep 2023 08:39:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695285550;
-        bh=SRktlw97rAUxXvmGZYe3/jusIyIMFE7ZdMCiBS5jEGw=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=crg4JG5LjedFtliw5QRvtI7SuUOmrrTBU+sHkBFQwYAKW8BwtVoP7z2ZeOOKtHjP7
-         1tCR0qfp2JfJ1IqYaY7uOBsOiTPTFP0I6ptfLB1BtsOZ1RPvio2SzKn7ueQona0vTj
-         WCcngKA0W+mDqjk30/xRyTNQFN80zqTumpd6YfSeEHlntqWw4CIipoM+j0dxDHPujl
-         NUKxajPOP7KzwemqUufWx4FlS/JXCg8xABT5xtQRUBeHWc8fFYH+LV7fYfoh7XUbgD
-         hW4/uMKVDOKp5KVyRlZouLkIZTcnEi99l4G3rR1Ryqa++3Lkls8uA5Ku3heJh5zPlb
-         JcM0+hhDpddiQ==
-Date:   Thu, 21 Sep 2023 10:39:01 +0200
-From:   Manivannan Sadhasivam <mani@kernel.org>
-To:     Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Cc:     agross@kernel.org, andersson@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, quic_shazhuss@quicinc.com,
-        quic_nitegupt@quicinc.com, quic_ramkri@quicinc.com,
-        quic_nayiluri@quicinc.com, quic_krichai@quicinc.com,
-        quic_vbadigan@quicinc.com, quic_parass@quicinc.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mhi@lists.linux.dev,
-        linux-phy@lists.infradead.org
-Subject: Re: [PATCH v1 3/5] phy: qcom-qmp-pcie: add endpoint support for
- sa8775p
-Message-ID: <20230921083901.GC2891@thinkpad>
-References: <1695218113-31198-1-git-send-email-quic_msarkar@quicinc.com>
- <1695218113-31198-4-git-send-email-quic_msarkar@quicinc.com>
+        with ESMTP id S230163AbjIUXUW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 19:20:22 -0400
+X-Greylist: delayed 450 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Sep 2023 11:07:29 PDT
+Received: from smtp.smtpout.orange.fr (smtp-15.smtpout.orange.fr [80.12.242.15])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E46FAF942
+        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 11:07:29 -0700 (PDT)
+Received: from [192.168.1.18] ([86.243.2.178])
+        by smtp.orange.fr with ESMTPA
+        id jNxxqrngYWkeLjNxxqqZsH; Thu, 21 Sep 2023 19:59:57 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+        s=t20230301; t=1695319197;
+        bh=Jy4yrl1sGF1TARfomG4wY5m/s9IFzHDGcTcBivxyLOM=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To;
+        b=R/GMDO51rXJCXspAXvO6D8ktPA7l4Cx6HvaJdkZ8Jib3GXRDdbTES4LcpDgC1K7Gy
+         iVPWNtSbjmHKqo27fko5suLlO8XEsvvqR8vaHgFl1siAMZXjb9QQoN8SrACQCN+Uka
+         06feaIThbzixPjiv5gEQRKcrFxrB2KKFpsHzVwLuknGXDvGzlM5QOV4MMEUqXpv+Ix
+         pqPRGgCm+XTHqccjHWC1VD7YP3EMA+C9eIudi8SxwJTcm4tg/XUDvFhFLqPmM5hzxV
+         Z4pT92e+AY0LLgp0kFM3cmzinTsjrtqbsVTq9WpXRMnJS9d540YGM62kakloKgds/A
+         3oaNWLWsLoWFQ==
+X-ME-Helo: [192.168.1.18]
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Thu, 21 Sep 2023 19:59:57 +0200
+X-ME-IP: 86.243.2.178
+Message-ID: <925da248-f582-6dd5-57ab-0fadc4e84f9e@wanadoo.fr>
+Date:   Thu, 21 Sep 2023 19:59:51 +0200
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH 1/1] PCI: layerscape-ep: set 64-bit DMA mask
+To:     Frank Li <Frank.Li@nxp.com>, Minghuan Lian <minghuan.Lian@nxp.com>,
+        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        "open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" 
+        <linuxppc-dev@lists.ozlabs.org>,
+        "open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" 
+        <linux-pci@vger.kernel.org>,
+        "moderated list:PCI DRIVER FOR FREESCALE LAYERSCAPE" 
+        <linux-arm-kernel@lists.infradead.org>,
+        open list <linux-kernel@vger.kernel.org>
+Cc:     imx@lists.linux.dev
+References: <20230921153702.3281289-1-Frank.Li@nxp.com>
+Content-Language: fr, en-US
+From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20230921153702.3281289-1-Frank.Li@nxp.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <1695218113-31198-4-git-send-email-quic_msarkar@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 20, 2023 at 07:25:10PM +0530, Mrinmay Sarkar wrote:
-> Add support for dual lane end point mode PHY found on sa8755p platform.
+Le 21/09/2023 à 17:37, Frank Li a écrit :
+> From: Guanhua Gao <guanhua.gao@nxp.com>
 > 
-> Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+> Set DMA mask and coherent DMA mask to enable 64-bit addressing.
+> 
+> Signed-off-by: Guanhua Gao <guanhua.gao@nxp.com>
+> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
 > ---
->  drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           | 41 ++++++++++++++++++++++
->  drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h         |  2 ++
->  drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v5.h |  1 +
->  3 files changed, 44 insertions(+)
+>   drivers/pci/controller/dwc/pci-layerscape-ep.c | 5 +++++
+>   1 file changed, 5 insertions(+)
 > 
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> index a63ca74..351047c 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> @@ -2147,6 +2147,38 @@ static const struct qmp_phy_init_tbl sa8775p_qmp_gen4x4_pcie_rc_serdes_alt_tbl[]
->  	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CLK_SELECT, 0x34),
->  };
->  
-> +static const struct qmp_phy_init_tbl sa8775p_qmp_gen4x2_pcie_ep_serdes_alt_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_BG_TIMER, 0x02),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYS_CLK_CTRL, 0x07),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE0, 0x27),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE1, 0x0a),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE0, 0x17),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE1, 0x19),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE0, 0x00),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE1, 0x03),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYSCLK_EN_SEL, 0x00),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN0_MODE0, 0xfb),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN1_MODE0, 0x01),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN0_MODE1, 0xfb),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN1_MODE1, 0x01),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CMN_MODE, 0x14),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE0, 0xff),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE0, 0x04),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE1, 0xff),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE1, 0x09),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DEC_START_MODE0, 0x19),
-> +	QMP_PHY_INIT_CFG(QSERDES_V5_COM_DEC_START_MODE1, 0x28),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl sa8775p_qmp_gen4_pcie_ep_pcs_misc_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5, 0x08),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl sa8775p_qmp_gen4x2_pcie_ep_pcs_alt_tbl[] = {
-> +	QMP_PHY_INIT_CFG(QPHY_V5_PCS_INSIG_MX_CTRL7, 0x00),
-> +	QMP_PHY_INIT_CFG(QPHY_V5_PCS_INSIG_SW_CTRL7, 0x00),
-> +};
-> +
->  struct qmp_pcie_offsets {
->  	u16 serdes;
->  	u16 pcs;
-> @@ -3043,6 +3075,15 @@ static const struct qmp_phy_cfg sa8775p_qmp_gen4x2_pciephy_cfg = {
->  		.pcs_misc_num	= ARRAY_SIZE(sa8775p_qmp_gen4_pcie_rc_pcs_misc_tbl),
->  	},
->  
-> +	.tbls_ep = &(const struct qmp_phy_cfg_tbls) {
-> +		.serdes		= sa8775p_qmp_gen4x2_pcie_ep_serdes_alt_tbl,
-> +		.serdes_num	= ARRAY_SIZE(sa8775p_qmp_gen4x2_pcie_ep_serdes_alt_tbl),
-> +		.pcs_misc	= sa8775p_qmp_gen4_pcie_ep_pcs_misc_tbl,
-> +		.pcs_misc_num	= ARRAY_SIZE(sa8775p_qmp_gen4_pcie_ep_pcs_misc_tbl),
-> +		.pcs		= sa8775p_qmp_gen4x2_pcie_ep_pcs_alt_tbl,
-> +		.pcs_num	= ARRAY_SIZE(sa8775p_qmp_gen4x2_pcie_ep_pcs_alt_tbl),
-> +	},
-> +
->  	.reset_list		= sdm845_pciephy_reset_l,
->  	.num_resets		= ARRAY_SIZE(sdm845_pciephy_reset_l),
->  	.vreg_list		= qmp_phy_vreg_l,
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h
-> index 36cc80b..2b33dc7 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h
-> @@ -30,5 +30,7 @@
->  #define QPHY_V5_PCS_EQ_CONFIG2				0x1e0
->  #define QPHY_V5_PCS_EQ_CONFIG3				0x1e4
->  #define QPHY_V5_PCS_EQ_CONFIG5				0x1ec
-> +#define QPHY_V5_PCS_INSIG_MX_CTRL7			0x07c
-> +#define QPHY_V5_PCS_INSIG_SW_CTRL7			0x060
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> index de4c1758a6c33..6fd0dea38a32c 100644
+> --- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
+> @@ -249,6 +249,11 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
+>   
+>   	pcie->big_endian = of_property_read_bool(dev->of_node, "big-endian");
+>   
+> +	/* set 64-bit DMA mask and coherent DMA mask */
+> +	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)))
+> +		if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32)))
 
-Sort the defines please, here and below.
+As stated in [1], dma_set_mask() with a 64-bit mask will never
+fail if dev->dma_mask is non-NULL.
 
-- Mani
+So, if it fails, the 32 bits case will also fail for the same reason.
+There is no need for the 2nd test.
 
->  
->  #endif
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v5.h b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v5.h
-> index c8afdf7..ad587c8 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v5.h
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-qserdes-com-v5.h
-> @@ -120,5 +120,6 @@
->  #define QSERDES_V5_COM_BIN_VCOCAL_CMP_CODE2_MODE1	0x1b8
->  #define QSERDES_V5_COM_BIN_VCOCAL_HSCLK_SEL		0x1bc
->  #define QSERDES_V5_COM_RESERVED_1			0x1c0
-> +#define QSERDES_V5_COM_PLL_CMN_MODE			0x1a0
->  
->  #endif
-> -- 
-> 2.7.4
-> 
 
--- 
-மணிவண்ணன் சதாசிவம்
+See [1] for Christoph Hellwig comment about it.
+
+CJ
+
+
+[1]: https://lkml.org/lkml/2021/6/7/398
+
+> +			return -EIO;
+> +
+>   	platform_set_drvdata(pdev, pcie);
+>   
+>   	ret = dw_pcie_ep_init(&pci->ep);
+
