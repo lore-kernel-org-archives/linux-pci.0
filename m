@@ -2,107 +2,93 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 79730E7D0B8
-	for <linux-pci@archiver.kernel.org>; Thu, 21 Sep 2023 23:20:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C1FE6E7D0BB
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Sep 2023 01:06:30 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229969AbjIUXUY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 21 Sep 2023 19:20:24 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42150 "EHLO
+        id S229452AbjIVBGe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 21 Sep 2023 21:06:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230163AbjIUXUW (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 19:20:22 -0400
-X-Greylist: delayed 450 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Thu, 21 Sep 2023 11:07:29 PDT
-Received: from smtp.smtpout.orange.fr (smtp-15.smtpout.orange.fr [80.12.242.15])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 8E46FAF942
-        for <linux-pci@vger.kernel.org>; Thu, 21 Sep 2023 11:07:29 -0700 (PDT)
-Received: from [192.168.1.18] ([86.243.2.178])
-        by smtp.orange.fr with ESMTPA
-        id jNxxqrngYWkeLjNxxqqZsH; Thu, 21 Sep 2023 19:59:57 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-        s=t20230301; t=1695319197;
-        bh=Jy4yrl1sGF1TARfomG4wY5m/s9IFzHDGcTcBivxyLOM=;
-        h=Date:Subject:To:Cc:References:From:In-Reply-To;
-        b=R/GMDO51rXJCXspAXvO6D8ktPA7l4Cx6HvaJdkZ8Jib3GXRDdbTES4LcpDgC1K7Gy
-         iVPWNtSbjmHKqo27fko5suLlO8XEsvvqR8vaHgFl1siAMZXjb9QQoN8SrACQCN+Uka
-         06feaIThbzixPjiv5gEQRKcrFxrB2KKFpsHzVwLuknGXDvGzlM5QOV4MMEUqXpv+Ix
-         pqPRGgCm+XTHqccjHWC1VD7YP3EMA+C9eIudi8SxwJTcm4tg/XUDvFhFLqPmM5hzxV
-         Z4pT92e+AY0LLgp0kFM3cmzinTsjrtqbsVTq9WpXRMnJS9d540YGM62kakloKgds/A
-         3oaNWLWsLoWFQ==
-X-ME-Helo: [192.168.1.18]
-X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
-X-ME-Date: Thu, 21 Sep 2023 19:59:57 +0200
-X-ME-IP: 86.243.2.178
-Message-ID: <925da248-f582-6dd5-57ab-0fadc4e84f9e@wanadoo.fr>
-Date:   Thu, 21 Sep 2023 19:59:51 +0200
+        with ESMTP id S230022AbjIVBGd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 21 Sep 2023 21:06:33 -0400
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 041E6195;
+        Thu, 21 Sep 2023 18:06:27 -0700 (PDT)
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+        by mx0b-00069f02.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 38LIsR7Z018736;
+        Fri, 22 Sep 2023 01:06:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=from : to : cc :
+ subject : date : message-id : in-reply-to : references : mime-version :
+ content-type : content-transfer-encoding; s=corp-2023-03-30;
+ bh=PaV2/eM0GTH4uo+cZQYOKUgL2TPNKr4vxGBi/Auf04c=;
+ b=bfUxlRQpdJ4bBoRxasUV9RwYTDGBe3oVsuLOsIsIb5LcOXdHd6yXw8i75zzYfJgOc0Zs
+ qzDsQVxZB8PINutrlwU/SHg7YFUj6Mx2EzmJm9zPpt8uHbw5FvJcg4oPyEwfusEVCgWQ
+ kqrI03p0/6c8OJPQ/q+ewyFZiQiLLHjg/g26ykYbCT/Pfg4XJr5nLZ4QSr9/2kYWSciZ
+ T2BM0EIJdbgjfoQ+pZ/iJNRbem4lPZTjnP2AmJEBNFoLqrMKrLNyLTnwiN3w3MaI0HFx
+ EVoLLiWcZe8eEiCdvPTJm0RVKvLKhbOCIY5vLS7ackLP/Ips4W8/7oPkNMBD6+N+XJRF Bg== 
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+        by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 3t8tt00ka9-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Sep 2023 01:06:09 +0000
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.17.1.19/8.17.1.19) with ESMTP id 38LMjJbi040584;
+        Fri, 22 Sep 2023 01:06:08 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 3t8u19bn40-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+        Fri, 22 Sep 2023 01:06:08 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 38M164sv032168;
+        Fri, 22 Sep 2023 01:06:08 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+        by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 3t8u19bn0m-4;
+        Fri, 22 Sep 2023 01:06:07 +0000
+From:   "Martin K. Petersen" <martin.petersen@oracle.com>
+To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
+        linux-pci@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
+        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc:     "Martin K . Petersen" <martin.petersen@oracle.com>,
+        linux-kernel@vger.kernel.org
+Subject: Re: (subset) [PATCH v2 00/10] PCI/treewide: PCIe capability access cleanups
+Date:   Thu, 21 Sep 2023 21:05:54 -0400
+Message-Id: <169534443603.456601.11816529763697878783.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20230913122748.29530-1-ilpo.jarvinen@linux.intel.com>
+References: <20230913122748.29530-1-ilpo.jarvinen@linux.intel.com>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH 1/1] PCI: layerscape-ep: set 64-bit DMA mask
-To:     Frank Li <Frank.Li@nxp.com>, Minghuan Lian <minghuan.Lian@nxp.com>,
-        Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        "open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" 
-        <linuxppc-dev@lists.ozlabs.org>,
-        "open list:PCI DRIVER FOR FREESCALE LAYERSCAPE" 
-        <linux-pci@vger.kernel.org>,
-        "moderated list:PCI DRIVER FOR FREESCALE LAYERSCAPE" 
-        <linux-arm-kernel@lists.infradead.org>,
-        open list <linux-kernel@vger.kernel.org>
-Cc:     imx@lists.linux.dev
-References: <20230921153702.3281289-1-Frank.Li@nxp.com>
-Content-Language: fr, en-US
-From:   Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-In-Reply-To: <20230921153702.3281289-1-Frank.Li@nxp.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-09-22_01,2023-09-21_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 malwarescore=0 spamscore=0
+ suspectscore=0 mlxlogscore=999 phishscore=0 mlxscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2309180000
+ definitions=main-2309220008
+X-Proofpoint-GUID: nHAfgE7Y28nFPrLNBjnRIzOL48I-snaf
+X-Proofpoint-ORIG-GUID: nHAfgE7Y28nFPrLNBjnRIzOL48I-snaf
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Le 21/09/2023 à 17:37, Frank Li a écrit :
-> From: Guanhua Gao <guanhua.gao@nxp.com>
+On Wed, 13 Sep 2023 15:27:38 +0300, Ilpo Järvinen wrote:
+
+> Instead of custom code to extract the PCIe capabilities, make the code
+> more obvious using FIELD_GET/PREP().
 > 
-> Set DMA mask and coherent DMA mask to enable 64-bit addressing.
+> Also cleanup some duplicated defines in e1000e.
 > 
-> Signed-off-by: Guanhua Gao <guanhua.gao@nxp.com>
-> Signed-off-by: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>
-> Signed-off-by: Frank Li <Frank.Li@nxp.com>
-> ---
->   drivers/pci/controller/dwc/pci-layerscape-ep.c | 5 +++++
->   1 file changed, 5 insertions(+)
+> I've only put Jonathan's Reviewed-by to patches I didn't modify
+> significantly.
 > 
-> diff --git a/drivers/pci/controller/dwc/pci-layerscape-ep.c b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> index de4c1758a6c33..6fd0dea38a32c 100644
-> --- a/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> +++ b/drivers/pci/controller/dwc/pci-layerscape-ep.c
-> @@ -249,6 +249,11 @@ static int __init ls_pcie_ep_probe(struct platform_device *pdev)
->   
->   	pcie->big_endian = of_property_read_bool(dev->of_node, "big-endian");
->   
-> +	/* set 64-bit DMA mask and coherent DMA mask */
-> +	if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(64)))
-> +		if (dma_set_mask_and_coherent(dev, DMA_BIT_MASK(32)))
+> [...]
 
-As stated in [1], dma_set_mask() with a 64-bit mask will never
-fail if dev->dma_mask is non-NULL.
+Applied to 6.7/scsi-queue, thanks!
 
-So, if it fails, the 32 bits case will also fail for the same reason.
-There is no need for the 2nd test.
+[07/10] scsi: esas2r: Use FIELD_GET() to extract PCIe capability fields
+        https://git.kernel.org/mkp/scsi/c/5532f2495150
+[08/10] scsi: qla2xxx: Use FIELD_GET() to extract PCIe capability fields
+        https://git.kernel.org/mkp/scsi/c/dc1d7b363301
 
-
-See [1] for Christoph Hellwig comment about it.
-
-CJ
-
-
-[1]: https://lkml.org/lkml/2021/6/7/398
-
-> +			return -EIO;
-> +
->   	platform_set_drvdata(pdev, pcie);
->   
->   	ret = dw_pcie_ep_init(&pci->ep);
-
+-- 
+Martin K. Petersen	Oracle Linux Engineering
