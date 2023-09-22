@@ -2,267 +2,295 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4D46ECD4942
-	for <linux-pci@archiver.kernel.org>; Fri, 22 Sep 2023 06:53:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 297F0CD4F49
+	for <linux-pci@archiver.kernel.org>; Fri, 22 Sep 2023 10:43:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230315AbjIVGx4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 22 Sep 2023 02:53:56 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43004 "EHLO
+        id S233462AbjIVKnD (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 22 Sep 2023 06:43:03 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46728 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230207AbjIVGxv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Sep 2023 02:53:51 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 808B71A4;
-        Thu, 21 Sep 2023 23:53:43 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.03,167,1694703600"; 
-   d="scan'208";a="176885453"
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 22 Sep 2023 15:53:40 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 5E53C400F799;
-        Fri, 22 Sep 2023 15:53:40 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, mani@kernel.org
-Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: [PATCH v21 14/16] PCI: dwc: rcar-gen4: Add R-Car Gen4 PCIe Endpoint support
-Date:   Fri, 22 Sep 2023 15:53:29 +0900
-Message-Id: <20230922065331.3806925-15-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230922065331.3806925-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230922065331.3806925-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S233533AbjIVKmz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 22 Sep 2023 06:42:55 -0400
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61AC3E48;
+        Fri, 22 Sep 2023 03:42:36 -0700 (PDT)
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
+        (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+        (Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+        by ex01.ufhost.com (Postfix) with ESMTP id 86A4624E26F;
+        Fri, 22 Sep 2023 18:42:28 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 22 Sep
+ 2023 18:42:28 +0800
+Received: from [192.168.125.57] (113.72.146.252) by EXMBX171.cuchost.com
+ (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 22 Sep
+ 2023 18:42:27 +0800
+Message-ID: <57267a7d-c03a-6abe-c64a-08766a0ce01b@starfivetech.com>
+Date:   Fri, 22 Sep 2023 18:42:26 +0800
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v6 07/19] PCI: plda: Move the setup functions to
+ pcie-plda-host.c
+Content-Language: en-US
+To:     Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        Conor Dooley <conor@kernel.org>,
+        Rob Herring <robh+dt@kernel.org>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>
+CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        =?UTF-8?Q?Pali_Roh=c3=a1r?= <pali@kernel.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Mason Huo <mason.huo@starfivetech.com>,
+        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+        Kevin Xie <kevin.xie@starfivetech.com>
+References: <20230915102243.59775-1-minda.chen@starfivetech.com>
+ <20230915102243.59775-8-minda.chen@starfivetech.com>
+ <CAJM55Z-wD4+TUJCsXsbgR49Zux5fuMZQmJ5bXEVW96QVNJbBFQ@mail.gmail.com>
+From:   Minda Chen <minda.chen@starfivetech.com>
+In-Reply-To: <CAJM55Z-wD4+TUJCsXsbgR49Zux5fuMZQmJ5bXEVW96QVNJbBFQ@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [113.72.146.252]
+X-ClientProxiedBy: EXCAS063.cuchost.com (172.16.6.23) To EXMBX171.cuchost.com
+ (172.16.6.91)
+X-YovoleRuleAgent: yovoleflag
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add R-Car Gen4 PCIe controller for endpoint mode. This controller is based
-on Synopsys DesignWare PCIe.
 
-Link: https://lore.kernel.org/linux-pci/20230825093219.2685912-18-yoshihiro.shimoda.uh@renesas.com
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
----
- drivers/pci/controller/dwc/Kconfig          |  11 ++
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 136 +++++++++++++++++++-
- 2 files changed, 144 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index bc69fcab2e2a..e7fd37717998 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -429,4 +429,15 @@ config PCIE_RCAR_GEN4_HOST
- 	  To compile this driver as a module, choose M here: the module will be
- 	  called pcie-rcar-gen4.ko. This uses the DesignWare core.
- 
-+config PCIE_RCAR_GEN4_EP
-+	tristate "Renesas R-Car Gen4 PCIe controller (endpoint mode)"
-+	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on PCI_ENDPOINT
-+	select PCIE_DW_EP
-+	select PCIE_RCAR_GEN4
-+	help
-+	  Say Y here if you want PCIe controller (endpoint mode) on R-Car Gen4
-+	  SoCs. To compile this driver as a module, choose M here: the module
-+	  will be called pcie-rcar-gen4.ko. This uses the DesignWare core.
-+
- endmenu
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index dfff6bb18932..68879b7308c5 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -45,6 +45,9 @@
- #define RCAR_NUM_SPEED_CHANGE_RETRIES	10
- #define RCAR_MAX_LINK_SPEED		4
- 
-+#define RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET	0x1000
-+#define RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET	0x800
-+
- struct rcar_gen4_pcie {
- 	struct dw_pcie dw;
- 	void __iomem *base;
-@@ -53,6 +56,7 @@ struct rcar_gen4_pcie {
- };
- #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
- 
-+/* Common */
- static void rcar_gen4_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar,
- 					bool enable)
- {
-@@ -310,6 +314,9 @@ static int rcar_gen4_add_dw_pcie_rp(struct rcar_gen4_pcie *rcar)
- {
- 	struct dw_pcie_rp *pp = &rcar->dw.pp;
- 
-+	if (!IS_ENABLED(CONFIG_PCIE_RCAR_GEN4_HOST))
-+		return -ENODEV;
-+
- 	pp->num_vectors = MAX_MSI_IRQS;
- 	pp->ops = &rcar_gen4_pcie_host_ops;
- 	rcar->mode = DW_PCIE_RC_TYPE;
-@@ -322,8 +329,114 @@ static void rcar_gen4_remove_dw_pcie_rp(struct rcar_gen4_pcie *rcar)
- 	dw_pcie_host_deinit(&rcar->dw.pp);
- }
- 
-+/* Endpoind mode */
-+static void rcar_gen4_pcie_ep_pre_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	int ret;
-+
-+	ret = rcar_gen4_pcie_common_init(rcar);
-+	if (ret)
-+		return;
-+
-+	writel(PCIEDMAINTSTSEN_INIT, rcar->base + PCIEDMAINTSTSEN);
-+}
-+
-+static void rcar_gen4_pcie_ep_init(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-+	enum pci_barno bar;
-+
-+	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++)
-+		dw_pcie_ep_reset_bar(pci, bar);
-+}
-+
-+static void rcar_gen4_pcie_ep_deinit(struct dw_pcie_ep *ep)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+
-+	writel(0, rcar->base + PCIEDMAINTSTSEN);
-+	rcar_gen4_pcie_common_deinit(rcar);
-+}
-+
-+static int rcar_gen4_pcie_ep_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
-+				       unsigned int type, u16 interrupt_num)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_ep(ep);
-+
-+	switch (type) {
-+	case PCI_IRQ_LEGACY:
-+		return dw_pcie_ep_raise_legacy_irq(ep, func_no);
-+	case PCI_IRQ_MSI:
-+		return dw_pcie_ep_raise_msi_irq(ep, func_no, interrupt_num);
-+	default:
-+		dev_err(dw->dev, "Unknown IRQ type\n");
-+		return -EINVAL;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct pci_epc_features rcar_gen4_pcie_epc_features = {
-+	.linkup_notifier = false,
-+	.msi_capable = true,
-+	.msix_capable = false,
-+	.reserved_bar = 1 << BAR_1 | 1 << BAR_3 | 1 << BAR_5,
-+	.align = SZ_1M,
-+};
-+
-+static const struct pci_epc_features*
-+rcar_gen4_pcie_ep_get_features(struct dw_pcie_ep *ep)
-+{
-+	return &rcar_gen4_pcie_epc_features;
-+}
-+
-+static unsigned int rcar_gen4_pcie_ep_func_conf_select(struct dw_pcie_ep *ep,
-+						       u8 func_no)
-+{
-+	return func_no * RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET;
-+}
-+
-+static unsigned int rcar_gen4_pcie_ep_get_dbi2_offset(struct dw_pcie_ep *ep,
-+						      u8 func_no)
-+{
-+	return func_no * RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET;
-+}
-+
-+static const struct dw_pcie_ep_ops pcie_ep_ops = {
-+	.pre_init = rcar_gen4_pcie_ep_pre_init,
-+	.ep_init = rcar_gen4_pcie_ep_init,
-+	.deinit = rcar_gen4_pcie_ep_deinit,
-+	.raise_irq = rcar_gen4_pcie_ep_raise_irq,
-+	.get_features = rcar_gen4_pcie_ep_get_features,
-+	.func_conf_select = rcar_gen4_pcie_ep_func_conf_select,
-+	.get_dbi2_offset = rcar_gen4_pcie_ep_get_dbi2_offset,
-+};
-+
-+static int rcar_gen4_add_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie_ep *ep = &rcar->dw.ep;
-+
-+	if (!IS_ENABLED(CONFIG_PCIE_RCAR_GEN4_EP))
-+		return -ENODEV;
-+
-+	rcar->mode = DW_PCIE_EP_TYPE;
-+	ep->ops = &pcie_ep_ops;
-+
-+	return dw_pcie_ep_init(ep);
-+}
-+
-+static void rcar_gen4_remove_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
-+{
-+	dw_pcie_ep_exit(&rcar->dw.ep);
-+}
-+
-+/* Common */
- static int rcar_gen4_pcie_probe(struct platform_device *pdev)
- {
-+	enum dw_pcie_device_mode mode;
- 	struct rcar_gen4_pcie *rcar;
- 	int err;
- 
-@@ -339,7 +452,13 @@ static int rcar_gen4_pcie_probe(struct platform_device *pdev)
- 	if (err)
- 		return err;
- 
--	err = rcar_gen4_add_dw_pcie_rp(rcar);
-+	mode = (enum dw_pcie_device_mode)of_device_get_match_data(&pdev->dev);
-+
-+	if (mode == DW_PCIE_RC_TYPE)
-+		err = rcar_gen4_add_dw_pcie_rp(rcar);
-+	else if (mode == DW_PCIE_EP_TYPE)
-+		err = rcar_gen4_add_dw_pcie_ep(rcar);
-+
- 	if (err)
- 		goto err_unprepare;
- 
-@@ -355,12 +474,23 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
- {
- 	struct rcar_gen4_pcie *rcar = platform_get_drvdata(pdev);
- 
--	rcar_gen4_remove_dw_pcie_rp(rcar);
-+	if (rcar->mode == DW_PCIE_RC_TYPE)
-+		rcar_gen4_remove_dw_pcie_rp(rcar);
-+	else if (rcar->mode == DW_PCIE_EP_TYPE)
-+		rcar_gen4_remove_dw_pcie_ep(rcar);
-+
- 	rcar_gen4_pcie_unprepare(rcar);
- }
- 
- static const struct of_device_id rcar_gen4_pcie_of_match[] = {
--	{ .compatible = "renesas,rcar-gen4-pcie", },
-+	{
-+		.compatible = "renesas,rcar-gen4-pcie",
-+		.data = (void *)DW_PCIE_RC_TYPE,
-+	},
-+	{
-+		.compatible = "renesas,rcar-gen4-pcie-ep",
-+		.data = (void *)DW_PCIE_EP_TYPE,
-+	},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, rcar_gen4_pcie_of_match);
--- 
-2.25.1
-
+On 2023/9/18 6:45, Emil Renner Berthing wrote:
+> Minda Chen wrote:
+>> Move setup functions to common pcie-plda-host.c.
+>>
+>> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+>> Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+>> ---
+>>  drivers/pci/controller/plda/Kconfig           |  4 +
+>>  drivers/pci/controller/plda/Makefile          |  1 +
+>>  .../pci/controller/plda/pcie-microchip-host.c | 59 -------------
+>>  drivers/pci/controller/plda/pcie-plda-host.c  | 82 +++++++++++++++++++
+>>  drivers/pci/controller/plda/pcie-plda.h       |  6 ++
+>>  5 files changed, 93 insertions(+), 59 deletions(-)
+>>  create mode 100644 drivers/pci/controller/plda/pcie-plda-host.c
+>>
+>> diff --git a/drivers/pci/controller/plda/Kconfig b/drivers/pci/controller/plda/Kconfig
+>> index 5cb3be4fc98c..e54a82ee94f5 100644
+>> --- a/drivers/pci/controller/plda/Kconfig
+>> +++ b/drivers/pci/controller/plda/Kconfig
+>> @@ -3,10 +3,14 @@
+>>  menu "PLDA-based PCIe controllers"
+>>  	depends on PCI
+>>
+>> +config PCIE_PLDA_HOST
+>> +	bool
+>> +
+>>  config PCIE_MICROCHIP_HOST
+>>  	tristate "Microchip AXI PCIe controller"
+>>  	depends on PCI_MSI && OF
+>>  	select PCI_HOST_COMMON
+>> +	select PCIE_PLDA_HOST
+>>  	help
+>>  	  Say Y here if you want kernel to support the Microchip AXI PCIe
+>>  	  Host Bridge driver.
+>> diff --git a/drivers/pci/controller/plda/Makefile b/drivers/pci/controller/plda/Makefile
+>> index e1a265cbf91c..4340ab007f44 100644
+>> --- a/drivers/pci/controller/plda/Makefile
+>> +++ b/drivers/pci/controller/plda/Makefile
+>> @@ -1,2 +1,3 @@
+>>  # SPDX-License-Identifier: GPL-2.0
+>> +obj-$(CONFIG_PCIE_PLDA_HOST) += pcie-plda-host.o
+>>  obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
+>> diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
+>> index 1d253acd6bc2..ac7126b0bacf 100644
+>> --- a/drivers/pci/controller/plda/pcie-microchip-host.c
+>> +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
+>> @@ -837,65 +837,6 @@ static int mc_pcie_init_irq_domains(struct plda_pcie_rp *port)
+>>  	return mc_allocate_msi_domains(port);
+>>  }
+>>
+>> -static void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
+>> -				   phys_addr_t axi_addr, phys_addr_t pci_addr,
+>> -				   size_t size)
+>> -{
+>> -	u32 atr_sz = ilog2(size) - 1;
+>> -	u32 val;
+>> -
+>> -	if (index == 0)
+>> -		val = PCIE_CONFIG_INTERFACE;
+>> -	else
+>> -		val = PCIE_TX_RX_INTERFACE;
+>> -
+>> -	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> -	       ATR0_AXI4_SLV0_TRSL_PARAM);
+>> -
+>> -	val = lower_32_bits(axi_addr) | (atr_sz << ATR_SIZE_SHIFT) |
+>> -			    ATR_IMPL_ENABLE;
+>> -	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> -	       ATR0_AXI4_SLV0_SRCADDR_PARAM);
+>> -
+>> -	val = upper_32_bits(axi_addr);
+>> -	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> -	       ATR0_AXI4_SLV0_SRC_ADDR);
+>> -
+>> -	val = lower_32_bits(pci_addr);
+>> -	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> -	       ATR0_AXI4_SLV0_TRSL_ADDR_LSB);
+>> -
+>> -	val = upper_32_bits(pci_addr);
+>> -	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> -	       ATR0_AXI4_SLV0_TRSL_ADDR_UDW);
+>> -
+>> -	val = readl(bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
+>> -	val |= (ATR0_PCIE_ATR_SIZE << ATR0_PCIE_ATR_SIZE_SHIFT);
+>> -	writel(val, bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
+>> -	writel(0, bridge_base_addr + ATR0_PCIE_WIN0_SRC_ADDR);
+>> -}
+>> -
+>> -static int plda_pcie_setup_iomems(struct pci_host_bridge *bridge,
+>> -				  struct plda_pcie_rp *port)
+>> -{
+>> -	void __iomem *bridge_base_addr = port->bridge_addr;
+>> -	struct resource_entry *entry;
+>> -	u64 pci_addr;
+>> -	u32 index = 1;
+>> -
+>> -	resource_list_for_each_entry(entry, &bridge->windows) {
+>> -		if (resource_type(entry->res) == IORESOURCE_MEM) {
+>> -			pci_addr = entry->res->start - entry->offset;
+>> -			plda_pcie_setup_window(bridge_base_addr, index,
+>> -					       entry->res->start, pci_addr,
+>> -					       resource_size(entry->res));
+>> -			index++;
+>> -		}
+>> -	}
+>> -
+>> -	return 0;
+>> -}
+>> -
+>>  static inline void mc_clear_secs(struct mc_pcie *port)
+>>  {
+>>  	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
+>> diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/controller/plda/pcie-plda-host.c
+>> new file mode 100644
+>> index 000000000000..f0c7636f1f64
+>> --- /dev/null
+>> +++ b/drivers/pci/controller/plda/pcie-plda-host.c
+>> @@ -0,0 +1,82 @@
+>> +// SPDX-License-Identifier: GPL-2.0
+>> +/*
+>> + * PLDA PCIe XpressRich host controller driver
+>> + *
+>> + * Copyright (C) 2023 Microchip Co. Ltd
+>> + *		      StarFive Co. Ltd.
+>> + *
+>> + * Author: Daire McNamara <daire.mcnamara@microchip.com>
+>> + * Author: Minda Chen <minda.chen@starfivetech.com>
+>> + */
+>> +
+>> +#include <linux/irqchip/chained_irq.h>
+>> +#include <linux/irqdomain.h>
+>> +#include <linux/msi.h>
+>> +#include <linux/of_address.h>
+>> +#include <linux/of_pci.h>
+>> +#include <linux/pci_regs.h>
+>> +#include <linux/pci-ecam.h>
+>> +#include <linux/platform_device.h>
+>> +
+>> +#include "pcie-plda.h"
+>> +
+>> +void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
+>> +			    phys_addr_t axi_addr, phys_addr_t pci_addr,
+>> +			    size_t size)
+>> +{
+>> +	u32 atr_sz = ilog2(size) - 1;
+>> +	u32 val;
+>> +
+>> +	if (index == 0)
+>> +		val = PCIE_CONFIG_INTERFACE;
+>> +	else
+>> +		val = PCIE_TX_RX_INTERFACE;
+>> +
+>> +	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> +	       ATR0_AXI4_SLV0_TRSL_PARAM);
+>> +
+>> +	val = lower_32_bits(axi_addr) | (atr_sz << ATR_SIZE_SHIFT) |
+>> +			    ATR_IMPL_ENABLE;
+>> +	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> +	       ATR0_AXI4_SLV0_SRCADDR_PARAM);
+>> +
+>> +	val = upper_32_bits(axi_addr);
+>> +	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> +	       ATR0_AXI4_SLV0_SRC_ADDR);
+>> +
+>> +	val = lower_32_bits(pci_addr);
+>> +	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> +	       ATR0_AXI4_SLV0_TRSL_ADDR_LSB);
+>> +
+>> +	val = upper_32_bits(pci_addr);
+>> +	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+>> +	       ATR0_AXI4_SLV0_TRSL_ADDR_UDW);
+>> +
+>> +	val = readl(bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
+>> +	val |= (ATR0_PCIE_ATR_SIZE << ATR0_PCIE_ATR_SIZE_SHIFT);
+> 
+> I know this code is just a straight copy, but for future cleanups are we
+> guaranteed that this field is always zero?
+> 
+> Otherwise it looks a little suspicious to do read-modify-write, but just
+> set the (0x25 << 1) bits without clearing the field first.
+> 
+The reset value is zero. And this is called once.
+Maybe I can add a patch to fix this.
+>> +	writel(val, bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
+>> +	writel(0, bridge_base_addr + ATR0_PCIE_WIN0_SRC_ADDR);
+>> +}
+>> +EXPORT_SYMBOL_GPL(plda_pcie_setup_window);
+>> +
+>> +int plda_pcie_setup_iomems(struct pci_host_bridge *bridge,
+>> +			   struct plda_pcie_rp *port)
+>> +{
+>> +	void __iomem *bridge_base_addr = port->bridge_addr;
+>> +	struct resource_entry *entry;
+>> +	u64 pci_addr;
+>> +	u32 index = 1;
+>> +
+>> +	resource_list_for_each_entry(entry, &bridge->windows) {
+>> +		if (resource_type(entry->res) == IORESOURCE_MEM) {
+>> +			pci_addr = entry->res->start - entry->offset;
+>> +			plda_pcie_setup_window(bridge_base_addr, index,
+>> +					       entry->res->start, pci_addr,
+>> +					       resource_size(entry->res));
+>> +			index++;
+>> +		}
+>> +	}
+>> +
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(plda_pcie_setup_iomems);
+>> diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
+>> index d04a571404b9..3deefd35fa5a 100644
+>> --- a/drivers/pci/controller/plda/pcie-plda.h
+>> +++ b/drivers/pci/controller/plda/pcie-plda.h
+>> @@ -119,4 +119,10 @@ struct plda_pcie_rp {
+>>  	struct plda_msi msi;
+>>  	void __iomem *bridge_addr;
+>>  };
+>> +
+>> +void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
+>> +			    phys_addr_t axi_addr, phys_addr_t pci_addr,
+>> +			    size_t size);
+>> +int plda_pcie_setup_iomems(struct pci_host_bridge *bridge,
+>> +			   struct plda_pcie_rp *port);
+>>  #endif
+>> --
+>> 2.17.1
