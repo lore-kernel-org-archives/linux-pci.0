@@ -2,131 +2,151 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E64EDCE7A81
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Sep 2023 08:07:57 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 285B4CE7A81
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Sep 2023 08:40:31 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232607AbjIYIIB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Sep 2023 04:08:01 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35870 "EHLO
+        id S232954AbjIYIkf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Sep 2023 04:40:35 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40428 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232585AbjIYIH4 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Sep 2023 04:07:56 -0400
-Received: from eu-smtp-delivery-151.mimecast.com (eu-smtp-delivery-151.mimecast.com [185.58.85.151])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 90592AF
-        for <linux-pci@vger.kernel.org>; Mon, 25 Sep 2023 01:07:49 -0700 (PDT)
-Received: from AcuMS.aculab.com (156.67.243.121 [156.67.243.121]) by
- relay.mimecast.com with ESMTP with both STARTTLS and AUTH (version=TLSv1.2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
- uk-mta-40-yCHXM_ZnNDeRG6PClZKq0A-1; Mon, 25 Sep 2023 09:07:37 +0100
-X-MC-Unique: yCHXM_ZnNDeRG6PClZKq0A-1
-Received: from AcuMS.Aculab.com (10.202.163.4) by AcuMS.aculab.com
- (10.202.163.4) with Microsoft SMTP Server (TLS) id 15.0.1497.48; Mon, 25 Sep
- 2023 09:07:36 +0100
-Received: from AcuMS.Aculab.com ([::1]) by AcuMS.aculab.com ([::1]) with mapi
- id 15.00.1497.048; Mon, 25 Sep 2023 09:07:36 +0100
-From:   David Laight <David.Laight@ACULAB.COM>
-To:     'Shuai Xue' <xueshuai@linux.alibaba.com>,
-        Bjorn Helgaas <helgaas@kernel.org>
-CC:     "Rafael J. Wysocki" <rafael@kernel.org>,
-        "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
-        Linux PCI <linux-pci@vger.kernel.org>,
-        "mahesh@linux.ibm.com" <mahesh@linux.ibm.com>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "bp@alien8.de" <bp@alien8.de>,
-        Baolin Wang <baolin.wang@linux.alibaba.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        "bhelgaas@google.com" <bhelgaas@google.com>,
-        "james.morse@arm.com" <james.morse@arm.com>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "lenb@kernel.org" <lenb@kernel.org>
-Subject: RE: Questions: Should kernel panic when PCIe fatal error occurs?
-Thread-Topic: Questions: Should kernel panic when PCIe fatal error occurs?
-Thread-Index: AQHZ7ISwt0MI+BDoAEe5dUPUvfmXNrAlQDAwgAV5fACAAHb74A==
-Date:   Mon, 25 Sep 2023 08:07:35 +0000
-Message-ID: <acd250505687437b85830a0b2f4d69b0@AcuMS.aculab.com>
-References: <20230920230257.GA280837@bhelgaas>
- <d84b6d17-7fe9-222a-c874-798af4d9faea@linux.alibaba.com>
- <2e5870e416f84e8fad8340061ec303e2@AcuMS.aculab.com>
- <f70e93c6-ba5b-a71c-4b82-33b279c76b0e@linux.alibaba.com>
-In-Reply-To: <f70e93c6-ba5b-a71c-4b82-33b279c76b0e@linux.alibaba.com>
-Accept-Language: en-GB, en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-x-ms-exchange-transport-fromentityheader: Hosted
-x-originating-ip: [10.202.205.107]
+        with ESMTP id S232976AbjIYIke (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Sep 2023 04:40:34 -0400
+Received: from forwardcorp1a.mail.yandex.net (forwardcorp1a.mail.yandex.net [IPv6:2a02:6b8:c0e:500:1:45:d181:df01])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4541EC0
+        for <linux-pci@vger.kernel.org>; Mon, 25 Sep 2023 01:40:25 -0700 (PDT)
+Received: from mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net (mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net [IPv6:2a02:6b8:c18:d11:0:640:6943:0])
+        by forwardcorp1a.mail.yandex.net (Yandex) with ESMTP id 2E3725FC6F;
+        Mon, 25 Sep 2023 11:40:23 +0300 (MSK)
+Received: from valesini-ubuntu.yandex.net (unknown [2a02:6b8:0:419:ef2d:88e2:d835:7089])
+        by mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net (smtpcorp/Yandex) with ESMTPSA id DeJIo00OrSw0-TSrfTwG7;
+        Mon, 25 Sep 2023 11:40:22 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex-team.ru;
+        s=default; t=1695631222;
+        bh=XpSiMgstCaB6mxfNqbC2zgKSk3FX6BnjwH2YglOmEPc=;
+        h=Message-Id:Date:In-Reply-To:Cc:Subject:References:To:From;
+        b=Svadz1E5rOcwMmK9x7PKuN3gkyOGs0PPhiEmDZ7n/liwKc5SzFr6whjnZxhW+zDPu
+         hzNy0UrzRoVb2JmXlaw2T2AU6VVdb6j3dIJSgvppd3fT5mT3ZhZX1RNEpt7Dl8FVvo
+         3QVkjU0uT5DUkrqspIVNHkzFbuiNhHFASAtZR5bI=
+Authentication-Results: mail-nwsmtp-smtp-corp-main-83.vla.yp-c.yandex.net; dkim=pass header.i=@yandex-team.ru
+From:   Valentine Sinitsyn <valesini@yandex-team.ru>
+To:     Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Tejun Heo <tj@kernel.org>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Daniel Vetter <daniel.vetter@ffwll.ch>,
+        Dan Williams <dan.j.williams@intel.com>,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: [PATCH v9 2/2] PCI: Implement custom llseek for sysfs resource entries
+Date:   Mon, 25 Sep 2023 11:40:13 +0300
+Message-Id: <20230925084013.309399-2-valesini@yandex-team.ru>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <2023092241-obedient-squirt-966c@gregkh>
+References: <2023092241-obedient-squirt-966c@gregkh>
 MIME-Version: 1.0
-X-Mimecast-Spam-Score: 0
-X-Mimecast-Originator: aculab.com
-Content-Language: en-US
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-RnJvbTogU2h1YWkgWHVlDQo+IFNlbnQ6IDI1IFNlcHRlbWJlciAyMDIzIDAyOjQ0DQo+IA0KPiBP
-biAyMDIzLzkvMjEgMjE6MjAsIERhdmlkIExhaWdodCB3cm90ZToNCj4gPiAuLi4NCj4gPiBJJ3Zl
-IGdvdCBhIHRhcmdldCB0byBnZW5lcmF0ZSBBRVIgZXJyb3JzIGJ5IGdlbmVyYXRpbmcgcmVhZCBj
-eWNsZXMNCj4gPiB0aGF0IGFyZSBpbnNpZGUgdGhlIGFkZHJlc3MgcmFuZ2UgdGhhdCB0aGUgYnJp
-ZGdlIGZvcndhcmRzIGJ1dA0KPiA+IG91dHNpZGUgb2YgYW55IEJBUiBiZWNhdXNlIHRoZXJlIGFy
-ZSAyIGRpZmZlcmVudCBzaXplZCBCQVJzLg0KPiA+IChQcmV0dHkgZWFzeSB0byBzZXR1cC4pDQo+
-ID4gT24gdGhlIHN5c3RlbSBJIHdhcyB1c2luZyB0aGV5IGRpZG4ndCBnZXQgcHJvcGFnYXRlZCBh
-bGwgdGhlIHdheQ0KPiA+IHRvIHRoZSByb290IGJyaWRnZSAtIGJ1dCB3ZXJlIHZpc2libGUgaW4g
-dGhlIGxvd2VyIGJyaWRnZS4NCj4gDQo+IFNvIGhvdyBkaWQgeW91IG9ic2VydmUgaXQ/IElmIHRo
-ZSBlcnJvciBtZXNzYWdlIGRvZXMgbm90IHByb3BhZ2F0ZQ0KPiB0byB0aGUgcm9vdCBicmlkZ2Us
-IEkgdGhpbmsgbm8gQUVSIGludGVycnVwdCB3aWxsIGJlIHRyaWdnZXIuDQoNCkkgbG9va2VkIGF0
-IHRoZSBpbnRlcm5hbCByZWdpc3RlcnMgKElJUkMgaW4gUENJZSBjb25maWcgc3BhY2UpDQpvZiB0
-aGUgaW50ZXJtZWRpYXRlIGJyaWRnZS4NCkkgZG9uJ3QgdGhpbmsgdGhlIHJvb3QgYnJpZGdlIG9u
-IHRoYXQgc3lzdGVtIHN1cHBvcnRlZCBBRVIuDQooSSB3YXMgdGVzdGluZyB0aGUgZ2VuZXJhdGlv
-biBvZiBBRVIgaW5kaWNhdGlvbnMgYnkgb3VyIGZwZ2EuKQ0KDQo+IA0KPiA+IEl0IHdvdWxkIGJl
-IG5pY2UgZm9yIGEgZHJpdmVyIHRvIGJlIGFibGUgdG8gZGV0ZWN0L2NsZWFyIHN1Y2gNCj4gPiBh
-IGZsYWcgaWYgaXQgZ2V0cyBhbiB1bmV4cGVjdGVkIH4wdSByZWFkIHZhbHVlLg0KPiA+IChJJ20g
-bm90IHN1cmUgYW4gZXJyb3IgY2FsbGJhY2sgaGVscHMuKQ0KPiANCj4gSU1ITywgYSBnZW5lcmFs
-IG1vZGVsIGlzIHRoYXQgZXJyb3IgZGV0ZWN0ZWQgYXQgZW5kcG9pbnQgc2hvdWxkIGJlDQo+IHJv
-dXRlZCB0byB1cHN0cmVhbSBwb3J0IGZvciBleGFtcGxlOiBSQ2lFUCByb3V0ZSBlcnJvciBtZXNz
-YWdlIHRvIFJDRUMsDQo+IHNvIHRoYXQgdGhlIEFFUiBwb3J0IHNlcnZpY2UgY291bGQgaGFuZGxl
-IHRoZSBlcnJvciwgdGhlIGRldmljZSBkcml2ZXINCj4gb25seSBoYXZlIHRvIGltcGxlbWVudCBl
-cnJvciBoYW5kbGVyIGNhbGxiYWNrLg0KDQpUaGUgcHJvYmxlbSBpcyB0aGF0IHRoYXQgYW5kIGNh
-bGxiYWNrIGlzIHRvbyBsYXRlIGZvciBzb21ldGhpbmcNCnRyaWdnZXJlZCBieSBhIFBDSWUgcmVh
-ZC4NClRoZSBkcml2ZXIgaGFzIHRvIGRldGVjdCB0aGF0IHRoZSB2YWx1ZSBpcyAnZHViaW91cycg
-YW5kIHdhbnRzDQphIG1ldGhvZCBvZiBkZXRlY3Rpbmcgd2hldGhlciB0aGVyZSB3YXMgYW4gYXNz
-b2NpYXRlZCBBRVIgKG9yIG90aGVyKQ0KZXJyb3IuDQpJZiB0aGUgQUVSIGluZGljYXRpb24gaXMg
-cm91dGVkIHRocm91Z2ggc29tZSBleHRlcm5hbCBlbnRpdHkgKGxpa2UNCmJvYXJkIG1hbmFnZW1l
-bnQgaGFyZHdhcmUpIHRoZXJlIHdpbGwgYmUgYWRkaXRpb25hbCBsYXRlbmN5IHRoYXQNCm1lYW5z
-IHRoYXQgdGhlIGFzc29jaWF0ZWQgaW50ZXJydXB0IChldmVuIGlmIGFuIE5NSSkgbWF5IG5vdCBo
-YXZlDQpiZWVuIHByb2Nlc3NlZCB3aGVuIHRoZSBkcml2ZXIgY29kZSBpcyB0cnlpbmcgdG8gZGV0
-ZXJtaW5lIHdoYXQNCmhhcHBlbmVkLg0KVGhpcyBjYW4gb25seSBiZSBtYWRlIHdvcnNlIGJ5IHRo
-ZSBpbnRlcnJ1cHQgY29taW5nIGluIG9uIGENCmRpZmZlcmVudCBjcHUuDQoNCj4gPiBPVE9IIGEg
-J25lYnMgY29tcGxpYW50JyBzZXJ2ZXIgcm91dGVkIGFueSBraW5kIG9mIFBDSWUgbGluayBlcnJv
-cg0KPiA+IHRocm91Z2ggdG8gc29tZSAnc3lzdGVtIG1hbmFnZW1lbnQnIGxvZ2ljIHRoYXQgdGhl
-biByYWlzZWQgYW4gTk1JLg0KPiA+IEknbSBub3Qgc3VyZSB3aG8gdGhvdWdodCBhbiBOTUkgd2Fz
-IGEgZ29vZCBpZGVhIC0gdGhleSBhcmUgcHJldHR5DQo+ID4gaW1wb3NzaWJsZSB0byBoYW5kbGUg
-aW4gdGhlIGtlcm5lbCBhbmQgdG9vIGxhdGUgdG8gYmUgb2YgdXNlIHRvDQo+ID4gdGhlIGNvZGUg
-cGVyZm9ybWluZyB0aGUgYWNjZXNzLg0KPiANCj4gSSB0aGluayBpdCBpcyB0aGUgcmVzcG9uc2li
-aWxpdHkgb2YgdGhlIGRldmljZSB0byBwcmV2ZW50IHRoZSBzcHJlYWQgb2YNCj4gZXJyb3JzIHdo
-aWxlIHJlcG9ydGluZyB0aGF0IGVycm9ycyBoYXZlIGJlZW4gZGV0ZWN0ZWQuIEZvciBleGFtcGxl
-LCBkcm9wDQo+IHRoZSBjdXJyZW50LCAoZHJhaW4gc3VibWl0IHF1ZXVlKSBhbmQgcmVwb3J0IGVy
-cm9yIGluIGNvbXBsZXRpb24gcmVjb3JkLg0KDQpFaD8NCkkgY2FuIGdlbmVyYXRlIHR3byB0eXBl
-cyBvZiBQQ0llIGVycm9yOg0KLSBSZWFkL3dyaXRlIHJlcXVlc3RzIGZvciBhZGRyZXNzZXMgdGhh
-dCBhcmVuJ3QgaW5zaWRlIGEgQkFSLg0KLSBMaW5rIGZhaWx1cmVzIHRoYXQgY2F1c2UgcmV0cmFp
-bmluZyBhbmQgbWlnaHQgbmVlZCBjb25maWcNCiAgc3BhY2UgcmVjb25maWd1cmluZy4NCg0KPiBC
-b3RoIE5NSSBhbmQgTVNJIGFyZSBhc3luY2hyb25vdXMgaW50ZXJydXB0cy4NCg0KSW5kZWVkLCB3
-aGljaCBtYWtlcyBuZWl0aGVyIG9mIHRoZW0gc3VpdGFibGUgZm9yIGFueSBpbmRpY2F0aW9uDQpy
-ZWxhdGluZyB0byBhIGJ1cyBjeWNsZSBmYWlsdXJlLg0KDQo+ID4gSW4gYW55IGNhc2Ugd2Ugd2Vy
-ZSBnZXR0aW5nIG9uZSBhZnRlciAnZWNobyAxID54eHgvcmVtb3ZlJyBhbmQNCj4gPiB0aGVuIHRh
-a2luZyB0aGUgUENJZSBsaW5rIGRvd24gYnkgcmVwcm9ncmFtbWluZyB0aGUgZnBnYS4NCj4gPiBT
-byB0aGUgbGluayBnb2luZyBkb3duIHdhcyBlbnRpcmVseSBleHBlY3RlZCwgYnV0IHRoZXJlIHNl
-ZW1lZA0KPiA+IHRvIGJlIG5vdGhpbmcgd2UgY291bGQgZG8gdG8gc3RvcCB0aGUga2VybmVsIGNy
-YXNoaW5nLg0KPiA+DQo+ID4gSSdtIHN1cmUgJ25lYnMgY29tcGxpYW50JyBvdWdodCB0byBjb250
-YWluIHNvbWUgcmVxdWlyZW1lbnRzIGZvcg0KPiA+IHJlc2lsaWVuY2UgdG8gaGFyZHdhcmUgZmFp
-bHVyZXMhDQo+IA0KPiBIb3cgdGhlIGtlcm5lbCBjcmFzaCBhZnRlciBhIGxpbmsgZG93bj8gRGlk
-IHRoZSBzeXN0ZW0gZGV0ZWN0IGEgc3VycHJpc2UNCj4gZG93biBlcnJvcj8NCg0KSXQgd2FzIGEg
-Y291cGxlIG9mIHllYXJzIGFnby4uDQpJSVJDIHRoZSAnbGluayBkb3duJyBjYXVzZSB0aGUgaHVi
-IHRvIGdlbmVyYXRlIGFuIEFFUiBlcnJvci4NClRoZSByb290IGh1YiBmb3J3YXJkZWQgaXQgdG8g
-c29tZSAnYm9hcmQgbWFuYWdlbWVudCBoYXJkd2FyZS9zb2Z0d2FyZScNCnRoYXQgdGhlbiByYWlz
-ZWQgYW5kIE5NSS4NClRoZSBrZXJuZWwgY3Jhc2hlZCBiZWNhdXNlIG9mIGFuIHVuZXhwZWN0ZWQg
-Tk1JLg0KDQoJRGF2aWQNCg0KLQ0KUmVnaXN0ZXJlZCBBZGRyZXNzIExha2VzaWRlLCBCcmFtbGV5
-IFJvYWQsIE1vdW50IEZhcm0sIE1pbHRvbiBLZXluZXMsIE1LMSAxUFQsIFVLDQpSZWdpc3RyYXRp
-b24gTm86IDEzOTczODYgKFdhbGVzKQ0K
+Since commit 636b21b50152 ("PCI: Revoke mappings like devmem"), mmappable
+sysfs entries have started to receive their f_mapping from the iomem
+pseudo filesystem, so that CONFIG_IO_STRICT_DEVMEM is honored in sysfs
+(and procfs) as well as in /dev/[k]mem.
+
+This resulted in a userspace-visible regression:
+
+1. Open a sysfs PCI resource file (eg. /sys/bus/pci/devices/*/resource0)
+2. Use lseek(fd, 0, SEEK_END) to determine its size
+
+Expected result: a PCI region size is returned.
+Actual result: 0 is returned.
+
+The reason is that PCI resource files residing in sysfs use
+generic_file_llseek(), which relies on f_mapping->host inode to get the
+file size. As f_mapping is now redefined, f_mapping->host points to an
+anonymous zero-sized iomem_inode which has nothing to do with sysfs file
+in question.
+
+Implement a custom llseek method for sysfs PCI resources, which is
+almost the same as proc_bus_pci_lseek() used for procfs entries.
+
+This makes sysfs and procfs entries consistent with regards to seeking,
+but also introduces userspace-visible changes to seeking PCI resources
+in sysfs:
+
+- SEEK_DATA and SEEK_HOLE are no longer supported;
+- Seeking past the end of the file is prohibited while previously
+  offsets up to MAX_NON_LFS were accepted (reading from these offsets
+  was always invalid).
+
+Fixes: 636b21b50152 ("PCI: Revoke mappings like devmem")
+Cc: stable@vger.kernel.org
+Signed-off-by: Valentine Sinitsyn <valesini@yandex-team.ru>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+ drivers/pci/pci-sysfs.c | 26 +++++++++++++++++++++++++-
+ 1 file changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index d9eede2dbc0e..97c9c62d5e3e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -835,6 +835,19 @@ static const struct attribute_group pci_dev_config_attr_group = {
+ 	.is_bin_visible = pci_dev_config_attr_is_visible,
+ };
+ 
++/*
++ * llseek operation for mmappable PCI resources.
++ * May be left unused if the arch doesn't provide them.
++ */
++static __maybe_unused loff_t
++pci_llseek_resource(struct file *filep,
++		    struct kobject *kobj __always_unused,
++		    struct bin_attribute *attr,
++		    loff_t offset, int whence)
++{
++	return fixed_size_llseek(filep, offset, whence, attr->size);
++}
++
+ #ifdef HAVE_PCI_LEGACY
+ /**
+  * pci_read_legacy_io - read byte(s) from legacy I/O port space
+@@ -967,6 +980,8 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_io->attr.mode = 0600;
+ 	b->legacy_io->read = pci_read_legacy_io;
+ 	b->legacy_io->write = pci_write_legacy_io;
++	/* See pci_create_attr() for motivation */
++	b->legacy_io->llseek = pci_llseek_resource;
+ 	b->legacy_io->mmap = pci_mmap_legacy_io;
+ 	b->legacy_io->f_mapping = iomem_get_mapping;
+ 	pci_adjust_legacy_attr(b, pci_mmap_io);
+@@ -981,6 +996,8 @@ void pci_create_legacy_files(struct pci_bus *b)
+ 	b->legacy_mem->size = 1024*1024;
+ 	b->legacy_mem->attr.mode = 0600;
+ 	b->legacy_mem->mmap = pci_mmap_legacy_mem;
++	/* See pci_create_attr() for motivation */
++	b->legacy_mem->llseek = pci_llseek_resource;
+ 	b->legacy_mem->f_mapping = iomem_get_mapping;
+ 	pci_adjust_legacy_attr(b, pci_mmap_mem);
+ 	error = device_create_bin_file(&b->dev, b->legacy_mem);
+@@ -1199,8 +1216,15 @@ static int pci_create_attr(struct pci_dev *pdev, int num, int write_combine)
+ 			res_attr->mmap = pci_mmap_resource_uc;
+ 		}
+ 	}
+-	if (res_attr->mmap)
++	if (res_attr->mmap) {
+ 		res_attr->f_mapping = iomem_get_mapping;
++		/*
++		 * generic_file_llseek() consults f_mapping->host to determine
++		 * the file size. As iomem_inode knows nothing about the
++		 * attribute, it's not going to work, so override it as well.
++		 */
++		res_attr->llseek = pci_llseek_resource;
++	}
+ 	res_attr->attr.name = res_attr_name;
+ 	res_attr->attr.mode = 0600;
+ 	res_attr->size = pci_resource_len(pdev, num);
+-- 
+2.34.1
 
