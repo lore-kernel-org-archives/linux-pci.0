@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2687CCE7A9C
-	for <linux-pci@archiver.kernel.org>; Mon, 25 Sep 2023 07:21:52 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0779ECE7A9E
+	for <linux-pci@archiver.kernel.org>; Mon, 25 Sep 2023 07:21:53 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232063AbjIYHVz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 25 Sep 2023 03:21:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43536 "EHLO
+        id S230302AbjIYHV4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 25 Sep 2023 03:21:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43494 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230302AbjIYHVp (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Sep 2023 03:21:45 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 7AD35CF;
-        Mon, 25 Sep 2023 00:21:38 -0700 (PDT)
+        with ESMTP id S231397AbjIYHVv (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 25 Sep 2023 03:21:51 -0400
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 1BA62EE;
+        Mon, 25 Sep 2023 00:21:39 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.03,174,1694703600"; 
-   d="scan'208";a="177131120"
+   d="scan'208";a="180864182"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 25 Sep 2023 16:21:34 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 25 Sep 2023 16:21:35 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id C7DBB4008C70;
-        Mon, 25 Sep 2023 16:21:34 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 9BE954008C71;
+        Mon, 25 Sep 2023 16:21:35 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
         bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
@@ -29,11 +29,12 @@ To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Geert Uytterhoeven <geert+renesas@glider.be>,
         Serge Semin <fancer.lancer@gmail.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v22 06/16] PCI: dwc: Expose dw_pcie_ep_exit() to module
-Date:   Mon, 25 Sep 2023 16:21:20 +0900
-Message-Id: <20230925072130.3901087-7-yoshihiro.shimoda.uh@renesas.com>
+        Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v22 11/16] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
+Date:   Mon, 25 Sep 2023 16:21:25 +0900
+Message-Id: <20230925072130.3901087-12-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230925072130.3901087-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230925072130.3901087-1-yoshihiro.shimoda.uh@renesas.com>
@@ -44,37 +45,144 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Since no PCIe controller drivers call this, this change is not required
-for now. But, Renesas R-Car Gen4 PCIe controller driver will call this
-and if the controller driver is built as a kernel module, the following
-build error happens:
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe endpoint module.
 
-  ERROR: modpost: "dw_pcie_ep_exit" [drivers/pci/controller/dwc/pcie-rcar-gen4-ep-drv.ko] undefined!
-
-So, expose dw_pcie_ep_exit() for it.
-
-[kwilczynski: commit log]
-Link: https://lore.kernel.org/linux-pci/20230825093219.2685912-11-yoshihiro.shimoda.uh@renesas.com
+Link: https://lore.kernel.org/linux-pci/20230825093219.2685912-16-yoshihiro.shimoda.uh@renesas.com
+Link: https://lore.kernel.org/linux-pci/20230901131711.2861283-4-yoshihiro.shimoda.uh@renesas.com
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Rob Herring <robh@kernel.org>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+ .../bindings/pci/rcar-gen4-pci-ep.yaml        | 115 ++++++++++++++++++
+ 1 file changed, 115 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 851538ddec0a..a8bcbc57ef86 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -638,6 +638,7 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 
- 	pci_epc_mem_exit(epc);
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_ep_exit);
- 
- static unsigned int dw_pcie_ep_find_ext_capability(struct dw_pcie *pci, int cap)
- {
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+new file mode 100644
+index 000000000000..fe38f62da066
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+@@ -0,0 +1,115 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022-2023 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Renesas R-Car Gen4 PCIe Endpoint
++
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
++
++allOf:
++  - $ref: snps,dw-pcie-ep.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
++
++  reg:
++    maxItems: 7
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: atu
++      - const: dma
++      - const: app
++      - const: phy
++      - const: addr_space
++
++  interrupts:
++    maxItems: 3
++
++  interrupt-names:
++    items:
++      - const: dma
++      - const: sft_ce
++      - const: app
++
++  clocks:
++    maxItems: 2
++
++  clock-names:
++    items:
++      - const: core
++      - const: ref
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    items:
++      - const: pwr
++
++  max-link-speed:
++    maximum: 4
++
++  num-lanes:
++    maximum: 4
++
++  max-functions:
++    maximum: 2
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - interrupt-names
++  - clocks
++  - clock-names
++  - power-domains
++  - resets
++  - reset-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie0_ep: pcie-ep@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie-ep", "renesas,rcar-gen4-pcie-ep";
++            reg = <0 0xe65d0000 0 0x2000>, <0 0xe65d2000 0 0x1000>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xe65d5000 0 0x1200>,
++                  <0 0xe65d6200 0 0x0e00>, <0 0xe65d7000 0 0x0400>,
++                  <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "dbi2", "atu", "dma", "app", "phy", "addr_space";
++            interrupts = <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "dma", "sft_ce", "app";
++            clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
++            clock-names = "core", "ref";
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            reset-names = "pwr";
++            max-link-speed = <4>;
++            num-lanes = <2>;
++            max-functions = /bits/ 8 <2>;
++        };
++    };
 -- 
 2.25.1
 
