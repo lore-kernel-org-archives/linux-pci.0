@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 482B0E7E62F
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9E85CE7E630
 	for <linux-pci@archiver.kernel.org>; Tue, 26 Sep 2023 12:24:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234576AbjIZMYp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Sep 2023 08:24:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47884 "EHLO
+        id S234578AbjIZMYq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Sep 2023 08:24:46 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47886 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233754AbjIZMYp (ORCPT
+        with ESMTP id S229827AbjIZMYp (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Sep 2023 08:24:45 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 183A8FB;
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 161CEEB;
         Tue, 26 Sep 2023 05:24:37 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.03,177,1694703600"; 
-   d="scan'208";a="181033388"
+   d="scan'208";a="177299696"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie6.idc.renesas.com with ESMTP; 26 Sep 2023 21:24:37 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 26 Sep 2023 21:24:36 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 20E7F41FAD07;
-        Tue, 26 Sep 2023 21:24:37 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id B1FBC41FAD07;
+        Tue, 26 Sep 2023 21:24:36 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
         bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
@@ -28,14 +28,11 @@ To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
         gustavo.pimentel@synopsys.com, mani@kernel.org
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: [PATCH v23 03/16] PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling
-Date:   Tue, 26 Sep 2023 21:24:18 +0900
-Message-Id: <20230926122431.3974714-4-yoshihiro.shimoda.uh@renesas.com>
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v23 00/16] PCI: dwc: rcar-gen4: Add R-Car Gen4 PCIe support
+Date:   Tue, 26 Sep 2023 21:24:15 +0900
+Message-Id: <20230926122431.3974714-1-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230926122431.3974714-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20230926122431.3974714-1-yoshihiro.shimoda.uh@renesas.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -43,65 +40,83 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Update dw_pcie_link_set_max_link_width() to set PCI_EXP_LNKCAP_MLW.
+Add R-Car S4-8 (R-Car Gen4) PCIe controller for both host and endpoint modes.
+To support them, modify PCIe DesignWare common codes.
 
-In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
-the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
-field there is another one which needs to be updated.
+Changes from v22:
+https://lore.kernel.org/linux-pci/20230925072130.3901087-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch.
+ - Add Reviewed-by in the patch 12/16.
+ - Move a few endpoint related code from the patch 13/16 to 14/16.
+ - Change subjects in the patch 1[34]/16.
+ - Modify the code for readability in the patch 14/16.
 
-It's LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
-the very least the maximum link-width capability CSR won't expose the
-actual maximum capability.
+Changes from v21:
+https://lore.kernel.org/linux-pci/20230922065331.3806925-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch.
+ - Fix -Wmissing-prototypes warnings that was reported by kernel test robot:
+   https://lore.kernel.org/linux-pci/202309222125.KiN4nFhD-lkp@intel.com/
 
-[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.60a, March 2015, p.1032
-[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.70a, March 2016, p.1065
-[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.90a, March 2016, p.1057
-...
-[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
-      Version 5.40a, March 2019, p.1396
-[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-      Version 5.40a, March 2019, p.1266
+Changes from v20 + squash patches:
+https://lore.kernel.org/linux-pci/20230825093219.2685912-1-yoshihiro.shimoda.uh@renesas.com/
+https://lore.kernel.org/linux-pci/20230901131711.2861283-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch.
+ - Cherry-picked almost all patches from the pci.git / controller/rcar branch
+   for squashing.
+  - But, drop the following patches which are related to INTx.
+     eb185e1e628a PCI: designware-ep: Add INTx IRQs support
+     5d0e51f85b23 PCI: dwc: Add outbound MSG TLPs support
+     4758bef61cc2 PCI: dwc: Change arguments of dw_pcie_prog_outbound_atu()
+     44938b13046b PCI: Add INTx Mechanism Messages macros
+ - Add a new macro T_PVPERL in the patch 12/16.
+ - Merge pcie-rcar-gen4-{ep,host}-drv.c and pcie-rcar-gen4.h files into
+   pcie-rcar-gen4.c.
+ - Add CONFIG_PCIE_RCAR_GEN4_HOST config.
+ - Fix some comments.
+ - Change return type of rcar_gen4_pcie_speed_change().
+ - Add registers' full names as comments.
+ - Rename function names of rcar_gen4_{add,remove}_pcie_ep() to
+   rcar_gen4_{add,remove}_dw_pcie_ep() for consistency.
 
-[kwilczynski: commit log]
-Link: https://lore.kernel.org/linux-pci/20230825093219.2685912-8-yoshihiro.shimoda.uh@renesas.com
-Suggested-by: Serge Semin <fancer.lancer@gmail.com>
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
----
- drivers/pci/controller/dwc/pcie-designware.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Yoshihiro Shimoda (16):
+  PCI: dwc: endpoint: Add multiple PFs support for dbi2
+  PCI: dwc: Add dw_pcie_link_set_max_link_width()
+  PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling
+  PCI: tegra194: Drop PCI_EXP_LNKSTA_NLW setting
+  PCI: dwc: Add EDMA_UNROLL capability flag
+  PCI: dwc: Expose dw_pcie_ep_exit() to module
+  PCI: dwc: Expose dw_pcie_write_dbi2() to module
+  PCI: dwc: endpoint: Introduce .pre_init() and .deinit()
+  dt-bindings: PCI: dwc: Update maxItems of reg and reg-names
+  dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+  dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Endpoint
+  PCI: add T_PVPERL macro
+  PCI: dwc: rcar-gen4: Add R-Car Gen4 PCIe controller support for host
+    mode
+  PCI: dwc: rcar-gen4: Add endpoint mode support
+  MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
+  misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index da4aba4aee62..2b60d20dfdf5 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -734,7 +734,8 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
- 
- static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- {
--	u32 lwsc, plc;
-+	u32 lnkcap, lwsc, plc;
-+	u8 cap;
- 
- 	if (!num_lanes)
- 		return;
-@@ -770,6 +771,12 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- 	}
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
- 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
-+
-+	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
-+	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
-+	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
-+	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
- }
- 
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ .../bindings/pci/rcar-gen4-pci-ep.yaml        | 115 ++++
+ .../bindings/pci/rcar-gen4-pci-host.yaml      | 127 +++++
+ .../bindings/pci/snps,dw-pcie-common.yaml     |   4 +-
+ .../bindings/pci/snps,dw-pcie-ep.yaml         |   4 +-
+ .../devicetree/bindings/pci/snps,dw-pcie.yaml |   4 +-
+ MAINTAINERS                                   |   1 +
+ drivers/misc/pci_endpoint_test.c              |   4 +
+ drivers/pci/controller/dwc/Kconfig            |  25 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ .../pci/controller/dwc/pcie-designware-ep.c   |  45 +-
+ drivers/pci/controller/dwc/pcie-designware.c  | 102 ++--
+ drivers/pci/controller/dwc/pcie-designware.h  |   8 +-
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   | 526 ++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-tegra194.c    |   6 -
+ drivers/pci/pci.h                             |   3 +
+ 15 files changed, 906 insertions(+), 69 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.c
+
 -- 
 2.25.1
 
