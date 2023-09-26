@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C4FA9E7E641
-	for <linux-pci@archiver.kernel.org>; Tue, 26 Sep 2023 12:24:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0264AE7E633
+	for <linux-pci@archiver.kernel.org>; Tue, 26 Sep 2023 12:24:46 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234645AbjIZMYu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 26 Sep 2023 08:24:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47988 "EHLO
+        id S234624AbjIZMYv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 26 Sep 2023 08:24:51 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48002 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234587AbjIZMYt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Sep 2023 08:24:49 -0400
+        with ESMTP id S234622AbjIZMYu (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 26 Sep 2023 08:24:50 -0400
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 55156126;
-        Tue, 26 Sep 2023 05:24:41 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 3678112A;
+        Tue, 26 Sep 2023 05:24:42 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.03,177,1694703600"; 
-   d="scan'208";a="177299711"
+   d="scan'208";a="177299714"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
   by relmlie5.idc.renesas.com with ESMTP; 26 Sep 2023 21:24:38 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id E9B5941FAD06;
-        Tue, 26 Sep 2023 21:24:37 +0900 (JST)
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 3DF4241FAD06;
+        Tue, 26 Sep 2023 21:24:38 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
         bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
@@ -29,10 +29,12 @@ To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: [PATCH v23 08/16] PCI: dwc: endpoint: Introduce .pre_init() and .deinit()
-Date:   Tue, 26 Sep 2023 21:24:23 +0900
-Message-Id: <20230926122431.3974714-9-yoshihiro.shimoda.uh@renesas.com>
+        Geert Uytterhoeven <geert+renesas@glider.be>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v23 10/16] dt-bindings: PCI: renesas: Add R-Car Gen4 PCIe Host
+Date:   Tue, 26 Sep 2023 21:24:25 +0900
+Message-Id: <20230926122431.3974714-11-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20230926122431.3974714-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20230926122431.3974714-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,85 +45,155 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Renesas R-Car Gen4 PCIe controllers require vendor-specific
-initialization before .init().
+Document bindings for Renesas R-Car Gen4 and R-Car S4-8 (R8A779F0)
+PCIe host module.
 
-To use dw->dbi and dw->num-lanes in the initialization code,
-introduce .pre_init() into struct dw_pcie_ep_ops. While at it,
-also introduce .deinit() to disable the controller by using
-vendor-specific de-initialization.
-
-Note that the ep_init in the struct dw_pcie_ep_ops should be
-renamed to init later.
-
-[kwilczynski: commit log]
-Link: https://lore.kernel.org/linux-pci/20230825093219.2685912-13-yoshihiro.shimoda.uh@renesas.com
+Link: https://lore.kernel.org/linux-pci/20230825093219.2685912-15-yoshihiro.shimoda.uh@renesas.com
+Link: https://lore.kernel.org/linux-pci/20230901131711.2861283-3-yoshihiro.shimoda.uh@renesas.com
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+Reviewed-by: Rob Herring <robh@kernel.org>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 ---
- drivers/pci/controller/dwc/pcie-designware-ep.c | 12 +++++++++++-
- drivers/pci/controller/dwc/pcie-designware.h    |  2 ++
- 2 files changed, 13 insertions(+), 1 deletion(-)
+ .../bindings/pci/rcar-gen4-pci-host.yaml      | 127 ++++++++++++++++++
+ 1 file changed, 127 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index a8bcbc57ef86..d34a5e87ad18 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -637,6 +637,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
- 			      epc->mem->window.page_size);
- 
- 	pci_epc_mem_exit(epc);
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+new file mode 100644
+index 000000000000..ffb34339b637
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+@@ -0,0 +1,127 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++# Copyright (C) 2022-2023 Renesas Electronics Corp.
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/rcar-gen4-pci-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	if (ep->ops->deinit)
-+		ep->ops->deinit(ep);
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_exit);
- 
-@@ -740,6 +743,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 	ep->phys_base = res->start;
- 	ep->addr_size = resource_size(res);
- 
-+	if (ep->ops->pre_init)
-+		ep->ops->pre_init(ep);
++title: Renesas R-Car Gen4 PCIe Host
 +
- 	dw_pcie_version_detect(pci);
- 
- 	dw_pcie_iatu_detect(pci);
-@@ -794,7 +800,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- 			       ep->page_size);
- 	if (ret < 0) {
- 		dev_err(dev, "Failed to initialize address space\n");
--		return ret;
-+		goto err_ep_deinit;
- 	}
- 
- 	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
-@@ -831,6 +837,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
- err_exit_epc_mem:
- 	pci_epc_mem_exit(epc);
- 
-+err_ep_deinit:
-+	if (ep->ops->deinit)
-+		ep->ops->deinit(ep);
++maintainers:
++  - Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 +
- 	return ret;
- }
- EXPORT_SYMBOL_GPL(dw_pcie_ep_init);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index e10f7e18b13a..8c637392ab08 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -330,7 +330,9 @@ struct dw_pcie_rp {
- };
- 
- struct dw_pcie_ep_ops {
-+	void	(*pre_init)(struct dw_pcie_ep *ep);
- 	void	(*ep_init)(struct dw_pcie_ep *ep);
-+	void	(*deinit)(struct dw_pcie_ep *ep);
- 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
- 			     enum pci_epc_irq_type type, u16 interrupt_num);
- 	const struct pci_epc_features* (*get_features)(struct dw_pcie_ep *ep);
++allOf:
++  - $ref: snps,dw-pcie.yaml#
++
++properties:
++  compatible:
++    items:
++      - const: renesas,r8a779f0-pcie   # R-Car S4-8
++      - const: renesas,rcar-gen4-pcie  # R-Car Gen4
++
++  reg:
++    maxItems: 7
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: dbi2
++      - const: atu
++      - const: dma
++      - const: app
++      - const: phy
++      - const: config
++
++  interrupts:
++    maxItems: 4
++
++  interrupt-names:
++    items:
++      - const: msi
++      - const: dma
++      - const: sft_ce
++      - const: app
++
++  clocks:
++    maxItems: 2
++
++  clock-names:
++    items:
++      - const: core
++      - const: ref
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    items:
++      - const: pwr
++
++  max-link-speed:
++    maximum: 4
++
++  num-lanes:
++    maximum: 4
++
++required:
++  - compatible
++  - reg
++  - reg-names
++  - interrupts
++  - interrupt-names
++  - clocks
++  - clock-names
++  - power-domains
++  - resets
++  - reset-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/r8a779f0-cpg-mssr.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/power/r8a779f0-sysc.h>
++
++    soc {
++        #address-cells = <2>;
++        #size-cells = <2>;
++
++        pcie: pcie@e65d0000 {
++            compatible = "renesas,r8a779f0-pcie", "renesas,rcar-gen4-pcie";
++            reg = <0 0xe65d0000 0 0x1000>, <0 0xe65d2000 0 0x0800>,
++                  <0 0xe65d3000 0 0x2000>, <0 0xe65d5000 0 0x1200>,
++                  <0 0xe65d6200 0 0x0e00>, <0 0xe65d7000 0 0x0400>,
++                  <0 0xfe000000 0 0x400000>;
++            reg-names = "dbi", "dbi2", "atu", "dma", "app", "phy", "config";
++            interrupts = <GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 422 IRQ_TYPE_LEVEL_HIGH>;
++            interrupt-names = "msi", "dma", "sft_ce", "app";
++            clocks = <&cpg CPG_MOD 624>, <&pcie0_clkref>;
++            clock-names = "core", "ref";
++            power-domains = <&sysc R8A779F0_PD_ALWAYS_ON>;
++            resets = <&cpg 624>;
++            reset-names = "pwr";
++            max-link-speed = <4>;
++            num-lanes = <2>;
++            #address-cells = <3>;
++            #size-cells = <2>;
++            bus-range = <0x00 0xff>;
++            device_type = "pci";
++            ranges = <0x01000000 0 0x00000000 0 0xfe000000 0 0x00400000>,
++                     <0x02000000 0 0x30000000 0 0x30000000 0 0x10000000>;
++            dma-ranges = <0x42000000 0 0x00000000 0 0x00000000 1 0x00000000>;
++            #interrupt-cells = <1>;
++            interrupt-map-mask = <0 0 0 7>;
++            interrupt-map = <0 0 0 1 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                            <0 0 0 2 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                            <0 0 0 3 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>,
++                            <0 0 0 4 &gic GIC_SPI 416 IRQ_TYPE_LEVEL_HIGH>;
++            snps,enable-cdm-check;
++        };
++    };
 -- 
 2.25.1
 
