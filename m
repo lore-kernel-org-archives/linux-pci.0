@@ -2,86 +2,149 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A0438E82CA5
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 15:39:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C4199E82CA5
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 15:46:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232643AbjI0PjG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Sep 2023 11:39:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49086 "EHLO
+        id S232005AbjI0PqJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Sep 2023 11:46:09 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48720 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232838AbjI0PiC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 11:38:02 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FD2ECD9
-        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 08:36:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695829015; x=1727365015;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=4y2ufGhmhaXTWIjmW47x7Uel7sXWt7hrK42AXxm10zk=;
-  b=VjNin6qzSHEjzZSjWj1PqNoukYf9H28GI38TILHI9FF9W9+gHthsgk3N
-   i6lUNSPp/oMjDkGntdOuAQ9+nu4csgT/3OJr1RuRNUUXHT7ANckD3oT3f
-   ugfXobzKHIALjl+8QuxiqoThiNKBWj3mZCTId9DzGTH6/fep5mpehuYlP
-   JYESGmPDbxR4idSINapyorLvdYr0cOwejJyhdGnMm7x6y3075P34hv6m7
-   bXcg+nAfLsQm0Zwoiso7V14ycZgV+dlKXOslEkECSCOb+96XZCBSt+mwC
-   KEpvldm36noUmrl0LggMJv9uCzLmSEyvL5xY4gqk1SQKMkZP5aNZRwZyY
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="384651401"
-X-IronPort-AV: E=Sophos;i="6.03,181,1694761200"; 
-   d="scan'208";a="384651401"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Sep 2023 08:36:54 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10846"; a="725854404"
-X-IronPort-AV: E=Sophos;i="6.03,181,1694761200"; 
-   d="scan'208";a="725854404"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga006.jf.intel.com with ESMTP; 27 Sep 2023 08:36:52 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id AE3C5177; Wed, 27 Sep 2023 18:36:50 +0300 (EEST)
-Date:   Wed, 27 Sep 2023 18:36:50 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Lukas Wunner <lukas@wunner.de>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        Kamil Paral <kparal@redhat.com>, linux-pci@vger.kernel.org,
-        regressions@lists.linux.dev, bhelgaas@google.com,
-        chris.chiu@canonical.com
-Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
- e8b908146d44 "PCI/PM: Increase wait time after resume"
-Message-ID: <20230927153650.GL3208943@black.fi.intel.com>
-References: <20230927051602.GX3208943@black.fi.intel.com>
- <20230927115703.GA445616@bhelgaas>
- <20230927124732.GI3208943@black.fi.intel.com>
- <20230927143143.GA16217@wunner.de>
- <20230927144248.GK3208943@black.fi.intel.com>
+        with ESMTP id S231752AbjI0PqI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 11:46:08 -0400
+Received: from mail-wr1-x430.google.com (mail-wr1-x430.google.com [IPv6:2a00:1450:4864:20::430])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DC8C0272AB
+        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 08:46:06 -0700 (PDT)
+Received: by mail-wr1-x430.google.com with SMTP id ffacd0b85a97d-3231d6504e1so7605717f8f.2
+        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 08:46:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1695829565; x=1696434365; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=AnVyIhUQftvj++Ho5Yy6rcq1eYnc1pWWiufohODrEFE=;
+        b=yMMij82nkhn4Th830NPLjXLNPcSSoWWVBozahIduJCUCr97mo97OVUDEnaUSIqHIn8
+         mB2+bKQFfdICXcxkcifGdTUhUFG0s7cTcx2viflW6pMBn2s01RlHhAGUyz8aYaQMdrXk
+         Dwp3G9SRV+fm2cvq4NPT7yYTJaDodrhOfSBlbG95/og1E4w1Jjd48WhTGKQtgtbJ4lDF
+         IWtElAfog+Wbm6L5MXKfCew5VKxWgJFJjm536l7oYh8Z0psCzMqJNVPCf4kcxmd/g0Q2
+         w55c+P+jV1i/xJOWuplzClh91O7xjX8qGtI8Fe6ugc5aFbIPicSPFQKdbU8Ja6n8+k9O
+         T86w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695829565; x=1696434365;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=AnVyIhUQftvj++Ho5Yy6rcq1eYnc1pWWiufohODrEFE=;
+        b=fIeDk/9+zPMBY8txlMBETfhV9p3kb3oqbovkSTBNxh1vo0ZTw3yFgInHx3WyR6J8fL
+         JnLY8ru1X8/qvfNqIIb2jgT98BpWgBwRV9+8Z+kI4C6STUMEHlgTnDWkPkuYCnDzz5OJ
+         KUUHMuIQarQnqRNVDVbySgz2wX9JfPq0jD48sXlFI/yycLLqODcZN/kl64OC8ZQxYe3L
+         I66MCl67HxlzomB9u2ZBmiGP4RtcDWH1VV7KFCoN51QQxYGMi2phNoM/GN07IH4ibfQK
+         5YtZ+sLdCCxX+Y/2nXrDrV3E/8lmDq5XkyOyoZNhO8XQNL3zxXjM0N60FAHswiFzVscf
+         wrVA==
+X-Gm-Message-State: AOJu0YwsQ6CJFQwf781XoFRVyDfa/lS079eGG3IHWnaWM56aXN6kQCnT
+        QpnnaP+EbJld0XwevOdC+leO
+X-Google-Smtp-Source: AGHT+IHPVlFHZSR7dS0CVY+TjYfy0oJ3z2n7yBnN6VGdCusCelDVK4SOfVJbaXNnh5OXlhTYFnYG6A==
+X-Received: by 2002:a05:6000:4cd:b0:321:4df5:b85e with SMTP id h13-20020a05600004cd00b003214df5b85emr2167996wri.26.1695829565184;
+        Wed, 27 Sep 2023 08:46:05 -0700 (PDT)
+Received: from thinkpad.fritz.box ([2a02:2454:9d09:3f00:b024:394e:56d7:d8b4])
+        by smtp.gmail.com with ESMTPSA id s28-20020adfa29c000000b003232f167df5sm6925852wra.108.2023.09.27.08.46.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Sep 2023 08:46:04 -0700 (PDT)
+From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To:     lpieralisi@kernel.org, kw@linux.com
+Cc:     andersson@kernel.org, konrad.dybcio@linaro.org,
+        bhelgaas@google.com, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        abel.vesa@linaro.org,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v3 1/3] PCI: qcom: Make use of PCIE_SPEED2MBS_ENC() macro for encoding link speed
+Date:   Wed, 27 Sep 2023 17:46:01 +0200
+Message-Id: <20230927154603.172049-1-manivannan.sadhasivam@linaro.org>
+X-Mailer: git-send-email 2.25.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20230927144248.GK3208943@black.fi.intel.com>
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 05:42:48PM +0300, Mika Westerberg wrote:
-> On Wed, Sep 27, 2023 at 04:31:43PM +0200, Lukas Wunner wrote:
-> > On Wed, Sep 27, 2023 at 03:47:32PM +0300, Mika Westerberg wrote:
-> > > This is not a Linux defect. The firmware is expected to create that
-> > > tunnel so regardless of the "delay" the devices are already back. This
-> > > is not happening.
-> > 
-> > I recall that newer chips can be switched over to software connection
-> > manager at runtime.
-> > 
-> > Can we determine that the ICM firmware failed to do what it should,
-> > kick it out and let the software connection manager take over?
-> 
-> No that's not possible. In Macs it was "partially" possible but even
-> there you lose all the PM and the like. I don't even want to speculate
-> what happens if you run the same on PCs.
-> 
-> There is an option to "force" this but I do not recommend this (pass
-> thunderbolt.start_icm=1 in the command line).
+Instead of hardcoding the link speed in MBps, let's make use of the
+existing PCIE_SPEED2MBS_ENC() macro that does the encoding of the
+link speed for us. Also, let's Wrap it with QCOM_PCIE_LINK_SPEED_TO_BW()
+macro to do the conversion to ICC speed.
 
-Sorry, this is the complete opposite. This starts the firmware not stops
-it but anyways everything else above is true ;-)
+This eliminates the need for a switch case in qcom_pcie_icc_update() and
+also works for future Gen speeds without any code modifications.
+
+Suggested-by: Bjorn Helgaas <bhelgaas@google.com>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+
+Changes in v3:
+
+- Used Mbps_to_icc() macro and changed the commit message a bit
+
+Changes in v2:
+
+- Switched to QCOM_PCIE_LINK_SPEED_TO_BW() macro as per Bjorn's suggestion
+  https://lore.kernel.org/linux-pci/20230924160713.217086-1-manivannan.sadhasivam@linaro.org/
+
+ drivers/pci/controller/dwc/pcie-qcom.c | 24 ++++++------------------
+ 1 file changed, 6 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index e2f29404c84e..367acb419a2b 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -148,6 +148,9 @@
+ 
+ #define QCOM_PCIE_CRC8_POLYNOMIAL		(BIT(2) | BIT(1) | BIT(0))
+ 
++#define QCOM_PCIE_LINK_SPEED_TO_BW(speed) \
++		Mbps_to_icc(PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]))
++
+ #define QCOM_PCIE_1_0_0_MAX_CLOCKS		4
+ struct qcom_pcie_resources_1_0_0 {
+ 	struct clk_bulk_data clks[QCOM_PCIE_1_0_0_MAX_CLOCKS];
+@@ -1347,7 +1350,7 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+ 	 * Set an initial peak bandwidth corresponding to single-lane Gen 1
+ 	 * for the pcie-mem path.
+ 	 */
+-	ret = icc_set_bw(pcie->icc_mem, 0, MBps_to_icc(250));
++	ret = icc_set_bw(pcie->icc_mem, 0, QCOM_PCIE_LINK_SPEED_TO_BW(1));
+ 	if (ret) {
+ 		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
+ 			ret);
+@@ -1360,7 +1363,7 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+ static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
+ {
+ 	struct dw_pcie *pci = pcie->pci;
+-	u32 offset, status, bw;
++	u32 offset, status;
+ 	int speed, width;
+ 	int ret;
+ 
+@@ -1377,22 +1380,7 @@ static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
+ 	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
+ 	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
+ 
+-	switch (speed) {
+-	case 1:
+-		bw = MBps_to_icc(250);
+-		break;
+-	case 2:
+-		bw = MBps_to_icc(500);
+-		break;
+-	default:
+-		WARN_ON_ONCE(1);
+-		fallthrough;
+-	case 3:
+-		bw = MBps_to_icc(985);
+-		break;
+-	}
+-
+-	ret = icc_set_bw(pcie->icc_mem, 0, width * bw);
++	ret = icc_set_bw(pcie->icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
+ 	if (ret) {
+ 		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
+ 			ret);
+-- 
+2.25.1
+
