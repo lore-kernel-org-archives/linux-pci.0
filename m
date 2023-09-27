@@ -2,128 +2,145 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B559E80A89
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 05:21:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 52656E80A8E
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 05:44:23 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229874AbjI0FVJ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Sep 2023 01:21:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:39126 "EHLO
+        id S229842AbjI0FoV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Sep 2023 01:44:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48898 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229832AbjI0FU3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 01:20:29 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E5D9E270C
-        for <linux-pci@vger.kernel.org>; Tue, 26 Sep 2023 22:16:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1695791766; x=1727327766;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ETJatUXksZxv7GcmiGmwoAcRbp77sOm1M4V6YfLhYAE=;
-  b=lYrmUpgnMF0x5GXUdPXImih1r8eUs8S4ZfgvsIMozrRc+mpH+4EpGWcE
-   g+k7uqinyzL4fDjv/KjUIUrpbOt5W2T3F0PtdwbIc+co54eXQu91L6WUi
-   E19mlXV1uwRTv0PGClQwiW+lzmjgv/2v09S2SWR+iZfCxWvcfGQu/feyI
-   HpAqsW0ViX1ObJqV3xRxxrAqwflJhbqjQTV/L1C02OoyrIzNRdAqq4QJz
-   o9tCEoCj/EPXyk9QUbPpUo/k8g29NaWyEzz7ASfrvylXRYRg8KbmB1aa3
-   ljndOof+A5n1BQMTho1fN082xbd9rIuF6wV6aSWiO0bSmP5tQ1OrL8YWF
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="379014371"
-X-IronPort-AV: E=Sophos;i="6.03,179,1694761200"; 
-   d="scan'208";a="379014371"
-Received: from fmsmga004.fm.intel.com ([10.253.24.48])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Sep 2023 22:16:06 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10845"; a="819285800"
-X-IronPort-AV: E=Sophos;i="6.03,179,1694761200"; 
-   d="scan'208";a="819285800"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga004.fm.intel.com with ESMTP; 26 Sep 2023 22:16:04 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id B2D6B177; Wed, 27 Sep 2023 08:16:02 +0300 (EEST)
-Date:   Wed, 27 Sep 2023 08:16:02 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Lukas Wunner <lukas@wunner.de>, Kamil Paral <kparal@redhat.com>,
-        linux-pci@vger.kernel.org, regressions@lists.linux.dev,
-        bhelgaas@google.com, chris.chiu@canonical.com
-Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
- e8b908146d44 "PCI/PM: Increase wait time after resume"
-Message-ID: <20230927051602.GX3208943@black.fi.intel.com>
-References: <20230925141930.GA21033@wunner.de>
- <20230926175530.GA418550@bhelgaas>
+        with ESMTP id S229774AbjI0Fnk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 01:43:40 -0400
+Received: from mail-yb1-xb36.google.com (mail-yb1-xb36.google.com [IPv6:2607:f8b0:4864:20::b36])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADD1619B4;
+        Tue, 26 Sep 2023 21:03:41 -0700 (PDT)
+Received: by mail-yb1-xb36.google.com with SMTP id 3f1490d57ef6-d81adf0d57fso11861113276.1;
+        Tue, 26 Sep 2023 21:03:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1695787421; x=1696392221; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PZWmen4JLaB5x8ESbke0gsUwehKeCChPmC+1mwTtUuc=;
+        b=fZ0YkKlhgDotlE9HR+rhVmoPYM5dn13c3GHiw5V4/WFnxc7a5+ow/vFtKfAGAqEf3n
+         BHM59Sg8CAQk5LbpZ4bzqdhEy8B1LM29toA0CylGm6cn7/CdaBQ5k/YDqFuPNlJ4BjeC
+         l1nmqPu8bU6E3//mdYhwd7O6c6iRYbwVKIF9qGjv6/gajRs82N4s76gB/cr3HuJIhZGM
+         lCehkP2E7O/2fVtAExd+r0wEpHvBbj3uPT05bIaoo7n2SyrvDXQ9d5ujx7quIx3ZrWY5
+         0UEfAs94pzzhIbKdZ8y7KLfzPm3Q+7hpdoB0lN/ybY5RLaMLFQhCaQ1vDrTpU4u9b1Sd
+         kMdg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1695787421; x=1696392221;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PZWmen4JLaB5x8ESbke0gsUwehKeCChPmC+1mwTtUuc=;
+        b=vHP7DAvtx9nN2Lb0ZJUD96nhbeXNwDXNhYb0tNuPFbHkXf6iGef2PgKsbNRkWbLyf2
+         11XxqTl4A8BdA7bewDLpF37mZO0bLzti/VGzdtgLCwameVcwffS+f4LAeMfklcvyJnER
+         M4VN4G70Y61PV8GHzGve+1CxHD1MSW/TBV8ZePoVuhYRR672xwyuO0hjZvs+IL3QW8XV
+         ZuBbEW1dglRZBeTn9vMeyHVZYJPCCPQ32VnbPvjocj4UajW7ngG0Pr94GlY0Sbu3fsnj
+         fzYyb6WQ/MJqaeG/FHlK6Ye9AdzvDUVAn9B86fr7Sx4BV9GmkTfCg/qD6Rd21r/htx5d
+         9Bng==
+X-Gm-Message-State: AOJu0YxtV9NfxJlXDU33M+4NgXX4x71x6ZlfEhEf/kNCglda3qw0l3VO
+        HOMAqHgH+xcpbXettEUOuQQWBjwPLX/0p1brUfg=
+X-Google-Smtp-Source: AGHT+IF/vVrJQC7R1KNQ8hd+XcJr7nFxUONmpUX2ez40DLteEgJFOZKReYjsBtv6ACZD43negIIJXfw85N4ywMxMNuI=
+X-Received: by 2002:a25:d6c9:0:b0:d78:ae6:e75a with SMTP id
+ n192-20020a25d6c9000000b00d780ae6e75amr797922ybg.60.1695787420719; Tue, 26
+ Sep 2023 21:03:40 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20230926175530.GA418550@bhelgaas>
+References: <fdc7a4ee-250f-7ec8-ca15-32cbd480bd3e@linux.alibaba.com> <20230926230247.GA429368@bhelgaas>
+In-Reply-To: <20230926230247.GA429368@bhelgaas>
+From:   "Oliver O'Halloran" <oohall@gmail.com>
+Date:   Wed, 27 Sep 2023 14:03:28 +1000
+Message-ID: <CAOSf1CF0nxSbLGhuB8LbK=LgpSQ1hfwPcH=-TV7VFj0N8adm2A@mail.gmail.com>
+Subject: Re: Questions: Should kernel panic when PCIe fatal error occurs?
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Shuai Xue <xueshuai@linux.alibaba.com>,
+        Miaohe Lin <linmiaohe@huawei.com>,
+        "wangkefeng.wang@huawei.com" <wangkefeng.wang@huawei.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        gregkh@linuxfoundation.org, Linux PCI <linux-pci@vger.kernel.org>,
+        mahesh@linux.ibm.com,
+        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
+        "tanxiaofei@huawei.com" <tanxiaofei@huawei.com>,
+        "bp@alien8.de" <bp@alien8.de>,
+        Baolin Wang <baolin.wang@linux.alibaba.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        bhelgaas@google.com, "james.morse@arm.com" <james.morse@arm.com>,
+        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
+        "lenb@kernel.org" <lenb@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 12:55:30PM -0500, Bjorn Helgaas wrote:
-> On Mon, Sep 25, 2023 at 04:19:30PM +0200, Lukas Wunner wrote:
-> > On Mon, Sep 25, 2023 at 08:48:41AM -0500, Bjorn Helgaas wrote:
-> > > Now pciehp thinks the slot is occupied and the link is up, so we
-> > > re-enumerate the hierarchy.  Is this because thunderbolt did something
-> > > to 06:00.0 that made the link from 05:01.0 come up?
-> > 
-> > PCIe TLPs are encapsulated into Thunderbolt packets and transmitted
-> > alongside DisplayPort and other data over the same physical link.
-> > 
-> > For this to work, PCIe tunnels need to be set up between the Thunderbolt
-> > host controller and attached devices.  Once a tunnel is established,
-> > the PCIe link magically goes up and TLPs can be transmitted.
-> > 
-> > There are two ways to establish those tunnels:
-> > 
-> > 1/ By a firmware in the Thunderbolt host controller.
-> >    (firmware or "internal" connection manager, drivers/thunderbolt/icm.c)
-> > 
-> > 2/ Natively by the kernel.
-> >    (software connection manager)
-> > 
-> > I'm assuming that the laptop in question exclusively uses the firmware
-> > connection manager, hence the kernel is reliant on that firmware to
-> > establish tunnels and can't really do anything if it fails to do so.
-> 
-> Thanks for the background; that improves my meager understanding a
-> lot.
-> 
-> Since this seems to be a firmware issue, it does sound like this
-> laptop uses a firmware connection manager.  But there still seems to
-> be some kernel connection because pre-e8b908146d44, the link came up
-> in <5 seconds, and after the minor e8b908146d44 change, it takes >60
-> seconds.
+On Wed, Sep 27, 2023 at 9:03=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> On Fri, Sep 22, 2023 at 10:46:36AM +0800, Shuai Xue wrote:
+> > ...
+>
+> > Actually, this is a question from my colleague from firmware team.
+> > The original question is that:
+> >
+> >     "Should I set CPER_SEV_FATAL for Generic Error Status Block when a
+> >     PCIe fatal error is detected? If set, kernel will always panic.
+> >     Otherwise, kernel will always not panic."
+> >
+> > So I pull a question about desired behavior of Linux kernel first :)
+> > From the perspective of the kernel, CPER_SEV_FATAL for Generic Error
+> > Status Block is not reasonable. The kernel will attempt to recover
+> > Fatal errors, although recovery may fail.
+>
+> I don't know the semantics of CPER_SEV_FATAL or why it's there.
+> With CPER, we have *two* error severities: a "native" one defined by
+> the PCIe spec and another defined by the platform via CPER.
+>
+> I speculate that the reason for the CPER severity could be to provide
+> a severity for error sources that don't have a "native" severity like
+> AER does, or for the vendor to force the OS to restart (for
+> CPER_SEV_FATAL, anyway) in cases where it might not otherwise.
+>
+> In the native case, we only have the PCIe severity and don't have the
+> CPER severity at all, and I suspect that unless there's uncontained
+> data corruption, we would rather handle even the most severe PCIe
+> fatal error by disabling the specific device(s) instead of panicking
+> and restarting the whole machine.
 
-In both cases (with or without) the commit what happens is that after
-resume is finished the firmware connection manager notices the
-connection, announces it to the Thunderbolt driver that exposes it to
-the userspace where boltd re-authorizes the device. This brings up the
-PCIe tunnel again and things get working.
+From a user's point of view disabling a device is often worse than a
+reboot. If you get a fatal error from a system's only network card
+then disabling the card may result in the system being uncontactable
+until someone manually recovers it. Similarly, if the disk hosting the
+root filesystem disappears the system may not crash immediately (most
+of what it needs will be in page cache), but there's no guarantee that
+it can do anything useful in that state. In both cases forcing a
+reboot will probably bring the system back into a usable state.
 
-(What is expected to happen is that during the resume the firmware
- connection manager re-connects the PCIe tunnel.)
+> So for PCIe errors, I'm not sure setting CPER_SEV_FATAL is beneficial
+> unless the platform wants to force the OS to panic, e.g., maybe the
+> platform knows about data corruption and/or the vendor wants the OS to
+> panic as part of a reliability story.
 
-This took previously the ~5s before resume is complete so that the above
-steps can happen where as after the commit it got delayed more up to the
-arbitrary ~60s because we started to use that with the commit
-e8b908146d44 (PCIE_RESET_READY_POLL_MS).
+The PCIe spec is (intentionally?) vague about the causes of fatal
+errors. For all we know a device is reporting one because the embedded
+OS it was running crashed and as a side effect it's been DMAing junk
+into system memory for the past hour. If you know something about the
+device in question maybe you can make those assumptions, but in
+general it's impossible to assess the actual severity of an error.
+Even in the case of a noisy link causing bit flips (it's possible,
+LCRC is only 16bit and ECEC is optional) if we get corruption of the
+address bits of the TLP header then the DMA might have overwritten
+something important to the OS. From a hardware vendor's point of view
+just forcing a reboot makes a lot of sense.
 
-> I'm kind of at a loss here because I don't have a clear path forward.
-> What I'm hearing is that the real fix is a firmware update or a BIOS
-> setting change (Thunderbolt "user" instead of "secure" mode).
+Paranoia aside, in a lot of cases PCI device errors are nothing major
+and can be resolved by just restarting the device. However, there's no
+way for generic kernel code to make that assessment and we probably
+shouldn't have the kernel guess. I'd say the safest option would be to
+punt that decision to userspace and provide some way to whitelist
+devices that we can ignore errors from. I'm not familiar enough with
+the ACPI to know if we have enough details in the notification it
+sends to actually implement that though.
 
-There are lots of firmares involved so, say if any of them are turned
-from the default value the system may enter code paths that are not
-fully validated unfortunately.
-
-I would also try to change all the BIOS settings back to defaults, see
-that it works (it is probably in "user" security level then), then
-switch back to "secure" (only change this one option) and try if it now
-works. It could be that some setting just did not get commited properly.
-
-> That is problematic for users, who will think resume got broken and
-> they don't know how to fix it.  It's problematic for me, because it
-> *looks* like a PCI issue and a PCI change exposed it, so I'll have to
-> deal with the reports.
-
-I'm sorry about that. Trying best I can to remedy this.
+Oliver
