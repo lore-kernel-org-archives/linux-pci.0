@@ -2,145 +2,164 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 52656E80A8E
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 05:44:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76EDDE80A9E
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 07:15:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229842AbjI0FoV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Sep 2023 01:44:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48898 "EHLO
+        id S229907AbjI0HPE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Sep 2023 03:15:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229774AbjI0Fnk (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 01:43:40 -0400
-Received: from mail-yb1-xb36.google.com (mail-yb1-xb36.google.com [IPv6:2607:f8b0:4864:20::b36])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ADD1619B4;
-        Tue, 26 Sep 2023 21:03:41 -0700 (PDT)
-Received: by mail-yb1-xb36.google.com with SMTP id 3f1490d57ef6-d81adf0d57fso11861113276.1;
-        Tue, 26 Sep 2023 21:03:41 -0700 (PDT)
+        with ESMTP id S229458AbjI0HPD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 03:15:03 -0400
+Received: from mail-pg1-x534.google.com (mail-pg1-x534.google.com [IPv6:2607:f8b0:4864:20::534])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AA04E10E
+        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 00:15:01 -0700 (PDT)
+Received: by mail-pg1-x534.google.com with SMTP id 41be03b00d2f7-5827f6d60aaso3742707a12.3
+        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 00:15:01 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1695787421; x=1696392221; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PZWmen4JLaB5x8ESbke0gsUwehKeCChPmC+1mwTtUuc=;
-        b=fZ0YkKlhgDotlE9HR+rhVmoPYM5dn13c3GHiw5V4/WFnxc7a5+ow/vFtKfAGAqEf3n
-         BHM59Sg8CAQk5LbpZ4bzqdhEy8B1LM29toA0CylGm6cn7/CdaBQ5k/YDqFuPNlJ4BjeC
-         l1nmqPu8bU6E3//mdYhwd7O6c6iRYbwVKIF9qGjv6/gajRs82N4s76gB/cr3HuJIhZGM
-         lCehkP2E7O/2fVtAExd+r0wEpHvBbj3uPT05bIaoo7n2SyrvDXQ9d5ujx7quIx3ZrWY5
-         0UEfAs94pzzhIbKdZ8y7KLfzPm3Q+7hpdoB0lN/ybY5RLaMLFQhCaQ1vDrTpU4u9b1Sd
-         kMdg==
+        d=linaro.org; s=google; t=1695798901; x=1696403701; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Bja12LI17w7SlAGim+7rV0lYQwVQg67VffGOzL5a63Q=;
+        b=NtK7MWFyclEp5SNVF26d/FbChfxjHSl6IZ2rWeYm8tNp/DVqRoSucr6BVUi9DQB3t7
+         IeeyNPp/Bk2WY3XsmQz27xOGtVV3O/4APv0T2eVMz85uTswkjDaliDMnyk8Vg4FQsqTP
+         v2B35jzO3y40j7ss/Oh5OT9zLASRPKQ+LgisQzPP9FAQoB4xf8aPXTxu7oBA/1+U/pYI
+         l8uskEL80kRTms9WFU7WVroKYKJDR3rUCylkieBez3k7H0Bzeq72G6fLJwQVFeeiGw4p
+         azbDnu6WveRK4JSqlrH6cwusnR3ASMzFqhpXjBc889+FCKPxJqyyhNO9NinDp0afsIIu
+         itdA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695787421; x=1696392221;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PZWmen4JLaB5x8ESbke0gsUwehKeCChPmC+1mwTtUuc=;
-        b=vHP7DAvtx9nN2Lb0ZJUD96nhbeXNwDXNhYb0tNuPFbHkXf6iGef2PgKsbNRkWbLyf2
-         11XxqTl4A8BdA7bewDLpF37mZO0bLzti/VGzdtgLCwameVcwffS+f4LAeMfklcvyJnER
-         M4VN4G70Y61PV8GHzGve+1CxHD1MSW/TBV8ZePoVuhYRR672xwyuO0hjZvs+IL3QW8XV
-         ZuBbEW1dglRZBeTn9vMeyHVZYJPCCPQ32VnbPvjocj4UajW7ngG0Pr94GlY0Sbu3fsnj
-         fzYyb6WQ/MJqaeG/FHlK6Ye9AdzvDUVAn9B86fr7Sx4BV9GmkTfCg/qD6Rd21r/htx5d
-         9Bng==
-X-Gm-Message-State: AOJu0YxtV9NfxJlXDU33M+4NgXX4x71x6ZlfEhEf/kNCglda3qw0l3VO
-        HOMAqHgH+xcpbXettEUOuQQWBjwPLX/0p1brUfg=
-X-Google-Smtp-Source: AGHT+IF/vVrJQC7R1KNQ8hd+XcJr7nFxUONmpUX2ez40DLteEgJFOZKReYjsBtv6ACZD43negIIJXfw85N4ywMxMNuI=
-X-Received: by 2002:a25:d6c9:0:b0:d78:ae6:e75a with SMTP id
- n192-20020a25d6c9000000b00d780ae6e75amr797922ybg.60.1695787420719; Tue, 26
- Sep 2023 21:03:40 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1695798901; x=1696403701;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Bja12LI17w7SlAGim+7rV0lYQwVQg67VffGOzL5a63Q=;
+        b=rNF8hXl8sm5VEJ/B6h4WWla+y1kBPKxY6CAkXQzTQGG1xxplKvrKe3bgb8qxgpskOW
+         FtjbF8/yUprEU/u9ZDDkNV/LCWCxnoCiH8bk0mftfpWnWdK8hCh3SbA466blvp/fFh3e
+         eimHVLhmXElJuFDMZsq/sRFdE8apsmFlsyG3h2xVD1/1HP1Xj1rRXgJM8bXm9XCbwqh1
+         ujFxVloG641Y+Ln5jsGHvLiWvgt9olX5iH+CM+izzuY7N2Syz1LSt8c1LJwQCKnhKfSk
+         6GI2Ei/0vr4jgzCNdzemo5Oa3zXq52kAI+QgvT85ZjpmPpXvjN1OHtCjGKwhFiDHKbC5
+         A/qw==
+X-Gm-Message-State: AOJu0Yz5+tz4BnEXhOhXj/cTSJyO1oMiRduwXEoHzEYC6+R0GLNPUWHT
+        dpJ3O++tuAcL28Coqks4yUqbOdS2WaIQ2er8hAw=
+X-Google-Smtp-Source: AGHT+IFEZBCbksbtcNTYf/GSZEytPkrOcuA47MwSgUX5XYYf4aTBNmh0w+tEc6YDfL3KznT/8qU+LA==
+X-Received: by 2002:a17:90b:1e0e:b0:269:2682:11fb with SMTP id pg14-20020a17090b1e0e00b00269268211fbmr908623pjb.8.1695798901045;
+        Wed, 27 Sep 2023 00:15:01 -0700 (PDT)
+Received: from localhost ([122.172.81.92])
+        by smtp.gmail.com with ESMTPSA id b8-20020a17090aa58800b00277326038dasm6928001pjq.39.2023.09.27.00.15.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 27 Sep 2023 00:15:00 -0700 (PDT)
+Date:   Wed, 27 Sep 2023 12:44:58 +0530
+From:   Viresh Kumar <viresh.kumar@linaro.org>
+To:     Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Cc:     agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
+        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+        vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org,
+        lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+        bhelgaas@google.com, rafael@kernel.org,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+        quic_ramkri@quicinc.com, quic_parass@quicinc.com
+Subject: Re: [PATCH v5 3/5] opp: Add dev_pm_opp_find_level_floor()
+Message-ID: <20230927071458.busudwwj26kmia4u@vireshk-i7>
+References: <1694066433-8677-1-git-send-email-quic_krichai@quicinc.com>
+ <1694066433-8677-4-git-send-email-quic_krichai@quicinc.com>
 MIME-Version: 1.0
-References: <fdc7a4ee-250f-7ec8-ca15-32cbd480bd3e@linux.alibaba.com> <20230926230247.GA429368@bhelgaas>
-In-Reply-To: <20230926230247.GA429368@bhelgaas>
-From:   "Oliver O'Halloran" <oohall@gmail.com>
-Date:   Wed, 27 Sep 2023 14:03:28 +1000
-Message-ID: <CAOSf1CF0nxSbLGhuB8LbK=LgpSQ1hfwPcH=-TV7VFj0N8adm2A@mail.gmail.com>
-Subject: Re: Questions: Should kernel panic when PCIe fatal error occurs?
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Shuai Xue <xueshuai@linux.alibaba.com>,
-        Miaohe Lin <linmiaohe@huawei.com>,
-        "wangkefeng.wang@huawei.com" <wangkefeng.wang@huawei.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>,
-        gregkh@linuxfoundation.org, Linux PCI <linux-pci@vger.kernel.org>,
-        mahesh@linux.ibm.com,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-acpi@vger.kernel.org" <linux-acpi@vger.kernel.org>,
-        "tanxiaofei@huawei.com" <tanxiaofei@huawei.com>,
-        "bp@alien8.de" <bp@alien8.de>,
-        Baolin Wang <baolin.wang@linux.alibaba.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        bhelgaas@google.com, "james.morse@arm.com" <james.morse@arm.com>,
-        "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>,
-        "lenb@kernel.org" <lenb@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <1694066433-8677-4-git-send-email-quic_krichai@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 9:03=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> On Fri, Sep 22, 2023 at 10:46:36AM +0800, Shuai Xue wrote:
-> > ...
->
-> > Actually, this is a question from my colleague from firmware team.
-> > The original question is that:
-> >
-> >     "Should I set CPER_SEV_FATAL for Generic Error Status Block when a
-> >     PCIe fatal error is detected? If set, kernel will always panic.
-> >     Otherwise, kernel will always not panic."
-> >
-> > So I pull a question about desired behavior of Linux kernel first :)
-> > From the perspective of the kernel, CPER_SEV_FATAL for Generic Error
-> > Status Block is not reasonable. The kernel will attempt to recover
-> > Fatal errors, although recovery may fail.
->
-> I don't know the semantics of CPER_SEV_FATAL or why it's there.
-> With CPER, we have *two* error severities: a "native" one defined by
-> the PCIe spec and another defined by the platform via CPER.
->
-> I speculate that the reason for the CPER severity could be to provide
-> a severity for error sources that don't have a "native" severity like
-> AER does, or for the vendor to force the OS to restart (for
-> CPER_SEV_FATAL, anyway) in cases where it might not otherwise.
->
-> In the native case, we only have the PCIe severity and don't have the
-> CPER severity at all, and I suspect that unless there's uncontained
-> data corruption, we would rather handle even the most severe PCIe
-> fatal error by disabling the specific device(s) instead of panicking
-> and restarting the whole machine.
+On 07-09-23, 11:30, Krishna chaitanya chundru wrote:
 
-From a user's point of view disabling a device is often worse than a
-reboot. If you get a fatal error from a system's only network card
-then disabling the card may result in the system being uncontactable
-until someone manually recovers it. Similarly, if the disk hosting the
-root filesystem disappears the system may not crash immediately (most
-of what it needs will be in page cache), but there's no guarantee that
-it can do anything useful in that state. In both cases forcing a
-reboot will probably bring the system back into a usable state.
+$Subject should have OPP instead of opp. Past history of framework can be seen
+for this.
 
-> So for PCIe errors, I'm not sure setting CPER_SEV_FATAL is beneficial
-> unless the platform wants to force the OS to panic, e.g., maybe the
-> platform knows about data corruption and/or the vendor wants the OS to
-> panic as part of a reliability story.
+> During initialization of some drivers, need to vote for max level.
+> 
+> Adding dev_pm_opp_find_level_floor() for searching a lesser match or
+> operating on OPP in the order of decreasing level.
+> 
+> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> ---
+>  drivers/opp/core.c     | 25 +++++++++++++++++++++++++
+>  include/linux/pm_opp.h |  9 +++++++++
+>  2 files changed, 34 insertions(+)
+> 
+> diff --git a/drivers/opp/core.c b/drivers/opp/core.c
+> index 919cc53..6d4d226 100644
+> --- a/drivers/opp/core.c
+> +++ b/drivers/opp/core.c
+> @@ -814,6 +814,31 @@ struct dev_pm_opp *dev_pm_opp_find_level_ceil(struct device *dev,
+>  EXPORT_SYMBOL_GPL(dev_pm_opp_find_level_ceil);
+>  
+>  /**
+> + * dev_pm_opp_find_level_floor() - Search for a rounded floor freq
 
-The PCIe spec is (intentionally?) vague about the causes of fatal
-errors. For all we know a device is reporting one because the embedded
-OS it was running crashed and as a side effect it's been DMAing junk
-into system memory for the past hour. If you know something about the
-device in question maybe you can make those assumptions, but in
-general it's impossible to assess the actual severity of an error.
-Even in the case of a noisy link causing bit flips (it's possible,
-LCRC is only 16bit and ECEC is optional) if we get corruption of the
-address bits of the TLP header then the DMA might have overwritten
-something important to the OS. From a hardware vendor's point of view
-just forcing a reboot makes a lot of sense.
+freq ?
 
-Paranoia aside, in a lot of cases PCI device errors are nothing major
-and can be resolved by just restarting the device. However, there's no
-way for generic kernel code to make that assessment and we probably
-shouldn't have the kernel guess. I'd say the safest option would be to
-punt that decision to userspace and provide some way to whitelist
-devices that we can ignore errors from. I'm not familiar enough with
-the ACPI to know if we have enough details in the notification it
-sends to actually implement that though.
+> + * @dev:	device for which we do this operation
+> + * @level:	Start level
+> + *
+> + * Search for the matching floor *available* OPP from a starting level
+> + * for a device.
+> + *
+> + * Return: matching *opp and refreshes *level accordingly, else returns
+> + * ERR_PTR in case of error and should be handled using IS_ERR. Error return
+> + * values can be:
+> + * EINVAL:	for bad pointer
+> + * ERANGE:	no match found for search
+> + * ENODEV:	if device not found in list of registered devices
+> + *
+> + * The callers are required to call dev_pm_opp_put() for the returned OPP after
+> + * use.
+> + */
+> +struct dev_pm_opp *dev_pm_opp_find_level_floor(struct device *dev,
+> +					       unsigned long *level)
+> +{
+> +	return _find_key_floor(dev, level, 0, true, _read_level, NULL);
+> +}
+> +EXPORT_SYMBOL_GPL(dev_pm_opp_find_level_floor);
+> +
+> +/**
+>   * dev_pm_opp_find_bw_ceil() - Search for a rounded ceil bandwidth
+>   * @dev:	device for which we do this operation
+>   * @bw:	start bandwidth
+> diff --git a/include/linux/pm_opp.h b/include/linux/pm_opp.h
+> index 91f87d7..baea92f 100644
+> --- a/include/linux/pm_opp.h
+> +++ b/include/linux/pm_opp.h
+> @@ -144,6 +144,9 @@ struct dev_pm_opp *dev_pm_opp_find_level_exact(struct device *dev,
+>  struct dev_pm_opp *dev_pm_opp_find_level_ceil(struct device *dev,
+>  					      unsigned int *level);
+>  
+> +struct dev_pm_opp *dev_pm_opp_find_level_floor(struct device *dev,
+> +					       unsigned long *level);
+> +
+>  struct dev_pm_opp *dev_pm_opp_find_bw_ceil(struct device *dev,
+>  					   unsigned int *bw, int index);
+>  
+> @@ -314,6 +317,12 @@ static inline struct dev_pm_opp *dev_pm_opp_find_bw_ceil(struct device *dev,
+>  	return ERR_PTR(-EOPNOTSUPP);
+>  }
+>  
+> +static inline struct dev_pm_opp *dev_pm_opp_find_level_floor(struct device *dev,
 
-Oliver
+Why add between two bw related functions ?
+
+> +							     unsigned long *level)
+> +{
+> +	return ERR_PTR(-EOPNOTSUPP);
+> +}
+> +
+>  static inline struct dev_pm_opp *dev_pm_opp_find_bw_floor(struct device *dev,
+>  					unsigned int *bw, int index)
+>  {
+
+Fixed all this and applied. Thanks.
+
+-- 
+viresh
