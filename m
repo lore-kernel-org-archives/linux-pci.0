@@ -2,210 +2,170 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 87C14E82CA7
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 15:48:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id F333FE82CAE
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 16:50:41 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232798AbjI0Pss (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Sep 2023 11:48:48 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38962 "EHLO
+        id S229473AbjI0Qul (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Sep 2023 12:50:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42712 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232893AbjI0Psg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 11:48:36 -0400
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2077.outbound.protection.outlook.com [40.107.95.77])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 893822CB84;
-        Wed, 27 Sep 2023 08:47:50 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=cz7WSDXgFHpcq1MxQ+GLFP70rU+f4zJIlB7fdl8kya8QY1+wDKgou3kHucBp+KcStcIv/7qCjzwP+0/lx888cpBHISa8/CSW0WpadX7E6rOTpsOsPjwfgl6EWe9kN3GApXSxcWGCnClCpZnAZX4IK8W97Y53ywr9xXbCXGAIJ7FNxYxN3172UmlrhkBLWWzylpVBmXhn9B7mj9TGkCzckPBWaMWnGCAK80uRjg/SPFC8uzdbI76ThoC9lstRUvVcr08lVik3dcGkm3V5Sphy61/6uX4mwkHYjbAPF8lQ1kjyqGHgVNlF3iN46U6jgx5N57AvEc6kjMTgpn8sPe6ghA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HgmxzE91/Y8CVse7GAXkYVZqkj2HZN+TVXdLm/OLf4w=;
- b=eLyuWcr67KKXjeW/CSCYQhnFg85b2dV2x/LEXS+7BwpVkLImX8qhPc3e3f6BwdczTBuq0Jd/C8SCLMWv8AY3mGJzPTnivOrnUYBX3BIQL43vTxAiR4Au1PnZOoiBxM1cVpOCI1mWeJG/G3hD4JrDhRGMjMDKmKyH0E17v0u7rvB3h1wSicLoGtmAuOej03C5JkAEXXe5+gErOm8GhcqVHcdgWyaH4XK4+uyviEdfte9rpkjLmz+GaYxNPLMXHMzT6aFdyF5xkXxrMlnT90JxV7fN59KtbLN/w2JuKO9VMciWbNy3wYtX/036UVjzwqunh+NSn4CSu5bMk1U5FSPeaA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=intel.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HgmxzE91/Y8CVse7GAXkYVZqkj2HZN+TVXdLm/OLf4w=;
- b=5Pg/1dUyfStEMO+izPuvmkKYPacwI2hmkYWyCdTF7SIKnJP3VI9lbYS60TNjqJOk71m4mnscURWFqUjTlZkHpsRGfopHB7HWJ4J/94SnyoZOjaTRt3fqIT3tP939UGub25P5+oSGp5RRlPWAtJ304NoQaOt3LXyufkBKdtwGk6w=
-Received: from BL1P221CA0018.NAMP221.PROD.OUTLOOK.COM (2603:10b6:208:2c5::30)
- by DM6PR12MB4154.namprd12.prod.outlook.com (2603:10b6:5:21d::21) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.28; Wed, 27 Sep
- 2023 15:47:45 +0000
-Received: from BL02EPF0001A104.namprd05.prod.outlook.com
- (2603:10b6:208:2c5:cafe::ba) by BL1P221CA0018.outlook.office365.com
- (2603:10b6:208:2c5::30) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.22 via Frontend
- Transport; Wed, 27 Sep 2023 15:47:45 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BL02EPF0001A104.mail.protection.outlook.com (10.167.241.135) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6838.14 via Frontend Transport; Wed, 27 Sep 2023 15:47:45 +0000
-Received: from rric.localdomain (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 27 Sep
- 2023 10:47:35 -0500
-From:   Robert Richter <rrichter@amd.com>
-To:     Alison Schofield <alison.schofield@intel.com>,
-        Vishal Verma <vishal.l.verma@intel.com>,
-        Ira Weiny <ira.weiny@intel.com>,
-        Ben Widawsky <bwidawsk@kernel.org>,
-        Dan Williams <dan.j.williams@intel.com>,
-        "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-cxl@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        Terry Bowman <terry.bowman@amd.com>,
-        Jonathan Cameron <jonathan.cameron@huawei.com>,
-        Robert Richter <rrichter@amd.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Oliver O'Halloran" <oohall@gmail.com>,
-        <linuxppc-dev@lists.ozlabs.org>, <linux-pci@vger.kernel.org>
-Subject: [PATCH v11 18/20] PCI/AER: Unmask RCEC internal errors to enable RCH downstream port error handling
-Date:   Wed, 27 Sep 2023 17:43:37 +0200
-Message-ID: <20230927154339.1600738-19-rrichter@amd.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20230927154339.1600738-1-rrichter@amd.com>
-References: <20230927154339.1600738-1-rrichter@amd.com>
+        with ESMTP id S229464AbjI0Quk (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 12:50:40 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2D21092
+        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 09:50:39 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E43BC433C9;
+        Wed, 27 Sep 2023 16:50:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1695833438;
+        bh=78eebxN/zU5Ta1svqcQKcWfWdehcyX+Vd9lIRhHdkyw=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=qjlKc+LvKmI4AJEEFHyaWg2l87sGgZp6X/LfpEIaV8XXivYiyMkSAJw1X2VQ4vCNm
+         TkZ+2JsnQcgpVMwjfQtPU9EDqwAQ3hvftQuX2RH9rMua3vCKQHuMeC/ra11vT8sHd0
+         DUXxkoQXkxTpeBqQQPGkqag8PLK8VFieWmGfM6/pSmg8JoTf6E9o79wUjqJAZJf//I
+         rZJ/Hc1E/dHAh+WrTlXCvvamjEfuK6h7tKzLPuvAHkMRtJAK9jQmyGHHFezyTxUqLq
+         83NAosNJEQFI+ZRhNTqqInJyDES/oKnwCT8ohh8d+T9s4DZ0hcvpmTP32u1H3mDsx7
+         /70g9nc9THpbw==
+Date:   Wed, 27 Sep 2023 11:50:36 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Lukas Wunner <lukas@wunner.de>, Kamil Paral <kparal@redhat.com>,
+        linux-pci@vger.kernel.org, regressions@lists.linux.dev,
+        bhelgaas@google.com, chris.chiu@canonical.com
+Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
+ e8b908146d44 "PCI/PM: Increase wait time after resume"
+Message-ID: <20230927165036.GA450933@bhelgaas>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF0001A104:EE_|DM6PR12MB4154:EE_
-X-MS-Office365-Filtering-Correlation-Id: 11afa12b-e572-48cb-e95f-08dbbf7117cf
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: Z55Ao5BMt3B63wpzpWWmxiwBTckF5BjFWD6Yef3rqAsRyQx2uOK2CJVQK31z0+TeQtoKd+Dy6WMzvMCuz6QaMhFtFkiG86YGi+HCDgM64pe9fRF0l8fDdWAnDb9Zi1M2JnO8XXzcnk0jbxdz6wZ7mxn1u9ScX61JAvVrM8fo3SHlUWA0kYJmmTEyiom5I2XObvaK91vh+okRK62/MLDKFMXTlUNUCKy7iqCUxkFiFq8nFrEDvFy2I69oi1rG10fM2r+rDAlcxH5epWqJkfTs177OqpZvefzyqfhd3uNwOnEs4kR5pOkqyPxCMKN0hhIauohzpG2yLr19LcM53ax+Jw1IE8DfQbLrlf03oOYvuXsFMkt5cgWfdDqDzECujXv2G1cm84FTaZRV1fhq9M5E8dMJ11WdJEUXtBvEN+YXTvvA+hbOm2quiiqdZ5EsPeYRan9RdMqLZvUF4w0ubKtle12sTq5bqOEcr9MRQkKKPc0lu5oeqEHEQcr88yuUgnsft/qaxf8NzbjBh9dw6b3OYy9bypW6hbggn2srGDbFK+U0V+nRp7wumIxdTkg9ufEPlCOzePMrtwGbaQMuElqry0pQpDoJZ2vowfVNinjAvNA1PMJYdWHRwmdyoVgZSWudthTudK2zzRopI4WugQp07+hU8TAswlC+2CUE5VHSp1IHVg6MGHjQ8lHljtcUxvvDmA4RRNkt5JOU3RT/bBkNQUsQIf48PrcAnHl491RIucD9JFZxwConnhAF89nlRIgRZqwVjY+LzwouIlAX836D0Q==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(346002)(39860400002)(396003)(136003)(230922051799003)(82310400011)(451199024)(186009)(1800799009)(40470700004)(36840700001)(46966006)(1076003)(40460700003)(478600001)(36756003)(2616005)(26005)(356005)(336012)(426003)(83380400001)(82740400003)(16526019)(81166007)(47076005)(36860700001)(5660300002)(40480700001)(54906003)(70206006)(110136005)(7416002)(2906002)(316002)(70586007)(4326008)(41300700001)(8676002)(8936002)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Sep 2023 15:47:45.4299
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 11afa12b-e572-48cb-e95f-08dbbf7117cf
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BL02EPF0001A104.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4154
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230927124732.GI3208943@black.fi.intel.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-AER corrected and uncorrectable internal errors (CIE/UIE) are masked
-in their corresponding mask registers per default once in power-up
-state. [1][2] Enable internal errors for RCECs to receive CXL
-downstream port errors of Restricted CXL Hosts (RCHs).
+On Wed, Sep 27, 2023 at 03:47:32PM +0300, Mika Westerberg wrote:
+> On Wed, Sep 27, 2023 at 06:57:03AM -0500, Bjorn Helgaas wrote:
+> > On Wed, Sep 27, 2023 at 08:16:02AM +0300, Mika Westerberg wrote:
+> > > On Tue, Sep 26, 2023 at 12:55:30PM -0500, Bjorn Helgaas wrote:
+> > > > On Mon, Sep 25, 2023 at 04:19:30PM +0200, Lukas Wunner wrote:
+> > > > > On Mon, Sep 25, 2023 at 08:48:41AM -0500, Bjorn Helgaas wrote:
+> > > > > > Now pciehp thinks the slot is occupied and the link is up, so we
+> > > > > > re-enumerate the hierarchy.  Is this because thunderbolt did something
+> > > > > > to 06:00.0 that made the link from 05:01.0 come up?
+> > > > > 
+> > > > > PCIe TLPs are encapsulated into Thunderbolt packets and transmitted
+> > > > > alongside DisplayPort and other data over the same physical link.
+> > > > > 
+> > > > > For this to work, PCIe tunnels need to be set up between the Thunderbolt
+> > > > > host controller and attached devices.  Once a tunnel is established,
+> > > > > the PCIe link magically goes up and TLPs can be transmitted.
+> > > > > 
+> > > > > There are two ways to establish those tunnels:
+> > > > > 
+> > > > > 1/ By a firmware in the Thunderbolt host controller.
+> > > > >    (firmware or "internal" connection manager, drivers/thunderbolt/icm.c)
+> > > > > 
+> > > > > 2/ Natively by the kernel.
+> > > > >    (software connection manager)
+> > > > > 
+> > > > > I'm assuming that the laptop in question exclusively uses the firmware
+> > > > > connection manager, hence the kernel is reliant on that firmware to
+> > > > > establish tunnels and can't really do anything if it fails to do so.
+> > > > 
+> > > > Thanks for the background; that improves my meager understanding a
+> > > > lot.
+> > > > 
+> > > > Since this seems to be a firmware issue, it does sound like this
+> > > > laptop uses a firmware connection manager.  But there still seems to
+> > > > be some kernel connection because pre-e8b908146d44, the link came up
+> > > > in <5 seconds, and after the minor e8b908146d44 change, it takes >60
+> > > > seconds.
+> > > 
+> > > In both cases (with or without) the commit what happens is that after
+> > > resume is finished the firmware connection manager notices the
+> > > connection, announces it to the Thunderbolt driver that exposes it to
+> > > the userspace where boltd re-authorizes the device. This brings up the
+> > > PCIe tunnel again and things get working.
+> > > 
+> > > (What is expected to happen is that during the resume the firmware
+> > >  connection manager re-connects the PCIe tunnel.)
+> > > 
+> > > This took previously the ~5s before resume is complete so that the above
+> > > steps can happen where as after the commit it got delayed more up to the
+> > > arbitrary ~60s because we started to use that with the commit
+> > > e8b908146d44 (PCIE_RESET_READY_POLL_MS).
+> > 
+> > Why does the kernel delay affect the timing of when the firmware
+> > connection manager notices the connection?  It seems like Linux waits
+> > for the timeout, then Linux does something that kicks the firmware
+> > connection manager.  That's why I asked about this sequence:
+> > 
+> >   [  118.985530] pcieport 0000:05:01.0: Data Link Layer Link Active not set in 1000 msec
+> >   [  190.090902] pcieport 0000:05:01.0: pciehp: Slot(1): Card not present
+> >   [  191.754347] thunderbolt 0000:06:00.0: 1: DROM version: 1
+> >   [  191.762638] thunderbolt 0-1: new device found, vendor=0x108 device=0x1630
+> >   [  191.762641] thunderbolt 0-1: Lenovo ThinkPad Thunderbolt 3 Dock
+> >   [  191.943506] pcieport 0000:05:01.0: pciehp: Slot(1): Card present
+> > 
+> > where we wait for the timeout, decide the device is gone, remove
+> > everything, and then the thunderbolt driver does something, and we
+> > notice the device is magically back.
+> 
+> Well the delay delays the whole resume and this includes Thunderbolt
+> driver resume too, and userspace (where the bolt daemon authorizes the
+> device again).
 
-[1] CXL 3.0 Spec, 12.2.1.1 - RCH Downstream Port Detected Errors
-[2] PCIe Base Spec r6.0, 7.8.4.3 Uncorrectable Error Mask Register,
-    7.8.4.6 Correctable Error Mask Register
+I don't know how the Thunderbolt driver works.  I assume this refers
+to "thunderbolt 0000:06:00.0"?  Is the 06:00.0 resume related to the
+firmware connection manager somehow?
 
-Co-developed-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Signed-off-by: Robert Richter <rrichter@amd.com>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Dave Jiang <dave.jiang@intel.com>
----
- drivers/pci/pcie/aer.c | 57 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 57 insertions(+)
+The removal affects the sub-hierarchy below 05:01.0 (bus 07-3b).
+06:00.0 is below 05:00.0, so it's in a different sub-hierarchy.  I
+don't think there's a PCIe requirement that 05:01.0 be resumed before
+05:00.0, or even that they be serialized at all.
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 9f420733996b..de63cda8f453 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -936,6 +936,30 @@ static bool find_source_device(struct pci_dev *parent,
- 
- #ifdef CONFIG_PCIEAER_CXL
- 
-+/**
-+ * pci_aer_unmask_internal_errors - unmask internal errors
-+ * @dev: pointer to the pcie_dev data structure
-+ *
-+ * Unmasks internal errors in the Uncorrectable and Correctable Error
-+ * Mask registers.
-+ *
-+ * Note: AER must be enabled and supported by the device which must be
-+ * checked in advance, e.g. with pcie_aer_is_native().
-+ */
-+static void pci_aer_unmask_internal_errors(struct pci_dev *dev)
-+{
-+	int aer = dev->aer_cap;
-+	u32 mask;
-+
-+	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, &mask);
-+	mask &= ~PCI_ERR_UNC_INTN;
-+	pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, mask);
-+
-+	pci_read_config_dword(dev, aer + PCI_ERR_COR_MASK, &mask);
-+	mask &= ~PCI_ERR_COR_INTERNAL;
-+	pci_write_config_dword(dev, aer + PCI_ERR_COR_MASK, mask);
-+}
-+
- static bool is_cxl_mem_dev(struct pci_dev *dev)
- {
- 	/*
-@@ -1015,7 +1039,39 @@ static void cxl_rch_handle_error(struct pci_dev *dev, struct aer_err_info *info)
- 		pcie_walk_rcec(dev, cxl_rch_handle_error_iter, info);
- }
- 
-+static int handles_cxl_error_iter(struct pci_dev *dev, void *data)
-+{
-+	bool *handles_cxl = data;
-+
-+	if (!*handles_cxl)
-+		*handles_cxl = is_cxl_mem_dev(dev) && cxl_error_is_native(dev);
-+
-+	/* Non-zero terminates iteration */
-+	return *handles_cxl;
-+}
-+
-+static bool handles_cxl_errors(struct pci_dev *rcec)
-+{
-+	bool handles_cxl = false;
-+
-+	if (pci_pcie_type(rcec) == PCI_EXP_TYPE_RC_EC &&
-+	    pcie_aer_is_native(rcec))
-+		pcie_walk_rcec(rcec, handles_cxl_error_iter, &handles_cxl);
-+
-+	return handles_cxl;
-+}
-+
-+static void cxl_rch_enable_rcec(struct pci_dev *rcec)
-+{
-+	if (!handles_cxl_errors(rcec))
-+		return;
-+
-+	pci_aer_unmask_internal_errors(rcec);
-+	pci_info(rcec, "CXL: Internal errors unmasked");
-+}
-+
- #else
-+static inline void cxl_rch_enable_rcec(struct pci_dev *dev) { }
- static inline void cxl_rch_handle_error(struct pci_dev *dev,
- 					struct aer_err_info *info) { }
- #endif
-@@ -1415,6 +1471,7 @@ static int aer_probe(struct pcie_device *dev)
- 		return status;
- 	}
- 
-+	cxl_rch_enable_rcec(port);
- 	aer_enable_rootport(rpc);
- 	pci_info(port, "enabled with IRQ %d\n", dev->irq);
- 	return 0;
--- 
-2.30.2
+The hierarchy:
 
+  pci 0000:00:1c.4: PCI bridge to [bus 04-3c]
+  pci 0000:04:00.0: PCI bridge to [bus 05-3c]
+  pci 0000:05:00.0: PCI bridge to [bus 06]
+  pci 0000:05:01.0: PCI bridge to [bus 07-3b]
+
+It looks like we start the 06:00.0 resume first (118.9), but it
+doesn't complete until after the timeout (191.7):
+
+  [  118.915870] thunderbolt 0000:06:00.0: control channel starting...
+  [  118.985530] pcieport 0000:05:01.0: Data Link Layer Link Active not set in 1000 msec
+  [  190.090902] pcieport 0000:05:01.0: pciehp: Slot(1): Card not present
+  [  191.754347] thunderbolt 0000:06:00.0: 1: DROM version: 1
+  [  191.762638] thunderbolt 0-1: new device found, vendor=0x108 device=0x1630
+  [  191.762641] thunderbolt 0-1: Lenovo ThinkPad Thunderbolt 3 Dock
+  [  191.943506] pcieport 0000:05:01.0: pciehp: Slot(1): Card present
+
+Did the Thunderbolt driver do something to 06:00.0 that caused the
+05:01.0 link to come up, or is the timing just coincidental?
+
+> > > I would also try to change all the BIOS settings back to defaults, see
+> > > that it works (it is probably in "user" security level then), then
+> > > switch back to "secure" (only change this one option) and try if it now
+> > > works. It could be that some setting just did not get commited properly.
+> > 
+> > If this might lead to fixing a Linux defect, I'm all for this kind of
+> > experimentation.  But if it only leads to understanding a firmware
+> > defect better or figuring out better advice to users, I'm not, because
+> > I don't want to address this with a release note.
+> 
+> This is not a Linux defect. The firmware is expected to create that
+> tunnel so regardless of the "delay" the devices are already back. This
+> is not happening.
+
+Sorry, bad phrasing on my part.  I understand it's not a Linux defect;
+I meant to suggest that if we can learn something that leads to a
+Linux change that avoids the delay, whether it's a quirk, design
+change, whatever, that's great.
+
+If it only leads to a documentation change or recommendation to users,
+that's not great because it's only a reaction to something the user
+has already tripped over.
+
+Bjorn
