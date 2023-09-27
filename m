@@ -2,104 +2,201 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9CDF7E82CA5
-	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 15:46:14 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2DC48E82CA7
+	for <linux-pci@archiver.kernel.org>; Wed, 27 Sep 2023 15:47:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232489AbjI0PqL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 27 Sep 2023 11:46:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48812 "EHLO
+        id S232607AbjI0PrC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 27 Sep 2023 11:47:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42404 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231752AbjI0PqK (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 11:46:10 -0400
-Received: from mail-wm1-x334.google.com (mail-wm1-x334.google.com [IPv6:2a00:1450:4864:20::334])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1393E272B5
-        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 08:46:09 -0700 (PDT)
-Received: by mail-wm1-x334.google.com with SMTP id 5b1f17b1804b1-4053c6f0e50so109218175e9.1
-        for <linux-pci@vger.kernel.org>; Wed, 27 Sep 2023 08:46:08 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1695829567; x=1696434367; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gSqf2S54Kv1lkMAHr+0KP81a4E6zfxwF+MNET+Rax3c=;
-        b=IWl0QOCkM8lrXZ1jZzlyBzdXx2OF+33inXwOXs20l/kx+WXdtxI2INUhTRH7As/Hv6
-         jYVkN/P62rapmmjgO8vFeqG3OnDo8xbCFO7hs6l1IcUlJ3g9psphfmUoo3hSJP6z8v8j
-         ecSgoo4QjokjceebU2tCxvqnrqDFnXGFNfwlETnc4NeF+U9BLDQDg3WHbiupdo5w47p9
-         W2TnvxvmEctIMpKVPdeRpzG1hNBexBo1yPL6B1ywYyPUDpsUR29vUdURxE4rSvB63q76
-         y+cjlBAlwk93qOQwVsImwaUJjcOkB4ZQ393W6jHvgKAjZD3RqplOTiAgvQOp/+/aFl1m
-         jRJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1695829567; x=1696434367;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=gSqf2S54Kv1lkMAHr+0KP81a4E6zfxwF+MNET+Rax3c=;
-        b=fTYrSvEFXW9WbXN2BipE5YjddQ3r0SwhPSaIVC1oJmJ+DYpuvyKQHOyzl7+P5xTF7r
-         bCLq/9/1Qvt2b7rckDFys3vzX+/T0cxR/N9ysfOQZ2PUm732Mz8Xr8gbsl2KqyoWetlU
-         xE7/aABKzorLuhwOJjqiKrhsMSEEHVSsa+busOvD/A53vs1CV5/osDIWRfME6BAjLlGa
-         NmmGbIns41XOpv+dI+QGkgig2A4XzTab/6xCdKSyc52/onfx4KL4b1DPVV7SDFkhisy3
-         AbFg/hS1piMvbVPJSiLdcGQ58eUo1E09jfilx+68rjEduUBUwCGUdNFj/oi9xk9J8X82
-         oBXw==
-X-Gm-Message-State: AOJu0YymqkIsnWjiYmYTMMtAcDM+crTMDnf6lJDG44381bAJwbiiDOfC
-        9zoH1Zh81dzuoFddurO0sr/M
-X-Google-Smtp-Source: AGHT+IGO1bx0oPXzCkNmPkew0sz+yNY9AldZkArrIHA5dVTPBnO/w6Qh1wcNpIsNRipkFsrEl7at+g==
-X-Received: by 2002:a05:600c:1e14:b0:406:44e6:15f0 with SMTP id ay20-20020a05600c1e1400b0040644e615f0mr1832590wmb.5.1695829567489;
-        Wed, 27 Sep 2023 08:46:07 -0700 (PDT)
-Received: from thinkpad.fritz.box ([2a02:2454:9d09:3f00:b024:394e:56d7:d8b4])
-        by smtp.gmail.com with ESMTPSA id s28-20020adfa29c000000b003232f167df5sm6925852wra.108.2023.09.27.08.46.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 27 Sep 2023 08:46:06 -0700 (PDT)
-From:   Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To:     lpieralisi@kernel.org, kw@linux.com
-Cc:     andersson@kernel.org, konrad.dybcio@linaro.org,
-        bhelgaas@google.com, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        abel.vesa@linaro.org,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Vidya Sagar <vidyas@nvidia.com>
-Subject: [PATCH v3 3/3] PCI: tegra194: Use Mbps_to_icc() macro for setting icc speed
-Date:   Wed, 27 Sep 2023 17:46:03 +0200
-Message-Id: <20230927154603.172049-3-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20230927154603.172049-1-manivannan.sadhasivam@linaro.org>
-References: <20230927154603.172049-1-manivannan.sadhasivam@linaro.org>
+        with ESMTP id S233208AbjI0Pqx (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 27 Sep 2023 11:46:53 -0400
+Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2085.outbound.protection.outlook.com [40.107.243.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E0A7C272B7;
+        Wed, 27 Sep 2023 08:46:50 -0700 (PDT)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=l/A9V1tUCcSMQWokrf3oUW/SOt7CIyR4GbjuqWDzg79SSvAm+VGHvSVBhud6hRwHgWWpeFQ9gFw+wH5gUf62N3b3xL1TmKUuhdCeUpUoTO3cKc59PeAqg1hKjZeQ0Jvv9RiJbxsEgyoQ5qHzC6uGpybKWS+hyDPsvAyKpJpkflO/UCogpkiDLyQ5mIlYdgTl9ELTETtErAWqVD0+vNRPqnO8fdslSf856rTlQvWN0Nbv7Dxey6xQfZdANghKWHdTaShUHxR+Zizkl2t5wSUgq+47Ip1mdJk4wR+mX06Q8QMPFDCEnnFGxwNUVBLghsyvwPtqiYXRYqXGtWP4Wmf/Lw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=5OQKVGh3EZ/j+8iwVEPWfT+hqonAJDDZqGI8hLrumcM=;
+ b=VCBDrwIECFgtRLB9tJ/r/lsDPGc7dY3b/YGFKcqC+I88CJdYZMQrJqI7TKKM40aBqDiYuWt+3576sSPUGLSbCF4SBCMHpcRixbl5DbEScjY/a/koYHTjoQwMsXnqTOKg1hfIhTugzZ78yV4zV/OuTM3IKKLR+zxFhOW1LdrPzJQko3aOh9rjWJJ42Oasw0I3hcTtgfPhRdtcS0XfY/DGNbz3I3X76/T1DZJIDwh+PvOw5HxWOdWkZFCfQGQONlZzHGAIspQoOuoXeTTPX0nZHedqrIOSq5zZd8dJtbjtT/PLoMI5NuG927ekFUDohKRC7yymjCc8Jku9OVstvaVguA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=intel.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=5OQKVGh3EZ/j+8iwVEPWfT+hqonAJDDZqGI8hLrumcM=;
+ b=bZt+Pyz4cJ5ScfXnpFJTJx5oLnuuTmt7Htl2fAKrsJVs1bSOLvgEsaE2MOn4ExiX2h79knSvJwLfGu3nLTrdSM+MqfadIcfEI2ml5YzZaVej8RnNXYK37Q6nZkVJXlciUF5fnp9dadSeT1asT4N4apbxeQxfRMrUng5uC+i+qdQ=
+Received: from BL1PR13CA0133.namprd13.prod.outlook.com (2603:10b6:208:2bb::18)
+ by IA1PR12MB8518.namprd12.prod.outlook.com (2603:10b6:208:447::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6813.20; Wed, 27 Sep
+ 2023 15:46:48 +0000
+Received: from BL02EPF0001A101.namprd05.prod.outlook.com
+ (2603:10b6:208:2bb:cafe::6) by BL1PR13CA0133.outlook.office365.com
+ (2603:10b6:208:2bb::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6838.22 via Frontend
+ Transport; Wed, 27 Sep 2023 15:46:48 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BL02EPF0001A101.mail.protection.outlook.com (10.167.241.132) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6838.14 via Frontend Transport; Wed, 27 Sep 2023 15:46:48 +0000
+Received: from rric.localdomain (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 27 Sep
+ 2023 10:46:44 -0500
+From:   Robert Richter <rrichter@amd.com>
+To:     Alison Schofield <alison.schofield@intel.com>,
+        Vishal Verma <vishal.l.verma@intel.com>,
+        Ira Weiny <ira.weiny@intel.com>,
+        Ben Widawsky <bwidawsk@kernel.org>,
+        Dan Williams <dan.j.williams@intel.com>,
+        "Davidlohr Bueso" <dave@stgolabs.net>,
+        Jonathan Cameron <jonathan.cameron@huawei.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+CC:     <linux-cxl@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        Terry Bowman <terry.bowman@amd.com>,
+        Robert Richter <rrichter@amd.com>,
+        Oliver O'Halloran <oohall@gmail.com>,
+        <linux-pci@vger.kernel.org>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        <linuxppc-dev@lists.ozlabs.org>
+Subject: [PATCH v11 12/20] PCI/AER: Refactor cper_print_aer() for use by CXL driver module
+Date:   Wed, 27 Sep 2023 17:43:31 +0200
+Message-ID: <20230927154339.1600738-13-rrichter@amd.com>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20230927154339.1600738-1-rrichter@amd.com>
+References: <20230927154339.1600738-1-rrichter@amd.com>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL02EPF0001A101:EE_|IA1PR12MB8518:EE_
+X-MS-Office365-Filtering-Correlation-Id: 6049afcd-4b93-41cf-9b74-08dbbf70f5c3
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: B8gKS8QpYx+wxC63naf4Hz8BZEpjQqcA80tR8tBaOhAmHjcsmh7ufnywQwfsCpANKR6ZcWKNHWIwm/XsFxI4+izKds2S5d7wausUpIzxVX3amdGoJY5b1M1D+dgjftAmZO6WnrxkFpRz6IN+tvMgoN/JTZGbXoHQBufojAbxkahXV+mUHZ/IILqTlQ+uEauhhY2N0O84nVNpeYdE2Zqq5M36+Rz+qSJ7ZowuZK3/FB+chKvhEsU7r7uExaDUTWNfhz4xP8RDolSixYiZVwwQvN4cQ/wcxWJLATQHl5C/+5x1ynGH47HkdAI1uVYRx68jDsKd8LvkZDULgniKSqIq1T+X67bg7pSL+TWm8OKgkY7sYql8WeAsVTms9bb5g0Pj16ah8DFcGocF5hT4UMY4WrTtURDMI/6Qtzn0Fkub81m6Ziga7BMti6YU0/uGL0K27ZgJTUVeKt8pPXc0mekzYy2nrREjtLrbdZbTcXYdnn+7hu2bsCU60Dji+/a/qD40Tsdbcvl7rHT6JYdPpoorWq4E4eHZAbG8AbOFfk7H3tZAhoPyxnZJS7AQ63DRJzHYpa+b6hXZcfkjmsHp+NPi9AedI8kNkhVY2RjDjQ2HRRmkFuwj2m5ntuR6R+P5qAmSxlUdET42BMJZcWFBxeCQ9av6AI6SVBja7jCxkretM0Pq275HItHnBO5wRl5n06PbOAGtL667GRCpHE8QEZp7ypOWNLQ+LjhQHHxxZJPeXMBAnN+5YxxJ82Uv8FpO8izGp1XdDBkgj8KEDKQzibnUJYu/Y80of2PtBMKJn+Tcyz4=
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(39860400002)(376002)(136003)(396003)(230922051799003)(1800799009)(82310400011)(451199024)(186009)(40470700004)(36840700001)(46966006)(316002)(921005)(40480700001)(40460700003)(41300700001)(4326008)(8676002)(8936002)(5660300002)(7416002)(36860700001)(36756003)(356005)(47076005)(478600001)(83380400001)(70586007)(2906002)(81166007)(110136005)(336012)(426003)(26005)(82740400003)(70206006)(16526019)(54906003)(1076003)(6666004)(2616005)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Sep 2023 15:46:48.2755
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6049afcd-4b93-41cf-9b74-08dbbf70f5c3
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BL02EPF0001A101.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB8518
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-PCIe speed returned by the PCIE_SPEED2MBS_ENC() macro is in Mbps. So
-instead of converting it to MBps explicitly and using the MBps_to_icc()
-macro, let's use the Mbps_to_icc() macro to pass the value directly.
+From: Terry Bowman <terry.bowman@amd.com>
 
-Cc: Vidya Sagar <vidyas@nvidia.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+The CXL driver plans to use cper_print_aer() for logging restricted CXL
+host (RCH) AER errors. cper_print_aer() is not currently exported and
+therefore not usable by the CXL drivers built as loadable modules. Export
+the cper_print_aer() function. Use the EXPORT_SYMBOL_NS_GPL() variant
+to restrict the export to CXL drivers.
+
+The CONFIG_ACPI_APEI_PCIEAER kernel config is currently used to enable
+cper_print_aer(). cper_print_aer() logs the AER registers and is
+useful in PCIE AER logging outside of APEI. Remove the
+CONFIG_ACPI_APEI_PCIEAER dependency to enable cper_print_aer().
+
+The cper_print_aer() function name implies CPER specific use but is useful
+in non-CPER cases as well. Rename cper_print_aer() to pci_print_aer().
+
+Also, update cxl_core to import CXL namespace imports.
+
+Co-developed-by: Robert Richter <rrichter@amd.com>
+Signed-off-by: Terry Bowman <terry.bowman@amd.com>
+Signed-off-by: Robert Richter <rrichter@amd.com>
+Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>
+Cc: "Oliver O'Halloran" <oohall@gmail.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Dave Jiang <dave.jiang@intel.com>
 ---
+ drivers/cxl/core/port.c | 1 +
+ drivers/pci/pcie/aer.c  | 9 +++++----
+ include/linux/aer.h     | 2 +-
+ 3 files changed, 7 insertions(+), 5 deletions(-)
 
-Changes in v3:
-
-- New patch
-
- drivers/pci/controller/dwc/pcie-tegra194.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 4bba31502ce1..5feac690e127 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -321,9 +321,9 @@ static void tegra_pcie_icc_set(struct tegra_pcie_dw *pcie)
- 	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, val);
- 	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val);
+diff --git a/drivers/cxl/core/port.c b/drivers/cxl/core/port.c
+index 41a8aa56cffd..802e85321a63 100644
+--- a/drivers/cxl/core/port.c
++++ b/drivers/cxl/core/port.c
+@@ -2101,3 +2101,4 @@ static void cxl_core_exit(void)
+ subsys_initcall(cxl_core_init);
+ module_exit(cxl_core_exit);
+ MODULE_LICENSE("GPL v2");
++MODULE_IMPORT_NS(CXL);
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 9c8fd69ae5ad..6593fe3fc555 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -759,9 +759,10 @@ int cper_severity_to_aer(int cper_severity)
+ 	}
+ }
+ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
++#endif
  
--	val = width * (PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]) / BITS_PER_BYTE);
-+	val = width * PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]);
+-void cper_print_aer(struct pci_dev *dev, int aer_severity,
+-		    struct aer_capability_regs *aer)
++void pci_print_aer(struct pci_dev *dev, int aer_severity,
++		   struct aer_capability_regs *aer)
+ {
+ 	int layer, agent, tlp_header_valid = 0;
+ 	u32 status, mask;
+@@ -800,7 +801,7 @@ void cper_print_aer(struct pci_dev *dev, int aer_severity,
+ 	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
+ 			aer_severity, tlp_header_valid, &aer->header_log);
+ }
+-#endif
++EXPORT_SYMBOL_NS_GPL(pci_print_aer, CXL);
  
--	if (icc_set_bw(pcie->icc_path, MBps_to_icc(val), 0))
-+	if (icc_set_bw(pcie->icc_path, Mbps_to_icc(val), 0))
- 		dev_err(pcie->dev, "can't set bw[%u]\n", val);
+ /**
+  * add_error_device - list device to be handled
+@@ -996,7 +997,7 @@ static void aer_recover_work_func(struct work_struct *work)
+ 			       PCI_SLOT(entry.devfn), PCI_FUNC(entry.devfn));
+ 			continue;
+ 		}
+-		cper_print_aer(pdev, entry.severity, entry.regs);
++		pci_print_aer(pdev, entry.severity, entry.regs);
+ 		if (entry.severity == AER_NONFATAL)
+ 			pcie_do_recovery(pdev, pci_channel_io_normal,
+ 					 aer_root_reset);
+diff --git a/include/linux/aer.h b/include/linux/aer.h
+index 29cc10220952..f6ea2f57d808 100644
+--- a/include/linux/aer.h
++++ b/include/linux/aer.h
+@@ -51,7 +51,7 @@ static inline int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
+ static inline int pcie_aer_is_native(struct pci_dev *dev) { return 0; }
+ #endif
  
- 	if (speed >= ARRAY_SIZE(pcie_gen_freq))
+-void cper_print_aer(struct pci_dev *dev, int aer_severity,
++void pci_print_aer(struct pci_dev *dev, int aer_severity,
+ 		    struct aer_capability_regs *aer);
+ int cper_severity_to_aer(int cper_severity);
+ void aer_recover_queue(int domain, unsigned int bus, unsigned int devfn,
 -- 
-2.25.1
+2.30.2
 
