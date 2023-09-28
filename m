@@ -2,106 +2,162 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 60526E732FE
-	for <linux-pci@archiver.kernel.org>; Thu, 28 Sep 2023 17:17:47 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3FDF1E732FE
+	for <linux-pci@archiver.kernel.org>; Thu, 28 Sep 2023 17:32:44 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231945AbjI1RRq (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 28 Sep 2023 13:17:46 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42662 "EHLO
+        id S230246AbjI1Rco (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 28 Sep 2023 13:32:44 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231938AbjI1RRm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2023 13:17:42 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6D06A1AD
-        for <linux-pci@vger.kernel.org>; Thu, 28 Sep 2023 10:17:41 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D903AC433C8;
-        Thu, 28 Sep 2023 17:17:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1695921461;
-        bh=0Y/q0fF3HChSAV7VSVV/Miaw5mCFfti5GmZY5d/6qSQ=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=n2r3FNo/k6diwETgcOKz9vGr//v0wZM8XayNHXaq4cFH7ArSPgWybFoUnFlR5M2uZ
-         qUWl00UB53Hf1out9nir8TamQ3jfEXjXxDWEfiWARIlliNGkOneBgt+JUXoIwHZt7o
-         FzbxHCYqlX+QE2ZCZ9txzo2rFhuCKoYq2dXsAmbCvDmO7MW34m1bpw7sn5N/u3jQG1
-         dQ72HXGF+xcll/J4kdFCcsaFwaXeWzQ375EtfA3g2HISb/1Kq+H2ZF3Ic+r0ZKtK6r
-         wcCP7hLZAkvzoNKOu/wYGVcnVP9CVZU1Ciq3wqxIwSHwNLDsTOe3Av9RTguwvIJ3pI
-         gSCJkncuoCUtQ==
-Date:   Thu, 28 Sep 2023 12:17:38 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Vicki Pfau <vi@endrift.com>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: Prevent xHCI driver from claiming AMD VanGogh USB3
- DRD device
-Message-ID: <20230928171738.GA489583@bhelgaas>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230927202212.2388216-1-vi@endrift.com>
+        with ESMTP id S229478AbjI1Rcn (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 28 Sep 2023 13:32:43 -0400
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2B0B2E5
+        for <linux-pci@vger.kernel.org>; Thu, 28 Sep 2023 10:32:38 -0700 (PDT)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by mailout1.hostsharing.net (Postfix) with ESMTPS id A5A2A101920C7;
+        Thu, 28 Sep 2023 19:32:36 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        by h08.hostsharing.net (Postfix) with ESMTPSA id 8184760E0037;
+        Thu, 28 Sep 2023 19:32:36 +0200 (CEST)
+X-Mailbox-Line: From 467bff0c4bab93067b1e353e5b8a92f1de353a3f Mon Sep 17 00:00:00 2001
+Message-Id: <cover.1695921656.git.lukas@wunner.de>
+From:   Lukas Wunner <lukas@wunner.de>
+Date:   Thu, 28 Sep 2023 19:32:32 +0200
+Subject: [PATCH 00/12] PCI device authentication
+To:     Bjorn Helgaas <helgaas@kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        <linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+        <linux-coco@lists.linux.dev>, <keyrings@vger.kernel.org>,
+        <linux-crypto@vger.kernel.org>, <kvm@vger.kernel.org>
+Cc:     Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        <linuxarm@huawei.com>, David Box <david.e.box@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, Zhi Wang <zhi.a.wang@intel.com>,
+        Alistair Francis <alistair.francis@wdc.com>,
+        Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+        Alexey Kardashevskiy <aik@amd.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Alexander Graf <graf@amazon.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Sep 27, 2023 at 01:22:12PM -0700, Vicki Pfau wrote:
-> The AMD VanGogh SoC contains a DesignWare USB3 Dual-Role Device that can be
-> operated as either a USB Host or a USB Device, similar to on the AMD Nolan
-> platform. A quirk was previously added to let the dwc3 driver claim the device
-> since it provides more specific support. This commit extends that quirk to
-> include the equivalent PID for the VanGogh SoC.
-> 
-> Signed-off-by: Vicki Pfau <vi@endrift.com>
+Authenticate PCI devices with CMA-SPDM (PCIe r6.1 sec 6.31) and
+expose the result in sysfs.  This enables user-defined policies
+such as forbidding driver binding to devices which failed
+authentication.
 
-Applied to misc for v6.7, thanks!
+CMA-SPDM forms the basis for PCI encryption (PCIe r6.1 sec 6.33),
+which will be submitted later.
 
-> ---
->  drivers/pci/quirks.c    | 8 +++++---
->  include/linux/pci_ids.h | 1 +
->  2 files changed, 6 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-> index eeec1d6f9023..e3e915329510 100644
-> --- a/drivers/pci/quirks.c
-> +++ b/drivers/pci/quirks.c
-> @@ -690,7 +690,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
->  /*
->   * In the AMD NL platform, this device ([1022:7912]) has a class code of
->   * PCI_CLASS_SERIAL_USB_XHCI (0x0c0330), which means the xhci driver will
-> - * claim it.
-> + * claim it. The same applies on the VanGogh platform device ([1022:163a]).
->   *
->   * But the dwc3 driver is a more specific driver for this device, and we'd
->   * prefer to use it instead of xhci. To prevent xhci from claiming the
-> @@ -698,7 +698,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI,	PCI_DEVICE_ID_ATI_RS100,   quirk_ati_
->   * defines as "USB device (not host controller)". The dwc3 driver can then
->   * claim it based on its Vendor and Device ID.
->   */
-> -static void quirk_amd_nl_class(struct pci_dev *pdev)
-> +static void quirk_amd_dwc_class(struct pci_dev *pdev)
->  {
->  	u32 class = pdev->class;
->  
-> @@ -708,7 +708,9 @@ static void quirk_amd_nl_class(struct pci_dev *pdev)
->  		 class, pdev->class);
->  }
->  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_NL_USB,
-> -		quirk_amd_nl_class);
-> +		quirk_amd_dwc_class);
-> +DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_AMD, PCI_DEVICE_ID_AMD_VANGOGH_USB,
-> +		quirk_amd_dwc_class);
->  
->  /*
->   * Synopsys USB 3.x host HAPS platform has a class code of
-> diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-> index 5fb3d4c393a9..3a8e24e9a93f 100644
-> --- a/include/linux/pci_ids.h
-> +++ b/include/linux/pci_ids.h
-> @@ -579,6 +579,7 @@
->  #define PCI_DEVICE_ID_AMD_1AH_M00H_DF_F3 0x12c3
->  #define PCI_DEVICE_ID_AMD_1AH_M20H_DF_F3 0x16fb
->  #define PCI_DEVICE_ID_AMD_MI200_DF_F3	0x14d3
-> +#define PCI_DEVICE_ID_AMD_VANGOGH_USB	0x163a
->  #define PCI_DEVICE_ID_AMD_CNB17H_F3	0x1703
->  #define PCI_DEVICE_ID_AMD_LANCE		0x2000
->  #define PCI_DEVICE_ID_AMD_LANCE_HOME	0x2001
-> -- 
-> 2.42.0
-> 
+The meat of the series is in patches [07/12] and [08/12], which contain
+the SPDM library and the CMA glue code (the PCI-adaption of SPDM).
+
+The reason why SPDM is done in-kernel is provided in patch [10/12]:
+Briefly, when devices are reauthenticated on resume from system sleep,
+user space is not yet available.  Same when reauthenticating after
+recovery from reset.
+
+One use case for CMA-SPDM and PCI encryption is confidential access
+to passed-through devices:  Neither the host nor other guests are
+able to eavesdrop on device accesses, in particular if guest memory
+is encrypted as well.
+
+Further use cases for the SPDM library are appearing on the horizon:
+Alistair Francis and Wilfred Mallawa from WDC are interested in using
+it for SCSI/SATA.  David Box from Intel has implemented measurement
+retrieval over SPDM.
+
+The root of trust is initially an in-kernel key ring of certificates.
+We can discuss linking the system key ring into it, thereby allowing
+EFI to pass trusted certificates to the kernel for CMA.  Alternatively,
+a bundle of trusted certificates could be loaded from the initrd.
+I envision that we'll add TPMs or remote attestation services such as
+https://keylime.dev/ to create an ecosystem of various trust sources.
+
+If you wish to play with PCI device authentication but lack capable
+hardware, Wilfred has written a guide how to test with qemu:
+https://github.com/twilfredo/spdm-emulation-guide-b
+
+Jonathan Cameron (2):
+  spdm: Introduce library to authenticate devices
+  PCI/CMA: Authenticate devices on enumeration
+
+Lukas Wunner (10):
+  X.509: Make certificate parser public
+  X.509: Parse Subject Alternative Name in certificates
+  X.509: Move certificate length retrieval into new helper
+  certs: Create blacklist keyring earlier
+  crypto: akcipher - Support more than one signature encoding
+  crypto: ecdsa - Support P1363 signature encoding
+  PCI/CMA: Validate Subject Alternative Name in certificates
+  PCI/CMA: Reauthenticate devices on reset and resume
+  PCI/CMA: Expose in sysfs whether devices are authenticated
+  PCI/CMA: Grant guests exclusive control of authentication
+
+ Documentation/ABI/testing/sysfs-bus-pci   |   27 +
+ MAINTAINERS                               |   10 +
+ certs/blacklist.c                         |    4 +-
+ crypto/akcipher.c                         |    2 +-
+ crypto/asymmetric_keys/public_key.c       |   12 +-
+ crypto/asymmetric_keys/x509_cert_parser.c |   15 +
+ crypto/asymmetric_keys/x509_loader.c      |   38 +-
+ crypto/asymmetric_keys/x509_parser.h      |   37 +-
+ crypto/ecdsa.c                            |   16 +-
+ crypto/internal.h                         |    1 +
+ crypto/rsa-pkcs1pad.c                     |   11 +-
+ crypto/sig.c                              |    6 +-
+ crypto/testmgr.c                          |    8 +-
+ crypto/testmgr.h                          |   16 +
+ drivers/pci/Kconfig                       |   16 +
+ drivers/pci/Makefile                      |    5 +
+ drivers/pci/cma-sysfs.c                   |   73 +
+ drivers/pci/cma-x509.c                    |  119 ++
+ drivers/pci/cma.asn1                      |   36 +
+ drivers/pci/cma.c                         |  151 +++
+ drivers/pci/doe.c                         |    5 +-
+ drivers/pci/pci-driver.c                  |    1 +
+ drivers/pci/pci-sysfs.c                   |    3 +
+ drivers/pci/pci.c                         |   12 +-
+ drivers/pci/pci.h                         |   17 +
+ drivers/pci/pcie/err.c                    |    3 +
+ drivers/pci/probe.c                       |    1 +
+ drivers/pci/remove.c                      |    1 +
+ drivers/vfio/pci/vfio_pci_core.c          |    9 +-
+ include/crypto/akcipher.h                 |   10 +-
+ include/crypto/sig.h                      |    6 +-
+ include/keys/asymmetric-type.h            |    2 +
+ include/keys/x509-parser.h                |   46 +
+ include/linux/oid_registry.h              |    3 +
+ include/linux/pci-doe.h                   |    4 +
+ include/linux/pci.h                       |   15 +
+ include/linux/spdm.h                      |   41 +
+ lib/Kconfig                               |   15 +
+ lib/Makefile                              |    2 +
+ lib/spdm_requester.c                      | 1510 +++++++++++++++++++++
+ 40 files changed, 2232 insertions(+), 77 deletions(-)
+ create mode 100644 drivers/pci/cma-sysfs.c
+ create mode 100644 drivers/pci/cma-x509.c
+ create mode 100644 drivers/pci/cma.asn1
+ create mode 100644 drivers/pci/cma.c
+ create mode 100644 include/keys/x509-parser.h
+ create mode 100644 include/linux/spdm.h
+ create mode 100644 lib/spdm_requester.c
+
+-- 
+2.40.1
+
