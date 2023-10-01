@@ -2,189 +2,98 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CF6D3E748ED
-	for <linux-pci@archiver.kernel.org>; Sun,  1 Oct 2023 15:34:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0EABCE748E9
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Oct 2023 17:03:22 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235112AbjJAPeV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 1 Oct 2023 11:34:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46384 "EHLO
+        id S235208AbjJARDW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 1 Oct 2023 13:03:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36884 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231185AbjJAPeV (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Oct 2023 11:34:21 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ACC14DA
-        for <linux-pci@vger.kernel.org>; Sun,  1 Oct 2023 08:34:18 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696174459; x=1727710459;
-  h=date:from:to:cc:subject:message-id;
-  bh=vGXGDsJS6gi8hx07mm9outE7jHamP1e8w/H4blTwPNI=;
-  b=iJ4seP5gxqMnbgXEftbMWhH8DkgN16Q38HnsCwAJ9wTJ7ZSGVIN4gZZE
-   MLEdKKjUIv1zBheZNYBJsiXzs20E4j0/imqXjg+KoSXFDptdHxy77AmKj
-   2VJj0/+kZLhZYTk8PhTVunAcsorVFpbQXMJ9rM27efPGcHmM0fwMGqUJw
-   fQyVbVMDmePpNlIf5VUlBsPLPxPOGzE3b9vDAn5SGVlB7pglzdRe7oefM
-   0hVvMKeTgt/8yymQBGB+4m6HbOHZ8kehIgHVJVYc1swn2L6csRLve8bPO
-   ulADXVl9lo2j0mdRCpP9gesLWM3NIRL9z7mhik/qnGnPrFtIUB7HZFe+W
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="4107497"
-X-IronPort-AV: E=Sophos;i="6.03,191,1694761200"; 
-   d="scan'208";a="4107497"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Oct 2023 08:34:18 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10850"; a="727045134"
-X-IronPort-AV: E=Sophos;i="6.03,191,1694761200"; 
-   d="scan'208";a="727045134"
-Received: from lkp-server02.sh.intel.com (HELO c3b01524d57c) ([10.239.97.151])
-  by orsmga006.jf.intel.com with ESMTP; 01 Oct 2023 08:34:14 -0700
-Received: from kbuild by c3b01524d57c with local (Exim 4.96)
-        (envelope-from <lkp@intel.com>)
-        id 1qmySU-0005B0-00;
-        Sun, 01 Oct 2023 15:34:14 +0000
-Date:   Sun, 01 Oct 2023 23:33:59 +0800
-From:   kernel test robot <lkp@intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- f69977404700a3d33b1c4b492c2a44f17cb07af5
-Message-ID: <202310012356.c2EwYkac-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+        with ESMTP id S235161AbjJARDW (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Oct 2023 13:03:22 -0400
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 50BD4D9
+        for <linux-pci@vger.kernel.org>; Sun,  1 Oct 2023 10:03:19 -0700 (PDT)
+Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
+        by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
+        (Exim 4.92)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qmzqR-0005BH-U7; Sun, 01 Oct 2023 19:03:03 +0200
+Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
+        by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+        (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qmzqM-00AKTc-Rp; Sun, 01 Oct 2023 19:02:58 +0200
+Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
+        (envelope-from <ukl@pengutronix.de>)
+        id 1qmzqM-0079nX-IU; Sun, 01 Oct 2023 19:02:58 +0200
+From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
+        <u.kleine-koenig@pengutronix.de>
+To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Santosh Shilimkar <santosh.shilimkar@ti.com>,
+        Murali Karicheri <m-karicheri2@ti.com>
+Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+        kernel@pengutronix.de
+Subject: [PATCH 3/4] PCI: keystone: Don't put .remove callback in .exit.text section
+Date:   Sun,  1 Oct 2023 19:02:53 +0200
+Message-Id: <20231001170254.2506508-4-u.kleine-koenig@pengutronix.de>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20231001170254.2506508-1-u.kleine-koenig@pengutronix.de>
+References: <20231001170254.2506508-1-u.kleine-koenig@pengutronix.de>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1715; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=Hr/QfLimX+7UJqAy4q3JH1FtTfAFH7k/Ct+ixkgZYDU=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlGaY6TD9wyR6mM92C8zolvynMcsMsHL8QMH5y8 XWEVYn44TqJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZRmmOgAKCRCPgPtYfRL+ ThJOB/9viY7JtyDZIhDNMYVrNTAltrR4nHZu/azOkmjnVcr96o35Ago+Dx9YZe2J0Go68sZuL7/ ICCUJeuG4gCPqgsmhe1gGuHiujrF9IZCf6Xrm73tFmyBc8ZoZUnwFnh/p8LmKErpFrcLT+nlQ6U Bc9K6fcnmLvIm+2LcP3EWVCLsRJGIJx7wOv6JdhQi4e4Q7JJxk1HsblMxQ4l9J5k8GCEeAamGI1 UpG6NZbumq1D7VndNhxz3OZBUChgsvLcgrV2nj2yW3Kj4sTk8UfLlV6S1vCVM4SgycXcJtpyu+3 CEGPIpXixzTTwHJFG6g0rYZx34iNkoCSbU2/SXj8Ppi03emt
+X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
+Content-Transfer-Encoding: 8bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
+X-SA-Exim-Mail-From: ukl@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: f69977404700a3d33b1c4b492c2a44f17cb07af5  PCI: of: Destroy changeset when adding PCI device node fails
+With CONFIG_PCIE_KEYSTONE=y and ks_pcie_remove() marked with __exit, the
+function is discarded from the driver. In this case a bound device can
+still get unbound, e.g via sysfs. Then no cleanup code is run resulting
+in resource leaks or worse.
 
-elapsed time: 2394m
+The right thing to do is do always have the remove callback available.
+Note that this driver cannot be compiled as a module, so
+ks_pcie_remove() was always discarded before this change and modpost
+couldn't warn about this issue. Further more the __ref annotation also
+prevents a warning.
 
-configs tested: 119
-configs skipped: 2
+Fixes: 0c4ffcfe1fbc ("PCI: keystone: Add TI Keystone PCIe driver")
+Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
+---
+ drivers/pci/controller/dwc/pci-keystone.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20230930   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   gcc  
-arm                   randconfig-001-20230930   gcc  
-arm64                            allmodconfig   gcc  
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   gcc  
-arm64                               defconfig   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20230930   gcc  
-i386         buildonly-randconfig-002-20230930   gcc  
-i386         buildonly-randconfig-003-20230930   gcc  
-i386         buildonly-randconfig-004-20230930   gcc  
-i386         buildonly-randconfig-005-20230930   gcc  
-i386         buildonly-randconfig-006-20230930   gcc  
-i386                              debian-10.3   gcc  
-i386                                defconfig   gcc  
-i386                  randconfig-001-20230930   gcc  
-i386                  randconfig-002-20230930   gcc  
-i386                  randconfig-003-20230930   gcc  
-i386                  randconfig-004-20230930   gcc  
-i386                  randconfig-005-20230930   gcc  
-i386                  randconfig-006-20230930   gcc  
-i386                  randconfig-011-20230930   gcc  
-i386                  randconfig-012-20230930   gcc  
-i386                  randconfig-013-20230930   gcc  
-i386                  randconfig-014-20230930   gcc  
-i386                  randconfig-015-20230930   gcc  
-i386                  randconfig-016-20230930   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20230930   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   gcc  
-riscv                            allmodconfig   gcc  
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   gcc  
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20230930   gcc  
-riscv                          rv32_defconfig   gcc  
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-s390                  randconfig-001-20230930   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   gcc  
-x86_64       buildonly-randconfig-001-20230930   gcc  
-x86_64       buildonly-randconfig-002-20230930   gcc  
-x86_64       buildonly-randconfig-003-20230930   gcc  
-x86_64       buildonly-randconfig-004-20230930   gcc  
-x86_64       buildonly-randconfig-005-20230930   gcc  
-x86_64       buildonly-randconfig-006-20230930   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20230930   gcc  
-x86_64                randconfig-002-20230930   gcc  
-x86_64                randconfig-003-20230930   gcc  
-x86_64                randconfig-004-20230930   gcc  
-x86_64                randconfig-005-20230930   gcc  
-x86_64                randconfig-006-20230930   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 49aea6ce3e87..eb3fa17b243f 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -1302,7 +1302,7 @@ static int __init ks_pcie_probe(struct platform_device *pdev)
+ 	return ret;
+ }
+ 
+-static int __exit ks_pcie_remove(struct platform_device *pdev)
++static int ks_pcie_remove(struct platform_device *pdev)
+ {
+ 	struct keystone_pcie *ks_pcie = platform_get_drvdata(pdev);
+ 	struct device_link **link = ks_pcie->link;
+@@ -1320,7 +1320,7 @@ static int __exit ks_pcie_remove(struct platform_device *pdev)
+ 
+ static struct platform_driver ks_pcie_driver __refdata = {
+ 	.probe  = ks_pcie_probe,
+-	.remove = __exit_p(ks_pcie_remove),
++	.remove = ks_pcie_remove,
+ 	.driver = {
+ 		.name	= "keystone-pcie",
+ 		.of_match_table = ks_pcie_of_match,
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.40.1
+
