@@ -2,97 +2,150 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 08082E748F5
-	for <linux-pci@archiver.kernel.org>; Sun,  1 Oct 2023 17:03:38 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2CD5CE748F3
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Oct 2023 17:53:37 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235184AbjJARDi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 1 Oct 2023 13:03:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43376 "EHLO
+        id S235251AbjJARxh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 1 Oct 2023 13:53:37 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35680 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235204AbjJARDh (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Oct 2023 13:03:37 -0400
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E30C4E6
-        for <linux-pci@vger.kernel.org>; Sun,  1 Oct 2023 10:03:33 -0700 (PDT)
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-        by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-        (Exim 4.92)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qmzqS-0005BE-PV; Sun, 01 Oct 2023 19:03:04 +0200
-Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
-        by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-        (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qmzqM-00AKTT-4F; Sun, 01 Oct 2023 19:02:58 +0200
-Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
-        (envelope-from <ukl@pengutronix.de>)
-        id 1qmzqL-0079nM-Qh; Sun, 01 Oct 2023 19:02:57 +0200
-From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
-        <u.kleine-koenig@pengutronix.de>
-To:     Jingoo Han <jingoohan1@gmail.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-        Kukjin Kim <kgene.kim@samsung.com>,
-        Siva Reddy Kallam <siva.kallam@samsung.com>,
-        Surendranath Gurivireddy Balla <suren.reddy@samsung.com>,
-        Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Kishon Vijay Abraham I <kishon@ti.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
-        Santosh Shilimkar <santosh.shilimkar@ti.com>,
-        Murali Karicheri <m-karicheri2@ti.com>
-Cc:     Rob Herring <robh@kernel.org>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        linux-samsung-soc@vger.kernel.org, kernel@pengutronix.de
-Subject: [PATCH 0/4] pci: Fix some section mismatches
-Date:   Sun,  1 Oct 2023 19:02:50 +0200
-Message-Id: <20231001170254.2506508-1-u.kleine-koenig@pengutronix.de>
-X-Mailer: git-send-email 2.40.1
+        with ESMTP id S233932AbjJARxh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Oct 2023 13:53:37 -0400
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5f64:0])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C7772D9;
+        Sun,  1 Oct 2023 10:53:33 -0700 (PDT)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by bmailout1.hostsharing.net (Postfix) with ESMTPS id C0877300000BE;
+        Sun,  1 Oct 2023 19:53:31 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id B40DE17C3E; Sun,  1 Oct 2023 19:53:31 +0200 (CEST)
+Date:   Sun, 1 Oct 2023 19:53:31 +0200
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Alistair Francis <alistair23@gmail.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        Jonathan.Cameron@huawei.com, alex.williamson@redhat.com,
+        christian.koenig@amd.com, kch@nvidia.com,
+        gregkh@linuxfoundation.org, logang@deltatee.com,
+        linux-kernel@vger.kernel.org, chaitanyak@nvidia.com,
+        rdunlap@infradead.org, Alistair Francis <alistair.francis@wdc.com>
+Subject: Re: [PATCH v8 2/3] PCI/DOE: Expose the DOE features via sysfs
+Message-ID: <20231001175331.GA13453@wunner.de>
+References: <20230921055531.2028834-1-alistair.francis@wdc.com>
+ <20230921055531.2028834-2-alistair.francis@wdc.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1166; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=sA6ad3X5iUkL2qhJAsZsIuRXKnigfYSc+1OexbjnF7Y=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlGaY2LW3MWmF/XhhO25KC7SqNqPeRdiMhhtCt5 JFtEgodsDmJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZRmmNgAKCRCPgPtYfRL+ TsN5B/4zTs7MkS4yfa2lME9woY5tX1qcMTZyYSeWgqw1OdHyEvE/SYViuzwKlp2vAE9PcxDVVHQ TzTp2TIZuP+5GmotKGAZtFLrUuTAIStIW0zQvAr2cJXKkFVS+OPQRJlDxspdKJ7RmSDmmwiAkuN N6lyzgCTvjPPzI4kCccSkFoPrMLSs2fyz9PG7Mq5sqMwarULlU6eUR6+Kh7u47Jpnk+Xe315tK9 BElLPFR3bMkpTtejhaTUFSU4EmKAVFMjZV7G2wo4XX22gjcb3L7WyXW683Frf0V8HDtJGwctePT 5v7OJrHLn5/9VqK2CaE5nOlcAh2Is7i7dBqHEGGVbKIb4BcM
-X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: ukl@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20230921055531.2028834-2-alistair.francis@wdc.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hello,
+On Thu, Sep 21, 2023 at 03:55:30PM +1000, Alistair Francis wrote:
+> The PCIe 6 specification added support for the Data Object Exchange (DOE).
+> When DOE is supported the Discovery Data Object Protocol must be
 
-modpost checks about section mismatches are about to get stronger, see
-https://lore.kernel.org/linux-kbuild/20230930165204.2478282-1-u.kleine-koenig@pengutronix.de
-.
+"... the DOE Discovery *Feature* must be implemented per PCIe r6.1
+sec 6.30.1.1"
 
-With the above patch applied, enabling the exynos and kirin drivers as
-modules result in a warning about their remove functions that is fixed
-here. The keystone driver is a bit special as it can only be enabled
-built-in and used __refdata on its driver struct. It also had a similar
-issue for .probe fixed in the last patch.
 
-IMHO all four patches qualify for backporting to stable.
+> implemented. The protocol allows a requester to obtain information about
+> the other DOE features supported by the device.
+> 
+> The kernel is already querying the DOE features supported and cacheing
+> the values. This patch exposes the values via sysfs. This will allow
 
-Best regards
-Uwe
+Instead of "This patch ...", prefer imperative mood, i.e.:
+"Expose the values in sysfs to allow user space to ..."
 
-Uwe Kleine-König (4):
-  PCI: exynos: Don't put .remove callback in .exit.text section
-  PCI: kirin: Don't put .remove callback in .exit.text section
-  PCI: keystone: Don't put .remove callback in .exit.text section
-  PCI: keystone: Don't put .probe callback in .init.text section
 
- drivers/pci/controller/dwc/pci-exynos.c   | 4 ++--
- drivers/pci/controller/dwc/pci-keystone.c | 8 ++++----
- drivers/pci/controller/dwc/pcie-kirin.c   | 4 ++--
- 3 files changed, 8 insertions(+), 8 deletions(-)
+> --- a/Documentation/ABI/testing/sysfs-bus-pci
+> +++ b/Documentation/ABI/testing/sysfs-bus-pci
+> @@ -500,3 +500,26 @@ Description:
+>  		console drivers from the device.  Raw users of pci-sysfs
+>  		resourceN attributes must be terminated prior to resizing.
+>  		Success of the resizing operation is not guaranteed.
+> +
+> +What:		/sys/bus/pci/devices/.../doe_features
+> +Date:		August 2023
 
-base-commit: 6465e260f48790807eef06b583b38ca9789b6072
--- 
-2.40.1
+Date says August but patch submission is from September.
 
+
+> --- a/drivers/pci/doe.c
+> +++ b/drivers/pci/doe.c
+> @@ -47,6 +47,7 @@
+>   * @wq: Wait queue for work item
+>   * @work_queue: Queue of pci_doe_work items
+>   * @flags: Bit array of PCI_DOE_FLAG_* flags
+> + * @sysfs_attrs: Array of sysfs device attributes
+
+What's the purpose of this pointer?  It's set in
+pci_doe_sysfs_feature_supports() but never used for anything.
+
+I'm guessing that you meant to use it to tear down the added attributes
+on device removal, but that's missing in the patch.
+
+The attributes are added with sysfs_add_file_to_group(), but it seems
+to me they're not automatically removed by sysfs_remove_groups() on
+device teardown.  Am I missing something?
+
+
+> +static int pci_doe_sysfs_feature_supports(struct pci_dev *pdev,
+> +					  struct pci_doe_mb *doe_mb)
+
+I don't quite understand the meaning of the function name:
+It sounds as if its purpose is to determine whether a feature
+is supported.  Maybe something like pci_doe_sysfs_add_features()
+instead?
+
+
+> +	doe_mb->sysfs_attrs = attrs;
+
+Set this after the xa_for_each() loop to avoid having to reset it
+to NULL on error.
+
+
+> +		attrs[i].show = pci_doe_sysfs_feature_show;
+> +
+> +		ret = sysfs_add_file_to_group(&dev->kobj, &attrs[i].attr,
+> +					      pci_dev_doe_feature_group.name);
+> +		if (ret) {
+> +			attrs[i].show = NULL;
+> +			goto fail;
+> +		}
+
+The purpose of resetting attrs[i].show to NULL in the error path
+seems to be that you want to skip over features which haven't
+been created as attributes yet.
+
+It seems more straightforward to just iterate over the elements
+in attrs[] until you reach one whose mode is 0.
+
+Alternatively, use xa_for_each_range(&doe_mb->feats, i, entry, 0, i - 1).
+
+
+> +int doe_sysfs_init(struct pci_dev *pdev)
+
+Rename to pci_doe_sysfs_init() for consistency.
+
+
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -186,6 +186,9 @@ extern const struct attribute_group *pci_dev_groups[];
+>  extern const struct attribute_group *pcibus_groups[];
+>  extern const struct device_type pci_dev_type;
+>  extern const struct attribute_group *pci_bus_groups[];
+> +#ifdef CONFIG_SYSFS
+> +extern const struct attribute_group pci_dev_doe_feature_group;
+> +#endif
+
+No #ifdef necessary.
+
+Thanks,
+
+Lukas
