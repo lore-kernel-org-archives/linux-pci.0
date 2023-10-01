@@ -2,51 +2,58 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4EFA2E748E9
-	for <linux-pci@archiver.kernel.org>; Sun,  1 Oct 2023 17:03:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 08082E748F5
+	for <linux-pci@archiver.kernel.org>; Sun,  1 Oct 2023 17:03:38 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233932AbjJARDb (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 1 Oct 2023 13:03:31 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45802 "EHLO
+        id S235184AbjJARDi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 1 Oct 2023 13:03:38 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43376 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235209AbjJARDa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Oct 2023 13:03:30 -0400
+        with ESMTP id S235204AbjJARDh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 1 Oct 2023 13:03:37 -0400
 Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [IPv6:2a0a:edc0:2:b01:1d::104])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01684DA
-        for <linux-pci@vger.kernel.org>; Sun,  1 Oct 2023 10:03:26 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E30C4E6
+        for <linux-pci@vger.kernel.org>; Sun,  1 Oct 2023 10:03:33 -0700 (PDT)
 Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
         by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
         (Exim 4.92)
         (envelope-from <ukl@pengutronix.de>)
-        id 1qmzqR-0005BG-U6; Sun, 01 Oct 2023 19:03:03 +0200
+        id 1qmzqS-0005BE-PV; Sun, 01 Oct 2023 19:03:04 +0200
 Received: from [2a0a:edc0:0:900:1d::77] (helo=ptz.office.stw.pengutronix.de)
         by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
         (Exim 4.94.2)
         (envelope-from <ukl@pengutronix.de>)
-        id 1qmzqM-00AKTZ-Ki; Sun, 01 Oct 2023 19:02:58 +0200
+        id 1qmzqM-00AKTT-4F; Sun, 01 Oct 2023 19:02:58 +0200
 Received: from ukl by ptz.office.stw.pengutronix.de with local (Exim 4.94.2)
         (envelope-from <ukl@pengutronix.de>)
-        id 1qmzqM-0079nT-BJ; Sun, 01 Oct 2023 19:02:58 +0200
+        id 1qmzqL-0079nM-Qh; Sun, 01 Oct 2023 19:02:57 +0200
 From:   =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= 
         <u.kleine-koenig@pengutronix.de>
-To:     Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
+To:     Jingoo Han <jingoohan1@gmail.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        Kukjin Kim <kgene.kim@samsung.com>,
+        Siva Reddy Kallam <siva.kallam@samsung.com>,
+        Surendranath Gurivireddy Balla <suren.reddy@samsung.com>,
+        Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
         Kishon Vijay Abraham I <kishon@ti.com>,
-        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>
-Cc:     Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-        kernel@pengutronix.de
-Subject: [PATCH 2/4] PCI: kirin: Don't put .remove callback in .exit.text section
-Date:   Sun,  1 Oct 2023 19:02:52 +0200
-Message-Id: <20231001170254.2506508-3-u.kleine-koenig@pengutronix.de>
+        Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
+        Santosh Shilimkar <santosh.shilimkar@ti.com>,
+        Murali Karicheri <m-karicheri2@ti.com>
+Cc:     Rob Herring <robh@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-samsung-soc@vger.kernel.org, kernel@pengutronix.de
+Subject: [PATCH 0/4] pci: Fix some section mismatches
+Date:   Sun,  1 Oct 2023 19:02:50 +0200
+Message-Id: <20231001170254.2506508-1-u.kleine-koenig@pengutronix.de>
 X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231001170254.2506508-1-u.kleine-koenig@pengutronix.de>
-References: <20231001170254.2506508-1-u.kleine-koenig@pengutronix.de>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1699; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=CWtdoFVKXqYzImyGIFt1yeoCIVYWiEHMUBw7PGKiOJk=; b=owGbwMvMwMXY3/A7olbonx/jabUkhlTJZZZiJ/lXbPb4lXu6tcVtrcEidfa1zduVP0n+2bNsp yNvTuP+TkZjFgZGLgZZMUUW+8Y1mVZVcpGda/9dhhnEygQyhYGLUwAm4uXPwTDtTO+LswU8W9+5 yuw6HCtj45O/V4fPvWPCwQlSC/52c3L95L0sk69oK2sRX9Nqfdgn2SEw/ePW/9di94rw33roOkH Tqjic3ypIzO/M7nSthaKT1lfulO5Lslgo+1N6onUn16RLPfuSlk6XObZq2bq2xQ+/fFOc6eXnvf /Y/iSFjYb8kfnGsSUfWaKcq3yUdEv6CjS2JdTfYu7SNWAwfNuQ+0Kw/vrWCq35u7N1DjWIvrqW9 +F78uejj465Kkc+Zc/0+hbAq8l5Syss4bee76H07eLdVqlHStRKlcyPxC+2VQjzVA/bzP8lOqkp L03WSX+t1qL2hILVuqvUbj5+s2J5rdvkCr4fZerTnSoB
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1166; i=u.kleine-koenig@pengutronix.de; h=from:subject; bh=sA6ad3X5iUkL2qhJAsZsIuRXKnigfYSc+1OexbjnF7Y=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBlGaY2LW3MWmF/XhhO25KC7SqNqPeRdiMhhtCt5 JFtEgodsDmJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCZRmmNgAKCRCPgPtYfRL+ TsN5B/4zTs7MkS4yfa2lME9woY5tX1qcMTZyYSeWgqw1OdHyEvE/SYViuzwKlp2vAE9PcxDVVHQ TzTp2TIZuP+5GmotKGAZtFLrUuTAIStIW0zQvAr2cJXKkFVS+OPQRJlDxspdKJ7RmSDmmwiAkuN N6lyzgCTvjPPzI4kCccSkFoPrMLSs2fyz9PG7Mq5sqMwarULlU6eUR6+Kh7u47Jpnk+Xe315tK9 BElLPFR3bMkpTtejhaTUFSU4EmKAVFMjZV7G2wo4XX22gjcb3L7WyXW683Frf0V8HDtJGwctePT 5v7OJrHLn5/9VqK2CaE5nOlcAh2Is7i7dBqHEGGVbKIb4BcM
 X-Developer-Key: i=u.kleine-koenig@pengutronix.de; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
@@ -57,46 +64,35 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-With CONFIG_PCIE_KIRIN=y and kirin_pcie_remove() marked with __exit, the
-function is discarded from the driver. In this case a bound device can
-still get unbound, e.g via sysfs. Then no cleanup code is run resulting
-in resource leaks or worse.
+Hello,
 
-The right thing to do is do always have the remove callback available.
-This fixes the following warning by modpost:
+modpost checks about section mismatches are about to get stronger, see
+https://lore.kernel.org/linux-kbuild/20230930165204.2478282-1-u.kleine-koenig@pengutronix.de
+.
 
-	drivers/pci/controller/dwc/pcie-kirin: section mismatch in reference: kirin_pcie_driver+0x8 (section: .data) -> kirin_pcie_remove (section: .exit.text)
+With the above patch applied, enabling the exynos and kirin drivers as
+modules result in a warning about their remove functions that is fixed
+here. The keystone driver is a bit special as it can only be enabled
+built-in and used __refdata on its driver struct. It also had a similar
+issue for .probe fixed in the last patch.
 
-(with ARCH=x86_64 W=1 allmodconfig).
+IMHO all four patches qualify for backporting to stable.
 
-Fixes: 000f60db784b ("PCI: kirin: Add support for a PHY layer")
-Signed-off-by: Uwe Kleine-König <u.kleine-koenig@pengutronix.de>
----
- drivers/pci/controller/dwc/pcie-kirin.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Best regards
+Uwe
 
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index d93bc2906950..2ee146767971 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -741,7 +741,7 @@ static int kirin_pcie_power_on(struct platform_device *pdev,
- 	return ret;
- }
- 
--static int __exit kirin_pcie_remove(struct platform_device *pdev)
-+static int kirin_pcie_remove(struct platform_device *pdev)
- {
- 	struct kirin_pcie *kirin_pcie = platform_get_drvdata(pdev);
- 
-@@ -818,7 +818,7 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 
- static struct platform_driver kirin_pcie_driver = {
- 	.probe			= kirin_pcie_probe,
--	.remove	        	= __exit_p(kirin_pcie_remove),
-+	.remove	        	= kirin_pcie_remove,
- 	.driver			= {
- 		.name			= "kirin-pcie",
- 		.of_match_table		= kirin_pcie_match,
+Uwe Kleine-König (4):
+  PCI: exynos: Don't put .remove callback in .exit.text section
+  PCI: kirin: Don't put .remove callback in .exit.text section
+  PCI: keystone: Don't put .remove callback in .exit.text section
+  PCI: keystone: Don't put .probe callback in .init.text section
+
+ drivers/pci/controller/dwc/pci-exynos.c   | 4 ++--
+ drivers/pci/controller/dwc/pci-keystone.c | 8 ++++----
+ drivers/pci/controller/dwc/pcie-kirin.c   | 4 ++--
+ 3 files changed, 8 insertions(+), 8 deletions(-)
+
+base-commit: 6465e260f48790807eef06b583b38ca9789b6072
 -- 
 2.40.1
 
