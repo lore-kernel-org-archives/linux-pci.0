@@ -2,205 +2,105 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E0988E784AD
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Oct 2023 12:05:20 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BFFF8E784AC
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Oct 2023 13:54:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236885AbjJBMFV (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Oct 2023 08:05:21 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50766 "EHLO
+        id S237575AbjJBNyC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Oct 2023 09:54:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44732 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236869AbjJBMFT (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2023 08:05:19 -0400
-Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6872394;
-        Mon,  2 Oct 2023 05:05:15 -0700 (PDT)
-Received: from loongson.cn (unknown [10.20.42.43])
-        by gateway (Coremail) with SMTP id _____8BxNuj5sRplz5MuAA--.35409S3;
-        Mon, 02 Oct 2023 20:05:13 +0800 (CST)
-Received: from openarena.loongson.cn (unknown [10.20.42.43])
-        by localhost.localdomain (Coremail) with SMTP id AQAAf8BxK9z3sRplVSEXAA--.47905S2;
-        Mon, 02 Oct 2023 20:05:11 +0800 (CST)
-From:   Sui Jingfeng <suijingfeng@loongson.cn>
-To:     Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH pci-next v6 0/2] PCI/VGA: Make the vga_is_firmware_default() less arch-dependent
-Date:   Mon,  2 Oct 2023 20:05:09 +0800
-Message-Id: <20231002120511.594737-1-suijingfeng@loongson.cn>
-X-Mailer: git-send-email 2.34.1
+        with ESMTP id S237585AbjJBNyB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2023 09:54:01 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05431E6;
+        Mon,  2 Oct 2023 06:53:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1696254839; x=1727790839;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=0iczxjgf4Ie892NJSryS5MvdoCgiYH0AtCxc5GWpQHs=;
+  b=R2CalH1N4wekZtdc7/m2n/6bPAhpPbN6oOCXpoL+YLhy7HSXrLuurYOO
+   6sykNadUIV4uDKhyF4x13GnmfbPqkVr4natcFkdct3RmVtoWFRotPkSRM
+   HfZ7vuo8vxMW1IMqS53vqJhyCt9WV9z6WCIsEwsjz6ExwuRmvzjkcU/rF
+   Oehnrl4YzwGDq1I6WXSGskt3L4Oekr97pxC5TLnkK1maSn2FhT5yJP+k1
+   8Y2rrfOmsrIsbphsNumdSTdjD/24izlovGfVsfsxb6SXuPLOLaFENsF8J
+   A+M0frRjZz2NFb7axSzqPrEEwuL30oBfy1YLFqjkP7K9ZfU21MgvTpCZs
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10851"; a="372995203"
+X-IronPort-AV: E=Sophos;i="6.03,194,1694761200"; 
+   d="scan'208";a="372995203"
+Received: from fmsmga003.fm.intel.com ([10.253.24.29])
+  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Oct 2023 06:53:57 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10851"; a="840990880"
+X-IronPort-AV: E=Sophos;i="6.03,194,1694761200"; 
+   d="scan'208";a="840990880"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by FMSMGA003.fm.intel.com with ESMTP; 02 Oct 2023 06:53:55 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+        id DCF131A7; Mon,  2 Oct 2023 16:53:53 +0300 (EEST)
+From:   Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc:     "Rafael J. Wysocki" <rafael@kernel.org>,
+        Len Brown <lenb@kernel.org>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 1/1] PCI: ACPI: Switch to use acpi_evaluate_dsm_typed()
+Date:   Mon,  2 Oct 2023 16:53:52 +0300
+Message-Id: <20231002135352.2603096-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.40.0.1.gaa8946217a0b
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: AQAAf8BxK9z3sRplVSEXAA--.47905S2
-X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
-X-Coremail-Antispam: 1Uk129KBj93XoW3Ww45XryUWw4kGw43CFWDWrX_yoW3Ww43pr
-        18Wa13Ww4kG3WrKrW7XF15CF15WrW8Ca97Jr1Igr48Cw4xKw18CF9IqF4jg347ArsFqw17
-        X3Z7Aa4rtw17JagCm3ZEXasCq-sJn29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7KY7ZEXa
-        sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
-        0xBIdaVrnRJUUUkYb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
-        IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
-        e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Gr0_Xr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
-        0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVWxJVW8Jr1l84ACjcxK6I8E87Iv6xkF7I0E14v2
-        6r4j6r4UJwAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
-        02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUAVWUtwAv7VC2z280aVAF
-        wI0_Gr0_Cr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JMxAIw28IcxkI7V
-        AKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCj
-        r7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUXVWUAwCIc40Y0x0EwIxGrwCI42IY6x
-        IIjxv20xvE14v26r1I6r4UMIIF0xvE2Ix0cI8IcVCY1x0267AKxVWUJVW8JwCI42IY6xAI
-        w20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Gr0_Cr1lIxAIcVC2z280aVCY1x
-        0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU8w0eJUUUUU==
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The vga_is_firmware_default() only works on x86 and ia64 currently, it is
-a no-op on the rest of the architectures. This patch completes the
-implementation for it, the added code tries to capture the PCI (e) VGA
-device that owns the firmware framebuffer before the PCI resource
-relocation. Since only one GPU could owns the firmware fb in normal case,
-things are almost done once we have determined the boot VGA device
-successfully.
+The acpi_evaluate_dsm_typed() provides a way to check the type of the
+object evaluated by _DSM call. Use it instead of open coded variant.
 
-Note that this patch requires the target platform has a way to set up the
-kernel's screen_info. On machines with muiltiple GPU co-exist and On UEFI
-environment, the firmware framebuffer should be put into the VRAM BAR of
-the primary GPU. For the arbitration purpose itself, changing PCI class
-code of the GPU to be non-primary is not required.
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/pci/pci-acpi.c | 13 +++++++------
+ 1 file changed, 7 insertions(+), 6 deletions(-)
 
-The provided method is tested on x86, arm64 and loongarch, all of the
-machine with UEFI firmware shipped.  See below for more information.
-
-1) LS3A5000+LS7A1000 platform with three video cards:
-
-$ lspci | grep VGA
-
-00:06.1 VGA compatible controller: Loongson Technology LLC DC (Display Controller) (rev 01)
-03:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Caicos XT [Radeon HD 7470/8470 / R5 235/310 OEM]
-07:00.0 VGA compatible controller: S3 Graphics Ltd. Device 9070 (rev 01)
-08:00.0 VGA compatible controller: S3 Graphics Ltd. Device 9070 (rev 01)
-
-Before apply this series:
-
- pci 0000:00:06.1: vgaarb: setting as boot VGA device
- pci 0000:00:06.1: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
- pci 0000:03:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:07:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:08:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- vgaarb: loaded
-
-After apply this series:
-
- pci 0000:03:00.0: vgaarb: BAR 0: [mem 0xe0050000000-0xe005fffffff 64bit pref] contains firmware FB [0xe0050000000-0xe00500ea5ff]
- pci 0000:00:06.1: vgaarb: setting as boot VGA device
- pci 0000:03:00.0: vgaarb: setting as boot VGA device (overriding previous)
- pci 0000:03:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:07:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:08:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- vgaarb: loaded
-
-$ dmesg | grep 0000:03:00.0
-
- pci 0000:03:00.0: [1002:6778] type 00 class 0x030000
- pci 0000:03:00.0: reg 0x10: [mem 0xe0050000000-0xe005fffffff 64bit pref]
- pci 0000:03:00.0: reg 0x18: [mem 0xe0065300000-0xe006531ffff 64bit]
- pci 0000:03:00.0: reg 0x20: [io  0x20000-0x200ff]
- pci 0000:03:00.0: reg 0x30: [mem 0xfffe0000-0xffffffff pref]
- pci 0000:03:00.0: vgaarb: BAR 0: [mem 0xe0050000000-0xe005fffffff 64bit pref] contains firmware FB [0xe0050000000-0xe00500ea5ff]
- pci 0000:03:00.0: BAR 0: assigned [mem 0xe0030000000-0xe003fffffff 64bit pref]
- pci 0000:03:00.0: BAR 2: assigned [mem 0xe0065200000-0xe006521ffff 64bit]
- pci 0000:03:00.0: BAR 6: assigned [mem 0xe0065220000-0xe006523ffff pref]
- pci 0000:03:00.0: BAR 4: assigned [io  0x5000-0x50ff]
- pci 0000:03:00.0: vgaarb: setting as boot VGA device (overriding previous)
- pci 0000:03:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
-
-Loongson UEFI firmware does not support specify which GPU to be the primary,
-the firmware set the ATI GPU(03:00.0) as the primary GPU with this hardware
-configuration by hardcode. The problem is that VGAARB can not override the
-platform integrated one(00:06.1) before apply this series.
-
-Please note that BAR 0 of the ATI GPU moved by PCI core from
-[0xe0050000000-0xe005fffffff] to [0xe0030000000-0xe003fffffff], the
-vga_is_firmware_default() function will return wrong results by simply
-remove #ifdefs while without take relocation into account.
-
-
-2) ARM64 (Kunpeng 920) with three video card:
-
-Before apply this series:
-
- pci 0000:02:00.0: vgaarb: setting as boot VGA device
- pci 0000:02:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:05:00.0: vgaarb: setting as boot VGA device (overriding previous) <--- (Because it has IO or MEM enabled)
- pci 0000:05:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:06:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- vgaarb: loaded
-
-After apply this series:
-
- pci 0000:05:00.0: vgaarb: BAR 0: [mem 0x80010000000-0x8001fffffff 64bit pref] contains firmware FB [0x80010000000-0x800101e77ff]
- pci 0000:02:00.0: vgaarb: setting as boot VGA device
- pci 0000:02:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:05:00.0: vgaarb: Boot VGA selected by firmware
- pci 0000:05:00.0: vgaarb: setting as boot VGA device (overriding previous) <--- (Because it owns firmware framebuffer)
- pci 0000:05:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:06:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- vgaarb: loaded
-
-3) x86 with three video card
-
-lspci | grep VGA
-05:00.0 VGA compatible controller: Silicon Motion, Inc. SM750 (rev a1)
-0c:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Navi 10 [Radeon RX 5600 OEM/5600 XT / 5700/5700 XT] (rev c1)
-0d:00.0 VGA compatible controller: Jingjia Microelectronics Co Ltd Device 9100 (rev 01)
-
-Before apply this series:
-
- pci 0000:05:00.0: vgaarb: setting as boot VGA device
- pci 0000:05:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:0c:00.0: vgaarb: setting as boot VGA device (overriding previous)
- pci 0000:0c:00.0: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
- pci 0000:0d:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- vgaarb: loaded
- amdgpu 0000:0c:00.0: vgaarb: deactivate vga console
- amdgpu 0000:0c:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=none:owns=io+me
-
-After apply this series:
-
- pci 0000:0c:00.0: vgaarb: BAR 0: [mem 0xa0000000-0xafffffff 64bit pref] contains firmware FB [0xa0000000-0xa1fa3fff]
- pci 0000:05:00.0: vgaarb: setting as boot VGA device
- pci 0000:05:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- pci 0000:0c:00.0: vgaarb: Boot VGA selected by firmware
- pci 0000:0c:00.0: vgaarb: setting as boot VGA device (overriding previous)
- pci 0000:0c:00.0: vgaarb: VGA device added: decodes=io+mem,owns=io+mem,locks=none
- pci 0000:0d:00.0: vgaarb: VGA device added: decodes=io+mem,owns=none,locks=none
- vgaarb: loaded
- amdgpu 0000:0c:00.0: vgaarb: deactivate vga console
- amdgpu 0000:0c:00.0: vgaarb: changed VGA decodes: olddecodes=io+mem,decodes=none:owns=io+mem
-
-
-v2:
-	* Fix test robot warnnings and fix typos
-v3:
-	* Fix linkage problems if the global screen_info is not exported
-v4:
-	* Handle linkage problems by hiding behind of CONFIG_SYSFB,
-	* Drop side-effects and simplify.
-v5:
-	* Print the BAR and the framebuffer region (Bjorn)
-	* Use pci_dev_for_each_resource() (Bjorn)
-	* Cleanup the old mechanisms (Bjorn)
-	* Make the commit log simple by moving the extraneous details to cover letter (Bjorn)
-	* Carry on test on arm64
-v6:
-	* Resolve merge conflect on pci-next branch.
-
-Sui Jingfeng (2):
-  PCI/VGA: Make the vga_is_firmware_default() less arch-dependent
-  PCI/VGA: Remove vga_is_firmware_default() function
-
- drivers/pci/vgaarb.c | 116 ++++++++++++++++++++++++++++---------------
- 1 file changed, 76 insertions(+), 40 deletions(-)
-
-
-base-commit: 87ab156b7bb2a117a79692a96239c667f5b4f08e
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index a05350a4e49c..cf108259aef6 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -1215,12 +1215,12 @@ void acpi_pci_add_bus(struct pci_bus *bus)
+ 	if (!pci_is_root_bus(bus))
+ 		return;
+ 
+-	obj = acpi_evaluate_dsm(ACPI_HANDLE(bus->bridge), &pci_acpi_dsm_guid, 3,
+-				DSM_PCI_POWER_ON_RESET_DELAY, NULL);
++	obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(bus->bridge), &pci_acpi_dsm_guid, 3,
++				      DSM_PCI_POWER_ON_RESET_DELAY, NULL, ACPI_TYPE_INTEGER);
+ 	if (!obj)
+ 		return;
+ 
+-	if (obj->type == ACPI_TYPE_INTEGER && obj->integer.value == 1) {
++	if (obj->integer.value == 1) {
+ 		bridge = pci_find_host_bridge(bus);
+ 		bridge->ignore_reset_delay = 1;
+ 	}
+@@ -1376,12 +1376,13 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
+ 	if (bridge->ignore_reset_delay)
+ 		pdev->d3cold_delay = 0;
+ 
+-	obj = acpi_evaluate_dsm(handle, &pci_acpi_dsm_guid, 3,
+-				DSM_PCI_DEVICE_READINESS_DURATIONS, NULL);
++	obj = acpi_evaluate_dsm_typed(handle, &pci_acpi_dsm_guid, 3,
++				      DSM_PCI_DEVICE_READINESS_DURATIONS, NULL,
++				      ACPI_TYPE_PACKAGE);
+ 	if (!obj)
+ 		return;
+ 
+-	if (obj->type == ACPI_TYPE_PACKAGE && obj->package.count == 5) {
++	if (obj->package.count == 5) {
+ 		elements = obj->package.elements;
+ 		if (elements[0].type == ACPI_TYPE_INTEGER) {
+ 			value = (int)elements[0].integer.value / 1000;
 -- 
-2.34.1
+2.40.0.1.gaa8946217a0b
 
