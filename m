@@ -2,92 +2,161 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 04328E748F8
-	for <linux-pci@archiver.kernel.org>; Mon,  2 Oct 2023 16:40:49 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 41153E748FB
+	for <linux-pci@archiver.kernel.org>; Mon,  2 Oct 2023 16:45:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231587AbjJBQkt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 2 Oct 2023 12:40:49 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46018 "EHLO
+        id S238194AbjJBQpF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 2 Oct 2023 12:45:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55128 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230107AbjJBQkt (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2023 12:40:49 -0400
-X-Greylist: delayed 1991 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Mon, 02 Oct 2023 09:40:44 PDT
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BFD7A9B;
-        Mon,  2 Oct 2023 09:40:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=XGVVjLtCy/b7XBDMrd+l3TWnpYYLvXFcVZSGnHlFQ0I=; b=mJQqcPDwO7ipsx68RKWvm0jKtr
-        FhyNNxdJSAYCuqGp617XQ+BSogb8Pfn7INKEXNbGv1t8ftDBmR86NY0yWTghteijc+FPWNLX5LowD
-        vZdlqta/hTH0lChornsXgF/i4XXA/64c7kmp5LvFJaiq4XXQdR46f+y4m7m1TOlbzkpDnyQQT2f+y
-        W4eZXQvVqtVFivZr4qskUjmy48juNz3iDo3x1PmuwRFaNkQR0PqRbkA9eC64D+/mILIafBxGaXdRf
-        S2JyxGWZLtDxNFClQvZdZMQfK9qxxn3Rf2/p8Du7URV62I8opHx9O1l4KRAYBOg5/9CR0i4KvXJuu
-        MyYHwAOQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1qnLS5-002kN1-J5; Mon, 02 Oct 2023 10:07:23 -0600
-Message-ID: <29da763d-1570-7197-2d5a-03c5659b8b52@deltatee.com>
-Date:   Mon, 2 Oct 2023 10:07:21 -0600
+        with ESMTP id S237844AbjJBQpD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 2 Oct 2023 12:45:03 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 22A2A9B;
+        Mon,  2 Oct 2023 09:44:59 -0700 (PDT)
+Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4RzmyS5506z6K6gc;
+        Tue,  3 Oct 2023 00:44:48 +0800 (CST)
+Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Mon, 2 Oct
+ 2023 17:44:55 +0100
+Date:   Mon, 2 Oct 2023 17:44:54 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Lukas Wunner <lukas@wunner.de>
+CC:     Bjorn Helgaas <helgaas@kernel.org>,
+        David Howells <dhowells@redhat.com>,
+        David Woodhouse <dwmw2@infradead.org>,
+        Herbert Xu <herbert@gondor.apana.org.au>,
+        "David S. Miller" <davem@davemloft.net>,
+        Alex Williamson <alex.williamson@redhat.com>,
+        <linux-pci@vger.kernel.org>, <linux-cxl@vger.kernel.org>,
+        <linux-coco@lists.linux.dev>, <keyrings@vger.kernel.org>,
+        <linux-crypto@vger.kernel.org>, <kvm@vger.kernel.org>,
+        <linuxarm@huawei.com>, David Box <david.e.box@intel.com>,
+        Dan Williams <dan.j.williams@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>,
+        "Li, Ming" <ming4.li@intel.com>, Zhi Wang <zhi.a.wang@intel.com>,
+        Alistair Francis <alistair.francis@wdc.com>,
+        Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+        Alexey Kardashevskiy <aik@amd.com>,
+        Tom Lendacky <thomas.lendacky@amd.com>,
+        Sean Christopherson <seanjc@google.com>,
+        Alexander Graf <graf@amazon.com>
+Subject: Re: [PATCH 03/12] X.509: Move certificate length retrieval into new
+ helper
+Message-ID: <20231002174454.000025c5@Huawei.com>
+In-Reply-To: <16c06528d13b2c0081229a45cacd4b1b9cdff738.1695921657.git.lukas@wunner.de>
+References: <cover.1695921656.git.lukas@wunner.de>
+        <16c06528d13b2c0081229a45cacd4b1b9cdff738.1695921657.git.lukas@wunner.de>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Content-Language: en-CA
-To:     "Gustavo A. R. Silva" <gustavoars@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-hardening@vger.kernel.org
-References: <ZRnf6wVOu0IJQ2Ok@work>
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <ZRnf6wVOu0IJQ2Ok@work>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: gustavoars@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-Subject: Re: [PATCH][next] PCI/P2PDMA: Fix undefined behavior bug in struct
- pci_p2pdma_pagemap
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-Originating-IP: [10.202.227.76]
+X-ClientProxiedBy: lhrpeml100005.china.huawei.com (7.191.160.25) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Thu, 28 Sep 2023 19:32:32 +0200
+Lukas Wunner <lukas@wunner.de> wrote:
 
-
-On 2023-10-01 15:08, Gustavo A. R. Silva wrote:
-> `struct dev_pagemap` is a flexible structure, which means that it
-> contains a flexible-array member at the bottom. This could potentially
-> lead to an overwrite of the objects following `pgmap` in `struct
-> pci_p2pdma_pagemap`, when `nr_range > 1`.
+> The upcoming in-kernel SPDM library (Security Protocol and Data Model,
+> https://www.dmtf.org/dsp/DSP0274) needs to retrieve the length from
+> ASN.1 DER-encoded X.509 certificates.
 > 
-> Fix this by placing the declaration of object `pgmap` at the end of
-> `struct pci_p2pdma_pagemap`.
+> Such code already exists in x509_load_certificate_list(), so move it
+> into a new helper for reuse by SPDM.
 > 
-> -Wflex-array-member-not-at-end is coming in GCC-14, and we are getting
-> ready to enable it globally.
+> No functional change intended.
 > 
-> Fixes: 0afea3814358 ("PCI/P2PDMA: Add provider's pci_dev to pci_p2pdma_pagemap struct")
-> Fixes: a6e6fe6549f6 ("PCI/P2PDMA: Introduce private pagemap structure")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+
+Good find :)  I vaguely remember carrying a hack for this so
+good to do something more general + save on the duplication.
+
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 
 
-Makes sense to me, thanks.
+> ---
+>  crypto/asymmetric_keys/x509_loader.c | 38 +++++++++++++++++++---------
+>  include/keys/asymmetric-type.h       |  2 ++
+>  2 files changed, 28 insertions(+), 12 deletions(-)
+> 
+> diff --git a/crypto/asymmetric_keys/x509_loader.c b/crypto/asymmetric_keys/x509_loader.c
+> index a41741326998..121460a0de46 100644
+> --- a/crypto/asymmetric_keys/x509_loader.c
+> +++ b/crypto/asymmetric_keys/x509_loader.c
+> @@ -4,28 +4,42 @@
+>  #include <linux/key.h>
+>  #include <keys/asymmetric-type.h>
+>  
+> +int x509_get_certificate_length(const u8 *p, unsigned long buflen)
+> +{
+> +	int plen;
+> +
+> +	/* Each cert begins with an ASN.1 SEQUENCE tag and must be more
+> +	 * than 256 bytes in size.
+> +	 */
+> +	if (buflen < 4)
+> +		return -EINVAL;
+> +
+> +	if (p[0] != 0x30 &&
+> +	    p[1] != 0x82)
+> +		return -EINVAL;
+> +
+> +	plen = (p[2] << 8) | p[3];
+> +	plen += 4;
+> +	if (plen > buflen)
+> +		return -EINVAL;
+> +
+> +	return plen;
+> +}
+> +EXPORT_SYMBOL_GPL(x509_get_certificate_length);
+> +
+>  int x509_load_certificate_list(const u8 cert_list[],
+>  			       const unsigned long list_size,
+>  			       const struct key *keyring)
+>  {
+>  	key_ref_t key;
+>  	const u8 *p, *end;
+> -	size_t plen;
+> +	int plen;
+>  
+>  	p = cert_list;
+>  	end = p + list_size;
+>  	while (p < end) {
+> -		/* Each cert begins with an ASN.1 SEQUENCE tag and must be more
+> -		 * than 256 bytes in size.
+> -		 */
+> -		if (end - p < 4)
+> -			goto dodgy_cert;
+> -		if (p[0] != 0x30 &&
+> -		    p[1] != 0x82)
+> -			goto dodgy_cert;
+> -		plen = (p[2] << 8) | p[3];
+> -		plen += 4;
+> -		if (plen > end - p)
+> +		plen = x509_get_certificate_length(p, end - p);
+> +		if (plen < 0)
+>  			goto dodgy_cert;
+>  
+>  		key = key_create_or_update(make_key_ref(keyring, 1),
+> diff --git a/include/keys/asymmetric-type.h b/include/keys/asymmetric-type.h
+> index 69a13e1e5b2e..6705cfde25b9 100644
+> --- a/include/keys/asymmetric-type.h
+> +++ b/include/keys/asymmetric-type.h
+> @@ -84,6 +84,8 @@ extern struct key *find_asymmetric_key(struct key *keyring,
+>  				       const struct asymmetric_key_id *id_2,
+>  				       bool partial);
+>  
+> +int x509_get_certificate_length(const u8 *p, unsigned long buflen);
+> +
+>  int x509_load_certificate_list(const u8 cert_list[], const unsigned long list_size,
+>  			       const struct key *keyring);
+>  
 
-Although, I'm not sure the fixes tags are appropriate. The
-flexible-array member was introduced in 5.10 (b7b3c01b19) and both the
-"fixed" commits predate that change by a number of releases.
-
-Also, it's probably worth noting in the commit message that the p2pdma
-code hardcodes nr_ranges to 1 (in pci_p2pdma_add_resource); so there is
-no way to actually hit any bug with the current code.
-
-I totally agree that the patch should be applied to prevent possible
-bugs being introduced in the future:
-
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-
-Logan
