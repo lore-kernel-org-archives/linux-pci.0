@@ -2,41 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 46339E7544F
-	for <linux-pci@archiver.kernel.org>; Tue,  3 Oct 2023 12:10:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6D8CCE75426
+	for <linux-pci@archiver.kernel.org>; Tue,  3 Oct 2023 12:10:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232422AbjJCMKH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 3 Oct 2023 08:10:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52456 "EHLO
+        id S232371AbjJCMKL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 3 Oct 2023 08:10:11 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44584 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S239896AbjJCMKE (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Oct 2023 08:10:04 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3785CF9;
-        Tue,  3 Oct 2023 05:10:00 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39372KJ0004142;
-        Tue, 3 Oct 2023 12:09:15 GMT
+        with ESMTP id S232449AbjJCMKI (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 3 Oct 2023 08:10:08 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1F3A7B8;
+        Tue,  3 Oct 2023 05:10:05 -0700 (PDT)
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 393BLPQ4023875;
+        Tue, 3 Oct 2023 12:09:42 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : subject
- : date : message-id : mime-version : content-type; s=qcppdkim1;
- bh=MBmuLVJ5qof0Fy+YtKzcWq7CgW3rViLRkagA6sXYRR8=;
- b=d5OO1Ysy47Cjkk5bYf3gAIe90InraCI2GklfHm/Tt3dg15DR1jF5QvEcDlHaMoW3hgmn
- Ja1Y3blsUlLFSTPi+jJtnzorW77sVz3GiOnTxBEM+irGD/ss1ZESC3Dkk0iBJGjpsT88
- qIDJXQ4MrPlSn9FDdvLSsEgA5yvOOLh/deaGKmkVsbiHyq1iDNMcxNAkLp6Rhem+p267
- tqgkYJC0+zVLtDBISS6JLePTzkVSSYpBCrATsbqxEvEvr7x1kSaU7Otnd+UvMTEfpiPo
- nec3q9b6I7L2N42n8+NxCc0sMNQd+Ivrvdy163DN6Zv8TtmQabUfXETLW+8+JJye+jBj 6g== 
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tec2enxdq-1
+ : date : message-id : in-reply-to : references : mime-version :
+ content-type; s=qcppdkim1;
+ bh=uGwKDcCkyHFY/Ii1s9gC+AfH8qdc8/hi1icRi+L+W1Y=;
+ b=mRMJj/a4yY2//gbYeixI1BYH96GA1aUvjFg0v8J5WeiLgP4Q3LwVzvk39HDwEViuG/jl
+ aoQWwUXSfzAqEkiV6IlKTnqraOz3gFNenw78SNqF2/cxkRVZQkzVb3F1XU7zhCJGW8qf
+ GzFP8UwlZ19jX7sesH1abyeLCzMzL++++GTrCJvm9BYTx956RW0YWYoNlb2Vyttv3aAi
+ kRnThMl3Vq4TixA0zRJGFB+CFxj9nu2OTcup23YxxlSOokTHNXh0uDSUbS1XgRaSTaky
+ dyTY6aMRDXoKtKQ1OCTGrKDdsQZYGLnYFCStP/b9JvD5iblozdAAEOOYNz6TZPHtoFNY Sg== 
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tg98rh62r-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 03 Oct 2023 12:09:14 +0000
+        Tue, 03 Oct 2023 12:09:41 +0000
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-        by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 393C9ChU028004
+        by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 393C9RDs010827
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 3 Oct 2023 12:09:12 GMT
+        Tue, 3 Oct 2023 12:09:27 GMT
 Received: from nsekar-linux.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1118.36; Tue, 3 Oct 2023 05:09:05 -0700
+ 15.2.1118.36; Tue, 3 Oct 2023 05:09:20 -0700
 From:   Nitheesh Sekar <quic_nsekar@quicinc.com>
 To:     <agross@kernel.org>, <andersson@kernel.org>,
         <konrad.dybcio@linaro.org>, <lpieralisi@kernel.org>,
@@ -48,10 +49,12 @@ To:     <agross@kernel.org>, <andersson@kernel.org>,
         <quic_ipkumar@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>
-Subject: [PATCH 0/6] Enable IPQ5018 PCI support
-Date:   Tue, 3 Oct 2023 17:38:40 +0530
-Message-ID: <20231003120846.28626-1-quic_nsekar@quicinc.com>
+Subject: [PATCH 2/6] dt-bindings: PCI: qcom: Add IPQ5108 SoC
+Date:   Tue, 3 Oct 2023 17:38:42 +0530
+Message-ID: <20231003120846.28626-3-quic_nsekar@quicinc.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231003120846.28626-1-quic_nsekar@quicinc.com>
+References: <20231003120846.28626-1-quic_nsekar@quicinc.com>
 MIME-Version: 1.0
 Content-Type: text/plain
 X-Originating-IP: [10.80.80.8]
@@ -59,44 +62,96 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: XPjrhI3_Zud6qJ43SLbt2XB6YprnP2GG
-X-Proofpoint-ORIG-GUID: XPjrhI3_Zud6qJ43SLbt2XB6YprnP2GG
+X-Proofpoint-ORIG-GUID: tIAslTKj3QGneJXJ2ctwAuWJqot6MTyU
+X-Proofpoint-GUID: tIAslTKj3QGneJXJ2ctwAuWJqot6MTyU
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-10-03_08,2023-10-02_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 mlxscore=0
- adultscore=0 priorityscore=1501 malwarescore=0 suspectscore=0
- mlxlogscore=538 spamscore=0 bulkscore=0 clxscore=1011 lowpriorityscore=0
- impostorscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310030087
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ suspectscore=0 bulkscore=0 adultscore=0 impostorscore=0 lowpriorityscore=0
+ clxscore=1015 spamscore=0 mlxscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2310030088
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This patch series adds the relevant phy and controller
-DT configurations for enabling PCI gen2 support
-on IPQ5018.
+Add support for the PCIe controller on the Qualcomm
+IPQ5108 SoC to the bindings.
 
-Nitheesh Sekar (6):
-  dt-bindings: phy: qcom,uniphy-pcie: Document PCIe uniphy
-  dt-bindings: PCI: qcom: Add IPQ5108 SoC
-  phy: qcom: Introduce PCIe UNIPHY 28LP driver
-  PCI: qcom: Add support for IPQ5018
-  arm64: dts: qcom: ipq5018: Add PCIe related nodes
-  arm64: dts: qcom: ipq5018: Enable PCIe
+Signed-off-by: Nitheesh Sekar <quic_nsekar@quicinc.com>
+---
+ .../devicetree/bindings/pci/qcom,pcie.yaml    | 36 +++++++++++++++++++
+ 1 file changed, 36 insertions(+)
 
- .../devicetree/bindings/pci/qcom,pcie.yaml    |  36 ++
- .../bindings/phy/qcom,uniphy-pcie-28lp.yaml   |  77 ++++
- .../arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts |   9 +
- arch/arm64/boot/dts/qcom/ipq5018.dtsi         | 186 +++++++++-
- drivers/pci/controller/dwc/pcie-qcom.c        |  22 +-
- drivers/phy/qualcomm/Kconfig                  |  12 +
- drivers/phy/qualcomm/Makefile                 |   1 +
- .../phy/qualcomm/phy-qcom-uniphy-pcie-28lp.c  | 336 ++++++++++++++++++
- 8 files changed, 663 insertions(+), 16 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/phy/qcom,uniphy-pcie-28lp.yaml
- create mode 100644 drivers/phy/qualcomm/phy-qcom-uniphy-pcie-28lp.c
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index eadba38171e1..72e24094ec7e 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -21,6 +21,7 @@ properties:
+           - qcom,pcie-apq8064
+           - qcom,pcie-apq8084
+           - qcom,pcie-ipq4019
++          - qcom,pcie-ipq5018
+           - qcom,pcie-ipq6018
+           - qcom,pcie-ipq8064
+           - qcom,pcie-ipq8064-v2
+@@ -170,6 +171,7 @@ allOf:
+         compatible:
+           contains:
+             enum:
++              - qcom,pcie-ipq5018
+               - qcom,pcie-ipq6018
+               - qcom,pcie-ipq8074-gen3
+     then:
+@@ -332,6 +334,39 @@ allOf:
+             - const: ahb # AHB reset
+             - const: phy_ahb # PHY AHB reset
+ 
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,pcie-ipq5018
++    then:
++      properties:
++        clocks:
++          minItems: 6
++          maxItems: 6
++        clock-names:
++          items:
++            - const: iface # PCIe to SysNOC BIU clock
++            - const: axi_m # AXI Master clock
++            - const: axi_s # AXI Slave clock
++            - const: ahb # AHB clock
++            - const: aux # Auxiliary clock
++            - const: axi_bridge # AXI bridge clock
++        resets:
++          minItems: 8
++          maxItems: 8
++        reset-names:
++          items:
++            - const: pipe # PIPE reset
++            - const: sleep # Sleep reset
++            - const: sticky # Core sticky reset
++            - const: axi_m # AXI master reset
++            - const: axi_s # AXI slave reset
++            - const: ahb # AHB reset
++            - const: axi_m_sticky # AXI master sticky reset
++            - const: axi_s_sticky # AXI slave sticky reset
++
+   - if:
+       properties:
+         compatible:
+@@ -790,6 +825,7 @@ allOf:
+               enum:
+                 - qcom,pcie-apq8064
+                 - qcom,pcie-ipq4019
++                - qcom,pcie-ipq5018
+                 - qcom,pcie-ipq8064
+                 - qcom,pcie-ipq8064v2
+                 - qcom,pcie-ipq8074
 -- 
 2.17.1
 
