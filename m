@@ -2,85 +2,208 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 492D1E92705
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE9D7E9270B
 	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S237088AbjJEOnW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:43:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48656 "EHLO
+        id S233985AbjJEOnX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:43:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45766 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233985AbjJEOiC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:38:02 -0400
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D77477D88
-        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 07:03:15 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1696514594;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=yidy6TZBy1CWG6Oo6GwAJihK7/D77PxhLMlTWyhd8wc=;
-        b=Dn6SUY0uuRm5Q6OTXBbi0OoHgkgdoTA+sjrkuz+WFZOW3lHm/hBDmFPaDPDjDZ8i9DkUoS
-        qIeDh1CnRYEuGfulmDU7S/mQAmVEJ+EfXanVIr5nuk6TkfW8A4q9TLyhCbNQW5LkuhnOuk
-        po7kdOnZmkHLht33TF0NnJ6DaodH95c=
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
- [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-590-lR-syHIUP-i9ws4vAP-MwQ-1; Thu, 05 Oct 2023 09:02:24 -0400
-X-MC-Unique: lR-syHIUP-i9ws4vAP-MwQ-1
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2775a7f3803so864831a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 05 Oct 2023 06:02:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696510943; x=1697115743;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=yidy6TZBy1CWG6Oo6GwAJihK7/D77PxhLMlTWyhd8wc=;
-        b=QD1lQfohJ0rjPRUeZEc94cVJ1gC+cjiyb29GZCSLSWKoeINC7nTKW0XKVWHDn3nUk8
-         WRKzQeY0x+YH9JXTRajlpvSbvXvR746cd8WK/VyAg+YjqAWnYVEN7E7L11zEAK0pu26b
-         6uWVs+1cUw98fkvNoIUIluXpa1sFerhthPKyf1zevpNx8J1FeCIzcMu/AfBMNE0PYpiY
-         zVjASyZ7BZ+YaFSBKOZ18zjqcyIFM2c1BYfpLy0MZi/1GVQ1gE1enpuevNcUtingIBn9
-         zhThIdhT7yfoVrdhcJ2cbqUbDzLD7m+jYWw23bIohZBJf86CUVv9eRSCsL/UVfkMciLK
-         uwBQ==
-X-Gm-Message-State: AOJu0YyOvs/U87obN/VfA9vPRpOInuPXXOlcSlDhZvgNJOr/Q9TYpwpM
-        SmpddARqFo/sBOFpJL7x/LQbkip/3V1jtyiHEln4C9F/fwDsaYpVIRX0Dm0Ju6VPRyUzBVgpfrS
-        I13mKTA9zbf7GUyWhx+0RyI21EQPmO9rmuQg=
-X-Received: by 2002:a17:90b:4ad0:b0:274:a021:9383 with SMTP id mh16-20020a17090b4ad000b00274a0219383mr5102303pjb.17.1696510943641;
-        Thu, 05 Oct 2023 06:02:23 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFUGIakY6gmiMMg7VIrDCgG6A1oUd7mRza4EcAODeKOxvfyAvfCd+QT1JpHAONy6e0NM9gveMU8O4PPolgXz5g=
-X-Received: by 2002:a17:90b:4ad0:b0:274:a021:9383 with SMTP id
- mh16-20020a17090b4ad000b00274a0219383mr5102281pjb.17.1696510943386; Thu, 05
- Oct 2023 06:02:23 -0700 (PDT)
-MIME-Version: 1.0
-References: <20230928044233.GR3208943@black.fi.intel.com> <20230928154934.GA484133@bhelgaas>
-In-Reply-To: <20230928154934.GA484133@bhelgaas>
-From:   Kamil Paral <kparal@redhat.com>
-Date:   Thu, 5 Oct 2023 15:01:56 +0200
-Message-ID: <CA+cBOTdOVnzbXXPhWhWHDs8=n3A1ixcEg6aDVxjCdsneXySdSA@mail.gmail.com>
-Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
- e8b908146d44 "PCI/PM: Increase wait time after resume"
+        with ESMTP id S235189AbjJEOiP (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:38:15 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 850AD4E361
+        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 07:03:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1696514619; x=1728050619;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=LuM3macVI1qvKuiMhDqeyzM9/w1PNpImMiN+bMazFH8=;
+  b=LzeaPVDZm4euICmNFvpLNX3n286Mgod4FEDi2ed5QkA/WBj1hdzqRD4U
+   Ip4CNyS46+C9Ajm1LZjW/zuTulbyZmWh8s/8E4yLQib50imxhe58Q++O4
+   /hlehLZSyyxJEfPcHXy44INYCeJmAOBlayV66krHBdPUDe8a6NKm2yEua
+   wWDcYqr7+nsZRHAvZxrmg05h2bLAUS39V/q0u052UPqJBbz8ypBge8NU+
+   yv0Aj/Z+xYk9rpth9R/9KaOWn3WzyoUpyhdE8QGsJXbsijDJQJ1HdXjMJ
+   grvzR7DsCXHm8U58hQ3jGoD4Cr4qMy47aJHp4d20SJUaglUE/UCPAMzwr
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10853"; a="380727281"
+X-IronPort-AV: E=Sophos;i="6.03,202,1694761200"; 
+   d="scan'208";a="380727281"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2023 02:03:03 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10853"; a="751713060"
+X-IronPort-AV: E=Sophos;i="6.03,202,1694761200"; 
+   d="scan'208";a="751713060"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga002.jf.intel.com with ESMTP; 05 Oct 2023 02:02:59 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 524E535A; Thu,  5 Oct 2023 12:02:58 +0300 (EEST)
+Date:   Thu, 5 Oct 2023 12:02:58 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
 To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
-        regressions@lists.linux.dev, bhelgaas@google.com,
-        chris.chiu@canonical.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Kuppuswamy Sathyanarayanan 
+        <sathyanarayanan.kuppuswamy@linux.intel.com>,
+        Vidya Sagar <vidyas@nvidia.com>,
+        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+        Kai-Heng Feng <kai.heng.feng@canonical.com>,
+        "David E . Box" <david.e.box@linux.intel.com>,
+        Tasev Nikola <tasev.stefanoska@skynet.be>,
+        Mark Enriquez <enriquezmark36@gmail.com>,
+        Thomas Witt <kernel@witt.link>,
+        Koba Ko <koba.ko@canonical.com>,
+        Werner Sembach <wse@tuxedocomputers.com>,
+        Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+        =?utf-8?B?5ZCz5piK5r6E?= Ricky <ricky_wu@realtek.com>,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4] PCI/ASPM: Add back L1 PM Substate save and restore
+Message-ID: <20231005090258.GQ3208943@black.fi.intel.com>
+References: <20231002070044.2299644-1-mika.westerberg@linux.intel.com>
+ <20231004222324.GA718849@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20231004222324.GA718849@bhelgaas>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Sep 28, 2023 at 5:49=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
-> Do we know how suspend/resume works with Windows in this
-> configuration?
+On Wed, Oct 04, 2023 at 05:23:24PM -0500, Bjorn Helgaas wrote:
+> On Mon, Oct 02, 2023 at 10:00:44AM +0300, Mika Westerberg wrote:
+> > Commit a7152be79b62 ("Revert "PCI/ASPM: Save L1 PM Substates Capability
+> > for suspend/resume"") reverted saving and restoring of ASPM L1 Substates
+> > due to a regression that caused resume from suspend to fail on certain
+> > systems. However, we never added this capability back and this is now
+> > causing systems fail to enter low power CPU states, drawing more power
+> > from the battery.
+> 
+> AFAICT, the save (suspend) side is effectively the same in
+> 4ff116d0d5fd ("PCI/ASPM: Save L1 PM Substates Capability for
+> suspend/resume") (the change reverted by a7152be79b62) and in this
+> patch.  There are minor ordering differences with respect to DPC and
+> AER, but I don't think they're relevant.
+> 
+> > The original revert mentioned that we restore L1 PM substate configuration
+> > even though ASPM L1 may already be enabled. This is due the fact that
+> > the pci_restore_aspm_l1ss_state() was called before pci_restore_pcie_state().
+> > 
+> > Try to enable this functionality again following PCIe r6.0.1, sec 5.5.4
+> > more closely by:
+> > 
+> >   1) Do not restore ASPM configuration in pci_restore_pcie_state() but
+> >      do that after PCIe capability is restored in pci_restore_aspm_state()
+> >      following PCIe r6.0, sec 5.5.4.
+> > 
+> >   2) ASPM is first enabled on the upstream component and then downstream
+> >      (this is already forced by the parent-child ordering of Linux
+> >      Device Power Management framework).
+> > 
+> >   3) Program ASPM L1 PM substate configuration before L1 enables.
+> > 
+> >   4) Program ASPM L1 PM substate enables last after rest of the fields
+> >      in the capability are programmed.
+> 
+> This patch changes the restore (resume) side.  4ff116d0d5fd restored
+> L1SS state followed by LNKCTL.
+> 
+> This patch instead restores LNKCTL (with ASPM *disabled*) before the
+> L1SS state, and then restores the full LNKCTL (including ASPM config).
 
-Hello Bjorn. I'm not sure if you're asking in general or about my
-laptop in particular. I don't have Windows installed, so I don't have
-an easy way to test this. There used to be some "evaluation" version
-of Windows that I think I could use to test it, but it would be a
-considerable time investment for me (including backing up my data,
-etc), and I'm currently low on spare time. So at this moment I'm
-unfortunately unable to help with this question.
+Right.
 
+> >   5) Add denylist that skips restoring on the ASUS and TUXEDO systems
+> >      where these regressions happened, just in case. For the TUXEDO case
+> >      we only skip restore if the BIOS is involved in system suspend
+> >      (that's forcing "mem_sleep=deep" in the command line). This is to
+> >      avoid possible power regression when the default suspend to idle is
+> >      used, and at the same time make sure the devices continue working
+> >      after resume when the BIOS is involved.
+> 
+> I looked through the v1, v2, and v3 threads, and I see testing failure
+> reports from Thomas (TUXEDO) for v1 and "v1.5" [1].  v1.5 looks
+> functionally identical to this v4 except it lacks the TUXEDO denylist
+> entry.
+> 
+> I don't see any actual success reports for either ASUS or TUXEDO.
+> 
+> Do we have testing reports for these ASUS and TUXEDO systems showing
+> that we need this denylist?  I think this patch fixes a real problem
+> with L1SS save/restore, and unless proven otherwise, I would assume
+> that it fixes ASUS and TUXEDO as well.
+
+The thing with TUXEDO is that on Thomas's system with mem_sleep=deep
+this patch (without denylist) breaks the resume as he describes here:
+
+https://bugzilla.kernel.org/show_bug.cgi?id=216877
+
+However, on exact same TUXEDO system with the same firmwares Werner is
+not able to reproduce the issue with or without the patch. So I'm not
+sure what to do and that's why I added denylist that should take effect
+on Thomas' system when mem_sleep=deep is set but also work on the same
+system without it.
+
+And since we have the denylist, I decided to add the ASUS there to avoid
+accidentally breaking those too.
+
+Let me know if you have any preference what we should do with the TUXEDO
+one. I really don't know any better way to keep everyone happy.
+
+> [1] https://lore.kernel.org/linux-pci/20230630104154.GS14638@black.fi.intel.com/
+> 
+> > Reported-by: Koba Ko <koba.ko@canonical.com>
+> > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217321
+> 
+> IIUC, Koba's report is on a Dell Inspiron 15 3530.
+
+Right.
+
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216782
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216877
+> 
+> These are the original issues reported with 4ff116d0d5fd: 216782 is
+> the ASUS UX305FA problem reported by Tasev, and 216877 is the TUXEDO
+> problem reported by Thomas.
+> 
+> So ... I think this patch definitely fixes a problem.  4ff116d0d5fd
+> restored L1SS state before LNKCTL on the assumption that ASPM was
+> disabled at the point, but I don't think we really know that.
+> 
+> This patch explicitly disables ASPM before restoring L1SS, which seems
+> safer.
+> 
+> But we just punt on the ASUS and TUXEDO systems, when there's no
+> reason we shouldn't be able to restore ASPM config there as well.  And
+> unless I missed them, we don't actually have testing reports from
+> ASUS, TUXEDO, or Koba's Dell.
+
+Just for the record, the Dell and probably others to the real issue is
+that if we don't restore these the CPU can't enter lower power C-states
+and that makes suspend to empty the battery much faster than user would
+expect. So some solution to this is definitely needed sooner rather than
+later.
+
+@Koba, can you provide your tested-by if this solves the issue on the
+Dell system?
+
+> I think there's still something we're missing.
+> 
+> We restore the LTR config before restoring DEVCTL2 (including the LTR
+> enable bit) and L1SS state.  I don't think we know the state of ASPM
+> and L1SS at that point, do we?  Do you think there could be an issue
+> there, too?
+
+AFAICT LTR does not affect until it is explicitly enabled and I don't
+think many drivers actually program it (although we have some sort of
+API for it at least for Intel LPSS devices).
+
+If you have suggestions, I'm all open. If I understand you would like
+this to be done like:
+
+  - Drop the denylist
+  - Add back the suspend/restore of L1SS
+  - Ask everyone in this thread to try it out
+
+I can do that no problem but I guess that for the TUXEDO one (Thomas')
+it probably is going to fail still.
