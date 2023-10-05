@@ -2,84 +2,157 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA774E92711
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 15:40:07 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 9FDC3E92718
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 15:48:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229799AbjJEPkG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Oct 2023 11:40:06 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58070 "EHLO
+        id S231635AbjJEPsl (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Oct 2023 11:48:41 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36528 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232676AbjJEPjn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 11:39:43 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A66257E239;
-        Thu,  5 Oct 2023 07:52:08 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5188DC433CA;
-        Thu,  5 Oct 2023 14:49:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696517385;
-        bh=3sV+Kpk/aoS9Ewxx5MLDNTFd0TDttPAvuUnzXSdo9/w=;
-        h=Date:From:To:Cc:Subject:In-Reply-To:From;
-        b=aeBU9A4wkKpVleSQBS0RU912dt7oDQeQVY99NMmTq6YmxKN3dh2VGyPwCPcHPTLHf
-         eOvTC6eLiHg+xAQ3zUdWo0pPbzW8pLq9AtV2oPcyDyuzAriFblF0jfhNonTYZMtv6m
-         161bbkmQQ2I/bWip2oFAG6+Fh6u/memb20bKtw2aBVRyUWyPm4F8b4C/2hZSBAeeDf
-         Ex3h2Of1QH6FLKh61m8Wjm2Og6BroPPDbJLtPun0Mr43p1DVuYJRNsXBSxkse71jT+
-         P0bcnDsNGU35fdXySL3Bj62LbHvU6iS0ioO3opbdBIYqDJjSlbALLxJ4qdcsZ/B5wK
-         9jZegSmhTS7qA==
-Date:   Thu, 5 Oct 2023 09:49:43 -0500
-From:   Bjorn Helgaas <helgaas@kernel.org>
-To:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, mani@kernel.org,
-        marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: Re: [PATCH v23 12/16] PCI: add T_PVPERL macro
-Message-ID: <20231005144943.GA746077@bhelgaas>
+        with ESMTP id S229877AbjJEPsB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 11:48:01 -0400
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0491411E55;
+        Thu,  5 Oct 2023 07:28:57 -0700 (PDT)
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3952fMpg014041;
+        Thu, 5 Oct 2023 02:53:18 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=message-id : date :
+ mime-version : subject : to : references : from : in-reply-to :
+ content-type : content-transfer-encoding; s=qcppdkim1;
+ bh=t2VKfZO3kaUydr1C8UHvRTAhUAaI59kgNGZmiU5iSQw=;
+ b=ZVzbzDBvRjg/6Id8Gi63jMlR9FTP5+qsuIx5xcOS/cXU1PTId+D76+lTILukyL1neuHb
+ gthGRfZion4nudW86OLnQ1EzpfFX7qKHDTjxfLOgaNS3DZTX/q8dqpkUzCQB5GyZCPoR
+ lbRTxVV/ltBJrUJIoKMWGuwsimCIAAwFDHc/Jiv7YPq7pYXLFUx5FdbzC18ruMvg/Ipb
+ HqQRH1Z8ZHvE/nVmz/oxfE7EUZIDSpeLcS8xzraJhSX4MyrcC2I2yksuMC817L/HkksK
+ ntWKkiYdR3ilAY7ox6LDLEs+YsnIcCoOSUXbNOoo93kDnI43UfInwum47o2//Fb5to/H 3Q== 
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3th2gq2njh-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 05 Oct 2023 02:53:18 +0000
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+        by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 3952rHx2005537
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+        Thu, 5 Oct 2023 02:53:17 GMT
+Received: from [10.50.3.48] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1118.36; Wed, 4 Oct
+ 2023 19:53:10 -0700
+Message-ID: <d4ea5877-b2e8-4cfe-9129-7fdae30adf20@quicinc.com>
+Date:   Thu, 5 Oct 2023 08:23:02 +0530
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20230926122431.3974714-13-yoshihiro.shimoda.uh@renesas.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/6] dt-bindings: phy: qcom,uniphy-pcie: Document PCIe
+ uniphy
+Content-Language: en-US
+To:     Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+        <agross@kernel.org>, <andersson@kernel.org>,
+        <konrad.dybcio@linaro.org>, <lpieralisi@kernel.org>,
+        <kw@linux.com>, <robh@kernel.org>, <bhelgaas@google.com>,
+        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
+        <vkoul@kernel.org>, <kishon@kernel.org>, <mani@kernel.org>,
+        <p.zabel@pengutronix.de>, <quic_srichara@quicinc.com>,
+        <quic_varada@quicinc.com>, <quic_ipkumar@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>
+References: <20231003120846.28626-1-quic_nsekar@quicinc.com>
+ <20231003120846.28626-2-quic_nsekar@quicinc.com>
+ <4bc021c1-0198-41a4-aa73-bf0cf0c0420a@linaro.org>
+From:   Nitheesh Sekar <quic_nsekar@quicinc.com>
+In-Reply-To: <4bc021c1-0198-41a4-aa73-bf0cf0c0420a@linaro.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.80.80.8]
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: Lhri4GHhApCv2WP1UNSg7ujlNiVXSe8W
+X-Proofpoint-ORIG-GUID: Lhri4GHhApCv2WP1UNSg7ujlNiVXSe8W
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2023-10-04_13,2023-10-02_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 phishscore=0 mlxlogscore=999 mlxscore=0 impostorscore=0
+ malwarescore=0 suspectscore=0 clxscore=1011 bulkscore=0 adultscore=0
+ priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2309180000 definitions=main-2310050023
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Sep 26, 2023 at 09:24:27PM +0900, Yoshihiro Shimoda wrote:
-> According to the PCI Express Card Electromechanical Specification,
-> Power stable to PERST# inactive interval is 100 ms as minimum.
-> So, add the macro to use PCIe controller drivers.
-> 
-> Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-> Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 
-Beautiful, thank you!
+On 10/4/2023 12:27 PM, Krzysztof Kozlowski wrote:
+> On 03/10/2023 14:08, Nitheesh Sekar wrote:
+>> Document the Qualcomm UNIPHY PCIe 28LP present in IPQ5018.
+>>
+>> Signed-off-by: Nitheesh Sekar <quic_nsekar@quicinc.com>
+> Thank you for your patch. There is something to discuss/improve.
+Sure. Will learn and improve.
+>
+>
+>> ---
+>>   .../bindings/phy/qcom,uniphy-pcie-28lp.yaml   | 77 +++++++++++++++++++
+>>   1 file changed, 77 insertions(+)
+>>   create mode 100644 Documentation/devicetree/bindings/phy/qcom,uniphy-pcie-28lp.yaml
+>>
+>> diff --git a/Documentation/devicetree/bindings/phy/qcom,uniphy-pcie-28lp.yaml b/Documentation/devicetree/bindings/phy/qcom,uniphy-pcie-28lp.yaml
+>> new file mode 100644
+>> index 000000000000..6b2574f9532e
+>> --- /dev/null
+>> +++ b/Documentation/devicetree/bindings/phy/qcom,uniphy-pcie-28lp.yaml
+> Filename should match compatibles and they do not use 28lp.
+Sure. will remove the 28lp. added it based on the file name.
+Is "qcom,uniphy-pcie.yaml" good ? Because this will be used for other 
+SoCs as well which will have different compatibles. So i did not include 
+the SoC name, lane and speed info which i have used int he compatible 
+names.
+>
+>> @@ -0,0 +1,77 @@
+>> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+>> +%YAML 1.2
+>> +---
+>> +$id: http://devicetree.org/schemas/phy/qcom,uniphy-pcie-28lp.yaml#
+>> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+>> +
+>> +title: Qualcomm UNIPHY PCIe 28LP PHY driver
+> Driver as Linux driver? Drop. Describe the hardware instead.
+>
+>> +
+>> +maintainers:
+>> +  - Nitheesh Sekar <quic_nsekar@quicinc.com>
+>> +  - Sricharan Ramabadhran <quic_srichara@quicinc.com>
+>> +
+>> +properties:
+>> +  compatible:
+>> +    enum:
+>> +      - qcom,ipq5018-uniphy-pcie-gen2x1
+>> +      - qcom,ipq5018-uniphy-pcie-gen2x2
+>> +
+>> +  reg:
+>> +    maxItems: 1
+>> +
+>> +  clocks:
+>> +    maxItems: 1
+>> +
+>> +  clock-names:
+>> +    items:
+>> +      - const: pipe_clk
+> Drop _clk... or even drop entire clock-names. Not needed for one entry.
+Sure. Will drop "_clk" part.
+>
+>> +
+>> +  resets:
+>> +    maxItems: 2
+>> +
+>> +  reset-names:
+>> +    items:
+>> +      - const: phy
+>> +      - const: phy_phy
+> These are absolutely terrible names. If you have third one, it would be
+> "phy_phy_phy"? Drop or provide something useful.
+Sure. Will update.
 
-No need to repost; whoever applies this, please:
-
-  - s/add/Add/ in subject
-  - Add sec 2.9.2 to spec citation in commit log and comment (can use
-    "PCIe CEM r5.0, sec 2.9.2" for brevity)
-
-> ---
->  drivers/pci/pci.h | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 39a8932dc340..5ecbcf041179 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -13,6 +13,9 @@
->  
->  #define PCIE_LINK_RETRAIN_TIMEOUT_MS	1000
->  
-> +/* Power stable to PERST# inactive from PCIe card Electromechanical Spec */
-> +#define PCIE_T_PVPERL_MS		100
-> +
->  /*
->   * PCIe r6.0, sec 5.3.3.2.1 <PME Synchronization>
->   * Recommends 1ms to 10ms timeout to check L2 ready.
-> -- 
-> 2.25.1
-> 
+Thanks,
+Nitheesh
