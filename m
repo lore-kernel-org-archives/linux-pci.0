@@ -2,124 +2,134 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9EECCE92722
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 15:58:30 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6D38E92717
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 15:59:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234854AbjJEP6D (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Oct 2023 11:58:03 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54500 "EHLO
+        id S236270AbjJEP6a (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Oct 2023 11:58:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53330 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234417AbjJEP4q (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 11:56:46 -0400
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5782E9ED4;
-        Thu,  5 Oct 2023 07:04:49 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 7B1A62800BBF3;
-        Thu,  5 Oct 2023 16:04:47 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 662DD4DD3BE; Thu,  5 Oct 2023 16:04:47 +0200 (CEST)
-Date:   Thu, 5 Oct 2023 16:04:47 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-coco@lists.linux.dev, keyrings@vger.kernel.org,
-        linux-crypto@vger.kernel.org, kvm@vger.kernel.org,
-        linuxarm@huawei.com, David Box <david.e.box@intel.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Zhi Wang <zhi.a.wang@intel.com>,
-        Alistair Francis <alistair.francis@wdc.com>,
-        Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-        Alexey Kardashevskiy <aik@amd.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Sean Christopherson <seanjc@google.com>,
-        Alexander Graf <graf@amazon.com>
-Subject: Re: [PATCH 09/12] PCI/CMA: Validate Subject Alternative Name in
- certificates
-Message-ID: <20231005140447.GA23472@wunner.de>
-References: <cover.1695921656.git.lukas@wunner.de>
- <bc1efd945f5d76587787f8351199e1ea45eaf2ef.1695921657.git.lukas@wunner.de>
- <20231003160455.00001a4f@Huawei.com>
+        with ESMTP id S236762AbjJEP51 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 11:57:27 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3FE8165A8
+        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 06:55:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1696514115;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=l8FnzjHBE5EOyFgL2R5kZRhAxL9Ra2YWa3jEQV7PDUY=;
+        b=e2Z91JfY9B0JD7zvrI9KY6Hv3VRX9BM2BXxJqnEXDKauMnhHr6cdROar9SC1VEHu97S6eu
+        XwXVH8WQfNA9rhXLUHGojqu+offDBZz7RFo6rJEErOk5YM7JzO0P5XYt00t+4XEKtpoOqi
+        6pb1nQtajjeWlFCtwtfNNKoHy8ZdhAE=
+Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com
+ [209.85.216.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-609-ksqDsfROPYycwIoqNoGDWA-1; Thu, 05 Oct 2023 08:54:52 -0400
+X-MC-Unique: ksqDsfROPYycwIoqNoGDWA-1
+Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-27756e0e4d8so844284a91.3
+        for <linux-pci@vger.kernel.org>; Thu, 05 Oct 2023 05:54:52 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696510491; x=1697115291;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=l8FnzjHBE5EOyFgL2R5kZRhAxL9Ra2YWa3jEQV7PDUY=;
+        b=uD8nR8qojc14bsCPOf34DMpP7VNMfjYkDUgTHOAVvfrCzEJ5Ge32xkv3WTNZxw3/cn
+         yeNPBIZwh7rublRBXyn3S6AzWypuBi+/KXaP+vHEBHqZcLJk85UI9W6E4AIJBlZsKYZz
+         qIczFJ88aKipcE2huM6DnFK4N2mYee+D1WhRMLK9qVEcoIHy4hcazkdeQ3OTq1Atn19z
+         4jtLWd/E+260x0dodYXu3Gy7CDTd3tbKtkQahU9jnyptEbBnwDohk5Kh1OYC0wJozrBJ
+         hZhg6veLH28pGKKOF5xIvN4gQ4Nmy8PymCM6mhjTnUfW6GXvLq8JeuI+LtmnaaIhcsNW
+         zmdA==
+X-Gm-Message-State: AOJu0YzR4khz5/KDFYNnXhXtwWBSWr2Rokhh6AzM8/b5KAuiXbIJYEKY
+        Pn/beFZLmjUW8aDfNVuXdA9lmL5kj9uNAHgcUTYqvgDmX5+pY3QUPPx+eKhxa2J1hFqZCIJTS+4
+        vPYTK/f6ii37FUb4fNwYHtbrS2UBa4dYB+Icln4ZQ+8978A==
+X-Received: by 2002:a17:90a:4ec3:b0:274:84a2:f0d8 with SMTP id v3-20020a17090a4ec300b0027484a2f0d8mr5221954pjl.25.1696510490758;
+        Thu, 05 Oct 2023 05:54:50 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IEcYgRZ3g9ugJyDEXZ+o2uh/VNC6urawc/m9Q8Xhjnb3KyySGrMPNhWT9qVeAunp4rh394LMoha3asVQfoH5EU=
+X-Received: by 2002:a17:90a:4ec3:b0:274:84a2:f0d8 with SMTP id
+ v3-20020a17090a4ec300b0027484a2f0d8mr5221937pjl.25.1696510490503; Thu, 05 Oct
+ 2023 05:54:50 -0700 (PDT)
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231003160455.00001a4f@Huawei.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+References: <20230925141930.GA21033@wunner.de> <20230926175530.GA418550@bhelgaas>
+ <20230927051602.GX3208943@black.fi.intel.com> <CA+cBOTds9k1Q2haC_gTpsUvjP02dHOv9vSconFEAu-Fsxwf36A@mail.gmail.com>
+ <20230927135346.GJ3208943@black.fi.intel.com> <CA+cBOTfCy-KOptir9yfkVz1=bfOTPQanqe9ofX-jphm7oeBEXg@mail.gmail.com>
+In-Reply-To: <CA+cBOTfCy-KOptir9yfkVz1=bfOTPQanqe9ofX-jphm7oeBEXg@mail.gmail.com>
+From:   Kamil Paral <kparal@redhat.com>
+Date:   Thu, 5 Oct 2023 14:54:23 +0200
+Message-ID: <CA+cBOTdzp+6whm=Sj5nE2=MC4a+45y0CFtk4hDGq0XgF6f0f2A@mail.gmail.com>
+Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
+ e8b908146d44 "PCI/PM: Increase wait time after resume"
+To:     Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        linux-pci@vger.kernel.org, regressions@lists.linux.dev,
+        bhelgaas@google.com, chris.chiu@canonical.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 03, 2023 at 04:04:55PM +0100, Jonathan Cameron wrote:
-> On Thu, 28 Sep 2023 19:32:39 +0200 Lukas Wunner <lukas@wunner.de> wrote:
-> > PCIe r6.1 sec 6.31.3 stipulates requirements for X.509 Leaf Certificates
-> > presented by devices, in particular the presence of a Subject Alternative
-> > Name extension with a name that encodes the Vendor ID, Device ID, Device
-> > Serial Number, etc.
-> 
-> Lets you do any of
-> * What you have here
-> * Reference Integrity Manifest, e.g. see Trusted Computing Group
-> * A pointer to a location where such a Reference Integrity Manifest can be
->   obtained.
-> 
-> So this text feels a little strong though I'm fine with only support the
-> Subject Alternative Name bit for now. Whoever has one of the other options
-> can add that support :)
+On Wed, Sep 27, 2023 at 4:12=E2=80=AFPM Kamil Paral <kparal@redhat.com> wro=
+te:
+>
+> On Wed, Sep 27, 2023 at 3:53=E2=80=AFPM Mika Westerberg
+> <mika.westerberg@linux.intel.com> wrote:
+> > If you apply the patch from here:
+> >
+> > https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=
+=3Dpm&id=3D6786c2941fe1788035f99c98c932672138b3fbc5
+> >
+> > Does the problem go away with the disconnect case too (and so that you
+> > have "secure" enabled)?
+>
+> Thanks, I'll test it, but I can't do it this week. I'll reply next week.
 
-I intend to amend the commit message as follows.  If anyone believes
-this is inaccurate, please let me know:
+Hello Mika, sorry for taking me so long. The URL above gives me a "Bad
+commit reference" error, but I found a patch mentioned in a different
+thread, so I used that one, and I hope it's the correct one :-) It's
+quoted below.
 
-    Side note:  Instead of a Subject Alternative Name, Leaf Certificates may
-    include "a Reference Integrity Manifest, e.g., see Trusted Computing
-    Group" or "a pointer to a location where such a Reference Integrity
-    Manifest can be obtained" (PCIe r6.1 sec 6.31.3).
+With the patch applied, I can confirm that disconnecting and
+reconnecting the cable during suspend is no longer a problem. I tested
+both "user" and "secure" Thunderbolt security levels. The resume is
+fast in all cases, and I've found no issues. Thanks for working on it!
 
-    A Reference Integrity Manifest contains "golden" measurements which can
-    be compared to actual measurements retrieved from a device.  It serves a
-    different purpose than the Subject Alternative Name, hence it is unclear
-    why the spec says only either of them is necessary.  It is also unclear
-    how a Reference Integrity Manifest shall be encoded into a certificate.
+The patch I used:
 
-    Ignore the Reference Integrity Manifest requirement until this confusion
-    is resolved by a spec update.
+> ---
+>  drivers/pci/pci-driver.c | 14 +++++++++++++-
+>  1 file changed, 13 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index a79c110c7e51..51ec9e7e784f 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -572,7 +572,19 @@ static void pci_pm_default_resume_early(struct pci_d=
+ev *pci_dev)
+>
+>  static void pci_pm_bridge_power_up_actions(struct pci_dev *pci_dev)
+>  {
+> -     pci_bridge_wait_for_secondary_bus(pci_dev, "resume");
+> +     int ret;
+> +
+> +     ret =3D pci_bridge_wait_for_secondary_bus(pci_dev, "resume");
+> +     if (ret) {
+> +             /*
+> +              * The downstream link failed to come up, so mark the
+> +              * devices below as disconnected to make sure we don't
+> +              * attempt to resume them.
+> +              */
+> +             pci_walk_bus(pci_dev->subordinate, pci_dev_set_disconnected=
+,
+> +                          NULL);
+> +             return;
+> +     }
+>
+>       /*
+>        * When powering on a bridge from D3cold, the whole hierarchy may b=
+e
+> --
 
-
-> I haven't looked asn.1 recently enough to have any confidence on
-> a review of that bit...
-> So, for everything except the asn.1
-> Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-
-In case it raises the confidence in that portion of the patch,
-I have tested it successfully not just with certificates containing
-a single CMA otherName, but also:
-
-- a single otherName with a different OID
-- multiple otherNames with a mix of CMA and other OIDs
-- multiple otherNames plus additional unrelated dNSNames
-- no Subject Alternative Name
-
-Getting the IMPLICIT annotations right was a bit nontrivial.
-It turned out that the existing crypto/asymmetric_keys/x509_akid.asn1
-got that wrong as well, so I fixed it up as a byproduct of this series:
-
-https://git.kernel.org/herbert/cryptodev-2.6/c/a1e452026e6d
-
-The debug experience made me appreciate the kernel's ASN.1 compiler
-and parser though:  Their code is surprisingly small, the generated
-output of the compiler is quite readable and the split architecture
-with a compiler+parser feels much safer than what openssl does.
-
-Thanks,
-
-Lukas
