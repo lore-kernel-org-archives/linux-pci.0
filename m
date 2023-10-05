@@ -2,208 +2,510 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id AE9D7E9270B
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1B53CE92709
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:47:34 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233985AbjJEOnX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:43:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45766 "EHLO
+        id S239256AbjJEOrC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:47:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36334 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235189AbjJEOiP (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:38:15 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.93])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 850AD4E361
-        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 07:03:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696514619; x=1728050619;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=LuM3macVI1qvKuiMhDqeyzM9/w1PNpImMiN+bMazFH8=;
-  b=LzeaPVDZm4euICmNFvpLNX3n286Mgod4FEDi2ed5QkA/WBj1hdzqRD4U
-   Ip4CNyS46+C9Ajm1LZjW/zuTulbyZmWh8s/8E4yLQib50imxhe58Q++O4
-   /hlehLZSyyxJEfPcHXy44INYCeJmAOBlayV66krHBdPUDe8a6NKm2yEua
-   wWDcYqr7+nsZRHAvZxrmg05h2bLAUS39V/q0u052UPqJBbz8ypBge8NU+
-   yv0Aj/Z+xYk9rpth9R/9KaOWn3WzyoUpyhdE8QGsJXbsijDJQJ1HdXjMJ
-   grvzR7DsCXHm8U58hQ3jGoD4Cr4qMy47aJHp4d20SJUaglUE/UCPAMzwr
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10853"; a="380727281"
-X-IronPort-AV: E=Sophos;i="6.03,202,1694761200"; 
-   d="scan'208";a="380727281"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by fmsmga102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2023 02:03:03 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10853"; a="751713060"
-X-IronPort-AV: E=Sophos;i="6.03,202,1694761200"; 
-   d="scan'208";a="751713060"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga002.jf.intel.com with ESMTP; 05 Oct 2023 02:02:59 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 524E535A; Thu,  5 Oct 2023 12:02:58 +0300 (EEST)
-Date:   Thu, 5 Oct 2023 12:02:58 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Vidya Sagar <vidyas@nvidia.com>,
-        "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-        Kai-Heng Feng <kai.heng.feng@canonical.com>,
-        "David E . Box" <david.e.box@linux.intel.com>,
-        Tasev Nikola <tasev.stefanoska@skynet.be>,
-        Mark Enriquez <enriquezmark36@gmail.com>,
-        Thomas Witt <kernel@witt.link>,
-        Koba Ko <koba.ko@canonical.com>,
-        Werner Sembach <wse@tuxedocomputers.com>,
-        Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-        =?utf-8?B?5ZCz5piK5r6E?= Ricky <ricky_wu@realtek.com>,
-        linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4] PCI/ASPM: Add back L1 PM Substate save and restore
-Message-ID: <20231005090258.GQ3208943@black.fi.intel.com>
-References: <20231002070044.2299644-1-mika.westerberg@linux.intel.com>
- <20231004222324.GA718849@bhelgaas>
+        with ESMTP id S240104AbjJEOoz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:44:55 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 678452B910;
+        Thu,  5 Oct 2023 07:22:50 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9CDE2C32774;
+        Thu,  5 Oct 2023 13:05:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+        s=korg; t=1696511124;
+        bh=shELxFK0t3LwvCqN1U6OFYPeGm+WwA3tp/gvX8oAO1I=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=D94BSBdr7sY08VP1z/72KHcCuKatVRlHnw7OPhGylpUYrij5KdM3eeTQc5zSKipOy
+         hcN0EL2x+6NDL4FQhHrPiGikTTycVowCqZRoToptzGzikAtjYDw2co50uObzftiZnw
+         8BNSx7BQeeCwM7X1qVAoaShLb7Xvc4gfIIk/FN4Q=
+Date:   Thu, 5 Oct 2023 15:05:21 +0200
+From:   Greg KH <gregkh@linuxfoundation.org>
+To:     Alistair Francis <alistair23@gmail.com>
+Cc:     bhelgaas@google.com, linux-pci@vger.kernel.org,
+        Jonathan.Cameron@huawei.com, lukas@wunner.de,
+        alex.williamson@redhat.com, christian.koenig@amd.com,
+        kch@nvidia.com, logang@deltatee.com, linux-kernel@vger.kernel.org,
+        chaitanyak@nvidia.com, rdunlap@infradead.org,
+        Alistair Francis <alistair.francis@wdc.com>
+Subject: Re: [PATCH v6 2/3] sysfs: Add a attr_is_visible function to
+ attribute_group
+Message-ID: <2023100539-playgroup-stoppable-d5d4@gregkh>
+References: <20230817235810.596458-1-alistair.francis@wdc.com>
+ <20230817235810.596458-2-alistair.francis@wdc.com>
+ <2023081959-spinach-cherisher-b025@gregkh>
+ <CAKmqyKM+DNTF1f0FvDEda_db792Ta4w_uAKNTZ6E3NkYoVcPFQ@mail.gmail.com>
+ <2023082325-cognitive-dispose-1180@gregkh>
+ <CAKmqyKMMKJN7HU_achBc8S6-Jx16owrthwDDRWysMZe=jymnMA@mail.gmail.com>
+ <2023083111-impulsive-majestic-24ee@gregkh>
+ <2023083139-underling-amuser-772e@gregkh>
+ <2023090142-circling-probably-7828@gregkh>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20231004222324.GA718849@bhelgaas>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <2023090142-circling-probably-7828@gregkh>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 04, 2023 at 05:23:24PM -0500, Bjorn Helgaas wrote:
-> On Mon, Oct 02, 2023 at 10:00:44AM +0300, Mika Westerberg wrote:
-> > Commit a7152be79b62 ("Revert "PCI/ASPM: Save L1 PM Substates Capability
-> > for suspend/resume"") reverted saving and restoring of ASPM L1 Substates
-> > due to a regression that caused resume from suspend to fail on certain
-> > systems. However, we never added this capability back and this is now
-> > causing systems fail to enter low power CPU states, drawing more power
-> > from the battery.
-> 
-> AFAICT, the save (suspend) side is effectively the same in
-> 4ff116d0d5fd ("PCI/ASPM: Save L1 PM Substates Capability for
-> suspend/resume") (the change reverted by a7152be79b62) and in this
-> patch.  There are minor ordering differences with respect to DPC and
-> AER, but I don't think they're relevant.
-> 
-> > The original revert mentioned that we restore L1 PM substate configuration
-> > even though ASPM L1 may already be enabled. This is due the fact that
-> > the pci_restore_aspm_l1ss_state() was called before pci_restore_pcie_state().
+On Fri, Sep 01, 2023 at 11:00:59PM +0200, Greg KH wrote:
+> On Thu, Aug 31, 2023 at 04:36:13PM +0200, Greg KH wrote:
+> > On Thu, Aug 31, 2023 at 10:31:07AM +0200, Greg KH wrote:
+> > > On Mon, Aug 28, 2023 at 03:05:41PM +1000, Alistair Francis wrote:
+> > > > On Wed, Aug 23, 2023 at 5:02 PM Greg KH <gregkh@linuxfoundation.org> wrote:
+> > > > >
+> > > > > On Tue, Aug 22, 2023 at 04:20:06PM -0400, Alistair Francis wrote:
+> > > > > > On Sat, Aug 19, 2023 at 6:57 AM Greg KH <gregkh@linuxfoundation.org> wrote:
+> > > > > > >
+> > > > > > > On Thu, Aug 17, 2023 at 07:58:09PM -0400, Alistair Francis wrote:
+> > > > > > > > The documentation for sysfs_merge_group() specifically says
+> > > > > > > >
+> > > > > > > >     This function returns an error if the group doesn't exist or any of the
+> > > > > > > >     files already exist in that group, in which case none of the new files
+> > > > > > > >     are created.
+> > > > > > > >
+> > > > > > > > So just not adding the group if it's empty doesn't work, at least not
+> > > > > > > > with the code we currently have. The code can be changed to support
+> > > > > > > > this, but it is difficult to determine how this will affect existing use
+> > > > > > > > cases.
+> > > > > > >
+> > > > > > > Did you try?  I'd really really really prefer we do it this way as it's
+> > > > > > > much simpler overall to have the sysfs core "do the right thing
+> > > > > > > automatically" than to force each and every bus/subsystem to have to
+> > > > > > > manually add this type of attribute.
+> > > > > > >
+> > > > > > > Also, on a personal level, I want this function to work as it will allow
+> > > > > > > us to remove some code in some busses that don't really need to be there
+> > > > > > > (dynamic creation of some device attributes), which will then also allow
+> > > > > > > me to remove some apis in the driver core that should not be used at all
+> > > > > > > anymore (but keep creeping back in as there is still a few users.)
+> > > > > > >
+> > > > > > > So I'll be selfish here and say "please try to get my proposed change to
+> > > > > > > work, it's really the correct thing to do here."
+> > > > > >
+> > > > > > I did try!
+> > > > > >
+> > > > > > This is an attempt:
+> > > > > > https://github.com/alistair23/linux/commit/56b55756a2d7a66f7b6eb8a5692b1b5e2f81a9a9
+> > > > > >
+> > > > > > It is based on your original patch with a bunch of:
+> > > > > >
+> > > > > > if (!parent) {
+> > > > > >     parent = kernfs_create_dir_ns(kobj->sd, grp->name,
+> > > > > >                   S_IRWXU | S_IRUGO | S_IXUGO,
+> > > > > >                   uid, gid, kobj, NULL);
+> > > > > >     ...
+> > > > > >     }
+> > > > > >
+> > > > > >
+> > > > > > added throughout the code base.
+> > > > > >
+> > > > > > Very basic testing shows that it does what I need it to do and I don't
+> > > > > > see any kernel oops on boot.
+> > > > >
+> > > > > Nice!
+> > > > >
+> > > > > Mind if I take it and clean it up a bit and test with it here?  Again, I
+> > > > > need this functionality for other stuff as well, so getting it merged
+> > > > > for your feature is fine with me.
+> > > > 
+> > > > Sure! Go ahead. Sorry I was travelling last week.
+> > > > 
+> > > > >
+> > > > > > I prefer the approach I have in this mailing list patch. But if you
+> > > > > > like the commit mentioned above I can tidy and clean it up and then
+> > > > > > use that instead
+> > > > >
+> > > > > I would rather do it this way.  I can work on this on Friday if you want
+> > > > > me to.
+> > > > 
+> > > > Yeah, that's fine with me. If you aren't able to let me know and I can
+> > > > finish up the patch and send it with this series
+> > > 
+> > > Great, and for the email record, as github links are not stable, here's
+> > > the patch that you have above attached below.  I'll test this out and
+> > > clean it up a bit more and see how it goes...
+> > > 
+> > > thanks,
+> > > 
+> > > greg k-h
+> > > 
+> > > 
+> > > From 2929d17b58d02dcf52d0345fa966c616e09a5afa Mon Sep 17 00:00:00 2001
+> > > From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Date: Wed, 24 Aug 2022 15:45:36 +0200
+> > > Subject: [PATCH] sysfs: do not create empty directories if no attributes are
+> > >  present
+> > > 
+> > > When creating an attribute group, if it is named a subdirectory is
+> > > created and the sysfs files are placed into that subdirectory.  If no
+> > > files are created, normally the directory would still be present, but it
+> > > would be empty.  Clean this up by removing the directory if no files
+> > > were successfully created in the group at all.
+> > > 
+> > > Co-developed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> > > Co-developed-by: Alistair Francis <alistair.francis@wdc.com>
+> > > Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
+> > > ---
+> > >  fs/sysfs/file.c  | 14 ++++++++++--
+> > >  fs/sysfs/group.c | 56 ++++++++++++++++++++++++++++++++++++------------
+> > >  2 files changed, 54 insertions(+), 16 deletions(-)
+> > > 
+> > > diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+> > > index a12ac0356c69..7aab6c09662c 100644
+> > > --- a/fs/sysfs/file.c
+> > > +++ b/fs/sysfs/file.c
+> > > @@ -391,8 +391,18 @@ int sysfs_add_file_to_group(struct kobject *kobj,
+> > >  		kernfs_get(parent);
+> > >  	}
+> > >  
+> > > -	if (!parent)
+> > > -		return -ENOENT;
+> > > +	if (!parent) {
+> > > +		parent = kernfs_create_dir_ns(kobj->sd, group,
+> > > +					  S_IRWXU | S_IRUGO | S_IXUGO,
+> > > +					  uid, gid, kobj, NULL);
+> > > +		if (IS_ERR(parent)) {
+> > > +			if (PTR_ERR(parent) == -EEXIST)
+> > > +				sysfs_warn_dup(kobj->sd, group);
+> > > +			return PTR_ERR(parent);
+> > > +		}
+> > > +
+> > > +		kernfs_get(parent);
+> > > +	}
+> > >  
+> > >  	kobject_get_ownership(kobj, &uid, &gid);
+> > >  	error = sysfs_add_file_mode_ns(parent, attr, attr->mode, uid, gid,
+> > > diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
+> > > index 138676463336..013fa333cd3c 100644
+> > > --- a/fs/sysfs/group.c
+> > > +++ b/fs/sysfs/group.c
+> > > @@ -31,12 +31,14 @@ static void remove_files(struct kernfs_node *parent,
+> > >  			kernfs_remove_by_name(parent, (*bin_attr)->attr.name);
+> > >  }
+> > >  
+> > > +/* returns -ERROR if error, or >= 0 for number of files actually created */
+> > >  static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+> > >  			kuid_t uid, kgid_t gid,
+> > >  			const struct attribute_group *grp, int update)
+> > >  {
+> > >  	struct attribute *const *attr;
+> > >  	struct bin_attribute *const *bin_attr;
+> > > +	int files_created = 0;
+> > >  	int error = 0, i;
+> > >  
+> > >  	if (grp->attrs) {
+> > > @@ -65,6 +67,8 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+> > >  						       gid, NULL);
+> > >  			if (unlikely(error))
+> > >  				break;
+> > > +
+> > > +			files_created++;
+> > >  		}
+> > >  		if (error) {
+> > >  			remove_files(parent, grp);
+> > > @@ -95,12 +99,15 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+> > >  							   NULL);
+> > >  			if (error)
+> > >  				break;
+> > > +			files_created++;
+> > >  		}
+> > >  		if (error)
+> > >  			remove_files(parent, grp);
+> > >  	}
+> > >  exit:
+> > > -	return error;
+> > > +	if (error)
+> > > +		return error;
+> > > +	return files_created;
+> > >  }
+> > >  
+> > >  
+> > > @@ -130,9 +137,14 @@ static int internal_create_group(struct kobject *kobj, int update,
+> > >  		if (update) {
+> > >  			kn = kernfs_find_and_get(kobj->sd, grp->name);
+> > >  			if (!kn) {
+> > > -				pr_warn("Can't update unknown attr grp name: %s/%s\n",
+> > > -					kobj->name, grp->name);
+> > > -				return -EINVAL;
+> > > +				kn = kernfs_create_dir_ns(kobj->sd, grp->name,
+> > > +							  S_IRWXU | S_IRUGO | S_IXUGO,
+> > > +							  uid, gid, kobj, NULL);
+> > > +				if (IS_ERR(kn)) {
+> > > +					if (PTR_ERR(kn) == -EEXIST)
+> > > +						sysfs_warn_dup(kobj->sd, grp->name);
+> > > +					return PTR_ERR(kn);
+> > > +				}
+> > >  			}
+> > >  		} else {
+> > >  			kn = kernfs_create_dir_ns(kobj->sd, grp->name,
+> > > @@ -150,11 +162,18 @@ static int internal_create_group(struct kobject *kobj, int update,
+> > >  
+> > >  	kernfs_get(kn);
+> > >  	error = create_files(kn, kobj, uid, gid, grp, update);
+> > > -	if (error) {
+> > > +	if (error <= 0) {
+> > > +		/*
+> > > +		 * If an error happened _OR_ if no files were created in the
+> > > +		 * attribute group, and we have a name for this group, delete
+> > > +		 * the name so there's not an empty directory.
+> > > +		 */
+> > >  		if (grp->name)
+> > >  			kernfs_remove(kn);
+> > > +	} else {
+> > > +		error = 0;
+> > > +		kernfs_put(kn);
+> > >  	}
+> > > -	kernfs_put(kn);
+> > >  
+> > >  	if (grp->name && update)
+> > >  		kernfs_put(kn);
+> > > @@ -318,13 +337,12 @@ void sysfs_remove_groups(struct kobject *kobj,
+> > >  EXPORT_SYMBOL_GPL(sysfs_remove_groups);
+> > >  
+> > >  /**
+> > > - * sysfs_merge_group - merge files into a pre-existing attribute group.
+> > > + * sysfs_merge_group - merge files into a attribute group.
+> > >   * @kobj:	The kobject containing the group.
+> > >   * @grp:	The files to create and the attribute group they belong to.
+> > >   *
+> > > - * This function returns an error if the group doesn't exist or any of the
+> > > - * files already exist in that group, in which case none of the new files
+> > > - * are created.
+> > > + * This function returns an error if any of the files already exist in
+> > > + * that group, in which case none of the new files are created.
+> > >   */
+> > >  int sysfs_merge_group(struct kobject *kobj,
+> > >  		       const struct attribute_group *grp)
+> > > @@ -336,12 +354,22 @@ int sysfs_merge_group(struct kobject *kobj,
+> > >  	struct attribute *const *attr;
+> > >  	int i;
+> > >  
+> > > -	parent = kernfs_find_and_get(kobj->sd, grp->name);
+> > > -	if (!parent)
+> > > -		return -ENOENT;
+> > > -
+> > >  	kobject_get_ownership(kobj, &uid, &gid);
+> > >  
+> > > +	parent = kernfs_find_and_get(kobj->sd, grp->name);
+> > > +	if (!parent) {
+> > > +		parent = kernfs_create_dir_ns(kobj->sd, grp->name,
+> > > +					  S_IRWXU | S_IRUGO | S_IXUGO,
+> > > +					  uid, gid, kobj, NULL);
+> > > +		if (IS_ERR(parent)) {
+> > > +			if (PTR_ERR(parent) == -EEXIST)
+> > > +				sysfs_warn_dup(kobj->sd, grp->name);
+> > > +			return PTR_ERR(parent);
+> > > +		}
+> > > +
+> > > +		kernfs_get(parent);
+> > > +	}
+> > > +
+> > >  	for ((i = 0, attr = grp->attrs); *attr && !error; (++i, ++attr))
+> > >  		error = sysfs_add_file_mode_ns(parent, *attr, (*attr)->mode,
+> > >  					       uid, gid, NULL);
+> > > -- 
+> > > 2.42.0
+> > > 
 > > 
-> > Try to enable this functionality again following PCIe r6.0.1, sec 5.5.4
-> > more closely by:
-> > 
-> >   1) Do not restore ASPM configuration in pci_restore_pcie_state() but
-> >      do that after PCIe capability is restored in pci_restore_aspm_state()
-> >      following PCIe r6.0, sec 5.5.4.
-> > 
-> >   2) ASPM is first enabled on the upstream component and then downstream
-> >      (this is already forced by the parent-child ordering of Linux
-> >      Device Power Management framework).
-> > 
-> >   3) Program ASPM L1 PM substate configuration before L1 enables.
-> > 
-> >   4) Program ASPM L1 PM substate enables last after rest of the fields
-> >      in the capability are programmed.
+> > And as the 0-day bot just showed, this patch isn't going to work
+> > properly, the uid/gid stuff isn't all hooked up properly, I'll work on
+> > fixing that up when I get some cycles...
 > 
-> This patch changes the restore (resume) side.  4ff116d0d5fd restored
-> L1SS state followed by LNKCTL.
-> 
-> This patch instead restores LNKCTL (with ASPM *disabled*) before the
-> L1SS state, and then restores the full LNKCTL (including ASPM config).
+> Oops, nope, that was my fault in applying this to my tree, sorry for the
+> noise...
 
-Right.
+And I just got around to testing this, and it does not boot at all.
+Below is the patch I am using, are you sure you got this to boot for
+you?
 
-> >   5) Add denylist that skips restoring on the ASUS and TUXEDO systems
-> >      where these regressions happened, just in case. For the TUXEDO case
-> >      we only skip restore if the BIOS is involved in system suspend
-> >      (that's forcing "mem_sleep=deep" in the command line). This is to
-> >      avoid possible power regression when the default suspend to idle is
-> >      used, and at the same time make sure the devices continue working
-> >      after resume when the BIOS is involved.
-> 
-> I looked through the v1, v2, and v3 threads, and I see testing failure
-> reports from Thomas (TUXEDO) for v1 and "v1.5" [1].  v1.5 looks
-> functionally identical to this v4 except it lacks the TUXEDO denylist
-> entry.
-> 
-> I don't see any actual success reports for either ASUS or TUXEDO.
-> 
-> Do we have testing reports for these ASUS and TUXEDO systems showing
-> that we need this denylist?  I think this patch fixes a real problem
-> with L1SS save/restore, and unless proven otherwise, I would assume
-> that it fixes ASUS and TUXEDO as well.
+thanks,
 
-The thing with TUXEDO is that on Thomas's system with mem_sleep=deep
-this patch (without denylist) breaks the resume as he describes here:
+greg k-h
 
-https://bugzilla.kernel.org/show_bug.cgi?id=216877
+From db537de5a5af649b594604e2de177527f890878d Mon Sep 17 00:00:00 2001
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Date: Wed, 24 Aug 2022 15:45:36 +0200
+Subject: [PATCH] sysfs: do not create empty directories if no attributes are
+ present
 
-However, on exact same TUXEDO system with the same firmwares Werner is
-not able to reproduce the issue with or without the patch. So I'm not
-sure what to do and that's why I added denylist that should take effect
-on Thomas' system when mem_sleep=deep is set but also work on the same
-system without it.
+When creating an attribute group, if it is named a subdirectory is
+created and the sysfs files are placed into that subdirectory.  If no
+files are created, normally the directory would still be present, but it
+would be empty.  Clean this up by removing the directory if no files
+were successfully created in the group at all.
 
-And since we have the denylist, I decided to add the ASUS there to avoid
-accidentally breaking those too.
+Co-developed-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Co-developed-by: Alistair Francis <alistair.francis@wdc.com>
+Signed-off-by: Alistair Francis <alistair.francis@wdc.com>
+---
+ fs/sysfs/file.c  | 16 +++++++++++---
+ fs/sysfs/group.c | 56 ++++++++++++++++++++++++++++++++++++------------
+ 2 files changed, 55 insertions(+), 17 deletions(-)
 
-Let me know if you have any preference what we should do with the TUXEDO
-one. I really don't know any better way to keep everyone happy.
+diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
+index a12ac0356c69..9f79ec193ffe 100644
+--- a/fs/sysfs/file.c
++++ b/fs/sysfs/file.c
+@@ -391,10 +391,20 @@ int sysfs_add_file_to_group(struct kobject *kobj,
+ 		kernfs_get(parent);
+ 	}
+ 
+-	if (!parent)
+-		return -ENOENT;
+-
+ 	kobject_get_ownership(kobj, &uid, &gid);
++	if (!parent) {
++		parent = kernfs_create_dir_ns(kobj->sd, group,
++					  S_IRWXU | S_IRUGO | S_IXUGO,
++					  uid, gid, kobj, NULL);
++		if (IS_ERR(parent)) {
++			if (PTR_ERR(parent) == -EEXIST)
++				sysfs_warn_dup(kobj->sd, group);
++			return PTR_ERR(parent);
++		}
++
++		kernfs_get(parent);
++	}
++
+ 	error = sysfs_add_file_mode_ns(parent, attr, attr->mode, uid, gid,
+ 				       NULL);
+ 	kernfs_put(parent);
+diff --git a/fs/sysfs/group.c b/fs/sysfs/group.c
+index 138676463336..013fa333cd3c 100644
+--- a/fs/sysfs/group.c
++++ b/fs/sysfs/group.c
+@@ -31,12 +31,14 @@ static void remove_files(struct kernfs_node *parent,
+ 			kernfs_remove_by_name(parent, (*bin_attr)->attr.name);
+ }
+ 
++/* returns -ERROR if error, or >= 0 for number of files actually created */
+ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+ 			kuid_t uid, kgid_t gid,
+ 			const struct attribute_group *grp, int update)
+ {
+ 	struct attribute *const *attr;
+ 	struct bin_attribute *const *bin_attr;
++	int files_created = 0;
+ 	int error = 0, i;
+ 
+ 	if (grp->attrs) {
+@@ -65,6 +67,8 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+ 						       gid, NULL);
+ 			if (unlikely(error))
+ 				break;
++
++			files_created++;
+ 		}
+ 		if (error) {
+ 			remove_files(parent, grp);
+@@ -95,12 +99,15 @@ static int create_files(struct kernfs_node *parent, struct kobject *kobj,
+ 							   NULL);
+ 			if (error)
+ 				break;
++			files_created++;
+ 		}
+ 		if (error)
+ 			remove_files(parent, grp);
+ 	}
+ exit:
+-	return error;
++	if (error)
++		return error;
++	return files_created;
+ }
+ 
+ 
+@@ -130,9 +137,14 @@ static int internal_create_group(struct kobject *kobj, int update,
+ 		if (update) {
+ 			kn = kernfs_find_and_get(kobj->sd, grp->name);
+ 			if (!kn) {
+-				pr_warn("Can't update unknown attr grp name: %s/%s\n",
+-					kobj->name, grp->name);
+-				return -EINVAL;
++				kn = kernfs_create_dir_ns(kobj->sd, grp->name,
++							  S_IRWXU | S_IRUGO | S_IXUGO,
++							  uid, gid, kobj, NULL);
++				if (IS_ERR(kn)) {
++					if (PTR_ERR(kn) == -EEXIST)
++						sysfs_warn_dup(kobj->sd, grp->name);
++					return PTR_ERR(kn);
++				}
+ 			}
+ 		} else {
+ 			kn = kernfs_create_dir_ns(kobj->sd, grp->name,
+@@ -150,11 +162,18 @@ static int internal_create_group(struct kobject *kobj, int update,
+ 
+ 	kernfs_get(kn);
+ 	error = create_files(kn, kobj, uid, gid, grp, update);
+-	if (error) {
++	if (error <= 0) {
++		/*
++		 * If an error happened _OR_ if no files were created in the
++		 * attribute group, and we have a name for this group, delete
++		 * the name so there's not an empty directory.
++		 */
+ 		if (grp->name)
+ 			kernfs_remove(kn);
++	} else {
++		error = 0;
++		kernfs_put(kn);
+ 	}
+-	kernfs_put(kn);
+ 
+ 	if (grp->name && update)
+ 		kernfs_put(kn);
+@@ -318,13 +337,12 @@ void sysfs_remove_groups(struct kobject *kobj,
+ EXPORT_SYMBOL_GPL(sysfs_remove_groups);
+ 
+ /**
+- * sysfs_merge_group - merge files into a pre-existing attribute group.
++ * sysfs_merge_group - merge files into a attribute group.
+  * @kobj:	The kobject containing the group.
+  * @grp:	The files to create and the attribute group they belong to.
+  *
+- * This function returns an error if the group doesn't exist or any of the
+- * files already exist in that group, in which case none of the new files
+- * are created.
++ * This function returns an error if any of the files already exist in
++ * that group, in which case none of the new files are created.
+  */
+ int sysfs_merge_group(struct kobject *kobj,
+ 		       const struct attribute_group *grp)
+@@ -336,12 +354,22 @@ int sysfs_merge_group(struct kobject *kobj,
+ 	struct attribute *const *attr;
+ 	int i;
+ 
+-	parent = kernfs_find_and_get(kobj->sd, grp->name);
+-	if (!parent)
+-		return -ENOENT;
+-
+ 	kobject_get_ownership(kobj, &uid, &gid);
+ 
++	parent = kernfs_find_and_get(kobj->sd, grp->name);
++	if (!parent) {
++		parent = kernfs_create_dir_ns(kobj->sd, grp->name,
++					  S_IRWXU | S_IRUGO | S_IXUGO,
++					  uid, gid, kobj, NULL);
++		if (IS_ERR(parent)) {
++			if (PTR_ERR(parent) == -EEXIST)
++				sysfs_warn_dup(kobj->sd, grp->name);
++			return PTR_ERR(parent);
++		}
++
++		kernfs_get(parent);
++	}
++
+ 	for ((i = 0, attr = grp->attrs); *attr && !error; (++i, ++attr))
+ 		error = sysfs_add_file_mode_ns(parent, *attr, (*attr)->mode,
+ 					       uid, gid, NULL);
+-- 
+2.42.0
 
-> [1] https://lore.kernel.org/linux-pci/20230630104154.GS14638@black.fi.intel.com/
-> 
-> > Reported-by: Koba Ko <koba.ko@canonical.com>
-> > Closes: https://bugzilla.kernel.org/show_bug.cgi?id=217321
-> 
-> IIUC, Koba's report is on a Dell Inspiron 15 3530.
-
-Right.
-
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216782
-> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=216877
-> 
-> These are the original issues reported with 4ff116d0d5fd: 216782 is
-> the ASUS UX305FA problem reported by Tasev, and 216877 is the TUXEDO
-> problem reported by Thomas.
-> 
-> So ... I think this patch definitely fixes a problem.  4ff116d0d5fd
-> restored L1SS state before LNKCTL on the assumption that ASPM was
-> disabled at the point, but I don't think we really know that.
-> 
-> This patch explicitly disables ASPM before restoring L1SS, which seems
-> safer.
-> 
-> But we just punt on the ASUS and TUXEDO systems, when there's no
-> reason we shouldn't be able to restore ASPM config there as well.  And
-> unless I missed them, we don't actually have testing reports from
-> ASUS, TUXEDO, or Koba's Dell.
-
-Just for the record, the Dell and probably others to the real issue is
-that if we don't restore these the CPU can't enter lower power C-states
-and that makes suspend to empty the battery much faster than user would
-expect. So some solution to this is definitely needed sooner rather than
-later.
-
-@Koba, can you provide your tested-by if this solves the issue on the
-Dell system?
-
-> I think there's still something we're missing.
-> 
-> We restore the LTR config before restoring DEVCTL2 (including the LTR
-> enable bit) and L1SS state.  I don't think we know the state of ASPM
-> and L1SS at that point, do we?  Do you think there could be an issue
-> there, too?
-
-AFAICT LTR does not affect until it is explicitly enabled and I don't
-think many drivers actually program it (although we have some sort of
-API for it at least for Intel LPSS devices).
-
-If you have suggestions, I'm all open. If I understand you would like
-this to be done like:
-
-  - Drop the denylist
-  - Add back the suspend/restore of L1SS
-  - Ask everyone in this thread to try it out
-
-I can do that no problem but I guess that for the TUXEDO one (Thomas')
-it probably is going to fail still.
