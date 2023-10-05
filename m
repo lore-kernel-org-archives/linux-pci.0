@@ -2,153 +2,100 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 66CDBE92701
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:00:21 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 36CCBE9270D
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:25:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230520AbjJEOAT (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:00:19 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41530 "EHLO
+        id S232999AbjJEOYz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:24:55 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45208 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232172AbjJEN6S (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 09:58:18 -0400
-Received: from mail-oa1-x2e.google.com (mail-oa1-x2e.google.com [IPv6:2001:4860:4864:20::2e])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 337BA72B2
-        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 00:02:56 -0700 (PDT)
-Received: by mail-oa1-x2e.google.com with SMTP id 586e51a60fabf-1dd1db54d42so406478fac.3
-        for <linux-pci@vger.kernel.org>; Thu, 05 Oct 2023 00:02:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rivosinc-com.20230601.gappssmtp.com; s=20230601; t=1696489375; x=1697094175; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=/sykav7kHqqi8q7/u6IWk2uLR08rKtlD8qNcinnjqeE=;
-        b=EK3LQLq2BSoHaJfCXYvCINOxMNAd5CDOeIfd6HdoUSpoJM9Pf/mtQiaKpxALLmv4WJ
-         TDzJHA1fSovX3qu4DorOfeOHWFf2ldAVRJNBb2i+Unixm5qFm1JreiS6sOc9DffUO67D
-         tda1FErfEqiVjtYnuvLI9tV6z1O79o97vG/4YCbmIAbF/ubLYwvLfWoSrIz96+CilOrC
-         TkCW1Oghw3JTNkT1nAwYb1iwrA3sab7jLI9F3LxkWPU3Xj3hbRpD5oEH6xZ2w42+gp1/
-         UryWBt3xuZiEgS9XoD4fcx3OAQ5X0uNOzGFzJoU+dy+STuO5Odisjh7O8lOvN8ADgxNV
-         3wSw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1696489375; x=1697094175;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=/sykav7kHqqi8q7/u6IWk2uLR08rKtlD8qNcinnjqeE=;
-        b=uWpugaGzdivc+hhk2jLITK/hY0Q/t7cqkgYEFQLPpQRHh0srVbISqXGjGzvxbLIBKv
-         7IvT4F3Dg++FBcH9P2jnczV/ERR9FEG57X5dN8G1tLQFW/U6c1lQXB6wLdiCABYS5zvJ
-         dKuoblSdGw4FtAxhOfU/zC78LO8f6jcPBF8WAnpzrwOqWEmpiC9xJ5OjaFXoOX4gTlnl
-         pLCHVWbRRr3yAVJT6hCL2RbSusLHW76MTelHpe0Zmxj2U5x3dVsMOXbe3nGbWKPYKF/g
-         fZjbU3diXJcKqBMgz7lfQavtG8yirZknzTNqun3oflDkVyPm7QFwtc+Qc90uTTiK5GRd
-         qIiQ==
-X-Gm-Message-State: AOJu0YxSAIUu+M2/zyqQparLaJRucMdY3BonLYvB4/jSy1V2A5qwtsYr
-        5Uv9MTZZCnzzf+kUpWWIWt5YAEtnQYqXIjP7yOZf5w==
-X-Google-Smtp-Source: AGHT+IEohgIk5UquNb/UwnJ5C2hvcdK98D8tmyk7HEt7s924VZVpqhRHV2s1uYLWOC8Y/4LxNPQ3sYtYYNYJ/BjIuxs=
-X-Received: by 2002:a05:6870:c195:b0:1be:ffae:29a3 with SMTP id
- h21-20020a056870c19500b001beffae29a3mr4873386oad.23.1696489375332; Thu, 05
- Oct 2023 00:02:55 -0700 (PDT)
+        with ESMTP id S234651AbjJEOXQ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:23:16 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1553A10D5
+        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 06:48:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1696513714; x=1728049714;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=KzpeFTx8zrn8+AF9NwBkDldV/9DUbJCChCOgqhxZ3gk=;
+  b=Q1V3FLdqZU/pHhN/HMhVFOqwvEAUuW9F40Q+xpTMeC7fWy7bBo9Z8lTC
+   XJnux7RIlF/H6V4c373RpuNx9FqE9c5pPlSvbYyfsZzD4j0YkwzHEq8w3
+   um2i9xu6VJQTYbC8BAfs9fLku2r/fVvPaL3kRVJ6zxNCB7i+zFU+WG+U5
+   I3aCIBe02MBcF4t75/tYNzq/YT8h7403dVL0ipH0n19/ODF2bGt9GI6w+
+   Bb1hQf0mfxvrc6A7qTN/+Iw37lD3kf52vogqdf781X05H7hRD0FvIzZtc
+   oAJHGIZDsFOXr9imxlz3EiM+8wYuvM99WTXiEhJ0vrTKLk6AfLWu5WNbF
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="469758233"
+X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
+   d="scan'208";a="469758233"
+Received: from orsmga008.jf.intel.com ([10.7.209.65])
+  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2023 06:09:41 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="781243723"
+X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
+   d="scan'208";a="781243723"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orsmga008.jf.intel.com with ESMTP; 05 Oct 2023 06:09:38 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 17E8535A; Thu,  5 Oct 2023 16:09:37 +0300 (EEST)
+Date:   Thu, 5 Oct 2023 16:09:37 +0300
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Kamil Paral <kparal@redhat.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
+        linux-pci@vger.kernel.org, regressions@lists.linux.dev,
+        bhelgaas@google.com, chris.chiu@canonical.com
+Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
+ e8b908146d44 "PCI/PM: Increase wait time after resume"
+Message-ID: <20231005130937.GS3208943@black.fi.intel.com>
+References: <20230925141930.GA21033@wunner.de>
+ <20230926175530.GA418550@bhelgaas>
+ <20230927051602.GX3208943@black.fi.intel.com>
+ <CA+cBOTds9k1Q2haC_gTpsUvjP02dHOv9vSconFEAu-Fsxwf36A@mail.gmail.com>
+ <20230927135346.GJ3208943@black.fi.intel.com>
+ <CA+cBOTfCy-KOptir9yfkVz1=bfOTPQanqe9ofX-jphm7oeBEXg@mail.gmail.com>
+ <CA+cBOTdzp+6whm=Sj5nE2=MC4a+45y0CFtk4hDGq0XgF6f0f2A@mail.gmail.com>
 MIME-Version: 1.0
-References: <CAGNS4TbhS3XnCFAEi378+cSmJvGMdjN2oTv=tES36vbV4CaDuA@mail.gmail.com>
- <CANXvt5qKxfU3p1eSK4fkzRFRBXHSVvSkJrnQRLKPkQjhsMGNzQ@mail.gmail.com>
-In-Reply-To: <CANXvt5qKxfU3p1eSK4fkzRFRBXHSVvSkJrnQRLKPkQjhsMGNzQ@mail.gmail.com>
-From:   Mattias Nissler <mnissler@rivosinc.com>
-Date:   Thu, 5 Oct 2023 09:02:44 +0200
-Message-ID: <CAGNS4TbAgqRQepv=fMoUxo02Qea5S9LwWFm-jjt1ej8DdLjshw@mail.gmail.com>
-Subject: Re: [RFC] Proposal of QEMU PCI Endpoint test environment
-To:     Shunsuke Mie <mie@igel.co.jp>
-Cc:     cz172638@gmail.com, bhelgaas@google.com,
-        Jagannathan Raman <jag.raman@oracle.com>, kishon@kernel.org,
-        kvijayab@amd.com, kw@linux.com, levon@movementarian.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        lpieralisi@kernel.org, manivannan.sadhasivam@linaro.org,
-        Marcel Apfelbaum <marcel.apfelbaum@gmail.com>,
-        "Michael S. Tsirkin" <mst@redhat.com>,
-        Paolo Bonzini <pbonzini@redhat.com>, qemu-devel@nongnu.org,
-        robh@kernel.org, thanos.makatos@nutanix.com, vaishnav.a@ti.com,
-        william.henderson@nutanix.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CA+cBOTdzp+6whm=Sj5nE2=MC4a+45y0CFtk4hDGq0XgF6f0f2A@mail.gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Oct 5, 2023 at 3:31=E2=80=AFAM Shunsuke Mie <mie@igel.co.jp> wrote:
->
-> Hi Jiri, Mattias and all.
->
-> 2023=E5=B9=B410=E6=9C=884=E6=97=A5(=E6=B0=B4) 16:36 Mattias Nissler <mnis=
-sler@rivosinc.com>:
->>>
->>> hi shunsuke, all,
->>> what about vfio-user + qemu?
->
-> Thank you for the suggestion.
->
->> FWIW, I have had some good success using VFIO-user to bridge software co=
-mponents to hardware designs. For the most part, I have been hooking up sof=
-tware endpoint models to hardware design components speaking the PCIe trans=
-action layer protocol. The central piece you need is a way to translate bet=
-ween the VFIO-user protocol and PCIe transaction layer messages, basically =
-converting ECAM accesses, memory accesses (DMA+MMIO), and interrupts betwee=
-n the two worlds. I have some code which implements the basics of that. It'=
-s certainly far from complete (TLP is a massive protocol), but it works wel=
-l enough for me. I believe we should be able to open-source this if there's=
- interest, let me know.
->
-> It is what I want to do, but I'm not familiar with the vfio and vfio-user=
-, and I have a question. QEMU has a PCI TLP communication implementation fo=
-r Multi-process QEMU[1]. It is similar to your success.
+Hi Kamil,
 
-I'm no qemu expert, but my understanding is that the plan is for the
-existing multi-process QEMU implementation to eventually be
-superseded/replaced by the VFIO-user based one (qemu folks, please
-correct me if I'm wrong). From a functional perspective they are more
-or less equivalent AFAICT.
+On Thu, Oct 05, 2023 at 02:54:23PM +0200, Kamil Paral wrote:
+> On Wed, Sep 27, 2023 at 4:12 PM Kamil Paral <kparal@redhat.com> wrote:
+> >
+> > On Wed, Sep 27, 2023 at 3:53 PM Mika Westerberg
+> > <mika.westerberg@linux.intel.com> wrote:
+> > > If you apply the patch from here:
+> > >
+> > > https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=pm&id=6786c2941fe1788035f99c98c932672138b3fbc5
+> > >
+> > > Does the problem go away with the disconnect case too (and so that you
+> > > have "secure" enabled)?
+> >
+> > Thanks, I'll test it, but I can't do it this week. I'll reply next week.
+> 
+> Hello Mika, sorry for taking me so long. The URL above gives me a "Bad
+> commit reference" error, but I found a patch mentioned in a different
+> thread, so I used that one, and I hope it's the correct one :-) It's
+> quoted below.
+> 
+> With the patch applied, I can confirm that disconnecting and
+> reconnecting the cable during suspend is no longer a problem. I tested
+> both "user" and "secure" Thunderbolt security levels. The resume is
+> fast in all cases, and I've found no issues. Thanks for working on it!
+> 
+> The patch I used:
 
-> The multi-process qemu also communicates TLP over UDS. Could you let me k=
-now your opinion about it?
+Yes, that patch is the correct one. Bjorn moved it to his "for-linus"
+branch so it got different Commit ID:
 
-Note that neither multi-process qemu nor VFIO-user actually pass
-around TLPs, but rather have their own command language to encode
-ECAM, MMIO, DMA, interrupts etc. However, translation from/to TLP is
-possible and works well enough in my experience.
+https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=for-linus&id=c82458101d5490230d735caecce14c9c27b1010c
 
->
->> One thing to note is that there are currently some limits to bridging VF=
-IO-user / TLP that I haven't figured out and/or will need further work: Adv=
-anced PCIe concepts like PASID, ATS/PRI, SR-IOV etc. may lack equivalents o=
-n the VFIO-user side that would have to be filled in. The folk behind libvf=
-io-user[2] have been very approachable and open to improvements in my exper=
-ience though.
->>
->> If I understand correctly, the specific goal here is testing PCIe endpoi=
-nt designs against a Linux host. What you'd need for that is a PCI host con=
-troller for the Linux side to talk to and then hooking up endpoints on the =
-transaction layer. QEMU can simulate host controllers that work with existi=
-ng Linux drivers just fine. Then you can put a vfio-user-pci stub device (I=
- don't think this has landed in qemu yet, but you can find the code at [1])=
- on the simulated PCI bus which will expose any software interactions with =
-the endpoint as VFIO-user protocol messages over unix domain socket. The pi=
-ece you need to bring is a VFIO-user server that handles these messages. It=
-s task is basically translating between VFIO-user and TLP and then injectin=
-g TLP into your hardware design.
->
-> Yes, If the pci host controller you said can be implemented, I can achiev=
-e my goal.
-
-I meant to say that the existing PCIe host controller implementations
-in qemu can be used as is.
-
->
-> To begin with, I'll investigate the vfio and libvfio-user.  Thanks!.
->
-> [1] https://www.qemu.org/docs/master/system/multi-process.html
->
-> Best,
-> Shunsuke
->>
->>
->> [1] https://github.com/oracle/qemu/tree/vfio-user-p3.1 - I believe that'=
-s the latest version, Jagannathan Raman will know best
->> [2] https://github.com/nutanix/libvfio-user
->>
->
+Thanks a lot for testing!
