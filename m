@@ -2,100 +2,85 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 36CCBE9270D
-	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:25:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 492D1E92705
+	for <linux-pci@archiver.kernel.org>; Thu,  5 Oct 2023 14:43:43 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232999AbjJEOYz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 5 Oct 2023 10:24:55 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45208 "EHLO
+        id S237088AbjJEOnW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 5 Oct 2023 10:43:22 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48656 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234651AbjJEOXQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:23:16 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.43])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1553A10D5
-        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 06:48:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1696513714; x=1728049714;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=KzpeFTx8zrn8+AF9NwBkDldV/9DUbJCChCOgqhxZ3gk=;
-  b=Q1V3FLdqZU/pHhN/HMhVFOqwvEAUuW9F40Q+xpTMeC7fWy7bBo9Z8lTC
-   XJnux7RIlF/H6V4c373RpuNx9FqE9c5pPlSvbYyfsZzD4j0YkwzHEq8w3
-   um2i9xu6VJQTYbC8BAfs9fLku2r/fVvPaL3kRVJ6zxNCB7i+zFU+WG+U5
-   I3aCIBe02MBcF4t75/tYNzq/YT8h7403dVL0ipH0n19/ODF2bGt9GI6w+
-   Bb1hQf0mfxvrc6A7qTN/+Iw37lD3kf52vogqdf781X05H7hRD0FvIzZtc
-   oAJHGIZDsFOXr9imxlz3EiM+8wYuvM99WTXiEhJ0vrTKLk6AfLWu5WNbF
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="469758233"
-X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
-   d="scan'208";a="469758233"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by fmsmga105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Oct 2023 06:09:41 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10854"; a="781243723"
-X-IronPort-AV: E=Sophos;i="6.03,203,1694761200"; 
-   d="scan'208";a="781243723"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orsmga008.jf.intel.com with ESMTP; 05 Oct 2023 06:09:38 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-        id 17E8535A; Thu,  5 Oct 2023 16:09:37 +0300 (EEST)
-Date:   Thu, 5 Oct 2023 16:09:37 +0300
-From:   Mika Westerberg <mika.westerberg@linux.intel.com>
-To:     Kamil Paral <kparal@redhat.com>
-Cc:     Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>,
-        linux-pci@vger.kernel.org, regressions@lists.linux.dev,
-        bhelgaas@google.com, chris.chiu@canonical.com
+        with ESMTP id S233985AbjJEOiC (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 5 Oct 2023 10:38:02 -0400
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D77477D88
+        for <linux-pci@vger.kernel.org>; Thu,  5 Oct 2023 07:03:15 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1696514594;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=yidy6TZBy1CWG6Oo6GwAJihK7/D77PxhLMlTWyhd8wc=;
+        b=Dn6SUY0uuRm5Q6OTXBbi0OoHgkgdoTA+sjrkuz+WFZOW3lHm/hBDmFPaDPDjDZ8i9DkUoS
+        qIeDh1CnRYEuGfulmDU7S/mQAmVEJ+EfXanVIr5nuk6TkfW8A4q9TLyhCbNQW5LkuhnOuk
+        po7kdOnZmkHLht33TF0NnJ6DaodH95c=
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com
+ [209.85.216.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-590-lR-syHIUP-i9ws4vAP-MwQ-1; Thu, 05 Oct 2023 09:02:24 -0400
+X-MC-Unique: lR-syHIUP-i9ws4vAP-MwQ-1
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2775a7f3803so864831a91.1
+        for <linux-pci@vger.kernel.org>; Thu, 05 Oct 2023 06:02:24 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1696510943; x=1697115743;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yidy6TZBy1CWG6Oo6GwAJihK7/D77PxhLMlTWyhd8wc=;
+        b=QD1lQfohJ0rjPRUeZEc94cVJ1gC+cjiyb29GZCSLSWKoeINC7nTKW0XKVWHDn3nUk8
+         WRKzQeY0x+YH9JXTRajlpvSbvXvR746cd8WK/VyAg+YjqAWnYVEN7E7L11zEAK0pu26b
+         6uWVs+1cUw98fkvNoIUIluXpa1sFerhthPKyf1zevpNx8J1FeCIzcMu/AfBMNE0PYpiY
+         zVjASyZ7BZ+YaFSBKOZ18zjqcyIFM2c1BYfpLy0MZi/1GVQ1gE1enpuevNcUtingIBn9
+         zhThIdhT7yfoVrdhcJ2cbqUbDzLD7m+jYWw23bIohZBJf86CUVv9eRSCsL/UVfkMciLK
+         uwBQ==
+X-Gm-Message-State: AOJu0YyOvs/U87obN/VfA9vPRpOInuPXXOlcSlDhZvgNJOr/Q9TYpwpM
+        SmpddARqFo/sBOFpJL7x/LQbkip/3V1jtyiHEln4C9F/fwDsaYpVIRX0Dm0Ju6VPRyUzBVgpfrS
+        I13mKTA9zbf7GUyWhx+0RyI21EQPmO9rmuQg=
+X-Received: by 2002:a17:90b:4ad0:b0:274:a021:9383 with SMTP id mh16-20020a17090b4ad000b00274a0219383mr5102303pjb.17.1696510943641;
+        Thu, 05 Oct 2023 06:02:23 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFUGIakY6gmiMMg7VIrDCgG6A1oUd7mRza4EcAODeKOxvfyAvfCd+QT1JpHAONy6e0NM9gveMU8O4PPolgXz5g=
+X-Received: by 2002:a17:90b:4ad0:b0:274:a021:9383 with SMTP id
+ mh16-20020a17090b4ad000b00274a0219383mr5102281pjb.17.1696510943386; Thu, 05
+ Oct 2023 06:02:23 -0700 (PDT)
+MIME-Version: 1.0
+References: <20230928044233.GR3208943@black.fi.intel.com> <20230928154934.GA484133@bhelgaas>
+In-Reply-To: <20230928154934.GA484133@bhelgaas>
+From:   Kamil Paral <kparal@redhat.com>
+Date:   Thu, 5 Oct 2023 15:01:56 +0200
+Message-ID: <CA+cBOTdOVnzbXXPhWhWHDs8=n3A1ixcEg6aDVxjCdsneXySdSA@mail.gmail.com>
 Subject: Re: [REGRESSION] resume with a Thunderbolt dock broke with commit
  e8b908146d44 "PCI/PM: Increase wait time after resume"
-Message-ID: <20231005130937.GS3208943@black.fi.intel.com>
-References: <20230925141930.GA21033@wunner.de>
- <20230926175530.GA418550@bhelgaas>
- <20230927051602.GX3208943@black.fi.intel.com>
- <CA+cBOTds9k1Q2haC_gTpsUvjP02dHOv9vSconFEAu-Fsxwf36A@mail.gmail.com>
- <20230927135346.GJ3208943@black.fi.intel.com>
- <CA+cBOTfCy-KOptir9yfkVz1=bfOTPQanqe9ofX-jphm7oeBEXg@mail.gmail.com>
- <CA+cBOTdzp+6whm=Sj5nE2=MC4a+45y0CFtk4hDGq0XgF6f0f2A@mail.gmail.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CA+cBOTdzp+6whm=Sj5nE2=MC4a+45y0CFtk4hDGq0XgF6f0f2A@mail.gmail.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+Cc:     Mika Westerberg <mika.westerberg@linux.intel.com>,
+        Lukas Wunner <lukas@wunner.de>, linux-pci@vger.kernel.org,
+        regressions@lists.linux.dev, bhelgaas@google.com,
+        chris.chiu@canonical.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Kamil,
+On Thu, Sep 28, 2023 at 5:49=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+> Do we know how suspend/resume works with Windows in this
+> configuration?
 
-On Thu, Oct 05, 2023 at 02:54:23PM +0200, Kamil Paral wrote:
-> On Wed, Sep 27, 2023 at 4:12 PM Kamil Paral <kparal@redhat.com> wrote:
-> >
-> > On Wed, Sep 27, 2023 at 3:53 PM Mika Westerberg
-> > <mika.westerberg@linux.intel.com> wrote:
-> > > If you apply the patch from here:
-> > >
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=pm&id=6786c2941fe1788035f99c98c932672138b3fbc5
-> > >
-> > > Does the problem go away with the disconnect case too (and so that you
-> > > have "secure" enabled)?
-> >
-> > Thanks, I'll test it, but I can't do it this week. I'll reply next week.
-> 
-> Hello Mika, sorry for taking me so long. The URL above gives me a "Bad
-> commit reference" error, but I found a patch mentioned in a different
-> thread, so I used that one, and I hope it's the correct one :-) It's
-> quoted below.
-> 
-> With the patch applied, I can confirm that disconnecting and
-> reconnecting the cable during suspend is no longer a problem. I tested
-> both "user" and "secure" Thunderbolt security levels. The resume is
-> fast in all cases, and I've found no issues. Thanks for working on it!
-> 
-> The patch I used:
+Hello Bjorn. I'm not sure if you're asking in general or about my
+laptop in particular. I don't have Windows installed, so I don't have
+an easy way to test this. There used to be some "evaluation" version
+of Windows that I think I could use to test it, but it would be a
+considerable time investment for me (including backing up my data,
+etc), and I'm currently low on spare time. So at this moment I'm
+unfortunately unable to help with this question.
 
-Yes, that patch is the correct one. Bjorn moved it to his "for-linus"
-branch so it got different Commit ID:
-
-https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=for-linus&id=c82458101d5490230d735caecce14c9c27b1010c
-
-Thanks a lot for testing!
