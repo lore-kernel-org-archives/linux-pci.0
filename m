@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7846FE9371D
-	for <linux-pci@archiver.kernel.org>; Mon,  9 Oct 2023 22:57:33 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 76E09E9371E
+	for <linux-pci@archiver.kernel.org>; Mon,  9 Oct 2023 22:57:35 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1378958AbjJIW5c (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 9 Oct 2023 18:57:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57392 "EHLO
+        id S1378939AbjJIW5e (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 9 Oct 2023 18:57:34 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57424 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1378961AbjJIW53 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2023 18:57:29 -0400
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id B8315A4
-        for <linux-pci@vger.kernel.org>; Mon,  9 Oct 2023 15:57:26 -0700 (PDT)
+        with ESMTP id S1378969AbjJIW5c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 9 Oct 2023 18:57:32 -0400
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2071.outbound.protection.outlook.com [40.107.244.71])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 01CDFA4
+        for <linux-pci@vger.kernel.org>; Mon,  9 Oct 2023 15:57:31 -0700 (PDT)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lldqslOiYoi8d5YNx6495LoZ8qnOLLJsyT9O9Z7kHyf5wlxz7ZpTKOrziPxMQSw07ceEcliqHsaquEzcxl6dWd4givUxBYbgV2tdRTNhmIC0BDt3kSPCawUM0wwwegNb3GZgj2inrBRPlRz7sjTqQVuj+06NFkLAti/+kwUaz5nOGxpu9R8sXskfTVB3jsC8TpaST9rYnBw7x92KLOQxr6SwLNLdGD8V69bkCleQahylDFYmIMCViyWzh8mDPyiTZi3PZGfZMKRugBQhNyHnijHsV573chzpqmnobWCnaFJd7G//W3I4Om0oMb6r3QRUx1jUbIR6d+uY7gHFwOZzCQ==
+ b=Zl5B+LlPlFtvzqh5LMT20Clk2SwkvXFzDkaXDAGfSusSAPgSeMzsZ50cU0Qx6yn2XmeFq1n46CVuWKKeop8Xt2euDBz0RsmjE8ShPUF1goDAE2f+e3a2DifQMuQtPh6f1jhdiy+YBQ6ldIODvtG/kvTfDNn1luGoXJC707ps/WHt/wrVLOWGB9I1t3qVHP/Wka7blvpR3p9zSMH3NNO5k7XZnIw3QKhLth88uNywK9UKUBAa+a2+RCCn3C0lzCHQQZXffF+ogrwPJ4/IuGCyNSWIABQxvJv7nBJhkG1gMTxZ9kMavicshROSO/UDJcGL35i2nAW7wqTcp0FdqiMrYQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=FqZX+nKpQrDcwOExLQrZV0f2UN7nreWNMpuBtL9orks=;
- b=KF5uliUEFkpfBaqtM1FgK/3hmJ4EU8r0zwTu0xVuJMkOfrjW/CRnoHlqXx+W5492tbsZOQ7L6+WDkqh7H8Q67X9DAjxMbAc37h+QdBd9PehZb01NRH2LD6o3t9+sRXMjXS925wYHigQmY9Tbj27HHkcBZeSYvTtWc17GuDJKXd/6HSWdXXRvY9ADNhmlAuVDbbcL/CPOtRiZulqyh/y6AZLc4v+HEfGe3Qb5btplD2vfKz0MpJSnU9uMmX00tIEas32T5rpHds8n44AdpnENV942ZmYb9nBBxp9v0rjRGzcBDPsb1FEl5Wyh4IIoF0+/qh16js9514zs2kIWMcC94w==
+ bh=8eUOlWTBTZZ1yFaKhYhblqOSQt2cmKckGswEOxIwRR0=;
+ b=QwGkopXZezZsTWdtVOGkew0oK3PWdrxdtZxM/9XvBD1H5vvdLDrM6TI0Wona0flqRZn2CO6rPJaQKdVOUp8oyaPqPQNcbFFxMmntwT699BbsrdIlDlqscbqxn06wh+dIfGoR7euligmhbC1ZpKWSgdU+gkekEpNcewa5QVHD5UbC+yOxpyO7UQyrVYJynXEotG49iRpU2eKgE8o7hOpWqLF8hLZ8KfQV1NA4irKhMhzAiZOi5k9XQXtlWSRCyNKkBfOwY+4IEkrJiuav7t/XLEX160xmJ95stIBYuf0i5f9y3O5EfBnT41pD6W1xZLuxgUcGIrBpFdePakUtyCaNhQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=FqZX+nKpQrDcwOExLQrZV0f2UN7nreWNMpuBtL9orks=;
- b=3BLhmCINTTRl12uDmyCmkH0SMTvttQ89qiA+il0E2jF3x0GrZZ4V2Bsvr3VkG4nnEqqNHkxdIBo9P/OUfAhk1JB8LkXJ6q4gawYXYhPH/iWQfv2TcayKLzjY6ikx8HA5ai9h51tKM0KmnzmDErTvmhq0M15auGlH2QEssoiqDBQ=
-Received: from CYZPR05CA0029.namprd05.prod.outlook.com (2603:10b6:930:a3::28)
- by CH3PR12MB8972.namprd12.prod.outlook.com (2603:10b6:610:169::11) with
+ bh=8eUOlWTBTZZ1yFaKhYhblqOSQt2cmKckGswEOxIwRR0=;
+ b=p2NctkrHFEhn6ePAcnrjXBJh3zABxoUq+l77KwlmEX6vqYb8oDV79mo814PAT66nJ8/Hyad+KP2WG4VrD8S62Kao6V0JU99UKWg5CmKA2xLvRyzzV3IiiROrZpB6Zr0I1nyNg9kToEq2Qo2jvR+8weAOhTxtn1nIaCnrjcxv0aI=
+Received: from CYZPR05CA0043.namprd05.prod.outlook.com (2603:10b6:930:a3::25)
+ by DM6PR12MB5024.namprd12.prod.outlook.com (2603:10b6:5:20a::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6863.38; Mon, 9 Oct
- 2023 22:57:21 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6863.37; Mon, 9 Oct
+ 2023 22:57:28 +0000
 Received: from CY4PEPF0000EE33.namprd05.prod.outlook.com
- (2603:10b6:930:a3:cafe::44) by CYZPR05CA0029.outlook.office365.com
- (2603:10b6:930:a3::28) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6886.23 via Frontend
- Transport; Mon, 9 Oct 2023 22:57:21 +0000
+ (2603:10b6:930:a3:cafe::4d) by CYZPR05CA0043.outlook.office365.com
+ (2603:10b6:930:a3::25) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6886.21 via Frontend
+ Transport; Mon, 9 Oct 2023 22:57:22 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  CY4PEPF0000EE33.mail.protection.outlook.com (10.167.242.39) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6838.19 via Frontend Transport; Mon, 9 Oct 2023 22:57:21 +0000
+ 15.20.6838.19 via Frontend Transport; Mon, 9 Oct 2023 22:57:22 +0000
 Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Mon, 9 Oct
- 2023 17:57:19 -0500
+ 2023 17:57:21 -0500
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         Hans de Goede <hdegoede@redhat.com>,
@@ -63,9 +63,9 @@ CC:     "Rafael J . Wysocki" <rjw@rjwysocki.net>,
         Lukas Wunner <lukas@wunner.de>,
         Kai-Heng Feng <kai.heng.feng@canonical.com>,
         Mario Limonciello <mario.limonciello@amd.com>
-Subject: [RFC v1 2/4] PCI: Add support for drivers to decide bridge D3 policy
-Date:   Mon, 9 Oct 2023 17:56:51 -0500
-Message-ID: <20231009225653.36030-3-mario.limonciello@amd.com>
+Subject: [RFC v1 4/4] platform/x86/amd: pmc: Add support for using constraints to decide D3 policy
+Date:   Mon, 9 Oct 2023 17:56:53 -0500
+Message-ID: <20231009225653.36030-5-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231009225653.36030-1-mario.limonciello@amd.com>
 References: <20231009225653.36030-1-mario.limonciello@amd.com>
@@ -77,271 +77,150 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE33:EE_|CH3PR12MB8972:EE_
-X-MS-Office365-Filtering-Correlation-Id: 557ead1e-46dd-4f90-506e-08dbc91b186b
+X-MS-TrafficTypeDiagnostic: CY4PEPF0000EE33:EE_|DM6PR12MB5024:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0860477b-cb3b-4c74-1e62-08dbc91b195c
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: rLOjiZlARhEmCpW+RemFXjkFYinReIsREbZmgyQj1eEzOB8GDtKBI6CxFGDtal5bvn/W92guSzvbnq+xH65lOBS2a87QLYjxPnD3xlVmuAI16rO8VaXEriEHalMdZSQubYX+Di946Pxk2va3pvg8t81KUS4OqwGC9rJk2a+4cg7LbJc7L4yE7JzpNJN/LNOJN2dMQ/EAZfNRM7Jadx67LBgra87PTodgbIs96zUhsAyfzpjdSt7AbDZZf3aTB5WQT44f4OG2ofRalaabtqqh2cGM3kOHokjud6hgwvbvWwz6bmhJWlLQaXQ+hkBH0OXAYLvra6fvtKB1H7a7v2BpdnkYEpdDVOkBIOy8twkaKqh8WR6b3OSsjEeBWCnFaOsbtSZxl4kEZyBXYYGvtTB+MopiKj8LL17eUXLEPPfCLYAXABkoR+iYicDYpOUH7B5vHx1z65e8RFjYndi5x31ErtPFCCvx2uxN8QexucXjXXR+4/eFnQtz0KDgFpLwhKHyk1pvOotVbFbv6lZXwUw/yRvOjqaqvs0CxwhbMsFcUgjGKbEQuZ2U6XwGT8B4pk/n81PEezDIaQLgqCVp9XDlJmBhdzCES1JazwWJuoiUFvBZkTUaD6kHFV+4kJ39oWE3mPOggFPRH/wQ4zF3lYPLs3326aA49a/DY/58ToMrq5WRcPDy3KMVHmQzSkGc2aGyY9in8ASuYRHE/Ly3pugoRdpyqSKfhAfNrr6rTS4dFnIgFOVm/9LbR2XjyD1xMnyUAb74SUXEeJOZh7bg3KEHQQ==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(346002)(376002)(136003)(39860400002)(230922051799003)(82310400011)(451199024)(186009)(1800799009)(64100799003)(46966006)(40470700004)(36840700001)(2616005)(1076003)(426003)(26005)(336012)(16526019)(36860700001)(7696005)(6666004)(41300700001)(47076005)(8676002)(8936002)(478600001)(2906002)(44832011)(4326008)(83380400001)(54906003)(110136005)(70206006)(70586007)(5660300002)(316002)(40460700003)(81166007)(356005)(36756003)(86362001)(40480700001)(82740400003)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: +psbvEoq+U/oNfc1MWeRR7/KrsWGJPW8VgiFRdbQWmtSryY9KKXMxxH02TnUuB/W20B3GJ1YN3GOpK4kDarNjLPmiZNig2Yw7ZwAq1ajuPUnET5ETr65KYVpSB9M7UEQ9QYcjG8iVxPfHh3LBWaZ9igcXLQJgftNwa396TVl13sIhcx1l9V404FyZIrn66fGK/mWklQn50+OlLBOScGtuhKHQCDdGBgW9QyWHIMm6p+DLd0F6iw64LDbGZSgJuQ0wZIgGfMPfzsdIhm/J2tnf/5ysdH4ks19Shof4LpUfFcSl6LET5ZuP/inc+BfRjX4wPHEW+JoQ+5/rJTWul6KHbq8o4ecghtHpjKD0z0S8znyApvtdwqH6pcJYT4JNha3wD6zwjoAVDEsvWjUC4K/LBe/CzmEJyinvRRvDkPdWb/OO0ve/57iesI4JjtnShBs76HhxNbeb6/4fSdKvizlC4gE4h+93k5E+ReBNLFAAHzWbFEr1nk7XsX/oYRuzd1xNifDV8QjZ4DmfOCCEVwgmyAXKrwOrrW2dvM0eSHQgeTMArdPuNXUyZvqjxfb7AoX/ty4dn07xz2/YQ2ju2nhiPakVOzJza78+/BztBiaVAlNX41LCWClN6Cfg38uRC+JcfS86lya0JRxXOzrOKwhHM90IV31egQWFK3T/Vr8QDRrHO3e6kq2Tr5RbaU5AMMf3lnNTAOwGfI8AOwlIO/YOnuimhxVQYdIu54wf9pJoLMaesygU2ZmWu+LhcS/LHWl
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(39860400002)(376002)(136003)(346002)(396003)(230922051799003)(82310400011)(186009)(451199024)(1800799009)(64100799003)(40470700004)(36840700001)(46966006)(82740400003)(2616005)(7696005)(1076003)(478600001)(41300700001)(316002)(336012)(83380400001)(966005)(47076005)(426003)(2906002)(70586007)(70206006)(54906003)(110136005)(5660300002)(4326008)(8676002)(8936002)(16526019)(26005)(40460700003)(36860700001)(44832011)(356005)(36756003)(40480700001)(81166007)(86362001)(6666004)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Oct 2023 22:57:21.2949
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Oct 2023 22:57:22.8887
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 557ead1e-46dd-4f90-506e-08dbc91b186b
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0860477b-cb3b-4c74-1e62-08dbc91b195c
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: CY4PEPF0000EE33.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8972
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB5024
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit 9d26d3a8f1b0 ("PCI: Put PCIe ports into D3 during suspend")
-changed pci_bridge_d3_possible() so that any vendor's PCIe ports
-from modern machines (>=2015) are allowed to be put into D3.
+The default kernel policy will allow modern machines to effectively put
+all PCIe bridges into PCI D3. This policy doesn't match what Windows uses.
 
-This policy change has worked for most machines, but the behavior
-is improved with `pcie_port_pm=off` on some others.
+In Windows the driver stack includes a "Power Engine Plugin" (uPEP driver)
+to decide the policy for integrated devices using PEP device constraints.
 
-Add support for drivers to register a callback that they can optionally
-use to decide the policy on supported machines.
+Device constraints are expressed as a number in the _DSM of the PNP0D80
+device and exported by the kernel in acpi_get_lps0_constraint().
 
-A priority is used so that if multiple drivers register a callback and
-support deciding for a device the highest priority driver will return
-the value.
+Add support for SoCs to use constraints on Linux as well for deciding
+target state for integrated PCI bridges.
 
-Suggested-by: Hans de Goede <hdegoede@redhat.com>
+No SoCs are introduced by default with this change, they will be added
+later on a case by case basis.
+
+Link: https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/platform-design-for-modern-standby#low-power-core-silicon-cpu-soc-dram
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- drivers/pci/pci.c   | 119 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h |  54 ++++++++++++++++++++
- 2 files changed, 173 insertions(+)
+ drivers/platform/x86/amd/pmc/pmc.c | 59 ++++++++++++++++++++++++++++++
+ 1 file changed, 59 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 59c01d68c6d5..3b8e7b936908 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -21,6 +21,7 @@
- #include <linux/module.h>
- #include <linux/spinlock.h>
- #include <linux/string.h>
-+#include <linux/list_sort.h>
- #include <linux/log2.h>
- #include <linux/logic_pio.h>
- #include <linux/pm_wakeup.h>
-@@ -54,6 +55,8 @@ unsigned int pci_pm_d3hot_delay;
- static void pci_pme_list_scan(struct work_struct *work);
- 
- static LIST_HEAD(pci_pme_list);
-+static LIST_HEAD(d3_possible_list);
-+static DEFINE_MUTEX(d3_possible_list_mutex);
- static DEFINE_MUTEX(pci_pme_list_mutex);
- static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
- 
-@@ -3031,6 +3034,16 @@ bool pci_bridge_d3_possible(struct pci_dev *bridge)
- 		if (pci_bridge_d3_force)
- 			return true;
- 
-+		/* check for any preferences for the bridge */
-+		switch (bridge->driver_d3) {
-+		case BRIDGE_PREF_DRIVER_D3:
-+			return true;
-+		case BRIDGE_PREF_DRIVER_D0:
-+			return false;
-+		default:
-+			break;
-+		}
-+
- 		/* Even the oldest 2010 Thunderbolt controller supports D3. */
- 		if (bridge->is_thunderbolt)
- 			return true;
-@@ -3168,6 +3181,112 @@ void pci_d3cold_disable(struct pci_dev *dev)
+diff --git a/drivers/platform/x86/amd/pmc/pmc.c b/drivers/platform/x86/amd/pmc/pmc.c
+index c1e788b67a74..34e76c6b3fb2 100644
+--- a/drivers/platform/x86/amd/pmc/pmc.c
++++ b/drivers/platform/x86/amd/pmc/pmc.c
+@@ -570,6 +570,14 @@ static void amd_pmc_dbgfs_unregister(struct amd_pmc_dev *dev)
+ 	debugfs_remove_recursive(dev->dbgfs_dir);
  }
- EXPORT_SYMBOL_GPL(pci_d3cold_disable);
  
-+static struct pci_dev *pci_get_upstream_port(struct pci_dev *pci_dev)
++static bool amd_pmc_use_acpi_constraints(struct amd_pmc_dev *dev)
 +{
-+	struct pci_dev *bridge;
++	switch (dev->cpu_id) {
++	default:
++		return false;
++	}
++}
 +
-+	bridge = pci_upstream_bridge(pci_dev);
-+	if (!bridge)
-+		return NULL;
+ static bool amd_pmc_is_stb_supported(struct amd_pmc_dev *dev)
+ {
+ 	switch (dev->cpu_id) {
+@@ -741,6 +749,41 @@ static int amd_pmc_czn_wa_irq1(struct amd_pmc_dev *pdev)
+ 	return 0;
+ }
+ 
++/*
++ * Constraints are specified in the ACPI LPS0 device and specify what the
++ * platform intended for the device.
++ *
++ * If a constraint is present and >= to ACPI_STATE_S3, then enable D3 for the
++ * device.
++ * If a constraint is not present or < ACPI_STATE_S3, then disable D3 for the
++ * device.
++ */
++static enum bridge_d3_pref amd_pmc_d3_check(struct pci_dev *pci_dev)
++{
++	struct acpi_device *adev = ACPI_COMPANION(&pci_dev->dev);
++	int constraint;
 +
-+	if (!pci_is_pcie(bridge))
-+		return NULL;
++	if (!adev)
++		return BRIDGE_PREF_UNSET;
 +
-+	switch (pci_pcie_type(bridge)) {
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+	case PCI_EXP_TYPE_UPSTREAM:
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+		return bridge;
++	constraint = acpi_get_lps0_constraint(adev);
++	dev_dbg(&pci_dev->dev, "constraint is %d\n", constraint);
++
++	switch (constraint) {
++	case ACPI_STATE_UNKNOWN:
++	case ACPI_STATE_S0:
++	case ACPI_STATE_S1:
++	case ACPI_STATE_S2:
++		return BRIDGE_PREF_DRIVER_D0;
++	case ACPI_STATE_S3:
++		return BRIDGE_PREF_DRIVER_D3;
 +	default:
 +		break;
-+	};
-+
-+	return NULL;
-+}
-+
-+static void pci_refresh_driver_d3(void)
-+{
-+	struct pci_d3_driver_ops *driver;
-+	struct pci_dev *pci_dev = NULL;
-+	struct pci_dev *bridge;
-+
-+	/* 1st pass: unset any preferences set a previous invocation */
-+	while ((pci_dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pci_dev))) {
-+		bridge = pci_get_upstream_port(pci_dev);
-+		if (!bridge)
-+			continue;
-+
-+		if (bridge->driver_d3 != BRIDGE_PREF_UNSET)
-+			bridge->driver_d3 = BRIDGE_PREF_UNSET;
 +	}
 +
-+	pci_dev = NULL;
++	return BRIDGE_PREF_UNSET;
++}
 +
-+	/* 2nd pass: update the preference and refresh bridge_d3 */
-+	while ((pci_dev = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, pci_dev))) {
-+		bridge = pci_get_upstream_port(pci_dev);
-+		if (!bridge)
-+			continue;
+ static int amd_pmc_verify_czn_rtc(struct amd_pmc_dev *pdev, u32 *arg)
+ {
+ 	struct rtc_device *rtc_device;
+@@ -881,6 +924,11 @@ static struct acpi_s2idle_dev_ops amd_pmc_s2idle_dev_ops = {
+ 	.restore = amd_pmc_s2idle_restore,
+ };
+ 
++static struct pci_d3_driver_ops amd_pmc_d3_ops = {
++	.check = amd_pmc_d3_check,
++	.priority = 50,
++};
 +
-+		/* don't make multiple passes on the same device */
-+		if (bridge->driver_d3 != BRIDGE_PREF_UNSET)
-+			continue;
-+
-+		/* the list is pre-sorted by highest priority */
-+		mutex_lock(&d3_possible_list_mutex);
-+		list_for_each_entry(driver, &d3_possible_list, list_node) {
-+			/* another higher priority driver already set preference */
-+			if (bridge->driver_d3 != BRIDGE_PREF_UNSET)
-+				break;
-+			if (!driver->check)
-+				continue;
-+			bridge->driver_d3 = driver->check(bridge);
-+		}
-+		mutex_unlock(&d3_possible_list_mutex);
-+
-+		/* no driver set a preference */
-+		if (bridge->driver_d3 == BRIDGE_PREF_UNSET)
-+			bridge->driver_d3 = BRIDGE_PREF_NONE;
-+
-+		/* update bridge_d3 */
-+		pci_bridge_d3_update(pci_dev);
+ static int amd_pmc_suspend_handler(struct device *dev)
+ {
+ 	struct amd_pmc_dev *pdev = dev_get_drvdata(dev);
+@@ -1074,10 +1122,19 @@ static int amd_pmc_probe(struct platform_device *pdev)
+ 			amd_pmc_quirks_init(dev);
+ 	}
+ 
++	if (amd_pmc_use_acpi_constraints(dev)) {
++		err = pci_register_driver_d3_policy_cb(&amd_pmc_d3_ops);
++		if (err)
++			goto err_register_lps0;
 +	}
-+}
 +
-+static int pci_d3_driver_cmp(void *priv, const struct list_head *_a,
-+			   const struct list_head *_b)
-+{
-+	struct pci_d3_driver_ops *a = container_of(_a, typeof(*a), list_node);
-+	struct pci_d3_driver_ops *b = container_of(_b, typeof(*b), list_node);
-+
-+	if (a->priority < b->priority)
-+		return -1;
-+	else if (a->priority > b->priority)
-+		return 1;
-+	return 0;
-+}
-+
-+int pci_register_driver_d3_policy_cb(struct pci_d3_driver_ops *arg)
-+{
-+	mutex_lock(&d3_possible_list_mutex);
-+	list_add(&arg->list_node, &d3_possible_list);
-+	list_sort(NULL, &d3_possible_list, pci_d3_driver_cmp);
-+	mutex_unlock(&d3_possible_list_mutex);
-+	pci_refresh_driver_d3();
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_register_driver_d3_policy_cb);
-+
-+void pci_unregister_driver_d3_policy_cb(struct pci_d3_driver_ops *arg)
-+{
-+	mutex_lock(&d3_possible_list_mutex);
-+	list_del(&arg->list_node);
-+	list_sort(NULL, &d3_possible_list, pci_d3_driver_cmp);
-+	mutex_unlock(&d3_possible_list_mutex);
-+	pci_refresh_driver_d3();
-+}
-+EXPORT_SYMBOL_GPL(pci_unregister_driver_d3_policy_cb);
-+
- /**
-  * pci_pm_init - Initialize PM functions of given PCI device
-  * @dev: PCI device to handle.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8c7c2c3c6c65..c36903a4e351 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -389,6 +389,7 @@ struct pci_dev {
- 						   bit manually */
- 	unsigned int	d3hot_delay;	/* D3hot->D0 transition time in ms */
- 	unsigned int	d3cold_delay;	/* D3cold->D0 transition time in ms */
-+	unsigned int	driver_d3;	/* Driver D3 request preference */
+ 	amd_pmc_dbgfs_register(dev);
+ 	pm_report_max_hw_sleep(U64_MAX);
+ 	return 0;
  
- #ifdef CONFIG_PCIEASPM
- 	struct pcie_link_state	*link_state;	/* ASPM link state */
-@@ -1405,6 +1406,59 @@ bool pcie_relaxed_ordering_enabled(struct pci_dev *dev);
- void pci_resume_bus(struct pci_bus *bus);
- void pci_bus_set_current_state(struct pci_bus *bus, pci_power_t state);
++err_register_lps0:
++	if (IS_ENABLED(CONFIG_SUSPEND))
++		acpi_unregister_lps0_dev(&amd_pmc_s2idle_dev_ops);
+ err_pci_dev_put:
+ 	pci_dev_put(rdev);
+ 	return err;
+@@ -1089,6 +1146,8 @@ static void amd_pmc_remove(struct platform_device *pdev)
  
-+/**
-+ * enum bridge_d3_pref - D3 preference of a bridge
-+ * @BRIDGE_PREF_UNSET: Not configured by driver
-+ * @BRIDGE_PREF_NONE: Driver does not care
-+ * @BRIDGE_PREF_DRIVER_D3: Driver prefers D3
-+ * @BRIDGE_PREF_DRIVER_D0: Driver prefers D0
-+ */
-+enum bridge_d3_pref {
-+	BRIDGE_PREF_UNSET,
-+	BRIDGE_PREF_NONE,
-+	BRIDGE_PREF_DRIVER_D3,
-+	BRIDGE_PREF_DRIVER_D0,
-+};
-+
-+/**
-+ * pci_d3_driver_ops - Operations provided by a driver to evaluate D3 policy
-+ * @list_node: the linked list node
-+ * @priority: the priority of the callback
-+ * @check: the callback to evaluate D3 policy
-+ *
-+ * For the callback drivers are expected to return:
-+ *  BRIDGE_PREF_NONE if they can't evaluate the decision whether to support D3
-+ *  BRIDGE_PREF_DRIVER_D0 if they decide the device should not support D3
-+ *  BRIDGE_PREF_DRIVER_D3 if they decide the device should support D3
-+ */
-+struct pci_d3_driver_ops {
-+	struct list_head list_node;
-+	int priority;
-+	enum bridge_d3_pref (*check)(struct pci_dev *pdev);
-+};
-+
-+/**
-+ * pci_register_driver_d3_policy_cb - Register a driver callback for configuring D3 policy
-+ * @arg: driver provided structure with function pointer and priority
-+ *
-+ * This function can be used by drivers to register a callback that can be used
-+ * to delegate the decision of whether a device should be used for D3 to that
-+ * driver.
-+ *
-+ * Returns 0 on success, error code on failure.
-+ */
-+int pci_register_driver_d3_policy_cb(struct pci_d3_driver_ops *arg);
-+
-+/**
-+ * pci_unregister_driver_d3_policy_cb - Unregister a driver callback for configuring D3 policy
-+ * @arg: driver provided structure with function pointer and priority
-+ *
-+ * This function can be used by drivers to unregister a callback that can be used
-+ * to delegate the decision of whether a device should be used for D3 to that
-+ * driver.
-+ */
-+void pci_unregister_driver_d3_policy_cb(struct pci_d3_driver_ops *arg);
-+
- /* For use by arch with custom probe code */
- void set_pcie_port_type(struct pci_dev *pdev);
- void set_pcie_hotplug_bridge(struct pci_dev *pdev);
+ 	if (IS_ENABLED(CONFIG_SUSPEND))
+ 		acpi_unregister_lps0_dev(&amd_pmc_s2idle_dev_ops);
++	if (amd_pmc_use_acpi_constraints(dev))
++		pci_unregister_driver_d3_policy_cb(&amd_pmc_d3_ops);
+ 	amd_pmc_dbgfs_unregister(dev);
+ 	pci_dev_put(dev->rdev);
+ 	mutex_destroy(&dev->lock);
 -- 
 2.34.1
 
