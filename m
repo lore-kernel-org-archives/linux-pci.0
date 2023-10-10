@@ -2,74 +2,97 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1A261CD690A
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Oct 2023 08:50:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18CB5CD691E
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Oct 2023 09:46:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229919AbjJJIuc (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Oct 2023 04:50:32 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49246 "EHLO
+        id S230006AbjJJJqC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Oct 2023 05:46:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47952 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229709AbjJJIu2 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2023 04:50:28 -0400
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F12A8AF;
-        Tue, 10 Oct 2023 01:50:22 -0700 (PDT)
-Received: from canpemm500009.china.huawei.com (unknown [172.30.72.56])
-        by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4S4TzK06p6zVlQN;
-        Tue, 10 Oct 2023 16:46:53 +0800 (CST)
-Received: from localhost.localdomain (10.50.163.32) by
- canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.31; Tue, 10 Oct 2023 16:50:21 +0800
-From:   Yicong Yang <yangyicong@huawei.com>
-To:     <suzuki.poulose@arm.com>, <mathieu.poirier@linaro.org>,
-        <jonathan.cameron@huawei.com>, <linux-kernel@vger.kernel.org>
-CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
-        <linux-pci@vger.kernel.org>, <prime.zeng@hisilicon.com>,
-        <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
-        <hejunhao3@huawei.com>
-Subject: [PATCH v3 4/5] hwtracing: hisi_ptt: Don't try to attach a task
-Date:   Tue, 10 Oct 2023 16:47:30 +0800
-Message-ID: <20231010084731.30450-5-yangyicong@huawei.com>
-X-Mailer: git-send-email 2.31.0
-In-Reply-To: <20231010084731.30450-1-yangyicong@huawei.com>
-References: <20231010084731.30450-1-yangyicong@huawei.com>
+        with ESMTP id S229892AbjJJJqB (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2023 05:46:01 -0400
+Received: from madras.collabora.co.uk (madras.collabora.co.uk [46.235.227.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D9F694;
+        Tue, 10 Oct 2023 02:46:00 -0700 (PDT)
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
+        (using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+        (No client certificate requested)
+        (Authenticated sender: kholk11)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 648956607243;
+        Tue, 10 Oct 2023 10:45:58 +0100 (BST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+        s=mail; t=1696931159;
+        bh=6H9Fj2tHWKm+K4ZGzGla2mVcICa34lDD8nktakutjLo=;
+        h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+        b=BOV1amVx1RHjJcfG/Juc7idTOADT5dPAhDeFPXtCHpZEG8Hikn6RKf4HB2LHgMEsK
+         2KAASVv/MZIKZV2hqNAQZftl+QQbgLJm6Qu0Xd3IFngyIS45lZ4e820Lfv4cvrTQVd
+         5gDF60go4lFLlGcBBXM8hwd1eHZzUpOYpIeRtmIV/ZjZh7h1cCsmvvk+3/mk9OCQdx
+         QMOrwfMs8fYy/xlxVxnuZC7fgfLpuiCmGHQthYja4UUFiUZkx/kCVqDrixf6ifSgXB
+         myjaI7Xog2MF1g0M4uJwdi09kmwsr8FfXemLQ2KriBgBIzKq0dcS3Rq38evxPFbm4z
+         GwF5ozFb0IUMQ==
+Message-ID: <50bb99ee-8ef3-343e-7359-526662f511cb@collabora.com>
+Date:   Tue, 10 Oct 2023 11:45:55 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.50.163.32]
-X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
- canpemm500009.china.huawei.com (7.192.105.203)
-X-CFilter-Loop: Reflected
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.0
+Subject: Re: [PATCH v3 1/2] dt-bindings: PCI: mediatek-gen3: Add support for
+ controlling power and reset
+Content-Language: en-US
+To:     Jian Yang <jian.yang@mediatek.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Rob Herring <robh@kernel.org>
+Cc:     linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org,
+        Project_Global_Chrome_Upstream_Group@mediatek.com,
+        Chuanjia.Liu@mediatek.com, Jieyy.Yang@mediatek.com,
+        Qizhong.Cheng@mediatek.com
+References: <20231009084957.18536-1-jian.yang@mediatek.com>
+ <20231009084957.18536-2-jian.yang@mediatek.com>
+From:   AngeloGioacchino Del Regno 
+        <angelogioacchino.delregno@collabora.com>
+In-Reply-To: <20231009084957.18536-2-jian.yang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yicong Yang <yangyicong@hisilicon.com>
+Il 09/10/23 10:49, Jian Yang ha scritto:
+> From: "jian.yang" <jian.yang@mediatek.com>
+> 
+> Add new properties to support control power supplies and reset pin of
+> a downstream component.
+> 
+> Signed-off-by: jian.yang <jian.yang@mediatek.com>
+> ---
+>   .../bindings/pci/mediatek-pcie-gen3.yaml      | 30 +++++++++++++++++++
+>   1 file changed, 30 insertions(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> index 7e8c7a2a5f9b..eb4ad98549d1 100644
+> --- a/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> +++ b/Documentation/devicetree/bindings/pci/mediatek-pcie-gen3.yaml
+> @@ -84,6 +84,26 @@ properties:
+>       items:
+>         enum: [ phy, mac ]
+>   
+> +  pcie1v8-supply:
 
-PTT is an uncore PMU and shouldn't be attached to any task. Block
-the usage in pmu::event_init().
+There are another two controllers having such regulators and they all have the
+same name for those supplies; Can you please change the names to be consistent
+with the other controllers?
 
-Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
-Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
----
- drivers/hwtracing/ptt/hisi_ptt.c | 3 +++
- 1 file changed, 3 insertions(+)
+vpcie1v8
+vpcie3v3
+vpcie12v
 
-diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
-index 4f355df8da23..62a444f5228e 100644
---- a/drivers/hwtracing/ptt/hisi_ptt.c
-+++ b/drivers/hwtracing/ptt/hisi_ptt.c
-@@ -1003,6 +1003,9 @@ static int hisi_ptt_pmu_event_init(struct perf_event *event)
- 		return -EOPNOTSUPP;
- 	}
- 
-+	if (event->attach_state & PERF_ATTACH_TASK)
-+		return -EOPNOTSUPP;
-+
- 	if (event->attr.type != hisi_ptt->hisi_ptt_pmu.type)
- 		return -ENOENT;
- 
--- 
-2.24.0
+Regards,
+Angelo
+
 
