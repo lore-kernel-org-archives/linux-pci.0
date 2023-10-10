@@ -2,30 +2,30 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id B91FFCD98C2
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Oct 2023 20:45:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 842F4CD98C1
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Oct 2023 20:45:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234709AbjJJUpL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Oct 2023 16:45:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:60904 "EHLO
+        id S1344004AbjJJUpM (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Oct 2023 16:45:12 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234228AbjJJUpC (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2023 16:45:02 -0400
+        with ESMTP id S1344034AbjJJUpJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2023 16:45:09 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AEF5999;
-        Tue, 10 Oct 2023 13:45:00 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1621C433C8;
-        Tue, 10 Oct 2023 20:44:59 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 62485CA;
+        Tue, 10 Oct 2023 13:45:06 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68796C433CB;
+        Tue, 10 Oct 2023 20:45:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1696970700;
-        bh=SgJRtupS7nAWYb0BB4CUnQ7/s6tkDFcfcPN1MGYpdEo=;
+        s=k20201202; t=1696970706;
+        bh=OVB+pKuPDbde+zczlAAsnMMXpVXRTCdD+xIMqYLAWl8=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=DMAdtbkfo0lFfisjm0xLwJhX+R52fe8k7WECE9pmsA7xM3yYuTx6kE4Ox1n5qq2fF
-         0MoMu8wmTgTbx6b+gOg4DLQdAKadVkhaRvJ7T9H8XlMPcy3COgUh8X+4QQPKQoGZ5d
-         cSwmx/IrvM3TfUMYX6ydn4VK53tuLGYsk70KpB42F9dXJJKmGL2G9EpUpHdz5ne2Rq
-         88MX9zIiAndMbxwm9RtoKbQlDKXxJtGR6HQ9Gq95ShgoxWL44sTHPK1kgUJD2ZW7Cq
-         m+D/wkYmUbb2f972cZEIGm2JfWT5H9O/SCaGmrW0e6SiSVR3wO4HovWmFolu1bquNU
-         3oFM+qUicDxqA==
+        b=XOdBLoBNWYWkZLs/1SLg1z2PdC1Yy6R7NbVsdHosYAzTgTDyhvltE78FBR7m3gKBh
+         Qqh4g0vony4q5xLfvdSSzVmKd41HwAgOE3g+ydk+kon2DfdaJp8fob6CQACEp0JvHj
+         kpnRMLDpwG0Omv+cLS/va3n3GOGRKdMRV0QvW/7eOI0/MWUho91H+2n7ktYcFvV6mZ
+         lhuZkyH2sv7WztIevBMixnXqvIemp6BGuS++DgcRpnR9KoEuNcGEJeeE8s/BP5dyVi
+         A+2moRZNzZreUI1zMaHdXHyP946R3GcLEYTRgeEjpZCami57eevd52LR5qORnOjp43
+         5bChSgbd50xSw==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     linux-pci@vger.kernel.org
 Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
@@ -33,9 +33,9 @@ Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         linux-kernel@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 07/10] PCI/PME: Use FIELD_GET()
-Date:   Tue, 10 Oct 2023 15:44:33 -0500
-Message-Id: <20231010204436.1000644-8-helgaas@kernel.org>
+Subject: [PATCH 09/10] PCI/VC: Use FIELD_GET()
+Date:   Tue, 10 Oct 2023 15:44:35 -0500
+Message-Id: <20231010204436.1000644-10-helgaas@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231010204436.1000644-1-helgaas@kernel.org>
 References: <20231010204436.1000644-1-helgaas@kernel.org>
@@ -52,44 +52,51 @@ shift value.  No functional change intended.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/pci/pcie/pme.c        | 4 +++-
- include/uapi/linux/pci_regs.h | 1 +
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ drivers/pci/vc.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/pcie/pme.c b/drivers/pci/pcie/pme.c
-index ef8ce436ead9..a2daebd9806c 100644
---- a/drivers/pci/pcie/pme.c
-+++ b/drivers/pci/pcie/pme.c
-@@ -9,6 +9,7 @@
- 
- #define dev_fmt(fmt) "PME: " fmt
+diff --git a/drivers/pci/vc.c b/drivers/pci/vc.c
+index 5fc59ac31145..a4ff7f5f66dd 100644
+--- a/drivers/pci/vc.c
++++ b/drivers/pci/vc.c
+@@ -6,6 +6,7 @@
+  *     Author: Alex Williamson <alex.williamson@redhat.com>
+  */
  
 +#include <linux/bitfield.h>
- #include <linux/pci.h>
+ #include <linux/device.h>
  #include <linux/kernel.h>
- #include <linux/errno.h>
-@@ -235,7 +236,8 @@ static void pcie_pme_work_fn(struct work_struct *work)
- 			pcie_clear_root_pme_status(port);
+ #include <linux/module.h>
+@@ -201,9 +202,9 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 	/* Extended VC Count (not counting VC0) */
+ 	evcc = cap1 & PCI_VC_CAP1_EVCC;
+ 	/* Low Priority Extended VC Count (not counting VC0) */
+-	lpevcc = (cap1 & PCI_VC_CAP1_LPEVCC) >> 4;
++	lpevcc = FIELD_GET(PCI_VC_CAP1_LPEVCC, cap1);
+ 	/* Port Arbitration Table Entry Size (bits) */
+-	parb_size = 1 << ((cap1 & PCI_VC_CAP1_ARB_SIZE) >> 10);
++	parb_size = 1 << FIELD_GET(PCI_VC_CAP1_ARB_SIZE, cap1);
  
- 			spin_unlock_irq(&data->lock);
--			pcie_pme_handle_request(port, rtsta & 0xffff);
-+			pcie_pme_handle_request(port,
-+				    FIELD_GET(PCI_EXP_RTSTA_PME_RQ_ID, rtsta));
- 			spin_lock_irq(&data->lock);
+ 	/*
+ 	 * Port VC Control Register contains VC Arbitration Select, which
+@@ -231,7 +232,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 		int vcarb_offset;
  
- 			continue;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index e97a06b50f95..9fb8a69241f4 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -637,6 +637,7 @@
- #define PCI_EXP_RTCAP		0x1e	/* Root Capabilities */
- #define  PCI_EXP_RTCAP_CRSVIS	0x0001	/* CRS Software Visibility capability */
- #define PCI_EXP_RTSTA		0x20	/* Root Status */
-+#define  PCI_EXP_RTSTA_PME_RQ_ID 0x0000ffff /* PME Requester ID */
- #define  PCI_EXP_RTSTA_PME	0x00010000 /* PME status */
- #define  PCI_EXP_RTSTA_PENDING	0x00020000 /* PME pending */
- /*
+ 		pci_read_config_dword(dev, pos + PCI_VC_PORT_CAP2, &cap2);
+-		vcarb_offset = ((cap2 & PCI_VC_CAP2_ARB_OFF) >> 24) * 16;
++		vcarb_offset = FIELD_GET(PCI_VC_CAP2_ARB_OFF, cap2) * 16;
+ 
+ 		if (vcarb_offset) {
+ 			int size, vcarb_phases = 0;
+@@ -277,7 +278,7 @@ static int pci_vc_do_save_buffer(struct pci_dev *dev, int pos,
+ 
+ 		pci_read_config_dword(dev, pos + PCI_VC_RES_CAP +
+ 				      (i * PCI_CAP_VC_PER_VC_SIZEOF), &cap);
+-		parb_offset = ((cap & PCI_VC_RES_CAP_ARB_OFF) >> 24) * 16;
++		parb_offset = FIELD_GET(PCI_VC_RES_CAP_ARB_OFF, cap) * 16;
+ 		if (parb_offset) {
+ 			int size, parb_phases = 0;
+ 
 -- 
 2.34.1
 
