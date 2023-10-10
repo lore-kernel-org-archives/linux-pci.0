@@ -2,117 +2,84 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8674DCD6906
-	for <linux-pci@archiver.kernel.org>; Tue, 10 Oct 2023 08:19:18 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B692CCD690A
+	for <linux-pci@archiver.kernel.org>; Tue, 10 Oct 2023 08:50:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1442703AbjJJITR (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 10 Oct 2023 04:19:17 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34496 "EHLO
+        id S229655AbjJJIu0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 10 Oct 2023 04:50:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48550 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1379439AbjJJITQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2023 04:19:16 -0400
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 00A0C97;
-        Tue, 10 Oct 2023 01:19:14 -0700 (PDT)
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 3F1AE2800A273;
-        Tue, 10 Oct 2023 10:19:13 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id 3176D58BE4D; Tue, 10 Oct 2023 10:19:13 +0200 (CEST)
-Date:   Tue, 10 Oct 2023 10:19:13 +0200
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Alexey Kardashevskiy <aik@amd.com>
-Cc:     Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-        Dan Williams <dan.j.williams@intel.com>,
-        Bjorn Helgaas <helgaas@kernel.org>,
-        David Howells <dhowells@redhat.com>,
-        David Woodhouse <dwmw2@infradead.org>,
-        Herbert Xu <herbert@gondor.apana.org.au>,
-        "David S. Miller" <davem@davemloft.net>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        linux-pci@vger.kernel.org, linux-cxl@vger.kernel.org,
-        linux-coco@lists.linux.dev, keyrings@vger.kernel.org,
-        linux-crypto@vger.kernel.org, kvm@vger.kernel.org,
-        linuxarm@huawei.com, David Box <david.e.box@intel.com>,
-        Dave Jiang <dave.jiang@intel.com>,
-        "Li, Ming" <ming4.li@intel.com>, Zhi Wang <zhi.a.wang@intel.com>,
-        Alistair Francis <alistair.francis@wdc.com>,
-        Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-        Tom Lendacky <thomas.lendacky@amd.com>,
-        Sean Christopherson <seanjc@google.com>,
-        Alexander Graf <graf@amazon.com>
-Subject: Re: [PATCH 00/12] PCI device authentication
-Message-ID: <20231010081913.GA24050@wunner.de>
-References: <cover.1695921656.git.lukas@wunner.de>
- <652030759e42d_ae7e72946@dwillia2-xfh.jf.intel.com.notmuch>
- <20231007100433.GA7596@wunner.de>
- <20231009123335.00006d3d@Huawei.com>
- <20231009134950.GA7097@wunner.de>
- <b003c0ca-b5c7-4082-a391-aeb04ccc33ca@amd.com>
+        with ESMTP id S229485AbjJJIuY (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 10 Oct 2023 04:50:24 -0400
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 61FA99F;
+        Tue, 10 Oct 2023 01:50:22 -0700 (PDT)
+Received: from canpemm500009.china.huawei.com (unknown [172.30.72.53])
+        by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4S4Ty05t96ztTBj;
+        Tue, 10 Oct 2023 16:45:44 +0800 (CST)
+Received: from localhost.localdomain (10.50.163.32) by
+ canpemm500009.china.huawei.com (7.192.105.203) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.31; Tue, 10 Oct 2023 16:50:20 +0800
+From:   Yicong Yang <yangyicong@huawei.com>
+To:     <suzuki.poulose@arm.com>, <mathieu.poirier@linaro.org>,
+        <jonathan.cameron@huawei.com>, <linux-kernel@vger.kernel.org>
+CC:     <alexander.shishkin@linux.intel.com>, <helgaas@kernel.org>,
+        <linux-pci@vger.kernel.org>, <prime.zeng@hisilicon.com>,
+        <linuxarm@huawei.com>, <yangyicong@hisilicon.com>,
+        <hejunhao3@huawei.com>
+Subject: [PATCH v3 2/5] hwtracing: hisi_ptt: Handle the interrupt in hardirq context
+Date:   Tue, 10 Oct 2023 16:47:28 +0800
+Message-ID: <20231010084731.30450-3-yangyicong@huawei.com>
+X-Mailer: git-send-email 2.31.0
+In-Reply-To: <20231010084731.30450-1-yangyicong@huawei.com>
+References: <20231010084731.30450-1-yangyicong@huawei.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b003c0ca-b5c7-4082-a391-aeb04ccc33ca@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+Content-Transfer-Encoding: 7BIT
+Content-Type:   text/plain; charset=US-ASCII
+X-Originating-IP: [10.50.163.32]
+X-ClientProxiedBy: dggems703-chm.china.huawei.com (10.3.19.180) To
+ canpemm500009.china.huawei.com (7.192.105.203)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, Oct 10, 2023 at 03:07:41PM +1100, Alexey Kardashevskiy wrote:
-> On 10/10/23 00:49, Lukas Wunner wrote:
-> > PCI Firmware Spec would seem to be appropriate.  However this can't
-> > be solved by the kernel community.
-> 
-> How so? It is up to the user to decide whether it is SPDM/CMA in the kernel
-> or   the firmware + coco, both are quite possible (it is IDE which is not
-> possible without the firmware on AMD but we are not there yet).
+From: Yicong Yang <yangyicong@hisilicon.com>
 
-The user can control ownership of CMA-SPDM e.g. through a BIOS knob.
-And that BIOS knob then influences the outcome of the _OSC negotiation
-between platform and OS.
+Handle the trace interrupt in the hardirq context, make sure the irq
+core won't threaded it by declaring IRQF_NO_THREAD and userspace won't
+balance it by declaring IRQF_NOBALANCING. Otherwise we may violate the
+synchronization requirements of the perf core, referenced to the
+change of arm-ccn PMU commit 0811ef7e2f54 ("bus: arm-ccn: fix PMU interrupt flags").
 
+In the interrupt handler we mainly doing 2 things:
+- Copy the data from the local DMA buffer to the AUX buffer
+- Commit the data in the AUX buffer
 
-> But the way SPDM is done now is that if the user (as myself) wants to let
-> the firmware run SPDM - the only choice is disabling CONFIG_CMA completely
-> as CMA is not a (un)loadable module or built-in (with some "blacklist"
-> parameters), and does not provide a sysfs knob to control its tentacles.
+Signed-off-by: Yicong Yang <yangyicong@hisilicon.com>
+Acked-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
+ drivers/hwtracing/ptt/hisi_ptt.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-The problem is every single vendor thinks they can come up with
-their own idea of who owns the SPDM session:
+diff --git a/drivers/hwtracing/ptt/hisi_ptt.c b/drivers/hwtracing/ptt/hisi_ptt.c
+index 428cca54217e..3041238a6e54 100644
+--- a/drivers/hwtracing/ptt/hisi_ptt.c
++++ b/drivers/hwtracing/ptt/hisi_ptt.c
+@@ -346,9 +346,9 @@ static int hisi_ptt_register_irq(struct hisi_ptt *hisi_ptt)
+ 		return ret;
+ 
+ 	hisi_ptt->trace_irq = pci_irq_vector(pdev, HISI_PTT_TRACE_DMA_IRQ);
+-	ret = devm_request_threaded_irq(&pdev->dev, hisi_ptt->trace_irq,
+-					NULL, hisi_ptt_isr, 0,
+-					DRV_NAME, hisi_ptt);
++	ret = devm_request_irq(&pdev->dev, hisi_ptt->trace_irq, hisi_ptt_isr,
++				IRQF_NOBALANCING | IRQF_NO_THREAD, DRV_NAME,
++				hisi_ptt);
+ 	if (ret) {
+ 		pci_err(pdev, "failed to request irq %d, ret = %d\n",
+ 			hisi_ptt->trace_irq, ret);
+-- 
+2.24.0
 
-I've looked at the Nvidia driver and they've hacked libspdm into it,
-so their idea is that the device driver owns the SPDM session.
-
-AMD wants the host to proxy DOE but not own the SPDM session.
-
-We have *standards* for a reason.  So that products are interoperable.
-
-If the kernel tries to accommodate to every vendor's idea of SPDM ownership
-we'll end up with an unmaintainable mess of quirks, plus sysfs knobs
-which were once intended as a stopgap but can never be removed because
-they're userspace ABI.
-
-This needs to be solved in the *specification*.
-
-And the existing solution for who owns a particular PCI feature is _OSC.
-Hence this needs to be taken up with the Firmware Working Group at the
-PCISIG.
-
-
-> Note, this PSP firmware is not BIOS (which runs on the same core and has
-> same access to PCI as the host OS), it is a separate platform processor
-> which only programs IDE keys to the PCI RC (via some some internal bus
-> mechanism) but does not do anything on the bus itself and relies on the host
-> OS proxying DOE, and there is no APCI between the core and the psp.
-
-Somewhat tangentially, would it be possible in your architecture
-that the host or guest asks PSP to program IDE keys into the Root Port?
-Or alternatively, access the key registers directly without PSP involvement?
-
-Thanks,
-
-Lukas
