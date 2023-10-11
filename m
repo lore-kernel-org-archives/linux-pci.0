@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 40BF3CD68EB
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 07:14:39 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E5E4CD98FB
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 07:14:40 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229747AbjJKHOi (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Oct 2023 03:14:38 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47596 "EHLO
+        id S229948AbjJKHOj (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Oct 2023 03:14:39 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:47586 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229806AbjJKHOf (ORCPT
+        with ESMTP id S229654AbjJKHOf (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 03:14:35 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 5D1C0B9;
-        Wed, 11 Oct 2023 00:14:33 -0700 (PDT)
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 12831B8;
+        Wed, 11 Oct 2023 00:14:32 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.03,214,1694703600"; 
-   d="scan'208";a="178877330"
+   d="scan'208";a="182667768"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 11 Oct 2023 16:14:30 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 11 Oct 2023 16:14:30 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 5B48341B2644;
+        by relmlir6.idc.renesas.com (Postfix) with ESMTP id D86DC41B2645;
         Wed, 11 Oct 2023 16:14:30 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
@@ -29,11 +29,10 @@ To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
 Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v24 12/16] PCI: Add T_PVPERL macro
-Date:   Wed, 11 Oct 2023 16:14:19 +0900
-Message-Id: <20231011071423.249458-13-yoshihiro.shimoda.uh@renesas.com>
+        Serge Semin <fancer.lancer@gmail.com>
+Subject: [PATCH v24 15/16] MAINTAINERS: Update PCI DRIVER FOR RENESAS R-CAR for R-Car Gen4
+Date:   Wed, 11 Oct 2023 16:14:22 +0900
+Message-Id: <20231011071423.249458-16-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231011071423.249458-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20231011071423.249458-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,31 +42,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-According to the PCIe CEM r5.0, sec 2.9.2, Power stable to PERST#
-inactive interval is 100 ms as minimum. Add a macro so that the PCIe
-controller drivers can make use of it.
+Update this entry for R-Car Gen4's source code.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/pci/pci.h | 3 +++
- 1 file changed, 3 insertions(+)
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 39a8932dc340..5ecbcf041179 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -13,6 +13,9 @@
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 90f13281d297..4115e648b4af 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16424,6 +16424,7 @@ L:	linux-renesas-soc@vger.kernel.org
+ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/*rcar*
+ F:	drivers/pci/controller/*rcar*
++F:	drivers/pci/controller/dwc/*rcar*
  
- #define PCIE_LINK_RETRAIN_TIMEOUT_MS	1000
- 
-+/* Power stable to PERST# inactive from PCIe card Electromechanical Spec */
-+#define PCIE_T_PVPERL_MS		100
-+
- /*
-  * PCIe r6.0, sec 5.3.3.2.1 <PME Synchronization>
-  * Recommends 1ms to 10ms timeout to check L2 ready.
+ PCI DRIVER FOR SAMSUNG EXYNOS
+ M:	Jingoo Han <jingoohan1@gmail.com>
 -- 
 2.25.1
 
