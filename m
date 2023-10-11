@@ -2,113 +2,243 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2382ACD6E5D
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:19:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 98240CD6E5C
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:24:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234795AbjJKLTX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:19:23 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34876 "EHLO
+        id S231958AbjJKLYK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Oct 2023 07:24:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59736 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346323AbjJKLTQ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:19:16 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A9D78F;
-        Wed, 11 Oct 2023 04:19:15 -0700 (PDT)
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39B8phZW000559;
-        Wed, 11 Oct 2023 11:18:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id; s=qcppdkim1;
- bh=DRVR115ULH05dEvTGRQlvYcaD3JskA4PUOvyleNRpIM=;
- b=QijTvPTl3CqjGvQvLBuj3rIhU+aONPBq/2DujmDeC9Fh0vP7nCxAVgn7dXzsMavNkXGL
- 1mvlReGP1Z1y1xXOLlbZ0NNZp5E5CmxuaOZ0sSL/itoorILNQcRuysPTjO0eDcK4gkQ+
- zyZ6opcqxTqPetD9y4UGHfYj17BcMQyNiL4eXWciKey+s3V7ShMSFMsds7nDKFzC9eX/
- dN8IPxHBHEjS41wJ+5qwTrNvihzzdZZ/+obSRzBpNarMBhBQmQCYsKileMWHOi8LAci2
- gMLlNU+tZmPppRj4mFLa/y2+C4R91gx46nHa9Hhs+ximaaM1fhfOPw1F5fxHEAGDOcHq Zw== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tnnvw8mmj-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 11 Oct 2023 11:18:46 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 39BBIc0Y011193;
-        Wed, 11 Oct 2023 11:18:38 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3tk0dkmawx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Wed, 11 Oct 2023 11:18:38 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39BBIcRd011187;
-        Wed, 11 Oct 2023 11:18:38 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 39BBIbTT011186;
-        Wed, 11 Oct 2023 11:18:38 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id CBB0343B8; Wed, 11 Oct 2023 16:48:36 +0530 (+0530)
-From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, mani@kernel.org
-Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        dmitry.baryshkov@linaro.org, robh@kernel.org,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        quic_parass@quicinc.com, Mrinmay Sarkar <quic_msarkar@quicinc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        with ESMTP id S231736AbjJKLYJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:24:09 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.136])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FA1F9E;
+        Wed, 11 Oct 2023 04:24:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1697023447; x=1728559447;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=PVLfrtWdcgP/+w8hDeJXKj0sFMISHijpt0iJDB7dG7E=;
+  b=gvlNDS7URszVtzCliLEMym376p/3dMn99kf/t3WFJEBg2moA8Mt5yLy5
+   c6zMxN+NTRBFDfw730eO6zHWaFGL0JDAW16LRokF9mU5bvG4uK5Un51yC
+   THFeWIB3i6uUoUGJgd+A388xkO9xiQmuvtyB8sqOLPdMi0aMETbj1HOye
+   Q3JJ/B+xilACnIU8Layg7ZIXuRsjnSi4IY3ccvsQ1jur1vO8f+R7ypbs4
+   +lnyxMHOi33m86B/8PkEFtgyhEca+IdeRqpPgDS0CeY/bOMGmYzMN/Tr3
+   juJ0Cx0SF6V0s4QTF6uv0TAzT88J0R9vAJYZrB64f0VC7JZUflozeY+iG
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="363997987"
+X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
+   d="scan'208";a="363997987"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmsmga106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 04:24:06 -0700
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10859"; a="1085193399"
+X-IronPort-AV: E=Sophos;i="6.03,214,1694761200"; 
+   d="scan'208";a="1085193399"
+Received: from opipikin-mobl2.ger.corp.intel.com (HELO sdodaev-mobl.ger.corp.intel.com) ([10.252.57.154])
+  by fmsmga005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2023 04:24:04 -0700
+Date:   Wed, 11 Oct 2023 14:24:02 +0300 (EEST)
+From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+cc:     linux-pci@vger.kernel.org,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mhi@lists.linux.dev,
-        linux-phy@lists.infradead.org
-Subject: [PATCH v2 0/4] arm64: qcom: sa8775p: add support for EP PCIe
-Date:   Wed, 11 Oct 2023 16:48:25 +0530
-Message-Id: <1697023109-23671-1-git-send-email-quic_msarkar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 1k85JyqyEewYSIU2u_O30ftyJ_7XE6Ux
-X-Proofpoint-GUID: 1k85JyqyEewYSIU2u_O30ftyJ_7XE6Ux
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-11_09,2023-10-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
- impostorscore=0 mlxlogscore=399 bulkscore=0 adultscore=0 phishscore=0
- clxscore=1015 spamscore=0 priorityscore=1501 malwarescore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2309180000 definitions=main-2310110099
+        LKML <linux-kernel@vger.kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 01/10] PCI: Use FIELD_GET()
+In-Reply-To: <20231010204436.1000644-2-helgaas@kernel.org>
+Message-ID: <bb8a4540-3dd-5959-503f-8cd1b8783afa@linux.intel.com>
+References: <20231010204436.1000644-1-helgaas@kernel.org> <20231010204436.1000644-2-helgaas@kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This series adds the relavent DT bindings, new compatible string,
-update PHY, add support to EPF driver and add EP PCIe node in dtsi
-file for ep pcie0 controller.
+On Tue, 10 Oct 2023, Bjorn Helgaas wrote:
 
-v1 -> v2:
-- update description for dma
-- Reusing qcom,sdx55-pcie-ep compatibe so remove compaitable
-  for sa8775p
-- sort the defines in phy header file and remove extra defines
-- add const in return type pci_epf_header and remove MHI_EPF_USE_DMA
-  flag as hdma patch is not ready
-- add fallback compatiable as qcom,sdx55-pcie-ep, add iommu property
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Use FIELD_GET() to remove dependences on the field position, i.e., the
+> shift value.  No functional change intended.
 
-Mrinmay Sarkar (4):
-  dt-bindings: PCI: qcom-ep: Add support for SA8775P SoC
-  phy: qcom-qmp-pcie: add endpoint support for sa8775p
-  PCI: epf-mhi: Add support for SA8775P
-  arm64: dts: qcom: sa8775p: Add ep pcie0 controller node
+FIELD_PREP() is also used below.
 
- .../devicetree/bindings/pci/qcom,pcie-ep.yaml      | 131 +++++++++++++++++----
- arch/arm64/boot/dts/qcom/sa8775p.dtsi              |  48 ++++++++
- drivers/pci/endpoint/functions/pci-epf-mhi.c       |  17 +++
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           |  41 +++++++
- drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h         |   2 +
- 5 files changed, 217 insertions(+), 22 deletions(-)
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+> ---
+>  drivers/pci/pci.c   | 45 ++++++++++++++++++++++-----------------------
+>  drivers/pci/probe.c |  8 ++++----
+>  2 files changed, 26 insertions(+), 27 deletions(-)
+> 
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index a8adc34dc86f..848c9ee65d7f 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -1776,8 +1776,7 @@ static void pci_restore_rebar_state(struct pci_dev *pdev)
+>  		return;
+>  
+>  	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> -	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
+> -		    PCI_REBAR_CTRL_NBAR_SHIFT;
+> +	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, ctrl);
+>  
+>  	for (i = 0; i < nbars; i++, pos += 8) {
+>  		struct resource *res;
+> @@ -1788,7 +1787,7 @@ static void pci_restore_rebar_state(struct pci_dev *pdev)
+>  		res = pdev->resource + bar_idx;
+>  		size = pci_rebar_bytes_to_size(resource_size(res));
+>  		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
+> -		ctrl |= size << PCI_REBAR_CTRL_BAR_SHIFT;
+> +		ctrl |= FIELD_PREP(PCI_REBAR_CTRL_BAR_SIZE, size);
+>  		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
+>  	}
+>  }
+> @@ -3229,7 +3228,7 @@ void pci_pm_init(struct pci_dev *dev)
+>  			 (pmc & PCI_PM_CAP_PME_D2) ? " D2" : "",
+>  			 (pmc & PCI_PM_CAP_PME_D3hot) ? " D3hot" : "",
+>  			 (pmc & PCI_PM_CAP_PME_D3cold) ? " D3cold" : "");
+> -		dev->pme_support = pmc >> PCI_PM_CAP_PME_SHIFT;
+> +		dev->pme_support = FIELD_GET(PCI_PM_CAP_PME_MASK, pmc);
+>  		dev->pme_poll = true;
+>  		/*
+>  		 * Make device's PM flags reflect the wake-up capability, but
+> @@ -3300,20 +3299,20 @@ static int pci_ea_read(struct pci_dev *dev, int offset)
+>  	ent_offset += 4;
+>  
+>  	/* Entry size field indicates DWORDs after 1st */
+> -	ent_size = ((dw0 & PCI_EA_ES) + 1) << 2;
+> +	ent_size = (FIELD_GET(PCI_EA_ES, dw0) + 1) << 2;
+>  
+>  	if (!(dw0 & PCI_EA_ENABLE)) /* Entry not enabled */
+>  		goto out;
+>  
+> -	bei = (dw0 & PCI_EA_BEI) >> 4;
+> -	prop = (dw0 & PCI_EA_PP) >> 8;
+> +	bei = FIELD_GET(PCI_EA_BEI, dw0);
+> +	prop = FIELD_GET(PCI_EA_PP, dw0);
+>  
+>  	/*
+>  	 * If the Property is in the reserved range, try the Secondary
+>  	 * Property instead.
+>  	 */
+>  	if (prop > PCI_EA_P_BRIDGE_IO && prop < PCI_EA_P_MEM_RESERVED)
+> -		prop = (dw0 & PCI_EA_SP) >> 16;
+> +		prop = FIELD_GET(PCI_EA_SP, dw0);
+>  	if (prop > PCI_EA_P_BRIDGE_IO)
+>  		goto out;
+>  
+> @@ -3720,14 +3719,13 @@ static int pci_rebar_find_pos(struct pci_dev *pdev, int bar)
+>  		return -ENOTSUPP;
+>  
+>  	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> -	nbars = (ctrl & PCI_REBAR_CTRL_NBAR_MASK) >>
+> -		    PCI_REBAR_CTRL_NBAR_SHIFT;
+> +	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, ctrl);
+>  
+>  	for (i = 0; i < nbars; i++, pos += 8) {
+>  		int bar_idx;
+>  
+>  		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> -		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
+> +		bar_idx = FIELD_GET(PCI_REBAR_CTRL_BAR_IDX, ctrl);
+>  		if (bar_idx == bar)
+>  			return pos;
+>  	}
+> @@ -3782,7 +3780,7 @@ int pci_rebar_get_current_size(struct pci_dev *pdev, int bar)
+>  		return pos;
+>  
+>  	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+> -	return (ctrl & PCI_REBAR_CTRL_BAR_SIZE) >> PCI_REBAR_CTRL_BAR_SHIFT;
+> +	return FIELD_GET(PCI_REBAR_CTRL_BAR_SIZE, ctrl);
+>  }
+>  
+>  /**
+> @@ -3805,7 +3803,7 @@ int pci_rebar_set_size(struct pci_dev *pdev, int bar, int size)
+>  
+>  	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
+>  	ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
+> -	ctrl |= size << PCI_REBAR_CTRL_BAR_SHIFT;
+> +	ctrl |= FIELD_PREP(PCI_REBAR_CTRL_BAR_SIZE, size);
+>  	pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
+>  	return 0;
+>  }
+> @@ -6043,7 +6041,7 @@ int pcix_get_max_mmrbc(struct pci_dev *dev)
+>  	if (pci_read_config_dword(dev, cap + PCI_X_STATUS, &stat))
+>  		return -EINVAL;
+>  
+> -	return 512 << ((stat & PCI_X_STATUS_MAX_READ) >> 21);
+> +	return 512 << FIELD_GET(PCI_X_STATUS_MAX_READ, stat);
+>  }
+>  EXPORT_SYMBOL(pcix_get_max_mmrbc);
+>  
+> @@ -6066,7 +6064,7 @@ int pcix_get_mmrbc(struct pci_dev *dev)
+>  	if (pci_read_config_word(dev, cap + PCI_X_CMD, &cmd))
+>  		return -EINVAL;
+>  
+> -	return 512 << ((cmd & PCI_X_CMD_MAX_READ) >> 2);
+> +	return 512 << FIELD_GET(PCI_X_CMD_MAX_READ, cmd);
+>  }
+>  EXPORT_SYMBOL(pcix_get_mmrbc);
+>  
+> @@ -6097,19 +6095,19 @@ int pcix_set_mmrbc(struct pci_dev *dev, int mmrbc)
+>  	if (pci_read_config_dword(dev, cap + PCI_X_STATUS, &stat))
+>  		return -EINVAL;
+>  
+> -	if (v > (stat & PCI_X_STATUS_MAX_READ) >> 21)
+> +	if (v > FIELD_GET(PCI_X_STATUS_MAX_READ, stat))
+>  		return -E2BIG;
+>  
+>  	if (pci_read_config_word(dev, cap + PCI_X_CMD, &cmd))
+>  		return -EINVAL;
+>  
+> -	o = (cmd & PCI_X_CMD_MAX_READ) >> 2;
+> +	o = FIELD_GET(PCI_X_CMD_MAX_READ, cmd);
+>  	if (o != v) {
+>  		if (v > o && (dev->bus->bus_flags & PCI_BUS_FLAGS_NO_MMRBC))
+>  			return -EIO;
+>  
+>  		cmd &= ~PCI_X_CMD_MAX_READ;
+> -		cmd |= v << 2;
+> +		cmd |= FIELD_PREP(PCI_X_CMD_MAX_READ, v);
+>  		if (pci_write_config_word(dev, cap + PCI_X_CMD, cmd))
+>  			return -EIO;
+>  	}
+> @@ -6129,7 +6127,7 @@ int pcie_get_readrq(struct pci_dev *dev)
+>  
+>  	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+>  
+> -	return 128 << ((ctl & PCI_EXP_DEVCTL_READRQ) >> 12);
+> +	return 128 << FIELD_GET(PCI_EXP_DEVCTL_READRQ, ctl);
+>  }
+>  EXPORT_SYMBOL(pcie_get_readrq);
+>  
+> @@ -6162,7 +6160,7 @@ int pcie_set_readrq(struct pci_dev *dev, int rq)
+>  			rq = mps;
+>  	}
+>  
+> -	v = (ffs(rq) - 8) << 12;
+> +	v = FIELD_PREP(PCI_EXP_DEVCTL_READRQ, ffs(rq) - 8);
+>  
+>  	if (bridge->no_inc_mrrs) {
+>  		int max_mrrs = pcie_get_readrq(dev);
+> @@ -6192,7 +6190,7 @@ int pcie_get_mps(struct pci_dev *dev)
+>  
+>  	pcie_capability_read_word(dev, PCI_EXP_DEVCTL, &ctl);
+>  
+> -	return 128 << ((ctl & PCI_EXP_DEVCTL_PAYLOAD) >> 5);
+> +	return 128 << FIELD_GET(PCI_EXP_DEVCTL_PAYLOAD, ctl);
+>  }
+>  EXPORT_SYMBOL(pcie_get_mps);
+>  
+> @@ -6215,7 +6213,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
+>  	v = ffs(mps) - 8;
+>  	if (v > dev->pcie_mpss)
+>  		return -EINVAL;
+> -	v <<= 5;
+> +	v = FIELD_PREP(PCI_EXP_DEVCTL_PAYLOAD, v);
+
 
 -- 
-2.7.4
-
+ i.
