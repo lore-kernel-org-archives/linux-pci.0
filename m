@@ -2,474 +2,147 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 24F31CD98F5
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 07:14:41 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5B5CD98F6
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 07:36:58 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230025AbjJKHOk (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Oct 2023 03:14:40 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41960 "EHLO
+        id S229698AbjJKHg5 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Oct 2023 03:36:57 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:38748 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229887AbjJKHOg (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 03:14:36 -0400
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 57E9898;
-        Wed, 11 Oct 2023 00:14:34 -0700 (PDT)
-X-IronPort-AV: E=Sophos;i="6.03,214,1694703600"; 
-   d="scan'208";a="178877333"
-Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 11 Oct 2023 16:14:30 +0900
-Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir6.idc.renesas.com (Postfix) with ESMTP id 8979541B2644;
-        Wed, 11 Oct 2023 16:14:30 +0900 (JST)
-From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-        bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, mani@kernel.org
-Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
-        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Serge Semin <fancer.lancer@gmail.com>
-Subject: [PATCH v24 13/16] PCI: rcar-gen4: Add R-Car Gen4 PCIe controller support for host mode
-Date:   Wed, 11 Oct 2023 16:14:20 +0900
-Message-Id: <20231011071423.249458-14-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20231011071423.249458-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20231011071423.249458-1-yoshihiro.shimoda.uh@renesas.com>
+        with ESMTP id S229656AbjJKHg5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 03:36:57 -0400
+Received: from mail-wr1-x42e.google.com (mail-wr1-x42e.google.com [IPv6:2a00:1450:4864:20::42e])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4A9B698
+        for <linux-pci@vger.kernel.org>; Wed, 11 Oct 2023 00:36:55 -0700 (PDT)
+Received: by mail-wr1-x42e.google.com with SMTP id ffacd0b85a97d-3226cc3e324so6339231f8f.3
+        for <linux-pci@vger.kernel.org>; Wed, 11 Oct 2023 00:36:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1697009813; x=1697614613; darn=vger.kernel.org;
+        h=content-transfer-encoding:autocrypt:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=VDjaX0sg9ebhJ0I27uKWg4fBYgPHYXROy1G6UFjbhT0=;
+        b=TV+lQCw6ofL58OWtttSt0g079beIjGeawLU3ulHaNdyscY6SDW9KB0EZxj0c6w9KW7
+         O7cmJKL7vkRTHpW47pjOrdTUilUxVyhGzVNpQSv6nukv+njl0XxD+zCHAd2k6HXW9fL5
+         XaGlwuq+7LXdRCK47XZP6wzHemUcz40q2bsiqJbW1Hu5R4x59AGTNKwCdr9DVhvxDUoG
+         fQtjdh5JYvTrVqcMWh/1JxLdrGDGlF0d/ZDtSLR0fHVtJHFRx9YRgyUevCkBnYAxeb+B
+         kA72Q3V6CVQh46eg8Qvbzk6Y1MHg7WUbnRQ+3bI4NHgR58XFEFwmVJcmZ0F5JU6BHHu5
+         Ta7A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1697009813; x=1697614613;
+        h=content-transfer-encoding:autocrypt:subject:from:cc:to
+         :content-language:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VDjaX0sg9ebhJ0I27uKWg4fBYgPHYXROy1G6UFjbhT0=;
+        b=hbR7+UGl+pp+10roGm6Y21Hr8gWz8/Eudvf02GuYj4aQmBSUVh63KT83n1FxvSupEz
+         /HETlQw663scnBJoyjc/dpv8tj9C3mzZYF2Uvnchja9talMOnm7Zvl1vVtzkeTi/hDsT
+         SvhadARdPeoDzRTNiMzgNtQMzT28DchLPOsk8cVkarHjBqVf5QzZECdWfFBnaLyikMH8
+         xD69jue0B7JkRx0cZencdoAMxKAt4junzgjmnP7R59Pj/gudzW6mi3mwtwrocGMBYCHw
+         iyffSqRw/5TJJEEi1C9MzqgFCAIMZQj+BMnK+Cipx1yO7urJRbg6RCbHmlsY7+yh1Mzh
+         /d9g==
+X-Gm-Message-State: AOJu0YyL+2LCqtMJZrHKP0X4Ebgiuu8d1xPtrua9ntG3L8Sq9tnmF8RB
+        l3GWAuXzyM6AmB5wlnDnvlo=
+X-Google-Smtp-Source: AGHT+IHI+ZH74jEpouy7hl2oT8ypw01ow8xGAFob/24Dyy/gE6UWZUCAkf2VWF2Og/PxIC6lfRaTcg==
+X-Received: by 2002:adf:a1d0:0:b0:32d:854d:c4a4 with SMTP id v16-20020adfa1d0000000b0032d854dc4a4mr637282wrv.5.1697009813212;
+        Wed, 11 Oct 2023 00:36:53 -0700 (PDT)
+Received: from ?IPV6:2a01:c22:7237:2c00:c502:a3a3:9e5b:9a02? (dynamic-2a01-0c22-7237-2c00-c502-a3a3-9e5b-9a02.c22.pool.telefonica.de. [2a01:c22:7237:2c00:c502:a3a3:9e5b:9a02])
+        by smtp.googlemail.com with ESMTPSA id s4-20020a5d6a84000000b00327bf4f2f14sm14627496wru.88.2023.10.11.00.36.52
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 11 Oct 2023 00:36:52 -0700 (PDT)
+Message-ID: <c75931ac-7208-4200-9ca1-821629cf5e28@gmail.com>
+Date:   Wed, 11 Oct 2023 09:36:40 +0200
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Content-Language: en-US
+To:     Bjorn Helgaas <bhelgaas@google.com>
+Cc:     "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        Ajay Agarwal <ajayagarwal@google.com>
+From:   Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH] Revert "PCI/ASPM: Disable only ASPM_STATE_L1 when driver,
+ disables L1"
+Autocrypt: addr=hkallweit1@gmail.com; keydata=
+ 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
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add R-Car Gen4 PCIe controller support for host mode.
+This reverts commit fb097dcd5a28c0a2325632405c76a66777a6bed9.
 
-This controller is based on Synopsys DesignWare PCIe. However, this
-particular controller has a number of vendor-specific registers, and as
-such, requires initialization code like mode setting and retraining and
-so on.
+After the referenced commit we may see L1 sub-states being active
+unexpectedly. Following scenario as an example:
+r8169 disables L1 because of known hardware issues on a number of
+systems. Implicitly L1.1 and L1.2 are disabled too.
+On my system L1 and L1.1 work fine, but L1.2 causes missed
+rx packets. Therefore I write 1 to aspm_l1_1.
+This removes ASPM_STATE_L1 from the disabled modes and therefore
+unexpectedly enables also L1.2. So return to the old behavior.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Link: https://lore.kernel.org/linux-pci/20231002151452.GA560499@bhelgaas/
+Cc: stable@vger.kernel.org
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
 ---
- drivers/pci/controller/dwc/Kconfig          |  14 +
- drivers/pci/controller/dwc/Makefile         |   1 +
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 369 ++++++++++++++++++++
- 3 files changed, 384 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-rcar-gen4.c
+Splitted the first version of the patch according to the linked discussion.
+---
+ drivers/pci/pcie/aspm.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index ab96da43e0c2..306fc71493fc 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -286,6 +286,20 @@ config PCIE_QCOM_EP
- 	  to work in endpoint mode. The PCIe controller uses the DesignWare core
- 	  plus Qualcomm-specific hardware wrappers.
- 
-+config PCIE_RCAR_GEN4
-+	tristate
-+
-+config PCIE_RCAR_GEN4_HOST
-+	tristate "Renesas R-Car Gen4 PCIe controller (host mode)"
-+	depends on ARCH_RENESAS || COMPILE_TEST
-+	depends on PCI_MSI
-+	select PCIE_DW_HOST
-+	select PCIE_RCAR_GEN4
-+	help
-+	  Say Y here if you want PCIe controller (host mode) on R-Car Gen4 SoCs.
-+	  To compile this driver as a module, choose M here: the module will be
-+	  called pcie-rcar-gen4.ko. This uses the DesignWare core.
-+
- config PCIE_ROCKCHIP_DW_HOST
- 	bool "Rockchip DesignWare PCIe controller"
- 	select PCIE_DW
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index bf5c311875a1..bac103faa523 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -26,6 +26,7 @@ obj-$(CONFIG_PCIE_TEGRA194) += pcie-tegra194.o
- obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
- obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
- obj-$(CONFIG_PCIE_VISCONTI_HOST) += pcie-visconti.o
-+obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4.o
- 
- # The following drivers are for devices that use the generic ACPI
- # pci_root.c driver but don't support standard ECAM config access.
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-new file mode 100644
-index 000000000000..098b840bcc31
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -0,0 +1,369 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * PCIe controller driver for Renesas R-Car Gen4 Series SoCs
-+ * Copyright (C) 2022-2023 Renesas Electronics Corporation
-+ */
-+
-+#include <linux/delay.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/module.h>
-+#include <linux/of_device.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/pm_runtime.h>
-+#include <linux/reset.h>
-+
-+#include "../../pci.h"
-+#include "pcie-designware.h"
-+
-+/* Renesas-specific */
-+/* PCIe Mode Setting Register 0 */
-+#define PCIEMSR0		0x0000
-+#define BIFUR_MOD_SET_ON	BIT(0)
-+#define DEVICE_TYPE_RC		BIT(4)
-+
-+/* PCIe Interrupt Status 0 */
-+#define PCIEINTSTS0		0x0084
-+
-+/* PCIe Interrupt Status 0 Enable */
-+#define PCIEINTSTS0EN		0x0310
-+#define MSI_CTRL_INT		BIT(26)
-+#define SMLH_LINK_UP		BIT(7)
-+#define RDLH_LINK_UP		BIT(6)
-+
-+/* PCIe DMA Interrupt Status Enable */
-+#define PCIEDMAINTSTSEN		0x0314
-+#define PCIEDMAINTSTSEN_INIT	GENMASK(15, 0)
-+
-+/* PCIe Reset Control Register 1 */
-+#define PCIERSTCTRL1		0x0014
-+#define APP_HOLD_PHY_RST	BIT(16)
-+#define APP_LTSSM_ENABLE	BIT(0)
-+
-+#define RCAR_NUM_SPEED_CHANGE_RETRIES	10
-+#define RCAR_MAX_LINK_SPEED		4
-+
-+struct rcar_gen4_pcie {
-+	struct dw_pcie dw;
-+	void __iomem *base;
-+	struct platform_device *pdev;
-+	enum dw_pcie_device_mode mode;
-+};
-+#define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
-+
-+static void rcar_gen4_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar,
-+					bool enable)
-+{
-+	u32 val;
-+
-+	val = readl(rcar->base + PCIERSTCTRL1);
-+	if (enable) {
-+		val |= APP_LTSSM_ENABLE;
-+		val &= ~APP_HOLD_PHY_RST;
-+	} else {
-+		/*
-+		 * Since the datasheet of R-Car doesn't mention how to assert
-+		 * the APP_HOLD_PHY_RST, don't assert it again. Otherwise,
-+		 * hang-up issue happened in the dw_edma_core_off() when
-+		 * the controller didn't detect a PCI device.
-+		 */
-+		val &= ~APP_LTSSM_ENABLE;
-+	}
-+	writel(val, rcar->base + PCIERSTCTRL1);
-+}
-+
-+static int rcar_gen4_pcie_link_up(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	u32 val, mask;
-+
-+	val = readl(rcar->base + PCIEINTSTS0);
-+	mask = RDLH_LINK_UP | SMLH_LINK_UP;
-+
-+	return (val & mask) == mask;
-+}
-+
-+/*
-+ * Manually initiate the speed change. Return 0 if change succeeded; otherwise
-+ * -ETIMEDOUT.
-+ */
-+static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
-+{
-+	u32 val;
-+	int i;
-+
-+	val = dw_pcie_readl_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val &= ~PORT_LOGIC_SPEED_CHANGE;
-+	dw_pcie_writel_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+
-+	val = dw_pcie_readl_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	val |= PORT_LOGIC_SPEED_CHANGE;
-+	dw_pcie_writel_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+
-+	for (i = 0; i < RCAR_NUM_SPEED_CHANGE_RETRIES; i++) {
-+		val = dw_pcie_readl_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+		if (!(val & PORT_LOGIC_SPEED_CHANGE))
-+			return 0;
-+		usleep_range(10000, 11000);
-+	}
-+
-+	return -ETIMEDOUT;
-+}
-+
-+/*
-+ * Enable LTSSM of this controller and manually initiate the speed change.
-+ * Always return 0.
-+ */
-+static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	int i, changes;
-+
-+	rcar_gen4_pcie_ltssm_enable(rcar, true);
-+
-+	/*
-+	 * Require direct speed change with retrying here if the link_gen is
-+	 * PCIe Gen2 or higher.
-+	 */
-+	changes = min_not_zero(dw->link_gen, RCAR_MAX_LINK_SPEED) - 1;
-+
-+	/*
-+	 * Since dw_pcie_setup_rc() sets it once, PCIe Gen2 will be trained.
-+	 * So, this needs remaining times for up to PCIe Gen4 if RC mode.
-+	 */
-+	if (changes && rcar->mode == DW_PCIE_RC_TYPE)
-+		changes--;
-+
-+	for (i = 0; i < changes; i++) {
-+		/* It may not be connected in EP mode yet. So, break the loop */
-+		if (rcar_gen4_pcie_speed_change(dw))
-+			break;
-+	}
-+
-+	return 0;
-+}
-+
-+static void rcar_gen4_pcie_stop_link(struct dw_pcie *dw)
-+{
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+
-+	rcar_gen4_pcie_ltssm_enable(rcar, false);
-+}
-+
-+static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+	u32 val;
-+	int ret;
-+
-+	ret = clk_bulk_prepare_enable(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
-+	if (ret) {
-+		dev_err(dw->dev, "Enabling core clocks failed\n");
-+		return ret;
-+	}
-+
-+	if (!reset_control_status(dw->core_rsts[DW_PCIE_PWR_RST].rstc))
-+		reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
-+
-+	val = readl(rcar->base + PCIEMSR0);
-+	if (rcar->mode == DW_PCIE_RC_TYPE) {
-+		val |= DEVICE_TYPE_RC;
-+	} else {
-+		ret = -EINVAL;
-+		goto err_unprepare;
-+	}
-+
-+	if (dw->num_lanes < 4)
-+		val |= BIFUR_MOD_SET_ON;
-+
-+	writel(val, rcar->base + PCIEMSR0);
-+
-+	ret = reset_control_deassert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
-+	if (ret)
-+		goto err_unprepare;
-+
-+	return 0;
-+
-+err_unprepare:
-+	clk_bulk_disable_unprepare(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
-+
-+	return ret;
-+}
-+
-+static void rcar_gen4_pcie_common_deinit(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie *dw = &rcar->dw;
-+
-+	reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
-+	clk_bulk_disable_unprepare(DW_PCIE_NUM_CORE_CLKS, dw->core_clks);
-+}
-+
-+static int rcar_gen4_pcie_prepare(struct rcar_gen4_pcie *rcar)
-+{
-+	struct device *dev = rcar->dw.dev;
-+	int err;
-+
-+	pm_runtime_enable(dev);
-+	err = pm_runtime_resume_and_get(dev);
-+	if (err < 0) {
-+		dev_err(dev, "Runtime resume failed\n");
-+		pm_runtime_disable(dev);
-+	}
-+
-+	return err;
-+}
-+
-+static void rcar_gen4_pcie_unprepare(struct rcar_gen4_pcie *rcar)
-+{
-+	struct device *dev = rcar->dw.dev;
-+
-+	pm_runtime_put(dev);
-+	pm_runtime_disable(dev);
-+}
-+
-+static int rcar_gen4_pcie_get_resources(struct rcar_gen4_pcie *rcar)
-+{
-+	/* Renesas-specific registers */
-+	rcar->base = devm_platform_ioremap_resource_byname(rcar->pdev, "app");
-+
-+	return PTR_ERR_OR_ZERO(rcar->base);
-+}
-+
-+static const struct dw_pcie_ops dw_pcie_ops = {
-+	.start_link = rcar_gen4_pcie_start_link,
-+	.stop_link = rcar_gen4_pcie_stop_link,
-+	.link_up = rcar_gen4_pcie_link_up,
-+};
-+
-+static struct rcar_gen4_pcie *rcar_gen4_pcie_alloc(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct rcar_gen4_pcie *rcar;
-+
-+	rcar = devm_kzalloc(dev, sizeof(*rcar), GFP_KERNEL);
-+	if (!rcar)
-+		return ERR_PTR(-ENOMEM);
-+
-+	rcar->dw.ops = &dw_pcie_ops;
-+	rcar->dw.dev = dev;
-+	rcar->pdev = pdev;
-+	dw_pcie_cap_set(&rcar->dw, EDMA_UNROLL);
-+	dw_pcie_cap_set(&rcar->dw, REQ_RES);
-+	platform_set_drvdata(pdev, rcar);
-+
-+	return rcar;
-+}
-+
-+/* Host mode */
-+static int rcar_gen4_pcie_host_init(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+	int ret;
-+	u32 val;
-+
-+	gpiod_set_value_cansleep(dw->pe_rst, 1);
-+
-+	ret = rcar_gen4_pcie_common_init(rcar);
-+	if (ret)
-+		return ret;
-+
-+	/* Enable MSI interrupt signal */
-+	val = readl(rcar->base + PCIEINTSTS0EN);
-+	val |= MSI_CTRL_INT;
-+	writel(val, rcar->base + PCIEINTSTS0EN);
-+
-+	msleep(PCIE_T_PVPERL_MS);	/* pe_rst requires 100msec delay */
-+
-+	gpiod_set_value_cansleep(dw->pe_rst, 0);
-+
-+	return 0;
-+}
-+
-+static void rcar_gen4_pcie_host_deinit(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *dw = to_dw_pcie_from_pp(pp);
-+	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
-+
-+	gpiod_set_value_cansleep(dw->pe_rst, 1);
-+	rcar_gen4_pcie_common_deinit(rcar);
-+}
-+
-+static const struct dw_pcie_host_ops rcar_gen4_pcie_host_ops = {
-+	.host_init = rcar_gen4_pcie_host_init,
-+	.host_deinit = rcar_gen4_pcie_host_deinit,
-+};
-+
-+static int rcar_gen4_add_dw_pcie_rp(struct rcar_gen4_pcie *rcar)
-+{
-+	struct dw_pcie_rp *pp = &rcar->dw.pp;
-+
-+	pp->num_vectors = MAX_MSI_IRQS;
-+	pp->ops = &rcar_gen4_pcie_host_ops;
-+	rcar->mode = DW_PCIE_RC_TYPE;
-+
-+	return dw_pcie_host_init(pp);
-+}
-+
-+static void rcar_gen4_remove_dw_pcie_rp(struct rcar_gen4_pcie *rcar)
-+{
-+	dw_pcie_host_deinit(&rcar->dw.pp);
-+}
-+
-+static int rcar_gen4_pcie_probe(struct platform_device *pdev)
-+{
-+	struct rcar_gen4_pcie *rcar;
-+	int err;
-+
-+	rcar = rcar_gen4_pcie_alloc(pdev);
-+	if (IS_ERR(rcar))
-+		return PTR_ERR(rcar);
-+
-+	err = rcar_gen4_pcie_get_resources(rcar);
-+	if (err)
-+		return err;
-+
-+	err = rcar_gen4_pcie_prepare(rcar);
-+	if (err)
-+		return err;
-+
-+	err = rcar_gen4_add_dw_pcie_rp(rcar);
-+	if (err)
-+		goto err_unprepare;
-+
-+	return 0;
-+
-+err_unprepare:
-+	rcar_gen4_pcie_unprepare(rcar);
-+
-+	return err;
-+}
-+
-+static void rcar_gen4_pcie_remove(struct platform_device *pdev)
-+{
-+	struct rcar_gen4_pcie *rcar = platform_get_drvdata(pdev);
-+
-+	rcar_gen4_remove_dw_pcie_rp(rcar);
-+	rcar_gen4_pcie_unprepare(rcar);
-+}
-+
-+static const struct of_device_id rcar_gen4_pcie_of_match[] = {
-+	{ .compatible = "renesas,rcar-gen4-pcie", },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, rcar_gen4_pcie_of_match);
-+
-+static struct platform_driver rcar_gen4_pcie_driver = {
-+	.driver = {
-+		.name = "pcie-rcar-gen4",
-+		.of_match_table = rcar_gen4_pcie_of_match,
-+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
-+	},
-+	.probe = rcar_gen4_pcie_probe,
-+	.remove_new = rcar_gen4_pcie_remove,
-+};
-+module_platform_driver(rcar_gen4_pcie_driver);
-+
-+MODULE_DESCRIPTION("Renesas R-Car Gen4 PCIe controller driver");
-+MODULE_LICENSE("GPL");
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 1bf630059264..530c3bb5708c 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1059,7 +1059,8 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 	if (state & PCIE_LINK_STATE_L0S)
+ 		link->aspm_disable |= ASPM_STATE_L0S;
+ 	if (state & PCIE_LINK_STATE_L1)
+-		link->aspm_disable |= ASPM_STATE_L1;
++		/* L1 PM substates require L1 */
++		link->aspm_disable |= ASPM_STATE_L1 | ASPM_STATE_L1SS;
+ 	if (state & PCIE_LINK_STATE_L1_1)
+ 		link->aspm_disable |= ASPM_STATE_L1_1;
+ 	if (state & PCIE_LINK_STATE_L1_2)
 -- 
-2.25.1
+2.42.0
 
