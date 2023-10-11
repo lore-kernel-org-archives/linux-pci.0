@@ -2,48 +2,48 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id EA6BECD6E5A
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:19:23 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2382ACD6E5D
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:19:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234757AbjJKLTW (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:19:22 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34892 "EHLO
+        id S234795AbjJKLTX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Oct 2023 07:19:23 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34876 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346319AbjJKLTQ (ORCPT
+        with ESMTP id S1346323AbjJKLTQ (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:19:16 -0400
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3F33594;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3A9D78F;
         Wed, 11 Oct 2023 04:19:15 -0700 (PDT)
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39B8Xa0e004047;
-        Wed, 11 Oct 2023 11:18:49 GMT
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39B8phZW000559;
+        Wed, 11 Oct 2023 11:18:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=nRyixbRMy/pqDX+0KMIbtD9m8Jzt5K5DBOTwDP9RhRQ=;
- b=jpKYDuvsCz/4km0qkiA/U57oZZGaVhbuqSmurDtO00lFQpDOXt0eaGPIr6ibQnQwMmAA
- mjCZUtm584qTrU17TIRrtu45kQ1AmxSpfLokL70msocnh2vJLam9p5PzCt3O9iK8XJyh
- 6sMkksAtnKLi5PNTiKnytJ78KqIBETnIBc8Jc44meJvL1EeZ3K5FXNjhkAyN1TvS/S1A
- /JnQ44NOZKb0ujtXy9tTKi3tjGm/no1oqTXFZ+mwwsrKEf0mSgKPLcFjscWsRkA7YMOd
- V7BFgz2HK+MUkBq8OAHsBmbXdcZKFGJzAufckK1+ZLJgtVk0rhluBasbCMhLDjM6xo3l 3Q== 
+ subject : date : message-id; s=qcppdkim1;
+ bh=DRVR115ULH05dEvTGRQlvYcaD3JskA4PUOvyleNRpIM=;
+ b=QijTvPTl3CqjGvQvLBuj3rIhU+aONPBq/2DujmDeC9Fh0vP7nCxAVgn7dXzsMavNkXGL
+ 1mvlReGP1Z1y1xXOLlbZ0NNZp5E5CmxuaOZ0sSL/itoorILNQcRuysPTjO0eDcK4gkQ+
+ zyZ6opcqxTqPetD9y4UGHfYj17BcMQyNiL4eXWciKey+s3V7ShMSFMsds7nDKFzC9eX/
+ dN8IPxHBHEjS41wJ+5qwTrNvihzzdZZ/+obSRzBpNarMBhBQmQCYsKileMWHOi8LAci2
+ gMLlNU+tZmPppRj4mFLa/y2+C4R91gx46nHa9Hhs+ximaaM1fhfOPw1F5fxHEAGDOcHq Zw== 
 Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tn3s1awjb-1
+        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3tnnvw8mmj-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 11 Oct 2023 11:18:49 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 39BBIkZA011282;
-        Wed, 11 Oct 2023 11:18:46 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3tk0dkmaxr-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
         Wed, 11 Oct 2023 11:18:46 +0000
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 39BBIc0Y011193;
+        Wed, 11 Oct 2023 11:18:38 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 3tk0dkmawx-1
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+        Wed, 11 Oct 2023 11:18:38 +0000
 Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39BBIjju011276;
-        Wed, 11 Oct 2023 11:18:45 GMT
+        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39BBIcRd011187;
+        Wed, 11 Oct 2023 11:18:38 GMT
 Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 39BBIjJA011271;
-        Wed, 11 Oct 2023 11:18:45 +0000
+        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 39BBIbTT011186;
+        Wed, 11 Oct 2023 11:18:38 +0000
 Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id 910A6D83; Wed, 11 Oct 2023 16:48:44 +0530 (+0530)
+        id CBB0343B8; Wed, 11 Oct 2023 16:48:36 +0530 (+0530)
 From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
 To:     agross@kernel.org, andersson@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
@@ -57,99 +57,58 @@ Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>, linux-pci@vger.kernel.org,
-        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, mhi@lists.linux.dev,
         linux-phy@lists.infradead.org
-Subject: [PATCH v2 4/4] arm64: dts: qcom: sa8775p: Add ep pcie0 controller node
-Date:   Wed, 11 Oct 2023 16:48:29 +0530
-Message-Id: <1697023109-23671-5-git-send-email-quic_msarkar@quicinc.com>
+Subject: [PATCH v2 0/4] arm64: qcom: sa8775p: add support for EP PCIe
+Date:   Wed, 11 Oct 2023 16:48:25 +0530
+Message-Id: <1697023109-23671-1-git-send-email-quic_msarkar@quicinc.com>
 X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1697023109-23671-1-git-send-email-quic_msarkar@quicinc.com>
-References: <1697023109-23671-1-git-send-email-quic_msarkar@quicinc.com>
 X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: XvdSTA4mbZMkZRyWxiqob6pl2llgrPQE
-X-Proofpoint-GUID: XvdSTA4mbZMkZRyWxiqob6pl2llgrPQE
+X-Proofpoint-ORIG-GUID: 1k85JyqyEewYSIU2u_O30ftyJ_7XE6Ux
+X-Proofpoint-GUID: 1k85JyqyEewYSIU2u_O30ftyJ_7XE6Ux
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.267,Aquarius:18.0.980,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-10-11_09,2023-10-11_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- malwarescore=0 suspectscore=0 bulkscore=0 spamscore=0 impostorscore=0
- lowpriorityscore=0 clxscore=1015 mlxlogscore=999 mlxscore=0 adultscore=0
- phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
+ impostorscore=0 mlxlogscore=399 bulkscore=0 adultscore=0 phishscore=0
+ clxscore=1015 spamscore=0 priorityscore=1501 malwarescore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.12.0-2309180000 definitions=main-2310110099
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add ep pcie dtsi node for pcie0 controller found on sa8775p platform.
-it supports x2 link width.
+This series adds the relavent DT bindings, new compatible string,
+update PHY, add support to EPF driver and add EP PCIe node in dtsi
+file for ep pcie0 controller.
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
----
- arch/arm64/boot/dts/qcom/sa8775p.dtsi | 48 +++++++++++++++++++++++++++++++++++
- 1 file changed, 48 insertions(+)
+v1 -> v2:
+- update description for dma
+- Reusing qcom,sdx55-pcie-ep compatibe so remove compaitable
+  for sa8775p
+- sort the defines in phy header file and remove extra defines
+- add const in return type pci_epf_header and remove MHI_EPF_USE_DMA
+  flag as hdma patch is not ready
+- add fallback compatiable as qcom,sdx55-pcie-ep, add iommu property
 
-diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-index b6a93b1..485f626 100644
---- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-@@ -2608,4 +2608,52 @@
- 
- 		status = "disabled";
- 	};
-+
-+	pcie0_ep: pcie-ep@1c00000 {
-+		compatible = "qcom,sa8775p-pcie-ep", "qcom,sdx55-pcie-ep";
-+		reg = <0x0 0x01c00000 0x0 0x3000>,
-+		      <0x0 0x40000000 0x0 0xf20>,
-+		      <0x0 0x40000f20 0x0 0xa8>,
-+		      <0x0 0x40001000 0x0 0x4000>,
-+		      <0x0 0x40200000 0x0 0x100000>,
-+		      <0x0 0x01c03000 0x0 0x1000>,
-+		      <0x0 0x40005000 0x0 0x2000>;
-+		reg-names = "parf", "dbi", "elbi", "atu", "addr_space",
-+			    "mmio", "dma";
-+
-+		clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-+			<&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+			<&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+			<&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+			<&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>;
-+
-+		clock-names = "aux",
-+			      "cfg",
-+			      "bus_master",
-+			      "bus_slave",
-+			      "slave_q2a";
-+
-+		interrupts = <GIC_SPI 306 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-+			     <GIC_SPI 630 IRQ_TYPE_LEVEL_HIGH>;
-+
-+		interrupt-names = "global", "doorbell", "dma";
-+
-+		interconnects = <&pcie_anoc MASTER_PCIE_0 0 &mc_virt SLAVE_EBI1 0>,
-+				<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_PCIE_0 0>;
-+		interconnect-names = "pcie-mem", "cpu-pcie";
-+
-+		iommu-map = <0x0 &pcie_smmu 0x0000 0x1>,
-+			    <0x100 &pcie_smmu 0x0001 0x1>;
-+
-+		resets = <&gcc GCC_PCIE_0_BCR>;
-+		reset-names = "core";
-+		power-domains = <&gcc PCIE_0_GDSC>;
-+		phys = <&pcie0_phy>;
-+		phy-names = "pciephy";
-+		max-link-speed = <3>;
-+		num-lanes = <2>;
-+
-+		status = "disabled";
-+	};
- };
+Mrinmay Sarkar (4):
+  dt-bindings: PCI: qcom-ep: Add support for SA8775P SoC
+  phy: qcom-qmp-pcie: add endpoint support for sa8775p
+  PCI: epf-mhi: Add support for SA8775P
+  arm64: dts: qcom: sa8775p: Add ep pcie0 controller node
+
+ .../devicetree/bindings/pci/qcom,pcie-ep.yaml      | 131 +++++++++++++++++----
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi              |  48 ++++++++
+ drivers/pci/endpoint/functions/pci-epf-mhi.c       |  17 +++
+ drivers/phy/qualcomm/phy-qcom-qmp-pcie.c           |  41 +++++++
+ drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h         |   2 +
+ 5 files changed, 217 insertions(+), 22 deletions(-)
+
 -- 
 2.7.4
 
