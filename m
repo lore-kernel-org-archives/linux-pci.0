@@ -2,113 +2,192 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D7DC8CD6E5B
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:02:29 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 320F2CD6E5C
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:05:28 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346709AbjJKLCZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:02:25 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43010 "EHLO
+        id S231918AbjJKLF0 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Oct 2023 07:05:26 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48788 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346690AbjJKLCX (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:02:23 -0400
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C24E3B6;
-        Wed, 11 Oct 2023 04:02:20 -0700 (PDT)
-Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.207])
-        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4S58tn6d4Rz6K6FZ;
-        Wed, 11 Oct 2023 19:00:17 +0800 (CST)
-Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Wed, 11 Oct
- 2023 12:02:17 +0100
-Date:   Wed, 11 Oct 2023 12:02:17 +0100
-From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To:     Bjorn Helgaas <helgaas@kernel.org>
-CC:     <linux-pci@vger.kernel.org>,
-        Ilpo =?UTF-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        with ESMTP id S229750AbjJKLFZ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:05:25 -0400
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 06D5094;
+        Wed, 11 Oct 2023 04:05:22 -0700 (PDT)
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
+        (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+        (Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+        by ex01.ufhost.com (Postfix) with ESMTP id 6734F24E313;
+        Wed, 11 Oct 2023 19:05:18 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 11 Oct
+ 2023 19:05:18 +0800
+Received: from ubuntu.localdomain (183.27.96.95) by EXMBX171.cuchost.com
+ (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 11 Oct
+ 2023 19:05:17 +0800
+From:   Minda Chen <minda.chen@starfivetech.com>
+To:     Conor Dooley <conor@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH 05/10] PCI/ATS: Use FIELD_GET()
-Message-ID: <20231011120217.0000770b@Huawei.com>
-In-Reply-To: <20231010204436.1000644-6-helgaas@kernel.org>
-References: <20231010204436.1000644-1-helgaas@kernel.org>
-        <20231010204436.1000644-6-helgaas@kernel.org>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+        "Daire McNamara" <daire.mcnamara@microchip.com>,
+        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Mason Huo <mason.huo@starfivetech.com>,
+        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+        Kevin Xie <kevin.xie@starfivetech.com>,
+        Minda Chen <minda.chen@starfivetech.com>
+Subject: [PATCH v8 02/22] PCI: microchip: Move pcie-microchip-host.c to plda directory
+Date:   Wed, 11 Oct 2023 19:04:54 +0800
+Message-ID: <20231011110514.107528-3-minda.chen@starfivetech.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231011110514.107528-1-minda.chen@starfivetech.com>
+References: <20231011110514.107528-1-minda.chen@starfivetech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-Originating-IP: [10.202.227.76]
-X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
-X-CFilter-Loop: Reflected
+Content-Type: text/plain
+X-Originating-IP: [183.27.96.95]
+X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX171.cuchost.com
+ (172.16.6.91)
+X-YovoleRuleAgent: yovoleflag
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Tue, 10 Oct 2023 15:44:31 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+For Microchip Polarfire PCIe host is PLDA XpressRich IP,
+move to plda directory. Prepare for refactor the codes.
 
-> From: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> Use FIELD_GET() to remove dependences on the field position, i.e., the
-> shift value.  No functional change intended.
-> 
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-One trivial comment inline. Either way.
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+---
+ MAINTAINERS                                        |  4 ++--
+ drivers/pci/controller/Kconfig                     |  9 +--------
+ drivers/pci/controller/Makefile                    |  2 +-
+ drivers/pci/controller/plda/Kconfig                | 14 ++++++++++++++
+ drivers/pci/controller/plda/Makefile               |  2 ++
+ .../controller/{ => plda}/pcie-microchip-host.c    |  2 +-
+ 6 files changed, 21 insertions(+), 12 deletions(-)
+ create mode 100644 drivers/pci/controller/plda/Kconfig
+ create mode 100644 drivers/pci/controller/plda/Makefile
+ rename drivers/pci/controller/{ => plda}/pcie-microchip-host.c (99%)
 
-> ---
->  drivers/pci/ats.c             | 7 ++-----
->  include/uapi/linux/pci_regs.h | 1 +
->  2 files changed, 3 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
-> index f9cc2e10b676..c570892b2090 100644
-> --- a/drivers/pci/ats.c
-> +++ b/drivers/pci/ats.c
-> @@ -9,6 +9,7 @@
->   * Copyright (C) 2011 Advanced Micro Devices,
->   */
->  
-> +#include <linux/bitfield.h>
->  #include <linux/export.h>
->  #include <linux/pci-ats.h>
->  #include <linux/pci.h>
-> @@ -480,8 +481,6 @@ int pci_pasid_features(struct pci_dev *pdev)
->  }
->  EXPORT_SYMBOL_GPL(pci_pasid_features);
->  
-> -#define PASID_NUMBER_SHIFT	8
-> -#define PASID_NUMBER_MASK	(0x1f << PASID_NUMBER_SHIFT)
->  /**
->   * pci_max_pasids - Get maximum number of PASIDs supported by device
->   * @pdev: PCI device structure
-> @@ -503,9 +502,7 @@ int pci_max_pasids(struct pci_dev *pdev)
->  
->  	pci_read_config_word(pdev, pasid + PCI_PASID_CAP, &supported);
->  
-> -	supported = (supported & PASID_NUMBER_MASK) >> PASID_NUMBER_SHIFT;
-> -
-> -	return (1 << supported);
-> +	return (1 << FIELD_GET(PCI_PASID_CAP_WIDTH, supported));
-
-Could drop the bonus set of brackets..
-
->  }
->  EXPORT_SYMBOL_GPL(pci_max_pasids);
->  #endif /* CONFIG_PCI_PASID */
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 6af1f8d53e97..833e5fb40ea5 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -932,6 +932,7 @@
->  #define PCI_PASID_CAP		0x04    /* PASID feature register */
->  #define  PCI_PASID_CAP_EXEC	0x0002	/* Exec permissions Supported */
->  #define  PCI_PASID_CAP_PRIV	0x0004	/* Privilege Mode Supported */
-> +#define  PCI_PASID_CAP_WIDTH	0x1f00
->  #define PCI_PASID_CTRL		0x06    /* PASID control register */
->  #define  PCI_PASID_CTRL_ENABLE	0x0001	/* Enable bit */
->  #define  PCI_PASID_CTRL_EXEC	0x0002	/* Exec permissions Enable */
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 6c4cce45a09d..be3a56b6cfc7 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16645,7 +16645,7 @@ M:	Daire McNamara <daire.mcnamara@microchip.com>
+ L:	linux-pci@vger.kernel.org
+ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/microchip*
+-F:	drivers/pci/controller/*microchip*
++F:	drivers/pci/controller/plda/*microchip*
+ 
+ PCIE DRIVER FOR QUALCOMM MSM
+ M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+@@ -18441,7 +18441,7 @@ F:	drivers/char/hw_random/mpfs-rng.c
+ F:	drivers/clk/microchip/clk-mpfs*.c
+ F:	drivers/i2c/busses/i2c-microchip-corei2c.c
+ F:	drivers/mailbox/mailbox-mpfs.c
+-F:	drivers/pci/controller/pcie-microchip-host.c
++F:	drivers/pci/controller/plda/pcie-microchip-host.c
+ F:	drivers/pwm/pwm-microchip-core.c
+ F:	drivers/reset/reset-mpfs.c
+ F:	drivers/rtc/rtc-mpfs.c
+diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
+index c0c3f2824990..80e23013c229 100644
+--- a/drivers/pci/controller/Kconfig
++++ b/drivers/pci/controller/Kconfig
+@@ -215,14 +215,6 @@ config PCIE_MT7621
+ 	help
+ 	  This selects a driver for the MediaTek MT7621 PCIe Controller.
+ 
+-config PCIE_MICROCHIP_HOST
+-	tristate "Microchip AXI PCIe controller"
+-	depends on PCI_MSI && OF
+-	select PCI_HOST_COMMON
+-	help
+-	  Say Y here if you want kernel to support the Microchip AXI PCIe
+-	  Host Bridge driver.
+-
+ config PCI_HYPERV_INTERFACE
+ 	tristate "Microsoft Hyper-V PCI Interface"
+ 	depends on ((X86 && X86_64) || ARM64) && HYPERV && PCI_MSI
+@@ -345,4 +337,5 @@ config PCIE_XILINX_CPM
+ source "drivers/pci/controller/cadence/Kconfig"
+ source "drivers/pci/controller/dwc/Kconfig"
+ source "drivers/pci/controller/mobiveil/Kconfig"
++source "drivers/pci/controller/plda/Kconfig"
+ endmenu
+diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
+index 37c8663de7fe..93236dc97b21 100644
+--- a/drivers/pci/controller/Makefile
++++ b/drivers/pci/controller/Makefile
+@@ -32,7 +32,6 @@ obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
+ obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
+ obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
+ obj-$(CONFIG_PCIE_MEDIATEK_GEN3) += pcie-mediatek-gen3.o
+-obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
+ obj-$(CONFIG_VMD) += vmd.o
+ obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
+ obj-$(CONFIG_PCI_LOONGSON) += pci-loongson.o
+@@ -43,6 +42,7 @@ obj-$(CONFIG_PCIE_MT7621) += pcie-mt7621.o
+ # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
+ obj-y				+= dwc/
+ obj-y				+= mobiveil/
++obj-y				+= plda/
+ 
+ 
+ # The following drivers are for devices that use the generic ACPI
+diff --git a/drivers/pci/controller/plda/Kconfig b/drivers/pci/controller/plda/Kconfig
+new file mode 100644
+index 000000000000..5cb3be4fc98c
+--- /dev/null
++++ b/drivers/pci/controller/plda/Kconfig
+@@ -0,0 +1,14 @@
++# SPDX-License-Identifier: GPL-2.0
++
++menu "PLDA-based PCIe controllers"
++	depends on PCI
++
++config PCIE_MICROCHIP_HOST
++	tristate "Microchip AXI PCIe controller"
++	depends on PCI_MSI && OF
++	select PCI_HOST_COMMON
++	help
++	  Say Y here if you want kernel to support the Microchip AXI PCIe
++	  Host Bridge driver.
++
++endmenu
+diff --git a/drivers/pci/controller/plda/Makefile b/drivers/pci/controller/plda/Makefile
+new file mode 100644
+index 000000000000..e1a265cbf91c
+--- /dev/null
++++ b/drivers/pci/controller/plda/Makefile
+@@ -0,0 +1,2 @@
++# SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
+diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
+similarity index 99%
+rename from drivers/pci/controller/pcie-microchip-host.c
+rename to drivers/pci/controller/plda/pcie-microchip-host.c
+index 137fb8570ba2..cb09a8137e25 100644
+--- a/drivers/pci/controller/pcie-microchip-host.c
++++ b/drivers/pci/controller/plda/pcie-microchip-host.c
+@@ -18,7 +18,7 @@
+ #include <linux/pci-ecam.h>
+ #include <linux/platform_device.h>
+ 
+-#include "../pci.h"
++#include "../../pci.h"
+ 
+ /* Number of MSI IRQs */
+ #define MC_MAX_NUM_MSI_IRQS			32
+-- 
+2.17.1
 
