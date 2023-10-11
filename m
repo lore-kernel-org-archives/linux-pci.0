@@ -2,180 +2,86 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 536F2CD6E5A
-	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:37:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0BEB8CD6E5A
+	for <linux-pci@archiver.kernel.org>; Wed, 11 Oct 2023 11:37:54 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234809AbjJKLhL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 11 Oct 2023 07:37:11 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36096 "EHLO
+        id S231447AbjJKLhw (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 11 Oct 2023 07:37:52 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53106 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234772AbjJKLhL (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:37:11 -0400
-Received: from mail-yw1-x112a.google.com (mail-yw1-x112a.google.com [IPv6:2607:f8b0:4864:20::112a])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 7D83394
-        for <linux-pci@vger.kernel.org>; Wed, 11 Oct 2023 04:37:09 -0700 (PDT)
-Received: by mail-yw1-x112a.google.com with SMTP id 00721157ae682-5a7ab31fb8bso29478787b3.1
-        for <linux-pci@vger.kernel.org>; Wed, 11 Oct 2023 04:37:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1697024228; x=1697629028; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=ADnQSRKfiE11Fw6NWJPg4jyr5BhP2bgI5UYJpaw9Vtc=;
-        b=DSI5lwUwDGyERG61xBXpUKSy3GvB/kfAiO+etSzyzwvKW7xInaTSA5mMhXMj4UTCGj
-         56ph2HQPIykn15aWXu4RdNCQ6i6VnEbzP9NZV6mqxkNXck8kJd7F8BQXN+Ug4RM3FeE2
-         OkXA5YAVaHycYoGtI8kUGVIR42GEyf4RQzfTY3JTBW6a84+wuHiIV9Ju5ZIXmFdrvhnR
-         +8pHhBHViQZNAWFR6NIwlC8sBhI1oDJaBRLkyV2T7rLbbHeCLKAKDsed9qIUkKfZ9vLG
-         wJbHF5vecCFG0w4mzYWYIy6rFyUZl8fB+6goZHXEtnjFpS3LsAhbvojpFkW6pUduu4zg
-         NCUA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697024228; x=1697629028;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ADnQSRKfiE11Fw6NWJPg4jyr5BhP2bgI5UYJpaw9Vtc=;
-        b=XOtqbRZVSN0g2/deRk8SYVXit806VahYpU+1Wk3LoQJ1WN36iqRHewv8DresdW1VjF
-         DqEMPDrAIR4gPGIIfYMNMA4P4jPg6+223LcEkDtmYqj5VCMJaVnfi9nB18awz1nnBazg
-         IUWliBL95B4aiNGn1UP93kBCvhj500pPSVI/NXUJ9rQ8p4BGyqxi3KmCeD3IJR+oIhxo
-         aJAG7kapg7xeYg6O8HlGJ9NNIKOQPYtXaUDdZ5hiuQMf3HgcMlA9I1C/F2d8D2mECMz8
-         AZoPY0uTqLiCX3y5aZL3Fi6N6FKFH2m5oF1FM4zMa337CinfUSD+SO05ftcdMSe+F01Y
-         fjRw==
-X-Gm-Message-State: AOJu0YwVAUw65t5+0GErINm23yTQNfIbVy8CSvZ/4H9Ayc/Vx32cw/jb
-        g6+kAsR3UZTdyAZd9cFuYkmNpgV4PdfvCNUvqr0itg==
-X-Google-Smtp-Source: AGHT+IFRpepGKSGvXbAwCvg5/0it467EZf0qhpiwowhNbkcbVmcXi8gnzAdqnBvYtzILhbVKUdAlRHR97OtZsiekmHc=
-X-Received: by 2002:a5b:20d:0:b0:d15:7402:f7cd with SMTP id
- z13-20020a5b020d000000b00d157402f7cdmr19392771ybl.27.1697024228604; Wed, 11
- Oct 2023 04:37:08 -0700 (PDT)
-MIME-Version: 1.0
-References: <1697023109-23671-1-git-send-email-quic_msarkar@quicinc.com> <1697023109-23671-3-git-send-email-quic_msarkar@quicinc.com>
-In-Reply-To: <1697023109-23671-3-git-send-email-quic_msarkar@quicinc.com>
-From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date:   Wed, 11 Oct 2023 14:36:55 +0300
-Message-ID: <CAA8EJpoLxeSvxjcyq1BMR9XuAffrxLmO-eaBYJ+Fhnb4zYmxUQ@mail.gmail.com>
-Subject: Re: [PATCH v2 2/4] phy: qcom-qmp-pcie: add endpoint support for sa8775p
-To:     Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Cc:     agross@kernel.org, andersson@kernel.org,
-        krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, mani@kernel.org,
-        quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        robh@kernel.org, quic_krichai@quicinc.com,
-        quic_vbadigan@quicinc.com, quic_parass@quicinc.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
+        with ESMTP id S1346422AbjJKLJD (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 11 Oct 2023 07:09:03 -0400
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 153C53591;
+        Wed, 11 Oct 2023 04:07:45 -0700 (PDT)
+Received: from lhrpeml500005.china.huawei.com (unknown [172.18.147.226])
+        by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4S59102Kpcz6K62T;
+        Wed, 11 Oct 2023 19:05:40 +0800 (CST)
+Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.31; Wed, 11 Oct
+ 2023 12:07:40 +0100
+Date:   Wed, 11 Oct 2023 12:07:39 +0100
+From:   Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To:     Bjorn Helgaas <helgaas@kernel.org>
+CC:     <linux-pci@vger.kernel.org>,
+        Ilpo =?UTF-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Vinod Koul <vkoul@kernel.org>, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, mhi@lists.linux.dev,
-        linux-phy@lists.infradead.org
-Content-Type: text/plain; charset="UTF-8"
+        <linux-kernel@vger.kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH 06/10] PCI/DPC: Use FIELD_GET()
+Message-ID: <20231011120739.00005d7d@Huawei.com>
+In-Reply-To: <20231010204436.1000644-7-helgaas@kernel.org>
+References: <20231010204436.1000644-1-helgaas@kernel.org>
+        <20231010204436.1000644-7-helgaas@kernel.org>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-Originating-IP: [10.202.227.76]
+X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
+X-CFilter-Loop: Reflected
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 11 Oct 2023 at 14:19, Mrinmay Sarkar <quic_msarkar@quicinc.com> wrote:
->
-> Add support for dual lane end point mode PHY found on sa8755p platform.
->
-> Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+On Tue, 10 Oct 2023 15:44:32 -0500
+Bjorn Helgaas <helgaas@kernel.org> wrote:
+
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Use FIELD_GET() to remove dependences on the field position, i.e., the
+> shift value.  No functional change intended.
+> 
+> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+A question about what 'rules' you are applying for using these macros
+vs choosing not not do so. Personally I prefer using them even for
+flag fields mostly because it makes the code more consistent and
+the compiler should remove any unnecessary shifts that result.
+
 > ---
->  drivers/phy/qualcomm/phy-qcom-qmp-pcie.c   | 41 ++++++++++++++++++++++++++++++
->  drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h |  2 ++
->  2 files changed, 43 insertions(+)
 
-Two minor questions.
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index eeec1d6f9023..a9fdc2e3f110 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -6154,7 +6154,7 @@ static void dpc_log_size(struct pci_dev *dev)
+>  	if (!(val & PCI_EXP_DPC_CAP_RP_EXT))
 
->
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> index a63ca74..962b4a1 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-> @@ -2147,6 +2147,38 @@ static const struct qmp_phy_init_tbl sa8775p_qmp_gen4x4_pcie_rc_serdes_alt_tbl[]
->         QMP_PHY_INIT_CFG(QSERDES_V5_COM_CLK_SELECT, 0x34),
->  };
->
-> +static const struct qmp_phy_init_tbl sa8775p_qmp_gen4x2_pcie_ep_serdes_alt_tbl[] = {
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_BG_TIMER, 0x02),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYS_CLK_CTRL, 0x07),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE0, 0x27),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_CP_CTRL_MODE1, 0x0a),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE0, 0x17),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_RCTRL_MODE1, 0x19),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE0, 0x00),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_PLL_CCTRL_MODE1, 0x03),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_SYSCLK_EN_SEL, 0x00),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN0_MODE0, 0xfb),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN1_MODE0, 0x01),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN0_MODE1, 0xfb),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_INTEGLOOP_GAIN1_MODE1, 0x01),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_CMN_MODE, 0x14),
+This is what I'm commenting on below.
 
-I should check whether we miss QSERDES_V5_COM_CMN_MODE in
-sm8450_qmp_gen4x2_pcie_ep_serdes_tbl, which is otherwise nearly
-identical.
-Also do you need to set QSERDES_V5_COM_CORE_CLK_EN here?
+>  		return;
+>  
+> -	if (!((val & PCI_EXP_DPC_RP_PIO_LOG_SIZE) >> 8)) {
+> +	if (FIELD_GET(PCI_EXP_DPC_RP_PIO_LOG_SIZE, val) == 0) {
 
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE0, 0xff),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE0, 0x04),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP1_MODE1, 0xff),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_LOCK_CMP2_MODE1, 0x09),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_DEC_START_MODE0, 0x19),
-> +       QMP_PHY_INIT_CFG(QSERDES_V5_COM_DEC_START_MODE1, 0x28),
-> +};
-> +
-> +static const struct qmp_phy_init_tbl sa8775p_qmp_gen4_pcie_ep_pcs_misc_tbl[] = {
-> +       QMP_PHY_INIT_CFG(QPHY_V5_20_PCS_PCIE_OSC_DTCT_MODE2_CONFIG5, 0x08),
-> +};
+Why do this one and not the one just above?
+In both cases extracting a field then comparing it to 0, I'm not sure
+it makes sense to care if that field is 1 bit or multiple bit.
 
-This is the same as sm8450_qmp_gen4x2_pcie_ep_pcs_misc_tbl
+>  		pci_info(dev, "Overriding RP PIO Log Size to 4\n");
+>  		dev->dpc_rp_log_size = 4;
+>  	}
 
-> +
-> +static const struct qmp_phy_init_tbl sa8775p_qmp_gen4x2_pcie_ep_pcs_alt_tbl[] = {
-> +       QMP_PHY_INIT_CFG(QPHY_V5_PCS_INSIG_MX_CTRL7, 0x00),
-> +       QMP_PHY_INIT_CFG(QPHY_V5_PCS_INSIG_SW_CTRL7, 0x00),
-> +};
-
-Could you please confirm that these registers belong to the V5
-namespace rather than V5_20 one?
-
-> +
->  struct qmp_pcie_offsets {
->         u16 serdes;
->         u16 pcs;
-> @@ -3043,6 +3075,15 @@ static const struct qmp_phy_cfg sa8775p_qmp_gen4x2_pciephy_cfg = {
->                 .pcs_misc_num   = ARRAY_SIZE(sa8775p_qmp_gen4_pcie_rc_pcs_misc_tbl),
->         },
->
-> +       .tbls_ep = &(const struct qmp_phy_cfg_tbls) {
-> +               .serdes         = sa8775p_qmp_gen4x2_pcie_ep_serdes_alt_tbl,
-> +               .serdes_num     = ARRAY_SIZE(sa8775p_qmp_gen4x2_pcie_ep_serdes_alt_tbl),
-> +               .pcs_misc       = sa8775p_qmp_gen4_pcie_ep_pcs_misc_tbl,
-> +               .pcs_misc_num   = ARRAY_SIZE(sa8775p_qmp_gen4_pcie_ep_pcs_misc_tbl),
-> +               .pcs            = sa8775p_qmp_gen4x2_pcie_ep_pcs_alt_tbl,
-> +               .pcs_num        = ARRAY_SIZE(sa8775p_qmp_gen4x2_pcie_ep_pcs_alt_tbl),
-> +       },
-> +
->         .reset_list             = sdm845_pciephy_reset_l,
->         .num_resets             = ARRAY_SIZE(sdm845_pciephy_reset_l),
->         .vreg_list              = qmp_phy_vreg_l,
-> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h
-> index 36cc80b..6ee1c33 100644
-> --- a/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h
-> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcs-v5.h
-> @@ -11,6 +11,8 @@
->  #define QPHY_V5_PCS_PCS_STATUS1                                0x014
->  #define QPHY_V5_PCS_POWER_DOWN_CONTROL                 0x040
->  #define QPHY_V5_PCS_START_CONTROL                      0x044
-> +#define QPHY_V5_PCS_INSIG_SW_CTRL7                     0x060
-> +#define QPHY_V5_PCS_INSIG_MX_CTRL7                     0x07c
->  #define QPHY_V5_PCS_LOCK_DETECT_CONFIG1                        0x0c4
->  #define QPHY_V5_PCS_LOCK_DETECT_CONFIG2                        0x0c8
->  #define QPHY_V5_PCS_LOCK_DETECT_CONFIG3                        0x0cc
-> --
-> 2.7.4
->
-
-
--- 
-With best wishes
-Dmitry
