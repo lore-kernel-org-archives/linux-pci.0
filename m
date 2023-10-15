@@ -2,52 +2,52 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E424DCDB47E
-	for <linux-pci@archiver.kernel.org>; Sun, 15 Oct 2023 20:22:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3CF48CDB47E
+	for <linux-pci@archiver.kernel.org>; Sun, 15 Oct 2023 20:45:52 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230243AbjJOUWp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 15 Oct 2023 16:22:45 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42504 "EHLO
+        id S229518AbjJOUpu (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 15 Oct 2023 16:45:50 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56782 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230298AbjJOUWo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Oct 2023 16:22:44 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 499A8D6
-        for <linux-pci@vger.kernel.org>; Sun, 15 Oct 2023 13:22:42 -0700 (PDT)
+        with ESMTP id S229641AbjJOUpt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 15 Oct 2023 16:45:49 -0400
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 444F7AB
+        for <linux-pci@vger.kernel.org>; Sun, 15 Oct 2023 13:45:47 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697401362; x=1728937362;
+  t=1697402747; x=1728938747;
   h=date:from:to:cc:subject:message-id:mime-version;
-  bh=NVj2RFlbEpvjqyFkNcS1aRfxtDEomBZexw/jpUpzvg4=;
-  b=V1X9n5JyVNYdPEoEQDdQ0cFHVSV2jz+YhpQq4kerz/HM3U2VqN8YCAE1
-   lqphSbR0iAVwN+pCC9Q/mMPqE9uqac/Nb2euqRJYg8kZzZPM2nnYRxm/H
-   rplTEhNBsziRBUku4HXdYC7gr3otULu5H/z1lFOlPqoUtjA71JeN5Jw/f
-   jmMvBHzWsO9UqqPILOQ2h1Jc5fJbeXnZ2Oqd+lqxKtVkBsubmfcCjtMV6
-   DqxW5Ivq3kDHstZvP6Az1162DSf6Z3ml7Yx07q/Znkhf33rWeaTGrCLJ2
-   pCaQbI+KjOHN2sxs3s5TfK3Ew8dWBf8Q3RTphGybRUQS4tcOgFWS5A5FU
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10863"; a="375783010"
+  bh=DNesg9Bcg+TvjfqwoqIwn8o0v/nNvaLHT7sB8/JLSC4=;
+  b=Qxpm6otXa8IKFECMd4vNS37dd1BB3/UlWS3jxafSbVDEpJQQnGwb701I
+   3F77vTPo4tcZmpas5Ul/XpDdb5YxAZn8bt0i2uV9CfWntkKUVe8Ct/eF6
+   CqV4jiTbLm5Sn0sSGC3n62EHdan5DfQKvv2zMwwR+RucJMV7RBBNuUyqF
+   q3npygDnBodXHO5Kbh7B5Mv6+n1fTglvJfpElzMSWEcZ3g9oSUfP5kmfz
+   boytatGgIkdPJQulH1iEb968NZTSE6orId9FqXKP6bchw+QgBTb72/cKU
+   fQKVsoDdRDe14f9mBM1CdHVYDFHanXRiewJMLOxAQES+b6lwxgwXjKysd
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10863"; a="6984668"
 X-IronPort-AV: E=Sophos;i="6.03,226,1694761200"; 
-   d="scan'208";a="375783010"
-Received: from orsmga008.jf.intel.com ([10.7.209.65])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2023 13:22:41 -0700
+   d="scan'208";a="6984668"
+Received: from orsmga002.jf.intel.com ([10.7.209.21])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Oct 2023 13:45:47 -0700
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10863"; a="784848635"
+X-IronPort-AV: E=McAfee;i="6600,9927,10863"; a="755440681"
 X-IronPort-AV: E=Sophos;i="6.03,226,1694761200"; 
-   d="scan'208";a="784848635"
+   d="scan'208";a="755440681"
 Received: from lkp-server02.sh.intel.com (HELO f64821696465) ([10.239.97.151])
-  by orsmga008.jf.intel.com with ESMTP; 15 Oct 2023 13:22:40 -0700
+  by orsmga002.jf.intel.com with ESMTP; 15 Oct 2023 13:45:45 -0700
 Received: from kbuild by f64821696465 with local (Exim 4.96)
         (envelope-from <lkp@intel.com>)
-        id 1qs7dF-0007lh-1D;
-        Sun, 15 Oct 2023 20:22:37 +0000
-Date:   Mon, 16 Oct 2023 04:21:37 +0800
+        id 1qs7zb-0007nN-0C;
+        Sun, 15 Oct 2023 20:45:43 +0000
+Date:   Mon, 16 Oct 2023 04:44:49 +0800
 From:   kernel test robot <lkp@intel.com>
 To:     "Krzysztof =?utf-8?Q?Wilczy=C5=84ski" ?= <kwilczynski@kernel.org>
 Cc:     linux-pci@vger.kernel.org
-Subject: [pci:controller/rcar] BUILD SUCCESS
- de45624e69e14ccd6b4b2886155578bb218925de
-Message-ID: <202310160434.jYvgZSSQ-lkp@intel.com>
+Subject: [pci:controller/speed] BUILD SUCCESS
+ 85e9eb3e7727e98cbf7b9bf475677f2a64be06b8
+Message-ID: <202310160446.lGp13soM-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
@@ -55,12 +55,12 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rcar
-branch HEAD: de45624e69e14ccd6b4b2886155578bb218925de  misc: pci_endpoint_test: Add Device ID for R-Car S4-8 PCIe controller
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/speed
+branch HEAD: 85e9eb3e7727e98cbf7b9bf475677f2a64be06b8  PCI: tegra194: Use Mbps_to_icc() macro for setting icc speed
 
-elapsed time: 1369m
+elapsed time: 1467m
 
-configs tested: 98
+configs tested: 102
 configs skipped: 2
 
 The following configs have been built successfully.
@@ -79,7 +79,6 @@ arm                              allmodconfig   gcc
 arm                               allnoconfig   gcc  
 arm                              allyesconfig   gcc  
 arm                                 defconfig   gcc  
-arm                   randconfig-001-20231015   gcc  
 arm64                            allmodconfig   gcc  
 arm64                             allnoconfig   gcc  
 arm64                            allyesconfig   gcc  
@@ -93,6 +92,12 @@ i386                              allnoconfig   gcc
 i386                             allyesconfig   gcc  
 i386                              debian-10.3   gcc  
 i386                                defconfig   gcc  
+i386                  randconfig-001-20231015   gcc  
+i386                  randconfig-002-20231015   gcc  
+i386                  randconfig-003-20231015   gcc  
+i386                  randconfig-004-20231015   gcc  
+i386                  randconfig-005-20231015   gcc  
+i386                  randconfig-006-20231015   gcc  
 loongarch                        allmodconfig   gcc  
 loongarch                         allnoconfig   gcc  
 loongarch                        allyesconfig   gcc  
@@ -129,7 +134,6 @@ riscv                            allmodconfig   gcc
 riscv                             allnoconfig   gcc  
 riscv                            allyesconfig   gcc  
 riscv                               defconfig   gcc  
-riscv                 randconfig-001-20231015   gcc  
 riscv                          rv32_defconfig   gcc  
 s390                             allmodconfig   gcc  
 s390                              allnoconfig   gcc  
