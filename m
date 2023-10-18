@@ -2,120 +2,193 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DEC03CDB47E
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 11:35:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 022B3CDB47E
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 11:46:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231446AbjJRLfH (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 07:35:07 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59690 "EHLO
+        id S229846AbjJRLqA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 07:46:00 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48910 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234836AbjJRLfB (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 07:35:01 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5CAD612F;
-        Wed, 18 Oct 2023 04:34:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1697628895; x=1729164895;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=NRJlQShSFWurHaKOv7QhLLMxfjt9JndN5eDKi4TZy98=;
-  b=aGbYegRUtj56RBdWDPRzO9F0UnjGtoWATtUqMrSJdZjhGYMQ2A6ivG4d
-   6pVdPGZDrHNJw3PzKnMNjDxsDxINogltPm/9AIegeJsjnG2nhApe4a3FP
-   Kbkd/js6XQVoJwiqrb+NGYeu3Se3MhMV73t52u4PH8gLgZPtY01u8TS6p
-   oHSFuxXJwF7XFJwp7YkFMS3hFHW167AeXArQkgnWhIvOdznIfeBSo503b
-   /8hS6qXYv4iFhgM0hZwCv1NFG45oiZFRX8q0WLUB1b45O8JQvpTnEZiST
-   oSbpvY0P3CxKt/rzUfUHYaW4OLTHrpITf658DpasvOLG1+E/FcvfspS9d
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="376365782"
-X-IronPort-AV: E=Sophos;i="6.03,234,1694761200"; 
-   d="scan'208";a="376365782"
-Received: from orsmga006.jf.intel.com ([10.7.209.51])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2023 04:34:50 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10866"; a="733145191"
-X-IronPort-AV: E=Sophos;i="6.03,234,1694761200"; 
-   d="scan'208";a="733145191"
-Received: from suguccin-mobl1.amr.corp.intel.com (HELO localhost) ([10.252.44.63])
-  by orsmga006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Oct 2023 04:34:47 -0700
-From:   =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
-        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-        Rob Herring <robh@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        linux-kernel@vger.kernel.org
-Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 7/7] PCI/MSI: Use FIELD_GET/PREP()
-Date:   Wed, 18 Oct 2023 14:32:54 +0300
-Message-Id: <20231018113254.17616-8-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20231018113254.17616-1-ilpo.jarvinen@linux.intel.com>
-References: <20231018113254.17616-1-ilpo.jarvinen@linux.intel.com>
+        with ESMTP id S230359AbjJRL1U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 07:27:20 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0EFA114;
+        Wed, 18 Oct 2023 04:27:18 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFC50C433C8;
+        Wed, 18 Oct 2023 11:27:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697628438;
+        bh=zlW+WXJ03AHaq8TEskzb4g7xW6mVxN5qwb3rME6hGQQ=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=JWFJEp+Xmwvqe1PFdvZVgupKgddtwchKLguWXYSy2opIYYHnnucRppdNIOI8hvmOL
+         8tn8h6rrY3/6hNMSC9Ysudo5/+2jx6i0aLDx4yyJH5hfKHiEc27hB9D2zHvtIIHiWo
+         lkE1MjpbhdqG/iMyT1Xi7ubTqK32DQT9kwnF9VINOU4CBWL+YbMGpVoUDepNe5pvtv
+         LK1xOym53SCRV8VbCl3ahcq8ZQgZc7wv9A6KboruZTX7Tng5vAnmOfJGXNDaeKTWBH
+         iegx8qrA/LBME+Sc2Vll002vBDr/hTKxEqqdjSvgqOb4GmZX+7KOkUxbqsIT9bTzXY
+         LRAsSME3qYBjQ==
+Date:   Wed, 18 Oct 2023 12:27:12 +0100
+From:   Conor Dooley <conor@kernel.org>
+To:     Minda Chen <minda.chen@starfivetech.com>
+Cc:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-pci@vger.kernel.org,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Mason Huo <mason.huo@starfivetech.com>,
+        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+        Kevin Xie <kevin.xie@starfivetech.com>
+Subject: Re: [PATCH v8 15/22] PCI: microchip: Add get_events() callback
+ function
+Message-ID: <20231018-landed-sampling-2fcec42943c8@spud>
+References: <20231011110514.107528-1-minda.chen@starfivetech.com>
+ <20231011110514.107528-16-minda.chen@starfivetech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="r6ZiTasWF0vb64gL"
+Content-Disposition: inline
+In-Reply-To: <20231011110514.107528-16-minda.chen@starfivetech.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Instead of custom masking and shifting, use FIELD_GET/PREP() with
-register fields.
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/pci/msi/msi.c | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+--r6ZiTasWF0vb64gL
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
-index ef1d8857a51b..682fa877478f 100644
---- a/drivers/pci/msi/msi.c
-+++ b/drivers/pci/msi/msi.c
-@@ -6,6 +6,7 @@
-  * Copyright (C) Tom Long Nguyen (tom.l.nguyen@intel.com)
-  * Copyright (C) 2016 Christoph Hellwig.
-  */
-+#include <linux/bitfield.h>
- #include <linux/err.h>
- #include <linux/export.h>
- #include <linux/irq.h>
-@@ -188,7 +189,7 @@ static inline void pci_write_msg_msi(struct pci_dev *dev, struct msi_desc *desc,
- 
- 	pci_read_config_word(dev, pos + PCI_MSI_FLAGS, &msgctl);
- 	msgctl &= ~PCI_MSI_FLAGS_QSIZE;
--	msgctl |= desc->pci.msi_attrib.multiple << 4;
-+	msgctl |= FIELD_PREP(PCI_MSI_FLAGS_QSIZE, desc->pci.msi_attrib.multiple);
- 	pci_write_config_word(dev, pos + PCI_MSI_FLAGS, msgctl);
- 
- 	pci_write_config_dword(dev, pos + PCI_MSI_ADDRESS_LO, msg->address_lo);
-@@ -299,7 +300,7 @@ static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
- 	desc.pci.msi_attrib.is_64	= !!(control & PCI_MSI_FLAGS_64BIT);
- 	desc.pci.msi_attrib.can_mask	= !!(control & PCI_MSI_FLAGS_MASKBIT);
- 	desc.pci.msi_attrib.default_irq	= dev->irq;
--	desc.pci.msi_attrib.multi_cap	= (control & PCI_MSI_FLAGS_QMASK) >> 1;
-+	desc.pci.msi_attrib.multi_cap	= FIELD_GET(PCI_MSI_FLAGS_QMASK, control);
- 	desc.pci.msi_attrib.multiple	= ilog2(__roundup_pow_of_two(nvec));
- 	desc.affinity			= masks;
- 
-@@ -478,7 +479,7 @@ int pci_msi_vec_count(struct pci_dev *dev)
- 		return -EINVAL;
- 
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &msgctl);
--	ret = 1 << ((msgctl & PCI_MSI_FLAGS_QMASK) >> 1);
-+	ret = 1 << FIELD_GET(PCI_MSI_FLAGS_QMASK, msgctl);
- 
- 	return ret;
- }
-@@ -511,7 +512,8 @@ void __pci_restore_msi_state(struct pci_dev *dev)
- 	pci_read_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, &control);
- 	pci_msi_update_mask(entry, 0, 0);
- 	control &= ~PCI_MSI_FLAGS_QSIZE;
--	control |= (entry->pci.msi_attrib.multiple << 4) | PCI_MSI_FLAGS_ENABLE;
-+	control |= PCI_MSI_FLAGS_ENABLE |
-+		   FIELD_PREP(PCI_MSI_FLAGS_QSIZE, entry->pci.msi_attrib.multiple);
- 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
- }
- 
--- 
-2.30.2
+On Wed, Oct 11, 2023 at 07:05:07PM +0800, Minda Chen wrote:
 
+
+> For different interrupts to event num mapping function,
+> add get_events() function pointer.
+> For extenting event ops in the fucture, Add struct
+> plda_event_ops data structure.
+
+I still think these commit messages are a bit weak and should point out
+the reasons why these are needed, rather than handwaving about future
+users.
+Otherwise,
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+
+Thanks,
+Conor.
+
+>=20
+> plda_handle_events() will call the get_events() callback
+> function pointer directly. For the robustness of codes,
+> add checking in plda_init_interrupts().
+>=20
+> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+> ---
+>  drivers/pci/controller/plda/pcie-microchip-host.c | 14 +++++++++++++-
+>  drivers/pci/controller/plda/pcie-plda.h           |  8 ++++++++
+>  2 files changed, 21 insertions(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/=
+pci/controller/plda/pcie-microchip-host.c
+> index e99498b5b563..fca1520d56c9 100644
+> --- a/drivers/pci/controller/plda/pcie-microchip-host.c
+> +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
+> @@ -647,7 +647,7 @@ static void plda_handle_event(struct irq_desc *desc)
+> =20
+>  	chained_irq_enter(chip, desc);
+> =20
+> -	events =3D mc_get_events(port);
+> +	events =3D port->event_ops->get_events(port);
+> =20
+>  	for_each_set_bit(bit, &events, port->num_events)
+>  		generic_handle_domain_irq(port->event_domain, bit);
+> @@ -806,7 +806,12 @@ static int mc_request_event_irq(struct plda_pcie_rp =
+*plda, int event_irq,
+>  				0, event_cause[event].sym, plda);
+>  }
+> =20
+> +static const struct plda_event_ops mc_event_ops =3D {
+> +	.get_events =3D mc_get_events,
+> +};
+> +
+>  static const struct plda_event mc_event =3D {
+> +	.event_ops              =3D &mc_event_ops,
+>  	.request_event_irq      =3D mc_request_event_irq,
+>  	.intx_event             =3D EVENT_LOCAL_PM_MSI_INT_INTX,
+>  	.msi_event              =3D EVENT_LOCAL_PM_MSI_INT_MSI,
+> @@ -920,6 +925,11 @@ static int plda_init_interrupts(struct platform_devi=
+ce *pdev,
+>  	int i, intx_irq, msi_irq, event_irq;
+>  	int ret;
+> =20
+> +	if (!event->event_ops || !event->event_ops->get_events) {
+> +		dev_err(dev, "no get events ops\n");
+> +		return -EINVAL;
+> +	}
+> +
+>  	ret =3D plda_pcie_init_irq_domains(port);
+>  	if (ret) {
+>  		dev_err(dev, "failed creating IRQ domains\n");
+> @@ -930,6 +940,8 @@ static int plda_init_interrupts(struct platform_devic=
+e *pdev,
+>  	if (irq < 0)
+>  		return -ENODEV;
+> =20
+> +	port->event_ops =3D event->event_ops;
+> +
+>  	for (i =3D 0; i < port->num_events; i++) {
+>  		event_irq =3D irq_create_mapping(port->event_domain, i);
+>  		if (!event_irq) {
+> diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/contro=
+ller/plda/pcie-plda.h
+> index 5ad1b81c0086..6571a4befac9 100644
+> --- a/drivers/pci/controller/plda/pcie-plda.h
+> +++ b/drivers/pci/controller/plda/pcie-plda.h
+> @@ -102,6 +102,12 @@
+>  #define EVENT_PM_MSI_INT_SYS_ERR		12
+>  #define NUM_PLDA_EVENTS				13
+> =20
+> +struct plda_pcie_rp;
+> +
+> +struct plda_event_ops {
+> +	u32 (*get_events)(struct plda_pcie_rp *pcie);
+> +};
+> +
+>  struct plda_msi {
+>  	struct mutex lock;		/* Protect used bitmap */
+>  	struct irq_domain *msi_domain;
+> @@ -117,11 +123,13 @@ struct plda_pcie_rp {
+>  	struct irq_domain *event_domain;
+>  	raw_spinlock_t lock;
+>  	struct plda_msi msi;
+> +	const struct plda_event_ops *event_ops;
+>  	void __iomem *bridge_addr;
+>  	int num_events;
+>  };
+> =20
+>  struct plda_event {
+> +	const struct plda_event_ops *event_ops;
+>  	int (*request_event_irq)(struct plda_pcie_rp *pcie,
+>  				 int event_irq, int event);
+>  	int intx_event;
+> --=20
+> 2.17.1
+>=20
+
+--r6ZiTasWF0vb64gL
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZS/BEAAKCRB4tDGHoIJi
+0m/cAQCOrCJ2bYXCB7wvpZnWAUAeEFiNVKT5N+U+TgJyh1aYPgEA5fNtx3R0qwom
+tjpc0UtKhVAbjP8MwJIzQFwaIgq+ig8=
+=OugO
+-----END PGP SIGNATURE-----
+
+--r6ZiTasWF0vb64gL--
