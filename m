@@ -2,191 +2,163 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C9044CDB47E
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 11:12:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C77DC41513
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 11:31:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229853AbjJRLMA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 07:12:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:44394 "EHLO
+        id S230299AbjJRLbG (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 07:31:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55278 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229702AbjJRLL7 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 07:11:59 -0400
-Received: from mail-lj1-x22c.google.com (mail-lj1-x22c.google.com [IPv6:2a00:1450:4864:20::22c])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DE87CFE;
-        Wed, 18 Oct 2023 04:11:57 -0700 (PDT)
-Received: by mail-lj1-x22c.google.com with SMTP id 38308e7fff4ca-2c5039d4e88so80900391fa.3;
-        Wed, 18 Oct 2023 04:11:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1697627516; x=1698232316; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=RQFBBHEStuhkSBdtrViUBG2kf2BEuRZkv42uXZ713vk=;
-        b=BxpgTcG3wIxOyBMl3TwUAVS/tKXtN24+GgbGZfTpmDk8+5tVDwzvzkoLbvqjLQMs7B
-         srWUmw3QQwYVaDokt4WwkJ0IgRr99IKKHZ+RBMI/gzIi/NqfstIqJzHoUyAAx1bNS76O
-         +/g5hZ0wzkLceDVlWFr8IOX8TcQ5NEt06HWswFz/a99h60o4NK5AOolQRCAr/Iavom8h
-         TqVy7jAZvnSjGwQrT/2ap1a1T23i4Gl8SDTkE5O7dDpIGw/tk9k9tgK9DJYs/lE9Zv/N
-         oAWCyMHNRvJeYZtJy2bvV1b3JL3gPN74ucHmSiCv7ODwOL/jCWVZm94LtzWdB2RVXRyJ
-         ENJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1697627516; x=1698232316;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=RQFBBHEStuhkSBdtrViUBG2kf2BEuRZkv42uXZ713vk=;
-        b=n2Pa9yxIX5ou2xgqBGyTGaeCDrZP2CyaGOzMPRHx6ZUx35tUZmRHmYx3F3Kb1jNvJB
-         Us9yBy9i4ocfIxsISnH+Cw8kGlfsfOFYMnxp29N5YWb2H9CpjHuHCCnORQjnovlA3xOD
-         p0cup9dj1Zd/vZFuJ01ZzjRq/hBnYzqF3poy43gRtnq9J9YXJgHK7yzhxa75/TzqzwzU
-         3zRm/JFPC7d5Zrmeb48ZyEC2rFetXTqT71b0nu3votuPhc7uzcx9+qG6lfzNa5ak/vDl
-         0JtKiUXW26meLA+k1w5ymmzyPSEc3Rj+/WZANWkM5U8Sx6ODiz5SNMG/Kvvdc+cdAFR9
-         BR8Q==
-X-Gm-Message-State: AOJu0YzFzRVkSAnkCHyFyB+nW2C6hklIzpSi8JoO02eDR5iEpLeesmBa
-        AY/BZCwBskq4/06rFWyVHPQ=
-X-Google-Smtp-Source: AGHT+IGE8kwPLL9OJEhJhKC57slqm/XHaN6b3Dv4R2zIGxbA4QnFhaq9FCUfHLrmBEbn/CQ4gXd37Q==
-X-Received: by 2002:a2e:9bd7:0:b0:2ba:6519:c50f with SMTP id w23-20020a2e9bd7000000b002ba6519c50fmr3529599ljj.52.1697627515673;
-        Wed, 18 Oct 2023 04:11:55 -0700 (PDT)
-Received: from mobilestation ([178.176.56.174])
-        by smtp.gmail.com with ESMTPSA id k23-20020a2e8897000000b002b9ef00b10csm668296lji.2.2023.10.18.04.11.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 18 Oct 2023 04:11:55 -0700 (PDT)
-Date:   Wed, 18 Oct 2023 14:11:52 +0300
-From:   Serge Semin <fancer.lancer@gmail.com>
-To:     Siddharth Vadapalli <s-vadapalli@ti.com>
-Cc:     lpieralisi@kernel.org, robh@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-        r-gunasekaran@ti.com, srk@ti.com
-Subject: Re: [PATCH v2] PCI: keystone: Fix ks_pcie_v3_65_add_bus() for AM654x
- SoC
-Message-ID: <zje5t7zbaisyzwgvkdxnqwlcadsyegipxbhsxxpbqlnuu45ria@4sqxpgieoig2>
-References: <20231018075038.2740534-1-s-vadapalli@ti.com>
+        with ESMTP id S229986AbjJRLbE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 07:31:04 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CC691112;
+        Wed, 18 Oct 2023 04:31:02 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B421DC433BA;
+        Wed, 18 Oct 2023 11:30:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1697628662;
+        bh=2a3fF360HQENIx57U7Wbr+82JHRHzTNfIBguTuTew0E=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=hO7SQdvI1JxwSmUngjOaS4yakSuhGvtWB6tzEVexM7TNSgntP6UcvUTUerAeqBBW5
+         H3p7HpIbJWPb54PjGdwY2HcubMDAunf+3AoJ46P9bifevmiPMe0AKpvldc2zVrU0iG
+         xqBxGUNf4OkyBCp8bPD0ZrvglNjU60SKPblgaqrY4rHw2g2vL2re0M3MFOs+56Y76/
+         OUTduFs351QSnEqOFENB/S0n4tIZDa4xo81KQN/pQWW3Dq8u3r4s2Fvb8+pEe+0lvq
+         r10U7elHuk4IB5eP9mZJ40FKuFpXmzM3UiH/0lC+CVRqHp4ScXL4WXoZrrj/zSDcla
+         aHE4S5t7K3nvg==
+Date:   Wed, 18 Oct 2023 12:30:56 +0100
+From:   Conor Dooley <conor@kernel.org>
+To:     Minda Chen <minda.chen@starfivetech.com>
+Cc:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-riscv@lists.infradead.org, linux-pci@vger.kernel.org,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Palmer Dabbelt <palmer@dabbelt.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Philipp Zabel <p.zabel@pengutronix.de>,
+        Mason Huo <mason.huo@starfivetech.com>,
+        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+        Kevin Xie <kevin.xie@starfivetech.com>
+Subject: Re: [PATCH v8 16/22] PCI: microchip: Add event IRQ domain ops to
+ struct plda_event
+Message-ID: <20231018-worrier-sizably-b13023f54b36@spud>
+References: <20231011110514.107528-1-minda.chen@starfivetech.com>
+ <20231011110514.107528-17-minda.chen@starfivetech.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: multipart/signed; micalg=pgp-sha256;
+        protocol="application/pgp-signature"; boundary="58kJN2dw4v2LbZBq"
 Content-Disposition: inline
-In-Reply-To: <20231018075038.2740534-1-s-vadapalli@ti.com>
+In-Reply-To: <20231011110514.107528-17-minda.chen@starfivetech.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Oct 18, 2023 at 01:20:38PM +0530, Siddharth Vadapalli wrote:
-> The ks_pcie_v3_65_add_bus() member of "ks_pcie_ops" was added for
-> platforms using DW PCIe IP-core version 3.65a. The AM654x SoC uses
-> DW PCIe IP-core version 4.90a and ks_pcie_v3_65_add_bus() is not
-> applicable to it.
 
-I'll copy my message from v1 regarding the IP-core version. Are you
-really sure that it's 4.90a? Here is what my DW PCIe RC
-_v4.90_ HW databook says about the BARs:
+--58kJN2dw4v2LbZBq
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-"Base Address Registers (Offset: 0x10-x14) The Synopsys core does not
-implement the optional BARs for the RC product. This is based on the
-assumption that the RC host probably has registers on some other
-internal bus and has knowledge and setup access to these registers
-already."
+On Wed, Oct 11, 2023 at 07:05:08PM +0800, Minda Chen wrote:
+> PolarFire Implements none-PLDA event interrupts. So the whole event
+> domain ops can not be re-used.
 
-You cited the next text:
+IIRC, the reason things are like this is to work around the lack of an
+msi controller and are not as a result of changes made to the PLDA IP
+by us.
 
-"3.5.7.2 RC Mode. Two BARs are present but are not expected to be
-used. You should disable them or else they will be unnecessarily
-assigned memory during device enumeration. If you do use a BAR, then
-you should program it to capture TLPs that are targeted to your local
-non-application memory space residing on TRGT1, and not for the
-application on TRGT1. The BAR range must be outside of the three
-Base/Limit regions."
+> PLDA event domain ops instances will be implemented
+> in later patch.
 
-AFAICS from the v5.20a, v5.30a, v5.40a databooks, it resides in the
-_v5.x_ databooks only meanwhile the older ones (v4.21, v4.60a, v4.70a
-and _v4.90a_) describe the BARs as I cited earlier. It makes my
-thinking that in your case the IP-core isn't of 4.90a version. Could
-you please clarify how did you detect the version? Did you use the
-PCIE_VERSION_NUMBER_OFF register available in the PORT_LOGIC CSRs
-space? If your judgment was based on the Keyston PCIe driver code,
-then the driver might get to be wrong in that matter.
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 
-> 
-> The commit which added support for the AM654x SoC has reused majority
-> of the functions with the help of the "is_am6" flag to handle AM654x
-> separately where applicable. Thus, make use of the "is_am6" flag and
-> change ks_pcie_v3_65_add_bus() to no-op for AM654x SoC.
-> 
-> Fixes: 18b0415bc802 ("PCI: keystone: Add support for PCIe RC in AM654x Platforms")
-> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+Thanks,
+Conor.
+
+>=20
+> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
 > ---
-> Hello,
-> 
-> This patch is based on linux-next tagged next-20231018.
-> 
-> The v1 of this patch is at:
-> https://lore.kernel.org/r/20231011123451.34827-1-s-vadapalli@ti.com/
-> 
-> While there are a lot of changes since v1 and this patch could have been
-> posted as a v1 patch itself, I decided to post it as the v2 of the patch
-> mentioned above since it aims to address the issue described by the v1
-> patch and is similar in that sense. However, the solution to the issue
-> described in the v1 patch appears to be completely different from what
-> was implemented in the v1 patch. Thus, the commit message and subject of
-> this patch have been modified accordingly.
-> 
-> Changes since v1:
-> - Updated patch subject and commit message.
-> - Determined that issue is not with the absence of Link as mentioned in
->   v1 patch. Even with Link up and endpoint device connected, if
->   ks_pcie_v3_65_add_bus() is invoked and executed, all reads to the
->   MSI-X offsets return 0xffffffff when pcieport driver attempts to setup
->   AER and PME services. The all Fs return value indicates that the MSI-X
->   configuration is failing even if Endpoint device is connected. This is
->   because the ks_pcie_v3_65_add_bus() function is not applicable to the
->   AM654x SoC which uses DW PCIe IP-core version 4.90a.
-> 
-> Regards,
-> Siddharth.
-> 
->  drivers/pci/controller/dwc/pci-keystone.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-> index 0def919f89fa..3abd59335574 100644
-> --- a/drivers/pci/controller/dwc/pci-keystone.c
-> +++ b/drivers/pci/controller/dwc/pci-keystone.c
-> @@ -459,7 +459,7 @@ static int ks_pcie_v3_65_add_bus(struct pci_bus *bus)
->  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
->  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
->  
+>  drivers/pci/controller/plda/pcie-microchip-host.c | 9 ++++++---
+>  drivers/pci/controller/plda/pcie-plda.h           | 1 +
+>  2 files changed, 7 insertions(+), 3 deletions(-)
+>=20
+> diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/=
+pci/controller/plda/pcie-microchip-host.c
+> index fca1520d56c9..2825c1f5563d 100644
+> --- a/drivers/pci/controller/plda/pcie-microchip-host.c
+> +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
+> @@ -811,13 +811,15 @@ static const struct plda_event_ops mc_event_ops =3D=
+ {
+>  };
+> =20
+>  static const struct plda_event mc_event =3D {
+> +	.domain_ops             =3D &mc_event_domain_ops,
+>  	.event_ops              =3D &mc_event_ops,
+>  	.request_event_irq      =3D mc_request_event_irq,
+>  	.intx_event             =3D EVENT_LOCAL_PM_MSI_INT_INTX,
+>  	.msi_event              =3D EVENT_LOCAL_PM_MSI_INT_MSI,
+>  };
+> =20
+> -static int plda_pcie_init_irq_domains(struct plda_pcie_rp *port)
+> +static int plda_pcie_init_irq_domains(struct plda_pcie_rp *port,
+> +				      const struct irq_domain_ops *ops)
+>  {
+>  	struct device *dev =3D port->dev;
+>  	struct device_node *node =3D dev->of_node;
+> @@ -831,7 +833,8 @@ static int plda_pcie_init_irq_domains(struct plda_pci=
+e_rp *port)
+>  	}
+> =20
+>  	port->event_domain =3D irq_domain_add_linear(pcie_intc_node, port->num_=
+events,
+> -						   &mc_event_domain_ops, port);
+> +						   ops, port);
+> +
+>  	if (!port->event_domain) {
+>  		dev_err(dev, "failed to get event domain\n");
+>  		of_node_put(pcie_intc_node);
+> @@ -930,7 +933,7 @@ static int plda_init_interrupts(struct platform_devic=
+e *pdev,
+>  		return -EINVAL;
+>  	}
+> =20
+> -	ret =3D plda_pcie_init_irq_domains(port);
+> +	ret =3D plda_pcie_init_irq_domains(port, event->domain_ops);
+>  	if (ret) {
+>  		dev_err(dev, "failed creating IRQ domains\n");
+>  		return ret;
+> diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/contro=
+ller/plda/pcie-plda.h
+> index 6571a4befac9..080932cbe8c4 100644
+> --- a/drivers/pci/controller/plda/pcie-plda.h
+> +++ b/drivers/pci/controller/plda/pcie-plda.h
+> @@ -129,6 +129,7 @@ struct plda_pcie_rp {
+>  };
+> =20
+>  struct plda_event {
+> +	const struct irq_domain_ops *domain_ops;
+>  	const struct plda_event_ops *event_ops;
+>  	int (*request_event_irq)(struct plda_pcie_rp *pcie,
+>  				 int event_irq, int event);
+> --=20
+> 2.17.1
+>=20
 
-> -	if (!pci_is_root_bus(bus))
-> +	if (!pci_is_root_bus(bus) || ks_pcie->is_am6)
+--58kJN2dw4v2LbZBq
+Content-Type: application/pgp-signature; name="signature.asc"
 
-1. IMO defining two versions of the pci_ops struct instances would look
-more readable:
-static struct pci_ops ks_pcie_v3_65_ops = {
-        .map_bus = dw_pcie_own_conf_map_bus,
-        .read = pci_generic_config_read,
-        .write = pci_generic_config_write,
-        .add_bus = ks_pcie_v3_65_add_bus,
-};
+-----BEGIN PGP SIGNATURE-----
 
-static struct pci_ops ks_pcie_ops = {
-        .map_bus = dw_pcie_own_conf_map_bus,
-        .read = pci_generic_config_read,
-        .write = pci_generic_config_write,
-};
+iHQEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZS/B8AAKCRB4tDGHoIJi
+0po5APiWGDsBhIIXOhjo24t9Ngvjf+qyTiHcD80kNJRtBXqJAP4gSLIomdwIbCJf
+Fp3FqROWnjnrkrANykQjljJiBa2nDw==
+=5HzY
+-----END PGP SIGNATURE-----
 
-2. In case of 1. implemented, ks_pcie_ops will look the same as
-ks_child_pcie_ops, so the later could be dropped.
-
-3. I'm not that fluent in the PCIe core details, but based on the
-pci_host_bridge.child_ops and pci_host_bridge.ops names, the first
-ones will be utilized for the child PCIe buses, meanwhile the later
-ones - for the root bus only (see pci_alloc_child_bus()). Bjorn?
-If so then the pci_is_root_bus() check can be dropped from the
-ks_pcie_v3_65_add_bus() method. After doing that I would have also
-changed the name to ks_pcie_v3_65_add_root_bus(). In anyway I would
-double-check the suggestion first.
-
--Serge(y)
-
->  		return 0;
->  
->  	/* Configure and set up BAR0 */
-> -- 
-> 2.34.1
-> 
+--58kJN2dw4v2LbZBq--
