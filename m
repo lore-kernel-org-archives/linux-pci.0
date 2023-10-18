@@ -2,24 +2,24 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1E511CDB482
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 08:57:05 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D2F96CDB47E
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 08:57:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229449AbjJRI5E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 04:57:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53004 "EHLO
+        id S229576AbjJRI5G (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 04:57:06 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229510AbjJRI5D (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 04:57:03 -0400
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id EE574F7;
-        Wed, 18 Oct 2023 01:57:01 -0700 (PDT)
+        with ESMTP id S229582AbjJRI5F (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 04:57:05 -0400
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 513F5F9;
+        Wed, 18 Oct 2023 01:57:02 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.03,234,1694703600"; 
-   d="scan'208";a="183503673"
+   d="scan'208";a="179708479"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 18 Oct 2023 17:57:00 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 18 Oct 2023 17:57:00 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 21D2C40116A7;
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 9B12940116A7;
         Wed, 18 Oct 2023 17:57:00 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
@@ -30,10 +30,12 @@ Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-renesas-soc@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Serge Semin <fancer.lancer@gmail.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v25 01/15] PCI: Add T_PVPERL macro
-Date:   Wed, 18 Oct 2023 17:56:17 +0900
-Message-Id: <20231018085631.1121289-2-yoshihiro.shimoda.uh@renesas.com>
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Jonathan Hunter <jonathanh@nvidia.com>
+Subject: [PATCH v25 04/15] PCI: tegra194: Drop PCI_EXP_LNKSTA_NLW setting
+Date:   Wed, 18 Oct 2023 17:56:20 +0900
+Message-Id: <20231018085631.1121289-5-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231018085631.1121289-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20231018085631.1121289-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,31 +45,37 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-According to the PCIe CEM r5.0, sec 2.9.2, Power stable to PERST#
-inactive interval is 100 ms as minimum. Add a macro so that the PCIe
-controller drivers can make use of it.
+dw_pcie_setup() is already setting PCI_EXP_LNKCAP_MLW to pcie->num_lanes
+in the PCI_EXP_LNKCAP register for programming maximum link width.
+
+Hence, remove the redundant setting here.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Thierry Reding <thierry.reding@gmail.com>
+Cc: Jonathan Hunter <jonathanh@nvidia.com>
 ---
- drivers/pci/pci.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 39a8932dc340..5ecbcf041179 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -13,6 +13,9 @@
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index a962f2c7794f..e1fe574ce765 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -916,12 +916,6 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
+ 		AMBA_ERROR_RESPONSE_CRS_SHIFT);
+ 	dw_pcie_writel_dbi(pci, PORT_LOGIC_AMBA_ERROR_RESPONSE_DEFAULT, val);
  
- #define PCIE_LINK_RETRAIN_TIMEOUT_MS	1000
- 
-+/* Power stable to PERST# inactive from PCIe card Electromechanical Spec */
-+#define PCIE_T_PVPERL_MS		100
-+
- /*
-  * PCIe r6.0, sec 5.3.3.2.1 <PME Synchronization>
-  * Recommends 1ms to 10ms timeout to check L2 ready.
+-	/* Configure Max lane width from DT */
+-	val = dw_pcie_readl_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKCAP);
+-	val &= ~PCI_EXP_LNKCAP_MLW;
+-	val |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, pcie->num_lanes);
+-	dw_pcie_writel_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKCAP, val);
+-
+ 	/* Clear Slot Clock Configuration bit if SRNS configuration */
+ 	if (pcie->enable_srns) {
+ 		val_16 = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base +
 -- 
 2.25.1
 
