@@ -2,25 +2,25 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8045ECDB484
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 08:57:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 25BA3CDB47E
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 08:57:11 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229615AbjJRI5J (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 04:57:09 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53078 "EHLO
+        id S229674AbjJRI5K (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 04:57:10 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34348 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229618AbjJRI5G (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 04:57:06 -0400
+        with ESMTP id S229635AbjJRI5H (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 04:57:07 -0400
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTP id 313F9100;
-        Wed, 18 Oct 2023 01:57:03 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTP id B9B34FA;
+        Wed, 18 Oct 2023 01:57:04 -0700 (PDT)
 X-IronPort-AV: E=Sophos;i="6.03,234,1694703600"; 
-   d="scan'208";a="179708482"
+   d="scan'208";a="179708488"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
   by relmlie5.idc.renesas.com with ESMTP; 18 Oct 2023 17:57:01 +0900
 Received: from localhost.localdomain (unknown [10.166.15.32])
-        by relmlir5.idc.renesas.com (Postfix) with ESMTP id F12BD40116BA;
-        Wed, 18 Oct 2023 17:57:00 +0900 (JST)
+        by relmlir5.idc.renesas.com (Postfix) with ESMTP id 500BB40116BA;
+        Wed, 18 Oct 2023 17:57:01 +0900 (JST)
 From:   Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To:     lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
         bhelgaas@google.com, krzysztof.kozlowski+dt@linaro.org,
@@ -31,9 +31,9 @@ Cc:     marek.vasut+renesas@gmail.com, linux-pci@vger.kernel.org,
         Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
         Serge Semin <fancer.lancer@gmail.com>,
         Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v25 06/15] PCI: dwc: Add EDMA_UNROLL capability flag
-Date:   Wed, 18 Oct 2023 17:56:22 +0900
-Message-Id: <20231018085631.1121289-7-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v25 08/15] PCI: dwc: endpoint: Introduce .pre_init() and .deinit()
+Date:   Wed, 18 Oct 2023 17:56:24 +0900
+Message-Id: <20231018085631.1121289-9-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20231018085631.1121289-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20231018085631.1121289-1-yoshihiro.shimoda.uh@renesas.com>
@@ -43,57 +43,83 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Renesas R-Car Gen4 PCIe controllers have an unexpected register value in
-the eDMA CTRL register.
+Renesas R-Car Gen4 PCIe controllers require vendor-specific
+initialization before .init().
 
-So, add a new capability flag "EDMA_UNROLL" which would force the unrolled
-eDMA mapping for the problematic device.
+To use dw->dbi and dw->num-lanes in the initialization code,
+introduce .pre_init() into struct dw_pcie_ep_ops. While at it,
+also introduce .deinit() to disable the controller by using
+vendor-specific de-initialization.
 
-Suggested-by: Serge Semin <fancer.lancer@gmail.com>
+Note that the ep_init in the struct dw_pcie_ep_ops should be
+renamed to init later.
+
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 8 +++++++-
- drivers/pci/controller/dwc/pcie-designware.h | 5 +++--
- 2 files changed, 10 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 12 +++++++++++-
+ drivers/pci/controller/dwc/pcie-designware.h    |  2 ++
+ 2 files changed, 13 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 2b60d20dfdf5..1f900be94556 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -887,8 +887,14 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
- 	 * Indirect eDMA CSRs access has been completely removed since v5.40a
- 	 * thus no space is now reserved for the eDMA channels viewport and
- 	 * former DMA CTRL register is no longer fixed to FFs.
-+	 *
-+	 * Note that Renesas R-Car S4-8's PCIe controllers for unknown reason
-+	 * have zeros in the eDMA CTRL register even though the HW-manual
-+	 * explicitly states there must FFs if the unrolled mapping is enabled.
-+	 * For such cases the low-level drivers are supposed to manually
-+	 * activate the unrolled mapping to bypass the auto-detection procedure.
- 	 */
--	if (dw_pcie_ver_is_ge(pci, 540A))
-+	if (dw_pcie_ver_is_ge(pci, 540A) || dw_pcie_cap_is(pci, EDMA_UNROLL))
- 		val = 0xFFFFFFFF;
- 	else
- 		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index a8bcbc57ef86..d34a5e87ad18 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -637,6 +637,9 @@ void dw_pcie_ep_exit(struct dw_pcie_ep *ep)
+ 			      epc->mem->window.page_size);
+ 
+ 	pci_epc_mem_exit(epc);
++
++	if (ep->ops->deinit)
++		ep->ops->deinit(ep);
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_ep_exit);
+ 
+@@ -740,6 +743,9 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 	ep->phys_base = res->start;
+ 	ep->addr_size = resource_size(res);
+ 
++	if (ep->ops->pre_init)
++		ep->ops->pre_init(ep);
++
+ 	dw_pcie_version_detect(pci);
+ 
+ 	dw_pcie_iatu_detect(pci);
+@@ -794,7 +800,7 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ 			       ep->page_size);
+ 	if (ret < 0) {
+ 		dev_err(dev, "Failed to initialize address space\n");
+-		return ret;
++		goto err_ep_deinit;
+ 	}
+ 
+ 	ep->msi_mem = pci_epc_mem_alloc_addr(epc, &ep->msi_mem_phys,
+@@ -831,6 +837,10 @@ int dw_pcie_ep_init(struct dw_pcie_ep *ep)
+ err_exit_epc_mem:
+ 	pci_epc_mem_exit(epc);
+ 
++err_ep_deinit:
++	if (ep->ops->deinit)
++		ep->ops->deinit(ep);
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_ep_init);
 diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 373358dee447..85522256a8e5 100644
+index 85522256a8e5..55ff76e3d384 100644
 --- a/drivers/pci/controller/dwc/pcie-designware.h
 +++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -51,8 +51,9 @@
+@@ -331,7 +331,9 @@ struct dw_pcie_rp {
+ };
  
- /* DWC PCIe controller capabilities */
- #define DW_PCIE_CAP_REQ_RES		0
--#define DW_PCIE_CAP_IATU_UNROLL		1
--#define DW_PCIE_CAP_CDM_CHECK		2
-+#define DW_PCIE_CAP_EDMA_UNROLL		1
-+#define DW_PCIE_CAP_IATU_UNROLL		2
-+#define DW_PCIE_CAP_CDM_CHECK		3
- 
- #define dw_pcie_cap_is(_pci, _cap) \
- 	test_bit(DW_PCIE_CAP_ ## _cap, &(_pci)->caps)
+ struct dw_pcie_ep_ops {
++	void	(*pre_init)(struct dw_pcie_ep *ep);
+ 	void	(*ep_init)(struct dw_pcie_ep *ep);
++	void	(*deinit)(struct dw_pcie_ep *ep);
+ 	int	(*raise_irq)(struct dw_pcie_ep *ep, u8 func_no,
+ 			     enum pci_epc_irq_type type, u16 interrupt_num);
+ 	const struct pci_epc_features* (*get_features)(struct dw_pcie_ep *ep);
 -- 
 2.25.1
 
