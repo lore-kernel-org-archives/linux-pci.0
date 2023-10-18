@@ -2,193 +2,267 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 022B3CDB47E
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 11:46:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AA272CDB482
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 11:57:21 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229846AbjJRLqA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 07:46:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48910 "EHLO
+        id S230187AbjJRL5V (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 07:57:21 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:37520 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230359AbjJRL1U (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 07:27:20 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A0EFA114;
-        Wed, 18 Oct 2023 04:27:18 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AFC50C433C8;
-        Wed, 18 Oct 2023 11:27:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697628438;
-        bh=zlW+WXJ03AHaq8TEskzb4g7xW6mVxN5qwb3rME6hGQQ=;
-        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-        b=JWFJEp+Xmwvqe1PFdvZVgupKgddtwchKLguWXYSy2opIYYHnnucRppdNIOI8hvmOL
-         8tn8h6rrY3/6hNMSC9Ysudo5/+2jx6i0aLDx4yyJH5hfKHiEc27hB9D2zHvtIIHiWo
-         lkE1MjpbhdqG/iMyT1Xi7ubTqK32DQT9kwnF9VINOU4CBWL+YbMGpVoUDepNe5pvtv
-         LK1xOym53SCRV8VbCl3ahcq8ZQgZc7wv9A6KboruZTX7Tng5vAnmOfJGXNDaeKTWBH
-         iegx8qrA/LBME+Sc2Vll002vBDr/hTKxEqqdjSvgqOb4GmZX+7KOkUxbqsIT9bTzXY
-         LRAsSME3qYBjQ==
-Date:   Wed, 18 Oct 2023 12:27:12 +0100
-From:   Conor Dooley <conor@kernel.org>
-To:     Minda Chen <minda.chen@starfivetech.com>
-Cc:     Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        Daire McNamara <daire.mcnamara@microchip.com>,
-        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-riscv@lists.infradead.org, linux-pci@vger.kernel.org,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Mason Huo <mason.huo@starfivetech.com>,
-        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
-        Kevin Xie <kevin.xie@starfivetech.com>
-Subject: Re: [PATCH v8 15/22] PCI: microchip: Add get_events() callback
- function
-Message-ID: <20231018-landed-sampling-2fcec42943c8@spud>
-References: <20231011110514.107528-1-minda.chen@starfivetech.com>
- <20231011110514.107528-16-minda.chen@starfivetech.com>
+        with ESMTP id S230131AbjJRL5U (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 07:57:20 -0400
+Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BBEC7114;
+        Wed, 18 Oct 2023 04:57:17 -0700 (PDT)
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 39IBuwRN040439;
+        Wed, 18 Oct 2023 06:56:58 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1697630218;
+        bh=oFUmBVXF6yI0yRITz2nIesN2UtTkvh37pJe0bnmDl/4=;
+        h=Date:CC:Subject:To:References:From:In-Reply-To;
+        b=qXN37eJVsyCy5iI6gsvgip5QP4tYbnV2yVxfWwnnn87bp1DwXJgsGC4DiS55FBzZF
+         E/JVR7bmXOnjJMAm9nO34B9hBgzJY1PN4nZgRWPBfEaYMzwCF5DuL4/neY6CN+IFef
+         NGj0F7njkkYqK4Ys/8T07xL97qUpcyOkqeP/Q1d0=
+Received: from DFLE104.ent.ti.com (dfle104.ent.ti.com [10.64.6.25])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 39IBuw1S122048
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Wed, 18 Oct 2023 06:56:58 -0500
+Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE104.ent.ti.com
+ (10.64.6.25) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Wed, 18
+ Oct 2023 06:56:57 -0500
+Received: from lelv0326.itg.ti.com (10.180.67.84) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Wed, 18 Oct 2023 06:56:57 -0500
+Received: from [172.24.227.9] (ileaxei01-snat2.itg.ti.com [10.180.69.6])
+        by lelv0326.itg.ti.com (8.15.2/8.15.2) with ESMTP id 39IBusYo003529;
+        Wed, 18 Oct 2023 06:56:54 -0500
+Message-ID: <6b74d547-bdaf-41e3-8046-ce295a0ecf03@ti.com>
+Date:   Wed, 18 Oct 2023 17:26:53 +0530
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-        protocol="application/pgp-signature"; boundary="r6ZiTasWF0vb64gL"
-Content-Disposition: inline
-In-Reply-To: <20231011110514.107528-16-minda.chen@starfivetech.com>
+User-Agent: Mozilla Thunderbird
+CC:     <lpieralisi@kernel.org>, <robh@kernel.org>, <kw@linux.com>,
+        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <r-gunasekaran@ti.com>,
+        <srk@ti.com>, <s-vadapalli@ti.com>
+Subject: Re: [PATCH v2] PCI: keystone: Fix ks_pcie_v3_65_add_bus() for AM654x
+ SoC
+Content-Language: en-US
+To:     Serge Semin <fancer.lancer@gmail.com>, <bhelgaas@google.com>
+References: <20231018075038.2740534-1-s-vadapalli@ti.com>
+ <zje5t7zbaisyzwgvkdxnqwlcadsyegipxbhsxxpbqlnuu45ria@4sqxpgieoig2>
+From:   Siddharth Vadapalli <s-vadapalli@ti.com>
+In-Reply-To: <zje5t7zbaisyzwgvkdxnqwlcadsyegipxbhsxxpbqlnuu45ria@4sqxpgieoig2>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
 
---r6ZiTasWF0vb64gL
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
 
-On Wed, Oct 11, 2023 at 07:05:07PM +0800, Minda Chen wrote:
+On 18/10/23 16:41, Serge Semin wrote:
+> On Wed, Oct 18, 2023 at 01:20:38PM +0530, Siddharth Vadapalli wrote:
+>> The ks_pcie_v3_65_add_bus() member of "ks_pcie_ops" was added for
+>> platforms using DW PCIe IP-core version 3.65a. The AM654x SoC uses
+>> DW PCIe IP-core version 4.90a and ks_pcie_v3_65_add_bus() is not
+>> applicable to it.
+> 
+> I'll copy my message from v1 regarding the IP-core version. Are you
+> really sure that it's 4.90a? Here is what my DW PCIe RC
+
+The HW databook I have is named:
+"PCI Express DM Controller Databook"
+and has the following footnote on every page of the databook:
+4.90a
+December 2016
+
+> _v4.90_ HW databook says about the BARs:
+> 
+> "Base Address Registers (Offset: 0x10-x14) The Synopsys core does not
+> implement the optional BARs for the RC product. This is based on the
+> assumption that the RC host probably has registers on some other
+> internal bus and has knowledge and setup access to these registers
+> already."
+> 
+> You cited the next text:
+> 
+> "3.5.7.2 RC Mode. Two BARs are present but are not expected to be
+> used. You should disable them or else they will be unnecessarily
+> assigned memory during device enumeration. If you do use a BAR, then
+> you should program it to capture TLPs that are targeted to your local
+> non-application memory space residing on TRGT1, and not for the
+> application on TRGT1. The BAR range must be outside of the three
+> Base/Limit regions."
+
+The above text is present in the "PCI Express DM Controller Databook" I
+mentioned above that I have with me which I have cited as-is. I am certain that
+the Databook version I have with me is v4.90a. Additionally, please refer to the
+commit which added support to the PCI Keystone driver for AM654x Platform:
+https://github.com/torvalds/linux/commit/18b0415bc802#diff-1a6482b4ef0eddbe6238232ad346930283832b99270ebabd67385571a619c267R977
+On line 977 in the diff:
+.version = 0x490A,
+
+> 
+> AFAICS from the v5.20a, v5.30a, v5.40a databooks, it resides in the
+> _v5.x_ databooks only meanwhile the older ones (v4.21, v4.60a, v4.70a
+> and _v4.90a_) describe the BARs as I cited earlier. It makes my
+> thinking that in your case the IP-core isn't of 4.90a version. Could
+> you please clarify how did you detect the version? Did you use the
+> PCIE_VERSION_NUMBER_OFF register available in the PORT_LOGIC CSRs
+
+The value of the register PCIE_RC_PCIE_VERSION_NUMBER_OFF is:
+3439302a
+which in ASCII is 490*
+The value of the register PCIE_RC_PCIE_VERSION_TYPE_OFF is:
+6c703039
+which in ASCII is lp09.
+
+So I am certain that the Controller is actually version 4.90.
 
 
-> For different interrupts to event num mapping function,
-> add get_events() function pointer.
-> For extenting event ops in the fucture, Add struct
-> plda_event_ops data structure.
+> space? If your judgment was based on the Keyston PCIe driver code,
+> then the driver might get to be wrong in that matter.
+> 
+>>
+>> The commit which added support for the AM654x SoC has reused majority
+>> of the functions with the help of the "is_am6" flag to handle AM654x
+>> separately where applicable. Thus, make use of the "is_am6" flag and
+>> change ks_pcie_v3_65_add_bus() to no-op for AM654x SoC.
+>>
+>> Fixes: 18b0415bc802 ("PCI: keystone: Add support for PCIe RC in AM654x Platforms")
+>> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+>> ---
+>> Hello,
+>>
+>> This patch is based on linux-next tagged next-20231018.
+>>
+>> The v1 of this patch is at:
+>> https://lore.kernel.org/r/20231011123451.34827-1-s-vadapalli@ti.com/
+>>
+>> While there are a lot of changes since v1 and this patch could have been
+>> posted as a v1 patch itself, I decided to post it as the v2 of the patch
+>> mentioned above since it aims to address the issue described by the v1
+>> patch and is similar in that sense. However, the solution to the issue
+>> described in the v1 patch appears to be completely different from what
+>> was implemented in the v1 patch. Thus, the commit message and subject of
+>> this patch have been modified accordingly.
+>>
+>> Changes since v1:
+>> - Updated patch subject and commit message.
+>> - Determined that issue is not with the absence of Link as mentioned in
+>>   v1 patch. Even with Link up and endpoint device connected, if
+>>   ks_pcie_v3_65_add_bus() is invoked and executed, all reads to the
+>>   MSI-X offsets return 0xffffffff when pcieport driver attempts to setup
+>>   AER and PME services. The all Fs return value indicates that the MSI-X
+>>   configuration is failing even if Endpoint device is connected. This is
+>>   because the ks_pcie_v3_65_add_bus() function is not applicable to the
+>>   AM654x SoC which uses DW PCIe IP-core version 4.90a.
+>>
+>> Regards,
+>> Siddharth.
+>>
+>>  drivers/pci/controller/dwc/pci-keystone.c | 2 +-
+>>  1 file changed, 1 insertion(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+>> index 0def919f89fa..3abd59335574 100644
+>> --- a/drivers/pci/controller/dwc/pci-keystone.c
+>> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+>> @@ -459,7 +459,7 @@ static int ks_pcie_v3_65_add_bus(struct pci_bus *bus)
+>>  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+>>  	struct keystone_pcie *ks_pcie = to_keystone_pcie(pci);
+>>  
+> 
+>> -	if (!pci_is_root_bus(bus))
+>> +	if (!pci_is_root_bus(bus) || ks_pcie->is_am6)
+> 
+> 1. IMO defining two versions of the pci_ops struct instances would look
+> more readable:
+> static struct pci_ops ks_pcie_v3_65_ops = {
+>         .map_bus = dw_pcie_own_conf_map_bus,
+>         .read = pci_generic_config_read,
+>         .write = pci_generic_config_write,
+>         .add_bus = ks_pcie_v3_65_add_bus,
+> };
+> 
+> static struct pci_ops ks_pcie_ops = {
+>         .map_bus = dw_pcie_own_conf_map_bus,
+>         .read = pci_generic_config_read,
+>         .write = pci_generic_config_write,
+> };
+> 
+> 2. In case of 1. implemented, ks_pcie_ops will look the same as
+> ks_child_pcie_ops, so the later could be dropped.
+> 
+> 3. I'm not that fluent in the PCIe core details, but based on the
+> pci_host_bridge.child_ops and pci_host_bridge.ops names, the first
+> ones will be utilized for the child PCIe buses, meanwhile the later
+> ones - for the root bus only (see pci_alloc_child_bus()). Bjorn?
+> If so then the pci_is_root_bus() check can be dropped from the
+> ks_pcie_v3_65_add_bus() method. After doing that I would have also
+> changed the name to ks_pcie_v3_65_add_root_bus(). In anyway I would
+> double-check the suggestion first.
 
-I still think these commit messages are a bit weak and should point out
-the reasons why these are needed, rather than handwaving about future
-users.
-Otherwise,
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Please note that irrespective of anything else, with no dependence on any prior
+discussions, what remains true is that commit 6ab15b5e7057:
+PCI: dwc: keystone: Convert .scan_bus() callback to use add_bus
+introduced a bug. Therefore, I believe that the fix will be to attempt to
+restore the driver's state back to what it was prior to commit 6ab15b5e7057, as
+gracefully as possible, without having to revert commit 6ab15b5e7057.
 
-Thanks,
-Conor.
+In the process of converting .scan_bus() callbacks to .add_bus(),
+.scan_bus method was removed from:
+static const struct dw_pcie_host_ops ks_pcie_host_ops = {
+	.host_init = ks_pcie_host_init,
+	.msi_host_init = ks_pcie_msi_host_init,
+	.scan_bus = ks_pcie_v3_65_scan_bus,
+};
 
->=20
-> plda_handle_events() will call the get_events() callback
-> function pointer directly. For the robustness of codes,
-> add checking in plda_init_interrupts().
->=20
-> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-> ---
->  drivers/pci/controller/plda/pcie-microchip-host.c | 14 +++++++++++++-
->  drivers/pci/controller/plda/pcie-plda.h           |  8 ++++++++
->  2 files changed, 21 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/=
-pci/controller/plda/pcie-microchip-host.c
-> index e99498b5b563..fca1520d56c9 100644
-> --- a/drivers/pci/controller/plda/pcie-microchip-host.c
-> +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-> @@ -647,7 +647,7 @@ static void plda_handle_event(struct irq_desc *desc)
-> =20
->  	chained_irq_enter(chip, desc);
-> =20
-> -	events =3D mc_get_events(port);
-> +	events =3D port->event_ops->get_events(port);
-> =20
->  	for_each_set_bit(bit, &events, port->num_events)
->  		generic_handle_domain_irq(port->event_domain, bit);
-> @@ -806,7 +806,12 @@ static int mc_request_event_irq(struct plda_pcie_rp =
-*plda, int event_irq,
->  				0, event_cause[event].sym, plda);
->  }
-> =20
-> +static const struct plda_event_ops mc_event_ops =3D {
-> +	.get_events =3D mc_get_events,
-> +};
-> +
->  static const struct plda_event mc_event =3D {
-> +	.event_ops              =3D &mc_event_ops,
->  	.request_event_irq      =3D mc_request_event_irq,
->  	.intx_event             =3D EVENT_LOCAL_PM_MSI_INT_INTX,
->  	.msi_event              =3D EVENT_LOCAL_PM_MSI_INT_MSI,
-> @@ -920,6 +925,11 @@ static int plda_init_interrupts(struct platform_devi=
-ce *pdev,
->  	int i, intx_irq, msi_irq, event_irq;
->  	int ret;
-> =20
-> +	if (!event->event_ops || !event->event_ops->get_events) {
-> +		dev_err(dev, "no get events ops\n");
-> +		return -EINVAL;
-> +	}
-> +
->  	ret =3D plda_pcie_init_irq_domains(port);
->  	if (ret) {
->  		dev_err(dev, "failed creating IRQ domains\n");
-> @@ -930,6 +940,8 @@ static int plda_init_interrupts(struct platform_devic=
-e *pdev,
->  	if (irq < 0)
->  		return -ENODEV;
-> =20
-> +	port->event_ops =3D event->event_ops;
-> +
->  	for (i =3D 0; i < port->num_events; i++) {
->  		event_irq =3D irq_create_mapping(port->event_domain, i);
->  		if (!event_irq) {
-> diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/contro=
-ller/plda/pcie-plda.h
-> index 5ad1b81c0086..6571a4befac9 100644
-> --- a/drivers/pci/controller/plda/pcie-plda.h
-> +++ b/drivers/pci/controller/plda/pcie-plda.h
-> @@ -102,6 +102,12 @@
->  #define EVENT_PM_MSI_INT_SYS_ERR		12
->  #define NUM_PLDA_EVENTS				13
-> =20
-> +struct plda_pcie_rp;
-> +
-> +struct plda_event_ops {
-> +	u32 (*get_events)(struct plda_pcie_rp *pcie);
-> +};
-> +
->  struct plda_msi {
->  	struct mutex lock;		/* Protect used bitmap */
->  	struct irq_domain *msi_domain;
-> @@ -117,11 +123,13 @@ struct plda_pcie_rp {
->  	struct irq_domain *event_domain;
->  	raw_spinlock_t lock;
->  	struct plda_msi msi;
-> +	const struct plda_event_ops *event_ops;
->  	void __iomem *bridge_addr;
->  	int num_events;
->  };
-> =20
->  struct plda_event {
-> +	const struct plda_event_ops *event_ops;
->  	int (*request_event_irq)(struct plda_pcie_rp *pcie,
->  				 int event_irq, int event);
->  	int intx_event;
-> --=20
-> 2.17.1
->=20
+and added as a .add_bus method to:
+static struct pci_ops ks_pcie_ops = {
+	.map_bus = dw_pcie_own_conf_map_bus,
+	.read = pci_generic_config_read,
+	.write = pci_generic_config_write,
+	.add_bus = ks_pcie_v3_65_add_bus,
+};
+in addition to renaming the method.
 
---r6ZiTasWF0vb64gL
-Content-Type: application/pgp-signature; name="signature.asc"
+Even before commit 6ab15b5e7057, with support for AM654x (using version 4.90a
+DWC PCIe IP-core) already present, ks_pcie_ops was being used for AM654x. This
+indicates that prior to commit 6ab15b5e7057, the ks_pcie_ops was applicable to
+AM654x and there's no problem. However, when commit 6ab15b5e7057 converted the
+.scan_bus() method in ks_pcie_host_ops (which wasn't used for AM654x) to
+.add_bus(), it added the method within the shared ks_pcie_ops structure which
+implicitly, *mistakenly*, assumes that a function named "ks_pcie_v3_65_add_bus"
+is also applicable to other controller versions (4.90a in this case). Paying
+attention to the name of the function, it becomes clear that it was added for
+controller version "3.65", hence the name "...v3_65...". The assumption that the
+function/method is applicable to other controller versions as well, was
+incorrect which led to the current issue that can be observed. The commit
+6ab15b5e7057 ended up adding a new method for a controller version which *never*
+used the method. This therefore is a bug.
 
------BEGIN PGP SIGNATURE-----
+The simplest fix I see is that of exiting ks_pcie_v3_65_add_bus() if:
+ks_pcie->is_am6 is set, since such checks have been scattered throughout the
+same driver prior to the addition of commit 6ab15b5e7057 as well.
 
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZS/BEAAKCRB4tDGHoIJi
-0m/cAQCOrCJ2bYXCB7wvpZnWAUAeEFiNVKT5N+U+TgJyh1aYPgEA5fNtx3R0qwom
-tjpc0UtKhVAbjP8MwJIzQFwaIgq+ig8=
-=OugO
------END PGP SIGNATURE-----
+I am open to other implementations of fixing this issue as well. Kindly let me
+know in case of any suggestions.
 
---r6ZiTasWF0vb64gL--
+> 
+> -Serge(y)
+> 
+>>  		return 0;
+>>  
+>>  	/* Configure and set up BAR0 */
+>> -- 
+>> 2.34.1
+>>
+
+-- 
+Regards,
+Siddharth.
