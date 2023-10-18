@@ -2,40 +2,41 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F2A86CDB482
-	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 16:09:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B25F5CDB484
+	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 16:09:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231486AbjJRQIv (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 12:08:51 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41160 "EHLO
+        id S1344714AbjJRQJE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 12:09:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41218 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232596AbjJRQIu (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 12:08:50 -0400
+        with ESMTP id S1344860AbjJRQIz (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 12:08:55 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1478D119;
-        Wed, 18 Oct 2023 09:08:48 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89FCCC433C7;
-        Wed, 18 Oct 2023 16:08:47 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6083811C;
+        Wed, 18 Oct 2023 09:08:52 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7A09C433C7;
+        Wed, 18 Oct 2023 16:08:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697645327;
-        bh=b8oAa/jdirMMTmQZgftTornsrNPKXWrb1kk+VtNeEYE=;
+        s=k20201202; t=1697645332;
+        bh=wcbn4CqBAdmkjiDP4EL9j1mJscemmjwifau8q2H9Em4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=kNUBrScUeqDw0NCA93kWHVjaqsImrYzD2M1Cu50OMLvVf8kZ4MRs/WEP0V3OLBG5W
-         7q5R1ORwALM3X7BwLzBsbQ/Oq69b3sg4/XYWPvS7nA9siMpjOxZV6BJ8spuKEd8Tvt
-         jBmXjhjWE8KSzl/4nYCLmDpv8wzCfF8qvNoeD7W5eng/SnuXXl4x7rA+U6yn6znsLd
-         YHYN2JstE588u/vI9EjkktNgPRktDz1wWyBSdGBZH8Hg3eawuFFaqEmVR3BYEKEWkI
-         sGJjOcvFbKV72c9GWvTkpUlrrJS57s4giIwN/vwRgDZ8bn1PE4LqeY9UIDNoUnmNvZ
-         acC+lU20cWI/w==
+        b=aZM73jL+QR2IDoY6JoO2lqEYBukJfnHr7rOA07LeIzyqMFkUFDcs0sgFk9OlIfd0u
+         0Pps5+4EKyo8lNOkgU2LMqUHFKT2Z1wqcX1avlTndJsaqmPFg4d/88GGDcuy1Bss8f
+         CVrUUIdmuZzi+CsW5dMe7kRA+RbmCVW+stlB/VQevsj868QrGt0fZ3lNrr9MfOvvl3
+         E2eF9p1szgHsM/T87D1p1pBUWumwGIKWts5nAbICX7hfnf6vyRsA9YUMwXPx/+Y77V
+         8Yt2NrNDmbQph2aH4/6BK/eae1RIzBX75vodZtm+2mskYwp4oYZ81MSZ3KxSbwTtTr
+         5QJ84prLH+4zA==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Martin Mares <mj@ucw.cz>
 Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         Gustavo Pimentel <Gustavo.Pimentel@synopsys.com>,
         Mateusz Nowicki <mateusz.nowicki@solidigm.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 3/8] lspci: Decode PCIe DevCtl2 Emergency Power Reduction Request
-Date:   Wed, 18 Oct 2023 11:08:31 -0500
-Message-Id: <20231018160836.1361510-4-helgaas@kernel.org>
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Subject: [PATCH 6/8] lspci: Print PCIe Interrupt Message Numbers consistently
+Date:   Wed, 18 Oct 2023 11:08:34 -0500
+Message-Id: <20231018160836.1361510-7-helgaas@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231018160836.1361510-1-helgaas@kernel.org>
 References: <20231018160836.1361510-1-helgaas@kernel.org>
@@ -47,44 +48,82 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Decode the PCIe DevCtl2 Emergency Power Reduction Request bit.
+Several Capabilities include MSI/MSI-X Interrupt Message Numbers, which
+were decoded in various ways:
+
+  - MSI %02x                             PCIe Capability
+  - IntMsg %d                            AER Capability
+  - INT Msg #%d                          DPC Capability
+  - Interrupt Message Number %03x        SR-IOV Capability
+  - Interrupt Message Number %03x        DOE Capability
+
+Print them all using the same format:
+
+  + IntMsgNum %d
+
+This better matches the "Interrupt Message Number" terminology used in the
+spec, e.g., PCIe r6.0, sec 7.5.3.2.
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
- lib/header.h | 1 +
- ls-caps.c    | 4 +++-
- 2 files changed, 4 insertions(+), 1 deletion(-)
+ ls-caps.c  | 2 +-
+ ls-ecaps.c | 8 ++++----
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/lib/header.h b/lib/header.h
-index 5065465c33db..c3a720f716b7 100644
---- a/lib/header.h
-+++ b/lib/header.h
-@@ -906,6 +906,7 @@
- #define  PCI_EXP_DEVCTL2_IDO_REQ_EN	0x0100	/* Allow IDO for requests */
- #define  PCI_EXP_DEVCTL2_IDO_CMP_EN	0x0200	/* Allow IDO for completions */
- #define  PCI_EXP_DEVCTL2_LTR		0x0400	/* LTR enabled */
-+#define  PCI_EXP_DEVCTL2_EPR_REQ	0x0800	/* Emergency Power Reduction Request */
- #define  PCI_EXP_DEVCTL2_10BIT_TAG_REQ	0x1000 /* 10 Bit Tag Requester enabled */
- #define  PCI_EXP_DEVCTL2_OBFF(x)		(((x) >> 13) & 3) /* OBFF enabled */
- #define PCI_EXP_DEVSTA2			0x2a	/* Device Status */
 diff --git a/ls-caps.c b/ls-caps.c
-index 0c7bef976144..19c59536f948 100644
+index 6c5b73bf2dca..fce9502bd29a 100644
 --- a/ls-caps.c
 +++ b/ls-caps.c
-@@ -1173,10 +1173,12 @@ static void cap_express_dev2(struct device *d, int where, int type)
-         printf(" EgressBlck%c", FLAG(w, PCI_EXP_DEVCTL2_ATOMICOP_EGRESS_BLOCK));
-       printf("\n");
-     }
--  printf("\t\t\t IDOReq%c IDOCompl%c LTR%c 10BitTagReq%c OBFF %s\n",
-+  printf("\t\t\t IDOReq%c IDOCompl%c LTR%c EmergencyPowerReductionReq%c\n",
- 	FLAG(w, PCI_EXP_DEVCTL2_IDO_REQ_EN),
- 	FLAG(w, PCI_EXP_DEVCTL2_IDO_CMP_EN),
- 	FLAG(w, PCI_EXP_DEVCTL2_LTR),
-+	FLAG(w, PCI_EXP_DEVCTL2_EPR_REQ));
-+  printf("\t\t\t 10BitTagReq%c OBFF %s\n",
- 	FLAG(w, PCI_EXP_DEVCTL2_10BIT_TAG_REQ),
- 	cap_express_devctl2_obff(PCI_EXP_DEVCTL2_OBFF(w)));
- }
+@@ -1436,7 +1436,7 @@ cap_express(struct device *d, int where, int cap)
+     default:
+       printf("Unknown type %d", type);
+   }
+-  printf(", MSI %02x\n", (cap & PCI_EXP_FLAGS_IRQ) >> 9);
++  printf(", IntMsgNum %d\n", (cap & PCI_EXP_FLAGS_IRQ) >> 9);
+   if (verbose < 2)
+     return type;
+ 
+diff --git a/ls-ecaps.c b/ls-ecaps.c
+index 6028607e8217..5bc7a6907349 100644
+--- a/ls-ecaps.c
++++ b/ls-ecaps.c
+@@ -191,7 +191,7 @@ cap_aer(struct device *d, int where, int type)
+ 
+       l = get_conf_long(d, where + PCI_ERR_ROOT_STATUS);
+       printf("\t\tRootSta: CERcvd%c MultCERcvd%c UERcvd%c MultUERcvd%c\n"
+-	    "\t\t\t FirstFatal%c NonFatalMsg%c FatalMsg%c IntMsg %d\n",
++	    "\t\t\t FirstFatal%c NonFatalMsg%c FatalMsg%c IntMsgNum %d\n",
+ 	    FLAG(l, PCI_ERR_ROOT_COR_RCV),
+ 	    FLAG(l, PCI_ERR_ROOT_MULTI_COR_RCV),
+ 	    FLAG(l, PCI_ERR_ROOT_UNCOR_RCV),
+@@ -221,7 +221,7 @@ static void cap_dpc(struct device *d, int where)
+     return;
+ 
+   l = get_conf_word(d, where + PCI_DPC_CAP);
+-  printf("\t\tDpcCap:\tINT Msg #%d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
++  printf("\t\tDpcCap:\tIntMsgNum %d, RPExt%c PoisonedTLP%c SwTrigger%c RP PIO Log %d, DL_ActiveErr%c\n",
+     PCI_DPC_CAP_INT_MSG(l), FLAG(l, PCI_DPC_CAP_RP_EXT), FLAG(l, PCI_DPC_CAP_TLP_BLOCK),
+     FLAG(l, PCI_DPC_CAP_SW_TRIGGER), PCI_DPC_CAP_RP_LOG(l), FLAG(l, PCI_DPC_CAP_DL_ACT_ERR));
+ 
+@@ -371,7 +371,7 @@ cap_sriov(struct device *d, int where)
+     return;
+ 
+   l = get_conf_long(d, where + PCI_IOV_CAP);
+-  printf("\t\tIOVCap:\tMigration%c 10BitTagReq%c Interrupt Message Number: %03x\n",
++  printf("\t\tIOVCap:\tMigration%c 10BitTagReq%c IntMsgNum %d\n",
+ 	FLAG(l, PCI_IOV_CAP_VFM), FLAG(l, PCI_IOV_CAP_VF_10BIT_TAG_REQ), PCI_IOV_CAP_IMN(l));
+   w = get_conf_word(d, where + PCI_IOV_CTRL);
+   printf("\t\tIOVCtl:\tEnable%c Migration%c Interrupt%c MSE%c ARIHierarchy%c 10BitTagReq%c\n",
+@@ -1394,7 +1394,7 @@ cap_doe(struct device *d, int where)
+   printf("\t\tDOECap: IntSup%c\n",
+ 	 FLAG(l, PCI_DOE_CAP_INT_SUPP));
+   if (l & PCI_DOE_CAP_INT_SUPP)
+-    printf("\t\t\tInterrupt Message Number %03x\n",
++    printf("\t\t\tIntMsgNum %d\n",
+ 	   PCI_DOE_CAP_INT_MSG(l));
+ 
+   l = get_conf_long(d, where + PCI_DOE_CTL);
 -- 
 2.34.1
 
