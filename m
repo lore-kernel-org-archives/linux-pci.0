@@ -2,30 +2,30 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9D7F9C46CA1
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4614CDB485
 	for <linux-pci@archiver.kernel.org>; Wed, 18 Oct 2023 16:09:06 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344817AbjJRQJE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 18 Oct 2023 12:09:04 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41190 "EHLO
+        id S1344832AbjJRQJF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 18 Oct 2023 12:09:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41224 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344761AbjJRQIx (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 12:08:53 -0400
+        with ESMTP id S1344983AbjJRQI5 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 18 Oct 2023 12:08:57 -0400
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2152119;
-        Wed, 18 Oct 2023 09:08:50 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6746CC433C8;
-        Wed, 18 Oct 2023 16:08:50 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91553118;
+        Wed, 18 Oct 2023 09:08:55 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8377C433C7;
+        Wed, 18 Oct 2023 16:08:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1697645330;
-        bh=PzeEk2W5nKRvW7BKtpqaTV+ksXI9b1FDcRk+eepXmZk=;
+        s=k20201202; t=1697645335;
+        bh=8EMrUpmQ/dxu9t4g0dBXpSoSTH19mpxuaSMVEHOy7uI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=e5mWmt8AmVEDOoabuds9W7G5s4c45xq/6joWWLAQr2xO4r4UuD307wiyMqOeerjhf
-         loKFiZn3n1f6+C+6Zk7dGYrRemE1XsnlYKs45BmAAZ56xdMwKc5PRW3hXcEGQxBJ46
-         4LsndmrdxmgnV6Rf6smYLfsMVmpmhnrc3sDPOJ63yB5eNjJ6T/+OUquEOSNLpxMp5y
-         TVgIvDzbWpBIpzllft4u8xqmvj3GcDiaCt9cb8/+RazaGS9RQjL6xw7UAvBUdSHDC6
-         vuXHvKdqntcWR0yQjy4vLdxP5vSssAmI+H3VEeOUVbuEHArMvIN4xkKlZTUvg9Lw0d
-         5k3gIIYcKYJIQ==
+        b=XwE6lqA/QH5gFXvA3/4JqY9co+femAvkLjU6T7h5Ds3s+2107qsqc2j96aAPbNSyB
+         IiTy5E3UBxVgUTuOxiiNHWcwqj9a46kJEUJrVKqf61T48eIKaCetDghQ42HIi6sk0C
+         GVc4KGWKRkhx3PbVA2oCjehgAAh4XI7P8IIO94GpcGbffVRCugowCqYpwVLqCw1OnY
+         EeqP7TW2aKX2sGxxNQIWtjXX/ADr+pdVTyDlp5XCSypsZqmbyobwbMiChBSwe5fOSq
+         UMKJeg3mvsgpfq00v7/cW0rCDbbxJEi9m9zku0MqzfxAovltYuWhb/1v5PlnK21UQV
+         uMyrr92gW+yTQ==
 From:   Bjorn Helgaas <helgaas@kernel.org>
 To:     Martin Mares <mj@ucw.cz>
 Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
@@ -33,9 +33,9 @@ Cc:     =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
         Mateusz Nowicki <mateusz.nowicki@solidigm.com>,
         linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
         Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH 5/8] lspci: Decode PCIe LnkCtl Link Disable as 'LnkDisable'
-Date:   Wed, 18 Oct 2023 11:08:33 -0500
-Message-Id: <20231018160836.1361510-6-helgaas@kernel.org>
+Subject: [PATCH 8/8] setpci: Fix man page typo
+Date:   Wed, 18 Oct 2023 11:08:36 -0500
+Message-Id: <20231018160836.1361510-9-helgaas@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231018160836.1361510-1-helgaas@kernel.org>
 References: <20231018160836.1361510-1-helgaas@kernel.org>
@@ -47,27 +47,27 @@ X-Mailing-List: linux-pci@vger.kernel.org
 
 From: Bjorn Helgaas <bhelgaas@google.com>
 
-Decode the Link Disable bit as "LnkDisable" (not simply "Disable") to match
-the spec terminology (PCIe r6.0, sec 7.5.3.7)
+"Several ways how to identity a register" doesn't read correctly and
+misspells "identify".  Reword as "several ways to identify a register".
 
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- ls-caps.c | 2 +-
+ setpci.man | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/ls-caps.c b/ls-caps.c
-index 0d333d578407..6c5b73bf2dca 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -841,7 +841,7 @@ static void cap_express_link(struct device *d, int where, int type)
-   if ((type == PCI_EXP_TYPE_ROOT_PORT) || (type == PCI_EXP_TYPE_ENDPOINT) ||
-       (type == PCI_EXP_TYPE_LEG_END) || (type == PCI_EXP_TYPE_PCI_BRIDGE))
-     printf(" RCB %d bytes,", w & PCI_EXP_LNKCTL_RCB ? 128 : 64);
--  printf(" Disabled%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
-+  printf(" LnkDisable%c CommClk%c\n\t\t\tExtSynch%c ClockPM%c AutWidDis%c BWInt%c AutBWInt%c\n",
- 	FLAG(w, PCI_EXP_LNKCTL_DISABLE),
- 	FLAG(w, PCI_EXP_LNKCTL_CLOCK),
- 	FLAG(w, PCI_EXP_LNKCTL_XSYNCH),
+diff --git a/setpci.man b/setpci.man
+index 9e4e1d8a6c44..fd4495f4d1b4 100644
+--- a/setpci.man
++++ b/setpci.man
+@@ -135,7 +135,7 @@ are hexadecimal numbers. In the latter case, only the bits corresponding to bina
+ ones in the \fImask\fP are changed (technically, this is a read-modify-write operation).
+ 
+ .PP
+-There are several ways how to identity a register:
++There are several ways to identify a register:
+ .IP \(bu
+ Tell its address in hexadecimal.
+ .IP \(bu
 -- 
 2.34.1
 
