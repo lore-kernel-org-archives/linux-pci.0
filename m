@@ -2,118 +2,91 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 528D9CDB474
-	for <linux-pci@archiver.kernel.org>; Fri, 20 Oct 2023 11:05:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74336CDB474
+	for <linux-pci@archiver.kernel.org>; Fri, 20 Oct 2023 12:03:08 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1376937AbjJTLFy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 20 Oct 2023 07:05:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58894 "EHLO
+        id S1377304AbjJTMDI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 20 Oct 2023 08:03:08 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45332 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1377057AbjJTKn5 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Oct 2023 06:43:57 -0400
-Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6897DD52;
-        Fri, 20 Oct 2023 03:43:55 -0700 (PDT)
-Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
-        (using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-        (Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
-        by fd01.gateway.ufhost.com (Postfix) with ESMTP id 2E0AC24E1BB;
-        Fri, 20 Oct 2023 18:43:54 +0800 (CST)
-Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
- (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 20 Oct
- 2023 18:43:54 +0800
-Received: from ubuntu.localdomain (183.27.99.123) by EXMBX171.cuchost.com
- (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 20 Oct
- 2023 18:43:52 +0800
-From:   Minda Chen <minda.chen@starfivetech.com>
-To:     Conor Dooley <conor@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh+dt@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        "Daire McNamara" <daire.mcnamara@microchip.com>,
-        Emil Renner Berthing <emil.renner.berthing@canonical.com>,
-        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-CC:     <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>,
-        Paul Walmsley <paul.walmsley@sifive.com>,
-        Palmer Dabbelt <palmer@dabbelt.com>,
-        Albert Ou <aou@eecs.berkeley.edu>,
-        Philipp Zabel <p.zabel@pengutronix.de>,
-        Mason Huo <mason.huo@starfivetech.com>,
-        Leyfoon Tan <leyfoon.tan@starfivetech.com>,
-        Kevin Xie <kevin.xie@starfivetech.com>,
-        Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v9 13/20] PCI: microchip: Add INTx and MSI event num to struct plda_event
-Date:   Fri, 20 Oct 2023 18:43:34 +0800
-Message-ID: <20231020104341.63157-14-minda.chen@starfivetech.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20231020104341.63157-1-minda.chen@starfivetech.com>
-References: <20231020104341.63157-1-minda.chen@starfivetech.com>
+        with ESMTP id S1376985AbjJTMDH (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 20 Oct 2023 08:03:07 -0400
+Received: from lelv0142.ext.ti.com (lelv0142.ext.ti.com [198.47.23.249])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 025E79E;
+        Fri, 20 Oct 2023 05:03:04 -0700 (PDT)
+Received: from fllv0034.itg.ti.com ([10.64.40.246])
+        by lelv0142.ext.ti.com (8.15.2/8.15.2) with ESMTP id 39KC2rhf000702;
+        Fri, 20 Oct 2023 07:02:53 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+        s=ti-com-17Q1; t=1697803373;
+        bh=euObzAVQLb2kNl6ho+Jc8405Du8j/FkJrWS8fMHsNQk=;
+        h=From:To:CC:Subject:Date;
+        b=Z2Bp82QPobEdnyOf32ZuGEV67Vv/HoIRYraPG2jGB4klDFG34DHVWGU+X297fd7oy
+         25Kq4b9M8C0DZatGg0t82KZwu+DY4ROMfVjt322duArPt9saKP1x+0Q7UFdsTFQkbm
+         hb+LZSStwIn76U7RMz5TUy3yNC1LMSniukGwRt9E=
+Received: from DLEE108.ent.ti.com (dlee108.ent.ti.com [157.170.170.38])
+        by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 39KC2r3S018904
+        (version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+        Fri, 20 Oct 2023 07:02:53 -0500
+Received: from DLEE115.ent.ti.com (157.170.170.26) by DLEE108.ent.ti.com
+ (157.170.170.38) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Fri, 20
+ Oct 2023 07:02:53 -0500
+Received: from lelv0327.itg.ti.com (10.180.67.183) by DLEE115.ent.ti.com
+ (157.170.170.26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Fri, 20 Oct 2023 07:02:53 -0500
+Received: from uda0492258.dhcp.ti.com (ileaxei01-snat.itg.ti.com [10.180.69.5])
+        by lelv0327.itg.ti.com (8.15.2/8.15.2) with ESMTP id 39KC2nZ6092962;
+        Fri, 20 Oct 2023 07:02:50 -0500
+From:   Siddharth Vadapalli <s-vadapalli@ti.com>
+To:     <lpieralisi@kernel.org>, <kw@linux.com>, <mani@kernel.org>,
+        <kishon@kernel.org>, <arnd@arndb.de>, <gregkh@linuxfoundation.org>
+CC:     <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-arm-kernel@lists.infradead.org>, <r-gunasekaran@ti.com>,
+        <srk@ti.com>, <s-vadapalli@ti.com>
+Subject: [PATCH] misc: pci_endpoint_test: Add deviceID for J721S2 PCIe EP device support
+Date:   Fri, 20 Oct 2023 17:32:48 +0530
+Message-ID: <20231020120248.3168406-1-s-vadapalli@ti.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Originating-IP: [183.27.99.123]
-X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX171.cuchost.com
- (172.16.6.91)
-X-YovoleRuleAgent: yovoleflag
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The INTx and MSI interrupt event num is different in Microchip and
-StarFive platform.
+Add DEVICE_ID for J721S2 and enable support for endpoints configured
+with this DEVICE_ID in the pci_endpoint_test driver.
 
-Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 ---
- drivers/pci/controller/plda/pcie-microchip-host.c | 6 ++++--
- drivers/pci/controller/plda/pcie-plda.h           | 2 ++
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
-index c95ef4679fc5..e57827bdb4b3 100644
---- a/drivers/pci/controller/plda/pcie-microchip-host.c
-+++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-@@ -813,6 +813,8 @@ static int mc_request_event_irq(struct plda_pcie_rp *plda, int event_irq,
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index ed4d0ef5e5c3..7e1acc68d435 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -71,6 +71,7 @@
+ #define PCI_DEVICE_ID_TI_AM654			0xb00c
+ #define PCI_DEVICE_ID_TI_J7200			0xb00f
+ #define PCI_DEVICE_ID_TI_AM64			0xb010
++#define PCI_DEVICE_ID_TI_J721S2		0xb013
+ #define PCI_DEVICE_ID_LS1088A			0x80c0
+ #define PCI_DEVICE_ID_IMX8			0x0808
  
- static const struct plda_event mc_event = {
- 	.request_event_irq = mc_request_event_irq,
-+	.intx_event        = EVENT_LOCAL_PM_MSI_INT_INTX,
-+	.msi_event         = EVENT_LOCAL_PM_MSI_INT_MSI,
+@@ -999,6 +1000,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_AM64),
+ 	  .driver_data = (kernel_ulong_t)&j721e_data,
+ 	},
++	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721S2),
++	  .driver_data = (kernel_ulong_t)&j721e_data,
++	},
+ 	{ }
  };
- 
- static int plda_pcie_init_irq_domains(struct plda_pcie_rp *port)
-@@ -953,7 +955,7 @@ static int plda_init_interrupts(struct platform_device *pdev,
- 	}
- 
- 	intx_irq = irq_create_mapping(port->event_domain,
--				      EVENT_LOCAL_PM_MSI_INT_INTX);
-+				      event->intx_event);
- 	if (!intx_irq) {
- 		dev_err(dev, "failed to map INTx interrupt\n");
- 		return -ENXIO;
-@@ -963,7 +965,7 @@ static int plda_init_interrupts(struct platform_device *pdev,
- 	irq_set_chained_handler_and_data(intx_irq, plda_handle_intx, port);
- 
- 	msi_irq = irq_create_mapping(port->event_domain,
--				     EVENT_LOCAL_PM_MSI_INT_MSI);
-+				     event->msi_event);
- 	if (!msi_irq)
- 		return -ENXIO;
- 
-diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
-index 28ed1374e1de..fba7343f9a96 100644
---- a/drivers/pci/controller/plda/pcie-plda.h
-+++ b/drivers/pci/controller/plda/pcie-plda.h
-@@ -124,6 +124,8 @@ struct plda_pcie_rp {
- struct plda_event {
- 	int (*request_event_irq)(struct plda_pcie_rp *pcie,
- 				 int event_irq, int event);
-+	int intx_event;
-+	int msi_event;
- };
- 
- void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
+ MODULE_DEVICE_TABLE(pci, pci_endpoint_test_tbl);
 -- 
-2.17.1
+2.34.1
 
