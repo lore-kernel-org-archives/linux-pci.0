@@ -2,68 +2,58 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BC7BFC001E0
-	for <linux-pci@archiver.kernel.org>; Mon, 23 Oct 2023 15:52:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 79CE3C25B45
+	for <linux-pci@archiver.kernel.org>; Mon, 23 Oct 2023 17:19:18 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229498AbjJWPwA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 23 Oct 2023 11:52:00 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36908 "EHLO
+        id S229453AbjJWRTS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 23 Oct 2023 13:19:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35374 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233353AbjJWPvy (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2023 11:51:54 -0400
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D0A1EFF
-        for <linux-pci@vger.kernel.org>; Mon, 23 Oct 2023 08:51:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-        d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-        MIME-Version:Date:Message-ID:content-disposition;
-        bh=QO0jPqp/qs2yWDaXi5BBn48i75pk74+sIYVNu39eIWI=; b=rxpc1sWGcK/0KVnixkVIxoUh4D
-        zt1jbRdmvX05NlzHlf+4yw6cnDEoYeu91/I6xWIIOqTJ3hoM4kbxltimT+Wsi1+3CjsKRakfpqJtL
-        usTSi0pKUmeqjiQzLLeirXu0K+Dh/5sptZhM1M4Gj315Fb+v2zwS88uIup4MK2CRreEnQGvmG4g++
-        Vw+nPyeHDjf3dbAqpeUhCx5AI0Afh7IXk6cwVkbwLEgAyQ+2dwJRfmb+oDckqcxTpkf9s/UBy689F
-        Ggxlu/SXS9sAqGw/50Rk2E5P9dF7nm2YDTRPp5paWdnfl1pqJYPaD5WaIJMR7ddTxn9GNiLKhQyRv
-        jg4b4KIA==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-        by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-        (Exim 4.94.2)
-        (envelope-from <logang@deltatee.com>)
-        id 1quxDY-004FQC-Fo; Mon, 23 Oct 2023 09:51:49 -0600
-Message-ID: <271d092e-36bd-4420-9432-ffa837e3134f@deltatee.com>
-Date:   Mon, 23 Oct 2023 09:51:47 -0600
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To:     Tadeusz Struk <tstruk@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc:     linux-pci@vger.kernel.org, Tadeusz Struk <tstruk@gigaio.com>
-References: <20231023084050.55230-1-tstruk@gmail.com>
-Content-Language: en-CA
-From:   Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20231023084050.55230-1-tstruk@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: tstruk@gmail.com, bhelgaas@google.com, linux-pci@vger.kernel.org, tstruk@gigaio.com
-X-SA-Exim-Mail-From: logang@deltatee.com
+        with ESMTP id S229594AbjJWRTR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 23 Oct 2023 13:19:17 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 91E1EBD
+        for <linux-pci@vger.kernel.org>; Mon, 23 Oct 2023 10:19:14 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D642C433C7;
+        Mon, 23 Oct 2023 17:19:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698081554;
+        bh=l4EsvDxN5O8Fu8tUL3suWkQEX002BW7JL7zgb/kJKto=;
+        h=Date:From:To:Cc:Subject:In-Reply-To:From;
+        b=nfvKKETCEfnvf+cBShaA2WwSpmvTpmvm+G/iZEFIetlUXxtJgtS4Dv7XHy3b+82ES
+         cUqu9vOX8LrEm4J/SLbTebN3J+EV6EFmwQoviD7g2z/NIjH34VfMKyiFV3cjuArmcn
+         IXXe329DwYhedMAibjm4eCBGago0RYZTXPkZB8EajFZDpcWqBv4SWKpzen+o0FFktj
+         GEtaZrowyoC1R8lKveh5TvQmSoSkd0ZE4Se/3sHG0rmrx25X1ONOnKV3oglrpV4x4X
+         Wo0RiZJtZKAlVK8NWUiqT8ZenfN15Iva3jZF5vCpSsLblN/y1uHibvr+iyAmNJeQwC
+         P3AvA2ne3MfVQ==
+Date:   Mon, 23 Oct 2023 12:19:12 -0500
+From:   Bjorn Helgaas <helgaas@kernel.org>
+To:     Tadeusz Struk <tstruk@gmail.com>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>,
+        Logan Gunthorpe <logang@deltatee.com>,
+        linux-pci@vger.kernel.org, Tadeusz Struk <tstruk@gigaio.com>
 Subject: Re: [PATCH] p2pdma: remove redundant goto
-X-SA-Exim-Version: 4.2.1 (built Sat, 13 Feb 2021 17:57:42 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Message-ID: <20231023171912.GA1601951@bhelgaas>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231023084050.55230-1-tstruk@gmail.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-
-
-On 2023-10-23 02:40, Tadeusz Struk wrote:
+On Mon, Oct 23, 2023 at 10:40:50AM +0200, Tadeusz Struk wrote:
 > Remove redundant goto in pci_alloc_p2pmem()
 > 
 > Signed-off-by: Tadeusz Struk <tstruk@gmail.com>
 
-Makes sense to me.
+Thanks, applied to pci/p2pdma with Logan's reviewed-by for v6.7.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Updated the subject line to:
 
-Logan
+  PCI/P2PDMA: Remove redundant goto
 
+so it matches the history.
 
 > ---
 >  drivers/pci/p2pdma.c | 1 -
@@ -81,3 +71,5 @@ Logan
 >  	}
 >  out:
 >  	rcu_read_unlock();
+> -- 
+> 2.41.0
