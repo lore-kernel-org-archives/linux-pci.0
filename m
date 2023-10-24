@@ -2,35 +2,35 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 84465C07545
-	for <linux-pci@archiver.kernel.org>; Tue, 24 Oct 2023 21:18:27 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DA335C25B6C
+	for <linux-pci@archiver.kernel.org>; Tue, 24 Oct 2023 21:18:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234943AbjJXVS1 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 24 Oct 2023 17:18:27 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56016 "EHLO
+        id S1344267AbjJXVSa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 24 Oct 2023 17:18:30 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56052 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232399AbjJXVS0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2023 17:18:26 -0400
+        with ESMTP id S1344155AbjJXVS3 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 24 Oct 2023 17:18:29 -0400
 Received: from madras.collabora.co.uk (madras.collabora.co.uk [IPv6:2a00:1098:0:82:1000:25:2eeb:e5ab])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C23BD10CF;
-        Tue, 24 Oct 2023 14:18:24 -0700 (PDT)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D38E10CE;
+        Tue, 24 Oct 2023 14:18:27 -0700 (PDT)
 Received: from notapiano.myfiosgateway.com (unknown [IPv6:2600:4041:5b1a:cd00:524d:e95d:1a9c:492a])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
         (No client certificate requested)
         (Authenticated sender: nfraprado)
-        by madras.collabora.co.uk (Postfix) with ESMTPSA id E8CF66607333;
-        Tue, 24 Oct 2023 22:18:21 +0100 (BST)
+        by madras.collabora.co.uk (Postfix) with ESMTPSA id 2ECEE6607341;
+        Tue, 24 Oct 2023 22:18:25 +0100 (BST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-        s=mail; t=1698182303;
-        bh=YRq5099l8oQL4Fdgmj24/WWMHCqsGt/HPtK1ssRTRao=;
-        h=From:To:Cc:Subject:Date:From;
-        b=ka/ZKhFp5M0+/HZbpCsb/pNnyzTib5pwvFEwqEMBcLpZKQeZl3X5l65mXPgALnchS
-         VNbg51Rugu1nhqbFGtYnMItn2Ejb7TtMvzMF2QflQezH3EN7NYYkYtsbBOY+8fSa9t
-         0nI1rqJNFcb3KDmnaBjK+3XaTkoHpOdKjlf3QguMmTba+Tnv8p+isVAZNP/kWI4n1V
-         t6fYkZQTThb+ISVq44KhCtxSKW9v5UIMLtgAYRsk7xlS03QUdMOQQ929+W+yAY5/Te
-         7Wnn4TVona2qfx9AlnFmBPk+MXH9BnhPe0DCKIWV3znm5faqxttQ8Q62xOkO+AmUp0
-         2MGixT6kVYbjg==
+        s=mail; t=1698182306;
+        bh=lA00sz0Lx65AYKekb409w73xnTi/I00wyG4FTRF9Wr8=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=Ir3xG0vLvri+xoOB5vvk5EU7wP/gQklulZkBXiCKV67qnbyDqQPj4hgQreVMjfJ+2
+         uwYdF5wl3okCpb0QepIbNEnN1gBO9nY6sbvGAJ9EGH00VhHUzVeTCpkTe94GvaLXmC
+         nMBfEB0YTmYaMN4hGT5Bkcd8i/yXY7Hscp7sCLjPHTQu9GiMlYqMuV+czQ9jwhO1z+
+         wyKuS1Makuhm6trKb/ao53NgcoDTxanBRMRvDdARcyn0DkVYfixvS0AnnEFlc78vOd
+         qpgir/R/wrT2X99U5bOHtcGR7Qg5L1RpMCeG5ID3V9F1YGZpJdKOnQ3hkFv0DC0ttm
+         0NpN8tXhCDTLQ==
 From:   =?UTF-8?q?N=C3=ADcolas=20F=2E=20R=2E=20A=2E=20Prado?= 
         <nfraprado@collabora.com>
 To:     Shuah Khan <shuah@kernel.org>,
@@ -41,10 +41,12 @@ Cc:     devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kselftest@vger.kernel.org, kernel@collabora.com,
         =?UTF-8?q?N=C3=ADcolas=20F=2E=20R=2E=20A=2E=20Prado?= 
         <nfraprado@collabora.com>, linux-kernel@vger.kernel.org
-Subject: [RFC PATCH 0/2] Add test to verify probe of devices from discoverable busses on DT platforms
-Date:   Tue, 24 Oct 2023 17:17:58 -0400
-Message-ID: <20231024211818.365844-1-nfraprado@collabora.com>
+Subject: [RFC PATCH 2/2] kselftest: devices: Add board file for google,spherion
+Date:   Tue, 24 Oct 2023 17:18:00 -0400
+Message-ID: <20231024211818.365844-3-nfraprado@collabora.com>
 X-Mailer: git-send-email 2.42.0
+In-Reply-To: <20231024211818.365844-1-nfraprado@collabora.com>
+References: <20231024211818.365844-1-nfraprado@collabora.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
@@ -52,57 +54,27 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+Add the list of devices expected to be probed from the USB and PCI
+busses on the google,spherion machine. The USB host controller at
+11200000 is shared between two busses, for USB2 and USB3, so an
+additional match is used to select the USB2 bus.
 
-This is part of an effort to improve detection of regressions impacting
-device probe on all platforms. The recently merged DT kselftest [1]
-detects probe issues for all devices described statically in the DT.
-That leaves out devices discovered at run-time from discoverable busses.
+Signed-off-by: Nícolas F. R. A. Prado <nfraprado@collabora.com>
+---
 
-This is where this test comes in. All of the devices that are connected
-through discoverable busses (ie USB and PCI), and which are internal and
-therefore always present, can be described in a per-platform file so
-they can be checked for. The test will check that the device has been
-instantiated and bound to a driver.
-
-Patch 1 introduces the test. Patch 2 adds the test definitions for the
-google,spherion machine (Acer Chromebook 514) as an example.
-
-This is the sample output from the test running on Spherion:
-
-TAP version 13
- Using board file:  boards/google,spherion
-1..10
-ok 1 usb.camera.0.device
-ok 2 usb.camera.0.driver
-ok 3 usb.camera.1.device
-ok 4 usb.camera.1.driver
-ok 5 usb.bluetooth.0.device
-ok 6 usb.bluetooth.0.driver
-ok 7 usb.bluetooth.1.device
-ok 8 usb.bluetooth.1.driver
-ok 9 pci.wifi.device
-ok 10 pci.wifi.driver
- Totals: pass:10 fail:0 xfail:0 xpass:0 skip:0 error:0
-
-[1] https://lore.kernel.org/all/20230828211424.2964562-1-nfraprado@collabora.com/
-
-
-Nícolas F. R. A. Prado (2):
-  kselftest: Add test to verify probe of devices from discoverable
-    busses
-  kselftest: devices: Add board file for google,spherion
-
- tools/testing/selftests/Makefile              |   1 +
- tools/testing/selftests/devices/.gitignore    |   1 +
- tools/testing/selftests/devices/Makefile      |   8 +
- .../selftests/devices/boards/google,spherion  |   3 +
- .../devices/test_discoverable_devices.sh      | 165 ++++++++++++++++++
- 5 files changed, 178 insertions(+)
- create mode 100644 tools/testing/selftests/devices/.gitignore
- create mode 100644 tools/testing/selftests/devices/Makefile
+ tools/testing/selftests/devices/boards/google,spherion | 3 +++
+ 1 file changed, 3 insertions(+)
  create mode 100644 tools/testing/selftests/devices/boards/google,spherion
- create mode 100755 tools/testing/selftests/devices/test_discoverable_devices.sh
 
+diff --git a/tools/testing/selftests/devices/boards/google,spherion b/tools/testing/selftests/devices/boards/google,spherion
+new file mode 100644
+index 000000000000..ba86ffcfe43c
+--- /dev/null
++++ b/tools/testing/selftests/devices/boards/google,spherion
+@@ -0,0 +1,3 @@
++usb camera 11200000,PRODUCT=.*/2/.* 1.4.1 1 0,1
++usb bluetooth 11200000,PRODUCT=.*/2/.* 1.4.2 1 0,1
++pci wifi 11230000 0.0/0.0
 -- 
 2.42.0
 
