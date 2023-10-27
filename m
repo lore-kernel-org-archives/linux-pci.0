@@ -2,96 +2,113 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1226FC25B47
-	for <linux-pci@archiver.kernel.org>; Fri, 27 Oct 2023 12:25:31 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C1B7C25B48
+	for <linux-pci@archiver.kernel.org>; Fri, 27 Oct 2023 17:14:56 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231345AbjJ0MZa (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 27 Oct 2023 08:25:30 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50790 "EHLO
+        id S235189AbjJ0RO4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 27 Oct 2023 13:14:56 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:35660 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S230101AbjJ0MZ3 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2023 08:25:29 -0400
-Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8081B10A;
-        Fri, 27 Oct 2023 05:25:26 -0700 (PDT)
-X-Alimail-AntiSpam: AC=PASS;BC=-1|-1;BR=01201311R171e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046059;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=15;SR=0;TI=SMTPD_---0Vv-ygIX_1698409518;
-Received: from 30.240.112.233(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Vv-ygIX_1698409518)
-          by smtp.aliyun-inc.com;
-          Fri, 27 Oct 2023 20:25:21 +0800
-Message-ID: <3b2f8b0f-ca94-400f-ae13-ac1de84591b1@linux.alibaba.com>
-Date:   Fri, 27 Oct 2023 20:25:16 +0800
+        with ESMTP id S235181AbjJ0ROq (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 27 Oct 2023 13:14:46 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2EE2F211E
+        for <linux-pci@vger.kernel.org>; Fri, 27 Oct 2023 10:04:24 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1136C43395;
+        Fri, 27 Oct 2023 17:03:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698426209;
+        bh=BfxsvhC4F9lgKCruOEQmZ10Exl7IYgbnsfHRmtm0NuY=;
+        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+        b=OpxFafWsVZ+deFU2cO2DlSnGVClbLbR7ulDy4qEtI9CWagcnrxC7Zi6Zlqo4096C7
+         gEPT7WMZtCw1+ejiIByjINtcant62lR6AXG4AWLUUpACJV52BJaePoJoSOIMpGyqDV
+         viJ8zql35rjy+7shtvnRzrJvlI0eCratoPEaUmH5GlEC4tT0K3m69yqiHiiaQyfAqD
+         mAjHySNjYep/Ps+vVRo2BKk+rSpnTRy3za88jj6//DqukIkuZAZx6r/XL89lno4mHg
+         dofQmRlf4hj2nMO9lXx4KB3rV2fP/cuADWcYwyl8nAIQSJG0GULCiJmu3DaywlMwcu
+         stFjaRBGsGGHg==
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-507a29c7eefso3319932e87.1;
+        Fri, 27 Oct 2023 10:03:28 -0700 (PDT)
+X-Gm-Message-State: AOJu0YwQ2JyWTxc0MKKvsYggW1YNka/4zHuw4yYYtj0k3ybdIHkgjC6/
+        SjN4cvLjnEeHvckAB/YguG9wC0slkxA7vPj3gA==
+X-Google-Smtp-Source: AGHT+IHJBBVNUhcAD3/MpN0+Oo67eI/jbR6jby2nErXAZsV4eVq8huXsTRKEm6EYfS7MX2n5YAd6TKWUQDnZ1WCgNX0=
+X-Received: by 2002:a05:6512:2396:b0:503:343a:829f with SMTP id
+ c22-20020a056512239600b00503343a829fmr3152037lfv.23.1698426207053; Fri, 27
+ Oct 2023 10:03:27 -0700 (PDT)
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 3/4] drivers/perf: add DesignWare PCIe PMU driver
-Content-Language: en-US
-To:     Robin Murphy <robin.murphy@arm.com>,
-        Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-Cc:     Will Deacon <will@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-        Yicong Yang <yangyicong@huawei.com>,
-        chengyou@linux.alibaba.com, kaishen@linux.alibaba.com,
-        baolin.wang@linux.alibaba.com, linux-kernel@vger.kernel.org,
-        linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-        rdunlap@infradead.org, mark.rutland@arm.com,
-        zhuo.song@linux.alibaba.com, renyu.zj@linux.alibaba.com
-References: <20231020134230.53342-1-xueshuai@linux.alibaba.com>
- <20231020134230.53342-4-xueshuai@linux.alibaba.com>
- <20231023123202.GA3515@willie-the-truck>
- <cf72afb6-44c7-45f0-bfaa-6881f6782ebf@arm.com>
- <5b695595-d243-4ea5-97bb-f4c74398fc27@linux.alibaba.com>
- <20231026144428.00005db8@Huawei.com>
- <8f8a2e42-f6ed-4328-9457-5f986d761224@arm.com>
-From:   Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <8f8a2e42-f6ed-4328-9457-5f986d761224@arm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+References: <20231027145422.40265-1-nks@flawful.org> <20231027145422.40265-2-nks@flawful.org>
+ <CAL_JsqJh6aJb7_qsVnVNEABBg2utf0FPN+qYyOfsF2dAfZpd0w@mail.gmail.com> <ZTvh51PGCBhSjURY@x1-carbon>
+In-Reply-To: <ZTvh51PGCBhSjURY@x1-carbon>
+From:   Rob Herring <robh@kernel.org>
+Date:   Fri, 27 Oct 2023 12:03:15 -0500
+X-Gmail-Original-Message-ID: <CAL_JsqKu9VxUrEbvyV0EFi-HhXstitu1sk0jQpbYqTDKY4N3=A@mail.gmail.com>
+Message-ID: <CAL_JsqKu9VxUrEbvyV0EFi-HhXstitu1sk0jQpbYqTDKY4N3=A@mail.gmail.com>
+Subject: Re: [PATCH v3 1/6] dt-bindings: PCI: dwc: rockchip: Add mandatory atu reg
+To:     Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc:     Niklas Cassel <nks@flawful.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Shawn Lin <shawn.lin@rock-chips.com>,
+        Simon Xue <xxm@rock-chips.com>,
+        Damien Le Moal <dlemoal@kernel.org>,
+        Sebastian Reichel <sebastian.reichel@collabora.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+        "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+        "linux-arm-kernel@lists.infradead.org" 
+        <linux-arm-kernel@lists.infradead.org>,
+        "linux-rockchip@lists.infradead.org" 
+        <linux-rockchip@lists.infradead.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
+On Fri, Oct 27, 2023 at 11:15=E2=80=AFAM Niklas Cassel <Niklas.Cassel@wdc.c=
+om> wrote:
+>
+> Hello Rob,
+>
+> On Fri, Oct 27, 2023 at 10:58:28AM -0500, Rob Herring wrote:
+> > On Fri, Oct 27, 2023 at 9:56=E2=80=AFAM Niklas Cassel <nks@flawful.org>=
+ wrote:
+> > >
+> > > From: Niklas Cassel <niklas.cassel@wdc.com>
+> > >
+> > > Even though rockchip-dw-pcie.yaml inherits snps,dw-pcie.yaml
+> > > using:
+> > >
+> > > allOf:
+> > >   - $ref: /schemas/pci/snps,dw-pcie.yaml#
+> > >
+> > > and snps,dw-pcie.yaml does have the atu reg defined, in order to be
+> > > able to use this reg, while still making sure 'make CHECK_DTBS=3Dy'
+> > > pass, we need to add this reg to rockchip-dw-pcie.yaml.
+> > >
+> > > All compatible strings (rockchip,rk3568-pcie and rockchip,rk3588-pcie=
+)
+> > > should have this reg.
+> > >
+> > > The regs in the example are updated to actually match pcie3x2 on rk35=
+68.
+> >
+> > Breaking compatibility on these platforms is okay because ...?
+>
+> I don't follow, could you please elaborate?
 
+A DT which was valid without 'atu' region is now not valid with this
+change. If I'm reading this schema with the change, then not having
+'atu' is an error and the OS can treat it as an error. If it does,
+then it wouldn't work with existing DTs. You cannot add new required
+properties or required entries.
 
-On 2023/10/27 00:52, Robin Murphy wrote:
-> On 26/10/2023 2:44 pm, Jonathan Cameron wrote:
->> On Tue, 24 Oct 2023 17:29:34 +0800
->> Shuai Xue <xueshuai@linux.alibaba.com> wrote:
->>
->>> + Will, Jonathan, Bjorn and Yicong for probe and hotplug handing.
->>>
-...
->>>>>> +
->>>>>> +    dwc_pcie_pmu_hp_state = ret;
->>>>>> +
->>>>>> +    ret = platform_driver_register(&dwc_pcie_pmu_driver);
->>>>>> +    if (ret)
->>>>>> +        goto platform_driver_register_err;
->>>>>> +
->>>>>> +    dwc_pcie_pmu_dev = platform_device_register_simple(
->>>>>> +                "dwc_pcie_pmu", PLATFORM_DEVID_NONE, NULL, 0);
->>>>>> +    if (IS_ERR(dwc_pcie_pmu_dev)) {
->>>>>> +        ret = PTR_ERR(dwc_pcie_pmu_dev);
->>>>>> +        goto platform_device_register_error;
->>>>>> +    }
->>>>>
->>>>> I'm a bit confused as to why you're having to create a platform device
->>>>> for a PCI device -- is this because the main designware driver has already
->>>>> bound to it? A comment here explaining why you need to do this would be
->>>>> very helpful. In particular, is there any dependency on another driver
->>>>> to make sure that e.g. config space accesses work properly? If so, we
->>>>> probably need to enforce module load ordering or something like that.
->>>>
->>>> AFAICS the platform device/driver serve no purpose other than being a hilariously roundabout way to run the for_each_pci_dev() loop in dwc_pcie_pmu_probe() upon module init, and to save explicitly freeing the PMU name/data. Furthermore the devres action for dwc_pcie_pmu_remove_cpuhp_instance() is apparently going for even more style points at module exit by not even relying on the corresponding .remove callback of the tenuous platform driver to undo what its .probe did, but (ab)using the device's devres list to avoid having to keep track of an explicit list of PMU instances at all.
->>>
->>> You are right.
->>
->> Also provides a (potential) parent for the PMU devices which is something
->> we were trying to clean up for existing PMUs (which end up in the
->> wrong directly in sysfs because they typically don't have parents).
-> 
-> Surely the relevant PCI device would be an even more appropriate parent, though, since that's the true topology?
-> 
+If you can say no users of the affected platforms care (e.g. only you
+have a board) or the binding is not yet in use, then it's fine. But
+you have to state that justification. I suspect that is not the case
+here.
 
-I see, I will add its parent.
-
-Thank you.
-Best Regards,
-Shuai
+Rob
