@@ -2,141 +2,58 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id DCD89C4167B
-	for <linux-pci@archiver.kernel.org>; Sat,  4 Nov 2023 03:12:35 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 14696C4332F
+	for <linux-pci@archiver.kernel.org>; Sat,  4 Nov 2023 04:58:02 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234926AbjKDDMf (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Nov 2023 23:12:35 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51976 "EHLO
+        id S231613AbjKDE6C (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sat, 4 Nov 2023 00:58:02 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40646 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234725AbjKDDMe (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2023 23:12:34 -0400
-Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 64D07D42;
-        Fri,  3 Nov 2023 20:12:32 -0700 (PDT)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10FBCC433C9;
-        Sat,  4 Nov 2023 03:12:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699067552;
-        bh=oI0QedCsOnC8Jw7SXQdJ46me22RoBpkAwcj3jrvSNwE=;
-        h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-        b=A3D92dsfYdiPd9aSrKm3J5sxnKBpbBkEsH8bXJVjXwIwQSGj42cdE1r92dHJgHdgx
-         bKzNhD17fmHLt+4Lqgc9qom4YMq5nBcK5IdJrxTFUBqA4KArdoMYBaBg1LdaErJEI3
-         DHB3JCS2XnRbCtDgKqGAYM4+0+aPjmZQ2mLEW81QjL7bqGO/BhsCMgAnQM/ODtwvu0
-         YVJm4DmVGNH23PQV7ou316W6YJjfVrE4mhAcCRa4soiD3eY789R4yihOLvMMJgLcS4
-         2tFcBqoIA6sqYZUbPn1ZyZRt2bB3CdgaSe2lly4760N32SwrlyCbPL68PQJUt5/N/r
-         VRjy6U1N0PYvg==
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-9db6cf8309cso373658066b.0;
-        Fri, 03 Nov 2023 20:12:32 -0700 (PDT)
-X-Gm-Message-State: AOJu0YzknupsSJawLgttBS4C2abNAceytrgV8fDPePs+YWVXy/Aqy0gF
-        X0ES6XSTug5BWXV9LrcXtTvA8X1wt59uT1bi/nw=
-X-Google-Smtp-Source: AGHT+IFEzA0jYVYe46njXNrOwelVMkm00a0rVzjZ0X18HAMZq/Uj9IcMTrJQaZ092NhSYg7o+LTvhC2J6JJwsLLdvIA=
-X-Received: by 2002:a17:907:97cd:b0:9b8:7746:f176 with SMTP id
- js13-20020a17090797cd00b009b87746f176mr8142759ejc.34.1699067550501; Fri, 03
- Nov 2023 20:12:30 -0700 (PDT)
+        with ESMTP id S229509AbjKDE6C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sat, 4 Nov 2023 00:58:02 -0400
+X-Greylist: delayed 4263 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 03 Nov 2023 21:58:00 PDT
+Received: from mail.profitpathwaygo.com (mail.profitpathwaygo.com [141.94.21.238])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1C3AB112
+        for <linux-pci@vger.kernel.org>; Fri,  3 Nov 2023 21:58:00 -0700 (PDT)
+Received: by mail.profitpathwaygo.com (Postfix, from userid 1002)
+        id 8AB604EC4F; Mon, 30 Oct 2023 08:30:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=profitpathwaygo.com;
+        s=mail; t=1698654909;
+        bh=qp3Ofokho6Ql+WtI8ZPVilyHYhskXL7fod7u9CWs8W4=;
+        h=Date:From:To:Subject:From;
+        b=bAlE6lRbdrrAWUH5JpN1RwlFIB8xNjV6NpH6PgQrIqrIb5pbO7HnXXhX/lu0HdJxk
+         9yBziaroijJlt4d0Ub7SDBRk7RFkKl1Wrn8aIroui3d6P+10W3752vWR0hIhH0I5Tq
+         d2r8TdzffAb+1rAScKnEaNbrzKtIHpMuj9/pMGoHpQtIvVUErg9YvXMsC3arBQFQWp
+         vMgpEdZaXxt7Ioy2+gbxteZjtnk0S38bjMumCj5Pw17vN7WqVjdHozDJ8R7kFdG4NU
+         nWlmCeI9XbvWVZZYto8ZtcviJnh93yEr/rcDNH3IyMY2IciSV3MYVed6PCIU+Jx1pZ
+         xviM1q2mVKjMg==
+Received: by mail.profitpathwaygo.com for <linux-pci@vger.kernel.org>; Mon, 30 Oct 2023 08:30:28 GMT
+Message-ID: <20231030074500-0.1.2s.154fb.0.lbfem4ulhn@profitpathwaygo.com>
+Date:   Mon, 30 Oct 2023 08:30:28 GMT
+From:   "Adam Charachuta" <adam.charachuta@profitpathwaygo.com>
+To:     <linux-pci@vger.kernel.org>
+Subject: =?UTF-8?Q?S=C5=82owa_kluczowe_do_wypozycjonowania_?=
+X-Mailer: mail.profitpathwaygo.com
 MIME-Version: 1.0
-References: <20231101114957.309902-1-jiaxun.yang@flygoat.com>
-In-Reply-To: <20231101114957.309902-1-jiaxun.yang@flygoat.com>
-From:   Huacai Chen <chenhuacai@kernel.org>
-Date:   Sat, 4 Nov 2023 11:12:18 +0800
-X-Gmail-Original-Message-ID: <CAAhV-H41Jwz2AuGxFJfq1f6nOkSJVASOjN8R6dxDqtDhGTs-Ug@mail.gmail.com>
-Message-ID: <CAAhV-H41Jwz2AuGxFJfq1f6nOkSJVASOjN8R6dxDqtDhGTs-Ug@mail.gmail.com>
-Subject: Re: [PATCH fixes v4] pci: loongson: Workaround MIPS firmware MRRS settings
-To:     Jiaxun Yang <jiaxun.yang@flygoat.com>
-Cc:     linux-pci@vger.kernel.org, lpieralisi@kernel.org, kw@linux.com,
-        robh@kernel.org, linux-kernel@vger.kernel.org,
-        stable@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, Nov 1, 2023 at 11:27=E2=80=AFPM Jiaxun Yang <jiaxun.yang@flygoat.co=
-m> wrote:
->
-> This is a partial revert of commit 8b3517f88ff2 ("PCI:
-> loongson: Prevent LS7A MRRS increases") for MIPS based Loongson.
->
-> There are many MIPS based Loongson systems in wild that
-> shipped with firmware which does not set maximum MRRS properly.
->
-> Limiting MRRS to 256 for all as MIPS Loongson comes with higher
-> MRRS support is considered rare.
->
-> It must be done at device enablement stage because hardware will
-> reset MRRS to inavlid value if a device got disabled.
->
-> Cc: stable@vger.kernel.org
-> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=3D217680
-> Fixes: 8b3517f88ff2 ("PCI: loongson: Prevent LS7A MRRS increases")
-> Signed-off-by: Jiaxun Yang <jiaxun.yang@flygoat.com>
-> ---
-> v4: Improve commit message
->
-> This is a partial revert of the origin quirk so there shouldn't
-> be any drama.
-> ---
->  drivers/pci/controller/pci-loongson.c | 38 +++++++++++++++++++++++++++
->  1 file changed, 38 insertions(+)
->
-> diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controll=
-er/pci-loongson.c
-> index d45e7b8dc530..d184d7b97e54 100644
-> --- a/drivers/pci/controller/pci-loongson.c
-> +++ b/drivers/pci/controller/pci-loongson.c
-> @@ -108,6 +108,44 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
->  DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
->                         DEV_LS7A_PCIE_PORT6, loongson_mrrs_quirk);
->
-> +#ifdef CONFIG_MIPS
-> +static void loongson_old_mrrs_quirk(struct pci_dev *pdev)
-> +{
-> +       struct pci_bus *bus =3D pdev->bus;
-> +       struct pci_dev *bridge;
-> +       static const struct pci_device_id bridge_devids[] =3D {
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS2K_PCIE_PORT0) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT0) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT1) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT2) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT3) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT4) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT5) },
-> +               { PCI_VDEVICE(LOONGSON, DEV_LS7A_PCIE_PORT6) },
-> +               { 0, },
-> +       };
-> +
-> +       /* look for the matching bridge */
-> +       while (!pci_is_root_bus(bus)) {
-> +               bridge =3D bus->self;
-> +               bus =3D bus->parent;
-> +               /*
-> +                * There are still some wild MIPS Loongson firmware won't
-> +                * set MRRS properly. Limiting MRRS to 256 as MIPS Loongs=
-on
-> +                * comes with higher MRRS support is considered rare.
-> +                */
-> +               if (pci_match_id(bridge_devids, bridge)) {
-> +                       if (pcie_get_readrq(pdev) > 256) {
-> +                               pci_info(pdev, "limiting MRRS to 256\n");
-> +                               pcie_set_readrq(pdev, 256);
-> +                       }
-> +                       break;
-> +               }
-> +       }
-> +}
-> +DECLARE_PCI_FIXUP_ENABLE(PCI_ANY_ID, PCI_ANY_ID, loongson_old_mrrs_quirk=
-);
-> +#endif
-Rename it to loongson_set_min_mrrs() and move it before
-loongson_mrrs_quirk() may be better.
+Dzie=C5=84 dobry,
 
-Huacai
+zapozna=C5=82em si=C4=99 z Pa=C5=84stwa ofert=C4=85 i z przyjemno=C5=9Bci=
+=C4=85 przyznaj=C4=99, =C5=BCe przyci=C4=85ga uwag=C4=99 i zach=C4=99ca d=
+o dalszych rozm=C3=B3w.=20
 
-> +
->  static void loongson_pci_pin_quirk(struct pci_dev *pdev)
->  {
->         pdev->pin =3D 1 + (PCI_FUNC(pdev->devfn) & 3);
-> --
-> 2.34.1
->
+Pomy=C5=9Bla=C5=82em, =C5=BCe mo=C5=BCe m=C3=B3g=C5=82bym mie=C4=87 sw=C3=
+=B3j wk=C5=82ad w Pa=C5=84stwa rozw=C3=B3j i pom=C3=B3c dotrze=C4=87 z t=C4=
+=85 ofert=C4=85 do wi=C4=99kszego grona odbiorc=C3=B3w. Pozycjonuj=C4=99 =
+strony www, dzi=C4=99ki czemu generuj=C4=85 =C5=9Bwietny ruch w sieci.
+
+Mo=C5=BCemy porozmawia=C4=87 w najbli=C5=BCszym czasie?
+
+
+Pozdrawiam serdecznie
+Adam Charachuta
