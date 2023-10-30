@@ -2,108 +2,131 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id BDAC1C4167D
-	for <linux-pci@archiver.kernel.org>; Mon, 30 Oct 2023 20:36:09 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2A5A1C4332F
+	for <linux-pci@archiver.kernel.org>; Mon, 30 Oct 2023 23:33:05 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229763AbjJ3UgK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Mon, 30 Oct 2023 16:36:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58202 "EHLO
+        id S229677AbjJ3XdF (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Mon, 30 Oct 2023 19:33:05 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52730 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231395AbjJ3UgJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2023 16:36:09 -0400
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.100])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 41BF7100
-        for <linux-pci@vger.kernel.org>; Mon, 30 Oct 2023 13:36:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1698698166; x=1730234166;
-  h=from:to:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=ym2ctNINyktJImW/k0OG/PnDZ1yktsI43wV0RXJdc+A=;
-  b=Pb14MbaCVizC6WwFcIkst4IG6vC8OrrTBuEZ/KHvQqkKrDZ/xWQWtH3N
-   r/9gSC7YoiqKkvDxvsHmMWeR2JjcYjlVovAYcziC8jZkkbA8rWhcpSXHr
-   d03K21YkDEA3JBm5SkNBLoh85Qp3Y4J+p4emZNmWocPgnoXffIUweIGZM
-   xxIgfrBMXtus2qDMJYCsGYPPcxB5/Zcp2AO+GlNTT1iE8Bujtgq4T1Ekc
-   kDUJPAk36hQv8BMiUcX4gcFK1FjKATX9jTOXk3xDP6D9BtAeuuSPd24G3
-   rJOL29w/vgOZCt1G28Q9FgEVGyqkWi85nxfNu760z49QrgFQAkww5NB1d
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="454620124"
-X-IronPort-AV: E=Sophos;i="6.03,264,1694761200"; 
-   d="scan'208";a="454620124"
-Received: from fmsmga008.fm.intel.com ([10.253.24.58])
-  by orsmga105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2023 13:35:59 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10879"; a="826162119"
-X-IronPort-AV: E=Sophos;i="6.03,264,1694761200"; 
-   d="scan'208";a="826162119"
-Received: from unknown (HELO localhost.ch.intel.com) ([10.2.230.30])
-  by fmsmga008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2023 13:35:58 -0700
-From:   Nirmal Patel <nirmal.patel@linux.intel.com>
-To:     nirmal.patel@linux.intel.com, <linux-pci@vger.kernel.org>
-Subject: [PATCH] PCI: vmd: Enable Hotplug based on BIOS setting on VMD rootports
-Date:   Mon, 30 Oct 2023 16:16:54 -0400
-Message-Id: <20231030201654.27505-1-nirmal.patel@linux.intel.com>
-X-Mailer: git-send-email 2.31.1
+        with ESMTP id S229646AbjJ3XdE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Mon, 30 Oct 2023 19:33:04 -0400
+Received: from mail-lf1-x132.google.com (mail-lf1-x132.google.com [IPv6:2a00:1450:4864:20::132])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id AC8F0C2;
+        Mon, 30 Oct 2023 16:33:01 -0700 (PDT)
+Received: by mail-lf1-x132.google.com with SMTP id 2adb3069b0e04-507adc3381cso7244501e87.3;
+        Mon, 30 Oct 2023 16:33:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1698708780; x=1699313580; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=TYzQy61n4OpQizbkMFZEMwiE1E2OOTWr3NUjWoPbxLQ=;
+        b=fGSKkIFueXKjkdnPyQZJAs2Owq5zZVoAdhRMv34VYAoVP7OelJRl9VhO0pSoqIkJ2h
+         jnXQJ0PLQCSXm3NlyoTCNpVvfyPuy4Ecs0CZt5QtI1lPkFshdiIMcumi3ajILhsQRS8P
+         hm9APZ3F9AF+xyjtJyJdhv9nSrDov5yfTiZEcYClfIOAVD1bwqS0b9lzuOKdQdvqK+ei
+         M4kACEr5Loro46rrD3wPoVuw9DodIZx4Tly7JBcsAVnBaXtR8BVPOz0FaInYDbIr+p7N
+         1RLwsY2VD9x41kY4x9MQxuyk8qRGobFZQnrPq0D0dyAVZ6sSyRZvLvjYO1Fa4ohPHzyd
+         ojmg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1698708780; x=1699313580;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=TYzQy61n4OpQizbkMFZEMwiE1E2OOTWr3NUjWoPbxLQ=;
+        b=CuP3HEgrDoof/mmjU1YV/PopV2mFvHbJ7cqocb4Tw+qUXyCF4xbgmTYOpWcO1tEmkw
+         kfawf8lzjwyHFiWIzOQA+hJ/SDNMyHTQB3EKNtdQd0cvvO29lA+w0whJiHORTz6yvF+l
+         nbJ5n0VdDsX3NvbmH3tgfl58VcBPPn2qHBNAWeJIcosrGSvZl4NSWk28TCtEFzxXwW1X
+         +vKN8g9LN4gJpYTZPPu7tTIlzn43RKYG3Br5/id7TJnwtExujSqRj3hiZGmrvpqTJeQz
+         Sxoxx8+K5O8RrUE91b6OIurHII5aFCMokf+wCs5UuD7QGDXxNtQ3Nvt6qdZrBLLCIsYi
+         /BZw==
+X-Gm-Message-State: AOJu0YwGRjh2SL23eRahQw0LBqXWtoDrm6TUHO9ApWcSdUBHGGJWvGjp
+        XrHAye8uaBWDEOQKx4ZVi7Y=
+X-Google-Smtp-Source: AGHT+IHX/xKq0tp9DABrucx3glLbnJxxbHBzclrIoU4uhOMhN+Lkw3rXuc7gQXaxtsHWmolNqt5atg==
+X-Received: by 2002:a05:6512:3b97:b0:507:9777:a34a with SMTP id g23-20020a0565123b9700b005079777a34amr11418761lfv.39.1698708779583;
+        Mon, 30 Oct 2023 16:32:59 -0700 (PDT)
+Received: from mobilestation ([89.113.151.243])
+        by smtp.gmail.com with ESMTPSA id t7-20020ac243a7000000b0050420b0a642sm2548lfl.91.2023.10.30.16.32.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 30 Oct 2023 16:32:59 -0700 (PDT)
+Date:   Tue, 31 Oct 2023 02:32:56 +0300
+From:   Serge Semin <fancer.lancer@gmail.com>
+To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc:     Xiaowei Song <songxiaowei@hisilicon.com>,
+        Binghui Wang <wangbinghui@hisilicon.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jingoo Han <jingoohan1@gmail.com>,
+        linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: Re: [PATCH] PCI: kirin: Fix an error path in kirin_pcie_probe()
+Message-ID: <gpmjckwgbbccsnjcexg7wtvw2oshj6wuwqomlbbo2ebok5oe3g@ky6mfxdutnt4>
+References: <e2b83334ab204ee905fe36ac01cfc297a5a2a7be.1698654061.git.christophe.jaillet@wanadoo.fr>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e2b83334ab204ee905fe36ac01cfc297a5a2a7be.1698654061.git.christophe.jaillet@wanadoo.fr>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-VMD Hotplug should be enabled or disabled based on VMD rootports'
-Hotplug configuration in BIOS. is_hotplug_bridge is set on each
-VMD rootport based on Hotplug capable bit in SltCap in probe.c.
-Check is_hotplug_bridge and enable or disable native_pcie_hotplug
-based on that value.
+On Mon, Oct 30, 2023 at 09:21:16AM +0100, Christophe JAILLET wrote:
+> If an error occurs after a successful kirin_pcie_power_on(),
+> kirin_pcie_power_off() should be called, as already done in the remove
+> function.
+> 
+> Fixes: fc5165db245a ("PCI: kirin: Add HiSilicon Kirin SoC PCIe controller driver")
+> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+> ---
+> Not sure of the Fixes tag.
+> ---
+>  drivers/pci/controller/dwc/pcie-kirin.c | 10 +++++++++-
+>  1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+> index 2ee146767971..0b93de9d2d06 100644
+> --- a/drivers/pci/controller/dwc/pcie-kirin.c
+> +++ b/drivers/pci/controller/dwc/pcie-kirin.c
+> @@ -813,7 +813,15 @@ static int kirin_pcie_probe(struct platform_device *pdev)
+>  	if (ret)
+>  		return ret;
+>  
+> -	return dw_pcie_host_init(&pci->pp);
+> +	ret = dw_pcie_host_init(&pci->pp);
+> +	if (ret)
+> +		goto err_power_off;
+> +
+> +	return 0;
+> +
+> +err_power_off:
+> +	kirin_pcie_power_off(kirin_pcie);
+> +	return ret;
 
-Currently VMD driver copies ACPI settings or platform configurations
-for Hotplug, AER, DPC, PM, etc and enables or disables these features
-on VMD bridge which is not correct in case of Hotplug.
+From the current driver implementation point of view this looks
+correct. So
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 
-Also during the Guest boot up, ACPI settings along with VMD UEFI
-driver are not present in Guest BIOS which results in assigning
-default values to Hotplug, AER, DPC, etc. As a result Hotplug is
-disabled on VMD in the Guest OS.
+But the design of the power on/off procedures seems very unfortunate:
+1. Calling antagonist from the respective protagonist is a bad
+solution for maintainability, because shall you need to add something
+to the protagonist you'll need to somehow take into account that it is
+reverted in the antagonist only if it was executed, which in its
+turn will get to be impossible if there are several conditional
+steps need to be implemented.
+2. There is a logical split up between the hi3660 and other
+controllers. Wherein the hi3660-specific code is implemented as a set
+of various coherent functions, meanwhile the code for the other
+controllers is placed directly to the kirin_pcie_power_on() and
+kirin_pcie_power_off() functions. It looks clumsy and hard-readable.
+3. kirin_pcie->gpio_id_dwc_perst is requested and switched to output,
+but is never freed and got back to input or level zero.
 
-This patch will make sure that Hotplug is enabled properly in Host
-as well as in VM.
+-Serge(y)
 
-Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
----
----
- drivers/pci/controller/vmd.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 769eedeb8802..e39eaef5549a 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -720,6 +720,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	resource_size_t membar2_offset = 0x2000;
- 	struct pci_bus *child;
- 	struct pci_dev *dev;
-+	struct pci_host_bridge *vmd_bridge;
- 	int ret;
- 
- 	/*
-@@ -886,8 +887,16 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	 * and will fail pcie_bus_configure_settings() early. It can instead be
- 	 * run on each of the real root ports.
- 	 */
--	list_for_each_entry(child, &vmd->bus->children, node)
-+	vmd_bridge = to_pci_host_bridge(vmd->bus->bridge);
-+	list_for_each_entry(child, &vmd->bus->children, node) {
- 		pcie_bus_configure_settings(child);
-+		/*
-+		 * When Hotplug is enabled on vmd root-port, enable it on vmd
-+		 * bridge.
-+		 */
-+		if (child->self->is_hotplug_bridge)
-+			vmd_bridge->native_pcie_hotplug = 1;
-+	}
- 
- 	pci_bus_add_devices(vmd->bus);
- 
--- 
-2.31.1
-
+>  }
+>  
+>  static struct platform_driver kirin_pcie_driver = {
+> -- 
+> 2.34.1
+> 
