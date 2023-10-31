@@ -2,110 +2,130 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 3420CC4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 31 Oct 2023 04:41:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 62141C4332F
+	for <linux-pci@archiver.kernel.org>; Tue, 31 Oct 2023 04:58:04 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236863AbjJaEly (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 31 Oct 2023 00:41:54 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:59456 "EHLO
+        id S236348AbjJaE6E (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 31 Oct 2023 00:58:04 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:54672 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236853AbjJaElv (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2023 00:41:51 -0400
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 94BCD98;
-        Mon, 30 Oct 2023 21:41:49 -0700 (PDT)
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 39V3g4Dm008494;
-        Tue, 31 Oct 2023 04:41:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=3fpmiuthC9CHGeq0wmB3uVkOPmEtr2rm72aEfJ8BAVw=;
- b=iscILfoqPZc0TjlMPKXUpftJhSZqQi60ltiVClTw9qliM4w7KjAAYHyqmD9T58slB0Z+
- Wetr394iVw3Ih0SpmfLi79k06ZfvvpcTrS2+zvRmlvzFrqNMiIv2NZ12BIwGoLyMYxuf
- 37xe83/Lp6JGPt8ahFKtrqoXVDhCP2Lwsrhe9WuZhCBGM2Z5nq728u0GqfQmxl0JBGPf
- Q43PPCDZebUwJwyG/GKE0eUt6qfkjYxeh6L637bTCK7II9XFxY8QPPnLOELSEBcO5Tij
- b3sI879aqRQrp8/P9p3bIqfJ1/yqcZz2wFSaQd+r+CFJgImVk0e8uqMQr66wYcIDpCkz bQ== 
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3u2b2qt4fe-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Tue, 31 Oct 2023 04:41:16 +0000
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 39V4fDVc012185;
-        Tue, 31 Oct 2023 04:41:13 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 3u0uckttak-1;
-        Tue, 31 Oct 2023 04:41:13 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 39V4fDA2012177;
-        Tue, 31 Oct 2023 04:41:13 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 39V4fD4q012170;
-        Tue, 31 Oct 2023 04:41:13 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id 738E1449C; Tue, 31 Oct 2023 10:11:12 +0530 (+0530)
-From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org,
+        with ESMTP id S232876AbjJaE6C (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 31 Oct 2023 00:58:02 -0400
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3428C9E;
+        Mon, 30 Oct 2023 21:58:00 -0700 (PDT)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7551EC433C7;
+        Tue, 31 Oct 2023 04:57:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1698728279;
+        bh=vPWQWJfyhiQnh4+ZjNGf+AuE1H2xx2JWs58swbGwmp4=;
+        h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+        b=LAPSYSqTmzZarZx3thoV1X9VqFpYA+u6JdtjVT6jpI0uqAX7HT7qjuO62Cu8FYVEu
+         nYqBZvTgzhq8DQVIf5PuwSxNy08mJHaGRL/OYPT5jjQlOoS31KbcNTx5lIeD2KBs5r
+         nXPabgvVYIFuExbE1toMXbEja+XmVb3/YIFpLmP3Gdl0bJWH4UD5TSWx068A5KewaJ
+         c5+pFsYRLUUK8E7HPM9N4YkOyb7RvXE2XMc+fDXAHuUTQqLlBSu5vVOEA7RCq0lCON
+         C9fgn3Hp+Tao4suXnvwxpMNX9RS+1lUnvZUZzWZOYZZo91Lj07nWdcST3yF97cbCxq
+         WXtRfTcUuzang==
+Date:   Tue, 31 Oct 2023 10:27:40 +0530
+From:   Manivannan Sadhasivam <mani@kernel.org>
+To:     Mrinmay Sarkar <quic_msarkar@quicinc.com>
+Cc:     agross@kernel.org, andersson@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, mani@kernel.org
-Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
+        konrad.dybcio@linaro.org, mani@kernel.org,
+        quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
         quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
         dmitry.baryshkov@linaro.org, robh@kernel.org,
         quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
         quic_parass@quicinc.com, quic_schintav@quicinc.com,
         quic_shijose@quicinc.com,
-        Mrinmay Sarkar <quic_msarkar@quicinc.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Kishon Vijay Abraham I <kishon@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
         mhi@lists.linux.dev
-Subject: [PATCH v5 2/4] PCI: qcom-ep: Add support for SA8775P SOC
-Date:   Tue, 31 Oct 2023 10:11:04 +0530
-Message-Id: <1698727267-22131-3-git-send-email-quic_msarkar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1698727267-22131-1-git-send-email-quic_msarkar@quicinc.com>
+Subject: Re: [PATCH v5 0/4] arm64: qcom: sa8775p: add cache coherency support
+ for SA8775P
+Message-ID: <20231031045740.GA11778@thinkpad>
 References: <1698727267-22131-1-git-send-email-quic_msarkar@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: UDrGqFzCAqJnLxj-IsDxTCrzzOT_-M08
-X-Proofpoint-ORIG-GUID: UDrGqFzCAqJnLxj-IsDxTCrzzOT_-M08
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-10-30_13,2023-10-31_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 adultscore=0
- spamscore=0 clxscore=1015 phishscore=0 priorityscore=1501 mlxlogscore=984
- suspectscore=0 impostorscore=0 lowpriorityscore=0 mlxscore=0 bulkscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2310240000
- definitions=main-2310310034
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <1698727267-22131-1-git-send-email-quic_msarkar@quicinc.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add support for SA8775P SoC to the Qualcomm PCIe Endpoint Controller
-driver. Adding new compatible string as it has different set of clocks
-compare to other SOCs.
+On Tue, Oct 31, 2023 at 10:11:02AM +0530, Mrinmay Sarkar wrote:
+> This series is to enable cache snooping logic in both RC and EP
+> driver and add the "dma-coherent" property in dtsi to support
+> cache coherency in SA8775P.
+> 
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
----
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+You just merged the cover letter of two different series. No, you are not
+enabling cache snooping in this series.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 9e58f05..3a53d97 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -875,6 +875,7 @@ static void qcom_pcie_ep_remove(struct platform_device *pdev)
- }
- 
- static const struct of_device_id qcom_pcie_ep_match[] = {
-+	{ .compatible = "qcom,sa8775p-pcie-ep", },
- 	{ .compatible = "qcom,sdx55-pcie-ep", },
- 	{ .compatible = "qcom,sm8450-pcie-ep", },
- 	{ }
+Please take time to review all the changes and cover letter before posting.
+
+- Mani
+
+> 
+> This series adds the relavent DT bindings, new compatible string,
+> add support to EPF driver and add EP PCIe node in dtsi file for
+> ep pcie0 controller.
+> 
+> v4 -> v5:
+> - add maxItems to the respective field to constrain io space and
+>   interrupt in all variants.
+> 
+> v3 -> v4:
+> - add maxItems field in dt bindings
+> - update comment in patch2
+> - dropped PHY driver patch as it is already applied [1]
+> - update comment in EPF driver patch
+> - update commect in dtsi and add iommus instead of iommu-map
+> 
+> [1] https://lore.kernel.org/all/169804254205.383714.18423881810869732517.b4-ty@kernel.org/
+> 
+> v2 -> v3:
+> - removed if/then schemas, added minItems for reg,
+>   reg-bnames, interrupt and interrupt-names instead.
+> - adding qcom,sa8775p-pcie-ep compitable for sa8775p
+>   as we have some specific change to add.
+> - reusing sm8450's pcs_misc num table as it is same as sa8775p.
+>   used appropriate namespace for pcs.
+> - remove const from sa8775p_header as kernel test robot
+>   throwing some warnings due to this.
+> - remove fallback compatiable as we are adding compatiable for sa8775p.
+> 
+> v1 -> v2:
+> - update description for dma
+> - Reusing qcom,sdx55-pcie-ep compatibe so remove compaitable
+>   for sa8775p
+> - sort the defines in phy header file and remove extra defines
+> - add const in return type pci_epf_header and remove MHI_EPF_USE_DMA
+>   flag as hdma patch is not ready
+> - add fallback compatiable as qcom,sdx55-pcie-ep, add iommu property
+> 
+> 
+> Mrinmay Sarkar (4):
+>   dt-bindings: PCI: qcom-ep: Add support for SA8775P SoC
+>   PCI: qcom-ep: Add support for SA8775P SOC
+>   PCI: epf-mhi: Add support for SA8775P
+>   arm64: dts: qcom: sa8775p: Add ep pcie0 controller node
+> 
+>  .../devicetree/bindings/pci/qcom,pcie-ep.yaml      | 64 +++++++++++++++++++++-
+>  arch/arm64/boot/dts/qcom/sa8775p.dtsi              | 46 ++++++++++++++++
+>  drivers/pci/controller/dwc/pcie-qcom-ep.c          |  1 +
+>  drivers/pci/endpoint/functions/pci-epf-mhi.c       | 17 ++++++
+>  4 files changed, 126 insertions(+), 2 deletions(-)
+> 
+> -- 
+> 2.7.4
+> 
+> 
+
 -- 
-2.7.4
-
+மணிவண்ணன் சதாசிவம்
