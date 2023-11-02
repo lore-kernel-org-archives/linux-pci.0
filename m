@@ -2,151 +2,65 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0E070C4167D
-	for <linux-pci@archiver.kernel.org>; Thu,  2 Nov 2023 12:27:51 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2737BC4332F
+	for <linux-pci@archiver.kernel.org>; Thu,  2 Nov 2023 15:22:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1347348AbjKBM1u (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Thu, 2 Nov 2023 08:27:50 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:50040 "EHLO
+        id S235310AbjKBPWB (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Thu, 2 Nov 2023 11:22:01 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:56308 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346094AbjKBM1s (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2023 08:27:48 -0400
-Received: from esa6.hc3370-68.iphmx.com (esa6.hc3370-68.iphmx.com [216.71.155.175])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F2E64128;
-        Thu,  2 Nov 2023 05:27:42 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=citrix.com; s=securemail; t=1698928063;
-  h=from:date:subject:mime-version:content-transfer-encoding:
-   message-id:references:in-reply-to:to:cc;
-  bh=oTEJNTw+CTtmPiz/F/xqvE9BcwMN5UZXmBpn9qQJTOg=;
-  b=VcWBK2XVNV0MCfjhmfAPDYIOe+qcx0sbq57WdYHvSpF6k0ixUUYPf4Fd
-   qQRy/8nl4F8EGXDuePy7ANR6upJyu99mQLmf0UXfr5YauEGJKU6LnCIax
-   /Lvz8v8VwVz0pClIM3QMkXRJifZ98UZzm8p47uB5ZFUAU/ta4g3IMM9Nn
-   M=;
-X-CSE-ConnectionGUID: pNIzOpSTTbaXx/hvRfdv1w==
-X-CSE-MsgGUID: mov3QMmaRyiW6eu7Auk/bw==
-Authentication-Results: esa6.hc3370-68.iphmx.com; dkim=none (message not signed) header.i=none
-X-SBRS: 4.0
-X-MesageID: 126596387
-X-Ironport-Server: esa6.hc3370-68.iphmx.com
-X-Remote-IP: 162.221.159.70
-X-Policy: $RELAYED
-X-ThreatScanner-Verdict: Negative
-IronPort-Data: A9a23:IFospKCQ+WgIuBVW/07lw5YqxClBgxIJ4kV8jS/XYbTApD10hD1Tz
- 2UcDz/VP/yLYWr1cohwa42//UoP75WHn4VqQQY4rX1jcSlH+JHPbTi7wuUcHAvJd5GeExg3h
- yk6QoOdRCzhZiaE/n9BCpC48D8kk/nOH+KgYAL9EngZbRd+Tys8gg5Ulec8g4p56fC0GArIs
- t7pyyHlEAbNNwVcbCRMsMpvlDs15K6p4WpA5ARiDRx2lAS2e0c9Xcp3yZ6ZdxMUcqEMdsamS
- uDKyq2O/2+x13/B3fv8z94X2mVTKlLjFVDmZkh+AsBOsTAbzsAG6Y4pNeJ0VKtio27hc+ada
- jl6ncfYpQ8BZsUgkQmGOvVSO3kW0aZuoNcrLZUj2CA6IoKvn3bEmp1T4E8K0YIw4sBWE0ZWz
- sAkIjk9fleDmdi4zKziVbw57igjBJGD0II3v3hhyXfSDOo8QICFSKLPjTNa9G5u3IYUR6+YP
- pdIL2U3BPjDS0Qn1lM/IZQyhuq3wFL4dCVVsgm9rqsr+WnDigd21dABNfKMIILXFJsOzhnwS
- mTu+mPnWSg/MdWl2Du6rH+x2cbSnmTxR9dHfFG/3qEz2wDCroAJMzUVSnO/oP+kmgi1XNc3A
- 1YT8CoGrqUo8kGvCN7nUHWQpGaFswQVX9tLEsU55RuLx66S5ByWbkAERz9QYdoppuczRDcw0
- USOkc+vDjtq2JWWWGm187aftzSpPiYJa2QFYEcsQQYO/tjLpYA4lBXUSdh/VqWyi7XdAi393
- T3MsyE+g50TlcNN3KK+lXjEkjah4J3EXwMvzgXPUySu6QYRTIKkYo2081md9vdeJYCYRVmpv
- GAJ3cOZ6YgmF4yWj2qERukABqqu4d6FKDCaillqd7Ej6i+x+njlcJpW+y1WJF9kdM0DfFfBc
- B+NkQBc/pleOD2td6AfS5q1AtgkyrLlUNj/V+7ZdJ9eMsZZagCK5mdtaFSW0mSrl1Ij+Yk7O
- JGGYYO0BncyF6tq1ny1Sv0b3LttwToxrUvXRJbm31GnwKKTfmC9V7gIKh2NY/o/4afCpx/am
- /5VL+ODzxRSVr24biS/2YIaM11MLXE9Hp3wg8hWcPOTZAtgBGwlTfTWxNsJe5Rst7ZEiuDSu
- Hq6XydwzVv5inrvMwiGanl/LrjoWP5Xp3I2OSMlNE2A1H8kboKiqqwYcvMfYbYj5MRnzPhpU
- +MCfcSQRPhCIhzL5TQUd4XVrYpsbh2niAuCeS2/b1AXdphsViTI/NH+dwfi/SVICTC43eM6o
- ru9xkbYTIAFSgBKEsnbcrSswkm3sHxbn/h9N2PXL9gVfETx2ItnMSr8irkwOc5kFPnY7mLEj
- UDMW05e/LSc5dBtmDXUuUyah5+PMvlZBnFmI2PS3abxNTfg8Ga9mJAVBY5kYgvhuHPIFLSKP
- LsEn6GtbqFawD6moKImTew3k/hWC8/H4u8ClFo5Rh0nenzyUus4SkRqy/WjoUGkKlVxkgysU
- 0bHwcFAOLOGI6sJ+3ZKf1J6N4xvORwO8wQ+DMjZw22gv0ebBJLdDS1v0+Ck0USx1oddPoI/2
- vsGs8UL8QG5gRdCGo/Y33AEqT/ScCJQCvVPWnQm7GjD01RD972/ScWBUXGeDG+nML2gzXXG0
- hfL3fGf1tywN2LJcmYpFGil4Nexca8m4UgQpHdbfgThpzYwrqNvtPGn2WhtH1s9I9Qu+74bB
- 1WHwGUsdfzUp2421JIdN41ucikYbCCkFoXK4wNhvAXko4OADwQh8EVV1T6xwX0k
-IronPort-HdrOrdr: A9a23:mvDfKaDez8/EmdTlHekB55DYdb4zR+YMi2TDGXoRdfUzSL3/qy
- nOpoV96faQslwssR4b9OxoVJPtfZqYz+8X3WH+VY3SIDUO+1HYUb2L1OPZskLd8lTFh5BgPM
- VbE5SWeeeAaWSS1vyKmTVQeuxIqLK6GeKT9IXjJhFWIj2CAJsQijuRZDz0LqRefng2ObMJUL
- Sd++tarH6adXwMaMPTPAh+Y8Hz4/PKibP7alo8CxQm8QmDii7A0s+ALzGomjkfThJSyvMY/W
- LEigz04bjmm/y30RPHzQbonudrseqk5NtfJdCGzvIYLTjhkW+TFfxccrCPpi00p+mz6FAsir
- D30mcdA/g=
-X-Talos-CUID: 9a23:oB45um9KxWZ1/MXqPMqVv1YyO9ICakbh8H3ZE1//CXhTRrGLEEDFrQ==
-X-Talos-MUID: 9a23:xxZ64Aa7/su0CuBTsjjy3whHMc5S8qWRVk0QzrwbuI6OKnkl
-X-IronPort-AV: E=Sophos;i="6.03,271,1694750400"; 
-   d="scan'208";a="126596387"
-From:   Andrew Cooper <andrew.cooper3@citrix.com>
-Date:   Thu, 2 Nov 2023 12:26:20 +0000
-Subject: [PATCH 2/3] x86/apic: Drop enum apic_delivery_modes
+        with ESMTP id S233053AbjKBPWA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Thu, 2 Nov 2023 11:22:00 -0400
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3699B193;
+        Thu,  2 Nov 2023 08:21:56 -0700 (PDT)
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+         client-signature RSA-PSS (4096 bits) client-digest SHA256)
+        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
+        by bmailout2.hostsharing.net (Postfix) with ESMTPS id 2AA0C28046BF6;
+        Thu,  2 Nov 2023 16:21:54 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+        id 1B3D740DA3E; Thu,  2 Nov 2023 16:21:54 +0100 (CET)
+Date:   Thu, 2 Nov 2023 16:21:54 +0100
+From:   Lukas Wunner <lukas@wunner.de>
+To:     Mario Limonciello <mario.limonciello@amd.com>
+Cc:     Bjorn Helgaas <helgaas@kernel.org>, bhelgaas@google.com,
+        mika.westerberg@linux.intel.com, andreas.noever@gmail.com,
+        michael.jamet@intel.com, YehezkelShB@gmail.com,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-usb@vger.kernel.org, Alexander.Deucher@amd.com
+Subject: Re: [PATCH 2/2] PCI: Ignore PCIe ports used for tunneling in
+ pcie_bandwidth_available()
+Message-ID: <20231102152154.GA22270@wunner.de>
+References: <20231101225259.GA101390@bhelgaas>
+ <928df647-5b20-406b-8da5-3199f5cfbb48@amd.com>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20231102-x86-apic-v1-2-bf049a2a0ed6@citrix.com>
-References: <20231102-x86-apic-v1-0-bf049a2a0ed6@citrix.com>
-In-Reply-To: <20231102-x86-apic-v1-0-bf049a2a0ed6@citrix.com>
-To:     Thomas Gleixner <tglx@linutronix.de>,
-        Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-        Dave Hansen <dave.hansen@linux.intel.com>, <x86@kernel.org>,
-        "H. Peter Anvin" <hpa@zytor.com>, Steve Wahl <steve.wahl@hpe.com>,
-        Justin Ernst <justin.ernst@hpe.com>,
-        Kyle Meyer <kyle.meyer@hpe.com>,
-        Dimitri Sivanich <dimitri.sivanich@hpe.com>,
-        "Russ Anderson" <russ.anderson@hpe.com>,
-        Darren Hart <dvhart@infradead.org>,
-        "Andy Shevchenko" <andy@infradead.org>,
-        "K. Y. Srinivasan" <kys@microsoft.com>,
-        Haiyang Zhang <haiyangz@microsoft.com>,
-        Wei Liu <wei.liu@kernel.org>,
-        "Dexuan Cui" <decui@microsoft.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>
-CC:     <linux-kernel@vger.kernel.org>,
-        <platform-driver-x86@vger.kernel.org>,
-        <linux-hyperv@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        Andrew Cooper <andrew.cooper3@citrix.com>
-X-Mailer: b4 0.12.4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <928df647-5b20-406b-8da5-3199f5cfbb48@amd.com>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The type is not used any more.
+On Wed, Nov 01, 2023 at 08:14:31PM -0500, Mario Limonciello wrote:
+> Considering this I think it's a good idea to move that creation of the
+> device link into drivers/pci/pci-acpi.c and store a bit in struct pci_device
+> to indicate it's a tunneled port.
+> 
+> Then 'thunderbolt' can look for this directly instead of walking all the FW
+> nodes.
+> 
+> pcie_bandwidth_available() can just look at the tunneled port bit instead of
+> the existence of the device link.
 
-Replace the constants with plain defines so they can live outside of an
-__ASSEMBLY__ block, allowing for more cleanup in subsequent changes.
+pci_is_thunderbolt_attached() should already be doing exactly what
+you want to achieve with the new bit.  It tells you whether a PCI
+device is behind a Thunderbolt tunnel.  So I don't think a new bit
+is actually needed.
 
-Signed-off-by: Andrew Cooper <andrew.cooper3@citrix.com>
----
- arch/x86/include/asm/apicdef.h | 16 +++++++---------
- 1 file changed, 7 insertions(+), 9 deletions(-)
+Thanks,
 
-diff --git a/arch/x86/include/asm/apicdef.h b/arch/x86/include/asm/apicdef.h
-index 4b125e5b3187..ddcbf00db19d 100644
---- a/arch/x86/include/asm/apicdef.h
-+++ b/arch/x86/include/asm/apicdef.h
-@@ -20,6 +20,13 @@
-  */
- #define IO_APIC_SLOT_SIZE		1024
- 
-+#define APIC_DELIVERY_MODE_FIXED	0
-+#define APIC_DELIVERY_MODE_LOWESTPRIO	1
-+#define APIC_DELIVERY_MODE_SMI		2
-+#define APIC_DELIVERY_MODE_NMI		4
-+#define APIC_DELIVERY_MODE_INIT		5
-+#define APIC_DELIVERY_MODE_EXTINT	7
-+
- #define	APIC_ID		0x20
- 
- #define	APIC_LVR	0x30
-@@ -430,14 +437,5 @@ struct local_apic {
-  #define BAD_APICID 0xFFFFu
- #endif
- 
--enum apic_delivery_modes {
--	APIC_DELIVERY_MODE_FIXED	= 0,
--	APIC_DELIVERY_MODE_LOWESTPRIO   = 1,
--	APIC_DELIVERY_MODE_SMI		= 2,
--	APIC_DELIVERY_MODE_NMI		= 4,
--	APIC_DELIVERY_MODE_INIT		= 5,
--	APIC_DELIVERY_MODE_EXTINT	= 7,
--};
--
- #endif /* !__ASSEMBLY__ */
- #endif /* _ASM_X86_APICDEF_H */
-
--- 
-2.30.2
-
+Lukas
