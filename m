@@ -2,46 +2,46 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C6D34C4167B
-	for <linux-pci@archiver.kernel.org>; Fri,  3 Nov 2023 20:16:10 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A4342C4167B
+	for <linux-pci@archiver.kernel.org>; Fri,  3 Nov 2023 20:17:17 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S230380AbjKCUQK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 3 Nov 2023 16:16:10 -0400
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46966 "EHLO
+        id S234569AbjKCURS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 3 Nov 2023 16:17:18 -0400
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:53690 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229576AbjKCUQJ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2023 16:16:09 -0400
+        with ESMTP id S229605AbjKCURR (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 3 Nov 2023 16:17:17 -0400
 Received: from mx0a-002e3701.pphosted.com (mx0a-002e3701.pphosted.com [148.163.147.86])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8D05EB8;
-        Fri,  3 Nov 2023 13:16:05 -0700 (PDT)
-Received: from pps.filterd (m0134420.ppops.net [127.0.0.1])
-        by mx0b-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A3InTir026999;
-        Fri, 3 Nov 2023 20:15:17 GMT
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 53B38D53;
+        Fri,  3 Nov 2023 13:17:14 -0700 (PDT)
+Received: from pps.filterd (m0150241.ppops.net [127.0.0.1])
+        by mx0a-002e3701.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3A3InJ4f001508;
+        Fri, 3 Nov 2023 20:16:51 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=hpe.com; h=date : from : to : cc :
  subject : message-id : references : mime-version : content-type :
- in-reply-to; s=pps0720; bh=L0vesmfq1HuNLBuf10D6DYelylk7j7jtVX78DuGz6M4=;
- b=iWxQzWxWxdg01AW5ZkknyW0p54Dl7PQ37JRPo/7Oj6xqCJH8BpGMgwPJPFkbGmg3QQA0
- rWzEK92rzFyLruSmbC/d5aVToYuKeQ2WBEdpfOsb0Rf6eV87qUZ+ue1h70Oa3i1mNo+g
- OrEAYB+Os5JL4lxb2jf6SzZjvdyJCjNddBMF4rEVRGQfBYoZ02iC8fEVQQEKtw9QCSQ+
- 27T5Vc5Mg8gJaOuAT6xPWF6vWVpJZtKcIPow94M9IRDYBnS/ac/wBPZ8lm+iznBDKHjH
- LFKSK/oI3MFJ+czPAuBirnM2FkX09gd4e2LNwMwezmsDQyTF4u+H9eURB5KI1K2I3UlN zg== 
-Received: from p1lg14879.it.hpe.com ([16.230.97.200])
-        by mx0b-002e3701.pphosted.com (PPS) with ESMTPS id 3u519dvh0t-1
+ in-reply-to; s=pps0720; bh=D51GjDb7/ozAJNlUYKNTwI4ApLuMChHWlUEbM3CJ6no=;
+ b=mEea6OpQ4GyhnF36+uGnR03Vx1ICKSCu6OxzE4yX+cbJ6lZDumNQVs6DbbTD0A9eauyy
+ g6s7jyvesL+yGSqFNIBsyeUJbdgqwdLPEY8MwMl8hF7MOl9/csH654p4dyiL76pXjgB8
+ vC+8zIVu1RbFbKK/ZBcfPojc9qgCiE/GS9pPEMGxRezsZQy60BECCIGxJ1gJu0bgdYK9
+ PbqRsZNXlnd+ZBL8vX6IhuGbHX8Lx5+2U9T+v9uxqxyBZrvHl9Cjr6P297DOTnBfeqxS
+ mJWs0TSX/DU4HShDVVjcAhARK9Uz3ucTScaxKKlyDeCErEBC8hqCaKVSoDmw2eNLmLIi Sw== 
+Received: from p1lg14878.it.hpe.com ([16.230.97.204])
+        by mx0a-002e3701.pphosted.com (PPS) with ESMTPS id 3u4twf02jx-1
         (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 03 Nov 2023 20:15:17 +0000
+        Fri, 03 Nov 2023 20:16:51 +0000
 Received: from p1lg14885.dc01.its.hpecorp.net (unknown [10.119.18.236])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (No client certificate requested)
-        by p1lg14879.it.hpe.com (Postfix) with ESMTPS id 23029131AC;
-        Fri,  3 Nov 2023 20:15:16 +0000 (UTC)
-Received: from swahl-home.5wahls.com (unknown [16.231.227.39])
+        by p1lg14878.it.hpe.com (Postfix) with ESMTPS id 7C11E13197;
+        Fri,  3 Nov 2023 20:16:43 +0000 (UTC)
+Received: from swahl-home.5wahls.com (unknown [16.231.227.36])
         (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
          key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
         (Client did not present a certificate)
-        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id 4BBB2807418;
-        Fri,  3 Nov 2023 20:15:13 +0000 (UTC)
-Date:   Fri, 3 Nov 2023 15:15:11 -0500
+        by p1lg14885.dc01.its.hpecorp.net (Postfix) with ESMTPS id CD82A80045D;
+        Fri,  3 Nov 2023 20:16:39 +0000 (UTC)
+Date:   Fri, 3 Nov 2023 15:16:38 -0500
 From:   Steve Wahl <steve.wahl@hpe.com>
 To:     Andrew Cooper <andrew.cooper3@citrix.com>
 Cc:     Thomas Gleixner <tglx@linutronix.de>,
@@ -63,216 +63,327 @@ Cc:     Thomas Gleixner <tglx@linutronix.de>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-kernel@vger.kernel.org, platform-driver-x86@vger.kernel.org,
         linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/3] x86/apic: Drop apic::delivery_mode
-Message-ID: <ZUVUz8P6a0mzVsJP@swahl-home.5wahls.com>
+Subject: Re: [PATCH 3/3] x86/apic: Drop struct local_apic
+Message-ID: <ZUVVJkpGg4hoF/Hs@swahl-home.5wahls.com>
 References: <20231102-x86-apic-v1-0-bf049a2a0ed6@citrix.com>
- <20231102-x86-apic-v1-1-bf049a2a0ed6@citrix.com>
+ <20231102-x86-apic-v1-3-bf049a2a0ed6@citrix.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20231102-x86-apic-v1-1-bf049a2a0ed6@citrix.com>
-X-Proofpoint-ORIG-GUID: FnFAgYD2Q1gW-8ZQ1sJxC5P3qp4qrjnK
-X-Proofpoint-GUID: FnFAgYD2Q1gW-8ZQ1sJxC5P3qp4qrjnK
+In-Reply-To: <20231102-x86-apic-v1-3-bf049a2a0ed6@citrix.com>
+X-Proofpoint-ORIG-GUID: kxI0VjgnmO0WDNPr5wrLa66Msn4A28Gw
+X-Proofpoint-GUID: kxI0VjgnmO0WDNPr5wrLa66Msn4A28Gw
 X-HPE-SCL: -1
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2023-11-03_19,2023-11-02_03,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 malwarescore=0
- bulkscore=0 priorityscore=1501 impostorscore=0 phishscore=0 spamscore=0
- adultscore=0 suspectscore=0 mlxlogscore=999 clxscore=1011
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2310240000 definitions=main-2311030170
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 lowpriorityscore=0 clxscore=1015 adultscore=0 spamscore=0
+ impostorscore=0 priorityscore=1501 suspectscore=0 mlxscore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2310240000
+ definitions=main-2311030170
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Thu, Nov 02, 2023 at 12:26:19PM +0000, Andrew Cooper wrote:
-> This field is set to APIC_DELIVERY_MODE_FIXED in all cases, and is read
-> exactly once.  Fold the constant in uv_program_mmr() and drop the field.
+On Thu, Nov 02, 2023 at 12:26:21PM +0000, Andrew Cooper wrote:
+> This type predates recorded history in tglx/history.git, making it older
+> than Feb 5th 2002.
 > 
-> Searching for the origin of the stale HyperV comment reveals commit
-> a31e58e129f7 ("x86/apic: Switch all APICs to Fixed delivery mode") which
-> notes:
+> This structure is literally old enough to drink in most juristictions in
+> the world, and has not been used once in that time.
 > 
->   As a consequence of this change, the apic::irq_delivery_mode field is
->   now pointless, but this needs to be cleaned up in a separate patch.
-> 
-> 6 years is long enough for this technical debt to have survived.
+> Lay it to rest in /dev/null.
 > 
 > Signed-off-by: Andrew Cooper <andrew.cooper3@citrix.com>
+> ---
+> There is perhaps something to be said for the longevity of the comment.
+> "Not terribly well tested" certainly hasn't bitrotted in all this time.
+
+   :-)  !!!
 
 Reveiewed-by: Steve Wahl <steve.wahl@hpe.com>
 
+
 > ---
->  arch/x86/include/asm/apic.h           | 2 --
->  arch/x86/kernel/apic/apic_flat_64.c   | 2 --
->  arch/x86/kernel/apic/apic_noop.c      | 1 -
->  arch/x86/kernel/apic/apic_numachip.c  | 2 --
->  arch/x86/kernel/apic/bigsmp_32.c      | 1 -
->  arch/x86/kernel/apic/probe_32.c       | 1 -
->  arch/x86/kernel/apic/x2apic_cluster.c | 1 -
->  arch/x86/kernel/apic/x2apic_phys.c    | 1 -
->  arch/x86/kernel/apic/x2apic_uv_x.c    | 1 -
->  arch/x86/platform/uv/uv_irq.c         | 2 +-
->  drivers/pci/controller/pci-hyperv.c   | 7 -------
->  11 files changed, 1 insertion(+), 20 deletions(-)
+>  arch/x86/include/asm/apicdef.h | 260 -----------------------------------------
+>  1 file changed, 260 deletions(-)
 > 
-> diff --git a/arch/x86/include/asm/apic.h b/arch/x86/include/asm/apic.h
-> index 5af4ec1a0f71..841afbd7bfe7 100644
-> --- a/arch/x86/include/asm/apic.h
-> +++ b/arch/x86/include/asm/apic.h
-> @@ -272,8 +272,6 @@ struct apic {
->  	void	(*send_IPI_all)(int vector);
->  	void	(*send_IPI_self)(int vector);
+> diff --git a/arch/x86/include/asm/apicdef.h b/arch/x86/include/asm/apicdef.h
+> index ddcbf00db19d..094106b6a538 100644
+> --- a/arch/x86/include/asm/apicdef.h
+> +++ b/arch/x86/include/asm/apicdef.h
+> @@ -172,270 +172,10 @@
+>  #define APIC_CPUID(apicid)	((apicid) & XAPIC_DEST_CPUS_MASK)
+>  #define NUM_APIC_CLUSTERS	((BAD_APICID + 1) >> XAPIC_DEST_CPUS_SHIFT)
 >  
-> -	enum apic_delivery_modes delivery_mode;
+> -#ifndef __ASSEMBLY__
+> -/*
+> - * the local APIC register structure, memory mapped. Not terribly well
+> - * tested, but we might eventually use this one in the future - the
+> - * problem why we cannot use it right now is the P5 APIC, it has an
+> - * errata which cannot take 8-bit reads and writes, only 32-bit ones ...
+> - */
+> -#define u32 unsigned int
 > -
->  	u32	disable_esr		: 1,
->  		dest_mode_logical	: 1,
->  		x2apic_set_max_apicid	: 1;
-> diff --git a/arch/x86/kernel/apic/apic_flat_64.c b/arch/x86/kernel/apic/apic_flat_64.c
-> index 032a84e2c3cc..e526b226910b 100644
-> --- a/arch/x86/kernel/apic/apic_flat_64.c
-> +++ b/arch/x86/kernel/apic/apic_flat_64.c
-> @@ -82,7 +82,6 @@ static struct apic apic_flat __ro_after_init = {
->  	.acpi_madt_oem_check		= flat_acpi_madt_oem_check,
->  	.apic_id_registered		= default_apic_id_registered,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= true,
->  
->  	.disable_esr			= 0,
-> @@ -153,7 +152,6 @@ static struct apic apic_physflat __ro_after_init = {
->  	.acpi_madt_oem_check		= physflat_acpi_madt_oem_check,
->  	.apic_id_registered		= default_apic_id_registered,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= false,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/kernel/apic/apic_noop.c b/arch/x86/kernel/apic/apic_noop.c
-> index 966d7cf10b95..70e7dfc3cc84 100644
-> --- a/arch/x86/kernel/apic/apic_noop.c
-> +++ b/arch/x86/kernel/apic/apic_noop.c
-> @@ -45,7 +45,6 @@ static void noop_apic_write(u32 reg, u32 val)
->  struct apic apic_noop __ro_after_init = {
->  	.name				= "noop",
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= true,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/kernel/apic/apic_numachip.c b/arch/x86/kernel/apic/apic_numachip.c
-> index 63f3d7be9dc7..8f5a42ad1f9f 100644
-> --- a/arch/x86/kernel/apic/apic_numachip.c
-> +++ b/arch/x86/kernel/apic/apic_numachip.c
-> @@ -222,7 +222,6 @@ static const struct apic apic_numachip1 __refconst = {
->  	.probe				= numachip1_probe,
->  	.acpi_madt_oem_check		= numachip1_acpi_madt_oem_check,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= false,
->  
->  	.disable_esr			= 0,
-> @@ -259,7 +258,6 @@ static const struct apic apic_numachip2 __refconst = {
->  	.probe				= numachip2_probe,
->  	.acpi_madt_oem_check		= numachip2_acpi_madt_oem_check,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= false,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/kernel/apic/bigsmp_32.c b/arch/x86/kernel/apic/bigsmp_32.c
-> index 0e5535add4b5..863c3002a574 100644
-> --- a/arch/x86/kernel/apic/bigsmp_32.c
-> +++ b/arch/x86/kernel/apic/bigsmp_32.c
-> @@ -80,7 +80,6 @@ static struct apic apic_bigsmp __ro_after_init = {
->  	.name				= "bigsmp",
->  	.probe				= probe_bigsmp,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= false,
->  
->  	.disable_esr			= 1,
-> diff --git a/arch/x86/kernel/apic/probe_32.c b/arch/x86/kernel/apic/probe_32.c
-> index 9a06df6cdd68..f851ccf1e14f 100644
-> --- a/arch/x86/kernel/apic/probe_32.c
-> +++ b/arch/x86/kernel/apic/probe_32.c
-> @@ -35,7 +35,6 @@ static struct apic apic_default __ro_after_init = {
->  	.probe				= probe_default,
->  	.apic_id_registered		= default_apic_id_registered,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= true,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/kernel/apic/x2apic_cluster.c b/arch/x86/kernel/apic/x2apic_cluster.c
-> index affbff65e497..7d15f6c3b718 100644
-> --- a/arch/x86/kernel/apic/x2apic_cluster.c
-> +++ b/arch/x86/kernel/apic/x2apic_cluster.c
-> @@ -227,7 +227,6 @@ static struct apic apic_x2apic_cluster __ro_after_init = {
->  	.probe				= x2apic_cluster_probe,
->  	.acpi_madt_oem_check		= x2apic_acpi_madt_oem_check,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= true,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/kernel/apic/x2apic_phys.c b/arch/x86/kernel/apic/x2apic_phys.c
-> index 788cdb4ee394..8bb740e22b7d 100644
-> --- a/arch/x86/kernel/apic/x2apic_phys.c
-> +++ b/arch/x86/kernel/apic/x2apic_phys.c
-> @@ -145,7 +145,6 @@ static struct apic apic_x2apic_phys __ro_after_init = {
->  	.probe				= x2apic_phys_probe,
->  	.acpi_madt_oem_check		= x2apic_acpi_madt_oem_check,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= false,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/kernel/apic/x2apic_uv_x.c b/arch/x86/kernel/apic/x2apic_uv_x.c
-> index 7d304ef1a7f5..ae4f0c1a7b43 100644
-> --- a/arch/x86/kernel/apic/x2apic_uv_x.c
-> +++ b/arch/x86/kernel/apic/x2apic_uv_x.c
-> @@ -805,7 +805,6 @@ static struct apic apic_x2apic_uv_x __ro_after_init = {
->  	.probe				= uv_probe,
->  	.acpi_madt_oem_check		= uv_acpi_madt_oem_check,
->  
-> -	.delivery_mode			= APIC_DELIVERY_MODE_FIXED,
->  	.dest_mode_logical		= false,
->  
->  	.disable_esr			= 0,
-> diff --git a/arch/x86/platform/uv/uv_irq.c b/arch/x86/platform/uv/uv_irq.c
-> index 4221259a5870..a379501b7a69 100644
-> --- a/arch/x86/platform/uv/uv_irq.c
-> +++ b/arch/x86/platform/uv/uv_irq.c
-> @@ -35,7 +35,7 @@ static void uv_program_mmr(struct irq_cfg *cfg, struct uv_irq_2_mmr_pnode *info)
->  	mmr_value = 0;
->  	entry = (struct uv_IO_APIC_route_entry *)&mmr_value;
->  	entry->vector		= cfg->vector;
-> -	entry->delivery_mode	= apic->delivery_mode;
-> +	entry->delivery_mode	= APIC_DELIVERY_MODE_FIXED;
->  	entry->dest_mode	= apic->dest_mode_logical;
->  	entry->polarity		= 0;
->  	entry->trigger		= 0;
-> diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> index bed3cefdaf19..f5d2ef8572e7 100644
-> --- a/drivers/pci/controller/pci-hyperv.c
-> +++ b/drivers/pci/controller/pci-hyperv.c
-> @@ -650,13 +650,6 @@ static void hv_arch_irq_unmask(struct irq_data *data)
->  			   PCI_FUNC(pdev->devfn);
->  	params->int_target.vector = hv_msi_get_int_vector(data);
->  
-> -	/*
-> -	 * Honoring apic->delivery_mode set to APIC_DELIVERY_MODE_FIXED by
-> -	 * setting the HV_DEVICE_INTERRUPT_TARGET_MULTICAST flag results in a
-> -	 * spurious interrupt storm. Not doing so does not seem to have a
-> -	 * negative effect (yet?).
-> -	 */
+> -struct local_apic {
 > -
->  	if (hbus->protocol_version >= PCI_PROTOCOL_VERSION_1_2) {
->  		/*
->  		 * PCI_PROTOCOL_VERSION_1_2 supports the VP_SET version of the
+> -/*000*/	struct { u32 __reserved[4]; } __reserved_01;
+> -
+> -/*010*/	struct { u32 __reserved[4]; } __reserved_02;
+> -
+> -/*020*/	struct { /* APIC ID Register */
+> -		u32   __reserved_1	: 24,
+> -			phys_apic_id	:  4,
+> -			__reserved_2	:  4;
+> -		u32 __reserved[3];
+> -	} id;
+> -
+> -/*030*/	const
+> -	struct { /* APIC Version Register */
+> -		u32   version		:  8,
+> -			__reserved_1	:  8,
+> -			max_lvt		:  8,
+> -			__reserved_2	:  8;
+> -		u32 __reserved[3];
+> -	} version;
+> -
+> -/*040*/	struct { u32 __reserved[4]; } __reserved_03;
+> -
+> -/*050*/	struct { u32 __reserved[4]; } __reserved_04;
+> -
+> -/*060*/	struct { u32 __reserved[4]; } __reserved_05;
+> -
+> -/*070*/	struct { u32 __reserved[4]; } __reserved_06;
+> -
+> -/*080*/	struct { /* Task Priority Register */
+> -		u32   priority	:  8,
+> -			__reserved_1	: 24;
+> -		u32 __reserved_2[3];
+> -	} tpr;
+> -
+> -/*090*/	const
+> -	struct { /* Arbitration Priority Register */
+> -		u32   priority	:  8,
+> -			__reserved_1	: 24;
+> -		u32 __reserved_2[3];
+> -	} apr;
+> -
+> -/*0A0*/	const
+> -	struct { /* Processor Priority Register */
+> -		u32   priority	:  8,
+> -			__reserved_1	: 24;
+> -		u32 __reserved_2[3];
+> -	} ppr;
+> -
+> -/*0B0*/	struct { /* End Of Interrupt Register */
+> -		u32   eoi;
+> -		u32 __reserved[3];
+> -	} eoi;
+> -
+> -/*0C0*/	struct { u32 __reserved[4]; } __reserved_07;
+> -
+> -/*0D0*/	struct { /* Logical Destination Register */
+> -		u32   __reserved_1	: 24,
+> -			logical_dest	:  8;
+> -		u32 __reserved_2[3];
+> -	} ldr;
+> -
+> -/*0E0*/	struct { /* Destination Format Register */
+> -		u32   __reserved_1	: 28,
+> -			model		:  4;
+> -		u32 __reserved_2[3];
+> -	} dfr;
+> -
+> -/*0F0*/	struct { /* Spurious Interrupt Vector Register */
+> -		u32	spurious_vector	:  8,
+> -			apic_enabled	:  1,
+> -			focus_cpu	:  1,
+> -			__reserved_2	: 22;
+> -		u32 __reserved_3[3];
+> -	} svr;
+> -
+> -/*100*/	struct { /* In Service Register */
+> -/*170*/		u32 bitfield;
+> -		u32 __reserved[3];
+> -	} isr [8];
+> -
+> -/*180*/	struct { /* Trigger Mode Register */
+> -/*1F0*/		u32 bitfield;
+> -		u32 __reserved[3];
+> -	} tmr [8];
+> -
+> -/*200*/	struct { /* Interrupt Request Register */
+> -/*270*/		u32 bitfield;
+> -		u32 __reserved[3];
+> -	} irr [8];
+> -
+> -/*280*/	union { /* Error Status Register */
+> -		struct {
+> -			u32   send_cs_error			:  1,
+> -				receive_cs_error		:  1,
+> -				send_accept_error		:  1,
+> -				receive_accept_error		:  1,
+> -				__reserved_1			:  1,
+> -				send_illegal_vector		:  1,
+> -				receive_illegal_vector		:  1,
+> -				illegal_register_address	:  1,
+> -				__reserved_2			: 24;
+> -			u32 __reserved_3[3];
+> -		} error_bits;
+> -		struct {
+> -			u32 errors;
+> -			u32 __reserved_3[3];
+> -		} all_errors;
+> -	} esr;
+> -
+> -/*290*/	struct { u32 __reserved[4]; } __reserved_08;
+> -
+> -/*2A0*/	struct { u32 __reserved[4]; } __reserved_09;
+> -
+> -/*2B0*/	struct { u32 __reserved[4]; } __reserved_10;
+> -
+> -/*2C0*/	struct { u32 __reserved[4]; } __reserved_11;
+> -
+> -/*2D0*/	struct { u32 __reserved[4]; } __reserved_12;
+> -
+> -/*2E0*/	struct { u32 __reserved[4]; } __reserved_13;
+> -
+> -/*2F0*/	struct { u32 __reserved[4]; } __reserved_14;
+> -
+> -/*300*/	struct { /* Interrupt Command Register 1 */
+> -		u32   vector			:  8,
+> -			delivery_mode		:  3,
+> -			destination_mode	:  1,
+> -			delivery_status		:  1,
+> -			__reserved_1		:  1,
+> -			level			:  1,
+> -			trigger			:  1,
+> -			__reserved_2		:  2,
+> -			shorthand		:  2,
+> -			__reserved_3		:  12;
+> -		u32 __reserved_4[3];
+> -	} icr1;
+> -
+> -/*310*/	struct { /* Interrupt Command Register 2 */
+> -		union {
+> -			u32   __reserved_1	: 24,
+> -				phys_dest	:  4,
+> -				__reserved_2	:  4;
+> -			u32   __reserved_3	: 24,
+> -				logical_dest	:  8;
+> -		} dest;
+> -		u32 __reserved_4[3];
+> -	} icr2;
+> -
+> -/*320*/	struct { /* LVT - Timer */
+> -		u32   vector		:  8,
+> -			__reserved_1	:  4,
+> -			delivery_status	:  1,
+> -			__reserved_2	:  3,
+> -			mask		:  1,
+> -			timer_mode	:  1,
+> -			__reserved_3	: 14;
+> -		u32 __reserved_4[3];
+> -	} lvt_timer;
+> -
+> -/*330*/	struct { /* LVT - Thermal Sensor */
+> -		u32  vector		:  8,
+> -			delivery_mode	:  3,
+> -			__reserved_1	:  1,
+> -			delivery_status	:  1,
+> -			__reserved_2	:  3,
+> -			mask		:  1,
+> -			__reserved_3	: 15;
+> -		u32 __reserved_4[3];
+> -	} lvt_thermal;
+> -
+> -/*340*/	struct { /* LVT - Performance Counter */
+> -		u32   vector		:  8,
+> -			delivery_mode	:  3,
+> -			__reserved_1	:  1,
+> -			delivery_status	:  1,
+> -			__reserved_2	:  3,
+> -			mask		:  1,
+> -			__reserved_3	: 15;
+> -		u32 __reserved_4[3];
+> -	} lvt_pc;
+> -
+> -/*350*/	struct { /* LVT - LINT0 */
+> -		u32   vector		:  8,
+> -			delivery_mode	:  3,
+> -			__reserved_1	:  1,
+> -			delivery_status	:  1,
+> -			polarity	:  1,
+> -			remote_irr	:  1,
+> -			trigger		:  1,
+> -			mask		:  1,
+> -			__reserved_2	: 15;
+> -		u32 __reserved_3[3];
+> -	} lvt_lint0;
+> -
+> -/*360*/	struct { /* LVT - LINT1 */
+> -		u32   vector		:  8,
+> -			delivery_mode	:  3,
+> -			__reserved_1	:  1,
+> -			delivery_status	:  1,
+> -			polarity	:  1,
+> -			remote_irr	:  1,
+> -			trigger		:  1,
+> -			mask		:  1,
+> -			__reserved_2	: 15;
+> -		u32 __reserved_3[3];
+> -	} lvt_lint1;
+> -
+> -/*370*/	struct { /* LVT - Error */
+> -		u32   vector		:  8,
+> -			__reserved_1	:  4,
+> -			delivery_status	:  1,
+> -			__reserved_2	:  3,
+> -			mask		:  1,
+> -			__reserved_3	: 15;
+> -		u32 __reserved_4[3];
+> -	} lvt_error;
+> -
+> -/*380*/	struct { /* Timer Initial Count Register */
+> -		u32   initial_count;
+> -		u32 __reserved_2[3];
+> -	} timer_icr;
+> -
+> -/*390*/	const
+> -	struct { /* Timer Current Count Register */
+> -		u32   curr_count;
+> -		u32 __reserved_2[3];
+> -	} timer_ccr;
+> -
+> -/*3A0*/	struct { u32 __reserved[4]; } __reserved_16;
+> -
+> -/*3B0*/	struct { u32 __reserved[4]; } __reserved_17;
+> -
+> -/*3C0*/	struct { u32 __reserved[4]; } __reserved_18;
+> -
+> -/*3D0*/	struct { u32 __reserved[4]; } __reserved_19;
+> -
+> -/*3E0*/	struct { /* Timer Divide Configuration Register */
+> -		u32   divisor		:  4,
+> -			__reserved_1	: 28;
+> -		u32 __reserved_2[3];
+> -	} timer_dcr;
+> -
+> -/*3F0*/	struct { u32 __reserved[4]; } __reserved_20;
+> -
+> -} __attribute__ ((packed));
+> -
+> -#undef u32
+> -
+>  #ifdef CONFIG_X86_32
+>   #define BAD_APICID 0xFFu
+>  #else
+>   #define BAD_APICID 0xFFFFu
+>  #endif
+>  
+> -#endif /* !__ASSEMBLY__ */
+>  #endif /* _ASM_X86_APICDEF_H */
 > 
 > -- 
 > 2.30.2
