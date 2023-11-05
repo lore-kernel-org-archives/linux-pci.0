@@ -2,89 +2,65 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5B4CFC4167D
-	for <linux-pci@archiver.kernel.org>; Sun,  5 Nov 2023 17:40:03 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE5DAC4332F
+	for <linux-pci@archiver.kernel.org>; Sun,  5 Nov 2023 22:20:48 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S229468AbjKERkE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Sun, 5 Nov 2023 12:40:04 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46202 "EHLO
+        id S229478AbjKEWUt (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Sun, 5 Nov 2023 17:20:49 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51464 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S229445AbjKERj6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Nov 2023 12:39:58 -0500
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [IPv6:2a01:37:1000::53df:5f64:0])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1FEE3CA;
-        Sun,  5 Nov 2023 09:39:49 -0800 (PST)
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-        (using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-         key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-         client-signature RSA-PSS (4096 bits) client-digest SHA256)
-        (Client CN "*.hostsharing.net", Issuer "RapidSSL Global TLS RSA4096 SHA256 2022 CA1" (verified OK))
-        by bmailout1.hostsharing.net (Postfix) with ESMTPS id D5BCE300002D8;
-        Sun,  5 Nov 2023 18:39:46 +0100 (CET)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-        id BDB26473E23; Sun,  5 Nov 2023 18:39:46 +0100 (CET)
-Date:   Sun, 5 Nov 2023 18:39:46 +0100
-From:   Lukas Wunner <lukas@wunner.de>
-To:     Mario Limonciello <mario.limonciello@amd.com>
-Cc:     Karol Herbst <kherbst@redhat.com>, Lyude Paul <lyude@redhat.com>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Hans de Goede <hdegoede@redhat.com>,
-        Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Mika Westerberg <mika.westerberg@linux.intel.com>,
-        Danilo Krummrich <dakr@redhat.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Xinhui Pan <Xinhui.Pan@amd.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        Mark Gross <markgross@kernel.org>,
-        Andreas Noever <andreas.noever@gmail.com>,
-        Michael Jamet <michael.jamet@intel.com>,
-        Yehezkel Bernat <YehezkelShB@gmail.com>,
-        Pali =?iso-8859-1?Q?Roh=E1r?= <pali@kernel.org>,
-        Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
-        <dri-devel@lists.freedesktop.org>,
-        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
-        <nouveau@lists.freedesktop.org>,
-        open list <linux-kernel@vger.kernel.org>,
-        "open list:RADEON and AMDGPU DRM DRIVERS" 
-        <amd-gfx@lists.freedesktop.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "open list:ACPI" <linux-acpi@vger.kernel.org>,
-        "open list:X86 PLATFORM DRIVERS" 
-        <platform-driver-x86@vger.kernel.org>,
-        "open list:THUNDERBOLT DRIVER" <linux-usb@vger.kernel.org>
-Subject: Re: [PATCH v2 6/9] PCI: Rename is_thunderbolt to is_tunneled
-Message-ID: <20231105173946.GA31955@wunner.de>
-References: <20231103190758.82911-1-mario.limonciello@amd.com>
- <20231103190758.82911-7-mario.limonciello@amd.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231103190758.82911-7-mario.limonciello@amd.com>
-User-Agent: Mutt/1.10.1 (2018-07-13)
+        with ESMTP id S229447AbjKEWUs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Sun, 5 Nov 2023 17:20:48 -0500
+X-Greylist: delayed 301 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Sun, 05 Nov 2023 14:20:46 PST
+Received: from so254-35.mailgun.net (so254-35.mailgun.net [198.61.254.35])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0A34DCF
+        for <linux-pci@vger.kernel.org>; Sun,  5 Nov 2023 14:20:45 -0800 (PST)
+DKIM-Signature: a=rsa-sha256; v=1; c=relaxed/relaxed;
+ d=email.heliumtrades.com; q=dns/txt; s=pic; t=1699222844; x=1699230044;
+ h=Content-Type: Content-Transfer-Encoding: Message-Id: To: To: From: From:
+ Subject: Subject: Mime-Version: Date: Sender: Sender;
+ bh=a/cMnUcQICU/RNfvkgM4G1+EcP3XtdkqfZ640LB0gPI=;
+ b=pzOI5DOEATN3qtLbI+QIVn/6jm+i0/aNc1pwN1qOCvB7Vrte4oWHBkbOSjwVGEfGIGb2PgajmnyJ6HG1M51F22CxN3Zdh2a2jdQk1gX4Uy+pdBQvC43X1WNoIep0Bcm8LUPl+oR23eP+I0xTwjUHYgUppp/3d+6l9rueasTRUwg=
+X-Mailgun-Sending-Ip: 198.61.254.35
+X-Mailgun-Sid: WyIxMGQ3MyIsImxpbnV4LXBjaUB2Z2VyLmtlcm5lbC5vcmciLCJmMDE1MzgiXQ==
+Received: from <unknown> (<unknown> []) by ddcde835e154 with HTTP id
+ 6548140f5baf8cc8f81ce60a; Sun, 05 Nov 2023 22:15:43 GMT
+Sender: contact@email.heliumtrades.com
+Date:   Sun, 05 Nov 2023 22:15:43 +0000
+Mime-Version: 1.0
+Subject: =?UTF-8?q?Stay_Ahead,_Stay_Informed:_All_Thanks_to_Helium_=F0=9F=93=9A?=
+From:   Helium Trades <contact@email.heliumtrades.com>
+To:     linux-pci@vger.kernel.org
+Message-Id: <20231105221543.5889014f1695fc01@email.heliumtrades.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Fri, Nov 03, 2023 at 02:07:55PM -0500, Mario Limonciello wrote:
-> The `is_thunderbolt` bit has been used to indicate that a PCIe device
-> contained the Intel VSEC which is used by various parts of the kernel
-> to change behavior. To later allow usage with USB4 controllers as well,
-> rename this to `is_tunneled`.
+Discover a smarter news experience tailored for depth, not just clicks. Wel=
+come to Helium.
 
-This doesn't seem to make sense.  is_thunderbolt indicates that a device
-is part of a Thunderbolt controller.  See the code comment:
+Why Helium Stands Out:
 
-> -	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
+    =F0=9F=8C=8D 38,285+ Sources: AI-curated summaries and bias analysis. N=
+o ads. Pure insights.
 
-A Thunderbolt controller is not necessarily tunneled.  The PCIe switch,
-NHI and XHCI of the Thunderbolt host controller are not tunneled at all.
+    =F0=9F=A4=96 Depth Over Hype: Skip the news frenzy. Our AI brings clari=
+ty and varied perspectives.
 
-Thanks,
+    =F0=9F=A7=A0 Broaden Your View: Experience diverse sources in one seaml=
+ess feed.
 
-Lukas
+    =F0=9F=93=88 Adaptive Forecasts: Helium refines predictions for sharper=
+ insights with each use.
+
+Rise above the noise. With Helium, it's about enlightenment over entertainm=
+ent.
+
+=F0=9F=91=89 Experience Helium Now: https://HeliumTrades.com/news/
+
+Warm regards,
+
+Helium Trades
+https://HeliumTrades.com/news/
