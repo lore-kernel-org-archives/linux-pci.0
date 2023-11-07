@@ -2,101 +2,104 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C2533C4332F
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:58:42 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 461A2C4167D
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:00:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344319AbjKGP6m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 10:58:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36044 "EHLO
+        id S234875AbjKGQAX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 11:00:23 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343898AbjKGP55 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:57:57 -0500
+        with ESMTP id S1344720AbjKGP7c (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:59:32 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 5F19061B1;
-        Tue,  7 Nov 2023 07:51:21 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 00B4DC433CA;
-        Tue,  7 Nov 2023 15:51:19 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28769132;
+        Tue,  7 Nov 2023 07:52:29 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8E46C433C7;
+        Tue,  7 Nov 2023 15:52:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372281;
-        bh=iaSVpkJTVddZbniMMSUXSo3sRmO+294uguuid4T50sY=;
+        s=k20201202; t=1699372348;
+        bh=uVDTK+z2k3wTFHlsnI3VQp3/iLIUswGQb1lSR/XCQ2A=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=ea875CCGhBq0cvkK5lDEWXBIZ2b75S8uuDdf143SD8Rj7W6T3PAsAyODnhSgkrC7F
-         HgUyAah0cyQFfqu28Wt8DFWhOswUup7mbOi8zBCVBze0CliRep8TXXIC59zVRqJcmO
-         UjrTmRW+TjI/6+NCQ39F49XGWCWFBCuNrR2Tn/fRshGDkIjwHhjz5rqVCTm+jXvh3b
-         dK7fp+uEm0y2t0Rg+15ch8rSd9DG/udATaVDaZeBWvmzpKk5oLZFthGbFZ62eA3u1Q
-         eu1YDO//z0Z5txKT1uLa2zd8T61jrbNH0Jktd/H+86Yl/UWVTqdEY5i6pDf1Tu/KbQ
-         /v1BQFYDaDnRw==
+        b=NNBBuns+xHeGKdWla0WvR/aP25aZajcmWvdTpTAQZsBpMldWmBT9ud3DR2DsGihPb
+         oStXZlqFyezS6tx5MOa+ADGsyHvMAanq39qG0Ei7w6DP+hqO4B+p2WuWY8mvwPZB5H
+         xOs5uyblQNWkVtjuKJ42PpO7FRM3qOU6IAJeIZUopHmfEXk7X1tpWgVtPeDT6KviK8
+         Y5uhw0WM9G8KC1+XmVWq/a2uQ3G0haj2rXtUNd9wGBATvkA9RShXwjoMDddsGlBeMA
+         HvV9nUHqQ9yBmDiVKqagPW8cHXSW0VQjGE14WQiwxxDBvNqsjrGrLaPnKzfVKj0bd9
+         AtqWjlp8nKsBA==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Nirmoy Das <nirmoy.das@amd.com>,
+Cc:     Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Alexander Lobakin <aleksander.lobakin@intel.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 25/30] PCI: Use FIELD_GET() in Sapphire RX 5600 XT Pulse quirk
-Date:   Tue,  7 Nov 2023 10:49:59 -0500
-Message-ID: <20231107155024.3766950-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 18/22] PCI: Disable ATS for specific Intel IPU E2000 devices
+Date:   Tue,  7 Nov 2023 10:51:27 -0500
+Message-ID: <20231107155146.3767610-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107155024.3766950-1-sashal@kernel.org>
-References: <20231107155024.3766950-1-sashal@kernel.org>
+In-Reply-To: <20231107155146.3767610-1-sashal@kernel.org>
+References: <20231107155146.3767610-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.61
+X-stable-base: Linux 5.15.137
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
 
-[ Upstream commit 04e82fa5951ca66495d7b05665eff673aa3852b4 ]
+[ Upstream commit a18615b1cfc04f00548c60eb9a77e0ce56e848fd ]
 
-Use FIELD_GET() to remove dependences on the field position, i.e., the
-shift value.  No functional change intended.
+Due to a hardware issue in A and B steppings of Intel IPU E2000, it expects
+wrong endianness in ATS invalidation message body. This problem can lead to
+outdated translations being returned as valid and finally cause system
+instability.
 
-Separate because this isn't as trivial as the other FIELD_GET() changes.
+To prevent such issues, add quirk_intel_e2000_no_ats() to disable ATS for
+vulnerable IPU E2000 devices.
 
-See 907830b0fc9e ("PCI: Add a REBAR size quirk for Sapphire RX 5600 XT
-Pulse")
-
-Link: https://lore.kernel.org/r/20231010204436.1000644-3-helgaas@kernel.org
+Link: https://lore.kernel.org/r/20230908143606.685930-3-bartosz.pawlowski@intel.com
+Signed-off-by: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Nirmoy Das <nirmoy.das@amd.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Reviewed-by: Alexander Lobakin <aleksander.lobakin@intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/quirks.c | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4f37885017200..8df156c28aade 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3713,14 +3713,14 @@ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
- 		return 0;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 60724825e2524..dd25e7e65396f 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5422,6 +5422,25 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
+ /* AMD Raven platform iGPU */
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
++
++/*
++ * Intel IPU E2000 revisions before C0 implement incorrect endianness
++ * in ATS Invalidate Request message body. Disable ATS for those devices.
++ */
++static void quirk_intel_e2000_no_ats(struct pci_dev *pdev)
++{
++	if (pdev->revision < 0x20)
++		quirk_no_ats(pdev);
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1451, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1452, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1453, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1454, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1455, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1459, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145a, quirk_intel_e2000_no_ats);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145c, quirk_intel_e2000_no_ats);
+ #endif /* CONFIG_PCI_ATS */
  
- 	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
--	cap &= PCI_REBAR_CAP_SIZES;
-+	cap = FIELD_GET(PCI_REBAR_CAP_SIZES, cap);
- 
- 	/* Sapphire RX 5600 XT Pulse has an invalid cap dword for BAR 0 */
- 	if (pdev->vendor == PCI_VENDOR_ID_ATI && pdev->device == 0x731f &&
--	    bar == 0 && cap == 0x7000)
--		cap = 0x3f000;
-+	    bar == 0 && cap == 0x700)
-+		return 0x3f00;
- 
--	return cap >> 4;
-+	return cap;
- }
- EXPORT_SYMBOL(pci_rebar_get_possible_sizes);
- 
+ /* Freescale PCIe doesn't support MSI in RC mode */
 -- 
 2.42.0
 
