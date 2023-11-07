@@ -2,103 +2,119 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B15C4167D
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:18:13 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 54006C4167B
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:31:24 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235258AbjKGQSN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 11:18:13 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41212 "EHLO
+        id S234106AbjKGQbY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 11:31:24 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40648 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235304AbjKGQR0 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 11:17:26 -0500
+        with ESMTP id S234098AbjKGQbJ (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 11:31:09 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F05351717;
-        Tue,  7 Nov 2023 07:52:27 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B459BC433CA;
-        Tue,  7 Nov 2023 15:52:26 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397F3D7A;
+        Tue,  7 Nov 2023 07:49:50 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3A39C433CA;
+        Tue,  7 Nov 2023 15:49:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372347;
-        bh=AJ60giNP+AH/cCyECe5rv18MhVuQSgTFA29ZeqFHnn4=;
+        s=k20201202; t=1699372190;
+        bh=yvPQWk4KLG1FPmpiuBEIGEd+6R9+YJXnjQkoL2grjZU=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=WD8+sPacdQeQM123resn0effztEBWYs+fF3uSho3yiV/WGm59piPQHOpunqXKybp2
-         IvLy2jmZvrUDpzjxqN4mgm1FMnQ2Ub3MORTOvdf+sMC5jlE+9oKqhDJIJ9TqImiNst
-         5qSDl4Vl3VZ8z0+D5RUGKZyMGx/i1uw5X8lfxeFcqYqhPRGAo95dewQIYavlZYXKV3
-         M2DkXAYZK0C3Z7RqMzmKUTmFYOEH+B97VBuf0OddG3nSjQMXz9mJixu3oKv2XQvmr0
-         efgFmCJHtNC9gcHReytylAFwmNYI+szd+xRQVkdSx765ozhAtQlk9uKGIVguuymQx0
-         xH7ass5Cue5uw==
+        b=LJQq2r+RQh0eVW9kL4WBNo7V46r4fHisH/txCJ/Qz+0T6eKmrA3H/ZCVarZNMTVsU
+         8/L8U8KqtcZq17Fwh1XqCvp6S9g2/J1jf8iNuArXr7JkUSAyuYVOQxcmV7Q1G35wJ3
+         Oj1XT7H3v2wOlgOEzSmVcGuo+YrJOn35jtJWpZ+0oHoRE2MKxtXEE71fnuZzRzBvEA
+         dvfW5zlvDwIP4/SaIg9Pzvbgz4zkkhPpns/JVX5NqPRQGAxar4Ea9dmpoj20h0dym4
+         xtlNc9zKj71TTO/nVKOWaxCAr1vrXdQ0ZooNQEjwWBS50KCoSd9C30dPnHRCVSriDz
+         sHXe4+q8e+OVg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 17/22] PCI: Extract ATS disabling to a helper function
-Date:   Tue,  7 Nov 2023 10:51:26 -0500
-Message-ID: <20231107155146.3767610-17-sashal@kernel.org>
+Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Sasha Levin <sashal@kernel.org>, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, lpieralisi@kernel.org, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 27/34] PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling
+Date:   Tue,  7 Nov 2023 10:48:07 -0500
+Message-ID: <20231107154846.3766119-27-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107155146.3767610-1-sashal@kernel.org>
-References: <20231107155146.3767610-1-sashal@kernel.org>
+In-Reply-To: <20231107154846.3766119-1-sashal@kernel.org>
+References: <20231107154846.3766119-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.137
+X-stable-base: Linux 6.5.10
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 
-[ Upstream commit f18b1137d38c091cc8c16365219f0a1d4a30b3d1 ]
+[ Upstream commit 89db0793c9f2da265ecb6c1681f899d9af157f37 ]
 
-Introduce quirk_no_ats() helper function to provide a standard way to
-disable ATS capability in PCI quirks.
+Update dw_pcie_link_set_max_link_width() to set PCI_EXP_LNKCAP_MLW.
 
-Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Link: https://lore.kernel.org/r/20230908143606.685930-2-bartosz.pawlowski@intel.com
-Signed-off-by: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
+the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
+field there is another one which needs to be updated.
+
+It's LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
+the very least the maximum link-width capability CSR won't expose the
+actual maximum capability.
+
+[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.60a, March 2015, p.1032
+[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.70a, March 2016, p.1065
+[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.90a, March 2016, p.1057
+...
+[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
+      Version 5.40a, March 2019, p.1396
+[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+      Version 5.40a, March 2019, p.1266
+
+Suggested-by: Serge Semin <fancer.lancer@gmail.com>
+Link: https://lore.kernel.org/linux-pci/20231018085631.1121289-4-yoshihiro.shimoda.uh@renesas.com
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 16 +++++++++-------
- 1 file changed, 9 insertions(+), 7 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ec17d42c2a155..60724825e2524 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5377,6 +5377,12 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0420, quirk_no_ext_tags);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index d14b4da700eaf..8e6f6ac42dc96 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -734,7 +734,8 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
  
- #ifdef CONFIG_PCI_ATS
-+static void quirk_no_ats(struct pci_dev *pdev)
-+{
-+	pci_info(pdev, "disabling ATS\n");
-+	pdev->ats_cap = 0;
-+}
-+
- /*
-  * Some devices require additional driver setup to enable ATS.  Don't use
-  * ATS for those devices as ATS will be enabled before the driver has had a
-@@ -5390,14 +5396,10 @@ static void quirk_amd_harvest_no_ats(struct pci_dev *pdev)
- 		    (pdev->subsystem_device == 0xce19 ||
- 		     pdev->subsystem_device == 0xcc10 ||
- 		     pdev->subsystem_device == 0xcc08))
--			goto no_ats;
--		else
--			return;
-+			quirk_no_ats(pdev);
-+	} else {
-+		quirk_no_ats(pdev);
+ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
+ {
+-	u32 lwsc, plc;
++	u32 lnkcap, lwsc, plc;
++	u8 cap;
+ 
+ 	if (!num_lanes)
+ 		return;
+@@ -770,6 +771,12 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
  	}
--
--no_ats:
--	pci_info(pdev, "disabling ATS\n");
--	pdev->ats_cap = 0;
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
+ 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
++
++	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
++	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
++	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
++	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
  }
  
- /* AMD Stoney platform GPU */
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
 -- 
 2.42.0
 
