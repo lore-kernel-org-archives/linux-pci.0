@@ -2,38 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88089C4167B
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:53:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 0CA68C4167D
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:53:19 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343878AbjKGPxK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 10:53:10 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49612 "EHLO
+        id S1344100AbjKGPxS (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 10:53:18 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:55976 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343881AbjKGPwc (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:52:32 -0500
+        with ESMTP id S1343961AbjKGPwt (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:52:49 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 80576173B;
-        Tue,  7 Nov 2023 07:49:41 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 67C96C433CB;
-        Tue,  7 Nov 2023 15:49:40 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0515E2736;
+        Tue,  7 Nov 2023 07:49:48 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D57FC433C8;
+        Tue,  7 Nov 2023 15:49:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372181;
-        bh=vzVoACxyclgh56ugjZIb3anLX8cjRd7jvqXQzJjLjY0=;
+        s=k20201202; t=1699372188;
+        bh=MSvapZDOoxEEWIBM1liMV0LaSFIB4F2xwAXAA2bVPJM=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=oT7sbPZY7MQVhhEX/XcjxcXVTKng+O5NP9UqP5s6XGJWMxWBO+CG8JiJlsZzhnhXp
-         vhJlG84n5+FChsgc3x702D7u4464uUYvIvtGGDLL4MRED37K3PY7zVX4SJoo7YsLDY
-         V21KO6n6ABjgZaqRGj+/WUG5D7VLggiVTR35A9OibLgCg32Wmnxw6LXwh2QunAw9fz
-         Bl9D0CuPOXTQXE1a7hI0mW38tp+Fxm+M4mobwSTswohHLIx2zKpjLy2WK3/0WMytcA
-         i8mrz0Fa79bqTgUL0oNu57jxoo515QFZI1+xrgRXHr7vGNSjy41K6G3HKTPehOzZ5j
-         9TIqni2V/hUDw==
+        b=cPFIhVC8/bIuI3k4eJqHRy4Uibw6N86e2NC3R8Fic1r4jiT51MPa3/+hMZAsD7+c6
+         Bgx8jhhxDpqzDDY2qzwbmfdkIq5/ttGhgg45OWKmt6fqDjfJPuWxdO+tiqX3J1l2Y2
+         4ITPWCNrIc2fjIDb+474IrWDK49ijFPQEHT0FvrP2vsrPH7N7m8GBrb+4TQH7HFxx8
+         wsg8yJM9zyeylXJ4CGp+QCoywpJ6+m9Hw7qmWZ/xhJ2rzNji2rl1hFmO+EwZVAT28L
+         HhW+sC6Lad8FjcxRu7eF5vc30MuVxRoi+e2nXraU6F+ajlrH+IbfywRR07ixOgU0lr
+         6yQ1Nr2MTofjw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 21/34] PCI: Do error check on own line to split long "if" conditions
-Date:   Tue,  7 Nov 2023 10:48:01 -0500
-Message-ID: <20231107154846.3766119-21-sashal@kernel.org>
+Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Sasha Levin <sashal@kernel.org>, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, lpieralisi@kernel.org, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 26/34] PCI: dwc: Add dw_pcie_link_set_max_link_width()
+Date:   Tue,  7 Nov 2023 10:48:06 -0500
+Message-ID: <20231107154846.3766119-26-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107154846.3766119-1-sashal@kernel.org>
 References: <20231107154846.3766119-1-sashal@kernel.org>
@@ -47,104 +51,133 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 
-[ Upstream commit d15f18053e5cc5576af9e7eef0b2a91169b6326d ]
+[ Upstream commit a9a1bcba90254975d4adbcca53f720318cf81c0c ]
 
-Placing PCI error code check inside "if" condition usually results in need
-to split lines. Combined with additional conditions the "if" condition
-becomes messy.
+This is a preparation before adding the Max-Link-width capability
+setup which would in its turn complete the max-link-width setup
+procedure defined by Synopsys in the HW-manual.
 
-Convert to the usual error handling pattern with an additional variable to
-improve code readability. In addition, reverse the logic in
-pci_find_vsec_capability() to get rid of &&.
+Seeing there is a max-link-speed setup method defined in the DW PCIe
+core driver it would be good to have a similar function for the link
+width setup.
 
-No functional changes intended.
+That's why we need to define a dedicated function first from already
+implemented but incomplete link-width setting up code.
 
-Link: https://lore.kernel.org/r/20230911125354.25501-5-ilpo.jarvinen@linux.intel.com
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-[bhelgaas: PCI_POSSIBLE_ERROR()]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Link: https://lore.kernel.org/linux-pci/20231018085631.1121289-3-yoshihiro.shimoda.uh@renesas.com
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.c    | 9 ++++++---
- drivers/pci/probe.c  | 6 +++---
- drivers/pci/quirks.c | 6 +++---
- 3 files changed, 12 insertions(+), 9 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 86 ++++++++++----------
+ 1 file changed, 41 insertions(+), 45 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 702fe577089b4..3cd907eb67b74 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -732,15 +732,18 @@ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap)
- {
- 	u16 vsec = 0;
- 	u32 header;
-+	int ret;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 1f2ee71da4da2..d14b4da700eaf 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -732,6 +732,46 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
  
- 	if (vendor != dev->vendor)
- 		return 0;
+ }
  
- 	while ((vsec = pci_find_next_ext_capability(dev, vsec,
- 						     PCI_EXT_CAP_ID_VNDR))) {
--		if (pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER,
--					  &header) == PCIBIOS_SUCCESSFUL &&
--		    PCI_VNDR_HEADER_ID(header) == cap)
-+		ret = pci_read_config_dword(dev, vsec + PCI_VNDR_HEADER, &header);
-+		if (ret != PCIBIOS_SUCCESSFUL)
-+			continue;
++static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
++{
++	u32 lwsc, plc;
 +
-+		if (PCI_VNDR_HEADER_ID(header) == cap)
- 			return vsec;
- 	}
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 24a83cf5ace8c..cd08d39fdb1ff 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1653,15 +1653,15 @@ static void pci_set_removable(struct pci_dev *dev)
- static bool pci_ext_cfg_is_aliased(struct pci_dev *dev)
++	if (!num_lanes)
++		return;
++
++	/* Set the number of lanes */
++	plc = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
++	plc &= ~PORT_LINK_FAST_LINK_MODE;
++	plc &= ~PORT_LINK_MODE_MASK;
++
++	/* Set link width speed control register */
++	lwsc = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
++	lwsc &= ~PORT_LOGIC_LINK_WIDTH_MASK;
++	switch (num_lanes) {
++	case 1:
++		plc |= PORT_LINK_MODE_1_LANES;
++		lwsc |= PORT_LOGIC_LINK_WIDTH_1_LANES;
++		break;
++	case 2:
++		plc |= PORT_LINK_MODE_2_LANES;
++		lwsc |= PORT_LOGIC_LINK_WIDTH_2_LANES;
++		break;
++	case 4:
++		plc |= PORT_LINK_MODE_4_LANES;
++		lwsc |= PORT_LOGIC_LINK_WIDTH_4_LANES;
++		break;
++	case 8:
++		plc |= PORT_LINK_MODE_8_LANES;
++		lwsc |= PORT_LOGIC_LINK_WIDTH_8_LANES;
++		break;
++	default:
++		dev_err(pci->dev, "num-lanes %u: invalid value\n", num_lanes);
++		return;
++	}
++	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
++	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
++}
++
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
  {
- #ifdef CONFIG_PCI_QUIRKS
--	int pos;
-+	int pos, ret;
- 	u32 header, tmp;
+ 	int max_region, ob, ib;
+@@ -1013,49 +1053,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
+ 	val |= PORT_LINK_DLL_LINK_EN;
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
  
- 	pci_read_config_dword(dev, PCI_VENDOR_ID, &header);
- 
- 	for (pos = PCI_CFG_SPACE_SIZE;
- 	     pos < PCI_CFG_SPACE_EXP_SIZE; pos += PCI_CFG_SPACE_SIZE) {
--		if (pci_read_config_dword(dev, pos, &tmp) != PCIBIOS_SUCCESSFUL
--		    || header != tmp)
-+		ret = pci_read_config_dword(dev, pos, &tmp);
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (header != tmp))
- 			return false;
- 	}
- 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 321156ca273d5..91c34b05374ce 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5381,7 +5381,7 @@ int pci_dev_specific_disable_acs_redir(struct pci_dev *dev)
-  */
- static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- {
--	int pos, i = 0;
-+	int pos, i = 0, ret;
- 	u8 next_cap;
- 	u16 reg16, *cap;
- 	struct pci_cap_saved_state *state;
-@@ -5427,8 +5427,8 @@ static void quirk_intel_qat_vf_cap(struct pci_dev *pdev)
- 		pdev->pcie_mpss = reg16 & PCI_EXP_DEVCAP_PAYLOAD;
- 
- 		pdev->cfg_size = PCI_CFG_SPACE_EXP_SIZE;
--		if (pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status) !=
--		    PCIBIOS_SUCCESSFUL || (status == 0xffffffff))
-+		ret = pci_read_config_dword(pdev, PCI_CFG_SPACE_SIZE, &status);
-+		if ((ret != PCIBIOS_SUCCESSFUL) || (PCI_POSSIBLE_ERROR(status)))
- 			pdev->cfg_size = PCI_CFG_SPACE_SIZE;
- 
- 		if (pci_find_saved_cap(pdev, PCI_CAP_ID_EXP))
+-	if (!pci->num_lanes) {
+-		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
+-		return;
+-	}
+-
+-	/* Set the number of lanes */
+-	val &= ~PORT_LINK_FAST_LINK_MODE;
+-	val &= ~PORT_LINK_MODE_MASK;
+-	switch (pci->num_lanes) {
+-	case 1:
+-		val |= PORT_LINK_MODE_1_LANES;
+-		break;
+-	case 2:
+-		val |= PORT_LINK_MODE_2_LANES;
+-		break;
+-	case 4:
+-		val |= PORT_LINK_MODE_4_LANES;
+-		break;
+-	case 8:
+-		val |= PORT_LINK_MODE_8_LANES;
+-		break;
+-	default:
+-		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->num_lanes);
+-		return;
+-	}
+-	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
+-
+-	/* Set link width speed control register */
+-	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
+-	switch (pci->num_lanes) {
+-	case 1:
+-		val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
+-		break;
+-	case 2:
+-		val |= PORT_LOGIC_LINK_WIDTH_2_LANES;
+-		break;
+-	case 4:
+-		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
+-		break;
+-	case 8:
+-		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
+-		break;
+-	}
+-	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
+ }
 -- 
 2.42.0
 
