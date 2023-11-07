@@ -2,182 +2,85 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 0C553C04A95
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:49:56 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 12785C4167D
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:53:10 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343567AbjKGPtz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 10:49:55 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32812 "EHLO
+        id S1343842AbjKGPxK (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 10:53:10 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49644 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344193AbjKGPsa (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:48:30 -0500
+        with ESMTP id S1343843AbjKGPwa (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:52:30 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 1A10F19AF;
-        Tue,  7 Nov 2023 07:47:59 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52410C433CA;
-        Tue,  7 Nov 2023 15:47:57 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DD51F26BF;
+        Tue,  7 Nov 2023 07:49:38 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59F34C433BD;
+        Tue,  7 Nov 2023 15:49:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372078;
-        bh=3qEpanbwib5jNfCkUva42HUnefLpAdF6/htcBhyp9yY=;
+        s=k20201202; t=1699372178;
+        bh=HoAiKJ3p4tgxhXDwoMT+dz43fNXsybvgZvNEbokcZTo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=aMKYJvZqQBdSr7l5Gu/fwlh58d2QDbmdilKMz2NMAjvU/2s3HENpVHHSJGXODDh61
-         u4RexJ0UAm8dodPb0NLP95mMO+Ar5TTIOB5dWU1KeKb+owiRiq7e3fNbR93ZjkBbgr
-         iff022z6qeGoZDQwEbJskVYOZCE2WdzkDLDxTSSwnULxcrkKa3hSn/zV3CjON9N18Q
-         idsPAKum8PGfB+hH24j0jvLfX0EK3xxCROGnzphifDJSzyPuB9Okf2c/o8JK41l10F
-         yU0pkK+UYE6SdydlEkkTB87EzX54p1p4CI6mbcACmWdwb+gYgCPv0fQBZhDvx8UTMa
-         I/hzk+X7unJeg==
+        b=PP9QJoZ4Otuj0TGJZSCOuMUjOUsaZXQB0E5SsU6zXRUcTue8ZnnBxtrGpW4RM8RxS
+         fNOhlv5a6aDGe88UCPDJhPsnu8OJpQg+cF0MNkOATu+j8r5xcNxETBLkyRx16A4z5j
+         2PYE87k0FNOn5yAZhrl/WcQQSfhan+vYNyRFFMIxvcdzTCIZutKY/R/HYAlR3umfH+
+         65Iqoams3WqcqAi9cdkf22KZYA3fKg8JXmJElrDaY4NsaDEYECR2Hy1vCjpwV2dG7A
+         cof5RvgfmFiWew+hfffbv/Fgm8ahKBQbIRQdZjLY8ds/dtVbHKa6GirHZdoTr94Bxk
+         Va4LUi4fYd67g==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        Sasha Levin <sashal@kernel.org>, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, lpieralisi@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 28/36] PCI: dwc: Add dw_pcie_link_set_max_link_width()
-Date:   Tue,  7 Nov 2023 10:46:10 -0500
-Message-ID: <20231107154654.3765336-28-sashal@kernel.org>
+Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Sasha Levin <sashal@kernel.org>, thomas.petazzoni@bootlin.com,
+        pali@kernel.org, lpieralisi@kernel.org, kw@linux.com,
+        linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.5 19/34] PCI: mvebu: Use FIELD_PREP() with Link Width
+Date:   Tue,  7 Nov 2023 10:47:59 -0500
+Message-ID: <20231107154846.3766119-19-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
-In-Reply-To: <20231107154654.3765336-1-sashal@kernel.org>
-References: <20231107154654.3765336-1-sashal@kernel.org>
+In-Reply-To: <20231107154846.3766119-1-sashal@kernel.org>
+References: <20231107154846.3766119-1-sashal@kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6
+X-stable-base: Linux 6.5.10
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-[ Upstream commit a9a1bcba90254975d4adbcca53f720318cf81c0c ]
+[ Upstream commit 408599ec561ad5862cda4f107626009f6fa97a74 ]
 
-This is a preparation before adding the Max-Link-width capability
-setup which would in its turn complete the max-link-width setup
-procedure defined by Synopsys in the HW-manual.
+mvebu_pcie_setup_hw() setups the Maximum Link Width field in the Link
+Capabilities registers using an open-coded variant of FIELD_PREP() with
+a literal in shift. Improve readability by using
+FIELD_PREP(PCI_EXP_LNKCAP_MLW, ...).
 
-Seeing there is a max-link-speed setup method defined in the DW PCIe
-core driver it would be good to have a similar function for the link
-width setup.
-
-That's why we need to define a dedicated function first from already
-implemented but incomplete link-width setting up code.
-
-Link: https://lore.kernel.org/linux-pci/20231018085631.1121289-3-yoshihiro.shimoda.uh@renesas.com
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Link: https://lore.kernel.org/r/20230919125648.1920-6-ilpo.jarvinen@linux.intel.com
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 86 ++++++++++----------
- 1 file changed, 41 insertions(+), 45 deletions(-)
+ drivers/pci/controller/pci-mvebu.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 1c1c7348972b0..da4aba4aee623 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -732,6 +732,46 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
+index c931b1b07b1d8..0cacd58f6c05e 100644
+--- a/drivers/pci/controller/pci-mvebu.c
++++ b/drivers/pci/controller/pci-mvebu.c
+@@ -265,7 +265,7 @@ static void mvebu_pcie_setup_hw(struct mvebu_pcie_port *port)
+ 	 */
+ 	lnkcap = mvebu_readl(port, PCIE_CAP_PCIEXP + PCI_EXP_LNKCAP);
+ 	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
+-	lnkcap |= (port->is_x4 ? 4 : 1) << 4;
++	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, port->is_x4 ? 4 : 1);
+ 	mvebu_writel(port, lnkcap, PCIE_CAP_PCIEXP + PCI_EXP_LNKCAP);
  
- }
- 
-+static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
-+{
-+	u32 lwsc, plc;
-+
-+	if (!num_lanes)
-+		return;
-+
-+	/* Set the number of lanes */
-+	plc = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
-+	plc &= ~PORT_LINK_FAST_LINK_MODE;
-+	plc &= ~PORT_LINK_MODE_MASK;
-+
-+	/* Set link width speed control register */
-+	lwsc = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
-+	lwsc &= ~PORT_LOGIC_LINK_WIDTH_MASK;
-+	switch (num_lanes) {
-+	case 1:
-+		plc |= PORT_LINK_MODE_1_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_1_LANES;
-+		break;
-+	case 2:
-+		plc |= PORT_LINK_MODE_2_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_2_LANES;
-+		break;
-+	case 4:
-+		plc |= PORT_LINK_MODE_4_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_4_LANES;
-+		break;
-+	case 8:
-+		plc |= PORT_LINK_MODE_8_LANES;
-+		lwsc |= PORT_LOGIC_LINK_WIDTH_8_LANES;
-+		break;
-+	default:
-+		dev_err(pci->dev, "num-lanes %u: invalid value\n", num_lanes);
-+		return;
-+	}
-+	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
-+	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
-+}
-+
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
- {
- 	int max_region, ob, ib;
-@@ -1013,49 +1053,5 @@ void dw_pcie_setup(struct dw_pcie *pci)
- 	val |= PORT_LINK_DLL_LINK_EN;
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
- 
--	if (!pci->num_lanes) {
--		dev_dbg(pci->dev, "Using h/w default number of lanes\n");
--		return;
--	}
--
--	/* Set the number of lanes */
--	val &= ~PORT_LINK_FAST_LINK_MODE;
--	val &= ~PORT_LINK_MODE_MASK;
--	switch (pci->num_lanes) {
--	case 1:
--		val |= PORT_LINK_MODE_1_LANES;
--		break;
--	case 2:
--		val |= PORT_LINK_MODE_2_LANES;
--		break;
--	case 4:
--		val |= PORT_LINK_MODE_4_LANES;
--		break;
--	case 8:
--		val |= PORT_LINK_MODE_8_LANES;
--		break;
--	default:
--		dev_err(pci->dev, "num-lanes %u: invalid value\n", pci->num_lanes);
--		return;
--	}
--	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
--
--	/* Set link width speed control register */
--	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	val &= ~PORT_LOGIC_LINK_WIDTH_MASK;
--	switch (pci->num_lanes) {
--	case 1:
--		val |= PORT_LOGIC_LINK_WIDTH_1_LANES;
--		break;
--	case 2:
--		val |= PORT_LOGIC_LINK_WIDTH_2_LANES;
--		break;
--	case 4:
--		val |= PORT_LOGIC_LINK_WIDTH_4_LANES;
--		break;
--	case 8:
--		val |= PORT_LOGIC_LINK_WIDTH_8_LANES;
--		break;
--	}
--	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
- }
+ 	/* Disable Root Bridge I/O space, memory space and bus mastering. */
 -- 
 2.42.0
 
