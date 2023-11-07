@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 205C9C4332F
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:49:12 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 43C3AC41535
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 15:49:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1344189AbjKGPtL (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 10:49:11 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49660 "EHLO
+        id S234084AbjKGPtz (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 10:49:55 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:32842 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344241AbjKGPsm (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:48:42 -0500
+        with ESMTP id S1344293AbjKGPsd (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:48:33 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 014BD1715;
-        Tue,  7 Nov 2023 07:48:04 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BFE2C433C8;
-        Tue,  7 Nov 2023 15:48:02 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0397D170D;
+        Tue,  7 Nov 2023 07:48:01 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35E4EC433C9;
+        Tue,  7 Nov 2023 15:47:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372083;
-        bh=eujyiJtdKwfFERNUN2NAwj4NBo/kOfjVry/q0OZUZuE=;
+        s=k20201202; t=1699372080;
+        bh=jlORUrhwRe1qCQ3jPdGLBjmsIvLRy3hgBAMYBSgKlto=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=Ca6SacCiT1PUUlyvRGcf4yyDVZAH/Nj2t7eShVDTIzN7xNvAqi0h4HR2+OixXpKw2
-         36kMFJy8YMwZKspCtnFQPdgsk93EdlbusmGlsQJe2wQSStyqVrocgKWeoS4aoDSbKo
-         lvVDJkscbbHjm2QWBpZSahOy78CVopHXfhSKZY5cU+I9Q0An/yNBP7Li/3eNYYOiaP
-         cTkVm/dhuwWB/esmYiB+H4aCArEN2JNgS16Af32Zascc0ErPiqbgL1yXCqGZBy6lrK
-         4jUXYOB059+2n8rhQAa90eYoyL2W7JIfuKfSd5N+R9Hs8QZXxrUsf17EDogdfq3CeL
-         lW7ma2AxKb7KQ==
+        b=NqDrAGU7BgJ603x0RAeNE56qqSwjfIlbkd28T8sSGolPoQqhCTgHpBMF3hlAc2Qp9
+         67PEaDq7GqmZbHEgxhO+wStCigq1zjwc6TQE/Qbzfba9dRqUWsyhbJyhwsjAeQa6ii
+         YcYOjoC8ysnFiCQLSO5j31hlSoXnX9l9mcBvdt+EybsSU5uJXQevCPKqFLOs6nmg1v
+         z7ZcfIOsZy3FX1VLOxOy76YwxOwHFVsOmW6AmvyQOnBMtEv4/HPYO/n2YUWULW0L/4
+         VCBNrbGSQZrMV/yfKtWFfwvrUrAQzzGbYy22Wnaa4xIEFOPxkzqwDv5Mokb9degCRz
+         Ra7PU/X7bpIEQ==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Nirmoy Das <nirmoy.das@amd.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 31/36] PCI: Use FIELD_GET() in Sapphire RX 5600 XT Pulse quirk
-Date:   Tue,  7 Nov 2023 10:46:13 -0500
-Message-ID: <20231107154654.3765336-31-sashal@kernel.org>
+Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Sasha Levin <sashal@kernel.org>, jingoohan1@gmail.com,
+        gustavo.pimentel@synopsys.com, lpieralisi@kernel.org, kw@linux.com,
+        bhelgaas@google.com, linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.6 29/36] PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling
+Date:   Tue,  7 Nov 2023 10:46:11 -0500
+Message-ID: <20231107154654.3765336-29-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107154654.3765336-1-sashal@kernel.org>
 References: <20231107154654.3765336-1-sashal@kernel.org>
@@ -51,52 +51,70 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 
-[ Upstream commit 04e82fa5951ca66495d7b05665eff673aa3852b4 ]
+[ Upstream commit 89db0793c9f2da265ecb6c1681f899d9af157f37 ]
 
-Use FIELD_GET() to remove dependences on the field position, i.e., the
-shift value.  No functional change intended.
+Update dw_pcie_link_set_max_link_width() to set PCI_EXP_LNKCAP_MLW.
 
-Separate because this isn't as trivial as the other FIELD_GET() changes.
+In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
+the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
+field there is another one which needs to be updated.
 
-See 907830b0fc9e ("PCI: Add a REBAR size quirk for Sapphire RX 5600 XT
-Pulse")
+It's LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
+the very least the maximum link-width capability CSR won't expose the
+actual maximum capability.
 
-Link: https://lore.kernel.org/r/20231010204436.1000644-3-helgaas@kernel.org
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Nirmoy Das <nirmoy.das@amd.com>
+[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.60a, March 2015, p.1032
+[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.70a, March 2016, p.1065
+[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+    Version 4.90a, March 2016, p.1057
+...
+[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
+      Version 5.40a, March 2019, p.1396
+[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
+      Version 5.40a, March 2019, p.1266
+
+Suggested-by: Serge Semin <fancer.lancer@gmail.com>
+Link: https://lore.kernel.org/linux-pci/20231018085631.1121289-4-yoshihiro.shimoda.uh@renesas.com
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index ec43ebfc24a5d..a607f277ccf10 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3755,14 +3755,14 @@ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
- 		return 0;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index da4aba4aee623..2b60d20dfdf59 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -734,7 +734,8 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
  
- 	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
--	cap &= PCI_REBAR_CAP_SIZES;
-+	cap = FIELD_GET(PCI_REBAR_CAP_SIZES, cap);
+ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
+ {
+-	u32 lwsc, plc;
++	u32 lnkcap, lwsc, plc;
++	u8 cap;
  
- 	/* Sapphire RX 5600 XT Pulse has an invalid cap dword for BAR 0 */
- 	if (pdev->vendor == PCI_VENDOR_ID_ATI && pdev->device == 0x731f &&
--	    bar == 0 && cap == 0x7000)
--		cap = 0x3f000;
-+	    bar == 0 && cap == 0x700)
-+		return 0x3f00;
- 
--	return cap >> 4;
-+	return cap;
+ 	if (!num_lanes)
+ 		return;
+@@ -770,6 +771,12 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
+ 	}
+ 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
+ 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
++
++	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
++	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
++	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
++	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
  }
- EXPORT_SYMBOL(pci_rebar_get_possible_sizes);
  
+ void dw_pcie_iatu_detect(struct dw_pcie *pci)
 -- 
 2.42.0
 
