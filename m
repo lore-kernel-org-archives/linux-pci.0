@@ -2,42 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 54006C4167B
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:31:24 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C9E32C04A68
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:31:25 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234106AbjKGQbY (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 11:31:24 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40648 "EHLO
+        id S234465AbjKGQbZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 11:31:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:40662 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234098AbjKGQbJ (ORCPT
+        with ESMTP id S235327AbjKGQbJ (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 11:31:09 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 397F3D7A;
-        Tue,  7 Nov 2023 07:49:50 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F3A39C433CA;
-        Tue,  7 Nov 2023 15:49:48 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E5851734;
+        Tue,  7 Nov 2023 07:49:37 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 285FDC433BA;
+        Tue,  7 Nov 2023 15:49:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372190;
-        bh=yvPQWk4KLG1FPmpiuBEIGEd+6R9+YJXnjQkoL2grjZU=;
+        s=k20201202; t=1699372176;
+        bh=H+WJmK5ts6VrNFEW8hzF571ahL4rflmJxgfJkLTP3Uo=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=LJQq2r+RQh0eVW9kL4WBNo7V46r4fHisH/txCJ/Qz+0T6eKmrA3H/ZCVarZNMTVsU
-         8/L8U8KqtcZq17Fwh1XqCvp6S9g2/J1jf8iNuArXr7JkUSAyuYVOQxcmV7Q1G35wJ3
-         Oj1XT7H3v2wOlgOEzSmVcGuo+YrJOn35jtJWpZ+0oHoRE2MKxtXEE71fnuZzRzBvEA
-         dvfW5zlvDwIP4/SaIg9Pzvbgz4zkkhPpns/JVX5NqPRQGAxar4Ea9dmpoj20h0dym4
-         xtlNc9zKj71TTO/nVKOWaxCAr1vrXdQ0ZooNQEjwWBS50KCoSd9C30dPnHRCVSriDz
-         sHXe4+q8e+OVg==
+        b=QnSmsQFhAxuTDgTJom87pELzSAcBdIg9c3jleVtylC5BcHWXV1Q+2VY5FFYB+Re/e
+         U9B9vQ1ae6G/8FMFTpZU0608i3h+xYbwVCEfht92L1TIFYs772lNRRJJqwRqmYW6Br
+         /yYFRKJwC6nvXDTRKW5lepmrduV/Ps7ap6m5q/LR95+ILAZf7q4/v+r4cxx8//9Tih
+         Sj51CuAx7ckvaRaQAlBMlkdyF/PC9iJNt0mPi5huPJubIPhDJlcfZ9skLI3PiE8DJD
+         h2xzLF83QfaBzA7GTRyNuRmPeTm7I2zDXJWcxHYSkmZ5ZUjoIfAayyF13U7pfzWO+8
+         v8D0HBHoY4PHw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-        Serge Semin <fancer.lancer@gmail.com>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        Sasha Levin <sashal@kernel.org>, jingoohan1@gmail.com,
-        gustavo.pimentel@synopsys.com, lpieralisi@kernel.org, kw@linux.com,
-        bhelgaas@google.com, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.5 27/34] PCI: dwc: Add missing PCI_EXP_LNKCAP_MLW handling
-Date:   Tue,  7 Nov 2023 10:48:07 -0500
-Message-ID: <20231107154846.3766119-27-sashal@kernel.org>
+Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Sasha Levin <sashal@kernel.org>, lpieralisi@kernel.org,
+        kw@linux.com, thierry.reding@gmail.com, jonathanh@nvidia.com,
+        mani@kernel.org, sumitg@nvidia.com, u.kleine-koenig@pengutronix.de,
+        vidyas@nvidia.com, yoshihiro.shimoda.uh@renesas.com,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.5 18/34] PCI: tegra194: Use FIELD_GET()/FIELD_PREP() with Link Width fields
+Date:   Tue,  7 Nov 2023 10:47:58 -0500
+Message-ID: <20231107154846.3766119-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107154846.3766119-1-sashal@kernel.org>
 References: <20231107154846.3766119-1-sashal@kernel.org>
@@ -51,70 +52,67 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-[ Upstream commit 89db0793c9f2da265ecb6c1681f899d9af157f37 ]
+[ Upstream commit 759574abd78e3b47ec45bbd31a64e8832cf73f97 ]
 
-Update dw_pcie_link_set_max_link_width() to set PCI_EXP_LNKCAP_MLW.
+Use FIELD_GET() to extract PCIe Negotiated Link Width field instead of
+custom masking and shifting.
 
-In accordance with the DW PCIe RC/EP HW manuals [1,2,3,...] aside with
-the PORT_LINK_CTRL_OFF.LINK_CAPABLE and GEN2_CTRL_OFF.NUM_OF_LANES[8:0]
-field there is another one which needs to be updated.
+Similarly, change custom code that misleadingly used
+PCI_EXP_LNKSTA_NLW_SHIFT to prepare value for PCI_EXP_LNKCAP write
+to use FIELD_PREP() with correct field define (PCI_EXP_LNKCAP_MLW).
 
-It's LINK_CAPABILITIES_REG.PCIE_CAP_MAX_LINK_WIDTH. If it isn't done at
-the very least the maximum link-width capability CSR won't expose the
-actual maximum capability.
-
-[1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.60a, March 2015, p.1032
-[2] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.70a, March 2016, p.1065
-[3] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-    Version 4.90a, March 2016, p.1057
-...
-[X] DesignWare Cores PCI Express Controller Databook - DWC PCIe Endpoint,
-      Version 5.40a, March 2019, p.1396
-[X+1] DesignWare Cores PCI Express Controller Databook - DWC PCIe Root Port,
-      Version 5.40a, March 2019, p.1266
-
-Suggested-by: Serge Semin <fancer.lancer@gmail.com>
-Link: https://lore.kernel.org/linux-pci/20231018085631.1121289-4-yoshihiro.shimoda.uh@renesas.com
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Serge Semin <fancer.lancer@gmail.com>
+Link: https://lore.kernel.org/r/20230919125648.1920-5-ilpo.jarvinen@linux.intel.com
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index d14b4da700eaf..8e6f6ac42dc96 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -734,7 +734,8 @@ static void dw_pcie_link_set_max_speed(struct dw_pcie *pci, u32 link_gen)
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index ccff8cde5cff6..07cb0818a5138 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -9,6 +9,7 @@
+  * Author: Vidya Sagar <vidyas@nvidia.com>
+  */
  
- static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- {
--	u32 lwsc, plc;
-+	u32 lnkcap, lwsc, plc;
-+	u8 cap;
++#include <linux/bitfield.h>
+ #include <linux/clk.h>
+ #include <linux/debugfs.h>
+ #include <linux/delay.h>
+@@ -347,8 +348,7 @@ static void apply_bad_link_workaround(struct dw_pcie_rp *pp)
+ 	 */
+ 	val = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA);
+ 	if (val & PCI_EXP_LNKSTA_LBMS) {
+-		current_link_width = (val & PCI_EXP_LNKSTA_NLW) >>
+-				     PCI_EXP_LNKSTA_NLW_SHIFT;
++		current_link_width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val);
+ 		if (pcie->init_link_width > current_link_width) {
+ 			dev_warn(pci->dev, "PCIe link is bad, width reduced\n");
+ 			val = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base +
+@@ -761,8 +761,7 @@ static void tegra_pcie_enable_system_interrupts(struct dw_pcie_rp *pp)
  
- 	if (!num_lanes)
- 		return;
-@@ -770,6 +771,12 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- 	}
- 	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
- 	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
-+
-+	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
-+	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
-+	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
-+	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
- }
+ 	val_w = dw_pcie_readw_dbi(&pcie->pci, pcie->pcie_cap_base +
+ 				  PCI_EXP_LNKSTA);
+-	pcie->init_link_width = (val_w & PCI_EXP_LNKSTA_NLW) >>
+-				PCI_EXP_LNKSTA_NLW_SHIFT;
++	pcie->init_link_width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val_w);
  
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
+ 	val_w = dw_pcie_readw_dbi(&pcie->pci, pcie->pcie_cap_base +
+ 				  PCI_EXP_LNKCTL);
+@@ -921,7 +920,7 @@ static int tegra_pcie_dw_host_init(struct dw_pcie_rp *pp)
+ 	/* Configure Max lane width from DT */
+ 	val = dw_pcie_readl_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKCAP);
+ 	val &= ~PCI_EXP_LNKCAP_MLW;
+-	val |= (pcie->num_lanes << PCI_EXP_LNKSTA_NLW_SHIFT);
++	val |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, pcie->num_lanes);
+ 	dw_pcie_writel_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKCAP, val);
+ 
+ 	/* Clear Slot Clock Configuration bit if SRNS configuration */
 -- 
 2.42.0
 
