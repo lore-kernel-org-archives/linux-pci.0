@@ -2,44 +2,48 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 461A2C4167D
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:00:25 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id DDDB0C4167B
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:00:26 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234875AbjKGQAX (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 11:00:23 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34794 "EHLO
+        id S234916AbjKGQAZ (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 11:00:25 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:46094 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1344720AbjKGP7c (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:59:32 -0500
+        with ESMTP id S1344692AbjKGP7a (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 10:59:30 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28769132;
-        Tue,  7 Nov 2023 07:52:29 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8E46C433C7;
-        Tue,  7 Nov 2023 15:52:27 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 491A97DA3;
+        Tue,  7 Nov 2023 07:52:22 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DEE3C433C8;
+        Tue,  7 Nov 2023 15:52:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372348;
-        bh=uVDTK+z2k3wTFHlsnI3VQp3/iLIUswGQb1lSR/XCQ2A=;
+        s=k20201202; t=1699372341;
+        bh=Uf97kONez/vCKWsXsmx59dIbWr+W5iilYM9iQ5jVqaQ=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=NNBBuns+xHeGKdWla0WvR/aP25aZajcmWvdTpTAQZsBpMldWmBT9ud3DR2DsGihPb
-         oStXZlqFyezS6tx5MOa+ADGsyHvMAanq39qG0Ei7w6DP+hqO4B+p2WuWY8mvwPZB5H
-         xOs5uyblQNWkVtjuKJ42PpO7FRM3qOU6IAJeIZUopHmfEXk7X1tpWgVtPeDT6KviK8
-         Y5uhw0WM9G8KC1+XmVWq/a2uQ3G0haj2rXtUNd9wGBATvkA9RShXwjoMDddsGlBeMA
-         HvV9nUHqQ9yBmDiVKqagPW8cHXSW0VQjGE14WQiwxxDBvNqsjrGrLaPnKzfVKj0bd9
-         AtqWjlp8nKsBA==
+        b=fVZWcMu+TxEC1fPum4VE88M7uSBW5xg50pzSBVnrU+fXRBmbKz4TDMNEOAdqpCudW
+         /LJZhh0m/ynYYaNxw/QwLvYaFl5d6eZ0SZ58p8faUnhoFg77Y/tI/RygPQyqY+kmrN
+         mV3J8i2omcwWVrcNvX+1PMIkyBQFO7nIZ4H8ja8z9SbhecZevd20w/Dw/EzEGeTe2L
+         fvae1fdZ88H+nPYrBUW7ZxTqZXIoCW1lN1O+9tcZsp3LDoLU0c6IuVqW2iFgF88iYM
+         1ZyFC50t5d60pbzjA6Ql6/cFaSg8KyPSi18AGytwa5/nzvlbQPjkd9J88fx2GLprTu
+         /+IjIWHZX+/Zg==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
+Cc:     =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Alexander Lobakin <aleksander.lobakin@intel.com>,
-        Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 18/22] PCI: Disable ATS for specific Intel IPU E2000 devices
-Date:   Tue,  7 Nov 2023 10:51:27 -0500
-Message-ID: <20231107155146.3767610-18-sashal@kernel.org>
+        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+        Sasha Levin <sashal@kernel.org>, lpieralisi@kernel.org,
+        kw@linux.com, thierry.reding@gmail.com, jonathanh@nvidia.com,
+        mani@kernel.org, sumitg@nvidia.com, u.kleine-koenig@pengutronix.de,
+        vidyas@nvidia.com, yoshihiro.shimoda.uh@renesas.com,
+        linux-pci@vger.kernel.org, linux-tegra@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.15 13/22] PCI: tegra194: Use FIELD_GET()/FIELD_PREP() with Link Width fields
+Date:   Tue,  7 Nov 2023 10:51:22 -0500
+Message-ID: <20231107155146.3767610-13-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107155146.3767610-1-sashal@kernel.org>
 References: <20231107155146.3767610-1-sashal@kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 5.15.137
@@ -48,58 +52,67 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-[ Upstream commit a18615b1cfc04f00548c60eb9a77e0ce56e848fd ]
+[ Upstream commit 759574abd78e3b47ec45bbd31a64e8832cf73f97 ]
 
-Due to a hardware issue in A and B steppings of Intel IPU E2000, it expects
-wrong endianness in ATS invalidation message body. This problem can lead to
-outdated translations being returned as valid and finally cause system
-instability.
+Use FIELD_GET() to extract PCIe Negotiated Link Width field instead of
+custom masking and shifting.
 
-To prevent such issues, add quirk_intel_e2000_no_ats() to disable ATS for
-vulnerable IPU E2000 devices.
+Similarly, change custom code that misleadingly used
+PCI_EXP_LNKSTA_NLW_SHIFT to prepare value for PCI_EXP_LNKCAP write
+to use FIELD_PREP() with correct field define (PCI_EXP_LNKCAP_MLW).
 
-Link: https://lore.kernel.org/r/20230908143606.685930-3-bartosz.pawlowski@intel.com
-Signed-off-by: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
+Link: https://lore.kernel.org/r/20230919125648.1920-5-ilpo.jarvinen@linux.intel.com
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Reviewed-by: Alexander Lobakin <aleksander.lobakin@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/pci/controller/dwc/pcie-tegra194.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 60724825e2524..dd25e7e65396f 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -5422,6 +5422,25 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7347, quirk_amd_harvest_no_ats);
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x734f, quirk_amd_harvest_no_ats);
- /* AMD Raven platform iGPU */
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x15d8, quirk_amd_harvest_no_ats);
-+
-+/*
-+ * Intel IPU E2000 revisions before C0 implement incorrect endianness
-+ * in ATS Invalidate Request message body. Disable ATS for those devices.
-+ */
-+static void quirk_intel_e2000_no_ats(struct pci_dev *pdev)
-+{
-+	if (pdev->revision < 0x20)
-+		quirk_no_ats(pdev);
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1451, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1452, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1453, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1454, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1455, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1457, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x1459, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145a, quirk_intel_e2000_no_ats);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, 0x145c, quirk_intel_e2000_no_ats);
- #endif /* CONFIG_PCI_ATS */
+diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
+index 765abe0732282..2f82da76e3711 100644
+--- a/drivers/pci/controller/dwc/pcie-tegra194.c
++++ b/drivers/pci/controller/dwc/pcie-tegra194.c
+@@ -7,6 +7,7 @@
+  * Author: Vidya Sagar <vidyas@nvidia.com>
+  */
  
- /* Freescale PCIe doesn't support MSI in RC mode */
++#include <linux/bitfield.h>
+ #include <linux/clk.h>
+ #include <linux/debugfs.h>
+ #include <linux/delay.h>
+@@ -328,8 +329,7 @@ static void apply_bad_link_workaround(struct pcie_port *pp)
+ 	 */
+ 	val = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKSTA);
+ 	if (val & PCI_EXP_LNKSTA_LBMS) {
+-		current_link_width = (val & PCI_EXP_LNKSTA_NLW) >>
+-				     PCI_EXP_LNKSTA_NLW_SHIFT;
++		current_link_width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val);
+ 		if (pcie->init_link_width > current_link_width) {
+ 			dev_warn(pci->dev, "PCIe link is bad, width reduced\n");
+ 			val = dw_pcie_readw_dbi(pci, pcie->pcie_cap_base +
+@@ -731,8 +731,7 @@ static void tegra_pcie_enable_system_interrupts(struct pcie_port *pp)
+ 
+ 	val_w = dw_pcie_readw_dbi(&pcie->pci, pcie->pcie_cap_base +
+ 				  PCI_EXP_LNKSTA);
+-	pcie->init_link_width = (val_w & PCI_EXP_LNKSTA_NLW) >>
+-				PCI_EXP_LNKSTA_NLW_SHIFT;
++	pcie->init_link_width = FIELD_GET(PCI_EXP_LNKSTA_NLW, val_w);
+ 
+ 	val_w = dw_pcie_readw_dbi(&pcie->pci, pcie->pcie_cap_base +
+ 				  PCI_EXP_LNKCTL);
+@@ -889,7 +888,7 @@ static int tegra_pcie_dw_host_init(struct pcie_port *pp)
+ 	/* Configure Max lane width from DT */
+ 	val = dw_pcie_readl_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKCAP);
+ 	val &= ~PCI_EXP_LNKCAP_MLW;
+-	val |= (pcie->num_lanes << PCI_EXP_LNKSTA_NLW_SHIFT);
++	val |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, pcie->num_lanes);
+ 	dw_pcie_writel_dbi(pci, pcie->pcie_cap_base + PCI_EXP_LNKCAP, val);
+ 
+ 	config_gen3_gen4_eq_presets(pcie);
 -- 
 2.42.0
 
