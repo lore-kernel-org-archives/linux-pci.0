@@ -2,47 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A544CC4167D
-	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:18:08 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 37B15C4167D
+	for <linux-pci@archiver.kernel.org>; Tue,  7 Nov 2023 16:18:13 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S235657AbjKGQSI (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 7 Nov 2023 11:18:08 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:51250 "EHLO
+        id S235258AbjKGQSN (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 7 Nov 2023 11:18:13 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41212 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S235560AbjKGQRZ (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 11:17:25 -0500
+        with ESMTP id S235304AbjKGQR0 (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 7 Nov 2023 11:17:26 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id E60A27DBD;
-        Tue,  7 Nov 2023 07:52:31 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA2F3C433C9;
-        Tue,  7 Nov 2023 15:52:30 +0000 (UTC)
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F05351717;
+        Tue,  7 Nov 2023 07:52:27 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B459BC433CA;
+        Tue,  7 Nov 2023 15:52:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-        s=k20201202; t=1699372351;
-        bh=xNizLpN7ywbUmlozKwPe6v+PA26m7PiS6OuQy83f0kw=;
+        s=k20201202; t=1699372347;
+        bh=AJ60giNP+AH/cCyECe5rv18MhVuQSgTFA29ZeqFHnn4=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=d5c0a5WzIzBY6T0zWw5NGGGNhS7ZWKI+scqyuVzdGKLZL0NTtu7LTiZHYC/UgJ2oQ
-         8zLz+t1CYzcB1M6Iz91iRS1ceSckHdczJ/F4qrDdP/SQl0qV7MGxropXa3ifUUz0R2
-         UC1X8Y7twGFefWIZZhGbN1KxzRL5qgyuAsgNzEyi1XaOm08NgLS9rm3ac4TrL80+lB
-         SHTrHRpqNBqWDA6APU/hT1m68bFjUi91WKaImcP3sgXiYuZ6gKThcmhqrsNQ0x6x58
-         AHGsM4qKIORAPPo5FAUmKbLWAhE4VFAy/8eMsftx73o9fQsl9ff6aPsUwl2i8vxzfI
-         ReY6npGPqu6yw==
+        b=WD8+sPacdQeQM123resn0effztEBWYs+fF3uSho3yiV/WGm59piPQHOpunqXKybp2
+         IvLy2jmZvrUDpzjxqN4mgm1FMnQ2Ub3MORTOvdf+sMC5jlE+9oKqhDJIJ9TqImiNst
+         5qSDl4Vl3VZ8z0+D5RUGKZyMGx/i1uw5X8lfxeFcqYqhPRGAo95dewQIYavlZYXKV3
+         M2DkXAYZK0C3Z7RqMzmKUTmFYOEH+B97VBuf0OddG3nSjQMXz9mJixu3oKv2XQvmr0
+         efgFmCJHtNC9gcHReytylAFwmNYI+szd+xRQVkdSx765ozhAtQlk9uKGIVguuymQx0
+         xH7ass5Cue5uw==
 From:   Sasha Levin <sashal@kernel.org>
 To:     linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc:     Bjorn Helgaas <bhelgaas@google.com>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-        Kuppuswamy Sathyanarayanan 
-        <sathyanarayanan.kuppuswamy@linux.intel.com>,
-        Nirmoy Das <nirmoy.das@amd.com>,
+Cc:     Bartosz Pawlowski <bartosz.pawlowski@intel.com>,
+        Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
         Sasha Levin <sashal@kernel.org>, linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 20/22] PCI: Use FIELD_GET() in Sapphire RX 5600 XT Pulse quirk
-Date:   Tue,  7 Nov 2023 10:51:29 -0500
-Message-ID: <20231107155146.3767610-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 17/22] PCI: Extract ATS disabling to a helper function
+Date:   Tue,  7 Nov 2023 10:51:26 -0500
+Message-ID: <20231107155146.3767610-17-sashal@kernel.org>
 X-Mailer: git-send-email 2.42.0
 In-Reply-To: <20231107155146.3767610-1-sashal@kernel.org>
 References: <20231107155146.3767610-1-sashal@kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 5.15.137
@@ -51,52 +47,58 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
 
-[ Upstream commit 04e82fa5951ca66495d7b05665eff673aa3852b4 ]
+[ Upstream commit f18b1137d38c091cc8c16365219f0a1d4a30b3d1 ]
 
-Use FIELD_GET() to remove dependences on the field position, i.e., the
-shift value.  No functional change intended.
+Introduce quirk_no_ats() helper function to provide a standard way to
+disable ATS capability in PCI quirks.
 
-Separate because this isn't as trivial as the other FIELD_GET() changes.
-
-See 907830b0fc9e ("PCI: Add a REBAR size quirk for Sapphire RX 5600 XT
-Pulse")
-
-Link: https://lore.kernel.org/r/20231010204436.1000644-3-helgaas@kernel.org
+Suggested-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Link: https://lore.kernel.org/r/20230908143606.685930-2-bartosz.pawlowski@intel.com
+Signed-off-by: Bartosz Pawlowski <bartosz.pawlowski@intel.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-Cc: Nirmoy Das <nirmoy.das@amd.com>
+Reviewed-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/pci.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/pci/quirks.c | 16 +++++++++-------
+ 1 file changed, 9 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 371ba983b4084..cc3f620b73bd7 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3649,14 +3649,14 @@ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
- 		return 0;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ec17d42c2a155..60724825e2524 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -5377,6 +5377,12 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0420, quirk_no_ext_tags);
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_SERVERWORKS, 0x0422, quirk_no_ext_tags);
  
- 	pci_read_config_dword(pdev, pos + PCI_REBAR_CAP, &cap);
--	cap &= PCI_REBAR_CAP_SIZES;
-+	cap = FIELD_GET(PCI_REBAR_CAP_SIZES, cap);
- 
- 	/* Sapphire RX 5600 XT Pulse has an invalid cap dword for BAR 0 */
- 	if (pdev->vendor == PCI_VENDOR_ID_ATI && pdev->device == 0x731f &&
--	    bar == 0 && cap == 0x7000)
--		cap = 0x3f000;
-+	    bar == 0 && cap == 0x700)
-+		return 0x3f00;
- 
--	return cap >> 4;
-+	return cap;
+ #ifdef CONFIG_PCI_ATS
++static void quirk_no_ats(struct pci_dev *pdev)
++{
++	pci_info(pdev, "disabling ATS\n");
++	pdev->ats_cap = 0;
++}
++
+ /*
+  * Some devices require additional driver setup to enable ATS.  Don't use
+  * ATS for those devices as ATS will be enabled before the driver has had a
+@@ -5390,14 +5396,10 @@ static void quirk_amd_harvest_no_ats(struct pci_dev *pdev)
+ 		    (pdev->subsystem_device == 0xce19 ||
+ 		     pdev->subsystem_device == 0xcc10 ||
+ 		     pdev->subsystem_device == 0xcc08))
+-			goto no_ats;
+-		else
+-			return;
++			quirk_no_ats(pdev);
++	} else {
++		quirk_no_ats(pdev);
+ 	}
+-
+-no_ats:
+-	pci_info(pdev, "disabling ATS\n");
+-	pdev->ats_cap = 0;
  }
- EXPORT_SYMBOL(pci_rebar_get_possible_sizes);
  
+ /* AMD Stoney platform GPU */
 -- 
 2.42.0
 
