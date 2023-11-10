@@ -2,124 +2,237 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 676A3C4332F
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:22:34 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81F57C4332F
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:44:50 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S236068AbjKJTWe (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Nov 2023 14:22:34 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:41434 "EHLO
+        id S236202AbjKJTov (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Nov 2023 14:44:51 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:52896 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S236001AbjKJTWG (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 14:22:06 -0500
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id ED396B9D4
-        for <linux-pci@vger.kernel.org>; Fri, 10 Nov 2023 11:16:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-        s=mimecast20190719; t=1699643770;
-        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-         content-transfer-encoding:content-transfer-encoding:
-         in-reply-to:in-reply-to:references:references;
-        bh=GxHfJ1htVRZCy6QGeX5s9dQZAX+xioUFSgZZ1hMauTk=;
-        b=SBFmwd3+Zn6DrlKo50on1EuhdYslwHLGXE5o8kPuQ0Hb9cEF9L7Oad1meknlnHiR9zi2ga
-        IuqhFNbi0aXNrOoFP9ANSv7PCRwrsAYZuzdYZKE+Xfkv6uuMkpQZM/wSl4c/fmJRBec7gj
-        7SY+QiF9z7564TVoT5j3LXQCnhNsvg8=
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com
- [209.85.219.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-668-coyAkwenP62Qi5v0WojZYg-1; Fri, 10 Nov 2023 14:16:09 -0500
-X-MC-Unique: coyAkwenP62Qi5v0WojZYg-1
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-6754babc2c8so2425266d6.0
-        for <linux-pci@vger.kernel.org>; Fri, 10 Nov 2023 11:16:09 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1699643768; x=1700248568;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=GxHfJ1htVRZCy6QGeX5s9dQZAX+xioUFSgZZ1hMauTk=;
-        b=DEFSfSz97WhQvEB5paMuRWxAvQfiNJfHpwu5UaRpM5kdSXN5HN0o5wf5YhysitoEmi
-         wUFXAupioJzzD/fL7xgVwzFoTwjBOnQ152iibMl/I7mJ4ZcdeObC9oJ91U9ubys0WH5J
-         MR11fRP6KI1Uvm5J0Lj+y+oyuUHby25Zzgn2pudgxShAyOaJ5mKlR/4Uy2sXjI/0Gem5
-         3KrB5Q5QpMvzK+UOxeTwXkhLT0aMQHLRUzhTjP/74I8rE1nUL7gJNdEQ6WRM1TnT5Geq
-         IuV3qN3+kzkl4Ni/136b3B+VIyEgPO7mN7YUuCX21Q/ttDeyo5dKxZtnhN9n7fN0ezN/
-         Sdjg==
-X-Gm-Message-State: AOJu0YxSpzt0tdMc5OfG0nsUI1GLak1udjFle/K2ewGR8Eby9ZUhpXSD
-        yGp5p66H9orRhl+EIzVVTuJcs5ThEnJQTA9xRqF9tHIC5Lih4JzR6Rqv6TJ/pjTxP5ucHCQw7+A
-        Vk7UcUkRDE6w+JOGQt42T
-X-Received: by 2002:ad4:5911:0:b0:66a:d2d2:59b6 with SMTP id ez17-20020ad45911000000b0066ad2d259b6mr93449qvb.5.1699643768669;
-        Fri, 10 Nov 2023 11:16:08 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFi1+TSOIQnmNjS0gFPLLySwN8wyJkIMgU/AagS1/+hxuZ+LJtxfrdJv5Rn17oTFgSYMv2bag==
-X-Received: by 2002:ad4:5911:0:b0:66a:d2d2:59b6 with SMTP id ez17-20020ad45911000000b0066ad2d259b6mr93433qvb.5.1699643768416;
-        Fri, 10 Nov 2023 11:16:08 -0800 (PST)
-Received: from pstanner-thinkpadt14sgen1.remote.csb ([2001:9e8:32e5:ff00:227b:d2ff:fe26:2a7a])
-        by smtp.gmail.com with ESMTPSA id e11-20020a056214162b00b0066d0621bb67sm50370qvw.114.2023.11.10.11.16.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 10 Nov 2023 11:16:08 -0800 (PST)
-Message-ID: <5c547e6de1e6c206a46197c8f46583e0bc5f4395.camel@redhat.com>
-Subject: Re: Implementation details of PCI Managed (devres) Functions
-From:   Philipp Stanner <pstanner@redhat.com>
-To:     Tejun Heo <tj@kernel.org>
-Cc:     linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Tejun Heo <htejun@gmail.com>, dakr@redhat.com,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Andrew Morton <akpm@linux-foundation.org>,
-        Ben Dooks <ben.dooks@codethink.co.uk>, jeff@garzik.org,
-        Al Viro <viro@zeniv.linux.org.uk>
-Date:   Fri, 10 Nov 2023 20:16:05 +0100
-In-Reply-To: <ZU0qYBfFzsF3e8S9@slm.duckdns.org>
-References: <84be1049e41283cf8a110267646320af9ffe59fe.camel@redhat.com>
-         <1e964a74ca51e9e28202a47af22917e468050039.camel@redhat.com>
-         <ZU0qYBfFzsF3e8S9@slm.duckdns.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
+        with ESMTP id S236191AbjKJTog (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 14:44:36 -0500
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2041.outbound.protection.outlook.com [40.107.237.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 6BB2D5FD0;
+        Fri, 10 Nov 2023 10:55:31 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=cGPtBp7ZMM9iB3jQApmOp0EVGqf5ejzWunQPgZ7M2xHXNmzVdBnehrX2JhUgpEK7xw+kgTqXuDiAZoFZ+JtJYbdHbfrxWXKYHAwCfY10e/LeF+qJwYZLukL38PAv0+2MDQ+ZbdWlrZTs74h0NIW8E2ITmfDfcFaGDodCn3K8+caiB12iQwgaxY46jBcto5u0nXpw5DnImAu+kDktGFHkCf2sFPwpwDV+EIhOtS3zjZrQgYPnqc5cY2vZ0HFbuhj6FIF9TlRPlGgIuU53hmBHoN6VXbfYsWMOwsrGTpduQOmYIFkATiwx8xnZT+IzUQUVhnCuk3iwo+bNED4F+GoE7g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Evpbeo1dZAqXLwCv66bXfYPNXxJZjiCaBhoTDXXLTik=;
+ b=lr+fk9ZfayBsrDfo7LTZv0PGT9J0tT/COxwjuDkk5frhzmIyNzCicWCArdvMR0wrSeYtoAoV6ytGMS5USZx/9VZo30meYuX2VJJxhMEruZS+V2NGYnokf5ExupTUeXaa0XLWGMvceiF9rHNHYyou+am2Qs7lwrsJ2rCV6WX6LcwkhG1dwQS9oNMfTPqYRNCKEV4DkfIshThGXKWvGyq3AAINTCMHBjnW2E5Jl9Qd+/YBDZv/XS4RVqoUZBsGBxzqOHZ0z7rtyYTNiyhpU17+EWd35QhoqYNcjne6E8dQiHfAmU8iM6dWVMKsl/gcDYM+aA48HbWKXFh30D9KJDa+0A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Evpbeo1dZAqXLwCv66bXfYPNXxJZjiCaBhoTDXXLTik=;
+ b=RFI9087FQs0vTBF/7k+RkxqdXxAn1syGtpccyjW6Iip+RdG569IbWYpRuQwLp6zTcsqKTLoiFbgJ1mCSn9MeR5cfTB03jj5/6lMI71i0g1pheBAXYolVjZMLv9P4tpMOX+N7QJF+COwTghjI+Z3D7NqK8iXxvOkAHtYWzWSg0WU=
+Received: from MN2PR01CA0030.prod.exchangelabs.com (2603:10b6:208:10c::43) by
+ IA0PR12MB7627.namprd12.prod.outlook.com (2603:10b6:208:437::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6954.28; Fri, 10 Nov
+ 2023 18:55:29 +0000
+Received: from BL6PEPF0001AB4F.namprd04.prod.outlook.com
+ (2603:10b6:208:10c:cafe::b0) by MN2PR01CA0030.outlook.office365.com
+ (2603:10b6:208:10c::43) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.19 via Frontend
+ Transport; Fri, 10 Nov 2023 18:55:29 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BL6PEPF0001AB4F.mail.protection.outlook.com (10.167.242.73) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6977.16 via Frontend Transport; Fri, 10 Nov 2023 18:55:28 +0000
+Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Fri, 10 Nov
+ 2023 12:55:26 -0600
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+CC:     "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Mario Limonciello" <mario.limonciello@amd.com>
+Subject: [PATCH 1/3] PCI: Call PCI ACPI _DSM with consistent revision argument
+Date:   Fri, 10 Nov 2023 12:55:01 -0600
+Message-ID: <20231110185503.46117-2-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231110185503.46117-1-mario.limonciello@amd.com>
+References: <20231110185503.46117-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB4F:EE_|IA0PR12MB7627:EE_
+X-MS-Office365-Filtering-Correlation-Id: c64b0b10-ea75-4634-c2db-08dbe21e9b99
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: Sq/wCSpVqcJc7ZNxqUL0ZLuHIT1SW+tnItcTtGSIIAjud9cT4hYQ1ruPtN7goTwthqjl2hJU3tscJOm3Ko5mRL7NwqRme5EDZLLL/ogRYC4Wk/ehnecrlj7xXknKp1DJeuuK9Gbv+og5bIsW1lacowBk6N2y4fMyPOKEgR5vEVPMzETAUVyDeDPtcnyn5TmxlcUIA6bOw5vOOVRC6c4kRv+G0zqTYo7NsyCcSN1dV+6Dy4hJaDwGld1VvyoMw3UCnTMOH+ZgqrCMi1I/7FNQQOiKOWvwmdzaGMfcvj4debYJ5XHVyNyZHXW6xHL6oxzpmrQ19OlsSwiE9CsmYVCC/hQR9uKfuEeRz9ptHV/rb8D/sYxxoMwgHo1L81xTNl+j9j167WC6PjwGdzLGXBwLItNQVkK9jxTpxH3heWlroha3ssSy/5LRvb3CnvepzGDoqUhapm0ZJEdvd1DFOG2krVih0tpMdeaSmshQpUESybhgIbOkKAP6FogdUWkITExkXHipv+EUEKbl3MMgnEJC3yw4TEYlIwyFVQ7KfuaAfcsD0gfRriZHuy0m5o/1skugaK/JuiQvnpvr8n+tmXxANiHIEEKz13Zs6xLtGaQbQk9f95qHhT1NnWM1ATQk1/IlaXytb+InAxwazel3A6G+hwvBKiFxFvGC4JFpHf0pZpeXKm2sRpq7xUk7rnxQw74gLuZ8KMl7prRyEmbrlCAlHznLZX/NgBY09QS/uaSI9jS3EPNDzVLb6nLGlF8nSPCKf2Hbifak2yAaJJrqskGQHA==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(396003)(39860400002)(136003)(376002)(230922051799003)(82310400011)(64100799003)(186009)(1800799009)(451199024)(36840700001)(40470700004)(46966006)(40460700003)(478600001)(336012)(83380400001)(81166007)(426003)(6666004)(7696005)(2616005)(1076003)(16526019)(26005)(82740400003)(40480700001)(966005)(356005)(47076005)(36860700001)(70586007)(70206006)(54906003)(316002)(44832011)(110136005)(4326008)(86362001)(2906002)(5660300002)(8936002)(41300700001)(8676002)(36756003)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 18:55:28.8623
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: c64b0b10-ea75-4634-c2db-08dbe21e9b99
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BL6PEPF0001AB4F.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB7627
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Hi Tejun,
+The PCI ACPI _DSM is called across multiple places in the PCI core
+with different arguments for the revision.
 
-On Thu, 2023-11-09 at 08:52 -1000, Tejun Heo wrote:
-> Hello, Philipp.
->=20
-> On Wed, Nov 08, 2023 at 10:02:29PM +0100, Philipp Stanner wrote:
-> ...
-> > That struct keeps track of the requested BARs. That's why there can
-> > only be one mapping per BAR, because that table is statically
-> > allocated
-> > and is indexed with the bar-number.
-> > pcim_iomap_table() now only ever returns the table with the
-> > pointers to
-> > the BARs. Adding tables to that struct that keep track of which
-> > mappings exist in which bars would be a bit tricky and require
-> > probably
-> > an API change for everyone who currently uses pcim_iomap_table(),
-> > and
-> > that's more than 100 C-files.
-> >=20
-> > So, it seems that a concern back in 2007 was to keep things simple
-> > and
-> > skip the more complex data structures necessary for keeping track
-> > of
-> > the various mappings within a bar.
->=20
-> It was so long ago that I don't remember much but I do remember
-> taking a
-> shortcut there for convenience / simplicity. I'm sure it's already
-> clear but
-> there's no deeper reason, so if you wanna put in the work to make it
-> consistent, that'd be great.
->=20
+The PCI firmware specification specifies that this is an incorrect
+behavior.
+"OSPM must invoke all Functions other than Function 0 with the
+ same Revision ID value"
 
-Alright, it's good to know that there seems to be no functional or
-semantic reason or something behind it.
+Link: https://members.pcisig.com/wg/PCI-SIG/document/15350
+      PCI Firmware specification 3.3, section 4.6
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/acpi/pci_root.c  |  3 ++-
+ drivers/pci/pci-acpi.c   |  6 ++++--
+ drivers/pci/pci-label.c  |  4 ++--
+ drivers/pci/pcie/edr.c   | 13 +++++++------
+ include/linux/pci-acpi.h |  1 +
+ 5 files changed, 16 insertions(+), 11 deletions(-)
 
-I'll think it through. Maybe we can design something clever
-
-P.
-
-
-> Thanks.
->=20
+diff --git a/drivers/acpi/pci_root.c b/drivers/acpi/pci_root.c
+index 58b89b8d950e..bca2270a93d4 100644
+--- a/drivers/acpi/pci_root.c
++++ b/drivers/acpi/pci_root.c
+@@ -1055,7 +1055,8 @@ struct pci_bus *acpi_pci_root_create(struct acpi_pci_root *root,
+ 	 * exists and returns 0, we must preserve any PCI resource
+ 	 * assignments made by firmware for this host bridge.
+ 	 */
+-	obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(bus->bridge), &pci_acpi_dsm_guid, 1,
++	obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(bus->bridge),
++				      &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 				      DSM_PCI_PRESERVE_BOOT_CONFIG, NULL, ACPI_TYPE_INTEGER);
+ 	if (obj && obj->integer.value == 0)
+ 		host_bridge->preserve_config = 1;
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 004575091596..bea72e807817 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -28,6 +28,7 @@
+ const guid_t pci_acpi_dsm_guid =
+ 	GUID_INIT(0xe5c937d0, 0x3553, 0x4d7a,
+ 		  0x91, 0x17, 0xea, 0x4d, 0x19, 0xc3, 0x43, 0x4d);
++const int pci_acpi_dsm_rev = 5;
+ 
+ #if defined(CONFIG_PCI_QUIRKS) && defined(CONFIG_ARM64)
+ static int acpi_get_rc_addr(struct acpi_device *adev, struct resource *res)
+@@ -1215,7 +1216,8 @@ void acpi_pci_add_bus(struct pci_bus *bus)
+ 	if (!pci_is_root_bus(bus))
+ 		return;
+ 
+-	obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(bus->bridge), &pci_acpi_dsm_guid, 3,
++	obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(bus->bridge),
++				      &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 				      DSM_PCI_POWER_ON_RESET_DELAY, NULL, ACPI_TYPE_INTEGER);
+ 	if (!obj)
+ 		return;
+@@ -1376,7 +1378,7 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
+ 	if (bridge->ignore_reset_delay)
+ 		pdev->d3cold_delay = 0;
+ 
+-	obj = acpi_evaluate_dsm_typed(handle, &pci_acpi_dsm_guid, 3,
++	obj = acpi_evaluate_dsm_typed(handle, &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 				      DSM_PCI_DEVICE_READINESS_DURATIONS, NULL,
+ 				      ACPI_TYPE_PACKAGE);
+ 	if (!obj)
+diff --git a/drivers/pci/pci-label.c b/drivers/pci/pci-label.c
+index 0c6446519640..91bdd04029f0 100644
+--- a/drivers/pci/pci-label.c
++++ b/drivers/pci/pci-label.c
+@@ -41,7 +41,7 @@ static bool device_has_acpi_name(struct device *dev)
+ 	if (!handle)
+ 		return false;
+ 
+-	return acpi_check_dsm(handle, &pci_acpi_dsm_guid, 0x2,
++	return acpi_check_dsm(handle, &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 			      1 << DSM_PCI_DEVICE_NAME);
+ #else
+ 	return false;
+@@ -162,7 +162,7 @@ static int dsm_get_label(struct device *dev, char *buf,
+ 	if (!handle)
+ 		return -1;
+ 
+-	obj = acpi_evaluate_dsm(handle, &pci_acpi_dsm_guid, 0x2,
++	obj = acpi_evaluate_dsm(handle, &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 				DSM_PCI_DEVICE_NAME, NULL);
+ 	if (!obj)
+ 		return -1;
+diff --git a/drivers/pci/pcie/edr.c b/drivers/pci/pcie/edr.c
+index 5f4914d313a1..ab6a50201124 100644
+--- a/drivers/pci/pcie/edr.c
++++ b/drivers/pci/pcie/edr.c
+@@ -35,7 +35,7 @@ static int acpi_enable_dpc(struct pci_dev *pdev)
+ 	 * Behavior when calling unsupported _DSM functions is undefined,
+ 	 * so check whether EDR_PORT_DPC_ENABLE_DSM is supported.
+ 	 */
+-	if (!acpi_check_dsm(adev->handle, &pci_acpi_dsm_guid, 5,
++	if (!acpi_check_dsm(adev->handle, &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 			    1ULL << EDR_PORT_DPC_ENABLE_DSM))
+ 		return 0;
+ 
+@@ -51,8 +51,9 @@ static int acpi_enable_dpc(struct pci_dev *pdev)
+ 	 * Firmware Specification r3.2, sec 4.6.12, EDR_PORT_DPC_ENABLE_DSM is
+ 	 * optional.  Return success if it's not implemented.
+ 	 */
+-	obj = acpi_evaluate_dsm(adev->handle, &pci_acpi_dsm_guid, 5,
+-				EDR_PORT_DPC_ENABLE_DSM, &argv4);
++	obj = acpi_evaluate_dsm(adev->handle, &pci_acpi_dsm_guid,
++				pci_acpi_dsm_rev, EDR_PORT_DPC_ENABLE_DSM,
++				&argv4);
+ 	if (!obj)
+ 		return 0;
+ 
+@@ -88,12 +89,12 @@ static struct pci_dev *acpi_dpc_port_get(struct pci_dev *pdev)
+ 	 * Behavior when calling unsupported _DSM functions is undefined,
+ 	 * so check whether EDR_PORT_DPC_ENABLE_DSM is supported.
+ 	 */
+-	if (!acpi_check_dsm(adev->handle, &pci_acpi_dsm_guid, 5,
++	if (!acpi_check_dsm(adev->handle, &pci_acpi_dsm_guid, pci_acpi_dsm_rev,
+ 			    1ULL << EDR_PORT_LOCATE_DSM))
+ 		return pci_dev_get(pdev);
+ 
+-	obj = acpi_evaluate_dsm(adev->handle, &pci_acpi_dsm_guid, 5,
+-				EDR_PORT_LOCATE_DSM, NULL);
++	obj = acpi_evaluate_dsm(adev->handle, &pci_acpi_dsm_guid,
++				pci_acpi_dsm_rev, EDR_PORT_LOCATE_DSM, NULL);
+ 	if (!obj)
+ 		return pci_dev_get(pdev);
+ 
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index 078225b514d4..7966ef8f14b3 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -115,6 +115,7 @@ static inline void acpiphp_check_host_bridge(struct acpi_device *adev) { }
+ #endif
+ 
+ extern const guid_t pci_acpi_dsm_guid;
++extern const int pci_acpi_dsm_rev;
+ 
+ /* _DSM Definitions for PCI */
+ #define DSM_PCI_PRESERVE_BOOT_CONFIG		0x05
+-- 
+2.34.1
 
