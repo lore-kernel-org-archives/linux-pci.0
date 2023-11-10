@@ -2,157 +2,127 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 8865EC05032
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 18:27:28 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B6AC4167D
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:17:00 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345471AbjKJS13 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Nov 2023 13:27:29 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36072 "EHLO
+        id S1345806AbjKJTRA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Nov 2023 14:17:00 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33518 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1346523AbjKJS04 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 13:26:56 -0500
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8BB7D0BE;
-        Fri, 10 Nov 2023 01:23:27 -0800 (PST)
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA9DJHD019415;
-        Fri, 10 Nov 2023 09:22:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=date : from : to : cc :
- subject : message-id : in-reply-to : references : mime-version :
- content-type : content-transfer-encoding; s=pp1;
- bh=HznTsQNl47/GQCrKjB/UG3RtaDQ6QdkoTZ2WIS6q3HA=;
- b=sgmKbhIMOjGnIze4wT/YBq4hk8KJotdGY/Eh4G72tNuNZKNW4Wx8q1Nrmxf+rPeyU/S/
- 4x90FWCue82TNGraPd2rBczxw+rOLPUp/8wpVB6Cs1FpNfeD+H22/XzNkv68k6i7ltNK
- nJXpsjt626Xro8OXMsDR53mvx2nQgttEljiWjSnvAL9wYTX6sBKzfth2slrjmgW/QwtI
- w5j3SWmFLBug1T8b8xCQkLUfCRKdriVA8UIlNoUN59vdsn68W5Qem73gbVU83sFK3nqP
- 1EMPCEDCaaM/SxlxKIt8T6bMEFfK/oCGO9R6EXDfKpvY7PYmtNro0+1slGBWRtgIyDoe LQ== 
-Received: from pps.reinject (localhost [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3u9h71s7q0-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 09:22:52 +0000
-Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AA9DW8S021570;
-        Fri, 10 Nov 2023 09:22:52 GMT
-Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
-        by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3u9h71s7pv-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 09:22:52 +0000
-Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
-        by ppma11.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 3AA74s4i004132;
-        Fri, 10 Nov 2023 09:22:51 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-        by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 3u7w219vjb-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Fri, 10 Nov 2023 09:22:51 +0000
-Received: from smtpav05.fra02v.mail.ibm.com (smtpav05.fra02v.mail.ibm.com [10.20.54.104])
-        by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 3AA9MmQn28639904
-        (version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-        Fri, 10 Nov 2023 09:22:48 GMT
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 87BF420043;
-        Fri, 10 Nov 2023 09:22:48 +0000 (GMT)
-Received: from smtpav05.fra02v.mail.ibm.com (unknown [127.0.0.1])
-        by IMSVA (Postfix) with ESMTP id 6FF5A20040;
-        Fri, 10 Nov 2023 09:22:47 +0000 (GMT)
-Received: from li-ce58cfcc-320b-11b2-a85c-85e19b5285e0 (unknown [9.171.21.196])
-        by smtpav05.fra02v.mail.ibm.com (Postfix) with SMTP;
-        Fri, 10 Nov 2023 09:22:47 +0000 (GMT)
-Date:   Fri, 10 Nov 2023 10:22:45 +0100
-From:   Halil Pasic <pasic@linux.ibm.com>
-To:     Petr Tesarik <petr.tesarik1@huawei-partners.com>
-Cc:     Petr =?UTF-8?B?VGVzYcWZw61r?= <petr@tesarici.cz>,
-        Niklas Schnelle <schnelle@linux.ibm.com>,
-        Christoph Hellwig <hch@lst.de>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Marek Szyprowski <m.szyprowski@samsung.com>,
-        Robin Murphy <robin.murphy@arm.com>,
-        Ross Lagerwall <ross.lagerwall@citrix.com>,
-        linux-pci <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <iommu@lists.linux.dev>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Halil Pasic <pasic@linux.ibm.com>
-Subject: Re: Memory corruption with CONFIG_SWIOTLB_DYNAMIC=y
-Message-ID: <20231110102245.6ac971b9.pasic@linux.ibm.com>
-In-Reply-To: <7a4f87c3-b3c6-42c5-9200-8eb56d1c8530@huawei-partners.com>
-References: <104a8c8fedffd1ff8a2890983e2ec1c26bff6810.camel@linux.ibm.com>
-        <20231103195949.0af884d0@meshulam.tesarici.cz>
-        <20231108115207.791a30d8.pasic@linux.ibm.com>
-        <41c0baf6-ba4d-4876-b692-279307265466@huawei-partners.com>
-        <20231108153230.6491acaa.pasic@linux.ibm.com>
-        <7a4f87c3-b3c6-42c5-9200-8eb56d1c8530@huawei-partners.com>
-Organization: IBM
-X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.32; x86_64-redhat-linux-gnu)
+        with ESMTP id S1345771AbjKJTQs (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 14:16:48 -0500
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8F566C80;
+        Fri, 10 Nov 2023 10:55:31 -0800 (PST)
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=QTY+YvtxFwfNC/D2PcuD00sBsndxwP+CdxK5qiCs5EgPzEesLxr6GESg+zae3K9Ofh0wZgSmgFXm1ehfD/0L+6bXWgDwyaneUedCK7Qp/QFR9GRW/vpVNWQFlHoLz99HtJTvCFDFwNKB05s7lYxa3H/5E4UY9pRGH92kAzTBfOJJEeXmM9mEO0HpFx0h+hTMQWp+e9lOneHffHp7LhjzEYG4sTuEDlljOkPevJSareFs4zY86sOIX6bsB5YDAMhCpelByH4zp6eTaNU/CbC551M28TKTJxasFzlLcUeUiCeRCCsj7LtBTRHxtg/gvQkbIYONKMN+HKC/mGBWCQvcCQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Te2U4OhyqhcboMmwVsPI/aIX8VIIMtqJNuHWbfVEFUI=;
+ b=CaNLELaIA/0+UlrYyX7cMSaL3JSEUC3+c3Nz4Qm8rSCqAajLoVKhMXShfboKMCSey5ggwJuTU64GGygnysTufzgEs7jQHX768ALgcFJPDdkQEcTGfNNRVUrkvVDZLBZoiiKe/4xJiYdxKtRj7hAXacf9mR4d02PSFm5jalFrsE8V9L0VTJgpLXyQ9JocQA/ugQJbeK/48Z/bNaBmZ77VRPkaTErKpCjVY7aZG6fsvWYRDNEZJvgJ2cSCi8hxWbhS50LZ0vYqWdyiQsx9uvQ4pKLOgLUq+epxjR1kUDR87OC4ThJ/qCWcqkJDzkdJjzaw3IRe5zwaDBo8fwF7hBRa0w==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Te2U4OhyqhcboMmwVsPI/aIX8VIIMtqJNuHWbfVEFUI=;
+ b=FGrJP3Rmb1kDIkpxwQaAljjb8BYSkpepDtm3Xg3E6saaonb/Lbrzjt0mKtsOSyioVJMqoc2RX4TtjYq4JKZf/+vPU3N/o5BqYXXXzWp2AeU4r0gigOs37NBYdnVu0rCo0HDPqBniyxFV7IzACiKhz7JJxBqmmg/HiG5V/Xxeq/s=
+Received: from MN2PR01CA0001.prod.exchangelabs.com (2603:10b6:208:10c::14) by
+ MW3PR12MB4426.namprd12.prod.outlook.com (2603:10b6:303:58::12) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.6954.29; Fri, 10 Nov 2023 18:55:28 +0000
+Received: from BL6PEPF0001AB4F.namprd04.prod.outlook.com
+ (2603:10b6:208:10c:cafe::30) by MN2PR01CA0001.outlook.office365.com
+ (2603:10b6:208:10c::14) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.19 via Frontend
+ Transport; Fri, 10 Nov 2023 18:55:28 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
+Received: from SATLEXMB04.amd.com (165.204.84.17) by
+ BL6PEPF0001AB4F.mail.protection.outlook.com (10.167.242.73) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.6977.16 via Frontend Transport; Fri, 10 Nov 2023 18:55:28 +0000
+Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Fri, 10 Nov
+ 2023 12:55:26 -0600
+From:   Mario Limonciello <mario.limonciello@amd.com>
+To:     Bjorn Helgaas <bhelgaas@google.com>,
+        "Rafael J . Wysocki" <rjw@rjwysocki.net>
+CC:     "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        "Mario Limonciello" <mario.limonciello@amd.com>
+Subject: [PATCH 0/3] Add API for missing PCI firmware specification funcs
+Date:   Fri, 10 Nov 2023 12:55:00 -0600
+Message-ID: <20231110185503.46117-1-mario.limonciello@amd.com>
+X-Mailer: git-send-email 2.34.1
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: oOuHQySkKhSqp4kaUhZWxxdqq2tOxfSE
-X-Proofpoint-ORIG-GUID: IIwt0OJc9stJoXlryv475MX4u7tTtuFY
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-10_05,2023-11-09_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- priorityscore=1501 bulkscore=0 adultscore=0 mlxscore=0 malwarescore=0
- clxscore=1015 spamscore=0 phishscore=0 mlxlogscore=999 suspectscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311100075
+X-Originating-IP: [10.180.168.240]
+X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
+ (10.181.40.145)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB4F:EE_|MW3PR12MB4426:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3e950538-c656-4007-78cb-08dbe21e9b2e
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info: 4dQwvUIrplcbUw+t9vpTP4SN+ySTOFRwJiypW3iOnU2yUK9H/l0sXmVRSRJ2d+h+5DB5GyyuthYmdXMZ0vV8tz8ntqFYGm8vgnEs7jjTVUvJI9Jf+OxDbZUOyvvZ9gCTs+2nGXbb0AGM+6ImkmUq4ZPruL+nw9E11TLQX6MoHkl99ulpmmrvjhZdeS3FPGjFDP0EwhTp6X1RzGQPZ652GENXv4O8j9qzNIkCbq6JZtUBwZRHy5bD/B+nphzILaXjyxJXrpccUw0sky/vJoqjFP2szVMav9f0OXjjTUk8iS0nhbnEKwvImpw1HGAilfJjTDxOgvqnj9Le661EnS66eKv6QurHCaHX5UYNAUaVjTZa4lDIN947OI4VcKw2wnIiY5rQvBA/DnoC57OwtgviBHManzEDlzbYti4ZSRgab5fSpf01KSEZgssdBydSI4+sAdUlLT7whKt8FPaHo2oXEXyiYXyAczof3latiDCXzp+fDDZ2XumfLlptpWrO5Fgzm/kipG62cF5xYhuelST2KttwDh2UCymY4lATa2z49urrJQ63VJ//HANhHUfEH6rP6pW91t4Ors4PlmUOZunR9kxS4Qc/+rV8i0BaPiQ1pPsQuDR1q6e4vBbCBDO3KXfEgckQdWsDF/fjNDn2v5mo4zFWq/71c6G29OC96bcBVZsV1sbjzzoBZepQmkw8NYMYvGoWGo3YlYz6RIgQUGfwCa9Ceqim5awRc5+k6rs2aXgvgP7u8mnGs9SNcQT05eJ83j8s7v0oaIC7XpXO3D0H9hpMfsGA2lLf0HPQub11mZBNVc4vGzv9E5F1yzIkJUpd
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(39860400002)(396003)(376002)(136003)(230922051799003)(1800799009)(186009)(82310400011)(64100799003)(451199024)(36840700001)(46966006)(40470700004)(336012)(966005)(45080400002)(478600001)(1076003)(110136005)(26005)(70206006)(5660300002)(16526019)(6666004)(54906003)(41300700001)(70586007)(82740400003)(8676002)(7696005)(426003)(4326008)(2906002)(8936002)(44832011)(316002)(36756003)(86362001)(47076005)(36860700001)(83380400001)(2616005)(81166007)(356005)(66899024)(40460700003)(40480700001)(36900700001);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 18:55:28.0498
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3e950538-c656-4007-78cb-08dbe21e9b2e
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource: BL6PEPF0001AB4F.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4426
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-On Wed, 8 Nov 2023 15:45:49 +0100
-Petr Tesarik <petr.tesarik1@huawei-partners.com> wrote:
+The PCI firmware specification includes support for methods for adjusting
+AUX power in D3cold as well as the PERST# assertion delay for a PCI
+device.
 
-> On 11/8/2023 3:32 PM, Halil Pasic wrote:
-> > On Wed, 8 Nov 2023 12:04:12 +0100
-> > Petr Tesarik <petr.tesarik1@huawei-partners.com> wrote:
-> > [..]  
-> >>>
-> >>> For the sake of simplicity let us assume we only have the min_align_mask
-> >>> requirement. Then I believe the worst case is that we need 
-> >>> (orig_addr & min_align_mask & PAGE_MASK)  + (min_align_mask & ~PAGE_MASK)
-> >>> extra space to fit.
-> >>>
-> >>> Depending on how the semantics pan out one may be able to replace
-> >>> min_align_mask with combined_mask.
-> >>>
-> >>> Is your point that for large combined_mask values 
-> >>> _get_free_pages(GFP_NOWAIT | __GFP_NOWARN, required_order) is not
-> >>> likely to complete successfully?    
-> >>
-> >> Yes, that's the reason. OTOH it's probably worth a try. The point is
-> >> that mapping a DMA buffer is allowed to fail, so callers should be
-> >> prepared anyway.
-> >>
-> >> And for the case you reported initially, I don't think there is any need
-> >> to preserve bit 11 (0x800) from the original buffer's physical address,
-> >> which is enough to fix it. See also my other email earlier today.  
-> > 
-> > Hm. Do you mean "[PATCH 1/1] swiotlb: fix out-of-bounds TLB allocations
-> > with CONFIG_SWIOTLB_DYNAMIC" or a different one?
-> > 
-> > I only see "[PATCH 1/1] swiotlb: fix out-of-bounds TLB allocations
-> > with CONFIG_SWIOTLB_DYNAMIC" but I don't think that one takes
-> > care of "I don't think there is any need to preserve bit 11 (0x800)
-> > from the original buffer's physical address".  
-> 
-> Yes, I mean only this patch. I want to fix memory corruption fast, while
-> waiting for more feedback on my understanding of the alignment masks.
-> What I'm trying to say is that your specific use case may not even need
-> a bigger allocation if the page alignment should be interpreted differently.
-> 
-> Again, thank you for your in-depth inspection, because it's not totally
-> clear how the various alignment parameters should be interpreted. It's
-> difficult to write correct code then...
+In some hardware designs these methods might be useful for drivers to
+call to configure the platform properly for the hardware's expected
+behavior.
 
-I fully understand. Thanks for tackling this. We decided to go with a bug
-report and not with a fix because of the very same reasons: lack of
-clarity on how certain things are supposed to work. Let us see how
-the discussion develops. :)
+This series introduces two new symbols as API that drivers can call if
+necessary.
 
-Regards,
-Halil
+In the Microsoft Windows ecosystem, Microsoft offers a similar API wrapping
+these functions for device drivers to utilize.
 
-> 
-> Petr T
+Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_d3cold_aux_power_and_timing_interface
+Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-d3cold_request_aux_power
+Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-d3cold_request_perst_delay
+
+Mario Limonciello (3):
+  PCI: Call PCI ACPI _DSM with consistent revision argument
+  PCI/ACPI: Add API for specifying aux power in D3cold
+  PCI/ACPI: Add API for specifying a PERST# assertion delay
+
+ drivers/acpi/pci_root.c  |   3 +-
+ drivers/pci/pci-acpi.c   | 100 ++++++++++++++++++++++++++++++++++++++-
+ drivers/pci/pci-label.c  |   4 +-
+ drivers/pci/pcie/edr.c   |  13 ++---
+ include/linux/pci-acpi.h |  10 ++++
+ 5 files changed, 119 insertions(+), 11 deletions(-)
+
+
+base-commit: 89cdf9d556016a54ff6ddd62324aa5ec790c05cc
+-- 
+2.34.1
 
