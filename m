@@ -2,187 +2,259 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E972C4167B
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:17:01 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18EFCC4167D
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:20:14 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1346119AbjKJTRC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Nov 2023 14:17:02 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43564 "EHLO
+        id S1346078AbjKJTUP (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Nov 2023 14:20:15 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33472 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345759AbjKJTQs (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 14:16:48 -0500
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2047.outbound.protection.outlook.com [40.107.244.47])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE8CD6C90;
-        Fri, 10 Nov 2023 10:55:32 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=PhRmmCM6XXHI2ZTrvZDvHIJrwrmlloS6ysksNSpKFZ/jGHSsjdNwbQqwsw5Sn399qv1U84r29x7zBh8TkETngEUelXYu6hd75Yw4HCn/+OAF7z4p1V3+vOburW4CpnVDEdGx47ChOCidOXmiSXVuRwvLEMX3UQ9LR68N77h17eahPccHO5+1OiZvdj/7eD0r+G4h7JgsW9a5Nb1sqV37DuzVPana8wTJZAJWsl51Fa9LNkH7HBgfz1Z4FQXofHBbsy7/CSm2wI2NdidOB93tnlGaJzQsRX4+vmFJCVxgRula+iISlQEHoD6A4unl2Dv7gv2M19d4HcKAH5XXrz7Qqg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=COYn6LvPddBHTWly4J+FD6qXdpwcv2oBpv77/QbspEw=;
- b=QNrohEiRb5pCSD/OKdA3nulPL9+feHLXkjEbZiO54Pngf/z31Mm0sOMCwwWmfIsN9dfiwxxxZAXfL8b4STjAY1VAejj/D3F/7dWN9QROOkL5pqSs6IKMXQMkvappgLKLfbJsQpL7XF04g0+osnmEe75f+kpBM8HQuvBTBFcta41CC4lWhPU3YXNBmPxp/k7+6V+mWYhiobzSol3v56QUbV6ZZjmOharReajj5CQ/bw77egBBSGHXP/PQEixL9wzZaKeALvE15+NyRGlk3zUq8CWNSedQhVDB8QShGV4REnBYEQZIdKsezlolGUB9SRtm0JxHOWPlb3ujuci1fKEiRw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=COYn6LvPddBHTWly4J+FD6qXdpwcv2oBpv77/QbspEw=;
- b=0nTyx2VhyRhoraw6MTQ1nUiyoJ5naO697W6A+4m8XZJ7bnG+k9Jprud8thu5VUe7eervs4rVSk0hvRA9kO8NL5oaJct1FnGLy34MCsm0jGGhcS33XsqqkMEHPDiUr6EINfh+Gs++Sw9oNq80bvZuaDYsKCNUeGVXKZSq1Bn0Foc=
-Received: from MN2PR01CA0005.prod.exchangelabs.com (2603:10b6:208:10c::18) by
- SN7PR12MB6930.namprd12.prod.outlook.com (2603:10b6:806:262::5) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6977.19; Fri, 10 Nov 2023 18:55:30 +0000
-Received: from BL6PEPF0001AB4F.namprd04.prod.outlook.com
- (2603:10b6:208:10c:cafe::76) by MN2PR01CA0005.outlook.office365.com
- (2603:10b6:208:10c::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.19 via Frontend
- Transport; Fri, 10 Nov 2023 18:55:30 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BL6PEPF0001AB4F.mail.protection.outlook.com (10.167.242.73) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6977.16 via Frontend Transport; Fri, 10 Nov 2023 18:55:29 +0000
-Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Fri, 10 Nov
- 2023 12:55:28 -0600
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     Bjorn Helgaas <bhelgaas@google.com>,
-        "Rafael J . Wysocki" <rjw@rjwysocki.net>
-CC:     "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Mario Limonciello" <mario.limonciello@amd.com>
-Subject: [PATCH 3/3] PCI/ACPI: Add API for specifying a PERST# assertion delay
-Date:   Fri, 10 Nov 2023 12:55:03 -0600
-Message-ID: <20231110185503.46117-4-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231110185503.46117-1-mario.limonciello@amd.com>
-References: <20231110185503.46117-1-mario.limonciello@amd.com>
+        with ESMTP id S1346179AbjKJTUA (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 14:20:00 -0500
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3428739740
+        for <linux-pci@vger.kernel.org>; Fri, 10 Nov 2023 06:35:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+        s=mimecast20190719; t=1699626905;
+        h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+         to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+         content-transfer-encoding:content-transfer-encoding:
+         in-reply-to:in-reply-to:references:references;
+        bh=E0jbSLocU8Qu+t0aHk24/qSe4dawu00kk74v0Zid600=;
+        b=hWrlm3a9XDPdDm2Vpq5VRRM4IfYZuRjPEOrhTCg+IEC993f5XOyb/EpS5MRsrw0OCkOZPQ
+        o9NOSS6HB990vu0npdjCtxZd4obCV2r+C/c2v7yrLnlI6iB/af04S4iTfYtVxUOCSNmS98
+        bbPj2MFn2v1wWLU7LfewSdtsAmIo6fY=
+Received: from mail-ej1-f72.google.com (mail-ej1-f72.google.com
+ [209.85.218.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-32-0UC3bZtFNpuzogss_RWrQw-1; Fri, 10 Nov 2023 09:35:03 -0500
+X-MC-Unique: 0UC3bZtFNpuzogss_RWrQw-1
+Received: by mail-ej1-f72.google.com with SMTP id a640c23a62f3a-9e644d94d85so74167466b.0
+        for <linux-pci@vger.kernel.org>; Fri, 10 Nov 2023 06:35:03 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699626902; x=1700231702;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=E0jbSLocU8Qu+t0aHk24/qSe4dawu00kk74v0Zid600=;
+        b=NYsh/QRczuDfad8Myq0d5zT26tCJz3fGs0RhFRlpZlqDHXxKzdEGOOwqqhZhkxTjbP
+         lmSXhUKFm3gqhssdMKT6vTvdwYeZBCyIQQprMOzsAJQDrd8/GXRYcxLiwt+uRKbSrka3
+         Cev7rLwumlmaRBycukmWvSEuzNnRWlOrs/PHGp0V5Cnd8N1JHeCc+swxya5qZVFmXG7m
+         KLtjCZC7PvT5u3gIqLYZs3g3ch1aXD9mB3nPSU9iYR5n4nBQBQIweE4A681sqDURK0Hm
+         O3hFEvCE7vFhDKAo8i65t/tcQvC20l49LLh0MCAOqvCty4EJSknWMaZxngHgYaSRediM
+         wS9w==
+X-Gm-Message-State: AOJu0Yzit6CX4AJhC6sdYdN9HdIgZbJtT0ot2XnVRWUZ9YFeObTA0FXH
+        iEyvI8ZgSlfh5K1enGt2KubBBLm5cXO5RHguSBCJ8ENBj/hGNVGMnpkqu2n8BWTHjrRB6kAfg8z
+        KGX/wCqV+ENPBcVp6eYr6
+X-Received: by 2002:a17:906:1c8e:b0:9d5:96e7:5ae1 with SMTP id g14-20020a1709061c8e00b009d596e75ae1mr2213151ejh.12.1699626902633;
+        Fri, 10 Nov 2023 06:35:02 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IH9uHdtYMXLxTcY/0b1/LwOT+o0u++Jc/LSsPYHzKMr5iLqhZpN/FN2epi+fQaVQ3HJwY3CwQ==
+X-Received: by 2002:a17:906:1c8e:b0:9d5:96e7:5ae1 with SMTP id g14-20020a1709061c8e00b009d596e75ae1mr2213136ejh.12.1699626902351;
+        Fri, 10 Nov 2023 06:35:02 -0800 (PST)
+Received: from imammedo.users.ipa.redhat.com ([185.140.112.229])
+        by smtp.gmail.com with ESMTPSA id ti11-20020a170907c20b00b009e62bb0439bsm909806ejc.212.2023.11.10.06.35.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Nov 2023 06:35:01 -0800 (PST)
+Date:   Fri, 10 Nov 2023 15:35:00 +0100
+From:   Igor Mammedov <imammedo@redhat.com>
+To:     "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc:     Bjorn Helgaas <bhelgaas@google.com>, Stefan Roese <sr@denx.de>,
+        Jim Wilson <wilson@tuliptree.org>,
+        David Abdurachmanov <david.abdurachmanov@sifive.com>,
+        linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] pci: Work around ASMedia ASM2824 PCIe link training
+ failures
+Message-ID: <20231110153500.316862fd@imammedo.users.ipa.redhat.com>
+In-Reply-To: <alpine.DEB.2.21.2201022100430.56863@angie.orcam.me.uk>
+References: <alpine.DEB.2.21.2201022100430.56863@angie.orcam.me.uk>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; x86_64-redhat-linux-gnu)
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB4F:EE_|SN7PR12MB6930:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3953cfdf-cb02-4105-0a13-08dbe21e9c43
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: a35lPOCYviJ1NbEDH5THP9qPdPr9slElG/0h/fCwxs7175OI1f6zp7yWkFkHgKp5A+X0ryt0dRzPJgT6Qa0lVMoLjx+lpxvvCVmHwyEUIQc415o1nVhAYSfBLyYsRtVcSmF5iAWu+2khf+aHP9uGjFUfaD6BHubHZtKh+U+XGdQWbW2HINz+qKf7KVs7uc+RHUnr5ScTbLhNSk9PCCi4//S8+mrpX7n9jN+E+pZj3D9SpR2BYKtMfkMPSEu3MIPPw7zo86/JXVjhKAF7rG7ComaCjSfUWuh7QX50ITW5n7Q1i49RL17YCjxNZX1om8VdWa2xoud8x1179tfJeQtyQtdnDycS6Z4B9UNlEtxBReHXZlyCAWLMDAsXoRuYGgnrgGhq1W6/lMrBduQh5HfKr01Z3ytI92AB7Nh8Swx66W7s53lFz1p2pDRVABe9IEbstW0l6/gizrTm5Hsi0bC4wQZ47lV9wvrqMTUgdsIJawUSf53l8rjxdURc+wvJh8MVd1/a6nIDaDM/oDKq7q4389GjznafB9wbSb3Hlveh04JzkUOCEwQLi8KLH/ZIxDhzt5ydlqjsHAxZXG5finnRMysbWvFE1xcj91dgl0T9FyPacAA5lC7pQ0B4vFeGnECc6zpR/h6PJUfFZLxatFndbiYABxIe8iaFw/DBynDJO1DUHYQ2z1rGyatljPt4lncLNYhl0GTV2fhp9SKLO3JVfkyvv/Edl4XjfB2mQjMj+a1SfDSz9NOnHPLFXmfRNjBTi5JsiWewgmjOuQa0QhtkGg==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(39860400002)(376002)(346002)(396003)(136003)(230922051799003)(82310400011)(64100799003)(1800799009)(451199024)(186009)(36840700001)(40470700004)(46966006)(7696005)(83380400001)(4326008)(8676002)(8936002)(2616005)(966005)(426003)(6666004)(26005)(70586007)(16526019)(44832011)(110136005)(478600001)(316002)(336012)(54906003)(70206006)(1076003)(47076005)(40480700001)(5660300002)(36860700001)(40460700003)(41300700001)(81166007)(356005)(82740400003)(36756003)(2906002)(86362001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 18:55:29.9717
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3953cfdf-cb02-4105-0a13-08dbe21e9c43
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BL6PEPF0001AB4F.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6930
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI firmware specification includes support for a _DSM function
-to specify a PERST# assertion delay.
+On Sun, 2 Jan 2022 23:25:25 +0000 (GMT)
+"Maciej W. Rozycki" <macro@orcam.me.uk> wrote:
 
-"The Add PERST# Assertion Delay function is used to convey the requirement
-for a fixed delay in timing between the time the PME_TO_Ack message is
-received at the PCI Express Downstream Port that originated the
-PME_Turn_Off message, and the time the platform asserts PERST# to the slot
-during the corresponding Endpoint’s or PCI Express Upstream Port’s
-transition to D3cold while the system is in an ACPI operational state."
+> Attempt to handle cases with a downstream port of the ASMedia ASM2824 
+> PCIe switch where link training never completes and the link continues 
+> switching between speeds indefinitely with the data link layer never 
+> reaching the active state.
+> 
+> It has been observed with a downstream port of the ASMedia ASM2824 Gen 3 
+> switch wired to the upstream port of the Pericom PI7C9X2G304 Gen 2 
+> switch, using a Delock Riser Card PCI Express x1 > 2 x PCIe x1 device, 
+> P/N 41433, wired to a SiFive HiFive Unmatched board.  In this setup the 
+> switches are supposed to negotiate the link speed of preferably 5.0GT/s, 
+> falling back to 2.5GT/s.
 
-Add API for callers to utilize this _DSM.
+It looks like I might have similar issue on EPYC system with this switch.
 
-Link: https://members.pcisig.com/wg/PCI-SIG/document/15350
-      PCI Firmware specification 3.3, section 4.6.11
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/pci/pci-acpi.c   | 40 ++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  2 ++
- 2 files changed, 42 insertions(+)
+In my case ASM2824 switch board connected to EPYC's root port (via SlimSAS 8i cable and on upstream site it negotiates expected 8GT/s x8) 
+were supposed to provide 10x slots with PCIe x1 Gen3 links.
+However lspci shows that link is capped at 2.5GT/s and NVME plugged into one of
+the slots is downgraded to 2.5GT/s.
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 257858a6719e..82e04808040d 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1402,6 +1402,46 @@ int pci_acpi_request_aux_power_for_d3cold(struct pci_dev *pdev, int arg)
- }
- EXPORT_SYMBOL_GPL(pci_acpi_request_aux_power_for_d3cold);
- 
-+/**
-+ * pci_acpi_set_perst_delay - Set the assertion delay for the PERST# signal
-+ * @pdev: PCI device to set the delay for
-+ * @arg: Delay value in microseconds
-+ *
-+ * This function sets the delay for the PERST# signal of the given PCI device.
-+ * The delay value is specified in microseconds through the @arg parameter.
-+ * The maximum delay value is 10000 microseconds.
-+ *
-+ * Return: 0 on success, negative error code on failure
-+ */
-+int pci_acpi_set_perst_delay(struct pci_dev *pdev, int arg)
-+{
-+	struct acpi_device *adev = ACPI_COMPANION(&pdev->dev);
-+	union acpi_object *obj;
-+	union acpi_object argv4 = {
-+		.integer.type = ACPI_TYPE_INTEGER,
-+		.integer.value = arg,
-+	};
-+	int val;
-+
-+	if (!acpi_check_dsm(adev->handle, &pci_acpi_dsm_guid,
-+			    pci_acpi_dsm_rev, 1 << DSM_PCI_ADD_PERST_DELAY))
-+		return -ENODEV;
-+
-+	if (arg > 10000)
-+		return -EINVAL;
-+
-+	obj = acpi_evaluate_dsm_typed(adev->handle, &pci_acpi_dsm_guid,
-+				      pci_acpi_dsm_rev, DSM_PCI_ADD_PERST_DELAY,
-+				      &argv4, ACPI_TYPE_INTEGER);
-+	if (!obj)
-+		return -EIO;
-+
-+	val = obj->integer.value;
-+	ACPI_FREE(obj);
-+	return (val == arg) ? 0 : -EINVAL;
-+}
-+EXPORT_SYMBOL_GPL(pci_acpi_set_perst_delay);
-+
- /**
-  * pci_acpi_optimize_delay - optimize PCI D3 and D3cold delay from ACPI
-  * @pdev: the PCI device whose delay is to be updated
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index bc6372bcb7d6..bdce83c3afbf 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -123,12 +123,14 @@ extern const int pci_acpi_dsm_rev;
- #define DSM_PCI_POWER_ON_RESET_DELAY		0x08
- #define DSM_PCI_DEVICE_READINESS_DURATIONS	0x09
- #define DSM_PCI_REQUEST_D3COLD_AUX_POWER	0x0A
-+#define DSM_PCI_ADD_PERST_DELAY			0x0B
- 
- #define PCI_D3COLD_AUX_DENIED			0
- #define PCI_D3COLD_AUX_GRANTED			1
- #define PCI_D3COLD_AUX_NO_MAIN_POWER_REMOVAL	2
- 
- int pci_acpi_request_aux_power_for_d3cold(struct pci_dev *pdev, int arg);
-+int pci_acpi_set_perst_delay(struct pci_dev *pdev, int arg);
- 
- #ifdef CONFIG_PCIE_EDR
- void pci_acpi_add_edr_notifier(struct pci_dev *pdev);
--- 
-2.34.1
+I wonder if it could be fixed to get expected 8GT/s per lane.
+
+Downstream port in question:
+
+07:00.0 PCI bridge: ASMedia Technology Inc. ASM2824 PCIe Gen3 Packet Switch (rev 01) (prog-if 00 [Normal decode])
+Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+Latency: 0, Cache Line Size: 64 bytes
+Interrupt: pin A routed to IRQ 35
+IOMMU group: 20
+Bus: primary=07, secondary=08, subordinate=08, sec-latency=0
+I/O behind bridge: [disabled] [32-bit]
+Memory behind bridge: ee700000-ee7fffff [size=1M] [32-bit]
+Prefetchable memory behind bridge: [disabled] [64-bit]
+Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
+BridgeCtl: Parity- SERR+ NoISA- VGA- VGA16+ MAbort- >Reset- FastB2B-
+PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
+Capabilities: [40] Power Management version 3
+Flags: PMEClk- DSI+ D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
+Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [50] MSI: Enable+ Count=1/1 Maskable- 64bit+
+Address: 00000000fee00000 Data: 0000
+Capabilities: [80] Express (v2) Downstream Port (Slot+), MSI 00
+DevCap: MaxPayload 512 bytes, PhantFunc 0
+ExtTag+ RBE+
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd+ ExtTag+ PhantFunc- AuxPwr- NoSnoop+
+MaxPayload 128 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr- TransPend-
+LnkCap: Port #0, Speed 2.5GT/s, Width x2, ASPM L1, Exit Latency L1 <64us
+ClockPM+ Surprise+ LLActRep+ BwNot+ ASPMOptComp+
+LnkCtl: ASPM Disabled; Disabled- CommClk+
+ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 2.5GT/s, Width x1
+TrErr- Train- SlotClk+ DLActive+ BWMgmt+ ABWMgmt-
+SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug- Surprise-
+Slot #0, PowerLimit 0W; Interlock- NoCompl-
+SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
+Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
+SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
+Changed: MRL- PresDet- LinkState-
+DevCap2: Completion Timeout: Not Supported, TimeoutDis- NROPrPrP- LTR+
+10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS- ARIFwd+
+AtomicOpsCap: Routing-
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- 10BitTagReq- OBFF Disabled, ARIFwd-
+AtomicOpsCtl: EgressBlck-
+LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
+LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis+, Selectable De-emphasis: -3.5dB
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
+LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete- EqualizationPhase1-
+EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+Retimer- 2Retimers- CrosslinkRes: unsupported
+Capabilities: [c0] Subsystem: Device 0000:0000
+Capabilities: [100 v1] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr-
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 00, ECRCGenCap- ECRCGenEn- ECRCChkCap- ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Capabilities: [140 v1] Power Budgeting <?>
+Capabilities: [160 v1] Latency Tolerance Reporting
+Max snoop latency: 0ns
+Max no snoop latency: 0ns
+Capabilities: [180 v1] Multicast
+McastCap: MaxGroups 64, ECRCRegen-
+McastCtl: NumGroups 1, Enable-
+McastBAR: IndexPos 0, BaseAddr 0000000000000000
+McastReceiveVec: 0000000000000000
+McastBlockAllVec: 0000000000000000
+McastBlockUntransVec: 0000000000000000
+McastOverlayBAR: OverlaySize 0 (disabled), BaseAddr 0000000000000000
+Capabilities: [1c0 v1] Secondary PCI Express
+LnkCtl3: LnkEquIntrruptEn- PerformEqu-
+LaneErrStat: 0
+Capabilities: [200 v1] Vendor Specific Information: ID=001a Rev=0 Len=000 <?>
+Kernel driver in use: pcieport
+
+NVME:
+
+08:00.0 Non-Volatile memory controller: Silicon Motion, Inc. SM2263EN/SM2263XT (DRAM-less) NVMe SSD Controllers (rev 03) (prog-if 02 [NVM Express])
+Subsystem: Biwin Storage Technology Co., Ltd. Device 2263
+Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx+
+Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
+Latency: 0, Cache Line Size: 64 bytes
+Interrupt: pin A routed to IRQ 34
+NUMA node: 0
+IOMMU group: 20
+Region 0: Memory at ee700000 (64-bit, non-prefetchable) [size=16K]
+Capabilities: [40] Power Management version 3
+Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
+Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
+Capabilities: [50] MSI: Enable- Count=1/8 Maskable+ 64bit+
+Address: 0000000000000000 Data: 0000
+Masking: 00000000 Pending: 00000000
+Capabilities: [70] Express (v2) Endpoint, MSI 00
+DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s unlimited, L1 unlimited
+ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset+ SlotPowerLimit 0W
+DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
+RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop- FLReset-
+MaxPayload 128 bytes, MaxReadReq 512 bytes
+DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr+ TransPend-
+LnkCap: Port #0, Speed 8GT/s, Width x4, ASPM L1, Exit Latency L1 <8us
+ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp+
+LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
+ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+LnkSta: Speed 2.5GT/s (downgraded), Width x1 (downgraded)
+TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
+DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR+
+10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
+EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
+FRS- TPHComp- ExtTPHComp-
+AtomicOpsCap: 32bit- 64bit- 128bitCAS-
+DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- 10BitTagReq- OBFF Disabled,
+AtomicOpsCtl: ReqEn-
+LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retimer- 2Retimers- DRS-
+LnkCtl2: Target Link Speed: 8GT/s, EnterCompliance- SpeedDis-
+Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
+Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
+LnkSta2: Current De-emphasis Level: -3.5dB, EqualizationComplete- EqualizationPhase1-
+EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
+Retimer- 2Retimers- CrosslinkRes: unsupported
+Capabilities: [b0] MSI-X: Enable+ Count=16 Masked-
+Vector table: BAR=0 offset=00002000
+PBA: BAR=0 offset=00002100
+Capabilities: [100 v2] Advanced Error Reporting
+UESta: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UEMsk: DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt- UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
+UESvrt: DLP+ SDES+ TLP- FCP+ CmpltTO- CmpltAbrt- UnxCmplt- RxOF+ MalfTLP+ ECRC- UnsupReq- ACSViol-
+CESta: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+CEMsk: RxErr- BadTLP- BadDLLP- Rollover- Timeout- AdvNonFatalErr+
+AERCap: First Error Pointer: 00, ECRCGenCap+ ECRCGenEn- ECRCChkCap+ ECRCChkEn-
+MultHdrRecCap- MultHdrRecEn- TLPPfxPres- HdrLogCap-
+HeaderLog: 00000000 00000000 00000000 00000000
+Capabilities: [158 v1] Secondary PCI Express
+LnkCtl3: LnkEquIntrruptEn- PerformEqu-
+LaneErrStat: 0
+Capabilities: [178 v1] Latency Tolerance Reporting
+Max snoop latency: 0ns
+Max no snoop latency: 0ns
+Capabilities: [180 v1] L1 PM Substates
+L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+ L1_PM_Substates+
+PortCommonModeRestoreTime=10us PortTPowerOnTime=10us
+L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2- ASPM_L1.1-
+T_CommonMode=0us LTR1.2_Threshold=0ns
+L1SubCtl2: T_PwrOn=10us
+Kernel driver in use: nvme
+Kernel modules: nvme
+
+
+full lspci output:
+https://pastebin.mozilla.org/Kb8Fs5Mj
+
+
+
 
