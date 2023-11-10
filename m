@@ -2,42 +2,42 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id C8B6AC4167D
-	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:17:00 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6E972C4167B
+	for <linux-pci@archiver.kernel.org>; Fri, 10 Nov 2023 19:17:01 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1345806AbjKJTRA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Fri, 10 Nov 2023 14:17:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:33518 "EHLO
+        id S1346119AbjKJTRC (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Fri, 10 Nov 2023 14:17:02 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:43564 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1345771AbjKJTQs (ORCPT
+        with ESMTP id S1345759AbjKJTQs (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Fri, 10 Nov 2023 14:16:48 -0500
-Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2041.outbound.protection.outlook.com [40.107.236.41])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id D8F566C80;
-        Fri, 10 Nov 2023 10:55:31 -0800 (PST)
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2047.outbound.protection.outlook.com [40.107.244.47])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE8CD6C90;
+        Fri, 10 Nov 2023 10:55:32 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=QTY+YvtxFwfNC/D2PcuD00sBsndxwP+CdxK5qiCs5EgPzEesLxr6GESg+zae3K9Ofh0wZgSmgFXm1ehfD/0L+6bXWgDwyaneUedCK7Qp/QFR9GRW/vpVNWQFlHoLz99HtJTvCFDFwNKB05s7lYxa3H/5E4UY9pRGH92kAzTBfOJJEeXmM9mEO0HpFx0h+hTMQWp+e9lOneHffHp7LhjzEYG4sTuEDlljOkPevJSareFs4zY86sOIX6bsB5YDAMhCpelByH4zp6eTaNU/CbC551M28TKTJxasFzlLcUeUiCeRCCsj7LtBTRHxtg/gvQkbIYONKMN+HKC/mGBWCQvcCQ==
+ b=PhRmmCM6XXHI2ZTrvZDvHIJrwrmlloS6ysksNSpKFZ/jGHSsjdNwbQqwsw5Sn399qv1U84r29x7zBh8TkETngEUelXYu6hd75Yw4HCn/+OAF7z4p1V3+vOburW4CpnVDEdGx47ChOCidOXmiSXVuRwvLEMX3UQ9LR68N77h17eahPccHO5+1OiZvdj/7eD0r+G4h7JgsW9a5Nb1sqV37DuzVPana8wTJZAJWsl51Fa9LNkH7HBgfz1Z4FQXofHBbsy7/CSm2wI2NdidOB93tnlGaJzQsRX4+vmFJCVxgRula+iISlQEHoD6A4unl2Dv7gv2M19d4HcKAH5XXrz7Qqg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Te2U4OhyqhcboMmwVsPI/aIX8VIIMtqJNuHWbfVEFUI=;
- b=CaNLELaIA/0+UlrYyX7cMSaL3JSEUC3+c3Nz4Qm8rSCqAajLoVKhMXShfboKMCSey5ggwJuTU64GGygnysTufzgEs7jQHX768ALgcFJPDdkQEcTGfNNRVUrkvVDZLBZoiiKe/4xJiYdxKtRj7hAXacf9mR4d02PSFm5jalFrsE8V9L0VTJgpLXyQ9JocQA/ugQJbeK/48Z/bNaBmZ77VRPkaTErKpCjVY7aZG6fsvWYRDNEZJvgJ2cSCi8hxWbhS50LZ0vYqWdyiQsx9uvQ4pKLOgLUq+epxjR1kUDR87OC4ThJ/qCWcqkJDzkdJjzaw3IRe5zwaDBo8fwF7hBRa0w==
+ bh=COYn6LvPddBHTWly4J+FD6qXdpwcv2oBpv77/QbspEw=;
+ b=QNrohEiRb5pCSD/OKdA3nulPL9+feHLXkjEbZiO54Pngf/z31Mm0sOMCwwWmfIsN9dfiwxxxZAXfL8b4STjAY1VAejj/D3F/7dWN9QROOkL5pqSs6IKMXQMkvappgLKLfbJsQpL7XF04g0+osnmEe75f+kpBM8HQuvBTBFcta41CC4lWhPU3YXNBmPxp/k7+6V+mWYhiobzSol3v56QUbV6ZZjmOharReajj5CQ/bw77egBBSGHXP/PQEixL9wzZaKeALvE15+NyRGlk3zUq8CWNSedQhVDB8QShGV4REnBYEQZIdKsezlolGUB9SRtm0JxHOWPlb3ujuci1fKEiRw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Te2U4OhyqhcboMmwVsPI/aIX8VIIMtqJNuHWbfVEFUI=;
- b=FGrJP3Rmb1kDIkpxwQaAljjb8BYSkpepDtm3Xg3E6saaonb/Lbrzjt0mKtsOSyioVJMqoc2RX4TtjYq4JKZf/+vPU3N/o5BqYXXXzWp2AeU4r0gigOs37NBYdnVu0rCo0HDPqBniyxFV7IzACiKhz7JJxBqmmg/HiG5V/Xxeq/s=
-Received: from MN2PR01CA0001.prod.exchangelabs.com (2603:10b6:208:10c::14) by
- MW3PR12MB4426.namprd12.prod.outlook.com (2603:10b6:303:58::12) with Microsoft
+ bh=COYn6LvPddBHTWly4J+FD6qXdpwcv2oBpv77/QbspEw=;
+ b=0nTyx2VhyRhoraw6MTQ1nUiyoJ5naO697W6A+4m8XZJ7bnG+k9Jprud8thu5VUe7eervs4rVSk0hvRA9kO8NL5oaJct1FnGLy34MCsm0jGGhcS33XsqqkMEHPDiUr6EINfh+Gs++Sw9oNq80bvZuaDYsKCNUeGVXKZSq1Bn0Foc=
+Received: from MN2PR01CA0005.prod.exchangelabs.com (2603:10b6:208:10c::18) by
+ SN7PR12MB6930.namprd12.prod.outlook.com (2603:10b6:806:262::5) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.6954.29; Fri, 10 Nov 2023 18:55:28 +0000
+ 15.20.6977.19; Fri, 10 Nov 2023 18:55:30 +0000
 Received: from BL6PEPF0001AB4F.namprd04.prod.outlook.com
- (2603:10b6:208:10c:cafe::30) by MN2PR01CA0001.outlook.office365.com
- (2603:10b6:208:10c::14) with Microsoft SMTP Server (version=TLS1_2,
+ (2603:10b6:208:10c:cafe::76) by MN2PR01CA0005.outlook.office365.com
+ (2603:10b6:208:10c::18) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.19 via Frontend
- Transport; Fri, 10 Nov 2023 18:55:28 +0000
+ Transport; Fri, 10 Nov 2023 18:55:30 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -47,21 +47,23 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  BL6PEPF0001AB4F.mail.protection.outlook.com (10.167.242.73) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.6977.16 via Frontend Transport; Fri, 10 Nov 2023 18:55:28 +0000
+ 15.20.6977.16 via Frontend Transport; Fri, 10 Nov 2023 18:55:29 +0000
 Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Fri, 10 Nov
- 2023 12:55:26 -0600
+ 2023 12:55:28 -0600
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Bjorn Helgaas <bhelgaas@google.com>,
         "Rafael J . Wysocki" <rjw@rjwysocki.net>
 CC:     "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
         <linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         "Mario Limonciello" <mario.limonciello@amd.com>
-Subject: [PATCH 0/3] Add API for missing PCI firmware specification funcs
-Date:   Fri, 10 Nov 2023 12:55:00 -0600
-Message-ID: <20231110185503.46117-1-mario.limonciello@amd.com>
+Subject: [PATCH 3/3] PCI/ACPI: Add API for specifying a PERST# assertion delay
+Date:   Fri, 10 Nov 2023 12:55:03 -0600
+Message-ID: <20231110185503.46117-4-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231110185503.46117-1-mario.limonciello@amd.com>
+References: <20231110185503.46117-1-mario.limonciello@amd.com>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
@@ -70,59 +72,117 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB4F:EE_|MW3PR12MB4426:EE_
-X-MS-Office365-Filtering-Correlation-Id: 3e950538-c656-4007-78cb-08dbe21e9b2e
+X-MS-TrafficTypeDiagnostic: BL6PEPF0001AB4F:EE_|SN7PR12MB6930:EE_
+X-MS-Office365-Filtering-Correlation-Id: 3953cfdf-cb02-4105-0a13-08dbe21e9c43
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: 4dQwvUIrplcbUw+t9vpTP4SN+ySTOFRwJiypW3iOnU2yUK9H/l0sXmVRSRJ2d+h+5DB5GyyuthYmdXMZ0vV8tz8ntqFYGm8vgnEs7jjTVUvJI9Jf+OxDbZUOyvvZ9gCTs+2nGXbb0AGM+6ImkmUq4ZPruL+nw9E11TLQX6MoHkl99ulpmmrvjhZdeS3FPGjFDP0EwhTp6X1RzGQPZ652GENXv4O8j9qzNIkCbq6JZtUBwZRHy5bD/B+nphzILaXjyxJXrpccUw0sky/vJoqjFP2szVMav9f0OXjjTUk8iS0nhbnEKwvImpw1HGAilfJjTDxOgvqnj9Le661EnS66eKv6QurHCaHX5UYNAUaVjTZa4lDIN947OI4VcKw2wnIiY5rQvBA/DnoC57OwtgviBHManzEDlzbYti4ZSRgab5fSpf01KSEZgssdBydSI4+sAdUlLT7whKt8FPaHo2oXEXyiYXyAczof3latiDCXzp+fDDZ2XumfLlptpWrO5Fgzm/kipG62cF5xYhuelST2KttwDh2UCymY4lATa2z49urrJQ63VJ//HANhHUfEH6rP6pW91t4Ors4PlmUOZunR9kxS4Qc/+rV8i0BaPiQ1pPsQuDR1q6e4vBbCBDO3KXfEgckQdWsDF/fjNDn2v5mo4zFWq/71c6G29OC96bcBVZsV1sbjzzoBZepQmkw8NYMYvGoWGo3YlYz6RIgQUGfwCa9Ceqim5awRc5+k6rs2aXgvgP7u8mnGs9SNcQT05eJ83j8s7v0oaIC7XpXO3D0H9hpMfsGA2lLf0HPQub11mZBNVc4vGzv9E5F1yzIkJUpd
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(346002)(39860400002)(396003)(376002)(136003)(230922051799003)(1800799009)(186009)(82310400011)(64100799003)(451199024)(36840700001)(46966006)(40470700004)(336012)(966005)(45080400002)(478600001)(1076003)(110136005)(26005)(70206006)(5660300002)(16526019)(6666004)(54906003)(41300700001)(70586007)(82740400003)(8676002)(7696005)(426003)(4326008)(2906002)(8936002)(44832011)(316002)(36756003)(86362001)(47076005)(36860700001)(83380400001)(2616005)(81166007)(356005)(66899024)(40460700003)(40480700001)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: a35lPOCYviJ1NbEDH5THP9qPdPr9slElG/0h/fCwxs7175OI1f6zp7yWkFkHgKp5A+X0ryt0dRzPJgT6Qa0lVMoLjx+lpxvvCVmHwyEUIQc415o1nVhAYSfBLyYsRtVcSmF5iAWu+2khf+aHP9uGjFUfaD6BHubHZtKh+U+XGdQWbW2HINz+qKf7KVs7uc+RHUnr5ScTbLhNSk9PCCi4//S8+mrpX7n9jN+E+pZj3D9SpR2BYKtMfkMPSEu3MIPPw7zo86/JXVjhKAF7rG7ComaCjSfUWuh7QX50ITW5n7Q1i49RL17YCjxNZX1om8VdWa2xoud8x1179tfJeQtyQtdnDycS6Z4B9UNlEtxBReHXZlyCAWLMDAsXoRuYGgnrgGhq1W6/lMrBduQh5HfKr01Z3ytI92AB7Nh8Swx66W7s53lFz1p2pDRVABe9IEbstW0l6/gizrTm5Hsi0bC4wQZ47lV9wvrqMTUgdsIJawUSf53l8rjxdURc+wvJh8MVd1/a6nIDaDM/oDKq7q4389GjznafB9wbSb3Hlveh04JzkUOCEwQLi8KLH/ZIxDhzt5ydlqjsHAxZXG5finnRMysbWvFE1xcj91dgl0T9FyPacAA5lC7pQ0B4vFeGnECc6zpR/h6PJUfFZLxatFndbiYABxIe8iaFw/DBynDJO1DUHYQ2z1rGyatljPt4lncLNYhl0GTV2fhp9SKLO3JVfkyvv/Edl4XjfB2mQjMj+a1SfDSz9NOnHPLFXmfRNjBTi5JsiWewgmjOuQa0QhtkGg==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(39860400002)(376002)(346002)(396003)(136003)(230922051799003)(82310400011)(64100799003)(1800799009)(451199024)(186009)(36840700001)(40470700004)(46966006)(7696005)(83380400001)(4326008)(8676002)(8936002)(2616005)(966005)(426003)(6666004)(26005)(70586007)(16526019)(44832011)(110136005)(478600001)(316002)(336012)(54906003)(70206006)(1076003)(47076005)(40480700001)(5660300002)(36860700001)(40460700003)(41300700001)(81166007)(356005)(82740400003)(36756003)(2906002)(86362001)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 18:55:28.0498
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 10 Nov 2023 18:55:29.9717
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3e950538-c656-4007-78cb-08dbe21e9b2e
+X-MS-Exchange-CrossTenant-Network-Message-Id: 3953cfdf-cb02-4105-0a13-08dbe21e9c43
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: BL6PEPF0001AB4F.namprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW3PR12MB4426
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR12MB6930
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The PCI firmware specification includes support for methods for adjusting
-AUX power in D3cold as well as the PERST# assertion delay for a PCI
-device.
+The PCI firmware specification includes support for a _DSM function
+to specify a PERST# assertion delay.
 
-In some hardware designs these methods might be useful for drivers to
-call to configure the platform properly for the hardware's expected
-behavior.
+"The Add PERST# Assertion Delay function is used to convey the requirement
+for a fixed delay in timing between the time the PME_TO_Ack message is
+received at the PCI Express Downstream Port that originated the
+PME_Turn_Off message, and the time the platform asserts PERST# to the slot
+during the corresponding Endpoint’s or PCI Express Upstream Port’s
+transition to D3cold while the system is in an ACPI operational state."
 
-This series introduces two new symbols as API that drivers can call if
-necessary.
+Add API for callers to utilize this _DSM.
 
-In the Microsoft Windows ecosystem, Microsoft offers a similar API wrapping
-these functions for device drivers to utilize.
+Link: https://members.pcisig.com/wg/PCI-SIG/document/15350
+      PCI Firmware specification 3.3, section 4.6.11
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+---
+ drivers/pci/pci-acpi.c   | 40 ++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci-acpi.h |  2 ++
+ 2 files changed, 42 insertions(+)
 
-Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/ns-wdm-_d3cold_aux_power_and_timing_interface
-Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-d3cold_request_aux_power
-Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nc-wdm-d3cold_request_perst_delay
-
-Mario Limonciello (3):
-  PCI: Call PCI ACPI _DSM with consistent revision argument
-  PCI/ACPI: Add API for specifying aux power in D3cold
-  PCI/ACPI: Add API for specifying a PERST# assertion delay
-
- drivers/acpi/pci_root.c  |   3 +-
- drivers/pci/pci-acpi.c   | 100 ++++++++++++++++++++++++++++++++++++++-
- drivers/pci/pci-label.c  |   4 +-
- drivers/pci/pcie/edr.c   |  13 ++---
- include/linux/pci-acpi.h |  10 ++++
- 5 files changed, 119 insertions(+), 11 deletions(-)
-
-
-base-commit: 89cdf9d556016a54ff6ddd62324aa5ec790c05cc
+diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+index 257858a6719e..82e04808040d 100644
+--- a/drivers/pci/pci-acpi.c
++++ b/drivers/pci/pci-acpi.c
+@@ -1402,6 +1402,46 @@ int pci_acpi_request_aux_power_for_d3cold(struct pci_dev *pdev, int arg)
+ }
+ EXPORT_SYMBOL_GPL(pci_acpi_request_aux_power_for_d3cold);
+ 
++/**
++ * pci_acpi_set_perst_delay - Set the assertion delay for the PERST# signal
++ * @pdev: PCI device to set the delay for
++ * @arg: Delay value in microseconds
++ *
++ * This function sets the delay for the PERST# signal of the given PCI device.
++ * The delay value is specified in microseconds through the @arg parameter.
++ * The maximum delay value is 10000 microseconds.
++ *
++ * Return: 0 on success, negative error code on failure
++ */
++int pci_acpi_set_perst_delay(struct pci_dev *pdev, int arg)
++{
++	struct acpi_device *adev = ACPI_COMPANION(&pdev->dev);
++	union acpi_object *obj;
++	union acpi_object argv4 = {
++		.integer.type = ACPI_TYPE_INTEGER,
++		.integer.value = arg,
++	};
++	int val;
++
++	if (!acpi_check_dsm(adev->handle, &pci_acpi_dsm_guid,
++			    pci_acpi_dsm_rev, 1 << DSM_PCI_ADD_PERST_DELAY))
++		return -ENODEV;
++
++	if (arg > 10000)
++		return -EINVAL;
++
++	obj = acpi_evaluate_dsm_typed(adev->handle, &pci_acpi_dsm_guid,
++				      pci_acpi_dsm_rev, DSM_PCI_ADD_PERST_DELAY,
++				      &argv4, ACPI_TYPE_INTEGER);
++	if (!obj)
++		return -EIO;
++
++	val = obj->integer.value;
++	ACPI_FREE(obj);
++	return (val == arg) ? 0 : -EINVAL;
++}
++EXPORT_SYMBOL_GPL(pci_acpi_set_perst_delay);
++
+ /**
+  * pci_acpi_optimize_delay - optimize PCI D3 and D3cold delay from ACPI
+  * @pdev: the PCI device whose delay is to be updated
+diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
+index bc6372bcb7d6..bdce83c3afbf 100644
+--- a/include/linux/pci-acpi.h
++++ b/include/linux/pci-acpi.h
+@@ -123,12 +123,14 @@ extern const int pci_acpi_dsm_rev;
+ #define DSM_PCI_POWER_ON_RESET_DELAY		0x08
+ #define DSM_PCI_DEVICE_READINESS_DURATIONS	0x09
+ #define DSM_PCI_REQUEST_D3COLD_AUX_POWER	0x0A
++#define DSM_PCI_ADD_PERST_DELAY			0x0B
+ 
+ #define PCI_D3COLD_AUX_DENIED			0
+ #define PCI_D3COLD_AUX_GRANTED			1
+ #define PCI_D3COLD_AUX_NO_MAIN_POWER_REMOVAL	2
+ 
+ int pci_acpi_request_aux_power_for_d3cold(struct pci_dev *pdev, int arg);
++int pci_acpi_set_perst_delay(struct pci_dev *pdev, int arg);
+ 
+ #ifdef CONFIG_PCIE_EDR
+ void pci_acpi_add_edr_notifier(struct pci_dev *pdev);
 -- 
 2.34.1
 
