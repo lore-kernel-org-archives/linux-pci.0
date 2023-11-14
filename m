@@ -2,201 +2,88 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A623BC54E6D
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 20:08:55 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id E4CBDC54E7B
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 20:22:36 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233902AbjKNUI4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Nov 2023 15:08:56 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36186 "EHLO
+        id S233869AbjKNUWh (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Nov 2023 15:22:37 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:48780 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233935AbjKNUIw (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 15:08:52 -0500
-Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2085.outbound.protection.outlook.com [40.107.94.85])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFFF3124;
-        Tue, 14 Nov 2023 12:08:41 -0800 (PST)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=SLFqqwBliHfL5CRK424gmlMBxUetwKos43G+9Gk2pOKiEzjbT8RjRaWQfLL7y1SXkkBdgFp6Qu6fIH91r0SBo2K6fVySdbL1sNLBeNEnXz6G3vmwPYXYmD0RSgidek8KqExpbcpEV5SEvZ05r0uquR5u21hnqhRVaNatrZAYzaYarfdMOWbq7fNkJHiTAbEKd7BA7omebk5uTnT3t2YLOl70TUeEZ7GDLoE2G3kRQJ4bAaOYMLDD+1CPbcaVfbWKWFhx9nOxe/cEOU97hg48dc9WIP4qsGj3P/O6fsR5wJjuz2OQEP5gDudka/ZLkeF5C2iQwxK35rLkYfRe587EDA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=QJzGKPDUmP7pviUBNdyibSeuU9WM7t2twfOHK0K1rUY=;
- b=fDc/P8+CuBXwMv71paD72ag+YpsWPzdBLk2ISG3YX2YuNUmJUpLmpqijduxwWg1cvLgo4+RxtObpQZaAABweP4CSl45Ba4osMVGGoqpGijP5zoTd4FNWbBVmYUxFdk8Y92YDlL5IXfwFBa7N+zbrCbqu7ix0jZmpDBgCFKr0PhrzgulZ9x6G9L2uePrBG1cPSYcn4ayQnmj7r9lfnrKeH/+m+7LGAf2BsaOgZRunOsUtphvWs8yXLwwSYNWKkohGC9Ti1RVwB+57qi/omKcrvB7cF0fLQ/Y6k8cnet1ycKkuuISvBNSHiTom6sVLA8jmdJWnrRWIxkcOgM+gcB1VDQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=redhat.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=QJzGKPDUmP7pviUBNdyibSeuU9WM7t2twfOHK0K1rUY=;
- b=mcOGpZwCtYx/uY9lW5p07eYdz1td1/xiFRpHXFv7XL26c9z6BoPRPcUKI1XnUODuGym9XVy/eHDLKRV2sTFxAwgxYNxlk4ejN2YGouIP7R6AxwIJj+BP78LYE9hjA1Axzyc20ZvYYvrrRHB7ZyPgJNGhjd5q5A7AhHHcg944ocw=
-Received: from BLAPR03CA0153.namprd03.prod.outlook.com (2603:10b6:208:32f::19)
- by DS0PR12MB6392.namprd12.prod.outlook.com (2603:10b6:8:cc::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7002.17; Tue, 14 Nov
- 2023 20:08:34 +0000
-Received: from BL02EPF0001A103.namprd05.prod.outlook.com
- (2603:10b6:208:32f:cafe::87) by BLAPR03CA0153.outlook.office365.com
- (2603:10b6:208:32f::19) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.31 via Frontend
- Transport; Tue, 14 Nov 2023 20:08:34 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- BL02EPF0001A103.mail.protection.outlook.com (10.167.241.133) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.7002.13 via Frontend Transport; Tue, 14 Nov 2023 20:08:34 +0000
-Received: from test-TBI1100B.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Tue, 14 Nov
- 2023 14:08:32 -0600
-From:   Mario Limonciello <mario.limonciello@amd.com>
-To:     Karol Herbst <kherbst@redhat.com>, Lyude Paul <lyude@redhat.com>,
-        "Alex Deucher" <alexander.deucher@amd.com>,
-        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        with ESMTP id S229507AbjKNUWh (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 15:22:37 -0500
+Received: from mail-oi1-f174.google.com (mail-oi1-f174.google.com [209.85.167.174])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8DE56F5;
+        Tue, 14 Nov 2023 12:22:30 -0800 (PST)
+Received: by mail-oi1-f174.google.com with SMTP id 5614622812f47-3b512dd7d5bso4083080b6e.1;
+        Tue, 14 Nov 2023 12:22:30 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1699993350; x=1700598150;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PN1QbTvxURo/h7mHZUP6E5kNPIsXRML0G9gU6ayYKzw=;
+        b=IX+9OGYD7Vu9yVBN+NhdBo6kO6+n607TfiV8gdX06uQf0bKBt15GHNX1+J9HL/ITxz
+         8+qDl/lb3Kvbu3l9erGPHUTXiKv2/jHqa5ldL0+zf9rC/Knip8r9aF/kO8vfS7ce1DqW
+         wl2dCHQqJD9/VarQZxntFvWgKH9VP6j/7aXV/KLzwhDVD2FIRyZaQYsnKNrLAlDH76qW
+         qMyUceBxPohBP0u7pZB+4oy5wDO+0sl6NlsZBwr+uebgFJStUO4XW39aOAalG6D/TNbv
+         LfcI26HCObjyM6/9bp6ixhgXnSoyfUPvEC9Oy2qgvue8OrcgiV9N1EBV+6dp3YNns+BW
+         SLSg==
+X-Gm-Message-State: AOJu0YxdwkstZML7e8SITiS/RCYzUqF1Skyro2CfmQglK2EmgFkF814o
+        xlxtF2rO2JT1dFElBj8ugA==
+X-Google-Smtp-Source: AGHT+IEROoId8ghIa/bUPwkp/GfJOwSwEJpVH6CEk4esrLAW0KKOStfLZDL1S3Jl3FT0nRRTMbYjkA==
+X-Received: by 2002:a05:6808:31a:b0:3a7:a3b1:ac30 with SMTP id i26-20020a056808031a00b003a7a3b1ac30mr11034373oie.44.1699993349749;
+        Tue, 14 Nov 2023 12:22:29 -0800 (PST)
+Received: from herring.priv (66-90-144-107.dyn.grandenetworks.net. [66.90.144.107])
+        by smtp.gmail.com with ESMTPSA id b7-20020aca1b07000000b003af732a2054sm1236360oib.57.2023.11.14.12.22.28
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 14 Nov 2023 12:22:29 -0800 (PST)
+Received: (nullmailer pid 455067 invoked by uid 1000);
+        Tue, 14 Nov 2023 20:22:27 -0000
+Date:   Tue, 14 Nov 2023 14:22:27 -0600
+From:   Rob Herring <robh@kernel.org>
+To:     Jim Quinlan <james.quinlan@broadcom.com>
+Cc:     Cyril Brulebois <kibi@debian.org>,
+        Jim Quinlan <jim2101024@gmail.com>,
+        linux-arm-kernel@lists.infradead.org,
+        bcm-kernel-feedback-list@broadcom.com,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        linux-kernel@vger.kernel.org,
+        Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+        Conor Dooley <conor+dt@kernel.org>,
+        linux-rpi-kernel@lists.infradead.org,
+        Phil Elwell <phil@raspberrypi.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
         Bjorn Helgaas <bhelgaas@google.com>,
-        "Mika Westerberg" <mika.westerberg@linux.intel.com>,
-        Lukas Wunner <lukas@wunner.de>
-CC:     Danilo Krummrich <dakr@redhat.com>,
-        David Airlie <airlied@gmail.com>,
-        Daniel Vetter <daniel@ffwll.ch>,
-        Xinhui Pan <Xinhui.Pan@amd.com>,
-        "Rafael J . Wysocki" <rafael@kernel.org>,
-        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
-        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
-        "Maciej W . Rozycki" <macro@orcam.me.uk>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Mario Limonciello <mario.limonciello@amd.com>,
-        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
-        <dri-devel@lists.freedesktop.org>,
-        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
-        <nouveau@lists.freedesktop.org>,
-        "open list" <linux-kernel@vger.kernel.org>,
-        "open list:RADEON and AMDGPU DRM DRIVERS" 
-        <amd-gfx@lists.freedesktop.org>,
-        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
-        "open list:ACPI" <linux-acpi@vger.kernel.org>
-Subject: [PATCH v3 4/7] PCI: pciehp: Move check for is_thunderbolt into a quirk
-Date:   Tue, 14 Nov 2023 14:07:52 -0600
-Message-ID: <20231114200755.14911-5-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20231114200755.14911-1-mario.limonciello@amd.com>
-References: <20231114200755.14911-1-mario.limonciello@amd.com>
+        Florian Fainelli <florian.fainelli@broadcom.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+        Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Subject: Re: [PATCH v8 1/2] dt-bindings: PCI: brcmstb: Add property
+ "brcm,clkreq-mode"
+Message-ID: <169999334704.455013.2784769290164979974.robh@kernel.org>
+References: <20231113185607.1756-1-james.quinlan@broadcom.com>
+ <20231113185607.1756-2-james.quinlan@broadcom.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-Originating-IP: [10.180.168.240]
-X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF0001A103:EE_|DS0PR12MB6392:EE_
-X-MS-Office365-Filtering-Correlation-Id: 9abb656f-3e41-40b1-15e6-08dbe54d7b25
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: jMOIA6xYltxfdXkxdG8T5SNQSet4XxKcJUYea9nqU/AGmbdBm/3l0O9MOhguF4Jye6V9bSgAp55xqDHW2vyRgJ44UnWcb5yOa5lXWDQPsKqo+Qn5Eb/8ewCg65MwtveWRvu1KPDaSqGQp1CdXDwZ5OkQcLg8dA0xe3Pv4w1uNHvu8KADEYRIJ/nm6oUjFn4LcgJWUpxxwGvQfM/jnuUksw2ejUE6EZbdzPk7c14ClOUIT/SZdB8GMhW0hyQl4nSSF1/8McopxnTBtObagCAv/EJsIE6bqJe2by+DhWkp0YvE7xy5gjp1cZCubyvtElaYblAkGPo9tksJuw6cYgIlxt2WXHNnqOXIqyMlZSPq6jM84wfPQpoE6UA+QLVYswFHt6WcJun31oFAaZuvrQZJr2vj+Xihwig0NvVWCtkB//HkvXe6JNyG8lxiLmUS5OaRX3llwusJNYH0bmT2McMW7go2jRcdQ1YUtsQpGxX1wZIVJw1BjiL2xgVjjc8p0t4aCKVKM+ed7R29gb1D+MWc+kze9YtXSwvIbPisE75k/Apj7kl6kzOYZfoAj7g/ymWMWWEepxI6IlYfiRlWtdvtsKH+nZppsKsFO9PzGaGmhF1/zfmd5aWw+1mcDBQ0tSF3WpZXjcRFHEjIZ6CK+vYsrsg25mqT1028Qxh6NX/NTpOTJQOTeBjEYiNQNAxJ1XsSi6TEy++8jj2FaMs0h71hVZYzIm5elxX4/fbmmzX6nmLey/bviK53zmIpvN0/4cV/U8BH4GT3sWSeq943r85igA==
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(136003)(39860400002)(396003)(346002)(230922051799003)(451199024)(186009)(1800799009)(82310400011)(64100799003)(36840700001)(46966006)(40470700004)(40460700003)(36860700001)(41300700001)(54906003)(70586007)(70206006)(86362001)(110136005)(36756003)(356005)(81166007)(82740400003)(478600001)(16526019)(26005)(1076003)(336012)(6666004)(2906002)(426003)(7696005)(7416002)(2616005)(5660300002)(83380400001)(40480700001)(44832011)(316002)(47076005)(4326008)(8936002)(8676002)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2023 20:08:34.2765
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 9abb656f-3e41-40b1-15e6-08dbe54d7b25
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource: BL02EPF0001A103.namprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6392
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231113185607.1756-2-james.quinlan@broadcom.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-commit 493fb50e958c ("PCI: pciehp: Assume NoCompl+ for Thunderbolt
-ports") added a check into pciehp code to explicitly set NoCompl+
-for all Intel Thunderbolt controllers, including those that don't
-need it.
 
-This overloaded the purpose of the `is_thunderbolt` member of
-`struct pci_device` because that means that any controller that
-identifies as thunderbolt would set NoCompl+ even if it doesn't
-suffer this deficiency. As that commit helpfully specifies all the
-controllers with the problem, move them into a PCI quirk.
+On Mon, 13 Nov 2023 13:56:05 -0500, Jim Quinlan wrote:
+> The Broadcom STB/CM PCIe HW -- a core that is also used by RPi SOCs --
+> requires the driver to deliberately place the RC HW one of three CLKREQ#
+> modes.  The "brcm,clkreq-mode" property allows the user to override the
+> default setting.  If this property is omitted, the default mode shall be
+> "default".
+> 
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  .../devicetree/bindings/pci/brcm,stb-pcie.yaml | 18 ++++++++++++++++++
+>  1 file changed, 18 insertions(+)
+> 
 
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
-v2->v3:
- * Reword commit message
- * Update comments
----
- drivers/pci/hotplug/pciehp_hpc.c |  6 +-----
- drivers/pci/quirks.c             | 20 ++++++++++++++++++++
- include/linux/pci.h              |  1 +
- 3 files changed, 22 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
-index b1d0a1b3917d..40f7a26fb98f 100644
---- a/drivers/pci/hotplug/pciehp_hpc.c
-+++ b/drivers/pci/hotplug/pciehp_hpc.c
-@@ -992,11 +992,7 @@ struct controller *pcie_init(struct pcie_device *dev)
- 	if (pdev->hotplug_user_indicators)
- 		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
- 
--	/*
--	 * We assume no Thunderbolt controllers support Command Complete events,
--	 * but some controllers falsely claim they do.
--	 */
--	if (pdev->is_thunderbolt)
-+	if (pdev->no_command_complete)
- 		slot_cap |= PCI_EXP_SLTCAP_NCCS;
- 
- 	ctrl->slot_cap = slot_cap;
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index ea476252280a..fa9b82cd7b3b 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3809,6 +3809,26 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
- DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
- 			quirk_thunderbolt_hotplug_msi);
- 
-+/*
-+ * Certain Thunderbolt 1 controllers falsely claim to support Command
-+ * Completed events.
-+ */
-+static void quirk_thunderbolt_command_complete(struct pci_dev *pdev)
-+{
-+	pdev->no_command_complete = 1;
-+}
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_RIDGE,
-+			quirk_thunderbolt_command_complete);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EAGLE_RIDGE,
-+			quirk_thunderbolt_command_complete);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_PEAK,
-+			quirk_thunderbolt_command_complete);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
-+			quirk_thunderbolt_command_complete);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C,
-+			quirk_thunderbolt_command_complete);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
-+			quirk_thunderbolt_command_complete);
- #ifdef CONFIG_ACPI
- /*
-  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 1fbca2bd92e8..20a6e4fc3060 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -441,6 +441,7 @@ struct pci_dev {
- 	unsigned int	is_hotplug_bridge:1;
- 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
- 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
-+	unsigned int	no_command_complete:1;	/* No command completion */
- 	/*
- 	 * Devices marked being untrusted are the ones that can potentially
- 	 * execute DMA attacks and similar. They are typically connected
--- 
-2.34.1
+Reviewed-by: Rob Herring <robh@kernel.org>
 
