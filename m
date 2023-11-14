@@ -2,34 +2,34 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E6D05C072A2
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 13:56:40 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D3067C4167D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 13:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232345AbjKNN4m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        id S229569AbjKNN4m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
         Tue, 14 Nov 2023 08:56:42 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49458 "EHLO
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S231935AbjKNN4j (ORCPT
+        with ESMTP id S231903AbjKNN4j (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 08:56:39 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 359F7D51;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 133A2D4F;
         Tue, 14 Nov 2023 05:56:34 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2E42C43391;
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AC537C433D9;
         Tue, 14 Nov 2023 13:56:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1699970193;
-        bh=IyFpJ4IPW+04Qg7uetnTuAVDseZG4Zu5u7tnsvS+xhA=;
-        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=SeWpsd+8blmriSQBMZBlDg9HTiPOqC/TQjd6pKDcunLzqR3jShDyFDuVGX3o+W+XL
-         Qoas/TI4ZoSf+VvVCy+P07qZYXvxi7ChCBAtOpvPnbQinxnLfLcuAuTbeAOpTkbOuQ
-         i8wswos2HLxVIWnBf2h2TXvEL8GoEUBo47tOC/L2ugI/3E+n7o+q+N5+mqYJOBpgnY
-         +UpX+ekmhHjqTIQDRuTjxbdrsokfqOrV5SdFdKfOzRvpTLvEMGsBjJM6Ns/kuFAArc
-         PpdVsvyLFgEZJ1jFRzTWNb0rwCc82mDHeIZ806JJ3F+rGx/KyHm+KiumEl5rD92iFh
-         couZyIiRK1mWQ==
+        bh=zn1cZkdmxow6oXx9mlxw4Bxyw+vPUUKmI1YntwViffA=;
+        h=From:To:Cc:Subject:Date:From;
+        b=ewfHx0DX6mWUD5x+Ub9YsdD/9h2Zx4P++52qj+6g/lLhdIMYPULBmDccX740UIkFV
+         h2v1wfdtDWZxpTibEafrM2WXZYn8EMoTUAu85RqPkz/nBH2KYvs2cuMAL3lwu9bXzo
+         UOmC0UC9b65g5nBpaGWNOtuV3trO9LwO73cuaqVEMCtCjmndpvoQ2zm5ouspzDedfz
+         RTC0eKoXwKakmq4i9IYYGYXIknP7cGPsduJnrWJCymoNyq7TLtKfHXsELqNbRh6Fi2
+         JKiETamQ7EmHJZvmblRZijBNX+pV/UxVAg+Ap6VV5f/2HDH492Dt4uPMwg07h32ZfS
+         gOCPoIyRsnyCQ==
 Received: from johan by xi.lan with local (Exim 4.96.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1r2tu3-0008PZ-0I;
-        Tue, 14 Nov 2023 14:56:31 +0100
+        id 1r2tu2-0008PN-1V;
+        Tue, 14 Nov 2023 14:56:30 +0100
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -44,39 +44,46 @@ Cc:     Andy Gross <agross@kernel.org>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org,
         Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH 6/6] PCI/ASPM: Add lockdep assert to link state helper
-Date:   Tue, 14 Nov 2023 14:55:53 +0100
-Message-ID: <20231114135553.32301-7-johan+linaro@kernel.org>
+Subject: [PATCH 0/6] PCI: Fix deadlocks when enabling ASPM
+Date:   Tue, 14 Nov 2023 14:55:47 +0100
+Message-ID: <20231114135553.32301-1-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20231114135553.32301-1-johan+linaro@kernel.org>
-References: <20231114135553.32301-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-Add a lockdep assert to the locked disable link state helper which
-should only be called with a pci_bus_sem read lock held.
+The pci_enable_link_state() helper is currently only called from
+pci_walk_bus(), something which can lead to a deadlock as both helpers
+take a pci_bus_sem read lock.
 
-Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
----
- drivers/pci/pcie/aspm.c | 2 ++
- 1 file changed, 2 insertions(+)
+Add a new locked helper which can be called with the read lock held and
+fix up the two current users (the second is new in 6.7-rc1).
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 19b7256d2dc9..ef2e7a186f57 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1090,6 +1090,8 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool locked
- 
- int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
- {
-+	lockdep_assert_held_read(&pci_bus_sem);
-+
- 	return __pci_disable_link_state(pdev, state, true);
- }
- EXPORT_SYMBOL(pci_disable_link_state_locked);
+Note that there are no users left of the original unlocked variant after
+this series, but I decided to leave it in place for now (e.g. to mirror
+the corresponding helpers to disable link states).
+
+Included are also a couple of related cleanups.
+
+Johan
+
+
+Johan Hovold (6):
+  PCI/ASPM: Add locked helper for enabling link state
+  PCI: vmd: Fix deadlock when enabling ASPM
+  PCI: qcom: Fix deadlock when enabling ASPM
+  PCI: qcom: Clean up ASPM comment
+  PCI/ASPM: Clean up disable link state parameter
+  PCI/ASPM: Add lockdep assert to link state helper
+
+ drivers/pci/controller/dwc/pcie-qcom.c |  7 ++-
+ drivers/pci/controller/vmd.c           |  2 +-
+ drivers/pci/pcie/aspm.c                | 65 +++++++++++++++++++-------
+ include/linux/pci.h                    |  3 ++
+ 4 files changed, 56 insertions(+), 21 deletions(-)
+
 -- 
 2.41.0
 
