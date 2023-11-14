@@ -2,116 +2,118 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 81E61C4332F
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 13:06:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3D852C4167D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 13:56:39 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S231605AbjKNNGo (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Nov 2023 08:06:44 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:57668 "EHLO
+        id S230089AbjKNN4j (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Nov 2023 08:56:39 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49396 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232864AbjKNNGn (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 08:06:43 -0500
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C6101199;
-        Tue, 14 Nov 2023 05:06:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1699967200; x=1731503200;
-  h=date:from:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=CHp8Hsk51sMQHL/7IfJH8nobg1wb9SdOZ4TtzrZFzDI=;
-  b=KW7S0eWovb1nWsPPnHGWZoHkEClSI8CXLdhULJx8oVG/5j1na5Re0d2S
-   mYW3iX790A32OtBB7lZDGtd1CAX1ku5HyqaDwUShrTf0anItRpKQbnw3L
-   faM0TyIQPy2Om2B3ShkV44tv5lc8ii1CZgTDbqy/EYe3vPHAFnkDnmcCs
-   2lXJCwUGj02oLgkUlw5BmrRlV+OFYGhCfQPj6/rLtAlUK8RuS8JKpCgeO
-   o1JI5ITkdJBx2KJuaHFQrtuw+hPQq7HzM22SXxB42zoAJXrvmZRMUOCsV
-   KEz/f8hL6P8GRoSQeQMzgxhYD5ca3JqraRwi2zKnnBZ+79aNUzvHMyK/h
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10893"; a="375692640"
-X-IronPort-AV: E=Sophos;i="6.03,302,1694761200"; 
-   d="scan'208";a="375692640"
-Received: from orsmga001.jf.intel.com ([10.7.209.18])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2023 05:06:37 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10893"; a="799519063"
-X-IronPort-AV: E=Sophos;i="6.03,302,1694761200"; 
-   d="scan'208";a="799519063"
-Received: from rauhjoha-mobl2.ger.corp.intel.com ([10.251.217.194])
-  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Nov 2023 05:06:34 -0800
-Date:   Tue, 14 Nov 2023 15:06:31 +0200 (EET)
-From:   =?ISO-8859-15?Q?Ilpo_J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To:     Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-cc:     Xiaowei Song <songxiaowei@hisilicon.com>,
-        Binghui Wang <wangbinghui@hisilicon.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?ISO-8859-2?Q?Krzysztof_Wilczy=F1ski?= <kw@linux.com>,
+        with ESMTP id S231895AbjKNN4h (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 08:56:37 -0500
+Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 13043D4D;
+        Tue, 14 Nov 2023 05:56:34 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AA2BFC433C9;
+        Tue, 14 Nov 2023 13:56:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+        s=k20201202; t=1699970193;
+        bh=ccp3ogSsb4odknXliurziQtdOSnVHJBmXHc1B6Tc75s=;
+        h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+        b=cqjCpx50IAiQYCU9k/IfgDPeIhFv+9uWmWFC6j2KoAkGQmt2kEAeY29cU/peo05pd
+         mhPyqxa1sMwBW46MTeju7iHCWPFWOvJv6N6K5ZBrldwxnYVuvva41K+vR2H9s9+Ucw
+         z5SFcCofn3ybaamOymSBoMfR7oVVcjqZzIvF7Dg7Byb9NnWwu6QBdGa/JwEVLrnxTi
+         E6YJejE+CF7P272F1nJyC0QGl2ojxS98dzoyuIhUcOEHtIFtbApWpXkNRGLvOZsC9A
+         oX/1obd0/Q3XG7FsvQO4lcQ8aP9MDLvnUFV3T+44UlhgnB6dZVxhE3r48J75wNi+iP
+         P/FJXHIESqxuA==
+Received: from johan by xi.lan with local (Exim 4.96.2)
+        (envelope-from <johan+linaro@kernel.org>)
+        id 1r2tu2-0008PX-3C;
+        Tue, 14 Nov 2023 14:56:31 +0100
+From:   Johan Hovold <johan+linaro@kernel.org>
+To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>
+Cc:     Andy Gross <agross@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konrad.dybcio@linaro.org>,
+        Manivannan Sadhasivam <mani@kernel.org>,
         Rob Herring <robh@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        LKML <linux-kernel@vger.kernel.org>,
-        kernel-janitors@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] PCI: kirin: Use devm_kasprintf()
-In-Reply-To: <085fc5ac70fc8d73d5da197967e76d18f2ab5208.1699774592.git.christophe.jaillet@wanadoo.fr>
-Message-ID: <fa6eb291-1dfc-1f18-aef1-bf8e91d0fd64@linux.intel.com>
-References: <085fc5ac70fc8d73d5da197967e76d18f2ab5208.1699774592.git.christophe.jaillet@wanadoo.fr>
+        Nirmal Patel <nirmal.patel@linux.intel.com>,
+        Jonathan Derrick <jonathan.derrick@linux.dev>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org,
+        Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH 5/6] PCI/ASPM: Clean up disable link state parameter
+Date:   Tue, 14 Nov 2023 14:55:52 +0100
+Message-ID: <20231114135553.32301-6-johan+linaro@kernel.org>
+X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20231114135553.32301-1-johan+linaro@kernel.org>
+References: <20231114135553.32301-1-johan+linaro@kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323329-58973192-1699967196=:1748"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+Replace the current 'sem' parameter to the __pci_disable_link_state()
+helper with a more descriptive 'locked' parameter, which indicates
+whether a pci_bus_sem read lock is already held.
 
---8323329-58973192-1699967196=:1748
-Content-Type: text/plain; charset=ISO-8859-15
-Content-Transfer-Encoding: 8BIT
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/pcie/aspm.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-On Sun, 12 Nov 2023, Christophe JAILLET wrote:
-
-> Use devm_kasprintf() instead of hand writing it.
-> This saves the need of an intermediate buffer.
-> 
-> There was also no reason to use the _const() version of devm_kstrdup().
-> The string was known be not constant.
-
-was known be -> is known to be
-
-With that fixed, 
-
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 8cf8cc2d6bba..19b7256d2dc9 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1041,7 +1041,7 @@ static struct pcie_link_state *pcie_aspm_get_link(struct pci_dev *pdev)
+ 	return bridge->link_state;
+ }
+ 
+-static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
++static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool locked)
+ {
+ 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
+ 
+@@ -1060,7 +1060,7 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 		return -EPERM;
+ 	}
+ 
+-	if (sem)
++	if (!locked)
+ 		down_read(&pci_bus_sem);
+ 	mutex_lock(&aspm_lock);
+ 	if (state & PCIE_LINK_STATE_L0S)
+@@ -1082,7 +1082,7 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 		link->clkpm_disable = 1;
+ 	pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	mutex_unlock(&aspm_lock);
+-	if (sem)
++	if (!locked)
+ 		up_read(&pci_bus_sem);
+ 
+ 	return 0;
+@@ -1090,7 +1090,7 @@ static int __pci_disable_link_state(struct pci_dev *pdev, int state, bool sem)
+ 
+ int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ {
+-	return __pci_disable_link_state(pdev, state, false);
++	return __pci_disable_link_state(pdev, state, true);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state_locked);
+ 
+@@ -1105,7 +1105,7 @@ EXPORT_SYMBOL(pci_disable_link_state_locked);
+  */
+ int pci_disable_link_state(struct pci_dev *pdev, int state)
+ {
+-	return __pci_disable_link_state(pdev, state, true);
++	return __pci_disable_link_state(pdev, state, false);
+ }
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
 -- 
- i.
+2.41.0
 
-
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
->  drivers/pci/controller/dwc/pcie-kirin.c | 6 ++----
->  1 file changed, 2 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-> index 2ee146767971..d9e3514de0a0 100644
-> --- a/drivers/pci/controller/dwc/pcie-kirin.c
-> +++ b/drivers/pci/controller/dwc/pcie-kirin.c
-> @@ -366,7 +366,6 @@ static int kirin_pcie_get_gpio_enable(struct kirin_pcie *pcie,
->  				      struct platform_device *pdev)
->  {
->  	struct device *dev = &pdev->dev;
-> -	char name[32];
->  	int ret, i;
->  
->  	/* This is an optional property */
-> @@ -387,9 +386,8 @@ static int kirin_pcie_get_gpio_enable(struct kirin_pcie *pcie,
->  		if (pcie->gpio_id_clkreq[i] < 0)
->  			return pcie->gpio_id_clkreq[i];
->  
-> -		sprintf(name, "pcie_clkreq_%d", i);
-> -		pcie->clkreq_names[i] = devm_kstrdup_const(dev, name,
-> -							    GFP_KERNEL);
-> +		pcie->clkreq_names[i] = devm_kasprintf(dev, GFP_KERNEL,
-> +						       "pcie_clkreq_%d", i);
->  		if (!pcie->clkreq_names[i])
->  			return -ENOMEM;
->  	}
-> 
---8323329-58973192-1699967196=:1748--
