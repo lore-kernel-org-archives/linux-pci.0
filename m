@@ -2,33 +2,33 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CB5E4C0755A
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 13:56:43 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 048FAC07545
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 13:56:42 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S232262AbjKNN4n (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Nov 2023 08:56:43 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49342 "EHLO
+        id S229645AbjKNN4m (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Nov 2023 08:56:42 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:49412 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S232168AbjKNN4k (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 08:56:40 -0500
+        with ESMTP id S232040AbjKNN4j (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 08:56:39 -0500
 Received: from smtp.kernel.org (relay.kernel.org [52.25.139.140])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C022D55;
-        Tue, 14 Nov 2023 05:56:35 -0800 (PST)
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA8C7C43397;
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0E195D4B;
+        Tue, 14 Nov 2023 05:56:34 -0800 (PST)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7492C433CB;
         Tue, 14 Nov 2023 13:56:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
         s=k20201202; t=1699970193;
-        bh=FBrVwkCNQ13rjcfw1rE/Ykhh7nhHv9rEy/bYSmsBegQ=;
+        bh=FQzhhHnHVLuWZguWtCeMQCQce7lbuXpiz5kGYt0gjTI=;
         h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-        b=BBHOHfNckzRz7mnu26EM4ZGNdr34Tk+SyDvwuccRYDg3/vBsf5XfdAI532RpNgedV
-         N2JcKrllILDtvNuhJ1nbPIeWY5nSHp8yMzs02lrEnGHsngcHmdgVmFYB5nTN+iedLp
-         dvT6K9UjGj7xIwUy0BOu+U75X49pqAxeZkUf7ZxLMW3AZ48e94dDU7baWsnE/IUxOa
-         iaaixLJK/z0HBKHZwYXQuw/48ot5+xto239+Sedo42JooeUiqBl1f8et7L58/eNSHe
-         YuICzi3eeb6/fxPrdVYw8HwDXX7YFZzoBaJw4GEid+wCUMf1pJd2tiDkUHS0LBHoQ/
-         u85joJ6WXsyug==
+        b=n1pE7bt2zjsr5fCQayJMtmeTKpYw9ejeIOJCj/heI2mhqOc4YBsxFuhsLK+Z0XG+t
+         0QKJTmjGJ4PaHrBdPzL0hZcCIk7JFunIlKryWjb7YTLRiCvwqoswcUDcuU7YBv0L+H
+         sTlTAotjjcfJksXzZkXrnv/X3RdErT7VeA9i59wGYjUzn3jWk+D9dpdpGXuJLNdTFJ
+         3O4FlL+vzkOq/eNVeLSwpLf7Of4OtRj4G3mIr2e3K0Ka6SdSmihQHkZvLiLChsBsh0
+         1FzXuFEbjsvyJnvt7aOiWo6qfWrq/w1BDy1RM1BGa9gSZDy1WHd9SUKWL1mF1iz12e
+         XoivxJP+BzVfg==
 Received: from johan by xi.lan with local (Exim 4.96.2)
         (envelope-from <johan+linaro@kernel.org>)
-        id 1r2tu2-0008PT-2c;
+        id 1r2tu2-0008PP-24;
         Tue, 14 Nov 2023 14:56:30 +0100
 From:   Johan Hovold <johan+linaro@kernel.org>
 To:     Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -43,11 +43,12 @@ Cc:     Andy Gross <agross@kernel.org>,
         Jonathan Derrick <jonathan.derrick@linux.dev>,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-kernel@vger.kernel.org,
-        Johan Hovold <johan+linaro@kernel.org>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH 3/6] PCI: qcom: Fix deadlock when enabling ASPM
-Date:   Tue, 14 Nov 2023 14:55:50 +0100
-Message-ID: <20231114135553.32301-4-johan+linaro@kernel.org>
+        Johan Hovold <johan+linaro@kernel.org>, stable@vger.kernel.org,
+        Michael Bottini <michael.a.bottini@linux.intel.com>,
+        "David E . Box" <david.e.box@linux.intel.com>
+Subject: [PATCH 1/6] PCI/ASPM: Add locked helper for enabling link state
+Date:   Tue, 14 Nov 2023 14:55:48 +0100
+Message-ID: <20231114135553.32301-2-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.41.0
 In-Reply-To: <20231114135553.32301-1-johan+linaro@kernel.org>
 References: <20231114135553.32301-1-johan+linaro@kernel.org>
@@ -57,56 +58,127 @@ Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The qcom_pcie_enable_aspm() helper is called from pci_walk_bus() during
-host init to enable ASPM.
+Add a helper for enabling link states that can be used in contexts where
+a pci_bus_sem read lock is already held (e.g. from pci_walk_bus()).
 
-Since pci_walk_bus() already holds a pci_bus_sem read lock, use the new
-locked helper to enable link states in order to avoid a potential
-deadlock (e.g. in case someone takes a write lock before reacquiring
-the read lock).
+This helper will be used to fix a couple of potential deadlocks where
+the current helper is called with the lock already held, hence the CC
+stable tag.
 
-This issue was reported by lockdep:
-
-   ============================================
-   WARNING: possible recursive locking detected
-   6.7.0-rc1 #4 Not tainted
-   --------------------------------------------
-   kworker/u16:6/147 is trying to acquire lock:
-   ffffbf3ff9d2cfa0 (pci_bus_sem){++++}-{3:3}, at: pci_enable_link_state+0x74/0x1e8
-
-   but task is already holding lock:
-   ffffbf3ff9d2cfa0 (pci_bus_sem){++++}-{3:3}, at: pci_walk_bus+0x34/0xbc
-
-   other info that might help us debug this:
-    Possible unsafe locking scenario:
-
-          CPU0
-          ----
-     lock(pci_bus_sem);
-     lock(pci_bus_sem);
-
-    *** DEADLOCK ***
-
-Fixes: 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops")
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Fixes: f492edb40b54 ("PCI: vmd: Add quirk to configure PCIe ASPM and LTR")
+Cc: stable@vger.kernel.org	# 6.3
+Cc: Michael Bottini <michael.a.bottini@linux.intel.com>
+Cc: David E. Box <david.e.box@linux.intel.com>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pcie/aspm.c | 53 +++++++++++++++++++++++++++++++----------
+ include/linux/pci.h     |  3 +++
+ 2 files changed, 43 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index ce3ece28fed2..21523115f6a4 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -971,7 +971,7 @@ static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
+diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+index 50b04ae5c394..8cf8cc2d6bba 100644
+--- a/drivers/pci/pcie/aspm.c
++++ b/drivers/pci/pcie/aspm.c
+@@ -1109,17 +1109,7 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
+ }
+ EXPORT_SYMBOL(pci_disable_link_state);
+ 
+-/**
+- * pci_enable_link_state - Clear and set the default device link state so that
+- * the link may be allowed to enter the specified states. Note that if the
+- * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
+- * touch the LNKCTL register. Also note that this does not enable states
+- * disabled by pci_disable_link_state(). Return 0 or a negative errno.
+- *
+- * @pdev: PCI device
+- * @state: Mask of ASPM link states to enable
+- */
+-int pci_enable_link_state(struct pci_dev *pdev, int state)
++static int __pci_enable_link_state(struct pci_dev *pdev, int state, bool locked)
  {
- 	/* Downstream devices need to be in D0 state before enabling PCI PM substates */
- 	pci_set_power_state(pdev, PCI_D0);
--	pci_enable_link_state(pdev, PCIE_LINK_STATE_ALL);
-+	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
+ 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
+ 
+@@ -1136,7 +1126,8 @@ int pci_enable_link_state(struct pci_dev *pdev, int state)
+ 		return -EPERM;
+ 	}
+ 
+-	down_read(&pci_bus_sem);
++	if (!locked)
++		down_read(&pci_bus_sem);
+ 	mutex_lock(&aspm_lock);
+ 	link->aspm_default = 0;
+ 	if (state & PCIE_LINK_STATE_L0S)
+@@ -1157,12 +1148,48 @@ int pci_enable_link_state(struct pci_dev *pdev, int state)
+ 	link->clkpm_default = (state & PCIE_LINK_STATE_CLKPM) ? 1 : 0;
+ 	pcie_set_clkpm(link, policy_to_clkpm_state(link));
+ 	mutex_unlock(&aspm_lock);
+-	up_read(&pci_bus_sem);
++	if (!locked)
++		up_read(&pci_bus_sem);
  
  	return 0;
  }
++
++/**
++ * pci_enable_link_state - Clear and set the default device link state so that
++ * the link may be allowed to enter the specified states. Note that if the
++ * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
++ * touch the LNKCTL register. Also note that this does not enable states
++ * disabled by pci_disable_link_state(). Return 0 or a negative errno.
++ *
++ * @pdev: PCI device
++ * @state: Mask of ASPM link states to enable
++ */
++int pci_enable_link_state(struct pci_dev *pdev, int state)
++{
++	return __pci_enable_link_state(pdev, state, false);
++}
+ EXPORT_SYMBOL(pci_enable_link_state);
+ 
++/**
++ * pci_enable_link_state - Clear and set the default device link state so that
++ * the link may be allowed to enter the specified states. Note that if the
++ * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
++ * touch the LNKCTL register. Also note that this does not enable states
++ * disabled by pci_disable_link_state(). Return 0 or a negative errno.
++ *
++ * @pdev: PCI device
++ * @state: Mask of ASPM link states to enable
++ *
++ * Context: Caller holds pci_bus_sem read lock.
++ */
++int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
++{
++	lockdep_assert_held_read(&pci_bus_sem);
++
++	return __pci_enable_link_state(pdev, state, true);
++}
++EXPORT_SYMBOL(pci_enable_link_state_locked);
++
+ static int pcie_aspm_set_policy(const char *val,
+ 				const struct kernel_param *kp)
+ {
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 60ca768bc867..dea043bc1e38 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1829,6 +1829,7 @@ extern bool pcie_ports_native;
+ int pci_disable_link_state(struct pci_dev *pdev, int state);
+ int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+ int pci_enable_link_state(struct pci_dev *pdev, int state);
++int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
+ void pcie_no_aspm(void);
+ bool pcie_aspm_support_enabled(void);
+ bool pcie_aspm_enabled(struct pci_dev *pdev);
+@@ -1839,6 +1840,8 @@ static inline int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
+ { return 0; }
+ static inline int pci_enable_link_state(struct pci_dev *pdev, int state)
+ { return 0; }
++static inline int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
++{ return 0; }
+ static inline void pcie_no_aspm(void) { }
+ static inline bool pcie_aspm_support_enabled(void) { return false; }
+ static inline bool pcie_aspm_enabled(struct pci_dev *pdev) { return false; }
 -- 
 2.41.0
 
