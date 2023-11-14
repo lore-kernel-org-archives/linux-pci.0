@@ -2,43 +2,43 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 22634C54E6B
-	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 20:08:54 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A623BC54E6D
+	for <linux-pci@archiver.kernel.org>; Tue, 14 Nov 2023 20:08:55 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S233950AbjKNUIy (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Tue, 14 Nov 2023 15:08:54 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36370 "EHLO
+        id S233902AbjKNUI4 (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Tue, 14 Nov 2023 15:08:56 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:36186 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S233966AbjKNUIw (ORCPT
+        with ESMTP id S233935AbjKNUIw (ORCPT
         <rfc822;linux-pci@vger.kernel.org>); Tue, 14 Nov 2023 15:08:52 -0500
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2045.outbound.protection.outlook.com [40.107.95.45])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 258C2132;
-        Tue, 14 Nov 2023 12:08:43 -0800 (PST)
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2085.outbound.protection.outlook.com [40.107.94.85])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id DFFF3124;
+        Tue, 14 Nov 2023 12:08:41 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=H/hfy5NfHD7sAMP/irV7tQQoDswq5E8nLa8kaZfJonOJGKTN87NVSmBtRoY33OHAcBfQ/TSn2fb/2AXXCYGU0rkAwkv97s2UgThI4a022Yjnv+EE+KeUUtRbTm5+4C2LFVawZDa2r6PN+r6mMqyy6lyE4EEsEgmpLY8Tc+0fkoGu66TfvP3fYC5AlYZKRXFnlki7Rh2k8QZH9WrqvqkXN1LXgZAEKqo9H4khrWEekeyRcG0gwhTu8E8xMLA4ZU+sT/JtM3RWQQuiKbUagFQKZfdYWqeJY7iQ5DIkS5WIRRM0MADt4vk1hPHizewFbxnk2E3hvKIcyuJtfcEETbr40A==
+ b=SLFqqwBliHfL5CRK424gmlMBxUetwKos43G+9Gk2pOKiEzjbT8RjRaWQfLL7y1SXkkBdgFp6Qu6fIH91r0SBo2K6fVySdbL1sNLBeNEnXz6G3vmwPYXYmD0RSgidek8KqExpbcpEV5SEvZ05r0uquR5u21hnqhRVaNatrZAYzaYarfdMOWbq7fNkJHiTAbEKd7BA7omebk5uTnT3t2YLOl70TUeEZ7GDLoE2G3kRQJ4bAaOYMLDD+1CPbcaVfbWKWFhx9nOxe/cEOU97hg48dc9WIP4qsGj3P/O6fsR5wJjuz2OQEP5gDudka/ZLkeF5C2iQwxK35rLkYfRe587EDA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=JGQJ2s9aczHwLlKwGw5MbAsL0y0CXVt2bqkXEOEvYPE=;
- b=I9x3QWCO6J/SOwGWsHRigxPqstIyqyC/ZUaU8zaF6rlK/4NOQc1ldlXmqHGX3rQ8gKPVJGpMir+3F5eu21tERAomS3RSuVGm7Lc93g5v8ZFtmTrrXOET2Qy8q5H+IxSJQ1lTiGOPnBr3h8vcIQeGfj4UOEr7iGv2aBKA7PdBkZm6iSVR7PH4SUGENbMlv3Ah9I5y1NPMjnGAX3cYVos4hRcgrbIK9GCxb5kdHMhw4ttH6bS71WqQENEloXAJ7fIH8RZEOmx8kjOMzxQXN4wVJefCYy9zxdNz8Xqh5RpA8WnI0eba4yvxYA03vzIq7NAj2mbGzRnuwzIuZbR9lAav1g==
+ bh=QJzGKPDUmP7pviUBNdyibSeuU9WM7t2twfOHK0K1rUY=;
+ b=fDc/P8+CuBXwMv71paD72ag+YpsWPzdBLk2ISG3YX2YuNUmJUpLmpqijduxwWg1cvLgo4+RxtObpQZaAABweP4CSl45Ba4osMVGGoqpGijP5zoTd4FNWbBVmYUxFdk8Y92YDlL5IXfwFBa7N+zbrCbqu7ix0jZmpDBgCFKr0PhrzgulZ9x6G9L2uePrBG1cPSYcn4ayQnmj7r9lfnrKeH/+m+7LGAf2BsaOgZRunOsUtphvWs8yXLwwSYNWKkohGC9Ti1RVwB+57qi/omKcrvB7cF0fLQ/Y6k8cnet1ycKkuuISvBNSHiTom6sVLA8jmdJWnrRWIxkcOgM+gcB1VDQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=redhat.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=JGQJ2s9aczHwLlKwGw5MbAsL0y0CXVt2bqkXEOEvYPE=;
- b=m4gWFlrWMMUv9/vnDDQkKzY5AzbWqD0gn4E1bF2n/ry8zz0Q8JtB5FhvyPN+6/sek7PgEoZtTx9GVgfva8IvhUR//F2hWzxrGWJuNpX1/GzH+/P0D1FQA8d0cUhdPcHIY2SC2KtCvtOPLwrn6BQvT2vdL58ZwxxBUq3B22r1bpY=
-Received: from BLAPR03CA0156.namprd03.prod.outlook.com (2603:10b6:208:32f::29)
- by CY5PR12MB6275.namprd12.prod.outlook.com (2603:10b6:930:20::9) with
+ bh=QJzGKPDUmP7pviUBNdyibSeuU9WM7t2twfOHK0K1rUY=;
+ b=mcOGpZwCtYx/uY9lW5p07eYdz1td1/xiFRpHXFv7XL26c9z6BoPRPcUKI1XnUODuGym9XVy/eHDLKRV2sTFxAwgxYNxlk4ejN2YGouIP7R6AxwIJj+BP78LYE9hjA1Axzyc20ZvYYvrrRHB7ZyPgJNGhjd5q5A7AhHHcg944ocw=
+Received: from BLAPR03CA0153.namprd03.prod.outlook.com (2603:10b6:208:32f::19)
+ by DS0PR12MB6392.namprd12.prod.outlook.com (2603:10b6:8:cc::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.31; Tue, 14 Nov
- 2023 20:08:38 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7002.17; Tue, 14 Nov
+ 2023 20:08:34 +0000
 Received: from BL02EPF0001A103.namprd05.prod.outlook.com
- (2603:10b6:208:32f:cafe::36) by BLAPR03CA0156.outlook.office365.com
- (2603:10b6:208:32f::29) with Microsoft SMTP Server (version=TLS1_2,
+ (2603:10b6:208:32f:cafe::87) by BLAPR03CA0153.outlook.office365.com
+ (2603:10b6:208:32f::19) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.6977.31 via Frontend
- Transport; Tue, 14 Nov 2023 20:08:38 +0000
+ Transport; Tue, 14 Nov 2023 20:08:34 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,11 +48,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  BL02EPF0001A103.mail.protection.outlook.com (10.167.241.133) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.7002.13 via Frontend Transport; Tue, 14 Nov 2023 20:08:38 +0000
+ 15.20.7002.13 via Frontend Transport; Tue, 14 Nov 2023 20:08:34 +0000
 Received: from test-TBI1100B.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.32; Tue, 14 Nov
- 2023 14:08:36 -0600
+ 2023 14:08:32 -0600
 From:   Mario Limonciello <mario.limonciello@amd.com>
 To:     Karol Herbst <kherbst@redhat.com>, Lyude Paul <lyude@redhat.com>,
         "Alex Deucher" <alexander.deucher@amd.com>,
@@ -80,9 +80,9 @@ CC:     Danilo Krummrich <dakr@redhat.com>,
         <amd-gfx@lists.freedesktop.org>,
         "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
         "open list:ACPI" <linux-acpi@vger.kernel.org>
-Subject: [PATCH v3 7/7] PCI: Exclude PCIe ports used for virtual links in pcie_bandwidth_available()
-Date:   Tue, 14 Nov 2023 14:07:55 -0600
-Message-ID: <20231114200755.14911-8-mario.limonciello@amd.com>
+Subject: [PATCH v3 4/7] PCI: pciehp: Move check for is_thunderbolt into a quirk
+Date:   Tue, 14 Nov 2023 14:07:52 -0600
+Message-ID: <20231114200755.14911-5-mario.limonciello@amd.com>
 X-Mailer: git-send-email 2.40.1
 In-Reply-To: <20231114200755.14911-1-mario.limonciello@amd.com>
 References: <20231114200755.14911-1-mario.limonciello@amd.com>
@@ -94,105 +94,109 @@ X-ClientProxiedBy: SATLEXMB03.amd.com (10.181.40.144) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF0001A103:EE_|CY5PR12MB6275:EE_
-X-MS-Office365-Filtering-Correlation-Id: 48817130-7df4-4be1-d229-08dbe54d7d89
+X-MS-TrafficTypeDiagnostic: BL02EPF0001A103:EE_|DS0PR12MB6392:EE_
+X-MS-Office365-Filtering-Correlation-Id: 9abb656f-3e41-40b1-15e6-08dbe54d7b25
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info: qAEcpAVAXE9PXfFweQl4igx5vpKZd0ofDnpX0YV1pNSqDaCySAQp0y9Ur4zDYhUM7tStS82ffe2XSKYoRwoEIINxzyMpFVwKs0yLdlmwzfRNcPwzsOhxT85sXtEQvdLYd0qK2l9iZYlpc2IRalPaJEQVv8xREhLaEIH2SzPr4Fmm4q+ET0jHerwQYmJ4EoWWlg+Y3KTSOumnC6Drw5XEeRZIvdjLQ2bTWsCBmxE9O0FiPTJWiA8dkor06HXQ/i7+eAyVviuGONqmAb0lzkAKbkqOqF9UOh5IBdWTSZRDpMjoFy6UmTtru2kno/pLYoO4tjaibjmVEjqFezgEi3XfAuSOg6DAaE+rbzhdV3SLEQwLWK7r4mc8XUuaufDF+xzZeUDAP0DXkbYxXTCjsJsubCvpxECHhC78dC0Q2ufhNzGdnZ3MOwol4/UZa3p8vSIDftwOVCGtHgetLPGij0XsayxntsEHge0JbJgkz19oFxeCj3Qaml3BzeW+nIvyrSgrvLbCQjRtfDZzZ3o13uDC9BTwWFwrx/L+++MkSFkTm9F6xI2YGf0P6+vFFNR6tcEO3rOqrXEsLenzBVLHEdtHoJFwSQlh1ukOiN5fXQnEb+r+mJaYnvxhlODakorZkF2v/A+LSLZBpDvnZhhpre5JUI6w0Uxpc72KJSUsM8YwkRjKSoqkmFwKAEn+KnUFBcaS0dPvQzomDp/QRCcBip1HPwCQvr3wg3B+Q4NmCNp8OVe13S3KoFkRjJ+K6gfgC063
-X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(396003)(39860400002)(376002)(136003)(346002)(230922051799003)(1800799009)(186009)(64100799003)(451199024)(82310400011)(40470700004)(36840700001)(46966006)(40460700003)(41300700001)(36860700001)(966005)(86362001)(36756003)(70586007)(70206006)(110136005)(316002)(54906003)(356005)(81166007)(478600001)(82740400003)(1076003)(2616005)(5660300002)(7416002)(2906002)(26005)(16526019)(7696005)(44832011)(6666004)(47076005)(426003)(336012)(8936002)(4326008)(8676002)(83380400001)(40480700001)(36900700001);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam-Message-Info: jMOIA6xYltxfdXkxdG8T5SNQSet4XxKcJUYea9nqU/AGmbdBm/3l0O9MOhguF4Jye6V9bSgAp55xqDHW2vyRgJ44UnWcb5yOa5lXWDQPsKqo+Qn5Eb/8ewCg65MwtveWRvu1KPDaSqGQp1CdXDwZ5OkQcLg8dA0xe3Pv4w1uNHvu8KADEYRIJ/nm6oUjFn4LcgJWUpxxwGvQfM/jnuUksw2ejUE6EZbdzPk7c14ClOUIT/SZdB8GMhW0hyQl4nSSF1/8McopxnTBtObagCAv/EJsIE6bqJe2by+DhWkp0YvE7xy5gjp1cZCubyvtElaYblAkGPo9tksJuw6cYgIlxt2WXHNnqOXIqyMlZSPq6jM84wfPQpoE6UA+QLVYswFHt6WcJun31oFAaZuvrQZJr2vj+Xihwig0NvVWCtkB//HkvXe6JNyG8lxiLmUS5OaRX3llwusJNYH0bmT2McMW7go2jRcdQ1YUtsQpGxX1wZIVJw1BjiL2xgVjjc8p0t4aCKVKM+ed7R29gb1D+MWc+kze9YtXSwvIbPisE75k/Apj7kl6kzOYZfoAj7g/ymWMWWEepxI6IlYfiRlWtdvtsKH+nZppsKsFO9PzGaGmhF1/zfmd5aWw+1mcDBQ0tSF3WpZXjcRFHEjIZ6CK+vYsrsg25mqT1028Qxh6NX/NTpOTJQOTeBjEYiNQNAxJ1XsSi6TEy++8jj2FaMs0h71hVZYzIm5elxX4/fbmmzX6nmLey/bviK53zmIpvN0/4cV/U8BH4GT3sWSeq943r85igA==
+X-Forefront-Antispam-Report: CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(136003)(39860400002)(396003)(346002)(230922051799003)(451199024)(186009)(1800799009)(82310400011)(64100799003)(36840700001)(46966006)(40470700004)(40460700003)(36860700001)(41300700001)(54906003)(70586007)(70206006)(86362001)(110136005)(36756003)(356005)(81166007)(82740400003)(478600001)(16526019)(26005)(1076003)(336012)(6666004)(2906002)(426003)(7696005)(7416002)(2616005)(5660300002)(83380400001)(40480700001)(44832011)(316002)(47076005)(4326008)(8936002)(8676002)(36900700001);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2023 20:08:38.2765
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Nov 2023 20:08:34.2765
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 48817130-7df4-4be1-d229-08dbe54d7d89
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9abb656f-3e41-40b1-15e6-08dbe54d7b25
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource: BL02EPF0001A103.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6275
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB6392
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-The USB4 spec specifies that PCIe ports that are used for tunneling
-PCIe traffic over USB4 fabric will be hardcoded to advertise 2.5GT/s and
-behave as a PCIe Gen1 device. The actual performance of these ports is
-controlled by the fabric implementation.
+commit 493fb50e958c ("PCI: pciehp: Assume NoCompl+ for Thunderbolt
+ports") added a check into pciehp code to explicitly set NoCompl+
+for all Intel Thunderbolt controllers, including those that don't
+need it.
 
-Callers for pcie_bandwidth_available() will always find the PCIe ports
-used for tunneling as a limiting factor potentially leading to incorrect
-performance decisions.
+This overloaded the purpose of the `is_thunderbolt` member of
+`struct pci_device` because that means that any controller that
+identifies as thunderbolt would set NoCompl+ even if it doesn't
+suffer this deficiency. As that commit helpfully specifies all the
+controllers with the problem, move them into a PCI quirk.
 
-To prevent such problems check explicitly for ports that are marked as
-virtual links or as thunderbolt controllers and skip them when looking
-for bandwidth limitations of the hierarchy. If the only device connected
-is a port used for tunneling then report that device.
-
-Callers to pcie_bandwidth_available() could make this change on their
-own as well but then they wouldn't be able to detect other potential
-speed bottlenecks from the hierarchy without duplicating
-pcie_bandwidth_available() logic.
-
-Link: https://gitlab.freedesktop.org/drm/amd/-/issues/2925#note_2145860
-Link: https://www.usb.org/document-library/usb4r-specification-v20
-      USB4 V2 with Errata and ECN through June 2023
-      Section 11.2.1
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
 v2->v3:
- * Split from previous patch version
- * Look for thunderbolt or virtual link
+ * Reword commit message
+ * Update comments
 ---
- drivers/pci/pci.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/pci/hotplug/pciehp_hpc.c |  6 +-----
+ drivers/pci/quirks.c             | 20 ++++++++++++++++++++
+ include/linux/pci.h              |  1 +
+ 3 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 0ff7883cc774..b1fb2258b211 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -6269,11 +6269,20 @@ static u32 pcie_calc_bw_limits(struct pci_dev *dev, u32 bw,
-  * limiting_dev, speed, and width pointers are supplied) information about
-  * that point.  The bandwidth returned is in Mb/s, i.e., megabits/second of
-  * raw bandwidth.
-+ *
-+ * This excludes the bandwidth calculation that has been returned from a
-+ * PCIe device that is used for transmitting tunneled PCIe traffic over a virtual
-+ * link part of larger hierarchy. Examples include Thunderbolt3 and USB4 links.
-+ * The calculation is excluded because the USB4 specification specifies that the
-+ * max speed returned from PCIe configuration registers for the tunneling link is
-+ * always PCI 1x 2.5 GT/s.  When only tunneled devices are present, the bandwidth
-+ * returned is the bandwidth available from the first tunneled device.
-  */
- u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 			     enum pci_bus_speed *speed,
- 			     enum pcie_link_width *width)
- {
-+	struct pci_dev *vdev = NULL;
- 	u32 bw = 0;
+diff --git a/drivers/pci/hotplug/pciehp_hpc.c b/drivers/pci/hotplug/pciehp_hpc.c
+index b1d0a1b3917d..40f7a26fb98f 100644
+--- a/drivers/pci/hotplug/pciehp_hpc.c
++++ b/drivers/pci/hotplug/pciehp_hpc.c
+@@ -992,11 +992,7 @@ struct controller *pcie_init(struct pcie_device *dev)
+ 	if (pdev->hotplug_user_indicators)
+ 		slot_cap &= ~(PCI_EXP_SLTCAP_AIP | PCI_EXP_SLTCAP_PIP);
  
- 	if (speed)
-@@ -6282,10 +6291,20 @@ u32 pcie_bandwidth_available(struct pci_dev *dev, struct pci_dev **limiting_dev,
- 		*width = PCIE_LNK_WIDTH_UNKNOWN;
+-	/*
+-	 * We assume no Thunderbolt controllers support Command Complete events,
+-	 * but some controllers falsely claim they do.
+-	 */
+-	if (pdev->is_thunderbolt)
++	if (pdev->no_command_complete)
+ 		slot_cap |= PCI_EXP_SLTCAP_NCCS;
  
- 	while (dev) {
-+		if (dev->is_virtual_link || dev->is_thunderbolt) {
-+			if (!vdev)
-+				vdev = dev;
-+			goto skip;
-+		}
- 		bw = pcie_calc_bw_limits(dev, bw, limiting_dev, speed, width);
-+skip:
- 		dev = pci_upstream_bridge(dev);
- 	}
+ 	ctrl->slot_cap = slot_cap;
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index ea476252280a..fa9b82cd7b3b 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -3809,6 +3809,26 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
+ 			quirk_thunderbolt_hotplug_msi);
  
-+	/* If nothing "faster" found on hierarchy, limit to first virtual link */
-+	if (vdev && !bw)
-+		bw = pcie_calc_bw_limits(vdev, bw, limiting_dev, speed, width);
-+
- 	return bw;
- }
- EXPORT_SYMBOL(pcie_bandwidth_available);
++/*
++ * Certain Thunderbolt 1 controllers falsely claim to support Command
++ * Completed events.
++ */
++static void quirk_thunderbolt_command_complete(struct pci_dev *pdev)
++{
++	pdev->no_command_complete = 1;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_RIDGE,
++			quirk_thunderbolt_command_complete);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_EAGLE_RIDGE,
++			quirk_thunderbolt_command_complete);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_LIGHT_PEAK,
++			quirk_thunderbolt_command_complete);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_4C,
++			quirk_thunderbolt_command_complete);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_CACTUS_RIDGE_2C,
++			quirk_thunderbolt_command_complete);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_PORT_RIDGE,
++			quirk_thunderbolt_command_complete);
+ #ifdef CONFIG_ACPI
+ /*
+  * Apple: Shutdown Cactus Ridge Thunderbolt controller.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 1fbca2bd92e8..20a6e4fc3060 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -441,6 +441,7 @@ struct pci_dev {
+ 	unsigned int	is_hotplug_bridge:1;
+ 	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
+ 	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
++	unsigned int	no_command_complete:1;	/* No command completion */
+ 	/*
+ 	 * Devices marked being untrusted are the ones that can potentially
+ 	 * execute DMA attacks and similar. They are typically connected
 -- 
 2.34.1
 
