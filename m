@@ -2,238 +2,112 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1ECC5C47072
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Nov 2023 09:35:45 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 3DB1AC47072
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Nov 2023 10:40:32 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S234709AbjKOJfp (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Nov 2023 04:35:45 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:58630 "EHLO
+        id S234883AbjKOKkd (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Nov 2023 05:40:33 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:45024 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S234695AbjKOJfo (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2023 04:35:44 -0500
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C458BFC
-        for <linux-pci@vger.kernel.org>; Wed, 15 Nov 2023 01:35:39 -0800 (PST)
-X-ASG-Debug-ID: 1700039780-086e236fef1c3d0001-0c9NHn
-Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx1.zhaoxin.com with ESMTP id 5SdqimNHpXjnmrhD (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Wed, 15 Nov 2023 17:16:20 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Received: from ZXBJMBX03.zhaoxin.com (10.29.252.7) by ZXSHMBX2.zhaoxin.com
- (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 15 Nov
- 2023 17:16:20 +0800
-Received: from xin.lan (10.32.64.1) by ZXBJMBX03.zhaoxin.com (10.29.252.7)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.27; Wed, 15 Nov
- 2023 17:16:18 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-From:   LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.29.252.7
-To:     <rafael@kernel.org>, <lenb@kernel.org>, <james.morse@arm.com>,
-        <tony.luck@intel.com>, <bp@alien8.de>, <bhelgaas@google.com>,
-        <robert.moore@intel.com>, <linux-acpi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <acpica-devel@lists.linux.dev>
-CC:     <CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>,
-        <ErosZhang@zhaoxin.com>, <LeoLiu@zhaoxin.com>,
-        leoliu-oc <leoliu-oc@zhaoxin.com>
-Subject: [PATCH 3/3] PCI/ACPI: Add pci_acpi_program_hest_aer_params()
-Date:   Wed, 15 Nov 2023 17:16:12 +0800
-X-ASG-Orig-Subj: [PATCH 3/3] PCI/ACPI: Add pci_acpi_program_hest_aer_params()
-Message-ID: <20231115091612.580685-4-LeoLiu-oc@zhaoxin.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231115091612.580685-1-LeoLiu-oc@zhaoxin.com>
-References: <20231115091612.580685-1-LeoLiu-oc@zhaoxin.com>
+        with ESMTP id S234098AbjKOKka (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2023 05:40:30 -0500
+Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 05C54C2;
+        Wed, 15 Nov 2023 02:40:26 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1700044827; x=1731580827;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=WhUgLMg4fPuk0HcHV6kkPoQlTphUx0dqokHvR43C3OQ=;
+  b=DqAHXMexfBurmC/XzfmKuCx86GMZeLwTWhfh6NI1Tue8xJikvQ7WDI89
+   wAG/2auxIdgZPwXiA8iVWjCLl4Um1GYfWi+mU+0XB5kSch6/j4K7o9F2Q
+   OQvQhIAH+oPHGjZ74xA9a24VC6FNFPWAQ1n50MLMJHGBOr55lq2P0x4hG
+   ABaqOeKqvss2uxIGxwUw2HLM0LSU2YkO+XOn4cyEfLEIPRAES+4/Ro/SC
+   5BeHcepThfV/0eplCInxvOE5MYVykHvkibXqcdNSjIy28MO2gkG+CuJ1k
+   Nzu5ta5iot4ir+IU67QyIHFBPRysT4V/TCNNH6tA9Br/NXawTD8JsaVCo
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10894"; a="393711582"
+X-IronPort-AV: E=Sophos;i="6.03,304,1694761200"; 
+   d="scan'208";a="393711582"
+Received: from fmsmga007.fm.intel.com ([10.253.24.52])
+  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2023 02:40:26 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10894"; a="768552987"
+X-IronPort-AV: E=Sophos;i="6.03,304,1694761200"; 
+   d="scan'208";a="768552987"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by fmsmga007.fm.intel.com with ESMTP; 15 Nov 2023 02:40:20 -0800
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+        id 3653C305; Wed, 15 Nov 2023 12:40:19 +0200 (EET)
+Date:   Wed, 15 Nov 2023 12:40:19 +0200
+From:   Mika Westerberg <mika.westerberg@linux.intel.com>
+To:     Mario Limonciello <mario.limonciello@amd.com>
+Cc:     Karol Herbst <kherbst@redhat.com>, Lyude Paul <lyude@redhat.com>,
+        Alex Deucher <alexander.deucher@amd.com>,
+        Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+        Bjorn Helgaas <bhelgaas@google.com>,
+        Lukas Wunner <lukas@wunner.de>,
+        Danilo Krummrich <dakr@redhat.com>,
+        David Airlie <airlied@gmail.com>,
+        Daniel Vetter <daniel@ffwll.ch>,
+        Xinhui Pan <Xinhui.Pan@amd.com>,
+        "Rafael J . Wysocki" <rafael@kernel.org>,
+        Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+        Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>,
+        Marek =?utf-8?B?QmVow7pu?= <kabel@kernel.org>,
+        "Maciej W . Rozycki" <macro@orcam.me.uk>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
+        <dri-devel@lists.freedesktop.org>,
+        "open list:DRM DRIVER FOR NVIDIA GEFORCE/QUADRO GPUS" 
+        <nouveau@lists.freedesktop.org>,
+        open list <linux-kernel@vger.kernel.org>,
+        "open list:RADEON and AMDGPU DRM DRIVERS" 
+        <amd-gfx@lists.freedesktop.org>,
+        "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+        "open list:ACPI" <linux-acpi@vger.kernel.org>
+Subject: Re: [PATCH v3 5/7] PCI: ACPI: Detect PCIe root ports that are used
+ for tunneling
+Message-ID: <20231115104019.GY17433@black.fi.intel.com>
+References: <20231114200755.14911-1-mario.limonciello@amd.com>
+ <20231114200755.14911-6-mario.limonciello@amd.com>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7BIT
-Content-Type:   text/plain; charset=US-ASCII
-X-Originating-IP: [10.32.64.1]
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
-X-Barracuda-Start-Time: 1700039780
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 5254
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.116772
-        Rule breakdown below
-         pts rule name              description
-        ---- ---------------------- --------------------------------------------------
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20231114200755.14911-6-mario.limonciello@amd.com>
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-From: leoliu-oc <leoliu-oc@zhaoxin.com>
+Hi Mario,
 
-Call the func pci_acpi_program_hest_aer_params() for every PCIe device.
-Extracting register value from HEST PCIe AER structures and programming
-them into AER Capabilities are implemented in this function.
-The implementation of the function is an effective supplement to _HPP/_HPX
-method when the Firmware does not support the _HPP/_HPX method and can be
-specially configured for the AER register of the specific device.
+On Tue, Nov 14, 2023 at 02:07:53PM -0600, Mario Limonciello wrote:
+> USB4 routers support a feature called "PCIe tunneling". This
+> allows PCIe traffic to be transmitted over USB4 fabric.
+> 
+> PCIe root ports that are used in this fashion can be discovered
+> by device specific data that specifies the USB4 router they are
+> connected to. For the PCI core, the specific connection information
+> doesn't matter, but it's interesting to know that this root port is
+> used for tunneling traffic. This will allow other decisions to be
+> made based upon it.
+> 
+> Detect the `usb4-host-interface` _DSD and if it's found save it
+> into a new `is_virtual_link` bit in `struct pci_device`.
 
-Signed-off-by: leoliu-oc <leoliu-oc@zhaoxin.com>
----
- drivers/pci/pci-acpi.c | 100 +++++++++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h      |   9 ++++
- drivers/pci/probe.c    |   1 +
- 3 files changed, 110 insertions(+)
+While this is fine for the "first" tunneled link, this does not take
+into account possible other "virtual" links that lead to the endpoint in
+question. Typically for eGPU it only makes sense to plug it directly to
+the host but say there is a USB4 hub (with PCIe tunneling capabilities)
+in the middle. Now the link from the hub to the eGPU that is also
+"virtual" is not marked as such and the bandwidth calculations may not
+get what is expected.
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 004575091596..5d04068b490e 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -18,6 +18,7 @@
- #include <linux/pm_runtime.h>
- #include <linux/pm_qos.h>
- #include <linux/rwsem.h>
-+#include <acpi/apei.h>
- #include "pci.h"
- 
- /*
-@@ -783,6 +784,105 @@ int pci_acpi_program_hp_params(struct pci_dev *dev)
- 	return -ENODEV;
- }
- 
-+#ifdef CONFIG_ACPI_APEI
-+static void program_hest_aer_endpoint(struct acpi_hest_aer_common aer_endpoint,
-+				struct pci_dev *dev, int pos)
-+{
-+	u32 uncor_mask;
-+	u32 uncor_severity;
-+	u32 cor_mask;
-+	u32 adv_cap;
-+
-+	uncor_mask = aer_endpoint.uncorrectable_mask;
-+	uncor_severity = aer_endpoint.uncorrectable_severity;
-+	cor_mask = aer_endpoint.correctable_mask;
-+	adv_cap = aer_endpoint.advanced_capabilities;
-+
-+	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK, uncor_mask);
-+	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER, uncor_severity);
-+	pci_write_config_dword(dev, pos + PCI_ERR_COR_MASK, cor_mask);
-+	pci_write_config_dword(dev, pos + PCI_ERR_CAP, adv_cap);
-+}
-+
-+static void program_hest_aer_root(struct acpi_hest_aer_root *aer_root,
-+				struct pci_dev *dev, int pos)
-+{
-+	u32 root_err_cmd;
-+
-+	root_err_cmd = aer_root->root_error_command;
-+
-+	pci_write_config_dword(dev, pos + PCI_ERR_ROOT_COMMAND, root_err_cmd);
-+}
-+
-+static void program_hest_aer_bridge(struct acpi_hest_aer_bridge *hest_aer_bridge,
-+				struct pci_dev *dev, int pos)
-+{
-+	u32 uncor_mask2;
-+	u32 uncor_severity2;
-+	u32 adv_cap2;
-+
-+	uncor_mask2 = hest_aer_bridge->uncorrectable_mask2;
-+	uncor_severity2 = hest_aer_bridge->uncorrectable_severity2;
-+	adv_cap2 = hest_aer_bridge->advanced_capabilities2;
-+
-+	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_MASK2, uncor_mask2);
-+	pci_write_config_dword(dev, pos + PCI_ERR_UNCOR_SEVER2, uncor_severity2);
-+	pci_write_config_dword(dev, pos + PCI_ERR_CAP2, adv_cap2);
-+}
-+
-+static void program_hest_aer_params(struct hest_parse_aer_info info)
-+{
-+	struct pci_dev *dev;
-+	int port_type;
-+	int pos;
-+	struct acpi_hest_aer_root *hest_aer_root;
-+	struct acpi_hest_aer *hest_aer_endpoint;
-+	struct acpi_hest_aer_bridge *hest_aer_bridge;
-+
-+	dev = info.pci_dev;
-+	port_type = pci_pcie_type(dev);
-+	pos = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ERR);
-+	if (!pos)
-+		return;
-+
-+	switch (port_type) {
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+		hest_aer_root = info.hest_aer_root_port;
-+		program_hest_aer_endpoint(hest_aer_root->aer, dev, pos);
-+		program_hest_aer_root(hest_aer_root, dev, pos);
-+	break;
-+	case PCI_EXP_TYPE_ENDPOINT:
-+		hest_aer_endpoint = info.hest_aer_endpoint;
-+		program_hest_aer_endpoint(hest_aer_endpoint->aer, dev, pos);
-+	break;
-+	case PCI_EXP_TYPE_PCI_BRIDGE:
-+	case PCI_EXP_TYPE_PCIE_BRIDGE:
-+		hest_aer_bridge = info.hest_aer_bridge;
-+		program_hest_aer_endpoint(hest_aer_bridge->aer, dev, pos);
-+		program_hest_aer_bridge(hest_aer_bridge, dev, pos);
-+	break;
-+	default:
-+		return;
-+	break;
-+	}
-+}
-+
-+int pci_acpi_program_hest_aer_params(struct pci_dev *dev)
-+{
-+	struct hest_parse_aer_info info = {
-+		.pci_dev = dev
-+	};
-+
-+	if (!pci_is_pcie(dev))
-+		return -ENODEV;
-+
-+	if (apei_hest_parse(hest_parse_pcie_aer, &info) == 1)
-+		program_hest_aer_params(info);
-+
-+	return 0;
-+}
-+#endif
-+
- /**
-  * pciehp_is_native - Check whether a hotplug port is handled by the OS
-  * @bridge: Hotplug port to check
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5ecbcf041179..1fc28f7a5972 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -714,6 +714,15 @@ static inline void pci_save_aer_state(struct pci_dev *dev) { }
- static inline void pci_restore_aer_state(struct pci_dev *dev) { }
- #endif
- 
-+#ifdef CONFIG_ACPI_APEI
-+int pci_acpi_program_hest_aer_params(struct pci_dev *dev);
-+#else
-+static inline int pci_acpi_program_hest_aer_params(struct pci_dev *dev)
-+{
-+	return 0;
-+}
-+#endif
-+
- #ifdef CONFIG_ACPI
- int pci_acpi_program_hp_params(struct pci_dev *dev);
- extern const struct attribute_group pci_dev_acpi_attr_group;
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index ed6b7f48736a..45a45ab72846 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2274,6 +2274,7 @@ static void pci_configure_device(struct pci_dev *dev)
- 	pci_configure_serr(dev);
- 
- 	pci_acpi_program_hp_params(dev);
-+	pci_acpi_program_hest_aer_params(dev);
- }
- 
- static void pci_release_capabilities(struct pci_dev *dev)
--- 
-2.34.1
-
+It should be possible to map the PCIe ports that go over USB4 links
+through router port operation "Get PCIe Downstream Entry Mapping" and
+for the Thunderbolt 3 there is the DROM entries (I believe Lukas has
+patches for this part already) but I guess it is outside of the scope of
+this series. Out of curiosity I tried to look in Windows documentation
+if there is such interface for GPUs as we have in Linux but could not
+find (which does not mean it does not exist, though).
