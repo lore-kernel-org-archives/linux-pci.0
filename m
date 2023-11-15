@@ -2,131 +2,135 @@ Return-Path: <linux-pci-owner@vger.kernel.org>
 X-Spam-Checker-Version: SpamAssassin 3.4.0 (2014-02-07) on
 	aws-us-west-2-korg-lkml-1.web.codeaurora.org
 Received: from vger.kernel.org (vger.kernel.org [23.128.96.18])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 33C74C07548
-	for <linux-pci@archiver.kernel.org>; Wed, 15 Nov 2023 12:37:59 +0000 (UTC)
+	by smtp.lore.kernel.org (Postfix) with ESMTP id EC415C47079
+	for <linux-pci@archiver.kernel.org>; Wed, 15 Nov 2023 13:19:03 +0000 (UTC)
 Received: (majordomo@vger.kernel.org) by vger.kernel.org via listexpand
-        id S1343792AbjKOMiA (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
-        Wed, 15 Nov 2023 07:38:00 -0500
-Received: from lindbergh.monkeyblade.net ([23.128.96.19]:34194 "EHLO
+        id S1343911AbjKONTE (ORCPT <rfc822;linux-pci@archiver.kernel.org>);
+        Wed, 15 Nov 2023 08:19:04 -0500
+Received: from lindbergh.monkeyblade.net ([23.128.96.19]:42426 "EHLO
         lindbergh.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1343794AbjKOMh6 (ORCPT
-        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2023 07:37:58 -0500
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 71A19125;
-        Wed, 15 Nov 2023 04:37:55 -0800 (PST)
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-        by mx0a-0031df01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 3AFAdwQe032479;
-        Wed, 15 Nov 2023 12:37:47 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=from : to : cc :
- subject : date : message-id : in-reply-to : references; s=qcppdkim1;
- bh=yvsrz7gI4WoOCC7ibHaISLNGWUyLEnOYhiZTDogf9rI=;
- b=MDO/FWhOtuNQn9OsKZW3y3ycmVtMYlHHk8sDNtt7gpAZ/xZoYAdHTtIiXdGkiP3FglEU
- Z+DITDR62KQq/vkUH+1ap3eFnfSAXfuJEXvdHiXceLkjJY7nVU3pik/8MgmJBOessl1U
- hNNze4wtf8X6W57iWHpDYvVaUgvULPWVxaiP6VsjQjmgJ5HFKO1xPGyrUHHk1mrTz7Tx
- nKh7vH2pKAltWc8iDkGefZLBxUW+CDrFIxRMv7sFMo+J/m75/53xvECNDxq+XliN1sQ6
- TpDOhDRHpVcakIhuwxFSF1zta5Jm3pGkMblV9R0w7ICfBgX5aj0BJWTZ2kMZEnJPy9pm 3A== 
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-        by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ucq5f8ydx-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-        Wed, 15 Nov 2023 12:37:47 +0000
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 3AFCb62t022140;
-        Wed, 15 Nov 2023 12:37:06 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3ua2pmatvf-1
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-        Wed, 15 Nov 2023 12:37:06 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-        by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 3AFCb6Dn022085;
-        Wed, 15 Nov 2023 12:37:06 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-        by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3AFCb5JF022079;
-        Wed, 15 Nov 2023 12:37:06 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-        id 024024BD5; Wed, 15 Nov 2023 18:07:05 +0530 (+0530)
-From:   Mrinmay Sarkar <quic_msarkar@quicinc.com>
-To:     agross@kernel.org, andersson@kernel.org,
+        with ESMTP id S1343883AbjKONTE (ORCPT
+        <rfc822;linux-pci@vger.kernel.org>); Wed, 15 Nov 2023 08:19:04 -0500
+Received: from mail-yb1-xb2a.google.com (mail-yb1-xb2a.google.com [IPv6:2607:f8b0:4864:20::b2a])
+        by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 49EB5121
+        for <linux-pci@vger.kernel.org>; Wed, 15 Nov 2023 05:19:00 -0800 (PST)
+Received: by mail-yb1-xb2a.google.com with SMTP id 3f1490d57ef6-da7ea62e76cso7331173276.3
+        for <linux-pci@vger.kernel.org>; Wed, 15 Nov 2023 05:19:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1700054339; x=1700659139; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=+vRJLB0hwLsR22GJa22gbqqqBV/RS9yq52QAFcn89A4=;
+        b=AT7Il+4/Vc9UMl7zKbOkhp9mIgRyNWa8lM5Pd5eDBpLTyIG6c5EWykCy4Jz2nDN2Xw
+         rCugxvs0nwP9rwOXLpjShAHPOU4haXwozNKnkWAFpFEsUti1JGEx88MU1C1GB6s1+PRF
+         595kxfXGWFFY6d1BVaXveIsYXGJggay8ln4KYO6r7OPa3XToPtnAX4YAmSGuUk3o0e7C
+         b1014Z3DW40hvucUrn+pCcpLanshl0SpRsxfRqVKU43bEikI1VkmpAgqBWxmXDl52rFF
+         k+0OFYt5ubo5I2MDjAYkdKWAAeGybDbZ6vCI6sZeSy1UOjzT4Qnf0GFYW9owr2skASW1
+         VZuw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700054339; x=1700659139;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+vRJLB0hwLsR22GJa22gbqqqBV/RS9yq52QAFcn89A4=;
+        b=C2euCXUqnB4BIYAlGwpT42xlh0VD1dzpWhNlGm1YAH8+SaPutniHgSdyBUhDLoP1U4
+         D5exz05/uw5ZsSVi8U1pLI3r/kY1/XMBBIWrsHWxOq1x26VA1ixn+j9UM+4/8MN0qYkK
+         EpvEOJAX70HbzKve3WC9SCyh8pTWGiCU/BjeLbwTWbpCg2viGG476ZUpmw3w0yC57Nfw
+         esxCs2LJYmHxvM4cf5lHPYTURU4NGKg2J+i/mJwwZynMjW1sLZwwzGd9TdTgK8/9gDUK
+         pLo0zvDZBEnWbONJPdcRIilnmSnqN/uLkHssipXiRSMJyf7oh58B3enn5KZyfYy0hFY9
+         SDoA==
+X-Gm-Message-State: AOJu0YxNO0MFTpmgEpUmf9Exb9zviXkfOiLVoAd52wbGUvO2MTT1scyE
+        dQfn1gGvYTBT35EWBL6yZWm2HLxqxfgO8BL2EK0EWQ==
+X-Google-Smtp-Source: AGHT+IGOjBUPEL3sJdbPpkrzRws6EeLvSwt7JJzox80aXGm6pK08NYMtazbM3pQlXjKvCVPrQERzRicT0Vnoo5tx1rA=
+X-Received: by 2002:a25:db90:0:b0:d7f:1749:9e59 with SMTP id
+ g138-20020a25db90000000b00d7f17499e59mr13214940ybf.11.1700054339341; Wed, 15
+ Nov 2023 05:18:59 -0800 (PST)
+MIME-Version: 1.0
+References: <1700051821-1087-1-git-send-email-quic_msarkar@quicinc.com> <1700051821-1087-2-git-send-email-quic_msarkar@quicinc.com>
+In-Reply-To: <1700051821-1087-2-git-send-email-quic_msarkar@quicinc.com>
+From:   Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Date:   Wed, 15 Nov 2023 15:18:48 +0200
+Message-ID: <CAA8EJprWP3ThYyPZDF7ddG9Awdk9D7ovxes--r0VS3Ma53VqxA@mail.gmail.com>
+Subject: Re: [PATCH v3 1/3] PCI: qcom: Enable cache coherency for SA8775P RC
+To:     Mrinmay Sarkar <quic_msarkar@quicinc.com>
+Cc:     agross@kernel.org, andersson@kernel.org,
         krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-        konrad.dybcio@linaro.org, mani@kernel.org, robh+dt@kernel.org
-Cc:     quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
+        konrad.dybcio@linaro.org, mani@kernel.org, robh+dt@kernel.org,
+        quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
         quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        dmitry.baryshkov@linaro.org, robh@kernel.org,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        quic_parass@quicinc.com, quic_schintav@quicinc.com,
-        quic_shijjose@quicinc.com,
-        Mrinmay Sarkar <quic_msarkar@quicinc.com>,
+        robh@kernel.org, quic_krichai@quicinc.com,
+        quic_vbadigan@quicinc.com, quic_parass@quicinc.com,
+        quic_schintav@quicinc.com, quic_shijjose@quicinc.com,
         Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Bjorn Helgaas <bhelgaas@google.com>,
         linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: [PATCH v3 2/3] PCI: qcom-ep: Enable cache coherency for SA8775P EP
-Date:   Wed, 15 Nov 2023 18:07:00 +0530
-Message-Id: <1700051821-1087-3-git-send-email-quic_msarkar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1700051821-1087-1-git-send-email-quic_msarkar@quicinc.com>
-References: <1700051821-1087-1-git-send-email-quic_msarkar@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: fQE39bTScXvFrjGSvMmT8VSy4mgmWlID
-X-Proofpoint-ORIG-GUID: fQE39bTScXvFrjGSvMmT8VSy4mgmWlID
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.987,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2023-11-15_11,2023-11-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 mlxscore=0
- spamscore=0 phishscore=0 clxscore=1015 impostorscore=0 mlxlogscore=564
- priorityscore=1501 bulkscore=0 malwarescore=0 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2311060000 definitions=main-2311150097
+Content-Type: text/plain; charset="UTF-8"
 Precedence: bulk
 List-ID: <linux-pci.vger.kernel.org>
 X-Mailing-List: linux-pci@vger.kernel.org
 
-This change will enable cache snooping logic to support
-cache coherency for 8775 EP platform.
+On Wed, 15 Nov 2023 at 14:37, Mrinmay Sarkar <quic_msarkar@quicinc.com> wrote:
+>
+> This change will enable cache snooping logic to support
+> cache coherency for 8775 RC platform.
+>
+> Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+> ---
+>  drivers/pci/controller/dwc/pcie-qcom.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
+>
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 6902e97..b82ccd1 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -51,6 +51,7 @@
+>  #define PARF_SID_OFFSET                                0x234
+>  #define PARF_BDF_TRANSLATE_CFG                 0x24c
+>  #define PARF_SLV_ADDR_SPACE_SIZE               0x358
+> +#define PCIE_PARF_NO_SNOOP_OVERIDE             0x3d4
+>  #define PARF_DEVICE_TYPE                       0x1000
+>  #define PARF_BDF_TO_SID_TABLE_N                        0x2000
+>
+> @@ -117,6 +118,10 @@
+>  /* PARF_LTSSM register fields */
+>  #define LTSSM_EN                               BIT(8)
+>
+> +/* PARF_NO_SNOOP_OVERIDE register fields */
+> +#define WR_NO_SNOOP_OVERIDE_EN                 BIT(1)
+> +#define RD_NO_SNOOP_OVERIDE_EN                 BIT(3)
+> +
+>  /* PARF_DEVICE_TYPE register fields */
+>  #define DEVICE_TYPE_RC                         0x4
+>
+> @@ -961,6 +966,14 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
+>
+>  static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+>  {
+> +       struct dw_pcie *pci = pcie->pci;
+> +       struct device *dev = pci->dev;
+> +
+> +       /* Enable cache snooping for SA8775P */
+> +       if (of_device_is_compatible(dev->of_node, "qcom,pcie-sa8775p"))
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
----
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+Quoting my feedback from v1:
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 3a53d97..ee99fb1 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -47,6 +47,7 @@
- #define PARF_DBI_BASE_ADDR_HI			0x354
- #define PARF_SLV_ADDR_SPACE_SIZE		0x358
- #define PARF_SLV_ADDR_SPACE_SIZE_HI		0x35c
-+#define PCIE_PARF_NO_SNOOP_OVERIDE		0x3d4
- #define PARF_ATU_BASE_ADDR			0x634
- #define PARF_ATU_BASE_ADDR_HI			0x638
- #define PARF_SRIS_MODE				0x644
-@@ -86,6 +87,10 @@
- #define PARF_DEBUG_INT_CFG_BUS_MASTER_EN	BIT(2)
- #define PARF_DEBUG_INT_RADM_PM_TURNOFF		BIT(3)
- 
-+/* PARF_NO_SNOOP_OVERIDE register fields */
-+#define WR_NO_SNOOP_OVERIDE_EN                 BIT(1)
-+#define RD_NO_SNOOP_OVERIDE_EN                 BIT(3)
-+
- /* PARF_DEVICE_TYPE register fields */
- #define PARF_DEVICE_TYPE_EP			0x0
- 
-@@ -489,6 +494,11 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
- 	val |= BIT(8);
- 	writel_relaxed(val, pcie_ep->parf + PARF_LTSSM);
- 
-+	/* Enable cache snooping for SA8775P */
-+	if (of_device_is_compatible(dev->of_node, "qcom,sa8775p-pcie-ep"))
-+		writel_relaxed(WR_NO_SNOOP_OVERIDE_EN | RD_NO_SNOOP_OVERIDE_EN,
-+				pcie_ep->parf + PCIE_PARF_NO_SNOOP_OVERIDE);
-+
- 	return 0;
- 
- err_disable_resources:
+Obviously: please populate a flag in the data structures instead of
+doing of_device_is_compatible(). Same applies to the patch 2.
+
+
+> +               writel(WR_NO_SNOOP_OVERIDE_EN | RD_NO_SNOOP_OVERIDE_EN,
+> +                               pcie->parf + PCIE_PARF_NO_SNOOP_OVERIDE);
+> +
+>         qcom_pcie_clear_hpc(pcie->pci);
+>
+>         return 0;
+> --
+> 2.7.4
+>
+
+
 -- 
-2.7.4
-
+With best wishes
+Dmitry
