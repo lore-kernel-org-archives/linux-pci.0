@@ -1,37 +1,70 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=baikalelectronics.ru header.i=@baikalelectronics.ru header.b="QZbubmNn"
-Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 07CD91AE;
-	Wed, 22 Nov 2023 09:11:34 -0800 (PST)
-Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
-	by post.baikalelectronics.com (Proxmox) with ESMTP id 37D75E0EB6;
-	Wed, 22 Nov 2023 20:05:13 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	baikalelectronics.ru; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:from:from:message-id
-	:mime-version:reply-to:subject:subject:to:to; s=post; bh=PaQ8UrY
-	qoUK/m1kbaJ2p3IjQEyIB74QQMBgVZJwX1Jo=; b=QZbubmNnJ/JWWkDxD0DId1m
-	G5uv4grvSYMYvuF37B9zNkGKbNmBWrInKwDoT1Lq24tq578FQiUstj/OWdwgm02U
-	Ei4trnz5pVKMb8mm2VIf2YWWTSwUoslbnPM64LbQo01wBlDH+ntuiXrZ1oNVc8FR
-	xHaHJgHkVbrpnsyUv2T8=
-Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
-	by post.baikalelectronics.com (Proxmox) with ESMTP id F28E6E0EB4;
-	Wed, 22 Nov 2023 20:05:12 +0300 (MSK)
-Received: from localhost (10.8.30.118) by mail (192.168.51.25) with Microsoft
- SMTP Server (TLS) id 15.0.1395.4; Wed, 22 Nov 2023 20:05:12 +0300
-From: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-To: Lukas Bulwahn <lukas.bulwahn@gmail.com>, Thomas Bogendoerfer
-	<tsbogend@alpha.franken.de>
-CC: Serge Semin <Sergey.Semin@baikalelectronics.ru>, Serge Semin
-	<fancer.lancer@gmail.com>, Alexey Malahov
-	<Alexey.Malahov@baikalelectronics.ru>, Arnd Bergmann <arnd@arndb.de>,
-	<linux-mips@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-hwmon@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-Subject: [PATCH 0/3] MAINTAINERS: Add MIPS Baikal-T1 SoC bits maintainer
-Date: Wed, 22 Nov 2023 20:04:49 +0300
-Message-ID: <20231122170506.27267-1-Sergey.Semin@baikalelectronics.ru>
-X-Mailer: git-send-email 2.42.1
+	dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b="sWF5vStY";
+	dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b="ZfaABvQn"
+Received: from mail-lf1-x136.google.com (mail-lf1-x136.google.com [IPv6:2a00:1450:4864:20::136])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4BD611B2
+	for <linux-pci@vger.kernel.org>; Wed, 22 Nov 2023 09:49:39 -0800 (PST)
+Received: by mail-lf1-x136.google.com with SMTP id 2adb3069b0e04-507be298d2aso9224016e87.1
+        for <linux-pci@vger.kernel.org>; Wed, 22 Nov 2023 09:49:39 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1700675377; x=1701280177;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:dkim-signature:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=KzvRqyLL8Wwqp7KMFovIxkbpSxyF2HOIdMkB4KZPVAM=;
+        b=vhNMRtI9UIgWXktd1ZM0IA0BE6RERRkDY2MCxgYC+lLuRoFPSS3Y4WApULcSdXs8fM
+         IB4Q9L7Q6LaGvQI/Hk32pHuOW8PVJpOKFxzFgUacW/RUxiXeaxt8zXxRjNj1wof+Nvjs
+         GcAggoCpbBtdK6/Nev7Ok5dveuEbTssNws74fEUA1f491Mlsvui0RwXemrKFQW/mCbBN
+         3q3W+pTGzsaWs96/A6vp0hY/ZBdEj/R4angCUiEmVzW2di8Uu63ktzcArV8P/BQeM2tY
+         5swrALFx+JwUTfnZTWC3lxuPIAfL4PamoBMbmp71zFufpz2JQVR1Zw5yJMBHkaoimsTy
+         XPYQ==
+X-Gm-Message-State: AOJu0YwHhB+9ARa+XNpw+RiPKQXBRaVYsWfOnd0pNq+VebuZ7KGAt1FR
+	JeZz6xd1kJM0mJkB1O9c2j4Jb/cvKa15HcAw
+X-Google-Smtp-Source: AGHT+IE3Xu1zZ9eWg2RhPX4JW+ATE9dY3IvY+y+Zx2sfkXT3d9uL6Ux7m6lLPeLjYp8y+Fd8cRqJmQ==
+X-Received: by 2002:a19:8c11:0:b0:50a:a2d6:972a with SMTP id o17-20020a198c11000000b0050aa2d6972amr1782713lfd.33.1700675377363;
+        Wed, 22 Nov 2023 09:49:37 -0800 (PST)
+Received: from flawful.org (c-55f5e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.245.85])
+        by smtp.gmail.com with ESMTPSA id a28-20020a195f5c000000b004fdde1db756sm1935242lfj.26.2023.11.22.09.49.36
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 22 Nov 2023 09:49:37 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+	t=1700675376; bh=w6kKQtmq2TAyKbyhD4agz2mAuAeEftxK8dFOKUjPaCw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=sWF5vStYwaoE6ukE/oph2gxJpqnAmMFQ1L1t+VpNVe/Ii9LvOoCygHIVljcwWSPTQ
+	 VQhk3NyCVCShSOjNM/AO/+Syju4oNb2sHkFa2ZdwdlDx1AbAif/kmSfQGTGkRv8NoM
+	 TT5J6IbGgPFSh6qvbgZhnsd6FBGyv04HUhL+QUaQ=
+Received: by flawful.org (Postfix, from userid 112)
+	id F2DDFAC5; Wed, 22 Nov 2023 18:49:35 +0100 (CET)
+X-Spam-Level: 
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+	t=1700675356; bh=w6kKQtmq2TAyKbyhD4agz2mAuAeEftxK8dFOKUjPaCw=;
+	h=From:To:Cc:Subject:Date:From;
+	b=ZfaABvQnGq3ouO4+rl0ML7oXYexFTXyr6ihgBCeeBdnP18ZWvXtXWSrz734QXQZ8C
+	 B3zSgSwtecvojlk4Hu4SYeMXw/QqzDc0lMKh7Nv/K6CfC3nLqGMsirIrqS4mSdSfvx
+	 pH/5tcZ4MquvILtTrAjRwkOchnxYRA1A09LvEA0w=
+Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by flawful.org (Postfix) with ESMTPSA id 8F3A8A67;
+	Wed, 22 Nov 2023 18:49:03 +0100 (CET)
+From: Niklas Cassel <nks@flawful.org>
+To: Jingoo Han <jingoohan1@gmail.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <niklas.cassel@wdc.com>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: dwc: endpoint: Fix dw_pcie_ep_raise_msix_irq() alignment support
+Date: Wed, 22 Nov 2023 18:48:55 +0100
+Message-ID: <20231122174856.736329-1-nks@flawful.org>
+X-Mailer: git-send-email 2.42.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,38 +72,41 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 
-For the last few years several Baikal-T1 platform-specific drivers have
-been merged into the kernel repo. I should have added them to the
-MAINTAINERS list in the first place, but didn't do that postponing for the
-final series with the arch-specific patches. Sooner than later that will
-be done (after I finally finish working on the EDAC and network drivers),
-but until then let's add the already merged in drivers maintainer to the
-list in order to not have them looking abandoned, especially seeing such
-concern has already been raised here:
+From: Niklas Cassel <niklas.cassel@wdc.com>
 
-Link: https://lore.kernel.org/lkml/20231122054142.31322-1-lukas.bulwahn@gmail.com/
+Commit 6f5e193bfb55 ("PCI: dwc: Fix dw_pcie_ep_raise_msix_irq() to get
+correct MSI-X table address") modified dw_pcie_ep_raise_msix_irq() to
+support iATUs which require a specific alignment.
 
-Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
-Cc: Alexey Malahov <Alexey.Malahov@baikalelectronics.ru>
-Cc: Arnd Bergmann <arnd@arndb.de>
-Cc: linux-mips@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-hwmon@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+However, this support cannot have been properly tested.
 
-Serge Semin (3):
-  MAINTAINERS: Add maintainer for Baikal-T1 PVT hwmon driver
-  MAINTAINERS: Add maintainer for Baikal-T1 PCIe driver
-  MAINTAINERS: Add maintainer for MIPS Baikal-T1 platform code
+The whole point is for the iATU to map an address that is aligned,
+using dw_pcie_ep_map_addr(), and then let the writel() write to the
+msi_address + aligned_offset.
 
- MAINTAINERS | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
+Thus, modify the address that is mapped such that it is aligned.
+With this change, dw_pcie_ep_raise_msix_irq() matches the logic in
+dw_pcie_ep_raise_msi_irq().
 
+Fixes: 6f5e193bfb55 ("PCI: dwc: Fix dw_pcie_ep_raise_msix_irq() to get correct MSI-X table address")
+Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index f6207989fc6a..bc94d7f39535 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -615,6 +615,7 @@ int dw_pcie_ep_raise_msix_irq(struct dw_pcie_ep *ep, u8 func_no,
+ 	}
+ 
+ 	aligned_offset = msg_addr & (epc->mem->window.page_size - 1);
++	msg_addr &= ~aligned_offset;
+ 	ret = dw_pcie_ep_map_addr(epc, func_no, 0, ep->msi_mem_phys, msg_addr,
+ 				  epc->mem->window.page_size);
+ 	if (ret)
 -- 
-2.42.1
-
+2.42.0
 
