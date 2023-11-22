@@ -1,132 +1,77 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CHGuVvkM"
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.24])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8612CA2;
-	Wed, 22 Nov 2023 08:29:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1700670540; x=1732206540;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=bagruS5CXrz6mOWB6COGHqS1jlKmltZBn+nUJ6YlRfc=;
-  b=CHGuVvkMltNsrvh0eAqgxIVDewD+WVIdJUZsJ2IkpO5lHrSn4UbwWPBX
-   bpxa/Zr5s20kbZw/hu9l381mf/cqIuKZjUNiVUCnsQmTSZejS4TnZBFTQ
-   ttIJrTDDZHKtxOQ+V/2lvL1rk2UCPDja4FhSw1qH6s7Ymxkwij4Fh8tBu
-   fftWG6kxgIQ4ms/eYgop0ppBYv6nI2xwF7vMoTFevna4yLtkqX/2K49NL
-   JonJpMCy3vy4/528RRPcPVxO3HaS5lY+cZ5feuz/TmIM0158y8gG2vKbq
-   eeg+oGvdzQkx67EEbg8Ty0K0VmE55njHwi5cGXff8aDrxGR2L/aVmxPqo
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10902"; a="394921013"
-X-IronPort-AV: E=Sophos;i="6.04,219,1695711600"; 
-   d="scan'208";a="394921013"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orsmga102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Nov 2023 08:28:59 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.04,219,1695711600"; 
-   d="scan'208";a="8531683"
-Received: from lkp-server01.sh.intel.com (HELO d584ee6ebdcc) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 22 Nov 2023 08:28:53 -0800
-Received: from kbuild by d584ee6ebdcc with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1r5q5r-0000gb-0J;
-	Wed, 22 Nov 2023 16:28:51 +0000
-Date: Thu, 23 Nov 2023 00:28:40 +0800
-From: kernel test robot <lkp@intel.com>
-To: Philipp Stanner <pstanner@redhat.com>,
-	Bjorn Helgaas <helgaas@kernel.org>, Arnd Bergmann <arnd@kernel.org>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Randy Dunlap <rdunlap@infradead.org>,
-	Jason Gunthorpe <jgg@ziepe.ca>, Eric Auger <eric.auger@redhat.com>,
-	Kent Overstreet <kmo@daterainc.com>,
-	Niklas Schnelle <schnelle@linux.ibm.com>, NeilBrown <neilb@suse.de>,
-	John Sanpe <sanpeqf@gmail.com>, Dave Jiang <dave.jiang@intel.com>,
-	Yury Norov <yury.norov@gmail.com>,
-	Kees Cook <keescook@chromium.org>,
-	"Masami Hiramatsu (Google)" <mhiramat@kernel.org>,
-	David Gow <davidgow@google.com>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	"wuqiang.matt" <wuqiang.matt@bytedance.com>,
-	Jason Baron <jbaron@akamai.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	Danilo Krummrich <dakr@redhat.com>
-Cc: Paul Gazzillo <paul@pgazz.com>,
-	Necip Fazil Yildiran <fazilyildiran@gmail.com>,
-	oe-kbuild-all@lists.linux.dev,
-	Linux Memory Management List <linux-mm@kvack.org>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/4] lib: move pci_iomap.c to drivers/pci/
-Message-ID: <202311222251.miLTgMyd-lkp@intel.com>
-References: <20231120215945.52027-3-pstanner@redhat.com>
+	dkim=pass (1024-bit key) header.d=baikalelectronics.ru header.i=@baikalelectronics.ru header.b="lSqnmEKy"
+X-Greylist: delayed 379 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 22 Nov 2023 09:11:34 PST
+Received: from post.baikalelectronics.com (post.baikalelectronics.com [213.79.110.86])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id D5E141A5;
+	Wed, 22 Nov 2023 09:11:34 -0800 (PST)
+Received: from post.baikalelectronics.com (localhost.localdomain [127.0.0.1])
+	by post.baikalelectronics.com (Proxmox) with ESMTP id C065CE0EB9;
+	Wed, 22 Nov 2023 20:05:13 +0300 (MSK)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	baikalelectronics.ru; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:from:from:in-reply-to:message-id
+	:mime-version:references:reply-to:subject:subject:to:to; s=post;
+	 bh=gnCHnfuBhq/n3w/GmAIAGIuczS2gRN7GtB95t4RaqmY=; b=lSqnmEKy23sw
+	k7EwB4T9Wx87G+mqey0DoSczT7qZMactdexV4vVxSIz3D652jMIDq84XvwVA/neg
+	xzmy04Utz06iSZ7cvbdj2pDOB7YQWaxh/9wG5vKrVWENT5XUH6NeqguOhEHcX2rc
+	F3EBYZet9PWm5EEu0Y9tW1PGXuSUW40=
+Received: from mail.baikal.int (mail.baikal.int [192.168.51.25])
+	by post.baikalelectronics.com (Proxmox) with ESMTP id 9FF9EE0EB4;
+	Wed, 22 Nov 2023 20:05:13 +0300 (MSK)
+Received: from localhost (10.8.30.118) by mail (192.168.51.25) with Microsoft
+ SMTP Server (TLS) id 15.0.1395.4; Wed, 22 Nov 2023 20:05:13 +0300
+From: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+To: Lukas Bulwahn <lukas.bulwahn@gmail.com>, Thomas Bogendoerfer
+	<tsbogend@alpha.franken.de>
+CC: Serge Semin <Sergey.Semin@baikalelectronics.ru>, Serge Semin
+	<fancer.lancer@gmail.com>, Alexey Malahov
+	<Alexey.Malahov@baikalelectronics.ru>, Arnd Bergmann <arnd@arndb.de>,
+	<linux-mips@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<linux-hwmon@vger.kernel.org>, <kernel-janitors@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+Subject: [PATCH 1/3] MAINTAINERS: Add maintainer for Baikal-T1 PVT hwmon driver
+Date: Wed, 22 Nov 2023 20:04:50 +0300
+Message-ID: <20231122170506.27267-2-Sergey.Semin@baikalelectronics.ru>
+X-Mailer: git-send-email 2.42.1
+In-Reply-To: <20231122170506.27267-1-Sergey.Semin@baikalelectronics.ru>
+References: <20231122170506.27267-1-Sergey.Semin@baikalelectronics.ru>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20231120215945.52027-3-pstanner@redhat.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: MAIL.baikal.int (192.168.51.25) To mail (192.168.51.25)
 
-Hi Philipp,
+Add myself as a maintainer of the Baikal-T1 PVT sensors driver.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Serge Semin <Sergey.Semin@baikalelectronics.ru>
+---
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v6.7-rc2 next-202311=
-22]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 97f51d5ec1cf..9e50a77d746e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -3467,6 +3467,14 @@ F:	drivers/video/backlight/
+ F:	include/linux/backlight.h
+ F:	include/linux/pwm_backlight.h
+ 
++BAIKAL-T1 PVT HARDWARE MONITOR DRIVER
++M:	Serge Semin <fancer.lancer@gmail.com>
++L:	linux-hwmon@vger.kernel.org
++S:	Supported
++F:	Documentation/devicetree/bindings/hwmon/baikal,bt1-pvt.yaml
++F:	Documentation/hwmon/bt1-pvt.rst
++F:	drivers/hwmon/bt1-pvt.[ch]
++
+ BARCO P50 GPIO DRIVER
+ M:	Santosh Kumar Yadav <santoshkumar.yadav@barco.com>
+ M:	Peter Korsgaard <peter.korsgaard@barco.com>
+-- 
+2.42.1
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Philipp-Stanner/lib-=
-move-pci_iomap-c-to-drivers-pci/20231121-060258
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20231120215945.52027-3-pstanner%40=
-redhat.com
-patch subject: [PATCH 1/4] lib: move pci_iomap.c to drivers/pci/
-config: csky-kismet-CONFIG_GENERIC_PCI_IOMAP-CONFIG_CSKY-0-0 (https://downl=
-oad.01.org/0day-ci/archive/20231122/202311222251.miLTgMyd-lkp@intel.com/con=
-fig)
-reproduce: (https://download.01.org/0day-ci/archive/20231122/202311222251.m=
-iLTgMyd-lkp@intel.com/reproduce)
 
-If you fix the issue in a separate patch/commit (i.e. not just a new versio=
-n of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202311222251.miLTgMyd-lkp@i=
-ntel.com/
-
-kismet warnings: (new ones prefixed by >>)
->> kismet: WARNING: unmet direct dependencies detected for GENERIC_PCI_IOMA=
-P when selected by CSKY
-   /usr/bin/grep: /db/releases/20231122101355/kernel-tests/etc/kcflags: No =
-such file or directory
-   {"timestamp":"2023-11-22 12:45:55 +0800", "level":"WARN", "event":"kbuil=
-d.sh:3942:in `add_etc_kcflags': grep exit 2 (ShellError)", "detail":"cmd: '=
-/usr/bin/grep' '-v' '-e' '^#' '-e' '^$' '/db/releases/20231122101355/kernel=
--tests/etc/kcflags' \nstderr: /usr/bin/grep: /db/releases/20231122101355/ke=
-rnel-tests/etc/kcflags: No such file or directory\n\n", "hostname":"communi=
-ty-kbuild-consumer-56", "host_hostname":"lkp-worker31", "call_stack":"/zday=
-/kernel-tests/lib/kbuild.sh:3942:in `add_etc_kcflags': /usr/bin/grep: /db/r=
-eleases/20231122101355/kernel-tests/etc/kcflags: No such file or directory =
-(ShellError 2)\n  from /zday/kernel-tests/lib/kbuild.sh:3971: setup_kcflags=
-\n  from /zday/kernel-tests/lib/kbuild.sh:4016: invoke_make\n  from /zday/k=
-ernel-tests/lib/kbuild.sh:4122: make\n  from /zday/kernel-tests/lib/kbuild.=
-sh:5623: make_config_allyes\n  from /zday/kernel-tests/common.sh:209: redir=
-ect_error_to_screen\n  from /zday/kernel-tests/common.sh:217: redirect_comm=
-and_errors\n  from /zday/kernel-tests/lib/kbuild.sh:5630: make_config\n  fr=
-om /zday/kernel-tests/lib/builder/kismet.sh:156: generate_make_olddefconfig=
-_warnings\n  from /zday/kernel-tests/lib/builder/kismet.sh:297: builder_com=
-pile\n  from /zday/kernel-tests/bisect-test-build-error.sh:94: main\n"}
-  =20
-   WARNING: unmet direct dependencies detected for GENERIC_PCI_IOMAP
-     Depends on [n]: PCI [=3Dn]
-     Selected by [y]:
-     - CSKY [=3Dy]
-
---=20
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
