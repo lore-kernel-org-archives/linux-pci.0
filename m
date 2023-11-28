@@ -1,181 +1,117 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6F5517988;
-	Tue, 28 Nov 2023 08:15:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QkpLci41"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D744C433CD;
-	Tue, 28 Nov 2023 08:15:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701159324;
-	bh=G81lMNlYRmVBLpcYlNH0IxVp3LwH9UwmbbiIFMtSKyE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=QkpLci41j5c4/RwAOvrCgGLQRVEQeNuHQfWRex0yjoXcD/1OPbV51okOYGbrbtuXN
-	 pwEHt9iQjIV+MtIMRR1bNOTphsf5f5iWUWubq5Vy+kyQ2FcSz4TDDFM6MeS2398tD1
-	 EUj8RzvEG2KVMbzgamNshxoXTgOhdALZa/uNc+7EstsNp2iGrWvPxbuuHS/MMvT5tE
-	 Sp1kPyrpE8sys1JQL5bhhIugjcaRYnkljbld6Xe03/hfjAVKa4ckkbk8MPykltfONQ
-	 ZtW4bCl4e+sLxTtPN2eYm8A7tt4LBVoD16+Q/YFgYir9yN7UBlb5cbItr4TFLM/a2u
-	 UBVw3iTDj4/6Q==
-Received: from johan by xi.lan with local (Exim 4.96.2)
-	(envelope-from <johan+linaro@kernel.org>)
-	id 1r7tG4-00053p-1c;
-	Tue, 28 Nov 2023 09:15:52 +0100
-From: Johan Hovold <johan+linaro@kernel.org>
-To: "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	"Bjorn Helgaas" <bhelgaas@google.com>
-Cc: Andy Gross <agross@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Jonathan Derrick <jonathan.derrick@linux.dev>,
-	linux-arm-msm@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Johan Hovold <johan+linaro@kernel.org>,
-	stable@vger.kernel.org,
-	Michael Bottini <michael.a.bottini@linux.intel.com>,
-	"David E . Box" <david.e.box@linux.intel.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v2 1/6] PCI/ASPM: Add locked helper for enabling link state
-Date: Tue, 28 Nov 2023 09:15:07 +0100
-Message-ID: <20231128081512.19387-2-johan+linaro@kernel.org>
-X-Mailer: git-send-email 2.41.0
-In-Reply-To: <20231128081512.19387-1-johan+linaro@kernel.org>
-References: <20231128081512.19387-1-johan+linaro@kernel.org>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rzXrRXwM"
+Received: from mail-lf1-x133.google.com (mail-lf1-x133.google.com [IPv6:2a00:1450:4864:20::133])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 495641A3
+	for <linux-pci@vger.kernel.org>; Tue, 28 Nov 2023 00:36:59 -0800 (PST)
+Received: by mail-lf1-x133.google.com with SMTP id 2adb3069b0e04-5094cb3a036so7057917e87.2
+        for <linux-pci@vger.kernel.org>; Tue, 28 Nov 2023 00:36:59 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1701160617; x=1701765417; darn=vger.kernel.org;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ndvlHffn+v+7jRpIhr2PQ0zOxK49/EI25GTkz7n0JYg=;
+        b=rzXrRXwMse+hL/IS8rQXfGsWgbtnROBLXA4udvTw97XvZ51PlMDzMUsgrAAagcHs1Z
+         BJOlD/DBYM7MNeRaAQH68h+nIUzioiQ1ia1NPsPSPkQEaiZETC/oOJlQOlb0Uvhf6ujO
+         zGmZf9JUGhW94ju1PuOqygpmPfc3dB9KM4b/joI17QWAEUyV534ftf+y1SKxmjFNF+Pi
+         RGKkMBWpsUW62r0tNWl+ukriDUqhkcxsn+B7fzmQY0nzyfNFR+W7x+SLRCbK6J57wRAT
+         vBbMH9YWw6PtGtW9OVszzX5i8hVfb1mN9RP9eXSkM+YRZgQbUGm0YF5vFGH6qvmVdw2S
+         /ICQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1701160617; x=1701765417;
+        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
+         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ndvlHffn+v+7jRpIhr2PQ0zOxK49/EI25GTkz7n0JYg=;
+        b=JIwKAb6vCjxAm69Sn5de8teqIUT7Iq0WH18zOMMD0Uk2uN/H6DWZy04C+KdgC5CR1z
+         o3Ubr7oC5pNiMAthOStKoLQq33ELQ699FU2Z55gD0oAgHL8FC32lYh5upeepuzbTckrf
+         A+QyX8GAk4TrU8XieCzdb0CWT0nbTi3PGd/FAgq1PRXcXF+y6N1EaUVg8A/FMTOdrHzc
+         9fZcZdSLGmb1tzexh7TZRwQ/s081OtnaIWbQ3I54fhXPMRQQmaijdZDmPFmyyZy3d4AV
+         WN2EYVE866p8GI80EDzv4vbU6L4XV7Db7NsTZAAvFeb81Va0gWe6TYNf38yY5uF5bQxB
+         B7Eg==
+X-Gm-Message-State: AOJu0YwvLkfaKoUogzFibMajRA6eOafYNykQKt0PXIOGfApS2S9CyjYB
+	LN/dKLBahD39NoT5H1vcWC7RsA==
+X-Google-Smtp-Source: AGHT+IH3naDiSAvMe65JEiUJ41gZDSqerHZJlISGg2SLDjWoDzje6LCP07SmqxC7BoqRB9JB0du7gw==
+X-Received: by 2002:a05:6512:1386:b0:507:a9b7:f071 with SMTP id fc6-20020a056512138600b00507a9b7f071mr13195200lfb.1.1701160617415;
+        Tue, 28 Nov 2023 00:36:57 -0800 (PST)
+Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:8261:5fff:fe11:bdda])
+        by smtp.gmail.com with ESMTPSA id ay12-20020a05600c1e0c00b0040588d85b3asm17390529wmb.15.2023.11.28.00.36.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Nov 2023 00:36:56 -0800 (PST)
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Date: Tue, 28 Nov 2023 09:36:50 +0100
+Subject: [PATCH RESEND] dt-bindings: PCI: qcom: document the SM8650 PCIe
+ Controller
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20231128-topic-sm8650-upstream-bindings-pcie-v1-1-9c803b439952@linaro.org>
+To: Andy Gross <agross@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konrad.dybcio@linaro.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Neil Armstrong <neil.armstrong@linaro.org>
+X-Mailer: b4 0.12.3
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1300;
+ i=neil.armstrong@linaro.org; h=from:subject:message-id;
+ bh=9202tyaMMRdGcdJf/JRZ0vhX+oG3wOQczHTXpC7CSu8=;
+ b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBlZaanrPZ4eB3vQ9G+ZXaEF6naExHNnSvlxOAbGMkH
+ JuEn2W+JAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCZWWmpwAKCRB33NvayMhJ0fpFD/
+ 9ajTKwAHyrK3169CtWuLrK2jizVnpbTvGTMo4pbUyk8yDZCKUGP7aDtHj6kLD1vSZR/Y49MnBeiMba
+ /Hwx9wXRqLL/R7Exd+ZF0YcjZsy/hNe+CUE/AcR19pcRwQfHW4E0D0V3sn23kRalKDJOeR+SHJGH2a
+ fyOptO+FdjrAvZ0Tnn004/6hdbrIflbupjpkcCLZCjIliitzz9lxLZz86+umD1FxLn2tKixtdcyjN5
+ kuy4uTh+5a2hPG0VB9/Zay9kU5nEruocuf87H/llQBVdk4YxHNxV9TeCN12tlWlFIkBkqiWE3JvGYM
+ dvm54f4jD0pFg+IvwRrGScHnTmbl53H1q3lgiG18q8zswlrt7Dyp3ItImxXiAwKV9JWMZDE3/4QeC2
+ 71s2+NOYy4Q7Gfwj6t5P89TTsBXvj0/8/r4CQCVirQNfwx9n2HgC6uYQKCQmVRE06gwDlLQAoE5JqL
+ NEyMuOaQRIvzQM4ZVtiTtv3WYETpVSCWdG421PMYv6o6PoNdN/VN69+4gO2mgYYi3GGRQqu06hlIr2
+ /8j/UItWEKdZVi3GkSeCHyXSd7VdshNfNYZe8D3Sca0sGe6UU++h2KjjgrKsRnvqInZbCQMR4cYAkB
+ RDBR2Jf7syf26uPh7QIxZJw6g4PHjz+04DOjNkZ1kfuKYw7bVP7mNX7wpDpg==
+X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
+ fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
 
-Add a helper for enabling link states that can be used in contexts where
-a pci_bus_sem read lock is already held (e.g. from pci_walk_bus()).
+Document the PCIe Controller on the SM8650 platform by using the
+SM8550 bindings as a fallback.
 
-This helper will be used to fix a couple of potential deadlocks where
-the current helper is called with the lock already held, hence the CC
-stable tag.
-
-Fixes: f492edb40b54 ("PCI: vmd: Add quirk to configure PCIe ASPM and LTR")
-Cc: stable@vger.kernel.org	# 6.3
-Cc: Michael Bottini <michael.a.bottini@linux.intel.com>
-Cc: David E. Box <david.e.box@linux.intel.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
- drivers/pci/pcie/aspm.c | 53 +++++++++++++++++++++++++++++++----------
- include/linux/pci.h     |  3 +++
- 2 files changed, 43 insertions(+), 13 deletions(-)
+For convenience, a regularly refreshed linux-next based git tree containing
+all the SM8650 related work is available at:
+https://git.codelinaro.org/neil.armstrong/linux/-/tree/topic/sm85650/upstream/integ
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 50b04ae5c394..5eb462772354 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -1109,17 +1109,7 @@ int pci_disable_link_state(struct pci_dev *pdev, int state)
- }
- EXPORT_SYMBOL(pci_disable_link_state);
- 
--/**
-- * pci_enable_link_state - Clear and set the default device link state so that
-- * the link may be allowed to enter the specified states. Note that if the
-- * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
-- * touch the LNKCTL register. Also note that this does not enable states
-- * disabled by pci_disable_link_state(). Return 0 or a negative errno.
-- *
-- * @pdev: PCI device
-- * @state: Mask of ASPM link states to enable
-- */
--int pci_enable_link_state(struct pci_dev *pdev, int state)
-+static int __pci_enable_link_state(struct pci_dev *pdev, int state, bool locked)
- {
- 	struct pcie_link_state *link = pcie_aspm_get_link(pdev);
- 
-@@ -1136,7 +1126,8 @@ int pci_enable_link_state(struct pci_dev *pdev, int state)
- 		return -EPERM;
- 	}
- 
--	down_read(&pci_bus_sem);
-+	if (!locked)
-+		down_read(&pci_bus_sem);
- 	mutex_lock(&aspm_lock);
- 	link->aspm_default = 0;
- 	if (state & PCIE_LINK_STATE_L0S)
-@@ -1157,12 +1148,48 @@ int pci_enable_link_state(struct pci_dev *pdev, int state)
- 	link->clkpm_default = (state & PCIE_LINK_STATE_CLKPM) ? 1 : 0;
- 	pcie_set_clkpm(link, policy_to_clkpm_state(link));
- 	mutex_unlock(&aspm_lock);
--	up_read(&pci_bus_sem);
-+	if (!locked)
-+		up_read(&pci_bus_sem);
- 
- 	return 0;
- }
-+
-+/**
-+ * pci_enable_link_state - Clear and set the default device link state so that
-+ * the link may be allowed to enter the specified states. Note that if the
-+ * BIOS didn't grant ASPM control to the OS, this does nothing because we can't
-+ * touch the LNKCTL register. Also note that this does not enable states
-+ * disabled by pci_disable_link_state(). Return 0 or a negative errno.
-+ *
-+ * @pdev: PCI device
-+ * @state: Mask of ASPM link states to enable
-+ */
-+int pci_enable_link_state(struct pci_dev *pdev, int state)
-+{
-+	return __pci_enable_link_state(pdev, state, false);
-+}
- EXPORT_SYMBOL(pci_enable_link_state);
- 
-+/**
-+ * pci_enable_link_state_locked - Clear and set the default device link state
-+ * so that the link may be allowed to enter the specified states. Note that if
-+ * the BIOS didn't grant ASPM control to the OS, this does nothing because we
-+ * can't touch the LNKCTL register. Also note that this does not enable states
-+ * disabled by pci_disable_link_state(). Return 0 or a negative errno.
-+ *
-+ * @pdev: PCI device
-+ * @state: Mask of ASPM link states to enable
-+ *
-+ * Context: Caller holds pci_bus_sem read lock.
-+ */
-+int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
-+{
-+	lockdep_assert_held_read(&pci_bus_sem);
-+
-+	return __pci_enable_link_state(pdev, state, true);
-+}
-+EXPORT_SYMBOL(pci_enable_link_state_locked);
-+
- static int pcie_aspm_set_policy(const char *val,
- 				const struct kernel_param *kp)
- {
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 60ca768bc867..dea043bc1e38 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1829,6 +1829,7 @@ extern bool pcie_ports_native;
- int pci_disable_link_state(struct pci_dev *pdev, int state);
- int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
- int pci_enable_link_state(struct pci_dev *pdev, int state);
-+int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
- void pcie_no_aspm(void);
- bool pcie_aspm_support_enabled(void);
- bool pcie_aspm_enabled(struct pci_dev *pdev);
-@@ -1839,6 +1840,8 @@ static inline int pci_disable_link_state_locked(struct pci_dev *pdev, int state)
- { return 0; }
- static inline int pci_enable_link_state(struct pci_dev *pdev, int state)
- { return 0; }
-+static inline int pci_enable_link_state_locked(struct pci_dev *pdev, int state)
-+{ return 0; }
- static inline void pcie_no_aspm(void) { }
- static inline bool pcie_aspm_support_enabled(void) { return false; }
- static inline bool pcie_aspm_enabled(struct pci_dev *pdev) { return false; }
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index eadba38171e1..af537732ded6 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -41,6 +41,10 @@ properties:
+           - qcom,pcie-sm8450-pcie0
+           - qcom,pcie-sm8450-pcie1
+           - qcom,pcie-sm8550
++      - items:
++          - enum:
++              - qcom,pcie-sm8650
++          - const: qcom,pcie-sm8550
+       - items:
+           - const: qcom,pcie-msm8998
+           - const: qcom,pcie-msm8996
+
+---
+base-commit: fe1998aa935b44ef873193c0772c43bce74f17dc
+change-id: 20231016-topic-sm8650-upstream-bindings-pcie-56e90536c258
+
+Best regards,
 -- 
-2.41.0
+Neil Armstrong <neil.armstrong@linaro.org>
 
