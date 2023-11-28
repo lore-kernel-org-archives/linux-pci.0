@@ -1,25 +1,25 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B414A168BA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B406616408;
 	Tue, 28 Nov 2023 08:15:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PnNpAEzk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54D89C433CB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FhT+l7PX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4F922C433C8;
 	Tue, 28 Nov 2023 08:15:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1701159324;
-	bh=e1PcYzYbTNGpVaCcrOSsdIFbJOZYRYBf4r0j5u1WFhE=;
-	h=From:To:Cc:Subject:Date:From;
-	b=PnNpAEzkB5uqEBeZm9QHP9op3cULwxXdOCDWsdgloE72TTyngsnpeQaqHd4ea6/wt
-	 rBPumlRF9D3096Yp4PlPDqbmZ6lrflrLcD+r44/0TwQ8xl/OZ1O4j//pRgMFOMCL6s
-	 m+csegl+47y24fwx5C5bo3vzd8Z7Y7OxMXuIAyjoc+9EHVkc5y7CTh4IVAfsFfwt0M
-	 dFz+LYyFTZh7Y5xSXgiZpn7uYwL9jBBIJKr8sjUb0A7IVHFfW97Wuy9Mtk1TfpJ0uT
-	 uJ0Gf3jDknuXwjEsGwu/6kDsabz0txTwpNLrBJ6YR+s3WbwQXDO+236Ab+EXckBvTQ
-	 AlGGVsNA8QdnQ==
+	bh=eo9kfCbX6q6KqiGf0IQeZw8TC/sg5ZoML6hbCiQxCyA=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=FhT+l7PXlqUxL/MIP3Y7OseSVvJgSBqwJ0NFYzrGzUipm7r2F6mpBdP7paJmdWhh+
+	 DI/+/J1LQVf6MFh60xle1fwBz4Rn6xdu4/PVJeUPpl8zCp4brsWBv5N2s6dzEJAdfm
+	 KQJX40OFdVLnW4sUIi67dD+58Lld9ceNlUMD69MeplYBC8g3HNDmaFPWfU9M7jHsct
+	 dumf/hMFtcSHTaGCplamCJT0V4BxwbTkVybyHdT4TIgv1+sBzpij+PUErXnVQbwHmC
+	 h1gsSSevRrwDSFsVkNd7VM3izHEij8WFraOW6fTjIjHTjJAGrZD/OmJ4XwPV3H8NAL
+	 waHw9ivwGPlEg==
 Received: from johan by xi.lan with local (Exim 4.96.2)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1r7tG3-00053n-2I;
+	id 1r7tG4-00053v-2S;
 	Tue, 28 Nov 2023 09:15:52 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
@@ -36,10 +36,12 @@ Cc: Andy Gross <agross@kernel.org>,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH v2 0/6] PCI: Fix deadlocks when enabling ASPM
-Date: Tue, 28 Nov 2023 09:15:06 +0100
-Message-ID: <20231128081512.19387-1-johan+linaro@kernel.org>
+Subject: [PATCH v2 4/6] PCI: qcom: Clean up ASPM comment
+Date: Tue, 28 Nov 2023 09:15:10 +0100
+Message-ID: <20231128081512.19387-5-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.41.0
+In-Reply-To: <20231128081512.19387-1-johan+linaro@kernel.org>
+References: <20231128081512.19387-1-johan+linaro@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,41 +50,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The pci_enable_link_state() helper is currently only called from
-pci_walk_bus(), something which can lead to a deadlock as both helpers
-take a pci_bus_sem read lock.
+Break up the newly added ASPM comment so that it fits within the soft 80
+character limit and becomes more readable.
 
-Add a new locked helper which can be called with the read lock held and
-fix up the two current users (the second is new in 6.7-rc1).
+Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-Note that there are no users left of the original unlocked variant after
-this series, but I decided to leave it in place for now (e.g. to mirror
-the corresponding helpers to disable link states).
-
-Included are also a couple of related cleanups.
-
-Johan
-
-
-Changes in v2
- - fix up the function name in a kernel doc comment as reported by the
-   kernel test robot <lkp@intel.com>
-
-
-Johan Hovold (6):
-  PCI/ASPM: Add locked helper for enabling link state
-  PCI: vmd: Fix deadlock when enabling ASPM
-  PCI: qcom: Fix deadlock when enabling ASPM
-  PCI: qcom: Clean up ASPM comment
-  PCI/ASPM: Clean up disable link state parameter
-  PCI/ASPM: Add lockdep assert to link state helper
-
- drivers/pci/controller/dwc/pcie-qcom.c |  7 ++-
- drivers/pci/controller/vmd.c           |  2 +-
- drivers/pci/pcie/aspm.c                | 65 +++++++++++++++++++-------
- include/linux/pci.h                    |  3 ++
- 4 files changed, 56 insertions(+), 21 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 21523115f6a4..a6f08acff3d4 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -969,7 +969,10 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+ 
+ static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
+ {
+-	/* Downstream devices need to be in D0 state before enabling PCI PM substates */
++	/*
++	 * Downstream devices need to be in D0 state before enabling PCI PM
++	 * substates.
++	 */
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
+ 
 -- 
 2.41.0
 
