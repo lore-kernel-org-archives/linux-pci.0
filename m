@@ -1,38 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED1A817CF;
-	Fri,  1 Dec 2023 03:30:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35A2F883B;
+	Fri,  1 Dec 2023 05:48:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gEiIdmJx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C257C433C8;
-	Fri,  1 Dec 2023 03:30:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="O/hVKTS8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C478AC433C9;
+	Fri,  1 Dec 2023 05:48:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1701401443;
-	bh=jwirEr5+4F46Zwbe3mG+0Zko/WcIUe6i503ufifelCI=;
+	s=k20201202; t=1701409693;
+	bh=gE50s48VK4sHzTLhiSqdX19Brr3TXGaAuzOkGv1vWd4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=gEiIdmJx6RpA3BgACWuH5mjB1eR6z1TE5ZvGWVgUfWCu5Cv/1bI41+d3lG1zndu0y
-	 tp3wUkGLIhwRyl1f8LDjlvIRDNB355AUK3MTrphTYbiVdzjcdk9wvQ2my895PufIK9
-	 vNdr0+SY0XUWDzzxMLbW3fFyUz5dAGidrJmeHvdGN2fnnscUdVrbKJuufnQKEa9+ki
-	 JoFMbXRXjF+MfPUwhp4y0ZtKpOZ20cMWGvYz7l9B5NurX9Wh93pX9lVnt3+oolra7+
-	 EykL0gJEEaRgPCB3d/IsGJLnlLfLzgggDJmJiU/+ZVMJ2YSo7oUNMKxcqTLOtahqxj
-	 qqK6rzmN4I5Wg==
-Date: Fri, 1 Dec 2023 09:00:28 +0530
+	b=O/hVKTS8Al69ohmDDaxiJjZvogAfV/1mShdd2PuVGw+5HUChl+1XCedBMuUoo6ZKW
+	 CH68l91HTy+v76YR5XLJwUYTk0dpPsHR79wH0n40W/5LgAUlQHYroY2kFEvHG1EBXH
+	 rvK38ExP2TYZiUIgRa8J3Qpah+LdK3cydK2nPwbRlfg1zq2xt32ACRUi/4N6SCdwKx
+	 gHtxIpwDEpXI01VYDbfqfbWYQlKiNwWlRS2Ca4tcPerhhpU5kzftlUuZEFmUoqQFfu
+	 cVHXCKofOXDCf+cKFHKMreDUz4U7fPVmHyo49emyQ1MJ2e+a6sgSyJu5BWsJJJj8Oo
+	 /54DqQZa/kFPg==
+Date: Fri, 1 Dec 2023 11:18:00 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Frank Li <Frank.li@nxp.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	bhelgaas@google.com, imx@lists.linux.dev, kw@linux.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
-	lpieralisi@kernel.org, minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
-	robh@kernel.org, roy.zang@nxp.com
-Subject: Re: [PATCH v4 4/4] PCI: layerscape: Add suspend/resume for ls1043a
-Message-ID: <20231201033028.GB2898@thinkpad>
-References: <20231129214412.327633-1-Frank.Li@nxp.com>
- <20231129214412.327633-5-Frank.Li@nxp.com>
- <20231130165100.GV3043@thinkpad>
- <ZWjt412xtyZWVjdL@lizhi-Precision-Tower-5810>
- <ZWju9s/HBS7jNTYX@lizhi-Precision-Tower-5810>
+To: Yang Yingliang <yangyingliang@huaweicloud.com>
+Cc: ntb@lists.linux.dev, linux-pci@vger.kernel.org, jdmason@kudzu.us,
+	dave.jiang@intel.com, allenbh@gmail.com, lpieralisi@kernel.org,
+	kw@linux.com, kishon@kernel.org, bhelgaas@google.com,
+	yangyingliang@huawei.com
+Subject: Re: [PATCH 1/2] NTB: fix possible name leak in ntb_register_device()
+Message-ID: <20231201054800.GE4009@thinkpad>
+References: <20231201033057.1399131-1-yangyingliang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,179 +36,82 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZWju9s/HBS7jNTYX@lizhi-Precision-Tower-5810>
+In-Reply-To: <20231201033057.1399131-1-yangyingliang@huaweicloud.com>
 
-On Thu, Nov 30, 2023 at 03:22:14PM -0500, Frank Li wrote:
-> On Thu, Nov 30, 2023 at 03:17:39PM -0500, Frank Li wrote:
-> > On Thu, Nov 30, 2023 at 10:21:00PM +0530, Manivannan Sadhasivam wrote:
-> > > On Wed, Nov 29, 2023 at 04:44:12PM -0500, Frank Li wrote:
-> > > > In the suspend path, PME_Turn_Off message is sent to the endpoint to
-> > > > transition the link to L2/L3_Ready state. In this SoC, there is no way to
-> > > > check if the controller has received the PME_To_Ack from the endpoint or
-> > > > not. So to be on the safer side, the driver just waits for
-> > > > PCIE_PME_TO_L2_TIMEOUT_US before asserting the SoC specific PMXMTTURNOFF
-> > > > bit to complete the PME_Turn_Off handshake. This link would then enter
-> > > > L2/L3 state depending on the VAUX supply.
-> > > > 
-> > > > In the resume path, the link is brought back from L2 to L0 by doing a
-> > > > software reset.
-> > > > 
-> > > 
-> > > Same comment on the patch description as on patch 2/4.
-> > > 
-> > > > Signed-off-by: Frank Li <Frank.Li@nxp.com>
-> > > > ---
-> > > > 
-> > > > Notes:
-> > > >     Change from v3 to v4
-> > > >     - Call scfg_pcie_send_turnoff_msg() shared with ls1021a
-> > > >     - update commit message
-> > > >     
-> > > >     Change from v2 to v3
-> > > >     - Remove ls_pcie_lut_readl(writel) function
-> > > >     
-> > > >     Change from v1 to v2
-> > > >     - Update subject 'a' to 'A'
-> > > > 
-> > > >  drivers/pci/controller/dwc/pci-layerscape.c | 63 ++++++++++++++++++++-
-> > > >  1 file changed, 62 insertions(+), 1 deletion(-)
-> > > > 
-> > > > diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
-> > > > index 590e07bb27002..d39700b3afaaa 100644
-> > > > --- a/drivers/pci/controller/dwc/pci-layerscape.c
-> > > > +++ b/drivers/pci/controller/dwc/pci-layerscape.c
-> > > > @@ -41,6 +41,15 @@
-> > > >  #define SCFG_PEXSFTRSTCR	0x190
-> > > >  #define PEXSR(idx)		BIT(idx)
-> > > >  
-> > > > +/* LS1043A PEX PME control register */
-> > > > +#define SCFG_PEXPMECR		0x144
-> > > > +#define PEXPME(idx)		BIT(31 - (idx) * 4)
-> > > > +
-> > > > +/* LS1043A PEX LUT debug register */
-> > > > +#define LS_PCIE_LDBG	0x7fc
-> > > > +#define LDBG_SR		BIT(30)
-> > > > +#define LDBG_WE		BIT(31)
-> > > > +
-> > > >  #define PCIE_IATU_NUM		6
-> > > >  
-> > > >  struct ls_pcie_drvdata {
-> > > > @@ -225,6 +234,45 @@ static int ls1021a_pcie_exit_from_l2(struct dw_pcie_rp *pp)
-> > > >  	return scfg_pcie_exit_from_l2(pcie->scfg, SCFG_PEXSFTRSTCR, PEXSR(pcie->index));
-> > > >  }
-> > > >  
-> > > > +static void ls1043a_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
-> > > > +{
-> > > > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > > > +	struct ls_pcie *pcie = to_ls_pcie(pci);
-> > > > +
-> > > > +	scfg_pcie_send_turnoff_msg(pcie->scfg, SCFG_PEXPMECR, PEXPME(pcie->index));
-> > > > +}
-> > > > +
-> > > > +static int ls1043a_pcie_exit_from_l2(struct dw_pcie_rp *pp)
-> > > > +{
-> > > > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> > > > +	struct ls_pcie *pcie = to_ls_pcie(pci);
-> > > > +	u32 val;
-> > > > +
-> > > > +	/*
-> > > > +	 * Only way let PEX module exit L2 is do a software reset.
-> > > 
-> > > Can you expand PEX? What is it used for?
-> > > 
-> > > Also if the reset is only for the PEX module, please use the same comment in
-> > > both patches 2 and 4. Patch 2 doesn't mention PEX in the comment.
-> > 
-> > After read spec again, I think PEX is pci express. So it should software
-> > reset controller. I don't know what exactly did in the chip. But without
-> > below code, PCIe can't exit L2/L3.
-> > 
-> > Any harmful if dwc controller reset? Anyway these code works well with
-> > intel network card.
+On Fri, Dec 01, 2023 at 11:30:56AM +0800, Yang Yingliang wrote:
+> From: Yang Yingliang <yangyingliang@huawei.com>
 > 
-> Sorry, sent too quick. It is PCIe express wrapper
+> If device_register() returns error in ntb_register_device(),
+> the name allocated by dev_set_name() need be freed. As comment
+> of device_register() says, it should use put_device() to give
+> up the reference in the error path. So fix this by calling
+> put_device(), then the name can be freed in kobject_cleanup().
 > 
-> Copy from spec: 
+> Remove the outside put_device() in pci_vntb_probe() and return
+> the error code.
 > 
-> "PEXLDBG[SR]. Once set the
-> PEXLDBG[SR] will enable the soft reset to the PEX wrapper."
-> 
+> Fixes: a1bd3baeb2f1 ("NTB: Add NTB hardware abstraction layer")
+> Signed-off-by: Yang Yingliang <yangyingliang@huawei.com>
 
-Okay. Please use the below comment in both patches 2 and 4:
-
-/* Reset the PEX wrapper to bring the link out of L2 */
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
 - Mani
 
-> Frank
+> ---
+>  drivers/ntb/core.c                            | 8 +++++++-
+>  drivers/pci/endpoint/functions/pci-epf-vntb.c | 6 +-----
+>  2 files changed, 8 insertions(+), 6 deletions(-)
 > 
-> > 
-> > Frank
-> > 
-> > > 
-> > > - Mani
-> > > 
-> > > > +	 * LDBG_WE: allows the user to have write access to the PEXDBG[SR] for both setting and
-> > > > +	 *	    clearing the soft reset on the PEX module.
-> > > > +	 * LDBG_SR: When SR is set to 1, the PEX module enters soft reset.
-> > > > +	 */
-> > > > +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
-> > > > +	val |= LDBG_WE;
-> > > > +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
-> > > > +
-> > > > +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
-> > > > +	val |= LDBG_SR;
-> > > > +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
-> > > > +
-> > > > +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
-> > > > +	val &= ~LDBG_SR;
-> > > > +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
-> > > > +
-> > > > +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
-> > > > +	val &= ~LDBG_WE;
-> > > > +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
-> > > > +
-> > > > +	return 0;
-> > > > +}
-> > > > +
-> > > >  static const struct dw_pcie_host_ops ls_pcie_host_ops = {
-> > > >  	.host_init = ls_pcie_host_init,
-> > > >  	.pme_turn_off = ls_pcie_send_turnoff_msg,
-> > > > @@ -242,6 +290,19 @@ static const struct ls_pcie_drvdata ls1021a_drvdata = {
-> > > >  	.exit_from_l2 = ls1021a_pcie_exit_from_l2,
-> > > >  };
-> > > >  
-> > > > +static const struct dw_pcie_host_ops ls1043a_pcie_host_ops = {
-> > > > +	.host_init = ls_pcie_host_init,
-> > > > +	.pme_turn_off = ls1043a_pcie_send_turnoff_msg,
-> > > > +};
-> > > > +
-> > > > +static const struct ls_pcie_drvdata ls1043a_drvdata = {
-> > > > +	.pf_lut_off = 0x10000,
-> > > > +	.pm_support = true,
-> > > > +	.scfg_support = true,
-> > > > +	.ops = &ls1043a_pcie_host_ops,
-> > > > +	.exit_from_l2 = ls1043a_pcie_exit_from_l2,
-> > > > +};
-> > > > +
-> > > >  static const struct ls_pcie_drvdata layerscape_drvdata = {
-> > > >  	.pf_lut_off = 0xc0000,
-> > > >  	.pm_support = true,
-> > > > @@ -252,7 +313,7 @@ static const struct of_device_id ls_pcie_of_match[] = {
-> > > >  	{ .compatible = "fsl,ls1012a-pcie", .data = &layerscape_drvdata },
-> > > >  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021a_drvdata },
-> > > >  	{ .compatible = "fsl,ls1028a-pcie", .data = &layerscape_drvdata },
-> > > > -	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1021a_drvdata },
-> > > > +	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043a_drvdata },
-> > > >  	{ .compatible = "fsl,ls1046a-pcie", .data = &layerscape_drvdata },
-> > > >  	{ .compatible = "fsl,ls2080a-pcie", .data = &layerscape_drvdata },
-> > > >  	{ .compatible = "fsl,ls2085a-pcie", .data = &layerscape_drvdata },
-> > > > -- 
-> > > > 2.34.1
-> > > > 
-> > > 
-> > > -- 
-> > > மணிவண்ணன் சதாசிவம்
+> diff --git a/drivers/ntb/core.c b/drivers/ntb/core.c
+> index 27dd93deff6e..d702bee78082 100644
+> --- a/drivers/ntb/core.c
+> +++ b/drivers/ntb/core.c
+> @@ -100,6 +100,8 @@ EXPORT_SYMBOL(ntb_unregister_client);
+>  
+>  int ntb_register_device(struct ntb_dev *ntb)
+>  {
+> +	int ret;
+> +
+>  	if (!ntb)
+>  		return -EINVAL;
+>  	if (!ntb->pdev)
+> @@ -120,7 +122,11 @@ int ntb_register_device(struct ntb_dev *ntb)
+>  	ntb->ctx_ops = NULL;
+>  	spin_lock_init(&ntb->ctx_lock);
+>  
+> -	return device_register(&ntb->dev);
+> +	ret = device_register(&ntb->dev);
+> +	if (ret)
+> +		put_device(&ntb->dev);
+> +
+> +	return ret;
+>  }
+>  EXPORT_SYMBOL(ntb_register_device);
+>  
+> diff --git a/drivers/pci/endpoint/functions/pci-epf-vntb.c b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> index 3f60128560ed..2b7bc5a731dd 100644
+> --- a/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> +++ b/drivers/pci/endpoint/functions/pci-epf-vntb.c
+> @@ -1278,15 +1278,11 @@ static int pci_vntb_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>  	ret = ntb_register_device(&ndev->ntb);
+>  	if (ret) {
+>  		dev_err(dev, "Failed to register NTB device\n");
+> -		goto err_register_dev;
+> +		return ret;
+>  	}
+>  
+>  	dev_dbg(dev, "PCI Virtual NTB driver loaded\n");
+>  	return 0;
+> -
+> -err_register_dev:
+> -	put_device(&ndev->ntb.dev);
+> -	return -EINVAL;
+>  }
+>  
+>  static struct pci_device_id pci_vntb_table[] = {
+> -- 
+> 2.25.1
+> 
 
 -- 
 மணிவண்ணன் சதாசிவம்
