@@ -1,264 +1,107 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BO162Ot2"
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 596E110D7
-	for <linux-pci@vger.kernel.org>; Fri,  1 Dec 2023 04:17:06 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1701433025;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aIU4mh01NIo3J+0bv0Z7Ok8zfrU9Sy5KFoYboE67XEg=;
-	b=BO162Ot2r3i6t0D+IGJdiws8Uq+tp8nza+hMHsmiaTi2+AD+9DOJTw6hCpI3NOHv5BUaZ/
-	JRc46Xc901oygR5M39Ckr8C+fe1G934lkf7p+owHYvT5OdXl1v8W95YuIuPNKidfp0uSRo
-	CQo9hKpX9vLHa6JpL0YVpldIkoAIr8U=
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com
- [209.85.160.198]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-99-5BaqsDxtP4ueuAQbsd1SeQ-1; Fri, 01 Dec 2023 07:17:04 -0500
-X-MC-Unique: 5BaqsDxtP4ueuAQbsd1SeQ-1
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-423c28eababso5306581cf.1
-        for <linux-pci@vger.kernel.org>; Fri, 01 Dec 2023 04:17:04 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701433023; x=1702037823;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=aIU4mh01NIo3J+0bv0Z7Ok8zfrU9Sy5KFoYboE67XEg=;
-        b=tXOIN5QC/L5X6IP78Ywg7xlZA2SguyuSAYKAX5qzIKwy9hpAelZwSvO0ptOLWNVNFq
-         HG04At0vdCF4ld5W1sDmibIpErPmRyJxc0JSwqyUoMZNNW+RcpI4fAK4wYljkh5IBKwp
-         ou329hlLFgqgHAhw0xyslDaYcbgmxrkildRbDaz6PeLZLdwJfvwtQJ7TIpjK1QAAhi77
-         B1TubGhfG3RfGbnk48lYLibPkiPrINFTOc8L/B8+fZLi3uglG/oVgF0u5+8h8ER0NLQp
-         6AF9mWT3C+YZBDgdpwHyN4m521E5JLiUbXLn/UU1jP0O0baK9jvUGrQ9WEe9CrlP6p3U
-         ZUrQ==
-X-Gm-Message-State: AOJu0YyzrR+YmeF0hlwb8iOOb6HPna1tXb3J+jItNMDJ6xu1Pm5skr5A
-	GemdD6XHClJUTcW1fj3JXSTd1/XHsA+KLbV6wcbc8ZDTzx/tMM5MvRP54Q7CPuFrRo4pOIj2zLO
-	0PJxYK6UjkK1RH1/yctvT
-X-Received: by 2002:a05:622a:5505:b0:423:a6c8:7db9 with SMTP id fj5-20020a05622a550500b00423a6c87db9mr24035878qtb.6.1701433023439;
-        Fri, 01 Dec 2023 04:17:03 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IFQfSS2UW2A54VtKLLtAF4bxHgHalN5nM46dpZI44qbzDLU3S4OQPiukfxEaRXrK+nRrdI9pQ==
-X-Received: by 2002:a05:622a:5505:b0:423:a6c8:7db9 with SMTP id fj5-20020a05622a550500b00423a6c87db9mr24035847qtb.6.1701433023157;
-        Fri, 01 Dec 2023 04:17:03 -0800 (PST)
-Received: from pstanner-thinkpadt14sgen1.remote.csb ([2001:9e8:32e2:4e00:227b:d2ff:fe26:2a7a])
-        by smtp.gmail.com with ESMTPSA id b19-20020ac87553000000b00423b8a53641sm1426528qtr.29.2023.12.01.04.16.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Dec 2023 04:17:02 -0800 (PST)
-From: Philipp Stanner <pstanner@redhat.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Uladzislau Koshchanka <koshchanka@gmail.com>,
-	NeilBrown <neilb@suse.de>,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	John Sanpe <sanpeqf@gmail.com>,
-	Kent Overstreet <kent.overstreet@gmail.com>,
-	Philipp Stanner <pstanner@redhat.com>,
-	"Masami Hiramatsu (Google)" <mhiramat@kernel.org>,
-	Kees Cook <keescook@chromium.org>,
-	David Gow <davidgow@google.com>,
-	Yury Norov <yury.norov@gmail.com>,
-	"wuqiang.matt" <wuqiang.matt@bytedance.com>,
-	Jason Baron <jbaron@akamai.com>,
-	Kefeng Wang <wangkefeng.wang@huawei.com>,
-	Ben Dooks <ben.dooks@codethink.co.uk>,
-	dakr@redhat.com
-Cc: linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	Arnd Bergmann <arnd@kernel.org>
-Subject: [PATCH v2 4/4] lib, pci: unify generic pci_iounmap()
-Date: Fri,  1 Dec 2023 13:16:22 +0100
-Message-ID: <20231201121622.16343-5-pstanner@redhat.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20231201121622.16343-1-pstanner@redhat.com>
-References: <20231201121622.16343-1-pstanner@redhat.com>
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="uYcRRnt0";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="0dayboYg"
+X-Greylist: delayed 67 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 01 Dec 2023 06:45:07 PST
+Received: from new3-smtp.messagingengine.com (new3-smtp.messagingengine.com [66.111.4.229])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 922D110F9;
+	Fri,  1 Dec 2023 06:45:07 -0800 (PST)
+Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
+	by mailnew.nyi.internal (Postfix) with ESMTP id C97045809F7;
+	Fri,  1 Dec 2023 09:45:06 -0500 (EST)
+Received: from imap51 ([10.202.2.101])
+  by compute5.internal (MEProxy); Fri, 01 Dec 2023 09:45:06 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-type:content-type:date:date:from:from:in-reply-to
+	:in-reply-to:message-id:mime-version:references:reply-to:sender
+	:subject:subject:to:to; s=fm3; t=1701441906; x=1701449106; bh=+L
+	CHDVdMO4HroZLW4+K9iEctf8j8Pnc97pjq2+19EyM=; b=uYcRRnt0ypzG+T8STd
+	NQrTedJ4t8y0QKNJgAZMqlWY3f00cPTsTaIXTxIpFmqq7hJEECpNU0LqRb6bcxlC
+	ObOEogFq/gXRXJPgdKt0uj978H4ktMy5QTAt4c8wGeVqnhSuJivsbNTAIc8vNG/0
+	kGqnfX6AfiroCZw8elB/ZcBja7NHtMgBcZfdf0F+4O4M92fPynweAgK8BZ/Uezv4
+	HuSUTBed+UAbjBq6YyG5ssvoIVr4TwyowCUetCQAXxRDntTIfeQ7m9hINLuSdEw4
+	Kt0W9XQvzynA2ian5d/Skxr5U+OD5fbfp7LPznSkAtB4T8KSfetaJA6jJLuREucL
+	zvnw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:sender:subject
+	:subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
+	:x-sasl-enc; s=fm1; t=1701441906; x=1701449106; bh=+LCHDVdMO4Hro
+	ZLW4+K9iEctf8j8Pnc97pjq2+19EyM=; b=0dayboYg4YVfLSp9hNyPyWJXns73T
+	SRa8QuDwE+c8lIYmC5/t3uefRAnTr9hujOPoNi9/SVoT0qP3n/x08EnjZwL8q9Ua
+	kP71YcKmgAeCbOuciaGct6Q9fiXCExG08YTzovOK18X1SjtZNJP1LnDnhEXAK7ds
+	/fZdLVtXPaUYactCyaLG+Hqf8CICJjWNcv8YYlcCDSxBjr2LGWJD6DTyzsSn+Td2
+	Nnf0nd6JaBnS+/SU8qqflw0PnS+pbFjedMbBUtmf3VvUGbVKw01fQePx7hcbLrRZ
+	p7nCNEPutvSXFhbea2eJ0bTlCCjqj6MGPsPTCiSMsdwfKuNYYLbEvSZrw==
+X-ME-Sender: <xms:cfFpZQ1CG5NdFTXZ68XBLazYcvfypIXc78eUEdp6YJDoySA7pNsCjw>
+    <xme:cfFpZbHp5JFCiZIwVHAwnfLNwRdyxO2XwSUpm82KIoo7LKDYNARJJ4wG5HzW5ZzjV
+    wpE7aGaNQyIV5IfJe0>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedrudeiledgieelucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
+    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
+    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
+    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
+    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
+    teffnecuvehluhhsthgvrhfuihiivgepudenucfrrghrrghmpehmrghilhhfrhhomheprg
+    hrnhgusegrrhhnuggsrdguvg
+X-ME-Proxy: <xmx:cfFpZY7e-KyiayVgkJpo-i1ayoVGmJz_zybGKW6FiLkOtKLrOt1miw>
+    <xmx:cfFpZZ3CtdGZPa6sBS2cq4_eTsTr6pdO4JtYHsQMqHMFCstNd44dPw>
+    <xmx:cfFpZTGvPGLr9As6kKvuuoBgumiPsnibN1HkdvSr8qpriD0ftGd7Vw>
+    <xmx:cvFpZbOqIU7ip9gmR0yiazV2Zf4CI2KsorVZuIknhVpONDGKfxOCwQ>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.nyi.internal (Postfix, from userid 501)
+	id 80EE6B60089; Fri,  1 Dec 2023 09:45:05 -0500 (EST)
+X-Mailer: MessagingEngine.com Webmail Interface
+User-Agent: Cyrus-JMAP/3.9.0-alpha0-1178-geeaf0069a7-fm-20231114.001-geeaf0069
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Message-Id: <32552a65-b540-4baa-9180-e04a278f0ca6@app.fastmail.com>
+In-Reply-To: <20231201121622.16343-3-pstanner@redhat.com>
+References: <20231201121622.16343-1-pstanner@redhat.com>
+ <20231201121622.16343-3-pstanner@redhat.com>
+Date: Fri, 01 Dec 2023 15:44:44 +0100
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "Philipp Stanner" <pstanner@redhat.com>,
+ "Bjorn Helgaas" <bhelgaas@google.com>,
+ "Andrew Morton" <akpm@linux-foundation.org>,
+ "Dan Williams" <dan.j.williams@intel.com>,
+ "Jonathan Cameron" <Jonathan.Cameron@huawei.com>,
+ "Jakub Kicinski" <kuba@kernel.org>, "Dave Jiang" <dave.jiang@intel.com>,
+ "Uladzislau Koshchanka" <koshchanka@gmail.com>, "Neil Brown" <neilb@suse.de>,
+ "Niklas Schnelle" <schnelle@linux.ibm.com>, "John Sanpe" <sanpeqf@gmail.com>,
+ "Kent Overstreet" <kent.overstreet@gmail.com>,
+ "Masami Hiramatsu" <mhiramat@kernel.org>,
+ "Kees Cook" <keescook@chromium.org>, "David Gow" <davidgow@google.com>,
+ "Yury Norov" <yury.norov@gmail.com>,
+ "wuqiang.matt" <wuqiang.matt@bytedance.com>,
+ "Jason Baron" <jbaron@akamai.com>,
+ "Kefeng Wang" <wangkefeng.wang@huawei.com>,
+ "Ben Dooks" <ben.dooks@codethink.co.uk>, "Danilo Krummrich" <dakr@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ Linux-Arch <linux-arch@vger.kernel.org>
+Subject: Re: [PATCH v2 2/4] lib: move pci-specific devres code to drivers/pci/
+Content-Type: text/plain
 
-The implementation of pci_iounmap() is currently scattered over two
-files, drivers/pci/iounmap.c and lib/iomap.c. Additionally,
-architectures can define their own version.
+On Fri, Dec 1, 2023, at 13:16, Philipp Stanner wrote:
+> The pcim_*() functions in lib/devres.c are guarded by an #ifdef
+> CONFIG_PCI and, thus, don't belong to this file. They are only ever used
+> for pci and are not generic infrastructure.
+>
+> Move all pcim_*() functions in lib/devres.c to drivers/pci/devres.c.
+> Adjust the Makefile.
+>
+> Suggested-by: Danilo Krummrich <dakr@redhat.com>
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> ---
+>  drivers/pci/Makefile |   2 +-
+>  drivers/pci/devres.c | 207 ++++++++++++++++++++++++++++++++++++++++++
+>  lib/devres.c         | 208 +------------------------------------------
 
-Besides one unified version being desirable in the first place, the old
-version in drivers/pci/iounmap.c contained a bug and could leak memory
-mappings. The bug was that #ifdef ARCH_HAS_GENERIC_IOPORT_MAP should not
-have guarded iounmap(p); in addition to the preceding code.
+I still think this should go into drivers/pci/pci_iomap.c along
+with the other functions.
 
-To have only one version, it's necessary to create a helper function,
-iomem_is_ioport(), that tells pci_iounmap() whether the passed address
-points to an ioport or normal memory.
-
-iomem_is_ioport() can be provided through three different ways:
-  1. The architecture itself provides it.
-  2. As a default version in include/asm-generic/io.h for those
-     architectures that don't use CONFIG_GENERIC_IOMAP, but also don't
-     provide their own version of iomem_is_ioport().
-  3. As a default version in lib/iomap.c for those architectures that
-     define and use CONFIG_GENERIC_IOMAP (currently, only x86 really
-     uses the functions in lib/iomap.c)
-
-Create a unified version of pci_iounmap() in drivers/pci/iomap.c.
-Provide the function iomem_is_ioport() in include/asm-generic/io.h and
-lib/iomap.c.
-
-Remove the CONFIG_GENERIC_IOMAP guard around
-ARCH_WANTS_GENERIC_PCI_IOUNMAP so that configs that set
-CONFIG_GENERIC_PCI_IOMAP without CONFIG_GENERIC_IOMAP still get the
-function.
-
-Fixes: 316e8d79a095 ("pci_iounmap'2: Electric Boogaloo: try to make sense of it all")
-Suggested-by: Arnd Bergmann <arnd@kernel.org>
-Signed-off-by: Philipp Stanner <pstanner@redhat.com>
----
- drivers/pci/iomap.c      | 40 +++++++++++-----------------------------
- include/asm-generic/io.h | 37 ++++++++++++++++++++++++++++++++++---
- lib/iomap.c              | 16 +++++++++-------
- 3 files changed, 54 insertions(+), 39 deletions(-)
-
-diff --git a/drivers/pci/iomap.c b/drivers/pci/iomap.c
-index 0a9d503ba533..cb7f86371b7d 100644
---- a/drivers/pci/iomap.c
-+++ b/drivers/pci/iomap.c
-@@ -135,42 +135,24 @@ void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
- EXPORT_SYMBOL_GPL(pci_iomap_wc);
- 
- /*
-- * pci_iounmap() somewhat illogically comes from lib/iomap.c for the
-- * CONFIG_GENERIC_IOMAP case, because that's the code that knows about
-- * the different IOMAP ranges.
-+ * Generic version of pci_iounmap() that is used if the architecture does not
-+ * provide its own version.
-  *
-- * But if the architecture does not use the generic iomap code, and if
-- * it has _not_ defined it's own private pci_iounmap function, we define
-- * it here.
-- *
-- * NOTE! This default implementation assumes that if the architecture
-- * support ioport mapping (HAS_IOPORT_MAP), the ioport mapping will
-- * be fixed to the range [ PCI_IOBASE, PCI_IOBASE+IO_SPACE_LIMIT [,
-- * and does not need unmapping with 'ioport_unmap()'.
-- *
-- * If you have different rules for your architecture, you need to
-- * implement your own pci_iounmap() that knows the rules for where
-- * and how IO vs MEM get mapped.
-- *
-- * This code is odd, and the ARCH_HAS/ARCH_WANTS #define logic comes
-- * from legacy <asm-generic/io.h> header file behavior. In particular,
-- * it would seem to make sense to do the iounmap(p) for the non-IO-space
-- * case here regardless, but that's not what the old header file code
-- * did. Probably incorrectly, but this is meant to be bug-for-bug
-- * compatible.
-+ * If you have special rules for your architecture, you need to implement your
-+ * own pci_iounmap() in ARCH/asm/io.h that knows the rules for where and how IO
-+ * vs MEM get mapped.
-  */
- #if defined(ARCH_WANTS_GENERIC_PCI_IOUNMAP)
- 
--void pci_iounmap(struct pci_dev *dev, void __iomem *p)
-+void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
- {
--#ifdef ARCH_HAS_GENERIC_IOPORT_MAP
--	uintptr_t start = (uintptr_t) PCI_IOBASE;
--	uintptr_t addr = (uintptr_t) p;
--
--	if (addr >= start && addr < start + IO_SPACE_LIMIT)
-+#ifdef CONFIG_HAS_IOPORT
-+	if (iomem_is_ioport(addr)) {
-+		ioport_unmap(addr);
- 		return;
--	iounmap(p);
-+	}
- #endif
-+	iounmap(addr);
- }
- EXPORT_SYMBOL(pci_iounmap);
- 
-diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
-index bac63e874c7b..4177d6b97e0b 100644
---- a/include/asm-generic/io.h
-+++ b/include/asm-generic/io.h
-@@ -1129,11 +1129,42 @@ extern void ioport_unmap(void __iomem *p);
- #endif /* CONFIG_GENERIC_IOMAP */
- #endif /* CONFIG_HAS_IOPORT_MAP */
- 
--#ifndef CONFIG_GENERIC_IOMAP
- #ifndef pci_iounmap
-+#define pci_iounmap pci_iounmap
- #define ARCH_WANTS_GENERIC_PCI_IOUNMAP
--#endif
--#endif
-+#endif /* pci_iounmap */
-+
-+
-+/*
-+ * This function is a helper only needed for the generic pci_iounmap().
-+ * It's provided here if the architecture does not select GENERIC_IOMAP and does
-+ * not provide its own version.
-+ */
-+#ifdef CONFIG_HAS_IOPORT
-+#ifndef iomem_is_ioport /* i.e., if the architecture hasn't defined its own. */
-+#define iomem_is_ioport iomem_is_ioport
-+
-+#ifndef CONFIG_GENERIC_IOMAP
-+static inline bool iomem_is_ioport(void __iomem *addr)
-+{
-+	unsigned long port = (unsigned long __force)addr;
-+
-+	// TODO: do we have to take IO_SPACE_LIMIT and PCI_IOBASE into account
-+	// similar as in ioport_map() ?
-+
-+	if (port > MMIO_UPPER_LIMIT)
-+		return false;
-+
-+	return true;
-+}
-+#else /* CONFIG_GENERIC_IOMAP. Version from lib/iomap.c will be used. */
-+bool iomem_is_ioport(void __iomem *addr);
-+#define ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT
-+#endif /* CONFIG_GENERIC_IOMAP */
-+
-+#endif /* iomem_is_ioport */
-+#endif /* CONFIG_HAS_IOPORT */
-+
- 
- #ifndef xlate_dev_mem_ptr
- #define xlate_dev_mem_ptr xlate_dev_mem_ptr
-diff --git a/lib/iomap.c b/lib/iomap.c
-index 4f8b31baa575..adaf6246f892 100644
---- a/lib/iomap.c
-+++ b/lib/iomap.c
-@@ -418,12 +418,14 @@ EXPORT_SYMBOL(ioport_map);
- EXPORT_SYMBOL(ioport_unmap);
- #endif /* CONFIG_HAS_IOPORT_MAP */
- 
--#ifdef CONFIG_PCI
--/* Hide the details if this is a MMIO or PIO address space and just do what
-- * you expect in the correct way. */
--void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
-+#if defined(ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT)
-+bool iomem_is_ioport(void __iomem *addr)
- {
--	IO_COND(addr, /* nothing */, iounmap(addr));
-+	unsigned long port = (unsigned long __force)addr;
-+
-+	if (port > PIO_OFFSET && port < PIO_RESERVED)
-+		return true;
-+
-+	return false;
- }
--EXPORT_SYMBOL(pci_iounmap);
--#endif /* CONFIG_PCI */
-+#endif /* ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT */
--- 
-2.43.0
-
+     Arnd
