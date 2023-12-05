@@ -1,49 +1,49 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="i2EmXETD"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VeBBU2YA"
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 019E2BF
-	for <linux-pci@vger.kernel.org>; Tue,  5 Dec 2023 07:39:45 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 963F8A9
+	for <linux-pci@vger.kernel.org>; Tue,  5 Dec 2023 07:40:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1701790785;
+	s=mimecast20190719; t=1701790800;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=tEi7wv7QZl2s4sbtmNX6yC+kQMQhn1gNlg651IagIrk=;
-	b=i2EmXETD3ydbe9mJRSa0QK9SV9lUQq3QHv8nMlJI6PUQM/gd3ZLlrXL2JydW1m3wuTjOOD
-	dB/dXNclqfvOAIufxhrOJ4SWSZCQdwD91XsA7fqUFjSd6GlU3AxPY50YijzOBNQlAAMHh6
-	Jd5igRD4nYg6ISSdrcv2rad7fR2nv+k=
-Received: from mail-lf1-f69.google.com (mail-lf1-f69.google.com
- [209.85.167.69]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=oTGzUnuImaRUCmV4376iFTUXoCEDIuJDS3P/LYSpU0A=;
+	b=VeBBU2YA9vXlNNqogtxULw9SbgObQL+FLnqhwEu4CfdK8wnYZXqRq2gVS7xIDR56syaN6F
+	92OKDHNlModuAlRgUNv5bt3AXaHhdhLVHGAK4PPF4mxNjSPcrSUFgT0m2p/oAIZvOdwykS
+	dJT0bPNT++iEpkvgbHJ7AtLw/Ei1GZE=
+Received: from mail-lf1-f72.google.com (mail-lf1-f72.google.com
+ [209.85.167.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-317-OR9fYGQwPkeY-oWP-ukKVA-1; Tue, 05 Dec 2023 10:38:04 -0500
-X-MC-Unique: OR9fYGQwPkeY-oWP-ukKVA-1
-Received: by mail-lf1-f69.google.com with SMTP id 2adb3069b0e04-50bfe590000so311249e87.0
-        for <linux-pci@vger.kernel.org>; Tue, 05 Dec 2023 07:38:03 -0800 (PST)
+ us-mta-339-7GCs-ke3P2KpxZXiqd0THw-1; Tue, 05 Dec 2023 10:38:07 -0500
+X-MC-Unique: 7GCs-ke3P2KpxZXiqd0THw-1
+Received: by mail-lf1-f72.google.com with SMTP id 2adb3069b0e04-50c0e82188bso81494e87.0
+        for <linux-pci@vger.kernel.org>; Tue, 05 Dec 2023 07:38:06 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701790676; x=1702395476;
+        d=1e100.net; s=20230601; t=1701790685; x=1702395485;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=tEi7wv7QZl2s4sbtmNX6yC+kQMQhn1gNlg651IagIrk=;
-        b=bm1Opa1qXygcQwvwSumNImNUSBNS2pH5OM0E3chpmsVAVWg2MC3A93FbQWIsnG4TbT
-         AXe76rv2UxXuaKo1FXZBnTzpdJbMIB6brHp4KLG149DLYKmDYZK0TD+aexU+V+NQRiYX
-         jCkWTgslPEUpsFuEbO9dPVRfoBm3AxpRpWp8jXo2Bf3BTL2t0Bmo4JUVxZT/GbFf1WcJ
-         aPc2Psv4XJ4vu82gZGjRWPo2uPofRFTKHSyMvSeZ3XQWuRZQ5MXCEUBS8eLKhT2zcCt2
-         eamPBWULaFEp2VKJ56hbG6nlvsJO6gjb66ZFJIOd8Codt3P4kBWwmIxbExi40IG/g2/e
-         OhQg==
-X-Gm-Message-State: AOJu0YwmeR7CRgoj6WZFiIImVGBdYOfVFZTQpCOe+zvxpR502kYloSKE
-	gEaKqwIL6gaJQt7hSGtzaXS+crGzxZUW/RDxE2LU7JfkQMchPbatPnQhUvf7hRrRI0djFhdW9Yo
-	G3Ozg7KgyIeZNHJqRS3le
-X-Received: by 2002:a05:6512:1111:b0:50b:f26b:62c7 with SMTP id l17-20020a056512111100b0050bf26b62c7mr4729394lfg.6.1701790676564;
-        Tue, 05 Dec 2023 07:37:56 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IGGqMTlJ14Gf928cMDlm5yh3tCedSPeZ4SuUa6eCkLFuz+1zQTJ8Zd0HpQ56sRzZ/milPk0pQ==
-X-Received: by 2002:a05:6512:1111:b0:50b:f26b:62c7 with SMTP id l17-20020a056512111100b0050bf26b62c7mr4729361lfg.6.1701790676236;
-        Tue, 05 Dec 2023 07:37:56 -0800 (PST)
+        bh=oTGzUnuImaRUCmV4376iFTUXoCEDIuJDS3P/LYSpU0A=;
+        b=Id4lSpSGpo3htOSuzVA8pHrTu8XfGBh2VhqcNuOtzuWP/LMt7ip6P9ItTk+zyzHWcN
+         kWRiIolaukHl+tpRY4xFy0cgOgfbVXAXZ0Gk8F9ocaX5UlcCd87/hspCDkkXdh1RjX2G
+         05h2zXyO07zW8sWfZjBkvHfYK7hUgD7K8qwSzDYj2sfp7yFHsh6XpUeZdwbs+8soRm3G
+         3yaJTLICpJH6jO4ChZuyvtrAOZxO5BQN5iyva8joW96KNrv35wNyHVYNhQ9TDUikmT8d
+         YmTDcRRlrgAgI5MeYfHOrvETu0+lTc79uiSia3EPpzIIYSfgAMAXSMWTz9IlQOChP8lJ
+         bOvg==
+X-Gm-Message-State: AOJu0YyH112LmxJuYJQNKiTn2tg9Y59b9ROrM4xkEymoNBNqGoFUtqrQ
+	xAt6TPsffaiyV0o7V47zmKR/UWl39I7V94Uv93+Zszd4Me1tEC5xjH+H6G92MtLR9UCeWr/sH7Q
+	uUDtR0afgp9MWvBN10mvZ
+X-Received: by 2002:a05:6512:3ca4:b0:50b:fd29:7ed8 with SMTP id h36-20020a0565123ca400b0050bfd297ed8mr3862448lfv.3.1701790685301;
+        Tue, 05 Dec 2023 07:38:05 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGr+KaNPAgoT0SZAJFiDxNFtRx0nasxXdzFRVvIz/4kkZr/bUzYlPYolm2P7sHnNK/2XAOWUQ==
+X-Received: by 2002:a05:6512:3ca4:b0:50b:fd29:7ed8 with SMTP id h36-20020a0565123ca400b0050bfd297ed8mr3862402lfv.3.1701790684999;
+        Tue, 05 Dec 2023 07:38:04 -0800 (PST)
 Received: from pstanner-thinkpadt14sgen1.remote.csb ([2a01:599:912:71c8:c243:7b37:30b:a236])
-        by smtp.gmail.com with ESMTPSA id r15-20020a056402018f00b0054c21d1fda7sm1244578edv.1.2023.12.05.07.37.53
+        by smtp.gmail.com with ESMTPSA id r15-20020a056402018f00b0054c21d1fda7sm1244578edv.1.2023.12.05.07.38.02
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 05 Dec 2023 07:37:55 -0800 (PST)
+        Tue, 05 Dec 2023 07:38:04 -0800 (PST)
 From: Philipp Stanner <pstanner@redhat.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Arnd Bergmann <arnd@arndb.de>,
@@ -72,10 +72,11 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
 Cc: linux-kernel@vger.kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-arch@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH v4 2/5] lib: move pci_iomap.c to drivers/pci/
-Date: Tue,  5 Dec 2023 16:36:27 +0100
-Message-ID: <20231205153629.26020-4-pstanner@redhat.com>
+	stable@vger.kernel.org,
+	Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH v4 5/5] lib, pci: unify generic pci_iounmap()
+Date: Tue,  5 Dec 2023 16:36:30 +0100
+Message-ID: <20231205153629.26020-7-pstanner@redhat.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20231205153629.26020-2-pstanner@redhat.com>
 References: <20231205153629.26020-2-pstanner@redhat.com>
@@ -87,99 +88,225 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-This file is guarded by an #ifdef CONFIG_PCI. It, consequently, does not
-belong to lib/ because it is not generic infrastructure.
+The implementation of pci_iounmap() is currently scattered over two
+files, drivers/pci/iomap.c and lib/iomap.c. Additionally,
+architectures can define their own version.
 
-Move the file to drivers/pci/ and implement the necessary changes to
-Makefiles and Kconfigs.
+To have only one version, it's necessary to create a helper function,
+iomem_is_ioport(), that tells pci_iounmap() whether the passed address
+points to an ioport or normal memory.
 
-Suggested-by: Danilo Krummrich <dakr@redhat.com>
+iomem_is_ioport() can be provided through two different ways:
+  1. The architecture itself provides it. As of today, the version
+     coming from lib/iomap.c de facto is the x86-specific version and
+     comes into play when CONFIG_GENERIC_IOMAP is selected. This rather
+     confusing naming is an artifact left by the removal of IA64.
+  2. As a default version in include/asm-generic/io.h for those
+     architectures that don't use CONFIG_GENERIC_IOMAP, but also don't
+     provide their own version of iomem_is_ioport().
+
+Once all architectures that support ports provide iomem_is_ioport(), the
+arch-specific definitions for pci_iounmap() can be removed and the archs
+can use the generic implementation, instead.
+
+Create a unified version of pci_iounmap() in drivers/pci/iomap.c.
+Provide the function iomem_is_ioport() in include/asm-generic/io.h
+(generic) and lib/iomap.c ("pseudo-generic" for x86).
+
+Remove the CONFIG_GENERIC_IOMAP guard around
+ARCH_WANTS_GENERIC_PCI_IOUNMAP so that configs that set
+CONFIG_GENERIC_PCI_IOMAP without CONFIG_GENERIC_IOMAP still get the
+function.
+
+Add TODOs for follow-up work on the "generic is not generic but
+x86-specific"-Problem.
+
+Suggested-by: Arnd Bergmann <arnd@kernel.org>
 Signed-off-by: Philipp Stanner <pstanner@redhat.com>
 Reviewed-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/pci/Kconfig                    | 5 +++++
- drivers/pci/Makefile                   | 1 +
- lib/pci_iomap.c => drivers/pci/iomap.c | 3 ---
- lib/Kconfig                            | 3 ---
- lib/Makefile                           | 1 -
- 5 files changed, 6 insertions(+), 7 deletions(-)
- rename lib/pci_iomap.c => drivers/pci/iomap.c (99%)
+ drivers/pci/iomap.c         | 46 +++++++++++++------------------------
+ include/asm-generic/io.h    | 27 ++++++++++++++++++++--
+ include/asm-generic/iomap.h | 21 +++++++++++++++++
+ lib/iomap.c                 | 28 ++++++++++++++++------
+ 4 files changed, 83 insertions(+), 39 deletions(-)
 
-diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-index 74147262625b..d35001589d88 100644
---- a/drivers/pci/Kconfig
-+++ b/drivers/pci/Kconfig
-@@ -13,6 +13,11 @@ config FORCE_PCI
- 	select HAVE_PCI
- 	select PCI
- 
-+# select this to provide a generic PCI iomap,
-+# without PCI itself having to be defined
-+config GENERIC_PCI_IOMAP
-+	bool
-+
- menuconfig PCI
- 	bool "PCI support"
- 	depends on HAVE_PCI
-diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
-index cc8b4e01e29d..64dcedccfc87 100644
---- a/drivers/pci/Makefile
-+++ b/drivers/pci/Makefile
-@@ -14,6 +14,7 @@ ifdef CONFIG_PCI
- obj-$(CONFIG_PROC_FS)		+= proc.o
- obj-$(CONFIG_SYSFS)		+= slot.o
- obj-$(CONFIG_ACPI)		+= pci-acpi.o
-+obj-$(CONFIG_GENERIC_PCI_IOMAP) += iomap.o
- endif
- 
- obj-$(CONFIG_OF)		+= of.o
-diff --git a/lib/pci_iomap.c b/drivers/pci/iomap.c
-similarity index 99%
-rename from lib/pci_iomap.c
-rename to drivers/pci/iomap.c
-index 6e144b017c48..91285fcff1ba 100644
---- a/lib/pci_iomap.c
+diff --git a/drivers/pci/iomap.c b/drivers/pci/iomap.c
+index 91285fcff1ba..b7faf22ec8f5 100644
+--- a/drivers/pci/iomap.c
 +++ b/drivers/pci/iomap.c
-@@ -9,7 +9,6 @@
+@@ -135,44 +135,30 @@ void __iomem *pci_iomap_wc(struct pci_dev *dev, int bar, unsigned long maxlen)
+ EXPORT_SYMBOL_GPL(pci_iomap_wc);
  
- #include <linux/export.h>
+ /*
+- * pci_iounmap() somewhat illogically comes from lib/iomap.c for the
+- * CONFIG_GENERIC_IOMAP case, because that's the code that knows about
+- * the different IOMAP ranges.
++ * This check is still necessary due to legacy reasons.
+  *
+- * But if the architecture does not use the generic iomap code, and if
+- * it has _not_ defined it's own private pci_iounmap function, we define
+- * it here.
+- *
+- * NOTE! This default implementation assumes that if the architecture
+- * support ioport mapping (HAS_IOPORT_MAP), the ioport mapping will
+- * be fixed to the range [ PCI_IOBASE, PCI_IOBASE+IO_SPACE_LIMIT [,
+- * and does not need unmapping with 'ioport_unmap()'.
+- *
+- * If you have different rules for your architecture, you need to
+- * implement your own pci_iounmap() that knows the rules for where
+- * and how IO vs MEM get mapped.
+- *
+- * This code is odd, and the ARCH_HAS/ARCH_WANTS #define logic comes
+- * from legacy <asm-generic/io.h> header file behavior. In particular,
+- * it would seem to make sense to do the iounmap(p) for the non-IO-space
+- * case here regardless, but that's not what the old header file code
+- * did. Probably incorrectly, but this is meant to be bug-for-bug
+- * compatible.
++ * TODO: Have all architectures that provide their own pci_iounmap() provide
++ * iomem_is_ioport() instead. Remove this #if afterwards.
+  */
+ #if defined(ARCH_WANTS_GENERIC_PCI_IOUNMAP)
  
--#ifdef CONFIG_PCI
- /**
-  * pci_iomap_range - create a virtual mapping cookie for a PCI BAR
-  * @dev: PCI device that owns the BAR
-@@ -178,5 +177,3 @@ void pci_iounmap(struct pci_dev *dev, void __iomem *p)
+-void pci_iounmap(struct pci_dev *dev, void __iomem *p)
++/**
++ * pci_iounmap - Unmapp a mapping
++ * @dev: PCI device the mapping belongs to
++ * @addr: start address of the mapping
++ *
++ * Unmapp a PIO or MMIO mapping.
++ */
++void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
+ {
+-#ifdef ARCH_HAS_GENERIC_IOPORT_MAP
+-	uintptr_t start = (uintptr_t) PCI_IOBASE;
+-	uintptr_t addr = (uintptr_t) p;
+-
+-	if (addr >= start && addr < start + IO_SPACE_LIMIT) {
+-		ioport_unmap(p);
++#ifdef CONFIG_HAS_IOPORT_MAP
++	if (iomem_is_ioport(addr)) {
++		ioport_unmap(addr);
+ 		return;
+ 	}
+ #endif
+-	iounmap(p);
++
++	iounmap(addr);
+ }
  EXPORT_SYMBOL(pci_iounmap);
  
- #endif /* ARCH_WANTS_GENERIC_PCI_IOUNMAP */
--
+diff --git a/include/asm-generic/io.h b/include/asm-generic/io.h
+index bac63e874c7b..58c7bf4080da 100644
+--- a/include/asm-generic/io.h
++++ b/include/asm-generic/io.h
+@@ -1129,11 +1129,34 @@ extern void ioport_unmap(void __iomem *p);
+ #endif /* CONFIG_GENERIC_IOMAP */
+ #endif /* CONFIG_HAS_IOPORT_MAP */
+ 
+-#ifndef CONFIG_GENERIC_IOMAP
++/*
++ * TODO:
++ * remove this once all architectures replaced their pci_iounmap() with
++ * a custom implementation of iomem_is_ioport().
++ */
+ #ifndef pci_iounmap
++#define pci_iounmap pci_iounmap
+ #define ARCH_WANTS_GENERIC_PCI_IOUNMAP
++#endif /* pci_iounmap */
++
++/*
++ * This function is a helper only needed for the generic pci_iounmap().
++ * It's provided here if the architecture does not provide its own version.
++ */
++#ifndef iomem_is_ioport
++#define iomem_is_ioport iomem_is_ioport
++static inline bool iomem_is_ioport(void __iomem *addr_raw)
++{
++#ifdef CONFIG_HAS_IOPORT
++	uintptr_t start = (uintptr_t)PCI_IOBASE;
++	uintptr_t addr = (uintptr_t)addr_raw;
++
++	if (addr >= start && addr < start + IO_SPACE_LIMIT)
++		return true;
+ #endif
+-#endif
++	return false;
++}
++#endif /* iomem_is_ioport */
+ 
+ #ifndef xlate_dev_mem_ptr
+ #define xlate_dev_mem_ptr xlate_dev_mem_ptr
+diff --git a/include/asm-generic/iomap.h b/include/asm-generic/iomap.h
+index 196087a8126e..2cdc6988a102 100644
+--- a/include/asm-generic/iomap.h
++++ b/include/asm-generic/iomap.h
+@@ -110,6 +110,27 @@ static inline void __iomem *ioremap_np(phys_addr_t offset, size_t size)
+ }
+ #endif
+ 
++/*
++ * If CONFIG_GENERIC_IOMAP is selected and the architecture does NOT provide its
++ * own version, ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT makes sure that the generic
++ * version from asm-generic/io.h is NOT used and instead the second "generic"
++ * version from lib/iomap.c is used.
++ *
++ * There are currently two generic versions because of a difficult cleanup
++ * process. Namely, the version in lib/iomap.c once was really generic when IA64
++ * still existed. Today, it's only really used by x86.
++ *
++ * TODO: Move the version from lib/iomap.c to x86 specific code. Then, remove
++ * this ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT-mechanism.
++ */
++#ifdef CONFIG_GENERIC_IOMAP
++#ifndef iomem_is_ioport
++#define iomem_is_ioport iomem_is_ioport
++bool iomem_is_ioport(void __iomem *addr);
++#define ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT
++#endif /* iomem_is_ioport */
++#endif /* CONFIG_GENERIC_IOMAP */
++
+ #include <asm-generic/pci_iomap.h>
+ 
+ #endif
+diff --git a/lib/iomap.c b/lib/iomap.c
+index 4f8b31baa575..eb9a879ebf42 100644
+--- a/lib/iomap.c
++++ b/lib/iomap.c
+@@ -418,12 +418,26 @@ EXPORT_SYMBOL(ioport_map);
+ EXPORT_SYMBOL(ioport_unmap);
+ #endif /* CONFIG_HAS_IOPORT_MAP */
+ 
+-#ifdef CONFIG_PCI
+-/* Hide the details if this is a MMIO or PIO address space and just do what
+- * you expect in the correct way. */
+-void pci_iounmap(struct pci_dev *dev, void __iomem * addr)
++/*
++ * If CONFIG_GENERIC_IOMAP is selected and the architecture does NOT provide its
++ * own version, ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT makes sure that the generic
++ * version from asm-generic/io.h is NOT used and instead the second "generic"
++ * version from this file here is used.
++ *
++ * There are currently two generic versions because of a difficult cleanup
++ * process. Namely, the version in lib/iomap.c once was really generic when IA64
++ * still existed. Today, it's only really used by x86.
++ *
++ * TODO: Move this function to x86-specific code.
++ */
++#if defined(ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT)
++bool iomem_is_ioport(void __iomem *addr)
+ {
+-	IO_COND(addr, /* nothing */, iounmap(addr));
++	unsigned long port = (unsigned long __force)addr;
++
++	if (port > PIO_OFFSET && port < PIO_RESERVED)
++		return true;
++
++	return false;
+ }
+-EXPORT_SYMBOL(pci_iounmap);
 -#endif /* CONFIG_PCI */
-diff --git a/lib/Kconfig b/lib/Kconfig
-index 3ea1c830efab..1bf859166ac7 100644
---- a/lib/Kconfig
-+++ b/lib/Kconfig
-@@ -70,9 +70,6 @@ source "lib/math/Kconfig"
- config NO_GENERIC_PCI_IOPORT_MAP
- 	bool
- 
--config GENERIC_PCI_IOMAP
--	bool
--
- config GENERIC_IOMAP
- 	bool
- 	select GENERIC_PCI_IOMAP
-diff --git a/lib/Makefile b/lib/Makefile
-index 6b09731d8e61..0800289ec6c5 100644
---- a/lib/Makefile
-+++ b/lib/Makefile
-@@ -153,7 +153,6 @@ CFLAGS_debug_info.o += $(call cc-option, -femit-struct-debug-detailed=any)
- obj-y += math/ crypto/
- 
- obj-$(CONFIG_GENERIC_IOMAP) += iomap.o
--obj-$(CONFIG_GENERIC_PCI_IOMAP) += pci_iomap.o
- obj-$(CONFIG_HAS_IOMEM) += iomap_copy.o devres.o
- obj-$(CONFIG_CHECK_SIGNATURE) += check_signature.o
- obj-$(CONFIG_DEBUG_LOCKING_API_SELFTESTS) += locking-selftest.o
++#endif /* ARCH_WANTS_GENERIC_IOMEM_IS_IOPORT */
 -- 
 2.43.0
 
