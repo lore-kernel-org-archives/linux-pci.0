@@ -1,9 +1,9 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 362BA181;
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 79474186;
 	Tue,  5 Dec 2023 01:55:36 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id CD2461C058F;
-	Tue,  5 Dec 2023 18:46:37 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id CC23D1C0465;
+	Tue,  5 Dec 2023 18:46:06 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -70,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 18/37] irqchip: SH7751 IRL external encoder with enable gate.
-Date: Tue,  5 Dec 2023 18:45:37 +0900
-Message-Id: <16941383a95369b239f7e913cf00ccd0c2e5c954.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 03/37] sh: Enable OF support for build and configuration.
+Date: Tue,  5 Dec 2023 18:45:22 +0900
+Message-Id: <e0ae187f2dd3b441996ea8de3ea657a51730ae03.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -84,278 +84,120 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-SH7751 have 15 level external interrupt.
-It is typically connected to the CPU through a priority encoder
-that can suppress requests.
-This driver provides a way to control those hardware with irqchip.
+IRQ, CLK and PCI will be migrated to a common driver framework.
+So if OF, disable the SH specific drivers.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- drivers/irqchip/Kconfig                 |   7 +
- drivers/irqchip/Makefile                |   2 +
- drivers/irqchip/irq-renesas-sh7751irl.c | 227 ++++++++++++++++++++++++
- 3 files changed, 236 insertions(+)
- create mode 100644 drivers/irqchip/irq-renesas-sh7751irl.c
+ arch/sh/Kconfig                 | 11 ++++++-----
+ arch/sh/drivers/Makefile        |  2 ++
+ arch/sh/kernel/cpu/Makefile     |  9 +++++++--
+ arch/sh/kernel/cpu/sh4/Makefile |  3 +++
+ 4 files changed, 18 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/irqchip/Kconfig b/drivers/irqchip/Kconfig
-index 658523f65b1d..2a061c01f381 100644
---- a/drivers/irqchip/Kconfig
-+++ b/drivers/irqchip/Kconfig
-@@ -687,4 +687,11 @@ config RENESAS_SH7751_INTC
- 	  Support for the Renesas SH7751 On-chip interrupt controller.
- 	  And external interrupt encoder for some targets.
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 7500521b2b98..63961d273af7 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -65,10 +65,10 @@ config SUPERH
+ 	select MODULES_USE_ELF_RELA
+ 	select NEED_SG_DMA_LENGTH
+ 	select NO_DMA if !MMU && !DMA_COHERENT
+-	select NO_GENERIC_PCI_IOPORT_MAP if PCI
++	select NO_GENERIC_PCI_IOPORT_MAP if !SH_DEVICE_TREE
+ 	select OLD_SIGACTION
+ 	select OLD_SIGSUSPEND
+-	select PCI_DOMAINS if PCI
++	select PCI_DOMAINS if PCI && !SH_DEVICE_TREE
+ 	select PERF_EVENTS
+ 	select PERF_USE_VMALLOC
+ 	select RTC_LIB
+@@ -152,7 +152,7 @@ menu "System type"
+ #
+ config CPU_SH2
+ 	bool
+-	select SH_INTC
++	select SH_INTC if !SH_DEVICE_TREE
  
-+config RENESAS_SH7751IRL_INTC
-+	bool "Renesas SH7751 based target IRL encoder support."
-+	depends on RENESAS_SH7751_INTC
-+	help
-+	  Support for External Interrupt encoder
-+	  on the some Renesas SH7751 based target.
+ config CPU_SH2A
+ 	bool
+@@ -178,7 +178,7 @@ config CPU_SH4
+ 	select CPU_HAS_INTEVT
+ 	select CPU_HAS_SR_RB
+ 	select CPU_HAS_FPU if !CPU_SH4AL_DSP
+-	select SH_INTC
++	select SH_INTC if !SH_DEVICE_TREE
+ 	select SYS_SUPPORTS_SH_TMU
+ 
+ config CPU_SH4A
+@@ -521,6 +521,7 @@ config SH_PCLK_FREQ
+ 
+ config SH_CLK_CPG
+ 	def_bool y
++	depends on !COMMON_CLK
+ 
+ config SH_CLK_CPG_LEGACY
+ 	depends on SH_CLK_CPG
+@@ -665,7 +666,7 @@ config BUILTIN_DTB_SOURCE
+ 	  kernel.
+ 
+ config ZERO_PAGE_OFFSET
+-	hex
++	hex "Zero page offset"
+ 	default "0x00010000" if PAGE_SIZE_64KB || SH_RTS7751R2D || \
+ 				SH_7751_SOLUTION_ENGINE
+ 	default "0x00004000" if PAGE_SIZE_16KB || SH_SH03
+diff --git a/arch/sh/drivers/Makefile b/arch/sh/drivers/Makefile
+index 8bd10b904bf9..83f609ca1eb4 100644
+--- a/arch/sh/drivers/Makefile
++++ b/arch/sh/drivers/Makefile
+@@ -5,6 +5,8 @@
+ 
+ obj-y		+= dma/ platform_early.o
+ 
++ifndef CONFIG_SH_DEVICE_TREE
+ obj-$(CONFIG_PCI)		+= pci/
++endif
+ obj-$(CONFIG_PUSH_SWITCH)	+= push-switch.o
+ obj-$(CONFIG_HEARTBEAT)		+= heartbeat.o
+diff --git a/arch/sh/kernel/cpu/Makefile b/arch/sh/kernel/cpu/Makefile
+index 46118236bf04..e00ebf134985 100644
+--- a/arch/sh/kernel/cpu/Makefile
++++ b/arch/sh/kernel/cpu/Makefile
+@@ -16,6 +16,11 @@ obj-$(CONFIG_ARCH_SHMOBILE)	+= shmobile/
+ # Common interfaces.
+ 
+ obj-$(CONFIG_SH_ADC)		+= adc.o
++ifndef CONFIG_COMMON_CLK
++obj-y += clock.o
+ obj-$(CONFIG_SH_CLK_CPG_LEGACY)	+= clock-cpg.o
+-
+-obj-y	+= irq/ init.o clock.o fpu.o pfc.o proc.o
++endif
++ifndef CONFIG_GENERIC_IRQ_CHIP
++obj-y	+= irq/
++endif
++obj-y	+= init.o fpu.o pfc.o proc.o
+diff --git a/arch/sh/kernel/cpu/sh4/Makefile b/arch/sh/kernel/cpu/sh4/Makefile
+index 02e3ee16e15c..33da4c86feff 100644
+--- a/arch/sh/kernel/cpu/sh4/Makefile
++++ b/arch/sh/kernel/cpu/sh4/Makefile
+@@ -15,6 +15,7 @@ perf-$(CONFIG_CPU_SUBTYPE_SH7750)	:= perf_event.o
+ perf-$(CONFIG_CPU_SUBTYPE_SH7750S)	:= perf_event.o
+ perf-$(CONFIG_CPU_SUBTYPE_SH7091)	:= perf_event.o
+ 
++ifndef CONFIG_SH_DEVICE_TREE
+ # CPU subtype setup
+ obj-$(CONFIG_CPU_SUBTYPE_SH7750)	+= setup-sh7750.o
+ obj-$(CONFIG_CPU_SUBTYPE_SH7750R)	+= setup-sh7750.o
+@@ -29,5 +30,7 @@ ifndef CONFIG_CPU_SH4A
+ clock-$(CONFIG_CPU_SH4)			:= clock-sh4.o
+ endif
+ 
++endif # CONFIG_SH_DEVICE_TREE
 +
- endmenu
-diff --git a/drivers/irqchip/Makefile b/drivers/irqchip/Makefile
-index 26c91d075e25..91df16726b1f 100644
---- a/drivers/irqchip/Makefile
-+++ b/drivers/irqchip/Makefile
-@@ -121,3 +121,5 @@ obj-$(CONFIG_APPLE_AIC)			+= irq-apple-aic.o
- obj-$(CONFIG_MCHP_EIC)			+= irq-mchp-eic.o
- obj-$(CONFIG_SUNPLUS_SP7021_INTC)	+= irq-sp7021-intc.o
- obj-$(CONFIG_RENESAS_SH7751_INTC)	+= irq-renesas-sh7751.o
-+obj-$(CONFIG_RENESAS_SH7751IRL_INTC)	+= irq-renesas-sh7751irl.o
-+
-diff --git a/drivers/irqchip/irq-renesas-sh7751irl.c b/drivers/irqchip/irq-renesas-sh7751irl.c
-new file mode 100644
-index 000000000000..99ee5bf9fb1e
---- /dev/null
-+++ b/drivers/irqchip/irq-renesas-sh7751irl.c
-@@ -0,0 +1,227 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * SH7751 based board IRL encoder driver
-+ * (Renesas RTS7751R2D / IO DATA DEVICE LANDISK, USL-5P)
-+ *
-+ * Copyright (C) 2023 Yoshinori Sato
-+ */
-+
-+#include <linux/err.h>
-+#include <linux/init.h>
-+#include <linux/interrupt.h>
-+#include <linux/io.h>
-+#include <linux/irqdomain.h>
-+#include <linux/irq.h>
-+#include <linux/irqchip.h>
-+#include <linux/of.h>
-+#include <linux/of_irq.h>
-+#include <linux/of_address.h>
-+#include <linux/slab.h>
-+#include <linux/bitops.h>
-+
-+struct sh7751irl_intc_priv {
-+	struct irq_domain *irq_domain;
-+	void __iomem	  *base;
-+	unsigned int	  width;
-+	bool		  invert;
-+	u32		  enable_bit[NR_IRL];
-+};
-+
-+static inline unsigned long get_reg(void __iomem *addr, unsigned int w)
-+{
-+	switch (w) {
-+	case 8:
-+		return __raw_readb(addr);
-+	case 16:
-+		return __raw_readw(addr);
-+	case 32:
-+		return __raw_readl(addr);
-+	default:
-+		/* The size is checked when reading the properties. */
-+		pr_err("%s: Invalid width %d", __FILE__, w);
-+		return 0;
-+	}
-+}
-+
-+static inline void set_reg(void __iomem *addr, unsigned int w, unsigned long val)
-+{
-+	switch (w) {
-+	case 8:
-+		__raw_writeb(val, addr);
-+		break;
-+	case 16:
-+		__raw_writew(val, addr);
-+		break;
-+	case 32:
-+		__raw_writel(val, addr);
-+		break;
-+	default:
-+		pr_err("%s: Invalid width %d", __FILE__, w);
-+	}
-+}
-+
-+static inline struct sh7751irl_intc_priv *irq_data_to_priv(struct irq_data *data)
-+{
-+	return data->domain->host_data;
-+}
-+
-+static void irl_endisable(struct irq_data *data, unsigned int enable)
-+{
-+	struct sh7751irl_intc_priv *priv;
-+	unsigned long val;
-+	unsigned int irl;
-+
-+	priv = irq_data_to_priv(data);
-+	irl = irqd_to_hwirq(data) - IRL_BASE_IRQ;
-+
-+	if (irl < NR_IRL && priv->enable_bit[irl] < priv->width) {
-+		if (priv->invert)
-+			enable = !enable;
-+
-+		val = get_reg(priv->base, priv->width);
-+		if (enable)
-+			set_bit(priv->enable_bit[irl], &val);
-+		else
-+			clear_bit(priv->enable_bit[irl], &val);
-+		set_reg(priv->base, priv->width, val);
-+	} else {
-+		pr_err("%s: Invalid register define in IRL %u", __FILE__, irl);
-+	}
-+}
-+
-+static void sh7751irl_intc_disable_irq(struct irq_data *data)
-+{
-+	irl_endisable(data, 0);
-+}
-+
-+static void sh7751irl_intc_enable_irq(struct irq_data *data)
-+{
-+	irl_endisable(data, 1);
-+}
-+
-+static struct irq_chip sh7751irl_intc_chip = {
-+	.name		= "SH7751IRL-INTC",
-+	.irq_enable	= sh7751irl_intc_enable_irq,
-+	.irq_disable	= sh7751irl_intc_disable_irq,
-+};
-+
-+static int sh7751irl_intc_map(struct irq_domain *h, unsigned int virq,
-+			       irq_hw_number_t hw_irq_num)
-+{
-+	irq_set_chip_and_handler(virq, &sh7751irl_intc_chip, handle_level_irq);
-+	irq_get_irq_data(virq)->chip_data = h->host_data;
-+	irq_modify_status(virq, IRQ_NOREQUEST, IRQ_NOPROBE);
-+	return 0;
-+}
-+
-+static int sh7751irl_intc_translate(struct irq_domain *domain,
-+			       struct irq_fwspec *fwspec, unsigned long *hwirq,
-+			       unsigned int *type)
-+{
-+	if (fwspec->param[0] > NR_IRL)
-+		return -EINVAL;
-+
-+	switch (fwspec->param_count) {
-+	case 2:
-+		*type = fwspec->param[1];
-+		fallthrough;
-+	case 1:
-+		*hwirq = fwspec->param[0] + IRL_BASE_IRQ;
-+		break;
-+	default:
-+		return -EINVAL;
-+	}
-+	return 0;
-+}
-+
-+static const struct irq_domain_ops sh7751irl_intc_domain_ops = {
-+	.map = sh7751irl_intc_map,
-+	.translate = sh7751irl_intc_translate,
-+};
-+
-+static int __init load_irq_bit(struct device_node *node, struct sh7751irl_intc_priv *priv)
-+{
-+	struct property *enable_map;
-+	const __be32 *p;
-+	u32 nr_bits;
-+	u32 irl;
-+	int ret;
-+
-+	/* Fill in unused */
-+	memset(priv->enable_bit, ~0, sizeof(priv->enable_bit));
-+
-+	enable_map = of_find_property(node, "renesas,enable-bit", &nr_bits);
-+	if (IS_ERR(enable_map))
-+		return PTR_ERR(enable_map);
-+
-+	nr_bits /= sizeof(u32);
-+	/* 2words per entry. */
-+	if (nr_bits % 2)
-+		return -EINVAL;
-+	nr_bits /= 2;
-+	if (nr_bits > NR_IRL)
-+		return -EINVAL;
-+
-+	ret = nr_bits;
-+	p = NULL;
-+	for (; nr_bits > 0; nr_bits--) {
-+		/* 1st word - IRL */
-+		p = of_prop_next_u32(enable_map, p, &irl);
-+		if (!p || irl > NR_IRL)
-+			return -EINVAL;
-+		/* 2nd word - enable bit index */
-+		p = of_prop_next_u32(enable_map, p, &priv->enable_bit[irl]);
-+		if (priv->enable_bit[irl] >= priv->width)
-+			return -EINVAL;
-+	}
-+	return ret;
-+}
-+
-+static int __init sh7751irl_init(struct device_node *node, struct device_node *parent)
-+{
-+	struct sh7751irl_intc_priv *priv;
-+	struct irq_domain *d;
-+	void __iomem *base;
-+	int ret = 0;
-+
-+	base = of_iomap(node, 0);
-+	if (!base)
-+		ret = -EINVAL;
-+
-+	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
-+	if (!priv)
-+		return -ENOMEM;
-+
-+	priv->base = base;
-+	of_property_read_u32(node, "renesas,width", &priv->width);
-+	if (priv->width != 8 && priv->width != 16 && priv->width != 32) {
-+		pr_err("%pOFP: Invalid register width.\n", node);
-+		ret = -EINVAL;
-+		goto error;
-+	}
-+
-+	priv->invert = of_property_read_bool(node, "renesas,set-to-disable");
-+
-+	ret = load_irq_bit(node, priv);
-+	if (ret < 0) {
-+		pr_err("%pOFP: Invalid register define.\n", node);
-+		goto error;
-+	}
-+
-+	d = irq_domain_add_tree(node, &sh7751irl_intc_domain_ops, priv);
-+	if (d == NULL) {
-+		pr_err("%pOFP: cannot initialize irq domain\n", node);
-+		ret = -ENOMEM;
-+		goto error;
-+	}
-+
-+	priv->irq_domain = d;
-+	irq_domain_update_bus_token(d, DOMAIN_BUS_WIRED);
-+	pr_info("%pOFP: SH7751 External Interrupt encoder (input=%d)", node, ret);
-+	return 0;
-+error:
-+	kfree(priv);
-+	return ret;
-+}
-+
-+IRQCHIP_DECLARE(renesas_sh7751_irl, "renesas,sh7751-irl-ext", sh7751irl_init);
+ obj-y					+= $(clock-y)
+ obj-$(CONFIG_PERF_EVENTS)		+= $(perf-y)
 -- 
 2.39.2
 
