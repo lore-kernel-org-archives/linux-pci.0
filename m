@@ -1,202 +1,170 @@
-Received: from mail-il1-f176.google.com (mail-il1-f176.google.com [209.85.166.176])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 3E9081AB;
-	Tue,  5 Dec 2023 06:21:56 -0800 (PST)
-Received: by mail-il1-f176.google.com with SMTP id e9e14a558f8ab-35d6c5f9579so7259825ab.0;
-        Tue, 05 Dec 2023 06:21:56 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OdR1wATk"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F3CA6B9
+	for <linux-pci@vger.kernel.org>; Tue,  5 Dec 2023 06:34:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1701786862;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=t1oo9wYlZR3izMsicqmb+vabDeYW3Sk3a+FflIBcT0I=;
+	b=OdR1wATkGTu+1GZ3xsJlJb8xwUuCY4Xp1G28Bmjd1naayL2YNhzQh1VmfaXDWHyt5ReR4X
+	cV6yndOReUKU+kqRBl+bWiSWCOBUPwe2zgix3Q7CwA7Wn5QxTHy0JOox1R6OKvDgonJaPp
+	/z8V+RAmkMBBMfbMMB852MLrJ+quSm8=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-167-LPFYlGVwMFiNVUNeLGlewQ-1; Tue, 05 Dec 2023 09:34:15 -0500
+X-MC-Unique: LPFYlGVwMFiNVUNeLGlewQ-1
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-40a3d918dc1so11654375e9.0
+        for <linux-pci@vger.kernel.org>; Tue, 05 Dec 2023 06:34:15 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701786115; x=1702390915;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wjEDTZbGLWl0kPzOEjqjXQ57XT0xydUQvJCUY6FowqA=;
-        b=sVt1M6Tprvh5CcP1CA6V7cgPHTd5SEzTyA8LkIczss03OChTZp0Ij4BBuXXQR6kvBN
-         ZHDbZ7h1Hy6tUFw9+NUa+rJt0NcqdRrmf31+NVZuUVI+q8xtR4VhtV/QOtgMyiICCk4i
-         onNQoosikS5VrHQQ5iGTzTU10XqHrKtApOa33S9BlMPgpw9zOpnaEMtSuwIXLcYKrmcw
-         WCg4nsRfkozywtj4gdwgtiy8CeTcReGEub9mrpNarnpRy9oZ3F1OrFi99FKPqYrkBCBY
-         fFZbMOebDko6KkqWoy24aVdNw13u/sFHlAOFCniXgxr75yvkwpFTjVoXXZd+j/tQC1sZ
-         D71A==
-X-Gm-Message-State: AOJu0YzL0nAXJ0lRS2bnc7aqEQiCX8FwA39WO+lC+gKtqVoNo4aS18pR
-	bWVeY9ZCnKVB+xr1hLxWMl9PzkCzPRmhdw==
-X-Google-Smtp-Source: AGHT+IHiJ8ijq3rDLHlUKDIUoapWhxOdwFwIlkcpCJkHcU69YH7LK0vxP4cObCv99jQmSEB1+zHIIA==
-X-Received: by 2002:a92:d292:0:b0:35d:482d:d5b3 with SMTP id p18-20020a92d292000000b0035d482dd5b3mr5821385ilp.10.1701786115219;
-        Tue, 05 Dec 2023 06:21:55 -0800 (PST)
-Received: from mail-il1-f181.google.com (mail-il1-f181.google.com. [209.85.166.181])
-        by smtp.gmail.com with ESMTPSA id l2-20020a056e0205c200b0035b0ad262e2sm615130ils.47.2023.12.05.06.21.55
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Dec 2023 06:21:55 -0800 (PST)
-Received: by mail-il1-f181.google.com with SMTP id e9e14a558f8ab-35d699ec3caso8281205ab.3;
-        Tue, 05 Dec 2023 06:21:55 -0800 (PST)
-X-Received: by 2002:a81:ee0b:0:b0:5d7:1941:a9a with SMTP id
- l11-20020a81ee0b000000b005d719410a9amr4666145ywm.53.1701785702584; Tue, 05
- Dec 2023 06:15:02 -0800 (PST)
+        d=1e100.net; s=20230601; t=1701786854; x=1702391654;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=t1oo9wYlZR3izMsicqmb+vabDeYW3Sk3a+FflIBcT0I=;
+        b=b5byJZeOC7K1ewRaS5VrRHq+oTn6KVibKAu/ty0uylM6FvrXvMXSKPTeqr2L6YpH5U
+         O06etDH9JDArVQcbhiQrLFFwyqhyUa9wV5L9ZNbVNj/rScQOt5j253PktKrV515iyUc1
+         HfUS8CDPpwgOxiM2vVYOv+2q3I3/MghjmIN0sgE2OrnlIil6s7Sqd2MqiWY8/73DMhmD
+         EuRRPy0AncQFuBhonIgWrAlDASsevaypbNCxwBKYZRJAKjzYurk7MWcG4MPsvmWGzH30
+         v+/nLF7FAS5PmSob37JoL0dWKJdvbQCM+LRK5wlQEd79iutCTfVW2T0s7DNivX8vHaq0
+         K0lw==
+X-Gm-Message-State: AOJu0Yzkap5kezgs0ldd4mzF4qqqdawb/E7I0UeSUkoyQ8HJaoPLaMtg
+	mTNcXsB4RKNgCXG/i3iprWMMlwBRkbgS3H1JeLZh8MPfSM0bd7Ae+0vc4V5P2/GAHSqY9yn4vH1
+	siN1b4j06182xMZERp0CQ
+X-Received: by 2002:a05:600c:5024:b0:40a:771f:6a56 with SMTP id n36-20020a05600c502400b0040a771f6a56mr24476155wmr.4.1701786854234;
+        Tue, 05 Dec 2023 06:34:14 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEGPNdBwDu9dr6enHkkgXCOXz022qJVffHzVjL5DyqXAOhz0Bn+IqdhhmLHKvXQvWYQm8QVxw==
+X-Received: by 2002:a05:600c:5024:b0:40a:771f:6a56 with SMTP id n36-20020a05600c502400b0040a771f6a56mr24476128wmr.4.1701786853892;
+        Tue, 05 Dec 2023 06:34:13 -0800 (PST)
+Received: from pstanner-thinkpadt14sgen1.remote.csb (nat-pool-muc-t.redhat.com. [149.14.88.26])
+        by smtp.gmail.com with ESMTPSA id t17-20020a05600c451100b0040b379e8526sm22411354wmo.25.2023.12.05.06.34.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Dec 2023 06:34:13 -0800 (PST)
+Message-ID: <8ec1ae92206c090c79a9ab9586bd17349798b08f.camel@redhat.com>
+Subject: Re: [PATCH v3 5/5] lib, pci: unify generic pci_iounmap()
+From: Philipp Stanner <pstanner@redhat.com>
+To: kernel test robot <lkp@intel.com>, Bjorn Helgaas <helgaas@kernel.org>, 
+ Arnd Bergmann <arnd@arndb.de>, Hanjun Guo <guohanjun@huawei.com>, NeilBrown
+ <neilb@suse.de>,  Kent Overstreet <kmo@daterainc.com>, Jakub Kicinski
+ <kuba@kernel.org>, Niklas Schnelle <schnelle@linux.ibm.com>,  Uladzislau
+ Koshchanka <koshchanka@gmail.com>, John Sanpe <sanpeqf@gmail.com>, Dave
+ Jiang <dave.jiang@intel.com>, "Masami Hiramatsu (Google)"
+ <mhiramat@kernel.org>,  Kees Cook <keescook@chromium.org>, David Gow
+ <davidgow@google.com>, Herbert Xu <herbert@gondor.apana.org.au>, Shuah Khan
+ <skhan@linuxfoundation.org>,  "wuqiang.matt" <wuqiang.matt@bytedance.com>,
+ Yury Norov <yury.norov@gmail.com>, Jason Baron <jbaron@akamai.com>,  Andrew
+ Morton <akpm@linux-foundation.org>, Ben Dooks <ben.dooks@codethink.co.uk>,
+ dakr@redhat.com
+Cc: oe-kbuild-all@lists.linux.dev, Linux Memory Management List
+ <linux-mm@kvack.org>, linux-kernel@vger.kernel.org,
+ linux-pci@vger.kernel.org,  linux-arch@vger.kernel.org,
+ stable@vger.kernel.org
+Date: Tue, 05 Dec 2023 15:34:12 +0100
+In-Reply-To: <202312051813.09WbvusW-lkp@intel.com>
+References: <20231204123834.29247-6-pstanner@redhat.com>
+	 <202312051813.09WbvusW-lkp@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.48.4 (3.48.4-1.fc38) 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1701768028.git.ysato@users.sourceforge.jp> <ca3122511b201a0da0a3f930c0f894bf11954423.1701768028.git.ysato@users.sourceforge.jp>
-In-Reply-To: <ca3122511b201a0da0a3f930c0f894bf11954423.1701768028.git.ysato@users.sourceforge.jp>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 5 Dec 2023 15:14:50 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdUY1aduN=6kaHFyfT=U3J3K3NPZDK2mCct8vS9XaMfaiA@mail.gmail.com>
-Message-ID: <CAMuHMdUY1aduN=6kaHFyfT=U3J3K3NPZDK2mCct8vS9XaMfaiA@mail.gmail.com>
-Subject: Re: [DO NOT MERGE v5 12/37] dt-bindings: pci: pci-sh7751: Add SH7751 PCI
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
-	Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Lee Jones <lee@kernel.org>, 
-	Helge Deller <deller@gmx.de>, Heiko Stuebner <heiko@sntech.de>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Chris Morgan <macromorgan@hotmail.com>, 
-	Linus Walleij <linus.walleij@linaro.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Arnd Bergmann <arnd@arndb.de>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
-	David Rientjes <rientjes@google.com>, Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Stephen Rothwell <sfr@canb.auug.org.au>, Guo Ren <guoren@kernel.org>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Azeem Shaikh <azeemshaikh38@gmail.com>, 
-	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>, 
-	Max Filippov <jcmvbkbc@gmail.com>, Tom Rix <trix@redhat.com>, 
-	Herve Codina <herve.codina@bootlin.com>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-Hi Sato-san,
+Alright, so it seems that not all architectures provide ioport_unmap().
+So I'll provide yet another preprocessor guard in v4. Wohooo, we love
+them...
 
-On Tue, Dec 5, 2023 at 10:46=E2=80=AFAM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
-> Renesas SH7751 PCI Controller json-schema.
->
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+P.
 
-Thanks for your patch!
+On Tue, 2023-12-05 at 18:44 +0800, kernel test robot wrote:
+> Hi Philipp,
+>=20
+> kernel test robot noticed the following build errors:
+>=20
+> [auto build test ERROR on pci/next]
+> [also build test ERROR on pci/for-linus arnd-asm-generic/master
+> kees/for-next/pstore kees/for-next/kspp linus/master v6.7-rc4 next-
+> 20231205]
+> [If your patch is applied to the wrong git tree, kindly drop us a
+> note.
+> And when submitting patch, we suggest to use '--base' as documented
+> in
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>=20
+> url:=C2=A0=C2=A0=C2=A0
+> https://github.com/intel-lab-lkp/linux/commits/Philipp-Stanner/lib-pci_io=
+map-c-fix-cleanup-bugs-in-pci_iounmap/20231204-204128
+> base:=C2=A0=C2=A0
+> https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git=C2=A0next
+> patch link:=C2=A0=C2=A0=C2=A0
+> https://lore.kernel.org/r/20231204123834.29247-6-pstanner%40redhat.com
+> patch subject: [PATCH v3 5/5] lib, pci: unify generic pci_iounmap()
+> config: openrisc-virt_defconfig
+> (https://download.01.org/0day-ci/archive/20231205/202312051813.09Wbvu
+> sW-lkp@intel.com/config)
+> compiler: or1k-linux-gcc (GCC) 13.2.0
+> reproduce (this is a W=3D1 build):
+> (https://download.01.org/0day-ci/archive/20231205/202312051813.09Wbvu
+> sW-lkp@intel.com/reproduce)
+>=20
+> If you fix the issue in a separate patch/commit (i.e. not just a new
+> version of
+> the same patch/commit), kindly add following tags
+> > Reported-by: kernel test robot <lkp@intel.com>
+> > Closes:
+> > https://lore.kernel.org/oe-kbuild-all/202312051813.09WbvusW-lkp@intel.c=
+om/
+>=20
+> All errors (new ones prefixed by >>):
+>=20
+> =C2=A0=C2=A0 drivers/pci/iomap.c: In function 'pci_iounmap':
+> > > drivers/pci/iomap.c:155:17: error: implicit declaration of
+> > > function 'ioport_unmap'; did you mean 'devm_ioport_unmap'? [-
+> > > Werror=3Dimplicit-function-declaration]
+> =C2=A0=C2=A0=C2=A0=C2=A0 155 |=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ioport_unmap(addr);
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ ^~~~~~~~~~~~
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ devm_ioport_unmap
+> =C2=A0=C2=A0 cc1: some warnings being treated as errors
+>=20
+>=20
+> vim +155 drivers/pci/iomap.c
+>=20
+> =C2=A0=C2=A0 144=C2=A0=C2=A0
+> =C2=A0=C2=A0 145=C2=A0=C2=A0/**
+> =C2=A0=C2=A0 146=C2=A0=C2=A0 * pci_iounmap - Unmapp a mapping
+> =C2=A0=C2=A0 147=C2=A0=C2=A0 * @dev: PCI device the mapping belongs to
+> =C2=A0=C2=A0 148=C2=A0=C2=A0 * @addr: start address of the mapping
+> =C2=A0=C2=A0 149=C2=A0=C2=A0 *
+> =C2=A0=C2=A0 150=C2=A0=C2=A0 * Unmapp a PIO or MMIO mapping.
+> =C2=A0=C2=A0 151=C2=A0=C2=A0 */
+> =C2=A0=C2=A0 152=C2=A0=C2=A0void pci_iounmap(struct pci_dev *dev, void __=
+iomem *addr)
+> =C2=A0=C2=A0 153=C2=A0=C2=A0{
+> =C2=A0=C2=A0 154=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0if (iomem_is_ioport(addr)) {
+> =C2=A0> 155=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ioport_unmap(addr);
+> =C2=A0=C2=A0 156=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return;
+> =C2=A0=C2=A0 157=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0}
+> =C2=A0=C2=A0 158=C2=A0=C2=A0
+> =C2=A0=C2=A0 159=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0iounmap(addr);
+> =C2=A0=C2=A0 160=C2=A0=C2=A0}
+> =C2=A0=C2=A0 161=C2=A0=C2=A0EXPORT_SYMBOL(pci_iounmap);
+> =C2=A0=C2=A0 162=C2=A0=C2=A0
+>=20
 
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/renesas,sh7751-pci.yaml
-> @@ -0,0 +1,128 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/renesas,sh7751-pci.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Renesas SH7751 PCI Host controller
-> +
-> +maintainers:
-> +  - Yoshinori Sato <ysato@users.sourceforge.jp>
-> +
-> +allOf:
-> +  - $ref: /schemas/pci/pci-bus.yaml#
-> +
-> +properties:
-> +  compatible:
-> +    items:
-> +      - enum:
-> +          - renesas,sh7751-pci
-> +
-> +  reg:
-> +    minItems: 2
-> +    maxItems: 2
-
-Please add "reg-names", as there is more than one entry.
-If that is not sufficient to document what each entry means, please add
-"description"s, too.
-
-> +  renesas,memory:
-> +    $ref: /schemas/types.yaml#/definitions/uint32-array
-> +    description: |
-> +      PCI BMDMA src/dst memory area.
-
-Isn't that the purpose of the "dma-ranges" property?
-
-> +
-> +  renesas,bcr1:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCIBCR1 value. This value makes add the value of BSC's=
- BCR1.
-
-What does this mean?
-
-> +
-> +  renesas,mcrmask:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCIMCR value. This value makes clear bit in the value =
-of BSC's MCR.
-
-What does this mean?
-
-> +
-> +  renesas,intm:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCIINTM value.
-> +
-> +  renesas,aintm:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCIIANTM value.
-> +
-> +  renesas,lsr:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCILSR0 and PCILSR1 values.
-> +      First word is PCILSR0, Second word is PCILSR1.
-> +
-> +  renesas,lar:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCILSA0 and PCILAR1 values.
-> +      First word is PCILAR0, Second word is PCILAR1.
-> +
-> +  renesas,dmabt:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCIDMABT value.
-> +
-> +  renesas,pintm:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: |
-> +      SH7751 PCIC PCIPINTM value.
-> +
-> +  renesas,config:
-> +    $ref: /schemas/types.yaml#/definitions/uint32-array
-> +    description: |
-> +      SH7751 PCIC PCICONFIG values array. Register Number and value pair=
- list.
-
-Several of these properties look like pure hardware programming.
-Can these values be derived from other (standard) DT properties?
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
