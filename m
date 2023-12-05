@@ -1,9 +1,9 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id D399A116;
-	Tue,  5 Dec 2023 01:55:36 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 6F44818B;
+	Tue,  5 Dec 2023 01:55:37 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 33C531C0509;
-	Tue,  5 Dec 2023 18:46:46 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 365251C0546;
+	Tue,  5 Dec 2023 18:46:21 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -70,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 22/37] dt-bindings: display: smi,sm501: SMI SM501 binding json-schema
-Date: Tue,  5 Dec 2023 18:45:41 +0900
-Message-Id: <f671beae8a8ebfd361f4c903bccce713135a169f.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 10/37] sh: Common PCI Framework driver support.
+Date: Tue,  5 Dec 2023 18:45:29 +0900
+Message-Id: <ec01fdf9a91d9d1da9da08be83d5821353ac5a9d.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -84,187 +84,109 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Define SM501 functions and modes.
+Add New OF based PCI Host driver.
+This driver conflicts some point in legacy PCI driver.
+To resolve the conflict, I made some changes to the legacy driver.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- .../bindings/display/smi,sm501.yaml           | 134 ++++++++++++++++++
- include/dt-bindings/display/sm501.h           |  25 ++++
- 2 files changed, 159 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/display/smi,sm501.yaml
- create mode 100644 include/dt-bindings/display/sm501.h
+ arch/sh/drivers/pci/pci.c |  6 ------
+ arch/sh/include/asm/io.h  |  6 ++++++
+ arch/sh/include/asm/pci.h |  4 ++++
+ arch/sh/kernel/iomap.c    | 24 ++++++++++++++++++++++++
+ 4 files changed, 34 insertions(+), 6 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/display/smi,sm501.yaml b/Documentation/devicetree/bindings/display/smi,sm501.yaml
-new file mode 100644
-index 000000000000..df46600b8d4a
---- /dev/null
-+++ b/Documentation/devicetree/bindings/display/smi,sm501.yaml
-@@ -0,0 +1,134 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/display/smi,sm501.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/arch/sh/drivers/pci/pci.c b/arch/sh/drivers/pci/pci.c
+index a3903304f33f..61a19c2c9014 100644
+--- a/arch/sh/drivers/pci/pci.c
++++ b/arch/sh/drivers/pci/pci.c
+@@ -286,12 +286,6 @@ void __iomem *__pci_ioport_map(struct pci_dev *dev,
+ 	return (void __iomem *)(chan->io_map_base + port);
+ }
+ 
+-void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
+-{
+-	iounmap(addr);
+-}
+-EXPORT_SYMBOL(pci_iounmap);
+-
+ #endif /* CONFIG_GENERIC_IOMAP */
+ 
+ EXPORT_SYMBOL(PCIBIOS_MIN_IO);
+diff --git a/arch/sh/include/asm/io.h b/arch/sh/include/asm/io.h
+index ac521f287fa5..efea1bd0a681 100644
+--- a/arch/sh/include/asm/io.h
++++ b/arch/sh/include/asm/io.h
+@@ -20,6 +20,7 @@
+ #include <asm/page.h>
+ #include <linux/pgtable.h>
+ #include <asm-generic/iomap.h>
++#include <linux/ioport.h>
+ 
+ #define __IO_PREFIX     generic
+ #include <asm/io_generic.h>
+@@ -317,4 +318,9 @@ unsigned long long poke_real_address_q(unsigned long long addr,
+ int valid_phys_addr_range(phys_addr_t addr, size_t size);
+ int valid_mmap_phys_addr_range(unsigned long pfn, size_t size);
+ 
++#if defined(CONFIG_PCI) && !defined(CONFIG_GENERIC_IOMAP)
++#define pci_remap_iospace pci_remap_iospace
++int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr);
++#endif
 +
-+title: Silicon Motion SM501 Mobile Multimedia Companion Chip
+ #endif /* __ASM_SH_IO_H */
+diff --git a/arch/sh/include/asm/pci.h b/arch/sh/include/asm/pci.h
+index 54c30126ea17..92b3bd604319 100644
+--- a/arch/sh/include/asm/pci.h
++++ b/arch/sh/include/asm/pci.h
+@@ -2,6 +2,7 @@
+ #ifndef __ASM_SH_PCI_H
+ #define __ASM_SH_PCI_H
+ 
++#ifndef CONFIG_SH_DEVICE_TREE
+ /* Can be used to override the logic in pci_scan_bus for skipping
+    already-configured bus numbers - to be used for buggy BIOSes
+    or architectures with incomplete PCI setup by the loader */
+@@ -88,4 +89,7 @@ static inline int pci_proc_domain(struct pci_bus *bus)
+ 	return hose->need_domain_info;
+ }
+ 
++#else /* CONFIG_SH_DEVICE_TREE */
++#include <asm-generic/pci.h>
++#endif
+ #endif /* __ASM_SH_PCI_H */
+diff --git a/arch/sh/kernel/iomap.c b/arch/sh/kernel/iomap.c
+index 0a0dff4e66de..ec68ce4e4a17 100644
+--- a/arch/sh/kernel/iomap.c
++++ b/arch/sh/kernel/iomap.c
+@@ -160,3 +160,27 @@ void iowrite32_rep(void __iomem *addr, const void *src, unsigned long count)
+ 	mmio_outsl(addr, src, count);
+ }
+ EXPORT_SYMBOL(iowrite32_rep);
 +
-+maintainers:
-+  - Yoshinori Sato <ysato@user.sourceforge.jp>
++#if defined(CONFIG_PCI) && !defined(CONFIG_GENERIC_IOMAP)
++void pci_iounmap(struct pci_dev *dev, void __iomem *addr)
++{
++	iounmap(addr);
++}
++EXPORT_SYMBOL(pci_iounmap);
 +
-+description: |
-+  These DT bindings describe the SM501.
++int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
++{
++	unsigned long vaddr = res->start;
 +
-+properties:
-+  compatible:
-+    const:
-+      smi,sm501
++	if (!(res->flags & IORESOURCE_IO))
++		return -EINVAL;
 +
-+  reg:
-+    maxItems: 2
-+    description: |
-+     First entry: System Configuration register
-+     Second entry: IO space (Display Controller register)
++	if (res->end > IO_SPACE_LIMIT)
++		return -EINVAL;
 +
-+  interrupts:
-+    description: SM501 interrupt to the cpu should be described here.
-+
-+  interrupt-name: true
-+
-+  mode:
-+    $ref: /schemas/types.yaml#/definitions/string
-+    description: select a video mode
-+
-+  edid:
-+    description: |
-+      verbatim EDID data block describing attached display.
-+      Data from the detailed timing descriptor will be used to
-+      program the display controller.
-+
-+  little-endian:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description: available on big endian systems, to set different foreign endian.
-+  big-endian:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description: available on little endian systems, to set different foreign endian.
-+
-+  swap-fb-endian:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description: swap framebuffer byteorder.
-+
-+  route-crt-panel:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description: Panel output merge to CRT.
-+
-+  crt:
-+    description: CRT output control
-+
-+  panel:
-+    description: Panel output control
-+
-+  bpp:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: Color depth
-+
-+  smi,flags:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: Display control flags.
-+
-+  smi,devices:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: SM501 device function select.
-+
-+  smi,mclk:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: mclk frequency.
-+
-+  smi,m1xclk:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: m1xclk frequency.
-+
-+  smi,misc-timing:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: Miscellaneous Timing reg value.
-+
-+  smi,misc-control:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: Miscellaneous Control reg value.
-+
-+  smi,gpio-low:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: GPIO0 to 31 Control reg value.
-+
-+  smi,gpio-high:
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    description: GPIO32 to 63 Control reg value.
-+
-+  smi,gpio-i2c:
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
-+    minItems: 5
-+    description: |
-+      GPIO I2C bus number
-+      1st field - I2C bus number
-+      2nd Field - GPIO SDA
-+      3rd Field - GPIO SCL
-+      4th Field - Timeout
-+      5th Field - udelay
-+
-+additionalProperties: false
-+
-+required:
-+  - compatible
-+  - reg
-+  - interrupts
-+
-+
-+examples:
-+  # MPC5200
-+  - |
-+    display@1,0 {
-+        compatible = "smi,sm501";
-+        reg = <0x00000000 0x00800000
-+               0x03e00000 0x00200000>;
-+        interrupts = <1 1 3>;
-+        mode = "640x480-32@60";
-+        edid = [00 ff ff ff ff ff ff 00 00 00 00 00 00 00 00 00
-+                00 00 01 04 00 00 00 00 00 00 00 00 00 00 00 00
-+                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+                00 00 00 00 00 00 f0 0a 80 fb 20 e0 25 10 32 60
-+                02 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00
-+                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-+                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 bd];
-+    };
-diff --git a/include/dt-bindings/display/sm501.h b/include/dt-bindings/display/sm501.h
-new file mode 100644
-index 000000000000..1be8490d7635
---- /dev/null
-+++ b/include/dt-bindings/display/sm501.h
-@@ -0,0 +1,25 @@
-+/* SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause */
-+
-+/* Platform data definitions */
-+
-+#define SM501FB_FLAG_USE_INIT_MODE	(1<<0)
-+#define SM501FB_FLAG_DISABLE_AT_EXIT	(1<<1)
-+#define SM501FB_FLAG_USE_HWCURSOR	(1<<2)
-+#define SM501FB_FLAG_USE_HWACCEL	(1<<3)
-+#define SM501FB_FLAG_PANEL_NO_FPEN	(1<<4)
-+#define SM501FB_FLAG_PANEL_NO_VBIASEN	(1<<5)
-+#define SM501FB_FLAG_PANEL_INV_FPEN	(1<<6)
-+#define SM501FB_FLAG_PANEL_INV_VBIASEN	(1<<7)
-+
-+#define SM501_USE_USB_HOST	(1<<0)
-+#define SM501_USE_USB_SLAVE	(1<<1)
-+#define SM501_USE_SSP0		(1<<2)
-+#define SM501_USE_SSP1		(1<<3)
-+#define SM501_USE_UART0		(1<<4)
-+#define SM501_USE_UART1		(1<<5)
-+#define SM501_USE_FBACCEL	(1<<6)
-+#define SM501_USE_AC97		(1<<7)
-+#define SM501_USE_I2S		(1<<8)
-+#define SM501_USE_GPIO		(1<<9)
-+
-+#define SM501_USE_ALL		(0xffffffff)
++	__set_io_port_base(phys_addr);
++	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
++				  pgprot_device(PAGE_KERNEL));
++}
++EXPORT_SYMBOL(pci_remap_iospace);
++#endif
 -- 
 2.39.2
 
