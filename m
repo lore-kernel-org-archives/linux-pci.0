@@ -1,195 +1,97 @@
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 318055FF19;
+	Tue,  5 Dec 2023 14:21:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="qJEun988";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="kzomfXtM"
-Received: from out5-smtp.messagingengine.com (out5-smtp.messagingengine.com [66.111.4.29])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id CF4141AB;
-	Tue,  5 Dec 2023 05:37:15 -0800 (PST)
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailout.nyi.internal (Postfix) with ESMTP id 3B5CC5C0073;
-	Tue,  5 Dec 2023 08:37:15 -0500 (EST)
-Received: from imap51 ([10.202.2.101])
-  by compute5.internal (MEProxy); Tue, 05 Dec 2023 08:37:15 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:sender
-	:subject:subject:to:to; s=fm3; t=1701783435; x=1701869835; bh=MS
-	o40/DzILPmk4fVztq26tP1UcAt4IZ5edthROYfIeQ=; b=qJEun988LPpJTneK4B
-	iOm8MG4rNWEJ2M9ylmnOyL8l6IwefIw3g+/fCxBQAzyJ7hYdhL0/vWbPNpuzsUFh
-	3rJnLmNXViDWxshFEt8CsL6vb4PkVF+BORWHrbr3H58yGuLoV7d7VhDamFjpQhcT
-	U/u+M5I1drvoNI3dxxKiGfFRUhtB2Ve3C1g31EZOupjooD8zk4+Mo+IjzVNeit2A
-	xrIqpr9SYwC2iP4Gd4vV3r7M8WNNp6iK/T8nTedZd/kkRg34bxzcsBoYntKliqtf
-	rWt81QWBmEKAovmrUW9mB6GfVJnBfIPPZu0EVRiRyoy+3Hv5hrUNpSjlpotMCzoZ
-	Tfwg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:sender:subject
-	:subject:to:to:x-me-proxy:x-me-proxy:x-me-sender:x-me-sender
-	:x-sasl-enc; s=fm1; t=1701783435; x=1701869835; bh=MSo40/DzILPmk
-	4fVztq26tP1UcAt4IZ5edthROYfIeQ=; b=kzomfXtMU0QNVW1G9ASuu30rLAGos
-	brOM5jegxaM9w5e0E+Mx0NaBvK7yKRLW7QEFi70l9E13SQcdbmlVehN4FL8GG+v3
-	7RsF2zI2Nyv6dHAMGGHfT47Lx9dGZC/A9N679EkNRrcIR+iFfssYQHIRL1Npjkbk
-	eBYMVft4X3MdNIlB9Zj8bhY3LknHONoh7BVL83Nvp2HHAnfut73c+YWszU2OV3K/
-	6zMPitTGR7BZjpWbzVUNxULgkm1Gk00Wy3GqEXLYAsGzKmGbotT7+uN4YvG5UW9z
-	iuXVOurc69aA6dcmz84gY6uMYS+XnL6znE2Xy2uInouwlGoH3ug5OPSsw==
-X-ME-Sender: <xms:iidvZSzxzQt9c1fSV60YcizLeTJiBllKOkZaAoH87W9KXaB9-0jiKg>
-    <xme:iidvZeRT49Fh7djkd5qgQf2NCRjlrWgdztUMf8L5b0qdI-EFZGp5EXBPiTBQ73rXl
-    eg3yUbr-dA7ideEfis>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvkedrudejkedgheegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtsehttdertderredtnecuhfhrohhmpedftehr
-    nhguuceuvghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrth
-    htvghrnhepffehueegteeihfegtefhjefgtdeugfegjeelheejueethfefgeeghfektdek
-    teffnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprg
-    hrnhgusegrrhhnuggsrdguvg
-X-ME-Proxy: <xmx:iidvZUXouaBsV59xnbNVHKF_uXZMwp2q_wCdiiHs5wsWMnd_ACMcKw>
-    <xmx:iidvZYhPVbBEyaGydQt8CbxNo52xULx8foRb9eVwP_9xGKxILkcQRA>
-    <xmx:iidvZUDRajflv2u1GEbjLptgtHm7CwStnkYNNuqBvb20vTp0-pEA4g>
-    <xmx:iydvZdKP1SM2yKZ3zCKMv0fokHE2VVWKyjYuf1Spzjczx5f7DTcEfA>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-	id 2D405B60089; Tue,  5 Dec 2023 08:37:13 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.9.0-alpha0-1178-geeaf0069a7-fm-20231114.001-geeaf0069
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P/1sMhDu"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19F2FC433C7;
+	Tue,  5 Dec 2023 14:21:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1701786095;
+	bh=i1tccxd+eeEBFdaia4vgRnGqbSydm2KGkprxYV81Cww=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=P/1sMhDuwCzF2R1U8l9QkQcrlKg/XwJGUkDdhtEecCh2K0ZEq1AGgUDPqcLH8Mm+I
+	 4N4abTyCacNS/I/MevxRwM60PzEmr5Fu0U4OjRQ3FbMmEZb8PgTxNbVGwkDpfi1UQe
+	 WZ2CNHLdnF3CFF2WHBOhw9YtUPfMv9sNc+4z929tLNkVG9S6frWbW+AWOmKh4POWxm
+	 +8SZWYu3iRrD9G20XP0ylM+fhj74Feswty6fH1uh4y0UV2GTX5MrpM+EZdpmRISCFh
+	 FD0+0QBZa39GQUwrgCXxD+lzFLdTsU2pKgc0I1eZPKKJRkOhVV4BpoY55w5M47CUdd
+	 kGuBk/9ejUerA==
+Date: Tue, 5 Dec 2023 14:21:28 +0000
+From: Will Deacon <will@kernel.org>
+To: Dan Carpenter <dan.carpenter@linaro.org>
+Cc: oe-kbuild@lists.linux.dev, Shuai Xue <xueshuai@linux.alibaba.com>,
+	ilkka@os.amperecomputing.com, kaishen@linux.alibaba.com,
+	helgaas@kernel.org, yangyicong@huawei.com,
+	Jonathan.Cameron@huawei.com, baolin.wang@linux.alibaba.com,
+	robin.murphy@arm.com, lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+	chengyou@linux.alibaba.com, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+	rdunlap@infradead.org, mark.rutland@arm.com,
+	zhuo.song@linux.alibaba.com, renyu.zj@linux.alibaba.com
+Subject: Re: [PATCH v11 4/5] drivers/perf: add DesignWare PCIe PMU driver
+Message-ID: <20231205142128.GA18450@willie-the-truck>
+References: <20231121013400.18367-5-xueshuai@linux.alibaba.com>
+ <2d52f588-f584-4c01-8f41-227815a54e41@suswa.mountain>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <2a5ce0d0-ad0a-49d7-84a6-055c4b729eec@app.fastmail.com>
-In-Reply-To: 
- <f671beae8a8ebfd361f4c903bccce713135a169f.1701768028.git.ysato@users.sourceforge.jp>
-References: <cover.1701768028.git.ysato@users.sourceforge.jp>
- <f671beae8a8ebfd361f4c903bccce713135a169f.1701768028.git.ysato@users.sourceforge.jp>
-Date: Tue, 05 Dec 2023 14:36:53 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Yoshinori Sato" <ysato@users.sourceforge.jp>, linux-sh@vger.kernel.org
-Cc: "Damien Le Moal" <dlemoal@kernel.org>,
- "Rob Herring" <robh+dt@kernel.org>,
- "Krzysztof Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
- "Conor Dooley" <conor+dt@kernel.org>,
- "Geert Uytterhoeven" <geert+renesas@glider.be>,
- "Michael Turquette" <mturquette@baylibre.com>,
- "Stephen Boyd" <sboyd@kernel.org>, "Dave Airlie" <airlied@gmail.com>,
- "Daniel Vetter" <daniel@ffwll.ch>,
- "Maarten Lankhorst" <maarten.lankhorst@linux.intel.com>,
- "Maxime Ripard" <mripard@kernel.org>,
- "Thomas Zimmermann" <tzimmermann@suse.de>,
- "Thomas Gleixner" <tglx@linutronix.de>,
- "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- "Bjorn Helgaas" <bhelgaas@google.com>,
- "Greg Kroah-Hartman" <gregkh@linuxfoundation.org>,
- "Jiri Slaby" <jirislaby@kernel.org>,
- "Magnus Damm" <magnus.damm@gmail.com>,
- "Daniel Lezcano" <daniel.lezcano@linaro.org>,
- "Rich Felker" <dalias@libc.org>,
- "John Paul Adrian Glaubitz" <glaubitz@physik.fu-berlin.de>,
- "Lee Jones" <lee@kernel.org>, "Helge Deller" <deller@gmx.de>,
- =?UTF-8?Q?Heiko_St=C3=BCbner?= <heiko@sntech.de>,
- "Jernej Skrabec" <jernej.skrabec@gmail.com>,
- "Chris Morgan" <macromorgan@hotmail.com>,
- "Linus Walleij" <linus.walleij@linaro.org>,
- "Randy Dunlap" <rdunlap@infradead.org>,
- "Hyeonggon Yoo" <42.hyeyoo@gmail.com>,
- "David Rientjes" <rientjes@google.com>,
- "Vlastimil Babka" <vbabka@suse.cz>, "Baoquan He" <bhe@redhat.com>,
- "Andrew Morton" <akpm@linux-foundation.org>,
- "Guenter Roeck" <linux@roeck-us.net>,
- "Stephen Rothwell" <sfr@canb.auug.org.au>, guoren <guoren@kernel.org>,
- "Javier Martinez Canillas" <javierm@redhat.com>,
- "Azeem Shaikh" <azeemshaikh38@gmail.com>,
- "Palmer Dabbelt" <palmer@rivosinc.com>, "Bin Meng" <bmeng@tinylab.org>,
- "Max Filippov" <jcmvbkbc@gmail.com>, "Tom Rix" <trix@redhat.com>,
- "Herve Codina" <herve.codina@bootlin.com>,
- "Jacky Huang" <ychuang3@nuvoton.com>,
- "Lukas Bulwahn" <lukas.bulwahn@gmail.com>,
- "Jonathan Corbet" <corbet@lwn.net>,
- "Biju Das" <biju.das.jz@bp.renesas.com>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
- "Sam Ravnborg" <sam@ravnborg.org>,
- "Michael Karcher" <kernel@mkarcher.dialup.fu-berlin.de>,
- "Sergey Shtylyov" <s.shtylyov@omp.ru>,
- "Laurent Pinchart" <laurent.pinchart+renesas@ideasonboard.com>,
- linux-ide@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Linux-Renesas <linux-renesas-soc@vger.kernel.org>,
- linux-clk@vger.kernel.org, dri-devel@lists.freedesktop.org,
- linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
- linux-fbdev@vger.kernel.org
-Subject: Re: [DO NOT MERGE v5 22/37] dt-bindings: display: smi,sm501: SMI SM501 binding
- json-schema
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2d52f588-f584-4c01-8f41-227815a54e41@suswa.mountain>
+User-Agent: Mutt/1.10.1 (2018-07-13)
 
-On Tue, Dec 5, 2023, at 10:45, Yoshinori Sato wrote:
-> Define SM501 functions and modes.
->
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-> ---
->  .../bindings/display/smi,sm501.yaml           | 134 ++++++++++++++++++
->  include/dt-bindings/display/sm501.h           |  25 ++++
+On Sat, Nov 25, 2023 at 10:06:39AM +0300, Dan Carpenter wrote:
+> Hi Shuai,
+> 
+> kernel test robot noticed the following build warnings:
+> 
+> https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Shuai-Xue/docs-perf-Add-description-for-Synopsys-DesignWare-PCIe-PMU-driver/20231121-093713
+> base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+> patch link:    https://lore.kernel.org/r/20231121013400.18367-5-xueshuai%40linux.alibaba.com
+> patch subject: [PATCH v11 4/5] drivers/perf: add DesignWare PCIe PMU driver
+> config: x86_64-randconfig-r071-20231123 (https://download.01.org/0day-ci/archive/20231124/202311241906.0ymlLjyo-lkp@intel.com/config)
+> compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git ae42196bc493ffe877a7e3dff8be32035dea4d07)
+> reproduce: (https://download.01.org/0day-ci/archive/20231124/202311241906.0ymlLjyo-lkp@intel.com/reproduce)
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Reported-by: Dan Carpenter <error27@gmail.com>
+> | Closes: https://lore.kernel.org/r/202311241906.0ymlLjyo-lkp@intel.com/
+> 
+> smatch warnings:
+> drivers/perf/dwc_pcie_pmu.c:352 dwc_pcie_pmu_event_update() error: uninitialized symbol 'now'.
+> 
+> vim +/now +352 drivers/perf/dwc_pcie_pmu.c
+> 
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  338  static void dwc_pcie_pmu_event_update(struct perf_event *event)
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  339  {
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  340  	struct hw_perf_event *hwc = &event->hw;
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  341  	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  342  	u64 delta, prev, now;
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  343  
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  344  	do {
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  345  		prev = local64_read(&hwc->prev_count);
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  346  
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  347  		if (type == DWC_PCIE_LANE_EVENT)
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  348  			now = dwc_pcie_pmu_read_lane_event_counter(event);
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  349  		else if (type == DWC_PCIE_TIME_BASE_EVENT)
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  350  			now = dwc_pcie_pmu_read_time_based_counter(event);
+> 
+> uninitialized on else path.
+> 
+> 3481798a4ec51d1 Shuai Xue 2023-11-21  351  
+> 3481798a4ec51d1 Shuai Xue 2023-11-21 @352  	} while (local64_cmpxchg(&hwc->prev_count, prev, now) != prev);
 
-It looks like we already have a binding at
-Documentation/devicetree/bindings/display/sm501fb.txt
+Shuai, any chance you can address this please? I think the event validation
+logic means that the type is only ever one of the cases you handle, so
+you probably just want to either initialise 'now' to 0 or WARN and return
+early if the type is unknown.
 
-> +  little-endian:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: available on big endian systems, to set different 
-> foreign endian.
-> +  big-endian:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: available on little endian systems, to set different 
-> foreign endian.
-> +
-> +  swap-fb-endian:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: swap framebuffer byteorder.
-
-Why do you need both the "swap" and the specific little/big
-properties?
-
-> +  crt:
-> +    description: CRT output control
-> +
-> +  panel:
-> +    description: Panel output control
-
-What type are these?
-
-> +  smi,misc-timing:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: Miscellaneous Timing reg value.
-> +
-> +  smi,misc-control:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: Miscellaneous Control reg value.
-> +
-> +  smi,gpio-low:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: GPIO0 to 31 Control reg value.
-> +
-> +  smi,gpio-high:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: GPIO32 to 63 Control reg value.
-
-Register values should generally not go into DT
-
-
-> +
-> +  smi,gpio-i2c:
-> +    $ref: /schemas/types.yaml#/definitions/uint32-array
-> +    minItems: 5
-> +    description: |
-> +      GPIO I2C bus number
-> +      1st field - I2C bus number
-> +      2nd Field - GPIO SDA
-> +      3rd Field - GPIO SCL
-> +      4th Field - Timeout
-> +      5th Field - udelay
-
-Instead of a bus number and other fields, I think
-this should reference an i2c device.
-
-      Arnd
+Will
