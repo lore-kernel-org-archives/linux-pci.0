@@ -1,9 +1,9 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id D24E0C6;
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id D399A116;
 	Tue,  5 Dec 2023 01:55:36 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id CAF801C04D0;
-	Tue,  5 Dec 2023 18:46:39 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 33C531C0509;
+	Tue,  5 Dec 2023 18:46:46 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -70,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 19/37] dt-bindings: interrupt-controller: renesas,sh7751-irl-ext: Add json-schema
-Date: Tue,  5 Dec 2023 18:45:38 +0900
-Message-Id: <1623383c89532994218795cd3755c37819be426b.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 22/37] dt-bindings: display: smi,sm501: SMI SM501 binding json-schema
+Date: Tue,  5 Dec 2023 18:45:41 +0900
+Message-Id: <f671beae8a8ebfd361f4c903bccce713135a169f.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -84,103 +84,187 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Renesas SH7751 external interrupt encoder json-schema.
+Define SM501 functions and modes.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- .../renesas,sh7751-irl-ext.yaml               | 83 +++++++++++++++++++
- 1 file changed, 83 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
+ .../bindings/display/smi,sm501.yaml           | 134 ++++++++++++++++++
+ include/dt-bindings/display/sm501.h           |  25 ++++
+ 2 files changed, 159 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/display/smi,sm501.yaml
+ create mode 100644 include/dt-bindings/display/sm501.h
 
-diff --git a/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml b/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
+diff --git a/Documentation/devicetree/bindings/display/smi,sm501.yaml b/Documentation/devicetree/bindings/display/smi,sm501.yaml
 new file mode 100644
-index 000000000000..ba4fe2e4d749
+index 000000000000..df46600b8d4a
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
-@@ -0,0 +1,83 @@
-+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
++++ b/Documentation/devicetree/bindings/display/smi,sm501.yaml
+@@ -0,0 +1,134 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/interrupt-controller/renesas,sh7751-irl-ext.yaml#
++$id: http://devicetree.org/schemas/display/smi,sm501.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: Renesas SH7751 IRL external encoder with enable regs.
++title: Silicon Motion SM501 Mobile Multimedia Companion Chip
 +
 +maintainers:
-+  - Yoshinori Sato <ysato@users.sourceforge.jp>
++  - Yoshinori Sato <ysato@user.sourceforge.jp>
 +
 +description: |
-+  This is the generally used external interrupt encoder on SH7751 based boards.
++  These DT bindings describe the SM501.
 +
 +properties:
 +  compatible:
-+    items:
-+      - const: renesas,sh7751-irl-ext
++    const:
++      smi,sm501
 +
 +  reg:
-+    minItems: 1
-+
-+  interrupt-controller: true
-+
-+  '#interrupt-cells':
-+    const: 1
-+
-+  '#address-cells':
-+    const: 0
-+
-+  '#size-cells':
-+    const: 0
-+
-+  renesas,width:
-+    description: Enable register width
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+    enum: [8, 16, 32]
-+
-+  renesas,set-to-disable:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description: Setting this flag to 1 disables it.
-+
-+  renesas,enable-bit:
-+    $ref: /schemas/types.yaml#/definitions/uint32-array
++    maxItems: 2
 +    description: |
-+      IRL enable register bit mapping
-+      1st word IRL
-+      2nd word bit index of enable register
++     First entry: System Configuration register
++     Second entry: IO space (Display Controller register)
++
++  interrupts:
++    description: SM501 interrupt to the cpu should be described here.
++
++  interrupt-name: true
++
++  mode:
++    $ref: /schemas/types.yaml#/definitions/string
++    description: select a video mode
++
++  edid:
++    description: |
++      verbatim EDID data block describing attached display.
++      Data from the detailed timing descriptor will be used to
++      program the display controller.
++
++  little-endian:
++    $ref: /schemas/types.yaml#/definitions/flag
++    description: available on big endian systems, to set different foreign endian.
++  big-endian:
++    $ref: /schemas/types.yaml#/definitions/flag
++    description: available on little endian systems, to set different foreign endian.
++
++  swap-fb-endian:
++    $ref: /schemas/types.yaml#/definitions/flag
++    description: swap framebuffer byteorder.
++
++  route-crt-panel:
++    $ref: /schemas/types.yaml#/definitions/flag
++    description: Panel output merge to CRT.
++
++  crt:
++    description: CRT output control
++
++  panel:
++    description: Panel output control
++
++  bpp:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: Color depth
++
++  smi,flags:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: Display control flags.
++
++  smi,devices:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: SM501 device function select.
++
++  smi,mclk:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: mclk frequency.
++
++  smi,m1xclk:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: m1xclk frequency.
++
++  smi,misc-timing:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: Miscellaneous Timing reg value.
++
++  smi,misc-control:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: Miscellaneous Control reg value.
++
++  smi,gpio-low:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: GPIO0 to 31 Control reg value.
++
++  smi,gpio-high:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: GPIO32 to 63 Control reg value.
++
++  smi,gpio-i2c:
++    $ref: /schemas/types.yaml#/definitions/uint32-array
++    minItems: 5
++    description: |
++      GPIO I2C bus number
++      1st field - I2C bus number
++      2nd Field - GPIO SDA
++      3rd Field - GPIO SCL
++      4th Field - Timeout
++      5th Field - udelay
++
++additionalProperties: false
 +
 +required:
 +  - compatible
 +  - reg
-+  - interrupt-controller
-+  - '#interrupt-cells'
-+  - renesas,width
-+  - renesas,enable-bit
++  - interrupts
 +
-+additionalProperties: false
 +
 +examples:
++  # MPC5200
 +  - |
-+    r2dintc: sh7751irl_encoder@a4000000 {
-+        compatible = "renesas,sh7751-irl-ext";
-+        reg = <0xa4000000 0x02>;
-+        interrupt-controller;
-+        #address-cells = <0>;
-+        #size-cells = <0>;
-+        #interrupt-cells = <1>;
-+        renesas,width = <16>;
-+        renesas,enable-bit = <0 11>,            /* PCI INTD */
-+                             <1 9>,             /* CF IDE */
-+                             <2 8>,             /* CF CD */
-+                             <3 12>,            /* PCI INTC */
-+                             <4 10>,            /* SM501 */
-+                             <5 6>,             /* KEY */
-+                             <6 5>,             /* RTC ALARM */
-+                             <7 4>,             /* RTC T */
-+                             <8 7>,             /* SDCARD */
-+                             <9 14>,            /* PCI INTA */
-+                             <10 13>,           /* PCI INTB */
-+                             <11 0>,            /* EXT */
-+                             <12 15>;           /* TP */
++    display@1,0 {
++        compatible = "smi,sm501";
++        reg = <0x00000000 0x00800000
++               0x03e00000 0x00200000>;
++        interrupts = <1 1 3>;
++        mode = "640x480-32@60";
++        edid = [00 ff ff ff ff ff ff 00 00 00 00 00 00 00 00 00
++                00 00 01 04 00 00 00 00 00 00 00 00 00 00 00 00
++                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++                00 00 00 00 00 00 f0 0a 80 fb 20 e0 25 10 32 60
++                02 00 00 00 00 00 00 06 00 00 00 00 00 00 00 00
++                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
++                00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 bd];
 +    };
+diff --git a/include/dt-bindings/display/sm501.h b/include/dt-bindings/display/sm501.h
+new file mode 100644
+index 000000000000..1be8490d7635
+--- /dev/null
++++ b/include/dt-bindings/display/sm501.h
+@@ -0,0 +1,25 @@
++/* SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause */
++
++/* Platform data definitions */
++
++#define SM501FB_FLAG_USE_INIT_MODE	(1<<0)
++#define SM501FB_FLAG_DISABLE_AT_EXIT	(1<<1)
++#define SM501FB_FLAG_USE_HWCURSOR	(1<<2)
++#define SM501FB_FLAG_USE_HWACCEL	(1<<3)
++#define SM501FB_FLAG_PANEL_NO_FPEN	(1<<4)
++#define SM501FB_FLAG_PANEL_NO_VBIASEN	(1<<5)
++#define SM501FB_FLAG_PANEL_INV_FPEN	(1<<6)
++#define SM501FB_FLAG_PANEL_INV_VBIASEN	(1<<7)
++
++#define SM501_USE_USB_HOST	(1<<0)
++#define SM501_USE_USB_SLAVE	(1<<1)
++#define SM501_USE_SSP0		(1<<2)
++#define SM501_USE_SSP1		(1<<3)
++#define SM501_USE_UART0		(1<<4)
++#define SM501_USE_UART1		(1<<5)
++#define SM501_USE_FBACCEL	(1<<6)
++#define SM501_USE_AC97		(1<<7)
++#define SM501_USE_I2S		(1<<8)
++#define SM501_USE_GPIO		(1<<9)
++
++#define SM501_USE_ALL		(0xffffffff)
 -- 
 2.39.2
 
