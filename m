@@ -1,9 +1,9 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4FDC1A7;
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 502FDAB;
 	Tue,  5 Dec 2023 01:55:32 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 153D61C050D;
-	Tue,  5 Dec 2023 18:46:15 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 1C5C71C04DB;
+	Tue,  5 Dec 2023 18:46:11 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -70,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 07/37] sh: Fix COMMON_CLK support in CONFIG_OF=y.
-Date: Tue,  5 Dec 2023 18:45:26 +0900
-Message-Id: <2bf3ae9e8b48d86acc771656ed7eb6a0ee9613ea.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 05/37] sh: GENERIC_IRQ_CHIP support for CONFIG_OF=y
+Date: Tue,  5 Dec 2023 18:45:24 +0900
+Message-Id: <c875bbe153051f385fb02f4ed805b8215a48f09e.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -84,103 +84,108 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Initialize the clock and timer using the COMMON_CLK procedure.
-sh's earlytimer mechanism doesn't work properly in OF,
-so timer initialization is delayed.
-If CONFIG_OF=y, perform the general timer initialization procedure.
+Remove unused function prototype.
+Add helper update_sr_imask. use for SH7751 irq driver.
+Add stub intc_finalize.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- arch/sh/boards/of-generic.c | 28 ++++------------------------
- arch/sh/kernel/time.c       | 12 ++++++++++++
- 2 files changed, 16 insertions(+), 24 deletions(-)
+ arch/sh/include/asm/irq.h      | 10 ++++++++--
+ arch/sh/kernel/cpu/Makefile    |  5 +----
+ arch/sh/kernel/cpu/irq/imask.c | 17 +++++++++++++++++
+ include/linux/sh_intc.h        |  7 ++++++-
+ 4 files changed, 32 insertions(+), 7 deletions(-)
 
-diff --git a/arch/sh/boards/of-generic.c b/arch/sh/boards/of-generic.c
-index f7f3e618e85b..f1ca5a914c11 100644
---- a/arch/sh/boards/of-generic.c
-+++ b/arch/sh/boards/of-generic.c
-@@ -8,6 +8,7 @@
- #include <linux/of.h>
- #include <linux/of_clk.h>
- #include <linux/of_fdt.h>
-+#include <linux/of_platform.h>
- #include <linux/clocksource.h>
- #include <linux/irqchip.h>
- #include <asm/machvec.h>
-@@ -98,16 +99,7 @@ static void sh_of_smp_probe(void)
+diff --git a/arch/sh/include/asm/irq.h b/arch/sh/include/asm/irq.h
+index 0f384b1f45ca..c3e3db793dba 100644
+--- a/arch/sh/include/asm/irq.h
++++ b/arch/sh/include/asm/irq.h
+@@ -16,8 +16,8 @@
+ /*
+  * Simple Mask Register Support
+  */
+-extern void make_maskreg_irq(unsigned int irq);
+-extern unsigned short *irq_mask_register;
++
++void update_sr_imask(unsigned int irq, unsigned int enable);
  
- #endif
+ /*
+  * PINT IRQs
+@@ -54,4 +54,10 @@ extern void irq_finish(unsigned int irq);
  
--static void noop(void)
--{
--}
--
--static int noopi(void)
--{
--	return 0;
--}
--
--static void __init sh_of_mem_reserve(void)
-+static void __init sh_of_mem_init(void)
- {
- 	early_init_fdt_reserve_self();
- 	early_init_fdt_scan_reserved_mem();
-@@ -140,25 +132,13 @@ static void __init sh_of_init_irq(void)
- 	irqchip_init();
+ #include <asm-generic/irq.h>
+ 
++/* SH3/4 INTC stuff */
++/* IRL level 0 - 15 */
++#define NR_IRL 15
++/* IRL0 -> IRQ16 */
++#define IRL_BASE_IRQ	16
++
+ #endif /* __ASM_SH_IRQ_H */
+diff --git a/arch/sh/kernel/cpu/Makefile b/arch/sh/kernel/cpu/Makefile
+index e00ebf134985..ad12807fae9c 100644
+--- a/arch/sh/kernel/cpu/Makefile
++++ b/arch/sh/kernel/cpu/Makefile
+@@ -20,7 +20,4 @@ ifndef CONFIG_COMMON_CLK
+ obj-y += clock.o
+ obj-$(CONFIG_SH_CLK_CPG_LEGACY)	+= clock-cpg.o
+ endif
+-ifndef CONFIG_GENERIC_IRQ_CHIP
+-obj-y	+= irq/
+-endif
+-obj-y	+= init.o fpu.o pfc.o proc.o
++obj-y	+= init.o fpu.o pfc.o proc.o irq/
+diff --git a/arch/sh/kernel/cpu/irq/imask.c b/arch/sh/kernel/cpu/irq/imask.c
+index 572585c3f2fd..d9a703715228 100644
+--- a/arch/sh/kernel/cpu/irq/imask.c
++++ b/arch/sh/kernel/cpu/irq/imask.c
+@@ -51,6 +51,7 @@ static inline void set_interrupt_registers(int ip)
+ 		     : "t");
  }
  
--static int __init sh_of_clk_init(void)
--{
--#ifdef CONFIG_COMMON_CLK
--	/* Disabled pending move to COMMON_CLK framework. */
--	pr_info("SH generic board support: scanning for clk providers\n");
--	of_clk_init(NULL);
--#endif
--	return 0;
--}
--
- static struct sh_machine_vector __initmv sh_of_generic_mv = {
- 	.mv_setup	= sh_of_setup,
- 	.mv_name	= "devicetree", /* replaced by DT root's model */
- 	.mv_irq_demux	= sh_of_irq_demux,
- 	.mv_init_irq	= sh_of_init_irq,
--	.mv_clk_init	= sh_of_clk_init,
--	.mv_mode_pins	= noopi,
--	.mv_mem_init	= noop,
--	.mv_mem_reserve	= sh_of_mem_reserve,
-+	.mv_mode_pins	= generic_mode_pins,
-+	.mv_mem_init	= sh_of_mem_init,
- };
- 
- struct sh_clk_ops;
-diff --git a/arch/sh/kernel/time.c b/arch/sh/kernel/time.c
-index 821a09cbd605..ce5b7c2f8628 100644
---- a/arch/sh/kernel/time.c
-+++ b/arch/sh/kernel/time.c
-@@ -19,7 +19,9 @@
- #include <asm/clock.h>
- #include <asm/rtc.h>
- #include <asm/platform_early.h>
-+#include <linux/of_clk.h>
- 
-+#ifndef CONFIG_SH_DEVICE_TREE
- static void __init sh_late_time_init(void)
++#ifndef CONFIG_GENERIC_IRQ_CHIP
+ static void mask_imask_irq(struct irq_data *data)
  {
- 	/*
-@@ -43,3 +45,13 @@ void __init time_init(void)
- 
- 	late_time_init = sh_late_time_init;
+ 	unsigned int irq = data->irq;
+@@ -83,3 +84,19 @@ void make_imask_irq(unsigned int irq)
+ 	irq_set_chip_and_handler_name(irq, &imask_irq_chip, handle_level_irq,
+ 				      "level");
  }
 +#else
-+/* CONFIG_SH_DEVICE_TREE */
-+void __init time_init(void)
++void update_sr_imask(unsigned int irq, unsigned int enable)
 +{
-+	pr_info("SH generic board support: scanning for clk providers\n");
-+
-+	of_clk_init(NULL);
-+	timer_probe();
++	if (enable) {
++		set_bit(irq, imask_mask);
++		interrupt_priority = IMASK_PRIORITY -
++		  find_first_bit(imask_mask, IMASK_PRIORITY);
++	} else {
++		clear_bit(irq, imask_mask);
++		if (interrupt_priority < IMASK_PRIORITY - irq)
++			interrupt_priority = IMASK_PRIORITY - irq;
++	}
++	set_interrupt_registers(interrupt_priority);
++}
++EXPORT_SYMBOL(update_sr_imask);
++#endif
+diff --git a/include/linux/sh_intc.h b/include/linux/sh_intc.h
+index 27ae79191bdc..994b5b05a0d7 100644
+--- a/include/linux/sh_intc.h
++++ b/include/linux/sh_intc.h
+@@ -139,8 +139,13 @@ struct intc_desc symbol __initdata = {					\
+ int register_intc_controller(struct intc_desc *desc);
+ int intc_set_priority(unsigned int irq, unsigned int prio);
+ int intc_irq_lookup(const char *chipname, intc_enum enum_id);
++#ifndef CONFIG_SH_DEVICE_TREE
+ void intc_finalize(void);
+-
++#else
++static inline void intc_finalize(void)
++{
 +}
 +#endif
+ #ifdef CONFIG_INTC_USERIMASK
+ int register_intc_userimask(unsigned long addr);
+ #else
 -- 
 2.39.2
 
