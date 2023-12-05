@@ -1,121 +1,138 @@
-Received: from mail-oo1-f53.google.com (mail-oo1-f53.google.com [209.85.161.53])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 15F6183;
-	Tue,  5 Dec 2023 07:34:08 -0800 (PST)
-Received: by mail-oo1-f53.google.com with SMTP id 006d021491bc7-58cf894544cso3805165eaf.3;
-        Tue, 05 Dec 2023 07:34:08 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="aTpJmBIK"
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id EE79383
+	for <linux-pci@vger.kernel.org>; Tue,  5 Dec 2023 07:38:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1701790686;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=NoDK23LlK5p4IgH6ZTqMMZELxs6CauTLQ4NGvi9HnM4=;
+	b=aTpJmBIK8PwgvktqOAM7SfZxJ06lLy6DnGsShEorVazYcoLGOdXuUqE5OPnTLjMrqGTjPk
+	HSxr8F3QJMBFCuvVRxG8ksE6mc4BKG4b+jfyNylTr6G8A4C17+G+mv9/0k+BqodY+p/uDH
+	WFhaipFWNMG1yaZ8oCv6ICekSwnSwiI=
+Received: from mail-ed1-f71.google.com (mail-ed1-f71.google.com
+ [209.85.208.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-168-OksBZoCdNPKoSsZrnns7Sw-1; Tue, 05 Dec 2023 10:37:55 -0500
+X-MC-Unique: OksBZoCdNPKoSsZrnns7Sw-1
+Received: by mail-ed1-f71.google.com with SMTP id 4fb4d7f45d1cf-54cc6ae088bso134871a12.1
+        for <linux-pci@vger.kernel.org>; Tue, 05 Dec 2023 07:37:55 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1701790447; x=1702395247;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1701790673; x=1702395473;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=jmso+Pyj6M965irEbY4qayX9k2jAUb4uqdD1fkCcZ8k=;
-        b=M/RKZM5r/HuKXnlC1AwALHy5A+1lNsS+ak67KBIDWzWW+e7oHEV4wYIjG0ktIvAWy4
-         o9Ms/FFY8HQaR9r7wE1/rpI9mJrYtszZgS5jYBdYf4n83Xcfd2BZWcJKTnyJ2U83rg01
-         9ea2Z3gl5ClaEU3zl0EHZtuVZfEe/Vg6sE9ggU2KHkH+BjlmEUDiKxFlZQ6oZK3leDFz
-         GoEbykehqL9BhilkUCuvfeKW29oBuJhF1dQye6mHjCNX7nHOGCnWi7fWbAWrdR/fXa03
-         hUMHXiBpFrl1oE1WoZOz3uGdIVrUmju9avN50gbykN8houelAidusLZqtEh7UFXY9oWA
-         EQOQ==
-X-Gm-Message-State: AOJu0YxnUAk7x2svdmMZiOnEuWFZ68xEB0XD86vs/y323StpSZmB2OFx
-	3JPG85CBZO9yOSHGA3VfT+eyowbThClxrA==
-X-Google-Smtp-Source: AGHT+IHN27ceI6iE1qZK+w6GzBy7WUpyNrFEpcC/23a2CRIYnX4f35zGNmGu2LTRothRE/zTzLr3Qg==
-X-Received: by 2002:a05:6820:2221:b0:58d:9942:b49 with SMTP id cj33-20020a056820222100b0058d99420b49mr6327142oob.9.1701790447130;
-        Tue, 05 Dec 2023 07:34:07 -0800 (PST)
-Received: from mail-oi1-f173.google.com (mail-oi1-f173.google.com. [209.85.167.173])
-        by smtp.gmail.com with ESMTPSA id 187-20020a4a14c4000000b0058a2872d1d6sm2412397ood.42.2023.12.05.07.34.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Dec 2023 07:34:06 -0800 (PST)
-Received: by mail-oi1-f173.google.com with SMTP id 5614622812f47-3b8b556aadbso2132370b6e.3;
-        Tue, 05 Dec 2023 07:34:06 -0800 (PST)
-X-Received: by 2002:a0d:df11:0:b0:5d5:c6c1:3522 with SMTP id
- i17-20020a0ddf11000000b005d5c6c13522mr2801851ywe.26.1701790046878; Tue, 05
- Dec 2023 07:27:26 -0800 (PST)
+        bh=NoDK23LlK5p4IgH6ZTqMMZELxs6CauTLQ4NGvi9HnM4=;
+        b=ZgFbKWY1h0nWrHJVEuploh3gvGfHhY7YgNT9JoYWX1xULx5oKpuH9XMJmGDs5RuTBn
+         NJXKBvJseuENI4Qq2yH8rB6/J1BGQcfLBCu03d+bZ4aHcgPrFD5GJEnz83cliphQy0RV
+         AhvvPwrCNz2OxSBw6Qso82DlqHk9ceg5caH6GkczrtfzczhrmhKAJL66qAf3lvy3JY78
+         SlzyYJLaxZsbUaMilaB+Jhv9XW09fsY3tytq2GdJMeW85Q2euFcTLvQE7pHhawipMf1f
+         D4I518r8K20g088pHG+ybIP6kxDlNJ9JDGoWv06+hU9VYTRVtV+/B8x4O+wF2diPWKPk
+         Buaw==
+X-Gm-Message-State: AOJu0YyYoqn8WjyqH1JUEUO3rzLTQYUppWKbM7ss5kDk/pSrgXH3Blwm
+	Nhdmu096mj7Ph/sL7MrfuX6I9JTFg7z1EsjewXa60dSV6zs1N+kPQanyHpQdBr+wNfoTT0QPoKo
+	jh0EDFK7QeT8BJ0GuHo6S
+X-Received: by 2002:a05:6402:1d0e:b0:54d:2efd:369e with SMTP id dg14-20020a0564021d0e00b0054d2efd369emr1100570edb.1.1701790673581;
+        Tue, 05 Dec 2023 07:37:53 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHMWm/1bFBFbNN6jWtOQ+6Wi9ETG9A4NbaILiBypRArdxNy576pceUJLgrbNKwNpAp9z7aoNA==
+X-Received: by 2002:a05:6402:1d0e:b0:54d:2efd:369e with SMTP id dg14-20020a0564021d0e00b0054d2efd369emr1100547edb.1.1701790673178;
+        Tue, 05 Dec 2023 07:37:53 -0800 (PST)
+Received: from pstanner-thinkpadt14sgen1.remote.csb ([2a01:599:912:71c8:c243:7b37:30b:a236])
+        by smtp.gmail.com with ESMTPSA id r15-20020a056402018f00b0054c21d1fda7sm1244578edv.1.2023.12.05.07.37.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Dec 2023 07:37:52 -0800 (PST)
+From: Philipp Stanner <pstanner@redhat.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Johannes Berg <johannes@sipsolutions.net>,
+	Randy Dunlap <rdunlap@infradead.org>,
+	NeilBrown <neilb@suse.de>,
+	John Sanpe <sanpeqf@gmail.com>,
+	Kent Overstreet <kent.overstreet@gmail.com>,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Philipp Stanner <pstanner@redhat.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Uladzislau Koshchanka <koshchanka@gmail.com>,
+	"Masami Hiramatsu (Google)" <mhiramat@kernel.org>,
+	David Gow <davidgow@google.com>,
+	Kees Cook <keescook@chromium.org>,
+	Rae Moar <rmoar@google.com>,
+	Geert Uytterhoeven <geert@linux-m68k.org>,
+	"wuqiang.matt" <wuqiang.matt@bytedance.com>,
+	Yury Norov <yury.norov@gmail.com>,
+	Jason Baron <jbaron@akamai.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Marco Elver <elver@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Ben Dooks <ben.dooks@codethink.co.uk>,
+	dakr@redhat.com
+Cc: linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	stable@vger.kernel.org,
+	Arnd Bergmann <arnd@kernel.org>
+Subject: [PATCH v4 1/5] lib/pci_iomap.c: fix cleanup bugs in pci_iounmap()
+Date: Tue,  5 Dec 2023 16:36:26 +0100
+Message-ID: <20231205153629.26020-3-pstanner@redhat.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20231205153629.26020-2-pstanner@redhat.com>
+References: <20231205153629.26020-2-pstanner@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1701768028.git.ysato@users.sourceforge.jp> <e147fd6dd7aba44a6f408c3a42076b207be862fb.1701768028.git.ysato@users.sourceforge.jp>
-In-Reply-To: <e147fd6dd7aba44a6f408c3a42076b207be862fb.1701768028.git.ysato@users.sourceforge.jp>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Tue, 5 Dec 2023 16:27:15 +0100
-X-Gmail-Original-Message-ID: <CAMuHMdWZo5EwZZmgDC-nEwwKz5oLvjpz9iY022kv5KwbV7b_gA@mail.gmail.com>
-Message-ID: <CAMuHMdWZo5EwZZmgDC-nEwwKz5oLvjpz9iY022kv5KwbV7b_gA@mail.gmail.com>
-Subject: Re: [DO NOT MERGE v5 20/37] serial: sh-sci: fix SH4 OF support.
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
-	Rob Herring <robh+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Jiri Slaby <jirislaby@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Rich Felker <dalias@libc.org>, 
-	John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, Lee Jones <lee@kernel.org>, 
-	Helge Deller <deller@gmx.de>, Heiko Stuebner <heiko@sntech.de>, 
-	Jernej Skrabec <jernej.skrabec@gmail.com>, Chris Morgan <macromorgan@hotmail.com>, 
-	Linus Walleij <linus.walleij@linaro.org>, Randy Dunlap <rdunlap@infradead.org>, 
-	Arnd Bergmann <arnd@arndb.de>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
-	David Rientjes <rientjes@google.com>, Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Stephen Rothwell <sfr@canb.auug.org.au>, Guo Ren <guoren@kernel.org>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Azeem Shaikh <azeemshaikh38@gmail.com>, 
-	Palmer Dabbelt <palmer@rivosinc.com>, Bin Meng <bmeng@tinylab.org>, 
-	Max Filippov <jcmvbkbc@gmail.com>, Tom Rix <trix@redhat.com>, 
-	Herve Codina <herve.codina@bootlin.com>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Lukas Bulwahn <lukas.bulwahn@gmail.com>, Jonathan Corbet <corbet@lwn.net>, 
-	Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Michael Karcher <kernel@mkarcher.dialup.fu-berlin.de>, 
-	Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-Hi Sato-san,
+pci_iounmap() in lib/pci_iomap.c is supposed to check whether an address
+is within ioport-range IF the config specifies that ioports exist. If
+so, the port should be unmapped with ioport_unmap(). If not, it's a
+generic MMIO address that has to be passed to iounmap().
 
-Thanks for your patch!
+The bugs are:
+  1. ioport_unmap() is missing entirely, so this function will never
+     actually unmap a port.
+  2. the #ifdef for the ioport-ranges accidentally also guards
+     iounmap(), potentially compiling an empty function. This would
+     cause the mapping to be leaked.
 
-On Tue, Dec 5, 2023 at 10:46=E2=80=AFAM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
-> - fix earlycon name.
-> - fix earlyprintk hung (NULL pointer reference).
+Implement the missing call to ioport_unmap().
 
-- fix SERIAL_SH_SCI_EARLYCON enablement
+Move the guard so that iounmap() will always be part of the function.
 
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+CC: <stable@vger.kernel.org> # v5.15+
+Fixes: 316e8d79a095 ("pci_iounmap'2: Electric Boogaloo: try to make sense of it all")
+Reported-by: Danilo Krummrich <dakr@redhat.com>
+Suggested-by: Arnd Bergmann <arnd@kernel.org>
+Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+---
+ lib/pci_iomap.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+diff --git a/lib/pci_iomap.c b/lib/pci_iomap.c
+index ce39ce9f3526..6e144b017c48 100644
+--- a/lib/pci_iomap.c
++++ b/lib/pci_iomap.c
+@@ -168,10 +168,12 @@ void pci_iounmap(struct pci_dev *dev, void __iomem *p)
+ 	uintptr_t start = (uintptr_t) PCI_IOBASE;
+ 	uintptr_t addr = (uintptr_t) p;
+ 
+-	if (addr >= start && addr < start + IO_SPACE_LIMIT)
++	if (addr >= start && addr < start + IO_SPACE_LIMIT) {
++		ioport_unmap(p);
+ 		return;
+-	iounmap(p);
++	}
+ #endif
++	iounmap(p);
+ }
+ EXPORT_SYMBOL(pci_iounmap);
+ 
+-- 
+2.43.0
 
-> --- a/drivers/tty/serial/Kconfig
-> +++ b/drivers/tty/serial/Kconfig
-> @@ -658,7 +658,7 @@ config SERIAL_SH_SCI_EARLYCON
->         depends on SERIAL_SH_SCI=3Dy
->         select SERIAL_CORE_CONSOLE
->         select SERIAL_EARLYCON
-> -       default ARCH_RENESAS
-> +       default ARCH_RENESAS || SUPERH
->
->  config SERIAL_SH_SCI_DMA
->         bool "DMA support" if EXPERT
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
