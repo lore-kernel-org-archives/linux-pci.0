@@ -1,9 +1,9 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 673101A2;
-	Tue,  5 Dec 2023 01:47:19 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 4ECA49E;
+	Tue,  5 Dec 2023 01:55:32 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 0AC691C096F;
-	Tue,  5 Dec 2023 18:47:17 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 2A0FC1C06F4;
+	Tue,  5 Dec 2023 18:46:50 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -70,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 37/37] sh: j2_defconfig: update
-Date: Tue,  5 Dec 2023 18:45:56 +0900
-Message-Id: <cd86054aee22dfd94d66abffad0347a2dbdbe23e.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 24/37] dt-binding: sh: cpus: Add SH CPUs json-schema
+Date: Tue,  5 Dec 2023 18:45:43 +0900
+Message-Id: <c796ca5adc21c55f92968070e7f13201fe5b3f4a.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -84,61 +84,93 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-I've changed some symbols related to DeviceTree,
-so let's take care of those changes.
+Renesas SH series and compatible ISA CPUs.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- arch/sh/configs/j2_defconfig | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ .../devicetree/bindings/sh/cpus.yaml          | 73 +++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/sh/cpus.yaml
 
-diff --git a/arch/sh/configs/j2_defconfig b/arch/sh/configs/j2_defconfig
-index 2eb81ebe3888..cdc8ed244618 100644
---- a/arch/sh/configs/j2_defconfig
-+++ b/arch/sh/configs/j2_defconfig
-@@ -1,18 +1,15 @@
--CONFIG_SMP=y
- CONFIG_SYSVIPC=y
- CONFIG_POSIX_MQUEUE=y
- CONFIG_NO_HZ=y
- CONFIG_HIGH_RES_TIMERS=y
- CONFIG_CPU_SUBTYPE_J2=y
- CONFIG_MEMORY_START=0x10000000
--CONFIG_MEMORY_SIZE=0x04000000
- CONFIG_CPU_BIG_ENDIAN=y
--CONFIG_SH_DEVICE_TREE=y
--CONFIG_SH_JCORE_SOC=y
-+CONFIG_SH_OF_BOARD=y
- CONFIG_HZ_100=y
-+CONFIG_SMP=y
- CONFIG_CMDLINE_OVERWRITE=y
- CONFIG_CMDLINE="console=ttyUL0 earlycon"
--CONFIG_BINFMT_ELF_FDPIC=y
- CONFIG_BINFMT_FLAT=y
- CONFIG_NET=y
- CONFIG_PACKET=y
-@@ -21,7 +18,6 @@ CONFIG_INET=y
- CONFIG_DEVTMPFS=y
- CONFIG_DEVTMPFS_MOUNT=y
- CONFIG_NETDEVICES=y
--CONFIG_SERIAL_EARLYCON=y
- CONFIG_SERIAL_UARTLITE=y
- CONFIG_SERIAL_UARTLITE_CONSOLE=y
- CONFIG_I2C=y
-@@ -30,8 +26,6 @@ CONFIG_SPI_JCORE=y
- CONFIG_WATCHDOG=y
- CONFIG_MMC=y
- CONFIG_MMC_SPI=y
--CONFIG_CLKSRC_JCORE_PIT=y
--CONFIG_JCORE_AIC=y
- CONFIG_EXT4_FS=y
- CONFIG_VFAT_FS=y
- CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
-@@ -40,3 +34,4 @@ CONFIG_NLS_DEFAULT="utf8"
- CONFIG_NLS_CODEPAGE_437=y
- CONFIG_NLS_ASCII=y
- CONFIG_NLS_UTF8=y
-+CONFIG_INIT_STACK_NONE=y
+diff --git a/Documentation/devicetree/bindings/sh/cpus.yaml b/Documentation/devicetree/bindings/sh/cpus.yaml
+new file mode 100644
+index 000000000000..eb57e76e2aa2
+--- /dev/null
++++ b/Documentation/devicetree/bindings/sh/cpus.yaml
+@@ -0,0 +1,73 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/sh/cpus.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Renesas SuperH CPUs
++
++maintainers:
++  - Yoshinori Sato <ysato@users.sourceforge.jp>
++
++description: |+
++  The device tree allows to describe the layout of CPUs in a system through
++  the "cpus" node, which in turn contains a number of subnodes (ie "cpu")
++  defining properties for every cpu.
++
++  Bindings for CPU nodes follow the Devicetree Specification, available from:
++
++  https://www.devicetree.org/specifications/
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - renesas,sh2a
++          - renesas,sh3
++          - renesas,sh4
++          - renesas,sh4a
++          - jcore,j2
++      - const: renesas,sh2
++
++  clock-frequency:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: |
++      CPU core clock freqency.
++
++  clocks: true
++
++  clock-names: true
++
++  reg:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    const: 0
++
++  device_type: true
++
++required:
++  - compatible
++  - reg
++  - device_type
++
++additionalProperties: true
++
++examples:
++  - |
++    #include <dt-bindings/clock/sh7750.h>
++    cpus {
++        #address-cells = <1>;
++        #size-cells = <0>;
++
++        cpu: cpu@0 {
++            compatible = "renesas,sh4", "renesas,sh2";
++            device_type = "cpu";
++            reg = <0>;
++            clocks = <&cpg SH7750_CPG_ICK>;
++            clock-names = "ick";
++            icache-size = <16384>;
++            icache-line-size = <32>;
++            dcache-size = <32768>;
++            dcache-line-size = <32>;
++        };
++    };
++...
 -- 
 2.39.2
 
