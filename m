@@ -1,10 +1,9 @@
-X-Greylist: delayed 61 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Tue, 05 Dec 2023 01:47:07 PST
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2226DA7;
-	Tue,  5 Dec 2023 01:47:07 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTP id 2DFC49A;
+	Tue,  5 Dec 2023 01:47:09 -0800 (PST)
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id A8F061C08F9;
-	Tue,  5 Dec 2023 18:47:04 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id BA98C1C090B;
+	Tue,  5 Dec 2023 18:47:06 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -71,9 +70,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v5 31/37] sh: Add IO DATA LANDISK dts
-Date: Tue,  5 Dec 2023 18:45:50 +0900
-Message-Id: <78327dd2b5000f01461edb7861eee0c1ac0bb6fd.1701768028.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v5 32/37] sh: Add IO DATA USL-5P dts
+Date: Tue,  5 Dec 2023 18:45:51 +0900
+Message-Id: <dadef7a646e17308af0cca66d3444a1c27bda8f3.1701768028.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1701768028.git.ysato@users.sourceforge.jp>
 References: <cover.1701768028.git.ysato@users.sourceforge.jp>
@@ -85,23 +84,23 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-IO DATA DEVICE Inc. LANDISK HDL-U devicetree.
+IO DATA DEVICE Inc. USL-5P devicetree.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- arch/sh/boot/dts/landisk.dts | 74 ++++++++++++++++++++++++++++++++++++
- 1 file changed, 74 insertions(+)
- create mode 100644 arch/sh/boot/dts/landisk.dts
+ arch/sh/boot/dts/usl-5p.dts | 84 +++++++++++++++++++++++++++++++++++++
+ 1 file changed, 84 insertions(+)
+ create mode 100644 arch/sh/boot/dts/usl-5p.dts
 
-diff --git a/arch/sh/boot/dts/landisk.dts b/arch/sh/boot/dts/landisk.dts
+diff --git a/arch/sh/boot/dts/usl-5p.dts b/arch/sh/boot/dts/usl-5p.dts
 new file mode 100644
-index 000000000000..62e8e48c35ef
+index 000000000000..ec666c75db12
 --- /dev/null
-+++ b/arch/sh/boot/dts/landisk.dts
-@@ -0,0 +1,74 @@
++++ b/arch/sh/boot/dts/usl-5p.dts
+@@ -0,0 +1,84 @@
 +// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Device Tree Source for the IO DATA DEVICE LANDISK
++ * Device Tree Source for the IO DATA DEVICE USL-5P
 + */
 +
 +/dts-v1/;
@@ -109,8 +108,8 @@ index 000000000000..62e8e48c35ef
 +#include "sh7751r.dtsi"
 +
 +/ {
-+	model = "IO DATA Device LANDISK";
-+	compatible = "iodata,landisk", "renesas,sh7751r";
++	model = "IO-DATA Device USL-5P";
++	compatible = "iodata,usl-5p", "renesas,sh7751r";
 +
 +	aliases {
 +		serial0 = &scif1;
@@ -130,6 +129,8 @@ index 000000000000..62e8e48c35ef
 +		reg = <0xb0000005 0x01>;
 +		interrupt-controller;
 +		#interrupt-cells = <1>;
++		#address-cells = <0>;
++		#size-cells = <0>;
 +		renesas,width = <8>;
 +		renesas,enable-bit = <5 0>,	/* PCI INTA */
 +				     <6 1>,	/* PCI INTB */
@@ -139,6 +140,14 @@ index 000000000000..62e8e48c35ef
 +				     <10 5>,	/* CF */
 +				     <11 6>,	/* Power Switch */
 +				     <12 7>;	/* Button */
++	};
++
++	compact-flash@b4000040 {
++		compatible = "iodata,usl-5p-ata", "ata-generic";
++		reg = <0xb4000040 0x0e>, <0xb400002c 2>;
++		reg-shift = <1>;
++		interrupt-parent = <&julianintc>;
++		interrupts = <10>;
 +	};
 +};
 +
