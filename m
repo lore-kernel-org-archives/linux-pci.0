@@ -1,17 +1,17 @@
-Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 773C6D5B;
-	Wed,  6 Dec 2023 02:58:54 -0800 (PST)
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id F125B10E0;
+	Wed,  6 Dec 2023 02:59:07 -0800 (PST)
 Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
-	by fd01.gateway.ufhost.com (Postfix) with ESMTP id 33A0080C5;
-	Wed,  6 Dec 2023 18:58:46 +0800 (CST)
+	by ex01.ufhost.com (Postfix) with ESMTP id 7D64124E31D;
+	Wed,  6 Dec 2023 18:58:54 +0800 (CST)
 Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
  (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
- 2023 18:58:46 +0800
+ 2023 18:58:54 +0800
 Received: from ubuntu.localdomain (183.27.97.199) by EXMBX171.cuchost.com
  (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
- 2023 18:58:45 +0800
+ 2023 18:58:53 +0800
 From: Minda Chen <minda.chen@starfivetech.com>
 To: Conor Dooley <conor@kernel.org>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
 	<kw@linux.com>, Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas
@@ -26,9 +26,9 @@ CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<mason.huo@starfivetech.com>, Leyfoon Tan <leyfoon.tan@starfivetech.com>,
 	Kevin Xie <kevin.xie@starfivetech.com>, Minda Chen
 	<minda.chen@starfivetech.com>
-Subject: [PATCH v12 04/21] PCI: microchip: Add bridge_addr field to struct mc_pcie
-Date: Wed, 6 Dec 2023 18:58:22 +0800
-Message-ID: <20231206105839.25805-5-minda.chen@starfivetech.com>
+Subject: [PATCH v12 14/21] PCI: microchip: Add get_events() callback function
+Date: Wed, 6 Dec 2023 18:58:32 +0800
+Message-ID: <20231206105839.25805-15-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20231206105839.25805-1-minda.chen@starfivetech.com>
 References: <20231206105839.25805-1-minda.chen@starfivetech.com>
@@ -43,109 +43,100 @@ X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX171.cuchost.com
  (172.16.6.91)
 X-YovoleRuleAgent: yovoleflag
 
-For bridge address base is common PLDA field, Add this to struct mc_pcie
-first.
+PolarFire implements its own PCIe interrupts, additional to the regular
+PCIe interrupts, due to lack of an MSI controller, so the interrupt to
+event number mapping is different to the PLDA local interrupts,
+necessitating a custom get_events() implementation.
 
-INTx and MSI codes interrupts codes will get the bridge base address from
-port->bridge_addr. These codes will be changed to common codes.
-axi_base_addr is Microchip its own data.
+plda_handle_events() will call the get_events() callback function pointer
+directly. For the robustness of codes, add checking in
+plda_init_interrupts().
 
 Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 ---
- .../pci/controller/plda/pcie-microchip-host.c | 23 ++++++++-----------
- 1 file changed, 9 insertions(+), 14 deletions(-)
+ drivers/pci/controller/plda/pcie-microchip-host.c | 14 +++++++++++++-
+ drivers/pci/controller/plda/pcie-plda.h           |  8 ++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
-index a34ec6aad4be..60870ee1f1c9 100644
+index 2c03b0354f15..f5e7da242aec 100644
 --- a/drivers/pci/controller/plda/pcie-microchip-host.c
 +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-@@ -195,6 +195,7 @@ struct mc_pcie {
+@@ -657,7 +657,7 @@ static void plda_handle_event(struct irq_desc *desc)
+ 
+ 	chained_irq_enter(chip, desc);
+ 
+-	events = mc_get_events(port);
++	events = port->event_ops->get_events(port);
+ 
+ 	for_each_set_bit(bit, &events, port->num_events)
+ 		generic_handle_domain_irq(port->event_domain, bit);
+@@ -816,7 +816,12 @@ static int mc_request_event_irq(struct plda_pcie_rp *plda, int event_irq,
+ 				0, event_cause[event].sym, plda);
+ }
+ 
++static const struct plda_event_ops mc_event_ops = {
++	.get_events = mc_get_events,
++};
++
+ static const struct plda_event mc_event = {
++	.event_ops         = &mc_event_ops,
+ 	.request_event_irq = mc_request_event_irq,
+ 	.intx_event        = EVENT_LOCAL_PM_MSI_INT_INTX,
+ 	.msi_event         = EVENT_LOCAL_PM_MSI_INT_MSI,
+@@ -931,6 +936,11 @@ static int plda_init_interrupts(struct platform_device *pdev,
+ 	int i, intx_irq, msi_irq, event_irq;
+ 	int ret;
+ 
++	if (!event->event_ops || !event->event_ops->get_events) {
++		dev_err(dev, "no get events ops\n");
++		return -EINVAL;
++	}
++
+ 	ret = plda_pcie_init_irq_domains(port);
+ 	if (ret) {
+ 		dev_err(dev, "failed creating IRQ domains\n");
+@@ -941,6 +951,8 @@ static int plda_init_interrupts(struct platform_device *pdev,
+ 	if (irq < 0)
+ 		return -ENODEV;
+ 
++	port->event_ops = event->event_ops;
++
+ 	for (i = 0; i < port->num_events; i++) {
+ 		event_irq = irq_create_mapping(port->event_domain, i);
+ 		if (!event_irq) {
+diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
+index fba7343f9a96..df1729095952 100644
+--- a/drivers/pci/controller/plda/pcie-plda.h
++++ b/drivers/pci/controller/plda/pcie-plda.h
+@@ -102,6 +102,12 @@
+ #define EVENT_PM_MSI_INT_SYS_ERR		12
+ #define NUM_PLDA_EVENTS				13
+ 
++struct plda_pcie_rp;
++
++struct plda_event_ops {
++	u32 (*get_events)(struct plda_pcie_rp *pcie);
++};
++
+ struct plda_msi {
+ 	struct mutex lock;		/* Protect used bitmap */
+ 	struct irq_domain *msi_domain;
+@@ -117,11 +123,13 @@ struct plda_pcie_rp {
  	struct irq_domain *event_domain;
  	raw_spinlock_t lock;
- 	struct mc_msi msi;
-+	void __iomem *bridge_addr;
+ 	struct plda_msi msi;
++	const struct plda_event_ops *event_ops;
+ 	void __iomem *bridge_addr;
+ 	int num_events;
  };
  
- struct cause {
-@@ -339,8 +340,7 @@ static void mc_handle_msi(struct irq_desc *desc)
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct device *dev = port->dev;
- 	struct mc_msi *msi = &port->msi;
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	unsigned long status;
- 	u32 bit;
- 	int ret;
-@@ -365,8 +365,7 @@ static void mc_handle_msi(struct irq_desc *desc)
- static void mc_msi_bottom_irq_ack(struct irq_data *data)
- {
- 	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	u32 bitpos = data->hwirq;
- 
- 	writel_relaxed(BIT(bitpos), bridge_base_addr + ISTATUS_MSI);
-@@ -488,8 +487,7 @@ static void mc_handle_intx(struct irq_desc *desc)
- 	struct mc_pcie *port = irq_desc_get_handler_data(desc);
- 	struct irq_chip *chip = irq_desc_get_chip(desc);
- 	struct device *dev = port->dev;
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	unsigned long status;
- 	u32 bit;
- 	int ret;
-@@ -514,8 +512,7 @@ static void mc_handle_intx(struct irq_desc *desc)
- static void mc_ack_intx_irq(struct irq_data *data)
- {
- 	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	u32 mask = BIT(data->hwirq + PM_MSI_INT_INTX_SHIFT);
- 
- 	writel_relaxed(mask, bridge_base_addr + ISTATUS_LOCAL);
-@@ -524,8 +521,7 @@ static void mc_ack_intx_irq(struct irq_data *data)
- static void mc_mask_intx_irq(struct irq_data *data)
- {
- 	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	unsigned long flags;
- 	u32 mask = BIT(data->hwirq + PM_MSI_INT_INTX_SHIFT);
- 	u32 val;
-@@ -540,8 +536,7 @@ static void mc_mask_intx_irq(struct irq_data *data)
- static void mc_unmask_intx_irq(struct irq_data *data)
- {
- 	struct mc_pcie *port = irq_data_get_irq_chip_data(data);
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	unsigned long flags;
- 	u32 mask = BIT(data->hwirq + PM_MSI_INT_INTX_SHIFT);
- 	u32 val;
-@@ -896,8 +891,7 @@ static void mc_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
- static int mc_pcie_setup_windows(struct platform_device *pdev,
- 				 struct mc_pcie *port)
- {
--	void __iomem *bridge_base_addr =
--		port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	void __iomem *bridge_base_addr = port->bridge_addr;
- 	struct pci_host_bridge *bridge = platform_get_drvdata(pdev);
- 	struct resource_entry *entry;
- 	u64 pci_addr;
-@@ -1081,6 +1075,7 @@ static int mc_host_probe(struct platform_device *pdev)
- 	mc_disable_interrupts(port);
- 
- 	bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
-+	port->bridge_addr = bridge_base_addr;
- 
- 	/* Allow enabling MSI by disabling MSI-X */
- 	val = readl(bridge_base_addr + PCIE_PCI_IRQ_DW0);
+ struct plda_event {
++	const struct plda_event_ops *event_ops;
+ 	int (*request_event_irq)(struct plda_pcie_rp *pcie,
+ 				 int event_irq, int event);
+ 	int intx_event;
 -- 
 2.17.1
 
