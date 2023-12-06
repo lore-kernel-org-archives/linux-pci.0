@@ -1,100 +1,55 @@
-Received: from fd01.gateway.ufhost.com (fd01.gateway.ufhost.com [61.152.239.71])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C910D10F1;
-	Wed,  6 Dec 2023 02:59:11 -0800 (PST)
-Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
-	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
-	by fd01.gateway.ufhost.com (Postfix) with ESMTP id AFA7880ED;
-	Wed,  6 Dec 2023 18:58:59 +0800 (CST)
-Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
- (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
- 2023 18:58:59 +0800
-Received: from ubuntu.localdomain (183.27.97.199) by EXMBX171.cuchost.com
- (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
- 2023 18:58:58 +0800
-From: Minda Chen <minda.chen@starfivetech.com>
-To: Conor Dooley <conor@kernel.org>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
-	<kw@linux.com>, Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, "Daire
- McNamara" <daire.mcnamara@microchip.com>, Emil Renner Berthing
-	<emil.renner.berthing@canonical.com>, Krzysztof Kozlowski
-	<krzysztof.kozlowski+dt@linaro.org>
-CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>, Paul Walmsley
-	<paul.walmsley@sifive.com>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
-	<aou@eecs.berkeley.edu>, Philipp Zabel <p.zabel@pengutronix.de>, Mason Huo
-	<mason.huo@starfivetech.com>, Leyfoon Tan <leyfoon.tan@starfivetech.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>, Minda Chen
-	<minda.chen@starfivetech.com>
-Subject: [PATCH v12 19/21] PCI: Add PCIE_RESET_CONFIG_DEVICE_WAIT_MS waiting time value
-Date: Wed, 6 Dec 2023 18:58:37 +0800
-Message-ID: <20231206105839.25805-20-minda.chen@starfivetech.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20231206105839.25805-1-minda.chen@starfivetech.com>
-References: <20231206105839.25805-1-minda.chen@starfivetech.com>
+Received: from wp530.webpack.hosteurope.de (wp530.webpack.hosteurope.de [80.237.130.52])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 35BB81986;
+	Wed,  6 Dec 2023 03:54:17 -0800 (PST)
+Received: from [2a02:8108:8980:2478:8cde:aa2c:f324:937e]; authenticated
+	by wp530.webpack.hosteurope.de running ExIM with esmtpsa (TLS1.3:ECDHE_RSA_AES_128_GCM_SHA256:128)
+	id 1rAqTn-0000PU-8z; Wed, 06 Dec 2023 12:54:15 +0100
+Message-ID: <cb450c07-2df2-45a7-a77a-25ce2a0a18bc@leemhuis.info>
+Date: Wed, 6 Dec 2023 12:54:14 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX171.cuchost.com
- (172.16.6.91)
-X-YovoleRuleAgent: yovoleflag
+User-Agent: Mozilla Thunderbird
+Reply-To: Linux regressions mailing list <regressions@lists.linux.dev>
+Subject: Re: [PATCH 2/2] x86/pci: Treat EfiMemoryMappedIO as reservation of
+ ECAM space
+Content-Language: en-US, de-DE
+To: linux-pci@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+References: <20230110180243.1590045-1-helgaas@kernel.org>
+ <20230110180243.1590045-3-helgaas@kernel.org>
+ <20231012153347.GA26695@polanet.pl>
+From: "Linux regression tracking #update (Thorsten Leemhuis)"
+ <regressions@leemhuis.info>
+In-Reply-To: <20231012153347.GA26695@polanet.pl>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-bounce-key: webpack.hosteurope.de;regressions@leemhuis.info;1701863657;e3b9cb1e;
+X-HE-SMSGID: 1rAqTn-0000PU-8z
 
-From: Kevin Xie <kevin.xie@starfivetech.com>
+[TLDR: This mail in primarily relevant for Linux kernel regression
+tracking. See link in footer if these mails annoy you.]
 
-Add the PCIE_RESET_CONFIG_DEVICE_WAIT_MS macro to define the minimum
-waiting time between exit from a conventional reset and sending the
-first configuration request to the device.
+On 12.10.23 17:33, Tomasz Pala wrote:
+> Hello,
+> 
+> On Tue, Jan 10, 2023 at 12:02:43 -0600, Bjorn Helgaas wrote:
+> 
+>> Normally we reject ECAM space unless it is reported as reserved in the E820
+>> table or via a PNP0C02 _CRS method (PCI Firmware, r3.3, sec 4.1.2).  This
+>> means PCI extended config space (offsets 0x100-0xfff) may not be accessible.
+> 
+> I'm still having a problem initializing ixgbe NICs with pristine 6.5.7 kernel.
 
-As described in PCI base specification r6.0, section 6.6.1 <Conventional
-Reset>, there are two different use cases of the value:
+#regzbot fix: x86/pci: Reserve ECAM if BIOS didn't include it in PNP0C02
+_CRS
+#regzbot ignore-activity
 
-   - "With a Downstream Port that does not support Link speeds greater
-     than 5.0 GT/s, software must wait a minimum of 100 ms following exit
-     from a Conventional Reset before sending a Configuration Request to
-     the device immediately below that Port."
-
-   - "With a Downstream Port that supports Link speeds greater than
-     5.0 GT/s, software must wait a minimum of 100 ms after Link training
-     completes before sending a Configuration Request to the device
-     immediately below that Port."
-
-Signed-off-by: Kevin Xie <kevin.xie@starfivetech.com>
-Reviewed-by: Mason Huo <mason.huo@starfivetech.com>
----
- drivers/pci/pci.h | 16 ++++++++++++++++
- 1 file changed, 16 insertions(+)
-
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 5ecbcf041179..06f1f1eb878c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -22,6 +22,22 @@
-  */
- #define PCIE_PME_TO_L2_TIMEOUT_US	10000
- 
-+/*
-+ * As described in PCI base specification r6.0, section 6.6.1 <Conventional
-+ * Reset>, there are two different use cases of the value:
-+ *
-+ * - "With a Downstream Port that does not support Link speeds greater
-+ *    than 5.0 GT/s, software must wait a minimum of 100 ms following exit
-+ *    from a Conventional Reset before sending a Configuration Request to
-+ *    the device immediately below that Port."
-+ *
-+ * - "With a Downstream Port that supports Link speeds greater than
-+ *    5.0 GT/s, software must wait a minimum of 100 ms after Link training
-+ *    completes before sending a Configuration Request to the device
-+ *    immediately below that Port."
-+ */
-+#define PCIE_RESET_CONFIG_DEVICE_WAIT_MS	100
-+
- extern const unsigned char pcie_link_speed[];
- extern bool pci_early_dump;
- 
--- 
-2.17.1
-
+Ciao, Thorsten (wearing his 'the Linux kernel's regression tracker' hat)
+--
+Everything you wanna know about Linux kernel regression tracking:
+https://linux-regtracking.leemhuis.info/about/#tldr
+That page also explains what to do if mails like this annoy you.
