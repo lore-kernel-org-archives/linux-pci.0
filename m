@@ -1,17 +1,17 @@
 Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C73B110FD;
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 4239518D;
 	Wed,  6 Dec 2023 02:58:51 -0800 (PST)
-Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
 	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
-	(Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
-	by ex01.ufhost.com (Postfix) with ESMTP id 8182224E2B5;
-	Wed,  6 Dec 2023 18:58:44 +0800 (CST)
-Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
- (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
- 2023 18:58:44 +0800
+	(Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+	by ex01.ufhost.com (Postfix) with ESMTP id 69CEC24E315;
+	Wed,  6 Dec 2023 18:58:50 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
+ 2023 18:58:50 +0800
 Received: from ubuntu.localdomain (183.27.97.199) by EXMBX171.cuchost.com
  (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
- 2023 18:58:43 +0800
+ 2023 18:58:49 +0800
 From: Minda Chen <minda.chen@starfivetech.com>
 To: Conor Dooley <conor@kernel.org>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
 	<kw@linux.com>, Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas
@@ -26,9 +26,9 @@ CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
 	<mason.huo@starfivetech.com>, Leyfoon Tan <leyfoon.tan@starfivetech.com>,
 	Kevin Xie <kevin.xie@starfivetech.com>, Minda Chen
 	<minda.chen@starfivetech.com>
-Subject: [PATCH v12 02/21] PCI: microchip: Move pcie-microchip-host.c to plda directory
-Date: Wed, 6 Dec 2023 18:58:20 +0800
-Message-ID: <20231206105839.25805-3-minda.chen@starfivetech.com>
+Subject: [PATCH v12 09/21] PCI: microchip: Move setup functions to pcie-plda-host.c
+Date: Wed, 6 Dec 2023 18:58:27 +0800
+Message-ID: <20231206105839.25805-10-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20231206105839.25805-1-minda.chen@starfivetech.com>
 References: <20231206105839.25805-1-minda.chen@starfivetech.com>
@@ -43,134 +43,217 @@ X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX171.cuchost.com
  (172.16.6.91)
 X-YovoleRuleAgent: yovoleflag
 
-For Microchip Polarfire PCIe host is PLDA XpressRich IP, move to plda
-directory. Prepare for refactoring the codes.
+Move setup functions to common pcie-plda-host.c. So these two functions
+can be re-used.
 
 Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
 Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
 ---
- MAINTAINERS                                        |  4 ++--
- drivers/pci/controller/Kconfig                     |  9 +--------
- drivers/pci/controller/Makefile                    |  2 +-
- drivers/pci/controller/plda/Kconfig                | 14 ++++++++++++++
- drivers/pci/controller/plda/Makefile               |  2 ++
- .../controller/{ => plda}/pcie-microchip-host.c    |  2 +-
- 6 files changed, 21 insertions(+), 12 deletions(-)
- create mode 100644 drivers/pci/controller/plda/Kconfig
- create mode 100644 drivers/pci/controller/plda/Makefile
- rename drivers/pci/controller/{ => plda}/pcie-microchip-host.c (99%)
+ drivers/pci/controller/plda/Kconfig           |  4 +
+ drivers/pci/controller/plda/Makefile          |  1 +
+ .../pci/controller/plda/pcie-microchip-host.c | 59 --------------
+ drivers/pci/controller/plda/pcie-plda-host.c  | 80 +++++++++++++++++++
+ drivers/pci/controller/plda/pcie-plda.h       |  5 ++
+ 5 files changed, 90 insertions(+), 59 deletions(-)
+ create mode 100644 drivers/pci/controller/plda/pcie-plda-host.c
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 788be9ab5b73..46728cc258ca 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -16842,7 +16842,7 @@ M:	Daire McNamara <daire.mcnamara@microchip.com>
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/microchip*
--F:	drivers/pci/controller/*microchip*
-+F:	drivers/pci/controller/plda/*microchip*
- 
- PCIE DRIVER FOR QUALCOMM MSM
- M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-@@ -18643,7 +18643,7 @@ F:	drivers/char/hw_random/mpfs-rng.c
- F:	drivers/clk/microchip/clk-mpfs*.c
- F:	drivers/i2c/busses/i2c-microchip-corei2c.c
- F:	drivers/mailbox/mailbox-mpfs.c
--F:	drivers/pci/controller/pcie-microchip-host.c
-+F:	drivers/pci/controller/plda/pcie-microchip-host.c
- F:	drivers/pwm/pwm-microchip-core.c
- F:	drivers/reset/reset-mpfs.c
- F:	drivers/rtc/rtc-mpfs.c
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index e534c02ee34f..4d2c188f5835 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -215,14 +215,6 @@ config PCIE_MT7621
- 	help
- 	  This selects a driver for the MediaTek MT7621 PCIe Controller.
- 
--config PCIE_MICROCHIP_HOST
--	tristate "Microchip AXI PCIe controller"
--	depends on PCI_MSI && OF
--	select PCI_HOST_COMMON
--	help
--	  Say Y here if you want kernel to support the Microchip AXI PCIe
--	  Host Bridge driver.
--
- config PCI_HYPERV_INTERFACE
- 	tristate "Microsoft Hyper-V PCI Interface"
- 	depends on ((X86 && X86_64) || ARM64) && HYPERV && PCI_MSI
-@@ -356,4 +348,5 @@ config PCIE_XILINX_CPM
- source "drivers/pci/controller/cadence/Kconfig"
- source "drivers/pci/controller/dwc/Kconfig"
- source "drivers/pci/controller/mobiveil/Kconfig"
-+source "drivers/pci/controller/plda/Kconfig"
- endmenu
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index f2b19e6174af..038ccbd9e3ba 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -33,7 +33,6 @@ obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
- obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
- obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
- obj-$(CONFIG_PCIE_MEDIATEK_GEN3) += pcie-mediatek-gen3.o
--obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
- obj-$(CONFIG_VMD) += vmd.o
- obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
- obj-$(CONFIG_PCI_LOONGSON) += pci-loongson.o
-@@ -44,6 +43,7 @@ obj-$(CONFIG_PCIE_MT7621) += pcie-mt7621.o
- # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
- obj-y				+= dwc/
- obj-y				+= mobiveil/
-+obj-y				+= plda/
- 
- 
- # The following drivers are for devices that use the generic ACPI
 diff --git a/drivers/pci/controller/plda/Kconfig b/drivers/pci/controller/plda/Kconfig
-new file mode 100644
-index 000000000000..5cb3be4fc98c
---- /dev/null
+index 5cb3be4fc98c..e54a82ee94f5 100644
+--- a/drivers/pci/controller/plda/Kconfig
 +++ b/drivers/pci/controller/plda/Kconfig
-@@ -0,0 +1,14 @@
-+# SPDX-License-Identifier: GPL-2.0
+@@ -3,10 +3,14 @@
+ menu "PLDA-based PCIe controllers"
+ 	depends on PCI
+ 
++config PCIE_PLDA_HOST
++	bool
 +
-+menu "PLDA-based PCIe controllers"
-+	depends on PCI
-+
-+config PCIE_MICROCHIP_HOST
-+	tristate "Microchip AXI PCIe controller"
-+	depends on PCI_MSI && OF
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want kernel to support the Microchip AXI PCIe
-+	  Host Bridge driver.
-+
-+endmenu
+ config PCIE_MICROCHIP_HOST
+ 	tristate "Microchip AXI PCIe controller"
+ 	depends on PCI_MSI && OF
+ 	select PCI_HOST_COMMON
++	select PCIE_PLDA_HOST
+ 	help
+ 	  Say Y here if you want kernel to support the Microchip AXI PCIe
+ 	  Host Bridge driver.
 diff --git a/drivers/pci/controller/plda/Makefile b/drivers/pci/controller/plda/Makefile
-new file mode 100644
-index 000000000000..e1a265cbf91c
---- /dev/null
+index e1a265cbf91c..4340ab007f44 100644
+--- a/drivers/pci/controller/plda/Makefile
 +++ b/drivers/pci/controller/plda/Makefile
-@@ -0,0 +1,2 @@
-+# SPDX-License-Identifier: GPL-2.0
-+obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
-similarity index 99%
-rename from drivers/pci/controller/pcie-microchip-host.c
-rename to drivers/pci/controller/plda/pcie-microchip-host.c
-index 137fb8570ba2..cb09a8137e25 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
+@@ -1,2 +1,3 @@
+ # SPDX-License-Identifier: GPL-2.0
++obj-$(CONFIG_PCIE_PLDA_HOST) += pcie-plda-host.o
+ obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
+diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
+index 31ca8d44ee2a..2e79bcc7c0a5 100644
+--- a/drivers/pci/controller/plda/pcie-microchip-host.c
 +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-@@ -18,7 +18,7 @@
- #include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
+@@ -838,65 +838,6 @@ static int mc_pcie_init_irq_domains(struct plda_pcie_rp *port)
+ 	return mc_allocate_msi_domains(port);
+ }
  
--#include "../pci.h"
-+#include "../../pci.h"
+-static void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
+-				   phys_addr_t axi_addr, phys_addr_t pci_addr,
+-				   size_t size)
+-{
+-	u32 atr_sz = ilog2(size) - 1;
+-	u32 val;
+-
+-	if (index == 0)
+-		val = PCIE_CONFIG_INTERFACE;
+-	else
+-		val = PCIE_TX_RX_INTERFACE;
+-
+-	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+-	       ATR0_AXI4_SLV0_TRSL_PARAM);
+-
+-	val = lower_32_bits(axi_addr) | (atr_sz << ATR_SIZE_SHIFT) |
+-			    ATR_IMPL_ENABLE;
+-	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+-	       ATR0_AXI4_SLV0_SRCADDR_PARAM);
+-
+-	val = upper_32_bits(axi_addr);
+-	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+-	       ATR0_AXI4_SLV0_SRC_ADDR);
+-
+-	val = lower_32_bits(pci_addr);
+-	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+-	       ATR0_AXI4_SLV0_TRSL_ADDR_LSB);
+-
+-	val = upper_32_bits(pci_addr);
+-	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
+-	       ATR0_AXI4_SLV0_TRSL_ADDR_UDW);
+-
+-	val = readl(bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
+-	val |= (ATR0_PCIE_ATR_SIZE << ATR0_PCIE_ATR_SIZE_SHIFT);
+-	writel(val, bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
+-	writel(0, bridge_base_addr + ATR0_PCIE_WIN0_SRC_ADDR);
+-}
+-
+-static int plda_pcie_setup_iomems(struct pci_host_bridge *bridge,
+-				  struct plda_pcie_rp *port)
+-{
+-	void __iomem *bridge_base_addr = port->bridge_addr;
+-	struct resource_entry *entry;
+-	u64 pci_addr;
+-	u32 index = 1;
+-
+-	resource_list_for_each_entry(entry, &bridge->windows) {
+-		if (resource_type(entry->res) == IORESOURCE_MEM) {
+-			pci_addr = entry->res->start - entry->offset;
+-			plda_pcie_setup_window(bridge_base_addr, index,
+-					       entry->res->start, pci_addr,
+-					       resource_size(entry->res));
+-			index++;
+-		}
+-	}
+-
+-	return 0;
+-}
+-
+ static inline void mc_clear_secs(struct mc_pcie *port)
+ {
+ 	void __iomem *ctrl_base_addr = port->axi_base_addr + MC_PCIE_CTRL_ADDR;
+diff --git a/drivers/pci/controller/plda/pcie-plda-host.c b/drivers/pci/controller/plda/pcie-plda-host.c
+new file mode 100644
+index 000000000000..19131181897f
+--- /dev/null
++++ b/drivers/pci/controller/plda/pcie-plda-host.c
+@@ -0,0 +1,80 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * PLDA PCIe XpressRich host controller driver
++ *
++ * Copyright (C) 2023 Microchip Co. Ltd
++ *
++ * Author: Daire McNamara <daire.mcnamara@microchip.com>
++ */
++
++#include <linux/irqchip/chained_irq.h>
++#include <linux/irqdomain.h>
++#include <linux/msi.h>
++#include <linux/of_address.h>
++#include <linux/of_pci.h>
++#include <linux/pci_regs.h>
++#include <linux/pci-ecam.h>
++#include <linux/platform_device.h>
++
++#include "pcie-plda.h"
++
++void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
++			    phys_addr_t axi_addr, phys_addr_t pci_addr,
++			    size_t size)
++{
++	u32 atr_sz = ilog2(size) - 1;
++	u32 val;
++
++	if (index == 0)
++		val = PCIE_CONFIG_INTERFACE;
++	else
++		val = PCIE_TX_RX_INTERFACE;
++
++	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
++	       ATR0_AXI4_SLV0_TRSL_PARAM);
++
++	val = lower_32_bits(axi_addr) | (atr_sz << ATR_SIZE_SHIFT) |
++			    ATR_IMPL_ENABLE;
++	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
++	       ATR0_AXI4_SLV0_SRCADDR_PARAM);
++
++	val = upper_32_bits(axi_addr);
++	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
++	       ATR0_AXI4_SLV0_SRC_ADDR);
++
++	val = lower_32_bits(pci_addr);
++	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
++	       ATR0_AXI4_SLV0_TRSL_ADDR_LSB);
++
++	val = upper_32_bits(pci_addr);
++	writel(val, bridge_base_addr + (index * ATR_ENTRY_SIZE) +
++	       ATR0_AXI4_SLV0_TRSL_ADDR_UDW);
++
++	val = readl(bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
++	val |= (ATR0_PCIE_ATR_SIZE << ATR0_PCIE_ATR_SIZE_SHIFT);
++	writel(val, bridge_base_addr + ATR0_PCIE_WIN0_SRCADDR_PARAM);
++	writel(0, bridge_base_addr + ATR0_PCIE_WIN0_SRC_ADDR);
++}
++EXPORT_SYMBOL_GPL(plda_pcie_setup_window);
++
++int plda_pcie_setup_iomems(struct pci_host_bridge *bridge,
++			   struct plda_pcie_rp *port)
++{
++	void __iomem *bridge_base_addr = port->bridge_addr;
++	struct resource_entry *entry;
++	u64 pci_addr;
++	u32 index = 1;
++
++	resource_list_for_each_entry(entry, &bridge->windows) {
++		if (resource_type(entry->res) == IORESOURCE_MEM) {
++			pci_addr = entry->res->start - entry->offset;
++			plda_pcie_setup_window(bridge_base_addr, index,
++					       entry->res->start, pci_addr,
++					       resource_size(entry->res));
++			index++;
++		}
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(plda_pcie_setup_iomems);
+diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
+index 363fcbbaf6ec..3deefd35fa5a 100644
+--- a/drivers/pci/controller/plda/pcie-plda.h
++++ b/drivers/pci/controller/plda/pcie-plda.h
+@@ -120,4 +120,9 @@ struct plda_pcie_rp {
+ 	void __iomem *bridge_addr;
+ };
  
- /* Number of MSI IRQs */
- #define MC_MAX_NUM_MSI_IRQS			32
++void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
++			    phys_addr_t axi_addr, phys_addr_t pci_addr,
++			    size_t size);
++int plda_pcie_setup_iomems(struct pci_host_bridge *bridge,
++			   struct plda_pcie_rp *port);
+ #endif
 -- 
 2.17.1
 
