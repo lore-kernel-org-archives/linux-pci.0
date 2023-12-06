@@ -1,96 +1,133 @@
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id A1C1FBA;
-	Wed,  6 Dec 2023 01:28:25 -0800 (PST)
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R321e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018045192;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=20;SR=0;TI=SMTPD_---0VxxhQrx_1701854900;
-Received: from 30.25.233.235(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0VxxhQrx_1701854900)
-          by smtp.aliyun-inc.com;
-          Wed, 06 Dec 2023 17:28:22 +0800
-Message-ID: <2c092b76-6b76-4675-94c8-2e4b0031c966@linux.alibaba.com>
-Date: Wed, 6 Dec 2023 17:28:15 +0800
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id C684110FC;
+	Wed,  6 Dec 2023 02:58:51 -0800 (PST)
+Received: from EXMBX166.cuchost.com (unknown [175.102.18.54])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "EXMBX166", Issuer "EXMBX166" (not verified))
+	by ex01.ufhost.com (Postfix) with ESMTP id BACE624E314;
+	Wed,  6 Dec 2023 18:58:47 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX166.cuchost.com
+ (172.16.6.76) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
+ 2023 18:58:47 +0800
+Received: from ubuntu.localdomain (183.27.97.199) by EXMBX171.cuchost.com
+ (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Wed, 6 Dec
+ 2023 18:58:46 +0800
+From: Minda Chen <minda.chen@starfivetech.com>
+To: Conor Dooley <conor@kernel.org>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
+	<kw@linux.com>, Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, "Daire
+ McNamara" <daire.mcnamara@microchip.com>, Emil Renner Berthing
+	<emil.renner.berthing@canonical.com>, Krzysztof Kozlowski
+	<krzysztof.kozlowski+dt@linaro.org>
+CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-riscv@lists.infradead.org>, <linux-pci@vger.kernel.org>, Paul Walmsley
+	<paul.walmsley@sifive.com>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+	<aou@eecs.berkeley.edu>, Philipp Zabel <p.zabel@pengutronix.de>, Mason Huo
+	<mason.huo@starfivetech.com>, Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>, Minda Chen
+	<minda.chen@starfivetech.com>
+Subject: [PATCH v12 06/21] PCI: microchip: Move PCIe host data structures to plda-pcie.h
+Date: Wed, 6 Dec 2023 18:58:24 +0800
+Message-ID: <20231206105839.25805-7-minda.chen@starfivetech.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20231206105839.25805-1-minda.chen@starfivetech.com>
+References: <20231206105839.25805-1-minda.chen@starfivetech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 4/5] drivers/perf: add DesignWare PCIe PMU driver
-Content-Language: en-US
-To: Will Deacon <will@kernel.org>, Dan Carpenter <dan.carpenter@linaro.org>
-Cc: oe-kbuild@lists.linux.dev, ilkka@os.amperecomputing.com,
- kaishen@linux.alibaba.com, helgaas@kernel.org, yangyicong@huawei.com,
- Jonathan.Cameron@huawei.com, baolin.wang@linux.alibaba.com,
- robin.murphy@arm.com, lkp@intel.com, oe-kbuild-all@lists.linux.dev,
- chengyou@linux.alibaba.com, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- rdunlap@infradead.org, mark.rutland@arm.com, zhuo.song@linux.alibaba.com,
- renyu.zj@linux.alibaba.com
-References: <20231121013400.18367-5-xueshuai@linux.alibaba.com>
- <2d52f588-f584-4c01-8f41-227815a54e41@suswa.mountain>
- <20231205142128.GA18450@willie-the-truck>
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <20231205142128.GA18450@willie-the-truck>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
+X-ClientProxiedBy: EXCAS062.cuchost.com (172.16.6.22) To EXMBX171.cuchost.com
+ (172.16.6.91)
+X-YovoleRuleAgent: yovoleflag
 
+Move the common data structures definition to head file for these two data
+structures can be re-used.
 
+Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+---
+ .../pci/controller/plda/pcie-microchip-host.c | 20 ------------------
+ drivers/pci/controller/plda/pcie-plda.h       | 21 +++++++++++++++++++
+ 2 files changed, 21 insertions(+), 20 deletions(-)
 
-On 2023/12/5 22:21, Will Deacon wrote:
-> On Sat, Nov 25, 2023 at 10:06:39AM +0300, Dan Carpenter wrote:
->> Hi Shuai,
->>
->> kernel test robot noticed the following build warnings:
->>
->> https://git-scm.com/docs/git-format-patch#_base_tree_information]
->>
->> url:    https://github.com/intel-lab-lkp/linux/commits/Shuai-Xue/docs-perf-Add-description-for-Synopsys-DesignWare-PCIe-PMU-driver/20231121-093713
->> base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
->> patch link:    https://lore.kernel.org/r/20231121013400.18367-5-xueshuai%40linux.alibaba.com
->> patch subject: [PATCH v11 4/5] drivers/perf: add DesignWare PCIe PMU driver
->> config: x86_64-randconfig-r071-20231123 (https://download.01.org/0day-ci/archive/20231124/202311241906.0ymlLjyo-lkp@intel.com/config)
->> compiler: clang version 16.0.4 (https://github.com/llvm/llvm-project.git ae42196bc493ffe877a7e3dff8be32035dea4d07)
->> reproduce: (https://download.01.org/0day-ci/archive/20231124/202311241906.0ymlLjyo-lkp@intel.com/reproduce)
->>
->> If you fix the issue in a separate patch/commit (i.e. not just a new version of
->> the same patch/commit), kindly add following tags
->> | Reported-by: kernel test robot <lkp@intel.com>
->> | Reported-by: Dan Carpenter <error27@gmail.com>
->> | Closes: https://lore.kernel.org/r/202311241906.0ymlLjyo-lkp@intel.com/
->>
->> smatch warnings:
->> drivers/perf/dwc_pcie_pmu.c:352 dwc_pcie_pmu_event_update() error: uninitialized symbol 'now'.
->>
->> vim +/now +352 drivers/perf/dwc_pcie_pmu.c
->>
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  338  static void dwc_pcie_pmu_event_update(struct perf_event *event)
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  339  {
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  340  	struct hw_perf_event *hwc = &event->hw;
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  341  	enum dwc_pcie_event_type type = DWC_PCIE_EVENT_TYPE(event);
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  342  	u64 delta, prev, now;
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  343  
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  344  	do {
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  345  		prev = local64_read(&hwc->prev_count);
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  346  
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  347  		if (type == DWC_PCIE_LANE_EVENT)
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  348  			now = dwc_pcie_pmu_read_lane_event_counter(event);
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  349  		else if (type == DWC_PCIE_TIME_BASE_EVENT)
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  350  			now = dwc_pcie_pmu_read_time_based_counter(event);
->>
->> uninitialized on else path.
->>
->> 3481798a4ec51d1 Shuai Xue 2023-11-21  351  
->> 3481798a4ec51d1 Shuai Xue 2023-11-21 @352  	} while (local64_cmpxchg(&hwc->prev_count, prev, now) != prev);
-> 
-> Shuai, any chance you can address this please? I think the event validation
-> logic means that the type is only ever one of the cases you handle, so
-> you probably just want to either initialise 'now' to 0 or WARN and return
-> early if the type is unknown.
+diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
+index 3dc4d4ca9d0c..261147a0a446 100644
+--- a/drivers/pci/controller/plda/pcie-microchip-host.c
++++ b/drivers/pci/controller/plda/pcie-microchip-host.c
+@@ -21,9 +21,6 @@
+ #include "../../pci.h"
+ #include "pcie-plda.h"
+ 
+-/* Number of MSI IRQs */
+-#define PLDA_MAX_NUM_MSI_IRQS			32
+-
+ /* PCIe Bridge Phy and Controller Phy offsets */
+ #define MC_PCIE1_BRIDGE_ADDR			0x00008000u
+ #define MC_PCIE1_CTRL_ADDR			0x0000a000u
+@@ -179,23 +176,6 @@ struct event_map {
+ 	u32 event_bit;
+ };
+ 
+-struct plda_msi {
+-	struct mutex lock;		/* Protect used bitmap */
+-	struct irq_domain *msi_domain;
+-	struct irq_domain *dev_domain;
+-	u32 num_vectors;
+-	u64 vector_phy;
+-	DECLARE_BITMAP(used, PLDA_MAX_NUM_MSI_IRQS);
+-};
+-
+-struct plda_pcie_rp {
+-	struct device *dev;
+-	struct irq_domain *intx_domain;
+-	struct irq_domain *event_domain;
+-	raw_spinlock_t lock;
+-	struct plda_msi msi;
+-	void __iomem *bridge_addr;
+-};
+ 
+ struct mc_pcie {
+ 	struct plda_pcie_rp plda;
+diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
+index 727fc54312c9..363fcbbaf6ec 100644
+--- a/drivers/pci/controller/plda/pcie-plda.h
++++ b/drivers/pci/controller/plda/pcie-plda.h
+@@ -6,6 +6,9 @@
+ #ifndef _PCIE_PLDA_H
+ #define _PCIE_PLDA_H
+ 
++/* Number of MSI IRQs */
++#define PLDA_MAX_NUM_MSI_IRQS			32
++
+ /* PCIe Bridge Phy Regs */
+ #define PCIE_PCI_IRQ_DW0			0xa8
+ #define  MSIX_CAP_MASK				BIT(31)
+@@ -99,4 +102,22 @@
+ #define EVENT_PM_MSI_INT_SYS_ERR		12
+ #define NUM_PLDA_EVENTS				13
+ 
++struct plda_msi {
++	struct mutex lock;		/* Protect used bitmap */
++	struct irq_domain *msi_domain;
++	struct irq_domain *dev_domain;
++	u32 num_vectors;
++	u64 vector_phy;
++	DECLARE_BITMAP(used, PLDA_MAX_NUM_MSI_IRQS);
++};
++
++struct plda_pcie_rp {
++	struct device *dev;
++	struct irq_domain *intx_domain;
++	struct irq_domain *event_domain;
++	raw_spinlock_t lock;
++	struct plda_msi msi;
++	void __iomem *bridge_addr;
++};
++
+ #endif
+-- 
+2.17.1
 
-Hi, Will, and Dan,
-
-As the type is checked in dwc_pcie_pmu_event_init(), I will fix this warning by
-initialising 'now' to 0.
-
-Thank you.
-Best Regards,
-Shuai
