@@ -1,28 +1,29 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="GzVmg7Yf"
+	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="NvkN3NyB"
 Received: from nikam.ms.mff.cuni.cz (nikam.ms.mff.cuni.cz [195.113.20.16])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 28A33AD
-	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 09:30:58 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C82911D
+	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 09:35:59 -0800 (PST)
 Received: by nikam.ms.mff.cuni.cz (Postfix, from userid 2587)
-	id DB02328C059; Fri,  8 Dec 2023 18:30:56 +0100 (CET)
+	id 47DF428C099; Fri,  8 Dec 2023 18:35:58 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
-	t=1702056656;
+	t=1702056958;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=okpHR3kEU9KFvkt4nvLsZJjTscSjLMsE+fX4VTRvtZU=;
-	b=GzVmg7YfG7fE+lQTZYoLVYnqqd+ASCkyR1GSfezpgBwHTfmB72UUQofgAZRDvSR4mS+Xf+
-	c3EugCp7CRnqXsFx2WOkV91FVPZtuO5seomrTqnRIGvqFXWjwrdGsroEmDp+eQufyrXrbY
-	v1I5e98YPVHyrXW9TnE1kUQLubAuq5U=
-Date: Fri, 8 Dec 2023 18:30:56 +0100
+	bh=3qh76SJbd3tGbAJL0ZLr8gcPnPaf3KSUICRLJyZMoM0=;
+	b=NvkN3NyBkGKm/Vqjc2+z4GxPtioz19QgNK+yQ+3YDHDRIFtKw1McSqCPG81Jr5RzdSSJcj
+	bQyRo1rbylBV8mke7ZML1S8tVKiXH37DAxlw1Zkrlhx3ZVxjwjfm+WVLjdmk83CXp8NTIv
+	rMGOzLgMhhb2d/4AqRwfboZIndX2Skc=
+Date: Fri, 8 Dec 2023 18:35:58 +0100
 From: Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
 To: Nikita Proshkin <n.proshkin@yadro.com>
 Cc: linux-pci@vger.kernel.org, linux@yadro.com,
 	Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: Re: [PATCH 00/15] pciutils: Add utility for Lane Margining
-Message-ID: <mj+md-20231208.173005.29014.nikam@ucw.cz>
+Subject: Re: [PATCH 05/15] pciutils-pcilmr: Add margining process functions
+Message-ID: <mj+md-20231208.173154.29528.nikam@ucw.cz>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
+ <20231208091734.12225-6-n.proshkin@yadro.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -32,39 +33,56 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
+In-Reply-To: <20231208091734.12225-6-n.proshkin@yadro.com>
 
-Hello!
+> +  if (msec < 0)
+> +  {
+> +    errno = EINVAL;
+> +    return -1;
+> +  }
+[...]
 
-> PCIe Gen 4 spec introduced new extended capability mandatory for all
-> ports - Lane Margining at the Receiver. This new feature allows to get an
-> approximation of the Link eye margin diagram by four points. This
-> information shows how resistant the Link is to external influences and can
-> be useful for link debugging and presets tuning.
-> Previously, this information was only available using a hardware debugger.
-> 
-> Patch series consists of two parts:
-> 
-> * Patch for lspci to add Margining registers reading. There is not much
->   information available without issuing any margining commands, but this
->   info is useful anyway;
-> * New pcilmr utility.
-> 
-> Margining capability assumes the exchange of commands with the device, so
-> its support was implemented as a separate utility pcilmr.
-> The pcilmr allows you to test Links and supports all the features provided
-> by the Margining capability. The utility is written using a pcilib, it is
-> divided into a library part and a main function with arguments parsing in
-> the pciutils root dir.
-> Man page is provided as well.
-> 
-> Utility compilation and man page preparation are integrated into the
-> pciutils Makefile, so run make is enough to start testing the utility
-> (Gen 4/5 device is required though).
-> Utility was written with Linux in mind and was tested only on this OS.
+Please follow the indentation style of the rest of pciutils.
 
-Thanks for your contribution. The utility will need some cleanups,
-but overall I will be glad to accept it.
+> +union margin_payload {
+> +  unsigned int payload : 8;
+> +
+> +  struct caps {
+> +    bool volt_support : 1;
+> +    bool ind_up_down_volt : 1;
+> +    bool ind_left_right_tim : 1;
+> +    bool sample_report_method : 1;
+> +    bool ind_error_sampler : 1;
+> +  } caps;
+> +
+> +  unsigned int timing_steps : 6;
+> +  unsigned int voltage_steps : 7;
+> +  unsigned int offset : 7;
+> +  unsigned int max_lanes : 5;
+> +  unsigned int sample_rate : 6;
+> +
+> +  struct step_resp {
+> +    unsigned int err_count : 6;
+> +    unsigned int status : 2;
+> +  } step_resp;
+> +
+> +  struct step_tim {
+> +    unsigned int steps : 6;
+> +    bool go_left : 1;
+> +  } step_tim;
+> +
+> +  struct step_volt {
+> +    unsigned int steps : 7;
+> +    bool go_down : 1;
+> +  } step_volt;
+> +
+> +} __attribute__((packed));
+
+Please do not assume that every compiler used to compile the pciutils supports
+GCC extensions. See lib/sysdep.h for how we handle such things.
+
+Also, I am not sure that bit fields are good idea: they save a little data
+space, but they expand code.
 
 				Have a nice fortnight
 -- 
