@@ -1,36 +1,39 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="g1Ia679n";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="fw/nJ5nK"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="LrY2qu+K";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="ULQtqslq"
+X-Greylist: delayed 477 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Fri, 08 Dec 2023 01:26:45 PST
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 517FB1724
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2758E171C
 	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:45 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 170C6C0002
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com A6E09C0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027126; bh=LffEoy7BEXtir+bHG7zJLq4DE9Brdo6hglCGBOxdd2Y=;
+	t=1702027155; bh=G+eLzLYQvX1MyD56fctAQ6GgHhdCBoIEONmqJ6/bA6s=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=g1Ia679n2fdVYMpGRRf6jtxZ+7nhAi05WkZUGSEd4UKcT+ZcPcdU+TFINAI+tuITg
-	 +0I3KQmFvwGTHL4AOeLX/zjYJFw7ys+ypD7zmBIVTN77iGrMZ0ujFC5a2jM7r7ObXW
-	 Q6zEGUNldETjEcBj/uLgM7viNR6aViqxryTYmU1nVrSuvuF3t8Dsf2mc45vSwtFO5p
-	 k8wO1JX8BCeeollweFqGYa2DAiwjCAxu3KAGKNtozPL9pCIJUm+Wcyrg3PkJmuwJCV
-	 /wzI/7njksEhbA5QYfgzE9ekRQqrO7phGhlmHBGX0bkinFqCbD96bvHvA/5L0CXZe+
-	 JoTvIGVKC5zcQ==
+	b=LrY2qu+KFT/QHkfyUeCfajG6APLGPXtp1CXSxZL7VnnfPB1sXsARcH5Se7BgnRzXe
+	 TwKY84/ArqWrjSZBl7WGTNV3fKz1okXI4NYwJ+W0V7bMN+/9T2Nfn8byHZiOD3WwLa
+	 ui7u7vGki8JnxXWA0f9F6vxvjJdDm7LX2PVVDw1YYTBF5COfbfTaelqxVS0mLA79wd
+	 ta40NDtctfnTR5dpc7uMwWr6YqtVojzA3Kjag3kGUDYGOQcxhWeLCQ6SeYb4ALNx54
+	 qaPufSEpx1241iv9RstCXSTjsMShFhyY5E5yaHR2g9mQWcKRam7DoO+u5Wf7cJL+O5
+	 JTGDRbyYDOfxA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027126; bh=LffEoy7BEXtir+bHG7zJLq4DE9Brdo6hglCGBOxdd2Y=;
+	t=1702027155; bh=G+eLzLYQvX1MyD56fctAQ6GgHhdCBoIEONmqJ6/bA6s=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=fw/nJ5nKLAznNu3diBoHUwwzp3s/h4itNfbzaXYcgvACmp/6HIUUCFVzIJ0tX2CvZ
-	 A24xQqrvM9LDRGPA4eN7dQbyLG34W54pa08ZAS6kOfgghxz0MbwvbqtQwpMOwFJ2v9
-	 TF6e30Af86Oj4Vg5vHOv2xu0QPvwIp7VsnfnPwDM8yObGjWVZnW8Zf/zX1647c3o7K
-	 Mx04UNQegoYQMxyC8qMIiuTzs7dfPUJE8Kw5h5AVDlJMEk0jt+QJOElY6diZ6AfSuC
-	 4lE5GJH/As97vvuLCyDEuwC7Pisi+um9DeTKxb4kZll7bNIj6aUO4ZL6Vh9ExMEE4i
-	 n69pbuTXazpcw==
+	b=ULQtqslqeI2FcmWQL8R6mmHWz1P75Nsh70OA4GJ5cyZSgQk428gLkEboi6+ToB6oQ
+	 3ZRvn9oG8qN/xds3CfzBjN0vZIBI4qY0O8wNY6ooPT0wlN078yujsMGFdRf8iuCNU2
+	 d+kli/vJkGEye72Y75qLQppl8+btBJu0R7aMQqrO3mkatA4RjffMQ8LM2X5WD7t10b
+	 +mxZ9UNZQ0kZxGdC8iWbkXX5EnE5Auk+I69A6ZJTBw0jJTa2WOEiFoxpen8KDBS5+u
+	 PcqkBz5V1B+sc5amk6eWfiLV14aIZd1lBHVXFgRByGEjl6S5vaiATGfzP7pkv9JGvc
+	 2FeLfZK3rc9dg==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 00/15] pciutils: Add utility for Lane Margining
-Date: Fri, 8 Dec 2023 12:17:19 +0300
-Message-ID: <20231208091734.12225-1-n.proshkin@yadro.com>
+Subject: [PATCH 12/15] pciutils-pcilmr: Add --scan mode to search for all LMR-capable Links
+Date: Fri, 8 Dec 2023 12:17:31 +0300
+Message-ID: <20231208091734.12225-13-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
+References: <20231208091734.12225-1-n.proshkin@yadro.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,89 +45,113 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-PCIe Gen 4 spec introduced new extended capability mandatory for all
-ports - Lane Margining at the Receiver. This new feature allows to get an
-approximation of the Link eye margin diagram by four points. This
-information shows how resistant the Link is to external influences and can
-be useful for link debugging and presets tuning.
-Previously, this information was only available using a hardware debugger.
+Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
+Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
+---
+ pcilmr.c | 51 ++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 46 insertions(+), 5 deletions(-)
 
-Patch series consists of two parts:
-
-* Patch for lspci to add Margining registers reading. There is not much
-  information available without issuing any margining commands, but this
-  info is useful anyway;
-* New pcilmr utility.
-
-Margining capability assumes the exchange of commands with the device, so
-its support was implemented as a separate utility pcilmr.
-The pcilmr allows you to test Links and supports all the features provided
-by the Margining capability. The utility is written using a pcilib, it is
-divided into a library part and a main function with arguments parsing in
-the pciutils root dir.
-Man page is provided as well.
-
-Utility compilation and man page preparation are integrated into the
-pciutils Makefile, so run make is enough to start testing the utility
-(Gen 4/5 device is required though).
-Utility was written with Linux in mind and was tested only on this OS.
-
-Example utility results on different systems you can see in gist:
-https://gist.github.com/bombanya/f2b15263712757ffba1a11eea011c419
-
-Patch series is also posted as PR on pciutils github:
-https://github.com/pciutils/pciutils/pull/162
-
-Nikita Proshkin (15):
-  pciutils-lspci: Fix unsynchronized caches in lspci struct device and
-    pci struct pci_dev
-  pciutils: Add constants for Lane Margining at the Receiver Extended
-    Capability
-  pciutils-lspci: Add Lane Margining support to the lspci
-  pciutils-pcilmr: Add functions for device checking and preparations
-    before main margining processes
-  pciutils-pcilmr: Add margining process functions
-  pciutils-pcilmr: Add logging functions for margining
-  pciutils-pcilmr: Add all-in-one device margining parameters reading
-    function
-  pciutils-pcilmr: Add function for default margining results log
-  pciutils-pcilmr: Add utility main function
-  pciutils-pcilmr: Add support for unique hardware quirks
-  pciutils-pcilmr: Add the ability to pass multiple links to the utility
-  pciutils-pcilmr: Add --scan mode to search for all LMR-capable Links
-  pciutils-pcilmr: Add option to save margining results in csv form
-  pciutils-pcilmr: Add handling of situations when device reports its
-    MaxOffset values equal to 0
-  pciutils-pcilmr: Add pcilmr man page
-
- Makefile                 |  11 +-
- lib/header.h             |   7 +
- lmr_lib/Makefile         |  10 +
- lmr_lib/margin.c         | 528 ++++++++++++++++++++++++++++++++++++++
- lmr_lib/margin.h         | 206 +++++++++++++++
- lmr_lib/margin_hw.c      | 163 ++++++++++++
- lmr_lib/margin_hw.h      |  46 ++++
- lmr_lib/margin_log.c     | 141 +++++++++++
- lmr_lib/margin_log.h     |  23 ++
- lmr_lib/margin_results.c | 255 +++++++++++++++++++
- lmr_lib/margin_results.h |  15 ++
- ls-ecaps.c               |  22 +-
- lspci.c                  |   1 +
- pcilmr.c                 | 532 +++++++++++++++++++++++++++++++++++++++
- pcilmr.man               | 179 +++++++++++++
- 15 files changed, 2136 insertions(+), 3 deletions(-)
- create mode 100644 lmr_lib/Makefile
- create mode 100644 lmr_lib/margin.c
- create mode 100644 lmr_lib/margin.h
- create mode 100644 lmr_lib/margin_hw.c
- create mode 100644 lmr_lib/margin_hw.h
- create mode 100644 lmr_lib/margin_log.c
- create mode 100644 lmr_lib/margin_log.h
- create mode 100644 lmr_lib/margin_results.c
- create mode 100644 lmr_lib/margin_results.h
- create mode 100644 pcilmr.c
- create mode 100644 pcilmr.man
-
+diff --git a/pcilmr.c b/pcilmr.c
+index ed37a05..46b9f24 100644
+--- a/pcilmr.c
++++ b/pcilmr.c
+@@ -9,19 +9,22 @@
+ 
+ enum mode {
+   MARGIN,
+-  FULL
++  FULL,
++  SCAN
+ };
+ 
+ static void usage(void)
+ {
+   printf("Usage:\n"
+          "pcilmr [--margin] [<margining options>] <downstream component> ...\n"
+-         "pcilmr --full [<margining options>]\n\n"
++         "pcilmr --full [<margining options>]\n"
++         "pcilmr --scan\n\n"
+          "Device Specifier:\n"
+          "<device/component>:\t[<domain>:]<bus>:<dev>.<func>\n\n"
+          "Modes:\n"
+          "--margin\t\tMargin selected Links\n"
+          "--full\t\t\tMargin all ready for testing Links in the system (one by one)\n"
++         "--scan\t\t\tScan for Links available for margining\n\n"
+          "Margining options:\n\n"
+          "Margining Test settings:\n"
+          "-c\t\t\tPrint Device Lane Margining Capabilities only. Do not run margining.\n"
+@@ -106,7 +109,38 @@ static uint8_t parse_csv_arg(char *arg, uint8_t *lanes)
+   return cnt;
+ }
+ 
+-static uint8_t find_ready_links(struct pci_access *pacc, struct pci_dev **down_ports, 
++static void scan_links(struct pci_access *pacc, bool only_ready)
++{
++  if (only_ready)
++    printf("Links ready for margining:\n");
++  else
++    printf("Links with Lane Margining at the Receiver capabilities:\n");
++  bool flag = true;
++  for (struct pci_dev *up = pacc->devices; up; up = up->next)
++  {
++    if (pci_find_cap(up, PCI_EXT_CAP_ID_LMR, PCI_CAP_EXTENDED))
++    {
++      struct pci_dev *down = find_down_port_for_up(pacc, up);
++
++      if (down && margin_verify_link(down, up))
++      {
++        margin_log_bdfs(down, up);
++        if (!only_ready && (margin_check_ready_bit(down) || margin_check_ready_bit(up)))
++        {
++          printf(" - Ready");
++        }
++        printf("\n");
++        flag = false;
++      }
++    }
++  }
++  if (flag)
++    printf("Links not found or you don't have enough privileges.\n");
++  pci_cleanup(pacc);
++  exit(0);
++}
++
++static uint8_t find_ready_links(struct pci_access *pacc, struct pci_dev **down_ports,
+                                 struct pci_dev **up_ports, bool cnt_only)
+ {
+   uint8_t cnt = 0;
+@@ -184,7 +218,8 @@ int main(int argc, char **argv)
+ 
+   struct option long_options[] = {
+       {.name = "margin", .has_arg = no_argument, .flag = NULL, .val = 0},
+-      {.name = "full", .has_arg = no_argument, .flag = NULL, .val = 1},
++      {.name = "scan", .has_arg = no_argument, .flag = NULL, .val = 1},
++      {.name = "full", .has_arg = no_argument, .flag = NULL, .val = 2},
+       {0, 0, 0, 0}};
+ 
+   int c;
+@@ -198,6 +233,12 @@ int main(int argc, char **argv)
+     mode = MARGIN;
+     break;
+   case 1:
++    mode = SCAN;
++    if (optind == argc)
++      scan_links(pacc, false);
++    optind--;
++    break;
++  case 2:
+     mode = FULL;
+     break;
+   default: /*unknown option symbol*/
+@@ -378,7 +419,7 @@ int main(int argc, char **argv)
+         for (uint8_t j = 0; j < args[i].recvs_n; j++)
+         {
+           if (margin_read_params_standalone(pacc,
+-                                            args[i].recvs[j] == 6 ? up_ports[i] : down_ports[i], 
++                                            args[i].recvs[j] == 6 ? up_ports[i] : down_ports[i],
+                                             args[i].recvs[j], &caps))
+           {
+             uint8_t steps_t = steps_t_arg == -1 ? caps.timing_steps : steps_t_arg;
 -- 
 2.34.1
 
