@@ -1,10 +1,10 @@
-Received: from out30-133.freemail.mail.aliyun.com (out30-133.freemail.mail.aliyun.com [115.124.30.133])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 037A811D;
-	Thu,  7 Dec 2023 18:57:11 -0800 (PST)
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R751e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046059;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0Vy1bwyE_1702004228;
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Vy1bwyE_1702004228)
+Received: from out30-101.freemail.mail.aliyun.com (out30-101.freemail.mail.aliyun.com [115.124.30.101])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9E17230D7;
+	Thu,  7 Dec 2023 18:57:06 -0800 (PST)
+X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R871e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=ay29a033018046050;MF=xueshuai@linux.alibaba.com;NM=1;PH=DS;RN=17;SR=0;TI=SMTPD_---0Vy1bwvd_1702004222;
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0Vy1bwvd_1702004222)
           by smtp.aliyun-inc.com;
-          Fri, 08 Dec 2023 10:57:09 +0800
+          Fri, 08 Dec 2023 10:57:04 +0800
 From: Shuai Xue <xueshuai@linux.alibaba.com>
 To: ilkka@os.amperecomputing.com,
 	kaishen@linux.alibaba.com,
@@ -23,9 +23,9 @@ Cc: chengyou@linux.alibaba.com,
 	zhuo.song@linux.alibaba.com,
 	xueshuai@linux.alibaba.com,
 	renyu.zj@linux.alibaba.com
-Subject: [PATCH v12 5/5] MAINTAINERS: add maintainers for DesignWare PCIe PMU driver
-Date: Fri,  8 Dec 2023 10:56:52 +0800
-Message-Id: <20231208025652.87192-6-xueshuai@linux.alibaba.com>
+Subject: [PATCH v12 2/5] PCI: Add Alibaba Vendor ID to linux/pci_ids.h
+Date: Fri,  8 Dec 2023 10:56:49 +0800
+Message-Id: <20231208025652.87192-3-xueshuai@linux.alibaba.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231208025652.87192-1-xueshuai@linux.alibaba.com>
 References: <20231208025652.87192-1-xueshuai@linux.alibaba.com>
@@ -37,32 +37,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add maintainers for Synopsys DesignWare PCIe PMU driver and driver
-document.
+The Alibaba Vendor ID (0x1ded) is now used by Alibaba elasticRDMA ("erdma")
+and will be shared with the upcoming PCIe PMU ("dwc_pcie_pmu"). Move the
+Vendor ID to linux/pci_ids.h so that it can shared by several drivers
+later.
 
 Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>	# pci_ids.h
+Tested-by: Ilkka Koskinen <ilkka@os.amperecomputing.com>
 ---
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/infiniband/hw/erdma/erdma_hw.h | 2 --
+ include/linux/pci_ids.h                | 2 ++
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 6c4cce45a09d..71f363f836ae 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -20866,6 +20866,13 @@ L:	linux-mmc@vger.kernel.org
- S:	Maintained
- F:	drivers/mmc/host/dw_mmc*
+diff --git a/drivers/infiniband/hw/erdma/erdma_hw.h b/drivers/infiniband/hw/erdma/erdma_hw.h
+index 9d316fdc6f9a..a155519a862f 100644
+--- a/drivers/infiniband/hw/erdma/erdma_hw.h
++++ b/drivers/infiniband/hw/erdma/erdma_hw.h
+@@ -11,8 +11,6 @@
+ #include <linux/types.h>
  
-+SYNOPSYS DESIGNWARE PCIE PMU DRIVER
-+M:	Shuai Xue <xueshuai@linux.alibaba.com>
-+M:	Jing Zhang <renyu.zj@linux.alibaba.com>
-+S:	Supported
-+F:	Documentation/admin-guide/perf/dwc_pcie_pmu.rst
-+F:	drivers/perf/dwc_pcie_pmu.c
+ /* PCIe device related definition. */
+-#define PCI_VENDOR_ID_ALIBABA 0x1ded
+-
+ #define ERDMA_PCI_WIDTH 64
+ #define ERDMA_FUNC_BAR 0
+ #define ERDMA_MISX_BAR 2
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index 5fb3d4c393a9..d8760daf9e5a 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2601,6 +2601,8 @@
+ #define PCI_VENDOR_ID_TEKRAM		0x1de1
+ #define PCI_DEVICE_ID_TEKRAM_DC290	0xdc29
+ 
++#define PCI_VENDOR_ID_ALIBABA		0x1ded
 +
- SYNOPSYS HSDK RESET CONTROLLER DRIVER
- M:	Eugeniy Paltsev <Eugeniy.Paltsev@synopsys.com>
- S:	Supported
+ #define PCI_VENDOR_ID_TEHUTI		0x1fc9
+ #define PCI_DEVICE_ID_TEHUTI_3009	0x3009
+ #define PCI_DEVICE_ID_TEHUTI_3010	0x3010
 -- 
 2.39.3
 
