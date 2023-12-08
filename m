@@ -1,35 +1,35 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="JkCFBezT";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="igyHg2+O"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="oIu+EoyJ";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="l0m0TQOf"
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 2357B1727
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B8AA1733
 	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:49 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com DB965C0002
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 53536C0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027136; bh=SBhBMSD/b041jxXSGOAXTq5IBUgFoQ2AEafdsjO0oPw=;
+	t=1702027149; bh=9nDLKbYdYrtPbPc+dke5n4p/Ias9emN9HC1PJDouES0=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=JkCFBezTgRdLThyZe7xK47AcHiG4/CtQZe7/B7zg3q5w3mcAy0fIVEP/5PRdmNn3U
-	 L9WVp4RBS2Hwi/8uvMfBz4f5qnUC3oiX8fDq8ZmlEFlmpYu0Vq1FdZYupUArh2uows
-	 10FInF3Jk8NL5qAGH/OlR+mnRMPg1fWWmGT4WclJWUQgRouMqYAy8KiwvVlR8dybV2
-	 MddgCzklENLEn0VcW08XZ/WcTEos9d6kWWyD+KpB4Kumhmho9Y4QP8OdnyNWjWhz1f
-	 +OcW/+asLUkfHigfC3XhmZOoVCbmSODSla6QC1Ky+4ANYG7ZdivdtPzn4FOUgaqoE+
-	 lIE+wXf6oF0XA==
+	b=oIu+EoyJSTuxu2fK+fL1tZonIbniF8x9wddv3tvzNF+yt+fzkhKuhyJI/UWzQ+Pz5
+	 QoQrYuxThb5rb7YM5zM83V7ZOiCxBQzeEa+9k+qLFrG3LNICOUXye94E3vqpRq/Zax
+	 ie9r0mPzVm6rwvSx9YoB+6rd/ZUtJaqCRDfIAX+HzqLZedgEu8VpisXLsoOp3Nx+vA
+	 dAbQQ80qYCHowGlDWF7AvbMc5WZB9bCrMxHFb8p8dFqUPpTLoSCvviXpU0g4bMoPiR
+	 bHsqkm8uEOpYWlNTlsg2X/OZaJbkRAy3dWOcLkIbE4DQ/VhzwXSiT19Z8/wZp9G6Vw
+	 OSw/NTHh5zR0w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027136; bh=SBhBMSD/b041jxXSGOAXTq5IBUgFoQ2AEafdsjO0oPw=;
+	t=1702027149; bh=9nDLKbYdYrtPbPc+dke5n4p/Ias9emN9HC1PJDouES0=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=igyHg2+O2trEXaqSPG6zqKhTKx706pDasCKpxQq8bNsGh7+QRU/m0/Bi/6W4RNYb0
-	 5LcXIkT0/XNyuPVYpVCw4f3IPGxam9e7+tbCRWVQtTCtcuOZhdelBISVpVZrd4jkYu
-	 JUgqHk6tEvljcRHG1hCHEXmefikQW4XzPul4JSv1S2bPtWD0reO3IIypbbjXMophaf
-	 /jVYoz2C5+pQ6/nIBwJoLojavHlXLcgrBsIyMAju4kiWnFvIBJccGONSMfCGiIdd3p
-	 w9aWGLMFniiE06R3ybttbENv0iPUPPq/LbclTHcb0/uudpGWF81uwCJYf88uupXUQd
-	 AzOepwpPKC8cw==
+	b=l0m0TQOfoyQPN3BlO62ifu+VszHn4fQPf9maHGqvg9s1wnsy8WNLQ2JXY312fVxKn
+	 Vt0fxnwxWd0FfCP7Ac75EdRu+grX5ffuAwAuWA3lHQc4pNzS5MfQZYvsfyi4AtB9I1
+	 aEcZINQoeO0VPwme2D5eoUWoWa4QWWxAiaTKmE7hHquZ8/lWVRtWj74OQVd7BxdWnq
+	 gqajhZhbQpSHiakmn9tYqED43nHjVUZOZfpWSum2LlqAV3hrpmXKcBBsmiGmIep0/t
+	 EMgmzYqHYvCZKH331v5HKaNNFId+TIxbXHXLY+KKn90uFv7CmmnfGfmq6cUbyhQ+EM
+	 zWQ4mjODAguEA==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 01/15] pciutils-lspci: Fix unsynchronized caches in lspci struct device and pci struct pci_dev
-Date: Fri, 8 Dec 2023 12:17:20 +0300
-Message-ID: <20231208091734.12225-2-n.proshkin@yadro.com>
+Subject: [PATCH 07/15] pciutils-pcilmr: Add all-in-one device margining parameters reading function
+Date: Fri, 8 Dec 2023 12:17:26 +0300
+Message-ID: <20231208091734.12225-8-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
@@ -44,73 +44,125 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-lspci initializes both caches for the device to the same memory block in
-its scan_device function. Latter calls to config_fetch function will
-realloc cache in struct device, but not in struct pci_dev leading to
-the invalid pointer in the latter. pci_dev cache is used by pci_read_*
-functions, what will lead to a possible use-after-free situations.
-
-Example:
-
-With patch:
-
-diff --git a/ls-caps.c b/ls-caps.c
-index a481b16..b454843 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -1802,6 +1802,7 @@ show_caps(struct device *d, int where)
- 	      break;
- 	    case PCI_CAP_ID_EXP:
- 	      type = cap_express(d, where, cap);
-+        struct pci_cap* test = pci_find_cap(d->dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
- 	      can_have_ext_caps = 1;
- 	      break;
- 	    case PCI_CAP_ID_MSIX:
-
-valgrind run:
-valgrind ./lspci -vvvs 7:0.0
-
-...
-==22835== Invalid read of size 2
-==22835==    at 0x11A90A: pci_read_word (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x11EBEC: pci_scan_caps (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x11AC00: pci_fill_info_v38 (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x11ED73: pci_find_cap (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x1126FA: show_caps (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10E860: show_device (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10BFA3: main (in /home/merlin/git/pciutils/lspci)
-==22835==  Address 0x5249276 is 6 bytes inside a block of size 64 free'd
-==22835==    at 0x4E0A13B: realloc (vg_replace_malloc.c:1649)
-==22835==    by 0x119BCC: xrealloc (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10CD2C: config_fetch (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x110DAA: show_caps (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10E860: show_device (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10BFA3: main (in /home/merlin/git/pciutils/lspci)
-==22835==  Block was alloc'd at
-==22835==    at 0x4E050B5: malloc (vg_replace_malloc.c:431)
-==22835==    by 0x119B9C: xmalloc (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10CE80: scan_device (in /home/merlin/git/pciutils/lspci)
-==22835==    by 0x10BF0F: main (in /home/merlin/git/pciutils/lspci)
-...
+Implement a function that performs all necessary actions to obtain device
+margining parameters for subsequent processing without running the actual
+margining test.
 
 Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
 ---
- lspci.c | 1 +
- 1 file changed, 1 insertion(+)
+ lmr_lib/margin.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++++
+ lmr_lib/margin.h |  4 +++
+ 2 files changed, 89 insertions(+)
 
-diff --git a/lspci.c b/lspci.c
-index 9452cd3..071cc11 100644
---- a/lspci.c
-+++ b/lspci.c
-@@ -107,6 +107,7 @@ config_fetch(struct device *d, unsigned int pos, unsigned int len)
-       d->config = xrealloc(d->config, d->config_bufsize);
-       d->present = xrealloc(d->present, d->config_bufsize);
-       memset(d->present + orig_size, 0, d->config_bufsize - orig_size);
-+      pci_setup_cache(d->dev, d->config, d->dev->cache_len);
-     }
-   result = pci_read_block(d->dev, pos, d->config + pos, len);
-   if (result)
+diff --git a/lmr_lib/margin.c b/lmr_lib/margin.c
+index 38a80bf..41c8fbf 100644
+--- a/lmr_lib/margin.c
++++ b/lmr_lib/margin.c
+@@ -414,3 +414,88 @@ void margin_free_results(struct margin_results *results, uint8_t results_n)
+   }
+   free(results);
+ }
++
++bool margin_read_params_standalone(struct pci_access *pacc, struct pci_dev *dev, 
++                                    int8_t recvn, struct margin_recv *caps)
++{
++  struct pci_cap *cap = pci_find_cap(dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
++  uint8_t dev_dir = (pci_read_word(dev, cap->addr + PCI_EXP_FLAGS) & PCI_EXP_FLAGS_TYPE) >> 4;
++
++  bool dev_down;
++  if (dev_dir == 4 || dev_dir == 6)
++    dev_down = true;
++  else
++    dev_down = false;
++
++  if (recvn == -1)
++  {
++    if (dev_down)
++      recvn = 1;
++    else
++      recvn = 6;
++  }
++
++  if (recvn < 1 || recvn > 6)
++    return false;
++  if (dev_down && recvn == 6)
++    return false;
++  if (!dev_down && recvn != 6)
++    return false;
++
++  caps->recvn = recvn;
++
++  struct pci_dev *down = NULL;
++  struct pci_dev *up = NULL;
++  struct margin_dev down_w;
++  struct margin_dev up_w;
++
++  for (struct pci_dev *p = pacc->devices; p; p = p->next)
++  {
++    if (dev_down && pci_read_byte(dev, PCI_SECONDARY_BUS) == p->bus && dev->domain == p->domain && p->func == 0)
++    {
++      down = dev;
++      up = p;
++      break;
++    }
++    else if (!dev_down && pci_read_byte(p, PCI_SECONDARY_BUS) == dev->bus && dev->domain == p->domain)
++    {
++      down = p;
++      up = dev;
++      break;
++    }
++  }
++
++  if (!down)
++    return false;
++  if (!margin_verify_link(down, up))
++    return false;
++
++  down_w = margin_fill_wrapper(down);
++  up_w = margin_fill_wrapper(up);
++
++  caps->dev = (dev_down ? &down_w : &up_w);
++  if (!margin_check_ready_bit(caps->dev->dev))
++    return false;
++
++  if (!margin_prep_dev(&down_w))
++    return false;
++  if (!margin_prep_dev(&up_w))
++  {
++    margin_restore_dev(&down_w);
++    return false;
++  }
++
++  bool status;
++  caps->lane_reversal = false;
++  status = margin_read_params(caps);
++  if (!status)
++  {
++    caps->lane_reversal = true;
++    status = margin_read_params(caps);
++  }
++
++  margin_restore_dev(&down_w);
++  margin_restore_dev(&up_w);
++
++  return status;
++}
+diff --git a/lmr_lib/margin.h b/lmr_lib/margin.h
+index bb57a76..13cfa73 100644
+--- a/lmr_lib/margin.h
++++ b/lmr_lib/margin.h
+@@ -172,6 +172,10 @@ union margin_cmd margin_make_cmd(uint8_t payload, uint8_t type, uint8_t recvn);
+ dev, recvn and lane_reversal fields must be initialized*/
+ bool margin_read_params(struct margin_recv *recv);
+ 
++/*Fill margin_recv without calling other functions*/
++bool margin_read_params_standalone(struct pci_access *pacc, struct pci_dev* dev, 
++                                   int8_t recvn, struct margin_recv* caps);
++
+ bool margin_report_cmd(struct margin_dev *dev, uint8_t lane, 
+                        union margin_cmd cmd, union margin_payload *result);
+ 
 -- 
 2.34.1
 
