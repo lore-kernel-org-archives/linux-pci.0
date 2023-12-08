@@ -1,35 +1,35 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="b3+1lLd0";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="eDl+8M0k"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="PeQ/2WHv";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="x+3vXHPr"
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 502C51723
-	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:45 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 8CBEFC0002
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 0456A1716
+	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:48 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 90D8BC0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027154; bh=NBsL3gbmdanLz8+vb3lTWwIl5Vnf1pCPSxGsZJBN9iw=;
+	t=1702027157; bh=mqPNV8KHqX8HHzuSTzohXXY5WQ7EG2t0sitk6v32BQM=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=b3+1lLd0pOUnQJ0BUkE2CrQawnKf/7U+bsMImirCUp51yXPrn+J0QT+8cOrZN/MOH
-	 lbd/v53zTJ1r74WwW5MCqqYdoqVJJmAnacdisr/0W8pP4N4b15Trr/t+hXJ+bk5dpO
-	 qOGsa8a6mbb3IHSwdbqSw0EZf8j4PgoMNi2wfILVFAGPXC7e8HquIAw69PVWxcfba7
-	 SIZglfIB5cujfbn/wVpyNilK5XZyJg+evqAyNrBC4HJI1qw+eTDUsvMg1sz9lopgjA
-	 KYEqbjWSdPCQZ0xsnvT24ewiJS7Mo21bqmp9XE+9zEygNgR7rQ6v+W+2Hx+211DcJL
-	 qXr4vP2JZ7MNQ==
+	b=PeQ/2WHvzywWw7gT+g7I6S7VupRvSqd38EJIRko7YjtTeBRIaITXVFNzkOzpCDmhz
+	 3zbR9E9RhUOaSl/bJ9L/KCJ5d18If/kDHf4v3ski+CgTDCFSXCXgAsR6jLqD4V4H+c
+	 4lTTEdHfpALI++Gf7Xclj3lGp395fIIPKsqRXlwDmTAUDl69bQBKTUxIEN0UVjlFJC
+	 f6M43FkJKYc+lne+pF2S5EfecqNCPl26QhPt2ghiSHv9zLRBHSIBL/jUt+aPzSVbNI
+	 G/rw9XijWSYuZmrBY74764BF0jn4qiVQUoKUrHkuO8jYOoXvlNsrdfLmipG2KBy62H
+	 TRlGBLwRAEy4w==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027154; bh=NBsL3gbmdanLz8+vb3lTWwIl5Vnf1pCPSxGsZJBN9iw=;
+	t=1702027157; bh=mqPNV8KHqX8HHzuSTzohXXY5WQ7EG2t0sitk6v32BQM=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=eDl+8M0kJgi9ZWf99Goeca5WcD5aYpcTnl1Ktzlsv8PYheSq/u6vg631n8QiRyJUG
-	 jj940hmxRsNiMa744Pe7YGJkqSgHGzrj+/ioY0TjPjqXEx9Lz+UBXj8hOHXB734kEV
-	 NMOuYGDb1RXzIRDPV/L+sZXVDb3z00RFOW79g5IkAPHsci+ewxouFdpuOFMy5dE3eu
-	 7UiWnDBnGd+iyO9a7pWFhYVDlwPiRkD1Ygk2C2y1uNz+SwGPjH0eZAm84EoMdNuIG6
-	 wkIiw5Ab7U4YAUNpNgQO9s9cEd5QqdTYlofJ0bZJ6b9vg5wjWKx104eHd3R9/afABD
-	 C/8ywsqZvtlCw==
+	b=x+3vXHPrpU5cHTs+GaMFA0OEDNj61B6JB/jzCJegeb/7Yy8EP+lN3WqykCaEAS2Kl
+	 rOySNXtooR/8jAWQxNX0NUESst/DDZ486jOIytzd1t+AcPlqSQcDmzpSOLTELUpdG4
+	 GoZYDkQVCbTKSJx3e4xoIQ2GO/9kvYzFjUrSBTEBrYdENlJegDRN8m7iwenjqApK+W
+	 e7jIEFkrhBhJafAnRs5B8PnyI4DhBlb1IaNAyxWIHbCli30YbOIVSZ1LCApwNZyZpA
+	 DfimhKGp7+3W6+hCy/Jk0+L8GnQcfLAqWSebOd5c2TlP1VuunU3MWWNS4efkMMOkMX
+	 R5MCjUN+2dQCg==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 11/15] pciutils-pcilmr: Add the ability to pass multiple links to the utility
-Date: Fri, 8 Dec 2023 12:17:30 +0300
-Message-ID: <20231208091734.12225-12-n.proshkin@yadro.com>
+Subject: [PATCH 13/15] pciutils-pcilmr: Add option to save margining results in csv form
+Date: Fri, 8 Dec 2023 12:17:32 +0300
+Message-ID: <20231208091734.12225-14-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
@@ -44,459 +44,204 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-* Add support for different utility modes;
-* Make the default (now --margin) mode capable to accept several
-  components and run test for all of them;
-* Add --full mode for sequential start of the test on all ready links
-  in the system;
-* The complication of the main function is due to the need to pre-read the
-  parameters of the devices before starting the tests in order to calculate
-  Total ETA of the utility.
-
 Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
 ---
- pcilmr.c | 316 +++++++++++++++++++++++++++++++++++++++++--------------
- 1 file changed, 235 insertions(+), 81 deletions(-)
+ lmr_lib/margin_results.c | 108 +++++++++++++++++++++++++++++++++++++++
+ lmr_lib/margin_results.h |   2 +
+ pcilmr.c                 |  18 ++++++-
+ 3 files changed, 126 insertions(+), 2 deletions(-)
 
+diff --git a/lmr_lib/margin_results.c b/lmr_lib/margin_results.c
+index 61f483a..cc6132f 100644
+--- a/lmr_lib/margin_results.c
++++ b/lmr_lib/margin_results.c
+@@ -1,5 +1,7 @@
+ #include <stdlib.h>
+ #include <stdio.h>
++#include <time.h>
++#include <string.h>
+ 
+ #include "margin_results.h"
+ 
+@@ -133,3 +135,109 @@ void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n)
+     printf("\n");
+   }
+ }
++
++void margin_results_save_csv(struct margin_results *results, uint8_t recvs_n, char *dir, struct pci_dev *up_dev)
++{
++  char timestamp[64];
++  time_t tim = time(NULL);
++  strftime(timestamp, 64, "%FT%H.%M.%S", gmtime(&tim));
++
++  char *path = (char *)malloc((strlen(dir) + 128) * sizeof(*path));
++  FILE *csv;
++
++  struct margin_res_lane *lane;
++  struct margin_results *recv;
++  enum lane_rating lane_rating;
++  uint8_t link_speed;
++
++  for (uint8_t i = 0; i < recvs_n; i++)
++  {
++    recv = &(results[i]);
++    link_speed = recv->link_speed - 4;
++
++    if (recv->test_status != MARGIN_TEST_OK)
++      continue;
++    sprintf(path, "%s/lmr_%0*x.%02x.%02x.%x_Rx%X_%s.csv", dir,
++            up_dev->domain_16 == 0xffff ? 8 : 4,
++            up_dev->domain, up_dev->bus, up_dev->dev,
++            up_dev->func, 10 + recv->recvn - 1, timestamp);
++    csv = fopen(path, "w");
++    if (!csv)
++    {
++      printf("Error while saving %s\n", path);
++      free(path);
++      return;
++    }
++
++    fprintf(csv, "Lane,Lane Status,Left %% UI,Left ps,Left Steps,Left Status,"
++                 "Right %% UI,Right ps,Right Steps,Right Status,"
++                 "Time %% UI,Time ps,Time Steps,Time Status,"
++                 "Up mV,Up Steps,Up Status,Down mV,Down Steps,Down Status,"
++                 "Voltage mV,Voltage Steps,Voltage Status\n");
++
++    if (check_recv_weird(recv, MARGIN_TIM_MIN, MARGIN_VOLT_MIN))
++      lane_rating = WEIRD;
++    else
++      lane_rating = INIT;
++
++    for (uint8_t j = 0; j < recv->lanes_n; j++)
++    {
++      lane = &(recv->lanes[j]);
++      double left_ui = lane->steps[TIM_LEFT] * recv->tim_coef;
++      double right_ui = lane->steps[TIM_RIGHT] * recv->tim_coef;
++      double up_volt = lane->steps[VOLT_UP] * recv->volt_coef;
++      double down_volt = lane->steps[VOLT_DOWN] * recv->volt_coef;
++
++      if (lane_rating != WEIRD)
++      {
++        lane_rating = rate_lane(left_ui, MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND, INIT);
++        if (recv->ind_left_right_tim)
++          lane_rating = rate_lane(right_ui, MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND, lane_rating);
++        if (recv->volt_support)
++        {
++          lane_rating = rate_lane(up_volt, MARGIN_VOLT_MIN, MARGIN_VOLT_MIN, lane_rating);
++          if (recv->ind_up_down_volt)
++            lane_rating = rate_lane(down_volt, MARGIN_VOLT_MIN, MARGIN_VOLT_MIN, lane_rating);
++        }
++      }
++
++      fprintf(csv, "%d,%s,", lane->lane, grades[lane_rating]);
++      if (recv->ind_left_right_tim)
++      {
++        fprintf(csv, "%f,%f,%d,%s,%f,%f,%d,%s,NA,NA,NA,NA,",
++                left_ui, left_ui * ui[link_speed], lane->steps[TIM_LEFT], sts_strings[lane->statuses[TIM_LEFT]],
++                right_ui, right_ui * ui[link_speed], lane->steps[TIM_RIGHT], sts_strings[lane->statuses[TIM_RIGHT]]);
++      }
++      else
++      {
++        for (uint8_t k = 0; k < 8; k++)
++          fprintf(csv, "NA,");
++        fprintf(csv, "%f,%f,%d,%s,", left_ui, left_ui * ui[link_speed],
++                lane->steps[TIM_LEFT], sts_strings[lane->statuses[TIM_LEFT]]);
++      }
++      if (recv->volt_support)
++      {
++        if (recv->ind_up_down_volt)
++        {
++          fprintf(csv, "%f,%d,%s,%f,%d,%s,NA,NA,NA\n",
++                  up_volt, lane->steps[VOLT_UP], sts_strings[lane->statuses[VOLT_UP]],
++                  down_volt, lane->steps[VOLT_DOWN], sts_strings[lane->statuses[VOLT_DOWN]]);
++        }
++        else
++        {
++          for (uint8_t k = 0; k < 6; k++)
++            fprintf(csv, "NA,");
++          fprintf(csv, "%f,%d,%s\n", up_volt, lane->steps[VOLT_UP], sts_strings[lane->statuses[VOLT_UP]]);
++        }
++      }
++      else
++      {
++        for (uint8_t k = 0; k < 8; k++)
++          fprintf(csv, "NA,");
++        fprintf(csv, "NA\n");
++      }
++    }
++    fclose(csv);
++  }
++  free(path);
++}
+diff --git a/lmr_lib/margin_results.h b/lmr_lib/margin_results.h
+index ab6ddb0..69847cb 100644
+--- a/lmr_lib/margin_results.h
++++ b/lmr_lib/margin_results.h
+@@ -10,4 +10,6 @@
+ 
+ void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n);
+ 
++void margin_results_save_csv(struct margin_results *results, uint8_t recvs_n, char *dir, struct pci_dev *up_dev);
++
+ #endif
 diff --git a/pcilmr.c b/pcilmr.c
-index bbab276..ed37a05 100644
+index 46b9f24..3da28e5 100644
 --- a/pcilmr.c
 +++ b/pcilmr.c
-@@ -7,12 +7,21 @@
- #include "lmr_lib/margin_results.h"
- #include "lmr_lib/margin_log.h"
- 
-+enum mode {
-+  MARGIN,
-+  FULL
-+};
-+
- static void usage(void)
- {
-   printf("Usage:\n"
--         "pcilmr [<margining options>] <downstream component>\n\n"
-+         "pcilmr [--margin] [<margining options>] <downstream component> ...\n"
-+         "pcilmr --full [<margining options>]\n\n"
-          "Device Specifier:\n"
-          "<device/component>:\t[<domain>:]<bus>:<dev>.<func>\n\n"
-+         "Modes:\n"
-+         "--margin\t\tMargin selected Links\n"
-+         "--full\t\t\tMargin all ready for testing Links in the system (one by one)\n"
-          "Margining options:\n\n"
-          "Margining Test settings:\n"
-          "-c\t\t\tPrint Device Lane Margining Capabilities only. Do not run margining.\n"
-@@ -97,27 +106,58 @@ static uint8_t parse_csv_arg(char *arg, uint8_t *lanes)
-   return cnt;
+@@ -47,7 +47,12 @@ static void usage(void)
+          "-v <steps>\t\tSpecify maximum number of steps for Voltage Margining.\n"
+          "Use only one of -T/-t options at the same time (same for -V/-v).\n"
+          "Without these options utility will use MaxSteps from Device\n"
+-         "capabilities as test limit.\n\n");
++         "capabilities as test limit.\n\n"
++         "Margining Log settings:\n"
++         "-o <directory>\t\tSave margining results in csv form into the\n"
++         "\t\t\tspecified directory. Utility will generate file with the\n"
++         "\t\t\tname in form of 'lmr_<downstream component>_Rx#_<timestamp>.csv'\n"
++         "\t\t\tfor each successfully tested receiver.\n");
  }
  
-+static uint8_t find_ready_links(struct pci_access *pacc, struct pci_dev **down_ports, 
-+                                struct pci_dev **up_ports, bool cnt_only)
-+{
-+  uint8_t cnt = 0;
-+  for (struct pci_dev *up = pacc->devices; up; up = up->next)
-+  {
-+    if (pci_find_cap(up, PCI_EXT_CAP_ID_LMR, PCI_CAP_EXTENDED))
-+    {
-+      struct pci_dev *down = find_down_port_for_up(pacc, up);
+ static struct pci_dev *dev_for_filter(struct pci_access *pacc, char *filter)
+@@ -198,6 +203,9 @@ int main(int argc, char **argv)
+ 
+   bool run_margin = true;
+ 
++  char *dir_for_csv = NULL;
++  bool save_csv = false;
 +
-+      if (down && margin_verify_link(down, up) &&
-+          (margin_check_ready_bit(down) || margin_check_ready_bit(up)))
-+      {
-+        if (!cnt_only)
-+        {
-+          up_ports[cnt] = up;
-+          down_ports[cnt] = down;
-+        }
-+        cnt++;
-+      }
-+    }
-+  }
-+  return cnt;
-+}
-+
- int main(int argc, char **argv)
- {
-   struct pci_access *pacc;
+   uint64_t total_steps = 0;
  
--  struct pci_dev *up_port;
--  struct pci_dev *down_port;
-+  struct pci_dev **up_ports;
-+  struct pci_dev **down_ports;
-+  uint8_t ports_n = 0;
+   pacc = pci_alloc();
+@@ -247,7 +255,7 @@ int main(int argc, char **argv)
+     break;
+   }
  
--  struct margin_dev wrapper_up;
--  struct margin_dev wrapper_down;
-+  struct margin_dev *wrappers_up;
-+  struct margin_dev *wrappers_down;
-+  bool *checks_status_ports;
- 
-   bool status = true;
-+  enum mode mode;
- 
--  struct margin_results *results;
--  uint8_t results_n;
-+  /*each link has several receivers -> several results*/
-+  struct margin_results **results;
-+  uint8_t *results_n;
- 
--  struct margin_args args;
-+  struct margin_args *args;
- 
-   int8_t steps_t_arg = -1;
-   int8_t steps_v_arg = -1;
-   int8_t parallel_lanes_arg = 1;
-   uint8_t error_limit = 4;
-+  uint8_t lanes_arg[32];
-+  uint8_t recvs_arg[6];
- 
-   int8_t lanes_n = -1;
-   int8_t recvs_n = -1;
-@@ -142,7 +182,29 @@ int main(int argc, char **argv)
- 
-   margin_global_logging = true;
- 
-+  struct option long_options[] = {
-+      {.name = "margin", .has_arg = no_argument, .flag = NULL, .val = 0},
-+      {.name = "full", .has_arg = no_argument, .flag = NULL, .val = 1},
-+      {0, 0, 0, 0}};
-+
-   int c;
-+  c = getopt_long(argc, argv, ":", long_options, NULL);
-+
-+  switch (c)
-+  {
-+  case -1: /*no options (strings like component are possible)*/
-+    /* FALLTHROUGH */
-+  case 0:
-+    mode = MARGIN;
-+    break;
-+  case 1:
-+    mode = FULL;
-+    break;
-+  default: /*unknown option symbol*/
-+    mode = MARGIN;
-+    optind--;
-+    break;
-+  }
- 
-   while (status && ((c = getopt(argc, argv, ":r:e:l:cp:t:v:VT")) != -1))
+-  while (status && ((c = getopt(argc, argv, ":r:e:l:cp:t:v:VT")) != -1))
++  while (status && ((c = getopt(argc, argv, ":r:e:l:cp:t:v:VTo:")) != -1))
    {
-@@ -167,13 +229,13 @@ int main(int argc, char **argv)
-       run_margin = false;
-       break;
-     case 'l':
--      lanes_n = parse_csv_arg(optarg, args.lanes);
-+      lanes_n = parse_csv_arg(optarg, lanes_arg);
-       break;
-     case 'e':
-       error_limit = atoi(optarg);
-       break;
+     switch (c)
+     {
+@@ -278,6 +286,10 @@ int main(int argc, char **argv)
      case 'r':
--      recvs_n = parse_csv_arg(optarg, args.recvs);
-+      recvs_n = parse_csv_arg(optarg, recvs_arg);
+       recvs_n = parse_csv_arg(optarg, recvs_arg);
        break;
++    case 'o':
++      dir_for_csv = optarg;
++      save_csv = true;
++      break;
      default:
        printf("Invalid arguments\n");
-@@ -184,7 +246,9 @@ int main(int argc, char **argv)
- 
-   if (status)
-   {
--    if (optind != argc - 1)
-+    if (mode == FULL && optind != argc)
-+      status = false;
-+    if (mode == MARGIN && optind == argc)
        status = false;
-     if (!status && argc > 1)
-       printf("Invalid arguments\n");
-@@ -194,25 +258,58 @@ int main(int argc, char **argv)
- 
-   if (status)
-   {
--    if ((up_port = dev_for_filter(pacc, argv[argc - 1])) == NULL)
-+    if (mode == FULL)
-     {
--      status = false;
-+      ports_n = find_ready_links(pacc, NULL, NULL, true);
-+      if (ports_n == 0)
-+      {
-+        printf("Links not found or you don't have enough privileges.\n");
-+        status = false;
-+      }
-+      else
-+      {
-+        up_ports = malloc(ports_n * sizeof(*up_ports));
-+        down_ports = malloc(ports_n * sizeof(*down_ports));
-+        find_ready_links(pacc, down_ports, up_ports, false);
-+      }
+@@ -494,6 +506,8 @@ int main(int argc, char **argv)
+       margin_log_bdfs(down_ports[i], up_ports[i]);
+       printf(":\n\n");
+       margin_results_print_brief(results[i], results_n[i]);
++      if (save_csv)
++        margin_results_save_csv(results[i], results_n[i], dir_for_csv, up_ports[i]);
+       printf("\n");
      }
--  }
-+    else if (mode == MARGIN)
-+    {
-+      ports_n = argc - optind;
-+      up_ports = malloc(ports_n * sizeof(*up_ports));
-+      down_ports = malloc(ports_n * sizeof(*down_ports));
- 
--  if (status)
--  {
--    down_port = find_down_port_for_up(pacc, up_port);
--    status = down_port != NULL;
--    if (!status)
--      printf("Cannot find Upstream Component for the specified device\n");
-+      uint8_t cnt = 0;
-+      while (optind != argc && status)
-+      {
-+        status = false;
-+        if ((up_ports[cnt] = dev_for_filter(pacc, argv[optind])) == NULL)
-+          break;
-+        down_ports[cnt] = find_down_port_for_up(pacc, up_ports[cnt]);
-+        status = down_ports[cnt] != NULL;
-+        if (!status)
-+          printf("Cannot find Upstream Component for the specified device\n");
-+        cnt++;
-+        optind++;
-+      }
-+
-+      if (!status)
-+      {
-+        free(up_ports);
-+        free(down_ports);
-+      }
-+    }
-+    else
-+      status = false;
    }
- 
-   if (status)
-   {
--    if (!pci_find_cap(up_port, PCI_CAP_ID_EXP, PCI_CAP_NORMAL))
-+    if (!pci_find_cap(up_ports[0], PCI_CAP_ID_EXP, PCI_CAP_NORMAL))
-     {
-       status = false;
-+      free(up_ports);
-+      free(down_ports);
-       printf("Looks like you don't have enough privileges to access "
-              "Device Configuration Space.\nTry to run utility as root.\n");
-     }
-@@ -220,75 +317,86 @@ int main(int argc, char **argv)
- 
-   if (status)
-   {
--    if (!margin_verify_link(down_port, up_port))
--    {
--      printf("Link ");
--      margin_log_bdfs(down_port, up_port);
--      printf(" is not ready for margining.\n"
--             "Link must be at Gen 4/5 speed.\n"
--             "Downstream Component must be at D0 PM state.\n");
--      status = false;
--    }
--    else
--    {
--      wrapper_down = margin_fill_wrapper(down_port);
--      wrapper_up = margin_fill_wrapper(up_port);
--    }
-+    results = malloc(ports_n * sizeof(*results));
-+    results_n = malloc(ports_n * sizeof(*results_n));
-+    wrappers_up = malloc(ports_n * sizeof(*wrappers_up));
-+    wrappers_down = malloc(ports_n * sizeof(*wrappers_down));
-+    checks_status_ports = malloc(ports_n * sizeof(*checks_status_ports));
-+    args = malloc(ports_n * sizeof(*args));
-   }
- 
-   if (status)
-   {
--    args.error_limit = error_limit;
--    args.lanes_n = lanes_n;
--    args.recvs_n = recvs_n;
--    args.steps_t = steps_t_arg;
--    args.steps_v = steps_v_arg;
--    args.parallel_lanes = parallel_lanes_arg;
--    args.run_margin = run_margin;
--    args.verbosity = 1;
--    args.steps_margin_remaining = &total_steps;
--
--    enum margin_test_status args_status;
--
--    if ((args_status = margin_process_args(&wrapper_down, &args)) != MARGIN_TEST_OK)
-+    for (uint8_t i = 0; i < ports_n; i++)
-     {
--      status = false;
--      margin_log_link(&wrapper_down, &wrapper_up);
--      if (args_status == MARGIN_TEST_ARGS_RECVS)
-+      args[i].error_limit = error_limit;
-+      args[i].parallel_lanes = parallel_lanes_arg;
-+      args[i].run_margin = run_margin;
-+      args[i].verbosity = 1;
-+      args[i].steps_t = steps_t_arg;
-+      args[i].steps_v = steps_v_arg;
-+      for (uint8_t j = 0; j < recvs_n; j++)
-+        args[i].recvs[j] = recvs_arg[j];
-+      args[i].recvs_n = recvs_n;
-+      for (uint8_t j = 0; j < lanes_n; j++)
-+        args[i].lanes[j] = lanes_arg[j];
-+      args[i].lanes_n = lanes_n;
-+      args[i].steps_margin_remaining = &total_steps;
-+
-+      bool local_status = true;
-+      enum margin_test_status args_status;
-+
-+      if (!margin_verify_link(down_ports[i], up_ports[i]))
-       {
--        margin_log("\nInvalid RecNums specified.\n");
-+        local_status = false;
-+        checks_status_ports[i] = false;
-+        results[i] = malloc(sizeof(*results[i]));
-+        results[i]->test_status = MARGIN_TEST_PREREQS;
-       }
--      else if (args_status == MARGIN_TEST_ARGS_LANES)
-+      else
-       {
--        margin_log("\nInvalid lanes specified.\n");
-+        wrappers_down[i] = margin_fill_wrapper(down_ports[i]);
-+        wrappers_up[i] = margin_fill_wrapper(up_ports[i]);
-       }
--    }
--  }
--
--  if (status)
--  {
--    struct margin_recv caps;
- 
--    for (uint8_t i = 0; i < args.recvs_n; i++)
--    {
--      if (margin_read_params_standalone(pacc,
--                                        args.recvs[i] == 6 ? up_port : down_port,
--                                        args.recvs[i], &caps))
-+      if (local_status)
-       {
--        uint8_t steps_t = steps_t_arg == -1 ? caps.timing_steps : steps_t_arg;
--        uint8_t steps_v = steps_v_arg == -1 ? caps.volt_steps : steps_v_arg;
--        uint8_t parallel_recv = parallel_lanes_arg > caps.max_lanes + 1 ? caps.max_lanes + 1 : parallel_lanes_arg;
-+        if ((args_status = margin_process_args(wrappers_down + i, args + i)) != MARGIN_TEST_OK)
-+        {
-+          local_status = false;
-+          results[i] = malloc(sizeof(*results[i]));
-+          results[i]->test_status = args_status;
-+          checks_status_ports[i] = false;
-+        }
-+      }
- 
--        uint8_t step_multiplier = args.lanes_n / parallel_recv + ((args.lanes_n % parallel_recv) > 0);
-+      if (local_status)
-+      {
-+        checks_status_ports[i] = true;
-+        struct margin_recv caps;
- 
--        total_steps += steps_t * step_multiplier;
--        if (caps.ind_left_right_tim)
--          total_steps += steps_t * step_multiplier;
--        if (caps.volt_support)
-+        for (uint8_t j = 0; j < args[i].recvs_n; j++)
-         {
--          total_steps += steps_v * step_multiplier;
--          if (caps.ind_up_down_volt)
--            total_steps += steps_v * step_multiplier;
-+          if (margin_read_params_standalone(pacc,
-+                                            args[i].recvs[j] == 6 ? up_ports[i] : down_ports[i], 
-+                                            args[i].recvs[j], &caps))
-+          {
-+            uint8_t steps_t = steps_t_arg == -1 ? caps.timing_steps : steps_t_arg;
-+            uint8_t steps_v = steps_v_arg == -1 ? caps.volt_steps : steps_v_arg;
-+            uint8_t parallel_recv = parallel_lanes_arg > caps.max_lanes + 1 ? caps.max_lanes + 1 : parallel_lanes_arg;
-+
-+            uint8_t step_multiplier = args[i].lanes_n / parallel_recv + ((args[i].lanes_n % parallel_recv) > 0);
-+
-+            total_steps += steps_t * step_multiplier;
-+            if (caps.ind_left_right_tim)
-+              total_steps += steps_t * step_multiplier;
-+            if (caps.volt_support)
-+            {
-+              total_steps += steps_v * step_multiplier;
-+              if (caps.ind_up_down_volt)
-+                total_steps += steps_v * step_multiplier;
-+            }
-+          }
-         }
-       }
-     }
-@@ -296,13 +404,41 @@ int main(int argc, char **argv)
- 
-   if (status)
-   {
--    results = margin_link(&wrapper_down, &wrapper_up, &args, &results_n);
--    status = (results != NULL);
-+    for (uint8_t i = 0; i < ports_n; i++)
-+    {
-+      if (checks_status_ports[i])
-+      {
-+        results[i] = margin_link(wrappers_down + i, wrappers_up + i, args + i, results_n + i);
-+      }
-+      else
-+      {
-+        results_n[i] = 1;
-+        if (results[i]->test_status == MARGIN_TEST_PREREQS)
-+        {
-+          printf("Link ");
-+          margin_log_bdfs(down_ports[i], up_ports[i]);
-+          printf(" is not ready for margining.\n"
-+                 "Link must be at Gen 4/5 speed.\n"
-+                 "Downstream Component must be at D0 PM state.\n");
-+        }
-+        else if (results[i]->test_status == MARGIN_TEST_ARGS_RECVS)
-+        {
-+          margin_log_link(wrappers_down + i, wrappers_up + i);
-+          printf("\nInvalid RecNums specified.\n");
-+        }
-+        else if (results[i]->test_status == MARGIN_TEST_ARGS_LANES)
-+        {
-+          margin_log_link(wrappers_down + i, wrappers_up + i);
-+          printf("\nInvalid lanes specified.\n");
-+        }
-+      }
-+      printf("\n----\n\n");
-+    }
-   }
- 
-   if (status && run_margin)
-   {
--    printf("\nResults:\n");
-+    printf("Results:\n");
-     printf("\nPass/fail criteria:\nTiming:\n");
-     printf("Minimum Offset (spec): %d %% UI\nRecommended Offset: %d %% UI\n", MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND);
-     printf("\nVoltage:\nMinimum Offset (spec): %d mV\n\n", MARGIN_VOLT_MIN);
-@@ -311,11 +447,29 @@ int main(int argc, char **argv)
-     printf("THR -\tThe set (using the utility options) \n\tstep threshold has been reached\n\n");
-     printf("Notations:\nst - steps\n\n");
- 
--    margin_results_print_brief(results, results_n);
-+    for (uint8_t i = 0; i < ports_n; i++)
-+    {
-+      printf("Link ");
-+      margin_log_bdfs(down_ports[i], up_ports[i]);
-+      printf(":\n\n");
-+      margin_results_print_brief(results[i], results_n[i]);
-+      printf("\n");
-+    }
-   }
- 
-   if (status)
--    margin_free_results(results, results_n);
-+  {
-+    for (uint8_t i = 0; i < ports_n; i++)
-+      margin_free_results(results[i], results_n[i]);
-+    free(results_n);
-+    free(results);
-+    free(up_ports);
-+    free(down_ports);
-+    free(wrappers_up);
-+    free(wrappers_down);
-+    free(checks_status_ports);
-+    free(args);
-+  }
- 
-   pci_cleanup(pacc);
-   return 0;
 -- 
 2.34.1
 
