@@ -1,35 +1,35 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="kDzMAHpl";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="AmTq+fC6"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="u8Ydd0LG";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="Tkvx93RI"
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A451735
-	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:50 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com F0038C0002
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8498E172D
+	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:49 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 49437C0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027150; bh=4OeTuXw8JJ5T+fGK4f2RemmfAw8cEwm0Qy2PQD//afE=;
+	t=1702027145; bh=VaBG1eoDne5ppfbxM8kSBEppntuhKQgnMBl1lri2pzQ=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=kDzMAHplFv1WLP0X88RfOTV1K6B6SB7mvRlbJy3rGJVJE+MzwEoIlpSMUeEbGUnq4
-	 arqinNEGPTNDlHyuudxjX4hTFNywPGvKFCGAmGcoCSkuRukIxub89UdNSu+du3GcrJ
-	 i2Dum6KdEArHkE/oMQYS27160fLYxBgUt6wnF7ReBz8oSPsj+DiHQWIijvz7MD+lLD
-	 LE2EHbyxrb5WsvEr3LGpwr/IR+2U5567UWi1BK9B0ncrtbbFs4NiMObZVZ40z/0x+t
-	 uC5UMbcAlAYhoVy7NT83dgcJ4fIN84Tedoez2Jyob0GX04cbn9UO2z5zJzxNe1G61o
-	 Xz1ajwlLv3iWw==
+	b=u8Ydd0LGsS36B6lUcaa6+BqNVPPocRveVT4PJMA+SLtedxnlFh6vzgEd/4IhurxgN
+	 XSOqa63Fhxw8Pgfq80V+ugv8Z0DZiqHMph2c7lEvzgQ9zJtxvGYXo2wOuV6zo2Us+Q
+	 fKpaQd09xsWAtjXgaUKa1pdrNrehTtNz4kS03aEnxePdXJvnhnjh4vR+TCoV51IDPk
+	 JIBLLZ4wmtn/W/AhvPVKCNU9+CAVYwSXrfjh3CiUZdjC1tt6prdWOG6mXeOkktClJU
+	 MayGt0ehV/G4HEV2ceBh4BLZFC1/TU5ELkmZk3z649VsW9W7fbkjjYDZ3/9C8JS8yt
+	 Gvbug1PpNXFZQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027150; bh=4OeTuXw8JJ5T+fGK4f2RemmfAw8cEwm0Qy2PQD//afE=;
+	t=1702027145; bh=VaBG1eoDne5ppfbxM8kSBEppntuhKQgnMBl1lri2pzQ=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=AmTq+fC6D/QjpMsNwBD9mOJfNxFjrgcnbwTh4Y9ha24I3u4lbejiwbpSmZejZnure
-	 F8GibqWLSLesJ8UuEQcN423Mxo9SiXea3hhtXb7EH1nDOcieTsA5F96usuvz3+dv78
-	 VntdH7xzMDrl+9xNiTzMjnEEKuZfx9skWEVdPfJnw6/xiUFh0sC3JLcT9BhrMACG2D
-	 TcNzC7kogQxTiePGskcjeJMSJkixJh24tZ+bnoc97onM3R9yPpCt08TuSKgmebsPWu
-	 TCUXf6I3SyFKAzvMhuzKLOkkvu85yqDWTU4MAunWaE41y9VOOjDN3REvWbn0NnXcsO
-	 qIOeKSoqX+vzg==
+	b=Tkvx93RIW+G/LwA+9x97mCU+qvZgo3Sn6j7thH9aOMXFwMdNRezMDWM5BsAnQCdRX
+	 IhZDIhgzLTThIvwuZEP3CmeeKWtpfKAlWV+q6FPCbTlcH3zmOUlUFAIKaLJp4lBClM
+	 o9Ci3Bm3m1nYATZXXmglgx2+YmIM8aXLR9GgKhZJhgQTAvCdlD+gRHeEYqGoKDxSfF
+	 ZqhBP5Iiq5GF0P8JphvH3H5lpYxUtIJaWIpagy1755TioPFmgx1+4ORshIHPGurHt3
+	 5k79Ek1MDjZPGhQGJsAK8c81cBVmrm6Cn5fkaeJBdwK7hPFutPhqLiPyqfS8CPzYO4
+	 do/RlYiR/BjTw==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 08/15] pciutils-pcilmr: Add function for default margining results log
-Date: Fri, 8 Dec 2023 12:17:27 +0300
-Message-ID: <20231208091734.12225-9-n.proshkin@yadro.com>
+Subject: [PATCH 04/15] pciutils-pcilmr: Add functions for device checking and preparations before main margining processes
+Date: Fri, 8 Dec 2023 12:17:23 +0300
+Message-ID: <20231208091734.12225-5-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
@@ -44,193 +44,198 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-Lanes are rated according to the minimum/recommended values.
-The minimum values are taken from the specification (Lane Margining at
-the Receiver - Electrical Requirements).
-30% UI recommended value for timing is taken from NVIDIA presentation
-"PCIe 4.0 Mass Electrical Margins Data Collection".
+Follow the checklist from the section 4.2.13.3 "Receiver Margin Testing
+Requirements" of the 5.0 spec:
+* Verify the Link is at 16 GT/s or higher data rate, in DO PM state;
+* Verify that Margining Ready bit of the device is set;
+* Disable the ASPM and Autonomous Speed/Width features for the duration
+  of the test.
 
-Receiver lanes are called 'Weird' if all results of all receiver lanes
-are equal to the spec minimum value.
+Also verify that Upstream Port of the Link is Function 0 of a Device,
+according to spec,only it must implement margining registers.
 
 Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
 ---
- lmr_lib/Makefile         |   2 +-
- lmr_lib/margin_results.c | 135 +++++++++++++++++++++++++++++++++++++++
- lmr_lib/margin_results.h |  13 ++++
- 3 files changed, 149 insertions(+), 1 deletion(-)
- create mode 100644 lmr_lib/margin_results.c
- create mode 100644 lmr_lib/margin_results.h
+ Makefile            |  5 ++-
+ lmr_lib/Makefile    | 10 ++++++
+ lmr_lib/margin_hw.c | 85 +++++++++++++++++++++++++++++++++++++++++++++
+ lmr_lib/margin_hw.h | 39 +++++++++++++++++++++
+ 4 files changed, 138 insertions(+), 1 deletion(-)
+ create mode 100644 lmr_lib/Makefile
+ create mode 100644 lmr_lib/margin_hw.c
+ create mode 100644 lmr_lib/margin_hw.h
 
-diff --git a/lmr_lib/Makefile b/lmr_lib/Makefile
-index a0eefd6..193e164 100644
---- a/lmr_lib/Makefile
-+++ b/lmr_lib/Makefile
-@@ -1,4 +1,4 @@
--OBJS=margin_hw margin margin_log
-+OBJS=margin_hw margin margin_log margin_results
- INCL=$(addsuffix .h,$(OBJS)) $(addprefix ../,$(PCIINC))
+diff --git a/Makefile b/Makefile
+index 228cb56..bd636bd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -67,11 +67,14 @@ PCIINC_INS=lib/config.h lib/header.h lib/pci.h lib/types.h
  
- $(addsuffix .o, $(OBJS)): %.o: %.c $(INCL)
-diff --git a/lmr_lib/margin_results.c b/lmr_lib/margin_results.c
+ export
+ 
+-all: lib/$(PCIIMPLIB) lspci$(EXEEXT) setpci$(EXEEXT) example$(EXEEXT) lspci.8 setpci.8 pcilib.7 pci.ids.5 update-pciids update-pciids.8 $(PCI_IDS)
++all: lib/$(PCIIMPLIB) lspci$(EXEEXT) setpci$(EXEEXT) example$(EXEEXT) lspci.8 setpci.8 pcilib.7 pci.ids.5 update-pciids update-pciids.8 $(PCI_IDS) lmr_lib/liblmr.a
+ 
+ lib/$(PCIIMPLIB): $(PCIINC) force
+ 	$(MAKE) -C lib all
+ 
++lmr_lib/liblmr.a: $(PCIINC) force
++	$(MAKE) -C lmr_lib all
++
+ force:
+ 
+ lib/config.h lib/config.mk:
+diff --git a/lmr_lib/Makefile b/lmr_lib/Makefile
 new file mode 100644
-index 0000000..61f483a
+index 0000000..4f85a17
 --- /dev/null
-+++ b/lmr_lib/margin_results.c
-@@ -0,0 +1,135 @@
-+#include <stdlib.h>
++++ b/lmr_lib/Makefile
+@@ -0,0 +1,10 @@
++OBJS=margin_hw
++INCL=$(addsuffix .h,$(OBJS)) $(addprefix ../,$(PCIINC))
++
++$(addsuffix .o, $(OBJS)): %.o: %.c $(INCL)
++
++all: liblmr.a
++
++liblmr.a: $(addsuffix .o, $(OBJS))
++	rm -f $@
++	$(AR) rcs $@ $^
+diff --git a/lmr_lib/margin_hw.c b/lmr_lib/margin_hw.c
+new file mode 100644
+index 0000000..dcc6593
+--- /dev/null
++++ b/lmr_lib/margin_hw.c
+@@ -0,0 +1,85 @@
 +#include <stdio.h>
++#include <string.h>
++#include <stdlib.h>
 +
-+#include "margin_results.h"
++#include "margin_hw.h"
 +
-+enum lane_rating {
-+  BAD = 0,
-+  OKAY,
-+  PERFECT,
-+  WEIRD,
-+  INIT,
-+};
-+
-+static char *const grades[] = {"Bad", "Okay", "Perfect", "Weird"};
-+static char *const sts_strings[] = {"NAK", "LIM", "THR"};
-+static const double ui[] = {62.5 / 100, 31.25 / 100};
-+
-+static enum lane_rating rate_lane(double value, double min, double recommended, enum lane_rating cur_rate)
++bool margin_verify_link(struct pci_dev *down_port, struct pci_dev *up_port)
 +{
-+  enum lane_rating res = PERFECT;
-+  if (value < recommended)
-+    res = OKAY;
-+  if (value < min)
-+    res = BAD;
-+  if (cur_rate == INIT)
-+    return res;
-+  if (res < cur_rate)
-+    return res;
-+  else
-+    return cur_rate;
++  struct pci_cap *cap = pci_find_cap(down_port, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
++  if (!cap)
++    return false;
++  if ((pci_read_word(down_port, cap->addr + PCI_EXP_LNKSTA) & PCI_EXP_LNKSTA_SPEED) < 4)
++    return false;
++  if ((pci_read_word(down_port, cap->addr + PCI_EXP_LNKSTA) & PCI_EXP_LNKSTA_SPEED) > 5)
++    return false;
++
++  uint8_t down_type = pci_read_byte(down_port, PCI_HEADER_TYPE) & 0x7F;
++  uint8_t down_sec = pci_read_byte(down_port, PCI_SECONDARY_BUS);
++  uint8_t down_dir = (pci_read_word(down_port, cap->addr + PCI_EXP_FLAGS) & PCI_EXP_FLAGS_TYPE) >> 4;
++
++  // Verify that devices are linked, down_port is Root Port or Downstream Port of Switch,
++  // up_port is Function 0 of a Device
++  if (!(down_sec == up_port->bus && down_type == 1 
++      && (down_dir == 4 || down_dir == 6) && up_port->func == 0))
++    return false;
++
++  struct pci_cap *pm = pci_find_cap(up_port, PCI_CAP_ID_PM, PCI_CAP_NORMAL);
++  return !(pci_read_word(up_port, pm->addr + PCI_PM_CTRL) & PCI_PM_CTRL_STATE_MASK); // D0
 +}
 +
-+static bool check_recv_weird(struct margin_results *results, double tim_min, double volt_min)
++bool margin_check_ready_bit(struct pci_dev *dev)
 +{
-+  bool result = true;
-+
-+  struct margin_res_lane *lane;
-+  for (uint8_t i = 0; i < results->lanes_n && result; i++)
-+  {
-+    lane = &(results->lanes[i]);
-+    if (lane->steps[TIM_LEFT] * results->tim_coef != tim_min)
-+      result = false;
-+    if (results->ind_left_right_tim && lane->steps[TIM_RIGHT] * results->tim_coef != tim_min)
-+      result = false;
-+    if (results->volt_support)
-+    {
-+      if (lane->steps[VOLT_UP] * results->volt_coef != volt_min)
-+        result = false;
-+      if (results->ind_up_down_volt && lane->steps[VOLT_DOWN] * results->volt_coef != volt_min)
-+        result = false;
-+    }
-+  }
-+  return result;
++  struct pci_cap *lmr = pci_find_cap(dev, PCI_EXT_CAP_ID_LMR, PCI_CAP_EXTENDED);
++  return lmr && (pci_read_word(dev, lmr->addr + PCI_LMR_PORT_STS) & PCI_LMR_PORT_STS_READY);
 +}
 +
-+void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n)
++struct margin_dev margin_fill_wrapper(struct pci_dev *dev)
 +{
-+  struct margin_res_lane *lane;
-+  struct margin_results *recv;
++  struct pci_cap *cap = pci_find_cap(dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
++  struct margin_dev res = {
++      .dev = dev,
++      .lmr_cap_addr = pci_find_cap(dev, PCI_EXT_CAP_ID_LMR, PCI_CAP_EXTENDED)->addr,
++      .width = (pci_read_word(dev, cap->addr + PCI_EXP_LNKSTA) & PCI_EXP_LNKSTA_WIDTH) >> 4,
++      .retimers_n = ((pci_read_word(dev, cap->addr + PCI_EXP_LNKSTA2) & PCI_EXP_LINKSTA2_RETIMER) > 0) +
++                    ((pci_read_word(dev, cap->addr + PCI_EXP_LNKSTA2) & PCI_EXP_LINKSTA2_2RETIMERS) > 0),
++      .link_speed = (pci_read_word(dev, cap->addr + PCI_EXP_LNKSTA) & PCI_EXP_LNKSTA_SPEED)};
++  return res;
++}
 +
-+  enum lane_rating lane_rating;
++bool margin_prep_dev(struct margin_dev *dev)
++{
++  struct pci_cap *pcie = pci_find_cap(dev->dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
 +
++  uint16_t lnk_ctl = pci_read_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL);
++  dev->aspm = lnk_ctl & PCI_EXP_LNKCTL_ASPM;
++  dev->hawd = lnk_ctl & PCI_EXP_LNKCTL_HWAUTWD;
++  lnk_ctl &= ~PCI_EXP_LNKCTL_ASPM;
++  pci_write_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL, lnk_ctl);
++  if (pci_read_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL) & PCI_EXP_LNKCTL_ASPM)
++    return false;
++
++  lnk_ctl |= PCI_EXP_LNKCTL_HWAUTWD;
++  pci_write_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL, lnk_ctl);
++
++  uint16_t lnk_ctl2 = pci_read_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL2);
++  dev->hasd = lnk_ctl2 & PCI_EXP_LNKCTL2_SPEED_DIS;
++  lnk_ctl2 |= PCI_EXP_LNKCTL2_SPEED_DIS;
++  pci_write_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL2, lnk_ctl2);
++
++  return true;
++}
++
++void margin_restore_dev(struct margin_dev *dev)
++{
++  struct pci_cap *pcie = pci_find_cap(dev->dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
++
++  uint16_t lnk_ctl = pci_read_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL);
++  lnk_ctl |= dev->aspm;
++  lnk_ctl &= (~PCI_EXP_LNKCTL_HWAUTWD | dev->hawd);
++  pci_write_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL, lnk_ctl);
++
++  uint16_t lnk_ctl2 = pci_read_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL2);
++  lnk_ctl2 &= (~PCI_EXP_LNKCTL2_SPEED_DIS | dev->hasd);
++  pci_write_word(dev->dev, pcie->addr + PCI_EXP_LNKCTL2, lnk_ctl2);
++}
+diff --git a/lmr_lib/margin_hw.h b/lmr_lib/margin_hw.h
+new file mode 100644
+index 0000000..a436d4b
+--- /dev/null
++++ b/lmr_lib/margin_hw.h
+@@ -0,0 +1,39 @@
++#ifndef _MARGIN_HW_H
++#define _MARGIN_HW_H
++
++#include <stdbool.h>
++#include <stdint.h>
++
++#include "../lib/pci.h"
++
++/*PCI Device wrapper for margining functions*/
++struct margin_dev
++{
++  struct pci_dev *dev;
++  int lmr_cap_addr;
++  uint8_t width;
++  uint8_t retimers_n;
 +  uint8_t link_speed;
 +
-+  char *no_test_msgs[] = {
-+      "", "Margining Ready bit is Clear",
-+      "Error during caps reading",
-+      "Margining prerequisites are not satisfied (Gen 4/5, D0)",
-+      "Invalid lanes specified with arguments",
-+      "Invalid receivers specified with arguments",
-+      "Couldn't disable ASPM"};
++  /*Saved Device settings to restore after margining*/
++  uint16_t aspm;
++  uint16_t hasd; /*Hardware Autonomous Speed Disable*/
++  uint16_t hawd; /*Hardware Autonomous Width Disable*/
++};
 +
-+  for (uint8_t i = 0; i < recvs_n; i++)
-+  {
-+    recv = &(results[i]);
-+    link_speed = recv->link_speed - 4;
++/*Verify that devices form the link at Gen 4 speed or higher*/
++bool margin_verify_link(struct pci_dev *down_port, struct pci_dev *up_port);
 +
-+    if (recv->test_status != MARGIN_TEST_OK)
-+    {
-+      if (recv->test_status < MARGIN_TEST_PREREQS)
-+        printf("Rx(%X) -", 10 + recv->recvn - 1);
-+      printf(" Couldn't run test (%s)\n\n", no_test_msgs[recv->test_status]);
-+      continue;
-+    }
++/*Check Margining Ready bit from Margining Port Status Register*/
++bool margin_check_ready_bit(struct pci_dev *dev);
 +
-+    if (recv->lane_reversal)
-+      printf("Rx(%X) - Lane Reversal\n", 10 + recv->recvn - 1);
-+    if (check_recv_weird(recv, MARGIN_TIM_MIN, MARGIN_VOLT_MIN))
-+      lane_rating = WEIRD;
-+    else
-+      lane_rating = INIT;
++/*Awaits device at Gen 4 or higher*/
++struct margin_dev margin_fill_wrapper(struct pci_dev *dev);
 +
-+    for (uint8_t j = 0; j < recv->lanes_n; j++)
-+    {
-+      lane = &(recv->lanes[j]);
-+      double left_ui = lane->steps[TIM_LEFT] * recv->tim_coef;
-+      double right_ui = lane->steps[TIM_RIGHT] * recv->tim_coef;
-+      double up_volt = lane->steps[VOLT_UP] * recv->volt_coef;
-+      double down_volt = lane->steps[VOLT_DOWN] * recv->volt_coef;
++/*Disable ASPM, set Hardware Autonomous Speed/Width Disable bits*/
++bool margin_prep_dev(struct margin_dev *dev);
 +
-+      if (lane_rating != WEIRD)
-+      {
-+        lane_rating = rate_lane(left_ui, MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND, INIT);
-+        if (recv->ind_left_right_tim)
-+          lane_rating = rate_lane(right_ui, MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND, lane_rating);
-+        if (recv->volt_support)
-+        {
-+          lane_rating = rate_lane(up_volt, MARGIN_VOLT_MIN, MARGIN_VOLT_MIN, lane_rating);
-+          if (recv->ind_up_down_volt)
-+            lane_rating = rate_lane(down_volt, MARGIN_VOLT_MIN, MARGIN_VOLT_MIN, lane_rating);
-+        }
-+      }
-+
-+      printf("Rx(%X) Lane %2d - %s\t", 10 + recv->recvn - 1, lane->lane, grades[lane_rating]);
-+      if (recv->ind_left_right_tim)
-+        printf("L %4.1f%% UI - %5.2fps - %2dst %s, R %4.1f%% UI - %5.2fps - %2dst %s", left_ui,
-+               left_ui * ui[link_speed], lane->steps[TIM_LEFT], sts_strings[lane->statuses[TIM_LEFT]], right_ui,
-+               right_ui * ui[link_speed], lane->steps[TIM_RIGHT], sts_strings[lane->statuses[TIM_RIGHT]]);
-+      else
-+        printf("T %4.1f%% UI - %5.2fps - %2dst %s", left_ui, left_ui * ui[link_speed],
-+               lane->steps[TIM_LEFT], sts_strings[lane->statuses[TIM_LEFT]]);
-+      if (recv->volt_support)
-+      {
-+        if (recv->ind_up_down_volt)
-+          printf(", U %5.1f mV - %3dst %s, D %5.1f mV - %3dst %s", up_volt,
-+                 lane->steps[VOLT_UP], sts_strings[lane->statuses[VOLT_UP]],
-+                 down_volt, lane->steps[VOLT_DOWN], sts_strings[lane->statuses[VOLT_DOWN]]);
-+        else
-+          printf(", V %5.1f mV - %3dst %s", up_volt, lane->steps[VOLT_UP], sts_strings[lane->statuses[VOLT_UP]]);
-+      }
-+      printf("\n");
-+    }
-+    printf("\n");
-+  }
-+}
-diff --git a/lmr_lib/margin_results.h b/lmr_lib/margin_results.h
-new file mode 100644
-index 0000000..ab6ddb0
---- /dev/null
-+++ b/lmr_lib/margin_results.h
-@@ -0,0 +1,13 @@
-+#ifndef _MARGIN_RESULTS_H
-+#define _MARGIN_RESULTS_H
-+
-+#include "margin.h"
-+
-+#define MARGIN_TIM_MIN 20
-+#define MARGIN_TIM_RECOMMEND 30
-+
-+#define MARGIN_VOLT_MIN 50
-+
-+void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n);
++/*Restore Device ASPM, Hardware Autonomous Speed/Width settings*/
++void margin_restore_dev(struct margin_dev *dev);
 +
 +#endif
 -- 
