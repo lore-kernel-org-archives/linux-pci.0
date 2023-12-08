@@ -1,29 +1,30 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="NvkN3NyB"
+	dkim=pass (1024-bit key) header.d=ucw.cz header.i=@ucw.cz header.b="mK5U6FZe"
 Received: from nikam.ms.mff.cuni.cz (nikam.ms.mff.cuni.cz [195.113.20.16])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 8C82911D
-	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 09:35:59 -0800 (PST)
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id BD99610EF
+	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 09:37:15 -0800 (PST)
 Received: by nikam.ms.mff.cuni.cz (Postfix, from userid 2587)
-	id 47DF428C099; Fri,  8 Dec 2023 18:35:58 +0100 (CET)
+	id 6A59D28C099; Fri,  8 Dec 2023 18:37:14 +0100 (CET)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ucw.cz; s=gen1;
-	t=1702056958;
+	t=1702057034;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=3qh76SJbd3tGbAJL0ZLr8gcPnPaf3KSUICRLJyZMoM0=;
-	b=NvkN3NyBkGKm/Vqjc2+z4GxPtioz19QgNK+yQ+3YDHDRIFtKw1McSqCPG81Jr5RzdSSJcj
-	bQyRo1rbylBV8mke7ZML1S8tVKiXH37DAxlw1Zkrlhx3ZVxjwjfm+WVLjdmk83CXp8NTIv
-	rMGOzLgMhhb2d/4AqRwfboZIndX2Skc=
-Date: Fri, 8 Dec 2023 18:35:58 +0100
+	bh=fYA26H6TrPel9AyfsmtvJriBxNbsxXk713FTns0+jSA=;
+	b=mK5U6FZeTrxxgrdSXZ2S20SjjTDtANGzW1iEiDO4m49QqPczJw+78KQDo1ZFoh1E+Gq/gu
+	arNsRWYjyGTwT7hqZQniG8Rc1YgvDywEm+8i18ZrpVESq1HGiTsr+IVd5YTSpZoHF0gFH9
+	PzhHAif3jK/ctRHGKface6ThjdjGp4E=
+Date: Fri, 8 Dec 2023 18:37:14 +0100
 From: Martin =?utf-8?B?TWFyZcWh?= <mj@ucw.cz>
 To: Nikita Proshkin <n.proshkin@yadro.com>
 Cc: linux-pci@vger.kernel.org, linux@yadro.com,
 	Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Subject: Re: [PATCH 05/15] pciutils-pcilmr: Add margining process functions
-Message-ID: <mj+md-20231208.173154.29528.nikam@ucw.cz>
+Subject: Re: [PATCH 06/15] pciutils-pcilmr: Add logging functions for
+ margining
+Message-ID: <mj+md-20231208.173606.30601.nikam@ucw.cz>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
- <20231208091734.12225-6-n.proshkin@yadro.com>
+ <20231208091734.12225-7-n.proshkin@yadro.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -33,56 +34,14 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20231208091734.12225-6-n.proshkin@yadro.com>
+In-Reply-To: <20231208091734.12225-7-n.proshkin@yadro.com>
 
-> +  if (msec < 0)
-> +  {
-> +    errno = EINVAL;
-> +    return -1;
-> +  }
-[...]
+>  #include "margin.h"
+> +#include "margin_log.h"
 
-Please follow the indentation style of the rest of pciutils.
-
-> +union margin_payload {
-> +  unsigned int payload : 8;
-> +
-> +  struct caps {
-> +    bool volt_support : 1;
-> +    bool ind_up_down_volt : 1;
-> +    bool ind_left_right_tim : 1;
-> +    bool sample_report_method : 1;
-> +    bool ind_error_sampler : 1;
-> +  } caps;
-> +
-> +  unsigned int timing_steps : 6;
-> +  unsigned int voltage_steps : 7;
-> +  unsigned int offset : 7;
-> +  unsigned int max_lanes : 5;
-> +  unsigned int sample_rate : 6;
-> +
-> +  struct step_resp {
-> +    unsigned int err_count : 6;
-> +    unsigned int status : 2;
-> +  } step_resp;
-> +
-> +  struct step_tim {
-> +    unsigned int steps : 6;
-> +    bool go_left : 1;
-> +  } step_tim;
-> +
-> +  struct step_volt {
-> +    unsigned int steps : 7;
-> +    bool go_down : 1;
-> +  } step_volt;
-> +
-> +} __attribute__((packed));
-
-Please do not assume that every compiler used to compile the pciutils supports
-GCC extensions. See lib/sysdep.h for how we handle such things.
-
-Also, I am not sure that bit fields are good idea: they save a little data
-space, but they expand code.
+Is it useful to have multiple include files? It could be more readable to have
+a single include file declaring functions from all modules (similar to lib/internal.h
+for libpci).
 
 				Have a nice fortnight
 -- 
