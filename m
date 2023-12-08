@@ -1,35 +1,35 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="oIu+EoyJ";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="l0m0TQOf"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="FL5Lv0bW";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="i8hxbAOM"
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 9B8AA1733
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 935611731
 	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:49 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 53536C0002
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 45B41C0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027149; bh=9nDLKbYdYrtPbPc+dke5n4p/Ias9emN9HC1PJDouES0=;
+	t=1702027159; bh=d6ukGsW2xVNmO3qJw9x+RgYelgSmQcsNU+qJNZKnTPA=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=oIu+EoyJSTuxu2fK+fL1tZonIbniF8x9wddv3tvzNF+yt+fzkhKuhyJI/UWzQ+Pz5
-	 QoQrYuxThb5rb7YM5zM83V7ZOiCxBQzeEa+9k+qLFrG3LNICOUXye94E3vqpRq/Zax
-	 ie9r0mPzVm6rwvSx9YoB+6rd/ZUtJaqCRDfIAX+HzqLZedgEu8VpisXLsoOp3Nx+vA
-	 dAbQQ80qYCHowGlDWF7AvbMc5WZB9bCrMxHFb8p8dFqUPpTLoSCvviXpU0g4bMoPiR
-	 bHsqkm8uEOpYWlNTlsg2X/OZaJbkRAy3dWOcLkIbE4DQ/VhzwXSiT19Z8/wZp9G6Vw
-	 OSw/NTHh5zR0w==
+	b=FL5Lv0bW4xGrswmMP1mJQopeQz8RHIVNyM1WOmL6ghkgllkYEh2uO88tAwSy3G2z8
+	 1ZGjoIrMzAggZnuwPoeirp7+/ruiIuwS3nbuZbi/FhRPxn5B20/kuPqq99dRSEiHtH
+	 M2rttd5igidSRk/z9a/0QYD8jwR+QvnVDJ3sXZtSC7jQ90zifT6oq1lP78AAINaIfK
+	 DD6XEWKk1cyR/uhC5fIBQK+7mkaz+kvy1o0KLgeI7sZwc53Njot06Jss7aCwGf2njq
+	 bATwAeqM21BsXSUylJSs5VAnhUXoJngIpEr8xZIIKfkYugnjPhyplgeuLBgP/J4f3y
+	 0Ij84TCV6JNsA==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027149; bh=9nDLKbYdYrtPbPc+dke5n4p/Ias9emN9HC1PJDouES0=;
+	t=1702027159; bh=d6ukGsW2xVNmO3qJw9x+RgYelgSmQcsNU+qJNZKnTPA=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=l0m0TQOfoyQPN3BlO62ifu+VszHn4fQPf9maHGqvg9s1wnsy8WNLQ2JXY312fVxKn
-	 Vt0fxnwxWd0FfCP7Ac75EdRu+grX5ffuAwAuWA3lHQc4pNzS5MfQZYvsfyi4AtB9I1
-	 aEcZINQoeO0VPwme2D5eoUWoWa4QWWxAiaTKmE7hHquZ8/lWVRtWj74OQVd7BxdWnq
-	 gqajhZhbQpSHiakmn9tYqED43nHjVUZOZfpWSum2LlqAV3hrpmXKcBBsmiGmIep0/t
-	 EMgmzYqHYvCZKH331v5HKaNNFId+TIxbXHXLY+KKn90uFv7CmmnfGfmq6cUbyhQ+EM
-	 zWQ4mjODAguEA==
+	b=i8hxbAOMjkDg4DPKstEwj636Qrf8uXIhO9UJjJ/J1QDRXEPiiCTsaLiM8FCl4dNzS
+	 HkVoikXF5cUlj8nk2qIpyAvHGfl7nHf1RXdtjTjt+OwKRszscZblQQ5NBlAmC6LGci
+	 zWTBdZGlZyLDcIwuF3oR3uZTkDer9C3FWxMD/HpKVTq+4V2oy9RJYF7ZPIFQ2VyRzK
+	 P7JF9NaKX87S+gGaLhEOOW7BOTD/x3HL+3wBttc/j0KRyFHXAuvpB43AsWoMdxsGO+
+	 8uWKB1QpwTf6K1Q+fg1e7+CmQk702clVUwRF7ZmFllgI72VFr8UwE38DQF+3jTMDtW
+	 c88cB7uF5fdWQ==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 07/15] pciutils-pcilmr: Add all-in-one device margining parameters reading function
-Date: Fri, 8 Dec 2023 12:17:26 +0300
-Message-ID: <20231208091734.12225-8-n.proshkin@yadro.com>
+Subject: [PATCH 14/15] pciutils-pcilmr: Add handling of situations when device reports its MaxOffset values equal to 0
+Date: Fri, 8 Dec 2023 12:17:33 +0300
+Message-ID: <20231208091734.12225-15-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
@@ -44,125 +44,99 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-Implement a function that performs all necessary actions to obtain device
-margining parameters for subsequent processing without running the actual
-margining test.
+According to spec, for the MaxTimingOffset and MaxVoltageOffset parameters
+'A 0 value may be reported if the vendor chooses not to report the offset'.
+
+Use max possible Offset value in such situations and report to the user.
 
 Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
 ---
- lmr_lib/margin.c | 85 ++++++++++++++++++++++++++++++++++++++++++++++++
- lmr_lib/margin.h |  4 +++
- 2 files changed, 89 insertions(+)
+ lmr_lib/margin.c         |  9 +++++++--
+ lmr_lib/margin.h         |  3 +++
+ lmr_lib/margin_log.c     | 11 +++++++++++
+ lmr_lib/margin_results.c | 12 ++++++++++++
+ 4 files changed, 33 insertions(+), 2 deletions(-)
 
 diff --git a/lmr_lib/margin.c b/lmr_lib/margin.c
-index 38a80bf..41c8fbf 100644
+index ac20e82..cb9a9da 100644
 --- a/lmr_lib/margin.c
 +++ b/lmr_lib/margin.c
-@@ -414,3 +414,88 @@ void margin_free_results(struct margin_results *results, uint8_t results_n)
-   }
-   free(results);
- }
+@@ -271,8 +271,13 @@ bool margin_receiver(struct margin_recv *recv, struct margin_args *args, struct
+       recv->parallel_lanes = recv->max_lanes + 1;
+     margin_apply_hw_quirks(recv);
+ 
+-    results->tim_coef = (double)recv->timing_offset / (double)recv->timing_steps;
+-    results->volt_coef = (double)recv->volt_offset / (double)recv->volt_steps * 10.0;
++    results->tim_off_reported = recv->timing_offset != 0;
++    results->volt_off_reported = recv->volt_offset != 0;
++    double tim_offset = results->tim_off_reported ? (double)recv->timing_offset : 50.0;
++    double volt_offset = results->volt_off_reported ? (double)recv->volt_offset : 50.0;
 +
-+bool margin_read_params_standalone(struct pci_access *pacc, struct pci_dev *dev, 
-+                                    int8_t recvn, struct margin_recv *caps)
-+{
-+  struct pci_cap *cap = pci_find_cap(dev, PCI_CAP_ID_EXP, PCI_CAP_NORMAL);
-+  uint8_t dev_dir = (pci_read_word(dev, cap->addr + PCI_EXP_FLAGS) & PCI_EXP_FLAGS_TYPE) >> 4;
-+
-+  bool dev_down;
-+  if (dev_dir == 4 || dev_dir == 6)
-+    dev_down = true;
-+  else
-+    dev_down = false;
-+
-+  if (recvn == -1)
-+  {
-+    if (dev_down)
-+      recvn = 1;
-+    else
-+      recvn = 6;
-+  }
-+
-+  if (recvn < 1 || recvn > 6)
-+    return false;
-+  if (dev_down && recvn == 6)
-+    return false;
-+  if (!dev_down && recvn != 6)
-+    return false;
-+
-+  caps->recvn = recvn;
-+
-+  struct pci_dev *down = NULL;
-+  struct pci_dev *up = NULL;
-+  struct margin_dev down_w;
-+  struct margin_dev up_w;
-+
-+  for (struct pci_dev *p = pacc->devices; p; p = p->next)
-+  {
-+    if (dev_down && pci_read_byte(dev, PCI_SECONDARY_BUS) == p->bus && dev->domain == p->domain && p->func == 0)
-+    {
-+      down = dev;
-+      up = p;
-+      break;
-+    }
-+    else if (!dev_down && pci_read_byte(p, PCI_SECONDARY_BUS) == dev->bus && dev->domain == p->domain)
-+    {
-+      down = p;
-+      up = dev;
-+      break;
-+    }
-+  }
-+
-+  if (!down)
-+    return false;
-+  if (!margin_verify_link(down, up))
-+    return false;
-+
-+  down_w = margin_fill_wrapper(down);
-+  up_w = margin_fill_wrapper(up);
-+
-+  caps->dev = (dev_down ? &down_w : &up_w);
-+  if (!margin_check_ready_bit(caps->dev->dev))
-+    return false;
-+
-+  if (!margin_prep_dev(&down_w))
-+    return false;
-+  if (!margin_prep_dev(&up_w))
-+  {
-+    margin_restore_dev(&down_w);
-+    return false;
-+  }
-+
-+  bool status;
-+  caps->lane_reversal = false;
-+  status = margin_read_params(caps);
-+  if (!status)
-+  {
-+    caps->lane_reversal = true;
-+    status = margin_read_params(caps);
-+  }
-+
-+  margin_restore_dev(&down_w);
-+  margin_restore_dev(&up_w);
-+
-+  return status;
-+}
++    results->tim_coef = tim_offset / (double)recv->timing_steps;
++    results->volt_coef = volt_offset / (double)recv->volt_steps * 10.0;
+ 
+     results->ind_left_right_tim = recv->ind_left_right_tim;
+     results->volt_support = recv->volt_support;
 diff --git a/lmr_lib/margin.h b/lmr_lib/margin.h
-index bb57a76..13cfa73 100644
+index 8f3506b..8f82f30 100644
 --- a/lmr_lib/margin.h
 +++ b/lmr_lib/margin.h
-@@ -172,6 +172,10 @@ union margin_cmd margin_make_cmd(uint8_t payload, uint8_t type, uint8_t recvn);
- dev, recvn and lane_reversal fields must be initialized*/
- bool margin_read_params(struct margin_recv *recv);
+@@ -129,6 +129,9 @@ struct margin_results {
+   double tim_coef;
+   double volt_coef;
  
-+/*Fill margin_recv without calling other functions*/
-+bool margin_read_params_standalone(struct pci_access *pacc, struct pci_dev* dev, 
-+                                   int8_t recvn, struct margin_recv* caps);
++  bool tim_off_reported;
++  bool volt_off_reported;
 +
- bool margin_report_cmd(struct margin_dev *dev, uint8_t lane, 
-                        union margin_cmd cmd, union margin_payload *result);
+   uint8_t lanes_n;
+   struct margin_res_lane *lanes;
+ };
+diff --git a/lmr_lib/margin_log.c b/lmr_lib/margin_log.c
+index e57bd79..83652f1 100644
+--- a/lmr_lib/margin_log.c
++++ b/lmr_lib/margin_log.c
+@@ -49,6 +49,17 @@ void margin_log_print_caps(struct margin_recv *recv)
+     margin_log("\nWarning: device uses Lane Reversal.\n");
+     margin_log("However, utility uses logical lane numbers in arguments and for logging.\n");
+   }
++
++  if (recv->timing_offset == 0)
++  {
++    margin_log("\nWarning: Vendor chose not to report the Max Timing Offset.\n"
++               "Utility will use its max possible value - 50 (50%% UI).\n");
++  }
++  if (recv->volt_support && recv->volt_offset == 0)
++  {
++    margin_log("\nWarning: Vendor chose not to report the Max Voltage Offset.\n"
++               "Utility will use its max possible value - 50 (500 mV).\n");
++  }
+ }
  
+ void margin_log_link(struct margin_dev *down, struct margin_dev *up)
+diff --git a/lmr_lib/margin_results.c b/lmr_lib/margin_results.c
+index cc6132f..656f1fe 100644
+--- a/lmr_lib/margin_results.c
++++ b/lmr_lib/margin_results.c
+@@ -87,6 +87,18 @@ void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n)
+ 
+     if (recv->lane_reversal)
+       printf("Rx(%X) - Lane Reversal\n", 10 + recv->recvn - 1);
++
++    if (!recv->tim_off_reported)
++      printf("Rx(%X) - Attention: Vendor chose not to report the Max Timing Offset.\n"
++             "Utility used its max possible value (50%% UI) for calculations of %% UI and ps.\n"
++             "Keep in mind that for timing results of this receiver only steps values are reliable.\n\n",
++             10 + recv->recvn - 1);
++    if (recv->volt_support && !recv->volt_off_reported)
++      printf("Rx(%X) - Attention: Vendor chose not to report the Max Voltage Offset.\n"
++             "Utility used its max possible value (500 mV) for calculations of mV.\n"
++             "Keep in mind that for voltage results of this receiver only steps values are reliable.\n\n",
++             10 + recv->recvn - 1);
++
+     if (check_recv_weird(recv, MARGIN_TIM_MIN, MARGIN_VOLT_MIN))
+       lane_rating = WEIRD;
+     else
 -- 
 2.34.1
 
