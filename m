@@ -1,35 +1,35 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="FL5Lv0bW";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="i8hxbAOM"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="kDzMAHpl";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="AmTq+fC6"
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 935611731
-	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:49 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 45B41C0002
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 52A451735
+	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:50 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com F0038C0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027159; bh=d6ukGsW2xVNmO3qJw9x+RgYelgSmQcsNU+qJNZKnTPA=;
+	t=1702027150; bh=4OeTuXw8JJ5T+fGK4f2RemmfAw8cEwm0Qy2PQD//afE=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=FL5Lv0bW4xGrswmMP1mJQopeQz8RHIVNyM1WOmL6ghkgllkYEh2uO88tAwSy3G2z8
-	 1ZGjoIrMzAggZnuwPoeirp7+/ruiIuwS3nbuZbi/FhRPxn5B20/kuPqq99dRSEiHtH
-	 M2rttd5igidSRk/z9a/0QYD8jwR+QvnVDJ3sXZtSC7jQ90zifT6oq1lP78AAINaIfK
-	 DD6XEWKk1cyR/uhC5fIBQK+7mkaz+kvy1o0KLgeI7sZwc53Njot06Jss7aCwGf2njq
-	 bATwAeqM21BsXSUylJSs5VAnhUXoJngIpEr8xZIIKfkYugnjPhyplgeuLBgP/J4f3y
-	 0Ij84TCV6JNsA==
+	b=kDzMAHplFv1WLP0X88RfOTV1K6B6SB7mvRlbJy3rGJVJE+MzwEoIlpSMUeEbGUnq4
+	 arqinNEGPTNDlHyuudxjX4hTFNywPGvKFCGAmGcoCSkuRukIxub89UdNSu+du3GcrJ
+	 i2Dum6KdEArHkE/oMQYS27160fLYxBgUt6wnF7ReBz8oSPsj+DiHQWIijvz7MD+lLD
+	 LE2EHbyxrb5WsvEr3LGpwr/IR+2U5567UWi1BK9B0ncrtbbFs4NiMObZVZ40z/0x+t
+	 uC5UMbcAlAYhoVy7NT83dgcJ4fIN84Tedoez2Jyob0GX04cbn9UO2z5zJzxNe1G61o
+	 Xz1ajwlLv3iWw==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027159; bh=d6ukGsW2xVNmO3qJw9x+RgYelgSmQcsNU+qJNZKnTPA=;
+	t=1702027150; bh=4OeTuXw8JJ5T+fGK4f2RemmfAw8cEwm0Qy2PQD//afE=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=i8hxbAOMjkDg4DPKstEwj636Qrf8uXIhO9UJjJ/J1QDRXEPiiCTsaLiM8FCl4dNzS
-	 HkVoikXF5cUlj8nk2qIpyAvHGfl7nHf1RXdtjTjt+OwKRszscZblQQ5NBlAmC6LGci
-	 zWTBdZGlZyLDcIwuF3oR3uZTkDer9C3FWxMD/HpKVTq+4V2oy9RJYF7ZPIFQ2VyRzK
-	 P7JF9NaKX87S+gGaLhEOOW7BOTD/x3HL+3wBttc/j0KRyFHXAuvpB43AsWoMdxsGO+
-	 8uWKB1QpwTf6K1Q+fg1e7+CmQk702clVUwRF7ZmFllgI72VFr8UwE38DQF+3jTMDtW
-	 c88cB7uF5fdWQ==
+	b=AmTq+fC6D/QjpMsNwBD9mOJfNxFjrgcnbwTh4Y9ha24I3u4lbejiwbpSmZejZnure
+	 F8GibqWLSLesJ8UuEQcN423Mxo9SiXea3hhtXb7EH1nDOcieTsA5F96usuvz3+dv78
+	 VntdH7xzMDrl+9xNiTzMjnEEKuZfx9skWEVdPfJnw6/xiUFh0sC3JLcT9BhrMACG2D
+	 TcNzC7kogQxTiePGskcjeJMSJkixJh24tZ+bnoc97onM3R9yPpCt08TuSKgmebsPWu
+	 TCUXf6I3SyFKAzvMhuzKLOkkvu85yqDWTU4MAunWaE41y9VOOjDN3REvWbn0NnXcsO
+	 qIOeKSoqX+vzg==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 14/15] pciutils-pcilmr: Add handling of situations when device reports its MaxOffset values equal to 0
-Date: Fri, 8 Dec 2023 12:17:33 +0300
-Message-ID: <20231208091734.12225-15-n.proshkin@yadro.com>
+Subject: [PATCH 08/15] pciutils-pcilmr: Add function for default margining results log
+Date: Fri, 8 Dec 2023 12:17:27 +0300
+Message-ID: <20231208091734.12225-9-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
 References: <20231208091734.12225-1-n.proshkin@yadro.com>
@@ -44,99 +44,195 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-According to spec, for the MaxTimingOffset and MaxVoltageOffset parameters
-'A 0 value may be reported if the vendor chooses not to report the offset'.
+Lanes are rated according to the minimum/recommended values.
+The minimum values are taken from the specification (Lane Margining at
+the Receiver - Electrical Requirements).
+30% UI recommended value for timing is taken from NVIDIA presentation
+"PCIe 4.0 Mass Electrical Margins Data Collection".
 
-Use max possible Offset value in such situations and report to the user.
+Receiver lanes are called 'Weird' if all results of all receiver lanes
+are equal to the spec minimum value.
 
 Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
 Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
 ---
- lmr_lib/margin.c         |  9 +++++++--
- lmr_lib/margin.h         |  3 +++
- lmr_lib/margin_log.c     | 11 +++++++++++
- lmr_lib/margin_results.c | 12 ++++++++++++
- 4 files changed, 33 insertions(+), 2 deletions(-)
+ lmr_lib/Makefile         |   2 +-
+ lmr_lib/margin_results.c | 135 +++++++++++++++++++++++++++++++++++++++
+ lmr_lib/margin_results.h |  13 ++++
+ 3 files changed, 149 insertions(+), 1 deletion(-)
+ create mode 100644 lmr_lib/margin_results.c
+ create mode 100644 lmr_lib/margin_results.h
 
-diff --git a/lmr_lib/margin.c b/lmr_lib/margin.c
-index ac20e82..cb9a9da 100644
---- a/lmr_lib/margin.c
-+++ b/lmr_lib/margin.c
-@@ -271,8 +271,13 @@ bool margin_receiver(struct margin_recv *recv, struct margin_args *args, struct
-       recv->parallel_lanes = recv->max_lanes + 1;
-     margin_apply_hw_quirks(recv);
+diff --git a/lmr_lib/Makefile b/lmr_lib/Makefile
+index a0eefd6..193e164 100644
+--- a/lmr_lib/Makefile
++++ b/lmr_lib/Makefile
+@@ -1,4 +1,4 @@
+-OBJS=margin_hw margin margin_log
++OBJS=margin_hw margin margin_log margin_results
+ INCL=$(addsuffix .h,$(OBJS)) $(addprefix ../,$(PCIINC))
  
--    results->tim_coef = (double)recv->timing_offset / (double)recv->timing_steps;
--    results->volt_coef = (double)recv->volt_offset / (double)recv->volt_steps * 10.0;
-+    results->tim_off_reported = recv->timing_offset != 0;
-+    results->volt_off_reported = recv->volt_offset != 0;
-+    double tim_offset = results->tim_off_reported ? (double)recv->timing_offset : 50.0;
-+    double volt_offset = results->volt_off_reported ? (double)recv->volt_offset : 50.0;
-+
-+    results->tim_coef = tim_offset / (double)recv->timing_steps;
-+    results->volt_coef = volt_offset / (double)recv->volt_steps * 10.0;
- 
-     results->ind_left_right_tim = recv->ind_left_right_tim;
-     results->volt_support = recv->volt_support;
-diff --git a/lmr_lib/margin.h b/lmr_lib/margin.h
-index 8f3506b..8f82f30 100644
---- a/lmr_lib/margin.h
-+++ b/lmr_lib/margin.h
-@@ -129,6 +129,9 @@ struct margin_results {
-   double tim_coef;
-   double volt_coef;
- 
-+  bool tim_off_reported;
-+  bool volt_off_reported;
-+
-   uint8_t lanes_n;
-   struct margin_res_lane *lanes;
- };
-diff --git a/lmr_lib/margin_log.c b/lmr_lib/margin_log.c
-index e57bd79..83652f1 100644
---- a/lmr_lib/margin_log.c
-+++ b/lmr_lib/margin_log.c
-@@ -49,6 +49,17 @@ void margin_log_print_caps(struct margin_recv *recv)
-     margin_log("\nWarning: device uses Lane Reversal.\n");
-     margin_log("However, utility uses logical lane numbers in arguments and for logging.\n");
-   }
-+
-+  if (recv->timing_offset == 0)
-+  {
-+    margin_log("\nWarning: Vendor chose not to report the Max Timing Offset.\n"
-+               "Utility will use its max possible value - 50 (50%% UI).\n");
-+  }
-+  if (recv->volt_support && recv->volt_offset == 0)
-+  {
-+    margin_log("\nWarning: Vendor chose not to report the Max Voltage Offset.\n"
-+               "Utility will use its max possible value - 50 (500 mV).\n");
-+  }
- }
- 
- void margin_log_link(struct margin_dev *down, struct margin_dev *up)
+ $(addsuffix .o, $(OBJS)): %.o: %.c $(INCL)
 diff --git a/lmr_lib/margin_results.c b/lmr_lib/margin_results.c
-index cc6132f..656f1fe 100644
---- a/lmr_lib/margin_results.c
+new file mode 100644
+index 0000000..61f483a
+--- /dev/null
 +++ b/lmr_lib/margin_results.c
-@@ -87,6 +87,18 @@ void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n)
- 
-     if (recv->lane_reversal)
-       printf("Rx(%X) - Lane Reversal\n", 10 + recv->recvn - 1);
+@@ -0,0 +1,135 @@
++#include <stdlib.h>
++#include <stdio.h>
 +
-+    if (!recv->tim_off_reported)
-+      printf("Rx(%X) - Attention: Vendor chose not to report the Max Timing Offset.\n"
-+             "Utility used its max possible value (50%% UI) for calculations of %% UI and ps.\n"
-+             "Keep in mind that for timing results of this receiver only steps values are reliable.\n\n",
-+             10 + recv->recvn - 1);
-+    if (recv->volt_support && !recv->volt_off_reported)
-+      printf("Rx(%X) - Attention: Vendor chose not to report the Max Voltage Offset.\n"
-+             "Utility used its max possible value (500 mV) for calculations of mV.\n"
-+             "Keep in mind that for voltage results of this receiver only steps values are reliable.\n\n",
-+             10 + recv->recvn - 1);
++#include "margin_results.h"
 +
-     if (check_recv_weird(recv, MARGIN_TIM_MIN, MARGIN_VOLT_MIN))
-       lane_rating = WEIRD;
-     else
++enum lane_rating {
++  BAD = 0,
++  OKAY,
++  PERFECT,
++  WEIRD,
++  INIT,
++};
++
++static char *const grades[] = {"Bad", "Okay", "Perfect", "Weird"};
++static char *const sts_strings[] = {"NAK", "LIM", "THR"};
++static const double ui[] = {62.5 / 100, 31.25 / 100};
++
++static enum lane_rating rate_lane(double value, double min, double recommended, enum lane_rating cur_rate)
++{
++  enum lane_rating res = PERFECT;
++  if (value < recommended)
++    res = OKAY;
++  if (value < min)
++    res = BAD;
++  if (cur_rate == INIT)
++    return res;
++  if (res < cur_rate)
++    return res;
++  else
++    return cur_rate;
++}
++
++static bool check_recv_weird(struct margin_results *results, double tim_min, double volt_min)
++{
++  bool result = true;
++
++  struct margin_res_lane *lane;
++  for (uint8_t i = 0; i < results->lanes_n && result; i++)
++  {
++    lane = &(results->lanes[i]);
++    if (lane->steps[TIM_LEFT] * results->tim_coef != tim_min)
++      result = false;
++    if (results->ind_left_right_tim && lane->steps[TIM_RIGHT] * results->tim_coef != tim_min)
++      result = false;
++    if (results->volt_support)
++    {
++      if (lane->steps[VOLT_UP] * results->volt_coef != volt_min)
++        result = false;
++      if (results->ind_up_down_volt && lane->steps[VOLT_DOWN] * results->volt_coef != volt_min)
++        result = false;
++    }
++  }
++  return result;
++}
++
++void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n)
++{
++  struct margin_res_lane *lane;
++  struct margin_results *recv;
++
++  enum lane_rating lane_rating;
++
++  uint8_t link_speed;
++
++  char *no_test_msgs[] = {
++      "", "Margining Ready bit is Clear",
++      "Error during caps reading",
++      "Margining prerequisites are not satisfied (Gen 4/5, D0)",
++      "Invalid lanes specified with arguments",
++      "Invalid receivers specified with arguments",
++      "Couldn't disable ASPM"};
++
++  for (uint8_t i = 0; i < recvs_n; i++)
++  {
++    recv = &(results[i]);
++    link_speed = recv->link_speed - 4;
++
++    if (recv->test_status != MARGIN_TEST_OK)
++    {
++      if (recv->test_status < MARGIN_TEST_PREREQS)
++        printf("Rx(%X) -", 10 + recv->recvn - 1);
++      printf(" Couldn't run test (%s)\n\n", no_test_msgs[recv->test_status]);
++      continue;
++    }
++
++    if (recv->lane_reversal)
++      printf("Rx(%X) - Lane Reversal\n", 10 + recv->recvn - 1);
++    if (check_recv_weird(recv, MARGIN_TIM_MIN, MARGIN_VOLT_MIN))
++      lane_rating = WEIRD;
++    else
++      lane_rating = INIT;
++
++    for (uint8_t j = 0; j < recv->lanes_n; j++)
++    {
++      lane = &(recv->lanes[j]);
++      double left_ui = lane->steps[TIM_LEFT] * recv->tim_coef;
++      double right_ui = lane->steps[TIM_RIGHT] * recv->tim_coef;
++      double up_volt = lane->steps[VOLT_UP] * recv->volt_coef;
++      double down_volt = lane->steps[VOLT_DOWN] * recv->volt_coef;
++
++      if (lane_rating != WEIRD)
++      {
++        lane_rating = rate_lane(left_ui, MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND, INIT);
++        if (recv->ind_left_right_tim)
++          lane_rating = rate_lane(right_ui, MARGIN_TIM_MIN, MARGIN_TIM_RECOMMEND, lane_rating);
++        if (recv->volt_support)
++        {
++          lane_rating = rate_lane(up_volt, MARGIN_VOLT_MIN, MARGIN_VOLT_MIN, lane_rating);
++          if (recv->ind_up_down_volt)
++            lane_rating = rate_lane(down_volt, MARGIN_VOLT_MIN, MARGIN_VOLT_MIN, lane_rating);
++        }
++      }
++
++      printf("Rx(%X) Lane %2d - %s\t", 10 + recv->recvn - 1, lane->lane, grades[lane_rating]);
++      if (recv->ind_left_right_tim)
++        printf("L %4.1f%% UI - %5.2fps - %2dst %s, R %4.1f%% UI - %5.2fps - %2dst %s", left_ui,
++               left_ui * ui[link_speed], lane->steps[TIM_LEFT], sts_strings[lane->statuses[TIM_LEFT]], right_ui,
++               right_ui * ui[link_speed], lane->steps[TIM_RIGHT], sts_strings[lane->statuses[TIM_RIGHT]]);
++      else
++        printf("T %4.1f%% UI - %5.2fps - %2dst %s", left_ui, left_ui * ui[link_speed],
++               lane->steps[TIM_LEFT], sts_strings[lane->statuses[TIM_LEFT]]);
++      if (recv->volt_support)
++      {
++        if (recv->ind_up_down_volt)
++          printf(", U %5.1f mV - %3dst %s, D %5.1f mV - %3dst %s", up_volt,
++                 lane->steps[VOLT_UP], sts_strings[lane->statuses[VOLT_UP]],
++                 down_volt, lane->steps[VOLT_DOWN], sts_strings[lane->statuses[VOLT_DOWN]]);
++        else
++          printf(", V %5.1f mV - %3dst %s", up_volt, lane->steps[VOLT_UP], sts_strings[lane->statuses[VOLT_UP]]);
++      }
++      printf("\n");
++    }
++    printf("\n");
++  }
++}
+diff --git a/lmr_lib/margin_results.h b/lmr_lib/margin_results.h
+new file mode 100644
+index 0000000..ab6ddb0
+--- /dev/null
++++ b/lmr_lib/margin_results.h
+@@ -0,0 +1,13 @@
++#ifndef _MARGIN_RESULTS_H
++#define _MARGIN_RESULTS_H
++
++#include "margin.h"
++
++#define MARGIN_TIM_MIN 20
++#define MARGIN_TIM_RECOMMEND 30
++
++#define MARGIN_VOLT_MIN 50
++
++void margin_results_print_brief(struct margin_results *results, uint8_t recvs_n);
++
++#endif
 -- 
 2.34.1
 
