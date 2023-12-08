@@ -1,38 +1,36 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="jP9WvKLE";
-	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="DGsFG2pI"
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="g1Ia679n";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="fw/nJ5nK"
 Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 501A7171F
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 517FB1724
 	for <linux-pci@vger.kernel.org>; Fri,  8 Dec 2023 01:26:45 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 875B6C0002
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com 170C6C0002
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
-	t=1702027143; bh=O/zlUo1HspP9LNqAMQfBFrDOh0YlNsMwwIWZTQJsg1A=;
+	t=1702027126; bh=LffEoy7BEXtir+bHG7zJLq4DE9Brdo6hglCGBOxdd2Y=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=jP9WvKLET60gi7uFApNZhB4PTxrKxepnNufOp5CFNds6AJOo2qOaTYXNF+5kLsRjt
-	 Flg4wfM2SXizTdZous5W610ooZayA3dsaelZ+4Ks2PBv1gBXKxH8gttZBK+xKdKhJ5
-	 AWyEg6bu+obCEvS1UsO2Fc3uj6X7+F17YtGXrswMZ497h/qEgI6LgfETlfQ5vnTV0I
-	 FZ3MRoRryjAyzn5L60xA3xifJShbLOD53Mvq/sXrx4fqDCaCeh+awyM+zodtZjW6x/
-	 8CpAxDeiX5HuLaTNPXY45kl3TrtGEBxccS/xCbUM7wQqf0wExDIDqN+NNBkXausgbq
-	 Q0aiz6QIg6g4Q==
+	b=g1Ia679n2fdVYMpGRRf6jtxZ+7nhAi05WkZUGSEd4UKcT+ZcPcdU+TFINAI+tuITg
+	 +0I3KQmFvwGTHL4AOeLX/zjYJFw7ys+ypD7zmBIVTN77iGrMZ0ujFC5a2jM7r7ObXW
+	 Q6zEGUNldETjEcBj/uLgM7viNR6aViqxryTYmU1nVrSuvuF3t8Dsf2mc45vSwtFO5p
+	 k8wO1JX8BCeeollweFqGYa2DAiwjCAxu3KAGKNtozPL9pCIJUm+Wcyrg3PkJmuwJCV
+	 /wzI/7njksEhbA5QYfgzE9ekRQqrO7phGhlmHBGX0bkinFqCbD96bvHvA/5L0CXZe+
+	 JoTvIGVKC5zcQ==
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
-	t=1702027143; bh=O/zlUo1HspP9LNqAMQfBFrDOh0YlNsMwwIWZTQJsg1A=;
+	t=1702027126; bh=LffEoy7BEXtir+bHG7zJLq4DE9Brdo6hglCGBOxdd2Y=;
 	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
-	b=DGsFG2pIDPTf/uk++QCCEAdGwEhXjrixU/qJskfrywe2BnqdCxFpAgsNFX38XFNuI
-	 XY7EgZiOZg5whRK/eUA+mDgg1cBHxe0x4MQirkDe1NVMEP1kpY0nDsKtUw2Oh9Y4kr
-	 8tu0r0ve8w4GC6xIWT46fxCXd5tl51H5o92Ycx9KYUIwmRmN2hY0LFn4436ngHDcdf
-	 2EuSiZpG9xzgBmnCN36EYd4CJYYcoGdxiC2BVGMk3AGbGPKV1CijOYHer8zrXEg6SU
-	 cgs0qtNlNtRwFb+33/OTedIL+BZp8Wq1zStEDErUSDAGqwHG/hMUHUlI0Dg4ifTyOr
-	 w9THLgGlz+hgg==
+	b=fw/nJ5nKLAznNu3diBoHUwwzp3s/h4itNfbzaXYcgvACmp/6HIUUCFVzIJ0tX2CvZ
+	 A24xQqrvM9LDRGPA4eN7dQbyLG34W54pa08ZAS6kOfgghxz0MbwvbqtQwpMOwFJ2v9
+	 TF6e30Af86Oj4Vg5vHOv2xu0QPvwIp7VsnfnPwDM8yObGjWVZnW8Zf/zX1647c3o7K
+	 Mx04UNQegoYQMxyC8qMIiuTzs7dfPUJE8Kw5h5AVDlJMEk0jt+QJOElY6diZ6AfSuC
+	 4lE5GJH/As97vvuLCyDEuwC7Pisi+um9DeTKxb4kZll7bNIj6aUO4ZL6Vh9ExMEE4i
+	 n69pbuTXazpcw==
 From: Nikita Proshkin <n.proshkin@yadro.com>
 To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
 CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
 	Nikita Proshkin <n.proshkin@yadro.com>
-Subject: [PATCH 03/15] pciutils-lspci: Add Lane Margining support to the lspci
-Date: Fri, 8 Dec 2023 12:17:22 +0300
-Message-ID: <20231208091734.12225-4-n.proshkin@yadro.com>
+Subject: [PATCH 00/15] pciutils: Add utility for Lane Margining
+Date: Fri, 8 Dec 2023 12:17:19 +0300
+Message-ID: <20231208091734.12225-1-n.proshkin@yadro.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231208091734.12225-1-n.proshkin@yadro.com>
-References: <20231208091734.12225-1-n.proshkin@yadro.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,58 +42,89 @@ Content-Type: text/plain
 X-ClientProxiedBy: T-EXCH-10.corp.yadro.com (172.17.11.60) To
  S-Exch-02.corp.yadro.com (10.78.5.239)
 
-Gather all the info available without writing to the config space.
-Without any commands margining capability exposes only 3 status bits to
-read through Margining Port Capabilities and Margining Port Status registers.
-It makes sense to show them anyway. For example, Margining Ready bit
-indicates whether the device is actually ready for the margining process.
+PCIe Gen 4 spec introduced new extended capability mandatory for all
+ports - Lane Margining at the Receiver. This new feature allows to get an
+approximation of the Link eye margin diagram by four points. This
+information shows how resistant the Link is to external influences and can
+be useful for link debugging and presets tuning.
+Previously, this information was only available using a hardware debugger.
 
-Reviewed-by: Sergei Miroshnichenko <s.miroshnichenko@yadro.com>
-Signed-off-by: Nikita Proshkin <n.proshkin@yadro.com>
----
- ls-ecaps.c | 22 +++++++++++++++++++++-
- 1 file changed, 21 insertions(+), 1 deletion(-)
+Patch series consists of two parts:
 
-diff --git a/ls-ecaps.c b/ls-ecaps.c
-index 267d98e..cd6f5d1 100644
---- a/ls-ecaps.c
-+++ b/ls-ecaps.c
-@@ -691,6 +691,26 @@ cap_rcec(struct device *d, int where)
-     printf("\t\tAssociatedBusNumbers: %02x-%02x\n", nextbusn, lastbusn );
- }
- 
-+static void
-+cap_lmr(struct device *d, int where)
-+{
-+  printf("Lane Margining at the Receiver\n");
-+
-+  if (verbose < 2)
-+    return;
-+
-+  if (!config_fetch(d, where, 8))
-+    return;
-+
-+  u16 port_caps = get_conf_word(d, where + PCI_LMR_CAPS);
-+  u16 port_status = get_conf_word(d, where + PCI_LMR_PORT_STS);
-+
-+  printf("\t\tPortCap: Uses Driver%c\n", FLAG(port_caps, PCI_LMR_CAPS_DRVR));
-+  printf("\t\tPortSta: MargReady%c MargSoftReady%c\n",
-+         FLAG(port_status, PCI_LMR_PORT_STS_READY),
-+         FLAG(port_status, PCI_LMR_PORT_STS_SOFT_READY));
-+}
-+
- static void
- cxl_range(u64 base, u64 size, int n)
- {
-@@ -1548,7 +1568,7 @@ show_ext_caps(struct device *d, int type)
- 	    printf("Physical Layer 16.0 GT/s <?>\n");
- 	    break;
- 	  case PCI_EXT_CAP_ID_LMR:
--	    printf("Lane Margining at the Receiver <?>\n");
-+            cap_lmr(d, where);
- 	    break;
- 	  case PCI_EXT_CAP_ID_HIER_ID:
- 	    printf("Hierarchy ID <?>\n");
+* Patch for lspci to add Margining registers reading. There is not much
+  information available without issuing any margining commands, but this
+  info is useful anyway;
+* New pcilmr utility.
+
+Margining capability assumes the exchange of commands with the device, so
+its support was implemented as a separate utility pcilmr.
+The pcilmr allows you to test Links and supports all the features provided
+by the Margining capability. The utility is written using a pcilib, it is
+divided into a library part and a main function with arguments parsing in
+the pciutils root dir.
+Man page is provided as well.
+
+Utility compilation and man page preparation are integrated into the
+pciutils Makefile, so run make is enough to start testing the utility
+(Gen 4/5 device is required though).
+Utility was written with Linux in mind and was tested only on this OS.
+
+Example utility results on different systems you can see in gist:
+https://gist.github.com/bombanya/f2b15263712757ffba1a11eea011c419
+
+Patch series is also posted as PR on pciutils github:
+https://github.com/pciutils/pciutils/pull/162
+
+Nikita Proshkin (15):
+  pciutils-lspci: Fix unsynchronized caches in lspci struct device and
+    pci struct pci_dev
+  pciutils: Add constants for Lane Margining at the Receiver Extended
+    Capability
+  pciutils-lspci: Add Lane Margining support to the lspci
+  pciutils-pcilmr: Add functions for device checking and preparations
+    before main margining processes
+  pciutils-pcilmr: Add margining process functions
+  pciutils-pcilmr: Add logging functions for margining
+  pciutils-pcilmr: Add all-in-one device margining parameters reading
+    function
+  pciutils-pcilmr: Add function for default margining results log
+  pciutils-pcilmr: Add utility main function
+  pciutils-pcilmr: Add support for unique hardware quirks
+  pciutils-pcilmr: Add the ability to pass multiple links to the utility
+  pciutils-pcilmr: Add --scan mode to search for all LMR-capable Links
+  pciutils-pcilmr: Add option to save margining results in csv form
+  pciutils-pcilmr: Add handling of situations when device reports its
+    MaxOffset values equal to 0
+  pciutils-pcilmr: Add pcilmr man page
+
+ Makefile                 |  11 +-
+ lib/header.h             |   7 +
+ lmr_lib/Makefile         |  10 +
+ lmr_lib/margin.c         | 528 ++++++++++++++++++++++++++++++++++++++
+ lmr_lib/margin.h         | 206 +++++++++++++++
+ lmr_lib/margin_hw.c      | 163 ++++++++++++
+ lmr_lib/margin_hw.h      |  46 ++++
+ lmr_lib/margin_log.c     | 141 +++++++++++
+ lmr_lib/margin_log.h     |  23 ++
+ lmr_lib/margin_results.c | 255 +++++++++++++++++++
+ lmr_lib/margin_results.h |  15 ++
+ ls-ecaps.c               |  22 +-
+ lspci.c                  |   1 +
+ pcilmr.c                 | 532 +++++++++++++++++++++++++++++++++++++++
+ pcilmr.man               | 179 +++++++++++++
+ 15 files changed, 2136 insertions(+), 3 deletions(-)
+ create mode 100644 lmr_lib/Makefile
+ create mode 100644 lmr_lib/margin.c
+ create mode 100644 lmr_lib/margin.h
+ create mode 100644 lmr_lib/margin_hw.c
+ create mode 100644 lmr_lib/margin_hw.h
+ create mode 100644 lmr_lib/margin_log.c
+ create mode 100644 lmr_lib/margin_log.h
+ create mode 100644 lmr_lib/margin_results.c
+ create mode 100644 lmr_lib/margin_results.h
+ create mode 100644 pcilmr.c
+ create mode 100644 pcilmr.man
+
 -- 
 2.34.1
 
