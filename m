@@ -1,66 +1,51 @@
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="shMhsbbS"
-Received: from EUR02-VI1-obe.outbound.protection.outlook.com (mail-vi1eur02on2083.outbound.protection.outlook.com [40.107.241.83])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 81E11FE;
-	Mon, 11 Dec 2023 14:01:14 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=nxp.com header.i=@nxp.com header.b="M4bZhIrE"
+Received: from EUR03-AM7-obe.outbound.protection.outlook.com (mail-am7eur03on2046.outbound.protection.outlook.com [40.107.105.46])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 20A71A1;
+	Mon, 11 Dec 2023 14:06:54 -0800 (PST)
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=aP3EMeAGm95F/DyrQu7le5G0+bP/BNtP+saekuxUzUYgqqvOewOGcKlI6ahgSepGt9CqLwHHNP9JolWWp5uHFtsvzv3OltlCnRZDI4aGp5AhXY1FSjuCTgjPHr+D9eUrCbrhDBPRILS5xarnhxEH6Hs/2Qc5zCFLVrxUhE12Ca9y5cxubCGUzSD/MCyNw8czaRFSW5mi3+1+6hoX8Sdjd5fspt4JXFL7wFKrvD++eOi8U7rkBpMXd9iFxisd8ZLmHQr3C40zCKZHQEjfxt4N7EU2PznGq6V7uscOh39GbrHAiOj5mYd5cY4/p5kSK0Zwn6SVCOGnL0vhT5/N/YZQWg==
+ b=ZwTuwXBOLzgEOhMVu5kMzpi8buAhexHuylTpgyUZDlfRo03xNFMvUhK/YJjDpOtBKn5P9YY1DxTJe8hjTJUSIzayNhJheXqUAP7vX4U3dwjIPHzbcoF7jVTO9zMmz4v0M+mT3F/FOJlKvumPiYM24POFtAumQNsXUThLEVaxz1PZPx01W43x500b949Cqh4usJTlqW7M93LBYzLtPlryrKHyavnYcrbNpBZXUjtbw8N5LfIc0daceLICpWIxGCW1/jSpG/ZhKjfSjuVx+ULIuDOXupOZF5HFRTTe5fh1VYEHdTnRYp9ERd2DwHW69k4rZSrQs6u0b6iQ+usptGZ3gQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=MJn1CcAug8mZf5HSinTejzQInL2u+Dc75u0Ow+OmQ3w=;
- b=Vs3G1E+xryfAQH0qzWW8/2d60Y305Ofze4dCT3ZwXSGrz8m/qWiKKPCy7FqT/H2T7j6aNZQ7ldTnMqhsVPPLrwxBcgaMADwHiKCuGbs08Yr5uH3aiddmd8kiT150kl4E3ZqIxyzdurR6Xtx2ZuskqoYwfO9+VqjcQ8dDHUrWDIGk5BmFtRHYXH1Cp8+3NHoEZVlLk7egU5e6OHxHrzj7u8sQHcC+BYNz8kA7+6TWVrGgADPfHG+F2gJozGSnJoqHKCA/+esyZNIkTkRyk14TujRx2HSy8evvp9QO3W1SU4riDGAktTdSmrdfp9TA6B5YHmtNcsNAf3QGvVfCgqroxg==
+ bh=wjs40/uZk9IiiJF2cbAEQhEIX+HPt7jr4ZHqwjyGQe8=;
+ b=DaV9NN3UQXbh8G/MB+pMiN3LFaf3m0Eq2kLBpu/gL7P7JE/ysyM10MlLwWiA3kzOiijcPSt+uI9ifFeZOjpWDDZFAm6IyA5/hq1hJvMLTVblJFp9YDZlhW9//FyHk1K4bKzn67SrUpA73swhfhnBkyT6UddKG8Fs7Os0XVCrDZ0FJ7LkcG5kVtrlcDBovIwlezNUSMQhlCf1tmLlwIVLWT7ldRiLwG7sNLRLtK0fbjhPmy3TUO7e+CZlWoK5SQgVtWoYEsDc8lwSbXqykOJfdp0k2G5nMKynw/YWgAZYTxJfX9jDEaZG8HQK7/cP+zHT2E+1dVL1VnpDXwKXiSKI+w==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
  header.d=nxp.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=MJn1CcAug8mZf5HSinTejzQInL2u+Dc75u0Ow+OmQ3w=;
- b=shMhsbbSzqvf/Mx4aAlyejznfajY0EfbvtLuOffEFzyRwtIaOORo7SYnMKY73uVpbsmtwLNi6e1gJ6UM806CSTen00m1pcenggheNAI0mdFkrB402IE335lU1sxeDNl49MHF9nioZrirmN3Uf0T8eCAzeHDsynWkCqVWCIhOt/c=
+ bh=wjs40/uZk9IiiJF2cbAEQhEIX+HPt7jr4ZHqwjyGQe8=;
+ b=M4bZhIrEBO6HyiMMZG9gwjDerNOUtd7ZcTi2KTB5jAa05tzBEddgwebDhFJP2luDF04haAlMlkPSjjLdtQIjcvFmE5vgze4Rjc+rO1jcFn96CGq+/VOwN9q8AlFrU+0kYyU+GREGXeQMGRxbqf6yvhZW6SvPHWluslnNWVRf71c=
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nxp.com;
 Received: from VI1PR04MB4845.eurprd04.prod.outlook.com (2603:10a6:803:51::30)
- by AM9PR04MB7569.eurprd04.prod.outlook.com (2603:10a6:20b:2d8::22) with
+ by PAWPR04MB9717.eurprd04.prod.outlook.com (2603:10a6:102:380::22) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.33; Mon, 11 Dec
- 2023 22:00:25 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7068.29; Mon, 11 Dec
+ 2023 22:06:51 +0000
 Received: from VI1PR04MB4845.eurprd04.prod.outlook.com
  ([fe80::dfaa:e869:45eb:76e5]) by VI1PR04MB4845.eurprd04.prod.outlook.com
  ([fe80::dfaa:e869:45eb:76e5%6]) with mapi id 15.20.7068.031; Mon, 11 Dec 2023
- 22:00:25 +0000
-From: Frank Li <Frank.Li@nxp.com>
-To: frank.li@nxp.com
-Cc: bhelgaas@google.com,
-	conor+dt@kernel.org,
-	devicetree@vger.kernel.org,
-	festevam@gmail.com,
-	helgaas@kernel.org,
-	hongxing.zhu@nxp.com,
-	imx@lists.linux.dev,
-	kernel@pengutronix.de,
-	krzysztof.kozlowski+dt@linaro.org,
-	kw@linux.com,
-	l.stach@pengutronix.de,
-	linux-arm-kernel@lists.infradead.org,
-	linux-imx@nxp.com,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	lpieralisi@kernel.org,
-	manivannan.sadhasivam@linaro.org,
-	robh@kernel.org,
-	s.hauer@pengutronix.de,
-	shawnguo@kernel.org
-Subject: [PATCH v3 12/13] dt-bindings: imx6q-pcie: Add iMX95 pcie endpoint compatible string
-Date: Mon, 11 Dec 2023 16:58:41 -0500
-Message-Id: <20231211215842.134823-13-Frank.Li@nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20231211215842.134823-1-Frank.Li@nxp.com>
-References: <20231211215842.134823-1-Frank.Li@nxp.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SJ0PR03CA0009.namprd03.prod.outlook.com
- (2603:10b6:a03:33a::14) To VI1PR04MB4845.eurprd04.prod.outlook.com
- (2603:10a6:803:51::30)
+ 22:06:51 +0000
+Date: Mon, 11 Dec 2023 17:06:42 -0500
+From: Frank Li <Frank.li@nxp.com>
+To: manivannan.sadhasivam@linaro.org
+Cc: bhelgaas@google.com, imx@lists.linux.dev, kw@linux.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	lpieralisi@kernel.org, minghuan.Lian@nxp.com, mingkai.hu@nxp.com,
+	robh@kernel.org, roy.zang@nxp.com
+Subject: Re: [PATCH v6 4/4] PCI: layerscape: Add suspend/resume for ls1043a
+Message-ID: <ZXeH8nF4KoC0gKg2@lizhi-Precision-Tower-5810>
+References: <20231204160829.2498703-1-Frank.Li@nxp.com>
+ <20231204160829.2498703-5-Frank.Li@nxp.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231204160829.2498703-5-Frank.Li@nxp.com>
+X-ClientProxiedBy: SN7PR04CA0188.namprd04.prod.outlook.com
+ (2603:10b6:806:126::13) To AM6PR04MB4838.eurprd04.prod.outlook.com
+ (2603:10a6:20b:4::16)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,112 +53,199 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: VI1PR04MB4845:EE_|AM9PR04MB7569:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4c205792-e05b-406e-e6c7-08dbfa949408
+X-MS-TrafficTypeDiagnostic: VI1PR04MB4845:EE_|PAWPR04MB9717:EE_
+X-MS-Office365-Filtering-Correlation-Id: 56ff6995-e5a7-4c00-123e-08dbfa9579ac
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;
 X-Microsoft-Antispam-Message-Info:
-	9YE7ToW4boflRLqwDkAZWA3C6bEVG2lBkx3qgrWqTE9olvuO8JbH7GTawMrKTwYEi9g8uC/IKdJkZYhTpxL+Jzgvv+FxkngqsG2GkoGyRbE/zLPF2hQ4JA+rMymnGmF6WHuyamvaBxDbYs/l//nv92Tt8aGJ9bdbzXgc5p/GLQ5meR202kWEAd2fAxn1DyW6mz46dqqdBA/GkhhT88qzUjJfOgfuuSU3PYn/gvAkLUrMD6FKxklXRQyI9trGokaykX+JP4rmvBPP1xKdYlV7ZjxBqwKFInZbr9fQufPiLlX5S6jW2QzK4fnfo4AXQTF54YD71f3VvCh3d/eWAx40+vrNoV4GJ8dDzRA+AelsPaLkhZPAG1JVrTunCyJ5QyoFSBRJK7EY9LJHo2tLqVzWfLi6VgdLJK01bMZQ3gK3Fpo2V0Y0D9iDRzl4GpJI3kIDxAWXqgKi2PL7NBlwF1GTn93GSsdJw3MSJ0zL6P81c6Ua8W5xxn8BT2xzQooLqa1dHqQnWIYN1xLq6FBcOBQMInb3IQYfKRkRcP+iPIjWkXiyZ4VOgVyb51PtD1G+V1PDpJMstgEJVz9AHA3R4Jn6j62b5340ayVYr8DGXoEaK0TInhWtRmDjRkl8irMzV5dvmM1XlU1cL2S+4pcKAGTy6w==
+	apliFr3Bho9l7AJeF2eoMWR8enCCLhvdBwZDl2uHmHGXJ7Jw3V21CSrTIPWI8q2A6pQ7nar8RG3Gpn+Pkh0tKWT+wD5N3jr4byGkaq1lOLwK4zRiziNJ4GJTCgS4ZhYmEJyHqr4oZNSsOG8vBCXRXDSUXZIMgdcn5au52A8DaHUTj7y0MDrDjJf4zxV+wUHnvCAHiPKNhYmIuND89Ylyjhuh+A+OpRncYQEHWy1hCvgTlZcTDEH8SKep8WIP/Jc6oYTFx3OSGoFv6YswkYbcUAiExoytIybjx+4aBHT4DEep7nxZVGu8d1BYbmbCsxYJq1mh3i0nxnD0Jg19yEnszu4KozYul7gHi7W/67tJW5Yrnci4tOR5WxulPYAEINuZIg1Fau5V9xhugbjvIf+rGpa5PpXB48wkXBmnqzJgeghOrK/0C9jTJV6RafAaRbna0s/0e01PwVCmrT+wQFpFSANwXQFOlwn+QuMQy07a9BLDywXaPv0tAwiaoOhqQ+M8bvodaN+PTIPyrhudkghcl7KOgHVWLuJdZhsJv/GjQiu+uQoFF9Q6gfCaoG4Nv+pp0IybBTBpKaJfyXyyVYD+CXNizZOVig0/i8eXN7QxkHqg8GicmOHn9rqccaQsi1XP
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR04MB4845.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(39860400002)(136003)(396003)(346002)(366004)(376002)(230922051799003)(451199024)(1800799012)(186009)(64100799003)(1076003)(26005)(2616005)(6666004)(6506007)(6512007)(52116002)(83380400001)(5660300002)(7416002)(41300700001)(2906002)(478600001)(6486002)(8676002)(8936002)(4326008)(66946007)(66556008)(316002)(34206002)(37006003)(66476007)(86362001)(38100700002)(36756003)(38350700005)(32563001);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:VI1PR04MB4845.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7916004)(376002)(39860400002)(136003)(396003)(346002)(366004)(230922051799003)(64100799003)(451199024)(1800799012)(186009)(478600001)(6512007)(9686003)(6506007)(52116002)(6666004)(26005)(38350700005)(38100700002)(86362001)(5660300002)(66556008)(66946007)(7416002)(41300700001)(33716001)(2906002)(15650500001)(6486002)(83380400001)(66476007)(8936002)(8676002)(316002)(4326008)(6916009);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?3N+mg2QpOl9sE/+5Av7VPzeKa+pwItyCSZzlnBAlrwbhPXBrIO+6++d5aZUV?=
- =?us-ascii?Q?gvWMjspxVGwp3uj95q+9xx1z9Z2hi8lfHZePKNafYPI4Y411KZ+jwAp5/wYS?=
- =?us-ascii?Q?/AQpdyPH0UHrNBiGt2VTyqXnYAU0m/mXPG8qbnIWNB4Uh2cUcWVQUguPOGi1?=
- =?us-ascii?Q?DlrnO6S7hguEUmkXR0f50+sSFrUd4JTpSEXYDYorI13xcoZEgJMukKt38EkP?=
- =?us-ascii?Q?F0WG18/XkABzFWlCVCY09tfCSmAhHqqcC0lhtQX8Ul+FPN11pIxB7Hn4h+Gy?=
- =?us-ascii?Q?QI5CCS9y6fx2Cps8O/uMamqYrAyE0WjZaRAKL0vCkjsxrBBbbTthA5IZIAHw?=
- =?us-ascii?Q?iv+26AcdRgD335iRprzSj6zZglEVirwJTE6iAn/UPy/glBdpKG8hVwR+BRSe?=
- =?us-ascii?Q?gJVsuGpsBQYVIA5eBnYbAYFtanOp7dfv3dsZPuvP0rEC+MOv+Ug63A/Ki5Q/?=
- =?us-ascii?Q?9riMqt84J3oviBFhBvG8hkAm9JE8g7/XilO8uuHv729VIwhfl+4uIjgLwBcN?=
- =?us-ascii?Q?xFR3HCQZtHtt/5txvISwtovnAfwTe4xDCxHSt99aAZn6gYMRbOecCmD/xoOp?=
- =?us-ascii?Q?58vHNX605z/sPQWDbLJM3bl4AZQmRhT0109eOJP1714GWFt+4xtYEQKJpu3c?=
- =?us-ascii?Q?TinqqfV2geeZxiKPXBp/DQ6bsGAfLZUfRvuFSRdQ+gmhE8AbMRtUVZSRMjue?=
- =?us-ascii?Q?h3akyB/YXxIEjoJAgtBrmn0BQGXYX3Pn6QWfWwrbSPJsXD5kjz2JnBw9K7xn?=
- =?us-ascii?Q?JZmgOQP3LohX4Y7OVTjCwomrYrTc3be6EUWlG/3i2eBJfRbIyAHVs0S69ufH?=
- =?us-ascii?Q?WGqAqhm5BjNeWBibijcU+RYptQfk3FXVkJ6PorzC8cx9kG8zjAgJ8cf9aluy?=
- =?us-ascii?Q?D6cdiDH6QwREvd5EbGKJtKk5eBDwFdPgUTBAP1U4mAkFdkz3gPhbAeZt+C1+?=
- =?us-ascii?Q?/eQ89XQXJm0g5HTsZ59fCdYfGCS1jq5Ht63ZGBVcfi0yv6Vc+1ih2N5SGSec?=
- =?us-ascii?Q?NrIh1DpKHtCBzGqIRUA+3YkHSznlAlkLco1JlZuOG+kbsrAhm+/bC2rWBpb7?=
- =?us-ascii?Q?p7nr8SpP1kBP3hokNcE0++ROTDF0euYI76HflNU6H/zs7sJxbh3CRTjSAGun?=
- =?us-ascii?Q?6fVOlxYhPXM1STjeDac8Y47BqbLgFM+Bqf4UXy0ogYNXMiVB/i3iYjVyCBPA?=
- =?us-ascii?Q?n27JVdgmNQ29u79wsY4Essp9OCsubnXee+dRg7uzVRU+Cdln1QmKb51IMXOh?=
- =?us-ascii?Q?9UpUeGR1LRmZAr3/Sp9r84XcFBV/zE5T1XV7f6Lz/YjBoot5jK5K2rweYG1o?=
- =?us-ascii?Q?aETKrQGj9/10jTc25pwSE2dKptjU70s+9LTeaKf06Tbxf5bcluT5mXasAANq?=
- =?us-ascii?Q?UdXiFbkrGWupNwBO+GPNFQLTAbDS0QfB++MuAt3Ln5KMfLgfPh9zIUDxTNgg?=
- =?us-ascii?Q?vgkZgFtKRsW4i45MSm1t580ubk0C8vgcTmtKXqZSnL7ErIiNE9xIpEQBLJdZ?=
- =?us-ascii?Q?eTZj+6aJzu0JFOnPiyoonHuMdwEweeTWn9wamfJ2YAdNDHESgxoVsUcOVL/q?=
- =?us-ascii?Q?jF+E/9f1sykf0FmSLZ1QqM1eI1HlPeMApzYOEUxe?=
+	=?us-ascii?Q?UDdRK7biXrSL+95jl/Vidi167MCo0Y3bsVlwvsaovoXcFekPLL7dSWGUKqyd?=
+ =?us-ascii?Q?3+ktaG3fezEL8DmLMABwzrj6H7I8CUHJHcvc2HSw0HGro+P9pn11uwcu8BGr?=
+ =?us-ascii?Q?eLNr0pvzuHWg6SNafJxJWyjarbLnfIyexFoETLM15Aafw71o0MB3UBhO4nrk?=
+ =?us-ascii?Q?VlVRDn1hvI0ezfaLc0P3e3EcqAXI+fKV4+0pCuvEhLmorokWG/Uakw+poIKV?=
+ =?us-ascii?Q?XvjxYxzG9uznvxrRI3ednDEcYiFYD99Dtr6k7MDy/AOxBUIgM57rmmv+CdEq?=
+ =?us-ascii?Q?+uCU1Gz8fIJjmGemYuXLuqL4hP5mFFlC9is7+wXmO7UJs1Ab36sP3dXHuf1X?=
+ =?us-ascii?Q?tctelaOxSRpm0ZnbQN2DUVvwmwef0IvWwlxhwED/QHx/TtGGlwslPe/qGDl8?=
+ =?us-ascii?Q?Pkg+oCfy3lLurfCRcLidkH4LXWmn22gr18leY5V6kt3M93cUsj7OfN+rIPtk?=
+ =?us-ascii?Q?wA0EMHjXDCfg0UYwk+amLTxuAXZjz83QlC/diRaITmSO5KH8kXvF3faJeXZj?=
+ =?us-ascii?Q?3GIGWUVjOOny1gPmxbI0TiOrlG8ln7VEBZxRa8a0XgQhB8R1Mrd65KjhOWtV?=
+ =?us-ascii?Q?xbyDSlyGILNpSWEZ2qNNGrWeepD3zL22ZJlvvog99MyXhXlmlLoOvam8gbuQ?=
+ =?us-ascii?Q?+5dJOvEToR+6mvMpVfFF/4RSxW3eFsV3ZDMiCSoiRZ2MleHvaNzm7YhNppmH?=
+ =?us-ascii?Q?BfBrdkt24f3teScj3/v423MXAJxnIWNXXm5k8gjjCcQ305iJS4l2DErlWTF6?=
+ =?us-ascii?Q?9UtMiCTDRHkHle70QG+wUs97h96LgMJkmk83DtRFxvDUlb0JtTDai/YaiXgV?=
+ =?us-ascii?Q?379D2kBhp4q89vTCTrs4aOERdDOVDI+q4DIWEKjP+hwK0esoWwimvhpS0AvH?=
+ =?us-ascii?Q?zH1l2XcxZLX67CSwlSgsrVC6AkAwlNHamypMMY4SR9lyV42N927CCxjsg2cy?=
+ =?us-ascii?Q?KclDGt3l9QF8h+7CXczI0nRUMR786pnVkBBnhaNL/+Z2n0E01d36WRuQ9hDq?=
+ =?us-ascii?Q?RRi/faZkPKbmD7PyUvB4YjE01OD+lM2vvG1Wv42UiLygf8GuIMXNlqOvIpQ9?=
+ =?us-ascii?Q?30OZ0PMaTRLTL1EeMdlgCKLZGsupigi7n5Rzt/cFSVozQkgbWgcf2Pd2d6y2?=
+ =?us-ascii?Q?PqZ7n3hASiPDAMRHeuKbvh+bA9q0gU9H3v/SCB3j0iiBOaCD9KR5hWBdofoj?=
+ =?us-ascii?Q?VV5CYW/2R9pWupZg3utFuJfnsW7R+3llc9kEMNo1Ga1pPu8pTkjdZOMQS7x3?=
+ =?us-ascii?Q?68JbrIBN5OUiYsvYrpxeQ+ikktJjwHi2LB1/E7flI1azkGSFwDAQUbbTukAE?=
+ =?us-ascii?Q?u8PZRr3JzJC7w1MJizM3kvAdMTtX+OufGyH3XUBdt3lh+iTRqE3ixEFZqVwY?=
+ =?us-ascii?Q?/z/NyaskWu9wp4pYpDor118twvQCxa0HI9k1vb7LDW5SZGIWgX/RzalzYXnc?=
+ =?us-ascii?Q?lzDho2/IPy0kydLvSMV19bIPNSdBDvUhDiV6EHpzXhj+5fSugKohXeGnydtJ?=
+ =?us-ascii?Q?RRmF2jFGwlnmvIgEF6+5ajq7ykO3JB9GtpOXniB8ItOCkNDf2vK9cP80mCV4?=
+ =?us-ascii?Q?+fdylVd4jBmD1GDTZM8=3D?=
 X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4c205792-e05b-406e-e6c7-08dbfa949408
-X-MS-Exchange-CrossTenant-AuthSource: VI1PR04MB4845.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 56ff6995-e5a7-4c00-123e-08dbfa9579ac
+X-MS-Exchange-CrossTenant-AuthSource: AM6PR04MB4838.eurprd04.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Dec 2023 22:00:25.0637
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Dec 2023 22:06:51.1176
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 229KVatznAuJU9Kx8VPeook8qSfNwVcRSDBAyce5oTegobTR8AjWOckKP3r7NyMzV3UQ+tUubkJVhjg40mLV9Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: AM9PR04MB7569
+X-MS-Exchange-CrossTenant-UserPrincipalName: tppendVPIzLSVhUnZ4SXyJSK835MNuzMwiUKI2br810+rgufN1N+7X0ZotpfzUUAbF02RT4QnXCy3mnEKeP40A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PAWPR04MB9717
 
-Add i.MX95 PCIe "fsl,imx95-pcie-ep" compatible string.
-Add reg-name: "atu", "dbi2", "dma" and "serdes".
+On Mon, Dec 04, 2023 at 11:08:29AM -0500, Frank Li wrote:
+> Add suspend/resume support for Layerscape LS1043a.
+> 
+> In the suspend path, PME_Turn_Off message is sent to the endpoint to
+> transition the link to L2/L3_Ready state. In this SoC, there is no way to
+> check if the controller has received the PME_To_Ack from the endpoint or
+> not. So to be on the safer side, the driver just waits for
+> PCIE_PME_TO_L2_TIMEOUT_US before asserting the SoC specific PMXMTTURNOFF
+> bit to complete the PME_Turn_Off handshake. Then the link would enter L2/L3
+> state depending on the VAUX supply.
+> 
+> In the resume path, the link is brought back from L2 to L0 by doing a
+> software reset.
+> 
+> Acked-by: Roy Zang <Roy.Zang@nxp.com>
+> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
 
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
----
+@Lorenzo:
 
-Notes:
-    Change from v1 to v3
-    - new patches at v3
+   Could you please pick up these patches? Mani already reviewed and only
+impact layerscape platform.
 
- .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 20 +++++++++++++++++++
- 1 file changed, 20 insertions(+)
+Frank
 
-diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-index ee155ed5f1811..36d8f117fdfb3 100644
---- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
-@@ -22,6 +22,7 @@ properties:
-       - fsl,imx8mm-pcie-ep
-       - fsl,imx8mq-pcie-ep
-       - fsl,imx8mp-pcie-ep
-+      - fsl,imx95-pcie-ep
- 
-   reg:
-     minItems: 2
-@@ -62,11 +63,30 @@ required:
- allOf:
-   - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
-   - $ref: /schemas/pci/fsl,imx6q-pcie-common.yaml#
-+  - if:
-+      properties:
-+        compatible:
-+          enum:
-+            - fsl,imx95-pcie-ep
-+    then:
-+      properties:
-+        reg:
-+          minItems: 6
-+        reg-names:
-+          items:
-+            - const: dbi
-+            - const: atu
-+            - const: dbi2
-+            - const: serdes
-+            - const: dma
-+            - const: addr_space
-+
-   - if:
-       properties:
-         compatible:
-           enum:
-             - fsl,imx8mq-pcie-ep
-+            - fsl,imx95-pcie-ep
-     then:
-       properties:
-         clocks:
--- 
-2.34.1
-
+> ---
+> 
+> Notes:
+>     Chagne from v5 to v6
+>     - none
+>     Change from v4 to v5
+>     - update commit message
+>     - use comments
+>     /* Reset the PEX wrapper to bring the link out of L2 */
+>     
+>     Change from v3 to v4
+>     - Call scfg_pcie_send_turnoff_msg() shared with ls1021a
+>     - update commit message
+>     
+>     Change from v2 to v3
+>     - Remove ls_pcie_lut_readl(writel) function
+>     
+>     Change from v1 to v2
+>     - Update subject 'a' to 'A'
+> 
+>  drivers/pci/controller/dwc/pci-layerscape.c | 63 ++++++++++++++++++++-
+>  1 file changed, 62 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-layerscape.c b/drivers/pci/controller/dwc/pci-layerscape.c
+> index f3dfb70066fb7..7cdada200de7e 100644
+> --- a/drivers/pci/controller/dwc/pci-layerscape.c
+> +++ b/drivers/pci/controller/dwc/pci-layerscape.c
+> @@ -41,6 +41,15 @@
+>  #define SCFG_PEXSFTRSTCR	0x190
+>  #define PEXSR(idx)		BIT(idx)
+>  
+> +/* LS1043A PEX PME control register */
+> +#define SCFG_PEXPMECR		0x144
+> +#define PEXPME(idx)		BIT(31 - (idx) * 4)
+> +
+> +/* LS1043A PEX LUT debug register */
+> +#define LS_PCIE_LDBG	0x7fc
+> +#define LDBG_SR		BIT(30)
+> +#define LDBG_WE		BIT(31)
+> +
+>  #define PCIE_IATU_NUM		6
+>  
+>  struct ls_pcie_drvdata {
+> @@ -224,6 +233,45 @@ static int ls1021a_pcie_exit_from_l2(struct dw_pcie_rp *pp)
+>  	return scfg_pcie_exit_from_l2(pcie->scfg, SCFG_PEXSFTRSTCR, PEXSR(pcie->index));
+>  }
+>  
+> +static void ls1043a_pcie_send_turnoff_msg(struct dw_pcie_rp *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct ls_pcie *pcie = to_ls_pcie(pci);
+> +
+> +	scfg_pcie_send_turnoff_msg(pcie->scfg, SCFG_PEXPMECR, PEXPME(pcie->index));
+> +}
+> +
+> +static int ls1043a_pcie_exit_from_l2(struct dw_pcie_rp *pp)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> +	struct ls_pcie *pcie = to_ls_pcie(pci);
+> +	u32 val;
+> +
+> +	/*
+> +	 * Reset the PEX wrapper to bring the link out of L2.
+> +	 * LDBG_WE: allows the user to have write access to the PEXDBG[SR] for both setting and
+> +	 *	    clearing the soft reset on the PEX module.
+> +	 * LDBG_SR: When SR is set to 1, the PEX module enters soft reset.
+> +	 */
+> +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
+> +	val |= LDBG_WE;
+> +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
+> +
+> +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
+> +	val |= LDBG_SR;
+> +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
+> +
+> +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
+> +	val &= ~LDBG_SR;
+> +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
+> +
+> +	val = ls_pcie_pf_lut_readl(pcie, LS_PCIE_LDBG);
+> +	val &= ~LDBG_WE;
+> +	ls_pcie_pf_lut_writel(pcie, LS_PCIE_LDBG, val);
+> +
+> +	return 0;
+> +}
+> +
+>  static const struct dw_pcie_host_ops ls_pcie_host_ops = {
+>  	.host_init = ls_pcie_host_init,
+>  	.pme_turn_off = ls_pcie_send_turnoff_msg,
+> @@ -241,6 +289,19 @@ static const struct ls_pcie_drvdata ls1021a_drvdata = {
+>  	.exit_from_l2 = ls1021a_pcie_exit_from_l2,
+>  };
+>  
+> +static const struct dw_pcie_host_ops ls1043a_pcie_host_ops = {
+> +	.host_init = ls_pcie_host_init,
+> +	.pme_turn_off = ls1043a_pcie_send_turnoff_msg,
+> +};
+> +
+> +static const struct ls_pcie_drvdata ls1043a_drvdata = {
+> +	.pf_lut_off = 0x10000,
+> +	.pm_support = true,
+> +	.scfg_support = true,
+> +	.ops = &ls1043a_pcie_host_ops,
+> +	.exit_from_l2 = ls1043a_pcie_exit_from_l2,
+> +};
+> +
+>  static const struct ls_pcie_drvdata layerscape_drvdata = {
+>  	.pf_lut_off = 0xc0000,
+>  	.pm_support = true,
+> @@ -252,7 +313,7 @@ static const struct of_device_id ls_pcie_of_match[] = {
+>  	{ .compatible = "fsl,ls1012a-pcie", .data = &layerscape_drvdata },
+>  	{ .compatible = "fsl,ls1021a-pcie", .data = &ls1021a_drvdata },
+>  	{ .compatible = "fsl,ls1028a-pcie", .data = &layerscape_drvdata },
+> -	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1021a_drvdata },
+> +	{ .compatible = "fsl,ls1043a-pcie", .data = &ls1043a_drvdata },
+>  	{ .compatible = "fsl,ls1046a-pcie", .data = &layerscape_drvdata },
+>  	{ .compatible = "fsl,ls2080a-pcie", .data = &layerscape_drvdata },
+>  	{ .compatible = "fsl,ls2085a-pcie", .data = &layerscape_drvdata },
+> -- 
+> 2.34.1
+> 
