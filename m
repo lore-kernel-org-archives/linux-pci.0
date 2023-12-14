@@ -1,169 +1,150 @@
-X-Greylist: delayed 1266 seconds by postgrey-1.37 at lindbergh.monkeyblade.net; Wed, 13 Dec 2023 17:49:53 PST
-Received: from server.atrad.com.au (server.atrad.com.au [150.101.241.2])
-	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 988DAE0;
-	Wed, 13 Dec 2023 17:49:53 -0800 (PST)
-Received: from marvin.atrad.com.au (marvin.atrad.com.au [192.168.0.2])
-	by server.atrad.com.au (8.17.2/8.17.2) with ESMTPS id 3BE1SKEW030932
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
-	Thu, 14 Dec 2023 11:58:22 +1030
-Date: Thu, 14 Dec 2023 11:58:20 +1030
-From: Jonathan Woithe <jwoithe@just42.net>
-To: bhelgaas@google.com, imammedo@redhat.com
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [Regression] Commit 40613da52b13 ("PCI: acpiphp: Reassign resources
- on bridge if necessary")
-Message-ID: <ZXpaNCLiDM+Kv38H@marvin.atrad.com.au>
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CfGH+pXB"
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	by lindbergh.monkeyblade.net (Postfix) with ESMTPS id 597E9E3;
+	Wed, 13 Dec 2023 18:16:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1702520198; x=1734056198;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=fEz3jDQ/xk9byD6ipVMs16iK9GZAZqzLksjBqt8qPrA=;
+  b=CfGH+pXBR1lwOwkU3xiUMDseHblZR+IjZYsjbDPEENFE4HbOMu1Cj5GI
+   tLZvkZNWr8VFgDHfY/hU2boW28fdaVYC6gcBawVwdzDAYcmmL/tfT7HAq
+   eVZPVKPAJhgn9mR2a6/gMSJybYpeN0yEf9/8iTnZ9hVPyyLk7Pb6MTJYJ
+   1850JxkzHQ53kMlMiRnxO+LfXc4elmIxFxOwyoFWuwRZmevxGku7DuSFK
+   jGGKmE856G37TBoOEgf91mHtNKV5qREoijRInOV72Ud9uXb2nAOQ62bRo
+   OIn6a7VoLTXfEZwTMH0lXpwb9a393MicaMhQ0joHNXzEj4KtuuphHpHxW
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="16607959"
+X-IronPort-AV: E=Sophos;i="6.04,274,1695711600"; 
+   d="scan'208";a="16607959"
+Received: from orsmga003.jf.intel.com ([10.7.209.27])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 18:16:38 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10923"; a="723891359"
+X-IronPort-AV: E=Sophos;i="6.04,274,1695711600"; 
+   d="scan'208";a="723891359"
+Received: from zhaohaif-mobl.ccr.corp.intel.com (HELO [10.254.210.186]) ([10.254.210.186])
+  by orsmga003-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Dec 2023 18:16:34 -0800
+Message-ID: <7f756fc6-e8ea-4fea-ad8b-30066f41037e@linux.intel.com>
+Date: Thu, 14 Dec 2023 10:16:31 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-MIMEDefang-action: accept
-X-Scanned-By: MIMEDefang 2.86 on 192.168.0.1
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] iommu/vt-d: don's issue devTLB flush request when
+ device is disconnected
+To: Lukas Wunner <lukas@wunner.de>
+Cc: bhelgaas@google.com, baolu.lu@linux.intel.com, dwmw2@infradead.org,
+ will@kernel.org, robin.murphy@arm.com, linux-pci@vger.kernel.org,
+ iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
+ Haorong Ye <yehaorong@bytedance.com>
+References: <20231213034637.2603013-1-haifeng.zhao@linux.intel.com>
+ <20231213034637.2603013-3-haifeng.zhao@linux.intel.com>
+ <20231213104417.GA31964@wunner.de>
+From: Ethan Zhao <haifeng.zhao@linux.intel.com>
+In-Reply-To: <20231213104417.GA31964@wunner.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-Hi
 
-Following an update from 5.15.72 to 5.15.139 on one of my machines, the
-console froze part way through the boot process.  The machine still managed
-to boot: it could be reached via the network and a keyboard-initiated
-shutdown would do the right thing.  The problem was that the screen remained
-static the whole time: the X login did not appear.  Only a reboot would
-restore the display's functionality.
+On 12/13/2023 6:44 PM, Lukas Wunner wrote:
+> On Tue, Dec 12, 2023 at 10:46:37PM -0500, Ethan Zhao wrote:
+>> For those endpoint devices connect to system via hotplug capable ports,
+>> users could request a warm reset to the device by flapping device's link
+>> through setting the slot's link control register,
+> Well, users could just *unplug* the device, right?  Why is it relevant
+> that thay could fiddle with registers in config space?
+>
+Yes, if the device and it's slot are hotplug capable, users could just
 
-Comparing boot logs between these two kernels showed that 5.15.139 reported
-the following messages not seen with 5.15.72:
+'unplug' the device.
 
-    thunderbolt 0000:04:00.0: interrupt for TX ring 0 is already enabled
-    WARNING: CPU: 0 PID: 713 at drivers/thunderbolt/nhi.c:139 ring_interrupt_active+0x218/0x270 [thunderbolt]
+But this case reported, users try to do a warm reset with a tool
 
-    thunderbolt 0000:04:00.0: interrupt for RX ring 0 is already enabled
-    WARNING: CPU: 0 PID: 713 at drivers/thunderbolt/nhi.c:139 ring_interrupt_active+0x218/0x270 [thunderbolt]
+command like:
 
-    radeon 0000:4b:00.0: Fatal error during GPU init
-    radeon: probe of 0000:4b:00.0 failed with error -12
+   mlxfwreset -d <busid> -y reset
 
-The fatal error during GPU initialisation would be the reason behind the
-frozen screen.  I don't know if the thunderbolt warnings are significant.
+Actually, it will access configuration space  just as
 
-A git bisect resulted in the following report:
+  setpci -s 0000:17:01.0 0x78.L=0x21050010
 
-    d9ce077f8b1f731407e6b612b03bba464fd18d9b is the first bad commit
-    commit d9ce077f8b1f731407e6b612b03bba464fd18d9b
-    Author: Igor Mammedov <imammedo@redhat.com>
-    Date:   Mon Apr 24 21:15:57 2023 +0200
+Well, we couldn't say don't fiddle PCIe config space registers like
 
-        PCI: acpiphp: Reassign resources on bridge if necessary
-    
-        [ Upstream commit 40613da52b13fb21c5566f10b287e0ca8c12c4e9 ]
+that.
 
-It's taken me a while to work through the bisect process due to limited
-access to the machine concerned.  I see that in the last few days there have
-been other reports associated with this commit.  The symptoms on my machine
-are different to the other reporters.  In particular, I note that I'm
-running the Linux kernel on bare metal.
+>> as pciehpt_ist() DLLSC
+>> interrupt sequence response, pciehp will unload the device driver and
+>> then power it off. thus cause an IOMMU devTLB flush request for device to
+>> be sent and a long time completion/timeout waiting in interrupt context.
+> A completion timeout should be on the order of usecs or msecs, why does it
+> cause a hard lockup?  The dmesg excerpt you've provided shows a 12 *second*
+> delay between hot removal and watchdog reaction.
+>
+In my understanding, the devTLB flush request sent to ATS capable devcie
 
-For what it's worth, I also experienced the same problem when I tested 6.6.4
-last week (the most recent kernel at the time of testing).
+is non-posted request, if the ATS transaction is broken by endpoint link
 
-The output of lspci is given at the end of this post[1].  The CPU is an
-"Intel(R) Core(TM) i7-5930K CPU @ 3.50GHz" which is not overclocked.  Please
-let me know if you'd like more information about the affected machine.  I
-can also perform additional tests if required, although for various reasons
-these can only be done on Thursdays at present.
+-down, power-off event, the timeout will take up to 60 seconds+-30,
 
-The kernel configuration file can easily be supplied if that would be
-useful.
+see "Invalidate Completion Timeout " part of
 
-Regards
-  jonathan
+chapter 10.3.1 Invalidate Request
 
-[1] lspci output
+In PCIe spec 6.1
 
-00:00.0 Host bridge: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DMI2 (rev 02)
-00:01.0 PCI bridge: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 PCI Express Root Port 1 (rev 02)
-00:01.1 PCI bridge: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 PCI Express Root Port 1 (rev 02)
-00:03.0 PCI bridge: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 PCI Express Root Port 3 (rev 02)
-00:05.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Address Map, VTd_Misc, System Management (rev 02)
-00:05.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Hot Plug (rev 02)
-00:05.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 RAS, Control Status and Global Errors (rev 02)
-00:11.0 Unassigned class [ff00]: Intel Corporation C610/X99 series chipset SPSR (rev 05)
-00:14.0 USB controller: Intel Corporation C610/X99 series chipset USB xHCI Host Controller (rev 05)
-00:16.0 Communication controller: Intel Corporation C610/X99 series chipset MEI Controller #1 (rev 05)
-00:19.0 Ethernet controller: Intel Corporation Ethernet Connection (2) I218-V (rev 05)
-00:1a.0 USB controller: Intel Corporation C610/X99 series chipset USB Enhanced Host Controller #2 (rev 05)
-00:1b.0 Audio device: Intel Corporation C610/X99 series chipset HD Audio Controller (rev 05)
-00:1c.0 PCI bridge: Intel Corporation C610/X99 series chipset PCI Express Root Port #1 (rev d5)
-00:1c.3 PCI bridge: Intel Corporation C610/X99 series chipset PCI Express Root Port #4 (rev d5)
-00:1d.0 USB controller: Intel Corporation C610/X99 series chipset USB Enhanced Host Controller #1 (rev 05)
-00:1f.0 ISA bridge: Intel Corporation C610/X99 series chipset LPC Controller (rev 05)
-00:1f.2 SATA controller: Intel Corporation C610/X99 series chipset 6-Port SATA Controller [AHCI mode] (rev 05)
-00:1f.3 SMBus: Intel Corporation C610/X99 series chipset SMBus Controller (rev 05)
-02:00.0 PCI bridge: Intel Corporation DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C 2015]
-03:00.0 PCI bridge: Intel Corporation DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C 2015]
-03:01.0 PCI bridge: Intel Corporation DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C 2015]
-03:02.0 PCI bridge: Intel Corporation DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C 2015]
-03:04.0 PCI bridge: Intel Corporation DSL6540 Thunderbolt 3 Bridge [Alpine Ridge 4C 2015]
-04:00.0 System peripheral: Intel Corporation DSL6540 Thunderbolt 3 NHI [Alpine Ridge 4C 2015]
-49:00.0 USB controller: Intel Corporation DSL6540 USB 3.1 Controller [Alpine Ridge]
-4b:00.0 VGA compatible controller: Advanced Micro Devices, Inc. [AMD/ATI] Cedar [Radeon HD 5000/6000/7350/8350 Series]
-4b:00.1 Audio device: Advanced Micro Devices, Inc. [AMD/ATI] Cedar HDMI Audio [Radeon HD 5400/6300/7300 Series]
-4d:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller (rev 06)
-ff:0b.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 R3 QPI Link 0 & 1 Monitoring (rev 02)
-ff:0b.1 Performance counters: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 R3 QPI Link 0 & 1 Monitoring (rev 02)
-ff:0b.2 Performance counters: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 R3 QPI Link 0 & 1 Monitoring (rev 02)
-ff:0c.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Unicast Registers (rev 02)
-ff:0c.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Unicast Registers (rev 02)
-ff:0c.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Unicast Registers (rev 02)
-ff:0c.3 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Unicast Registers (rev 02)
-ff:0c.4 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Unicast Registers (rev 02)
-ff:0c.5 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Unicast Registers (rev 02)
-ff:0f.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Buffered Ring Agent (rev 02)
-ff:0f.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Buffered Ring Agent (rev 02)
-ff:0f.4 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 System Address Decoder & Broadcast Registers (rev 02)
-ff:0f.5 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 System Address Decoder & Broadcast Registers (rev 02)
-ff:0f.6 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 System Address Decoder & Broadcast Registers (rev 02)
-ff:10.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 PCIe Ring Interface (rev 02)
-ff:10.1 Performance counters: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 PCIe Ring Interface (rev 02)
-ff:10.5 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Scratchpad & Semaphore Registers (rev 02)
-ff:10.6 Performance counters: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Scratchpad & Semaphore Registers (rev 02)
-ff:10.7 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Scratchpad & Semaphore Registers (rev 02)
-ff:12.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Home Agent 0 (rev 02)
-ff:12.1 Performance counters: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Home Agent 0 (rev 02)
-ff:13.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Target Address, Thermal & RAS Registers (rev 02)
-ff:13.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Target Address, Thermal & RAS Registers (rev 02)
-ff:13.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel Target Address Decoder (rev 02)
-ff:13.3 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel Target Address Decoder (rev 02)
-ff:13.4 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel Target Address Decoder (rev 02)
-ff:13.5 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel Target Address Decoder (rev 02)
-ff:13.6 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO Channel 0/1 Broadcast (rev 02)
-ff:13.7 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO Global Broadcast (rev 02)
-ff:14.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 0 Thermal Control (rev 02)
-ff:14.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 1 Thermal Control (rev 02)
-ff:14.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 0 ERROR Registers (rev 02)
-ff:14.3 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 1 ERROR Registers (rev 02)
-ff:14.4 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 0 & 1 (rev 02)
-ff:14.5 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 0 & 1 (rev 02)
-ff:14.6 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 0 & 1 (rev 02)
-ff:14.7 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 0 & 1 (rev 02)
-ff:15.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 2 Thermal Control (rev 02)
-ff:15.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 3 Thermal Control (rev 02)
-ff:15.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 2 ERROR Registers (rev 02)
-ff:15.3 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 0 Channel 3 ERROR Registers (rev 02)
-ff:16.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 1 Target Address, Thermal & RAS Registers (rev 02)
-ff:16.6 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO Channel 2/3 Broadcast (rev 02)
-ff:16.7 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO Global Broadcast (rev 02)
-ff:17.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Integrated Memory Controller 1 Channel 0 Thermal Control (rev 02)
-ff:17.4 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 2 & 3 (rev 02)
-ff:17.5 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 2 & 3 (rev 02)
-ff:17.6 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 2 & 3 (rev 02)
-ff:17.7 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 DDRIO (VMSE) 2 & 3 (rev 02)
-ff:1e.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Power Control Unit (rev 02)
-ff:1e.1 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Power Control Unit (rev 02)
-ff:1e.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Power Control Unit (rev 02)
-ff:1e.3 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Power Control Unit (rev 02)
-ff:1e.4 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 Power Control Unit (rev 02)
-ff:1f.0 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 VCU (rev 02)
-ff:1f.2 System peripheral: Intel Corporation Xeon E7 v3/Xeon E5 v3/Core i7 VCU (rev 02)
+"
+
+IMPLEMENTATION NOTE:
+
+INVALIDATE COMPLETION TIMEOUT
+
+Devices should respond to Invalidate Requests within 1 minute (+50% 
+-0%).Having a bounded time
+
+permits an ATPT to implement Invalidate Completion Timeouts and reuse 
+the associated ITag values.
+
+ATPT designs are implementation specific. As such, Invalidate Completion 
+Timeouts and their
+
+associated error handling are outside the scope of this specification
+
+"
+
+>> Fix it by checking the device's error_state in
+>> devtlb_invalidation_with_pasid() to avoid sending meaningless devTLB flush
+>> request to link down device that is set to pci_channel_io_perm_failure and
+>> then powered off in
+> This doesn't seem to be a proper fix.  It will work most of the time
+> but not always.  A user might bring down the slot via sysfs, then yank
+> the card from the slot just when the iommu flush occurs such that the
+> pci_dev_is_disconnected(pdev) check returns false but the card is
+> physically gone immediately afterwards.  In other words, you've shrunk
+> the time window during which the issue may occur, but haven't eliminated
+> it completely.
+
+If you mean disable the slot via sysfs, that's SAFE_REMOVAL, right ?
+
+that would issse devTLB invalidation first, power off device later, it
+
+wouldn't trigger the hard lockup, though the
+
+pci_dev_is_disconnected() return false. this fix works such case.
+
+
+Thanks,
+
+Ethan
+
+
+
+>
+> Thanks,
+>
+> Lukas
