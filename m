@@ -1,204 +1,136 @@
-Received: from NAM12-DM6-obe.outbound.protection.outlook.com (mail-dm6nam12on2058.outbound.protection.outlook.com [40.107.243.58])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from server.atrad.com.au (server.atrad.com.au [150.101.241.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9E118EA1;
-	Fri, 15 Dec 2023 22:18:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="IgggiDUE"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=lFb0o2RWX5sq/uQmq9tI0K9ZfUU/hz5rhwowED3BO1x3iv52Vxz37YwYXVGvB+Gcfz7ThwFXI9YHBAaQWFS6gxW6kY1ydvjK34flgMx+RIiPtLtDV2+aNmIt737EDMAtU/UyENsMB9K8wCcKpF+g2wFq+4zNwnsNRdyIYqC1D3j5gEZNdEIY8LW0ILmIGt4Ygu26FjNPfYqVlorQTSoAAAesd3v6h8ip3/0HLGN4JZ5KXgA4/Z0pN92CnAGdJw3NK09Suv9UuQuhs3zT9BHNvyya0zWfq59KX2bqtjuf3jjjItUn+wuumBdXNORR+2XpoQKRHtnuYHwYs0KUNcuztg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=F8yQiURzbi+JuTiylQT8sVzM/UD+jOTKzIg7VMaTVto=;
- b=U6WXLtrqP1snoH9vcjC89kO9usB1JQqZcamoltf/m7fixDTL3Ix/QJzSEt1UCZNa34NfR1BaRZO/Zj8xU4eqvq7ua8egwuItXIokFB9CtIf7DhhGayYUl7+r2Vi/fkWtIcTVWEDWGmu4h9kSx/hZcMgYBQ5+h2VghUMuv+AHcMajmgD7VEHK/lAry5wJZLSsMCUSu3aqgRepXWZ68VV5rA3bzHinE6IiF+jSzBT5LsQB2TcCRtWymyfofo7UmP6B2Stt5uusnioCwc8z5xEn0qKJjoIYxi2KJmLRg9xYhFLBaT8EWAzQp/3WwaqIuH0mj9Ffj9urQmYkp75q/3SLpg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=F8yQiURzbi+JuTiylQT8sVzM/UD+jOTKzIg7VMaTVto=;
- b=IgggiDUEVdvRBzbJv6jY1ukH56/8FjrchIpNiLxD2goHEXnSEvB5mXswTtvrcCoCCdrd2LzZNyx9ullQcOvdz5yJGm9vUfIPBYs7cT5Wih6Ba9Llfcq6Ug5QP9Zy/s+XKjz3wANOY+z1evD+qU+8nJVv4XQX3p4ZNaPMlNtdpaQ=
-Received: from MW4PR03CA0279.namprd03.prod.outlook.com (2603:10b6:303:b5::14)
- by MW4PR12MB7215.namprd12.prod.outlook.com (2603:10b6:303:228::8) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7091.33; Fri, 15 Dec
- 2023 22:18:06 +0000
-Received: from CO1PEPF000042A9.namprd03.prod.outlook.com
- (2603:10b6:303:b5:cafe::43) by MW4PR03CA0279.outlook.office365.com
- (2603:10b6:303:b5::14) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7091.32 via Frontend
- Transport; Fri, 15 Dec 2023 22:18:06 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- CO1PEPF000042A9.mail.protection.outlook.com (10.167.243.38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.7113.14 via Frontend Transport; Fri, 15 Dec 2023 22:18:05 +0000
-Received: from AUS-P9-MLIMONCI.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.34; Fri, 15 Dec
- 2023 16:17:52 -0600
-From: Mario Limonciello <mario.limonciello@amd.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, "Rafael J . Wysocki"
-	<rjw@rjwysocki.net>
-CC: <linux-pci@vger.kernel.org>, <linux-acpi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v2] x86/pci: Stop requiring ECAM to be declared in E820, ACPI or EFI
-Date: Fri, 15 Dec 2023 16:03:43 -0600
-Message-ID: <20231215220343.22523-1-mario.limonciello@amd.com>
-X-Mailer: git-send-email 2.34.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1741118ECB;
+	Fri, 15 Dec 2023 23:35:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=just42.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=just42.net
+Received: from marvin.atrad.com.au (marvin.atrad.com.au [192.168.0.2])
+	by server.atrad.com.au (8.17.2/8.17.2) with ESMTPS id 3BFNZKjE001393
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+	Sat, 16 Dec 2023 10:05:22 +1030
+Date: Sat, 16 Dec 2023 10:05:20 +1030
+From: Jonathan Woithe <jwoithe@just42.net>
+To: Igor Mammedov <imammedo@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [Regression] Commit 40613da52b13 ("PCI: acpiphp: Reassign
+ resources on bridge if necessary")
+Message-ID: <ZXziuPCKNBLhbssO@marvin.atrad.com.au>
+References: <ZXpaNCLiDM+Kv38H@marvin.atrad.com.au>
+ <20231214143205.4ba0e11a@imammedo.users.ipa.redhat.com>
+ <ZXt+BxvmG6ru63qJ@marvin.atrad.com.au>
+ <ZXw4Ly/csFgl76Lj@marvin.atrad.com.au>
+ <20231215143638.032028eb@imammedo.users.ipa.redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000042A9:EE_|MW4PR12MB7215:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8ca13cbe-4fcf-4a24-48ad-08dbfdbbb631
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	2ZW2w8jTSle3yfckqkqBiSR/8N6dexdLn0niCSZBH8QcmH6oywZdlQKfc8isb+kUkrGm0BPu9MQWgOpF94CyU+UYMrptg+7MX3bV76bX+/vryFYX9w3c/GYpoKTnv002GFUoobfrWZUS9aPQwjpia1gcGMhObocJMjY5jfB8WnqCxmDoB3sgsq2i44EwoE+EMQzWzyl51kEbo3cBPTPGTg8qGPSD2f5IXUbRWPZ5g3VVYQYRY3rwcrkLQOcoit5Yzj8EirykexMmGxd31nTtk55gsTpEg2HnGk/89eXJrCZKcZrEJ9X7QTR0aSkRyoi+1302NLtjA09Gcggis21ixGEX0fUleZMXE5WSXZDLb17jh4NBN+twfscQxhgFPnNdYnFOHdamF0/8Yi+TMTAoOGQ6g9nUGKgCNbA+tLEsbnUDAz0Vlz+dD1dRNgl8i6n/q+J2nCtHRZatDJliXl8C+tTKnkaMtXLgPXfLdJfVOC7GskhsikDFO1kyQRFBrpLGt+I6KfThpF11ZFd4Zcp05abw6ujlnUCo3FqZAKoh6ru4QJtfDsofR/f44MRy3QH7aThJT7S/1Of2QIHOAnPOvgOVNYgK+xkyxwwHV/ceToOs85wWN9vJhNlUXm6m4BN9j3vgY4tw7Phvlupls250H/nXKuqYoZGYO34gAsYLbzpLC9z4kSzqnp1a/AjLyzcaIfUHgnsxaTMxhp1GS3WqlZGLZYVUkphoMiEjFyB6MO+Aq2HXGT+OBfQovMN5NFSceYOv/irgMfWDJU0dV7NvOA==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(136003)(39860400002)(396003)(346002)(376002)(230922051799003)(186009)(451199024)(82310400011)(1800799012)(64100799003)(40470700004)(36840700001)(46966006)(83380400001)(966005)(478600001)(82740400003)(6666004)(7696005)(1076003)(40480700001)(2616005)(426003)(336012)(16526019)(26005)(110136005)(54906003)(316002)(70206006)(70586007)(356005)(81166007)(36860700001)(47076005)(86362001)(8676002)(4326008)(44832011)(40460700003)(8936002)(5660300002)(2906002)(36756003)(41300700001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 15 Dec 2023 22:18:05.8889
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8ca13cbe-4fcf-4a24-48ad-08dbfdbbb631
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	CO1PEPF000042A9.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7215
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20231215143638.032028eb@imammedo.users.ipa.redhat.com>
+X-MIMEDefang-action: accept
+X-Scanned-By: MIMEDefang 2.86 on 192.168.0.1
 
-commit 7752d5cfe3d1 ("x86: validate against acpi motherboard resources")
-introduced checks for ensuring that MCFG table also has memory region
-reservations to ensure no conflicts were introduced from a buggy BIOS.
+On Fri, Dec 15, 2023 at 02:36:38PM +0100, Igor Mammedov wrote:
+> On Fri, 15 Dec 2023 21:57:43 +1030
+> Jonathan Woithe <jwoithe@just42.net> wrote:
+> 
+> > On Fri, Dec 15, 2023 at 08:43:29AM +1030, Jonathan Woithe wrote:
+> > > On Thu, Dec 14, 2023 at 02:32:05PM +0100, Igor Mammedov wrote:  
+> > > > On Thu, 14 Dec 2023 11:58:20 +1030 Jonathan Woithe wrote:  
+> > > > > 
+> > > > > Following an update from 5.15.72 to 5.15.139 on one of my machines, the  
+> > > > 
+> > > > looks like you are running downstream kernel, can you file bug report
+> > > > with distro that you use (with a link posed here as well).  
+> > > 
+> > > I am running Slackware64 15.0.  The kernels supplied by that distribution
+> > > are unmodified kernel.org kernels.
+> > >   
+> > > > For now offending patches are being reverted, so downstream bug will help
+> > > > with tracking it and reverting it there.   
+> > > 
+> > > The patches will be reverted in Slackware as a matter of course when a
+> > > kernel.org "-stable" kernel with the fix is adopted.  Slackware does not
+> > > apply any patches to kernel.org kernels.  Nevertheless, I will raise a post
+> > > in the forum, hopefully later today.  
+> > 
+> > This has now been done:
+> > 
+> >   https://www.linuxquestions.org/questions/slackware-14/heads-up-pci-regression-introduced-in-or-around-5-15-129-commit-40613da52b13-4175731828/#post6470559
+> > 
+> > > > > The output of lspci is given at the end of this post[1].  The CPU is an
+> > > > > "Intel(R) Core(TM) i7-5930K CPU @ 3.50GHz" which is not overclocked.  Please
+> > > > > let me know if you'd like more information about the affected machine.  I
+> > > > > can also perform additional tests if required, although for various reasons
+> > > > > these can only be done on Thursdays at present.
+> > > > > 
+> > > > > The kernel configuration file can easily be supplied if that would be
+> > > > > useful.  
+> > > > 
+> > > > full dmesg log and used config might help down the road (preferably with current
+> > > > upstream kernel), as I will be looking into fixing related issues.
+> > > > 
+> > > > Perhaps a better way for taking this issue and collecting logs, will be
+> > > > opening a separate bug at https://bugzilla.kernel.org (pls CC me as well)  
+> > > 
+> > > Sure, will do.  I'll be able to get the dmesg log from my earlier tests and
+> > > config easily enough.  Testing with another kernel will have to wait until
+> > > next Thursday as that is when I'll next have physical access to the machine.  
+> > 
+> > A bug has been opened at bugzilla.kernel.org as requested.  The logs, kernel
+> > configuration and the "lspci -tv" output (requested in a subsequent email)
+> > have been added.  The logs and kernel configuration are from the kernel.org
+> > 5.15.139 kernel.  You have been added to the bug's CC.  The bug number is
+> > 218268:
+> > 
+> >   https://bugzilla.kernel.org/show_bug.cgi?id=218268
+> > 
+> > As mentioned, testing another kernel can only happen next Thursday.  If
+> > you would like other tests done let me know and I'll do them at the same
+> > time.  I have remote access to the machine, so it's possible to retrieve
+> > information from it at any time.
+> 
+> lets wait till you can get logs with dyndbg='...' (I've asked for earlier)
+> and one more test with "pci=realloc" on kernel CLI to see if that helps.
 
-This has proceeded over time to add other types of reservation checks
-for ACPI PNP resources and EFI MMIO memory type.  The PCI firmware spec
-does say that these checks are only required when the operating system
-doesn't comprehend the firmware region:
+Okay.
 
-```
-If the operating system does not natively comprehend reserving the MMCFG
-region, the MMCFG region must be reserved by firmware. The address range
-reported in the MCFG table or by _CBA method (see Section 4.1.3) must be
-reserved by declaring a motherboard resource. For most systems, the
-motherboard resource would appear at the root of the ACPI namespace
-(under \_SB) in a node with a _HID of EISAID (PNP0C02), and the resources
-in this case should not be claimed in the root PCI bus’s _CRS. The
-resources can optionally be returned in Int15 E820h or EFIGetMemoryMap
-as reserved memory but must always be reported through ACPI as a
-motherboard resource.
-```
+> > Let me know if there's anything else I can do to assist.
+> 
+> It looks like  pci_assign_unassigned_bridge_resources() messed up BIOS configured
+> resources. And then didn't manage to reconfigure bridges correctly, which led to
+> unassigned BARs => thunderbolt/VGA issues.
+> 
+> Something in ACPI tables must be triggering acpiphp hotplug path during boot.
+> Can you dump DSDT + SSDT tables and attach them to BZ.
+> PS:
+> to dump tables you can use command from acpica-tools (not sure how it's called in Slackware) 
+>  acpidump -b
+> which will dump all tables in binary format (so attach those or 'iasl -d' de-compiled ones)
 
-Running this check causes problems with accessing extended PCI
-configuration space on OEM laptops that don't specify the region in PNP
-resources or in the EFI memory map. That later manifests as problems with
-dGPU and accessing resizable BAR. Similar problems don't exist in Windows
-11 with exact same laptop/firmware stack.
+Slackware doesn't provide acpidump AFAIK but it was easy enough to compile
+from tools/power/acpi/tools/acpidump within the 5.15.72 tree I'd used
+previously to build 5.15.72 (the kernel that's currently running).  However,
+running
 
-Due to the stability of the Windows ecosystem that x86 machines participate
-it is unlikely that using the region specified in the MCFG table as
-a reservation will cause a problem. The possible worst circumstance could
-be that a buggy BIOS causes a larger hole in the memory map that is
-unusable for devices than intended.
+  acpidump -b
 
-Change the default behavior to keep the region specified in MCFG even if
-it's not specified in another source. This is expected to improve
-machines that otherwise couldn't access PCI extended configuration space.
+resulted in a segmentation fault.  The root cause is line 339 in vsnprintf()
+in utprint.c.  With a workaround in place a functional acpidump was
+obtained.  I can provide further information from my analysis if it's
+appropriate and you're interested.
 
-In case this change causes problems, add a kernel command line parameter
-that can restore the previous behavior.
+For completeness I then tried the acpica source from Intel (version
+20230628).  The acpidump from this worked fine, and the files produced were
+identical to those from my fixed kernel-tree acpidump.  A tarball of these
+is now attached to the Bugzilla report.  Curiously enough, the corresponding
+vsnprintf() line in the Intel acpica source distribution matches that in the
+5.15.72 source.  Perhaps the compiler flags in the Intel package happen to
+prevent the segfault condition occurring at runtime for me.
 
-Link: https://members.pcisig.com/wg/PCI-SIG/document/15350
-      PCI Firmware Specification 3.3
-      Section 4.1.2 MCFG Table Description Note 2
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
-v1->v2:
- * Rebase on pci/next
- * Add an escape hatch
- * Reword commit message
----
- .../admin-guide/kernel-parameters.txt         |  6 ++++++
- arch/x86/pci/mmconfig-shared.c                | 19 +++++++++++++++----
- 2 files changed, 21 insertions(+), 4 deletions(-)
-
-diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
-index 65731b060e3f..eacd0c0521c2 100644
---- a/Documentation/admin-guide/kernel-parameters.txt
-+++ b/Documentation/admin-guide/kernel-parameters.txt
-@@ -1473,6 +1473,12 @@
- 			(in particular on some ATI chipsets).
- 			The kernel tries to set a reasonable default.
- 
-+	enforce_ecam_resv [X86]
-+			Enforce requiring an ECAM reservation specified in
-+			BIOS for PCI devices.
-+			This parameter is only valid if CONFIG_PCI_MMCONFIG
-+			is enabled.
-+
- 	enforcing=	[SELINUX] Set initial enforcing status.
- 			Format: {"0" | "1"}
- 			See security/selinux/Kconfig help text.
-diff --git a/arch/x86/pci/mmconfig-shared.c b/arch/x86/pci/mmconfig-shared.c
-index 0cc9520666ef..aee117c6bbf9 100644
---- a/arch/x86/pci/mmconfig-shared.c
-+++ b/arch/x86/pci/mmconfig-shared.c
-@@ -34,6 +34,15 @@ static DEFINE_MUTEX(pci_mmcfg_lock);
- 
- LIST_HEAD(pci_mmcfg_list);
- 
-+static bool enforce_ecam_resv __read_mostly;
-+static int __init parse_ecam_options(char *str)
-+{
-+	enforce_ecam_resv = true;
-+
-+	return 1;
-+}
-+__setup("enforce_ecam_resv", parse_ecam_options);
-+
- static void __init pci_mmconfig_remove(struct pci_mmcfg_region *cfg)
- {
- 	if (cfg->res.parent)
-@@ -569,10 +578,12 @@ static void __init pci_mmcfg_reject_broken(int early)
- 
- 	list_for_each_entry(cfg, &pci_mmcfg_list, list) {
- 		if (!pci_mmcfg_reserved(NULL, cfg, early)) {
--			pr_info("not using ECAM (%pR not reserved)\n",
--				&cfg->res);
--			free_all_mmcfg();
--			return;
-+			pr_info("ECAM %pR not reserved, %s\n", &cfg->res,
-+				enforce_ecam_resv ? "ignoring" : "using anyway");
-+			if (enforce_ecam_resv) {
-+				free_all_mmcfg();
-+				return;
-+			}
- 		}
- 	}
- }
-
-base-commit: 67e04d921cb6902e8c2abdbf748279d43f25213e
--- 
-2.34.1
-
+Regards
+  jonathan
