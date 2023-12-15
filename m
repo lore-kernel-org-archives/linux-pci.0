@@ -1,168 +1,156 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.w2.samsung.com (mailout2.w2.samsung.com [211.189.100.12])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A87244B15F;
-	Fri, 15 Dec 2023 21:53:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6d3165ac96bso3830b3a.0;
-        Fri, 15 Dec 2023 13:53:43 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702677223; x=1703282023;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7hA3Hgf6nqLzdqHtPQW16dypUAXOdqP0k3RFbxDCTWU=;
-        b=NRCFh5gzgm4N+1Y2mnY423XgYDbnmrCILTW4D29S/PKrp6GZrhrnfFA+gtcw/fPKMp
-         4SsPWpdDL67q8WtRmnMBWP7p7cBtRIfxmLRV/tA+pLkwf8G1agyzW16QW8sVSPMQChNl
-         lM3YtHfWBP1ghJEcRUUZ7xiENZ9y/M2vWz8alvbS84lhelz+QZUCNcbigOc4E3Jr62er
-         spDK511xDCpr4RTYntyI1dfETagrN0G6wSocZ2dgbRqnF6Bn0WWzlI9d6g+GAyXtiecr
-         Qe0USmvoukc2yzp3Jv2y0u8pLmHGr4ni+ksx2Htqea9m9eouobkXLn+0MtcDeP6f9Buc
-         z2+g==
-X-Gm-Message-State: AOJu0YwQ6bReWVOM8CKMJeCrWZ8icCzGTsQogncP1X8t7XfCH/D1hV2S
-	kehiG3X0txklO1iUmjqJX0g=
-X-Google-Smtp-Source: AGHT+IF2/YGHNdbW1xBXfJiqLH3eObzr2iLIti5qGi+SF7q+N+5lL4mkwdo3xswfGbiLNa2+CHGkDg==
-X-Received: by 2002:a05:6a00:c91:b0:6ce:5fbf:3cd8 with SMTP id a17-20020a056a000c9100b006ce5fbf3cd8mr8062574pfv.21.1702677222905;
-        Fri, 15 Dec 2023 13:53:42 -0800 (PST)
-Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with ESMTPSA id kr5-20020a056a004b4500b006ce83da3076sm14267311pfb.170.2023.12.15.13.53.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Dec 2023 13:53:41 -0800 (PST)
-Date: Sat, 16 Dec 2023 06:53:39 +0900
-From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: Serge Semin <fancer.lancer@gmail.com>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	lpieralisi@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
-	mani@kernel.org, linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: Re: [PATCH v3 4/6] PCI: dwc: Add dw_pcie_ep_{read,write}_dbi[2]
- helpers
-Message-ID: <20231215215339.GA766237@rocinante>
-References: <20231215022955.3574063-1-yoshihiro.shimoda.uh@renesas.com>
- <20231215022955.3574063-5-yoshihiro.shimoda.uh@renesas.com>
- <lgwp4u2pzfkax6qdozen74cl6bddyaloz57wiso62swafslz2n@7di6ura7omzo>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B75413B12C;
+	Fri, 15 Dec 2023 22:11:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UxXsFG7X"
+Received: from uscas1p2.samsung.com (unknown [182.198.245.207])
+	by mailout2.w2.samsung.com (KnoxPortal) with ESMTP id 20231215221119usoutp023fb644809b43e26f021783371c1e4803~hIN_xEqLE1802018020usoutp02W;
+	Fri, 15 Dec 2023 22:11:19 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w2.samsung.com 20231215221119usoutp023fb644809b43e26f021783371c1e4803~hIN_xEqLE1802018020usoutp02W
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1702678279;
+	bh=KvZvvlGPICQFkYjf7KEZNtzlEaLHKZVdgQyZ9zCYw/s=;
+	h=From:To:CC:Subject:Date:In-Reply-To:References:From;
+	b=UxXsFG7XrYslZwcgwEMc42vJEg06zJNqeahqEe6wcRL8LbBspCpZekgpzjFYDzn/h
+	 v/X59DYaWBeHzllxFXT+DV9WMBEwKhaZVx8pscNZ8cYTOo+8oByuxTN4KqWasZXA+g
+	 Dng+64vnYC8qbVKC/X+f/ExM4KSULVNGyRG5RrWg=
+Received: from ussmges1new.samsung.com (u109.gpu85.samsung.co.kr
+	[203.254.195.109]) by uscas1p2.samsung.com (KnoxPortal) with ESMTP id
+	20231215221119uscas1p22efb0ad26c168906661c06a07cc275fe~hIN_qWGPZ0138301383uscas1p2N;
+	Fri, 15 Dec 2023 22:11:19 +0000 (GMT)
+Received: from uscas1p2.samsung.com ( [182.198.245.207]) by
+	ussmges1new.samsung.com (USCPEMTA) with SMTP id 9B.F4.09678.70FCC756; Fri,
+	15 Dec 2023 17:11:19 -0500 (EST)
+Received: from ussmgxs2new.samsung.com (u91.gpu85.samsung.co.kr
+	[203.254.195.91]) by uscas1p1.samsung.com (KnoxPortal) with ESMTP id
+	20231215221118uscas1p1b407f67deb53a75ae03d67247653b30b~hIN_Z2okP2295022950uscas1p1Y;
+	Fri, 15 Dec 2023 22:11:18 +0000 (GMT)
+X-AuditID: cbfec36d-85fff700000025ce-54-657ccf07df13
+Received: from SSI-EX1.ssi.samsung.com ( [105.128.3.67]) by
+	ussmgxs2new.samsung.com (USCPEXMTA) with SMTP id BD.4D.09813.60FCC756; Fri,
+	15 Dec 2023 17:11:18 -0500 (EST)
+Received: from SSI-EX2.ssi.samsung.com (105.128.2.227) by
+	SSI-EX1.ssi.samsung.com (105.128.2.226) with Microsoft SMTP Server
+	(version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
+	15.1.2375.24; Fri, 15 Dec 2023 14:11:18 -0800
+Received: from SSI-EX2.ssi.samsung.com ([105.128.2.227]) by
+	SSI-EX2.ssi.samsung.com ([105.128.2.227]) with mapi id 15.01.2375.024; Fri,
+	15 Dec 2023 14:11:18 -0800
+From: Jim Harris <jim.harris@samsung.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, Leon Romanovsky <leonro@nvidia.com>, "Jason
+ Gunthorpe" <jgg@nvidia.com>, Alex Williamson <alex.williamson@redhat.com>
+Subject: Re: [PATCH] pci/iov: fix kobject_uevent() ordering in
+ sriov_enable()
+Thread-Topic: [PATCH] pci/iov: fix kobject_uevent() ordering in
+	sriov_enable()
+Thread-Index: AQHaLfZbfzSE7OYN20WpA0TR5aL0dLCoHtUAgANSmoA=
+Date: Fri, 15 Dec 2023 22:11:17 +0000
+Message-ID: <ZXzPBTZ2rK/CPy5o@ubuntu>
+In-Reply-To: <20231213192652.GA1054534@bhelgaas>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach: 
+X-MS-TNEF-Correlator: 
+Content-Type: text/plain; charset="us-ascii"
+Content-ID: <A9BE0741C2887B4194448243347D1463@ssi.samsung.com>
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <lgwp4u2pzfkax6qdozen74cl6bddyaloz57wiso62swafslz2n@7di6ura7omzo>
+X-CFilter-Loop: Reflected
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrOKsWRmVeSWpSXmKPExsWy7djX87rs52tSDT4fZLb49r+HzWJJU4bF
+	qzNr2Syu/NvDaLFpwxMWi8u75rBZnJ13nM2B3WPBplKPTas62Tx6m9+xebzfd5XN4/MmuQDW
+	KC6blNSczLLUIn27BK6MFSvPsRec5a3oazzE2sD4kquLkZNDQsBEouPEftYuRi4OIYGVjBK7
+	FpxihnBamSTa1t5ihKm6uOYuI0RiDaPEtb2X2CCcT4wSP1evYIFwljFKnP5+kBmkhU1AU+LX
+	lTVMXYwcHCICahJd7aEgNcwCc5gk5j87wA5SIyzgLzFxxikWiJoAiecv60HCIgJWEmeedLCC
+	2CwCqhLLbk8Bu4IXyN4/eSELiM0pYCAx4/FtJhCbUUBM4vupNWA2s4C4xK0n85kgrhaUWDR7
+	DzOELSbxb9dDNghbUeL+95fsEPU6Egt2f2IDOYFZwE7i3BwBiLC2xLKFr5kh1gpKnJz5hAWi
+	VVLi4IobYO9KCNzhkHi7ZBs7RMJFYuPHA1BF0hJ/7y6DuiFbYuX6DnAwSAgUSDQcCYIIW0ss
+	/LOeaQKjyiwkV89CctEshItmIbloFpKLFjCyrmIULy0uzk1PLTbMSy3XK07MLS7NS9dLzs/d
+	xAhMS6f/Hc7dwbjj1ke9Q4xMHIyHGCU4mJVEeBesrU4V4k1JrKxKLcqPLyrNSS0+xCjNwaIk
+	zmtoezJZSCA9sSQ1OzW1ILUIJsvEwSnVwOQw640y0967K8w2x29SO8rHce8eF3NoyTSjX0nP
+	xM5V8lyeWXG7Z/te5WTVLYmvpzNZfXgmaf97r9q8dU/EBNiV9MsmO38U7rw4TZ3r+6wdmiKB
+	3eo6K91VliQ9e7dJrcK9J3BLTFl0wSlR9nNKLgWf7LfVFXy5GurQtm3KwtY7CSVX7Bp5Z56f
+	cu3T1gIh/+PVhu+LMsu3LVUVn+2VXaRluiJlh4eY9KPZX5psd/2JCWN6ctxxS8s23iKOefO3
+	BVzqW8avdshVbg3HPcmzkwoaHYNLvLi19AUXqBjaijBfuXXiy76Fu8U11nzzjv26b8r0uPXe
+	ftf1RWbO/7aHd++H6lXPvil7cffmdX3V81NiKc5INNRiLipOBAA4IEp/ugMAAA==
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFjrGIsWRmVeSWpSXmKPExsWS2cDsrMt2vibV4PZSPYtv/3vYLJY0ZVi8
+	OrOWzeLKvz2MFps2PGGxuLxrDpvF2XnH2RzYPRZsKvXYtKqTzaO3+R2bx/t9V9k8Pm+SC2CN
+	4rJJSc3JLEst0rdL4MpYsfIce8FZ3oq+xkOsDYwvuboYOTkkBEwkLq65y9jFyMUhJLCKUeL+
+	yQNsIAkhgU+MEh/uFkEkljFKHPj0jxkkwSagKfHryhqmLkYODhEBNYmu9lCQGmaBOUwS858d
+	YAepERbwlfi2/QzYIBEBP4nTd65A2VYSZ550sILYLAKqEstuT2EEsXmB7P2TF7JALGtklGi8
+	+AJsEKeAgcSMx7eZQGxGATGJ76fWgNnMAuISt57MZ4J4QUBiyZ7zzBC2qMTLx/9YIWxFifvf
+	X7JD1OtILNj9iQ3kaGYBO4lzcwQgwtoSyxa+Zoa4QVDi5MwnLBCtkhIHV9xgmcAoMQvJtllI
+	Js1CmDQLyaRZSCYtYGRdxSheWlycm15RbJSXWq5XnJhbXJqXrpecn7uJERjVp/8djt7BePvW
+	R71DjEwcjIcYJTiYlUR4F6ytThXiTUmsrEotyo8vKs1JLT7EKM3BoiTOe/eBRqqQQHpiSWp2
+	ampBahFMlomDU6qBqXmK80zLul/VD7mz7e+aeFZHfhDfblIkKHRm4/lV33gbjrSfcu2cY/nm
+	3tRyxYU/Ozdqd1VoV7m0/bkWs/xqyIUkrcoi8cbYKXfzMr/tMFueEn13ssd97cPyTjwHk4vL
+	tm84PMlC78+qsItTuha9+l76M2j1N8tVEaY577zY/U/xSTJv7c3g8TWZkrPWYcKRbR3T7oq8
+	CzuivEcs6KvsI4uLK3u2KuVdk2Zap73LiiHXNa9cdcfk1b+PWG3yr3mz5+6cN1yy9e6OW02u
+	ZSoJStVefBu2fIlU5qNVsTc4kidt/VDX+KzTy+y/VEA0J7/AB02blaoB9p3B7YH/vl5Zlv2D
+	3+bB1GS27euPZQs/UmIpzkg01GIuKk4EAPZ0q/VZAwAA
+X-CMS-MailID: 20231215221118uscas1p1b407f67deb53a75ae03d67247653b30b
+CMS-TYPE: 301P
+X-CMS-RootMailID: 20231215221118uscas1p1b407f67deb53a75ae03d67247653b30b
+References: <170249390826.436889.13896090394795622449.stgit@bgt-140510-bm01.eng.stellus.in>
+	<20231213192652.GA1054534@bhelgaas>
+	<CGME20231215221118uscas1p1b407f67deb53a75ae03d67247653b30b@uscas1p1.samsung.com>
 
-Hello,
+On Wed, Dec 13, 2023 at 01:26:52PM -0600, Bjorn Helgaas wrote:
+> On Wed, Dec 13, 2023 at 06:58:28PM +0000, Jim Harris wrote:
+> > Wait to call kobject_uevent() until all of the associated changes are d=
+one,
+> > including updating the num_VFs value.
+>=20
+> This seems right to me.  Can we add a little rationale to the commit
+> log?  E.g., something about how num_VFs is visible to userspace via
+> sysfs and we don't want a race between (a) userspace reading num_VFs
+> because of KOBJ_CHANGE and (b) the kernel updating num_VFs?  (If
+> that's the actual reason.)
+>=20
+> If there's a problem report about this, include that reference as
+> well.
 
-[...]
-> > The current code calculated some dbi[2] registers' offset by calling
-> > dw_pcie_ep_get_dbi[2]_offset() in each function. To improve code
-> > readability, add dw_pcie_ep_{read,write}_dbi[2} and some data-width
-> > related helpers.
-[...]
-> > +static inline unsigned int dw_pcie_ep_get_dbi_offset(struct dw_pcie_ep *ep,
-> > +						     u8 func_no)
-> > +{
-> > +	unsigned int dbi_offset = 0;
-> > +
-> > +	if (ep->ops->get_dbi_offset)
-> > +		dbi_offset = ep->ops->get_dbi_offset(ep, func_no);
-> > +
-> > +	return dbi_offset;
-> > +}
-> > +
-> > +static inline unsigned int dw_pcie_ep_get_dbi2_offset(struct dw_pcie_ep *ep,
-> > +						      u8 func_no)
-> > +{
-> > +	unsigned int dbi2_offset = 0;
-> > +
-> > +	if (ep->ops->get_dbi2_offset)
-> > +		dbi2_offset = ep->ops->get_dbi2_offset(ep, func_no);
-> > +	else if (ep->ops->get_dbi_offset)     /* for backward compatibility */
-> > +		dbi2_offset = ep->ops->get_dbi_offset(ep, func_no);
-> > +
-> > +	return dbi2_offset;
-> > +}
-> > +
-> > +static inline u32 dw_pcie_ep_read_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +				      u32 reg, size_t size)
-> > +{
-> > +	unsigned int offset = dw_pcie_ep_get_dbi_offset(ep, func_no);
-> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > +
-> > +	return dw_pcie_read_dbi(pci, offset + reg, size);
-> > +}
-> > +
-> > +static inline void dw_pcie_ep_write_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +					u32 reg, size_t size, u32 val)
-> > +{
-> > +	unsigned int offset = dw_pcie_ep_get_dbi_offset(ep, func_no);
-> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > +
-> > +	dw_pcie_write_dbi(pci, offset + reg, size, val);
-> > +}
-> > +
-> > +static inline void dw_pcie_ep_write_dbi2(struct dw_pcie_ep *ep, u8 func_no,
-> > +					 u32 reg, size_t size, u32 val)
-> > +{
-> > +	unsigned int offset = dw_pcie_ep_get_dbi2_offset(ep, func_no);
-> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> > +
-> > +	dw_pcie_write_dbi2(pci, offset + reg, size, val);
-> > +}
-> > +
-> > +static inline void dw_pcie_ep_writel_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +					 u32 reg, u32 val)
-> > +{
-> > +	dw_pcie_ep_write_dbi(ep, func_no, reg, 0x4, val);
-> > +}
-> > +
-> > +static inline u32 dw_pcie_ep_readl_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +				       u32 reg)
-> > +{
-> > +	return dw_pcie_ep_read_dbi(ep, func_no, reg, 0x4);
-> > +}
-> > +
-> > +static inline void dw_pcie_ep_writew_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +					 u32 reg, u16 val)
-> > +{
-> > +	dw_pcie_ep_write_dbi(ep, func_no, reg, 0x2, val);
-> > +}
-> > +
-> > +static inline u16 dw_pcie_ep_readw_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +				       u32 reg)
-> > +{
-> > +	return dw_pcie_ep_read_dbi(ep, func_no, reg, 0x2);
-> > +}
-> > +
-> > +static inline void dw_pcie_ep_writeb_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +					 u32 reg, u8 val)
-> > +{
-> > +	dw_pcie_ep_write_dbi(ep, func_no, reg, 0x1, val);
-> > +}
-> > +
-> > +static inline u8 dw_pcie_ep_readb_dbi(struct dw_pcie_ep *ep, u8 func_no,
-> > +				      u32 reg)
-> > +{
-> > +	return dw_pcie_ep_read_dbi(ep, func_no, reg, 0x1);
-> > +}
-> > +
-> > +static inline void dw_pcie_ep_writel_dbi2(struct dw_pcie_ep *ep, u8 func_no,
-> > +					  u32 reg, u32 val)
-> > +{
-> > +	dw_pcie_ep_write_dbi2(ep, func_no, reg, 0x4, val);
-> > +}
-> > +
-> 
-> A tiny nitpick. Since these are CSRs accessors it would be better for
-> readability to have them grouped with the rest of the IO-accessors
-> dw_pcie_writel_dbi()..dw_pcie_writel_dbi2(). Particularly have them
-> defined below the already available ones. So first normal
-> DBI-accessors would be placed and the EP-specific DBI-accessors
-> afterwords. Not sure whether it's that much required. So it's up to
-> Mani to decide. Perhaps the subsystem maintainers could fix it on
-> merge in? Bjorn, Krzysztof, Lorenzo?
+There's a second patch that I haven't pushed yet that has more of the
+rationale that led to this suggestion from Leon - see thread
+"Locking between vfio hot-remove..." I'll push the two patches as a series.
 
-Yes, I can change order after I pull this series.  Not to worry.
+The second patch will effectively revert 35ff867b7, since Leon felt the
+reasoning behind that patch was incorrect. I'll tie all of that into the
+cover letter.
 
-	Krzysztof
+-Jim
+
+>=20
+> > Suggested by: Leon Romanovsky <leonro@nvidia.com>
+> > Signed-off-by: Jim Harris <jim.harris@samsung.com>
+> > ---
+> >  drivers/pci/iov.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >=20
+> > diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> > index 25dbe85c4217..3b768e20c7ab 100644
+> > --- a/drivers/pci/iov.c
+> > +++ b/drivers/pci/iov.c
+> > @@ -683,8 +683,8 @@ static int sriov_enable(struct pci_dev *dev, int nr=
+_virtfn)
+> >  	if (rc)
+> >  		goto err_pcibios;
+> > =20
+> > -	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
+> >  	iov->num_VFs =3D nr_virtfn;
+> > +	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
+> > =20
+> >  	return 0;
+> > =20
+> > =
