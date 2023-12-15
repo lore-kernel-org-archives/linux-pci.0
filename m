@@ -1,126 +1,94 @@
-Received: from mail-lj1-f181.google.com (mail-lj1-f181.google.com [209.85.208.181])
+Received: from server.atrad.com.au (server.atrad.com.au [150.101.241.2])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9067288DF
-	for <linux-pci@vger.kernel.org>; Fri, 15 Dec 2023 11:00:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flawful.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b="Viy03zJ2";
-	dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b="DmdhF3Ij"
-Received: by mail-lj1-f181.google.com with SMTP id 38308e7fff4ca-2cc3facf0c0so4738791fa.0
-        for <linux-pci@vger.kernel.org>; Fri, 15 Dec 2023 03:00:38 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1702638037; x=1703242837;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:dkim-signature:dkim-signature:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Lq6j0mU5Mll9Pawu/xX7IuMY9JzP34OhaczRh9tSeeE=;
-        b=HPijH+WTTR9LICg2dlD9dd5va0y0WhnQszdbIfRpv8xb/xRejBKl1Nu9P0bw3j3TTt
-         eD0YWA9hrXyOVsC7vLqJpkTr3PUX8vEvbVLw62JMuoNAkLmki0w9QdnhtWg4dVVhdAoQ
-         NTg8s0hKYwTxD1dtUeRYzN/8L3fcfFPgYoansE40Kbf+t7d3KfnopKUrd1SSiIT0kROb
-         zyN/KdUFPMv9xpQfDIIPs3hp1XT8GJnAgLCg+2PTx4FoUskEjTdni13sB27NmSfUX4jF
-         wUqCig3t2Er9r+QgYNvUrWMej0XOX3PUiBNNnBE7SDv34apHwvIbEmTDJffUagnoxiCb
-         WKJg==
-X-Gm-Message-State: AOJu0YxQiJi0OEqEyo5Rl7HjMutpELU+St2dURHsjJR7HLVwjRW1Hf7e
-	1fbDXw9IGLnGIAjFVzp8gXzSVBKjYDpTLA==
-X-Google-Smtp-Source: AGHT+IGYP8jd/9BZHwFUf3uBW0yT65DMb7sWp/K9ut2pWkm1SrzMw3swFrYjV+NUsYS9CER4qoMUhg==
-X-Received: by 2002:a05:651c:1a10:b0:2c9:e9e4:54bf with SMTP id by16-20020a05651c1a1000b002c9e9e454bfmr8460827ljb.6.1702638036778;
-        Fri, 15 Dec 2023 03:00:36 -0800 (PST)
-Received: from flawful.org (c-55f5e255.011-101-6d6c6d3.bbcust.telenor.se. [85.226.245.85])
-        by smtp.gmail.com with ESMTPSA id r6-20020a2e9946000000b002c9f71e61f3sm2413297ljj.6.2023.12.15.03.00.36
-        for <linux-pci@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 15 Dec 2023 03:00:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-	t=1702638035; bh=6XnQr7IR4mSYvHDqnRSpGCYXwO21MgtFIwPtN9/Ek6g=;
-	h=From:To:Cc:Subject:Date:From;
-	b=Viy03zJ28HZL3+AjtMxwzNdHVQTosg8vwyQSZr73f4/bX7kvVG+cGdxmbJ2AIijWo
-	 qFoCCg8AN4kgCuiR8+NpZbHn+2tbVG6oDMBwpg2mZUycOAk4MkDcx/M3tPS8VPCBas
-	 6Kn6LRo9f2aw0/PPkvE8AApWozhj74Rd8eSy+yLc=
-Received: by flawful.org (Postfix, from userid 112)
-	id A8A32267; Fri, 15 Dec 2023 12:00:35 +0100 (CET)
-X-Spam-Level: 
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
-	t=1702638015; bh=6XnQr7IR4mSYvHDqnRSpGCYXwO21MgtFIwPtN9/Ek6g=;
-	h=From:To:Cc:Subject:Date:From;
-	b=DmdhF3Ij/86U/cHpdj9MLqHAcON6J/tO7NWRB7EIFQLOgsz8Xi83EtMu07dMQ9z+s
-	 94I8YXAjUWazp1v7pDyFqSXkhwOG6LU3j8XcKs9O7oSXzl+/8R38kD2icjtxpwxnII
-	 hM67ohCIBveltk/cIAIIPm/ghwa5LfOqtwePF580=
-Received: from x1-carbon.lan (OpenWrt.lan [192.168.1.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by flawful.org (Postfix) with ESMTPSA id 0A2BF60B;
-	Fri, 15 Dec 2023 12:00:08 +0100 (CET)
-From: Niklas Cassel <nks@flawful.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Niklas Cassel <niklas.cassel@wdc.com>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH] misc: pci_endpoint_test: Use a unique test pattern for each BAR
-Date: Fri, 15 Dec 2023 11:59:51 +0100
-Message-ID: <20231215105952.1531683-1-nks@flawful.org>
-X-Mailer: git-send-email 2.43.0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC66625564;
+	Fri, 15 Dec 2023 11:28:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=just42.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=just42.net
+Received: from marvin.atrad.com.au (marvin.atrad.com.au [192.168.0.2])
+	by server.atrad.com.au (8.17.2/8.17.2) with ESMTPS id 3BFBRhN8018278
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NO);
+	Fri, 15 Dec 2023 21:57:44 +1030
+Date: Fri, 15 Dec 2023 21:57:43 +1030
+From: Jonathan Woithe <jwoithe@just42.net>
+To: Igor Mammedov <imammedo@redhat.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+Subject: Re: [Regression] Commit 40613da52b13 ("PCI: acpiphp: Reassign
+ resources on bridge if necessary")
+Message-ID: <ZXw4Ly/csFgl76Lj@marvin.atrad.com.au>
+References: <ZXpaNCLiDM+Kv38H@marvin.atrad.com.au>
+ <20231214143205.4ba0e11a@imammedo.users.ipa.redhat.com>
+ <ZXt+BxvmG6ru63qJ@marvin.atrad.com.au>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZXt+BxvmG6ru63qJ@marvin.atrad.com.au>
+X-MIMEDefang-action: accept
+X-Scanned-By: MIMEDefang 2.86 on 192.168.0.1
 
-From: Niklas Cassel <niklas.cassel@wdc.com>
+On Fri, Dec 15, 2023 at 08:43:29AM +1030, Jonathan Woithe wrote:
+> On Thu, Dec 14, 2023 at 02:32:05PM +0100, Igor Mammedov wrote:
+> > On Thu, 14 Dec 2023 11:58:20 +1030 Jonathan Woithe wrote:
+> > > 
+> > > Following an update from 5.15.72 to 5.15.139 on one of my machines, the
+> > 
+> > looks like you are running downstream kernel, can you file bug report
+> > with distro that you use (with a link posed here as well).
+> 
+> I am running Slackware64 15.0.  The kernels supplied by that distribution
+> are unmodified kernel.org kernels.
+> 
+> > For now offending patches are being reverted, so downstream bug will help
+> > with tracking it and reverting it there. 
+> 
+> The patches will be reverted in Slackware as a matter of course when a
+> kernel.org "-stable" kernel with the fix is adopted.  Slackware does not
+> apply any patches to kernel.org kernels.  Nevertheless, I will raise a post
+> in the forum, hopefully later today.
 
-Use a unique test pattern for each BAR in. This makes it easier to
-detect/debug address translation issues, since a developer can dump
-the backing memory on the EP side, using e.g. devmem, to verify that
-the address translation for each BAR is actually correct.
+This has now been done:
 
-Signed-off-by: Niklas Cassel <niklas.cassel@wdc.com>
----
- drivers/misc/pci_endpoint_test.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+  https://www.linuxquestions.org/questions/slackware-14/heads-up-pci-regression-introduced-in-or-around-5-15-129-commit-40613da52b13-4175731828/#post6470559
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index a765a05f0c64..7ac1922475af 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -263,6 +263,15 @@ static bool pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
- 	return false;
- }
- 
-+static const u32 bar_test_pattern[] = {
-+	0xA0A0A0A0,
-+	0xA1A1A1A1,
-+	0xA2A2A2A2,
-+	0xA3A3A3A3,
-+	0xA4A4A4A4,
-+	0xA5A5A5A5,
-+};
-+
- static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
- 				  enum pci_barno barno)
- {
-@@ -280,11 +289,12 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
- 		size = 0x4;
- 
- 	for (j = 0; j < size; j += 4)
--		pci_endpoint_test_bar_writel(test, barno, j, 0xA0A0A0A0);
-+		pci_endpoint_test_bar_writel(test, barno, j,
-+					     bar_test_pattern[barno]);
- 
- 	for (j = 0; j < size; j += 4) {
- 		val = pci_endpoint_test_bar_readl(test, barno, j);
--		if (val != 0xA0A0A0A0)
-+		if (val != bar_test_pattern[barno])
- 			return false;
- 	}
- 
--- 
-2.43.0
+> > > The output of lspci is given at the end of this post[1].  The CPU is an
+> > > "Intel(R) Core(TM) i7-5930K CPU @ 3.50GHz" which is not overclocked.  Please
+> > > let me know if you'd like more information about the affected machine.  I
+> > > can also perform additional tests if required, although for various reasons
+> > > these can only be done on Thursdays at present.
+> > > 
+> > > The kernel configuration file can easily be supplied if that would be
+> > > useful.
+> > 
+> > full dmesg log and used config might help down the road (preferably with current
+> > upstream kernel), as I will be looking into fixing related issues.
+> > 
+> > Perhaps a better way for taking this issue and collecting logs, will be
+> > opening a separate bug at https://bugzilla.kernel.org (pls CC me as well)
+> 
+> Sure, will do.  I'll be able to get the dmesg log from my earlier tests and
+> config easily enough.  Testing with another kernel will have to wait until
+> next Thursday as that is when I'll next have physical access to the machine.
 
+A bug has been opened at bugzilla.kernel.org as requested.  The logs, kernel
+configuration and the "lspci -tv" output (requested in a subsequent email)
+have been added.  The logs and kernel configuration are from the kernel.org
+5.15.139 kernel.  You have been added to the bug's CC.  The bug number is
+218268:
+
+  https://bugzilla.kernel.org/show_bug.cgi?id=218268
+
+As mentioned, testing another kernel can only happen next Thursday.  If
+you would like other tests done let me know and I'll do them at the same
+time.  I have remote access to the machine, so it's possible to retrieve
+information from it at any time.
+
+Let me know if there's anything else I can do to assist.
+
+Regards
+  jonathan
