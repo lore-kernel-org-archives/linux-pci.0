@@ -1,36 +1,36 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEC5223BB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5376846B0;
 	Wed, 20 Dec 2023 00:52:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XvSImWrJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S8BAewp8"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1703033554; x=1734569554;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=nWkB0DhRuUJFODyFvS+WwtqVYahssVR4/V2vWkTPvxA=;
-  b=XvSImWrJNUE6wt4AyltQWpW6Kx80k/Z86ceYCNXfLVkmyztFs+i3X0yq
-   zDjWSZAvgQoBOOaeIWT/AulCp8stNL3DHu2imhjsPsz0GVdzOAPUCtZfw
-   S5wi0kpdhINcnsCgXzsrZJus9cR/OkOz4eZ6j1R6xs5GOuudC/ixGeeHo
-   W4u3fAVOY2qWgwyAlhuIcRF/repBS62W1rsWnNuIsuRYt1xiykeXD61bS
-   twIr00tGhlklDFTULAUGMIsAHfo3eERlFLk0KRzYgvWWsCSHT6+F1PaqL
-   ms1RI4Rk09S/gVilGMCK8wTVLNPNGODsva4Je1XsYRxrjO20fNjxB3Joc
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="2566092"
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=TeO26yGTeKCJ1V78ZWomV1eTGapN19AztW7PHl3ULlg=;
+  b=S8BAewp8Yo+6T3zI0t8W9/eipw/v2Tnfzo6No22UhyRemn04y4+hh8qp
+   ZpwYdHkrQnpt/FqnYtgIeHUJZWVEtRs2kE/zYG77bawu4OM8A6uBt0w1V
+   TcHSnePiBAv2QknmeZIou5MC3/tIdyolUwzP8S6HYyupoa6H4vOkKniiY
+   c7q1PFZ9NmY/PIOUSLOEnTwuTtk/ajaTAo5+FVGYlwOVJLCis9h6Ek6uj
+   a+enHpEaS3xKfDO0DuI5PyJOegaj2zdZsIpf6vOyTSTbNjsS0FaauJMve
+   E4pMIX+1W25QaGf00BgqDcfY2dyziytoUmaYKkOC6CeTxqQdnK8IbtIk2
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="2566104"
 X-IronPort-AV: E=Sophos;i="6.04,290,1695711600"; 
-   d="scan'208";a="2566092"
+   d="scan'208";a="2566104"
 Received: from fmsmga005.fm.intel.com ([10.253.24.32])
   by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 16:52:05 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="1107551563"
+X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="1107551580"
 X-IronPort-AV: E=Sophos;i="6.04,290,1695711600"; 
-   d="scan'208";a="1107551563"
+   d="scan'208";a="1107551580"
 Received: from ply01-vm-store.bj.intel.com ([10.238.153.201])
-  by fmsmga005.fm.intel.com with ESMTP; 19 Dec 2023 16:51:57 -0800
+  by fmsmga005.fm.intel.com with ESMTP; 19 Dec 2023 16:52:01 -0800
 From: Ethan Zhao <haifeng.zhao@linux.intel.com>
 To: bhelgaas@google.com,
 	baolu.lu@linux.intel.com,
@@ -41,10 +41,12 @@ To: bhelgaas@google.com,
 Cc: linux-pci@vger.kernel.org,
 	iommu@lists.linux.dev,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v4 0/2] fix vt-d hard lockup when hotplug ATS capable device
-Date: Tue, 19 Dec 2023 19:51:51 -0500
-Message-Id: <20231220005153.3984502-1-haifeng.zhao@linux.intel.com>
+Subject: [PATCH v4 2/2] iommu/vt-d: don's issue devTLB flush request when device is disconnected
+Date: Tue, 19 Dec 2023 19:51:53 -0500
+Message-Id: <20231220005153.3984502-3-haifeng.zhao@linux.intel.com>
 X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20231220005153.3984502-1-haifeng.zhao@linux.intel.com>
+References: <20231220005153.3984502-1-haifeng.zhao@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,25 +55,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
- This patchset is used to fix vt-d hard lockup reported when surpprise
- unplug ATS capable endpoint device connects to system via PCIe switch
- as following topology.
+For those endpoint devices connect to system via hotplug capable ports,
+users could request a warm reset to the device by flapping device's link
+through setting the slot's link control register, as pciehpt_ist() DLLSC
+interrupt sequence response, pciehp will unload the device driver and
+then power it off. thus cause an IOMMU devTLB flush request for device to
+be sent and a long time completion/timeout waiting in interrupt context.
 
-     +-[0000:15]-+-00.0  Intel Corporation Ice Lake Memory Map/VT-d
-     |           +-00.1  Intel Corporation Ice Lake Mesh 2 PCIe
-     |           +-00.2  Intel Corporation Ice Lake RAS
-     |           +-00.4  Intel Corporation Device 0b23
-     |           \-01.0-[16-1b]----00.0-[17-1b]--+-00.0-[18]----00.0 
-                                           NVIDIA Corporation Device 2324
-     |                                           +-01.0-[19]----00.0
-                          Mellanox Technologies MT2910 Family [ConnectX-7]
-
- User brought endpoint device 19:00.0's link down by flapping it's hotplug 
- capable slot 17:01.0 link control register, as sequence DLLSC response, 
- pciehp_ist() will unload device driver and power it off, durning device
- driver is unloading an iommu devTlb flush request issued to that link 
- down device, thus a long time completion/timeout waiting in interrupt
- context causes continuous hard lockup warnning and system hang.
+That would cause following continuous hard lockup warning and system hang
 
 [ 4211.433662] pcieport 0000:17:01.0: pciehp: Slot(108): Link Down
 [ 4211.433664] pcieport 0000:17:01.0: pciehp: Slot(108): Card not present
@@ -181,51 +172,42 @@ BIOS 01.01.02.03.01 05/15/2023
 [ 4223.822647] Kernel Offset: 0x6400000 from 0xffffffff81000000 (relocation
 range: 0xffffffff80000000-0xffffffffbfffffff)
 
-Make a quick fix by checking the device's error_state in
+Fix it by checking the device's error_state in
 devtlb_invalidation_with_pasid() to avoid sending meaningless devTLB flush
 request to link down device that is set to pci_channel_io_perm_failure and
-then powered off in
+then power off in
 
 pciehp_ist()
    pciehp_handle_presence_or_link_change()
      pciehp_disable_slot()
        remove_board()
          pciehp_unconfigure_device()
+
+For SAVE_REMOVAL unplug, link is alive when iommu releases device and
+issues devTLB invalidate request, wouldn't trigger such issue.
+
+This patch works for all kinds of SURPPRISE_REMOVAL unplug operation.
+
+Tested-by: Haorong Ye <yehaorong@bytedance.com>
+Signed-off-by: Ethan Zhao <haifeng.zhao@linux.intel.com>
+---
+ drivers/iommu/intel/pasid.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/iommu/intel/pasid.c b/drivers/iommu/intel/pasid.c
+index 74e8e4c17e81..7dbee9931eb6 100644
+--- a/drivers/iommu/intel/pasid.c
++++ b/drivers/iommu/intel/pasid.c
+@@ -481,6 +481,9 @@ devtlb_invalidation_with_pasid(struct intel_iommu *iommu,
+ 	if (!info || !info->ats_enabled)
+ 		return;
  
-safe_removal unplug doesn't trigger such issue. 
-and this fix works for all supprise_removal unplug operation.
-
-This patchset was tested by yehaorong@bytedance.com on stable-6.7rc4.
-
-
-change log:
-
-v4: 
-- move the PCI device state checking after ATS per Baolu's suggestion.
-v3:
-- fix commit description typo.
-v2:
-- revise commit[1] description part according to Lukas' suggestion.
-- revise commit[2] description to clarify the issue's impact.
-v1:
-- https://lore.kernel.org/lkml/20231213034637.2603013-1-haifeng.zhao@linux.intel.com/T/
-
-
-
-Thanks,
-Ethan
-
-
-Ethan Zhao (2):
-  PCI: make pci_dev_is_disconnected() helper public for other drivers
-  iommu/vt-d: don's issue devTLB flush request when device is
-    disconnected
-
- drivers/iommu/intel/pasid.c | 21 ++++++++++++++++++++-
- drivers/pci/pci.h           |  5 -----
- include/linux/pci.h         |  5 +++++
- 3 files changed, 25 insertions(+), 6 deletions(-)
-
++	if (pci_dev_is_disconnected(to_pci_dev(dev)))
++		return;
++
+ 	sid = info->bus << 8 | info->devfn;
+ 	qdep = info->ats_qdep;
+ 	pfsid = info->pfsid;
 -- 
 2.31.1
 
