@@ -1,256 +1,104 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9A8820FE
-	for <linux-pci@vger.kernel.org>; Wed, 20 Dec 2023 00:45:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A974FBE52;
+	Wed, 20 Dec 2023 00:52:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Tfeih5zr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fiV8BXng"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1703033136; x=1734569136;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=X7EUmvaRv2bfYfJBwHAlWB39pYYoekrZwYtdxXZCdBQ=;
-  b=Tfeih5zrNhXYdu3GoN2GoBwNakvGaEiexPcMJx9vIVZgneuPB8+UVT4Z
-   Hs/cm5DVVdspf5yXwDU8qO++T/HT1YKXbE6Jiejlxj7Morn0L3eAZxGLr
-   NGL9VCMFRg1pY4VH1ny3PSbV05eVRVNoQaRcPgPt7r3HzrGvLEWLE6+bV
-   5/SyouNagE/lfBlybkX6xE4vIWbdO35CiHMrADEn/S+FOBdlcaS7qMvBw
-   Te+Z7cWrmEVHyuNe99tf/0slzCgEsQjzRoAxnJNpCz7TgTGS556Bux+Tz
-   F6Uk4Q9FfvbTeyBXhAbUZNveMTJ9zG44Bg32r+hpFj10VGItbhjJOjse6
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="17297222"
-X-IronPort-AV: E=Sophos;i="6.04,289,1695711600"; 
-   d="scan'208";a="17297222"
-Received: from fmsmga007.fm.intel.com ([10.253.24.52])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 16:45:33 -0800
+  t=1703033552; x=1734569552;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=Bq2s9gwLh3Oh742hJuC8CK1tg4+GUxCgWKtcAn88usw=;
+  b=fiV8BXngQ6KeWmqvcxgpebmdHL7k5vcxx73zZnzZTwU7LjMiccn10IDg
+   KJt7ezzFr6qDp+ZxF7EiUn9FZbuRzh7iwzmJ5nxPZK+qyCrdIqP43fRKE
+   ZkD67W1de+OY5OKQbRC9gJNcPZQAmT8pMc2yj/rwqN0eygB66NX/ooOg5
+   bQBlZUcnmoBniQ458BP/snTYPWLgBcaCJt3BfFRWP0Q/TW7mF9Wn12LWb
+   5PrgnYYFcr30lbfg7tEpMx+wqVijpSw5jBOfYFdz9MxVlNWeSYjplwNoB
+   tHJBv++xFSMRkqZtwhUK9AWJ9bidxT11QcJ/DW2Vc1wJRg10x0KBm/hwH
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="2566070"
+X-IronPort-AV: E=Sophos;i="6.04,290,1695711600"; 
+   d="scan'208";a="2566070"
+Received: from fmsmga005.fm.intel.com ([10.253.24.32])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Dec 2023 16:52:05 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="779665622"
-X-IronPort-AV: E=Sophos;i="6.04,289,1695711600"; 
-   d="scan'208";a="779665622"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga007.fm.intel.com with ESMTP; 19 Dec 2023 16:45:31 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rFkiH-00068D-2Y;
-	Wed, 20 Dec 2023 00:45:29 +0000
-Date: Wed, 20 Dec 2023 08:44:59 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:endpoint] BUILD SUCCESS
- 6f517e044096fd78fa6f19b3da20579426980af7
-Message-ID: <202312200854.z8iKTWqK-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="1107551574"
+X-IronPort-AV: E=Sophos;i="6.04,290,1695711600"; 
+   d="scan'208";a="1107551574"
+Received: from ply01-vm-store.bj.intel.com ([10.238.153.201])
+  by fmsmga005.fm.intel.com with ESMTP; 19 Dec 2023 16:51:59 -0800
+From: Ethan Zhao <haifeng.zhao@linux.intel.com>
+To: bhelgaas@google.com,
+	baolu.lu@linux.intel.com,
+	dwmw2@infradead.org,
+	will@kernel.org,
+	robin.murphy@arm.com,
+	lukas@wunner.de
+Cc: linux-pci@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v4 1/2] PCI: make pci_dev_is_disconnected() helper public for other drivers
+Date: Tue, 19 Dec 2023 19:51:52 -0500
+Message-Id: <20231220005153.3984502-2-haifeng.zhao@linux.intel.com>
+X-Mailer: git-send-email 2.31.1
+In-Reply-To: <20231220005153.3984502-1-haifeng.zhao@linux.intel.com>
+References: <20231220005153.3984502-1-haifeng.zhao@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
-branch HEAD: 6f517e044096fd78fa6f19b3da20579426980af7  PCI: endpoint: pci-epf-test: Make struct pci_epf_ops const
+Make pci_dev_is_disconnected() public so that it can be called from
+Intel vt-d driver to quickly fix/workaround the SURPPRISE_REMOVAL unplug
+hang issue for those ATS capable devices on PCIe switch downstream 
+ports.
 
-elapsed time: 1498m
+Tested-by: Haorong Ye <yehaorong@bytedance.com>
+Signed-off-by: Ethan Zhao <haifeng.zhao@linux.intel.com>
+---
+ drivers/pci/pci.h   | 5 -----
+ include/linux/pci.h | 5 +++++
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
-configs tested: 188
-configs skipped: 9
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     nsimosci_hs_defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   gcc  
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                   randconfig-001-20231219   clang
-arm                   randconfig-002-20231219   clang
-arm                   randconfig-003-20231219   clang
-arm                   randconfig-004-20231219   clang
-arm                         s3c6400_defconfig   gcc  
-arm                        shmobile_defconfig   gcc  
-arm                           tegra_defconfig   gcc  
-arm                           u8500_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20231219   clang
-arm64                 randconfig-002-20231219   clang
-arm64                 randconfig-003-20231219   clang
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20231219   clang
-hexagon               randconfig-002-20231219   clang
-i386                             alldefconfig   gcc  
-i386                             allmodconfig   clang
-i386                              allnoconfig   clang
-i386                             allyesconfig   clang
-i386         buildonly-randconfig-001-20231219   clang
-i386         buildonly-randconfig-002-20231219   clang
-i386         buildonly-randconfig-003-20231219   clang
-i386         buildonly-randconfig-004-20231219   clang
-i386         buildonly-randconfig-005-20231219   clang
-i386         buildonly-randconfig-006-20231219   clang
-i386                                defconfig   gcc  
-i386                  randconfig-001-20231219   clang
-i386                  randconfig-002-20231219   clang
-i386                  randconfig-003-20231219   clang
-i386                  randconfig-004-20231219   clang
-i386                  randconfig-005-20231219   clang
-i386                  randconfig-006-20231219   clang
-i386                  randconfig-011-20231219   gcc  
-i386                  randconfig-011-20231220   clang
-i386                  randconfig-012-20231219   gcc  
-i386                  randconfig-012-20231220   clang
-i386                  randconfig-013-20231219   gcc  
-i386                  randconfig-013-20231220   clang
-i386                  randconfig-014-20231219   gcc  
-i386                  randconfig-014-20231220   clang
-i386                  randconfig-015-20231219   gcc  
-i386                  randconfig-015-20231220   clang
-i386                  randconfig-016-20231219   gcc  
-i386                  randconfig-016-20231220   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                         amcore_defconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                        m5272c3_defconfig   gcc  
-m68k                       m5275evb_defconfig   gcc  
-m68k                        m5307c3_defconfig   gcc  
-m68k                          multi_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   clang
-mips                             allyesconfig   gcc  
-mips                         db1xxx_defconfig   gcc  
-mips                 decstation_r4k_defconfig   gcc  
-mips                      fuloong2e_defconfig   gcc  
-mips                           ip27_defconfig   gcc  
-mips                           ip32_defconfig   gcc  
-mips                       lemote2f_defconfig   gcc  
-mips                       rbtx49xx_defconfig   gcc  
-nios2                            alldefconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-32bit_defconfig   gcc  
-parisc64                            defconfig   gcc  
-powerpc                    adder875_defconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                    amigaone_defconfig   gcc  
-powerpc                     ep8248e_defconfig   gcc  
-powerpc                      mgcoge_defconfig   gcc  
-powerpc                      ppc40x_defconfig   gcc  
-powerpc                      ppc6xx_defconfig   gcc  
-powerpc               randconfig-002-20231219   clang
-powerpc               randconfig-003-20231219   clang
-powerpc                     redwood_defconfig   gcc  
-powerpc64             randconfig-002-20231219   clang
-powerpc64             randconfig-003-20231219   clang
-riscv                             allnoconfig   clang
-riscv                               defconfig   gcc  
-riscv                 randconfig-001-20231219   clang
-riscv                 randconfig-002-20231219   clang
-riscv                          rv32_defconfig   clang
-s390                             allmodconfig   gcc  
-s390                              allnoconfig   gcc  
-s390                             allyesconfig   gcc  
-s390                                defconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                            hp6xx_defconfig   gcc  
-sh                     magicpanelr2_defconfig   gcc  
-sh                           se7343_defconfig   gcc  
-sh                            titan_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   clang
-um                                  defconfig   gcc  
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20231219   clang
-um                    randconfig-002-20231219   clang
-um                           x86_64_defconfig   gcc  
-x86_64                            allnoconfig   gcc  
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20231219   clang
-x86_64       buildonly-randconfig-001-20231220   gcc  
-x86_64       buildonly-randconfig-002-20231219   clang
-x86_64       buildonly-randconfig-002-20231220   gcc  
-x86_64       buildonly-randconfig-003-20231219   clang
-x86_64       buildonly-randconfig-003-20231220   gcc  
-x86_64       buildonly-randconfig-004-20231219   clang
-x86_64       buildonly-randconfig-004-20231220   gcc  
-x86_64       buildonly-randconfig-005-20231219   clang
-x86_64       buildonly-randconfig-005-20231220   gcc  
-x86_64       buildonly-randconfig-006-20231219   clang
-x86_64       buildonly-randconfig-006-20231220   gcc  
-x86_64                              defconfig   gcc  
-x86_64                                  kexec   gcc  
-x86_64                randconfig-011-20231219   clang
-x86_64                randconfig-011-20231220   gcc  
-x86_64                randconfig-012-20231219   clang
-x86_64                randconfig-012-20231220   gcc  
-x86_64                randconfig-013-20231219   clang
-x86_64                randconfig-013-20231220   gcc  
-x86_64                randconfig-014-20231219   clang
-x86_64                randconfig-014-20231220   gcc  
-x86_64                randconfig-015-20231219   clang
-x86_64                randconfig-015-20231220   gcc  
-x86_64                randconfig-016-20231219   clang
-x86_64                randconfig-016-20231220   gcc  
-x86_64                randconfig-071-20231219   clang
-x86_64                randconfig-071-20231220   gcc  
-x86_64                randconfig-072-20231219   clang
-x86_64                randconfig-072-20231220   gcc  
-x86_64                randconfig-073-20231219   clang
-x86_64                randconfig-073-20231220   gcc  
-x86_64                randconfig-074-20231219   clang
-x86_64                randconfig-074-20231220   gcc  
-x86_64                randconfig-075-20231219   clang
-x86_64                randconfig-075-20231220   gcc  
-x86_64                randconfig-076-20231219   clang
-x86_64                randconfig-076-20231220   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                  audio_kc705_defconfig   gcc  
-xtensa                generic_kc705_defconfig   gcc  
-xtensa                          iss_defconfig   gcc  
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 5ecbcf041179..75fa2084492f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -366,11 +366,6 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+ 	return 0;
+ }
+ 
+-static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
+-{
+-	return dev->error_state == pci_channel_io_perm_failure;
+-}
+-
+ /* pci_dev priv_flags */
+ #define PCI_DEV_ADDED 0
+ #define PCI_DPC_RECOVERED 1
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 60ca768bc867..869f2ec97a84 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -2503,6 +2503,11 @@ static inline struct pci_dev *pcie_find_root_port(struct pci_dev *dev)
+ 	return NULL;
+ }
+ 
++static inline bool pci_dev_is_disconnected(const struct pci_dev *dev)
++{
++	return dev->error_state == pci_channel_io_perm_failure;
++}
++
+ void pci_request_acs(void);
+ bool pci_acs_enabled(struct pci_dev *pdev, u16 acs_flags);
+ bool pci_acs_path_enabled(struct pci_dev *start,
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.31.1
+
