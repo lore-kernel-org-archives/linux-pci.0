@@ -1,35 +1,30 @@
-Received: from esa5.hc1455-7.c3s2.iphmx.com (esa5.hc1455-7.c3s2.iphmx.com [68.232.139.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A88451170D;
-	Wed, 20 Dec 2023 05:32:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fujitsu.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
-X-IronPort-AV: E=McAfee;i="6600,9927,10929"; a="143487949"
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 20DB9FBE1;
+	Wed, 20 Dec 2023 05:38:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.04,290,1695654000"; 
-   d="scan'208";a="143487949"
-Received: from unknown (HELO oym-r1.gw.nic.fujitsu.com) ([210.162.30.89])
-  by esa5.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 Dec 2023 14:32:29 +0900
-Received: from oym-m1.gw.nic.fujitsu.com (oym-nat-oym-m1.gw.nic.fujitsu.com [192.168.87.58])
-	by oym-r1.gw.nic.fujitsu.com (Postfix) with ESMTP id E6E6ED2A02;
-	Wed, 20 Dec 2023 14:32:26 +0900 (JST)
-Received: from m3004.s.css.fujitsu.com (m3004.s.css.fujitsu.com [10.128.233.124])
-	by oym-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 1D9C0D88CE;
-	Wed, 20 Dec 2023 14:32:26 +0900 (JST)
-Received: from cxl-test.. (unknown [10.118.237.107])
-	by m3004.s.css.fujitsu.com (Postfix) with ESMTP id E96E12005352;
-	Wed, 20 Dec 2023 14:32:25 +0900 (JST)
-From: KobayashiDaisuke <kobayashi.da-06@fujitsu.com>
-To: linux-pci@vger.kernel.org
-Cc: linux-cxl@vger.kernel.org,
-	y-goto@fujitsu.com,
-	KobayashiDaisuke <kobayashi.da-06@fujitsu.com>
-Subject: [RFC PATCH 3/3] Implement a function to get a RCRB Base address
-Date: Wed, 20 Dec 2023 14:07:38 +0900
-Message-ID: <20231220050738.178481-4-kobayashi.da-06@fujitsu.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20231220050738.178481-1-kobayashi.da-06@fujitsu.com>
-References: <20231220050738.178481-1-kobayashi.da-06@fujitsu.com>
+   d="scan'208";a="187105320"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie5.idc.renesas.com with ESMTP; 20 Dec 2023 14:38:39 +0900
+Received: from localhost.localdomain (unknown [10.166.13.99])
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 63DBE416941A;
+	Wed, 20 Dec 2023 14:38:39 +0900 (JST)
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To: lpieralisi@kernel.org,
+	kw@linux.com,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	jingoohan1@gmail.com,
+	gustavo.pimentel@synopsys.com,
+	mani@kernel.org
+Cc: linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v4 0/6] PCI: controllers: tidy code up
+Date: Wed, 20 Dec 2023 14:38:23 +0900
+Message-Id: <20231220053829.1921187-1-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -37,78 +32,76 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
 
-This patch adds a function to obtain the RCRB base address corresponding to
-the uid. 
+This patch series tidies the code of PCIe dwc controllers and some
+controllers up.
 
-In the case of a CXL1.1 device, the RCRB base address is included in the CHBS
-in the CEDT (cxl3.0 specification 9.17.1). In this function, the ACPI's CEDT 
-is explored, and the RCRB base address is obtained from the CHBS corresponding
-to the uid.
+Changes from v3:
+https://lore.kernel.org/linux-pci/20231215022955.3574063-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch. So, I modified the patch 1/6
+   for pci-layerscape.c.
+ - Add Reviewed-by tag in the patch 4/6.
+ - Fix locations of read/write accessors by grouped for readability in
+   the patch 4/6.
 
+Changes from v2:
+https://lore.kernel.org/linux-pci/20231114055456.2231990-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch.
+ - Add Suggestion-by and Reviewed-by tags.
+ - Move read/write accessors to the header file in the patch 4/6.
+ - Revise the commit description in the patch 5/6.
 
-Signed-off-by: KobayashiDaisuke <kobayashi.da-06@fujitsu.com>
----
- ls-caps.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 45 insertions(+)
+Changes from v1:
+https://lore.kernel.org/linux-pci/20231113013300.2132152-1-yoshihiro.shimoda.uh@renesas.com/
+ - Based on the latest pci.git / next branch.
+ - Add a new patch to drop host prefix of members from dw_pcie_host_ops
+   in the patch 1/6.
+ - Add Reviewed-by tag in the patch 3/6.
+ - Drop unneeded local variable in the patch 4/6.
+ - Add new patches to resolve issues of clang warnings in the patch [56]/6.
 
-diff --git a/ls-caps.c b/ls-caps.c
-index 077e8ea..cccd775 100644
---- a/ls-caps.c
-+++ b/ls-caps.c
-@@ -1438,6 +1438,51 @@ static int get_device_uid(struct device *d){
- }
- 
- static off_t get_rcrb_base(int device_uid){
-+  FILE *cedt_file = fopen("/sys/firmware/acpi/tables/CEDT", "rb");
-+  if (cedt_file == NULL)
-+    return -1;
-+
-+  struct CEDT_Header header;
-+  fread(&header, sizeof(header), 1, cedt_file);
-+  
-+  struct CHBS_Structure chbs;
-+  chbs.base = 0;
-+  size_t total_bytes_read = 0;
-+  while (total_bytes_read < header.length)
-+  {
-+    struct CEDT_Structure cedt;
-+    size_t bytes_read = fread(&cedt, sizeof(cedt), 1, cedt_file);
-+    if (bytes_read != 1)
-+    {
-+      fclose(cedt_file);
-+      return -1;
-+    }
-+    total_bytes_read += sizeof(cedt);
-+    if (cedt.type == CHBS_TYPE)
-+    {
-+      bytes_read = fread(&chbs, sizeof(chbs), 1, cedt_file);
-+      if(bytes_read != 1){
-+        fclose(cedt_file);
-+        return -1;
-+      }
-+      total_bytes_read += sizeof(chbs);
-+      if ((int)chbs.uid == device_uid){
-+        if(chbs.cxl_version == 0){
-+          fclose(cedt_file);
-+          return chbs.base;
-+        }else{
-+          fclose(cedt_file);
-+          return -1;
-+        }
-+      } 
-+    }
-+    else
-+    {
-+      fseek(cedt_file, cedt.record_length - sizeof(cedt), SEEK_SET);
-+      total_bytes_read += cedt.record_length;
-+    }
-+  }
-+  fclose(cedt_file);
-   return -1;
- }
- 
+Justin Stitt (1):
+  PCI: iproc: fix -Wvoid-pointer-to-enum-cast warning
+
+Yoshihiro Shimoda (5):
+  PCI: dwc: Drop host prefix from struct dw_pcie_host_ops
+  PCI: dwc: Rename to .init in struct dw_pcie_ep_ops
+  PCI: dwc: Rename to .get_dbi_offset in struct dw_pcie_ep_ops
+  PCI: dwc: Add dw_pcie_ep_{read,write}_dbi[2] helpers
+  PCI: rcar-gen4: fix -Wvoid-pointer-to-enum-cast warning
+
+ drivers/pci/controller/dwc/pci-dra7xx.c       |   4 +-
+ drivers/pci/controller/dwc/pci-exynos.c       |   2 +-
+ drivers/pci/controller/dwc/pci-imx6.c         |   6 +-
+ drivers/pci/controller/dwc/pci-keystone.c     |   8 +-
+ .../pci/controller/dwc/pci-layerscape-ep.c    |   7 +-
+ drivers/pci/controller/dwc/pci-layerscape.c   |   6 +-
+ drivers/pci/controller/dwc/pci-meson.c        |   2 +-
+ drivers/pci/controller/dwc/pcie-al.c          |   2 +-
+ drivers/pci/controller/dwc/pcie-armada8k.c    |   2 +-
+ drivers/pci/controller/dwc/pcie-artpec6.c     |   4 +-
+ drivers/pci/controller/dwc/pcie-bt1.c         |   4 +-
+ .../pci/controller/dwc/pcie-designware-ep.c   | 188 ++++++------------
+ .../pci/controller/dwc/pcie-designware-host.c |  30 +--
+ .../pci/controller/dwc/pcie-designware-plat.c |   2 +-
+ drivers/pci/controller/dwc/pcie-designware.h  | 105 +++++++++-
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c |   2 +-
+ drivers/pci/controller/dwc/pcie-fu740.c       |   2 +-
+ drivers/pci/controller/dwc/pcie-histb.c       |   2 +-
+ drivers/pci/controller/dwc/pcie-intel-gw.c    |   2 +-
+ drivers/pci/controller/dwc/pcie-keembay.c     |   2 +-
+ drivers/pci/controller/dwc/pcie-kirin.c       |   2 +-
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |   2 +-
+ drivers/pci/controller/dwc/pcie-qcom.c        |   6 +-
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   |  12 +-
+ drivers/pci/controller/dwc/pcie-spear13xx.c   |   2 +-
+ drivers/pci/controller/dwc/pcie-tegra194.c    |   2 +-
+ drivers/pci/controller/dwc/pcie-uniphier-ep.c |   2 +-
+ drivers/pci/controller/dwc/pcie-uniphier.c    |   2 +-
+ drivers/pci/controller/dwc/pcie-visconti.c    |   2 +-
+ drivers/pci/controller/pcie-iproc-platform.c  |   2 +-
+ 30 files changed, 222 insertions(+), 194 deletions(-)
+
 -- 
-2.43.0
+2.25.1
 
