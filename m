@@ -1,49 +1,49 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45EF512E47
-	for <linux-pci@vger.kernel.org>; Sat, 23 Dec 2023 18:43:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D1912E7C
+	for <linux-pci@vger.kernel.org>; Sat, 23 Dec 2023 18:44:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ZwJcPA0P"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-5542ac8b982so2645321a12.3
-        for <linux-pci@vger.kernel.org>; Sat, 23 Dec 2023 10:43:05 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gJcQGc3H"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-a235eb41251so326610266b.3
+        for <linux-pci@vger.kernel.org>; Sat, 23 Dec 2023 10:44:33 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1703356983; x=1703961783; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1703357072; x=1703961872; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :from:to:cc:subject:date:message-id:reply-to;
-        bh=g+gco8BLqAjcPdkrZdCffxU9a4mlAf+P/uZCUnr+h8c=;
-        b=ZwJcPA0PAXjWeQkreV0XnGWRludNXBC0WxAtIC82ZxbC51xH+1DQYfvTv7BymyiBLE
-         SY3mkcrMIU/zkfjZKZVIcLDNYuxqnO+IKV4jht1q1GT9IJPtFjOBofNicPI4IuVZU/aM
-         7VQu2sbpujvi/J9PNbHZuLetrSSExSl6gFCFJpBBnm3lj+vTiNBx1nx74bOjTOSIDyZA
-         AxkXHKCpjLBI6U/n+RF8OXCZtSC9On7GIBwuM9d+q6GskTARrU6FjybClnUyO5w8dD57
-         OFx1zoXsijORFl9WMSfeLkO7zoWto+VNXN8ZdHIi57eGqh9dsgDSsRiCKODVowGtOuLY
-         Azdw==
+        bh=B3f2Z73OfrGYYllkbNR/UoDxWId1ziQj3DBf9RvQPjw=;
+        b=gJcQGc3H+mElX75FlHLBL/dnzZbvU04nbyy8bahuJnLLqMz27BowYaj00SedFWKLFt
+         XrpgM9uzQpf3c8BIhKNtO/UDmE3FcBoMEE1DW2c6ocHSTTbIWKJJTtuive6PdpUv/y23
+         6lHG5PEPPrkkABmA8GE48CkzYNUXGPeWzj/TmtX/fBNLM5Sm1coEA69BuGnvfbcWKp0r
+         2retpunM3fIOqdvMNC5U7mrmR8mqen601PNoaHwb2W/7nk2uSXj5YbCy8YTwNDLTlyp+
+         pOJ8lPl/OthmPWvQ14Q8teCkgm2UoMnlfPuF1GYf+LqqFIT5r09YKdLX/+xXFNibkNXi
+         lr0w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1703356983; x=1703961783;
+        d=1e100.net; s=20230601; t=1703357072; x=1703961872;
         h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
          :to:content-language:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=g+gco8BLqAjcPdkrZdCffxU9a4mlAf+P/uZCUnr+h8c=;
-        b=iMeOsWRI5lC20+0PLHuUnkDn++vhXw3KloYAueZIW1arIwTd6wgqVrALBP9fE2dxUZ
-         hAAOLTOjva4g6EGhrLZBBgLCPPGMWLWWqQGI8kzcM8CH4lyC/osMz67Zzqhj8kE6w7+5
-         hVG8sf3ZZzSbuzegX7YuTO2WKNWIrjyjmFgTbPv3mdcvpQDALFWkrW9isKwlNL2i8l2a
-         f1uOe94FT7fQOm41Xjkf+N9DA9GN5dGffRnzUE7XYlOAJlY2DdFwDHcIEHKRA/T3SRku
-         WriFyQgBdskndyqOflpvpCSdIZQoB71Of37RO+V4zy02ZklGLdKIB7CtWl9u27GPEC2a
-         64gw==
-X-Gm-Message-State: AOJu0YxJXAKc23Pzo53cTSyDN94SErskrTjwRWVK2epygxjQyIwQ9sj+
-	n9RhlM0MSn6eZlW+g26ijcW7grfCUBF6wQ==
-X-Google-Smtp-Source: AGHT+IH1RiLXz8KYuAkcsiOD+30BiDaipZUpG48Ja6HREcXMHcgv4XmU6K31QzIKR74j9wAUxJoFkQ==
-X-Received: by 2002:a50:a416:0:b0:553:34d3:2ba6 with SMTP id u22-20020a50a416000000b0055334d32ba6mr1964111edb.78.1703356983635;
-        Sat, 23 Dec 2023 10:43:03 -0800 (PST)
+        bh=B3f2Z73OfrGYYllkbNR/UoDxWId1ziQj3DBf9RvQPjw=;
+        b=AZCDnhFpFuGjNQ9ZzfD7ElIUjugeStSQteghw1UY3V/QvPFyETqmJdmWiPqh4wG3SK
+         4u47F4bdF2RDLJO+F/AChVOLrOY46M0Qqtwr7TdjZpXiWhjn2IOpuCRyjiCcLP+ydPBQ
+         KyNXrm0h0u//HQBjIMmXMHFPTu/iDH1tKutsB+NeaKt3rC/Y8dT7ijFvuQ64df62AK0M
+         +Fy/YyMTWhXxO5qZx3nL8amFFU//Q8DHP37AHXinyQoplxUDKCZ3fCcTfarpfnASTab3
+         twY68tUm3kX1nR5/76xAlE6OYtAAgH0J9uECOB0nRpUnRoHjRzr2tEtQxrJbInheh9cF
+         vkYQ==
+X-Gm-Message-State: AOJu0YxuUsfyZ52xAfpsYGOeIUWlqAuKxW2rCQvbpge1mg+whXps8yFY
+	r+EhR0Mxvq2dVH7MSmPZ/YzCGObtHRq/KQ==
+X-Google-Smtp-Source: AGHT+IFBs6Gof+vTbmVWy/tgu0jQZNnEiV3xHdg26WC64wb6uKtQ99RX/cclcc2Jj8UY4f8QkdOdHw==
+X-Received: by 2002:a50:8ad3:0:b0:553:83ca:60c5 with SMTP id k19-20020a508ad3000000b0055383ca60c5mr1474107edk.3.1703357072290;
+        Sat, 23 Dec 2023 10:44:32 -0800 (PST)
 Received: from [192.168.0.22] ([78.10.206.178])
-        by smtp.gmail.com with ESMTPSA id p13-20020a05640210cd00b0055298b38768sm4197774edu.80.2023.12.23.10.43.01
+        by smtp.gmail.com with ESMTPSA id p13-20020a05640210cd00b0055298b38768sm4197774edu.80.2023.12.23.10.44.30
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 23 Dec 2023 10:43:02 -0800 (PST)
-Message-ID: <524646e6-17d4-4a72-be96-74347be36482@linaro.org>
-Date: Sat, 23 Dec 2023 19:43:01 +0100
+        Sat, 23 Dec 2023 10:44:31 -0800 (PST)
+Message-ID: <8fb359da-2d35-4cea-8a62-199fde1d9a29@linaro.org>
+Date: Sat, 23 Dec 2023 19:44:30 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,20 +51,20 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 10/16] dt-bindings: imx6q-pcie: remove reg and reg-name
+Subject: Re: [PATCH v5 15/16] dt-bindings: imx6q-pcie: Add iMX95 pcie endpoint
+ compatible string
 Content-Language: en-US
-To: Frank Li <Frank.li@nxp.com>, Rob Herring <robh@kernel.org>
-Cc: manivannan.sadhasivam@linaro.org, bhelgaas@google.com,
- conor+dt@kernel.org, devicetree@vger.kernel.org, festevam@gmail.com,
- helgaas@kernel.org, hongxing.zhu@nxp.com, imx@lists.linux.dev,
- kernel@pengutronix.de, krzysztof.kozlowski+dt@linaro.org, kw@linux.com,
- l.stach@pengutronix.de, linux-arm-kernel@lists.infradead.org,
- linux-imx@nxp.com, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- lpieralisi@kernel.org, s.hauer@pengutronix.de, shawnguo@kernel.org
+To: Frank Li <Frank.Li@nxp.com>, manivannan.sadhasivam@linaro.org
+Cc: bhelgaas@google.com, conor+dt@kernel.org, devicetree@vger.kernel.org,
+ festevam@gmail.com, helgaas@kernel.org, hongxing.zhu@nxp.com,
+ imx@lists.linux.dev, kernel@pengutronix.de,
+ krzysztof.kozlowski+dt@linaro.org, kw@linux.com, l.stach@pengutronix.de,
+ linux-arm-kernel@lists.infradead.org, linux-imx@nxp.com,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ lpieralisi@kernel.org, robh@kernel.org, s.hauer@pengutronix.de,
+ shawnguo@kernel.org
 References: <20231220213615.1561528-1-Frank.Li@nxp.com>
- <20231220213615.1561528-11-Frank.Li@nxp.com>
- <20231221225033.GA228866-robh@kernel.org>
- <ZYZYFYBr23OtTtrd@lizhi-Precision-Tower-5810>
+ <20231220213615.1561528-16-Frank.Li@nxp.com>
 From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
  xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
@@ -110,45 +110,56 @@ Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
  KQ06ztUMRrj8eVtpImjsWCd0bDWRaaR4vqhCHvAG9iWXZu4qh3ipie2Y0oSJygcZT7H3UZxq
  fyYKiqEmRuqsvv6dcbblD8ZLkz1EVZL6djImH5zc5x8qpVxlA0A0i23v5QvN00m6G9NFF0Le
  D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <ZYZYFYBr23OtTtrd@lizhi-Precision-Tower-5810>
+In-Reply-To: <20231220213615.1561528-16-Frank.Li@nxp.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 23/12/2023 04:46, Frank Li wrote:
-> On Thu, Dec 21, 2023 at 04:50:33PM -0600, Rob Herring wrote:
->> On Wed, Dec 20, 2023 at 04:36:09PM -0500, Frank Li wrote:
->>> snps,dw-pcie.yaml already have reg and reg-name information. Needn't
->>> duplciate here.
->>>
->>> Acked-by: Rob Herring <robh@kernel.org>
->>> Signed-off-by: Frank Li <Frank.Li@nxp.com>
->>> ---
->>>
->>> Notes:
->>>     Change from v4 to v5
->>>     - add Rob's Acked
->>
->> Err, that was intended for patch 9, not this one. This patch should be 
->> dropped.
+On 20/12/2023 22:36, Frank Li wrote:
+> Add i.MX95 PCIe "fsl,imx95-pcie-ep" compatible string.
+> Add reg-name: "atu", "dbi2", "dma" and "serdes".
 > 
-> Sorry, will correct it.
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> ---
 > 
-> Actually I want to move it under Allof
+> Notes:
+>     Change from v1 to v3
+>     - new patches at v3
 > 
-> if compatiable string (A, B, C...)
-> then
-> 	reg-names:
-> 		-const: dbi
-> 		-const: config
+>  .../bindings/pci/fsl,imx6q-pcie-ep.yaml       | 52 ++++++++++++++++---
+>  1 file changed, 44 insertions(+), 8 deletions(-)
 > 
-> Differece SOC have difference reg-names required list. If split it, it
-> will be easy when add new SOC. Needn't change two place.
-> 
-> Let me update at next version.
-> 
+> diff --git a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
+> index ee155ed5f1811..be9ea77ce8548 100644
+> --- a/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
+> +++ b/Documentation/devicetree/bindings/pci/fsl,imx6q-pcie-ep.yaml
+> @@ -22,14 +22,7 @@ properties:
+>        - fsl,imx8mm-pcie-ep
+>        - fsl,imx8mq-pcie-ep
+>        - fsl,imx8mp-pcie-ep
+> -
+> -  reg:
+> -    minItems: 2
+> -
+> -  reg-names:
+> -    items:
+> -      - const: dbi
+> -      - const: addr_space
 
-This patch should be dropped. Why do you remove entries from top-level?
-Are they defined in other schema?
+No, why? Entries should be defined top-level. If you remove them here,
+where are they defined (in which schema)?
+
+
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          enum:
+> +            - fsl,imx95-pcie-ep
+> +    then:
+> +      properties:
+> +        linux,pci-domain: true
+
+Why? It is allowed already.
+
 
 Best regards,
 Krzysztof
