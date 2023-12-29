@@ -1,103 +1,135 @@
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.126])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from ex01.ufhost.com (ex01.ufhost.com [61.152.239.75])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9734B567C;
-	Fri, 29 Dec 2023 03:46:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ah/aicGE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1703821574; x=1735357574;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Vm6p9nuxloRluzYcX979ML+GT8QFdDfRTL49gEoXQn4=;
-  b=Ah/aicGELwRB1UDR92/tVtkjEliD2YeJgdQDbaXjBdctPgzi1culLNtX
-   2T+o2BGygwzY0sQOK0XSbm4wcHrmP3+esO5Xvm9A7CXR8kE/vRo0LtBTh
-   h1G7m5tunRj+UAwDhYaTlgC1Hq3HENcTFxJ6IPnfUYjls0PwrERExeXJc
-   bWYkOVu+FyXg1Nqr/p2E2xOpQjWTbeZYh4mhbky2K7MgKcmMpUEuhTLnn
-   TlpjEK8Y1k3MIs3U+kDTHaLil7io1Sno8jzKRT44Q1C56Ap3wr6xZBlIy
-   ABP8grqmDyheonJ2TCgqO5yw4/pppY0ndFCSTG0jIO4YF4LyjAWkSr0m6
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10937"; a="381591511"
-X-IronPort-AV: E=Sophos;i="6.04,313,1695711600"; 
-   d="scan'208";a="381591511"
-Received: from orsmga002.jf.intel.com ([10.7.209.21])
-  by orsmga106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Dec 2023 19:46:13 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10937"; a="778711269"
-X-IronPort-AV: E=Sophos;i="6.04,313,1695711600"; 
-   d="scan'208";a="778711269"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by orsmga002.jf.intel.com with ESMTP; 28 Dec 2023 19:46:10 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rJ3oz-000H4F-1U;
-	Fri, 29 Dec 2023 03:46:06 +0000
-Date: Fri, 29 Dec 2023 11:42:53 +0800
-From: kernel test robot <lkp@intel.com>
-To: Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <helgaas@kernel.org>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Stanimir Varbanov <svarbanov@mm-sol.com>,
-	Andrew Murray <amurray@thegoodpenguin.co.uk>,
-	Vinod Koul <vkoul@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Konrad Dybcio <konrad.dybcio@linaro.org>
-Subject: Re: [PATCH 4/4] PCI: qcom: Implement RC shutdown/power up
-Message-ID: <202312291155.8v6ZEtrf-lkp@intel.com>
-References: <20231227-topic-8280_pcie-v1-4-095491baf9e4@linaro.org>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7C1F23BB;
+	Fri, 29 Dec 2023 03:46:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
+Received: from EXMBX165.cuchost.com (unknown [175.102.18.54])
+	(using TLSv1 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+	(Client CN "EXMBX165", Issuer "EXMBX165" (not verified))
+	by ex01.ufhost.com (Postfix) with ESMTP id 0434624E255;
+	Fri, 29 Dec 2023 11:46:12 +0800 (CST)
+Received: from EXMBX171.cuchost.com (172.16.6.91) by EXMBX165.cuchost.com
+ (172.16.6.75) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 29 Dec
+ 2023 11:46:12 +0800
+Received: from [192.168.125.85] (183.27.96.32) by EXMBX171.cuchost.com
+ (172.16.6.91) with Microsoft SMTP Server (TLS) id 15.0.1497.42; Fri, 29 Dec
+ 2023 11:46:10 +0800
+Message-ID: <fa9be81b-d81f-49a2-b879-0b9ada317e11@starfivetech.com>
+Date: Fri, 29 Dec 2023 11:46:10 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20231227-topic-8280_pcie-v1-4-095491baf9e4@linaro.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v13 11/21] PCI: microchip: Add num_events field to struct
+ plda_pcie_rp
+Content-Language: en-US
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+CC: Conor Dooley <conor@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+	<kw@linux.com>, Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, Daire McNamara <daire.mcnamara@microchip.com>, "Emil
+ Renner Berthing" <emil.renner.berthing@canonical.com>, Krzysztof Kozlowski
+	<krzysztof.kozlowski+dt@linaro.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
+	<linux-pci@vger.kernel.org>, Paul Walmsley <paul.walmsley@sifive.com>,
+	"Palmer Dabbelt" <palmer@dabbelt.com>, Albert Ou <aou@eecs.berkeley.edu>,
+	"Philipp Zabel" <p.zabel@pengutronix.de>, Mason Huo
+	<mason.huo@starfivetech.com>, Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>
+References: <20231214072839.2367-1-minda.chen@starfivetech.com>
+ <20231214072839.2367-12-minda.chen@starfivetech.com>
+ <ZYxJDIf1NDoEZkBJ@lpieralisi>
+From: Minda Chen <minda.chen@starfivetech.com>
+In-Reply-To: <ZYxJDIf1NDoEZkBJ@lpieralisi>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: EXCAS066.cuchost.com (172.16.6.26) To EXMBX171.cuchost.com
+ (172.16.6.91)
+X-YovoleRuleAgent: yovoleflag
 
-Hi Konrad,
 
-kernel test robot noticed the following build errors:
 
-[auto build test ERROR on 39676dfe52331dba909c617f213fdb21015c8d10]
+On 2023/12/27 23:55, Lorenzo Pieralisi wrote:
+> On Thu, Dec 14, 2023 at 03:28:29PM +0800, Minda Chen wrote:
+>> The event num is different in other platform. For re-using interrupt
+>> process codes, replace macros with variable.
+> 
+> "The number of events is different across platforms. In order to
+> share interrupt processing code, add a variable that defines the
+> number of events so that it can be set per-platform instead of
+> hardcoding it".
+> 
+> Lorenzo
+> 
+Thanks for reviewing. Happy new year!
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Konrad-Dybcio/PCI-qcom-Reshuffle-reset-logic-in-2_7_0-init/20231228-062002
-base:   39676dfe52331dba909c617f213fdb21015c8d10
-patch link:    https://lore.kernel.org/r/20231227-topic-8280_pcie-v1-4-095491baf9e4%40linaro.org
-patch subject: [PATCH 4/4] PCI: qcom: Implement RC shutdown/power up
-config: arm64-allmodconfig (https://download.01.org/0day-ci/archive/20231229/202312291155.8v6ZEtrf-lkp@intel.com/config)
-compiler: clang version 18.0.0git (https://github.com/llvm/llvm-project 8a4266a626914765c0c69839e8a51be383013c1a)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20231229/202312291155.8v6ZEtrf-lkp@intel.com/reproduce)
+All the maintainers:
+ Happy new year!
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202312291155.8v6ZEtrf-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> ld.lld: error: undefined symbol: cmd_db_ready
-   >>> referenced by pcie-qcom.c
-   >>>               drivers/pci/controller/dwc/pcie-qcom.o:(qcom_pcie_probe) in archive vmlinux.a
---
->> ld.lld: error: undefined symbol: crc8_populate_msb
-   >>> referenced by pcie-qcom.c
-   >>>               drivers/pci/controller/dwc/pcie-qcom.o:(qcom_pcie_config_sid_1_9_0) in archive vmlinux.a
---
->> ld.lld: error: undefined symbol: crc8
-   >>> referenced by pcie-qcom.c
-   >>>               drivers/pci/controller/dwc/pcie-qcom.o:(qcom_pcie_config_sid_1_9_0) in archive vmlinux.a
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+>> 
+>> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+>> Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+>> ---
+>>  drivers/pci/controller/plda/pcie-microchip-host.c | 8 +++++---
+>>  drivers/pci/controller/plda/pcie-plda.h           | 1 +
+>>  2 files changed, 6 insertions(+), 3 deletions(-)
+>> 
+>> diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
+>> index 506e6eeadc76..7b3f4f74745d 100644
+>> --- a/drivers/pci/controller/plda/pcie-microchip-host.c
+>> +++ b/drivers/pci/controller/plda/pcie-microchip-host.c
+>> @@ -654,7 +654,7 @@ static void plda_handle_event(struct irq_desc *desc)
+>>  
+>>  	events = mc_get_events(port);
+>>  
+>> -	for_each_set_bit(bit, &events, NUM_EVENTS)
+>> +	for_each_set_bit(bit, &events, port->num_events)
+>>  		generic_handle_domain_irq(port->event_domain, bit);
+>>  
+>>  	chained_irq_exit(chip, desc);
+>> @@ -817,7 +817,8 @@ static int plda_pcie_init_irq_domains(struct plda_pcie_rp *port)
+>>  		return -EINVAL;
+>>  	}
+>>  
+>> -	port->event_domain = irq_domain_add_linear(pcie_intc_node, NUM_EVENTS,
+>> +	port->event_domain = irq_domain_add_linear(pcie_intc_node,
+>> +						   port->num_events,
+>>  						   &plda_event_domain_ops,
+>>  						   port);
+>>  	if (!port->event_domain) {
+>> @@ -921,7 +922,7 @@ static int plda_init_interrupts(struct platform_device *pdev, struct plda_pcie_r
+>>  	if (irq < 0)
+>>  		return -ENODEV;
+>>  
+>> -	for (i = 0; i < NUM_EVENTS; i++) {
+>> +	for (i = 0; i < port->num_events; i++) {
+>>  		event_irq = irq_create_mapping(port->event_domain, i);
+>>  		if (!event_irq) {
+>>  			dev_err(dev, "failed to map hwirq %d\n", i);
+>> @@ -1013,6 +1014,7 @@ static int mc_host_probe(struct platform_device *pdev)
+>>  
+>>  	bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
+>>  	plda->bridge_addr = bridge_base_addr;
+>> +	plda->num_events = NUM_EVENTS;
+>>  
+>>  	/* Allow enabling MSI by disabling MSI-X */
+>>  	val = readl(bridge_base_addr + PCIE_PCI_IRQ_DW0);
+>> diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
+>> index 3deefd35fa5a..e3d35cef9894 100644
+>> --- a/drivers/pci/controller/plda/pcie-plda.h
+>> +++ b/drivers/pci/controller/plda/pcie-plda.h
+>> @@ -118,6 +118,7 @@ struct plda_pcie_rp {
+>>  	raw_spinlock_t lock;
+>>  	struct plda_msi msi;
+>>  	void __iomem *bridge_addr;
+>> +	int num_events;
+>>  };
+>>  
+>>  void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
+>> -- 
+>> 2.17.1
+>> 
