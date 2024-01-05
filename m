@@ -1,169 +1,188 @@
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2078.outbound.protection.outlook.com [40.107.220.78])
+Received: from CHN02-SH0-obe.outbound.protection.partner.outlook.cn (mail-sh0chn02on2058.outbound.protection.partner.outlook.cn [139.219.146.58])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9D91DFCB;
-	Fri,  5 Jan 2024 06:22:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="Gi8POD9k"
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE0818041;
+	Fri,  5 Jan 2024 07:10:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=k09RoEikwXJcESAx7pGucEnlEsmBefpWHk6rwqeY8ahnl7CvvOGAapb1RbrW9cCh+yNBR+5OvVyJrFXooAtyFXnXsqFeF/FF5l1OZhNuZnlzwQi26NNiDrWDFZea0zBmYI5CfKN6m9vqE/Z38P4oVe3TcsE7NzldjLrpctd67lYxgri2ttRgkH4PgECWxicS7ig21wSWAsE7qun1PRy2imF9HeK5mcm0Fdm34DN/bbjS0U85rvb0AX+YxfiryPbCfN2/m1DYOD+4vHcYaFoONJI88vW8gXdMEkI2U/YvXtGJ9F96Pi14oCVYq64s8Y0oS0nRZ6t/z7ZWQbaMpwWI2Q==
+ b=LABp2Xd8JFXjhBWoVLQVtpZmBrmzBAtPTFoOWTW3DOtkz3rTxFv56pRoBN3xDlxbE4kEiZ6OZN8ylznwblOATKoptMAOXXWsjmvA98b6N5vcdOB6Go4Tba58HNuBbPFO3jQiZOb5qFJZvt7Ms+8DKR7p3HiK14jq9Io7iCpMwNtlJR374YA/DoyfhKcLMxBzS330DotQT2VRYmb8G9CajVIOgJAFoTnAlswFRBXIjUf4ycvpeZ9QGOh9VCD5Ih1/LdY+6RSVI6SXW+3XbYd+6KST26tXzY/A3nGg/4VrIcxU78y9A7BykAhU2oq1tI9fFa6KBpg160VJbANVLOoRJQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mEBEqKqA7iCm+KmSP0HqBc3BzXcAJJq0BwRgpVVeKfk=;
- b=AnSt9qZLSku8IYIySet92jIngBS0xVuCpkVc8E7ew7XHz/tTyO0kt6zhbwshR1vpUzKQPaqzGfhcL3B3egHI9XMom/9Wqvdpq7nP66LHiluUxxJX/tBTckreh30MXrgXnMNk8wALNXxTfvXO6RXXklBZfgZc9QdKQb54RB9BcMzqeBWxJT26VP+tPG62hNkECgWgQs39s9chS3m38FLSpP+fieiYzP8kq2u81v7Pf282/A6cIzdMP4J8FZme9cNr2sPBwC5Enp6GHSx5rmJErz4sHLlbtn3rFJPBcksU6dsij4V4bNgfgvaIb5Z9tD2Rcjiyo0EmiRcCP50s1L2OAg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=suse.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mEBEqKqA7iCm+KmSP0HqBc3BzXcAJJq0BwRgpVVeKfk=;
- b=Gi8POD9k2yEB/Dld1hZhzYUqRirs+P+aMbrUvZTrK7UGzwsmlztMgaq9iy8J0F5TNu3z1u4DXiw7wbSsHrNkawFjZgWpQFqisdcGeo/ZojrfGdr9E2XTbsWkbIJbxx4rAXZcBloV/ajXSZSAsTQ20F21w18U/2OgwJPmE2yulAs=
-Received: from SJ0PR03CA0089.namprd03.prod.outlook.com (2603:10b6:a03:331::34)
- by IA0PR12MB7507.namprd12.prod.outlook.com (2603:10b6:208:441::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7159.16; Fri, 5 Jan
- 2024 06:22:53 +0000
-Received: from DS2PEPF0000343B.namprd02.prod.outlook.com
- (2603:10b6:a03:331:cafe::5b) by SJ0PR03CA0089.outlook.office365.com
- (2603:10b6:a03:331::34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7159.14 via Frontend
- Transport; Fri, 5 Jan 2024 06:22:52 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- DS2PEPF0000343B.mail.protection.outlook.com (10.167.18.38) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.7159.9 via Frontend Transport; Fri, 5 Jan 2024 06:22:52 +0000
-Received: from cjq-desktop.amd.com (10.180.168.240) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.34; Fri, 5 Jan
- 2024 00:22:44 -0600
-From: Jiqian Chen <Jiqian.Chen@amd.com>
-To: Juergen Gross <jgross@suse.com>, Stefano Stabellini
-	<sstabellini@kernel.org>, Oleksandr Tyshchenko
-	<oleksandr_tyshchenko@epam.com>, Boris Ostrovsky
-	<boris.ostrovsky@oracle.com>, Bjorn Helgaas <bhelgaas@google.com>, "Rafael J
- . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
-	=?UTF-8?q?Roger=20Pau=20Monn=C3=A9?= <roger.pau@citrix.com>
-CC: <xen-devel@lists.xenproject.org>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-acpi@vger.kernel.org>, "Stewart
- Hildebrand" <Stewart.Hildebrand@amd.com>, Huang Rui <Ray.Huang@amd.com>,
-	Jiqian Chen <Jiqian.Chen@amd.com>, Huang Rui <ray.huang@amd.com>
-Subject: [RFC KERNEL PATCH v4 3/3] PCI/sysfs: Add gsi sysfs for pci_dev
-Date: Fri, 5 Jan 2024 14:22:17 +0800
-Message-ID: <20240105062217.349645-4-Jiqian.Chen@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240105062217.349645-1-Jiqian.Chen@amd.com>
-References: <20240105062217.349645-1-Jiqian.Chen@amd.com>
+ bh=VxmeZJF60lnX5RnKDVwlgUX0Ere9i+J3XylcRcaC1Mc=;
+ b=ESdbdyR41eKcDEaoSoxNv/t/MfZRYxoHtk/ZzwPPVTb6T4hbPYPjM28dE6hBXZAUhYy1l77XWC8tUcfXXLNoGe9vG4zAaXBCBBtzqT9o89SVFWyKGP4u+FoHx3e7YTJAKHxr1a0vsSvUgCacVldJ3XDoxrOAQoWwm6MtlkYr14f8Xu/T/C7yD/2WHNspSlgf2TYiJH7l63ThrnG0/411GyLyp8hex0GZHWf23N4NiXErwfLoznpqWGm3K/l/31eyRz6NdbkZf78NC0f7kelgYSQGJMd9BW28l9d2j3a+v29URN31XoqtVJrmKWfUUdCLOyacr3N9/puiE7jTiqXnuQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=starfivetech.com; dmarc=pass action=none
+ header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
+Received: from ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c550::13) by ZQ0PR01MB1222.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c550:1b::5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7135.27; Fri, 5 Jan
+ 2024 02:35:10 +0000
+Received: from ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+ ([fe80::4583:3e2:da11:265e]) by ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+ ([fe80::4583:3e2:da11:265e%6]) with mapi id 15.20.7135.013; Fri, 5 Jan 2024
+ 02:35:10 +0000
+From: Kevin Xie <kevin.xie@starfivetech.com>
+To: Kevin Hilman <khilman@baylibre.com>, Minda Chen
+	<minda.chen@starfivetech.com>, Conor Dooley <conor@kernel.org>,
+	=?gb2312?B?S3J6eXN6dG9mIFdpbGN6eai9c2tp?= <kw@linux.com>, Rob Herring
+	<robh+dt@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi
+	<lpieralisi@kernel.org>, Daire McNamara <daire.mcnamara@microchip.com>, Emil
+ Renner Berthing <emil.renner.berthing@canonical.com>, Krzysztof Kozlowski
+	<krzysztof.kozlowski+dt@linaro.org>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Paul Walmsley
+	<paul.walmsley@sifive.com>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+	<aou@eecs.berkeley.edu>, Philipp Zabel <p.zabel@pengutronix.de>, Mason Huo
+	<mason.huo@starfivetech.com>, Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+	Minda Chen <minda.chen@starfivetech.com>
+Subject:
+ =?gb2312?B?u9i4tDogW1BBVENIIHYxMyAwLzIxXSBSZWZhY3RvcmluZyBNaWNyb2NoaXAg?=
+ =?gb2312?Q?PCIe_driver_and_add_StarFive_PCIe?=
+Thread-Topic: [PATCH v13 0/21] Refactoring Microchip PCIe driver and add
+ StarFive PCIe
+Thread-Index: AQHaPpXiMe+t6/O8C0OnZGJ4Y32LtrDKgdAQ
+Date: Fri, 5 Jan 2024 02:35:10 +0000
+Message-ID:
+ <ZQ0PR01MB098128579D86207B4B9BA7D28266A@ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn>
+References: <20231214072839.2367-1-minda.chen@starfivetech.com>
+ <7hfrzeavmj.fsf@baylibre.com>
+In-Reply-To: <7hfrzeavmj.fsf@baylibre.com>
+Accept-Language: zh-CN, en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=starfivetech.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: ZQ0PR01MB0981:EE_|ZQ0PR01MB1222:EE_
+x-ms-office365-filtering-correlation-id: 080d11ca-2a84-44e3-88ea-08dc0d96f03f
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info:
+ 10Er+8cBEExcgmcApRf21maOJZ/Crw6wAugR2L6mo0p0zIrJw5hqsB8nLCfJ+egqxIj7+vvr3LY6EujoIloaN7rMeAaeWNMspXVl4ZYSWt10U9oJTCMEwbeHy4D5KCGK2bi21l7BN1eFbiD8stF6mEzH5Wxemmrek47sOQisA67hFX/BkVHKT91M2K4MElewwAaxXJ+UX541gaUtZBQOx0Jv0nJsdpJXsQkhywvvjQnKAP4aNOvL4PVahMdjWetGJn3cqLuGYuoJqTgYh3ZakWs9QuT2uXLR7v32R9Mpr5TBn1K7/LXzuVbKqca5kEBkA5RIl4nVxL8GZfT2yRIy4xGV0oCvp9Y3li7GwHkMn5it9ECe7Nt6jGt3+O5Y68e6lYJNJNqxDXUahkvSpRgkRB5ybus+15wGWlf3dELvtm4BSxHO9EmmovEBz7kJf7X/SX0kOvYQyu0ztqHJ48c8xRziKZ/W8Uuds6faCxD+Og/B8bW0BwKo87h5XX2zeG8QOU712sIZjUy7mqE35OqiZ5wan5+UK5OtOj3ynkxmmyYDDzSh4mm8uu7KEsHID/fv
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230031)(136003)(39830400003)(346002)(366004)(396003)(230922051799003)(1800799012)(451199024)(64100799003)(186009)(508600001)(2906002)(40180700001)(44832011)(5660300002)(7416002)(921011)(122000001)(40160700002)(33656002)(38100700002)(55016003)(4326008)(8936002)(7696005)(224303003)(66446008)(38070700009)(66476007)(76116006)(66946007)(9686003)(71200400001)(54906003)(64756008)(110136005)(66556008)(26005)(41300700001)(86362001)(83380400001)(107886003)(41320700001);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?gb2312?B?MkVIR1huZm03b0VFTXdHVGpEcStjUjFkQnBsRnRXYjdKM1E4V0RoOE5PVVgr?=
+ =?gb2312?B?cER5d2VlNmpVN2VWTE9LbUVlb0J2VDQ2M1JqTkNpaHlnNGV6Nkg4RUxxVnpL?=
+ =?gb2312?B?UGdSdHV5YlpsaDZqSHg0MnN2UjA5a0RNRS9IWnR5emFXb1Z0bWU5SjFFV0w0?=
+ =?gb2312?B?WTRYRW40OVVnVnhkQ1hNS3hvb1lxKzNWMURsdDBiNEVqS3RTNXdoQ2tOemtT?=
+ =?gb2312?B?c1VLN0x5Vm9jNzdKaW5FTHhLa1NBWko3NmFhNjJoanQvdVRWamp3SmZCNW5z?=
+ =?gb2312?B?Q2FsRHFwdE9leThGenVGem5JQ3F0M1loU2xxVTk0REN0Rng0L0tiOCtLT2pz?=
+ =?gb2312?B?a0Y0ZzlpMkNjN2ljVjRMTnQrVCszaURTRW1TSDhEMWU4NFM2c00yVU40S2hG?=
+ =?gb2312?B?alpJNW8ya2c5SU5LVnZDc09McVVqVTlUcHE4RTljZW9ldHVJWVBBcGVVbzZo?=
+ =?gb2312?B?bW9EZmg1c1JULzVodU9Yb0xBZnZuMUFoVVJEV2JJR0NpY1l1R3p2ZEVsdGlp?=
+ =?gb2312?B?YkVHRjRJSGE2OGVpR2xSM1FTZitpaHNBZXR1Q3I4VWtlcWxYV09FQlRuais5?=
+ =?gb2312?B?OHkzVW56Q05ERjVSV2JkMUtMSzFXZzhPaXM0cHQzWHpWZWRtcFgwRWFvbUZi?=
+ =?gb2312?B?UDlCMzNoWEErRHNkZzRjVVNCZFh5bGx5aERQeGo4VktkMHZ0WDZWZStFR3JO?=
+ =?gb2312?B?Rmo1SENKVjR1eDBCRmdDakN6bDQ3VG1uNHhyV3c1dFVhV2V1M0tRbWh3ZWt5?=
+ =?gb2312?B?NDBnYW5sQ3FZZTdyd3BEM2lCUHFTZldUYTQyUE1lRTJaRUE1ZGNBQlAxeEZN?=
+ =?gb2312?B?S2k5ZUZyMWZTN3o3UmhlQmx2eUFQTXZCeC9vWXlRelhQUTFvUHZzU2wvMjBG?=
+ =?gb2312?B?TFJTNXpBZzhkT2tERlJSNGVlMk1BVGRtY2ZBZjNJaElhTVhuVkN1ZnpMQnBH?=
+ =?gb2312?B?eGVIOWh2M1JobzBySk5qUHZ1bXhNVEE4ait5L0xvb2J1bys2SlIrMjA1UGNC?=
+ =?gb2312?B?RTBPWlNBZnRESlFpSHNwNjZwZXdWR0pKajlwbCtVYVprQUJnbjM1eW9pZFkz?=
+ =?gb2312?B?VmdlM2p3MUJ5dzgrM1dHeko1VjNyQnhxTndyWmIxNE9sQ0xnOEN1TDg5OHN5?=
+ =?gb2312?B?cHV4M3Z2eFJkNGZBY2svNjloWnNGTFhHTVVEWWY5RTNHUFcyMlNoNGRUQk9D?=
+ =?gb2312?B?TGhJTGlUMW9OQUdYUGxITHVlMStqdjBxMFJhcmVqbFZoV0VuaHROQnloZ1JS?=
+ =?gb2312?B?TFYrYm8vbXAvQkU3VmlwSzNZSk9YSGo1ZkVnS0lVWHlIa2dUMzBlTlZ6NlVG?=
+ =?gb2312?B?eDNBOWZXcUorZUsrSzlwWnJYSUxmM2x2ODFEVGNZcXV1d1pTVHg3MU8vWUo0?=
+ =?gb2312?B?ZkNwZnJEMzk4K3lQb2Y1MkdqMjV4VFc5cVZvbGFUbEI0UmJuSW9zVjN3ZCtX?=
+ =?gb2312?B?SVVVd21vMUxNckVWdUxXN3VuK01TY21DQUNWTzJCT0lTUjFMMWljSEp0Ui9D?=
+ =?gb2312?B?N3pNR2xoR1dRTVZWb25tTEFoT3FCcUg5ZXNVdERvTTJsa3lmN1cySU8zamxO?=
+ =?gb2312?B?T0hmR1dGVmhsVjNQWVJmZFdzK3h3Z3ZwZjJ3Rm9mRUF5N3Y3VXhXRDBBSnFJ?=
+ =?gb2312?B?eXBzcXhDQ0JVSEE0anRSd0RFclNhSksxdDladHNGY1lHaDVMZktUSkRzeUpQ?=
+ =?gb2312?B?dW9nNC9KTlhNVk11NzZRbGZoaVF0Z0JwWDEydXFncjRHUTV1Z0U2dm9wNHZI?=
+ =?gb2312?B?S295SllPTXE1bll5NW1vMEhZSTlPSHRuM3IrZHBJbkxKV3laS0hMOUE4d0g1?=
+ =?gb2312?B?WTVXcnlOUkM3TG5zMXE0b0RkMEwwMm9vUWxZdWh1dVhuSkNIajk4L3lMNm5r?=
+ =?gb2312?B?b1NQRGpaOWZISnNINVJ3ME8zZ2hHUkpNd1d4SjNiL2k2ck5PTWNUTklESzhB?=
+ =?gb2312?B?V1BHSk16RXdsZy9qNjhnRTRFVExsNFlvVCtUdlcvN1o4LzFhRnFKVzNnd0hR?=
+ =?gb2312?B?Y3NIc1F0MkhaSnZQTnpYZzE5a0E1cWdpdDFJTlYxVDdFOTlWN2RYditUUFFh?=
+ =?gb2312?Q?E5NpbJ?=
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
- (10.181.40.145)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS2PEPF0000343B:EE_|IA0PR12MB7507:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7a331728-29ab-46e1-0d3b-08dc0db6bf8b
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	1RJFOBH2EQw+BwQCZTJX02YzJm8vOWMFi4e3B/Wv6JhFbstCIk4TolRme10eQRaC89MHDZoeSE96Qh9R3fjSq6vc3uL7Xm/DFNHaXIxFh1qhk/yuEnOPE1IVxUpFZt7KxGSyQxiplr6ZWiBrA8ALsZGNSDP33d/yHEHckgaH0d/Z4JjhOTGmv65+PnsN2zs2B9dmBRwWxZJTfgXa8XVBPJGUx2+y5MKezk+jErj/hPkGJ0jyNIFhxCdz3Fa6CD/eocmGrbU5gwoYzIgpdmBnwrQkFnjmcmIhRG+3O036CrjJsHTqD7XOz1gkbo5dUsDE32IQNAa9UXEslF531UGGcz6ZZ2NS9alBSETxr34qhkaehJDKJp1D0FwRliPjGU29FqZAT4C8BNobBgavvATehSLTqT+86r4uyE0nS0lauqBOPOLmUrHKLiod3uCYNNznLHn/E8xN84Es1auHj9REMGJOXZsoQ3aA0SNVCWuE/W8vl3BDBdH6IFV3KQz6nBXp/Tw5Wr7mi4xkAYrHGzA8GntdmsU4Cnm1lKS0hfdeMJm3dGAngznjqd6vw84E2Wquly3NEodiB84ZxNpk6XmX7dAUHpdgJ11MEzsoBwkL3Ig9FT5+9kaqwi1K9VfbVl9FecQdOrdpU1dVB+9ShwUXncsDhufhixZamzl+Kk9ArGrTvBwZoQOTiMRiE51Btr+uDT9cZ7xd/bpO/2Inqk8HnT0R0kiF1LBdsEUIY3zHPQFaK/KPsz4OkxNmS8ajEtVF90mZPB7gTbDAu9E3hSmCuA==
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(4636009)(376002)(396003)(136003)(39860400002)(346002)(230922051799003)(186009)(82310400011)(64100799003)(451199024)(1800799012)(40470700004)(36840700001)(46966006)(2616005)(336012)(426003)(16526019)(26005)(1076003)(7696005)(6666004)(86362001)(83380400001)(4326008)(316002)(54906003)(110136005)(8676002)(8936002)(7416002)(2906002)(36756003)(5660300002)(478600001)(70206006)(70586007)(82740400003)(81166007)(356005)(47076005)(36860700001)(41300700001)(40460700003)(40480700001)(36900700001);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Jan 2024 06:22:52.7600
+X-OriginatorOrg: starfivetech.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: ZQ0PR01MB0981.CHNPR01.prod.partner.outlook.cn
+X-MS-Exchange-CrossTenant-Network-Message-Id: 080d11ca-2a84-44e3-88ea-08dc0d96f03f
+X-MS-Exchange-CrossTenant-originalarrivaltime: 05 Jan 2024 02:35:10.6310
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7a331728-29ab-46e1-0d3b-08dc0db6bf8b
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS2PEPF0000343B.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR12MB7507
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: VuW/hQSaTVCShMEefGwO+JscG0WbVMEKYx08f3G0Iwx6Y6sEDx5EJOLThoFx20ErRHNbvG33xkw91Mhsl69tgYSNLNY/tWKD0tWqid/srRw=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: ZQ0PR01MB1222
 
-There is a need for some scenarios to use gsi sysfs.
-For example, when xen passthrough a device to dumU, it will
-use gsi to map pirq, but currently userspace can't get gsi
-number.
-So, add gsi sysfs for that and for other potential scenarios.
-
-Co-developed-by: Huang Rui <ray.huang@amd.com>
-Signed-off-by: Jiqian Chen <Jiqian.Chen@amd.com>
----
- drivers/acpi/pci_irq.c  |  1 +
- drivers/pci/pci-sysfs.c | 11 +++++++++++
- include/linux/pci.h     |  2 ++
- 3 files changed, 14 insertions(+)
-
-diff --git a/drivers/acpi/pci_irq.c b/drivers/acpi/pci_irq.c
-index 630fe0a34bc6..739a58755df2 100644
---- a/drivers/acpi/pci_irq.c
-+++ b/drivers/acpi/pci_irq.c
-@@ -449,6 +449,7 @@ int acpi_pci_irq_enable(struct pci_dev *dev)
- 		kfree(entry);
- 		return 0;
- 	}
-+	dev->gsi = gsi;
- 
- 	rc = acpi_register_gsi(&dev->dev, gsi, triggering, polarity);
- 	if (rc < 0) {
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 2321fdfefd7d..c51df88d079e 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -71,6 +71,16 @@ static ssize_t irq_show(struct device *dev,
- }
- static DEVICE_ATTR_RO(irq);
- 
-+static ssize_t gsi_show(struct device *dev,
-+			struct device_attribute *attr,
-+			char *buf)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+
-+	return sysfs_emit(buf, "%u\n", pdev->gsi);
-+}
-+static DEVICE_ATTR_RO(gsi);
-+
- static ssize_t broken_parity_status_show(struct device *dev,
- 					 struct device_attribute *attr,
- 					 char *buf)
-@@ -596,6 +606,7 @@ static struct attribute *pci_dev_attrs[] = {
- 	&dev_attr_revision.attr,
- 	&dev_attr_class.attr,
- 	&dev_attr_irq.attr,
-+	&dev_attr_gsi.attr,
- 	&dev_attr_local_cpus.attr,
- 	&dev_attr_local_cpulist.attr,
- 	&dev_attr_modalias.attr,
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index dea043bc1e38..0618d4a87a50 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -529,6 +529,8 @@ struct pci_dev {
- 
- 	/* These methods index pci_reset_fn_methods[] */
- 	u8 reset_methods[PCI_NUM_RESET_METHODS]; /* In priority order */
-+
-+	unsigned int	gsi;
- };
- 
- static inline struct pci_dev *pci_physfn(struct pci_dev *dev)
--- 
-2.34.1
-
+PiBNaW5kYSBDaGVuIDxtaW5kYS5jaGVuQHN0YXJmaXZldGVjaC5jb20+IHdyaXRlczoNCj4gDQo+
+ID4gVGhpcyBwYXRjaHNldCBmaW5hbCBwdXJwb3NlIGlzIGFkZCBQQ0llIGRyaXZlciBmb3IgU3Rh
+ckZpdmUgSkg3MTEwIFNvQy4NCj4gPiBKSDcxMTAgdXNpbmcgUExEQSBYcHJlc3NSSUNIIFBDSWUg
+SVAuIE1pY3JvY2hpcCBQb2xhckZpcmUgVXNpbmcgdGhlDQo+ID4gc2FtZSBJUCBhbmQgaGF2ZSBj
+b21taXQgdGhlaXIgY29kZXMsIHdoaWNoIGFyZSBtaXhlZCB3aXRoIFBMREENCj4gPiBjb250cm9s
+bGVyIGNvZGVzIGFuZCBNaWNyb2NoaXAgcGxhdGZvcm0gY29kZXMuDQo+IA0KPiBUaGFuayB5b3Ug
+Zm9yIHRoaXMgc2VyaWVzLg0KPiANCj4gSSB0ZXN0ZWQgdGhpcyBvbiBhIFZpc2lvbkZpdmUgdjIg
+Ym9hcmQsIGFuZCBpdCBzZWVtcyB0byBwcm9iZSBhbmQgZmluZCBteQ0KPiBNLjIgTlZNZSBTU0Qs
+IGJ1dCB0aGVuIGdldHMgdGltZW91dHMgd2hlbiB0cnlpbmcgdG8gdXNlIHRoZSBOVk1lIChlLmcu
+DQo+ICdibGtpZCcgY29tbWFuZCkNCj4gDQoNCkhpLCBLZXZpbjoNCkNvdWxkIHlvdSBwbGVhc2Ug
+cHJvdmlkZSB0aGUgbWFudWZhY3R1cmVyIGFuZCBtb2RlbCBvZiB0aGUgTS4yIE5WTWUgU1NEDQp5
+b3UgdGVzdGVkPw0KDQo+IEtlcm5lbCBsb2dzIGJlbG93Lg0KPiANCj4gS2V2aW4NCj4gDQo+IFsg
+ICAxNS4xMzEwOTRdIHBjaWUtc3RhcmZpdmUgOWMwMDAwMDAwLnBjaWU6IGhvc3QgYnJpZGdlDQo+
+IC9zb2MvcGNpZUA5YzAwMDAwMDAgcmFuZ2VzOg0KPiBbICAgMTUuMTM4NjM3XSBwY2llLXN0YXJm
+aXZlIDljMDAwMDAwMC5wY2llOiAgICAgIE1FTQ0KPiAweDAwMzgwMDAwMDAuLjB4MDAzZmZmZmZm
+ZiAtPiAweDAwMzgwMDAwMDANCj4gWyAgIDE1LjE0NzE4MF0gcGNpZS1zdGFyZml2ZSA5YzAwMDAw
+MDAucGNpZTogICAgICBNRU0NCj4gMHgwOTgwMDAwMDAwLi4weDA5YmZmZmZmZmYgLT4gMHgwOTgw
+MDAwMDAwDQo+IFsgICAxNS4zNjgwNDBdIHBjaWUtc3RhcmZpdmUgOWMwMDAwMDAwLnBjaWU6IHBv
+cnQgbGluayB1cA0KPiBbICAgMTUuMzc0MjE5XSBwY2llLXN0YXJmaXZlIDljMDAwMDAwMC5wY2ll
+OiBQQ0kgaG9zdCBicmlkZ2UgdG8gYnVzIDAwMDE6MDANCj4gWyAgIDE1LjM4MDk0NF0gcGNpX2J1
+cyAwMDAxOjAwOiByb290IGJ1cyByZXNvdXJjZSBbYnVzIDAwLWZmXQ0KPiBbICAgMTUuMzg2NDQz
+XSBwY2lfYnVzIDAwMDE6MDA6IHJvb3QgYnVzIHJlc291cmNlIFttZW0NCj4gMHgzODAwMDAwMC0w
+eDNmZmZmZmZmXQ0KPiBbICAgMTUuMzkzMzMwXSBwY2lfYnVzIDAwMDE6MDA6IHJvb3QgYnVzIHJl
+c291cmNlIFttZW0NCj4gMHg5ODAwMDAwMDAtMHg5YmZmZmZmZmYgcHJlZl0NCj4gWyAgIDE1LjQw
+MDg4Ml0gcGNpIDAwMDE6MDA6MDAuMDogWzE1NTY6MTExMV0gdHlwZSAwMSBjbGFzcyAweDA2MDQw
+MA0KPiBbICAgMTUuNDA3MTY1XSBwY2kgMDAwMTowMDowMC4wOiBzdXBwb3J0cyBEMSBEMg0KPiBb
+ICAgMTUuNDExNDQ3XSBwY2kgMDAwMTowMDowMC4wOiBQTUUjIHN1cHBvcnRlZCBmcm9tIEQwIEQx
+IEQyIEQzaG90DQo+IEQzY29sZA0KPiBbICAgMTUuNDE5OTY0XSBwY2kgMDAwMTowMDowMC4wOiBi
+cmlkZ2UgY29uZmlndXJhdGlvbiBpbnZhbGlkIChbYnVzIDAwLTAwXSksDQo+IHJlY29uZmlndXJp
+bmcNCj4gWyAgIDE1LjQyODI0NV0gcGNpIDAwMDE6MDE6MDAuMDogWzEyNmY6MjI2M10gdHlwZSAw
+MCBjbGFzcyAweDAxMDgwMg0KPiBbICAgMTUuNDM0MzMxXSBwY2kgMDAwMTowMTowMC4wOiByZWcg
+MHgxMDogW21lbSAweDAwMDAwMDAwLTB4MDAwMDNmZmYNCj4gNjRiaXRdDQo+IFsgICAxNS40NDE1
+NzhdIHBjaSAwMDAxOjAxOjAwLjA6IDQuMDAwIEdiL3MgYXZhaWxhYmxlIFBDSWUgYmFuZHdpZHRo
+LA0KPiBsaW1pdGVkIGJ5IDUuMCBHVC9zIFBDSWUgeDEgbGluayBhdCAwMDAxOjAwOjAwLjAgKGNh
+cGFibGUgb2YgMzEuNTA0IEdiL3Mgd2l0aA0KPiA4DQo+IC4wIEdUL3MgUENJZSB4NCBsaW5rKQ0K
+PiBbICAgMTUuNDU2OTEwXSBwY2lfYnVzIDAwMDE6MDE6IGJ1c25fcmVzOiBbYnVzIDAxLWZmXSBl
+bmQgaXMgdXBkYXRlZCB0byAwMQ0KPiBbICAgMTUuNDYzNTUzXSBwY2kgMDAwMTowMDowMC4wOiBC
+QVIgODogYXNzaWduZWQgW21lbQ0KPiAweDM4MDAwMDAwLTB4MzgwZmZmZmZdDQo+IFsgICAxNS40
+NzAzNTJdIHBjaSAwMDAxOjAxOjAwLjA6IEJBUiAwOiBhc3NpZ25lZCBbbWVtDQo+IDB4MzgwMDAw
+MDAtMHgzODAwM2ZmZiA2NGJpdF0NCj4gWyAgIDE1LjQ3NzY5OV0gcGNpIDAwMDE6MDA6MDAuMDog
+UENJIGJyaWRnZSB0byBbYnVzIDAxXQ0KPiBbICAgMTUuNDgyNjg2XSBwY2kgMDAwMTowMDowMC4w
+OiAgIGJyaWRnZSB3aW5kb3cgW21lbQ0KPiAweDM4MDAwMDAwLTB4MzgwZmZmZmZdDQo+IFsgICAx
+NS40ODk2MzJdIHBjaWVwb3J0IDAwMDE6MDA6MDAuMDogZW5hYmxpbmcgZGV2aWNlICgwMDAwIC0+
+IDAwMDIpDQo+IFsgICAxNS40OTYwMzhdIHBjaWVwb3J0IDAwMDE6MDA6MDAuMDogUE1FOiBTaWdu
+YWxpbmcgd2l0aCBJUlEgNTYNCj4gWyAgIDE1LjUwMjQ3Ml0gdXNiIDEtMTogbmV3IGhpZ2gtc3Bl
+ZWQgVVNCIGRldmljZSBudW1iZXIgMiB1c2luZyB4aGNpX2hjZA0KPiBbICAgMTUuNTA5NzU1XSB1
+c2IgdXNiMi1wb3J0Mjogb3Zlci1jdXJyZW50IGNvbmRpdGlvbg0KPiBbICAgMTUuNTE1ODgzXSBu
+dm1lIG52bWUwOiBwY2kgZnVuY3Rpb24gMDAwMTowMTowMC4wDQo+IFsgICAxNS41MjA2MTVdIG52
+bWUgMDAwMTowMTowMC4wOiBlbmFibGluZyBkZXZpY2UgKDAwMDAgLT4gMDAwMikNCj4gWyAgIDE1
+LjUzMjY4NV0gbnZtZSBudm1lMDogYWxsb2NhdGVkIDY0IE1pQiBob3N0IG1lbW9yeSBidWZmZXIu
+DQo+IFsgICAxNS41NTAwNzBdIG52bWUgbnZtZTA6IDQvMC8wIGRlZmF1bHQvcmVhZC9wb2xsIHF1
+ZXVlcw0KPiBbICAgMTUuNTYyOTkyXSBudm1lIG52bWUwOiBJZ25vcmluZyBib2d1cyBOYW1lc3Bh
+Y2UgSWRlbnRpZmllcnMNCj4gWyAgIDE1LjY2MzMyN10gaHViIDEtMToxLjA6IFVTQiBodWIgZm91
+bmQNCj4gWyAgIDE1LjY2NzMyMF0gaHViIDEtMToxLjA6IDQgcG9ydHMgZGV0ZWN0ZWQNCj4gDQo+
+IFsgICA0Ni4wNjQwNTJdIG52bWUgbnZtZTA6IEkvTyA0MjQgUUlEIDMgdGltZW91dCwgY29tcGxl
+dGlvbiBwb2xsZWQNCj4gDQo+IFsgICA3Ni43ODQwNDZdIG52bWUgbnZtZTA6IEkvTyA0MjUgKEkv
+TyBDbWQpIFFJRCAzIHRpbWVvdXQsIGFib3J0aW5nDQo+IFsgICA3Ni43OTAxNzldIG52bWUgbnZt
+ZTA6IEkvTyA0MjYgKEkvTyBDbWQpIFFJRCAzIHRpbWVvdXQsIGFib3J0aW5nDQo+IFsgICA3Ni43
+OTYyOTRdIG52bWUgbnZtZTA6IEkvTyA0MjcgKEkvTyBDbWQpIFFJRCAzIHRpbWVvdXQsIGFib3J0
+aW5nDQo+IFsgICA3Ni44MDI0MTFdIG52bWUgbnZtZTA6IEkvTyA0MjggKEkvTyBDbWQpIFFJRCAz
+IHRpbWVvdXQsIGFib3J0aW5nDQo+IFsgICA3Ni44MDg1MjVdIG52bWUgbnZtZTA6IEkvTyA0Mjkg
+KEkvTyBDbWQpIFFJRCAzIHRpbWVvdXQsIGFib3J0aW5nDQoNCg==
