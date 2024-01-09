@@ -1,122 +1,145 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5885B639;
-	Tue,  9 Jan 2024 00:29:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D72E8186E;
+	Tue,  9 Jan 2024 01:24:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UhX17OvJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Dtf5FdSV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1704760168; x=1736296168;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ICS0Q1nES6wmFGgjB/iavarHm9pD/C1AFIAVIA7DcCg=;
-  b=UhX17OvJ5dE7T7WIKCyciBTJqWDWcu4lVS6h1KJxP6Wa2kfJ2nBA8pDu
-   z7ZSIUTckegp5Tx5h9hNfhCINjYibt+/B+cLo1YEnxmLkBMK20xWRbqhS
-   LI9zoA8GkpgOW8MwCUxlK+o8fd01AxKxNkvyW5zlaPZjuLntFZOnPlLAx
-   z1M+BA/xKIhbEKavwGukIQowopfAAaXtKchhgLuGATa2bNYp1VtP6XPxl
-   BghbUtfXg5ejUs5v22z4z+nTKi77wZ7nQunBMA6hDzFrDdDfdo0RR0n1L
-   IvevUkNMAKuzokjrGuaj88yD1dF2xLsnIr/Ecdsdj7vgEG4RZYe8y2Yny
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10947"; a="396911428"
+  t=1704763450; x=1736299450;
+  h=message-id:date:mime-version:subject:from:to:cc:
+   references:in-reply-to:content-transfer-encoding;
+  bh=tztNPMuvQXiNw1r7vUmDEia96WTG9eqw7fOwv3oe8+k=;
+  b=Dtf5FdSVkuYo5mOXUe2Ei1or5b2KQU2LARRyDzgPz8et9JRP+YDcEc3D
+   bhOAcPjkyMy4eilmabBoMC9laZgbv551HMpd63Z8pSAiFeQFK62+64tnz
+   oeDf7Cke8UePACm6efud4aSSG8RKJYPgx1ttgnDg9xmafX5hK70Hnfvlo
+   M04cjnrLo3fDPOhi9elonZgIu/MjsszK/mbZzYxXuEcXuuccgKbf1pEgh
+   V16ah0EY8bJsuxueF2DDhlrBp+uwskOw5nANIWuOC8J+HoMb7HT0lTu+G
+   gpht8COcGjCambaWuitNgpzErbT88vxnZhkRo1NBe6Hj/nxkzzw5UQQ4k
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10947"; a="11399747"
 X-IronPort-AV: E=Sophos;i="6.04,181,1695711600"; 
-   d="scan'208";a="396911428"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2024 16:29:25 -0800
+   d="scan'208";a="11399747"
+Received: from orsmga004.jf.intel.com ([10.7.209.38])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2024 17:24:10 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10947"; a="900547474"
+X-IronPort-AV: E=McAfee;i="6600,9927,10947"; a="904984767"
 X-IronPort-AV: E=Sophos;i="6.04,181,1695711600"; 
-   d="scan'208";a="900547474"
-Received: from lkp-server02.sh.intel.com (HELO b07ab15da5fe) ([10.239.97.151])
-  by fmsmga002.fm.intel.com with ESMTP; 08 Jan 2024 16:29:19 -0800
-Received: from kbuild by b07ab15da5fe with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rMzzZ-0005G6-28;
-	Tue, 09 Jan 2024 00:29:17 +0000
-Date: Tue, 9 Jan 2024 08:28:59 +0800
-From: kernel test robot <lkp@intel.com>
-To: Thomas Zimmermann <tzimmermann@suse.de>, ardb@kernel.org,
-	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
-	dave.hansen@linux.intel.com, x86@kernel.org, hpa@zytor.com,
-	bhelgaas@google.com, arnd@arndb.de, zohar@linux.ibm.com,
-	dmitry.kasatkin@gmail.com, paul@paul-moore.com, jmorris@namei.org,
-	serge@hallyn.com, javierm@redhat.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-arch@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-integrity@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	Thomas Zimmermann <tzimmermann@suse.de>
-Subject: Re: [PATCH v4 2/4] arch/x86: Move internal setup_data structures
- into setup_data.h
-Message-ID: <202401090800.UOBEKB3W-lkp@intel.com>
-References: <20240108095903.8427-3-tzimmermann@suse.de>
+   d="scan'208";a="904984767"
+Received: from zhaohaif-mobl.ccr.corp.intel.com (HELO [10.93.19.162]) ([10.93.19.162])
+  by orsmga004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2024 17:24:07 -0800
+Message-ID: <fb4f62a9-131d-4c3c-b290-e77041ee0019@linux.intel.com>
+Date: Tue, 9 Jan 2024 09:24:05 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240108095903.8427-3-tzimmermann@suse.de>
-
-Hi Thomas,
-
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on tip/x86/core]
-[also build test WARNING on efi/next tip/master tip/auto-latest linus/master v6.7 next-20240108]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Thomas-Zimmermann/arch-x86-Move-UAPI-setup-structures-into-setup_data-h/20240108-180158
-base:   tip/x86/core
-patch link:    https://lore.kernel.org/r/20240108095903.8427-3-tzimmermann%40suse.de
-patch subject: [PATCH v4 2/4] arch/x86: Move internal setup_data structures into setup_data.h
-config: x86_64-rhel-8.3-bpf (https://download.01.org/0day-ci/archive/20240109/202401090800.UOBEKB3W-lkp@intel.com/config)
-compiler: ClangBuiltLinux clang version 17.0.6 (https://github.com/llvm/llvm-project 6009708b4367171ccdbf4b5905cb6a803753fe18)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240109/202401090800.UOBEKB3W-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202401090800.UOBEKB3W-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from arch/x86/realmode/rm/wakemain.c:3:
-   In file included from arch/x86/boot/boot.h:24:
-   In file included from arch/x86/include/asm/setup.h:10:
-   In file included from arch/x86/include/asm/page_types.h:7:
-   In file included from include/linux/mem_encrypt.h:17:
-   In file included from arch/x86/include/asm/mem_encrypt.h:18:
-   In file included from arch/x86/include/uapi/asm/bootparam.h:5:
->> arch/x86/include/asm/setup_data.h:10:20: warning: field 'data' with variable sized type 'struct setup_data' not at the end of a struct or class is a GNU extension [-Wgnu-variable-sized-type-not-at-end]
-      10 |         struct setup_data data;
-         |                           ^
-   1 warning generated.
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH v10 0/5] fix vt-d hard lockup when hotplug ATS capable
+ device
+From: Ethan Zhao <haifeng.zhao@linux.intel.com>
+To: kevin.tian@intel.com, bhelgaas@google.com, baolu.lu@linux.intel.com,
+ dwmw2@infradead.org, will@kernel.org, robin.murphy@arm.com, lukas@wunner.de
+Cc: linux-pci@vger.kernel.org, iommu@lists.linux.dev,
+ linux-kernel@vger.kernel.org
+References: <20231228170206.720675-1-haifeng.zhao@linux.intel.com>
+In-Reply-To: <20231228170206.720675-1-haifeng.zhao@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-vim +10 arch/x86/include/asm/setup_data.h
+On 12/29/2023 1:02 AM, Ethan Zhao wrote:
+> This patchset is used to fix vt-d hard lockup reported when surprise
+> unplug ATS capable endpoint device connects to system via PCIe switch
+> as following topology.
+>                                                                      
+>       +-[0000:15]-+-00.0  Intel Corporation Ice Lake Memory Map/VT-d
+>       |           +-00.1  Intel Corporation Ice Lake Mesh 2 PCIe
+>       |           +-00.2  Intel Corporation Ice Lake RAS
+>       |           +-00.4  Intel Corporation Device 0b23
+>       |           \-01.0-[16-1b]----00.0-[17-1b]--+-00.0-[18]----00.0
+>                                             NVIDIA Corporation Device 2324
+>       |                                           +-01.0-[19]----00.0
+>                            Mellanox Technologies MT2910 Family [ConnectX-7]
+>                                                                            
+> User brought endpoint device 19:00.0's link down by flapping it's hotplug
+> capable slot 17:01.0 link control register, as sequence DLLSC response,
+> pciehp_ist() will unload device driver and power it off, durning device
+> driver is unloading an iommu device-TLB invalidation (Intel VT-d spec, or
+> 'ATS Invalidation' in PCIe spec) request issued to that link down device,
+> thus a long time completion/timeout waiting in interrupt context causes
+> continuous hard lockup warnning and system hang.
+>                                                                           
+> Other detail, see every patch commit log.
+>                                                                           
+> patch [3&4] were tested by yehaorong@bytedance.com on stable v6.7-rc4.
+> patch [1-5] passed compiling on stable v6.7-rc6.
+>                                                                           
+>                                                                           
+> change log:
+> v10:
+> - refactor qi_submit_sync() and its callers to get pci_dev instance, as
+>    Kevin pointed out add target_flush_dev to iommu is not right.
+> v9:
+> - unify all spelling of ATS Invalidation adhere to PCIe spec per Bjorn's
+>    suggestion.
+> v8:
+> - add a patch to break the loop for timeout device-TLB invalidation, as
+>    Bjorn said there is possibility device just no response but not gone.
+> v7:
+> - reorder patches and revise commit log per Bjorn's guide.
+> - other code and commit log revise per Lukas' suggestion.
+> - rebased to stable v6.7-rc6.
+> v6:
+> - add two patches to break out device-TLB invalidation if device is gone.
+> v5:
+> - add a patch try to fix the rare case (surprise remove a device in
+>    safe removal process). not work because surprise removal handling can't
+>    re-enter when another safe removal is in process.
+> v4:
+> - move the PCI device state checking after ATS per Baolu's suggestion.
+> v3:
+> - fix commit description typo.
+> v2:
+> - revise commit[1] description part according to Lukas' suggestion.
+> - revise commit[2] description to clarify the issue's impact.
+> v1:
+> - https://lore.kernel.org/lkml/20231213034637.2603013-1-haifeng.zhao@
+> linux.intel.com/T/
+>                                                                            
+>                                                                            
+> Thanks,
+> Ethan
+>
+>
+> Ethan Zhao (5):
+>    iommu/vt-d: add pci_dev parameter to qi_submit_sync and refactor
+>      callers
+>    iommu/vt-d: break out ATS Invalidation if target device is gone
+>    PCI: make pci_dev_is_disconnected() helper public for other drivers
+>    iommu/vt-d: don't issue ATS Invalidation request when device is
+>      disconnected
+>    iommu/vt-d: don't loop for timeout ATS Invalidation request forever
+>
+>   drivers/iommu/intel/dmar.c          | 55 ++++++++++++++++++++++-------
+>   drivers/iommu/intel/iommu.c         | 26 ++++----------
+>   drivers/iommu/intel/iommu.h         | 17 +++++----
+>   drivers/iommu/intel/irq_remapping.c |  2 +-
+>   drivers/iommu/intel/pasid.c         | 13 +++----
+>   drivers/iommu/intel/svm.c           | 13 ++++---
+>   drivers/pci/pci.h                   |  5 ---
+>   include/linux/pci.h                 |  5 +++
+>   8 files changed, 74 insertions(+), 62 deletions(-)
 
-     8	
-     9	struct pci_setup_rom {
-  > 10		struct setup_data data;
-    11		uint16_t vendor;
-    12		uint16_t devid;
-    13		uint64_t pcilen;
-    14		unsigned long segment;
-    15		unsigned long bus;
-    16		unsigned long device;
-    17		unsigned long function;
-    18		uint8_t romdata[];
-    19	};
-    20	
+Any new comment for this patchset ?
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+
+Thanks,
+
+Ethan
+
