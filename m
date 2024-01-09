@@ -1,11 +1,11 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 695A926AF2;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6957922065;
 	Tue,  9 Jan 2024 08:31:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 6A1D11C053C;
-	Tue,  9 Jan 2024 17:23:46 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id DF4CA1C0268;
+	Tue,  9 Jan 2024 17:23:42 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -71,9 +71,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v6 04/37] dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
-Date: Tue,  9 Jan 2024 17:23:01 +0900
-Message-Id: <b9cea5b530a6d68ea921174fbbda60afb8dd4432.1704788539.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v6 02/37] sh: Kconfig unified OF supported targets.
+Date: Tue,  9 Jan 2024 17:22:59 +0900
+Message-Id: <e5d965a1ba1447466c4a70c95b1e3aa8c1aebe4b.1704788539.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1704788539.git.ysato@users.sourceforge.jp>
 References: <cover.1704788539.git.ysato@users.sourceforge.jp>
@@ -85,39 +85,75 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Renesas SH7751 Interrupt controller priority register define.
+Targets that support OF should be treated as one board.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- .../renesas,sh7751-intc.h                     | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
- create mode 100644 include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+ arch/sh/Kconfig        |  1 +
+ arch/sh/boards/Kconfig | 24 ++++++++++++++----------
+ 2 files changed, 15 insertions(+), 10 deletions(-)
 
-diff --git a/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
-new file mode 100644
-index 000000000000..0543bd1b895e
---- /dev/null
-+++ b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
-@@ -0,0 +1,19 @@
-+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+ *
-+ * SH3/4 INTC IPR register offsets (Address / bits)
-+ */
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 7500521b2b98..ecca128c15fa 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -710,6 +710,7 @@ choice
+ 	prompt "Kernel command line"
+ 	optional
+ 	default CMDLINE_OVERWRITE
++	depends on !OF || USE_BUILTIN_DTB
+ 	help
+ 	  Setting this option allows the kernel command line arguments
+ 	  to be set.
+diff --git a/arch/sh/boards/Kconfig b/arch/sh/boards/Kconfig
+index 109bec4dad94..e7e52779ef62 100644
+--- a/arch/sh/boards/Kconfig
++++ b/arch/sh/boards/Kconfig
+@@ -19,16 +19,9 @@ config SH_DEVICE_TREE
+ 	select TIMER_OF
+ 	select COMMON_CLK
+ 	select GENERIC_CALIBRATE_DELAY
+-
+-config SH_JCORE_SOC
+-	bool "J-Core SoC"
+-	select SH_DEVICE_TREE
+-	select CLKSRC_JCORE_PIT
+-	select JCORE_AIC
+-	depends on CPU_J2
+-	help
+-	  Select this option to include drivers core components of the
+-	  J-Core SoC, including interrupt controllers and timers.
++	select GENERIC_IRQ_CHIP
++	select SYS_SUPPORTS_PCI
++	select GENERIC_PCI_IOMAP if PCI
+ 
+ config SH_SOLUTION_ENGINE
+ 	bool "SolutionEngine"
+@@ -293,6 +286,7 @@ config SH_LANDISK
+ 	bool "LANDISK"
+ 	depends on CPU_SUBTYPE_SH7751R
+ 	select HAVE_PCI
++	select SYS_SUPPORTS_PCI
+ 	help
+ 	  I-O DATA DEVICE, INC. "LANDISK Series" support.
+ 
+@@ -369,6 +363,16 @@ config SH_APSH4AD0A
+ 	help
+ 	  Select AP-SH4AD-0A if configuring for an ALPHAPROJECT AP-SH4AD-0A.
+ 
++config SH_OF_BOARD
++	bool "General Open Firmware boards"
++	select SH_DEVICE_TREE
++	select CLKSRC_JCORE_PIT if CPU_J2
++	select JCORE_AIC if CPU_J2
++	select HAVE_PCI if CPU_SUBTYPE_SH7751R
++	help
++	  This board means general OF supported targets.
 +
-+#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
-+#define __DT_BINDINGS_RENESAS_SH7751_INTC
 +
-+#define IPRA			0
-+#define IPRB			4
-+#define IPRC			8
-+#define IPRD			12
-+#define INTPRI00		256
-+#define IPR_B12			12
-+#define IPR_B8			8
-+#define IPR_B4			4
-+#define IPR_B0			0
-+
-+#endif
+ source "arch/sh/boards/mach-r2d/Kconfig"
+ source "arch/sh/boards/mach-highlander/Kconfig"
+ source "arch/sh/boards/mach-sdk7780/Kconfig"
 -- 
 2.39.2
 
