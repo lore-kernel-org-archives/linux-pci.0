@@ -1,11 +1,11 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8B3C63DB86;
-	Tue,  9 Jan 2024 08:24:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 695A926AF2;
+	Tue,  9 Jan 2024 08:31:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 10BB11C0939;
-	Tue,  9 Jan 2024 17:24:49 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 6A1D11C053C;
+	Tue,  9 Jan 2024 17:23:46 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -71,9 +71,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v6 37/37] sh: j2_defconfig: update
-Date: Tue,  9 Jan 2024 17:23:34 +0900
-Message-Id: <71cffa7cbb24c4d95f05fe937609bff0737e6283.1704788539.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v6 04/37] dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
+Date: Tue,  9 Jan 2024 17:23:01 +0900
+Message-Id: <b9cea5b530a6d68ea921174fbbda60afb8dd4432.1704788539.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1704788539.git.ysato@users.sourceforge.jp>
 References: <cover.1704788539.git.ysato@users.sourceforge.jp>
@@ -85,61 +85,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-I've changed some symbols related to DeviceTree,
-so let's take care of those changes.
+Renesas SH7751 Interrupt controller priority register define.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- arch/sh/configs/j2_defconfig | 11 +++--------
- 1 file changed, 3 insertions(+), 8 deletions(-)
+ .../renesas,sh7751-intc.h                     | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
 
-diff --git a/arch/sh/configs/j2_defconfig b/arch/sh/configs/j2_defconfig
-index 2eb81ebe3888..cdc8ed244618 100644
---- a/arch/sh/configs/j2_defconfig
-+++ b/arch/sh/configs/j2_defconfig
-@@ -1,18 +1,15 @@
--CONFIG_SMP=y
- CONFIG_SYSVIPC=y
- CONFIG_POSIX_MQUEUE=y
- CONFIG_NO_HZ=y
- CONFIG_HIGH_RES_TIMERS=y
- CONFIG_CPU_SUBTYPE_J2=y
- CONFIG_MEMORY_START=0x10000000
--CONFIG_MEMORY_SIZE=0x04000000
- CONFIG_CPU_BIG_ENDIAN=y
--CONFIG_SH_DEVICE_TREE=y
--CONFIG_SH_JCORE_SOC=y
-+CONFIG_SH_OF_BOARD=y
- CONFIG_HZ_100=y
-+CONFIG_SMP=y
- CONFIG_CMDLINE_OVERWRITE=y
- CONFIG_CMDLINE="console=ttyUL0 earlycon"
--CONFIG_BINFMT_ELF_FDPIC=y
- CONFIG_BINFMT_FLAT=y
- CONFIG_NET=y
- CONFIG_PACKET=y
-@@ -21,7 +18,6 @@ CONFIG_INET=y
- CONFIG_DEVTMPFS=y
- CONFIG_DEVTMPFS_MOUNT=y
- CONFIG_NETDEVICES=y
--CONFIG_SERIAL_EARLYCON=y
- CONFIG_SERIAL_UARTLITE=y
- CONFIG_SERIAL_UARTLITE_CONSOLE=y
- CONFIG_I2C=y
-@@ -30,8 +26,6 @@ CONFIG_SPI_JCORE=y
- CONFIG_WATCHDOG=y
- CONFIG_MMC=y
- CONFIG_MMC_SPI=y
--CONFIG_CLKSRC_JCORE_PIT=y
--CONFIG_JCORE_AIC=y
- CONFIG_EXT4_FS=y
- CONFIG_VFAT_FS=y
- CONFIG_FAT_DEFAULT_IOCHARSET="ascii"
-@@ -40,3 +34,4 @@ CONFIG_NLS_DEFAULT="utf8"
- CONFIG_NLS_CODEPAGE_437=y
- CONFIG_NLS_ASCII=y
- CONFIG_NLS_UTF8=y
-+CONFIG_INIT_STACK_NONE=y
+diff --git a/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+new file mode 100644
+index 000000000000..0543bd1b895e
+--- /dev/null
++++ b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+@@ -0,0 +1,19 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * SH3/4 INTC IPR register offsets (Address / bits)
++ */
++
++#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
++#define __DT_BINDINGS_RENESAS_SH7751_INTC
++
++#define IPRA			0
++#define IPRB			4
++#define IPRC			8
++#define IPRD			12
++#define INTPRI00		256
++#define IPR_B12			12
++#define IPR_B8			8
++#define IPR_B4			4
++#define IPR_B0			0
++
++#endif
 -- 
 2.39.2
 
