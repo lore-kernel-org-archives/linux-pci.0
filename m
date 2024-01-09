@@ -1,11 +1,11 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7A0AE29433;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7A07B29431;
 	Tue,  9 Jan 2024 08:31:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (ZM005235.ppp.dion.ne.jp [222.8.5.235])
-	by sakura.ysato.name (Postfix) with ESMTPSA id A3EBC1C03CF;
-	Tue,  9 Jan 2024 17:23:44 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 1FCC41C01B8;
+	Tue,  9 Jan 2024 17:23:41 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -71,9 +71,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v6 03/37] sh: Enable OF support for build and configuration.
-Date: Tue,  9 Jan 2024 17:23:00 +0900
-Message-Id: <ca24ae14c127e80ca42e42d5c0f769f03e211771.1704788539.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v6 01/37] sh: passing FDT address to kernel startup.
+Date: Tue,  9 Jan 2024 17:22:58 +0900
+Message-Id: <edd42bb5aa30ac3eb26a9e08b1dc6fc9041aa3b1.1704788539.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1704788539.git.ysato@users.sourceforge.jp>
 References: <cover.1704788539.git.ysato@users.sourceforge.jp>
@@ -85,120 +85,37 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-IRQ, CLK and PCI will be migrated to a common driver framework.
-So if OF, disable the SH specific drivers.
+R4 is caller saved in SH ABI.
+Save it so it doesn't get corrupted until it's needed for initialization.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- arch/sh/Kconfig                 | 11 ++++++-----
- arch/sh/drivers/Makefile        |  2 ++
- arch/sh/kernel/cpu/Makefile     |  9 +++++++--
- arch/sh/kernel/cpu/sh4/Makefile |  3 +++
- 4 files changed, 18 insertions(+), 7 deletions(-)
+ arch/sh/boot/compressed/head_32.S | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index ecca128c15fa..0ce73256e34d 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -65,10 +65,10 @@ config SUPERH
- 	select MODULES_USE_ELF_RELA
- 	select NEED_SG_DMA_LENGTH
- 	select NO_DMA if !MMU && !DMA_COHERENT
--	select NO_GENERIC_PCI_IOPORT_MAP if PCI
-+	select NO_GENERIC_PCI_IOPORT_MAP if !SH_DEVICE_TREE
- 	select OLD_SIGACTION
- 	select OLD_SIGSUSPEND
--	select PCI_DOMAINS if PCI
-+	select PCI_DOMAINS if PCI && !SH_DEVICE_TREE
- 	select PERF_EVENTS
- 	select PERF_USE_VMALLOC
- 	select RTC_LIB
-@@ -152,7 +152,7 @@ menu "System type"
- #
- config CPU_SH2
- 	bool
--	select SH_INTC
-+	select SH_INTC if !SH_DEVICE_TREE
- 
- config CPU_SH2A
- 	bool
-@@ -178,7 +178,7 @@ config CPU_SH4
- 	select CPU_HAS_INTEVT
- 	select CPU_HAS_SR_RB
- 	select CPU_HAS_FPU if !CPU_SH4AL_DSP
--	select SH_INTC
-+	select SH_INTC if !SH_DEVICE_TREE
- 	select SYS_SUPPORTS_SH_TMU
- 
- config CPU_SH4A
-@@ -521,6 +521,7 @@ config SH_PCLK_FREQ
- 
- config SH_CLK_CPG
- 	def_bool y
-+	depends on !COMMON_CLK
- 
- config SH_CLK_CPG_LEGACY
- 	depends on SH_CLK_CPG
-@@ -665,7 +666,7 @@ config BUILTIN_DTB_SOURCE
- 	  kernel.
- 
- config ZERO_PAGE_OFFSET
--	hex
-+	hex "Zero page offset"
- 	default "0x00010000" if PAGE_SIZE_64KB || SH_RTS7751R2D || \
- 				SH_7751_SOLUTION_ENGINE
- 	default "0x00004000" if PAGE_SIZE_16KB || SH_SH03
-diff --git a/arch/sh/drivers/Makefile b/arch/sh/drivers/Makefile
-index 8bd10b904bf9..83f609ca1eb4 100644
---- a/arch/sh/drivers/Makefile
-+++ b/arch/sh/drivers/Makefile
-@@ -5,6 +5,8 @@
- 
- obj-y		+= dma/ platform_early.o
- 
-+ifndef CONFIG_SH_DEVICE_TREE
- obj-$(CONFIG_PCI)		+= pci/
-+endif
- obj-$(CONFIG_PUSH_SWITCH)	+= push-switch.o
- obj-$(CONFIG_HEARTBEAT)		+= heartbeat.o
-diff --git a/arch/sh/kernel/cpu/Makefile b/arch/sh/kernel/cpu/Makefile
-index 46118236bf04..e00ebf134985 100644
---- a/arch/sh/kernel/cpu/Makefile
-+++ b/arch/sh/kernel/cpu/Makefile
-@@ -16,6 +16,11 @@ obj-$(CONFIG_ARCH_SHMOBILE)	+= shmobile/
- # Common interfaces.
- 
- obj-$(CONFIG_SH_ADC)		+= adc.o
-+ifndef CONFIG_COMMON_CLK
-+obj-y += clock.o
- obj-$(CONFIG_SH_CLK_CPG_LEGACY)	+= clock-cpg.o
+diff --git a/arch/sh/boot/compressed/head_32.S b/arch/sh/boot/compressed/head_32.S
+index 7bb168133dbb..6be59851122e 100644
+--- a/arch/sh/boot/compressed/head_32.S
++++ b/arch/sh/boot/compressed/head_32.S
+@@ -15,7 +15,8 @@ startup:
+ 	/* Load initial status register */
+ 	mov.l   init_sr, r1
+ 	ldc     r1, sr
 -
--obj-y	+= irq/ init.o clock.o fpu.o pfc.o proc.o
-+endif
-+ifndef CONFIG_GENERIC_IRQ_CHIP
-+obj-y	+= irq/
-+endif
-+obj-y	+= init.o fpu.o pfc.o proc.o
-diff --git a/arch/sh/kernel/cpu/sh4/Makefile b/arch/sh/kernel/cpu/sh4/Makefile
-index 02e3ee16e15c..33da4c86feff 100644
---- a/arch/sh/kernel/cpu/sh4/Makefile
-+++ b/arch/sh/kernel/cpu/sh4/Makefile
-@@ -15,6 +15,7 @@ perf-$(CONFIG_CPU_SUBTYPE_SH7750)	:= perf_event.o
- perf-$(CONFIG_CPU_SUBTYPE_SH7750S)	:= perf_event.o
- perf-$(CONFIG_CPU_SUBTYPE_SH7091)	:= perf_event.o
- 
-+ifndef CONFIG_SH_DEVICE_TREE
- # CPU subtype setup
- obj-$(CONFIG_CPU_SUBTYPE_SH7750)	+= setup-sh7750.o
- obj-$(CONFIG_CPU_SUBTYPE_SH7750R)	+= setup-sh7750.o
-@@ -29,5 +30,7 @@ ifndef CONFIG_CPU_SH4A
- clock-$(CONFIG_CPU_SH4)			:= clock-sh4.o
- endif
- 
-+endif # CONFIG_SH_DEVICE_TREE
-+
- obj-y					+= $(clock-y)
- obj-$(CONFIG_PERF_EVENTS)		+= $(perf-y)
++	/* Save FDT address */
++	mov	r4, r13
+ 	/* Move myself to proper location if necessary */
+ 	mova	1f, r0
+ 	mov.l	1f, r2
+@@ -84,7 +85,7 @@ l1:
+ 	/* Jump to the start of the decompressed kernel */
+ 	mov.l	kernel_start_addr, r0
+ 	jmp	@r0
+-	nop
++	 mov	r13, r4
+ 	
+ 	.align	2
+ bss_start_addr:
 -- 
 2.39.2
 
