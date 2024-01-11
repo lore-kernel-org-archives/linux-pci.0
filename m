@@ -1,128 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.55.52.120])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20CA910E8;
-	Thu, 11 Jan 2024 02:36:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4914920E0
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jan 2024 03:33:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iqt2EVyW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1704940605; x=1736476605;
-  h=message-id:date:mime-version:cc:subject:to:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=0Va+P7X83oGoZ+4IUOYXS7EzUs4E4JPqjUEHp4bqu5U=;
-  b=iqt2EVyWHlxzU65lLKMPUzmsIakxVC7t2J6VbqjVIKYA9LBKtH/Wqt3L
-   eC6rT7FFXjwhBA7Rv3Ds3d0kfWNxwH7Q5c8h8Ou+t0T0q1c9Xyo89+uhM
-   FO9wtoO0Y/pgO+fYQSwbDjoK9uGfQo4RBk/HFMQjG9UA59UYCRXhq1uko
-   NyQeMdq9sjZKWoB5K47gukiTk09YgN6r1+G7Jen/9dOsarboNqkx40/4Y
-   /kIflkiLPyg5gmUXUgQ9mXeacXRKsfT5o7XJhLcWLtDNub4zrcsTuufJG
-   v+TTV+BzYgKcDticjnQIKFpNAWCiRGoy106dmNlkRQjECwUUKCMPmPoAO
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10949"; a="397588095"
-X-IronPort-AV: E=Sophos;i="6.04,185,1695711600"; 
-   d="scan'208";a="397588095"
-Received: from orsmga003.jf.intel.com ([10.7.209.27])
-  by fmsmga104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2024 18:36:44 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10949"; a="732046535"
-X-IronPort-AV: E=Sophos;i="6.04,185,1695711600"; 
-   d="scan'208";a="732046535"
-Received: from allen-box.sh.intel.com (HELO [10.239.159.127]) ([10.239.159.127])
-  by orsmga003.jf.intel.com with ESMTP; 10 Jan 2024 18:36:40 -0800
-Message-ID: <65312590-01e1-4f53-a0dc-fc22f75379cd@linux.intel.com>
-Date: Thu, 11 Jan 2024 10:31:25 +0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nX+1BjAo"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1d3ed1ca402so44143315ad.2
+        for <linux-pci@vger.kernel.org>; Wed, 10 Jan 2024 19:33:03 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1704943982; x=1705548782; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=iScWVuqhfpheqwtS8P8/yXNx/aCMkmPoM914hptI/Iw=;
+        b=nX+1BjAofLKSavGr9BrS/IxpxaO8EYYt4ruNfmsymXIud7gdiXMtRKb4MiyaVEMrPF
+         qUMv2o8vkPqLOUKit7GZSFDz9r/kNXMZNWwimIRKAi/G0BkBT12/SflZStMJW+o6WjMf
+         R7dFmrJDKbFpVfhIdaumUeOceKbrdGJ8DJwam5ATw0/lIRoVD00lFfzxSBLGKjwKJIYH
+         EJSpWre2w0gIB1A6AfwX6K1Ah1AGtMBnFVwZTyShxhmcy+6AL6ijfEC21e4FadUtfcz4
+         qAr4iMjzDuASVef41kbt02Ka/STFQzVaixD2MZtzus3jdOk7rkIZhHAeS+rc4jURvSZv
+         6K2Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1704943982; x=1705548782;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iScWVuqhfpheqwtS8P8/yXNx/aCMkmPoM914hptI/Iw=;
+        b=tMg+fRr6IPrFcagir5iiSRc/VsZaZBrx87CAz6xErdNFuhOGGZ7neEkR6y/soRrDvz
+         sgIT29H13QdEy3dhJHnAu0kdUmApFmSnUkTV9ZQyLS8tDhmYDNU2jkJvLrSfe+NnCZRc
+         7RZAgjKXgjG7WDddjt2gV/CLyKMa5QhEaFw+W1vyOCzfxxVOG8YSzjklNdGrWvi7xCDm
+         0dsRg5OKmHa1Z1Xc+0d0AH29wWZfOq/TGXXNFsX2av54Kds7ROq6dRmkvlL0usefB9CJ
+         qCXNUncLmvidgvuz+S3hH1vmQin9ltA2XtYbTsax4AmaWMDdxdKTv3DgUCk8tVgyV843
+         f94g==
+X-Gm-Message-State: AOJu0Yz9JdxKmQ1yMHC/1jlS35EyPBlDs6de/JXmA5QYdqAQ09vkOzKU
+	87C+KBjje2/yooHzBZpdi/S54z72H3P/eQ==
+X-Google-Smtp-Source: AGHT+IF4eUYLrn4Ez/WaZRqyZDR2oIn8Xra42U1GhajMqpzSX9odZBLq6HasGPuLaVFUI46HmRHpxg==
+X-Received: by 2002:a17:902:eb83:b0:1d5:89c8:3fc9 with SMTP id q3-20020a170902eb8300b001d589c83fc9mr483209plg.1.1704943982624;
+        Wed, 10 Jan 2024 19:33:02 -0800 (PST)
+Received: from localhost ([122.172.81.83])
+        by smtp.gmail.com with ESMTPSA id kk11-20020a170903070b00b001cf96a0e4e6sm80235plb.242.2024.01.10.19.33.01
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 10 Jan 2024 19:33:01 -0800 (PST)
+Date: Thu, 11 Jan 2024 09:02:59 +0530
+From: Viresh Kumar <viresh.kumar@linaro.org>
+To: Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, agross@kernel.org,
+	andersson@kernel.org, konrad.dybcio@linaro.org,
+	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+	vireshk@kernel.org, nm@ti.com, sboyd@kernel.org, mani@kernel.org,
+	lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+	bhelgaas@google.com, rafael@kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org, quic_vbadigan@quicinc.com,
+	quic_nitegupt@quicinc.com, quic_skananth@quicinc.com,
+	quic_ramkri@quicinc.com, quic_parass@quicinc.com
+Subject: Re: [PATCH v5 5/5] PCI: qcom: Add OPP support to scale performance
+ state of power domain
+Message-ID: <20240111033259.7h2jdr76wvkfnges@vireshk-i7>
+References: <20231102053013.7yt7pxin5awlu7w7@vireshk-i7>
+ <20231102120950.GA115288@bhelgaas>
+ <20231103051247.u4cnckzstcvs4lf5@vireshk-i7>
+ <15a98ec0-214b-218b-1e3c-c09f770fce2e@quicinc.com>
+ <0ba9f2af-169e-a9a2-9ae4-4c6a70b0a94e@quicinc.com>
+ <20240110065757.xde2nvpr3z7c4isu@vireshk-i7>
+ <376b3716-46ff-2324-73fc-f3afa3f7af1c@quicinc.com>
+ <20240110073807.sqwmsyr6nmigg6zc@vireshk-i7>
+ <ba732b1c-223c-ee70-d25b-4c78b312402c@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: baolu.lu@linux.intel.com, linux-pci@vger.kernel.org,
- iommu@lists.linux.dev, linux-kernel@vger.kernel.org
-Subject: Re: [RFC PATCH v10 5/5] iommu/vt-d: don't loop for timeout ATS
- Invalidation request forever
-Content-Language: en-US
-To: Ethan Zhao <haifeng.zhao@linux.intel.com>, kevin.tian@intel.com,
- bhelgaas@google.com, dwmw2@infradead.org, will@kernel.org,
- robin.murphy@arm.com, lukas@wunner.de
-References: <20231228170504.720794-1-haifeng.zhao@linux.intel.com>
- <20231228170504.720794-3-haifeng.zhao@linux.intel.com>
- <aba65111-47c1-4003-b9a9-19c908507c01@linux.intel.com>
- <53c563ad-b47b-4962-abc7-f0da3a7181d6@linux.intel.com>
-From: Baolu Lu <baolu.lu@linux.intel.com>
-In-Reply-To: <53c563ad-b47b-4962-abc7-f0da3a7181d6@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ba732b1c-223c-ee70-d25b-4c78b312402c@quicinc.com>
 
-On 1/10/24 4:40 PM, Ethan Zhao wrote:
+On 10-01-24, 18:28, Krishna Chaitanya Chundru wrote:
+> it might be less only for now may be around 20 opp entries, but PCIe spec is
+> being updated every few years and a new gen
 > 
-> On 1/10/2024 1:28 PM, Baolu Lu wrote:
->> On 12/29/23 1:05 AM, Ethan Zhao wrote:
->>> When the ATS Invalidation request timeout happens, the qi_submit_sync()
->>> will restart and loop for the invalidation request forever till it is
->>> done, it will block another Invalidation thread such as the fq_timer
->>> to issue invalidation request, cause the system lockup as following
->>>
->>> [exception RIP: native_queued_spin_lock_slowpath+92]
->>>
->>> RIP: ffffffffa9d1025c RSP: ffffb202f268cdc8 RFLAGS: 00000002
->>>
->>> RAX: 0000000000000101 RBX: ffffffffab36c2a0 RCX: 0000000000000000
->>>
->>> RDX: 0000000000000000 RSI: 0000000000000000 RDI: ffffffffab36c2a0
->>>
->>> RBP: ffffffffab36c2a0 R8: 0000000000000001 R9: 0000000000000000
->>>
->>> R10: 0000000000000010 R11: 0000000000000018 R12: 0000000000000000
->>>
->>> R13: 0000000000000004 R14: ffff9e10d71b1c88 R15: ffff9e10d71b1980
->>>
->>> ORIG_RAX: ffffffffffffffff CS: 0010 SS: 0018
->>>
->>> (the left part of exception see the hotplug case of ATS capable device)
->>>
->>> If one endpoint device just no response to the ATS Invalidation request,
->>> but is not gone, it will bring down the whole system, to avoid such
->>> case, don't try the timeout ATS Invalidation request forever.
->>>
->>> Signed-off-by: Ethan Zhao <haifeng.zhao@linux.intel.com>
->>> ---
->>>   drivers/iommu/intel/dmar.c | 2 +-
->>>   1 file changed, 1 insertion(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/iommu/intel/dmar.c b/drivers/iommu/intel/dmar.c
->>> index 0a8d628a42ee..9edb4b44afca 100644
->>> --- a/drivers/iommu/intel/dmar.c
->>> +++ b/drivers/iommu/intel/dmar.c
->>> @@ -1453,7 +1453,7 @@ int qi_submit_sync(struct intel_iommu *iommu, 
->>> struct qi_desc *desc,
->>>       reclaim_free_desc(qi);
->>>       raw_spin_unlock_irqrestore(&qi->q_lock, flags);
->>>   -    if (rc == -EAGAIN)
->>> +    if (rc == -EAGAIN && type !=QI_DIOTLB_TYPE && type != 
->>> QI_DEIOTLB_TYPE)
->>>           goto restart;
->>>         if (iotlb_start_ktime)
->>
->> Above is also unnecessary if qi_check_fault() returns -ETIMEDOUT,
->> instead of -EAGAIN. Or did I miss anything?
+> gen speed will release, right now PCIe GEN6 is released but I don't we had
+> any device in the market now and GEN7 is in process.
 > 
-> It is pro if we fold it into qi_check_fault(), the con is we have to add
+> So in future it might become very big table. Either we need to come up with
+> a framework in the OPP to select the BW based up on lane width
 > 
-> more parameter to qi_check_fault(), no need check invalidation type
-> 
-> of QI_DIOTLB_TYPE&QI_DEIOTLB_TYPE in qi_check_fault() ?
+> for particular speed or use the driver way.
 
-No need to check the request type as multiple requests might be batched
-together in a single call. This is also the reason why I asked you to
-add a flag bit to this helper and make the intention explicit, say,
+Lets solve the problem the right (current) way for right now and revisit the
+whole thing when it gets complex ? So I would suggest configuring the bw via the
+OPP framework only, since it takes care of that for all other device types too.
 
-"This includes requests to interact with a PCI endpoint. The device may
-  become unavailable at any time, so do not attempt to retry if ITE is
-  detected and the device has gone away."
+We can surely revisit and try to do it differently if we find some issues going
+forward.
 
-Best regards,
-baolu
+-- 
+viresh
