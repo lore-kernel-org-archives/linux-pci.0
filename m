@@ -1,359 +1,178 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7D565EE82;
-	Fri, 12 Jan 2024 09:50:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3C355D729
+	for <linux-pci@vger.kernel.org>; Fri, 12 Jan 2024 10:00:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WVfb89vf";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="GNKTw6kD";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WVfb89vf";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="GNKTw6kD"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 8193F21E5A;
-	Fri, 12 Jan 2024 09:50:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1705053005; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4ZY5CvUKPTyR/DoYhG/6WLW1e06/fH9Nafua63trqkc=;
-	b=WVfb89vfFOsfEQtmvvxMABtAAqd4mvPtclri/fLLV0HtETZ+f00vBbuf84LcqDqTUtmYd9
-	p/p8uNqVD/25+fIw+MfJ1sfpaJrtNp+CCiew/2fWJXXvrpXIBIAu+xNM2wDiJgWbKLtUN9
-	AGN/surNnYHZzBkP7vm2uaTwYYrP+os=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1705053005;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4ZY5CvUKPTyR/DoYhG/6WLW1e06/fH9Nafua63trqkc=;
-	b=GNKTw6kDfumSrhXL8aBNPuFDSXgOyUwW5MG5LU3CTmblkDYzL7mYhh6rl38fA3ZfOkQmcz
-	7bHg3H6dazhdIbAg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1705053005; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4ZY5CvUKPTyR/DoYhG/6WLW1e06/fH9Nafua63trqkc=;
-	b=WVfb89vfFOsfEQtmvvxMABtAAqd4mvPtclri/fLLV0HtETZ+f00vBbuf84LcqDqTUtmYd9
-	p/p8uNqVD/25+fIw+MfJ1sfpaJrtNp+CCiew/2fWJXXvrpXIBIAu+xNM2wDiJgWbKLtUN9
-	AGN/surNnYHZzBkP7vm2uaTwYYrP+os=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1705053005;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4ZY5CvUKPTyR/DoYhG/6WLW1e06/fH9Nafua63trqkc=;
-	b=GNKTw6kDfumSrhXL8aBNPuFDSXgOyUwW5MG5LU3CTmblkDYzL7mYhh6rl38fA3ZfOkQmcz
-	7bHg3H6dazhdIbAg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EBCF613782;
-	Fri, 12 Jan 2024 09:50:04 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id MPxPOEwLoWVmOgAAD6G6ig
-	(envelope-from <tzimmermann@suse.de>); Fri, 12 Jan 2024 09:50:04 +0000
-From: Thomas Zimmermann <tzimmermann@suse.de>
-To: ardb@kernel.org,
-	nathan@kernel.org,
-	tglx@linutronix.de,
-	mingo@redhat.com,
-	bp@alien8.de,
-	dave.hansen@linux.intel.com,
-	x86@kernel.org,
-	hpa@zytor.com,
-	bhelgaas@google.com,
-	arnd@arndb.de,
-	zohar@linux.ibm.com,
-	dmitry.kasatkin@gmail.com,
-	paul@paul-moore.com,
-	jmorris@namei.org,
-	serge@hallyn.com,
-	javierm@redhat.com
-Cc: linux-arch@vger.kernel.org,
-	linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-integrity@vger.kernel.org,
-	linux-security-module@vger.kernel.org,
-	Thomas Zimmermann <tzimmermann@suse.de>
-Subject: [PATCH v5 4/4] arch/x86: Do not include <asm/bootparam.h> in several files
-Date: Fri, 12 Jan 2024 10:44:39 +0100
-Message-ID: <20240112095000.8952-5-tzimmermann@suse.de>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240112095000.8952-1-tzimmermann@suse.de>
-References: <20240112095000.8952-1-tzimmermann@suse.de>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="OpOcctWq"
+Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-28bc7155755so3378104a91.2
+        for <linux-pci@vger.kernel.org>; Fri, 12 Jan 2024 02:00:24 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1705053624; x=1705658424; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=dRYoalgnwKVYfdSiaBfDRevKcT4wc2GOJqsALypTOmU=;
+        b=OpOcctWqWBe3ajchwYGTl3RxOwVKYQiBfBqLvQPnN9D8/8aHpnJz3q8CFxEqBfsUz5
+         JCacvo4unw0zaCQBdj4M6F5i5WoCuGpCHuOYKV7nE+rvVqchOgHOsECliAMxK3y51HLF
+         rzi2gvAQUP7nPGrQ9WApRk9fws2Q2gJarzBju1s7MBOYwc9VHLYA7fkVglDsvqCeeFiE
+         HMZv7RO/ch4OuvWpErEJumEsS1cnaCnNgBIOKwgGGRrYTpMJX1G+kmIsRzVirT88jPKj
+         A+6UBi8td/SRVZ17mRI3eMvlyjP5TqYKFmvFKPuFutppLVyrVbJiu7TXitHS5rFPrKyL
+         6Y8g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705053624; x=1705658424;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=dRYoalgnwKVYfdSiaBfDRevKcT4wc2GOJqsALypTOmU=;
+        b=xA8+A8fByT4xU9IffebJFzsl1HpvXDM2NvALysbyCp9OG6BoUA7z9BxHqFpQLGxL6c
+         R16LgEH9yjyLMlsVfH4nisKB8/5Grab3ub1ke6og1sHbTi9rk9BtcZoI0ZZ+bBTi03tb
+         j6j7vsCP6uWWpD5SzwC7f5oqJowRtmtr3VBGS5Nr5VM0ciEX6clB+2lImcHJiRueznyp
+         0xO9FieNjsEDnWyw9nRzxEjXJML1+D27zEDxHV89gsmB7b87XwQINEk5nIoCiWNZI4iN
+         GbuO5LMBGx2x1THD5DpJ0RFk+KyD8mn1VmJINzo2TM+9ynmSl/uma9lP4qxT9FsPRwHS
+         QZNw==
+X-Gm-Message-State: AOJu0YwtHE+jS90hLsdI8BoXGQMgoTss9cRFS7nnUGOYq6PsHQ+aBPXe
+	yZHu0Mx7yhoedOwgMnewxKLxoifqXSsMtVkl385R7sk3i35CkL4=
+X-Google-Smtp-Source: AGHT+IGVBuc/bzfWDGIQZBxbBGBGgbQ8hy2U6+QesiLzQrB5AGxj9ilSJ5pZ8u646RBth+dnJjW/eA==
+X-Received: by 2002:a17:90a:898b:b0:28d:2b9d:e273 with SMTP id v11-20020a17090a898b00b0028d2b9de273mr917862pjn.74.1705053624143;
+        Fri, 12 Jan 2024 02:00:24 -0800 (PST)
+Received: from google.com (108.93.126.34.bc.googleusercontent.com. [34.126.93.108])
+        by smtp.gmail.com with ESMTPSA id px12-20020a17090b270c00b0028e17b2f27esm58229pjb.13.2024.01.12.02.00.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Jan 2024 02:00:23 -0800 (PST)
+Date: Fri, 12 Jan 2024 15:30:15 +0530
+From: Ajay Agarwal <ajayagarwal@google.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Johan Hovold <johan@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Bjorn Andersson <quic_bjorande@quicinc.com>,
+	Sajid Dalvi <sdalvi@google.com>
+Subject: Re: [PATCH] Revert "PCI: dwc: Wait for link up only if link is
+ started"
+Message-ID: <ZaENr7jQ35winQAe@google.com>
+References: <20230706082610.26584-1-johan+linaro@kernel.org>
+ <20230706125811.GD4808@thinkpad>
+ <ZKgJfG5Mi-e77LQT@hovoldconsulting.com>
+ <ZKwwAin4FcCETGq/@google.com>
+ <20230711073719.GA36617@thinkpad>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: *
-X-Spamd-Bar: +
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=WVfb89vf;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=GNKTw6kD
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Spamd-Result: default: False [1.99 / 50.00];
-	 RCVD_VIA_SMTP_AUTH(0.00)[];
-	 TO_DN_SOME(0.00)[];
-	 R_MISSING_CHARSET(2.50)[];
-	 DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	 BROKEN_CONTENT_TYPE(1.50)[];
-	 R_RATELIMIT(0.00)[to_ip_from(RLfgmttzabnpkr34rizty4fwu5)];
-	 RCVD_COUNT_THREE(0.00)[3];
-	 DKIM_TRACE(0.00)[suse.de:+];
-	 MX_GOOD(-0.01)[];
-	 NEURAL_HAM_SHORT(-0.20)[-1.000];
-	 FREEMAIL_TO(0.00)[kernel.org,linutronix.de,redhat.com,alien8.de,linux.intel.com,zytor.com,google.com,arndb.de,linux.ibm.com,gmail.com,paul-moore.com,namei.org,hallyn.com];
-	 FROM_EQ_ENVFROM(0.00)[];
-	 MIME_TRACE(0.00)[0:+];
-	 BAYES_HAM(-3.00)[100.00%];
-	 ARC_NA(0.00)[];
-	 R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 FROM_HAS_DN(0.00)[];
-	 FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	 TO_MATCH_ENVRCPT_ALL(0.00)[];
-	 TAGGED_RCPT(0.00)[];
-	 MIME_GOOD(-0.10)[text/plain];
-	 NEURAL_HAM_LONG(-1.00)[-1.000];
-	 DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	 RCPT_COUNT_TWELVE(0.00)[23];
-	 MID_CONTAINS_FROM(1.00)[];
-	 DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:email];
-	 FUZZY_BLOCKED(0.00)[rspamd.com];
-	 RCVD_TLS_ALL(0.00)[];
-	 SUSPICIOUS_RECIPS(1.50)[]
-X-Spam-Score: 1.99
-X-Rspamd-Queue-Id: 8193F21E5A
-X-Spam-Flag: NO
+In-Reply-To: <20230711073719.GA36617@thinkpad>
 
-Remove the include statement for <asm/bootparam.h> from several files
-that don't require it. Limits the exposure of the boot parameters
-within the Linux kernel code.
+On Tue, Jul 11, 2023 at 01:07:19PM +0530, Manivannan Sadhasivam wrote:
+> On Mon, Jul 10, 2023 at 09:51:22PM +0530, Ajay Agarwal wrote:
+> > On Fri, Jul 07, 2023 at 02:47:56PM +0200, Johan Hovold wrote:
+> > > On Thu, Jul 06, 2023 at 06:28:11PM +0530, Manivannan Sadhasivam wrote:
+> > > > On Thu, Jul 06, 2023 at 10:26:10AM +0200, Johan Hovold wrote:
+> > > 
+> > > > > Finally, note that the intel-gw driver is the only driver currently not
+> > > > > providing a start_link callback and instead starts the link in its
+> > > > > host_init callback, and which may avoid an additional one-second timeout
+> > > > > during probe by making the link-up wait conditional. If anyone cares,
+> > > > > that can be done in a follow-up patch with a proper motivation.
+> > > 
+> > > > The offending commit is bogus since it makes the intel-gw _special_ w.r.t
+> > > > waiting for the link up. Most of the drivers call dw_pcie_host_init() during the
+> > > > probe time and they all have to wait for 1 sec if the slot is empty.
+> > Mani, can you please explain how my commit made the intel-gw driver
+> > special? The intel driver actually fails the dw_pcie_host_init if the
+> > link does not come up. That was my motivation behind adding the fail
+> > logic in the core driver as well.
+> 
+> Your commit ended up failing the probe, if dw_pcie_wait_for_link() fails for
+> SoCs defining start_link() callback, which is the case for all the drivers
+> except intel-gw. I take back my _special_ argument since it was special before
+> your commit and now you just made its behavior applicable to all SoCs.
+>
+You are right. I should not have returned an error from the
+dw_pcie_wait_for_link check. Raised v5 with the error return removed:
+https://lore.kernel.org/all/20240112093006.2832105-1-ajayagarwal@google.com/
 
-Signed-off-by: Thomas Zimmermann <tzimmermann@suse.de>
-Acked-by: Ard Biesheuvel <ardb@kernel.org>
+> > > 
+> > > Just to clarify, the intel-gw driver starts the link and waits for link
+> > > up in its host_init() callback, which is called during probe. That wait
+> > > could possibly just be dropped in favour of the one in
+> > > dw_pcie_host_init() and/or the driver could be reworked to implement
+> > > start_link().
+> > > 
+> > > Either way, the call in dw_pcie_host_init() will only add an additional
+> > > 1 second delay in cases where the link did *not* come up.
+> > > 
+> > > > As Johan noted, intel-gw should make use of the async probe to avoid the boot
+> > > > delay instead of adding a special case.
+> > > 
+> > > Indeed.
+> > > 
+> > > Johan
+> > Johan, Mani
+> > My apologies for adding this regression in some of the SOCs.
+> > May I suggest to keep my patch and make the following change instead?
+> > This shall keep the existing behavior as is, and save the boot time
+> > for drivers that do not define the start_link()?
+> > 
+> 
+> No, IMO the offending commit was wrong in serving its purpose so a revert makes
+> sense. Because, if the intention was to reduce the boot delay then it did not
+> fix that because dw_pcie_wait_for_link() is still called from intel-gw's
+> host_init() callback. You just skipped another instance which is there in
+> dw_pcie_host_init().
+> 
+> So to fix this issue properly intel-gw needs to do 2 things:
+> 
+> 1. Move the ltssm_enable to start_link() callback and get rid of
+> dw_pcie_wait_for_link() from its host_init() callback. If there is any special
+> reason to not do this way, please explain.
+> 
+> 2. Enable async probe so that other drivers can continue probing while this
+> driver waits for the link to be up. This will almost make the delay negligible.
+> 
+> The above 2 should be done in separate patches.
+> 
+> - Mani
+>
+Mani, the intention is not to fix the intel-gw driver in any manner. It
+calls dw_pcie_wait_for_link explicitly in the probe path and checks for
+the error as well. So it has to live with the delay and the probe
+failure if the link does not come up.
 
----
+My intention is just to get rid of the 1 sec delay for the drivers that
+do not define the start_link callback, and hence do not expect that the
+link will come up during probe anyway.
 
-v5:
-	* revert of boot/compressed/misc.h (kernel test robot)
-v3:
-	* revert of e820/types.h required
-v2:
-	* clean up misc.h and e820/types.h
-	* include bootparam.h in several source files
----
- arch/x86/boot/compressed/acpi.c       | 2 ++
- arch/x86/boot/compressed/cmdline.c    | 2 ++
- arch/x86/boot/compressed/efi.c        | 2 ++
- arch/x86/boot/compressed/pgtable_64.c | 1 +
- arch/x86/boot/compressed/sev.c        | 1 +
- arch/x86/include/asm/kexec.h          | 1 -
- arch/x86/include/asm/mem_encrypt.h    | 2 +-
- arch/x86/include/asm/sev.h            | 3 ++-
- arch/x86/include/asm/x86_init.h       | 2 --
- arch/x86/kernel/crash.c               | 1 +
- arch/x86/kernel/sev-shared.c          | 2 ++
- arch/x86/platform/pvh/enlighten.c     | 1 +
- arch/x86/xen/enlighten_pvh.c          | 1 +
- arch/x86/xen/vga.c                    | 1 -
- 14 files changed, 16 insertions(+), 6 deletions(-)
-
-diff --git a/arch/x86/boot/compressed/acpi.c b/arch/x86/boot/compressed/acpi.c
-index 18d15d1ce87d..f196b1d1ddf8 100644
---- a/arch/x86/boot/compressed/acpi.c
-+++ b/arch/x86/boot/compressed/acpi.c
-@@ -5,6 +5,8 @@
- #include "../string.h"
- #include "efi.h"
- 
-+#include <asm/bootparam.h>
-+
- #include <linux/numa.h>
- 
- /*
-diff --git a/arch/x86/boot/compressed/cmdline.c b/arch/x86/boot/compressed/cmdline.c
-index c1bb180973ea..e162d7f59cc5 100644
---- a/arch/x86/boot/compressed/cmdline.c
-+++ b/arch/x86/boot/compressed/cmdline.c
-@@ -1,6 +1,8 @@
- // SPDX-License-Identifier: GPL-2.0
- #include "misc.h"
- 
-+#include <asm/bootparam.h>
-+
- static unsigned long fs;
- static inline void set_fs(unsigned long seg)
- {
-diff --git a/arch/x86/boot/compressed/efi.c b/arch/x86/boot/compressed/efi.c
-index 6edd034b0b30..f2e50f9758e6 100644
---- a/arch/x86/boot/compressed/efi.c
-+++ b/arch/x86/boot/compressed/efi.c
-@@ -7,6 +7,8 @@
- 
- #include "misc.h"
- 
-+#include <asm/bootparam.h>
-+
- /**
-  * efi_get_type - Given a pointer to boot_params, determine the type of EFI environment.
-  *
-diff --git a/arch/x86/boot/compressed/pgtable_64.c b/arch/x86/boot/compressed/pgtable_64.c
-index 51f957b24ba7..c882e1f67af0 100644
---- a/arch/x86/boot/compressed/pgtable_64.c
-+++ b/arch/x86/boot/compressed/pgtable_64.c
-@@ -1,5 +1,6 @@
- // SPDX-License-Identifier: GPL-2.0
- #include "misc.h"
-+#include <asm/bootparam.h>
- #include <asm/e820/types.h>
- #include <asm/processor.h>
- #include "pgtable.h"
-diff --git a/arch/x86/boot/compressed/sev.c b/arch/x86/boot/compressed/sev.c
-index 454acd7a2daf..13beae767e48 100644
---- a/arch/x86/boot/compressed/sev.c
-+++ b/arch/x86/boot/compressed/sev.c
-@@ -12,6 +12,7 @@
-  */
- #include "misc.h"
- 
-+#include <asm/bootparam.h>
- #include <asm/pgtable_types.h>
- #include <asm/sev.h>
- #include <asm/trapnr.h>
-diff --git a/arch/x86/include/asm/kexec.h b/arch/x86/include/asm/kexec.h
-index c9f6a6c5de3c..91ca9a9ee3a2 100644
---- a/arch/x86/include/asm/kexec.h
-+++ b/arch/x86/include/asm/kexec.h
-@@ -25,7 +25,6 @@
- 
- #include <asm/page.h>
- #include <asm/ptrace.h>
--#include <asm/bootparam.h>
- 
- struct kimage;
- 
-diff --git a/arch/x86/include/asm/mem_encrypt.h b/arch/x86/include/asm/mem_encrypt.h
-index 359ada486fa9..c1a8a3408c18 100644
---- a/arch/x86/include/asm/mem_encrypt.h
-+++ b/arch/x86/include/asm/mem_encrypt.h
-@@ -15,7 +15,7 @@
- #include <linux/init.h>
- #include <linux/cc_platform.h>
- 
--#include <asm/bootparam.h>
-+struct boot_params;
- 
- #ifdef CONFIG_X86_MEM_ENCRYPT
- void __init mem_encrypt_init(void);
-diff --git a/arch/x86/include/asm/sev.h b/arch/x86/include/asm/sev.h
-index 5b4a1ce3d368..8dad8b1613bf 100644
---- a/arch/x86/include/asm/sev.h
-+++ b/arch/x86/include/asm/sev.h
-@@ -13,7 +13,6 @@
- 
- #include <asm/insn.h>
- #include <asm/sev-common.h>
--#include <asm/bootparam.h>
- #include <asm/coco.h>
- 
- #define GHCB_PROTOCOL_MIN	1ULL
-@@ -22,6 +21,8 @@
- 
- #define	VMGEXIT()			{ asm volatile("rep; vmmcall\n\r"); }
- 
-+struct boot_params;
-+
- enum es_result {
- 	ES_OK,			/* All good */
- 	ES_UNSUPPORTED,		/* Requested operation not supported */
-diff --git a/arch/x86/include/asm/x86_init.h b/arch/x86/include/asm/x86_init.h
-index c878616a18b8..f062715578a0 100644
---- a/arch/x86/include/asm/x86_init.h
-+++ b/arch/x86/include/asm/x86_init.h
-@@ -2,8 +2,6 @@
- #ifndef _ASM_X86_PLATFORM_H
- #define _ASM_X86_PLATFORM_H
- 
--#include <asm/bootparam.h>
--
- struct ghcb;
- struct mpc_bus;
- struct mpc_cpu;
-diff --git a/arch/x86/kernel/crash.c b/arch/x86/kernel/crash.c
-index c92d88680dbf..564cff7ed33a 100644
---- a/arch/x86/kernel/crash.c
-+++ b/arch/x86/kernel/crash.c
-@@ -26,6 +26,7 @@
- #include <linux/vmalloc.h>
- #include <linux/memblock.h>
- 
-+#include <asm/bootparam.h>
- #include <asm/processor.h>
- #include <asm/hardirq.h>
- #include <asm/nmi.h>
-diff --git a/arch/x86/kernel/sev-shared.c b/arch/x86/kernel/sev-shared.c
-index ccb0915e84e1..4962ec42dc68 100644
---- a/arch/x86/kernel/sev-shared.c
-+++ b/arch/x86/kernel/sev-shared.c
-@@ -9,6 +9,8 @@
-  * and is included directly into both code-bases.
-  */
- 
-+#include <asm/setup_data.h>
-+
- #ifndef __BOOT_COMPRESSED
- #define error(v)	pr_err(v)
- #define has_cpuflag(f)	boot_cpu_has(f)
-diff --git a/arch/x86/platform/pvh/enlighten.c b/arch/x86/platform/pvh/enlighten.c
-index 00a92cb2c814..944e0290f2c0 100644
---- a/arch/x86/platform/pvh/enlighten.c
-+++ b/arch/x86/platform/pvh/enlighten.c
-@@ -3,6 +3,7 @@
- 
- #include <xen/hvc-console.h>
- 
-+#include <asm/bootparam.h>
- #include <asm/io_apic.h>
- #include <asm/hypervisor.h>
- #include <asm/e820/api.h>
-diff --git a/arch/x86/xen/enlighten_pvh.c b/arch/x86/xen/enlighten_pvh.c
-index ada3868c02c2..9e9db601bd52 100644
---- a/arch/x86/xen/enlighten_pvh.c
-+++ b/arch/x86/xen/enlighten_pvh.c
-@@ -4,6 +4,7 @@
- 
- #include <xen/hvc-console.h>
- 
-+#include <asm/bootparam.h>
- #include <asm/io_apic.h>
- #include <asm/hypervisor.h>
- #include <asm/e820/api.h>
-diff --git a/arch/x86/xen/vga.c b/arch/x86/xen/vga.c
-index d97adab8420f..f7547807b0bd 100644
---- a/arch/x86/xen/vga.c
-+++ b/arch/x86/xen/vga.c
-@@ -2,7 +2,6 @@
- #include <linux/screen_info.h>
- #include <linux/init.h>
- 
--#include <asm/bootparam.h>
- #include <asm/setup.h>
- 
- #include <xen/interface/xen.h>
--- 
-2.43.0
-
+> > ```
+> > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > index cf61733bf78d..af6a7cd060b1 100644
+> > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > @@ -492,11 +492,8 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+> >                 if (ret)
+> >                         goto err_remove_edma;
+> > 
+> > -               if (pci->ops && pci->ops->start_link) {
+> > -                       ret = dw_pcie_wait_for_link(pci);
+> > -                       if (ret)
+> > -                               goto err_stop_link;
+> > -               }
+> > +               if (pci->ops && pci->ops->start_link)
+> > +                       dw_pcie_wait_for_link(pci);
+> >         }
+> > 
+> >         bridge->sysdata = pp;
+> > ```
+> 
+> -- 
+> மணிவண்ணன் சதாசிவம்
