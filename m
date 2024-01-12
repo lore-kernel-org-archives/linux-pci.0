@@ -1,132 +1,219 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70880FBF8;
-	Thu, 11 Jan 2024 22:41:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 126AE12B91
+	for <linux-pci@vger.kernel.org>; Thu, 11 Jan 2024 23:55:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OfvTIE3Y"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8E2ECC433F1;
-	Thu, 11 Jan 2024 22:41:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705012870;
-	bh=+WwJWrlRns8EY2E9CLCbBROU9LT8j8Mr6e6ahvyEWOU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OfvTIE3YPZ6MdksK4thbEF0gX4EYWItfgro+p6au+ae/0L1Rn5KPQUey1MO2mF7sb
-	 912wFQwxWJt6Eqz5rquvRdwVK23gOw+mZN3QMJzBuw9omsgfklBLL4ldqAI5eFHiMf
-	 UwH3kwKHmW649e28JAQ6P8MeeoY5YOS78K9x583/YWF7UJuVj+KZu6omk0vxfKcOhP
-	 NdiX663P8dwv8VefWE36YU8/vmf1Hpt79kYUnhnu0IyL1nEAxmLnqQ0zgq6NMjjG59
-	 7vahCIA30Sn0UeqmjWeNnB4C048bpJkLlXFQL2KrAO5l8ShyZvKdAqNwDxW80aGjE4
-	 KMyE7A/fIix6w==
-Date: Thu, 11 Jan 2024 15:41:08 -0700
-From: Nathan Chancellor <nathan@kernel.org>
-To: Thomas Zimmermann <tzimmermann@suse.de>
-Cc: kernel test robot <lkp@intel.com>, ardb@kernel.org, tglx@linutronix.de,
-	mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com,
-	x86@kernel.org, hpa@zytor.com, bhelgaas@google.com, arnd@arndb.de,
-	zohar@linux.ibm.com, dmitry.kasatkin@gmail.com, paul@paul-moore.com,
-	jmorris@namei.org, serge@hallyn.com, javierm@redhat.com,
-	llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-arch@vger.kernel.org, linux-efi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-integrity@vger.kernel.org,
-	linux-security-module@vger.kernel.org
-Subject: Re: [PATCH v4 2/4] arch/x86: Move internal setup_data structures
- into setup_data.h
-Message-ID: <20240111224108.GA227186@dev-arch.thelio-3990X>
-References: <20240108095903.8427-3-tzimmermann@suse.de>
- <202401090800.UOBEKB3W-lkp@intel.com>
- <20240109175814.GA5981@dev-arch.thelio-3990X>
- <1fd1a3ca-edeb-4bf6-a12d-a8087a180d36@suse.de>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hgocUT0s"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1705017347; x=1736553347;
+  h=message-id:subject:from:to:cc:date:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=VDjDJ21sAvPSNJw9v2V28Xessc45DsIPFotEuY24Fhw=;
+  b=hgocUT0sGjUathgKm1kbHQKvZKmeYdSaGqxoLDFchSuvcSklOXfZZVW1
+   kGcHDdsnFVqpqrimBKCT8N93pccj13FtLkQ6fLDGSPKOBJq4wOmZer8Jn
+   IYPsuBhI+9l9uM8lbFaBN6NF1ljbbgqiRGyOwNRg75eaFZ0ZQBTl6ucKQ
+   iFKTvohQDfHc6uUBJq9C6I04nbaGOqKkQ05D6V3P7l5KvM6f3eK0aUCvA
+   StoFx5HAR3Is7Di2ZVPjiyPG7HGbSjOtgxA5APK++AklPH1XB/OGs7yV3
+   /xxVc4HKUBMmVHWvJsoqq9Jfzj6LY8YJ055zp21AXZ8qI9ySEZF7P6kYg
+   Q==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10950"; a="6117763"
+X-IronPort-AV: E=Sophos;i="6.04,187,1695711600"; 
+   d="scan'208";a="6117763"
+Received: from orsmga001.jf.intel.com ([10.7.209.18])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2024 15:55:47 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=McAfee;i="6600,9927,10950"; a="816894091"
+X-IronPort-AV: E=Sophos;i="6.04,187,1695711600"; 
+   d="scan'208";a="816894091"
+Received: from patelni-ubuntu-dev.ch.intel.com ([10.2.132.59])
+  by orsmga001-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Jan 2024 15:55:46 -0800
+Message-ID: <66d99c778051b65db86929d8b508b573ec19fe77.camel@linux.intel.com>
+Subject: Re: [PATCH v2] PCI: vmd: Enable Hotplug based on BIOS setting on
+ VMD rootports
+From: Nirmal Patel <nirmal.patel@linux.intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org, samruddh.dhope@intel.com
+Date: Thu, 11 Jan 2024 17:02:18 -0700
+In-Reply-To: <24a4e9c73f6447f5bb67906c57520514dfa77389.camel@linux.intel.com>
+References: <20231214192325.GA1095340@bhelgaas>
+	 <24a4e9c73f6447f5bb67906c57520514dfa77389.camel@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.36.5-0ubuntu1 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1fd1a3ca-edeb-4bf6-a12d-a8087a180d36@suse.de>
+Content-Transfer-Encoding: 7bit
 
-On Thu, Jan 11, 2024 at 10:50:43AM +0100, Thomas Zimmermann wrote:
-> Hi
-> 
-> Am 09.01.24 um 18:58 schrieb Nathan Chancellor:
-> > On Tue, Jan 09, 2024 at 08:28:59AM +0800, kernel test robot wrote:
-> > > Hi Thomas,
-> > > 
-> > > kernel test robot noticed the following build warnings:
-> > > 
-> > > [auto build test WARNING on tip/x86/core]
-> > > [also build test WARNING on efi/next tip/master tip/auto-latest linus/master v6.7 next-20240108]
-> > > [If your patch is applied to the wrong git tree, kindly drop us a note.
-> > > And when submitting patch, we suggest to use '--base' as documented in
-> > > https://git-scm.com/docs/git-format-patch#_base_tree_information]
-> > > 
-> > > url:    https://github.com/intel-lab-lkp/linux/commits/Thomas-Zimmermann/arch-x86-Move-UAPI-setup-structures-into-setup_data-h/20240108-180158
-> > > base:   tip/x86/core
-> > > patch link:    https://lore.kernel.org/r/20240108095903.8427-3-tzimmermann%40suse.de
-> > > patch subject: [PATCH v4 2/4] arch/x86: Move internal setup_data structures into setup_data.h
-> > > config: x86_64-rhel-8.3-bpf (https://download.01.org/0day-ci/archive/20240109/202401090800.UOBEKB3W-lkp@intel.com/config)
-> > > compiler: ClangBuiltLinux clang version 17.0.6 (https://github.com/llvm/llvm-project 6009708b4367171ccdbf4b5905cb6a803753fe18)
-> > > reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240109/202401090800.UOBEKB3W-lkp@intel.com/reproduce)
-> > > 
-> > > If you fix the issue in a separate patch/commit (i.e. not just a new version of
-> > > the same patch/commit), kindly add following tags
-> > > | Reported-by: kernel test robot <lkp@intel.com>
-> > > | Closes: https://lore.kernel.org/oe-kbuild-all/202401090800.UOBEKB3W-lkp@intel.com/
-> > > 
-> > > All warnings (new ones prefixed by >>):
-> > > 
-> > >     In file included from arch/x86/realmode/rm/wakemain.c:3:
-> > >     In file included from arch/x86/boot/boot.h:24:
-> > >     In file included from arch/x86/include/asm/setup.h:10:
-> > >     In file included from arch/x86/include/asm/page_types.h:7:
-> > >     In file included from include/linux/mem_encrypt.h:17:
-> > >     In file included from arch/x86/include/asm/mem_encrypt.h:18:
-> > >     In file included from arch/x86/include/uapi/asm/bootparam.h:5:
-> > > > > arch/x86/include/asm/setup_data.h:10:20: warning: field 'data' with variable sized type 'struct setup_data' not at the end of a struct or class is a GNU extension [-Wgnu-variable-sized-type-not-at-end]
-> > >        10 |         struct setup_data data;
-> > >           |                           ^
-> > >     1 warning generated.
+On Thu, 2023-12-14 at 15:22 -0700, Nirmal Patel wrote:
+> On Thu, 2023-12-14 at 13:23 -0600, Bjorn Helgaas wrote:
+> > On Wed, Dec 13, 2023 at 06:07:02PM -0700, Nirmal Patel wrote:
+> > > On Tue, 2023-12-12 at 15:13 -0600, Bjorn Helgaas wrote:
+> > > > On Mon, Dec 11, 2023 at 04:05:25PM -0700, Nirmal Patel wrote:
+> > > > > On Tue, 2023-12-05 at 18:27 -0600, Bjorn Helgaas wrote:
+> > > > > > On Tue, Dec 05, 2023 at 03:20:27PM -0700, Nirmal Patel
+> > > > > > wrote:
+> > > > > > ...
+> > > > > > > Currently Hotplug is controlled by _OSC in both host and
+> > > > > > > Guest.
+> > > > > > > In case of guest, it seems guest BIOS hasn't implemented
+> > > > > > > _OSC
+> > > > > > > since all the flags are set to 0 which is not the case in
+> > > > > > > host.
+> > > > > > 
+> > > > > > I think you want pciehp to work on the VMD Root Ports in
+> > > > > > the
+> > > > > > Guest, no matter what, on the assumption that any _OSC that
+> > > > > > applies to host bridge A does not apply to the host bridge
+> > > > > > created
+> > > > > > by the vmd driver.
+> > > > > > 
+> > > > > > If so, we should just revert 04b12ef163d1 ("PCI: vmd: Honor
+> > > > > > ACPI
+> > > > > > _OSC on PCIe features").  Since host bridge B was not
+> > > > > > enumerated
+> > > > > > via ACPI, the OS owns all those features under B by
+> > > > > > default,
+> > > > > > so
+> > > > > > reverting 04b12ef163d1 would leave that state.
+> > > > > > 
+> > > > > > Obviously we'd have to first figure out another solution
+> > > > > > for
+> > > > > > the
+> > > > > > AER message flood that 04b12ef163d1 resolved.
+> > > > > 
+> > > > > If we revert 04b12ef163d1, then VMD driver will still enable
+> > > > > AER
+> > > > > blindly which is a bug. So we need to find a way to make VMD
+> > > > > driver
+> > > > > aware of AER platform setting and use that information to
+> > > > > enable or
+> > > > > disable AER for its child devices.
+> > > > > 
+> > > > > There is a setting in BIOS that allows us to enable OS native
+> > > > > AER
+> > > > > support on the platform. This setting is located in EDK Menu
+> > > > > ->
+> > > > > Platform configuration -> system event log -> IIO error
+> > > > > enabling ->
+> > > > > OS native AER support.
+> > > > > 
+> > > > > This setting is assigned to VMD bridge by
+> > > > > vmd_copy_host_bridge_flags in patch 04b12ef163d1. Without the
+> > > > > patch 04b12ef163d1, VMD driver will enable AER even if
+> > > > > platform
+> > > > > has disabled OS native AER support as mentioned earlier. This
+> > > > > will result in an AER flood mentioned in 04b12ef163d1 since
+> > > > > there is no AER handlers. 
 > > 
-> > I think this warning is expected. This structure is now included in the
-> > realmode part of arch/x86, which has its own set of build flags,
-> > including -Wall, which includes -Wgnu on clang. The kernel obviously
-> > uses GNU extensions and states this clearly with '-std=gnu11', so
-> > -Wno-gnu is unconditionally added to KBUILD_CFLAGS for clang. It seems
-> > that same treatment is needed for REALMODE_CFLAGS, which also matches
-> > arch/x86/boot/compressed/Makefile, see commit 6c3b56b19730 ("x86/boot:
-> > Disable Clang warnings about GNU extensions"):
+> > I missed this before.  What does "there are no AER handlers"
+> > mean?  Do
+> > you mean there are no *firmware* AER handlers?  
+> Sorry for confusing wordings. Your understanding is correct. The
+> patch
+> 04b12ef163d1 is used to disable AER on vmd and avoid the AER flooding
+> by applying _OSC settings since vmd driver doesn't give a choice to
+> toggle AER, DPC, LTR, etc.
+> > The dmesg log at 
+> > https://bugzilla.kernel.org/attachment.cgi?id=299571
+> > (from https://bugzilla.kernel.org/show_bug.cgi?id=215027, the bug
+> > fixed by 04b12ef163d1), shows this:
 > > 
-> > diff --git a/arch/x86/Makefile b/arch/x86/Makefile
-> > index 1a068de12a56..24076db59783 100644
-> > --- a/arch/x86/Makefile
-> > +++ b/arch/x86/Makefile
-> > @@ -53,6 +53,9 @@ REALMODE_CFLAGS += -fno-stack-protector
-> >   REALMODE_CFLAGS += -Wno-address-of-packed-member
-> >   REALMODE_CFLAGS += $(cc_stack_align4)
-> >   REALMODE_CFLAGS += $(CLANG_FLAGS)
-> > +ifdef CONFIG_CC_IS_CLANG
-> > +REALMODE_CFLAGS += -Wno-gnu
-> > +endif
-> 
-> Thanks. Shall I include this change in the patchset?
+> >   acpi PNP0A08:00: _OSC: OS supports [ExtendedConfig ASPM ClockPM
+> > Segments MSI HPX-Type3]
+> >   acpi PNP0A08:00: _OSC: platform does not support [AER]
+> >   acpi PNP0A08:00: _OSC: OS now controls [PCIeHotplug SHPCHotplug
+> > PME
+> > PCIeCapability LTR]
+> > 
+> > so the firmware did not grant AER control to the OS (I think
+> > "platform
+> > does not support" is a confusing description).
+> > 
+> > Prior to 04b12ef163d1, Linux applied _OSC above the VMD bridge but
+> > not
+> > below it, so Linux had native control below VMD and it did handle
+> > AER
+> > interrupts from the 10000:e0:06.0 Root Port below VMD:
+> > 
+> >   vmd 0000:00:0e.0: PCI host bridge to bus 10000:e0
+> >   pcieport 10000:e0:06.0: AER: Corrected error received:
+> > 10000:e1:00.0
+> > 
+> > After 04b12ef163d1, Linux applied _OSC below the VMD bridge as
+> > well,
+> > so it did not enable or handle any AER interrupts.  I suspect the
+> > platform didn't handle AER interrupts below VMD either, so those
+> > errors were probably just ignored.
+> > 
+> > > > > If VMD is aware of OS native AER support setting, then we
+> > > > > will
+> > > > > not
+> > > > > see AER flooding issue.
+> > > > > 
+> > > > > Do you have any suggestion on how to make VMD driver aware of
+> > > > > AER
+> > > > > setting and keep it in sync with platform setting.
+> > > > 
+> > > > Well, this is the whole problem.  IIUC, you're saying we should
+> > > > use
+> > > > _OSC to negotiate for AER control below the VMD bridge, but
+> > > > ignore
+> > > > _OSC for hotplug control.
+> > > 
+> > > Because VMD has its own hotplug BIOS setting which allows vmd to
+> > > enable or disable hotplug on its domain. However we don't have
+> > > VMD
+> > > specific AER, DPC, LTR settings. 
+> > 
+> > I don't quite follow.  The OS knows nothing about whether BIOS
+> > settings exist, so they can't be used to determine where _OSC
+> > applies.
+> > 
+> > > Is it okay if we include an additional check for hotplug? i.e.
+> > > Hotplug capable bit in SltCap register which reflects VMD BIOS
+> > > hotplug setting.
+> > 
+> > I don't know what check you have in mind, but the OS can definitely
+> > use SltCap to decide what features to enable.
+> Yes I agree. That is what I am also suggesting in this patch.
+> > You suggest above that you want vmd to be aware of AER ownership
+> > per
+> > _OSC, but it sounds more like you just want AER disabled below VMD
+> > regardless.  Or do you have platforms that can actually handle AER
+> > interrupts from Root Ports below VMD?
+> No I dont want AER disabled below VMD all the time. I am suggesting
+> vmd
+> should be in sync with all the _OSC flags since vmd doesn't give a
+> choice to toggle. However, the issue arises in guest where _OSC
+> setting
+> for hotplug is always 0 eventhough hotplug is 1 in host and hotplug
+> enable bit in SltCap register is 1 in both host and guest. So we can
+> use that to enable hotplug in guest. Like you suggested in your above
+> comment. 
+> > > Another way is to overwrite _OSC setting for hotplug only in
+> > > Guest
+> > > OS.  If we make VMD driver aware of Host or Guest environment,
+> > > only
+> > > in case of Guest we overwrite _OSC hotplug using SltCap register
+> > > and
+> > > we don't revert the 04b12ef163d1.
+> > 
+> > Making vmd aware of being in host or guest sounds kind of ugly to
+> > me.
+> I agree.
+> > Bjorn
+Hi Bjorn,
 
-Yes, I think so to keep the build clean.
+Happy new year. sending a gentle reminder to help conclude the
+discussion.
 
-> Best regards
-> Thomas
-> 
-> >   export REALMODE_CFLAGS
-> >   # BITS is used as extension for files which are available in a 32 bit
-> 
-> -- 
-> Thomas Zimmermann
-> Graphics Driver Developer
-> SUSE Software Solutions Germany GmbH
-> Frankenstrasse 146, 90461 Nuernberg, Germany
-> GF: Ivo Totev, Andrew Myers, Andrew McDonald, Boudien Moerman
-> HRB 36809 (AG Nuernberg)
-
-
+Thanks
+nirmal
 
