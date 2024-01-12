@@ -1,110 +1,73 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0DB065E;
-	Fri, 12 Jan 2024 00:00:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="p7YY3Zqe"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	Content-Type:In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:
-	Message-ID:Sender:Reply-To:Content-ID:Content-Description;
-	bh=Swpd3nH8sLH2WwkLic9FH3brfxhtOQSnmjDNZwdYIyk=; b=p7YY3ZqeCVnn8ILbz2A+vf0mtE
-	n2fU1ANIUkpR1Hbm1/QvjJbx4onHZuQ1ow9SfR4ERzi/ErDUtKI4ix5OL3547nYkPedlyDreC9McJ
-	8/3zHPubRh3AgNQHMfs2jrLvSlWgEA7jFYmkD6brCTInoN+4vHXk4SJT/cxKRgw6dF2BxgCJCPvUm
-	eUI6mMgvO5Hk3SFib+/fROJzA/wSNC6UhNRrV77EK4orcx0S1YyicYn4WxyTE+AFeFHNRa0/lYcWy
-	RU1g+JnKwQ8hGcNhrBwurE8opBBLK2kyKZ/gVxygjaJrX1/4Ot3zU1RL7xSL5m629p7Mlr+4pn2Kc
-	oEsMZlnA==;
-Received: from [50.53.46.231] (helo=[192.168.254.15])
-	by bombadil.infradead.org with esmtpsa (Exim 4.96 #2 (Red Hat Linux))
-	id 1rO4yJ-001Vbn-1r;
-	Fri, 12 Jan 2024 00:00:27 +0000
-Message-ID: <86b381d4-17a9-4b68-bd53-aae69ea7ddba@infradead.org>
-Date: Thu, 11 Jan 2024 16:00:27 -0800
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 796A5136B;
+	Fri, 12 Jan 2024 02:35:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
+Received: from loongson.cn (unknown [10.20.42.122])
+	by gateway (Coremail) with SMTP id _____8BxHOtapaBlOG4EAA--.13142S3;
+	Fri, 12 Jan 2024 10:35:06 +0800 (CST)
+Received: from [10.20.42.122] (unknown [10.20.42.122])
+	by localhost.localdomain (Coremail) with SMTP id AQAAf8Axz99UpaBl5ZISAA--.48437S3;
+	Fri, 12 Jan 2024 10:35:06 +0800 (CST)
+Message-ID: <2a5e3801-6740-0c63-6819-83a18f552dbf@loongson.cn>
+Date: Fri, 12 Jan 2024 10:35:00 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101
+ Thunderbird/102.11.0
 Subject: Re: [PATCH] PCI: Fix kernel-doc issues
-Content-Language: en-US
 To: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
-Cc: Sui Jingfeng <suijingfeng@loongson.cn>,
- Manivannan Sadhasivam <mani@kernel.org>, linux-kernel@vger.kernel.org,
+Cc: Manivannan Sadhasivam <mani@kernel.org>, linux-kernel@vger.kernel.org,
  Bjorn Helgaas <bhelgaas@google.com>
 References: <20240111162850.2177655-1-helgaas@kernel.org>
-From: Randy Dunlap <rdunlap@infradead.org>
+Content-Language: en-US
+From: Sui Jingfeng <suijingfeng@loongson.cn>
 In-Reply-To: <20240111162850.2177655-1-helgaas@kernel.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:AQAAf8Axz99UpaBl5ZISAA--.48437S3
+X-CM-SenderInfo: xvxlyxpqjiv03j6o00pqjv00gofq/
+X-Coremail-Antispam: 1Uk129KBj9xXoWrZw4UKFWDJFWUtr18tFy7urX_yoWxKwc_A3
+	y3J3yUGrs7Aw4UAr4rCa9rXF4Y93y0qF9Fqw4rXrZxWFn0kw4Yya97JFyqkF45G3s2kF1Y
+	kFykC3Zaqrn0vosvyTuYvTs0mTUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUj1kv1TuYvT
+	s0mT0YCTnIWjqI5I8CrVACY4xI64kE6c02F40Ex7xfYxn0WfASr-VFAUDa7-sFnT9fnUUI
+	cSsGvfJTRUUUbxkYFVCjjxCrM7AC8VAFwI0_Jr0_Gr1l1xkIjI8I6I8E6xAIw20EY4v20x
+	vaj40_Wr0E3s1l1IIY67AEw4v_JrI_Jryl8cAvFVAK0II2c7xJM28CjxkF64kEwVA0rcxS
+	w2x7M28EF7xvwVC0I7IYx2IY67AKxVWUCVW8JwA2z4x0Y4vE2Ix0cI8IcVCY1x0267AKxV
+	W8JVWxJwA2z4x0Y4vEx4A2jsIE14v26F4j6r4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+	Gr0_Gr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2x26I8E6xACxx1l5I
+	8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r106r15McIj6I8E87Iv67AK
+	xVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lc7I2V7IY0VAS07AlzV
+	AYIcxG8wCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E
+	14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_JF0_Jw1lIx
+	kGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAF
+	wI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r
+	4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Jr0_GrUvcSsGvfC2KfnxnUUI43ZEXa7IU1EksDUU
+	UUU==
+
+Hi,
 
 
-
-On 1/11/24 08:28, Bjorn Helgaas wrote:
+On 2024/1/12 00:28, Bjorn Helgaas wrote:
 > From: Bjorn Helgaas <bhelgaas@google.com>
-> 
+>
 > Fix kernel-doc issues reported by
 > "find include -name \*pci\* | xargs scripts/kernel-doc -none":
-> 
->   include/linux/pci.h:731: warning: Function parameter or member 'pdev' not described in 'pci_is_vga'
->   include/linux/pci-epc.h:154: warning: Function parameter or member 'list_lock' not described in 'pci_epc'
->   include/linux/pci-epf.h:83: warning: expecting prototype for struct pci_epf_event_ops. Prototype was for struct pci_epc_event_ops instead
-> 
+>
+>    include/linux/pci.h:731: warning: Function parameter or member 'pdev' not described in 'pci_is_vga'
+>    include/linux/pci-epc.h:154: warning: Function parameter or member 'list_lock' not described in 'pci_epc'
+>    include/linux/pci-epf.h:83: warning: expecting prototype for struct pci_epf_event_ops. Prototype was for struct pci_epc_event_ops instead
+
+
+Thanks a lot for the fix.
+
+
 > Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-Acked-by: Randy Dunlap <rdunlap@infradead.org>
-Tested-by: Randy Dunlap <rdunlap@infradead.org>
 
-Thanks.
+Acked-by: Sui Jingfeng <suijingfeng@loongson.cn>
 
-> ---
->  include/linux/pci-epc.h | 2 +-
->  include/linux/pci-epf.h | 2 +-
->  include/linux/pci.h     | 1 +
->  3 files changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/include/linux/pci-epc.h b/include/linux/pci-epc.h
-> index 5cb694031072..bfe41b03b70c 100644
-> --- a/include/linux/pci-epc.h
-> +++ b/include/linux/pci-epc.h
-> @@ -122,7 +122,7 @@ struct pci_epc_mem {
->   * struct pci_epc - represents the PCI EPC device
->   * @dev: PCI EPC device
->   * @pci_epf: list of endpoint functions present in this EPC device
-> - * list_lock: Mutex for protecting pci_epf list
-> + * @list_lock: Mutex for protecting pci_epf list
->   * @ops: function pointers for performing endpoint operations
->   * @windows: array of address space of the endpoint controller
->   * @mem: first window of the endpoint controller, which corresponds to
-> diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-> index 3f44b6aec477..92d0b71d33d7 100644
-> --- a/include/linux/pci-epf.h
-> +++ b/include/linux/pci-epf.h
-> @@ -68,7 +68,7 @@ struct pci_epf_ops {
->  };
->  
->  /**
-> - * struct pci_epf_event_ops - Callbacks for capturing the EPC events
-> + * struct pci_epc_event_ops - Callbacks for capturing the EPC events
->   * @core_init: Callback for the EPC initialization complete event
->   * @link_up: Callback for the EPC link up event
->   * @link_down: Callback for the EPC link down event
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 1a89dc66f89a..eb45087d7e00 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -715,6 +715,7 @@ static inline bool pci_is_bridge(struct pci_dev *dev)
->  
->  /**
->   * pci_is_vga - check if the PCI device is a VGA device
-> + * @pdev: PCI device
->   *
->   * The PCI Code and ID Assignment spec, r1.15, secs 1.4 and 1.1, define
->   * VGA Base Class and Sub-Classes:
-
--- 
-#Randy
