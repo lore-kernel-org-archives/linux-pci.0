@@ -1,30 +1,30 @@
 Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA527179BE;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CB2717BA0;
 	Mon, 15 Jan 2024 16:16:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="MF2pnLzV"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 5BDB9C0009;
-	Mon, 15 Jan 2024 16:16:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Nyn6Z7nS"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 5A97BC0014;
+	Mon, 15 Jan 2024 16:16:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1705335377;
+	t=1705335383;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=1mtR7io+GXcxCNgtcR6WdMbs4r9dsHCXx4WfnCMzH5I=;
-	b=MF2pnLzV5ERkgaPFDMVpO9L/ap+ntfbAdlwCxqnW9WBDAlKlU5rGdhan0Y1J2sXjvZUQsv
-	bAKBoXOObsbZEFEyxFagqyS4Ive4NF7RRGHKAChFmsLbY8+Tipsrai2ZGas++CrOvtaj1e
-	hx5zPYubHf27pxZ1kSCe6mPbOtrjvPIZ3PB2nAWZEahvIoxXa9wZ7XrJaKH7HJnWZITSMD
-	Rq1IjF+vmaNTQ/of7m/qZrrZn06agVzaPGeVGr4h3ISwIT59aDgsrBV4HpylpNpHxA4Lyl
-	giZvssdEom/0NkTgNPRuDjqno0MS2QSyrRruEsiUjoWJ/+PQRK9PsaqBM6/RqA==
+	bh=qwKGf7qwzlJSl38EGsWN6oKmN7+Z3kA3VFlKRRwxvC0=;
+	b=Nyn6Z7nS4rpPrtcLEUkTF9AAgHB7htljXQCy+nyVz7Y/WDZKFIZ+B9Ry1SSldbMdvKl+ib
+	AJcGsDJnar6WP+Nu5EVq49AY9dZ51z4Sydg6D6lWZFsLxozf+d6OliKbMCKVQYPSvM6yYD
+	ztNFRagdPrThYH6N3QYZPRIifO90got8tY1XwISASqORDilOCeevf0nysbCbYro5OarwFY
+	k3uy5zRU3eHZx90T+1ENgPQkW5TpzwfXbUjJWV82BamdC3HBiEuRuWx+Wqo2seucK8I8/8
+	iFuZnSkdpejBFw5Y0p7k5A5xv2VI9sO+JFnQKQYkqEaLgt57sxDDiJ48qrPR0g==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Mon, 15 Jan 2024 17:14:43 +0100
-Subject: [PATCH 02/14] pinctrl: pinctrl-single: move suspend/resume to
- suspend_noirq/resume_noirq
+Date: Mon, 15 Jan 2024 17:14:48 +0100
+Subject: [PATCH 07/14] phy: cadence-torrent: extract calls to clk_get from
+ cdns_torrent_clk
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -32,8 +32,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v1-2-84e55da52400@bootlin.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20240102-j7200-pcie-s2r-v1-7-84e55da52400@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -57,77 +57,61 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-The goal is to extend the active period of pinctrl.
-Some devices may need active pinctrl after suspend and/or before resume.
-So move suspend/resume to suspend_noirq/resume_noirq to have active
-pinctrl until suspend_noirq (included), and from resume_noirq
-(included).
+Extract calls to clk_get from cdns_torrent_clk into a separate function.
+It needs to call cdns_torrent_clk at resume without looking up the clock.
 
-The deprecated API has been removed to use the new one (dev_pm_ops struct).
+Based on the work of Théo Lebrun <theo.lebrun@bootlin.com>
 
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/pinctrl/pinctrl-single.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ drivers/phy/cadence/phy-cadence-torrent.c | 22 +++++++++++++++-------
+ 1 file changed, 15 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/pinctrl/pinctrl-single.c b/drivers/pinctrl/pinctrl-single.c
-index 19cc0db771a5..4ad0f66cf42a 100644
---- a/drivers/pinctrl/pinctrl-single.c
-+++ b/drivers/pinctrl/pinctrl-single.c
-@@ -1690,12 +1690,11 @@ static void pcs_restore_context(struct pcs_device *pcs)
+diff --git a/drivers/phy/cadence/phy-cadence-torrent.c b/drivers/phy/cadence/phy-cadence-torrent.c
+index a75c96385c57..94298ad9f875 100644
+--- a/drivers/phy/cadence/phy-cadence-torrent.c
++++ b/drivers/phy/cadence/phy-cadence-torrent.c
+@@ -2681,18 +2681,22 @@ static int cdns_torrent_reset(struct cdns_torrent_phy *cdns_phy)
+ 	return 0;
+ }
+ 
+-static int cdns_torrent_clk(struct cdns_torrent_phy *cdns_phy)
++static int cdns_torrent_of_get_clk(struct cdns_torrent_phy *cdns_phy)
+ {
+-	struct device *dev = cdns_phy->dev;
+-	unsigned long ref_clk_rate;
+-	int ret;
+-
+-	cdns_phy->clk = devm_clk_get(dev, "refclk");
++	cdns_phy->clk = devm_clk_get(cdns_phy->dev, "refclk");
+ 	if (IS_ERR(cdns_phy->clk)) {
+-		dev_err(dev, "phy ref clock not found\n");
++		dev_err(cdns_phy->dev, "phy ref clock not found\n");
+ 		return PTR_ERR(cdns_phy->clk);
  	}
- }
  
--static int pinctrl_single_suspend(struct platform_device *pdev,
--					pm_message_t state)
-+static int pinctrl_single_suspend_noirq(struct device *dev)
- {
- 	struct pcs_device *pcs;
- 
--	pcs = platform_get_drvdata(pdev);
-+	pcs = dev_get_drvdata(dev);
- 	if (!pcs)
- 		return -EINVAL;
- 
-@@ -1710,11 +1709,11 @@ static int pinctrl_single_suspend(struct platform_device *pdev,
- 	return pinctrl_force_sleep(pcs->pctl);
- }
- 
--static int pinctrl_single_resume(struct platform_device *pdev)
-+static int pinctrl_single_resume_noirq(struct device *dev)
- {
- 	struct pcs_device *pcs;
- 
--	pcs = platform_get_drvdata(pdev);
-+	pcs = dev_get_drvdata(dev);
- 	if (!pcs)
- 		return -EINVAL;
- 
-@@ -1723,6 +1722,11 @@ static int pinctrl_single_resume(struct platform_device *pdev)
- 
- 	return pinctrl_force_default(pcs->pctl);
- }
++	return 0;
++}
 +
-+static const struct dev_pm_ops pinctrl_single_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(pinctrl_single_suspend_noirq,
-+				      pinctrl_single_resume_noirq)
-+};
- #endif
++static int cdns_torrent_clk(struct cdns_torrent_phy *cdns_phy)
++{
++	unsigned long ref_clk_rate;
++	int ret;
++
+ 	ret = clk_prepare_enable(cdns_phy->clk);
+ 	if (ret) {
+ 		dev_err(cdns_phy->dev, "Failed to prepare ref clock\n");
+@@ -2776,6 +2780,10 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		return ret;
  
- /**
-@@ -1986,11 +1990,8 @@ static struct platform_driver pcs_driver = {
- 	.driver = {
- 		.name		= DRIVER_NAME,
- 		.of_match_table	= pcs_of_match,
-+		.pm = pm_ptr(&pinctrl_single_pm_ops),
- 	},
--#ifdef CONFIG_PM
--	.suspend = pinctrl_single_suspend,
--	.resume = pinctrl_single_resume,
--#endif
- };
++	ret = cdns_torrent_of_get_clk(cdns_phy);
++	if (ret)
++		goto clk_cleanup;
++
+ 	regmap_field_read(cdns_phy->phy_pma_cmn_ctrl_1, &already_configured);
  
- module_platform_driver(pcs_driver);
+ 	if (!already_configured) {
 
 -- 
 2.39.2
