@@ -1,30 +1,29 @@
 Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9305179AF;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2139179B0;
 	Mon, 15 Jan 2024 16:16:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="RKiq6PED"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 07E69C0004;
-	Mon, 15 Jan 2024 16:16:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="RJ1p+lSe"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id C8333C000A;
+	Mon, 15 Jan 2024 16:16:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1705335381;
+	t=1705335375;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=xHlgHmhFQdKKCDXxYc/ggNFFXgHMuRi1rAK2fpmgtw0=;
-	b=RKiq6PEDFJewrIz560B/cQ7e8tySHH9TYfN2TIIxHo7jCa0ynZHX3RDfG0oFlfnFvvOssw
-	u144gWBkomeblDYKinfqJUIYWK1WMtw9qjsgs7ng8lZ2ypTKhVLM9zmHr6dJ63EVQXQwde
-	eThjBltyddSiqdCcYecfV4PIMB8UcX9g6arV7Nop89YqbkWUTlUPpNMmLqMdDR+4irOTBT
-	440oP+5rcQZtcYkgHtRWUSEVkdd1WLtoyBxz9Faf4iL6d2dKxvhoH4OaD4imIxpLc2MVR6
-	vK/ktLLz9ZcJhB9krkUmpZJHTB1l5Lkga5nXC/T7b3uLnVm8CyR1WQbqjXSCAg==
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=FTQqCzxmqCmlYgHh3ktXPX0P1HCGFzF7LoD+ZqCYJUk=;
+	b=RJ1p+lSeuPctrMJTsfUuaITNbe+buWSru/jnSfFXQoT8He0ouAn9HpqNISomUAfaiuYaDb
+	sj6wgjZCcgcWoIQT/jPEDnQKPrJ/YEEMSRheHxrOvbq/NVyhWfRW2rJ8HZ5XwCY4m+6hx7
+	gWbH9Os6b24MmF47qQhtyHcjU8F7uaGeeIcwbmb5LPRRuzAxUcwAJ6qNct71edKD8qCI8y
+	FYnDk1JlLnJxaRym4sQEIcixdOi2mDDqSEs4t7GDk5AwYGZeSz8OvQoqIddG4V3frE/e1G
+	TKEUv/CbSR+Xmmu8swfG7A3CjqR/lRNY+WvPkgL4C8PMHHYyG114pVWaPADOvQ==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Mon, 15 Jan 2024 17:14:46 +0100
-Subject: [PATCH 05/14] phy: ti: phy-j721e-wiz: make wiz_clock_init callable
- multiple times
+Subject: [PATCH 00/14] Add suspend to ram support for PCIe on J7200
+Date: Mon, 15 Jan 2024 17:14:41 +0100
+Message-Id: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -33,9 +32,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-Message-Id: <20240102-j7200-pcie-s2r-v1-5-84e55da52400@bootlin.com>
-References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
-In-Reply-To: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
+X-B4-Tracking: v=1; b=H4sIAPJZpWUC/x2NQQrCQAwAv1JyNpCNylK/Ih6ya7QRXEsiIpT+3
+ a3HYRhmgVA3DTgNC7h+LOzVOqTdAHWSdle0a2dg4gMlYnxkJsK5mmKwo9aSZMyj7o8ZelQkFIt
+ Lq9OWPSXe6puYXW/2/Z/Ol3X9AbewuWd5AAAA
 To: Linus Walleij <linus.walleij@linaro.org>, 
  Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
  Tony Lindgren <tony@atomide.com>, 
@@ -57,126 +56,57 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-For suspend and resume support, wiz_clock_init needs to be called
-multiple times.
-Add a parameter to wiz_clock_init to be able to skip clocks
-registration.
+This add suspend to ram support for the PCIe (RC mode) on J7200
+platform.
 
-Based on the work of Théo Lebrun <theo.lebrun@bootlin.com>
+In RC mode, the reset pin for endpoints is managed by a gpio expander
+on a i2c bus. This pin shall be managed in suspend_noirq and
+resume_noirq.
+The suspend/resume has been moved to suspend_noirq/resume_noirq for
+pca953x (expander) and pinctrl-single.
+
+To do i2c accesses during suspend_noirq/resume_noirq, we need to force
+the wakeup of the i2c controller (which is autosuspended) during
+suspend callback. 
+It's the only way to wakeup the controller if it's autosuspended, as
+runtime pm is disabled in suspend_noirq and resume_noirq.
 
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/phy/ti/phy-j721e-wiz.c | 60 +++++++++++++++++++++++++-----------------
- 1 file changed, 36 insertions(+), 24 deletions(-)
+Thomas Richard (10):
+      gpio: pca953x: move suspend/resume to suspend_noirq/resume_noirq
+      pinctrl: pinctrl-single: move suspend/resume to suspend_noirq/resume_noirq
+      i2c: omap: wakeup the controller during suspend callback
+      phy: ti: phy-j721e-wiz: make wiz_clock_init callable multiple times
+      phy: ti: phy-j721e-wiz: add resume support
+      phy: cadence-torrent: extract calls to clk_get from cdns_torrent_clk
+      phy: cadence-torrent: register resets even if the phy is already configured
+      phy: cadence-torrent: move already_configured to struct cdns_torrent_phy
+      phy: cadence-torrent: remove noop_ops phy operations
+      phy: cadence-torrent: add suspend and resume support
 
-diff --git a/drivers/phy/ti/phy-j721e-wiz.c b/drivers/phy/ti/phy-j721e-wiz.c
-index fc3cd98c60ff..09f7edf16562 100644
---- a/drivers/phy/ti/phy-j721e-wiz.c
-+++ b/drivers/phy/ti/phy-j721e-wiz.c
-@@ -1076,7 +1076,7 @@ static int wiz_clock_register(struct wiz *wiz)
- 	return ret;
- }
- 
--static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
-+static int wiz_clock_init(struct wiz *wiz, struct device_node *node, bool probe)
- {
- 	const struct wiz_clk_mux_sel *clk_mux_sel = wiz->clk_mux_sel;
- 	struct device *dev = wiz->dev;
-@@ -1087,14 +1087,36 @@ static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
- 	int ret;
- 	int i;
- 
--	clk = devm_clk_get(dev, "core_ref_clk");
--	if (IS_ERR(clk)) {
--		dev_err(dev, "core_ref_clk clock not found\n");
--		ret = PTR_ERR(clk);
--		return ret;
-+	if (probe) {
-+		clk = devm_clk_get(dev, "core_ref_clk");
-+		if (IS_ERR(clk)) {
-+			dev_err(dev, "core_ref_clk clock not found\n");
-+			ret = PTR_ERR(clk);
-+			return ret;
-+		}
-+		wiz->input_clks[WIZ_CORE_REFCLK] = clk;
-+
-+		if (wiz->data->pma_cmn_refclk1_int_mode) {
-+			clk = devm_clk_get(dev, "core_ref1_clk");
-+			if (IS_ERR(clk)) {
-+				dev_err(dev, "core_ref1_clk clock not found\n");
-+				ret = PTR_ERR(clk);
-+				return ret;
-+			}
-+			wiz->input_clks[WIZ_CORE_REFCLK1] = clk;
-+		}
-+
-+		clk = devm_clk_get(dev, "ext_ref_clk");
-+		if (IS_ERR(clk)) {
-+			dev_err(dev, "ext_ref_clk clock not found\n");
-+			ret = PTR_ERR(clk);
-+			return ret;
-+		}
-+		wiz->input_clks[WIZ_EXT_REFCLK] = clk;
- 	}
--	wiz->input_clks[WIZ_CORE_REFCLK] = clk;
- 
-+
-+	clk = wiz->input_clks[WIZ_CORE_REFCLK];
- 	rate = clk_get_rate(clk);
- 	if (rate >= 100000000)
- 		regmap_field_write(wiz->pma_cmn_refclk_int_mode, 0x1);
-@@ -1121,14 +1143,7 @@ static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
- 	}
- 
- 	if (wiz->data->pma_cmn_refclk1_int_mode) {
--		clk = devm_clk_get(dev, "core_ref1_clk");
--		if (IS_ERR(clk)) {
--			dev_err(dev, "core_ref1_clk clock not found\n");
--			ret = PTR_ERR(clk);
--			return ret;
--		}
--		wiz->input_clks[WIZ_CORE_REFCLK1] = clk;
--
-+		clk = wiz->input_clks[WIZ_CORE_REFCLK1];
- 		rate = clk_get_rate(clk);
- 		if (rate >= 100000000)
- 			regmap_field_write(wiz->pma_cmn_refclk1_int_mode, 0x1);
-@@ -1136,20 +1151,17 @@ static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
- 			regmap_field_write(wiz->pma_cmn_refclk1_int_mode, 0x3);
- 	}
- 
--	clk = devm_clk_get(dev, "ext_ref_clk");
--	if (IS_ERR(clk)) {
--		dev_err(dev, "ext_ref_clk clock not found\n");
--		ret = PTR_ERR(clk);
--		return ret;
--	}
--	wiz->input_clks[WIZ_EXT_REFCLK] = clk;
--
-+	clk = wiz->input_clks[WIZ_EXT_REFCLK];
- 	rate = clk_get_rate(clk);
- 	if (rate >= 100000000)
- 		regmap_field_write(wiz->pma_cmn_refclk_mode, 0x0);
- 	else
- 		regmap_field_write(wiz->pma_cmn_refclk_mode, 0x2);
- 
-+	/* What follows is about registering clocks. */
-+	if (!probe)
-+		return 0;
-+
- 	switch (wiz->type) {
- 	case AM64_WIZ_10G:
- 	case J7200_WIZ_10G:
-@@ -1592,7 +1604,7 @@ static int wiz_probe(struct platform_device *pdev)
- 		goto err_get_sync;
- 	}
- 
--	ret = wiz_clock_init(wiz, node);
-+	ret = wiz_clock_init(wiz, node, true);
- 	if (ret < 0) {
- 		dev_warn(dev, "Failed to initialize clocks\n");
- 		goto err_get_sync;
+Théo Lebrun (4):
+      mux: mmio: Add resume support
+      PCI: cadence: add resume support to cdns_pcie_host_setup()
+      PCI: j721e: move reset GPIO to device struct
+      PCI: j721e: add suspend and resume support
 
+ drivers/gpio/gpio-pca953x.c                        |   8 +-
+ drivers/i2c/busses/i2c-omap.c                      |  15 +++
+ drivers/mux/mmio.c                                 |  34 ++++++
+ drivers/pci/controller/cadence/pci-j721e.c         |  86 ++++++++++++--
+ drivers/pci/controller/cadence/pcie-cadence-host.c |  49 ++++----
+ drivers/pci/controller/cadence/pcie-cadence-plat.c |   2 +-
+ drivers/pci/controller/cadence/pcie-cadence.h      |   7 +-
+ drivers/phy/cadence/phy-cadence-torrent.c          | 125 +++++++++++++++------
+ drivers/phy/ti/phy-j721e-wiz.c                     |  99 ++++++++++++----
+ drivers/pinctrl/pinctrl-single.c                   |  19 ++--
+ 10 files changed, 342 insertions(+), 102 deletions(-)
+---
+base-commit: 00ff0f9ce40db8e64fe16c424a965fd7ab769c42
+change-id: 20240102-j7200-pcie-s2r-ecb1a979e357
+
+Best regards,
 -- 
-2.39.2
+Thomas Richard <thomas.richard@bootlin.com>
 
