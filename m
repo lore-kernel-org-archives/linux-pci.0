@@ -1,147 +1,182 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 553D71863C
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jan 2024 14:47:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9305179AF;
+	Mon, 15 Jan 2024 16:16:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OvsBgFDH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1705330058;
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="RKiq6PED"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 07E69C0004;
+	Mon, 15 Jan 2024 16:16:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1705335381;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jIzHvpzkkigfxw83x1LWeciN350K4+qfOeyYElcXkdQ=;
-	b=OvsBgFDHBCmsVrBMYQEvJrJ4nR3+j1Kze2Z282eczrlZuNoULV4+QgGwChLoHlCSQMx3lI
-	abH4ZXhk4evOY8XQ6PjHb9GlUefEmjZp9IFYvIHE0qVVgIGVPusNXmRlVvtJ9+VeBtAKFQ
-	zZyFDPKa1lB/u1dMbU6eIxUBPSV+cRI=
-Received: from mail-oo1-f72.google.com (mail-oo1-f72.google.com
- [209.85.161.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-113-70WWM5H4Odqon65Tnmrl2g-1; Mon, 15 Jan 2024 09:47:37 -0500
-X-MC-Unique: 70WWM5H4Odqon65Tnmrl2g-1
-Received: by mail-oo1-f72.google.com with SMTP id 006d021491bc7-5990b589658so74687eaf.1
-        for <linux-pci@vger.kernel.org>; Mon, 15 Jan 2024 06:47:37 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1705330056; x=1705934856;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=jIzHvpzkkigfxw83x1LWeciN350K4+qfOeyYElcXkdQ=;
-        b=WlrIK9lTJGdfX7LPPmL2jsYLeSjMDZATYVzHpibvT9go6pee+/WsMJwWeybPprkQFK
-         Rp1u8FeuPMYJntTCBZi5Zp2W2WCTO5frxZt2L354gXfopTQcYu++WTN3Gi//NgpBcVLw
-         gJFwmufUSNPGnUBNOBHCn0F6braIQ4U5CDsEmPqhW41HJ09r2ThxVIF/AntYtdGKVgOl
-         9q8ovhe/lsdN1whahw+tmAwjFvxHd2rt3wNkOoDOD68uxf/px81591ruS1HHOXgj/9hx
-         B0+/uPWopO5/eccbYYIHzkJg8UkqQ7Ni9Lmu2A9mWI9qyn+8W5ezeJwPnjUHnfZyqu95
-         YwFA==
-X-Gm-Message-State: AOJu0YyWiS2WSfvSKlOaqKNVuKJHgbcWS1RlS3CjgRYCbdIIy34SxZul
-	0BI2asGe2HTfClLxXNFrYYgFApKs54Dw3nRqWpimWPHxuoDpl+3RhpHDGpgNZikmKte27FG1RZq
-	Q0JRtkB9SINZs1g3PgRRx6OClQUb/
-X-Received: by 2002:a4a:dd8f:0:b0:598:b2d7:2499 with SMTP id h15-20020a4add8f000000b00598b2d72499mr7707345oov.0.1705330056432;
-        Mon, 15 Jan 2024 06:47:36 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHi7+XsSK011xhs3AvyU5Z7vMLQIc2V6iqOiH+OrjwaSbXs/XiSSr4Ft9JY9kxXHF9woE1zRQ==
-X-Received: by 2002:a4a:dd8f:0:b0:598:b2d7:2499 with SMTP id h15-20020a4add8f000000b00598b2d72499mr7707328oov.0.1705330056145;
-        Mon, 15 Jan 2024 06:47:36 -0800 (PST)
-Received: from pstanner-thinkpadt14sgen1.muc.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
-        by smtp.gmail.com with ESMTPSA id ne13-20020a056214424d00b006815cf9a644sm1020720qvb.55.2024.01.15.06.47.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 15 Jan 2024 06:47:35 -0800 (PST)
-From: Philipp Stanner <pstanner@redhat.com>
-To: Jonathan Corbet <corbet@lwn.net>,
-	Hans de Goede <hdegoede@redhat.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Stanner <pstanner@redhat.com>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	dakr@redhat.com
-Cc: linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org,
-	stable@kernel.vger.org
-Subject: [PATCH 10/10] drm/vboxvideo: fix mapping leaks
-Date: Mon, 15 Jan 2024 15:46:21 +0100
-Message-ID: <20240115144655.32046-12-pstanner@redhat.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240115144655.32046-2-pstanner@redhat.com>
-References: <20240115144655.32046-2-pstanner@redhat.com>
+	bh=xHlgHmhFQdKKCDXxYc/ggNFFXgHMuRi1rAK2fpmgtw0=;
+	b=RKiq6PEDFJewrIz560B/cQ7e8tySHH9TYfN2TIIxHo7jCa0ynZHX3RDfG0oFlfnFvvOssw
+	u144gWBkomeblDYKinfqJUIYWK1WMtw9qjsgs7ng8lZ2ypTKhVLM9zmHr6dJ63EVQXQwde
+	eThjBltyddSiqdCcYecfV4PIMB8UcX9g6arV7Nop89YqbkWUTlUPpNMmLqMdDR+4irOTBT
+	440oP+5rcQZtcYkgHtRWUSEVkdd1WLtoyBxz9Faf4iL6d2dKxvhoH4OaD4imIxpLc2MVR6
+	vK/ktLLz9ZcJhB9krkUmpZJHTB1l5Lkga5nXC/T7b3uLnVm8CyR1WQbqjXSCAg==
+From: Thomas Richard <thomas.richard@bootlin.com>
+Date: Mon, 15 Jan 2024 17:14:46 +0100
+Subject: [PATCH 05/14] phy: ti: phy-j721e-wiz: make wiz_clock_init callable
+ multiple times
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+Message-Id: <20240102-j7200-pcie-s2r-v1-5-84e55da52400@bootlin.com>
+References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
+In-Reply-To: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
+To: Linus Walleij <linus.walleij@linaro.org>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+ Tony Lindgren <tony@atomide.com>, 
+ Haojian Zhuang <haojian.zhuang@linaro.org>, Vignesh R <vigneshr@ti.com>, 
+ Aaro Koskinen <aaro.koskinen@iki.fi>, 
+ Janusz Krzysztofik <jmkrzyszt@gmail.com>, 
+ Andi Shyti <andi.shyti@kernel.org>, Peter Rosin <peda@axentia.se>, 
+ Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, Tom Joseph <tjoseph@cadence.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org, 
+ linux-i2c@vger.kernel.org, linux-phy@lists.infradead.org, 
+ linux-pci@vger.kernel.org, gregory.clement@bootlin.com, 
+ theo.lebrun@bootlin.com, thomas.petazzoni@bootlin.com, u-kumar1@ti.com, 
+ Thomas Richard <thomas.richard@bootlin.com>
+X-Mailer: b4 0.12.0
+X-GND-Sasl: thomas.richard@bootlin.com
 
-When the managed PCI-API was introduced to this driver, it was falsly
-assumed that initializing the device with pcim_enable_device() instead
-of pci_enable_device() will make all PCI functions managed.
+For suspend and resume support, wiz_clock_init needs to be called
+multiple times.
+Add a parameter to wiz_clock_init to be able to skip clocks
+registration.
 
-This is wrong and was caused by the quite confusing devres API for PCI:
-The function pci_iomap_range() is never managed.
+Based on the work of Théo Lebrun <theo.lebrun@bootlin.com>
 
-Replace pci_iomap_range() with the actually managed function
-pcim_iomap_range().
-
-Additionally, add a call to pcim_request_region() to ensure exclusive
-access to BAR 0.
-
-CC: <stable@kernel.vger.org> # v5.10+
-Fixes: 8558de401b5f ("drm/vboxvideo: use managed pci functions")
-Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/gpu/drm/vboxvideo/vbox_main.c | 24 +++++++++++++-----------
- 1 file changed, 13 insertions(+), 11 deletions(-)
+ drivers/phy/ti/phy-j721e-wiz.c | 60 +++++++++++++++++++++++++-----------------
+ 1 file changed, 36 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/gpu/drm/vboxvideo/vbox_main.c b/drivers/gpu/drm/vboxvideo/vbox_main.c
-index 42c2d8a99509..7f686a0190e6 100644
---- a/drivers/gpu/drm/vboxvideo/vbox_main.c
-+++ b/drivers/gpu/drm/vboxvideo/vbox_main.c
-@@ -42,12 +42,11 @@ static int vbox_accel_init(struct vbox_private *vbox)
- 	/* Take a command buffer for each screen from the end of usable VRAM. */
- 	vbox->available_vram_size -= vbox->num_crtcs * VBVA_MIN_BUFFER_SIZE;
+diff --git a/drivers/phy/ti/phy-j721e-wiz.c b/drivers/phy/ti/phy-j721e-wiz.c
+index fc3cd98c60ff..09f7edf16562 100644
+--- a/drivers/phy/ti/phy-j721e-wiz.c
++++ b/drivers/phy/ti/phy-j721e-wiz.c
+@@ -1076,7 +1076,7 @@ static int wiz_clock_register(struct wiz *wiz)
+ 	return ret;
+ }
  
--	vbox->vbva_buffers = pci_iomap_range(pdev, 0,
--					     vbox->available_vram_size,
--					     vbox->num_crtcs *
--					     VBVA_MIN_BUFFER_SIZE);
--	if (!vbox->vbva_buffers)
--		return -ENOMEM;
-+	vbox->vbva_buffers = pcim_iomap_range(
-+			pdev, 0, vbox->available_vram_size,
-+			vbox->num_crtcs * VBVA_MIN_BUFFER_SIZE);
-+	if (IS_ERR(vbox->vbva_buffers))
-+		return PTR_ERR(vbox->vbva_buffers);
+-static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
++static int wiz_clock_init(struct wiz *wiz, struct device_node *node, bool probe)
+ {
+ 	const struct wiz_clk_mux_sel *clk_mux_sel = wiz->clk_mux_sel;
+ 	struct device *dev = wiz->dev;
+@@ -1087,14 +1087,36 @@ static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
+ 	int ret;
+ 	int i;
  
- 	for (i = 0; i < vbox->num_crtcs; ++i) {
- 		vbva_setup_buffer_context(&vbox->vbva_info[i],
-@@ -115,12 +114,15 @@ int vbox_hw_init(struct vbox_private *vbox)
- 
- 	DRM_INFO("VRAM %08x\n", vbox->full_vram_size);
- 
-+	ret = pcim_request_region(pdev, 0, "vboxvideo");
-+	if (ret)
-+		return ret;
+-	clk = devm_clk_get(dev, "core_ref_clk");
+-	if (IS_ERR(clk)) {
+-		dev_err(dev, "core_ref_clk clock not found\n");
+-		ret = PTR_ERR(clk);
+-		return ret;
++	if (probe) {
++		clk = devm_clk_get(dev, "core_ref_clk");
++		if (IS_ERR(clk)) {
++			dev_err(dev, "core_ref_clk clock not found\n");
++			ret = PTR_ERR(clk);
++			return ret;
++		}
++		wiz->input_clks[WIZ_CORE_REFCLK] = clk;
 +
- 	/* Map guest-heap at end of vram */
--	vbox->guest_heap =
--	    pci_iomap_range(pdev, 0, GUEST_HEAP_OFFSET(vbox),
--			    GUEST_HEAP_SIZE);
--	if (!vbox->guest_heap)
--		return -ENOMEM;
-+	vbox->guest_heap = pcim_iomap_range(pdev, 0,
-+			GUEST_HEAP_OFFSET(vbox), GUEST_HEAP_SIZE);
-+	if (IS_ERR(vbox->guest_heap))
-+		return PTR_ERR(vbox->guest_heap);
++		if (wiz->data->pma_cmn_refclk1_int_mode) {
++			clk = devm_clk_get(dev, "core_ref1_clk");
++			if (IS_ERR(clk)) {
++				dev_err(dev, "core_ref1_clk clock not found\n");
++				ret = PTR_ERR(clk);
++				return ret;
++			}
++			wiz->input_clks[WIZ_CORE_REFCLK1] = clk;
++		}
++
++		clk = devm_clk_get(dev, "ext_ref_clk");
++		if (IS_ERR(clk)) {
++			dev_err(dev, "ext_ref_clk clock not found\n");
++			ret = PTR_ERR(clk);
++			return ret;
++		}
++		wiz->input_clks[WIZ_EXT_REFCLK] = clk;
+ 	}
+-	wiz->input_clks[WIZ_CORE_REFCLK] = clk;
  
- 	/* Create guest-heap mem-pool use 2^4 = 16 byte chunks */
- 	vbox->guest_pool = devm_gen_pool_create(vbox->ddev.dev, 4, -1,
++
++	clk = wiz->input_clks[WIZ_CORE_REFCLK];
+ 	rate = clk_get_rate(clk);
+ 	if (rate >= 100000000)
+ 		regmap_field_write(wiz->pma_cmn_refclk_int_mode, 0x1);
+@@ -1121,14 +1143,7 @@ static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
+ 	}
+ 
+ 	if (wiz->data->pma_cmn_refclk1_int_mode) {
+-		clk = devm_clk_get(dev, "core_ref1_clk");
+-		if (IS_ERR(clk)) {
+-			dev_err(dev, "core_ref1_clk clock not found\n");
+-			ret = PTR_ERR(clk);
+-			return ret;
+-		}
+-		wiz->input_clks[WIZ_CORE_REFCLK1] = clk;
+-
++		clk = wiz->input_clks[WIZ_CORE_REFCLK1];
+ 		rate = clk_get_rate(clk);
+ 		if (rate >= 100000000)
+ 			regmap_field_write(wiz->pma_cmn_refclk1_int_mode, 0x1);
+@@ -1136,20 +1151,17 @@ static int wiz_clock_init(struct wiz *wiz, struct device_node *node)
+ 			regmap_field_write(wiz->pma_cmn_refclk1_int_mode, 0x3);
+ 	}
+ 
+-	clk = devm_clk_get(dev, "ext_ref_clk");
+-	if (IS_ERR(clk)) {
+-		dev_err(dev, "ext_ref_clk clock not found\n");
+-		ret = PTR_ERR(clk);
+-		return ret;
+-	}
+-	wiz->input_clks[WIZ_EXT_REFCLK] = clk;
+-
++	clk = wiz->input_clks[WIZ_EXT_REFCLK];
+ 	rate = clk_get_rate(clk);
+ 	if (rate >= 100000000)
+ 		regmap_field_write(wiz->pma_cmn_refclk_mode, 0x0);
+ 	else
+ 		regmap_field_write(wiz->pma_cmn_refclk_mode, 0x2);
+ 
++	/* What follows is about registering clocks. */
++	if (!probe)
++		return 0;
++
+ 	switch (wiz->type) {
+ 	case AM64_WIZ_10G:
+ 	case J7200_WIZ_10G:
+@@ -1592,7 +1604,7 @@ static int wiz_probe(struct platform_device *pdev)
+ 		goto err_get_sync;
+ 	}
+ 
+-	ret = wiz_clock_init(wiz, node);
++	ret = wiz_clock_init(wiz, node, true);
+ 	if (ret < 0) {
+ 		dev_warn(dev, "Failed to initialize clocks\n");
+ 		goto err_get_sync;
+
 -- 
-2.43.0
+2.39.2
 
