@@ -1,30 +1,30 @@
 Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47F2717C60;
-	Mon, 15 Jan 2024 16:16:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDE4A17C95;
+	Mon, 15 Jan 2024 16:16:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="IMcgHzS0"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 8EE79C0015;
-	Mon, 15 Jan 2024 16:16:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Crp6RWxA"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 77D41C000B;
+	Mon, 15 Jan 2024 16:16:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1705335384;
+	t=1705335378;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+S1bV3o/pT6DGMVe8pPN9SikJtzfTvzV+l25VERgt3Y=;
-	b=IMcgHzS0EzcVT6FgexD4TRcnwzkFI9f80CEcAppC2cx5Heh/9WSGS2Iohpk0AFTqZhRcBD
-	wZUstknu0sx+gNVczlRidJaQHE+Kiq/SHozs0Z8KpR5Ft17IWCzj5NnJJC1NI+2LMjamtm
-	qHvrKBS2GzKuvN2szmTuk38pjUCjSuaKn9hkQdTYYOlD5eSJcoAY7USqeQT0IqFygXammI
-	gqb5fmKhxLER0ydyt/qmNdQhrGHhRCt6h/eRqx5wEnzyHWZxk8yegOE4Z0qUJ0SKoixgEe
-	t2q/VNy/VXjLF4JKhhZV2O3K9jJy3okMzsI4uuJjO9NBYn2w55U8p1p9SL/8/A==
+	bh=luuiYzsnns/OhtWeHFFRwSXyejuX6Zby2kvPJdFacfc=;
+	b=Crp6RWxAJP1bUpPZkHVslhQDy0LElcVFI6AwLcwULZs5RsYzIudWQYt8Q3iRhDgSSnaVZK
+	7ymwpYUXf0wGkO5wq+5zCpEykusRLnHd/2731m5szrEcC5N5vLQ/lkof9wfprFL2GDVlYU
+	afNaDKsSr4+VALNWEMFWoWM0E5iBdmI/TqzLmaSDb8LhG0uu0N1htYIBEBKEjvqeHJsd6I
+	PLElpPuwjvTy40jIgKBGS+dcAtKQwxZDjDs4wNOTVGcTD54SeSVUhAphBiFx+ccLAAaDHM
+	9Zw+x3r/aYZpT99MMMs2BmRWWIFYXclINT6abTZtRXkI30meD4hNw7NHLai+Rw==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Mon, 15 Jan 2024 17:14:49 +0100
-Subject: [PATCH 08/14] phy: cadence-torrent: register resets even if the
- phy is already configured
+Date: Mon, 15 Jan 2024 17:14:44 +0100
+Subject: [PATCH 03/14] i2c: omap: wakeup the controller during suspend
+ callback
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -33,7 +33,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v1-8-84e55da52400@bootlin.com>
+Message-Id: <20240102-j7200-pcie-s2r-v1-3-84e55da52400@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -57,52 +57,54 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-Resets are needed during suspend and resume stages.
-So they shall be registered during the probe even the phy is already
-initialized.
-The function cdns_torrent_reset is renamed cdns_torrent_of_get_reset to
-make it clear.
+A device may need the controller up during suspend_noirq or
+resume_noirq.
+But if the controller is autosuspended, there is no way to wakeup it
+during suspend_noirq or resume_noirq because runtime pm is disabled
+at this time.
+
+The suspend callback wakes up the controller, so it is available until
+its suspend_noirq callback (pm_runtime_force_suspend).
+During the resume, it's restored by resume_noirq callback
+(pm_runtime_force_resume). Then resume callback enables autosuspend.
+
+So the controller is up during a little time slot in suspend and resume
+sequences even if it's not used.
 
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/phy/cadence/phy-cadence-torrent.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
+ drivers/i2c/busses/i2c-omap.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/phy/cadence/phy-cadence-torrent.c b/drivers/phy/cadence/phy-cadence-torrent.c
-index 94298ad9f875..100b58965558 100644
---- a/drivers/phy/cadence/phy-cadence-torrent.c
-+++ b/drivers/phy/cadence/phy-cadence-torrent.c
-@@ -2660,7 +2660,7 @@ static int cdns_torrent_clk_register(struct cdns_torrent_phy *cdns_phy)
+diff --git a/drivers/i2c/busses/i2c-omap.c b/drivers/i2c/busses/i2c-omap.c
+index 42165ef57946..57f0738fa748 100644
+--- a/drivers/i2c/busses/i2c-omap.c
++++ b/drivers/i2c/busses/i2c-omap.c
+@@ -1575,9 +1575,24 @@ static int __maybe_unused omap_i2c_runtime_resume(struct device *dev)
  	return 0;
  }
  
--static int cdns_torrent_reset(struct cdns_torrent_phy *cdns_phy)
-+static int cdns_torrent_of_get_reset(struct cdns_torrent_phy *cdns_phy)
- {
- 	struct device *dev = cdns_phy->dev;
- 
-@@ -2780,6 +2780,10 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
-+	ret = cdns_torrent_of_get_reset(cdns_phy);
-+	if (ret)
-+		goto clk_cleanup;
 +
- 	ret = cdns_torrent_of_get_clk(cdns_phy);
- 	if (ret)
- 		goto clk_cleanup;
-@@ -2787,10 +2791,6 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
- 	regmap_field_read(cdns_phy->phy_pma_cmn_ctrl_1, &already_configured);
- 
- 	if (!already_configured) {
--		ret = cdns_torrent_reset(cdns_phy);
--		if (ret)
--			goto clk_cleanup;
--
- 		ret = cdns_torrent_clk(cdns_phy);
- 		if (ret)
- 			goto clk_cleanup;
++static int omap_i2c_suspend(struct device *dev)
++{
++	return pm_runtime_resume_and_get(dev);
++}
++
++static int omap_i2c_resume(struct device *dev)
++{
++	pm_runtime_mark_last_busy(dev);
++	pm_runtime_put_autosuspend(dev);
++
++	return 0;
++}
++
+ static const struct dev_pm_ops omap_i2c_pm_ops = {
+ 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
+ 				      pm_runtime_force_resume)
++	SET_SYSTEM_SLEEP_PM_OPS(omap_i2c_suspend, omap_i2c_resume)
+ 	SET_RUNTIME_PM_OPS(omap_i2c_runtime_suspend,
+ 			   omap_i2c_runtime_resume, NULL)
+ };
 
 -- 
 2.39.2
