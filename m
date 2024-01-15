@@ -1,30 +1,29 @@
 Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FA54179B8;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1525D179BD;
 	Mon, 15 Jan 2024 16:16:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Xrrtb3P8"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 24575C0006;
-	Mon, 15 Jan 2024 16:16:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="COOXp3qP"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 322DFC0008;
+	Mon, 15 Jan 2024 16:16:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1705335376;
+	t=1705335382;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=QdylFGoGNBM+6WQopCODNAlZIa2ZGhmHad5v6oJ+DkE=;
-	b=Xrrtb3P8fSAlvWg0HrBGIRn0z/2b89JwWbXUPzMJkJN376Hsr93U/+D2nW34Ye9VuZmmGf
-	ycr1Bs2cezuq7DwAcszuCKv6OZ0GZNOWD/GG6kwlbfJohqEKpI8kO4aiLcMOBIwjnWGgeT
-	dZ88pTG+vgf55p7hXOdqN+xAn5lJ/syE1dhWn0U79r171RVUSF7FhhvGRCr0UND8VnVdvY
-	Zh4df2PphsovC0oH0o5a931aYsS2riTeyWAP9CjYPcxurcj/zVsmaBSPU3mXQFj8xr2Lef
-	3jEwsT2hqPazGPMtOqt7fxwVUsYNS9roCJRNlXsXPatwGcNvGXAWys3x2NpB8g==
+	bh=5sUS3vLWJetwrOxifoKHwojurtz05QQ0WVVV+b0as8c=;
+	b=COOXp3qPdfsNX4WwaTj+W6tNhEJvjMWJwGpreYYsAzWHkD+A6UGJGtR6y0XvJRVUth+rs2
+	1gASrl5oLU9BrJ/J2UDxOXzPYx03q3SW8eLI+TtSKxG9C06QjLKmVsS5khzb3ZRbjvTjOi
+	0LH8AB+Uh+p8St2qxjjUc4GPijrgM5cK0qsEYAYs0yFtAl2NRy6aXsbXjmZJUAKhoy/JwA
+	2nMmfnm1FYFGQrlzibu6pz121m3l+m5C2Lyc2+WMMqyVY77aIttUeEwpzzSfk2qOJvNgLY
+	qYRFtnhkloQNhaO9Tw9kjSKVn8hh8m1vhZseUUKfrl3wnB7AmJhciG9L9f7Aww==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Mon, 15 Jan 2024 17:14:42 +0100
-Subject: [PATCH 01/14] gpio: pca953x: move suspend/resume to
- suspend_noirq/resume_noirq
+Date: Mon, 15 Jan 2024 17:14:47 +0100
+Subject: [PATCH 06/14] phy: ti: phy-j721e-wiz: add resume support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -32,8 +31,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v1-1-84e55da52400@bootlin.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20240102-j7200-pcie-s2r-v1-6-84e55da52400@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -57,47 +56,72 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-Some IOs can be needed during suspend_noirq/resume_noirq.
-So move suspend/resume callbacks to noirq.
+Add resume support.
+It has been tested on J7200 SR1.0 and SR2.0.
+
+Based on the work of Théo Lebrun <theo.lebrun@bootlin.com>
 
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/gpio/gpio-pca953x.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/phy/ti/phy-j721e-wiz.c | 39 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 39 insertions(+)
 
-diff --git a/drivers/gpio/gpio-pca953x.c b/drivers/gpio/gpio-pca953x.c
-index 00ffa168e405..83da5d213c55 100644
---- a/drivers/gpio/gpio-pca953x.c
-+++ b/drivers/gpio/gpio-pca953x.c
-@@ -1234,7 +1234,7 @@ static void pca953x_save_context(struct pca953x_chip *chip)
- 	regcache_cache_only(chip->regmap, true);
+diff --git a/drivers/phy/ti/phy-j721e-wiz.c b/drivers/phy/ti/phy-j721e-wiz.c
+index 09f7edf16562..fac7070a9d6b 100644
+--- a/drivers/phy/ti/phy-j721e-wiz.c
++++ b/drivers/phy/ti/phy-j721e-wiz.c
+@@ -1666,12 +1666,51 @@ static void wiz_remove(struct platform_device *pdev)
+ 	pm_runtime_disable(dev);
  }
  
--static int pca953x_suspend(struct device *dev)
-+static int pca953x_suspend_noirq(struct device *dev)
- {
- 	struct pca953x_chip *chip = dev_get_drvdata(dev);
- 
-@@ -1248,7 +1248,7 @@ static int pca953x_suspend(struct device *dev)
- 	return 0;
- }
- 
--static int pca953x_resume(struct device *dev)
-+static int pca953x_resume_noirq(struct device *dev)
- {
- 	struct pca953x_chip *chip = dev_get_drvdata(dev);
- 	int ret;
-@@ -1268,7 +1268,9 @@ static int pca953x_resume(struct device *dev)
- 	return ret;
- }
- 
--static DEFINE_SIMPLE_DEV_PM_OPS(pca953x_pm_ops, pca953x_suspend, pca953x_resume);
-+static const struct dev_pm_ops pca953x_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(pca953x_suspend_noirq, pca953x_resume_noirq)
++#ifdef CONFIG_PM
++static int wiz_resume_noirq(struct device *dev)
++{
++	struct device_node *node = dev->of_node;
++	struct wiz *wiz = dev_get_drvdata(dev);
++	int ret;
++
++	/* Enable supplemental Control override if available */
++	if (wiz->sup_legacy_clk_override)
++		regmap_field_write(wiz->sup_legacy_clk_override, 1);
++
++	ret = wiz_clock_init(wiz, node, false);
++	if (ret < 0) {
++		dev_warn(dev, "Failed to initialize clocks\n");
++		goto err_get_sync;
++	}
++
++	ret = wiz_init(wiz);
++	if (ret) {
++		dev_err(dev, "WIZ initialization failed\n");
++		goto err_wiz_init;
++	}
++
++	return 0;
++
++err_wiz_init:
++	wiz_clock_cleanup(wiz, node);
++
++err_get_sync:
++
++	return ret;
++}
++
++static const struct dev_pm_ops wiz_pm_ops = {
++	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(NULL, wiz_resume_noirq)
 +};
- 
- /* convenience to stop overlong match-table lines */
- #define OF_653X(__nrgpio, __int) ((void *)(__nrgpio | PCAL653X_TYPE | __int))
++#endif
++
+ static struct platform_driver wiz_driver = {
+ 	.probe		= wiz_probe,
+ 	.remove_new	= wiz_remove,
+ 	.driver		= {
+ 		.name	= "wiz",
+ 		.of_match_table = wiz_id_table,
++		.pm	= pm_ptr(&wiz_pm_ops),
+ 	},
+ };
+ module_platform_driver(wiz_driver);
 
 -- 
 2.39.2
