@@ -1,29 +1,30 @@
 Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A26418048;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 974B4182A7;
 	Mon, 15 Jan 2024 16:16:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="F/+6IPqF"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id BDBC5C0013;
-	Mon, 15 Jan 2024 16:16:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="LzfGo0f1"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id BE59BC000E;
+	Mon, 15 Jan 2024 16:16:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1705335379;
+	t=1705335385;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=j40X4Nu4eW/wfOAO/d7B3IGTPdOyDBc/O2ndpv/7HmA=;
-	b=F/+6IPqFmci0LEpiKsOSrjUeL2jGbhF/9atcE8qzUcQtLYK/brxsei7e3RZeUzfNzN4Zl2
-	BGlSDC3rbCowgKD1C6eTFBU1KYs8J170dSsLKAxAGLb2ni6COkWoRLHmLL1jwYqx3Ch5Af
-	zl09x0HFnGDfU3Fi/Bad5Ts6Eepgr9LpWyS/LUKkUKi5kJ8CbI3poOU9kBNwb4eqj3eSz7
-	8SkHeoB8uoXuyuGPqE9qRUEGtApJV5vm5q2cBoX+Qj9/W5zB4Y1Y4Og2oXQprGsUYBsgdE
-	PrfoPZIl7V9Vcn9ajzE7R+g0B2UK1Y+noBqRgt17q0pucMB5duEqKE63/r9EsA==
+	bh=aJphqhRe7sCCUllJmYP7giuhDMzxfp8od1YO/mqFDeI=;
+	b=LzfGo0f1XBKbdnRbpJLHnWitIVtExxNPOBaV1ff3LkRjE2TzsQ48ipDbFQnIgVTCJsO9Ao
+	lsfbWg30X2WpUT90y0L7230VJ7vsRawFw0ki+4ZYhpn4gkhMMG1eRpvN1Ksw3qz+zqMUo5
+	h8aNbW83LKhsFoIpmNIkMBP68vy9avMwwhU+Jemn/12ruKeoW3exVeRPMSTXf7GXFjDjVc
+	pLgaq2fCqPqZ6BO8uVjcNQ9U7Dv5S7BK51oPx9kiEMlPoPu6LxGZFJscq8jU27CusWEYpk
+	PfJDaIqQbsPQtwmwqidHFCPiL5sQjk7ZRMZzw7cxg6rgYajeIE7eFx8nh9IXHw==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Mon, 15 Jan 2024 17:14:45 +0100
-Subject: [PATCH 04/14] mux: mmio: Add resume support
+Date: Mon, 15 Jan 2024 17:14:50 +0100
+Subject: [PATCH 09/14] phy: cadence-torrent: move already_configured to
+ struct cdns_torrent_phy
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -31,8 +32,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20240102-j7200-pcie-s2r-v1-4-84e55da52400@bootlin.com>
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240102-j7200-pcie-s2r-v1-9-84e55da52400@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -56,68 +57,64 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-From: Théo Lebrun <theo.lebrun@bootlin.com>
+Move already_configured to struct cdns_torrent_phy, so it can be used at
+differents stages.
 
-Implement resume support
-
-Signed-off-by: Théo Lebrun <theo.lebrun@bootlin.com>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/mux/mmio.c | 34 ++++++++++++++++++++++++++++++++++
- 1 file changed, 34 insertions(+)
+ drivers/phy/cadence/phy-cadence-torrent.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/mux/mmio.c b/drivers/mux/mmio.c
-index fd1d121a584b..ab4ef195fc0d 100644
---- a/drivers/mux/mmio.c
-+++ b/drivers/mux/mmio.c
-@@ -125,13 +125,47 @@ static int mux_mmio_probe(struct platform_device *pdev)
+diff --git a/drivers/phy/cadence/phy-cadence-torrent.c b/drivers/phy/cadence/phy-cadence-torrent.c
+index 100b58965558..a1e9d06453e6 100644
+--- a/drivers/phy/cadence/phy-cadence-torrent.c
++++ b/drivers/phy/cadence/phy-cadence-torrent.c
+@@ -358,6 +358,7 @@ struct cdns_torrent_phy {
+ 	enum cdns_torrent_ref_clk ref_clk_rate;
+ 	struct cdns_torrent_inst phys[MAX_NUM_LANES];
+ 	int nsubnodes;
++	int already_configured;
+ 	const struct cdns_torrent_data *init_data;
+ 	struct regmap *regmap_common_cdb;
+ 	struct regmap *regmap_phy_pcs_common_cdb;
+@@ -2741,7 +2742,6 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
+ 	struct device_node *child;
+ 	int ret, subnodes, node = 0, i;
+ 	u32 total_num_lanes = 0;
+-	int already_configured;
+ 	u8 init_dp_regmap = 0;
+ 	u32 phy_type;
  
- 	mux_chip->ops = &mux_mmio_ops;
+@@ -2788,9 +2788,9 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
+ 	if (ret)
+ 		goto clk_cleanup;
  
-+	dev_set_drvdata(dev, mux_chip);
-+
- 	return devm_mux_chip_register(dev, mux_chip);
- }
+-	regmap_field_read(cdns_phy->phy_pma_cmn_ctrl_1, &already_configured);
++	regmap_field_read(cdns_phy->phy_pma_cmn_ctrl_1, &cdns_phy->already_configured);
  
-+#ifdef CONFIG_PM
-+static int mux_mmio_resume_noirq(struct device *dev)
-+{
-+	struct mux_chip *mux_chip = dev_get_drvdata(dev);
-+	int global_ret = 0;
-+	unsigned int i;
-+
-+	for (i = 0; i < mux_chip->controllers; i++) {
-+		struct mux_control *mux = &mux_chip->mux[i];
-+		int val = mux->cached_state;
-+		int ret;
-+
-+		if (val == MUX_IDLE_AS_IS)
-+			continue;
-+
-+		ret = mux_mmio_set(mux, val);
-+		if (ret) {
-+			dev_err(dev, "control %u: error restoring mux: %d\n", i, ret);
-+			if (!global_ret)
-+				global_ret = ret;
-+		}
-+	}
-+
-+	return global_ret;
-+}
-+#endif
-+
-+static const struct dev_pm_ops mux_mmio_pm_ops = {
-+	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(NULL, mux_mmio_resume_noirq)
-+};
-+
- static struct platform_driver mux_mmio_driver = {
- 	.driver = {
- 		.name = "mmio-mux",
- 		.of_match_table	= mux_mmio_dt_ids,
-+		.pm = &mux_mmio_pm_ops,
- 	},
- 	.probe = mux_mmio_probe,
- };
+-	if (!already_configured) {
++	if (!cdns_phy->already_configured) {
+ 		ret = cdns_torrent_clk(cdns_phy);
+ 		if (ret)
+ 			goto clk_cleanup;
+@@ -2870,7 +2870,7 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
+ 		of_property_read_u32(child, "cdns,ssc-mode",
+ 				     &cdns_phy->phys[node].ssc_mode);
+ 
+-		if (!already_configured)
++		if (!cdns_phy->already_configured)
+ 			gphy = devm_phy_create(dev, child, &cdns_torrent_phy_ops);
+ 		else
+ 			gphy = devm_phy_create(dev, child, &noop_ops);
+@@ -2956,7 +2956,7 @@ static int cdns_torrent_phy_probe(struct platform_device *pdev)
+ 		goto put_lnk_rst;
+ 	}
+ 
+-	if (cdns_phy->nsubnodes > 1 && !already_configured) {
++	if (cdns_phy->nsubnodes > 1 && !cdns_phy->already_configured) {
+ 		ret = cdns_torrent_phy_configure_multilink(cdns_phy);
+ 		if (ret)
+ 			goto put_lnk_rst;
 
 -- 
 2.39.2
