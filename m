@@ -1,48 +1,48 @@
-Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+Received: from fllv0016.ext.ti.com (fllv0016.ext.ti.com [198.47.19.142])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD3A01C688;
-	Wed, 17 Jan 2024 10:25:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.248
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EF7414A8E;
+	Wed, 17 Jan 2024 10:26:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.142
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705487160; cv=none; b=cPrx0iBZGGe0sbXPpGukJWJwgg6cA0kPS742ni1WjW9YPSpjGaXa3IPK7E7JIIsUEmn7zj58om6A0YfOV5pRQVugPo4XtTzy5zTPMVexRcgEPLmBEMl/oMvr55mgdZ8xmWZNcEEjIGUWkCLs/mdqsOw7ogg5/LCNg3FUJrbWX74=
+	t=1705487166; cv=none; b=N8HseUzeFG00YS2CSLZ9cifEfeeojBbKufsW8viSpx4MTGd1A9yxtmaYK01bg/Cd7saGGVF8jvzh391USNaGy11xnw5eZTRS+R7YQi/KTqkV9L2lW8ztfM9VuYU1fB5NDhuTDQ770R9jpD8fpXX+a6ph1yORXGO2ijQ88u53a1s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705487160; c=relaxed/simple;
-	bh=y5LACg26gms7ionU9Ein9Zbr8O1IRR5m5lnwW1h0SFU=;
+	s=arc-20240116; t=1705487166; c=relaxed/simple;
+	bh=nahy3SS6sJexvp/Fe+FnCJVPr3TOlktOrrshUHTXvMg=;
 	h=Received:DKIM-Signature:Received:Received:Received:Received:From:
 	 To:CC:Subject:Date:Message-ID:X-Mailer:In-Reply-To:References:
 	 MIME-Version:Content-Transfer-Encoding:Content-Type:
-	 X-EXCLAIMER-MD-CONFIG; b=YE89nn444hKAHpKsHaOWU5EbuzZSq5Yv3J5tXu0YI0W8+sCX80XCCJgj/x029+nZWKc+LY/zH59fmkS02wvK48Q3wMJApzVOZ8WylwJrxaV49Nq+/sUbk/+rJIgy6Cao8NAEKehabHyVKMD69Zy1xF2j7ASg18nB8IcdaaY9lHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=IGqHNsjz; arc=none smtp.client-ip=198.47.23.248
+	 X-EXCLAIMER-MD-CONFIG; b=qF0IY2SEVh7JAVQNCOxsvE1sBH8FS+sLb0lgamg+1SDTKUrIani2WVo0uo70hXKsAIpxxzw/nuU3QVdIdoBHAU9XA7BsNlfdX9WT5KAqbKw3VtHQPlxIzL1vtLJgwib1nwuY37znVPyx+kq0mEJhs4n6c/hLyd0snqC3fq5Our8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=x50NvCKP; arc=none smtp.client-ip=198.47.19.142
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="IGqHNsjz"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="x50NvCKP"
 Received: from fllv0034.itg.ti.com ([10.64.40.246])
-	by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 40HAPZAw105560;
-	Wed, 17 Jan 2024 04:25:35 -0600
+	by fllv0016.ext.ti.com (8.15.2/8.15.2) with ESMTP id 40HAPiIv090260;
+	Wed, 17 Jan 2024 04:25:44 -0600
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1705487135;
-	bh=1NNkaI42Hc7TBXVBYnyRbtIbsZVBSgd7WE0qsCIVHFM=;
+	s=ti-com-17Q1; t=1705487144;
+	bh=0OJmNLdqlDpealeON2rR+yAWVUQlNSGGnDJNQz+hl1Y=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=IGqHNsjzbslsQ9R386dDMLmIBdMoPbwbZwW05P2LsDpj5s3IPMEkGNUujO9s32w9Z
-	 rPnZr2yFT+0eqi6vsq53ooeFyZBpEibBPbcmu2Jz3sr74JS9I6BaBsMOqioUk74Ymv
-	 Fv9DNrVl2v5FH6o3K7+5xKxsvnWdd3RxI+FCsRGA=
-Received: from DLEE111.ent.ti.com (dlee111.ent.ti.com [157.170.170.22])
-	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 40HAPZD5035433
+	b=x50NvCKPz5fIcWDVTwbJJEOJNFku7WdsPiuuak7BFLnCaioxIy4U27cah1A9YjkdX
+	 2I9Cd0H2ZmWFtDzX6zrAX8EkeRw3U4s6ZUAWZTOS7fS1hi36pVa7llRGfm9bPlWeR1
+	 BCDN26gNHlYhR1hVh/hsHaWQPpP4zJZCtPmMroTI=
+Received: from DFLE115.ent.ti.com (dfle115.ent.ti.com [10.64.6.36])
+	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 40HAPi39035540
 	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 17 Jan 2024 04:25:35 -0600
-Received: from DLEE107.ent.ti.com (157.170.170.37) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
+	Wed, 17 Jan 2024 04:25:44 -0600
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE115.ent.ti.com
+ (10.64.6.36) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Wed, 17
- Jan 2024 04:25:35 -0600
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DLEE107.ent.ti.com
- (157.170.170.37) with Microsoft SMTP Server (version=TLS1_2,
+ Jan 2024 04:25:44 -0600
+Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Wed, 17 Jan 2024 04:25:35 -0600
+ Frontend Transport; Wed, 17 Jan 2024 04:25:44 -0600
 Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [172.24.227.9])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 40HAPQIg042834;
-	Wed, 17 Jan 2024 04:25:31 -0600
+	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 40HAPQIi042834;
+	Wed, 17 Jan 2024 04:25:40 -0600
 From: Siddharth Vadapalli <s-vadapalli@ti.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <robh@kernel.org>, <krzysztof.kozlowski+dt@linaro.org>,
@@ -50,9 +50,9 @@ To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
         <vigneshr@ti.com>, <afd@ti.com>, <srk@ti.com>, <s-vadapalli@ti.com>
-Subject: [PATCH 1/3] dt-bindings: PCI: ti,j721e-pci-*: Fix check for num-lanes
-Date: Wed, 17 Jan 2024 15:55:24 +0530
-Message-ID: <20240117102526.557006-2-s-vadapalli@ti.com>
+Subject: [PATCH 3/3] dt-bindings: PCI: ti,j721e-pci-host: Add support for J722S SoC
+Date: Wed, 17 Jan 2024 15:55:26 +0530
+Message-ID: <20240117102526.557006-4-s-vadapalli@ti.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240117102526.557006-1-s-vadapalli@ti.com>
 References: <20240117102526.557006-1-s-vadapalli@ti.com>
@@ -66,120 +66,52 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
-The existing implementation for validating the "num-lanes" property
-based on the compatible(s) doesn't enforce it. Fix it by updating the
-checks to handle both single-compatible and multi-compatible cases.
+TI's J722S SoC has one instance of a Gen3 Single Lane PCIe controller.
+The controller on J722S SoC is similar to the one present on TI's AM64
+SoC, with the difference being that the controller on AM64 SoC supports
+up to Gen2 link speed while the one on J722S SoC supports Gen3 link speed.
 
-Fixes: b3ba0f6e82cb ("dt-bindings: PCI: ti,j721e-pci-*: Add checks for num-lanes")
-Fixes: adc14d44d7cb ("dt-bindings: PCI: ti,j721e-pci-*: Add j784s4-pci-* compatible strings")
+Update the bindings with a new compatible for J722S SoC and enforce checks
+for "num-lanes" and "max-link-speed".
+
+Technical Reference Manual of J722S SoC: https://www.ti.com/lit/zip/sprujb3
+
 Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 ---
- .../bindings/pci/ti,j721e-pci-ep.yaml         | 26 ++++++++++++++-----
- .../bindings/pci/ti,j721e-pci-host.yaml       | 26 ++++++++++++++-----
- 2 files changed, 38 insertions(+), 14 deletions(-)
+ .../devicetree/bindings/pci/ti,j721e-pci-host.yaml  | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-index 97f2579ea908..278e0892f8ac 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-ep.yaml
-@@ -68,8 +68,9 @@ allOf:
-   - if:
-       properties:
-         compatible:
--          enum:
--            - ti,am64-pcie-ep
-+          items:
-+            - const: ti,am64-pcie-ep
-+            - const: ti,j721e-pcie-ep
-     then:
-       properties:
-         num-lanes:
-@@ -78,9 +79,9 @@ allOf:
-   - if:
-       properties:
-         compatible:
--          enum:
--            - ti,j7200-pcie-ep
--            - ti,j721e-pcie-ep
-+          items:
-+            - const: ti,j7200-pcie-ep
-+            - const: ti,j721e-pcie-ep
-     then:
-       properties:
-         num-lanes:
-@@ -90,8 +91,19 @@ allOf:
-   - if:
-       properties:
-         compatible:
--          enum:
--            - ti,j784s4-pcie-ep
-+          items:
-+            - const: ti,j721e-pcie-ep
-+    then:
-+      properties:
-+        num-lanes:
-+          minimum: 1
-+          maximum: 4
-+
-+  - if:
-+      properties:
-+        compatible:
-+          items:
-+            - const: ti,j784s4-pcie-ep
-     then:
-       properties:
-         num-lanes:
 diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-index b7a534cef24d..36bcc8cb7896 100644
+index 005546dc8bd4..b7648f7e73c9 100644
 --- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
 +++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -97,8 +97,9 @@ allOf:
-   - if:
-       properties:
-         compatible:
--          enum:
--            - ti,am64-pcie-host
-+          items:
-+            - const: ti,am64-pcie-host
-+            - const: ti,j721e-pcie-host
-     then:
-       properties:
-         num-lanes:
-@@ -107,9 +108,9 @@ allOf:
-   - if:
-       properties:
-         compatible:
--          enum:
--            - ti,j7200-pcie-host
--            - ti,j721e-pcie-host
-+          items:
-+            - const: ti,j7200-pcie-host
-+            - const: ti,j721e-pcie-host
-     then:
-       properties:
-         num-lanes:
-@@ -119,8 +120,19 @@ allOf:
-   - if:
-       properties:
-         compatible:
--          enum:
--            - ti,j784s4-pcie-host
-+          items:
-+            - const: ti,j721e-pcie-host
-+    then:
-+      properties:
-+        num-lanes:
-+          minimum: 1
-+          maximum: 4
-+
+@@ -14,6 +14,7 @@ properties:
+   compatible:
+     oneOf:
+       - const: ti,j721e-pcie-host
++      - const: ti,j722s-pcie-host
+       - const: ti,j784s4-pcie-host
+       - description: PCIe controller in AM64
+         items:
+@@ -134,6 +135,18 @@ allOf:
+           minimum: 1
+           maximum: 4
+ 
 +  - if:
 +      properties:
 +        compatible:
 +          items:
-+            - const: ti,j784s4-pcie-host
-     then:
++            - const: ti,j722s-pcie-host
++    then:
++      properties:
++        max-link-speed:
++          const: 3
++        num-lanes:
++          const: 1
++
+   - if:
        properties:
-         num-lanes:
+         compatible:
 -- 
 2.34.1
 
