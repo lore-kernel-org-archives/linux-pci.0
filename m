@@ -1,65 +1,73 @@
-Received: from mgamail.intel.com (mgamail.intel.com [134.134.136.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A25CBD51D;
-	Fri, 19 Jan 2024 07:58:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=134.134.136.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF19DDC5
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jan 2024 08:17:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705651107; cv=none; b=BrO3kYXz/Q81gRGoCnzkqaSjh2hVQLBbGd5Xyf7oGYE2l36JLC/8Tn2OpJ5UzLnFMfpkQ3UbcQ8r+XjOJcHEpBG/2wCqOdKl/hEt/AYkRsVhZUM0kTcRRtkeeAabfYkb8CT3ZC0/HYAtWhG1GSTKhW/jSlC5cuZW3CKjXmKVnOo=
+	t=1705652233; cv=none; b=Unu6yD8c2bPaArL/C0bhLlr2v04C+VjPctJorrSFZmOETneAEzIAGlHuf+CyLpLd68mmJKe12raCyrK+rlZI5BCj6amgNHqZPd34wRn/gCPiUoCt6lOUnY1ulVXKeD8gi1tDAsfoPzkK0e3iJlJjGpG5gQ+B8T+wcM3J7H/xPYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705651107; c=relaxed/simple;
-	bh=XfipyyIGq/R+X/vdsGIcSi03h8tMqB6s/DePqcWm/0I=;
+	s=arc-20240116; t=1705652233; c=relaxed/simple;
+	bh=oKKbj+jvfOiHePyNHPvlPksDgVHym+JYEXU4x7rTGMg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sIDdSQEVfefp6KH1m2+AZTKRAS5IT1Il9IwoJJUtSXrl3Ee78inQCs2IVYBRRoscrD5t1hZaQm1ezmSPD0Hd6Gp7e+MVavylYnGk34mZq4jxiW1LbVHyh5Inc20lTzbuePx76+D0TUGLfK+f9qKhDFVm9JLAMTmkTtv2cHRL5e4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Hf3GLcw1; arc=none smtp.client-ip=134.134.136.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=GoMyFUQ+vYiYchBBQU3Ex59rr4QLtMGWA5tzYM8zb4g1KdJRvo2ipAl6cuJ/AjpHXc9FcqPDL6vLaMmLTD5E6N5C0H4o4aLLETnss1TT3rwbvsjU3RbXzXO5zEmt5mpcl+SdU6ABUls3DHTr5JMFrSF+uduuCgOao3+jT5BtK4Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=GCiUmNiH; arc=none smtp.client-ip=209.85.215.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Hf3GLcw1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705651105; x=1737187105;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=XfipyyIGq/R+X/vdsGIcSi03h8tMqB6s/DePqcWm/0I=;
-  b=Hf3GLcw1sUKlh4umzq904PUtC24yhbDeHJFAhmDfAkPkWRDNtw+RhJKu
-   gwlhsQ6UzHhd7IZWZDgZKBVIHpK2QifK/W+vjXVuGlsERTAIHF6WFe7FY
-   l94jGfa7j3Wel87qj3UI4hD+KTSJaKhPaLYFyRzuptGI/X1EAnL2N9zN7
-   5ZbDd2FgzxZ2chSEhymEI5xY0GBOfOmsmtL8JHIE1pXsji39MvHGswWLc
-   Q8M1j4nNR0thKBOZ0ThAjGkaHwadcXTjtpXTNA6GRplLc51sVwxVTiilZ
-   7mEb0czrxqnkbVIRwxkB9eiuQvym+IMSkShb9gFzW/Mkm9hcR80nNJ8zM
-   Q==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="391126288"
-X-IronPort-AV: E=Sophos;i="6.05,204,1701158400"; 
-   d="scan'208";a="391126288"
-Received: from fmsmga002.fm.intel.com ([10.253.24.26])
-  by orsmga101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 23:58:24 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="904083616"
-X-IronPort-AV: E=Sophos;i="6.05,204,1701158400"; 
-   d="scan'208";a="904083616"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by fmsmga002.fm.intel.com with ESMTP; 18 Jan 2024 23:58:22 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-	id F1E0035E; Fri, 19 Jan 2024 09:48:29 +0200 (EET)
-Date: Fri, 19 Jan 2024 09:48:29 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Mario Limonciello <mario.limonciello@amd.com>,
-	Esther Shimanovich <eshimanovich@chromium.org>,
-	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH v4] PCI: Relabel JHL6540 on Lenovo X1 Carbon 7,8
-Message-ID: <20240119074829.GD2543524@black.fi.intel.com>
-References: <20231221-thunderbolt-pci-patch-4-v4-1-2e136e57c9bc@chromium.org>
- <20231228132517.GA12586@wunner.de>
- <20231228133949.GG2543524@black.fi.intel.com>
- <CA+Y6NJFQq39WSSwHwm37ZQV8_rwX+6k5r+0uUs_d1+UyGGLqUw@mail.gmail.com>
- <20240118060002.GV2543524@black.fi.intel.com>
- <23ee70d5-d6c0-4dff-aeac-08cc48b11c54@amd.com>
- <ZalOCPrVA52wyFfv@google.com>
- <20240119053756.GC2543524@black.fi.intel.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GCiUmNiH"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-5ca29c131ebso359443a12.0
+        for <linux-pci@vger.kernel.org>; Fri, 19 Jan 2024 00:17:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1705652231; x=1706257031; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=CKeQxr74v0/RAxO8TgttZrcsw2Yx0+jcWvQmI1Qe2Zw=;
+        b=GCiUmNiHqUl724sarO7rz1kosw2/m9Vmq+DUpQv/gfja+Frk0tGcgM8ybrfERKzSTL
+         szei/DpG+JN6B1gTo8IitHYfHmGVRm2nA+UaGKuaE309WPj5NzuZSDK/v0QKRHBJnd4Z
+         eZoo2tWQIXpRfPwwhcrAW+rM7TBz+dCkh0OaSeAhghhWQUuEaZC1X+lv4qbxRIySPV1b
+         8BUH5zsjlmQX7lGPYD9TycxFNFuQ5k0mPeZF9ufiPg8Ubb4sV3vxlT8tUHDt/EqKcHTw
+         kFuHacbvPO8poDCMCgzh6+/hiNay0Z6hGrAsapsRpOFaSE2gSh//zfIb37mF23+L4824
+         Uc1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705652231; x=1706257031;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=CKeQxr74v0/RAxO8TgttZrcsw2Yx0+jcWvQmI1Qe2Zw=;
+        b=Es2COxhzY5Nw2EuLiGmQdpcK6xMkd3LivrwjaadDUsaG/MF5AA+ttUbnqCH8NF8vOP
+         JSbdyJi/egZKHB5g/1c7crNppFm0/mzdNcgmpr631KYDg3uKW4u4YA92fJuCvTF/Bwu3
+         lRyQGHZjaCPxZDRmCUnKia7O0Jsn/wN7YL/MsIs0cONiKDrsiwafq3nvrsz0w822WnfT
+         N7DntGqS48IX2z3X4gSQa9seIlkujTp1PO/ZJFAqlWmwPMhohb4y+CXRmaGZ89SQi8yl
+         Y4hs/KvERfGe4m0jcePUwzU23neDjd9PZGH/68npsYwovZZU7qO/swXMbgrQxxGJ+Ou1
+         v43A==
+X-Gm-Message-State: AOJu0YxMOVpQbKKiDJ8QGGp9WwFZcwD4E4Fx7mJhQReNvOkTlBu1ef5O
+	TWAUh7VgCpb95B7HKoB8T6y46SI6VU3Jg4IHWYX/kiJuaW+BzEDN/Q9t2Z7Q1g==
+X-Google-Smtp-Source: AGHT+IGS5Ltk1U1ZHIZAH9/TpF9urtmkWgrvxjyopbIMgOLF9edEyr5g7jMcF0En2+zgNlJcEzObqA==
+X-Received: by 2002:a05:6a20:7fa4:b0:19a:21b8:ab6a with SMTP id d36-20020a056a207fa400b0019a21b8ab6amr2476870pzj.27.1705652230687;
+        Fri, 19 Jan 2024 00:17:10 -0800 (PST)
+Received: from thinkpad ([117.248.2.56])
+        by smtp.gmail.com with ESMTPSA id fb30-20020a056a002d9e00b006d9af8c25easm4506321pfb.84.2024.01.19.00.17.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 19 Jan 2024 00:17:10 -0800 (PST)
+Date: Fri, 19 Jan 2024 13:47:00 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Frank Li <Frank.Li@nxp.com>
+Cc: krzysztof.kozlowski@linaro.org, bhelgaas@google.com,
+	conor+dt@kernel.org, devicetree@vger.kernel.org, festevam@gmail.com,
+	helgaas@kernel.org, hongxing.zhu@nxp.com, imx@lists.linux.dev,
+	kernel@pengutronix.de, krzysztof.kozlowski+dt@linaro.org,
+	kw@linux.com, l.stach@pengutronix.de,
+	linux-arm-kernel@lists.infradead.org, linux-imx@nxp.com,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	lpieralisi@kernel.org, robh@kernel.org, s.hauer@pengutronix.de,
+	shawnguo@kernel.org
+Subject: Re: [PATCH v8 01/16] PCI: imx6: Simplify clock handling by using
+ clk_bulk*() function
+Message-ID: <20240119081700.GD2866@thinkpad>
+References: <20240108232145.2116455-1-Frank.Li@nxp.com>
+ <20240108232145.2116455-2-Frank.Li@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,52 +77,162 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240119053756.GC2543524@black.fi.intel.com>
+In-Reply-To: <20240108232145.2116455-2-Frank.Li@nxp.com>
 
-On Fri, Jan 19, 2024 at 07:37:56AM +0200, Mika Westerberg wrote:
-> On Thu, Jan 18, 2024 at 08:12:56AM -0800, Dmitry Torokhov wrote:
-> > On Thu, Jan 18, 2024 at 09:47:07AM -0600, Mario Limonciello wrote:
-> > > On 1/18/2024 00:00, Mika Westerberg wrote:
-> > > > > Before my patch, you see that the JHL6540 controller is inaccurately
-> > > > > labeled “removable”:
-> > > > > $ udevadm info -a -p /sys/bus/pci/devices/0000:05:00.0 | grep -e
-> > > > > {removable} -e {device} -e {vendor} -e looking
-> > > > >    looking at device '/devices/pci0000:00/0000:00:1d.4/0000:05:00.0':
-> > > > >      ATTR{device}=="0x15d3"
-> > > > >      ATTR{removable}=="removable"
-> > > > >      ATTR{vendor}=="0x8086"
-> > > > 
-> > > > This is actually accurate. The Thunderbolt controller is itself
-> > > > hot-removable and that BTW happens to be hot-removed when fwupd applies
-> > > > firmware upgrades to the device.
-> > 
-> > This is quite interesting take. Does fwupd rip the controller out of the
-> > box to update it? By that account your touchpad is also removable as it
-> > may stop functioning when its firmware gets updated.
+On Mon, Jan 08, 2024 at 06:21:30PM -0500, Frank Li wrote:
+> Refector the clock handling logic. Add 'clk_names' define in drvdata. Use
+> clk_bulk*() api simplify the code.
 > 
-> The Thunderbolt controller is connected to a hotpluggable PCIe root port
-> so it will be dissappear from the userspace so that "removable" in that
-> sense is accurate.
+> Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> ---
 
-There are systems as well where the Thunderbolt (and/or xHCI) controller
-only appears if there is anything plugged to the physical Type-C ports
-and it gets removed pretty soon after the physical device gets
-unplugged. These are also the same Alpine Ridge and Titan Ridge
-controllers that this patch is dealing with.
+One comment below. With that addressed,
 
-I tried to think about some sort of more generic heuristic how to figure
-out that the controller is actually inside the physical system but there
-is a problem that the same controller can appear on the bus as well, eg.
-you plug in Thunderbolt dock and that one has xHCI controller too. That
-device should definitely be "removable". With the "software CM" systems
-we have a couple of additional hints in the ACPI tables that can be used
-to identify the "tunneled" ports but this does not apply to the older
-systems I'm afraid.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Now if I understand the reason behind this patch is actually not about
-"removability" that much than about identifying a trusted vs. untrusted
-device and attaching a driver to those. I was under impression that
-there is already a solution to this in ChromeOS kernel. It has an
-allowlist of drivers that are allowed to attach these devices and that
-includes the PCIe port drivers, xhci_hcd and the thunderbolt driver,
-possibly something else too. Is this not working for your case?
+> 
+> Notes:
+>     Change from v7 to v8
+>     - update comment message
+>     - using ARRAY_SIZE to count clk_names.
+>     Change from v6 to v7
+>     - none
+>     Change from v4 to v5
+>     - update commit message
+>     - direct using clk name list, instead of macro
+>     - still keep caculate clk list count because sizeof return pre allocated
+>     array size.
+>     
+>     Change from v3 to v4
+>     - using clk_bulk_*() API
+>     Change from v1 to v3
+>     - none
+>     
+>     Change from v4 to v5
+>     - update commit message
+>     - direct using clk name list, instead of macro
+>     - still keep caculate clk list count because sizeof return pre allocated
+>     array size.
+>     
+>     Change from v3 to v4
+>     - using clk_bulk_*() API
+>     Change from v1 to v3
+>     - none
+> 
+>  drivers/pci/controller/dwc/pci-imx6.c | 144 ++++++++++----------------
+>  1 file changed, 54 insertions(+), 90 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+> index 74703362aeec7..4912c6b08ecf8 100644
+> --- a/drivers/pci/controller/dwc/pci-imx6.c
+> +++ b/drivers/pci/controller/dwc/pci-imx6.c
+
+[...]
+
+>  
+> +static const char * const
+> +imx6_3clks_bus_pcie_phy[] = {"pcie_bus", "pcie", "pcie_phy"};
+> +static const char * const
+> +imx6_3clks_bus_pcie_aux[] = {"pcie_bus", "pcie", "pcie_aux"};
+> +static const char * const
+> +imx6_4clks_bus_pcie_phy_aux[] = {"pcie_bus", "pcie", "pcie_phy", "pcie_aux"};
+> +static const char * const
+> +imx6_4clks_bus_pcie_phy_axi[] = {"pcie_bus", "pcie", "pcie_phy", "pcie_inbound_axi"};
+> +
+
+Use platform names for defining the array. Like,
+
+imx6q_clks[]
+imx6sx_clks[]
+imx8mq_clks[]
+imx8mm_clks[]
+
+and reuse them for other platforms as well. This gives an idea of how the clocks
+got inherited from some base platforms.
+
+- Mani
+
+>  static const struct imx6_pcie_drvdata drvdata[] = {
+>  	[IMX6Q] = {
+>  		.variant = IMX6Q,
+> @@ -1477,6 +1421,8 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+>  			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_phy,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_phy),
+>  	},
+>  	[IMX6SX] = {
+>  		.variant = IMX6SX,
+> @@ -1484,6 +1430,8 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+>  			 IMX6_PCIE_FLAG_IMX6_SPEED_CHANGE |
+>  			 IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+> +		.clk_names = imx6_4clks_bus_pcie_phy_axi,
+> +		.clks_cnt = ARRAY_SIZE(imx6_4clks_bus_pcie_phy_axi),
+>  	},
+>  	[IMX6QP] = {
+>  		.variant = IMX6QP,
+> @@ -1492,40 +1440,56 @@ static const struct imx6_pcie_drvdata drvdata[] = {
+>  			 IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.dbi_length = 0x200,
+>  		.gpr = "fsl,imx6q-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_phy,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_phy),
+>  	},
+>  	[IMX7D] = {
+>  		.variant = IMX7D,
+>  		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.gpr = "fsl,imx7d-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_phy,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_phy),
+>  	},
+>  	[IMX8MQ] = {
+>  		.variant = IMX8MQ,
+>  		.gpr = "fsl,imx8mq-iomuxc-gpr",
+> +		.clk_names = imx6_4clks_bus_pcie_phy_aux,
+> +		.clks_cnt = ARRAY_SIZE(imx6_4clks_bus_pcie_phy_aux),
+>  	},
+>  	[IMX8MM] = {
+>  		.variant = IMX8MM,
+>  		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.gpr = "fsl,imx8mm-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_aux,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_aux),
+>  	},
+>  	[IMX8MP] = {
+>  		.variant = IMX8MP,
+>  		.flags = IMX6_PCIE_FLAG_SUPPORTS_SUSPEND,
+>  		.gpr = "fsl,imx8mp-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_aux,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_aux),
+>  	},
+>  	[IMX8MQ_EP] = {
+>  		.variant = IMX8MQ_EP,
+>  		.mode = DW_PCIE_EP_TYPE,
+>  		.gpr = "fsl,imx8mq-iomuxc-gpr",
+> +		.clk_names = imx6_4clks_bus_pcie_phy_aux,
+> +		.clks_cnt = ARRAY_SIZE(imx6_4clks_bus_pcie_phy_aux),
+>  	},
+>  	[IMX8MM_EP] = {
+>  		.variant = IMX8MM_EP,
+>  		.mode = DW_PCIE_EP_TYPE,
+>  		.gpr = "fsl,imx8mm-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_aux,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_aux),
+>  	},
+>  	[IMX8MP_EP] = {
+>  		.variant = IMX8MP_EP,
+>  		.mode = DW_PCIE_EP_TYPE,
+>  		.gpr = "fsl,imx8mp-iomuxc-gpr",
+> +		.clk_names = imx6_3clks_bus_pcie_aux,
+> +		.clks_cnt = ARRAY_SIZE(imx6_3clks_bus_pcie_aux),
+>  	},
+>  };
+>  
+> -- 
+> 2.34.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
