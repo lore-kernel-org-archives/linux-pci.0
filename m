@@ -1,111 +1,192 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D42651018;
-	Fri, 19 Jan 2024 12:46:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A88E51C51;
+	Fri, 19 Jan 2024 13:00:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705668381; cv=none; b=bvB8rk1928jozqp8xyT9Xcr0Na4o6pecg5D6jPcDMauGjtq3kt0HCtJbw4ZrqNsdCxByyNiFSumENWGvRhGRnoJXVPbJVLuWLW6eDhShziz0ZoYQ1FSUnR+QAVQCidOhqbfQZeWPTeiCTg+RpsXzYfgG1q+3n6jC98KUfJ6lghU=
+	t=1705669256; cv=none; b=QxEj+2kpmzGCpw4qTxCAmt/M7ag69bmTTKzZo4WYgrk5YzB8lzt5Wgz+60syBUIEWQYCiuWlfA3FYvCQX1JI0hVtzRjjVVG7hbhWFJjk4AUn4okHGcQhmL6SRPZ/ViRtIlQCwDc+doRPafjE4IkxX1M73XaWtTJ305jXdrWbgvI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705668381; c=relaxed/simple;
-	bh=xk3x+2RM2H/oAdspTIOEfhbsgKMkXla9iDqO6jQMg9Q=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cjK5gf/X223H2du87MXZU2MF/OmRXFWQbatBC933fiqzZYFh3J18/vsOvhbG+/qBzuvUf7XZh6DA1CGpCkWgT+LdBNlr9VeRPlzQe5hF/KKsIVjeIwbK2Y0AGbPCcDicMHvxX+Jmzs9OQ7y3rG/id18sqXn+rIKfw7sQScyAGy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AfUiVApl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1705669256; c=relaxed/simple;
+	bh=7if1y3LEA2TciUlZzH4PB3mo5tvNU1LOoYchLLLIcgo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=uflT9qMELjw6JCRi4pNHXJgNxf17q9IX/j+KkMqhu0M/1qeBsLQ3XExdd2NDGT3+ZPShTvS9R64chXpzvzBpHPnFk8UdMbOXs88Vti/qg77EOVc2jPTGxrdl4IcSENKtrN98cGRSTBtMrA4ZyhgZF+sar4WiyaLFHD0mDiAJs98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=niwQZv6+; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AfUiVApl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8450AC433F1;
-	Fri, 19 Jan 2024 12:46:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705668380;
-	bh=xk3x+2RM2H/oAdspTIOEfhbsgKMkXla9iDqO6jQMg9Q=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AfUiVAplPTiBub9LycMtmRS8kyKnJwiWqP+Ej/vi17J69lPhymH5nTmCXvLGlxY8u
-	 k6VNqjchBuLPnqiWUAww7Pv2NTVX7VxAl69BMMoDyUDfpRgRt884JIjZvRan68GpWd
-	 R9EukABSUPGXAvyId+6ej9ZXkICKHIrLaIEn/Xue6vGP+2cZKW55MtoHIZBaOaIMG4
-	 2JplkA4DX/6ArH46zF9ocdvsrUeODfJMiuFin2LRchWbNLTOWhzBnkfxc3msEYaFKr
-	 rjq1ic5DwwiC8cRFlUtAEM4N316Kzpy2ztrXWoxcjt68sY7vn7LqS4BRoiADWQ/9ZD
-	 sps0MZ5+CZkbA==
-Date: Fri, 19 Jan 2024 13:46:12 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel-janitors@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: dwc: Cleanup in dw_pcie_ep_raise_msi_irq()
-Message-ID: <ZapvFNHnhppQkoys@x1-carbon>
-References: <c5035dc2-a379-48f0-8544-aa57d642136b@moroto.mountain>
- <e231e268-d537-4613-a87c-876d99ea49e4@moroto.mountain>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="niwQZv6+"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 40J9BOqZ012323;
+	Fri, 19 Jan 2024 13:00:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references; s=
+	qcppdkim1; bh=UCljDwG5bVjcE8GSPbx7lIYjj7v3bE8mKi8kdhrvC7Q=; b=ni
+	wQZv6+lX/WgnLZt//LkJ00+t6whjGzWUji+EmjCDOtZBidS+p17WGB4mSTH6UMC2
+	Asx9BjNPKbRqGWluIA2nrgGVbX4vP/wzz9N4OA8gLqRzPFxx+2fPM7ysx0+UkELI
+	gYlpRdEGsGnacxx5JDa/7IZuSKM4q0Ic8FmYLduBuYKv4M/l/tJ2VNt5HqxY88vC
+	UJy5+qv83UWjqlF8z6TwHKyp59mu13p3ciKUmfYS7FbBvCBdDve0UruZdOebdHf/
+	xwBwJRmf8J2yQu5C+V7P8FCNoHsuvBubI03hKHAdBOlyIXOrF/P5YlVY4Bc7Yh2x
+	9Zhf8etv1ep1sTnLeZCQ==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3vqndb0grb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 19 Jan 2024 13:00:40 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 40JD0bMQ023773;
+	Fri, 19 Jan 2024 13:00:37 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 3vkkkmtgrj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Fri, 19 Jan 2024 13:00:37 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 40JD0bIf023767;
+	Fri, 19 Jan 2024 13:00:37 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 40JD0aYK023765;
+	Fri, 19 Jan 2024 13:00:37 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
+	id 1748B273A; Fri, 19 Jan 2024 18:30:36 +0530 (+0530)
+From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+To: vkoul@kernel.org, jingoohan1@gmail.com, conor+dt@kernel.org,
+        konrad.dybcio@linaro.org, manivannan.sadhasivam@linaro.org,
+        robh+dt@kernel.org
+Cc: quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
+        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
+        dmitry.baryshkov@linaro.org, quic_krichai@quicinc.com,
+        quic_vbadigan@quicinc.com, quic_parass@quicinc.com,
+        quic_schintav@quicinc.com, quic_shijjose@quicinc.com,
+        Mrinmay Sarkar <quic_msarkar@quicinc.com>,
+        Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Kishon Vijay Abraham I <kishon@kernel.org>, dmaengine@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev
+Subject: [PATCH v1 2/6] dmaengine: dw-edma: Introduce helpers for getting the eDMA/HDMA max channel count
+Date: Fri, 19 Jan 2024 18:30:18 +0530
+Message-Id: <1705669223-5655-3-git-send-email-quic_msarkar@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1705669223-5655-1-git-send-email-quic_msarkar@quicinc.com>
+References: <1705669223-5655-1-git-send-email-quic_msarkar@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: GmMST81T2hRl2-fzUAeJ0DfgPBStIF6_
+X-Proofpoint-GUID: GmMST81T2hRl2-fzUAeJ0DfgPBStIF6_
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.997,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-01-19_07,2024-01-19_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 spamscore=0
+ suspectscore=0 clxscore=1015 mlxlogscore=843 impostorscore=0
+ lowpriorityscore=0 mlxscore=0 bulkscore=0 priorityscore=1501 phishscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2311290000 definitions=main-2401190066
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e231e268-d537-4613-a87c-876d99ea49e4@moroto.mountain>
 
-On Fri, Jan 19, 2024 at 11:24:18AM +0300, Dan Carpenter wrote:
-> The alignment code in dw_pcie_ep_raise_msix_irq() and
-> dw_pcie_ep_raise_msi_irq() is quite similar.  I recently update the code
-> in the former, so tweak the latter to match as well for consistency sake.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
-> ---
-> v2: Add this new patch
-> 
-> I wrote two versions of this, one where both patches were folded
-> together and this one where the style tweaks are separated out into
-> their own patch.  This is the better version.
-> 
->  drivers/pci/controller/dwc/pcie-designware-ep.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 2b6607c23541..ccfc21cd0bb0 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -456,8 +456,8 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->  	u32 msg_addr_lower, msg_addr_upper, reg;
->  	struct dw_pcie_ep_func *ep_func;
->  	struct pci_epc *epc = ep->epc;
-> -	unsigned int aligned_offset;
->  	u16 msg_ctrl, msg_data;
-> +	u64 aligned_offset;
->  	bool has_upper;
->  	u64 msg_addr;
->  	int ret;
-> @@ -483,8 +483,8 @@ int dw_pcie_ep_raise_msi_irq(struct dw_pcie_ep *ep, u8 func_no,
->  		msg_data = dw_pcie_ep_readw_dbi(ep, func_no, reg);
->  	}
->  	aligned_offset = msg_addr_lower & (epc->mem->window.page_size - 1);
-> -	msg_addr = ((u64)msg_addr_upper) << 32 |
-> -			(msg_addr_lower & ~aligned_offset);
-> +	msg_addr = ((u64)msg_addr_upper) << 32 | msg_addr_lower;
-> +	msg_addr &= ~aligned_offset;
->  	ret = dw_pcie_ep_map_addr(epc, func_no, 0, ep->msi_mem_phys, msg_addr,
->  				  epc->mem->window.page_size);
->  	if (ret)
-> -- 
-> 2.43.0
-> 
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-I like this change, but like Ilpo said, perhaps even cleaner with:
-msg_addr = ((u64)msg_addr_upper) << 32 | msg_addr_lower;
-msg_addr = ALIGN_DOWN(msg_addr, epc->mem->window.page_size);
+Add common helpers for getting the eDMA/HDMA max channel count.
 
-As we can remove the aligned_offset variable completely,
-no need to even change the type.
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+---
+ drivers/dma/dw-edma/dw-edma-core.c           | 18 ++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.c |  6 +++---
+ include/linux/dma/edma.h                     | 14 ++++++++++++++
+ 3 files changed, 35 insertions(+), 3 deletions(-)
 
-(dw_pcie_ep_raise_msix_irq() would obviously only need the
-second statement.)
+diff --git a/drivers/dma/dw-edma/dw-edma-core.c b/drivers/dma/dw-edma/dw-edma-core.c
+index 7fe1c19..2bd6e43 100644
+--- a/drivers/dma/dw-edma/dw-edma-core.c
++++ b/drivers/dma/dw-edma/dw-edma-core.c
+@@ -902,6 +902,24 @@ static int dw_edma_irq_request(struct dw_edma *dw,
+ 	return err;
+ }
+ 
++static u32 dw_edma_get_max_ch(enum dw_edma_map_format mf, enum dw_edma_dir dir)
++{
++	if (mf == EDMA_MF_HDMA_NATIVE)
++		return HDMA_MAX_NR_CH;
++
++	return dir == EDMA_DIR_WRITE ? EDMA_MAX_WR_CH : EDMA_MAX_RD_CH;
++}
++
++u32 dw_edma_get_max_rd_ch(enum dw_edma_map_format mf)
++{
++	return dw_edma_get_max_ch(mf, EDMA_DIR_READ);
++}
++
++u32 dw_edma_get_max_wr_ch(enum dw_edma_map_format mf)
++{
++	return dw_edma_get_max_ch(mf, EDMA_DIR_WRITE);
++}
++
+ int dw_edma_probe(struct dw_edma_chip *chip)
+ {
+ 	struct device *dev;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index eca047a..96575b8 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -864,7 +864,7 @@ static int dw_pcie_edma_irq_vector(struct dw_edma_chip *edma, unsigned int nr)
+ 	char name[6];
+ 	int ret;
+ 
+-	if (nr >= EDMA_MAX_WR_CH + EDMA_MAX_RD_CH)
++	if (nr >= dw_edma_get_max_rd_ch(edma->mf) + dw_edma_get_max_wr_ch(edma->mf))
+ 		return -EINVAL;
+ 
+ 	ret = platform_get_irq_byname_optional(pdev, "dma");
+@@ -923,8 +923,8 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+ 	pci->edma.ll_rd_cnt = FIELD_GET(PCIE_DMA_NUM_RD_CHAN, val);
+ 
+ 	/* Sanity check the channels count if the mapping was incorrect */
+-	if (!pci->edma.ll_wr_cnt || pci->edma.ll_wr_cnt > EDMA_MAX_WR_CH ||
+-	    !pci->edma.ll_rd_cnt || pci->edma.ll_rd_cnt > EDMA_MAX_RD_CH)
++	if (!pci->edma.ll_wr_cnt || pci->edma.ll_wr_cnt > dw_edma_get_max_wr_ch(pci->edma.mf) ||
++	    !pci->edma.ll_rd_cnt || pci->edma.ll_rd_cnt > dw_edma_get_max_rd_ch(pci->edma.mf))
+ 		return -EINVAL;
+ 
+ 	return 0;
+diff --git a/include/linux/dma/edma.h b/include/linux/dma/edma.h
+index 7197a58..550f6a4 100644
+--- a/include/linux/dma/edma.h
++++ b/include/linux/dma/edma.h
+@@ -106,6 +106,9 @@ struct dw_edma_chip {
+ #if IS_REACHABLE(CONFIG_DW_EDMA)
+ int dw_edma_probe(struct dw_edma_chip *chip);
+ int dw_edma_remove(struct dw_edma_chip *chip);
++
++u32 dw_edma_get_max_rd_ch(enum dw_edma_map_format mf);
++u32 dw_edma_get_max_wr_ch(enum dw_edma_map_format mf);
+ #else
+ static inline int dw_edma_probe(struct dw_edma_chip *chip)
+ {
+@@ -116,6 +119,17 @@ static inline int dw_edma_remove(struct dw_edma_chip *chip)
+ {
+ 	return 0;
+ }
++
++static inline u32 dw_edma_get_max_rd_ch(enum dw_edma_map_format mf)
++{
++	return 0;
++}
++
++static inline u32 dw_edma_get_max_wr_ch(enum dw_edma_map_format mf)
++{
++	return 0;
++}
++
+ #endif /* CONFIG_DW_EDMA */
+ 
+ #endif /* _DW_EDMA_H */
+-- 
+2.7.4
 
-
-Kind regards,
-Niklas
