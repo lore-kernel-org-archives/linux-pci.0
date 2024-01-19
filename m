@@ -1,64 +1,75 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oo1-f41.google.com (mail-oo1-f41.google.com [209.85.161.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 762384A0C;
-	Fri, 19 Jan 2024 06:03:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40567944F
+	for <linux-pci@vger.kernel.org>; Fri, 19 Jan 2024 07:28:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705644206; cv=none; b=QhWUeJL0luzKAbWI4S3F9WB1sopZt8ybrpsFPDV5S5VMV2jcE+HYka9WFEW8rAHMXVT0LBXmPIrLXCrCxAvCZcvr3cKQBSZ6BuAQ4W6Ed8K5PO+pDPMjyBibJU4k/KQgpDPfcuvUj++6k016rcQ5pFbekAUJ1aAKPj7xsaT2r8k=
+	t=1705649333; cv=none; b=rX+PQEPm7VonPeP/iP/wbk6L34tVBu1vTYr4FF/pIeIw8daCbIUfst2yV1NmcvgZVbROtgp8bh/kDdZxbyOY6a1tl94d9GKGWpMb/MN/CM8lLo+5dbBty8fVPuMnba68Sv/7wNVnDCjysKnjln/3AxzMeEBiWYYFk2evLEUVaPg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705644206; c=relaxed/simple;
-	bh=fElIcAvj+JU3H2ET/6sVLuziTay9kn5vl9dtRYelW34=;
+	s=arc-20240116; t=1705649333; c=relaxed/simple;
+	bh=69/RqV/A9lodeZFJ33s4o7jKp84bmhN8cSxnNImvxjs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CAX2zKByS9dnJ0nSyWCfZ0bGIxiBTCPVKXEsVOLh5RaGu+py2KT+9CY48+hSc1JluAztawCXUupiiQRnKEpI1n2G2TwIKmlJCRnF5Zti26BzmgebLkEm/+NJyeFZYAJ34xRHC7yoJBvEhqfkRXSPKBUVpJQ+zBKolZ2YmS6V+5E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YeV+Fpez; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=TC0PLP6qOFhRHIDiCAHdFkoH0om9qdFBAcgF2zxF9kzyGGlDb/9Uk6YiD1xNsvM9OHVTDXsv5eOTIqjbMm8jSo5ZR27aEVCnaoIrL7/LUmSqfp46LZGTc+8uJIVMnpFONkuRAwYsIm/V2bTj4rhHom8jtCKqlKh5pYGLi8GmurM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Yy6dS/VR; arc=none smtp.client-ip=209.85.161.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YeV+Fpez"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1705644206; x=1737180206;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=fElIcAvj+JU3H2ET/6sVLuziTay9kn5vl9dtRYelW34=;
-  b=YeV+FpezRSAXXMAndxGm44UCHMLNXvXs+2OMRKBoXVGiccubsVFQTclM
-   GhBT/bWpTevuwhReE3boaUrGVLZno//kQ5gx35IN6TMh+Fdwwqm8HtiZM
-   hjPHkja4qJPlmlxXaVdiAoau4nNYanry/lrLkqbJa+gtlXH2VZRRdFxs5
-   3Z9q8+2HgSvcfYtoAKibNj0Q1S8+aghSi+IlDDrRIupFO8bi85948iRMI
-   BJlo0cfC4xqYbdYxTanZG3fgnOI5A3mdUX7d9DJkbKghXry7/hvHBlads
-   fJXvFl6Zi4HwEnHuUUz+jF3LuraJPJRXjWNGip1isyHySkAHyXnK07pVm
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="14192965"
-X-IronPort-AV: E=Sophos;i="6.05,204,1701158400"; 
-   d="scan'208";a="14192965"
-Received: from fmsmga003.fm.intel.com ([10.253.24.29])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Jan 2024 22:03:25 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10956"; a="875291857"
-X-IronPort-AV: E=Sophos;i="6.05,204,1701158400"; 
-   d="scan'208";a="875291857"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by FMSMGA003.fm.intel.com with ESMTP; 18 Jan 2024 22:03:22 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1001)
-	id 572EEE3; Fri, 19 Jan 2024 07:37:56 +0200 (EET)
-Date: Fri, 19 Jan 2024 07:37:56 +0200
-From: Mika Westerberg <mika.westerberg@linux.intel.com>
-To: Dmitry Torokhov <dmitry.torokhov@gmail.com>
-Cc: Mario Limonciello <mario.limonciello@amd.com>,
-	Esther Shimanovich <eshimanovich@chromium.org>,
-	Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Rajat Jain <rajatja@google.com>
-Subject: Re: [PATCH v4] PCI: Relabel JHL6540 on Lenovo X1 Carbon 7,8
-Message-ID: <20240119053756.GC2543524@black.fi.intel.com>
-References: <20231221-thunderbolt-pci-patch-4-v4-1-2e136e57c9bc@chromium.org>
- <20231228132517.GA12586@wunner.de>
- <20231228133949.GG2543524@black.fi.intel.com>
- <CA+Y6NJFQq39WSSwHwm37ZQV8_rwX+6k5r+0uUs_d1+UyGGLqUw@mail.gmail.com>
- <20240118060002.GV2543524@black.fi.intel.com>
- <23ee70d5-d6c0-4dff-aeac-08cc48b11c54@amd.com>
- <ZalOCPrVA52wyFfv@google.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Yy6dS/VR"
+Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-5989d8decbfso281375eaf.2
+        for <linux-pci@vger.kernel.org>; Thu, 18 Jan 2024 23:28:52 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1705649331; x=1706254131; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=8jAiFI/yvaL8Qq4R2H+lz7RghStZviQ8Vc/0mAOlq10=;
+        b=Yy6dS/VRYBeOZI65JXWlGe1Ah84Co7IbQXLvXJCtaUsLjVjLFU1jE6rxM68vZ6+ND+
+         X1VVjJQGsCa1JbU47XNqy3JNyeszfcq7ldQvqion/wdMlNQhkEWg/Ytt+kTMsUkIkUQp
+         OgQ4n+hJd/c8AMMxVLxQhrXArUYz8tA3BQe2f2pfX79UQDPgiXAaNkTmgrqFY55ikAGx
+         CDtFXlCeC13kS6OfGPell2GXi9pfoa6Y3p6KsLdc6OmTlZodCsBg+SvkzNVtJ8QGxyQj
+         o/H+Py6G6/ueAECSBZ7+YJauA2byIIjC4bVIs1a6mrhwRH+xoWigWwuiCKNrbZxB+E1p
+         fUCg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1705649331; x=1706254131;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8jAiFI/yvaL8Qq4R2H+lz7RghStZviQ8Vc/0mAOlq10=;
+        b=VTXh2sEPNzLVxleuvt3ev5JfQLu8cpKL/QdhW2+CsBzX6I723xE+A/VrGe08FGxttt
+         ReoOZJ7uNmbkiMw40Wg3dm4SCjhJSTiENTJ8eqyfOu0+PvG7OkYp6WdComyAI7/Oa8aM
+         ixCsGNzQaOtoBi8bbRgyu2wytqtO3gUEv+PyLJdHfhbfqgrDHPqtxL5OCAdTNdW6WMJ0
+         azsGq9NDlBLUHFeGj+X89ZiH4qyy9ILvq1vZ8Nx8aKontnnN0kKxwOBGxemilYz9qGlT
+         1d5/fdUuPFvOn6XpvtnfilauWEazkX6EoygorkYaFSlDzFUJS+Mk41kUN8KBQXamcJk+
+         8Z7g==
+X-Gm-Message-State: AOJu0Yz+2zsVq9MQGkrzp7inpfFfJbObyuUzlsc+Fno+DfWs0uooJ2oi
+	hN/5GuBRzYRSngdlz13sR4poDTy5uj3rK+gKMfblDCDw3aA68oAvqspUvyOX9Q==
+X-Google-Smtp-Source: AGHT+IFtESwXBzDIx6X05cuoaycVAwHJT1YpO5zrXOdBalBmMS1AXy1MxIWoy3U8FOBs+zefArabcw==
+X-Received: by 2002:a05:6359:a11:b0:175:9fdb:8345 with SMTP id el17-20020a0563590a1100b001759fdb8345mr2101692rwb.10.1705649331225;
+        Thu, 18 Jan 2024 23:28:51 -0800 (PST)
+Received: from thinkpad ([117.248.2.56])
+        by smtp.gmail.com with ESMTPSA id v23-20020aa78517000000b006d9b8572e77sm4421823pfn.120.2024.01.18.23.28.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 18 Jan 2024 23:28:50 -0800 (PST)
+Date: Fri, 19 Jan 2024 12:58:46 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Niklas Cassel <Niklas.Cassel@wdc.com>
+Cc: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Vidya Sagar <vidyas@nvidia.com>
+Subject: Re: [PATCH v7 1/2] PCI: designware-ep: Fix DBI access before core
+ init
+Message-ID: <20240119070116.GA2866@thinkpad>
+References: <ZWYmX8Y/7Q9WMxES@x1-carbon>
+ <ZWcitTbK/wW4VY+K@x1-carbon>
+ <20231129155140.GC7621@thinkpad>
+ <ZWdob6tgWf6919/s@x1-carbon>
+ <20231130063800.GD3043@thinkpad>
+ <ZWhwdkpSNzIdi23t@x1-carbon>
+ <20231130135757.GS3043@thinkpad>
+ <ZYY9QHRE4Zz30LG8@x1-carbon>
+ <20240106151238.GC2512@thinkpad>
+ <Zalu//dNi5BhZlBU@x1-carbon>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -68,58 +79,110 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <ZalOCPrVA52wyFfv@google.com>
+In-Reply-To: <Zalu//dNi5BhZlBU@x1-carbon>
 
-On Thu, Jan 18, 2024 at 08:12:56AM -0800, Dmitry Torokhov wrote:
-> On Thu, Jan 18, 2024 at 09:47:07AM -0600, Mario Limonciello wrote:
-> > On 1/18/2024 00:00, Mika Westerberg wrote:
-> > > > Before my patch, you see that the JHL6540 controller is inaccurately
-> > > > labeled “removable”:
-> > > > $ udevadm info -a -p /sys/bus/pci/devices/0000:05:00.0 | grep -e
-> > > > {removable} -e {device} -e {vendor} -e looking
-> > > >    looking at device '/devices/pci0000:00/0000:00:1d.4/0000:05:00.0':
-> > > >      ATTR{device}=="0x15d3"
-> > > >      ATTR{removable}=="removable"
-> > > >      ATTR{vendor}=="0x8086"
+On Thu, Jan 18, 2024 at 06:33:35PM +0000, Niklas Cassel wrote:
+> Hello Mani,
+> 
+> On Sat, Jan 06, 2024 at 08:42:38PM +0530, Manivannan Sadhasivam wrote:
 > > > 
-> > > This is actually accurate. The Thunderbolt controller is itself
-> > > hot-removable and that BTW happens to be hot-removed when fwupd applies
-> > > firmware upgrades to the device.
+> > > So to give you a clear example:
+> > > If you:
+> > > 1) start the EP, start the pci-epf-test
+> > > 2) start the RC
+> > > 3) run pci-epf-test
+> > > 4) reboot the RC
+> > > 
+> > > this will trigger a link-down reset IRQ on the EP side (link_req_rst_not).
+> > > 
+> > 
+> > Right. This is the sane RC reboot scenario. Although, there is no guarantee
+> > that the EP will get LINK_DOWN event before perst_assert (I've seen this with
+> > some RC platforms).
+> > 
+> > But can you confirm whether your EP is receiving PERST assert/deassert when RC
+> > reboots?
 > 
-> This is quite interesting take. Does fwupd rip the controller out of the
-> box to update it? By that account your touchpad is also removable as it
-> may stop functioning when its firmware gets updated.
+> Yes, it does:
+> 
+> ## RC side:
+> # reboot
+> 
+> ## EP side
+> [  845.606810] pci: PERST asserted by host!
+> [  845.657058] pci: PCIE_CLIENT_INTR_STATUS_MISC: 0x4
+> [  845.657759] pci: hot reset or link-down reset (LTSSM_STATUS: 0x0)
+> [  852.483985] pci: PERST de-asserted by host!
+> [  852.503041] pci: PERST asserted by host!
+> [  852.521616] pci: PCIE_CLIENT_INTR_STATUS_MISC: 0x2003
+> [  852.522375] pci: link up! (LTSSM_STATUS: 0x230011)
+> [  852.610318] pci: PERST de-asserted by host!
+> 
+> The time between 845 and 852 is the time it takes for the RC to
+> boot and probe the RC PCIe driver.
+> 
+> Note that I currently don't do anything in the perst gpio handler,
+> I only print when receiving the PERST GPIO IRQ, as I wanted to be
+> able to answer your question.
+> 
+> /
+> Currently, what I do instead, in order to handle a link down
+> (which clears all the RESBAR registers) followed by a link up,
+> is to re-write the RESBAR registers when receiving the link down IRQ.
+> (This is only to handle the case of the RC rebooting.)
+> 
+> A nicer solution would probably be to modify dw_pcie_ep_set_bar() to
+> properly handle controllers with the Resizable BAR capability, and remove
+> the RESBAR related code from dw_pcie_ep_init_complete().
+> 
+> However, that would still require changes in pci-epf-test.c to call
+> set_bar() after a hot reset/link-down reset (and it is not possible
+> to distinguish between them), which could be done by either:
+> 1) Making sure that the glue drivers (that implement Resizable BAR capability)
+>  call dw_pcie_ep_init_notify() when receiving a hot reset/link-down reset
+>  IRQ (or maybe instead when getting the link up IRQ), as that will
+>  trigger pci-epf-test.c to (once again) call set_bar().
+> or
+> 2) Modifying pci-epf-test.c:pci_epf_test_link_up() to call set_bar()
+>  (If epc_features doesn't have a core_init_notifier, as in that case
+>  set_bar() is called by pci_epf_test_core_init()).
+>  (Since I assume that not all SoCs might have a PERST GPIO.)
+> or
+> 3) We could allow glue drivers that use an internal refclk to still make
+>  use of the PERST GPIO IRQ, and only call dw_pcie_ep_init_notify(),
+>  as that would also cause pci-epf-test.c to call set_bar().
+>  (These glue drivers, which implement the Resizable BAR capability would
+>  however not need to perform a full core reset, etc. in the PERST GPIO
+>  IRQ handler, they only need to call dw_pcie_ep_init_notify().)
+> 
+> Right now, I think I prefer 1).
+> 
+> What do you think?
+> 
 
-The Thunderbolt controller is connected to a hotpluggable PCIe root port
-so it will be dissappear from the userspace so that "removable" in that
-sense is accurate.
+[For this context, I'm not only focusing on REBAR but all of the non-sticky DWC
+registers]
 
-> > Depending on the consumers of this removable attribute I wonder if we need
-> > to a new ATTR of "external" instead of overloading "removable".
-> 
-> Isn't this the same thing? From
-> Documentation/ABI/testing/sysfs-devices-removable:
-> 
-> What:		/sys/devices/.../removable
-> Date:		May 2021
-> Contact:	Rajat Jain <rajatxjain@gmail.com>
-> Description:
-> 		Information about whether a given device can be removed from the
-> 		platform by the	user. This is determined by its subsystem in a
-> 		bus / platform-specific way. This attribute is only present for
-> 		devices that can support determining such information:
-> 
-> 		===========  ===================================================
-> 		"removable"  device can be removed from the platform by the user
-> 		"fixed"      device is fixed to the platform / cannot be removed
-> 			     by the user.
-> 
-> Note this "by the user". Maybe we should add word "physically" here to
-> qualify the meaning completely, but that is what it is. Not that it
-> disappears from the bus or stops operating for some time because of
-> firmware updates, but it can be physically detached from the
-> platform/system.
+If the PCIe spec has mandated using PERST# for all endpoints, I would've
+definitely went with option 3. But the spec has made PERST# as optional for the
+endpoints, so we cannot force the glue drivers to make use of PERST# IRQ.
 
-That would be good to fully qualify what this means. But I get you it is
-intented to identify devices that can be physically unplugged from the
-system.
+But the solution I'm thinking is, we should reconfigure all non-sticky DWC
+registers during LINK_DOWN phase irrespective of whether core_init_notifier is
+used or not. This should work for both cases because we can skip configuring the
+DWC registers when the core_init platforms try to do it again during PERST#
+deassert.
+
+Wdyt?
+
+- Mani
+
+> Since it seems that not many SoCs that use a DWC core, have Resizable
+> BAR capability implemented, I will try to see what I can come up with.
+> 
+> 
+> Kind regards,
+> Niklas
+
+-- 
+மணிவண்ணன் சதாசிவம்
