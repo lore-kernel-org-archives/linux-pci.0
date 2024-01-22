@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8573C13E22F;
-	Mon, 22 Jan 2024 15:15:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1DE5148FEC;
+	Mon, 22 Jan 2024 15:17:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705936559; cv=none; b=e+0YT8ll1ur/0ZjouQDfq6/wFf88kn3MkERC3UlDoZ3HbzZ+D8LvrbMAx9kS4CjoI0s+l7C35w7NMOkOpJ63F2MGxqlHTcWVmpfxc59oM64Z4mBJoai7t/j8EIjeG8nHaSkLrGcAUvrn9n2FCU+m7cHcOYisKKqLKgjA/KxpQ3M=
+	t=1705936647; cv=none; b=kINdTvfX6uQaYsOkOx3d780zZ6YWtFcNRVL3TN0MnkdMRdA+6v7QU+0C2vPX/rTTjRtcyS73FJfdFutpU9HLlmTxJUQi16Z/3iSG6W7M1NNb6VnZLBNlfoa0NKb2U9j2m5YgbuohvoHnnitvqdDb1AbJq+lWFfsr/Bdu66KJPvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705936559; c=relaxed/simple;
-	bh=msXDYHGXUUrvP5rOtftQbzOuFk8Y2ReFDcFCMxE/Si4=;
+	s=arc-20240116; t=1705936647; c=relaxed/simple;
+	bh=JJN/GoOqH5N8ePvai55B8lM1XmfhSU9g7dxUEstOPE0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=C58wtYwWbi2MPwW11f65rEeCah4Wm++jRZMiIS3xvFR7PJlnEth/4AFXERjImZQVolhfMAgvNZf5Or+IR/ayhGwbKmmW9GLritH+l8asTNPjCbWNWFt8mgSUiRQZPz9KwW3zbontnzx9mJqUidpiUqpVg7BSSme8UqUuNZhcOGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j5nFY1ZS; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=SqugW1XG44E30kk5qLjK316HQpMiuEyDYHviYerjgKtkv0x0srP0N4qY2Mkb+HLXZvl1jLUunI2GMtTm/TiXkb60UYSzp4iAbh04xvH+T2IiyEcp6ELqtS+AebE5GAEL9HYPCpnUv8NtG8O1cDY/bdjpifcRgFh+pgGXaSr0HNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qVR20TPW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j5nFY1ZS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07E0AC43390;
-	Mon, 22 Jan 2024 15:15:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qVR20TPW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5DEFCC43394;
+	Mon, 22 Jan 2024 15:17:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705936558;
-	bh=msXDYHGXUUrvP5rOtftQbzOuFk8Y2ReFDcFCMxE/Si4=;
+	s=k20201202; t=1705936646;
+	bh=JJN/GoOqH5N8ePvai55B8lM1XmfhSU9g7dxUEstOPE0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=j5nFY1ZS/LdRJbyKCge1AhgKGWkzVPC7wdh02WBT/2iSLt6kvfelUJ0hKdsBZoFOI
-	 SXc1vgYMpl+a3I2sT/WbKO0Pae1M1Q+YQjd50TU5slK7XkdID09sum2im0SXW9Kabp
-	 T9KAB/Gz2iDketxKg7G8Yed6yODVGf3pioiWXvS4Zyfj+5fpiT1EZtdEijGdmK3CIE
-	 U1zNMj5EKzFj2Y9lZ4CEn5nIwHzVDRgjtrqLm9Tt1u2cxE3vPG8VlC+rUT7uGQcwj1
-	 lryfmzbmZXuov/JS1Ncpd+BFVikWBW+MRLsVP0eYvOFbw0x5Si7iN9+VkVBt9kbGgQ
-	 iOJy1IMVsll9A==
+	b=qVR20TPWKBDNihaTTbn4D1C3QWYYdU6FcunX099Od3bBYOiLJ4dfl6khf5VQXpzzI
+	 cQzRAFE448CU7CQm/LuofbstUE7PLQ75F5hb5KtbsuwE3jjW87RG3yUPCtLJU9xvD9
+	 zZWeKFoTBOlDBltCIrQeC9UNPo/55bkXVZ28d45du4d/5MAT3h+1cvkrte1O0hYYwV
+	 z7ksR4OnZDErJFPKOYBv96D7KrBzMWVbD7j+INl3FQGCLrz+1ootHs4R1H3NWoibG0
+	 w/9w/dqt3LZM+yRi12SmsbSCa5ge/xWDhGB8NvtVBFcFSH4u2JePYmA1z2tGzJDYsL
+	 ptgdbamrH6azA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -37,12 +37,12 @@ Cc: Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
 	Sasha Levin <sashal@kernel.org>,
 	bhelgaas@google.com,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 15/28] PCI: add INTEL_HDA_ARL to pci_ids.h
-Date: Mon, 22 Jan 2024 10:14:41 -0500
-Message-ID: <20240122151521.996443-15-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 12/24] PCI: add INTEL_HDA_ARL to pci_ids.h
+Date: Mon, 22 Jan 2024 10:16:26 -0500
+Message-ID: <20240122151659.997085-12-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240122151521.996443-1-sashal@kernel.org>
-References: <20240122151521.996443-1-sashal@kernel.org>
+In-Reply-To: <20240122151659.997085-1-sashal@kernel.org>
+References: <20240122151659.997085-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,7 +52,7 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.208
+X-stable-base: Linux 5.4.267
 Content-Transfer-Encoding: 8bit
 
 From: Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
@@ -74,10 +74,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+)
 
 diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index 1a41147b22e8..80744a7b5e33 100644
+index fcacf2334704..d8b188643a87 100644
 --- a/include/linux/pci_ids.h
 +++ b/include/linux/pci_ids.h
-@@ -3020,6 +3020,7 @@
+@@ -3011,6 +3011,7 @@
  #define PCI_DEVICE_ID_INTEL_82443GX_0	0x71a0
  #define PCI_DEVICE_ID_INTEL_82443GX_2	0x71a2
  #define PCI_DEVICE_ID_INTEL_82372FB_1	0x7601
