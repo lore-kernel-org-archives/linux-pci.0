@@ -1,113 +1,97 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D51A53FE20;
-	Mon, 22 Jan 2024 18:12:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F7963A8C4;
+	Mon, 22 Jan 2024 18:16:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1705947128; cv=none; b=Bl2++bUxbMKsSyPrvQWX1g3sLpW8g8s3dJ3r2h6CdrP2q+xa7KizlHKNylpUtjPaG1snWjLnYlmQBRJNlOBXusiZyPN549IQ2iKdRl7s7JlJh9G2FEtCBfZ2pxa7+blHCpkkE96y+N1vMfSkkKou4UWZbG6SeubZ/T/BES8k+L8=
+	t=1705947412; cv=none; b=MFHArN1UogRnw0oE85cesRDuAAA19cSqQTmymcEimh23QdVkkPch9mOKHKco7PP5+gW7P5qs5ZUCMA1oZ7kATuPs24k6CrriuTb0tL+T+esac7/4pEOLV6eAoNx3nZhEJWAC/d61zF8QsgiFh7E/uWieQHulo+Ar/GrHa0wWQT4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1705947128; c=relaxed/simple;
-	bh=X7GfhZVrnsTjbrFniNSElkwaarUNiRIasEFIuqkBbsc=;
+	s=arc-20240116; t=1705947412; c=relaxed/simple;
+	bh=zs4odd+WvZxxeJZAIgTFXLhjdsQ/+nQnKFxVYEnrn5E=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=XpiI4M86cWTacKbd+mR2FtRLgqklB7SvgHVIf8Jv06zoSoDlskFNdTSDMWkxc+MAA5/S7RN8ULrkHAnkcQVJ95+TYhWApD/8t+1cc9pcF5cBwfCdC+AmLE4Hg7SW+xkZpukFcL3o55269DKWGofUbskb0SbjJ2gSS/h8zgcZ4Jw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RD8iuvLT; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=QeNGMvgCWK1oy7KgEcf/LrW0kVD4wvk0TXW+oS6kY7TuLAPIjFq/CgTgn3JpIqnifUawX/2whVMTlSpzKc69UlSLR/mdRD3Bqqmqm2U4lXnjP2cK55xN4qNtBML2XAGYuS+RC2WINjQsSX6gCdPkwoY+opPr/WlAmtDrC+bQQ0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KyTBGJ/R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RD8iuvLT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 24E09C433C7;
-	Mon, 22 Jan 2024 18:12:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KyTBGJ/R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6FC88C43390;
+	Mon, 22 Jan 2024 18:16:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1705947127;
-	bh=X7GfhZVrnsTjbrFniNSElkwaarUNiRIasEFIuqkBbsc=;
+	s=k20201202; t=1705947411;
+	bh=zs4odd+WvZxxeJZAIgTFXLhjdsQ/+nQnKFxVYEnrn5E=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=RD8iuvLT4Sv4aBKpW/AH0z/cICipgVW1lAjoC1YM1SyiKLBhrgz3HpvzH1fu0nXxq
-	 vQj2C7z9nKhUhA7/137/0FAZ1UBUIJEqX2EfctHJRDcwwbF0B3eM2QUwSTO0EFM+S8
-	 Yg16Li20dF9C76zTt/31v+fnBYVns0Nfn05p0rt7gygIitxU3Bb83OBnj1axDQ0+VJ
-	 EZwq7+GP7yVeDXZO1XkZwJDVdbVocBqnaLtJc502siNpXTksX+/aFBCBazIDD38kBZ
-	 t4xqOKiSwtjFP4ljsbSdg9zoGDHylXjw2ljwv+rHUHDX1WLpXQ1t5goVu8GYMzXfC7
-	 VPLhQabcjhzIA==
-Date: Mon, 22 Jan 2024 12:12:05 -0600
+	b=KyTBGJ/Roe52KXBtV6pUS2z2guHxTPRqLqAbKA7P7brGduEu6SHbdDU5jikzGQ/5+
+	 W/ERfaZ450P+TB1QSC3SG27MfKirkVxWRso1UHQ/p1oLAZVJN8VzE2f2S4n/pA8tUn
+	 /b3PDIfS7yt634Rv5MhUjn6h9gv497E7B3KbLq7lC8LF9EmkXW99PiE9fNJM2GbiPd
+	 Jv3rzlMqRfUmSSN2WK60I0MrOXbj6Me1dPQSzYkJ+jn1IvJ0TKd+DMH7HoqiR6sDTe
+	 pXxHDyvFAYvRvfk4SDDTLA3LrOVZxUFJ+2FjZWX46RAV2iV1vJzNfSiA2VPsXfY53R
+	 maWi+q3muzhtg==
+Date: Mon, 22 Jan 2024 12:16:49 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sakari Ailus <sakari.ailus@linux.intel.com>
-Cc: linux-pm@vger.kernel.org, "Rafael J. Wysocki" <rafael@kernel.org>,
-	linux-pci@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	Jaroslav Kysela <perex@perex.cz>,
-	Stanislaw Gruszka <stanislaw.gruszka@linux.intel.com>,
-	laurent.pinchart@ideasonboard.com, David Airlie <airlied@gmail.com>,
-	Paul Elder <paul.elder@ideasonboard.com>,
-	linux-media@vger.kernel.org,
-	Thomas =?utf-8?Q?Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	intel-gfx@lists.freedesktop.org,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	Mark Brown <broonie@kernel.org>,
-	Jacek Lawrynowicz <jacek.lawrynowicz@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	intel-xe@lists.freedesktop.org,
-	Tvrtko Ursulin <tvrtko.ursulin@linux.intel.com>,
-	Alex Elder <elder@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-sound@vger.kernel.org, Takashi Iwai <tiwai@suse.com>,
-	Daniel Vetter <daniel@ffwll.ch>, netdev@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] pm: runtime: Simplify pm_runtime_get_if_active()
- usage
-Message-ID: <20240122181205.GA275751@bhelgaas>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Dongdong Liu <liudongdong3@huawei.com>,
+	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI/DPC: Fix TLP Prefix register reading offset
+Message-ID: <20240122181649.GA276863@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20240122114121.56752-2-sakari.ailus@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240118110815.3867-1-ilpo.jarvinen@linux.intel.com>
 
-On Mon, Jan 22, 2024 at 01:41:21PM +0200, Sakari Ailus wrote:
-> There are two ways to opportunistically increment a device's runtime PM
-> usage count, calling either pm_runtime_get_if_active() or
-> pm_runtime_get_if_in_use(). The former has an argument to tell whether to
-> ignore the usage count or not, and the latter simply calls the former with
-> ign_usage_count set to false. The other users that want to ignore the
-> usage_count will have to explitly set that argument to true which is a bit
-> cumbersome.
-
-s/explitly/explicitly/
-
-> To make this function more practical to use, remove the ign_usage_count
-> argument from the function. The main implementation is renamed as
-> pm_runtime_get_conditional().
+On Thu, Jan 18, 2024 at 01:08:15PM +0200, Ilpo Järvinen wrote:
+> The TLP Prefix Log Register consists of multiple DWORDs (PCIe r6.1 sec
+> 7.9.14.13) but the loop in dpc_process_rp_pio_error() keeps reading
+> from the first DWORD. Add the iteration count based offset calculation
+> into the config read.
 > 
-> Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
-> Reviewed-by: Alex Elder <elder@linaro.org> # drivers/net/ipa/ipa_smp2p.c
-> Reviewed-by: Laurent Pinchart <laurent.pinchart@ideasonboard.com>
-> Acked-by: Takashi Iwai <tiwai@suse.de> # sound/
-> Reviewed-by: Jacek Lawrynowicz <jacek.lawrynowicz@linux.intel.com> # drivers/accel/ivpu/
-> Acked-by: Rodrigo Vivi <rodrigo.vivi@intel.com> # drivers/gpu/drm/i915/
-> Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
+> Fixes: f20c4ea49ec4 ("PCI/DPC: Add eDPC support")
+> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-Acked-by: Bjorn Helgaas <bhelgaas@google.com> # drivers/pci/
+Applied to pci/dpc for v6.9 with commit log below, thanks!
 
-> -EXPORT_SYMBOL_GPL(pm_runtime_get_if_active);
-> +EXPORT_SYMBOL_GPL(pm_runtime_get_conditional);
+    PCI/DPC: Print all TLP Prefixes, not just the first
+    
+    The TLP Prefix Log Register consists of multiple DWORDs (PCIe r6.1 sec
+    7.9.14.13) but the loop in dpc_process_rp_pio_error() keeps reading from
+    the first DWORD, so we print only the first PIO TLP Prefix (duplicated
+    several times), and we never print the second, third, etc., Prefixes.
+    
+    Add the iteration count based offset calculation into the config read.
+    
+    Fixes: f20c4ea49ec4 ("PCI/DPC: Add eDPC support")
+    Link: https://lore.kernel.org/r/20240118110815.3867-1-ilpo.jarvinen@linux.intel.com
+    Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+    [bhelgaas: add user-visible details to commit log]
+    Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 
-If pm_runtime_get_conditional() is exported, shouldn't it also be
-documented in Documentation/power/runtime_pm.rst?
-
-But I'm dubious about exporting it because
-__intel_runtime_pm_get_if_active() is the only caller, and you end up
-with the same pattern there that we have before this series in the PM
-core.  Why can't intel_runtime_pm.c be updated to use
-pm_runtime_get_if_active() or pm_runtime_get_if_in_use() directly, and
-make pm_runtime_get_conditional() static?
-
-> +++ b/drivers/gpu/drm/i915/intel_runtime_pm.c
-> @@ -246,7 +246,7 @@ static intel_wakeref_t __intel_runtime_pm_get_if_active(struct intel_runtime_pm
->  		 * function, since the power state is undefined. This applies
->  		 * atm to the late/early system suspend/resume handlers.
->  		 */
-> -		if (pm_runtime_get_if_active(rpm->kdev, ignore_usecount) <= 0)
-> +		if (pm_runtime_get_conditional(rpm->kdev, ignore_usecount) <= 0)
->  			return 0;
+> ---
+>  drivers/pci/pcie/dpc.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+> index 94111e438241..e5d7c12854fa 100644
+> --- a/drivers/pci/pcie/dpc.c
+> +++ b/drivers/pci/pcie/dpc.c
+> @@ -234,7 +234,7 @@ static void dpc_process_rp_pio_error(struct pci_dev *pdev)
+>  
+>  	for (i = 0; i < pdev->dpc_rp_log_size - 5; i++) {
+>  		pci_read_config_dword(pdev,
+> -			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG, &prefix);
+> +			cap + PCI_EXP_DPC_RP_PIO_TLPPREFIX_LOG + i * 4, &prefix);
+>  		pci_err(pdev, "TLP Prefix Header: dw%d, %#010x\n", i, prefix);
 >  	}
-
-Bjorn
+>   clear_status:
+> -- 
+> 2.39.2
+> 
