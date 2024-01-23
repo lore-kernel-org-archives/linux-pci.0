@@ -1,187 +1,125 @@
-Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC6AC5F545;
-	Tue, 23 Jan 2024 11:08:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D8BB05DF00;
+	Tue, 23 Jan 2024 12:45:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706008108; cv=none; b=ZDWCZlYcwbk4AKRIHFCumxrjge64zVNi9erBTg8PZbxOrkAY01kKqctkQ0TyaDcJJ9v4hQzwi6WSIl1lizpph4/suta/GvJvVshGBwhn1u8ps147WZHwkFUOUrZkaAOs4ACUj7s8jQOs/eaDDciK48DQ42Mr2LLlWZ8vHVfVuV8=
+	t=1706013910; cv=none; b=k+Yzaid5PoCgn7JiwyIp6/tiXrOx3asC3Y5P/pUCPXV92mKWdDwFlUOBwNWpBbFx1k5a5x87Fkdpqq75EhMyrULIBP3fmZ4YXZ4g70ZHcyh6TXlrOs7vofdPL0kujMEN44h5vo9V4jaNla9fryTguD+WKstXe6hM3/TE9h0WK9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706008108; c=relaxed/simple;
-	bh=ePXcq+3ZYklh/Ja9ctOyMj+QSXTswOpfPk1EoxnOuU4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XDms6oNGBbjbFBZHEAKQNWfIG0IgacaoqLLB5DXsD/kfL98f8GT72xgVUuQLbwOfDybIceb37hwjuxOt+2KuvBgs5MIiRCWfUDw5Nb0Qp1f7P7v5hGcSBy24dGUmWc49M6LZDfXdOAWzL4nbRZ6vhZzWbHNqjT8ghwywzSnqxlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=WHSJGS+3; arc=none smtp.client-ip=46.235.227.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	s=arc-20240116; t=1706013910; c=relaxed/simple;
+	bh=m/c1lPPu1YXGObYrj+WgGUhF4RVTsLyLde300zR9Fns=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JvlT7v4oNJZkdX+HDpc7MmFP8LDHhqP7xHVAPPNs8ucsfbZQaADfb+KsmMG9/7Zk6ZBEQmSfARfDaUiL5Os/JYCI4jDarQQ6xrnljaG/19caJPCoTMeCWxhlzZBalLppDLzsqaZfMDHZKP0hfQDhyxLPfT3LmiBba+euXTA/olI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RiarLDzz; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="WHSJGS+3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1706008104;
-	bh=ePXcq+3ZYklh/Ja9ctOyMj+QSXTswOpfPk1EoxnOuU4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=WHSJGS+3u3ESf596ATW3fy0qn2TXktoZ06Uz5ewlpPDDesf2vkDWRY4ohIN1UQU2G
-	 5B520CKex7b/cjHF4YzApi0HsCnwDLfu0N+MKHaV46OWWbL7gXjFGzyr5AI4fmGfWh
-	 LX18pgHn3sZeYDx4HtAsZEdZYMYxgp4QcMBqWqUqFOknwhl961AP9qy1cAJVtjJc0X
-	 Vcu4x/GdUBD21iP3eOWCTWDpw6UxTaUYmGGDLVjM39+ofyez/vvdu3roY7Rm3Q/Jax
-	 jyYby5c7HcVd0z+yH2F21B1DAQqEPuLaVEEaDHmvwzwUcnTt7BEr1sxywPg17uY8mG
-	 rUE1GE3yzdgSw==
-Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id 0FEB437820AA;
-	Tue, 23 Jan 2024 11:08:23 +0000 (UTC)
-Message-ID: <7aa0df3d-ae9d-414d-ad7f-ed7588e70f3e@collabora.com>
-Date: Tue, 23 Jan 2024 12:08:22 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RiarLDzz"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-a2f22bfb4e6so439119166b.0;
+        Tue, 23 Jan 2024 04:45:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1706013907; x=1706618707; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=oA1UQQc1JfCo+FECv9KYv1eo56zKsN80lRRNAWxIGh4=;
+        b=RiarLDzz4o7g+PNLVaiubC8q0cDjVGzxGUlNPJ+7/nGUmDRV6CThw7JFnB1I6XOWVE
+         TCgNCkFWlshDmfKsBjmQG70r20n8Cfk3nAAcYlkS2LxRPeHb5qmgXQ+6N4D43VOsHyLQ
+         IOzs6+DgzPleDLGn5GaxSmHLW2RKHnGnzIHG1VapQNXh0ccMs/AVNVrE64FgB36PNQv9
+         5HWW9jqhxgRpPxe6VdZwNqS9Kc8a/JRKiR2/mTWi0cH+14PLszKQUdUacN/q57buB+Ym
+         bdYOzORVpARoaA38V6RCZqB7tsL58jGbaCCJSWuOkHJEV61B1scbWmMSuCnbluE1aPj8
+         U4dQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706013907; x=1706618707;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=oA1UQQc1JfCo+FECv9KYv1eo56zKsN80lRRNAWxIGh4=;
+        b=XkWlQT6ZOCikwPh1ZiaXc4AWjG6WvkgiOptty1lltGF6kPMMPtmJKOhQyyEdNOMHM/
+         FJU6qXCxxWUxoZZ4bMKXtv8rETWcBszVlRb+7bMe7iXJj7a5Ve4C9G+JWuUYEtSaOwgB
+         oin5K4dMohLtDJeMhyHJny0Ct5Hy5C170d0fnC9yNQE+PkqZwlFK3KkOxL3XqFECqUD0
+         gGQz3gVp+K9l8/n76qMX0iKRKTA1eSuXTZ3TDjg6x+PTG8IvYvJ0u9eWMQMMpOH3K5cS
+         aBESTDJ3/5s5zkIkf/DyCqX4xbu6yMjtI+vqx51ayF8FO4K5xwzejarcq3u2e31hVLfi
+         MMFg==
+X-Gm-Message-State: AOJu0Yw7o+Q1/h1sslyGUJXZhsYwrVlkg8k8kexBEzQ7MuAXhoyWqhXR
+	FOcVbnZtwLysYVBARmmi38Q9OAdf5lF7o6UQmOJFgV9TrcpmRiP2Ng+VF2bN3cBlQvCXYutv8GQ
+	fTsg12AGMJuKtDeSMhuqdVsAgWVs=
+X-Google-Smtp-Source: AGHT+IGVOi9cJtPjLV8rCcZZAIqP8Of+wjWmyBE/0kgMRwdEcXgkHHcr8D02Phwnkk/tQc54fmCf7RPslpX8DcJ6cZg=
+X-Received: by 2002:a17:906:2b4d:b0:a30:cc38:f192 with SMTP id
+ b13-20020a1709062b4d00b00a30cc38f192mr517708ejg.96.1706013906745; Tue, 23 Jan
+ 2024 04:45:06 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 3/3] kselftest: devices: Add sample board file for XPS
- 13 9300
-Content-Language: en-US
-To: =?UTF-8?B?TsOtY29sYXMgRi4gUi4gQS4gUHJhZG8=?= <nfraprado@collabora.com>,
- Shuah Khan <shuah@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: kernelci@lists.linux.dev, kernel@collabora.com,
- Tim Bird <Tim.Bird@sony.com>, linux-pci@vger.kernel.org,
- David Gow <davidgow@google.com>, linux-kselftest@vger.kernel.org,
- Rob Herring <robh+dt@kernel.org>, Doug Anderson <dianders@chromium.org>,
- linux-usb@vger.kernel.org, Saravana Kannan <saravanak@google.com>,
- Dan Carpenter <dan.carpenter@linaro.org>, Guenter Roeck
- <groeck@chromium.org>, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20240122-discoverable-devs-ksft-v4-0-d602e1df4aa2@collabora.com>
- <20240122-discoverable-devs-ksft-v4-3-d602e1df4aa2@collabora.com>
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-In-Reply-To: <20240122-discoverable-devs-ksft-v4-3-d602e1df4aa2@collabora.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+References: <20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com>
+ <20240102-j7200-pcie-s2r-v1-2-84e55da52400@bootlin.com> <CAHp75Verff06LE0QFaDRoun=ANpGfVU1tHknvvQZd_KyzLVP5Q@mail.gmail.com>
+ <223422cc-2a1c-417b-8fa1-20d3b3eb41ef@bootlin.com> <CAHp75VcaABafPh7o1TjrHW2txXRRSxjT443XJe33gfS1YD4bhA@mail.gmail.com>
+ <b59067f0-fdba-40d1-bb52-9f66fd833f40@bootlin.com>
+In-Reply-To: <b59067f0-fdba-40d1-bb52-9f66fd833f40@bootlin.com>
+From: Andy Shevchenko <andy.shevchenko@gmail.com>
+Date: Tue, 23 Jan 2024 14:44:30 +0200
+Message-ID: <CAHp75VdwwfTdYYG59DcwO=kPXmPxrkShk6VjoSQPHKDi_p=iMA@mail.gmail.com>
+Subject: Re: [PATCH 02/14] pinctrl: pinctrl-single: move suspend/resume to suspend_noirq/resume_noirq
+To: Thomas Richard <thomas.richard@bootlin.com>
+Cc: Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
+	Andy Shevchenko <andy@kernel.org>, Tony Lindgren <tony@atomide.com>, 
+	Haojian Zhuang <haojian.zhuang@linaro.org>, Vignesh R <vigneshr@ti.com>, 
+	Aaro Koskinen <aaro.koskinen@iki.fi>, Janusz Krzysztofik <jmkrzyszt@gmail.com>, 
+	Andi Shyti <andi.shyti@kernel.org>, Peter Rosin <peda@axentia.se>, Vinod Koul <vkoul@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>, 
+	Tom Joseph <tjoseph@cadence.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-gpio@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-omap@vger.kernel.org, linux-i2c@vger.kernel.org, 
+	linux-phy@lists.infradead.org, linux-pci@vger.kernel.org, 
+	gregory.clement@bootlin.com, theo.lebrun@bootlin.com, 
+	thomas.petazzoni@bootlin.com, u-kumar1@ti.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Il 22/01/24 19:53, Nícolas F. R. A. Prado ha scritto:
-> Add a sample board file describing the file's format and with the list
-> of devices expected to be probed on the XPS 13 9300 machine as an
-> example x86 platform.
-> 
-> Test output:
-> 
-> TAP version 13
-> Using board file: boards/Dell Inc.,XPS 13 9300.yaml
-> 1..22
-> ok 1 /pci-controller/14.0/usb2-controller/9/camera.device
-> ok 2 /pci-controller/14.0/usb2-controller/9/camera.0.driver
-> ok 3 /pci-controller/14.0/usb2-controller/9/camera.1.driver
-> ok 4 /pci-controller/14.0/usb2-controller/9/camera.2.driver
-> ok 5 /pci-controller/14.0/usb2-controller/9/camera.3.driver
-> ok 6 /pci-controller/14.0/usb2-controller/10/bluetooth.device
-> ok 7 /pci-controller/14.0/usb2-controller/10/bluetooth.0.driver
-> ok 8 /pci-controller/14.0/usb2-controller/10/bluetooth.1.driver
-> ok 9 /pci-controller/2.0/gpu.device
-> ok 10 /pci-controller/2.0/gpu.driver
-> ok 11 /pci-controller/4.0/thermal.device
-> ok 12 /pci-controller/4.0/thermal.driver
-> ok 13 /pci-controller/12.0/sensors.device
-> ok 14 /pci-controller/12.0/sensors.driver
-> ok 15 /pci-controller/14.3/wifi.device
-> ok 16 /pci-controller/14.3/wifi.driver
-> ok 17 /pci-controller/1d.0/0.0/ssd.device
-> ok 18 /pci-controller/1d.0/0.0/ssd.driver
-> ok 19 /pci-controller/1d.7/0.0/sdcard-reader.device
-> ok 20 /pci-controller/1d.7/0.0/sdcard-reader.driver
-> ok 21 /pci-controller/1f.3/audio.device
-> ok 22 /pci-controller/1f.3/audio.driver
-> Totals: pass:22 fail:0 xfail:0 xpass:0 skip:0 error:0
-> 
-> Signed-off-by: Nícolas F. R. A. Prado <nfraprado@collabora.com>
-> ---
->   .../devices/boards/Dell Inc.,XPS 13 9300.yaml      | 40 ++++++++++++++++++++++
->   1 file changed, 40 insertions(+)
-> 
-> diff --git a/tools/testing/selftests/devices/boards/Dell Inc.,XPS 13 9300.yaml b/tools/testing/selftests/devices/boards/Dell Inc.,XPS 13 9300.yaml
-> new file mode 100644
-> index 000000000000..ff932eb19f0b
-> --- /dev/null
-> +++ b/tools/testing/selftests/devices/boards/Dell Inc.,XPS 13 9300.yaml	
-> @@ -0,0 +1,40 @@
-> +# SPDX-License-Identifier: GPL-2.0
-> +#
-> +# This is the device definition for the XPS 13 9300.
-> +# The filename "Dell Inc.,XPS 13 9300" was chosen following the format
-> +# "Vendor,Product", where Vendor comes from
-> +# /sys/devices/virtual/dmi/id/sys_vendor, and Product comes from
-> +# /sys/devices/virtual/dmi/id/product_name.
-> +#
-> +# See google,spherion.yaml for more information.
+On Mon, Jan 22, 2024 at 4:33=E2=80=AFPM Thomas Richard
+<thomas.richard@bootlin.com> wrote:
+> On 1/19/24 17:11, Andy Shevchenko wrote:
+> > On Fri, Jan 19, 2024 at 6:08=E2=80=AFPM Thomas Richard
+> > <thomas.richard@bootlin.com> wrote:
+> >> On 1/15/24 21:02, Andy Shevchenko wrote:
+> >>> On Mon, Jan 15, 2024 at 6:16=E2=80=AFPM Thomas Richard
+> >>> <thomas.richard@bootlin.com> wrote:
 
-What if - instead of taking google,spherion.yaml as an example - you create a new
-file named something like
+...
 
-"example,device.yaml"
+> >>>> +static const struct dev_pm_ops pinctrl_single_pm_ops =3D {
+> >>>> +       SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(pinctrl_single_suspend_noirq,
+> >>>> +                                     pinctrl_single_resume_noirq)
+> >>>> +};
+> >>>
+> >>> Use proper / modern macro.
+> >>
+> >> fixed, use DEFINE_NOIRQ_DEV_PM_OPS now
+> >
+> > ...
+> >
+> >>>>  #endif
+> >>>
+> >>> Why ifdeferry is needed (esp. taking into account pm_ptr() use below)=
+?
+> >>
+> >> We may have an "unused variable" warning for pinctrl_single_pm_ops if
+> >> CONFIG_PM is undefined (due to pm_ptr).
+> >
+> > This is coupled with the above. Fixing above will automatically make
+> > the right thing.
+>
+> Yes you're right.
+> By the way I can use pm_sleep_ptr instead of pm_ptr.
 
-that would be a fantasy device, bringing examples for all .. or most of .. the
-currently supported types/devices?
+Yes, pm_sleep_ptr() is the correct one in this case.
 
-You would also move the nice documentation that you wrote in spherion.yaml to the
-new example,device.yaml and ask to refer to that instead in all of the real device
-specific definitions.
-
-# SPDX-License-Identifier: GPL-2.0 <--- (GPL-2.0 OR MIT) like device trees perhaps?
-#
-# This is the device definition for the Example Device
-# The filename "Example Device" was chosen following the format
-# "Vendor,Product", where:
-#  - Vendor is "Example" and comes from /sys/devices/virtual/dmi/id/sys_vendor
-#  - Product is "Device" and comes from /sys/devices/virtual/dmi/id/product_name
-#
-# ....the rest of the blurb goes here
-#
-
-- type : .... this that the other
-   devices:
-     - the least amount of device descriptions that you can use for documenting how
-       to write this stuff :-)
-
-Anything against that?
-
-Cheers,
-Angelo
-
-> +#
-> +- type: pci-controller
-> +  # This machine has a single PCI host controller so it's valid to not have any
-> +  # key to identify the controller. If it had more than one controller, the UID
-> +  # of the controller from ACPI could be used to distinguish as follows:
-> +  #acpi-uid: 0
-> +  devices:
-> +    - path: 14.0
-> +      type: usb-controller
-> +      usb-version: 2
-> +      devices:
-> +        - path: 9
-> +          name: camera
-> +          interfaces: [0, 1, 2, 3]
-> +        - path: 10
-> +          name: bluetooth
-> +          interfaces: [0, 1]
-> +    - path: 2.0
-> +      name: gpu
-> +    - path: 4.0
-> +      name: thermal
-> +    - path: 12.0
-> +      name: sensors
-> +    - path: 14.3
-> +      name: wifi
-> +    - path: 1d.0/0.0
-> +      name: ssd
-> +    - path: 1d.7/0.0
-> +      name: sdcard-reader
-> +    - path: 1f.3
-> +      name: audio
-> 
-
+--=20
+With Best Regards,
+Andy Shevchenko
