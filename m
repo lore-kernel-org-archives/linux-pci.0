@@ -1,88 +1,108 @@
-Received: from mail-oo1-f54.google.com (mail-oo1-f54.google.com [209.85.161.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2174453E17
-	for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2024 23:18:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C001754B;
+	Wed, 24 Jan 2024 08:16:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706051923; cv=none; b=U4EAHH/QJcwS90KvhyDCZv8cmHioZFB/KEiKIhxPzajoPsXiL0zserTYLvtKxQTaU88cdw9CC5N6QljYTYshvsNR31VRaF4aHSWmK7FF0WtXP4x6lRYVPBy6PJS5h65pwXFIlRGs7I9/eAg3SO+SauRF6YX8oa5BPk97snXbTKM=
+	t=1706084187; cv=none; b=TL+asDi4yyf7u+4yHj5Dh6wEq8vva+tN3pc7TbLmmn4tHut3sIFP/u4jkPkQtAuZ38QG6zkJBzem6dARCDzShJRmaidFIpxCVYsiltgdotfgfEoeWUedbb8blx96P+JJUpumv+N0avsxEJxef9az6fvUXJk0tE8eEQsSC/zdNn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706051923; c=relaxed/simple;
-	bh=i9rIOokU6RsS6QmCuiL3cX/YyA1Roci+/uEwk+pGRrs=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=mak7SOYqsCErb8fkYX5MkGdC9Nl58BkMePyk/O+BsXFk+eV2uBtARSt51HwfA2nddNLpdoMrN5FPm7dauif7jXq6bJa+jFel/DV/XlerEwSvEQ6cSwNqkWWpGxiITHnl5i3mY6j5ssboKjaMiK5BOo3PZHbZ3rzAEo2hGl8lhb0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=BU5AMyBY; arc=none smtp.client-ip=209.85.161.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1706084187; c=relaxed/simple;
+	bh=yPHZyzsk8WzbI7ldL7fVLGbYXwS6Sgp6n83vgEDFIks=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nX9ycsdwJTpYWAwgaWR4dDHxMFmVUjlselGU0pWUzKs+1IjxYOrory53nVMUTSD9QdpXuEVicaTtD2abuZijP/Gbwvzc0XNFjuwTpvPgZS/pFldcKxVKX4IGE6VGwwmh7ic0PhAdhWNQqaERvANZQCzxKpkP3QZO+dfGYABNJyM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G4OMdyWO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="BU5AMyBY"
-Received: by mail-oo1-f54.google.com with SMTP id 006d021491bc7-5957ede4deaso2919003eaf.1
-        for <linux-pci@vger.kernel.org>; Tue, 23 Jan 2024 15:18:40 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1706051920; x=1706656720; darn=vger.kernel.org;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=i9rIOokU6RsS6QmCuiL3cX/YyA1Roci+/uEwk+pGRrs=;
-        b=BU5AMyBYRnAg6/BVFiPXo7C108aFrO6kkBJPWxFUISQD6e2CRO5vfS0BtMPE668or2
-         5KgY/4TK5970tOpXYMsh1Mjre0dR7PuYdMESLjy9Si47v/VwcW9W/3cjxJBEfvwpyCjU
-         muvuqeMMfY44VTWoBF1uREU9Rl07P5uIk0qc1E+VOBxZmk6ipMNh8n01rfozVNomq0CT
-         aY9k4aavTeTYRHowH8vohps0bFPeK5sDPzOlGzy2Mx6KDpUHFMlJFllTLgxJB3of/2AE
-         wDWNMtv3Nzmj2hT/IAZsJi3+BZEdf3g6vYtn7lK66IQNsH9vS1uvQRaPr+jR8BcE60jj
-         KJXw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706051920; x=1706656720;
-        h=references:in-reply-to:message-id:date:subject:cc:to:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=i9rIOokU6RsS6QmCuiL3cX/YyA1Roci+/uEwk+pGRrs=;
-        b=nJz6eyoZf+3t8gIEH3L9a9Ii5fxuEZiHZ7GhgirbUGaq4kf2rVf9adgAqGEq2lru1u
-         mCpYGLWV9VA4ksCEDQ0Zir1eZAsdPFMeCvnX8Vye6cI3TL0Uj6l7k7d9B6f8nXKzWuFB
-         yQGWW079RfsFDJ11j2La5Gsmyjb0C5iLWse0ljqDYssTCI2uAhYu5K72M0450OP76rAX
-         lQBGdUhZ6vWRNFjsskEhXZF+hQKPKjTz+Pe3+zdI6m8kZjOhNiVA3JWY/M2uk5CJl0Kb
-         y3flL1Z53Hkb12aWdki5Ek9bXn4M15Lh9ifhf1zshdKPHNp0mDOhfPfQzdDQR5YSviZ6
-         rnkA==
-X-Gm-Message-State: AOJu0Yw97ktIufPwKLTCrFlDQn899Cr/i9PdaFHC87G5bj2bvVW4H7PO
-	fP2z6ZV9hVsa/cJKmbdZDKxJB+Fih/O0Mc/RnhOAzOMNSPAtO83xdbNN9ZI7HyA=
-X-Google-Smtp-Source: AGHT+IHgkNFEW5OhVohNSnFSnm8qVjakloMxBSTkLqdBqYozBExVAIS6QQFuQZNsDFXzG8MjEIL3Ew==
-X-Received: by 2002:a05:6359:5807:b0:175:c51c:c696 with SMTP id nd7-20020a056359580700b00175c51cc696mr5940860rwb.36.1706051920145;
-        Tue, 23 Jan 2024 15:18:40 -0800 (PST)
-Received: from dev-mattc2.dev.purestorage.com ([208.88.159.129])
-        by smtp.googlemail.com with ESMTPSA id fj30-20020a056a003a1e00b006db04fb3f00sm12234240pfb.28.2024.01.23.15.18.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Jan 2024 15:18:39 -0800 (PST)
-From: Matthew W Carlis <mattc@purestorage.com>
-To: helgaas@kernel.org
-Cc: bhelgaas@google.com,
-	kbusch@kernel.org,
-	linux-pci@vger.kernel.org,
-	lukas@wunner.de,
-	mattc@purestorage.com,
-	mika.westerberg@linux.intel.com,
-	sathyanarayanan.kuppuswamy@linux.intel.com
-Subject: [PATCH 1/1] PCI/portdrv: Allow DPC if the OS controls AER natively.
-Date: Tue, 23 Jan 2024 16:18:34 -0700
-Message-Id: <20240123231834.11340-1-mattc@purestorage.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20240123155921.GA316585@bhelgaas>
-References: <20240123155921.GA316585@bhelgaas>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G4OMdyWO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0360C43390;
+	Wed, 24 Jan 2024 08:16:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1706084186;
+	bh=yPHZyzsk8WzbI7ldL7fVLGbYXwS6Sgp6n83vgEDFIks=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=G4OMdyWO4KloRWY9yuRP7AYNTnjQgo7yui/V0wAVzm76Zmg4xC1shujvBIUYdkbbx
+	 ElGZlOT0mwppT8NqOQHVKWECY87aCEF3vxSoRFHZ+ktHCOoW6zmg2mrmygqtF/9Asw
+	 llO/GqUWTNm38OOLYGV8CRbsp31Pz/1S7uihnR/PBhO+GOqaSarSRVcQleF5LnoaZH
+	 HeHX6Son2PnyQKaxoEJVW1MEP9x1J9RsqKq/BD0PYyDq8bsh3XLAxIlR+Xd9e+9yKt
+	 AOwnN8nePJhkTErWKuPwjF0Ix6pUOf1uzSGTHJ9K2GeWpozmeItdMPUUZFVD6q6DaN
+	 FPKRU/SznEaOg==
+Received: from johan by xi.lan with local (Exim 4.97.1)
+	(envelope-from <johan@kernel.org>)
+	id 1rSYR4-000000001Zb-0U3f;
+	Wed, 24 Jan 2024 09:16:38 +0100
+Date: Wed, 24 Jan 2024 09:16:38 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Michael Schaller <michael@5challer.de>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	regressions@lists.linux.dev,
+	"Maciej W . Rozycki" <macro@orcam.me.uk>,
+	Ajay Agarwal <ajayagarwal@google.com>,
+	Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Johan Hovold <johan+linaro@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, stable@vger.kernel.org,
+	regressions@leemhuis.info
+Subject: Re: PCI/ASPM locking regression in 6.7-final (was: Re: [PATCH]
+ Revert "PCI/ASPM: Remove pcie_aspm_pm_state_change()")
+Message-ID: <ZbDHZtR8Tg1hWAzc@hovoldconsulting.com>
+References: <Za_2oKTUksw8Di5E@hovoldconsulting.com>
+ <20240123223648.GA331671@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240123223648.GA331671@bhelgaas>
 
-Hello again! I'm glad that I'm not the only person with a little confusion
-about the FW ECN regarding DPC/EDR. I would argue that DPC wasn't tied to EDR
-& shouldn't have been because DPC was added in PCI Base Spec Rev 3.1 in 2014,
-but there wasn't an EDR ECN till ~2020. Anyway, that's the way it goes..
+On Tue, Jan 23, 2024 at 04:36:48PM -0600, Bjorn Helgaas wrote:
+> On Tue, Jan 23, 2024 at 06:25:52PM +0100, Johan Hovold wrote:
+> > On Mon, Jan 22, 2024 at 12:26:15PM -0600, Bjorn Helgaas wrote:
+> > > On Mon, Jan 22, 2024 at 11:53:35AM +0100, Johan Hovold wrote:
 
-I don't want to burden the kernel with making some impossible boot time decision
-here. Perhaps most of the machines in the world using DPC will soon use EDR/SFI
-etc. My use cases are a bit out of the ordinary & the ACPI specifications don't
-seem to have given us a mechanism for the kernel to conclude it can use DPC
-without EDR support...
+> > > 08d0cc5f3426 ("PCI/ASPM: Remove pcie_aspm_pm_state_change()") was a
+> > > start at fixing other problems and also improving the ASPM style, so I
+> > > hope somebody steps up to fix both it and the lockdep issue.  I
+> > > haven't looked at it enough to have a preference for *how* to fix it.
+> > 
+> > Ok, but since you were the one introducing the locking regression in
+> > 6.7-final shouldn't you look into fixing it?
+> > 
+> > Especially if there were alternatives to restoring the offending commit
+> > which would solve the underlying issue for the resume failure without
+> > breaking other platforms.
+> 
+> Did somebody propose an alternate patch?  If so, I missed it, but we
+> could look at it now.
 
-Shall I submit a patch removing CONFIG_PCIE_EDR? Perhaps the exercise would
-inform me about whether its code should be in CONFIG_PCIE_DPC or CONFIG_ACPI.
+I've only skimmed the discussion leading up to the revert, but I got the
+impression that other alternatives were looked at as it was still not
+clear what the underlying issue actually was.
 
-Thanks,
--Matt
+As Michael and Thorsten pointed out before the revert, it may have been
+better not to do a last minute revert of a 16 month old commit which
+risks introducing regressions (and brought back another sysfs issue
+IIUC) before fully understanding what is really going on here.
 
+> > I don't want to spend more time on this if the offending commit could
+> > simply be reverted.
+> 
+> I don't quite follow.  By simply reverting, do you mean to revert
+> f93e71aea6c6 ("Revert "PCI/ASPM: Remove
+> pcie_aspm_pm_state_change()"")?  IIUC that would break Michael's
+> machine again.
+
+Right, at least until that issue is fully understood and alternative
+fixes have been considered.
+
+If that's not an option, we need to rework core to pass a flag through
+more than one layer to indicate whether pcie_aspm_pm_state_change()
+should take the bus semaphore or not. I'd rather not do that if it can
+be avoided.
+
+Johan
