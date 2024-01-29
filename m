@@ -1,58 +1,59 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A50E55E52
-	for <linux-pci@vger.kernel.org>; Mon, 29 Jan 2024 11:10:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9578C5C8E5
+	for <linux-pci@vger.kernel.org>; Mon, 29 Jan 2024 11:10:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706526640; cv=none; b=J2kJgSu3dwRAIrWEf+BQqOKyQvHjWG689wvcXY1EsLSjvqpYR3HmbB9JC5+3PKlRwlUkaEBzrlXfmdmm4USOk+Nt84CR+7kT1+dg9WW7n0ZvYI3nNslS8NI48I6R7S8FJkg370PccpTWuML8P60hJX+QLKIHu+BZvbzuHYwCibo=
+	t=1706526643; cv=none; b=jt83NPyexWhPt4ywEDhnR4OjCpQYszgkscM0j+VsGs2CEseITiIvQQLLrtL6UM4ape1XQd32/4ca53pr1AWgkBsxzFbDflYqdj+898A2EsJ4hJnKe8iR6wvv/dWfm3Wm3g9yTtHqtF5XaZMavadsA/1osOkisTNCWKAQx7sMFvU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706526640; c=relaxed/simple;
-	bh=kaq0OgPo/9vol1D2bYM76Ta9GssTvOOm0ZJv+0O3b8M=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=EchzwCi8zFhqQU4OqGS08mTJpE+kt4VGihzpJMIdUB3FHBRi7vMK2z9NGv5WLhTA943ay4DSiHRUPFivr0c7qMbe1NP7aX3Q6aBPeCdQHDMzyE85h+877RUXuCstgDQdpAJfGYOgQRHWQRr4LtXy503Gp+g+rH0KyG8PJtamDtc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=yW7XWvmY; arc=none smtp.client-ip=209.85.218.41
+	s=arc-20240116; t=1706526643; c=relaxed/simple;
+	bh=8EuammNvz7q0zLsv/fNHGrCFJkNOTUOv7xYPFDSydtM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=j6VZV+pdQ6Tan/f+RXDW16YulvPOzAwEPyxvZLYtA8Wky1Z2w5G53bfd1nVf7+w1Lpt0wlbeAe467VxYij2QE31YObfa9GND4u7/qcOOy40Kzj3FLQA1N+0PtkPoONqdqqSpt4zAV9yXl193OkZrEaMBIxgjGa8nw8pukXfjDjc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=B8SklICA; arc=none smtp.client-ip=209.85.218.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yW7XWvmY"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-a2f22bfb4e6so386816666b.0
-        for <linux-pci@vger.kernel.org>; Mon, 29 Jan 2024 03:10:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="B8SklICA"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-a35385da5bbso251394266b.3
+        for <linux-pci@vger.kernel.org>; Mon, 29 Jan 2024 03:10:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706526637; x=1707131437; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=HRaRfDbDYLX14FrKlogP0cv2vAUvFXFj6eUZ8j21eOw=;
-        b=yW7XWvmY3sJ/v0QjhdlNvwLFrrtHMa8wv7xSAvEnPCRqo7VbmtFED0p6Q0vpuX/wqv
-         JZ9lbXUVhMpgX1r+57LS1msVvFY4WjHr/3Z4LKv2ueLDBb8vnqNhCU7KUaBj0mPPYszR
-         4aJ+oeYTv9m5Q4te5vc5XI/RrjPJINv4XjjxEhjx0CXHDcnY4ARMLt/YE452vlj6Myjs
-         dGIC8iUMlDjSBCeyb+QWde2ExFg1WbB42exAjnmV2/v7U2E8qbz2eC703foXEnSj4fRO
-         zLVKAvb8rKR3ZqLcTVUAa1uE2n1Z/mpl2qelfmS73Fa1MxYwO5fJ5vikeTWvm8hJLfWN
-         hNCg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706526637; x=1707131437;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=linaro.org; s=google; t=1706526640; x=1707131440; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=HRaRfDbDYLX14FrKlogP0cv2vAUvFXFj6eUZ8j21eOw=;
-        b=BcvsL78SU+0PExHs79BZOUqNfyJUsdmhyf1BlD4BKGw5wBoOEMaN1ht5vmEdeRX1p7
-         VLf7A/d71fhtcIJoPQaCcc7jIFrwGlKn0QMbaxlb75MvP8pbwvhbB/h1N/m+sdA/9rkc
-         l/yqTpDs1Kr2RjruSeRGQTVh83wH6nUD8yIMxWatjkS/LXmrnpZOGIsWq+kUfsajtchI
-         HIMDY22R51B/PWafcg8asjq70L5ZAV9an/Q3N07vhgxEhsbu9BzZ9m6dKYxXW7dpGGL9
-         yg6Br/uShlCg3SpqGDyHQOxocFNphfzRF7Hfib0dDw5reOMRZi9gvC/tIkGhRYrmEWhh
-         62yQ==
-X-Gm-Message-State: AOJu0Yw7E5NPxB1fzxksUE8jyZR4oyNGdHiSkra4d6Zv4oIizP+xZ091
-	retWDEbpJ+9Gw9esAKJuSh/1zLOOzyLdfLL+pUuWdRfmyHJCjTSWtMLMM0GffNk=
-X-Google-Smtp-Source: AGHT+IFdGR7DwC3V+AcNwApIE6x6SYSmmC81K54nXEd72Ad4K9TD5UyxiF2+FW9bIvC7KDOu9MPpPw==
-X-Received: by 2002:a17:906:454d:b0:a31:29fc:6ef2 with SMTP id s13-20020a170906454d00b00a3129fc6ef2mr4747444ejq.41.1706526637312;
-        Mon, 29 Jan 2024 03:10:37 -0800 (PST)
+        bh=L2ZdJpKQBRnfaS4iSb7zJfUhDZu3ZFuYALkM/QlvKws=;
+        b=B8SklICAx022Lv67Iee5iVyJGekUI4syUq71fUgaHDz8hjReFC3BIQIIdx8f8CONQk
+         OFZj02JEf1Acn0yVFpasAxp9VfWOEoAFlIWS1l1+5rhBdr83NlcIjXJMUxfH9V+SNuph
+         CK5gdxDPwOO9rc7yeahpryZM4/NlQXnjIsIbQ7n7AOaSj4orzDVC2XweqWuCHZ+l+gd5
+         oUv7KomaqjW8NLTRvLePSzR9Y1sHItZOz/LsTXyQlQIJtIkscCgnzoJtBfPcvg+Zsz32
+         wHWE4AG8o0MqFydu1j0X7ux1P9qJpNbT0TLkuBZxR5bI2MDBbn3UnogQMkKHsISCnNQY
+         sePQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1706526640; x=1707131440;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=L2ZdJpKQBRnfaS4iSb7zJfUhDZu3ZFuYALkM/QlvKws=;
+        b=ft5w3q5AFFe9ayux0j8cPZibvOQDorjBiG0bbBQvNJcaizAqR1lHrKS3c1sw1ezRqI
+         unhKXeKNYs3hbz4eE7adVhgGJ6CQfQFlAzgX4vqNHWsVbByV1y5Wq7WtHX0B41tnj+5e
+         73zclOIkAGYfove5WHQMBTE/QVjtO2HSzbSzh1si3G7CenHbnvuHM4vzkiOnwZE7M/AE
+         O+4TrVjjb2G1CkkkEMvVOIP59Ux5jzsHLbFkMAP5WUzxK5+naP+jWnj3aAKkwELCKLZb
+         kiXUgS7ke2knZ1RcZT2gxKwRY7TI2Y11sGaq2nF6nQgLbFkAFP8xSQ54Q7F+9hULAxsy
+         0ZNQ==
+X-Gm-Message-State: AOJu0YwnyxGNOr+f2bqi33qKLaNYHzQAR3IDck2H4xlSGY4NyQdqDA5Z
+	OIFoKyW4RcdaHBShTKfJzwfsMxx6qDvhL1TGNZ1O3yb4Hk+VIhCKjBv92R/i9Qo=
+X-Google-Smtp-Source: AGHT+IGAZENcpm/0S5OSxltI6B5d6wcqy/QdB1c3/GHjkwf4bfaL0FekpPfwhxKE5akGn5ihpxauIw==
+X-Received: by 2002:a17:906:71db:b0:a27:9bb7:622c with SMTP id i27-20020a17090671db00b00a279bb7622cmr3714658ejk.63.1706526639767;
+        Mon, 29 Jan 2024 03:10:39 -0800 (PST)
 Received: from [127.0.1.1] ([79.115.23.25])
-        by smtp.gmail.com with ESMTPSA id tj4-20020a170907c24400b00a352f7a57a4sm2934620ejc.178.2024.01.29.03.10.36
+        by smtp.gmail.com with ESMTPSA id tj4-20020a170907c24400b00a352f7a57a4sm2934620ejc.178.2024.01.29.03.10.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 29 Jan 2024 03:10:36 -0800 (PST)
+        Mon, 29 Jan 2024 03:10:39 -0800 (PST)
 From: Abel Vesa <abel.vesa@linaro.org>
-Subject: [PATCH v2 0/2] PCI: qcom: Add PCIe support for X1E80100
-Date: Mon, 29 Jan 2024 13:10:25 +0200
-Message-Id: <20240129-x1e80100-pci-v2-0-a466d10685b6@linaro.org>
+Date: Mon, 29 Jan 2024 13:10:27 +0200
+Subject: [PATCH v2 2/2] PCI: qcom: Add X1E80100 PCIe support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,10 +62,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAKGHt2UC/1WNQQ6CMBBFr2K6tmamgIAr72FYtDDAJKQlUyUYw
- t0t7Fy+n7z/NhVJmKJ6XDYltHDk4BOY60W1o/UDae4SKwMmQwOoV6QKEEDPLWvKbFdjUTlncpU
- UZyNpJ9a3Y5L8Z5rSOAv1vJ6NV5N45PgO8j2TCx7r8Z4Dmvr/fUGNmvquL4uqLu8Ez4m9lXALM
- qhm3/cfLlogyb4AAAA=
+Message-Id: <20240129-x1e80100-pci-v2-2-a466d10685b6@linaro.org>
+References: <20240129-x1e80100-pci-v2-0-a466d10685b6@linaro.org>
+In-Reply-To: <20240129-x1e80100-pci-v2-0-a466d10685b6@linaro.org>
 To: Bjorn Andersson <andersson@kernel.org>, 
  Konrad Dybcio <konrad.dybcio@linaro.org>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
@@ -74,44 +74,43 @@ To: Bjorn Andersson <andersson@kernel.org>,
 Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
  linux-kernel@vger.kernel.org, Abel Vesa <abel.vesa@linaro.org>
 X-Mailer: b4 0.12.4
-X-Developer-Signature: v=1; a=openpgp-sha256; l=733; i=abel.vesa@linaro.org;
- h=from:subject:message-id; bh=kaq0OgPo/9vol1D2bYM76Ta9GssTvOOm0ZJv+0O3b8M=;
- b=owEBbQKS/ZANAwAKARtfRMkAlRVWAcsmYgBlt4ekpsF3X7YJyrnDVqN+171lOsGtT2eIe4S4c
- n5g7+WGKWqJAjMEAAEKAB0WIQRO8+4RTnqPKsqn0bgbX0TJAJUVVgUCZbeHpAAKCRAbX0TJAJUV
- Vp8lD/0VzRSzxozsfLD/lTH+A26kdlKd+ybLr23ujjxI6fClzrK2JNl7SWLRArBXpN8tOe8fCix
- 4ygHZJOjDfgo1cX9IqOGh2IVf4+fwU6mDCygLos3qcDW4nf2+OwIi4pS4TQk7CKJUN/hjmWGG2H
- 5pbYSq9z/xqp0u0JiOm3A78xynvYK1isXtksSlrh2a0ShG+ToUqHw4w7r95Unzbi7GKgmJShSr8
- Jpt+J/+XJE+yny5lkwdrkEr5qgEtqWrE53EtALEdH5ZeYReKLQ4a3bKsxpflSaoqc4OCYEBKmTz
- zNpR+t4RpM1bxY2ah4AMTqoxv8RrL2MhEHHsNWTe+EF98E2OXaQdhq66jeSba9AfCfcZb/Juzbv
- F86g++xrmZaHJsgKqc1EGSGmgnKt1NZ0XwUv8kZG+ZmemzU8kzt1gEGQ0zE2IGfp9XInrgrQG5W
- XutOdgqmcEZD3C454t1+AZTbvz5+BL8qRmhnwbCqiIVlxozpal5HWoM2Qv6+tKGqEVyt75qJv48
- Fk7J0gec7dqK8byBxwbga01yS31sbhQIngDx+9Rj1WhSyfz4HmQ7kyxXML33pNZnPrkBovmDiu0
- +th//D3Xi4XJgALKTJBAO6lubjHJrXdrT4zv2O+YvHB0sA2hrLwnyZ6f9amn3lfl2b1H7xanean
- DeYqVVcUxwJ1paw==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=785; i=abel.vesa@linaro.org;
+ h=from:subject:message-id; bh=8EuammNvz7q0zLsv/fNHGrCFJkNOTUOv7xYPFDSydtM=;
+ b=owEBbQKS/ZANAwAKARtfRMkAlRVWAcsmYgBlt4er8jIwuUe3lH5Fd/YkeceijfJtwLD8JEWgT
+ IO95XM3TAyJAjMEAAEKAB0WIQRO8+4RTnqPKsqn0bgbX0TJAJUVVgUCZbeHqwAKCRAbX0TJAJUV
+ Vj8AD/90UMoF2ZHpC0USCER/mY8HfUzShRLdnodKJERNlQD2yHvIqJZydsbeQ3mvURuo65EmmjE
+ rca2HUmjKTT8omc6Mp2oA/Pqn4LgCGpxXmLvcFljCzIqylEsAigK4g2GN7WFtH50gnXhqheSJrn
+ u1whlX6w1M5kEr2IVGsgcTaH6CNH8RqDALJJFLsjUyGa4zk5hUgoVjUkHN6hQONQL7Dk9fNa7D1
+ Lc5lDS/JiCDOEbzlNfuVJht2DGAFCqVtpODgOERDTjhdIsSVSh+m3enGCZo6KuuIAdhi3LI18tO
+ 6bmPlelwPeLcx1FREip6DK/5C9JjqlRON9rpGLbQhzCiLUalET1WHsbkG56wQLS8gAj906lg6k6
+ J2ji2bqbuCw1v8VZRCHlyUGmfUpfNxqGwx4VVLG2pJZimoR82DyVmpNwnFkbfl02e2fxkDGUjnf
+ KPiHAPi9exFnKKUILyGxQoI6MeBUeSR9Gu+aLoUY5GBHcC283Mi/fzm/UkNm/CXHhtV69PTVoR+
+ ZizJyptcXs25iXpQst7NiU5qbm9Tl5C4za9B7dbf5Sz2XkglRmpkURfTIbyOcQ3TzO5CraPR4x8
+ AyPE8p+JuWy7CITDG8T43RfoLGofVn90aqFEk6Sp+UIwbGjK31TAlz3Gl7PhyP5pACrf0WOheNQ
+ MFouH6u5MK0Aw9Q==
 X-Developer-Key: i=abel.vesa@linaro.org; a=openpgp;
  fpr=6AFF162D57F4223A8770EF5AF7BF214136F41FAE
 
-Add support for PCIe controllers found on X1E80100 platform.
+Add the compatible and the driver data for X1E80100.
 
 Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
 ---
-Changes in v2:
-- Documented the compatible
-- Link to v1: https://lore.kernel.org/r/20240129-x1e80100-pci-v1-1-efdf758976e0@linaro.org
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
----
-Abel Vesa (2):
-      dt-bindings: PCI: qcom: Document the X1E80100 PCIe Controller
-      PCI: qcom: Add X1E80100 PCIe support
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 10f2d0bb86be..2a6000e457bc 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1642,6 +1642,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
+ 	{ .compatible = "qcom,pcie-sm8550", .data = &cfg_1_9_0 },
++	{ .compatible = "qcom,pcie-x1e80100", .data = &cfg_1_9_0 },
+ 	{ }
+ };
+ 
 
- .../devicetree/bindings/pci/qcom,pcie.yaml         | 29 ++++++++++++++++++++++
- drivers/pci/controller/dwc/pcie-qcom.c             |  1 +
- 2 files changed, 30 insertions(+)
----
-base-commit: 01af33cc9894b4489fb68fa35c40e9fe85df63dc
-change-id: 20231201-x1e80100-pci-e3ad9158bb24
-
-Best regards,
 -- 
-Abel Vesa <abel.vesa@linaro.org>
+2.34.1
 
