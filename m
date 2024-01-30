@@ -1,101 +1,120 @@
-Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C46B128388;
-	Tue, 30 Jan 2024 16:38:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8F5E8612C;
+	Tue, 30 Jan 2024 16:44:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706632702; cv=none; b=cPkMig5llDg0pMilykzhr+u6+3eTk7nvT3QG99KubRg8DkQB0IRUkivD5scUBYxeKB+vZe0cLqi3VD6Qh60wpkLbGFG9T5aLBj8P5ymd189cMySlqkdIT8JOM3zzk7wPiNzEzdlByyDb2yJDTS9bNsQ901eZOY9ainrZeFGD7fQ=
+	t=1706633046; cv=none; b=cLXjpcX0Xej2T8NeumuJi1KjULIsi+t2E2cHPuzMQ0sZZCxZh/C1Mz7KYFyr5J1Kwi8ksKQbo9oFsQtehELtIm/N39LoCjjOXoMWSnpYtQCDKUZhNXVeFg+fP2ZYlb8lZwBC28wOhMI/9ZJNwb12CE0hvJLQgSwKlzopVyv/W+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706632702; c=relaxed/simple;
-	bh=M2wO7sSvCPR2982vZ06PIUvIfGKMG54QQ49RvdvfJ4o=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u5bGL3U1v8nIb9taC0nv1lBGU9QxIxr0cMEbh7HFu7+ItShq5PtfKKtgceNWE+fiGBzICyCdbfVz1XYqUN7xgofgqNrb0hkgs/+HISMIhbI/4wt3KEfhlVE4EMEHH2M9Ftckjw9fNe6DT701Xd19ITyTF4WHySRgXYPDPze1P/s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=WJnGlYvs; arc=none smtp.client-ip=217.70.183.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1706633046; c=relaxed/simple;
+	bh=QgABafDNsktgkXRudOCLlwXhcYXw4Ycvqs7d0i/LQ1U=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XcbUSyMx655xevO71/iiR6rWZQQVmpIi7aZCmKXB+2pDPedW0GY/3oUdA5N/HM7vB1kcH88swf4WlAv72BO5ZXtZqc/BXpDgoQpmYjVLVLgUcHlR0NkMa/qsTocjczk+0gqJ5HTJSAqTMMW6IQM1vKm4Y45AlXIPxD/Ot87CDyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=uzqAZKLn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="WJnGlYvs"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 7C932FF802;
-	Tue, 30 Jan 2024 16:38:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1706632690;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=TplrVwlT1KQQSHzhl19fkElU89ykPDWXpM5Ja8kRAJg=;
-	b=WJnGlYvsLktLg5YVEN9Gc1gRr1+qFsRheBxrdMHtKhX0EhYL6k098CAcruxMCEhyHXGutn
-	vFpG6qz/d4LOwRUl4ySVuhnkRWEaRDVB/weY8qLcaLhH4lVfe59poYOcxtBCfQLdIsQgsT
-	cr+TW103IMpfivL5fTtM6wDz2VB0cl1yixDpo0WKESic98lfwYdjvkOMTFxJCEyKvUEabW
-	mteGb4Ee6jVAsVdMafL7bmIXSQRjTkhrB4gIDXJQJNMh68dL2595yEmPLQCqqJYohbIpan
-	ibg0KXyFQrPgV/3vESu7rY8nQo9lUZ651P006nibWUVpZ+tGeyoBDKzZMv5Lvg==
-Message-ID: <3fa57200-4218-4ac8-86b9-3f86723d5cd8@bootlin.com>
-Date: Tue, 30 Jan 2024 17:38:08 +0100
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="uzqAZKLn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ADF1C433F1;
+	Tue, 30 Jan 2024 16:44:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1706633045;
+	bh=QgABafDNsktgkXRudOCLlwXhcYXw4Ycvqs7d0i/LQ1U=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uzqAZKLnLfqAX16wTaHfxzIhJle9n1YAO75dG0h3i7HfVla1jerWbReyXqYPut88f
+	 Y0Lft1wcBTSuVpW2zVmxysZP8URMLHnmB5qI8n9dmNgfb7keXFOZTJh6ncc3YYSouz
+	 KOofi6pqU7s2S/17CPUT1SNuEz0vb8M/cZYNJEAI=
+Date: Tue, 30 Jan 2024 08:44:04 -0800
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org
+Subject: Re: [RFC PATCH 4/5] sysfs: Introduce a mechanism to hide static
+ attribute_groups
+Message-ID: <2024013016-sank-idly-dd6b@gregkh>
+References: <170660662589.224441.11503798303914595072.stgit@dwillia2-xfh.jf.intel.com>
+ <170660664848.224441.8152468052311375109.stgit@dwillia2-xfh.jf.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 04/15] mux: add mux_chip_resume() function
-Content-Language: en-US
-To: Andy Shevchenko <andy.shevchenko@gmail.com>
-Cc: Linus Walleij <linus.walleij@linaro.org>,
- Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>,
- Tony Lindgren <tony@atomide.com>, Haojian Zhuang
- <haojian.zhuang@linaro.org>, Vignesh R <vigneshr@ti.com>,
- Aaro Koskinen <aaro.koskinen@iki.fi>,
- Janusz Krzysztofik <jmkrzyszt@gmail.com>, Andi Shyti
- <andi.shyti@kernel.org>, Peter Rosin <peda@axentia.se>,
- Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
- Philipp Zabel <p.zabel@pengutronix.de>, Tom Joseph <tjoseph@cadence.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org,
- linux-i2c@vger.kernel.org, linux-phy@lists.infradead.org,
- linux-pci@vger.kernel.org, gregory.clement@bootlin.com,
- theo.lebrun@bootlin.com, thomas.petazzoni@bootlin.com, u-kumar1@ti.com
-References: <20240102-j7200-pcie-s2r-v2-0-8e4f7d228ec2@bootlin.com>
- <20240102-j7200-pcie-s2r-v2-4-8e4f7d228ec2@bootlin.com>
- <CAHp75Ve2K=v=OrNPH0q+K6vp2283HSMBYYSh0hYbw56snGd+xg@mail.gmail.com>
-From: Thomas Richard <thomas.richard@bootlin.com>
-In-Reply-To: <CAHp75Ve2K=v=OrNPH0q+K6vp2283HSMBYYSh0hYbw56snGd+xg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: thomas.richard@bootlin.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <170660664848.224441.8152468052311375109.stgit@dwillia2-xfh.jf.intel.com>
 
-On 1/26/24 22:28, Andy Shevchenko wrote:
-> On Fri, Jan 26, 2024 at 4:37 PM Thomas Richard
-> <thomas.richard@bootlin.com> wrote:
->>
->> The mux_chip_resume() function restores a mux_chip using the cached state
->> of each mux.
+On Tue, Jan 30, 2024 at 01:24:08AM -0800, Dan Williams wrote:
+> Add a mechanism for named attribute_groups to hide their directory at
+> sysfs_update_group() time, or otherwise skip emitting the group
+> directory when the group is first registered. It piggybacks on
+> is_visible() in a similar manner as SYSFS_PREALLOC, i.e. special flags
+> in the upper bits of the returned mode. To use it, specify a symbol
+> prefix to DEFINE_SYSFS_GROUP_VISIBLE(), and then pass that same prefix
+> to SYSFS_GROUP_VISIBLE() when assigning the @is_visible() callback:
 > 
-> ...
+> 	DEFINE_SYSFS_GROUP_VISIBLE($prefix)
 > 
->> +int mux_chip_resume(struct mux_chip *mux_chip)
->> +{
->> +       int ret, i;
->> +
->> +       for (i = 0; i < mux_chip->controllers; ++i) {
->> +               struct mux_control *mux = &mux_chip->mux[i];
+> 	struct attribute_group $prefix_group = {
+> 		.name = $name,
+> 		.is_visible = SYSFS_GROUP_VISIBLE($prefix),
+> 	};
 > 
->> +               if (mux->cached_state != MUX_CACHE_UNKNOWN) {
+> SYSFS_GROUP_VISIBLE() expects a definition of $prefix_group_visible()
+> and $prefix_attr_visible(), where $prefix_group_visible() just returns
+> true / false and $prefix_attr_visible() behaves as normal.
 > 
->   if (_state == ...)
->     continue;
+> The motivation for this capability is to centralize PCI device
+> authentication in the PCI core with a named sysfs group while keeping
+> that group hidden for devices and platforms that do not meet the
+> requirements. In a PCI topology, most devices will not support
+> authentication, a small subset will support just PCI CMA (Component
+> Measurement and Authentication), a smaller subset will support PCI CMA +
+> PCIe IDE (Link Integrity and Encryption), and only next generation
+> server hosts will start to include a platform TSM (TEE Security
+> Manager).
 > 
-> ?
+> Without this capability the alternatives are:
+> 
+> * Check if all attributes are invisible and if so, hide the directory.
+>   Beyond trouble getting this to work [1], this is an ABI change for
+>   scenarios if userspace happens to depend on group visibility absent any
+>   attributes. I.e. this new capability avoids regression since it does
+>   not retroactively apply to existing cases.
+> 
+> * Publish an empty /sys/bus/pci/devices/$pdev/tsm/ directory for all PCI
+>   devices (i.e. for the case when TSM platform support is present, but
+>   device support is absent). Unfortunate that this will be a vestigial
+>   empty directory in the vast majority of cases.
+> 
+> * Reintroduce usage of runtime calls to sysfs_{create,remove}_group()
+>   in the PCI core. Bjorn has already indicated that he does not want to
+>   see any growth of pci_sysfs_init() [2].
+> 
+> * Drop the named group and simulate a directory by prefixing all
+>   TSM-related attributes with "tsm_". Unfortunate to not use the naming
+>   capability of a sysfs group as intended.
+> 
+> In comparison, there is a small potential for regression if for some
+> reason an @is_visible() callback had dependencies on how many times it
+> was called. Additionally, it is no longer an error to update a group
+> that does not have its directory already present, and it is no longer a
+> WARN() to remove a group that was never visible.
+> 
+> Link: https://lore.kernel.org/all/2024012321-envious-procedure-4a58@gregkh/ [1]
+> Link: https://lore.kernel.org/linux-pci/20231019200110.GA1410324@bhelgaas/ [2]
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+> ---
+>  fs/sysfs/group.c      |   45 ++++++++++++++++++++++++++++-------
+>  include/linux/sysfs.h |   63 ++++++++++++++++++++++++++++++++++++++++---------
+>  2 files changed, 87 insertions(+), 21 deletions(-)
 
-Yes it makes the code easier to read.
-Fixed in next iteration.
+You beat me to this again :)
 
--- 
-Thomas Richard, Bootlin
-Embedded Linux and Kernel engineering
-https://bootlin.com
+I have tested this patch, and it looks good, I'll send out my series
+that uses it for a different subsystem as well.
 
+I guess I can take this as a static tag for others to pull from for this
+rc development cycle?
+
+thanks,
+
+greg k-h
