@@ -1,112 +1,133 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-vk1-f180.google.com (mail-vk1-f180.google.com [209.85.221.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 821B3185B
-	for <linux-pci@vger.kernel.org>; Fri,  2 Feb 2024 12:44:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5F083D8F
+	for <linux-pci@vger.kernel.org>; Fri,  2 Feb 2024 13:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706877891; cv=none; b=jo1h8v/RsmRjm3g7n+KPGpTwiu60LDoznkMy8+iLVClJyfeUF/Q/p8cPIhkyInHH8FWjle3p5VRhZ7/JUCmWTRH9FQZqszeZ+4+stNGEl0huEbJiMv0vz24KbblkGmuS6t53oUdPhb3GDazPsowTlWccfDtwJaKlwsruTnNiHvE=
+	t=1706879173; cv=none; b=k/hpw/DqDWpli0jdAWWzJnVvG69tNoHc2hv3ZuIbKOiA5yAtLste76X4pE4zmiSsrvToKLxnI1BiHBJXGePTSJ2ErHzFaxzWYrCvEw2J+Y+TFxK/bqVwq7MRrS2d5D4D6JQuKNtu+Uj/3DfWib3shLCdK9ge0TAUie5tDs1E208=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706877891; c=relaxed/simple;
-	bh=PpBzCGG1kfdSEKS6ZVE0DfABNyS1LEwesMsku1vqKHE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=m1yFCJ2FwPwDwV/lTIKDGYHuo1nigzS5L45b6x1go02lT1MR5z3EI+LdIOLGMz7V6TcO4kJjZEwmT4Ak2RDqcwtC4MjLD6WZhmcNchASq1LttgHL9VTrZqzxZaaYK8zzEgFMmGybUsNStuFs4RL0t6NyOYMzC1ejXuMKjfcbYOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ecRXyb8E; arc=none smtp.client-ip=209.85.214.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1706879173; c=relaxed/simple;
+	bh=0dxT2bZfqUTaN/pgDE3v3v3YQiHSfOH7dfGHB+kmRmg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fajVcyodxUloeaWNdHe0NKdNvbEZ9eRXs2RTGFXlhx4fLjxkx7s34hByMwuIj5PnfQICuNPNegHoip0dM6h2EM4gOYvD7MDULfL++wLhN7XhinZ0SniVGVUOh7rLEZHpuYBUg3+hUtjKogHmW346arCw+xsN/GCGqhGbIW2NqKE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=krb/jVRI; arc=none smtp.client-ip=209.85.221.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ecRXyb8E"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-1d780a392fdso17130385ad.3
-        for <linux-pci@vger.kernel.org>; Fri, 02 Feb 2024 04:44:49 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="krb/jVRI"
+Received: by mail-vk1-f180.google.com with SMTP id 71dfb90a1353d-4bfe04cd2b0so820278e0c.0
+        for <linux-pci@vger.kernel.org>; Fri, 02 Feb 2024 05:06:11 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706877889; x=1707482689; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=6uHxgJc6SIrgskffi3vozHz8JcpTZE+U0V1Oe4eJ8Bk=;
-        b=ecRXyb8E0LjsU7i9/UG5OcDpIGMYTjpMA83vmVuTsPhjm4eq5SYbMOnm8XnXrjdDu6
-         yAtW+gApEJVdUXXGJ1SI2qjXJQTopQDDqNXir79SwlhstSQEE63LnBFzPJtQREr4H5TZ
-         JmbPBPlZZKPGiWN0NXe7Jsiu61eQQaIGpsLTHb2h9YxW5H20dfiuUC2D286Y2oqBYFpW
-         Mr4FINFqTcdEeQW2aTMtbY+MzsBnNGltJkuQmXa9Mtg7cu9Hc155HN1jf+Woro2TCU0d
-         jGSJ0on/wNGoKQl702bb2RSwmk/FQ8SI7NWnEa7axCCq1YZ+Pnyx+nLy44IYdXeWdJk8
-         Gz4A==
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1706879170; x=1707483970; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0dxT2bZfqUTaN/pgDE3v3v3YQiHSfOH7dfGHB+kmRmg=;
+        b=krb/jVRIzFSy7rofP1kdGAN1lBPMRGaSy3yXvyAR8qAJ/pJXXQYkLdo5cHNuP3YK5H
+         qKJuQ17g0kaiEuTHn91wZRikrV//iD8lekH50jVs/Y0M67gX98Lg7rH1iU4mDLviBnp/
+         3e5Lboy0RHc+dsoVmTCnu2WnjyO3ZDwBel2VkFIAxdadWIfXaIUQd/y8YlCHnLhzYFhy
+         sWyE2JNnKhYvITTW5SIdCL+YNzjrxYT3omFkSW2gpcNjzuMjKGk7TpxhJOi82SC173+F
+         COLFkotOjz4hBAfxqwP7o2zfb7ukpqBYVMIrwia1EMAXrP6ZMGEUCEEhH4qgH/Gk3Dnc
+         wggQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706877889; x=1707482689;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=6uHxgJc6SIrgskffi3vozHz8JcpTZE+U0V1Oe4eJ8Bk=;
-        b=g7eybUbT7nkjxiXjwknD28AyMUlspaQa10vjm4tlIZ6+eJhnNbKd2AN/mHmzNVI6M+
-         2afrfShaa1zu78/YFNTMC0lybv6adC5p/m5HhTO/lKKwpf0bjYVxIG6GmHaHq2nMNbOK
-         ifLrrLhCp5U2CUf7+/C1ILU24JS1EVEr2POF7NhslkZj6QJ1Q3AZopfylhANu85x5EqW
-         VuRtvudIJwng6hzREtUzYSSX7m2IqtceL9lpGvN2Tpkh+tx4InhnppWw8A9L2+PQxpAa
-         XDmaI/kp1xblxj3+Fl1gHL/WsoMKJuvPjGH6uRfz9Q3lIVDvhhHXpju7b0F6q12+JVry
-         uoDQ==
-X-Gm-Message-State: AOJu0Yx3g3ilOnMXcfoFO8mE1mM2VGpS5jSEVRjimxeDygn45v8QZdyQ
-	lbLaHk/pGwmXx62FYe/8pFtueM8X514j7P+NZeuBnFxhGiS2jti0n2XkXF0BVYxdBjsvqkLjTR0
-	=
-X-Google-Smtp-Source: AGHT+IH1pBIPnV4+Kw7l0S2rRr96oqEx/hAT/W7h4rSfgtu6ZverhYAVJudCiBYv3w47WdCdnYCA5A==
-X-Received: by 2002:a17:902:7d85:b0:1d9:21bc:c607 with SMTP id a5-20020a1709027d8500b001d921bcc607mr4825111plm.60.1706877888773;
-        Fri, 02 Feb 2024 04:44:48 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCUFWHhEo/HupTFPZosTA5Leq5aQb3CTr4YUIIlNYt5Zmj5LOJxkReBu0YLZkFkZK06LBpvBp4n7sUY6oYEWHq8EfSHOV8AO7L1Gelz7C1cCRJUNMmxosDe/90NuMbCaPH7izSpTAEEbux0hAUN63dABuenN0hV7k8Xi+/k6W/NN0tB4yq3d5qGkBMfxaevPDwXya9MftMv0/DxGGzbtkczUz9e4K66PfcukM0k6echRwsH2NmnWwqhWKDufLEc2FsbpqXimCR8YE5BDRCR55wKA1y9moEIFJ+xpHuSBYas9hHq2b+9tE9ADzDpq
-Received: from thinkpad ([120.56.198.122])
-        by smtp.gmail.com with ESMTPSA id j10-20020a170902f24a00b001d9834f2946sm42190plc.46.2024.02.02.04.44.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 Feb 2024 04:44:48 -0800 (PST)
-Date: Fri, 2 Feb 2024 18:14:44 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Abel Vesa <abel.vesa@linaro.org>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konrad.dybcio@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 2/2] PCI: qcom: Add X1E80100 PCIe support
-Message-ID: <20240202124444.GG8020@thinkpad>
-References: <20240129-x1e80100-pci-v2-0-a466d10685b6@linaro.org>
- <20240129-x1e80100-pci-v2-2-a466d10685b6@linaro.org>
+        d=1e100.net; s=20230601; t=1706879170; x=1707483970;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=0dxT2bZfqUTaN/pgDE3v3v3YQiHSfOH7dfGHB+kmRmg=;
+        b=ZQdnhBgo/B5fs/0AHkZoX9sMK+rlcWdaTnvejkmMcY7Myflgz/ds36AWs5ulZrDsxm
+         3MSBgcvWh+fn3zS+OHRYHWtDqCOTUPZtv0XSRRqQQbY24U/qM0NxWRS7YweLMnjGUrXi
+         tcbu03YDIpDwG81+EviM6/cFPSjJKa9br5rUUyp7aTAx7glzUQvXWpryZ9+bVMmgRqwA
+         BV5BTEWSjlE6FNg0q/dBDIma6k6UuirZ0XPxg3G+UANcdd7wsNXGCXn8U9XkKubT/1gd
+         osdiXdGcBJ0Ho/0llVyMWzYpKdz6z30zt9E4qX3qLZtGmD7CIKDUGzZncMRFCxY2NMxC
+         8iKw==
+X-Gm-Message-State: AOJu0Yz/grews4Y6l865M2QjaqZctX4YaWOtC/e5NtHyUI8Gyx0ZoPdx
+	psLlRqlWDkbe5lQ07ZGOTD/cJ+7O6MvSl5i+Adbo7/zlYHGG488ZoAtscwK0oAUSdAmAwEV/mie
+	uVGhUR6Ein1CHxdksZgxf+GTno9jD5mjbmAb67A==
+X-Google-Smtp-Source: AGHT+IEWSGGwOYOwE9UNS4a7/BGQ5J1Iy+sfg/cwAIy6czcrvkxuNiWzhaxMEH75CieiMzMPxqerQJsKsDuJ/9HoZ2E=
+X-Received: by 2002:a05:6122:3a05:b0:4bd:728b:c108 with SMTP id
+ fp5-20020a0561223a0500b004bd728bc108mr8581270vkb.8.1706879170735; Fri, 02 Feb
+ 2024 05:06:10 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240129-x1e80100-pci-v2-2-a466d10685b6@linaro.org>
+References: <20240201155532.49707-1-brgl@bgdev.pl> <20240201155532.49707-10-brgl@bgdev.pl>
+ <jb4hzijjxjv4kiy3cn2fuc5ox4x5uutredbxiwo2fvnkh2xudf@5w65qtp35ase>
+In-Reply-To: <jb4hzijjxjv4kiy3cn2fuc5ox4x5uutredbxiwo2fvnkh2xudf@5w65qtp35ase>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Fri, 2 Feb 2024 14:05:59 +0100
+Message-ID: <CAMRc=MdQ_uRq7a24RYt=KRSff9sw_1soQ+8ONEpNXy0emk5ChQ@mail.gmail.com>
+Subject: Re: [RFC 9/9] PCI/pwrctl: add a PCI power control driver for power
+ sequenced devices
+To: Bjorn Andersson <andersson@kernel.org>
+Cc: Konrad Dybcio <konrad.dybcio@linaro.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Neil Armstrong <neil.armstrong@linaro.org>, 
+	Alex Elder <elder@linaro.org>, Srini Kandagatla <srinivas.kandagatla@linaro.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Arnd Bergmann <arnd@arndb.de>, 
+	Abel Vesa <abel.vesa@linaro.org>, Manivannan Sadhasivam <mani@kernel.org>, Lukas Wunner <lukas@wunner.de>, 
+	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-pci@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jan 29, 2024 at 01:10:27PM +0200, Abel Vesa wrote:
-> Add the compatible and the driver data for X1E80100.
-> 
-> Signed-off-by: Abel Vesa <abel.vesa@linaro.org>
+On Fri, Feb 2, 2024 at 5:03=E2=80=AFAM Bjorn Andersson <andersson@kernel.or=
+g> wrote:
+>
+> On Thu, Feb 01, 2024 at 04:55:32PM +0100, Bartosz Golaszewski wrote:
+> > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> >
+> > Add a PCI power control driver that's capable of correctly powering up
+> > devices using the power sequencing subsystem. For now we support the
+> > ath11k module on QCA6390.
+> >
+>
+> For a PCI device which doesn't share resources with something on another
+> bus, the whole power sequencing would be implemented in a driver like
+> this - without the involvement of the power sequence framework.
+>
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Yes, this is what I did in the previous incarnation of this code[1].
 
-- Mani
+(I know, I should have linked it here. My bad, I will do it next time).
 
-> ---
->  drivers/pci/controller/dwc/pcie-qcom.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index 10f2d0bb86be..2a6000e457bc 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -1642,6 +1642,7 @@ static const struct of_device_id qcom_pcie_match[] = {
->  	{ .compatible = "qcom,pcie-sm8450-pcie0", .data = &cfg_1_9_0 },
->  	{ .compatible = "qcom,pcie-sm8450-pcie1", .data = &cfg_1_9_0 },
->  	{ .compatible = "qcom,pcie-sm8550", .data = &cfg_1_9_0 },
-> +	{ .compatible = "qcom,pcie-x1e80100", .data = &cfg_1_9_0 },
->  	{ }
->  };
->  
-> 
-> -- 
-> 2.34.1
-> 
+> I think it would be nice to see this series introduce a simple
+> pci_pwrctl driver, and then (in the same series) introduce the power
+> sequence framework and your PMU driver.
+>
 
--- 
-மணிவண்ணன் சதாசிவம்
+I disagree. I was initially annoyed by Dmitry asking me to do a lot
+more work than anticipated but he's right after all. WLAN and BT
+consuming what is really the PMU's inputs is simply not the actual
+representation. That's why we should make it a pwrseq user IMO.
+
+> One case where such model would be appropriate is the XHCI controller
+> (uPD720201) on db845c. Today we describe vddpe-3p3-supply as a supply on
+> the PCI controller, but it should have been vdd33-supply, vdd10-supply,
+> avdd33-supply on the PCI device.
+
+Sounds like a good second user then!
+
+>
+> That would provide an example for how a simple PCI power control driver
+> can/should look like, and we can discuss the PCI pieces separate from
+> the introduction of the new power sequence framework (which is unrelated
+> to PCI).
+
+I agree it's unrelated and it could possibly go upstream separately
+but the particular use-case on RB5 (and other Qcom platforms) requires
+both the PCI and generic power sequencing to be addressed.
+
+Bart
+
+[snip]
+
+[1] https://lore.kernel.org/netdev/20240117160748.37682-7-brgl@bgdev.pl/T/#=
+m72f52254a52fcb8a8a44de0702cad1087d4bcfa1
