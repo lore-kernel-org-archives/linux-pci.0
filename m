@@ -1,135 +1,113 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9699217BDC
-	for <linux-pci@vger.kernel.org>; Fri,  2 Feb 2024 06:54:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 857F617BA8;
+	Fri,  2 Feb 2024 07:17:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1706856878; cv=none; b=QFctPhzpS0/y/vD7kr/Fc9j5oMSvvjkA1J3tjl00TWVSN8SaWNIrAPnVl/diArxCCLtlbjNOrKd1Mz8Cq2puxH1Lz4tC79CxsDaieFv/TZL4KBDvpJ6+Hllv0QBFPDu/9vXhPDQlYsLNWe+CQE0YfkRKnRzKmEF6kg1ndfpCap4=
+	t=1706858247; cv=none; b=D6xbimbqqDSKD52IE1w/sE17IEaAw/CDaA1oXSHBV0lq2RxnoHtEimlr36MZDcPG4KTbBzHrrsv+pZ6W1ZJqrnE9SuRCFDwoJZoldUDM1yI/Ce+gD+gWgK0SWDVEQtgyF3egV7r3A1eCwnFPFa9NLcwLbsQ7Xiuwrd1mXuI4e98=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1706856878; c=relaxed/simple;
-	bh=8a+0oyI0cSJoqWk2V6P5ZLmO6u2tJ1UClYhfKKZ2QWw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=k2le2oG5CTblA8h3J39aY6zVcuvC7HO0W/6VirMpoExlUEojU/BVomruP7BQ4HWLwDe6YUUrmsy2UFJJVaZWnpdM75u7vEzgUigrnnIvYI044q4hB/As7BRw98R2FJsC9UoAIzQfv1YYBmBEnqlDaFh0+8D+QXId0iM6oZq117o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ytfTPLfL; arc=none smtp.client-ip=209.85.216.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1706858247; c=relaxed/simple;
+	bh=h4Hp9Xzm/YT6xUNfO+jL+JGLsKAcnkgFgcS2QV41hM0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JM7FIzoSKiextgWr8UxpBSUw2e9QZTeUzp+DyDSsMPa/cYfD4w/mkgO1nYv/TvUVE47cw3W5lXT1YqiPvoQhRK9O+IRWmiEwr9veWNOMLvzzsSaoC2Oq+OGlpOP2kiO2EQDA/2i/DvUDzUopl2n/axwPPJfgBfvYf6u4MlhDFI8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Uamen+kW; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ytfTPLfL"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-2906773c7e9so1294300a91.1
-        for <linux-pci@vger.kernel.org>; Thu, 01 Feb 2024 22:54:36 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1706856876; x=1707461676; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=h/x9xuKD51JJrFalnZZ10uYlZwdWv4nb3yUwtxcC2fc=;
-        b=ytfTPLfL6b5yFwmrwF2tJ1Giu9g/HOMPwRIC51omxKZtBi7gpWl+HWY2IHSfx0A5Dc
-         QBYHpuSbRvO3f6PX37qDW8tvGjc3/AAqH0DjuJ0I1do3Tphq639bot4OVg4/igJtmh5+
-         JpNd7haYCM18x91TP9EPkJj6Mk0zMpmNjZ+qyQIN1h344+ltvFzLa596c5sFyZBNrG0F
-         M6Y231WGp8J5BuvRM18rugq7gNvoVF9kbXjcDsaLgM9iteMDCKN/rQGRkO7dRDatBm57
-         1e67a8sIi+eLA4J2+pGa6dfWnagSGdVHgm26UWRXFFDCo07w0ZdpmvIefk9cmP8KBZIG
-         T1IQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1706856876; x=1707461676;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=h/x9xuKD51JJrFalnZZ10uYlZwdWv4nb3yUwtxcC2fc=;
-        b=v2c/PQzhSaakhFqwhEIeRdSTZ9IOXx9Qbg3k5SwZMiel+ZRE2QXM33RC3dROxlnQmO
-         DhEREh29gVQjLXSyGHdlCtLnGIejQbYXp+ueTLzW35e+I5rct8BasoxGQ4Yt+1uPp8FB
-         1+SvuKngP2eap1FrH7LaW/fz66ZFX0PnkA2ALwaLZtRpudG/Y+8oSATXDnOr7EZhJDzg
-         eMlqwH84gSSIXuN4jpSH7urTpDkBxr1uCgwEob6psz4U5kfVQ9oYSvMj9mFRhKrI+MkD
-         srxUfQt1SLaVtAd6IeZImnxz8vPgTejEP3GuS6LW0LLHzwSAI9Yf9wUr3GDkMJBPt8Cz
-         B7Lg==
-X-Gm-Message-State: AOJu0YzJfVtDV6MvHwaMTIRIFsIhVpyWBsRgN2cZjMAcGqEGSCAMauF1
-	4COHDQVa+hhyjSPezhPJhuLRBV4cAGEZFLhVuF3iguM4NKcLqUYMyio+D8aNTQ==
-X-Google-Smtp-Source: AGHT+IG35APMmIsAPS0j6Mhg1cAmS1c/03TtriEZi2sP8CTKNnEvcqdTcj64smTRHsNcjMtbMv2EQg==
-X-Received: by 2002:a17:90a:6b46:b0:296:2fe3:cd28 with SMTP id x6-20020a17090a6b4600b002962fe3cd28mr2273163pjl.0.1706856875975;
-        Thu, 01 Feb 2024 22:54:35 -0800 (PST)
-X-Forwarded-Encrypted: i=0; AJvYcCU5Jb1FDbEvfLgI5xEQaw+rAxd3rh1NLDc++Z9GSqA8boFyE/4tJGNkVMmL+J3MHUPd00O9sWjbw/T7FmnwE17PzhgMW9Egiqz1VqLkq2sVcaaEXCXgYS3cRNL4GAFTdQIdfsap6ppvCHeeGP83EyYsaMd6xdQMmJjNSzkSFpQ+aAysiNhA+k4AlUf4iPkJjU1hEhDRW9f0glweYChXypIbS18lHIGvQClqXGrW7jIchleOTaGXLTWRrXvMn48PnQeCl3mIG4th5+2SXrYDfsKwVW6snheHd1RauWcFHtZC+no01zkIpbx36tvgU3Hp36mDnU/xnXzpQv6cmBDNo5Q2DKajMkMfjXbOvdZfJCyTBRrN7d0EDwfRV2HYA/lTr2ApwXNbTzWUhBbf2138ZKh8GP/m+nF4s7Wxn9EqYwO8uYQNnWWtJ001sg==
-Received: from [127.0.1.1] ([120.56.198.122])
-        by smtp.gmail.com with ESMTPSA id r16-20020a17090ad41000b00295f900f38fsm984763pju.11.2024.02.01.22.54.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 01 Feb 2024 22:54:35 -0800 (PST)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Date: Fri, 02 Feb 2024 12:24:18 +0530
-Subject: [PATCH 2/2] PCI: qcom: Enable D3 support for the recent PCI
- bridges
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Uamen+kW"
+Received: by linux.microsoft.com (Postfix, from userid 1127)
+	id 3A9B420B2000; Thu,  1 Feb 2024 23:17:26 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 3A9B420B2000
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1706858246;
+	bh=VrfVzgkHK9RQktBAOnodKa9BkvUSa49XaF41iL55nWc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Uamen+kW6PMS4UNg3mO8vg0xS24Q3nHFdcoXqfnpt2G3o5HzRBrgarc1aQBh2FkAm
+	 Of/hWRSteCAuh7PaMdFtK8ldI4XjrFYJdAVckBSwuq/QX3+11WImJwY2tFoPf5rcD3
+	 WtmYMKXSmTIAK5C8QKNKZhiYauw3QVHrFJoF45Bk=
+Date: Thu, 1 Feb 2024 23:17:26 -0800
+From: Saurabh Singh Sengar <ssengar@linux.microsoft.com>
+To: Alexander Stein <alexander.stein@ew.tq-group.com>
+Cc: bhelgaas@google.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, decui@microsoft.com
+Subject: Re: [PATCH] PCI/sysfs: Fix race in pci sysfs creation
+Message-ID: <20240202071726.GA14505@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+References: <1702093576-30405-1-git-send-email-ssengar@linux.microsoft.com>
+ <5736414.DvuYhMxLoT@steina-w>
+ <20231212082805.GA3521@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <20240104053803.GA16954@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+ <20240120064156.GA3130@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240202-pcie-qcom-bridge-v1-2-46d7789836c0@linaro.org>
-References: <20240202-pcie-qcom-bridge-v1-0-46d7789836c0@linaro.org>
-In-Reply-To: <20240202-pcie-qcom-bridge-v1-0-46d7789836c0@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Bjorn Andersson <andersson@kernel.org>, 
- Konrad Dybcio <konrad.dybcio@linaro.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Rob Herring <robh@kernel.org>
-Cc: Lukas Wunner <lukas@wunner.de>, 
- Mika Westerberg <mika.westerberg@linux.intel.com>, quic_krichai@quicinc.com, 
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-X-Mailer: b4 0.12.4
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1737;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=8a+0oyI0cSJoqWk2V6P5ZLmO6u2tJ1UClYhfKKZ2QWw=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBlvJGciN/Y0zChE5M99t5u9KSV9M2KE/HUNCrvm
- er3fnw8mOGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZbyRnAAKCRBVnxHm/pHO
- 9S1nB/4jumZoFbgNps6BZOB3a0lMhegz7WtIlzbRJv+6L1+sIUWkv2tHHcWN5uABhRb9v4ObLcp
- H328Xl2mbuZZDJFZmaNqd22ihNpYSZ1yj5+fIsAwXXw6PGjKuunjkZs/dv7tQRD61dDr9I/jyec
- W0mh4Iu1xSe/g6Qo0c5ODfo6SWOcl8y17Mo947xnafjV8URXtcZf+tUrKgDHKgDbc92UK88zBSK
- a5xvY0Mu1G1/Cj5NYsq2JJ3M0pJgPw0k7RxzgD7dR97Li86IjCxVfO8inkLlo5KZjXpY+ROWIGv
- oFDw78TWDPlJ0PCuqMTdcG6iCHi9rkpSyifMG3nDQMhOnYFc
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240120064156.GA3130@linuxonhyperv3.guj3yctzbm1etfxqx2vob5hsef.xx.internal.cloudapp.net>
+User-Agent: Mutt/1.5.21 (2010-09-15)
 
-Make use of the "bridge_d3_capable" flag to specify the D3 capability to
-the PCI core so that the D3 support (in turn runtime PM) will be enabled
-for the PCI bridges.
+On Fri, Jan 19, 2024 at 10:41:56PM -0800, Saurabh Singh Sengar wrote:
+> On Wed, Jan 03, 2024 at 09:38:03PM -0800, Saurabh Singh Sengar wrote:
+> > On Tue, Dec 12, 2023 at 12:28:05AM -0800, Saurabh Singh Sengar wrote:
+> > > On Tue, Dec 12, 2023 at 08:19:11AM +0100, Alexander Stein wrote:
+> > > > Hi Saurabh,
+> > > > 
+> > > > thanks for the patch.
+> > > > 
+> > > > Am Samstag, 9. Dezember 2023, 04:46:16 CET schrieb Saurabh Sengar:
+> > > > > Currently there is a race in calling pci_create_resource_files function
+> > > > > from two different therads, first therad is triggered by pci_sysfs_init
+> > > > > from the late initcall where as the second thread is initiated by
+> > > > > pci_bus_add_devices from the respective PCI drivers probe.
+> > > > > 
+> > > > > The synchronization between these threads relies on the sysfs_initialized
+> > > > > flag. However, in pci_sysfs_init, sysfs_initialized is set right before
+> > > > > calling pci_create_resource_files which is wrong as it can create race
+> > > > > condition with pci_bus_add_devices threads. Fix this by setting
+> > > > > sysfs_initialized flag at the end of pci_sysfs_init and direecly call the
+> > > > 
+> > > > Small typo here: direecly -> directly
+> > > > 
+> > > > > pci_create_resource_files function from it.
+> > > > > 
+> > > > > There can be an additional case where driver probe is so delayed that
+> > > > > pci_bus_add_devices is called after the sysfs is created by pci_sysfs_init.
+> > > > > In such cases, attempting to access already existing sysfs resources is
+> > > > > unnecessary. Fix this by adding a check for sysfs attributes and return
+> > > > > if they are already allocated.
+> > > > > 
+> > > > > In both cases, the consequence will be the removal of sysfs resources that
+> > > > > were appropriately allocated by pci_sysfs_init following the warning below.
+> > > > 
+> > > > I'm not sure if this is the way to go. Unfortunately I can't trigger this 
+> > > > error on my imx6 platform at the moment (apparently timing is off).
+> > > > But reading [1] again, the most expressive way is that pci_bus_add_devices() 
+> > > > needs to wait until pci_sysfs_init() has passed.
+> > > 
+> > > (I correct my self a bit in my earlier reply)
+> > > The problem with waiting is that sysfs entries will be created by pci_sysfs_init
+> > > already and when pci_bus_add_devices try to create it will observe that the
+> > > entries are already existing and in such case PCI code will remove the sysfs
+> > > entries created by pci_sysfs_init. Resulting system will be having no sysfs
+> > > entries.
+> > 
+> > 
+> > Hi Alexander,
+> > Have you got time to check this ? Please let me know if you think there is any
+> > concern left with this patch.
+> 
+> Hi PCI Maintainers,
+> 
+> If there is no objection, can we take this patch in ?
+> 
 
-Currently, only for the recent bridges with PID "0x0110", this flag is set
-as a fixup. Because, there is no guarantee that the older bridges will
-support D3.
+ping
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 10f2d0bb86be..a6ae78d2ce92 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -1649,6 +1649,11 @@ static void qcom_fixup_class(struct pci_dev *dev)
- {
- 	dev->class = PCI_CLASS_BRIDGE_PCI_NORMAL;
- }
-+
-+static void qcom_fixup_bridge_d3_capability(struct pci_dev *dev)
-+{
-+	dev->bridge_d3_capable = true;
-+}
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0101, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0104, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0106, qcom_fixup_class);
-@@ -1656,6 +1661,7 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0107, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0302, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1000, qcom_fixup_class);
- DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x1001, qcom_fixup_class);
-+DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_QCOM, 0x0110, qcom_fixup_bridge_d3_capability);
- 
- static const struct dev_pm_ops qcom_pcie_pm_ops = {
- 	NOIRQ_SYSTEM_SLEEP_PM_OPS(qcom_pcie_suspend_noirq, qcom_pcie_resume_noirq)
-
--- 
-2.25.1
-
+> 
+> Regards,
+> Saurabh
+> 
+> 
+> 
+> 
