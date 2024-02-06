@@ -1,136 +1,128 @@
-Received: from mail-vs1-f41.google.com (mail-vs1-f41.google.com [209.85.217.41])
+Received: from mail-oi1-f178.google.com (mail-oi1-f178.google.com [209.85.167.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59970745D9
-	for <linux-pci@vger.kernel.org>; Tue,  6 Feb 2024 04:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B06878B78
+	for <linux-pci@vger.kernel.org>; Tue,  6 Feb 2024 05:33:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707192437; cv=none; b=txO5VPrrd3rh6b9e9E2ePwJ5iy5HpJpV4tQxYTOvE4pa8bP6UviSrQxs4lFKBUqtnqfe9h+Fu6oM0qKA8afP9K/zS0o65phlYnM4vKGIsEBlwPXblTC19rLzttT5b4v5N8llOti/QONZ/N9T2vWVCDS/YFjnoJZORpIOWHc4m/0=
+	t=1707197585; cv=none; b=EkSj9N+7MZYF5D7QX6QXa81mVc4SlGRVbzqf+Yy+JPKS6FgCKVP+VeUNLfgAPvYZWAJvIR/RKVvyu9c3KMlBQNmIHMaNAS9RYgs8h3X9uhis6DnbnpPnqD+T5U/AQDMgPHDJmkrivbOXTxgJ2NDh+jd27nZXQ1P24HOrarxLBQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707192437; c=relaxed/simple;
-	bh=zokrW1f+16Qg+2O8GRlxfpab3AIL9zNH/c3bUo5qOLk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=p7XoNtLvAFqHZpqExW27jh7rX0q/rZLZXGGnlIYx0yw8b1ZdgTUQC7DB+yVkogeI+RXolskGN3Xczsob+qzTDazVqUnIfhR5EGpYVf3mq0yjIoV/2/aynM1aiSbwkyXykxLPhxmXjwZVX10dhS+2kAYONfkc4EIbaUD2xplFr0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=e/tf2aEE; arc=none smtp.client-ip=209.85.217.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1707197585; c=relaxed/simple;
+	bh=Ui+JUqgpTROVByU1PNqr7sknWrjQ+hS/sSnSZVf0fhE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=DzBMUIINJEzbL7UzIO7Pz3NvzbAkstNwJgKz/zBZyGYc6HY4dlBQsx5kaMj03uAEBR6gUh7uMTqISK1S6kYqxnKMo4j85yBE0a0Mw7Lq/w+PmFRsloVsAV2McPDsypqtHYakWJe2h3haODaKTBQD1ux9GUyT1pxMWxujHh7/3hY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hVrHILVe; arc=none smtp.client-ip=209.85.167.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="e/tf2aEE"
-Received: by mail-vs1-f41.google.com with SMTP id ada2fe7eead31-467570ba746so1078215137.1
-        for <linux-pci@vger.kernel.org>; Mon, 05 Feb 2024 20:07:16 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hVrHILVe"
+Received: by mail-oi1-f178.google.com with SMTP id 5614622812f47-3bbb4806f67so4153312b6e.3
+        for <linux-pci@vger.kernel.org>; Mon, 05 Feb 2024 21:33:03 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1707192435; x=1707797235; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=LW8pqMVD9kMk/xl/hCgGyjJMUF2ET14pjFyj3oVX3yI=;
-        b=e/tf2aEEK0l+rV6qHJVsZOcE5QoHDBJMoniQWQQC3RITUJfTGYf2TEUWyJXu5u9NJA
-         lXdMUT4rq6F8asIkIWTh+m6xVnm+VRZJuIn7xoNJXTJx4Kg9fTBT2xxevY9jOD+ODMvG
-         ZD8uwXkxsQrVd9lG2yHIetjq2kf75+SmEZft3Wjs2zmrDAO0oYOKijFN5NtBfCSPpd/P
-         00MiWiybmir+KVKyXoNxjpQhNHz6YxkUND0AyrrB5PPbEB+Fl8m6ehv2jPZ3QrjvO+DU
-         yOR5xu9gAHyz8ZaIW7o4ydXvhCdujRKZ0tB7XP8NrFzVR/79ZrK0++Uw3fL4r69V1enn
-         0Vkg==
+        d=linaro.org; s=google; t=1707197582; x=1707802382; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ydU6BbxwzhKtYby2dXMvJri2N0Iv1xyu+D32zjFW9Fo=;
+        b=hVrHILVeJ+JF1zUONEv6gQu+YgcRtL5Dy/sMogpI3zMzmAjoPAVGvQnCr7Zt8XGMJd
+         ctF8OSa5wcvP6cYEOU6ujcQX3Fu731eeJEtbDmMcXzcRm2l8nBYSMZMu4SOYIT0BGss6
+         MpK1/IOg2hXglbQcOl39uJsBzyqVhXKCNKpFjK+/4UBK/2gfrFwIF6JJ6gD5LGXwbtRH
+         OL86u3w625T/+eRBPSfcakxDtVmUJNPDp3peESL7qORRYHv343ZIY8fwZ1uclwQi9oVY
+         csoB5GIuMAgGwXLJEsdEIsn8quZjnRjn3/d7Lrb51VEhAmwa3aeRdcfBMxnE1GEQhvaI
+         G7vg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1707192435; x=1707797235;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=LW8pqMVD9kMk/xl/hCgGyjJMUF2ET14pjFyj3oVX3yI=;
-        b=TtgJZMpBSiALQrZpqyFtWnmSyjdqHhtXIJ72WFFJi1ne6TlVcT7UDucc5N856l8iHg
-         64AScVipZicKIr7wyVxn78gwjgE9zuixX8onOkTRAXQ8WTurzJwaxaXK6GmY1HQRaFKi
-         y6wrSmZnPfan6ti9B5rA7jMtA5vsxgoJ7PBsuIlCI0M0BhZaI6HEZGDxqvf/FG9RAoLp
-         UhLRz3IYJWTJ8CJbGRSj/1YAc1UwyVhpwSX3xrQtwO4SMAbueEJythcx8hJnTjlY7+fz
-         XWQViz85zz6jTa20c49kR88C6hAagbWGPQGQf68r9WyU3PmInvxqTSJWPWBTaY/99xvH
-         xzdQ==
-X-Gm-Message-State: AOJu0YwqRNaKJcY+HYGp1wvRT3yE2oeB4OzLnCEONdFEih+V0i0fADfO
-	pzVOO5iS9tksva8332aQSPX5qOXh7Bi80OZQFdn2/xtwjpj4QO3WQw1o89aSLQJxIuy2VBtAMbx
-	SHJlA4c5TehHfefZIbPeGAa8oR6A=
-X-Google-Smtp-Source: AGHT+IFXAyTAq6+HgttUCGuwfa3I5MWdijdZ+pBGJAtbU7u4KQj6751ktnifUKthEkKr++iTuZ2sNfpGSOO10Z4BflQ=
-X-Received: by 2002:a05:6122:925:b0:4c0:3cfc:6752 with SMTP id
- j37-20020a056122092500b004c03cfc6752mr1616796vka.1.1707192434963; Mon, 05 Feb
- 2024 20:07:14 -0800 (PST)
+        d=1e100.net; s=20230601; t=1707197582; x=1707802382;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ydU6BbxwzhKtYby2dXMvJri2N0Iv1xyu+D32zjFW9Fo=;
+        b=uBc4pmVJRD1R3cNg2vvEX7SAzIV9XrHDXlutupOSpV/kxnYDzBys6ZB2QXEM6niMO8
+         DQUnYewP3/MWxWHnNFBG//7YD0O9XKS4HMIU4TatOkCnaPl3v5Gx5+lnpnStfdjM7wkQ
+         oewMJuK7bS0rOBAFoiJizRaYJeiQ8seiFS3Dn5yLcxoOmNgton7BBEnCEBSj4ySoBglb
+         PG18jjhuxv7L7baN6kAd+cYqa+zg3Zq1YofLrHFKK+WyZLvzUJ6q1wxRorG3MxQgNb3v
+         8DKkdfiZyA+352WYhirnGQ8sgobARC3TsMA+VvdwMjZJP5O7JyA6KKQzEY1mgG/VwFDW
+         QBLA==
+X-Gm-Message-State: AOJu0YypFS6vDKi44/OjPEC5SxxvBH51sr3Hb7aq4UmPYPssfA1/CxMr
+	yhw2UVzJnHZv2r/U40Y1hdOUHRdSSaVdewYiAvgnmOfinLoYupX0bHOte9u2tA==
+X-Google-Smtp-Source: AGHT+IG3C0afHDBZwdkrvhFt478xwoB+XQ/Bi2elhj/RlkQqEjBD3zrZSRKNEhbEZ38Dzl5IL9OEpA==
+X-Received: by 2002:a05:6808:f8e:b0:3bf:e451:2c05 with SMTP id o14-20020a0568080f8e00b003bfe4512c05mr1077265oiw.43.1707197582466;
+        Mon, 05 Feb 2024 21:33:02 -0800 (PST)
+X-Forwarded-Encrypted: i=0; AJvYcCU/IZHrFGLasi2jG1XOdy47tNQMPT7dhgSZibT+eZ1lfXCBvG5rp9H+wgyZ9f2ektNGqOKGC//wkDZHQaTO38vku+DRl6MiTuwXcgm3ngsTmM/MPUGjv24nx7KJ64g/E3KvwooCKI2pN57wgf0X5szf6L/A3EiNimTiseA7ptYJVpxpw0M7k1zjEYXU3v3+wmSUSnssVvht49WlkiRb6mHMIrBtf7heBv/Y4/rgOsNGHRaqP/Ofjv133g==
+Received: from thinkpad ([120.138.12.234])
+        by smtp.gmail.com with ESMTPSA id q14-20020a62ae0e000000b006e0472fd7d1sm863952pff.130.2024.02.05.21.32.59
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Feb 2024 21:33:02 -0800 (PST)
+Date: Tue, 6 Feb 2024 11:02:58 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: "Ricardo B. Marliere" <ricardo@marliere.net>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] pci: endpoint: make pci_epf_bus_type const
+Message-ID: <20240206053258.GA3644@thinkpad>
+References: <20240204-bus_cleanup-pci-v1-1-300267a1e99e@marliere.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAAgyjC9ttHQxodPsVcrNKx2_2T9FTy_E6wZf_u3QbqGGs82P_w@mail.gmail.com>
- <20240130192856.GA527632@bhelgaas>
-In-Reply-To: <20240130192856.GA527632@bhelgaas>
-From: aravind <aravindk20@gmail.com>
-Date: Tue, 6 Feb 2024 09:37:03 +0530
-Message-ID: <CAAgyjC9t3iJmZML7x87dzsnSnSCfMcg48rfdxxP_G4NXnXD5tw@mail.gmail.com>
-Subject: Re: memory access to mmaped pci sysfs file, does not fail when the
- pci device is removed.
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Daniel Vetter <daniel@ffwll.ch>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240204-bus_cleanup-pci-v1-1-300267a1e99e@marliere.net>
 
-Hi Daniel
-      Could you please comment ? Is there a way to clean up
-mapping/unmap for the process when sysfs files are removed on pci
-device removal?
+On Sun, Feb 04, 2024 at 05:28:58PM -0300, Ricardo B. Marliere wrote:
+> Now that the driver core can properly handle constant struct bus_type,
+> move the pci_epf_bus_type variable to be a constant structure as well,
+> placing it into read-only memory which can not be modified at runtime.
+> 
+> Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+> Signed-off-by: Ricardo B. Marliere <ricardo@marliere.net>
 
-Regards
-Aravind SK
+Applied to pci/endpoint!
 
-On Wed, Jan 31, 2024 at 12:58=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org>=
- wrote:
->
-> [+cc Daniel (author of 74b30195395c), Greg]
->
-> On Tue, Jan 30, 2024 at 08:50:10AM +0530, aravind wrote:
-> > Hi,
-> >  I am facing an issue in v5.15 kernel due to " [PATCH v7 12/17] PCI:
-> > Revoke mappings like devmem "related changes.
-> >  Whenever a PCI device (4f:00.0)is removed while being accessed from
-> > user space (mmaped (sys/bus/pci/device/....4f:00.0/resource0)), no sig
-> > bus error is raised. in earlier kernel v5.2, a sig bus error used to
-> > get generated for this scenario.
-> > In v5.15 5 kernel , value 0xffffffff is returned when the device is
-> > plugged out or it is reset.
-> > if the device is removed through "echo 1 >
-> > /sys/bus/pci/devices/..4f:00.0/remove") command. user space code is
-> > still able to access device memory no fault is generated in this case.
-> > not sure if this is expected behavior. as the file which is mapped is
-> > removed .(/sys/bus/pci/.../resource0)
-> >
-> > After making the below change in v5.15 , I am able to get fault for
-> > above scenarios. (device removal or unplug/reset.)
-> > Please let me know if this is a new feature introduced to handle
-> > mmaped memory access holes ? and allow to work inspite of sysfs files
-> > removal.
-> >
-> >
-> > diff --git a/fs/sysfs/file.c b/fs/sysfs/file.c
-> > index d019d6ac6ad0..5f9b59ba8320 100644
-> > --- a/fs/sysfs/file.c
-> > +++ b/fs/sysfs/file.c
-> > @@ -251,7 +251,7 @@ static const struct kernfs_ops sysfs_bin_kfops_mmap=
- =3D {
-> >         .read           =3D sysfs_kf_bin_read,
-> >         .write          =3D sysfs_kf_bin_write,
-> >         .mmap           =3D sysfs_kf_bin_mmap,
-> > -       .open           =3D sysfs_kf_bin_open,
-> > +//     .open           =3D sysfs_kf_bin_open,
-> >  };
->
-> If the change above makes the difference, I guess the change might be
-> related to https://git.kernel.org/linus/74b30195395c ("sysfs: Support
-> zapping of binary attr mmaps"), which appeared in v5.12.
->
-> I agree that SIGBUS when accessing MMIO space of a device that has
-> been removed sounds like a better experience than reading 0xffffffff.
->
-> I don't know enough about the VM side of this to know just how
-> 74b30195395c makes this difference.  Maybe Daniel will chime in.
->
-> Bjorn
+- Mani
 
+> ---
+>  drivers/pci/endpoint/pci-epf-core.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epf-core.c b/drivers/pci/endpoint/pci-epf-core.c
+> index 2c32de667937..bf655383e5ed 100644
+> --- a/drivers/pci/endpoint/pci-epf-core.c
+> +++ b/drivers/pci/endpoint/pci-epf-core.c
+> @@ -17,7 +17,7 @@
+>  
+>  static DEFINE_MUTEX(pci_epf_mutex);
+>  
+> -static struct bus_type pci_epf_bus_type;
+> +static const struct bus_type pci_epf_bus_type;
+>  static const struct device_type pci_epf_type;
+>  
+>  /**
+> @@ -507,7 +507,7 @@ static void pci_epf_device_remove(struct device *dev)
+>  	epf->driver = NULL;
+>  }
+>  
+> -static struct bus_type pci_epf_bus_type = {
+> +static const struct bus_type pci_epf_bus_type = {
+>  	.name		= "pci-epf",
+>  	.match		= pci_epf_device_match,
+>  	.probe		= pci_epf_device_probe,
+> 
+> ---
+> base-commit: 1281aa073d3701b03cc6e716dc128df5ba47509d
+> change-id: 20240204-bus_cleanup-pci-f70b6d5a5bcf
+> 
+> Best regards,
+> -- 
+> Ricardo B. Marliere <ricardo@marliere.net>
+> 
 
-
---=20
-Aravind
+-- 
+மணிவண்ணன் சதாசிவம்
