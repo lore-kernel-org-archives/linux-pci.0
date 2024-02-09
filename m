@@ -1,170 +1,123 @@
-Received: from mailout2.w2.samsung.com (mailout2.w2.samsung.com [211.189.100.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51DF6219E4;
-	Fri,  9 Feb 2024 23:15:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.189.100.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83ACF38DE2;
+	Fri,  9 Feb 2024 23:37:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707520529; cv=none; b=V/8dxkyoI6geN082Q72JSDZKuF1DbD5TKKwOt++5kvZSqhqYx1ms15JZUUGhOF6cp6og1cCE8Z/uaDXIb+qACgcv5Vrh8mLWh5TYby9pYaST2gMGhnY3uDC9eEMbL68z8rM33QPuSiFzfU5RkGmyrbL/eWW0dYCs2WfVKMgZStQ=
+	t=1707521824; cv=none; b=WFfBX9S3MzyEss4+/oXy68eEHa12w6tysbuhrZ9kq96gMfdv1v6dY/Bfm0I1HE+uM49JbRAzyV5VobLMJj8GJMx1ZsYNkzPZGOpqaIRHsD4PsROE/3tsJwAVoIt4XEj6KPwRtA1NgxWcgNf1Sl1wWGuV1jhQy5imCTVoHeszOdE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707520529; c=relaxed/simple;
-	bh=iHOiWx3N44/V0chuIC+CU2VPdA0byhu2KNToSA2kEB8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:Content-Type:
-	 MIME-Version:References; b=HE3SG0yap1xFfiFQxC5fgHs/zOty+7QnO8VLSMy5LbeRL5vHKiQPV7+pJ841CnbaZN8d86hjWyUpmTJMMdWvI6eZqjh7LSc3rEdBUmJZWqHbkLJrN/VJPtR3G+Ghr1VLuwGv2earbSu+H1YOyR6YRm3Eo3mpNebSgXLnf+wLukg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YZBJ8hjN; arc=none smtp.client-ip=211.189.100.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1707521824; c=relaxed/simple;
+	bh=vab66JaH+98JX7uwKvF0gxBwsDwHTA+LMjKxktqFBFI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tCMh8gIzVWyF0QsqPwornGl6bScGVlXBqAiT3zsHcRHeWymPNi5JhWCnnflz4zprt3VpzkLO3InEuW9Zl+YBwUEfbbtA5EiEeHt25LRr/smEp/0n2J14xm9biolVw023wwPpLB7t+jj/PxPux/OdUoJ/PFRdU97h01xNY4eCGQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oLrmi2Ug; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YZBJ8hjN"
-Received: from uscas1p1.samsung.com (unknown [182.198.245.206])
-	by mailout2.w2.samsung.com (KnoxPortal) with ESMTP id 20240209230630usoutp02488d1d4a6cfd6c79586faedf938f0bdc~yVGJVUUO52937329373usoutp02g;
-	Fri,  9 Feb 2024 23:06:30 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w2.samsung.com 20240209230630usoutp02488d1d4a6cfd6c79586faedf938f0bdc~yVGJVUUO52937329373usoutp02g
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1707519990;
-	bh=9streDRSc+PJVyGG8oa28gukDCVkQV34TxJf+8p7MM4=;
-	h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-	b=YZBJ8hjN0RY/u27tBlnPxiyaK1fpSvwwtx2FYEBOoKx8CGtbAUOjAtwOS8N+pcBIb
-	 JAdJSrr0hFGYuNA7Gq+Z2yFkvu9z8FEZcorqtY8KZXBbMLY4+ylX+PU6I2nFuyNG2u
-	 6gpk2u6Q/3XCcWRcPKtWjnAReQIs2uz7bdBNazyI=
-Received: from ussmges1new.samsung.com (u109.gpu85.samsung.co.kr
-	[203.254.195.109]) by uscas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20240209230629uscas1p21e53a766dbba7d8927b89dab3666dc76~yVGJMLzRi3086030860uscas1p2L;
-	Fri,  9 Feb 2024 23:06:29 +0000 (GMT)
-Received: from uscas1p1.samsung.com ( [182.198.245.206]) by
-	ussmges1new.samsung.com (USCPEMTA) with SMTP id 03.FD.09678.5FFA6C56; Fri, 
-	9 Feb 2024 18:06:29 -0500 (EST)
-Received: from ussmgxs2new.samsung.com (u91.gpu85.samsung.co.kr
-	[203.254.195.91]) by uscas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20240209230629uscas1p2a12ec31d123307de2ef5babc608c2912~yVGJA_FWL0162101621uscas1p2D;
-	Fri,  9 Feb 2024 23:06:29 +0000 (GMT)
-X-AuditID: cbfec36d-85fff700000025ce-15-65c6aff54764
-Received: from SSI-EX2.ssi.samsung.com ( [105.128.3.66]) by
-	ussmgxs2new.samsung.com (USCPEXMTA) with SMTP id 86.4C.45319.5FFA6C56; Fri, 
-	9 Feb 2024 18:06:29 -0500 (EST)
-Received: from SSI-EX2.ssi.samsung.com (105.128.2.227) by
-	SSI-EX2.ssi.samsung.com (105.128.2.227) with Microsoft SMTP Server
-	(version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
-	15.1.2375.24; Fri, 9 Feb 2024 15:06:24 -0800
-Received: from SSI-EX2.ssi.samsung.com ([105.128.2.227]) by
-	SSI-EX2.ssi.samsung.com ([105.128.2.227]) with mapi id 15.01.2375.024; Fri,
-	9 Feb 2024 15:06:24 -0800
-From: Jim Harris <jim.harris@samsung.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Bjorn Helgaas <bhelgaas@google.com>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, Leon Romanovsky <leonro@nvidia.com>, "Jason
- Gunthorpe" <jgg@nvidia.com>, Alex Williamson <alex.williamson@redhat.com>,
-	=?iso-8859-1?Q?Pierre_Cr=E9gut?= <pierre.cregut@orange.com>
-Subject: Re: [PATCH 0/2] pci/iov: avoid device_lock() when reading
- sriov_numvfs
-Thread-Topic: [PATCH 0/2] pci/iov: avoid device_lock() when reading
-	sriov_numvfs
-Thread-Index: AQHaM5gBfWDt8KjT2UOEaPDLPlceorEB/SkAgAF66wA=
-Date: Fri, 9 Feb 2024 23:06:24 +0000
-Message-ID: <Zcav5ppteV/6PEr6@ubuntu>
-In-Reply-To: <20240209003002.GA984052@bhelgaas>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach: 
-X-MS-TNEF-Correlator: 
-Content-Type: text/plain; charset="iso-8859-1"
-Content-ID: <73E21C11A76604428B69E749A22EFB52@ssi.samsung.com>
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oLrmi2Ug"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46BEFC433F1;
+	Fri,  9 Feb 2024 23:37:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1707521823;
+	bh=vab66JaH+98JX7uwKvF0gxBwsDwHTA+LMjKxktqFBFI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=oLrmi2UgocGnOO/gap5TAGTQkug/s/k067+bvJPqRjk02YmbV1+nxy3sDJAyB1HvK
+	 14++nREuC0sMSTr+hpQhKlx2HG/LjbOM2lb4MK/wfkzlqlP3P8F3iDxChowgCJCeZy
+	 FKKXv2Sgu/LzYTvr5OiH6nz0xyW8+ybUsRv9HM+mcC6OaC8BHzlADy/kXvXMM2pKxH
+	 nKkxd1vCgAvIa7WkQv/dvw6Sq7Mn/5GWVhmzkze32/ZZJZD3fmBIL+fPh1D/k6NiSt
+	 3hB62JPL7qL2Sd/RFwUJq6s9V4x9xd3YXVquvrU47evSzfphB8Sz5bQY9WTnCxaI/n
+	 bjBR24cpsmSZg==
+Date: Fri, 9 Feb 2024 17:37:00 -0600
+From: Bjorn Andersson <andersson@kernel.org>
+To: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: Konrad Dybcio <konrad.dybcio@linaro.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Marcel Holtmann <marcel@holtmann.org>, 
+	Luiz Augusto von Dentz <luiz.dentz@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Alex Elder <elder@linaro.org>, 
+	Srini Kandagatla <srinivas.kandagatla@linaro.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Arnd Bergmann <arnd@arndb.de>, Abel Vesa <abel.vesa@linaro.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lukas Wunner <lukas@wunner.de>, linux-arm-msm@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-bluetooth@vger.kernel.org, 
+	linux-pci@vger.kernel.org, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Subject: Re: Re: [RFC 9/9] PCI/pwrctl: add a PCI power control driver for
+ power sequenced devices
+Message-ID: <nezjddfz22a74rbhjovq2nyba46752lwf66rw47oebfa3xg6zv@ad6wag5e5zrk>
+References: <20240201155532.49707-1-brgl@bgdev.pl>
+ <20240201155532.49707-10-brgl@bgdev.pl>
+ <jb4hzijjxjv4kiy3cn2fuc5ox4x5uutredbxiwo2fvnkh2xudf@5w65qtp35ase>
+ <CAMRc=MdQ_uRq7a24RYt=KRSff9sw_1soQ+8ONEpNXy0emk5ChQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-CFilter-Loop: Reflected
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0hTYRjHe3c5Ow6s40n0yUBolZTabGWwyiS6cTDQrhQW1MqTE3VbO1m2
-	blaT1DTyVjZNM610aItlZWoLzbRp9SEn1rrDGKnoMm+VbpU7Bvv2e573//L8npcX55JGfgCe
-	oDhCqxWyJBEm5D1sG329ZNTQRi/V6pZLx/5kY9LKc3Jp38taTGpxNSGp8Z6NJ+1qKMGkr0rb
-	Malh1IGtxakbxhTKqM/EqJzzgxiltZsxymHqxqhhY+AWLFYYEUcnJRyl1WGR+4XyibESnuoy
-	mWrNfSlIQ/Uzs5AXDkQ4WO0ufhYS4iRRjeBSbb6ALdI50NUxiv1P5RnOcqaYJGoQZBTL2dAQ
-	gqEHGYgtbiHQ1WW6UxixGH5bav4xjvsSQZB1YedUhku858B46VXBVGY2sRVy6orRFPsS26C5
-	rJPP8ip4/OiJm3nEAnC8G3TnvYmF0GK56TbyIsLgjsPp7iPCD8Y7atxzuYQ/WG1lHNbaB24W
-	N3FZ9gNXw9fpbebB5/FeAZsXw9vCAozlSLA7zHyWQ+B2eT+XnesD5ms2Hnt3DjRXvZ3mbzg0
-	NyeyvAE6L7RO9+eC8+PtaYdEqDZkuN8BCBWktW5j26uhfNLAuYwW6DysdR5GOg8jnYeRzsPo
-	BuLrkX8KwyTH04xEQR8TM7JkJkURLz6oTDaif9+q0/UsuR7VW4fELYiDoxYEOFfk672jspUm
-	veNkxzW0WrlPnZJEMy1oLs4T+XtL1pgPkkS87AidSNMqWv3/lIN7BaRxstuodZ8rnr9pFzLO
-	gauxfZaVT/WF2wXzfljLhzpVpMRRQX4oUmo22kt/2mzOzfymmvVR85VnSuUm132qsc6nOmhz
-	ekxeWNEfuiuwqj0EWxGTG5ebb/k1ElSkVfgFRk2IWk3Lup+pDvT83NKzr3csa8nRQ3Pe3c3c
-	O7zbWfW7yhpAhfNOV3RXf230uTIA6TEdod8HYlWNRSExmXJqxu6e6E0ZL2gTRaW+OKklvfwK
-	gg9Ha01R5SPKyJE8TcOqnEsfZoUnmEMfmU58+lKbpFdEXD/ZP1mSMKKfkNw/l29/k7NrveZ1
-	niaY/vQqbe+M3j2hw5WLEm8pL5aJD9SdmvyWLeIxcpkkmKtmZH8BLrA4WsUDAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrEIsWRmVeSWpSXmKPExsWS2cDspPt1/bFUg9PfVCy+/e9hs1jSlGHx
-	6sxaNosr//YwWmza8ITF4vKuOWwWZ+cdZ7NY//U9mwOHx4JNpR6bVnWyefQ2v2PzaHl2ks3j
-	/b6rbB6fN8kFsEVx2aSk5mSWpRbp2yVwZfz+NoelYIJQxa2JZ9gbGHfwdTFyckgImEhMWt/I
-	1MXIxSEksIpRYtK8XkYI5yOQ0/GeBcJZyigxbe08JpAWNgFNiV9X1gDZHBwiAmoSXe2hIDXM
-	AreZJL7Pm84OUiMsECjRu2U2I4gtIhAkcW5ZB5RtJbFz+15WEJtFQEXi/c13YPW8AqoSh64s
-	YgOxhQTqJH4fWwe2i1NAX2L5+79gNYwCYhLfT60BizMLiEvcejKfCeIFAYkle84zQ9iiEi8f
-	/2OFsBUl7n9/yQ5RrydxY+oUNgjbTuLZ+5OsELa2xLKFr5khbhCUODnzCQtEr6TEwRU3WCYw
-	SsxCsm4WklGzkIyahWTULCSjFjCyrmIULy0uzk2vKDbKSy3XK07MLS7NS9dLzs/dxAiM9tP/
-	DkfvYLx966PeIUYmDsZDjBIczEoivCFLjqQK8aYkVlalFuXHF5XmpBYfYpTmYFES5737QCNV
-	SCA9sSQ1OzW1ILUIJsvEwSnVwFRVlnd8Zudd/pi3WkwHinteOytkm/Qb/515d2Gxv+x8zgbf
-	iHX/qzw2xn7ctvtNgNmnwx3/u/fyTa+fY55xd0mo1RVmjUOzbI3mF05TFV+gETjVN0pZ9JKy
-	w6PM/XG6tp++5eaon/9XH/dn0k1H6Xxnf7MvvhEP9Fc4KTEUGDbxRKxasPLJgl2T7K/o6b/3
-	zWQ+umyFf4Lnx7AWueBXkzZfmuetGn5ueqBzkNzB3edmSr7hLHW9Uun1SfHn8gPV/y4qfzvy
-	n/P8/m25fGzzeGwMGj4aPKp/qHODS7Dplu2rZcsbMraXsD+uc782x3r9Npa7HxR0tNrsF5yT
-	sfy3OvfglpusH47MSJnOv/b/AQUlluKMREMt5qLiRAA1Y8c/ZQMAAA==
-X-CMS-MailID: 20240209230629uscas1p2a12ec31d123307de2ef5babc608c2912
-CMS-TYPE: 301P
-X-CMS-RootMailID: 20240209230629uscas1p2a12ec31d123307de2ef5babc608c2912
-References: <170311143880.2826.17853753430536108145.stgit@bgt-140510-bm01.eng.stellus.in>
-	<20240209003002.GA984052@bhelgaas>
-	<CGME20240209230629uscas1p2a12ec31d123307de2ef5babc608c2912@uscas1p2.samsung.com>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAMRc=MdQ_uRq7a24RYt=KRSff9sw_1soQ+8ONEpNXy0emk5ChQ@mail.gmail.com>
 
-On Thu, Feb 08, 2024 at 06:30:02PM -0600, Bjorn Helgaas wrote:
-> [+cc Pierre, author of 35ff867b7657 ("PCI/IOV: Serialize sysfs
-> sriov_numvfs reads vs writes")]
->=20
-> On Wed, Dec 20, 2023 at 10:58:12PM +0000, Jim Harris wrote:
-> > If SR-IOV enabled device is held by vfio, and device is removed,
-> > vfio will hold device lock and notify userspace of the removal. If
-> > userspace reads sriov_numvfs sysfs entry, that thread will be
-> > blocked since sriov_numvfs_show() also tries to acquire the device
-> > lock. If that same thread is responsible for releasing the device to
-> > vfio, it results in a deadlock.
-> > =20
-> > One patch was proposed to add a separate mutex, specifically for
-> > struct pci_sriov, to synchronize access to sriov_numvfs in the sysfs
-> > paths (replacing use of the device_lock()). Leon instead suggested
-> > just reverting the commit 35ff867b765 which introduced device_lock()
-> > in the store path. This also led to a small fix around ordering on
-> > the kobject_uevent() when sriov_numvfs is updated.
-> >=20
-> > Ref: https://lore.kernel.org/linux-pci/ZXJI5+f8bUelVXqu@ubuntu/=20
->=20
-> 1) Cc author of the commit being reverted (Pierre) so he has a chance
-> to chime in and make sure the proposed fix works for him as well.
+On Fri, Feb 02, 2024 at 02:05:59PM +0100, Bartosz Golaszewski wrote:
+> On Fri, Feb 2, 2024 at 5:03 AM Bjorn Andersson <andersson@kernel.org> wrote:
+> >
+> > On Thu, Feb 01, 2024 at 04:55:32PM +0100, Bartosz Golaszewski wrote:
+> > > From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> > >
+> > > Add a PCI power control driver that's capable of correctly powering up
+> > > devices using the power sequencing subsystem. For now we support the
+> > > ath11k module on QCA6390.
+> > >
+> >
+> > For a PCI device which doesn't share resources with something on another
+> > bus, the whole power sequencing would be implemented in a driver like
+> > this - without the involvement of the power sequence framework.
+> >
+> 
+> Yes, this is what I did in the previous incarnation of this code[1].
+> 
+> (I know, I should have linked it here. My bad, I will do it next time).
+> 
+> > I think it would be nice to see this series introduce a simple
+> > pci_pwrctl driver, and then (in the same series) introduce the power
+> > sequence framework and your PMU driver.
+> >
+> 
+> I disagree. I was initially annoyed by Dmitry asking me to do a lot
+> more work than anticipated but he's right after all. WLAN and BT
+> consuming what is really the PMU's inputs is simply not the actual
+> representation. That's why we should make it a pwrseq user IMO.
+> 
 
-Ack. I'll also Cc Pierre on the v2.
+If the PMU registers the "internal" output regulators, then PCI device
+would consume the PCI outputs of the PMU, the BT device would consume
+the BT outputs of the PMU. The PMU requests inputs enabled and drives
+BT_EN and WLAN_EN according to which subset of these output regulators
+are enabled.
 
-> 2) The revert commit log needs to justify the revert, not merely say
-> what the proper way is.  The Ref: above suggests that the current code
-> (pre-revert) leads to a deadlock in some cases, so the revert commit
-> log should detail that.
->=20
-> It's ideal if we never regress, not even between the revert and the
-> second patch, so it's possible that they should be squashed into a
-> single patch.  But if you keep it as two patches, it's trivial for me
-> to squash them if we decide that's best.
+Pretty much exactly as "regulator-fixes" isn't a pwrseq device.
 
-The deadlock I hit is fixed by patch 1 alone. Patch 2 is a separate
-bug - it's better to update the num_VFs value before sending the notificati=
-on
-that the num_VFs value changed.
+Regards,
+Bjorn
 
-I'll add some more color to that commit message too, to differentiate it
-from the revert. I have no issues if you eventually decide to squash them.
->=20
-> 3) Follow subject line convention for drivers/pci (use "git log
-> --oneline drivers/pci" to learn it).
-
-Will fix in v2.
-
-Thanks,
-
-Jim=
+> > One case where such model would be appropriate is the XHCI controller
+> > (uPD720201) on db845c. Today we describe vddpe-3p3-supply as a supply on
+> > the PCI controller, but it should have been vdd33-supply, vdd10-supply,
+> > avdd33-supply on the PCI device.
+> 
+> Sounds like a good second user then!
+> 
+> >
+> > That would provide an example for how a simple PCI power control driver
+> > can/should look like, and we can discuss the PCI pieces separate from
+> > the introduction of the new power sequence framework (which is unrelated
+> > to PCI).
+> 
+> I agree it's unrelated and it could possibly go upstream separately
+> but the particular use-case on RB5 (and other Qcom platforms) requires
+> both the PCI and generic power sequencing to be addressed.
+> 
+> Bart
+> 
+> [snip]
+> 
+> [1] https://lore.kernel.org/netdev/20240117160748.37682-7-brgl@bgdev.pl/T/#m72f52254a52fcb8a8a44de0702cad1087d4bcfa1
