@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A31C653A7
-	for <linux-pci@vger.kernel.org>; Fri,  9 Feb 2024 22:03:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA86363B3
+	for <linux-pci@vger.kernel.org>; Fri,  9 Feb 2024 23:09:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707516228; cv=none; b=nSCTKJ5lqWRE8OaR3MXeqmiRXE29Xjr3llVDxV9N5NHP+l+91EUTV5AlQkTsCM4jdltdAD5X6p/woZM9AOI9L6QrKXPaeab1ML5SpAFiXc82p62vMRdl4mgUQaQ+Iaw14Lr8Zi06cA4oPL5YBYnPmRX4TIzh/evgAXuPlGIUDEI=
+	t=1707520189; cv=none; b=uvedjPmQ+LZUiuyRXhIXkJN4bmu/6p8zzSkI9FQQ9sISyJuXw+Hb5MU9xdzqHtDi09kHcKt9iCbTJJQ3N1xsKXzP1Om6FiDD7b/c8dF+sY2xgjXJ1rYzZVJfiE/YptjlAKTF/iwBqxECVLKYLS1PRKq+DMt6N2wjsB71fXuvpt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707516228; c=relaxed/simple;
-	bh=T551jAsYNNeIsDFFXhFo7hiWJzaDLq/hPkaNGjWwaiI=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=adkrwMZ7zGrw+NoZjGiHAicc9EuVopUm3C9nr7rNs0ZiHYciFNER7IW5BmjFB7bToXKaP7QhTpelyYEZD/iCIqkqBioOJGvsL4Immi+rcsGF8p0UgmeOhuzKxBka1sFsjcBOs5tVTmgFGyEJFupZfgGwEEnbdzbfmclMsZaEiN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QVp3rDWM; arc=none smtp.client-ip=192.198.163.11
+	s=arc-20240116; t=1707520189; c=relaxed/simple;
+	bh=QMYmyqgr3rr6bV5b05EARs3jeYneoKHNqh2XuxlSoRM=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=uy2yz3m8Bo+ITgjxEFE5qMq3RcK3CTt03fPZvREyqVG25FyHJ8YcryX0DLtAcCUIQwbeJhYLvA2I4On6hlGlcGfcJJTyckmflLesr8AL2gKcOIFQQNXk+FREznJpPMBxXHdkbD9hMg4n9cgdyyamCkW+rBj3GQm02xiXYEzh5ec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=U7MAn4AJ; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QVp3rDWM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="U7MAn4AJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1707516227; x=1739052227;
+  t=1707520187; x=1739056187;
   h=date:from:to:cc:subject:message-id;
-  bh=T551jAsYNNeIsDFFXhFo7hiWJzaDLq/hPkaNGjWwaiI=;
-  b=QVp3rDWM4aWz1miVNEiN4uc4NQHSp8qPbMxrYhj9hbt7JUR//qCr0PXA
-   rwWsz7Kim7/SbTfuoWdhjwcLPiv26yPSc2MArXarNCVN5q/5dw0/21+ri
-   Hp+6wwxRd/Vg5N7GVDfBcRbeu6LvM0PlaLnOuJNHCh5Ju08AwyXf4UwfM
-   jmSPSIZu69T47gAwyMa8Tme0LvoTTqSDWL13uAKXkYSBmmdezvXIDLlvZ
-   8m/SPB2Y8x5E2S73TZVzn+NmYo9m4Vsz9lqWp5Sv0rzrOtWgXCK0iJoCz
-   Xamzf8ge+lbuIMpWpk9MqXnVQM8ZfxSbKc7hY/w1gsJWmcE7nBbqnWF1U
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10979"; a="12153856"
-X-IronPort-AV: E=Sophos;i="6.05,257,1701158400"; 
-   d="scan'208";a="12153856"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 14:03:46 -0800
+  bh=QMYmyqgr3rr6bV5b05EARs3jeYneoKHNqh2XuxlSoRM=;
+  b=U7MAn4AJPZogsYq1PkxFdzr7bQmMhGC/pgqrpQiveQL8CD/WldlfGZf0
+   00/8B8MnLiRSxx4rkB74k4M8INFXQGlfobt5I0NCCKVYQecunpENPE5eM
+   2rmC67tyhkbLrQwp57y8Mq/tg9luDMjzrWRorICzA4Pr8/OJR9tMDQyeS
+   Y0mi3IlL1gzfYEkgxMJnIoxf29b1sYaste6q/+ZKu0ApFNtRGqHEZ8V0d
+   lrrBNJfYURPi6Y+T6/RzdFDQC3l8nRmISxibiDAaFkP9Na+sS2/h/EsVS
+   L5QeR95twWGQoME75F7du0Sn+i+bM2EJB/zQmnFu7lXYQME50XzJU7uU4
+   w==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10979"; a="1673186"
+X-IronPort-AV: E=Sophos;i="6.05,258,1701158400"; 
+   d="scan'208";a="1673186"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Feb 2024 15:09:46 -0800
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.05,257,1701158400"; 
-   d="scan'208";a="33131339"
+X-IronPort-AV: E=Sophos;i="6.05,258,1701158400"; 
+   d="scan'208";a="2046445"
 Received: from lkp-server01.sh.intel.com (HELO 01f0647817ea) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 09 Feb 2024 14:03:44 -0800
+  by fmviesa007.fm.intel.com with ESMTP; 09 Feb 2024 15:09:44 -0800
 Received: from kbuild by 01f0647817ea with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1rYYyD-00059o-2N;
-	Fri, 09 Feb 2024 22:03:41 +0000
-Date: Sat, 10 Feb 2024 06:03:03 +0800
+	id 1rYa06-0005BO-29;
+	Fri, 09 Feb 2024 23:09:42 +0000
+Date: Sat, 10 Feb 2024 07:09:41 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:p2pdma] BUILD SUCCESS
- 1e5c66afd4a40bb7be17cb33cbb1a1085f727730
-Message-ID: <202402100658.Bs3Vdutz-lkp@intel.com>
+Subject: [pci:virtualization] BUILD SUCCESS
+ 33ec18e5bc19764c38f53d0c6cf5249ff18a896e
+Message-ID: <202402100737.xDRuukr2-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -55,10 +55,10 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git p2pdma
-branch HEAD: 1e5c66afd4a40bb7be17cb33cbb1a1085f727730  PCI/P2PDMA: Fix a sleeping issue in a RCU read section
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git virtualization
+branch HEAD: 33ec18e5bc19764c38f53d0c6cf5249ff18a896e  PCI/IOV: Fix kobject_uevent() ordering in sriov_enable()
 
-elapsed time: 1453m
+elapsed time: 1447m
 
 configs tested: 173
 configs skipped: 3
