@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9723D3D996;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 962923D995;
 	Mon, 12 Feb 2024 16:53:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707756819; cv=none; b=XCdlHDIyKMnbFwFlelDuLCAimX83J3ZAQQGhQfpxZ6kRL+tXFVyEGHkvpBqnYuXQx2R36TTOAla5X1sWpczHRFpI33qeEpUoh5CTcMZ1Q8qg+Zb4OdoVj5GfljjQZScVThxJmAInzObXoAiksBWqVCJ1fqmVRrtONwForKhtrwo=
+	t=1707756819; cv=none; b=ETnWtbnvXWydbMfBcePVQpIfXxjYE3RNj/lW7k2y5EwjfdvcLrVILiEawGMOTEhw/pvlEhYoiO5FFhR3sFK3snzqe84k8+MYNL84m5i/Bqk6m5v9i+4Cffw0aJeJeYcz2eVZgCb07e7Pcl0Eoa9Jn0c5vWoHQKNQpNFY80Aw68E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1707756819; c=relaxed/simple;
-	bh=nc3KMv6LaxhZJZMcRLz/F3lbKNxPeRWIM/UQNUFhBwo=;
+	bh=b9sQBFDZU3VO1UBig2yVSwe4gu61tiUJKbyEVJ58Ty4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=A/Qpxm+PCN0D7/CnolXMmdGdNhj8wbSx6ThI4qbRMJlhLkJ8RK7GrNu1U/Rl+ROahTucW3cNkSm5ZsTqw7G9Yob6eDw4U7aaQNXYK+lHQzxgrzcRJ1G/nWhhLzSIBEO5doqyTtijQt5e8V/GTj6QXkIRjt8gWQUQL7+2ci97Zkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p8rGL4pv; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=iat/uY6ci7hO9LXPxhWZ4JY/sVYjnUnogYtEUWWjZ+GtfK8tcpgq1PvHaKry/vea8WKusy3W0vAAFFAjKvwPcyzX8Cst2v/SpmbgIyfxR8ncZ1JHrcHiACBCkvCDhNXxtV/kB0y0TiGppW3HzqVhlOLrfkwLffA5nCYKNLEeCWY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kfDDJcXj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p8rGL4pv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDBF1C32781;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kfDDJcXj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B72C2C43601;
 	Mon, 12 Feb 2024 16:53:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1707756818;
-	bh=nc3KMv6LaxhZJZMcRLz/F3lbKNxPeRWIM/UQNUFhBwo=;
+	bh=b9sQBFDZU3VO1UBig2yVSwe4gu61tiUJKbyEVJ58Ty4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=p8rGL4pvSvJ8SJXhzR6YZt4uxpFW2O6EKr/IfVHspDA6tIcbJiTJkUU3+xp0RmEVM
-	 YX/rEdOmlQbCoxEOpN3zcbnDtwF6NKzych7w9+JDth73pWQdZiEQV9n5wuyM8LTxHT
-	 HmKIhddBIRGWm16YTuw1GfFRvit6ch806/mWpcBk3lF5NjbhzwBc44So/YJy+pu09r
-	 hddkBd+sPF7dJR76fOMHh4PECQYNrGuYPqoj11F5EOAUqDDcJrcA+qIGO32P7zEBY+
-	 G5MWve+W9ziqS6B391s1ScXfw1ivWxxichFfAi+uBdS2uQNLpfTd76uOxFzfiBZ2mW
-	 /dXCBhAp8neDg==
+	b=kfDDJcXjc5rf9yM9juPLHJ15hJN5VnNveC0WNajBfuKrI7feA2TRUaNz5XDEwiaEi
+	 tXwZ87lDx9N4tHJWeEsy6HVRs9cJRkVz51BTFPS7IFeOt+rS0LZADGwHUSMgnkqHzx
+	 AIMc3MuvLGG2/fM6da9rri9R2G3y9yfoho2pxwlrwtJLJpeGs6KtaQs8P0r0KAnCVY
+	 3vq/bT6r36QKxz10qDkHqcPQZEefqDbmY9nERSu0d6F+ZanBOQsBzpl8tbW4qWsVu3
+	 lvlZH3dCBLwHVt5P0Bkz+p+v+1UAM1etCW9v7a/Du8hAQF7G6JAZDTLlO/Wc0WBnmE
+	 cUPH5vTax9gjA==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rZZZ2-000000007NF-4AyO;
-	Mon, 12 Feb 2024 17:53:53 +0100
+	id 1rZZZ2-000000007N1-1kg7;
+	Mon, 12 Feb 2024 17:53:52 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Andersson <andersson@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>
@@ -45,9 +45,9 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan+linaro@kernel.org>
-Subject: [RFC 09/10] arm64: dts: qcom: sc8280xp-crd: disable ASPM L0s for NVMe
-Date: Mon, 12 Feb 2024 17:50:42 +0100
-Message-ID: <20240212165043.26961-10-johan+linaro@kernel.org>
+Subject: [PATCH 02/10] dt-bindings: PCI: qcom: Do not require 'msi-map-mask'
+Date: Mon, 12 Feb 2024 17:50:35 +0100
+Message-ID: <20240212165043.26961-3-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240212165043.26961-1-johan+linaro@kernel.org>
 References: <20240212165043.26961-1-johan+linaro@kernel.org>
@@ -59,29 +59,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Enabling ASPM L0s on the CRD results in a large amount of Correctable
-Errors (Timeout) when accessing the NVMe controller so disable it for
-now.
+Whether the 'msi-map-mask' property is needed or not depends on how the
+MSI interrupts are mapped and it should therefore not be described as
+required.
 
-Fixes: 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops")
+Note that the current schema fails to detect omissions of the mask
+property if the internal MSI controller properties are also present.
+
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 2 ++
- 1 file changed, 2 insertions(+)
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-index 8c1fccf8847a..a428ba624ce1 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-@@ -525,6 +525,8 @@ keyboard@68 {
- };
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 5eda4e72f681..b28517047db2 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -146,7 +146,6 @@ anyOf:
+       - "#interrupt-cells"
+   - required:
+       - msi-map
+-      - msi-map-mask
  
- &pcie2a {
-+	aspm-no-l0s;
-+
- 	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
- 
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
 -- 
 2.43.0
 
