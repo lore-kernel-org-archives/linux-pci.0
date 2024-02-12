@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28A9D3D39F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28AC43D3A1;
 	Mon, 12 Feb 2024 16:53:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707756819; cv=none; b=fwuHpYyKazjftVYW7clq+JHfnHLgYmX9PCkBS5mUBelOC3WXOEIspVnKWvjhaABxS3jfOInEsaJVhKNQe5neNFt6v8M4SFmt7gqRFO0qU8kJNXNZWSedoW/c1qlR3dA8Q1u0nqCq7p7S6HThah/UcFKDNoUanJVbgs9urPyJ0FM=
+	t=1707756819; cv=none; b=P+CXdLnauS5sM1syTy4uBlQ60TQG0vk7Efie0VTYnf+TTELVNIfYx6q9/uxtp5RPZUjS9Z7z24oc3jfdJiI7zp+2iU/DEbW35/p2fWQmci3gg2rHgnLaeZFQ3DLV2KIHWyrjkeFo9UO1cUeg12k/rpWSJ8n6M1QSP5Qx5nGTP4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1707756819; c=relaxed/simple;
-	bh=vk+Lt5I2JfW5rauqD9RI4ZcRRxFOCwrY7DdoHCOyR8M=;
+	bh=nc4MqV6YaWXP4nv2pZ90dCQqT4i4GYj2D270C7X4X5g=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Xzp80FPJMtFQdEYdxQwtCYENiHSKJc584kJRqHMCtdd1dzEHHbC3pUex7Nx2StQgilZVitn2TWWnqi69puR8pwD3ABlEDzXf3Raw9kslT2GE0zZlu3uUeHlhoncsPmsgpurhwEMB9QmfCxYDQuV7vN4Vymjt5CIOxOSsT0JqIfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kFI5Baa4; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=JAHlXxCIcRPm2CBOXOoLvs2rcJBhu+ByzTTC1BMvLSmtRamZFaIGpQ189yB3KF2ajHOrKwHQ3j3hgjkAKiNaZ2IyLXrn9a6+5bX8e7j9kZUpoqTdqa2KHS1wwKwSuhmHvOaGmAgry2n84nIeNnaGK1nusT8MQS5PSnPaCD7Wb2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YkJ9Yqxe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kFI5Baa4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACA0DC433B1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YkJ9Yqxe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A5C7FC43399;
 	Mon, 12 Feb 2024 16:53:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1707756818;
-	bh=vk+Lt5I2JfW5rauqD9RI4ZcRRxFOCwrY7DdoHCOyR8M=;
+	bh=nc4MqV6YaWXP4nv2pZ90dCQqT4i4GYj2D270C7X4X5g=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kFI5Baa47zDEkpiFIS+is9qV7PpYX7LBgeSj8eFnmELiHBK4oOOFLZe6uIRYPyBcl
-	 57uA+HZ3iEbEEJ1Ns03MItwhGmiU3ySRcTsjiUKSLwAYmaQpABdds7j4kyW8IQVgkj
-	 bSdOta3yIMNyykDASx8gYDSHf88hIQ2HcBPufi5lJ5iIh2e7iQF30W7GB+0zmYbzfp
-	 W7Vqbg0oqM2yxNvVXsgiysSEt3Us24ynKTYcnhKGhtDG8J0vc030TWkvNBVsMoZpOh
-	 40fUWUb/1Tf2VNcO+OEZzLqVW1F7Z2JO3A+fB3zewCFIeIrvgJfHMZET3tk7kd0aLb
-	 SnTK1bjvPJ9Qw==
+	b=YkJ9Yqxe2rkvBsFYQXHVLOHTbYd1bYXt3mmVLH0Uis9itgcKVJJd7cDhi/KtBLHpM
+	 yWikgU5w6EiQaofDMr54Sh5raJbarLkP+olgFIvp+wlW16eOaAIQoZTbcT9HwH6b1D
+	 xhG0gJDLZMh/6dRjgMaZxMg8Sy2GAMPFyUfyYO2uZzp8AuhoE36LzLbPBuwa6XM2+s
+	 Q6uZTdQycmOaVNteQQGhxC7UElnZgVst+TVsyH4zg1ZICmQDzcOJA+35/0q08cjzv8
+	 rQJqRlbvyRZTn9BnLXfESp38OPFYGrxCA87WqZ+Sa7arrIhP/h/M32J6h6duojKDiQ
+	 mUQ1RiocdSKNA==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rZZZ2-000000007N3-282y;
+	id 1rZZZ2-000000007NB-3T1E;
 	Mon, 12 Feb 2024 17:53:52 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Andersson <andersson@kernel.org>,
@@ -44,11 +44,10 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Johan Hovold <johan+linaro@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH 03/10] arm64: dts: qcom: sc8280xp: add missing PCIe minimum OPP
-Date: Mon, 12 Feb 2024 17:50:36 +0100
-Message-ID: <20240212165043.26961-4-johan+linaro@kernel.org>
+	Johan Hovold <johan+linaro@kernel.org>
+Subject: [RFC 07/10] dt-bindings: PCI: qcom: Allow 'aspm-no-l0s'
+Date: Mon, 12 Feb 2024 17:50:40 +0100
+Message-ID: <20240212165043.26961-8-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240212165043.26961-1-johan+linaro@kernel.org>
 References: <20240212165043.26961-1-johan+linaro@kernel.org>
@@ -60,61 +59,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the missing PCIe CX performance level votes to avoid relying on
-other drivers (e.g. USB or UFS) to maintain the nominal performance
-level required for Gen3 speeds.
+Add 'aspm-no-l0s', which can be used to indicate that ASPM L0s is not
+supported, to the binding.
 
-Fixes: 813e83157001 ("arm64: dts: qcom: sc8280xp/sa8540p: add PCIe2-4 nodes")
-Cc: stable@vger.kernel.org      # 6.2
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 5 +++++
- 1 file changed, 5 insertions(+)
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-index ae41b3051819..36382b1bd965 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-@@ -1780,6 +1780,7 @@ pcie4: pcie@1c00000 {
- 			reset-names = "pci";
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index b28517047db2..4d1060b52592 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -130,6 +130,8 @@ properties:
+     description: GPIO controlled connection to WAKE# signal
+     maxItems: 1
  
- 			power-domains = <&gcc PCIE_4_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie4_phy>;
- 			phy-names = "pciephy";
-@@ -1878,6 +1879,7 @@ pcie3b: pcie@1c08000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_3B_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie3b_phy>;
- 			phy-names = "pciephy";
-@@ -1976,6 +1978,7 @@ pcie3a: pcie@1c10000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_3A_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie3a_phy>;
- 			phy-names = "pciephy";
-@@ -2077,6 +2080,7 @@ pcie2b: pcie@1c18000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_2B_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie2b_phy>;
- 			phy-names = "pciephy";
-@@ -2175,6 +2179,7 @@ pcie2a: pcie@1c20000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_2A_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie2a_phy>;
- 			phy-names = "pciephy";
++  aspm-no-l0s: true
++
+ required:
+   - compatible
+   - reg
 -- 
 2.43.0
 
