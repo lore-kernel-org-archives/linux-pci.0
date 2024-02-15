@@ -1,262 +1,134 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFD0312AAF0;
-	Thu, 15 Feb 2024 11:47:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40D0112B141
+	for <linux-pci@vger.kernel.org>; Thu, 15 Feb 2024 11:51:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1707997636; cv=none; b=noxaQzdVJmGify0zbUVzI6bh5YrouvR7wq34DbGHGhK+d9l8cOMaU4nlcr6vcTpOLaBvQjl05cdIblHSA2cmV4PgvAmdUh5xaHvE1w8L3ndtSMw5y+b3G/S9J50/KJgNSFRXfzcGfX/gkM6uub9SbES8IhVdnAc9l2dUdeIeiQU=
+	t=1707997904; cv=none; b=f9Gy3jq1QiWcaSxYKO3Pc/if5Uu8TXYL1AUIT49s4/W85qyw9uDestmTBpyoWQy5TUcw2vRbMSnRfI3pjoYsgWe3FNMrhSX6VDXYLfZA8wMjuyeLh+mtQ9gGOo1ISh+0Phxb/HqjmfMP1uH+4lE1qpRpwZJtkVptViBPpB5cg4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1707997636; c=relaxed/simple;
-	bh=lP9mG+q31w+0eBk1IgbWBdBggPCn8pZT5QzEIkttmUI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=s8kagY51HZyzMk5ecxoLM8DV0aXdxI6zxgCc8Bg33ZfZxyVy4xpgMPJcshpO8MA1sT7uqb2uo1FlaPG/Cbf42SrpEimCELyZL1G9vlNOl6IknD7UtrTN7oDcblHNqjnux/H3sC9p3e89RgMkpI42UeAB5nrad/R11kFpurdAYfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.31])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4TbCrF2pKJz67Lqc;
-	Thu, 15 Feb 2024 19:43:41 +0800 (CST)
-Received: from lhrpeml500006.china.huawei.com (unknown [7.191.161.198])
-	by mail.maildlp.com (Postfix) with ESMTPS id F22231400D3;
-	Thu, 15 Feb 2024 19:47:08 +0800 (CST)
-Received: from SecurePC30232.china.huawei.com (10.122.247.234) by
- lhrpeml500006.china.huawei.com (7.191.161.198) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Thu, 15 Feb 2024 11:47:08 +0000
-From: <shiju.jose@huawei.com>
-To: <linux-edac@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-cxl@vger.kernel.org>, <mchehab@kernel.org>
-CC: <qingshun.wang@linux.intel.com>, <jonathan.cameron@huawei.com>,
-	<tanxiaofei@huawei.com>, <prime.zeng@hisilicon.com>, <linuxarm@huawei.com>,
-	<shiju.jose@huawei.com>
-Subject: [RFC PATCH 1/2] rasdaemon: Add handling of new fields in aer_event for advisory non-fatal and other errors
-Date: Thu, 15 Feb 2024 19:46:58 +0800
-Message-ID: <20240215114659.1513-2-shiju.jose@huawei.com>
-X-Mailer: git-send-email 2.35.1.windows.2
-In-Reply-To: <20240215114659.1513-1-shiju.jose@huawei.com>
-References: <20240215114659.1513-1-shiju.jose@huawei.com>
+	s=arc-20240116; t=1707997904; c=relaxed/simple;
+	bh=LfXbtTyJfdBafr8Nmb/3/6uRpRigTCz4GIYDnBXXRhQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rgu68Z8BaqUeE/BLtW/R4Z8bCv5EOc+dGXfKpgfM69DES6kvOrm4TdsuZmDDSbuflvMLqsADrxuNTCQyq7LNT6Nu7kZCfs68OJWposalStS196MTpqbdlMexEZaWZYjXIxSXE0fxgpVF2COu4M7Z1GifkZH9Sf346j03D/ad/oE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=T3FWjtI1; arc=none smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="T3FWjtI1"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-5620c778052so1009173a12.0
+        for <linux-pci@vger.kernel.org>; Thu, 15 Feb 2024 03:51:42 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1707997900; x=1708602700; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=7H+soaEw6AcQrP6dkKX2lz7OFWQ/K5+K149F+3iyFsI=;
+        b=T3FWjtI1j78RvW3MYl5zOur1ThCwbbEe3dQ34YI4GuINLrckDKdd6aL3FBphqzn8kk
+         MvqdWGydX8ZAU/rpbnCbd4uxNMDHOO6eymqpEDHzxWQKSEv84MElvnY2KhNCNhZMqad8
+         tdsUVFBf3gtWwF6eQiklV5agAXBV48R8SM9acFTfLYJEv+Ro1IOokgTow9TaYJIo/8Pd
+         AWt6RWZsG36eP1GhxZ/LtKrGl5LxriDPbV1lDbMUAyjEZwBasrWRcOMUxAz+FhxVbi/Z
+         4NTXKoz+uU5rdRCjx3xvXefo2FEHnQH2TMOiFj54Z9IlwUY5rotp93N7v1LD8J18tpat
+         Z3ng==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1707997900; x=1708602700;
+        h=content-transfer-encoding:in-reply-to:autocrypt:from:references:cc
+         :to:content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7H+soaEw6AcQrP6dkKX2lz7OFWQ/K5+K149F+3iyFsI=;
+        b=voccdM0BMdrb0mi6w8Lv4wscPAOBraERu/ohG1jOkcvV2NroFRaeVOl3NLHg+aMmJn
+         yqRnuePhFBCS5i6olJtsKvscwbKDpz+undRoociYIOvfQM6pnMbyk55d2B9BbzgVx5C6
+         HSC/zzOWpwuChGOJYo+k3bBxFcD3RRurq39ccWkJX3MXWe8oU59U//6WHEezIauu7ut8
+         P9t2J6BwSpRr9MXrrKSROekmI01xnK7jIVThEgfcqEuA3hT8C0eskFQQRP9CAw8Y9mik
+         ZeC7pizCIOLaawZDLUu6OUoajmnLYB8ijvEFywphO46x3wap9AvBDabTiKD4DQ5YQXHx
+         AV1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXaU0Mz+Kzh/ROvMht6f3TEcJHDZZW/FGTfsJNUAlbSHezrsI39ubPB4KBtloFoot3k80HG0dP5qf91Ou85sGInHDizRCyOPH4y
+X-Gm-Message-State: AOJu0YxhSRIgS+oSD5CUBVl935mgHYrkbm/w9vmTX9ZitTmxczLr9/Xb
+	TvrmXQbgOZP3xxYxiUI6ryp3O90cqBeDEHCAXA71xURtyJj/0m9A04sgwcXXyie96hyRV329ycM
+	k
+X-Google-Smtp-Source: AGHT+IFjyC4fiPAQVmXxyzWZpj/0Aye/E/BmLR4+E7Dz0O8nwav1eQvhRJqj2FBIT0xcCBO7N91rEA==
+X-Received: by 2002:a17:906:a8c:b0:a3d:14d0:f253 with SMTP id y12-20020a1709060a8c00b00a3d14d0f253mr1169320ejf.9.1707997900535;
+        Thu, 15 Feb 2024 03:51:40 -0800 (PST)
+Received: from [192.168.192.135] (078088045141.garwolin.vectranet.pl. [78.88.45.141])
+        by smtp.gmail.com with ESMTPSA id ss11-20020a170907c00b00b00a3c625064e5sm462042ejc.100.2024.02.15.03.51.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 15 Feb 2024 03:51:40 -0800 (PST)
+Message-ID: <bfdb5271-8c1e-48f0-8589-deaddf50117c@linaro.org>
+Date: Thu, 15 Feb 2024 12:51:38 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: lhrpeml100006.china.huawei.com (7.191.160.224) To
- lhrpeml500006.china.huawei.com (7.191.161.198)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/3] PCI: qcom: reshuffle reset logic in 2_7_0 .init
+Content-Language: en-US
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, linux-arm-msm@vger.kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ Johan Hovold <johan+linaro@kernel.org>
+References: <20240212211432.GA1145620@bhelgaas>
+From: Konrad Dybcio <konrad.dybcio@linaro.org>
+Autocrypt: addr=konrad.dybcio@linaro.org; keydata=
+ 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
+ izWDgYvmBE8=
+In-Reply-To: <20240212211432.GA1145620@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Shiju Jose <shiju.jose@huawei.com>
+On 12.02.2024 22:14, Bjorn Helgaas wrote:
+> Would be nice to have a hint in the subject line about what this does.
+> Also capitalize to match the others ("PCI: qcom: <Capitalized verb>").
+> 
+> On Sat, Feb 10, 2024 at 06:10:05PM +0100, Konrad Dybcio wrote:
+>> At least on SC8280XP, if the PCIe reset is asserted, the corresponding
+>> AUX_CLK will be stuck at 'off'. This has not been an issue so far,
+>> since the reset is both left de-asserted by the previous boot stages
+>> and the driver only toggles it briefly in .init.
+>>
+>> As part of the upcoming suspend prodecure however, the reset will be
+>> held asserted.
+> 
+> s/prodecure/procedure/
 
-Add handling of following new fields in trace aer_event
-for advisory non-fatal and other errors.
+Before I get around to resending, does the commit look fine otherwise?
 
-  - cor_status		(Correctable Error Status)
-  - cor_mask		(Correctable Error Mask)
-  - uncor_status	(Uncorrectable Error Status)
-  - uncor_severity	(Uncorrectable Error Severity)
-  - uncor_mask		(Uncorrectable Error Mask)
-  - aer_cap_ctrl	(AER Capabilities and Control)
-  - link_status		(Link Status)
-  - device_status	(Device Status)
-  - device_control_2	(Device Control 2)
-
-https://lore.kernel.org/lkml/20240125062802.50819-5-qingshun.wang@linux.intel.com/
-
-Question: Does "aer_event" table in SQLite DB  to be rename,
-for example "aer_event_v2" because new fields are added?
-
-Signed-off-by: Shiju Jose <shiju.jose@huawei.com>
----
- ras-aer-handler.c | 60 +++++++++++++++++++++++++++++++++++++++++++++++
- ras-record.c      | 20 ++++++++++++++++
- ras-record.h      | 10 ++++++++
- ras-report.c      | 24 +++++++++++++++++--
- 4 files changed, 112 insertions(+), 2 deletions(-)
-
-diff --git a/ras-aer-handler.c b/ras-aer-handler.c
-index bb1a6f6..9a732e7 100644
---- a/ras-aer-handler.c
-+++ b/ras-aer-handler.c
-@@ -54,6 +54,30 @@ static const char *aer_uncor_errors[32] = {
- 
- #define BUF_LEN	1024
- 
-+struct aer_header_log_regs {
-+	uint32_t dw0;
-+	uint32_t dw1;
-+	uint32_t dw2;
-+	uint32_t dw3;
-+};
-+
-+struct aer_capability_regs {
-+	uint32_t header;
-+	uint32_t uncor_status;
-+	uint32_t uncor_mask;
-+	uint32_t uncor_severity;
-+	uint32_t cor_status;
-+	uint32_t cor_mask;
-+	uint32_t cap_control;
-+	struct aer_header_log_regs header_log;
-+	uint32_t root_command;
-+	uint32_t root_status;
-+	uint16_t cor_err_source;
-+	uint16_t uncor_err_source;
-+};
-+
-+#define  PCI_ERR_CAP_FEP(x)     ((x) & 0x1f)    /* First Error Pointer */
-+
- int ras_aer_event_handler(struct trace_seq *s,
- 			  struct tep_record *record,
- 			  struct tep_event *event, void *context)
-@@ -70,6 +94,7 @@ int ras_aer_event_handler(struct trace_seq *s,
- 	char ipmi_add_sel[105];
- 	uint8_t sel_data[5];
- 	int seg, bus, dev, fn;
-+	struct aer_capability_regs *aer_caps = NULL;
- 
- 	/*
- 	 * Newer kernels (3.10-rc1 or upper) provide an uptime clock.
-@@ -148,6 +173,41 @@ int ras_aer_event_handler(struct trace_seq *s,
- 	}
- 	trace_seq_puts(s, ev.error_type);
- 
-+	aer_caps = tep_get_field_raw(s, event, "aer_caps",
-+				     record, &len, 1);
-+	if (aer_caps) {
-+		ev.cor_status = aer_caps->cor_status;
-+		ev.cor_mask = aer_caps->cor_mask;
-+		ev.uncor_status = aer_caps->uncor_status;
-+		ev.uncor_mask = aer_caps->uncor_mask;
-+		ev.uncor_severity = aer_caps->uncor_severity;
-+		ev.cap_control = aer_caps->cap_control;
-+		ev.first_err_ptr = PCI_ERR_CAP_FEP(aer_caps->cap_control);
-+
-+		trace_seq_printf(s, " cor_status: 0x%08x", ev.cor_status);
-+		trace_seq_printf(s, " cor_mask: 0x%08x", ev.cor_mask);
-+		trace_seq_printf(s, " uncor_status: 0x%08x", ev.uncor_status);
-+		trace_seq_printf(s, " uncor_mask: 0x%08x", ev.uncor_mask);
-+		trace_seq_printf(s, " uncor_severity: 0x%08x", ev.uncor_severity);
-+		trace_seq_printf(s, " cap_control: 0x%08x", ev.cap_control);
-+		trace_seq_printf(s, " first_error_pointer: 0x%x",
-+				 ev.first_err_ptr);
-+	}
-+	if (tep_get_field_val(s,  event, "link_status", record, &val, 1) >= 0) {
-+		ev.link_status = val;
-+		trace_seq_printf(s, " link_status: 0x%04x ", ev.link_status);
-+	}
-+
-+	if (tep_get_field_val(s,  event, "device_status", record, &val, 1) >= 0) {
-+		ev.device_status = val;
-+		trace_seq_printf(s, " device_status: 0x%04x ", ev.device_status);
-+	}
-+
-+	if (tep_get_field_val(s,  event, "device_control_2", record, &val, 1) >= 0) {
-+		ev.device_control_2 = val;
-+		trace_seq_printf(s, " device_control_2: 0x%04x ", ev.device_control_2);
-+	}
-+
- 	/* Insert data into the SGBD */
- #ifdef HAVE_SQLITE3
- 	ras_store_aer_event(ras, &ev);
-diff --git a/ras-record.c b/ras-record.c
-index f3ffafb..889e96f 100644
---- a/ras-record.c
-+++ b/ras-record.c
-@@ -111,6 +111,16 @@ static const struct db_fields aer_event_fields[] = {
- 		{ .name = "dev_name",		.type = "TEXT" },
- 		{ .name = "err_type",		.type = "TEXT" },
- 		{ .name = "err_msg",		.type = "TEXT" },
-+		{ .name = "cor_status",		.type = "INTEGER" },
-+		{ .name = "cor_mask",		.type = "INTEGER" },
-+		{ .name = "uncor_status",	.type = "INTEGER" },
-+		{ .name = "uncor_mask",		.type = "INTEGER" },
-+		{ .name = "uncor_severity",	.type = "INTEGER" },
-+		{ .name = "cap_control",	.type = "INTEGER" },
-+		{ .name = "first_err_pointer",  .type = "INTEGER" },
-+		{ .name = "link_status",	.type = "INTEGER" },
-+		{ .name = "device_status",	.type = "INTEGER" },
-+		{ .name = "device_control_2",	.type = "INTEGER" },
- };
- 
- static const struct db_table_descriptor aer_event_tab = {
-@@ -132,6 +142,16 @@ int ras_store_aer_event(struct ras_events *ras, struct ras_aer_event *ev)
- 	sqlite3_bind_text(priv->stmt_aer_event,  2, ev->dev_name, -1, NULL);
- 	sqlite3_bind_text(priv->stmt_aer_event,  3, ev->error_type, -1, NULL);
- 	sqlite3_bind_text(priv->stmt_aer_event,  4, ev->msg, -1, NULL);
-+	sqlite3_bind_int(priv->stmt_aer_event,  5, ev->cor_status);
-+	sqlite3_bind_int(priv->stmt_aer_event,  6, ev->cor_mask);
-+	sqlite3_bind_int(priv->stmt_aer_event,  7, ev->uncor_status);
-+	sqlite3_bind_int(priv->stmt_aer_event,  8, ev->uncor_mask);
-+	sqlite3_bind_int(priv->stmt_aer_event,  9, ev->uncor_severity);
-+	sqlite3_bind_int(priv->stmt_aer_event,  10, ev->cap_control);
-+	sqlite3_bind_int(priv->stmt_aer_event,  11, ev->first_err_ptr);
-+	sqlite3_bind_int(priv->stmt_aer_event,  12, ev->link_status);
-+	sqlite3_bind_int(priv->stmt_aer_event,  13, ev->device_status);
-+	sqlite3_bind_int(priv->stmt_aer_event,  14, ev->device_control_2);
- 
- 	rc = sqlite3_step(priv->stmt_aer_event);
- 	if (rc != SQLITE_OK && rc != SQLITE_DONE)
-diff --git a/ras-record.h b/ras-record.h
-index 2b2231c..ecab219 100644
---- a/ras-record.h
-+++ b/ras-record.h
-@@ -59,6 +59,16 @@ struct ras_aer_event {
- 	uint8_t tlp_header_valid;
- 	uint32_t *tlp_header;
- 	const char *msg;
-+	uint32_t cor_status;
-+	uint32_t cor_mask;
-+	uint32_t uncor_status;
-+	uint32_t uncor_mask;
-+	uint32_t uncor_severity;
-+	uint32_t cap_control;
-+	uint32_t first_err_ptr;
-+	uint16_t link_status;
-+	uint16_t device_status;
-+	uint16_t device_control_2;
- };
- 
- struct ras_extlog_event {
-diff --git a/ras-report.c b/ras-report.c
-index 5cc55b6..5e659ce 100644
---- a/ras-report.c
-+++ b/ras-report.c
-@@ -205,11 +205,31 @@ static int set_aer_event_backtrace(char *buf, struct ras_aer_event *ev)
- 						"timestamp=%s\n"	\
- 						"error_type=%s\n"	\
- 						"dev_name=%s\n"	\
--						"msg=%s\n",	\
-+						"msg=%s\n"	\
-+						"cor_status=0x%08x\n"	\
-+						"cor_mask=0x%08x\n"	\
-+						"uncor_status=0x%08x\n"	\
-+						"uncor_mask=0x%08x\n"	\
-+						"uncor_severity=0x%08x\n"	\
-+						"cap_control=0x%08x\n"	\
-+						"first_error_pointer=0x%x\n"	\
-+						"link_status=0x%04x\n"	\
-+						"device_status=0x%04x\n"	\
-+						"device_control_2=0x%04x\n",	\
- 						ev->timestamp,	\
- 						ev->error_type,	\
- 						ev->dev_name,	\
--						ev->msg);
-+						ev->msg,	\
-+						ev->cor_status,	\
-+						ev->cor_mask,	\
-+						ev->uncor_status,	\
-+						ev->uncor_mask,	\
-+						ev->uncor_severity,	\
-+						ev->cap_control,	\
-+						ev->first_err_ptr,	\
-+						ev->link_status,	\
-+						ev->device_status,	\
-+						ev->device_control_2);
- 
- 	strcat(buf, bt_buf);
- 
--- 
-2.34.1
-
+Konrad
