@@ -1,125 +1,110 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26B07130ADA;
-	Thu, 15 Feb 2024 14:51:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB610132487;
+	Thu, 15 Feb 2024 15:18:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708008681; cv=none; b=j2Gl8S4xglwV8OWJmp3iy/Z7FHpFCQ3sCsmSM/TfTy7wIvmD12G+XeYSpglaotvT/Mxwyks2DX8W3KL/b/JsyICO57Nl9ph0LSPYU5o4W2hB/br5flhcO7frkOWHTErCgH56j3/egtCtLp97+/OF2qHaI7kUOfxrr6dhzRfTPHQ=
+	t=1708010287; cv=none; b=j2eBLS0KkUbkBTeWyqm9m42dze9O7fblglvVacsYF+8ktL9j1chzgzR5P2J5JdT7FDFsvgz35Y/ULo5x0LK4+Qh4vP+fUbUiGcPMMP74uQv2lOhV3D5q07ovdyyhvfAFM5LHqkmLLgpzV+yFBW/WSCkAPan5j7khbtNRWsczVm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708008681; c=relaxed/simple;
-	bh=B8mmg75WeEttw7pPxYccdGAOyO7FWsoSc/5kLKpImqQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PSypx8M3gvgoxah2fCSEIjyKMnpef2/jiYPcR4vvyIR/YeMGKeGWeJRs8WfedkNP0Id4IQfUVejVvgwsl/dcIGF7NQwKtiEhIIc2uoG8oSM0M2Qoygy9Lhl1HaLdsgxb3I0KmlZFT2mtB6Kyetf5YlXutDo0554Qh29DZkxykTI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JeQXA7zR; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1708010287; c=relaxed/simple;
+	bh=NUH30x/9mKIikGBACPkPdrVWLNqgjqGCxMYohiQhXpY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Q6L1cHqihZvWk4RJsuLyXEAwn8+QrwX/56+O860n7pgq0t7+k3Z9oRyzBbdqVfsWTRknEHhhYPgW67QrPK5ha04Cz1+QVcb2yl2i3JYTDPKFUzRe3NVhsrIlVyStBABGCDi43T7B6Qf3kdIV/Bm6vMSAdMQ340ieE4Df423pBWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=GWEL8kMT; arc=none smtp.client-ip=217.70.183.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JeQXA7zR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708008680; x=1739544680;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=B8mmg75WeEttw7pPxYccdGAOyO7FWsoSc/5kLKpImqQ=;
-  b=JeQXA7zRp5CZ/JqxQh3BOssC3S/onpxMXXb8i3Aewq0/IjkXylCmLO6p
-   te+MJDhkd1+rt0AzUg3vUjQHZETaLQMy7xjoVmlZaXWXnXyyuPU3Nm3FQ
-   GzIeJS2S5kSmqOr2tu+G93NmyBzlNqBYUvahBWRG6N77rTKCGtP8GjC+R
-   wXvKI1Rm5Nni/z2bqctCgpxfC47QxWeQUx4p1rC/3WT+lAYYeECEvpWdH
-   JRy90jXxp6mIYipntWJGyOWaEClwmarWHq6Wm6gNSgz6KpnXOeO3A59n6
-   WRL8mH4KrzuEMCY4NkNwPgHMJ7BwwSBObmmcPcntBZuI5d8fFvN6P8Lio
-   g==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10984"; a="1968915"
-X-IronPort-AV: E=Sophos;i="6.06,161,1705392000"; 
-   d="scan'208";a="1968915"
-Received: from fmsmga001.fm.intel.com ([10.253.24.23])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 06:51:19 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=McAfee;i="6600,9927,10984"; a="935676974"
-X-IronPort-AV: E=Sophos;i="6.06,161,1705392000"; 
-   d="scan'208";a="935676974"
-Received: from wilesamy-mobl.amr.corp.intel.com (HELO [10.251.3.206]) ([10.251.3.206])
-  by fmsmga001-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Feb 2024 06:51:18 -0800
-Message-ID: <361f7ae0-6de1-423c-bb64-82a5acccb502@linux.intel.com>
-Date: Thu, 15 Feb 2024 06:51:16 -0800
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="GWEL8kMT"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id C540724000A;
+	Thu, 15 Feb 2024 15:18:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1708010281;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=J6YtYEPkWQliDBXfdSpeuMo61P38HreYk7GRFYqtXkw=;
+	b=GWEL8kMTuyWm7ECMBeYelFKt5Q6vwC0YFhuakiRf3NgJ4SBetjufDuAbCa4NJNSLtfIKWV
+	ImLFqNcgDQYVLO3cbQuuw8NIoN4nnrh1b64RWoi0gQpI/vawF3LZXPoK/rifPfVg+uCD00
+	ilFkwuYn3JROW1CkcDFCvPNZuKBGle+6lYipptiewaLr8MT5IfZV28OhCL/K6W76efhLm+
+	unZdb1L2x+xQKZi4yw0LsR140IPSbJJI9VzZIhTmPRZjP2t+4mu8zR8X8dSdu3sDpvSLGb
+	U3g7hket/T2SQvbAjCO7mVpT/AY81IVeWS6NM4U7DA1px1hAhBQcCZZESczqlg==
+From: Thomas Richard <thomas.richard@bootlin.com>
+Date: Thu, 15 Feb 2024 16:17:47 +0100
+Subject: [PATCH v3 02/18] pinctrl: pinctrl-single: remove dead code in
+ suspend() and resume() callbacks
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: dwc: Use the correct sleep function in wait_for_link
-Content-Language: en-US
-To: Konrad Dybcio <konrad.dybcio@linaro.org>,
- Jingoo Han <jingoohan1@gmail.com>,
- Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
-Cc: Marijn Suijten <marijn.suijten@somainline.org>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Johan Hovold <johan+linaro@kernel.org>
-References: <20240215-topic-pci_sleep-v1-1-7ac79ac9739a@linaro.org>
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20240215-topic-pci_sleep-v1-1-7ac79ac9739a@linaro.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
+Message-Id: <20240102-j7200-pcie-s2r-v3-2-5c2e4a3fac1f@bootlin.com>
+References: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
+In-Reply-To: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
+To: Linus Walleij <linus.walleij@linaro.org>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
+ Tony Lindgren <tony@atomide.com>, 
+ Haojian Zhuang <haojian.zhuang@linaro.org>, Vignesh R <vigneshr@ti.com>, 
+ Aaro Koskinen <aaro.koskinen@iki.fi>, 
+ Janusz Krzysztofik <jmkrzyszt@gmail.com>, 
+ Andi Shyti <andi.shyti@kernel.org>, Peter Rosin <peda@axentia.se>, 
+ Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Philipp Zabel <p.zabel@pengutronix.de>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org, 
+ linux-i2c@vger.kernel.org, linux-phy@lists.infradead.org, 
+ linux-pci@vger.kernel.org, gregory.clement@bootlin.com, 
+ theo.lebrun@bootlin.com, thomas.petazzoni@bootlin.com, u-kumar1@ti.com, 
+ Thomas Richard <thomas.richard@bootlin.com>
+X-Mailer: b4 0.12.0
+X-GND-Sasl: thomas.richard@bootlin.com
 
+No need to check the pointer returned by platform_get_drvdata(), as
+platform_set_drvdata() is called during the probe.
 
-On 2/15/24 2:39 AM, Konrad Dybcio wrote:
-> According to [1], msleep should be used for large sleeps, such as the
-> 100-ish ms one in this function. Comply with the guide and use it.
->
-> [1] https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
->
-> Signed-off-by: Konrad Dybcio <konrad.dybcio@linaro.org>
-> ---
-> Tested on Qualcomm SC8280XP CRD
-> ---
->  drivers/pci/controller/dwc/pcie-designware.c | 2 +-
->  drivers/pci/controller/dwc/pcie-designware.h | 3 +--
->  2 files changed, 2 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> index 250cf7f40b85..abce6afceb91 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> @@ -655,7 +655,7 @@ int dw_pcie_wait_for_link(struct dw_pcie *pci)
->  		if (dw_pcie_link_up(pci))
->  			break;
->  
-> -		usleep_range(LINK_WAIT_USLEEP_MIN, LINK_WAIT_USLEEP_MAX);
-> +		msleep(LINK_WAIT_MSLEEP_MAX);
->  	}
->  
->  	if (retries >= LINK_WAIT_MAX_RETRIES) {
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 26dae4837462..3f145d6a8a31 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -63,8 +63,7 @@
->  
->  /* Parameters for the waiting for link up routine */
->  #define LINK_WAIT_MAX_RETRIES		10
-> -#define LINK_WAIT_USLEEP_MIN		90000
-> -#define LINK_WAIT_USLEEP_MAX		100000
-> +#define LINK_WAIT_MSLEEP_MAX		100
+Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
+---
+ drivers/pinctrl/pinctrl-single.c | 12 ++----------
+ 1 file changed, 2 insertions(+), 10 deletions(-)
 
-Since 90 ms is an acceptable value, why not use it?
-
->  
->  /* Parameters for the waiting for iATU enabled routine */
->  #define LINK_WAIT_MAX_IATU_RETRIES	5
->
-> ---
-> base-commit: 26d7d52b6253574d5b6fec16a93e1110d1489cef
-> change-id: 20240215-topic-pci_sleep-368108a1fb6f
->
-> Best regards,
+diff --git a/drivers/pinctrl/pinctrl-single.c b/drivers/pinctrl/pinctrl-single.c
+index 19cc0db771a5..02eabd28d46e 100644
+--- a/drivers/pinctrl/pinctrl-single.c
++++ b/drivers/pinctrl/pinctrl-single.c
+@@ -1693,11 +1693,7 @@ static void pcs_restore_context(struct pcs_device *pcs)
+ static int pinctrl_single_suspend(struct platform_device *pdev,
+ 					pm_message_t state)
+ {
+-	struct pcs_device *pcs;
+-
+-	pcs = platform_get_drvdata(pdev);
+-	if (!pcs)
+-		return -EINVAL;
++	struct pcs_device *pcs = platform_get_drvdata(pdev);
+ 
+ 	if (pcs->flags & PCS_CONTEXT_LOSS_OFF) {
+ 		int ret;
+@@ -1712,11 +1708,7 @@ static int pinctrl_single_suspend(struct platform_device *pdev,
+ 
+ static int pinctrl_single_resume(struct platform_device *pdev)
+ {
+-	struct pcs_device *pcs;
+-
+-	pcs = platform_get_drvdata(pdev);
+-	if (!pcs)
+-		return -EINVAL;
++	struct pcs_device *pcs = platform_get_drvdata(pdev);
+ 
+ 	if (pcs->flags & PCS_CONTEXT_LOSS_OFF)
+ 		pcs_restore_context(pcs);
 
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.39.2
 
