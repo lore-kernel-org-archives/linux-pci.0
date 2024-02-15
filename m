@@ -1,37 +1,39 @@
 Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB5CD1EEE7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC846132497;
 	Thu, 15 Feb 2024 15:18:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708010287; cv=none; b=oUVYDEmvJpzXN4lZjeuXJgb6pgms4AcWrC6GvE/PUQgovyEqsBPoTLBNMZ5n5beKfq1sDN2xgoUYYYlkYTLcBhcOYsggRHxUF02cvhig4kvUjx8JDslaRp60SmXzMxDR1W8+tQQKto2Pb0INXfnDVM8id4EmkyUAA0oKCR1H+PM=
+	t=1708010287; cv=none; b=nV2dkWjvijhGpgc6C4URyobNo718Q0YtJBStFZUdpxoI3e5kd5nd29pkjVdo9FUnvCLYgTjkcwP1oJK/vWRtOiRAOVD9FCbinIKJF25MI/XwuixnwrG7W1iZd1L51SzGQc0fbWD4HLArzqOa2vujH7UZIEQ92R3m3mAI0OHA5EI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1708010287; c=relaxed/simple;
-	bh=/5RuGo1BUth2SZ1jzxAgP1hnBYBVss31ksnOXl9XJrA=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=eVAJCDK+IjAScr3EPL+TCqH/XftZyzNAAxAdCRSWH6IOFgwP/4++rPKu4nkE5j14eE9Fa5MtMUpeCtGFdYlNTUVyypVuRHlRAD3a3EjRx1DJ2DZWNczHUUpL7T9c/7OSNwc+AsA4rHE5EOAusMRgQEUzwd2R3uM9Te+C8j5oU/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=o9DbmqpX; arc=none smtp.client-ip=217.70.183.193
+	bh=aSTKbIbocmfQVktZDk7IuOcqfsqSduUZkf7ik6EjfoQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=qwyi7b8tjYgLuZ1Y9HhNSiPH5BDSeVML3HnhIuRG72/J8pZtDAR5Zx+Up5LVBxOcUyIrASYomUd3Cg13pnUT3lYC+C9Y3MfWXbN+RJh0vCAw83JMxl0JjIRDuUXhtlIZ4cX2ErrSU0arOhaXkbP+iia5TayJ+Jh0AASIWwXdAPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=ZWbj4bpo; arc=none smtp.client-ip=217.70.183.193
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="o9DbmqpX"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 8270C240002;
-	Thu, 15 Feb 2024 15:17:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="ZWbj4bpo"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id D55AE240008;
+	Thu, 15 Feb 2024 15:18:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1708010279;
+	t=1708010282;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=mFwF74WYG389eTgoCBYbyxfkr+BMGReUM+V29ejlH/U=;
-	b=o9DbmqpX4/9BdCNE5XP79nCuaHvPL3RSwYXLefC9AJr49SuqVn3XKDXDtej/ID9DyQRboT
-	6u1yn7jIStwyGAhYzO5ATu7pptNaohDS2ZrCLPXskvm+Nm3iEdf1G0YYl3siW7qgw/OKUn
-	zVHPSIdue3Jq+cDPL6NNW7NVvY1eAJbQDJNlGBCU0CGcPMgnW97E0O0o+8omOjAcaQj4FC
-	40hZf8UBmaWOUGGFL3CM0LoU4uXpj8wvxUFt8c2rym1n5LpMz6gtBEMGlW+c4Mc4qHMZjx
-	xcbwmKpDSpz/78ukf6JT1G3dRc9WJnGouHmAeGu5fYJPzIASeTCac6dOGjC/wA==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=4i5VKICPkOcySB+v4EkO/Z1q1pJDA/ZgXOxMH2KXNho=;
+	b=ZWbj4bpo0gq4xsPTML+Apv3A4CRTQTTzJoyfT4HYx2zruymwJsoWfJVA13e4KRMtDPAhK+
+	CYCp73hrUA5wEGtsrs8ZmrZkHS3zDtVcyEV73Br3gjCoNp5H06Psz56lEIUgmWnaZrgltN
+	qkyqqXYAkmLfL7shCLK6jw9bym09GzbECAWhaWXX4KvdHXqnVYqAmbEjdIfCXP5Ghq91dY
+	SppJdi7Q+JU6MmUL4dTZzGws11jJ8shhPss0CuH4/Irt38bKfVLTdyeDwwNihKJ/gJWZ4i
+	um3prNd11HKpF1aeFum/P8wwhqEKM5Lnhcc/ZRenW/xjd9mtqKhKqzoXwkGaIw==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Subject: [PATCH v3 00/18] Add suspend to ram support for PCIe on J7200
-Date: Thu, 15 Feb 2024 16:17:45 +0100
-Message-Id: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
+Date: Thu, 15 Feb 2024 16:17:48 +0100
+Subject: [PATCH v3 03/18] pinctrl: pinctrl-single: move suspend()/resume()
+ callbacks to noirq
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,11 +41,10 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-B4-Tracking: v=1; b=H4sIABkrzmUC/32NQQ7CIBBFr9KwdgxMS2hdeQ/jAujUYrQ00BBN0
- 7sL3bnQ5Z/5/72VRQqOIjtVKwuUXHR+yqE+VMyOeroRuD5nhhwbLjjCXSHnMFtHEDEAWSN0pzq
- qpWJ5ZHQkMEFPdiyzp44LhfKYAw3utZsu15xHFxcf3rs4iXL96UgCOLQNSdlrmSv8bLxfHm46W
- v9kBZbwPwALgJpB9YgtWfwGbNv2Adp2j00IAQAA
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240102-j7200-pcie-s2r-v3-3-5c2e4a3fac1f@bootlin.com>
+References: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
+In-Reply-To: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
  Bartosz Golaszewski <brgl@bgdev.pl>, Andy Shevchenko <andy@kernel.org>, 
  Tony Lindgren <tony@atomide.com>, 
@@ -62,107 +63,88 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, gregory.clement@bootlin.com, 
  theo.lebrun@bootlin.com, thomas.petazzoni@bootlin.com, u-kumar1@ti.com, 
  Thomas Richard <thomas.richard@bootlin.com>, 
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
  Andy Shevchenko <andy.shevchenko@gmail.com>
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-This add suspend to ram support for the PCIe (RC mode) on J7200 platform.
+The goal is to extend the active period of pinctrl.
+Some devices may need active pinctrl after suspend() and/or before
+resume().
+So move suspend()/resume() to suspend_noirq()/resume_noirq() in order to
+have active pinctrl until suspend_noirq() (included), and from
+resume_noirq() (included).
 
-In RC mode, the reset pin for endpoints is managed by a gpio expander on a
-i2c bus. This pin shall be managed in suspend_noirq() and resume_noirq().
-The suspend/resume has been moved to suspend_noirq()/resume_noirq() for
-pca953x (expander) and pinctrl-single.
+The deprecated API has been removed to use the new one (dev_pm_ops struct).
 
-To do i2c accesses during suspend_noirq/resume_noirq, we need to force the
-wakeup of the i2c controller (which is autosuspended) during suspend
-callback. 
-It's the only way to wakeup the controller if it's autosuspended, as
-runtime pm is disabled in suspend_noirq and resume_noirq.
-
-The main change in this v3 is the removal of the probe boolean for the
-functions wiz_clock_probe() and cdns_pcie_host_setup().
-Their contents were split in multiple functions which are called in the
-resume_noirq() callbacks.
-
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
-Changes in v3:
-- pinctrl-single: split patch in two parts, a first patch to remove the
-  dead code, a second to move suspend()/resume() callbacks to noirq.
-- i2c-omap: add a comments above the suspend_noirq() callback.
-- mux: now mux_chip_resume() try to restores all muxes, then return 0 if
-  all is ok or the first failure.
-- mmio: fix commit message.
-- phy-j721e-wiz: add a patch to use dev_err_probe() instead of dev_err() in
-  the wiz_clock_init() function.
-- phy-j721e-wiz: remove probe boolean for the wiz_clock_init(), rename the
-  function to wiz_clock_probe(), extract hardware configuration part in a
-  new function wiz_clock_init().
-- phy-cadence-torrent: use dev_err_probe() and fix commit messages
-- pcie-cadence-host: remove probe boolean for the cdns_pcie_host_setup()
-  function and extract the link setup part in a new function
-  cdns_pcie_host_link_setup().
-- pcie-cadence-host: make cdns_pcie_host_init() global.
-- pci-j721e: use the cdns_pcie_host_link_setup() cdns_pcie_host_init()
-  functions in the resume_noirq() callback.
-- Link to v2: https://lore.kernel.org/r/20240102-j7200-pcie-s2r-v2-0-8e4f7d228ec2@bootlin.com
+ drivers/pinctrl/pinctrl-single.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-Changes in v2:
-- all: fix commits messages.
-- all: use DEFINE_NOIRQ_DEV_PM_OPS and pm_sleep_ptr macros.
-- all: remove useless #ifdef CONFIG_PM.
-- pinctrl-single: drop dead code
-- mux: add mux_chip_resume() function in mux core.
-- mmio: resume sequence is now a call to mux_chip_resume().
-- phy-cadence-torrent: fix typo in resume sequence (reset_control_assert()
-  instead of reset_control_put()).
-- phy-cadence-torrent: use PHY instead of phy.
-- pci-j721e: do not shadow cdns_pcie_host_setup return code in resume
-  sequence.
-- pci-j721e: drop dead code.
-- Link to v1: https://lore.kernel.org/r/20240102-j7200-pcie-s2r-v1-0-84e55da52400@bootlin.com
+diff --git a/drivers/pinctrl/pinctrl-single.c b/drivers/pinctrl/pinctrl-single.c
+index 02eabd28d46e..0dd4b0e11adf 100644
+--- a/drivers/pinctrl/pinctrl-single.c
++++ b/drivers/pinctrl/pinctrl-single.c
+@@ -1625,7 +1625,6 @@ static int pcs_irq_init_chained_handler(struct pcs_device *pcs,
+ 	return 0;
+ }
+ 
+-#ifdef CONFIG_PM
+ static int pcs_save_context(struct pcs_device *pcs)
+ {
+ 	int i, mux_bytes;
+@@ -1690,10 +1689,9 @@ static void pcs_restore_context(struct pcs_device *pcs)
+ 	}
+ }
+ 
+-static int pinctrl_single_suspend(struct platform_device *pdev,
+-					pm_message_t state)
++static int pinctrl_single_suspend_noirq(struct device *dev)
+ {
+-	struct pcs_device *pcs = platform_get_drvdata(pdev);
++	struct pcs_device *pcs = dev_get_drvdata(dev);
+ 
+ 	if (pcs->flags & PCS_CONTEXT_LOSS_OFF) {
+ 		int ret;
+@@ -1706,16 +1704,19 @@ static int pinctrl_single_suspend(struct platform_device *pdev,
+ 	return pinctrl_force_sleep(pcs->pctl);
+ }
+ 
+-static int pinctrl_single_resume(struct platform_device *pdev)
++static int pinctrl_single_resume_noirq(struct device *dev)
+ {
+-	struct pcs_device *pcs = platform_get_drvdata(pdev);
++	struct pcs_device *pcs = dev_get_drvdata(dev);
+ 
+ 	if (pcs->flags & PCS_CONTEXT_LOSS_OFF)
+ 		pcs_restore_context(pcs);
+ 
+ 	return pinctrl_force_default(pcs->pctl);
+ }
+-#endif
++
++static DEFINE_NOIRQ_DEV_PM_OPS(pinctrl_single_pm_ops,
++			       pinctrl_single_suspend_noirq,
++			       pinctrl_single_resume_noirq);
+ 
+ /**
+  * pcs_quirk_missing_pinctrl_cells - handle legacy binding
+@@ -1978,11 +1979,8 @@ static struct platform_driver pcs_driver = {
+ 	.driver = {
+ 		.name		= DRIVER_NAME,
+ 		.of_match_table	= pcs_of_match,
++		.pm = pm_sleep_ptr(&pinctrl_single_pm_ops),
+ 	},
+-#ifdef CONFIG_PM
+-	.suspend = pinctrl_single_suspend,
+-	.resume = pinctrl_single_resume,
+-#endif
+ };
+ 
+ module_platform_driver(pcs_driver);
 
----
-Thomas Richard (15):
-      gpio: pca953x: move suspend()/resume() to suspend_noirq()/resume_noirq()
-      pinctrl: pinctrl-single: remove dead code in suspend() and resume() callbacks
-      pinctrl: pinctrl-single: move suspend()/resume() callbacks to noirq
-      i2c: omap: wakeup the controller during suspend() callback
-      mux: add mux_chip_resume() function
-      phy: ti: phy-j721e-wiz: use dev_err_probe() instead of dev_err()
-      phy: ti: phy-j721e-wiz: split wiz_clock_init() function
-      phy: ti: phy-j721e-wiz: add resume support
-      phy: cadence-torrent: extract calls to clk_get from cdns_torrent_clk
-      phy: cadence-torrent: register resets even if the phy is already configured
-      phy: cadence-torrent: add already_configured to struct cdns_torrent_phy
-      phy: cadence-torrent: remove noop_ops phy operations
-      phy: cadence-torrent: add suspend and resume support
-      PCI: cadence: extract link setup sequence from cdns_pcie_host_setup()
-      PCI: cadence: set cdns_pcie_host_init() global
-
-Théo Lebrun (3):
-      mux: mmio: add resume support
-      PCI: j721e: add reset GPIO to struct j721e_pcie
-      PCI: j721e: add suspend and resume support
-
- drivers/gpio/gpio-pca953x.c                        |   7 +-
- drivers/i2c/busses/i2c-omap.c                      |  22 ++++
- drivers/mux/core.c                                 |  30 +++++
- drivers/mux/mmio.c                                 |  12 ++
- drivers/pci/controller/cadence/pci-j721e.c         | 102 ++++++++++++++++-
- drivers/pci/controller/cadence/pcie-cadence-host.c |  44 +++++---
- drivers/pci/controller/cadence/pcie-cadence.h      |  12 ++
- drivers/phy/cadence/phy-cadence-torrent.c          | 121 +++++++++++++++------
- drivers/phy/ti/phy-j721e-wiz.c                     | 119 +++++++++++++-------
- drivers/pinctrl/pinctrl-single.c                   |  28 ++---
- include/linux/mux/driver.h                         |   1 +
- 11 files changed, 380 insertions(+), 118 deletions(-)
----
-base-commit: 00ff0f9ce40db8e64fe16c424a965fd7ab769c42
-change-id: 20240102-j7200-pcie-s2r-ecb1a979e357
-
-Best regards,
 -- 
-Thomas Richard <thomas.richard@bootlin.com>
+2.39.2
 
