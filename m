@@ -1,144 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 855DF535A2;
-	Fri, 16 Feb 2024 10:52:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37501535DD;
+	Fri, 16 Feb 2024 11:09:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708080772; cv=none; b=ofZBhUu3AKa13W9TTf42Rc2/9HuOp6FbtoHVbP1uDxvXUkuUAUvEZV90ZzxtgpxFirt0j/NkknVpxx6oc0NbFgBOVy1m+ZVARv8KRpmKzm3OHo+/2ap7xIuqwS7P7uAVtMm+kFOe5IcqTd85uO8rONGAhyaTF9rgKrYI42jfugQ=
+	t=1708081764; cv=none; b=mIOrDdBt3xsLQaj31Rksv0VA1uBRpUnnR1gvlbNGVLjOE1wz2Olyykb5qoyHvzrqTyp+4JWPdGm/AP1FHJpGhthkruZu37x9PfK4njsTpnUn5+QSPuVKTvj0f3mcEmG0Pvx+SPR+LWqT8MHrw8l257LO8VpzDuOgdo7aTLfmffw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708080772; c=relaxed/simple;
-	bh=8VkaDPezDLyOsFDWG7YISAHY6yzoxdeio9M6WtqjSaw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fph5odDwzzAIxy5jkyl0UqSPnSu+73Fmg5t9SQUgEe936FhY38YpmDrBIpgxKBs59+QbCuUnvjR8AP1yYJjooi3KuHE6dOA3HPT5pBRu8qeHD6+2RHfyavfB0vXuif6+b/NDjU3A5tR04+jM7J0SbHPnlqzevmw05ZtfxhTN8vA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dZxKMAMl; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708081764; c=relaxed/simple;
+	bh=VoIm7bG7xdxeX1Ve84YA5mgH1w68YbeyVDn/kcEb2Ns=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
+	 References:In-Reply-To; b=L1KetItU0In3bjJ9P56MH/J+Eljapb8yABLYD7ebsKJFXLfwJHKu2s4diUeum693Erq/0arlDlgN7lxBub/TpZ0dLSBpfyd3uXt0Faml8Copqbg+4b0zdXf6vK+QpdAVFbiNNgiOhdiBbtn3+fFZmlxjwCin5ytUrt9rp6cyo0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=pu19fIin; arc=none smtp.client-ip=217.70.183.199
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dZxKMAMl"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D0B92C433C7;
-	Fri, 16 Feb 2024 10:52:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1708080772;
-	bh=8VkaDPezDLyOsFDWG7YISAHY6yzoxdeio9M6WtqjSaw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dZxKMAMlNEItXdf+sah3f0Cyw5u24xo2zCc00T3+8mqhBrqpOxyetDPgOL9e8avxx
-	 mv22lD1sEPmBEmFDSHApj6JOize1TuBT4VPWM4jBcJrKvhYj92EzTyN60eKdNNzhIt
-	 7yYcEj66TVVTE8xrrDPoK4urjCLlNNUpfQPba/TWUvl/7TT12Yr5dVPI/+323QCq7F
-	 TmaGxLvOhmIVwApJw/9MbnTbjlaCsq1ZAzy8dZAgR6x9rfcpnVf2SuuJSE3GDx4sNQ
-	 FBP2KsLyjT8nx4N4tU/0WxdWlWFnesGH9gIGZWVbjblrTWsB7Pb2DROPyjsNu9MQZD
-	 b6BSnB9vI28LQ==
-Date: Fri, 16 Feb 2024 16:22:41 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Cc: agross@kernel.org, andersson@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-	konrad.dybcio@linaro.org, mani@kernel.org, robh+dt@kernel.org,
-	quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-	quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-	dmitry.baryshkov@linaro.org, robh@kernel.org,
-	quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-	quic_parass@quicinc.com, quic_schintav@quicinc.com,
-	quic_shijjose@quicinc.com, Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mhi@lists.linux.dev
-Subject: Re: [PATCH v9 0/5] arm64: qcom: sa8775p: add support for EP PCIe
-Message-ID: <20240216105241.GB2559@thinkpad>
-References: <1701432377-16899-1-git-send-email-quic_msarkar@quicinc.com>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="pu19fIin"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id C1D3EFF807;
+	Fri, 16 Feb 2024 11:09:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1708081759;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VoIm7bG7xdxeX1Ve84YA5mgH1w68YbeyVDn/kcEb2Ns=;
+	b=pu19fIindWoyvl+UGjcMcq0t+6LJjVczMtqO7ZZb4KGzFo4HYYZa89THhOrO2/5B+ftg7b
+	YjSeimNZDgnx7EQscGzkSBZcYAS6+CezQS8UgDZiuHuaOnObzJBP20rocAZNF8IomgpHA2
+	Av5ymPoGLmO4ztX+HCX1kn3h9Bkg26z1b6omSa6oJlDiQafr7OX2mSBONtWifEX8frY17p
+	yHiYMKESalbmWEcskaoL+yv2hXLk6GWqU3RsrzopcgLnCFiBa/mEPgJD5GaD1mHTQtatb7
+	VRK1dcwRCRGRgUVjrrMGy7jr3GNvaLoGb1imMlWSxUCstw1pmHELoBGOiNulnA==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1701432377-16899-1-git-send-email-quic_msarkar@quicinc.com>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 16 Feb 2024 12:09:17 +0100
+Message-Id: <CZ6GG6OQUJTX.2OM5TC9YLOAXV@bootlin.com>
+From: =?utf-8?q?Th=C3=A9o_Lebrun?= <theo.lebrun@bootlin.com>
+Subject: Re: [PATCH v3 18/18] PCI: j721e: add suspend and resume support
+Cc: "Linus Walleij" <linus.walleij@linaro.org>, "Bartosz Golaszewski"
+ <brgl@bgdev.pl>, "Andy Shevchenko" <andy@kernel.org>, "Tony Lindgren"
+ <tony@atomide.com>, "Haojian Zhuang" <haojian.zhuang@linaro.org>, "Vignesh
+ R" <vigneshr@ti.com>, "Aaro Koskinen" <aaro.koskinen@iki.fi>, "Janusz
+ Krzysztofik" <jmkrzyszt@gmail.com>, "Andi Shyti" <andi.shyti@kernel.org>,
+ "Peter Rosin" <peda@axentia.se>, "Vinod Koul" <vkoul@kernel.org>, "Kishon
+ Vijay Abraham I" <kishon@kernel.org>, "Philipp Zabel"
+ <p.zabel@pengutronix.de>, "Lorenzo Pieralisi" <lpieralisi@kernel.org>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, "Rob Herring"
+ <robh@kernel.org>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ <linux-gpio@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-arm-kernel@lists.infradead.org>, <linux-omap@vger.kernel.org>,
+ <linux-i2c@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+ <linux-pci@vger.kernel.org>, <gregory.clement@bootlin.com>,
+ <thomas.petazzoni@bootlin.com>, <u-kumar1@ti.com>
+To: "Siddharth Vadapalli" <s-vadapalli@ti.com>, "Thomas Richard"
+ <thomas.richard@bootlin.com>
+X-Mailer: aerc 0.15.2
+References: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
+ <20240102-j7200-pcie-s2r-v3-18-5c2e4a3fac1f@bootlin.com>
+ <aa791703-81d8-420c-ba35-c8fd08bc3f07@ti.com>
+In-Reply-To: <aa791703-81d8-420c-ba35-c8fd08bc3f07@ti.com>
+X-GND-Sasl: theo.lebrun@bootlin.com
 
-On Fri, Dec 01, 2023 at 05:36:11PM +0530, Mrinmay Sarkar wrote:
-> This series adds the relavent DT bindings, new compatible string,
-> add support to EPF driver and add EP PCIe node in dtsi file for
-> ep pcie0 controller.
-> 
+Hello,
 
-Applied patches 3 and 4 to pci/endpoint!
+On Fri Feb 16, 2024 at 11:48 AM CET, Siddharth Vadapalli wrote:
+> On 24/02/15 04:18PM, Thomas Richard wrote:
+> > From: Th=C3=A9o Lebrun <theo.lebrun@bootlin.com>
+> >=20
+> > Add suspend and resume support. Only the rc mode is supported.
+> >=20
+> > During the suspend stage PERST# is asserted, then deasserted during the
+> > resume stage.
+>
+> Wouldn't this imply that the Endpoint device will be reset and therefore
+> lose context? Or is it expected that the driver corresponding to the
+> Endpoint Function in Linux will restore the state on resume, post reset?
 
-- Mani
+This does imply exactly that. Endpoint driver must be able to restore
+context anyway, as system-wide suspend could mean lost power to PCI RC
+controller (eg suspend-to-RAM) or PCI rails (dependent on hardware).
 
-> v8 -> v9:
-> - update author in "Add pci_epf_mhi_ prefix to the function" patch.
-> - add ack by and reviewed by tag in commit message.
-> 
-> v7 -> v8:
-> - Add new patch PCI: epf-mhi: Add "pci_epf_mhi_" prefix to the function
->   names
-> - Update PCI: epf-mhi: Add support for SA8775P patch on top of the new
->   patch and update commit message.
-> 
-> v6 -> v7:
-> - add reviewed by tag in commit message in all patches.
-> - update commit message in patch 2 as per comment.
-> - update reason for reusing PID in commit message.
-> 
-> v5 -> v6:
-> - update cover letter.
-> 
-> v4 -> v5:
-> - add maxItems to the respective field to constrain io space and
->   interrupt in all variants.
-> 
-> v3 -> v4:
-> - add maxItems field in dt bindings
-> - update comment in patch2
-> - dropped PHY driver patch as it is already applied [1]
-> - update comment in EPF driver patch
-> - update commect in dtsi and add iommus instead of iommu-map
-> 
-> [1] https://lore.kernel.org/all/169804254205.383714.18423881810869732517.b4-ty@kernel.org/
-> 
-> v2 -> v3:
-> - removed if/then schemas, added minItems for reg,
->   reg-bnames, interrupt and interrupt-names instead.
-> - adding qcom,sa8775p-pcie-ep compitable for sa8775p
->   as we have some specific change to add.
-> - reusing sm8450's pcs_misc num table as it is same as sa8775p.
->   used appropriate namespace for pcs.
-> - remove const from sa8775p_header as kernel test robot
->   throwing some warnings due to this.
-> - remove fallback compatiable as we are adding compatiable for sa8775p.
-> 
-> v1 -> v2:
-> - update description for dma
-> - Reusing qcom,sdx55-pcie-ep compatibe so remove compaitable
->   for sa8775p
-> - sort the defines in phy header file and remove extra defines
-> - add const in return type pci_epf_header and remove MHI_EPF_USE_DMA
->   flag as hdma patch is not ready
-> - add fallback compatiable as qcom,sdx55-pcie-ep, add iommu property
-> 
-> 
-> Manivannan Sadhasivam (1):
->   PCI: epf-mhi: Add "pci_epf_mhi_" prefix to the function names
-> 
-> Mrinmay Sarkar (4):
->   dt-bindings: PCI: qcom-ep: Add support for SA8775P SoC
->   PCI: qcom-ep: Add support for SA8775P SOC
->   PCI: epf-mhi: Add support for SA8775P
->   arm64: dts: qcom: sa8775p: Add ep pcie0 controller node
-> 
->  .../devicetree/bindings/pci/qcom,pcie-ep.yaml      | 64 +++++++++++++++++++++-
->  arch/arm64/boot/dts/qcom/sa8775p.dtsi              | 46 ++++++++++++++++
->  drivers/pci/controller/dwc/pcie-qcom-ep.c          |  1 +
->  drivers/pci/endpoint/functions/pci-epf-mhi.c       | 21 ++++++-
->  4 files changed, 128 insertions(+), 4 deletions(-)
-> 
-> -- 
-> 2.7.4
-> 
-> 
+Thanks,
 
--- 
-மணிவண்ணன் சதாசிவம்
+--
+Th=C3=A9o Lebrun, Bootlin
+Embedded Linux and Kernel engineering
+https://bootlin.com
