@@ -1,191 +1,214 @@
-Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2139.outbound.protection.partner.outlook.cn [139.219.17.139])
+Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2096.outbound.protection.partner.outlook.cn [139.219.17.96])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEDE36350A;
-	Sun, 18 Feb 2024 13:54:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D5A86BFB4;
+	Sun, 18 Feb 2024 13:56:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.96
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708264489; cv=fail; b=ErjFDhESuyM8j/SWFel1d1r/t50icpqzy6lO6/CnCVpAWtXxKkpobYsI1m0JzOvkppObnmkdadsz2jPxl+rnrBvZIEGfWuN2OjH+USaDm5bOWiwog0UKQT6dDK8grqthBLNySqLk9O3Ao38wEIMWZ6YyhcYNiJiH5T5bivJ/myk=
+	t=1708264612; cv=fail; b=WJk2GA2eTW7VhCZr8tp1LDdvMlHOB+BfIpv/ZDO7m3RB/D8ZDPZTeHtnHAiUixTBbcQhFBFrxGwB7woUMPjwDmJDFOe4J1HB1MmCYnNRzUJJ7/7R8g14EBvcKj/VYRO0GXsXOMPALE9JxSO8Vc/IRyohz+xtbE1GLOgPq3I+02E=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708264489; c=relaxed/simple;
-	bh=/4PccNbWjjS+4Uc+iPMog5YcbODT2POYLU9j4TmmDl8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=m4FVSGU7pvI04pr586WxKrs4bng+em4rSWyKnTf/8bfGckPOOimg+yyaclYia8fbACjgwshMxnZEFsu7QpCJlb7vodmPx9BCQubDAIFg2Jw56w6f0kbRECN5nySjP/uNLwS+edhzx4XEQ+VfJhijilzhTUrmHNgF7w2+F44/WlI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.17.139
+	s=arc-20240116; t=1708264612; c=relaxed/simple;
+	bh=EHPcSj9sR7PdM2cnaBEbCcyVix+pV/iYqVG8akqgkw4=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=oDSWfldsAJL9uhycaXOE1Sbs0ufQDuSEGYtLjdfPDoejrGseWi8lhl38TmyztX7Yc/3jspdJdUn+iEd7ig1qUer6sRaJm06zop1XO5owAVGW3ubx2MIU89sRWwFa2I93Br0J7Kd7FdY9iTePCReQdhg8Z5Jlx89Wg/sInZbBMGo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.17.96
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=O/AXF0Sh5UMBpORY79hRgdA7qgky+XB9ZD7UhB9VESE1LqGvoGhv7tsQQcutV9OV+64XjvX8VqBc5wFOB+oLQgmrUhG9x36YfSASFS3GEuPYDD8fOAYDz7B294Q+E8qAut5PC/qw5AtN1ovUElD/4odl78aCiKM7rNam/oX/6RkduujLc3bmY00CxgCjCRSghLRTi2chrnAM+K5Yu1OmRMu4q1c0FQjdxlkI8DOGYQqDvTurGfm3Vg3aIAqhjrf4PqDOX2WPAJdynjJIIP8XOJ33xkYAVN4o9fW+jDJ2aKDvXWrHCdC8kJ5vUJCJ7Wo9n3LdASv6ZTG1n4a/obTvgw==
+ b=eSFKgMz9SLtBOWgLZMwmzsBMsaKTtHY+sEoaJ47hR1F+rmZPdqEVaj3aWMBC4sDQ3znItof1C8TGS2fVAff/UPb4ro1hneaOnNf4yqRFNuD0WHL0xmEPqVfuxgbyj7nK8tcLmdeIAfrAAQmwNVkd8BC0ACRojqi0FuFCGuPJA6ZrQMM4Qrit3aoqRxW7ld8W4oN1gQWaFdDYA0GfTy1TKWEMFeIZxwyIN1yMdHkj+oHGPI9SZxZc6Zv4FH8bQJkemDLu6/SRfuWlP8wvd53/vKX5vkeLBSmbE8726hlxW6cn2uyKvSyNKaRncItw0FogK1nJ8d132twUADV7HTVTmg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qiqHj4APLQ+5sb97w44ol5KWqweOs8B8Tg2C7Uqvdm0=;
- b=YZtmA3Pltg/wkzVtetNM0dDJizxKQSBwwt3TaP9QF83gvxNyuripwsCgcBe/E8DaOHMJtMfvguBiTOUasVaEPsGwIGoEeVXONlPWWjcyFSVOsuCOBfHxMGM9auQPDdamY4iR5/el8Sezm+aelOWWWJHUWrcODQ9NKwwrCk4FL52outnsfTOKNTdrDXBpSPEerCdxPaPyE61liTBcF4b3AVR7Pd0R8Fd0A5Y3jF6Yc7J5wyJlAy0NwHto1/lwbQ6F+uVvByMhQtKP9uT9rKhmpHNDnWce//Igo2YP+KwjU1y+72jUaD5j5MV9cQXOn8eIpKopgkTwKUJ3eVqobjrJTQ==
+ bh=R0+ut9cZnMaNFheeqwtU0iLAGDDkHh3yE1QguZZMOuY=;
+ b=iIiAieaa8q9zGMmhPIf4iHJ55BWKCoFfG3Szdo+L2Rw6dzSB12/f/MwQbp3kS5e9YiBIb9ZftlLA57stN/iQJPxCOBzHZ6tSZHJZpOiRPxdxBQrohM20rw/lktLsdBbx+BKkwQDMnNuJ9UiAAm6MXCXW/PCBX5dZiEy+WRzCua6BcjLPmD+lzlhDa0IQINQdRsAfQenjPzmWb28litf0E3yhSpEsNt6QdCAflHhbxMj9l9MXcmeIGY/IGk8ceS/ukZE79bFUrkkjUVvLu2oOsZHiBTpF7ZeCV5C1Sc4jXItYALsQRrYYRxIiT3Ll5VGx1X8MHiSsBsi+LlqbTNQCmw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=starfivetech.com; dmarc=pass action=none
  header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=starfivetech.com;
 Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
- (2406:e500:c311:25::15) by SHXPR01MB0765.CHNPR01.prod.partner.outlook.cn
- (2406:e500:c311:26::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.46; Sun, 18 Feb
- 2024 10:17:46 +0000
+ (2406:e500:c311:25::15) by SHXPR01MB0464.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:1d::23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7249.50; Sun, 18 Feb
+ 2024 10:23:20 +0000
 Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
  ([fe80::5a5a:fa59:15fd:63dc]) by
  SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn ([fe80::5a5a:fa59:15fd:63dc%3])
- with mapi id 15.20.7249.051; Sun, 18 Feb 2024 10:17:46 +0000
+ with mapi id 15.20.7249.051; Sun, 18 Feb 2024 10:23:20 +0000
 From: Minda Chen <minda.chen@starfivetech.com>
-To: Conor Dooley <conor@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Daire McNamara <daire.mcnamara@microchip.com>,
-	Emil Renner Berthing <emil.renner.berthing@canonical.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
-Cc: devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-riscv@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	Paul Walmsley <paul.walmsley@sifive.com>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Mason Huo <mason.huo@starfivetech.com>,
-	Leyfoon Tan <leyfoon.tan@starfivetech.com>,
-	Kevin Xie <kevin.xie@starfivetech.com>,
-	Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v15 11/23] PCI: microchip: Add num_events field to struct plda_pcie_rp
-Date: Sun, 18 Feb 2024 18:17:30 +0800
-Message-Id: <20240218101732.113397-10-minda.chen@starfivetech.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20240218101732.113397-1-minda.chen@starfivetech.com>
-References: <20240218101732.113397-1-minda.chen@starfivetech.com>
-Content-Type: text/plain
-X-ClientProxiedBy: SHXPR01CA0022.CHNPR01.prod.partner.outlook.cn
- (2406:e500:c311:1b::31) To SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
- (2406:e500:c311:25::15)
+To: Conor Dooley <conor@kernel.org>, =?iso-8859-2?Q?Krzysztof_Wilczy=F1ski?=
+	<kw@linux.com>, Rob Herring <robh+dt@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, Daire
+ McNamara <daire.mcnamara@microchip.com>, Emil Renner Berthing
+	<emil.renner.berthing@canonical.com>, Krzysztof Kozlowski
+	<krzysztof.kozlowski+dt@linaro.org>, Kevin Hilman <khilman@baylibre.com>
+CC: "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-riscv@lists.infradead.org" <linux-riscv@lists.infradead.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, Paul Walmsley
+	<paul.walmsley@sifive.com>, Palmer Dabbelt <palmer@dabbelt.com>, Albert Ou
+	<aou@eecs.berkeley.edu>, Philipp Zabel <p.zabel@pengutronix.de>, Mason Huo
+	<mason.huo@starfivetech.com>, Kevin Xie <kevin.xie@starfivetech.com>
+Subject: Re: [PATCH v15 22/23] PCI: starfive: Offload the NVMe timeout
+ workaround to host drivers.
+Thread-Topic: [PATCH v15 22/23] PCI: starfive: Offload the NVMe timeout
+ workaround to host drivers.
+Thread-Index: AQHaYlP4rHGw8vZ4EUmOCs3FPdp69rEP5FTw
+Date: Sun, 18 Feb 2024 10:23:20 +0000
+Message-ID:
+ <SHXPR01MB0863B1FE2434D02FC221FF73E652A@SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn>
+References: <20240218101921.113528-1-minda.chen@starfivetech.com>
+ <20240218101921.113528-7-minda.chen@starfivetech.com>
+In-Reply-To: <20240218101921.113528-7-minda.chen@starfivetech.com>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=starfivetech.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SHXPR01MB0863:EE_|SHXPR01MB0464:EE_
+x-ms-office365-filtering-correlation-id: 2a26c880-8617-4841-e51c-08dc306ba164
+x-ms-exchange-senderadcheck: 1
+x-microsoft-antispam: BCL:0;
+x-microsoft-antispam-message-info:
+ MrxrABSImBd8nFsGU8nHUmmp/noxJaQR8eOGjGxaNtOpURH3nN6dYpOqyMlRPAnaYZe5z0ZzOD5V5svpkTKjHonLVffR8GKEY9emaKKN+lPBKBYRXK6tdyQ4ub8LjyTlh6pRRyTWzKmWXwLX8HOTB0zOhskT2rrFaz3bgTBVcd/0KK/zg4PQJSF8YRpm6VOa0WMO7wLxU4hYRa9F0HvhiHJjvl4Qvj82M7iANsi5QtQE41sj+x204jVpTLWoCrdp5DXGUDDhV7Sb6yhInAJDbg5KnxdgA1Ov4AFiWVA6gt7RnXv+56/yUU69qApJuUilJ2o5+C2X40DC0/qeVgBIMeLmxc+H2R8R2v5qNGrWUHSW08x2yUAcRin0rHOcPCCSLZ8yVBdWRfRFpVFvG6PV+FYyzN6mTghF+qVLnVOs4OVhNp/ysdCUQVfCP0pEcfKydcWqoKR4Rkp0rKqNCqpt1B9utz7f2MQSzlPtPq3D6Y+7BP0AEuEBOOCee7l858MQYlfCKhkipPHU6W1qMGt/IxFx8zO5ElTb+h97+Y0UC1ySKfUyqn1KfgsqWEagflYY
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230031)(39830400003)(366004)(346002)(136003)(396003)(230922051799003)(1800799012)(451199024)(186009)(64100799003)(33656002)(55016003)(86362001)(83380400001)(122000001)(40180700001)(40160700002)(38100700002)(5660300002)(41320700001)(7416002)(2906002)(66946007)(4326008)(7696005)(38070700009)(44832011)(54906003)(76116006)(66446008)(66476007)(64756008)(41300700001)(8936002)(66556008)(8676002)(26005)(508600001)(71200400001)(110136005)(9686003)(107886003);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?iso-8859-2?Q?WtwyofcqpL7czQU4qlGOj1oHFgdt1rxH37HuvX1Tw24R5w8wqrsphx9Bnt?=
+ =?iso-8859-2?Q?9Eq0y2jNMJhtrmlnF4fFO0bYIMK2mXSk09x0/3aA3BwGVXu8iotn3rUMub?=
+ =?iso-8859-2?Q?z+VnCVyRzaHDZNaBxtHE4oTFyjXcVS+EogmYoZLIMjCda2sdSr35dMVfwm?=
+ =?iso-8859-2?Q?ySWfsUvFiMRnUwV+WyHKgmAnJf1Sap6ApqGTubU+TA+BLU9dCAfXhOLZyH?=
+ =?iso-8859-2?Q?631WzmAd/ydWWFzF0hiLI+PQs/GaPUZEeMJSq2oGVuHAaiQa9Q6CXjjFXM?=
+ =?iso-8859-2?Q?3xHztmme4PMr1ZKJHSpu55ZQlTcV/0sfShk4T20Oi0PXWTPZde+WEKbRAl?=
+ =?iso-8859-2?Q?akfPsIx1WLbCC5+sJme5s3WDQG/4k+FTNY5eZB9marMS+X7IuwyIp67n5H?=
+ =?iso-8859-2?Q?dJOEzNQ2vjk1v2iLHBAvm15G5XcmvrymJHtFT57aYXOElcvtHlhqcUZEC5?=
+ =?iso-8859-2?Q?Cojhpam8cCX5cgN5iUcn2c8GV4VstwwtHoWsxDr7nNLlY47H2o+9BYdfvJ?=
+ =?iso-8859-2?Q?oRS1ItWxi3HI2TdEpnLfxcx+Xmvo3Lq0A2m4szMICb63H33iB4UmsBrut9?=
+ =?iso-8859-2?Q?+jZQ01pTPbF0ieAM292FgQw+CquVQsW4w+/0xsSAZdELilDWgkz8N0L+P7?=
+ =?iso-8859-2?Q?jXUPVzNhdgLy0a+Bjb/Sx0QnjXyKygL9OqSILweWc4cXvCEWihHrCslTsJ?=
+ =?iso-8859-2?Q?W6SJ2FTgswIhioeYXwJsnbMu2x/fP4pieIxeFi4Hq7jWD69aG9fbuVeAF6?=
+ =?iso-8859-2?Q?kJEdVS6bHw7A5D8Ls+YwUaQDCXaTjSgWV0LMU7juqtADiU7Ar32O1mUnNq?=
+ =?iso-8859-2?Q?7FVoBBVz52g2Ogbnujv+JXChDzAXpKidYqdC9mxQ22oSoaK99mpmzsMke/?=
+ =?iso-8859-2?Q?M9pWyvF1O8GutaJH+4i49Fl17TjdNNzpx17VvaU7VC9VDJXncchGlE1gw+?=
+ =?iso-8859-2?Q?xBlbJ5RfiWzoz1LB2oqN9cKAxIv0lo3/pvn21cuqfYR47ONYOrVUuG3P8T?=
+ =?iso-8859-2?Q?6GQcD6saIRjTqBoHxuq6/3mo5CRZQztHn69fdFCYPOvqilgAOeiu0OtpKL?=
+ =?iso-8859-2?Q?AylK1X/QTL6ANR4k/EYWXQReYkD+Z9jSMCVgietchfvUhjhHsmsNfco+Gz?=
+ =?iso-8859-2?Q?qiZQBo2uJFRzQUJm35AoJeEw83kfr6QY9bCIvfa4mVGUV9iv87mpE1HI9q?=
+ =?iso-8859-2?Q?7h30aU9bP9mY22rrnqS7RZE2jZx3aBDs54nNpidJm53UUtYDLgrYkMD7Nd?=
+ =?iso-8859-2?Q?4T+m50wy/P8hCk4tB9hk/RXsDfODLkld9ZaeSBPcBxRgS1KjrfRpzktmZg?=
+ =?iso-8859-2?Q?uVUtD8J39KpGNsYmbttSD7yOGWlXY1DJdusIohRXiVx1qhag9M33vik4PA?=
+ =?iso-8859-2?Q?qvcBa+J97fOV0mcCevW7QR17aLAfY+vY9O3NVSkCmdjQuoNjOc7vJ91LRX?=
+ =?iso-8859-2?Q?uqbrNV4WTYGiJK9lwHn4qvqRdpS5zI/gPs3JLs8twJAvq0VGCmzlOI7W78?=
+ =?iso-8859-2?Q?yJRCtfTAGaPmZ9QiKS4RObSseiyAnHp+gAkrLt6+kOcMJlLneG8T1CnXga?=
+ =?iso-8859-2?Q?OI0G0yp7MaLjvFaZMBHUeRD76ZH2MkI3+dptrWiixw0nhdAPTmhbGqIvnD?=
+ =?iso-8859-2?Q?mWp3psZRcCp7Do3d78ZxHYoQcX+BfkMSbUH1l26bOtPRMR6wZJau7zRg?=
+ =?iso-8859-2?Q?=3D=3D?=
+Content-Type: text/plain; charset="iso-8859-2"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SHXPR01MB0863:EE_|SHXPR01MB0765:EE_
-X-MS-Office365-Filtering-Correlation-Id: 65bfaaad-ad15-459e-99c5-08dc306ad9e6
-X-MS-Exchange-SenderADCheck: 1
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	co6V7q6hZ0RZCqIypLTafcAzhAnVEtOuUXXp3fpav0iIH9ducynUUd930CxPqEjabY7NZwCDAVUDPZbfpQQf+Gbs4CYVumMAJc7kt8s/x6Ib6lCfIqxKXzQeOYiz13/S4O1RthTGfkr5EH18keRwyYDKZqbrQ1nQRw/veZLV2TqiDJTTkPriWOpalOFrLq6Zfgsq08azvEFUhbZ4sGUfIS9lronFgLlYqvDrxKGftTvVk/1UhsJHRsknEo29D2aGYSaDpMerUXHt8iRAiCRc6yoH110sFrl6fkFbCxGFYJvgLWl8aoX/UguH+ldkRUGBsW9eXSprzZeWnnzkuJWwCW86wFtYiPtmLpipAIOl+jRejQ7qAl5AG0J18la58sLFowcfqL8fVXKhDilfcn5iSKGxHQSclDD3Wc0dhwyZQPveJjsiYwVceKYIoHhqGDrLoISJiEBdnrPctOE3QfiKGN22CXC25/9gbNxKFntY37ikzqYafC8uQJYZdzo8IMG/I63Opt8cM3kbTNZf28A9QPd2aE6CfThKKCyfS1dsaB4EMfFvXuEPOp4Lz+evFjsJ
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230031)(366004)(136003)(396003)(346002)(39830400003)(230922051799003)(64100799003)(186009)(451199024)(1800799012)(2906002)(5660300002)(7416002)(44832011)(41320700001)(26005)(1076003)(6666004)(8936002)(66556008)(66476007)(4326008)(66946007)(107886003)(41300700001)(2616005)(83380400001)(8676002)(40180700001)(38350700005)(52116002)(508600001)(110136005)(54906003)(38100700002)(86362001)(36756003)(40160700002);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?+B/akDW3uBJRNeHBHZ4bPTIRvcXvqFCLIQrVe2wWNUaK6i4rICLfkRSQct+u?=
- =?us-ascii?Q?5d7urybcBlkiRqHYbxzA7/lX510rziwsUQagnphYQznvQkflaUbjVUJmxGRV?=
- =?us-ascii?Q?naIVE/YCuJwGSWnR28X8pWeJfmRP9I/A7s+k0J7qRgpuYbGiwHh5xs4c7nxL?=
- =?us-ascii?Q?BeILrY29r1Cv0KDTz/ujCh8mtBl9GBdbL/IqXCyoBmgGpZx4KYdLYlPf7FDD?=
- =?us-ascii?Q?O74LdXzgAsGFN9ERo61eilXcok0U+XpTJW14hx3yS4AWMS3XZV3Z8CmtF3Rn?=
- =?us-ascii?Q?7P8uOhn9Lb2pqtJQuTYaao7G8ZcsVxOHhcDiaJ8E5HSV8ODzQBkFhkPLigim?=
- =?us-ascii?Q?OcGzQRvEIpJbsaHvITgc40dvi9X3MWQix+UO3ftGecECUrQIf2gL6lTySGsa?=
- =?us-ascii?Q?DAV/gG8qttXftbyG/Ib5x9aOx8UyzCKlW14wwjQpva5zOFnOCcBOthp+gUi8?=
- =?us-ascii?Q?kP9zZtQOC70KKIpoMyQrkjQs+TI11R0/epz5/+Asj9sQQPQxA9ZIHFlRIgFM?=
- =?us-ascii?Q?ZZBkmNn1Uq/GM52vPwxOG2IPiUcLWzZwXTtQrCOViMYylWYmSxfMjKu1+Cae?=
- =?us-ascii?Q?5PKCIsiuy7+WFE0N6PlZ7HIAja422PFD+7inkGlfdjRA224KcpALFiBwutiu?=
- =?us-ascii?Q?Kw+ECWTNnSYQVG7HPq7nphqJuL+fu13iz7yJ54BhCMF1VFfDuMEI28Exp2xW?=
- =?us-ascii?Q?wlv7WocRVvPREkhI9ZWY4gNfLqWaof/aPLokQRGIYLEpYmQSkndtkeVytGmD?=
- =?us-ascii?Q?ZL0PMt8yL7mioUkoXfGYIJZTJHdw+pL36WDga1ipMYapHvn6OZHzLCGtrLlS?=
- =?us-ascii?Q?avbnjgPGDaPjYBjUZSaM3juxjL3N/qkCGupdtt4M5UDgMqBCvfhEddHlOdF5?=
- =?us-ascii?Q?W+MbgGoqrbxEqwsPflp1l6gw0lUM2vhjYAXP31a4ULL92o1GLPhyqjBKw8WT?=
- =?us-ascii?Q?GB1KOq7i4R7w8kO9pWmKk1n3ikY0vlmlKe9pG0/7leIK339aSZ8Q6uBXCj6Z?=
- =?us-ascii?Q?XMDAnnyuUIgpdrpj6WPuVoo9+MsskT7LmXy52GQcc9ypULAm/2sZIlRS1UaJ?=
- =?us-ascii?Q?NYBlgrrxP9iKMucX4xXw35Q4Se+RxGhejfVVnd4aqWrXUwgRll+lp45xANgf?=
- =?us-ascii?Q?xre2VqYp4mCN6pNphM0KP876shiXJqIgXRTW0io1V5lvA9OmxzxvBKmkx9wE?=
- =?us-ascii?Q?lHiJL7nHcV1jxmvE+DsGy8YVO8FO8FqDornRlMZmyNqn17QAahQoBh3MDDw1?=
- =?us-ascii?Q?wG0ZVHvy0f1AvFhcATTKBWPsakGZYYoXw/GjtkeAW0V+HKtedN1ESJJ5T48I?=
- =?us-ascii?Q?HKe79u6jVvIXSTU0JMeFxMGcZHfF0nnqosev5Q/Jw5COAWiONbqYD/VNgw8o?=
- =?us-ascii?Q?YYtjYT9DXja5VmwTW8FML7Lxs4EUNZAyJi9gbnuC8dB2FuJ2ghU/K5T7oIIY?=
- =?us-ascii?Q?D6Id3WTU7mfwzQFD8FFTz0oSwdQAr+Artmed/7IjKgSObp53WGBdghzlslHR?=
- =?us-ascii?Q?Bja8UtTCAt/d5Ma/c4CIwsISjyAOrtAEZtyz+wQghNIEO0gQrTb4nR7ifB+b?=
- =?us-ascii?Q?SAmBoULWNkVErS9EQougi5ARJ3B0iVHu8iXnR03jAy/caxBhtdwP7vXUWASM?=
- =?us-ascii?Q?Nw=3D=3D?=
 X-OriginatorOrg: starfivetech.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 65bfaaad-ad15-459e-99c5-08dc306ad9e6
-X-MS-Exchange-CrossTenant-AuthSource: SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2024 10:17:46.1389
+X-MS-Exchange-CrossTenant-AuthSource: SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2a26c880-8617-4841-e51c-08dc306ba164
+X-MS-Exchange-CrossTenant-originalarrivaltime: 18 Feb 2024 10:23:20.6638
  (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: VyZ7S/xcA6o9tESdyTN3eT2BayA6xOTVwzqOCf7yaaneKMArszdvGnnNqKFFXMMLZphILrrirGgvmyqWBmp+/BcpY9wMLi1KJ+9EkqqZkv4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SHXPR01MB0765
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: cKSAaozEglzH42xwzucXHBr2bxtVJxt0t0z+5TdsumeO9BZnx7e7vxBo3uHhjSaaXNJb2tzoLQZO+9i5ZZmmI1fAHMYnYL9kKXOfCyQzyq4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SHXPR01MB0464
 
-The number of events is different across platforms. In order to share
-interrupt processing code, add a variable that defines the number of
-events so that it can be set per-platform instead of hardcoding it.
 
-Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
----
- drivers/pci/controller/plda/pcie-microchip-host.c | 8 +++++---
- drivers/pci/controller/plda/pcie-plda.h           | 1 +
- 2 files changed, 6 insertions(+), 3 deletions(-)
+>=20
+> From: Kevin Xie <kevin.xie@starfivetech.com>
+>=20
+> As the Starfive JH7110 hardware can't keep two inbound post write in orde=
+r all
+> the time, such as MSI messages and NVMe completions. If the NVMe
+> completion update later than the MSI, an NVMe IRQ handle will miss.
+>=20
+> As a workaround, we will wait a while before going to the generic handle =
+here.
+>=20
+> Verified with NVMe SSD, USB SSD, R8169 NIC.
+> The performance are stable and even higher after this patch.
+>=20
+> Signed-off-by: Kevin Xie <kevin.xie@starfivetech.com>
+> Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+> ---
+>  drivers/pci/controller/plda/pcie-plda-host.c | 12 ++++++++++++
+>  drivers/pci/controller/plda/pcie-plda.h      |  1 +
+>  drivers/pci/controller/plda/pcie-starfive.c  |  1 +
+>  3 files changed, 14 insertions(+)
+>=20
+> diff --git a/drivers/pci/controller/plda/pcie-plda-host.c
+> b/drivers/pci/controller/plda/pcie-plda-host.c
+> index a18923d7cea6..9e077ddf45c0 100644
+> --- a/drivers/pci/controller/plda/pcie-plda-host.c
+> +++ b/drivers/pci/controller/plda/pcie-plda-host.c
+> @@ -13,6 +13,7 @@
+>  #include <linux/msi.h>
+>  #include <linux/pci_regs.h>
+>  #include <linux/pci-ecam.h>
+> +#include <linux/delay.h>
+>=20
+>  #include "pcie-plda.h"
+>=20
+> @@ -44,6 +45,17 @@ static void plda_handle_msi(struct irq_desc *desc)
+>  			       bridge_base_addr + ISTATUS_LOCAL);
+>  		status =3D readl_relaxed(bridge_base_addr + ISTATUS_MSI);
+>  		for_each_set_bit(bit, &status, msi->num_vectors) {
+> +			/*
+> +			 * As the Starfive JH7110 hardware can't keep two
+> +			 * inbound post write in order all the time, such as
+> +			 * MSI messages and NVMe completions.
+> +			 * If the NVMe completion update later than the MSI,
+> +			 * an NVMe IRQ handle will miss.
+> +			 * As a workaround, we will wait a while before
+> +			 * going to the generic handle here.
+> +			 */
+> +			if (port->msi_quirk_delay_us)
+> +				udelay(port->msi_quirk_delay_us);
+>  			ret =3D generic_handle_domain_irq(msi->dev_domain, bit);
+>  			if (ret)
+>  				dev_err_ratelimited(dev, "bad MSI IRQ %d\n", diff --git
+> a/drivers/pci/controller/plda/pcie-plda.h
+> b/drivers/pci/controller/plda/pcie-plda.h
+> index 04e385758a2f..feccf285dfe8 100644
+> --- a/drivers/pci/controller/plda/pcie-plda.h
+> +++ b/drivers/pci/controller/plda/pcie-plda.h
+> @@ -186,6 +186,7 @@ struct plda_pcie_rp {
+>  	int msi_irq;
+>  	int intx_irq;
+>  	int num_events;
+> +	u16 msi_quirk_delay_us;
+>  };
+>=20
+>  struct plda_event {
+> diff --git a/drivers/pci/controller/plda/pcie-starfive.c
+> b/drivers/pci/controller/plda/pcie-starfive.c
+> index 9bb9f0e29565..5cfc30572b7f 100644
+> --- a/drivers/pci/controller/plda/pcie-starfive.c
+> +++ b/drivers/pci/controller/plda/pcie-starfive.c
+> @@ -391,6 +391,7 @@ static int starfive_pcie_probe(struct platform_device
+> *pdev)
+>=20
+>  	plda->host_ops =3D &sf_host_ops;
+>  	plda->num_events =3D PLDA_MAX_EVENT_NUM;
+> +	plda->msi_quirk_delay_us =3D 1;
+>  	/* mask doorbell event */
+>  	plda->events_bitmap =3D GENMASK(PLDA_INT_EVENT_NUM - 1, 0)
+>  			     & ~BIT(PLDA_AXI_DOORBELL)
+> --
+> 2.17.1
 
-diff --git a/drivers/pci/controller/plda/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
-index 18bc352db389..0a5cd8b214cd 100644
---- a/drivers/pci/controller/plda/pcie-microchip-host.c
-+++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-@@ -653,7 +653,7 @@ static void plda_handle_event(struct irq_desc *desc)
- 
- 	events = mc_get_events(port);
- 
--	for_each_set_bit(bit, &events, NUM_EVENTS)
-+	for_each_set_bit(bit, &events, port->num_events)
- 		generic_handle_domain_irq(port->event_domain, bit);
- 
- 	chained_irq_exit(chip, desc);
-@@ -816,7 +816,8 @@ static int plda_pcie_init_irq_domains(struct plda_pcie_rp *port)
- 		return -EINVAL;
- 	}
- 
--	port->event_domain = irq_domain_add_linear(pcie_intc_node, NUM_EVENTS,
-+	port->event_domain = irq_domain_add_linear(pcie_intc_node,
-+						   port->num_events,
- 						   &plda_event_domain_ops,
- 						   port);
- 	if (!port->event_domain) {
-@@ -920,7 +921,7 @@ static int plda_init_interrupts(struct platform_device *pdev, struct plda_pcie_r
- 	if (irq < 0)
- 		return -ENODEV;
- 
--	for (i = 0; i < NUM_EVENTS; i++) {
-+	for (i = 0; i < port->num_events; i++) {
- 		event_irq = irq_create_mapping(port->event_domain, i);
- 		if (!event_irq) {
- 			dev_err(dev, "failed to map hwirq %d\n", i);
-@@ -1012,6 +1013,7 @@ static int mc_host_probe(struct platform_device *pdev)
- 
- 	bridge_base_addr = port->axi_base_addr + MC_PCIE_BRIDGE_ADDR;
- 	plda->bridge_addr = bridge_base_addr;
-+	plda->num_events = NUM_EVENTS;
- 
- 	/* Allow enabling MSI by disabling MSI-X */
- 	val = readl(bridge_base_addr + PCIE_PCI_IRQ_DW0);
-diff --git a/drivers/pci/controller/plda/pcie-plda.h b/drivers/pci/controller/plda/pcie-plda.h
-index e277a5452b5d..f7e900b395f8 100644
---- a/drivers/pci/controller/plda/pcie-plda.h
-+++ b/drivers/pci/controller/plda/pcie-plda.h
-@@ -124,6 +124,7 @@ struct plda_pcie_rp {
- 	raw_spinlock_t lock;
- 	struct plda_msi msi;
- 	void __iomem *bridge_addr;
-+	int num_events;
- };
- 
- void plda_pcie_setup_window(void __iomem *bridge_base_addr, u32 index,
--- 
-2.17.1
-
+Hi Kevin Hilman
+   Will you try this series patch? Maybe this patch can fix the NVMe timeou=
+t print issue.
+If this patch can fix it, please notify us. Thanks
