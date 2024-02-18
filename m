@@ -1,287 +1,311 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2129.outbound.protection.partner.outlook.cn [139.219.17.129])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E849C1E861
-	for <linux-pci@vger.kernel.org>; Sat, 17 Feb 2024 23:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708211190; cv=none; b=LQP6RrItrgyKEiSsUz8/4tWpgVWSObMBT9LTrzGQT4u0mbfklM2iDi8IU4vO3qMxao7wRoe8qyc1MviuZQyKvIrGB4tGV/PiToI55GN9sZbuNkR5rRYdi/ZvCzMJFdfG+iP4FQWX05WpY2AObQGQwfEw2UuLCyY+0LHiwgpDwVw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708211190; c=relaxed/simple;
-	bh=bPj9BDeO01NuFeM4Ym7cH6Ut7Be0dElqkCk0GCNpZjo=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=Numwe2vQvcCFkOtuCbGQKlnAgL298y/0Plavl/hu/rkBcSSERNoD6QQUZOnh6zNH+d/aWEVK8KIEhKqk5kJ5EvJ9tnbsw+rNFg+rKGt37x0aJSfuUwh6MwNrn4keciuNJbybI21yPKLezPjYJGni3Af7sR+qI0rqPza942+uMgc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=n39RE/Il; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="n39RE/Il"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708211188; x=1739747188;
-  h=date:from:to:cc:subject:message-id;
-  bh=bPj9BDeO01NuFeM4Ym7cH6Ut7Be0dElqkCk0GCNpZjo=;
-  b=n39RE/Ilt6Jxg2mzhCt346eGXiUr04arLFCqhTYOMBRca0SPYT7vTGGO
-   8xNDmqNMrJf9cnd5lHe03lPtKBls4wXSQ2hVz3ZV7Vuu096rIHNhCa7fd
-   aa+TJBUSKUi3sQBGgDDlFzZ20ePeCH1d6ND5IHWRT6AXuFwJAObW492ZN
-   ybtn50HsLtlVYK97sa35HD4EbdKZEgFVC+h5vc1hukNDdgQkVHeXVI6K0
-   FI1/ppIcuxpa4sMAhVx148ECPLtrM69M2lBMGdg/tjc15KLh0MqSiIq+y
-   YSQOcQCXDxmI1PvE3VxqEN/QJVTUM5vN9zJMMAOvolQwKk+fKl6kLhWJ3
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10987"; a="6145229"
-X-IronPort-AV: E=Sophos;i="6.06,167,1705392000"; 
-   d="scan'208";a="6145229"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Feb 2024 15:06:28 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,167,1705392000"; 
-   d="scan'208";a="8740096"
-Received: from lkp-server02.sh.intel.com (HELO 3c78fa4d504c) ([10.239.97.151])
-  by fmviesa005.fm.intel.com with ESMTP; 17 Feb 2024 15:06:26 -0800
-Received: from kbuild by 3c78fa4d504c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rbTlH-0002Zo-2i;
-	Sat, 17 Feb 2024 23:06:23 +0000
-Date: Sun, 18 Feb 2024 07:05:52 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 172c0cf519fb52860157c57067f1a58cfc0aa861
-Message-ID: <202402180749.bc3ckosC-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53910374DD;
+	Sun, 18 Feb 2024 10:30:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.129
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1708252210; cv=fail; b=aLceJrSzR0iCHVDO/RjZjvj6aZhyJ+fYiZsZCaU3YqDGfC0iOvOtPB31kWlyWZVyWZdWaMatf2ZUqKAxyIZue8zH6HoQMI1ggZuHCHhSUADnqWVXjEX0mougltFTVdWoDvOyOeloCzyArT0WbgdzULYQYk4NQaGBq6DFM10+1+o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1708252210; c=relaxed/simple;
+	bh=153z9nphCTtjtmLY0yRQaHO9ivj+TovGeZp8rlL4AZY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=nT+5uyl0h2xNbhO/QWn4hgaVqfxYweoozhdxSHgDHFjqJvUKG82VGJ482cRw/aytdhsn2tFN7SGp2nUxfmqnl10qmc9k7MovxOnG5vCfH7clzzAlHLbxpuKc0zFQyAqEMeNWf58Unsb/6csONVCN2jxwpF8KIgjO5lzvjdWRLz8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.17.129
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=ej7pjPbsqzuqTwj8XbekSN3ETlX4O/GNFg54N+JL+pgbCGHXxYLRT5dj8zFmB1f6ooQASwzNKgnG0oaqRD94Ba64EAzst4WHYHUrZVfAKDz+n+Qv5w1D2naDX/dMg/J9EeCcHRzbb6C6mXG8axIIEK1+HSzDrYcm4VQBTkxZlnXW9Q6Q01PMRuA/8adhqZ3Xio8GqHHh23izbkq/YxyA4NdeC+cSa/nBQnh1Gi3iy4Q2/6Lp9L3057ieepmkTbcN5mw3ph3UriVZ/FOjhltS1NhSha2jKxUmibxzCu85GcjsmQgKfuXnV7QBqFMY0+sx4x+8/Ft9aAWnIIOpq2Cc0Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=K7UZdmdyYz24tezUgGACcYCmJKOSO6Q04qEPwmoKWvY=;
+ b=Ctyf8IdVWlTz4QXO21WPLuub6f1TJbAJm7ECo9RHHR2HCCFnwCvq7ZrUsvPDfrtZtWeZbiNQ7wn/uK8J8PCZe24OpQRvaACMX6fpm6pYopYB3Yj3nIrp+EmRDkgCTQrkO4PayuS+L9LSsU8z4vlOeeAhUVambw143vQ+DVPal/0tXkAg/jGxARjmv7BdFFbB7ZUj4DbnIbQl7bTjmzxX1sF0s2oEGANYIwDP5bXRRjOosrcnJVWtv5716hHP86leVDJ/g2bocWMAmM1VdQdiblYOjcotvkHHjQ2aMZJ72nX3/pnN/ckuZO86YXDNjq1S+YWZVOT2qcIN/ImNBUyZ7A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=starfivetech.com; dmarc=pass action=none
+ header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=starfivetech.com;
+Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:25::15) by SHXPR01MB0765.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:26::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.46; Sun, 18 Feb
+ 2024 10:15:39 +0000
+Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+ ([fe80::5a5a:fa59:15fd:63dc]) by
+ SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn ([fe80::5a5a:fa59:15fd:63dc%3])
+ with mapi id 15.20.7249.051; Sun, 18 Feb 2024 10:15:39 +0000
+From: Minda Chen <minda.chen@starfivetech.com>
+To: Conor Dooley <conor@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daire McNamara <daire.mcnamara@microchip.com>,
+	Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc: devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	Paul Walmsley <paul.walmsley@sifive.com>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Mason Huo <mason.huo@starfivetech.com>,
+	Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>,
+	Minda Chen <minda.chen@starfivetech.com>
+Subject: [PATCH v15 01/23] dt-bindings: PCI: Add PLDA XpressRICH PCIe host common properties
+Date: Sun, 18 Feb 2024 18:15:30 +0800
+Message-Id: <20240218101530.113306-2-minda.chen@starfivetech.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240218101530.113306-1-minda.chen@starfivetech.com>
+References: <20240218101530.113306-1-minda.chen@starfivetech.com>
+Content-Type: text/plain
+X-ClientProxiedBy: SHXPR01CA0019.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:1b::28) To SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:25::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SHXPR01MB0863:EE_|SHXPR01MB0765:EE_
+X-MS-Office365-Filtering-Correlation-Id: 256dc340-5454-488e-9396-08dc306a8e3c
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	m07vXg0GA6d+0RHOn43g1WrmmDmvUoSVwCPsw3J/rbCLu5gpSpbBiiOBLihaN3sJJxct8aPEeaDaUHLsny0km4kMQqkCgGbrA2ve7XnElB+yagCq1fnN+PJqpQDtLl4hcdExRdNi5gTC/iJ8kvzwu09iMyOxkrFsdxWXEzCP6tFOS/4KceUa0nM4hbkUCrCm9QvrJq7Y/xvbCOQyz3f0sB317zMV9kvaQshw7d6PgLKsQZLC6ssUOpQZb6PX/C3pmCNtk7uYevSMIlhxfOuyXl75m3Ns3pjtXCIgsRMMLVn6LDJxRnCr0simk/jpec8saXnwngPxjXi0MO0Qd1WZLiwc7dak/y2KLL7B7feTGQlcSTcL0I0nWg5o9CK6ull0gqH4G7D5j3LlkNKcf0aKA7Ixap9vED92AOlBG7rcs07iwRZebCxorL3YDsluu7ViYMibEqhOTdbtSr1aLLwBhzA3eVxgxW2F7oV+urroI+7HpKKQ4pc1LRScBtthJh0bJfnGd4pLifZsersaAny64vPV1O4pyKpmncKAEWO8zL2m+H2cf8MP+rvbDMj5EiKO
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230031)(366004)(136003)(396003)(346002)(39830400003)(230922051799003)(64100799003)(186009)(451199024)(1800799012)(2906002)(5660300002)(7416002)(44832011)(41320700001)(26005)(1076003)(6666004)(8936002)(66556008)(66476007)(4326008)(66946007)(107886003)(41300700001)(2616005)(83380400001)(8676002)(40180700001)(38350700005)(52116002)(508600001)(110136005)(54906003)(966005)(38100700002)(86362001)(36756003)(40160700002);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?Qy25mHapg9j+crG0IE7fOG/0wFKiqF5ePEfK6saGu+Gz7dA5eTQT9pk+MFIf?=
+ =?us-ascii?Q?A5AwGWs74XQI9EGjrgcWksF6Xjt5BgT+Ht7CTCLdxtSkyhgIPzs7B3CJEg2t?=
+ =?us-ascii?Q?xRCMe7vbNdAUfsF8nsGRqam4IIWkwPC95vA9FzlYOc77tHl7V9PAWJou1d7f?=
+ =?us-ascii?Q?CHErHqqCYj/znCrxONOwAkQye1JO0z6NiCi91zonDr+EsjM+i6gq4JbNl16O?=
+ =?us-ascii?Q?H7ZZoPYZOCCf5bm8wCyR2+/kr15jSxYGiOPDzVz2bHh20u1zdoFvINYzt/In?=
+ =?us-ascii?Q?I7RDLax4LV7G30/EH1EHryLE+VU+VBJLED/mZu7hvjs9P+JRpRcCPDKiGdI+?=
+ =?us-ascii?Q?UKwgwTYw3Oun3xKggxFVEhC2amEFG1liGOgOAzkcT3Q5lXTNmNQgZce85tkr?=
+ =?us-ascii?Q?yYEYIU/16VgsdTZ9Idbb5oto+awemyapU/cFGhStmQ8HunhppoakpucVpHd1?=
+ =?us-ascii?Q?1NzozLAScN6qxZr0dyRviKwTqzcx2ZHkpKczG8OXfkpbvWQxrMR7izPYeb2M?=
+ =?us-ascii?Q?TXi4lGcdXmQnY45KN9Phv5BG+WfuD4Z1Qx3J//Fg9/23hQuNz3eoLo/Dy1rh?=
+ =?us-ascii?Q?foA7DqEPYJ3/rBvbh9+AURoQZziMzsgR0kOa5UltZPhNP/ZDu34/KcIcwiW7?=
+ =?us-ascii?Q?fSsMnxrPv3QJ8yL/FBMujg+/KZXsfCmFlJ0GFrgK4AtIz85T52EpG7zt6bcU?=
+ =?us-ascii?Q?FNxIgKQU5NYHOXNTV48mVsPrHFDtuXYqr/KETyF75cohXoKo7KtqJS22t/3w?=
+ =?us-ascii?Q?ST9qQrMLEC/mouocS2dVE1WTVhMxGW/LHm5zwKSdpCXWtDCU7FTGkGVrn89X?=
+ =?us-ascii?Q?QYpHDYqGE+cl6KbogGAEsyCWBwRHABazbpltqlLDfgqX1VPdfdakwkM+NBpE?=
+ =?us-ascii?Q?N0V9lp2vi4zMfYQAFyIwu8r5zyVCxFlkkzZWz4k81fNqDXru/CNeJm2D2dLq?=
+ =?us-ascii?Q?hfQN9pbWOi6rwWFBIu45oxMYX+CQvOCHj145GKLT2uTd6XYseSFPfDy15WGY?=
+ =?us-ascii?Q?gSrEU8uREH8rFGJ2rNRTotJ3CoTY0nCZLzX9SpFsuCD6drwKNkwtAWKJv3pI?=
+ =?us-ascii?Q?ohDvV+OYFvOYfXGVV5WIIPkoq19FnhZwuI0veinLB0kmQHWRuZ6VhQZJklGF?=
+ =?us-ascii?Q?Nr+Fg+el13daDWDDmP4Ql0g2nxEL7QdutufKHgII6nfgtl1Q5DamZ+fq0b01?=
+ =?us-ascii?Q?/V7lurM4NkNy5upP0/dQGGuG93l0uGWDv3yQ6TgqB2rzmReEvJys7E97EcRl?=
+ =?us-ascii?Q?CgsBkY705l80ESkkH/1rXqi20qRPFjco8cYLi/TxCEz05gwcIftVAJWlSl8c?=
+ =?us-ascii?Q?6A0F7IG5edEoJbyMsLJh3uy6vr+xwVjfBTLlsTgvBVIlResmc4kwm8xXnTEp?=
+ =?us-ascii?Q?aPNb0+oyv15WO1G6+fd448CjISH/HuSyW0K3oAmsU3XdTvp8Bosz6VKkdsRD?=
+ =?us-ascii?Q?TDHjqO6Ii0XeWQ6p1C4blEbaof0bE1EMF1HuhvS6neAApRwEcmnYlznuTVsB?=
+ =?us-ascii?Q?M/q/efWxVVGY+e4ftzXq9qlilu+13BcOlgNLraA0tZKvKOy0GYuQtn1Zsnp6?=
+ =?us-ascii?Q?EYv9iH1B1kZsiYqUJbI6j8w1xuQ4Smsprqts5P+6QtXtguz5TQThkr2mFpz8?=
+ =?us-ascii?Q?4A=3D=3D?=
+X-OriginatorOrg: starfivetech.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 256dc340-5454-488e-9396-08dc306a8e3c
+X-MS-Exchange-CrossTenant-AuthSource: SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2024 10:15:39.2193
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: LqeNtsqDqa5RzEhc9JWwKVhFGq23WfFGrEIqqUYK5ZrntCzPusWfiqdHpc/rO7zeBJhdmgQsKTaWlKbtRKUggWSU/bezLZJRwJb7y8WKMKI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SHXPR01MB0765
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 172c0cf519fb52860157c57067f1a58cfc0aa861  MAINTAINERS: Add Siddharth Vadapalli as PCI TI DRA7XX/J721E reviewer
+Add PLDA XpressRICH PCIe host common properties dt-binding doc.
+PolarFire PCIe host using PLDA IP. Move common properties from Microchip
+PolarFire PCIe host to PLDA files.
 
-elapsed time: 1455m
+Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+Reviewed-by: Hal Feng <hal.feng@starfivetech.com>
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Tested-by: John Clark <inindev@gmail.com>
+---
+ .../bindings/pci/microchip,pcie-host.yaml     | 55 +-------------
+ .../pci/plda,xpressrich3-axi-common.yaml      | 75 +++++++++++++++++++
+ 2 files changed, 76 insertions(+), 54 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
 
-configs tested: 214
-configs skipped: 3
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                      axs103_smp_defconfig   gcc  
-arc                                 defconfig   gcc  
-arc                     nsimosci_hs_defconfig   gcc  
-arc                   randconfig-001-20240217   gcc  
-arc                   randconfig-001-20240218   gcc  
-arc                   randconfig-002-20240217   gcc  
-arc                   randconfig-002-20240218   gcc  
-arc                           tb10x_defconfig   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                          pxa910_defconfig   gcc  
-arm                   randconfig-002-20240217   gcc  
-arm                   randconfig-003-20240217   gcc  
-arm                   randconfig-003-20240218   gcc  
-arm                   randconfig-004-20240217   gcc  
-arm                         s5pv210_defconfig   gcc  
-arm                           sama5_defconfig   gcc  
-arm                           spitz_defconfig   gcc  
-arm                           stm32_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-002-20240217   gcc  
-arm64                 randconfig-003-20240217   gcc  
-arm64                 randconfig-004-20240218   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240217   gcc  
-csky                  randconfig-001-20240218   gcc  
-csky                  randconfig-002-20240217   gcc  
-csky                  randconfig-002-20240218   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240217   gcc  
-i386         buildonly-randconfig-002-20240217   clang
-i386         buildonly-randconfig-003-20240217   gcc  
-i386         buildonly-randconfig-004-20240217   gcc  
-i386         buildonly-randconfig-005-20240217   gcc  
-i386         buildonly-randconfig-006-20240217   clang
-i386         buildonly-randconfig-006-20240218   gcc  
-i386                                defconfig   clang
-i386                  randconfig-001-20240217   gcc  
-i386                  randconfig-002-20240217   gcc  
-i386                  randconfig-002-20240218   gcc  
-i386                  randconfig-003-20240217   clang
-i386                  randconfig-004-20240217   gcc  
-i386                  randconfig-005-20240217   gcc  
-i386                  randconfig-006-20240217   clang
-i386                  randconfig-006-20240218   gcc  
-i386                  randconfig-011-20240217   gcc  
-i386                  randconfig-011-20240218   gcc  
-i386                  randconfig-012-20240217   gcc  
-i386                  randconfig-012-20240218   gcc  
-i386                  randconfig-013-20240217   clang
-i386                  randconfig-014-20240217   clang
-i386                  randconfig-014-20240218   gcc  
-i386                  randconfig-015-20240217   clang
-i386                  randconfig-015-20240218   gcc  
-i386                  randconfig-016-20240217   gcc  
-i386                  randconfig-016-20240218   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240217   gcc  
-loongarch             randconfig-001-20240218   gcc  
-loongarch             randconfig-002-20240217   gcc  
-loongarch             randconfig-002-20240218   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                       m5475evb_defconfig   gcc  
-m68k                        mvme147_defconfig   gcc  
-m68k                            q40_defconfig   gcc  
-m68k                           virt_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                       bmips_be_defconfig   gcc  
-mips                  cavium_octeon_defconfig   gcc  
-mips                  decstation_64_defconfig   gcc  
-mips                           ip27_defconfig   gcc  
-mips                    maltaup_xpa_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240217   gcc  
-nios2                 randconfig-001-20240218   gcc  
-nios2                 randconfig-002-20240217   gcc  
-nios2                 randconfig-002-20240218   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-64bit_defconfig   gcc  
-parisc                randconfig-001-20240217   gcc  
-parisc                randconfig-001-20240218   gcc  
-parisc                randconfig-002-20240217   gcc  
-parisc                randconfig-002-20240218   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                    ge_imp3a_defconfig   gcc  
-powerpc                     kmeter1_defconfig   gcc  
-powerpc                     ppa8548_defconfig   gcc  
-powerpc               randconfig-001-20240217   gcc  
-powerpc               randconfig-001-20240218   gcc  
-powerpc               randconfig-002-20240217   gcc  
-powerpc               randconfig-002-20240218   gcc  
-powerpc               randconfig-003-20240217   gcc  
-powerpc                     tqm5200_defconfig   gcc  
-powerpc64             randconfig-002-20240217   gcc  
-powerpc64             randconfig-002-20240218   gcc  
-powerpc64             randconfig-003-20240218   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv                 randconfig-001-20240217   gcc  
-riscv                 randconfig-001-20240218   gcc  
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240218   gcc  
-s390                  randconfig-002-20240217   gcc  
-s390                  randconfig-002-20240218   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                         ecovec24_defconfig   gcc  
-sh                        edosk7705_defconfig   gcc  
-sh                            migor_defconfig   gcc  
-sh                          r7785rp_defconfig   gcc  
-sh                    randconfig-001-20240217   gcc  
-sh                    randconfig-001-20240218   gcc  
-sh                    randconfig-002-20240217   gcc  
-sh                    randconfig-002-20240218   gcc  
-sh                          sdk7780_defconfig   gcc  
-sh                           se7721_defconfig   gcc  
-sh                   secureedge5410_defconfig   gcc  
-sh                   sh7770_generic_defconfig   gcc  
-sh                            shmin_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240217   gcc  
-sparc64               randconfig-001-20240218   gcc  
-sparc64               randconfig-002-20240217   gcc  
-sparc64               randconfig-002-20240218   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                    randconfig-001-20240218   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20240217   gcc  
-x86_64       buildonly-randconfig-003-20240217   gcc  
-x86_64       buildonly-randconfig-004-20240217   gcc  
-x86_64       buildonly-randconfig-006-20240217   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20240217   gcc  
-x86_64                randconfig-011-20240217   gcc  
-x86_64                randconfig-012-20240217   gcc  
-x86_64                randconfig-014-20240217   gcc  
-x86_64                randconfig-015-20240217   gcc  
-x86_64                randconfig-071-20240217   gcc  
-x86_64                randconfig-072-20240217   gcc  
-x86_64                randconfig-073-20240217   gcc  
-x86_64                randconfig-075-20240217   gcc  
-x86_64                randconfig-076-20240217   gcc  
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                          rhel-8.3-func   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                randconfig-001-20240217   gcc  
-xtensa                randconfig-001-20240218   gcc  
-xtensa                randconfig-002-20240217   gcc  
-xtensa                randconfig-002-20240218   gcc  
-
+diff --git a/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml b/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
+index f7a3c2636355..7c2d51221f65 100644
+--- a/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
++++ b/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
+@@ -10,21 +10,13 @@ maintainers:
+   - Daire McNamara <daire.mcnamara@microchip.com>
+ 
+ allOf:
+-  - $ref: /schemas/pci/pci-bus.yaml#
++  - $ref: plda,xpressrich3-axi-common.yaml#
+   - $ref: /schemas/interrupt-controller/msi-controller.yaml#
+ 
+ properties:
+   compatible:
+     const: microchip,pcie-host-1.0 # PolarFire
+ 
+-  reg:
+-    maxItems: 2
+-
+-  reg-names:
+-    items:
+-      - const: cfg
+-      - const: apb
+-
+   clocks:
+     description:
+       Fabric Interface Controllers, FICs, are the interface between the FPGA
+@@ -52,18 +44,6 @@ properties:
+     items:
+       pattern: '^fic[0-3]$'
+ 
+-  interrupts:
+-    minItems: 1
+-    items:
+-      - description: PCIe host controller
+-      - description: builtin MSI controller
+-
+-  interrupt-names:
+-    minItems: 1
+-    items:
+-      - const: pcie
+-      - const: msi
+-
+   ranges:
+     maxItems: 1
+ 
+@@ -71,39 +51,6 @@ properties:
+     minItems: 1
+     maxItems: 6
+ 
+-  msi-controller:
+-    description: Identifies the node as an MSI controller.
+-
+-  msi-parent:
+-    description: MSI controller the device is capable of using.
+-
+-  interrupt-controller:
+-    type: object
+-    properties:
+-      '#address-cells':
+-        const: 0
+-
+-      '#interrupt-cells':
+-        const: 1
+-
+-      interrupt-controller: true
+-
+-    required:
+-      - '#address-cells'
+-      - '#interrupt-cells'
+-      - interrupt-controller
+-
+-    additionalProperties: false
+-
+-required:
+-  - reg
+-  - reg-names
+-  - "#interrupt-cells"
+-  - interrupts
+-  - interrupt-map-mask
+-  - interrupt-map
+-  - msi-controller
+-
+ unevaluatedProperties: false
+ 
+ examples:
+diff --git a/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml b/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
+new file mode 100644
+index 000000000000..31bb17b11e58
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
+@@ -0,0 +1,75 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/plda,xpressrich3-axi-common.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: PLDA XpressRICH PCIe host common properties
++
++maintainers:
++  - Daire McNamara <daire.mcnamara@microchip.com>
++  - Kevin Xie <kevin.xie@starfivetech.com>
++
++description:
++  Generic PLDA XpressRICH PCIe host common properties.
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  reg:
++    maxItems: 2
++
++  reg-names:
++    items:
++      - const: cfg
++      - const: apb
++
++  interrupts:
++    minItems: 1
++    items:
++      - description: PCIe host controller
++      - description: builtin MSI controller
++
++  interrupt-names:
++    minItems: 1
++    items:
++      - const: pcie
++      - const: msi
++
++  msi-controller:
++    description: Identifies the node as an MSI controller.
++
++  msi-parent:
++    description: MSI controller the device is capable of using.
++
++  interrupt-controller:
++    type: object
++    properties:
++      '#address-cells':
++        const: 0
++
++      '#interrupt-cells':
++        const: 1
++
++      interrupt-controller: true
++
++    required:
++      - '#address-cells'
++      - '#interrupt-cells'
++      - interrupt-controller
++
++    additionalProperties: false
++
++required:
++  - reg
++  - reg-names
++  - interrupts
++  - msi-controller
++  - "#interrupt-cells"
++  - interrupt-map-mask
++  - interrupt-map
++
++additionalProperties: true
++
++...
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.17.1
+
