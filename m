@@ -1,233 +1,126 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f45.google.com (mail-vs1-f45.google.com [209.85.217.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64269664B9
-	for <linux-pci@vger.kernel.org>; Tue, 20 Feb 2024 11:21:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9601D67E67
+	for <linux-pci@vger.kernel.org>; Tue, 20 Feb 2024 11:22:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708428100; cv=none; b=c2Lq3lXvb/AndPPMEflzVnWKs3miXNZTEc0ImBcQdUwUvay9LK+k0NU1z2a1At6dfS7heJA0VbebPedZKNFPrsspLEZXbrIIIhJ7RD4lw+ikDADBGa32ph3IdMp/jrdrfH/qgzYPJ8giOL8HfJB9IGKPv3QeTvOunabhL9GEH0c=
+	t=1708428176; cv=none; b=DzE0Jhzwcvyk34QrkQ4IMsEsI+rncs9++wyXAWW6qHsuDk3UEOMLLNNmHAs+QsvhC0xrDQRlk51OP+BrwQ8otmXTWPnACPms2ns8rtpPYydULdGJmOm/zcSYWeCFEmt7NCGHYNDfCzy7BC4QSlybOQkhWz9hjLubSVhotWifrVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708428100; c=relaxed/simple;
-	bh=uQSuDcenC7QtjyHuVyxBlW7jEkPTOEKNuzZhMEq78rI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:Content-Type:
-	 References; b=idxsbU174m8tnFIg8XMmHkwrd6/M/Qr2CE3Q5noh47YbN+B2NyKDXuRMxXhfZWy8LBPkMEDWau5d6aCCQzVUBFYl4huUFdqFVaIxjzjqVvFnhbJ087swhocCmIY1WvOyCZgh43MNA4LnDgYTdTaoJ8EMgjSbul+Fc7wbre0a41A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=NoJ16kJ/; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1708428176; c=relaxed/simple;
+	bh=dQqffqh6T4LO8Z67UPdabicBep7/vKvQtPnTrA6jWl0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=DTigkGli4zddVe6mghme4kPFBd9T7lY4fOYspwbeRuJW2Ci0l25GZwn0gUSMvWP+Ts+vQWoPaMZiZsXGTGSGzw4yQmdSII0BJyudVWybw3zYhYstPhoLSGH5sDVsHKSh5tyQnHqoyD+3YIJCQ74jugdeUQ910Sj3zNrxFgb2++k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=vSO0mx5a; arc=none smtp.client-ip=209.85.217.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="NoJ16kJ/"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20240220112131epoutp01dd5574ff08a3b4b9afe18073b00161fa~1jkwVMvUC2828328283epoutp01c
-	for <linux-pci@vger.kernel.org>; Tue, 20 Feb 2024 11:21:31 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20240220112131epoutp01dd5574ff08a3b4b9afe18073b00161fa~1jkwVMvUC2828328283epoutp01c
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1708428091;
-	bh=6WcEEEJAqHt6H76Re3bajB+WXdTeFoCOJ/3X3ukJOi4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=NoJ16kJ/2Wf/u+qfLviKZqe/TdbFGWbloZIcnE4klF/gPOylGnrlg+w8EPmhEG6/3
-	 cTlsCKwMzJ9PQpaXhnJXG9ztyPz7yqNsnqPnlkD776m/lePf/dvDJ1rr1LX7Fk34Cw
-	 U+p72gFgvDqp9HGtRyJVKNKAYTTMqUpBubiwH0tk=
-Received: from epsnrtp3.localdomain (unknown [182.195.42.164]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20240220112130epcas5p1c696cdb51441ce6690ccd0ce05ae5dd0~1jkv0vIQq2879428794epcas5p1s;
-	Tue, 20 Feb 2024 11:21:30 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.174]) by
-	epsnrtp3.localdomain (Postfix) with ESMTP id 4TfH6J5jF4z4x9Pt; Tue, 20 Feb
-	2024 11:21:28 +0000 (GMT)
-Received: from epcas5p2.samsung.com ( [182.195.41.40]) by
-	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	FB.F3.09672.83B84D56; Tue, 20 Feb 2024 20:21:28 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20240220084125epcas5p28c6d886685006800fc26c11918d5d1dd~1hY_Xg-4K1825418254epcas5p20;
-	Tue, 20 Feb 2024 08:41:25 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20240220084125epsmtrp1969a5c0f2d6b128c58305a9f6452d154~1hY_WkhMu0876808768epsmtrp1c;
-	Tue, 20 Feb 2024 08:41:25 +0000 (GMT)
-X-AuditID: b6c32a4b-60bfd700000025c8-fe-65d48b381b9a
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	D4.C7.08817.5B564D56; Tue, 20 Feb 2024 17:41:25 +0900 (KST)
-Received: from cheetah.sa.corp.samsungelectronics.net (unknown
-	[107.109.115.53]) by epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20240220084122epsmtip15bf359fa9d7cb4279eec9634a592a933~1hY7vkWrA2980029800epsmtip19;
-	Tue, 20 Feb 2024 08:41:22 +0000 (GMT)
-From: Shradha Todi <shradha.t@samsung.com>
-To: linux-clk@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-samsung-soc@vger.kernel.org
-Cc: mturquette@baylibre.com, sboyd@kernel.org, jingoohan1@gmail.com,
-	lpieralisi@kernel.org, kw@linux.com, robh@kernel.org, bhelgaas@google.com,
-	krzysztof.kozlowski@linaro.org, alim.akhtar@samsung.com,
-	linux@armlinux.org.uk, m.szyprowski@samsung.com,
-	manivannan.sadhasivam@linaro.org, pankaj.dubey@samsung.com,
-	gost.dev@samsung.com, Shradha Todi <shradha.t@samsung.com>
-Subject: [PATCH v6 2/2] PCI: exynos: Adapt to clk_bulk_* APIs
-Date: Tue, 20 Feb 2024 14:10:46 +0530
-Message-Id: <20240220084046.23786-3-shradha.t@samsung.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20240220084046.23786-1-shradha.t@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA0VSbUxTVxjeubftLSDmho/sWAKSK2YDB7YK9aAyNXNwF1lGZrZs+wHc0ZuW
-	UG5rW4YzqHwjCAwIIjKobKtk8jVpwSFfw0qEwHAj1AIbMARD5lgYXwM3JqylsP17zvs8z/vk
-	fc8rxN2aBSJhPKdjNRyjpATOvLsP/F8NRFctrHig6wCa0t8VIEO6Ao1138PQ1ys3CNQ510Kg
-	1Px1PjLOWPloMX+Sj4bbKgVoUN8rQOU/dGHIfK0ToMx/MnmooWeCQBOZuXw01P8m+rJlhUCb
-	Ha0E2rA28VDBg4snPehh6xBO/zGaRdD3KiYIutqYRBtrcwX0uLVDQD+1XMdok+EyXdhcC+hl
-	o0+U80cJxxUsI2M1viwXp5LFc/Iw6szZmDdiQqRiSaAkFB2hfDkmkQ2jTkdGBYbHK22zUb6f
-	MMokWymK0Wqpg68f16iSdKyvQqXVhVGsWqZUB6uDtEyiNomTB3Gs7qhELD4UYhPGJihKy1YJ
-	dYno/OD8piAVWD3zgJMQksFwUz/NywPOQjeyHcDNdgtmJ9zIJQDHBwIcxCqAT17c5u04+grm
-	gUPUCWBltrtDlIXBovblLUJABsC0P/NwO+FBfgXgT60mvv2Bk39jsCvNuJXhTobBxYJ2wo55
-	5H5oMudsRbiSR+H9H+sIR9xeWHen29ZJKHQij8HHNfH2PpDsE8KloVHMXofkaTh55bxD7g5/
-	623etorgs8+yt7Ec3jaV4w6shKsmA+bAJ2C3pZJnb4OT/vCbtoOOsje81t+4JcHJ3bBg/em2
-	3BW26nfwPrjyomN7KXug/uEw34Fp+G32DOZYSiGAyzcbsSLgU/F/RDUAtWAPq9YmylltiPow
-	xyb/92lxqkQj2DrfgDOtYHpqIcgMMCEwAyjEKQ9XXrKFdXOVMZ9eYDWqGE2SktWaQYhtfcW4
-	yDNOZbt/ThcjCQ4VB0ul0uDQw1IJ9bLrXFaVzI2UMzo2gWXVrGbHhwmdRKlYW1nEr48+n11a
-	6jbcqE/I0ZlGqlpkordgbl3FsZGpI7pD+VGd84w40YuwFK0PFFH1PQcGv9eeuETMPg+JGRrb
-	PzJ7Ls0/4701n56L+7jXcudPqcMvtLTGpecZXHaNNJaUPKci12bmijMiX/nLJXZDNFhWslHs
-	svDhz3JkvlVzyW/wCd5354NfSpmo5KVzp1Lun37MBo13+ZWvYZNh61zEcM3Vh1/ELvTcbGjb
-	ndH//q5ZPRdg2NvkIpgOX/A+m0JPvWNQpLQ/ip6JriqMPvmuR46XOeLWaNnas14xWGyUDkut
-	9XVE6pX6y5uN34lxv4aPS5sYL89VakzyUvXv6Q3eI29TPK2CkQTgGi3zLzlS0stHBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrNLMWRmVeSWpSXmKPExsWy7bCSnO7W1CupBuuOiVg8mLeNzWJJU4bF
-	zQM7mSxWfJnJbrH39VZ2i4ae36wWmx5fY7X42HOP1eLyrjlsFmfnHWezmHF+H5PFoal7GS1a
-	/rSwWKw9cpfd4m5LJ6vFxVOuFou2fmG3+L9nB7vFv2sbWSx6D9c6iHhcvnaR2eP9jVZ2j52z
-	7rJ7LNhU6rFpVSebx51re9g8nlyZzuSxeUm9R9+WVYwenzfJBXBFcdmkpOZklqUW6dslcGVM
-	mfaNvWCSVMXZd//ZGhiviXYxcnJICJhInOh9xwhiCwnsZpR4fFoEIi4p8fniOiYIW1hi5b/n
-	7F2MXEA1zUwS6/bsYAZJsAloSTR+7WIGSYgILGeU+HnyKVgHs0APs8SB1hAQW1jAVuJj7252
-	EJtFQFVi86F2FhCbV8BK4uCF1ewQG+QlVm84ADSIg4NTwFri6rJMiIOsJP4/3MU8gZFvASPD
-	KkbJ1ILi3PTcYsMCo7zUcr3ixNzi0rx0veT83E2M4PjQ0trBuGfVB71DjEwcjIcYJTiYlUR4
-	3ZsupArxpiRWVqUW5ccXleakFh9ilOZgURLn/fa6N0VIID2xJDU7NbUgtQgmy8TBKdXA1NFv
-	tvDENo2ZO6sZ5K9P9507q6d41+E0K75L7XkvCrVrhfl5hGZOFDYOz1HevrsgLFRDZeW6G74X
-	pyxrviG9iH1l1BKLtcunJHTkvjrr9l3VVyzGOSBkV0fPgs4HIfGNs96/WCPrLclrocP8qXMn
-	l5Z3c2eV7DXJ5emWQWrmf2VZI5+17JKrXbUmUmIO1z4pgVLWDVIHHHZuXLdyg+sM3YYX/y5u
-	kl64f/+211P6LC4E/MtY9a8pj8G6xynpR/TbvWK2/MYp78+tjFa4Nami+LXxV1ctZr4t6z13
-	HwnccenPr8Vic36pMmyLOHdshvCCB5XcG3bMCD0hslv9od25rhb788p2PN1fVhpXdZslKbEU
-	ZyQaajEXFScCAHzCl+P+AgAA
-X-CMS-MailID: 20240220084125epcas5p28c6d886685006800fc26c11918d5d1dd
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20240220084125epcas5p28c6d886685006800fc26c11918d5d1dd
-References: <20240220084046.23786-1-shradha.t@samsung.com>
-	<CGME20240220084125epcas5p28c6d886685006800fc26c11918d5d1dd@epcas5p2.samsung.com>
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="vSO0mx5a"
+Received: by mail-vs1-f45.google.com with SMTP id ada2fe7eead31-47064e95199so323070137.3
+        for <linux-pci@vger.kernel.org>; Tue, 20 Feb 2024 03:22:54 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1708428173; x=1709032973; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tnGpsA2N+oEjNvZD5MvHoPc7WS23uAKNUryh+bWrqLI=;
+        b=vSO0mx5a+FNZasQYE4RcLEccUm4jxE8F3vYw1Sc5Z6kw5LmrJjsBHkEAhmB/OwiObt
+         tP8uQWrOti3T4Rsuxd2Dqutiv+AGL72KptpRTUkZnO4DrhN39ZYEcR8wGuugsTxpFzN7
+         lQyH9QDVQWiZp67zAJGmlFmxUG44rWwjGYkA4JBpouU3dzGX53eAy0Vv5CiKJSR7jW2u
+         Bgca6eN8Oj+QhK3B5CBSfGP3EnYlRfI1NNrpHpbcj623KRgeabfPIRWT4zzt3u/8VT9A
+         3G7DDvfLBZ5+7czw32tDwcCPbEA+IOYiiR/QTDyburwckbN3vOFgvgyvYIRhLTX3n1qu
+         m82w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1708428173; x=1709032973;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=tnGpsA2N+oEjNvZD5MvHoPc7WS23uAKNUryh+bWrqLI=;
+        b=ex28g8utBNd4+TkeV+kH3t6DxutsLGBCJE6wPo7g+hiVvl8pERM3Svn7J8FnSkhYx0
+         5C3F20Yj3OGsdharaq3FBAzxXEuNMDchwraIU2WRXrFdhZxllJi33NYjoapONEX5IQ9e
+         gbgneAmmsH4RzCdrwBWg54BCnj7DzjEsAlTpDVua3TV/ESp+/Xjurs7IRCaiFiXtE6tX
+         D1NzLVAHVeUIS9mi+7Ak9IztckdNaNA6xAU4FUozJ1ehvprVmYC7MvEWgwSUbV/TEWPw
+         IY/qEuZ+Y1CpAx/+xLElGSSKRpFYt0Er3JDzEotnSPyLYIs73rrOzg/hkCYtgjHfGPae
+         ug9A==
+X-Forwarded-Encrypted: i=1; AJvYcCUo0/nhjnVnYFP9U0X0+7vMTsP/6EecuKg4pmhyM8JURfcXTRpPB8rsGAiN3FjUn7Ut8avXfmCQFjG7gX+bjXEdDX60urAOrCH4
+X-Gm-Message-State: AOJu0Yz+/s45bhQVKuB8zeY5HWm3z1rXhrCVQpqPm57gWsgt1iIRHy0C
+	Fi0OG+Ct5eWCcukQEQLgkSYTke9ibYyr+RidU6QI/mDs4M9ejNiV830Ny2AWNi0MqynN6/uhVSd
+	5etwhhMH22+C3EaDQWst9/9gdKWuf6Yba0oDGSQ==
+X-Google-Smtp-Source: AGHT+IGmypbXGvIgsXnS85V0NkbV+58vcVfrux92hdJBvsnBD1MJ/T8V6U4tgekizLSc354z11MbuHbewdtd9TTnF58=
+X-Received: by 2002:a67:ec0a:0:b0:470:4dd8:b18 with SMTP id
+ d10-20020a67ec0a000000b004704dd80b18mr5421598vso.19.1708428173554; Tue, 20
+ Feb 2024 03:22:53 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20240216203215.40870-1-brgl@bgdev.pl> <20240216203215.40870-15-brgl@bgdev.pl>
+ <d5d603dc-ec66-4e21-aa41-3b25557f1fb7@sirena.org.uk>
+In-Reply-To: <d5d603dc-ec66-4e21-aa41-3b25557f1fb7@sirena.org.uk>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Tue, 20 Feb 2024 12:22:42 +0100
+Message-ID: <CAMRc=MeUjKPS3ANE6=7WZ3kbbGAdyE8HeXFN=75Jp-pVyBaWrQ@mail.gmail.com>
+Subject: Re: [PATCH v5 14/18] PCI/pwrctl: add a power control driver for WCN7850
+To: Mark Brown <broonie@kernel.org>
+Cc: Marcel Holtmann <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>, 
+	"David S . Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Kalle Valo <kvalo@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konrad.dybcio@linaro.org>, Liam Girdwood <lgirdwood@gmail.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Saravana Kannan <saravanak@google.com>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Arnd Bergmann <arnd@arndb.de>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Marek Szyprowski <m.szyprowski@samsung.com>, 
+	Alex Elder <elder@linaro.org>, Srini Kandagatla <srinivas.kandagatla@linaro.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Abel Vesa <abel.vesa@linaro.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, Lukas Wunner <lukas@wunner.de>, 
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, linux-bluetooth@vger.kernel.org, 
+	netdev@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-wireless@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-There is no need to hardcode the clock info in the driver as driver can
-rely on the devicetree to supply the clocks required for the functioning
-of the peripheral. Get rid of the static clock info and obtain the
-platform supplied clocks. All the clocks supplied is obtained and enabled
-using the devm_clk_bulk_get_all_enable() API.
+On Mon, Feb 19, 2024 at 6:50=E2=80=AFPM Mark Brown <broonie@kernel.org> wro=
+te:
+>
+> On Fri, Feb 16, 2024 at 09:32:11PM +0100, Bartosz Golaszewski wrote:
+>
+> > +static struct pci_pwrctl_wcn7850_vreg pci_pwrctl_wcn7850_vregs[] =3D {
+> > +     {
+> > +             .name =3D "vdd",
+> > +             .load_uA =3D 16000,
+> > +     },
+>
+> I know a bunch of the QC stuff includes these load numbers but are they
+> actually doing anything constructive?  It keeps coming up that they're
+> causing a bunch of work and it's not clear that they have any great
+> effect on modern systems.
+>
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
- drivers/pci/controller/dwc/pci-exynos.c | 54 ++-----------------------
- 1 file changed, 4 insertions(+), 50 deletions(-)
+Yes, we have what is called a high-power mode and a low-power mode in
+regulators and these values are used to determine which one to use.
 
-diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-index ec5611005566..3234eb5be1fb 100644
---- a/drivers/pci/controller/dwc/pci-exynos.c
-+++ b/drivers/pci/controller/dwc/pci-exynos.c
-@@ -54,43 +54,11 @@
- struct exynos_pcie {
- 	struct dw_pcie			pci;
- 	void __iomem			*elbi_base;
--	struct clk			*clk;
--	struct clk			*bus_clk;
-+	struct clk_bulk_data		*clks;
- 	struct phy			*phy;
- 	struct regulator_bulk_data	supplies[2];
- };
- 
--static int exynos_pcie_init_clk_resources(struct exynos_pcie *ep)
--{
--	struct device *dev = ep->pci.dev;
--	int ret;
--
--	ret = clk_prepare_enable(ep->clk);
--	if (ret) {
--		dev_err(dev, "cannot enable pcie rc clock");
--		return ret;
--	}
--
--	ret = clk_prepare_enable(ep->bus_clk);
--	if (ret) {
--		dev_err(dev, "cannot enable pcie bus clock");
--		goto err_bus_clk;
--	}
--
--	return 0;
--
--err_bus_clk:
--	clk_disable_unprepare(ep->clk);
--
--	return ret;
--}
--
--static void exynos_pcie_deinit_clk_resources(struct exynos_pcie *ep)
--{
--	clk_disable_unprepare(ep->bus_clk);
--	clk_disable_unprepare(ep->clk);
--}
--
- static void exynos_pcie_writel(void __iomem *base, u32 val, u32 reg)
- {
- 	writel(val, base + reg);
-@@ -332,17 +300,9 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- 	if (IS_ERR(ep->elbi_base))
- 		return PTR_ERR(ep->elbi_base);
- 
--	ep->clk = devm_clk_get(dev, "pcie");
--	if (IS_ERR(ep->clk)) {
--		dev_err(dev, "Failed to get pcie rc clock\n");
--		return PTR_ERR(ep->clk);
--	}
--
--	ep->bus_clk = devm_clk_get(dev, "pcie_bus");
--	if (IS_ERR(ep->bus_clk)) {
--		dev_err(dev, "Failed to get pcie bus clock\n");
--		return PTR_ERR(ep->bus_clk);
--	}
-+	ret = devm_clk_bulk_get_all_enable(dev, &ep->clks);
-+	if (ret < 0)
-+		return ret;
- 
- 	ep->supplies[0].supply = "vdd18";
- 	ep->supplies[1].supply = "vdd10";
-@@ -351,10 +311,6 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- 	if (ret)
- 		return ret;
- 
--	ret = exynos_pcie_init_clk_resources(ep);
--	if (ret)
--		return ret;
--
- 	ret = regulator_bulk_enable(ARRAY_SIZE(ep->supplies), ep->supplies);
- 	if (ret)
- 		return ret;
-@@ -369,7 +325,6 @@ static int exynos_pcie_probe(struct platform_device *pdev)
- 
- fail_probe:
- 	phy_exit(ep->phy);
--	exynos_pcie_deinit_clk_resources(ep);
- 	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
- 
- 	return ret;
-@@ -383,7 +338,6 @@ static int __exit exynos_pcie_remove(struct platform_device *pdev)
- 	exynos_pcie_assert_core_reset(ep);
- 	phy_power_off(ep->phy);
- 	phy_exit(ep->phy);
--	exynos_pcie_deinit_clk_resources(ep);
- 	regulator_bulk_disable(ARRAY_SIZE(ep->supplies), ep->supplies);
- 
- 	return 0;
--- 
-2.17.1
+> > +static int pci_pwrctl_wcn7850_power_on(struct pci_pwrctl_wcn7850_ctx *=
+ctx)
+> > +{
+> > +     int ret;
+> > +
+> > +     ret =3D regulator_bulk_enable(ctx->pdata->num_vregs, ctx->regs);
+> > +     if (ret)
+> > +             return ret;
+> > +
+> > +     ret =3D clk_prepare_enable(ctx->clk);
+> > +     if (ret)
+> > +             return ret;
+>
+> This won't disable the regulators on error.
 
+Indeed. Thanks for catching this.
+
+Bart
