@@ -1,168 +1,147 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47F2876C99
-	for <linux-pci@vger.kernel.org>; Wed, 21 Feb 2024 13:59:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE345762C1;
+	Wed, 21 Feb 2024 14:04:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708523957; cv=none; b=P37MBy/IWKXIlseVUMtLocm2wEoS2hGXFrX4FzaAsFl4o/prejDlmdhM5wXF348Jc1/+I9kqzp57mCql2xw8KgcbgdNbt7i8Nmu5Vt0F0ZNSDuvcJyCPGq8Fud9nfKvbaIbUFOmbLSpECwyo1mRO5hI0mQDVMYj9zrohS5xs7iI=
+	t=1708524269; cv=none; b=H2ogikXN65KKAVM9fAGuATkFSdmPjbGmZCpnfK6v+lwaMEjRfYWL5J0pABuc6xpw0LYzDJrO4zAyU6xpZUdWnCFNN+9k8FEfokos3eYwEUv9XHZ4ejMWaGRUuiSiy7yuzq19u5hLi+WoUzOYpPG5qnNwaiovJN3A36xDsleZgwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708523957; c=relaxed/simple;
-	bh=SPoiOVe9t7+lJy32KOx/8m4/OcgmeATJO9xiMhnNQl8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=MvhTN4O6n2sXdnZpeIcTxwFoVdNx3BRatqW8iPjRcnYRvbT8W1vQN3yD8N/5WQ0YsHOU9iOUMrk3mVIiI15obxx6TAMkUBmBXWpQ4nAUgJg8ft7q4Ltf7inP6wog4uiAnTVgzktzZ5Zf/cTpHj2STozJ+NfD7b3GU0t9cgHjXH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1rcn7W-0000Lo-VY; Wed, 21 Feb 2024 14:58:46 +0100
-Received: from [2a0a:edc0:0:900:1d::4e] (helo=lupine)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.94.2)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1rcn7U-0023E5-1L; Wed, 21 Feb 2024 14:58:44 +0100
-Received: from pza by lupine with local (Exim 4.96)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1rcn7T-000AN8-35;
-	Wed, 21 Feb 2024 14:58:43 +0100
-Message-ID: <338419fd10ffcc62b135d924f766d66af8186346.camel@pengutronix.de>
-Subject: Re: [PATCH v3 14/18] phy: cadence-torrent: add suspend and resume
- support
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Thomas Richard <thomas.richard@bootlin.com>, Linus Walleij
- <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, Andy
- Shevchenko <andy@kernel.org>, Tony Lindgren <tony@atomide.com>, Haojian
- Zhuang <haojian.zhuang@linaro.org>,  Vignesh R <vigneshr@ti.com>, Aaro
- Koskinen <aaro.koskinen@iki.fi>, Janusz Krzysztofik <jmkrzyszt@gmail.com>,
- Andi Shyti <andi.shyti@kernel.org>, Peter Rosin <peda@axentia.se>, Vinod
- Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof
- =?UTF-8?Q?Wilczy=C5=84ski?= <kw@linux.com>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-omap@vger.kernel.org, 
- linux-i2c@vger.kernel.org, linux-phy@lists.infradead.org, 
- linux-pci@vger.kernel.org, gregory.clement@bootlin.com,
- theo.lebrun@bootlin.com,  thomas.petazzoni@bootlin.com, u-kumar1@ti.com
-Date: Wed, 21 Feb 2024 14:58:43 +0100
-In-Reply-To: <113b7f2e-1313-4ebf-a403-e5fcae8f01ca@bootlin.com>
-References: <20240102-j7200-pcie-s2r-v3-0-5c2e4a3fac1f@bootlin.com>
-	 <20240102-j7200-pcie-s2r-v3-14-5c2e4a3fac1f@bootlin.com>
-	 <c105bfa8567f9e76731f2b018f4ca3176357204d.camel@pengutronix.de>
-	 <113b7f2e-1313-4ebf-a403-e5fcae8f01ca@bootlin.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.46.4-2 
+	s=arc-20240116; t=1708524269; c=relaxed/simple;
+	bh=rDN6YXXi4Jj9hKLri75fs2GXswgudO4zwSM3AqHNXIE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=b/SxrK0NANCv7rU949VZ1+vHUfbNclDxY8RWw35gI1fcsM2tNhi68IQdSKi4O1jFQU+jQRPCxePo4SEtvwGeDHaXArStSYVZxVXIpPXSqxmEZx3tUeS596ndfJolYsYZOkc8saITKP2UBeN/uFSR/vL1z7gmgQfXuXP+lKq9HWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hu-msarkar-hyd.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=SmlThAbB; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=hu-msarkar-hyd.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="SmlThAbB"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 41LB0AcH003491;
+	Wed, 21 Feb 2024 14:04:16 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding; s=qcppdkim1; bh=Ur2iNkD
+	AwgpJroYXONg49nEPN3PEIQqjXl88ksY4Vjw=; b=SmlThAbBOf4IE3ll42/CyI/
+	EjsE/KtNgN9N7H18nCJyEezuFIqvY8mVI+MmHrJn2ejlh/KPHg6wTtk2fAPxNADs
+	q2cg0v5PUua0Rmvrlg8ME+axxLWMIQYzdYKb5LhtvZQ11dqtKrn3x+FcDmF70Gzj
+	sL3M0t9I92LsnVb6oBh9FgYBHJ/QO4ZjPCmu2Kgxn5G7Syc1SD8TtG8K5SFLNj4R
+	yCvCTXVO6MEw2lhY1Q+3Il1beNt2yMizbSexwOxPAuNChzQda66AWI52JxmHcxCx
+	Mz2XVlRn2Gx5X4ApXZlJ7LfwyzrmXLVDmKprAPy+WIckCeXKSQQj7jSwMd17IoA=
+	=
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wd21s240h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 21 Feb 2024 14:04:15 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 41LE4C3R013272;
+	Wed, 21 Feb 2024 14:04:12 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3wanvkycfg-1;
+	Wed, 21 Feb 2024 14:04:12 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 41LE4Cei013266;
+	Wed, 21 Feb 2024 14:04:12 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 41LE4CA8013260;
+	Wed, 21 Feb 2024 14:04:12 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 0)
+	id 44F4139B8; Wed, 21 Feb 2024 19:34:11 +0530 (+0530)
+From: root <root@hu-msarkar-hyd.qualcomm.com>
+To: andersson@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        jingoohan1@gmail.com, gustavo.pimentel@synopsys.com,
+        konrad.dybcio@linaro.org, manivannan.sadhasivam@linaro.org,
+        conor+dt@kernel.org, quic_nitegupt@quicinc.com
+Cc: quic_shazhuss@quicinc.com, quic_ramkri@quicinc.com,
+        quic_nayiluri@quicinc.com, quic_krichai@quicinc.com,
+        quic_vbadigan@quicinc.com, Mrinmay Sarkar <quic_msarkar@quicinc.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: [PATCH v1 1/3] dt-bindings: PCI: qcom: Add global irq support for SA8775p
+Date: Wed, 21 Feb 2024 19:34:02 +0530
+Message-Id: <20240221140405.28532-2-root@hu-msarkar-hyd.qualcomm.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20240221140405.28532-1-root@hu-msarkar-hyd.qualcomm.com>
+References: <20240221140405.28532-1-root@hu-msarkar-hyd.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: p.zabel@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-pci@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: n3PIdNzPqXevbg6Z9UZMsPFp0XnuC4o2
+X-Proofpoint-GUID: n3PIdNzPqXevbg6Z9UZMsPFp0XnuC4o2
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-02-20_06,2024-02-21_02,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ spamscore=0 impostorscore=0 mlxscore=0 suspectscore=0 phishscore=0
+ clxscore=1034 lowpriorityscore=0 mlxlogscore=977 malwarescore=0
+ bulkscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2402120000 definitions=main-2402210109
 
-On Mi, 2024-02-21 at 14:41 +0100, Thomas Richard wrote:
-> On 2/21/24 14:09, Philipp Zabel wrote:
-> > On Do, 2024-02-15 at 16:17 +0100, Thomas Richard wrote:
-> > > Add suspend and resume support.
-> > >=20
-> > > The already_configured flag is cleared during the suspend stage to fo=
-rce
-> > > the PHY initialization during the resume stage.
-> > >=20
-> > > Based on the work of Th=C3=A9o Lebrun <theo.lebrun@bootlin.com>
-> > >=20
-> > > Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
-> > > ---
-> > >  drivers/phy/cadence/phy-cadence-torrent.c | 54 +++++++++++++++++++++=
-++++++++++
-> > >  1 file changed, 54 insertions(+)
-> > >=20
-> > > diff --git a/drivers/phy/cadence/phy-cadence-torrent.c b/drivers/phy/=
-cadence/phy-cadence-torrent.c
-> > > index 52cadca4c07b..f8945a11e7ca 100644
-> > > --- a/drivers/phy/cadence/phy-cadence-torrent.c
-> > > +++ b/drivers/phy/cadence/phy-cadence-torrent.c
-> > > @@ -3005,6 +3005,59 @@ static void cdns_torrent_phy_remove(struct pla=
-tform_device *pdev)
-> > >  	cdns_torrent_clk_cleanup(cdns_phy);
-> > >  }
-> > > =20
-> > > +static int cdns_torrent_phy_suspend_noirq(struct device *dev)
-> > > +{
-> > > +	struct cdns_torrent_phy *cdns_phy =3D dev_get_drvdata(dev);
-> > > +	int i;
-> > > +
-> > > +	reset_control_assert(cdns_phy->phy_rst);
-> > > +	reset_control_assert(cdns_phy->apb_rst);
-> > > +	for (i =3D 0; i < cdns_phy->nsubnodes; i++)
-> > > +		reset_control_assert(cdns_phy->phys[i].lnk_rst);
-> > > +
-> > > +	if (cdns_phy->already_configured)
-> > > +		cdns_phy->already_configured =3D 0;
-> > > +	else
-> > > +		clk_disable_unprepare(cdns_phy->clk);
-> > > +
-> > > +	return 0;
-> > > +}
-> > > +
-> > > +static int cdns_torrent_phy_resume_noirq(struct device *dev)
-> > > +{
-> > > +	struct cdns_torrent_phy *cdns_phy =3D dev_get_drvdata(dev);
-> > > +	int node =3D cdns_phy->nsubnodes;
-> > > +	int ret, i;
-> > > +
-> > > +	ret =3D cdns_torrent_clk(cdns_phy);
-> > > +	if (ret)
-> > > +		goto clk_cleanup;
-> > > +
-> > > +	/* Enable APB */
-> > > +	reset_control_deassert(cdns_phy->apb_rst);
-> > > +
-> > > +	if (cdns_phy->nsubnodes > 1) {
-> > > +		ret =3D cdns_torrent_phy_configure_multilink(cdns_phy);
-> > > +		if (ret)
-> > > +			goto put_lnk_rst;
-> > > +	}
-> > > +
-> > > +	return 0;
-> > > +
-> > > +put_lnk_rst:
-> > > +	for (i =3D 0; i < node; i++)
-> > > +		reset_control_assert(cdns_phy->phys[i].lnk_rst);
-> >=20
-> > The same cleanup is found in probe. Would it be cleaner to move this
-> > into cdns_torrent_phy_configure_multilink() instead of duplicating it
-> > here?
->=20
-> Hello Philipp,
->=20
-> Yes I could, but from my point of view, it would not be cleaner.
-> This cleanup is called from many places in the probe:
-> -
-> https://elixir.bootlin.com/linux/v6.8-rc5/source/drivers/phy/cadence/phy-=
-cadence-torrent.c#L2948
-> -
-> https://elixir.bootlin.com/linux/v6.8-rc5/source/drivers/phy/cadence/phy-=
-cadence-torrent.c#L2954
-> -
-> https://elixir.bootlin.com/linux/v6.8-rc5/source/drivers/phy/cadence/phy-=
-cadence-torrent.c#L2960
->
-> If I add this cleanup in cdns_torrent_phy_configure_multilink(), yes I
-> could remove it from cdns_torrent_phy_resume_noirq(), but I should keep
-> it in the probe. And I should modify the probe to jump to clk_cleanup if
-> cdns_torrent_phy_configure_multilink() fails.
+From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
 
-I see it now. If it can't be consolidated, it's not useful to move it
-around.
+Add global interrupt support in dt-bindings for SA8775p RC platform.
 
->=20
-regards
-Philipp
+Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+---
+ .../devicetree/bindings/pci/qcom,pcie.yaml    | 26 +++++++++++++++++--
+ 1 file changed, 24 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index a93ab3b54066..d86fb63a2d2c 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -63,7 +63,7 @@ properties:
+ 
+   interrupt-names:
+     minItems: 1
+-    maxItems: 8
++    maxItems: 9
+ 
+   iommu-map:
+     minItems: 1
+@@ -873,8 +873,30 @@ allOf:
+         compatible:
+           contains:
+             enum:
+-              - qcom,pcie-msm8996
+               - qcom,pcie-sa8775p
++    then:
++      oneOf:
++        - properties:
++            interrupts:
++              minItems: 9
++            interrupt-names:
++              items:
++                - const: msi0
++                - const: msi1
++                - const: msi2
++                - const: msi3
++                - const: msi4
++                - const: msi5
++                - const: msi6
++                - const: msi7
++                - const: global
++
++  - if:
++      properties:
++        compatible:
++          contains:
++            enum:
++              - qcom,pcie-msm8996
+               - qcom,pcie-sc7280
+               - qcom,pcie-sc8180x
+               - qcom,pcie-sdm845
+-- 
+2.40.1
+
