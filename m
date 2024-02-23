@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6893D83CC3;
-	Fri, 23 Feb 2024 15:23:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6EC83A0D;
+	Fri, 23 Feb 2024 15:23:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708701789; cv=none; b=mOO5sZKYspBS4ZC2AnFU07tqw9iUmNpLOl20fV6NCmPnn/svHz+iquyfANXYii5Kae1TNO2d1nTM+sjLWxxbVcqdxmnUY7UIwuYpl+RZEgBj0slKFxbedo3S93sFIFYUfF/AyH40xOMtwtcSPbbdCvP5EEBjFmumnUj9WZY2OrU=
+	t=1708701788; cv=none; b=KrpR8ER9dWc1xcw4ynpZ2+Pzekv6t77dOxm1UfSFxYxO6KALrvi4Ya+Lodn6hhEeV4qQaTdr1Uand3bEq58wg8UTcG1tSTULkIvbVNm53aqm9kNLVWjr+QQrfEB/2VMrSGcxyWhPkHFNt7Oblh4u0CEdtKsluhs/UHPnYPRjkyA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708701789; c=relaxed/simple;
-	bh=OWj2b5i7fpfFVzm3D5FLX7tedf5qUfedcLWseSq8y7Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gWNseEvwfg3CVg4Em64aHMzUurlDNDliN3nP47UXO+dKaa64gmOlhfegf+TCu7Uih6EzF0ipPjAHnB7B/cizeXr7HEucRsbCWlv9uNdoygKUX+xGYu7DX/C6Y48aGznF1UGje/2ObutmyAywTofHb3WWAq5ltLIZfBF+p0EEf98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QMrhpPkq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1708701788; c=relaxed/simple;
+	bh=9shxrV37X/hKYhC7+xafRBxXkbpYRJ8dJYB3wBS8aq0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BLOL9n7tF5+le8pZTh8ROqBCKTFXlXowQNGZNIwNz/fxBdIk5uEy+9BPJBi8JObhNuXAaDNKrmdtSw8TLb5Jr6/+ZuZPooX/4ZMTk8+/sU2v+DndfIzVAfwYWtUzjod83UyUShpJ5SOuGxXq3AGoXaiNRhzXHxnY3iQWesc0f5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BwTHzWzs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QMrhpPkq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A3C76C43609;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BwTHzWzs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F0DFC433B2;
 	Fri, 23 Feb 2024 15:23:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1708701786;
-	bh=OWj2b5i7fpfFVzm3D5FLX7tedf5qUfedcLWseSq8y7Q=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=QMrhpPkqFG9r00mtXMNDXeW0UgnlRmsYPdHbyg/9/4Z0HEmdvntpW5CGszqUtomla
-	 B+EPNYxM2lTEWEirudMCLMviRTm9sQPqwXZrL9zYTIjn2gsYMJCX9q+BxKrGDpc4cx
-	 YyKPwjDbXwaqfZoxeHZG9GjXD/UfKyCkK8Uf4oy1NFCfeuuCcUbMHwDRGpbfRw1lzs
-	 nRBKklaoM1guPH/h4JCPEggS4Ton0f8E9jMSlkRXpriINSLhY/5xKbLBoPS1HgJqWs
-	 8NumliXEAp6iJN/qM2FrnRQejdl0UECHN7VoaSTjEJaK792mlHVYoUjvEOnBQ0pD3D
-	 WfuUvasNTOkBQ==
+	bh=9shxrV37X/hKYhC7+xafRBxXkbpYRJ8dJYB3wBS8aq0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=BwTHzWzsu/Zd0FkgYEt+VHXbuKOy5OgClB6+XaV77LhCiG9PBCZEJSKEHkrmIK+Wf
+	 BYa+b8S/A4inKzgNzR6f8Q58lkxDXjPL60D1qxqVFHC8raTHfuiPBwzhIIWw6RJzl1
+	 Vc3DrZWsRQseLG/eRus7+GfMAQbdeHRR9gHwhxx2V1euwi0wrVDRwp1ZzRDepbvcj3
+	 84k8dfFLc/xbsPA9emz04nCyG/95jqxWDRj5LHy2yfqXhwWJIavpBhIlWJj9ewSvlq
+	 wgvtR3xw0ssPqYPpQZWnnez0cCIwStZ/r8bZZQ1eJlDu7ngNu6XiBpQxf+ZEM9bw+1
+	 IXsRPM0H507SA==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rdXOJ-000000005Fh-1XsO;
-	Fri, 23 Feb 2024 16:23:11 +0100
+	id 1rdXOI-000000005FT-0JA2;
+	Fri, 23 Feb 2024 16:23:10 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Bjorn Andersson <andersson@kernel.org>
@@ -44,14 +43,11 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Johan Hovold <johan+linaro@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH v2 07/12] arm64: dts: qcom: sc8280xp-x13s: limit pcie4 link speed
-Date: Fri, 23 Feb 2024 16:21:19 +0100
-Message-ID: <20240223152124.20042-8-johan+linaro@kernel.org>
+	Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH v2 00/12] arm64: dts: qcom: sc8280xp: PCIe fixes and GICv3 ITS enable
+Date: Fri, 23 Feb 2024 16:21:12 +0100
+Message-ID: <20240223152124.20042-1-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240223152124.20042-1-johan+linaro@kernel.org>
-References: <20240223152124.20042-1-johan+linaro@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,38 +56,111 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Limit the WiFi PCIe link speed to Gen2 speed (500 MB/s), which is the
-speed that the boot firmware has brought up the link at (and that
-Windows uses).
+This series addresses a few problems with the sc8280xp PCIe
+implementation.
 
-This is specifically needed to avoid a large amount of link errors when
-restarting the link during boot (but which are currently not reported).
+The DWC PCIe controller can either use its internal MSI controller or an
+external one such as the GICv3 ITS. Enabling the latter allows for
+assigning affinity to individual interrupts, but results in a large
+amount of Correctable Errors being logged on both the Lenovo ThinkPad
+X13s and the sc8280xp-crd reference design.
 
-This also appears to fix intermittent failures to download the ath11k
-firmware during boot which can be seen when there is a longer delay
-between restarting the link and loading the WiFi driver (e.g. when using
-full disk encryption).
+It turns out that these errors are always generated, but for some yet to
+be determined reason, the AER interrupts are never received when using
+the internal MSI controller, which makes the link errors harder to
+notice.
 
-Fixes: 123b30a75623 ("arm64: dts: qcom: sc8280xp-x13s: enable WiFi controller")
-Cc: stable@vger.kernel.org      # 6.2
-Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
----
- arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 2 ++
- 1 file changed, 2 insertions(+)
+On the X13s, there is a large number of errors generated when bringing
+up the link on boot. This is related to the fact that UEFI firmware has
+already enabled the Wi-Fi PCIe link at Gen2 speed and restarting the
+link at Gen3 generates a massive amount of errors until the Wi-Fi
+firmware is restarted. This has now also been shown to cause the Wi-Fi
+to sometimes not start at all on boot for some users.
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-index 2c17e137563a..a67756ada990 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-@@ -768,6 +768,8 @@ &pcie3a_phy {
- };
- 
- &pcie4 {
-+	max-link-speed = <2>;
-+
- 	perst-gpios = <&tlmm 141 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 139 GPIO_ACTIVE_LOW>;
- 
+A recent commit enabling ASPM on certain Qualcomm platforms introduced
+further errors when using the Wi-Fi on the X13s as well as when
+accessing the NVMe on the CRD. The exact reason for this has not yet
+been identified, but disabling ASPM L0s makes the errors go away. This
+could suggest that either the current ASPM implementation is incomplete
+or that L0s is not supported with these devices.
+
+Note that the X13s and CRD use the same Wi-Fi controller, but the errors
+are only generated on the X13s. The NVMe controller on my X13s does not
+support L0s so there are no issues there, unlike on the CRD which uses a
+different controller. The modem on the CRD does not generate any errors,
+but both the NVMe and modem keeps bouncing in and out of L0s/L1 also
+when not used, which could indicate that there are bigger problems with
+the ASPM implementation. I don't have a modem on my X13s so I have not
+been able to test whether L0s causes any trouble there.
+
+Enabling AER error reporting on sc8280xp could similarly also reveal
+existing problems with the related sa8295p and sa8540p platforms as they
+share the base dtsi.
+
+After discussing this with Bjorn Andersson at Qualcomm we have decided
+to go ahead and disable L0s for all controllers on the CRD and the
+X13s.
+
+Note that disabling ASPM L0s for the X13s Wi-Fi does not seem to have a
+significant impact on the power consumption (and there are indications
+that this applies generally for L0s on these platforms).
+
+***
+
+As this series fixes a regression in 6.7 (which enabled ASPM) and fixes
+a user-reported problem with the Wi-Fi often not starting at boot, I
+think we should merge this series for the 6.8 cycle. The final patch
+enabling the GIC ITS should wait for 6.9.
+
+The DT bindings and PCI patch are expected to go through the PCI tree,
+while Bjorn A takes the devicetree updates through the Qualcomm tree.
+
+Note that the devicetree binding updates will conflict with the
+following series which was just merged for 6.9 today:
+
+	https://lore.kernel.org/lkml/513dfb69-aea1-4848-8755-613e03c65843@linaro.org/
+
+The resolution is simply to add 'required-opps' and 'aspm-no-l0s' to the
+new 'qcom,pcie-common.yaml' schema file instead of 'qcom,pcie.yaml',
+while removing 'msi-map-mask'.
+
+***
+
+Johan
+
+
+Changes in v2
+ - drop RFC from ASPM patches and add stable tags
+ - reorder patches and move ITS patch last
+ - fix s/GB/MB/ typo in Gen2 speed commit messages
+ - fix an incorrect Fixes tag
+ - amend commit message X13 wifi link speed patch after user
+   confirmation that this fixes the wifi startup issue
+ - disable L0s also for modem and wifi on CRD
+ - disable L0s also for nvme and modem on X13s
+
+
+Johan Hovold (12):
+  dt-bindings: PCI: qcom: Allow 'required-opps'
+  dt-bindings: PCI: qcom: Do not require 'msi-map-mask'
+  dt-bindings: PCI: qcom: Allow 'aspm-no-l0s'
+  PCI: qcom: Add support for disabling ASPM L0s in devicetree
+  arm64: dts: qcom: sc8280xp: add missing PCIe minimum OPP
+  arm64: dts: qcom: sc8280xp-crd: limit pcie4 link speed
+  arm64: dts: qcom: sc8280xp-x13s: limit pcie4 link speed
+  arm64: dts: qcom: sc8280xp-crd: disable ASPM L0s for NVMe
+  arm64: dts: qcom: sc8280xp-crd: disable ASPM L0s for modem and Wi-Fi
+  arm64: dts: qcom: sc8280xp-x13s: disable ASPM L0s for Wi-Fi
+  arm64: dts: qcom: sc8280xp-x13s: disable ASPM L0s for NVMe and modem
+  arm64: dts: qcom: sc8280xp: enable GICv3 ITS for PCIe
+
+ .../devicetree/bindings/pci/qcom,pcie.yaml    |  6 +++++-
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts     |  7 +++++++
+ .../qcom/sc8280xp-lenovo-thinkpad-x13s.dts    |  7 +++++++
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi        | 17 +++++++++++++++-
+ drivers/pci/controller/dwc/pcie-qcom.c        | 20 +++++++++++++++++++
+ 5 files changed, 55 insertions(+), 2 deletions(-)
+
 -- 
 2.43.0
 
