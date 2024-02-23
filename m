@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 618FA82866;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C7A0839EC;
 	Fri, 23 Feb 2024 15:23:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708701787; cv=none; b=EAUklM5PjLcor+YQbrByo9lzk3C7/Qy9xr3TNpLzUENTiBAQgfAPaXJXGZQ0lihny3ui8bt453rDPdh6PdHzEUZeT9NQIQXH3ZRaSgb3aUtJ1jzXF5vRbLYkN+oGM6YGLLijg/s3RUgMpSuhOXAB9rDRUICK1mbc5hNbG7R1L/o=
+	t=1708701787; cv=none; b=nK2b6Duu4Jier3vGZRlkgCSP0cOVEn/1Ia3xkMT0Zt0/pMKg7/z7rHZV2DyoHmFy//4endgYJ3LDgQJN6ckQ9V1NsEoJovXXOnXzQtlXymXW2oilOyoKDLWZDtrrxdQeYQ+pFLXpMNtD/T7RkrdR3rSl0YLF/IUSqMD2GVht074=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1708701787; c=relaxed/simple;
-	bh=jSrJkfIN1qAWzxJsRTl7DfvhSeqHU9HH07knGCfmKHk=;
+	bh=hKdAU8xGeWoBEDF62SIFZ8ycEZqo56n2cRdtQJsOYWI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CCX1pagZ6LRVUooGatlg23JfgiyukTz2TpBS7PF1aVAR41Fdsf4TAnB49Nth/x5ha84Q0NHdPYb2/0wWhRJpj/dcPVmPVkXpI126TwysJTnjbDmeyDFtfRgA/LalnOz0kuJlNdzQWqrrY1riJGilstzUdSX/yFtS31kxycV+3BU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fl5esR1J; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=BGdwhzOJJ/YuvjpGuQvOGzzkOjUatnLZjGMnr55zWUnhG908YdOyd1WO1pja3CbSw98DIOvSKGrZ5Yv0kDQM0owyCWIxp8O+r3KW8zqTXRlAXFzCvQVLcLZKQuWavGCz8eaQKqG0WPaMV7IixcQI/+shaNeoOHV4BZMZDCHOpOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cXTUmzaX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fl5esR1J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CFA2C433C7;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cXTUmzaX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 852CBC43390;
 	Fri, 23 Feb 2024 15:23:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1708701786;
-	bh=jSrJkfIN1qAWzxJsRTl7DfvhSeqHU9HH07knGCfmKHk=;
+	bh=hKdAU8xGeWoBEDF62SIFZ8ycEZqo56n2cRdtQJsOYWI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=fl5esR1JlBLC32MubsqkqReluCkKzF9p1XmsrALW6QYtrbSfz5f9Hj1QH9VeFNG1F
-	 twC8+mwwaJvx7f/2+7aP0HKsPgQcxOxFLYeDOscVDvWY5PvhrcI+LQd+iPY0xph2xm
-	 mNCB638j/w9XfNGwFSWQH+CWcU4hqPWXuYIORv7upi29Oux8islrzdgPr8ABy6lunC
-	 qbb7+p8S6EGanN14Y4dBrz/V0OfkQr0b4eo1uKV58ngOXjmkw2+SXSyZ1yxCL6DL5V
-	 ZzItuyb6YQMpLJpvFZRbde4q/Lydkxptilv7M7xmpR+S7jbmEb0Uhu1AlRln0mnGWs
-	 f0pIsILf0MEfQ==
+	b=cXTUmzaXMkILnO7RQP11RNpxQxwSqANnovUfeLsNj/+qwgrEIDdtEsiEC3SBLJa7D
+	 zCN57TEjBeF7KkzYGum7kYT5t2cEST8NtvRFz3IdjwHCb1jbmhNgPEVhn32aZCYdq1
+	 kq56BfhR7wynQ1vQpmCypa7P3SnCbmH+t3PEFPH0YVnMEhBmEKM+NG0OKKXDpfRyoB
+	 7o4YCezeFA6Un2PCF99Yuw3zoq6IT5SS2rEwrAm/06o/BOAXpgj6D2f+Sy0bofGHGP
+	 adGEbKQnBfZjcXtf7GhjbB4Vwjz1N4KBAYkUbuXEiNZF3uM2U4V/zfvhjgF6WfwAHB
+	 oIxUTvAjG3SFw==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rdXOI-000000005FV-3iz9;
-	Fri, 23 Feb 2024 16:23:10 +0100
+	id 1rdXOJ-000000005Ff-1Da7;
+	Fri, 23 Feb 2024 16:23:11 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Bjorn Andersson <andersson@kernel.org>
@@ -44,11 +44,10 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v2 01/12] dt-bindings: PCI: qcom: Allow 'required-opps'
-Date: Fri, 23 Feb 2024 16:21:13 +0100
-Message-ID: <20240223152124.20042-2-johan+linaro@kernel.org>
+	Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH v2 06/12] arm64: dts: qcom: sc8280xp-crd: limit pcie4 link speed
+Date: Fri, 23 Feb 2024 16:21:18 +0100
+Message-ID: <20240223152124.20042-7-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240223152124.20042-1-johan+linaro@kernel.org>
 References: <20240223152124.20042-1-johan+linaro@kernel.org>
@@ -60,29 +59,27 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Some Qualcomm SoCs require a minimum performance level for the power
-domain so add 'required-opps' to the binding.
+Limit the WiFi PCIe link speed to Gen2 speed (500 MB/s), which is the
+speed that Windows uses.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/qcom,pcie.yaml | 3 +++
- 1 file changed, 3 insertions(+)
+ arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index a93ab3b54066..5eda4e72f681 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -123,6 +123,9 @@ properties:
-     description: GPIO controlled connection to PERST# signal
-     maxItems: 1
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+index ffc4406422ae..41215567b3ae 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
+@@ -563,6 +563,8 @@ &pcie3a_phy {
+ };
  
-+  required-opps:
-+    maxItems: 1
+ &pcie4 {
++	max-link-speed = <2>;
 +
-   wake-gpios:
-     description: GPIO controlled connection to WAKE# signal
-     maxItems: 1
+ 	perst-gpios = <&tlmm 141 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 139 GPIO_ACTIVE_LOW>;
+ 
 -- 
 2.43.0
 
