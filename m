@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BF9483A0E;
-	Fri, 23 Feb 2024 15:23:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 710F882897;
+	Fri, 23 Feb 2024 15:23:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708701788; cv=none; b=PfhPz7E+32a4rYOWwbD3hzUG+W6bOVqxJKjLUdTcq0zWxw2Q73IA3MIv+GFaQq9LshZ87sR/i3uq5UulrVd7zemSZ9txVEuhiWPoqXIR4m8YVLKAmuUaxm3rgbFXqSK6x0+OjMpIxWbeX78c2r/CJykWms1ePGVxyVTOFDvzFYg=
+	t=1708701788; cv=none; b=i+v1w9TE4n32L/Vns6i+Pfb9R6aNjEw3ttjbeUvy96Cw4dlu4Slc/rBEmYzc0NGb8AhuEMA/C+xZM9UWAsd/GxfmCx9lmuOB7s8+hVUC7GLJMZr3BAVCnpnJKEXynWEhoVsJv0dw0umUd+XS5XghEN9GMNOSly9Yiy2s4HSjwMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1708701788; c=relaxed/simple;
-	bh=jVZUt4YG+wPeP4sDqHFS9RcmoM+nVy3+c7gqaqdvxNc=;
+	bh=gJZHjSh3y+j7s4q6gU9xs2cqQ5VjywqHBbKDaqt8bfM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X0IccknntARvR2NskJz4pUGpDEBkLptEIyVUS5FwoiXncdd6lsrv9SaD4Z/QL96G6QhTnh2Cm9FW2vwGXBeIQLLW334aIsi8auZUIAvjlERAjpYftkdOOKEje3fqer8x187tWJU4j+wvU7IlYXS0L/0JTzhSNOZEaWqvAQaBVDE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uRY9ySyF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=AjL9OCuZLrvwXPKJBDUnoS5igpjZYuA91F4zumxkbn5vX3j5CKXGZc1VqrhrRrCew68rW7FCtayy33AsVyP0kX/YkvvKdEfLd0B+AEHb6pZ51lSuFlo/E28z2Ce84B2C7WqDtOH4Mg6g6eTJXMXOrCDPuEpUlg1kJsOZwjrK1tw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RiMkzcS5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uRY9ySyF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95172C43399;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RiMkzcS5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BC6BC43330;
 	Fri, 23 Feb 2024 15:23:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1708701786;
-	bh=jVZUt4YG+wPeP4sDqHFS9RcmoM+nVy3+c7gqaqdvxNc=;
+	bh=gJZHjSh3y+j7s4q6gU9xs2cqQ5VjywqHBbKDaqt8bfM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=uRY9ySyF+q/Bqrj1OVKddGDpv1hliLUQkBbjGwzajppkTt/imWCpi3zjflQf5Gnf0
-	 jZupC3jRkOpAyb74BHUzODkJClItg77QjE/bwy31Q1p3OfkutaE5ftbGDd9BdDuHO7
-	 ls4Ildmwurs13GNyzDlMfhIZnM5YDw33oA3h8Lg820WcVCKMntpKVeBJJFGxqhkBSZ
-	 GwiQBFT5YVqf9JAPh7lzBJB25tqAhDPAuyLy6uTQR5Tamcv+4p577efVtzmIEatBsp
-	 5uRTGdC36/XLYtH3AW2h7LWj4ItppftXlzMzMNoiFDQ7QJwqmTn1VR1Kj/KrrjD/Jj
-	 ho/4D6azXpg0Q==
+	b=RiMkzcS5oV2wh7PEl8kSNanLJNv9U7lFD6i8q8LVXxXNHLUXjNvxiuc0rYsong6Wc
+	 ssaUlKFv2vUQxAvUh5ohXotOVix5xcW6mw0RzrerVcMqjFetoIlEERDmqr5mce6Qcc
+	 XwnYtEkq/uLvlQRpceVaADrgfs9Imbm+dGSZqIgHIwtBcxkdEhBRt0N2VYIrLO/Vt0
+	 sp8ZyJ78zBABDxRmwmdR2VcxdeiT5HdliQYerU4Hz/Jv+sqYfnLXkbCs/sq2yCSsQL
+	 bzIviGKvXSsQ3QW8HIMa+y5YX0YE+ktaMj0f6cCVBqChoIby88UN58LnYLyJeNguVV
+	 LGkJxduKxYYHQ==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rdXOJ-000000005Fn-2a69;
+	id 1rdXOJ-000000005Fd-0t1U;
 	Fri, 23 Feb 2024 16:23:11 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan+linaro@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH v2 10/12] arm64: dts: qcom: sc8280xp-x13s: disable ASPM L0s for Wi-Fi
-Date: Fri, 23 Feb 2024 16:21:22 +0100
-Message-ID: <20240223152124.20042-11-johan+linaro@kernel.org>
+Subject: [PATCH v2 05/12] arm64: dts: qcom: sc8280xp: add missing PCIe minimum OPP
+Date: Fri, 23 Feb 2024 16:21:17 +0100
+Message-ID: <20240223152124.20042-6-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240223152124.20042-1-johan+linaro@kernel.org>
 References: <20240223152124.20042-1-johan+linaro@kernel.org>
@@ -60,29 +60,61 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Enabling ASPM L0s on the Lenovo Thinkpad X13s results in Correctable
-Errors (BadTLP, Timeout) when accessing the Wi-Fi controller so disable
-it for now.
+Add the missing PCIe CX performance level votes to avoid relying on
+other drivers (e.g. USB or UFS) to maintain the nominal performance
+level required for Gen3 speeds.
 
-Fixes: 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops")
-Cc: stable@vger.kernel.org      # 6.7
+Fixes: 813e83157001 ("arm64: dts: qcom: sc8280xp/sa8540p: add PCIe2-4 nodes")
+Cc: stable@vger.kernel.org      # 6.2
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 1 +
- 1 file changed, 1 insertion(+)
+ arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-index a67756ada990..70824294108e 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-@@ -769,6 +769,7 @@ &pcie3a_phy {
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+index 0a40b8dec14e..95c7b746407f 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
+@@ -1780,6 +1780,7 @@ pcie4: pcie@1c00000 {
+ 			reset-names = "pci";
  
- &pcie4 {
- 	max-link-speed = <2>;
-+	aspm-no-l0s;
+ 			power-domains = <&gcc PCIE_4_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
  
- 	perst-gpios = <&tlmm 141 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 139 GPIO_ACTIVE_LOW>;
+ 			phys = <&pcie4_phy>;
+ 			phy-names = "pciephy";
+@@ -1878,6 +1879,7 @@ pcie3b: pcie@1c08000 {
+ 			reset-names = "pci";
+ 
+ 			power-domains = <&gcc PCIE_3B_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			phys = <&pcie3b_phy>;
+ 			phy-names = "pciephy";
+@@ -1976,6 +1978,7 @@ pcie3a: pcie@1c10000 {
+ 			reset-names = "pci";
+ 
+ 			power-domains = <&gcc PCIE_3A_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			phys = <&pcie3a_phy>;
+ 			phy-names = "pciephy";
+@@ -2077,6 +2080,7 @@ pcie2b: pcie@1c18000 {
+ 			reset-names = "pci";
+ 
+ 			power-domains = <&gcc PCIE_2B_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			phys = <&pcie2b_phy>;
+ 			phy-names = "pciephy";
+@@ -2175,6 +2179,7 @@ pcie2a: pcie@1c20000 {
+ 			reset-names = "pci";
+ 
+ 			power-domains = <&gcc PCIE_2A_GDSC>;
++			required-opps = <&rpmhpd_opp_nom>;
+ 
+ 			phys = <&pcie2a_phy>;
+ 			phy-names = "pciephy";
 -- 
 2.43.0
 
