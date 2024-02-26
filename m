@@ -1,126 +1,127 @@
-Received: from mail-qk1-f172.google.com (mail-qk1-f172.google.com [209.85.222.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A7494F1FA
-	for <linux-pci@vger.kernel.org>; Mon, 26 Feb 2024 11:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEA0B1DA37;
+	Mon, 26 Feb 2024 11:49:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708947501; cv=none; b=XlhLvUwwctGGM0tnOSUG0yu41pgvioQ/8whaiT8zt3paZ4o0CnbOL7WkWs1tUPt+ZvfZGCQaugume08BAtK4ECSr81/JNJGO837x3eVIuDZuFZgvi+7wIoN26BP3u669S5Y+e0PMR80o+Vc9DrDQyp0ggflZ6iHfTlQsPF+shMI=
+	t=1708948184; cv=none; b=fRLDPGmEwOQ7Z764LR12ehD941heY9eOmfN/7aQbZMkIRCJpAmkuu+GKDTh8G2gthv6crPh0m3349yFhCm6jrEt+nj5q/z4yGUtz9cc1B5KdIm1vCb15WOfha0Y+QCqxJe5rA9wkonJ+pA4XkWYQvhAc0skjXGq9xUqSjwK12lc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708947501; c=relaxed/simple;
-	bh=rySUPOYrv9T+HZDbsprHAcPFbuAMziJaAQnsy9yh8Qw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=AjoosNCI+mwEj4tW79bFF6bI60QIVCGNCpFu3NpTxmkNNx2hHmogtjdgOl8beiTFHyDNdq7oKideZOJYsbbnaXoTLDZN7+khwJy2QE6DxzWOh/2C5p5CQyYTD1RxcSBVu14A3rn9HCGe5uB21EUodllPrViLGfx3UIFoDuef+RA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=o7NmKcXs; arc=none smtp.client-ip=209.85.222.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1708948184; c=relaxed/simple;
+	bh=XDVR6cUnSSDPnKY5yPTZWPfRyY9FP26xvfynU2Sa91A=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=seaWdjGHeqvn0LesYda3ZWQxcFkjRivmtuAbhCXNVlpSWTdwXb6H6P5+v5V9a1Qo43iTjnKgOq6ohSVFsqJ2AS/WryUyMI4XfwslG8TCaJXvdsmA3GaVlas5ozKIvL7cqthtiCpqG+8Qc3xdctAnRr0Y36bAhS+cjqKfwxlHBvc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FIYdPJD8; arc=none smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="o7NmKcXs"
-Received: by mail-qk1-f172.google.com with SMTP id af79cd13be357-787b0b1deeaso186053985a.3
-        for <linux-pci@vger.kernel.org>; Mon, 26 Feb 2024 03:38:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1708947498; x=1709552298; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=+w+dz2LhhxLyj9g/T/Ynx7ET7ucJXKJT/WmnsqQcygw=;
-        b=o7NmKcXszo+BqMNkU9Yb3xrTXkDX4fAEdnEZQ//UJo/OzdBqck2rYONAcgwvM+/09N
-         cJLtfzO3Mzij4Cu0GxRVeIKtVNYqISFky24J+yLyJNbHk2hRA52qPMe+3pgH3G879nxE
-         OA+mz8uQHU6IZfJWTALqVsYN6Gj1UlArV1mhdIRm35GKTF19Ljsih9QuDIWsCLD2J+o4
-         JSBblX61IwUySiMuFveSy6pFiUCXH7uhWYyMek8nizWa27xoWPbMfLYcN+tGJMQiT3p1
-         UboOwcvt73CmDcmpkiLglqwZzxmauIL2VTCLJzipwPj7HjPcJ3rnSo6JLLOkG0qOJEXj
-         N8MA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1708947498; x=1709552298;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=+w+dz2LhhxLyj9g/T/Ynx7ET7ucJXKJT/WmnsqQcygw=;
-        b=dBqE/f0deG7eORWmsKNwWcDP1/OCqzRmZMWYBVuVf4u+i7QBRYsyENTyAOUMapjf8c
-         GhSlA2Wh5zuo+wAYUA3VCgvMpJ7d/DzJs+aHbVPYN/AG07WYnqUGYBsdcPgalLEEQdEs
-         aNxAyb/N8Sy+CIWcQO7b5ks28ZOnjmhKdLfI4LfV4YRWh7IzuH81m7+JDIJxdD+2BVqC
-         WzKSAWJgv0Q6P0ms/M9ulveMUwGIHmNg/7uzqAsVq3ev+NEsaFj840gw1fTv342SQMVx
-         SgdiQ1g5VYBz6/S1tuxh6DEzpxUaZ7pko9BhxLkMNMw9CxKSVXVJuPCDpwDdCpZ5790e
-         JzTg==
-X-Forwarded-Encrypted: i=1; AJvYcCWzqZ8MStg6NhQMeZzJE4m3r99EqK2SF3OERX4VWzCLObPM2ewRw8lWei02VSHxob+cArhSb+CA91KBgr13Cr+N8KM642tponA1
-X-Gm-Message-State: AOJu0YzYBEZ9b8OshEkLTA2X3G3YtNkR7W82gXvSyKTbEye4IdVfHh9C
-	uZcdSt20unFNFpac2RwCQrEvo9NRCZpMEE3FDhRzWZ7jgGwEiuuJzaorTN7e1g==
-X-Google-Smtp-Source: AGHT+IF7HmtMnaGrj80UYao6lQvALwBuMw8q3jvFf9UFrxEVWdxk0u5fePdkKkkBuQR3Or+GeX/gvw==
-X-Received: by 2002:a05:620a:2014:b0:787:3769:d747 with SMTP id c20-20020a05620a201400b007873769d747mr6779105qka.59.1708947498204;
-        Mon, 26 Feb 2024 03:38:18 -0800 (PST)
-Received: from [127.0.1.1] ([117.202.184.81])
-        by smtp.gmail.com with ESMTPSA id q15-20020a05620a0c8f00b007878babb96asm2341842qki.94.2024.02.26.03.38.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 26 Feb 2024 03:38:17 -0800 (PST)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Date: Mon, 26 Feb 2024 17:07:30 +0530
-Subject: [PATCH v3 5/5] PCI: epf-mhi: Enable HDMA for SA8775P SoC
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FIYdPJD8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1708948183; x=1740484183;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=XDVR6cUnSSDPnKY5yPTZWPfRyY9FP26xvfynU2Sa91A=;
+  b=FIYdPJD8xgpDHi8jNyFTM13HGtcC37xUoTJMe/o7L4MnMf7TIvnj7pTo
+   /hz3kG7CtyTP6egioOUb6sUPEEwujf3Nw5IJpC5wY5f9bi3DgxROxzvZv
+   EOhCpZqkGM7awIxqA6bND1zor7cH/L40s/FsWRoaZ9JgRQCopzuajja8S
+   0hO5Pgn8dIksEjRQhq76hiSjDocRgrRvu2dR2iyg6sveQKd62XAcSTWvZ
+   4bAdFgCPD8CNWn+zKPhWBKI8q9hDGMGTBz/q+2xuVSHFHhtTfZwAvzzsH
+   G9aQh/7DC5MxOnjn7TGjl7UODQ2rdBRGKoHjxgWE8py//CsKO/JPhdVQ4
+   A==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10995"; a="7032128"
+X-IronPort-AV: E=Sophos;i="6.06,185,1705392000"; 
+   d="scan'208";a="7032128"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2024 03:49:42 -0800
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.06,185,1705392000"; 
+   d="scan'208";a="6634988"
+Received: from ijarvine-desk1.ger.corp.intel.com (HELO localhost) ([10.246.48.12])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2024 03:49:40 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Mon, 26 Feb 2024 13:49:34 +0200 (EET)
+To: Mathias De Weerdt <mathias.de.weerdt@gmail.com>
+cc: Bjorn Helgaas <helgaas@kernel.org>, ben.chuang@genesyslogic.com.tw, 
+    johnsonm@danlj.org, linux-pci@vger.kernel.org, linux-mmc@vger.kernel.org, 
+    linux-pm@vger.kernel.org, "Maciej W. Rozycki" <macro@orcam.me.uk>
+Subject: Re: Bug Report: Delayed Wake from Suspend with Genesys Logic GL9755
+ SD Host Controller
+In-Reply-To: <CAKfmkPK+T0887-uQORxOzbcz-ZxBY+wKLYPRoiQiUfNhffQBEg@mail.gmail.com>
+Message-ID: <0aa430ff-c60d-b2c6-bb1c-e352ae7be020@linux.intel.com>
+References: <CAKfmkPKW=cD88D-cYJUaoN0A6i91C5ukiy6AYYWpNbW8VBQaGA@mail.gmail.com> <20240225233117.GA182018@bhelgaas> <CAKfmkPK+T0887-uQORxOzbcz-ZxBY+wKLYPRoiQiUfNhffQBEg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240226-dw-hdma-v3-5-cfcb8171fc24@linaro.org>
-References: <20240226-dw-hdma-v3-0-cfcb8171fc24@linaro.org>
-In-Reply-To: <20240226-dw-hdma-v3-0-cfcb8171fc24@linaro.org>
-To: Jingoo Han <jingoohan1@gmail.com>, 
- Gustavo Pimentel <gustavo.pimentel@synopsys.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Marek Vasut <marek.vasut+renesas@gmail.com>, 
- Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
- Kishon Vijay Abraham I <kishon@kernel.org>
-Cc: Serge Semin <fancer.lancer@gmail.com>, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Mrinmay Sarkar <quic_msarkar@quicinc.com>, 
- Siddharth Vadapalli <s-vadapalli@ti.com>
-X-Mailer: b4 0.12.4
-X-Developer-Signature: v=1; a=openpgp-sha256; l=974;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=isUh7Dyx4QOFqnRUN5haG5ZOvquZ4WskKD+PqeTLyJ8=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBl3HgGRFaIIukjpQ+MlVp1t7r1KyH4o9t0giPf0
- ecjdOvjr4+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZdx4BgAKCRBVnxHm/pHO
- 9T0gB/wJn/wKQ4SsV6Ave0iIOFHg8ILRsYljtotpgZCkHh/5Kj1edf/8JHtagUfbFRpAG79lmH2
- O1MojHHi2V9sIKmQmUmcpuOTMRDxwbdCebgoSKNoHPArCydW0NeU4pzCKz9EE81+RlUR12fPoS/
- ZGPPGrolyRh6QD9wXY5iFzg3Yl3RNCEAC4lx3D4bFD3xbujKklIHTBHNUApv+5z8th9yggp7DRd
- sBP0G7dSjLssbgvE9DAsWGoXqVaz4aTH+jTEs9w1V1EuwHzla3+MJc2Sy0FL95Ga5Kdw3ZPRcLb
- k071qmHaETAfzo4PIDsL3SeyXE9Ic3T3xa5XDj6Fh1otg3tt
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
+Content-Type: text/plain; charset=US-ASCII
 
-From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+On Mon, 26 Feb 2024, Mathias De Weerdt wrote:
 
-SA8775P SoC supports Hyper DMA (HDMA) DMA Engine present in the DWC IP. So,
-let's enable it in the EPF driver so that the DMA Engine APIs can be used
-for data transfer.
+> Hi Bjorn
+> 
+> This has indeed never worked. I have even tried plenty of older
+> kernels and now also the latest mainline.
+> 
+> I collected the data you requested on the following kernel (Latest
+> mainline as of yesterday)
+> Linux core-arch 6.8.0-rc5-1-mainline #1 SMP PREEMPT_DYNAMIC Sun, 25
+> Feb 2024 21:59:28 +0000 x86_64 GNU/Linux
+> 
+> After booting the laptop I put it to sleep and woke it up and
+> collected the dmesg and lspci logs. (They have been attached)
+> 
+> Thanks for your quick response.
+> If you need anything else please let me know.
+> 
+> Kinds regards
+> Mathias
+> 
+> On Mon, 26 Feb 2024 at 00:31, Bjorn Helgaas <helgaas@kernel.org> wrote:
+> >
+> > On Sun, Feb 25, 2024 at 11:38:35PM +0100, Mathias De Weerdt wrote:
+> > > Hi
+> > >
+> > > I am writing to report a potential bug in the Linux kernel related to
+> > > waking from suspend on a system(Laptop) with a Genesys Logic GL9755 SD
+> > > Host Controller. Below are the details of the issue:
+> >
+> > Hi Mathias, thanks very much for this report.  A few questions below.
+> >
+> > > Issue Description:
+> > > After suspending the system, waking it up takes an extended amount of
+> > > time, typically 1 to 2 minutes. The delay occurs consistently and is
+> > > observed in the dmesg logs.
+> > >
+> > >
+> > > System Information:
+> > > - OS: Arch Linux x86_64
+> > > - Kernel: 6.7.5-arch1-1 and 6.7.6-arch1-1
+> > > - SD Host Controller: Genesys Logic GL9755 SD Host Controller (PCI ID:
+> > > 17a0:9755)
+> > >
+> > > Observed Logs (dmesg):
+> > > [ 642.483972] sdhci-pci 0000:2f:00.0: not ready 1023ms after resume; waiting
+> > > [ 643.537370] sdhci-pci 0000:2f:00.0: not ready 2047ms after resume; waiting
+> > > [ 645.724028] sdhci-pci 0000:2f:00.0: not ready 4095ms after resume; waiting
+> > > [ 649.990655] sdhci-pci 0000:2f:00.0: not ready 8191ms after resume; waiting
+> > > [ 658.310658] sdhci-pci 0000:2f:00.0: not ready 16383ms after resume; waiting
+> > > [ 675.590673] sdhci-pci 0000:2f:00.0: not ready 32767ms after resume; waiting
+> > > [ 709.723965] sdhci-pci 0000:2f:00.0: not ready 65535ms after resume; giving up
+> > > [ 709.724183] sdhci-pci 0000:2f:00.0: Unable to change power state
+> > > from D3cold to D0, device inaccessible
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
-[mani: reworded commit message]
-Reviewed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/endpoint/functions/pci-epf-mhi.c | 1 +
- 1 file changed, 1 insertion(+)
+Hi Mathias,
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-index 2c54d80107cf..570c1d1fb12e 100644
---- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-@@ -137,6 +137,7 @@ static const struct pci_epf_mhi_ep_info sa8775p_info = {
- 	.epf_flags = PCI_BASE_ADDRESS_MEM_TYPE_32,
- 	.msi_count = 32,
- 	.mru = 0x8000,
-+	.flags = MHI_EPF_USE_DMA,
- };
- 
- struct pci_epf_mhi {
+In your dmesg, there's the Target Speed quirk triggering. Please try these 
+two patches, they should fix the logic bug that causes the long delay you 
+see:
+
+https://lore.kernel.org/linux-pci/alpine.DEB.2.21.2402092125070.2376@angie.orcam.me.uk/T/#t
+
+(They won't help to the link not coming up issue though).
 
 -- 
-2.25.1
-
+ i.
