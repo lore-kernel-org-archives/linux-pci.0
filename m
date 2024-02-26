@@ -1,97 +1,185 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3C421DA5F;
-	Mon, 26 Feb 2024 11:49:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E01B1CD08;
+	Mon, 26 Feb 2024 12:03:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1708948184; cv=none; b=kymbJJJvUiRsonOj2hVNnOW86WVjrLpQBt84dNouA2CYOHHaJybEcoBrBReMoJYtESjHfmafPgiitwLoINik69RWN2SkbafIZp8eTQQwQCoP7iLIQ+aNXvzZYF2Z20uX6TuF38vlGjFuxKLin8kz7r9AaXjiF2KWYSlTfdldsgE=
+	t=1708949001; cv=none; b=TTP+P2o2JyXccecj73Vysk2Xg3QmeXK00iByZJYH1+zV0ym4bygLLiE9RvlddcsRWPKFq6G7EqzH+NTew/g+q/A+IphGKvCzBHb1wlpRXiVDKZb5GWyYsuUfwnWGJZT4kil9TGvb8FZF4mq/8VIQqSHsr0WndrMdg/3cNup/PqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1708948184; c=relaxed/simple;
-	bh=0g9GcCs8vfketXgTlugah+18Pi8X9CkkeR2K4H65dqY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=KyB4/XgQWdDc8hK07hTE2mFobr1bV3UxDc6I2pQaKNv96fw71P48LWCPXlFTj3sttyZyUPeTcxCmESsDAbaXffuhbTJe/GCKszK5puqOCpMrIc6oQYRLUfN/qRScSt1Vaevw8PX29dglRsIfdG3zN/TcAs9S4vKaCAaYvpJIl3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=nff32nA7; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1708949001; c=relaxed/simple;
+	bh=vRIEb/+D7M4j/nHK9fDGfbH9sUW39k0q7B5ZbffZKjw=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y3SR1IwpVW92Q6/gL3hpTzceTc0LovI+8JtYSwXv5zBMSD5hL8z5Vgy8II86+ULvJY3F5mN+Tf8sXjcnvON4t3MJV5eH8zkwA9txO5WbGgSJHwXMV8v4qIAWq0ZjAiWaawtSdGG+UPTUd4SNUQfxodWaF6dZVZaCcb898sUX9J8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=kzG7Z1CL; arc=none smtp.client-ip=198.47.19.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="nff32nA7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1708948183; x=1740484183;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=0g9GcCs8vfketXgTlugah+18Pi8X9CkkeR2K4H65dqY=;
-  b=nff32nA7aeoi1EMYsZBuKAw8hWnSHscax6hTeCocVNkfvnlMDjCWVhpl
-   c4LzuKUR8qa9INZldQbGAQNWL0zU802t6M3uLEhrz69lgdDJYRIgDvID5
-   QvjycE2flZzC/8KGK6M9xg0oFv9VNmMGozfipkt3TMInfVHWzwblTgUAu
-   FPIE3eepLEcrRMI9xQyrSWwUDRiEahZ26A/SeVbqz9wkgcOvcfT6Ccpix
-   e3SpETq+rDvz2iXrlfiAL7pozQiyQhDXkZKnmrGlzL/AIeXVmtxZpIKEE
-   WEYsHriROzJNy79a7ZoVevUdea+rmLVQosPJ23/53B7dRb4C973g9r5N5
-   A==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10995"; a="28652379"
-X-IronPort-AV: E=Sophos;i="6.06,185,1705392000"; 
-   d="scan'208";a="28652379"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2024 03:49:42 -0800
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.06,185,1705392000"; 
-   d="scan'208";a="6678310"
-Received: from lkp-server02.sh.intel.com (HELO 3c78fa4d504c) ([10.239.97.151])
-  by orviesa009.jf.intel.com with ESMTP; 26 Feb 2024 03:49:35 -0800
-Received: from kbuild by 3c78fa4d504c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1reZTn-000AHf-22;
-	Mon, 26 Feb 2024 11:49:15 +0000
-Date: Mon, 26 Feb 2024 19:48:08 +0800
-From: kernel test robot <lkp@intel.com>
-To: Ethan Zhao <haifeng.zhao@linux.intel.com>, baolu.lu@linux.intel.com,
-	bhelgaas@google.com, robin.murphy@arm.com, jgg@ziepe.ca
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	kevin.tian@intel.com, dwmw2@infradead.org, will@kernel.org,
-	lukas@wunner.de, yi.l.liu@intel.com, dan.carpenter@linaro.org,
-	iommu@lists.linux.dev, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Ethan Zhao <haifeng.zhao@linux.intel.com>
-Subject: Re: [PATCH v13 3/3] iommu/vt-d: improve ITE fault handling if target
- device isn't valid
-Message-ID: <202402261910.IZ3PGmH3-lkp@intel.com>
-References: <20240222090251.2849702-4-haifeng.zhao@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="kzG7Z1CL"
+Received: from lelv0266.itg.ti.com ([10.180.67.225])
+	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 41QC2mR0099398;
+	Mon, 26 Feb 2024 06:02:48 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1708948968;
+	bh=+3AsQsaBHuAdklDpGOnvvIB16uuAzF8tgDh7ffFqkhY=;
+	h=Date:From:To:CC:Subject:References:In-Reply-To;
+	b=kzG7Z1CL27dDBNkYo2tw7iZjIJPFaNvIU847qw0GQo0uVwMo1MBKX5cMH/pORS2V4
+	 H4t1PkdKa7j5T1kXRQH+nJFQc9l9KTioni/0nyQWp/DlrIYRmzNB0SPQ4CTbzy580C
+	 FV04F/xi3LJYmMN8WiwyuXf90xfPaRTq7klgspuE=
+Received: from DFLE103.ent.ti.com (dfle103.ent.ti.com [10.64.6.24])
+	by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 41QC2m0t104041
+	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 26 Feb 2024 06:02:48 -0600
+Received: from DFLE107.ent.ti.com (10.64.6.28) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Mon, 26
+ Feb 2024 06:02:48 -0600
+Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DFLE107.ent.ti.com
+ (10.64.6.28) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Mon, 26 Feb 2024 06:02:48 -0600
+Received: from localhost (uda0492258.dhcp.ti.com [172.24.227.9])
+	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 41QC2lnH056462;
+	Mon, 26 Feb 2024 06:02:47 -0600
+Date: Mon, 26 Feb 2024 17:32:46 +0530
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC: Jingoo Han <jingoohan1@gmail.com>,
+        Gustavo Pimentel
+	<gustavo.pimentel@synopsys.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+        Rob Herring
+	<robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Marek Vasut
+	<marek.vasut+renesas@gmail.com>,
+        Yoshihiro Shimoda
+	<yoshihiro.shimoda.uh@renesas.com>,
+        Kishon Vijay Abraham I
+	<kishon@kernel.org>,
+        Serge Semin <fancer.lancer@gmail.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <mhi@lists.linux.dev>,
+        <s-vadapalli@ti.com>
+Subject: Re: [PATCH v3 1/5] PCI: dwc: Refactor dw_pcie_edma_find_chip() API
+Message-ID: <a3e4f9f9-e3c0-428c-913c-d777f3386556@ti.com>
+References: <20240226-dw-hdma-v3-0-cfcb8171fc24@linaro.org>
+ <20240226-dw-hdma-v3-1-cfcb8171fc24@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="us-ascii"
 Content-Disposition: inline
-In-Reply-To: <20240222090251.2849702-4-haifeng.zhao@linux.intel.com>
+In-Reply-To: <20240226-dw-hdma-v3-1-cfcb8171fc24@linaro.org>
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
-Hi Ethan,
+On Mon, Feb 26, 2024 at 05:07:26PM +0530, Manivannan Sadhasivam wrote:
+> In order to add support for Hyper DMA (HDMA), let's refactor the existing
+> dw_pcie_edma_find_chip() API by moving the common code to separate
+> functions.
+> 
+> No functional change.
+> 
+> Suggested-by: Serge Semin <fancer.lancer@gmail.com>
+> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-kernel test robot noticed the following build errors:
+Reviewed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 
-[auto build test ERROR on e60bf5aa1a74c0652cd12d0cdc02f5c2b5fe5c74]
+Regards,
+Siddharth.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Ethan-Zhao/PCI-make-pci_dev_is_disconnected-helper-public-for-other-drivers/20240222-170625
-base:   e60bf5aa1a74c0652cd12d0cdc02f5c2b5fe5c74
-patch link:    https://lore.kernel.org/r/20240222090251.2849702-4-haifeng.zhao%40linux.intel.com
-patch subject: [PATCH v13 3/3] iommu/vt-d: improve ITE fault handling if target device isn't valid
-config: x86_64-randconfig-074-20240226 (https://download.01.org/0day-ci/archive/20240226/202402261910.IZ3PGmH3-lkp@intel.com/config)
-compiler: clang version 17.0.6 (https://github.com/llvm/llvm-project 6009708b4367171ccdbf4b5905cb6a803753fe18)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240226/202402261910.IZ3PGmH3-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202402261910.IZ3PGmH3-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> ld.lld: error: undefined symbol: device_rbtree_find
-   >>> referenced by dmar.c:1346 (drivers/iommu/intel/dmar.c:1346)
-   >>>               drivers/iommu/intel/dmar.o:(qi_submit_sync) in archive vmlinux.a
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> ---
+>  drivers/pci/controller/dwc/pcie-designware.c | 52 +++++++++++++++++++++-------
+>  1 file changed, 39 insertions(+), 13 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+> index 250cf7f40b85..193fcd86cf93 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware.c
+> @@ -880,7 +880,17 @@ static struct dw_edma_plat_ops dw_pcie_edma_ops = {
+>  	.irq_vector = dw_pcie_edma_irq_vector,
+>  };
+>  
+> -static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+> +static void dw_pcie_edma_init_data(struct dw_pcie *pci)
+> +{
+> +	pci->edma.dev = pci->dev;
+> +
+> +	if (!pci->edma.ops)
+> +		pci->edma.ops = &dw_pcie_edma_ops;
+> +
+> +	pci->edma.flags |= DW_EDMA_CHIP_LOCAL;
+> +}
+> +
+> +static int dw_pcie_edma_find_mf(struct dw_pcie *pci)
+>  {
+>  	u32 val;
+>  
+> @@ -900,24 +910,27 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+>  	else
+>  		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+>  
+> -	if (val == 0xFFFFFFFF && pci->edma.reg_base) {
+> -		pci->edma.mf = EDMA_MF_EDMA_UNROLL;
+> -
+> -		val = dw_pcie_readl_dma(pci, PCIE_DMA_CTRL);
+> -	} else if (val != 0xFFFFFFFF) {
+> -		pci->edma.mf = EDMA_MF_EDMA_LEGACY;
+> +	/* Set default mapping format here and update it below if needed */
+> +	pci->edma.mf = EDMA_MF_EDMA_LEGACY;
+>  
+> +	if (val == 0xFFFFFFFF && pci->edma.reg_base)
+> +		pci->edma.mf = EDMA_MF_EDMA_UNROLL;
+> +	else if (val != 0xFFFFFFFF)
+>  		pci->edma.reg_base = pci->dbi_base + PCIE_DMA_VIEWPORT_BASE;
+> -	} else {
+> +	else
+>  		return -ENODEV;
+> -	}
+>  
+> -	pci->edma.dev = pci->dev;
+> +	return 0;
+> +}
+>  
+> -	if (!pci->edma.ops)
+> -		pci->edma.ops = &dw_pcie_edma_ops;
+> +static int dw_pcie_edma_find_channels(struct dw_pcie *pci)
+> +{
+> +	u32 val;
+>  
+> -	pci->edma.flags |= DW_EDMA_CHIP_LOCAL;
+> +	if (pci->edma.mf == EDMA_MF_EDMA_LEGACY)
+> +		val = dw_pcie_readl_dbi(pci, PCIE_DMA_VIEWPORT_BASE + PCIE_DMA_CTRL);
+> +	else
+> +		val = dw_pcie_readl_dma(pci, PCIE_DMA_CTRL);
+>  
+>  	pci->edma.ll_wr_cnt = FIELD_GET(PCIE_DMA_NUM_WR_CHAN, val);
+>  	pci->edma.ll_rd_cnt = FIELD_GET(PCIE_DMA_NUM_RD_CHAN, val);
+> @@ -930,6 +943,19 @@ static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+>  	return 0;
+>  }
+>  
+> +static int dw_pcie_edma_find_chip(struct dw_pcie *pci)
+> +{
+> +	int ret;
+> +
+> +	dw_pcie_edma_init_data(pci);
+> +
+> +	ret = dw_pcie_edma_find_mf(pci);
+> +	if (ret)
+> +		return ret;
+> +
+> +	return dw_pcie_edma_find_channels(pci);
+> +}
+> +
+>  static int dw_pcie_edma_irq_verify(struct dw_pcie *pci)
+>  {
+>  	struct platform_device *pdev = to_platform_device(pci->dev);
+> 
+> -- 
+> 2.25.1
+> 
+> 
