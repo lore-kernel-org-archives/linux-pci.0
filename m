@@ -1,48 +1,47 @@
-Received: from esa2.hc1455-7.c3s2.iphmx.com (esa2.hc1455-7.c3s2.iphmx.com [207.54.90.48])
+Received: from esa6.hc1455-7.c3s2.iphmx.com (esa6.hc1455-7.c3s2.iphmx.com [68.232.139.139])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24DEE6A351;
-	Tue, 27 Feb 2024 08:30:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.54.90.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9061978B63;
+	Tue, 27 Feb 2024 08:31:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.139.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709022655; cv=none; b=ItePaQrYqyuGP5vsA3G7zCgY01bf6EnBUYY2K8r7RjMCTcftwQBMd8NeZRToPjtgYfvlB05byqaTsMt7ZnIQhO0exTKkaMzC6R4tGhqO8f5KbmeIz7duVEIc9XnyEYOWM3DjOwDrDjBwNiI5REtw4lt9dfI+zRp58nnS9myn2Cw=
+	t=1709022717; cv=none; b=otR1IlIpIICWEqlzfpm7QXu36J0i2S3r3N7jm/7TTTALDk3BnhIg9+CNbxoc2ly7ACURSQjkNnN+amZG+HDjTG/UwpD/GOAzykH62DzFth6EpqPlfPEEsssidXtHYdWNzuLbSnzNTcTxrda8M/OfZy7iuzv8O72JdTESXLl2Fyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709022655; c=relaxed/simple;
-	bh=bPSnlvhM/EbpGy25SiekuNdcEivAYfCgLjkCyRbM4L0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gc6wxDvks8oy/ag0Q13HXX709hl9bT9XayO8HlvVKsX5PEEtS6N+Xw4qPix5yfVlLGG8BNTFZQWAB8M+KIpEXW8tdeT6boBQrf+Rdl7rwjVdnAdUPNJ3p3QLxDzeKOgktiN7g0xFjJ381/LRJnrbw0o26ugTwQapxi4rP8WG2+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=OWbolQ+t; arc=none smtp.client-ip=207.54.90.48
+	s=arc-20240116; t=1709022717; c=relaxed/simple;
+	bh=QaU6xtLanhVm/lVZZdQ2W7V9TciWhdO0uo1lqexjJvg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JqiU14MX03ZjAadmELnjf0wXQua/wdGhnq/XEKpret+otNYdQzI3bbGa9WhfAuvhvPwo2uQfaIsloXjMuPZL/B0lzi5upPFX1vMRmD7En1uhixT3El90Yigqm6zvndJBR0Jm9bki2j/M/c/gimT/BGRNUgvLSyYAh6q1DaU6otE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com; spf=pass smtp.mailfrom=fujitsu.com; dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b=LVyWEkdV; arc=none smtp.client-ip=68.232.139.139
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fujitsu.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="OWbolQ+t"
+	dkim=pass (2048-bit key) header.d=fujitsu.com header.i=@fujitsu.com header.b="LVyWEkdV"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=fujitsu.com; i=@fujitsu.com; q=dns/txt; s=fj2;
-  t=1709022654; x=1740558654;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=bPSnlvhM/EbpGy25SiekuNdcEivAYfCgLjkCyRbM4L0=;
-  b=OWbolQ+t7u+b26T4rACTD+0y6ISZMpvhNwCfcZq9+9hEEEPGOspB6Z/p
-   dgPMSEWoF9XKVx7uDlwsNO1WDeEIQSPEzJkSW8YDCGBqIEMWuSASYSyKx
-   TO0BRCfLRDWdiduehQhFinUTYyM+UmBuY6PJ/y6aBeKnGXQUiBjhQOXFE
-   3s41Yrwg7sjiV1aCBYYTx7TnQN50S7TDZ3DTmqKsq5fRf2GVYJMQOY4Hh
-   u2wdr/v1RAymvWrukmH/FSmYUJkgPoTUUeCtjXCbiBAkbmi77E+V/6Ebj
-   ePODYawuO+w/2I6xK9rdlhv4yxG3l2R2nsHs5/baOOqy9fEDO9vGJMC15
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,10996"; a="150557150"
+  t=1709022713; x=1740558713;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=QaU6xtLanhVm/lVZZdQ2W7V9TciWhdO0uo1lqexjJvg=;
+  b=LVyWEkdVBANfjiwN9p1oT1TcaR5UjJ3M+qw1VD1vLpCqnvcN8Aa4yEF0
+   ULfxPdGphccIio3/VcAo4EUAvSxBnNnd2wRunNngBnxdBS5Gk+cZDXcvP
+   PZ7L506bwYAyE8K+0IVuiNwDGcL6WgGld8BHzB6TW7jDDIrKDR7sYJw3y
+   tysmcv4zvFw3iUMoM5hmOWSMBKXw9vSbqbSaeUeLHrIBQUS7Ec0JR29CM
+   D5LZWCx1IcPggGITZfEubZdHJvHXyGhUftFfE8Psztn69CW6htYnpo/ox
+   IGYnybWpokICZT/ZpzBwq+hkEBtYPE4WlJuV4FlxpNj20zwq/QLMTC6Qz
+   g==;
+X-IronPort-AV: E=McAfee;i="6600,9927,10996"; a="152321650"
 X-IronPort-AV: E=Sophos;i="6.06,187,1705330800"; 
-   d="scan'208";a="150557150"
-Received: from unknown (HELO yto-r3.gw.nic.fujitsu.com) ([218.44.52.219])
-  by esa2.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2024 17:30:49 +0900
-Received: from yto-m3.gw.nic.fujitsu.com (yto-nat-yto-m3.gw.nic.fujitsu.com [192.168.83.66])
-	by yto-r3.gw.nic.fujitsu.com (Postfix) with ESMTP id D1267E8CDE;
-	Tue, 27 Feb 2024 17:30:46 +0900 (JST)
+   d="scan'208";a="152321650"
+Received: from unknown (HELO yto-r4.gw.nic.fujitsu.com) ([218.44.52.220])
+  by esa6.hc1455-7.c3s2.iphmx.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Feb 2024 17:30:40 +0900
+Received: from yto-m1.gw.nic.fujitsu.com (yto-nat-yto-m1.gw.nic.fujitsu.com [192.168.83.64])
+	by yto-r4.gw.nic.fujitsu.com (Postfix) with ESMTP id 2D104D9F01;
+	Tue, 27 Feb 2024 17:30:40 +0900 (JST)
 Received: from m3002.s.css.fujitsu.com (msm3.b.css.fujitsu.com [10.128.233.104])
-	by yto-m3.gw.nic.fujitsu.com (Postfix) with ESMTP id 180F0E6300;
-	Tue, 27 Feb 2024 17:30:46 +0900 (JST)
+	by yto-m1.gw.nic.fujitsu.com (Postfix) with ESMTP id 71890CF7E5;
+	Tue, 27 Feb 2024 17:30:39 +0900 (JST)
 Received: from cxl-test.. (unknown [10.118.236.45])
-	by m3002.s.css.fujitsu.com (Postfix) with ESMTP id E76192020A50;
-	Tue, 27 Feb 2024 17:30:45 +0900 (JST)
+	by m3002.s.css.fujitsu.com (Postfix) with ESMTP id 429FA20C19DC;
+	Tue, 27 Feb 2024 17:30:39 +0900 (JST)
 From: "Kobayashi,Daisuke" <kobayashi.da-06@fujitsu.com>
 To: kobayashi.da-06@jp.fujitsu.com,
 	linux-cxl@vger.kernel.org
@@ -51,12 +50,10 @@ Cc: y-goto@fujitsu.com,
 	mj@ucw.cz,
 	dan.j.williams@intel.com,
 	"Kobayashi,Daisuke" <kobayashi.da-06@fujitsu.com>
-Subject: [RFC PATCH v2 2/3] Remove conditional branch that is not suitable for cxl1.1 devices
-Date: Tue, 27 Feb 2024 17:33:12 +0900
-Message-ID: <20240227083313.87699-3-kobayashi.da-06@fujitsu.com>
+Subject: [RFC PATCH v2 0/3] Display cxl1.1 device link status
+Date: Tue, 27 Feb 2024 17:33:10 +0900
+Message-ID: <20240227083313.87699-1-kobayashi.da-06@fujitsu.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240227083313.87699-1-kobayashi.da-06@fujitsu.com>
-References: <20240227083313.87699-1-kobayashi.da-06@fujitsu.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,34 +63,54 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
 
-This patch removes conditional branching that does not comply with the specifications.
+Hello.
 
-In the existing code, there is a conditional branch that compares "chbs->length" 
-with "CXL_RCRB_SIZE". However, according to the specifications, "chbs->length" 
-indicates the length of the CHBS structure in the cedt, not the size of the 
-configuration space. Therefore, since this condition does not comply with
-the specifications(cxl3.0 specification 9.17.1), remove it.
+This patch series adds a feature that displays the link status
+of the CXL1.1 device.
 
-Signed-off-by: "Kobayashi,Daisuke" <kobayashi.da-06@fujitsu.com>
----
- drivers/cxl/acpi.c | 4 ----
- 1 file changed, 4 deletions(-)
+CXL devices are extensions of PCIe. Therefore, from CXL2.0 onwards,
+the link status can be output in the same way as traditional PCIe.
+However, unlike devices from CXL2.0 onwards, CXL1.1 requires a
+different method to obtain the link status from traditional PCIe.
+This is because the link status of the CXL1.1 device is not mapped
+in the configuration space (as per cxl3.0 specification 8.1).
+Instead, the configuration space containing the link status is mapped
+to the memory mapped register region (as per cxl3.0 specification 8.2,
+Table 8-18). Therefore, the current lspci has a problem where it does
+not display the link status of the CXL1.1 device. 
+This patch solves these issues.
 
-diff --git a/drivers/cxl/acpi.c b/drivers/cxl/acpi.c
-index dcf2b39e1048..cf15c5130428 100644
---- a/drivers/cxl/acpi.c
-+++ b/drivers/cxl/acpi.c
-@@ -477,10 +477,6 @@ static int cxl_get_chbs_iter(union acpi_subtable_headers *header, void *arg,
- 	if (!chbs->base)
- 		return 0;
- 
--	if (chbs->cxl_version == ACPI_CEDT_CHBS_VERSION_CXL11 &&
--	    chbs->length != CXL_RCRB_SIZE)
--		return 0;
--
- 	ctx->base = chbs->base;
- 
- 	return 0;
+The procedure is as follows:
+First, obtain the RCRB address within the cxl driver, then access 
+the configuration space. Next, output the link status information from
+the configuration space to sysfs. Finally, read sysfs within lspci to 
+display the link status information.
+
+Changes
+v1[1] -> v2:
+The following are the main changes made based on the feedback from Dan Williams.
+- Modified to perform rcrb access within the CXL driver.
+- Added new attributes to the sysfs of the PCI device.
+- Output the link status information to the sysfs of the PCI device.
+- Retrieve information from sysfs as the source when displaying information in lspci.
+
+
+[1]
+https://lore.kernel.org/linux-cxl/20231220050738.178481-1-kobayashi.da-06@fujitsu.com/
+
+
+Kobayashi,Daisuke (3):
+  Add sysfs attribute for CXL 1.1 device link status
+  Removed conditional branches that are not suitable for cxl1.1 devices
+
+ drivers/cxl/acpi.c |   4 -
+ drivers/cxl/pci.c  | 206 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 206 insertions(+), 4 deletions(-)
+  
+  Add function to display cxl1.1 device link status
+
+ ls-caps.c | 96 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 96 insertions(+)
 -- 
 2.43.0
 
