@@ -1,26 +1,26 @@
 Received: from CHN02-BJS-obe.outbound.protection.partner.outlook.cn (mail-bjschn02on2116.outbound.protection.partner.outlook.cn [139.219.17.116])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F26E61386B2;
-	Tue, 27 Feb 2024 11:09:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DE02139566;
+	Tue, 27 Feb 2024 11:09:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.17.116
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709032177; cv=fail; b=N5Kd06ye7TD58Sj+SM47WQl8HeIBL8dp9/qdqwwMUeqPYaTjuLgoXWPLnczVoH9NmBszgKMCCF7tQPm+b+io/aupa7cnCtyGKp2GKk1kuRUl76diz3LFefCgj7OFMthH3+fRZE6npB7+hkpvBlDBT7eS/k5of7Wet/KXwtxwOys=
+	t=1709032180; cv=fail; b=muvGYDUrYpZDJann9tJ0izjdaa3x5W8wPi6bILOsWAYDz1EVOyJy6qcPLFPXl8rcBzQs1rHaQpb+ufTiIQPltSErIHTXtM4VLUMc3zn3O42yhtGgyMoXrbSReEUDJegZ/RqHsrnjMwk+O6CGSpNoPSVszDcW4o5kKZOcD4s3FqY=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709032177; c=relaxed/simple;
-	bh=v2dst+CQ/q/nF6gN4BRL7a2zRto32r18LAgeV6p4Kyw=;
+	s=arc-20240116; t=1709032180; c=relaxed/simple;
+	bh=+XR95O94FvOWrP++2cvScYdRO3BZXTL/7OgAr1OBYVI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=fOprU+ZAChm5JJ5OT6tzfIp8KlWA9uzyXBezzF7gQUe6uAp0BXftYWDALT2coM+UOvIba/8XWq8r6mAY9tS+ldr8D2Ww5bAAYEXqTn4Z5moxiHG7Syeo6idPdkZWEAHwddeEHbQfAdeyHvwgKjr0DMZ+OgvsLQEzErniKYJ7N3g=
+	 Content-Type:MIME-Version; b=pmqSxChxuysXD0socX+tPoBsFVFSCHO8eDWGH3kHLs04xcNAmLyQGTmLmkgijLhBQNg3ysvt9BhNf1bintBCmwH7DLOTNEPRmQ0QyzmF2Itl3DL7jhAzyl1JdZaMMvqBLCUDjGGdrNuJ2907oOsd7L7S5TyOrZCMfsXOyhnxFpU=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.17.116
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=WD8WZQyaYoYwgUWFOtlDxb2jk449fd7QOhWgBxfDpYkNPYQ3gIQN9fnzjiI1L++05ZSiXY/sSZEWjkcdFgonzyg+AkCbb9FjKKYlVArafxwBB30UGUH6ZBEunB00e6pnXmB7OsMUrKGSNrPoKatwIcW0HseWwA5Y7OH8Gmy8jh5JRsVyofcw6baEUxRy4Ltxd0sYRS9zdRX+XA0uxbLK9J2TgwE98hp08+JiXakAixmLkAmWCEx2KHQODbnZ5U9abDxig0cY31cQuK0gEFWKia8yIigp4tVTSGYYZMZAXefQt//804W9xRLbiOnjt9tKHtB+yx6JMgbgF3KG+Vw+NA==
+ b=TT4GKAgjdhXv9pb/Pu0cbvSs59aczwh+PcdYN8y+pQBKCW+lVN8SzG6XZRGG9cs6RSLRwVGUtmS8CTYjNDjDq+F+e31rzTlZviCXKOxGOSP04vY0iud+vVQZnWD2x0Jwe/i5cw+H5c1/CJGAf8hd7nZVr1DD2+Vk2Wys7XpM4qCxcJlrtuooq0GtMuUxfcHBZ2teN3MwOhqF+UlthivtIFZoW9TWGIA3fSjJ4FbEb0S7qSkpTj20uXMMXT/UeAMbqRH7gzeRnWYfxnhMilQlEXSWr5uaHhblTVhtYwlCJUzph3M95FpxbcdgAgwe/lL2d7wUYqTTWEr658cPKuFOdA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector9901;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8u7rdsaomMzM+dZFYx1cmmLgLtXul9EWiXfeKTQVofQ=;
- b=EsVo1FDtFH3BYo+W2+r5qRJSgMyhK1is+xipKH5P/USyCE3ehx6DQgOcVoh3x8FjSxY1AKplaoXlU4nEGCqnv2CS0v0U8/jifpSIHXCVz423UQPjkFxBVAgivzd/WSQO6Ck3lfxDE0VVTzhKGXMcTzRU0SIeRCi2jJ1lst8eOmUuaiA+j6ipv0x4/d+MtNFJcUC1c8auDiHAjQ+HDC3ZApae+gs2F9Ycb2+Uvd1xf34ffoYQsTz5D4qbGT7oS1a5rm+Q3ocezph92vGO5Qh1YAgCf/y97weTNtwIwp2SpKaJMqLU0EihMGqtUQVRNmK/tkohV2Mwx6ytvijHJfp9KA==
+ bh=wIppChXKdfBPnlczcIvPyd3KB2Im4cgmJK8iWQ76edM=;
+ b=cGnbCe87wXpLHrAqXjmml5uLEd5uuWAt8L3Trbnng9AQjCkW3rZjP/P3J4Hl7GtXn+AVlFZGV5shsd9GEV8oYMPZs28e2RJaSoDlmPHBq14e9dErNxOBIwdw6QRthcJo3qmdipoUiCwZKnXe2rznYM2aLr2St6bEclSYTa+IqdqhWDV75fMNLEK6R4kKHJG2gbfCMIG0qJLh53Ljlr+Few9OKmNNRbCNopG1bKg8ky8049eWTeC2wYKSa8KRrHy8jeTsHHTbME+FH1RRwsoyOHW2DYXvPiDx9S4ViLQuJu5mY3JPhgj5XB3XzwH5oRUwe8F/xNtFNXh/qrvjYk9lWA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=starfivetech.com; dmarc=pass action=none
  header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
@@ -30,11 +30,11 @@ Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
  (2406:e500:c311:25::15) by SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
  (2406:e500:c311:25::15) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7270.47; Tue, 27 Feb
- 2024 10:35:31 +0000
+ 2024 10:35:53 +0000
 Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
  ([fe80::5a5a:fa59:15fd:63dc]) by
  SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn ([fe80::5a5a:fa59:15fd:63dc%3])
- with mapi id 15.20.7270.047; Tue, 27 Feb 2024 10:35:31 +0000
+ with mapi id 15.20.7270.047; Tue, 27 Feb 2024 10:35:53 +0000
 From: Minda Chen <minda.chen@starfivetech.com>
 To: Conor Dooley <conor@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -57,9 +57,9 @@ Cc: devicetree@vger.kernel.org,
 	Leyfoon Tan <leyfoon.tan@starfivetech.com>,
 	Kevin Xie <kevin.xie@starfivetech.com>,
 	Minda Chen <minda.chen@starfivetech.com>
-Subject: [PATCH v15,RESEND 02/23] PCI: microchip: Move pcie-microchip-host.c to plda directory
-Date: Tue, 27 Feb 2024 18:35:01 +0800
-Message-Id: <20240227103522.80915-3-minda.chen@starfivetech.com>
+Subject: [PATCH v15,RESEND 23/23] riscv: dts: starfive: add PCIe dts configuration for JH7110
+Date: Tue, 27 Feb 2024 18:35:22 +0800
+Message-Id: <20240227103522.80915-24-minda.chen@starfivetech.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20240227103522.80915-1-minda.chen@starfivetech.com>
 References: <20240227103522.80915-1-minda.chen@starfivetech.com>
@@ -75,183 +75,242 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: SHXPR01MB0863:EE_
-X-MS-Office365-Filtering-Correlation-Id: e4d539c1-7d02-4b64-56ac-08dc377fd2e0
+X-MS-Office365-Filtering-Correlation-Id: 259c9233-0771-4d6c-6e18-08dc377fdf83
 X-MS-Exchange-SenderADCheck: 1
 X-Microsoft-Antispam: BCL:0;
 X-Microsoft-Antispam-Message-Info:
-	+IKcrFNVUE7tDQamkX+H8OSL8BzjYuTHAQUspnkC+1qYjUJ/J0Nnucaix44IDXPe3RP0HRQgSWspQ7qSPmv2msW6nNLEcMjvmjlCBtRxWu8BFpP4bkUUjvpnZH4i7CJdGvtTBQ18iBnZGYEwfiAmgvZn7TLIdmsfLtcMJFS1xu7Hy3aL0vs2wKqWNzOzoV8BSmOJoQZ5leMuQh3aY8TbnlDKFA+zbw1Q38QoJ5snUiWD+uTYf3x445y7WtZP4xtilAFNeuoFp6kWL4L6gVTqw4B7EA8YhpooMUvbNlzEqsDRv5xhgxJVrx/Q9fgIMYgs846zms7d8zvJL4PCn5ov93w1M5N3+ZAFS5NrAJ/aMFLkI+vGE+ti8457eeBQbFRhTB44wBEZotMp1USlvDvAuHWP95Hp1LL8tBdhXg47cud5S3wRGnvDOmLfNMsUHjl0G9EQbd1ReO1En3gmvtojG2+vwdgclshUcIMaER2DB16VIte5nJ50tZpM/joLpJbqxrMhn+VtMU4KhOoiHDZ7GUwoW+aPJe0xscYO8apPFSWHTtjrfNwS1FcjEfKa3tpipeyhvWOA8nBlX5NQn4XByUJz88A9OuMjY7l9m2/MFBzFbajL2iZIs30gaejxhygf
+	BKKmxHvXUGKzE0UUn9rsuZzWzi4np8dIAVuhgthQ9U8ytiUbx5WO2uRghE6zLQ/25IKnaIYWoJ/5jzqvQ293tZK/+qTq8NVVODCap2BMZuWKE3afS+Oa9UHx3ey7nrZ6rjRj2a9uMr1auVDWMXe0p6StrHcBDWj+Y+x+hSJsWGQ7rYSUM29YgbrtWp9XliuZVdSBgz5zw7v7ya6bufTpd4RxlNfPTBVj86rLSOalZXI5njGIIuC6yKIAugoeaS0ZMMlO/7o9LgNLalH5N3jveBhlFFqFfz72dXAgzsX4ujeF2ednhR9oT37M98cqOsDFYs39oobCdvpcqbE9JLG4HCwkt2E/9XCx1LgWpXf4F4vnpKoMrVD2lFIuv0N7q9PJZQpckBnbvFWuKib6bp7/va5yOF7Jc5npAEmKmwezJUuMMV57enSqslX+299nzOmEQc/LmPzwhCqFooxh5yFFBWfdMyZhrzykC2NPtzYoXzoY7ZLb/wM623kbP6ashrIZzUAwZXL7wz+vzwqGAbMtzftysr2offKBVYRpfOqrCUsn5Q5nK6kFdRKED8Hbt5swpCJXqP6wAJOsedSUwh85t8E9MKiSr89sIRlIGYaJNzd7MyCBDAvQzCAmyDXVNRSw
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230031)(38350700005);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?af7ESUhxA+DzQLQP/BKpC1bwdFMqDscmoazILiEhBPo/Fow5/fHOskE+0g5q?=
- =?us-ascii?Q?sqeRltDeilViP1Dn62uJBI2CP7LrgwKwJ/Ynq8Zs43a/GkZ55cn1oNX8m6UM?=
- =?us-ascii?Q?MNXyk0HqoXnvVl1jJ2OxBkiDJX7fZGsMMwRPL8Z27Tq0h1XANnRA3KlkoGG7?=
- =?us-ascii?Q?o+0SlvodF84BL4Qg9U2djdyvWSNYkohShqbMAJg4di95oAQ4O3okF6QFvOTq?=
- =?us-ascii?Q?wc56NsBexKFTXh9SS0t4jtJVhjLwwizs/ZF07DtOfXJWS7fypaTk10g5RhlA?=
- =?us-ascii?Q?bDwH0WYnhJOYxMmsJoixu25cn+Ds2P9xeJIwJMeTYzT3DlSa/GUAwUAFjhy0?=
- =?us-ascii?Q?C8xpoCivPh+HN1V4MyfbAqRFmgumZE2pS7RoBkKd17p178exGJkhR0A/lAuC?=
- =?us-ascii?Q?EKiGJEGg/WqXJ5WLDgA0ChpAPvq88BXdjSFrr2ymyKkApVeEEow6OHaReFLS?=
- =?us-ascii?Q?R6qX+bmtmu0bqQ6dXNC403w0sOKHl/ztscCUpNsl9f6TbdcTnkvJcJ+mmXqr?=
- =?us-ascii?Q?cF/P8V9a3otHwAUWK2/voJoD1p27S456kQyp4U0fft+WFTaMdHeI9hPQ9D0c?=
- =?us-ascii?Q?+Us9fnF0rdxMNyko54ItN+kCZOy32M9zh6fGY6NslhmDpXvoltOBdk5EGJkt?=
- =?us-ascii?Q?7Sq1huZT3S+faj0fjrDEP37ErV4P+WVx8j0fo445fL5NxVgmVSclW+eiSh5A?=
- =?us-ascii?Q?tSBP+s/ajleQcPQ5S0HQVPaxUVyH7gfZhccafNJGivdkwP33flLmY9AEHPz6?=
- =?us-ascii?Q?D9jrx+qMqX3ScTAfqkUqL45pclAyZ4Xna/cwbkxt2FYaPlFXSCvH6DIEnVyd?=
- =?us-ascii?Q?r6xZHDLzzLZAgnTR8qpYtxsdMq3v0Q9Nr5oShuQRT1Doj8jRsgC8yxfh1naT?=
- =?us-ascii?Q?kd9+I/vpum9Nwu9TDBuksLkOedez7Dn2q8+XsHBpVvnUJ8UWdrWE0sfrz71i?=
- =?us-ascii?Q?Ewg3oLKQgEAO1joRbTaFnQM2jQzKOxb/n1a8NBfSChZsI/OArB27/JHEBr8o?=
- =?us-ascii?Q?xjYhKCVIGRxAE52jWn4ItuTXpMHmG2L4vNrJx87yEniofvec+2ZXY6F0dvoL?=
- =?us-ascii?Q?1a1LyIOoIpsuOsDdFrk3JtB7fiN7RJkk3rcqpGHWwWtlO8Udt1YCZurSV0ez?=
- =?us-ascii?Q?ZseQkskmOd+hjnAjbfuDHz9FaLLNEE1edZEx2NeLEJE9lyAWFbO6PINieq/G?=
- =?us-ascii?Q?XY25Oj3AvoJi9XZexepfND6jlJZq8DT46iymyYdAxL83Wv+lXDyp9s5Kck7O?=
- =?us-ascii?Q?r3NDwWROiRsbI5blsKDzNfRjyPVX9riAAUcJLVbg5zJfCq4FS2NWJ90bQCzQ?=
- =?us-ascii?Q?twESZrIzqnT6vK7A1LJT3N/yg2ObxBNYdOt60PEmqEIEP0HoucxkXCtMtE+A?=
- =?us-ascii?Q?MRGQbFeABsyIBynKjz0yZL6evuhRzvdp8FQ8QXNTa/zdxaZ/DtTwS7ONaotj?=
- =?us-ascii?Q?dofdrqSuugfu8/lGbV02U7uBLmPBNgBcsutCYoNNz5KKO15wyMyrvqr6mfNb?=
- =?us-ascii?Q?/CDpWIVlPaodakDLGGC1JhY1SvG3h+FQYaIp2xqZP4Njq+hSNYtg6HUB4j1n?=
- =?us-ascii?Q?2S/OR0Kp6/SlfVPqKc+3VWhad9gK1w9K+jSPkayQOI9rGahwCsCrigJcecWL?=
- =?us-ascii?Q?Ug=3D=3D?=
+	=?us-ascii?Q?AGoncGn1Q1pwQFiXydEbCqjGkEexop5pjvBeeSWqcucaB9mwxebmQ/JbfRz/?=
+ =?us-ascii?Q?KgOGa+Y2nXdzh0dKAXsqV6cJjG1suivxwyLxJpEfim5NwgbUJo+FlkjYNZW4?=
+ =?us-ascii?Q?n1HBHPZFTzNZZTMB1b/GM5egJgbX3v00L3D34D/OOlFonR683ZMLXeTk9TFf?=
+ =?us-ascii?Q?4mT6XEA7+TIB1voxFyTtTRXKGGGGDLgACdHfMqupRGy5abCAeHiF2hgXvmde?=
+ =?us-ascii?Q?Glwm8OV4gi3Q4fj62ohI9SyYbJYAL397FCF/TtUqH1N+41wWguytQLA5/wuh?=
+ =?us-ascii?Q?U38zkv+WQ2ypKkMhhbhaXA26mdWLNgGsudMaTmPuEvivnEskOkDfeB2gkrA7?=
+ =?us-ascii?Q?LrdZyYyAZLs0qPevRdizwAFhHVMMu93HonbZxc0RyDp/E01WSU7iXh9Qp/Dg?=
+ =?us-ascii?Q?0E9iebwvQHUpGxF2n0RrGZrOc4zXbZ3xeUTdDa6AsuaCtjdJlz6PfZDEd/sh?=
+ =?us-ascii?Q?9iwAVH6LKeKOTPl8JrOKFn+jRVtqCj1yZNK5A273PMwrHvYydQAN+gi/d1UO?=
+ =?us-ascii?Q?hyjzB/3h0VeHYVfpj/MM3mR9oerP2rfpL0NSP9OscvCZlbvb/az2qO014dzu?=
+ =?us-ascii?Q?MdCJW4+uNngxE8ZfTxa2h9NpFwfsO6QU9mJsBSQ1XvloUmNxGtA6CfjwqVHQ?=
+ =?us-ascii?Q?8RJX1HvJGvvPz3hP9vBUhRWb+rkt607zHI7wMQRdEmTrR9Os6a0GFiFrH3io?=
+ =?us-ascii?Q?LCI+vztWPrTsyDUo6X4B4D1YsT6UbwoIl4Z36JwTIqRCmSeLppfHd7bry42h?=
+ =?us-ascii?Q?Uv+pUD+QGgdhfekc8Sjz0Dm/Zmd0hQ2SbfzMTSjymaGjanRMDnBYYb8DkbSj?=
+ =?us-ascii?Q?12MM1iI+1jYLXje3s92DcRUVVxS/u01HL9A65HUXnoIeMMT5E+yED3wXClip?=
+ =?us-ascii?Q?gDw/UFiKGI/Y1rzOPhrz7temFI2T8x7SnNMhzWwFfe0KGR9mHhi3qJwc4rAi?=
+ =?us-ascii?Q?smMgvnrD9Q03I7oLfEYLjPcBDvrgQmfQZ6XSx7R2yuaE8VMX/wzBF1TXmSkS?=
+ =?us-ascii?Q?/YumJ/mUhdoe7LC/KOQuyt/OofOShnuXLWIkjnwAlXu9jythp2mSsO3f8qMh?=
+ =?us-ascii?Q?Ugzw1C17axkfMy3PkTbypfgkxHy5oRZKl0fmN8MAhS6fC7x2APFZb/e2rMch?=
+ =?us-ascii?Q?S5XB7XjO5i8fJ1Yx8gGaY+r5uCVjVMoeIZob7n5SzotYnLTTidK0IuCAVskf?=
+ =?us-ascii?Q?bMv5uvRodbv9Qch3vtF2GhjJNxgqq74Um/xQuaJ4K1IleLW8YYde2uphOb9G?=
+ =?us-ascii?Q?0JziWl4S88Y7EUY0fUFjSDNAvkeWH9LyIoMPik17nERl+txk+JZy4ieC0IrL?=
+ =?us-ascii?Q?wG9EqbVFpMXF6aG1863p8IqN1HnzMSgUrDXTvVCDdfClrkhnJ3dsWaP03A7S?=
+ =?us-ascii?Q?vI2ZpX2tu31MisVjiy+vHkiKjHD1iOy0Okp+o0UkRo0cCm5VAT7/tynBh772?=
+ =?us-ascii?Q?kkr+N7nnagv4l3tPMSkfuW00Y2ZN3B4Cl7uudeuKoCYOMFJG/vv5ZZJEiP+q?=
+ =?us-ascii?Q?WB9Wup/AhnF29lNxiFLsJQpeDSj3g2Mv7dBtPDMuADuRoYTQITjDTk6qphDr?=
+ =?us-ascii?Q?pKlIhpW9fAb5J869AXU7dlC+0KhZZP8pNhYqAKi2gFAj2Qm0aZZErFprgXO1?=
+ =?us-ascii?Q?Jg=3D=3D?=
 X-OriginatorOrg: starfivetech.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e4d539c1-7d02-4b64-56ac-08dc377fd2e0
+X-MS-Exchange-CrossTenant-Network-Message-Id: 259c9233-0771-4d6c-6e18-08dc377fdf83
 X-MS-Exchange-CrossTenant-AuthSource: SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2024 10:35:31.9049
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Feb 2024 10:35:53.1447
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: K0O9Xzb7MMEZlcXjItEeTmNaa5CiRLA3iGxMIB6UNEU0E7xc8ysM+O6lZqT7Q7TpAOwxNjyR8gzIi+WjJcEeClPvUzjCPeHVJFgcKPD5Feg=
+X-MS-Exchange-CrossTenant-UserPrincipalName: UEVTDFhv9XXOev/SwjPpgPd+wCsa+bDSmGLNTI47xT1ijO6Jhsgl9dcM1xpH87phkO6aJ0J6hbScjw4GATCfwvtkMPK28rjngbeJILE3AdQ=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SHXPR01MB0863
 
-For Microchip Polarfire PCIe host is PLDA XpressRich IP, move to plda
-directory. Prepare for refactoring the codes.
+Add PCIe dts configuraion for JH7110 SoC platform.
 
 Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Hal Feng <hal.feng@starfivetech.com>
 ---
- MAINTAINERS                                        |  4 ++--
- drivers/pci/controller/Kconfig                     |  9 +--------
- drivers/pci/controller/Makefile                    |  2 +-
- drivers/pci/controller/plda/Kconfig                | 14 ++++++++++++++
- drivers/pci/controller/plda/Makefile               |  2 ++
- .../controller/{ => plda}/pcie-microchip-host.c    |  2 +-
- 6 files changed, 21 insertions(+), 12 deletions(-)
- create mode 100644 drivers/pci/controller/plda/Kconfig
- create mode 100644 drivers/pci/controller/plda/Makefile
- rename drivers/pci/controller/{ => plda}/pcie-microchip-host.c (99%)
+ .../jh7110-starfive-visionfive-2.dtsi         | 64 ++++++++++++++
+ arch/riscv/boot/dts/starfive/jh7110.dtsi      | 86 +++++++++++++++++++
+ 2 files changed, 150 insertions(+)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 2ecaaec6a6bf..9f7e907c8749 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -17046,7 +17046,7 @@ M:	Daire McNamara <daire.mcnamara@microchip.com>
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	Documentation/devicetree/bindings/pci/microchip*
--F:	drivers/pci/controller/*microchip*
-+F:	drivers/pci/controller/plda/*microchip*
+diff --git a/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi b/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
+index b89e9791efa7..ff55a66d7603 100644
+--- a/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
++++ b/arch/riscv/boot/dts/starfive/jh7110-starfive-visionfive-2.dtsi
+@@ -281,6 +281,22 @@
+ 	status = "okay";
+ };
  
- PCIE DRIVER FOR QUALCOMM MSM
- M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-@@ -18838,7 +18838,7 @@ F:	drivers/clk/microchip/clk-mpfs*.c
- F:	drivers/firmware/microchip/mpfs-auto-update.c
- F:	drivers/i2c/busses/i2c-microchip-corei2c.c
- F:	drivers/mailbox/mailbox-mpfs.c
--F:	drivers/pci/controller/pcie-microchip-host.c
-+F:	drivers/pci/controller/plda/pcie-microchip-host.c
- F:	drivers/pwm/pwm-microchip-core.c
- F:	drivers/reset/reset-mpfs.c
- F:	drivers/rtc/rtc-mpfs.c
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index e534c02ee34f..4d2c188f5835 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -215,14 +215,6 @@ config PCIE_MT7621
- 	help
- 	  This selects a driver for the MediaTek MT7621 PCIe Controller.
- 
--config PCIE_MICROCHIP_HOST
--	tristate "Microchip AXI PCIe controller"
--	depends on PCI_MSI && OF
--	select PCI_HOST_COMMON
--	help
--	  Say Y here if you want kernel to support the Microchip AXI PCIe
--	  Host Bridge driver.
--
- config PCI_HYPERV_INTERFACE
- 	tristate "Microsoft Hyper-V PCI Interface"
- 	depends on ((X86 && X86_64) || ARM64) && HYPERV && PCI_MSI
-@@ -356,4 +348,5 @@ config PCIE_XILINX_CPM
- source "drivers/pci/controller/cadence/Kconfig"
- source "drivers/pci/controller/dwc/Kconfig"
- source "drivers/pci/controller/mobiveil/Kconfig"
-+source "drivers/pci/controller/plda/Kconfig"
- endmenu
-diff --git a/drivers/pci/controller/Makefile b/drivers/pci/controller/Makefile
-index f2b19e6174af..038ccbd9e3ba 100644
---- a/drivers/pci/controller/Makefile
-+++ b/drivers/pci/controller/Makefile
-@@ -33,7 +33,6 @@ obj-$(CONFIG_PCIE_ROCKCHIP_EP) += pcie-rockchip-ep.o
- obj-$(CONFIG_PCIE_ROCKCHIP_HOST) += pcie-rockchip-host.o
- obj-$(CONFIG_PCIE_MEDIATEK) += pcie-mediatek.o
- obj-$(CONFIG_PCIE_MEDIATEK_GEN3) += pcie-mediatek-gen3.o
--obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
- obj-$(CONFIG_VMD) += vmd.o
- obj-$(CONFIG_PCIE_BRCMSTB) += pcie-brcmstb.o
- obj-$(CONFIG_PCI_LOONGSON) += pci-loongson.o
-@@ -44,6 +43,7 @@ obj-$(CONFIG_PCIE_MT7621) += pcie-mt7621.o
- # pcie-hisi.o quirks are needed even without CONFIG_PCIE_DW
- obj-y				+= dwc/
- obj-y				+= mobiveil/
-+obj-y				+= plda/
- 
- 
- # The following drivers are for devices that use the generic ACPI
-diff --git a/drivers/pci/controller/plda/Kconfig b/drivers/pci/controller/plda/Kconfig
-new file mode 100644
-index 000000000000..5cb3be4fc98c
---- /dev/null
-+++ b/drivers/pci/controller/plda/Kconfig
-@@ -0,0 +1,14 @@
-+# SPDX-License-Identifier: GPL-2.0
++&pcie0 {
++	perst-gpios = <&sysgpio 26 GPIO_ACTIVE_LOW>;
++	phys = <&pciephy0>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie0_pins>;
++	status = "okay";
++};
 +
-+menu "PLDA-based PCIe controllers"
-+	depends on PCI
++&pcie1 {
++	perst-gpios = <&sysgpio 28 GPIO_ACTIVE_LOW>;
++	phys = <&pciephy1>;
++	pinctrl-names = "default";
++	pinctrl-0 = <&pcie1_pins>;
++	status = "okay";
++};
 +
-+config PCIE_MICROCHIP_HOST
-+	tristate "Microchip AXI PCIe controller"
-+	depends on PCI_MSI && OF
-+	select PCI_HOST_COMMON
-+	help
-+	  Say Y here if you want kernel to support the Microchip AXI PCIe
-+	  Host Bridge driver.
+ &pwmdac {
+ 	pinctrl-names = "default";
+ 	pinctrl-0 = <&pwmdac_pins>;
+@@ -497,6 +513,54 @@
+ 		};
+ 	};
+ 
++	pcie0_pins: pcie0-0 {
++		clkreq-pins {
++			pinmux = <GPIOMUX(27, GPOUT_LOW,
++					      GPOEN_DISABLE,
++					      GPI_NONE)>;
++			bias-pull-down;
++			drive-strength = <2>;
++			input-enable;
++			input-schmitt-disable;
++			slew-rate = <0>;
++		};
 +
-+endmenu
-diff --git a/drivers/pci/controller/plda/Makefile b/drivers/pci/controller/plda/Makefile
-new file mode 100644
-index 000000000000..e1a265cbf91c
---- /dev/null
-+++ b/drivers/pci/controller/plda/Makefile
-@@ -0,0 +1,2 @@
-+# SPDX-License-Identifier: GPL-2.0
-+obj-$(CONFIG_PCIE_MICROCHIP_HOST) += pcie-microchip-host.o
-diff --git a/drivers/pci/controller/pcie-microchip-host.c b/drivers/pci/controller/plda/pcie-microchip-host.c
-similarity index 99%
-rename from drivers/pci/controller/pcie-microchip-host.c
-rename to drivers/pci/controller/plda/pcie-microchip-host.c
-index 137fb8570ba2..cb09a8137e25 100644
---- a/drivers/pci/controller/pcie-microchip-host.c
-+++ b/drivers/pci/controller/plda/pcie-microchip-host.c
-@@ -18,7 +18,7 @@
- #include <linux/pci-ecam.h>
- #include <linux/platform_device.h>
- 
--#include "../pci.h"
-+#include "../../pci.h"
- 
- /* Number of MSI IRQs */
- #define MC_MAX_NUM_MSI_IRQS			32
++		wake-pins {
++			pinmux = <GPIOMUX(32, GPOUT_LOW,
++					      GPOEN_DISABLE,
++					      GPI_NONE)>;
++			bias-pull-up;
++			drive-strength = <2>;
++			input-enable;
++			input-schmitt-disable;
++			slew-rate = <0>;
++		};
++	};
++
++	pcie1_pins: pcie1-0 {
++		clkreq-pins {
++			pinmux = <GPIOMUX(29, GPOUT_LOW,
++					      GPOEN_DISABLE,
++					      GPI_NONE)>;
++			bias-pull-down;
++			drive-strength = <2>;
++			input-enable;
++			input-schmitt-disable;
++			slew-rate = <0>;
++		};
++
++		wake-pins {
++			pinmux = <GPIOMUX(21, GPOUT_LOW,
++					      GPOEN_DISABLE,
++					      GPI_NONE)>;
++			bias-pull-up;
++			drive-strength = <2>;
++			input-enable;
++			input-schmitt-disable;
++			slew-rate = <0>;
++		};
++	};
++
+ 	pwmdac_pins: pwmdac-0 {
+ 		pwmdac-pins {
+ 			pinmux = <GPIOMUX(33, GPOUT_SYS_PWMDAC_LEFT,
+diff --git a/arch/riscv/boot/dts/starfive/jh7110.dtsi b/arch/riscv/boot/dts/starfive/jh7110.dtsi
+index 74ed3b9264d8..db96214fd443 100644
+--- a/arch/riscv/boot/dts/starfive/jh7110.dtsi
++++ b/arch/riscv/boot/dts/starfive/jh7110.dtsi
+@@ -1138,5 +1138,91 @@
+ 			#reset-cells = <1>;
+ 			power-domains = <&pwrc JH7110_PD_VOUT>;
+ 		};
++
++		pcie0: pcie@940000000 {
++			compatible = "starfive,jh7110-pcie";
++			reg = <0x9 0x40000000 0x0 0x1000000>,
++			      <0x0 0x2b000000 0x0 0x100000>;
++			reg-names = "cfg", "apb";
++			linux,pci-domain = <0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x82000000  0x0 0x30000000  0x0 0x30000000 0x0 0x08000000>,
++				 <0xc3000000  0x9 0x00000000  0x9 0x00000000 0x0 0x40000000>;
++			interrupts = <56>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc0 0x1>,
++					<0x0 0x0 0x0 0x2 &pcie_intc0 0x2>,
++					<0x0 0x0 0x0 0x3 &pcie_intc0 0x3>,
++					<0x0 0x0 0x0 0x4 &pcie_intc0 0x4>;
++			msi-controller;
++			device_type = "pci";
++			starfive,stg-syscon = <&stg_syscon>;
++			bus-range = <0x0 0xff>;
++			clocks = <&syscrg JH7110_SYSCLK_NOC_BUS_STG_AXI>,
++				 <&stgcrg JH7110_STGCLK_PCIE0_TL>,
++				 <&stgcrg JH7110_STGCLK_PCIE0_AXI_MST0>,
++				 <&stgcrg JH7110_STGCLK_PCIE0_APB>;
++			clock-names = "noc", "tl", "axi_mst0", "apb";
++			resets = <&stgcrg JH7110_STGRST_PCIE0_AXI_MST0>,
++				 <&stgcrg JH7110_STGRST_PCIE0_AXI_SLV0>,
++				 <&stgcrg JH7110_STGRST_PCIE0_AXI_SLV>,
++				 <&stgcrg JH7110_STGRST_PCIE0_BRG>,
++				 <&stgcrg JH7110_STGRST_PCIE0_CORE>,
++				 <&stgcrg JH7110_STGRST_PCIE0_APB>;
++			reset-names = "mst0", "slv0", "slv", "brg",
++				      "core", "apb";
++			status = "disabled";
++
++			pcie_intc0: interrupt-controller {
++				#address-cells = <0>;
++				#interrupt-cells = <1>;
++				interrupt-controller;
++			};
++		};
++
++		pcie1: pcie@9c0000000 {
++			compatible = "starfive,jh7110-pcie";
++			reg = <0x9 0xc0000000 0x0 0x1000000>,
++			      <0x0 0x2c000000 0x0 0x100000>;
++			reg-names = "cfg", "apb";
++			linux,pci-domain = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			#interrupt-cells = <1>;
++			ranges = <0x82000000  0x0 0x38000000  0x0 0x38000000 0x0 0x08000000>,
++				 <0xc3000000  0x9 0x80000000  0x9 0x80000000 0x0 0x40000000>;
++			interrupts = <57>;
++			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
++			interrupt-map = <0x0 0x0 0x0 0x1 &pcie_intc1 0x1>,
++					<0x0 0x0 0x0 0x2 &pcie_intc1 0x2>,
++					<0x0 0x0 0x0 0x3 &pcie_intc1 0x3>,
++					<0x0 0x0 0x0 0x4 &pcie_intc1 0x4>;
++			msi-controller;
++			device_type = "pci";
++			starfive,stg-syscon = <&stg_syscon>;
++			bus-range = <0x0 0xff>;
++			clocks = <&syscrg JH7110_SYSCLK_NOC_BUS_STG_AXI>,
++				 <&stgcrg JH7110_STGCLK_PCIE1_TL>,
++				 <&stgcrg JH7110_STGCLK_PCIE1_AXI_MST0>,
++				 <&stgcrg JH7110_STGCLK_PCIE1_APB>;
++			clock-names = "noc", "tl", "axi_mst0", "apb";
++			resets = <&stgcrg JH7110_STGRST_PCIE1_AXI_MST0>,
++				 <&stgcrg JH7110_STGRST_PCIE1_AXI_SLV0>,
++				 <&stgcrg JH7110_STGRST_PCIE1_AXI_SLV>,
++				 <&stgcrg JH7110_STGRST_PCIE1_BRG>,
++				 <&stgcrg JH7110_STGRST_PCIE1_CORE>,
++				 <&stgcrg JH7110_STGRST_PCIE1_APB>;
++			reset-names = "mst0", "slv0", "slv", "brg",
++				      "core", "apb";
++			status = "disabled";
++
++			pcie_intc1: interrupt-controller {
++				#address-cells = <0>;
++				#interrupt-cells = <1>;
++				interrupt-controller;
++			};
++		};
+ 	};
+ };
 -- 
 2.17.1
 
