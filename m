@@ -1,172 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F38DD3E47E;
-	Thu, 29 Feb 2024 06:38:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2483B45BE0
+	for <linux-pci@vger.kernel.org>; Thu, 29 Feb 2024 07:30:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709188698; cv=none; b=Wmsz4zifx49HpJj0O+RkULaHEHkyctyEteCcPxZmtw6If8Smie/P4Qfp4YeIt+A4CXDF4ihYIrk/EhIN+AA/dJdw+B5i75KZw0XkV3JHh58tikTWu1oAWVWqPW0g+0LIsIz1z7VZRZ///nuOcnCchLXnTTkQPPmGyhjAzEzeJGc=
+	t=1709191814; cv=none; b=kf3qi2VyQYciCaeFtNkB9yytlzddbz1sXIeu1B+EbS5+tNULCYFLBAsT0U0LjRcZ3PNsJkThwsK6qmWGTFWTDmLen5cQaJVTQZEhO/JZc2teKv2+aZjE9vYhm8qaeSK4KSwmamu30xY3vex26z4KOZWyTQWAa+a8oKcr/nrDF5Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709188698; c=relaxed/simple;
-	bh=VnaCGmTbhdOxcaI9YOBv8ChVZ1c9Uo+mqEnOdGTunRQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y6lU9woth/+VHM9O0ysU5bGJuzJHeGVbQ67jhyr5EJb37UUDV/GCyYW1zUnFvthvHt+EZVZfviScqAJaD9EtZLeV3bqsIH9HEcaXPaw3Q1ErIlm9P4Bq2yQM05pRARCMrm8nzEppYBWUziE+BGZNi3cQNERiycI7iuEuoN6Seh4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=kKYCfUTj; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="kKYCfUTj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04749C433C7;
-	Thu, 29 Feb 2024 06:38:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1709188697;
-	bh=VnaCGmTbhdOxcaI9YOBv8ChVZ1c9Uo+mqEnOdGTunRQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kKYCfUTjlHsSI85yXg91f1hcMEnc4IaSOnLMDBbHvnFG2xlO0wNdWa54lUmmrwNV3
-	 zixmUh28pPClhwMvdtSbq7f9l/+KvVaJ4kYS0lLlRCI+zzWN78REdRrON6GuO8seJH
-	 4a4A2VfAATpOLLwi8Q3XbDrwQHpFLvKlgwX8br7c=
-Date: Thu, 29 Feb 2024 07:38:14 +0100
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Kai-Heng Feng <kai.heng.feng@canonical.com>
-Cc: rafael@kernel.org, bhelgaas@google.com, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Ricky Wu <ricky_wu@realtek.com>,
-	Kees Cook <keescook@chromium.org>, Tony Luck <tony.luck@intel.com>,
-	"Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-	linux-hardening@vger.kernel.org, bpf@vger.kernel.org
-Subject: Re: [PATCH v3] driver core: Cancel scheduled pm_runtime_idle() on
- device removal
-Message-ID: <2024022925-kudos-frugally-04a0@gregkh>
-References: <20240229062201.49500-1-kai.heng.feng@canonical.com>
+	s=arc-20240116; t=1709191814; c=relaxed/simple;
+	bh=rjKQsLKBAzqSr4dtcHw0J7MTGh8WjlmBAOHPzrDr92M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qvRWh5/URUz9HLj2t55mHokztw6vNnrAxF/dwWSBURHPvRAPGoZckuoK967LkbP/axlTpOQewU1U9VeNENVBMQV1Vm9u5UObh+sS9/YQ16hB1d2LWeIFzs2YeL8h9YMRAF9cCjUnoUP+TYsJLtImSh64vIdXNYatgsPgllTGFQ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
+Received: from ptz.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::77] helo=[127.0.0.1])
+	by metis.whiteo.stw.pengutronix.de with esmtp (Exim 4.92)
+	(envelope-from <a.fatoum@pengutronix.de>)
+	id 1rfarW-0000Gw-9K; Thu, 29 Feb 2024 08:29:50 +0100
+Message-ID: <0d03e5d4-12d0-4cc5-b17c-692471ee3c2d@pengutronix.de>
+Date: Thu, 29 Feb 2024 08:29:47 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20240229062201.49500-1-kai.heng.feng@canonical.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/6] PCI: imx6: Rename pci-imx6.c and PCI_IMX6 config
+Content-Language: en-US
+To: Frank Li <Frank.li@nxp.com>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ imx@lists.linux.dev, Richard Zhu <hongxing.zhu@nxp.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>, Rob Herring <robh@kernel.org>,
+ Fabio Estevam <festevam@gmail.com>, Lorenzo Pieralisi
+ <lpieralisi@kernel.org>, Liam Girdwood <lgirdwood@gmail.com>,
+ linux-kernel@vger.kernel.org, Mark Brown <broonie@kernel.org>,
+ NXP Linux Team <linux-imx@nxp.com>,
+ Pengutronix Kernel Team <kernel@pengutronix.de>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, bpf@vger.kernel.org,
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>,
+ linux-arm-kernel@lists.infradead.org, Lucas Stach <l.stach@pengutronix.de>
+References: <20240227-pci2_upstream-v1-2-b952f8333606@nxp.com>
+ <20240228230520.GA314710@bhelgaas>
+ <Zd/DlibuoSxvjPW5@lizhi-Precision-Tower-5810>
+From: Ahmad Fatoum <a.fatoum@pengutronix.de>
+In-Reply-To: <Zd/DlibuoSxvjPW5@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 2a0a:edc0:0:900:1d::77
+X-SA-Exim-Mail-From: a.fatoum@pengutronix.de
+X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
+X-PTX-Original-Recipient: linux-pci@vger.kernel.org
 
-On Thu, Feb 29, 2024 at 02:22:00PM +0800, Kai-Heng Feng wrote:
-> When inserting an SD7.0 card to Realtek card reader, the card reader
-> unplugs itself and morph into a NVMe device. The slot Link down on hot
-> unplugged can cause the following error:
->=20
-> pcieport 0000:00:1c.0: pciehp: Slot(8): Link Down
-> BUG: unable to handle page fault for address: ffffb24d403e5010
-> PGD 100000067 P4D 100000067 PUD 1001fe067 PMD 100d97067 PTE 0
-> Oops: 0000 [#1] PREEMPT SMP PTI
-> CPU: 3 PID: 534 Comm: kworker/3:10 Not tainted 6.4.0 #6
-> Hardware name: To Be Filled By O.E.M. To Be Filled By O.E.M./H370M Pro4, =
-BIOS P3.40 10/25/2018
-> Workqueue: pm pm_runtime_work
-> RIP: 0010:ioread32+0x2e/0x70
-> Code: ff 03 00 77 25 48 81 ff 00 00 01 00 77 14 8b 15 08 d9 54 01 b8 ff f=
-f ff ff 85 d2 75 14 c3 cc cc cc cc 89 fa ed c3 cc cc cc cc <8b> 07 c3 cc cc=
- cc cc 55 83 ea 01 48 89 fe 48 c7 c7 98 6f 15 99 48
-> RSP: 0018:ffffb24d40a5bd78 EFLAGS: 00010296
-> RAX: ffffb24d403e5000 RBX: 0000000000000152 RCX: 000000000000007f
-> RDX: 000000000000ff00 RSI: ffffb24d403e5010 RDI: ffffb24d403e5010
-> RBP: ffffb24d40a5bd98 R08: ffffb24d403e5010 R09: 0000000000000000
-> R10: ffff9074cd95e7f4 R11: 0000000000000003 R12: 000000000000007f
-> R13: ffff9074e1a68c00 R14: ffff9074e1a68d00 R15: 0000000000009003
-> FS:  0000000000000000(0000) GS:ffff90752a180000(0000) knlGS:0000000000000=
-000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: ffffb24d403e5010 CR3: 0000000152832006 CR4: 00000000003706e0
-> Call Trace:
->  <TASK>
->  ? show_regs+0x68/0x70
->  ? __die_body+0x20/0x70
->  ? __die+0x2b/0x40
->  ? page_fault_oops+0x160/0x480
->  ? search_bpf_extables+0x63/0x90
->  ? ioread32+0x2e/0x70
->  ? search_exception_tables+0x5f/0x70
->  ? kernelmode_fixup_or_oops+0xa2/0x120
->  ? __bad_area_nosemaphore+0x179/0x230
->  ? bad_area_nosemaphore+0x16/0x20
->  ? do_kern_addr_fault+0x8b/0xa0
->  ? exc_page_fault+0xe5/0x180
->  ? asm_exc_page_fault+0x27/0x30
->  ? ioread32+0x2e/0x70
->  ? rtsx_pci_write_register+0x5b/0x90 [rtsx_pci]
->  rtsx_set_l1off_sub+0x1c/0x30 [rtsx_pci]
->  rts5261_set_l1off_cfg_sub_d0+0x36/0x40 [rtsx_pci]
->  rtsx_pci_runtime_idle+0xc7/0x160 [rtsx_pci]
->  ? __pfx_pci_pm_runtime_idle+0x10/0x10
->  pci_pm_runtime_idle+0x34/0x70
->  rpm_idle+0xc4/0x2b0
->  pm_runtime_work+0x93/0xc0
->  process_one_work+0x21a/0x430
->  worker_thread+0x4a/0x3c0
->  ? __pfx_worker_thread+0x10/0x10
->  kthread+0x106/0x140
->  ? __pfx_kthread+0x10/0x10
->  ret_from_fork+0x29/0x50
->  </TASK>
-> Modules linked in: nvme nvme_core snd_hda_codec_hdmi snd_sof_pci_intel_cn=
-l snd_sof_intel_hda_common snd_hda_codec_realtek snd_hda_codec_generic snd_=
-soc_hdac_hda soundwire_intel ledtrig_audio nls_iso8859_1 soundwire_generic_=
-allocation soundwire_cadence snd_sof_intel_hda_mlink snd_sof_intel_hda snd_=
-sof_pci snd_sof_xtensa_dsp snd_sof snd_sof_utils snd_hda_ext_core snd_soc_a=
-cpi_intel_match snd_soc_acpi soundwire_bus snd_soc_core snd_compress ac97_b=
-us snd_pcm_dmaengine snd_hda_intel i915 snd_intel_dspcfg snd_intel_sdw_acpi=
- intel_rapl_msr snd_hda_codec intel_rapl_common snd_hda_core x86_pkg_temp_t=
-hermal intel_powerclamp snd_hwdep coretemp snd_pcm kvm_intel drm_buddy ttm =
-mei_hdcp kvm drm_display_helper snd_seq_midi snd_seq_midi_event cec crct10d=
-if_pclmul ghash_clmulni_intel sha512_ssse3 aesni_intel crypto_simd rc_core =
-cryptd rapl snd_rawmidi drm_kms_helper binfmt_misc intel_cstate i2c_algo_bi=
-t joydev snd_seq snd_seq_device syscopyarea wmi_bmof snd_timer sysfillrect =
-input_leds snd ee1004 sysimgblt mei_me soundcore
->  mei intel_pch_thermal mac_hid acpi_tad acpi_pad sch_fq_codel msr parport=
-_pc ppdev lp ramoops drm parport reed_solomon efi_pstore ip_tables x_tables=
- autofs4 hid_generic usbhid hid rtsx_pci_sdmmc crc32_pclmul ahci e1000e i2c=
-_i801 i2c_smbus rtsx_pci xhci_pci libahci xhci_pci_renesas video wmi
-> CR2: ffffb24d403e5010
-> ---[ end trace 0000000000000000 ]---
->=20
-> This happens because scheduled pm_runtime_idle() is not cancelled.
->=20
-> So before releasing the device, stop all runtime power managements by
-> using pm_runtime_barrier() to fix the issue.
->=20
-> Link: https://lore.kernel.org/all/2ce258f371234b1f8a1a470d5488d00e@realte=
-k.com/
-> Cc: Ricky Wu <ricky_wu@realtek.com>
-> Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Hello Frank,
 
-What commit id does this fix?
+On 29.02.24 00:36, Frank Li wrote:
+> On Wed, Feb 28, 2024 at 05:05:20PM -0600, Bjorn Helgaas wrote:
+>> On Tue, Feb 27, 2024 at 04:47:09PM -0500, Frank Li wrote:
+>>> -config PCI_IMX6
+>>> +config PCI_IMX
+>>
+>> What does this look like to users who carry an old .config file
+>> forward?
+> 
+> I don't think people will use old .config when update to new kernel. I can
+> keep PCI_IMX6 for config if have to.
 
-Should it also go to stable kernels?
+I'd argue it's the complete opposite. Most users don't use the in-tree defconfig,
+but use olddefconfig on their customized .config, either explicitly or
+implicitly via menuconfig and saving.
 
+This would result in non-functional PCI after an update. I don't mind renaming
+the file, but please leave the Kconfig symbol as-is.
 
-> ---
-> v3:
->   Move the change the device driver core.
-> =20
-> v2:
->   Cover more cases than just pciehp.
->=20
->  drivers/base/dd.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/base/dd.c b/drivers/base/dd.c
-> index 85152537dbf1..38c815e2b3a2 100644
-> --- a/drivers/base/dd.c
-> +++ b/drivers/base/dd.c
-> @@ -1244,6 +1244,7 @@ static void __device_release_driver(struct device *=
-dev, struct device *parent)
-> =20
->  	drv =3D dev->driver;
->  	if (drv) {
-> +		pm_runtime_barrier(dev);
->  		pm_runtime_get_sync(dev);
+Thanks,
+Ahmad
 
-This is going to affect every device, are you sure about that?
+> 
+> 
+> 
+> 
 
-And shouldn't we be checking the return value?  Wait, why does EVERYONE
-ignore the return value of this call?
+-- 
+Pengutronix e.K.                           |                             |
+Steuerwalder Str. 21                       | http://www.pengutronix.de/  |
+31137 Hildesheim, Germany                  | Phone: +49-5121-206917-0    |
+Amtsgericht Hildesheim, HRA 2686           | Fax:   +49-5121-206917-5555 |
 
-thanks,
-
-greg k-h
