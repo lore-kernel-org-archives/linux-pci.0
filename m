@@ -1,23 +1,23 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8ADA87CF30;
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 14DA17CF05;
 	Thu, 29 Feb 2024 12:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709208456; cv=none; b=eu0kCCfZT5F3SjHR1nTv1c/bYTosokJlP/IDXNZgtYe5RfEIdov8WuLi0jTJp17mLmYtvpbmvS2YUAuvSs2QadcHzbJHfoyhQFSHCu5dj/NPb/s8b1ajUpFlzP9UhLU9Yd/OyIeAo+s78VZFiO1dB7h6aZVrB092VKOcUVD/Umc=
+	t=1709208456; cv=none; b=ltId1aaJEz+V6Nm3kMfb8rkVE5f0mA9aF9qpJnhyVN3u1FWpoa+vdFY6YSkcpISWIgkAHBtbu7nnpH6bBmLRSPlIv2udSXiWLKQrQjCaX0HptmD18GVr6u3pfY5hEY99ceVv8YJdaYLlRdHag6+aRXRvWPUYdTViiDvPh2olxJ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709208456; c=relaxed/simple;
-	bh=/FFfEomu6fYMdhxeZFy2P5C2gv/ZA6OCkelbPwL8e7Q=;
+	bh=nEj89xyZoFBvp66Y8Lw8tPcJShRZGoiU+lWaoLYqHpo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Q1iuvRlEsI7gjF79JxotcD+xZRXRh0AIkAGgqzcW1AV8XR+Yt6N7T6/5jZ8UJxyD/jK5nsk18xgCsa4mWUrUnLMM65QVNtlZWyaAroI9Ke/IbCnN6K4cHprBGrx3169a6wEctQ7zNtz0l+p54EnoDfGlAMaQ0IpicZaWefmSOoA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
+	 MIME-Version; b=ebNda7prKlX5YsMfhG2zeHxa+++iVjh3sadb571Q5SxBgkehuAynrEgkkqzXdF9liVecdGHb6ARqnghbmyUoSIO9af0v3wDybXIyiH3PcBE8Z3LcFs1qVDI2nNJnLzwNUUkegBUN/YXRpJF3I3RNdPrOdFII1+3p2ayVLN+Dko4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.06,194,1705330800"; 
-   d="scan'208";a="195830394"
+   d="scan'208";a="199768939"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 29 Feb 2024 21:07:24 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 29 Feb 2024 21:07:25 +0900
 Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 5A187400857D;
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id E589A400857D;
 	Thu, 29 Feb 2024 21:07:24 +0900 (JST)
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To: lpieralisi@kernel.org,
@@ -34,9 +34,9 @@ Cc: marek.vasut+renesas@gmail.com,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH 2/6] dt-bindings: PCI: rcar-gen4-pci-ep: Add R-Car V4H compatible
-Date: Thu, 29 Feb 2024 21:07:15 +0900
-Message-Id: <20240229120719.2553638-3-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH 6/6] misc: pci_endpoint_test: Add Device ID for R-Car V4H PCIe controller
+Date: Thu, 29 Feb 2024 21:07:19 +0900
+Message-Id: <20240229120719.2553638-7-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240229120719.2553638-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20240229120719.2553638-1-yoshihiro.shimoda.uh@renesas.com>
@@ -48,28 +48,36 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Document bindings for R-Car V4H (R8A779G0) PCIe endpoint module.
+Add Renesas R8A779G0 in pci_device_id table so that pci-epf-test
+can be used for testing PCIe EP on R-Car V4H.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/misc/pci_endpoint_test.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-index fe38f62da066..91b81ac75592 100644
---- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
-@@ -16,7 +16,9 @@ allOf:
- properties:
-   compatible:
-     items:
--      - const: renesas,r8a779f0-pcie-ep   # R-Car S4-8
-+      - enum:
-+          - renesas,r8a779f0-pcie-ep      # R-Car S4-8
-+          - renesas,r8a779g0-pcie-ep      # R-Car V4H
-       - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index c38a6083f0a7..2fa3c6473c7d 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -83,6 +83,7 @@
+ #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
+ #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
+ #define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
++#define PCI_DEVICE_ID_RENESAS_R8A779G0		0x0030
  
-   reg:
+ static DEFINE_IDA(pci_endpoint_test_ida);
+ 
+@@ -1005,6 +1006,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
+ 	  .driver_data = (kernel_ulong_t)&default_data,
+ 	},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779G0),
++	  .driver_data = (kernel_ulong_t)&default_data,
++	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
+ 	  .driver_data = (kernel_ulong_t)&j721e_data,
+ 	},
 -- 
 2.25.1
 
