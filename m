@@ -1,23 +1,23 @@
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 14DA17CF05;
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 673E67CF31;
 	Thu, 29 Feb 2024 12:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709208456; cv=none; b=ltId1aaJEz+V6Nm3kMfb8rkVE5f0mA9aF9qpJnhyVN3u1FWpoa+vdFY6YSkcpISWIgkAHBtbu7nnpH6bBmLRSPlIv2udSXiWLKQrQjCaX0HptmD18GVr6u3pfY5hEY99ceVv8YJdaYLlRdHag6+aRXRvWPUYdTViiDvPh2olxJ0=
+	t=1709208457; cv=none; b=smwPmfrzrmEjEsRxUnqqD0RQjToz4wd5z1/IcAgcSTWIMhujMLxn6481dZpBqlBW88JMnvDPCTnN/Joz+XVterf/45xRYcJ21vduaY37vXbs/+cV4ksNfhQa3Tqre1XWDwnIUbSBbaSCG3HFMUtNZF6EJUWVUiijn9sKfcfnx8o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709208456; c=relaxed/simple;
-	bh=nEj89xyZoFBvp66Y8Lw8tPcJShRZGoiU+lWaoLYqHpo=;
+	s=arc-20240116; t=1709208457; c=relaxed/simple;
+	bh=pITh/YfXvUUVknMBJl2FYDWSuqEWNHyIX9eb4ksFyyE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ebNda7prKlX5YsMfhG2zeHxa+++iVjh3sadb571Q5SxBgkehuAynrEgkkqzXdF9liVecdGHb6ARqnghbmyUoSIO9af0v3wDybXIyiH3PcBE8Z3LcFs1qVDI2nNJnLzwNUUkegBUN/YXRpJF3I3RNdPrOdFII1+3p2ayVLN+Dko4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.172
+	 MIME-Version; b=GbxUSA38KmR7eW/XuhosK11s+Ren8r5G4CncMVrzSQ27whg1nWU2PFLqlZHwi7Eqv3RoA9WQIfoBV1vj/LPNJxKN/p76cwYTRfEWsK/+iL+1AbCeSR5SJ7bmMCs9sQSXxqBUXfDJvfM5djIWDmdkl7OG0YPsuLy2BmTkRThmGRY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.06,194,1705330800"; 
-   d="scan'208";a="199768939"
+   d="scan'208";a="195830397"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 29 Feb 2024 21:07:25 +0900
+  by relmlie5.idc.renesas.com with ESMTP; 29 Feb 2024 21:07:24 +0900
 Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id E589A400857D;
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id A8153400857D;
 	Thu, 29 Feb 2024 21:07:24 +0900 (JST)
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To: lpieralisi@kernel.org,
@@ -34,9 +34,9 @@ Cc: marek.vasut+renesas@gmail.com,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH 6/6] misc: pci_endpoint_test: Add Device ID for R-Car V4H PCIe controller
-Date: Thu, 29 Feb 2024 21:07:19 +0900
-Message-Id: <20240229120719.2553638-7-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH 4/6] PCI: dwc: rcar-gen4: Add a new function pointer for other SoC support
+Date: Thu, 29 Feb 2024 21:07:17 +0900
+Message-Id: <20240229120719.2553638-5-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240229120719.2553638-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20240229120719.2553638-1-yoshihiro.shimoda.uh@renesas.com>
@@ -48,36 +48,115 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add Renesas R8A779G0 in pci_device_id table so that pci-epf-test
-can be used for testing PCIe EP on R-Car V4H.
+This driver can reuse other R-Car Gen4 SoC support. However, some
+initializing settings differs between r8a779f0 and others. So, add
+a new function pointer start_link_enable() to support other R-Car
+Gen4 SoC in the future. No behavior changes.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
- drivers/misc/pci_endpoint_test.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 57 +++++++++++++++++++--
+ 1 file changed, 52 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index c38a6083f0a7..2fa3c6473c7d 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -83,6 +83,7 @@
- #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
- #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
- #define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
-+#define PCI_DEVICE_ID_RENESAS_R8A779G0		0x0030
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index e9166619b1f9..9f4d868c1703 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -53,9 +53,16 @@ struct rcar_gen4_pcie {
+ 	void __iomem *base;
+ 	struct platform_device *pdev;
+ 	enum dw_pcie_device_mode mode;
++
++	int (*start_link_enable)(struct rcar_gen4_pcie *rcar);
+ };
+ #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
  
- static DEFINE_IDA(pci_endpoint_test_ida);
++struct rcar_gen4_pcie_platdata {
++	enum dw_pcie_device_mode mode;
++	int (*start_link_enable)(struct rcar_gen4_pcie *rcar);
++};
++
+ /* Common */
+ static void rcar_gen4_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar,
+ 					bool enable)
+@@ -123,9 +130,13 @@ static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
+ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
+ {
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+-	int i, changes;
++	int i, changes, ret;
  
-@@ -1005,6 +1006,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
- 	  .driver_data = (kernel_ulong_t)&default_data,
- 	},
-+	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779G0),
-+	  .driver_data = (kernel_ulong_t)&default_data,
+-	rcar_gen4_pcie_ltssm_enable(rcar, true);
++	if (rcar->start_link_enable) {
++		ret = rcar->start_link_enable(rcar);
++		if (ret)
++			return ret;
++	}
+ 
+ 	/*
+ 	 * Require direct speed change with retrying here if the link_gen is
+@@ -435,7 +446,10 @@ static void rcar_gen4_remove_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
+ /* Common */
+ static int rcar_gen4_add_dw_pcie(struct rcar_gen4_pcie *rcar)
+ {
+-	rcar->mode = (uintptr_t)of_device_get_match_data(&rcar->pdev->dev);
++	const struct rcar_gen4_pcie_platdata *pd = of_device_get_match_data(&rcar->pdev->dev);
++
++	rcar->mode = pd->mode;
++	rcar->start_link_enable = pd->start_link_enable;
+ 
+ 	switch (rcar->mode) {
+ 	case DW_PCIE_RC_TYPE:
+@@ -498,14 +512,47 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
+ 	rcar_gen4_pcie_unprepare(rcar);
+ }
+ 
++static int r8a779f0_pcie_start_link_enable(struct rcar_gen4_pcie *rcar)
++{
++	rcar_gen4_pcie_ltssm_enable(rcar, true);
++
++	return 0;
++}
++
++static struct rcar_gen4_pcie_platdata platdata_r8a779f0_pcie = {
++	.mode = DW_PCIE_RC_TYPE,
++	.start_link_enable = r8a779f0_pcie_start_link_enable,
++};
++
++static struct rcar_gen4_pcie_platdata platdata_r8a779f0_pcie_ep = {
++	.mode = DW_PCIE_EP_TYPE,
++	.start_link_enable = r8a779f0_pcie_start_link_enable,
++};
++
++static struct rcar_gen4_pcie_platdata platdata_rcar_gen4_pcie = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static struct rcar_gen4_pcie_platdata platdata_rcar_gen4_pcie_ep = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id rcar_gen4_pcie_of_match[] = {
++	{
++		.compatible = "renesas,r8a779f0-pcie",
++		.data = &platdata_r8a779f0_pcie,
 +	},
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
- 	  .driver_data = (kernel_ulong_t)&j721e_data,
++	{
++		.compatible = "renesas,r8a779f0-pcie-ep",
++		.data = &platdata_r8a779f0_pcie_ep,
++	},
+ 	{
+ 		.compatible = "renesas,rcar-gen4-pcie",
+-		.data = (void *)DW_PCIE_RC_TYPE,
++		.data = &platdata_rcar_gen4_pcie,
  	},
+ 	{
+ 		.compatible = "renesas,rcar-gen4-pcie-ep",
+-		.data = (void *)DW_PCIE_EP_TYPE,
++		.data = &platdata_rcar_gen4_pcie_ep,
+ 	},
+ 	{},
+ };
 -- 
 2.25.1
 
