@@ -1,45 +1,45 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 013E73D963
-	for <linux-pci@vger.kernel.org>; Mon,  4 Mar 2024 13:44:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8523F9CC
+	for <linux-pci@vger.kernel.org>; Mon,  4 Mar 2024 13:49:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709559846; cv=none; b=oQr3T0cKQaGoH2tauHisNv1R7zpxu/Y6eXSaq/hwxRmoqVFwSs1ph9tTdp1t1FrvN2euSsRpE+moUbnCTz1Ea3XdSVvoHIlroLet+ATdTJp4i6mXHeL/LS3+yKhLo80mitYTijc+xrSaZ0r6DJeN7mYtE15n4TkeDM74ClCDL8M=
+	t=1709560171; cv=none; b=k9JT/ar/hSC7S5wXAD6FRmEE52r8Wm6QwyUI/PYPvlScLKvju/lfaUjOMIvca52x68Ao7Wy8fkSyQTWbEOGDScri4F4ECVxgUNHYkKPKJr70GE8kQ/iZHoPyOCX9UP8XYEBJwdfDTHFyXYbmgBNs9JbS3Ad+ma+pQm055NBp8+s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709559846; c=relaxed/simple;
-	bh=6temxexlrCI0DLt9A9CbkEwDrv1mp4dXTU/zTUzl1+U=;
+	s=arc-20240116; t=1709560171; c=relaxed/simple;
+	bh=a8Oeia3y6iiXNQb/h+FkMpPj8XaNTESPE0upy5Hq1GU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=O1gZlXDsqVD8S4lVXR+hcE2GT3ADpM2cwCtn/QcEoO78XzUdcjUEi3wQd8X1L9z2lR6nlzE5X28Jr5wPjS/TcCIHAJNgma21yB/6FX82R488zNrUT08j020R/VkzsDNhBI8TVYNR3pKB0tEH/N+3HbseCGvoS4Q1M3xhegaCG9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IARRpBWA; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=IRlX7duImHMZsFGPRutwEg9G08Pw8/KU6zw+8kd3VnvVX0IXYOxntBAsDuMRHOIGFuy1b5s1ucOYo9UMupUeZgSUO4pwv0PGpXVlUs2GgqOFFbeXi2fesGeiF0s+0L5Ojai/puukpLqsJ7MWG49p6seD1hlGVLR0g3zIE3iaaxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IMp/xxah; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IARRpBWA"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IMp/xxah"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1709559844;
+	s=mimecast20190719; t=1709560168;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Y52A912ZtNs9Ap8KrFaEE37xvN2BehQdyIwgbj6SpGs=;
-	b=IARRpBWAxHBddBn3bbrCqbEByzm8BLKCobPi8L/6L2kv1WFhyfBjTqjANbCqcRU/DEBJXm
-	IP/KlqgxeqpRpzbBnoEe1h4xCqgdjt1oYO9r1TfcupEsaUNW8wxNQ4Q/clGCd25EBzh20Y
-	/pyPtqlwabYNjGbFyfhWllK6ABf+gyM=
-Received: from mimecast-mx02.redhat.com (mimecast-mx02.redhat.com
- [66.187.233.88]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-502-9ZGS7V5-Ow2sWG5vJ-Cjeg-1; Mon, 04 Mar 2024 08:44:00 -0500
-X-MC-Unique: 9ZGS7V5-Ow2sWG5vJ-Cjeg-1
-Received: from smtp.corp.redhat.com (int-mx10.intmail.prod.int.rdu2.redhat.com [10.11.54.10])
+	bh=p07BVuCRl/vgtI3ktEGIWBy/AyZuue/MffO8lcXsVeQ=;
+	b=IMp/xxahGDnn9pXKb4vwBZ1SF8ppKTbyBNcFP66/iKXhSEUeBss3DrEtFJTe3+daJJSP21
+	U47mXVmXPrDiHKlI+2DPS7Ki/Ciyqq2cvuoM0ZEsTS9siFbgp5DlXFM2sY+IPscqjBVmiq
+	Y8+rPWGqdH88NFjcQEdCnqaudzMlR8E=
+Received: from mimecast-mx02.redhat.com (mx-ext.redhat.com [66.187.233.73])
+ by relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-77-1BKKvLu9Ocqdl27lYGVyTg-1; Mon,
+ 04 Mar 2024 08:49:25 -0500
+X-MC-Unique: 1BKKvLu9Ocqdl27lYGVyTg-1
+Received: from smtp.corp.redhat.com (int-mx02.intmail.prod.int.rdu2.redhat.com [10.11.54.2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id 28891185A783;
-	Mon,  4 Mar 2024 13:44:00 +0000 (UTC)
+	by mimecast-mx02.redhat.com (Postfix) with ESMTPS id A577C1C068C9;
+	Mon,  4 Mar 2024 13:49:24 +0000 (UTC)
 Received: from x1.localdomain.com (unknown [10.39.195.86])
-	by smtp.corp.redhat.com (Postfix) with ESMTP id C936D492BE4;
-	Mon,  4 Mar 2024 13:43:58 +0000 (UTC)
+	by smtp.corp.redhat.com (Postfix) with ESMTP id 39246401546D;
+	Mon,  4 Mar 2024 13:49:23 +0000 (UTC)
 From: Hans de Goede <hdegoede@redhat.com>
 To: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
 	Andy Shevchenko <andy@kernel.org>,
@@ -50,11 +50,11 @@ Cc: Hans de Goede <hdegoede@redhat.com>,
 	Klara Modin <klarasmodin@gmail.com>,
 	linux-pci@vger.kernel.org,
 	platform-driver-x86@vger.kernel.org
-Subject: [RFC 1/1] platform/x86: p2sb: On Goldmont only cache P2SB and SPI devfn BAR
-Date: Mon,  4 Mar 2024 14:43:55 +0100
-Message-ID: <20240304134356.305375-2-hdegoede@redhat.com>
-In-Reply-To: <20240304134356.305375-1-hdegoede@redhat.com>
-References: <20240304134356.305375-1-hdegoede@redhat.com>
+Subject: [RFC 1/2] platform/x86: p2sb: Cache SPI controller resources on Goldmont platforms
+Date: Mon,  4 Mar 2024 14:49:20 +0100
+Message-ID: <20240304134921.305604-2-hdegoede@redhat.com>
+In-Reply-To: <20240304134921.305604-1-hdegoede@redhat.com>
+References: <20240304134921.305604-1-hdegoede@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,30 +62,23 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.10
+X-Scanned-By: MIMEDefang 3.4.1 on 10.11.54.2
 
-On Goldmont p2sb_bar() only ever gets called for 2 devices, the actual P2SB
-devfn 13,0 and the SPI controller which is part of the P2SB, devfn 13,2.
+Instead of skipping all fs_initcall() caching of resources on Goldmont
+platforms, cache the SPI controller BAR. Caching the SPI controller BAR
+seems safe to do (unlike the P2SB BAR which is known to cause issues
+on Goldmont).
 
-But the current p2sb code tries to cache BAR0 info for all of
-devfn 13,0 to 13,7 . This involves calling pci_scan_single_device()
-for device 13 functions 0-7 and the hw does not seem to like
-pci_scan_single_device() getting called for some of the other hidden
-devices. E.g. on an ASUS VivoBook D540NV-GQ065T this leads to continuous
-ACPI errors leading to high CPU usage.
+Caching the SPI controller BAR is useful since p2sb_bar() normally
+is always called for the SPI devfn on Goldmont platforms.
 
-Fix this by only caching BAR0 info and thus only calling
-pci_scan_single_device() for the P2SB and the SPI controller.
-
-Link: https://bugzilla.kernel.org/show_bug.cgi?id=218531 [1]
-Fixes: 5913320eb0b3 ("platform/x86: p2sb: Allow p2sb_bar() calls during PCI device probe")
 Signed-off-by: Hans de Goede <hdegoede@redhat.com>
 ---
- drivers/platform/x86/p2sb.c | 23 ++++++++---------------
- 1 file changed, 8 insertions(+), 15 deletions(-)
+ drivers/platform/x86/p2sb.c | 41 ++++++++++++++++++++++---------------
+ 1 file changed, 25 insertions(+), 16 deletions(-)
 
 diff --git a/drivers/platform/x86/p2sb.c b/drivers/platform/x86/p2sb.c
-index 6bd14d0132db..3d66e1d4eb1f 100644
+index c829dbd8f058..caf037b44487 100644
 --- a/drivers/platform/x86/p2sb.c
 +++ b/drivers/platform/x86/p2sb.c
 @@ -20,9 +20,11 @@
@@ -101,33 +94,71 @@ index 6bd14d0132db..3d66e1d4eb1f 100644
  	{}
  };
  
-@@ -98,21 +100,12 @@ static void p2sb_scan_and_cache_devfn(struct pci_bus *bus, unsigned int devfn)
+@@ -109,7 +111,7 @@ static struct pci_bus *p2sb_get_bus(struct pci_bus *bus)
+ 	return p2sb_bus;
+ }
  
- static int p2sb_scan_and_cache(struct pci_bus *bus, unsigned int devfn)
+-static int p2sb_cache_resources(unsigned int devfn_to_cache, bool from_fs_init)
++static int p2sb_cache_resources(unsigned int devfn_to_cache)
  {
--	unsigned int slot, fn;
-+	/* Scan the P2SB device and cache its BAR0 */
-+	p2sb_scan_and_cache_devfn(bus, devfn);
+ 	unsigned int devfn_p2sb;
+ 	u32 value = P2SBC_HIDE;
+@@ -126,18 +128,6 @@ static int p2sb_cache_resources(unsigned int devfn_to_cache, bool from_fs_init)
+ 	if (!bus)
+ 		return -ENODEV;
  
--	if (PCI_FUNC(devfn) == 0) {
--		/*
--		 * When function number of the P2SB device is zero, scan it and
--		 * other function numbers, and if devices are available, cache
--		 * their BAR0s.
--		 */
--		slot = PCI_SLOT(devfn);
--		for (fn = 0; fn < NR_P2SB_RES_CACHE; fn++)
--			p2sb_scan_and_cache_devfn(bus, PCI_DEVFN(slot, fn));
--	} else {
--		/* Scan the P2SB device and cache its BAR0 */
--		p2sb_scan_and_cache_devfn(bus, devfn);
--	}
-+	/* On Goldmont p2sb_bar() also gets called for the SPI controller */
+-	/*
+-	 * On ASUS VivoBook D540NV-GQ065T which has Goldmont CPU family Pentium
+-	 * N4200, P2SB device scan including function 0 at fs_initcall() step
+-	 * causes ACPI errors. To avoid the errors, defer P2SB device scan and
+-	 * cache when P2SB devices has function 0.
+-	 */
+-	if (PCI_FUNC(devfn_p2sb) == 0 && from_fs_init)
+-		return -EBUSY;
+-
+-	if (devfn_to_cache == 0)
+-		devfn_to_cache = devfn_p2sb;
+-
+ 	/*
+ 	 * When a device with same devfn exists and its device class is not
+ 	 * PCI_CLASS_MEMORY_OTHER for P2SB, do not touch it.
+@@ -205,7 +195,7 @@ int p2sb_bar(struct pci_bus *bus, unsigned int devfn, struct resource *mem)
+ 
+ 	/* Scan and cache P2SB device if it was deferred at fs_initcall() */
+ 	if (!p2sb_valid_resource(&cache->res))
+-		p2sb_cache_resources(devfn, false);
++		p2sb_cache_resources(devfn);
+ 
+ 	if (cache->bus_dev_id != bus->dev.id)
+ 		return -ENODEV;
+@@ -220,7 +210,26 @@ EXPORT_SYMBOL_GPL(p2sb_bar);
+ 
+ static int __init p2sb_fs_init(void)
+ {
+-	p2sb_cache_resources(0, true);
++	unsigned int devfn;
++
++	/*
++	 * On most platforms p2sb_bar() is only called with the PCI devfn
++	 * of the P2SB PCI device itself, cache the P2SB BAR.
++	 */
++	p2sb_get_devfn(&devfn);
++
++	/*
++	 * On Goldmont platforms p2sb_bar() may be called with 2 different PCI
++	 * devfn values, one for the P2SB itself and one for the SPI controller.
++	 * Unhiding the P2SB is known to cause ACPI errors on some devices
++	 * where p2sb_bar() is never called for the P2SB devfn. This happens
++	 * on e.g. the ASUS VivoBook D540NV-GQ065T with a Pentium N4200 CPU.
++	 * To avoid this issue only cache the SPI BAR at fs_initcall() time.
++	 */
 +	if (devfn == P2SB_DEVFN_GOLDMONT)
-+		p2sb_scan_and_cache_devfn(bus, SPI_DEVFN_GOLDMONT);
++		devfn = SPI_DEVFN_GOLDMONT;
++
++	p2sb_cache_resources(devfn);
+ 	return 0;
+ }
  
- 	if (!p2sb_valid_resource(&p2sb_resources[PCI_FUNC(devfn)].res))
- 		return -ENOENT;
 -- 
 2.44.0
 
