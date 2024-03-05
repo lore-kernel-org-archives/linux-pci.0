@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41C0380632;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F51F80630;
 	Tue,  5 Mar 2024 08:14:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709626486; cv=none; b=iLVRmP7hdRz8RRMHpmS3gTGCK6zM7aOJsnWAql/ShdB7UXcIIdfobWRxYde1NB4zGNTizWuG8zoQb/EpRMRP0Nt9WdE5GfJodJpD1GS2d6fEC7LSec7V4amTPimekEov5ZnbM5bx1jG5pzb2RMRY0sMnC53oSS1CM4G685vy+1M=
+	t=1709626486; cv=none; b=EGJUB9ZP/Y1xt/U1YSm/WTBSSLVtO8KD9kAjPwcD/WqHmQ3EE4pZbBuozaYIHyZ05FzFAnl4XMhA1IeFe7feABP0F37neQFIY0Gw0umPm75DyP64saGazIGIKZ+nvBkXPZSh/13P8Dy0kon9mG8X+8Nn3PkKwn9LE/iitZu81NM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709626486; c=relaxed/simple;
-	bh=RdyY/PZRclHf+VgiPUlJt+u4TDL/TN39E8sr3KrgD8Y=;
+	bh=LG9qzAt51k9B0led/p2cn23iSKOm/jB6p41538MCRnk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BSgEVd1ykyf4ko2ub8roJs6I6JlvlGg/roA3U3JyoKAjZ7geClE6uYiygLu6pSJ7MKKpjA8QJ9ODITG1WQOWPWrC1o8iToDXrY9bGEdGzAjXH0oqFtQ5oVo/85CsHlCMmFRlHeqtQ49KCP9OXBQG7m4jp9Ywj7caovyUwVLw8kY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AyQZLLjj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=AMDGSUWyCm6JJ1nRWn4UnFfglsSLLO4+jwtdbx+x6giOBGu7TFmd1z+GtVmKKfKUxKH2iYk2TBbJvPTnDLQ6goX1BiQzb4uLids3SR1JJznsk2Vxhipfqh6+0pwvzEj7pLFTxqjItjyAFsTN3LVN8YtFK1tl6DBLXviGDGHMo8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ip7Bo1GS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AyQZLLjj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B685FC43609;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ip7Bo1GS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0C76C433A6;
 	Tue,  5 Mar 2024 08:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1709626485;
-	bh=RdyY/PZRclHf+VgiPUlJt+u4TDL/TN39E8sr3KrgD8Y=;
+	bh=LG9qzAt51k9B0led/p2cn23iSKOm/jB6p41538MCRnk=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=AyQZLLjjGDWkuWqqPTGU7l495gMLekYH1xscFLOVr0WKxjzYsoqFiPcGP9aKz+XV5
-	 4McKIU22Ydf46mfz5Utqkvia1zXNdm6F1kgVTLbo7iSMWdCQa3fv81GTjH7Ui9flTw
-	 JahQBBuCv2tlTia9qimt8P5U2f02JOIN2AEbT6VWeo1cvG9pZLHgO5j0DYfWJ8uqXU
-	 +01Y4eoSgh0glwMxKov4jJwEiNsadCn0WqNTw3QiouE1onxmGv7USyRBrjqFg+rvdy
-	 v/DRpY7kM0LR2VoNflmS8aDnLzM1F0h2yD1Ph6ggmudmEwJdnufZIfKdAgNayVf7Be
-	 jNqm9BlqerczA==
+	b=ip7Bo1GSWMZvafG6V1OdRzhkxJTO2CP8BJKyz6JVNyzfGMNeKYfbrbuCIUVGAZFsr
+	 dgxPlS54HHE9ISyY0StS1xLNNke6mlB0MK8yPLMxtJ96rj5vO/8Ua9kzr5Sy1J5Fo1
+	 nGlyMeCAMeeiAhbWjrsoaA8dH0qRIsA0I6FLyjLEIcw/KNfhk3cBmcx3HbvoY2pC3B
+	 /STfXbfUy0GmBIU4N2uAV+Hy3l8O9TvQHx5ikxfqST685KVV7mPhTqNtT2xtFdtnsB
+	 zf1yXvwWqnR7OP8UXrydYaaINA/2at7C18nqeA6KwlVul/JKLwE6xBmSiVYeHZ/ABx
+	 bIGLcamm2ghbw==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rhPwq-00000000387-2Rx6;
-	Tue, 05 Mar 2024 09:14:52 +0100
+	id 1rhPwp-0000000037r-3e5U;
+	Tue, 05 Mar 2024 09:14:51 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Bjorn Andersson <andersson@kernel.org>
@@ -44,10 +44,11 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Johan Hovold <johan+linaro@kernel.org>
-Subject: [PATCH v3 10/10] arm64: dts: qcom: sc8280xp: enable GICv3 ITS for PCIe
-Date: Tue,  5 Mar 2024 09:11:05 +0100
-Message-ID: <20240305081105.11912-11-johan+linaro@kernel.org>
+	Johan Hovold <johan+linaro@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v3 02/10] dt-bindings: PCI: qcom: Do not require 'msi-map-mask'
+Date: Tue,  5 Mar 2024 09:10:57 +0100
+Message-ID: <20240305081105.11912-3-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240305081105.11912-1-johan+linaro@kernel.org>
 References: <20240305081105.11912-1-johan+linaro@kernel.org>
@@ -59,86 +60,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The DWC PCIe controller can be used with its internal MSI controller or
-with an external one such as the GICv3 Interrupt Translation Service
-(ITS).
+Whether the 'msi-map-mask' property is needed or not depends on how the
+MSI interrupts are mapped and it should therefore not be described as
+required.
 
-Add the msi-map properties needed to use the GIC ITS. This will also
-make Linux switch to the ITS implementation, which allows for assigning
-affinity to individual MSIs.
+Note that the current schema fails to detect omissions of the mask
+property if the internal MSI controller properties are also present.
 
-Note that using the GIC ITS on SC8280XP will cause Advanced Error
-Reporting (AER) interrupts to be received on errors unlike when using
-the internal MSI controller. This will specifically lead to
-notifications about Correctable Errors being logged for the Wi-Fi
-controller on the Lenovo ThinkPad X13s when ASPM L0s is enabled.
-
-Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml | 1 -
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml        | 1 -
+ 2 files changed, 2 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-index 424d143ee26a..4708ba28c4d5 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-@@ -1737,6 +1737,8 @@ pcie4: pcie@1c00000 {
- 			linux,pci-domain = <6>;
- 			num-lanes = <1>;
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+index 8d570669650a..0d1b23523f62 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+@@ -93,7 +93,6 @@ anyOf:
+       - "#interrupt-cells"
+   - required:
+       - msi-map
+-      - msi-map-mask
  
-+			msi-map = <0x0 &its 0xe0000 0x10000>;
-+
- 			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-@@ -1838,6 +1840,8 @@ pcie3b: pcie@1c08000 {
- 			linux,pci-domain = <5>;
- 			num-lanes = <2>;
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index 1d7a6a520fef..efaab5f82b47 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -134,7 +134,6 @@ anyOf:
+       - "#interrupt-cells"
+   - required:
+       - msi-map
+-      - msi-map-mask
  
-+			msi-map = <0x0 &its 0xd0000 0x10000>;
-+
- 			interrupts = <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-@@ -1937,6 +1941,8 @@ pcie3a: pcie@1c10000 {
- 			linux,pci-domain = <4>;
- 			num-lanes = <4>;
- 
-+			msi-map = <0x0 &its 0xc0000 0x10000>;
-+
- 			interrupts = <GIC_SPI 312 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 314 IRQ_TYPE_LEVEL_HIGH>,
-@@ -2039,6 +2045,8 @@ pcie2b: pcie@1c18000 {
- 			linux,pci-domain = <3>;
- 			num-lanes = <2>;
- 
-+			msi-map = <0x0 &its 0xb0000 0x10000>;
-+
- 			interrupts = <GIC_SPI 306 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 307 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 308 IRQ_TYPE_LEVEL_HIGH>,
-@@ -2138,6 +2146,8 @@ pcie2a: pcie@1c20000 {
- 			linux,pci-domain = <2>;
- 			num-lanes = <4>;
- 
-+			msi-map = <0x0 &its 0xa0000 0x10000>;
-+
- 			interrupts = <GIC_SPI 86 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 523 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 524 IRQ_TYPE_LEVEL_HIGH>,
-@@ -4342,7 +4352,7 @@ intc: interrupt-controller@17a00000 {
- 			#size-cells = <2>;
- 			ranges;
- 
--			msi-controller@17a40000 {
-+			its: msi-controller@17a40000 {
- 				compatible = "arm,gic-v3-its";
- 				reg = <0 0x17a40000 0 0x20000>;
- 				msi-controller;
+ allOf:
+   - $ref: /schemas/pci/pci-bus.yaml#
 -- 
 2.43.0
 
