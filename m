@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E04480621;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DFBE8061E;
 	Tue,  5 Mar 2024 08:14:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709626486; cv=none; b=jCzPYTkKThh51pxa6/1VM6cJlnIzhHJxxXMYNUy8VvzDlPEkUYzdwVPKC5LBxzWpWYU+WkLC6P3fzMBuih+nyvs1wn69CDUAQchfDzG8EsrSixHhMw53APD0ZhwrwzveYOA+QY+HOUkp4deebv4N/ynB1qol98pHp+AO7EuoQBc=
+	t=1709626486; cv=none; b=tC5PiE+ED8Ym+y3pvrXqTZOhZHbHITH+QPwlymBLcA+YC1XnHc04+p9FJlgtUPc2gM7BK6MiyAdVmtlFufmkTUqWZX7Vm6S0Vn8LnVsGrfu3POORj0sWOpQ07Jw95lNkitQ4nNnHlcBqIIYI/vL3LJdtLslFWWLDHr7v9dgnR3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709626486; c=relaxed/simple;
-	bh=SeN5s38iyxyuP3h2YLzK9sPl4gFza+BIG/u7YnOtYgA=;
+	bh=SZw49HDPW+I9QK3XYA80NnOgMYXXl4SLIPsCVKDM8ec=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=caDbMCPdZaTaVwD3y/nnfvuSX8oTKNAt63Auc+aix2Zh5JSF/px5pAUaoRZH4WLmvqoQm6+i3dihelwjE1km1qgrQ0FuyEsno/sFrYi5ENZBcCJ3X1cdAtIMJ4RrAedALbNnm8i0wxk7JJ0D5092d529HF5MzeZWD2M/+E6aWAc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/IjcnCa; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=bYyL3CR508oego/lNPOMqcITnQCZxlv0tOH7r3kffeaUTiKnbyjm9FfR42yfqhLEbrIwSLwk2HpPYc0pQc60fQQy/iBBtzbVeF/uk32PW2tOHTdga0cHVTVPNGzxEO2mED09BVpa3s/Hvqyo//0cFEuSDtY/GpFHxD5iPjQF3sA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LqKr58BB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/IjcnCa"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D138C43390;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LqKr58BB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D97BC43394;
 	Tue,  5 Mar 2024 08:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1709626485;
-	bh=SeN5s38iyxyuP3h2YLzK9sPl4gFza+BIG/u7YnOtYgA=;
+	bh=SZw49HDPW+I9QK3XYA80NnOgMYXXl4SLIPsCVKDM8ec=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=X/IjcnCatz2PFJcczjWwH7v5EC3Z2QudrSXRO03CUSwFflCEaoWqBDhJJVf5la8iN
-	 SPLdb0NIe2FoYSEBVd8+4jsJdf696L+J8jF/cAgZI6DVWnvbFBGtROL6HaxU0abZOj
-	 jzqAk65U7QrPrXSYV36rmRrUy4JW3oPkkT9M0YF6xEfBHu+saLLq+OOgIAXQHu1wAl
-	 kMOtbr0KPu1QAF6m823lWxcGcE6Ofk40RkqfSfpWKxG2UZaNsCWs19nAX7FDUte+WS
-	 PLz1LjscB6KGmlN/AdmU3xdL1i86lg306CCqhOnl+mDK9pt1uHXWJWsU5hSDFKqzXL
-	 98hJCNXEVl4eg==
+	b=LqKr58BB/iYxh02k23Ur3P9fLCPFNjcO6N9217KiQ8oegficJ6en3fvX1T1N9Kjmh
+	 MH8jDXtFSNmxhxsQtDBLhpj1wVTtLTQCPW88UT2nJnUn3x6jrQTa944a6Z/vFX1FDW
+	 OOkiVyQf7r0l9CA/WdyPJ9kK3JTnrpkcWT8/YTvAwCiWcaWmBjmAnw48E8PbKvE4Ye
+	 fyKjbIzV42v4Z8ApuOC9LthatKBT/S5dymfkvsKvWhAU3AsKyPiv5ipir4Y1qpCptS
+	 9ZL1+3GDxW0wcJ+bOcJq+PV6a7OqN8yLukrxZOEldY4ygRWUkzhoy/BbQ9iMf4q+ry
+	 Tl5XaaQI119Cw==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rhPwq-0000000037z-159h;
+	id 1rhPwq-0000000037v-0FO1;
 	Tue, 05 Mar 2024 09:14:52 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan+linaro@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH v3 06/10] arm64: dts: qcom: sc8280xp-crd: disable ASPM L0s for NVMe
-Date: Tue,  5 Mar 2024 09:11:01 +0100
-Message-ID: <20240305081105.11912-7-johan+linaro@kernel.org>
+Subject: [PATCH v3 04/10] PCI: qcom: Add support for disabling ASPM L0s in devicetree
+Date: Tue,  5 Mar 2024 09:10:59 +0100
+Message-ID: <20240305081105.11912-5-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240305081105.11912-1-johan+linaro@kernel.org>
 References: <20240305081105.11912-1-johan+linaro@kernel.org>
@@ -60,32 +60,64 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Enabling ASPM L0s on the CRD results in a large amount of Correctable
-Errors (Timeout) when accessing the NVMe controller so disable it for
-now.
+Commit 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting
+1.9.0 ops") started enabling ASPM unconditionally when the hardware
+claims to support it. This triggers Correctable Errors for some PCIe
+devices on machines like the Lenovo ThinkPad X13s, which could indicate
+an incomplete driver ASPM implementation or that the hardware does in
+fact not support L0s.
+
+Add support for disabling ASPM L0s in the devicetree when it is not
+supported on a particular machine and controller.
+
+Note that only the 1.9.0 ops enable ASPM currently.
 
 Fixes: 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops")
 Cc: stable@vger.kernel.org      # 6.7
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp-crd.dts | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 20 ++++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-index 41215567b3ae..7e94a68d5d9f 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp-crd.dts
-@@ -525,6 +525,8 @@ keyboard@68 {
- };
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 09d485df34b9..0fb5dc06d2ef 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -273,6 +273,25 @@ static int qcom_pcie_start_link(struct dw_pcie *pci)
+ 	return 0;
+ }
  
- &pcie2a {
-+	aspm-no-l0s;
++static void qcom_pcie_clear_aspm_l0s(struct dw_pcie *pci)
++{
++	u16 offset;
++	u32 val;
 +
- 	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
++	if (!of_property_read_bool(pci->dev->of_node, "aspm-no-l0s"))
++		return;
++
++	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++
++	dw_pcie_dbi_ro_wr_en(pci);
++
++	val = readl(pci->dbi_base + offset + PCI_EXP_LNKCAP);
++	val &= ~PCI_EXP_LNKCAP_ASPM_L0S;
++	writel(val, pci->dbi_base + offset + PCI_EXP_LNKCAP);
++
++	dw_pcie_dbi_ro_wr_dis(pci);
++}
++
+ static void qcom_pcie_clear_hpc(struct dw_pcie *pci)
+ {
+ 	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+@@ -962,6 +981,7 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
  
+ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+ {
++	qcom_pcie_clear_aspm_l0s(pcie->pci);
+ 	qcom_pcie_clear_hpc(pcie->pci);
+ 
+ 	return 0;
 -- 
 2.43.0
 
