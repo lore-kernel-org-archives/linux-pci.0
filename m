@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F4C98062F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7296580C02;
 	Tue,  5 Mar 2024 08:14:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709626486; cv=none; b=WDAm+gYgGhO3oKVlhTaKnxiWLsmU9exnZSHfvX0YzWMqJxJqD80TrDlLNdrvMl7htmBESLFOrLyh/mCQrdbjyMhANUOQW5zPdffjs1CltkyJsivgVV3IjoUCNZLKzDKTSlDuJ1Xspn5aRg74W3KfSBnue7nvgYqKEbmd2eeNnFw=
+	t=1709626486; cv=none; b=IYqK1aICkTQK3Y+Phapf2NxEmj5smtQSILFLTmEt50KPKCEvNo4fJ4j5RZ4+xrtMHqXoyVcYn8G94zzJUE3vjRjmerwVrDBzf2Bq3a5KQN6YfEZxyaS5p+4EKVCOuuactILftp4M+98jT50ZtHrrJ3ztCCcvMxZgRd4d6hJnFJc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709626486; c=relaxed/simple;
-	bh=OJHWjk4Xm5Pt54cy7lIhhGCkWvJvBeW3Z7MBRZ4L81c=;
+	bh=YyzJd5EjL4gnLemAYI0eCwc4e5Q6VYtrbvPZbBch1h4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Gye7EEl17zx1SmocmNAz0Jq382Yah8qDbPBBZwuzHPk8bD8fEIMhpVZm7/ql+4nI53ifcjGpMjIW/+R9yK4JRq3vpDCch1oGo+1dcmSNIbLudX3lXpqT3eUszciwbPEkR3p5HBV93PqxCKW+i9zae5ZNjfP6/NYfoldX1b/T+SU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dcoOjbjL; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=KttUUCcj8DUWoKmkMQ1eKCO3wL7R6QSLFC3K+ZNpudiDC0wv/dp5i9C06VJemDGPGyL6s7ySl6XHAeAd+r9s15COOrJ3wE+KwMI+9Y+0y8i1mhlg9FDGaHHnOlXpu5y/fbsmVjed2wp6HSAt+GUEFE4kDJmiZ2cYVhSfntymC3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YMwah7VV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dcoOjbjL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8996C43330;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMwah7VV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B890DC43141;
 	Tue,  5 Mar 2024 08:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1709626485;
-	bh=OJHWjk4Xm5Pt54cy7lIhhGCkWvJvBeW3Z7MBRZ4L81c=;
+	bh=YyzJd5EjL4gnLemAYI0eCwc4e5Q6VYtrbvPZbBch1h4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=dcoOjbjLKivx6csYxxcB0bZY3VDVvpXOc9+Im43l9NbUZvfjBPD5lymo+2o+sdRTZ
-	 jYM5QOdZ8HWEs9MDWk9R0VfYYMnVXFA9K/62D/aguz0SYUi4vALumoqXe3YC+2EqGV
-	 gwG0XQGLmTkwim3B4hERpo74J4I/l8XTV9AX6M8KY3vyTt3+IJivk3L9NyODu0KIYK
-	 9ztuEowuGulqzmyEWv4ESf1k+O2zeKW+H/4wAgZm0VfPTFEllAsKCWKHPjNkM3dBV9
-	 S+fkP86UY5mLtVdVyavKmSHLX+ejEwCdBDa05VCNBFVQvoSoRAEffLlQ2w4K1+31yZ
-	 DWPjXat1PyTCA==
+	b=YMwah7VV7xvdtDONagk+i+LRvS5xXjX+HSCVwJElg938vGn5PTNe0nqWlOYx3KZip
+	 76lj9PorAWeImUQficLJ2396rQaCNtd9gkzsQwpyxwxMRPcktxADS/mmQhG05dp278
+	 rKICEpi888tvCfsVpYZRYRAleTt7flDkI6oFqviGDqeaNVYhsbf4ost9KMnbw5GBEc
+	 njiV1dwzcCT8/MzBLc3EvF5KZolrIiNINMsx65XfknQgAxzZc28MjTbszIm6foTvx8
+	 YJjfyyBhP6OUBI7mOnlhgKtlu/FpOokQeIX1mwL2jKpIVZk1wZqxDmTBpOqgZg389w
+	 F6m2V21PNIAMg==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rhPwq-0000000037x-0gOM;
+	id 1rhPwq-00000000385-2A4L;
 	Tue, 05 Mar 2024 09:14:52 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
@@ -46,9 +46,9 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan+linaro@kernel.org>,
 	stable@vger.kernel.org
-Subject: [PATCH v3 05/10] arm64: dts: qcom: sc8280xp: add missing PCIe minimum OPP
-Date: Tue,  5 Mar 2024 09:11:00 +0100
-Message-ID: <20240305081105.11912-6-johan+linaro@kernel.org>
+Subject: [PATCH v3 09/10] arm64: dts: qcom: sc8280xp-x13s: disable ASPM L0s for NVMe and modem
+Date: Tue,  5 Mar 2024 09:11:04 +0100
+Message-ID: <20240305081105.11912-10-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240305081105.11912-1-johan+linaro@kernel.org>
 References: <20240305081105.11912-1-johan+linaro@kernel.org>
@@ -60,63 +60,44 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add the missing PCIe CX performance level votes to avoid relying on
-other drivers (e.g. USB or UFS) to maintain the nominal performance
-level required for Gen3 speeds.
+There are indications that ASPM L0s is not working very well on this
+machine so disable it also for the NVMe and modem controllers for now.
 
-Fixes: 813e83157001 ("arm64: dts: qcom: sc8280xp/sa8540p: add PCIe2-4 nodes")
-Cc: stable@vger.kernel.org      # 6.2
-Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Note that this is done as a precaution based on problems with the Wi-Fi
+on the X13s as well as the NVMe, modem and Wi-Fi on the sc8280xp-crd
+reference design (the NVMe controller on my X13s does not support L0s
+and the machine lacks a modem).
+
+Fixes: 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops")
+Cc: stable@vger.kernel.org      # 6.7
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 5 +++++
- 1 file changed, 5 insertions(+)
+ arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-index c8e84c53935c..424d143ee26a 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-@@ -1780,6 +1780,7 @@ pcie4: pcie@1c00000 {
- 			reset-names = "pci";
+diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+index 9567b82db9a5..057e4d9d3c0f 100644
+--- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
++++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
+@@ -695,6 +695,8 @@ keyboard@68 {
+ };
  
- 			power-domains = <&gcc PCIE_4_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
+ &pcie2a {
++	aspm-no-l0s;
++
+ 	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
  
- 			phys = <&pcie4_phy>;
- 			phy-names = "pciephy";
-@@ -1878,6 +1879,7 @@ pcie3b: pcie@1c08000 {
- 			reset-names = "pci";
+@@ -714,6 +716,8 @@ &pcie2a_phy {
+ };
  
- 			power-domains = <&gcc PCIE_3B_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
+ &pcie3a {
++	aspm-no-l0s;
++
+ 	perst-gpios = <&tlmm 151 GPIO_ACTIVE_LOW>;
+ 	wake-gpios = <&tlmm 148 GPIO_ACTIVE_LOW>;
  
- 			phys = <&pcie3b_phy>;
- 			phy-names = "pciephy";
-@@ -1976,6 +1978,7 @@ pcie3a: pcie@1c10000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_3A_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie3a_phy>;
- 			phy-names = "pciephy";
-@@ -2077,6 +2080,7 @@ pcie2b: pcie@1c18000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_2B_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie2b_phy>;
- 			phy-names = "pciephy";
-@@ -2175,6 +2179,7 @@ pcie2a: pcie@1c20000 {
- 			reset-names = "pci";
- 
- 			power-domains = <&gcc PCIE_2A_GDSC>;
-+			required-opps = <&rpmhpd_opp_nom>;
- 
- 			phys = <&pcie2a_phy>;
- 			phy-names = "pciephy";
 -- 
 2.43.0
 
