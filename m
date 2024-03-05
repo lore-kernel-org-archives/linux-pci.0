@@ -1,86 +1,127 @@
-Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
+Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58AB85810B;
-	Tue,  5 Mar 2024 11:31:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1767E54910;
+	Tue,  5 Mar 2024 11:45:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709638303; cv=none; b=b4eZ4N3aVnhKB2DQuaebdrzUpIrAqAyvAl1FQib/BnioAtFIgur5IraUOFxssUMf6Q7Vhp8Xiavt1PQF9rZqK6zCaAdpfJIk08B3urfpDvG/OOmvEJUm36fFrOClwx6EtNIKrpxZ1d5PC9GzgPcxX/z0vCRquJqP0rIwKUrNA8k=
+	t=1709639144; cv=none; b=SPHPNDmEoIFklrYV7mKzq4QTyA32ARNy0t5Ke2pZDstdb0Bjdg0edr/5hKU7vvdpNNLo3sE0iCLsacFANyDjOMeWNOXNDNdQxg4qvHQhKDRtsvSUPVebXedsl9LExXWxHhZ+5TM64uL56n+4PhA0rvKEybWKA33JLINPShh6Xhs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1709638303; c=relaxed/simple;
-	bh=UqGd1ri4gTlEkvaN2aOBK9y3ML5BPpaqHWx1c43uktk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BCFlU2MuIlqwA9hLh8acFF2Ji9B3VdV4OpDp6ICEJgralc0/0OR7UpJh64WMWAcjUM/Tnnp27anyGAKWPybiTOD03U0Z7p/xwptBApYN01D/Dp10SOL3+bN6q/zoik8mvSi3yqTHi8ZeiBVN9GC53yw0tenPqvFTcMmqvzOa8Ew=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
-Received: from abreu.molgen.mpg.de (g34.guest.molgen.mpg.de [141.14.220.34])
+	s=arc-20240116; t=1709639144; c=relaxed/simple;
+	bh=FHUHlLigDUUjjEfAgynun0/iQyt0bpAOryZ/isN6/Cw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=c+R0ilkiRV8QabhzyksteLNI7vN/2u5XOchkPGBkM1TCpyyPi+HBbVEG3OqUZ44X7Bi1rKj1AifOBidqyfRZVQU1SjQCHzfpCnbbB5LZr0ysTDPnyCA/1TXKN5d72prR8ruYZJv2H8QiZM6s8RnMl7des0Nxz7657Ouekc8Mm3s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=fail (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=ZmY4lgUL reason="signature verification failed"; arc=none smtp.client-ip=79.96.170.134
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="ZmY4lgUL"
+Received: from localhost (127.0.0.1) (HELO v370.home.net.pl)
+ by /usr/run/smtp (/usr/run/postfix/private/idea_relay_lmtp) via UNIX with SMTP (IdeaSmtpServer 5.4.0)
+ id 774bf1c7206d9c9b; Tue, 5 Mar 2024 11:45:39 +0100
+Received: from kreacher.localnet (unknown [195.136.19.94])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: pmenzel)
-	by mx.molgen.mpg.de (Postfix) with ESMTPSA id C5E4961E5FE3E;
-	Tue,  5 Mar 2024 12:31:09 +0100 (CET)
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Paul Menzel <pmenzel@molgen.mpg.de>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	nvaert1986@hotmail.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] PCI/DPC: Quirk PIO log size for Intel Raptor Lake Root Ports
-Date: Tue,  5 Mar 2024 12:30:56 +0100
-Message-ID: <20240305113057.56468-1-pmenzel@molgen.mpg.de>
-X-Mailer: git-send-email 2.43.0
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id D152C66AA0C;
+	Tue,  5 Mar 2024 11:45:38 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
+	s=dkim; t=1709635539;
+	bh=FHUHlLigDUUjjEfAgynun0/iQyt0bpAOryZ/isN6/Cw=;
+	h=From:To:Cc:Subject:Date;
+	b=ZmY4lgULCHBNmKGSZrEKSFDn7qZkfBnuwQiT6SudrIYceXh7lJpAlIWnOpyP4yqx8
+	 Q9YiCUEYFjcEMaKdnD6M4F8LDPyfGDm/uBy/F/MqDL9S7wHKSfL4XLyHuYTB5akHM6
+	 TeTBuWaet63AqwC328mM1yA0KPr4tFkDxCuBH+FXfeJLD7XkHvFwTd/MNirNM0K0yc
+	 b6mbgbv97F9I+UHX7Twkhp8O8R2BgpFNKNJEjQe8pgJ68TpVl3izmc8CqQFYAoPltY
+	 7SPMHmNm2OhTe5GVrZ37bPR05fxHkDwlj7pMfPvyRZo1oi4FRae0r38KA2yreDogsp
+	 Rv9IY9yYHZgtw==
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PCI <linux-pci@vger.kernel.org>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>, Linux PM <linux-pm@vger.kernel.org>,
+ "Rafael J. Wysocki" <rafael@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Ricky Wu <ricky_wu@realtek.com>, Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject:
+ [PATCH v1] PM: runtime: PCI: Drain runtime-idle callbacks before driver
+ removal
+Date: Tue, 05 Mar 2024 11:45:38 +0100
+Message-ID: <5761426.DvuYhMxLoT@kreacher>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 195.136.19.94
+X-CLIENT-HOSTNAME: 195.136.19.94
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgedvledrheelgdduiecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfjqffogffrnfdpggftiffpkfenuceurghilhhouhhtmecuudehtdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkggfgtgesthfuredttddtjeenucfhrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqeenucggtffrrghtthgvrhhnpeegfffhudejlefhtdegffekteduhfethffhieettefhkeevgfdvgfefieekiefgheenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeduleehrddufeeirdduledrleegnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepudelhedrudefiedrudelrdelgedphhgvlhhopehkrhgvrggthhgvrhdrlhhotggrlhhnvghtpdhmrghilhhfrhhomhepfdftrghfrggvlhculfdrucghhihsohgtkhhifdcuoehrjhifsehrjhifhihsohgtkhhirdhnvghtqedpnhgspghrtghpthhtohepkedprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtohephhgvlhhgrggrsheskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqphhmsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheprhgrfhgrvghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehgrhgvghhkhheslhhinhhugihfohhunhgurghtihhonhdrohhrgh
+X-DCC--Metrics: v370.home.net.pl 1024; Body=8 Fuz1=8 Fuz2=8
 
-Commit 5459c0b70467 ("PCI/DPC: Quirk PIO log size for certain Intel Root
-Ports") and commit 3b8803494a06 ("PCI/DPC: Quirk PIO log size for Intel Ice
-Lake Root Ports") add quirks for Ice, Tiger and Alder Lake Root Ports.
-System firmware for Raptor Lake still has the bug, so Linux logs the
-warning below on several Raptor Lake systems like Dell Precision 3581 with
-Intel Raptor Lake processor (0W18NX) system firmware/BIOS version 1.10.1.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-    pci 0000:00:07.0: [8086:a76e] type 01 class 0x060400
-    pci 0000:00:07.0: PME# supported from D0 D3hot D3cold
-    pci 0000:00:07.0: PTM enabled (root), 4ns granularity
-    pci 0000:00:07.0: DPC: RP PIO log size 0 is invalid
-    pci 0000:00:07.1: [8086:a73f] type 01 class 0x060400
-    pci 0000:00:07.1: PME# supported from D0 D3hot D3cold
-    pci 0000:00:07.1: PTM enabled (root), 4ns granularity
-    pci 0000:00:07.1: DPC: RP PIO log size 0 is invalid
+A race condition between the .runtime_idle() callback and the .remove()
+callback in the rtsx_pcr PCI driver leads to a kernel crash due to an
+unhandled page fault [1].
 
-So, apply the quirk for Raptor Lake Root Ports as well.
+The problem is that rtsx_pci_runtime_idle() is not expected to be
+running after pm_runtime_get_sync() has been called, but the latter
+doesn't really guarantee that.  It only guarantees that the suspend
+and resume callbacks will not be running when it returns.
 
-This also enables the DPC driver to dump the RP PIO Log registers when DPC
-is triggered.
+However, if a .runtime_idle() callback is already running when
+pm_runtime_get_sync() is called, the latter will notice that the
+runtime PM status of the device is RPM_ACTIVE and it will return right
+away without waiting for the former to complete.  In fact, it cannot
+wait for .runtime_idle() to complete because it may be called from that
+callback (it arguably does not make much sense to do that, but it is not
+strictly prohibited).
 
-Closes: https://bugzilla.kernel.org/show_bug.cgi?id=218560
-Cc: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: nvaert1986@hotmail.com
-Signed-off-by: Paul Menzel <pmenzel@molgen.mpg.de>
+Thus in general, whoever is providing a .runtime_idle() callback, they
+need to protect it from running in parallel with whatever code runs
+after pm_runtime_get_sync().  [Note that .runtime_idle() will not start
+after pm_runtime_get_sync() has returned, but it may continue running
+then if it has started earlier already.]
+
+One way to address that race condition is to call pm_runtime_barrier()
+after pm_runtime_get_sync() (not before it, because a nonzero value of
+the runtime PM usage counter is necessary to prevent runtime PM
+callbacks from being invoked) to wait for the runtime-idle callback to
+complete should it be running at that point.  A suitable place for
+doing that is in pci_device_remove() which calls pm_runtime_get_sync()
+before removing the driver, so it may as well call pm_runtime_barrier()
+subsequently, which will prevent the race in question from occurring,
+not just in the rtsx_pcr driver, but in any PCI drivers providing
+runtime-idle callbacks.
+
+Link: https://lore.kernel.org/lkml/20240229062201.49500-1-kai.heng.feng@canonical.com/ # [1]
+Reported-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Tested-by: Ricky Wu <ricky_wu@realtek.com>
+Cc: All applicable <stable@vger.kernel.org>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/quirks.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/pci-driver.c |    7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index d797df6e5f3e..663d838fa861 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -6225,6 +6225,8 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a2b, dpc_log_size);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a2d, dpc_log_size);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a2f, dpc_log_size);
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0x9a31, dpc_log_size);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0xa73f, dpc_log_size);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL, 0xa76e, dpc_log_size);
- #endif
+Index: linux-pm/drivers/pci/pci-driver.c
+===================================================================
+--- linux-pm.orig/drivers/pci/pci-driver.c
++++ linux-pm/drivers/pci/pci-driver.c
+@@ -473,6 +473,13 @@ static void pci_device_remove(struct dev
  
- /*
--- 
-2.43.0
+ 	if (drv->remove) {
+ 		pm_runtime_get_sync(dev);
++		/*
++		 * If the driver provides a .runtime_idle() callback and it has
++		 * started to run already, it may continue to run in parallel
++		 * with the code below, so wait until all of the runtime PM
++		 * activity has completed.
++		 */
++		pm_runtime_barrier(dev);
+ 		drv->remove(pci_dev);
+ 		pm_runtime_put_noidle(dev);
+ 	}
+
+
 
