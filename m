@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7296580C02;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7249A80BFE;
 	Tue,  5 Mar 2024 08:14:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1709626486; cv=none; b=IYqK1aICkTQK3Y+Phapf2NxEmj5smtQSILFLTmEt50KPKCEvNo4fJ4j5RZ4+xrtMHqXoyVcYn8G94zzJUE3vjRjmerwVrDBzf2Bq3a5KQN6YfEZxyaS5p+4EKVCOuuactILftp4M+98jT50ZtHrrJ3ztCCcvMxZgRd4d6hJnFJc=
+	t=1709626486; cv=none; b=bFO9sqPikphub27YoD1a/o990TBZpUeH8X+dnpDblC8IvL6AqELPJVTbdw/TtiVrH30kcK12TrunSvz71wKjMp6rTTrTQlafrxs0zSpxYmTc+c0uyF8kAxQG3FwBoBI8ANkI8tPa+aO7N+qTNxACA4fmhjGXYtf6kxCmSBVaO+k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1709626486; c=relaxed/simple;
-	bh=YyzJd5EjL4gnLemAYI0eCwc4e5Q6VYtrbvPZbBch1h4=;
+	bh=DQk9lCKuHSluKcrPQ1v0+lTVtvnpI7fwkC/si6tMhYo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KttUUCcj8DUWoKmkMQ1eKCO3wL7R6QSLFC3K+ZNpudiDC0wv/dp5i9C06VJemDGPGyL6s7ySl6XHAeAd+r9s15COOrJ3wE+KwMI+9Y+0y8i1mhlg9FDGaHHnOlXpu5y/fbsmVjed2wp6HSAt+GUEFE4kDJmiZ2cYVhSfntymC3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YMwah7VV; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=aa5FqH2HxnoWtRl4/qN7xVW8QT3SYVE5jjzvOJw/LlFmBjP2+RkVLKRde6YUCdcAzxbfaxWKLvE8oJcZnXifyX2rb0rSAKiCrTIXazbXDy33XMFDlWLtsHtVjc+HQr6nFFwaw/VsYApLjU+aIQ9jq+bSJumI1rlAnPnD1Qn3V00=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S2EQX+Wm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YMwah7VV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B890DC43141;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S2EQX+Wm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAF83C43601;
 	Tue,  5 Mar 2024 08:14:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1709626485;
-	bh=YyzJd5EjL4gnLemAYI0eCwc4e5Q6VYtrbvPZbBch1h4=;
+	bh=DQk9lCKuHSluKcrPQ1v0+lTVtvnpI7fwkC/si6tMhYo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YMwah7VV7xvdtDONagk+i+LRvS5xXjX+HSCVwJElg938vGn5PTNe0nqWlOYx3KZip
-	 76lj9PorAWeImUQficLJ2396rQaCNtd9gkzsQwpyxwxMRPcktxADS/mmQhG05dp278
-	 rKICEpi888tvCfsVpYZRYRAleTt7flDkI6oFqviGDqeaNVYhsbf4ost9KMnbw5GBEc
-	 njiV1dwzcCT8/MzBLc3EvF5KZolrIiNINMsx65XfknQgAxzZc28MjTbszIm6foTvx8
-	 YJjfyyBhP6OUBI7mOnlhgKtlu/FpOokQeIX1mwL2jKpIVZk1wZqxDmTBpOqgZg389w
-	 F6m2V21PNIAMg==
+	b=S2EQX+WmdUT7kERI1AuoPc5sQiTWG9h1kybHRySR06cxllxxIBAxndYRgXj12B5Mk
+	 pJiZwNVbK3xuE5v20ER+5tn1WnCaJ+qEv4FXssHSdxZFw6a5KwkikDmPPpP2ILiJYT
+	 LpWmpCj6/h1Uf6wjgWouLEAJWcHutLP5oZW4jmYpjjEf05RhB3dwq3ooZG3BU4C7Fq
+	 7sly7H8U5LbWudfCSAZiyeZnMznwQ16KjKBj7fG0O5Coek/MoWbqKWrLgkdbWrgff3
+	 Af7DS7vk3JKZSL56iEKoQ4s6OJv9L/9fcOq7q90FM/AMWR4j5ghnll+zj5ChzxwHiE
+	 asz11h/BE7YJw==
 Received: from johan by xi.lan with local (Exim 4.97.1)
 	(envelope-from <johan+linaro@kernel.org>)
-	id 1rhPwq-00000000385-2A4L;
-	Tue, 05 Mar 2024 09:14:52 +0100
+	id 1rhPwp-0000000037p-3Gna;
+	Tue, 05 Mar 2024 09:14:51 +0100
 From: Johan Hovold <johan+linaro@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	Bjorn Andersson <andersson@kernel.org>
@@ -45,10 +45,10 @@ Cc: Konrad Dybcio <konrad.dybcio@linaro.org>,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Johan Hovold <johan+linaro@kernel.org>,
-	stable@vger.kernel.org
-Subject: [PATCH v3 09/10] arm64: dts: qcom: sc8280xp-x13s: disable ASPM L0s for NVMe and modem
-Date: Tue,  5 Mar 2024 09:11:04 +0100
-Message-ID: <20240305081105.11912-10-johan+linaro@kernel.org>
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH v3 01/10] dt-bindings: PCI: qcom: Allow 'required-opps'
+Date: Tue,  5 Mar 2024 09:10:56 +0100
+Message-ID: <20240305081105.11912-2-johan+linaro@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240305081105.11912-1-johan+linaro@kernel.org>
 References: <20240305081105.11912-1-johan+linaro@kernel.org>
@@ -60,44 +60,45 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are indications that ASPM L0s is not working very well on this
-machine so disable it also for the NVMe and modem controllers for now.
+Some Qualcomm SoCs require a minimum performance level for the power
+domain so add 'required-opps' to the binding.
 
-Note that this is done as a precaution based on problems with the Wi-Fi
-on the X13s as well as the NVMe, modem and Wi-Fi on the sc8280xp-crd
-reference design (the NVMe controller on my X13s does not support L0s
-and the machine lacks a modem).
-
-Fixes: 9f4f3dfad8cf ("PCI: qcom: Enable ASPM for platforms supporting 1.9.0 ops")
-Cc: stable@vger.kernel.org      # 6.7
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Johan Hovold <johan+linaro@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts | 4 ++++
- 1 file changed, 4 insertions(+)
+ Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml | 3 +++
+ Documentation/devicetree/bindings/pci/qcom,pcie.yaml        | 3 +++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-index 9567b82db9a5..057e4d9d3c0f 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts
-@@ -695,6 +695,8 @@ keyboard@68 {
- };
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+index 125136176f93..8d570669650a 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+@@ -59,6 +59,9 @@ properties:
+   power-domains:
+     maxItems: 1
  
- &pcie2a {
-+	aspm-no-l0s;
++  required-opps:
++    maxItems: 1
 +
- 	perst-gpios = <&tlmm 143 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 145 GPIO_ACTIVE_LOW>;
+   resets:
+     minItems: 1
+     maxItems: 12
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+index c8f36978a94c..1d7a6a520fef 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
+@@ -111,6 +111,9 @@ properties:
+     description: GPIO controlled connection to PERST# signal
+     maxItems: 1
  
-@@ -714,6 +716,8 @@ &pcie2a_phy {
- };
- 
- &pcie3a {
-+	aspm-no-l0s;
++  required-opps:
++    maxItems: 1
 +
- 	perst-gpios = <&tlmm 151 GPIO_ACTIVE_LOW>;
- 	wake-gpios = <&tlmm 148 GPIO_ACTIVE_LOW>;
- 
+   wake-gpios:
+     description: GPIO controlled connection to WAKE# signal
+     maxItems: 1
 -- 
 2.43.0
 
