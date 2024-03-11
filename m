@@ -1,94 +1,200 @@
-Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B28583B78E;
-	Mon, 11 Mar 2024 11:46:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E51F62BB19;
+	Mon, 11 Mar 2024 14:11:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710157614; cv=none; b=Y2o89PkRmcWISAk9oidAbbjHE9v2NJ2GsUkVFj/nmftmuegKxx2EuXuDaFin+obj3de/NpUYSUlmz8Qw7WJLJvuIk8YWayjVsLJoqb5M+CiBJzqgflAxMuYQr2NrGVGpbD+ca+7mtAtKk6giKxXjoLJjPTXVIuZJ5gvHcXMzUNM=
+	t=1710166318; cv=none; b=twbI49ICvpqLBPkvGdHt758N2kIvf8jTOUPsDNH1d/8Bl8sP4F8LTdb1f8QrvhHgS0yA0bfNRuD8nqK+NYoNoVl3fTAeLodm6WcDnz/ijjQPaJS7Km4peH7m3J8dBFjlFXjZTKeb8Wck/awQeKhmmN0u8gvTorc7Z/yDT/cfwM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710157614; c=relaxed/simple;
-	bh=ADA7WsWOqpTgckZhMzIai2MEKGe5CSeq88JNezN9c2M=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZBTeSqEcoGRVdK0gI8yiP5q7IAYT3waNTq7nTvu5ub8ws2M6gyVfXJEO0bF7D6s3y1v5TrerPeh1w1D1PvHU9L4tWqv4WNmfJfkAU27WSgBHsFBpJAWCAP+AxI7rg6TXvLNUlCpEydt0z7HDQVYGc0blAugg5yZfC0CJXyQyDZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MEEFanXf; arc=none smtp.client-ip=209.85.214.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1710166318; c=relaxed/simple;
+	bh=mhCL+FFrUbCnF1vabmkRlvfCdLR1l2CTmIaT3w4W9HI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=XBWcCtqV0939k08m2aA3+P2lsBDYtQFfJd4JH+PNaKAK6bE7ukbkwlZUqWFKBegtQEUIQOhM6UJH7IG7gJ/ySXmb0hlsFahPsBMuqxfkEX1n5cCihz15UrphQGASGeWUYsMYg3YM8LEOcKzT6tSVhmutu5HNW6lR+/Z1TTOTsr8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=gmkqcufR; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MEEFanXf"
-Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-1dc3b4b9b62so25414985ad.1;
-        Mon, 11 Mar 2024 04:46:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1710157612; x=1710762412; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=ADA7WsWOqpTgckZhMzIai2MEKGe5CSeq88JNezN9c2M=;
-        b=MEEFanXfhCGqgIrfQ+0SgaZG0Ad8T/QTzAZ0GRLJebRw0E4rJ+flwEuxdrUa8SoXT8
-         QZO6begJwOauRZlD0fakKOOoxl8EFW3EgIBe932vwtA96eVX0C4RQtsT+X00hb5eOE4f
-         5MBXVDOXljrQjspWnqjxZYTdy9A2P+RhSJH8uFGW//IL/dA02x/mXpiqAy7HwsD9rsHq
-         1v/Erkxu0cGu+l4Pg/TQaMSUjtYVUl3vPMY2uTYSSr1CCMhOnm59GSBRmYJyx1/NosI4
-         I/Bb0v2kdk6SmXFX7leqMtbiPamirsao0M2anpGYENBmrGtI/cj+jU44pkh+BHBSFtHl
-         Qbog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1710157612; x=1710762412;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=ADA7WsWOqpTgckZhMzIai2MEKGe5CSeq88JNezN9c2M=;
-        b=pXUIBdWECrHZOCjPfH05T6EFlHlXYkcEI/+In7ryKwRqqg4zEZIGb5OaFS7ohXtH5q
-         VD+suhXNEz9uKB0utAgOP1L9DcXmIQ5Ymfp3kMmDt8aMvUdLK/0VaJummgKpfMocXBFu
-         ml2/MPktLJoqSLHzHpniuaMNpVAlCh8dMR2qR1srK0kphQjII6AFx/XJ+6UdaXJKGHsj
-         ZGwaLd+dLp1CZYpGlkD863llvEkwLx82HSwrH26b26hwT+dFFGtDxcHyttPxCuupp1lF
-         o47ZFN5lO6y5l1ClUtJPO+sN3nvSWenk59N5mxVo8vviBWoM2VtStuKNamnFOzKvthQv
-         ojcg==
-X-Forwarded-Encrypted: i=1; AJvYcCXoDfHzqSqEzQDFkC5YpnRhzyv9e9SS5Mt4Wk1dgR7sF6Z/1a3uZRtFPjbhl/JNcOEXf+PXAInUqWTzcaN9Lufiq/2ajESBXHVI8fMalq+uHdiJsLQxUNZAw6AexS5V
-X-Gm-Message-State: AOJu0YyNgKM2GGyn1TCKz11mcMwmpwrCFDXGEgQz08rAZe/nooj5K7KE
-	sRD8k7bOb4IDXEBMPludd3f8I+rR9TXvgo9bghReLlB9votcdp3s51nSniWgdRMBg5OKpcrfxh3
-	ei/Ld8TjVadFZbXG+oJmcQiHEm7k=
-X-Google-Smtp-Source: AGHT+IG3/lofTePc3tTrdH/j62d9xz8R6o/uCfYlMdLpBER9bDLT2xGfHEMxm7Bc39GvJ1RhKfxmwbOCvDt8dtP+RJw=
-X-Received: by 2002:a17:903:2305:b0:1dc:b64:13cd with SMTP id
- d5-20020a170903230500b001dc0b6413cdmr9596984plh.27.1710157611864; Mon, 11 Mar
- 2024 04:46:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="gmkqcufR"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42B83qLO021011;
+	Mon, 11 Mar 2024 14:11:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references; s=
+	qcppdkim1; bh=Mg7D5hafs0CksO0KQDO8nfTfqzR+GxiUhfHRuIiEv/0=; b=gm
+	kqcufRFzMFj0gtBX1j4Mu39kzggTaALp0/7HOUOhlvD+QxUBC2sNB0p75Y1Rb5KN
+	TktEmMGLXjhaemMs4H6QwKBLD+qOSbT1Pn4uyTKNUX2vRoY73RRY+VdAPdFwpUPO
+	FS6vpZ546zqcrN+XvtZEcp7kR85JCT2wzHmikS5OwW8aCBQKOcLZLEJSMnCew7H1
+	Pj4TxJmjSxDYVPdkOWzp63ekpVQKLFutBdnBJ+flnYqhWON4YUkx7qof3V7KThkV
+	JC7njXQyp3m9kfobqOlCXzq8s26pXRoxFgbygZ9XPEByeH9FZHH6UmcfLo18mE/m
+	7vCSql/7qJ7CaMZPxiKw==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wsx48s18j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 11 Mar 2024 14:11:48 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 42BEBjrv009671;
+	Mon, 11 Mar 2024 14:11:45 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3wrguks1w2-1;
+	Mon, 11 Mar 2024 14:11:45 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42BEBjjq009662;
+	Mon, 11 Mar 2024 14:11:45 GMT
+Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 42BEBjST009661;
+	Mon, 11 Mar 2024 14:11:45 +0000
+Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
+	id 18F133A4E; Mon, 11 Mar 2024 19:41:44 +0530 (+0530)
+From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+To: andersson@kernel.org, krzysztof.kozlowski+dt@linaro.org,
+        conor+dt@kernel.org, konrad.dybcio@linaro.org,
+        manivannan.sadhasivam@linaro.org, robh@kernel.org
+Cc: quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
+        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
+        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
+        quic_schintav@quicinc.com, Mrinmay Sarkar <quic_msarkar@quicinc.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org
+Subject: [PATCH v7 2/3] PCI: qcom-ep: Override NO_SNOOP attribute for SA8775P EP
+Date: Mon, 11 Mar 2024 19:41:36 +0530
+Message-Id: <1710166298-27144-3-git-send-email-quic_msarkar@quicinc.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1710166298-27144-1-git-send-email-quic_msarkar@quicinc.com>
+References: <1710166298-27144-1-git-send-email-quic_msarkar@quicinc.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: TPGPq7EgLBdc17Ia2kT9xiwZN5U5bFub
+X-Proofpoint-ORIG-GUID: TPGPq7EgLBdc17Ia2kT9xiwZN5U5bFub
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-03-11_08,2024-03-06_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=999
+ spamscore=0 impostorscore=0 adultscore=0 phishscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 priorityscore=1501 malwarescore=0
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2402120000 definitions=main-2403110106
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <Zeso7eNj1sBhH5zY@infradead.org> <CAADnVQKQumV-0AxGLKX0jQEfa8Z2Bxx2yW8k_1OqGBnD-RqrbA@mail.gmail.com>
- <ZetEkyW1QgIKwfFz@infradead.org> <CAADnVQL4JAUz-p-X9aEggeKNpYUqJZrzQKO7N0dnohE0r7mdpg@mail.gmail.com>
- <ZetJ4xfopatYstPs@infradead.org> <CAADnVQJKPa+JUUKpW7gZehbFBYj3GPrbpd0NCj4xwkU2puObEw@mail.gmail.com>
- <CAADnVQJeOc9Muki+-PUYc20-=1vRgkprbNL0zTc=Cz-T_iYkNQ@mail.gmail.com>
- <CAADnVQ+zbZ1M_uvWmyWUdomAedP+LWMhQX-5bGajzJ0GYzme9g@mail.gmail.com>
- <ZeyATzYas84F3IKQ@infradead.org> <CAADnVQLVr4ppEkDOVScR2FZ0dRwMLADtgh7L4jqt1yOYrxoWZg@mail.gmail.com>
- <ZeyQGU3ziQbLBu_E@infradead.org> <CAADnVQJVkxKXyQXHuBOrsCR3-9Jb7MV6H0D89Hzd2+ZNOvjv1Q@mail.gmail.com>
-In-Reply-To: <CAADnVQJVkxKXyQXHuBOrsCR3-9Jb7MV6H0D89Hzd2+ZNOvjv1Q@mail.gmail.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Mon, 11 Mar 2024 12:46:45 +0100
-Message-ID: <CANiq72nYFiL4YRpwjty6BQFbuF1E2Vp1nAxakMOh2fi8vevDfA@mail.gmail.com>
-Subject: Re: vm_area at addr ffffffffc0800000 is not marked as VM_IOREMAP
-To: Alexei Starovoitov <alexei.starovoitov@gmail.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Linus Torvalds <torvalds@linux-foundation.org>, 
-	linux-mm <linux-mm@kvack.org>, Andrew Morton <akpm@linux-foundation.org>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
-	Linux ARM <linux-arm-kernel@lists.infradead.org>, 
-	Daniel Borkmann <daniel@iogearbox.net>, bpf <bpf@vger.kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Sat, Mar 9, 2024 at 5:39=E2=80=AFPM Alexei Starovoitov
-<alexei.starovoitov@gmail.com> wrote:
->
-> Thanks. It's on the top, so it's easy.
+Due to some hardware changes, SA8775P has set the NO_SNOOP attribute
+in its TLP for all the PCIe controllers. NO_SNOOP attribute when set,
+the requester is indicating that no cache coherency issues exist for
+the addressed memory on the host i.e., memory is not cached. But in
+reality, requester cannot assume this unless there is a complete
+control/visibility over the addressed memory on the host.
 
-A Link/Closes to the discussion/report(s) (I think Naresh also
-reported it) would be nice. In any case:
+And worst case, if the memory is cached on the host, it may lead to
+memory corruption issues. It should be noted that the caching of memory
+on the host is not solely dependent on the NO_SNOOP attribute in TLP.
 
-Tested-by: Miguel Ojeda <ojeda@kernel.org>
+So to avoid the corruption, this patch overrides the NO_SNOOP attribute
+by setting the PCIE_PARF_NO_SNOOP_OVERIDE register. This patch is not
+needed for other upstream supported platforms since they do not set
+NO_SNOOP attribute by default.
 
-Thanks!
+Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom-ep.c | 19 ++++++++++++++++---
+ 1 file changed, 16 insertions(+), 3 deletions(-)
 
-Cheers,
-Miguel
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 89d06a3..a00262d 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -47,6 +47,7 @@
+ #define PARF_DBI_BASE_ADDR_HI			0x354
+ #define PARF_SLV_ADDR_SPACE_SIZE		0x358
+ #define PARF_SLV_ADDR_SPACE_SIZE_HI		0x35c
++#define PARF_NO_SNOOP_OVERIDE			0x3d4
+ #define PARF_ATU_BASE_ADDR			0x634
+ #define PARF_ATU_BASE_ADDR_HI			0x638
+ #define PARF_SRIS_MODE				0x644
+@@ -86,6 +87,10 @@
+ #define PARF_DEBUG_INT_CFG_BUS_MASTER_EN	BIT(2)
+ #define PARF_DEBUG_INT_RADM_PM_TURNOFF		BIT(3)
+ 
++/* PARF_NO_SNOOP_OVERIDE register fields */
++#define WR_NO_SNOOP_OVERIDE_EN                 BIT(1)
++#define RD_NO_SNOOP_OVERIDE_EN                 BIT(3)
++
+ /* PARF_DEVICE_TYPE register fields */
+ #define PARF_DEVICE_TYPE_EP			0x0
+ 
+@@ -152,9 +157,11 @@ enum qcom_pcie_ep_link_status {
+ /**
+  * struct qcom_pcie_ep_cfg - Per SoC config struct
+  * @hdma_support: HDMA support on this SoC
++ * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache snooping
+  */
+ struct qcom_pcie_ep_cfg {
+ 	bool hdma_support;
++	bool override_no_snoop;
+ };
+ 
+ /**
+@@ -175,6 +182,7 @@ struct qcom_pcie_ep_cfg {
+  * @num_clks: PCIe clocks count
+  * @perst_en: Flag for PERST enable
+  * @perst_sep_en: Flag for PERST separation enable
++ * @cfg: PCIe EP config struct
+  * @link_status: PCIe Link status
+  * @global_irq: Qualcomm PCIe specific Global IRQ
+  * @perst_irq: PERST# IRQ
+@@ -202,6 +210,7 @@ struct qcom_pcie_ep {
+ 	u32 perst_en;
+ 	u32 perst_sep_en;
+ 
++	const struct qcom_pcie_ep_cfg *cfg;
+ 	enum qcom_pcie_ep_link_status link_status;
+ 	int global_irq;
+ 	int perst_irq;
+@@ -497,6 +506,10 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
+ 	val |= BIT(8);
+ 	writel_relaxed(val, pcie_ep->parf + PARF_LTSSM);
+ 
++	if (pcie_ep->cfg && pcie_ep->cfg->override_no_snoop)
++		writel_relaxed(WR_NO_SNOOP_OVERIDE_EN | RD_NO_SNOOP_OVERIDE_EN,
++				pcie_ep->parf + PARF_NO_SNOOP_OVERIDE);
++
+ 	return 0;
+ 
+ err_disable_resources:
+@@ -811,7 +824,6 @@ static const struct dw_pcie_ep_ops pci_ep_ops = {
+ 
+ static int qcom_pcie_ep_probe(struct platform_device *pdev)
+ {
+-	const struct qcom_pcie_ep_cfg *cfg;
+ 	struct device *dev = &pdev->dev;
+ 	struct qcom_pcie_ep *pcie_ep;
+ 	char *name;
+@@ -826,8 +838,8 @@ static int qcom_pcie_ep_probe(struct platform_device *pdev)
+ 	pcie_ep->pci.ep.ops = &pci_ep_ops;
+ 	pcie_ep->pci.edma.nr_irqs = 1;
+ 
+-	cfg = of_device_get_match_data(dev);
+-	if (cfg && cfg->hdma_support) {
++	pcie_ep->cfg = of_device_get_match_data(dev);
++	if (pcie_ep->cfg && pcie_ep->cfg->hdma_support) {
+ 		pcie_ep->pci.edma.ll_wr_cnt = 8;
+ 		pcie_ep->pci.edma.ll_rd_cnt = 8;
+ 		pcie_ep->pci.edma.mf = EDMA_MF_HDMA_NATIVE;
+@@ -893,6 +905,7 @@ static void qcom_pcie_ep_remove(struct platform_device *pdev)
+ 
+ static const struct qcom_pcie_ep_cfg cfg_1_34_0 = {
+ 	.hdma_support = true,
++	.override_no_snoop = true,
+ };
+ 
+ static const struct of_device_id qcom_pcie_ep_match[] = {
+-- 
+2.7.4
+
