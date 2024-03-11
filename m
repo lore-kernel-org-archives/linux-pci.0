@@ -1,188 +1,194 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9D7F40BF9;
-	Mon, 11 Mar 2024 14:12:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57BB141215
+	for <linux-pci@vger.kernel.org>; Mon, 11 Mar 2024 14:46:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710166330; cv=none; b=AxclpsOj8s+e1vZ3GDI5qP3m1UQ7LOlVFYNabe1GjInr7ENAo1MIaVUq1c1At4MIP62VsdDNJnG/ZqYG7jmtYTyIw5ayC57subPbR7RS/8toFu/aDysI/7n3Ci1w7KlQ+GVTAefdegqvPZHY1AViOEa4EcQmO0o0jukMGfl4eTo=
+	t=1710168375; cv=none; b=C90zbO5b8YFsfCHH/8rTPPPXKAEo3TOrazH7Eo9gk0p8EqVIvxzmaUAxsNyo5T2EmJrUND6uAiUcGblVhrbMeXfb3DT/wXGsfAAwnwZLaQjbcamzRD5qHInZNkFGrY7cjaD0wAZyorj0tXaFgKA3Bef+2FynwLX9vD/HEOqVZhk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710166330; c=relaxed/simple;
-	bh=5cqlctc+u2flelN7hZ3JT1WlfmlRbkjMxBj0eioYen0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=IVk18imYu6oX6gCg5pJrCzpE5VC1Xq86VLt2rW6c1dZs5RFiYP7IyAd6iHxZM42UM8pSICfdESDCZhSYYaE94haCbsnV9RTYgxtznVSZWr4xudHBHBysf2skGl6Rm+Z/Ea/X8ZSNt8svcRzIw2xdDWm7AISoie1kfCEUzXA3H9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=eMyPtNgD; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1710168375; c=relaxed/simple;
+	bh=aTwrh90GUA0KuD1dJsmiDHSRUsUSaTCyVUrQIX6iNAo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uT7NKm35S+G2O+aaSM5+m2XiHUXOCnMp+AnnK205GH+eGy+ccIhYK3puk8hM7kQIFHLGdpjXbb2ajeW2TFb/dIMJ7+YwIdK9VHbrr4qg1BAx9WihfyB2iRuj+LjopgpZAiIArfGzhryBq+f4xs/+EduNseECnGpAiW2pTS3u8bM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=rHyJ3FtD; arc=none smtp.client-ip=209.85.210.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="eMyPtNgD"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 42BCr18g028358;
-	Mon, 11 Mar 2024 14:12:02 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references; s=
-	qcppdkim1; bh=ZZU5iHRa9Ad0hRMFOv4eNizT9Os74TvIY7bINI55mHs=; b=eM
-	yPtNgDvcYZLKS56Dh+a6CLh0Xk5buqXAoj1m7HMQD/kINq1dLxsOnOOtQuzL2nqc
-	GyzNSk7PhKci/mBZQzeWjD2CRcLs8Bmcvyhnod12Ct3SbPpC2ObW9PdYwHTcSrme
-	gkg0Vg2h0dPSUgBkgzPf0WPflkzu4y941Ucjg4v8FVUdtvOYudHQOjAcSNkyuUSN
-	tBH1mbamNaDwTrS6VKPGBXgQLvL6TLpMRaYV0yE0oZ1tnnIFpG3bJsZlqjrI6BL0
-	ANnT/VqvS/nYjlwiRmrRndqnTCzxwnbwc1mXQLougHJWvFwLOHpsfhkPo8zqTIKI
-	YPNw9UidaxAXKquxeRPg==
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3wssgv9ep1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Mar 2024 14:12:02 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 42BEBi8Q009649;
-	Mon, 11 Mar 2024 14:11:44 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3wrguks1vt-1;
-	Mon, 11 Mar 2024 14:11:44 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 42BEBhYm009640;
-	Mon, 11 Mar 2024 14:11:44 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 42BEBh93009639;
-	Mon, 11 Mar 2024 14:11:43 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-	id AD4DD3B84; Mon, 11 Mar 2024 19:41:42 +0530 (+0530)
-From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
-To: andersson@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, konrad.dybcio@linaro.org,
-        manivannan.sadhasivam@linaro.org, robh@kernel.org
-Cc: quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        quic_schintav@quicinc.com, Mrinmay Sarkar <quic_msarkar@quicinc.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org
-Subject: [PATCH v7 1/3] PCI: qcom: Override NO_SNOOP attribute for SA8775P RC
-Date: Mon, 11 Mar 2024 19:41:35 +0530
-Message-Id: <1710166298-27144-2-git-send-email-quic_msarkar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1710166298-27144-1-git-send-email-quic_msarkar@quicinc.com>
-References: <1710166298-27144-1-git-send-email-quic_msarkar@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: xik7Lcx32s7lv1Y-r-iOe9-RM3tNZpny
-X-Proofpoint-ORIG-GUID: xik7Lcx32s7lv1Y-r-iOe9-RM3tNZpny
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-03-11_08,2024-03-06_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 malwarescore=0
- clxscore=1015 mlxlogscore=999 bulkscore=0 lowpriorityscore=0
- impostorscore=0 mlxscore=0 spamscore=0 priorityscore=1501 adultscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2402120000 definitions=main-2403110107
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rHyJ3FtD"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-6e4d48a5823so2255651b3a.1
+        for <linux-pci@vger.kernel.org>; Mon, 11 Mar 2024 07:46:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1710168372; x=1710773172; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=7WZeoUY9lDhr7yJPXp/YwXiCG8hTtAt9+Pvs1llVqw0=;
+        b=rHyJ3FtDcw8P3wUOnNulEZuwPV4VP0ulj4JM28BomYQAawePdstskecFXjin3dHATR
+         x4aqmmZMPM+ZUs8tKM2d4QnxSPCoOXKQnLrrV7t2e6d4tHcXzmK253JWCT592tlQR6mk
+         uXo0+GIF3C45JyvikWWPq6dVH8ihWBmpYg/KvifT9ETHjIvWCdFgHXRMMME4GkY9Y5Eo
+         eDjrkmsf8BUw0A+oY4NjDDbAv709DQ3L8IeZokl5MY8ZsWQe4doWKQ2aKUEunK7rbGMh
+         65pphfZ8I9Qz8hXH3hXRJ437HKXNAw0AyzJ7eXbGGKR0plvTtsUHzro/JLE79v+GlYyN
+         ZclA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710168372; x=1710773172;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7WZeoUY9lDhr7yJPXp/YwXiCG8hTtAt9+Pvs1llVqw0=;
+        b=AmKVB2CeLbuQZMJgNHq6XBxg23v3TnO+go4xnDVimYU+YYAzzoFBUn/EVwRUtuJMj+
+         ryJRt1ZvwL0ZgNgknHtoCh2GVvGc3bbTN+m8/AvpVaAqwMtQd6va/pG2/lcS6tRX5rQd
+         kWwK81/1LEbyzfkOOeua8J4R80BQhymZ3LIq5ru5QwhE+ngw1/DrMT6UNEThPmMzZaCF
+         ht/D4XwaUHU0gKzJfxB0KyKKLA0Iy4fWLnvPeXdEogwH5lHLjYz19GZYu/q2RUrLrZxH
+         QlrBe/1DqS+Pn0+frHZwv7scF5rL2oKLSXP3Cz/1ydC+js6n7ehYX1wbFA+hgKG7QAbV
+         bD5A==
+X-Forwarded-Encrypted: i=1; AJvYcCWHffywNBSifQZVxD1tb00Ly+PGH3zlAvx0/ushIB37p4hCCcezYfRAwGcWoTqaJ2Z1/OyTNmjUuVqlwRqkZCf9FWsG+qgEfmLW
+X-Gm-Message-State: AOJu0YxNp5HQ1c3JgR49oIMewiY1UfmInntYip44aqvHe6ow3BtwRrLz
+	vgFTDjt2QOm5MKDh/0UZL92vDrzMpfhId3Sf/CynZ3tvfYE/LWTsgolUL/rM8w==
+X-Google-Smtp-Source: AGHT+IEkyoSv3cUPd2YD+Ord9GisLbDuQ3mTJgXZUAwKm1FrFZN401VY7NABhiAj7Fw9fR+qh9jZVw==
+X-Received: by 2002:a05:6a00:2d20:b0:6e5:5a24:818c with SMTP id fa32-20020a056a002d2000b006e55a24818cmr7159193pfb.7.1710168372299;
+        Mon, 11 Mar 2024 07:46:12 -0700 (PDT)
+Received: from thinkpad ([117.217.184.48])
+        by smtp.gmail.com with ESMTPSA id o12-20020a62f90c000000b006e053e98e1csm4427472pfh.136.2024.03.11.07.46.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Mar 2024 07:46:11 -0700 (PDT)
+Date: Mon, 11 Mar 2024 20:15:59 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	NXP Linux Team <linux-imx@nxp.com>,
+	Minghuan Lian <minghuan.Lian@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Jesper Nilsson <jesper.nilsson@axis.com>,
+	Srikanth Thokala <srikanth.thokala@intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@axis.com, Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v9 07/10] PCI: dwc: ep: Remove "core_init_notifier" flag
+Message-ID: <20240311144559.GA2504@thinkpad>
+References: <20240304-pci-dbi-rework-v9-0-29d433d99cda@linaro.org>
+ <20240304-pci-dbi-rework-v9-7-29d433d99cda@linaro.org>
+ <ZesRk5Dg4KEASD3U@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZesRk5Dg4KEASD3U@ryzen>
 
-Due to some hardware changes, SA8775P has set the NO_SNOOP attribute
-in its TLP for all the PCIe controllers. NO_SNOOP attribute when set,
-the requester is indicating that no cache coherency issue exist for
-the addressed memory on the endpoint i.e., memory is not cached. But
-in reality, requester cannot assume this unless there is a complete
-control/visibility over the addressed memory on the endpoint.
+On Fri, Mar 08, 2024 at 02:24:35PM +0100, Niklas Cassel wrote:
+> On Mon, Mar 04, 2024 at 02:52:19PM +0530, Manivannan Sadhasivam wrote:
+> > "core_init_notifier" flag is set by the glue drivers requiring refclk from
+> > the host to complete the DWC core initialization. Also, those drivers will
+> > send a notification to the EPF drivers once the initialization is fully
+> > completed using the pci_epc_init_notify() API. Only then, the EPF drivers
+> > will start functioning.
+> > 
+> > For the rest of the drivers generating refclk locally, EPF drivers will
+> > start functioning post binding with them. EPF drivers rely on the
+> > 'core_init_notifier' flag to differentiate between the drivers.
+> > Unfortunately, this creates two different flows for the EPF drivers.
+> > 
+> > So to avoid that, let's get rid of the "core_init_notifier" flag and follow
+> > a single initialization flow for the EPF drivers. This is done by calling
+> > the dw_pcie_ep_init_notify() from all glue drivers after the completion of
+> > dw_pcie_ep_init_registers() API. This will allow all the glue drivers to
+> > send the notification to the EPF drivers once the initialization is fully
+> > completed.
+> > 
+> > Only difference here is that, the drivers requiring refclk from host will
+> > send the notification once refclk is received, while others will send it
+> > during probe time itself.
+> > 
+> > Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > index 18c80002d3bd..fc0282b0d626 100644
+> > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
+> > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+> > @@ -927,21 +928,12 @@ static int pci_epf_test_bind(struct pci_epf *epf)
+> >  	if (ret)
+> >  		return ret;
+> >
+> 
+> Hello Mani,
+> 
+> Since you asked for testing, I gave your series a spin
+> (with a driver without .core_init_notifier).
+> 
+> 
+> There seems to be a problem that pci_epc_write_header() is never called.
+> 
+> Debugging this, it seems that .core_init in pci-epf-test is never called.
+> 
+> If I add debug prints in pci_epc_init_notify(), I see that it does not
+> notify a single EPF driver.
+> 
+> It appears that the patch in $subject will call pci_epc_init_notify()
+> at EPC driver .probe() time, and at that point in time, there are no
+> EPF drivers registered.
+> 
+> They get registered later, when doing the configfs write.
+> 
+> 
+> I would say that it is the following change that breaks things:
+> 
+> > -	if (!core_init_notifier) {
+> > -		ret = pci_epf_test_core_init(epf);
+> > -		if (ret)
+> > -			return ret;
+> > -	}
+> > -
+> 
+> Since without this code, pci_epf_test_core_init() will no longer be called,
+> as there is currently no one that calls epf->core_init() for a EPF driver
+> after it has been bound. (For drivers that call dw_pcie_ep_init_notify() in
+> .probe())
+> 
 
-And worst case, if the memory is cached on the endpoint, it may lead to
-memory corruption issues. It should be noted that the caching of memory
-on the endpoint is not solely dependent on the NO_SNOOP attribute in TLP.
+Thanks a lot for testing, Niklas!
 
-So to avoid the corruption, this patch overrides the NO_SNOOP attribute
-by setting the PCIE_PARF_NO_SNOOP_OVERIDE register. This patch is not
-needed for other upstream supported platforms since they do not set
-NO_SNOOP attribute by default.
+> I guess one way to solve this would be for the EPC core to keep track of
+> the current EPC "core state" (up/down). If the core is "up" at EPF .bind()
+> time, notify the EPF driver directly after .bind()?
+> 
 
-8775 has IP version 1.34.0 so introduce a new cfg(cfg_1_34_0) for this
-platform. Assign override_no_snoop flag into struct qcom_pcie_cfg and
-set it true in cfg_1_34_0 and enable cache snooping if this particular
-flag is true.
+Yeah, that's a good solution. But I think it would be better if the EPC caches
+all events if the EPF drivers are not available and dispatch them once the bind
+happens for each EPF driver. Even though INIT_COMPLETE is the only event that is
+getting generated before bind() now, IMO it is better to add provision to catch
+other events also.
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 24 +++++++++++++++++++++++-
- 1 file changed, 23 insertions(+), 1 deletion(-)
+Wdyt?
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 2ce2a3b..4eb2701 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -51,6 +51,7 @@
- #define PARF_SID_OFFSET				0x234
- #define PARF_BDF_TRANSLATE_CFG			0x24c
- #define PARF_SLV_ADDR_SPACE_SIZE		0x358
-+#define PARF_NO_SNOOP_OVERIDE			0x3d4
- #define PARF_DEVICE_TYPE			0x1000
- #define PARF_BDF_TO_SID_TABLE_N			0x2000
- 
-@@ -117,6 +118,10 @@
- /* PARF_LTSSM register fields */
- #define LTSSM_EN				BIT(8)
- 
-+/* PARF_NO_SNOOP_OVERIDE register fields */
-+#define WR_NO_SNOOP_OVERIDE_EN			BIT(1)
-+#define RD_NO_SNOOP_OVERIDE_EN			BIT(3)
-+
- /* PARF_DEVICE_TYPE register fields */
- #define DEVICE_TYPE_RC				0x4
- 
-@@ -227,8 +232,14 @@ struct qcom_pcie_ops {
- 	int (*config_sid)(struct qcom_pcie *pcie);
- };
- 
-+ /**
-+  * struct qcom_pcie_cfg - Per SoC config struct
-+  * @ops: qcom pcie ops structure
-+  * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache snooping
-+  */
- struct qcom_pcie_cfg {
- 	const struct qcom_pcie_ops *ops;
-+	bool override_no_snoop;
- };
- 
- struct qcom_pcie {
-@@ -961,6 +972,12 @@ static int qcom_pcie_init_2_7_0(struct qcom_pcie *pcie)
- 
- static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
- {
-+	const struct qcom_pcie_cfg *pcie_cfg = pcie->cfg;
-+
-+	if (pcie_cfg->override_no_snoop)
-+		writel(WR_NO_SNOOP_OVERIDE_EN | RD_NO_SNOOP_OVERIDE_EN,
-+				pcie->parf + PARF_NO_SNOOP_OVERIDE);
-+
- 	qcom_pcie_clear_hpc(pcie->pci);
- 
- 	return 0;
-@@ -1334,6 +1351,11 @@ static const struct qcom_pcie_cfg cfg_1_9_0 = {
- 	.ops = &ops_1_9_0,
- };
- 
-+static const struct qcom_pcie_cfg cfg_1_34_0 = {
-+	.ops = &ops_1_9_0,
-+	.override_no_snoop = true,
-+};
-+
- static const struct qcom_pcie_cfg cfg_2_1_0 = {
- 	.ops = &ops_2_1_0,
- };
-@@ -1630,7 +1652,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
- 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
- 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_1_9_0 },
--	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_9_0},
-+	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_34_0},
- 	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sc8180x", .data = &cfg_1_9_0 },
- 	{ .compatible = "qcom,pcie-sc8280xp", .data = &cfg_1_9_0 },
+- Mani
+
 -- 
-2.7.4
-
+மணிவண்ணன் சதாசிவம்
