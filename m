@@ -1,56 +1,61 @@
-Received: from mail.aixigo.de (mail.aixigo.de [5.145.142.10])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26401B657
-	for <linux-pci@vger.kernel.org>; Tue, 12 Mar 2024 07:35:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.145.142.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82D616995B;
+	Tue, 12 Mar 2024 07:50:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710228946; cv=none; b=VxtZ8PJm6ZfMG4cgTd7llY7tsTyxrF+ZnC01aZNJ3XnTk8VPHnJ+cKCrIM5BtOdN0wxU2T5IevKKio/7hDQilN1taX4zHVXaJtWyFTBow49PdqEnRPsSGYWYblf7QPG+yfiLzxAmj6EOwDvmvyOSvQfhS/5z0VXZ66td11EV8yQ=
+	t=1710229816; cv=none; b=sm8Np5TJnwFIVPGIpk0mNNgna9jk44jRPzuHJi9ZYGoukLs4MvFjjFNpXxGJGrHl+A5XthpxPqqYJMfq8Tvjtfrf9bvQ7VyaNBKx4rgC9bv2/2l6222CN7GiEBcaxTXChBNrkZYjz7PbIyaHiJ0F6MeXRyKHSNolh6xq5Gm+zHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710228946; c=relaxed/simple;
-	bh=i8LxFDf1XaIdOe1QRMw/keLvlJBrPRFle3EnGoiU51o=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=ltuqHvgcfpIwCSjjFev72UNUKIuxJANiRgISNu5Mb/J8+nuG9D/pNLgVf59OCTNrIr94vQu+XIasV4VLsyLsf7Y4TGn8Tb/va+KxVG9+Ol8nnXA1U+0iNKtHRluXgLlGj57eZ7derSd40mbF4oAlsugrvfHB+h97laSXWp5kY/Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aixigo.com; spf=pass smtp.mailfrom=aixigo.com; dkim=pass (1024-bit key) header.d=aixigo.com header.i=@aixigo.com header.b=E4aNegPF; arc=none smtp.client-ip=5.145.142.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=aixigo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=aixigo.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=aixigo.com header.i=@aixigo.com header.b="E4aNegPF"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple; s=default; bh=i8LxFDf1XaId
-	Oe1QRMw/keLvlJBrPRFle3EnGoiU51o=; h=in-reply-to:references:cc:to:from:
-	subject:date; d=aixigo.com; b=E4aNegPFx1/wbV5PnHqMUA2Gid1Jo1RLfRKsbxRm
-	xbB38ZBIOy0lX2AGACNL6aC/SnzA1KTI559XJo9gI2Mn5eZ2Fad/3CrH9gX9aloeAP3hM9
-	hQ3l+clgWFPjux04b9NNoB5UJ3K/amGmJApx3tbyBd/QBEoPY6WFT92gb8myw=
-Received: from mailhost.ac.aixigo.de (mailhost.ac.aixigo.de [172.19.96.11])
-	by mail.aixigo.de (OpenSMTPD) with ESMTPS id 96beadbf (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
-	Tue, 12 Mar 2024 08:35:32 +0100 (CET)
-Received: from [172.19.97.128] (dpcl082.ac.aixigo.de [172.19.97.128])
-	by mailhost.ac.aixigo.de (8.17.1.9/8.17.1.9/Debian-2) with ESMTPS id 42C7ZVIf2611094
-	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT);
-	Tue, 12 Mar 2024 08:35:32 +0100
-Message-ID: <b2269edc-2928-426e-ae09-d555f239ea79@aixigo.com>
-Date: Tue, 12 Mar 2024 08:35:31 +0100
+	s=arc-20240116; t=1710229816; c=relaxed/simple;
+	bh=h6DM/hM1xlKy3Hc7CpFU3ajXUunOj0LnS5nJ9tulN8E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YqJqZ156dLXGhlCgoE/SGfaDow6HRjfClaT8saaaFOWqS62S9JXMhSuuHSpTg1bCT0o5722HCHDZIys46Mv5feo13c6RH9FyWnbnceM6NDK1uGTu+L5UKQ7/CW4NZrjxGDrDNAnDRA4XJpJfQFZ4RkP3bO1GlhZLvmi0ewNOjyA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 5A642100DA1C9;
+	Tue, 12 Mar 2024 08:50:10 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 3BA1423A014; Tue, 12 Mar 2024 08:50:10 +0100 (CET)
+Date: Tue, 12 Mar 2024 08:50:10 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Dave Jiang <dave.jiang@intel.com>
+Cc: linux-cxl@vger.kernel.org, linux-pci@vger.kernel.org,
+	dan.j.williams@intel.com, ira.weiny@intel.com,
+	vishal.l.verma@intel.com, alison.schofield@intel.com,
+	Jonathan.Cameron@huawei.com, dave@stgolabs.net, bhelgaas@google.com
+Subject: Re: [PATCH 2/3] PCI: Create new reset method to force SBR for CXL
+Message-ID: <ZfAJMggDhK3DaO3Q@wunner.de>
+References: <20240311204132.62757-1-dave.jiang@intel.com>
+ <20240311204132.62757-3-dave.jiang@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Linux)
-Subject: Re: AER: Corrected error message received from 0000:00:06.0
-From: Harald Dunkel <harald.dunkel@aixigo.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-References: <20240229202652.GA361290@bhelgaas>
- <02aecc45-0184-4aa5-94cd-4bdb4e8e9309@aixigo.com>
-Content-Language: en-US
-In-Reply-To: <02aecc45-0184-4aa5-94cd-4bdb4e8e9309@aixigo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Virus-Scanned: clamav-milter 1.0.3 at srvvm01.ac.aixigo.de
-X-Virus-Status: Clean
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240311204132.62757-3-dave.jiang@intel.com>
 
-For the records: Booting with pcie_aspm=off seems to help.
+On Mon, Mar 11, 2024 at 01:39:54PM -0700, Dave Jiang wrote:
+> CXL spec r3.1 8.1.5.2
+> By default Secondary Bus Reset (SBR) is masked for CXL ports. Introduce a
+> new PCI reset method "cxl_bus_force" to force SBR on CXL ports by setting
+> the unmask SBR bit in the CXL DVSEC port control register before performing
+> the bus reset and restore the original value of the bit post reset.
 
-Regards
-Harri
+Hm, why not have a sysfs attribute (or sysctl variable) to unmask SBR?
+
+That would avoid the need to touch pci code as the sysfs attribute could
+be kept local to the cxl subsystem.
+
+Thanks,
+
+Lukas
