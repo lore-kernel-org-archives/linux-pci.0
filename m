@@ -1,113 +1,195 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C1174C6B;
-	Thu, 14 Mar 2024 06:49:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2B195C8EC
+	for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2024 07:22:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1710398966; cv=none; b=sQ37DAWG7ZKnD0yO8Rb9+HDDU6do1lrW0inXbSvSl9TE/Evzgrqy3n8Bje+xPAmwZ9+b6cRTxx7/AxxF0KrhfKPtC4MiIocyER5uARppeVhGPZtlXJ0CQSWODOkVCEUAmc8QscISCjPdqzSoyUbkSEz7gOm3jhWKKpu77MWZG5E=
+	t=1710400942; cv=none; b=kNSpItvnpDu7Kc6wlgzbVx+oUjjjCta9j+nB0U6SZDb/dutXl+xTv92sRogBbYP4Oc2pSQv5QvkAT4f30bnW9AsvPnBCJdNoBb+jZ4DkalGVdPWBZaBrG5+4tZTbHBFV0ieEH5/fObwXFcpR10a+MRIT0NO8FKZu6rbzbU1m1j4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1710398966; c=relaxed/simple;
-	bh=8ubDKyYtxzqXNk7nLpS19hpHVjEEsI3x3aQpcL8zxU4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MJL8O709x5zhCucdqKXaNaNthcxdC6MYOIbfIs1OFo2feP+dZXip0q/QTHBEY7VOQVsjvB9HC3i96bCT4rFffpjLq5OheCiPWnWjfkhIjDXrWI9BOKAI26Vjy53K+pwalNSzUZ88aPM9wxo8G8YQte5vVplW/9Q/7qju8asgQg8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KTzRQJ66; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1710400942; c=relaxed/simple;
+	bh=n+DhiitdzCy6PlCjUMm0H6SMuSpk93mlHftoxOwzpbs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ESMdi//9wNAKW3AEufyayAEuBrbvnXoOfinZ3F00ldvPhr1snFoS0QLhxu8ocqrAVRr7c6fXZRyjd5cg1ybA49Wnr/PeCdMNLAbqNJtdREQACuI6QJgf/4Qtv6yVgwTAlUnkLdxWKEyKa47+SqzbFcSWY7ey13OLhkfKZ1TZvm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=MaCuFtT1; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KTzRQJ66"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1710398964; x=1741934964;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=8ubDKyYtxzqXNk7nLpS19hpHVjEEsI3x3aQpcL8zxU4=;
-  b=KTzRQJ66YMlAwOSvKNQoIB20d1GCIP+CsSFXNkFwnh2W/yuTZP3DYUVk
-   RIiSiqrEitUOl+NmEszzB0e4Evn9rsEesbgul/70tSG8XNxfhKIyWWURL
-   HYldlpPQ59LoPrsOT/KWoT2UmJxsB9R3j0pCfmk7vviUzkdi+WJD9COE8
-   5jT5rQ2lWE6s1ezQhLUXTGuTo5xkj+pt/+sRJeQuh6L6dbYhUSvCo3EAU
-   L8HVth10r15AhVH7EVgq+mrHFqId6ETFkKfuhCn357mxFyu/3GfJQRreA
-   RKxmd7PmSDTkFcuXq6g6nFMJAyrjdU398f5g8JeByTmhFkdksc76Ntqns
-   w==;
-X-IronPort-AV: E=McAfee;i="6600,9927,11012"; a="16598531"
-X-IronPort-AV: E=Sophos;i="6.07,124,1708416000"; 
-   d="scan'208";a="16598531"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2024 23:49:23 -0700
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,124,1708416000"; 
-   d="scan'208";a="12208283"
-Received: from oozturk-mobl3.amr.corp.intel.com (HELO [10.209.75.221]) ([10.209.75.221])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2024 23:49:23 -0700
-Message-ID: <8d076ed4-5c3c-499a-bca0-9bd51d5454cc@linux.intel.com>
-Date: Wed, 13 Mar 2024 23:49:22 -0700
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MaCuFtT1"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1dc29f1956cso4450095ad.0
+        for <linux-pci@vger.kernel.org>; Thu, 14 Mar 2024 00:22:20 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1710400940; x=1711005740; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=2Hg0QBhHNwXtR+/hf03RzKTokT9XhPWy1qXzqNjgPKw=;
+        b=MaCuFtT1txVGTv/VHGoD12w6G1l1lilNPoJLxc9Mk27j4Jp4utucTNyi1EL6HOWA6j
+         MSkMPEw4ssLdo7mU9dzwbWTuxa8hmpPh1hxPQCs4tgCv/X00ByHGlkrQKfwQ7j8x/WWg
+         tLFGtQl9FnGQ7yJapj4cA5ye1BTBUBUex34N/xMBspTE29YTDLZxveNwisQ7DUdBtjI7
+         jbS5QvJQollqjBeM3P0l8GF1A6BJlbyoML1JQKzZm/FG8PgrcVIB5Y3n07ZbDMWmO+vw
+         /EBarJNjanR9EVg0u3psNGmouCfyv3Gaq0T4y70IiXbR4XH8jjZGl3oeGNVf5LfEFw/P
+         mdlQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1710400940; x=1711005740;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=2Hg0QBhHNwXtR+/hf03RzKTokT9XhPWy1qXzqNjgPKw=;
+        b=FFynCdCDu4JoOSa1+9x5Q/BGmUthwssilXfpbNzsfvPGN9pQ/8lyuc0Lk7KTaLYNGs
+         33fbue82BxATTPy3XCdco/lTGHnxB7RtHUvsqKiVNhRZJgDN7M5Cig+PgLOFuKV2suL1
+         UgvHDhv4qO0ecjTmndu1343UAiVspI2Kk84zDQNKFxnc5MaJkgkr6H2Wqz0py6BKY/Eg
+         OvAHmtSTs/7zJTBH6N8MHvpzlbTHJiS83XZXDfU0LQiQpqugKN5Fq/S6rYrQKU/7pXo+
+         sSBG4tzoVd4cTQuKXi5kq+u+pNI1T64DLYKa60ELnN3TGxZOIFKUy62NTk1VeK1TPOoq
+         yQcQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV+VGgJBbIf4m0MGWmq9Zsrbm54+two0Yr0qcm04JMcjd6zwkzGEMr/lm9moKHhOp8tNkwYXrkXXhLrhrZJkHpGm/Nc26PE5qcx
+X-Gm-Message-State: AOJu0YwEj2HjsP+XgVxO/qmb66EGCGufoqj83+7nZUamylWR5HpDsWer
+	Zy235xbyKjLLsRCqV0af+0jM1szAKh01f51OIOzkmxBSYXOhwFnLI6EYmCG6CA==
+X-Google-Smtp-Source: AGHT+IF/X3aYAW3IYlU6wCv/eec5+n3yuANXgesmj7Xvw84faSW1oJcJKTyrIR8e5yfg2eATFcw1LQ==
+X-Received: by 2002:a17:902:7594:b0:1dc:cc77:5668 with SMTP id j20-20020a170902759400b001dccc775668mr937645pll.51.1710400939560;
+        Thu, 14 Mar 2024 00:22:19 -0700 (PDT)
+Received: from thinkpad ([117.207.30.211])
+        by smtp.gmail.com with ESMTPSA id c7-20020a170902d48700b001dddeb10d83sm881090plg.223.2024.03.14.00.22.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 14 Mar 2024 00:22:19 -0700 (PDT)
+Date: Thu, 14 Mar 2024 12:52:07 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Marek Vasut <marek.vasut+renesas@gmail.com>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Thierry Reding <thierry.reding@gmail.com>,
+	Jonathan Hunter <jonathanh@nvidia.com>,
+	Kishon Vijay Abraham I <kishon@ti.com>,
+	Vidya Sagar <vidyas@nvidia.com>,
+	Vignesh Raghavendra <vigneshr@ti.com>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	NXP Linux Team <linux-imx@nxp.com>,
+	Minghuan Lian <minghuan.Lian@nxp.com>,
+	Mingkai Hu <mingkai.hu@nxp.com>, Roy Zang <roy.zang@nxp.com>,
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Jesper Nilsson <jesper.nilsson@axis.com>,
+	Srikanth Thokala <srikanth.thokala@intel.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-tegra@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linuxppc-dev@lists.ozlabs.org,
+	linux-arm-kernel@axis.com
+Subject: Re: [PATCH v9 06/10] PCI: dwc: ep: Call dw_pcie_ep_init_registers()
+ API directly from all glue drivers
+Message-ID: <20240314072207.GC4831@thinkpad>
+References: <20240304-pci-dbi-rework-v9-0-29d433d99cda@linaro.org>
+ <20240304-pci-dbi-rework-v9-6-29d433d99cda@linaro.org>
+ <ZeolaEIRYmKZjnvT@ryzen>
+ <20240308053624.GB3789@thinkpad>
+ <ZerUx9Vw_W997LZk@ryzen>
+ <20240308094947.GH3789@thinkpad>
+ <Zerm_LukciAYCZxD@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH kernel v3] PCI/DOE: Support discovery version 2
-Content-Language: en-US
-To: Alexey Kardashevskiy <aik@amd.com>,
- Sathyanarayanan Kuppuswamy Natarajan <sathyanarayanan.nkuppuswamy@gmail.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>, Ira Weiny <ira.weiny@intel.com>,
- Dan Williams <dan.j.williams@intel.com>,
- Jonathan Cameron <Jonathan.Cameron@huawei.com>,
- Lukas Wunner <lukas@wunner.de>
-References: <20240307022006.3657433-1-aik@amd.com>
- <32ac2ee6-26b1-4f37-bd88-db1ef2a31267@linux.intel.com>
- <16120a31-c3d6-48a8-9355-7b063e28d242@amd.com>
- <CAC41dw9x8H2m=YB66+PA-GwiVkpCyT0PobdWvFXLHpAsQOE0ew@mail.gmail.com>
- <8d542410-d8e1-4243-939c-6ce7743a66f1@amd.com>
-From: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <8d542410-d8e1-4243-939c-6ce7743a66f1@amd.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <Zerm_LukciAYCZxD@ryzen>
 
+On Fri, Mar 08, 2024 at 11:22:52AM +0100, Niklas Cassel wrote:
+> On Fri, Mar 08, 2024 at 03:19:47PM +0530, Manivannan Sadhasivam wrote:
+> > > > > > @@ -467,6 +467,13 @@ static int dra7xx_add_pcie_ep(struct dra7xx_pcie *dra7xx,
+> > > > > >  		return ret;
+> > > > > >  	}
+> > > > > >  
+> > > > > > +	ret = dw_pcie_ep_init_registers(ep);
+> > > > > > +	if (ret) {
+> > > > > 
+> > > > > Here you are using if (ret) to error check the return from
+> > > > > dw_pcie_ep_init_registers().
+> > > > > 
+> > > > > 
+> > > > > > index c0c62533a3f1..8392894ed286 100644
+> > > > > > --- a/drivers/pci/controller/dwc/pci-keystone.c
+> > > > > > +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> > > > > > @@ -1286,6 +1286,13 @@ static int ks_pcie_probe(struct platform_device *pdev)
+> > > > > >  		ret = dw_pcie_ep_init(&pci->ep);
+> > > > > >  		if (ret < 0)
+> > > > > >  			goto err_get_sync;
+> > > > > > +
+> > > > > > +		ret = dw_pcie_ep_init_registers(&pci->ep);
+> > > > > > +		if (ret < 0) {
+> > > > > 
+> > > > > Here you are using if (ret < 0) to error check the return from
+> > > > > dw_pcie_ep_init_registers(). Please be consistent.
+> > > > > 
+> > > > 
+> > > > I maintained the consistency w.r.t individual drivers. Please check them
+> > > > individually.
+> > > > 
+> > > > If I maintain consistency w.r.t this patch, then the style will change within
+> > > > the drivers.
+> > > 
+> > > Personally, I disagree with that.
+> > > 
+> > > All glue drivers should use the same way of checking dw_pcie_ep_init(),
+> > > depending on the kdoc of dw_pcie_ep_init().
+> > > 
+> > > If the kdoc for dw_pcie_ep_init() says returns 0 on success,
+> > > then I think that it is strictly more correct to do:
+> > > 
+> > > ret = dw_pcie_ep_init()
+> > > if (ret) {
+> > > 	<error handling>
+> > > }
+> > > 
+> > > And if a glue driver doesn't look like that, then I think we should change
+> > > them. (Same reasoning for dw_pcie_ep_init_registers().)
+> > > 
+> > > 
+> > > If you read code that looks like:
+> > > ret = dw_pcie_ep_init()
+> > > if (ret < 0) {
+> > > 	<error handling>
+> > > }
+> > > 
+> > > then you assume that is is a function with a kdoc that says it can return 0
+> > > or a positive value on success, e.g. a function that returns an index in an
+> > > array.
+> > > 
+> > 
+> > But if you read the same function from the individual drivers, it could present
+> > a different opinion because the samantics is different than others.
+> 
+> Is there any glue driver where a positive result from dw_pcie_ep_init() is
+> considered valid?
+> 
+> 
+> > 
+> > I'm not opposed to keeping the API semantics consistent, but we have to take
+> > account of the drivers style as well.
+> 
+> kdoc > "driver style"
+> IMO, but you are the maintainer, I just offered my 50 cents :)
+> 
 
-On 3/13/24 5:59 PM, Alexey Kardashevskiy wrote:
->
->
-> On 7/3/24 17:22, Sathyanarayanan Kuppuswamy Natarajan wrote:
->> On Wed, Mar 6, 2024 at 10:09 PM Alexey Kardashevskiy <aik@amd.com> wrote:
->>>
->>>
->>>
->>> On 7/3/24 16:06, Kuppuswamy Sathyanarayanan wrote:
->>>>
->>>> On 3/6/24 6:20 PM, Alexey Kardashevskiy wrote:
->>>>> PCIe r6.1, sec 6.30.1.1 defines a "DOE Discovery Version" field in
->>>>> the DOE Discovery Request Data Object Contents (3rd DW) as:
->>>>>
->>>>> 15:8 DOE Discovery Version – must be 02h if the Capability Version in
->>>>> the Data Object Exchange Extended Capability is 02h or greater.
->>>>
->>>> Does this change fix any functional issue? If yes, please add Fixes:
->>>> tag and probably CC stable?
->>>
->>> The issue is that before this patch the DOE driver was following PCIe
->>> r6.0 and it was not working on a device with DOE cap v2 added in r6.1.
->>> Is it "fixes"?
->>>
->>
->> Since you are enabling support for the newer spec version, I think it will not
->> fall under bug fix. But it might be qualified for the stable branch.
->> It depends on
->> whether you want to support this device in older(stable) kernels.
->
->
-> I am going to need lot more stuff (TSM, IDE, TDISP) in addition to this but it is coming much later so there is no point in pushing this alone to older kernels. Thanks,
->
->
-Got it.
+Those valuable 50 cents :) Looking at it again, I think you are right. We
+should honor the API over driver's own style.
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+I've changed the semantics in next version, thanks!
 
+- Mani
 
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
-
+மணிவண்ணன் சதாசிவம்
