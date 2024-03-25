@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 395F2181327;
-	Mon, 25 Mar 2024 07:10:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7605A1802C4;
+	Mon, 25 Mar 2024 07:10:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350657; cv=none; b=C25nZs1Z+c8QewNnM01J3PrQ/wUZBjyxmGvV59xs5I921E2TWnYj3trOx9tWXdtyJ9V4XxqrwikNLsoKa2FlKNioQU6sqeusSKZwGwL2haCR0hE+58B4BV7a82ampHWDU4AZXKjdUXPdCswBoGHm1qQB2UrIJJ84TVz6tzoARpE=
+	t=1711350600; cv=none; b=Bq+sjz4gPAsR30Lg6OWNo4CP0Fzc3oilurWYQ4L0TOYEn3ascsufDMenxnXD+0ibkzCttktXYtpa2q88K/r6HEiBPxhl6I9wxAzVs8MAUfj2KzpmJlQx5c+SEcvtq9ple2eW/qSwWSEqHdb6MOuZLuOGczBUVzl1/fsBvnVFJuY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350657; c=relaxed/simple;
-	bh=XKJ4PdWS7sPUSp/i639lPoqRweHPQBN/JvN8m6hg+pc=;
+	s=arc-20240116; t=1711350600; c=relaxed/simple;
+	bh=25LpLFDUK7yCKsArH1FwhXbVER4eRwrvFSgeehcEArs=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LZ991KGX2GfLmDzEWtmhsngjr/ZCoXt83QhHp1FxCCZeTnfUDxOhC7X97Ccw+FXOmlFSpADEZZzkbSSOoUe0zopAafolfZ2YBeqbofz8RK/VkuMA7WVYkUccG3S4RqqroEbxL74QYBYR8pyeRipFrZKeIQSBXMs9XTSu1hGnxis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EQF88+Zs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ULmtWOzo1ksRYt1y2LOMHUaYeWym2te7MKEXIrGtFJhQOlsAv6/oQuGRShKUbL006IO29Uba0/fagE/63vihSzqrYLOoc3NxhnCchNn3rCMZdUTV8IeDFgtUVCAXshd3BnfaeVtXyl0H8SICvW4bXZcIgLN46HnAT9rfbiQmfhE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qa/X5yWD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EQF88+Zs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9BCE5C43390;
-	Mon, 25 Mar 2024 07:10:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qa/X5yWD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8644C433C7;
+	Mon, 25 Mar 2024 07:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350657;
-	bh=XKJ4PdWS7sPUSp/i639lPoqRweHPQBN/JvN8m6hg+pc=;
+	s=k20201202; t=1711350600;
+	bh=25LpLFDUK7yCKsArH1FwhXbVER4eRwrvFSgeehcEArs=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=EQF88+Zsdyl9+YqNvdRhZaeBdFtqwsmgLnRE2ZYEQO91OQDEssBs1HPYFOydw2Y/c
-	 q9fVT5yFUBshGdvC1nUwagh7ju47fKIHz84i+Kl0muQiajdyvAcnGrWwVPBVKT9G7i
-	 USMISh4UGA5PG/UwiADc9Diq32hAG2W8nPjC9IMpbUEg9z+qL+RoATwb/JLfpgPlhz
-	 Em6NmF8VDQuJbxefV/WmGaqGuE3aZePf4TtuO3WeiAJagXHfk082h9jsD/qBidsVoD
-	 6tsgfsehwBOgri2r63Ealv34YI6KGsuvwWNrnRxGVU/59jD+ALjfzcF5ZDBs0DLce0
-	 +1KV1UDFRbPWw==
+	b=qa/X5yWDz6dwe5dMyQx+NAYSgAguUFLGgjV7qf/kSfDLz28KlIGCuz4ecgRcuRYEh
+	 MhMiBUGzmFjtWmCAW0g9zX1kk2TOIKNVnDVC1T3sPMaChkpUjwVoK66HXkjzQXaxwj
+	 obD0t0C9/R5oKN4/8kDBhoa/ji2zAPXTS5eoEIB2xHuTLdip8GhIUzq4NDe0OHtYxO
+	 /4MgNB27YKEAwlbKfQlIOeH+HtbNt+CqYPkNeLL6SQY8VeocEspxjnKCMtA8Hcxi7g
+	 e0qJ/Vo/kdc3N0oBfTC4d6XUKQkha+tp1pJ6MfAqLplXdY4MJZaC2hvLasDeZ7E+SA
+	 lWK7hbwqZQHCg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -49,9 +49,9 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 18/28] net: wangxun: Use PCI_IRQ_INTX
-Date: Mon, 25 Mar 2024 16:09:29 +0900
-Message-ID: <20240325070944.3600338-19-dlemoal@kernel.org>
+Subject: [PATCH 03/28] PCI: documentation: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:14 +0900
+Message-ID: <20240325070944.3600338-4-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
 References: <20240325070944.3600338-1-dlemoal@kernel.org>
@@ -61,47 +61,72 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Use the macro PCI_IRQ_INTX instead of the deprecated PCI_IRQ_LEGACY
-macro.
+Change all references to PCI_IRQ_LEGACY to PCI_IRQ_INTX in the PCI
+documentation to reflect that PCI_IRQ_LEGACY is deprecated.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/net/ethernet/wangxun/libwx/wx_lib.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ Documentation/PCI/msi-howto.rst                    | 2 +-
+ Documentation/PCI/pci.rst                          | 2 +-
+ Documentation/translations/zh_CN/PCI/msi-howto.rst | 2 +-
+ Documentation/translations/zh_CN/PCI/pci.rst       | 2 +-
+ 4 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/net/ethernet/wangxun/libwx/wx_lib.c b/drivers/net/ethernet/wangxun/libwx/wx_lib.c
-index 6dff2c85682d..ae0b940717a8 100644
---- a/drivers/net/ethernet/wangxun/libwx/wx_lib.c
-+++ b/drivers/net/ethernet/wangxun/libwx/wx_lib.c
-@@ -1674,14 +1674,14 @@ static int wx_set_interrupt_capability(struct wx *wx)
- 	/* minmum one for queue, one for misc*/
- 	nvecs = 1;
- 	nvecs = pci_alloc_irq_vectors(pdev, nvecs,
--				      nvecs, PCI_IRQ_MSI | PCI_IRQ_LEGACY);
-+				      nvecs, PCI_IRQ_MSI | PCI_IRQ_INTX);
- 	if (nvecs == 1) {
- 		if (pdev->msi_enabled)
- 			wx_err(wx, "Fallback to MSI.\n");
- 		else
--			wx_err(wx, "Fallback to LEGACY.\n");
-+			wx_err(wx, "Fallback to INTX.\n");
- 	} else {
--		wx_err(wx, "Failed to allocate MSI/LEGACY interrupts. Error: %d\n", nvecs);
-+		wx_err(wx, "Failed to allocate MSI/INTX interrupts. Error: %d\n", nvecs);
- 		return nvecs;
- 	}
+diff --git a/Documentation/PCI/msi-howto.rst b/Documentation/PCI/msi-howto.rst
+index 783d30b7bb42..0692c9aec66f 100644
+--- a/Documentation/PCI/msi-howto.rst
++++ b/Documentation/PCI/msi-howto.rst
+@@ -103,7 +103,7 @@ min_vecs argument set to this limit, and the PCI core will return -ENOSPC
+ if it can't meet the minimum number of vectors.
  
-@@ -2127,7 +2127,7 @@ void wx_write_eitr(struct wx_q_vector *q_vector)
-  * wx_configure_vectors - Configure vectors for hardware
-  * @wx: board private structure
-  *
-- * wx_configure_vectors sets up the hardware to properly generate MSI-X/MSI/LEGACY
-+ * wx_configure_vectors sets up the hardware to properly generate MSI-X/MSI/INTX
-  * interrupts.
-  **/
- void wx_configure_vectors(struct wx *wx)
+ The flags argument is used to specify which type of interrupt can be used
+-by the device and the driver (PCI_IRQ_LEGACY, PCI_IRQ_MSI, PCI_IRQ_MSIX).
++by the device and the driver (PCI_IRQ_INTX, PCI_IRQ_MSI, PCI_IRQ_MSIX).
+ A convenient short-hand (PCI_IRQ_ALL_TYPES) is also available to ask for
+ any possible kind of interrupt.  If the PCI_IRQ_AFFINITY flag is set,
+ pci_alloc_irq_vectors() will spread the interrupts around the available CPUs.
+diff --git a/Documentation/PCI/pci.rst b/Documentation/PCI/pci.rst
+index cced568d78e9..dd7b1c0c21da 100644
+--- a/Documentation/PCI/pci.rst
++++ b/Documentation/PCI/pci.rst
+@@ -335,7 +335,7 @@ causes the PCI support to program CPU vector data into the PCI device
+ capability registers. Many architectures, chip-sets, or BIOSes do NOT
+ support MSI or MSI-X and a call to pci_alloc_irq_vectors with just
+ the PCI_IRQ_MSI and PCI_IRQ_MSIX flags will fail, so try to always
+-specify PCI_IRQ_LEGACY as well.
++specify PCI_IRQ_INTX as well.
+ 
+ Drivers that have different interrupt handlers for MSI/MSI-X and
+ legacy INTx should chose the right one based on the msi_enabled
+diff --git a/Documentation/translations/zh_CN/PCI/msi-howto.rst b/Documentation/translations/zh_CN/PCI/msi-howto.rst
+index 1b9b5ea790d8..95baadf767e4 100644
+--- a/Documentation/translations/zh_CN/PCI/msi-howto.rst
++++ b/Documentation/translations/zh_CN/PCI/msi-howto.rst
+@@ -88,7 +88,7 @@ MSI功能。
+ 如果设备对最小数量的向量有要求，驱动程序可以传递一个min_vecs参数，设置为这个限制，
+ 如果PCI核不能满足最小数量的向量，将返回-ENOSPC。
+ 
+-flags参数用来指定设备和驱动程序可以使用哪种类型的中断（PCI_IRQ_LEGACY, PCI_IRQ_MSI,
++flags参数用来指定设备和驱动程序可以使用哪种类型的中断（PCI_IRQ_INTX, PCI_IRQ_MSI,
+ PCI_IRQ_MSIX）。一个方便的短语（PCI_IRQ_ALL_TYPES）也可以用来要求任何可能的中断类型。
+ 如果PCI_IRQ_AFFINITY标志被设置，pci_alloc_irq_vectors()将把中断分散到可用的CPU上。
+ 
+diff --git a/Documentation/translations/zh_CN/PCI/pci.rst b/Documentation/translations/zh_CN/PCI/pci.rst
+index 83c2a41d38d3..347f5c3f5ce9 100644
+--- a/Documentation/translations/zh_CN/PCI/pci.rst
++++ b/Documentation/translations/zh_CN/PCI/pci.rst
+@@ -304,7 +304,7 @@ MSI-X可以分配几个单独的向量。
+ 的PCI_IRQ_MSI和/或PCI_IRQ_MSIX标志来启用MSI功能。这将导致PCI支持将CPU向量数
+ 据编程到PCI设备功能寄存器中。许多架构、芯片组或BIOS不支持MSI或MSI-X，调用
+ ``pci_alloc_irq_vectors`` 时只使用PCI_IRQ_MSI和PCI_IRQ_MSIX标志会失败，
+-所以尽量也要指定 ``PCI_IRQ_LEGACY`` 。
++所以尽量也要指定 ``PCI_IRQ_INTX`` 。
+ 
+ 对MSI/MSI-X和传统INTx有不同中断处理程序的驱动程序应该在调用
+ ``pci_alloc_irq_vectors`` 后根据 ``pci_dev``结构体中的 ``msi_enabled``
 -- 
 2.44.0
 
