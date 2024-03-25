@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18C707352F;
-	Mon, 25 Mar 2024 07:10:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3390D180A75;
+	Mon, 25 Mar 2024 07:10:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711350642; cv=none; b=J5AlZjYERpwxyrQegOptFDrWMRZjQ0k53/oMAwCCCTNKs36muG4WktrwbNa9gU3ijKuXdDcZE4V4483C5JzhjLhMlcbJra3Ra87TMoUqqYR2D1N/OthsVHwBzmV4LW5BDzgsfxHHdBjWKb7MFLLfWgmhnXvhnEJM75jyz8yX0FU=
+	t=1711350627; cv=none; b=Y6nZr5ErM9usZlm2BeBY5dzg/Vkc8ZqvU9YTrCTITDes+ilZGCJZjAdUWXlxgAO5HPZA5NlRSWyDDftI1G92mJ/F7kXs6R/6Cd7rEcwtBaJvktfjnSv/eYmkF4A9bXWVO7Bf3uCV/RVriso1k8qS3x4n7fCC+bC0spPIRLzDRGU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711350642; c=relaxed/simple;
-	bh=OmWC4u7/olcC3uHIhbPfvkwAK9DJXzZPo8ow7g20qSs=;
+	s=arc-20240116; t=1711350627; c=relaxed/simple;
+	bh=BOO5AFiKarAvKdN17nScbLEokRrc/g2D/BQM9yhP4d4=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Lj0+qER0maiJL5CEen6BKLbxiGyCf7ijQTSkTV8hEdSqSDUdlmNSC72yoQSxGWv68akEb94C4qiW51adAQN8f94OZGVUPpwYjZ5+slENvN1eRVG5uhQB8NGRoxVQdSlfbk/2vrv0MNAk5g3KlegSpqJ8d8VRHmsRp6UwmrPU73U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKuC+jlA; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=X/PqwWcoxR9Fj2dukxxsnA9cxMn5dkYwG5HfXJ4NM3U9SYpI/qQsQ8GNpcVbvzpIvkJEiYkVePMmKxA4rLJ7lww/SoH+GZum4X4SukNWpOeNfGwoQEu4bSPBfwiL0oNbPwpLVDos8/FEAQdcW4kWMRpcKerWcFfzvGOY5Z67O/k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUpBhcU4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKuC+jlA"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7B558C43390;
-	Mon, 25 Mar 2024 07:10:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUpBhcU4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56255C433C7;
+	Mon, 25 Mar 2024 07:10:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711350642;
-	bh=OmWC4u7/olcC3uHIhbPfvkwAK9DJXzZPo8ow7g20qSs=;
+	s=k20201202; t=1711350626;
+	bh=BOO5AFiKarAvKdN17nScbLEokRrc/g2D/BQM9yhP4d4=;
 	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=MKuC+jlA+mRfHMfmSKKv78QSW+WSz9J7DOIRN/RSAMSOhpWl+7zovZPRm8D1DFfRm
-	 XLo1+8eBt88H6kz7NK0kW8rOru79NjtwH13Q1sjIpmPZY7b/Xw7qPWcpwi1FdDjLk+
-	 MHUjx+jflFd/Hz4PxGMWU/BK9PlUmAsDJRS4WmbSfYlAQIMwkvJp3iHiLXGcYumX+7
-	 ZXv8Tk87JZxkQeiE8HKqYpdXKN2/7n0Nh3aMRviPoGAI+siUgm8GQh4OTZEIvtDeav
-	 lKW8lr5oU/OoN1gBl4jY1H/jdkPzAr6IekdUA79mnxYFxfvL5D9suh4Zz2FAr1cEt8
-	 rzeYBfdQPD3wg==
+	b=XUpBhcU4GiganFQWfcpsbaYVp+TsJUR7YCqoseHr5vZC0zMb+B2R5tSiJS9wEGs5i
+	 l26JyR1LurvCl22zfC9wlGhYjNiqb1/jW6GwMWiXDulr1ECjCaxKJ8GHElD9typr/r
+	 xIr9JRV3OtQWryAMUNEdkuaH/PTVfMxSpYdbaTtPW3CyrD74V8fYHhcIYa/M5LDqsC
+	 ilHVHSVTcdeMBjMzZvGW1r4QgrqqyC+auJ1ZQKC5IZwmlSEfiTLs6V3c2PDFCco7c7
+	 cHziWs6eB2Saz+fTKwatFYcm6UIv455fJxW0zdPpbBvMfjw0aFu6iR2GhrSOelQsk7
+	 nY5UqTzGjEMoQ==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -49,9 +49,9 @@ To: linux-pci@vger.kernel.org,
 	Eric Dumazet <edumazet@google.com>,
 	netdev@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 14/28] net: xgbe: Use PCI_IRQ_INTX
-Date: Mon, 25 Mar 2024 16:09:25 +0900
-Message-ID: <20240325070944.3600338-15-dlemoal@kernel.org>
+Subject: [PATCH 10/28] drm: amdgpu: Use PCI_IRQ_INTX
+Date: Mon, 25 Mar 2024 16:09:21 +0900
+Message-ID: <20240325070944.3600338-11-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240325070944.3600338-1-dlemoal@kernel.org>
 References: <20240325070944.3600338-1-dlemoal@kernel.org>
@@ -68,22 +68,22 @@ macro.
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/net/ethernet/amd/xgbe/xgbe-pci.c | 2 +-
+ drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
-index f409d7bd1f1e..c5e5fac49779 100644
---- a/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
-+++ b/drivers/net/ethernet/amd/xgbe/xgbe-pci.c
-@@ -170,7 +170,7 @@ static int xgbe_config_irqs(struct xgbe_prv_data *pdata)
- 		goto out;
+diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c
+index 7e6d09730e6d..d18113017ee7 100644
+--- a/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c
++++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_irq.c
+@@ -279,7 +279,7 @@ int amdgpu_irq_init(struct amdgpu_device *adev)
+ 	adev->irq.msi_enabled = false;
  
- 	ret = pci_alloc_irq_vectors(pdata->pcidev, 1, 1,
--				    PCI_IRQ_LEGACY | PCI_IRQ_MSI);
-+				    PCI_IRQ_INTX | PCI_IRQ_MSI);
- 	if (ret < 0) {
- 		dev_info(pdata->dev, "single IRQ enablement failed\n");
- 		return ret;
+ 	if (!amdgpu_msi_ok(adev))
+-		flags = PCI_IRQ_LEGACY;
++		flags = PCI_IRQ_INTX;
+ 	else
+ 		flags = PCI_IRQ_ALL_TYPES;
+ 
 -- 
 2.44.0
 
