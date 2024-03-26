@@ -1,24 +1,24 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6043F128811;
-	Tue, 26 Mar 2024 02:51:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A6974128813;
+	Tue, 26 Mar 2024 02:51:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711421472; cv=none; b=fGdjwDyEM1qAShmxeGQqVrGitjjYWBjvAPNty8Wg/uruPIuHDF3DNozdrMEFSkwbdUFlqUqrdcFI/HjdPFcigbcWXBoRWEPOZIrmKkkGtVbx5QMs8oL/80kUbNJwCrOb8kouGWmoZWT5JZJ9XJjHO9cXcQet5mjJ5eU2GOef5Ao=
+	t=1711421472; cv=none; b=XdfgQA09t3UirwnXw441ckig4yNzKTF9PfBbHyYRWYeMLgwrCQ2RH30PKaVUBpipPX19KdJgQJPBlJ0kGgY+WZRX3sctcszGGbqNqeQQamPBEjcNIeCYTEA0RqMwgBBId0LW/D0640OdA2RGRVCa62KCfrpS9KMhU+tCpoI2jrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1711421472; c=relaxed/simple;
-	bh=he+6NGrhJHI5YonJXCPkU2iB/F89fg/iVTKIZyLwyDs=;
+	bh=MircnBo8gMN/tRscpv5Kv/YMtYFg6OFJGzBm1hrVGK8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AEfB/i1clOpZxOrPk21vhyIggvwTh8iZ4XLFJ1swm61QF/o1vdUo6fr6u8GgtSwv2OB6W7g/wv9/8euYy2Y1Zq2ID8UaSmJhZbdgaVdxCh3Ss37pyX9RIKYEcKZmqiZMwsf+jeF61D/RHjxYwJY+Re5xqOyXrII0C0H6avuw4Ss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
+	 MIME-Version; b=hakUiFUNJYCH58yfYfol3STp+67piKAEyfv30+VtwIby1hsxE0uH72/4CEwbdMUPf2UVZhh6sk60qSkw057Gtf6gWFhpgwp3fI157rACtf7eXpD6u4hhfV1tzwpiQk9TumOtzSL+cgw+82VRkuKpt62m1e0lek7uiMx48C1wlxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.07,154,1708354800"; 
-   d="scan'208";a="199248031"
+   d="scan'208";a="203200850"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
-  by relmlie5.idc.renesas.com with ESMTP; 26 Mar 2024 11:45:58 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 26 Mar 2024 11:45:58 +0900
 Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id E9E12415DFB8;
-	Tue, 26 Mar 2024 11:45:57 +0900 (JST)
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 5AAB5415E8CA;
+	Tue, 26 Mar 2024 11:45:58 +0900 (JST)
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To: lpieralisi@kernel.org,
 	kw@linux.com,
@@ -33,10 +33,11 @@ Cc: marek.vasut+renesas@gmail.com,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v2 3/6] PCI: dwc: Add PCIE_PORT_{FORCE,LANE_SKEW} macros
-Date: Tue, 26 Mar 2024 11:45:37 +0900
-Message-Id: <20240326024540.2336155-4-yoshihiro.shimoda.uh@renesas.com>
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH v2 6/6] misc: pci_endpoint_test: Add Device ID for R-Car V4H PCIe controller
+Date: Tue, 26 Mar 2024 11:45:40 +0900
+Message-Id: <20240326024540.2336155-7-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240326024540.2336155-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20240326024540.2336155-1-yoshihiro.shimoda.uh@renesas.com>
@@ -48,38 +49,37 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-R-Car Gen4 PCIe controller needs to use the Synopsys-specific PCIe
-configuration registers. So, add the macros.
+Add Renesas R8A779G0 in pci_device_id table so that pci-epf-test
+can be used for testing PCIe EP on R-Car V4H.
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- drivers/pci/controller/dwc/pcie-designware.h | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/misc/pci_endpoint_test.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 26dae4837462..aa4db6eaf02a 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -71,6 +71,9 @@
- #define LINK_WAIT_IATU			9
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index c38a6083f0a7..2fa3c6473c7d 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -83,6 +83,7 @@
+ #define PCI_DEVICE_ID_RENESAS_R8A774C0		0x002d
+ #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
+ #define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
++#define PCI_DEVICE_ID_RENESAS_R8A779G0		0x0030
  
- /* Synopsys-specific PCIe configuration registers */
-+#define PCIE_PORT_FORCE			0x708
-+#define PORT_FORCE_DO_DESKEW_FOR_SRIS	BIT(23)
-+
- #define PCIE_PORT_AFR			0x70C
- #define PORT_AFR_N_FTS_MASK		GENMASK(15, 8)
- #define PORT_AFR_N_FTS(n)		FIELD_PREP(PORT_AFR_N_FTS_MASK, n)
-@@ -92,6 +95,9 @@
- #define PORT_LINK_MODE_4_LANES		PORT_LINK_MODE(0x7)
- #define PORT_LINK_MODE_8_LANES		PORT_LINK_MODE(0xf)
+ static DEFINE_IDA(pci_endpoint_test_ida);
  
-+#define PCIE_PORT_LANE_SKEW		0x714
-+#define PORT_LANE_SKEW_INSERT_MASK	GENMASK(23, 0)
-+
- #define PCIE_PORT_DEBUG0		0x728
- #define PORT_LOGIC_LTSSM_STATE_MASK	0x1f
- #define PORT_LOGIC_LTSSM_STATE_L0	0x11
+@@ -1005,6 +1006,9 @@ static const struct pci_device_id pci_endpoint_test_tbl[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779F0),
+ 	  .driver_data = (kernel_ulong_t)&default_data,
+ 	},
++	{ PCI_DEVICE(PCI_VENDOR_ID_RENESAS, PCI_DEVICE_ID_RENESAS_R8A779G0),
++	  .driver_data = (kernel_ulong_t)&default_data,
++	},
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_J721E),
+ 	  .driver_data = (kernel_ulong_t)&j721e_data,
+ 	},
 -- 
 2.25.1
 
