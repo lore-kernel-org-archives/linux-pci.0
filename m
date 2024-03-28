@@ -1,160 +1,329 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from CHN02-SH0-obe.outbound.protection.partner.outlook.cn (mail-sh0chn02on2114.outbound.protection.partner.outlook.cn [139.219.146.114])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C7E05FBBE
-	for <linux-pci@vger.kernel.org>; Thu, 28 Mar 2024 09:07:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711616844; cv=none; b=f6p4yGXeIysMTRZ+E8AHuwwz9841oXFLzOGQvR1a3KO3twyd0CvDyOnGogSgmwxl6WUUavAab1wBWLohNc6hoAoMoMQnTwVOHc96ZUANZmXfxL22qSW0YWusGFE+Xk6v/zAhXg74LZGiPtmpHAIIwcOslfqBxmcc6w0+4CIhJLk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711616844; c=relaxed/simple;
-	bh=B5P2QmTqG+zV/6zmv5Tkk3zk8lAWVapCRSaMTRw5r0A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=PrW2+HqmdrxB2TuyyZtrb4D6suJLi02XAzTAD12C4d74/kYEbeoYcoZzEBXmB+jPSSdpQGYXGWVZ4GfHXQRjP0RmNf4YrJONwTFLgJ2zKnPHrjGzwtkENPMtoEaqgkkq/xb+HS1A0CXZ5J5w0wMEEMKloyLcUWZsHHOCLB5rYbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xo0Sfd9/; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xo0Sfd9/"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-41494c040a1so4860115e9.2
-        for <linux-pci@vger.kernel.org>; Thu, 28 Mar 2024 02:07:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1711616840; x=1712221640; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=kR7691QsLdiheg/qYlTvIwafZmDVMgMpzMu7f9J689k=;
-        b=xo0Sfd9/qBWj+gMrKlvyBeZ13v1Gi5WBWhsmVGYZJQHT3h4OaHMb3TbLrqwYJttNxv
-         HMecEWGEDtk4ZmyHUVpkv/2HxCb/lPya+P8yYcBtbPH64KS0Lpcoo0xc4Up6aQQ0q0HT
-         MpRutvmz4y48q8MTuCPaX+Yrj+NfmGs3uWm9ZhMYJWqjhXOWT6ahAhtum5JqCdB+cXTS
-         /YDCx39LT+LDwFQVZ8wXiJlg3+LSjBkv9skFr3cC5r/A1i1ZTntlFYBtCNOyktEEet7K
-         nUZmEML54bB9lnm1QCAAQO+/4FuDYHUoo/WEmQ0wgFIB7ym0E1a99L/9aVX1uNrOlMYK
-         v4kA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1711616840; x=1712221640;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=kR7691QsLdiheg/qYlTvIwafZmDVMgMpzMu7f9J689k=;
-        b=f3lpGb/sOPTaXJvoA0HxrE4YFWOAiUJ+Jcg0poaa3ZdDN+X/2jt27/bW/zv0aSgiZ4
-         90MYw0vAaV9FYn/0zbTZzXbRTUCDLLVQXECHgCiME3YNIYBpb7zVFuUkW9eW+FYH77pO
-         ckSbmrjtnWLeygLuRxmCzu95Vu3CriNZCT3AZ6AmzCDxqHoHdhNO5GR5BYoGkhXfbhR/
-         FDJu5VxrwicKPt8vW9ykCXjboYvd27pw4ZKS1Zc33ZeGU22oo+IXUFaqCR8NA5B0+d7K
-         ZUTY9SZWkKDZZ9P2w8hKM/pGKykc0VKOuSpSzt15XWWfhL0iPUOtHvAdGWSEjkBrcDLr
-         UeEw==
-X-Forwarded-Encrypted: i=1; AJvYcCXgwohY1grDJpOQCeKlTk3ERn+mWP+VWTMntt9nZaUxImaibtYozL3ytL0UvdopqLcYfhsk4c1gXJedom2nR7vuFNxKWgGe2UO0
-X-Gm-Message-State: AOJu0YyStawblyyzoWwknmVYbtzS8k+osdUFxmck5nizBx5U43p9T32m
-	ujGLNzbMn7kih+FanKhSqRIoB/tyfw4p6rZ/jR2vTd/OWqbWWI/xIfD9G+RtwBo=
-X-Google-Smtp-Source: AGHT+IFcH20TzPyDooBAuXCMccHixkHgImEVAVGVV0gG91HKEAKRs5otgy4+usrR2yWejLzN7oXoiw==
-X-Received: by 2002:a05:600c:1c23:b0:414:222:ad5e with SMTP id j35-20020a05600c1c2300b004140222ad5emr1870691wms.11.1711616840331;
-        Thu, 28 Mar 2024 02:07:20 -0700 (PDT)
-Received: from [192.168.1.20] ([178.197.219.148])
-        by smtp.gmail.com with ESMTPSA id w11-20020a05600c474b00b00414927b21f6sm4746668wmo.22.2024.03.28.02.07.17
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Mar 2024 02:07:19 -0700 (PDT)
-Message-ID: <dfebb955-6fbc-4e1b-bde3-13f9ddc33365@linaro.org>
-Date: Thu, 28 Mar 2024 10:07:17 +0100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E556041C62;
+	Thu, 28 Mar 2024 09:18:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=139.219.146.114
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1711617538; cv=fail; b=idFV1/xcDvMw6FQPy+zuwcIHHRPyFFijtpPsYTiWqh5MCYHM2UIXSOWuxOVZh/Tcn51V061IDRI8dneVHgussbnILIx2FjgV7Ky/fWZ3z/BsJYLwY7Ar2x7S05prBZWh5gVJRew9knGBqXTpOYhyXIoNuUgWCK5nDNLL3WQDZl0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1711617538; c=relaxed/simple;
+	bh=HbCVSTAjM8a3PXKEy1PZmv0HG2ZFUW/Wt0Tct0VQj44=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=igxiO2UraUCdYkagdExFH5EQujlVtw7YWEiacI0a4XFXQw0HcmWGO8DZr38AfBqAoBLfOhG4AOVSR0oSlbTm7Dfc1sseazDSMs+vSvgHh5PMRExMMnoZvapc9on36ejTf5lDTPE7YZ/A2JsrB45tq+T7uSSD5ZzdlZUVzNZ2X40=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com; spf=pass smtp.mailfrom=starfivetech.com; arc=fail smtp.client-ip=139.219.146.114
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=starfivetech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=starfivetech.com
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=AX2HxbF4wcxZAGRWQvRanOBFhaWLdOxn4JqvYbO+25pz5V4EESjO7QC+uJWf+rZs16g3/D+4OkC5uSvr5GXY4kiFaWdSpkjGVF2p+lv0+rNTD9KIwGsnbn4l7MvMuoisGo7GswVhET0mMX7Rf9d99bfA5cO3LOsroNwt3ZyvXBvrm0920m4Q8B1QkLOjTT+CKKBg78+Fs1dh4DEPaCNTAw6SM34qzNdOZ5drqcjOyQefLLmp0J7B4tomTd/yhGJPwvX3jrrYtapardNX3YKjpAcXO3uDAMP6wrj40reorFEwIENXZcHkJXIB2n+gHo9bTczJy1RIGA3XG5TPKw4kTg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AzDoPxR3Yw9qsHSucTZgXrB+6r4PYRhPc+CkYV1T8oc=;
+ b=TtZcYkuEWBj1x2TvyGRqIXIbv9j05G8Ix0qnK6hgB2+K7wRAtVP+SBgws0i6qzBI3V9Iw/fu6tDUVC7no0EYBOoFs0e3eDCGHZDypdajEhp2QnE5PGYxamh7yyfLgBksLPR42V7ZBWAwt33H2FEoE1XIemz88sUo9ZGSWa6wwnsZqRYwfTbxGxxNjLwL3kftOuqBzwEB/uMQRgDgdIFiwQej6MKeSiscxTy52IkOMwYI8x+IXu0zqRqavUvu2LjzsR8t982ngX6nUQ3xuUwf6JlEBHApSxu0mshQH84xHCHrC0T+vbg2elEvtffg/kHQEgKecPWOx/2GFLZ5hGcOKg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=starfivetech.com; dmarc=pass action=none
+ header.from=starfivetech.com; dkim=pass header.d=starfivetech.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=starfivetech.com;
+Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:25::15) by SHXPR01MB0496.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:1f::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.32; Thu, 28 Mar
+ 2024 09:18:45 +0000
+Received: from SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+ ([fe80::c738:9e6b:f92e:8bb9]) by
+ SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn ([fe80::c738:9e6b:f92e:8bb9%6])
+ with mapi id 15.20.7409.031; Thu, 28 Mar 2024 09:18:45 +0000
+From: Minda Chen <minda.chen@starfivetech.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Conor Dooley <conor@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh+dt@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Daire McNamara <daire.mcnamara@microchip.com>,
+	Emil Renner Berthing <emil.renner.berthing@canonical.com>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>
+Cc: devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	Paul Walmsley <paul.walmsley@sifive.com>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Mason Huo <mason.huo@starfivetech.com>,
+	Leyfoon Tan <leyfoon.tan@starfivetech.com>,
+	Kevin Xie <kevin.xie@starfivetech.com>,
+	Minda Chen <minda.chen@starfivetech.com>
+Subject: [PATCH v16 01/22] dt-bindings: PCI: Add PLDA XpressRICH PCIe host common properties
+Date: Thu, 28 Mar 2024 17:18:14 +0800
+Message-Id: <20240328091835.14797-2-minda.chen@starfivetech.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240328091835.14797-1-minda.chen@starfivetech.com>
+References: <20240328091835.14797-1-minda.chen@starfivetech.com>
+Content-Type: text/plain
+X-ClientProxiedBy: NT0PR01CA0020.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c510:c::16) To SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+ (2406:e500:c311:25::15)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 01/16] regulator: dt-bindings: describe the PMU module
- of the QCA6390 package
-To: Bartosz Golaszewski <brgl@bgdev.pl>, Marcel Holtmann
- <marcel@holtmann.org>, Luiz Augusto von Dentz <luiz.dentz@gmail.com>,
- "David S . Miller" <davem@davemloft.net>, Eric Dumazet
- <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
- Paolo Abeni <pabeni@redhat.com>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, Kalle Valo <kvalo@kernel.org>,
- Bjorn Andersson <andersson@kernel.org>,
- Konrad Dybcio <konrad.dybcio@linaro.org>, Liam Girdwood
- <lgirdwood@gmail.com>, Mark Brown <broonie@kernel.org>,
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Saravana Kannan <saravanak@google.com>,
- Geert Uytterhoeven <geert+renesas@glider.be>, Arnd Bergmann <arnd@arndb.de>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Marek Szyprowski <m.szyprowski@samsung.com>, Alex Elder <elder@linaro.org>,
- Srini Kandagatla <srinivas.kandagatla@linaro.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Abel Vesa <abel.vesa@linaro.org>, Manivannan Sadhasivam <mani@kernel.org>,
- Lukas Wunner <lukas@wunner.de>,
- Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Cc: linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org,
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-References: <20240325131624.26023-1-brgl@bgdev.pl>
- <20240325131624.26023-2-brgl@bgdev.pl>
-Content-Language: en-US
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- D2GYIS41Kv4Isx2dEFh+/Q==
-In-Reply-To: <20240325131624.26023-2-brgl@bgdev.pl>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SHXPR01MB0863:EE_|SHXPR01MB0496:EE_
+X-MS-Office365-Filtering-Correlation-Id: bfc79af4-ca3e-4708-7233-08dc4f081152
+X-MS-Exchange-SenderADCheck: 1
+X-Microsoft-Antispam: BCL:0;
+X-Microsoft-Antispam-Message-Info:
+	04BPEbGE03+HvxLxpa6quZIoABmU2R4MIkSWUr/IE6hQOgTNVRPh+76BBGfD8ifLDMQ7yoIecSV3rY5mrXOjuQ+V6VBwix30zEWwwVi6ojsATn5IBFC909xPy0bbyAGSffc5jL2XkPHu11Dt2wkyGUmbNeUQGJa5Sc+Zlxkd/1XvbJ+PX+O9Gh7Ckmvg7jhkjC+ggIoJRCT701t11MiM4KE9+u6D/piGbJIhu33vEDc0g3Y+3KM1EIYAS1ZhkuQa7IUE7+oVIoQdhHI1OrPeJGpLs9UsFtMU5OVYf4Lj0VKCRS8+xzaWRkE5exr6EVtng0DTKW2XtMUuwWFj0b8FsXaBEG0+j6aJOnByQ3yTFL0jUMZW1nm3YdjVsEXrcG+Ye+CnZ52rpn1vtcnwqY+ZUsmH6nn58iiuiJXQ4QT2o2r9hCw+RpAZysXJMBFVnjgct19lCqt1RYuDBTmqg9TTNEi2K7dLz/a3wnBqr0jEmNdf3FZwX0keeJ5Os3ePLsbUmyi62828jxCpiALQotr8yk8Zo92Ukvd6wWG3KJQTUiST2E5nhQob+lx3Tqmljia8JoUQ/NSyRBnOxbHynlCEeb0wJ2W87eFv/9ovbISLqPOFiq9jMF46FFF9B99xYge7
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn;PTR:;CAT:NONE;SFS:(13230031)(52116005)(1800799015)(7416005)(41320700004)(366007)(38350700005);DIR:OUT;SFP:1102;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?jC536hJMBur1kIOvj595WrMpNx+VYlS9KAsu4h9pInvr2vAKSoupyh/ndNTt?=
+ =?us-ascii?Q?y9Zn2hQoY8fG9XyomUxBSJRNh7Ern7Mqj4lXnxc9Z/nSj75AKOxcLIoZ9obm?=
+ =?us-ascii?Q?BCQP/ufeEnU2P0DU2oShAEHQNCwpkAy7C9dwxnHx9l2zEoflbBU54BKjbutE?=
+ =?us-ascii?Q?FhggicmCp2iz9TOsZohE7PuER8DDvRFT4C9FtmBLDy2q7+lgMNpXsEzVKTeQ?=
+ =?us-ascii?Q?rvIvG3E20tIdEdBzJwzJ0FUVp41GDhMmg1xgHZAwLXreLG/GxBBjxWryn9HN?=
+ =?us-ascii?Q?Ic10+v0QyhNNTurIYssyZ2ZLz4EynL68U21+JmbaedChdVGnDW2fsGRDr0aR?=
+ =?us-ascii?Q?37Ning8tjOn9Yd6rROuWxhR9DkWKKVkERQZe2h4e+caMbbyNiaJ0xd9YUViq?=
+ =?us-ascii?Q?Is08QLHaAgN+4c5M7WJlM5JiQVDXwXIJ6650EJqoAefhqwLBF83ZVhe4iTTt?=
+ =?us-ascii?Q?HXxovbCJ1FeNmTc/ENIHMgD84J0o4KdOOdG0LoipzByrADOQQ36oixs6D4q3?=
+ =?us-ascii?Q?Gv3KqXc6WAoF93iQ5t1xH6Q61YSZE7+BNZ3AA7MyyXnCySDGe4TF1NIYSCcm?=
+ =?us-ascii?Q?AXBcb2BNEYhSH6mZOirLvb2WASUQi23MNqrM9nVy7xnV0bneGQZk97M5BKxU?=
+ =?us-ascii?Q?2ButvR5IUX8sbuhR/bZ1I1RSWAkl1v8JhVmxNr9Cj5PSatvUDgWBu6U+Ukb6?=
+ =?us-ascii?Q?BJ9dIAnWp3FxN4KiObDXBvEMUf97g/Vjlg2P1ZgDlujzOHcGC7cbdRe5uyIT?=
+ =?us-ascii?Q?dECcDtMHIH9VuliPpvgPRzNhTExI4t3A1M1RAFGzK0C/TKqogNCtgYZ5wcsJ?=
+ =?us-ascii?Q?GpYUdtpYZpJHGbkmnK2jy+58mjg5kL761GFAankPPG/s3lTbGaT88kp3IoSq?=
+ =?us-ascii?Q?hU1jjup3Ikv7tQWxS0lQ5PX9QGxGbjVSg9DkTvX7wPO6UoKEutCZdxjFH2AV?=
+ =?us-ascii?Q?YubbeG3Rr2nOl0s3PQnDY+nA22+y7jfT3Rm7/7qxzrPul3g48KQUAXJVr3ip?=
+ =?us-ascii?Q?K6TXKGHtNfYoRcpEaSNBYlXNK0SgtWhYbPZ0Eh8VWFNNKzF7WH4IAuY7SpAJ?=
+ =?us-ascii?Q?UJU2FhLF7BXMTLmMPW3PTrq1Cr/1terEjshGoCC9TpsCJkn3/ELYpWOD+pVH?=
+ =?us-ascii?Q?ptFMwDvLFK9UnJoWIp9Os29d2aG2IlykrmdZlwegcJ5Ne4bVoQoRkgZ+FfOG?=
+ =?us-ascii?Q?orsHTi2ucen7yWuxjkEMRiETPhR3aWyxd2qSwQTQhwjI3/aNAwFLskMiDKSo?=
+ =?us-ascii?Q?yC/OtA3VOEykNfzrXdsOTWakeQwbjD7ggQFmE35ywQ46bT4bvu8ybUAkE/B2?=
+ =?us-ascii?Q?nBu4PY5GIbFM9z2N/FG2TvYBlzwgxS+mOB2oosT6HS8dfnwfT/rBy7hHEVWB?=
+ =?us-ascii?Q?yTwQFxkjf5z8JFm89FusofFp+UPox8HH0h0dBChRuIUuP8LQUJOk7IMpSzdT?=
+ =?us-ascii?Q?ONdkvD8YoYWUK0PIWlbjV3w7tlWfsj8u/lV5ootFvTOwaJS4oNhVUOSCxeY7?=
+ =?us-ascii?Q?Zo4rzhO7djvlb6ifRglK/DWECv5STnUTaOj6bOeQrEb6MG77MR8oUhakPwTn?=
+ =?us-ascii?Q?YygzUW1SX9I4/yLueNwGFCifv9lKnfPEKmCCaFT1JQMpqCzqDQ03V6DBK2Y0?=
+ =?us-ascii?Q?BA=3D=3D?=
+X-OriginatorOrg: starfivetech.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bfc79af4-ca3e-4708-7233-08dc4f081152
+X-MS-Exchange-CrossTenant-AuthSource: SHXPR01MB0863.CHNPR01.prod.partner.outlook.cn
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Mar 2024 09:18:44.9798
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 06fe3fa3-1221-43d3-861b-5a4ee687a85c
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: MpVczu0QHOn5pV2f8B+naM/HZXehpWcgNJpmmGbFb7SzhldRoQGSdpAf1bFoHdA47TUslqXcps6Phmc+fZUOgiIWFX9OSnuG4cEN5dgqdCI=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SHXPR01MB0496
 
-On 25/03/2024 14:16, Bartosz Golaszewski wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> 
-> The QCA6390 package contains discreet modules for WLAN and Bluetooth. They
-> are powered by the Power Management Unit (PMU) that takes inputs from the
-> host and provides LDO outputs. This document describes this module.
-> 
-> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> ---
+Add PLDA XpressRICH PCIe host common properties dt-binding doc.
+PolarFire PCIe host using PLDA IP. Move common properties from Microchip
+PolarFire PCIe host to PLDA files.
 
+Signed-off-by: Minda Chen <minda.chen@starfivetech.com>
+Reviewed-by: Hal Feng <hal.feng@starfivetech.com>
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Rob Herring <robh@kernel.org>
+Tested-by: John Clark <inindev@gmail.com>
+---
+ .../bindings/pci/microchip,pcie-host.yaml     | 55 +-------------
+ .../pci/plda,xpressrich3-axi-common.yaml      | 75 +++++++++++++++++++
+ MAINTAINERS                                   |  6 ++
+ 3 files changed, 82 insertions(+), 54 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-
-Best regards,
-Krzysztof
+diff --git a/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml b/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
+index f7a3c2636355..7c2d51221f65 100644
+--- a/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
++++ b/Documentation/devicetree/bindings/pci/microchip,pcie-host.yaml
+@@ -10,21 +10,13 @@ maintainers:
+   - Daire McNamara <daire.mcnamara@microchip.com>
+ 
+ allOf:
+-  - $ref: /schemas/pci/pci-bus.yaml#
++  - $ref: plda,xpressrich3-axi-common.yaml#
+   - $ref: /schemas/interrupt-controller/msi-controller.yaml#
+ 
+ properties:
+   compatible:
+     const: microchip,pcie-host-1.0 # PolarFire
+ 
+-  reg:
+-    maxItems: 2
+-
+-  reg-names:
+-    items:
+-      - const: cfg
+-      - const: apb
+-
+   clocks:
+     description:
+       Fabric Interface Controllers, FICs, are the interface between the FPGA
+@@ -52,18 +44,6 @@ properties:
+     items:
+       pattern: '^fic[0-3]$'
+ 
+-  interrupts:
+-    minItems: 1
+-    items:
+-      - description: PCIe host controller
+-      - description: builtin MSI controller
+-
+-  interrupt-names:
+-    minItems: 1
+-    items:
+-      - const: pcie
+-      - const: msi
+-
+   ranges:
+     maxItems: 1
+ 
+@@ -71,39 +51,6 @@ properties:
+     minItems: 1
+     maxItems: 6
+ 
+-  msi-controller:
+-    description: Identifies the node as an MSI controller.
+-
+-  msi-parent:
+-    description: MSI controller the device is capable of using.
+-
+-  interrupt-controller:
+-    type: object
+-    properties:
+-      '#address-cells':
+-        const: 0
+-
+-      '#interrupt-cells':
+-        const: 1
+-
+-      interrupt-controller: true
+-
+-    required:
+-      - '#address-cells'
+-      - '#interrupt-cells'
+-      - interrupt-controller
+-
+-    additionalProperties: false
+-
+-required:
+-  - reg
+-  - reg-names
+-  - "#interrupt-cells"
+-  - interrupts
+-  - interrupt-map-mask
+-  - interrupt-map
+-  - msi-controller
+-
+ unevaluatedProperties: false
+ 
+ examples:
+diff --git a/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml b/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
+new file mode 100644
+index 000000000000..31bb17b11e58
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
+@@ -0,0 +1,75 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/plda,xpressrich3-axi-common.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: PLDA XpressRICH PCIe host common properties
++
++maintainers:
++  - Daire McNamara <daire.mcnamara@microchip.com>
++  - Kevin Xie <kevin.xie@starfivetech.com>
++
++description:
++  Generic PLDA XpressRICH PCIe host common properties.
++
++allOf:
++  - $ref: /schemas/pci/pci-bus.yaml#
++
++properties:
++  reg:
++    maxItems: 2
++
++  reg-names:
++    items:
++      - const: cfg
++      - const: apb
++
++  interrupts:
++    minItems: 1
++    items:
++      - description: PCIe host controller
++      - description: builtin MSI controller
++
++  interrupt-names:
++    minItems: 1
++    items:
++      - const: pcie
++      - const: msi
++
++  msi-controller:
++    description: Identifies the node as an MSI controller.
++
++  msi-parent:
++    description: MSI controller the device is capable of using.
++
++  interrupt-controller:
++    type: object
++    properties:
++      '#address-cells':
++        const: 0
++
++      '#interrupt-cells':
++        const: 1
++
++      interrupt-controller: true
++
++    required:
++      - '#address-cells'
++      - '#interrupt-cells'
++      - interrupt-controller
++
++    additionalProperties: false
++
++required:
++  - reg
++  - reg-names
++  - interrupts
++  - msi-controller
++  - "#interrupt-cells"
++  - interrupt-map-mask
++  - interrupt-map
++
++additionalProperties: true
++
++...
+diff --git a/MAINTAINERS b/MAINTAINERS
+index aa3b947fb080..06278f1db13f 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -16946,6 +16946,12 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/pci/layerscape-pcie-gen4.txt
+ F:	drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+ 
++PCI DRIVER FOR PLDA PCIE IP
++M:	Daire McNamara <daire.mcnamara@microchip.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/plda,xpressrich3-axi-common.yaml
++
+ PCI DRIVER FOR RENESAS R-CAR
+ M:	Marek Vasut <marek.vasut+renesas@gmail.com>
+ M:	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+-- 
+2.17.1
 
