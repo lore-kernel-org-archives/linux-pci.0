@@ -1,99 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04DBB1BEDE5;
-	Fri, 29 Mar 2024 12:51:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4913941C7C;
+	Fri, 29 Mar 2024 13:37:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711716684; cv=none; b=IM4L87IZgWq1hsNPFOhww4nE8YV7TXVTYwHzHegTUWOdZiusTRHC6bCgKQbz5xXljOmOajz3KZxFnhkbss2GqLptfn7VPRBsBEHMc1XZQiCMJtVtXa07wIIklyxeZwv3PypUAFS8R06WduZJP8badTMR7b1cPy2KeyrpUmn55jU=
+	t=1711719431; cv=none; b=TS4hvEjycXWlFh857GuzGXaackrgJB0Bl0xNmmUgghqZFTPFoCDeITTrYtpH/3ApeFXRQJ4WZB05oDo4rNJasCef/U1ZBc9hoHiX317mP3p1Eqw8emBhQcXBSSBFGXKodierHxBncnFlkVVobkXQ4hCZFNTysotTlYb6cwMqPbY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711716684; c=relaxed/simple;
-	bh=X1my/7+7X5B9OA9NnI7yjwSBlsp4CFdaaHUnPmmMCqw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=V9gJbgVwCCCreuP+3+pWq5YhFjYJ4t4hoqLcRcwQn4sfuXf//Qe3U+V7QQAPQFrBjL0y9NLucYlZXP2L4jlbInxJyoFjpiXflS5pPB/Q02TkxHOXgLof50dzDsXM32Q2h/B21AzPQ9dFHsGgAEO4Pkb4Uwol1FDyhOOUOrbos+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RbNdHYo4; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RbNdHYo4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9867C433C7;
-	Fri, 29 Mar 2024 12:51:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711716683;
-	bh=X1my/7+7X5B9OA9NnI7yjwSBlsp4CFdaaHUnPmmMCqw=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RbNdHYo4ik+x1TSj0Q5Nc79EdaKDYE7Xm8+/JmT2B3jiTWT1bl+CafOCkCh6d0cwc
-	 FU0Ia6aH099Bb/WG0OM75SVZ8Fyce1EEJY5/XhUzrxCILNgEoZRWqyqXH/0YI55qwN
-	 95qAOj9xYkkGZLigoYJ855zRUzDz+707KKnDzjiwCBulUe5gz6yEUU6K8ZPAtdHGxK
-	 8HAV2dP8XfyMoS3Ke30fh27J6rIMeiXMe4T76HuhM+Q9mo1d/az8aN5QiVNSA82vwQ
-	 8kH5UAWFREfi1ESbdgxHoy6V4LJkivirquRcwlqYQELq4LL6SbZDyJmsjhKCsYVM3j
-	 6w1tufFfDHlaQ==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Edmund Raile <edmund.raile@proton.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19 12/19] PCI: Mark LSI FW643 to avoid bus reset
-Date: Fri, 29 Mar 2024 08:50:44 -0400
-Message-ID: <20240329125100.3094358-12-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240329125100.3094358-1-sashal@kernel.org>
-References: <20240329125100.3094358-1-sashal@kernel.org>
+	s=arc-20240116; t=1711719431; c=relaxed/simple;
+	bh=DtoTAQjupKMSfIUCutH4u+VOc8cctrujprJ6Hy4mG/A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o0JY9w19GqWtu39Z+TGJ3aF2dcouyaexECQ4LoeRnSDFEi+gLXU89Yqi08zN5v5X8gvSU1U4DJ9PstUWUFu1LQY8HraH2dKW7vy1rb0HQcSvy/Kr3uFUe4VFvVJCaSrwF8VeBfB9AA/jo1TT8uhet1GAG431W5i1voiHt/efhMA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id BBBA7100DCEF9;
+	Fri, 29 Mar 2024 14:37:05 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 932C126E89; Fri, 29 Mar 2024 14:37:05 +0100 (CET)
+Date: Fri, 29 Mar 2024 14:37:05 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Takashi Sakamoto <o-takashi@sakamocchi.jp>
+Cc: Alex Williamson <alex.williamson@redhat.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	linux1394-devel@lists.sourceforge.net, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, edmund.raile@proton.me
+Subject: Re: [PATCH v2] PCI: Mark LSI FW643 to avoid bus reset
+Message-ID: <ZgbEAa91hYmmhj7h@wunner.de>
+References: <20240326131858.GA140624@workstation.local>
+ <20240327150119.GA1502858@bhelgaas>
+ <20240328144201.510f6d5e.alex.williamson@redhat.com>
+ <ZgZGbMj0I3_6Rt0f@wunner.de>
+ <20240329081219.GC231329@workstation.local>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.311
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240329081219.GC231329@workstation.local>
 
-From: Edmund Raile <edmund.raile@proton.me>
+On Fri, Mar 29, 2024 at 05:12:19PM +0900, Takashi Sakamoto wrote:
+> On Fri, Mar 29, 2024 at 05:41:16AM +0100, Lukas Wunner wrote:
+> > Just checked the ACPI tables and there's an FPEN method below the
+> > FRWR device which toggles GPIO 48 on the PCH.  Checked the schematics
+> > as well and GPIO 48 is marked FW_PWR_EN.  The GPIO controls load
+> > switches which cut power to the FW643 chip when nothing is connected.
+> > 
+> > Also, FW_PWR_EN feeds into an SLG4AP016V chip where it seems to
+> > internally gate FW_CLKREQ_L.
+> > 
+> > I'm guessing the driver may need to call the FPEN ACPI method after
+> > issuing a SBR to force the chip on (or perhaps first off, then on)
+> > and thereby re-enable Clock Request.
+> > 
+> > It's a pity the ohci.c driver doesn't seem to support runtime PM.
+> > That would allow cutting power to the chip when nothing is connected
+> > and thus increase battery life.  The ACPI tables indicate that the
+> > platform sends a notification when something is plugged in, so all
+> > the necessary ingredients are there but we're not taking advantage
+> > of them.
+> 
+> Yup. In both PCI drivers and unit drivers belonging to Linux FireWire
+> subsystem, any type of runtime PM is not supported. If I integrate 1394
+> OHCI driver, I should implement all of the above in any callback of
+> runtime PM, or the part of the above is already supported by any driver
+> in parent PCI layer?
 
-[ Upstream commit 29a43dc130ce65d365a8ea9e1cc4bc51005a353e ]
+The power management method Apple uses to cut power to the FireWire
+controller, Thunderbolt controller and discrete GPU is nonstandard.
+It's *implemented* in ACPI, but doesn't *conform* to ACPI:  There are
+no Power Resources described in the ACPI tables, just custom methods.
 
-Apparently the LSI / Agere FW643 can't recover after a Secondary Bus Reset
-and requires a power-off or suspend/resume and rescan.
+This can be made to work on Linux by assigning a dev_pm_domain to the
+Root Port above the FireWire controller.  The dev_pm_domain callbacks
+cut power to the FireWire controller on ->runtime_suspend() and
+reinstate it on ->runtime_resume().  The reason this needs to be done
+at the Root Port level is that the PCI core assumes the FireWire
+controller is powered on when it calls pci_pm_runtime_resume() for it.
+Normally that function would reinstate power through ACPI via
+pci_power_up(), but that doesn't work due to the nonstandard nature
+of Apple's ACPI tables.
 
-VFIO resets a device before assigning it to a VM, and the FW643 doesn't
-support any other reset methods, so this problem prevented assignment of
-FW643 to VMs.
+I've implemented this 8 years ago for Thunderbolt but unfortunately
+got sidetracked and thus haven't been able to finish upstreaming it yet:
 
-Prevent use of Secondary Bus Reset for this device.
+https://github.com/l1k/linux/commit/a53d44439d42
 
-With this change, the FW643 can be assigned to VMs with VFIO.  Note that it
-will not be reset, resulting in leaking state between VMs and host.
+I'm not as familiar with ohci.c as I am (or was) with thunderbolt.ko.
+If you could amend ohci.c to call pm_runtime_get() when something is
+attached and call pm_runtime_put() when something is detached, I could
+look into bringing up the ACPI stuff.  You could acquire one runtime PM
+ref for each attached device or just acquire a single ref if *anything*
+is connected at all.  Doesn't matter.  But acquiring one ref per attached
+device might be simpler.
 
-Link: https://lore.kernel.org/r/20240227131401.17913-1-edmund.raile@proton.me
-Signed-off-by: Edmund Raile <edmund.raile@proton.me>
-[bhelgaas: commit log, comment]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/quirks.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+I would also need a function to perform a bus scan upon runtime resume
+which looks for new devices and acquires refs as necessary.  Once that
+infrastructure exists, adding the Apple-specific ACPI stuff wouldn't
+be too hard for me to do as I could just adapt what I did for Thunderbolt.
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 99a8a24ea79dc..132b7cd6805c8 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3504,6 +3504,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003e, quirk_no_bus_reset);
-  */
- DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
- 
-+/*
-+ * Apparently the LSI / Agere FW643 can't recover after a Secondary Bus
-+ * Reset and requires a power-off or suspend/resume and rescan.  Prevent
-+ * use of that reset.
-+ */
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATT, 0x5900, quirk_no_bus_reset);
-+DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATT, 0x5901, quirk_no_bus_reset);
-+
- /*
-  * Some TI KeyStone C667X devices do not support bus/hot reset.  The PCIESS
-  * automatically disables LTSSM when Secondary Bus Reset is received and
--- 
-2.43.0
+Thanks,
 
+Lukas
