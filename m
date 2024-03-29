@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 353F116131F
-	for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2024 12:33:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 398CC181482
+	for <linux-pci@vger.kernel.org>; Fri, 29 Mar 2024 12:41:44 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711715617; cv=none; b=JAtVtMROqZ3OhiJTYvU4WS2BbzwDJ6kPtWypCwCO6r9oN61Itx6RMvAxMoX2z04AHmdHWWgMq6z1CP1ZM7J3g1e8VdH5S54n/D+lO1o9z0G6YI7iZcdwzxn36nYYLWSpPJufnbwC5VjdXaqQocNHL/HzHEi61JFbJ2swSAiEFiY=
+	t=1711716105; cv=none; b=iLrLkpWgUAtu2FLs6ISDg3/bIKHTxkqZm5+hYcHZBEeODITsm0t3tEjVNLFLXGZ7nz/UlSqIuqnNfX003EL6mz0lgx9+v/rCCLvFtaA8PYMllcK6joY2h40X4eY9vKa7lfjE6NzigEJpt5pyh6fXApHW89sAotiktMdJE27iOAU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711715617; c=relaxed/simple;
-	bh=0t7MXM/aLNu5a23txLPE25mlHB94/qJWGAlsmICZDFw=;
+	s=arc-20240116; t=1711716105; c=relaxed/simple;
+	bh=MGQMjrN3E2cMAmaQFYgStNUss/TX0AOz9m6LyxdKvac=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=APOvnGb+m1j/BZSAlluGxpUBIfgMLoBQv8GQ+vbfQMzt7HXLJw6veR91k1NQ9L1FYG8W0Vm53OQDl8Y1f6zutAcgOLPpEuAxQcC90+RQAe/LkK9Q9Q1fFs1hapHOHzoo7LOuNz80BUidRySRVAbYqfq1A5WAU+b/WsAqj0TF6b4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rCoS01yL; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=o1oUsP+7F1Z/YtYjjHuu0YzOWVb04G2VJowEaHCfgD4YN/YBiq6D+RtOs8ZFqv0h1iVeWh0sZpdk8mXn1whVe8O5F+IYWZGO4dBicSCdxhF3sd6pg+Y12ZQeVgtJYHU+PlNDxuE913suEP3kk4MkYvjK4zCHCpxrK2j3xpAwAUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LBrJM5Jj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rCoS01yL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB992C433F1;
-	Fri, 29 Mar 2024 12:33:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LBrJM5Jj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0E4AC43394;
+	Fri, 29 Mar 2024 12:41:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711715617;
-	bh=0t7MXM/aLNu5a23txLPE25mlHB94/qJWGAlsmICZDFw=;
+	s=k20201202; t=1711716104;
+	bh=MGQMjrN3E2cMAmaQFYgStNUss/TX0AOz9m6LyxdKvac=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=rCoS01yLhRpHwD3y+xUjTocfIjUpKz+FM2UZyiztDCo6bgH/jOeBctL4k8F28Mxu9
-	 PoOTzHcMCAV3rXPpXgP/MoqLV4qsoCXP8Dkl9sVR9FHwdEmI806TJpQNFsj+0rvzFe
-	 4OKWLO7PIXrFhnR4kUCIs4UpEl5SahkBf246+AoyfG5fqnfTYXakoA6fEgsjMZ6V7L
-	 MiyWGnzwADiL3gOqXBaO3V4QcQP6S5ZgIZe6HDsLNAUmweYO2TZYSLdoxlpRImzD42
-	 UEgcBoG3sS3XFYm8sM4/U5EcT8a5jgN3AEzYd3ecehz88fK5JRa3wz178rGE28W0a7
-	 3neMCygCaWmtw==
-Date: Fri, 29 Mar 2024 07:33:35 -0500
+	b=LBrJM5JjwDG56aGa3eKVxxOz/QbYBaYP6BylgRJi3X1JlzXptSeS9sKqcpqzSSp6e
+	 9Oljam7968p/0jUwr+I9B3KEw7kWlzf0Crv5MxzeclSUU/+VGgfzqt9JY+t8QlFlh6
+	 QWwPLRi4ONjICITTlZuKhA2qUIeN+/O2OM6zjgM6tswWoA7Kpuj4e0SXG54pYvE0Hf
+	 IOPh5DKl4MLubbYr95z/nd3/goz6ok6LFxSnQKYkLkSPz2yHtzGm6i95nBgYv9yZKd
+	 PlGbXyTuRO/9OVQdcG6BnigfB0V1HDdgAAYCEq87aPkyhoNaKjSZxuWOgzg083TayI
+	 DoUeyd78ldTLA==
+Date: Fri, 29 Mar 2024 07:41:43 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
@@ -36,8 +36,8 @@ Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
 	linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH 01/19] PCI: endpoint: Introduce pci_epc_check_func()
-Message-ID: <20240329123335.GA1638817@bhelgaas>
+Subject: Re: [PATCH 00/19] Improve PCI memory mapping API
+Message-ID: <20240329124143.GA1638894@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,15 +46,18 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240329090945.1097609-2-dlemoal@kernel.org>
+In-Reply-To: <20240329090945.1097609-1-dlemoal@kernel.org>
 
-On Fri, Mar 29, 2024 at 06:09:27PM +0900, Damien Le Moal wrote:
-> Introduce the small epc core helper function pci_epc_check_func() to
-> check that an epc pointer, a physical function number and a virtual
-> function number are all valid. This avoids repeating the code pattern:
+On Fri, Mar 29, 2024 at 06:09:26PM +0900, Damien Le Moal wrote:
+> This series introduces the new functions pci_epc_map_align(),
+> pci_epc_mem_map() and pci_epc_mem_unmap() to improve handling of the
+> PCI address mapping alignment constraints of endpoint controllers in a
+> controller independent manner.
 
-Can you rename pci_epc_check_func() to something that suggests an
-assertion that can be either true or false?  "Check" doesn't give a
-hint about what a "true" return means.  Maybe "valid_func" or similar?
+>   PCI: rockchip-ep: use macro to define EP controller .align feature
 
-Bjorn
+s/use/Use/
+
+>   PCI: rockchip-ep: Refactor rockchip_pcie_ep_probe() MSIX hiding
+
+s/MSIX/MSI-X/ (also in commit log)
