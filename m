@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCEA81B11D6;
-	Fri, 29 Mar 2024 12:49:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3453152DEF;
+	Fri, 29 Mar 2024 12:50:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711716580; cv=none; b=boCQU3v/8E3J66MEUdbt5t6pq59PLTk+ipifpX6eaGDmIhhIa9hg9nMxt48PKccD3zsVtbLe2XiteDqr7gd1h6t+GyFLGVSjMMAnt9nxMHJp3O36imD9JBXI77iCMONeu+K40OlRCt+OtqNbxKgtRsUIIVFhoq60X92i4f6ot1Q=
+	t=1711716640; cv=none; b=chqpFO/h/zlC+Pv+TsIy7wx5ttnR72TTat2X9YipLKDH50xgVf/x7/gYV1Rkb4AeK8doCdu627X8Os5J0TGHCo+KuzXBhu5A5AraqFTt169CIfDwRznoUjpLD2Hb7x41hFuuehqjPpdB1CUUHD7dMZTGE8sbFdy+qjjhiQf6C+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711716580; c=relaxed/simple;
-	bh=8THCduGIwQ+m+/W/iGE67JZa5hZtwWMwPxdC8E75i6g=;
+	s=arc-20240116; t=1711716640; c=relaxed/simple;
+	bh=c0cSvFtaha8uW8yTxZHbsbZUx/PHmoVdkuzCzjt6a0o=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lUSDrLuCc7HKKej+i0XsSx0zt3YJZQUOoCtZ99qowjqY4qqY4MAQwQdQtqA2n+idDjDDJZ0Tskfu/N5EtWldkgDfA6CYLpAasIZq2gdVulEP8RsW4B39C+YNO/gkmRA9X/FFA8lnyoKdbtZSzY3a+hkU1ezJEIwfXoko0fJadM4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CO1bvjME; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=VzvFk+qDiBhahQtAKAQF/w9MdlMsEjGYzXfQ+cBCJNLOntFLmhtvAXtCfWM1PQw8TNCXkiPdtZY/4ETjxxUuajbYSN3GG5uH5BTtXxSok2s6LqmaH8DjH1ujy01DWu0E/ToZnt37FbmD4063m3UZZ5dXqEX2c4/9gGtIy2W/vaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DtY+C7Ju; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CO1bvjME"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F687C433F1;
-	Fri, 29 Mar 2024 12:49:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DtY+C7Ju"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19F9DC43394;
+	Fri, 29 Mar 2024 12:50:39 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711716580;
-	bh=8THCduGIwQ+m+/W/iGE67JZa5hZtwWMwPxdC8E75i6g=;
+	s=k20201202; t=1711716639;
+	bh=c0cSvFtaha8uW8yTxZHbsbZUx/PHmoVdkuzCzjt6a0o=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=CO1bvjMENGLmnTxWEbFEwylffggAseotY3xKqs62KgXgP2PuMWPdTYJ9Ig5uCe+bQ
-	 uAS8XcJFeffPIkczHU5sWvs5Fj49c42xhfI3qg4EHimTUsCYhvejw4x1/S1KK/p74X
-	 V4mv5BCcR9dT+g0g8FM4ztdFWIHY7i+amLaPedYjlZCWIPrjB7saXTxDJcI/lM795R
-	 76M8wQKg91uN3ckczgwVa/PVZlUB3QKFiWJahi7W2pGYb9HHZvNiB4KqOj+yvaqy9w
-	 AEk/BTGh5P5sab9HCGC41xjAHalxxAbCps/O77FVGKxlcsWjWHgjM71OzNOCBbmw4Y
-	 iu3t6L2YoLKgg==
+	b=DtY+C7JuSs4WuNMWwciBaaniSjhqyF+KPbBjYU+3prsImwkzh/j8ZUok3SgWOK2t0
+	 Alt7ac9FP21riggAEqHLR1liwz36bSG4KuGZSoVnuTfPRiQUCb0ESQ9ijLGI+7yNuY
+	 gqLRXkWKSnpWptMXx25b7kmq4lt8dwpkGp5kTT+YgM15CJuM0LsILEaPp3cIGet8OV
+	 Ssv8EJLqwMwfsUyR0Ryt0op+8XA0pplSmOFP3mm3MbcJ9AgvHzRQhya1mmlMAQcu3T
+	 kyDSxXg5YjL2FVA0EU7M5CUXEaZ9gQS4vIKorfV+pV0imB8g6wqwFmdPkB0CIZWBVr
+	 uiL0i6D80dtaQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -33,12 +33,12 @@ Cc: Edmund Raile <edmund.raile@proton.me>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 21/31] PCI: Mark LSI FW643 to avoid bus reset
-Date: Fri, 29 Mar 2024 08:48:38 -0400
-Message-ID: <20240329124903.3093161-21-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 16/23] PCI: Mark LSI FW643 to avoid bus reset
+Date: Fri, 29 Mar 2024 08:49:49 -0400
+Message-ID: <20240329125009.3093845-16-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240329124903.3093161-1-sashal@kernel.org>
-References: <20240329124903.3093161-1-sashal@kernel.org>
+In-Reply-To: <20240329125009.3093845-1-sashal@kernel.org>
+References: <20240329125009.3093845-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.214
+X-stable-base: Linux 5.4.273
 Content-Transfer-Encoding: 8bit
 
 From: Edmund Raile <edmund.raile@proton.me>
@@ -76,10 +76,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 8 insertions(+)
 
 diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index b67aea8d8f197..99d33902a6154 100644
+index 821e71a45849c..91aeef1be7e70 100644
 --- a/drivers/pci/quirks.c
 +++ b/drivers/pci/quirks.c
-@@ -3610,6 +3610,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003e, quirk_no_bus_reset);
+@@ -3598,6 +3598,14 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_ATHEROS, 0x003e, quirk_no_bus_reset);
   */
  DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CAVIUM, 0xa100, quirk_no_bus_reset);
  
