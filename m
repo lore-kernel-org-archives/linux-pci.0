@@ -1,107 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BDFEB26AEA;
-	Sun, 31 Mar 2024 23:06:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id ED6AB385;
+	Mon,  1 Apr 2024 02:39:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1711926381; cv=none; b=dWrqfaA3rxXTQCo7QZfOFQltNNatHVcrmT6JT+da9fn3vp7WirgzOu38qLE8bWqPZU9Zn3opghPzFtlTZKh+IypsFr9OIHjbeLt1Yu8QtQragn6J11KwIFMEuTFRskYRcnBqyrEnCfaVaj5XRP8Y/fi8uPDNLX17RhxPki6knsc=
+	t=1711939200; cv=none; b=jeFgkO7nCoRypyJpEoXxzQZG88pl1L54KYbl/4TcKxeWY+h3ZWAoYGiTpMNI8gPlt1wd2NdpLZ+KWIEyaBLmqqn2verBDv6a6EWzL/rm7F4Jok0thZzLWdybvbwtdGBu0+balOkIQPzTdvtSYkZuYwsWHld8Ay51Bj8ZXGGiDd8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1711926381; c=relaxed/simple;
-	bh=14qIqX8MDo3yXNFpqBzy/00s9TGjAWt6G7ERHC7x30A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LEkZQOIZvVYdz9iqlRPM3VGgfye3jvHfwBgzsdFOGg/PyJRR/e/bLAgHw4O4aPttCazfRkhwUJ2YE06aqbB5v2+Rl0Ijpvvm68lpuGIzyBKTXi4jA3ImIalEBN449a6QAblw+KJhRFmCUZ5IyPxi9De09bTWwQHMDiptzo9rERw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gw6sdMmc; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gw6sdMmc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC358C433F1;
-	Sun, 31 Mar 2024 23:06:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1711926381;
-	bh=14qIqX8MDo3yXNFpqBzy/00s9TGjAWt6G7ERHC7x30A=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=gw6sdMmccfg6fv2rsBdDfRpSG7EMGTTmkv9GV0mfGfq78EG0Qa3zFW+rJUZzSqm/1
-	 9rw6aVYZcX3zsaWf+T8zHt+KIJdjHHYF+3GyTxnvmPCDqh8zutCL1T5XgVQX8sf8Ub
-	 XCLjmRv0WFLzmR5UfSYpKO6zco0y/AHJCjO71mC+f9PpTO5gqM/B2OmeCNYooRVxo9
-	 2mKSG0zoKqfErDvmrGPb305oT3IpOq+xTMdWPERY6pzWuFMWaE5sXg9Bo7xIRiphe7
-	 ddcRd9uXmkpF6sUoIMIgiNFlwRzX4TbqA6IWQNgGTC8Bl/Jgmi+8lfUjtYJAAmr2Et
-	 fItqbas/oQN0g==
-Message-ID: <c75cb54a-61c7-4bc3-978e-8a28dde93b08@kernel.org>
-Date: Mon, 1 Apr 2024 08:06:17 +0900
+	s=arc-20240116; t=1711939200; c=relaxed/simple;
+	bh=QHWTwOOMMPET8PzAlJc3PFCQ9tLxuzBQFNBgnWpopiA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Z50UXP9xhYsxpSl2d1ZEgfswBADQV+5NW8qpAjHgLIa+kLG3G56v09PQs5SyDdRFysg680/VsB++CUD8Iz4evo+/NpcqXvxLe2v9ZWEpdDZVrE11kEjOK8wi5AawV9JubzH8wDV3AKhvKKQMliNdkXJ/w2K+BldKcEms5gV89Q0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
+X-IronPort-AV: E=Sophos;i="6.07,171,1708354800"; 
+   d="scan'208";a="199904681"
+Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
+  by relmlie5.idc.renesas.com with ESMTP; 01 Apr 2024 11:39:50 +0900
+Received: from localhost.localdomain (unknown [10.166.13.99])
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 667CE400A6C3;
+	Mon,  1 Apr 2024 11:39:50 +0900 (JST)
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To: lpieralisi@kernel.org,
+	kw@linux.com,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	krzysztof.kozlowski+dt@linaro.org,
+	conor+dt@kernel.org,
+	jingoohan1@gmail.com,
+	mani@kernel.org
+Cc: marek.vasut+renesas@gmail.com,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Conor Dooley <conor.dooley@microchip.com>,
+	Geert Uytterhoeven <geert+renesas@glider.be>
+Subject: [PATCH v3 1/7] dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car V4H compatible
+Date: Mon,  1 Apr 2024 11:39:36 +0900
+Message-Id: <20240401023942.134704-2-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240401023942.134704-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20240401023942.134704-1-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 17/18] dt-bindings: pci: rockchip,rk3399-pcie-ep: Add
- ep-gpios property
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kw@linux.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
- Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
- Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org
-Cc: linux-rockchip@lists.infradead.org, linux-arm-kernel@lists.infradead.org,
- Rick Wertenbroek <rick.wertenbroek@gmail.com>,
- Wilfred Mallawa <wilfred.mallawa@wdc.com>, Niklas Cassel <cassel@kernel.org>
-References: <20240330041928.1555578-1-dlemoal@kernel.org>
- <20240330041928.1555578-18-dlemoal@kernel.org>
- <b020b74e-8ae1-448a-9d47-6c9bb13735f9@linaro.org>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <b020b74e-8ae1-448a-9d47-6c9bb13735f9@linaro.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 3/30/24 18:16, Krzysztof Kozlowski wrote:
-> On 30/03/2024 05:19, Damien Le Moal wrote:
->> From: Wilfred Mallawa <wilfred.mallawa@wdc.com>
->>
->> Describe the `ep-gpios` property which is used to map the PERST# input
->> signal for endpoint mode.
->>
->> Signed-off-by: Wilfred Mallawa <wilfred.mallawa@wdc.com>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> ---
->>  .../devicetree/bindings/pci/rockchip,rk3399-pcie-ep.yaml       | 3 +++
->>  1 file changed, 3 insertions(+)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie-ep.yaml
->> index 6b62f6f58efe..9331d44d6963 100644
->> --- a/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie-ep.yaml
->> +++ b/Documentation/devicetree/bindings/pci/rockchip,rk3399-pcie-ep.yaml
->> @@ -30,6 +30,9 @@ properties:
->>      maximum: 32
->>      default: 32
->>  
->> +  ep-gpios:
->> +    description: Input GPIO configured for the PERST# signal.
-> 
-> Missing maxItems. But more important: why existing property perst-gpios,
-> which you already have there in common schema, is not correct for this case?
+Document bindings for R-Car V4H (R8A779G0) PCIe host module.
 
-I am confused... Where do you find perst-gpios defined for the rk3399 ?
-Under Documentation/devicetree/bindings/pci/, the only schema I see using
-perst-gpios property are for the qcom (Qualcomm) controllers.
-The RC bindings for the rockchip rk3399 PCIe controller
-(pci/rockchip,rk3399-pcie.yaml) already define the ep-gpios property. So if
-anything, this patch should be probably be modified to move this property to the
-common schema in pci/rockchip,rk3399-pcie-common.yaml.
-No ?
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
+---
+ Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-> 
-> Best regards,
-> Krzysztof
-> 
-
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+index ffb34339b637..955c664f1fbb 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml
+@@ -16,7 +16,9 @@ allOf:
+ properties:
+   compatible:
+     items:
+-      - const: renesas,r8a779f0-pcie   # R-Car S4-8
++      - enum:
++          - renesas,r8a779f0-pcie      # R-Car S4-8
++          - renesas,r8a779g0-pcie      # R-Car V4H
+       - const: renesas,rcar-gen4-pcie  # R-Car Gen4
+ 
+   reg:
 -- 
-Damien Le Moal
-Western Digital Research
+2.25.1
 
