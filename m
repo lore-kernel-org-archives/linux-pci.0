@@ -1,23 +1,23 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0465C4DA08;
-	Wed,  3 Apr 2024 05:33:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 25EB84EB5F;
+	Wed,  3 Apr 2024 05:33:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712122397; cv=none; b=pWBHuzWVXkyMWbu90VoUbj9HBYxZmini7yj1abNrg3t42TFieHLvY7x7UAzzxNXCg9Bz6F9HqmYuCg7l7W/yVlNDsZBz1G+iqoW2qE/uDvU6JBigbdvIQCcCaU4P/6RMHnzZPGI9KZO7mmXpHPoDu42Odi2XqvhlS7id8emMbsc=
+	t=1712122399; cv=none; b=PXU3oL/QgthatHHPDugmow4Z7YR6pCtbN1RrO2Pr2SDWwReTvWllapWoDIgyyrTa7rMTg1/v4Ne8xWEfw21eFnzebyHlfkfLZDD3MXZpaIIL/HA6qERWPUE+N3V/9j5la3PgAAAJ5llJJyQB8PhFYA7Fyvfe+10V0rcnVLROXec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712122397; c=relaxed/simple;
-	bh=rDGADCXyQhug1jHaaVuWWWUGQXoCuhG2D6lBeCel1wQ=;
+	s=arc-20240116; t=1712122399; c=relaxed/simple;
+	bh=JvBtad0J2pVqMkVoLq9W0c2q+s1EJrC8zTxmJmrQfvQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=oTbX2MFpHm0aw438ncLKIP/rto97Yy1MIKhshZuQ8sQEJlmal3DuHk9c/n0E5YOnxQJncrH0M7y2aZLmFoefAB38zwljpYWG/CJL1xHq+xBIg0wUZIH5wv1jlNH0RfXZIHe3ira9R5kdEpkSyNaA6RU7E3bGYY1mzKfV9jxZBwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
+	 MIME-Version; b=LiD9vADMNkcPCeZuQvDkKSeg2FXeRlPwlhr8LqK+P7dxarJw5otIPotBfAQLgq1kOHotmbtGPlcw7lq/Lrj4W/AJH85Ta+l0AeDs8+t5Yn/hOqnbmz1/t0P/kO9GA1ZztVD9h4QIb1xKjEl0gRTbUO5D2gRRH1pdKs15knHVTYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.07,176,1708354800"; 
-   d="scan'208";a="200195946"
+   d="scan'208";a="204148825"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 03 Apr 2024 14:33:09 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 03 Apr 2024 14:33:09 +0900
 Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 76740400F302;
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 4054B40029A6;
 	Wed,  3 Apr 2024 14:33:09 +0900 (JST)
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To: lpieralisi@kernel.org,
@@ -32,11 +32,10 @@ Cc: marek.vasut+renesas@gmail.com,
 	linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Frank Li <Frank.li@nxp.com>
-Subject: [PATCH v4 7/7] misc: pci_endpoint_test: Document a policy about adding pci_device_id
-Date: Wed,  3 Apr 2024 14:33:04 +0900
-Message-Id: <20240403053304.3695096-8-yoshihiro.shimoda.uh@renesas.com>
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v4 5/7] PCI: dwc: rcar-gen4: Add .ltssm_enable() for other SoC support
+Date: Wed,  3 Apr 2024 14:33:02 +0900
+Message-Id: <20240403053304.3695096-6-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20240403053304.3695096-1-yoshihiro.shimoda.uh@renesas.com>
 References: <20240403053304.3695096-1-yoshihiro.shimoda.uh@renesas.com>
@@ -48,30 +47,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-To avoid becoming struct pci_device_id pci_endpoint_test_tbl longer
-and longer, document a policy. For example, if PCIe endpoint controller
-can configure vendor id and/or product id, you can reuse one of
-existing entries to test.
+This driver can reuse other R-Car Gen4 SoCs support like r8a779g0 and
+r8a779h0. However, r8a779g0 and r8a779h0 require other initializing
+settings that differ than r8a779f0. So, add a new function pointer
+.ltssm_enable() for it. No behavior changes.
+
+After applied this patch, probing SoCs by rcar_gen4_pcie_of_match[]
+will be changed like below:
+
+- r8a779f0 as "renesas,r8a779f0-pcie" and "renesas,r8a779f0-pcie-ep"
 
 Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 ---
-Cc: Frank Li <Frank.li@nxp.com>
----
- drivers/misc/pci_endpoint_test.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 41 ++++++++++++++++++---
+ 1 file changed, 36 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index c38a6083f0a7..3c8a0afad91d 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -980,6 +980,7 @@ static const struct pci_endpoint_test_data j721e_data = {
- 	.irq_type = IRQ_TYPE_MSI,
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index da2821d6efce..e760bcd30c4e 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -48,7 +48,9 @@
+ #define RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET	0x1000
+ #define RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET	0x800
+ 
++struct rcar_gen4_pcie;
+ struct rcar_gen4_pcie_platdata {
++	int (*ltssm_enable)(struct rcar_gen4_pcie *rcar);
+ 	enum dw_pcie_device_mode mode;
  };
  
-+/* Don't need to add a new entry if you can use existing entry to test */
- static const struct pci_device_id pci_endpoint_test_tbl[] = {
- 	{ PCI_DEVICE(PCI_VENDOR_ID_TI, PCI_DEVICE_ID_TI_DRA74x),
- 	  .driver_data = (kernel_ulong_t)&default_data,
+@@ -61,8 +63,8 @@ struct rcar_gen4_pcie {
+ #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
+ 
+ /* Common */
+-static void rcar_gen4_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar,
+-					bool enable)
++static void rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar,
++					 bool enable)
+ {
+ 	u32 val;
+ 
+@@ -127,9 +129,13 @@ static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
+ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
+ {
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+-	int i, changes;
++	int i, changes, ret;
+ 
+-	rcar_gen4_pcie_ltssm_enable(rcar, true);
++	if (rcar->platdata->ltssm_enable) {
++		ret = rcar->platdata->ltssm_enable(rcar);
++		if (ret)
++			return ret;
++	}
+ 
+ 	/*
+ 	 * Require direct speed change with retrying here if the link_gen is
+@@ -157,7 +163,7 @@ static void rcar_gen4_pcie_stop_link(struct dw_pcie *dw)
+ {
+ 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
+ 
+-	rcar_gen4_pcie_ltssm_enable(rcar, false);
++	rcar_gen4_pcie_ltssm_control(rcar, false);
+ }
+ 
+ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
+@@ -504,6 +510,23 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
+ 	rcar_gen4_pcie_unprepare(rcar);
+ }
+ 
++static int r8a779f0_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar)
++{
++	rcar_gen4_pcie_ltssm_control(rcar, true);
++
++	return 0;
++}
++
++static struct rcar_gen4_pcie_platdata platdata_r8a779f0_pcie = {
++	.ltssm_enable = r8a779f0_pcie_ltssm_enable,
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static struct rcar_gen4_pcie_platdata platdata_r8a779f0_pcie_ep = {
++	.ltssm_enable = r8a779f0_pcie_ltssm_enable,
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static struct rcar_gen4_pcie_platdata platdata_rcar_gen4_pcie = {
+ 	.mode = DW_PCIE_RC_TYPE,
+ };
+@@ -513,6 +536,14 @@ static struct rcar_gen4_pcie_platdata platdata_rcar_gen4_pcie_ep = {
+ };
+ 
+ static const struct of_device_id rcar_gen4_pcie_of_match[] = {
++	{
++		.compatible = "renesas,r8a779f0-pcie",
++		.data = &platdata_r8a779f0_pcie,
++	},
++	{
++		.compatible = "renesas,r8a779f04-pcie-ep",
++		.data = &platdata_r8a779f0_pcie_ep,
++	},
+ 	{
+ 		.compatible = "renesas,rcar-gen4-pcie",
+ 		.data = &platdata_rcar_gen4_pcie,
 -- 
 2.25.1
 
