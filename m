@@ -1,156 +1,308 @@
-Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 25EB84EB5F;
-	Wed,  3 Apr 2024 05:33:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
+Received: from mail-oa1-f44.google.com (mail-oa1-f44.google.com [209.85.160.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA3B4548E7
+	for <linux-pci@vger.kernel.org>; Wed,  3 Apr 2024 06:46:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712122399; cv=none; b=PXU3oL/QgthatHHPDugmow4Z7YR6pCtbN1RrO2Pr2SDWwReTvWllapWoDIgyyrTa7rMTg1/v4Ne8xWEfw21eFnzebyHlfkfLZDD3MXZpaIIL/HA6qERWPUE+N3V/9j5la3PgAAAJ5llJJyQB8PhFYA7Fyvfe+10V0rcnVLROXec=
+	t=1712126780; cv=none; b=GqG9Xm4lYJ+fNrbshi2yO05eCVFlGbafGu3pbUiZcUnN0dBfsVAns4rzqPgxNWyvQCsBo0830jVDAjDiCgoUUp5/I1jnUeKykHH65lZxen8nvH5XpyQJis6Mm/2FM5mgl0cccnwn3isO1YvzJ5gloBrqEvDo9o5rVxKbaWiDA1w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712122399; c=relaxed/simple;
-	bh=JvBtad0J2pVqMkVoLq9W0c2q+s1EJrC8zTxmJmrQfvQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=LiD9vADMNkcPCeZuQvDkKSeg2FXeRlPwlhr8LqK+P7dxarJw5otIPotBfAQLgq1kOHotmbtGPlcw7lq/Lrj4W/AJH85Ta+l0AeDs8+t5Yn/hOqnbmz1/t0P/kO9GA1ZztVD9h4QIb1xKjEl0gRTbUO5D2gRRH1pdKs15knHVTYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
-X-IronPort-AV: E=Sophos;i="6.07,176,1708354800"; 
-   d="scan'208";a="204148825"
-Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie6.idc.renesas.com with ESMTP; 03 Apr 2024 14:33:09 +0900
-Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id 4054B40029A6;
-	Wed,  3 Apr 2024 14:33:09 +0900 (JST)
-From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-To: lpieralisi@kernel.org,
-	kw@linux.com,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	krzysztof.kozlowski+dt@linaro.org,
-	conor+dt@kernel.org,
-	jingoohan1@gmail.com,
-	mani@kernel.org
-Cc: marek.vasut+renesas@gmail.com,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH v4 5/7] PCI: dwc: rcar-gen4: Add .ltssm_enable() for other SoC support
-Date: Wed,  3 Apr 2024 14:33:02 +0900
-Message-Id: <20240403053304.3695096-6-yoshihiro.shimoda.uh@renesas.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240403053304.3695096-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20240403053304.3695096-1-yoshihiro.shimoda.uh@renesas.com>
+	s=arc-20240116; t=1712126780; c=relaxed/simple;
+	bh=EtLzbRs1jyXC2EzWtrlyjhshVeLBDRwrWIp3gdtJp2g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VqmpdJOt9GnTE6RWdvFg4HXhDNGomtMVTDNtfoRNVbx55t+uk8rERG5qmJsa9tAU7qALOTvIlVsPNfX+NGt36c45oXA3z5z1dfLMPedOXZLT8PqhugWx82qM/WT41gVWwlvH679tW2AD0e+b+ei0/C86RhSpGiPC5JZzLpe/vu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=fktE8wSR; arc=none smtp.client-ip=209.85.160.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="fktE8wSR"
+Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-22e7444c5a0so702848fac.2
+        for <linux-pci@vger.kernel.org>; Tue, 02 Apr 2024 23:46:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1712126778; x=1712731578; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=t7PxrVKW+xziJG22nruxVobi3iX95Q/TH3TNd20dcL8=;
+        b=fktE8wSRoxw/1c74LY4UcOYVWm6DBRDTpxKt5Dv4mjFdU1465t1PghL0lZJK3f36RQ
+         9aVAKuDTHD9lUmXPwIjfMZLD0LWAI4XEHHXTCcDDsQw8hIWOKI7rPZNaAJU8VvxgGeKP
+         kgO0VUGUFxZldXXZyDm72ZaJj1eJIqikFKU4tG4KqO0Js9unWiCAG8WswS2FvQMzECpY
+         CzZQJ5Uv7CcmtyVAmAnS3U4bu6ju0Scm5KnWpYkAIJ/umNsQtovG0WcKN0teOPfCmneF
+         iHGV75XbNY0m6A/w38GrVTP5yoFb1l8l7CkRVUq/DvkhRLPCiYUqGk79zBiWw/8kVTll
+         /LnA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712126778; x=1712731578;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=t7PxrVKW+xziJG22nruxVobi3iX95Q/TH3TNd20dcL8=;
+        b=kq67rahIr7hVv/N+W1U1EPpS5Ku0ueg3V8oRNvTl3jHsObTgSDB/NwCUARHUIscvn2
+         69NJqAQ72MgwBb6EXLngiO3Hq4V9hCW/DosRC2DkOzKQNtPs42b4y5DPtKcE24ISwuZU
+         7OdbPAzhdDVH05lpcYnTG3o2W9zlsRj5RnwJ9BfR9HtO7Plie4mJceWi+Kf69k3Gu8IX
+         wunbtuUjh46hthlgrI4VGdS7cAjDw+7JTgXj03JXpLr5tFGKbzA1QYrRl6U/BY1pe6+V
+         L9/3mSCW8dyKSWw5aaufuc0AZlAvVk3WK5plqnpUB+7kTn/R8tMB5jC9eQ7xXtthtlpf
+         72jA==
+X-Forwarded-Encrypted: i=1; AJvYcCVFnjZTePZGyvgez5TbeYKIHkoyzvya9Yz+u1ui8LsdTWBojxlJpN/QO29i2TwwF7GwYoVjIT60kSVBg6DpNKIYolxbAZylj+SE
+X-Gm-Message-State: AOJu0YwVgEkHghGkXgEpcPFVQOeW6bnokepAPU2Edo6qwfHvZcHmLHsI
+	rlcMityQpRAUUG0fD2XmRGz883MKzAVhlqsU95HdsLZH3Xcqyjm9vwDMODdJog==
+X-Google-Smtp-Source: AGHT+IGpI2xtNByiryiE2cJzVu481+eI1+G8W13TvfGzP3+1XQ6iPKh97Q6OebN9sY+msv6hN6A8yg==
+X-Received: by 2002:a05:6871:547:b0:22e:7c64:af74 with SMTP id t7-20020a056871054700b0022e7c64af74mr2036337oal.44.1712126777521;
+        Tue, 02 Apr 2024 23:46:17 -0700 (PDT)
+Received: from thinkpad ([103.28.246.48])
+        by smtp.gmail.com with ESMTPSA id j15-20020aa7928f000000b006ea7d877191sm11041957pfa.2.2024.04.02.23.46.13
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Apr 2024 23:46:17 -0700 (PDT)
+Date: Wed, 3 Apr 2024 12:16:10 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH v2 01/18] PCI: endpoint: Introduce
+ pci_epc_function_is_valid()
+Message-ID: <20240403064610.GB25309@thinkpad>
+References: <20240330041928.1555578-1-dlemoal@kernel.org>
+ <20240330041928.1555578-2-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240330041928.1555578-2-dlemoal@kernel.org>
 
-This driver can reuse other R-Car Gen4 SoCs support like r8a779g0 and
-r8a779h0. However, r8a779g0 and r8a779h0 require other initializing
-settings that differ than r8a779f0. So, add a new function pointer
-.ltssm_enable() for it. No behavior changes.
+On Sat, Mar 30, 2024 at 01:19:11PM +0900, Damien Le Moal wrote:
+> Introduce the epc core helper function pci_epc_function_is_valid() to
+> verify that an epc pointer, a physical function number and a virtual
+> function number are all valid. This avoids repeating the code pattern:
+> 
+> if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> 	return err;
+> 
+> if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> 	return err;
+> 
+> in many functions of the endpoint controller core code.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-After applied this patch, probing SoCs by rcar_gen4_pcie_of_match[]
-will be changed like below:
+One nit below. With that fixed,
 
-- r8a779f0 as "renesas,r8a779f0-pcie" and "renesas,r8a779f0-pcie-ep"
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 41 ++++++++++++++++++---
- 1 file changed, 36 insertions(+), 5 deletions(-)
+> ---
+>  drivers/pci/endpoint/pci-epc-core.c | 79 +++++++++++------------------
+>  1 file changed, 31 insertions(+), 48 deletions(-)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index da3fc0795b0b..754afd115bbd 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -126,6 +126,18 @@ enum pci_barno pci_epc_get_next_free_bar(const struct pci_epc_features
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_get_next_free_bar);
+>  
+> +static inline bool pci_epc_function_is_valid(struct pci_epc *epc,
+> +					     u8 func_no, u8 vfunc_no)
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index da2821d6efce..e760bcd30c4e 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -48,7 +48,9 @@
- #define RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET	0x1000
- #define RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET	0x800
- 
-+struct rcar_gen4_pcie;
- struct rcar_gen4_pcie_platdata {
-+	int (*ltssm_enable)(struct rcar_gen4_pcie *rcar);
- 	enum dw_pcie_device_mode mode;
- };
- 
-@@ -61,8 +63,8 @@ struct rcar_gen4_pcie {
- #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
- 
- /* Common */
--static void rcar_gen4_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar,
--					bool enable)
-+static void rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar,
-+					 bool enable)
- {
- 	u32 val;
- 
-@@ -127,9 +129,13 @@ static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
- static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
- {
- 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
--	int i, changes;
-+	int i, changes, ret;
- 
--	rcar_gen4_pcie_ltssm_enable(rcar, true);
-+	if (rcar->platdata->ltssm_enable) {
-+		ret = rcar->platdata->ltssm_enable(rcar);
-+		if (ret)
-+			return ret;
-+	}
- 
- 	/*
- 	 * Require direct speed change with retrying here if the link_gen is
-@@ -157,7 +163,7 @@ static void rcar_gen4_pcie_stop_link(struct dw_pcie *dw)
- {
- 	struct rcar_gen4_pcie *rcar = to_rcar_gen4_pcie(dw);
- 
--	rcar_gen4_pcie_ltssm_enable(rcar, false);
-+	rcar_gen4_pcie_ltssm_control(rcar, false);
- }
- 
- static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
-@@ -504,6 +510,23 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
- 	rcar_gen4_pcie_unprepare(rcar);
- }
- 
-+static int r8a779f0_pcie_ltssm_enable(struct rcar_gen4_pcie *rcar)
-+{
-+	rcar_gen4_pcie_ltssm_control(rcar, true);
-+
-+	return 0;
-+}
-+
-+static struct rcar_gen4_pcie_platdata platdata_r8a779f0_pcie = {
-+	.ltssm_enable = r8a779f0_pcie_ltssm_enable,
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static struct rcar_gen4_pcie_platdata platdata_r8a779f0_pcie_ep = {
-+	.ltssm_enable = r8a779f0_pcie_ltssm_enable,
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
- static struct rcar_gen4_pcie_platdata platdata_rcar_gen4_pcie = {
- 	.mode = DW_PCIE_RC_TYPE,
- };
-@@ -513,6 +536,14 @@ static struct rcar_gen4_pcie_platdata platdata_rcar_gen4_pcie_ep = {
- };
- 
- static const struct of_device_id rcar_gen4_pcie_of_match[] = {
-+	{
-+		.compatible = "renesas,r8a779f0-pcie",
-+		.data = &platdata_r8a779f0_pcie,
-+	},
-+	{
-+		.compatible = "renesas,r8a779f04-pcie-ep",
-+		.data = &platdata_r8a779f0_pcie_ep,
-+	},
- 	{
- 		.compatible = "renesas,rcar-gen4-pcie",
- 		.data = &platdata_rcar_gen4_pcie,
+No need to add 'inline' keyword to function definitions in a .c file. Compiler
+will handle that.
+
+- Mani
+
+> +{
+> +	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> +		return false;
+> +
+> +	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +		return false;
+> +
+> +	return true;
+> +}
+> +
+>  /**
+>   * pci_epc_get_features() - get the features supported by EPC
+>   * @epc: the features supported by *this* EPC device will be returned
+> @@ -143,10 +155,7 @@ const struct pci_epc_features *pci_epc_get_features(struct pci_epc *epc,
+>  {
+>  	const struct pci_epc_features *epc_features;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return NULL;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return NULL;
+>  
+>  	if (!epc->ops->get_features)
+> @@ -216,10 +225,7 @@ int pci_epc_raise_irq(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  {
+>  	int ret;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return -EINVAL;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->raise_irq)
+> @@ -260,10 +266,7 @@ int pci_epc_map_msi_irq(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  {
+>  	int ret;
+>  
+> -	if (IS_ERR_OR_NULL(epc))
+> -		return -EINVAL;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->map_msi_irq)
+> @@ -291,10 +294,7 @@ int pci_epc_get_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no)
+>  {
+>  	int interrupt;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return 0;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return 0;
+>  
+>  	if (!epc->ops->get_msi)
+> @@ -327,11 +327,10 @@ int pci_epc_set_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no, u8 interrupts)
+>  	int ret;
+>  	u8 encode_int;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> -	    interrupts < 1 || interrupts > 32)
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return -EINVAL;
+>  
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (interrupts < 1 || interrupts > 32)
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->set_msi)
+> @@ -359,10 +358,7 @@ int pci_epc_get_msix(struct pci_epc *epc, u8 func_no, u8 vfunc_no)
+>  {
+>  	int interrupt;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return 0;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return 0;
+>  
+>  	if (!epc->ops->get_msix)
+> @@ -395,11 +391,10 @@ int pci_epc_set_msix(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  {
+>  	int ret;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> -	    interrupts < 1 || interrupts > 2048)
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return -EINVAL;
+>  
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (interrupts < 1 || interrupts > 2048)
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->set_msix)
+> @@ -426,10 +421,7 @@ EXPORT_SYMBOL_GPL(pci_epc_set_msix);
+>  void pci_epc_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  			phys_addr_t phys_addr)
+>  {
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return;
+>  
+>  	if (!epc->ops->unmap_addr)
+> @@ -457,10 +449,7 @@ int pci_epc_map_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  {
+>  	int ret;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return -EINVAL;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return -EINVAL;
+>  
+>  	if (!epc->ops->map_addr)
+> @@ -487,12 +476,11 @@ EXPORT_SYMBOL_GPL(pci_epc_map_addr);
+>  void pci_epc_clear_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  		       struct pci_epf_bar *epf_bar)
+>  {
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> -	    (epf_bar->barno == BAR_5 &&
+> -	     epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return;
+>  
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (epf_bar->barno == BAR_5 &&
+> +	    epf_bar->flags & PCI_BASE_ADDRESS_MEM_TYPE_64)
+>  		return;
+>  
+>  	if (!epc->ops->clear_bar)
+> @@ -519,18 +507,16 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  	int ret;
+>  	int flags = epf_bar->flags;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions ||
+> -	    (epf_bar->barno == BAR_5 &&
+> -	     flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ||
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+> +		return -EINVAL;
+> +
+> +	if ((epf_bar->barno == BAR_5 && flags & PCI_BASE_ADDRESS_MEM_TYPE_64) ||
+>  	    (flags & PCI_BASE_ADDRESS_SPACE_IO &&
+>  	     flags & PCI_BASE_ADDRESS_IO_MASK) ||
+>  	    (upper_32_bits(epf_bar->size) &&
+>  	     !(flags & PCI_BASE_ADDRESS_MEM_TYPE_64)))
+>  		return -EINVAL;
+>  
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> -		return -EINVAL;
+> -
+>  	if (!epc->ops->set_bar)
+>  		return 0;
+>  
+> @@ -559,10 +545,7 @@ int pci_epc_write_header(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  {
+>  	int ret;
+>  
+> -	if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
+> -		return -EINVAL;
+> -
+> -	if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
+> +	if (!pci_epc_function_is_valid(epc, func_no, vfunc_no))
+>  		return -EINVAL;
+>  
+>  	/* Only Virtual Function #1 has deviceID */
+> -- 
+> 2.44.0
+> 
+
 -- 
-2.25.1
-
+மணிவண்ணன் சதாசிவம்
