@@ -1,20 +1,19 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B731729CF1;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8F05E20B35;
 	Thu,  4 Apr 2024 05:10:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712207431; cv=none; b=Nz4iTPoPY8UgoW8rG7n/M8M8IK+OM2ukTB+zf6SK3v01O9CQ1t5PIRALIeJqHqRHdXkfDa2G/Ck53jVAL2vdgvr2Kax0DU8WdmgAs/dF4FYgekwbWQzWWU+ayyUUwqrwiidmMe/N/b5tvVWeo337nqkdbkfALs+2Y15xK/YBCwo=
+	t=1712207431; cv=none; b=oi8wZJJWCQuLJ1AjBjcBiWlBa0qt4XAhkLTTIHAfFanFxWque2/iXhSD3dKER7LAhiZMsMBd7ImfTZyhzNAZciHdRbFZGtuJwPkKO7XrH0hWESAPUqFMB2VEuujcA7N8DcQg1EcbXSpVXqIF1uyRLk0bOFMH8Yh+8tQrEp4SG9g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712207431; c=relaxed/simple;
-	bh=Mlar4k36vsGupOpHsgffs9x7mHFF2T26ers8FFl0RyI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UkLGdXMavcUNxmNZNs7zWsSARSEaqh07LxlUDj+e9g2igAo1xT2aFC+3n6EH5RwjSK3n5BNwbm6IjX2yg5UPJYd7Kx0GNRf57E2F+yKJRgwaFZ8TukLiG8uuxBbPFHXTWBpMp7wpw6yU49RHfub6Jtt+eOgW8HvHXfgW6jn0pJ0=
+	bh=3DF/2Dz6pH2U0aQ7KjEm7anPXTkdGjTa5S1TzcVBgGw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lT8n9NJOWHffiqq6MwfrNozjsCA3OpdHsSkhEYxNAHm2vKAJw5CaNH5dPNEnBXXnSGA01KyY8WJ4nq1KTrCEnyf06wAHmWxwUGLJzKT5qluRqKlluUn1AmqRPNL1EvnnSl0dp1HjxiQD6RwZyjAs/aVmskIrkP7dPSGYrQaZqnI=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 9BB021C0242;
-	Thu,  4 Apr 2024 14:00:38 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 0A0E91C0109;
+	Thu,  4 Apr 2024 14:00:35 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -80,12 +79,10 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [PATCH v7 02/37] sh: Kconfig unified OF supported targets.
-Date: Thu,  4 Apr 2024 13:59:27 +0900
-Message-Id: <d0e87238d664b7b1780dd8321a1629e51aa108ec.1712205900.git.ysato@users.sourceforge.jp>
+Subject: [PATCH v7 00/37] Device Tree support for SH7751 based board
+Date: Thu,  4 Apr 2024 13:59:25 +0900
+Message-Id: <cover.1712205900.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <cover.1712205900.git.ysato@users.sourceforge.jp>
-References: <cover.1712205900.git.ysato@users.sourceforge.jp>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -94,74 +91,179 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Targets that support OF should be treated as one board.
+This is an updated version of something I wrote about 7 years ago.
+Minimum support for R2D-plus and LANDISK.
+I think R2D-1 will work if you add AX88796 to dts.
+And board-specific functions and SCI's SPI functions are not supported.
 
-Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
----
- arch/sh/Kconfig        |  1 +
- arch/sh/boards/Kconfig | 23 +++++++++++++----------
- 2 files changed, 14 insertions(+), 10 deletions(-)
+You can get it working with qemu found here.
+https://gitlab.com/yoshinori.sato/qemu/-/tree/landisk
 
-diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
-index 2ad3e29f0ebe..cbf48e69ad74 100644
---- a/arch/sh/Kconfig
-+++ b/arch/sh/Kconfig
-@@ -711,6 +711,7 @@ choice
- 	prompt "Kernel command line"
- 	optional
- 	default CMDLINE_OVERWRITE
-+	depends on !OF || USE_BUILTIN_DTB
- 	help
- 	  Setting this option allows the kernel command line arguments
- 	  to be set.
-diff --git a/arch/sh/boards/Kconfig b/arch/sh/boards/Kconfig
-index 109bec4dad94..46387fd040ad 100644
---- a/arch/sh/boards/Kconfig
-+++ b/arch/sh/boards/Kconfig
-@@ -19,16 +19,9 @@ config SH_DEVICE_TREE
- 	select TIMER_OF
- 	select COMMON_CLK
- 	select GENERIC_CALIBRATE_DELAY
--
--config SH_JCORE_SOC
--	bool "J-Core SoC"
--	select SH_DEVICE_TREE
--	select CLKSRC_JCORE_PIT
--	select JCORE_AIC
--	depends on CPU_J2
--	help
--	  Select this option to include drivers core components of the
--	  J-Core SoC, including interrupt controllers and timers.
-+	select GENERIC_IRQ_CHIP
-+	select SYS_SUPPORTS_PCI
-+	select GENERIC_PCI_IOMAP if PCI
- 
- config SH_SOLUTION_ENGINE
- 	bool "SolutionEngine"
-@@ -293,6 +286,7 @@ config SH_LANDISK
- 	bool "LANDISK"
- 	depends on CPU_SUBTYPE_SH7751R
- 	select HAVE_PCI
-+	select SYS_SUPPORTS_PCI
- 	help
- 	  I-O DATA DEVICE, INC. "LANDISK Series" support.
- 
-@@ -369,6 +363,15 @@ config SH_APSH4AD0A
- 	help
- 	  Select AP-SH4AD-0A if configuring for an ALPHAPROJECT AP-SH4AD-0A.
- 
-+config SH_OF_BOARD
-+	bool "General Open Firmware boards"
-+	select SH_DEVICE_TREE
-+	select CLKSRC_JCORE_PIT if CPU_J2
-+	select JCORE_AIC if CPU_J2
-+	select HAVE_PCI if CPU_SUBTYPE_SH7751R
-+	help
-+	  This board means general OF supported targets.
-+
- source "arch/sh/boards/mach-r2d/Kconfig"
- source "arch/sh/boards/mach-highlander/Kconfig"
- source "arch/sh/boards/mach-sdk7780/Kconfig"
+v7 changes.
+- sh/kernel/setup.c: fix kernel parameter handling.
+- clk-sh7750.c: cleanup.
+- sh_tmu.c: cleanup.
+- irq-renesas-sh7751.c: IPR definition move to code.
+- irq-renesas-sh7751irl.c: update register definition.
+- pci-sh7751.c: Register initialization fix. 
+- sm501 and sm501fb: Re-design Device Tree properties.
+
+v6 changes.
+- pci-sh7751: merge register define.
+- pci-sh7751: use 'dma-ranges' property.
+- pci-sh7751: rename general PCI properties.
+- sm501 and sm501fb: Re-design Device Tree properties.
+- sh/kernel/setup: cleanup command line setup.
+- irq-sh7751.c: some cleanup.
+
+v5 changes.
+- pci-sh7751: revert header changes. and some fix in previuous driver.
+- sh/kernel/iomap.c: Use SH io functions.
+- sm501 and sm501fb: re-write DT support.
+
+v4 changes.
+- cpg-sh7750: use clk-divider and clk-gate.
+- pci-sh7751: unified header files to old PCI driver.
+- irq-renesas-sh7751: IPR registers direct mapping.
+- irq-renesas-sh7751irl: useful register bit mapping.
+- sm501 and sm501fb: re-write dt parser.
+- j2_minus: fix build error.
+- dt-binding schema: fix some errors.
+- *.dts: cleanup.
+
+v3 changes.
+- Rewrite clk drivers.
+- Added sh_tmu to OF support.
+- Cleanup PCI stuff.
+- Update sm501 and sm501fb OF support.
+- Update devicetree and documents.
+
+v2 changes.
+- Rebasing v6,6-rc1
+- re-write irqchip driver.
+- Add binding documents.
+- Cleanup review comment.
+
+Yoshinori Sato (37):
+  sh: passing FDT address to kernel startup.
+  sh: Kconfig unified OF supported targets.
+  sh: Enable OF support for build and configuration.
+  dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
+  sh: GENERIC_IRQ_CHIP support for CONFIG_OF=y
+  sh: kernel/setup Update DT support.
+  sh: Fix COMMON_CLK support in CONFIG_OF=y.
+  clocksource: sh_tmu: CLOCKSOURCE support.
+  dt-binding: Add compatible SH7750 SoC
+  sh: Common PCI Framework driver support.
+  pci: pci-sh7751: Add SH7751 PCI driver
+  dt-bindings: pci: pci-sh7751: Add SH7751 PCI
+  dt-bindings: clock: sh7750-cpg: Add renesas,sh7750-cpg header.
+  clk: Compatible with narrow registers
+  clk: renesas: Add SH7750/7751 CPG Driver
+  irqchip: Add SH7751 INTC driver
+  dt-bindings: interrupt-controller: renesas,sh7751-intc: Add
+    json-schema
+  irqchip: SH7751 external interrupt encoder with enable gate.
+  dt-bindings: interrupt-controller: renesas,sh7751-irl-ext: Add
+    json-schema
+  serial: sh-sci: fix SH4 OF support.
+  dt-bindings: serial: renesas,scif: Add scif-sh7751.
+  dt-bindings: display: smi,sm501: SMI SM501 binding json-schema
+  dt-bindings: display: sm501 register definition helper
+  mfd: sm501: Convert platform_data to OF property
+  dt-binding: sh: cpus: Add SH CPUs json-schema
+  dt-bindings: vendor-prefixes: Add iodata
+  dt-bindings: ata: ata-generic: Add new targets
+  dt-bindings: soc: renesas: sh: Add SH7751 based target
+  sh: SH7751R SoC Internal peripheral definition dtsi.
+  sh: add RTS7751R2D Plus DTS
+  sh: Add IO DATA LANDISK dts
+  sh: Add IO DATA USL-5P dts
+  sh: j2_mimas_v2.dts update
+  sh: Add dtbs target support.
+  sh: RTS7751R2D Plus OF defconfig
+  sh: LANDISK OF defconfig
+  sh: j2_defconfig: update
+
+ .../devicetree/bindings/ata/ata-generic.yaml  |   2 +
+ .../bindings/clock/renesas,sh7750-cpg.yaml    | 105 ++++
+ .../bindings/display/smi,sm501.yaml           | 398 +++++++++++++++
+ .../renesas,sh7751-intc.yaml                  |  53 ++
+ .../renesas,sh7751-irl-ext.yaml               |  57 +++
+ .../bindings/pci/renesas,sh7751-pci.yaml      |  89 ++++
+ .../bindings/serial/renesas,scif.yaml         |   1 +
+ .../devicetree/bindings/sh/cpus.yaml          |  63 +++
+ .../devicetree/bindings/soc/renesas/sh.yaml   |  27 +
+ .../bindings/timer/renesas,tmu.yaml           |   2 +
+ .../devicetree/bindings/vendor-prefixes.yaml  |   2 +
+ arch/sh/Kconfig                               |  33 +-
+ arch/sh/boards/Kconfig                        |  23 +-
+ arch/sh/boards/of-generic.c                   |  28 +-
+ arch/sh/boot/compressed/head_32.S             |   5 +-
+ arch/sh/boot/dts/Makefile                     |   5 +
+ arch/sh/boot/dts/j2_mimas_v2.dts              |   2 +-
+ arch/sh/boot/dts/landisk.dts                  |  77 +++
+ arch/sh/boot/dts/rts7751r2dplus.dts           | 169 ++++++
+ arch/sh/boot/dts/sh7751r.dtsi                 | 105 ++++
+ arch/sh/boot/dts/usl-5p.dts                   |  85 ++++
+ arch/sh/configs/j2_defconfig                  |  11 +-
+ arch/sh/configs/landisk-of_defconfig          | 104 ++++
+ arch/sh/configs/rts7751r2dplus-of_defconfig   |  75 +++
+ arch/sh/drivers/Makefile                      |   2 +
+ arch/sh/include/asm/io.h                      |   8 +
+ arch/sh/include/asm/irq.h                     |  10 +-
+ arch/sh/include/asm/pci.h                     |   4 +
+ arch/sh/include/asm/setup.h                   |   1 +
+ arch/sh/kernel/cpu/Makefile                   |   6 +-
+ arch/sh/kernel/cpu/irq/imask.c                |  17 +
+ arch/sh/kernel/cpu/sh4/Makefile               |   3 +
+ arch/sh/kernel/iomap.c                        |  18 +
+ arch/sh/kernel/setup.c                        |  36 +-
+ arch/sh/kernel/time.c                         |  12 +
+ drivers/clk/clk-divider.c                     |  56 +-
+ drivers/clk/clk-gate.c                        |  62 ++-
+ drivers/clk/renesas/Kconfig                   |  13 +-
+ drivers/clk/renesas/Makefile                  |   1 +
+ drivers/clk/renesas/clk-sh7750.c              | 480 ++++++++++++++++++
+ drivers/clocksource/sh_tmu.c                  | 198 +++++---
+ drivers/irqchip/Kconfig                       |  15 +
+ drivers/irqchip/Makefile                      |   3 +
+ drivers/irqchip/irq-renesas-sh7751.c          | 282 ++++++++++
+ drivers/irqchip/irq-renesas-sh7751irl.c       | 221 ++++++++
+ drivers/mfd/sm501.c                           | 315 ++++++++++++
+ drivers/pci/controller/Kconfig                |   9 +
+ drivers/pci/controller/Makefile               |   1 +
+ drivers/pci/controller/pci-sh7751.c           | 342 +++++++++++++
+ drivers/tty/serial/Kconfig                    |   2 +-
+ drivers/tty/serial/sh-sci.c                   |   6 +-
+ drivers/video/fbdev/sm501fb.c                 | 106 ++++
+ include/dt-bindings/clock/sh7750-cpg.h        |  26 +
+ include/dt-bindings/display/sm501.h           |  76 +++
+ .../renesas,sh7751-intc.h                     |  19 +
+ include/linux/clk-provider.h                  |  22 +-
+ include/linux/sh_intc.h                       |   7 +-
+ 57 files changed, 3713 insertions(+), 187 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/clock/renesas,sh7750-cpg.yaml
+ create mode 100644 Documentation/devicetree/bindings/display/smi,sm501.yaml
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-intc.yaml
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/renesas,sh7751-irl-ext.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/renesas,sh7751-pci.yaml
+ create mode 100644 Documentation/devicetree/bindings/sh/cpus.yaml
+ create mode 100644 Documentation/devicetree/bindings/soc/renesas/sh.yaml
+ create mode 100644 arch/sh/boot/dts/landisk.dts
+ create mode 100644 arch/sh/boot/dts/rts7751r2dplus.dts
+ create mode 100644 arch/sh/boot/dts/sh7751r.dtsi
+ create mode 100644 arch/sh/boot/dts/usl-5p.dts
+ create mode 100644 arch/sh/configs/landisk-of_defconfig
+ create mode 100644 arch/sh/configs/rts7751r2dplus-of_defconfig
+ create mode 100644 drivers/clk/renesas/clk-sh7750.c
+ create mode 100644 drivers/irqchip/irq-renesas-sh7751.c
+ create mode 100644 drivers/irqchip/irq-renesas-sh7751irl.c
+ create mode 100644 drivers/pci/controller/pci-sh7751.c
+ create mode 100644 include/dt-bindings/clock/sh7750-cpg.h
+ create mode 100644 include/dt-bindings/display/sm501.h
+ create mode 100644 include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+
 -- 
 2.39.2
 
