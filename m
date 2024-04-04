@@ -1,20 +1,20 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4214B129E6B;
-	Thu,  4 Apr 2024 05:15:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 267F312AACA;
+	Thu,  4 Apr 2024 05:15:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712207746; cv=none; b=o6cc4WDQ8AF69guHUyz40ehiP7Qb0ryD6AvQYIEN2nj1waaJx1VqEdvMMBUObCo8h92W2O1ljLGVDpgClyT5HPisIPsh8PNTcpboo7Y8SOq0mtToFUVvSArgzbW2+1tyZEjTR2G4srolBrmo6a+FISO7skQgA3Wjvnm3tSrS3zk=
+	t=1712207747; cv=none; b=QZkmyTPmYq8VtDyM3boQPIbzkGKSn2+ujBD4EzoaEXm4Sk2qtQjpQe+sgk0oikOetyHxkQFnh+2hsV/KbZE/A6u3mNxV1iPPFv3g55s7a7rAZ746cky+qLxL6nUAQ/04G9IYFKDvgED4ahEtiSOos99kaCKItYD3Yb5GsPfnXN0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712207746; c=relaxed/simple;
-	bh=/Oty/pqTzaVIaQmvghpB3+DTwG96IK8n+9UewamWlEA=;
+	s=arc-20240116; t=1712207747; c=relaxed/simple;
+	bh=ujRB9umra6Ow9vggObeyKeVFpIbOKfySaVYNfAnwi94=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ftnBSQExm1llQIfds1mvNA0TGemeaRBCErj7/my6155bKCel+j0IiqfnBO3PdSa8gQrNnm46xxbZ3jH0OHW1IRgxOXlW+o87rmyyMevxvNTt5WMNiegXIY1wTpVe4Mr67WygzYWRAZuVsqFjw0ztYlLA9gTAR29wjMRWEFUFeOc=
+	 MIME-Version; b=px+XYdgSdHZ+NVre4Ml/A1x/Chflfd4C8QbK6DrbRjyqiF/mol80srJBSYWyS7FyoabbqJMo2UycZIp6blx+xNXzsSq7j0WEtSFP6icWzEFi2vM5datFw8qfUTGhgcVXtwjVlmPDwCZ5ZXXgKk2xdEafXI+TA74xTgW4pNGIPVM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 2B5841C102F;
-	Thu,  4 Apr 2024 14:15:42 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 0BD591C101B;
+	Thu,  4 Apr 2024 14:15:44 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -80,9 +80,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [RESEND v7 26/37] dt-bindings: vendor-prefixes: Add iodata
-Date: Thu,  4 Apr 2024 14:14:37 +0900
-Message-Id: <4649938dc48da6e449ef6f1987c7739ba3a80b42.1712207606.git.ysato@users.sourceforge.jp>
+Subject: [RESEND v7 27/37] dt-bindings: ata: ata-generic: Add new targets
+Date: Thu,  4 Apr 2024 14:14:38 +0900
+Message-Id: <53f85cc2e124d1c2e7394458b73293d797817d6d.1712207606.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1712207606.git.ysato@users.sourceforge.jp>
 References: <cover.1712207606.git.ysato@users.sourceforge.jp>
@@ -94,28 +94,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add IO DATA DEVICE INC.
-https://www.iodata.com/
+Added new ata-generic target.
+- iodata,usl-5p-ata
+- renesas,rts7751r2d-ata
+
+Each boards have simple IDE Interface. Use ATA generic driver.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- Documentation/devicetree/bindings/vendor-prefixes.yaml | 2 ++
+ Documentation/devicetree/bindings/ata/ata-generic.yaml | 2 ++
  1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/vendor-prefixes.yaml b/Documentation/devicetree/bindings/vendor-prefixes.yaml
-index b97d298b3eb6..769f9b8c9bd3 100644
---- a/Documentation/devicetree/bindings/vendor-prefixes.yaml
-+++ b/Documentation/devicetree/bindings/vendor-prefixes.yaml
-@@ -708,6 +708,8 @@ patternProperties:
-     description: Inventec
-   "^inversepath,.*":
-     description: Inverse Path
-+  "^iodata,.*":
-+    description: IO DATA DEVICE Inc.
-   "^iom,.*":
-     description: Iomega Corporation
-   "^irondevice,.*":
+diff --git a/Documentation/devicetree/bindings/ata/ata-generic.yaml b/Documentation/devicetree/bindings/ata/ata-generic.yaml
+index 0697927f3d7e..1025b3b351d0 100644
+--- a/Documentation/devicetree/bindings/ata/ata-generic.yaml
++++ b/Documentation/devicetree/bindings/ata/ata-generic.yaml
+@@ -18,6 +18,8 @@ properties:
+       - enum:
+           - arm,vexpress-cf
+           - fsl,mpc8349emitx-pata
++          - iodata,usl-5p-ata
++          - renesas,rts7751r2d-ata
+       - const: ata-generic
+ 
+   reg:
 -- 
 2.39.2
 
