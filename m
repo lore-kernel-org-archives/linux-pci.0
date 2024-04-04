@@ -1,19 +1,19 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8F05E20B35;
-	Thu,  4 Apr 2024 05:10:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C2A2B40BE6;
+	Thu,  4 Apr 2024 05:14:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712207431; cv=none; b=oi8wZJJWCQuLJ1AjBjcBiWlBa0qt4XAhkLTTIHAfFanFxWque2/iXhSD3dKER7LAhiZMsMBd7ImfTZyhzNAZciHdRbFZGtuJwPkKO7XrH0hWESAPUqFMB2VEuujcA7N8DcQg1EcbXSpVXqIF1uyRLk0bOFMH8Yh+8tQrEp4SG9g=
+	t=1712207697; cv=none; b=NQeIYloSorFADGAmGDNgsQAdNZpk0Uq7/JVLVKi+zBguFnYZIWvmuX+IjL4zFhOdUeP5JJw3XceOSH4o5cBUCb+U5pvpwsZg8PU+TdIUXmPzs2FORSlJcwb1oJXn4Dni4Iz6+euh/pmly0GyBvAWUuGRh1hWASltloM9i1NZL30=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712207431; c=relaxed/simple;
-	bh=3DF/2Dz6pH2U0aQ7KjEm7anPXTkdGjTa5S1TzcVBgGw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lT8n9NJOWHffiqq6MwfrNozjsCA3OpdHsSkhEYxNAHm2vKAJw5CaNH5dPNEnBXXnSGA01KyY8WJ4nq1KTrCEnyf06wAHmWxwUGLJzKT5qluRqKlluUn1AmqRPNL1EvnnSl0dp1HjxiQD6RwZyjAs/aVmskIrkP7dPSGYrQaZqnI=
+	s=arc-20240116; t=1712207697; c=relaxed/simple;
+	bh=uDYKvaK8mWU0ZOmw+OPqp3b2duLch7D6g1bdcjJ7NWE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=caszzjcZUPxguFk51Y4LAvkjqclApwEyDeOidacGfEEf1TEezozawhkYveCtopAbJAb4xA3N+TRrcjAbJMe/oFqBNiy0jL7kOnbIXRM1NaM5oGVjcg86JuK6VwG9mz5iZvNUHcsbfLu7yL2fVIqM8jP7hU26POkA4M0upbSA+Hw=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 0A0E91C0109;
-	Thu,  4 Apr 2024 14:00:35 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 679331C0B72;
+	Thu,  4 Apr 2024 14:14:52 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -79,9 +79,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [PATCH v7 00/37] Device Tree support for SH7751 based board
-Date: Thu,  4 Apr 2024 13:59:25 +0900
-Message-Id: <cover.1712205900.git.ysato@users.sourceforge.jp>
+Subject: [RESEND v7 00/37] Device Tree support for SH7751 based board
+Date: Thu,  4 Apr 2024 14:14:11 +0900
+Message-ID: <cover.1712205900.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -90,6 +90,9 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Message-ID: <20240404051411.g0bmlrcuhfeBJelbtmwQSMs4MGc-bye-q8BVEOzB_oM@z>
+
+Sorry. previus mail is thread broken.
 
 This is an updated version of something I wrote about 7 years ago.
 Minimum support for R2D-plus and LANDISK.
