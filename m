@@ -1,20 +1,20 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B15024642A;
-	Thu,  4 Apr 2024 05:01:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8F01920330;
+	Thu,  4 Apr 2024 05:10:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712206882; cv=none; b=pV+EtgDiCDuq0lj6MrPOoUfr4984T6rNyfO+GATs9Z0tF1ULAr6qArc9cSyaQQ8DyZ9LtEVYl6TPXU0lrrn9zn3Mx1kWo/2v8Ls2uQEq/fSe+P6WVeSXov70ompxZCTrbcAelpP5Gt6erOo0QDViSXoNtEwLQXorO/ZL1YCnurc=
+	t=1712207430; cv=none; b=TfJ+JCyUvQPH+d8pJ/vDX6Ia4S50bK1pQlkzDmP1ZMOju7vEWNe6o8b+7hElTPxr0IMrC1Vbp5WU/YABrrbkOSkdmVYS6Xo4+u7AbxDExSypblAYFCT8iRhfDo0wUsS0p1IYJ2GgPgl5h6EdtcQIdrHa+hKIifbyaergGJCCO0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712206882; c=relaxed/simple;
-	bh=RfBIVerSVY5ro3iClkCuqoyBsbZfPpMYmGiZieoqKAU=;
+	s=arc-20240116; t=1712207430; c=relaxed/simple;
+	bh=+zx1JhiouGQP7v/b1coKbbm4yO+9KDHNfNLHimV1Sxs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RRk21OWuKexCZxDtqlzKiqDwdw9rsOwzqKIphxEFxJTjbWltrUch6Q8n83viHGFHE/Urd1aRo1O4FaZni45LPhy3/NwDJFqX/vGB1Vd2lzC+gAhsZLM83yDozF+GqTCMjqIUsc3W20Mj2gvlntLHtG1HLSLmTvX1pMyjYUheGVY=
+	 MIME-Version; b=j+AgP4/7cJjOcc0jeX7gIurEsQuaV/ng0Mq+FvX4Ue19Jsc4ljFkzkWowD4KqjSL2caCNWiXGaB38IuCY1q/HhZOrPP2ZCQbpM6tiS9KDmSPISQEX3fwrNSDww1YFujQhW0NbEX/vNVN6D+WW1HDZrOGgnWrgqtWHCMiFbn8+7o=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id AEDF81C0B3E;
-	Thu,  4 Apr 2024 14:01:18 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 26EC61C0399;
+	Thu,  4 Apr 2024 14:00:42 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -80,9 +80,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [PATCH v7 23/37] dt-bindings: display: sm501 register definition helper
-Date: Thu,  4 Apr 2024 14:00:02 +0900
-Message-Id: <dac98a697c8e850054f984964af62a209f241c83.1712205900.git.ysato@users.sourceforge.jp>
+Subject: [PATCH v7 04/37] dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
+Date: Thu,  4 Apr 2024 13:59:29 +0900
+Message-Id: <d50827196f7e1201bb9a62656fb04223a8989f1d.1712205900.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1712205900.git.ysato@users.sourceforge.jp>
 References: <cover.1712205900.git.ysato@users.sourceforge.jp>
@@ -94,94 +94,37 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Miscellaneous Timing and Miscellaneous Control registers definition.
+Renesas SH7751 Interrupt controller priority register define.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- include/dt-bindings/display/sm501.h | 76 +++++++++++++++++++++++++++++
- 1 file changed, 76 insertions(+)
- create mode 100644 include/dt-bindings/display/sm501.h
+ .../renesas,sh7751-intc.h                     | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
 
-diff --git a/include/dt-bindings/display/sm501.h b/include/dt-bindings/display/sm501.h
+diff --git a/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
 new file mode 100644
-index 000000000000..a6c6943642e4
+index 000000000000..0543bd1b895e
 --- /dev/null
-+++ b/include/dt-bindings/display/sm501.h
-@@ -0,0 +1,76 @@
-+/* SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause */
-+#ifndef __DT_BINDING_DISPALY_SM501__
-+#define __DT_BINDING_DISPALY_SM501__
++++ b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+@@ -0,0 +1,19 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * SH3/4 INTC IPR register offsets (Address / bits)
++ */
 +
-+/* Miscellaneous Conntrol */
-+#define SM501_MISC_CONTROL_PAD_24	0
-+#define SM501_MISC_CONTROL_PAD_12	1
-+#define SM501_MISC_CONTROL_PAD_8	2
++#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
++#define __DT_BINDINGS_RENESAS_SH7751_INTC
 +
-+#define SM501_MISC_CONTROL_USBCLK_XTAL	0
-+#define SM501_MISC_CONTROL_USBCLK_96MHZ	1
-+#define SM501_MISC_CONTROL_USBCLK_48MHZ	2
-+
-+#define SM501_MISC_CONTROL_RFSH_8US	0
-+#define SM501_MISC_CONTROL_RFSH_16US	1
-+#define SM501_MISC_CONTROL_RFSH_32US	2
-+#define SM501_MISC_CONTROL_RFSH_64US	3
-+
-+#define SM501_MISC_CONTROL_HOLD_EMPTY	0
-+#define SM501_MISC_CONTROL_HOLD_8TR	1
-+#define SM501_MISC_CONTROL_HOLD_16TR	2
-+#define SM501_MISC_CONTROL_HOLD_24TR	3
-+#define SM501_MISC_CONTROL_HOLD_32TR	4
-+
-+/* Miscellaneous timing */
-+#define SM501_MISC_TIMING_EX_HOLD_0	0
-+#define SM501_MISC_TIMING_EX_HOLD_16	1
-+#define SM501_MISC_TIMING_EX_HOLD_32	2
-+#define SM501_MISC_TIMING_EX_HOLD_48	3
-+#define SM501_MISC_TIMING_EX_HOLD_64	4
-+#define SM501_MISC_TIMING_EX_HOLD_80	5
-+#define SM501_MISC_TIMING_EX_HOLD_96	6
-+#define SM501_MISC_TIMING_EX_HOLD_112	7
-+#define SM501_MISC_TIMING_EX_HOLD_128	8
-+#define SM501_MISC_TIMING_EX_HOLD_144	9
-+#define SM501_MISC_TIMING_EX_HOLD_160	10
-+#define SM501_MISC_TIMING_EX_HOLD_176	11
-+#define SM501_MISC_TIMING_EX_HOLD_192	12
-+#define SM501_MISC_TIMING_EX_HOLD_208	13
-+#define SM501_MISC_TIMING_EX_HOLD_224	14
-+#define SM501_MISC_TIMING_EX_HOLD_240	15
-+
-+#define SM501_MISC_TIMING_XC_INTERNAL	0
-+#define SM501_MISC_TIMING_XC_HCLK	1
-+#define SM501_MISC_TIMING_XC_GPIO	2
-+
-+#define SM501_MISC_TIMING_SM_DIV1	0
-+#define SM501_MISC_TIMING_SM_DIV2	1
-+#define SM501_MISC_TIMING_SM_DIV4	2
-+#define SM501_MISC_TIMING_SM_DIV8	3
-+#define SM501_MISC_TIMING_SM_DIV16	4
-+#define SM501_MISC_TIMING_SM_DIV32	5
-+#define SM501_MISC_TIMING_SM_DIV64	6
-+#define SM501_MISC_TIMING_SM_DIV128	7
-+#define SM501_MISC_TIMING_SM_DIV3	8
-+#define SM501_MISC_TIMING_SM_DIV6	9
-+#define SM501_MISC_TIMING_SM_DIV12	10
-+#define SM501_MISC_TIMING_SM_DIV24	11
-+#define SM501_MISC_TIMING_SM_DIV48	12
-+#define SM501_MISC_TIMING_SM_DIV96	13
-+#define SM501_MISC_TIMING_SM_DIV192	14
-+#define SM501_MISC_TIMING_SM_DIV384	15
-+
-+#define SM501_MISC_TIMING_DIV336MHZ	0
-+#define SM501_MISC_TIMING_DIV288MHZ	1
-+#define SM501_MISC_TIMING_DIV240MHZ	2
-+#define SM501_MISC_TIMING_DIV192MHZ	3
-+
-+#define SM501_MISC_TIMING_DELAY_NONE	0
-+#define SM501_MISC_TIMING_DELAY_0_5	1
-+#define SM501_MISC_TIMING_DELAY_1_0	2
-+#define SM501_MISC_TIMING_DELAY_1_5	3
-+#define SM501_MISC_TIMING_DELAY_2_0	4
-+#define SM501_MISC_TIMING_DELAY_2_5	5
++#define IPRA			0
++#define IPRB			4
++#define IPRC			8
++#define IPRD			12
++#define INTPRI00		256
++#define IPR_B12			12
++#define IPR_B8			8
++#define IPR_B4			4
++#define IPR_B0			0
 +
 +#endif
 -- 
