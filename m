@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CB5116DEAC;
-	Fri,  5 Apr 2024 13:40:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84FC859B45;
+	Fri,  5 Apr 2024 13:41:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712324406; cv=none; b=MiI1oesAjwbAf19Lt1YSt25t9jh+UAhCDOo4FA452v+8DdCF6qlMVaU2aHUIt2uPScp2zKYVLnrTDzNQA197QbfF2wo/K03uLfiC8RmNjjTSKLoLZzmx/WHQDIHCSCkNWeIRRUarQnXql/qrzuMFRDT6u/0CxNgF4hoQBxm3DrE=
+	t=1712324488; cv=none; b=TE2dVF8BLhqkGMEjl2gpv4jCQR2W3cE3DvqngYq1lEpGKX6GKrglNpWFCsdr0qRXj/mDCOg2nz55AIgcAbjQojvbHW8v056mdLF5SkOrrNZXtBXw9M23xQq4xCfcZZZJh/Ba27oREDGp8BURBiW8TMtfMrUyJRjHS3H0w8KPofc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712324406; c=relaxed/simple;
-	bh=3at59mEmgC+L0KoA8pMOqcydnzZkiW0Wf9PDxwZlAb8=;
+	s=arc-20240116; t=1712324488; c=relaxed/simple;
+	bh=V+Xyb/jwNJsEvKzPZ1fkCMpDaQQ/EP8zA4y0v+msi18=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gql3dMKztBmTXvrCqe4PkEyZEH8GnBpTdckDwI6zMMYQQ46OVeNHq1OSehRHsGgT9+6h6KxwG0jh48LIh678GOhRMqWJgOxP8FyNAu7z+1EIKagp4mPly3M/5SMsUoAYJDXfkpem+In3yb/sgwr/wJm41pgPb3DmXDgDWkoEtsc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PGDRvRl0; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=nhvmxbW7sSScOfAyqu/tM31k4lEPgyAIfNdXW8ZUtK30hgFtXbkZLz1vmBkkEzUTJP+HM60e1G4oRM276ssKw6X1V17CKoiMhTck9M3Y6+Xz9U+ksaCq4hV8Pg84sPm/WSFDwI4Jg+qwKsAavNPGJnQqk/2195LG/b55nUtSOe4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KIFGpFry; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PGDRvRl0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3F528C43390;
-	Fri,  5 Apr 2024 13:40:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KIFGpFry"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55874C433F1;
+	Fri,  5 Apr 2024 13:41:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712324405;
-	bh=3at59mEmgC+L0KoA8pMOqcydnzZkiW0Wf9PDxwZlAb8=;
+	s=k20201202; t=1712324488;
+	bh=V+Xyb/jwNJsEvKzPZ1fkCMpDaQQ/EP8zA4y0v+msi18=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PGDRvRl0Ip++MuCGskt5HMFYe9MozdxozZ/cROLlrICeVbR3g7aivBcsEW7CHAxYB
-	 YqCiKc2PnSDxylDO2z8Bb/ctA9OqSNBotw5PcLgXEj7Dgo5rZnGlzQfI5hWghzbEVR
-	 ulz0dEMODvuGx51/CuKJ8FO2kOz/+gTTgFhHthWEe/cfU45jmcaqPb04+zY5yaH7Y3
-	 mBYGtjp4aLn0SjC9++qDkcJoqkosFnhcoHzxTb7T7HMssuNHyU/bVbib6ZqqTccw+d
-	 /vlQBy+zi826O80lNPJ+2Pxb7CQIWQPX8dwx1DKU64mNVja3RhmfZHouIILLJ/iHux
-	 wGUgTN4iKtdtg==
-Date: Fri, 5 Apr 2024 15:39:58 +0200
+	b=KIFGpFrycHM2ymqjL7xxbKsG27dgV8+Smtj/IGt6XTZQ7czeCZrCXeSAYBRuRzTPn
+	 bI2iQJpYxjeOrbPje0qIVYrmB25ug6nkSjocCpZBtYs130izvlkDakf8zR/lPG7+F2
+	 azDH0tKNAUjyorDkKggL1WJJaWdHhIulBKXZ/Z1rPqpHWMcbfkSUdk7rpk7apy2Jj2
+	 w5MCn5wbZKTPIwX7fkY4jfOZ251RvEYH9t9b9zML8m0o1e2BhGLEt0A1C0sTCpNBaV
+	 vwTle62EpO36T68fkrzfeL9gcKn+pPWNzvax3cWigZQ5c2qS7PrgxQzHCR1gs57pPS
+	 6w+QiZ64eVn4A==
+Date: Fri, 5 Apr 2024 15:41:19 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Cc: Damien Le Moal <dlemoal@kernel.org>,
@@ -43,77 +43,36 @@ Cc: Damien Le Moal <dlemoal@kernel.org>,
 	linux-arm-kernel@lists.infradead.org,
 	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
 	Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Subject: Re: [PATCH v2 06/18] PCI: endpoint: test: Implement link_down event
- operation
-Message-ID: <Zg//LiMg0Wh7LfT8@x1-carbon>
+Subject: Re: [PATCH v2 05/18] PCI: endpoint: test: Synchronously cancel
+ command handler work
+Message-ID: <Zg//fzGM0ptjMM8s@x1-carbon>
 References: <20240330041928.1555578-1-dlemoal@kernel.org>
- <20240330041928.1555578-7-dlemoal@kernel.org>
- <20240403074823.GE25309@thinkpad>
+ <20240330041928.1555578-6-dlemoal@kernel.org>
+ <20240403074702.GD25309@thinkpad>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240403074823.GE25309@thinkpad>
+In-Reply-To: <20240403074702.GD25309@thinkpad>
 
-On Wed, Apr 03, 2024 at 01:18:23PM +0530, Manivannan Sadhasivam wrote:
-> On Sat, Mar 30, 2024 at 01:19:16PM +0900, Damien Le Moal wrote:
-> > Implement the link_down event operation to stop the command execution
-> > delayed work when the endpoint controller notifies a link down event.
+On Wed, Apr 03, 2024 at 01:17:02PM +0530, Manivannan Sadhasivam wrote:
+> On Sat, Mar 30, 2024 at 01:19:15PM +0900, Damien Le Moal wrote:
+> > Replace the call to cancel_delayed_work() with a call to
+> > cancel_delayed_work_sync() in pci_epf_test_unbind(). This ensures that
+> > the command handler is really stopped when proceeding with dma and bar
+> > cleanup.
 > > 
 > > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > 
-> This patch is already part of another series I posted [1] and under review. So
-> this can be dropped.
+> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 > 
 > - Mani
 > 
-> [1] https://lore.kernel.org/linux-pci/20240401-pci-epf-rework-v2-9-970dbe90b99d@linaro.org/
-
-Mani, your patch does not use _sync(),
-so I don't think that we can simply drop this patch.
-
-
-Kind regards,
-Niklas
-
-> 
 > > Reviewed-by: Frank Li <Frank.Li@nxp.com>
 > > ---
-> >  drivers/pci/endpoint/functions/pci-epf-test.c | 10 ++++++++++
-> >  1 file changed, 10 insertions(+)
-> > 
-> > diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-> > index ab40c3182677..e6d4e1747c9f 100644
-> > --- a/drivers/pci/endpoint/functions/pci-epf-test.c
-> > +++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-> > @@ -824,9 +824,19 @@ static int pci_epf_test_link_up(struct pci_epf *epf)
-> >  	return 0;
-> >  }
-> >  
-> > +static int pci_epf_test_link_down(struct pci_epf *epf)
-> > +{
-> > +	struct pci_epf_test *epf_test = epf_get_drvdata(epf);
-> > +
-> > +	cancel_delayed_work_sync(&epf_test->cmd_handler);
-> > +
-> > +	return 0;
-> > +}
-> > +
-> >  static const struct pci_epc_event_ops pci_epf_test_event_ops = {
-> >  	.core_init = pci_epf_test_core_init,
-> >  	.link_up = pci_epf_test_link_up,
-> > +	.link_down = pci_epf_test_link_down,
-> >  };
-> >  
-> >  static int pci_epf_test_alloc_space(struct pci_epf *epf)
-> > -- 
-> > 2.44.0
-> > 
-> 
-> -- 
-> மணிவண்ணன் சதாசிவம்
+
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
