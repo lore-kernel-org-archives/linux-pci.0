@@ -1,195 +1,115 @@
-Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2111.outbound.protection.outlook.com [40.107.244.111])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4960013A265;
-	Fri,  5 Apr 2024 12:26:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.244.111
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712320013; cv=fail; b=gKKDy3epApRCI2irEkYxp+H0rTU/kDb06A/nXYHl5EqrUONWX+v+oCV2QTG63lDwI8ja4tX+a6WNi4cAqZGV1kQX6knm2/IHGkKcqC+Rkaw/SuQUMjOgToDsCA+m6MN+7NYBamTxdTvjEtRNZPjjJlujBLRZZUU9cuWey6LuplE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712320013; c=relaxed/simple;
-	bh=jFNo1EimX1/H8fQ77ZwGSxyTySkbcMg4tJqnSziyhgk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=HMYzSF3q5wusA8MOXa/1Y222Ah8Am71I+Owdq7a2SbEUImVJt+vnNTnGM3Uf5idTZg0tTw9yRoUMjPMA6OayP/5ycB69KRBaDykKDYuu+Zoze04pDiOgBZ25ggqkaIwg/Q4K3YSfrwheNZ5UIXKxyOYx+wyozrDE1gYIKeDT+rU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=sOPDBchf; arc=fail smtp.client-ip=40.107.244.111
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="sOPDBchf"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=leRL43DRIoUbz7/HhcigfutT4//ZxQOKgeNxT+VvYQNhCs54OE3b6SmWiXGd5cFLn77tojjFstKQVHImzFcAj6yP4zRCVs4i4og3YwpDFnmeePmlHfk5T7rKBd0gYlACuUaZPRZHafc4CS56tugSzqWdFzjg9jptXYlcveZMjYqplds/yr5tRD3dIedGGVzmGpnA21g2OFpwOWmKQ4J81k1+Z88aj7rTpQ7PVjb3deDDBgYAJJBu6ynqZS45SVjAT8SIAWgzfNLXOUiiSDxWdZF0m+AM8omPcESw357sSTJrsG09lQOSdk0H0u++tYav3TPv57ZPxBUW1hm9jbKSXA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=tA+NsjcRahzf1BXehG4Lp4fBIwRKd8Af3/diB9e5oqE=;
- b=k2UTc8M9gBsUnExHzHnBsTdtwCgSLT1HMFR5byBUDxrk2WH1NZzqqAc42juakIpYw6juA+DuTaEKEojTWFyNbqJZKWI0PSThd3Yn5PRCdfzUEM92a0oYgmaJBhId/jqZ0lTkAZJrH7Fmj8BD+RJQtDDl3DA+ZDizrmMWpsZRCDFa1KvUJGpHobA1ISIbeiOlg93wujOskfF2NQFa9z9WQ2KhqZoLkLxAXVjJYDbkT2M4xO1gV2AR0/oMiL3DY5T2Y/sJlZ9ZGwKmC0u7gyfL3z4LNHT+Nxl4Mz5qi4EcDew/M3OKFCl4nP7SYxS+uPgtRM6J8kmChBrCiy4JyEbLvA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=tA+NsjcRahzf1BXehG4Lp4fBIwRKd8Af3/diB9e5oqE=;
- b=sOPDBchfJ89E2Wx2Dk2RiQ5vu5NaSUlOjFGdn01KU7JYXhIGMTDEd+O9LBkdVnOQMYSgUcm+Qwizdml4A0cXfpa4M+Kd+3Q+/C3A4dAp/ZH0Jo2gNpHFWCvYzpPa7uY/eTTDCqr4xmAm5+fIC6mu8BmqiaqrBwinZKlcV2B4Qi5Tpz4F/roVcxcMpK9E9xLeqD/GpSOB/Wky1ETBKQH75d1wa/WBH4dhE89chmMkGjD4GuO2pdHaLFkbAlZhlBYgOTtVfXMxsb3D+dzwLzioG1ebm33+yn8gp3VhF/Wbdy1y2bi5mQDtkuzP7I98BhYfDUU5VnF9SBF+ZHpuoVZV9w==
-Received: from DM6PR12MB3849.namprd12.prod.outlook.com (2603:10b6:5:1c7::26)
- by LV2PR12MB5822.namprd12.prod.outlook.com (2603:10b6:408:179::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.54; Fri, 5 Apr
- 2024 12:26:48 +0000
-Received: from DM6PR12MB3849.namprd12.prod.outlook.com
- ([fe80::6aec:dbca:a593:a222]) by DM6PR12MB3849.namprd12.prod.outlook.com
- ([fe80::6aec:dbca:a593:a222%5]) with mapi id 15.20.7409.042; Fri, 5 Apr 2024
- 12:26:48 +0000
-Date: Fri, 5 Apr 2024 09:26:46 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Paolo Abeni <pabeni@redhat.com>
-Cc: Alexander Duyck <alexander.duyck@gmail.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	John Fastabend <john.fastabend@gmail.com>,
-	Jiri Pirko <jiri@resnulli.us>, netdev@vger.kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Alexander Duyck <alexanderduyck@fb.com>, davem@davemloft.net,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [net-next PATCH 00/15] eth: fbnic: Add network driver for Meta
- Platforms Host Network Interface
-Message-ID: <20240405122646.GA166551@nvidia.com>
-References: <171217454226.1598374.8971335637623132496.stgit@ahduyck-xeon-server.home.arpa>
- <Zg6Q8Re0TlkDkrkr@nanopsycho>
- <CAKgT0Uf8sJK-x2nZqVBqMkDLvgM2P=UHZRfXBtfy=hv7T_B=TA@mail.gmail.com>
- <Zg7JDL2WOaIf3dxI@nanopsycho>
- <CAKgT0Ufgm9-znbnxg3M3wQ-A13W5JDaJJL0yXy3_QaEacw9ykQ@mail.gmail.com>
- <20240404132548.3229f6c8@kernel.org>
- <660f22c56a0a2_442282088b@john.notmuch>
- <20240404165000.47ce17e6@kernel.org>
- <CAKgT0UcmE_cr2F0drUtUjd+RY-==s-Veu_kWLKw8yrds1ACgnw@mail.gmail.com>
- <678f49b06a06d4f6b5d8ee37ad1f4de804c7751d.camel@redhat.com>
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <678f49b06a06d4f6b5d8ee37ad1f4de804c7751d.camel@redhat.com>
-X-ClientProxiedBy: BLAPR03CA0044.namprd03.prod.outlook.com
- (2603:10b6:208:32d::19) To DM6PR12MB3849.namprd12.prod.outlook.com
- (2603:10b6:5:1c7::26)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9450316DEA5;
+	Fri,  5 Apr 2024 12:32:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712320332; cv=none; b=oin4xQYxqoesX1p7kEm88v1LcIh7REm/H1Rzpb9u+5UluRhArQVu0C6F+EwJ4U5jRNnSUQA5wFLx+QDL2gItMyysVApvupI2zBKHch2nkVx9Qe3zwHJRr294onE7ngZYvGsvxvzuo7ktMiwi1BHNkjXxsUkwxu4NmzDKUeCOCSM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712320332; c=relaxed/simple;
+	bh=RB1Wd/l8LoElaNdtvFRK6lkrvSeTO+EqCHYvOY2uo9k=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Vcd53BblRdWhkH3/OY2IylBbqdArQoDEDQAU89QBqfVv7YYdWsINkBCHusfKJcP3zgsQdZ2CCr85kOcRGLKq4Aw9se/dtPDwa1lwgpJqEJZXS/2eeMzDv2PUpKSeP7dzunik+V5eB0QO5QZVfX5OsvxsbEI7/fJu/cmUEWwciws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-dcc71031680so2104444276.2;
+        Fri, 05 Apr 2024 05:32:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712320328; x=1712925128;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/bPulDFyqKcNHOqZbTas5oGwjflVlb0IvXxADWNRbac=;
+        b=MPlvI2s8USkd0KUwDLyzT+44IipyacqoM3eSrOXEnaE+gq/5eri1jvCAFInTymt60z
+         REU/Xv5JsI4t7qr17Xnw+FIDmUxaLz7gsDwdCATDwL4saADckMYtHthVLdhZjH4WnVkI
+         HNmDc5maAvcDHpP8QIc+gi4SIJ7qQHSvwOpCpAw14M34yvFCdM4lTsL//m/wELHt3DrF
+         xCzxk0tHygg8yKgui6SNjP9VEBw9MCjbiZR9HYwoxG9s1tsg1f3UKX2ja26i2NdU7l6K
+         IF6LPaov4qX7thKBssjGWuISdK8f4InaEyHqbsyt6dnrBeG3EEVVFTShBlccg7+s9F3F
+         AZVQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWL5nURRwxemR+6FpvigBrmySRwBvKpTecJEy/+pr7a/EPAndTOjR1HayG/9Cwqlxk1bQHM9EH6lT/rfRGBLnCz1SSwBQ03t9FaEezpmkYkReHuLJhfU93oj3ltN6sRC0VvGpnpDpeqITVL8H3noqnNYVa7xvMWbD8HbQA0geo9wf9XXi30uxCvWsVdrgft6rHgcKw/6kreLrVOWUp0Zj7Ww+cJNduKmoj9PlChpSP6qyq+Yvwt4/i9VTAbDYg1js+vlRnsdYmQaXBe2BEK6VrEXkOIVoX48ghA6ij+LwxKLjzxYsUo9NLl9GydVMZRYi0SIQA0UqQ8fDy/6FdrKGj7Qx59s7lf0Ovu443QwAKZhY05OJRpi2g=
+X-Gm-Message-State: AOJu0YzEmVMQJ17wtrOGRxANtnDxvTZ4n3IIxa58hBJWlw07SqnqyyIe
+	Vhmkx6r/UINMq4po4OpwPVcvZiW/5XlcYCRpEU6lwQK/5/+1wIQOtr6wJq+Az4k=
+X-Google-Smtp-Source: AGHT+IGgevHEpkwMOS5F8pl4dvxc5ZuXVYL1BPsil8rGe3AWrEo/ncgGoEdKh0U9XNWHI/dLAToN5Q==
+X-Received: by 2002:a5b:ac6:0:b0:dc6:d457:ac92 with SMTP id a6-20020a5b0ac6000000b00dc6d457ac92mr984772ybr.31.1712320327715;
+        Fri, 05 Apr 2024 05:32:07 -0700 (PDT)
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com. [209.85.128.181])
+        by smtp.gmail.com with ESMTPSA id h4-20020a25b184000000b00dcf35be9f51sm284055ybj.24.2024.04.05.05.32.06
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 05 Apr 2024 05:32:07 -0700 (PDT)
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-6151d2489b4so23214527b3.0;
+        Fri, 05 Apr 2024 05:32:06 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWCCz7fA2Scgs08FC+THMGTgCJv9gl18fLbu1NXBD3XzOowX1J9JcPetsrnxejSXGejHF+zEgnxKFVCryqhlpXFJLiq8yL9Ok95qeT9dVG16h9hICUfo2sOC80D4xpJv5saikGuc+5vBPGB+DmhdCAI044MiNxsoco8Ipre4i6/Er5NMsFq5TejWgZ2ESX8iTy19C+7OO8WOuJHYlCQwAujhrufjL8tccWpg7TajjzsOoIJty+1t8QPiM4CJwBktcNvAvplAFecd2lTEZ8bE1bpEpqLs9jcitN5ETCzEYTVp5luw4SM0BwiTPXmMp8SZwD8F/oGc02IUWHwYVhgsbMX3G+BhIwkQGWfTox/izi0nC6dt/xETRw=
+X-Received: by 2002:a5b:4ca:0:b0:dcd:19ba:10df with SMTP id
+ u10-20020a5b04ca000000b00dcd19ba10dfmr1040280ybp.56.1712320326217; Fri, 05
+ Apr 2024 05:32:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR12MB3849:EE_|LV2PR12MB5822:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	c03anaC0HXoFwsOFBWVxY/zNjIYxDhNiM0BC/9PYwQasmT3IF9zYlBh/Crh8RTnl1vd8spceXQ7exnkZrbjpgcQkCgixaeV8SAEPCBaMLYcvBEzuNMMkuwctl9d20Jcjiv8Jz2oBuTWooPh3MbZ8LRc1G5TVFdNRNPj7pRAMf+GrOvkX0eL/BRh+p94BdnmWftJ5VL1CZ8hR5SMp/S0LitNGPkwP47phz1lIaxMJUzxsrPGwzrrd156HoGnd2owVNSjOjO3EJfp9wdv5IVVcoL0+RgOFE1qAwHqnDyF0cLQaB3U2Yxw0GoFjlsAWIsO4BSt753wi6LitW80B9nZX71D1GHKcX0SlDfB8ekek5fSR5wJbkwTrD+1Kiy9/EwFRzsPfb7t+DtO1WqJJolBXawTbDoIp32Jn40aJO21vpcmiOP1pP2ExC6pag+WEsvDZhU8XOGnGCM57NzlLzJLhxfP3WKBEAI6N6PTZWLhsjBAiMrYh6HnUiaOLFZ057yzf7DGxX5+dz+ungoIVoSmZzgAMcwC/DbaB0b30UXuZ/2gC+3oz+0xlm2yYIZ1vrnc64J2miEVmCS8xI/+bbrbqnkA+DMCzRt3+znOOkmJmZgevSehg/kHutU1LoAYY3k/XzO22F9YbSIcRpfKC6D+mlRhw3IGcshzCRz+0oF6CajY=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3849.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(7416005)(1800799015)(376005)(366007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?YU5zUytVU1VpREw4dnF2UThuREphM3U0THg2VTV2VWR5UUhmSkQ4alR3bHg2?=
- =?utf-8?B?N25qcm5HRVRKREllVkF0VXFucEFZWTJyclNUVUhYTFZFRmNMQWVtREswMmVk?=
- =?utf-8?B?eGJKV2lON1IvTzl4ODJLZjJGTFYyOFNTeFJQUlZBMjNKczY4d1VTR0EvVU52?=
- =?utf-8?B?VDArYi9lS0xlZVBzWlNjKzJNd1BZNzZJUjJINXFJcFY1THFveU5oS1hkOThz?=
- =?utf-8?B?RzZqZmw0RW5iemJmNGFMbHcvWU9DemVNV0NZSXpxSm9rVDVNVHl2UHV2SDF1?=
- =?utf-8?B?ZFNmRHJKY2pGR2NFVzFsanhRWis2Zk1jdzZaS1BOMXJCcW8vVkJ4SE9aVDUv?=
- =?utf-8?B?eExLb2gxZjVtT1RhUHhrRzlyYW9lUitLY1NjMHhvVnV2dmlzeGZrckRiSTBG?=
- =?utf-8?B?dVk2Y3paSGEyR1k5c2tPd3NCbDV4MHpwaTQ1OEx3VW1wRXZyN3dlcGpjZ1gw?=
- =?utf-8?B?ZTQwdWx5ajhDRXh0M3ZMbTE2MWp3KzZkaHdwZWJwZWRuWEFBbGRQV0xXaXQw?=
- =?utf-8?B?R2pHT2taQ1RnR2RsUU13K0hxZjVCbzZRYWpPbC8zK09SMG5jMEpPWFllMmR0?=
- =?utf-8?B?dUhKOEMrcEltbDl0eWFNNngzOHlhMkVGRnRwWmdGQTdoQk1KcEtlL2tIN244?=
- =?utf-8?B?N3ExTTBEcE1YL2h5L0ppaFN1ZDEzMnZDaitLbWdkZTJVR0hUemQzUjRlcHZW?=
- =?utf-8?B?bGRqYWZKUjN2Y1VBS1ZZSEM5aWR1M3ZQOTRKY3RyV3BjWGFoTXhYclRzck5i?=
- =?utf-8?B?bXNnZWtSd01QdzB6UzNSRmxYMUcrU0xXbDNFSFRpdlVSd3FCTmdKaTlBbzgy?=
- =?utf-8?B?cFRZWGZhSDB4TDJDYXU5S3RwRVY1ZlNjZ0FLTGRmcWRIWVRyd2EwSTdvcU5v?=
- =?utf-8?B?RmpwTkNxMmZkUFlVYWtHdFh3NGsyTFFCUmtCS0dzRmF3M29FOW9VNTFXWGxm?=
- =?utf-8?B?bHlrdHJFd29PZVRWQzZTWWYwVVVNc01zWVMyWEMvWkdycHBzVTNxNXpkOGxJ?=
- =?utf-8?B?c1F1VHEyUlVvU00rZ2c1TGNPTUtrc2FIdFBtZVVXOHB3UXVmRmwrSFBFbGZm?=
- =?utf-8?B?V3NJVG82dWFjSm9DU2kxdUd3VHdzNHZHbnhrSERMMS8xUFRpU0xlWEp5ejdK?=
- =?utf-8?B?L0ZQcDY1Wk9EdW53ZGpCaGE0Z0ExS21tSy9YY3lrTzBMMmZQcmNQeUdaVnBa?=
- =?utf-8?B?dTZlOWM3Ynpld1VMM0hYMFhIS0JNZ1o0R002ZXZ0eGdVdFBzdXA5ZEJ5b0FR?=
- =?utf-8?B?M211OUdLMHc1UEMwVzBxZk4xbkpvMjJnT1FTZ3hzQlA0MmpTcEhqZkx0VHN0?=
- =?utf-8?B?SFErWmRRbnJOM2J4NFVnWEFHWjV0dGRKTnFMOFVvQlZYaFRuZ0JWTWJxRXhh?=
- =?utf-8?B?cnN1UkU2SE5QTmo2SzdmT0NLTzRWRzVhTC8zTVNuS1VkemxoUEtlT09yRjdD?=
- =?utf-8?B?cENtMEkvaG10OHlSZGtRWnFYTTMyOFZqNm9MRFhMbjhyR0JqUmcwemNoY0Vv?=
- =?utf-8?B?VlhRSkZSWitmK1Jnc0p1S2ZNZnFtQkRPS3lEdWFWM0V2M0VYUGVpczA4Zllp?=
- =?utf-8?B?VVhDV0wrRFhxNmFhYndVQkhNV3NRNWQxdk5vWE9mRERVOGlFU0xrclJnL2x6?=
- =?utf-8?B?bTNlbGFkSjB0elhiVFA4STJQVTdmejlIYzF4R0U2Z2NnR1lteXgwanIyVVlR?=
- =?utf-8?B?S3l1MVpCMmk5NTR0bHVFSDFaS1d4TTFSREE5cHZDMFA1cUNnaXdkbzcveDk1?=
- =?utf-8?B?T1gxY1JTUmpTKzZENHVvNzZQMTVWLzZpNUtMTFlWbW1PRmJIVlVtYTdIdWtq?=
- =?utf-8?B?a1V4ak9RM3pGVVRRK1Vyd2RKck5peFNRVlUrTXpIWVBRUWNzaldsM0NDcEht?=
- =?utf-8?B?aG82aEZ2VVNPUWxZVENidVVqbkNPUzdKSnZqc0I3OXZobkV4MXhxZjhHZ0hR?=
- =?utf-8?B?Q3VEUG1CT2VkM3h3UlNrdUk0MUpOUzRIUmkrUTRLWHUrWHRMY0c4ZzByamM4?=
- =?utf-8?B?K1AzOEQ2S1hhN1JZNk1GYW5URVJQL1hyUXFqOWtSNDI5bk5kd3BkSldWTWtm?=
- =?utf-8?B?ayt6TTlaVXI1SVVQZExVTFVEYXBMWkh4SFM0Y0lIZFQvVU5RK3BTYlRkNHJm?=
- =?utf-8?Q?fetLzWZn+XrHyx8Jo7aWUCRYE?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 24c5385f-1dab-4251-c291-08dc556ba99e
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3849.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Apr 2024 12:26:47.9672
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DCa5Xujd+Mo8j/n+vqeSN/Be1omalOcJRZ9baLVaJj2mffh3NADyglhHajn1DwIT
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV2PR12MB5822
+References: <cover.1712207606.git.ysato@users.sourceforge.jp> <4ac65d0f311e890c1ca92bf057c70954ec7ac351.1712207606.git.ysato@users.sourceforge.jp>
+In-Reply-To: <4ac65d0f311e890c1ca92bf057c70954ec7ac351.1712207606.git.ysato@users.sourceforge.jp>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Date: Fri, 5 Apr 2024 14:31:54 +0200
+X-Gmail-Original-Message-ID: <CAMuHMdXvL0fWGrn+KNDvXcioYnY-=3WmGtcdFkC82L7tL__+wA@mail.gmail.com>
+Message-ID: <CAMuHMdXvL0fWGrn+KNDvXcioYnY-=3WmGtcdFkC82L7tL__+wA@mail.gmail.com>
+Subject: Re: [RESEND v7 09/37] dt-binding: Add compatible SH7750 SoC
+To: Yoshinori Sato <ysato@users.sourceforge.jp>
+Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
+	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Geert Uytterhoeven <geert+renesas@glider.be>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
+	Magnus Damm <magnus.damm@gmail.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, 
+	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
+	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>, 
+	Heiko Stuebner <heiko.stuebner@cherry.de>, Shawn Guo <shawnguo@kernel.org>, 
+	Sebastian Reichel <sre@kernel.org>, Chris Morgan <macromorgan@hotmail.com>, 
+	Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, 
+	David Rientjes <rientjes@google.com>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
+	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
+	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
+	Kefeng Wang <wangkefeng.wang@huawei.com>, Stephen Rothwell <sfr@canb.auug.org.au>, 
+	Javier Martinez Canillas <javierm@redhat.com>, Guo Ren <guoren@kernel.org>, 
+	Azeem Shaikh <azeemshaikh38@gmail.com>, Max Filippov <jcmvbkbc@gmail.com>, 
+	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
+	Herve Codina <herve.codina@bootlin.com>, 
+	Manikanta Guntupalli <manikanta.guntupalli@amd.com>, Anup Patel <apatel@ventanamicro.com>, 
+	Biju Das <biju.das.jz@bp.renesas.com>, 
+	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
+	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 05, 2024 at 09:11:19AM +0200, Paolo Abeni wrote:
-> On Thu, 2024-04-04 at 17:11 -0700, Alexander Duyck wrote:
-> > Again, I would say we look at the blast radius. That is how we should
-> > be measuring any change. At this point the driver is self contained
-> > into /drivers/net/ethernet/meta/fbnic/. It isn't exporting anything
-> > outside that directory, and it can be switched off via Kconfig.
-> 
-> I personally think this is the most relevant point. This is just a new
-> NIC driver, completely self-encapsulated. I quickly glanced over the
-> code and it looks like it's not doing anything obviously bad. It really
-> looks like an usual, legit, NIC driver.
+On Thu, Apr 4, 2024 at 7:15=E2=80=AFAM Yoshinori Sato
+<ysato@users.sourceforge.jp> wrote:
+> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 
-This is completely true, and as I've said many times the kernel as a
-project is substantially about supporting the HW that people actually
-build. There is no reason not to merge yet another basic netdev
-driver.
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 
-However, there is also a pretty strong red line in Linux where people
-belive, with strong conviction, that kernel code should not be merged
-only to support a propriety userspace. This submission is clearly
-bluring that line. This driver will only run in Meta's proprietary
-kernel fork on servers running Meta's propriety userspace.
+Gr{oetje,eeting}s,
 
-At this point perhaps it is OK, a basic NIC driver is not really an
-issue, but Jiri is also very correct to point out that this is heading
-in a very concerning direction.
+                        Geert
 
-Alex already indicated new features are coming, changes to the core
-code will be proposed. How should those be evaluated? Hypothetically
-should fbnic be allowed to be the first implementation of something
-invasive like Mina's DMABUF work? Google published an open userspace
-for NCCL that people can (in theory at least) actually run. Meta would
-not be able to do that. I would say that clearly crosses the line and
-should not be accepted.
+--=20
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
+.org
 
-So I think there should be an expectation that technicaly sound things
-Meta may propose must not be accepted because they cross the
-ideological red line into enabling only proprietary software.
-
-To me it sets up a fairly common anti-pattern where a vendor starts
-out with good intentions, reaches community pushback and falls back to
-their downstream fork. Once forking occurs it becomes self-reinforcing
-as built up infrastructure like tests and CI will only run correctly
-on the fork and the fork grows. Then eventually the upstream code is
-abandoned. This has happened many times before in Linux..
-
-IMHO from a community perspective I feel like we should expect Meta to
-fail and end up with a fork. The community should warn them. However
-if they really want to try anyhow then I'm not sure it would be
-appropriate to stop them at this point. Meta will just end up being a
-"bad vendor".
-
-I think the best thing the netdev community could do is come up with
-some more clear guidelines what Meta could use fbnic to justify and
-what would be rejected (ideologically) and Meta can decide on their
-own if they want to continue.
-
-Jason
+In personal conversations with technical people, I call myself a hacker. Bu=
+t
+when I'm talking to journalists I just say "programmer" or something like t=
+hat.
+                                -- Linus Torvalds
