@@ -1,62 +1,25 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C870812EBEE
-	for <linux-pci@vger.kernel.org>; Fri,  5 Apr 2024 07:40:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 386A413D265;
+	Fri,  5 Apr 2024 08:23:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712302858; cv=none; b=L+B8TX2NnujV2woh/uTMeMggqPG6DnaAZbLiTXZyzX+PWSk+92nSuxqlmyjqxUys8w2KEAByVUNwXb9bWYcjRDe2S79AxZ6xvi+B8AhsXNBPpb9ejCW75ydokZAadwO13zZz5u0RSCswk9IAhgp8ckE8lxUHo8WJfDQvfSwis9s=
+	t=1712305401; cv=none; b=tlOKdKtEiLcjUQ00iumhcrifini8J4mpXJg38Hdff3QO8sYnAMXtSsiXqsu4dNlOWz0Kae7E7BoFRhsLD17+eWfNJz/HtRbpJGXq6jy6VO7PyfSNYbxSRoScCxLHPw0JKw7zx8wtUUXcObUt+EYCfEy7EWGpnltwB6KhUvrH77k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712302858; c=relaxed/simple;
-	bh=TlV2tfNsy0zEXW78TY+Y9hKkNagEtGiiitnOqeo8Nr0=;
+	s=arc-20240116; t=1712305401; c=relaxed/simple;
+	bh=XD5Gi3+swQNJ7msa6Jo0RxLzsMbB8WlGIPxGLCNByJw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nXQTqgryQ/PLeMrRKUCNxvu2KcU5VCv4kN/zsyRNDGUMiu9HKscyoUU89jx2eD769MEPoK0CzMMkKwX2+FdcTwpZBFwLd+J6TlJ53SDTcFaCIKAWaHpzN2odBOqeIDtpwzMoXJf1UMMGwWQ99byUVcq4KJxaeMwnKrcmKTN6icM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RHrlE0Ny; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RHrlE0Ny"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-6ecee1f325bso1404133b3a.2
-        for <linux-pci@vger.kernel.org>; Fri, 05 Apr 2024 00:40:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1712302855; x=1712907655; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=i1a6gAQh2PhrhPbXculVO9O3NtZn8zLGPDuyjie7Sr0=;
-        b=RHrlE0NyBj9DZq6tajOxAjVnUDk3t2Kjq/T3h7fg6hknd8mVeNu//PpgZrEdiGR7LW
-         /1NdqJmH1sZtfqKdOVSPtDSDsc1nHYnS04SXAFpKW50x3G4npFMfSYxary7bRX6aWROP
-         RIEy93zhapai3yWdwkfIWFc4ur/qUQp2VxhIcw9EonqjosCu0a7cPG/pAqc/FkaEOINF
-         TlrILtZEGaGvoAUPIfze3BtRapD6GX27RE0SGe63KEZrg3u78GyNSZlrPe7NRQIIEDxu
-         IBAQ7hlv+R6hpYqvG/4EqucG/KctvaMZIz9VwKNCsj9piInQcExEFjH+4g1bY0qZSBEn
-         /8ww==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712302855; x=1712907655;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=i1a6gAQh2PhrhPbXculVO9O3NtZn8zLGPDuyjie7Sr0=;
-        b=FchLKazy2watV6HNI+xG+omvZtLLfTdq8C9PvIaa4VRyx2kwFyVEyP74uQ305w/ldA
-         jOHqlxyeKAVU9ON8TS4FErBwzzd+KbzA6JOHDxODOa2A9y7uaiu/aBXTpRu0ad5l1Zqw
-         eRrJhz35OzVInH0HAD7y3ZldzSFNHegRgKBXRqZ0MS2XPj308ABjxdzA8RgRjzsveUzf
-         i2UhpX0g7y7rVVmmiuDs6xQIoyYJWZUooRWmZIUx8QsoUOpDcUGxIGyfEbVQ6NX4W6zN
-         nYvRh1MFYyHL993B9M/a/n2OQQKq/7ybilJdTsjNzsHp2XZg2+wSLYL2UR+8kwgLfJTF
-         uGgg==
-X-Forwarded-Encrypted: i=1; AJvYcCVLd0qGveHR0PCjDdBqe949xzzdL0zVb5maUeA1cyyZczKvUG1UfLX0qHeI4mB3C6ms6hinFAVm4MMsNlR3LC9rWjt94rcJjcID
-X-Gm-Message-State: AOJu0YwUAPPLmjsR5VzGezghIExnXQarn6P+eYEhYAXm8D/RzA+IB5Ig
-	3rOgyXR56A9TKhNULXJJGRQeQc5V+uSc5zDS5I7aXkmQMDB4MokbVDYqLmKuSg==
-X-Google-Smtp-Source: AGHT+IGQzPSdv4xCm9KGESdaqlLSMA46b1EcN3+jKD7raTmoSF2Zx46In/rvazfGN0hikiiMIMSQ5g==
-X-Received: by 2002:a05:6a00:3c8c:b0:6ea:b48a:f971 with SMTP id lm12-20020a056a003c8c00b006eab48af971mr941273pfb.2.1712302854931;
-        Fri, 05 Apr 2024 00:40:54 -0700 (PDT)
-Received: from thinkpad ([120.60.67.119])
-        by smtp.gmail.com with ESMTPSA id q26-20020a63505a000000b005df41b00ee9sm820523pgl.68.2024.04.05.00.40.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Apr 2024 00:40:54 -0700 (PDT)
-Date: Fri, 5 Apr 2024 13:10:44 +0530
+	 Content-Type:Content-Disposition:In-Reply-To; b=U3B5MUQeJqCNhUnPmR6rTqmjq6ico68nzdbfBl3O73WojYLcUQUoQbI2sX0FpoiI2QUhwnf1DC3F18k81aksCcNw7NrAd/RshetyalKqet8O7u6DQz/tamWWVMo+sq0ehCDxbt9ygJw6varJEgRACdRfGCin2QiJorutziFi+2s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6B7BBC43390;
+	Fri,  5 Apr 2024 08:23:14 +0000 (UTC)
+Date: Fri, 5 Apr 2024 13:53:06 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Konrad Dybcio <konrad.dybcio@linaro.org>
-Cc: Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+To: Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
 	Bjorn Andersson <andersson@kernel.org>,
+	Konrad Dybcio <konrad.dybcio@linaro.org>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
 	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
@@ -70,12 +33,13 @@ Cc: Krishna chaitanya chundru <quic_krichai@quicinc.com>,
 	linux-kernel@vger.kernel.org, vireshk@kernel.org,
 	quic_vbadigan@quicinc.com, quic_skananth@quicinc.com,
 	quic_nitegupt@quicinc.com, quic_parass@quicinc.com
-Subject: Re: [PATCH v8 2/7] arm64: dts: qcom: sm8450: Add interconnect path
- to PCIe node
-Message-ID: <20240405074044.GC2953@thinkpad>
+Subject: Re: [PATCH v8 7/7] PCI: qcom: Add OPP support to scale performance
+ state of power domain
+Message-ID: <20240405082306.GD2953@thinkpad>
 References: <20240302-opp_support-v8-0-158285b86b10@quicinc.com>
- <20240302-opp_support-v8-2-158285b86b10@quicinc.com>
- <4bd2e661-8e1e-41ff-9b7f-917bb92a196d@linaro.org>
+ <20240302-opp_support-v8-7-158285b86b10@quicinc.com>
+ <20240304180506.GE31079@thinkpad>
+ <c74e326e-285d-854e-5e54-329079152df2@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -85,42 +49,86 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <4bd2e661-8e1e-41ff-9b7f-917bb92a196d@linaro.org>
+In-Reply-To: <c74e326e-285d-854e-5e54-329079152df2@quicinc.com>
 
-On Wed, Mar 06, 2024 at 05:04:54PM +0100, Konrad Dybcio wrote:
+On Tue, Mar 05, 2024 at 04:44:20PM +0530, Krishna Chaitanya Chundru wrote:
 > 
 > 
-> On 3/2/24 04:59, Krishna chaitanya chundru wrote:
-> > Add pcie-mem & cpu-pcie interconnect path to the PCIe nodes.
+> On 3/4/2024 11:35 PM, Manivannan Sadhasivam wrote:
+> > On Sat, Mar 02, 2024 at 09:30:01AM +0530, Krishna chaitanya chundru wrote:
+> > > QCOM Resource Power Manager-hardened (RPMh) is a hardware block which
+> > > maintains hardware state of a regulator by performing max aggregation of
+> > > the requests made by all of the clients.
+> > > 
+> > > PCIe controller can operate on different RPMh performance state of power
+> > > domain based on the speed of the link. And this performance state varies
+> > > from target to target, like some controllers support GEN3 in NOM (Nominal)
+> > > voltage corner, while some other supports GEN3 in low SVS (static voltage
+> > > scaling).
+> > > 
+> > > The SoC can be more power efficient if we scale the performance state
+> > > based on the aggregate PCIe link bandwidth.
+> > > 
+> > > Add Operating Performance Points (OPP) support to vote for RPMh state based
+> > > on the aggregate link bandwidth.
+> > > 
+> > > OPP can handle ICC bw voting also, so move ICC bw voting through OPP
+> > > framework if OPP entries are present.
+> > > 
+> > > Different link configurations may share the same aggregate bandwidth,
+> > > e.g., a 2.5 GT/s x2 link and a 5.0 GT/s x1 link have the same bandwidth
+> > > and share the same OPP entry.
+> > > 
+> > > As we are moving ICC voting as part of OPP, don't initialize ICC if OPP
+> > > is supported.
+> > > 
+> > > Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> > > ---
+> > >   drivers/pci/controller/dwc/pcie-qcom.c | 81 +++++++++++++++++++++++++++-------
+> > >   1 file changed, 66 insertions(+), 15 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> > > index a0266bfe71f1..2ec14bfafcfc 100644
+> > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+
+[...]
+
+> > >   static int qcom_pcie_link_transition_count(struct seq_file *s, void *data)
+> > > @@ -1472,8 +1491,10 @@ static void qcom_pcie_init_debugfs(struct qcom_pcie *pcie)
+> > >   static int qcom_pcie_probe(struct platform_device *pdev)
+> > >   {
+> > >   	const struct qcom_pcie_cfg *pcie_cfg;
+> > > +	unsigned long max_freq = INT_MAX;
+> > >   	struct device *dev = &pdev->dev;
+> > >   	struct qcom_pcie *pcie;
+> > > +	struct dev_pm_opp *opp;
+> > >   	struct dw_pcie_rp *pp;
+> > >   	struct resource *res;
+> > >   	struct dw_pcie *pci;
+> > > @@ -1540,9 +1561,36 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+> > >   		goto err_pm_runtime_put;
+> > >   	}
+> > > -	ret = qcom_pcie_icc_init(pcie);
+> > > -	if (ret)
+> > > +	 /* OPP table is optional */
+> > > +	ret = devm_pm_opp_of_add_table(dev);
+> > > +	if (ret && ret != -ENODEV) {
+> > > +		dev_err_probe(dev, ret, "Failed to add OPP table\n");
+> > >   		goto err_pm_runtime_put;
+> > > +	}
+> > > +
+> > > +	/*
+> > > +	 * Use highest OPP here if the OPP table is present. At the end of
 > > 
-> > Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-> > ---
-> >   arch/arm64/boot/dts/qcom/sm8450.dtsi | 8 ++++++++
-> >   1 file changed, 8 insertions(+)
+> > Why highest opp? For ICC, we set minimal bandwidth before.
 > > 
-> > diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-> > index 01e4dfc4babd..6b1d2e0d9d14 100644
-> > --- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
-> > +++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-> > @@ -1781,6 +1781,10 @@ pcie0: pcie@1c00000 {
-> >   					<0 0 0 3 &intc 0 0 0 151 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-> >   					<0 0 0 4 &intc 0 0 0 152 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-> > +			interconnects = <&pcie_noc MASTER_PCIE_0 0 &mc_virt SLAVE_EBI1 0>,
-> 
-> Please use QCOM_ICC_TAG_ALWAYS.
-> 
-> > +					<&gem_noc MASTER_APPSS_PROC 0 &config_noc SLAVE_PCIE_0 0>;
-> 
-> And this path could presumably be demoted to QCOM_ICC_TAG_ACTIVE_ONLY?
+> In OPP we are voting for both ICC and voltage corner also, if we didn't vote
+> for maximum voltage core the PCIe link may not come in maximum supported
+> speed. Due to that we are voting for Maximum value.
 > 
 
-I think it should be fine since there would be no register access done while the
-RPMh is put into sleep state. Krishna, can you confirm that by executing the CX
-shutdown with QCOM_ICC_TAG_ACTIVE_ONLY vote for cpu-pcie path on any supported
-platform?
-
-But if we do such change, then it should also be applied to other SoCs.
+Okay, then this information should be part of the comment.
 
 - Mani
 
