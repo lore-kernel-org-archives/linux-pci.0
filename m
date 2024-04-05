@@ -1,195 +1,276 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA9716D9B3;
-	Fri,  5 Apr 2024 15:18:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B57417BA0;
+	Fri,  5 Apr 2024 15:41:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712330318; cv=none; b=m7yASgKB+8p2KiZcWk40wuig8DbiNudznkoFW/1XHEzUTqDAo+pDtoG62f90Yq3rYvoLBM/20AL4opbth6TW7T7hIdBIt+YaSS53TM7ubyLUqjq38HlQr3SMVeza38xmyg4BMji1THznyesCs/Iai/FH+XXbliFca2mhZD03foQ=
+	t=1712331712; cv=none; b=urHcfTh/lxPsl6PyPCHxNk9sWmoSUlDsUyq/pOAaJzGCE4rEwpB956RD9mzGxb952JTu5ETrS0An6WG0qym2uDQWZZ5zg0MURXqregFuQsRPIHaEu2CsRt/4szqIFoMZmctU5WFcMl7ir6b8OIvRhjPjwcOTcRfpLJa+3jbFtJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712330318; c=relaxed/simple;
-	bh=X6pHevWSssAs9ixG4YxroAR6EPsHtS1VXJB0aVPbpis=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=aNPgq2kajF2Z95/xyemeVzE8jJT9JuenRIp3tTJ0JNofaqG/zVD0ekK5CPU2pTEcTXXoFyE6gre8uvUZQ1ejdLlpMLPXoQ7L5xoF1pY2Gnku2++NJuMdaVUHhE6yDEnYY0ix6ccaFOSbydUMi4y2F+vwoGO9DTI+MqAvSBC1kvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tSjJQ/bb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1712331712; c=relaxed/simple;
+	bh=ZVIunp5/b3ua5z68fg7CkpvbQK47x3IgXrmASVT294A=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=aOcZD3qZTMLso0dPIQJvCx4vuZIQEDt7nASRGHuNoGAQI+L8B35tkICMNn8g1Gfe96Bq31KXOKMC52gHPBxr3pqo1WJU9caoKZMNcJHesyJR+v31r9oyfzyzuNYWa0tUMMym5AnJnRB9RXv0ykW4UlAwUGmORZWX3WYXjIuEBbc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=kxBxDbdK; arc=none smtp.client-ip=209.85.208.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tSjJQ/bb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED339C433C7;
-	Fri,  5 Apr 2024 15:18:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712330317;
-	bh=X6pHevWSssAs9ixG4YxroAR6EPsHtS1VXJB0aVPbpis=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=tSjJQ/bbGYLM3304BH4A8P12Fsfgm6xezkRozu8XogFubodOKDPaqvBEkk77Zxpu4
-	 gA153lZpCzWfw0VF+OEzQOzdoEy9NUOPmVwesxeUJ/X6gwc9HRT1GX6WR3qGj0Vria
-	 WwF6teE8+2dmqfwXG87b/cFXeQ0gMT5238Yi2SLen4RCS9Pq2TCpUt8wIqdb7pFEhE
-	 DuIsihbwZJTwkcoGuLKDlVHCqUv6T+KeXsVWb+3OaZ1zkGnjhPECjZbEVhtl6BH2FG
-	 8dj6W43YsAfs4gqN2tKUZumg7zCG3XFZmRm6UEPZAtZyI8IemaA+jAAVdvlc3sbkU1
-	 d0yC9MaId/roA==
-Date: Fri, 5 Apr 2024 17:18:28 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Kishon Vijay Abraham I <kvijayab@amd.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
-	Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
-	linux-rockchip@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
-	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Subject: Re: [PATCH v2 02/18] PCI: endpoint: Introduce pci_epc_map_align()
-Message-ID: <ZhAWRLiP8DNZEC0x@x1-carbon>
-References: <20240330041928.1555578-1-dlemoal@kernel.org>
- <20240330041928.1555578-3-dlemoal@kernel.org>
- <dccb87db-d826-43fa-a499-cf36ea9b10d5@amd.com>
- <3a2aff21-4b1d-4f99-bd49-bf75f41cb924@kernel.org>
- <Zg_skLWnl04-pxkn@ryzen>
- <9b3cfd8a-640d-4645-83a9-ddaa34cd09cd@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="kxBxDbdK"
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-2d715638540so28858121fa.3;
+        Fri, 05 Apr 2024 08:41:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1712331709; x=1712936509; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=af4tFSueF3LyD09l18VwVzYXA4EAvWmGHq3uEV1NWcA=;
+        b=kxBxDbdKeUMzqS1kM1FD9qog/nYs7JYzKJDErJPya5LjCbq9u1C/oQqnq21UKs2yy7
+         u4k+GoT9zBFJK5LlXxU/ZtNkd0A3/Wky2wvymoZmMK7ggCz75rkV4kzt8RQtng/zuqib
+         cCjBuZbF3BaymbQFf/IYCZzQ9gM20Aecv1p8zv314T27y4gzV4x7IJgxjogRdO3m9eW6
+         P9pPOY8+KUyQFgxlAmvf+xEhI4b7orsjwTWI7+Lmmucp5dxAJhQmAwSvGolJZpVfynDh
+         RV1sWIOGIUGpExtR7Ga799q3OlUcykYXVH0239121JoOF+yOHpuOS5jepnXJmozuRH2E
+         QUOw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1712331709; x=1712936509;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=af4tFSueF3LyD09l18VwVzYXA4EAvWmGHq3uEV1NWcA=;
+        b=vQvYWPZr1oQLehMlhiYbMqbupxfS4K6CuX/PZlpNEYeDKOR0WzVGHRfrQ2SXwKbOnB
+         ZnOO2NYKnoAIPAz9lQfHbc9SenGWvDI+mTFyqcrscnRdvyw4EVP/q07nkfgQdAVLhIB9
+         05Lqv0EfnfUxFmdUapXRyyGFpY2HYhcxxqQJPElf5tBrL5xTX/C0mDu033TjorfDbFyN
+         uL0sD7Hb0F3T85+R0/ok77dt0+zqViaNPyh7RL7a+ziwEDW+/dXXpQ5OZ7olCBEEcSLq
+         iPTQOuPQK/6uDQ9h3924Ox87uu1k2IvLfOWFsno5xVzn74g61xXesf6cerJOZKvIKQpM
+         mLEQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVG8n4bPcROi02mj9h3nGvnqZGqxop/gvA8iSLE4YXDAMXRvXVD/oC0rwLzSPLvO7W/G2PX+zi9XpanqwnXoSm7OGjVlLDRz/PVynAOwRNzQFE862P5QuHl8Ih82Guf4G7Y
+X-Gm-Message-State: AOJu0YyY5sMeDwiblWgjqsNj3+uS4CDGrqDM8CkJeDRj45+HQYA5v2QE
+	5Hu/2WV1ykbdm4REFti8uDQ5jqBhWzusV5lmpg4WB55zBoEOtPqlQAM0WC7fUpXgxwVPol9eiTN
+	SMEtkTj3JSeypqqUfZw6teUbd9H9vKEv1
+X-Google-Smtp-Source: AGHT+IHUMqhpaA35BIk5Mvh9BR4JQ3pcLfam7lZaR6ADv1a8WRegNIjyWKhFr/AemARy2FCk3a9gNjdkngZj1f7MwjU=
+X-Received: by 2002:a2e:bc20:0:b0:2d6:d536:41ca with SMTP id
+ b32-20020a2ebc20000000b002d6d53641camr2085346ljf.4.1712331708386; Fri, 05 Apr
+ 2024 08:41:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <9b3cfd8a-640d-4645-83a9-ddaa34cd09cd@kernel.org>
+References: <171217454226.1598374.8971335637623132496.stgit@ahduyck-xeon-server.home.arpa>
+ <Zg6Q8Re0TlkDkrkr@nanopsycho> <CAKgT0Uf8sJK-x2nZqVBqMkDLvgM2P=UHZRfXBtfy=hv7T_B=TA@mail.gmail.com>
+ <Zg7JDL2WOaIf3dxI@nanopsycho> <CAKgT0Ufgm9-znbnxg3M3wQ-A13W5JDaJJL0yXy3_QaEacw9ykQ@mail.gmail.com>
+ <20240404132548.3229f6c8@kernel.org> <660f22c56a0a2_442282088b@john.notmuch>
+ <20240404165000.47ce17e6@kernel.org> <CAKgT0UcmE_cr2F0drUtUjd+RY-==s-Veu_kWLKw8yrds1ACgnw@mail.gmail.com>
+ <20240404193817.500523aa@kernel.org>
+In-Reply-To: <20240404193817.500523aa@kernel.org>
+From: Alexander Duyck <alexander.duyck@gmail.com>
+Date: Fri, 5 Apr 2024 08:41:11 -0700
+Message-ID: <CAKgT0UdAz1mb48kFEngY5sCvHwYM2vYtEK81VceKj-xo6roFyA@mail.gmail.com>
+Subject: Re: [net-next PATCH 00/15] eth: fbnic: Add network driver for Meta
+ Platforms Host Network Interface
+To: Jakub Kicinski <kuba@kernel.org>
+Cc: John Fastabend <john.fastabend@gmail.com>, Jiri Pirko <jiri@resnulli.us>, netdev@vger.kernel.org, 
+	bhelgaas@google.com, linux-pci@vger.kernel.org, 
+	Alexander Duyck <alexanderduyck@fb.com>, davem@davemloft.net, pabeni@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Apr 05, 2024 at 09:43:42PM +0900, Damien Le Moal wrote:
-> On 4/5/24 21:20, Niklas Cassel wrote:
-> > 
-> > Now I understand that rockchip is the first one that does not have a fixed
-> > alignment.
-> > So for that platform, map_align() will be different from ep->page_size.
-> > (For all DWC based drivers the outbound iATU alignment requirement is
-> > the same as the page size.)
-> 
-> Yes. So we can have a generic map_align() implementation that all these drivers
-> can use as there .map_align method. No need to expose page size to the epc/epf
-> core code.
+On Thu, Apr 4, 2024 at 7:38=E2=80=AFPM Jakub Kicinski <kuba@kernel.org> wro=
+te:
+>
+> On Thu, 4 Apr 2024 17:11:47 -0700 Alexander Duyck wrote:
+> > > Opensourcing is just one push to github.
+> > > There are guarantees we give to upstream drivers.
+> >
+> > Are there? Do we have them documented somewhere?
+>
+> I think they are somewhere in Documentation/
+> To some extent this question in itself supports my point that written
+> down rules, as out of date as they may be, seem to carry more respect
+> than what a maintainer says :S
 
-I don't follow.
+I think the problem is there are multiple maintainers and they all
+have different ways of doing things. As a submitter over the years I
+have had to deal with probably over a half dozen different maintainers
+and each experience has been different. I have always argued that the
+netdev tree is one of the better maintained setups.
 
-ep->page_size is used by pci_epc_multi_mem_init(), pci_epc_mem_alloc_addr()
-and pci_epc_mem_free_addr(), so it is used by EPC core.
+> > > > Eventually they need some kernel changes and than we block those to=
+o
+> > > > because we didn't allow the driver that was the use case? This seem=
+s
+> > > > wrong to me.
+> > >
+> > > The flip side of the argument is, what if we allow some device we don=
+'t
+> > > have access to to make changes to the core for its benefit. Owner
+> > > reports that some changes broke the kernel for them. Kernel rules,
+> > > regression, we have to revert. This is not a hypothetical, "less than
+> > > cooperative users" demanding reverts, and "reporting us to Linus"
+> > > is a reality :(
+> > >
+> > > Technical solution? Maybe if it's not a public device regression rule=
+s
+> > > don't apply? Seems fairly reasonable.
+> >
+> > This is a hypothetical. This driver currently isn't changing anything
+> > outside of itself. At this point the driver would only be build tested
+> > by everyone else. They could just not include it in their Kconfig and
+> > then out-of-sight, out-of-mind.
+>
+> Not changing does not mean not depending on existing behavior.
+> Investigating and fixing properly even the hardest regressions in
+> the stack is a bar that Meta can so easily clear. I don't understand
+> why you are arguing.
 
-pci_epc_mem_alloc_addr() currently uses it to align up an allocation to the
-page size, so that an allocation from the PCI window/memory space is a multiple
-of page_size. How can we avoid exposing the page size to EPC core?
+I wasn't saying the driver wouldn't be dependent on existing behavior.
+I was saying that it was a hypothetical that Meta would be a "less
+than cooperative user" and demand a revert.  It is also a hypothetical
+that Linus wouldn't just propose a revert of the fbnic driver instead
+of the API for the crime of being a "less than cooperative maintainer"
+and  then give Meta the Nvidia treatment.
 
+> > > > Anyways we have zero ways to enforce such a policy. Have vendors
+> > > > ship a NIC to somebody with the v0 of the patch set? Attach a pictu=
+re?
+> > >
+> > > GenAI world, pictures mean nothing :) We do have a CI in netdev, whic=
+h
+> > > is all ready to ingest external results, and a (currently tiny amount=
+?)
+> > > of test for NICs. Prove that you care about the device by running the
+> > > upstream tests and reporting results? Seems fairly reasonable.
+> >
+> > That seems like an opportunity to be exploited through. Are the
+> > results going to be verified in any way? Maybe cryptographically
+> > signed? Seems like it would be easy enough to fake the results.
+>
+> I think it's much easier to just run the tests than write a system
+> which will competently lie. But even if we completely suspend trust,
+> someone lying is of no cost to the community in this case.
 
-For a DWC-based driver, the mapping part requires that the start address of
-the mapping should be aligned to the page size.
+I don't get this part. You are paranoid about bad actors until it
+comes to accepting the test results? So write a broken API, "prove" it
+works by running it on your broken test setup, and then get it
+upstream after establishing a false base for trust. Seems like a
+perfect setup for an exploit like what happened with the xz setup.
 
-But e.g.
-drivers/pci/controller/pcie-rockchip-ep.c, sets page size (smallest allocation):
-to 1 MB:
-windows[i].page_size = SZ_1M;
+> > > > Even if vendor X claims they will have a product in N months and
+> > > > than only sells it to qualified customers what to do we do then.
+> > > > Driver author could even believe the hardware will be available
+> > > > when they post the driver, but business may change out of hands
+> > > > of the developer.
+> > > >
+> > > > I'm 100% on letting this through assuming Alex is on top of feedbac=
+k
+> > > > and the code is good.
+> > >
+> > > I'd strongly prefer if we detach our trust and respect for Alex
+> > > from whatever precedent we make here. I can't stress this enough.
+> > > IDK if I'm exaggerating or it's hard to appreciate the challenges
+> > > of maintainership without living it, but I really don't like being
+> > > accused of playing favorites or big companies buying their way in :(
+> >
+> > Again, I would say we look at the blast radius. That is how we should
+> > be measuring any change. At this point the driver is self contained
+> > into /drivers/net/ethernet/meta/fbnic/. It isn't exporting anything
+> > outside that directory, and it can be switched off via Kconfig.
+>
+> It is not practical to ponder every change case by case. Maintainers
+> are overworked. How long until we send the uAPI patch for RSS on the
+> flow label? I'd rather not re-litigate this every time someone posts
+> a slightly different feature. Let's cover the obvious points from
+> the beginning while everyone is paying attention. We can amend later
+> as need be.
 
-But the mapping part for rockchip-ep appears to have different requirements.
+Isn't that what we are doing right now? We are basically refusing this
+patch set not based on its own merits but on a "what-if" scenario for
+a patch set that might come at some point in the future and conjecture
+that somehow it is going to be able to add features for just itself
+when we haven't allowed that for in the past, for example with things
+like GSO partial.
 
+> > When the time comes to start adding new features we can probably start
+> > by looking at how to add either generic offloads like was done for
+> > GSO, CSO, ect or how it can also be implemented on another vendor's
+> > NIC.
+> >
+> > At this point the only risk the driver presents is that it is yet
+> > another driver, done in the same style I did the other Intel drivers,
+> > and so any kernel API changes will end up needing to be applied to it
+> > just like the other drivers.
+>
+> The risk is we'll have a fight every time there is a disagreement about
+> the expectations.
 
-> 
-> > However, it would be nice if:
-> > 1) We could have a default implementation of map_align() that by default uses
-> > ep->page_size. Platforms that have non-fixed alignment requirements could
-> > define their own map_align().
-> 
-> See above. The default implementation can be a helper function defined in epc
-> core that the drivers can use for their .map_align() method.
+We always do. I am not sure why you would expect that would change by
+blocking this patch set. If anything it sounds like maybe we need to
+document some requirements for availability for testing, and
+expectations for what it would mean to be a one-off device where only
+one entity has access to it. However that is a process problem, and
+not so much a patch or driver issue.
 
-Sounds good.
+> > > > I think any other policy would be very ugly to enforce, prove, and
+> > > > even understand. Obviously code and architecture debates I'm all fo=
+r.
+> > > > Ensuring we have a trusted, experienced person signed up to review
+> > > > code, address feedback, fix whatever syzbot finds and so on is also=
+ a
+> > > > must I think. I'm sure Alex will take care of it.
+> > >
+> > > "Whatever syzbot finds" may be slightly moot for a private device ;)
+> > > but otherwise 100%! These are exactly the kind of points I think we
+> > > should enumerate. I started writing a list of expectations a while ba=
+ck:
+> > >
+> > > Documentation/maintainer/feature-and-driver-maintainers.rst
+> > >
+> > > I think we just need something like this, maybe just a step up, for
+> > > non-public devices..
+> >
+> > I honestly think we are getting the cart ahead of the horse. When we
+> > start talking about kernel API changes then we can probably get into
+> > the whole "private" versus "publicly available" argument. A good
+> > example of the kind of thing I am thinking of is GSO partial where I
+> > ended up with Mellanox and Intel sending me 40G and 100G NICs and
+> > cables to implement it on their devices as all I had was essentially
+> > igb and ixgbe based NICs.
+>
+> That'd be great. Maybe even more than I'd expect. So why not write
+> it down? In case the person doing the coding is not Alex Duyck, and
+> just wants to get it done for their narrow use case, get a promo,
+> go work on something else?
 
+Write what down? That the vendors didn't like me harassing them to
+test my code so they shipped me the NICs and asked me to just test it
+myself?
 
-> > 2) We fix dw_pcie_ep_raise_msi_irq() and dw_pcie_ep_raise_msix_irq() to use
-> > the new pci_epc_map_align().
-> 
-> Why ? That is completely internal to the controller driver.
+That worked in my scenario as I had a server level system in my home
+lab to make that work. We cannot expect everyone to have that kind of
+setup for their own development. That is why I am considering the QEMU
+approach as that might make this a bit more accessible. I could then
+look at enabling the QEMU at the same time I enable the driver.
 
-Well, dw_pcie_ep_raise_msi_irq() and dw_pcie_ep_raise_msix_irq() currently does
-some clearing of lower bits of the address before using .map_addr() to map the
-an aligned outbound address. It will then write to the mapped address + some
-offset.
+> > Odds are when we start getting to those kind of things maybe we need
+> > to look at having a few systems available for developer use, but until
+> > then I am not sure it makes sense to focus on if the device is
+> > publicly available or not.
+>
+> Developer access would be huge.
+> A mirage of developer access? immaterial :)
 
-Since it is already using .map_addr(), it seems like the perfect use case for
-pci_epc_map_align(), as the function then would not need to do any clearing
-of lower bits before mapping, nor writing to an offset within the mapping.
+If nothing else, maybe we need a writeup somewhere of the level of
+support a driver should expect from the Linux community if the device
+is not "easily available". We could probably define that in terms of
+what a reasonable expectation would be for a developer to have access
+to it.
 
-It would just use pci_epc_map_align() and then write to map->pci_addr.
+I would say that "commercial sales" is not a good metric and shouldn't
+come into it. If anything it would be about device availability for
+development and testing.
 
-
-> > 3) It is getting too complicated with all these...
-> > epc_features->align, ep->page_size, map_align(), and .alignment in host driver.
-> > I think that we need to document each of these in Documentation/PCI/endpoint/
-> 
-> test host driver .alignment needs to be nuked. That one is nonsense.
-> ep->page_size needs to stay internal to the driver. .map_align method is enough
-> to handle any PCI address mapping constraint and will indicate memory size to
-> allocate, offset into it etc. And for the BARs alignment, .align feature is not
-> exactly great as it is not clear, but it is enough I think. So we could just
-> rename it to be clear. And even maybe remove it from features. I do not see why
-> an EPF needs to care about it given that epc core funstions are used to setup
-> the bars.
-
-+1 on renaming it to bar_alignment or inbound_alignment or similar.
-
-I don't think that we can remove it from epc_features. It is used by
-pci_epf_alloc_space() which uses epc_features->align to ensure that
-when an EPF driver allocates the backing memory for a BAR, the backing
-memory is aligned to bar_alignment. (An allocation of size X is guaranteed
-to be aligned to X.)
-
-
-> > 4) It would be nice if we could set page_size correctly for all the PCI device
-> > and vendor IDs that have defined an .alignment in drivers/misc/pci_endpoint_test.c
-> > in the correct EPC driver. That way, we should be able to completely remove all
-> > .alignment specified in drivers/misc/pci_endpoint_test.c.
-> 
-> The host side should be allowed to use any PCI address alignment it wants. So no
-> alignment communicated at all. It is the EP side that needs to deal with alignment.
-
-I think we are saying the same thing.
-But in order to remove all .alignment uses in drivers/misc/pci_endpoint_test.c,
-we will need to add modify the corresponding EPC driver to either:
-- Define the ep->page_size, so that the generic map_align() implementation will
-work.
-(If you grep for page_size in drivers/pci/controller, you will see that
-very few EPC drivers currently set ep->page_size, even though the PCI device
-and vendor IDs for those same controllers have specified an alignment in
-drivers/misc/pci_endpoint_test.c)
-- Define a custom map_align() implementation.
-
-
-> > 5) Unfortunately drivers/misc/pci_endpoint_test.c defines a default alignment
-> > of 4K:
-> > https://github.com/torvalds/linux/blob/v6.9-rc2/drivers/misc/pci_endpoint_test.c#L968
-> > https://github.com/torvalds/linux/blob/v6.9-rc2/drivers/misc/pci_endpoint_test.c#L820
-> > 
-> > It would be nice if we could get rid of this as well. Or perhaps add an option
-> > to pci_test so that it does not use this 4k alignment, such that we can verify
-> > that pci_epc_map_align() is actually working.
-> 
-> Exactly. Get rid of any default alignment, add a test parameter to define one so
-> that we can test different alignment+size combinations.
-> 
-> > In my opinion 4) is the biggest win with this series, because it means that
-> > we define the alignment in the EPC driver, instead of needing to define it in
-> > each and every host side driver. But right now, this great improvement is not
-> > really visible for someone looking quickly at the current series.
-> 
-> Yes. Once in place, we can rework the test driver alignment stuff to make it
-> optional instead of mandatory because of bad handling on the EP side :)
-
-Perhaps it would be nice to have 5) implemented for this initial series,
-so that it is possible to test that this new API is behaving as intended?
-
-
-Kind regards,
-Niklas
+In addition I would be good with a definition of "support" for the
+case of a device that isn't publicly available being quite limited, as
+those with access would have to have active involvement in the
+community to enable support. Without that it might as well be
+considered orphaned and the driver dropped.
