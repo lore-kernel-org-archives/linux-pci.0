@@ -1,375 +1,161 @@
-Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 752FA160783;
-	Fri,  5 Apr 2024 10:02:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C6D4161908;
+	Fri,  5 Apr 2024 10:16:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712311358; cv=none; b=pM5zAxmeTOegRYtIwpvJ/P1eKQ15OsoFXTt4kwduubLSl13wxbvsV7U+G/Iie8Sv+zmcWBmGOrI+GVUlB5p7GYW+OwBVf+Vtl7AwVzKNdTVuIfyx98rO3SWKjUynWU3Q322jDJUBhANoq1oyOLgO+LzxrwNMoGAr1MEnfdIecEU=
+	t=1712312193; cv=none; b=Ol5sc0swujUSp3+tYosYgXKPs8TepyGVj+SFDd6jDa7oeTHvhbgkTW/O/9YKagBH7qDvZpCRUzrp/Pue7UZx4PrvoDcK1aCPPYYmPUFL3fzK9nRSzQ9SLP4Ffa5VaVv10apICgXsZEhlwx/wwLBwluCy+6obAGfd8ayNP1FC0KA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712311358; c=relaxed/simple;
-	bh=NxvxzWFEm1vUUexok4ekiOZ5+EfNkBZCkduLoUStE9k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OxkVK7tIRqYWdN0cS4Sn1ik2z2wuOdxK7ndkvCM4NQBAQ0DElOHTtP+qHgJjTFLY83KMrCh1B4CkMIuMhO5/+V/Il8M6ydDGSQ1LI1HhKVSEJ29aDfTCQ6rgnND0Erja2As9PdoDOJCpHKbF2TRjmrCb8Q5C6pfAOCUR1/gz7h8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 015C9100DA1A6;
-	Fri,  5 Apr 2024 12:02:33 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id C87935FC4DA; Fri,  5 Apr 2024 12:02:32 +0200 (CEST)
-Date: Fri, 5 Apr 2024 12:02:32 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Roman Lozko <lozko.roma@gmail.com>
-Cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Sean Christopherson <seanjc@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	netdev@vger.kernel.org, Heiner Kallweit <hkallweit1@gmail.com>,
-	Christian Marangi <ansuelsmth@gmail.com>,
-	Kurt Kanzenbach <kurt@linutronix.de>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	intel-wired-lan@lists.osuosl.org
-Subject: Re: Deadlock in pciehp on dock disconnect
-Message-ID: <Zg_MOG1OufptoRph@wunner.de>
-References: <CAEhC_B=ksywxCG_+aQqXUrGEgKq+4mqnSV8EBHOKbC3-Obj9+Q@mail.gmail.com>
+	s=arc-20240116; t=1712312193; c=relaxed/simple;
+	bh=IicMOvK28H3EnncVC3yjaeAGnYaW03ovhlG7vCImlgE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=sWtS+h9uwTMnkB8EnOQftdDxGmsPVAC2ZsaaO0gz09E7F235Ca/mqXnHe9p0ItTWYg2R4F9FulYlx3Krkjz6Aid9CIAlYZmsNfgz/dhAYB+LaYiy0DY2T6BRLdQslfUC87VNHncLW8PB9hmzAb0J+BFnCe1zRNKxkt32Mb9H85Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=c9mANT52; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="c9mANT52"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 4359ptL8003900;
+	Fri, 5 Apr 2024 10:16:22 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	message-id:date:mime-version:subject:to:cc:references:from
+	:in-reply-to:content-type:content-transfer-encoding; s=
+	qcppdkim1; bh=XoKf4c/Zf9/PmnCv6NFmNqJ8E0n9nXZfLg8KjCiDALE=; b=c9
+	mANT52is76j10P9oMSmn42gYfx4YhJda+q/pYO6hgqCTPBj51WORBXrtD5MdA5NM
+	Q/H0Y7U9Na+Yv3Q79HH/7AdCbt86CdnKOorI4n1wtx41Vu7ya18d0A2slSkkcj1Y
+	Jqukms0EJ/GlpdNiFfMTsKW1MefGpQ3jKPx0WfqTXKA0ynUgrF/EKoqCFUbvApgo
+	WsN9s8vZpKprst6W5mmDESGHM+/JxNStfunXptsMRrKXOO10M3SqcOdJLFKlWa0A
+	+0p/vwl0+KbQhXzL6NIMn/SteXSZEy8BESML2FCWMKFw1iPXMyicSpduMIDdkw7L
+	Oj1HW43bbcBwap74nIkQ==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xa7m5gwun-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 05 Apr 2024 10:16:20 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 435AGJaf010862
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 5 Apr 2024 10:16:19 GMT
+Received: from [10.216.8.191] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Fri, 5 Apr 2024
+ 03:16:11 -0700
+Message-ID: <190caeb1-3f47-d0b0-bf98-f1022b8f3a90@quicinc.com>
+Date: Fri, 5 Apr 2024 15:46:08 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAEhC_B=ksywxCG_+aQqXUrGEgKq+4mqnSV8EBHOKbC3-Obj9+Q@mail.gmail.com>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:91.0) Gecko/20100101
+ Thunderbird/91.13.1
+Subject: Re: [PATCH v8 3/7] PCI: qcom: Add ICC bandwidth vote for CPU to PCIe
+ path
+Content-Language: en-US
+To: Manivannan Sadhasivam <mani@kernel.org>
+CC: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio
+	<konrad.dybcio@linaro.org>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Rob Herring
+	<robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+        Krzysztof Kozlowski
+	<krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Rob Herring
+	<robh+dt@kernel.org>,
+        Johan Hovold <johan+linaro@kernel.org>,
+        Brian Masney
+	<bmasney@redhat.com>, Georgi Djakov <djakov@kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <vireshk@kernel.org>, <quic_vbadigan@quicinc.com>,
+        <quic_skananth@quicinc.com>, <quic_nitegupt@quicinc.com>,
+        <quic_parass@quicinc.com>,
+        Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+References: <20240302-opp_support-v8-0-158285b86b10@quicinc.com>
+ <20240302-opp_support-v8-3-158285b86b10@quicinc.com>
+ <20240304174111.GB31079@thinkpad>
+ <9d878f69-c9d1-1ee4-f80e-1d8f16c6920e@quicinc.com>
+ <20240405082944.GE2953@thinkpad>
+From: Krishna Chaitanya Chundru <quic_krichai@quicinc.com>
+In-Reply-To: <20240405082944.GE2953@thinkpad>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: V-jYCDRiPY5Fgq6Gpizpd63QNyzx8axk
+X-Proofpoint-GUID: V-jYCDRiPY5Fgq6Gpizpd63QNyzx8axk
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
+ definitions=2024-04-05_09,2024-04-04_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 lowpriorityscore=0
+ mlxlogscore=999 spamscore=0 adultscore=0 phishscore=0 bulkscore=0
+ mlxscore=0 suspectscore=0 malwarescore=0 impostorscore=0 classifier=spam
+ adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
+ definitions=main-2404050076
 
-[cc += netdev maintainers]
 
-On Fri, Apr 05, 2024 at 11:14:01AM +0200, Roman Lozko wrote:
-> Hi, I'm using HP G4 Thunderbolt docking station, and recently (?)
-> kernel started to "partially" deadlock after disconnecting the dock
-> station. This results in inability to turn network interfaces on or
-> off, system can't reboot, `sudo` does not work (guess because it uses
-> DNS).
+
+On 4/5/2024 1:59 PM, Manivannan Sadhasivam wrote:
+> On Tue, Mar 05, 2024 at 04:23:21PM +0530, Krishna Chaitanya Chundru wrote:
+>>
+>>
+>> On 3/4/2024 11:11 PM, Manivannan Sadhasivam wrote:
+>>> On Sat, Mar 02, 2024 at 09:29:57AM +0530, Krishna chaitanya chundru wrote:
+>>>> To access PCIe registers, PCIe BAR space, config space the CPU-PCIe
+>>>> ICC (interconnect consumers) path should be voted otherwise it may
+>>>> lead to NoC (Network on chip) timeout. We are surviving because of
+>>>> other driver vote for this path.
+>>>>
+>>>> As there is less access on this path compared to PCIe to mem path
+>>>> add minimum vote i.e 1KBps bandwidth always.
+>>>
+>>> Please add the info that 1KBps is what shared by the HW team.
+>>>
+>> Ack to all the comments
+>>>>
+>>>> When suspending, disable this path after register space access
+>>>> is done.
+>>>>
+>>>> Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
+>>>> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+>>>> ---
+>>>>    drivers/pci/controller/dwc/pcie-qcom.c | 38 ++++++++++++++++++++++++++++++++--
+>>>>    1 file changed, 36 insertions(+), 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+>>>> index 10f2d0bb86be..a0266bfe71f1 100644
+>>>> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+>>>> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
 > 
-> It started to occur ~two weeks ago, don't know why, I did not change
-> anything at that time. First seen on 6.8.2, nothing changed with
-> 6.9.0-rc2.
-
-This is not a pciehp issue, it's a networking issue:
-
-In the stacktrace you've provided below, the rtnl_lock() is acquired
-recursively, which leads to the deadlock:
-
-unregister_netdev() acquires rtnl_lock(), indirectly invokes
-netdev_trig_deactivate() upon unregistering some LED, thereby
-calling unregister_netdevice_notifier(), which tries to
-acquire rtnl_lock() again.
-
-From a quick look at the source files involved, this doesn't look
-like something new, though I note LED support for igc was added
-only recently with ea578703b03d ("igc: Add support for LEDs on
-i225/i226"), which went into v6.9-rc1.
-
-The other hanging tasks are simply waiting for rtnl_lock() as well.
-
-
-> pciehp stack trace:
-> INFO: task irq/122-pciehp:209 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:irq/122-pciehp  state:D stack:0     pid:209   tgid:209   ppid:2
->    flags:0x00004000
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  unregister_netdevice_notifier+0x40/0x150
->  netdev_trig_deactivate+0x1f/0x60 [ledtrig_netdev c68f5c964fe428d1a2169816a653c62dba2f2e01]
->  led_trigger_set+0x102/0x330
->  led_classdev_unregister+0x4b/0x110
->  release_nodes+0x3d/0xb0
->  devres_release_all+0x8b/0xc0
->  device_del+0x34f/0x3c0
->  unregister_netdevice_many_notify+0x80b/0xaf0
->  unregister_netdev+0x7c/0xd0
->  igc_remove+0xd8/0x1e0 [igc d1bcf7b726f7370e167c72960cdb27ae7f970357]
->  pci_device_remove+0x3f/0xb0
->  device_release_driver_internal+0x1be/0x2d0
->  pci_stop_bus_device+0x68/0xa0
->  pci_stop_bus_device+0x39/0xa0
->  pci_stop_bus_device+0x39/0xa0
->  pciehp_unconfigure_device+0x12b/0x1d0
->  pciehp_disable_slot+0x65/0x120
->  pciehp_handle_presence_or_link_change+0x7a/0x450
->  pciehp_ist+0xf5/0x320
->  irq_thread_fn+0x1d/0x40
->  irq_thread+0x19b/0x260
->  kthread+0x147/0x160
->  ret_from_fork+0x34/0x40
->  ret_from_fork_asm+0x11/0x20
->  </TASK>
+> [...]
 > 
-> Other affected kernel threads
-> INFO: task NetworkManager:1294 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:NetworkManager  state:D stack:0     pid:1294  tgid:1294  ppid:1
->    flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  ____sys_sendmsg+0x1a5/0x2a0
->  ___sys_sendmsg+0x293/0x2d0
->  __x64_sys_sendmsg+0x10d/0x140
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x7971ac52c02b
-> RSP: 002b:00007ffc684c09a0 EFLAGS: 00000293 ORIG_RAX: 000000000000002e
-> RAX: ffffffffffffffda RBX: 00005661e9bc5be0 RCX: 00007971ac52c02b
-> RDX: 0000000000000000 RSI: 00007ffc684c09e0 RDI: 000000000000000d
-> RBP: 00007ffc684c09c0 R08: 0000000000000000 R09: 0000000000000001
-> R10: 0000000000000001 R11: 0000000000000293 R12: 0000000000000001
-> R13: 0000000000000000 R14: 00005661e9c45030 R15: 00005661e9bc5cac
->  </TASK>
-> INFO: task geoclue:2325 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:geoclue         state:D stack:0     pid:2325  tgid:2325  ppid:1
->    flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x7ad712b2beea
-> RSP: 002b:00007fff94c1fd80 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007ad712b2beea
-> RDX: 0000000000000014 RSI: 00007fff94c1fe10 RDI: 0000000000000007
-> RBP: 00007fff94c1fdb0 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000004000 R11: 0000000000000246 R12: 00007fff94c1fe10
-> R13: 0000000000000014 R14: 0000000000000000 R15: 0000000000000000
->  </TASK>
-> INFO: task pool-geoclue:84396 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:pool-geoclue    state:D stack:0     pid:84396 tgid:2325  ppid:1
->    flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x7ad712b2c0e4
-> RSP: 002b:00007ad6e7dfdf40 EFLAGS: 00000293 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007ad712b2c0e4
-> RDX: 0000000000000014 RSI: 00007ad6e7dff070 RDI: 000000000000000b
-> RBP: 00007ad6e7dfdf80 R08: 00007ad6e7dff014 R09: 000000000000000c
-> R10: 0000000000000000 R11: 0000000000000293 R12: 000000000000000b
-> R13: 0000000000000010 R14: 00007ad6e7dff030 R15: 00000000d3fb1bea
->  </TASK>
-> INFO: task Qt bearer threa:4002 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:Qt bearer threa state:D stack:0     pid:4002  tgid:3506
-> ppid:3034   flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x76f3c692beea
-> RSP: 002b:000076f3a51fecb0 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 000076f3c692beea
-> RDX: 0000000000000020 RSI: 000076f3a51fed60 RDI: 0000000000000023
-> RBP: 000076f3a51fece0 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 000076f3a51fee38
-> R13: 000076f378026b30 R14: 000076f3a51fed30 R15: 000076f378026b48
->  </TASK>
-> INFO: task gnome-software:3529 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:gnome-software  state:D stack:0     pid:3529  tgid:3529
-> ppid:3034   flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x7d6be892beea
-> RSP: 002b:00007ffd94e01560 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 00007d6be892beea
-> RDX: 0000000000000014 RSI: 00007ffd94e015f0 RDI: 000000000000000d
-> RBP: 00007ffd94e01590 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000004000 R11: 0000000000000246 R12: 00007ffd94e015f0
-> R13: 0000000000000014 R14: 0000000000000000 R15: 0000000000000000
->  </TASK>
-> INFO: task Qt bearer threa:3960 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:Qt bearer threa state:D stack:0     pid:3960  tgid:3550
-> ppid:3034   flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x777a42b2beea
-> RSP: 002b:0000777a2abfecf0 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 0000777a42b2beea
-> RDX: 0000000000000020 RSI: 0000777a2abfeda0 RDI: 000000000000001d
-> RBP: 0000777a2abfed20 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000000 R11: 0000000000000246 R12: 0000777a2abfee78
-> R13: 0000777a080285b0 R14: 0000777a2abfed70 R15: 0000777a080285c8
->  </TASK>
-> INFO: task xdg-desktop-por:3821 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:xdg-desktop-por state:D stack:0     pid:3821  tgid:3821
-> ppid:2776   flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x79d76612beea
-> RSP: 002b:00007ffd480942a0 EFLAGS: 00000246 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 000079d76612beea
-> RDX: 0000000000000014 RSI: 00007ffd48094330 RDI: 0000000000000008
-> RBP: 00007ffd480942d0 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000004000 R11: 0000000000000246 R12: 00007ffd48094330
-> R13: 0000000000000014 R14: 0000000000000000 R15: 0000000000000000
->  </TASK>
-> INFO: task DNS Res~ver #11:25588 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:DNS Res~ver #11 state:D stack:0     pid:25588 tgid:4934
-> ppid:3070   flags:0x00000002
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  netlink_dump+0x1c4/0x3f0
->  __netlink_dump_start+0x2b3/0x340
->  rtnetlink_rcv_msg+0x469/0x4a0
->  netlink_rcv_skb+0xed/0x120
->  netlink_unicast+0x2ce/0x3f0
->  netlink_sendmsg+0x39c/0x450
->  __sys_sendto+0x2c8/0x350
->  __x64_sys_sendto+0x26/0x30
->  do_syscall_64+0x92/0x170
->  entry_SYSCALL_64_after_hwframe+0x46/0x4e
-> RIP: 0033:0x72d65892c0e4
-> RSP: 002b:000072d649cbb880 EFLAGS: 00000293 ORIG_RAX: 000000000000002c
-> RAX: ffffffffffffffda RBX: 0000000000000000 RCX: 000072d65892c0e4
-> RDX: 0000000000000014 RSI: 000072d649cbc9b0 RDI: 0000000000000053
-> RBP: 000072d649cbb8c0 R08: 000072d649cbc954 R09: 000000000000000c
-> R10: 0000000000000000 R11: 0000000000000293 R12: 0000000000000053
-> R13: 0000000000000010 R14: 000072d649cbc970 R15: 00000000b48fd654
->  </TASK>
-> INFO: task kworker/u88:2:31385 blocked for more than 120 seconds.
->       Not tainted 6.9.0-rc2 #1
-> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> task:kworker/u88:2   state:D stack:0     pid:31385 tgid:31385 ppid:2
->    flags:0x00004000
-> Workqueue: ipv6_addrconf addrconf_verify_work
-> Call Trace:
->  <TASK>
->  __schedule+0x5dd/0x1380
->  schedule+0x6e/0xf0
->  schedule_preempt_disabled+0x15/0x20
->  __mutex_lock+0x2a0/0x750
->  addrconf_verify_work+0x20/0x30
->  process_scheduled_works+0x1f4/0x450
->  worker_thread+0x349/0x5e0
->  kthread+0x147/0x160
->  ret_from_fork+0x34/0x40
->  ret_from_fork_asm+0x11/0x20
->  </TASK>
+>>>> +	ret = icc_disable(pcie->icc_cpu);
+>>>> +	if (ret) {
+>>>> +		dev_err(dev, "failed to disable icc path of cpu-pcie: %d\n", ret);
+>>>
+>>> "CPU-PCIe"
+>>>
+>>>> +		if (pcie->suspended) {
+>>>> +			qcom_pcie_host_init(&pcie->pci->pp);
+>>>
+>>> Interesting. So if icc_disable() fails, can the IP continue to function?
+>>>
+>> As the ICC already enable before icc_disable() fails, the IP should work.
+> 
+> If icc_disable() fails, then most likely something is wrong with RPMh. How can
+> the IP continue to work in that case?
+>
+Ok then I will log the error and return here
+
+- Krishna Chaitanya.
+
+> - Mani
+> 
