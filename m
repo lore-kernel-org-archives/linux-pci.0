@@ -1,110 +1,86 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from msa.smtpout.orange.fr (msa-213.smtpout.orange.fr [193.252.23.213])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 422F1134AC;
-	Fri,  5 Apr 2024 17:48:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B0BC17277E;
+	Fri,  5 Apr 2024 18:18:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.252.23.213
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712339299; cv=none; b=uyMhdBa6/iPvI4orH4W40vxrlf3L9ip1ekPwS7aKRI0huhHQIykBjRiPNGSYnp2C/0ffFg5e1UDifY2kVuzzEiAIhG05NHBo9RHhb+3un4bjQkNJjAjEXmD/j/SvZ/glvP4Tq6hXrGoPqbA4L7PAphCxFVhm0yfNKg3dLDC2iww=
+	t=1712341103; cv=none; b=N4mYQfwxE4ql/UFPnBUMx/l1iPM0nzTwvAJconZ2LkHIJ1c0Hou8grae224g9ya2NW4aXJWAC0Cn3pmXQB6eRyzeEgQYtxJTzdS8ouAOGIJYxYaSeoNtmRHkkt4fTE42RW4b9phuqpJNyxWCT572Q0/KoTilOlEhFUlDutINc0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712339299; c=relaxed/simple;
-	bh=WvRsBVBjYEza67dv61GNHhs7Cd+qc3xljT52Ok2UXD8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=MZLPoOvoeunHujmHfXIKJYjbHYDdFHO86ymTeueChbIX/eg6gjqjbwKR04H6nyLe5XMptBWrT3km2SM+UHmK2Nex8v1OgecD01rx/pvlMhdFjVKQdDCQtgQ4jcgKq/csRckLoRYDndfiDNmEtQlrWPHwZ4P3BW82gI02HZnitG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 1D43B2800BB90;
-	Fri,  5 Apr 2024 19:48:08 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 082829926D8; Fri,  5 Apr 2024 19:48:08 +0200 (CEST)
-Date: Fri, 5 Apr 2024 19:48:08 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Roman Lozko <lozko.roma@gmail.com>, linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dave Hansen <dave.hansen@linux.intel.com>,
-	Sean Christopherson <seanjc@google.com>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	netdev@vger.kernel.org, Christian Marangi <ansuelsmth@gmail.com>,
-	Kurt Kanzenbach <kurt@linutronix.de>,
-	Jesse Brandeburg <jesse.brandeburg@intel.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	intel-wired-lan@lists.osuosl.org
-Subject: Re: Deadlock in pciehp on dock disconnect
-Message-ID: <ZhA5WAYyMQJsAey8@wunner.de>
-References: <CAEhC_B=ksywxCG_+aQqXUrGEgKq+4mqnSV8EBHOKbC3-Obj9+Q@mail.gmail.com>
- <Zg_MOG1OufptoRph@wunner.de>
- <cd9edf12-5241-4366-b376-d5ee8f919903@gmail.com>
+	s=arc-20240116; t=1712341103; c=relaxed/simple;
+	bh=cvs/43SwtLRtedcsO543rgUvMrFflja1dGXNQx9R344=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=CJPgNLkb2Dn1CV4p1WCwHCbGSc6TCY++D2ffXiOEl//avpCIWR9DmE3HHQOK89jH98qdWR6g1gMv1GlCR/7a3LrIM2BOAiBl68csoO/dk78FTJgZgsRzkZhSF+RU1PLVe4RMaaitte1HP9xcN6aWpH8HmGLw0wj75Pd5DMecwd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=lkTgAZOC; arc=none smtp.client-ip=193.252.23.213
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="lkTgAZOC"
+Received: from fedora.home ([86.243.17.157])
+	by smtp.orange.fr with ESMTPA
+	id so7frCyNy41mCso7gr3bZJ; Fri, 05 Apr 2024 20:17:08 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1712341028;
+	bh=CBOkN9rmFPDZtUIpA+M9rXhLCZmZnPuzbOdFADzAiHU=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=lkTgAZOCcEfDQ6oFnLdPtpbDX3pQNJE5xRzadS8UtdiIVUW+JpWKdYOywrEp0LFns
+	 1M8+YXAffelLS48FIErg2gSVHJS+vxT6xtJfEF1OEIOQ3gPk4IYsAZEYkTo0HTr7cE
+	 7LT1vBFXD97HtS5IVWNigCSzRk9OBpRSmOPvsTfs9ok8+JQQSCt6togt8evYjq0LsT
+	 jkdxr5HXJH2VQKEXwbuHRyMXWKL4VVlJ9TWkpytUrdSiVMJBTWxVgjxve2TsA5QRsK
+	 cCqp7kPNj4FYzNODtt8cF9vi/SnH9G8nvFEYlBSC9v+8x+ZHHhkWAoRatIb3jlwR2V
+	 Rk0Vvb+rxDpQA==
+X-ME-Helo: fedora.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Fri, 05 Apr 2024 20:17:08 +0200
+X-ME-IP: 86.243.17.157
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-pci@vger.kernel.org
+Subject: [PATCH] PCI: endpoint: Remove some unused fields in struct pci_epf_group
+Date: Fri,  5 Apr 2024 20:16:59 +0200
+Message-ID: <6507d44b6c60a19af35a605e2d58050be8872ab6.1712341008.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd9edf12-5241-4366-b376-d5ee8f919903@gmail.com>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Apr 05, 2024 at 03:31:34PM +0200, Heiner Kallweit wrote:
-> On 05.04.2024 12:02, Lukas Wunner wrote:
-> > On Fri, Apr 05, 2024 at 11:14:01AM +0200, Roman Lozko wrote:
-> > > Hi, I'm using HP G4 Thunderbolt docking station, and recently (?)
-> > > kernel started to "partially" deadlock after disconnecting the dock
-> > > station. This results in inability to turn network interfaces on or
-> > > off, system can't reboot, `sudo` does not work (guess because it uses
-> > > DNS).
-> > 
-> > unregister_netdev() acquires rtnl_lock(), indirectly invokes
-> > netdev_trig_deactivate() upon unregistering some LED, thereby
-> > calling unregister_netdevice_notifier(), which tries to
-> > acquire rtnl_lock() again.
-> > 
-> > From a quick look at the source files involved, this doesn't look
-> > like something new, though I note LED support for igc was added
-> > only recently with ea578703b03d ("igc: Add support for LEDs on
-> > i225/i226"), which went into v6.9-rc1.
-> 
-> It's unfortunate that the device-managed LED is bound to the netdev device.
-> Wouldn't binding it to the parent (&pdev->dev) solve the issue?
+In "struct pci_epf_group", the 'type_group' field is unused.
 
-I'm guessing igc commit ea578703b03d copy-pasted from r8169 commit
-be51ed104ba9 ("r8169: add LED support for RTL8125/RTL8126") because
-that driver has exactly the same problem. :)
+This was added, but already unused, by commit 70b3740f2c19 ("PCI: endpoint:
+Automatically create a function specific attributes group")
 
-Roman, does the below patch fix the issue?
+Remove it.
 
-Note that just changing the devm_led_classdev_register() call isn't
-sufficient:  I'm changing the devm_kcalloc() in igc_led_setup() as well
-to avoid a use-after-free (memory would already get freed on netdev
-unregister but led a little later on pdev unbind).
+Found with cppcheck, unusedStructMember.
 
--- >8 --
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Compile tested only.
+---
+ drivers/pci/endpoint/pci-ep-cfs.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/net/ethernet/intel/igc/igc_leds.c b/drivers/net/ethernet/intel/igc/igc_leds.c
-index bf240c5..0b78c30 100644
---- a/drivers/net/ethernet/intel/igc/igc_leds.c
-+++ b/drivers/net/ethernet/intel/igc/igc_leds.c
-@@ -257,13 +257,13 @@ static void igc_setup_ldev(struct igc_led_classdev *ldev,
- 	led_cdev->hw_control_get = igc_led_hw_control_get;
- 	led_cdev->hw_control_get_device = igc_led_hw_control_get_device;
- 
--	devm_led_classdev_register(&netdev->dev, led_cdev);
-+	devm_led_classdev_register(&adapter->pdev->dev, led_cdev);
- }
- 
- int igc_led_setup(struct igc_adapter *adapter)
- {
- 	struct net_device *netdev = adapter->netdev;
--	struct device *dev = &netdev->dev;
-+	struct device *dev = &adapter->pdev->dev;
- 	struct igc_led_classdev *leds;
- 	int i;
- 
+diff --git a/drivers/pci/endpoint/pci-ep-cfs.c b/drivers/pci/endpoint/pci-ep-cfs.c
+index 0ea64e24ed61..ad4e2e329ae9 100644
+--- a/drivers/pci/endpoint/pci-ep-cfs.c
++++ b/drivers/pci/endpoint/pci-ep-cfs.c
+@@ -23,7 +23,6 @@ struct pci_epf_group {
+ 	struct config_group group;
+ 	struct config_group primary_epc_group;
+ 	struct config_group secondary_epc_group;
+-	struct config_group *type_group;
+ 	struct delayed_work cfs_work;
+ 	struct pci_epf *epf;
+ 	int index;
+-- 
+2.44.0
+
