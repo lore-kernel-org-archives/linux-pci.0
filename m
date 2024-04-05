@@ -1,298 +1,114 @@
-Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from www62.your-server.de (www62.your-server.de [213.133.104.62])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8B2B16D4D3;
-	Fri,  5 Apr 2024 12:57:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188E116ABFA;
+	Fri,  5 Apr 2024 13:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.133.104.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712321835; cv=none; b=XfO0x/mLj3a3ADgFas4CsP4LXnC3XaWQi3C8qe6me27HLJRzchAd8C7M0qT82xhAUQf+KrjOWk5FhlCaFUbO3DAy+TIz8fD3mZ4c1JRC6wnNNFoYanUmKNGxh4XFvjbU2VhkpBz1JCvOYga5jU0hcjw/hanAozOppkyjwU/XNSo=
+	t=1712322391; cv=none; b=iIMcXakP7ddPxaLHwN2vsugCZAWusrT84CCnsMcQJeumQu4JkODG1bp47OkGUQk/omkUwkinwsiC4J7IVxAUGGZCljtK8nYv1f9B8ER/g2pwp3/BgDcW0pLp57jSGCfq9J3o1duOnpz7MLCN9jYw+/RAZBq4TdKWgsHbH+FncMA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712321835; c=relaxed/simple;
-	bh=2YtxCtIfHL+1+HO+ks+D6RthwuzyQBykWodO082NqcQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=nKQJdYZBXtvqv0oh9JI3aMAScbTV5sJuHV3OgU40LrfcjpIZUPG6bXSRUiDOmSLb5cmcyBHx2iV4uNl4HBE1RNKxfKBDp9zQh2Lx/lBC3nNLFGXQQOaTP7unp3Am/9NaQCcgL8bJURazOcPy0ChQnRTND8SCSkD8TdkLH3HB2fM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.219.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-dcc6fc978ddso1759262276.0;
-        Fri, 05 Apr 2024 05:57:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1712321829; x=1712926629;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=IrYQalnHLpNlFPtXNRcvWmXwt3g+egtwV8d+Fjl7XAg=;
-        b=lWaScKyTMPjDLZlXlZXd8hC5e/C0F8CMRpvEE7Wndpe9XyY1AGivuOd4soOCAJ3Sca
-         zv7jTm80IOPceLWvrhds8RJ5cDIBXyda74r3qiJK4U4MVRBaXOWyfDnNWg3RIiJbGp1d
-         Iva2FO+zJsBPgicaD6u9fYhk/Ju7BpaZsmRTvYTOEyV3uf+7l59lQzn+NhyW0XJnGRlz
-         ZvB5OV7AjSpgdZK/vPaFwQA5TcnrJgW8zEa40ER6GiHCNcKICjIchHpBkPCfIB4PON6x
-         PNqPApUrovXQ6J1mY7deja4OHKnugaIPkUlicvX6a6WXDfJuuMIJEJfCJqMhh0u9rytl
-         3ELA==
-X-Forwarded-Encrypted: i=1; AJvYcCU/WkinzxD1N7Oe8jTXZnse5TLsLglAFNt5gEFe3j01EJJ0Zh/cghOBJkXuNqI8yE1HR7rts4+w9kONd0GSyyK5MC9LCZu6cKjk/wpbN1p+A0/0En5TvD1XkusEYD919vDa5ZDIzRiUV4RP3oN87giRLCmJKSJGNUafTwQs/C6ltLuALkITGOcHgFuYjgd55lyNWzxS+ybIa9fmNMH07Jh7jhwXfEPO9MdCaAS69tSzmeHiWW5K9pC/X3Czj45DoNEoHii2eL/+65rjdwZFvLYPb2YrfE5hnCu439qjFwm1lye1cm0pl1b3QvEd3tppXOJB4YcFj3PxHEGYngdmHgsygjVgBzWl+RWEoVFBHanJcClugS59HIU=
-X-Gm-Message-State: AOJu0Yy48WtO/yikFldb1xSDBkxcvJp4wgFAk4+NYc7wH/Y4HWmJUxd/
-	kyBsHcOQJNuqpBzH5kX//grO1cRqZ7uvTLXP4eoXK7bzf5b4D9TdQCaSfDohKq4=
-X-Google-Smtp-Source: AGHT+IEr1cWRfbRnWqwooGaruYL1olqIXbBlkHEnD+nK0QdasKLy/60NBLixdP9lFuE8mI19MpfUAw==
-X-Received: by 2002:a5b:ed0:0:b0:dc6:f0ac:6b53 with SMTP id a16-20020a5b0ed0000000b00dc6f0ac6b53mr866097ybs.15.1712321829314;
-        Fri, 05 Apr 2024 05:57:09 -0700 (PDT)
-Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com. [209.85.219.180])
-        by smtp.gmail.com with ESMTPSA id 133-20020a25198b000000b00dc2328c28ebsm296209ybz.51.2024.04.05.05.57.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 05 Apr 2024 05:57:08 -0700 (PDT)
-Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-dc6cbe1ac75so1595520276.1;
-        Fri, 05 Apr 2024 05:57:08 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCW7omlBOIn7yssfNTnAvTG1djrkeJ4J6Yq/4eSM44Jd5SMBECoXwPcXZdsItin1OGLxarVqxwoEn7Oqa/d4jCkwtorvWZtc1IsPX3Y4LG9xyFT2C8PRVYyLaarZwQxDkm1wYQTNZVzYj9/xGhbAWewoRuAurPNDWfirVUsQnA7LFRHDMl+PeFecj6dglK2pNjb4mqMmeDNyUg4wCuf99+aT9/uSKqib3sXVO50zAs7Vs4zXVm5m/+n/R+A0Dno6cpqpbxnO64W/ngKt4SLRsbme1SX8mt4viWZ6FqfXALgPbGuyOs2AoJOPj1kbumDdVIzsfKfKIHGF+k1oV+qp99f0lSxiyTB3E76n2NPhHB08H0O8v2IGBOU=
-X-Received: by 2002:a05:6902:2b10:b0:dcd:b806:7446 with SMTP id
- fi16-20020a0569022b1000b00dcdb8067446mr1084419ybb.1.1712321827974; Fri, 05
- Apr 2024 05:57:07 -0700 (PDT)
+	s=arc-20240116; t=1712322391; c=relaxed/simple;
+	bh=YljZRN04HiQc8Wt3luG12vSGapEED3ffuFFBqFi0cl8=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=lelpJZp0W3XJRzFrjGAuAjVYv2Ece8I5kwrBZW9ojfOS0XeaGB0T20kX1uiDnQwljkWL7GPHbjz9qhyk6nJKWbSFczg3wTGdkYA3kMxGE0swW0rsnQYngbucxFHtvm3XVKxYCEClMCIJVAEPlzPTx41kDh44CRhPNItQmvrkTzA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net; spf=pass smtp.mailfrom=iogearbox.net; dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b=Kra4dFt5; arc=none smtp.client-ip=213.133.104.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iogearbox.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iogearbox.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=iogearbox.net header.i=@iogearbox.net header.b="Kra4dFt5"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=iogearbox.net; s=default2302; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:MIME-Version:Date:Message-ID:From:References:Cc:To:Subject:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID;
+	bh=UBqDaTZzUF/U4d8S2p0/DyPa6gFbPu12hq+e26cZbaA=; b=Kra4dFt51r+1M3Ng+yvTwc4kPy
+	wU9Mex2+lsP3H0WX4jKl35z8+Cy7WybyBOR7szfGSBqoaOttIByz2JV6BwWOaLiHyH5SNjaBltPsg
+	3OkEaZP7TDAsmCqBjbnW4YYsxMpkEY78WsssbvuWkj4+m8T7zRelZ+uzSa9OH9eXQ00ZKjymvrWIl
+	R2Gg9hlVlOA2oE2Wg2r64OPA/uzaLWObuyP1xmVrC3pTuw7RWdQVjnfcVLp3IOjih6i3ag8DxX1kt
+	Mf1DYRDk0ur+WyFJndxkBZ9f9m8p0TdBwqYTUyCLf2ryl9Kl/2azb3cL17SeIFhOwHXkprz+Fkhku
+	J8H8TSxA==;
+Received: from sslproxy05.your-server.de ([78.46.172.2])
+	by www62.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <daniel@iogearbox.net>)
+	id 1rsjGu-0000R9-Qj; Fri, 05 Apr 2024 15:06:20 +0200
+Received: from [178.197.249.22] (helo=linux.home)
+	by sslproxy05.your-server.de with esmtpsa  (TLS1.3) tls TLS_AES_256_GCM_SHA384
+	(Exim 4.96)
+	(envelope-from <daniel@iogearbox.net>)
+	id 1rsjGu-00Fqav-0L;
+	Fri, 05 Apr 2024 15:06:20 +0200
+Subject: Re: [net-next PATCH 00/15] eth: fbnic: Add network driver for Meta
+ Platforms Host Network Interface
+To: Jason Gunthorpe <jgg@nvidia.com>, Paolo Abeni <pabeni@redhat.com>
+Cc: Alexander Duyck <alexander.duyck@gmail.com>,
+ Jakub Kicinski <kuba@kernel.org>, John Fastabend <john.fastabend@gmail.com>,
+ Jiri Pirko <jiri@resnulli.us>, netdev@vger.kernel.org, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, Alexander Duyck <alexanderduyck@fb.com>,
+ davem@davemloft.net, Christoph Hellwig <hch@lst.de>
+References: <171217454226.1598374.8971335637623132496.stgit@ahduyck-xeon-server.home.arpa>
+ <Zg6Q8Re0TlkDkrkr@nanopsycho>
+ <CAKgT0Uf8sJK-x2nZqVBqMkDLvgM2P=UHZRfXBtfy=hv7T_B=TA@mail.gmail.com>
+ <Zg7JDL2WOaIf3dxI@nanopsycho>
+ <CAKgT0Ufgm9-znbnxg3M3wQ-A13W5JDaJJL0yXy3_QaEacw9ykQ@mail.gmail.com>
+ <20240404132548.3229f6c8@kernel.org> <660f22c56a0a2_442282088b@john.notmuch>
+ <20240404165000.47ce17e6@kernel.org>
+ <CAKgT0UcmE_cr2F0drUtUjd+RY-==s-Veu_kWLKw8yrds1ACgnw@mail.gmail.com>
+ <678f49b06a06d4f6b5d8ee37ad1f4de804c7751d.camel@redhat.com>
+ <20240405122646.GA166551@nvidia.com>
+From: Daniel Borkmann <daniel@iogearbox.net>
+Message-ID: <7f728d06-3a8b-945b-de0f-d0691d3c1eab@iogearbox.net>
+Date: Fri, 5 Apr 2024 15:06:19 +0200
+User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:60.0) Gecko/20100101
+ Thunderbird/60.7.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <cover.1712207606.git.ysato@users.sourceforge.jp> <9c1d56d37f5d3780d3c506ae680133b6bdaa5fdc.1712207606.git.ysato@users.sourceforge.jp>
-In-Reply-To: <9c1d56d37f5d3780d3c506ae680133b6bdaa5fdc.1712207606.git.ysato@users.sourceforge.jp>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Fri, 5 Apr 2024 14:56:55 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdVXvPW+3-sY2XPQ2aMcTZkK9zoMnxWeZ+PRB+VRgGszdQ@mail.gmail.com>
-Message-ID: <CAMuHMdVXvPW+3-sY2XPQ2aMcTZkK9zoMnxWeZ+PRB+VRgGszdQ@mail.gmail.com>
-Subject: Re: [RESEND v7 14/37] clk: Compatible with narrow registers
-To: Yoshinori Sato <ysato@users.sourceforge.jp>
-Cc: linux-sh@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
-	Niklas Cassel <cassel@kernel.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	David Airlie <airlied@gmail.com>, Daniel Vetter <daniel@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Thomas Gleixner <tglx@linutronix.de>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jirislaby@kernel.org>, 
-	Magnus Damm <magnus.damm@gmail.com>, Daniel Lezcano <daniel.lezcano@linaro.org>, 
-	Rich Felker <dalias@libc.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>, 
-	Lee Jones <lee@kernel.org>, Helge Deller <deller@gmx.de>, 
-	Heiko Stuebner <heiko.stuebner@cherry.de>, Shawn Guo <shawnguo@kernel.org>, 
-	Sebastian Reichel <sre@kernel.org>, Chris Morgan <macromorgan@hotmail.com>, 
-	Linus Walleij <linus.walleij@linaro.org>, Arnd Bergmann <arnd@arndb.de>, 
-	David Rientjes <rientjes@google.com>, Hyeonggon Yoo <42.hyeyoo@gmail.com>, 
-	Vlastimil Babka <vbabka@suse.cz>, Baoquan He <bhe@redhat.com>, 
-	Andrew Morton <akpm@linux-foundation.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Kefeng Wang <wangkefeng.wang@huawei.com>, Stephen Rothwell <sfr@canb.auug.org.au>, 
-	Javier Martinez Canillas <javierm@redhat.com>, Guo Ren <guoren@kernel.org>, 
-	Azeem Shaikh <azeemshaikh38@gmail.com>, Max Filippov <jcmvbkbc@gmail.com>, 
-	Jonathan Corbet <corbet@lwn.net>, Jacky Huang <ychuang3@nuvoton.com>, 
-	Herve Codina <herve.codina@bootlin.com>, 
-	Manikanta Guntupalli <manikanta.guntupalli@amd.com>, Anup Patel <apatel@ventanamicro.com>, 
-	Biju Das <biju.das.jz@bp.renesas.com>, 
-	=?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <u.kleine-koenig@pengutronix.de>, 
-	Sam Ravnborg <sam@ravnborg.org>, Sergey Shtylyov <s.shtylyov@omp.ru>, 
-	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>, linux-ide@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-renesas-soc@vger.kernel.org, linux-clk@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-pci@vger.kernel.org, 
-	linux-serial@vger.kernel.org, linux-fbdev@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20240405122646.GA166551@nvidia.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Language: en-US
+Content-Transfer-Encoding: 8bit
+X-Authenticated-Sender: daniel@iogearbox.net
+X-Virus-Scanned: Clear (ClamAV 0.103.10/27236/Fri Apr  5 10:26:04 2024)
 
-Hi Sato-san,
-
-On Thu, Apr 4, 2024 at 7:15=E2=80=AFAM Yoshinori Sato
-<ysato@users.sourceforge.jp> wrote:
-> divider and gate only support 32-bit registers.
-> Older hardware uses narrower registers, so I want to be able to handle
-> 8-bit and 16-bit wide registers.
->
-> Seven clk_divider flags are used, and if I add flags for 8bit access and
-> 16bit access, 8bit will not be enough, so I expanded it to u16.
->
-> Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-
-Thanks for the update!
-
-> --- a/drivers/clk/clk-divider.c
-> +++ b/drivers/clk/clk-divider.c
-> @@ -26,20 +26,38 @@
->   * parent - fixed parent.  No clk_set_parent support
->   */
->
-> -static inline u32 clk_div_readl(struct clk_divider *divider)
-> -{
-> -       if (divider->flags & CLK_DIVIDER_BIG_ENDIAN)
-> -               return ioread32be(divider->reg);
-> -
-> -       return readl(divider->reg);
-> +static inline u32 clk_div_read(struct clk_divider *divider)
-> +{
-> +       if (divider->flags & CLK_DIVIDER_REG_8BIT)
-
-When you need curly braces in one branch of an if/else statement,
-please use curly braces in all branches (everywhere).
-
-> +               return readb(divider->reg);
-> +       else if (divider->flags & CLK_DIVIDER_REG_16BIT) {
-> +               if (divider->flags & CLK_DIVIDER_BIG_ENDIAN)
-> +                       return ioread16be(divider->reg);
-> +               else
-> +                       return readw(divider->reg);
-> +       } else {
-> +               if (divider->flags & CLK_DIVIDER_BIG_ENDIAN)
-> +                       return ioread32be(divider->reg);
-> +               else
-> +                       return readl(divider->reg);
-> +       }
->  }
-
-> --- a/drivers/clk/clk-gate.c
-> +++ b/drivers/clk/clk-gate.c
-
-> @@ -137,12 +155,30 @@ struct clk_hw *__clk_hw_register_gate(struct device=
- *dev,
->         struct clk_init_data init =3D {};
->         int ret =3D -EINVAL;
->
-> +       /* validate register size option and bit_idx */
->         if (clk_gate_flags & CLK_GATE_HIWORD_MASK) {
->                 if (bit_idx > 15) {
->                         pr_err("gate bit exceeds LOWORD field\n");
->                         return ERR_PTR(-EINVAL);
->                 }
->         }
-> +       if (clk_gate_flags & CLK_GATE_REG_16BIT) {
-> +               if (bit_idx > 15) {
-> +                       pr_err("gate bit exceeds 16 bits\n");
-> +                       return ERR_PTR(-EINVAL);
-> +               }
-> +       }
-> +       if (clk_gate_flags & CLK_GATE_REG_8BIT) {
-> +               if (bit_idx > 7) {
-> +                       pr_err("gate bit exceeds 8 bits\n");
-> +                       return ERR_PTR(-EINVAL);
-> +               }
-> +       }
-> +       if ((clk_gate_flags & CLK_GATE_HIWORD_MASK) &&
-
-If you use parentheses around "a & b" here...
-
-> +           clk_gate_flags & (CLK_GATE_REG_8BIT | CLK_GATE_REG_16BIT)) {
-
-please add parentheses here, too.
-
-> +               pr_err("HIWORD_MASK required 32-bit register\n");
-> +               return ERR_PTR(-EINVAL);
-> +       }
->
->         /* allocate the gate */
->         gate =3D kzalloc(sizeof(*gate), GFP_KERNEL);
-> diff --git a/include/linux/clk-provider.h b/include/linux/clk-provider.h
-> index 4a537260f655..eaa6ff1d0b2e 100644
-> --- a/include/linux/clk-provider.h
-> +++ b/include/linux/clk-provider.h
-> @@ -508,12 +508,16 @@ void of_fixed_clk_setup(struct device_node *np);
->   * CLK_GATE_BIG_ENDIAN - by default little endian register accesses are =
-used for
->   *     the gate register.  Setting this flag makes the register accesses=
- big
->   *     endian.
-> + * CLK_GATE_REG_8BIT - by default 32bit register accesses are used for
-> + *     the gate register.  Setting this flag makes the register accesses=
- 8bit.
-> + * CLK_GATE_REG_16BIT - by default 32bit register accesses are used for
-> + *     the gate register.  Setting this flag makes the register accesses=
- 16bit.
->   */
->  struct clk_gate {
->         struct clk_hw hw;
->         void __iomem    *reg;
->         u8              bit_idx;
-> -       u8              flags;
-> +       u32             flags;
-
-(from my comments on v6)
-There is no need to increase the size of the flags field for the gate clock=
-.
-
-
->         spinlock_t      *lock;
->  };
->
-
-> @@ -675,13 +681,17 @@ struct clk_div_table {
->   * CLK_DIVIDER_BIG_ENDIAN - By default little endian register accesses a=
-re used
->   *     for the divider register.  Setting this flag makes the register a=
-ccesses
->   *     big endian.
-> + * CLK_DIVIDER_REG_8BIT - by default 32bit register accesses are used fo=
-r
-> + *     the gate register.  Setting this flag makes the register accesses=
- 8bit.
-> + * CLK_DIVIDER_REG_16BIT - by default 32bit register accesses are used f=
-or
-> + *     the gate register.  Setting this flag makes the register accesses=
- 16bit.
->   */
->  struct clk_divider {
->         struct clk_hw   hw;
->         void __iomem    *reg;
->         u8              shift;
->         u8              width;
-> -       u8              flags;
-> +       u16             flags;
->         const struct clk_div_table      *table;
->         spinlock_t      *lock;
->  };
-
-> @@ -726,18 +738,18 @@ struct clk_hw *__clk_hw_register_divider(struct dev=
-ice *dev,
->                 struct device_node *np, const char *name,
->                 const char *parent_name, const struct clk_hw *parent_hw,
->                 const struct clk_parent_data *parent_data, unsigned long =
-flags,
-> -               void __iomem *reg, u8 shift, u8 width, u8 clk_divider_fla=
-gs,
-> +               void __iomem *reg, u8 shift, u8 width, u32 clk_divider_fl=
-ags,
-
-"u16 clk_divider_flags", to match clk_divider.flags.
-
->                 const struct clk_div_table *table, spinlock_t *lock);
->  struct clk_hw *__devm_clk_hw_register_divider(struct device *dev,
->                 struct device_node *np, const char *name,
->                 const char *parent_name, const struct clk_hw *parent_hw,
->                 const struct clk_parent_data *parent_data, unsigned long =
-flags,
-> -               void __iomem *reg, u8 shift, u8 width, u8 clk_divider_fla=
-gs,
-> +               void __iomem *reg, u8 shift, u8 width, u32 clk_divider_fl=
-ags,
-
-Likewise.
-
->                 const struct clk_div_table *table, spinlock_t *lock);
->  struct clk *clk_register_divider_table(struct device *dev, const char *n=
-ame,
->                 const char *parent_name, unsigned long flags,
->                 void __iomem *reg, u8 shift, u8 width,
-> -               u8 clk_divider_flags, const struct clk_div_table *table,
-> +               u32 clk_divider_flags, const struct clk_div_table *table,
-
-Likewise.
-
->                 spinlock_t *lock);
->  /**
->   * clk_register_divider - register a divider clock with the clock framew=
-ork
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---=20
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k=
-.org
-
-In personal conversations with technical people, I call myself a hacker. Bu=
-t
-when I'm talking to journalists I just say "programmer" or something like t=
-hat.
-                                -- Linus Torvalds
+On 4/5/24 2:26 PM, Jason Gunthorpe wrote:
+> On Fri, Apr 05, 2024 at 09:11:19AM +0200, Paolo Abeni wrote:
+>> On Thu, 2024-04-04 at 17:11 -0700, Alexander Duyck wrote:
+>>> Again, I would say we look at the blast radius. That is how we should
+>>> be measuring any change. At this point the driver is self contained
+>>> into /drivers/net/ethernet/meta/fbnic/. It isn't exporting anything
+>>> outside that directory, and it can be switched off via Kconfig.
+>>
+>> I personally think this is the most relevant point. This is just a new
+>> NIC driver, completely self-encapsulated. I quickly glanced over the
+>> code and it looks like it's not doing anything obviously bad. It really
+>> looks like an usual, legit, NIC driver.
+> 
+> This is completely true, and as I've said many times the kernel as a
+> project is substantially about supporting the HW that people actually
+> build. There is no reason not to merge yet another basic netdev
+> driver.
+> 
+> However, there is also a pretty strong red line in Linux where people
+> belive, with strong conviction, that kernel code should not be merged
+> only to support a propriety userspace. This submission is clearly
+> bluring that line. This driver will only run in Meta's proprietary
+> kernel fork on servers running Meta's propriety userspace.
+> 
+> At this point perhaps it is OK, a basic NIC driver is not really an
+> issue, but Jiri is also very correct to point out that this is heading
+> in a very concerning direction.
+> 
+> Alex already indicated new features are coming, changes to the core
+> code will be proposed. How should those be evaluated? Hypothetically
+> should fbnic be allowed to be the first implementation of something
+> invasive like Mina's DMABUF work?
+My $0.02 from only reading this thread on the side.. when it comes to
+extending and integrating with core networking code (e.g. larger features
+like offloads, xdp/af_xdp, etc) the networking community always requested
+at least two driver implementations to show-case that the code extensions
+touching core code are not unique to just a single driver/NIC/vendor. I'd
+expect this holds true also here..
