@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9987016D4D6;
-	Fri,  5 Apr 2024 13:33:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0989B16D4E1;
+	Fri,  5 Apr 2024 13:37:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712324015; cv=none; b=oio0hRsR90RimFeiUNBxeZdXO33jUTBck5CVPfbLuw4gtdEK7W+N5DInl99lvUK8x4Q7ZnWp3zmLfYH1Jy3MVCS+Q9HU0plWbx8h7ztAaqQsy+Ax0lCjRy5mn/hTasYEa34ca0tewqacECepe2bsd8PGreh9WPp6Vm2HnCbBEeo=
+	t=1712324253; cv=none; b=a1GXY1BL3vv2HMW1PYASnWIlhpLvkv9B7ibAScSgDcZrXqbCZjb8SW7KoHGsMCOQTo4M0VGi7g4HDbJ0p//CgILHHtyDTVn9FMoYxviHLSA1c/ncBOymd+5ZXkOloM3I8tgp2zzLIMqg8sY3PdS9S3O2KQHJ479ZY6eHIZ4x65I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712324015; c=relaxed/simple;
-	bh=zfEeXh3hz25nDeq9dAo0iY9I4+qJizPHM4+Hki6OxD4=;
+	s=arc-20240116; t=1712324253; c=relaxed/simple;
+	bh=erIF6D/fny9USFYzetNP8CRUx1a3CYG4GswwTMXaNzY=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BkqPjaz+gqVNCShgh8KFeV6VWwyYnbljlfNkCqirXnfPrMaOjCwGm+ZFa8vnlup96upQOAXLx96Zd7qQK8MINkWdMgiulHO1vUmP8IokWazhyi9Xf+UVjNP7EKyJWjvA0M2y86t2WT1ftlpNfuYrKS94X/ZN2x5khD0LL9McvTE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RBlURaLr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=boXpKPjmN4z+ONZoKVkUVnFh9CPZny3UTtpu3Tu12mFq5aVnc1ipEA0YW3hBZ5Hc9IWV+v7ZlmSpsDlI7+zqGbPCzsTHhxQ6lGnHzxQuimYorj14nOg0UgIbfAQXU+0dYQUHOPVfd4rFCkggccmaPU9dDdAZxXu/IAz+NzAIrOM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pQeYOymd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RBlURaLr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EF58C433F1;
-	Fri,  5 Apr 2024 13:33:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pQeYOymd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B60F9C433C7;
+	Fri,  5 Apr 2024 13:37:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1712324015;
-	bh=zfEeXh3hz25nDeq9dAo0iY9I4+qJizPHM4+Hki6OxD4=;
+	s=k20201202; t=1712324252;
+	bh=erIF6D/fny9USFYzetNP8CRUx1a3CYG4GswwTMXaNzY=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=RBlURaLrFBp1q2lYBiEiNbuJxjgEpFiuQO3t9ZQdjV4T24hplKn2qODVKd/6j7rKY
-	 xpr5VtNZVRz8lS4VG76mWHUZnEWv4TD4GY4VWlOBJHOR2Ms8A7scVANGaXzXB6DkxE
-	 5DlqbxBlew7Ko3emEWT1ERVFUUyn9sNNW8hDRLwFQjkMwMc0nT6e5TUqlv6a72moFR
-	 8ILiJGYHMSUf07W6OPLKy/9Zq26BChP7WKtwcG0O1BTKSFumpjKGr71ZuirCloJs3/
-	 N5dRgMkN9XyKnItvKsbeCjfpUpt0j3AW+C+hKKQFulSoiCz5BdHLTBLhkG15kB/CHs
-	 /6AwBuyHdaYdg==
-Date: Fri, 5 Apr 2024 15:33:28 +0200
+	b=pQeYOymdsnpY58edFysi1vjMiF1pRycTgJis+C1wA8+SVz5UaC4pI957KysCP2VxY
+	 zYbG3fwAzD1Yp2T5u02x23j1DziTJLabPBr85uHrhH6UMns1ZSN4zBQf7TphsGFx/q
+	 gtgPvMAk/ZF0wfVeA8KC5fSAq/cSktlev9dqbTSkXjJcB1EVXXBcjbKJYYs6M1a9Mr
+	 RgNNc6F5riYv2z7DJPN3LRzWiEL7QpAWYXvqnhWYpga7XpTX31xe0ItnMyDib1tOYe
+	 8oUfdosAy3Dlbqy0YdkLE5W6BB5l5sUf16jrL+VAPSc1Au37+BnnpXGMunJzPsTE97
+	 TsQuU2HnDDpIg==
+Date: Fri, 5 Apr 2024 15:37:23 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
@@ -43,11 +43,10 @@ Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	linux-arm-kernel@lists.infradead.org,
 	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
 	Wilfred Mallawa <wilfred.mallawa@wdc.com>
-Subject: Re: [PATCH v2 01/18] PCI: endpoint: Introduce
- pci_epc_function_is_valid()
-Message-ID: <Zg_9qNgh4KZIoHMX@ryzen>
+Subject: Re: [PATCH v2 04/18] PCI: endpoint: test: Use pci_epc_mem_map/unmap()
+Message-ID: <Zg/+k1IMGNjTRRhn@x1-carbon>
 References: <20240330041928.1555578-1-dlemoal@kernel.org>
- <20240330041928.1555578-2-dlemoal@kernel.org>
+ <20240330041928.1555578-5-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,22 +55,29 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240330041928.1555578-2-dlemoal@kernel.org>
+In-Reply-To: <20240330041928.1555578-5-dlemoal@kernel.org>
 
-On Sat, Mar 30, 2024 at 01:19:11PM +0900, Damien Le Moal wrote:
-> Introduce the epc core helper function pci_epc_function_is_valid() to
-> verify that an epc pointer, a physical function number and a virtual
-> function number are all valid. This avoids repeating the code pattern:
-> 
-> if (IS_ERR_OR_NULL(epc) || func_no >= epc->max_functions)
-> 	return err;
-> 
-> if (vfunc_no > 0 && (!epc->max_vfs || vfunc_no > epc->max_vfs[func_no]))
-> 	return err;
-> 
-> in many functions of the endpoint controller core code.
+On Sat, Mar 30, 2024 at 01:19:14PM +0900, Damien Le Moal wrote:
+> Modify the endpoint test driver to use the functions pci_epc_mem_map()
+> and pci_epc_mem_unmap() for the read, write and copy tests. For each
+> test case, the transfer (dma or mmio) are executed in a loop to ensure
+> that potentially partial mappings returned by pci_epc_mem_map() are
+> correctly handled.
 > 
 > Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 > ---
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+You probably want to rebase this series on top of:
+[1] https://lore.kernel.org/linux-pci/20240314-pci-dbi-rework-v10-0-14a45c5a938e@linaro.org/
+[2] https://lore.kernel.org/linux-pci/20240320113157.322695-1-cassel@kernel.org/
+
+As these both modify pci-epf-test.c.
+
+AFAICT both these series [1] (DBI rework v12, not v10) and [2] are fully
+reviewed and seem to be ready to go.
+
+They just seem to take a really long time to be picked up.
+
+
+Kind regards,
+Niklas
