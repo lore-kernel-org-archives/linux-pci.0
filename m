@@ -1,203 +1,195 @@
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2114.outbound.protection.outlook.com [40.107.93.114])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72F6216F851;
-	Fri,  5 Apr 2024 15:17:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.93.114
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712330233; cv=fail; b=elJF8ljm0iFFVK4SdvIBA1wa4ygO7Vq58jw5QbXyRssbHci7t7B2vkWgyGn0oH3L+Eju22ffAIx9P3THO9ktaWj4FUPBwwVT8pqJNcNVd2Lkb1bmmtWSwvWGJi8CE65eoDta2XFFzxhQG8j7DmGlATeHjI79XH+i6gtMLNQxsks=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712330233; c=relaxed/simple;
-	bh=3PT0L7167N22bxCp/ksiJz4XNO0BZ4QsxM0jYUprRV8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=JqHgS77EDydgS9JTBV8jet5mAbzoh5+i0YBUrVo9bJYzTlQemo5ljaFvq/7y5S5lJz/3zQDQw0gQQPOunL9Qxwf2uf8OReVNsvzznxgzSOJgb42s9JcN3xL02YTRa7DV+BgKLAgw7YatsR73VpWFoHEPzPpToQLXL9XOl4xVKWU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=pc1lI60x; arc=fail smtp.client-ip=40.107.93.114
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA9716D9B3;
+	Fri,  5 Apr 2024 15:18:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1712330318; cv=none; b=m7yASgKB+8p2KiZcWk40wuig8DbiNudznkoFW/1XHEzUTqDAo+pDtoG62f90Yq3rYvoLBM/20AL4opbth6TW7T7hIdBIt+YaSS53TM7ubyLUqjq38HlQr3SMVeza38xmyg4BMji1THznyesCs/Iai/FH+XXbliFca2mhZD03foQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1712330318; c=relaxed/simple;
+	bh=X6pHevWSssAs9ixG4YxroAR6EPsHtS1VXJB0aVPbpis=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aNPgq2kajF2Z95/xyemeVzE8jJT9JuenRIp3tTJ0JNofaqG/zVD0ekK5CPU2pTEcTXXoFyE6gre8uvUZQ1ejdLlpMLPXoQ7L5xoF1pY2Gnku2++NJuMdaVUHhE6yDEnYY0ix6ccaFOSbydUMi4y2F+vwoGO9DTI+MqAvSBC1kvg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tSjJQ/bb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="pc1lI60x"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=T2SFrBphLZoTLm5UiDmSNiR4AL7cCSNVt99AKm+P+9ErGVEXDxT1W9KQjCTOZAbU9nIwivbC4UaOavDbYbeyxhi5Vi12sfsELbc2NE/eTRDMR0bkHHG9uPz5QG/P+ty0/2mCwTCWEYoT5sSOkmRE3X1w0xfJIaX2cGhlcGmZBYmcjND/sjkJnCmcdZFhe4dksnHwJX9ZBhvSnB/sTTIG12/S6DEf+NQOmSqN9LnZm1zRW/yK6VbgNozExa6NCrjw7BDJD5unfb4RLGZ+Fl6g2Ee3OV8Bm9CITZSMa4HgrUABWlZbWb/au/9kEHU+XvJVmD1y73gRz0eIolvWm0w+nw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Ixe/Q3lLADMG2i+kqNp/sIa2knlnV15zFvGQoi7X0+E=;
- b=XoskZ4HWXGN3zVh3Zbed+VGr0K3Fbo46x8UgYIqaoIB1b8PbtC2ezwnDnkERW817HZmYMr1FRDtXullH4mD+RoiHo/NRa0Sjos9IRugKITC2JmDlpNp0qGJsbZHE7KMEcsBrU9pzfgixWVVwbiWC+q4EQyCf3JIpxEqU/ODb97LxFs2Eufth9m4azvtv5dNBSO5zi1IDqYAlqNx7A8QS/M52Wf/x9Kv0fCEwX7JBwPUrWAK1hHMZqfjAgYAOBRREE6fjdGz87ZrbMVBhW6euPf0ei164ipZdhAej/ZVFJ+Jc6Rlo0OZ94z29CULAGQTREce4XNqg14hkujXlyEr6QA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Ixe/Q3lLADMG2i+kqNp/sIa2knlnV15zFvGQoi7X0+E=;
- b=pc1lI60xdkpa5H4plppB5ndinDH+9jKl/1AVWXCWY43cbfjsxzRgzX/bsmDZKRZcGPH4PDwUagPxwTuUa/rFLLLVTFdmytWswcYfZTFMLSx5CZ/PauY9JYjWG9399uAszN8TObTAXmLBxFEp9vEm7O/REydDFZ7YGYd5Wz2WbliDfnj0XaCPh/gR2+5iO8I9gIfF6uxMVEr7MgzWc1fFQVSNZdsh30/t8YU87H9Ge/4TNTfg0FW30kKe0nmgDMysDN/b47mUXVXKJMqkkbT2gsA4DHUdFRbolByBRB3FC9NCmo5t/jRnFYn4ouwCW+P7BLDVamj8RnXJThQOVmjv5w==
-Received: from DM6PR12MB3849.namprd12.prod.outlook.com (2603:10b6:5:1c7::26)
- by IA1PR12MB6457.namprd12.prod.outlook.com (2603:10b6:208:3ab::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7409.46; Fri, 5 Apr
- 2024 15:17:05 +0000
-Received: from DM6PR12MB3849.namprd12.prod.outlook.com
- ([fe80::6aec:dbca:a593:a222]) by DM6PR12MB3849.namprd12.prod.outlook.com
- ([fe80::6aec:dbca:a593:a222%5]) with mapi id 15.20.7409.042; Fri, 5 Apr 2024
- 15:17:05 +0000
-Date: Fri, 5 Apr 2024 12:17:03 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Alexander Duyck <alexander.duyck@gmail.com>
-Cc: Paolo Abeni <pabeni@redhat.com>, Jakub Kicinski <kuba@kernel.org>,
-	John Fastabend <john.fastabend@gmail.com>,
-	Jiri Pirko <jiri@resnulli.us>, netdev@vger.kernel.org,
-	bhelgaas@google.com, linux-pci@vger.kernel.org,
-	Alexander Duyck <alexanderduyck@fb.com>, davem@davemloft.net,
-	Christoph Hellwig <hch@lst.de>
-Subject: Re: [net-next PATCH 00/15] eth: fbnic: Add network driver for Meta
- Platforms Host Network Interface
-Message-ID: <20240405151703.GF5383@nvidia.com>
-References: <CAKgT0Uf8sJK-x2nZqVBqMkDLvgM2P=UHZRfXBtfy=hv7T_B=TA@mail.gmail.com>
- <Zg7JDL2WOaIf3dxI@nanopsycho>
- <CAKgT0Ufgm9-znbnxg3M3wQ-A13W5JDaJJL0yXy3_QaEacw9ykQ@mail.gmail.com>
- <20240404132548.3229f6c8@kernel.org>
- <660f22c56a0a2_442282088b@john.notmuch>
- <20240404165000.47ce17e6@kernel.org>
- <CAKgT0UcmE_cr2F0drUtUjd+RY-==s-Veu_kWLKw8yrds1ACgnw@mail.gmail.com>
- <678f49b06a06d4f6b5d8ee37ad1f4de804c7751d.camel@redhat.com>
- <20240405122646.GA166551@nvidia.com>
- <CAKgT0UeBCBfeq5TxTjND6G_S=CWYZsArxQxVb-2paK_smfcn2w@mail.gmail.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAKgT0UeBCBfeq5TxTjND6G_S=CWYZsArxQxVb-2paK_smfcn2w@mail.gmail.com>
-X-ClientProxiedBy: BL0PR01CA0002.prod.exchangelabs.com (2603:10b6:208:71::15)
- To DM6PR12MB3849.namprd12.prod.outlook.com (2603:10b6:5:1c7::26)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tSjJQ/bb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED339C433C7;
+	Fri,  5 Apr 2024 15:18:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1712330317;
+	bh=X6pHevWSssAs9ixG4YxroAR6EPsHtS1VXJB0aVPbpis=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tSjJQ/bbGYLM3304BH4A8P12Fsfgm6xezkRozu8XogFubodOKDPaqvBEkk77Zxpu4
+	 gA153lZpCzWfw0VF+OEzQOzdoEy9NUOPmVwesxeUJ/X6gwc9HRT1GX6WR3qGj0Vria
+	 WwF6teE8+2dmqfwXG87b/cFXeQ0gMT5238Yi2SLen4RCS9Pq2TCpUt8wIqdb7pFEhE
+	 DuIsihbwZJTwkcoGuLKDlVHCqUv6T+KeXsVWb+3OaZ1zkGnjhPECjZbEVhtl6BH2FG
+	 8dj6W43YsAfs4gqN2tKUZumg7zCG3XFZmRm6UEPZAtZyI8IemaA+jAAVdvlc3sbkU1
+	 d0yC9MaId/roA==
+Date: Fri, 5 Apr 2024 17:18:28 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Kishon Vijay Abraham I <kvijayab@amd.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>
+Subject: Re: [PATCH v2 02/18] PCI: endpoint: Introduce pci_epc_map_align()
+Message-ID: <ZhAWRLiP8DNZEC0x@x1-carbon>
+References: <20240330041928.1555578-1-dlemoal@kernel.org>
+ <20240330041928.1555578-3-dlemoal@kernel.org>
+ <dccb87db-d826-43fa-a499-cf36ea9b10d5@amd.com>
+ <3a2aff21-4b1d-4f99-bd49-bf75f41cb924@kernel.org>
+ <Zg_skLWnl04-pxkn@ryzen>
+ <9b3cfd8a-640d-4645-83a9-ddaa34cd09cd@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DM6PR12MB3849:EE_|IA1PR12MB6457:EE_
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;
-X-Microsoft-Antispam-Message-Info:
-	JZCHQC+gG/Ytha80Js8p6eeZnTKhqMLe2AvxF1FHQpH+dWIz3qzid5v/XbvYOjqHiNHZjkOtJN9c4ID3V5T3N4X7p7PGVSWo53Am2hw84XQTWsoDBXTOLjG2skcd3SdihcvhWBUamAX7QeePX59C2OzxeuelFFyVLGR5BLeO7TiU9OSybggWImb/WUrkeNu/oIm0RxT6tiKMX1iHpf3W5/RKDdNOrW+Lmbp7BSBI6CWGkVZVcwFtuc4bHgk1YgeRP6IRkTgs2to1cdhrY8BMKPEVea3TTmU1jdfLYbsWN59nvFcmXMBdxz18OdnEeZuSNDfTSgeKJxsrzFTa8wBRBPpyVMBEFtYXKUm9Q4i8+ORdGpsDzrvxvEZSpw9OBxRP2y/teQX5oK97BC4ET3CEHlGBSBY3q9fRex+9+4xGf+lT8avfByZvqKv0UwzzBWJP1ELhnKuu3U9GpeiFuknIKxoYcaPczdcC+LL+eTlBP4aYCw/fPGe917LEEIgqCDgzj74NNWUmCDfu3PHvIsXR7pd5BloEfU0cSZ3iJEGENFPYYk49kCcEK5pD/munwtfbnOv+1ncr2IgM+c2Tyrf805HoeGGtFS3h/MyjTyEsdyMlThvi/dNCB5MwZJ9Kw1nO0R0kfsSHPqo46rrGyoxru2naqHcplvPMG5ZyWKG6IjM=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DM6PR12MB3849.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(376005)(1800799015)(7416005)(366007);DIR:OUT;SFP:1102;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?GmLEGj+qQPBb8FljhGOfBIi8rEuq4GJsL7rEFzFZeA/j9UJqIfNXdQYw4Iaz?=
- =?us-ascii?Q?ds+J6r6/yitMfpLsa04KGjMRJpLOXjDx9IpyJ8KiYs5nWlZAUvfvW3zw7qXg?=
- =?us-ascii?Q?wEypB1T5BjhR9OzPtqHCk7GMH6EBzHcOpxtBXLgFbx7dP+Oup9mLSv2lCj9E?=
- =?us-ascii?Q?3aaESMWLblIWLZM/xAVFrQfmJhaCANygKavLpB8J1SYIH+muqS7pu8Ir/YcE?=
- =?us-ascii?Q?HhZedY0hJs0pMc56XT2X26b/S/RiLnmPGE58uICa7WZGtFaRDqmbBKtdeDhE?=
- =?us-ascii?Q?TPu1Ec0VGPu7Sy9Lq2DKHs5+/LYEPazzKF1E6DCFcE7ID1eiN3abU6pDItWd?=
- =?us-ascii?Q?o+QFy04Arx3xhDL50L8czQUDX1LKiE6P5yDZrBxkOsvufEdIJEJmmWDs6SeN?=
- =?us-ascii?Q?vvEoLXck3quTKYKKpi4Ft98NAQ7o7MWJk/yfgUFEu1udva4hJ3prOrFQK5IR?=
- =?us-ascii?Q?8MBSwaG7qFGNGMHAfygB20YvCMZ9vTe//+49f+IO9EcCsri/WRCtPo4Jhuax?=
- =?us-ascii?Q?hmRSSdPPPWj/z21Em597vA8klJkbDo8hMYJti3amLUT2VQWtgd/0OiUQdc5t?=
- =?us-ascii?Q?rlkDfiL22AISbbXYTwhspKaoI9UDnMJ2aCcvi2VlBVrZM6h9eUvzv7NdNdAj?=
- =?us-ascii?Q?dsnufENkDFu/u8F60xdHW3cE7LcxJpMGHYM2rOrPR1twbSh7Wh1lnCbpX6yC?=
- =?us-ascii?Q?NzIEenT9cituGBcJJAfGF+GayJK00AAaNoRGHsLwuI/7MmV8Fv4hWdWmgpPi?=
- =?us-ascii?Q?unmSHhIDkDeBbqGlG7QuVLR7MQYE/XktjDCg8p1pwEKYdMmjxBIuUMuZTnkE?=
- =?us-ascii?Q?wSPZVVzA1+ZiuSpeh/jz3gUtHO9jaEgk8Lf3irBjJ36XYv+3pOhwStzvlupj?=
- =?us-ascii?Q?XSwEbTDFrgsVugt+FcjxU33bTsEw8x4JYKk/4J+470ZncA57enCKp82KBcjd?=
- =?us-ascii?Q?C4OY4x+SXdyCCMvanIR3Gt+wl36WJ8bwQTYXQg3zHGSaITXz0iKwiPJz8Omd?=
- =?us-ascii?Q?QYLLSiwcXYayMeh0IGjJcjW88jUkwP3hfMaFD/l/41BxeDeVGdjQk5i8N8/2?=
- =?us-ascii?Q?+ySzRXhYp7lYdOoYNnAbJKlLH1/81KNzcLDiKMNzyLPIZMpxnwomCZ7TJ833?=
- =?us-ascii?Q?6a8cU5pEwMgADJKGVYr2kpPIZY+8zFzRFRDYTdrNER+7bNn+CVDdFZbw3NzX?=
- =?us-ascii?Q?P+pHn6B1MNVdh1vfcSRxCCTfagmNEPIq+WyYrIKnjRYkK9RK2PhmQZHty8V8?=
- =?us-ascii?Q?jca5/2r/0Rd7B61ZaqWifeGrBuk8NJwImcp7ownSoq5V6GXKR57zUA5d4JdS?=
- =?us-ascii?Q?8i7j2gQekU01w7bUnyGOVDwY9/91PjrKRGr/l3CIP+E+rBojyOR2vw6NeAbf?=
- =?us-ascii?Q?OF/UOAvTktN9YesNOG2t3L6c3z/tf1XmR8QImrdp7J8hnc2Y4EaL6wEQuMP2?=
- =?us-ascii?Q?LkmDNryQPj1L2DL16We5SFgaTud1M7glsZjW+7ltgJ6azk3MITR86fp22CWV?=
- =?us-ascii?Q?xapAMhBoHJ53nvg5pTSSqaQiFknMpSNoWhMvtFPSOO0MV7iIFBa9RVM+MPt5?=
- =?us-ascii?Q?8tdYlNttzAs/3mIPuxjdgIlTqiCiF5WlvLW82uPm?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bbdc2248-20e0-4d54-ea1c-08dc558373d8
-X-MS-Exchange-CrossTenant-AuthSource: DM6PR12MB3849.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Apr 2024 15:17:05.3926
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: YHf6wEQZlQjU9TOw4vafSRwVMzlgycrq+hFQ6H9uKswi2EfzctLiqpXfk0FtppPB
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6457
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9b3cfd8a-640d-4645-83a9-ddaa34cd09cd@kernel.org>
 
-On Fri, Apr 05, 2024 at 07:24:32AM -0700, Alexander Duyck wrote:
-> > Alex already indicated new features are coming, changes to the core
-> > code will be proposed. How should those be evaluated? Hypothetically
-> > should fbnic be allowed to be the first implementation of something
-> > invasive like Mina's DMABUF work? Google published an open userspace
-> > for NCCL that people can (in theory at least) actually run. Meta would
-> > not be able to do that. I would say that clearly crosses the line and
-> > should not be accepted.
+On Fri, Apr 05, 2024 at 09:43:42PM +0900, Damien Le Moal wrote:
+> On 4/5/24 21:20, Niklas Cassel wrote:
+> > 
+> > Now I understand that rockchip is the first one that does not have a fixed
+> > alignment.
+> > So for that platform, map_align() will be different from ep->page_size.
+> > (For all DWC based drivers the outbound iATU alignment requirement is
+> > the same as the page size.)
 > 
-> Why not? Just because we are not commercially selling it doesn't mean
-> we couldn't look at other solutions such as QEMU. If we were to
-> provide a github repo with an emulation of the NIC would that be
-> enough to satisfy the "commercial" requirement?
+> Yes. So we can have a generic map_align() implementation that all these drivers
+> can use as there .map_align method. No need to expose page size to the epc/epf
+> core code.
 
-My test is not "commercial", it is enabling open source ecosystem vs
-benefiting only proprietary software.
+I don't follow.
 
-In my hypothetical you'd need to do something like open source Meta's
-implementation of the AI networking that the DMABUF patches enable,
-and even then since nobody could run it at performance the thing is
-pretty questionable.
+ep->page_size is used by pci_epc_multi_mem_init(), pci_epc_mem_alloc_addr()
+and pci_epc_mem_free_addr(), so it is used by EPC core.
 
-IMHO publishing a qemu chip emulator would not advance the open source
-ecosystem around building a DMABUF AI networking scheme.
+pci_epc_mem_alloc_addr() currently uses it to align up an allocation to the
+page size, so that an allocation from the PCI window/memory space is a multiple
+of page_size. How can we avoid exposing the page size to EPC core?
 
-> > So I think there should be an expectation that technically sound things
-> > Meta may propose must not be accepted because they cross the
-> > ideological red line into enabling only proprietary software.
+
+For a DWC-based driver, the mapping part requires that the start address of
+the mapping should be aligned to the page size.
+
+But e.g.
+drivers/pci/controller/pcie-rockchip-ep.c, sets page size (smallest allocation):
+to 1 MB:
+windows[i].page_size = SZ_1M;
+
+But the mapping part for rockchip-ep appears to have different requirements.
+
+
 > 
-> That is a faulty argument. That is like saying we should kick out the
-> nouveu driver out of Linux just because it supports Nvidia graphics
-> cards that happen to also have a proprietary out-of-tree driver out
-> there,
+> > However, it would be nice if:
+> > 1) We could have a default implementation of map_align() that by default uses
+> > ep->page_size. Platforms that have non-fixed alignment requirements could
+> > define their own map_align().
+> 
+> See above. The default implementation can be a helper function defined in epc
+> core that the drivers can use for their .map_align() method.
 
-Huh? nouveau supports a fully open source mesa graphics stack in
-Linux. How is that remotely similar to what I said? No issue.
+Sounds good.
 
-> or maybe we need to kick all the Intel NIC drivers out for
-> DPDK? 
 
-DPDK is fully open source, again no issue.
+> > 2) We fix dw_pcie_ep_raise_msi_irq() and dw_pcie_ep_raise_msix_irq() to use
+> > the new pci_epc_map_align().
+> 
+> Why ? That is completely internal to the controller driver.
 
-You pointed at two things that I would consider to be exemplar open
-source projects and said their existance somehow means we should be
-purging drivers from the kernel???
+Well, dw_pcie_ep_raise_msi_irq() and dw_pcie_ep_raise_msix_irq() currently does
+some clearing of lower bits of the address before using .map_addr() to map the
+an aligned outbound address. It will then write to the mapped address + some
+offset.
 
-I really don't understand what you are trying to say at all.
+Since it is already using .map_addr(), it seems like the perfect use case for
+pci_epc_map_align(), as the function then would not need to do any clearing
+of lower bits before mapping, nor writing to an offset within the mapping.
 
-The kernel standard is that good quality open source *does* exist, we
-tend to not care what proprietary things people create beyond that.
+It would just use pci_epc_map_align() and then write to map->pci_addr.
 
-> I can't think of many NIC vendors that don't have their own
-> out-of-tree drivers floating around with their own kernel bypass
-> solutions to support proprietary software.
 
-Most of those are also open source, and we can't say much about what
-people do out of tree, obviously.
+> > 3) It is getting too complicated with all these...
+> > epc_features->align, ep->page_size, map_align(), and .alignment in host driver.
+> > I think that we need to document each of these in Documentation/PCI/endpoint/
+> 
+> test host driver .alignment needs to be nuked. That one is nonsense.
+> ep->page_size needs to stay internal to the driver. .map_align method is enough
+> to handle any PCI address mapping constraint and will indicate memory size to
+> allocate, offset into it etc. And for the BARs alignment, .align feature is not
+> exactly great as it is not clear, but it is enough I think. So we could just
+> rename it to be clear. And even maybe remove it from features. I do not see why
+> an EPF needs to care about it given that epc core funstions are used to setup
+> the bars.
 
-> I agree. We need a consistent set of standards. I just strongly
-> believe commercial availability shouldn't be one of them.
++1 on renaming it to bar_alignment or inbound_alignment or similar.
 
-I never said commercial availability. I talked about open source vs
-proprietary userspace. This is very standard kernel stuff.
+I don't think that we can remove it from epc_features. It is used by
+pci_epf_alloc_space() which uses epc_features->align to ensure that
+when an EPF driver allocates the backing memory for a BAR, the backing
+memory is aligned to bar_alignment. (An allocation of size X is guaranteed
+to be aligned to X.)
 
-You have an unavailable NIC, so we know it is only ever operated with
-Meta's proprietary kernel fork, supporting Meta's proprietary
-userspace software. Where exactly is the open source?
 
-Why should someone working to improve only their proprietary
-environment be welcomed in the same way as someone working to improve
-the open source ecosystem? That has never been the kernel communities
-position.
+> > 4) It would be nice if we could set page_size correctly for all the PCI device
+> > and vendor IDs that have defined an .alignment in drivers/misc/pci_endpoint_test.c
+> > in the correct EPC driver. That way, we should be able to completely remove all
+> > .alignment specified in drivers/misc/pci_endpoint_test.c.
+> 
+> The host side should be allowed to use any PCI address alignment it wants. So no
+> alignment communicated at all. It is the EP side that needs to deal with alignment.
 
-If you want to propose things to the kernel that can only be
-meaningfully used by your proprietary software then you should not
-expect to succeed. No one should be surprised to hear this.
+I think we are saying the same thing.
+But in order to remove all .alignment uses in drivers/misc/pci_endpoint_test.c,
+we will need to add modify the corresponding EPC driver to either:
+- Define the ep->page_size, so that the generic map_align() implementation will
+work.
+(If you grep for page_size in drivers/pci/controller, you will see that
+very few EPC drivers currently set ep->page_size, even though the PCI device
+and vendor IDs for those same controllers have specified an alignment in
+drivers/misc/pci_endpoint_test.c)
+- Define a custom map_align() implementation.
 
-Jason
+
+> > 5) Unfortunately drivers/misc/pci_endpoint_test.c defines a default alignment
+> > of 4K:
+> > https://github.com/torvalds/linux/blob/v6.9-rc2/drivers/misc/pci_endpoint_test.c#L968
+> > https://github.com/torvalds/linux/blob/v6.9-rc2/drivers/misc/pci_endpoint_test.c#L820
+> > 
+> > It would be nice if we could get rid of this as well. Or perhaps add an option
+> > to pci_test so that it does not use this 4k alignment, such that we can verify
+> > that pci_epc_map_align() is actually working.
+> 
+> Exactly. Get rid of any default alignment, add a test parameter to define one so
+> that we can test different alignment+size combinations.
+> 
+> > In my opinion 4) is the biggest win with this series, because it means that
+> > we define the alignment in the EPC driver, instead of needing to define it in
+> > each and every host side driver. But right now, this great improvement is not
+> > really visible for someone looking quickly at the current series.
+> 
+> Yes. Once in place, we can rework the test driver alignment stuff to make it
+> optional instead of mandatory because of bad handling on the EP side :)
+
+Perhaps it would be nice to have 5) implemented for this initial series,
+so that it is possible to test that this new API is behaving as intended?
+
+
+Kind regards,
+Niklas
