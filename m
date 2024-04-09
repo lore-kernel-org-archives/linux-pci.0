@@ -1,19 +1,19 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CDFB137C4B;
-	Tue,  9 Apr 2024 16:03:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E5AD913AD3F;
+	Tue,  9 Apr 2024 16:03:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712678582; cv=none; b=CKuFQGl7QG/EqfdtqH5oJRg9yVcQlIzdWrKzIO7q2RNJmc0PmExM8InF9VfAuYkJfXxIhu5r8hQyC4hG1eMkuuuVvn6oVLw+4zqkhq3u7fWPEdg+FfezIxG4+jspMVY58oUlnWDnxfcze0wZ835qYqHeMCPOKqbRVjEfC+5w1OE=
+	t=1712678582; cv=none; b=P2Y+2kJ/o67CrwfVMvbfO0ZKoN35JHofVhkVZZglfg75ZeuFKqJECgKl9wxJSAWq8TIyCwofBNDLEwiAsyFfJYMVk2wFgjUgWEmtKSi16MwDL0Xz25fwmGUCJXQ0cic0FTadjI5MPPEZqekpGh2YhsvM3WPXBjXjMbTvYmFN7ok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1712678582; c=relaxed/simple;
-	bh=iQ7ZiOmv+j9Oi7tsrj5kfjeBL3qXrKszX1ort4vDcnc=;
+	bh=vvWR5zO14zGXLal37SMteyWzk17WOIVGlVgn28GuZqg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nSn40EjFOw87lT7eVWG0ZwfLem0r4B3ws1x4hutbrDb+U7koTAtDZzRo6zqDnOzolhbYTxf+n6ycfydt9x8dEMXqwG5GD45cgVYd25YfiaoDQQhJrTXNr5Bf1g14ikPvaFZqGgLGyq//Sw/aEmauouug1Fe9o9+SDOMf7qcPlfI=
+	 MIME-Version; b=Nph6D53OsKO760BbH0Z9SMEv6MjWIqxBMxsTyPbXXB45+Tkwf87QI1KO3LOnCklScNCgGllu7THU4CaRDHe869gGfHbTY9YlCmPAfm1uIJQm/1ze1Veie6HWMI0EKdxKEiQCo2whgzFuq98yCvG/dYcoQ0kYnP1XLq0LroRu9lg=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AEB1BC43399;
-	Tue,  9 Apr 2024 16:03:01 +0000 (UTC)
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF130C433F1;
+	Tue,  9 Apr 2024 16:03:02 +0000 (UTC)
 From: Dave Jiang <dave.jiang@intel.com>
 To: linux-cxl@vger.kernel.org,
 	linux-pci@vger.kernel.org
@@ -25,9 +25,9 @@ Cc: dan.j.williams@intel.com,
 	dave@stgolabs.net,
 	bhelgaas@google.com,
 	lukas@wunner.de
-Subject: [PATCH v4 2/4] PCI: Add check for CXL Secondary Bus Reset
-Date: Tue,  9 Apr 2024 09:01:15 -0700
-Message-ID: <20240409160256.94184-3-dave.jiang@intel.com>
+Subject: [PATCH v4 3/4] PCI: Create new reset method to force SBR for CXL
+Date: Tue,  9 Apr 2024 09:01:16 -0700
+Message-ID: <20240409160256.94184-4-dave.jiang@intel.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <20240409160256.94184-1-dave.jiang@intel.com>
 References: <20240409160256.94184-1-dave.jiang@intel.com>
@@ -39,104 +39,94 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Per CXL spec r3.1 8.1.5.2, Secondary Bus Reset (SBR) is masked unless the
-"Unmask SBR" bit is set. Add a check to the PCI secondary bus reset
-path to fail the CXL SBR request if the "Unmask SBR" bit is clear in
-the CXL Port Control Extensions register by returning -ENOTTY.
+CXL spec r3.1 8.1.5.2
+By default Secondary Bus Reset (SBR) is masked for CXL ports. Introduce a
+new PCI reset method "cxl_bus" to force SBR on CXL ports by setting
+the unmask SBR bit in the CXL DVSEC port control register before performing
+the bus reset and restore the original value of the bit post reset. The
+new reset method allows the user to intentionally perform SBR on a CXL
+device without needing to set the "Unmask SBR" bit via a user tool.
 
-When the "Unmask SBR" bit is set to 0 (default), the bus_reset would
-appear to have executed successfully. However the operation is actually
-masked. The intention is to inform the user that SBR for the CXL device
-is masked and will not go through.
-
-If the "Unmask SBR" bit is set to 1, then the bus reset will execute
-successfully.
-
-Link: https://lore.kernel.org/linux-cxl/20240220203956.GA1502351@bhelgaas/
 Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Dave Jiang <dave.jiang@intel.com>
 ---
 v4:
-- cxl_port_dvsec() should return u16. (Lukas)
+- Use pci_dev_lock guard() on bridge. (Dan)
 ---
- drivers/pci/pci.c             | 45 +++++++++++++++++++++++++++++++++++
- include/uapi/linux/pci_regs.h |  5 ++++
- 2 files changed, 50 insertions(+)
+ drivers/pci/pci.c   | 39 +++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h |  2 +-
+ 2 files changed, 40 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e5f243dd4288..570b00fe10f7 100644
+index 570b00fe10f7..3b4f7b369287 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -4927,10 +4927,55 @@ static int pci_dev_reset_slot_function(struct pci_dev *dev, bool probe)
- 	return pci_reset_hotplug_slot(dev->slot->hotplug, probe);
+@@ -4982,6 +4982,44 @@ static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
+ 	return pci_parent_bus_reset(dev, probe);
  }
  
-+static u16 cxl_port_dvsec(struct pci_dev *dev)
++static int cxl_reset_bus_function(struct pci_dev *dev, bool probe)
 +{
-+	return pci_find_dvsec_capability(dev, PCI_VENDOR_ID_CXL,
-+					 PCI_DVSEC_CXL_PORT);
-+}
-+
-+static bool cxl_sbr_masked(struct pci_dev *dev)
-+{
-+	u16 dvsec, reg;
++	struct pci_dev *bridge;
++	u16 dvsec, reg, val;
 +	int rc;
 +
-+	/*
-+	 * No DVSEC found, either is not a CXL port, or not connected in which
-+	 * case mask state is a nop (CXL r3.1 sec 9.12.3 "Enumerating CXL RPs
-+	 * and DSPs"
-+	 */
-+	dvsec = cxl_port_dvsec(dev);
-+	if (!dvsec)
-+		return false;
-+
-+	rc = pci_read_config_word(dev, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
-+	if (rc || PCI_POSSIBLE_ERROR(reg))
-+		return false;
-+
-+	/*
-+	 * CXL spec r3.1 8.1.5.2
-+	 * When 0, SBR bit in Bridge Control register of this Port has no effect.
-+	 * When 1, the Port shall generate hot reset when SBR bit in Bridge
-+	 * Control gets set to 1.
-+	 */
-+	if (reg & PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR)
-+		return false;
-+
-+	return true;
-+}
-+
- static int pci_reset_bus_function(struct pci_dev *dev, bool probe)
- {
-+	struct pci_dev *bridge = pci_upstream_bridge(dev);
- 	int rc;
- 
-+	/* If it's a CXL port and the SBR control is masked, fail the SBR */
-+	if (bridge && cxl_sbr_masked(bridge)) {
-+		if (probe)
-+			return 0;
-+
++	bridge = pci_upstream_bridge(dev);
++	if (!bridge)
 +		return -ENOTTY;
++
++	dvsec = cxl_port_dvsec(bridge);
++	if (!dvsec)
++		return -ENOTTY;
++
++	if (probe)
++		return 0;
++
++	guard(pci_dev)(bridge);
++	rc = pci_read_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL, &reg);
++	if (rc)
++		return -ENOTTY;
++
++	if (!(reg & PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR)) {
++		val = reg | PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR;
++		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL,
++				      val);
++	} else {
++		val = reg;
 +	}
 +
- 	rc = pci_dev_reset_slot_function(dev, probe);
- 	if (rc != -ENOTTY)
- 		return rc;
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index a39193213ff2..d61fa43662e3 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1148,4 +1148,9 @@
- #define PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL		0x00ff0000
- #define PCI_DOE_DATA_OBJECT_DISC_RSP_3_NEXT_INDEX	0xff000000
- 
-+/* Compute Express Link (CXL) */
-+#define PCI_DVSEC_CXL_PORT				3
-+#define PCI_DVSEC_CXL_PORT_CTL				0x0c
-+#define PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
++	rc = pci_reset_bus_function(dev, probe);
 +
- #endif /* LINUX_PCI_REGS_H */
++	if (reg != val)
++		pci_write_config_word(bridge, dvsec + PCI_DVSEC_CXL_PORT_CTL, reg);
++
++	return rc;
++}
++
+ void pci_dev_lock(struct pci_dev *dev)
+ {
+ 	/* block PM suspend, driver probe, etc. */
+@@ -5066,6 +5104,7 @@ static const struct pci_reset_fn_method pci_reset_fn_methods[] = {
+ 	{ pci_af_flr, .name = "af_flr" },
+ 	{ pci_pm_reset, .name = "pm" },
+ 	{ pci_reset_bus_function, .name = "bus" },
++	{ cxl_reset_bus_function, .name = "cxl_bus" },
+ };
+ 
+ static ssize_t reset_method_show(struct device *dev,
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 16493426a04f..235f37715a43 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -51,7 +51,7 @@
+ 			       PCI_STATUS_PARITY)
+ 
+ /* Number of reset methods used in pci_reset_fn_methods array in pci.c */
+-#define PCI_NUM_RESET_METHODS 7
++#define PCI_NUM_RESET_METHODS 8
+ 
+ #define PCI_RESET_PROBE		true
+ #define PCI_RESET_DO_RESET	false
 -- 
 2.44.0
 
