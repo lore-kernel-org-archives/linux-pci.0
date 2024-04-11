@@ -1,225 +1,92 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from mout.perfora.net (mout.perfora.net [74.208.4.197])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0596117CCEE
-	for <linux-pci@vger.kernel.org>; Thu, 11 Apr 2024 15:37:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732DC1FFC5C;
+	Thu, 11 Apr 2024 15:43:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.208.4.197
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1712849875; cv=none; b=Ehsy9tO/jsccquOwe4QCYWMXP+kp21me54MZ53rSL7blm2wlRBHlSBzA4WfUbyaLtTprr2+nmu87Qc3RXqo2W12MqTVvEI2Fkv6XIKuwkstx72lS2wE8nSz1JktOf6BLrL3ZqFiP+TuHjxlsmD2Wzu1UPseL5CG8YNBZ+DqFEAI=
+	t=1712850214; cv=none; b=UUPtjEslIPE4H0bQih5T1hJ8h+2RTxnVFlFAUlYeMoX4Hc9D9XLeHtPu4qJdE4COXlgVcohAUExXqWWq+zs7GKNfLqKzfYWo9VdM1fnIOzyOq3x9PdLpl1Rk8J+RmHpKhxhuOtUrr1XGRA8ps3OZKGYuPDBSaL2JlVpOYU132+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1712849875; c=relaxed/simple;
-	bh=E4Z+9687CFeb3MTYM/qlOZ9UJl1g1YY9X+eNH8diKxM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=WMsZylSw1JL/umN0EhFIN9Xi8O6bvKo7P/inwIz3YMYllwvaQ9Ce02prdoegUQoho+cctzA5J6Mq9f9T8XO9gH+sGtrvZBcK9NgVXRMn59LRZpKqduP3YAS29wEFlcnzNXSPV6h1KiwP3FvtoXOFWNdeBCboh49X5DhxQHIokSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WARNlPLL; arc=none smtp.client-ip=192.198.163.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1712850214; c=relaxed/simple;
+	bh=G/uDq8R2cEJGETysdgyw+/FbbvpRatIhc4DdkmlZI7U=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=rQ6I8/gSc3L2JqJPDzOUSPO2tvZ2+KaHCiytmffbjlLY7p+m5vLA4kkf/CCAMEdh1ZwGIDt/zn+NNbQ0E5zxk7bofBRQMdiAvdDriS2SX3cV2ys6XOwca+0VTFccLwQxbmikR9ipiRuUC095udtHYjNN7yhQf6ku3SEoxjj+ZQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=finest.io; spf=pass smtp.mailfrom=finest.io; dkim=pass (2048-bit key) header.d=finest.io header.i=parker@finest.io header.b=N+JmWxX8; arc=none smtp.client-ip=74.208.4.197
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=finest.io
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=finest.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WARNlPLL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1712849873; x=1744385873;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=E4Z+9687CFeb3MTYM/qlOZ9UJl1g1YY9X+eNH8diKxM=;
-  b=WARNlPLLIfZzauvN9DxJKVBTpMQvZ+Gr0gG+pjzg8uzfATCocMrVj8ca
-   0QKQRFVW3c2K6ZsmHqGiHaXM4745dgMxCTQGAXoT8oEOkKIwvjQAoeT+L
-   6cQ/ivgyC4ACT+Riji5+l8SR69Pd7fVRBB5fW0XAtMrVePQR/+8LTTyFU
-   9vH/+kvtxjs1mA6xCVOeuacQHTIom9M03Tc4BnJApJVt3TSkEDl7CVW6X
-   rkjySMQMszXqGuv4rBGAk6delW/hEtrXsZVAxxhVRq5AU9owJ0GDT/B0Z
-   ZLpHbID1aRNMrO8b25a1BDGb93Vzs1+5f7/AJUO2jpwuygoKL3ZGzuQgG
-   g==;
-X-CSE-ConnectionGUID: 0O+oU08JRFCp7GUcmV2kYQ==
-X-CSE-MsgGUID: 23+bClK/TB2BrCTCQhIMfg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11041"; a="8128619"
-X-IronPort-AV: E=Sophos;i="6.07,193,1708416000"; 
-   d="scan'208";a="8128619"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Apr 2024 08:37:52 -0700
-X-CSE-ConnectionGUID: yjH6B58hR+utIEPSV8wYyA==
-X-CSE-MsgGUID: sfllCqR3StCu/kyD4u+aJg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,193,1708416000"; 
-   d="scan'208";a="21000815"
-Received: from lkp-server01.sh.intel.com (HELO e61807b1d151) ([10.239.97.150])
-  by fmviesa007.fm.intel.com with ESMTP; 11 Apr 2024 08:37:51 -0700
-Received: from kbuild by e61807b1d151 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1ruwUm-0008k4-35;
-	Thu, 11 Apr 2024 15:37:48 +0000
-Date: Thu, 11 Apr 2024 23:37:02 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:dt-bindings] BUILD SUCCESS
- f4cb9ef3f58d7ee0d8a85f3cdaec35536b233fd1
-Message-ID: <202404112300.AuRkyGqA-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=finest.io header.i=parker@finest.io header.b="N+JmWxX8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=finest.io;
+	s=s1-ionos; t=1712850207; x=1713455007; i=parker@finest.io;
+	bh=Wmyh4+ECtBW0Jh/HVjgWQOVgBLp1r/1BdeWBCqXIMJU=;
+	h=X-UI-Sender-Class:From:To:Cc:Subject:Date;
+	b=N+JmWxX8X2C7iukAkyyle1+I3fOz7RM7RDk0GDHH1HhP0zu4JLEFcd96sXkELpB+
+	 LGM7jd0Py4pCpqzkTpJBwzgA9f6TXel4lA9P6+E/UYc4Xyjn2dLRirSBwaEhDkWmT
+	 c9NlzfkZ8xvBwLiYXt8O2ksx54Efyft1Tg7ZH6Re4U2epCTeEN6wiUpEhQjdJKsPL
+	 yA+aLj6vqvjlG8Tl1UBQpGjyF0ej4sSTpW77Jne7iFWmbgy24wnmsnnUqoQR1rCKe
+	 Gw0X80eq9/TVFx9gCFn63ZCu00MrEzAvG/hj7k60UA2ZwmBeYOh9LpT9qH7HIB7rE
+	 rhwueu2nxhw5l41jyw==
+X-UI-Sender-Class: 55c96926-9e95-11ee-ae09-1f7a4046a0f6
+Received: from finest.io ([98.159.241.229]) by mrelay.perfora.net (mreueus002
+ [74.208.5.2]) with ESMTPSA (Nemesis) id 0LsBB3-1suW0J0tXL-00to1W; Thu, 11 Apr
+ 2024 17:30:04 +0200
+From: parker@finest.io
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	linux-kernel@vger.kernel.org,
+	linux-serial@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org
+Cc: Parker Newman <pnewman@connecttech.com>
+Subject: [PATCH 0/2] serial: exar: add Connect Tech serial cards to Exar driver
+Date: Thu, 11 Apr 2024 11:29:25 -0400
+Message-ID: <cover.1712846025.git.pnewman@connecttech.com>
+X-Mailer: git-send-email 2.43.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:xqtzeB7BoSjGN76zplJXS9B9wmmGlf1dciTVJVO/D8DMswVfxcC
+ Jz8+JXKQu2GMLzZdvxrVG+dGGWoe5r6dmqzd1bx14wa+dKMu8noevmQx9rlyXprlTMdukSG
+ yK1KHNe8K1OskvxzGad1doerz6uOFgiNwdm8wlIDIPXjtFGa8D60PJM7kJU4bK3YcfJRJbO
+ LY0Vnmona40ZK0nlDWQ8g==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:XfH5YioreMY=;q20CEaQ7J56knqbZMJLYmfWUUgK
+ XmmlL0se7pW3gdsuAS3egnk7UTa8F/j+4dt/4tR5asMi+6zB/Jf1X1g82huV5o65LTh6dki74
+ eIQpVRbePI17eH1RF6lgve0cXxMVNAqzMwkXOxsWEtxcTXygI7O+K2IWK+q/Wgg3HEZbr8SpH
+ Z9jXS88vufPqjIw8K4//vG/gBYKqsl75/0cf5Pj6XEq8jHf8MAVo9kDnXAcWprNqvxLFFQVLW
+ tYe0NfpjrSfFL7TSJRbn0vAd9VqiB+xoTkzS6W89M1MvkvOrlUWmx+s24uHwaH6NDEmxef8re
+ ikMFZ3BIc5rlXC9nljVrPd8R2JcIg/qIagUHzKQwt2nvaN9mJ44W4XOi6F0hZSh/wlglDUNjo
+ KbJLybG2nbd2YkqBWuZK5QphcJpEkjRdqIdZgvy6n0pJvXWPixXk9Y7ZtlhcLJYXWtxYOQI4B
+ vsi+RMh4V+6LofVYOWcSeQGn1ROB6sq5Us9p+V7CBNkInVgGX3Ev85QbG8CLLYO8NKIR91W3M
+ Y/sheKDNQLL6ndiVYV29qdM1o1g5mqsd/toh8eJSdxBKx1fpm3dAhxdkVWChmac+MBulMIT5B
+ VxCiSeWOU/kbFOf6CQvjqqvUTrAFvPhIr0mYcDzotaoY+txoQspkd6ZS0Bv8uQI17Z5V6ZS7J
+ TJivTsfZWQDFShp9oCjTQ02Z6s6SXB3Sd8YZyCwerftwdYOnKh8pQ6kwcoVPcC5XuIeVINfWn
+ FPT6kNji1yLowUUeWUVAafL6tXJdZja6KDt8Ht/1Mq6DrXvnxi5oZE=
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git dt-bindings
-branch HEAD: f4cb9ef3f58d7ee0d8a85f3cdaec35536b233fd1  dt-bindings: PCI: ti,j721e-pci-host: Add support for J722S SoC
+From: Parker Newman <pnewman@connecttech.com>
 
-elapsed time: 1211m
+Hello,
+These patches add proper support for most of Connect Tech's (CTI) Exar
+based serial cards. Previously, only a subset of CTI's cards would work
+with the Exar driver while the rest required the CTI out-of-tree driver.
+These patches are intended to phase out the out-of-tree driver.
 
-configs tested: 146
-configs skipped: 3
+I am new to the mailing lists and contributing to the kernel so please
+let me know if I have made any mistakes or if you have any feedback.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Thank you,
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                         haps_hs_defconfig   gcc  
-arc                   randconfig-001-20240411   gcc  
-arc                   randconfig-002-20240411   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                           omap1_defconfig   gcc  
-arm                   randconfig-001-20240411   gcc  
-arm                   randconfig-002-20240411   gcc  
-arm                   randconfig-004-20240411   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   clang
-arm64                               defconfig   gcc  
-arm64                 randconfig-002-20240411   gcc  
-arm64                 randconfig-003-20240411   gcc  
-arm64                 randconfig-004-20240411   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240411   gcc  
-csky                  randconfig-002-20240411   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240411   clang
-i386         buildonly-randconfig-002-20240411   clang
-i386         buildonly-randconfig-003-20240411   clang
-i386         buildonly-randconfig-004-20240411   clang
-i386         buildonly-randconfig-005-20240411   clang
-i386         buildonly-randconfig-006-20240411   clang
-i386                                defconfig   clang
-i386                  randconfig-001-20240411   gcc  
-i386                  randconfig-002-20240411   gcc  
-i386                  randconfig-003-20240411   clang
-i386                  randconfig-004-20240411   clang
-i386                  randconfig-005-20240411   gcc  
-i386                  randconfig-006-20240411   clang
-i386                  randconfig-011-20240411   clang
-i386                  randconfig-012-20240411   gcc  
-i386                  randconfig-013-20240411   gcc  
-i386                  randconfig-014-20240411   gcc  
-i386                  randconfig-015-20240411   clang
-i386                  randconfig-016-20240411   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240411   gcc  
-loongarch             randconfig-002-20240411   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                            mac_defconfig   gcc  
-m68k                           sun3_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                         bigsur_defconfig   gcc  
-mips                      fuloong2e_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240411   gcc  
-nios2                 randconfig-002-20240411   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-32bit_defconfig   gcc  
-parisc                randconfig-001-20240411   gcc  
-parisc                randconfig-002-20240411   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc               randconfig-001-20240411   gcc  
-powerpc               randconfig-003-20240411   gcc  
-powerpc64             randconfig-002-20240411   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-002-20240411   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                         ecovec24_defconfig   gcc  
-sh                    randconfig-001-20240411   gcc  
-sh                    randconfig-002-20240411   gcc  
-sh                           se7206_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240411   gcc  
-sparc64               randconfig-002-20240411   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240411   gcc  
-um                    randconfig-002-20240411   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64                              defconfig   gcc  
-x86_64                           rhel-8.3-bpf   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                randconfig-001-20240411   gcc  
-xtensa                randconfig-002-20240411   gcc  
+Parker Newman (2):
+  serial: exar: add missing CTI/Exar PCI IDs to include/linux/pci_ids.h
+  serial: exar: adding CTI PCI/PCIe serial port support to 8250_exar
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+ drivers/tty/serial/8250/8250_exar.c | 1092 +++++++++++++++++++++++++--
+ include/linux/pci_ids.h             |  104 ++-
+ 2 files changed, 1094 insertions(+), 102 deletions(-)
+
+=2D-
+2.43.2
+
