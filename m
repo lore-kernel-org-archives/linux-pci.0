@@ -1,234 +1,244 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f49.google.com (mail-oa1-f49.google.com [209.85.160.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 574A855E7B
-	for <linux-pci@vger.kernel.org>; Sat, 13 Apr 2024 22:19:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CCA5224DD
+	for <linux-pci@vger.kernel.org>; Sun, 14 Apr 2024 10:33:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713046750; cv=none; b=TKHhS5xDujxpGVf+EHouSIQnnBZFaZgCwI5Vp5/itWYOHOnByHvR0LeKD1xUVdzrNx2Iy5pfCdOzp9UjhCpZVneL2UoBD/yoXoVGXc6xRtyM8AApZ4A9R0Ior6pO70poIEJjhl4PjtilLS3lXrKnxkoIDIAJJDmY0JkRAdcg7Uo=
+	t=1713090784; cv=none; b=dxQYtUMarHz9D3gMmZtSSUqSLy2nPwI3zArsuibtQICZft8e42Je/piQQu0q8fIL3Evn/xIU0mXrzUlNrH25gq3WX+Y/2gyrd/9svdIuBr6SNVO6pq/v2iF5BFEXChuFfTfovOezEYSqMblbXMwolwGvGu6DMCIpsWuA6iDAUvY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713046750; c=relaxed/simple;
-	bh=nyxsphQtcp36eo4pbRpRPN6NXzYsTM5OPmTvx4jmkb8=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=iVRsYK4ZOTHZX8SO9PIgPimQYYkTaOmep/HE1DVJUR8d6cLvErYdsaJRsktAnZRLfy5hdXAa8JQfAyR5nHZbj/L14eU8EMe2+mgtixGIHiTX7FQfAyKgeNz/Ai017fKZOmZOWfrbbs3wMjdcze6SPFLKre8FTUZlSRxYbxU61WQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HSopuKcX; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1713090784; c=relaxed/simple;
+	bh=GD2VZJ/Qqsxp3zuRDLUSfSvzp4vBjYYUvZyBFHVrN0s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=J4rs7utUFy3Vtbhu5zLfoStWdMg385obfweiOBXDV7bjWStsXqYPwfc4N+QrcsHEFH9AShHuo4ejmghQOn5NaWHUZ4657j0QN3A8JjrOiG5576amQsWiP9kQc8N8kCbRiz3TAkdPyMQGWoIsH164FHRqvx59oaQkAsTt7BJedcQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xT07n4fN; arc=none smtp.client-ip=209.85.160.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HSopuKcX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713046746; x=1744582746;
-  h=date:from:to:cc:subject:message-id;
-  bh=nyxsphQtcp36eo4pbRpRPN6NXzYsTM5OPmTvx4jmkb8=;
-  b=HSopuKcXm0Z7zMj9odUd8MqNsmVxmxKygr4g+HfPmGKxKV1pEr07GwuV
-   oietn0Fz+eZK/4/8GfHxY2Kd827/J1lcZQW1ILatR0O95diLirySOjd0d
-   fEQbHb+FZhk/E9gyOn6gaBwKsGm4iLn0bDOXtvhln928VmbcC1NuKTXM/
-   q1AH5gE6/bUrsSwqsG/EyagVUbO09ebisBQaSbLIYB4h8bKZbbuBPuFJk
-   c3R9FjqtLtjk4SsIO64H9nThqKtzLtFiMFJmUnDw7dvwHOCKYuyS7xDuY
-   OdZx5WEFUq6+rLRdJb+flpOsaEZwF7HtXiQJ8NxioaMQZ3S9brsbxVNrA
-   Q==;
-X-CSE-ConnectionGUID: 7n83hk3lQmO+4IQjDImjvw==
-X-CSE-MsgGUID: H0ntJXr3Rb2jEvwu8PxABg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11043"; a="11426114"
-X-IronPort-AV: E=Sophos;i="6.07,199,1708416000"; 
-   d="scan'208";a="11426114"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Apr 2024 15:19:04 -0700
-X-CSE-ConnectionGUID: UCIF3+nJQjuVZATVEtJasw==
-X-CSE-MsgGUID: wHo3isRQT5GMfMxl/P5+EA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,199,1708416000"; 
-   d="scan'208";a="21636388"
-Received: from unknown (HELO 23c141fc0fd8) ([10.239.97.151])
-  by fmviesa007.fm.intel.com with ESMTP; 13 Apr 2024 15:19:03 -0700
-Received: from kbuild by 23c141fc0fd8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1rvli8-00034g-1s;
-	Sat, 13 Apr 2024 22:19:00 +0000
-Date: Sun, 14 Apr 2024 06:18:02 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:ims-removal] BUILD SUCCESS
- b0d460e1e2c9a5b59b7e2a9577a64dd2ef710a5b
-Message-ID: <202404140600.a7uZOyAt-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xT07n4fN"
+Received: by mail-oa1-f49.google.com with SMTP id 586e51a60fabf-23333ef4a02so1722411fac.1
+        for <linux-pci@vger.kernel.org>; Sun, 14 Apr 2024 03:33:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1713090781; x=1713695581; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ezWv8Uk8r0iZzTSx1VI+aatOFO9g5HSxqsWTUv27XdY=;
+        b=xT07n4fN2MXFmrGmyS6NquXlcu85iBt+fCszcf7oYJAyZittCaFBKXk5fb/XHlucQ8
+         VD1frCRZknnC1V8pNk6YrfRB9oXGTi4AVxPvtTVogvD4bTL3NJjSOQMu0VDpUhCj+9Zx
+         KXr8hfPmTfMT50fvft6EikXQzea7UudlqB+zW4gTfhSiiy1FiaN59dqcm0oRz85ZmgT4
+         x6+6UxB/JRUsvh9d3PiN3alj4oOJcl+qPaKalwITnYsKXRjSWYSOzOM4xmIj3iyWfXu6
+         +wUIYGWtIXe8mnrrFpQQBEEsn/vINEju6PLW0xTwRbZ8dtdbAIPpiPvi7W+a+EUHxsjc
+         DF9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1713090781; x=1713695581;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ezWv8Uk8r0iZzTSx1VI+aatOFO9g5HSxqsWTUv27XdY=;
+        b=Ge5pjEElKUOdH8WtqOoZjGAMhHXUWcKi9QYOp4vBoVN4kRoL3Eui7Y3013jaLeBnoJ
+         exWLAL5eDqS+t3QsJJ1RhMYYk+L7UsAmwhNgszbxPcmd0sW6HdFDdN65y2xrcZUsiLVj
+         m59yLDSGaMI6nvBIi1rTqTIBYa/cUqNyCM3RyCIvKsQIZgVPnvfVw10Wl0dk6eSmh1W+
+         irDVW583mDDfUfBbv1sYWVqvKL0/e2ezKfuCdCbXi3wKFVQ80IqOQaj2T+XEk3aQJPOK
+         ZcFE84+0oosWk+IGgGP9dHM3XGFShGa3A0CA432UpkzacZ5H08WZITC2IZQxFNFRHwoB
+         uMkw==
+X-Forwarded-Encrypted: i=1; AJvYcCVX1pOpPycS6/NnBnoqLAmqyxiO40AG9f7hUIOPbl7naVg/RbOVppHdfAxWekv6mswl1gVDxzZgWvvwhIEWABm2mHoqU4Wx5oxV
+X-Gm-Message-State: AOJu0YzGY55EXXcfUxlU0z8woaisHBSaGmLnNaPwhTHxxx75BVu5IRa7
+	oTWyPOiSUWm6qdwR1LUuWRvIZu0SWI2GSLmDIn6SoWy0QtNoRRqp0JupefYrMw==
+X-Google-Smtp-Source: AGHT+IGHvQOl59qxFzhWvb2JB596M3kORklxXhpjbwofS/WCy0scK/ufcS2lkNd5/pxWK7SME16DWg==
+X-Received: by 2002:a05:6871:60f:b0:229:87f6:ee8a with SMTP id w15-20020a056871060f00b0022987f6ee8amr8649408oan.30.1713090781146;
+        Sun, 14 Apr 2024 03:33:01 -0700 (PDT)
+Received: from thinkpad ([120.60.136.171])
+        by smtp.gmail.com with ESMTPSA id 1-20020a056a00072100b006ed045e3a70sm5391418pfm.25.2024.04.14.03.32.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 14 Apr 2024 03:33:00 -0700 (PDT)
+Date: Sun, 14 Apr 2024 16:02:56 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Frank Li <Frank.li@nxp.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzysztof.kozlowski+dt@linaro.org>,
+	Conor Dooley <conor+dt@kernel.org>, imx@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org
+Subject: Re: [PATCH v5 5/5] PCI: dwc: Add common send PME_Turn_Off message
+ method
+Message-ID: <20240414103256.GB2294@thinkpad>
+References: <20240319-pme_msg-v5-0-af9ffe57f432@nxp.com>
+ <20240319-pme_msg-v5-5-af9ffe57f432@nxp.com>
+ <20240405062426.GB2953@thinkpad>
+ <ZhALNGyNTAzN86GF@lizhi-Precision-Tower-5810>
+ <20240406040131.GC2678@thinkpad>
+ <ZhQJD7GjRpDwa6jI@lizhi-Precision-Tower-5810>
+ <20240412170548.GB19020@thinkpad>
+ <Zhmi0XEUFMIO9OLx@lizhi-Precision-Tower-5810>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <Zhmi0XEUFMIO9OLx@lizhi-Precision-Tower-5810>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git ims-removal
-branch HEAD: b0d460e1e2c9a5b59b7e2a9577a64dd2ef710a5b  Revert "genirq/msi: Provide constants for PCI/IMS support"
+On Fri, Apr 12, 2024 at 05:08:33PM -0400, Frank Li wrote:
+> On Fri, Apr 12, 2024 at 10:35:48PM +0530, Manivannan Sadhasivam wrote:
+> > On Mon, Apr 08, 2024 at 11:11:11AM -0400, Frank Li wrote:
+> > > On Sat, Apr 06, 2024 at 09:31:31AM +0530, Manivannan Sadhasivam wrote:
+> > > > On Fri, Apr 05, 2024 at 10:31:16AM -0400, Frank Li wrote:
+> > > > > On Fri, Apr 05, 2024 at 11:54:26AM +0530, Manivannan Sadhasivam wrote:
+> > > > > > On Tue, Mar 19, 2024 at 12:07:15PM -0400, Frank Li wrote:
+> > > > > > 
+> > > > > > PCI: dwc: Add generic MSG TLP support for sending PME_Turn_Off during system suspend
+> > > > > > 
+> > > > > > > Reserve space at end of first IORESOURCE_MEM window as message TLP MMIO
+> > > > > > > window. This space's size is 'region_align'.
+> > > > > > > 
+> > > > > > > Set outbound ATU map memory write to send PCI message. So one MMIO write
+> > > > > > > can trigger a PCI message, such as PME_Turn_Off.
+> > > > > > > 
+> > > > > > > Add common dwc_pme_turn_off() function.
+> > > > > > > 
+> > > > > > > Call dwc_pme_turn_off() to send out PME_Turn_Off message in general
+> > > > > > > dw_pcie_suspend_noirq() if there are not platform callback pme_turn_off()
+> > > > > > > exist.
+> > > > > > > 
+> > > > > > 
+> > > > > > How about:
+> > > > > > 
+> > > > > > "Instead of relying on the vendor specific implementations to send the
+> > > > > > PME_Turn_Off message, let's introduce a generic way of sending the message using
+> > > > > > the MSG TLP.
+> > > > > > 
+> > > > > > This is achieved by reserving a region for MSG TLP of size 'pci->region_align',
+> > > > > > at the end of the first IORESOURCE_MEM window of the host bridge. And then
+> > > > > > sending the PME_Turn_Off message during system suspend with the help of iATU.
+> > > > > > 
+> > > > > > It should be noted that this generic implementation is optional for the glue
+> > > > > > drivers and can be overridden by a custom 'pme_turn_off' callback."
+> > > > > > 
+> > > > > > > Signed-off-by: Frank Li <Frank.Li@nxp.com>
+> > > > > > > ---
+> > > > > > >  drivers/pci/controller/dwc/pcie-designware-host.c | 94 ++++++++++++++++++++++-
+> > > > > > >  drivers/pci/controller/dwc/pcie-designware.h      |  3 +
+> > > > > > >  2 files changed, 93 insertions(+), 4 deletions(-)
+> > > > > > > 
+> > > > > > > diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > > > > > index 267687ab33cbc..d5723fce7a894 100644
+> > > > > > > --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > > > > > +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> > > > > > > @@ -393,6 +393,31 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+> > > > > > >  	return 0;
+> > > > > > >  }
+> > > > > > >  
+> > > > > > > +static void dw_pcie_host_request_msg_tlp_res(struct dw_pcie_rp *pp)
+> > > > > > > +{
+> > > > > > > +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+> > > > > > > +	struct resource_entry *win;
+> > > > > > > +	struct resource *res;
+> > > > > > > +
+> > > > > > > +	win = resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM);
+> > > > > > > +	if (win) {
+> > > > > > > +		res = devm_kzalloc(pci->dev, sizeof(*res), GFP_KERNEL);
+> > > > > > > +		if (!res)
+> > > > > > > +			return;
+> > > > > > > +
+> > > > > > > +		/* Reserve last region_align block as message TLP space */
+> > > > > > > +		res->start = win->res->end - pci->region_align + 1;
+> > > > > > > +		res->end = win->res->end;
+> > > > > > 
+> > > > > > Don't you need to adjust the host bridge window size and end address?
+> > > > > 
+> > > > > Needn't. request_resource will reserve it from bridge window. Like malloc,
+> > > > > if you malloc to get a region of memory, which will never get by malloc
+> > > > > again utill you call free.
+> > > > > 
+> > > > 
+> > > > Hmm, will that modify the window->res->end address and size?
+> > > 
+> > > No. This windows already reported to pci system before this function. It is
+> > > not good to modify window-res-end. It just add child resource like below.
+> > > 
+> > > windows is root resource, which will create may child when call
+> > > request_resource.
+> > >           bridge -> windows
+> > > 		child1 -> msg
+> > > 		child2 -> pci ep1
+> > > 		child3 -> pci_ep2.
+> > > 		...
+> > > 
+> > > Although you see whole bridge window, 'msg' already used and put under root
+> > > resource,  new pci devices will never use 'msg' resource. 
+> > > 
+> > > If change windows->res->end here, I worry about it may broken resource
+> > > tree.
+> > > 
+> > 
+> > Hmm, I think your argument is fair. I was worrying that if someone try to
+> > map separately by referencing win->res->end, then they will see access
+> > violation.
+> 
+> It should be wrong if use it without request resource.
+> 
+> > 
+> > But why can't you just allocate the resource using 'alloc_resource()' API
+> > instead of always allocating at the end?
+> 
+> Alloc will start from windows (for example: 0x8000_0000). 
+> 0x8000_0000 -> 0x8001_0000 will be allocated to 'msg'.
+> 
+> If ep1 want to get 1MB windows, 0x8010_0000 will return. There is a big
+> hole between 0x8001_0000 to 0x8010_0000.
+> 
+> I just want to reduce impact to existed system. So PCIe memory layout will
+> be kept the same w/o this patch.
+> 
+> There are not big difference between allocate resource and reserve resource
+> for 'msg'. Just little better friendly for exist system.
+> 
 
-elapsed time: 1447m
+Ok. This sounds fine to me. Please add this information as a comment so that
+everyone will be aware of the reasoning.
 
-configs tested: 157
-configs skipped: 3
+- Mani
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                          axs101_defconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240413   gcc  
-arc                   randconfig-002-20240413   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                                 defconfig   clang
-arm                   randconfig-002-20240413   gcc  
-arm                         socfpga_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                            allyesconfig   clang
-arm64                               defconfig   gcc  
-csky                             alldefconfig   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240413   gcc  
-csky                  randconfig-002-20240413   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240413   gcc  
-i386         buildonly-randconfig-002-20240413   gcc  
-i386         buildonly-randconfig-003-20240413   clang
-i386         buildonly-randconfig-004-20240413   clang
-i386         buildonly-randconfig-005-20240413   clang
-i386         buildonly-randconfig-006-20240413   clang
-i386                                defconfig   clang
-i386                  randconfig-001-20240413   clang
-i386                  randconfig-002-20240413   gcc  
-i386                  randconfig-003-20240413   clang
-i386                  randconfig-004-20240413   gcc  
-i386                  randconfig-005-20240413   clang
-i386                  randconfig-006-20240413   clang
-i386                  randconfig-011-20240413   gcc  
-i386                  randconfig-012-20240413   clang
-i386                  randconfig-013-20240413   gcc  
-i386                  randconfig-014-20240413   gcc  
-i386                  randconfig-015-20240413   clang
-i386                  randconfig-016-20240413   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240413   gcc  
-loongarch             randconfig-002-20240413   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                         amcore_defconfig   gcc  
-m68k                         apollo_defconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                     cu1000-neo_defconfig   gcc  
-mips                     loongson2k_defconfig   gcc  
-mips                      maltasmvp_defconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240413   gcc  
-nios2                 randconfig-002-20240413   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc                 simple_smp_defconfig   gcc  
-openrisc                       virt_defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                generic-32bit_defconfig   gcc  
-parisc                randconfig-001-20240413   gcc  
-parisc                randconfig-002-20240413   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                      arches_defconfig   gcc  
-powerpc                    ge_imp3a_defconfig   gcc  
-powerpc                     kmeter1_defconfig   gcc  
-powerpc                 mpc832x_rdb_defconfig   gcc  
-powerpc                      ppc64e_defconfig   gcc  
-powerpc64             randconfig-002-20240413   gcc  
-powerpc64             randconfig-003-20240413   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv                 randconfig-002-20240413   gcc  
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240413   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                          lboxre2_defconfig   gcc  
-sh                    randconfig-001-20240413   gcc  
-sh                    randconfig-002-20240413   gcc  
-sh                          rsk7201_defconfig   gcc  
-sh                            titan_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240413   gcc  
-sparc64               randconfig-002-20240413   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64                              defconfig   gcc  
-x86_64                randconfig-011-20240413   clang
-x86_64                randconfig-012-20240413   clang
-x86_64                randconfig-013-20240413   clang
-x86_64                randconfig-014-20240413   clang
-x86_64                randconfig-016-20240413   clang
-x86_64                randconfig-073-20240413   clang
-x86_64                randconfig-076-20240413   clang
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                  cadence_csp_defconfig   gcc  
-xtensa                randconfig-001-20240413   gcc  
-xtensa                randconfig-002-20240413   gcc  
-xtensa                         virt_defconfig   gcc  
-xtensa                    xip_kc705_defconfig   gcc  
+> Frank
+> 
+> > 
+> > - Mani
+> > 
+> > > > 
+> > > > > > 
+> > > > > > > +		res->name = "msg";
+> > > > > > > +		res->flags = win->res->flags | IORESOURCE_BUSY;
+> > > > > > > +
+> > > > > > 
+> > > > > > Shouldn't this resource be added back to the host bridge?
+> > > > > 
+> > > > > No, this resource will reserver for msg only for whole bridge life cycle.
+> > > > > Genenally alloc resource only happen at PCI devices probe. All pci space
+> > > > > will be fixed after system probe.
+> > > > > 
+> > > > 
+> > > > I don't think so. This resource still belongs to the host bridge, so we should
+> > > > add it back.
+> > > 
+> > > When add back?  It was reserved at bridge probe. When bridge remove, all
+> > > resource will released. 
+> > > 
+> > > > 
+> > > > - Mani
+> > > > 
+> > > > -- 
+> > > > மணிவண்ணன் சதாசிவம்
+> > 
+> > -- 
+> > மணிவண்ணன் சதாசிவம்
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+மணிவண்ணன் சதாசிவம்
