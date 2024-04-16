@@ -1,39 +1,38 @@
 Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B4012D1E0;
-	Tue, 16 Apr 2024 13:30:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851AC12D219;
+	Tue, 16 Apr 2024 13:30:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713274223; cv=none; b=tW0XXf/DRkYuvwuioVWvKYWblCSGc/G4v+BkWGZwSA248nkc2tzZokG4+LD28MKxV7oGt9ClhtUamKqjBuDyXWrrUlMIrS/G2h0by62y0r7BAvDV7jBxxn71qS1Ywrs9L/Xm2EhF72dy35LMY4Zj97Kkt9GYVJn28YbZkh2rw8w=
+	t=1713274224; cv=none; b=YQnjjM7BHY0IEw18Lh3q3bKts3LUTd2nfchil+YIlSxPwGJKjILcnCJ7ix4FYR76mDLTEf/yFeA/9T4dxrYs7ryUh3Vnid+jhHAth2FMDZLgWXujETLnm10IeCRBFjDCBh/y3gv7o09Wpol5j/kSR7e8vOc3BHBKdKMpqSGbz/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713274223; c=relaxed/simple;
-	bh=jCHXzfxyA3cVRfcENK9qyg8NQxzPtrBSSYd3Ot8KwRo=;
+	s=arc-20240116; t=1713274224; c=relaxed/simple;
+	bh=bhAcdQhNVtJ/WY7T35xnlNhq8WgY2YmZ/UU091QPnqA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=fSjdxb2uG9dAsAs9xVGs4EXNymbzR9q2DjwlZHEPEEmqlnu792SIylVbENOPistNMUQnD/FNsWKkhTIIF0GlJEaOKKBZgFRYnDdo4PycJvLBS3yyNFc/wqnql+akomtSR3s6i1awuGGC3xrmHXs6Yk+ksjBW8lqSzfop4RBFSNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=muvG93MX; arc=none smtp.client-ip=217.70.183.194
+	 In-Reply-To:To:Cc; b=SWDUqJzqUvcxm1pnyCtvygp0/K5p/qG0tXmYC6bongln0GhrlmdvKiIZGorLKGJc5FQ7dTChBuP/4VeidzEl9wasq3YJFjmZ+3A2RdYd9D6QAlQNV/UipS7Gen327lnptMNdZxq2410qJnE2HCFHo7KssMefKBJhXzGgaSzttAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=kzUh70Vr; arc=none smtp.client-ip=217.70.183.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="muvG93MX"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 70D3740010;
-	Tue, 16 Apr 2024 13:30:16 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="kzUh70Vr"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id CFF0A40003;
+	Tue, 16 Apr 2024 13:30:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1713274218;
+	t=1713274214;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=miPb/e5NuKGB8qP7OIDdVZ0YjYkj1W+eBv5Jcf20cUo=;
-	b=muvG93MXchdP5F7jPyPed9u75C1w/FOQ2FBCnZY7hO9a5kA/sfhPiU04mhOQXplIqojLTN
-	7SMAMRFS4ar5yR5TpJXG+gx5iVz/CEFJuvgJjGDU/FV+hPj8my4m4ywEADPJkN5soG6RPo
-	/EwwjzoN86WziiSJD5rTw9OaHSXn5TrcD0krPZCP3AFP9VpBV+dv8krx9kDHoTHHOzI2OO
-	sCP2FTGTakn+sPLwgfypG4pJEry4qKcO5d7C3m13OAihxmJrddx0MyujwddPCha8wD929K
-	jNItLEWqpH+WYbxVHYZGz6e6mH/oNLvuextThyutnRaK0xgaYMAhkLQWKpLA9A==
+	bh=N+wkZZoLT0Vq8kTdRlFm+WcHMzeYn9ukxLpZ0zVifpE=;
+	b=kzUh70Vrr4eagnn1vKXVoieorCICcHWLdjzCIVFkuVcRjIywXs6GpVRYI21bGiut28ZERY
+	plMS5KQD7MEEFWSz9A9Hs2rXj0mr4EQDx4XXuihwHXv+xn/5bFVdka3/q0E6kHlgNVJtZw
+	TYwk13IUo79YaWs/1dWzCr5Du4tTPccdaTdc7ZIqXhI4LhI5KyKdyVUaRz/pxEKKEG7Vmu
+	i7SN3aogCjZ/IllAYWg0m+Vkg8lBvz35dRyOBRdN2AJHxxbiVvk0q7Xo7Sc0iW0j33uSu+
+	npMeqIvd62V9pOCv7yRvabfumVQCXgNCSSj1HCTRIR5lqUDjsuxSA/wEhBuwqA==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Tue, 16 Apr 2024 15:29:54 +0200
-Subject: [PATCH v5 05/11] PCI: cadence: Extract link setup sequence from
- cdns_pcie_host_setup()
+Date: Tue, 16 Apr 2024 15:29:52 +0200
+Subject: [PATCH v5 03/11] mux: add mux_chip_resume() function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v5-5-4b8c46711ded@bootlin.com>
+Message-Id: <20240102-j7200-pcie-s2r-v5-3-4b8c46711ded@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v5-0-4b8c46711ded@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v5-0-4b8c46711ded@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -63,97 +62,67 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-The function cdns_pcie_host_setup() mixes probe structure and link setup.
+The mux_chip_resume() function restores a mux_chip using the cached state
+of each mux.
 
-The link setup must be done during the resume sequence. So extract it from
-cdns_pcie_host_setup() and create a dedicated function.
-
-Reviewed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/pci/controller/cadence/pcie-cadence-host.c | 39 ++++++++++++++--------
- drivers/pci/controller/cadence/pcie-cadence.h      |  6 ++++
- 2 files changed, 32 insertions(+), 13 deletions(-)
+ drivers/mux/core.c         | 29 +++++++++++++++++++++++++++++
+ include/linux/mux/driver.h |  1 +
+ 2 files changed, 30 insertions(+)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 5b14f7ee3c79..93d9922730af 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -497,6 +497,30 @@ static int cdns_pcie_host_init(struct device *dev,
- 	return cdns_pcie_host_init_address_translation(rc);
+diff --git a/drivers/mux/core.c b/drivers/mux/core.c
+index 775816112932..0742aa2a7c73 100644
+--- a/drivers/mux/core.c
++++ b/drivers/mux/core.c
+@@ -215,6 +215,35 @@ void mux_chip_free(struct mux_chip *mux_chip)
  }
+ EXPORT_SYMBOL_GPL(mux_chip_free);
  
-+int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
++/**
++ * mux_chip_resume() - restores the mux-chip state
++ * @mux_chip: The mux-chip to resume.
++ *
++ * Restores the mux-chip state.
++ *
++ * Return: Zero on success or a negative errno on error.
++ */
++int mux_chip_resume(struct mux_chip *mux_chip)
 +{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	struct device *dev = rc->pcie.dev;
-+	int ret;
++	int ret, i;
 +
-+	if (rc->quirk_detect_quiet_flag)
-+		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
++	for (i = 0; i < mux_chip->controllers; ++i) {
++		struct mux_control *mux = &mux_chip->mux[i];
 +
-+	cdns_pcie_host_enable_ptm_response(pcie);
++		if (mux->cached_state == MUX_CACHE_UNKNOWN)
++			continue;
 +
-+	ret = cdns_pcie_start_link(pcie);
-+	if (ret) {
-+		dev_err(dev, "Failed to start link\n");
-+		return ret;
++		ret = mux_control_set(mux, mux->cached_state);
++		if (ret < 0) {
++			dev_err(&mux_chip->dev, "unable to restore state\n");
++			return ret;
++		}
 +	}
 +
-+	ret = cdns_pcie_host_start_link(rc);
-+	if (ret)
-+		dev_dbg(dev, "PCIe link never came up\n");
-+
 +	return 0;
 +}
++EXPORT_SYMBOL_GPL(mux_chip_resume);
 +
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ static void devm_mux_chip_release(struct device *dev, void *res)
  {
- 	struct device *dev = rc->pcie.dev;
-@@ -533,20 +557,9 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 		return PTR_ERR(rc->cfg_base);
- 	rc->cfg_res = res;
+ 	struct mux_chip *mux_chip = *(struct mux_chip **)res;
+diff --git a/include/linux/mux/driver.h b/include/linux/mux/driver.h
+index 18824064f8c0..2a7e5ec5d540 100644
+--- a/include/linux/mux/driver.h
++++ b/include/linux/mux/driver.h
+@@ -88,6 +88,7 @@ struct mux_chip *mux_chip_alloc(struct device *dev,
+ int mux_chip_register(struct mux_chip *mux_chip);
+ void mux_chip_unregister(struct mux_chip *mux_chip);
+ void mux_chip_free(struct mux_chip *mux_chip);
++int mux_chip_resume(struct mux_chip *mux_chip);
  
--	if (rc->quirk_detect_quiet_flag)
--		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
--
--	cdns_pcie_host_enable_ptm_response(pcie);
--
--	ret = cdns_pcie_start_link(pcie);
--	if (ret) {
--		dev_err(dev, "Failed to start link\n");
--		return ret;
--	}
--
--	ret = cdns_pcie_host_start_link(rc);
-+	ret = cdns_pcie_host_link_setup(rc);
- 	if (ret)
--		dev_dbg(dev, "PCIe link never came up\n");
-+		return ret;
- 
- 	for (bar = RP_BAR0; bar <= RP_NO_BAR; bar++)
- 		rc->avail_ib_bar[bar] = true;
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 7a66a2f815dc..1d37d5f9f811 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -521,10 +521,16 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
- }
- 
- #ifdef CONFIG_PCIE_CADENCE_HOST
-+int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc);
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
- void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where);
- #else
-+static inline int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
-+{
-+	return 0;
-+}
-+
- static inline int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- {
- 	return 0;
+ struct mux_chip *devm_mux_chip_alloc(struct device *dev,
+ 				     unsigned int controllers,
 
 -- 
 2.39.2
