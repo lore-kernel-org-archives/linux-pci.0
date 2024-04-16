@@ -1,39 +1,39 @@
 Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 961A412CDBB;
-	Tue, 16 Apr 2024 13:30:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B4012D1E0;
+	Tue, 16 Apr 2024 13:30:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713274223; cv=none; b=Syhz3C6AmZbj1BspUyLH3IhDwRgy1/zL7Ly40iJRIiZBPTZQVvG9I1lCbbLbspcwopKL2dxFV/nox7HMK0T7Km19iJRo1zSAOIrwtMSwUn4vIIxgLE8eevlinmm74arSAmxH8mXOujVKzgnxFAJqGoqvrtrf6c3hC8Idu5egb7M=
+	t=1713274223; cv=none; b=tW0XXf/DRkYuvwuioVWvKYWblCSGc/G4v+BkWGZwSA248nkc2tzZokG4+LD28MKxV7oGt9ClhtUamKqjBuDyXWrrUlMIrS/G2h0by62y0r7BAvDV7jBxxn71qS1Ywrs9L/Xm2EhF72dy35LMY4Zj97Kkt9GYVJn28YbZkh2rw8w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1713274223; c=relaxed/simple;
-	bh=1HPfLwnNxhMFYvL7QXVkxva28ELMiug/Navcejf1G+c=;
+	bh=jCHXzfxyA3cVRfcENK9qyg8NQxzPtrBSSYd3Ot8KwRo=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=N9o8qKV6FgLQ6zztYiI7kg4XYqZBfNvJE4OuQhnVd+eLGMWFJ0rfEzx8DW4NEMfvMo3xFdTu2o9qdjarV5uud2XiU6XSBTMfA7QSlAcKtQB5L3buiVY/n318ZMKhdtRHxxWWtKIiu1pnwIyWcSGB45MQI0VHI55fICYIwUuUAWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=O/aQWG4j; arc=none smtp.client-ip=217.70.183.194
+	 In-Reply-To:To:Cc; b=fSjdxb2uG9dAsAs9xVGs4EXNymbzR9q2DjwlZHEPEEmqlnu792SIylVbENOPistNMUQnD/FNsWKkhTIIF0GlJEaOKKBZgFRYnDdo4PycJvLBS3yyNFc/wqnql+akomtSR3s6i1awuGGC3xrmHXs6Yk+ksjBW8lqSzfop4RBFSNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=muvG93MX; arc=none smtp.client-ip=217.70.183.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="O/aQWG4j"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 21B3D4000B;
-	Tue, 16 Apr 2024 13:30:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="muvG93MX"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 70D3740010;
+	Tue, 16 Apr 2024 13:30:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1713274212;
+	t=1713274218;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xqh2Batmb/usTjbVB3bshxxGezo7bBmN6Z74wQtMSDE=;
-	b=O/aQWG4jnyVFqgryJ4wC0kevnEfeKbeON6EN7zqfeUEIDFAMNrSCY+JuB4qADAQtcFDEvk
-	PzfDkXe0TljMj7xxU/cmXiD/LruUx67DAl7iaNX5US2plim9DPQgOiT1mfSBFnuE4l/qKm
-	T3Zc2Dyv2n+tRhpqpXMvEBfxOr/iTTMFfPhX07gOSBK8gs7ITrdf0OPOPoVqrZLI0tD9kc
-	TofaDM27ViToPe8QUiGHsSdoV4OBgS9p1+uZ7zMQOhsZ5poFF3iSBmxUW1JhOVtq/trDLg
-	0AwBEpVv/BARG4KhsivBvyyla7/WV6fDs9GIYepy9DfHjJbbPo3LE2BhRHf06A==
+	bh=miPb/e5NuKGB8qP7OIDdVZ0YjYkj1W+eBv5Jcf20cUo=;
+	b=muvG93MXchdP5F7jPyPed9u75C1w/FOQ2FBCnZY7hO9a5kA/sfhPiU04mhOQXplIqojLTN
+	7SMAMRFS4ar5yR5TpJXG+gx5iVz/CEFJuvgJjGDU/FV+hPj8my4m4ywEADPJkN5soG6RPo
+	/EwwjzoN86WziiSJD5rTw9OaHSXn5TrcD0krPZCP3AFP9VpBV+dv8krx9kDHoTHHOzI2OO
+	sCP2FTGTakn+sPLwgfypG4pJEry4qKcO5d7C3m13OAihxmJrddx0MyujwddPCha8wD929K
+	jNItLEWqpH+WYbxVHYZGz6e6mH/oNLvuextThyutnRaK0xgaYMAhkLQWKpLA9A==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Tue, 16 Apr 2024 15:29:51 +0200
-Subject: [PATCH v5 02/11] i2c: omap: wakeup the controller during suspend()
- callback
+Date: Tue, 16 Apr 2024 15:29:54 +0200
+Subject: [PATCH v5 05/11] PCI: cadence: Extract link setup sequence from
+ cdns_pcie_host_setup()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,7 +42,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v5-2-4b8c46711ded@bootlin.com>
+Message-Id: <20240102-j7200-pcie-s2r-v5-5-4b8c46711ded@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v5-0-4b8c46711ded@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v5-0-4b8c46711ded@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -59,69 +59,101 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
  gregory.clement@bootlin.com, theo.lebrun@bootlin.com, 
  thomas.petazzoni@bootlin.com, u-kumar1@ti.com, 
- Thomas Richard <thomas.richard@bootlin.com>, 
- Wolfram Sang <wsa+renesas@sang-engineering.com>
+ Thomas Richard <thomas.richard@bootlin.com>
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-A device may need the controller up during suspend_noirq() or
-resume_noirq().
-But if the controller is autosuspended, there is no way to wakeup it during
-suspend_noirq() or resume_noirq() because runtime pm is disabled at this
-time.
+The function cdns_pcie_host_setup() mixes probe structure and link setup.
 
-The suspend() callback wakes up the controller, so it is available until
-its suspend_noirq() callback (pm_runtime_force_suspend()).
-During the resume, it's restored by resume_noirq() callback
-(pm_runtime_force_resume()). Then resume() callback enables autosuspend.
+The link setup must be done during the resume sequence. So extract it from
+cdns_pcie_host_setup() and create a dedicated function.
 
-So the controller is up during a little time slot in suspend and resume
-sequences even if it's not used.
-
-Reviewed-by: Andi Shyti <andi.shyti@kernel.org>
-Acked-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Reviewed-by: Tony Lindgren <tony@atomide.com>
+Reviewed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/i2c/busses/i2c-omap.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
+ drivers/pci/controller/cadence/pcie-cadence-host.c | 39 ++++++++++++++--------
+ drivers/pci/controller/cadence/pcie-cadence.h      |  6 ++++
+ 2 files changed, 32 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/i2c/busses/i2c-omap.c b/drivers/i2c/busses/i2c-omap.c
-index 42165ef57946..28417b2a18b0 100644
---- a/drivers/i2c/busses/i2c-omap.c
-+++ b/drivers/i2c/busses/i2c-omap.c
-@@ -1575,9 +1575,31 @@ static int __maybe_unused omap_i2c_runtime_resume(struct device *dev)
- 	return 0;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
+index 5b14f7ee3c79..93d9922730af 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence-host.c
++++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
+@@ -497,6 +497,30 @@ static int cdns_pcie_host_init(struct device *dev,
+ 	return cdns_pcie_host_init_address_translation(rc);
  }
  
-+static int omap_i2c_suspend(struct device *dev)
++int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
 +{
-+	/*
-+	 * If the controller is autosuspended, there is no way to wakeup it once
-+	 * runtime pm is disabled (in suspend_late()).
-+	 * But a device may need the controller up during suspend_noirq() or
-+	 * resume_noirq().
-+	 * Wakeup the controller while runtime pm is enabled, so it is available
-+	 * until its suspend_noirq(), and from resume_noirq().
-+	 */
-+	return pm_runtime_resume_and_get(dev);
-+}
++	struct cdns_pcie *pcie = &rc->pcie;
++	struct device *dev = rc->pcie.dev;
++	int ret;
 +
-+static int omap_i2c_resume(struct device *dev)
-+{
-+	pm_runtime_mark_last_busy(dev);
-+	pm_runtime_put_autosuspend(dev);
++	if (rc->quirk_detect_quiet_flag)
++		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
++
++	cdns_pcie_host_enable_ptm_response(pcie);
++
++	ret = cdns_pcie_start_link(pcie);
++	if (ret) {
++		dev_err(dev, "Failed to start link\n");
++		return ret;
++	}
++
++	ret = cdns_pcie_host_start_link(rc);
++	if (ret)
++		dev_dbg(dev, "PCIe link never came up\n");
 +
 +	return 0;
 +}
 +
- static const struct dev_pm_ops omap_i2c_pm_ops = {
- 	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
- 				      pm_runtime_force_resume)
-+	SET_SYSTEM_SLEEP_PM_OPS(omap_i2c_suspend, omap_i2c_resume)
- 	SET_RUNTIME_PM_OPS(omap_i2c_runtime_suspend,
- 			   omap_i2c_runtime_resume, NULL)
- };
+ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ {
+ 	struct device *dev = rc->pcie.dev;
+@@ -533,20 +557,9 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ 		return PTR_ERR(rc->cfg_base);
+ 	rc->cfg_res = res;
+ 
+-	if (rc->quirk_detect_quiet_flag)
+-		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
+-
+-	cdns_pcie_host_enable_ptm_response(pcie);
+-
+-	ret = cdns_pcie_start_link(pcie);
+-	if (ret) {
+-		dev_err(dev, "Failed to start link\n");
+-		return ret;
+-	}
+-
+-	ret = cdns_pcie_host_start_link(rc);
++	ret = cdns_pcie_host_link_setup(rc);
+ 	if (ret)
+-		dev_dbg(dev, "PCIe link never came up\n");
++		return ret;
+ 
+ 	for (bar = RP_BAR0; bar <= RP_NO_BAR; bar++)
+ 		rc->avail_ib_bar[bar] = true;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index 7a66a2f815dc..1d37d5f9f811 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -521,10 +521,16 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
+ }
+ 
+ #ifdef CONFIG_PCIE_CADENCE_HOST
++int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc);
+ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
+ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
+ 			       int where);
+ #else
++static inline int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
++{
++	return 0;
++}
++
+ static inline int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
+ {
+ 	return 0;
 
 -- 
 2.39.2
