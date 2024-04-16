@@ -1,38 +1,39 @@
 Received: from relay2-d.mail.gandi.net (relay2-d.mail.gandi.net [217.70.183.194])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19A9C12C7FB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5083E12C81A;
 	Tue, 16 Apr 2024 13:30:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.194
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713274220; cv=none; b=JlZi1Kvr/8CwZgqhc917vKkcGie5uQn4/HYzV3kwnagEkVPMdYrZnMwKvHdLpoeOaReaQtHKFcYlkCfjU3xmZbOVJ7E5D3CWWqtiXR8KN7lL71cy/6di/yFhpE8fPtL/JTkQqVIa8lIPkkOwxsN/QShhckth56oF2AcZNYYAevU=
+	t=1713274221; cv=none; b=QKWN2RBhAvG4w1sYqU+QB5g+KWjA1oqOg4oNcIVkhjLm2hOVXN1+EliDrXS7FFumWjEOLEhRR/HHubHlK+2Qt+hfNflTG5XTni6e6ulu4pUSOMMTnqMg2VNhXAA1eSK8IHDVoURRmFiDiDDl4k2piLeLyLxCHxP8xwRbKYjs0nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713274220; c=relaxed/simple;
-	bh=KoeKOC9BxNbULIOx5THehrA2LvyMrmoh0J2kqk1uxqk=;
+	s=arc-20240116; t=1713274221; c=relaxed/simple;
+	bh=OyHx7ZZ4/h8Wstp56SurooyJvSWdHdopw96/iRKHd8A=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=qbC8mxck8GIpvsjvTnq+W8MF15dxiSLghTgIF9VtPL7cgnk5TTA9QyzR+b3YH16l+ptJteIA3gwxNSTFh+qxTpg9hfkLmbj0QC2ra4aPmLmt9dV9Iqwr9tsEP7ZlIfrHZUJu3CnwcuV4GTU7d9onWd+JObk1jsfniC0zAZwCUr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=ZL1ooC7L; arc=none smtp.client-ip=217.70.183.194
+	 In-Reply-To:To:Cc; b=Od2lqEdOcvf/jYrrXaD0WuXEaIUE66zubp+HfyXw1Om55heur/fiJvGjMKzd4qUov+fdMp3JpkTPTuQwtXn4IWlxuirbi7coGhZvPJpDh5YSJpp4qEoxbS1+JLN5jXxHUXBIkt9ff1Dr7dJ+xp3K1D/6kkfDpDbC95ENpu41ZlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=m44ZOLO8; arc=none smtp.client-ip=217.70.183.194
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="ZL1ooC7L"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id B8E9540007;
-	Tue, 16 Apr 2024 13:30:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="m44ZOLO8"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 2679640002;
+	Tue, 16 Apr 2024 13:30:09 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1713274216;
+	t=1713274211;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=jPqUbSf1Qdf1yloJtVBeCvPFg+XlI7QIXeQdbRho+l4=;
-	b=ZL1ooC7LClW/wnvSt9rJuIpcwX5TWts2+cJjbvrpFVnpjNZufsfCmP2cqcJQNAl9PbIW+d
-	5tuOzJov3/7Ae6ugSkqS9GwyVK2siy5qOX2dgriDOQ1thf4bg2jGuKSZoUnSR9d4yG5nik
-	fIejV3ZSVPwW1J0kR0cIzSyKTheiz7pW6LPX6A3NPbfwDkkhr6yLELst5HTGSLSXVwWqvW
-	e6vqxmRt5O/TGKbV1OtVSI8y4admj+tdIR9X3qP3EqQJRyA5Ofsyi2xJ27x4CIdogD6Wyb
-	wtPdFIa2K8zOMmrJwUUz8PRQleuuOW4JFm2W7HrC7Dl3ct4X2a6moS0vGTX7aw==
+	bh=S70Ysmy7GOlawn6RWq9qzGyOkNk33BPaQBIqrV30L4w=;
+	b=m44ZOLO8xpcdJKizGaKX1WggODNsjt4un2hjLuEjhmbR32wlPqG9/kESbGgqe1D8HsirO5
+	vExlvHjUeYcOGMMcn5A+lbgOnDdiCcoC04YoQb0EXPyLXy687m5LybeYJq9cu4xTEF2GVU
+	qieBPBlBCnELs3pn9ET5ATWQIlopmHncoMqx2TXGEEFOyBal6O0S99COZ5LCh+ALIo7dlc
+	JmoF2mpk5cZ8xcz13AHNe7aNb52Egf1FVPScQbCjWPOMGSKfJ7L1iHaVpCQWq8AfFD38pc
+	6TY1MWkdzzHF4yGmmUhhZjGGTMfiZnIu0KdntxUzWon0p+S/NtmHGusiI2RZ1w==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Tue, 16 Apr 2024 15:29:53 +0200
-Subject: [PATCH v5 04/11] mux: mmio: add resume support
+Date: Tue, 16 Apr 2024 15:29:50 +0200
+Subject: [PATCH v5 01/11] gpio: pca953x: move suspend()/resume() to
+ suspend_noirq()/resume_noirq()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,8 +41,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20240102-j7200-pcie-s2r-v5-4-4b8c46711ded@bootlin.com>
+Content-Transfer-Encoding: 7bit
+Message-Id: <20240102-j7200-pcie-s2r-v5-1-4b8c46711ded@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v5-0-4b8c46711ded@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v5-0-4b8c46711ded@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -58,53 +59,56 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
  gregory.clement@bootlin.com, theo.lebrun@bootlin.com, 
  thomas.petazzoni@bootlin.com, u-kumar1@ti.com, 
- Thomas Richard <thomas.richard@bootlin.com>
+ Thomas Richard <thomas.richard@bootlin.com>, 
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ Andy Shevchenko <andy.shevchenko@gmail.com>
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-From: Théo Lebrun <theo.lebrun@bootlin.com>
+Some IOs can be needed during suspend_noirq()/resume_noirq().
+So move suspend()/resume() to noirq.
 
-No need to save something during the suspend stage, as the mux core has an
-internal cache to store the state of muxes.
-
-This cache is used by mux_chip_resume() to restore all muxes.
-
-Signed-off-by: Théo Lebrun <theo.lebrun@bootlin.com>
+Reviewed-by: Andi Shyti <andi.shyti@kernel.org>
+Acked-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Reviewed-by: Andy Shevchenko <andy.shevchenko@gmail.com>
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/mux/mmio.c | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ drivers/gpio/gpio-pca953x.c | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/mux/mmio.c b/drivers/mux/mmio.c
-index 30a952c34365..00405abe3ce3 100644
---- a/drivers/mux/mmio.c
-+++ b/drivers/mux/mmio.c
-@@ -130,13 +130,25 @@ static int mux_mmio_probe(struct platform_device *pdev)
- 
- 	mux_chip->ops = &mux_mmio_ops;
- 
-+	dev_set_drvdata(dev, mux_chip);
-+
- 	return devm_mux_chip_register(dev, mux_chip);
+diff --git a/drivers/gpio/gpio-pca953x.c b/drivers/gpio/gpio-pca953x.c
+index 00ffa168e405..6e495fc67a93 100644
+--- a/drivers/gpio/gpio-pca953x.c
++++ b/drivers/gpio/gpio-pca953x.c
+@@ -1234,7 +1234,7 @@ static void pca953x_save_context(struct pca953x_chip *chip)
+ 	regcache_cache_only(chip->regmap, true);
  }
  
-+static int mux_mmio_resume_noirq(struct device *dev)
-+{
-+	struct mux_chip *mux_chip = dev_get_drvdata(dev);
-+
-+	return mux_chip_resume(mux_chip);
-+}
-+
-+static DEFINE_NOIRQ_DEV_PM_OPS(mux_mmio_pm_ops, NULL, mux_mmio_resume_noirq);
-+
- static struct platform_driver mux_mmio_driver = {
- 	.driver = {
- 		.name = "mmio-mux",
- 		.of_match_table	= mux_mmio_dt_ids,
-+		.pm = pm_sleep_ptr(&mux_mmio_pm_ops),
- 	},
- 	.probe = mux_mmio_probe,
- };
+-static int pca953x_suspend(struct device *dev)
++static int pca953x_suspend_noirq(struct device *dev)
+ {
+ 	struct pca953x_chip *chip = dev_get_drvdata(dev);
+ 
+@@ -1248,7 +1248,7 @@ static int pca953x_suspend(struct device *dev)
+ 	return 0;
+ }
+ 
+-static int pca953x_resume(struct device *dev)
++static int pca953x_resume_noirq(struct device *dev)
+ {
+ 	struct pca953x_chip *chip = dev_get_drvdata(dev);
+ 	int ret;
+@@ -1268,7 +1268,8 @@ static int pca953x_resume(struct device *dev)
+ 	return ret;
+ }
+ 
+-static DEFINE_SIMPLE_DEV_PM_OPS(pca953x_pm_ops, pca953x_suspend, pca953x_resume);
++static DEFINE_NOIRQ_DEV_PM_OPS(pca953x_pm_ops,
++			       pca953x_suspend_noirq, pca953x_resume_noirq);
+ 
+ /* convenience to stop overlong match-table lines */
+ #define OF_653X(__nrgpio, __int) ((void *)(__nrgpio | PCAL653X_TYPE | __int))
 
 -- 
 2.39.2
