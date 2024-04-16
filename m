@@ -1,189 +1,163 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp-relay-canonical-1.canonical.com (smtp-relay-canonical-1.canonical.com [185.125.188.121])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B619C3E48F;
-	Mon, 15 Apr 2024 23:31:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DB01BC5C;
+	Tue, 16 Apr 2024 04:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.121
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713223873; cv=none; b=KFiLHvBFg/g9UX37xIYW1HAvzXAgd9gLvByfcKTgU5JiPZWqirLmmjLd+NPVav0Fukw96WRsxex+n5H0QkkYSOWnzSomJoK/zdFWyu7qUo1Vi5PvnT2+A0L82RRYDo47OPRvUFdQuAyB/9zam9aTfaLDKMxQlX4FCy0Hh4kXekc=
+	t=1713242015; cv=none; b=azlnHtxddUHqbuE2uCpNJUMb8rDJEzVevglNkrlNpGfGa7lvYlsQaIO7EPfUPgBwis5GoK0op7PeH6Q674MGP9WbyylT+JwVJCrybV3xVHJ+gaQyUXkkCjlC5mdyQzc822dbAYSZnnRoPvXsEfvTJL/jGi8fg5e8Gk+JI+g/ZUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713223873; c=relaxed/simple;
-	bh=Ozqw81J6Cm7EIm7S9/9fhN/jyCcOAPejuOm/ULKeqgE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=fGPaRc7pbOrpSUYPfNGAWDkwetBms2QvQLjAlu5cXBNDaJwjhKrCs34JkWoDQtYYqQiDdKDMtW4Fn53MKvc++mG0AwG7sNNPeSAJz3CgOaSVnJGMB45rJyHohnrck4oCILlpifc7yJP++M7nWjWmfcgaULUmIWfODE9m4cBSo1k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=e/uogkw/; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1713242015; c=relaxed/simple;
+	bh=ET5pyKN9r4SlZzma8e0fiAbkahwzN7k33++Uo0oQh9Q=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=qSj8gHRnAp2l6aRa9HicXpDYQEDzoBel8RjMyp4tjLoXUhLmMwKxvIVSbc50hYbuBwQRQJ8l45TGM89F5hasF8gpHBLZiahHPzowrue0GJ/eF5H8lXTDAyki0LoV14ErKh/yyK5ASCDNQ7ru0g23sXz8Gm1TgW7CvNzRdG/xV3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b=qVGiUamw; arc=none smtp.client-ip=185.125.188.121
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="e/uogkw/"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.17.1.24/8.17.1.24) with ESMTP id 43FMw3Xn003994;
-	Mon, 15 Apr 2024 23:31:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	message-id:date:mime-version:subject:to:cc:references:from
-	:in-reply-to:content-type:content-transfer-encoding; s=
-	qcppdkim1; bh=bBP6L1aZea7WJ/01FBS0Qvao0QV2TFtDmz1tmopxE38=; b=e/
-	uogkw/EBkdOFmchRLIrMAbqgXcyL60Jhk5MqoOhxb4pTfXr30qLlJz6RnhZ2JrJA
-	/Nyr9NYthhzjGNmQOMtdoXWQKNXj/qtQ99AX754iqdrf8fZPDR8wvm65KpmFB/1k
-	N7F+LTWCoMG9IoRO5aGM3odZELzr7vnbFcw5ZBaASO2Fp7w+2iOcGjbIS/FD8p3w
-	b0LU+ntwx2P1ClOUKX6623MUQdZP6xudcQG42vcsr7XfvtcUnfftXWlAXmoecILL
-	LnEORjURiPDt1RXY7jskzgeepRXvwc1rXTX6oLpTypP3PRIJKXtrQj+dmOYw/KR5
-	tQaRX7MZPcBmUAyOtFow==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xha8y8d2e-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 15 Apr 2024 23:31:00 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43FNUxYE018125
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 15 Apr 2024 23:30:59 GMT
-Received: from [10.110.122.232] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 15 Apr
- 2024 16:30:58 -0700
-Message-ID: <c623951e-1b47-4e0b-bfa4-338672a5eeb9@quicinc.com>
-Date: Mon, 15 Apr 2024 16:30:58 -0700
+	dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b="qVGiUamw"
+Received: from localhost.localdomain (unknown [10.101.196.174])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-canonical-1.canonical.com (Postfix) with ESMTPSA id CC2303F176;
+	Tue, 16 Apr 2024 04:33:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20210705; t=1713242010;
+	bh=8+sIYCY+3Pc8+EMiPSoH0rMhXyMl45YAVFAQyJoev2g=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version;
+	b=qVGiUamwNeLPxTXVB3LP1mYoRsnNYsQ1gOKtJRu9KsiIsvc/vIJRIRV0mHEs9nHEG
+	 PSsdGGqYRl61oA0eHRN01lSn+kpSnNK6uRmHPG/tmWcMb+fe0xowJ6psXmykAm4rx0
+	 /6Tp4HSTnzTFA3AwJi7xx5SpsQKiHLrTL0wSkD/iRhTik/IA2ccHqy6CMg/AOp8eX0
+	 LUJLI6HwCQnnEIU51CKErEBXNLAu3sFOb2nOAAnqbXgQInsIer4c62wFsHZOXnBQAs
+	 DBHT5Aa1VmvYpP2KXaZaKgd9OTIh8EYFcEGvJ7hL8ZO87QM96JcJT6htSm6OkC8+rb
+	 HPJc8ngqqnAaQ==
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+To: bhelgaas@google.com
+Cc: mahesh@linux.ibm.com,
+	oohall@gmail.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	bagasdotme@gmail.com,
+	regressions@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	kch@nvidia.com,
+	hch@lst.de,
+	gloriouseggroll@gmail.com,
+	kbusch@kernel.org,
+	sagi@grimberg.me,
+	hare@suse.de,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>
+Subject: [PATCH v8 2/3] PCI/AER: Disable AER service on suspend
+Date: Tue, 16 Apr 2024 12:32:24 +0800
+Message-Id: <20240416043225.1462548-2-kai.heng.feng@canonical.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240416043225.1462548-1-kai.heng.feng@canonical.com>
+References: <20240416043225.1462548-1-kai.heng.feng@canonical.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 2/2] PCI: Add Qualcomm PCIe ECAM root complex driver
-To: Rob Herring <robh@kernel.org>
-CC: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        <linux-pci@vger.kernel.org>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <bhelgaas@google.com>, <andersson@kernel.org>,
-        <krzysztof.kozlowski+dt@linaro.org>, <conor+dt@kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
-        <quic_ramkri@quicinc.com>, <quic_nkela@quicinc.com>,
-        <quic_shazhuss@quicinc.com>, <quic_msarkar@quicinc.com>,
-        <quic_nitegupt@quicinc.com>
-References: <1712257884-23841-1-git-send-email-quic_mrana@quicinc.com>
- <1712257884-23841-3-git-send-email-quic_mrana@quicinc.com>
- <20240405052918.GA2953@thinkpad>
- <e2ff3031-bd71-4df7-a3a4-cec9c2339eaa@quicinc.com>
- <20240406041717.GD2678@thinkpad>
- <0b738556-0042-43ab-80f2-d78ed3b432f7@quicinc.com>
- <20240410165829.GA418382-robh@kernel.org>
-Content-Language: en-US
-From: Mayank Rana <quic_mrana@quicinc.com>
-In-Reply-To: <20240410165829.GA418382-robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: B6GBLqjdRmKNY-gl3PLAcn2kxvenlyI3
-X-Proofpoint-ORIG-GUID: B6GBLqjdRmKNY-gl3PLAcn2kxvenlyI3
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
- definitions=2024-04-15_18,2024-04-15_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- mlxlogscore=999 adultscore=0 spamscore=0 malwarescore=0 priorityscore=1501
- clxscore=1015 phishscore=0 bulkscore=0 mlxscore=0 lowpriorityscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2404010003 definitions=main-2404150157
+Content-Transfer-Encoding: 8bit
 
-Hi Rob
+When the power rail gets cut off, the hardware can create some electric
+noise on the link that triggers AER. If IRQ is shared between AER with
+PME, such AER noise will cause a spurious wakeup on system suspend.
 
-Excuse me for late response on this (was OOO).
-On 4/10/2024 9:58 AM, Rob Herring wrote:
-> On Mon, Apr 08, 2024 at 11:57:58AM -0700, Mayank Rana wrote:
->> Hi Mani
->>
->> On 4/5/2024 9:17 PM, Manivannan Sadhasivam wrote:
->>> On Fri, Apr 05, 2024 at 10:41:15AM -0700, Mayank Rana wrote:
->>>> Hi Mani
->>>>
->>>> On 4/4/2024 10:30 PM, Manivannan Sadhasivam wrote:
->>>>> On Thu, Apr 04, 2024 at 12:11:24PM -0700, Mayank Rana wrote:
->>>>>> On some of Qualcomm platform, firmware configures PCIe controller into
->>>>>> ECAM mode allowing static memory allocation for configuration space of
->>>>>> supported bus range. Firmware also takes care of bringing up PCIe PHY
->>>>>> and performing required operation to bring PCIe link into D0. Firmware
->>>>>> also manages system resources (e.g. clocks/regulators/resets/ bus voting).
->>>>>> Hence add Qualcomm PCIe ECAM root complex driver which enumerates PCIe
->>>>>> root complex and connected PCIe devices. Firmware won't be enumerating
->>>>>> or powering up PCIe root complex until this driver invokes power domain
->>>>>> based notification to bring PCIe link into D0/D3cold mode.
->>>>>>
->>>>>
->>>>> Is this an in-house PCIe IP of Qualcomm or the same DWC IP that is used in other
->>>>> SoCs?
->>>>>
->>>>> - Mani
->>>> Driver is validated on SA8775p-ride platform using PCIe DWC IP for
->>>> now.Although this driver doesn't need to know used PCIe controller and PHY
->>>> IP as well programming sequence as that would be taken care by firmware.
->>>>
->>>
->>> Ok, so it is the same IP but firmware is controlling the resources now. This
->>> information should be present in the commit message.
->>>
->>> Btw, there is an existing generic ECAM host controller driver:
->>> drivers/pci/controller/pci-host-generic.c
->>>
->>> This driver is already being used by several vendors as well. So we should try
->>> to extend it for Qcom usecase also.
-> 
-> I would take it a bit further and say if you need your own driver, then
-> just use the default QCom driver. Perhaps extend it to support ECAM.
-> Better yet, copy your firmware setup and always configure the QCom h/w
-> to use ECAM.
-Good suggestion. Although here we are having 2 set of requirements:
-1. ECAM configuration
-2. Managing PCIe controller and PHY resources and programming from 
-firmware as well
-Hence it is not feasible to use default QCOM driver.
-> If you want to extend the generic driver, that's fine, but we don't need
-> a 3rd.
-I did consider this part before coming up with new driver. Although I 
-felt that
-below mentioned functionality may not look more generic to be part of 
-pci-host-generic.c driver.
->> I did review pci-host-generic.c driver for usage. although there are more
->> functionalityneeded for use case purpose as below:
->> 1. MSI functionality
-> 
-> Pretty sure the generic driver already supports that.
-I don't find any MSI support with pci-host-generic.c driver.
->> 2. Suspend/Resume
-> 
-> Others might want that to work as well.
-Others firmware won't have way to handle D3cold and D0 functionality 
-handling as
-needed here for supporting suspend/resume as I don't find any interface 
-for pci-host-generic.c driver to notify firmware. here we are having way 
-to talk to firmware using GenPD based power domain usage to communicate 
-with firmware.
+When the power rail gets back, the firmware of the device resets itself
+and can create unexpected behavior like sending PTM messages. For this
+case, the driver will always be too late to toggle off features should
+be disabled.
 
->> 3. Wakeup Functionality (not part of current change, but would be added
->> later)
-> 
-> Others might want that to work as well.
-possible if suspend/resume support is available or used.
->> 4. Here this driver provides way to virtualized PCIe controller. So VMs only
->> talk to a generic ECAM whereas HW is only directed accessed by service VM.
-> 
-> That's the existing driver. If if doesn't work for a VM, fix the VM.
-Correct.
->> 5. Adding more Auto based safety use cases related implementation
-> 
-> Now that's just hand waving.
-Here I am trying to provide new set of changes plan to be added as part 
-of required functionality.
+As Per PCIe Base Spec 5.0, section 5.2, titled "Link State Power
+Management", TLP and DLLP transmission are disabled for a Link in L2/L3
+Ready (D3hot), L2 (D3cold with aux power) and L3 (D3cold) states. So if
+the power will be turned off during suspend process, disable AER service
+and re-enable it during the resume process. This should not affect the
+basic functionality.
 
->> Hence keeping pci-host-generic.c as generic driver where above functionality
->> may not be needed.
-> 
-> Duplicating things to avoid touching existing drivers is not how kernel
-> development works.
-I shall try your suggestion and see how it looks in terms of code 
-changes. Perhaps then we can have more clarity in terms of adding more
-functionality into generic or having separate driver.
-> Rob
-Regards,
-Mayank
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=209149
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=216295
+Link: https://bugzilla.kernel.org/show_bug.cgi?id=218090
+Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+---
+v8:
+ - Add more bug reports.
+
+v7:
+ - Wording
+ - Disable AER completely (again) if power will be turned off
+
+v6:
+v5:
+ - Wording.
+
+v4:
+v3:
+ - No change.
+
+v2:
+ - Only disable AER IRQ.
+ - No more check on PME IRQ#.
+ - Use helper.
+
+ drivers/pci/pcie/aer.c | 25 +++++++++++++++++++++++++
+ 1 file changed, 25 insertions(+)
+
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index ac6293c24976..bea7818c2d1b 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -28,6 +28,7 @@
+ #include <linux/delay.h>
+ #include <linux/kfifo.h>
+ #include <linux/slab.h>
++#include <linux/suspend.h>
+ #include <acpi/apei.h>
+ #include <acpi/ghes.h>
+ #include <ras/ras_event.h>
+@@ -1497,6 +1498,28 @@ static int aer_probe(struct pcie_device *dev)
+ 	return 0;
+ }
+ 
++static int aer_suspend(struct pcie_device *dev)
++{
++	struct aer_rpc *rpc = get_service_data(dev);
++	struct pci_dev *pdev = rpc->rpd;
++
++	if (pci_ancestor_pr3_present(pdev) || pm_suspend_via_firmware())
++		aer_disable_rootport(rpc);
++
++	return 0;
++}
++
++static int aer_resume(struct pcie_device *dev)
++{
++	struct aer_rpc *rpc = get_service_data(dev);
++	struct pci_dev *pdev = rpc->rpd;
++
++	if (pci_ancestor_pr3_present(pdev) || pm_resume_via_firmware())
++		aer_enable_rootport(rpc);
++
++	return 0;
++}
++
+ /**
+  * aer_root_reset - reset Root Port hierarchy, RCEC, or RCiEP
+  * @dev: pointer to Root Port, RCEC, or RCiEP
+@@ -1561,6 +1584,8 @@ static struct pcie_port_service_driver aerdriver = {
+ 	.service	= PCIE_PORT_SERVICE_AER,
+ 
+ 	.probe		= aer_probe,
++	.suspend	= aer_suspend,
++	.resume		= aer_resume,
+ 	.remove		= aer_remove,
+ };
+ 
+-- 
+2.34.1
+
