@@ -1,54 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4BE16C68D
-	for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2024 15:51:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E5BF16D4C0
+	for <linux-pci@vger.kernel.org>; Thu, 18 Apr 2024 15:56:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713455511; cv=none; b=f9Jr5U5xwnIhEOvAlb9aL6ickt5sJM1ysKtovM9Eq89onbh0WSfX06nAx7BnHKwAldIwdp+oP1pNAWal5vIe8lA89vbjLRYcyAGlDOaZOFpcg/3iv/EoJBgxyjTckb9U1eqzIPSxbHDxyN3Inyic1viODsvxHEhcsc7CkHgei2U=
+	t=1713455816; cv=none; b=Pqdyt0M+x8lPae0mzBSaSHHN9rU0sBKum9yH0tvVgnXCHaVgO5VbJ4pEg5CAdtjTf9z6HvY1SMicDJDUBuWftK8fALPXtl93D9Q1VhaRfq5JFyyCH9p8YNu3P0bDlNYwI2VZT0oHk556L4YRxmEMhM9+pkGxScw6fTSd+mv+mDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713455511; c=relaxed/simple;
-	bh=R3E3sXddsLXECQjS/OLimDZaspfmXv+H9hZxH2MU5g8=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gMENRu7FMvvuwNQ87gAQm/RYWBSPdo8JejpkqJIgc9/cEmD7QULZN1Xvf/sv+0PxHqBWOyZrmQdfrSKePvr9iHRwzBB3HdRTld69mwm4nV+/C8mpDd1rBregp4INQHyCcGyXJmo5L7y0UtigTjB8t29vgJkJdJKCosCRjoJuFwo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WNxQzZkN; arc=none smtp.client-ip=192.198.163.10
+	s=arc-20240116; t=1713455816; c=relaxed/simple;
+	bh=CuCUtcEhpYdjf/mbbIa4HGilOqc4yp877YVRmkCeqoQ=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version; b=b6KjDwfug1TqmvplRvxqPNvXcpDgEa7FUsElu9Fch+OmQ1YD/Ck5xCwI4l618KsUrJrzYuLJAjgyOghYudC7bERQ/TCZQcvVpnBvShzPtJJJs+VDGdFG4/31tkjtS4osqUgjiaLBCWHwctk8ubmGkdat+aOX8lN15ypRkGQgCOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=PAmZK5B7; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WNxQzZkN"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="PAmZK5B7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713455509; x=1744991509;
-  h=from:to:cc:subject:date:message-id:mime-version:
+  t=1713455814; x=1744991814;
+  h=from:to:subject:date:message-id:mime-version:
    content-transfer-encoding;
-  bh=R3E3sXddsLXECQjS/OLimDZaspfmXv+H9hZxH2MU5g8=;
-  b=WNxQzZkNeOpDD/kaByDzE4Q2sEP1q7iLWJJ+3yxJhAz74Xz/qWYj6OoV
-   fbJU7569fn2AQPrY+JxVpdyu5/mFG8njG6BUp1vlIGsR/hobAxjgyXyWC
-   cPdIPca4W5aS9YO3L0sYoe8XtBTfBeEcG/pYKbLXJitxPy4JNDp36soby
-   a9+cvB1XxjHblNzwkwKq7wKwauot7nCoZKB79JMMGx5lP8IYz6qRqVYau
-   tMY/l3PGiNNrSCcmuCTU7UXyZBmaMi5eSWycFfHnViXk61eh8hfpmsulK
-   rISw+uN64R0LS42Z7jrIMziQAD86MeeclQxJ+b+tTh9zVOuAOqOPKXopi
-   A==;
-X-CSE-ConnectionGUID: iOVRUO7USNerHN3suJ/CqQ==
-X-CSE-MsgGUID: EaycyUaeSmGOGSf1qWZ53g==
-X-IronPort-AV: E=McAfee;i="6600,9927,11047"; a="20401211"
+  bh=CuCUtcEhpYdjf/mbbIa4HGilOqc4yp877YVRmkCeqoQ=;
+  b=PAmZK5B7d91LbNvlK+t/OBSVu8MvxtAzOyVgjFWU0yYYKdHkWAhrGu1a
+   eYVIoejpmbzYgmLEKw/cTeZI29jl/hcAjN8+9GacI3ufjifFC7XlNsOGC
+   /6h2ITsxYil60sLodQJYM5y7F+lo/wWKfSDlh2OgrV3kdJg3VkQLZZsR4
+   V7t6FDeoVREteOHaASJa4wirZ0sgOw4B3eB6L2/2D2zw2MQ9JpnLOX8v3
+   ON8iC3yvXoeDyPnVLLyczeYbPKPfDXqev0/1J1fsJgrhC792IWfqP0ajB
+   YPCPXlUBQbBGAq4J/PBP/7qxUAPcGpwRxGoJmLG0/l+xNV9nIHLAqAGJD
+   w==;
+X-CSE-ConnectionGUID: dvHCOI42RqyBpYwdeLXaPw==
+X-CSE-MsgGUID: VZzK2/vLQhiar56yc3zLaw==
+X-IronPort-AV: E=McAfee;i="6600,9927,11047"; a="9236141"
 X-IronPort-AV: E=Sophos;i="6.07,212,1708416000"; 
-   d="scan'208";a="20401211"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2024 08:51:48 -0700
-X-CSE-ConnectionGUID: s5Mj9wRhSamoVH8IXgdKBQ==
-X-CSE-MsgGUID: hY8Fad13SnigwBLQm3FKNQ==
+   d="scan'208";a="9236141"
+Received: from orviesa002.jf.intel.com ([10.64.159.142])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2024 08:56:53 -0700
+X-CSE-ConnectionGUID: wduSyPp4RnyMaPlSuyGYaA==
+X-CSE-MsgGUID: LvCmvWmMS/6H71TpNVBLzg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,212,1708416000"; 
-   d="scan'208";a="23094994"
+   d="scan'208";a="53961344"
 Received: from unknown (HELO localhost.ch.intel.com) ([10.2.230.30])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2024 08:51:48 -0700
+  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Apr 2024 08:56:54 -0700
 From: Nirmal Patel <nirmal.patel@linux.intel.com>
 To: nirmal.patel@linux.intel.com,
 	<linux-pci@vger.kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Subject: [PATCH v3] PCI: vmd: Disable MSI remap only for low MSI count
-Date: Thu, 18 Apr 2024 11:26:09 -0400
-Message-Id: <20240418152609.290301-1-nirmal.patel@linux.intel.com>
+Subject: [PATCH v4] PCI: vmd: Disable MSI remap only for low MSI count
+Date: Thu, 18 Apr 2024 11:31:21 -0400
+Message-Id: <20240418153121.291534-1-nirmal.patel@linux.intel.com>
 X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -61,15 +60,14 @@ Content-Transfer-Encoding: 8bit
 VMD MSI remapping is disabled by default for all the CPUs with 28c0 VMD
 deviceID. We used to disable remapping because drives supported more
 vectors than the VMD so the performance was better without remapping.
-Now with CPUs that support more than 64 (128 VMD MSIx vectors for gen4
-VMD) we no longer need to disable this feature.
+Now with CPUs that support more than 64 (128 VMD MSIx vectors for gen5)
+we no longer need to disable this feature.
 
 Note, pci_msix_vec_count() failure is translated to ENODEV per typical
 expectations that drivers may return ENODEV when some driver-known
 fundamental detail of the device is missing.
 
 Signed-off-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Acked-by: Dan Williams <dan.j.williams@intel.com>
 ---
 v1->v2: Updating commit message.
 v2->v3: Use VMD MSI count instead of cpu count.
