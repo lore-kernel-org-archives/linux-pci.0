@@ -1,25 +1,25 @@
 Received: from fgw20-7.mail.saunalahti.fi (fgw20-7.mail.saunalahti.fi [62.142.5.81])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9030250288
-	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2024 07:43:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3328B4D5A5
+	for <linux-pci@vger.kernel.org>; Mon, 22 Apr 2024 07:45:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713771793; cv=none; b=DCOtjB8VcTpXsBaWJxXlnjgt9To807whWsltft1VaK+UK0zdowF9saXjwXCvXTeOkck1QB6R1SPjQvyxoARR6gKrNErXXyH/sDiSwpFYsObA1CwPcQdF5SXFOzRWxyu3IozsmSUNZxrx4/kEmMpY8dkwY0E2npvkd8h2wBqEdss=
+	t=1713771951; cv=none; b=d5c/Ld6PFNGyYFmPaUsUOLRrwVj7Aj8oMeCkwRh8QZVNVNfiGtuyyKmZ++5RlvwbXCTywbaNcXSW50AHF5wArffgg8WJ2SHqShAFGImH4p09/NnP7H2LnYAYhudlhzVCCwNGv+WL/kTKXOXwj3TPfmG9eHFee9eWHEihSYuXips=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713771793; c=relaxed/simple;
-	bh=ew5dSgQMfS9IwbBwrIa9E4pKL0iPTREwTY8/gbHfluY=;
+	s=arc-20240116; t=1713771951; c=relaxed/simple;
+	bh=0tZUCejrJ79JNWlBVqZKd9V4vKZCGo0VoibkvLVA/P8=;
 	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=fjtJNnJta4xiUnqJKhUUYykBXiIljo8/UlFZfrU6Ig0xlkManTioTSQz4p2tnb0EAiCKUgbD8FZr8xSvjCpOJLAnoWDlqO3zXmFCdgkoMGaCC5c3rDNL701IlhFQXQ2p0ST2sgir/NXfwE1cngpmAvH+Z2KO14bjsFd+DgCCt1A=
+	 Content-Type:Content-Disposition:In-Reply-To; b=iqyebP9lKA285QplUNKcIRB0YL0LfhH6n833FzRDXtnRnvaS2AtyKTLdgPDzviixL9Kc39UNaYo4juOFXq+jPQy/W7HKtlaEycMvSBq76OFOx17c3kiMxeemWb0E8wrOCoW/c6ST7lqVipghHvzL9B9pLIIpJY13k+6IRZsDeUk=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com; spf=fail smtp.mailfrom=gmail.com; arc=none smtp.client-ip=62.142.5.81
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=gmail.com
 Received: from localhost (88-113-25-208.elisa-laajakaista.fi [88.113.25.208])
 	by fgw22.mail.saunalahti.fi (Halon) with ESMTP
-	id f64f7c0a-007b-11ef-a9de-005056bdf889;
-	Mon, 22 Apr 2024 10:43:09 +0300 (EEST)
+	id 5482aa03-007c-11ef-a9de-005056bdf889;
+	Mon, 22 Apr 2024 10:45:46 +0300 (EEST)
 From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Mon, 22 Apr 2024 10:43:08 +0300
+Date: Mon, 22 Apr 2024 10:45:46 +0300
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: Vidya Sagar <vidyas@nvidia.com>,
 	"Rafael J . Wysocki" <rafael@kernel.org>,
@@ -36,12 +36,12 @@ Cc: Vidya Sagar <vidyas@nvidia.com>,
 	linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v7-incomplete 3/3] PCI: Unify ACPI and DT 'preserve
- config' support
-Message-ID: <ZiYVDEt-c57rAIl7@surfacebook.localdomain>
+Subject: Re: [PATCH v7-incomplete 1/3] PCI: Move PRESERVE_BOOT_CONFIG _DSM
+ evaluation to pci_register_host_bridge()
+Message-ID: <ZiYVqulm8cE_FGKx@surfacebook.localdomain>
 References: <20240418174043.3750240-1-vidyas@nvidia.com>
  <20240421190914.374399-1-helgaas@kernel.org>
- <20240421190914.374399-4-helgaas@kernel.org>
+ <20240421190914.374399-2-helgaas@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,21 +50,51 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240421190914.374399-4-helgaas@kernel.org>
+In-Reply-To: <20240421190914.374399-2-helgaas@kernel.org>
 
-Sun, Apr 21, 2024 at 02:09:14PM -0500, Bjorn Helgaas kirjoitti:
+Sun, Apr 21, 2024 at 02:09:12PM -0500, Bjorn Helgaas kirjoitti:
+> From: Bjorn Helgaas <bhelgaas@google.com>
+> 
+> Move the PRESERVE_BOOT_CONFIG _DSM evaluation from acpi_pci_root_create()
+> to pci_register_host_bridge().
+> 
+> This will help unify the ACPI _DSM path and the DT-based
+> "linux,pci-probe-only" paths.
 
 ...
 
-> +	if (host_bridge->dev.parent && host_bridge->dev.parent->of_node)
-> +		return of_pci_preserve_config(host_bridge->dev.parent->of_node);
+> +bool pci_acpi_preserve_config(struct pci_host_bridge *host_bridge)
+> +{
+> +	if (ACPI_HANDLE(&host_bridge->dev)) {
 
-If you need fwnode or of_node from struct device, please avoid direct
-dereference, we have
+Wouldn't the below looks nicer if you invert the conditional?
 
-dev_fwnode()
-of_fwnode_handle()
-dev_of_node()
+	handle = ACPI_HANDLE(...);
+
+	if (!handle)
+		return false;
+
+	...
+
+> +		union acpi_object *obj;
+> +
+> +		/*
+> +		 * Evaluate the "PCI Boot Configuration" _DSM Function.  If it
+> +		 * exists and returns 0, we must preserve any PCI resource
+> +		 * assignments made by firmware for this host bridge.
+> +		 */
+> +		obj = acpi_evaluate_dsm_typed(ACPI_HANDLE(&host_bridge->dev),
+> +					      &pci_acpi_dsm_guid,
+> +					      1, DSM_PCI_PRESERVE_BOOT_CONFIG,
+> +					      NULL, ACPI_TYPE_INTEGER);
+> +		if (obj && obj->integer.value == 0)
+> +			return true;
+> +		ACPI_FREE(obj);
+> +	}
+> +
+> +	return false;
+> +}
+
 
 -- 
 With Best Regards,
