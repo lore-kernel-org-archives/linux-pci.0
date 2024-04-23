@@ -1,50 +1,49 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0883C58105;
-	Tue, 23 Apr 2024 09:08:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A0C957333;
+	Tue, 23 Apr 2024 09:08:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713863295; cv=none; b=qSQ1L5wDoh+AkxQAVVvJCi0lYhcKQLyvJuYW0FiToLRtCuZAsfr+eGGw11LFdx+l5GqokwFCHFkwUIsglkM98lZlirHI9oa+Ge8SvXfmqlo5GgSqG2/yi08Q2lo/UmS9ah0Bp1Pmo7koUwLlsE7doEdTcWr/RgkzmmRZaGmZsUM=
+	t=1713863307; cv=none; b=Sgv9A/Rb1K9U7Z6p3s+pfFpiVZKJlao0WwJxue4yv8NY69hkHlO9VJrsaW6cHPjxGX26zXJn6gZh2L/+lzhM7DWsCGMDeXSJ2qXXohwDpWmB8YXSVdm4kIJbQjH/mC8Hi8rIkW8M8jmD0KVdaTa0XOE1Ntxk01Drryg9DN0zuzI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713863295; c=relaxed/simple;
-	bh=V+31wpy+ViuFYyPXxxni0lbwtREaNbHVwxOi2HByI6I=;
+	s=arc-20240116; t=1713863307; c=relaxed/simple;
+	bh=FG21nJMzDgQVBPiWDAMRoSDJCoh5DoD48CK6U3Qv5f8=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=bnDWXSp8MIB7ZrxturJYmewokuGqbZTD9+inAuuFSvarR4tzWHf17FLsgnMPoLUiQmfwN4Xvl8Lb4m/O7JHBePwWbaRDWgA0fDoPSdboYrBo0fAsedlbreIezxUwYwDDqvdmMgy67qVhkabTvOIG3+B5YK7Z3UAI20jxx2fB6XY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=b6c/gSBj; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:To:CC; b=ofArj3MbiYuubVeQztAdP4KbnHonMr7B8HKZQOzrWK68e297ajAUxmUPIXCv2CWuGSJh7nBKKiU+bTdiofJ3JhTpiodrM9S4Av9qznmO2LnNszo8nnjZYfcv48T215FtrgbLrK+hCFmsnD/NOo919e+U9itpuMWy3DbpqjYfzUs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BdIPVgyX; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="b6c/gSBj"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43N7uJnH007871;
-	Tue, 23 Apr 2024 09:08:01 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BdIPVgyX"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43N8FdPD009777;
+	Tue, 23 Apr 2024 09:08:15 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	from:date:subject:mime-version:content-type
 	:content-transfer-encoding:message-id:references:in-reply-to:to
-	:cc; s=qcppdkim1; bh=Lge6OIRDCgkl4zCRo6LWVugfANWljw5EKDyEYyAefvo
-	=; b=b6c/gSBjgB5+wF9Bz45oKEm0pdAkkG+zORAurnPefyjkmgeRAcOpSqgXi78
-	ao3V0r09B5pVEEtB0N0FiIhQ6JR5PUUa2YadXpgrLF6MGRFU9aFAHyZ0U/YXQ7nP
-	8GPjAFQb1Ec0yvts7O8LK0YBiiNQwSL2oWQnRPDDul5JpqPp1TNkA/jfKMgjbJSs
-	/Jme08hanLOK8MoIljx/DqwuBeJOW4YY5mMKIdhob5g8Yt3Bp/Brm55GIxo9Zwih
-	p8zuG1fM4kLwOObzrFccpgmourgcnyCop4LMgEWvyk47oqTbmX5U+n52VoJylaLN
-	CPtLavKJP+J77VfeMkVMkvE7dBg==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xp91fg5uh-1
+	:cc; s=qcppdkim1; bh=ljGBYLQFC3HKRQ9g+LrdPl9BYHhm2n7q5flQqnt1vP8
+	=; b=BdIPVgyXnOs+BcDdS63bRI16icB5qAtv2f4mE87jZ22lAQ/C2KnbCejcPhT
+	+Q8lf4H7rxKBxVz1ChnMCZ+TJ4gos6szK8L5yY7voVfKJrkyX6pAYHRIa6TCayzB
+	G026nfSwb/yFIGHPJ7Cd0m2ZoU8mee/uhlU6Pi42tYxdJfqg27BF8ApU3bmx8NyS
+	Vdl76p6WzgXbfunRyvpxuCbVLdIQRS5gFWJKe/a+42TV4BIcvLo9Vb+NHxrMA9Y5
+	LgEBTklN2bY/rVxPSVN7MZADjDljw3JE8at4G7DpCGRtaL7/qiIJs9xfoPVyuR3D
+	Up3cDH66DftK5AilLfU7fux5m5A==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xp9aa04c7-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Apr 2024 09:08:01 +0000 (GMT)
+	Tue, 23 Apr 2024 09:08:14 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43N980jE030802
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 43N98Dsl001926
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 23 Apr 2024 09:08:00 GMT
+	Tue, 23 Apr 2024 09:08:13 GMT
 Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 23 Apr 2024 02:07:53 -0700
+ 15.2.1544.9; Tue, 23 Apr 2024 02:08:06 -0700
 From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Date: Tue, 23 Apr 2024 14:36:55 +0530
-Subject: [PATCH v11 1/6] arm64: dts: qcom: sm8450: Add interconnect path to
- PCIe node
+Date: Tue, 23 Apr 2024 14:36:57 +0530
+Subject: [PATCH v11 3/6] dt-bindings: pci: qcom: Add OPP table
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,7 +52,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20240423-opp_support-v11-1-15fdd40b0f95@quicinc.com>
+Message-ID: <20240423-opp_support-v11-3-15fdd40b0f95@quicinc.com>
 References: <20240423-opp_support-v11-0-15fdd40b0f95@quicinc.com>
 In-Reply-To: <20240423-opp_support-v11-0-15fdd40b0f95@quicinc.com>
 To: Bjorn Andersson <andersson@kernel.org>,
@@ -77,68 +76,60 @@ CC: <linux-arm-msm@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <vireshk@kernel.org>, <quic_vbadigan@quicinc.com>,
         <quic_skananth@quicinc.com>, <quic_nitegupt@quicinc.com>,
         <quic_parass@quicinc.com>, <quic_krichai@quicinc.com>,
-        <krzysztof.kozlowski@linaro.org>
+        <krzysztof.kozlowski@linaro.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>
 X-Mailer: b4 0.13-dev-83828
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1713863265; l=1661;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1713863266; l=1082;
  i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
- bh=V+31wpy+ViuFYyPXxxni0lbwtREaNbHVwxOi2HByI6I=;
- b=Rk6K56u92t2kiIqnqFJpkYkzwaq0CnI/ozh1AxLOcRO1bJBTvBHFVww6ljx+8/uR/0xGHDJGo
- bKbK+UJz69nA7hRs8oXN65WMAYHJ6fQIfPIvor+7m9WiYF3/Niwp1iU
+ bh=FG21nJMzDgQVBPiWDAMRoSDJCoh5DoD48CK6U3Qv5f8=;
+ b=gKzIIKu1NU2Cx4Ti1z6HPqOt186P9zNlyY8LdyfkL+N/4kLyAsS2LTuQCXN9ORy5hr2PAXHWu
+ P6l1/Yboc95BRwkWG+jS531zXfl0WYWzdWMdLZd+qNqadr8a2q6vO3F
 X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
  pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: r36NtGu1yXqzO4LesjMO_7xMlBM1z-3o
-X-Proofpoint-ORIG-GUID: r36NtGu1yXqzO4LesjMO_7xMlBM1z-3o
+X-Proofpoint-GUID: 17Hwed8_nEFOhj7BAhF34KB1wXSD_2Dy
+X-Proofpoint-ORIG-GUID: 17Hwed8_nEFOhj7BAhF34KB1wXSD_2Dy
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.619,FMLib:17.11.176.26
  definitions=2024-04-23_07,2024-04-22_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 suspectscore=0
- impostorscore=0 phishscore=0 spamscore=0 mlxlogscore=999
- priorityscore=1501 clxscore=1015 malwarescore=0 mlxscore=0
- lowpriorityscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx
- scancount=1 engine=8.19.0-2404010003 definitions=main-2404230024
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 mlxlogscore=999
+ bulkscore=0 mlxscore=0 lowpriorityscore=0 phishscore=0 malwarescore=0
+ impostorscore=0 adultscore=0 spamscore=0 suspectscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
+ definitions=main-2404230025
 
-Add PCIe-MEM & CPU-PCIe interconnect path to the PCIe nodes.
+PCIe needs to choose the appropriate performance state of RPMh power
+domain based on the PCIe gen speed.
 
+Adding the Operating Performance Points table allows to adjust power
+domain performance state and ICC peak bw, depending on the PCIe data
+rate and link width.
+
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
 Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 ---
- arch/arm64/boot/dts/qcom/sm8450.dtsi | 12 ++++++++++++
- 1 file changed, 12 insertions(+)
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/sm8450.dtsi b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-index b86be34a912b..615296e13c43 100644
---- a/arch/arm64/boot/dts/qcom/sm8450.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm8450.dtsi
-@@ -1807,6 +1807,12 @@ pcie0: pcie@1c00000 {
- 					<0 0 0 3 &intc 0 0 0 151 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
- 					<0 0 0 4 &intc 0 0 0 152 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
+index 1496d6993ab4..d8c0afaa4b19 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
+@@ -69,6 +69,10 @@ properties:
+       - const: msi6
+       - const: msi7
  
-+			interconnects = <&pcie_noc MASTER_PCIE_0 QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-+					 &config_noc SLAVE_PCIE_0 QCOM_ICC_TAG_ALWAYS>;
-+			interconnect-names = "pcie-mem", "cpu-pcie";
++  operating-points-v2: true
++  opp-table:
++    type: object
 +
- 			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
- 				 <&gcc GCC_PCIE_0_PIPE_CLK_SRC>,
- 				 <&pcie0_phy>,
-@@ -1930,6 +1936,12 @@ pcie1: pcie@1c08000 {
- 					<0 0 0 3 &intc 0 0 0 438 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
- 					<0 0 0 4 &intc 0 0 0 439 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
+   resets:
+     maxItems: 1
  
-+			interconnects = <&pcie_noc MASTER_PCIE_1 QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-+					 &config_noc SLAVE_PCIE_1 QCOM_ICC_TAG_ALWAYS>;
-+			interconnect-names = "pcie-mem", "cpu-pcie";
-+
- 			clocks = <&gcc GCC_PCIE_1_PIPE_CLK>,
- 				 <&gcc GCC_PCIE_1_PIPE_CLK_SRC>,
- 				 <&pcie1_phy>,
 
 -- 
 2.42.0
