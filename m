@@ -1,122 +1,106 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D2013E40C;
-	Tue, 23 Apr 2024 17:22:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A7F339A8;
+	Tue, 23 Apr 2024 18:43:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1713892944; cv=none; b=j1Zx1Omh+4F8Itb2oQZaPZDb/ljsW3QShiTICkZGvp0MUknhPpaQE/zndTweWVa5DzDUo2TAk7YdprpQ0+j24hG1Zaj+6CpiixYb5Inq4kARcwHw9IzLCUvWN4l+7zTGqD37PfJRFbYGQ2YzDyvCC4Hw+coGskI1L3W07PNyaRU=
+	t=1713897826; cv=none; b=AkVN1j1KuJPg47ImgSYi95ABPZu8S5csjssbgthnrDGXPJbnmLgNtKdA5lMhzrrhToJhw0M5jFM1IdYTrELAsxwWE6Ilzf5nzFm7shjfytnWoDxo/kO+/fmEeGKzY4Tf4kWLHTuDhRxVISrFytn2jhQrvQxOLuBAj7IU2OwRt+A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1713892944; c=relaxed/simple;
-	bh=wS6mLiwTSrStK6wq/zzMd+gLFuAwWxuYlHIG5FjkkyY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=N2+UDGQ1RwVBo0WhLbrIQiOd/jBCult6Kx7Yjtb7/mb8Gu0rlvUPx3LwMpGD11kYZPqUQtdZ4/e1i0Lt8CnG9sdjumn7YYaRetVYiwcrVM8RUKs7gMiG1HJbsy3nWh62kpQk3vGvRceGROciE8+ejgefShtmIvL14WBBVDwfgq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Hycmtpeh; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1713897826; c=relaxed/simple;
+	bh=dnDTg2hhfjuMJSf3lpUjKS5ed+pt7dtcGLK4en30Zpg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=lXqm88VTlDZ17BLR6HGCE6Fx/rbdxtyUYn5oDAFENtXbANCf6FxY8rzNNtk1NAWs366JnVXcgSvfWfIYnM/aYndZAqxm+aHMTvA6lL61hcA9MbzAZ6G6b/wmMnx5K2b3NQITBYXiGGwsEVDD97mwExXAkx86xQQAkJ1Wdqv8o9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I4cNQXFH; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Hycmtpeh"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I4cNQXFH"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1713892943; x=1745428943;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=wS6mLiwTSrStK6wq/zzMd+gLFuAwWxuYlHIG5FjkkyY=;
-  b=HycmtpehrL2ixjfPJ3repiM/CRe6mPEdeC1LLwDzKCU5hzxh1VJ8nvzU
-   LlFVaF3e7x6tN7zUAAB5VXvKuWg6/vnKjn4wGZpmLCYNumNkTBeVKvFh+
-   Y1L9W/DotGgp+vZvU/YbzspHqlANcIRSLGJR5eTXvbdksZql4tw5IT8sp
-   bPG7mpgrmUwJUNpJVLAh+gJWKU8HKtBAyF/uoChGZabAHc37td3cn37Cx
-   t/RrRa9VuYG6igXiCC6wFzMznQ4skbQH+a3SDLkQLp2qsr9VGbgvV1emt
-   CPf6sNUs2NkTuZiz9YiVt7iWW1cO+j0keBr4+uMxlFU06hTWvyIZnA68V
-   g==;
-X-CSE-ConnectionGUID: gJZDvhprQCGDh7lJC35VaQ==
-X-CSE-MsgGUID: iDFvOyR8STqQHSmY46f39g==
-X-IronPort-AV: E=McAfee;i="6600,9927,11053"; a="20898283"
+  t=1713897826; x=1745433826;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=dnDTg2hhfjuMJSf3lpUjKS5ed+pt7dtcGLK4en30Zpg=;
+  b=I4cNQXFHlSfyYX8ZbVQTSggEYMG0jG/Zw/F0Oy92wNwyXCWqEOWOEokb
+   f4w6FXrQEDz0K40i2KA26qVAss250oLAnQftHetlOcVtSWagdj/8zsTnc
+   u8SEyDgWTNU5XPmdSK5xORGppJt4w74LXGXxS6JtE+ILyt6ALYaPreepI
+   mp5T9r5xQS0rFsiOlRXfoKy/1LpYnAqBIbvLmzUKnjeFE5lScwWba6jeI
+   wGv1c7jy9NThfOvDsw12MhTTRW2muYytvXi4it2fs/QNqEAecRWgWUTOm
+   Lnux2OFZVO/270yimX6/ZSPnfBNZ1QgAz9z/YYGJTjaXARbJa4OrhW7AY
+   A==;
+X-CSE-ConnectionGUID: neNYyq6TSZufA+SWsMxJsg==
+X-CSE-MsgGUID: ehCXbI8gSdCEFTNaq0sMkw==
+X-IronPort-AV: E=McAfee;i="6600,9927,11053"; a="13289804"
 X-IronPort-AV: E=Sophos;i="6.07,222,1708416000"; 
-   d="scan'208";a="20898283"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2024 10:22:20 -0700
-X-CSE-ConnectionGUID: Dr85zdv8Ry67lMcR78sHfg==
-X-CSE-MsgGUID: T1Zw1WYoQVO/2Au0vKgZZA==
+   d="scan'208";a="13289804"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Apr 2024 11:43:45 -0700
+X-CSE-ConnectionGUID: O142LiH0RNCb7xMVQ+IT6w==
+X-CSE-MsgGUID: ANXAfjkxRSyRv31/ArsfyA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,222,1708416000"; 
-   d="scan'208";a="55410233"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orviesa002.jf.intel.com with ESMTP; 23 Apr 2024 10:22:11 -0700
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-	id 6E4F8192; Tue, 23 Apr 2024 20:22:10 +0300 (EEST)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
-	linux-omap@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	imx@lists.linux.dev,
-	linux-amlogic@lists.infradead.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-tegra@vger.kernel.org
-Cc: Vignesh Raghavendra <vigneshr@ti.com>,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
+   d="scan'208";a="24509645"
+Received: from lkp-server01.sh.intel.com (HELO e434dd42e5a1) ([10.239.97.150])
+  by fmviesa010.fm.intel.com with ESMTP; 23 Apr 2024 11:43:42 -0700
+Received: from kbuild by e434dd42e5a1 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1rzL7D-0000Rc-1Z;
+	Tue, 23 Apr 2024 18:43:39 +0000
+Date: Wed, 24 Apr 2024 02:43:07 +0800
+From: kernel test robot <lkp@intel.com>
+To: Sean Anderson <sean.anderson@linux.dev>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <hongxing.zhu@nxp.com>,
-	Lucas Stach <l.stach@pengutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Yue Wang <yue.wang@Amlogic.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Kevin Hilman <khilman@baylibre.com>,
-	Jerome Brunet <jbrunet@baylibre.com>,
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
-	Xiaowei Song <songxiaowei@hisilicon.com>,
-	Binghui Wang <wangbinghui@hisilicon.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-Subject: [PATCH v2 0/4] PCI: controller: Move to agnostic GPIO API
-Date: Tue, 23 Apr 2024 20:19:03 +0300
-Message-ID: <20240423172208.2723892-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.43.0.rc1.1336.g36b5255a03ac
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
+	Michal Simek <monstr@monstr.eu>, Bjorn Helgaas <helgaas@kernel.org>,
+	Sean Anderson <sean.anderson@linux.dev>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk@kernel.org>, devicetree@vger.kernel.org
+Subject: Re: [PATCH 1/7] dt-bindings: pci: xilinx-nwl: Add phys
+Message-ID: <202404240241.n4QeoKna-lkp@intel.com>
+References: <20240422195904.3591683-2-sean.anderson@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240422195904.3591683-2-sean.anderson@linux.dev>
 
-Convert the PCI controller drivers to use GPIO agnostic API.
-While at it, remove of_gpio.h leftover from some of the drivers.
+Hi Sean,
 
-In v2:
-- combined previously sent patches into a series (Manivannan)
-- added tags (Rob, Manivannan)
-- converted iMX.6 driver (Manivannan)
-- dropped leftover in aadvark drivers (Manivannan)
+kernel test robot noticed the following build warnings:
 
-Andy Shevchenko (4):
-  PCI: aardvark: Remove unused of_gpio.h
-  PCI: dwc: Remove unused of_gpio.h
-  PCI: imx6: Convert to agnostic GPIO API
-  PCI: kirin: Convert to agnostic GPIO API
+[auto build test WARNING on pci/next]
+[also build test WARNING on pci/for-linus xilinx-xlnx/master robh/for-next linus/master v6.9-rc5 next-20240423]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
- drivers/pci/controller/dwc/pci-dra7xx.c    |   1 -
- drivers/pci/controller/dwc/pci-imx6.c      |  37 +++-----
- drivers/pci/controller/dwc/pci-meson.c     |   1 -
- drivers/pci/controller/dwc/pcie-kirin.c    | 105 +++++++--------------
- drivers/pci/controller/dwc/pcie-qcom.c     |   1 -
- drivers/pci/controller/dwc/pcie-tegra194.c |   2 -
- drivers/pci/controller/pci-aardvark.c      |   1 -
- 7 files changed, 49 insertions(+), 99 deletions(-)
+url:    https://github.com/intel-lab-lkp/linux/commits/Sean-Anderson/dt-bindings-pci-xilinx-nwl-Add-phys/20240423-040215
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20240422195904.3591683-2-sean.anderson%40linux.dev
+patch subject: [PATCH 1/7] dt-bindings: pci: xilinx-nwl: Add phys
+compiler: loongarch64-linux-gcc (GCC) 13.2.0
+dtschema version: 2024.4
+reproduce: (https://download.01.org/0day-ci/archive/20240424/202404240241.n4QeoKna-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202404240241.n4QeoKna-lkp@intel.com/
+
+dtcheck warnings: (new ones prefixed by >>)
+>> Documentation/devicetree/bindings/pci/xlnx,nwl-pcie.yaml: properties:phy-names: {'maxItems': 4, 'items': [{'pattern': '^pcie-phy[0-3]$'}]} should not be valid under {'required': ['maxItems']}
+   	hint: "maxItems" is not needed with an "items" list
+   	from schema $id: http://devicetree.org/meta-schemas/items.yaml#
 
 -- 
-2.43.0.rc1.1336.g36b5255a03ac
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
