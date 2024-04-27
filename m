@@ -1,217 +1,87 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03A0E3A29A
-	for <linux-pci@vger.kernel.org>; Sat, 27 Apr 2024 19:07:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DDC247F63;
+	Sat, 27 Apr 2024 21:14:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714244873; cv=none; b=LASJ2j2LtMREcb8pE6B8hjQepbfi8+Qo2Dbz2Qu4Hgj+98mzHj6I7cP9NYUbUwrFx43WDUZclv5LtpzOyy239v0liB2B6Z27nKZkVHgMpuJ+VJ3TPJ5pZWxPyeivEKT5iemVPSac95h954dF0UkpKl0orPZEm1C4LLb3lTZI28E=
+	t=1714252474; cv=none; b=c9tJW/0QSfaCo6pT+dwcXbyqIPyxRtaFMQCE5Zfey+WIUf6jl5bFd7PxFDhP1nBHop8/a86ZUU7dEq8HyDOOMooLDdxWMRa26nIfqqlJ7S3wZKnX0/qMfeTHQxYfyD3fhO5OSwi1X0Jw+WKtaYZKa1vhVebht+4Majbf2GV2z78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714244873; c=relaxed/simple;
-	bh=OLLlXlfaUPnqdlubsDNvuX7sQqvzF7+cSQg1UlleblM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=O2EigbtAiROpaSRs36bPclcXG8hCAibSnhBjiMvA6JsOp5r+hEWdoWKXWWxn/ewIhrSTCjqhnmoUqtA26AD1uMaug1rGAEUaCGBC1QgT8GJU9c2aDGPVHyy4Xk7U4AHQGCQZDblne1ZK6jFSwAkez3YBZVpyCT1PlAMDv/BTRi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=RbHwvpKw; arc=none smtp.client-ip=198.175.65.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="RbHwvpKw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714244871; x=1745780871;
-  h=date:from:to:cc:subject:message-id;
-  bh=OLLlXlfaUPnqdlubsDNvuX7sQqvzF7+cSQg1UlleblM=;
-  b=RbHwvpKwN0iWAbeIaFhJwAeGNgpVYvrC1fVd9WMa7di0gDaGtTHIMHpA
-   odTuvGePy95ntf5jDeumj9wpUF5c5Dm9aFnSBns+bZUF2XKRet8TrIKnZ
-   zDtalQxfZ5hj7DD4BqnWMNxRjKQQQ8xljUuljfRiKhob5sSF9yYkBJLok
-   C0PX5ngJGyvz6tRYt447/scw/mJwBb8sU+D0Gzx3aov+vLDeooumsy49A
-   n3gLR70SqLOeKkiYiaYoa7OIfgv+mVHRzMSCNAL6tgO5xdFYkjm+jCUO6
-   WeR9cVuNkA7IJGCCB0OI4VlWTnlIVZto3KC4qa2Endw8cENbAxRoRbXgi
-   g==;
-X-CSE-ConnectionGUID: p7swPNabQ+G7ZhNamk1MbQ==
-X-CSE-MsgGUID: 7xRUzdK1R8WAkgoMYpjF4w==
-X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="27411980"
-X-IronPort-AV: E=Sophos;i="6.07,236,1708416000"; 
-   d="scan'208";a="27411980"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Apr 2024 12:07:51 -0700
-X-CSE-ConnectionGUID: PBE0elVNTqepaHCwljc6EA==
-X-CSE-MsgGUID: tAPdklxTTYS/fnLrIBOqNw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,236,1708416000"; 
-   d="scan'208";a="63194114"
-Received: from lkp-server01.sh.intel.com (HELO e434dd42e5a1) ([10.239.97.150])
-  by orviesa001.jf.intel.com with ESMTP; 27 Apr 2024 12:07:50 -0700
-Received: from kbuild by e434dd42e5a1 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1s0nOl-0005Pe-0O;
-	Sat, 27 Apr 2024 19:07:47 +0000
-Date: Sun, 28 Apr 2024 03:06:49 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:msi] BUILD SUCCESS
- 0ba5cd94bbc2d21ffb392b6a3b23ee288b4778d5
-Message-ID: <202404280346.p1mJInEk-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	s=arc-20240116; t=1714252474; c=relaxed/simple;
+	bh=JLb9nkXBuq9tVxjgmesZjvdH2BXz28wXTyP7JHc7zJo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=snrzUWs9IggkyY0Ds3a01bUeqinbgXEIZGnrrw0kqNcC4raVR91LEgvmHY0fnE1T2XzwZkWZuJyxrQR/dBaZXIJ2E9sMgvxxGnw/DFDnfASvM2FOn5h0urkVt31GOn0VbCMC/vg+3k6Of1QVvFjRC6FWTuob0a+OC6iqRQ6bkFE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout2.hostsharing.net (Postfix) with ESMTPS id B9A7C2801371D;
+	Sat, 27 Apr 2024 23:14:28 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 8C896190545; Sat, 27 Apr 2024 23:14:28 +0200 (CEST)
+Date: Sat, 27 Apr 2024 23:14:28 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: gregkh@linuxfoundation.org,
+	Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>,
+	Marc Herbert <marc.herbert@intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-coco@lists.linux.dev, alsa-devel@alsa-project.org
+Subject: Re: [PATCH 1/3] sysfs: Fix crash on empty group attributes array
+Message-ID: <Zi1qtKNwcyydP4c2@wunner.de>
+References: <170863444851.1479840.10249410842428140526.stgit@dwillia2-xfh.jf.intel.com>
+ <170863445442.1479840.1818801787239831650.stgit@dwillia2-xfh.jf.intel.com>
+ <ZiYrzzk9Me1aksmE@wunner.de>
+ <662beb6ad280f_db82d29458@dwillia2-xfh.jf.intel.com.notmuch>
+ <Ziv9984CJeQ4muZy@wunner.de>
+ <662d2ca522cc6_b6e02942d@dwillia2-mobl3.amr.corp.intel.com.notmuch>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <662d2ca522cc6_b6e02942d@dwillia2-mobl3.amr.corp.intel.com.notmuch>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git msi
-branch HEAD: 0ba5cd94bbc2d21ffb392b6a3b23ee288b4778d5  PCI/MSI: Make error path handling follow the standard pattern
+On Sat, Apr 27, 2024 at 09:49:41AM -0700, Dan Williams wrote:
+> Lukas Wunner wrote:
+> > But I want to raise awareness that the inability to hide
+> > empty attribute groups feels awkward.
+> 
+> That is fair, it was definitely some gymnastics to only change user
+> visible behavior for new "invisible aware" attribute groups that opt-in
+> while leaving all the legacy cases alone.
+> 
+> The concern is knowing when it is ok to call an is_visible() callback
+> with a NULL @attr argument, or knowing when an empty array actually
+> means "hide the group directory".
+> 
+> We could add a sentinel value to indicate "I am an empty attribute list
+> *AND* I want my directory hidden by default". However, that's almost
+> identical to requiring a placeholder attribute in the list just to make
+> __first_visible() happy.
+> 
+> Other ideas?
 
-elapsed time: 1237m
+Perhaps an optional ->is_group_visible() callback in struct attribute_group
+which gets passed only the struct kobject pointer?
 
-configs tested: 140
-configs skipped: 3
+At least for PCI device authentication, that would be sufficient.
+I could get from the kobject to the corresponding struct device,
+then determine whether the device supports authentication or not.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Because it's a new, optional callback, there should be no compatibility
+issues.  The SYSFS_GROUP_INVISIBLE return code from the ->is_visible()
+call for individual attributes would not be needed then, at least in my
+use case.
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240427   gcc  
-arc                   randconfig-002-20240427   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                            mmp2_defconfig   gcc  
-arm                   randconfig-003-20240427   gcc  
-arm                         s5pv210_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-003-20240427   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240427   gcc  
-csky                  randconfig-002-20240427   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-002-20240427   gcc  
-i386         buildonly-randconfig-006-20240427   gcc  
-i386                                defconfig   clang
-i386                  randconfig-002-20240427   gcc  
-i386                  randconfig-004-20240427   gcc  
-i386                  randconfig-005-20240427   gcc  
-i386                  randconfig-011-20240427   gcc  
-i386                  randconfig-012-20240427   gcc  
-i386                  randconfig-015-20240427   gcc  
-i386                  randconfig-016-20240427   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240427   gcc  
-loongarch             randconfig-002-20240427   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-microblaze                      mmu_defconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240427   gcc  
-nios2                 randconfig-002-20240427   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240427   gcc  
-parisc                randconfig-002-20240427   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                     tqm8540_defconfig   gcc  
-powerpc                 xes_mpc85xx_defconfig   gcc  
-powerpc64             randconfig-001-20240427   gcc  
-powerpc64             randconfig-002-20240427   gcc  
-powerpc64             randconfig-003-20240427   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv                 randconfig-002-20240427   gcc  
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240427   gcc  
-s390                  randconfig-002-20240427   gcc  
-sh                               alldefconfig   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                         ecovec24_defconfig   gcc  
-sh                          landisk_defconfig   gcc  
-sh                          lboxre2_defconfig   gcc  
-sh                            migor_defconfig   gcc  
-sh                    randconfig-001-20240427   gcc  
-sh                    randconfig-002-20240427   gcc  
-sh                          rsk7269_defconfig   gcc  
-sh                           se7343_defconfig   gcc  
-sh                        sh7763rdp_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240427   gcc  
-sparc64               randconfig-002-20240427   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-002-20240427   gcc  
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-003-20240427   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-003-20240427   gcc  
-x86_64                randconfig-005-20240427   gcc  
-x86_64                randconfig-006-20240427   gcc  
-x86_64                randconfig-011-20240427   gcc  
-x86_64                randconfig-015-20240427   gcc  
-x86_64                randconfig-016-20240427   gcc  
-x86_64                randconfig-071-20240427   gcc  
-x86_64                randconfig-076-20240427   gcc  
-x86_64                          rhel-8.3-rust   clang
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                randconfig-001-20240427   gcc  
-xtensa                randconfig-002-20240427   gcc  
+Thanks,
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Lukas
