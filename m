@@ -1,155 +1,128 @@
-Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24020383BA
-	for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2024 10:55:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D350E4501D
+	for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2024 11:43:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714388147; cv=none; b=MYdpkvRoWJzHHPDsy1SOAm25xHD8Pc5lizW673EZkxsqVWFDoYcNGkOlLg5tka4Nv8vI5D5baRNwPz5L/Bpw7NLXMrtdW7bzijdxcBZiIj7aCQihfjSj8mjfbME1rm01eC9fH5bCOjlOmUpAlBc8KHMrOzKlxhwLQfyQkcZLpX8=
+	t=1714390991; cv=none; b=QbJkHg9U0NxJQ7RV65QCDDL3xJ2BqGHfBsp97YQagO9X4k5yANnX+VF7yC+XfkYFODj7ZV7JGifSqRNnxjYQQDDsGaLbvCorO6rHuENYI+p/N46Xt54rCBsfycWImfyguuxDJAC0mA49gwQGTVMbXkbc41VFjBt0h8hN21Zqav4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714388147; c=relaxed/simple;
-	bh=Xpupn6nv6f2q38+tmYSrohtAxHhfoWPOabgy2X+P2HM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eegfEIWqYmO+J3qEHZGlUaltpYl7HJHElfEwaDLosYaQ5zqgMvdlw0c1uHS+eM2x6kPbXsB+VlE38x8JA4O1rwZbP25jplzR7pal5fLb5sAL8bfq7X6pw68PzUpsH9SVj5NzDALWBhf7nczKY9tMkdNkNFP0GflwXvZpydvT6U4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RqN72Smo; arc=none smtp.client-ip=209.85.219.177
+	s=arc-20240116; t=1714390991; c=relaxed/simple;
+	bh=xP9omRynCEpRGFZBVMKXP4h+HilIKdIqSnqZkJEzSkk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=RsdjYSvXCbNQY8qe91ZXa21DAboey4OtIEwwAK/VzwwHiUTTsPEgmWiDRvYGgBnAJ4izM/b4XemPzxulT0WpeeNvsaTMHmbj2T7hlMe9rVTkE7y1AB473oNVrCqIKBkPYChOUsYkTsiHzXFMwDsTIYDVl8XMcMdq7sdRVmYz/Sc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=kTRlCFbs; arc=none smtp.client-ip=209.85.208.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RqN72Smo"
-Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-de46da8ced2so4927779276.0
-        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2024 03:55:44 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kTRlCFbs"
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-2db17e8767cso50415661fa.3
+        for <linux-pci@vger.kernel.org>; Mon, 29 Apr 2024 04:43:09 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1714388144; x=1714992944; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=HK9OBY6JCsI5PbvjejB+IUXQa8uw72iX0OVXzGaQJV4=;
-        b=RqN72Smo87boybYk0biU491UJ2hX+RJHRb0epw9NuEPoXPbZy+O/dcrX2UQzwz8zfn
-         22unEBQRlyVVqSgIQ/HEephQ9WNkxmNkLm8v2VzY5JUlHFujea//EyDoUTY6m0hgFpJD
-         vSixFTitHZPDDzbd/I3UGA4l0UoHZjBbeZbI0FbsSwFOjZJImU4hDUfDlniXwaeSsrJ1
-         NdQQjLtv7e/TT8Norxfk8IVQsMmxpYgXr6BpoPtQQ1Iqb2cQXmjWc98pYN0UPW96r8G6
-         8dKBcsZvFHCValowyiSrTJAnLiJnSU138DJr9MctjH2udQl5ua90RDaXiVV6R7kX0Xaw
-         IZLw==
+        d=linaro.org; s=google; t=1714390988; x=1714995788; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=4AHu2GrYMZd5nsIxhghrANJzfEVXRFCsK+/iWXt8RrI=;
+        b=kTRlCFbsKExTySVZvFot2sqit9Ifvb89v4z79uammipb9HLmCDvNabwSYu+3GMrBUq
+         5fml7vZFYA7TMp57D1iHNcYr7Npt/C4rUffttpy3GVi4Va+t5PaDtlvg9G/IUHPQCzPo
+         72kqScSZaLCx3TpBuW6HlCtGHoEcFp4Raco2mdvduBCtuJqOIVJyhtZlzoh7OYeS2yk0
+         Meidw7W29niYZNlWICcuwvDz87JB6xk06/NNzbgyJ0n9yUWtfGaQ6G51uvS2+QtYskcP
+         93l7/5a6sp+Cnxy01n/RWW1FtDVx3unbmMnaYQHKZaeuPtxQvZOqiWmODT01tQkeTWw0
+         hXfA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1714388144; x=1714992944;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=HK9OBY6JCsI5PbvjejB+IUXQa8uw72iX0OVXzGaQJV4=;
-        b=BPZpadq8K8cg4oc6ldWuw+RRNY7ekdXT6rD9AVuPaGAOPeh7Ew+vRoBWakFh+GMLv2
-         9F+TtKqrlZ6QSq3kV/lbkFM+/i5j0VseBa18O7Iy6rFbBbpqgWHPmkqC6c9GbTwUTutZ
-         m0XV5s67WTbsBCJlUlXC6dWFnwKyNZvm9ipp//FHd+RtFpiQmNxdunXayXNbsO4Gp1ia
-         9+R9os66aDLKxsemeOXk0yl1VZCuqxd+1grGGQd53fWZ6xshB30ELiU2bpMXhJOlL9lm
-         u7YMs2uBOcc3YprrPDhcEVF7FK5bs+6/CqpcwszlALwa0dvYe42zLUuSDAPJPQQ4/DX5
-         lhuQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX6gfIs/8nNZHgaxaritERd3h5waxoLrWIU5Rz3auPwzkX4TFsQXSO13QAu3eweKXcoiwmBS8GEti+Go/vi3nTELx5TLggpUetR
-X-Gm-Message-State: AOJu0Yy/jZ4F0EZ5AM8d9+ZdpQ/9frtKbfUxyKXtukTqfPcF8ULPN8M+
-	Ous+g2k4o8iYRDxljxauCSu4T9ve2byITx7M4oj+S8wohQcC3Bl5rpBJ1RIVrvpZgvE1B7YiP9y
-	5Hf4B886pALJ+oM8kMXbP0jgp4tpFG7/aybr/iA==
-X-Google-Smtp-Source: AGHT+IGnLAI/1mmfL0Yrtu3STdW3JZRgrtSe9fLYX4PwRR3wSZS0mEZbbEeASJOYhpilXlNLDeYA2jBBTzekDMQ4uOM=
-X-Received: by 2002:a25:ae18:0:b0:de5:5d4b:1632 with SMTP id
- a24-20020a25ae18000000b00de55d4b1632mr9731287ybj.60.1714388144152; Mon, 29
- Apr 2024 03:55:44 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1714390988; x=1714995788;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=4AHu2GrYMZd5nsIxhghrANJzfEVXRFCsK+/iWXt8RrI=;
+        b=nyd7VGwTr9bosUK4NfTgsTbEAjUam1AbhlqoEP9PYFRkIDCx33fOjRItgU8CaISWFQ
+         L0ZcKCi2bu9uiiR/8saibEW8cZ1tXuhEFK/WCBEgnu+kpxKwGWQSBj/BhNOl+sl8tbcE
+         xMhMBwCRNmGqmOt/ompgH5pTOJcAWdZ3mmYE8/S/kQ8hvldulezO8v3cwKkV5rzhUenj
+         da2MSg0Hq5AE+vybGo8jXWkmvIHr/MUYfm69w+xOuTSsM8k5izwf6bf/yfR10phGyzio
+         8XJlLRDrxts8MJuuNG+5DmtXQxt/N8HMH1Hx1E6enurJsvEFxtDPc5MW3yYNafaVl7CW
+         vDBg==
+X-Forwarded-Encrypted: i=1; AJvYcCXObbVHZdUyPKEEWDDK0xISfArBaCcitOAi6iMxPh2Kh3B+GuD5wLMQjydZqzQtyqp2JLgPZN6f/jEmIc73hnb2ZWfQbEYgP2UB
+X-Gm-Message-State: AOJu0Yy5Yf05pyTV/bu5V9s2V12FP+LgTHo3o2Rd/2bNL93ZBEUt5xl0
+	24pxXCsm4q83HtwK2aouQzTjWkWO/tK4XyW7tre4VHfvsI3eJVMERa38+6tyOAg=
+X-Google-Smtp-Source: AGHT+IEM/SX8JWy3onOefygk1LTTCZaAW7PQ3Tj7tXR9aiLyU2Z/2Z/HvLOTcE/H0E6Xb96t5e5h8A==
+X-Received: by 2002:a2e:901a:0:b0:2d8:4169:3a58 with SMTP id h26-20020a2e901a000000b002d841693a58mr6273268ljg.41.1714390987975;
+        Mon, 29 Apr 2024 04:43:07 -0700 (PDT)
+Received: from localhost.localdomain ([2.221.137.100])
+        by smtp.gmail.com with ESMTPSA id j28-20020a05600c1c1c00b0041bfb176a87sm7006611wms.27.2024.04.29.04.43.07
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 29 Apr 2024 04:43:07 -0700 (PDT)
+From: Jean-Philippe Brucker <jean-philippe@linaro.org>
+To: will@kernel.org,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	liviu.dudau@arm.com,
+	sudeep.holla@arm.com,
+	joro@8bytes.org
+Cc: robin.murphy@arm.com,
+	nicolinc@nvidia.com,
+	ketanp@nvidia.com,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev,
+	devicetree@vger.kernel.org,
+	Jean-Philippe Brucker <jean-philippe@linaro.org>
+Subject: [PATCH 1/3] dt-bindings: PCI: generic: Add ats-supported property
+Date: Mon, 29 Apr 2024 12:39:37 +0100
+Message-ID: <20240429113938.192706-3-jean-philippe@linaro.org>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20240429113938.192706-2-jean-philippe@linaro.org>
+References: <20240429113938.192706-2-jean-philippe@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20240415182052.374494-1-mr.nuke.me@gmail.com> <20240415182052.374494-7-mr.nuke.me@gmail.com>
- <CAA8EJpqY1aDZMaeqBULEOD26UeGYbLd8RsA16jZw7zXJ7_oGPQ@mail.gmail.com>
- <6726fa2b-f5fe-10fb-6aab-f76d61f0b3cd@gmail.com> <4a7b1e1d-ac68-4857-8925-f90c9e123fd1@gmail.com>
- <CAA8EJppGW=qyk2P6Z_S=dp0njsCjqZaXjw8qU4MY1HOZR-N=4A@mail.gmail.com> <Zi88Hdx6UgBo/gti@hu-varada-blr.qualcomm.com>
-In-Reply-To: <Zi88Hdx6UgBo/gti@hu-varada-blr.qualcomm.com>
-From: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
-Date: Mon, 29 Apr 2024 13:55:32 +0300
-Message-ID: <CAA8EJpq+Bbws8yH5Xq7rHyA+-=DaCcfEcgUa5RUt2+LWQW0kKg@mail.gmail.com>
-Subject: Re: [PATCH v3 6/7] phy: qcom-qmp-pcie: add support for ipq9574 gen3x2 PHY
-To: Varadarajan Narayanan <quic_varada@quicinc.com>
-Cc: "Alex G." <mr.nuke.me@gmail.com>, Bjorn Andersson <andersson@kernel.org>, 
-	Konrad Dybcio <konrad.dybcio@linaro.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Vinod Koul <vkoul@kernel.org>, 
-	Kishon Vijay Abraham I <kishon@kernel.org>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-phy@lists.infradead.org, linux-clk@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 
-On Mon, 29 Apr 2024 at 09:20, Varadarajan Narayanan
-<quic_varada@quicinc.com> wrote:
->
-> On Wed, Apr 17, 2024 at 12:50:49AM +0300, Dmitry Baryshkov wrote:
-> > On Wed, 17 Apr 2024 at 00:25, Alex G. <mr.nuke.me@gmail.com> wrote:
-> > >
-> > > Hi Dmitry,
-> > >
-> > > On 4/15/24 16:25, mr.nuke.me@gmail.com wrote:
-> > > >
-> > > >
-> > > > On 4/15/24 15:10, Dmitry Baryshkov wrote:
-> > > >> On Mon, 15 Apr 2024 at 21:23, Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> > > >> wrote:
-> > > >>>
-> > > >>> Add support for the gen3x2 PCIe PHY on IPQ9574, ported form downstream
-> > > >>> 5.4 kernel. Only the serdes and pcs_misc tables are new, the others
-> > > >>> being reused from IPQ8074 and IPQ6018 PHYs.
-> > > >>>
-> > > >>> Signed-off-by: Alexandru Gagniuc <mr.nuke.me@gmail.com>
-> > > >>> ---
-> > > >>>   drivers/phy/qualcomm/phy-qcom-qmp-pcie.c      | 136 +++++++++++++++++-
-> > > >>>   .../phy/qualcomm/phy-qcom-qmp-pcs-pcie-v5.h   |  14 ++
-> > > >>>   2 files changed, 149 insertions(+), 1 deletion(-)
-> > > >>>
-> > > >>
-> > > >> [skipped]
-> > > >>
-> > > >>> @@ -2448,7 +2542,7 @@ static inline void qphy_clrbits(void __iomem
-> > > >>> *base, u32 offset, u32 val)
-> > > >>>
-> > > >>>   /* list of clocks required by phy */
-> > > >>>   static const char * const qmp_pciephy_clk_l[] = {
-> > > >>> -       "aux", "cfg_ahb", "ref", "refgen", "rchng", "phy_aux",
-> > > >>> +       "aux", "cfg_ahb", "ref", "refgen", "rchng", "phy_aux",
-> > > >>> "anoc", "snoc"
-> > > >>
-> > > >> Are the NoC clocks really necessary to drive the PHY? I think they are
-> > > >> usually connected to the controllers, not the PHYs.
-> > > >
-> > > > The system will hang if these clocks are not enabled. They are also
-> > > > attached to the PHY in the QCA 5.4 downstream kernel.
-> >
-> > Interesting.
-> > I see that Varadarajan is converting these clocks into interconnects.
-> > Maybe it's better to wait for those patches to land and use
-> > interconnects instead. I think it would better suit the
-> > infrastructure.
-> >
-> > Varadarajan, could you please comment, are these interconnects
-> > connected to the PHY too or just to the PCIe controller?
->
-> Sorry for the late response. Missed this e-mail.
->
-> These 2 clks are related to AXI port clk on Aggnoc/SNOC, not
-> directly connected to PCIE wrapper, but it should be enabled to
-> generate pcie traffic.
+Add a way for firmware to tell the OS that ATS is supported by the PCI
+root complex. An endpoint with ATS enabled may send Translation Requests
+and Translated Memory Requests, which look just like Normal Memory
+Requests with a non-zero AT field. So a root controller that ignores the
+AT field may simply forward the request to the IOMMU as a Normal Memory
+Request, which could end badly. In any case, the endpoint will be
+unusable.
 
-So, are they required for the PHY or are they required for the PCIe
-controller only?
+The ats-supported property allows the OS to only enable ATS in endpoints
+if the root controller can handle ATS requests. Only add the property to
+pcie-host-ecam-generic for the moment. For non-generic root controllers,
+availability of ATS can be inferred from the compatible string.
 
->
-> Thanks
-> Varada
->
-> > > They are named "anoc_lane", and "snoc_lane" in the downstream kernel.
-> > > Would you like me to use these names instead?
-> >
-> > I'm fine either way.
-> >
+Signed-off-by: Jean-Philippe Brucker <jean-philippe@linaro.org>
+Reviewed-by: Rob Herring <robh@kernel.org>
+---
+From a while ago: https://lore.kernel.org/all/20200219222454.GA16221@bogus/
+---
+ Documentation/devicetree/bindings/pci/host-generic-pci.yaml | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-
-
+diff --git a/Documentation/devicetree/bindings/pci/host-generic-pci.yaml b/Documentation/devicetree/bindings/pci/host-generic-pci.yaml
+index d25423aa71674..94d4a4914a483 100644
+--- a/Documentation/devicetree/bindings/pci/host-generic-pci.yaml
++++ b/Documentation/devicetree/bindings/pci/host-generic-pci.yaml
+@@ -110,6 +110,12 @@ properties:
+   iommu-map-mask: true
+   msi-parent: true
+ 
++  ats-supported:
++    description:
++      Indicates that a PCIe host controller supports ATS, and can handle Memory
++      Requests with Address Type (AT).
++    type: boolean
++
+ required:
+   - compatible
+   - reg
 -- 
-With best wishes
-Dmitry
+2.44.0
+
