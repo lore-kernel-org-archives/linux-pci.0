@@ -1,50 +1,49 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 924672C86A;
-	Mon, 29 Apr 2024 10:25:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A0039FE0;
+	Mon, 29 Apr 2024 10:25:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714386324; cv=none; b=gS2NeEz/8bGQ+EdH/+R0TKUYLEVWZvlHuwDhStwSRWQ5MBlfMEdbdX4KMiN9n6I/FWKAADzRZ+G8Gesh4BBgFty2ssTTxWmQyHLbneDYux5NcGr3FFVIokBTnQgzC+PdqNRrZLCmiGgil7k4tMmfS2kXw3T2Kz9cAU93FjCefS8=
+	t=1714386325; cv=none; b=jdWq/MH6be/idckBjXbfpz0Zmets7JOPtEt5rqSKarskH5oU0opRKUAAbZtiauqXkWOnfqJRqbhL0W9a3szdIsWePxQ9XhESQQoApBkdCEQ2JwNBX47d0cNZ25RKiblZVIUFhjnbFt2OvjwHPYX3EgGQZ2pbM055UNtN6mlyGI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714386324; c=relaxed/simple;
-	bh=8rSWiYZvmKFnXcw8ynHscd2dH4mpaWep1+0Q3U6jY4c=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Nvo5yrP/XuW0cRoI4+nEJkYXYxD42DvltkKsongXifmZ+9FKl99mz+CKR3yvHjqC7w5I+lRVoEpBH93kIjgBXcPqOilQ45ScqECBhBCPxn6RvGrVgbT2xiH7YE0L+WCqC7T/6gD4pPnmflhGSVzTrWMgBPEuwfGIGYYwdix7Dgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OzgYMJPt; arc=none smtp.client-ip=192.198.163.12
+	s=arc-20240116; t=1714386325; c=relaxed/simple;
+	bh=BSxkbBdK70uPefLrVg5yOQ3KIh93f8UTGSR+QBBryx8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WtmxQZ3T/tQXTSU6KfpQrHDu2v/OA+xaRifeLpmtQt/Ps+FW5lYqKD4WO09G6RXPJwcBwpUnMS+oV2PHtpLgOBfujt7URJjPKAgng9XNNJwyy36De1TESyEiy3XknSJSu4FIJ0+xwOU3AdO7D8tuboYRrWpKorFG0eUC4oyAAQU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=aqzI1y+a; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OzgYMJPt"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="aqzI1y+a"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714386323; x=1745922323;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=8rSWiYZvmKFnXcw8ynHscd2dH4mpaWep1+0Q3U6jY4c=;
-  b=OzgYMJPtzLnxyXEyTkLq4NKhwT4wkTIJgM4sLqFs4ZYPUa2g108olNg8
-   OAdxuzIaOdWf1LqYkoddOvugmKVedQyFU/C8WVwa9eB4MQ6WDVj/sngwF
-   gOKJVs8/ye8dQW/Bwd95uYLiBYtI73O4+YcXdTln4EAHxbKC+fwWA1SEp
-   BLOHm1m6yfFed/dTUC+OK//1EtxHAs/zaC+zZlmgwzvAfdBS3f5Nn6djG
-   cmewWpmbn24uxk4Byt+2qoswonM3jkwsE/+YvFVBZllgGxU1FD+uQMS47
-   NIuxLYuGj0H4ZXHIgwI/Py+XthEd7250aSucirw+VHmBFOcFfHBGVdtij
-   g==;
-X-CSE-ConnectionGUID: 3gmhgQmZQPGBv0LWWGrlYw==
-X-CSE-MsgGUID: MvEUdEULSCKmBr12BkOHuA==
-X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="13827882"
+  t=1714386324; x=1745922324;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=BSxkbBdK70uPefLrVg5yOQ3KIh93f8UTGSR+QBBryx8=;
+  b=aqzI1y+am4cWxn35amY488YPHxcRTap9ln9e8KynCSnw+LjO82izM2ZK
+   dhikF9pgx0zZXAFdl+13EcETboxch9Sz0xMwA9SWLYcBSXxjb7b5zg87U
+   Z75tji9vCYEt/5yAsZKBOmUPaVuC3m3vaZj+nP+lJQ1JQwnY3hi/gbPyx
+   aVFinCaNraC+sNV5LQGPl427sPW5ld3OfAjmY/67j5WKy4tzzb/JNPIg6
+   Nj0r5BO2g/VKEpj//1ZH+CJ74J4F2K8NeFPLPFV+aAZaRj8s4FaQJLbXE
+   ivZNc+GH7WaihiZ21b6NVmo2k3xvhGBpZlsuByWwQ6C4BGrQyYfGzkGEK
+   Q==;
+X-CSE-ConnectionGUID: clveFvorRWmyUxyB3Igtkw==
+X-CSE-MsgGUID: VHK1JHxTSySIhAVRYRcfCg==
+X-IronPort-AV: E=McAfee;i="6600,9927,11057"; a="13827905"
 X-IronPort-AV: E=Sophos;i="6.07,239,1708416000"; 
-   d="scan'208";a="13827882"
+   d="scan'208";a="13827905"
 Received: from orviesa006.jf.intel.com ([10.64.159.146])
   by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Apr 2024 03:25:21 -0700
-X-CSE-ConnectionGUID: Zt/l+adsTyGWI5SPauizfA==
-X-CSE-MsgGUID: i0V5bZmRQd2eW/gk5ii/2Q==
+X-CSE-ConnectionGUID: eTitjhPcTPOhtWqwOYqo5Q==
+X-CSE-MsgGUID: kiuwJZZ9SPKgOBlYns0TzA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.07,239,1708416000"; 
-   d="scan'208";a="26475171"
+   d="scan'208";a="26475172"
 Received: from black.fi.intel.com ([10.237.72.28])
   by orviesa006.jf.intel.com with ESMTP; 29 Apr 2024 03:25:13 -0700
 Received: by black.fi.intel.com (Postfix, from userid 1003)
-	id B80531AC; Mon, 29 Apr 2024 13:25:11 +0300 (EEST)
+	id 827C115B; Mon, 29 Apr 2024 13:25:11 +0300 (EEST)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Frank Li <Frank.Li@nxp.com>,
@@ -82,12 +81,10 @@ Cc: Vignesh Raghavendra <vigneshr@ti.com>,
 	Jonathan Hunter <jonathanh@nvidia.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	=?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>
-Subject: [PATCH v3 3/5] PCI: dwc: Remove unused of_gpio.h
-Date: Mon, 29 Apr 2024 13:23:20 +0300
-Message-ID: <20240429102510.2665280-4-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 0/5] PCI: controller: Move to agnostic GPIO API
+Date: Mon, 29 Apr 2024 13:23:17 +0300
+Message-ID: <20240429102510.2665280-1-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.43.0.rc1.1336.g36b5255a03ac
-In-Reply-To: <20240429102510.2665280-1-andriy.shevchenko@linux.intel.com>
-References: <20240429102510.2665280-1-andriy.shevchenko@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -96,74 +93,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-of_gpio.h is deprecated and subject to remove.
-The driver doesn't use it, simply remove the unused header.
+While at it, remove of_gpio.h leftover from some of the drivers.
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/pci/controller/dwc/pci-dra7xx.c    | 1 -
- drivers/pci/controller/dwc/pci-meson.c     | 1 -
- drivers/pci/controller/dwc/pcie-qcom.c     | 1 -
- drivers/pci/controller/dwc/pcie-tegra194.c | 2 --
- 4 files changed, 5 deletions(-)
+In v3:
+- added precursor patch 1 to avoid build errors (LKP)
+- used GPIOD_OUT_LOW instead of GPIOD_ASIS (Mani)
+- added tags (Mani, Frank)
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index b67071a63f8a..cf8392190856 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -18,7 +18,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/of.h>
--#include <linux/of_gpio.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index 6477c83262c2..db9482a113e9 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -9,7 +9,6 @@
- #include <linux/clk.h>
- #include <linux/delay.h>
- #include <linux/gpio/consumer.h>
--#include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/reset.h>
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 14772edcf0d3..436076612c8f 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -20,7 +20,6 @@
- #include <linux/kernel.h>
- #include <linux/init.h>
- #include <linux/of.h>
--#include <linux/of_gpio.h>
- #include <linux/pci.h>
- #include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
-diff --git a/drivers/pci/controller/dwc/pcie-tegra194.c b/drivers/pci/controller/dwc/pcie-tegra194.c
-index 93f5433c5c55..e8cd8c1bd4f4 100644
---- a/drivers/pci/controller/dwc/pcie-tegra194.c
-+++ b/drivers/pci/controller/dwc/pcie-tegra194.c
-@@ -13,7 +13,6 @@
- #include <linux/clk.h>
- #include <linux/debugfs.h>
- #include <linux/delay.h>
--#include <linux/gpio.h>
- #include <linux/gpio/consumer.h>
- #include <linux/interconnect.h>
- #include <linux/interrupt.h>
-@@ -21,7 +20,6 @@
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/of.h>
--#include <linux/of_gpio.h>
- #include <linux/of_pci.h>
- #include <linux/pci.h>
- #include <linux/phy/phy.h>
+In v2:
+- combined previously sent patches into a series (Manivannan)
+- added tags (Rob, Manivannan)
+- converted iMX.6 driver (Manivannan)
+- dropped leftover in aadvark drivers (Manivannan)
+
+Andy Shevchenko (5):
+  PCI: dra7xx: Add missing header inclusion
+  PCI: aardvark: Remove unused of_gpio.h
+  PCI: dwc: Remove unused of_gpio.h
+  PCI: imx6: Convert to agnostic GPIO API
+  PCI: kirin: Convert to agnostic GPIO API
+
+ drivers/pci/controller/dwc/pci-dra7xx.c    |   2 +-
+ drivers/pci/controller/dwc/pci-imx6.c      |  37 +++-----
+ drivers/pci/controller/dwc/pci-meson.c     |   1 -
+ drivers/pci/controller/dwc/pcie-kirin.c    | 105 +++++++--------------
+ drivers/pci/controller/dwc/pcie-qcom.c     |   1 -
+ drivers/pci/controller/dwc/pcie-tegra194.c |   2 -
+ drivers/pci/controller/pci-aardvark.c      |   1 -
+ 7 files changed, 50 insertions(+), 99 deletions(-)
+
 -- 
 2.43.0.rc1.1336.g36b5255a03ac
 
