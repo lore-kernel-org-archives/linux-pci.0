@@ -1,88 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE5B745025;
-	Tue, 30 Apr 2024 08:05:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C05D1272C6;
+	Tue, 30 Apr 2024 08:38:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714464350; cv=none; b=b9AO1dqyh0M+kwRByHvxSSS5R1wNjHj1Xi5rtv3t+zhDm5maBaXxFmEVixBD/4ynCn2VIxkdYbLlVi4thuYrgciwK06xwheqXuu+bzKYdK+D5EGxnEF6iC/pKlVLr4mteclxBhGZBsokRLc1JlkpZ6cZXVy1VV9jidcLo9DnqqM=
+	t=1714466310; cv=none; b=GCnyC7Tz+uhVj2HLLwlg8UHsfGPpBaw9KiJ+HEcuxzEx/0KVIpySwDNWIEZwjRkCLKNtScYrMFXdmLH8QTh3OYnvKuLl81/pHLqahj9HQ6fHJ2bm23EuQCABocCA05DKdJcWSfali5ggGz0J90Vyb8M5kGlz3Q5lPnk2Vv2K/yU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714464350; c=relaxed/simple;
-	bh=fZlcYqSpR1qIHI7+FV0GRGg/1UW0j86/RtjUAe6cOus=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u/TdzAAfc9YIH484VzKcXrROaf8FgO9ESJIFP4n9YKZXLQlCo3uvWYkpYG7dfwg5X8qo73cLu6GzRsW8fAKq0txCKo16JLbUDuhBTo28zHG/jWtbaDMmKHjMu/TFpqhi5VT9D8SMHdh5zt311+d47IeJBjhbixu8ibeap5QGxjk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HDYceixi; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HDYceixi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56A45C2BBFC;
-	Tue, 30 Apr 2024 08:05:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1714464349;
-	bh=fZlcYqSpR1qIHI7+FV0GRGg/1UW0j86/RtjUAe6cOus=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HDYceixiVNKl2rZlwhH+0mqIn8qgRF2jmeFy+1zJQ7sdotsRnp+s5JhFXshq2e5iA
-	 xbtPfzzywFyv5jMJVyexbxxKraVb+Q+wegepRKFMjVzNBYw/iNl1I8jzLTQek0XBMm
-	 OFbuhgHbu+2VMeM45hOAaz9E7QMHzSt3h4y3RnIoKXTkTQ6usC8KuR3vHFJ1YzyRZt
-	 LRPfmAmv7duacOC3FgSLe3lE2o7xjjlUxRK0moKsBfvWQ3gJ8XwXjOFtrnVii/PnKU
-	 Gy+Zdwi78MrBzdahIqXCM/B/jQpN50TQLTdURBdlnXJ5paJLUukxR8JnOvoOSv0sFb
-	 k32C9ZN/PXWKw==
-Date: Tue, 30 Apr 2024 10:05:42 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Thierry Reding <thierry.reding@gmail.com>,
-	Jonathan Hunter <jonathanh@nvidia.com>, linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mhi@lists.linux.dev, linux-tegra@vger.kernel.org,
-	Bjorn Helgaas <helgaas@kernel.org>
-Subject: Re: [PATCH v4 04/10] PCI: qcom-ep: Drop 'Link is enabled' from the
- debug message for BME event
-Message-ID: <ZjCmVuc_-oCDQXIX@ryzen.lan>
-References: <20240430-pci-epf-rework-v4-0-22832d0d456f@linaro.org>
- <20240430-pci-epf-rework-v4-4-22832d0d456f@linaro.org>
+	s=arc-20240116; t=1714466310; c=relaxed/simple;
+	bh=JPAY6hy0dx2EEWypghWseKBA28SpgSG3Jr5Y4Fm3M/E=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=buchR4VSuKhXFGNVdV7+J0FottTPJNci3NQUaWlTPMj+RasA9JztDkpp0Cx6jBjH+jj/3v1vmmFl3VjE9jnwl25ofTCguuX37IbyzOiVS+duwAh0YGbZ+Q6YKJWenbRcggPVzQnJ34NB2Z2ti4Oq/CJQQ839J1AIIwj5pfeLFR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; arc=none smtp.client-ip=185.11.138.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sntech.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
+Received: from i53875b01.versanet.de ([83.135.91.1] helo=diego.localnet)
+	by gloria.sntech.de with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <heiko@sntech.de>)
+	id 1s1j06-0007i9-Ie; Tue, 30 Apr 2024 10:38:10 +0200
+From: Heiko =?ISO-8859-1?Q?St=FCbner?= <heiko@sntech.de>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof =?utf-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Simon Xue <xxm@rock-chips.com>, Kever Yang <kever.yang@rock-chips.com>,
+ Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Jianfeng Liu <liujianfeng1994@gmail.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ stable@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Fix initial PERST# GPIO value
+Date: Tue, 30 Apr 2024 10:38:09 +0200
+Message-ID: <2493811.Mh6RI2rZIc@diego>
+In-Reply-To: <20240417164227.398901-1-cassel@kernel.org>
+References: <20240417164227.398901-1-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240430-pci-epf-rework-v4-4-22832d0d456f@linaro.org>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="us-ascii"
 
-On Tue, Apr 30, 2024 at 11:43:45AM +0530, Manivannan Sadhasivam wrote:
-> Bus Master Enable (BME) event that is generated by the Qcom PCIe EP
-> controller due to host setting the Bus Master Enable bit in the Command
-> register doesn't have anything to do with the PCIe link.
+Am Mittwoch, 17. April 2024, 18:42:26 CEST schrieb Niklas Cassel:
+> PERST# is active low according to the PCIe specification.
 > 
-> Hence, drop the bogus statement.
+> However, the existing pcie-dw-rockchip.c driver does:
+> gpiod_set_value(..., 0); msleep(100); gpiod_set_value(..., 1);
+> When asserting + deasserting PERST#.
 > 
-> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/pci/controller/dwc/pcie-qcom-ep.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+> This is of course wrong, but because all the device trees for this
+> compatible string have also incorrectly marked this GPIO as ACTIVE_HIGH:
+> $ git grep -B 10 reset-gpios arch/arm64/boot/dts/rockchip/rk3568*
+> $ git grep -B 10 reset-gpios arch/arm64/boot/dts/rockchip/rk3588*
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> index f6e925d434f6..dcac177b55fb 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> @@ -636,7 +636,7 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
->  		pcie_ep->link_status = QCOM_PCIE_EP_LINK_DOWN;
->  		pci_epc_linkdown(pci->ep.epc);
->  	} else if (FIELD_GET(PARF_INT_ALL_BME, status)) {
-> -		dev_dbg(dev, "Received Bus Master Enable event. Link is enabled!\n");
-> +		dev_dbg(dev, "Received Bus Master Enable event\n");
->  		pcie_ep->link_status = QCOM_PCIE_EP_LINK_ENABLED;
->  		qcom_pcie_ep_icc_update(pcie_ep);
->  		pci_epc_bus_master_enable_notify(pci->ep.epc);
+> The actual toggling of PERST# is correct.
+> (And we cannot change it anyway, since that would break device tree
+> compatibility.)
 > 
-> -- 
-> 2.25.1
+> However, this driver does request the GPIO to be initialized as
+> GPIOD_OUT_HIGH, which does cause a silly sequence where PERST# gets
+> toggled back and forth for no good reason.
 > 
+> Fix this by requesting the GPIO to be initialized as GPIOD_OUT_LOW
+> (which for this driver means PERST# asserted).
+> 
+> This will avoid an unnecessary signal change where PERST# gets deasserted
+> (by devm_gpiod_get_optional()) and then gets asserted
+> (by rockchip_pcie_start_link()) just a few instructions later.
+> 
+> Before patch, debug prints on EP side, when booting RC:
+> [  845.606810] pci: PERST# asserted by host!
+> [  852.483985] pci: PERST# de-asserted by host!
+> [  852.503041] pci: PERST# asserted by host!
+> [  852.610318] pci: PERST# de-asserted by host!
+> 
+> After patch, debug prints on EP side, when booting RC:
+> [  125.107921] pci: PERST# asserted by host!
+> [  132.111429] pci: PERST# de-asserted by host!
+> 
+> This extra, very short, PERST# assertion + deassertion has been reported
+> to cause issues with certain WLAN controllers, e.g. RTL8822CE.
+> 
+> Fixes: 0e898eb8df4e ("PCI: rockchip-dwc: Add Rockchip RK356X host controller driver")
+> Tested-by: Jianfeng Liu <liujianfeng1994@gmail.com>
+> Tested-by: Heiko Stuebner <heiko@sntech.de>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Cc: stable@vger.kernel.org	# 5.15+
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Heiko Stuebner <heiko@sntech.de>
+
+it also matches what the vendor kernel does.
+
+
