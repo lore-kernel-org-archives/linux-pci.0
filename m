@@ -1,112 +1,86 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 403F3172BC6;
-	Tue, 30 Apr 2024 15:56:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14E1917F38C;
+	Tue, 30 Apr 2024 16:32:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714492601; cv=none; b=tUf663qPBcK6sMsjOuj27t0ejndRpfjdm2OkYCH4Noau3MISih0YN8DQvQB2Gg+kJy6ryQvI4U4Ao//W1Us5VyY4azJafbwrLRk5K9SAgBJUV5ZjJ/vLriC6zCRCsn2oumzotp7rzYK7pqeHoIQ/u3VEIsRUFAm95Fyx5JQjoDU=
+	t=1714494723; cv=none; b=Y2Hb//gT0LpTdRIPyqtNwTxxDx7aTp5tTLMl2dorr092x8hmsZGstFz0ZwU1DP2JV3DOlARAUs+mbjXFJRZMlaTm0tCbTipjVfsVm2o7GLQT2DFwEQFlOK9/txkwLSCgrpME/tJLCWmTPc3e5zTufqOofPbp0iH889sMaN+MfPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714492601; c=relaxed/simple;
-	bh=u4IgZKgSqkJ8S3Q9RctjnjagFB4IRFtxZbCY1ltX7qM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=pEDnbE+9dtw79bx2RA+tk/I9DMh4gYlGL2wpjrxUiHD8qCdX7Gw91cAwdU4ekrTGg/1TPC2tUm4lW5WRz0as/QLY/erpAJ1F2XuCvljqWubzVtD5Rdz3EglSU3AY4Dx49ws9Rj9DTt0rhbo5mdq5S5vGRrm2d2T15jSFTS9PdDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nKHUy0nz; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1714494723; c=relaxed/simple;
+	bh=VkkpzsJprISmtYUc+TA6qOHr+ByoaUmlZ1YxntQ0LXQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=COS6RIpxFHMEtW2wS7tWIEg4wuR7+djaC/tT7VPQjgRkL2WZ5ZLY0jQPHkb/nba2Qfvpj1MJcnE+L7v302Mdz9sUAk83RMV89E4P5QU5PMSOkhjDwEM34dMOlz2bDHUf9EBsalCI0Ngqzg8LlaQK8S3wbT5fdVb3BAR8ehhcFi8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=lo9Ygd8V; arc=none smtp.client-ip=156.67.10.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nKHUy0nz"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 43UBMnse009744;
-	Tue, 30 Apr 2024 15:56:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	from:to:cc:subject:date:message-id:in-reply-to:references; s=
-	qcppdkim1; bh=Mpjm17i6B4MRL/9Zsqr4cHQqmIHEkNPKZyKlvRv22IU=; b=nK
-	HUy0nzhzG568t4rYqiC4q05+6iaNRhdTXDDJwms4m4l4Aw3VLQu+mKLMVEje2bjb
-	XbENnYn0obxTFSTRzxrtpjX0I0EdHcf78vjxy9V+xAcmi4ACc7M99VIIqycbV6UK
-	PKgZsSdYR1PxPK4eN9GxiSN7r4sI5vTYD8khatGSvwiTBuV8mrrgTYFbbrAqoYgY
-	Kiyw62obLhlAcybcPoTU3fyk+q5nlbRyGbEWWPxHVoMU/Bj9/BRy1uO4ldGLUuys
-	W+AzqNVcur/KWxJV+xtb2cme8xsNQrJRVpcT/s90D2tpEEC0CltB2EJZAZEN/7LF
-	nSGscyeI++7TseLxlCow==
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xtyptgpba-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 30 Apr 2024 15:56:32 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTP id 43UFtqoJ032542;
-	Tue, 30 Apr 2024 15:55:52 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 3xrtem1a7v-1;
-	Tue, 30 Apr 2024 15:55:52 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 43UFtqMf032537;
-	Tue, 30 Apr 2024 15:55:52 GMT
-Received: from hu-sgudaval-hyd.qualcomm.com (hu-msarkar-hyd.qualcomm.com [10.213.111.194])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 43UFtqY6032516;
-	Tue, 30 Apr 2024 15:55:52 +0000
-Received: by hu-sgudaval-hyd.qualcomm.com (Postfix, from userid 3891782)
-	id C26F13BD6; Tue, 30 Apr 2024 21:25:51 +0530 (+0530)
-From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
-To: andersson@kernel.org, krzysztof.kozlowski+dt@linaro.org,
-        conor+dt@kernel.org, konrad.dybcio@linaro.org,
-        manivannan.sadhasivam@linaro.org
-Cc: quic_shazhuss@quicinc.com, quic_nitegupt@quicinc.com,
-        quic_ramkri@quicinc.com, quic_nayiluri@quicinc.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        quic_schintav@quicinc.com, Mrinmay Sarkar <quic_msarkar@quicinc.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH v11 2/3] PCI: qcom-ep: Add support for SA8775P SOC
-Date: Tue, 30 Apr 2024 21:25:38 +0530
-Message-Id: <1714492540-15419-3-git-send-email-quic_msarkar@quicinc.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1714492540-15419-1-git-send-email-quic_msarkar@quicinc.com>
-References: <1714492540-15419-1-git-send-email-quic_msarkar@quicinc.com>
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: AnEdzKqwuJVEYGYEyiGS5N5-umweLOek
-X-Proofpoint-ORIG-GUID: AnEdzKqwuJVEYGYEyiGS5N5-umweLOek
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
- definitions=2024-04-30_09,2024-04-30_01,2023-05-22_02
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0
- priorityscore=1501 adultscore=0 clxscore=1015 mlxscore=0 suspectscore=0
- malwarescore=0 impostorscore=0 lowpriorityscore=0 mlxlogscore=999
- spamscore=0 bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2404010003 definitions=main-2404300112
+	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="lo9Ygd8V"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+	bh=mT9X8XxEhdVId5LCLAyWK0SaWlOcI+5k2YpzrCEzpcc=; b=lo9Ygd8VvCtkhrWLQSkc9WRxm5
+	izdHwlIin29YSQpzkR70osYqugMijrSi6bsa8XfUPttWdHC4+bj7kM1/o/y0OEESp2HoNGN/NfBpt
+	4vFtCwuRMETDTVWSoxeBzL77Q/3JnP7kxF4s32Oq0WuEp+Gg7PpZ7XVZnKMBMF2lBqYg=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1s1qOQ-00EMfF-CZ; Tue, 30 Apr 2024 18:31:46 +0200
+Date: Tue, 30 Apr 2024 18:31:46 +0200
+From: Andrew Lunn <andrew@lunn.ch>
+To: Herve Codina <herve.codina@bootlin.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Lee Jones <lee@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	UNGLinuxDriver@microchip.com,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Russell King <linux@armlinux.org.uk>,
+	Saravana Kannan <saravanak@google.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Lars Povlsen <lars.povlsen@microchip.com>,
+	Steen Hegelund <Steen.Hegelund@microchip.com>,
+	Daniel Machon <daniel.machon@microchip.com>,
+	Alexandre Belloni <alexandre.belloni@bootlin.com>,
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
+Subject: Re: [PATCH 06/17] dt-bindings: net: mscc-miim: Add resets property
+Message-ID: <2b01ed8a-1169-4928-952e-1645935aca2f@lunn.ch>
+References: <20240430083730.134918-1-herve.codina@bootlin.com>
+ <20240430083730.134918-7-herve.codina@bootlin.com>
+ <5d899584-38ed-4eee-9ba5-befdedbc5734@lunn.ch>
+ <20240430174023.4d15a8a4@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240430174023.4d15a8a4@bootlin.com>
 
-Add support for SA8775P SoC to the Qualcomm PCIe Endpoint Controller
-driver. Adding new compatible string as it has different set of clocks
-compared to other SoCs.
+> We have the same construction with the pinctrl driver used in the LAN966x
+>   Documentation/devicetree/bindings/pinctrl/mscc,ocelot-pinctrl.yaml
+> 
+> The reset name is 'switch' in the pinctrl binding.
+> I can use the same description here as the one present in the pinctrl binding:
+>   description: Optional shared switch reset.
+> and keep 'switch' as reset name here (consistent with pinctrl reset name).
+> 
+> What do you think about that ?
 
-Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 1 +
- 1 file changed, 1 insertion(+)
+It would be good to document what it is shared with. So it seems to be
+the switch itself, pinctl and MDIO? Anything else?
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 2fb8c15..a95c755 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -875,6 +875,7 @@ static void qcom_pcie_ep_remove(struct platform_device *pdev)
- }
- 
- static const struct of_device_id qcom_pcie_ep_match[] = {
-+	{ .compatible = "qcom,sa8775p-pcie-ep", },
- 	{ .compatible = "qcom,sdx55-pcie-ep", },
- 	{ .compatible = "qcom,sm8450-pcie-ep", },
- 	{ }
--- 
-2.7.4
-
+    Andrew
