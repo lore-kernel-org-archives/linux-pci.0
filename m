@@ -1,204 +1,449 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B79C112FF97;
-	Wed,  1 May 2024 16:09:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.18
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714579769; cv=fail; b=tcNRRmzKg7MtFsnhi41kU3Ob0okmJbQIJPqV/a3wUWI4dForXNjuRptokU/YtrYYtMjRY+i0uVslTT9wgBauEOmbOxO146bYptS5pPJvVmAGq45WYpCJKPPvNc2rrOuvMP9snC53evGiaMm8d6NyBRKVQOiNtyZkBxL/iddB4UI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714579769; c=relaxed/simple;
-	bh=9eaJtf00LJhY8xM188vuiVE8PfT0N3vzVmQqt9Kyetw=;
-	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=mhLDtMd9o8qFmoLf4JpY8Uh1ztpMz/itN3/jk1rGIFAhaUL8jOFOP9qdK5nfwAhLiyxbeJU/3Y5Eb/Kj4JhV+VKao3Vh8O9CNN2LPT+TnlNNc0bbUx3PCwUrbAs6oQI28vrtxZkqab72JOtWA9JD47x74RasgxS0z/cgZ1lfbaw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=a1vHk2DD; arc=fail smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3559DC125;
+	Wed,  1 May 2024 16:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1714581413; cv=none; b=LnneGz328gMsaiuzP9kMmMC1q44rBKgLLZzNOp5Euffyx3qIKGJr1bFWOBjvWbE2daNZ+Mg1kR/hUXc93BlJILdG1Ld9DRn2PDzmcbcoYg7HhyDgsr6gOUIClWYq/0pfEZiS9eHfoYjSixKpzGD6pfAsfJfAM6BBH5yd9+2DCos=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1714581413; c=relaxed/simple;
+	bh=2HxYMzKbbH95jrWPrKh7ikTDWfN+L7+e/F7W3StYhUg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=tncRm7Hb+QY4UN0FvbgeBZbfokJq9ECqhBDgt3bzuAS9m+ANZfE7lAfmFlJ5dJZ1v/a1j4zSHojJV/ArCrT6cd30kvOGocscp8ezN343dhA5LZjwUBjMu1kPrPYUd6snyUQ4dCBh7vXgfFUGXROzslsvdliunUoityHwET1ehpc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=V20XmfBb; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="a1vHk2DD"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1714579769; x=1746115769;
-  h=date:from:to:cc:subject:message-id:references:
-   in-reply-to:mime-version;
-  bh=9eaJtf00LJhY8xM188vuiVE8PfT0N3vzVmQqt9Kyetw=;
-  b=a1vHk2DDSaK5rT71OxcicgCmWgoIw3PFNIWFZKBh++LdJ7ZgDxqZqcM9
-   0GIc6ErB5SdqZ+Pbmd/ONdNzonuvQpSa+0+e6aySv5oUjsLtXJgXjeNYQ
-   ds38001Hl1qVUOQNsWz50AHXJdG9AjBpZZW/uf9n56z5lJO4V6Th6W8r4
-   Njby3OMn+TDpdJu9PCEo2OIjtk8ZO57/vwesOh7ImlKBbTEMLxddaqLeo
-   nUlba+h/7fXHt6Lnuo3Y764lWswjdeb4eQtIbYinquvZQwjy+zNKE24Zp
-   GE4DYLDFDvEPuS1ZACC9PoXIrl6I+hBCntht8wGIZ1C39haWpIcrv77yY
-   A==;
-X-CSE-ConnectionGUID: cwF6+0YXSZqhSwr78hPapg==
-X-CSE-MsgGUID: i23mdNexSbKO7NCsMSTTaQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11061"; a="10487641"
-X-IronPort-AV: E=Sophos;i="6.07,245,1708416000"; 
-   d="scan'208";a="10487641"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 May 2024 09:09:27 -0700
-X-CSE-ConnectionGUID: PJXq3SvPTiii92SKasageQ==
-X-CSE-MsgGUID: 86z26ft4TOaJxFQ7ZYFsyQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.07,245,1708416000"; 
-   d="scan'208";a="26839805"
-Received: from orsmsx602.amr.corp.intel.com ([10.22.229.15])
-  by fmviesa007.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 01 May 2024 09:09:25 -0700
-Received: from orsmsx610.amr.corp.intel.com (10.22.229.23) by
- ORSMSX602.amr.corp.intel.com (10.22.229.15) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35; Wed, 1 May 2024 09:09:24 -0700
-Received: from ORSEDG602.ED.cps.intel.com (10.7.248.7) by
- orsmsx610.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.35 via Frontend Transport; Wed, 1 May 2024 09:09:24 -0700
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (104.47.57.40) by
- edgegateway.intel.com (134.134.137.103) with Microsoft SMTP Server
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="V20XmfBb"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 441D7E7A018047;
+	Wed, 1 May 2024 16:36:34 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	from:to:cc:subject:date:message-id:in-reply-to:references
+	:mime-version:content-transfer-encoding:content-type; s=
+	qcppdkim1; bh=i5YnzY4DGjFEtT2ooXiDhI3qspPLQ5dyyyvRVJUTd04=; b=V2
+	0XmfBb/9/pawRyxWp76xRzm6GCe8noAMhyGFBoHF3vsqWPS1ObgTCehhSMgXJvce
+	V1OKHPneqr4qx4Hgg8rDTtWs7Wauo0l1jT37Z8+3t9PK4sKbozQLEf6/eAR4Fm5L
+	IeViuwL3AxsiCXAmIuKAmH0FK3FobeUyMrldZMk+bivQ8v//Or7/LipxY/V2sair
+	RX9pwUpoCmhKu6TrnZLDemU5Df8QUafoB42LnCDm5FF4ZbdLvgSKBVbwzzeIFPE+
+	qljRzkBZWzXFXOgqZG3VCRycCvGV65s7xidADwdzHMdlD99Ee1u1apSyVGmB3PsO
+	oJ9uMb3/STajWazMQHTw==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3xud769dd4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 01 May 2024 16:36:33 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.17.1.5/8.17.1.5) with ESMTPS id 441GaWZG002711
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 1 May 2024 16:36:32 GMT
+Received: from adas-linux5.qualcomm.com (10.80.80.8) by
+ nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.1.2507.35; Wed, 1 May 2024 09:09:24 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=YxLQA3MnEMMMs/LgSGY9HmSi5QPT18q2t+uUlkzo27SmyZJ0gAIVb9UJykk0OSek4r3WmFAPHK2ESEK2EJoTfK1fTR/ht7HO4zwk8blqZkBTbfrWUP5Z7XPI8cEb4NxZKr2hrG+mh4bBCG3P3e6n9Hefqh4ZjJPWx/t7cde2+cZX7VJi2I8FlQGEk89FZi8S6bbqafZBh2OsF3Qx8wZgn/+0pwaGO0Ng78B6t6q7FQ9FcMcIuX0vsEBF+EwZS8I1kTkt3y0z9YnGsts4bakZu/eXaIFi4TuUrH8JO5SMX8QX7zPt+ChoLeGLzZSBP1yRdAeOodgdZBiwUgKQg4S/jw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=n1vKuamlnsvgM2vbBGPzmsXj8cAe1ar4oih+gEEWtP0=;
- b=bzRy+LnrAbqMa02plnb0pgGQ9CNicD34Ls85MMd7mVdVmv/gVa/o2X6qJnuPKFfO0wO3OWj6y6wsxWWvZHnw+knkHd/E38mwzA1ZfsIpLy+xht1310tqXf85r+Szt0OOe/JDFf3fF3v0008/tRXLc9fD1MV+X4akVSNsfA2aAxQWKBv9ec6xrKvZxC+s+TyOMtlwY+EI+mqM6qSByst+DWNOPAmIjXLcY9mlhCQIB5Z47nwJo59/qWe4GJpskEcITMVgLkki9hynEm/Y5cB1N6hGl/7p5d4iBRZc+CXhy5UfgSjnmwims+TJPwu+2Thrw5V3ztZHtDLkJuIQjBJ2Fg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
- dkim=pass header.d=intel.com; arc=none
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=intel.com;
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
- by SA2PR11MB5068.namprd11.prod.outlook.com (2603:10b6:806:116::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7544.24; Wed, 1 May
- 2024 16:09:22 +0000
-Received: from PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
- ([fe80::6b05:74cf:a304:ecd8%5]) with mapi id 15.20.7519.031; Wed, 1 May 2024
- 16:09:22 +0000
-Date: Wed, 1 May 2024 09:09:19 -0700
-From: Dan Williams <dan.j.williams@intel.com>
-To: Dave Jiang <dave.jiang@intel.com>, PJ Waskiewicz <ppwaskie@kernel.org>,
-	<linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>
-CC: <dan.j.williams@intel.com>, <ira.weiny@intel.com>,
-	<vishal.l.verma@intel.com>, <alison.schofield@intel.com>,
-	<Jonathan.Cameron@huawei.com>, <dave@stgolabs.net>, <bhelgaas@google.com>,
-	<lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>, "Kuppuswamy
- Sathyanarayanan" <sathyanarayanan.kuppuswamy@linux.intel.com>
-Subject: Re: [PATCH v5 1/4] PCI/cxl: Move PCI CXL vendor Id to a common
- location from CXL subsystem
-Message-ID: <6632692fc5862_10c21294e9@dwillia2-mobl3.amr.corp.intel.com.notmuch>
-References: <20240429223610.1341811-1-dave.jiang@intel.com>
- <20240429223610.1341811-2-dave.jiang@intel.com>
- <91fe797284f433a76bdc1f804a6d86e0077a905f.camel@kernel.org>
- <0c7663b0-b812-4f41-a29d-f56b7cda81e6@intel.com>
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <0c7663b0-b812-4f41-a29d-f56b7cda81e6@intel.com>
-X-ClientProxiedBy: MW4PR04CA0144.namprd04.prod.outlook.com
- (2603:10b6:303:84::29) To PH8PR11MB8107.namprd11.prod.outlook.com
- (2603:10b6:510:256::6)
+ 15.2.1544.9; Wed, 1 May 2024 09:36:31 -0700
+From: Shashank Babu Chinta Venkata <quic_schintav@quicinc.com>
+To: <jingoohan1@gmail.com>, <gustavo.pimentel@synopsys.com>,
+        <manivannan.sadhasivam@linaro.org>, <andersson@kernel.org>,
+        <agross@kernel.org>, <konrad.dybcio@linaro.org>, <mani@kernel.org>
+CC: <quic_msarkar@quicinc.com>, <quic_kraravin@quicinc.com>,
+        Lorenzo Pieralisi
+	<lpieralisi@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
+	<kw@linux.com>,
+        Rob Herring <robh@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>,
+        Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+        Serge Semin <fancer.lancer@gmail.com>,
+        Conor Dooley
+	<conor.dooley@microchip.com>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>
+Subject: [PATCH v4 1/3] PCI: qcom: Refactor common code
+Date: Wed, 1 May 2024 09:35:32 -0700
+Message-ID: <20240501163610.8900-2-quic_schintav@quicinc.com>
+X-Mailer: git-send-email 2.43.2
+In-Reply-To: <20240501163610.8900-1-quic_schintav@quicinc.com>
+References: <20240501163610.8900-1-quic_schintav@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SA2PR11MB5068:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2f41ed65-fbbd-4dcc-20b5-08dc69f9107c
-X-LD-Processed: 46c98d88-e344-4ed4-8496-4ed7712e255d,ExtAddr
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230031|366007|376005|1800799015;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?YmDJKgPjg2HF8yiIo+ioGiTqf0n3QGu+RoMzywUGlbXnSJABPymdylPh82NN?=
- =?us-ascii?Q?ZXfUJqup5iOt/wLx0rP5a2aPyL14jfqD6MRY+GbZxVd/eHK+EfyKE/Fv/YwV?=
- =?us-ascii?Q?ooec8pLkQOwxKligqgUOCQsgtkwN9uSAJC/UJelvqrBofNziGDRfQbz/Nno7?=
- =?us-ascii?Q?YEGAE+hVaakXXHYpF1qtQl0X5EtWMoNer3DX7cbvtP4wq+tUaldv3cLxecIx?=
- =?us-ascii?Q?4Aa8qP4Wtg//0Iuvf+A7O4X2sZUBkDCxUaATKmGPyT1xTyqUcqbRYH27kANQ?=
- =?us-ascii?Q?n0UgkEwygKsbQhuXsA0ISsvFcxTFHYQ3X8ya4HLlB+OTQHg3JXAbFVHOtkYg?=
- =?us-ascii?Q?6d7gRRAzty+zVfK9WS12EcTBTJni8QvK0IdlRkeCIOmmDKLBGffNyI8YWsPA?=
- =?us-ascii?Q?Q1OYs4U6v2F7b7RQ7GvokqEBCm3FB959bjcuoLuE2Sut9OkBZcEV1H1JCnJa?=
- =?us-ascii?Q?k+wzWt3Aj0ScEMb7JETO9HpLY3GdQwjRRtdJJ5CuP5/hLdnUF1Sstg7vdZL9?=
- =?us-ascii?Q?ip6gOVBUijnxdwG/a1d+LorJvLQ3TInaXCxqyHglW+yoBd916+Sb/nysTqLE?=
- =?us-ascii?Q?1gzwEEn7IuopAM0bo2LjU8UU8MOazGMSlUAGc8Sn/hrO4LsNj6VagOJBbpjI?=
- =?us-ascii?Q?+4FNZ/ODT0io6NYhamJIIu1b8os34SkRRak5VsV7JcQoqEhJyKLkrSvGi1pD?=
- =?us-ascii?Q?TESWjquyjcYEZdCkg2VHWXpQt/qWGkDGcFfPGu2vDBpitTwwvABWVobXnKTx?=
- =?us-ascii?Q?zJJNM2pdebL9HoBhRJ61mLMH5HTY9lBqQ8c4JpFvqGReuxubEL5QeHWBRGKS?=
- =?us-ascii?Q?gcfwkf5dG83hWBVuk2pOssaX6/Zzx/TYEreZ46mZTMBSQU9tpHgiSjQ34RqD?=
- =?us-ascii?Q?FxtLUZg4+GYuxwQgwmamQboP7qVtGop9c4VR0M7ngydakXFRay9vuaIxN70+?=
- =?us-ascii?Q?vgFAbLlXDSYroded0sXR5Y2luJETDoYxBYtHxPxSDU1qRFsJP6tnnpiBlDnX?=
- =?us-ascii?Q?hk7b6pSxp7QOOvK8lzrcGcIywDNnlpc/11E9bD1DmdhpuejWT9mn3ZELnNY+?=
- =?us-ascii?Q?+mTn0it4jB94A/CKhRvg+mymkNiQflzm0xwVs2xf0F0RsJJPSSTNzYRak6sD?=
- =?us-ascii?Q?MhwZnX4s3hpuvB/K80COxx59H7o3lPV/tEC+7uvjLpKB0h0JO1RzKDuIOqfO?=
- =?us-ascii?Q?ASM6EZdLGUe2tULo6d6KBW59VrmOCtFW89TJkB+7UsYNO1xrtVmjfAyZXHqb?=
- =?us-ascii?Q?EL7P5Cxf0i0ysbG6tPwmJZWcAqkOu//haMu64Sk7tA=3D=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230031)(366007)(376005)(1800799015);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?+ZJ4kB4v9toCFpu+jUrxf/1wsn2exQHIilFjrBcFSES7g3at/4x5MbOmpV7p?=
- =?us-ascii?Q?L4I8PoTupWTFA8Q0xL46iIq4ylhbfbrNzMNbxN+dgJYSHr17ZtvYIFbwEUXt?=
- =?us-ascii?Q?zxGFqDx7SHu5lromOoM2IuVwzUq8QDNTyQEqvpbE/gek9Mf22xqzLptjbh7K?=
- =?us-ascii?Q?f4CmFdQKXSwqiQ3KUGGglu9oFJYS3HnQPTEM6o5lNqOhzxNY2f/BiElFeJ/b?=
- =?us-ascii?Q?lpGDGyALPWY1BptY53KqDQvQrmXoqVKUjX4ROUoC6JAp85x4jdL/+dz+dL4m?=
- =?us-ascii?Q?l4KnBFl7UapCNgb3KR+HmskaWjlvA2HtcNFmp2ogrQdZuBhTIu5GnaYG660N?=
- =?us-ascii?Q?7XndFhd2ua+DUzac+d5Jl+ChKbB1EGLrZe37gJH1tn5VAIMnG5klUiaHCyQz?=
- =?us-ascii?Q?7iTt5ugVFyLLN+ZuOtP/kSQ+dTMjHCrSK2WUEnNynMqS5bTCq13UtyBSLx6y?=
- =?us-ascii?Q?4s0O0Ek2TwngVAfotKL2QpFiE0UKfio39Oow0tpxo/aAowAxx5zFmLqZb39G?=
- =?us-ascii?Q?j2wmMoXdtQ0wQiaLAAZ6BkYZ49hAD9kOjkHa8pfDhBMijbLxqgWId1A90EP0?=
- =?us-ascii?Q?bGz1D7JRShxudUZbgAwVVWEg0sx2NeeasiB60Z3GxJcizHSKGkoBm2Mtcyt5?=
- =?us-ascii?Q?i2R64uif6Mb65QHYLD5/CP6kXjQDjzdW9oaWAkJ59zuzoM3gviZLWyc3S5PN?=
- =?us-ascii?Q?t/jGmcQMf17dxVI/Q8Br0gYmGmELWACO8hz+sHdLowJMhSUjowygVQuEEDqW?=
- =?us-ascii?Q?fX3KWltl7f9u8jpdCnlejWX7isfd13aAA3AmqQX+8Bm95ByNqZL/lpHFXuzX?=
- =?us-ascii?Q?hW1BVMbd9OabpnqxcLiJ91JpOB//JaSjJ9xhZb6J0XoGBKy7mUbMZWko67Tx?=
- =?us-ascii?Q?8J6LIqw74deaFHa4667ey/sR2t2h/ZcUC4FP87nJIOgWosWs0pIQl3+nliUv?=
- =?us-ascii?Q?Je1nkx0USwdCp0fozkuja5QdiXF/SLHgZqqAskChc3NtdD8x2m9t7Bprh7rB?=
- =?us-ascii?Q?vmQOLFd6mVUjwfu1UsvsnPW5didMmc3pxx18zqezv902lFLQvDc/dKtrJ6n+?=
- =?us-ascii?Q?Z2v91dbtRs/Ta9U75I9N2PekGZM6MzKxAAQJ21aEE4qMjgR6Rcix+SgXxFQf?=
- =?us-ascii?Q?Ed7NqqtvG07BJf7yNWZJiHmZaWoRDZFvj+4eH8SycMpQiB0/T0CuXSyR9WVI?=
- =?us-ascii?Q?ISd37uP87le6W5Lti7o0BWIIZTSJDJ+dfJpvEzXSFbiVnlpdpNIDUb6Xm0dc?=
- =?us-ascii?Q?8N34NRzmU3d8zHluugmu419Q5fXwIzBqB1wOdY0jxujdYHmp5Po8iE1CedTe?=
- =?us-ascii?Q?qAxU1hutwTqV7wx0V5ZeB+DszP+oGPUyPnU3y8mAR0gPAHFjvXOEjjW1OV7U?=
- =?us-ascii?Q?5XGyfDb7NiCvlbz2MsZ2I4GSzu6HAY+HvpVwvtxTMmlZ9/pVUsLpcIbouLhJ?=
- =?us-ascii?Q?hJY0RgJ9y/Av4DElzIotepuBiANXghdV2rJhJpjZwrTMMDX6VRyXgWdsL25v?=
- =?us-ascii?Q?Ub0YP0i3K7rLkNNZSWrnjxG/7CKTQxMJV09/tAWp91VLSdFVy/FvWHymY9V1?=
- =?us-ascii?Q?rLp2GYYl7ACP/ud+lHcGd8kaL3UEbIgUTJDTkg9I6YRi8LSGRDQ0G67gm8y2?=
- =?us-ascii?Q?NQ=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2f41ed65-fbbd-4dcc-20b5-08dc69f9107c
-X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 May 2024 16:09:22.5344
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: e00lLq0MPQrRAAFrnOguYeweg40KP7IYyyAYua9rXlTna44FSTvfDuKT/ljtcmaiZPfJW8080YdG42Ewmk6EGC+K4NIHvLxIflLS4eeKe9U=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA2PR11MB5068
-X-OriginatorOrg: intel.com
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: AImVTm7ZR4d_evZpw9lvZ-a7nvpk-h8B
+X-Proofpoint-GUID: AImVTm7ZR4d_evZpw9lvZ-a7nvpk-h8B
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1011,Hydra:6.0.650,FMLib:17.11.176.26
+ definitions=2024-05-01_16,2024-04-30_01,2023-05-22_02
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 suspectscore=0
+ malwarescore=0 phishscore=0 spamscore=0 priorityscore=1501 impostorscore=0
+ clxscore=1015 bulkscore=0 mlxscore=0 lowpriorityscore=0 mlxlogscore=999
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2404010003
+ definitions=main-2405010117
 
-Dave Jiang wrote:
-> 
-> 
-> On 5/1/24 8:37 AM, PJ Waskiewicz wrote:
-> > On Mon, 2024-04-29 at 15:35 -0700, Dave Jiang wrote:
-> >> Move PCI_DVSEC_VENDOR_ID_CXL in CXL private code to PCI_VENDOR_ID_CXL
-> >> in
-> >> pci_ids.h in order to be utilized in PCI subsystem.
-> >>
-> >> When uplevelling PCI_DVSEC_VENDOR_ID_CXL to a common locatoin Bjorn
-> >> suggested making it a proper PCI_VENDOR_ID_* define in
-> >> include/linux/pci_ids.h. While it is not in the PCI IDs database it
-> >> is a
-> >> reserved value and Linux treats it as a 'vendor id' for all intents
-> >> and
-> >> purposes [1].
-> > 
-> > Would you consider a patch, after this series merges, to upstream
-> > pciutils to sync up lspci's name of this value as well?  It would be
-> > less confusing to anyone looking at both codebases and trying to line
-> > up #define's.
-> > 
-> 
-> Yes I can look into doing that. 
+Refactor common code from RC(Root Complex) and EP(End Point)
+drivers and move them to a common driver. This acts as placeholder
+for common source code for both drivers, thus avoiding duplication.
 
-Wait, isn't this Martin's call? If pcituils follows the kernel, great,
-if it does not, that's pciutil's prerogative.
+Signed-off-by: Shashank Babu Chinta Venkata <quic_schintav@quicinc.com>
+---
+ drivers/pci/controller/dwc/Kconfig            |  5 ++
+ drivers/pci/controller/dwc/Makefile           |  1 +
+ drivers/pci/controller/dwc/pcie-qcom-common.c | 76 +++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-qcom-common.h | 12 +++
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     | 39 +---------
+ drivers/pci/controller/dwc/pcie-qcom.c        | 69 +++--------------
+ 6 files changed, 108 insertions(+), 94 deletions(-)
+ create mode 100644 drivers/pci/controller/dwc/pcie-qcom-common.c
+ create mode 100644 drivers/pci/controller/dwc/pcie-qcom-common.h
+
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index 8afacc90c63b..1599550cd628 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -265,12 +265,16 @@ config PCIE_DW_PLAT_EP
+ 	  order to enable device-specific features PCI_DW_PLAT_EP must be
+ 	  selected.
+ 
++config PCIE_QCOM_COMMON
++	bool
++
+ config PCIE_QCOM
+ 	bool "Qualcomm PCIe controller (host mode)"
+ 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+ 	depends on PCI_MSI
+ 	select PCIE_DW_HOST
+ 	select CRC8
++	select PCIE_QCOM_COMMON
+ 	help
+ 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
+ 	  PCIe controller uses the DesignWare core plus Qualcomm-specific
+@@ -281,6 +285,7 @@ config PCIE_QCOM_EP
+ 	depends on OF && (ARCH_QCOM || COMPILE_TEST)
+ 	depends on PCI_ENDPOINT
+ 	select PCIE_DW_EP
++	select PCIE_QCOM_COMMON
+ 	help
+ 	  Say Y here to enable support for the PCIe controllers on Qualcomm SoCs
+ 	  to work in endpoint mode. The PCIe controller uses the DesignWare core
+diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+index bac103faa523..3f557dd60c38 100644
+--- a/drivers/pci/controller/dwc/Makefile
++++ b/drivers/pci/controller/dwc/Makefile
+@@ -14,6 +14,7 @@ obj-$(CONFIG_PCI_LAYERSCAPE) += pci-layerscape.o
+ obj-$(CONFIG_PCI_LAYERSCAPE_EP) += pci-layerscape-ep.o
+ obj-$(CONFIG_PCIE_QCOM) += pcie-qcom.o
+ obj-$(CONFIG_PCIE_QCOM_EP) += pcie-qcom-ep.o
++obj-$(CONFIG_PCIE_QCOM_COMMON) += pcie-qcom-common.o
+ obj-$(CONFIG_PCIE_ARMADA_8K) += pcie-armada8k.o
+ obj-$(CONFIG_PCIE_ARTPEC6) += pcie-artpec6.o
+ obj-$(CONFIG_PCIE_ROCKCHIP_DW_HOST) += pcie-dw-rockchip.o
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
+new file mode 100644
+index 000000000000..228d9eec0222
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
+@@ -0,0 +1,76 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * Copyright (c) 2014-2015, 2020 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2015, 2021 Linaro Limited.
++ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ *
++ */
++
++#include <linux/pci.h>
++#include <linux/interconnect.h>
++
++#include "../../pci.h"
++#include "pcie-designware.h"
++#include "pcie-qcom-common.h"
++
++#define QCOM_PCIE_LINK_SPEED_TO_BW(speed) \
++		Mbps_to_icc(PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]))
++
++struct icc_path *qcom_pcie_common_icc_get_resource(struct dw_pcie *pci, const char *path)
++{
++	struct icc_path *icc_mem_p;
++
++	icc_mem_p = devm_of_icc_get(pci->dev, path);
++	if (IS_ERR_OR_NULL(icc_mem_p))
++		return PTR_ERR(icc_mem_p);
++	return icc_mem_p;
++}
++EXPORT_SYMBOL_GPL(qcom_pcie_common_icc_get_resource);
++
++int qcom_pcie_common_icc_init(struct dw_pcie *pci, struct icc_path *icc_mem)
++{
++	int ret;
++
++	/*
++	 * Some Qualcomm platforms require interconnect bandwidth constraints
++	 * to be set before enabling interconnect clocks.
++	 *
++	 * Set an initial peak bandwidth corresponding to single-lane Gen 1
++	 * for the pcie-mem path.
++	 */
++	ret = icc_set_bw(icc_mem, 0, QCOM_PCIE_LINK_SPEED_TO_BW(1));
++	if (ret) {
++		dev_err(pci->dev, "Failed to set interconnect bandwidth: %d\n",
++			ret);
++		return ret;
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(qcom_pcie_common_icc_init);
++
++void qcom_pcie_common_icc_update(struct dw_pcie *pci, struct icc_path *icc_mem)
++{
++	u32 offset, status;
++	int speed, width;
++	int ret;
++
++	if (!icc_mem)
++		return;
++
++	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
++	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
++
++	/* Only update constraints if link is up. */
++	if (!(status & PCI_EXP_LNKSTA_DLLLA))
++		return;
++
++	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
++	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
++
++	ret = icc_set_bw(icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
++	if (ret)
++		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
++			ret);
++}
++EXPORT_SYMBOL_GPL(qcom_pcie_common_icc_update);
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.h b/drivers/pci/controller/dwc/pcie-qcom-common.h
+new file mode 100644
+index 000000000000..da1760c7e164
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-qcom-common.h
+@@ -0,0 +1,12 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/*
++ * Copyright (c) 2014-2015, 2020 The Linux Foundation. All rights reserved.
++ * Copyright (c) 2015, 2021 Linaro Limited.
++ * Copyright (c) 2024 Qualcomm Innovation Center, Inc. All rights reserved.
++ */
++
++#include "pcie-designware.h"
++
++struct icc_path *qcom_pcie_common_icc_get_resource(struct dw_pcie *pci, const char *path);
++int qcom_pcie_common_icc_init(struct dw_pcie *pci, struct icc_path *icc_mem);
++void qcom_pcie_common_icc_update(struct dw_pcie *pci, struct icc_path *icc_mem);
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 36e5e80cd22f..f0c61d847643 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -25,6 +25,7 @@
+ 
+ #include "../../pci.h"
+ #include "pcie-designware.h"
++#include "pcie-qcom-common.h"
+ 
+ /* PARF registers */
+ #define PARF_SYS_CTRL				0x00
+@@ -137,9 +138,6 @@
+ #define CORE_RESET_TIME_US_MAX			1005
+ #define WAKE_DELAY_US				2000 /* 2 ms */
+ 
+-#define QCOM_PCIE_LINK_SPEED_TO_BW(speed) \
+-		Mbps_to_icc(PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]))
+-
+ #define to_pcie_ep(x)				dev_get_drvdata((x)->dev)
+ 
+ enum qcom_pcie_ep_link_status {
+@@ -278,28 +276,6 @@ static void qcom_pcie_dw_write_dbi2(struct dw_pcie *pci, void __iomem *base,
+ 	writel(0, pcie_ep->elbi + ELBI_CS2_ENABLE);
+ }
+ 
+-static void qcom_pcie_ep_icc_update(struct qcom_pcie_ep *pcie_ep)
+-{
+-	struct dw_pcie *pci = &pcie_ep->pci;
+-	u32 offset, status;
+-	int speed, width;
+-	int ret;
+-
+-	if (!pcie_ep->icc_mem)
+-		return;
+-
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+-
+-	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
+-	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
+-
+-	ret = icc_set_bw(pcie_ep->icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
+-	if (ret)
+-		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
+-			ret);
+-}
+-
+ static int qcom_pcie_enable_resources(struct qcom_pcie_ep *pcie_ep)
+ {
+ 	struct dw_pcie *pci = &pcie_ep->pci;
+@@ -325,14 +301,7 @@ static int qcom_pcie_enable_resources(struct qcom_pcie_ep *pcie_ep)
+ 	if (ret)
+ 		goto err_phy_exit;
+ 
+-	/*
+-	 * Some Qualcomm platforms require interconnect bandwidth constraints
+-	 * to be set before enabling interconnect clocks.
+-	 *
+-	 * Set an initial peak bandwidth corresponding to single-lane Gen 1
+-	 * for the pcie-mem path.
+-	 */
+-	ret = icc_set_bw(pcie_ep->icc_mem, 0, QCOM_PCIE_LINK_SPEED_TO_BW(1));
++	ret = qcom_pcie_common_icc_init(pci, pcie_ep->icc_mem);
+ 	if (ret) {
+ 		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
+ 			ret);
+@@ -616,7 +585,7 @@ static int qcom_pcie_ep_get_resources(struct platform_device *pdev,
+ 	if (IS_ERR(pcie_ep->phy))
+ 		ret = PTR_ERR(pcie_ep->phy);
+ 
+-	pcie_ep->icc_mem = devm_of_icc_get(dev, "pcie-mem");
++	pcie_ep->icc_mem = qcom_pcie_common_icc_get_resource(&pcie_ep->pci, "pcie-mem");
+ 	if (IS_ERR(pcie_ep->icc_mem))
+ 		ret = PTR_ERR(pcie_ep->icc_mem);
+ 
+@@ -643,7 +612,7 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
+ 	} else if (FIELD_GET(PARF_INT_ALL_BME, status)) {
+ 		dev_dbg(dev, "Received BME event. Link is enabled!\n");
+ 		pcie_ep->link_status = QCOM_PCIE_EP_LINK_ENABLED;
+-		qcom_pcie_ep_icc_update(pcie_ep);
++		qcom_pcie_common_icc_update(pci, pcie_ep->icc_mem);
+ 		pci_epc_bme_notify(pci->ep.epc);
+ 	} else if (FIELD_GET(PARF_INT_ALL_PM_TURNOFF, status)) {
+ 		dev_dbg(dev, "Received PM Turn-off event! Entering L23\n");
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 2ce2a3bd932b..0095c42aeee0 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -32,6 +32,7 @@
+ #include <linux/types.h>
+ 
+ #include "../../pci.h"
++#include "pcie-qcom-common.h"
+ #include "pcie-designware.h"
+ 
+ /* PARF registers */
+@@ -147,9 +148,6 @@
+ 
+ #define QCOM_PCIE_CRC8_POLYNOMIAL		(BIT(2) | BIT(1) | BIT(0))
+ 
+-#define QCOM_PCIE_LINK_SPEED_TO_BW(speed) \
+-		Mbps_to_icc(PCIE_SPEED2MBS_ENC(pcie_link_speed[speed]))
+-
+ #define QCOM_PCIE_1_0_0_MAX_CLOCKS		4
+ struct qcom_pcie_resources_1_0_0 {
+ 	struct clk_bulk_data clks[QCOM_PCIE_1_0_0_MAX_CLOCKS];
+@@ -1363,59 +1361,6 @@ static const struct dw_pcie_ops dw_pcie_ops = {
+ 	.start_link = qcom_pcie_start_link,
+ };
+ 
+-static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+-{
+-	struct dw_pcie *pci = pcie->pci;
+-	int ret;
+-
+-	pcie->icc_mem = devm_of_icc_get(pci->dev, "pcie-mem");
+-	if (IS_ERR(pcie->icc_mem))
+-		return PTR_ERR(pcie->icc_mem);
+-
+-	/*
+-	 * Some Qualcomm platforms require interconnect bandwidth constraints
+-	 * to be set before enabling interconnect clocks.
+-	 *
+-	 * Set an initial peak bandwidth corresponding to single-lane Gen 1
+-	 * for the pcie-mem path.
+-	 */
+-	ret = icc_set_bw(pcie->icc_mem, 0, QCOM_PCIE_LINK_SPEED_TO_BW(1));
+-	if (ret) {
+-		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
+-			ret);
+-		return ret;
+-	}
+-
+-	return 0;
+-}
+-
+-static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
+-{
+-	struct dw_pcie *pci = pcie->pci;
+-	u32 offset, status;
+-	int speed, width;
+-	int ret;
+-
+-	if (!pcie->icc_mem)
+-		return;
+-
+-	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+-
+-	/* Only update constraints if link is up. */
+-	if (!(status & PCI_EXP_LNKSTA_DLLLA))
+-		return;
+-
+-	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
+-	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
+-
+-	ret = icc_set_bw(pcie->icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
+-	if (ret) {
+-		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
+-			ret);
+-	}
+-}
+-
+ static int qcom_pcie_link_transition_count(struct seq_file *s, void *data)
+ {
+ 	struct qcom_pcie *pcie = (struct qcom_pcie *)dev_get_drvdata(s->private);
+@@ -1524,7 +1469,13 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_pm_runtime_put;
+ 	}
+ 
+-	ret = qcom_pcie_icc_init(pcie);
++	pcie->icc_mem = qcom_pcie_common_icc_get_resource(pcie->pci, "pcie-mem");
++	if (IS_ERR_OR_NULL(pcie->icc_mem)) {
++		ret = PTR_ERR(pcie->icc_mem);
++		goto err_pm_runtime_put;
++	}
++
++	ret = qcom_pcie_common_icc_init(pcie->pci, pcie->icc_mem);
+ 	if (ret)
+ 		goto err_pm_runtime_put;
+ 
+@@ -1546,7 +1497,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_phy_exit;
+ 	}
+ 
+-	qcom_pcie_icc_update(pcie);
++	qcom_pcie_common_icc_update(pcie->pci, pcie->icc_mem);
+ 
+ 	if (pcie->mhi)
+ 		qcom_pcie_init_debugfs(pcie);
+@@ -1613,7 +1564,7 @@ static int qcom_pcie_resume_noirq(struct device *dev)
+ 		pcie->suspended = false;
+ 	}
+ 
+-	qcom_pcie_icc_update(pcie);
++	qcom_pcie_common_icc_update(pcie->pci, pcie->icc_mem);
+ 
+ 	return 0;
+ }
+-- 
+2.43.2
+
