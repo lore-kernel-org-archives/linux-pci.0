@@ -1,146 +1,136 @@
-Received: from mx1.t-argos.ru (mx1.t-argos.ru [109.73.34.58])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f180.google.com (mail-yb1-f180.google.com [209.85.219.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1285757CAF;
-	Fri,  3 May 2024 13:09:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=109.73.34.58
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DF4A1DA21
+	for <linux-pci@vger.kernel.org>; Fri,  3 May 2024 13:59:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714741753; cv=none; b=hNwaNfnRCXA3GqW/gikvXf4eAVeqXTUDP+Vpn8UB1kaDopdKjj/exmNLWDF43I2DBldF0b3R6qvYaEIbo9julIGHUzJpu7kbgV080hshd01S3hq0tNfhTLi/NlhXzrrjpxXIeA+FCQk+Cg+AdltMMcj4XRf7F+jLCZLgnk+dqBw=
+	t=1714744792; cv=none; b=NqxIYCyG9jpM1ZM3yb1PWMQabl0MEErFzidu6PkmLecE2G+Pgd6yxROuN4QSNDo7nprrxTa2sr/oHtd8mMQn8wxN/8fHOA0joo6UJlCXrVn0n03MoSs261nrrXUpZnqjpIAJIV/bQH9HeOCxq3dWKC23bxgtEyJVYTobL5v78JQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714741753; c=relaxed/simple;
-	bh=DK58w0qoY8bz2V3cf6+WgUE3iZh/7ahs8g0KuQsm9dw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ptqCECPnT1K2wKWkNOzERnUiDGqkqzf4gJ2w5y+uE2lodE4i+x5lE6ibP7Yr63OdHNBoEL4/XyTKP7/s/X0VwW7LhI8k8pMRzC+WGk2ciLYzaDhVdn2EkJ3lqM0V+GzTUnPqhq9BELd4Zb53+4suI2mPKnUHRBjqCl/7siKZVjU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=t-argos.ru; spf=pass smtp.mailfrom=t-argos.ru; dkim=pass (2048-bit key) header.d=t-argos.ru header.i=@t-argos.ru header.b=sN7akbRC; arc=none smtp.client-ip=109.73.34.58
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=t-argos.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=t-argos.ru
+	s=arc-20240116; t=1714744792; c=relaxed/simple;
+	bh=9XTu69i9//N23QjLUaRVeITayCFaVH/ZcxE8frlF8/A=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uLeJN6QYBVCZ+5chP+Oz62A09nsAJalPdOp2jmL1SyKohwmWVrm7YjA8C5GK1eXt6uKWISb1tNS19CQsuwFeE9MkuwpRijup5BTr0i7zc8RxrOqERJfTOa+MQEtv205EWpcHvaahu2E/5jad0lau1t4A/sKJlbtDk6M4T+B7KK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ventanamicro.com; spf=pass smtp.mailfrom=ventanamicro.com; dkim=pass (2048-bit key) header.d=ventanamicro.com header.i=@ventanamicro.com header.b=JfmkKyfa; arc=none smtp.client-ip=209.85.219.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ventanamicro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ventanamicro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=t-argos.ru header.i=@t-argos.ru header.b="sN7akbRC"
-Received: from mx1.t-argos.ru (localhost [127.0.0.1])
-	by mx1.t-argos.ru (Postfix) with ESMTP id 815B3100002;
-	Fri,  3 May 2024 15:58:27 +0300 (MSK)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=t-argos.ru; s=mail;
-	t=1714741107; bh=eVo+sqixpVSIXoZvCWGWulhPdG3v/sDUTXHvwVOwTVo=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type;
-	b=sN7akbRCGwqsie3fdKFfpQ8OpA7SsWEz06TcjBE5EEL/iaa4EeoG+jCCS4QUMYcFx
-	 cK0RmrDUgYs1tFA3FeOdFujF0n4MW5ZesMWbqJhG3NOhu0bOA+p7RvwCQxd4TzejU8
-	 YOaDkFJJVODMp0YGNv2Jh/jgfT2ZugOEwg6C3nHSP0HtW1YST1YYo8fL7fYh8TNDcK
-	 REgWV12MtN6Jx1G+3Qo29CSprtBcyTplTg+IbubNAf3rND0kza0SSKSHvEtSwz/N1i
-	 qQUyhTCHqYf5hSH7nvFY0PdXlKGhj4KVneK5laHuiO4MqSU/1Ian1R3HR89Ldm/p7z
-	 ZwR3SRgpBH08A==
-Received: from mx1.t-argos.ru.ru (ta-mail-02.ta.t-argos.ru [172.17.13.212])
-	by mx1.t-argos.ru (Postfix) with ESMTP;
-	Fri,  3 May 2024 15:57:34 +0300 (MSK)
-Received: from localhost.localdomain (172.17.215.6) by ta-mail-02
- (172.17.13.212) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 3 May 2024
- 15:57:13 +0300
-From: Aleksandr Mishin <amishin@t-argos.ru>
-To: Jonathan Chocron <jonnyc@amazon.com>
-CC: Aleksandr Mishin <amishin@t-argos.ru>, Lorenzo Pieralisi
-	<lpieralisi@kernel.org>, =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?=
-	<kw@linux.com>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <lvc-project@linuxtesting.org>, Bjorn Helgaas
-	<helgaas@kernel.org>
-Subject: [PATCH v3] PCI: dwc: al: Check IORESOURCE_BUS existence during PCIe config preparation
-Date: Fri, 3 May 2024 15:57:05 +0300
-Message-ID: <20240503125705.46055-1-amishin@t-argos.ru>
-X-Mailer: git-send-email 2.30.2
-In-Reply-To: <20240328180126.23574-1-amishin@t-argos.ru>
-References: 
+	dkim=pass (2048-bit key) header.d=ventanamicro.com header.i=@ventanamicro.com header.b="JfmkKyfa"
+Received: by mail-yb1-f180.google.com with SMTP id 3f1490d57ef6-de5a7b18acdso9077869276.3
+        for <linux-pci@vger.kernel.org>; Fri, 03 May 2024 06:59:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ventanamicro.com; s=google; t=1714744789; x=1715349589; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ChPcRq4NfZHnrwL48HNhQ7iFI35ROHq79DvxMeghd44=;
+        b=JfmkKyfaJuYg5mwrmJMxqu7Eel+9ThNcdFDiYO9YqQ1kJBCkO3H/xMSHQSw6Wb9+Kg
+         05UzQEys4dw00NIr/Mlwr65do+t23F6VYKLzsFS/JuEn1Nq19druVREWyfQp09GPIMMA
+         9dU72hsdHzPZ+f02XFa0eSpBl8ubhCKk1gkfpXSjDeNsCYk/KzF6XmXKe4OlTCOEPTOa
+         KKV4x6P8fJc/wYycb4EPANAjPXBDu0IsZQYPmZ25cc/Z3uHhYS4ZxjgqtdCA4FgiUNu3
+         zmHbsv8vlZpOJ3WKrevk4/I56d3Xh3d7+zW2uVzY0KymQ8aXGh4i3907OzcyHwNGrNSW
+         VvRw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714744789; x=1715349589;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ChPcRq4NfZHnrwL48HNhQ7iFI35ROHq79DvxMeghd44=;
+        b=bLCI3BPWHJ1TToj7aySqBT9IyKYhdnBe4L5IsrPA9lyechYaRyVaRVAZrP6hOM9rF6
+         bpE8A/JEqtpTDevcclw2uVwZxRF2t/qe0+nTk2V4UUS3I+YILsOEIRTqJFXXwV9JI7Qs
+         yWKRhpuKNkkY1Ept6tdRXOslmT+ee+70kasnzo8DCcPDYa4zPXpaqJYgywhYMo45J7iu
+         02yEfOLtsJ91a5aK5LAe5AmCxD8Im56u91OTPUNGSjB0BMY4bDBRV9V4reSI9BA7qiEA
+         R/Cij7YcXFhbvCEX1I7Xycd8PDsJ2kdNaBP8oH2S4m9sx13Gjvsy21XFTWsuKb/fw3SI
+         by3A==
+X-Forwarded-Encrypted: i=1; AJvYcCUr+Y9WVyCmSHLLX/FlTGSiF9FOBOlWb9U8Lkp8X6BPrA0WdWx+raTorcgVBA8H8Qs6IMG//j1bKxQt+7eBWeIqXuLCbjNebJmW
+X-Gm-Message-State: AOJu0Yy6FSxKu3021+60eSNPVxP8YHQOtrmTuPmvJVhmP3E1zZsWBgWN
+	zom1H+uMhxvueaTt5LJijI5Lw4XZ9s/Ded+x62pd9WBy6wKgU9l7YPsDsEXyM2k=
+X-Google-Smtp-Source: AGHT+IFctvodowwbTmaaEDSmGBZj/O9adwDNYje40Gk9jTBEJueLXsMCVV/UKXpClCHAizcOHif2cQ==
+X-Received: by 2002:a05:6902:246:b0:de5:e046:6ac with SMTP id k6-20020a056902024600b00de5e04606acmr2994231ybs.5.1714744789552;
+        Fri, 03 May 2024 06:59:49 -0700 (PDT)
+Received: from sunil-laptop ([106.51.191.139])
+        by smtp.gmail.com with ESMTPSA id l14-20020a25bf8e000000b00de51b87bfefsm627782ybk.18.2024.05.03.06.59.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 03 May 2024 06:59:48 -0700 (PDT)
+Date: Fri, 3 May 2024 19:29:35 +0530
+From: Sunil V L <sunilvl@ventanamicro.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-riscv@lists.infradead.org, linux-acpi@vger.kernel.org,
+	linux-pci@vger.kernel.org, linux-serial@vger.kernel.org,
+	acpica-devel@lists.linux.dev,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>,
+	Paul Walmsley <paul.walmsley@sifive.com>,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Anup Patel <anup@brainfault.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Samuel Holland <samuel.holland@sifive.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Jiri Slaby <jirislaby@kernel.org>,
+	Robert Moore <robert.moore@intel.com>,
+	Conor Dooley <conor.dooley@microchip.com>,
+	Andrew Jones <ajones@ventanamicro.com>,
+	Marc Zyngier <maz@kernel.org>,
+	Atish Kumar Patra <atishp@rivosinc.com>,
+	Andrei Warkentin <andrei.warkentin@intel.com>,
+	Haibo1 Xu <haibo1.xu@intel.com>,
+	=?utf-8?B?QmrDtnJuIFTDtnBlbA==?= <bjorn@kernel.org>
+Subject: Re: [PATCH v5 17/17] serial: 8250: Add 8250_acpi driver
+Message-ID: <ZjTtx88zk4GvCImk@sunil-laptop>
+References: <20240501121742.1215792-1-sunilvl@ventanamicro.com>
+ <20240501121742.1215792-18-sunilvl@ventanamicro.com>
+ <ZjNaR-YtVTm4pbP7@smile.fi.intel.com>
+ <ZjNh0Llcx+0VHevy@sunil-laptop>
+ <ZjNmdfR2J6hNnYle@smile.fi.intel.com>
+ <ZjN3GQI3gegYOIgS@sunil-laptop>
+ <ZjOy2G0qN5G076i0@smile.fi.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: ta-mail-02.ta.t-argos.ru (172.17.13.212) To ta-mail-02
- (172.17.13.212)
-X-KSMG-Rule-ID: 1
-X-KSMG-Message-Action: clean
-X-KSMG-AntiSpam-Lua-Profiles: 185041 [May 03 2024]
-X-KSMG-AntiSpam-Version: 6.1.0.4
-X-KSMG-AntiSpam-Envelope-From: amishin@t-argos.ru
-X-KSMG-AntiSpam-Rate: 0
-X-KSMG-AntiSpam-Status: not_detected
-X-KSMG-AntiSpam-Method: none
-X-KSMG-AntiSpam-Auth: dkim=none
-X-KSMG-AntiSpam-Info: LuaCore: 19 0.3.19 07c7fa124d1a1dc9662cdc5aace418c06ae99d2b, {Tracking_from_domain_doesnt_match_to}, d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;t-argos.ru:7.1.1;127.0.0.199:7.1.2;mx1.t-argos.ru.ru:7.1.1, FromAlignment: s
-X-MS-Exchange-Organization-SCL: -1
-X-KSMG-AntiSpam-Interceptor-Info: scan successful
-X-KSMG-AntiPhishing: Clean, bases: 2024/05/03 12:24:00
-X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 1.1.2.30, bases: 2024/05/03 04:26:00 #25076703
-X-KSMG-AntiVirus-Status: Clean, skipped
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZjOy2G0qN5G076i0@smile.fi.intel.com>
 
-If IORESOURCE_BUS is not provided in Device Tree it will be fabricated
-in of_pci_parse_bus_range(). So NULL pointer dereference will not occur.
-But other drivers do this check. So it can be added for code consistency.
+On Thu, May 02, 2024 at 06:35:52PM +0300, Andy Shevchenko wrote:
+> On Thu, May 02, 2024 at 04:50:57PM +0530, Sunil V L wrote:
+> > On Thu, May 02, 2024 at 01:09:57PM +0300, Andy Shevchenko wrote:
+> > > On Thu, May 02, 2024 at 03:20:08PM +0530, Sunil V L wrote:
+> > > > On Thu, May 02, 2024 at 12:17:59PM +0300, Andy Shevchenko wrote:
+> 
+> ...
+> 
+> > > > This driver is not a duplicate of 8250_pnp. It just relies on UART
+> > > > enumerated as platform device instead of using PNP interfaces.
+> > > > Isn't it better and simple to have an option to enumerate as platform
+> > > > device instead of PNP? 
+> > > 
+> > > Ah, then extract platform driver first from 8250_core.c.
+> > > 
+> > Let me know if I understand your suggestion correctly. Do you mean call
+> > something like serial8250_acpi_init() from serial8250_init() and
+> > register the driver directly in serial8250_acpi_init()?
+> 
+> Extract the code to be 8250_platform.c and update that file.
+> I have locally the extraction of RSA code, I will see if I can help you
+> with the rest.
+> 
+Thanks!. That will be helpful. TBH, I don't understand what to do for
+extracting the platform driver code. There are already several vendor
+specific UART drivers (ex: 8250_fsl.c) which are enumerated as platform
+devices. 8250_core.c looks cleanly supporting such drivers which can
+register themselves with the core. For generic UART, DT has 8250_of.c
+and ACPI has 8250_pnp.c. But 8250_pnp.c comes with baggage of PNP
+contract. So, the driver in this patch is similar to vendor specific
+drivers to support generic uart devices which are enumerated as platform
+device. I can rename 8250_acpi.c to 8250_platform.c if that is better.
 
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
+Could you please help with a patch even if not compiled so that I can
+understand your suggestion better? 
 
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Aleksandr Mishin <amishin@t-argos.ru>
----
-v1->v2: Add return code processing as suggested by Bjorn
-v2->v3: Return -ENODEV instead of -EINVAL
-
- drivers/pci/controller/dwc/pcie-al.c | 16 +++++++++++++---
- 1 file changed, 13 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-al.c b/drivers/pci/controller/dwc/pcie-al.c
-index 6dfdda59f328..643115f74092 100644
---- a/drivers/pci/controller/dwc/pcie-al.c
-+++ b/drivers/pci/controller/dwc/pcie-al.c
-@@ -242,18 +242,24 @@ static struct pci_ops al_child_pci_ops = {
- 	.write = pci_generic_config_write,
- };
- 
--static void al_pcie_config_prepare(struct al_pcie *pcie)
-+static int al_pcie_config_prepare(struct al_pcie *pcie)
- {
- 	struct al_pcie_target_bus_cfg *target_bus_cfg;
- 	struct dw_pcie_rp *pp = &pcie->pci->pp;
- 	unsigned int ecam_bus_mask;
-+	struct resource_entry *ft;
- 	u32 cfg_control_offset;
-+	struct resource *bus;
- 	u8 subordinate_bus;
- 	u8 secondary_bus;
- 	u32 cfg_control;
- 	u32 reg;
--	struct resource *bus = resource_list_first_type(&pp->bridge->windows, IORESOURCE_BUS)->res;
- 
-+	ft = resource_list_first_type(&pp->bridge->windows, IORESOURCE_BUS);
-+	if (!ft)
-+		return -ENODEV;
-+
-+	bus = ft->res;
- 	target_bus_cfg = &pcie->target_bus_cfg;
- 
- 	ecam_bus_mask = (pcie->ecam_size >> PCIE_ECAM_BUS_SHIFT) - 1;
-@@ -287,6 +293,8 @@ static void al_pcie_config_prepare(struct al_pcie *pcie)
- 	       FIELD_PREP(CFG_CONTROL_SEC_BUS_MASK, secondary_bus);
- 
- 	al_pcie_controller_writel(pcie, cfg_control_offset, reg);
-+
-+	return 0;
- }
- 
- static int al_pcie_host_init(struct dw_pcie_rp *pp)
-@@ -305,7 +313,9 @@ static int al_pcie_host_init(struct dw_pcie_rp *pp)
- 	if (rc)
- 		return rc;
- 
--	al_pcie_config_prepare(pcie);
-+	rc = al_pcie_config_prepare(pcie);
-+	if (rc)
-+		return rc;
- 
- 	return 0;
- }
--- 
-2.30.2
-
+Thanks for your help!
+Sunil
