@@ -1,256 +1,182 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A8823D388;
-	Sat,  4 May 2024 16:15:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 430421E871
+	for <linux-pci@vger.kernel.org>; Sat,  4 May 2024 17:01:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1714839331; cv=none; b=a5DB/+0LmtB/xyT0tf40L86QF6X1JqQMC+HdHhIPvgW2sm3wOxqfnd88sBA3py6V9dSmCsS/iFTgLPG9sag3MSiY8LXmggUSZDanbZPWU+a8cYQnZ8yDFIp00NXgcNjENlvprTCtRBbsinMR+FW9V9L36Sm8d1TpJNgQN5WaHXE=
+	t=1714842109; cv=none; b=QpvKb6hQSQqaAwXN8YK+5WlxaCRrQoAnLP1Mfur0dzcGmQqIv0xDIcdcl6vQA4wOacpNa/aPMVWll5NuR9QOQnfH63WW7hqTgzF6d14MwkifG52/V3DSo+K10vwIGVxCfio2+uaLUKRfG04F/cRuG9puSVsnlXAyyZRjgs4BBvk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1714839331; c=relaxed/simple;
-	bh=AovjvSd4+O1pHoca5qsWQT8F+963B3HOGnRsm+oNjrs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=I2/vgbiANnt1ctVC5lIO+7kpGwS67i9Wftw8gOtFNLWLGPPwTnp88E34ctQLP4yC+kahwDDi9rZnkSZF1E8W46c/OGSjjwE13MfbNEocnIhNChsJWsZBH5lmr5+7dB5KCHzyGtgfaR3THpIK7iuWFMsff2g1/aCV+I59/KVISek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=DWWwUH8Y; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=2Zn/75t4; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1714842109; c=relaxed/simple;
+	bh=Ui289m/aD+ifRYLXt9sDXS8DUyCLcvxnyweT3Q+LgHQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FVmDoGMZQL+5/2LK5oIuOXMOtE33/HRZg9R9Ei54YLZmsL04cV6HHMXnFEUtT+qT7uVv8bBZF7UfmAD0Gp9V2urBlH6O6MazEgkghUZ6uIz7oPWBNwltXU0EX46z5qgnr7uFJVa6oiSu9yrIDuev+MAQ0XCF1OtJHvrOlvMyk1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Ed/EGp+I; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="DWWwUH8Y";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="2Zn/75t4"
-From: Nam Cao <namcao@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1714839326;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=PQ4G3u5ufzRM0q5tKBKrEyXxPmH11k+9Dg+ph0ZLeAE=;
-	b=DWWwUH8Y7nvx09vP/G4wHOf3fBn+OQtNmZpwSDwobr/8TSWHyktkcbhDlR9HXYLr2loCpF
-	2gxqtGAXxT1X6osPd1mqPpoKxAQilusqW6/IMHDKEeIs61Bg7Kl/Hjg0yoyxA3xhtB8z62
-	RrGrO4NqXmE7sNC0uqrwTX62BJsu32FKIGsV0eg2jj0X3qq9iMqrCfo0R6q4oODlYbBAqB
-	ySWgYUP336V9C7dEtJXalV84LI2Mwg3pMJAXR0wD3u32TGR2XxbeoCOeMV5FPuc10sBpYh
-	v+/wOQLghGf5c5w3kyiPWHRWFpPjh+YcfzdqUzEjgsGjCDkm/bs7UY53xg2+sQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1714839326;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=PQ4G3u5ufzRM0q5tKBKrEyXxPmH11k+9Dg+ph0ZLeAE=;
-	b=2Zn/75t4zc0wg5R5s2ddxvaxveQs6Xo6x9n727y0VMV+ici0JRbrAFecD2e7J2wUhXNOl4
-	oRMcWaaYPZnw2bAQ==
-To: Lukas Wunner <lukas@wunner.de>,
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Ed/EGp+I"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-6f30f69a958so532039b3a.1
+        for <linux-pci@vger.kernel.org>; Sat, 04 May 2024 10:01:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1714842106; x=1715446906; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ANbQzLbC04OT96qrkLQKxGMSo5LbgtdU/enMtsBUeUQ=;
+        b=Ed/EGp+IeDo/igMDy7R6cZHQVwMcUksysOSOMFs8d491hHusOTh4aNR5JjSdETXXYj
+         RhQY1RMxj2X3pveQ6c7LqD9mwRye2Cer3jWwFCKX8XhfcAzEA04c5HBOcnalECXbyneB
+         q6Tpye+gy6NbcZMpGnF/9TxgUOh50G3x1CSbaFoKRWOBPhe038lWYq4VkyKfXPFs1GuC
+         mdZNQJU1QKAJDFiCVwV2jGYxAPGilSx7mxJIM4uEgqsXyut9aLVTf1f/2gDwl8lt+/BB
+         lBY6cMEGjbEWR3WN88sLgBEBlb8MYMDcam0oegcob/+/BLDlrNvOA3yvsi6ki0CwqRqc
+         LbJw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1714842106; x=1715446906;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ANbQzLbC04OT96qrkLQKxGMSo5LbgtdU/enMtsBUeUQ=;
+        b=IzWWn5fjMzM03Y9KRswZMszYCX+HhYC+sSdXQbBxakzUrwHsfY185WhxqS+rnD9OJO
+         e8fQUfumtDPy87UfZmopxcZWhbpxGP5EtkHYg9o4EurURaLX9bLeDf0bgxiXct6xLDaP
+         z/XyogdL3JtLFHzelTeSvjXO8zXp7LJSJBmqyIaZ7SU51W0LOuRCn07FLod4ULAmD2sX
+         Ms5xCO5om1UzA3836SZIU4LCg9umhVpUJykSAM/w4uQHt+5u6gcp1yWrwyXjGRY0nRMG
+         M903qooFn26c5dsCGExNoxQQW59x+A91RUqDuUrJMnU4P+biPbmKEBofFAQnDAiJMUu7
+         OyVA==
+X-Forwarded-Encrypted: i=1; AJvYcCUkr7L7vpwsbZ4b7c4c1UkXNTV5UZY5sAnPkDo+XLnrGxTE+d88IU7fDE++9zRhqR8fQi0MZjuOn5hwUbJSAprT9TxbknDJFtO6
+X-Gm-Message-State: AOJu0Ywm68czZmZLuj6Ha2tV8rTRexYt5fawoERMna4X6p+f/hyoXxQr
+	RKvgTdzyPO+tjFudsHMHrPmgCXnMl7M1lvH7yyZV6otdQD2xbeN5Eye9PJFKZQ==
+X-Google-Smtp-Source: AGHT+IFoYFMT+P/n6MbXuyw0mxYc/wmFkYedDEEx3BgEqvaXl/D4ZN745Jr5wrhk+w+gEEPdlTJu0g==
+X-Received: by 2002:a05:6a00:92a5:b0:6e6:946b:a983 with SMTP id jw37-20020a056a0092a500b006e6946ba983mr6518136pfb.10.1714842106223;
+        Sat, 04 May 2024 10:01:46 -0700 (PDT)
+Received: from thinkpad ([220.158.156.237])
+        by smtp.gmail.com with ESMTPSA id ls30-20020a056a00741e00b006f4123491d2sm4954233pfb.108.2024.05.04.10.01.42
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 04 May 2024 10:01:45 -0700 (PDT)
+Date: Sat, 4 May 2024 22:31:39 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Aleksandr Mishin <amishin@t-argos.ru>
+Cc: Rob Herring <robh@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Yinghai Lu <yinghai@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Nam Cao <namcao@linutronix.de>
-Subject: [PATCH v2 0/2] abort hot-plug if pci_hp_add_bridge() fails
-Date: Sat,  4 May 2024 18:15:20 +0200
-Message-Id: <cover.1714838173.git.namcao@linutronix.de>
+	Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@pengutronix.de>,
+	Serge Semin <fancer.lancer@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, lvc-project@linuxtesting.org,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH v3] PCI: dwc: keystone: Fix NULL pointer dereference in
+ case of DT error in ks_pcie_setup_rc_app_regs()
+Message-ID: <20240504170139.GB4315@thinkpad>
+References: <20240329051947.28900-1-amishin@t-argos.ru>
+ <20240503125726.46116-1-amishin@t-argos.ru>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240503125726.46116-1-amishin@t-argos.ru>
 
-Hi,
+On Fri, May 03, 2024 at 03:57:26PM +0300, Aleksandr Mishin wrote:
+> If IORESOURCE_MEM is not provided in Device Tree due to any error,
+> resource_list_first_type() will return NULL and
+> pci_parse_request_of_pci_ranges() will just emit a warning.
+> This will cause a NULL pointer dereference.
+> Fix this bug by adding NULL return check.
+> 
+> Found by Linux Verification Center (linuxtesting.org) with SVACE.
+> 
+> Fixes: 0f71c60ffd26 ("PCI: dwc: Remove storing of PCI resources")
+> Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
+> Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Signed-off-by: Aleksandr Mishin <amishin@t-argos.ru>
 
-When I hot-plug a bridge, but there is no bus number available for its
-downstreambus, the kernel crashes.
+One nitpick below. With that addressed,
 
-This can be reproduced with something like:
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-	qemu-system-x86_64 -machine pc-q35-2.10 \
-	 -kernel ../build-pci/arch/x86/boot/bzImage \
-	 -drive "file=img,format=raw" \
-	 -m 2048 -smp 2 -enable-kvm \
-	 -append "console=ttyS0 root=/dev/sda" \
-	 -nographic \
-	 -device pcie-root-port,bus=pcie.0,id=rp1,slot=1,bus-reserve=0
+> ---
+> v1->v2: Add return code processing as suggested by Bjorn
+> v2->v3: Return -ENODEV instead of -EINVAL as suggested by Manivannan
+> 
+>  drivers/pci/controller/dwc/pci-keystone.c | 20 +++++++++++++++-----
+>  1 file changed, 15 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+> index 844de4418724..381f7b2b74ca 100644
+> --- a/drivers/pci/controller/dwc/pci-keystone.c
+> +++ b/drivers/pci/controller/dwc/pci-keystone.c
+> @@ -382,17 +382,22 @@ static void ks_pcie_clear_dbi_mode(struct keystone_pcie *ks_pcie)
+>  	} while (val & DBI_CS2);
+>  }
+>  
+> -static void ks_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+> +static int ks_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+>  {
+>  	u32 val;
+>  	u32 num_viewport = ks_pcie->num_viewport;
+>  	struct dw_pcie *pci = ks_pcie->pci;
+>  	struct dw_pcie_rp *pp = &pci->pp;
+> -	u64 start, end;
+> +	struct resource_entry *ft;
 
-Note the "bus-reserve=0": no bus number is reserved for hot-plugging a
-bridge.
+s/ft/entry
 
-After booting is completed, a PCI bridge can be hot-added with the QEMU
-command:
-	device_add pcie-pci-bridge,id=br1,bus=rp1
+- Mani
 
-After this command, the kernel crashes (crash log below).
-
-The reason is that, hot-plugging a bridge is done with pci_hp_add_bridge()
-and this can fail. However, its returned value is not checked, and the
-kernel proceeds despite the bridge was not added correctly. This results
-in the crash.
-
-Best regards,
-Nam
-
-[   77.763860] pcieport 0000:00:03.0: pciehp: Slot(1): Button press: will power on in 5 sec
-[   77.765343] pcieport 0000:00:03.0: pciehp: Slot(1): Card present
-[   77.766385] pcieport 0000:00:03.0: pciehp: Slot(1): Link Up
-[   78.881224] pci 0000:01:00.0: [1b36:000e] type 01 class 0x060400 PCIe to PCI/PCI-X bridge
-[   78.883650] pci 0000:01:00.0: BAR 0 [mem 0x00000000-0x000000ff 64bit]
-[   78.884849] pci 0000:01:00.0: PCI bridge to [bus 00]
-[   78.886433] pci 0000:01:00.0:   bridge window [io  0x0000-0x0fff]
-[   78.887541] pci 0000:01:00.0:   bridge window [mem 0x00000000-0x000fffff]
-[   78.889479] pci 0000:01:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-[   78.892464] pci 0000:01:00.0: No bus number available for hot-added bridge
-[   78.893717] pci 0000:01:00.0: BAR 0 [mem 0xfe800000-0xfe8000ff 64bit]: assigned
-[   78.895703] pcieport 0000:00:03.0: PCI bridge to [bus 01]
-[   78.896708] pcieport 0000:00:03.0:   bridge window [io  0x1000-0x1fff]
-[   78.898878] pcieport 0000:00:03.0:   bridge window [mem 0xfe800000-0xfe9fffff]
-[   78.900829] pcieport 0000:00:03.0:   bridge window [mem 0xfe000000-0xfe1fffff 64bit pref]
-[   78.905378] shpchp 0000:01:00.0: HPC vendor_id 1b36 device_id e ss_vid 0 ss_did 0
-[   78.906729] shpchp 0000:01:00.0: enabling device (0000 -> 0002)
-[   78.910290] BUG: kernel NULL pointer dereference, address: 00000000000000da
-[   78.911539] #PF: supervisor write access in kernel mode
-[   78.912484] #PF: error_code(0x0002) - not-present page
-[   78.913407] PGD 0 P4D 0
-[   78.913871] Oops: 0002 [#1] PREEMPT SMP NOPTI
-[   78.914652] CPU: 0 PID: 45 Comm: irq/24-pciehp Not tainted 6.8.6 #31
-[   78.915774] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-[   78.917395] RIP: 0010:shpc_init+0x3fb/0x9d0
-[   78.918162] Code: 8b 48 08 40 80 ff 02 0f 84 15 04 00 00 f7 c2 00 00 00 1f 0f 84 44 02 00 00 b8 04 00 00 00 b9 04 00 0f
-[   78.921407] RSP: 0018:ffffc9000018fad8 EFLAGS: 00010246
-[   78.922330] RAX: 0000000000000000 RBX: ffff88800459ab00 RCX: 0000000000000000
-[   78.923591] RDX: 00000000000000ff RSI: 0000000000000000 RDI: ffffffff83015701
-[   78.924845] RBP: ffffc9000018fb20 R08: ffff888003658280 R09: 0000000000000000
-[   78.926093] R10: 0000000000000000 R11: ffff888006888780 R12: ffff8880042ff000
-[   78.927358] R13: 0000000000000000 R14: 000000007f000d0f R15: 000000000000001f
-[   78.928622] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
-[   78.930040] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   78.931056] CR2: 00000000000000da CR3: 000000000471a000 CR4: 00000000000006f0
-[   78.932321] Call Trace:
-[   78.932770]  <TASK>
-[   78.933175]  ? show_regs+0x64/0x70
-[   78.933793]  ? __die+0x23/0x70
-[   78.934351]  ? page_fault_oops+0x17b/0x460
-[   78.935087]  ? search_module_extables+0x18/0x60
-[   78.935907]  ? shpc_init+0x3fb/0x9d0
-[   78.936548]  ? kernelmode_fixup_or_oops+0x9d/0x120
-[   78.937420]  ? __bad_area_nosemaphore+0x16b/0x220
-[   78.938272]  ? bad_area_nosemaphore+0x11/0x20
-[   78.939068]  ? do_user_addr_fault+0x28c/0x610
-[   78.939858]  ? exc_page_fault+0x6e/0x160
-[   78.940566]  ? asm_exc_page_fault+0x2b/0x30
-[   78.941332]  ? shpc_init+0x3fb/0x9d0
-[   78.941976]  ? shpc_init+0x569/0x9d0
-[   78.942618]  shpc_probe+0x92/0x390
-[   78.943232]  local_pci_probe+0x46/0xa0
-[   78.943922]  pci_device_probe+0xb0/0x190
-[   78.944491]  really_probe+0xc2/0x2d0
-[   78.944996]  ? __pfx___device_attach_driver+0x10/0x10
-[   78.945693]  __driver_probe_device+0x73/0x120
-[   78.946300]  driver_probe_device+0x1f/0xf0
-[   78.946869]  __device_attach_driver+0x8d/0x120
-[   78.947489]  bus_for_each_drv+0x96/0xf0
-[   78.948031]  __device_attach+0xae/0x1a0
-[   78.948571]  device_attach+0xf/0x20
-[   78.949062]  pci_bus_add_device+0x58/0x90
-[   78.949628]  pci_bus_add_devices+0x30/0x70
-[   78.950201]  pciehp_configure_device+0xa8/0x150
-[   78.950840]  pciehp_handle_presence_or_link_change+0x161/0x4a0
-[   78.951655]  pciehp_ist+0x20f/0x240
-[   78.952144]  ? __pfx_irq_thread_fn+0x10/0x10
-[   78.952744]  irq_thread_fn+0x23/0x60
-[   78.953245]  irq_thread+0xfa/0x1c0
-[   78.953726]  ? __pfx_irq_thread_dtor+0x10/0x10
-[   78.954346]  ? __pfx_irq_thread+0x10/0x10
-[   78.955175]  kthread+0xe0/0x110
-[   78.955631]  ? __pfx_kthread+0x10/0x10
-[   78.956160]  ret_from_fork+0x3c/0x60
-[   78.956661]  ? __pfx_kthread+0x10/0x10
-[   78.957207]  ret_from_fork_asm+0x1b/0x30
-[   78.957754]  </TASK>
-[   78.958070] Modules linked in:
-[   78.958501] CR2: 00000000000000da
-[   78.958970] ---[ end trace 0000000000000000 ]---
-[   78.959615] RIP: 0010:shpc_init+0x3fb/0x9d0
-[   78.960201] Code: 8b 48 08 40 80 ff 02 0f 84 15 04 00 00 f7 c2 00 00 00 1f 0f 84 44 02 00 00 b8 04 00 00 00 b9 04 00 0f
-[   78.962745] RSP: 0018:ffffc9000018fad8 EFLAGS: 00010246
-[   78.963462] RAX: 0000000000000000 RBX: ffff88800459ab00 RCX: 0000000000000000
-[   78.964441] RDX: 00000000000000ff RSI: 0000000000000000 RDI: ffffffff83015701
-[   78.965469] RBP: ffffc9000018fb20 R08: ffff888003658280 R09: 0000000000000000
-[   78.966537] R10: 0000000000000000 R11: ffff888006888780 R12: ffff8880042ff000
-[   78.967531] R13: 0000000000000000 R14: 000000007f000d0f R15: 000000000000001f
-[   78.968539] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
-[   78.969662] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   78.970472] CR2: 00000000000000da CR3: 000000000471a000 CR4: 00000000000006f0
-[   78.971449] note: irq/24-pciehp[45] exited with irqs disabled
-[   78.972281] BUG: kernel NULL pointer dereference, address: 0000000000000000
-[   78.973232] #PF: supervisor instruction fetch in kernel mode
-[   78.974012] #PF: error_code(0x0010) - not-present page
-[   78.974717] PGD 0 P4D 0
-[   78.975075] Oops: 0010 [#2] PREEMPT SMP NOPTI
-[   78.975686] CPU: 0 PID: 45 Comm: irq/24-pciehp Tainted: G      D            6.8.6 #31
-[   78.976751] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-[   78.978011] RIP: 0010:0x0
-[   78.978383] Code: Unable to access opcode bytes at 0xffffffffffffffd6.
-[   78.979274] RSP: 0018:ffffc9000018fe98 EFLAGS: 00010286
-[   78.979996] RAX: 0000000000000000 RBX: ffff888003d2c740 RCX: 00000000000001c0
-[   78.980973] RDX: 0000000000000001 RSI: 0000000000000000 RDI: ffffc9000018fea0
-[   78.981949] RBP: ffffc9000018feb8 R08: 0000000000009ffb R09: 00000000ffffdfff
-[   78.982924] R10: 0000000000000001 R11: ffffffff82a58aa0 R12: ffff888003d2c740
-[   78.983901] R13: ffff888003d2cf54 R14: ffff888003e78001 R15: 0000000000000000
-[   78.984884] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
-[   78.985992] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   78.986786] CR2: ffffffffffffffd6 CR3: 000000000471a000 CR4: 00000000000006f0
-[   78.987793] Call Trace:
-[   78.988143]  <TASK>
-[   78.988443]  ? show_regs+0x64/0x70
-[   78.988924]  ? __die+0x23/0x70
-[   78.989355]  ? page_fault_oops+0x17b/0x460
-[   78.989925]  ? do_user_addr_fault+0x2d1/0x610
-[   78.990539]  ? _prb_read_valid+0x2e6/0x370
-[   78.991132]  ? exc_page_fault+0x6e/0x160
-[   78.991688]  ? asm_exc_page_fault+0x2b/0x30
-[   78.992318]  task_work_run+0x60/0x90
-[   78.992798]  do_exit+0x355/0xb00
-[   78.993234]  make_task_dead+0x7e/0x160
-[   78.993708]  rewind_stack_and_make_dead+0x17/0x20
-[   78.994303]  </TASK>
-[   78.994589] Modules linked in:
-[   78.994984] CR2: 0000000000000000
-[   78.995408] ---[ end trace 0000000000000000 ]---
-[   78.995984] RIP: 0010:shpc_init+0x3fb/0x9d0
-[   78.996503] Code: 8b 48 08 40 80 ff 02 0f 84 15 04 00 00 f7 c2 00 00 00 1f 0f 84 44 02 00 00 b8 04 00 00 00 b9 04 00 0f
-[   78.998828] RSP: 0018:ffffc9000018fad8 EFLAGS: 00010246
-[   78.999500] RAX: 0000000000000000 RBX: ffff88800459ab00 RCX: 0000000000000000
-[   79.000406] RDX: 00000000000000ff RSI: 0000000000000000 RDI: ffffffff83015701
-[   79.001282] RBP: ffffc9000018fb20 R08: ffff888003658280 R09: 0000000000000000
-[   79.002159] R10: 0000000000000000 R11: ffff888006888780 R12: ffff8880042ff000
-[   79.003036] R13: 0000000000000000 R14: 000000007f000d0f R15: 000000000000001f
-[   79.003926] FS:  0000000000000000(0000) GS:ffff88807dc00000(0000) knlGS:0000000000000000
-[   79.004921] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   79.005637] CR2: ffffffffffffffd6 CR3: 000000000471a000 CR4: 00000000000006f0
-[   79.006523] note: irq/24-pciehp[45] exited with irqs disabled
-[   79.007261] Fixing recursive fault but reboot is needed!
-[   79.007942] BUG: scheduling while atomic: irq/24-pciehp/45/0x00000000
-[   79.008740] Modules linked in:
-[   79.009151] CPU: 0 PID: 45 Comm: irq/24-pciehp Tainted: G      D            6.8.6 #31
-[   79.010117] Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
-[   79.011255] Call Trace:
-[   79.011573]  <TASK>
-[   79.011845]  dump_stack_lvl+0x5f/0x80
-[   79.012310]  dump_stack+0x14/0x20
-[   79.012730]  __schedule_bug+0x51/0x70
-[   79.013195]  __schedule+0x79c/0x890
-[   79.013634]  ? vprintk+0x31/0x40
-[   79.014044]  ? _printk+0x5f/0x80
-[   79.014456]  do_task_dead+0x43/0x50
-[   79.014897]  make_task_dead+0x142/0x160
-[   79.015378]  rewind_stack_and_make_dead+0x17/0x20
-[   79.015971]  </TASK>
-
-Nam Cao (2):
-  PCI: shpchp: Abort hot-plug if pci_hp_add_bridge() fails
-  PCI: pciehp: Abort hot-plug if pci_hp_add_bridge() fails
-
- drivers/pci/hotplug/pciehp_pci.c | 6 ++++--
- drivers/pci/hotplug/shpchp_pci.c | 6 ++++--
- 2 files changed, 8 insertions(+), 4 deletions(-)
+>  	struct resource *mem;
+> +	u64 start, end;
+>  	int i;
+>  
+> -	mem = resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM)->res;
+> +	ft = resource_list_first_type(&pp->bridge->windows, IORESOURCE_MEM);
+> +	if (!ft)
+> +		return -ENODEV;
+> +
+> +	mem = ft->res;
+>  	start = mem->start;
+>  	end = mem->end;
+>  
+> @@ -403,7 +408,7 @@ static void ks_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+>  	ks_pcie_clear_dbi_mode(ks_pcie);
+>  
+>  	if (ks_pcie->is_am6)
+> -		return;
+> +		return 0;
+>  
+>  	val = ilog2(OB_WIN_SIZE);
+>  	ks_pcie_app_writel(ks_pcie, OB_SIZE, val);
+> @@ -420,6 +425,8 @@ static void ks_pcie_setup_rc_app_regs(struct keystone_pcie *ks_pcie)
+>  	val = ks_pcie_app_readl(ks_pcie, CMD_STATUS);
+>  	val |= OB_XLAT_EN_VAL;
+>  	ks_pcie_app_writel(ks_pcie, CMD_STATUS, val);
+> +
+> +	return 0;
+>  }
+>  
+>  static void __iomem *ks_pcie_other_map_bus(struct pci_bus *bus,
+> @@ -814,7 +821,10 @@ static int __init ks_pcie_host_init(struct dw_pcie_rp *pp)
+>  		return ret;
+>  
+>  	ks_pcie_stop_link(pci);
+> -	ks_pcie_setup_rc_app_regs(ks_pcie);
+> +	ret = ks_pcie_setup_rc_app_regs(ks_pcie);
+> +	if (ret)
+> +		return ret;
+> +
+>  	writew(PCI_IO_RANGE_TYPE_32 | (PCI_IO_RANGE_TYPE_32 << 8),
+>  			pci->dbi_base + PCI_IO_BASE);
+>  
+> -- 
+> 2.30.2
+> 
+> 
 
 -- 
-2.39.2
-
+மணிவண்ணன் சதாசிவம்
