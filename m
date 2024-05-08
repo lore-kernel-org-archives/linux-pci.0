@@ -1,57 +1,58 @@
 Received: from mailout1.w2.samsung.com (mailout1.w2.samsung.com [211.189.100.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC44F14A9F;
-	Wed,  8 May 2024 18:33:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE0A1523D;
+	Wed,  8 May 2024 18:35:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=211.189.100.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715193236; cv=none; b=ewNmKkEesM94Vc/dxPPSan5DYyQp1rSfjfzY/m+Wo0We87Obsaz+TD36oAehCpeP4mZi0ziknRM/iKFPgmZg2q9mudnfN+A0E+1TKHNUSapRL+3HvJBA45o4tZfveSzU8G64tdYCVaYthHUfv4qHhVgrSmSZJuZdvqUpANqBxys=
+	t=1715193356; cv=none; b=dRLMZg5olm/D+gybAmY72twP5dZ8NmNjP4mipr7lVCkSMWH6F7o11uO4Fh7XejDI8xrMr6+andbcnwhPStxv8fvVP0aKPagsopIw3mS+7hY1fTyo8Pa6ksLVTPCi/IbObpy5Yo5ads4JXTjaCOIl1nrQH3N31Rc2tHoPuFY0Tag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715193236; c=relaxed/simple;
-	bh=+GKzrwDDje9xL1agtIpDU63JUFc4U4WwEIaD48oCDI8=;
+	s=arc-20240116; t=1715193356; c=relaxed/simple;
+	bh=MAZemTVIxbbNdAXjauGs3j7pc3YiV5dz1grKxXNvLfc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:Content-Type:
-	 MIME-Version:References; b=eTTunT6tW+zIxc9qMiLfLHkGyP2Z2CXGLIZSodDguXABmGLVMrdFJxJw5EPXdOoIf0cUbPnwE3YVlyboCJ3Xz8Ek7QEQ8CdY3gBTq8kl/LwzpZNMH11YSux+wLpDzBfK+ZTOebxIiMaSStvm/uVCDd4K0fEl/QmbsAce4hRkKQY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ppC0+yau; arc=none smtp.client-ip=211.189.100.11
+	 MIME-Version:References; b=tUTrpwtviPJs9Obu59+EZL83evITXVouffkG7fwe6acn1+02ArWiVjdB+0fk+O0UB6X2MMQEXqtOxs8z1WTfH/sSz9lhsJIzlfUr+K0m9KJf14KymDypdw9MaQS8nnoaLSgnlJJ2gnGPStpLoCofxwZNUdXTCrNfdBMT3A2lHdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=u6vsIl8g; arc=none smtp.client-ip=211.189.100.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ppC0+yau"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="u6vsIl8g"
 Received: from uscas1p2.samsung.com (unknown [182.198.245.207])
-	by mailout1.w2.samsung.com (KnoxPortal) with ESMTP id 20240508182625usoutp01c53c0488931d8fb681ee50314512d77e~NlsBGWAtk0541805418usoutp01W;
-	Wed,  8 May 2024 18:26:25 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w2.samsung.com 20240508182625usoutp01c53c0488931d8fb681ee50314512d77e~NlsBGWAtk0541805418usoutp01W
+	by mailout1.w2.samsung.com (KnoxPortal) with ESMTP id 20240508183552usoutp01b83795cd216711334497135027464070~Nl0RMtz9J1797317973usoutp016;
+	Wed,  8 May 2024 18:35:52 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w2.samsung.com 20240508183552usoutp01b83795cd216711334497135027464070~Nl0RMtz9J1797317973usoutp016
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1715192785;
-	bh=ADy6altnCCmTZdV0jetpYV+xMuQBv/62xo0t0U50deU=;
+	s=mail20170921; t=1715193352;
+	bh=glT/YkXulVm/q0ZI/+Nj1dOUvzJ97c/oga4X16Ufhs8=;
 	h=From:To:CC:Subject:Date:In-Reply-To:References:From;
-	b=ppC0+yaukrOgcenGDeLf8QJBlLOq7jz+G6sj9waIucn+9k85OsCITlmTY03PeAoIi
-	 7s9wx9k36tZ2oA+0YBl7xn9onE8Hp/q2WWDE/bQ66IxIpxfmIskW232FQWbSpm4euS
-	 vTkbpeh/t2T8ggFRsLhQwwcK9P11mYwfPYhIEnMs=
-Received: from ussmges3new.samsung.com (u112.gpu85.samsung.co.kr
-	[203.254.195.112]) by uscas1p1.samsung.com (KnoxPortal) with ESMTP id
-	20240508182625uscas1p1b86e6e57b4abc4e846b6f94262b8b4d0~NlsA8hPsZ0965109651uscas1p12;
-	Wed,  8 May 2024 18:26:25 +0000 (GMT)
+	b=u6vsIl8gnjuqTmxbqwgs+4zxYfGu7wQSbTkyMuU3qmtjWCaj864T9VN2G7mAmF/4t
+	 89+JJgv745fgiiUFguyr3nBHO4GrsXrr17PMFAE7eh6Lmd6Hc5dAU0yGm3DqJcJ29A
+	 OyIq3oHaeUH+Ww28Im+e/UFSsiJ50a/Q3Q/i2+mI=
+Received: from ussmges1new.samsung.com (u109.gpu85.samsung.co.kr
+	[203.254.195.109]) by uscas1p1.samsung.com (KnoxPortal) with ESMTP id
+	20240508183552uscas1p1938f6a75fb6aeb367969fc0bb1f6ff68~Nl0Q_A0qK0528405284uscas1p1R;
+	Wed,  8 May 2024 18:35:52 +0000 (GMT)
 Received: from uscas1p1.samsung.com ( [182.198.245.206]) by
-	ussmges3new.samsung.com (USCPEMTA) with SMTP id 87.CE.09504.1D3CB366; Wed, 
-	8 May 2024 14:26:25 -0400 (EDT)
-Received: from ussmgxs1new.samsung.com (u89.gpu85.samsung.co.kr
-	[203.254.195.89]) by uscas1p2.samsung.com (KnoxPortal) with ESMTP id
-	20240508182624uscas1p2693660020f1c82155813d83e905662e7~NlsAdbtqD2562725627uscas1p2U;
-	Wed,  8 May 2024 18:26:24 +0000 (GMT)
-X-AuditID: cbfec370-ed5ff70000002520-b3-663bc3d1e47d
+	ussmges1new.samsung.com (USCPEMTA) with SMTP id A5.3F.09616.806CB366; Wed, 
+	8 May 2024 14:35:52 -0400 (EDT)
+Received: from ussmgxs3new.samsung.com (u92.gpu85.samsung.co.kr
+	[203.254.195.92]) by uscas1p1.samsung.com (KnoxPortal) with ESMTP id
+	20240508183552uscas1p198b490406a13bf31836c0964882362b8~Nl0Qn3SSF2186721867uscas1p1f;
+	Wed,  8 May 2024 18:35:52 +0000 (GMT)
+X-AuditID: cbfec36d-265ff70000002590-8b-663bc60849e3
 Received: from SSI-EX1.ssi.samsung.com ( [105.128.3.67]) by
-	ussmgxs1new.samsung.com (USCPEXMTA) with SMTP id 3F.54.09521.0D3CB366; Wed, 
-	8 May 2024 14:26:24 -0400 (EDT)
+	ussmgxs3new.samsung.com (USCPEXMTA) with SMTP id 02.24.09511.706CB366; Wed, 
+	8 May 2024 14:35:51 -0400 (EDT)
 Received: from SSI-EX3.ssi.samsung.com (105.128.2.228) by
 	SSI-EX1.ssi.samsung.com (105.128.2.226) with Microsoft SMTP Server
 	(version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id
-	15.1.2507.35; Wed, 8 May 2024 11:26:23 -0700
+	15.1.2507.35; Wed, 8 May 2024 11:35:50 -0700
 Received: from SSI-EX3.ssi.samsung.com ([105.128.5.228]) by
 	SSI-EX3.ssi.samsung.com ([105.128.5.228]) with mapi id 15.01.2507.035; Wed,
-	8 May 2024 11:26:23 -0700
+	8 May 2024 11:35:50 -0700
 From: Adam Manzanares <a.manzanares@samsung.com>
-To: Dan Williams <dan.j.williams@intel.com>
+To: Michal Hocko <mhocko@suse.com>
 CC: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
+	"dan.j.williams@intel.com" <dan.j.williams@intel.com>,
 	"jonathan.cameron@huawei.com" <jonathan.cameron@huawei.com>,
 	"dave@stgolabs.net" <dave@stgolabs.net>, Fan Ni <fan.ni@samsung.com>,
 	"dave.jiang@intel.com" <dave.jiang@intel.com>, "ira.weiny@intel.com"
@@ -62,22 +63,21 @@ CC: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>,
 	"rientjes@google.com" <rientjes@google.com>, "ruansy.fnst@fujitsu.com"
 	<ruansy.fnst@fujitsu.com>, "shradha.t@samsung.com" <shradha.t@samsung.com>,
 	"mcgrof@kernel.org" <mcgrof@kernel.org>, Jim Harris
-	<jim.harris@samsung.com>, "mhocko@suse.com" <mhocko@suse.com>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-cxl@vger.kernel.org"
-	<linux-cxl@vger.kernel.org>, "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>
+	<jim.harris@samsung.com>, "linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"linux-cxl@vger.kernel.org" <linux-cxl@vger.kernel.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
 Subject: Re: [LSF/MM/BPF TOPIC] CXL Development Discussions
 Thread-Topic: [LSF/MM/BPF TOPIC] CXL Development Discussions
-Thread-Index: AQHan+tkd4BPRAK+n02hrtqAe44hSbGLVQ6AgALK6YA=
-Date: Wed, 8 May 2024 18:26:23 +0000
-Message-ID: <e51cc411-a05a-4b0c-b43f-bc99a94208eb@nmtadam.samsung>
-In-Reply-To: <66396c1938726_2f63a29443@dwillia2-mobl3.amr.corp.intel.com.notmuch>
+Thread-Index: AQHan+tkd4BPRAK+n02hrtqAe44hSbGMHooAgAIEEQA=
+Date: Wed, 8 May 2024 18:35:50 +0000
+Message-ID: <cd7de8e2-6520-4b06-92be-668aeb96bc40@nmtadam.samsung>
+In-Reply-To: <ZjoVHhiSLm3KRW63@tiehlicka>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach: 
 X-MS-TNEF-Correlator: 
 Content-Type: text/plain; charset="us-ascii"
-Content-ID: <A386930B6EAB444D828D3317216D1F57@ssi.samsung.com>
+Content-ID: <E891342E91B197468547BDB109FBDA48@ssi.samsung.com>
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -86,49 +86,50 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-CFilter-Loop: Reflected
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrFKsWRmVeSWpSXmKPExsWy7djXc7oXD1unGRy5Kmlx9/EFNovpUy8w
-	Wpy42chmsfrmGkaLF3+eM1nsf/qcxWLVwmtsFudnnWKxuLfmP6vF2XnH2Sz2vd7LbHFjwlNG
-	i/t9DhZtSzYyWSy4185icWvCMSaL9XsWsDoIemxoesPmsXPWXXaPBZtKPVqOvGX1WLznJZPH
-	plWdbB6bPk1i95h8Yzmjx9TZ9R7rt1xl8fi8SS6AO4rLJiU1J7MstUjfLoEr4+CmD6wFTxUr
-	/q3ax9TAeESqi5GTQ0LARGL5qy72LkYuDiGBlYwSLzetYoNwWpkkPr86zwpT9fHPL6jEGkaJ
-	P+t2M0E4Hxklrt9sYoFwljJK3H85lxGkhU3AQOL38Y3MILaIgLbExDkHmUGKmAX2s0tMftbE
-	BJIQFrCWePl1D1CCA6jIRuLzcwGIeiuJX+sXgvWyCKhIvPrQywZi8wo4ScycuxIszikQKNH1
-	firYGEYBMYnvp9aA2cwC4hK3nsxngjhbUGLR7D3MELaYxL9dD9kgbEWJ+99fskPU60gs2P2J
-	DcK2k5j9bDqUrS2xbOFrZoi9ghInZz5hgeiVlDi44gbYwxIChzkl+tr+QS1zkTj7/h6ULS1x
-	9fpUqMX5ErvarkDZFRJXX3dDHWEtsfDPeqYJjCqzkNw9C8lNs5DcNAvJTbOQ3LSAkXUVo3hp
-	cXFuemqxcV5quV5xYm5xaV66XnJ+7iZGYPI8/e9wwQ7GW7c+6h1iZOJgPMQowcGsJMJbVWOd
-	JsSbklhZlVqUH19UmpNafIhRmoNFSZzX0PZkspBAemJJanZqakFqEUyWiYNTqoFJYOur6ceU
-	P/7PlZwyoZ/7e6BgZcpfvgq5cN3Yr0IdCRdNX34QPdQqs675jM3/d07Gy4/81Cu4eEMmXUHi
-	YPLi7uRlC9pSQp537uN6N6fUPdNjV8vCP/aW516xxcz7+3TB72U7BXgOqveJyGyvurbht2kE
-	a+ELjj8WT3xifLpWTA3NXhLWtoZRb+MdpvwO40IrGV7uLbNXGu0JK1I9N42/OKWB8/jTh+Iv
-	nxYznkvIEIjYu+La/L2cdm9msb6fWdfuwV/36L6hv3Zj3paYmRdFX18LEAt/bpXkPbtpz8Pc
-	62wJ556aman9yL+hK7f1mM6Nd6+XBb+4z5ax1D5R72NVlMCz3ON/Fr0tnC1YIKWvxFKckWio
-	xVxUnAgArrJEKQ0EAAA=
-X-Brightmail-Tracker: H4sIAAAAAAAAA02SfVBMURjGnXvv3r2bWa6VOvI1rYYU0SjOaCWRucaM1D/5jB2uLSq5d7dI
-	Qz6GsWiWRLutbBRajdjpDx+rnbYoQhmDyoZB1oYhyzTCpu0ys//95n2e93neM3MoXHZKFESl
-	Z6lZLkuZISf9iPQCfNGMtoaYzbO+f5+Nut62keh0cRtAzR17SXS5oxqgD7+dGLJ1OwlkLn9G
-	olbDfQK9rB4QoYdlTSSq+3gbR+26boBeFcahgxXXMGR6eYhAnbq7GKqxmkRxo5ir+z6RzA1D
-	l5gxWTTMgcbPIua81YUxFvNhkrF8OyFmitovAqa4dA9TU/uUYNyWiSuGr/ZTbGIz0nNYbmbs
-	Br+0estXUXZ38A6PuQ4rAI1BWiChIB0Fe3/3k1rgR8loM4ADjeXAK8joXgCP1MYKQiWAB0v6
-	hwSSngV/NV3DvexPh8PjxvohxmmbGN68McXLo+kY6PphHZxTgx4FdDtpwT4P9teUD9kJOgT2
-	fD1GellKx0P9mSpc6OoCsEz7eEiQ0ElQ+6UY8zKgA2Df/WpM6AqEne/OYsILaFhhbcUFHgNd
-	bz0igYPhqz6XWPBPh6Zb30iBY2Hp+9P/OBxeKP+IC0eMgvf07whhdyysv9RO6AA0+NQZfKIM
-	PlEGnyiDT5QJiMwgUMPzmaodfGQWmxvBKzN5TZYqYuO2TAsY/DotnoZV18Gdzt4IO8AoYAeQ
-	wuX+0rz8mM0y6SblzjyW27ae02SwvB2Mowh5oLTrdSgro1VKNbuVZbNZ7r+KUZKgAsyY4Jme
-	u9BJN6lKjHrCXaxOy9X2SDXT3r8YkLXIUy3cVEdO48jU5WVvolpDpbawUJUuuiLk59Uex5yt
-	0bWmyZm6REtBgKJPN+yCdbKtxF60Z2DtZfujMD173ug4VLV/QfOagLFxqx7qCxeMR8NTjPsj
-	+7aIHOOWrDf/SeVXzpctEZ+72DB32YMr+RWpI9STolyzJQp1XbUpaapttyfhz4zSqnViJq+Z
-	63i+1x2/b2lIb3L8xqO3L+H5OU8mJLfsqrp++IiNcEQlbk+sXdwc/sx4UmG9WXgmOqczN/lA
-	W6X/Lbcnu3teSuld6aSjwS7uUXDCFUq6Ji4lZbQEOmdq+o/JCT5NGRmGc7zyL/cuSAypAwAA
-X-CMS-MailID: 20240508182624uscas1p2693660020f1c82155813d83e905662e7
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrFKsWRmVeSWpSXmKPExsWy7djXc7ocx6zTDI4vFbO4+/gCm8X0qRcY
+	LU7cbGSzWH1zDaPFiz/PmSz2P33OYrFq4TU2i/OzTrFY3Fvzn9Xi7LzjbBb7Xu9ltrgx4Smj
+	xf0+B4u2JRuZLBbca2exuDXhGJPF+j0LWB0EPTY0vWHz2DnrLrvHgk2lHi1H3rJ6LN7zkslj
+	06pONo9Nnyaxe0y+sZzRY+rseo/1W66yeHzeJBfAHcVlk5Kak1mWWqRvl8CVMeXTbKaCPUIV
+	lw7vZmpgXMvXxcjJISFgIjHr3AS2LkYuDiGBlYwSxw/tY4JwWpkkrrffY4epOni5gxEisYZR
+	4sSPxVBVHxklHj7czA7hLGWUONSzmxGkhU3AQOL38Y3MILaIgJJE1+adYEuYBS6yS7y5uZwF
+	JCEsYC3x8useoCIOoCIbic/PBSDqrSTmzV8OtppFQEXi4eJusJm8Ak4Sv/afYAOxOQU0JdpO
+	vQObzyggJvH91BomEJtZQFzi1pP5TBBnC0osmr2HGcIWk/i36yEbhK0ocf/7S3aIeh2JBbs/
+	sUHYdhJnVqxlgbC1JZYtfM0MsVdQ4uTMJywQvZISB1fcYAH5RULgEqfE95XvGSESLhIvJ72C
+	sqUlpq+5DNWQL7Gr7QrUERUSV193Qx1hLbHwz3qmCYwqs5DcPQvJTbOQ3DQLyU2zkNy0gJF1
+	FaN4aXFxbnpqsWFearlecWJucWleul5yfu4mRmDyPP3vcO4Oxh23PuodYmTiYDzEKMHBrCTC
+	W1VjnSbEm5JYWZValB9fVJqTWnyIUZqDRUmc19D2ZLKQQHpiSWp2ampBahFMlomDU6qBqV2V
+	7dLDX7e5Z/SWevLfit6jXnjk4QHPm+4M7d94HNl4spm26Fhv5hISVJES/Dk/uj1ednXwM/UI
+	Gzl95uWT3mpOWbTvWN/v2ZV3i3d+jWlbtrPZa2LBZ7ZbcZofZZmez7pwPvQGp2Dxd9Gwsr2s
+	F1aorV/UwM8skbtT+8DDHanztJ9rf1//S8LUYOFpt72aT/Ury1ezO231D3NbYVhaPbOXZYPc
+	Yp+NDyR2JiY92nVY3fl0dNyjIxNv2ke8WXXXf3p8Rusz7U3X9uUnfmE1+iGqy9m7UD583YS4
+	qHspIbe1fWRWxJsmT71qM+H73tsiitsulWztOzHv9Web32l3/s/b8DrjwU59Pw6VE+aaXEos
+	xRmJhlrMRcWJAN/1wTgNBAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprBKsWRmVeSWpSXmKPExsWS2cDsrMt+zDrN4NoNK4u7jy+wWUyfeoHR
+	4sTNRjaL1TfXMFq8+POcyWL/0+csFqsWXmOzOD/rFIvFvTX/WS3OzjvOZrHv9V5mixsTnjJa
+	3O9zsGhbspHJYsG9dhaLWxOOMVms37OA1UHQY0PTGzaPnbPusnss2FTq0XLkLavH4j0vmTw2
+	repk89j0aRK7x+Qbyxk9ps6u91i/5SqLx+dNcgHcUVw2Kak5mWWpRfp2CVwZUz7NZirYI1Rx
+	6fBupgbGtXxdjJwcEgImEgcvdzB2MXJxCAmsYpTY0dDMDOF8ZJS4ve8nlLOUUWL/1alsIC1s
+	AgYSv49vZAaxRQSUJLo272QDKWIWuMgusXx5HwtIQljAWuLl1z1ARRxARTYSn58LQNRbScyb
+	v5wdxGYRUJF4uLibEcTmFXCS+LX/BBvEsq2MEofmHGQCSXAKaEq0nXoHtoxRQEzi+6k1YHFm
+	AXGJW0/mM0H8ICCxZM95ZghbVOLl43+sELaixP3vL9kh6nUkFuz+xAZh20mcWbGWBcLWlli2
+	8DUzxBGCEidnPmGB6JWUOLjiBssERolZSNbNQjJqFpJRs5CMmoVk1AJG1lWM4qXFxbnpFcXG
+	eanlesWJucWleel6yfm5mxiBief0v8MxOxjv3fqod4iRiYPxEKMEB7OSCG9VjXWaEG9KYmVV
+	alF+fFFpTmrxIUZpDhYlcd67DzRShQTSE0tSs1NTC1KLYLJMHJxSDUxbTUzPKQbbXbtswCvS
+	1G/86ByzuhPTkpnB5f5eW6sMgjisjsgytVWcnz3Be2bJO5+9J971tv9pP7XWxcyB59/MDOce
+	Q4XVMxr2Jbwo4plS6MbHXloV0J/pZq5eMePicYFFHzybTic81NZ8ueHUvi2Vr/m9m8M/NDfr
+	Ccx3a7pa5/79W9Ednpm/Ott3xExVnhLx2ayrez0ra9PW/Wm157rknKWmKjVdOSrQ861yp0Hs
+	tC1iAltFQhvXpCoUfJZOcjvVPmvil8VXV80sPnnT1fsH81S10NeZrlNEfoYfFJ/4rIylh/ed
+	+abp7UFLvL9PM32+JSJFPfX30QkPZkdNXL/z67qMHTNXvrZzaL4hGavEUpyRaKjFXFScCADb
+	xD/qqwMAAA==
+X-CMS-MailID: 20240508183552uscas1p198b490406a13bf31836c0964882362b8
 CMS-TYPE: 301P
 X-CMS-RootMailID: 20240506192712uscas1p225316f79bb69f979b647d2a06a00a25f
 References: <CGME20240506192712uscas1p225316f79bb69f979b647d2a06a00a25f@uscas1p2.samsung.com>
 	<9bf86b97-319f-4f58-b658-1fe3ed0b1993@nmtadam.samsung>
-	<66396c1938726_2f63a29443@dwillia2-mobl3.amr.corp.intel.com.notmuch>
+	<ZjoVHhiSLm3KRW63@tiehlicka>
 
-On Mon, May 06, 2024 at 04:47:37PM -0700, Dan Williams wrote:
-> Adam Manzanares wrote:
+On Tue, May 07, 2024 at 01:48:46PM +0200, Michal Hocko wrote:
+> On Mon 06-05-24 19:27:10, Adam Manzanares wrote:
 > > Hello all,
 > >=20
 > > I would like to have a discussion with the CXL development community ab=
@@ -136,12 +137,7 @@ out
 > > current outstanding issues and also invite developers interested in RAS=
  and
 > > memory tiering to participate.
->=20
-> Thanks for putting this together Adam!
-
-NP, its been great working together in the community.
-
->=20
+> >=20
 > > The first topic I believe we should discuss is how we can ensure as a g=
 roup
 > > that we are prioritizing upstream work. On a recent upstream CXL develo=
@@ -152,15 +148,7 @@ ot
  this
 > > link should be shared with others so we can help get more reviews where=
  needed.
->=20
-> Dave already replied here but one thing I will add is help keeping an
-> eye out for things that should be in queue. Likely a good way to
-> do that is send a note along with a review so both get reflected in the
-> tracking.
->=20
-
-Noted.
-
+> >=20
 > > The second topic I would like to discuss is how we integrate RAS featur=
 es that
 > > have similar equivalents in the kernel. A CXL device can provide info a=
@@ -173,40 +161,7 @@ e EDAC
 L has=20
 > > port level RAS features and the PCIe DW series touched on this issue  [=
 2]
->=20
-> If I could uplevel this a bit there are multiple efforts in memory RAS
-> that likely want to figure out a cohesive story, or at least make
-> conscious decisions about implementation divergence. Some related work
-> that caught my eye:
->=20
-> * AMD M1300 specific poison handling that sounds similar to CXL List
->   Poison facility:
->   http://lore.kernel.org/r/20240214033516.1344948-3-yazen.ghannam@amd.com
->=20
-> * Scrub subsystem that has both ACPI and CXL intercepts:
->   http://lore.kernel.org/r/20240419164720.1765-1-shiju.jose@huawei.com
->=20
-> * Inconsistencies between firmware reported fatal errors and native
->   error handling, compare:
->=20
->   ghes_proc()::
->         if (ghes_severity(estatus->error_severity) >=3D GHES_SEV_PANIC)
->                 __ghes_panic(ghes, estatus, buf_paddr, FIX_APEI_GHES_IRQ)=
-;
->=20
->   ...vs:
->=20
->   pcie_do_recovery()::
->         /* TODO: Should kernel panic here? */
->         pci_info(bridge, "device recovery failed\n");
->=20
->   Also the inconsistencies between EXTLOG, GHES, BERT, and native error
->   reporting.
->=20
-
-Thanks for pointing these out. I will try to put all of these references
-in context for discussion.
-
+> >=20
 > > The third topic I would like to discuss is how we can get a set of comm=
 on
 > > benchmarks for memory tiering evaluations. Our team has done some initi=
@@ -223,26 +178,17 @@ with
 test,=20
 > > qemu, and uunit testing framework [4].
 >=20
-> I think benchmarking for memory-tiering is orthogonal to patch
-> unit, function, and integration testing.
->=20
+> This seems to be quite a lot for a single time slot. I think it would
+> make sense to split that into more slots. WDYT?
 
-Agreed.=20
++1. I think the performance implications of CXL memory and how it relates
+to existing memory management code tackling performance differentiated memo=
+ry=20
+would be nice to separate. I think Davidlohr would be a great candidate to=
+=20
+lead this discussion.
 
-> For testing I think it is an "all of the above plus hardware testing if
-> possible" situation. My hope is to get to a point where CXL patchwork
-> lights up "S/W/F" columns with backend tests similar to NETDEV
-> patchwork:
->=20
-> https://patchwork.kernel.org/project/netdevbpf/list/
->=20
-> There are some initial discussions about how to do this likely we can
-> grab some folks to discuss more.
->=20
-> I think Paul and Song would be useful to have for this discussion. Can
-> you recommend others that would be useful for this or other CXL
-> topics to help with timeslot conflict resolution?
->=20
-
-Luis already chimed in and he is definitely our expert in terms of
-establishing baselines for new functionalities.=20
+> --=20
+> Michal Hocko
+> SUSE Labs
+> =
