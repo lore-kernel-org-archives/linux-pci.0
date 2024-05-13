@@ -1,107 +1,154 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4601C01;
-	Mon, 13 May 2024 14:53:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 055A24A32;
+	Mon, 13 May 2024 14:57:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715612039; cv=none; b=N21o0euDsU2eomTAe7NJa9cNFJKsVoEMjgCyRdHchBsbouwJuRYS/LMODax6PxK2xZ2D63zyIpsY5kkdp6zHkaauQQzDgd0Wa3mO51Mxkwje0A3Jf4dDZnvJQ9iSdKg3QKhEABlovrXgyzFutoOV3vxvagwIF2QsSIQI7uTTDEc=
+	t=1715612243; cv=none; b=DGonhNNnAUjArukUOIkucdetC1AZop2dOVru9zlxkC4Pnsue87FbEkuNOYlr0qvABQFy4BH872CsCcfMefF/OVui0s2RzCP75n1/0Xp5jYy0z1AGG9vDX6HU4C0bIcgvLlT3nwKMD+MVn0FUqiyDDdhGxz/nQMhgNyCvEQEidmU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715612039; c=relaxed/simple;
-	bh=dLfguYFlEZM8pXj+gnfRKXow5bLqSaYtXraAJ28Xh+s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=V3AWRf9pwM3PZQdGvjqs4/WUcYV/MfCb6+Vlv70DsxNXsZ8r26PBe7AdtfVKzBeSxgA7XYS57x3G2IjTlA8GIyG3Vyxll77ZdDDhdFoo1nK7+cSPRci4M6ZL4JQGnJgegRwU28HxWw4+5rp4YdZryeXkzce4g6QYgaq2fD4oidU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XiGMMNwS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1715612243; c=relaxed/simple;
+	bh=CYlNkVHIRsr52u7bN4H+E4oBcbIvmmh2GgRSV20DBm0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=cI7Ys22F9xA6BIo1eZac0qzv7pexY3xodLmyfwG3BASF8+WWXuCnfv4ErdzCjqIpRZSmQjJeoix6qQ+tJu7wCjNghrJqfoeTSdmKDMdFtKZ3nk3BYtzBxDdcvq4oVtIakrtMBTW+9/I4v7GvZ7S5PFwoA+RhrIUssSFS11XXJBA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=HtullCni; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=S9bZBtlY; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XiGMMNwS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0372DC113CC;
-	Mon, 13 May 2024 14:53:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1715612039;
-	bh=dLfguYFlEZM8pXj+gnfRKXow5bLqSaYtXraAJ28Xh+s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XiGMMNwS0pqUaXc/XjsL9E0Ll3T4d4WZIAw1c8zOCWDCHCbkesjjdnlLtfqWR1f0N
-	 2NxNyqSTtyGAfD7QyxJlJ17wJF9rBsn4aWaUxr2CxUyfIx1OScZG6/okfkOnwUdbFN
-	 ZbryLIj8PRNzMSpzBTr4DqhdFnBgg9eEC35YCON7w403zoetxm21pUe1Yz+4NAY+Kr
-	 nzLZZAefzR9nluD7nQ+sUDQa/ubpKr17a+7pRv/G3XGdNoTFpFeTcd1nhLJLo4oOCg
-	 mkiZyqKU4dQZO1yagMaCcqgq+YnAI+iNOk9Ck7xs7NofaMpNhJ60h6JjM/t4oJO98H
-	 7bcI9oMtxAKYQ==
-Date: Mon, 13 May 2024 09:53:58 -0500
-From: Rob Herring <robh@kernel.org>
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Thomas Gleixner <tglx@linutronix.de>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Lee Jones <lee@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	UNGLinuxDriver@microchip.com, Andrew Lunn <andrew@lunn.ch>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Lars Povlsen <lars.povlsen@microchip.com>,
-	Steen Hegelund <Steen.Hegelund@microchip.com>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	Alexandre Belloni <alexandre.belloni@bootlin.com>,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH 09/17] dt-bindings: interrupt-controller: Add support for
- Microchip LAN966x OIC
-Message-ID: <20240513145358.GA2574205-robh@kernel.org>
-References: <20240430083730.134918-1-herve.codina@bootlin.com>
- <20240430083730.134918-10-herve.codina@bootlin.com>
- <20240507152806.GA505222-robh@kernel.org>
- <20240513143720.1174306a@bootlin.com>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="HtullCni";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="S9bZBtlY"
+From: Nam Cao <namcao@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1715612240;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X4knFADxIOkDEn739FHeOZMTRRcDGiLM3OkU+m+AGQc=;
+	b=HtullCniNLu6y0N4cORD+7rmoDRhDtU9JEMWfB9C/+7XXNhWzsZtxk67UbcqUJP/8y7xRq
+	/Jrc1b7ANMnbds1d+djA2zDfA9fr5Z9oBJZCopX0hOcTpCS+M3hn91TWbl5ycrhUjIzJt0
+	AiyDOLGUPwOXyfkU7y+fXJogO0BoCV6NZ5awqAJC6U5oQXL0inIjl5ZmMusdDEMD/cpdpK
+	gbmlKADf2bC4LxmDeEUNogSrPCE5zi9iNkydXDt2rfbdisG+XDMiINqbZApNS/Z5+z+pKE
+	xBfBKzhTdWXZN45CVtjrevuRZtPIdMurs2k00WdmWAw6MeNSszkbNGTRCza20A==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1715612240;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=X4knFADxIOkDEn739FHeOZMTRRcDGiLM3OkU+m+AGQc=;
+	b=S9bZBtlY6f665ZvDMpBCMLJunZOj4wQHWuFDBNEisIqSx+Ddxh6Pi9vYojFh86rL2l9WDu
+	qJCtVoIuXBkYiKAg==
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Yinghai Lu <yinghai@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>
+Cc: Nam Cao <namcao@linutronix.de>,
+	stable@vger.kernel.org
+Subject: [PATCH v3 1/2] PCI: shpchp: Abort hot-plug if pci_hp_add_bridge() fails
+Date: Mon, 13 May 2024 16:56:46 +0200
+Message-Id: <fdd7e1c44ab4bfc54271f89e258eea6851dd42dd.1715609848.git.namcao@linutronix.de>
+In-Reply-To: <cover.1715609848.git.namcao@linutronix.de>
+References: <cover.1715609848.git.namcao@linutronix.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240513143720.1174306a@bootlin.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, May 13, 2024 at 02:37:20PM +0200, Herve Codina wrote:
-> Hi Rob,
-> 
-> On Tue, 7 May 2024 10:28:06 -0500
-> Rob Herring <robh@kernel.org> wrote:
-> 
-> ...
-> > > +examples:
-> > > +  - |
-> > > +    interrupt-controller@e00c0120 {
-> > > +        compatible = "microchip,lan966x-oic";
-> > > +        reg = <0xe00c0120 0x190>;  
-> > 
-> > Looks like this is part of some larger block?
-> > 
-> 
-> According to the registers information document:
->   https://microchip-ung.github.io/lan9662_reginfo/reginfo_LAN9662.html?select=cpu,intr
-> 
-> The interrupt controller is mapped at offset 0x48 (offset in number of
-> 32bit words).
-> -> Address offset: 0x48 * 4 = 0x120
-> -> size: (0x63 + 1) *  4 = 0x190
-> 
-> IMHO, the reg property value looks correct.
+If a bridge is hot-added without any bus number available for its
+downstream bus, pci_hp_add_bridge() will fail. However, the driver
+proceeds regardless, and the kernel crashes.
 
-What I mean is h/w blocks don't just start at some address with small 
-alignment. That wouldn't work from a physical design standpoint. The 
-larger block here is "CPU System Regs". The block as a whole should be 
-documented, but maybe that ship already sailed.
+This crash can be reproduced with the QEMU command:
+    qemu-system-x86_64 -machine pc-q35-2.10 \
+        -kernel bzImage \
+        -drive "file=img,format=raw" \
+        -m 2048 -smp 2 -enable-kvm \
+        -append "console=ttyS0 root=/dev/sda" \
+        -nographic \
+        -device pcie-root-port,bus=pcie.0,id=rp1,slot=1,bus-reserve=0 \
+        -device pcie-pci-bridge,id=br1,bus=rp1
 
-Also, here you call it the OIC, but the link above calls it the VCore 
-interrupt controller.
+then hot-plug a bridge at runtime with the QEMU command:
+    device_add pci-bridge,id=br2,bus=br1,chassis_nr=1,addr=1
 
-Rob
+and the kernel crashes:
+
+shpchp 0000:01:00.0: Latch close on Slot(1-1)
+shpchp 0000:01:00.0: Button pressed on Slot(1-1)
+shpchp 0000:01:00.0: Card present on Slot(1-1)
+shpchp 0000:01:00.0: PCI slot #1-1 - powering on due to button press
+pci 0000:02:01.0: [1b36:0001] type 01 class 0x060400 conventional PCI bridge
+pci 0000:02:01.0: BAR 0 [mem 0x00000000-0x000000ff 64bit]
+pci 0000:02:01.0: PCI bridge to [bus 00]
+pci 0000:02:01.0:   bridge window [io  0x0000-0x0fff]
+pci 0000:02:01.0:   bridge window [mem 0x00000000-0x000fffff]
+pci 0000:02:01.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
+pci 0000:02:01.0: No bus number available for hot-added bridge
+
+	(note: kernel should abort hot-plugging right here)
+
+pci 0000:02:01.0: BAR 0 [mem 0xfe600000-0xfe6000ff 64bit]: assigned
+shpchp 0000:01:00.0: PCI bridge to [bus 02]
+shpchp 0000:01:00.0:   bridge window [io  0xc000-0xcfff]
+shpchp 0000:01:00.0:   bridge window [mem 0xfe600000-0xfe7fffff]
+shpchp 0000:01:00.0:   bridge window [mem 0xfe000000-0xfe1fffff 64bit pref]
+shpchp 0000:02:01.0: HPC vendor_id 1b36 device_id 1 ss_vid 0 ss_did 0
+shpchp 0000:02:01.0: enabling device (0000 -> 0002)
+ACPI: \_SB_.GSIE: Enabled at IRQ 20
+BUG: kernel NULL pointer dereference, address: 00000000000000da
+PGD 0 P4D 0
+Oops: 0002 [#1] PREEMPT SMP NOPTI
+CPU: 1 PID: 66 Comm: kworker/1:2 Not tainted 6.9.0-rc1-00001-g2e0239d47d75 #33
+Hardware name: QEMU Standard PC (Q35 + ICH9, 2009), BIOS 1.16.2-debian-1.16.2-1 04/01/2014
+Workqueue: shpchp-1 shpchp_pushbutton_thread
+RIP: 0010:shpc_init+0x3fb/0x9d0
+[stack dump and register dump cut out]
+
+Fix this by aborting the hot-plug if pci_hp_add_bridge() fails.
+
+Fixes: 7d01f70ac6f4 ("PCI: shpchp: use generic pci_hp_add_bridge()")
+Signed-off-by: Nam Cao <namcao@linutronix.de>
+Cc: Yinghai Lu <yinghai@kernel.org>
+Cc: <stable@vger.kernel.org>
+---
+v3: revert back to the solution in v1 (calling
+pci_stop_and_remove_bus_device() and returning negative error code)
+
+v2:
+  - add more information to commit description
+  - return 0 instead of -EINVAL
+
+ drivers/pci/hotplug/shpchp_pci.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/hotplug/shpchp_pci.c b/drivers/pci/hotplug/shpchp_pci.c
+index 36db0c3c4ea6..2ac98bdc83d9 100644
+--- a/drivers/pci/hotplug/shpchp_pci.c
++++ b/drivers/pci/hotplug/shpchp_pci.c
+@@ -48,8 +48,13 @@ int shpchp_configure_device(struct slot *p_slot)
+ 	}
+ 
+ 	for_each_pci_bridge(dev, parent) {
+-		if (PCI_SLOT(dev->devfn) == p_slot->device)
+-			pci_hp_add_bridge(dev);
++		if (PCI_SLOT(dev->devfn) == p_slot->device) {
++			if (pci_hp_add_bridge(dev)) {
++				pci_stop_and_remove_bus_device(dev);
++				ret = -EINVAL;
++				goto out;
++			}
++		}
+ 	}
+ 
+ 	pci_assign_unassigned_bridge_resources(bridge);
+-- 
+2.39.2
+
