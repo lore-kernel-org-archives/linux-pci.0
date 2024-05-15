@@ -1,39 +1,38 @@
 Received: from relay8-d.mail.gandi.net (relay8-d.mail.gandi.net [217.70.183.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80D235FDD3;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE315604B3;
 	Wed, 15 May 2024 10:01:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715767296; cv=none; b=ckFJ9eTgHW2OGHH46SjQoIDP96JhamxEm8AHQafb0UmiIWYk7Mf7IIpJv1oJcN8OrFp32d5XggekD/IQgH0u4HHc0sIP4XNkZkx/gkwXFfUvey6j8wxKJyGc8HEIAFR+fj4aOWSnbG1mvMpU3nugUgXBmBj3XI3JUknj5xOygto=
+	t=1715767296; cv=none; b=RwklLM/CFZ3aswGa7AToNQmoymaPTIq1arbA2IrxxV5DjgN9iSSYQHWDximxEABI3ONXlmcLgIc2ZWha7+ClTtXfDA5Y2eFh8HnCi04LMyFRdYPC5ahMy1Obe0UXoHROjKLILB2d3rGRO0HPow+RRBo3RHN7H0oShr9B0/IhIZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1715767296; c=relaxed/simple;
-	bh=ZrTKcGJkHEqb+v6yflajK2rkFG4g28PoMECEd6V0ZOU=;
+	bh=KoeKOC9BxNbULIOx5THehrA2LvyMrmoh0J2kqk1uxqk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=XZf469RDrOEyIqLzsA3fNXZzHQh8V+6l+Ews4lMFIg5Mi+MxQ9jY1o0F+BtsAp4JNVQkJERlNglFWVENKEM0Tzt8aEejTRQb4UaPULnHuQUl+LUeca1yFH1YUwEEjI2i0U9iTGxr1y4z70E0Nj9o42Uye63U4E3Epj6Gk5pL43Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=eRmiQZqk; arc=none smtp.client-ip=217.70.183.201
+	 In-Reply-To:To:Cc; b=Lwe6HGxQ5RFUOx1+5gAJRxJSQHa3KPZdcuGOvbUnQJlEUIkHfuP9QoA3EecJVcpBtq7bgaZyyObUjkEGumfGLbREGR6vs3DhacoW1hZd14WLd3BtdCLodF/zHZdfUiWozWWZ9Rwza1p1D9P8rcYpzl+eYSSS3WFCmHebxJ0Kxwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Z284BDOJ; arc=none smtp.client-ip=217.70.183.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="eRmiQZqk"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id E46111BF20B;
-	Wed, 15 May 2024 10:01:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Z284BDOJ"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id CD19F1BF213;
+	Wed, 15 May 2024 10:01:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1715767286;
+	t=1715767292;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=KGogtQj5nq7MIjQ8OBcq+m0LGsth8pY35oV+zXBp1Qg=;
-	b=eRmiQZqkTOB37sJmNecYYb6L5eGWwHHm3E9JIKzFuo2CLYM01ZMDoJEcmCDNq2o+fjvi8X
-	/zp2AVkP/ILYZ8NUnm6XUs2i4iJzAwzPs2BFkBiLVFILTjfg8vwO8zDDV/nxG4t9idT4LC
-	YO7gmkwlfzQlXHQtSDBpmNS+U6MQP5nraaBt8tMqLE92WCnyoz/sdX7ZB5NDIL0ye1Giwb
-	DtzqfoTUF/TTRdtT7qI3UBzwlUiNFr9tWdz/J0AoBnbEAGuaBTXKq/CKWYYDWOt8ftWICH
-	kej/9saIc2AyRrifaUIqnusY3FB7wyNhUNHSOBehQkt+BV8e/z71SM1OWFsMGA==
+	bh=jPqUbSf1Qdf1yloJtVBeCvPFg+XlI7QIXeQdbRho+l4=;
+	b=Z284BDOJJLPKstqIHGVQYmD2X1RGEnq6FFY6emrTxhfExkXyrmBDSt1zM7QSObjcfel2/z
+	VnfSkU5SNcQHVM4f4OPImuIV0GcR7YCEXKV/ImscfY4isvsiKqnUSQnC2urvEkbkcyvJnC
+	WGGnTeOiid54zl52PWTBCQw9dw7jvMM53I8HAPjP6Vk2edSqB0UuAsMIUkutLYu1FLNJBR
+	HwVrHEbXOGTTDAXwZcSu9ck2qAeytg0o7e9jbXmwqsKQ6UOI+u3OI0ixRQVmBJbH9nAJde
+	o2GNhJ19a8Vsu85WXNkyzsA+dtkUEMKPwh3UZuP5iFfyhHSIHyW+sApW9VNKLw==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Wed, 15 May 2024 12:01:03 +0200
-Subject: [PATCH v6 02/12] i2c: omap: switch to NOIRQ_SYSTEM_SLEEP_PM_OPS()
- and RUNTIME_PM_OPS()
+Date: Wed, 15 May 2024 12:01:06 +0200
+Subject: [PATCH v6 05/12] mux: mmio: add resume support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,8 +40,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v6-2-4656ef6e6d66@bootlin.com>
+Content-Transfer-Encoding: 8bit
+Message-Id: <20240102-j7200-pcie-s2r-v6-5-4656ef6e6d66@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v6-0-4656ef6e6d66@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v6-0-4656ef6e6d66@bootlin.com>
 To: Linus Walleij <linus.walleij@linaro.org>, 
@@ -63,63 +62,48 @@ Cc: linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org,
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-Replace SET_NOIRQ_SYSTEM_SLEEP_PM_OPS() and SET_RUNTIME_PM_OPS() by
-NOIRQ_SYSTEM_SLEEP_PM_OPS() and RUNTIME_PM_OPS().
-The usage of pm_ptr() and these more recent macros allows the compiler to
-see and drop the dead code.
-The unnecessary '__maybe_unused' annotations on PM functions can be
-removed.
+From: Théo Lebrun <theo.lebrun@bootlin.com>
 
+No need to save something during the suspend stage, as the mux core has an
+internal cache to store the state of muxes.
+
+This cache is used by mux_chip_resume() to restore all muxes.
+
+Signed-off-by: Théo Lebrun <theo.lebrun@bootlin.com>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/i2c/busses/i2c-omap.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/mux/mmio.c | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-diff --git a/drivers/i2c/busses/i2c-omap.c b/drivers/i2c/busses/i2c-omap.c
-index 42165ef57946..258839845b12 100644
---- a/drivers/i2c/busses/i2c-omap.c
-+++ b/drivers/i2c/busses/i2c-omap.c
-@@ -1535,7 +1535,7 @@ static void omap_i2c_remove(struct platform_device *pdev)
- 	pm_runtime_disable(&pdev->dev);
+diff --git a/drivers/mux/mmio.c b/drivers/mux/mmio.c
+index 30a952c34365..00405abe3ce3 100644
+--- a/drivers/mux/mmio.c
++++ b/drivers/mux/mmio.c
+@@ -130,13 +130,25 @@ static int mux_mmio_probe(struct platform_device *pdev)
+ 
+ 	mux_chip->ops = &mux_mmio_ops;
+ 
++	dev_set_drvdata(dev, mux_chip);
++
+ 	return devm_mux_chip_register(dev, mux_chip);
  }
  
--static int __maybe_unused omap_i2c_runtime_suspend(struct device *dev)
-+static int omap_i2c_runtime_suspend(struct device *dev)
- {
- 	struct omap_i2c_dev *omap = dev_get_drvdata(dev);
- 
-@@ -1561,7 +1561,7 @@ static int __maybe_unused omap_i2c_runtime_suspend(struct device *dev)
- 	return 0;
- }
- 
--static int __maybe_unused omap_i2c_runtime_resume(struct device *dev)
-+static int omap_i2c_runtime_resume(struct device *dev)
- {
- 	struct omap_i2c_dev *omap = dev_get_drvdata(dev);
- 
-@@ -1576,10 +1576,10 @@ static int __maybe_unused omap_i2c_runtime_resume(struct device *dev)
- }
- 
- static const struct dev_pm_ops omap_i2c_pm_ops = {
--	SET_NOIRQ_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
--				      pm_runtime_force_resume)
--	SET_RUNTIME_PM_OPS(omap_i2c_runtime_suspend,
--			   omap_i2c_runtime_resume, NULL)
-+	NOIRQ_SYSTEM_SLEEP_PM_OPS(pm_runtime_force_suspend,
-+				  pm_runtime_force_resume)
-+	RUNTIME_PM_OPS(omap_i2c_runtime_suspend,
-+		       omap_i2c_runtime_resume, NULL)
- };
- 
- static struct platform_driver omap_i2c_driver = {
-@@ -1587,7 +1587,7 @@ static struct platform_driver omap_i2c_driver = {
- 	.remove_new	= omap_i2c_remove,
- 	.driver		= {
- 		.name	= "omap_i2c",
--		.pm	= &omap_i2c_pm_ops,
-+		.pm	= pm_ptr(&omap_i2c_pm_ops),
- 		.of_match_table = of_match_ptr(omap_i2c_of_match),
++static int mux_mmio_resume_noirq(struct device *dev)
++{
++	struct mux_chip *mux_chip = dev_get_drvdata(dev);
++
++	return mux_chip_resume(mux_chip);
++}
++
++static DEFINE_NOIRQ_DEV_PM_OPS(mux_mmio_pm_ops, NULL, mux_mmio_resume_noirq);
++
+ static struct platform_driver mux_mmio_driver = {
+ 	.driver = {
+ 		.name = "mmio-mux",
+ 		.of_match_table	= mux_mmio_dt_ids,
++		.pm = pm_sleep_ptr(&mux_mmio_pm_ops),
  	},
+ 	.probe = mux_mmio_probe,
  };
 
 -- 
