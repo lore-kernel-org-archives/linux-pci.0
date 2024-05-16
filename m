@@ -1,317 +1,342 @@
-Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2074.outbound.protection.outlook.com [40.107.220.74])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D0A1448CB;
-	Thu, 16 May 2024 09:34:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.220.74
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715852053; cv=fail; b=K/Qz5nm8bgdyzqZLy1srqmj3g5i0ixaOgmww+2Nb2kQGJKUYKkBVeXTw3xrQz3GAVICaqHjNFO69XoA7L/6DAnT/9IYjUVbOr6wLLrNL3Ie4Tpk89SsIexN63Z/Xke8dmCGYQi0C9dk4BkTFjvCvlLnU2HvrfZGZ2oKrXI7iSL8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715852053; c=relaxed/simple;
-	bh=pjH7lWhaoZTYGCJLu4w4YutR368Fcgi2rLFlDTMQre0=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=V83VfpuBPfOn38ppVPsuak+99shlfyKt2e1QVgFtqMff/VpnCgLNtsiq84S9qhRVm0bx46aHMVclMBS9YyvFUO1HbbQJA9aFGz1JglPqOdt1tyIx1urvkc5iQTSrJwkeEwuHFBQIkE23lckdm0lM3RC0kcwHHLb+eXuhTtdSag8=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=SaPIrMQM; arc=fail smtp.client-ip=40.107.220.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60826144D21;
+	Thu, 16 May 2024 09:34:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715852059; cv=none; b=nD3hUz5yw9kBcROKSMl+4TZCBjbFgjHT6auXm29FIcmJ1OwWvG9K21xRPj4qcnaOm69UHmaV5Q2p923y0kGHaqlj5WXVdTJjtj0Q2FOiuGJA6Jh28SgIUyISsrN7GNUtSkWEExSdv1Ow+LkhGJ8inf01oreyTfOjDVrg+3Iexqw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715852059; c=relaxed/simple;
+	bh=z1bEIZI1MNH9EenT73hgXO8ZkeN9edr3Kn7/hFxax9s=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jHxUgiMTZKui6/Y4mn2uK1TSyPFzw6OyRQ4jCIabVoc9OScXE2E2egzwkKkhWN8lJyhDv1V9dAMV8vdcqEdLbPnU6fCnxuGbzxETRUqWPFY4WAo3nmZG17ZHINZq2xNQCmvNGvJbJOYtSQ3Ruf52lbek5fe3pLglRC3GFXQ9VJQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WwKTJGvM; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="SaPIrMQM"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
- b=g/EoogB7lqyb5eufieMMHUG+TN0P4wcnDGGmDGmNRLJ832bEhLrEduXS/AzkQ76pjOv9OVIC4joQm+mqMwI4820nelgcpdIxTAdqOsiKE1dIZ1pq7FPbDCFO/QvCcwEMRMt8WF/cbbWfBi2eB0sh4L9JM98UXLJSugs/4djOvEVXq1thhrQq89x9o7rFWCIewowTkfbjIpIyiKuqA1B3c8UwsvchqWUnGB1Kq58AplE/GRdeQvayo3rzXZuOZ0jENdakVVhO5FUAAbMJ7HkaVAHn2K1wfPZv987BD6JaM7D9XG0rhZvb4V2f/s2L+iNq0iMKqIUUgz8FPctbuYMCBQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector9901;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=nO8KbzV9Wlyu53SmuLGW5u9WmmJdo64UTJ1CpsyrUy0=;
- b=FSqcbDE/910NBEqSjzIRx8M195uveL2vkdiLq3/Ltc+BbCpJRQxKxLyCDp0JRkLcQI8ivZz5gow9bCrzIGPc7amHQ7ORXO5tmFYRfGV+T7sOPVzVAoqenr67WwerwTyLLEUY6TUtGsSKWkzHvNnkkwOc6/HZQfBQkroov4JQ13ejiBIFtwUeo9FTaoWxcrTQPfrBdBz4cFp7Ql4O477oBN6UuzM0Vt0ybT9H86GfdBoCD/ks7MRDX0CZRYLeIY1m1ZPJ141sSUigfYjoQwjeGC8NsfyYaVMwOzYhc8dvzA+rhTAAOuepWjDLjt3S7Y4c2HHKLEoD7SdyinVDZoy+Gw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
- dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
- header.from=amd.com; dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=nO8KbzV9Wlyu53SmuLGW5u9WmmJdo64UTJ1CpsyrUy0=;
- b=SaPIrMQMhGRiJnzWNI5TKYQjj4z5TjIPy739z9mx/RAfi+00+T4i/I++pJMt+44piVk7j+CGh4lrmRMqVzlv0GDNjqpQ2mCyxR3W2EnwDI6OKjsHXGELzi5qNXbeob7tu22nPU9rm+9Wsip5A98WsbOIvLdR3B9LefM5Kt5o+yc=
-Received: from BL0PR1501CA0003.namprd15.prod.outlook.com
- (2603:10b6:207:17::16) by CH3PR12MB8880.namprd12.prod.outlook.com
- (2603:10b6:610:17b::18) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.26; Thu, 16 May
- 2024 09:34:07 +0000
-Received: from BL6PEPF00022571.namprd02.prod.outlook.com
- (2603:10b6:207:17:cafe::a0) by BL0PR1501CA0003.outlook.office365.com
- (2603:10b6:207:17::16) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.28 via Frontend
- Transport; Thu, 16 May 2024 09:34:06 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
-Received: from SATLEXMB03.amd.com (165.204.84.17) by
- BL6PEPF00022571.mail.protection.outlook.com (10.167.249.39) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.7587.21 via Frontend Transport; Thu, 16 May 2024 09:34:06 +0000
-Received: from SATLEXMB06.amd.com (10.181.40.147) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 16 May
- 2024 04:34:06 -0500
-Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB06.amd.com
- (10.181.40.147) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 16 May
- 2024 04:34:06 -0500
-Received: from sriov-ubuntu2204.amd.com (10.180.168.240) by SATLEXMB03.amd.com
- (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
- Transport; Thu, 16 May 2024 04:34:04 -0500
-From: Lianjie Shi <Lianjie.Shi@amd.com>
-To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Bjorn Helgaas
-	<bhelgaas@google.com>
-CC: Lianjie Shi <Lianjie.Shi@amd.com>
-Subject: [PATCH 1/1] PCI: Support VF resizable BAR
-Date: Thu, 16 May 2024 17:33:34 +0800
-Message-ID: <20240516093334.2266599-2-Lianjie.Shi@amd.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20240516093334.2266599-1-Lianjie.Shi@amd.com>
-References: <20240516093334.2266599-1-Lianjie.Shi@amd.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WwKTJGvM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1715852058; x=1747388058;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=z1bEIZI1MNH9EenT73hgXO8ZkeN9edr3Kn7/hFxax9s=;
+  b=WwKTJGvMoaUzp5sPvSHn5q9a0y7KZngHUGw7Q/nrIq8SGlv7nza46Dbz
+   yvIfsemrHUWje8//c23juv1aSa/neS7t0w3jr3zZct+aTsgEfu5MeqpI2
+   rpxOcYk5bXvhlRJVMtb5LqkYDF7x9A1XkrDPoHL30BMCGXRfY7ZXcUseC
+   GKQrIavVjxwkf8+ScaMV//jSwRTavTGHK3yJQWEp+7IQwtJJVtUQUMwMe
+   Du59dridf3ba9iQpbxQQgV1K7RRK94DRZX83zlp2GhQXXvPu/jYAMkwjA
+   WQR4mW3S1ZjyUr4Yr3nhkoQWzteskEKXDvABAal72Bx6OezjDGeosjE2/
+   A==;
+X-CSE-ConnectionGUID: KtqkfFNXScKEi1l3TUWgGQ==
+X-CSE-MsgGUID: FlRa8US+SQ+qF3IsKyCC7g==
+X-IronPort-AV: E=McAfee;i="6600,9927,11074"; a="23355097"
+X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
+   d="scan'208";a="23355097"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 02:34:17 -0700
+X-CSE-ConnectionGUID: cgN1CT//SLyjTRQzX4ZGLg==
+X-CSE-MsgGUID: P/22DOGFQF6FiIs41t5lyg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
+   d="scan'208";a="31372510"
+Received: from ijarvine-desk1.ger.corp.intel.com (HELO localhost) ([10.245.247.108])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 02:34:12 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	"Maciej W . Rozycki" <macro@orcam.me.uk>,
+	Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	linux-pm@vger.kernel.org,
+	Shuah Khan <shuah@kernel.org>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	linux-kselftest@vger.kernel.org
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Amit Kucheria <amitk@kernel.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH v6 8/8] selftests/pcie_bwctrl: Create selftests
+Date: Thu, 16 May 2024 12:32:22 +0300
+Message-Id: <20240516093222.1684-9-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20240516093222.1684-1-ilpo.jarvinen@linux.intel.com>
+References: <20240516093222.1684-1-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL6PEPF00022571:EE_|CH3PR12MB8880:EE_
-X-MS-Office365-Filtering-Correlation-Id: a254521c-275d-45e2-7dc7-08dc758b550f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230031|36860700004|82310400017|1800799015|376005;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?aev7Fyd08S0gsFynG2oF38SzrrNZko9Gcu5Rb9htfyv8euQ2yvmYng/IPdPj?=
- =?us-ascii?Q?cdKpU0n6f0nzxk5QVv7fr8Ty18Z7rgnBGka8I/2tcuhBwN1Yhp6dpCOSW7sJ?=
- =?us-ascii?Q?ULl+vMQXbqs8L1nWUaDHLpq9Tiqrz8VndbjcgnlnfrH6RcdvY5N8gFITe5QU?=
- =?us-ascii?Q?NnvobrMMjCNchMmnpI5dO+T+XULcP6hUdYOPLqr799u+8tPjEDKDm8fyZh8t?=
- =?us-ascii?Q?sZloc23agrqWQIOJwJOXYyX2FDTR41rgVXnPcMmTJEbDpug+cxantkC9GPN1?=
- =?us-ascii?Q?u79j5UCVUGT+EzGEhDN8cjWLTeOJYHK8f9g4aCSeTKy0iE/fPXYErM22RhRp?=
- =?us-ascii?Q?TE22lJCG3YCh/GIhpFv9bcqGDNr7YhzuXGTT2xdr9ldLCPUVe1QINrfEIp1c?=
- =?us-ascii?Q?0t8Jh56x+/edC0S0GNgQMe2uHKmh8eICgFOIqMnuHuosiBmpTCW5KtyJhOOt?=
- =?us-ascii?Q?R/UQDy87TstAt2mwf8cKm3d20jJ365VTYWiqGn//KZqmzTy3f+xLA+BDgIbL?=
- =?us-ascii?Q?ofeNtsV3ZZpdzhFJ78KyMkQAL1729u5k33Nt3aSV6M+bGfwiMSDvLZIh4VHc?=
- =?us-ascii?Q?jH7Xx4bsipp5S6oM7g0OIQYeRz8JJzxloQ3NvUdX3dAg+QdGg1LL70miqm5F?=
- =?us-ascii?Q?HCSq7jbw68oaFxhQOHipfBCCE9N9nPAmz/RWrTvD6Fa61z67lAYLYizsMuyN?=
- =?us-ascii?Q?95MQEF76zJVI/5aBSgIFvQGaCrlhtqJ97HNbwxBrbN42WeiARuiO9un2iwLC?=
- =?us-ascii?Q?vwXDRpGUlSqogddFgZx/E90aj//LbAlnxc3F7bi+Kz8rvUvBRyyzC5DbXtjo?=
- =?us-ascii?Q?sdOsA8urTI7BcOUqTYwY4L7w8QiexW4Se3cs+m3wRsfQG9EW6f91cNE5Jpx/?=
- =?us-ascii?Q?aoGMVY64DSt2P7ZsJma+0U1xI9A12+11BwhG8XQiKORtaC3LpUh4jqB4yHTQ?=
- =?us-ascii?Q?UEeLPPOLpX6zUig/dWbxXQoVza9qxFq2SwJRp7aF8M2kU1TpoaGOSNSYaG5A?=
- =?us-ascii?Q?toSYAJlk6mCLrsN6fxtGQQibhed+/Tv4x2A2zMTSm8IX7pmEcDBmbdsIub/o?=
- =?us-ascii?Q?W1pzTuRy3C/vTMJivtmI2b+HUX1LCsIzu52j3EHz0FzoARwgV70eETvqxx/i?=
- =?us-ascii?Q?cmfL553NsboAEZ9YDPZGy307oKfKZiOt0cyJBEAOYMAENU9bvTCG7OsTZ44N?=
- =?us-ascii?Q?PoOGcAlQKbw3H9MLCvlFhgczDGkgAFuhfTttoh/CLTrx7lm2TEw/XZ4K6qCq?=
- =?us-ascii?Q?74WkpfBN7wXsLXniViGst3tuhqQonC+GPN8zt6YUUBKiw4sIDtIQKmv3bDxN?=
- =?us-ascii?Q?74xiXx9kxIB9AG0sS5AoYNci?=
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(36860700004)(82310400017)(1800799015)(376005);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 May 2024 09:34:06.7281
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: a254521c-275d-45e2-7dc7-08dc758b550f
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	BL6PEPF00022571.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8880
 
-Add support for VF resizable BAR PCI extended cap.
-Similar to regular BAR, drivers can use pci_resize_resource() to
-resize an IOV BAR. For each VF, dev->sriov->barsz of the IOV BAR is
-resized, but the total resource size of the IOV resource should not
-exceed its original size upon init.
+Create selftests for PCIe BW control through the PCIe cooling device
+sysfs interface.
 
-Based on following patch series:
-Link: https://lore.kernel.org/lkml/YbqGplTKl5i%2F1%2FkY@rocinante/T/
+First, the BW control selftest finds the PCIe Port to test with. By
+default, the PCIe Port with the highest Link Speed is selected but
+another PCIe Port can be provided with -d parameter.
 
-Signed-off-by: Lianjie Shi <Lianjie.Shi@amd.com>
+The actual test steps the cur_state of the cooling device one-by-one
+from max_state to what the cur_state was initially. The speed change
+is confirmed by observing the current_link_speed for the corresponding
+PCIe Port.
+
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/pci/pci.c             | 44 +++++++++++++++++++++++++++++++++-
- drivers/pci/setup-res.c       | 45 +++++++++++++++++++++++++++++------
- include/uapi/linux/pci_regs.h |  1 +
- 3 files changed, 82 insertions(+), 8 deletions(-)
+ MAINTAINERS                                   |   1 +
+ tools/testing/selftests/Makefile              |   1 +
+ tools/testing/selftests/pcie_bwctrl/Makefile  |   2 +
+ .../pcie_bwctrl/set_pcie_cooling_state.sh     | 122 ++++++++++++++++++
+ .../selftests/pcie_bwctrl/set_pcie_speed.sh   |  67 ++++++++++
+ 5 files changed, 193 insertions(+)
+ create mode 100644 tools/testing/selftests/pcie_bwctrl/Makefile
+ create mode 100755 tools/testing/selftests/pcie_bwctrl/set_pcie_cooling_state.sh
+ create mode 100755 tools/testing/selftests/pcie_bwctrl/set_pcie_speed.sh
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index e5f243dd4..bb9a2f322 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -1867,6 +1867,39 @@ static void pci_restore_rebar_state(struct pci_dev *pdev)
- 	}
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3a94ae81b13f..5a3b69515256 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -17106,6 +17106,7 @@ S:	Supported
+ F:	drivers/pci/pcie/bwctrl.c
+ F:	drivers/thermal/pcie_cooling.c
+ F:	include/linux/pci-bwctrl.h
++F:	tools/testing/selftests/pcie_bwctrl/
  
-+static void pci_restore_vf_rebar_state(struct pci_dev *pdev)
+ PCIE DRIVER FOR AMAZON ANNAPURNA LABS
+ M:	Jonathan Chocron <jonnyc@amazon.com>
+diff --git a/tools/testing/selftests/Makefile b/tools/testing/selftests/Makefile
+index e1504833654d..ac0bc8af4123 100644
+--- a/tools/testing/selftests/Makefile
++++ b/tools/testing/selftests/Makefile
+@@ -65,6 +65,7 @@ TARGETS += net/openvswitch
+ TARGETS += net/tcp_ao
+ TARGETS += netfilter
+ TARGETS += nsfs
++TARGETS += pcie_bwctrl
+ TARGETS += perf_events
+ TARGETS += pidfd
+ TARGETS += pid_namespace
+diff --git a/tools/testing/selftests/pcie_bwctrl/Makefile b/tools/testing/selftests/pcie_bwctrl/Makefile
+new file mode 100644
+index 000000000000..3e84e26341d1
+--- /dev/null
++++ b/tools/testing/selftests/pcie_bwctrl/Makefile
+@@ -0,0 +1,2 @@
++TEST_PROGS = set_pcie_cooling_state.sh
++include ../lib.mk
+diff --git a/tools/testing/selftests/pcie_bwctrl/set_pcie_cooling_state.sh b/tools/testing/selftests/pcie_bwctrl/set_pcie_cooling_state.sh
+new file mode 100755
+index 000000000000..9df606552af3
+--- /dev/null
++++ b/tools/testing/selftests/pcie_bwctrl/set_pcie_cooling_state.sh
+@@ -0,0 +1,122 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++SYSFS=
++# Kselftest framework requirement - SKIP code is 4.
++ksft_skip=4
++retval=0
++skipmsg="skip all tests:"
++
++PCIEPORTTYPE="PCIe_Port_Link_Speed"
++
++prerequisite()
 +{
-+#ifdef CONFIG_PCI_IOV
-+	unsigned int pos, nbars, i;
-+	u32 ctrl;
-+	u16 total;
++	local ports
 +
-+	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_VF_REBAR);
-+	if (!pos)
-+		return;
++	if [ $UID != 0 ]; then
++		echo $skipmsg must be run as root >&2
++		exit $ksft_skip
++	fi
 +
-+	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, ctrl);
++	SYSFS=`mount -t sysfs | head -1 | awk '{ print $3 }'`
 +
-+	for (i = 0; i < nbars; i++, pos += 8) {
-+		struct resource *res;
-+		int bar_idx, size;
++	if [ ! -d "$SYSFS" ]; then
++		echo $skipmsg sysfs is not mounted >&2
++		exit $ksft_skip
++	fi
 +
-+		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
-+		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
-+		total = pdev->sriov->total_VFs;
-+		if (!total)
-+			return;
++	if ! ls $SYSFS/class/thermal/cooling_device* > /dev/null 2>&1; then
++		echo $skipmsg thermal cooling devices missing >&2
++		exit $ksft_skip
++	fi
 +
-+		res = pdev->resource + bar_idx + PCI_IOV_RESOURCES;
-+		size = pci_rebar_bytes_to_size(resource_size(res) / total);
-+		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
-+		ctrl |= FIELD_PREP(PCI_REBAR_CTRL_BAR_SIZE, size);
-+		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
-+	}
-+#endif
++	ports=`grep -e "^$PCIEPORTTYPE" $SYSFS/class/thermal/cooling_device*/type | wc -l`
++	if [ $ports -eq 0 ]; then
++		echo $skipmsg pcie cooling devices missing >&2
++		exit $ksft_skip
++	fi
 +}
 +
- /**
-  * pci_restore_state - Restore the saved state of a PCI device
-  * @dev: PCI device that we're dealing with
-@@ -1882,6 +1915,7 @@ void pci_restore_state(struct pci_dev *dev)
- 	pci_restore_ats_state(dev);
- 	pci_restore_vc_state(dev);
- 	pci_restore_rebar_state(dev);
-+	pci_restore_vf_rebar_state(dev);
- 	pci_restore_dpc_state(dev);
- 	pci_restore_ptm_state(dev);
- 
-@@ -3677,10 +3711,18 @@ void pci_acs_init(struct pci_dev *dev)
-  */
- static int pci_rebar_find_pos(struct pci_dev *pdev, int bar)
- {
-+	int cap = PCI_EXT_CAP_ID_REBAR;
- 	unsigned int pos, nbars, i;
- 	u32 ctrl;
- 
--	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
-+#ifdef CONFIG_PCI_IOV
-+	if (bar >= PCI_IOV_RESOURCES) {
-+		cap = PCI_EXT_CAP_ID_VF_REBAR;
-+		bar -= PCI_IOV_RESOURCES;
-+	}
-+#endif
-+
-+	pos = pci_find_ext_capability(pdev, cap);
- 	if (!pos)
- 		return -ENOTSUPP;
- 
-diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
-index c6d933ddf..d978a2ccf 100644
---- a/drivers/pci/setup-res.c
-+++ b/drivers/pci/setup-res.c
-@@ -427,13 +427,32 @@ void pci_release_resource(struct pci_dev *dev, int resno)
- }
- EXPORT_SYMBOL(pci_release_resource);
- 
-+static int pci_memory_decoding(struct pci_dev *dev, int resno)
++testport=
++find_pcie_port()
 +{
-+	u16 cmd;
++	local patt="$1"
++	local pcieports
++	local max
++	local cur
++	local delta
++	local bestdelta=-1
 +
-+#ifdef CONFIG_PCI_IOV
-+	if (resno >= PCI_IOV_RESOURCES) {
-+		pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_CTRL, &cmd);
-+		if (cmd & PCI_SRIOV_CTRL_MSE)
-+			return -EBUSY;
-+		else
-+			return 0;
-+	}
-+#endif
-+	pci_read_config_word(dev, PCI_COMMAND, &cmd);
-+	if (cmd & PCI_COMMAND_MEMORY)
-+		return -EBUSY;
-+
-+	return 0;
++	pcieports=`grep -l -F -e "$patt" /sys/class/thermal/cooling_device*/type`
++	if [ -z "$pcieports" ]; then
++		return
++	fi
++	pcieports=${pcieports//\/type/}
++	# Find the port with the highest PCIe Link Speed
++	for port in $pcieports; do
++		max=`cat $port/max_state`
++		cur=`cat $port/cur_state`
++		delta=$((max-cur))
++		if [ $delta -gt $bestdelta ]; then
++			testport="$port"
++			bestdelta=$delta
++		fi
++	done
 +}
 +
- int pci_resize_resource(struct pci_dev *dev, int resno, int size)
- {
- 	struct resource *res = dev->resource + resno;
- 	struct pci_host_bridge *host;
- 	int old, ret;
- 	u32 sizes;
--	u16 cmd;
- 
- 	/* Check if we must preserve the firmware's resource assignment */
- 	host = pci_find_host_bridge(dev->bus);
-@@ -444,9 +463,9 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
- 	if (!(res->flags & IORESOURCE_UNSET))
- 		return -EBUSY;
- 
--	pci_read_config_word(dev, PCI_COMMAND, &cmd);
--	if (cmd & PCI_COMMAND_MEMORY)
--		return -EBUSY;
-+	ret = pci_memory_decoding(dev, resno);
-+	if (ret)
-+		return ret;
- 
- 	sizes = pci_rebar_get_possible_sizes(dev, resno);
- 	if (!sizes)
-@@ -463,19 +482,31 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
- 	if (ret)
- 		return ret;
- 
--	res->end = res->start + pci_rebar_size_to_bytes(size) - 1;
-+#ifdef CONFIG_PCI_IOV
-+	if (resno >= PCI_IOV_RESOURCES)
-+		dev->sriov->barsz[resno - PCI_IOV_RESOURCES] = pci_rebar_size_to_bytes(size);
-+	else
-+#endif
-+		res->end = res->start + pci_rebar_size_to_bytes(size) - 1;
- 
- 	/* Check if the new config works by trying to assign everything. */
- 	if (dev->bus->self) {
- 		ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
--		if (ret)
-+		if (ret && ret != -ENOENT)
- 			goto error_resize;
- 	}
- 	return 0;
- 
- error_resize:
- 	pci_rebar_set_size(dev, resno, old);
--	res->end = res->start + pci_rebar_size_to_bytes(old) - 1;
++sysfspcidev=
++find_sysfs_pci_dev()
++{
++	local typefile="$1/type"
++	local pcidir
 +
-+#ifdef CONFIG_PCI_IOV
-+	if (resno >= PCI_IOV_RESOURCES)
-+		dev->sriov->barsz[resno - PCI_IOV_RESOURCES] = pci_rebar_size_to_bytes(old);
-+	else
-+#endif
-+		res->end = res->start + pci_rebar_size_to_bytes(old) - 1;
++	pcidir="$SYSFS/bus/pci/devices/`sed -e "s|^${PCIEPORTTYPE}_||g" $typefile`"
 +
- 	return ret;
- }
- EXPORT_SYMBOL(pci_resize_resource);
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index a39193213..a66b90982 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -738,6 +738,7 @@
- #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
- #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
- #define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
-+#define PCI_EXT_CAP_ID_VF_REBAR	0x24	/* VF Resizable BAR */
- #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
- #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
- #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
++	if [ -r "$pcidir/current_link_speed" ]; then
++		sysfspcidev="$pcidir/current_link_speed"
++	fi
++}
++
++usage()
++{
++	echo "Usage $0 [ -d dev ]"
++	echo -e "\t-d: PCIe port BDF string (e.g., 0000:00:04.0)"
++}
++
++pattern="$PCIEPORTTYPE"
++parse_arguments()
++{
++	while getopts d:h opt; do
++		case $opt in
++			h)
++				usage "$0"
++				exit 0
++				;;
++			d)
++				pattern="$PCIEPORTTYPE_$OPTARG"
++				;;
++			*)
++				usage "$0"
++				exit 0
++				;;
++		esac
++	done
++}
++
++parse_arguments "$@"
++prerequisite
++find_pcie_port "$pattern"
++if [ -z "$testport" ]; then
++	echo $skipmsg "pcie cooling device not found from sysfs" >&2
++	exit $ksft_skip
++fi
++find_sysfs_pci_dev "$testport"
++if [ -z "$sysfspcidev" ]; then
++	echo $skipmsg "PCIe port device not found from sysfs" >&2
++	exit $ksft_skip
++fi
++
++./set_pcie_speed.sh "$testport" "$sysfspcidev"
++retval=$?
++
++exit $retval
+diff --git a/tools/testing/selftests/pcie_bwctrl/set_pcie_speed.sh b/tools/testing/selftests/pcie_bwctrl/set_pcie_speed.sh
+new file mode 100755
+index 000000000000..584596949312
+--- /dev/null
++++ b/tools/testing/selftests/pcie_bwctrl/set_pcie_speed.sh
+@@ -0,0 +1,67 @@
++#!/bin/bash
++# SPDX-License-Identifier: GPL-2.0-or-later
++
++set -e
++
++TESTNAME=set_pcie_speed
++
++declare -a PCIELINKSPEED=(
++	"2.5 GT/s PCIe"
++	"5.0 GT/s PCIe"
++	"8.0 GT/s PCIe"
++	"16.0 GT/s PCIe"
++	"32.0 GT/s PCIe"
++	"64.0 GT/s PCIe"
++)
++
++# Kselftest framework requirement - SKIP code is 4.
++ksft_skip=4
++retval=0
++
++coolingdev="$1"
++statefile="$coolingdev/cur_state"
++maxfile="$coolingdev/max_state"
++linkspeedfile="$2"
++
++oldstate=`cat $statefile`
++maxstate=`cat $maxfile`
++
++set_state()
++{
++	local state=$1
++	local linkspeed
++	local expected_linkspeed
++
++	echo $state > $statefile
++
++	sleep 1
++
++	linkspeed="`cat $linkspeedfile`"
++	expected_linkspeed=$((maxstate-state))
++	expected_str="${PCIELINKSPEED[$expected_linkspeed]}"
++	if [ ! "${expected_str}" = "${linkspeed}" ]; then
++		echo "$TESTNAME failed: expected: ${expected_str}; got ${linkspeed}"
++		retval=1
++	fi
++}
++
++cleanup_skip ()
++{
++	set_state $oldstate
++	exit $ksft_skip
++}
++
++trap cleanup_skip EXIT
++
++echo "$TESTNAME: testing states $maxstate .. $oldstate with $coolingdev"
++for i in $(seq $maxstate -1 $oldstate); do
++	set_state "$i"
++done
++
++trap EXIT
++if [ $retval -eq 0 ]; then
++	echo "$TESTNAME [PASS]"
++else
++	echo "$TESTNAME [FAIL]"
++fi
++exit $retval
 -- 
-2.34.1
+2.39.2
 
