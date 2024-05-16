@@ -1,327 +1,317 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2074.outbound.protection.outlook.com [40.107.220.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B8E1144317;
-	Thu, 16 May 2024 09:34:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715852048; cv=none; b=N/8N9HklFbAzyWsYy7P51VZp6t6d6XN+JjvGxHK8YkmoNUcUJfeDSIPIjU1LOisLtV9cCyvn1fUFJQA3qXry2qRagatTWqh9MdeGG3MhsMCSou1xvJCSbtJcwqwk+GqWaDkN4P0enVMM55WfKnc42A6IU655ymwM2qmZOkHD3jw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715852048; c=relaxed/simple;
-	bh=ZzbyjOkJxa4z/Qz3gvuL/n1sfN3XgXLqmsGCeM2kmMA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AkGsCqeqKmdtJP/zzQCOZcmgP5XolPQ/BrHcNa3ztkRzf+Cm+hBixZuPD5azApBbyPS9HaBFqOMhhHpXUVgkp22NxQRpKMrmVcHiJ2YD0y1/p0Y9q26a/XybR6sG9yE/C+SESUYhF+BLFpDNkyHTHs0xrnu0hdHumxAV7e2IKUQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eU9RSQ2I; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63D0A1448CB;
+	Thu, 16 May 2024 09:34:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.220.74
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715852053; cv=fail; b=K/Qz5nm8bgdyzqZLy1srqmj3g5i0ixaOgmww+2Nb2kQGJKUYKkBVeXTw3xrQz3GAVICaqHjNFO69XoA7L/6DAnT/9IYjUVbOr6wLLrNL3Ie4Tpk89SsIexN63Z/Xke8dmCGYQi0C9dk4BkTFjvCvlLnU2HvrfZGZ2oKrXI7iSL8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715852053; c=relaxed/simple;
+	bh=pjH7lWhaoZTYGCJLu4w4YutR368Fcgi2rLFlDTMQre0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=V83VfpuBPfOn38ppVPsuak+99shlfyKt2e1QVgFtqMff/VpnCgLNtsiq84S9qhRVm0bx46aHMVclMBS9YyvFUO1HbbQJA9aFGz1JglPqOdt1tyIx1urvkc5iQTSrJwkeEwuHFBQIkE23lckdm0lM3RC0kcwHHLb+eXuhTtdSag8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=SaPIrMQM; arc=fail smtp.client-ip=40.107.220.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eU9RSQ2I"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715852047; x=1747388047;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=ZzbyjOkJxa4z/Qz3gvuL/n1sfN3XgXLqmsGCeM2kmMA=;
-  b=eU9RSQ2InCOPXzKEcHhcJ6DPtQUEER2KQhZI9inA7nj8Hs59Vv1bsQ5/
-   5PBAHeKl8+xYdUpZisSMYL3UowhOYPTzmL9xxY9Hj/WHMwy0KUlgyxMx8
-   7AiFJoC6vePC1+TS0Xvh39duYEo8g29tW2phVDhur18F9YmtIy+rGML21
-   UyX3sMhGr5iG6RVCoca5yEfdmzwC3ji+NienZqVROS7aJoA27EcDCRbAa
-   lbBLBduF0c22FzlCwMSEF/TYP4+3pdf64bEZ+oXUok7Ju+KtNsWrPl32M
-   /WGp5H+BkWxPu5uBKokctDKDbNT2h4WnVntpLNQtTb3wBjog0JWXcZxzb
-   g==;
-X-CSE-ConnectionGUID: 2sUCxSqgTk2uaMaCRdto8w==
-X-CSE-MsgGUID: ZUMqAZXbQcKyd1bWNsC1rQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11074"; a="23355048"
-X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
-   d="scan'208";a="23355048"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 02:34:06 -0700
-X-CSE-ConnectionGUID: Kmjrx8OOTOq3nPI0Raxxmw==
-X-CSE-MsgGUID: FWOAUXICTqyh4+ctSk8Tgg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
-   d="scan'208";a="31372502"
-Received: from ijarvine-desk1.ger.corp.intel.com (HELO localhost) ([10.245.247.108])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 02:34:01 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	"Maciej W . Rozycki" <macro@orcam.me.uk>,
-	Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	linux-pm@vger.kernel.org,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Lukasz Luba <lukasz.luba@arm.com>,
-	linux-kernel@vger.kernel.org
-Cc: Amit Kucheria <amitk@kernel.org>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: [PATCH v6 7/8] thermal: Add PCIe cooling driver
-Date: Thu, 16 May 2024 12:32:21 +0300
-Message-Id: <20240516093222.1684-8-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240516093222.1684-1-ilpo.jarvinen@linux.intel.com>
-References: <20240516093222.1684-1-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="SaPIrMQM"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=g/EoogB7lqyb5eufieMMHUG+TN0P4wcnDGGmDGmNRLJ832bEhLrEduXS/AzkQ76pjOv9OVIC4joQm+mqMwI4820nelgcpdIxTAdqOsiKE1dIZ1pq7FPbDCFO/QvCcwEMRMt8WF/cbbWfBi2eB0sh4L9JM98UXLJSugs/4djOvEVXq1thhrQq89x9o7rFWCIewowTkfbjIpIyiKuqA1B3c8UwsvchqWUnGB1Kq58AplE/GRdeQvayo3rzXZuOZ0jENdakVVhO5FUAAbMJ7HkaVAHn2K1wfPZv987BD6JaM7D9XG0rhZvb4V2f/s2L+iNq0iMKqIUUgz8FPctbuYMCBQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=nO8KbzV9Wlyu53SmuLGW5u9WmmJdo64UTJ1CpsyrUy0=;
+ b=FSqcbDE/910NBEqSjzIRx8M195uveL2vkdiLq3/Ltc+BbCpJRQxKxLyCDp0JRkLcQI8ivZz5gow9bCrzIGPc7amHQ7ORXO5tmFYRfGV+T7sOPVzVAoqenr67WwerwTyLLEUY6TUtGsSKWkzHvNnkkwOc6/HZQfBQkroov4JQ13ejiBIFtwUeo9FTaoWxcrTQPfrBdBz4cFp7Ql4O477oBN6UuzM0Vt0ybT9H86GfdBoCD/ks7MRDX0CZRYLeIY1m1ZPJ141sSUigfYjoQwjeGC8NsfyYaVMwOzYhc8dvzA+rhTAAOuepWjDLjt3S7Y4c2HHKLEoD7SdyinVDZoy+Gw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=nO8KbzV9Wlyu53SmuLGW5u9WmmJdo64UTJ1CpsyrUy0=;
+ b=SaPIrMQMhGRiJnzWNI5TKYQjj4z5TjIPy739z9mx/RAfi+00+T4i/I++pJMt+44piVk7j+CGh4lrmRMqVzlv0GDNjqpQ2mCyxR3W2EnwDI6OKjsHXGELzi5qNXbeob7tu22nPU9rm+9Wsip5A98WsbOIvLdR3B9LefM5Kt5o+yc=
+Received: from BL0PR1501CA0003.namprd15.prod.outlook.com
+ (2603:10b6:207:17::16) by CH3PR12MB8880.namprd12.prod.outlook.com
+ (2603:10b6:610:17b::18) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.26; Thu, 16 May
+ 2024 09:34:07 +0000
+Received: from BL6PEPF00022571.namprd02.prod.outlook.com
+ (2603:10b6:207:17:cafe::a0) by BL0PR1501CA0003.outlook.office365.com
+ (2603:10b6:207:17::16) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.28 via Frontend
+ Transport; Thu, 16 May 2024 09:34:06 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ BL6PEPF00022571.mail.protection.outlook.com (10.167.249.39) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.7587.21 via Frontend Transport; Thu, 16 May 2024 09:34:06 +0000
+Received: from SATLEXMB06.amd.com (10.181.40.147) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 16 May
+ 2024 04:34:06 -0500
+Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB06.amd.com
+ (10.181.40.147) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 16 May
+ 2024 04:34:06 -0500
+Received: from sriov-ubuntu2204.amd.com (10.180.168.240) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
+ Transport; Thu, 16 May 2024 04:34:04 -0500
+From: Lianjie Shi <Lianjie.Shi@amd.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>
+CC: Lianjie Shi <Lianjie.Shi@amd.com>
+Subject: [PATCH 1/1] PCI: Support VF resizable BAR
+Date: Thu, 16 May 2024 17:33:34 +0800
+Message-ID: <20240516093334.2266599-2-Lianjie.Shi@amd.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240516093334.2266599-1-Lianjie.Shi@amd.com>
+References: <20240516093334.2266599-1-Lianjie.Shi@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL6PEPF00022571:EE_|CH3PR12MB8880:EE_
+X-MS-Office365-Filtering-Correlation-Id: a254521c-275d-45e2-7dc7-08dc758b550f
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230031|36860700004|82310400017|1800799015|376005;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?aev7Fyd08S0gsFynG2oF38SzrrNZko9Gcu5Rb9htfyv8euQ2yvmYng/IPdPj?=
+ =?us-ascii?Q?cdKpU0n6f0nzxk5QVv7fr8Ty18Z7rgnBGka8I/2tcuhBwN1Yhp6dpCOSW7sJ?=
+ =?us-ascii?Q?ULl+vMQXbqs8L1nWUaDHLpq9Tiqrz8VndbjcgnlnfrH6RcdvY5N8gFITe5QU?=
+ =?us-ascii?Q?NnvobrMMjCNchMmnpI5dO+T+XULcP6hUdYOPLqr799u+8tPjEDKDm8fyZh8t?=
+ =?us-ascii?Q?sZloc23agrqWQIOJwJOXYyX2FDTR41rgVXnPcMmTJEbDpug+cxantkC9GPN1?=
+ =?us-ascii?Q?u79j5UCVUGT+EzGEhDN8cjWLTeOJYHK8f9g4aCSeTKy0iE/fPXYErM22RhRp?=
+ =?us-ascii?Q?TE22lJCG3YCh/GIhpFv9bcqGDNr7YhzuXGTT2xdr9ldLCPUVe1QINrfEIp1c?=
+ =?us-ascii?Q?0t8Jh56x+/edC0S0GNgQMe2uHKmh8eICgFOIqMnuHuosiBmpTCW5KtyJhOOt?=
+ =?us-ascii?Q?R/UQDy87TstAt2mwf8cKm3d20jJ365VTYWiqGn//KZqmzTy3f+xLA+BDgIbL?=
+ =?us-ascii?Q?ofeNtsV3ZZpdzhFJ78KyMkQAL1729u5k33Nt3aSV6M+bGfwiMSDvLZIh4VHc?=
+ =?us-ascii?Q?jH7Xx4bsipp5S6oM7g0OIQYeRz8JJzxloQ3NvUdX3dAg+QdGg1LL70miqm5F?=
+ =?us-ascii?Q?HCSq7jbw68oaFxhQOHipfBCCE9N9nPAmz/RWrTvD6Fa61z67lAYLYizsMuyN?=
+ =?us-ascii?Q?95MQEF76zJVI/5aBSgIFvQGaCrlhtqJ97HNbwxBrbN42WeiARuiO9un2iwLC?=
+ =?us-ascii?Q?vwXDRpGUlSqogddFgZx/E90aj//LbAlnxc3F7bi+Kz8rvUvBRyyzC5DbXtjo?=
+ =?us-ascii?Q?sdOsA8urTI7BcOUqTYwY4L7w8QiexW4Se3cs+m3wRsfQG9EW6f91cNE5Jpx/?=
+ =?us-ascii?Q?aoGMVY64DSt2P7ZsJma+0U1xI9A12+11BwhG8XQiKORtaC3LpUh4jqB4yHTQ?=
+ =?us-ascii?Q?UEeLPPOLpX6zUig/dWbxXQoVza9qxFq2SwJRp7aF8M2kU1TpoaGOSNSYaG5A?=
+ =?us-ascii?Q?toSYAJlk6mCLrsN6fxtGQQibhed+/Tv4x2A2zMTSm8IX7pmEcDBmbdsIub/o?=
+ =?us-ascii?Q?W1pzTuRy3C/vTMJivtmI2b+HUX1LCsIzu52j3EHz0FzoARwgV70eETvqxx/i?=
+ =?us-ascii?Q?cmfL553NsboAEZ9YDPZGy307oKfKZiOt0cyJBEAOYMAENU9bvTCG7OsTZ44N?=
+ =?us-ascii?Q?PoOGcAlQKbw3H9MLCvlFhgczDGkgAFuhfTttoh/CLTrx7lm2TEw/XZ4K6qCq?=
+ =?us-ascii?Q?74WkpfBN7wXsLXniViGst3tuhqQonC+GPN8zt6YUUBKiw4sIDtIQKmv3bDxN?=
+ =?us-ascii?Q?74xiXx9kxIB9AG0sS5AoYNci?=
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(36860700004)(82310400017)(1800799015)(376005);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 May 2024 09:34:06.7281
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: a254521c-275d-45e2-7dc7-08dc758b550f
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL6PEPF00022571.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR12MB8880
 
-Add a thermal cooling driver to provide path to access PCIe bandwidth
-controller using the usual thermal interfaces.
+Add support for VF resizable BAR PCI extended cap.
+Similar to regular BAR, drivers can use pci_resize_resource() to
+resize an IOV BAR. For each VF, dev->sriov->barsz of the IOV BAR is
+resized, but the total resource size of the IOV resource should not
+exceed its original size upon init.
 
-A cooling device is instantiated for controllable PCIe Ports from the
-bwctrl service driver.
+Based on following patch series:
+Link: https://lore.kernel.org/lkml/YbqGplTKl5i%2F1%2FkY@rocinante/T/
 
-If registering the cooling device fails, allow bwctrl's probe to
-succeed regardless. As cdev in that case contains IS_ERR() pseudo
-"pointer", clean that up inside the probe function so the remove side
-doesn't need to suddenly make an odd looking IS_ERR() check.
-
-The thermal side state 0 means no throttling, i.e., maximum supported
-PCIe Link Speed.
-
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Acked-by: Rafael J. Wysocki <rafael@kernel.org> # From the cooling device interface perspective
+Signed-off-by: Lianjie Shi <Lianjie.Shi@amd.com>
 ---
- MAINTAINERS                    |  2 +
- drivers/pci/pcie/bwctrl.c      | 11 +++++
- drivers/thermal/Kconfig        | 10 +++++
- drivers/thermal/Makefile       |  2 +
- drivers/thermal/pcie_cooling.c | 80 ++++++++++++++++++++++++++++++++++
- include/linux/pci-bwctrl.h     | 28 ++++++++++++
- 6 files changed, 133 insertions(+)
- create mode 100644 drivers/thermal/pcie_cooling.c
- create mode 100644 include/linux/pci-bwctrl.h
+ drivers/pci/pci.c             | 44 +++++++++++++++++++++++++++++++++-
+ drivers/pci/setup-res.c       | 45 +++++++++++++++++++++++++++++------
+ include/uapi/linux/pci_regs.h |  1 +
+ 3 files changed, 82 insertions(+), 8 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index bd420cb09821..3a94ae81b13f 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -17104,6 +17104,8 @@ M:	Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
- L:	linux-pci@vger.kernel.org
- S:	Supported
- F:	drivers/pci/pcie/bwctrl.c
-+F:	drivers/thermal/pcie_cooling.c
-+F:	include/linux/pci-bwctrl.h
- 
- PCIE DRIVER FOR AMAZON ANNAPURNA LABS
- M:	Jonathan Chocron <jonnyc@amazon.com>
-diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
-index c44da36ef81a..c1d0ccbcc3ab 100644
---- a/drivers/pci/pcie/bwctrl.c
-+++ b/drivers/pci/pcie/bwctrl.c
-@@ -27,6 +27,7 @@
- #include <linux/interrupt.h>
- #include <linux/mutex.h>
- #include <linux/pci.h>
-+#include <linux/pci-bwctrl.h>
- #include <linux/rwsem.h>
- #include <linux/slab.h>
- #include <linux/types.h>
-@@ -38,10 +39,12 @@
-  * struct pcie_bwctrl_data - PCIe bandwidth controller
-  * @set_speed_mutex:	Serializes link speed changes
-  * @lbms_count:		Count for LBMS (since last reset)
-+ * @cdev:		thermal cooling device associated with the port
-  */
- struct pcie_bwctrl_data {
- 	struct mutex set_speed_mutex;
- 	atomic_t lbms_count;
-+	struct thermal_cooling_device *cdev;
- };
- 
- static bool pcie_valid_speed(enum pci_bus_speed speed)
-@@ -290,6 +293,11 @@ static int pcie_bwnotif_probe(struct pcie_device *srv)
- 
- 	pci_dbg(port, "enabled with IRQ %d\n", srv->irq);
- 
-+	/* Don't fail on errors. Don't leave IS_ERR() "pointer" into ->cdev */
-+	port->link_bwctrl->cdev = pcie_cooling_device_register(port);
-+	if (IS_ERR(port->link_bwctrl->cdev))
-+		port->link_bwctrl->cdev = NULL;
-+
- 	return 0;
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e5f243dd4..bb9a2f322 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -1867,6 +1867,39 @@ static void pci_restore_rebar_state(struct pci_dev *pdev)
+ 	}
  }
  
-@@ -297,6 +305,9 @@ static void pcie_bwnotif_remove(struct pcie_device *srv)
++static void pci_restore_vf_rebar_state(struct pci_dev *pdev)
++{
++#ifdef CONFIG_PCI_IOV
++	unsigned int pos, nbars, i;
++	u32 ctrl;
++	u16 total;
++
++	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_VF_REBAR);
++	if (!pos)
++		return;
++
++	pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++	nbars = FIELD_GET(PCI_REBAR_CTRL_NBAR_MASK, ctrl);
++
++	for (i = 0; i < nbars; i++, pos += 8) {
++		struct resource *res;
++		int bar_idx, size;
++
++		pci_read_config_dword(pdev, pos + PCI_REBAR_CTRL, &ctrl);
++		bar_idx = ctrl & PCI_REBAR_CTRL_BAR_IDX;
++		total = pdev->sriov->total_VFs;
++		if (!total)
++			return;
++
++		res = pdev->resource + bar_idx + PCI_IOV_RESOURCES;
++		size = pci_rebar_bytes_to_size(resource_size(res) / total);
++		ctrl &= ~PCI_REBAR_CTRL_BAR_SIZE;
++		ctrl |= FIELD_PREP(PCI_REBAR_CTRL_BAR_SIZE, size);
++		pci_write_config_dword(pdev, pos + PCI_REBAR_CTRL, ctrl);
++	}
++#endif
++}
++
+ /**
+  * pci_restore_state - Restore the saved state of a PCI device
+  * @dev: PCI device that we're dealing with
+@@ -1882,6 +1915,7 @@ void pci_restore_state(struct pci_dev *dev)
+ 	pci_restore_ats_state(dev);
+ 	pci_restore_vc_state(dev);
+ 	pci_restore_rebar_state(dev);
++	pci_restore_vf_rebar_state(dev);
+ 	pci_restore_dpc_state(dev);
+ 	pci_restore_ptm_state(dev);
+ 
+@@ -3677,10 +3711,18 @@ void pci_acs_init(struct pci_dev *dev)
+  */
+ static int pci_rebar_find_pos(struct pci_dev *pdev, int bar)
  {
- 	struct pcie_bwctrl_data *data = get_service_data(srv);
++	int cap = PCI_EXT_CAP_ID_REBAR;
+ 	unsigned int pos, nbars, i;
+ 	u32 ctrl;
  
-+	if (data->cdev)
-+		pcie_cooling_device_unregister(data->cdev);
+-	pos = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_REBAR);
++#ifdef CONFIG_PCI_IOV
++	if (bar >= PCI_IOV_RESOURCES) {
++		cap = PCI_EXT_CAP_ID_VF_REBAR;
++		bar -= PCI_IOV_RESOURCES;
++	}
++#endif
 +
- 	pcie_bwnotif_disable(srv->port);
- 	scoped_guard(rwsem_write, &pcie_bwctrl_remove_rwsem)
- 		srv->port->link_bwctrl = NULL;
-diff --git a/drivers/thermal/Kconfig b/drivers/thermal/Kconfig
-index 204ed89a3ec9..7ddc44be4701 100644
---- a/drivers/thermal/Kconfig
-+++ b/drivers/thermal/Kconfig
-@@ -211,6 +211,16 @@ config DEVFREQ_THERMAL
++	pos = pci_find_ext_capability(pdev, cap);
+ 	if (!pos)
+ 		return -ENOTSUPP;
  
- 	  If you want this support, you should say Y here.
+diff --git a/drivers/pci/setup-res.c b/drivers/pci/setup-res.c
+index c6d933ddf..d978a2ccf 100644
+--- a/drivers/pci/setup-res.c
++++ b/drivers/pci/setup-res.c
+@@ -427,13 +427,32 @@ void pci_release_resource(struct pci_dev *dev, int resno)
+ }
+ EXPORT_SYMBOL(pci_release_resource);
  
-+config PCIE_THERMAL
-+	bool "PCIe cooling support"
-+	depends on PCIEPORTBUS
-+	select PCIE_BWCTRL
-+	help
-+	  This implements PCIe cooling mechanism through bandwidth reduction
-+	  for PCIe devices.
-+
-+	  If you want this support, you should say Y here.
-+
- config THERMAL_EMULATION
- 	bool "Thermal emulation mode support"
- 	help
-diff --git a/drivers/thermal/Makefile b/drivers/thermal/Makefile
-index 5cdf7d68687f..5b9bf8e80eb6 100644
---- a/drivers/thermal/Makefile
-+++ b/drivers/thermal/Makefile
-@@ -31,6 +31,8 @@ thermal_sys-$(CONFIG_CPU_IDLE_THERMAL)	+= cpuidle_cooling.o
- # devfreq cooling
- thermal_sys-$(CONFIG_DEVFREQ_THERMAL) += devfreq_cooling.o
- 
-+thermal_sys-$(CONFIG_PCIE_THERMAL) += pcie_cooling.o
-+
- obj-$(CONFIG_K3_THERMAL)	+= k3_bandgap.o k3_j72xx_bandgap.o
- # platform thermal drivers
- obj-y				+= broadcom/
-diff --git a/drivers/thermal/pcie_cooling.c b/drivers/thermal/pcie_cooling.c
-new file mode 100644
-index 000000000000..a876d64f1582
---- /dev/null
-+++ b/drivers/thermal/pcie_cooling.c
-@@ -0,0 +1,80 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/*
-+ * PCIe cooling device
-+ *
-+ * Copyright (C) 2023-2024 Intel Corporation
-+ */
-+
-+#include <linux/build_bug.h>
-+#include <linux/cleanup.h>
-+#include <linux/err.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/pci-bwctrl.h>
-+#include <linux/slab.h>
-+#include <linux/sprintf.h>
-+#include <linux/thermal.h>
-+
-+#define COOLING_DEV_TYPE_PREFIX		"PCIe_Port_Link_Speed_"
-+
-+static int pcie_cooling_get_max_level(struct thermal_cooling_device *cdev, unsigned long *state)
++static int pci_memory_decoding(struct pci_dev *dev, int resno)
 +{
-+	struct pci_dev *port = cdev->devdata;
++	u16 cmd;
 +
-+	/* cooling state 0 is same as the maximum PCIe speed */
-+	*state = port->subordinate->max_bus_speed - PCIE_SPEED_2_5GT;
++#ifdef CONFIG_PCI_IOV
++	if (resno >= PCI_IOV_RESOURCES) {
++		pci_read_config_word(dev, dev->sriov->pos + PCI_SRIOV_CTRL, &cmd);
++		if (cmd & PCI_SRIOV_CTRL_MSE)
++			return -EBUSY;
++		else
++			return 0;
++	}
++#endif
++	pci_read_config_word(dev, PCI_COMMAND, &cmd);
++	if (cmd & PCI_COMMAND_MEMORY)
++		return -EBUSY;
 +
 +	return 0;
 +}
 +
-+static int pcie_cooling_get_cur_level(struct thermal_cooling_device *cdev, unsigned long *state)
-+{
-+	struct pci_dev *port = cdev->devdata;
-+
-+	/* cooling state 0 is same as the maximum PCIe speed */
-+	*state = cdev->max_state - (port->subordinate->cur_bus_speed - PCIE_SPEED_2_5GT);
-+
-+	return 0;
-+}
-+
-+static int pcie_cooling_set_cur_level(struct thermal_cooling_device *cdev, unsigned long state)
-+{
-+	struct pci_dev *port = cdev->devdata;
-+	enum pci_bus_speed speed;
-+
-+	/* cooling state 0 is same as the maximum PCIe speed */
-+	speed = (cdev->max_state - state) + PCIE_SPEED_2_5GT;
-+
-+	return pcie_set_target_speed(port, speed, true);
-+}
-+
-+static struct thermal_cooling_device_ops pcie_cooling_ops = {
-+	.get_max_state = pcie_cooling_get_max_level,
-+	.get_cur_state = pcie_cooling_get_cur_level,
-+	.set_cur_state = pcie_cooling_set_cur_level,
-+};
-+
-+struct thermal_cooling_device *pcie_cooling_device_register(struct pci_dev *port)
-+{
-+	char *name __free(kfree) =
-+		kasprintf(GFP_KERNEL, COOLING_DEV_TYPE_PREFIX "%s", pci_name(port));
-+	if (!name)
-+		return ERR_PTR(-ENOMEM);
-+
-+	return thermal_cooling_device_register(name, port, &pcie_cooling_ops);
-+}
-+
-+void pcie_cooling_device_unregister(struct thermal_cooling_device *cdev)
-+{
-+	thermal_cooling_device_unregister(cdev);
-+}
-+
-+/* For bus_speed <-> state arithmetic */
-+static_assert(PCIE_SPEED_2_5GT + 1 == PCIE_SPEED_5_0GT);
-+static_assert(PCIE_SPEED_5_0GT + 1 == PCIE_SPEED_8_0GT);
-+static_assert(PCIE_SPEED_8_0GT + 1 == PCIE_SPEED_16_0GT);
-+static_assert(PCIE_SPEED_16_0GT + 1 == PCIE_SPEED_32_0GT);
-+static_assert(PCIE_SPEED_32_0GT + 1 == PCIE_SPEED_64_0GT);
-+
-+MODULE_AUTHOR("Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>");
-+MODULE_DESCRIPTION("PCIe cooling driver");
-diff --git a/include/linux/pci-bwctrl.h b/include/linux/pci-bwctrl.h
-new file mode 100644
-index 000000000000..cee07127455b
---- /dev/null
-+++ b/include/linux/pci-bwctrl.h
-@@ -0,0 +1,28 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * PCIe bandwidth controller
-+ *
-+ * Copyright (C) 2023-2024 Intel Corporation
-+ */
-+
-+#ifndef LINUX_PCI_BWCTRL_H
-+#define LINUX_PCI_BWCTRL_H
-+
-+#include <linux/pci.h>
-+
-+struct thermal_cooling_device;
-+
-+#ifdef CONFIG_PCIE_THERMAL
-+struct thermal_cooling_device *pcie_cooling_device_register(struct pci_dev *port);
-+void pcie_cooling_device_unregister(struct thermal_cooling_device *cdev);
-+#else
-+static inline struct thermal_cooling_device *pcie_cooling_device_register(struct pci_dev *port)
-+{
-+	return NULL;
-+}
-+static inline void pcie_cooling_device_unregister(struct thermal_cooling_device *cdev)
-+{
-+}
+ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+ {
+ 	struct resource *res = dev->resource + resno;
+ 	struct pci_host_bridge *host;
+ 	int old, ret;
+ 	u32 sizes;
+-	u16 cmd;
+ 
+ 	/* Check if we must preserve the firmware's resource assignment */
+ 	host = pci_find_host_bridge(dev->bus);
+@@ -444,9 +463,9 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+ 	if (!(res->flags & IORESOURCE_UNSET))
+ 		return -EBUSY;
+ 
+-	pci_read_config_word(dev, PCI_COMMAND, &cmd);
+-	if (cmd & PCI_COMMAND_MEMORY)
+-		return -EBUSY;
++	ret = pci_memory_decoding(dev, resno);
++	if (ret)
++		return ret;
+ 
+ 	sizes = pci_rebar_get_possible_sizes(dev, resno);
+ 	if (!sizes)
+@@ -463,19 +482,31 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+ 	if (ret)
+ 		return ret;
+ 
+-	res->end = res->start + pci_rebar_size_to_bytes(size) - 1;
++#ifdef CONFIG_PCI_IOV
++	if (resno >= PCI_IOV_RESOURCES)
++		dev->sriov->barsz[resno - PCI_IOV_RESOURCES] = pci_rebar_size_to_bytes(size);
++	else
 +#endif
++		res->end = res->start + pci_rebar_size_to_bytes(size) - 1;
+ 
+ 	/* Check if the new config works by trying to assign everything. */
+ 	if (dev->bus->self) {
+ 		ret = pci_reassign_bridge_resources(dev->bus->self, res->flags);
+-		if (ret)
++		if (ret && ret != -ENOENT)
+ 			goto error_resize;
+ 	}
+ 	return 0;
+ 
+ error_resize:
+ 	pci_rebar_set_size(dev, resno, old);
+-	res->end = res->start + pci_rebar_size_to_bytes(old) - 1;
 +
++#ifdef CONFIG_PCI_IOV
++	if (resno >= PCI_IOV_RESOURCES)
++		dev->sriov->barsz[resno - PCI_IOV_RESOURCES] = pci_rebar_size_to_bytes(old);
++	else
 +#endif
++		res->end = res->start + pci_rebar_size_to_bytes(old) - 1;
++
+ 	return ret;
+ }
+ EXPORT_SYMBOL(pci_resize_resource);
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index a39193213..a66b90982 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -738,6 +738,7 @@
+ #define PCI_EXT_CAP_ID_L1SS	0x1E	/* L1 PM Substates */
+ #define PCI_EXT_CAP_ID_PTM	0x1F	/* Precision Time Measurement */
+ #define PCI_EXT_CAP_ID_DVSEC	0x23	/* Designated Vendor-Specific */
++#define PCI_EXT_CAP_ID_VF_REBAR	0x24	/* VF Resizable BAR */
+ #define PCI_EXT_CAP_ID_DLF	0x25	/* Data Link Feature */
+ #define PCI_EXT_CAP_ID_PL_16GT	0x26	/* Physical Layer 16.0 GT/s */
+ #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
 -- 
-2.39.2
+2.34.1
 
