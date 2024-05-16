@@ -1,230 +1,126 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56851147C62
-	for <linux-pci@vger.kernel.org>; Thu, 16 May 2024 13:50:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEBEF14A4E1;
+	Thu, 16 May 2024 14:17:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715867405; cv=none; b=JcD+Y+4rOLoBLhzVcfM5hVXW6xzjQoDfIoYTdwJ+6hpt4FCdZv9iPOhhy/79/joUXmFA4YwEpDz19wyYSb9S044g4kuFb2nnNmUFXGIU+LcNXsjW0d844pL40BzkKeUg+IxVtXri5irHuOG1LOYcqexd7IeX+QwdIG0X1Fj65fM=
+	t=1715869064; cv=none; b=JOurS6o+en6O0xuj6KJcjtOFc4/tIJYUUtnx0rmoDmtfR+blWDxURUjDmLDFcLLi66ofA0GVewkLOULKbFHe+5Uckd16YOHXfgvXTOX52bH+99QVYhCSBk6JOE7DRKNPze9SRrhSjhZMtkyku928SxvnsIk8vFg/9scV325ZO9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715867405; c=relaxed/simple;
-	bh=6ifUodwvNIsfHfV9iMLGnBeAmMm+Szd1VMHCPCb2XEs=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=pPSjlzoQnQRzeG7AzznBjFLqNriz0zeElgSGtCY+3U5eiL/O0FVUz1AOAFbfb8171kSSfVMBMfNX+BVJseuBTw9BEzAnJqysGAOoVjB6hqrAts7wPnCgfLhQyspWRUd0pyakbevnj8xpxHCkQAATiStBFetBNHcu9pAFfjEYecw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mIQxEeak; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1715869064; c=relaxed/simple;
+	bh=xMv7XT50PYQKLPovqBhh7bmTIxuh18H6PUJ2EPoy6u8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=MyHtm/fjn4JoMqEnA8JfFvz2CI25o0KwqTWEnjYbmxPSXII0ohS/WLwryraXiyHK5WIQWDqxPGpsbJsrDouF++zYoO1Jz8UnmztUlMly5KIXSeymhwr7H7YIggR88zlufGp3Yg8X0GdnGP4OT2xgGXA/v8dJsYKxjN8oJ+QWKO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kjfc0Ikh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mIQxEeak"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715867404; x=1747403404;
-  h=date:from:to:cc:subject:message-id;
-  bh=6ifUodwvNIsfHfV9iMLGnBeAmMm+Szd1VMHCPCb2XEs=;
-  b=mIQxEeakv1jn3R8QrLmGgPal9Mcr7TttIP+05ibV9b9CRZdcwOHZ8afg
-   bCf3qBTt1HJNFiWsrKiAKCYgcmjWooaDNOcl96TXrIxIQ9WQgj4kfg2on
-   ShVRgoStDI49bnX29XI0LZntHosl1l3564s0Bo0j8NjfJTWKhde6uVgM5
-   vbpDKqmpZKFgfqtbklO9zvQVo4ENj+wt1ZDkgZcrgkCtWWs1WLVWLh8QR
-   VB6y8rBoQLzGzhKJ7kd7fQGK9TWYcDW80fkxDbxJU5XiZVuxNFdUIILpN
-   wWiJGGMy15mQTCPDy0G+vpdUFrnx1soUc1Iosym0oOe1+Ss0bF6VR/q18
-   Q==;
-X-CSE-ConnectionGUID: AUTkYIuGRhWPRLNDta5TUg==
-X-CSE-MsgGUID: zNysMaqHSHmqcGwWpgoPJQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11074"; a="14928597"
-X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
-   d="scan'208";a="14928597"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 06:50:03 -0700
-X-CSE-ConnectionGUID: kZNnpGS4S8600pmayZOk3Q==
-X-CSE-MsgGUID: kxdNAsjgSAq6b/UG6JoFnw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
-   d="scan'208";a="31984621"
-Received: from lkp-server01.sh.intel.com (HELO f8b243fe6e68) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 16 May 2024 06:50:02 -0700
-Received: from kbuild by f8b243fe6e68 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1s7bUd-000EIh-06;
-	Thu, 16 May 2024 13:49:59 +0000
-Date: Thu, 16 May 2024 21:49:01 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc] BUILD SUCCESS
- 5066c0b87d865d1fafc3e6c761df2f433237b1e2
-Message-ID: <202405162159.413OLGCU-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kjfc0Ikh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EC60AC113CC;
+	Thu, 16 May 2024 14:17:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1715869064;
+	bh=xMv7XT50PYQKLPovqBhh7bmTIxuh18H6PUJ2EPoy6u8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=Kjfc0IkhMHVHFnfxmOd2jro4rjH+gKB/gy2doI4HcBeGt0EUDniqlL0+B53yKUoQS
+	 iP+x9qB/rqsFwNPjy7TzFDVo76JhA0/2ZRrm9vUfIS62+zCbpgTgJU5Hv9Y8r1+8SF
+	 hMv2Xuiq0DLYIt+NlHbvelhpnSVzvSzuk5Wr5ElZIvtR6SYooK01prdKH8hrTgXlYp
+	 YbDSH/wZFUIQFEQgIdHApYFg+KXkyPku6hzF2pg4s9SfO1ECfIGq9KG5n2B/LdoGut
+	 93R9egqzEpqLQRkDWP68NHSc0SD4jSZnGAtGR+Gdg+wDcikonmxoUujdlKCpwQKdQz
+	 4LzP4wGNeksJg==
+Date: Thu, 16 May 2024 09:17:42 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+	bhelgaas@google.com, manivannan.sadhasivam@linaro.org,
+	fancer.lancer@gmail.com, u.kleine-koenig@pengutronix.de,
+	cassel@kernel.org, dlemoal@kernel.org,
+	yoshihiro.shimoda.uh@renesas.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	srk@ti.com
+Subject: Re: [PATCH v7 2/2] PCI: keystone: Fix pci_ops for AM654x SoC
+Message-ID: <20240516141742.GA2204499@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ee5f54a8-c19f-4a56-9a9b-f8aeebf475d0@ti.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
-branch HEAD: 5066c0b87d865d1fafc3e6c761df2f433237b1e2  PCI: qcom-ep: Drop 'Link is enabled' from the debug message for BME event
+On Thu, May 16, 2024 at 11:07:27AM +0530, Siddharth Vadapalli wrote:
+> On Wed, May 15, 2024 at 02:26:14PM -0500, Bjorn Helgaas wrote:
+> > On Tue, May 14, 2024 at 04:14:54PM -0500, Bjorn Helgaas wrote:
+> > > On Tue, May 14, 2024 at 05:41:48PM +0530, Siddharth Vadapalli wrote:
+> > > > On Mon, May 13, 2024 at 04:53:50PM -0500, Bjorn Helgaas wrote:
+> > > ...
+> > 
+> > > > > I'm not quite clear on the mechanism, but it would be helpful to at
+> > > > > least know what's wrong and on what platform.  E.g., currently v4.90
+> > > > > suffers Completion Timeouts and 45 second boot delays?  And this patch
+> > > > > fixes that?
+> > > > 
+> > > > Yes, the Completion Timeouts cause the 45 second boot delays and this
+> > > > patch fixes that.
+> > > 
+> > > And this problem happens on AM654x/v4.90a, right?  I really want the
+> > > commit log to say what platform is affected!
+> > > 
+> > > Maybe something like this?
+> > > 
+> > >   PCI: keystone: Enable BAR 0 only for v3.65a
+> > > 
+> > >   The BAR 0 initialization done by ks_pcie_v3_65_add_bus() should
+> > >   happen for v3.65a devices only.  On other devices, BAR 0 should be
+> > >   left disabled, as it is by dw_pcie_setup_rc().
+> > > 
+> > >   After 6ab15b5e7057 ("PCI: dwc: keystone: Convert .scan_bus()
+> > >   callback to use add_bus"), ks_pcie_v3_65_add_bus() enabled BAR 0 for
+> > >   both v3.65a and v4.90a devices.  On the AM654x SoC, which uses
+> > >   v4.90a, enabling BAR 0 causes Completion Timeouts when setting up
+> > >   MSI-X.  These timeouts delay boot of the AM654x by about 45 seconds.
+> > > 
+> > >   Move the BAR 0 initialization to ks_pcie_msi_host_init(), which is
+> > >   only used for v3.65a devices, and remove ks_pcie_v3_65_add_bus().
+> > 
+> > I haven't heard anything so I amended it to the above.  But please
+> > correct me if it's wrong.
+> 
+> I would suggest specifying the failing combination since I do not know
+> if there is another device that is using v4.90a but doesn't see this
+> issue. What is certain is that this issue is seen with the v4.90a
+> controller on AM654x platform. Despite the PCIe Controller version
+> remaining the same across different platforms, it might be possible
+> that not all features supported by the PCIe Controller are enabled on
+> all platforms. For that reason, it appears to me that the subject could
+> be:
+> 
+>   PCI: keystone: Don't enable BAR 0 for AM654x
+> 
+> which implicitly indicates the combination as well (v4.90a on AM654x).
+> 
+> The commit message's contents could be reduced to:
+> 
+>   After 6ab15b5e7057 ("PCI: dwc: keystone: Convert .scan_bus()
+>   callback to use add_bus"), ks_pcie_v3_65_add_bus() enabled BAR 0 for
+>   both v3.65a and v4.90a devices.  On the AM654x SoC, which uses
+>   v4.90a, enabling BAR 0 causes Completion Timeouts when setting up
+>   MSI-X.  These timeouts delay boot of the AM654x by about 45 seconds.
+> 
+>   Move the BAR 0 initialization to ks_pcie_msi_host_init(), which is
+>   only used for v3.65a devices, and remove ks_pcie_v3_65_add_bus().
+> 
+> by dropping:
+> 
+>   The BAR 0 initialization done by ks_pcie_v3_65_add_bus() should
+>   happen for v3.65a devices only.  On other devices, BAR 0 should be
+>   left disabled, as it is by dw_pcie_setup_rc().
+> 
+> The reason behind dropping the above paragraph is that BAR 0 could
+> probably be enabled on other controller versions as well, but not on the
+> v4.90a controller on the AM654x SoC.
 
-elapsed time: 1045m
+Thanks, that makes good sense, I changed the subject and dropped that
+paragraph.
 
-configs tested: 153
-configs skipped: 5
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240516   gcc  
-arc                   randconfig-002-20240516   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                            qcom_defconfig   clang
-arm                   randconfig-001-20240516   gcc  
-arm                   randconfig-002-20240516   clang
-arm                   randconfig-003-20240516   gcc  
-arm                   randconfig-004-20240516   clang
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240516   gcc  
-arm64                 randconfig-002-20240516   clang
-arm64                 randconfig-003-20240516   clang
-arm64                 randconfig-004-20240516   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240516   gcc  
-csky                  randconfig-002-20240516   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20240516   clang
-hexagon               randconfig-002-20240516   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240516   clang
-i386         buildonly-randconfig-002-20240516   clang
-i386         buildonly-randconfig-003-20240516   clang
-i386         buildonly-randconfig-004-20240516   gcc  
-i386         buildonly-randconfig-005-20240516   gcc  
-i386         buildonly-randconfig-006-20240516   gcc  
-i386                                defconfig   clang
-i386                  randconfig-001-20240516   gcc  
-i386                  randconfig-002-20240516   gcc  
-i386                  randconfig-003-20240516   clang
-i386                  randconfig-004-20240516   clang
-i386                  randconfig-005-20240516   clang
-i386                  randconfig-006-20240516   clang
-i386                  randconfig-011-20240516   gcc  
-i386                  randconfig-012-20240516   gcc  
-i386                  randconfig-013-20240516   clang
-i386                  randconfig-014-20240516   gcc  
-i386                  randconfig-015-20240516   gcc  
-i386                  randconfig-016-20240516   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240516   gcc  
-loongarch             randconfig-002-20240516   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                         amcore_defconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                           mtx1_defconfig   clang
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240516   gcc  
-nios2                 randconfig-002-20240516   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-openrisc                 simple_smp_defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240516   gcc  
-parisc                randconfig-002-20240516   gcc  
-parisc64                            defconfig   gcc  
-powerpc                    adder875_defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                   microwatt_defconfig   gcc  
-powerpc                 mpc836x_rdk_defconfig   clang
-powerpc                    mvme5100_defconfig   gcc  
-powerpc                      ppc40x_defconfig   clang
-powerpc               randconfig-001-20240516   gcc  
-powerpc               randconfig-002-20240516   clang
-powerpc               randconfig-003-20240516   clang
-powerpc                 xes_mpc85xx_defconfig   gcc  
-powerpc64             randconfig-001-20240516   gcc  
-powerpc64             randconfig-002-20240516   clang
-powerpc64             randconfig-003-20240516   gcc  
-riscv                            alldefconfig   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv                 randconfig-001-20240516   gcc  
-riscv                 randconfig-002-20240516   clang
-s390                              allnoconfig   clang
-s390                                defconfig   clang
-s390                  randconfig-001-20240516   gcc  
-s390                  randconfig-002-20240516   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                             espt_defconfig   gcc  
-sh                          lboxre2_defconfig   gcc  
-sh                    randconfig-001-20240516   gcc  
-sh                    randconfig-002-20240516   gcc  
-sh                   rts7751r2dplus_defconfig   gcc  
-sh                          sdk7780_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240516   gcc  
-sparc64               randconfig-002-20240516   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240516   clang
-um                    randconfig-002-20240516   clang
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64                              defconfig   gcc  
-x86_64                          rhel-8.3-rust   clang
-xtensa                            allnoconfig   gcc  
-xtensa                          iss_defconfig   gcc  
-xtensa                randconfig-001-20240516   gcc  
-xtensa                randconfig-002-20240516   gcc  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Bjorn
