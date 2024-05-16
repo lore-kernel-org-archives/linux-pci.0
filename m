@@ -1,394 +1,155 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
+Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2052.outbound.protection.outlook.com [40.107.237.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5437182AF;
-	Thu, 16 May 2024 09:33:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715852039; cv=none; b=klTFUVlZIhQWMAsvKzgwA/jGw1G6gon6hkgBjw7G7NHw8VR9wdiLfV6zImr0wQd0qLzldwIrQhJy7Wre7zvGhQg0cWA40FNYLI+btqe1Zm0Pw1Ifz5Qyut8hjfWfQtYqxL4BDOEHVJ81j7mW7sx1GQANCWgtYhyIgeebxfji/pI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715852039; c=relaxed/simple;
-	bh=eZCyLma/Em5HCPqSF80iWFHJDAVVFQLC3YecfXAnF3k=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jhMTxCPSPlnAOeuSwccg6PY1xB6g/ksdvDKvC38I2n4tfesFd5yazi2UTZbKrlX4lOWL2jR303cyynQBGF+eir3dasZ/FwvTVBxW/xJPWnBiddJAuhRqZL1Je+I378FwQw+nzQwdJSKBiDvDh1KRpTrU2M1RgnIFSJqiqwVmtwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HSmrQn0p; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517CB14389B;
+	Thu, 16 May 2024 09:34:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.237.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1715852043; cv=fail; b=k61beu0YZa4ZdgdTC0aHRIQejJ/TAFSkfUYlUpCwcM37hSUPVuUxqxw86Ji8VzhUuv3quwU3aV0J20IjAdtmj3RSz2OiqW6gKFBzLI5URblwaxFWGyYKd6jpXiHbxRgeclxAMfz0xC3Or6kCanWbKSiaMKo145uqn0Rc1evYVLM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1715852043; c=relaxed/simple;
+	bh=USpbp+mI2kYAyj8ogxWxCBeCoNKeGXcUhP3jobHhxYI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=cRAzwWnuIOMwAwCZamYUTD6/TVe9SGEUiP4nnwWILQtTQE4VcX0MoyvjEod4QKBI6odt36y2uV2yBrcrKZ6+9p+zYv6KoNwyd6zFSc/H9ZQiZ8Q963MFwy9aMmWsLmX9JwcvHNIZR464hKxEnPn49Fkqxhk8j64rjYBBBpPGNoY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=o7AhWu1K; arc=fail smtp.client-ip=40.107.237.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HSmrQn0p"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1715852038; x=1747388038;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=eZCyLma/Em5HCPqSF80iWFHJDAVVFQLC3YecfXAnF3k=;
-  b=HSmrQn0pTiGQsh4Jxl6L3pqAzOJ0FquBmriA3ewKZNyAKAPuKr6IU9+7
-   euiBjFC+BVzAjbwIsnSnm7TROyWqtaeTA6J3U9WEKrhaN1MSh8edzt6X6
-   WbF5Eb1XbxN/BJ4hZ1oAfMQ+hPcOI92wAJjS3JvzSOud7mpLwnLjMkysx
-   Cm6s9rDnvoODT8BmflpviOkQI5vyFrzTHgzE6hC0MtJxoyMBIyD/9d8nf
-   tprQ057YhX1pRIgTmuYaQ5XoteEweZzXAyKBeSoZ1+TZSLFa6zVveVPd0
-   smhS6WCGL5CKNhCExiUanhVEJHan05BsjI0u6rfwyruHMLToJOvKMBXha
-   g==;
-X-CSE-ConnectionGUID: 6WcqJ6Z2ThWp0nsW2gn6UQ==
-X-CSE-MsgGUID: ElNN62+8RmaAVweHqLoKNg==
-X-IronPort-AV: E=McAfee;i="6600,9927,11074"; a="23355018"
-X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
-   d="scan'208";a="23355018"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 02:33:56 -0700
-X-CSE-ConnectionGUID: uOXlKOfJSeSw5Gi27AB9JQ==
-X-CSE-MsgGUID: RiTczmm5SI6t9RvQ4Geyqw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,164,1712646000"; 
-   d="scan'208";a="31372494"
-Received: from ijarvine-desk1.ger.corp.intel.com (HELO localhost) ([10.245.247.108])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2024 02:33:51 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
-	Rob Herring <robh@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	"Maciej W . Rozycki" <macro@orcam.me.uk>,
-	Jonathan Cameron <Jonathan.Cameron@Huawei.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Alexandru Gagniuc <mr.nuke.me@gmail.com>,
-	Krishna chaitanya chundru <quic_krichai@quicinc.com>,
-	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	linux-pm@vger.kernel.org,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	linux-kernel@vger.kernel.org
-Cc: Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Amit Kucheria <amitk@kernel.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH v6 6/8] PCI/bwctrl: Add API to set PCIe Link Speed
-Date: Thu, 16 May 2024 12:32:20 +0300
-Message-Id: <20240516093222.1684-7-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20240516093222.1684-1-ilpo.jarvinen@linux.intel.com>
-References: <20240516093222.1684-1-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="o7AhWu1K"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector9901; d=microsoft.com; cv=none;
+ b=WOKxp+bTMGlFl1pdwjBMINtMx46VMU7X6CZ4286TUSDubVKdsexu4dgXe0+H4ySL82Kh5caxecyvw/mXK2PgtfTSc8RxczOe44h3D36lsHBQFdC+TfCB90LRHT4yySFOfOPx8L+nf5ny42q0vrfM7oJUYGyoPCLeaeOl13SLFbNvyCRSRQROYxZdRrh29euEMDJJ0I3WHm7nLzY2OqS/Gj4e86hUY6AxZ/KWBUr2zYb1kxMb+80/98WW6t4FoAUKNN74Ol0s2gzyjXeScdp/fJOdrdOOM/s/dUJxDbMmVWxXNRRPf0JMIm+5B3S3W+pUZMKO8pkWv9WaeKZTqdj5rQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector9901;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=TAvMw9UFEhZ6lax5oHWCl0uxEmMvrW2GKjQ2jZ1qNhg=;
+ b=SWiA4b/xzSOX8/NLXxxRnXpLaodd2NQbZz7xNA3vylsa9fChbe6ARqhuN6ZVSOCMEHcjC7srLXKSuVxxRXbYaRT18ZBtFMnRkNpuMUbfCixNx9VK7J4uYutqsc7TY4QPqP1Nkt6Ki2cDCGHF5/jcImF+Wgy01dRvIKrmR2gkkQ+ouamm+B49flvfHzC6U0gs2OXePOEumTwgwrfsLXa/YStULmmmwDOK99L57fhw77uc33liNgw3nA9u67hEVh6ALoX5PTb3Hv66RCzznLNihNBg0o0RGxWNG1/lawgPNXIN5jcv4lzdZp3RtgpmMjrk2E5qTFTohzjIID/vZakrmg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=amd.com;
+ dmarc=pass (p=quarantine sp=quarantine pct=100) action=none
+ header.from=amd.com; dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=TAvMw9UFEhZ6lax5oHWCl0uxEmMvrW2GKjQ2jZ1qNhg=;
+ b=o7AhWu1KX7KREf7o+4Sei2GlB0X7m92RJjEmIDxZJplDJmPpzefwmo3hv5+kyrtP7j4gs5Wmg0Rxak0T7QN+j3MGkzljk8INzDTX/weo3lpJyybF3SzYP3m4+UAOsoop5nV/8zl6bNMc3tUUugFHVKaO9B+nW7YKPh8vMgi+PRc=
+Received: from BL1PR13CA0422.namprd13.prod.outlook.com (2603:10b6:208:2c3::7)
+ by DM6PR12MB4121.namprd12.prod.outlook.com (2603:10b6:5:220::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7587.27; Thu, 16 May
+ 2024 09:33:58 +0000
+Received: from BL6PEPF00022573.namprd02.prod.outlook.com
+ (2603:10b6:208:2c3:cafe::76) by BL1PR13CA0422.outlook.office365.com
+ (2603:10b6:208:2c3::7) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7611.10 via Frontend
+ Transport; Thu, 16 May 2024 09:33:58 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ BL6PEPF00022573.mail.protection.outlook.com (10.167.249.41) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.7587.21 via Frontend Transport; Thu, 16 May 2024 09:33:58 +0000
+Received: from SATLEXMB06.amd.com (10.181.40.147) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 16 May
+ 2024 04:33:58 -0500
+Received: from SATLEXMB03.amd.com (10.181.40.144) by SATLEXMB06.amd.com
+ (10.181.40.147) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.35; Thu, 16 May
+ 2024 04:33:57 -0500
+Received: from sriov-ubuntu2204.amd.com (10.180.168.240) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server id 15.1.2507.35 via Frontend
+ Transport; Thu, 16 May 2024 04:33:56 -0500
+From: Lianjie Shi <Lianjie.Shi@amd.com>
+To: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>
+CC: Lianjie Shi <Lianjie.Shi@amd.com>
+Subject: [PATCH 0/1] PCI: VF resizable BAR
+Date: Thu, 16 May 2024 17:33:33 +0800
+Message-ID: <20240516093334.2266599-1-Lianjie.Shi@amd.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BL6PEPF00022573:EE_|DM6PR12MB4121:EE_
+X-MS-Office365-Filtering-Correlation-Id: 18b9d10e-b66a-4633-c9f2-08dc758b5029
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230031|82310400017|1800799015|36860700004|376005;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?9gV2977qRhjvSlKCmszwKOx4ynDM2HudAih+VIHWt+SXbHXck9Ig3trSVNgI?=
+ =?us-ascii?Q?7wVadDGIlrHUc1eDGO+90kBET/ZpS1MWmpFGYRBoj+Az/jNwWZDENbjdbL2B?=
+ =?us-ascii?Q?nyCWLUNZxmXOkfjt00lqZNsZXPYNBSNs4BZhkSmEgJdTiIVuuDf9z0eCA3LV?=
+ =?us-ascii?Q?wk0iQUunJpayLmcYxw0FWMp0COBD0/VYocwC+YL/+2gp+gjl3J6htko7XkYB?=
+ =?us-ascii?Q?4HOppz0WyGa5rrdiOA8sDRMIPXqEMRLWwTX8nJpXvKnoNlI0s/fO4847EZCz?=
+ =?us-ascii?Q?ERzksWTkmUJVxVlf3WGWYDubgXqse0xuN+8eaAbU2ZPZysK32h0cYVZUSbGs?=
+ =?us-ascii?Q?5jTmVy6GtTbgtctemM4mCTK/g0za2jidQxTFEdPgriVyG1/9w8vks0J9evHR?=
+ =?us-ascii?Q?soQk4Zcyo4B/B5oHrm5uwtnbGFYOkvcaJa0grEXCVb1voWwjrkKtgnbH3j14?=
+ =?us-ascii?Q?aQYIINsYxDHiWj89YAH3JBd4fCXkKCuxPc0dePkF9SFtZ07mXm0rExqx+FmT?=
+ =?us-ascii?Q?9/FnqW/oh8989zkcMR0Rb5nwlbjUxXgGezrDUj2lzYYTDuzL36YWMtbEa/yf?=
+ =?us-ascii?Q?/2peqydPCnBuX2ItwZDzw8YBjqF6CerCCpG3wfjMLSkJNJgBnnLW9fiW2opr?=
+ =?us-ascii?Q?WSE5SW7PrIu9gQ+zcSNSwDccVmN+FujNqVf0vrmlkNQ04FzqrTgg0Nbuvk8M?=
+ =?us-ascii?Q?7Oft2Yw5X9XgCJ0fjqRSrICQJ650HgWBQVxODnycH+nk4ODTW50tjg5x73hg?=
+ =?us-ascii?Q?3/upG9nPOnX3+06baOIyPIKpVLDG2sRMCx4nN6gQdNJnQEizKIK7hLjhbxi2?=
+ =?us-ascii?Q?/rY9dM2FhDzhbKI023OSCuKAvfhsZAhRDVWuTyQ6In0CCLAWt2fSFNtVDZH4?=
+ =?us-ascii?Q?OPusB1EUg3DuCeOdQL+OWyCHIpaXveXq5iy5eNDmwY/cEC6mOiOy0x5m+J9z?=
+ =?us-ascii?Q?uIE7vS34yAYK3syTbGe65O2wCgUI4uvDeQiivV7SGIRFUY8YmUJd3SCObrJ7?=
+ =?us-ascii?Q?rB9Oe9Y7QPUVSGwi2fiDpLNT465UDjYRB6bZld3K8ApAJg25q7972SaonO8i?=
+ =?us-ascii?Q?bkqecEkL8io6eD1/g/xVDab0PQJwH9U7Trbv4ZqBoPmOFhFJmQReCnoSQhfh?=
+ =?us-ascii?Q?+Iyd5un89F3h2vQFOQTo/7LxpSM4+uxv5bJMHi658b9ui9dC5WLM3/VGph5c?=
+ =?us-ascii?Q?phtK8/Q9KgsGXXSVEJvvyNZODaeABL7TMUthPagVWnZbELh65igUIN/4AtTl?=
+ =?us-ascii?Q?avvBmkgoLbkStbexFyAY6VoWXHqgnMciDX2AUXrZf3ej5O383BMe7+A+qb0k?=
+ =?us-ascii?Q?fs4JtMeZ2pJz+9yMcMGfx+xpD+NH342ip/dN7RXSyKYMtIk1OXkZKFUrwcm/?=
+ =?us-ascii?Q?hGiAc74=3D?=
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230031)(82310400017)(1800799015)(36860700004)(376005);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 16 May 2024 09:33:58.5118
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 18b9d10e-b66a-4633-c9f2-08dc758b5029
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BL6PEPF00022573.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4121
 
-Currently, PCIe Link Speeds are adjusted by custom code rather than in
-a common function provided in PCI core. PCIe bandwidth controller
-(bwctrl) introduces an in-kernel API to set PCIe Link Speed. Convert
-Target Speed quirk to use the new API.
+Similar to regular BAR, drivers can use pci_resize_resource() to resize
+an IOV BAR to the desired size provided that is supported by the
+hardware, which can be queried using pci_rebar_get_possible_sizes().
 
-The new API is also intended to be used in an upcoming commit that adds
-a thermal cooling device to throttle PCIe bandwidth when thermal
-thresholds are reached.
+This feature is based on the fact that (default VF BAR size) * (supported
+VF number) covers all possible resource/address ranges (rounded up to the
+power of 2 size). For example, the total size of the resource behind the
+BAR is 256GB, the supported maximum VF number is 4, the default VF BAR
+size should then be set to 64GB. When the enabled vf_num changes, the VF
+BAR size will adjust accordingly as
+- For 1 VF, VF BAR size is 256GB
+- For 2 VFs, VF BAR size is 128GB
+- For 4 VFs, VF BAR size is 64GB
 
-The PCIe bandwidth control procedure is as follows. The highest speed
-supported by the Port and the PCIe device which is not higher than the
-requested speed is selected and written into the Target Link Speed in
-the Link Control 2 Register. Then bandwidth controller retrains the
-PCIe Link.
+This feature is necessary to accommodate the limited address per PCI port.
 
-Bandwidth Notifications enable the cur_bus_speed in the struct pci_bus
-to keep track PCIe Link Speed changes. While Bandwidth Notifications
-should also be generated when bandwidth controller alters the PCIe Link
-Speed, a few platforms do not deliver LMBS interrupt after Link
-Training as expected. Thus, after changing the Link Speed, bandwidth
-controller makes additional read for the Link Status Register to ensure
-cur_bus_speed is consistent with the new PCIe Link Speed.
+Lianjie Shi (1):
+  PCI: Support VF resizable BAR
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/pci/pci.h         |  11 +++
- drivers/pci/pcie/Makefile |   2 +-
- drivers/pci/pcie/bwctrl.c | 147 ++++++++++++++++++++++++++++++++++++++
- drivers/pci/quirks.c      |  12 +---
- include/linux/pci.h       |   3 +
- 5 files changed, 164 insertions(+), 11 deletions(-)
+ drivers/pci/pci.c             | 44 +++++++++++++++++++++++++++++++++-
+ drivers/pci/setup-res.c       | 45 +++++++++++++++++++++++++++++------
+ include/uapi/linux/pci_regs.h |  1 +
+ 3 files changed, 82 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 416540baf27b..f95e0fedb35c 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -270,6 +270,17 @@ void pci_disable_bridge_window(struct pci_dev *dev);
- struct pci_bus *pci_bus_get(struct pci_bus *bus);
- void pci_bus_put(struct pci_bus *bus);
- 
-+#define PCIE_LNKCAP_SLS2SPEED(lnkcap)					\
-+({									\
-+	(lnkcap == PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :	\
-+	 lnkcap == PCI_EXP_LNKCAP_SLS_32_0GB ? PCIE_SPEED_32_0GT :	\
-+	 lnkcap == PCI_EXP_LNKCAP_SLS_16_0GB ? PCIE_SPEED_16_0GT :	\
-+	 lnkcap == PCI_EXP_LNKCAP_SLS_8_0GB ? PCIE_SPEED_8_0GT :	\
-+	 lnkcap == PCI_EXP_LNKCAP_SLS_5_0GB ? PCIE_SPEED_5_0GT :	\
-+	 lnkcap == PCI_EXP_LNKCAP_SLS_2_5GB ? PCIE_SPEED_2_5GT :	\
-+	 PCI_SPEED_UNKNOWN);						\
-+})
-+
- /* PCIe link information from Link Capabilities 2 */
- #define PCIE_LNKCAP2_SLS2SPEED(lnkcap2) \
- 	((lnkcap2) & PCI_EXP_LNKCAP2_SLS_64_0GB ? PCIE_SPEED_64_0GT : \
-diff --git a/drivers/pci/pcie/Makefile b/drivers/pci/pcie/Makefile
-index 6357bc219632..e8cf58a0fa3f 100644
---- a/drivers/pci/pcie/Makefile
-+++ b/drivers/pci/pcie/Makefile
-@@ -12,5 +12,5 @@ obj-$(CONFIG_PCIEAER_INJECT)	+= aer_inject.o
- obj-$(CONFIG_PCIE_PME)		+= pme.o
- obj-$(CONFIG_PCIE_DPC)		+= dpc.o
- obj-$(CONFIG_PCIE_PTM)		+= ptm.o
--obj-$(CONFIG_PCIE_BWCTRL)	+= bwctrl.o
-+obj-y				+= bwctrl.o
- obj-$(CONFIG_PCIE_EDR)		+= edr.o
-diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
-index 048a9cffc531..c44da36ef81a 100644
---- a/drivers/pci/pcie/bwctrl.c
-+++ b/drivers/pci/pcie/bwctrl.c
-@@ -7,6 +7,11 @@
-  * Copyright (C) 2019 Dell Inc
-  * Copyright (C) 2023-2024 Intel Corporation
-  *
-+ * The PCIe bandwidth controller provides a way to alter PCIe Link Speeds
-+ * and notify the operating system when the Link Width or Speed changes. The
-+ * notification capability is required for all Root Ports and Downstream
-+ * Ports supporting Link Width wider than x1 and/or multiple Link Speeds.
-+ *
-  * This service port driver hooks into the Bandwidth Notification interrupt
-  * watching for changes or links becoming degraded in operation. It updates
-  * the cached Current Link Speed that is exposed to user space through sysfs.
-@@ -15,9 +20,12 @@
- #define dev_fmt(fmt) "bwctrl: " fmt
- 
- #include <linux/atomic.h>
-+#include <linux/bitops.h>
-+#include <linux/bits.h>
- #include <linux/cleanup.h>
- #include <linux/errno.h>
- #include <linux/interrupt.h>
-+#include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/rwsem.h>
- #include <linux/slab.h>
-@@ -28,15 +36,151 @@
- 
- /**
-  * struct pcie_bwctrl_data - PCIe bandwidth controller
-+ * @set_speed_mutex:	Serializes link speed changes
-  * @lbms_count:		Count for LBMS (since last reset)
-  */
- struct pcie_bwctrl_data {
-+	struct mutex set_speed_mutex;
- 	atomic_t lbms_count;
- };
- 
-+static bool pcie_valid_speed(enum pci_bus_speed speed)
-+{
-+	return (speed >= PCIE_SPEED_2_5GT) && (speed <= PCIE_SPEED_64_0GT);
-+}
-+
-+static u16 pci_bus_speed2lnkctl2(enum pci_bus_speed speed)
-+{
-+	static const u8 speed_conv[] = {
-+		[PCIE_SPEED_2_5GT] = PCI_EXP_LNKCTL2_TLS_2_5GT,
-+		[PCIE_SPEED_5_0GT] = PCI_EXP_LNKCTL2_TLS_5_0GT,
-+		[PCIE_SPEED_8_0GT] = PCI_EXP_LNKCTL2_TLS_8_0GT,
-+		[PCIE_SPEED_16_0GT] = PCI_EXP_LNKCTL2_TLS_16_0GT,
-+		[PCIE_SPEED_32_0GT] = PCI_EXP_LNKCTL2_TLS_32_0GT,
-+		[PCIE_SPEED_64_0GT] = PCI_EXP_LNKCTL2_TLS_64_0GT,
-+	};
-+
-+	if (WARN_ON_ONCE(!pcie_valid_speed(speed)))
-+		return 0;
-+
-+	return speed_conv[speed];
-+}
-+
-+static inline u16 pcie_supported_speeds2target_speed(u8 supported_speeds)
-+{
-+	return __fls(supported_speeds);
-+}
-+
-+/**
-+ * pcie_bwctrl_select_speed - Select Target Link Speed
-+ * @port:	PCIe Port
-+ * @speed_req:	requested PCIe Link Speed
-+ *
-+ * Select Target Link Speed by take into account Supported Link Speeds of
-+ * both the Root Port and the Endpoint.
-+ *
-+ * Return: Target Link Speed (1=2.5GT/s, 2=5GT/s, 3=8GT/s, etc.)
-+ */
-+static u16 pcie_bwctrl_select_speed(struct pci_dev *port, enum pci_bus_speed speed_req)
-+{
-+	struct pci_bus *bus = port->subordinate;
-+	u8 desired_speeds;
-+
-+	if (WARN_ON_ONCE(!bus->supported_speeds))
-+		return PCI_EXP_LNKCAP2_SLS_2_5GB;
-+
-+	desired_speeds = GENMASK(pci_bus_speed2lnkctl2(speed_req),
-+				 __fls(PCI_EXP_LNKCAP2_SLS_2_5GB));
-+
-+	return pcie_supported_speeds2target_speed(bus->supported_speeds & desired_speeds);
-+}
-+
-+static int pcie_bwctrl_change_speed(struct pci_dev *port, u16 target_speed, bool use_lt)
-+{
-+	int ret;
-+
-+	ret = pcie_capability_clear_and_set_word(port, PCI_EXP_LNKCTL2,
-+						 PCI_EXP_LNKCTL2_TLS, target_speed);
-+	if (ret != PCIBIOS_SUCCESSFUL)
-+		return pcibios_err_to_errno(ret);
-+
-+	ret = pcie_retrain_link(port, use_lt);
-+	if (ret < 0)
-+		return ret;
-+
-+	/*
-+	 * Ensure link speed updates also with platforms that have problems
-+	 * with notifications.
-+	 */
-+	pcie_update_link_speed(port->subordinate);
-+
-+	return 0;
-+}
-+
-+#ifdef CONFIG_PCIE_BWCTRL
- /* Prevents port removal during link speed changes and LBMS count accessors */
- static DECLARE_RWSEM(pcie_bwctrl_remove_rwsem);
- 
-+static int __pcie_set_target_speed(struct pci_dev *port, u16 target_speed, bool use_lt)
-+{
-+	struct pcie_bwctrl_data *data = NULL;
-+
-+	guard(rwsem_read)(&pcie_bwctrl_remove_rwsem);
-+	data = port->link_bwctrl;
-+	if (!data)
-+		return -ENODEV;
-+
-+	guard(mutex)(&data->set_speed_mutex);
-+
-+	return pcie_bwctrl_change_speed(port, target_speed, use_lt);
-+}
-+#else
-+static int __pcie_set_target_speed(struct pci_dev *port, u16 target_speed, bool use_lt)
-+{
-+	return pcie_bwctrl_change_speed(port, target_speed, use_lt);
-+}
-+#endif
-+
-+/**
-+ * pcie_set_target_speed - Set downstream Link Speed for PCIe Port
-+ * @port:	PCIe Port
-+ * @speed_req:	requested PCIe Link Speed
-+ * @use_lt:	Wait for the LT or DLLLA bit to detect the end of link training
-+ *
-+ * Attempts to set PCIe Port Link Speed to @speed_req. @speed_req may be
-+ * adjusted downwards to the best speed supported by both the Port and PCIe
-+ * Device underneath it.
-+ *
-+ * Return:
-+ * * 0		- on success
-+ * * -EINVAL	- @speed_req is not a PCIe Link Speed
-+ * * -ENODEV	- @port is not controllable
-+ * * -ETIMEDOUT	- changing Link Speed took too long
-+ * * -EAGAIN	- Link Speed was changed but @speed_req was not achieved
-+ */
-+int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
-+			  bool use_lt)
-+{
-+	u16 target_speed;
-+	int ret;
-+
-+	if (WARN_ON_ONCE(!pcie_valid_speed(speed_req)))
-+		return -EINVAL;
-+
-+	if (port->subordinate->cur_bus_speed == speed_req)
-+		return 0;
-+
-+	target_speed = pcie_bwctrl_select_speed(port, speed_req);
-+
-+	ret = __pcie_set_target_speed(port, target_speed, use_lt);
-+	if (!ret && port->subordinate->cur_bus_speed != speed_req)
-+		ret = -EAGAIN;
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pcie_set_target_speed);
-+
-+#ifdef CONFIG_PCIE_BWCTRL
- static void pcie_bwnotif_enable(struct pcie_device *srv)
- {
- 	struct pcie_bwctrl_data *data = get_service_data(srv);
-@@ -133,6 +277,7 @@ static int pcie_bwnotif_probe(struct pcie_device *srv)
- 	if (!data)
- 		return -ENOMEM;
- 
-+	mutex_init(&data->set_speed_mutex);
- 	set_service_data(srv, data);
- 
- 	ret = request_threaded_irq(srv->irq, NULL, pcie_bwnotif_irq_thread,
-@@ -157,6 +302,7 @@ static void pcie_bwnotif_remove(struct pcie_device *srv)
- 		srv->port->link_bwctrl = NULL;
- 
- 	free_irq(srv->irq, srv);
-+	mutex_destroy(&data->set_speed_mutex);
- 	kfree(data);
- }
- 
-@@ -186,3 +332,4 @@ int __init pcie_bwctrl_init(void)
- {
- 	return pcie_port_service_register(&pcie_bwctrl_driver);
- }
-+#endif	/* CONFIG_PCIE_BWCTRL */
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 85e6624ba3b9..783494f04789 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -105,11 +105,7 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
- 	if (!(lnksta & PCI_EXP_LNKSTA_DLLLA) && pcie_lbms_seen(dev, lnksta)) {
- 		pci_info(dev, "broken device, retraining non-functional downstream link at 2.5GT/s\n");
- 
--		lnkctl2 &= ~PCI_EXP_LNKCTL2_TLS;
--		lnkctl2 |= PCI_EXP_LNKCTL2_TLS_2_5GT;
--		pcie_capability_write_word(dev, PCI_EXP_LNKCTL2, lnkctl2);
--
--		ret = pcie_retrain_link(dev, false);
-+		ret = pcie_set_target_speed(dev, PCIE_SPEED_2_5GT, false);
- 		if (ret) {
- 			pci_info(dev, "retraining failed\n");
- 			return ret;
-@@ -125,11 +121,7 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
- 
- 		pci_info(dev, "removing 2.5GT/s downstream link speed restriction\n");
- 		pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
--		lnkctl2 &= ~PCI_EXP_LNKCTL2_TLS;
--		lnkctl2 |= lnkcap & PCI_EXP_LNKCAP_SLS;
--		pcie_capability_write_word(dev, PCI_EXP_LNKCTL2, lnkctl2);
--
--		ret = pcie_retrain_link(dev, false);
-+		ret = pcie_set_target_speed(dev, PCIE_LNKCAP_SLS2SPEED(lnkcap), false);
- 		if (ret) {
- 			pci_info(dev, "retraining failed\n");
- 			return ret;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 406ed87fb0aa..b43bbd61c437 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1876,6 +1876,9 @@ bool pci_aer_available(void);
- static inline bool pci_aer_available(void) { return false; }
- #endif
- 
-+int pcie_set_target_speed(struct pci_dev *port, enum pci_bus_speed speed_req,
-+			  bool use_lt);
-+
- bool pci_ats_disabled(void);
- 
- #ifdef CONFIG_PCIE_PTM
+
+base-commit: cf87f46fd34d6c19283d9625a7822f20d90b64a4
 -- 
-2.39.2
+2.34.1
 
