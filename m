@@ -1,184 +1,113 @@
-Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90B8F3A8EF;
-	Fri, 17 May 2024 11:21:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ED7F3E471;
+	Fri, 17 May 2024 11:22:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1715944917; cv=none; b=lyLiXLoRcHXIZ7yFgHlLqCJyaeSVcp2i5hRBAVI829HBVPsRd4bbeReePMCzpDhn9J6xcntonbW1lnZPelyNDDatDCCroCkUcVKd8y3+wCBNe4B96MMe4+Jrkh2OMJts/UN+EcVjDLthSaMA/8NLoUqkhf/nsce7PYnm+gm4PXs=
+	t=1715944964; cv=none; b=RcjGYAV4ZCaeDCownT50d9+kW9+pgtg8OoFXsRaD/9vR6jjNnGhlZz18wAVnLQIMDtSNK+F/m/FkDCFFPYLMm26uRYacXvPmKZRzXonZVP8nO9hVtJmDnm+jWsudawkHrg847sCEf9Um8i6BTKiL3drjBhzKNVawh54D+G1mdXc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1715944917; c=relaxed/simple;
-	bh=cCiMLIeRQ2EXgfa0YgaB46BmldEjRuND+u8cgoXj8jA=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nq54Fkimf1wchCvA/g/E6EFYzJ2L9CkFLF7k/H9SyQRC64Mx5ryyucX39gF7p/knmoWwU5bKtHQIDUwbl+yLLYNEXQs5UCkZyjEHuoutJhFiSYsiYBJFJhrTIC9CwR/8u7PA/WWsFe0V+Y91dUmViKui0iDFc6NlxRSnPo7sM7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=pnKxv3wR; arc=none smtp.client-ip=198.47.19.141
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="pnKxv3wR"
-Received: from fllv0034.itg.ti.com ([10.64.40.246])
-	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 44HBKg9V111437;
-	Fri, 17 May 2024 06:20:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1715944842;
-	bh=M9gLMIAiDHAcckpBA6eubUaCYcUpTziwh4/Q77XTl20=;
-	h=Date:From:To:CC:Subject:References:In-Reply-To;
-	b=pnKxv3wREjHrW3r0IDs9vWgsr1lVRgaHQZuEryX4lHHhpM8MLY7TQnUzYwVTT3nMY
-	 o/xww5ONhLtQyUiudXBPeHrqexHCBRCyEdxllCMkL1NTvEboN89YNDoHVKEsM9qQVr
-	 qiIJByQY2KYw1OLVKCf32o+PG6Jx6wS+qmbDIIRU=
-Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
-	by fllv0034.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 44HBKgTI067066
-	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 17 May 2024 06:20:42 -0500
-Received: from DFLE112.ent.ti.com (10.64.6.33) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Fri, 17
- May 2024 06:20:42 -0500
-Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DFLE112.ent.ti.com
- (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Fri, 17 May 2024 06:20:42 -0500
-Received: from localhost (uda0492258.dhcp.ti.com [172.24.227.9])
-	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 44HBKfhh080832;
-	Fri, 17 May 2024 06:20:41 -0500
-Date: Fri, 17 May 2024 16:50:40 +0530
-From: Siddharth Vadapalli <s-vadapalli@ti.com>
-To: Onkarnarth <onkarnath.1@samsung.com>
-CC: <bhelgaas@google.com>, <vigneshr@ti.com>, <s-vadapalli@ti.com>,
-        <lpieralisi@kernel.org>, <kw@linux.com>, <robh@kernel.org>,
-        <yue.wang@Amlogic.com>, <neil.armstrong@linaro.org>,
-        <khilman@baylibre.com>, <jbrunet@baylibre.com>,
-        <martin.blumenstingl@googlemail.com>, <thomas.petazzoni@bootlin.com>,
-        <shawn.guo@linaro.org>, <lchuanhua@maxlinear.com>,
-        <srikanth.thokala@intel.com>, <songxiaowei@hisilicon.com>,
-        <wangbinghui@hisilicon.com>, <manivannan.sadhasivam@linaro.org>,
-        <thierry.reding@gmail.com>, <jonathanh@nvidia.com>,
-        <hayashi.kunihiko@socionext.com>, <mhiramat@kernel.org>,
-        <pali@kernel.org>, <toan@os.amperecomputing.com>,
-        <daire.mcnamara@microchip.com>, <conor.dooley@microchip.com>,
-        <marek.vasut+renesas@gmail.com>, <shawn.lin@rock-chips.com>,
-        <heiko@sntech.de>, <nirmal.patel@linux.intel.com>,
-        <jonathan.derrick@linux.dev>, <kishon@kernel.org>, <jdmason@kudzu.us>,
-        <dave.jiang@intel.com>, <rafael@kernel.org>, <lenb@kernel.org>,
-        <mahesh@linux.ibm.com>, <oohall@gmail.com>,
-        <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-omap@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-amlogic@lists.infradead.org>, <linux-arm-msm@vger.kernel.org>,
-        <linux-tegra@vger.kernel.org>, <r.thapliyal@samsung.com>,
-        Maninder Singh <maninder1.s@samsung.com>
-Subject: Re: [PATCH 1/1] PCI : Refactoring error log prints for better
- readability
-Message-ID: <4ec3b167-9324-41d3-a086-74ca001b9042@ti.com>
-References: <CGME20240517105941epcas5p3e8dbb97f19c9553bf9942ad146124806@epcas5p3.samsung.com>
- <20240517105923.2406246-1-onkarnath.1@samsung.com>
+	s=arc-20240116; t=1715944964; c=relaxed/simple;
+	bh=y0gcdIWx2hhNx3bFhbLmbTGSbZSCvWEtpHIYYuD4/kI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=d4dLTEplHhbzEMTvXi0ou95OxNEc5cLl/GGm8YWkuj/HknycitGUKqzzBFmkl963Es3fxZdDoq8KJmFge+ynbB3c4q18KPZpXI1zJIPRDRebiEimWqoeAps2B43ZU5OzmJ2B+V3LOLrn3JZqTRyCQ5cLXaci3p+J9plSpSqeBdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-1ee954e0aa6so5335625ad.3;
+        Fri, 17 May 2024 04:22:43 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1715944962; x=1716549762;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=G2dvI+vZE8pCZhViJyMM66y2U5LdOWJJxNSUxl+PGww=;
+        b=qjgQhaHlpR5vdGbDrkEPpCSJbiC0HBPxv/dzpDVHXzjPdcrERGVJsSpFDOl6FVQgr9
+         XOPe94WSqOeRMcZtONKovA4U1ZBp5Kl6E8nfuFiMoFRrE9uRolKUxW9ui6xmTDbkhvf1
+         Ry4/RqLpMyFvM/JZJWU1Mq93GTFmTrXa+WEFOyuRmfRHLlkIBj67NQfV6rkq1WVWmDnN
+         cYTldETgJiVBDY2dm3e/KxX1ASiazC+6kaWapiI1g1TOHlOULfpdf3Ra1ENZpKzGfYaU
+         dgrU3cPCv4NVh2YQtudi1qUEKXJqZg8lXabtPIX8KshcEDVaN8ryt/n/0/TIG1B9jakM
+         3jvQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVHIPlDS8XTUc6niwc7yyoolDm6sIjWq8JjdXrBK0nM9oBnhaHT4dk74kOqSmJl50L8GcabAMoTFN+Iwxho3GSk72nzUzoG8QLQyHTo8r6M1AGMmjRT+FoSiiOjNKe8tSF+
+X-Gm-Message-State: AOJu0YxHwtF4SpSz4MQEtmqXeCXyUoetff1PSHFpR+nm9njxpxT07mQz
+	H6vblsHbZGD4yMnYE3hLYEINJDyT++JaLIgzAdRQTYcBz6MGPCnF
+X-Google-Smtp-Source: AGHT+IHeIMz2gvttVbu8YvoQNX0R+DpY+pIkhaL/+tyli1VVIoZ7xusCcFeOVbaL7QVaVkzkH6ZC4g==
+X-Received: by 2002:a17:903:245:b0:1e4:4ade:f504 with SMTP id d9443c01a7336-1ef44161e45mr231310545ad.46.1715944962575;
+        Fri, 17 May 2024 04:22:42 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ef0bad9d22sm155932115ad.72.2024.05.17.04.22.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 17 May 2024 04:22:41 -0700 (PDT)
+Date: Fri, 17 May 2024 20:22:39 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, Simon Xue <xxm@rock-chips.com>,
+	Kever Yang <kever.yang@rock-chips.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jianfeng Liu <liujianfeng1994@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	stable@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v3] PCI: dw-rockchip: Fix initial PERST# GPIO value
+Message-ID: <20240517112239.GU202520@rocinante>
+References: <20240417164227.398901-1-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20240517105923.2406246-1-onkarnath.1@samsung.com>
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+In-Reply-To: <20240417164227.398901-1-cassel@kernel.org>
 
-On Fri, May 17, 2024 at 04:29:23PM +0530, Onkarnarth wrote:
-> From: Onkarnath <onkarnath.1@samsung.com>
+Hello,
 
-I think that the $subject should be similar to:
-https://patchwork.kernel.org/comment/25712288/
-rather than the generic "refactoring error log".
-
+> PERST# is active low according to the PCIe specification.
 > 
-> As %pe is already introduced, it's better to use it in place of (%ld) or (%d) for
-> printing error in logs. It will enhance readability of logs.
+> However, the existing pcie-dw-rockchip.c driver does:
+> gpiod_set_value(..., 0); msleep(100); gpiod_set_value(..., 1);
+> When asserting + deasserting PERST#.
 > 
-> Error print style is more consistent now.
+> This is of course wrong, but because all the device trees for this
+> compatible string have also incorrectly marked this GPIO as ACTIVE_HIGH:
+> $ git grep -B 10 reset-gpios arch/arm64/boot/dts/rockchip/rk3568*
+> $ git grep -B 10 reset-gpios arch/arm64/boot/dts/rockchip/rk3588*
 > 
-> Co-developed-by: Maninder Singh <maninder1.s@samsung.com>
-> Signed-off-by: Maninder Singh <maninder1.s@samsung.com>
-> Signed-off-by: Onkarnath <onkarnath.1@samsung.com>
-> ---
-> Suggested by Bjorn Helgaas in below discussion
-> https://patchwork.kernel.org/comment/25712288/
-
-Since you have indicated that Bjorn has suggested it, shouldn't there
-also be a "Suggested-by tag" in the commit message?
-
+> The actual toggling of PERST# is correct.
+> (And we cannot change it anyway, since that would break device tree
+> compatibility.)
 > 
->  drivers/pci/bus.c                             |   2 +-
->  drivers/pci/controller/dwc/pci-dra7xx.c       |   2 +-
->  drivers/pci/controller/dwc/pci-meson.c        |  16 +--
->  drivers/pci/controller/dwc/pcie-armada8k.c    |   4 +-
->  drivers/pci/controller/dwc/pcie-histb.c       |   6 +-
->  drivers/pci/controller/dwc/pcie-intel-gw.c    |  10 +-
->  drivers/pci/controller/dwc/pcie-keembay.c     |   2 +-
->  drivers/pci/controller/dwc/pcie-kirin.c       |   6 +-
->  drivers/pci/controller/dwc/pcie-qcom-ep.c     |  18 +--
->  drivers/pci/controller/dwc/pcie-qcom.c        |  18 +--
->  drivers/pci/controller/dwc/pcie-tegra194.c    | 132 +++++++++---------
->  drivers/pci/controller/dwc/pcie-uniphier-ep.c |   2 +-
->  drivers/pci/controller/pci-aardvark.c         |   6 +-
->  drivers/pci/controller/pci-ftpci100.c         |   2 +-
->  drivers/pci/controller/pci-tegra.c            |  86 ++++++------
->  drivers/pci/controller/pci-xgene.c            |   4 +-
->  drivers/pci/controller/pcie-microchip-host.c  |   2 +-
->  drivers/pci/controller/pcie-rcar-host.c       |  14 +-
->  drivers/pci/controller/pcie-rockchip.c        |  34 ++---
->  drivers/pci/controller/vmd.c                  |   2 +-
->  drivers/pci/doe.c                             |   4 +-
->  drivers/pci/endpoint/functions/pci-epf-mhi.c  |   8 +-
->  drivers/pci/endpoint/functions/pci-epf-ntb.c  |   2 +-
->  drivers/pci/endpoint/functions/pci-epf-test.c |   4 +-
->  drivers/pci/endpoint/functions/pci-epf-vntb.c |   2 +-
->  drivers/pci/endpoint/pci-ep-cfs.c             |  12 +-
->  drivers/pci/endpoint/pci-epf-core.c           |  16 +--
->  drivers/pci/hotplug/acpiphp_core.c            |   2 +-
->  drivers/pci/hotplug/pciehp_core.c             |   8 +-
->  drivers/pci/hotplug/shpchp_core.c             |   4 +-
->  drivers/pci/of.c                              |   6 +-
->  drivers/pci/pci-driver.c                      |   4 +-
->  drivers/pci/pcie/dpc.c                        |   4 +-
->  drivers/pci/quirks.c                          |   2 +-
->  drivers/pci/setup-bus.c                       |   2 +-
->  drivers/pci/slot.c                            |   4 +-
->  drivers/pci/vgaarb.c                          |   2 +-
->  37 files changed, 227 insertions(+), 227 deletions(-)
+> However, this driver does request the GPIO to be initialized as
+> GPIOD_OUT_HIGH, which does cause a silly sequence where PERST# gets
+> toggled back and forth for no good reason.
 > 
-> diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-> index 826b5016a101..dbc16cf5a246 100644
-> --- a/drivers/pci/bus.c
-> +++ b/drivers/pci/bus.c
-> @@ -351,7 +351,7 @@ void pci_bus_add_device(struct pci_dev *dev)
->  	dev->match_driver = !dn || of_device_is_available(dn);
->  	retval = device_attach(&dev->dev);
->  	if (retval < 0 && retval != -EPROBE_DEFER)
-> -		pci_warn(dev, "device attach failed (%d)\n", retval);
-> +		pci_warn(dev, "device attach failed: %pe\n", ERR_PTR(retval));
+> Fix this by requesting the GPIO to be initialized as GPIOD_OUT_LOW
+> (which for this driver means PERST# asserted).
+> 
+> This will avoid an unnecessary signal change where PERST# gets deasserted
+> (by devm_gpiod_get_optional()) and then gets asserted
+> (by rockchip_pcie_start_link()) just a few instructions later.
+> 
+> Before patch, debug prints on EP side, when booting RC:
+> [  845.606810] pci: PERST# asserted by host!
+> [  852.483985] pci: PERST# de-asserted by host!
+> [  852.503041] pci: PERST# asserted by host!
+> [  852.610318] pci: PERST# de-asserted by host!
+> 
+> After patch, debug prints on EP side, when booting RC:
+> [  125.107921] pci: PERST# asserted by host!
+> [  132.111429] pci: PERST# de-asserted by host!
+> 
+> This extra, very short, PERST# assertion + deassertion has been reported
+> to cause issues with certain WLAN controllers, e.g. RTL8822CE.
 
-Is there a reason behind dropping the parantheses?
+Applied to controller/rockchip, thank you!
 
->  
->  	pci_dev_assign_added(dev, true);
->  }
-> diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-> index d2d17d37d3e0..79b6cc7f0287 100644
-> --- a/drivers/pci/controller/dwc/pci-dra7xx.c
-> +++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-> @@ -801,7 +801,7 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
->  	reset = devm_gpiod_get_optional(dev, NULL, GPIOD_OUT_HIGH);
->  	if (IS_ERR(reset)) {
->  		ret = PTR_ERR(reset);
-> -		dev_err(&pdev->dev, "gpio request failed, ret %d\n", ret);
-> +		dev_err(&pdev->dev, "gpio request failed: %pe\n", ERR_PTR(ret));
+[1/1] PCI: dw-rockchip: Fix initial PERST# GPIO value
+      https://git.kernel.org/pci/pci/c/b00c483a1075
 
-Similar question as above regarding converting "failed, ret" to
-"failed:". Is this a new convention that is expected to be followed,
-where all errors are supposed to have "failed: %pe", rather than custom
-statements? Please let me know if this has already been discussed
-elsewhere.
-
-[...]
-
-Regards,
-Siddharth.
+	Krzysztof
