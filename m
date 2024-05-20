@@ -1,32 +1,32 @@
-Received: from out-189.mta0.migadu.com (out-189.mta0.migadu.com [91.218.175.189])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 553CC13774B
-	for <linux-pci@vger.kernel.org>; Mon, 20 May 2024 14:54:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D660137907
+	for <linux-pci@vger.kernel.org>; Mon, 20 May 2024 14:54:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716216864; cv=none; b=Zwll3ru8AJsMIaG51Jphi8z+WxpFRcW2ZqOkwylIxIOwAoaWjPpN/i9PHA9JSNPTn5lFzrwgJTnI/zaLcwoxGPJD/n3ndi7r7/BEUOiVo2iNDYntFXD4PDs+YhJyUkUUUpOxuAMbj4XvJZnt3q90aeaXWFgV5SmVbZY0NRo/S3g=
+	t=1716216865; cv=none; b=PTF3g3zk2maTpguPDpbTKqyuoli9gFx0Mt05tqPifQ6gGN70QrrA85gB6adViyp6Mr0PQkvzQF0clD4zy7BBu41jksopGL7oxabdwczI+X1ukfnCvVxGdg/KzpoPWeyB5C0nk4TxIYxW2Bm3dJEKkNLbPhlCmU6LsF/ObJFglaQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716216864; c=relaxed/simple;
-	bh=R6C/JcAy4XUIj+2mid0YFJ1dW39G3VQ8kRlz1b3tSQ8=;
+	s=arc-20240116; t=1716216865; c=relaxed/simple;
+	bh=zUjxErAfNxsRNkAthkqFDhI6NogrjhKQNib6awNIKNc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EXQlN8OZiP/xrKETxqaNOlNr6AKdWx4RL0HE3b89rhtmZJc+fch5etDh9fDxDLwH4ZceEHQW6ro8/IOT1z2Vfqt2o0weZRiSqfLTy1O2iXPBqDggsVSWFqNRmhX7KRt4jq2ALmVMjA8+V/5liDYxbP3e3Aug7gZ4/qR3mTbFRYk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=pGI8Zd6V; arc=none smtp.client-ip=91.218.175.189
+	 MIME-Version; b=Z4ogTlfvxGGQ5WLFlUeXvY92tQ7pfZ1mdJZseti9JRFGazdthLxxxrXzmqlYU1F5+B1jpHVP3eFQ3szSXTzfR5IRQEmI935labMBg5d7etyQGqzFWB5a1dJVvdR/RqFBJXd2E/qYkTl4Wqu2chCIlNn5NpCfVtOT86wYN2sliHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=ek3vP4gN; arc=none smtp.client-ip=91.218.175.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="pGI8Zd6V"
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="ek3vP4gN"
 X-Envelope-To: lpieralisi@kernel.org
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
-	t=1716216858;
+	t=1716216862;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=h+uuIXz4xj0FsFVOIz/Umf+nSIXJTEGtc5WA6Ask/xo=;
-	b=pGI8Zd6VEt20VL6kw+23rXruM9Wjb9BVRm9ETW6EKayZz35VT6Rw0QRsuSSU+n9YOtmvBV
-	GE2Pi1WTXnmd3YUCTOPLaSj1XY4402y/gaa6oNHo6w6X1Nkay57l0j0GmDDy+i2BriaCnW
-	txIAT1AJC/a/sCQ8nmAqRLOrg4sl1mI=
+	bh=vtlPUzut99fgqzwIOlVSGdtokjNewldmjFQ9baMdh6A=;
+	b=ek3vP4gN5H0U9AvSl18KYnpeAnAhzV6VPfmhrOugJy1fV+xFv+hpbiyKC99AHBRDgv7p4I
+	pEC69vnzUa3/e3QtLE5Cse+JN/fHgkZDgsLfoyYcNDSJDXuzzY3un/CuYeK8Aav3G7Yi12
+	zX7oURMTnmalD6li5HQ9snlyNUHD2DQ=
 X-Envelope-To: kw@linux.com
 X-Envelope-To: robh@kernel.org
 X-Envelope-To: linux-pci@vger.kernel.org
@@ -36,6 +36,9 @@ X-Envelope-To: linux-arm-kernel@lists.infradead.org
 X-Envelope-To: bhelgaas@google.com
 X-Envelope-To: linux-kernel@vger.kernel.org
 X-Envelope-To: sean.anderson@linux.dev
+X-Envelope-To: bharat.kumar.gogada@xilinx.com
+X-Envelope-To: lorenzo.pieralisi@arm.com
+X-Envelope-To: michal.simek@xilinx.com
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 From: Sean Anderson <sean.anderson@linux.dev>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
@@ -47,10 +50,13 @@ Cc: Michal Simek <michal.simek@amd.com>,
 	linux-arm-kernel@lists.infradead.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-kernel@vger.kernel.org,
-	Sean Anderson <sean.anderson@linux.dev>
-Subject: [PATCH v3 3/7] PCI: xilinx-nwl: Fix register misspelling
-Date: Mon, 20 May 2024 10:53:58 -0400
-Message-Id: <20240520145402.2526481-4-sean.anderson@linux.dev>
+	Sean Anderson <sean.anderson@linux.dev>,
+	Bharat Kumar Gogada <bharat.kumar.gogada@xilinx.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Michal Simek <michal.simek@xilinx.com>
+Subject: [PATCH v3 5/7] PCI: xilinx-nwl: Clean up clock on probe failure/removal
+Date: Mon, 20 May 2024 10:54:00 -0400
+Message-Id: <20240520145402.2526481-6-sean.anderson@linux.dev>
 In-Reply-To: <20240520145402.2526481-1-sean.anderson@linux.dev>
 References: <20240520145402.2526481-1-sean.anderson@linux.dev>
 Precedence: bulk
@@ -62,56 +68,78 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Migadu-Flow: FLOW_OUT
 
-MSIC -> MISC
+Make sure we turn off the clock on probe failure and device removal.
 
-Fixes: c2a7ff18edcd ("PCI: xilinx-nwl: Expand error logging")
+Fixes: de0a01f52966 ("PCI: xilinx-nwl: Enable the clock through CCF")
 Signed-off-by: Sean Anderson <sean.anderson@linux.dev>
 ---
 
 (no changes since v1)
 
- drivers/pci/controller/pcie-xilinx-nwl.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/pci/controller/pcie-xilinx-nwl.c | 22 ++++++++++++++++++----
+ 1 file changed, 18 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-xilinx-nwl.c b/drivers/pci/controller/pcie-xilinx-nwl.c
-index 437927e3bcca..ce881baac6d8 100644
+index c0a60cebdb2e..424cc5a1b4d1 100644
 --- a/drivers/pci/controller/pcie-xilinx-nwl.c
 +++ b/drivers/pci/controller/pcie-xilinx-nwl.c
-@@ -80,8 +80,8 @@
- #define MSGF_MISC_SR_NON_FATAL_DEV	BIT(22)
- #define MSGF_MISC_SR_FATAL_DEV		BIT(23)
- #define MSGF_MISC_SR_LINK_DOWN		BIT(24)
--#define MSGF_MSIC_SR_LINK_AUTO_BWIDTH	BIT(25)
--#define MSGF_MSIC_SR_LINK_BWIDTH	BIT(26)
-+#define MSGF_MISC_SR_LINK_AUTO_BWIDTH	BIT(25)
-+#define MSGF_MISC_SR_LINK_BWIDTH	BIT(26)
+@@ -779,6 +779,7 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		return -ENODEV;
  
- #define MSGF_MISC_SR_MASKALL		(MSGF_MISC_SR_RXMSG_AVAIL | \
- 					MSGF_MISC_SR_RXMSG_OVER | \
-@@ -96,8 +96,8 @@
- 					MSGF_MISC_SR_NON_FATAL_DEV | \
- 					MSGF_MISC_SR_FATAL_DEV | \
- 					MSGF_MISC_SR_LINK_DOWN | \
--					MSGF_MSIC_SR_LINK_AUTO_BWIDTH | \
--					MSGF_MSIC_SR_LINK_BWIDTH)
-+					MSGF_MISC_SR_LINK_AUTO_BWIDTH | \
-+					MSGF_MISC_SR_LINK_BWIDTH)
+ 	pcie = pci_host_bridge_priv(bridge);
++	platform_set_drvdata(pdev, pcie);
  
- /* Legacy interrupt status mask bits */
- #define MSGF_LEG_SR_INTA		BIT(0)
-@@ -299,10 +299,10 @@ static irqreturn_t nwl_pcie_misc_handler(int irq, void *data)
- 	if (misc_stat & MSGF_MISC_SR_FATAL_DEV)
- 		dev_err(dev, "Fatal Error Detected\n");
+ 	pcie->dev = dev;
  
--	if (misc_stat & MSGF_MSIC_SR_LINK_AUTO_BWIDTH)
-+	if (misc_stat & MSGF_MISC_SR_LINK_AUTO_BWIDTH)
- 		dev_info(dev, "Link Autonomous Bandwidth Management Status bit set\n");
+@@ -801,13 +802,13 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 	err = nwl_pcie_bridge_init(pcie);
+ 	if (err) {
+ 		dev_err(dev, "HW Initialization failed\n");
+-		return err;
++		goto err_clk;
+ 	}
  
--	if (misc_stat & MSGF_MSIC_SR_LINK_BWIDTH)
-+	if (misc_stat & MSGF_MISC_SR_LINK_BWIDTH)
- 		dev_info(dev, "Link Bandwidth Management Status bit set\n");
+ 	err = nwl_pcie_init_irq_domain(pcie);
+ 	if (err) {
+ 		dev_err(dev, "Failed creating IRQ Domain\n");
+-		return err;
++		goto err_clk;
+ 	}
  
- 	/* Clear misc interrupt status */
+ 	bridge->sysdata = pcie;
+@@ -817,11 +818,23 @@ static int nwl_pcie_probe(struct platform_device *pdev)
+ 		err = nwl_pcie_enable_msi(pcie);
+ 		if (err < 0) {
+ 			dev_err(dev, "failed to enable MSI support: %d\n", err);
+-			return err;
++			goto err_clk;
+ 		}
+ 	}
+ 
+-	return pci_host_probe(bridge);
++	err = pci_host_probe(bridge);
++
++err_clk:
++	if (err)
++		clk_disable_unprepare(pcie->clk);
++	return err;
++}
++
++static void nwl_pcie_remove(struct platform_device *pdev)
++{
++	struct nwl_pcie *pcie = platform_get_drvdata(pdev);
++
++	clk_disable_unprepare(pcie->clk);
+ }
+ 
+ static struct platform_driver nwl_pcie_driver = {
+@@ -831,5 +844,6 @@ static struct platform_driver nwl_pcie_driver = {
+ 		.of_match_table = nwl_pcie_of_match,
+ 	},
+ 	.probe = nwl_pcie_probe,
++	.remove_new = nwl_pcie_remove,
+ };
+ builtin_platform_driver(nwl_pcie_driver);
 -- 
 2.35.1.1320.gc452695387.dirty
 
