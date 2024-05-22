@@ -1,227 +1,102 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mta-04.yadro.com (mta-04.yadro.com [89.207.88.248])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D0881F17B
-	for <linux-pci@vger.kernel.org>; Wed, 22 May 2024 16:14:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E5882869B
+	for <linux-pci@vger.kernel.org>; Wed, 22 May 2024 16:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.248
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716394469; cv=none; b=o4U2a/4Ro8uhKHMDjtPXvOkI+t5nU1FWa5i+YoqqXFATnJz3mtS2D9XcPALCNYfajulb4LCHUV/npFhU54uzRnbQQCPI19RAbfVuO7ExMVhr05GZboQ6JlWekjjXXH5GN/eRc08oJRG5Odz97Z90KLmSW6rtxwImNsAdvufIHvA=
+	t=1716394478; cv=none; b=hiIeTHbjMPDd0jeYBd1TH93y4Pt4GNxTQGnSgkdUX3dQS+HKkh0LwG/nYVAG04k+OKxWD/vRoYTNLRmA3NZdcnyq0psCGl5M7UxjjYqJ+ISlxZwaGmQhDwo7wJnad2+WMvnKyqjX//RzC4BeKCKrFYkbpswDRn0CLNDiTc8kTBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716394469; c=relaxed/simple;
-	bh=t5oLeJLARB4GIEkSWSnsjY8OLcXgibYZT57bfXOlG7c=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=seci8DPnegXkVNoS9DxxI5DoU5uDquLvQ2lhY8WITm7G6tAi4tMrWMhWgjkl1W7e34w8wxDW847Uhx28vqaIp8/OvIzIGeoSajxhck0epQxqJAohNZ1OJRfKlQhoX3TPw6KzdFupFwxcudFIcicY6RRUk9tyE8EJCz6yiHQhFqg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=k7oSrasw; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1716394478; c=relaxed/simple;
+	bh=oFrpeI8iuiwLywqkzLVa7EnTh1eXLHZXFkaTZFMAwqE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FSwSGSgNV4b17TCxVWIGvJ+PuuZcEzIDI9Z4lStThXwXAw/FOabo7clcxze+yXjP69j/zcC86XSGXE9dgWASL9V45/b046/1UOrl6/fAwBBQQbSE86D1SUgR0yK4v7CJV2j4UwuwXLliqCCKhSJUlwkSIMcvvOgxxN6kUYqaIFk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=ahHcFbLJ; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=M2ccUJ5O; arc=none smtp.client-ip=89.207.88.248
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="k7oSrasw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1716394467; x=1747930467;
-  h=date:from:to:cc:subject:message-id;
-  bh=t5oLeJLARB4GIEkSWSnsjY8OLcXgibYZT57bfXOlG7c=;
-  b=k7oSrasw+0ZFDN8KUF9ErHS/rbGm52cBTze+Vp0ALQh+8A06b0GH50Jo
-   xK1cr7w0G3qZTwCHO4b7Qm1Dh+Tcoixhtyt02/qK0t4Fkc/HgYANYAGiK
-   P9HRBAk9l2ljaMjgLKgXOOYRJbDSbxOjizBSRCqR9dOMYyenbpe6l6BQc
-   2u/otlibbzGqj6bKwPz7plS5lHtWdUCt4sg+92qG//l+LExhosRT5h2ko
-   E4obSnYat6Rqd4t8L+Hj+fdZvE/ZTDGzSX9AirzhvmrBMkKbYZrBpb+bC
-   upQrBYK0e+qDxDs5Pt1RO8g+tJ3ukwizoNBzdpLqSsyT5EqPI1EffdceX
-   g==;
-X-CSE-ConnectionGUID: 60bc5TWeQ4+vCEulfrmuAA==
-X-CSE-MsgGUID: Hm5xGQ/cQ9qCK3IRht3fQQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11080"; a="12838899"
-X-IronPort-AV: E=Sophos;i="6.08,181,1712646000"; 
-   d="scan'208";a="12838899"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 May 2024 09:14:27 -0700
-X-CSE-ConnectionGUID: dLQhFU/QTVmtIPkdNIVkyg==
-X-CSE-MsgGUID: 6lbwlp37Rd2dg46xlJMiuQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,181,1712646000"; 
-   d="scan'208";a="37921071"
-Received: from unknown (HELO 0610945e7d16) ([10.239.97.151])
-  by fmviesa004.fm.intel.com with ESMTP; 22 May 2024 09:14:26 -0700
-Received: from kbuild by 0610945e7d16 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1s9obc-0001iY-1g;
-	Wed, 22 May 2024 16:14:21 +0000
-Date: Thu, 23 May 2024 00:13:32 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:defer/misc] BUILD SUCCESS
- 17661d367522e15262cc5c8c8831c599c547cb08
-Message-ID: <202405230030.raAg312u-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="ahHcFbLJ";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="M2ccUJ5O"
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-04.yadro.com F3170C0002
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
+	t=1716394041; bh=NnEmWc8vyujFXDLcuMZKSPG3QOonBGAsJyQ2L4f0ceI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
+	b=ahHcFbLJpsLfqPjnYuba375DaWrPTNX6xLzBukkSy/Ou3WLL74nk24bbKixiofjwJ
+	 A7qr5+BlMEJKwcFIbfMgTAh5/Ke+2jTeEAMTUP1qdiJLev0flZL0x95/Dscjw5YBPn
+	 lSQaL1+RhfH46jPgqCbTvST7LQLvWdWlFPbFLdvUnxlMw5Kitj9vEr1RWBCgbloYVa
+	 DZyJaFhw6fHPjtDZVkwQ89l9TtblfrofRqdwsweUL7GdJubeaM6odGIcv0i0Lt/+9C
+	 7do3/+QGAuZF3fQkgQHLyYfMHce7w6ttBnG/ZMwm34NbiK6bIm8YxN/LI+FAjHnwNv
+	 8sEqXjiRbVsFA==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1716394041; bh=NnEmWc8vyujFXDLcuMZKSPG3QOonBGAsJyQ2L4f0ceI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:From;
+	b=M2ccUJ5OT11AB252oBSctYWoJmL4weiElkD3XHp8wZpkMacp1N+DZ2tb8L51RsG4+
+	 GKbr8Z2BfMseRHHqwazQfuLUf6HufPZnA3uK7rBb5Md05GCYVbrmOlft1Evatlcv9x
+	 BpsKFRgq4Vi27ng1ez3D6G7rU4pV9KxqmO8mJ9Fi8hvhQ0YJko/KdWzVHopguEAMug
+	 nZb6SAZvqo0KiFKnuVm8aF/GJGqfY9neC+NEEqKybZU6brFl+I16P3anzf634t8oBL
+	 1lDrWjYDse3ta9OWMx2buMDVOCo/ir2esbPalcU0I0WkWAJ77VI++5dktEpthpCCdr
+	 C/m8doG0FYEdQ==
+From: Nikita Proshkin <n.proshkin@yadro.com>
+To: <linux-pci@vger.kernel.org>, Martin Mares <mj@ucw.cz>
+CC: <linux@yadro.com>, Sergei Miroshnichenko <s.miroshnichenko@yadro.com>,
+	Nikita Proshkin <n.proshkin@yadro.com>
+Subject: [PATCH pciutils 0/6] pcilmr: Improve grading of the margining results
+Date: Wed, 22 May 2024 19:06:28 +0300
+Message-ID: <20240522160634.29831-1-n.proshkin@yadro.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: T-EXCH-08.corp.yadro.com (172.17.11.58) To
+ S-Exch-02.corp.yadro.com (10.78.5.239)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git defer/misc
-branch HEAD: 17661d367522e15262cc5c8c8831c599c547cb08  Documentation: PCI: pci-endpoint: Fix EPF ops list
+Original version of the pcilmr utility used values from the Table 8-11 of
+the PCIe Base Spec Rev 5.0 to evaluate lanes. But it seems that these
+values relate only to the margining equipment and are not relevant to
+evaluating the quality of connections.
 
-elapsed time: 1171m
+Patch set improves grading from two sides:
+* The PCIe Base Spec Rev 5.0 sets the minimum values for the eye in the
+  section 8.4.2. Change default grading values in the utility according to
+  this section. Keep in mind that the Spec uses full eye width and height
+  terms and that reference values depend on the current Link speed;
+* Manufacturers can provide criteria for their devices that
+  differ from the standard ones. Usually this information falls under the
+  NDA, so add an option to the utility that will allow the user to set
+  necessary criteria for evaluating the quality of lanes.
 
-configs tested: 150
-configs skipped: 3
+At the same time, fix the known limitations associated with arguments
+parsing.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+With the new changes made, the logic responsible for arguments parsing has
+become too large, so put it in a separate file.
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                              allmodconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                              allyesconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240522   gcc  
-arc                   randconfig-002-20240522   gcc  
-arm                              allmodconfig   gcc  
-arm                               allnoconfig   clang
-arm                              allyesconfig   gcc  
-arm                                 defconfig   clang
-arm                   randconfig-001-20240522   clang
-arm                   randconfig-002-20240522   gcc  
-arm                   randconfig-003-20240522   clang
-arm                   randconfig-004-20240522   clang
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240522   clang
-arm64                 randconfig-002-20240522   clang
-arm64                 randconfig-003-20240522   gcc  
-arm64                 randconfig-004-20240522   gcc  
-csky                             allmodconfig   gcc  
-csky                              allnoconfig   gcc  
-csky                             allyesconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240522   gcc  
-csky                  randconfig-002-20240522   gcc  
-hexagon                          allmodconfig   clang
-hexagon                           allnoconfig   clang
-hexagon                          allyesconfig   clang
-hexagon                             defconfig   clang
-hexagon               randconfig-001-20240522   clang
-hexagon               randconfig-002-20240522   clang
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-001-20240522   clang
-i386         buildonly-randconfig-002-20240522   clang
-i386         buildonly-randconfig-003-20240522   gcc  
-i386         buildonly-randconfig-004-20240522   clang
-i386         buildonly-randconfig-005-20240522   clang
-i386         buildonly-randconfig-006-20240522   gcc  
-i386                                defconfig   clang
-i386                  randconfig-001-20240522   clang
-i386                  randconfig-002-20240522   clang
-i386                  randconfig-003-20240522   clang
-i386                  randconfig-004-20240522   clang
-i386                  randconfig-005-20240522   clang
-i386                  randconfig-006-20240522   clang
-i386                  randconfig-011-20240522   clang
-i386                  randconfig-012-20240522   gcc  
-i386                  randconfig-013-20240522   gcc  
-i386                  randconfig-014-20240522   gcc  
-i386                  randconfig-015-20240522   gcc  
-i386                  randconfig-016-20240522   gcc  
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240522   gcc  
-loongarch             randconfig-002-20240522   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240522   gcc  
-nios2                 randconfig-002-20240522   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                         allyesconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                           allmodconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                           allyesconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240522   gcc  
-parisc                randconfig-002-20240522   gcc  
-parisc64                            defconfig   gcc  
-powerpc                          allmodconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc               randconfig-001-20240522   gcc  
-powerpc               randconfig-002-20240522   gcc  
-powerpc               randconfig-003-20240522   clang
-powerpc64             randconfig-001-20240522   clang
-powerpc64             randconfig-002-20240522   clang
-powerpc64             randconfig-003-20240522   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv                 randconfig-001-20240522   gcc  
-riscv                 randconfig-002-20240522   gcc  
-s390                             allmodconfig   clang
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-s390                  randconfig-001-20240522   clang
-s390                  randconfig-002-20240522   gcc  
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                    randconfig-001-20240522   gcc  
-sh                    randconfig-002-20240522   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240522   gcc  
-sparc64               randconfig-002-20240522   gcc  
-um                               allmodconfig   clang
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                    randconfig-001-20240522   gcc  
-um                    randconfig-002-20240522   clang
-um                           x86_64_defconfig   clang
-x86_64                            allnoconfig   clang
-x86_64                           allyesconfig   clang
-x86_64       buildonly-randconfig-001-20240522   clang
-x86_64       buildonly-randconfig-002-20240522   gcc  
-x86_64       buildonly-randconfig-003-20240522   clang
-x86_64       buildonly-randconfig-004-20240522   gcc  
-x86_64       buildonly-randconfig-005-20240522   clang
-x86_64       buildonly-randconfig-006-20240522   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-001-20240522   gcc  
-x86_64                randconfig-002-20240522   clang
-x86_64                randconfig-003-20240522   gcc  
-x86_64                randconfig-004-20240522   gcc  
-x86_64                randconfig-005-20240522   gcc  
-x86_64                          rhel-8.3-rust   clang
-xtensa                            allnoconfig   gcc  
-xtensa                randconfig-001-20240522   gcc  
-xtensa                randconfig-002-20240522   gcc  
+Nikita Proshkin (6):
+  pcilmr: Ensure that utility can accept either Downstream or Upstream
+    link port
+  pcilmr: Move most of pcilmr arguments parsing logic to the separate
+    file
+  pcilmr: Add new grading option
+  pcilmr: Add option to configure margining dwell time
+  pcilmr: Apply grading quirk for Ice Lake RC ports
+  pcilmr: Update usage and man: new arguments format and grading
+
+ Makefile             |   2 +-
+ lmr/lmr.h            | 103 +++++++++----
+ lmr/margin.c         |  72 ++++-----
+ lmr/margin_args.c    | 302 ++++++++++++++++++++++++++++++++++++
+ lmr/margin_hw.c      |  57 ++++++-
+ lmr/margin_log.c     |  23 ++-
+ lmr/margin_results.c | 322 +++++++++++++++++++++++++--------------
+ pcilmr.c             | 353 ++++++-------------------------------------
+ pcilmr.man           | 138 +++++++++++++----
+ 9 files changed, 841 insertions(+), 531 deletions(-)
+ create mode 100644 lmr/margin_args.c
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
