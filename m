@@ -1,20 +1,20 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E156E19066A;
-	Wed, 29 May 2024 08:02:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 516D6194C6D;
+	Wed, 29 May 2024 08:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716969749; cv=none; b=oKmVt0txf3oSZSPU+lZojXIKvIWYxlabaT6xgUR1EVxI5HrbnNi8hNlOor1Azsn/ECiolJ+1We5NQiqaOTfAXfN7EwoZjFWdP6Fz+2jSs3q9BhnblIU8BIgVOzL8TsUV6zymPKNcfu/zRvNG34gYIDsGBciNcgQeyzHdWouA47g=
+	t=1716969751; cv=none; b=kI1m5cuTu1pjIczy8AcZl4y4ONxuro7VTdvqeN6mUO8phcNzk6HZlep656frTZ13qQINftheLcDqyA95K/KxeVv5EGs7tqZ9WgWCyjYtVvp6rMbqIOhl+o7MDCeCLW6Nk5UHnRVENrr0dAM2kmX3nekrK6gA3VkChh5wh2RzB34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716969749; c=relaxed/simple;
-	bh=lIQoJuYfvm679uF1lNFyIyCACKNRNlfZEqAQst/OIC0=;
+	s=arc-20240116; t=1716969751; c=relaxed/simple;
+	bh=nytelL/99ibcM5qbvj525iWQpx+Zq9NOxMVc5VPy8J0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=udDmsB1F12Wv8cTuRGF0WHmsFZNXEPT4XKqfAFrn2bW0udAvG9hnqOdMXjpj5a3w6huxMB/4TkOPYWqA7BIVSsGXnJpaZ9V8E82+rCdnw0ZyQxGFCJE2S6CuFE57v4VIYw9XxT7c2QyDX2Fep2Ar3CnjMtjVBDkzwB3/WT3cOWs=
+	 MIME-Version; b=lmRrJcabkoEVtIjKCB56nj/787HjttZRMMAUaioX/LPsVcqJYOURpaZHq313ING0Y4BIXPxgQzzc28oNH8eDYNy8XU0mM3KASqvyxRSS456KRm7uQ/jtv9JFqz2gxLq0DKu/V6U7PynfMW5z1cOsWWYAuUL1HoWHGUbqFuAXcRU=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id DF3A31C102B;
-	Wed, 29 May 2024 17:02:25 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id B451C1C1064;
+	Wed, 29 May 2024 17:02:27 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -81,9 +81,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v8 32/36] sh: j2_mimas_v2.dts update
-Date: Wed, 29 May 2024 17:01:18 +0900
-Message-Id: <82f265311a16717f9f07f69dfa242af7d773b512.1716965617.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v8 33/36] sh: Add dtbs target support.
+Date: Wed, 29 May 2024 17:01:19 +0900
+Message-Id: <453720d8182ce94d20dff57ee44b6a2092b3773f.1716965617.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1716965617.git.ysato@users.sourceforge.jp>
 References: <cover.1716965617.git.ysato@users.sourceforge.jp>
@@ -96,23 +96,23 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
+Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- arch/sh/boot/dts/j2_mimas_v2.dts | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ arch/sh/boot/dts/Makefile | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/arch/sh/boot/dts/j2_mimas_v2.dts b/arch/sh/boot/dts/j2_mimas_v2.dts
-index faf884f53804..b6ee682c5737 100644
---- a/arch/sh/boot/dts/j2_mimas_v2.dts
-+++ b/arch/sh/boot/dts/j2_mimas_v2.dts
-@@ -16,7 +16,7 @@ cpus {
- 
- 		cpu@0 {
- 			device_type = "cpu";
--			compatible = "jcore,j2";
-+			compatible = "jcore,j2", "renesas,sh2";
- 			reg = <0>;
- 			clock-frequency = <50000000>;
- 			d-cache-size = <8192>;
+diff --git a/arch/sh/boot/dts/Makefile b/arch/sh/boot/dts/Makefile
+index 4a6dec9714a9..e6b93360c213 100644
+--- a/arch/sh/boot/dts/Makefile
++++ b/arch/sh/boot/dts/Makefile
+@@ -1,2 +1,7 @@
+ # SPDX-License-Identifier: GPL-2.0-only
+ obj-$(CONFIG_USE_BUILTIN_DTB) += $(addsuffix .dtb.o, $(CONFIG_BUILTIN_DTB_SOURCE))
++
++dtb-$(CONFIG_CPU_J2) += j2_mimas_v2.dtb
++dtb-$(CONFIG_CPU_SUBTYPE_SH7751R) += landisk.dtb
++dtb-$(CONFIG_CPU_SUBTYPE_SH7751R) += rts7751r2dplus.dtb
++dtb-$(CONFIG_CPU_SUBTYPE_SH7751R) += usl-5p.dtb
 -- 
 2.39.2
 
