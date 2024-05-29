@@ -1,20 +1,20 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1978317BB37;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D3F7217B509;
 	Wed, 29 May 2024 08:07:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716970054; cv=none; b=rhuczeuyS4REpVT0839DHmiiQYLw7C+Q9XFJ2iLVIs7diH+8uexWwYifTpEF5dqrEYjUOVLvMXUYul6pn8Pi1Ern3dzrJpd3F1quYRNLa3BwuJK0sRHFkw301MoxK0LJ88Wiocw6QnZCNG6VyW4qEQU7FsqQFwUlaYrRAKyo6Os=
+	t=1716970055; cv=none; b=ohK5CZPpbLXkUB/FxzyR3GzDRx3O2LjrjRuLSjM8thOcbmdohGKmWaiCUKclYcBmUuljLUtLEaunDPZMkhw+g3PSVar/4FhHXoz13toJ1N5mrgudSy+HetUod6msDbixLUh/L9RHamccv3i4jrgIolXBTJZRCvAk45MXzV2FHZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716970054; c=relaxed/simple;
-	bh=X5xhUmYdUi/YHxJqfjY+z9LAkIgLaCslllhJ8YzjKP4=;
+	s=arc-20240116; t=1716970055; c=relaxed/simple;
+	bh=+zx1JhiouGQP7v/b1coKbbm4yO+9KDHNfNLHimV1Sxs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Vg/D+iTrrbCFPb+dM55r1dySD5/1uG3G/8hwwVZieHgLyIDC+Jl8zNIOSnHKABjNyDAauI5OiPGDS2j4PGu6S4AL8SqJo0SQ5leYqL5W+IgYPlxiXigYMcc4Ci0z5bvE/RXCWmsOgfiYy4kb6WVDTGIzX82ZbmLqCwvK6rhPFJo=
+	 MIME-Version; b=K0w9JlyBoCqjhUUvusqeqc8Kil1odX/OL9GQGSO+FZg9SpINF6ZyoX2kyOAYR/gjagJUxf3/qh8G7kdvO+wKfXdM0FQcDD18c1R77Ya/MJ1jL9Il305nWS4UgWVDIGKA6VzsxWK6STbusY+lQvHuVB2oIjRr5jDuaz4QRcPKG+E=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id AFD791C00A2;
-	Wed, 29 May 2024 17:01:29 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 2DD6D1C0554;
+	Wed, 29 May 2024 17:01:35 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -81,9 +81,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v8 01/36] sh: passing FDT address to kernel startup.
-Date: Wed, 29 May 2024 17:00:47 +0900
-Message-Id: <f77649c921180a3b8c3c3a29058ab782b499a3bd.1716965617.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v8 04/36] dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
+Date: Wed, 29 May 2024 17:00:50 +0900
+Message-Id: <98a4466e189f5f0358b0525d96d0207398907009.1716965617.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1716965617.git.ysato@users.sourceforge.jp>
 References: <cover.1716965617.git.ysato@users.sourceforge.jp>
@@ -95,38 +95,39 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-R4 is caller saved in SH ABI.
-Save it so it doesn't get corrupted until it's needed for initialization.
+Renesas SH7751 Interrupt controller priority register define.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
-Reviewed-by: Geert Uytterhoeven <geert+renesas@glider.be>
 ---
- arch/sh/boot/compressed/head_32.S | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ .../renesas,sh7751-intc.h                     | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+ create mode 100644 include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
 
-diff --git a/arch/sh/boot/compressed/head_32.S b/arch/sh/boot/compressed/head_32.S
-index 7bb168133dbb..6be59851122e 100644
---- a/arch/sh/boot/compressed/head_32.S
-+++ b/arch/sh/boot/compressed/head_32.S
-@@ -15,7 +15,8 @@ startup:
- 	/* Load initial status register */
- 	mov.l   init_sr, r1
- 	ldc     r1, sr
--
-+	/* Save FDT address */
-+	mov	r4, r13
- 	/* Move myself to proper location if necessary */
- 	mova	1f, r0
- 	mov.l	1f, r2
-@@ -84,7 +85,7 @@ l1:
- 	/* Jump to the start of the decompressed kernel */
- 	mov.l	kernel_start_addr, r0
- 	jmp	@r0
--	nop
-+	 mov	r13, r4
- 	
- 	.align	2
- bss_start_addr:
+diff --git a/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+new file mode 100644
+index 000000000000..0543bd1b895e
+--- /dev/null
++++ b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+@@ -0,0 +1,19 @@
++/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++ *
++ * SH3/4 INTC IPR register offsets (Address / bits)
++ */
++
++#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
++#define __DT_BINDINGS_RENESAS_SH7751_INTC
++
++#define IPRA			0
++#define IPRB			4
++#define IPRC			8
++#define IPRD			12
++#define INTPRI00		256
++#define IPR_B12			12
++#define IPR_B8			8
++#define IPR_B4			4
++#define IPR_B0			0
++
++#endif
 -- 
 2.39.2
 
