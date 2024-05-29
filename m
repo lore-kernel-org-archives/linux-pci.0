@@ -1,45 +1,46 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA13917B404
-	for <linux-pci@vger.kernel.org>; Wed, 29 May 2024 14:51:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86BB0159216
+	for <linux-pci@vger.kernel.org>; Wed, 29 May 2024 14:55:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716994284; cv=none; b=lDO9nvxR8/HeZitJ5OEsvUM9+Hb/CHmwviJGOixfawlaugxdTd6yaTeiqeVXIRZIH7v+5BL9/Ns5OgCWTdgAvmk2ivcZ/edxDZrYbtIkAa7/XGmRpWqPp/muRv1jP4HyHjYS/Q6NBbK/VdVYVWyJ5ZTdyglYEqR3q2xd3MX3YZk=
+	t=1716994503; cv=none; b=J3vDrfGxEsWzf0WqK/m8sJksfhFg/WSztF3/g0bXL/xZviyCDaozslYp8zr+DvB26SviIE+3CRcMS9CZeV11Var4yyBCqpwA2HgdWY/B3nNJlRpwtTbSoaMIAWJqqYdAVF6PdIFuzXToTkfx0OHLsdoctx0Om/f0OlZ/jcd+dB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1716994284; c=relaxed/simple;
-	bh=87tgenCcbkDkT1v056+Rrow6+rvKb6ED20JwCzwCEBo=;
+	s=arc-20240116; t=1716994503; c=relaxed/simple;
+	bh=ucPBMN8ELSEqqPVpCWsJ2PX+3RqrGtkco4aD/+vQeDc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qgxj0JcGK/2nFbCTJ8Vk56M4Hr6JzqDAtQL538+t4s3V5lCQme0Usxux8s2do6Y2n6cefV1ZH2eS2ckdQ3DubnfrNBJ8axDyO+MF28o47mr40CPJehwQYFdtXqXnklVkv4ACOrTHschBuXe1NoVqJfzUjy1q+4Yvzf6L7YBBwTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id C5EC530000D14;
-	Wed, 29 May 2024 16:43:51 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id B0FAA230885; Wed, 29 May 2024 16:43:51 +0200 (CEST)
-Date: Wed, 29 May 2024 16:43:51 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Ricky WU <ricky_wu@realtek.com>
-Cc: "scott@spiteful.org" <scott@spiteful.org>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"kbusch@kernel.org" <kbusch@kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: Re: [bug report] nvme not re-recognize when changed M.2 SSD in S3
- mode
-Message-ID: <Zlc_J2386nAAhn1s@wunner.de>
-References: <a608b5930d0a48f092f717c0e137454b@realtek.com>
- <ZhZk7MMt_dm6avBJ@wunner.de>
- <ZhapFF3393xuIHwM@wunner.de>
- <8c3d00850e7449c184e4c45a3c9b9dfa@realtek.com>
- <ZlR0grWLqO9nch8Q@wunner.de>
- <94918684e6a84122a6373ef45b3c117c@realtek.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=dx5KmFO9BDbNhM8RJASd2MGm9kSvesIM4WDvv9+cxEdqE8rDNpK/9lcZmJ2hI+348/LferMvcWAT5VdZlmpF5+WDzKeACBlRr1vVrLMpEwI4kZw/Lwb4S9Nb/6FHYeM1I3Ssgr/iMMvv5ESTM3As6fTJKtEWUYKngJbXkCwsgH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uHjfbplA; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uHjfbplA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0DE28C113CC;
+	Wed, 29 May 2024 14:55:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1716994503;
+	bh=ucPBMN8ELSEqqPVpCWsJ2PX+3RqrGtkco4aD/+vQeDc=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uHjfbplArmBCkVQK7UHhgwK54QVNsB79byIwy6v7kNtSY/BZg1wXxzYzmoeOKaU6K
+	 R7nUDouk394fdI57VuqKvAWTpkJC8WUUm9dFZ+X5qwpwjj1lHzaIAfzx1T9VYiAMmi
+	 CrmKK1THuK6hHQyWn3hSoDkcEtZKDKXyW2KRa8jXabTVXGduRi/GgAb3JOKNlCtu+V
+	 c6A7wNrA4XLP0hxjgdJX4RvSncqFUwfc8tgTg4hZgdF7/PSo5CP20nOMx9VbBUlzNN
+	 zuzzpKJ5G+aqSfWkcBWlVli8FQ9w/TaOz5uc2dkp7kysdUIzTwTlSf6ACuuPF+rCIB
+	 B0Z/dkgemqw0A==
+Date: Wed, 29 May 2024 16:54:57 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH 1/3] PCI: dwc: ep: Add dw_pcie_ep_deinit_notify()
+Message-ID: <ZldBwUwyekUM-b9i@ryzen.lan>
+References: <ZlYt1DvhcK-ePwXU@ryzen.lan>
+ <20240528195539.GA458945@bhelgaas>
+ <Zlba0OfNCGecFYj8@ryzen.lan>
+ <20240529141614.GA3293@thinkpad>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,45 +49,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <94918684e6a84122a6373ef45b3c117c@realtek.com>
+In-Reply-To: <20240529141614.GA3293@thinkpad>
 
-On Wed, May 29, 2024 at 07:47:13AM +0000, Ricky WU wrote:
-> We tried this patch as below situation: 
-> 1.keep the SDEX card enter S3 then resume ->PASS 
-> 2. on S3 mode insert the SDEX card then resume -> PASS
-> 3.on S3 mode remove the SDEX card then resume -> PASS
-> 4.replace card on S3 mode (different brand) ->PASS
-> 5.replace card on S3 mode (same brand and same capacity) ->FAIL
-> Can not see the msg "device replace during system sleep"
+On Wed, May 29, 2024 at 07:46:14PM +0530, Manivannan Sadhasivam wrote:
 > 
-> Against 5 we found a issue, most card not declare capability
-> "PCI_EXT_CAP_ID_DSN", even if there is the capability the config space
-> value are 0, cause pci_get_dsn() return 0 normally.
-> However these cards can show the SN on CrystalDiskInfo.
+> That's fine. Thanks a lot for stepping in to fix the build issue. I was on
+> vacation, so couldn't act on your query/series promptly.
 
-Thanks for testing.  That's the expected behavior so I went ahead and
-submitted the patch:
+Welcome back ;)
 
-https://lore.kernel.org/all/a1afaa12f341d146ecbea27c1743661c71683833.1716992815.git.lukas@wunner.de/
 
-If vendors neglect to populate the Device Serial Number in config space,
-it's zero and we cannot use it to detect device replacement.
+> 
+> Let us conclude the fix here itself as we have more than 1 threads going on.
+> I did consider adding the stubs to pci-epc.h, but only the deinit API requires
+> that. So I thought it will look odd to add stub for only one function, that too
+> for one of the two variants (init/deinit).
+> 
+> So I went ahead with the ugly (yes) conditional for the deinit_notify API.
+> 
+> Ideally, I would've expected both dwc and EP subsystem to provide stubs for the
+> APIs used by the common driver (host and EP). But since the controller drivers
+> were using the conditional check to differentiate between host and EP mode,
+> compilers were smart enough to spot the dead functions and removes them. So
+> there were no reports so far.
+> 
+> But in this case, the pci_epc_deinit_notify() is called in a separate helper and
+> hence the issue.
+> 
+> So to conclude, I think it is best if we can add stub just for
+> pci_epc_deinit_notify() in pci-epc.h and get rid of the dummy
+> dw_pcie_ep_init_notify() wrapper to make the init/deinit API usage consistent.
+> 
+> Also I do not want to remove the wrapper for dw_pcie_ep_linkup() since its
+> conterpart dw_pcie_ep_linkdown() is required.
 
-A DSN of "all zeroes" is a reserved value:
+I see, sounds good.
 
-   "The all-zeros EUI-48 value (00-00-00-00-00-00) and EUI-64 value
-    (00-00-00-00-00-00-00-00), though assigned to an organization,
-    have not been and will not be used by that assignee as an EUI.
-    (They can be considered as assigned to the IEEE Registration Authority.)"
+However, if we add a stub for pci_epc_deinit_notify(), it makes sense to also
+add a stub for pci_epc_init_notify(). (I'm quite sure tegra will fail to link
+if you change it from dw_pcie_ep_init_notify() to pci_epc_init_notify()
+otherwise.)
 
-    https://standards-support.ieee.org/hc/en-us/articles/4888705676564-Guidelines-for-Use-of-Extended-Unique-Identifier-EUI-Organizationally-Unique-Identifier-OUI-and-Company-ID-CID
+We should probably also address Bjorn comment:
+"ls and qcom even use *both*: pci_epc_linkdown() but dw_pcie_ep_linkup()."
 
-The serial numbers of block devices shown by lsblk are not PCI
-serial numbers, but specific to the NVME or SCSI or ATA layer.
-I'll look into adding a PCI helper which those layers can call
-on resume if they detect a change in device identity, but that's
-independent from the patch I just submitted.
+As far as I can tell, it is only ls (not sure why Bjorn also mentioned qcom):
+drivers/pci/controller/dwc/pci-layerscape-ep.c:         pci_epc_linkdown(pci->ep.epc);
+But this should probably also be fixed to use dw_pcie_ep_linkdown().
 
-Thanks,
 
-Lukas
+Kind regards,
+Niklas
