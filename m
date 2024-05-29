@@ -1,20 +1,20 @@
 Received: from sakura.ysato.name (ik1-413-38519.vs.sakura.ne.jp [153.127.30.23])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D3F7217B509;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E0B9C17BB2A;
 	Wed, 29 May 2024 08:07:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=153.127.30.23
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1716970055; cv=none; b=ohK5CZPpbLXkUB/FxzyR3GzDRx3O2LjrjRuLSjM8thOcbmdohGKmWaiCUKclYcBmUuljLUtLEaunDPZMkhw+g3PSVar/4FhHXoz13toJ1N5mrgudSy+HetUod6msDbixLUh/L9RHamccv3i4jrgIolXBTJZRCvAk45MXzV2FHZ8=
+	t=1716970055; cv=none; b=HXwA1wLEjo0gGY6EoTJevIcOC5EVt37UGATxrdFXebW5CSVkTcIGnBAemmBnccB+31eTNJ9akCEQUZMOl9BC7SAvQqB7S2QP6Ne5xttK3t4IPHEfJjaaydeF+i5eDfp/uk7Npnns5hIRDYOw0IeNQbhHb1Jqkic/0NHSgJNinNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1716970055; c=relaxed/simple;
-	bh=+zx1JhiouGQP7v/b1coKbbm4yO+9KDHNfNLHimV1Sxs=;
+	bh=ZOXJqoNpfJi51Vl3FuxgTIPEhYkHwt3DigpPUVNGTDo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=K0w9JlyBoCqjhUUvusqeqc8Kil1odX/OL9GQGSO+FZg9SpINF6ZyoX2kyOAYR/gjagJUxf3/qh8G7kdvO+wKfXdM0FQcDD18c1R77Ya/MJ1jL9Il305nWS4UgWVDIGKA6VzsxWK6STbusY+lQvHuVB2oIjRr5jDuaz4QRcPKG+E=
+	 MIME-Version; b=BCWCHRJTCG4lSLGzxeCVJBNz6fJ51QT5IeMhHE2ltLOMfvK/rGyklXpgWSio9Szv8dWujwEnrQkPgSWZMXt+qzZBf0iofkj5dmD4D1EPky9eBD/QEwjxZflYWNykycHDQMlh7t/k/Bwpyyh3Tbf0dzuOggcabt2NCOiS/zpTLS4=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp; spf=fail smtp.mailfrom=users.sourceforge.jp; arc=none smtp.client-ip=153.127.30.23
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=users.sourceforge.jp
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=users.sourceforge.jp
 Received: from SIOS1075.ysato.name (al128006.dynamic.ppp.asahi-net.or.jp [111.234.128.6])
-	by sakura.ysato.name (Postfix) with ESMTPSA id 2DD6D1C0554;
-	Wed, 29 May 2024 17:01:35 +0900 (JST)
+	by sakura.ysato.name (Postfix) with ESMTPSA id 85A111C032B;
+	Wed, 29 May 2024 17:01:31 +0900 (JST)
 From: Yoshinori Sato <ysato@users.sourceforge.jp>
 To: linux-sh@vger.kernel.org
 Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
@@ -81,9 +81,9 @@ Cc: Yoshinori Sato <ysato@users.sourceforge.jp>,
 	linux-pci@vger.kernel.org,
 	linux-serial@vger.kernel.org,
 	linux-fbdev@vger.kernel.org
-Subject: [DO NOT MERGE v8 04/36] dt-bindings: interrupt-controller: Add header for Renesas SH3/4 INTC.
-Date: Wed, 29 May 2024 17:00:50 +0900
-Message-Id: <98a4466e189f5f0358b0525d96d0207398907009.1716965617.git.ysato@users.sourceforge.jp>
+Subject: [DO NOT MERGE v8 02/36] sh: Kconfig unified OF supported targets.
+Date: Wed, 29 May 2024 17:00:48 +0900
+Message-Id: <5226282870c6ea790cc4af2c723bae46658d4611.1716965617.git.ysato@users.sourceforge.jp>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <cover.1716965617.git.ysato@users.sourceforge.jp>
 References: <cover.1716965617.git.ysato@users.sourceforge.jp>
@@ -95,39 +95,74 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Renesas SH7751 Interrupt controller priority register define.
+Targets that support OF should be treated as one board.
 
 Signed-off-by: Yoshinori Sato <ysato@users.sourceforge.jp>
 ---
- .../renesas,sh7751-intc.h                     | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
- create mode 100644 include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
+ arch/sh/Kconfig        |  1 +
+ arch/sh/boards/Kconfig | 23 +++++++++++++----------
+ 2 files changed, 14 insertions(+), 10 deletions(-)
 
-diff --git a/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
-new file mode 100644
-index 000000000000..0543bd1b895e
---- /dev/null
-+++ b/include/dt-bindings/interrupt-controller/renesas,sh7751-intc.h
-@@ -0,0 +1,19 @@
-+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+ *
-+ * SH3/4 INTC IPR register offsets (Address / bits)
-+ */
+diff --git a/arch/sh/Kconfig b/arch/sh/Kconfig
+index 5e6a3ead51fb..d6704c57f9dc 100644
+--- a/arch/sh/Kconfig
++++ b/arch/sh/Kconfig
+@@ -711,6 +711,7 @@ config ROMIMAGE_MMCIF
+ choice
+ 	prompt "Kernel command line"
+ 	default CMDLINE_OVERWRITE
++	depends on !OF || USE_BUILTIN_DTB
+ 	help
+ 	  Setting this option allows the kernel command line arguments
+ 	  to be set.
+diff --git a/arch/sh/boards/Kconfig b/arch/sh/boards/Kconfig
+index 109bec4dad94..46387fd040ad 100644
+--- a/arch/sh/boards/Kconfig
++++ b/arch/sh/boards/Kconfig
+@@ -19,16 +19,9 @@ config SH_DEVICE_TREE
+ 	select TIMER_OF
+ 	select COMMON_CLK
+ 	select GENERIC_CALIBRATE_DELAY
+-
+-config SH_JCORE_SOC
+-	bool "J-Core SoC"
+-	select SH_DEVICE_TREE
+-	select CLKSRC_JCORE_PIT
+-	select JCORE_AIC
+-	depends on CPU_J2
+-	help
+-	  Select this option to include drivers core components of the
+-	  J-Core SoC, including interrupt controllers and timers.
++	select GENERIC_IRQ_CHIP
++	select SYS_SUPPORTS_PCI
++	select GENERIC_PCI_IOMAP if PCI
+ 
+ config SH_SOLUTION_ENGINE
+ 	bool "SolutionEngine"
+@@ -293,6 +286,7 @@ config SH_LANDISK
+ 	bool "LANDISK"
+ 	depends on CPU_SUBTYPE_SH7751R
+ 	select HAVE_PCI
++	select SYS_SUPPORTS_PCI
+ 	help
+ 	  I-O DATA DEVICE, INC. "LANDISK Series" support.
+ 
+@@ -369,6 +363,15 @@ config SH_APSH4AD0A
+ 	help
+ 	  Select AP-SH4AD-0A if configuring for an ALPHAPROJECT AP-SH4AD-0A.
+ 
++config SH_OF_BOARD
++	bool "General Open Firmware boards"
++	select SH_DEVICE_TREE
++	select CLKSRC_JCORE_PIT if CPU_J2
++	select JCORE_AIC if CPU_J2
++	select HAVE_PCI if CPU_SUBTYPE_SH7751R
++	help
++	  This board means general OF supported targets.
 +
-+#ifndef __DT_BINDINGS_RENESAS_SH7751_INTC
-+#define __DT_BINDINGS_RENESAS_SH7751_INTC
-+
-+#define IPRA			0
-+#define IPRB			4
-+#define IPRC			8
-+#define IPRD			12
-+#define INTPRI00		256
-+#define IPR_B12			12
-+#define IPR_B8			8
-+#define IPR_B4			4
-+#define IPR_B0			0
-+
-+#endif
+ source "arch/sh/boards/mach-r2d/Kconfig"
+ source "arch/sh/boards/mach-highlander/Kconfig"
+ source "arch/sh/boards/mach-sdk7780/Kconfig"
 -- 
 2.39.2
 
