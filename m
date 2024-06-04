@@ -1,145 +1,194 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C56DC1758E;
-	Tue,  4 Jun 2024 14:07:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEE6F12AAE0;
+	Tue,  4 Jun 2024 14:23:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717510083; cv=none; b=beIdxLjPRMktuaRwdgJstf7aazCoGzpX8dU/QXYOnwo64cPWTnteGlbkopFXE4wdghwDiqscaDboPl59H/NJGbFK3HFdj39P+L2eonROYnkNxJ/LLd2v+eD6iDWR+Pn6jWmCfbmtcVSkub2yJ4Jz0w/dVrlK7eEh7tAV986zBHA=
+	t=1717510993; cv=none; b=Z9DKvrBYbLq5FZtUdcL7ka9D6ryowYp4KvLgHe/qSJGzaqqEWvmV6GwR43s4swa1d28G4UoGdH2PkJWs1pY9QYHy9aUcSAFoaH/+yawLAfC/jA1itd4pZ2xiwxRymK7kbxPMGVxM1q+WfgUnQAl9cEGDUr7aGPENRCr5udTuFL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717510083; c=relaxed/simple;
-	bh=z7yEEpK74vp1Pi/nTAMGb9uyRtbHGpKYCmr4Vsd8P2E=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cQNWWeWgyXU708UgdL+R9ywagr6NNZ7CkpyYveA8rct/iy0AksrNacftfYDAFYgrG9Zy38rKVM+cc+SM9vw8UAg35WJAeN6P1n/1pSOmHOXTTJvX9ucfQSoDWxYaaIygp6Ut39kHdFpV09gJ4KOn8oOAHOJMFGt8BmLjBYbHsJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=G8xkl4ms; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1717510993; c=relaxed/simple;
+	bh=6wtMO9jjdBSgiV0rCA9xQ8IrArGt4hrC0flY/6Hdk5s=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=XrMS1RUo/HUTZvEqiIQ4ZILC6FjOilXRE9F6P4V342S7gBoJijGGoGxs5C946LK53nFMtaEKlK6l73CwiQfS1cSIT1R0RYY8Jvy5kflQvp7Rq4NiS7G2AuUWp/+NbsRSTDALeyeZyPLZkA354sxJy0OmFfQ31L06Dn7UkHelrBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=ItL64zfI; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="G8xkl4ms"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=LINxQ
-	OPMwvx6YSrPDiJL1/lBlysJrvaDgFr6Q9/0zno=; b=G8xkl4msnSzL2ZK9iYuDS
-	4aXzFXOxKkE5kbiOPqYA5CTN9H2efE8GWiUgLIjycwfqMc3DyAju9yff2UomkpFO
-	Y+Qc59yMvOU50n6wyR8SIMtJjL2oEzEH3iElnqZPN+9nmjReE8sePzV7+gMeHzG6
-	eMxL0Rjta9yV0v2krbVxcM=
-Received: from localhost.localdomain (unknown [120.244.62.148])
-	by gzga-smtp-mta-g3-3 (Coremail) with SMTP id _____wCXLyL6G19msUX7Cw--.28684S2;
-	Tue, 04 Jun 2024 21:51:55 +0800 (CST)
-From: Jiwei Sun <sjiwei@163.com>
-To: nirmal.patel@linux.intel.com,
-	jonathan.derrick@linux.dev
-Cc: lpieralisi@kernel.org,
-	kw@linux.com,
-	robh@kernel.org,
-	bhelgaas@google.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	sunjw10@lenovo.com,
-	sjiwei@163.com,
-	ahuang12@lenovo.com
-Subject: [PATCH v2] PCI: vmd: Create domain symlink before pci_bus_add_devices()
-Date: Tue,  4 Jun 2024 21:51:53 +0800
-Message-Id: <20240604135153.9182-1-sjiwei@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="ItL64zfI"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.17.1.19/8.17.1.19) with ESMTP id 454EHumb012428;
+	Tue, 4 Jun 2024 14:23:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc :
+ content-transfer-encoding : content-type : date : from : in-reply-to :
+ message-id : mime-version : references : subject : to; s=pp1;
+ bh=FG1FQXeuciirQ71PBlH7iwtRbfdGBP8U6zOBQ5mNGxk=;
+ b=ItL64zfI7XewzNI99mLS5Bv5srixFgU6ll2PB4AVSzAFWktSythEDmzyJwOoNEBt30Io
+ 6CTj9UY8V9SCSLjspLwVMBOWMDMHF4doKQ8t0DoThFgoiy288/94gcP2LnaHKHVvRRur
+ m36ML5CzHXWZT1A5chSUL64nL6VoXhU7zVD5AXYcnS5xZCQkg8NRHP/VyO69u7N7BxY/
+ C+XX3yvpp4q0EJszNZIaFpwHdbu68iOgmxBDfoPiX29OiukO6gnmpKjcIn8KGZx62JmO
+ pLdL/XfwrHJN9pPvyGTa1bsOPHCWHobZn/NiCVNjQEwHiQYB8vIiY2hBxfG/58Bw4hxO jA== 
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3yj4jf00en-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 04 Jun 2024 14:23:07 +0000
+Received: from m0353725.ppops.net (m0353725.ppops.net [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 454EN7wD020342;
+	Tue, 4 Jun 2024 14:23:07 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 3yj4jf00ek-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 04 Jun 2024 14:23:07 +0000
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.17.1.19/8.17.1.19) with ESMTP id 454EFRiQ022835;
+	Tue, 4 Jun 2024 14:23:06 GMT
+Received: from smtprelay03.wdc07v.mail.ibm.com ([172.16.1.70])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 3ygg6m66hh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 04 Jun 2024 14:23:06 +0000
+Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
+	by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 454EN3GN41615804
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 4 Jun 2024 14:23:05 GMT
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 419E758065;
+	Tue,  4 Jun 2024 14:23:03 +0000 (GMT)
+Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5C08158068;
+	Tue,  4 Jun 2024 14:23:02 +0000 (GMT)
+Received: from oc-fedora.boeblingen.de.ibm.com (unknown [9.152.212.216])
+	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Tue,  4 Jun 2024 14:23:02 +0000 (GMT)
+Message-ID: <00aba58c1175e0bfb4480b36831d314bc39b5aa1.camel@linux.ibm.com>
+Subject: Re: [PATCH] PCI: Add missing lockdep assertion in
+ pci_cfg_access_trylock()
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+        Dan Williams
+ <dan.j.williams@intel.com>,
+        Dave Jiang <dave.jiang@intel.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Matthew Rosato
+	 <mjrosato@linux.ibm.com>
+Date: Tue, 04 Jun 2024 16:23:01 +0200
+In-Reply-To: <20240604-pci_cfg_lockdep-v1-1-00da1706c9fd@linux.ibm.com>
+References: <20240604-pci_cfg_lockdep-v1-1-00da1706c9fd@linux.ibm.com>
+Autocrypt: addr=schnelle@linux.ibm.com; prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+User-Agent: Evolution 3.52.1 (3.52.1-1.fc40) 
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: xkyKszPIpxMJa2yGcBZ8QFCYEctPiDyn
+X-Proofpoint-GUID: 2GlaT4i6861GLjIFdRLuCRPnz79oTckh
+Content-Transfer-Encoding: quoted-printable
+X-Proofpoint-UnRewURL: 0 URL was un-rewritten
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCXLyL6G19msUX7Cw--.28684S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr13Kr45urW3GF4ruF1DAwb_yoW5Zw4UpF
-	4rWa12vrZrGw4fXayDA3y8Xry5Aa1vv34UJ3s8K34Uua98AFyF9rW0grZ8Ar4qyF1qv3W2
-	vwsrXF1a93Z8KaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piuyIUUUUUU=
-X-CM-SenderInfo: 5vml4vrl6rljoofrz/1tbiWx3zmWV4JRGdOwAAsj
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-04_05,2024-06-04_01,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 priorityscore=1501
+ mlxlogscore=999 adultscore=0 malwarescore=0 bulkscore=0 phishscore=0
+ spamscore=0 lowpriorityscore=0 suspectscore=0 impostorscore=0
+ clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2405010000 definitions=main-2406040114
 
-From: Jiwei Sun <sunjw10@lenovo.com>
+On Tue, 2024-06-04 at 15:38 +0200, Niklas Schnelle wrote:
+> In commit 7e89efc6e9e4 ("PCI: Lock upstream bridge for
+> pci_reset_function()") it was missed that pci_cfg_access_trylock() needs
+> the same lockdep assertion as pci_cfg_access_lock(). This leads to false
+> positive lockdep splats for users of pci_cfg_access_trylock(). Add the
+> missing assertion when the lock was successfully acquired.
+>=20
+> Fixes: 7e89efc6e9e4 ("PCI: Lock upstream bridge for pci_reset_function()")
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
+>  drivers/pci/access.c | 2 ++
+>  1 file changed, 2 insertions(+)
+>=20
+> diff --git a/drivers/pci/access.c b/drivers/pci/access.c
+> index 30f031de9cfe..5b6620da30d7 100644
+> --- a/drivers/pci/access.c
+> +++ b/drivers/pci/access.c
+> @@ -319,6 +319,8 @@ bool pci_cfg_access_trylock(struct pci_dev *dev)
+>  		dev->block_cfg_access =3D 1;
+>  	raw_spin_unlock_irqrestore(&pci_lock, flags);
+>=20=20
+> +	if (locked)
+> +		lock_map_acquire(&dev->cfg_access_lock);
+>  	return locked;
+>  }
+>  EXPORT_SYMBOL_GPL(pci_cfg_access_trylock);
+>=20
+> ---
+> base-commit: c3f38fa61af77b49866b006939479069cd451173
+> change-id: 20240604-pci_cfg_lockdep-b6914e62d726
+>=20
+> Best regards,
 
-During booting into the kernel, the following error message appears:
+Matt just pointed out to me that the same issue is also discussed with
+a proposed fix in the discussion of the fixed commit[0]. That
+additionally moves the lockdep asserts into the pci_lock critical
+section.
 
-  (udev-worker)[2149]: nvme1n1: '/sbin/mdadm -I /dev/nvme1n1'(err) 'mdadm: Unable to get real path for '/sys/bus/pci/drivers/vmd/0000:c7:00.5/domain/device''
-  (udev-worker)[2149]: nvme1n1: '/sbin/mdadm -I /dev/nvme1n1'(err) 'mdadm: /dev/nvme1n1 is not attached to Intel(R) RAID controller.'
-  (udev-worker)[2149]: nvme1n1: '/sbin/mdadm -I /dev/nvme1n1'(err) 'mdadm: No OROM/EFI properties for /dev/nvme1n1'
-  (udev-worker)[2149]: nvme1n1: '/sbin/mdadm -I /dev/nvme1n1'(err) 'mdadm: no RAID superblock on /dev/nvme1n1.'
-  (udev-worker)[2149]: nvme1n1: Process '/sbin/mdadm -I /dev/nvme1n1' failed with exit code 1.
-
-This symptom prevents the OS from booting successfully.
-
-After a NVMe disk is probed/added by the nvme driver, the udevd executes
-some rule scripts by invoking mdadm command to detect if there is a
-mdraid associated with this NVMe disk. The mdadm determines if one
-NVMe devce is connected to a particular VMD domain by checking the
-domain symlink. Here is the root cause:
-
-Thread A                   Thread B             Thread mdadm
-vmd_enable_domain
-  pci_bus_add_devices
-    __driver_probe_device
-     ...
-     work_on_cpu
-       schedule_work_on
-       : wakeup Thread B
-                           nvme_probe
-                           : wakeup scan_work
-                             to scan nvme disk
-                             and add nvme disk
-                             then wakeup udevd
-                                                : udevd executes
-                                                  mdadm command
-       flush_work                               main
-       : wait for nvme_probe done                ...
-    __driver_probe_device                        find_driver_devices
-    : probe next nvme device                     : 1) Detect the domain
-    ...                                            symlink; 2) Find the
-    ...                                            domain symlink from
-    ...                                            vmd sysfs; 3) The
-    ...                                            domain symlink is not
-    ...                                            created yet, failed
-  sysfs_create_link
-  : create domain symlink
-
-sysfs_create_link() is invoked at the end of vmd_enable_domain().
-However, this implementation introduces a timing issue, where mdadm
-might fail to retrieve the vmd symlink path because the symlink has not
-been created yet.
-
-Fix the issue by creating VMD domain symlinks before invoking
-pci_bus_add_devices().
-
-Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
-Suggested-by: Adrian Huang <ahuang12@lenovo.com>
----
-v2 changes:
- - Add "()" after function names in subject and commit log
- - Move sysfs_create_link() after vmd_attach_resources()
-
----
- drivers/pci/controller/vmd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 87b7856f375a..d0e33e798bb9 100644
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -925,6 +925,9 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 		dev_set_msi_domain(&vmd->bus->dev,
- 				   dev_get_msi_domain(&vmd->dev->dev));
- 
-+	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
-+			       "domain"), "Can't create symlink to domain\n");
-+
- 	vmd_acpi_begin();
- 
- 	pci_scan_child_bus(vmd->bus);
-@@ -964,9 +967,6 @@ static int vmd_enable_domain(struct vmd_dev *vmd, unsigned long features)
- 	pci_bus_add_devices(vmd->bus);
- 
- 	vmd_acpi_end();
--
--	WARN(sysfs_create_link(&vmd->dev->dev.kobj, &vmd->bus->dev.kobj,
--			       "domain"), "Can't create symlink to domain\n");
- 	return 0;
- }
- 
--- 
-2.27.0
+[0]
+https://lore.kernel.org/all/20240523153839.16102e26.alex.williamson@redhat.=
+com/
 
