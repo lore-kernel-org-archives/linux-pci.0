@@ -1,313 +1,364 @@
-Received: from mail-m127166.xmail.ntesmail.com (mail-m127166.xmail.ntesmail.com [115.236.127.166])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F18C13D897;
-	Tue,  4 Jun 2024 02:03:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.166
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85FA22A8D0;
+	Tue,  4 Jun 2024 05:10:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717466610; cv=none; b=YRwl0EExyPHdc14/1tE+ZQKGgIzGwTKlfJJVrhkBpvY0604UsPNKAJWQ7g5hj7EZsyj8mXyp3qkiJV8BabfjCmtSpWpU89oU7YY7m2koAV3hrBAmbU2ZYI/6kdGjRqnCHLKEvs3TmXDy/+UprOTgWk7WyQx8KrVCkLC2ahnfRkA=
+	t=1717477839; cv=none; b=n6jJovWHguMmUlfbd+GcmnthR538nifurzhe8+kkhs98uTq4TixJV8heySyW+cYoCH3gS9+uNLuuukbJ70UozfirnnXFuRV8g33ImrHJH2Kt+XZ6SAryfzTeIQVPkyhMvUmQPtrWA3x+cVg2mqm96B4eH75CBrPjPoO2UeRBa54=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717466610; c=relaxed/simple;
-	bh=CO5eKq5OAiCs/P6T3wxecAKfgpYaYpbqP3zWAC+XjPg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FJ7hpUuKfl6f7POyMw7FrbBfSZsfXY2IVBHkKAP2iY0SxA8ykdi0aEyN9i8wNRJ1xSCAJZSp7mWjnSL2DzXeIprYGhKP+VnJyHECUPAdXPOz3QeosMEao67llYi+y4ZzM4Vr5Os0nwZpq2uVASwVO3JIJzrobpqM1wAkq1Ly7xo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=N2fImurh; arc=none smtp.client-ip=115.236.127.166
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1717477839; c=relaxed/simple;
+	bh=cXg9Uh+mwdg7QtODtpq80TFwDa4ZVOdly16SztyY8+w=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=euaHWL72Hh+Hr/Z2btTu5CTpJgtx6WRk/1k2T0x+mlLIDL6kJuSAgfuAYzsASLldEKZCrqUNUiO0/Toyj+mV3LC2wS/NzaHGz7s2LpqcJmGIuJFm7JNBX4qn4XJbmrcuLALEz8Or3OP1C+IRtDoM4cTfYoVl9U8P19XdlLYfEC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KpkzF69L; arc=none smtp.client-ip=209.85.210.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="N2fImurh"
-DKIM-Signature: a=rsa-sha256;
-	b=N2fImurhfMc3GCqOAS84cOFRtdfmiZNwGXOdfYqJq6IJb5sUFHAlXozAbmf3CcaCn/2Bz+0F3EgQs7j3o/VjLS+4cixfw0ntBusS9aC6OGeshBrcfzAHuMluCwYludFQR+zesiBS+KAX9hr2tBAZipzD4WU/Bd/UR55mP6LTuBs=;
-	c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=kbXSfr2xVMK7ezycrCzeNVcxpZlKpdLdcjyHpmgP240=;
-	h=date:mime-version:subject:message-id:from;
-Received: from [172.16.12.77] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTPA id C14DE900399;
-	Tue,  4 Jun 2024 09:45:34 +0800 (CST)
-Message-ID: <05b1bfa3-4284-4820-b0f6-124e08088456@rock-chips.com>
-Date: Tue, 4 Jun 2024 09:45:33 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KpkzF69L"
+Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-6f8d2ec8652so3067792a34.3;
+        Mon, 03 Jun 2024 22:10:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1717477836; x=1718082636; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:reply-to:message-id:date
+         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=lR9xxF67xkv8Jh6JeaRQRfZn3f3Gas3sg1WacLeR+Fw=;
+        b=KpkzF69L5rg6zs6U2SVIyJIyyDUucKXFC0pioDpHf9onZmemJFDWwcM64vNqcF2ulM
+         mx/66etouP5ttqbGpt0TDb90xKNHG9V8Y5Fjhav7OaLXrjbAiseAXvF+ddNO0KtSs+Gp
+         /iq5B+fEdZUr2cFL0n7f62owAH0QfuiM1wPpXylv9oSWDsVOz5XaLHSDKSTbPphwUevb
+         7hfOF7HUZenwir/3nkxXBgH5EA7Hu6zKqQaZ7UIUronKyIigMkJm+sNUVxtt2seuzNQR
+         4kbPy2Izwf6mW9iPadJEwXREgo4i2yFxWi8rez/COFyjKcvDCJqd9+hDDq1hGpmb0oBN
+         JubA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1717477836; x=1718082636;
+        h=content-transfer-encoding:mime-version:reply-to:message-id:date
+         :subject:cc:to:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=lR9xxF67xkv8Jh6JeaRQRfZn3f3Gas3sg1WacLeR+Fw=;
+        b=hy32HnTc8imqJC8Bu5P7fbr9Vc0YNzNfu/mW9Y12fWpkokd44Nk0W6tZZ7fNDBZw9p
+         6PbFUFXVoCWA/VFtVsEyfRQUYQKxSs6lI50b6vscrt7G8bJZbN9gTp+xXmaMsuf92id0
+         JrVUv6o25ITUrPZL4R/zdQMCVUbyMj1HV5dlZ92UrpxDiavClxF3LCdvZgwQCI+9Ub8i
+         d5gLdQHpgEsBXkEmQecppVEp2OOftKQQIxq730yBREvRDiYNDQchBaXFNM8E5+YdAvka
+         S4XJ/nuMevY3wCJziIEM/jweKN2nUC9qMD0E/N9UU6bLiVg6zmKlZj+Y7Y2mGOOls6dU
+         xfig==
+X-Forwarded-Encrypted: i=1; AJvYcCXAxSjQysLLNM+Ib77QqmOxpFeKeUs5/4LXz+h9PMy9rOiPgMx6LDDASkJ50O3J7ZPpFUOQyPjAXjc9OwYIDNnel/iqLHXhCJ4V7mT67I6HgoU/91Btt+U8uohB3svk6cdc7M7y5Yj6YVbqeLy2W+Q6ezb7W0c1qFQw8bMQd61I8AuixOJfPYnRp/6SDbt3NAAKON56VtTgJGoDBgWKvQdCEnI4PSwUjohuuRoa9PNcEuni0sGS1etDR7TXzfc=
+X-Gm-Message-State: AOJu0YxF6tJZkNH9nDASAXak8XSc6WlRrCJbSiSm4s0PTwic28+QOCwa
+	jqQlA6UZJWxyzUCBAbItp9yd9ZgrHvFRPzVU0haYcMubaq7wPsmX
+X-Google-Smtp-Source: AGHT+IEya7cZOohNIqUZ/PLElWCaPIt+W1R3BZWdLXmWEbtERH6DJ1vLUCCh+IvPi3IGCg/P506MIA==
+X-Received: by 2002:a05:6870:718b:b0:24f:c0bc:5ac6 with SMTP id 586e51a60fabf-2508b9b3b00mr12243100fac.11.1717477836142;
+        Mon, 03 Jun 2024 22:10:36 -0700 (PDT)
+Received: from localhost.localdomain (c-67-161-114-176.hsd1.wa.comcast.net. [67.161.114.176])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-70242c270c7sm6298153b3a.220.2024.06.03.22.10.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Jun 2024 22:10:35 -0700 (PDT)
+From: mhkelley58@gmail.com
+X-Google-Original-From: mhklinux@outlook.com
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	tglx@linutronix.de,
+	mingo@redhat.com,
+	bp@alien8.de,
+	dave.hansen@linux.intel.com,
+	x86@kernel.org,
+	hpa@zytor.com,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	arnd@arndb.de,
+	linux-hyperv@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-arch@vger.kernel.org
+Cc: maz@kernel.org,
+	den@valinux.co.jp,
+	jgowans@amazon.com,
+	dawei.li@shingroup.cn
+Subject: [RFC 00/12] Hyper-V guests use Linux IRQs for channel interrupts
+Date: Mon,  3 Jun 2024 22:09:28 -0700
+Message-Id: <20240604050940.859909-1-mhklinux@outlook.com>
+X-Mailer: git-send-email 2.25.1
+Reply-To: mhklinux@outlook.com
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 00/13] PCI: dw-rockchip: Add endpoint mode support
-To: Niklas Cassel <cassel@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
- Conor Dooley <conor+dt@kernel.org>, Heiko Stuebner <heiko@sntech.de>,
- Kishon Vijay Abraham I <kishon@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
- Damien Le Moal <dlemoal@kernel.org>, Jon Lin <jon.lin@rock-chips.com>,
- Shawn Lin <shawn.lin@rock-chips.com>, Simon Xue <xxm@rock-chips.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-rockchip@lists.infradead.org
-References: <20240529-rockchip-pcie-ep-v1-v4-0-3dc00fe21a78@kernel.org>
-Content-Language: en-US
-From: Kever Yang <kever.yang@rock-chips.com>
-In-Reply-To: <20240529-rockchip-pcie-ep-v1-v4-0-3dc00fe21a78@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGk9LHlZOS0oeSR9OGRhLGEhVEwETFh
-	oSFyQUDg9ZV1kYEgtZQVlOQ1VJSVVMVUpKT1lXWRYaDxIVHRRZQVlPS0hVSk1PSU5JVUpLS1VKQl
-	kG
-X-HM-Tid: 0a8fe0ec551303a9kunmc14de900399
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Kww6OCo4MDMMAj84DgooSzhI
-	KjIKCy5VSlVKTEpMT01OTkhNTkhJVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
-	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFKSU1PSjcG
+Content-Transfer-Encoding: 8bit
 
-Hi Niklas,
+From: Michael Kelley <mhklinux@outlook.com>
 
-On 2024/5/29 16:28, Niklas Cassel wrote:
-> Hello all,
->
-> This series adds PCIe endpoint mode support for the rockchip rk3588 and
-> rk3568 SoCs.
->
-> This series is based on: pci/next
-> (git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git)
->
-> This series can also be found in git:
-> https://github.com/floatious/linux/commits/rockchip-pcie-ep-v4
->
-> Testing done:
-> This series has been tested with two rock5b:s, one running in RC mode and
-> one running in EP mode. This series has also been tested with an Intel x86
-> host and rock5b running in EP mode.
+This patch set makes significant changes in how Linux guests running on Hyper-V
+handle interrupts from VMBus devices. It's "RFC" because of the level of change,
+and because I'm interested in macro-level feedback on the whole idea. The usual
+detailed-level code review feedback is also welcome.
 
-I'm interesting how you test in Intel x86 host, PC scan the PCIe device 
-in BIOS, do you
+Background
+----------
+Linux guests running on Hyper-V are presented with a range of synthetic
+devices, including storage, networking, mouse, keyboard, etc. Guests are also
+presented with management-related pseudo-devices, including time
+synchronization, heartbeat, and host-initiated shutdown. These devices use the
+VMBus connection between the host and the guest, and each device has one or
+more VMBus channels for passing messages between the host and guest.
+Separately, a control path exists for creating and tearing down VMBus channels
+when needed. Hyper-V VMBus and its synthetic devices play a role similar to
+virtio and virtio devices.
 
-power on the EP before PC power on?
+The host interrupts the guest when it sends a new message to the guest in an
+otherwise empty channel, and when it sends a new control message to the guest.
+All interrupts are multiplexed onto a single per-CPU architectural interrupt as
+defined by the processor architecture. On arm64, this architectural interrupt
+is a PPI, and is represented in Linux as a Linux per-CPU IRQ. The x86/x64
+architecture does not provide per-CPU interrupts, so Linux reserves a fixed x86
+interrupt vector (HYPERVISOR_CALLBACK_VECTOR) on all CPUs, with a hard-coded
+interrupt handler. No Linux IRQ is assigned on x86/x64.
 
+The interrupt handler for the architectural interrupt is the VMBus interrupt
+handler, and it runs whenever the host generates an interrupt for a channel or
+a control message. The VMBus interrupt handler consults data structures
+provided by the per-CPU Hyper-V synthetic interrupt controller (synic) to
+determine which channel or channels have a pending interrupt, or if there is a
+pending control message. When doing this demultiplexing, the VMBus interrupt
+handler directly invokes the per-device handlers, and processes any control
+messages.
 
-Thanks,
-- Kever
->
-> BAR4 exposes the ATU Port Logic Structure and the DMA Port Logic Structure
-> to the host. The EPC controller driver thus disables this BAR as init time,
-> because if it doesn't, when the host writes the test pattern to this BAR,
-> all the iATU settings will get wiped, resulting in all further BAR accesses
-> being non-functional.
->
-> Running pcitest.sh (modified to also perform the READ and WRITE tests with
-> the -d option, i.e. with DMA enabled) results in the following:
->
-> $ /usr/bin/pcitest.sh
-> BAR tests
->
-> BAR0:           OKAY
-> BAR1:           OKAY
-> BAR2:           OKAY
-> BAR3:           OKAY
-> BAR4:           NOT OKAY
-> BAR5:           OKAY
->
-> Interrupt tests
->
-> SET IRQ TYPE TO LEGACY:         OKAY
-> LEGACY IRQ:     NOT OKAY
-> SET IRQ TYPE TO MSI:            OKAY
-> MSI1:           OKAY
-> MSI2:           OKAY
-> MSI3:           OKAY
-> MSI4:           OKAY
-> MSI5:           OKAY
-> MSI6:           OKAY
-> MSI7:           OKAY
-> MSI8:           OKAY
-> MSI9:           OKAY
-> MSI10:          OKAY
-> MSI11:          OKAY
-> MSI12:          OKAY
-> MSI13:          OKAY
-> MSI14:          OKAY
-> MSI15:          OKAY
-> MSI16:          OKAY
-> MSI17:          OKAY
-> MSI18:          OKAY
-> MSI19:          OKAY
-> MSI20:          OKAY
-> MSI21:          OKAY
-> MSI22:          OKAY
-> MSI23:          OKAY
-> MSI24:          OKAY
-> MSI25:          OKAY
-> MSI26:          OKAY
-> MSI27:          OKAY
-> MSI28:          OKAY
-> MSI29:          OKAY
-> MSI30:          OKAY
-> MSI31:          OKAY
-> MSI32:          OKAY
->
-> SET IRQ TYPE TO MSI-X:          OKAY
-> MSI-X1:         OKAY
-> MSI-X2:         OKAY
-> MSI-X3:         OKAY
-> MSI-X4:         OKAY
-> MSI-X5:         OKAY
-> MSI-X6:         OKAY
-> MSI-X7:         OKAY
-> MSI-X8:         OKAY
-> MSI-X9:         OKAY
-> MSI-X10:                OKAY
-> MSI-X11:                OKAY
-> MSI-X12:                OKAY
-> MSI-X13:                OKAY
-> MSI-X14:                OKAY
-> MSI-X15:                OKAY
-> MSI-X16:                OKAY
-> MSI-X17:                OKAY
-> MSI-X18:                OKAY
-> MSI-X19:                OKAY
-> MSI-X20:                OKAY
-> MSI-X21:                OKAY
-> MSI-X22:                OKAY
-> MSI-X23:                OKAY
-> MSI-X24:                OKAY
-> MSI-X25:                OKAY
-> MSI-X26:                OKAY
-> MSI-X27:                OKAY
-> MSI-X28:                OKAY
-> MSI-X29:                OKAY
-> MSI-X30:                OKAY
-> MSI-X31:                OKAY
-> MSI-X32:                OKAY
->
-> Read Tests
->
-> SET IRQ TYPE TO MSI:            OKAY
-> READ (      1 bytes):           OKAY
-> READ (   1024 bytes):           OKAY
-> READ (   1025 bytes):           OKAY
-> READ (1024000 bytes):           OKAY
-> READ (1024001 bytes):           OKAY
->
-> Write Tests
->
-> WRITE (      1 bytes):          OKAY
-> WRITE (   1024 bytes):          OKAY
-> WRITE (   1025 bytes):          OKAY
-> WRITE (1024000 bytes):          OKAY
-> WRITE (1024001 bytes):          OKAY
->
-> Copy Tests
->
-> COPY (      1 bytes):           OKAY
-> COPY (   1024 bytes):           OKAY
-> COPY (   1025 bytes):           OKAY
-> COPY (1024000 bytes):           OKAY
-> COPY (1024001 bytes):           OKAY
->
-> Read Tests DMA
->
-> READ (      1 bytes):           OKAY
-> READ (   1024 bytes):           OKAY
-> READ (   1025 bytes):           OKAY
-> READ (1024000 bytes):           OKAY
-> READ (1024001 bytes):           OKAY
->
-> Write Tests DMA
->
-> WRITE (      1 bytes):          OKAY
-> WRITE (   1024 bytes):          OKAY
-> WRITE (   1025 bytes):          OKAY
-> WRITE (1024000 bytes):          OKAY
-> WRITE (1024001 bytes):          OKAY
->
-> Corresponding output on the EP side:
-> rockchip-dw-pcie a40000000.pcie-ep: EP cannot raise INTX IRQs
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1 B, DMA: NO, Time: 0.000000292 s, Rate: 3424 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1024 B, DMA: NO, Time: 0.000007583 s, Rate: 135038 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1025 B, DMA: NO, Time: 0.000007584 s, Rate: 135152 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1024000 B, DMA: NO, Time: 0.009164167 s, Rate: 111739 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1024001 B, DMA: NO, Time: 0.009164458 s, Rate: 111736 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1 B, DMA: NO, Time: 0.000001750 s, Rate: 571 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1024 B, DMA: NO, Time: 0.000147875 s, Rate: 6924 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1025 B, DMA: NO, Time: 0.000149041 s, Rate: 6877 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1024000 B, DMA: NO, Time: 0.147537833 s, Rate: 6940 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1024001 B, DMA: NO, Time: 0.147533750 s, Rate: 6940 KB/s
-> pci_epf_test pci_epf_test.0: COPY => Size: 1 B, DMA: NO, Time: 0.000003208 s, Rate: 311 KB/s
-> pci_epf_test pci_epf_test.0: COPY => Size: 1024 B, DMA: NO, Time: 0.000156625 s, Rate: 6537 KB/s
-> pci_epf_test pci_epf_test.0: COPY => Size: 1025 B, DMA: NO, Time: 0.000158375 s, Rate: 6471 KB/s
-> pci_epf_test pci_epf_test.0: COPY => Size: 1024000 B, DMA: NO, Time: 0.156902666 s, Rate: 6526 KB/s
-> pci_epf_test pci_epf_test.0: COPY => Size: 1024001 B, DMA: NO, Time: 0.156847833 s, Rate: 6528 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1 B, DMA: YES, Time: 0.000185500 s, Rate: 5 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1024 B, DMA: YES, Time: 0.000177334 s, Rate: 5774 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1025 B, DMA: YES, Time: 0.000178792 s, Rate: 5732 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1024000 B, DMA: YES, Time: 0.000486209 s, Rate: 2106090 KB/s
-> pci_epf_test pci_epf_test.0: WRITE => Size: 1024001 B, DMA: YES, Time: 0.000486791 s, Rate: 2103574 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1 B, DMA: YES, Time: 0.000177333 s, Rate: 5 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1024 B, DMA: YES, Time: 0.000177625 s, Rate: 5764 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1025 B, DMA: YES, Time: 0.000171208 s, Rate: 5986 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1024000 B, DMA: YES, Time: 0.000701167 s, Rate: 1460422 KB/s
-> pci_epf_test pci_epf_test.0: READ => Size: 1024001 B, DMA: YES, Time: 0.000702625 s, Rate: 1457393 KB/s
->
-> Kind regards,
-> Niklas
->
-> ---
-> Changes in v4:
-> - Rebased on pci/next
-> - Link to v3: https://lore.kernel.org/r/20240508-rockchip-pcie-ep-v1-v3-0-1748e202b084@kernel.org
->
-> Changes in v3:
-> - Renamed rockchip_pcie_ltssm() to rockchip_pcie_get_ltssm()
-> - Reworded some commit messages to avoid the term "patches".
-> - Dropped patch that added explicit rockchip,rk3588-pcie compatible
-> - Moved !IS_ENABLED(CONFIG_PCIE_ROCKCHIP_DW_HOST) check to proper patch.
-> - Added comment in front of rk3588 epc_features describing why BAR4 is
->    reserved.
-> - Added another struct epc_features for rk3568 as it does not have the
->    ATU regs mapped to BAR4 (like rk3588 does).
-> - Picked up tags from Rob and Mani. Thank you!
-> - Link to v2: https://lore.kernel.org/r/20240430-rockchip-pcie-ep-v1-v2-0-a0f5ee2a77b6@kernel.org
->
-> Changes in v2:
-> - Rebased on v4 of the pci-epf-rework series that we depend on.
-> - Picked up tags from Rob.
-> - Split dw-rockchip DT binding in to common, RC and EP parts.
-> - Added support for rk3568 in DT binding and driver.
-> - Added a new patch that fixed "combined legacy IRQ description".
-> - Link to v1: https://lore.kernel.org/r/20240424-rockchip-pcie-ep-v1-v1-0-b1a02ddad650@kernel.org
->
-> ---
-> Niklas Cassel (13):
->        dt-bindings: PCI: snps,dw-pcie-ep: Add vendor specific reg-name
->        dt-bindings: PCI: snps,dw-pcie-ep: Add vendor specific interrupt-names
->        dt-bindings: PCI: snps,dw-pcie-ep: Add tx_int{a,b,c,d} legacy irqs
->        dt-bindings: PCI: rockchip-dw-pcie: Prepare for Endpoint mode support
->        dt-bindings: PCI: rockchip-dw-pcie: Fix description of legacy irq
->        dt-bindings: rockchip: Add DesignWare based PCIe Endpoint controller
->        PCI: dw-rockchip: Fix weird indentation
->        PCI: dw-rockchip: Add rockchip_pcie_get_ltssm() helper
->        PCI: dw-rockchip: Refactor the driver to prepare for EP mode
->        PCI: dw-rockchip: Add endpoint mode support
->        misc: pci_endpoint_test: Add support for rockchip rk3588
->        arm64: dts: rockchip: Add PCIe endpoint mode support
->        arm64: dts: rockchip: Add rock5b overlays for PCIe endpoint mode
->
->   .../bindings/pci/rockchip-dw-pcie-common.yaml      | 126 +++++++++
->   .../bindings/pci/rockchip-dw-pcie-ep.yaml          |  95 +++++++
->   .../devicetree/bindings/pci/rockchip-dw-pcie.yaml  |  93 +------
->   .../devicetree/bindings/pci/snps,dw-pcie-ep.yaml   |  13 +-
->   arch/arm64/boot/dts/rockchip/Makefile              |   5 +
->   .../boot/dts/rockchip/rk3588-rock-5b-pcie-ep.dtso  |  25 ++
->   .../dts/rockchip/rk3588-rock-5b-pcie-srns.dtso     |  16 ++
->   arch/arm64/boot/dts/rockchip/rk3588.dtsi           |  35 +++
->   drivers/misc/pci_endpoint_test.c                   |  11 +
->   drivers/pci/controller/dwc/Kconfig                 |  17 +-
->   drivers/pci/controller/dwc/pcie-dw-rockchip.c      | 308 +++++++++++++++++++--
->   11 files changed, 620 insertions(+), 124 deletions(-)
-> ---
-> base-commit: e3fca37312892122d73f8c5293c0d1cc8c34500b
-> change-id: 20240424-rockchip-pcie-ep-v1-87c78b16d53c
->
-> Best regards,
+In this scheme, the individual VMBus devices and their channels are not
+modelled as Linux IRQs. /proc/interrupts shows counts for the top-level
+architectural interrupt, but not for the individual VMBus devices. The VMBus
+driver has implemented separate reporting of per-device data under /sys.
+Similarly, /proc/irq/<nn> does not show affinity information for individual
+VMBus devices, and the affinity cannot be changed via /proc/irq. Again, a
+separate interface under /sys is provided for changing the vCPU that a VMBus
+channel should interrupt.
+
+What's New
+----------
+Linux kernel community members have commented that it would be better for the
+Hyper-V synic and the handling of VMBus channel interrupts to be modelled as
+Linux IRQs. Then they would participate in existing IRQ handling mechanisms,
+and not need something separate under /sys. This patch set provides such an
+implementation.
+
+With this patch set, the output of /proc/interrupts looks like this in a Linux
+guest on a Hyper-V x86/x64 Generation 2 VM with 8 vCPUs (the columns for
+CPUs 2 thru 5 are omitted due to text width considerations):
+
+           CPU0       CPU1        CPU6       CPU7
+  8:          0          0           0          0   IO-APIC   8-edge      rtc0
+  9:          2          0           0          0   IO-APIC   9-fasteoi   acpi
+ 24:      16841          0           0          0     VMBus   7  heartbeat
+ 25:          1          0           0          0     VMBus   9  shutdown
+ 26:       6752          0           0          0     VMBus  10  timesync
+ 27:          1          0           0          0     VMBus  11  vss
+ 28:      22095          0           0          0     VMBus  14  pri@storvsc1
+ 29:          0         85           0          0     VMBus  15  pri@storvsc0
+ 30:          3          0           0          0     VMBus   1  balloon
+ 31:        106          0           0          0     VMBus   3  mouse
+ 32:         73          0           0          0     VMBus   4  keyboard
+ 33:          6          0           0          0     VMBus   5  framebuffer
+ 34:          0          0           0          0     VMBus  13  netvsc
+ 35:          1          0           0          0     VMBus   8  kvp
+ 36:          0          0           0          0     VMBus  16  netvsc
+ 37:          0          0           0          0     VMBus  17  netvsc
+ 38:          0          0           0          0     VMBus  18  netvsc
+ 39:          0          0        2375          0     VMBus  19  netvsc
+ 40:          0          0           0       1178     VMBus  20  netvsc
+ 41:       1003          0           0          0     VMBus  21  netvsc
+ 42:          0       4337           0          0     VMBus  22  netvsc
+ 43:          0          0           0          0     VMBus  23  sub@storvsc1
+ 44:          0          0           0          0     VMBus  24  sub@storvsc0
+NMI:          0          0           0          0   Non-maskable interrupts
+LOC:          0          0           0          0   Local timer interrupts
+SPU:          0          0           0          0   Spurious interrupts
+PMI:          0          0           0          0   Performance monitoring interrupts
+IWI:          1          0           0          2   IRQ work interrupts
+RTR:          0          0           0          0   APIC ICR read retries
+RES:        411        233         349        318   Rescheduling interrupts
+CAL:     135236      29211       99526      36424   Function call interrupts
+TLB:          0          0           0          0   TLB shootdowns
+TRM:          0          0           0          0   Thermal event interrupts
+THR:          0          0           0          0   Threshold APIC interrupts
+DFR:          0          0           0          0   Deferred Error APIC interrupts
+MCE:          0          0           0          0   Machine check exceptions
+MCP:        109        109         109        109   Machine check polls
+HYP:         71          0           0          0   Hypervisor callback interrupts
+HRE:          0          0           0          0   Hyper-V reenlightenment interrupts
+HVS:     183391     109695      181539     339239   Hyper-V stimer0 interrupts
+ERR:          0
+MIS:          0
+PIN:          0          0           0          0   Posted-interrupt notification event
+NPI:          0          0           0          0   Nested posted-interrupt event
+PIW:          0          0           0          0   Posted-interrupt wakeup event
+
+IRQs 24 thru 44 are the VMBus channel IRQs that didn't previously exist. Some
+devices, such as storvsc and netvsc, have multiple channels, each of which has
+a separate IRQ. The HYP line now shows counts only for control messages instead
+of for all VMBus interrupts. The HVS line continues to show Hyper-V synthetic
+timer (stimer0) interrupts. (In older versions of Hyper-V where stimer0
+interrupts are delivered as control messages, those interrupts are accounted
+for on the HYP line. Since this is legacy behavior, it seemed unnecessary to
+create a separate Linux IRQ to model these messages.)
+
+The basic approach is to update the VMBus channel create/open/close/delete
+infrastructure, and the VMBus interrupt handler, to create and process the
+additional IRQs. The goal is that individual VMBus drivers require no code
+changes to work with the new IRQs. However, a driver may optionally annotate
+the IRQ using knowledge that only the driver has. For example, in the above
+/proc/interrupts output, the storvsc driver for synthetic disks has been
+updated to distinguish the primary channel from the subchannels, and to
+distinguish controller 0 from controller 1. Since storvsc models a SCSI
+controller, the numeric designations are set to match the "host0" and "host1"
+SCSI controllers that could be seen with "lsscsi -H -v". Similarly annotating
+the "netvsc" entries is a "to do" item.
+
+In furtherance of the "no changes to existing VMBus drivers" goal, all VMBus
+IRQs use the same interrupt handler. Each channel has a callback function
+associated with it, and the interrupt handler invokes this callback in the same
+way as before VMBus IRQs were introduced.
+
+VMBus code creates a standalone linear IRQ domain for the VMBus IRQs. The hwirq
+#'s are the VMBus channel relid's, which are integers in the range 1 to 2047.
+Each relid uniquely identifies a VMBus channel, and a channel interrupt from
+the host provides the relid. A mapping from IRQ to hwirq (relid) is created
+when a new channel is created, and the mapping is deleted when the channel is
+deleted, so adding and removing VMBus devices in a running VM is fully
+functional.
+
+Getting the IRQ counting correct requires a new IRQ flow handler in
+/kernel/irq/chip.c. See Patch 6. The existing flow handlers don't handle this
+case, and creating a custom flow handler outside of chip.c isn't feasible
+because the needed components aren't available to code outside of /kernel/irq.
+
+When a guest CPU is taken offline, Linux automatically changes the affinity of
+IRQs assigned to that CPU so that the IRQ is handled on another CPU that is
+still online. Unfortunately, VMBus channel IRQs are not able to take advantage
+of that mechanism. At the point the mechanism runs, it isn't possible to know
+when Hyper-V started interrupting the new CPU; hence pending interrupts may be
+stranded on the old offline CPU. Existing VMBus code in Linux prevents a CPU
+from going offline when a VMBus channel interrupt is affined to it, and that
+code must be retained. Of course, VMBus channel IRQs can manually be affined to
+a different CPU, which could then allow a CPU to be taken offline. I have an
+idea for a somewhat convoluted way to allow the automatic Linux mechanism to
+work, but that will be another patch set.
+
+Having VMBus channel interrupts appear in /proc/irq means that user-space
+irqbalance can change the affinity of the interrupts, where previously it could
+not. For example, this gives irqbalance the ability to change (and perhaps
+degrade) the default affinity configuration that was designed to maximize
+network throughput. This is yet another reason to disable irqbalance in VM
+images.
+
+The custom VMBus entries under /sys are retained for backwards compatibility,
+but they are integrated. For example, changing the affinity via /proc/irq is
+reflected in /sys/bus/vmbus/devices/<guid>/channels/<nn>/cpu, and vice versa.
+
+Patches
+-------
+The patches have been tested on x86/x64 Generation 1 and Generation 2 VMs, and
+on arm64 VMs.
+
+* Patches 1 and 2 fixes some error handling that is needed by subsequent
+patches. They could be applied independent of this patch set.
+
+* Patches 3,4, and 5 add support for IRQ names, and add annotations in the
+storvsc and the Hyper-V vPCI driver so that descriptions in /proc/interrupts
+convey useful information.
+
+* Patch 6 adds a new IRQ flow handler needed to properly account for IRQs as
+VMBus IRQs or as the top-level architectural interrupt.
+
+* Patch 7 creates the new IRQ domain for VMBus channel IRQs.
+
+* Patch 8 allocates the VMBus channel IRQs, and creates the mapping between
+VMBus relid (used as the hwirq) and the Linux IRQ number. That mapping is then
+used for lookups.
+
+* Patch 9 does request_irq() for the new VMBus channel IRQs, and converts the
+top-level VMBus architectural interrupt handler to use the new VMBus channel
+IRQs for handling channel interrupts. With this patch, /proc/interrupts shows
+counts for the VMBus channel IRQs.
+
+* Patch 10 implements the irq_set_affinity() function for VMBus channel IRQs,
+and integrates it with the existing Hyper-V-specific sysfs mechanism for
+changing the CPU that a VMBus channel will interrupt.
+
+* Patch 11 updates hv_synic_cleanup() during CPU offlining to handle the lack
+of waiting for the MODIFYCHANNEL message in vmbus_irq_set_affinity() in Patch
+10.
+
+* Patch 12 fixes a race in VMBus channel interrupt assignments that existed
+prior to this patch set when taking a CPU offline.
+
+Open Topics
+-----------
+* The performance impact of the additional IRQ processing in the interrupt path
+appears to be minimal, based on looking at the code. Measurements are still to
+be taken to confirm this.
+
+* Does the netvsc driver have sufficient information to annotate what appears
+in /proc/interrupts, particularly when multiple synthetic NICs are present? At
+first glance, it appears that the identifying info isn't generated until after
+vmbus_open() is called, and by then it's too late to do the IRQ annotation.
+Need some input from a netvsc expert.
+
+* The VMBus irq domain and irq chip data structures are placed in the
+vmbus_connection structure. Starting with VMBus protocol version 5.0, the VMBus
+host side supports multiple connections from a single guest instance (see
+commit ae20b254306a6). While there's no upstream kernel code that creates
+multiple VMBus connections, it's unclear whether the IRQ domain should be
+global across all VMBus connection, or per connection. Are relid's global (to
+the VM) or per connection?
+
+* I have not tried or tested any hv_sock channels. Is there a handy test
+program that would be convenient for opening multiple hv_sock connections to
+the guest, have them persist long enough to see what /proc/interrupts shows,
+and try changing the IRQ affinity?
+
+* I have not tried or tested Linux guest hibernation paths.
+
+The patches build and run against 6.10-rc2 and next-20240603.
+
+Michael Kelley (12):
+  Drivers: hv: vmbus: Drop unsupported VMBus devices earlier
+  Drivers: hv: vmbus: Fix error path that deletes non-existent sysfs
+    group
+  Drivers: hv: vmbus: Add an IRQ name to VMBus channels
+  PCI: hv: Annotate the VMBus channel IRQ name
+  scsi: storvsc: Annotate the VMBus channel IRQ name
+  genirq: Add per-cpu flow handler with conditional IRQ stats
+  Drivers: hv: vmbus: Set up irqdomain and irqchip for the VMBus
+    connection
+  Drivers: hv: vmbus: Allocate an IRQ per channel and use for relid
+    mapping
+  Drivers: hv: vmbus: Use Linux IRQs to handle VMBus channel interrupts
+  Drivers: hv: vmbus: Implement vmbus_irq_set_affinity
+  Drivers: hv: vmbus: Wait for MODIFYCHANNEL to finish when offlining
+    CPUs
+  Drivers: hv: vmbus: Ensure IRQ affinity isn't set to a CPU going
+    offline
+
+ arch/x86/kernel/cpu/mshyperv.c      |   9 +-
+ drivers/hv/channel.c                | 125 ++++------
+ drivers/hv/channel_mgmt.c           | 139 ++++++++----
+ drivers/hv/connection.c             |  48 ++--
+ drivers/hv/hv.c                     |  90 +++++++-
+ drivers/hv/hv_common.c              |   2 +-
+ drivers/hv/hyperv_vmbus.h           |  22 +-
+ drivers/hv/vmbus_drv.c              | 338 +++++++++++++++++++---------
+ drivers/pci/controller/pci-hyperv.c |   5 +
+ drivers/scsi/storvsc_drv.c          |   9 +
+ include/asm-generic/mshyperv.h      |   9 +-
+ include/linux/hyperv.h              |   9 +
+ include/linux/irq.h                 |   1 +
+ kernel/irq/chip.c                   |  29 +++
+ 14 files changed, 567 insertions(+), 268 deletions(-)
+
+-- 
+2.25.1
+
