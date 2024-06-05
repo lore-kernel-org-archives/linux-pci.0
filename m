@@ -1,150 +1,159 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B6963DAC0C
-	for <linux-pci@vger.kernel.org>; Wed,  5 Jun 2024 08:16:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77704195FE8;
+	Wed,  5 Jun 2024 08:18:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717575407; cv=none; b=ssGLndNxcZ15kYMy8GVos9+Isx8c73T33J1pehi2KT5SIMR93mW5XNYNEObDdiP//SQL0ojbeup7wv3fCsn/LmwkXHzSc0ikh8gQEo9FXmZj0Jj6K+tLAm0G0k0mAf1+znROsh5VScMzgPDbJLMdaKcwDkVAFegjGU9kLlvvBeU=
+	t=1717575489; cv=none; b=q9UfIFBANL3cNMcAY4GjukZV9jaO4nz7L3Y7dtXe4+WPt8J29YkNCdYV3lv/UJsHWbHSPRuaYESv+YiAQB+21KXEk8j50EqdmmqM3Ko27FQBYjHr9AOjBCJTgUKGh56hCVkhV3B+y+Cc4UG5pt5lhYNAXR1DmUTb18o9G1ZYtcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717575407; c=relaxed/simple;
-	bh=bCBZE66HS4MGevuCEuGbllziHVNkZUwOrdLYjEkBs5Y=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JvItIii3Zmn8Dy689H7MsI6mUbmQkD2nUxl+60bwA78feyPyUsAjiQpoiOpFMsYiWc68ZeKIITJb1s5SzuA0GQuv0AfhKNSDuqkB/Tsj59nCiTbY+bKRVPrnhG+/d7313VzgdPYDgT9QrRj+tKQ8W7bqJVJs1H4fIqD3kTu+1rU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZbzBrObm; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1717575489; c=relaxed/simple;
+	bh=AaNMFa474izpGRkn1s2bqhLMgtZao6BeoKtAM/4bkRI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ck+mCDPLn68NN13aJ56Yaaqls5HAKiMuggskxPrN36M0aGwcEMtnNX2dK30w7hpfJmcds0D403eXFy6xVd2mrefSGwx724bS8px9UzIXUEKSdulAvlHjkFWwghC2LMpZ9Xb5SHVq+tHlL0v2kxKSdwIHnn++NDbSJiJsQgdcZk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QuXzzy2Q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZbzBrObm"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1717575405;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PQF/RRtq2M1mXHCVQZRIWcpncx1S//L9Tm5LTcwCt7g=;
-	b=ZbzBrObm+j+iMlIWF5kabtlOGAiv40BI4MLT7jR4JLkLCnnvb6L7cgFAMZsEzp8xNOy+TX
-	yLNwiTEQ2AmkORw07YNT7scevwPfmK8xQVAHe2aMJz2vkPPJIsP49UguIBrhRqisniURou
-	B+ZCwWv0d215AV6aO37/6w6BzUyGQD0=
-Received: from mail-ej1-f69.google.com (mail-ej1-f69.google.com
- [209.85.218.69]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-160-v-3t3J8qNo-lSIwyRGbm9Q-1; Wed, 05 Jun 2024 04:16:41 -0400
-X-MC-Unique: v-3t3J8qNo-lSIwyRGbm9Q-1
-Received: by mail-ej1-f69.google.com with SMTP id a640c23a62f3a-a68bed163b0so13228366b.2
-        for <linux-pci@vger.kernel.org>; Wed, 05 Jun 2024 01:16:41 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1717575400; x=1718180200;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PQF/RRtq2M1mXHCVQZRIWcpncx1S//L9Tm5LTcwCt7g=;
-        b=QKxQfVsq7ZQw/pZVm2TKg6NY4vjWPsF17YziEEaxgzUDKhvJ2WnfzKTI5c5BklMd/l
-         GiXMYksX4H/ZWhStMyWi67o7g1tLEqIFioKcuYi0tJKICSYpemqeZ97Stnff0OS+LjLf
-         me3ZR5CT/2TXI1Clv5TsWeDo1JwaPa+UP9ZnMLDtwQ/B0qOW+MxthWLHudltTbckp7lj
-         wOP9gzWEIBDgJo4xISkiOT4Yp+kzVXWkVIuZT28uKhjcJ6O979pSJ3Qmfi7ZrTcLMhDf
-         HwlkYJrCTCBPXOu3MyerhYdrgliE0jGVrZR7FrXi8IsGKOSStPATbKUkKhzp8FbP2550
-         5Y/A==
-X-Forwarded-Encrypted: i=1; AJvYcCWCRtstvtB+wQSjAWImX9NgSBugI47EOd1MNxxLBasR75ND14Uz96/8st4IuhYojbz/1lzJ9wbhPzdsueycYNqwIxRoEXrk28sI
-X-Gm-Message-State: AOJu0YxRlG9LosVmNiV/rTA3AZxBXNqOGMiziI59mpBn7Ks2PQ7jZ0ds
-	yay8UJ//eZyW3YVJo/+C8g/hPefVoM8+vVb6azpYg1zlTp0SRmuYCrDJamzNPFHIfnw/CkPzR2d
-	CSe1D9KceS5NswJbbUiuBGjvB0duJVTBVHwphZlCKQcE1NgAAGMmGoPSyew==
-X-Received: by 2002:a50:9983:0:b0:57a:2069:e91 with SMTP id 4fb4d7f45d1cf-57a8b674ab5mr1282380a12.1.1717575400719;
-        Wed, 05 Jun 2024 01:16:40 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHnDWsmeGVuf2mez79IRf+VouIvlEPmoOV19RR5wEUe4IIflrHEB7JVXR7OyM17+DSycTI2BQ==
-X-Received: by 2002:a5d:62c4:0:b0:358:a09:2677 with SMTP id ffacd0b85a97d-35e84046ff8mr1214838f8f.2.1717575380210;
-        Wed, 05 Jun 2024 01:16:20 -0700 (PDT)
-Received: from pstanner-thinkpadt14sgen1.fritz.box ([2001:9e8:32e6:e600:c901:4daf:2476:80ad])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-35dd0630010sm13739163f8f.76.2024.06.05.01.16.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Jun 2024 01:16:19 -0700 (PDT)
-From: Philipp Stanner <pstanner@redhat.com>
-To: Hans de Goede <hdegoede@redhat.com>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>,
-	Daniel Vetter <daniel@ffwll.ch>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QuXzzy2Q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8A334C32781;
+	Wed,  5 Jun 2024 08:18:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1717575488;
+	bh=AaNMFa474izpGRkn1s2bqhLMgtZao6BeoKtAM/4bkRI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=QuXzzy2QmnMeVrq08FbdVt/73QHryni6SoM0SVxGGuiz6A4ghxNqCCZLNCEecbtu4
+	 IdgdnbLINDiAizZoS+N79/csAIyM4fv+50RhuZY1Z/d5cyYdzmFXLSezPJP9czv3cy
+	 NF2BUTwaug+THss1Oo4UscXBvOJctBQrTyB21nc8fEMRkZj45V4MVoK4vY6hijv331
+	 Ldvx61iNLXJgcnHTMN8JvVtuqlk+rqy55z2CbuSVMc55eI7TPwiUZ3x6loS3DoX9PE
+	 Dsjim1vDbwOHx2HXWV/DDwFKYd8ghDGYwXgDHgqxWQA08+Lz8M43+p2xmiB/rsKaRL
+	 woG/EIr73aK6w==
+Date: Wed, 5 Jun 2024 13:47:53 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Sam Ravnborg <sam@ravnborg.org>,
-	dakr@redhat.com
-Cc: dri-devel@lists.freedesktop.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Philipp Stanner <pstanner@redhat.com>
-Subject: [PATCH v7 04/13] PCI: Deprecate two surplus devres functions
-Date: Wed,  5 Jun 2024 10:15:56 +0200
-Message-ID: <20240605081605.18769-6-pstanner@redhat.com>
-X-Mailer: git-send-email 2.45.0
-In-Reply-To: <20240605081605.18769-2-pstanner@redhat.com>
-References: <20240605081605.18769-2-pstanner@redhat.com>
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>,
+	Jon Lin <jon.lin@rock-chips.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v4 10/13] PCI: dw-rockchip: Add endpoint mode support
+Message-ID: <20240605081753.GK5085@thinkpad>
+References: <20240529-rockchip-pcie-ep-v1-v4-0-3dc00fe21a78@kernel.org>
+ <20240529-rockchip-pcie-ep-v1-v4-10-3dc00fe21a78@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240529-rockchip-pcie-ep-v1-v4-10-3dc00fe21a78@kernel.org>
 
-pcim_iomap_table() should not be used anymore because it contributed to
-the PCI devres API being designed contrary to devres's design goals.
+On Wed, May 29, 2024 at 10:29:04AM +0200, Niklas Cassel wrote:
+> The PCIe controller in rk3568 and rk3588 can operate in endpoint mode.
+> This endpoint mode support heavily leverages the existing code in
+> pcie-designware-ep.c.
+> 
+> Add support for endpoint mode to the existing pcie-dw-rockchip glue
+> driver.
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-pcim_iomap_regions_request_all() is a surplus, complicated function
-that can easily be replaced by using a pcim_* request function in
-combination with a pcim_* mapping function.
+Couple of comments below. With those addressed,
 
-Mark pcim_iomap_table() and pcim_iomap_regions_request_all() as
-deprecated in the function documentation.
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Signed-off-by: Philipp Stanner <pstanner@redhat.com>
----
- drivers/pci/devres.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+> ---
+>  drivers/pci/controller/dwc/Kconfig            |  17 ++-
+>  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 210 ++++++++++++++++++++++++++
+>  2 files changed, 224 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+> index 8afacc90c63b..9fae0d977271 100644
+> --- a/drivers/pci/controller/dwc/Kconfig
+> +++ b/drivers/pci/controller/dwc/Kconfig
+> @@ -311,16 +311,27 @@ config PCIE_RCAR_GEN4_EP
+>  	  SoCs. To compile this driver as a module, choose M here: the module
+>  	  will be called pcie-rcar-gen4.ko. This uses the DesignWare core.
+>  
+> +config PCIE_ROCKCHIP_DW
+> +	bool
 
-diff --git a/drivers/pci/devres.c b/drivers/pci/devres.c
-index e6e791c9db6e..f199f610ae51 100644
---- a/drivers/pci/devres.c
-+++ b/drivers/pci/devres.c
-@@ -501,7 +501,7 @@ static void pcim_iomap_release(struct device *gendev, void *res)
- }
- 
- /**
-- * pcim_iomap_table - access iomap allocation table
-+ * pcim_iomap_table - access iomap allocation table (DEPRECATED)
-  * @pdev: PCI device to access iomap table for
-  *
-  * Returns:
-@@ -515,6 +515,11 @@ static void pcim_iomap_release(struct device *gendev, void *res)
-  * This function might sleep when the table is first allocated but can
-  * be safely called without context and guaranteed to succeed once
-  * allocated.
-+ *
-+ * This function is DEPRECATED. Do not use it in new code. Instead, obtain a
-+ * mapping's address directly from one of the pcim_* mapping functions. For
-+ * example:
-+ * void __iomem *mappy = pcim_iomap(pdev, barnr, length);
-  */
- void __iomem * const *pcim_iomap_table(struct pci_dev *pdev)
- {
-@@ -886,7 +891,7 @@ static int pcim_request_all_regions(struct pci_dev *pdev, const char *name)
- }
- 
- /**
-- * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones
-+ * pcim_iomap_regions_request_all - Request all BARs and iomap specified ones (DEPRECATED)
-  * @pdev: PCI device to map IO resources for
-  * @mask: Mask of BARs to iomap
-  * @name: Name associated with the requests
-@@ -897,6 +902,9 @@ static int pcim_request_all_regions(struct pci_dev *pdev, const char *name)
-  *
-  * To release these resources manually, call pcim_release_region() for the
-  * regions and pcim_iounmap() for the mappings.
-+ *
-+ * This function is DEPRECATED. Don't use it in new code. Instead, use one of the
-+ * pcim_* region request functions in combination with a pcim_* mapping function.
-  */
- int pcim_iomap_regions_request_all(struct pci_dev *pdev, int mask,
- 				   const char *name)
+Where is this symbol used?
+
+> +
+>  config PCIE_ROCKCHIP_DW_HOST
+> -	bool "Rockchip DesignWare PCIe controller"
+> -	select PCIE_DW
+> +	bool "Rockchip DesignWare PCIe controller (host mode)"
+>  	select PCIE_DW_HOST
+>  	depends on PCI_MSI
+>  	depends on ARCH_ROCKCHIP || COMPILE_TEST
+>  	depends on OF
+>  	help
+>  	  Enables support for the DesignWare PCIe controller in the
+> -	  Rockchip SoC except RK3399.
+> +	  Rockchip SoC (except RK3399) to work in host mode.
+> +
+> +config PCIE_ROCKCHIP_DW_EP
+> +	bool "Rockchip DesignWare PCIe controller (endpoint mode)"
+> +	select PCIE_DW_EP
+> +	depends on ARCH_ROCKCHIP || COMPILE_TEST
+> +	depends on OF
+> +	help
+> +	  Enables support for the DesignWare PCIe controller in the
+> +	  Rockchip SoC (except RK3399) to work in endpoint mode.
+>  
+>  config PCI_EXYNOS
+>  	tristate "Samsung Exynos PCIe controller"
+> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> index e133511692af..347721207161 100644
+> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+
+[...]
+
+> +static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+> +{
+> +	struct rockchip_pcie *rockchip = arg;
+> +	struct dw_pcie *pci = &rockchip->pci;
+> +	struct device *dev = pci->dev;
+> +	u32 reg, val;
+> +
+> +	reg = rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_INTR_STATUS_MISC);
+> +
+> +	dev_dbg(dev, "PCIE_CLIENT_INTR_STATUS_MISC: %#x\n", reg);
+> +	dev_dbg(dev, "LTSSM_STATUS: %#x\n", rockchip_pcie_get_ltssm(rockchip));
+> +
+> +	if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
+> +		dev_dbg(dev, "hot reset or link-down reset\n");
+> +		dw_pcie_ep_linkdown(&pci->ep);
+> +	}
+> +
+> +	if (reg & PCIE_RDLH_LINK_UP_CHGED) {
+> +		val = rockchip_pcie_get_ltssm(rockchip);
+> +		if ((val & PCIE_LINKUP) == PCIE_LINKUP) {
+> +			dev_dbg(dev, "link up\n");
+> +			dw_pcie_ep_linkup(&pci->ep);
+> +		}
+> +	}
+> +
+> +	rockchip_pcie_writel_apb(rockchip, reg, PCIE_CLIENT_INTR_STATUS_MISC);
+
+It is recommended to clear the IRQs at the start of the handler (after status
+read).
+
+- Mani
+
 -- 
-2.45.0
-
+மணிவண்ணன் சதாசிவம்
