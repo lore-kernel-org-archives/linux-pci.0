@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9222A198A0A;
-	Wed,  5 Jun 2024 11:55:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 444031BA89E;
+	Wed,  5 Jun 2024 11:55:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717588508; cv=none; b=hs+4v/v47jNvYHbWZ2Mtxx2Wolmi6yiF2GMvrJj6UZB7114ip1i3KpDTI0SeWCgx2HUD/unmqcMlI8VZXxxhtqFJ65PDK2mHoN7csub9F6iD1ywLjZaascGlQbxWf/wtXZ08+/mH2fp255mHeTvsoT9+CHzRxLZIJKac3biQHhI=
+	t=1717588523; cv=none; b=Y+MI/VY8bJvsEqafJHAZTTOCNWhRClnuMJCCdZPc9l7KhZLjDIFfkpZU9ze/1w8yuMFZ48GqOmBzcIWpKAXP9lSyZsv0FVJ+b+ONzAWaeE0LQnIkHBSSQsuTa4/44bhDamR5WQYSoHLX2IzYF67+AIsAESikR/xKrsaURJRh+tE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717588508; c=relaxed/simple;
-	bh=+cBXV3mzAmKOx0ZUkuAPK7a9zlIlZdwUozGVJj62rIo=;
+	s=arc-20240116; t=1717588523; c=relaxed/simple;
+	bh=7BgoD1Te/ofFCaNZUnrVRTv7nU7IXLSPK3C/Bx4GeOY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=V2P8cc905G5MbOj6iNvjeW06YCGbBQYAiEO738RWmQ0J2/N5Ssf2CE5KEzp8xwIw1tgEFkvDZLOTqU7KkynK1LzhRKVJYAhq7D2bgoYynNIv/gIfgKL/ADrasrSJqvgQKqaJOfKb9MEU64HrdfF/jDV9x8KQXMyx9J827SMcXs4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aHQ3+o0T; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=IS5uEm9CKcCbQYo1zKQJrsG3LESemHP02lInoVzuLrBpHLkSwiS8ss6OvFugHQnW6nUkTRTVAXUyQxFq7Vf98CzT8+HChtiCOorvASh6hCcUeJhlEPgJ7P2D/mTR54Kpn6S7UqQPfJWauAjXuugRB/JoiGDSJkHzfmc/LeNlZCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HLwJWAUS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aHQ3+o0T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A0EE0C4AF09;
-	Wed,  5 Jun 2024 11:55:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HLwJWAUS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 55063C32781;
+	Wed,  5 Jun 2024 11:55:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1717588508;
-	bh=+cBXV3mzAmKOx0ZUkuAPK7a9zlIlZdwUozGVJj62rIo=;
+	s=k20201202; t=1717588523;
+	bh=7BgoD1Te/ofFCaNZUnrVRTv7nU7IXLSPK3C/Bx4GeOY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aHQ3+o0TFKC8vD2XGILgWSdTAOKyeEzlIXQ0BB9cNAdR8sL0571insVFHRQhqmdQ0
-	 ShbeaNwZIdLMkyN72hQkovnXBRj25PMb4coNJ+qRTeD6PCbff+pAvJzQ8H5nvYl62/
-	 c0QzkuGyqjLbsNcM5IBQxpbd6W1GHIUeIMPbTPlJ5U2Tvjn0sZHZUBDenFN3vdyfXb
-	 gM7l7kl3negBKAP9tNWbiC5BBW3gRNZoEXD1qksTpiaRmG/4tKNe1Mm0aCleduR7gC
-	 eCOZl5QyEuH3cew5FeeORqzBEMMUQBkQGW1cAI6+ABYbY0qsUGUKJ+DDOQCVFwnHdb
-	 /INRQrYhtVBaw==
+	b=HLwJWAUSQmhp1uJdANrOdRH3fkBoGE5AZYxbQ6oMcyyBNO6F2PYnG2ABLvR1+f7r6
+	 tEjWi5W/opKREJsY+MytF33AgEd9HkdHkrVip+hVBFE2BOVhNDxZFXp+resCgAhMqy
+	 1WWkeL+G+azZOBIVLpIo+D+yprZYrMskEcgggufhTj/DgoeI43CgdpVft/ITlORCUe
+	 m05JETqO/Em47dERsRNpXFLOzlahfKhLOrBURaQE4g+vPmHQkRhIhuvUewThs637Vc
+	 Hjj2nbRYF+RVo9jYvhdXwGHfd50gIOXZz5ectnlHM/RNefMnACJG+cv/rgl6djIW7m
+	 WgG4Pal9adeUw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -34,12 +34,12 @@ Cc: Mario Limonciello <mario.limonciello@amd.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 3/5] PCI/PM: Avoid D3cold for HP Pavilion 17 PC/1972 PCIe Ports
-Date: Wed,  5 Jun 2024 07:54:56 -0400
-Message-ID: <20240605115504.2964549-3-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 4.19 3/4] PCI/PM: Avoid D3cold for HP Pavilion 17 PC/1972 PCIe Ports
+Date: Wed,  5 Jun 2024 07:55:11 -0400
+Message-ID: <20240605115518.2964670-3-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240605115504.2964549-1-sashal@kernel.org>
-References: <20240605115504.2964549-1-sashal@kernel.org>
+In-Reply-To: <20240605115518.2964670-1-sashal@kernel.org>
+References: <20240605115518.2964670-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.277
+X-stable-base: Linux 4.19.315
 Content-Transfer-Encoding: 8bit
 
 From: Mario Limonciello <mario.limonciello@amd.com>
@@ -92,10 +92,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 12 insertions(+)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 64c89b23e99f7..deafd229ef8b4 100644
+index 2ac400adaee11..4f229cb5d2a9f 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -2626,6 +2626,18 @@ static const struct dmi_system_id bridge_d3_blacklist[] = {
+@@ -2530,6 +2530,18 @@ static const struct dmi_system_id bridge_d3_blacklist[] = {
  			DMI_MATCH(DMI_BOARD_VERSION, "Continental Z2"),
  		},
  	},
