@@ -1,101 +1,217 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2624119AA63;
-	Fri,  7 Jun 2024 16:17:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B81D19007A;
+	Fri,  7 Jun 2024 16:27:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717777049; cv=none; b=DTseyb3ghVdANX5oLmXd5vMTGxzfb74SM702vlhL1vZF6zmnmvwUBVC9yT+yxAoFb5b3nnMljZfWcyXmWh7KatkvLAMV6dA0+uKQOWmgxf6+ThFaltItKFVhdn6bx67i39Cyd2yBD4HFGOMakfcEDXXdBlyKcOyCwkXALvKOnE8=
+	t=1717777628; cv=none; b=kdnwS9KeOlkrB0I8bew6EluHkNRat4elkfGXGAh9ZlblSCv+XXR+XEYuFAJ4KkP6TH/I8g3CWPvaucyGSJ+kGXnwJ73UTMMu+qYpVcI2YN2Mv+7XQ0BM6ZhUAJiTBGXx3vO/hX1YpLGh8jKobunFeLx2qY+Bbl+PN+z8WlwEqgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717777049; c=relaxed/simple;
-	bh=QfF9Bb7X32F8nICu81y4HThudduzWvXoFg1jEZTpPhE=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=NjQlgc/e/wYsgH5HdTzU1q2tHcUZgYoWwBZlXwBS++87Z2uFLEWpSJQTdffGMna6AnHDztmYSolAohUvBvtrjE6ka2yYPDVbGAJInnZxoEzBUNUQlpR+NLSKxYuOqbm0IIR1RGoBxY6NaimzO5cFZlRaHOEEOy96R2wE/Ar9jF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=BBIh0yCR; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="BBIh0yCR"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=qkDEkc3600QydwZ7dLx85k/1FneEqzK/z4bkuCI+5S8=; b=BBIh0yCRXnuFy/KVqsXSN0Ylfu
-	RvrfX04VdJB3Fw2avS7C17nDPoTwlpTf9XQi3wuBbfvzX3ZFNHVCl1NwYu2/PPOGLE7QkR2tET3Iq
-	B5ktVUDPG8MF7I3G89kYngU4gEfVeHZXrG3i1NMqVinkvy8Pzh9+q9QZRhpQYxeYyvN+wwFTlmGHE
-	dp7tguHBZtRWbAX+rITl46AsNMZ/uAofdIz8MGNGDSIF/A/sI6fT37NqJOUFeKQbzlybKJT1QWEIg
-	rHMS8X2tz+58WNHlo7DNN9t+cGoZGKYId1dXBKtTy+E4tdiT3RNoJqNdo9RRG7v4Qe2GcxlNJg/eP
-	VofAp7tA==;
-Received: from d104-157-31-28.abhsia.telus.net ([104.157.31.28] helo=[192.168.1.250])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1sFcHC-002ro5-1t;
-	Fri, 07 Jun 2024 10:17:15 -0600
-Message-ID: <69dc6610-e70a-46ca-a6e9-7ca183eb055c@deltatee.com>
-Date: Fri, 7 Jun 2024 10:16:58 -0600
+	s=arc-20240116; t=1717777628; c=relaxed/simple;
+	bh=4Q10J8kr9vNr8phtfffRz/SvOstz+NEUvY6qN2pdO3k=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HHuoUK7Rd7i0+kjU7wbcMOwmqLUQwypIG0+sYd8YJ3TgS7FZ17F3wmetTX6LIjsBwWkXCtdN7um+WumY0tcSWvPGrsILPcIt8JuGbtvkhgepfC78Ze/K9Y1DZIJRRBXUQSgG0tTrkfg4QmOV8TxBZVjvnoatolcvBPX0CzVUv+s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.31])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Vwmld2snFz67Lqc;
+	Sat,  8 Jun 2024 00:25:49 +0800 (CST)
+Received: from lhrpeml500005.china.huawei.com (unknown [7.191.163.240])
+	by mail.maildlp.com (Postfix) with ESMTPS id 846D81408FE;
+	Sat,  8 Jun 2024 00:27:03 +0800 (CST)
+Received: from localhost (10.202.227.76) by lhrpeml500005.china.huawei.com
+ (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Fri, 7 Jun
+ 2024 17:27:02 +0100
+Date: Fri, 7 Jun 2024 17:27:01 +0100
+From: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
+To: Wei Huang <wei.huang2@amd.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-doc@vger.kernel.org>, <netdev@vger.kernel.org>, <bhelgaas@google.com>,
+	<corbet@lwn.net>, <davem@davemloft.net>, <edumazet@google.com>,
+	<kuba@kernel.org>, <pabeni@redhat.com>, <alex.williamson@redhat.com>,
+	<gospo@broadcom.com>, <michael.chan@broadcom.com>,
+	<ajit.khaparde@broadcom.com>, <somnath.kotur@broadcom.com>,
+	<andrew.gospodarek@broadcom.com>, <manoj.panicker2@amd.com>,
+	<Eric.VanTassell@amd.com>, <vadim.fedorenko@linux.dev>, <horms@kernel.org>,
+	<bagasdotme@gmail.com>
+Subject: Re: [PATCH V2 3/9] PCI/TPH: Implement a command line option to
+ disable TPH
+Message-ID: <20240607172701.00006ae1@Huawei.com>
+In-Reply-To: <20240531213841.3246055-4-wei.huang2@amd.com>
+References: <20240531213841.3246055-1-wei.huang2@amd.com>
+	<20240531213841.3246055-4-wei.huang2@amd.com>
+Organization: Huawei Technologies Research and Development (UK) Ltd.
+X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Christoph Hellwig <hch@infradead.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Martin Oliveira <martin.oliveira@eideticom.com>,
- linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-mm@kvack.org, Jason Gunthorpe
- <jgg@ziepe.ca>, Leon Romanovsky <leon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Tejun Heo <tj@kernel.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Andrew Morton <akpm@linux-foundation.org>,
- Mike Marciniszyn <mike.marciniszyn@intel.com>,
- Michael Guralnik <michaelgur@nvidia.com>,
- Dan Williams <dan.j.williams@intel.com>, Ard Biesheuvel <ardb@kernel.org>,
- Valentine Sinitsyn <valesini@yandex-team.ru>, Lukas Wunner <lukas@wunner.de>
-References: <20240605192934.742369-1-martin.oliveira@eideticom.com>
- <20240605192934.742369-2-martin.oliveira@eideticom.com>
- <2024060658-ember-unblessed-4c74@gregkh> <ZmKUpXQmMLpH8vf5@infradead.org>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <ZmKUpXQmMLpH8vf5@infradead.org>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 104.157.31.28
-X-SA-Exim-Rcpt-To: hch@infradead.org, gregkh@linuxfoundation.org, martin.oliveira@eideticom.com, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-mm@kvack.org, jgg@ziepe.ca, leon@kernel.org, bhelgaas@google.com, tj@kernel.org, rafael@kernel.org, akpm@linux-foundation.org, mike.marciniszyn@intel.com, michaelgur@nvidia.com, dan.j.williams@intel.com, ardb@kernel.org, valesini@yandex-team.ru, lukas@wunner.de
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH 1/6] kernfs: create vm_operations_struct without
- page_mkwrite()
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-ClientProxiedBy: lhrpeml100003.china.huawei.com (7.191.160.210) To
+ lhrpeml500005.china.huawei.com (7.191.163.240)
 
+On Fri, 31 May 2024 16:38:35 -0500
+Wei Huang <wei.huang2@amd.com> wrote:
 
+> Provide a kernel option, with related helper functions, to completely
+> disable TPH so that no TPH headers are generated.
 
-On 2024-06-06 23:03, Christoph Hellwig wrote:
-> On Thu, Jun 06, 2024 at 10:54:06PM +0200, Greg Kroah-Hartman wrote:
->> On Wed, Jun 05, 2024 at 01:29:29PM -0600, Martin Oliveira wrote:
->>> The standard kernfs vm_ops installs a page_mkwrite() operator which
->>> modifies the file update time on write.
->>>
->>> This not always required (or makes sense), such as in the P2PDMA, which
->>> uses the sysfs file as an allocator from userspace.
->>
->> That's not a good idea, please don't do that.  sysfs binary files are
->> "pass through", why would you want to use this as an allocator?
+Why would someone use this option?
+
 > 
-> I think the real question is why sysfs binary files implement
-> page_mkwrite by default.  page_mkwrite is needed for file systems that
-> need to allocate space from a free space pool, which seems odd for
-> sysfs.
+> Co-developed-by: Eric Van Tassell <Eric.VanTassell@amd.com>
+> Signed-off-by: Eric Van Tassell <Eric.VanTassell@amd.com>
+> Signed-off-by: Wei Huang <wei.huang2@amd.com>
+> Reviewed-by: Ajit Khaparde <ajit.khaparde@broadcom.com>
+> Reviewed-by: Somnath Kotur <somnath.kotur@broadcom.com> 
+> Reviewed-by: Andy Gospodarek <andrew.gospodarek@broadcom.com>
+> ---
+>  .../admin-guide/kernel-parameters.txt         |  1 +
+>  drivers/pci/pci-driver.c                      |  7 ++++-
+>  drivers/pci/pci.c                             | 12 ++++++++
+>  drivers/pci/pcie/tph.c                        | 30 +++++++++++++++++++
+>  include/linux/pci-tph.h                       | 19 ++++++++++++
+>  include/linux/pci.h                           |  1 +
+>  6 files changed, 69 insertions(+), 1 deletion(-)
+>  create mode 100644 include/linux/pci-tph.h
+> 
+> diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+> index 500cfa776225..fedcc69e35c1 100644
+> --- a/Documentation/admin-guide/kernel-parameters.txt
+> +++ b/Documentation/admin-guide/kernel-parameters.txt
+> @@ -4623,6 +4623,7 @@
+>  		nomio		[S390] Do not use MIO instructions.
+>  		norid		[S390] ignore the RID field and force use of
+>  				one PCI domain per PCI function
+> +		notph		[PCIE] Do not use PCIe TPH
+>  
+>  	pcie_aspm=	[PCIE] Forcibly enable or ignore PCIe Active State Power
+>  			Management.
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index af2996d0d17f..9722d070c0ca 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -21,6 +21,7 @@
+>  #include <linux/acpi.h>
+>  #include <linux/dma-map-ops.h>
+>  #include <linux/iommu.h>
+> +#include <linux/pci-tph.h>
+>  #include "pci.h"
+>  #include "pcie/portdrv.h"
+>  
+> @@ -322,8 +323,12 @@ static long local_pci_probe(void *_ddi)
+>  	pm_runtime_get_sync(dev);
+>  	pci_dev->driver = pci_drv;
+>  	rc = pci_drv->probe(pci_dev, ddi->id);
+> -	if (!rc)
+> +	if (!rc) {
+> +		if (pci_tph_disabled())
+> +			pcie_tph_disable(pci_dev);
+> +
+>  		return rc;
+> +	}
+>  	if (rc < 0) {
+>  		pci_dev->driver = NULL;
+>  		pm_runtime_put_sync(dev);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 59e0949fb079..31c443504ce9 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -157,6 +157,9 @@ static bool pcie_ari_disabled;
+>  /* If set, the PCIe ATS capability will not be used. */
+>  static bool pcie_ats_disabled;
+>  
+> +/* If set, the PCIe TPH capability will not be used. */
+> +static bool pcie_tph_disabled;
+> +
+>  /* If set, the PCI config space of each device is printed during boot. */
+>  bool pci_early_dump;
+>  
+> @@ -166,6 +169,12 @@ bool pci_ats_disabled(void)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_ats_disabled);
+>  
+> +bool pci_tph_disabled(void)
+> +{
+> +	return pcie_tph_disabled;
+> +}
+> +EXPORT_SYMBOL_GPL(pci_tph_disabled);
+> +
+>  /* Disable bridge_d3 for all PCIe ports */
+>  static bool pci_bridge_d3_disable;
+>  /* Force bridge_d3 for all PCIe ports */
+> @@ -6806,6 +6815,9 @@ static int __init pci_setup(char *str)
+>  				pci_no_domains();
+>  			} else if (!strncmp(str, "noari", 5)) {
+>  				pcie_ari_disabled = true;
+> +			} else if (!strcmp(str, "notph")) {
+> +				pr_info("PCIe: TPH is disabled\n");
+> +				pcie_tph_disabled = true;
+>  			} else if (!strncmp(str, "cbiosize=", 9)) {
+>  				pci_cardbus_io_size = memparse(str + 9, &str);
+>  			} else if (!strncmp(str, "cbmemsize=", 10)) {
+> diff --git a/drivers/pci/pcie/tph.c b/drivers/pci/pcie/tph.c
+> index 5f0cc06b74bb..5dc533b89a33 100644
+> --- a/drivers/pci/pcie/tph.c
+> +++ b/drivers/pci/pcie/tph.c
+> @@ -16,11 +16,41 @@
+>  #include <linux/errno.h>
+>  #include <linux/msi.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-tph.h>
+>  #include <linux/msi.h>
+>  #include <linux/pci-acpi.h>
+>  
+>  #include "../pci.h"
+>  
+> +static int tph_set_reg_field_u32(struct pci_dev *dev, u8 offset, u32 mask,
+> +				 u8 shift, u32 field)
 
-The default page_mkwrite in kernfs just calls file_update_time() but, as
-I understand it, the fault code should call file_update_time() if
-page_mkwrite isn't set. So perhaps the easiest thing is to simply not
-add a page_mkwrite unless the vm_ops adds one.
+I'm unconvinced this helper makes sense.  Do we do similar for other
+PCI capabilities?
 
-It's not the easiest thing to trace, but as best as I can tell there are
-no kernfs binary attributes that use page_mkwrite. So alternatively,
-perhaps we could just disallow page_mkwrite in kernfs entirely?
+If it does make sense to have a field update, then provide
+one alongside pci_read_config_dword() etc.
 
-Logan
+> +{
+> +	u32 reg_val;
+> +	int ret;
+> +
+> +	if (!dev->tph_cap)
+> +		return -EINVAL;
+> +
+> +	ret = pci_read_config_dword(dev, dev->tph_cap + offset, &reg_val);
+> +	if (ret)
+> +		return ret;
+> +
+> +	reg_val &= ~mask;
+> +	reg_val |= (field << shift) & mask;
+> +
+> +	ret = pci_write_config_dword(dev, dev->tph_cap + offset, reg_val);
+> +
+> +	return ret;
+
+	return pci_write_config_dword();
+
+> +}
+> +
+> +int pcie_tph_disable(struct pci_dev *dev)
+> +{
+> +	return  tph_set_reg_field_u32(dev, PCI_TPH_CTRL,
+
+extra space after return
+
+> +				      PCI_TPH_CTRL_REQ_EN_MASK,
+> +				      PCI_TPH_CTRL_REQ_EN_SHIFT,
+> +				      PCI_TPH_REQ_DISABLE);
+> +}
+> +
+>  void pcie_tph_init(struct pci_dev *dev)
+>  {
+>  	dev->tph_cap = pci_find_ext_capability(dev, PCI_EXT_CAP_ID_TPH);
+
