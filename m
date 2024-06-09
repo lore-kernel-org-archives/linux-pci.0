@@ -1,232 +1,125 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D62417545;
-	Sun,  9 Jun 2024 02:39:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36E6F5223
+	for <linux-pci@vger.kernel.org>; Sun,  9 Jun 2024 02:41:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717900776; cv=none; b=shLMFMPaTn1LntJYhOE/OpHodgV2o2IUeTiB8H8QGV810NWZloq4EditYEq1G6V8eo3jTZLMOSBf0PfuSXnjVsP3CpzKKTpOiYvaI1Kigm8YGigvMGbpAw7F8RCUJvCUgRscYq5glqaGn+X7LJy82hm3n/GYdyEV5tdcHMEYldI=
+	t=1717900901; cv=none; b=DyV8rdKfcWfUrdDYfyH6mq2rKIbOZIdgvkDswgyFdDlEBl2uenG55QTq3W11vun9zIGOAht+fDhgXytB4wYLNmihxXyKRlYiGSnbJgNgRcOhgjomt1hTveBXID4NO6+1jtNoxSBfyRjo1vBf6Y/46go+D8ffeol0/iXt9ePz0XU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717900776; c=relaxed/simple;
-	bh=eFrXmFb/Z9o3AtXGYA4wDz3H9ChjTl8r2uCrxUik/Wk=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=CuX1kQAgZl+Y2lUA2SEi4UARIqLDnABoRT8/c7XlDBye7xg/VBZ9tgCd8rlbOvOyrCNh0P9D13Ef4p7Ly7ohLuXV0iFHk6rE6dO1EGa7eCt9gS7tgIyf3R4/WUYDfszN3pyV/t/USd0hGjzCKeoFmkOfq52F2wxqZ6ve1OGkZjs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=JXXUxu+j; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1717900901; c=relaxed/simple;
+	bh=dnsnE/cFeBqTZm+7dDNLXjWjN2dN4cXJ2NegCKzGr9M=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=hluF7yPEDTZ43a1UQH8UneW1KLchudOAlM2IxbzW8h1lFIuAHoQMvooRdPoqCwaOLY2S3ay7zg9ELvGmQ/Gjgeonmi+eAWW9vg+Yg6a85g7Vc6xs7usV59lF3YwyHHs7jfcDWxaE/7HJCifHp4NdXWr9ytYt3mGCBcOI3VQhpuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c4Kel+2k; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="JXXUxu+j"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4592SeiU005055;
-	Sun, 9 Jun 2024 02:38:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/HV5h/uPpWapD7fJ1gbc0vj5zW23q3NYvvO1YGMvW8M=; b=JXXUxu+jgVZOdFyK
-	GnD+8oUirqNTzK8IdIJNJyuGir9g2tm8yPsi+lrb/wppKNNXc1U9qrCW/LjNg5Jj
-	4CQXemSQO1l/ASjjRvZze41GPoMUcu9BBivRsyEdgmM4iDLDyzLOGGcK7NjXMBry
-	CyOAP5FrQlP7PONe3OU/DsatHfVs1QP1nVVzU8PhgnC12rkk5wzUbNEGPjSbaIV6
-	eqfbqmxDLrLRyGky2XIE9Y7Y8Sj/8kw3ApgY0ijBOTptF3ej+TtNJ69GRRVN3ogY
-	TvR+dC9CYxP3UyseES5XbJUYVtaI4eAL+D03XROHx9ApnJX7SBV7NoCAKky6ovWP
-	zgT83g==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymemgh7k9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 09 Jun 2024 02:38:35 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4592cXUS002321
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 9 Jun 2024 02:38:33 GMT
-Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Sat, 8 Jun 2024 19:38:26 -0700
-From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Date: Sun, 9 Jun 2024 08:08:15 +0530
-Subject: [PATCH v14 1/4] PCI: qcom: Add ICC bandwidth vote for CPU to PCIe
- path
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c4Kel+2k"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1717900899; x=1749436899;
+  h=date:from:to:cc:subject:message-id;
+  bh=dnsnE/cFeBqTZm+7dDNLXjWjN2dN4cXJ2NegCKzGr9M=;
+  b=c4Kel+2kaajfzYy8R/y2r3S328T0JOO0YrDIyrKvo7WGAiI6laWnSZLD
+   2BdqUBz6Gqw1lwT4cEKOqXLVcj+Sw69UUlHeaBG0N4TQZdaDfvyzUu0ni
+   j+ymS4JVGh0szPkjmC9T0tadSraGz2fO99YzQmaFIFi3tSEi2awdkaLTh
+   cxZFQzmrGT6lbi+2ykbth2LdoP5vT6SBfFTIu6BcszvDLItd9A44PbYqE
+   Eb5u67+bkrZ9qELth0EJ73db1q8zSLjC9lDzNEdnMyhd0sz3+dSv+VkHK
+   o9mQ7PESGCLUrWESAKJ9eNZcr7AgOJs+rBQ81bjZuxRkgXP7qU2qAZ8O+
+   g==;
+X-CSE-ConnectionGUID: JOA/Zb01RguWeS/X/nPv3A==
+X-CSE-MsgGUID: Dkuy9u+vRFyilzAgyartaA==
+X-IronPort-AV: E=McAfee;i="6600,9927,11097"; a="14826400"
+X-IronPort-AV: E=Sophos;i="6.08,224,1712646000"; 
+   d="scan'208";a="14826400"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2024 19:41:39 -0700
+X-CSE-ConnectionGUID: jYbMG47TRzeBRToqOW9emA==
+X-CSE-MsgGUID: D+l6o+m6QuuCbqNBRXGeSQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.08,224,1712646000"; 
+   d="scan'208";a="43650577"
+Received: from lkp-server01.sh.intel.com (HELO 8967fbab76b3) ([10.239.97.150])
+  by orviesa005.jf.intel.com with ESMTP; 08 Jun 2024 19:41:38 -0700
+Received: from kbuild by 8967fbab76b3 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sG8Ux-0000ma-1I;
+	Sun, 09 Jun 2024 02:41:35 +0000
+Date: Sun, 09 Jun 2024 10:40:46 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:next] BUILD SUCCESS
+ e150a8a6fb76fb4aa860abf320691dd4860049a3
+Message-ID: <202406091045.GgJou8jd-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20240609-opp_support-v14-1-801cff862b5a@quicinc.com>
-References: <20240609-opp_support-v14-0-801cff862b5a@quicinc.com>
-In-Reply-To: <20240609-opp_support-v14-0-801cff862b5a@quicinc.com>
-To: Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio
-	<konrad.dybcio@linaro.org>,
-        Rob Herring <robh@kernel.org>,
-        "Krzysztof
- Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
-        Conor Dooley
-	<conor+dt@kernel.org>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>,
-        Lorenzo Pieralisi
-	<lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
-	<kw@linux.com>,
-        Bjorn Helgaas <bhelgaas@google.com>, <johan+linaro@kernel.org>,
-        <bmasney@redhat.com>, <djakov@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>
-CC: <linux-arm-msm@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <vireshk@kernel.org>, <quic_vbadigan@quicinc.com>,
-        <quic_skananth@quicinc.com>, <quic_nitegupt@quicinc.com>,
-        <quic_parass@quicinc.com>, <quic_krichai@quicinc.com>,
-        <krzysztof.kozlowski@linaro.org>,
-        Bryan O'Donoghue
-	<bryan.odonoghue@linaro.org>
-X-Mailer: b4 0.13-dev-83828
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1717900699; l=4515;
- i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
- bh=eFrXmFb/Z9o3AtXGYA4wDz3H9ChjTl8r2uCrxUik/Wk=;
- b=A82RT4L/R4ywRpBG9dLK4gB6DaeDB2bVoXdzQy/yiY2HWP7vRnEXoseCLZ2wkyrkCcAaiuwRo
- yeeFio6ke4+Ay+q6zozC6DYUFHINej9mue9F+RtFOvc4AgHQKm3VqqJ
-X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
- pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: SM-UdvgblO8A-_6XfQ7dMbLRwH29_H0I
-X-Proofpoint-ORIG-GUID: SM-UdvgblO8A-_6XfQ7dMbLRwH29_H0I
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-08_16,2024-06-06_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxlogscore=999
- suspectscore=0 adultscore=0 impostorscore=0 spamscore=0 priorityscore=1501
- lowpriorityscore=0 phishscore=0 malwarescore=0 mlxscore=0 clxscore=1011
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2405170001
- definitions=main-2406090019
 
-To access the host controller registers of the host controller and the
-endpoint BAR/config space, the CPU-PCIe ICC (interconnect) path should
-be voted otherwise it may lead to NoC (Network on chip) timeout.
-We are surviving because of other driver voting for this path.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+branch HEAD: e150a8a6fb76fb4aa860abf320691dd4860049a3  Merge branch 'pci/misc'
 
-As there is less access on this path compared to PCIe to mem path
-add minimum vote i.e 1KBps bandwidth always which is sufficient enough
-to keep the path active and is recommended by HW team.
+elapsed time: 2106m
 
-During S2RAM (Suspend-to-RAM), the DBI access can happen very late (while
-disabling the boot CPU). So do not disable the CPU-PCIe interconnect path
-during S2RAM as that may lead to NoC error.
+configs tested: 48
+configs skipped: 2
 
-Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-qcom.c | 45 +++++++++++++++++++++++++++++++---
- 1 file changed, 41 insertions(+), 4 deletions(-)
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 5f9f0ff19baa..ff1d891c8b9a 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -253,6 +253,7 @@ struct qcom_pcie {
- 	struct phy *phy;
- 	struct gpio_desc *reset;
- 	struct icc_path *icc_mem;
-+	struct icc_path *icc_cpu;
- 	const struct qcom_pcie_cfg *cfg;
- 	struct dentry *debugfs;
- 	bool suspended;
-@@ -1369,6 +1370,9 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
- 	if (IS_ERR(pcie->icc_mem))
- 		return PTR_ERR(pcie->icc_mem);
- 
-+	pcie->icc_cpu = devm_of_icc_get(pci->dev, "cpu-pcie");
-+	if (IS_ERR(pcie->icc_cpu))
-+		return PTR_ERR(pcie->icc_cpu);
- 	/*
- 	 * Some Qualcomm platforms require interconnect bandwidth constraints
- 	 * to be set before enabling interconnect clocks.
-@@ -1378,11 +1382,25 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
- 	 */
- 	ret = icc_set_bw(pcie->icc_mem, 0, QCOM_PCIE_LINK_SPEED_TO_BW(1));
- 	if (ret) {
--		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
-+		dev_err(pci->dev, "Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
- 			ret);
- 		return ret;
- 	}
- 
-+	/*
-+	 * Since the CPU-PCIe path is only used for activities like register
-+	 * access of the host controller and endpoint Config/BAR space access,
-+	 * HW team has recommended to use a minimal bandwidth of 1KBps just to
-+	 * keep the path active.
-+	 */
-+	ret = icc_set_bw(pcie->icc_cpu, 0, kBps_to_icc(1));
-+	if (ret) {
-+		dev_err(pci->dev, "Failed to set bandwidth for CPU-PCIe interconnect path: %d\n",
-+			ret);
-+		icc_set_bw(pcie->icc_mem, 0, 0);
-+		return ret;
-+	}
-+
- 	return 0;
- }
- 
-@@ -1408,7 +1426,7 @@ static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
- 
- 	ret = icc_set_bw(pcie->icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
- 	if (ret) {
--		dev_err(pci->dev, "failed to set interconnect bandwidth: %d\n",
-+		dev_err(pci->dev, "Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
- 			ret);
- 	}
- }
-@@ -1570,7 +1588,7 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 	 */
- 	ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
- 	if (ret) {
--		dev_err(dev, "Failed to set interconnect bandwidth: %d\n", ret);
-+		dev_err(dev, "Failed to set bandwidth for PCIe-MEM interconnect path: %d\n", ret);
- 		return ret;
- 	}
- 
-@@ -1594,7 +1612,18 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 		pcie->suspended = true;
- 	}
- 
--	return 0;
-+	/*
-+	 * Only disable CPU-PCIe interconnect path if the suspend is non-S2RAM.
-+	 * Because on some platforms, DBI access can happen very late during the
-+	 * S2RAM and a non-active CPU-PCIe interconnect path may lead to NoC
-+	 * error.
-+	 */
-+	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
-+		ret = icc_disable(pcie->icc_cpu);
-+		if (ret)
-+			dev_err(dev, "Failed to disable CPU-PCIe interconnect path: %d\n", ret);
-+	}
-+	return ret;
- }
- 
- static int qcom_pcie_resume_noirq(struct device *dev)
-@@ -1602,6 +1631,14 @@ static int qcom_pcie_resume_noirq(struct device *dev)
- 	struct qcom_pcie *pcie = dev_get_drvdata(dev);
- 	int ret;
- 
-+	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
-+		ret = icc_enable(pcie->icc_cpu);
-+		if (ret) {
-+			dev_err(dev, "Failed to enable CPU-PCIe interconnect path: %d\n", ret);
-+			return ret;
-+		}
-+	}
-+
- 	if (pcie->suspended) {
- 		ret = qcom_pcie_host_init(&pcie->pci->pp);
- 		if (ret)
+tested configs:
+alpha                            allyesconfig   gcc  
+hexagon                          allmodconfig   clang
+hexagon                          allyesconfig   clang
+i386         buildonly-randconfig-001-20240609   gcc  
+i386         buildonly-randconfig-002-20240609   gcc  
+i386         buildonly-randconfig-003-20240609   gcc  
+i386         buildonly-randconfig-004-20240609   gcc  
+i386         buildonly-randconfig-005-20240609   clang
+i386         buildonly-randconfig-006-20240609   gcc  
+i386                  randconfig-001-20240609   clang
+i386                  randconfig-002-20240609   clang
+i386                  randconfig-003-20240609   gcc  
+i386                  randconfig-004-20240609   gcc  
+i386                  randconfig-005-20240609   clang
+i386                  randconfig-006-20240609   clang
+i386                  randconfig-011-20240609   clang
+i386                  randconfig-012-20240609   clang
+i386                  randconfig-013-20240609   clang
+i386                  randconfig-014-20240609   clang
+i386                  randconfig-015-20240609   gcc  
+i386                  randconfig-016-20240609   clang
+openrisc                          allnoconfig   gcc  
+openrisc                            defconfig   gcc  
+parisc                            allnoconfig   gcc  
+parisc                              defconfig   gcc  
+parisc64                            defconfig   gcc  
+powerpc                           allnoconfig   gcc  
+riscv                             allnoconfig   gcc  
+riscv                               defconfig   clang
+s390                              allnoconfig   clang
+s390                                defconfig   clang
+sh                                allnoconfig   gcc  
+sh                                  defconfig   gcc  
+sparc                             allnoconfig   gcc  
+sparc                               defconfig   gcc  
+sparc64                             defconfig   gcc  
+um                               allmodconfig   clang
+um                                allnoconfig   clang
+um                               allyesconfig   gcc  
+um                                  defconfig   clang
+um                             i386_defconfig   gcc  
+um                           x86_64_defconfig   clang
+x86_64                            allnoconfig   clang
+x86_64       buildonly-randconfig-001-20240609   clang
+x86_64       buildonly-randconfig-002-20240609   clang
+x86_64       buildonly-randconfig-003-20240609   clang
+x86_64       buildonly-randconfig-004-20240609   gcc  
+xtensa                            allnoconfig   gcc  
 
 -- 
-2.42.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
