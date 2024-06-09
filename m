@@ -1,208 +1,304 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4138BE57D
-	for <linux-pci@vger.kernel.org>; Sat,  8 Jun 2024 20:29:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AEA225223;
+	Sun,  9 Jun 2024 02:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1717878565; cv=none; b=ImnjzNUjLDAxcev59N0A6Exbsn0McBSMOJhNeZIhGyox5KVuwOEKCU2Dv2yjJ6wOQpTXtTVl2Y6c3pan8VKaRNFCc58FrV3MM/O+xvietQ/eGWtnbDHgEX7d/74QJywtUOVNALO9UzDj8q7SEfF9bEeQb0QtGJQDVIqhieCIGpY=
+	t=1717900749; cv=none; b=ksqPOXo66eDw6zcMliKlC4Gbkh87azkQhgZlLc/V4J2GuUkpq5+QCkj5XRJ1ZJPJCbgvMnOgvg2CWKdgvqipSldrlf/UKyRBSpaX0AdoLtfXAXc6F8NuqqCR4Rlg8IdZNDWfMtxeZO1pry3raA7qg9HhUKQZWS++bai4m5LcchA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1717878565; c=relaxed/simple;
-	bh=c5zsuN9nDGpwY9Oth2RTaDfffk2ooo3p/9DCZNyKEuI=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=g9X5MuIKJwhqzfmASUi3hkJDfF/4agtxeM+Syw3JyICKpEYpk3UVrxEkD+qT+9wHJtYLE+ez3NUGAYvr/Ev6v/W89uyXmGBdZkpW6qqQiEDbYRSz6OL9dQM17JvIDCkYne30mGykFQnQVFTZ9e+esXY7S640mS335pn66L+5yw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OV3d4xw2; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1717900749; c=relaxed/simple;
+	bh=Ri5Us2htYCOxR0J+fU8iQSYS64K3qnxNjnvQ9YMgn+o=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:CC; b=lg049J1b12YqqSWEC0XyH5Q3NvusO4UKbBz1NatI/ViUKSTyFtZWzHsILoTItvhRcr7Pzm3/SClZ4+C8O7GkRuhizZ3pMpMudFvCWgHwm/dXntVdEsueBCIS0dSm31vJUoEJlCn5LrGBsqJzF/LlEZkye13r214HjiEI5yxx6rg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=gVvwqWja; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OV3d4xw2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1717878564; x=1749414564;
-  h=date:from:to:cc:subject:message-id;
-  bh=c5zsuN9nDGpwY9Oth2RTaDfffk2ooo3p/9DCZNyKEuI=;
-  b=OV3d4xw2ENPIBz+zO2rYdInb68kXkh1i96C+mbFuQLmICCiSuoi54Mgk
-   vsNA++fbJn6KFt3ePBrZc4Yr42kxwZVISe+X+RkH0fNQmc0Dk9jJ6+Sho
-   l1q57P45vO5f/p1RJCeHjmtq8AcIJE640r71TkFZzyb5cIfwoCU7nPDSo
-   sfdEMTcYIHaSmJjyFBN4i5gSRc3meCZ1MYcanDkeaOuQKlXPcv8zK/LrF
-   Cseejbbu/PlqcmAePawNKhvIuhyg9YUnKnMKHFMzjkZi2LSxCnLQIJ2s4
-   t91gzI+Q2mFrYWmkpLW03M9V/ubmK/sKQYWOkyxuGPo4OfRSoIiG5UcQO
-   w==;
-X-CSE-ConnectionGUID: LypfEuRlTKWslKqD4C9dCw==
-X-CSE-MsgGUID: MX/129SmQ6OgD7ZqZh3jzQ==
-X-IronPort-AV: E=McAfee;i="6600,9927,11097"; a="25997691"
-X-IronPort-AV: E=Sophos;i="6.08,224,1712646000"; 
-   d="scan'208";a="25997691"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jun 2024 13:29:23 -0700
-X-CSE-ConnectionGUID: xqVgkwTlTqy6hzo0rTbyEg==
-X-CSE-MsgGUID: D7706a3CQnGziB51GV1QtQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,224,1712646000"; 
-   d="scan'208";a="61844336"
-Received: from lkp-server01.sh.intel.com (HELO 8967fbab76b3) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 08 Jun 2024 13:29:21 -0700
-Received: from kbuild by 8967fbab76b3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sG2gh-0000Qu-2U;
-	Sat, 08 Jun 2024 20:29:19 +0000
-Date: Sun, 09 Jun 2024 04:28:48 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:devres] BUILD SUCCESS
- 1199e585f1e8955a141f4eb9452923f12ed5c699
-Message-ID: <202406090446.zX3mgPcC-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="gVvwqWja"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4591j5pr026937;
+	Sun, 9 Jun 2024 02:38:55 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	IUKPYn4SCK2L32Q0KmG/mHHU/d9LwqngcdVyiH3UMtY=; b=gVvwqWja4b+auxBC
+	59XQdcTkAOUWfUm11cCylkQXSq9LGaRBirnGUyHGTvcY6uIUv3NjI1rTpynPUWmE
+	xEz9/JY7Zo8TzDYVCi6PZ/22DKSuLwXwav6VU04OznpDIV6Q6SbfIpj+qy8ZJi6j
+	e3lEjuI6pJ7GXQFryeAHkr4cQzrLiPq78J3OnXF8IVVrNhpCjrpjpnGbfzXCGVko
+	qa/OtwrdA8YdblYZY2h74Ntch5EcscOrcX8fLdD/bfb37Xfz517HzRUEdeaBYzI1
+	Sgb3py39bGAIuRYdtz3/BvolxPhRbvQeUS7TDHDyWJeoiUeiTZuSlIC/lSjz4PUA
+	U6L0sg==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 3ymevx979a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 09 Jun 2024 02:38:55 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4592crFW025496
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 9 Jun 2024 02:38:53 GMT
+Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
+ nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.9; Sat, 8 Jun 2024 19:38:47 -0700
+From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Date: Sun, 9 Jun 2024 08:08:18 +0530
+Subject: [PATCH v14 4/4] PCI: qcom: Add OPP support to scale performance
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-ID: <20240609-opp_support-v14-4-801cff862b5a@quicinc.com>
+References: <20240609-opp_support-v14-0-801cff862b5a@quicinc.com>
+In-Reply-To: <20240609-opp_support-v14-0-801cff862b5a@quicinc.com>
+To: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio
+	<konrad.dybcio@linaro.org>,
+        Rob Herring <robh@kernel.org>,
+        "Krzysztof
+ Kozlowski" <krzysztof.kozlowski+dt@linaro.org>,
+        Conor Dooley
+	<conor+dt@kernel.org>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>,
+        Lorenzo Pieralisi
+	<lpieralisi@kernel.org>,
+        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?=
+	<kw@linux.com>,
+        Bjorn Helgaas <bhelgaas@google.com>, <johan+linaro@kernel.org>,
+        <bmasney@redhat.com>, <djakov@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>
+CC: <linux-arm-msm@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <vireshk@kernel.org>, <quic_vbadigan@quicinc.com>,
+        <quic_skananth@quicinc.com>, <quic_nitegupt@quicinc.com>,
+        <quic_parass@quicinc.com>, <quic_krichai@quicinc.com>,
+        <krzysztof.kozlowski@linaro.org>
+X-Mailer: b4 0.13-dev-83828
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1717900699; l=6487;
+ i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
+ bh=Ri5Us2htYCOxR0J+fU8iQSYS64K3qnxNjnvQ9YMgn+o=;
+ b=iqpRZsev4456MkiW9hC71zwxfhV0BjhC++q/Il90zhTaEOQW59q9Frh2JSEGeCBwOG65mIoT5
+ 5NBCCc1STiaCdVVgDftC1mkVsscwk7uEshYCMbtNmzNHStsvQAGJ2rE
+X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
+ pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: ZOKR9GAFt4R_b6YDSRSuwOMHaybtNaAL
+X-Proofpoint-GUID: ZOKR9GAFt4R_b6YDSRSuwOMHaybtNaAL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
+ definitions=2024-06-08_16,2024-06-06_02,2024-05-17_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999 mlxscore=0
+ impostorscore=0 adultscore=0 phishscore=0 malwarescore=0 clxscore=1015
+ suspectscore=0 priorityscore=1501 spamscore=0 bulkscore=0
+ lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2405170001 definitions=main-2406090019
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git devres
-branch HEAD: 1199e585f1e8955a141f4eb9452923f12ed5c699  PCI: Warn users about complicated devres nature
+QCOM Resource Power Manager-hardened (RPMh) is a hardware block which
+maintains hardware state of a regulator by performing max aggregation of
+the requests made by all of the clients.
 
-elapsed time: 1456m
+PCIe controller can operate on different RPMh performance state of power
+domain based on the speed of the link. And this performance state varies
+from target to target, like some controllers support GEN3 in NOM (Nominal)
+voltage corner, while some other supports GEN3 in low SVS (static voltage
+scaling).
 
-configs tested: 131
-configs skipped: 2
+The SoC can be more power efficient if we scale the performance state
+based on the aggregate PCIe link bandwidth.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+Add Operating Performance Points (OPP) support to vote for RPMh state based
+on the aggregate link bandwidth.
 
-tested configs:
-alpha                             allnoconfig   gcc  
-alpha                            allyesconfig   gcc  
-alpha                               defconfig   gcc  
-arc                               allnoconfig   gcc  
-arc                                 defconfig   gcc  
-arc                   randconfig-001-20240608   gcc  
-arc                   randconfig-002-20240608   gcc  
-arm                       aspeed_g5_defconfig   gcc  
-arm                             mxs_defconfig   clang
-arm                         nhk8815_defconfig   clang
-arm                   randconfig-001-20240608   gcc  
-arm                        shmobile_defconfig   gcc  
-arm                         vf610m4_defconfig   gcc  
-arm64                            allmodconfig   clang
-arm64                             allnoconfig   gcc  
-arm64                               defconfig   gcc  
-arm64                 randconfig-001-20240608   gcc  
-arm64                 randconfig-002-20240608   gcc  
-arm64                 randconfig-003-20240608   gcc  
-csky                              allnoconfig   gcc  
-csky                                defconfig   gcc  
-csky                  randconfig-001-20240608   gcc  
-csky                  randconfig-002-20240608   gcc  
-i386                             allmodconfig   gcc  
-i386                              allnoconfig   gcc  
-i386                             allyesconfig   gcc  
-i386         buildonly-randconfig-002-20240608   clang
-i386         buildonly-randconfig-005-20240608   clang
-i386                  randconfig-001-20240608   clang
-i386                  randconfig-004-20240608   clang
-i386                  randconfig-011-20240608   clang
-i386                  randconfig-012-20240608   clang
-i386                  randconfig-013-20240608   clang
-i386                  randconfig-015-20240608   clang
-i386                  randconfig-016-20240608   clang
-loongarch                        allmodconfig   gcc  
-loongarch                         allnoconfig   gcc  
-loongarch                        allyesconfig   gcc  
-loongarch                           defconfig   gcc  
-loongarch             randconfig-001-20240608   gcc  
-loongarch             randconfig-002-20240608   gcc  
-m68k                             alldefconfig   gcc  
-m68k                             allmodconfig   gcc  
-m68k                              allnoconfig   gcc  
-m68k                             allyesconfig   gcc  
-m68k                                defconfig   gcc  
-m68k                          hp300_defconfig   gcc  
-microblaze                       allmodconfig   gcc  
-microblaze                        allnoconfig   gcc  
-microblaze                       allyesconfig   gcc  
-microblaze                          defconfig   gcc  
-microblaze                      mmu_defconfig   gcc  
-mips                             allmodconfig   gcc  
-mips                              allnoconfig   gcc  
-mips                             allyesconfig   gcc  
-mips                           jazz_defconfig   clang
-mips                      maltaaprp_defconfig   clang
-mips                         rt305x_defconfig   clang
-nios2                            allmodconfig   gcc  
-nios2                             allnoconfig   gcc  
-nios2                            allyesconfig   gcc  
-nios2                               defconfig   gcc  
-nios2                 randconfig-001-20240608   gcc  
-nios2                 randconfig-002-20240608   gcc  
-openrisc                         allmodconfig   gcc  
-openrisc                          allnoconfig   gcc  
-openrisc                            defconfig   gcc  
-parisc                            allnoconfig   gcc  
-parisc                              defconfig   gcc  
-parisc                randconfig-001-20240608   gcc  
-parisc                randconfig-002-20240608   gcc  
-parisc64                            defconfig   gcc  
-powerpc                           allnoconfig   gcc  
-powerpc                          allyesconfig   clang
-powerpc                 linkstation_defconfig   clang
-powerpc                 mpc834x_itx_defconfig   clang
-powerpc               randconfig-003-20240608   gcc  
-riscv                            allmodconfig   clang
-riscv                             allnoconfig   gcc  
-riscv                            allyesconfig   clang
-riscv                               defconfig   clang
-riscv             nommu_k210_sdcard_defconfig   gcc  
-riscv                 randconfig-001-20240608   gcc  
-riscv                 randconfig-002-20240608   gcc  
-s390                              allnoconfig   clang
-s390                             allyesconfig   gcc  
-s390                                defconfig   clang
-sh                               allmodconfig   gcc  
-sh                                allnoconfig   gcc  
-sh                               allyesconfig   gcc  
-sh                                  defconfig   gcc  
-sh                    randconfig-001-20240608   gcc  
-sh                    randconfig-002-20240608   gcc  
-sh                           se7619_defconfig   gcc  
-sh                        sh7757lcr_defconfig   gcc  
-sparc                            allmodconfig   gcc  
-sparc                             allnoconfig   gcc  
-sparc                            allyesconfig   gcc  
-sparc                               defconfig   gcc  
-sparc64                          allmodconfig   gcc  
-sparc64                          allyesconfig   gcc  
-sparc64                             defconfig   gcc  
-sparc64               randconfig-001-20240608   gcc  
-sparc64               randconfig-002-20240608   gcc  
-um                                allnoconfig   clang
-um                               allyesconfig   gcc  
-um                                  defconfig   clang
-um                             i386_defconfig   gcc  
-um                           x86_64_defconfig   clang
-x86_64       buildonly-randconfig-002-20240608   gcc  
-x86_64       buildonly-randconfig-004-20240608   gcc  
-x86_64       buildonly-randconfig-005-20240608   gcc  
-x86_64       buildonly-randconfig-006-20240608   gcc  
-x86_64                              defconfig   gcc  
-x86_64                randconfig-002-20240608   gcc  
-x86_64                randconfig-003-20240608   gcc  
-x86_64                randconfig-004-20240608   gcc  
-x86_64                randconfig-006-20240608   gcc  
-x86_64                randconfig-011-20240608   gcc  
-x86_64                randconfig-013-20240608   gcc  
-x86_64                randconfig-014-20240608   gcc  
-x86_64                randconfig-016-20240608   gcc  
-x86_64                randconfig-071-20240608   gcc  
-x86_64                randconfig-072-20240608   gcc  
-x86_64                randconfig-074-20240608   gcc  
-x86_64                randconfig-076-20240608   gcc  
-x86_64                               rhel-8.3   gcc  
-xtensa                            allnoconfig   gcc  
-xtensa                           allyesconfig   gcc  
-xtensa                randconfig-001-20240608   gcc  
-xtensa                randconfig-002-20240608   gcc  
+OPP can handle ICC bw voting also, so move ICC bw voting through OPP
+framework if OPP entries are present.
+
+As we are moving ICC voting as part of OPP, don't initialize ICC if OPP
+is supported.
+
+Before PCIe link is initialized vote for highest OPP in the OPP table,
+so that we are voting for maximum voltage corner for the link to come up
+in maximum supported speed.
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 93 +++++++++++++++++++++++++++-------
+ 1 file changed, 75 insertions(+), 18 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index ff1d891c8b9a..296e2d5036f6 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -21,6 +21,7 @@
+ #include <linux/init.h>
+ #include <linux/of.h>
+ #include <linux/pci.h>
++#include <linux/pm_opp.h>
+ #include <linux/pm_runtime.h>
+ #include <linux/platform_device.h>
+ #include <linux/phy/pcie.h>
+@@ -1404,15 +1405,13 @@ static int qcom_pcie_icc_init(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
++static void qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
+ {
++	int speed, width, ret, freq_mbps;
+ 	struct dw_pcie *pci = pcie->pci;
++	unsigned long freq_kbps;
++	struct dev_pm_opp *opp;
+ 	u32 offset, status;
+-	int speed, width;
+-	int ret;
+-
+-	if (!pcie->icc_mem)
+-		return;
+ 
+ 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	status = readw(pci->dbi_base + offset + PCI_EXP_LNKSTA);
+@@ -1424,10 +1423,26 @@ static void qcom_pcie_icc_update(struct qcom_pcie *pcie)
+ 	speed = FIELD_GET(PCI_EXP_LNKSTA_CLS, status);
+ 	width = FIELD_GET(PCI_EXP_LNKSTA_NLW, status);
+ 
+-	ret = icc_set_bw(pcie->icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
+-	if (ret) {
+-		dev_err(pci->dev, "Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
+-			ret);
++	if (pcie->icc_mem) {
++		ret = icc_set_bw(pcie->icc_mem, 0, width * QCOM_PCIE_LINK_SPEED_TO_BW(speed));
++		if (ret) {
++			dev_err(pci->dev, "Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
++				ret);
++		}
++	} else {
++		freq_mbps = pcie_link_speed_to_mbps(pcie_link_speed[speed]);
++		if (freq_mbps < 0)
++			return;
++
++		freq_kbps = freq_mbps * 1000;
++		opp = dev_pm_opp_find_freq_exact(pci->dev, freq_kbps * width, true);
++		if (!IS_ERR(opp)) {
++			ret = dev_pm_opp_set_opp(pci->dev, opp);
++			if (ret)
++				dev_err(pci->dev, "Failed to set OPP for freq (%ld): %d\n",
++					freq_kbps * width, ret);
++		}
++		dev_pm_opp_put(opp);
+ 	}
+ }
+ 
+@@ -1471,7 +1486,9 @@ static void qcom_pcie_init_debugfs(struct qcom_pcie *pcie)
+ static int qcom_pcie_probe(struct platform_device *pdev)
+ {
+ 	const struct qcom_pcie_cfg *pcie_cfg;
++	unsigned long max_freq = INT_MAX;
+ 	struct device *dev = &pdev->dev;
++	struct dev_pm_opp *opp;
+ 	struct qcom_pcie *pcie;
+ 	struct dw_pcie_rp *pp;
+ 	struct resource *res;
+@@ -1539,9 +1556,42 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_pm_runtime_put;
+ 	}
+ 
+-	ret = qcom_pcie_icc_init(pcie);
+-	if (ret)
++	/* OPP table is optional */
++	ret = devm_pm_opp_of_add_table(dev);
++	if (ret && ret != -ENODEV) {
++		dev_err_probe(dev, ret, "Failed to add OPP table\n");
+ 		goto err_pm_runtime_put;
++	}
++
++	/*
++	 * Before PCIe link is initialized vote for highest OPP in the OPP table,
++	 * so that we are voting for maximum voltage corner for the link to come up
++	 * in maximum supported speed. At the end of the probe(), OPP will be
++	 * updated using qcom_pcie_icc_opp_update().
++	 */
++	if (!ret) {
++		opp = dev_pm_opp_find_freq_floor(dev, &max_freq);
++		if (IS_ERR(opp)) {
++			dev_err_probe(pci->dev, PTR_ERR(opp),
++				      "Unable to find max freq OPP\n");
++			goto err_pm_runtime_put;
++		} else {
++			ret = dev_pm_opp_set_opp(dev, opp);
++		}
++
++		dev_pm_opp_put(opp);
++		if (ret) {
++			dev_err_probe(pci->dev, ret,
++				      "Failed to set OPP for freq %ld\n",
++				      max_freq);
++			goto err_pm_runtime_put;
++		}
++	} else {
++		/* Skip ICC init if OPP is supported as it is handled by OPP */
++		ret = qcom_pcie_icc_init(pcie);
++		if (ret)
++			goto err_pm_runtime_put;
++	}
+ 
+ 	ret = pcie->cfg->ops->get_resources(pcie);
+ 	if (ret)
+@@ -1561,7 +1611,7 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 		goto err_phy_exit;
+ 	}
+ 
+-	qcom_pcie_icc_update(pcie);
++	qcom_pcie_icc_opp_update(pcie);
+ 
+ 	if (pcie->mhi)
+ 		qcom_pcie_init_debugfs(pcie);
+@@ -1586,10 +1636,14 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
+ 	 * Set minimum bandwidth required to keep data path functional during
+ 	 * suspend.
+ 	 */
+-	ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
+-	if (ret) {
+-		dev_err(dev, "Failed to set bandwidth for PCIe-MEM interconnect path: %d\n", ret);
+-		return ret;
++	if (pcie->icc_mem) {
++		ret = icc_set_bw(pcie->icc_mem, 0, kBps_to_icc(1));
++		if (ret) {
++			dev_err(dev,
++				"Failed to set bandwidth for PCIe-MEM interconnect path: %d\n",
++				ret);
++			return ret;
++		}
+ 	}
+ 
+ 	/*
+@@ -1622,6 +1676,9 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
+ 		ret = icc_disable(pcie->icc_cpu);
+ 		if (ret)
+ 			dev_err(dev, "Failed to disable CPU-PCIe interconnect path: %d\n", ret);
++
++		if (!pcie->icc_mem)
++			dev_pm_opp_set_opp(pcie->pci->dev, NULL);
+ 	}
+ 	return ret;
+ }
+@@ -1647,7 +1704,7 @@ static int qcom_pcie_resume_noirq(struct device *dev)
+ 		pcie->suspended = false;
+ 	}
+ 
+-	qcom_pcie_icc_update(pcie);
++	qcom_pcie_icc_opp_update(pcie);
+ 
+ 	return 0;
+ }
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.42.0
+
