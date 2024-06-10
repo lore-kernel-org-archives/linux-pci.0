@@ -1,153 +1,214 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27D9B57CA2;
-	Mon, 10 Jun 2024 08:20:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3FAC74404
+	for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2024 09:32:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718007658; cv=none; b=gTpXkPwu5cf9rScKmrNG0KpwdmSVMENlby9V+yImG5oh9TXcBIPsHHS1JBTaVQmSRCxsSudTUIs3ULbW8bgBqanjXpEntdooivJnwE9Yne8GzPGn4qP2K3wwCE6QIgT1tcK8Vkg/shNHvjANL1QcTiEetxHAHNVvwoBHEeNpdBY=
+	t=1718011927; cv=none; b=hgT10SFTqh3z5P6GP8QyoGtRymiSQcEPoP1h3+77CBpDSMoVMmKASIWldbTXhaT6A8R53oYhsdNFWM21LAcf3JIZBsKyvIUMNYYcrSJodlh9lh4r1SP9ymubxhdOPLPR0CQxzsJFTm5AVR83ogF66WtPzJBHIXmmgsdhINgYmAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718007658; c=relaxed/simple;
-	bh=CAiZ3SVovdoincgpGx3yjmnj9eAa3sknXt7flqN/34E=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=r32Te9YyBNpWFKv4lVQK5vCZsCFZRYLbMEzSe2V9UWvnH0PvYRh+dhMPVWL9e3gIpHqEts+Ny48botQgTsRvTGHynlZzlYmCZE6TIFUbeUrVwPr6FugHnsFbQv7q0Di3AszQffQKvQhI7xGaG271wa0L08VLXYkmmebVoWgWN14=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=DR36WAKj; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718011927; c=relaxed/simple;
+	bh=TgkR4Nl7UsfcnDus5PAQ/eglmpUMQS/oRcoljkpQuXI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=c77usezXdVN9HxNCvPpYDbQBzBhfWjvAnQ3RkboonifDRZp2E7IX2uik/b4HE0i5G6yIxdFh9OE/dIUJzlj1d8QqFOSjWR2qOs/sj2/OBTvBt1tZ3fb8IwVIFpL06SK6dZZEGwkZL9D6RUdpcqzw6JAwrCod49Ke5JgUZrJDM9U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fBgve4Ha; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="DR36WAKj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CB34C4AF1C;
-	Mon, 10 Jun 2024 08:20:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1718007657;
-	bh=CAiZ3SVovdoincgpGx3yjmnj9eAa3sknXt7flqN/34E=;
-	h=From:To:Cc:Subject:Date:From;
-	b=DR36WAKj0OoO6zEjepBa0BCBBBnZa9iPb1PzgKYmT/DIDimlQqYNgiUkMox0KCWe7
-	 /TfRZFyLj7mX+lq/kT8LlBIeavN+C9q5v0qjAxKhN3mUBJn61PbXBDcryrpkVbVD/B
-	 +ONZ22+sYH9qZG6wQTk2sqjukqF1n1AnEd/lU5QM=
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: linux-pci@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Kurt Schwemmer <kurt.schwemmer@microsemi.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Jon Mason <jdmason@kudzu.us>,
-	Dave Jiang <dave.jiang@intel.com>,
-	Allen Hubbe <allenbh@gmail.com>,
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fBgve4Ha"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1718011925;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=qTRnfk+xncNuJMn54sP5qzAQh4gcZ4Sy3yYao6iQeYc=;
+	b=fBgve4HaBONMdXGPyAQqmE5QnrszPXafnzxJMgaG57Nb1v+u2uJoZtqPIT+2gVkuqGq3H3
+	57+Sd4atkSQd8sYS0Xwl4ak9sRBO1j26yjGdlEVOZC/D8O0tY6ghDl9Ahon6zNRWM8ZZ6T
+	BdyszpxeymKlf9HOxjZIasRkJDWERGc=
+Received: from mail-wr1-f69.google.com (mail-wr1-f69.google.com
+ [209.85.221.69]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-688-FwSPV1NkNQuvmA09yCQPXQ-1; Mon, 10 Jun 2024 05:32:03 -0400
+X-MC-Unique: FwSPV1NkNQuvmA09yCQPXQ-1
+Received: by mail-wr1-f69.google.com with SMTP id ffacd0b85a97d-354dfd4971dso132912f8f.0
+        for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2024 02:32:02 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718011922; x=1718616722;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=qTRnfk+xncNuJMn54sP5qzAQh4gcZ4Sy3yYao6iQeYc=;
+        b=nvdr0IjJoSSOqefIH3ZqP08xBcg1Zpa+98cXqAvWII6DcJVCQ4LrCXqiJJywYcA5xs
+         6Q6f/QBQdoo4dwdeYkFYi5cLBNlvcYHOuj+TbYzczJrFvHc6vHfDdHD/DySqgdp2Pyrc
+         hQM4ILIblDIP55Yt1M6h2samVizvDeIreNVAMyjv23W48lAYBz7zZML994Y6N4bQM5Xy
+         LqfMW9+e0XdwdrQ3Vhcg4I3K9poWsLMJy1cHuRd2DE7EKossZCxiJiotIg5Avie7rPjP
+         2goxWD2FhTVNr/nu2xnxebE7088Y9f+YFwUOvVCxI1kJ075b9vO9TZ6ezrW0XTnJWYqj
+         fKMQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWvHY5WuQRYHbhA3oxJJ7ggJkQEDIIKCzuODPDZ5fhgCvstRZ7UwOFJCbt8dZhCz2wkVHwvjt0DstR3bKFfdwxmojYolBqfbmFF
+X-Gm-Message-State: AOJu0YwjZbWNCRIBLS/eVc79EtccxQVljJoXFdl8py804KmGKfJSMcWI
+	xxMG9EnUkYP2x1vu2h+5JMP1CBXoOrXl5AZeRFIV6BNeAnh4dTHkDA6ijAQPGFLTNFAZQzYfdlR
+	yTAEyXkBeWJYVVYV8xXxdOR7/nWbvv1kEqaIPHaG3pKm90WseWPaR2ZFN1g==
+X-Received: by 2002:a5d:588e:0:b0:34d:b5d6:fe4b with SMTP id ffacd0b85a97d-35efedd2e3emr6479219f8f.4.1718011921895;
+        Mon, 10 Jun 2024 02:32:01 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHZ34RIrsm60vplmSUHSp8HATp7AS7kEdOir9ms2KbhbicgUfnK/HnyWUyl28CP1kKuZ42sMA==
+X-Received: by 2002:a5d:588e:0:b0:34d:b5d6:fe4b with SMTP id ffacd0b85a97d-35efedd2e3emr6479204f8f.4.1718011921628;
+        Mon, 10 Jun 2024 02:32:01 -0700 (PDT)
+Received: from pstanner-thinkpadt14sgen1.muc.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-35f0ce4b62fsm7257545f8f.80.2024.06.10.02.32.00
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 10 Jun 2024 02:32:01 -0700 (PDT)
+From: Philipp Stanner <pstanner@redhat.com>
+To: Hans de Goede <hdegoede@redhat.com>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	David Airlie <airlied@gmail.com>,
+	Daniel Vetter <daniel@ffwll.ch>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	ntb@lists.linux.dev
-Subject: [PATCH] PCI: switchtec: make switchtec_class constant
-Date: Mon, 10 Jun 2024 10:20:53 +0200
-Message-ID: <2024061053-online-unwound-b173@gregkh>
-X-Mailer: git-send-email 2.45.2
+	Sam Ravnborg <sam@ravnborg.org>,
+	dakr@redhat.com
+Cc: dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Philipp Stanner <pstanner@redhat.com>
+Subject: [PATCH v8 02/13] PCI: Add devres helpers for iomap table
+Date: Mon, 10 Jun 2024 11:31:24 +0200
+Message-ID: <20240610093149.20640-3-pstanner@redhat.com>
+X-Mailer: git-send-email 2.45.0
+In-Reply-To: <20240610093149.20640-1-pstanner@redhat.com>
+References: <20240610093149.20640-1-pstanner@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3586; i=gregkh@linuxfoundation.org; h=from:subject:message-id; bh=CAiZ3SVovdoincgpGx3yjmnj9eAa3sknXt7flqN/34E=; b=owGbwMvMwCRo6H6F97bub03G02pJDGlp21P5bQ5tWScq+3jdjYSCa743+6ZJTljT0FOq3MI34 dPvhBM8HbEsDIJMDLJiiixftvEc3V9xSNHL0PY0zBxWJpAhDFycAjCRsByGBcdMJ5r9NunUs9Zm WnDUfq8Wg3pdIsOCjVdkZ1rY380Oqso4+/bQmy+vUjxuAwA=
-X-Developer-Key: i=gregkh@linuxfoundation.org; a=openpgp; fpr=F4B60CC5BF78C2214A313DCB3147D40DDB2DFB29
 Content-Transfer-Encoding: 8bit
 
-Now that the driver core allows for struct class to be in read-only
-memory, we should make all 'class' structures declared at build time
-placing them into read-only memory, instead of having to be dynamically
-allocated at runtime.
+The pcim_iomap_devres.table administrated by pcim_iomap_table() has its
+entries set and unset at several places throughout devres.c using manual
+iterations which are effectively code duplications.
 
-Cc: Kurt Schwemmer <kurt.schwemmer@microsemi.com>
-Cc: Logan Gunthorpe <logang@deltatee.com>
-Cc: Jon Mason <jdmason@kudzu.us>
-Cc: Dave Jiang <dave.jiang@intel.com>
-Cc: Allen Hubbe <allenbh@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org
-Cc: ntb@lists.linux.dev
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Add pcim_add_mapping_to_legacy_table() and
+pcim_remove_mapping_from_legacy_table() helper functions and use them where
+possible.
+
+Link: https://lore.kernel.org/r/20240605081605.18769-4-pstanner@redhat.com
+Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+[bhelgaas: s/short bar/int bar/ for consistency]
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 ---
- drivers/ntb/hw/mscc/ntb_hw_switchtec.c |  2 +-
- drivers/pci/switch/switchtec.c         | 16 ++++++++--------
- include/linux/switchtec.h              |  2 +-
- 3 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/pci/devres.c | 77 +++++++++++++++++++++++++++++++++-----------
+ 1 file changed, 58 insertions(+), 19 deletions(-)
 
-diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-index d6bbcc7b5b90..31946387badf 100644
---- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-+++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
-@@ -1565,7 +1565,7 @@ static struct class_interface switchtec_interface  = {
- 
- static int __init switchtec_ntb_init(void)
- {
--	switchtec_interface.class = switchtec_class;
-+	switchtec_interface.class = &switchtec_class;
- 	return class_interface_register(&switchtec_interface);
+diff --git a/drivers/pci/devres.c b/drivers/pci/devres.c
+index f13edd4a3873..845d6fab0ce7 100644
+--- a/drivers/pci/devres.c
++++ b/drivers/pci/devres.c
+@@ -297,6 +297,52 @@ void __iomem * const *pcim_iomap_table(struct pci_dev *pdev)
  }
- module_init(switchtec_ntb_init);
-diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
-index 5a4adf6c04cf..c7e1089ffdaf 100644
---- a/drivers/pci/switch/switchtec.c
-+++ b/drivers/pci/switch/switchtec.c
-@@ -37,7 +37,9 @@ MODULE_PARM_DESC(nirqs, "number of interrupts to allocate (more may be useful fo
- static dev_t switchtec_devt;
- static DEFINE_IDA(switchtec_minor_ida);
+ EXPORT_SYMBOL(pcim_iomap_table);
  
--struct class *switchtec_class;
-+const struct class switchtec_class = {
-+	.name = "switchtec",
-+};
- EXPORT_SYMBOL_GPL(switchtec_class);
- 
- enum mrpc_state {
-@@ -1363,7 +1365,7 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
- 
- 	dev = &stdev->dev;
- 	device_initialize(dev);
--	dev->class = switchtec_class;
-+	dev->class = &switchtec_class;
- 	dev->parent = &pdev->dev;
- 	dev->groups = switchtec_device_groups;
- 	dev->release = stdev_release;
-@@ -1851,11 +1853,9 @@ static int __init switchtec_init(void)
- 	if (rc)
- 		return rc;
- 
--	switchtec_class = class_create("switchtec");
--	if (IS_ERR(switchtec_class)) {
--		rc = PTR_ERR(switchtec_class);
-+	rc = class_register(&switchtec_class);
-+	if (rc)
- 		goto err_create_class;
--	}
- 
- 	rc = pci_register_driver(&switchtec_pci_driver);
- 	if (rc)
-@@ -1866,7 +1866,7 @@ static int __init switchtec_init(void)
- 	return 0;
- 
- err_pci_register:
--	class_destroy(switchtec_class);
-+	class_unregister(&switchtec_class);
- 
- err_create_class:
- 	unregister_chrdev_region(switchtec_devt, max_devices);
-@@ -1878,7 +1878,7 @@ module_init(switchtec_init);
- static void __exit switchtec_exit(void)
++/*
++ * Fill the legacy mapping-table, so that drivers using the old API can
++ * still get a BAR's mapping address through pcim_iomap_table().
++ */
++static int pcim_add_mapping_to_legacy_table(struct pci_dev *pdev,
++					    void __iomem *mapping, int bar)
++{
++	void __iomem **legacy_iomap_table;
++
++	if (bar >= PCI_STD_NUM_BARS)
++		return -EINVAL;
++
++	legacy_iomap_table = (void __iomem **)pcim_iomap_table(pdev);
++	if (!legacy_iomap_table)
++		return -ENOMEM;
++
++	/* The legacy mechanism doesn't allow for duplicate mappings. */
++	WARN_ON(legacy_iomap_table[bar]);
++
++	legacy_iomap_table[bar] = mapping;
++
++	return 0;
++}
++
++/*
++ * Remove a mapping. The table only contains whole-BAR mappings, so this will
++ * never interfere with ranged mappings.
++ */
++static void pcim_remove_mapping_from_legacy_table(struct pci_dev *pdev,
++						  void __iomem *addr)
++{
++	int bar;
++	void __iomem **legacy_iomap_table;
++
++	legacy_iomap_table = (void __iomem **)pcim_iomap_table(pdev);
++	if (!legacy_iomap_table)
++		return;
++
++	for (bar = 0; bar < PCI_STD_NUM_BARS; bar++) {
++		if (legacy_iomap_table[bar] == addr) {
++			legacy_iomap_table[bar] = NULL;
++			return;
++		}
++	}
++}
++
+ /**
+  * pcim_iomap - Managed pcim_iomap()
+  * @pdev: PCI device to iomap for
+@@ -308,16 +354,20 @@ EXPORT_SYMBOL(pcim_iomap_table);
+  */
+ void __iomem *pcim_iomap(struct pci_dev *pdev, int bar, unsigned long maxlen)
  {
- 	pci_unregister_driver(&switchtec_pci_driver);
--	class_destroy(switchtec_class);
-+	class_unregister(&switchtec_class);
- 	unregister_chrdev_region(switchtec_devt, max_devices);
- 	ida_destroy(&switchtec_minor_ida);
+-	void __iomem **tbl;
++	void __iomem *mapping;
  
-diff --git a/include/linux/switchtec.h b/include/linux/switchtec.h
-index 8d8fac1626bd..cdb58d61c152 100644
---- a/include/linux/switchtec.h
-+++ b/include/linux/switchtec.h
-@@ -521,6 +521,6 @@ static inline struct switchtec_dev *to_stdev(struct device *dev)
- 	return container_of(dev, struct switchtec_dev, dev);
+-	BUG_ON(bar >= PCIM_IOMAP_MAX);
+-
+-	tbl = (void __iomem **)pcim_iomap_table(pdev);
+-	if (!tbl || tbl[bar])	/* duplicate mappings not allowed */
++	mapping = pci_iomap(pdev, bar, maxlen);
++	if (!mapping)
+ 		return NULL;
+ 
+-	tbl[bar] = pci_iomap(pdev, bar, maxlen);
+-	return tbl[bar];
++	if (pcim_add_mapping_to_legacy_table(pdev, mapping, bar) != 0)
++		goto err_table;
++
++	return mapping;
++
++err_table:
++	pci_iounmap(pdev, mapping);
++	return NULL;
  }
+ EXPORT_SYMBOL(pcim_iomap);
  
--extern struct class *switchtec_class;
-+extern const struct class switchtec_class;
+@@ -330,20 +380,9 @@ EXPORT_SYMBOL(pcim_iomap);
+  */
+ void pcim_iounmap(struct pci_dev *pdev, void __iomem *addr)
+ {
+-	void __iomem **tbl;
+-	int i;
+-
+ 	pci_iounmap(pdev, addr);
  
- #endif
+-	tbl = (void __iomem **)pcim_iomap_table(pdev);
+-	BUG_ON(!tbl);
+-
+-	for (i = 0; i < PCIM_IOMAP_MAX; i++)
+-		if (tbl[i] == addr) {
+-			tbl[i] = NULL;
+-			return;
+-		}
+-	WARN_ON(1);
++	pcim_remove_mapping_from_legacy_table(pdev, addr);
+ }
+ EXPORT_SYMBOL(pcim_iounmap);
+ 
 -- 
-2.45.2
+2.45.0
 
