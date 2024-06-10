@@ -1,92 +1,125 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60DCD14D6FF
-	for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2024 22:03:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 79B8954FAD
+	for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2024 23:20:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718057035; cv=none; b=Y+N/4A0lEv7xhlbiflLKQairtN0W3R51AJHO1HVnQuZ+twiOQg6eJvIUCHNL+upnCUQQ3RJxj4f+abNUm3MesSxwi+jtqnty5JGxO2Ucpl8WpFnUJCuPgAGv4Su6/3EylHL8aMpB/RwpQc6sr7naNL7my3zfl3FSTEJq53/I0y4=
+	t=1718061643; cv=none; b=CwFlTqKcccdYeNy6UKgZPq2lqeitEU2xDlom9GlifiW216bSZ+iuY5KPaJx1jp7dhN5UV7/nBJuhTYcWJBn1DoZuUPoaSiIZOLb4rr4gJlDB7+ZxOGttdAt8nebuYeHgzeZjM34zQfGyJKfN+KGLtQn74cEuhB18nITuVf3FLdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718057035; c=relaxed/simple;
-	bh=19kpE4LJ7lwqGa6y00OBrOrFXe93CbZPXrxtzyUyUfc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=maky0Fd71misx0RbRcoo5j+Mjh7fPRKWBHlBcR3k489dBCvEpTZGQdFBFiD3ZTNMyDMZv6ns89oW9usCHbatHPScK7JM8ozkJfG+9MivlBhXo+MiNtzgkB/OzA0No2OCOBIM5klAPzw/l893ky3s6HoprEvFqmLDqe+S7M3KGkY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=epq6f6lR; arc=none smtp.client-ip=67.231.153.30
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1718061643; c=relaxed/simple;
+	bh=YGTvdQZwDOzgzfVvjWe9z+/k5IhE22IUsz8NO0h/L5M=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QwUUXLrUXmJAmprZ95SJA+lBJxbQ8ZNHRQdnx8eaaH3+V4QL6ehlrbBl0ryEk7p0Kuwx7B3joKxezDoBXxYexL/N0eHN+Qkea6vTynq3sCzVDs8T7YseADYbtUaEAff3W36O3YCW8987sYNlNf5kkZY1yJGzJSAGwQUe8UhFC8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=rJepUrle; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="epq6f6lR"
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-	by m0001303.ppops.net (8.17.1.19/8.17.1.19) with ESMTP id 45AL1KGC013339
-	for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2024 15:03:53 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc :
- content-transfer-encoding : content-type : date : from : message-id :
- mime-version : subject : to; s=s2048-2021-q4;
- bh=MdtkHIS7AhW0BixCc+/9jsteQY5oGSj+ScyLRqZ0M48=;
- b=epq6f6lRYrtGOXaj2GyXFaehC4OPh4pqiNOolfG7+oQq0Bcd8xWBvhmRNfiIcwE3DVyh
- b5YzM0xnyLKggySssqFibjcBZLcqZZXhOy2bjhJEkeaTmEIZwv0jueRVHDLf2so329hF
- mJ2FIUxvCmpU1fQ+PvkdgTEVJq132eeZq0RAnbqg5CHldujT88CwGQuHmjCtHxaFwCPT
- Lj8cepJKJE0c2NCOpjQMhw8nGYnLiBxCedawrLCjgdUT18Z41IG48wFDL1/e/LqrG0uP
- PbloSl0wjy7pMWqM3X0fr0kLc5YmlqKk/Og33NXOO91MH7m454wTtR9y6iyW9r4diCGr jg== 
-Received: from maileast.thefacebook.com ([163.114.130.16])
-	by m0001303.ppops.net (PPS) with ESMTPS id 3ymjywc43c-18
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Mon, 10 Jun 2024 15:03:53 -0700
-Received: from twshared19013.17.frc2.facebook.com (2620:10d:c0a8:1b::30) by
- mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.1544.11; Mon, 10 Jun 2024 22:03:51 +0000
-Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
-	id BEF52F4E2352; Mon, 10 Jun 2024 15:03:34 -0700 (PDT)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-pci@vger.kernel.org>, <lukas@wunner.de>, <bhelgaas@google.com>
-CC: Keith Busch <kbusch@kernel.org>
-Subject: [PATCH 0/2] pcie hotplug and error fixes
-Date: Mon, 10 Jun 2024 15:03:01 -0700
-Message-ID: <20240610220304.3162895-1-kbusch@meta.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="rJepUrle"
+Received: from thinkpad-p16sg1.vs.shawcable.net (S010600cb7a0d6c8b.vs.shawcable.net [96.55.224.203])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 9A40620693EF;
+	Mon, 10 Jun 2024 16:20:41 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 9A40620693EF
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1718061641;
+	bh=cV7+VpHLkN83sahtfG2wP5xElGeAE5ABlPUTJ7Sj6IY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=rJepUrleCdnW1of5xG6NMwgB0r4HeVrCY0iyrvJVMs6yVMI1IywXOB3nni5JSs1wV
+	 txiJHONe/OAgkiDx4A0bOjF4XT4uEG4uuBKrMTm7OXc0rz7x7dO67GWMclW6DFpwAd
+	 iPpZ1j2zhbwkx0Jps8iqQMr/o5QxD9rq3rBleD20=
+From: Shyam Saini <shyamsaini@linux.microsoft.com>
+To: fancer.lancer@gmail.com
+Cc: Sergey.Semin@baikalelectronics.ru,
+	apais@linux.microsoft.com,
+	bboscaccy@linux.microsoft.com,
+	code@tyhicks.com,
+	gustavo.pimentel@synopsys.com,
+	jingoohan1@gmail.com,
+	linux-pci@vger.kernel.org,
+	okaya@kernel.org,
+	shyamsaini@linux.microsoft.com,
+	srivatsa@csail.mit.edu,
+	tballasi@linux.microsoft.com,
+	vijayb@linux.microsoft.com
+Subject: [PATCH] drivers: pci: dwc: dynamically set pci region limit
+Date: Mon, 10 Jun 2024 16:20:19 -0700
+Message-Id: <20240610232019.299410-1-shyamsaini@linux.microsoft.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <hxluc6qth4temdyxloekbhoy4iielyvxmmhp3u47qwtcxb5t5v@v5hdzvqmrsyv>
+References: <hxluc6qth4temdyxloekbhoy4iielyvxmmhp3u47qwtcxb5t5v@v5hdzvqmrsyv>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-GUID: 14oX6s4fG0ndD8Ub4QOGV5hQYoBeuKTv
-X-Proofpoint-ORIG-GUID: 14oX6s4fG0ndD8Ub4QOGV5hQYoBeuKTv
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-06-10_06,2024-06-10_01,2024-05-17_01
+Content-Transfer-Encoding: 8bit
 
-From: Keith Busch <kbusch@kernel.org>
+Hi Serge,
 
-I am working with larger pcie topologies again, and we're seeing some
-failures when dealing with certain overlapping pcie events.
+On Wed, May 22, 2024 at 05:10:46PM -0700, Shyam Saini wrote:
+> commit 89473aa9ab26 ("PCI: dwc: Add iATU regions size detection procedure")
+>> hardcodes the pci region limit to 4G.
 
-The topology is essentially this:
+> In what part does it _harcode_ the region limit to 4G? The procedure
+> _auto-detects_ the actual iATU region limits. The limits aren't
+> hardcoded.  The upper bound is 4G for DW PCIe IP-core older than
+> v4.60. If the IP-core is younger than that the upper bound will be
+> determined by the CX_ATU_MAX_REGION_SIZE IP-core synthesize parameter.
+> The auto-detection procedure is about the CX_ATU_MAX_REGION_SIZE
+> parameter detection.
 
-  [Root Port] <-> [UpStream Port] <-> [DownStream Port] <-> [End Device]
+>> This causes regression on
+>> systems with PCI memory region higher than 4G.
 
-An error between the DSP and ED triggers DPC. There's only inband
-presence detection so it also triggers hotplug. Before the error
-handling is completed, though, another error seen by the RP triggers its
-own DPC handling.
+> I am sure it doesn't. If it did we would have got multiple bug-reports
+> right after the patch was merged into the mainline kernel repo. So
+> please provide a comprehensive description of the problem you have.
+> 
+Sorry, I am certainly not a PCI expert but here is how I got here:
 
-The concurrent event handling reveals some interesting races, and this
-small patchset tries to address these in the low invasive way.
+With [1] this change I started to see PCI driver throwing "Failed to set MEM range" error messages
+and as consequence the driver probe fails with " error -22"
 
-Keith Busch (2):
-  PCI: pciehp: fix concurrent sub-tree removal deadlock
-  PCI: err: ensure stable topology during handling
+When I tracked the code, I found [1] this check was causing the driver probe failure 
+and pci->region_limit was set to 4G in [2] this commit
 
- drivers/pci/hotplug/pciehp_pci.c | 12 +++++++++---
- drivers/pci/pci.h                |  1 +
- drivers/pci/pcie/err.c           |  8 +++++++-
- drivers/pci/probe.c              | 24 ++++++++++++++++++++++++
- include/linux/pci.h              |  2 ++
- 5 files changed, 43 insertions(+), 4 deletions(-)
+So, to fix this issue I prepared this patch and it solves the problem I was having.
+Based on your reply it seems problem is some where else.
 
---=20
-2.43.0
+I didn't see any problem with PCI memory <= 4G
 
+>> 
+>> Fix this by dynamically setting pci region limit based on maximum
+>> size of memory ranges in the PCI device tree node.
+
+> It seems to me that your patch is an attempt to workaround some
+> problem you met. Give more insight about the problem in order to find
+> a proper fix. The justification you've provided so far seems incorrect.
+> 
+> Note you can't use the ranges DT-property specified on your platform
+> to determine the actual iATU regions size, because the later entity is
+> a primary/root parameter of the PCIe controller. The DT-node memory
+> ranges could be defined with a size greater than the actual iATU
+> region size. In that case the address translation logic will be broken
+> in the current driver implementation. AFAICS from the DW PCIe IP-core
+> HW-manuals the IO-transaction will be passed further to the PCIe bus with
+> no address translated and with the TLP fields filled in with the data
+> retrieved on the application interface (XALI/AXI):
+> 
+> "3.10.5.6 No Address Match Result Overview: When there is no address
+> match then the address is untranslated but the TLP header information
+> (for fields that are programmable) comes from the relevant fields on
+> the application transmit interface XALI* or AXI slave."
+> 
+> That isn't what could be allowed, because it may cause unpredictable
+> results up to the system crash, for instance, if the TLPs with the
+> untranslated TLPs reached a device they weren't targeted to.
+
+> If what you met in your system was a memory range greater than the
+> permitted iATU region limit, a proper fix would have been to allocate
+> a one more iATU region for the out of bounds part of the memory range.
+
+based on your suggestions I have prepared a new patch, which i will send shortly.
+Thank you for the reviews.
+
+[1] https://elixir.bootlin.com/linux/v6.9.1/source/drivers/pci/controller/dwc/pcie-designware.c#L480
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?id=89473aa9ab261948ed13b16effe841a675efed77
