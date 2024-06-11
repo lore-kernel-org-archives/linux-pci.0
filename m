@@ -1,23 +1,22 @@
-Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 806B017C213;
-	Tue, 11 Jun 2024 12:51:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
+Received: from relmlie6.idc.renesas.com (relmlor2.renesas.com [210.160.252.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 61EC717C20C;
+	Tue, 11 Jun 2024 12:51:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718110269; cv=none; b=jBTgiOroZjIZ2j7r4tfKKPo/jK5WkYNIM6HnGcLyWZC6Fh0g0dysXZfLiib/qspjrOtNdRENEW9WzpbuvSAkYb0Re0XbX3KwfaSkWIC7UbrDiQxBitVdYehBlN9gx+xLT0e1mwdWIQf7okDYqaQpDjXa+RBNnxOFRBsM42xmSSs=
+	t=1718110270; cv=none; b=fNIcOQmGTaXAIPKvRTfLs1szIjD4VJB8HEH2kPjx5uuunKRKSHFEFStysPGbOwAUKMDNgTkF1dzXltk0cmX6sG+bXuYvnBiSaPsFtLvJ1GTEHG4WLT+eTXIPzKgEs/t/YEh2Ve+f3W45c7VXyoYi3T4v2ZAqYtipspKaE8ltdk0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718110269; c=relaxed/simple;
-	bh=Kb+D628CEHKpo9KY8JPhLtMpFlYRZZXD8jfyDESS7Lc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=t/uFAU85SRgs9lRxxv2dvG+CxtJgnR3p1OCJhl9zAwyD6DW2zM79BkbP5mwHIp14N/H/kBkX5Sp20fuWODM34TAAOQimr2Mtvl/D8k37TgOIZ+F/bicLJ1ww8y2AC8e1ehHyYwz3o0GCIj1wvYn+tS8jSzR3ubTz6UbgDQFAihE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
+	s=arc-20240116; t=1718110270; c=relaxed/simple;
+	bh=U/Ie7iZqgHKR8zcfnLGW1zlv0d/KYGgoe1QRnrRuN5w=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cWsXmUQakq6rvG2EWbjn2suO0+rtEWwyrD/q6UIkp9TVD0VLd+ZBLEIBft5ELNrgvZH5fgjYbNw2+i6LOO6LfkT0Ru6QXgGa/mlGIN9biO1QmBHhCeiubz82B0G90oiIudOxI+aYvpD86C5jCZfRADe+vzr2y9G94yhR2W/YiUk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.08,230,1712588400"; 
-   d="scan'208";a="207497069"
+   d="scan'208";a="211455257"
 Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
-  by relmlie5.idc.renesas.com with ESMTP; 11 Jun 2024 21:51:06 +0900
+  by relmlie6.idc.renesas.com with ESMTP; 11 Jun 2024 21:51:05 +0900
 Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir5.idc.renesas.com (Postfix) with ESMTP id F3C6F40104E9;
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id BE3A740104EA;
 	Tue, 11 Jun 2024 21:51:05 +0900 (JST)
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To: lpieralisi@kernel.org,
@@ -29,14 +28,11 @@ To: lpieralisi@kernel.org,
 Cc: marek.vasut+renesas@gmail.com,
 	linux-pci@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v9 2/5] PCI: rcar-gen4: Add rcar_gen4_pcie_drvdata
-Date: Tue, 11 Jun 2024 21:50:54 +0900
-Message-Id: <20240611125057.1232873-3-yoshihiro.shimoda.uh@renesas.com>
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH v9 0/5] PCI: rcar-gen4: Add R-Car V4H support
+Date: Tue, 11 Jun 2024 21:50:52 +0900
+Message-Id: <20240611125057.1232873-1-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240611125057.1232873-1-yoshihiro.shimoda.uh@renesas.com>
-References: <20240611125057.1232873-1-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,107 +41,62 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-In order to support future SoCs such as r8a779g0 and r8a779h0 that
-require different initialization settings, introduce SoC specific
-driver data with the initial member being the device mode.
-No functional change.
+The pcie-rcar-gen4 driver can reuse other R-Car Gen4 support like
+r8a779g0 (R-Car V4H) and r8a779h0 (R-Car V4M). However, some
+initializing settings differ between R-Car S4-8 (r8a779f0) and
+others. The R-Car S4-8 will be minority about the setting way. So,
+R-Car V4H will be majority and this is generic initialization way
+as "renesas,rcar-gen4-pcie{-ep}" compatible.
 
-Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/controller/dwc/pcie-rcar-gen4.c | 32 +++++++++++++++------
- 1 file changed, 23 insertions(+), 9 deletions(-)
+About the firmware binary, please refer to the following patch
+descirption:
+  PCI: rcar-gen4: Add support for r8a779g0
 
-diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-index cfeccc2f9ee1..eb3ea4a5fd0a 100644
---- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-+++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
-@@ -48,11 +48,15 @@
- #define RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET	0x1000
- #define RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET	0x800
- 
-+struct rcar_gen4_pcie_drvdata {
-+	enum dw_pcie_device_mode mode;
-+};
-+
- struct rcar_gen4_pcie {
- 	struct dw_pcie dw;
- 	void __iomem *base;
- 	struct platform_device *pdev;
--	enum dw_pcie_device_mode mode;
-+	const struct rcar_gen4_pcie_drvdata *drvdata;
- };
- #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
- 
-@@ -137,7 +141,7 @@ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
- 	 * Since dw_pcie_setup_rc() sets it once, PCIe Gen2 will be trained.
- 	 * So, this needs remaining times for up to PCIe Gen4 if RC mode.
- 	 */
--	if (changes && rcar->mode == DW_PCIE_RC_TYPE)
-+	if (changes && rcar->drvdata->mode == DW_PCIE_RC_TYPE)
- 		changes--;
- 
- 	for (i = 0; i < changes; i++) {
-@@ -172,9 +176,9 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
- 		reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
- 
- 	val = readl(rcar->base + PCIEMSR0);
--	if (rcar->mode == DW_PCIE_RC_TYPE) {
-+	if (rcar->drvdata->mode == DW_PCIE_RC_TYPE) {
- 		val |= DEVICE_TYPE_RC;
--	} else if (rcar->mode == DW_PCIE_EP_TYPE) {
-+	} else if (rcar->drvdata->mode == DW_PCIE_EP_TYPE) {
- 		val |= DEVICE_TYPE_EP;
- 	} else {
- 		ret = -EINVAL;
-@@ -451,9 +455,11 @@ static void rcar_gen4_remove_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
- /* Common */
- static int rcar_gen4_add_dw_pcie(struct rcar_gen4_pcie *rcar)
- {
--	rcar->mode = (uintptr_t)of_device_get_match_data(&rcar->pdev->dev);
-+	rcar->drvdata = of_device_get_match_data(&rcar->pdev->dev);
-+	if (!rcar->drvdata)
-+		return -EINVAL;
- 
--	switch (rcar->mode) {
-+	switch (rcar->drvdata->mode) {
- 	case DW_PCIE_RC_TYPE:
- 		return rcar_gen4_add_dw_pcie_rp(rcar);
- 	case DW_PCIE_EP_TYPE:
-@@ -494,7 +500,7 @@ static int rcar_gen4_pcie_probe(struct platform_device *pdev)
- 
- static void rcar_gen4_remove_dw_pcie(struct rcar_gen4_pcie *rcar)
- {
--	switch (rcar->mode) {
-+	switch (rcar->drvdata->mode) {
- 	case DW_PCIE_RC_TYPE:
- 		rcar_gen4_remove_dw_pcie_rp(rcar);
- 		break;
-@@ -514,14 +520,22 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
- 	rcar_gen4_pcie_unprepare(rcar);
- }
- 
-+static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie = {
-+	.mode = DW_PCIE_RC_TYPE,
-+};
-+
-+static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie_ep = {
-+	.mode = DW_PCIE_EP_TYPE,
-+};
-+
- static const struct of_device_id rcar_gen4_pcie_of_match[] = {
- 	{
- 		.compatible = "renesas,rcar-gen4-pcie",
--		.data = (void *)DW_PCIE_RC_TYPE,
-+		.data = &drvdata_rcar_gen4_pcie,
- 	},
- 	{
- 		.compatible = "renesas,rcar-gen4-pcie-ep",
--		.data = (void *)DW_PCIE_EP_TYPE,
-+		.data = &drvdata_rcar_gen4_pcie_ep,
- 	},
- 	{},
- };
+For now, I tested both R-Car S4-8 and R-Car V4H on this driver.
+I'll support one more other SoC (R-Car V4M) in the future.
+
+Changes from v8:
+https://lore.kernel.org/linux-pci/20240520074300.125969-1-yoshihiro.shimoda.uh@renesas.com/
+- Add Reviewed-by in the patch 3/5.
+- Revise commit description in the patch [2345]/5.
+- Some minor updates of the code in the patch 4/5.
+
+Changes from v7:
+https://lore.kernel.org/linux-pci/20240415081135.3814373-1-yoshihiro.shimoda.uh@renesas.com/
+- Since the following patches are merged into pci.git / dt-bindings branch,
+  drop them from this patch series:
+   dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car V4H compatible
+   dt-bindings: PCI: rcar-gen4-pci-ep: Add R-Car V4H compatible
+- Add Reviewed-by in the patch [25]/5.
+- Add a condition to avoid automated tools report in the patch 2/5.
+- Change the new function which adds an "enable" flag in the patch 3/5.
+  So, change the commit description and move some functions' places.
+- Revise the commit description and add firmware information in detail in
+  the patch 4/5.
+- Use the offset directly instead of definitions in the patch 4/5.
+- Add comments for some magical offsets/values in the patch 4/5.
+- Change error message when request_firmware() failed in the patch 4/5.
+
+Changes from v6:
+https://lore.kernel.org/linux-pci/20240410004832.3726922-1-yoshihiro.shimoda.uh@renesas.com/
+- Add Manivannan's Reviewed-by in patch [37]/7.
+- Rename a struct from "platdata" to "drvdata" in patch [4/7].
+- Revise the commit descriptions in patch [456]/7.
+- Rename some functions in patch 6/7.
+- Fix the return value of an error path in patch 6/7.
+
+Yoshihiro Shimoda (5):
+  PCI: dwc: Add PCIE_PORT_{FORCE,LANE_SKEW} macros
+  PCI: rcar-gen4: Add rcar_gen4_pcie_drvdata
+  PCI: rcar-gen4: Add .ltssm_control() for other SoC support
+  PCI: rcar-gen4: Add support for r8a779g0
+  misc: pci_endpoint_test: Document a policy about adding pci_device_id
+
+ drivers/misc/pci_endpoint_test.c             |   4 +
+ drivers/pci/controller/dwc/pcie-designware.h |   6 +
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c  | 313 +++++++++++++++++--
+ 3 files changed, 289 insertions(+), 34 deletions(-)
+
 -- 
 2.25.1
 
