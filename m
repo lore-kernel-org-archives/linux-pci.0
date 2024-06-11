@@ -1,89 +1,151 @@
-Received: from madrid.collaboradmins.com (madrid.collaboradmins.com [46.235.227.194])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877FD54750;
-	Tue, 11 Jun 2024 10:27:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.227.194
+Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 806B017C213;
+	Tue, 11 Jun 2024 12:51:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718101630; cv=none; b=E7wnskbiykMLbhdp3RrlGHE/1J92edCTm4sdRFCzRWcN4oXuIKcjDx90lcduWGpuPybA0xXpx6SllEusz3dxoAMouUmAscIQho5I92ypBsV187kjW/Cx/KrMRWIZJ5yiAczKf1Eoq+pTgsWnC9mjpxjspRGFuOLcraDjyn666qI=
+	t=1718110269; cv=none; b=jBTgiOroZjIZ2j7r4tfKKPo/jK5WkYNIM6HnGcLyWZC6Fh0g0dysXZfLiib/qspjrOtNdRENEW9WzpbuvSAkYb0Re0XbX3KwfaSkWIC7UbrDiQxBitVdYehBlN9gx+xLT0e1mwdWIQf7okDYqaQpDjXa+RBNnxOFRBsM42xmSSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718101630; c=relaxed/simple;
-	bh=YjCgBc+r+06nJ6IVpW13RFBeFFzWdG5LhXvUogE3Vjo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CT6oQbADF0EHrAbdcxlYjQFZVQkFm1t/87ZlMl4VT8QjLtEkgB0mYF0KfHLVapYz3sLdewTjKArt4rIkcvYJeX7q6uFc2s3YEcLKd8nabg1XFBwhNROC6WgxdicQX2RbvDFhv853w3eSj0OcDb/QZFfqxoxfaYtF5oKT0NJnUc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=T1wzQjsn; arc=none smtp.client-ip=46.235.227.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="T1wzQjsn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
-	s=mail; t=1718101626;
-	bh=YjCgBc+r+06nJ6IVpW13RFBeFFzWdG5LhXvUogE3Vjo=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=T1wzQjsnI/PhpuS+7t5fBwGZr6+q2ZAxBqLXqQMriXE7BFH57QT/sDcseACk0hDbf
-	 mHUK99ISk7TYaw9IvJz4Xm7/Msho3y10Pk6CMVUBQYEqCG+1Ej59FukA/UQ5wJFC8I
-	 oVoWIgnJte49b4dtn9P85C2PivUVwZocQfrRDJ97i8rroBx750ogE3mmEFdPUBqUjJ
-	 i/LBCZuyz+fTPYHH1Ff1dXDOYKvtyP418oMSiCapdk2sHf7eX/KpklshnpPfaOlRlU
-	 C8MdxapQvg9t/dnqMlIFQZwAoQOn2tna9za2GKGJjRbmIruV1oX/VQrIVf6Pc9G1yr
-	 T45pI9gg3cHSA==
-Received: from [100.113.186.2] (cola.collaboradmins.com [195.201.22.229])
-	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kholk11)
-	by madrid.collaboradmins.com (Postfix) with ESMTPSA id D799237804C6;
-	Tue, 11 Jun 2024 10:27:04 +0000 (UTC)
-Message-ID: <6d4173cd-ffe1-427d-ac04-bb9374b4b8d8@collabora.com>
-Date: Tue, 11 Jun 2024 12:27:04 +0200
+	s=arc-20240116; t=1718110269; c=relaxed/simple;
+	bh=Kb+D628CEHKpo9KY8JPhLtMpFlYRZZXD8jfyDESS7Lc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=t/uFAU85SRgs9lRxxv2dvG+CxtJgnR3p1OCJhl9zAwyD6DW2zM79BkbP5mwHIp14N/H/kBkX5Sp20fuWODM34TAAOQimr2Mtvl/D8k37TgOIZ+F/bicLJ1ww8y2AC8e1ehHyYwz3o0GCIj1wvYn+tS8jSzR3ubTz6UbgDQFAihE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
+X-IronPort-AV: E=Sophos;i="6.08,230,1712588400"; 
+   d="scan'208";a="207497069"
+Received: from unknown (HELO relmlir5.idc.renesas.com) ([10.200.68.151])
+  by relmlie5.idc.renesas.com with ESMTP; 11 Jun 2024 21:51:06 +0900
+Received: from localhost.localdomain (unknown [10.166.13.99])
+	by relmlir5.idc.renesas.com (Postfix) with ESMTP id F3C6F40104E9;
+	Tue, 11 Jun 2024 21:51:05 +0900 (JST)
+From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+To: lpieralisi@kernel.org,
+	kw@linux.com,
+	robh@kernel.org,
+	bhelgaas@google.com,
+	jingoohan1@gmail.com,
+	mani@kernel.org
+Cc: marek.vasut+renesas@gmail.com,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Subject: [PATCH v9 2/5] PCI: rcar-gen4: Add rcar_gen4_pcie_drvdata
+Date: Tue, 11 Jun 2024 21:50:54 +0900
+Message-Id: <20240611125057.1232873-3-yoshihiro.shimoda.uh@renesas.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240611125057.1232873-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20240611125057.1232873-1-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: controller: add missing MODULE_DESCRIPTION() macros
-To: Jeff Johnson <quic_jjohnson@quicinc.com>,
- Jingoo Han <jingoohan1@gmail.com>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kw@linux.com>, Rob Herring <robh@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk@kernel.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Will Deacon <will@kernel.org>,
- Joyce Ooi <joyce.ooi@intel.com>, Alyssa Rosenzweig <alyssa@rosenzweig.io>,
- Marc Zyngier <maz@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
- Jianjun Wang <jianjun.wang@mediatek.com>,
- Sergio Paracuellos <sergio.paracuellos@gmail.com>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- Nirmal Patel <nirmal.patel@linux.intel.com>,
- Jonathan Derrick <jonathan.derrick@linux.dev>
-Cc: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-mediatek@lists.infradead.org, kernel-janitors@vger.kernel.org
-References: <20240610-md-drivers-pci-controller-v1-1-b998c242df55@quicinc.com>
-From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-Content-Language: en-US
-In-Reply-To: <20240610-md-drivers-pci-controller-v1-1-b998c242df55@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-Il 11/06/24 03:04, Jeff Johnson ha scritto:
-> When ARCH=x86, make allmodconfig && make W=1 C=1 reports:
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/dwc/pci-exynos.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pci-host-generic.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pcie-altera.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pcie-altera-msi.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pcie-mediatek.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pcie-mediatek-gen3.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/vmd.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pcie-apple.o
-> WARNING: modpost: missing MODULE_DESCRIPTION() in drivers/pci/controller/pcie-mt7621.o
-> 
-> Add the missing invocations of the MODULE_DESCRIPTION() macro.
-> 
-> Signed-off-by: Jeff Johnson <quic_jjohnson@quicinc.com>
+In order to support future SoCs such as r8a779g0 and r8a779h0 that
+require different initialization settings, introduce SoC specific
+driver data with the initial member being the device mode.
+No functional change.
 
-For MediaTek
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 32 +++++++++++++++------
+ 1 file changed, 23 insertions(+), 9 deletions(-)
 
-Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index cfeccc2f9ee1..eb3ea4a5fd0a 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -48,11 +48,15 @@
+ #define RCAR_GEN4_PCIE_EP_FUNC_DBI_OFFSET	0x1000
+ #define RCAR_GEN4_PCIE_EP_FUNC_DBI2_OFFSET	0x800
+ 
++struct rcar_gen4_pcie_drvdata {
++	enum dw_pcie_device_mode mode;
++};
++
+ struct rcar_gen4_pcie {
+ 	struct dw_pcie dw;
+ 	void __iomem *base;
+ 	struct platform_device *pdev;
+-	enum dw_pcie_device_mode mode;
++	const struct rcar_gen4_pcie_drvdata *drvdata;
+ };
+ #define to_rcar_gen4_pcie(_dw)	container_of(_dw, struct rcar_gen4_pcie, dw)
+ 
+@@ -137,7 +141,7 @@ static int rcar_gen4_pcie_start_link(struct dw_pcie *dw)
+ 	 * Since dw_pcie_setup_rc() sets it once, PCIe Gen2 will be trained.
+ 	 * So, this needs remaining times for up to PCIe Gen4 if RC mode.
+ 	 */
+-	if (changes && rcar->mode == DW_PCIE_RC_TYPE)
++	if (changes && rcar->drvdata->mode == DW_PCIE_RC_TYPE)
+ 		changes--;
+ 
+ 	for (i = 0; i < changes; i++) {
+@@ -172,9 +176,9 @@ static int rcar_gen4_pcie_common_init(struct rcar_gen4_pcie *rcar)
+ 		reset_control_assert(dw->core_rsts[DW_PCIE_PWR_RST].rstc);
+ 
+ 	val = readl(rcar->base + PCIEMSR0);
+-	if (rcar->mode == DW_PCIE_RC_TYPE) {
++	if (rcar->drvdata->mode == DW_PCIE_RC_TYPE) {
+ 		val |= DEVICE_TYPE_RC;
+-	} else if (rcar->mode == DW_PCIE_EP_TYPE) {
++	} else if (rcar->drvdata->mode == DW_PCIE_EP_TYPE) {
+ 		val |= DEVICE_TYPE_EP;
+ 	} else {
+ 		ret = -EINVAL;
+@@ -451,9 +455,11 @@ static void rcar_gen4_remove_dw_pcie_ep(struct rcar_gen4_pcie *rcar)
+ /* Common */
+ static int rcar_gen4_add_dw_pcie(struct rcar_gen4_pcie *rcar)
+ {
+-	rcar->mode = (uintptr_t)of_device_get_match_data(&rcar->pdev->dev);
++	rcar->drvdata = of_device_get_match_data(&rcar->pdev->dev);
++	if (!rcar->drvdata)
++		return -EINVAL;
+ 
+-	switch (rcar->mode) {
++	switch (rcar->drvdata->mode) {
+ 	case DW_PCIE_RC_TYPE:
+ 		return rcar_gen4_add_dw_pcie_rp(rcar);
+ 	case DW_PCIE_EP_TYPE:
+@@ -494,7 +500,7 @@ static int rcar_gen4_pcie_probe(struct platform_device *pdev)
+ 
+ static void rcar_gen4_remove_dw_pcie(struct rcar_gen4_pcie *rcar)
+ {
+-	switch (rcar->mode) {
++	switch (rcar->drvdata->mode) {
+ 	case DW_PCIE_RC_TYPE:
+ 		rcar_gen4_remove_dw_pcie_rp(rcar);
+ 		break;
+@@ -514,14 +520,22 @@ static void rcar_gen4_pcie_remove(struct platform_device *pdev)
+ 	rcar_gen4_pcie_unprepare(rcar);
+ }
+ 
++static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie = {
++	.mode = DW_PCIE_RC_TYPE,
++};
++
++static struct rcar_gen4_pcie_drvdata drvdata_rcar_gen4_pcie_ep = {
++	.mode = DW_PCIE_EP_TYPE,
++};
++
+ static const struct of_device_id rcar_gen4_pcie_of_match[] = {
+ 	{
+ 		.compatible = "renesas,rcar-gen4-pcie",
+-		.data = (void *)DW_PCIE_RC_TYPE,
++		.data = &drvdata_rcar_gen4_pcie,
+ 	},
+ 	{
+ 		.compatible = "renesas,rcar-gen4-pcie-ep",
+-		.data = (void *)DW_PCIE_EP_TYPE,
++		.data = &drvdata_rcar_gen4_pcie_ep,
+ 	},
+ 	{},
+ };
+-- 
+2.25.1
 
