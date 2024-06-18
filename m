@@ -1,178 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from relay8-d.mail.gandi.net (relay8-d.mail.gandi.net [217.70.183.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE4FB41A80
-	for <linux-pci@vger.kernel.org>; Tue, 18 Jun 2024 15:45:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08645D299;
+	Tue, 18 Jun 2024 15:55:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718725505; cv=none; b=Rpx9/Qn6AOym2tUsWUEyTm/Gsn9j3T2VYvrQRwlu4zu/TefkguuL6EohK1xD9PrIqKteEHt8TRpzVCT//jquA92lg/+qDgOuxoQcSyaC/0W+OI5rMRsHXFFozJP0sgFYh+wPJxBoWNcoHxNDMMM6oEMDq4T0VcdDuaTtXexhd0A=
+	t=1718726148; cv=none; b=FJKeQibxLPNyZs/aphdNVHzB58FCGviQhlXjAipYvBqImlZtYrYI9QPzy/5Vl6ntYbMBJTNojMzvg1wuUTnarXJEadVODJ3t4VoLCw/NPLGkykNn8D8P+M5qeqM+7595IVQ9u1NSXjliuzEs0KJeaIshFNpxlsj+5HZABWc8bXM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718725505; c=relaxed/simple;
-	bh=mmoTWxV90KQj/71X22t7f4wuhUs5l86oq3BZTL4AQyU=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PsvGo6NNiBOhCGlkbO3CPulDm3oNi5yj7LBLcfxpf8mOp1zHSVLeaarkNUsJwV8ep1rylBZoJuzhRrxHh6KSQRU8oQioHOz5jJbJoO8dWwLbjvopYZwK5OhrkRCJdSRotCgSkNq9txibHORi1fod4P4D215JXwMizoe+nr7exHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W12CaZsp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718726148; c=relaxed/simple;
+	bh=lhjj25VP5M4sTOzHNNjscKcLGzs0m0KUFagNmmsLVCY=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ndhp3YFugIpjo7o4053ZIYxfPCjVRPDwuVKXFAylRmw6lG9VknPeQQH8ByZrIXJiAjapzgyhkGcipa8qqfRT2zRqhbNxn8XkKbhu6zgvZgAgEWxWXPr8DGSSkfH07SjkqI734JcNyZoRFrL8ecrGE9wfk3DF4aoOuuYjXFann7k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=GH1xLuWs; arc=none smtp.client-ip=217.70.183.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W12CaZsp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0832AC3277B;
-	Tue, 18 Jun 2024 15:45:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718725505;
-	bh=mmoTWxV90KQj/71X22t7f4wuhUs5l86oq3BZTL4AQyU=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=W12CaZsp7O7N9viiYbImc9E4h4JS+2bX5MYzvePXEi22L9H2Y4a62iBZr1AXSE65H
-	 HSimZKMaI0EcxMvHK4vCDChP8nv10TioST1f6Lqr/ukbeUSpQa6DVdg42xFkNMwjbn
-	 IL4V2tVfnZmC8V0XCQfhDv50OtW6TKyKpsab/5pldxTZgdOkniGbegFKen/fgQusvu
-	 mKdyw9FXZQogK8vkDI6NEXYpOSJH8drxf/Bl3Mod7sblHp3Dw2M1bGbsvqOpC1NSSO
-	 NQb/3DcSqda3Ao2bnDqV06fHCvYheY+Av+m41T0xaVKQYciNuf0qGg4k2qXzg4WT+L
-	 aAZvFA6yNknIw==
-Date: Tue, 18 Jun 2024 10:45:03 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: kernel test robot <lkp@intel.com>
-Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: Re: [pci:endpoint] BUILD REGRESSION
- 1b2ccd0341a6124d964211bae2ec378fafd0c8b2
-Message-ID: <20240618154503.GA1257212@bhelgaas>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="GH1xLuWs"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id 833B11BF204;
+	Tue, 18 Jun 2024 15:55:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1718726137;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V2KE/O5mxQyzYGqNyk0NZy+aO7Wf1mUhJbeharOTLWU=;
+	b=GH1xLuWsQxAhseqDqFHZLD/PAHYZJjFDGtEsCC1ScJeUUlB6N1r9kc7jpvEKmvzMil1ZLw
+	N7wVAJzKpSnPXXL/hbSWtz0+ILKsU1RIIZRu/IrIfG75FCcKItUgfR+M54pq6bbI7L4dtr
+	IX0N3HpabnDfVqLo0OzGu7jQVD00B2p5g9HSkO5PrG0kZdPRe1U3u/NepoJIeZqKetZj43
+	L5QZaneld0T0Npc8RpVNG6z6+EdYPoreOCeTyULCfvm6IJEp3OOJTx8tqRAoZVp5vYufPZ
+	JeobUn7bnS1yOLi9zePgor/7ilQKJspTnQn9BfPegr1Wx3fffcDxqFTbXCIZIQ==
+Date: Tue, 18 Jun 2024 17:55:33 +0200
+From: Herve Codina <herve.codina@bootlin.com>
+To: "Arnd Bergmann" <arnd@arndb.de>
+Cc: "Simon Horman" <horms@kernel.org>, "Sai Krishna Gajula"
+ <saikrishnag@marvell.com>, "Thomas Gleixner" <tglx@linutronix.de>, "Rob
+ Herring" <robh@kernel.org>, "Krzysztof Kozlowski" <krzk+dt@kernel.org>,
+ "Conor Dooley" <conor+dt@kernel.org>, "David S . Miller"
+ <davem@davemloft.net>, "Eric Dumazet" <edumazet@google.com>, "Jakub
+ Kicinski" <kuba@kernel.org>, "Paolo Abeni" <pabeni@redhat.com>, "Lee Jones"
+ <lee@kernel.org>, "Horatiu Vultur" <horatiu.vultur@microchip.com>,
+ UNGLinuxDriver@microchip.com, "Andrew Lunn" <andrew@lunn.ch>, "Heiner
+ Kallweit" <hkallweit1@gmail.com>, "Russell King" <linux@armlinux.org.uk>,
+ "Saravana Kannan" <saravanak@google.com>, "Bjorn Helgaas"
+ <bhelgaas@google.com>, "Philipp Zabel" <p.zabel@pengutronix.de>, "Lars
+ Povlsen" <lars.povlsen@microchip.com>, "Steen Hegelund"
+ <Steen.Hegelund@microchip.com>, "Daniel Machon"
+ <daniel.machon@microchip.com>, "Alexandre Belloni"
+ <alexandre.belloni@bootlin.com>, linux-kernel@vger.kernel.org,
+ devicetree@vger.kernel.org, Netdev <netdev@vger.kernel.org>,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, "Allan
+ Nielsen" <allan.nielsen@microchip.com>, "Luca Ceresoli"
+ <luca.ceresoli@bootlin.com>, "Thomas Petazzoni"
+ <thomas.petazzoni@bootlin.com>, "Clement Leger" <clement.leger@bootlin.com>
+Subject: Re: [PATCH v2 01/19] mfd: syscon: Add reference counting and device
+ managed support
+Message-ID: <20240618175533.3e1534ca@bootlin.com>
+In-Reply-To: <b685d5e5-09d3-4916-ad0b-d329c166e149@app.fastmail.com>
+References: <20240527161450.326615-1-herve.codina@bootlin.com>
+	<20240527161450.326615-2-herve.codina@bootlin.com>
+	<b685d5e5-09d3-4916-ad0b-d329c166e149@app.fastmail.com>
+Organization: Bootlin
+X-Mailer: Claws Mail 4.2.0 (GTK 3.24.41; x86_64-redhat-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <202406141054.rqus0osg-lkp@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-GND-Sasl: herve.codina@bootlin.com
 
-On Fri, Jun 14, 2024 at 10:32:57AM +0800, kernel test robot wrote:
-> tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
-> branch HEAD: 1b2ccd0341a6124d964211bae2ec378fafd0c8b2  PCI: endpoint: Make pci_epc_class struct constant
-> 
-> Error/Warning ids grouped by kconfigs:
-> 
-> gcc_recent_errors
-> `-- sparc-randconfig-002-20240614
->     `-- (.head.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-init.text
+Hi Arnd,
 
-Is there any further information about this?  I don't see the config
-file to be able to reproduce this failure.
+On Tue, 18 Jun 2024 16:53:30 +0200
+"Arnd Bergmann" <arnd@arndb.de> wrote:
 
-> elapsed time: 1692m
+> On Mon, May 27, 2024, at 18:14, Herve Codina wrote:
+> > From: Clément Léger <clement.leger@bootlin.com>
+> >
+> > Syscon releasing is not supported.
+> > Without release function, unbinding a driver that uses syscon whether
+> > explicitly or due to a module removal left the used syscon in a in-use
+> > state.
+> >
+> > For instance a syscon_node_to_regmap() call from a consumer retrieve a
+> > syscon regmap instance. Internally, syscon_node_to_regmap() can create
+> > syscon instance and add it to the existing syscon list. No API is
+> > available to release this syscon instance, remove it from the list and
+> > free it when it is not used anymore.
+> >
+> > Introduce reference counting in syscon in order to keep track of syscon
+> > usage using syscon_{get,put}() and add a device managed version of
+> > syscon_regmap_lookup_by_phandle(), to automatically release the syscon
+> > instance on the consumer removal.
+> >
+> > Signed-off-by: Clément Léger <clement.leger@bootlin.com>
+> > Signed-off-by: Herve Codina <herve.codina@bootlin.com>  
 > 
-> configs tested: 109
-> configs skipped: 3
+> This all looks correct from an implementation perspective,
+> but it does add a lot of complexity if now every syscon user
+> feels compelled to actually free up their resources again,
+> while nothing else should actually depend on this.
 > 
-> tested configs:
-> alpha                             allnoconfig   gcc-13.2.0
-> alpha                            allyesconfig   gcc-13.2.0
-> alpha                               defconfig   gcc-13.2.0
-> arc                               allnoconfig   gcc-13.2.0
-> arc                                 defconfig   gcc-13.2.0
-> arc                   randconfig-001-20240614   gcc-13.2.0
-> arc                   randconfig-002-20240614   gcc-13.2.0
-> arm                               allnoconfig   clang-19
-> arm                                 defconfig   clang-14
-> arm                   randconfig-001-20240614   gcc-13.2.0
-> arm                   randconfig-002-20240614   gcc-13.2.0
-> arm                   randconfig-003-20240614   gcc-13.2.0
-> arm                   randconfig-004-20240614   clang-19
-> arm64                             allnoconfig   gcc-13.2.0
-> arm64                               defconfig   gcc-13.2.0
-> arm64                 randconfig-001-20240614   gcc-13.2.0
-> arm64                 randconfig-002-20240614   clang-19
-> arm64                 randconfig-003-20240614   gcc-13.2.0
-> arm64                 randconfig-004-20240614   clang-19
-> csky                              allnoconfig   gcc-13.2.0
-> csky                                defconfig   gcc-13.2.0
-> csky                  randconfig-001-20240614   gcc-13.2.0
-> csky                  randconfig-002-20240614   gcc-13.2.0
-> hexagon                          allmodconfig   clang-19
-> hexagon                           allnoconfig   clang-19
-> hexagon                          allyesconfig   clang-19
-> hexagon                             defconfig   clang-19
-> hexagon               randconfig-001-20240614   clang-19
-> hexagon               randconfig-002-20240614   clang-19
-> i386         buildonly-randconfig-001-20240613   gcc-9
-> i386         buildonly-randconfig-002-20240613   clang-18
-> i386         buildonly-randconfig-003-20240613   clang-18
-> i386         buildonly-randconfig-004-20240613   clang-18
-> i386         buildonly-randconfig-005-20240613   gcc-7
-> i386         buildonly-randconfig-006-20240613   clang-18
-> i386                  randconfig-001-20240613   gcc-7
-> i386                  randconfig-002-20240613   gcc-11
-> i386                  randconfig-003-20240613   gcc-13
-> i386                  randconfig-004-20240613   clang-18
-> i386                  randconfig-005-20240613   gcc-13
-> i386                  randconfig-006-20240613   gcc-13
-> i386                  randconfig-011-20240613   gcc-13
-> i386                  randconfig-012-20240613   clang-18
-> i386                  randconfig-013-20240613   clang-18
-> i386                  randconfig-014-20240613   gcc-12
-> i386                  randconfig-015-20240613   gcc-8
-> i386                  randconfig-016-20240613   gcc-13
-> loongarch                         allnoconfig   gcc-13.2.0
-> loongarch                           defconfig   gcc-13.2.0
-> loongarch             randconfig-001-20240614   gcc-13.2.0
-> loongarch             randconfig-002-20240614   gcc-13.2.0
-> m68k                              allnoconfig   gcc-13.2.0
-> m68k                                defconfig   gcc-13.2.0
-> microblaze                        allnoconfig   gcc-13.2.0
-> microblaze                          defconfig   gcc-13.2.0
-> mips                              allnoconfig   gcc-13.2.0
-> nios2                             allnoconfig   gcc-13.2.0
-> nios2                               defconfig   gcc-13.2.0
-> nios2                 randconfig-001-20240614   gcc-13.2.0
-> nios2                 randconfig-002-20240614   gcc-13.2.0
-> openrisc                          allnoconfig   gcc-13.2.0
-> openrisc                            defconfig   gcc-13.2.0
-> parisc                            allnoconfig   gcc-13.2.0
-> parisc                              defconfig   gcc-13.2.0
-> parisc                randconfig-001-20240614   gcc-13.2.0
-> parisc                randconfig-002-20240614   gcc-13.2.0
-> parisc64                            defconfig   gcc-13.2.0
-> powerpc                           allnoconfig   gcc-13.2.0
-> powerpc               randconfig-001-20240614   gcc-13.2.0
-> powerpc               randconfig-002-20240614   clang-19
-> powerpc               randconfig-003-20240614   gcc-13.2.0
-> powerpc64             randconfig-001-20240614   clang-19
-> powerpc64             randconfig-002-20240614   gcc-13.2.0
-> powerpc64             randconfig-003-20240614   gcc-13.2.0
-> riscv                             allnoconfig   gcc-13.2.0
-> riscv                               defconfig   clang-19
-> riscv                 randconfig-001-20240614   gcc-13.2.0
-> riscv                 randconfig-002-20240614   clang-19
-> s390                              allnoconfig   clang-19
-> s390                                defconfig   clang-19
-> s390                  randconfig-001-20240614   gcc-13.2.0
-> s390                  randconfig-002-20240614   clang-19
-> sh                               allmodconfig   gcc-13.2.0
-> sh                                allnoconfig   gcc-13.2.0
-> sh                                  defconfig   gcc-13.2.0
-> sh                    randconfig-001-20240614   gcc-13.2.0
-> sh                    randconfig-002-20240614   gcc-13.2.0
-> sparc                             allnoconfig   gcc-13.2.0
-> sparc                               defconfig   gcc-13.2.0
-> sparc64                             defconfig   gcc-13.2.0
-> sparc64               randconfig-001-20240614   gcc-13.2.0
-> sparc64               randconfig-002-20240614   gcc-13.2.0
-> um                               allmodconfig   clang-19
-> um                                allnoconfig   clang-17
-> um                               allyesconfig   gcc-13
-> um                                  defconfig   clang-19
-> um                             i386_defconfig   gcc-13
-> um                    randconfig-001-20240614   gcc-13
-> um                    randconfig-002-20240614   gcc-13
-> um                           x86_64_defconfig   clang-15
-> x86_64       buildonly-randconfig-001-20240614   clang-18
-> x86_64       buildonly-randconfig-002-20240614   gcc-8
-> x86_64       buildonly-randconfig-003-20240614   clang-18
-> x86_64       buildonly-randconfig-004-20240614   gcc-8
-> x86_64       buildonly-randconfig-005-20240614   gcc-10
-> x86_64       buildonly-randconfig-006-20240614   clang-18
-> xtensa                            allnoconfig   gcc-13.2.0
-> xtensa                randconfig-001-20240614   gcc-13.2.0
-> xtensa                randconfig-002-20240614   gcc-13.2.0
+> The only reference I found in your series here is the
+> reset controller, and it only does a single update to
+> the regmap in the probe function.
 > 
-> -- 
-> 0-DAY CI Kernel Test Service
-> https://github.com/intel/lkp-tests/wiki
+> Would it be possible to just make the syscon support in
+> the reset driver optional and instead poke the register
+> in the mfd driver itself when this is used as a pci device?
+> Or do you expect to see the syscon get used in other
+> places in the future for the PCI case?
+> 
+
+IMHO, I don't think that poking the register in the mfd driver and so
+avoiding syscon usage is the right solution.
+
+Indeed, additional devices can be added in the DT overlay and an other
+syscon user can be present.
+
+Also, overlays can be used on other PCI devices in the future and these PCI
+devices can use drivers that are syscon users. In that case, the same kind
+of workaround will be needed and maybe a quite more complex one depending on
+syscon users.
+
+The root issue is that syscon does not support removal.
+I prefer fixing this root issue instead of finding a kind of workaround.
+
+Even if all syscon users are not fixed right now (and probably don't need to
+be fixed), a solution with the new devm_syscon_regmap_lookup_by_phandle() is
+available and drivers that need to release their resources because of a
+device removal can easily move to devm_syscon_regmap_lookup_by_phandle().
+
+Best regards,
+Hervé
