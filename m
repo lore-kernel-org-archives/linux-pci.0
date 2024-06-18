@@ -1,151 +1,140 @@
-Received: from wflow4-smtp.messagingengine.com (wflow4-smtp.messagingengine.com [64.147.123.139])
+Received: from mx3.molgen.mpg.de (mx3.molgen.mpg.de [141.14.17.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F93F2139AC;
-	Tue, 18 Jun 2024 14:53:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=64.147.123.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D16044CE05;
+	Tue, 18 Jun 2024 15:20:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=141.14.17.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718722436; cv=none; b=UKuzgySjuOxw5gurUeId6BMOt+1Np0GCurZp3/telG3nQy6+aOnY/c3GiD2uCqcRdrLAkD2JJ5jvsACqHCWhHQffgn9S4Cl+tJR5UeWO05/IkGleMcyVC6zRWMzM5lnz8BGNezbAGVLasGCl+pP6tLz+GQCA6MxkHcZ5lM9eH4Y=
+	t=1718724038; cv=none; b=FQFhpkbRBNDOFrqez/FEOrThWKlnU1FJsxzXtPPzcC+FnvPiksVEn+00LQqDMDq1+Fp+SmsMvbh2u+ZzqgLQqrKoyYqa8de08en149kVHln6uUoRHIbgqKLPdVnuFM81G8gopIQLo3/dx3+RdPWChhPcfGZbaoxr7NNrKuboNfc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718722436; c=relaxed/simple;
-	bh=0UMGObr4c/PBQHn9Sn0+mxPAO48JSjyOWOHPtEQMc6w=;
-	h=MIME-Version:Message-Id:In-Reply-To:References:Date:From:To:Cc:
-	 Subject:Content-Type; b=ZlM1WlOxsLwntvlEXf9Y6KN6qtiIyxVHKPl4INpDgRNmWQxZ9hxh28bamMmGM8s7c5dmjaadPVxGeE1X4TdBCsoXCqUcUO6cy6exg0RNKOHYFQ5mNl1o/80eQeF3GPo7xXpVEOdGrjBOlXZAvDE1jTkx+4qTi1tPBqgfFZ8NkKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=WspiMbRv; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=uSdJsRMC; arc=none smtp.client-ip=64.147.123.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="WspiMbRv";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="uSdJsRMC"
-Received: from compute5.internal (compute5.nyi.internal [10.202.2.45])
-	by mailflow.west.internal (Postfix) with ESMTP id 2BF1B2CC008B;
-	Tue, 18 Jun 2024 10:53:52 -0400 (EDT)
-Received: from imap51 ([10.202.2.101])
-  by compute5.internal (MEProxy); Tue, 18 Jun 2024 10:53:54 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1718722431;
-	 x=1718729631; bh=kcbpkU2iZLW5TZK6Y8fCG83H86YT8jkb38ChT7Si83Q=; b=
-	WspiMbRvMrVrg++N2gk/7bMfurwgpyJQrB/7lc+1YEwlRfvr4+qL9B0ikSP8MiwZ
-	bOf/1288yHNN7pUb2/ZXFD8tcsgG1tOO4q93G+RKxziKKZTHDaaWUaMkeyMGJgHP
-	VC+llVVnYIIO81/+4OHhhqHZXKu2vrLiTwlfOEgPZsaAijneWDt4g2DkxVByalVf
-	vVcCURoBNMdgH7jsLAbvCzVHSD1HBJ5VsfqEA5CQlFBwkPSgQFN60dbdGKHQ502k
-	lbLmzPIY5v8Rf5CKlUcCbyCB5BvQawKfsyPQz4zHMfHmtwDYwfuJtvP8xv2gkstM
-	Jwx6N0nhZNqHpbSlbg2t9g==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1718722431; x=
-	1718729631; bh=kcbpkU2iZLW5TZK6Y8fCG83H86YT8jkb38ChT7Si83Q=; b=u
-	SdJsRMCljw9dO6nRoqCRSbf3v1s9J8J5tOv4uHC2y8Cq6yNQu9DuoFSmo+hn8+27
-	Gnjf7YDeIpmK+v6RVeRnUVrWpVHDzDec8Vnn7OcYN4GGhV43IAW4ZzM8Lu80yqpc
-	FLoBRsdIjjQUvYiKUXlcAxocWkX5woTqsidcHIN/LCV6x+oOQm4Vs/Z7S5Rbc8Uu
-	+lTlCMygk0vqoy0R6aXMtxUDDSxPBgPf0XpPrgKlvSFD0TUH/3U15WeoPxKn0cJl
-	uuN2liSFCvgABbntR+rfWipIQYpwtix+ygKcBSDlhxdw+2yjXkWRy1hcwjO61/Nh
-	a946buU4gjAzI+icNiv7g==
-X-ME-Sender: <xms:f59xZgWKesXdDDG9K0Vrq96WT5Oy7q7o8pUvafCCOmZ43RoRB0UvNQ>
-    <xme:f59xZklevwcfy6odWy_nPKhGPoibZW-_74-6smhGai-UNWVe1R-YdGsvvvT-KxJrT
-    Gy_Gths9f98TOTfu-k>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgedvledrfedvkedghedvucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfqfgfvpdfurfetoffkrfgpnffqhgen
-    uceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmne
-    cujfgurhepofgfggfkjghffffhvfevufgtgfesthhqredtreerjeenucfhrhhomhepfdet
-    rhhnugcuuegvrhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrg
-    htthgvrhhnpeegfeejhedvledvffeijeeijeeivddvhfeliedvleevheejleetgedukedt
-    gfejveenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpe
-    grrhhnugesrghrnhgusgdruggv
-X-ME-Proxy: <xmx:f59xZkYT3Wv9xpWIF_mEBkOGqxDRYSAjUTMUVwrEsnCGtHPFZBtUNg>
-    <xmx:f59xZvWE3UnO86LAHE9USvBALm8vQFXpk_cY9ZN0D_LcK8RUHCnJJQ>
-    <xmx:f59xZql-5bziqCYF6a0PJwLdsUXs224hiyD-x4D2I_NuvMLZjO4HMA>
-    <xmx:f59xZkdgNXCSsGCNxjscUkN_nfCuq7Y3_NWXXZB5RqmJHufWP3VRew>
-    <xmx:f59xZqt7fQC9zayGrAg38J0AEHme73ZScxYPO6YvwoTaBdM6eYpM1Jjl>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.nyi.internal (Postfix, from userid 501)
-	id 25A2AB60092; Tue, 18 Jun 2024 10:53:50 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
-User-Agent: Cyrus-JMAP/3.11.0-alpha0-522-ga39cca1d5-fm-20240610.002-ga39cca1d
+	s=arc-20240116; t=1718724038; c=relaxed/simple;
+	bh=n/fRSaMQD1tYH9Xuyl9lD+l+43rICCNzQtg/jdEtL6U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Cr3BJfP/g/Yrf4OIZWFDKzL5Vp8aCVlTqDXgrkzt6X3dqdSeAeu5vNkT5hkqjC5bX9LGgU2RcrHw/aA//KEDglXmqpux9Hlo4fwpVpVhqeUyZfULhKzXm9WLAeZpJsyxhhuEZByCE55+Ty+GMF2Lw+dU/FRnTqwYrlPIuh2Og64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de; spf=pass smtp.mailfrom=molgen.mpg.de; arc=none smtp.client-ip=141.14.17.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=molgen.mpg.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=molgen.mpg.de
+Received: from [141.14.220.45] (g45.guest.molgen.mpg.de [141.14.220.45])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: pmenzel)
+	by mx.molgen.mpg.de (Postfix) with ESMTPSA id 9D84B61E5FE01;
+	Tue, 18 Jun 2024 17:19:28 +0200 (CEST)
+Message-ID: <fc546ab5-3ffe-4b72-9d3f-f4807ad4858f@molgen.mpg.de>
+Date: Tue, 18 Jun 2024 17:19:27 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-Id: <b685d5e5-09d3-4916-ad0b-d329c166e149@app.fastmail.com>
-In-Reply-To: <20240527161450.326615-2-herve.codina@bootlin.com>
-References: <20240527161450.326615-1-herve.codina@bootlin.com>
- <20240527161450.326615-2-herve.codina@bootlin.com>
-Date: Tue, 18 Jun 2024 16:53:30 +0200
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Herve Codina" <herve.codina@bootlin.com>,
- "Simon Horman" <horms@kernel.org>,
- "Sai Krishna Gajula" <saikrishnag@marvell.com>,
- "Thomas Gleixner" <tglx@linutronix.de>, "Rob Herring" <robh@kernel.org>,
- "Krzysztof Kozlowski" <krzk+dt@kernel.org>,
- "Conor Dooley" <conor+dt@kernel.org>,
- "David S . Miller" <davem@davemloft.net>,
- "Eric Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>,
- "Paolo Abeni" <pabeni@redhat.com>, "Lee Jones" <lee@kernel.org>,
- "Horatiu Vultur" <horatiu.vultur@microchip.com>,
- UNGLinuxDriver@microchip.com, "Andrew Lunn" <andrew@lunn.ch>,
- "Heiner Kallweit" <hkallweit1@gmail.com>,
- "Russell King" <linux@armlinux.org.uk>,
- "Saravana Kannan" <saravanak@google.com>,
- "Bjorn Helgaas" <bhelgaas@google.com>,
- "Philipp Zabel" <p.zabel@pengutronix.de>,
- "Lars Povlsen" <lars.povlsen@microchip.com>,
- "Steen Hegelund" <Steen.Hegelund@microchip.com>,
- "Daniel Machon" <daniel.machon@microchip.com>,
- "Alexandre Belloni" <alexandre.belloni@bootlin.com>
-Cc: linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
- Netdev <netdev@vger.kernel.org>, linux-pci@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org,
- "Allan Nielsen" <allan.nielsen@microchip.com>,
- "Luca Ceresoli" <luca.ceresoli@bootlin.com>,
- "Thomas Petazzoni" <thomas.petazzoni@bootlin.com>,
- "Clement Leger" <clement.leger@bootlin.com>
-Subject: Re: [PATCH v2 01/19] mfd: syscon: Add reference counting and device managed
- support
-Content-Type: text/plain;charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: Linux warns `Unknown NUMA node; performance will be reduced`
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ Yunsheng Lin <linyunsheng@huawei.com>, Thomas Gleixner <tglx@linutronix.de>,
+ Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+ Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+ LKML <linux-kernel@vger.kernel.org>
+References: <20240611151102.GA963259@bhelgaas>
+Content-Language: en-US
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+In-Reply-To: <20240611151102.GA963259@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Mon, May 27, 2024, at 18:14, Herve Codina wrote:
-> From: Cl=C3=A9ment L=C3=A9ger <clement.leger@bootlin.com>
->
-> Syscon releasing is not supported.
-> Without release function, unbinding a driver that uses syscon whether
-> explicitly or due to a module removal left the used syscon in a in-use
-> state.
->
-> For instance a syscon_node_to_regmap() call from a consumer retrieve a
-> syscon regmap instance. Internally, syscon_node_to_regmap() can create
-> syscon instance and add it to the existing syscon list. No API is
-> available to release this syscon instance, remove it from the list and
-> free it when it is not used anymore.
->
-> Introduce reference counting in syscon in order to keep track of syscon
-> usage using syscon_{get,put}() and add a device managed version of
-> syscon_regmap_lookup_by_phandle(), to automatically release the syscon
-> instance on the consumer removal.
->
-> Signed-off-by: Cl=C3=A9ment L=C3=A9ger <clement.leger@bootlin.com>
-> Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+[Cc: +X86 maintainers]
 
-This all looks correct from an implementation perspective,
-but it does add a lot of complexity if now every syscon user
-feels compelled to actually free up their resources again,
-while nothing else should actually depend on this.
 
-The only reference I found in your series here is the
-reset controller, and it only does a single update to
-the regmap in the probe function.
+Dear Bjorn, dear Linux folks,
 
-Would it be possible to just make the syscon support in
-the reset driver optional and instead poke the register
-in the mfd driver itself when this is used as a pci device?
-Or do you expect to see the syscon get used in other
-places in the future for the PCI case?
 
-      Arnd
+Am 11.06.24 um 17:11 schrieb Bjorn Helgaas:
+> On Mon, Jun 10, 2024 at 10:27:37PM +0200, Paul Menzel wrote:
+>> Am 10.06.24 um 21:42 schrieb Bjorn Helgaas:
+>>> On Sun, Jun 09, 2024 at 10:31:05AM +0200, Paul Menzel wrote:
+>>>> On the servers below Linux warns:
+>>>>
+>>>>        Unknown NUMA node; performance will be reduced
+>>>
+>>> This warning was added by ad5086108b9f ("PCI: Warn if no host bridge
+>>> NUMA node info"), which appeared in v5.5, so I assume this isn't new.
+>>>
+>>> That commit log says:
+>>>
+>>>     In pci_call_probe(), we try to run driver probe functions on the node where
+>>>     the device is attached.  If we don't know which node the device is attached
+>>>     to, the driver will likely run on the wrong node.  This will still work,
+>>>     but performance will not be as good as it could be.
+>>>
+>>>     On NUMA systems, warn if we don't know which node a PCI host bridge is
+>>>     attached to.  This is likely an indication that ACPI didn't supply a _PXM
+>>>     method or the DT didn't supply a "numa-node-id" property.
+>>>
+>>> I assume these are all ACPI systems, so likely missing _PXM.  An
+>>> acpidump could confirm this.
+>>
+>> I created an issue in the Linux Kernel Bugzilla [1] and attached the output
+>> of `acpidump` on a Dell PowerEdge T630 there. The DSDT contains:
+>>
+>>          Device (PCI1)
+>>          {
+>>          […]
+>>              Method (_PXM, 0, NotSerialized)  // _PXM: Device Proximity
+>>              {
+>>                  If ((CLOD == 0x00))
+>>                  {
+>>                      Return (0x01)
+>>                  }
+>>                  Else
+>>                  {
+>>                      Return (0x02)
+>>                  }
+>>              }
+>>          […]
+>>          }
+> 
+> This machine (the T630, from your first message) has several PCI host
+> bridges:
+> 
+>    ACPI: PCI Root Bridge [UNC1] (domain 0000 [bus ff])
+>    pci_bus 0000:ff: root bus resource [bus ff]
+> 
+>    ACPI: PCI Root Bridge [UNC0] (domain 0000 [bus 7f])
+>    pci_bus 0000:7f: root bus resource [bus 7f]
+> 
+>    ACPI: PCI Root Bridge [PCI0] (domain 0000 [bus 00-7e])
+>    pci_bus 0000:00: root bus resource [io  0x0000-0x03bb window]
+>    pci_bus 0000:00: root bus resource [io  0x03bc-0x03df window]
+>    pci_bus 0000:00: root bus resource [io  0x03e0-0x0cf7 window]
+>    pci_bus 0000:00: root bus resource [io  0x1000-0x7fff window]
+>    pci_bus 0000:00: root bus resource [mem 0x000a0000-0x000bffff window]
+>    pci_bus 0000:00: root bus resource [mem 0x90000000-0xc7ffbfff window]
+>    pci_bus 0000:00: root bus resource [mem 0x38000000000-0x3bfffffffff window]
+>    pci_bus 0000:00: root bus resource [bus 00-7e]
+> 
+>    ACPI: PCI Root Bridge [PCI1] (domain 0000 [bus 80-fe])
+>    pci_bus 0000:80: root bus resource [io  0x8000-0xffff window]
+>    pci_bus 0000:80: root bus resource [mem 0xc8000000-0xfbffbfff window]
+>    pci_bus 0000:80: root bus resource [mem 0x3c000000000-0x3ffffffffff window]
+>    pci_bus 0000:80: root bus resource [bus 80-fe]
+> 
+> PCI0 and PCI1 lead to all your normal PCI devices, they both
+> implement _PXM, and they have all the usual apertures for PCI I/O and
+> MMIO space where device BARs live.
+> 
+> UNC0 and UNC1 lead to these special chipset devices, they don't
+> implement _PXM, and they don't have any resources except the bus
+> number.  The devices on bus 7f and ff can only be used via config
+> space accesses, and I have no idea what they are used for.
+
+Maybe the X86 folks now.
+
+
+Kind regards,
+
+Paul
+
+
+>> [1]: https://bugzilla.kernel.org/show_bug.cgi?id=218951
