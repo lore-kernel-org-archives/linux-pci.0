@@ -1,39 +1,39 @@
 Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E786D40879;
-	Wed, 19 Jun 2024 10:15:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 950567F499;
+	Wed, 19 Jun 2024 10:15:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718792136; cv=none; b=Ilf8JNpg6wuw44OYaRAmn61cHIFT05j4cJrVpECR7f8NlLB8teMKmKXEx6gpTGMfXQDG1G/E7hDsyw7qVfjHs8c270vMvQNmHz10qA5a5EnDAmHnAo6IkLdo9nSzyH9u6M5EOHVsIEb41cq+LiKAm8AgkhZVfGmDdF6G/2ybtX0=
+	t=1718792136; cv=none; b=ZxN/9NvMXrglJUXqH3JWCzesd1S4gllvS3dX9tcHNioV0o9Ct3tOBXJx7OGx0rXttGjvd550NhGNBPxRzlBo6c+tToAlFe+mehJJ6LZXWL7OegMH8KOJLLs+mqghTx2TSuTaHKrsTMtJ80Qqu3SjyBOhs1g+ZEK5af+31pfpQU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1718792136; c=relaxed/simple;
-	bh=jCHXzfxyA3cVRfcENK9qyg8NQxzPtrBSSYd3Ot8KwRo=;
+	bh=Hi7CNJIos7Z9zyfmhn8gv5F7wudXu7ivCs1VjXQ08h0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=suhQcmjIqS3uRzZdHMsCSObos9NeBeFxpcniI5Z9Pkr8lH+ugLYIHa9bmLSufaL4/kSgFu6VKZS8AKcguNyEsJTOfPKXFq5wm8om50bdFvG6VgwchFXzUf5tSXkkwupdStUGWnfgVxhv5fu/eNDplth1xGOkRRozv6qycD9c6Zs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=hoXHesme; arc=none smtp.client-ip=217.70.183.196
+	 In-Reply-To:To:Cc; b=nruTbjiGQTarQzBAiRetOA+fZiN5qX2I+GNUjq3HBD9t0QBdlZ9q+11Iz7B9QKXSIBuPK/oYYaWWwbkrYEfY46BNV4geufxuT29s6Wd15PwsdaiART1NY/vPvlb8B4s2QjYBjO8O5vO/IALvyAsh05b/iUf3fFTnUS5/c0dPOA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=O6dYELlR; arc=none smtp.client-ip=217.70.183.196
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="hoXHesme"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 895F0E0005;
-	Wed, 19 Jun 2024 10:15:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="O6dYELlR"
+Received: by mail.gandi.net (Postfix) with ESMTPSA id E696CE000E;
+	Wed, 19 Jun 2024 10:15:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1718792126;
+	t=1718792127;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=miPb/e5NuKGB8qP7OIDdVZ0YjYkj1W+eBv5Jcf20cUo=;
-	b=hoXHesmeIGYW0/XyzfOVW0myeg6/l85iWfR/WV0nET2gN0rZQrq/KcMddLvGMY7aDabht0
-	j+lKqBNhsF0TEWLiyD9eaMwGuLYmlcYLOFWrBBFNMYlElKvgguZx/TppvOA7fduu5gUMUR
-	FTjGkOKjDyuLbQl0aewshKustBCOQ27y7myVIJ05Poi/fcMAhm3gcvbrym7Wv9DpLJekC2
-	nbis74FsjzEL6ghqmoFwGbZNz7BGUGDz3Z/C1JlcS98C2XkD1qxFxkBMmGQFAg2A6zaKFq
-	7kEXTEhzln6zNNdB0wVkd9hESZ3DXA7Yt/y/BV28eLlb4bsXu5SgjqQV1Oog2g==
+	bh=fJFPWxXw72vNyH+gQgC1DthvjYV6wnk21OakN4I7AYs=;
+	b=O6dYELlR2YwvpcvFq8Q8N4nEjBVQtgeiQQ3wBVPNyCXXl0ZvVZf1oVgDoZTWT+A/F8IqXy
+	Eu39528qfpzzxtk1aTYpVRtCSPkbZ8UI3aXOrw+BBHDNV9G077cULmPDTcIVDySUZi3Gj7
+	TQhNOSR/4o9j5KOwf7p0f/H1zrtn53MtPiuCU4ZP4Nh/RYcn8C7Hsa/avUNQQ9kS9tGxB7
+	Nrr4i4bN1n4wu6H3eK/K/LS603V1bfri7wPZwfVXCzHu9TIFrbR8tIQuBza80w7HPnLbT1
+	xyHDg2pohnYpCC0Mau0bfMfz0/KSiLkc6sSK5EO74irQO9pCR9GaMZUQ0QswVg==
 From: Thomas Richard <thomas.richard@bootlin.com>
-Date: Wed, 19 Jun 2024 12:15:09 +0200
-Subject: [PATCH v7 1/7] PCI: cadence: Extract link setup sequence from
- cdns_pcie_host_setup()
+Date: Wed, 19 Jun 2024 12:15:11 +0200
+Subject: [PATCH v7 3/7] PCI: j721e: Use dev_err_probe() in the probe()
+ function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,7 +42,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240102-j7200-pcie-s2r-v7-1-a2f9156da6c3@bootlin.com>
+Message-Id: <20240102-j7200-pcie-s2r-v7-3-a2f9156da6c3@bootlin.com>
 References: <20240102-j7200-pcie-s2r-v7-0-a2f9156da6c3@bootlin.com>
 In-Reply-To: <20240102-j7200-pcie-s2r-v7-0-a2f9156da6c3@bootlin.com>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -54,101 +54,90 @@ Cc: gregory.clement@bootlin.com, theo.lebrun@bootlin.com,
  thomas.petazzoni@bootlin.com, u-kumar1@ti.com, linux-pci@vger.kernel.org, 
  linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org, 
  linux-arm-kernel@lists.infradead.org, 
- Thomas Richard <thomas.richard@bootlin.com>
+ Thomas Richard <thomas.richard@bootlin.com>, 
+ Francesco Dolcini <francesco.dolcini@toradex.com>
 X-Mailer: b4 0.12.0
 X-GND-Sasl: thomas.richard@bootlin.com
 
-The function cdns_pcie_host_setup() mixes probe structure and link setup.
+Use dev_err_probe() instead of dev_err() in the probe() function to
+simplify the code and standardize the error output.
 
-The link setup must be done during the resume sequence. So extract it from
-cdns_pcie_host_setup() and create a dedicated function.
-
-Reviewed-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+Reviewed-by: Francesco Dolcini <francesco.dolcini@toradex.com>
 Signed-off-by: Thomas Richard <thomas.richard@bootlin.com>
 ---
- drivers/pci/controller/cadence/pcie-cadence-host.c | 39 ++++++++++++++--------
- drivers/pci/controller/cadence/pcie-cadence.h      |  6 ++++
- 2 files changed, 32 insertions(+), 13 deletions(-)
+ drivers/pci/controller/cadence/pci-j721e.c | 19 ++++++++-----------
+ 1 file changed, 8 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index 5b14f7ee3c79..93d9922730af 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -497,6 +497,30 @@ static int cdns_pcie_host_init(struct device *dev,
- 	return cdns_pcie_host_init_address_translation(rc);
- }
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index 85718246016b..98484f001562 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -482,20 +482,20 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	pm_runtime_enable(dev);
+ 	ret = pm_runtime_get_sync(dev);
+ 	if (ret < 0) {
+-		dev_err(dev, "pm_runtime_get_sync failed\n");
++		dev_err_probe(dev, ret, "pm_runtime_get_sync failed\n");
+ 		goto err_get_sync;
+ 	}
  
-+int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
-+{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	struct device *dev = rc->pcie.dev;
-+	int ret;
-+
-+	if (rc->quirk_detect_quiet_flag)
-+		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
-+
-+	cdns_pcie_host_enable_ptm_response(pcie);
-+
-+	ret = cdns_pcie_start_link(pcie);
-+	if (ret) {
-+		dev_err(dev, "Failed to start link\n");
-+		return ret;
-+	}
-+
-+	ret = cdns_pcie_host_start_link(rc);
-+	if (ret)
-+		dev_dbg(dev, "PCIe link never came up\n");
-+
-+	return 0;
-+}
-+
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- {
- 	struct device *dev = rc->pcie.dev;
-@@ -533,20 +557,9 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 		return PTR_ERR(rc->cfg_base);
- 	rc->cfg_res = res;
+ 	ret = j721e_pcie_ctrl_init(pcie);
+ 	if (ret < 0) {
+-		dev_err(dev, "pm_runtime_get_sync failed\n");
++		dev_err_probe(dev, ret, "pm_runtime_get_sync failed\n");
+ 		goto err_get_sync;
+ 	}
  
--	if (rc->quirk_detect_quiet_flag)
--		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
--
--	cdns_pcie_host_enable_ptm_response(pcie);
--
--	ret = cdns_pcie_start_link(pcie);
--	if (ret) {
--		dev_err(dev, "Failed to start link\n");
--		return ret;
--	}
--
--	ret = cdns_pcie_host_start_link(rc);
-+	ret = cdns_pcie_host_link_setup(rc);
- 	if (ret)
--		dev_dbg(dev, "PCIe link never came up\n");
-+		return ret;
+ 	ret = devm_request_irq(dev, irq, j721e_pcie_link_irq_handler, 0,
+ 			       "j721e-pcie-link-down-irq", pcie);
+ 	if (ret < 0) {
+-		dev_err(dev, "failed to request link state IRQ %d\n", irq);
++		dev_err_probe(dev, ret, "failed to request link state IRQ %d\n", irq);
+ 		goto err_get_sync;
+ 	}
  
- 	for (bar = RP_BAR0; bar <= RP_NO_BAR; bar++)
- 		rc->avail_ib_bar[bar] = true;
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 7a66a2f815dc..1d37d5f9f811 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -521,10 +521,16 @@ static inline bool cdns_pcie_link_up(struct cdns_pcie *pcie)
- }
+@@ -505,28 +505,25 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	case PCI_MODE_RC:
+ 		gpiod = devm_gpiod_get_optional(dev, "reset", GPIOD_OUT_LOW);
+ 		if (IS_ERR(gpiod)) {
+-			ret = PTR_ERR(gpiod);
+-			if (ret != -EPROBE_DEFER)
+-				dev_err(dev, "Failed to get reset GPIO\n");
++			ret = dev_err_probe(dev, PTR_ERR(gpiod), "Failed to get reset GPIO\n");
+ 			goto err_get_sync;
+ 		}
  
- #ifdef CONFIG_PCIE_CADENCE_HOST
-+int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc);
- int cdns_pcie_host_setup(struct cdns_pcie_rc *rc);
- void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 			       int where);
- #else
-+static inline int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
-+{
-+	return 0;
-+}
-+
- static inline int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- {
- 	return 0;
+ 		ret = cdns_pcie_init_phy(dev, cdns_pcie);
+ 		if (ret) {
+-			dev_err(dev, "Failed to init phy\n");
++			dev_err_probe(dev, ret, "Failed to init phy\n");
+ 			goto err_get_sync;
+ 		}
+ 
+ 		clk = devm_clk_get_optional(dev, "pcie_refclk");
+ 		if (IS_ERR(clk)) {
+-			ret = PTR_ERR(clk);
+-			dev_err(dev, "failed to get pcie_refclk\n");
++			ret = dev_err_probe(dev, PTR_ERR(clk), "failed to get pcie_refclk\n");
+ 			goto err_pcie_setup;
+ 		}
+ 
+ 		ret = clk_prepare_enable(clk);
+ 		if (ret) {
+-			dev_err(dev, "failed to enable pcie_refclk\n");
++			dev_err_probe(dev, ret, "failed to enable pcie_refclk\n");
+ 			goto err_pcie_setup;
+ 		}
+ 		pcie->refclk = clk;
+@@ -554,7 +551,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 	case PCI_MODE_EP:
+ 		ret = cdns_pcie_init_phy(dev, cdns_pcie);
+ 		if (ret) {
+-			dev_err(dev, "Failed to init phy\n");
++			dev_err_probe(dev, ret, "Failed to init phy\n");
+ 			goto err_get_sync;
+ 		}
+ 
 
 -- 
 2.39.2
