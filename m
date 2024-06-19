@@ -1,58 +1,40 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8119514E2D7
-	for <linux-pci@vger.kernel.org>; Wed, 19 Jun 2024 13:52:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 100AD15252D
+	for <linux-pci@vger.kernel.org>; Wed, 19 Jun 2024 14:17:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718805123; cv=none; b=Jba3vTrqaeGGMSMtpykb8ej1ku16SX0J5a+j/aWlimgufg0L7EIsig0fz888xNSNKCLqm7Z54znQB0PBdA47PI35a90U/fqR2A8gLdEgPiLtLYuupmVXHszFOc05BmnmwFv8XB27T51ZmyiGLnUhq6FYwCI1Pfy6w5FLFUakQRE=
+	t=1718806660; cv=none; b=ofMFwbUaRcn+toMPgLAnoY99CVZPopzt86hNJvgWtCjQ6Rrk0CV/FpFF6OByB0zS8dKs1+lDxoSowxw+nPQSII/LqFtXgsGtB816LHky9IpJ6wgRe+oE3XohDzjDwXItio5JlPExGSfhAkcyOmERZ9+NbWOMfQd0dw5nITmESM4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718805123; c=relaxed/simple;
-	bh=Ne4dJOs6adSB2/UchB2CxvXGXprEWZmbqLcksNHoLig=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=fXM5TrgOFHONhX8Df5DVKE3IMhG3SxxgA9lTy7XhYyoGdw/nOoHjn0NAjadFztdcS8q2t0iQ51AlwkuT9SV21QuK/A9m2g9k1XtiuodqFwJOQAxcFAEHT571jNLDiM47UmWiIk7Kxk3FAd9RW47QWzcsTVj/+2jEc+6Fh/oujLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=blqEOqXz; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1718806660; c=relaxed/simple;
+	bh=kJPh6yDEdtOWARX+uasQmBIz7GSmO0MaY3dKgb4yO24=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=N94Q8shQb6PUne8Y2ddMflhE+qUzhxgAxmymufCjeJ5E1izHzAJqkJG8X1awqLbxqhCUggCb4mRk9F4hDxYPxGjPfDQd0TMLLjlB8YePr4BrzOWWJmJbAvspOEW2pcubVAtORbvz5f8YvZviTZjxSd907LnIuFaL1a7P5xHEtg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t6oBF+Cd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="blqEOqXz"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1718805121; x=1750341121;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=Ne4dJOs6adSB2/UchB2CxvXGXprEWZmbqLcksNHoLig=;
-  b=blqEOqXz7nyO9T2RKJqvOByyNSdGhmKqakpUdFH4Hw/17zG3g4+3w4g9
-   bk0zJAzghReqs1W4Mg6PG1ARhFinKetyypBO7xUP23Xcu+yKOmfpn9w5t
-   JRQppXkbr1zOHcoj4NWAP5pFMiLYXDzFamNyCi3owcV7pvB0xYxT3hSbW
-   godaxbFGclH1AqS2Op05dgg0qEU5eA0zeLZnOjlXPCUJHZsQ04EpMT7wB
-   akRTRaSy7mB00Yfb5CMVslz/bbwdf/gjFd8taRgzLRyqChrjUlMdYxrVA
-   fywe7yBKu3Ae7J5J+nRaUigGzRaosvVyPxK2mJLkyO8Byrpu9mv+7Pvmx
-   w==;
-X-CSE-ConnectionGUID: AFWl5G+2R4+BPLzMDjOj/Q==
-X-CSE-MsgGUID: +Ac5XsSPQ4SqipPhy2VlgA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11108"; a="26424062"
-X-IronPort-AV: E=Sophos;i="6.08,250,1712646000"; 
-   d="scan'208";a="26424062"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Jun 2024 06:46:15 -0700
-X-CSE-ConnectionGUID: qTop81ZFSTedgk5nuV4yXA==
-X-CSE-MsgGUID: RHvdy3ndTrS7evbWUYFWWg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.08,250,1712646000"; 
-   d="scan'208";a="42023292"
-Received: from lkp-server01.sh.intel.com (HELO 68891e0c336b) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 19 Jun 2024 06:46:11 -0700
-Received: from kbuild by 68891e0c336b with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1sJvdX-0006eI-2Z;
-	Wed, 19 Jun 2024 13:46:07 +0000
-Date: Wed, 19 Jun 2024 21:45:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:kwilczynski/sysfs-static-resource-attributes] BUILD
- REGRESSION 7f395964ea2fe94ad5099688ff13d6ba89c68f97
-Message-ID: <202406192151.KLjfRFBB-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t6oBF+Cd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23D96C2BBFC;
+	Wed, 19 Jun 2024 14:17:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1718806659;
+	bh=kJPh6yDEdtOWARX+uasQmBIz7GSmO0MaY3dKgb4yO24=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=t6oBF+CdTJqdBcMybqxAn+99Lu4NLdNvq05t794f8fJ/mBYBchDpQVIqKfBtfO8Fk
+	 VfNdENn/IB9mmMydIJRXXFlUqT1euEattK4q6pcSjYGpTEBRIWXT1cvG07wdJ2YTUK
+	 Kt8TRmByc5Mk4PugejkfTTZzpW/ADKh44Fgvz1QQglkKM1M56N7h68eu8htwKPxcmL
+	 KSTaO1WHJ4wyJRZZF1mjIHPjwMVZAVZIqXGKyjMEDmFqa0Uy+fF5VML9HY/5SRdGAn
+	 qI/1wGTXy8xNIBcRhBnQD6vZCid6d22z06uxC3XM2MyXpsWRgdAmn0gVx2QBjXUhBe
+	 ysiSO2E6/0NQg==
+Date: Wed, 19 Jun 2024 09:17:36 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Philip Li <philip.li@intel.com>
+Cc: kernel test robot <lkp@intel.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	linux-pci@vger.kernel.org
+Subject: Re: [pci:endpoint] BUILD REGRESSION
+ 1b2ccd0341a6124d964211bae2ec378fafd0c8b2
+Message-ID: <20240619141736.GA1307542@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,143 +42,28 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZnLe3dOQNg4TZ5HB@rli9-mobl>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git kwilczynski/sysfs-static-resource-attributes
-branch HEAD: 7f395964ea2fe94ad5099688ff13d6ba89c68f97  PCI/sysfs: Limit pci_sysfs_init() late initcall compile time scope
+On Wed, Jun 19, 2024 at 09:36:30PM +0800, Philip Li wrote:
+> On Tue, Jun 18, 2024 at 10:45:03AM -0500, Bjorn Helgaas wrote:
+> > On Fri, Jun 14, 2024 at 10:32:57AM +0800, kernel test robot wrote:
+> > > tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint
+> > > branch HEAD: 1b2ccd0341a6124d964211bae2ec378fafd0c8b2  PCI: endpoint: Make pci_epc_class struct constant
+> > > 
+> > > Error/Warning ids grouped by kconfigs:
+> > > 
+> > > gcc_recent_errors
+> > > `-- sparc-randconfig-002-20240614
+> > >     `-- (.head.text):relocation-truncated-to-fit:R_SPARC_WDISP22-against-init.text
+> > 
+> > Is there any further information about this?  I don't see the config
+> > file to be able to reproduce this failure.
+> 
+> Sorry, kindly ignore this, looks this is a false bisection and it doesn't
+> send out final bisection report. It was wrongly recorded here, and we also
+> need follow up to fix this problem.
 
-Error/Warning reports:
+Great, thank you!  I'll add that patch back in.
 
-https://lore.kernel.org/oe-kbuild-all/202406191615.C3UP7pEc-lkp@intel.com
-https://lore.kernel.org/oe-kbuild-all/202406191749.Tjh9cRdX-lkp@intel.com
-
-Error/Warning: (recently discovered and may have been fixed)
-
-drivers/pci/pci-sysfs.c:971:10: error: 'struct pci_bus' has no member named 'legacy_io'
-drivers/pci/pci-sysfs.c:971:5: error: no member named 'legacy_io' in 'struct pci_bus'
-drivers/pci/pci-sysfs.c:992:10: error: 'struct pci_bus' has no member named 'legacy_mem'
-drivers/pci/pci-sysfs.c:992:5: error: no member named 'legacy_mem' in 'struct pci_bus'
-
-Error/Warning ids grouped by kconfigs:
-
-gcc_recent_errors
-|-- alpha-allmodconfig
-|   |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-|   `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-|-- alpha-allyesconfig
-|   |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-|   `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-|-- powerpc-allmodconfig
-|   |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-|   `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-|-- powerpc-randconfig-001-20240619
-|   |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-|   `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-|-- powerpc-randconfig-003-20240619
-|   |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-|   `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-|-- powerpc64-randconfig-001-20240619
-|   |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-|   `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-`-- powerpc64-randconfig-002-20240619
-    |-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_io
-    `-- drivers-pci-pci-sysfs.c:error:struct-pci_bus-has-no-member-named-legacy_mem
-clang_recent_errors
-|-- powerpc-allyesconfig
-|   |-- drivers-pci-pci-sysfs.c:error:no-member-named-legacy_io-in-struct-pci_bus
-|   `-- drivers-pci-pci-sysfs.c:error:no-member-named-legacy_mem-in-struct-pci_bus
-|-- powerpc-randconfig-002-20240619
-|   |-- drivers-pci-pci-sysfs.c:error:no-member-named-legacy_io-in-struct-pci_bus
-|   `-- drivers-pci-pci-sysfs.c:error:no-member-named-legacy_mem-in-struct-pci_bus
-`-- powerpc64-randconfig-003-20240619
-    |-- drivers-pci-pci-sysfs.c:error:no-member-named-legacy_io-in-struct-pci_bus
-    `-- drivers-pci-pci-sysfs.c:error:no-member-named-legacy_mem-in-struct-pci_bus
-
-elapsed time: 1635m
-
-configs tested: 79
-configs skipped: 0
-
-tested configs:
-arc                   randconfig-001-20240619   gcc-13.2.0
-arc                   randconfig-002-20240619   gcc-13.2.0
-arm                   randconfig-001-20240619   clang-19
-arm                   randconfig-002-20240619   clang-19
-arm                   randconfig-003-20240619   clang-19
-arm                   randconfig-004-20240619   gcc-13.2.0
-arm64                 randconfig-001-20240619   clang-19
-arm64                 randconfig-002-20240619   clang-19
-arm64                 randconfig-003-20240619   clang-19
-arm64                 randconfig-004-20240619   clang-19
-csky                  randconfig-001-20240619   gcc-13.2.0
-csky                  randconfig-002-20240619   gcc-13.2.0
-hexagon               randconfig-001-20240619   clang-15
-hexagon               randconfig-002-20240619   clang-19
-i386         buildonly-randconfig-001-20240619   clang-18
-i386         buildonly-randconfig-002-20240619   clang-18
-i386         buildonly-randconfig-003-20240619   clang-18
-i386         buildonly-randconfig-004-20240619   clang-18
-i386         buildonly-randconfig-005-20240619   gcc-7
-i386         buildonly-randconfig-006-20240619   gcc-7
-i386                  randconfig-001-20240619   gcc-7
-i386                  randconfig-002-20240619   gcc-7
-i386                  randconfig-003-20240619   clang-18
-i386                  randconfig-004-20240619   gcc-7
-i386                  randconfig-005-20240619   clang-18
-i386                  randconfig-006-20240619   gcc-9
-i386                  randconfig-011-20240619   clang-18
-i386                  randconfig-012-20240619   clang-18
-i386                  randconfig-013-20240619   gcc-13
-i386                  randconfig-014-20240619   clang-18
-i386                  randconfig-015-20240619   clang-18
-i386                  randconfig-016-20240619   gcc-13
-loongarch             randconfig-001-20240619   gcc-13.2.0
-loongarch             randconfig-002-20240619   gcc-13.2.0
-nios2                 randconfig-001-20240619   gcc-13.2.0
-nios2                 randconfig-002-20240619   gcc-13.2.0
-parisc                randconfig-001-20240619   gcc-13.2.0
-parisc                randconfig-002-20240619   gcc-13.2.0
-powerpc               randconfig-001-20240619   gcc-13.2.0
-powerpc               randconfig-002-20240619   clang-15
-powerpc               randconfig-003-20240619   gcc-13.2.0
-powerpc64             randconfig-001-20240619   gcc-13.2.0
-powerpc64             randconfig-002-20240619   gcc-13.2.0
-powerpc64             randconfig-003-20240619   clang-19
-riscv                 randconfig-001-20240619   clang-15
-riscv                 randconfig-002-20240619   clang-19
-s390                  randconfig-001-20240619   clang-19
-s390                  randconfig-002-20240619   gcc-13.2.0
-sh                    randconfig-001-20240619   gcc-13.2.0
-sh                    randconfig-002-20240619   gcc-13.2.0
-sparc64               randconfig-001-20240619   gcc-13.2.0
-sparc64               randconfig-002-20240619   gcc-13.2.0
-um                    randconfig-001-20240619   clang-19
-um                    randconfig-002-20240619   clang-19
-x86_64       buildonly-randconfig-001-20240619   clang-18
-x86_64       buildonly-randconfig-002-20240619   clang-18
-x86_64       buildonly-randconfig-003-20240619   gcc-11
-x86_64       buildonly-randconfig-004-20240619   clang-18
-x86_64       buildonly-randconfig-005-20240619   clang-18
-x86_64       buildonly-randconfig-006-20240619   gcc-13
-x86_64                randconfig-001-20240619   gcc-13
-x86_64                randconfig-002-20240619   clang-18
-x86_64                randconfig-003-20240619   gcc-8
-x86_64                randconfig-004-20240619   clang-18
-x86_64                randconfig-005-20240619   clang-18
-x86_64                randconfig-006-20240619   gcc-13
-x86_64                randconfig-011-20240619   gcc-13
-x86_64                randconfig-012-20240619   gcc-13
-x86_64                randconfig-013-20240619   gcc-13
-x86_64                randconfig-014-20240619   clang-18
-x86_64                randconfig-015-20240619   clang-18
-x86_64                randconfig-016-20240619   gcc-11
-x86_64                randconfig-071-20240619   clang-18
-x86_64                randconfig-072-20240619   clang-18
-x86_64                randconfig-073-20240619   gcc-9
-x86_64                randconfig-074-20240619   gcc-9
-x86_64                randconfig-075-20240619   clang-18
-x86_64                randconfig-076-20240619   clang-18
-xtensa                randconfig-002-20240619   gcc-13.2.0
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Bjorn
