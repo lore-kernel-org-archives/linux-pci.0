@@ -1,94 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA6CE1AED20;
-	Thu, 20 Jun 2024 14:30:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C977626AE8;
+	Thu, 20 Jun 2024 14:31:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718893851; cv=none; b=H+6Fk3qkOb4pZQfe36kK87/fGF/sq7Y6DhJoQebZPMBIwjquEJRnt8t4H6Jt+4fkXrtdLO2YiiPYhYlwjoUP8pXWR8S2sihmO/QTY7N3L0JwdPt3OESSc/AIeDBcPS4xpnuWi3XpaZskA4tKdg0peAeO7aqNEbVuz3fiP6pxoXg=
+	t=1718893895; cv=none; b=SYcbeQGq4jvMrUD9GQn/7D47+5ru7/YCnvuO/Ty1P9WTw+EJatBsSO3nDLo0roQAIOPqHIeQs6VlsY+MIbrh47XZMCugj4chXvUilg8MwhOQTMfZNDWsXvD1LRSs9UXd2iE/X/x+fXzSeUVYT4vCZ2f8X/pUVsDBcfEu1VwbIEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718893851; c=relaxed/simple;
-	bh=MCEdSf7+2gNB9bRow0LmNrkJ5TryvBvJFSq8fOZe7Rg=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=cyto9yB/74kHVOGoRXPRM/f/9VBIIEOmttBEDRrT8qQMBvzx+jc+p0TUlZfk7WjEZ3nV3NvR4uG9G7eHgAogYa7CiLpa4GWroshzcl7YceAA6hetUytMrBlpO4284yTvtwqm9laLD3D/StBrTyjTmir1vezlJ75EOTrSblrCKcE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K5MlKvy8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1718893895; c=relaxed/simple;
+	bh=twOrqBFFqDvTjWbRrwIUvXugDfBRMo2UYCoRXgolWI0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NqL6BbTPzsPD9v49SBOlyGzBpRx7OdKSwT2zLl6shbajln2xOEIR/cIGMVYM0Kn1XmiHO24whyps8WXNqQ3TBE8o8mItcsCU6PqVb6d4zg+1k3d09Ztj5F8pDcmnLaaBn2q03E1NhMKsjC7svBDYhqU9kBubqhJpZnoDjLs2SNw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=BUMk0Mla; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K5MlKvy8"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 754EDC4AF08;
-	Thu, 20 Jun 2024 14:30:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1718893850;
-	bh=MCEdSf7+2gNB9bRow0LmNrkJ5TryvBvJFSq8fOZe7Rg=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=K5MlKvy87w2ZwcwG/Mb+ggZHPQRRRAsjnPfz5F/9Rw3ACzo50kWz4W/1sPKRsx2OD
-	 45eJ8PJhfT9C1aSYG2oOOgEz+4pmU2qtcoDQQGDJjKM0vkdc2yPDvx7BKGEKYgUVfJ
-	 FbJJ3SHC715N7y2gwH8X8Iarb/5jC5/Ag2YNJNCp9yR768tH/pzNSKCVNFyqQ+EmGk
-	 Qe94ZYQ3qZ7SE+cBm4X+6bEGLap4rWytkSdmouOPCDSoDglqpewIDO836XoaVi9yvu
-	 NEAxY8FQhqm3R7R7kvd87h48C07OD9j7BGxz2P5qUju6kcFwPuPmw9/B2XOOiweZox
-	 aoPYuE7BiyA6g==
-Received: from aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by aws-us-west-2-korg-oddjob-1.ci.codeaurora.org (Postfix) with ESMTP id 5B2D8E7C4C6;
-	Thu, 20 Jun 2024 14:30:50 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="BUMk0Mla"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7307C2BD10;
+	Thu, 20 Jun 2024 14:31:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1718893895;
+	bh=twOrqBFFqDvTjWbRrwIUvXugDfBRMo2UYCoRXgolWI0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BUMk0Mlawif2Lh2C1AebggyiEXjcm3wOz6JLwY49Dc61L/oBnYnpETH0cXKssDnBY
+	 oFfvs3fqcpIM3S24NG+DpFGuc6CKMZ8bDF2BFLrQiMDBjG+JNbeLsHY/L0nHuVOMXH
+	 nJvMCelrN+kJxCDWRbtfbmtM3EJBfXmTonUlvy3M=
+Date: Thu, 20 Jun 2024 16:31:32 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Danilo Krummrich <dakr@redhat.com>
+Cc: rafael@kernel.org, bhelgaas@google.com, ojeda@kernel.org,
+	alex.gaynor@gmail.com, wedsonaf@gmail.com, boqun.feng@gmail.com,
+	gary@garyguo.net, bjorn3_gh@protonmail.com, benno.lossin@proton.me,
+	a.hindborg@samsung.com, aliceryhl@google.com, airlied@gmail.com,
+	fujita.tomonori@gmail.com, lina@asahilina.net, pstanner@redhat.com,
+	ajanulgu@redhat.com, lyude@redhat.com, robh@kernel.org,
+	daniel.almeida@collabora.com, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2 03/10] rust: implement `IdArray`, `IdTable` and
+ `RawDeviceId`
+Message-ID: <2024062031-untracked-opt-3ff1@gregkh>
+References: <20240618234025.15036-1-dakr@redhat.com>
+ <20240618234025.15036-4-dakr@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH v9 0/2] pwrseq: introduce the subsystem and first driver
-From: patchwork-bot+bluetooth@kernel.org
-Message-Id: 
- <171889385036.4585.6482250630135606154.git-patchwork-notify@kernel.org>
-Date: Thu, 20 Jun 2024 14:30:50 +0000
-References: <20240605123850.24857-1-brgl@bgdev.pl>
-In-Reply-To: <20240605123850.24857-1-brgl@bgdev.pl>
-To: Bartosz Golaszewski <brgl@bgdev.pl>
-Cc: marcel@holtmann.org, luiz.dentz@gmail.com, davem@davemloft.net,
- edumazet@google.com, kuba@kernel.org, pabeni@redhat.com, robh@kernel.org,
- krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org, kvalo@kernel.org,
- andersson@kernel.org, konrad.dybcio@linaro.org, lgirdwood@gmail.com,
- broonie@kernel.org, catalin.marinas@arm.com, will@kernel.org,
- bhelgaas@google.com, saravanak@google.com, geert+renesas@glider.be,
- arnd@arndb.de, neil.armstrong@linaro.org, m.szyprowski@samsung.com,
- elder@linaro.org, srinivas.kandagatla@linaro.org, gregkh@linuxfoundation.org,
- abel.vesa@linaro.org, mani@kernel.org, lukas@wunner.de,
- dmitry.baryshkov@linaro.org, amit.pundir@linaro.org, wuxilin123@gmail.com,
- linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- linux-pm@vger.kernel.org, bartosz.golaszewski@linaro.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20240618234025.15036-4-dakr@redhat.com>
 
-Hello:
-
-This series was applied to bluetooth/bluetooth-next.git (master)
-by Bartosz Golaszewski <bartosz.golaszewski@linaro.org>:
-
-On Wed,  5 Jun 2024 14:38:48 +0200 you wrote:
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+On Wed, Jun 19, 2024 at 01:39:49AM +0200, Danilo Krummrich wrote:
+> From: Wedson Almeida Filho <wedsonaf@gmail.com>
 > 
-> Hi!
+> Most subsystems use some kind of ID to match devices and drivers. Hence,
+> we have to provide Rust drivers an abstraction to register an ID table
+> for the driver to match.
+
+Let's not.
+
+For now, let's stick with the C arrays please.  That way it's simple,
+makes it easy to understand, and you can put the array in a .c file and
+access it that way.  That way also all of our existing infrastructure
+will work properly (I don't know how you deal with the modinfo sections
+here...)
+
+
 > 
-> These are the power sequencing patches sent separately after some
-> improvements suggested by Bjorn Helgaas. I intend to pick them up into a
-> new branch and maintain the subsystem from now on. I then plan to
-> provide an immutable tag to the Bluetooth and PCI subsystems so that the
-> rest of the C changes can be applied. This new branch will then be
-> directly sent to Linus Torvalds for the next merge window.
+> Generally, those IDs are subsystem specific and hence need to be
+> implemented by the corresponding subsystem. However, the `IdArray`,
+> `IdTable` and `RawDeviceId` types provide a generalized implementation
+> that makes the life of subsystems easier to do so.
 > 
-> [...]
+> Co-developed-by: Asahi Lina <lina@asahilina.net>
+> Signed-off-by: Asahi Lina <lina@asahilina.net>
+> Signed-off-by: Wedson Almeida Filho <wedsonaf@gmail.com>
+> Co-developed-by: Danilo Krummrich <dakr@redhat.com>
+> Signed-off-by: Danilo Krummrich <dakr@redhat.com>
+> ---
+>  rust/kernel/device_id.rs | 336 +++++++++++++++++++++++++++++++++++++++
+>  rust/kernel/lib.rs       |   2 +
+>  2 files changed, 338 insertions(+)
+>  create mode 100644 rust/kernel/device_id.rs
+> 
+> diff --git a/rust/kernel/device_id.rs b/rust/kernel/device_id.rs
+> new file mode 100644
+> index 000000000000..c490300f29bb
+> --- /dev/null
+> +++ b/rust/kernel/device_id.rs
 
-Here is the summary with links:
-  - [v9,1/2] power: sequencing: implement the pwrseq core
-    https://git.kernel.org/bluetooth/bluetooth-next/c/249ebf3f65f8
-  - [v9,2/2] power: pwrseq: add a driver for the PMU module on the QCom WCN chipsets
-    https://git.kernel.org/bluetooth/bluetooth-next/c/2f1630f437df
+While I see the temptation to attempt to create a generic class for ids,
+this is all VERY bus specific.  Please just stick with a simple C array
+for now, trying to mess with generic array types of arbitrary structures
+and values and fields is a fun exercise in rust macros, but ick, let's
+worry about that much later.
 
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
+Try to do something "simple" if you really must, like just a pci device
+id list, and if that works, then try USB ids.  And then, if you think
+they look comon, THEN think about maybe combining them into something
+that looks crazy like this.
 
+But not now, no, please, keep it simple.  Stick to C arrays.
 
+greg k-h
