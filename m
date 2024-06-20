@@ -1,131 +1,141 @@
-Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCD051BF32D;
-	Thu, 20 Jun 2024 17:57:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51C441BD505
+	for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2024 18:01:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718906271; cv=none; b=VawZVzNUnDZroT4cPLSwEnO6Y07CMrqxkxrgL1ivB6Vl2jWhPjzMswD9BJhvS5VLooaA73myia/S2KbMMzF13qOt97SkghNuJt5kJQJe9BYCDuRs3GiN4DTvmO0vBGRzZlBZWkodh/WM+sHaIC1Rufs1vxxCWAoySlO8Xtq1Ty4=
+	t=1718906480; cv=none; b=Sk3xAKtZVBYYO9n+34fT5p0k4uvMusZapJeNv7YiAAmRwLhPGGoqJ3BY1fZQtD5DiMgQPQUrXBjanf7rC9+5HtKiLqGq32wC7o07A39+UEWJiuN9Vt7lkv+o5OeyXlyeu/yNTNzzYC9iesRu7c6UvJsBj3CMQG56A1WeoENKBjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718906271; c=relaxed/simple;
-	bh=XG2GU2+zFp405uZad/oPORvyyKH9S5jaQ4HWX9leIiU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=e15OaC6HtrEaW3QgA147Hp9EqWydEZ17nNc0HG167Mv8f5kwdeFOhRysqDafBxl6Wr6O+ByLclOvmjKkrQsOzlataXbRL3bxmFdsYbAFO4v7Nl1xCxcQwjyemHWwaiOsuaXvmF3pIaVIcjgXviyRHP5Gz6m/e231lmpC2nuh04c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hVupu5/H; arc=none smtp.client-ip=209.85.216.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1718906480; c=relaxed/simple;
+	bh=29OxgEL3l6wtk/wr9HSlAcydEGnms+qvS9bonjZCeq4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=U6bxnrXs+GGmMVCITCIIkJPgArgYw9MHUVnJmLPj+YuhYzbKFEv8EmTUzwitPwZIDjaldrLlLjWcS0PzbE/H5biOx7nGaEKy2UyPTQDJ9iVbCWWXcDH3u8pBX6xdR1gN1kE48tuxeLIn4bC5HeVWtFkZH+wjq3O2YgUeA9MxkQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b=hbBLmrTU; arc=none smtp.client-ip=209.85.208.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-foundation.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hVupu5/H"
-Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-2c7b3c513f9so1044678a91.3;
-        Thu, 20 Jun 2024 10:57:49 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux-foundation.org header.i=@linux-foundation.org header.b="hbBLmrTU"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-57d046f4afdso637600a12.1
+        for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2024 11:01:18 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1718906269; x=1719511069; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Dh6DBCUzBIXsYTBDCp5GIVtLCP64sJqenVlYmZsGDjI=;
-        b=hVupu5/H5+dZneVBgBWN4KCPLGzYbfc6+CEbUbh0rNl9ajM2oNoots6DCrchcKm7mr
-         VDFEcXh4pqAsxRpcqdcunlL9V02dKuBwtKmuWwLRt5d0RCX4UMFjZ7zL2ajQZKl7R3Ks
-         zkbrbL41U+sL+FraDGlNuWjFNbFVY2d59Rbvv30iRzD4Y2gWoTJNcPgUaJnagYio8rbC
-         J/fQyMVbWOmu1MYbJuYQJyj9rOb3QfIgvM4pK4Lt3ssdQrkjWUVSxOaCdrvwXeQhTucr
-         Ajit/NsdNIR1oVVdAn3TYZvF92lAJmjk0V2R7T+KSl4Lb6qlint5m8d1IZFpuryzF0a3
-         sJhA==
+        d=linux-foundation.org; s=google; t=1718906476; x=1719511276; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=fuatl8An2r1cXJScFESolD1f90VPFvdc9a3mKIi/oro=;
+        b=hbBLmrTUrpdW0zhFRdPdB116KmBib51iLpI83cu2TGRcZCLJ9y5dHyl7ZmLb+MD6gb
+         yiepW7W/xsNZMVuhCT2o85buCVN1hIq0UchvAT+QYo+QCJ9jxUMdSm4YRtbkJhqjdYI2
+         ldQ0aSg6hsyH/xHCi798DOhGect+T6OjVzdeI=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718906269; x=1719511069;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Dh6DBCUzBIXsYTBDCp5GIVtLCP64sJqenVlYmZsGDjI=;
-        b=FjfvfT6swsg30ptzVgygZqko0kwWjukO2+7lbpcDTEteRCanntocZZIAgsXCrCeBEp
-         GMz7vefABQYYg0itcK9suBZQKS6YJ5YJKfIOeNBUDJTnLtYIM1GhOcH2hVNGuPutyZna
-         ydIsv2r1vbZMv2Dlc4GO5pXpASfmayF1+E7n8D2KVsA8R6loIKNPeJcoUVRGTzLob6n0
-         lZLLMbD3Ka6nmmViuDiUe442Mk0rA9kLpRNbwNAjjP0qkx5P7orz8/R03aS82t35a6w4
-         xZkYOugBtDSy82tudfeRunraDisRqXXClqhtoVoK6JI6vjlLLc+JY+5HCQF0q33HUnNn
-         1ZWw==
-X-Forwarded-Encrypted: i=1; AJvYcCVksFpp5i3t8egpWEroYU2QOGq/1kO3uPiQuc46+wyfcyFclwM9gGqb22be1aNB+rm+0ei9YJoHhAAdveBuQgmh/xIIVwBO02BdIE+htx75ycj0PkzqI3+26VsrFT86lALPbF78d5Vw
-X-Gm-Message-State: AOJu0Yz5TETUKK4RYpvtel4hO2LdWPXHRasus1/JLVc7d1Jd6zrT5qaR
-	l+Ye95o/1Bjqf/0DA1qiigQ2ks3P6uvrQTAt3oNrBgP5+pg0j5NH+BFytqUzN0o=
-X-Google-Smtp-Source: AGHT+IG83Pia9Bm6gkce/miVZL5B0kwBeKxwmNQd+rjCKpzPOZ8JsfwHh5KI+bHzYlygVmWjL4TSuQ==
-X-Received: by 2002:a17:90a:d58a:b0:2c7:c6a1:42d9 with SMTP id 98e67ed59e1d1-2c7c6a144d7mr4361713a91.49.1718906269090;
-        Thu, 20 Jun 2024 10:57:49 -0700 (PDT)
-Received: from localhost ([216.228.127.128])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c7e58d041dsm1993578a91.38.2024.06.20.10.57.48
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jun 2024 10:57:48 -0700 (PDT)
-From: Yury Norov <yury.norov@gmail.com>
-To: linux-kernel@vger.kernel.org,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>,
-	Dexuan Cui <decui@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-hyperv@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Yury Norov <yury.norov@gmail.com>,
-	Alexey Klimov <alexey.klimov@linaro.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jan Kara <jack@suse.cz>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Shtylyov <s.shtylyov@omp.ru>,
-	Michael Kelley <mhklinux@outlook.com>
-Subject: [PATCH v4 14/40] PCI: hv: Optimize hv_get_dom_num() by using find_and_set_bit()
-Date: Thu, 20 Jun 2024 10:56:37 -0700
-Message-ID: <20240620175703.605111-15-yury.norov@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240620175703.605111-1-yury.norov@gmail.com>
-References: <20240620175703.605111-1-yury.norov@gmail.com>
+        d=1e100.net; s=20230601; t=1718906476; x=1719511276;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=fuatl8An2r1cXJScFESolD1f90VPFvdc9a3mKIi/oro=;
+        b=r6F8XtMjW3KjnHSxvxYnufj+lXWOzhxdzs0nrjlTFfjRDcu+8u+Ykvu+iSrHo3TGl7
+         LBKfolSMah1HkIcg5NqXpMtDXB07taPExvJfsZT0Fmfjuq59BbsOrngKRHGWSLRBLLsX
+         0KdLVAqEiIvLtEQr5vs+3d/nhI+IiNpwjXn2zYAq9+DOV3rL5XXcYdcwoAzZBW4oyjg/
+         nS4wznY0NegCIv4sG7WuGF0yYB9Ct8kLaV/HCMab2uZrrNZX2IG9C/H06v38mfkcbs6i
+         yoBRgubVJgoYGrcAhrz7fkxeHucKWichOdzGLqSwz34bRdcpiLH0iUZmPLs6U+OlXwtz
+         sS0g==
+X-Forwarded-Encrypted: i=1; AJvYcCX9B80Hc44WWOMdKHoxiLKT/77HCBRY+ZuH/XKAfJFzWQQnAJIMtqOdEyh6qI7cjktB10HxOLcFQpNd/lYQWsTZhBeX8WLxeBgt
+X-Gm-Message-State: AOJu0YxpXustifq4VrhsNxFpjxNmngGXQjpunJdgl//n7ZduT3tWhXOE
+	GszOKDWELP43ceQK5MI2XlRgrDqZl+n0t+ySmf1ufGL3S1MiTii6DsQ5atwD60aNsAPvyXhnpPA
+	A9vSbgQ==
+X-Google-Smtp-Source: AGHT+IFfklGlSJAIXgio48FLze6L3FQD6gHulxqFIJu80jZ0ah07/XP7Dmkh2InUwODkvL7oCqgbZA==
+X-Received: by 2002:a50:d78b:0:b0:57d:3cf:899d with SMTP id 4fb4d7f45d1cf-57d07e6b69cmr5155125a12.22.1718906476501;
+        Thu, 20 Jun 2024 11:01:16 -0700 (PDT)
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com. [209.85.128.43])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-57cba492acfsm9493052a12.15.2024.06.20.11.01.16
+        for <linux-pci@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 20 Jun 2024 11:01:16 -0700 (PDT)
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-421d32fda86so13998445e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2024 11:01:16 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUd+MWNwUJCBf1Z/8qyAOvLuJ4Lswj6FiBQd+G5y8uZFruH1st4x4qR/gbbeWNJCEpvUNnV2ql55rACHAkVmMUnSwxk+fZPE3fV
+X-Received: by 2002:a50:96cf:0:b0:57c:5874:4f5c with SMTP id
+ 4fb4d7f45d1cf-57d07ea857fmr5124279a12.32.1718906455555; Thu, 20 Jun 2024
+ 11:00:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <20240620175703.605111-1-yury.norov@gmail.com>
+In-Reply-To: <20240620175703.605111-1-yury.norov@gmail.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Date: Thu, 20 Jun 2024 11:00:38 -0700
+X-Gmail-Original-Message-ID: <CAHk-=wiUTXC452qbypG3jW6XCZGfc8d-iehSavxn5JkQ=sv0zA@mail.gmail.com>
+Message-ID: <CAHk-=wiUTXC452qbypG3jW6XCZGfc8d-iehSavxn5JkQ=sv0zA@mail.gmail.com>
+Subject: Re: [PATCH v4 00/40] lib/find: add atomic find_bit() primitives
+To: Yury Norov <yury.norov@gmail.com>
+Cc: linux-kernel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, 
+	"H. Peter Anvin" <hpa@zytor.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
+	"K. Y. Srinivasan" <kys@microsoft.com>, "Md. Haris Iqbal" <haris.iqbal@ionos.com>, 
+	Akinobu Mita <akinobu.mita@gmail.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Bjorn Andersson <andersson@kernel.org>, Borislav Petkov <bp@alien8.de>, Chaitanya Kulkarni <kch@nvidia.com>, 
+	Christian Brauner <brauner@kernel.org>, Damien Le Moal <damien.lemoal@opensource.wdc.com>, 
+	Dave Hansen <dave.hansen@linux.intel.com>, David Disseldorp <ddiss@suse.de>, 
+	Edward Cree <ecree.xilinx@gmail.com>, Eric Dumazet <edumazet@google.com>, 
+	Fenghua Yu <fenghua.yu@intel.com>, Geert Uytterhoeven <geert@linux-m68k.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Gregory Greenman <gregory.greenman@intel.com>, 
+	Hans Verkuil <hverkuil@xs4all.nl>, Hans de Goede <hdegoede@redhat.com>, 
+	Hugh Dickins <hughd@google.com>, Ingo Molnar <mingo@redhat.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Jaroslav Kysela <perex@perex.cz>, Jason Gunthorpe <jgg@ziepe.ca>, Jens Axboe <axboe@kernel.dk>, 
+	Jiri Pirko <jiri@resnulli.us>, Jiri Slaby <jirislaby@kernel.org>, Kalle Valo <kvalo@kernel.org>, 
+	Karsten Graul <kgraul@linux.ibm.com>, Karsten Keil <isdn@linux-pingi.de>, 
+	Kees Cook <keescook@chromium.org>, Leon Romanovsky <leon@kernel.org>, 
+	Mark Rutland <mark.rutland@arm.com>, Martin Habets <habetsm.xilinx@gmail.com>, 
+	Mauro Carvalho Chehab <mchehab@kernel.org>, Michael Ellerman <mpe@ellerman.id.au>, Michal Simek <monstr@monstr.eu>, 
+	Nicholas Piggin <npiggin@gmail.com>, Oliver Neukum <oneukum@suse.com>, Paolo Abeni <pabeni@redhat.com>, 
+	Paolo Bonzini <pbonzini@redhat.com>, Peter Zijlstra <peterz@infradead.org>, 
+	Ping-Ke Shih <pkshih@realtek.com>, Rich Felker <dalias@libc.org>, Rob Herring <robh@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, Sean Christopherson <seanjc@google.com>, 
+	Shuai Xue <xueshuai@linux.alibaba.com>, Stanislaw Gruszka <stf_xl@wp.pl>, 
+	Steven Rostedt <rostedt@goodmis.org>, Thomas Bogendoerfer <tsbogend@alpha.franken.de>, 
+	Thomas Gleixner <tglx@linutronix.de>, Valentin Schneider <vschneid@redhat.com>, 
+	Vitaly Kuznetsov <vkuznets@redhat.com>, Wenjia Zhang <wenjia@linux.ibm.com>, 
+	Will Deacon <will@kernel.org>, Yoshinori Sato <ysato@users.sourceforge.jp>, 
+	GR-QLogic-Storage-Upstream@marvell.com, alsa-devel@alsa-project.org, 
+	ath10k@lists.infradead.org, dmaengine@vger.kernel.org, iommu@lists.linux.dev, 
+	kvm@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-arm-msm@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-bluetooth@vger.kernel.org, linux-hyperv@vger.kernel.org, 
+	linux-m68k@lists.linux-m68k.org, linux-media@vger.kernel.org, 
+	linux-mips@vger.kernel.org, linux-net-drivers@amd.com, 
+	linux-pci@vger.kernel.org, linux-rdma@vger.kernel.org, 
+	linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-serial@vger.kernel.org, linux-sh@vger.kernel.org, 
+	linux-sound@vger.kernel.org, linux-usb@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, netdev@vger.kernel.org, 
+	sparclinux@vger.kernel.org, x86@kernel.org, 
+	Alexey Klimov <alexey.klimov@linaro.org>, Bart Van Assche <bvanassche@acm.org>, Jan Kara <jack@suse.cz>, 
+	Matthew Wilcox <willy@infradead.org>, Mirsad Todorovac <mirsad.todorovac@alu.unizg.hr>, 
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>, Sergey Shtylyov <s.shtylyov@omp.ru>
+Content-Type: text/plain; charset="UTF-8"
 
-The function traverses bitmap with for_each_clear_bit() just to allocate
-a bit atomically. Simplify it by using dedicated find_and_set_bit().
+On Thu, 20 Jun 2024 at 10:57, Yury Norov <yury.norov@gmail.com> wrote:
+>
+>
+> The typical lock-protected bit allocation may look like this:
 
-Signed-off-by: Yury Norov <yury.norov@gmail.com>
-Reviewed-by: Michael Kelley <mhklinux@outlook.com>
-Acked-by: Wei Liu <wei.liu@kernel.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
----
- drivers/pci/controller/pci-hyperv.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+If it looks like this, then nobody cares. Clearly the user in question
+never actually cared about performance, and you SHOULD NOT then say
+"let's optimize this that nobody cares about":.
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 5992280e8110..d8a3ca9a7378 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -37,6 +37,7 @@
-  * the PCI back-end driver in Hyper-V.
-  */
- 
-+#include <linux/find_atomic.h>
- #include <linux/kernel.h>
- #include <linux/module.h>
- #include <linux/pci.h>
-@@ -3599,12 +3600,9 @@ static u16 hv_get_dom_num(u16 dom)
- 	if (test_and_set_bit(dom, hvpci_dom_map) == 0)
- 		return dom;
- 
--	for_each_clear_bit(i, hvpci_dom_map, HVPCI_DOM_MAP_SIZE) {
--		if (test_and_set_bit(i, hvpci_dom_map) == 0)
--			return i;
--	}
-+	i = find_and_set_bit(hvpci_dom_map, HVPCI_DOM_MAP_SIZE);
- 
--	return HVPCI_DOM_INVALID;
-+	return i < HVPCI_DOM_MAP_SIZE ? i : HVPCI_DOM_INVALID;
- }
- 
- /**
--- 
-2.43.0
+Yury, I spend an inordinate amount of time just double-checking your
+patches. I ended up having to basically undo one of them just days
+ago.
 
+New rule: before you send some optimization, you need to have NUMBERS.
+
+Some kind of "look, this code is visible in profiles, so we actually care".
+
+Because without numbers, I'm just not going to pull anything from you.
+These insane inlines for things that don't matter need to stop.
+
+And if they *DO* matter, you need to show that they matter.
+
+               Linus
