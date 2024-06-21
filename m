@@ -1,174 +1,163 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+Received: from mail-lf1-f52.google.com (mail-lf1-f52.google.com [209.85.167.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AEC12EBE7;
-	Fri, 21 Jun 2024 06:19:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44C97155726
+	for <linux-pci@vger.kernel.org>; Fri, 21 Jun 2024 06:36:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1718950755; cv=none; b=SpqwXdigq+MdBaas0f60HkBhyiMQRaGPM/ubHy4uf13KJiH1UTd8gFGXuvwb8q9TKJYz2asiOVZd0v6P6jPxY8xVg5yhZFyYUtq7c2zSmkJniVKgwEIxRKcVReCMXujYFJHcROxJXfpzyNqpO/p9vEPXdFItGAqpasPhfzGuLOU=
+	t=1718951792; cv=none; b=XU2wEDOXGeAtTnTwrN019WfoMsYLmvtsFGEfp58zwLvuCxb4OTuTrUYNt5397QoaBsam0x7tADydAmm/EV1ZAnSyftrljAgCR9VzVm/pPTavXvnRvSYaKf+fB4rGr8sSnQXKbfMGd6zFkm+WN9iLgIs297RovZwgJvFEh1yPnj8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1718950755; c=relaxed/simple;
-	bh=Q7aq0fOpQCJq7F2V7f0fN6ZFA1pO4o0cmFfX4qCWF7I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ltgRW9+JsNw4ELFf23FFMfgfviV1+CoyfEAIgyF4LfHXbQNoaaFdFBVax7a+rRYsWkhyczZyVmnMVDntq7NmtSvmc3t3ZFIdsbAEgSy2rrnzPq1V3ZWFhnWLrWE6N+j1U2uYxmqMfCsDB9SNpvxW99Bz6BklSK/OSH8LgZv3Ki4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-713fa1aea36so841948a12.1;
-        Thu, 20 Jun 2024 23:19:13 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1718950753; x=1719555553;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+	s=arc-20240116; t=1718951792; c=relaxed/simple;
+	bh=tIZJesXUiqyNL0+tf4ZcTxHwPed67ixLIRK/Y7eHy/I=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=B4+D4q/5AEmJK8fEQo0yo/xmDNwCu1uIrlNfjJeXS+7h7snZJWkKvlST/bIk6HhhY2dvR/UCJyK9Rrho6azjuHdyAP/jJcqFQfHQ0BF/PZGFG9RHTfR+swcN5JydFg7eFqWDwC/sf6IV3gbNODwa2feIMiUBTdd1J7gMZXMHtV4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=HUVhUVcB; arc=none smtp.client-ip=209.85.167.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="HUVhUVcB"
+Received: by mail-lf1-f52.google.com with SMTP id 2adb3069b0e04-52c89d6b4adso1571735e87.3
+        for <linux-pci@vger.kernel.org>; Thu, 20 Jun 2024 23:36:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1718951788; x=1719556588; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=aSaqs2iuk6bbR7Lo24Uoxzq+8d0Qih1b+Z3gayAwS6g=;
-        b=L7Bma2q/pS1nN04m84LfopT9ID88/vGuFOmcp5yvm8rxlHU8GtZqkmppNQjtPaBvAP
-         ezzQNVjZF39fOVkNGTwxH8G7WM/vd6wdjfWcejy7kvuKGzAFBKeHl7i/PoO24zSqsHi5
-         AF943waq4bEIvvPwG9T31W7Gsj+beQ7xMPAi3ZLawWyc6S+f4jJKCM69i38gq+GvYPGf
-         sbvOB8nI7/WRCiLb/OPHvsHZuoIKYD2akMxqQgiIw5lXuzbdz9tnc5wS3pT94cS3KLiu
-         hQF+L2sCdX5tmbfRYqRIdVK3vaCbYJl4L8FClIqo4qCI4PyiTujVNS3dww/M7fuQVsPI
-         FQeQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX8evfshVYbA0FRHUD1qQddVpX+EdYzYT5ld/b26Yws5EVJdtlDxDIcu4HUNqji8f8OHnMs/wX9hpqBszBSFzDZ7OH+EMdZwBklYi68+PHxUtzFJeJSz6eEqWH9JiTU1yCC+s1LYbMWNaHh75BpxXEkEYeGSahrlyw0W41SXwhgoShIVL0w
-X-Gm-Message-State: AOJu0YzFk+xdt0zKJslBmMpRHc4MigJtBrV0FYOytn4eW53yVKlgCzki
-	dnOkJAHeTWKp9GkaqeujBGT8PwwAFmxEeKT/tQXYrFeVpHvnrBKD
-X-Google-Smtp-Source: AGHT+IEuyIQlnydbM3TMY4dfAyVKnExSuGL6YCxekVduLB3ih+rOlqd04UekGVmNtLqelXH3TEzIbA==
-X-Received: by 2002:a17:90a:ce90:b0:2c2:db48:aae2 with SMTP id 98e67ed59e1d1-2c7b5dc9c13mr7447980a91.40.1718950753175;
-        Thu, 20 Jun 2024 23:19:13 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2 ([20.69.120.36])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c7e53e2846sm2765014a91.24.2024.06.20.23.19.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 20 Jun 2024 23:19:12 -0700 (PDT)
-Date: Fri, 21 Jun 2024 06:19:05 +0000
-From: Wei Liu <wei.liu@kernel.org>
-To: Michael Kelley <mhklinux@outlook.com>
-Cc: Wei Liu <wei.liu@kernel.org>,
-	Linux on Hyper-V List <linux-hyperv@vger.kernel.org>,
-	"stable@kernel.org" <stable@kernel.org>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Dexuan Cui <decui@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jake Oshins <jakeo@microsoft.com>,
-	"open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" <linux-pci@vger.kernel.org>,
-	open list <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: hv: fix reading of PCI_INTERRUPT_LINE and
- PCI_INTERRUPT_PIN
-Message-ID: <ZnUbWUdVE7q8oNjj@liuwe-devbox-debian-v2>
-References: <20240621014815.263590-1-wei.liu@kernel.org>
- <SN6PR02MB4157C9FD41483E9AC7ED9E70D4C92@SN6PR02MB4157.namprd02.prod.outlook.com>
+        bh=hDlgAx36WtQTmqaDPFS1bjCgqZ49vXGvfFSl1X9D+uI=;
+        b=HUVhUVcBAeDvJ5ZLv1iN1LWfop8ExyJAFdfsg1JKTzJz61HrhU+wCprK6eCgQppvl3
+         87Ev0hVgKDsOwpvg2mP2Vs9sskeVo+EC8InncdH89cRmL7mymKQBKQxTf7BK4gt6JLx1
+         FwGNhlqdkvVDT4gTahsMglZSw4pdSxPT67qqRiqoJ3P9lk8RzQP4zMrzzCy/sTls0Q8J
+         MBCDerIHOSsH0aSWNSGyhNwusYKUAdI0+r6vl52k0YVnh6oIsi3ScQrVJ1t+iC+v2Z8W
+         pS0kxlSmMsd7HHLM9pI8TYKx7Nlx2hPI4TdUnsh/QmfjSR9vmsQTSrCehWz5ZYRZrgHX
+         a0pw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1718951788; x=1719556588;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=hDlgAx36WtQTmqaDPFS1bjCgqZ49vXGvfFSl1X9D+uI=;
+        b=uRlo839z6SAAbobdEQtwH+4Tv0XxCFBfVXsPS6kmkpCl2MU+SR014Ug0cfeyjCN//f
+         iNN4RSYywbs/2QAWikY6iDqEMJACOnRLOkrT9GT7PTPOZlHZOgQ0SDpjRWLaMwOieMvM
+         j82NCGbtP+sZdyiuqfZyKpcHUqOPdJLQKU4t4vP0GxMUHL3oiyuLMH1MfUUbc/XdzrPQ
+         o+26Ei3MnMpmd8K5EiAj4bo50kxcbn9TOeA+PzMJ0dUfvLmeS2fx0DecLC3PJTMAvaY4
+         PZE/0lS3xJ/Qqdudteh1MFfCy9NBdZFo1dWTchIaQESQATNtjAySQPZrrI5RyGSWOKxK
+         azeA==
+X-Forwarded-Encrypted: i=1; AJvYcCWpLHM+0FRw3YFq4I5+lzhdR0xHwynwLPdJ6Lyq3I9tBn71D2Gj/NlgSniGyJWUlecE4LsqLLdVcpBlMo9GsXvWQXwWl7ci5RZM
+X-Gm-Message-State: AOJu0YwoJoXqA0cXR4q56p1xsar92V6sWNazeQvOCX5atw1jQPw4fzfL
+	jD3whKTowG7gYgh6jvQpMYmAFN9ZuPRCtn1RiA0ECy750L5+e9dc9CeTM2HNFXgKKBuBafBNit8
+	4u5XPSOBssVcc81zzQHVkh5BnJp9M8ichCrV2NQ==
+X-Google-Smtp-Source: AGHT+IETcccKM8WA7GpqQapLV3BglD0CyTXI7Fuf3artRzg+wwCccDOMDfEs5iixeaBWfAxzjwo6k5OyfcLU1ZQouHU=
+X-Received: by 2002:a05:6512:33c9:b0:52c:8a4e:f4bf with SMTP id
+ 2adb3069b0e04-52ccaa98d21mr4559244e87.51.1718951788223; Thu, 20 Jun 2024
+ 23:36:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <SN6PR02MB4157C9FD41483E9AC7ED9E70D4C92@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <20240605123850.24857-1-brgl@bgdev.pl> <171889385036.4585.6482250630135606154.git-patchwork-notify@kernel.org>
+ <0b144517-4cc5-4c23-be57-d6f5323690ec@163.com>
+In-Reply-To: <0b144517-4cc5-4c23-be57-d6f5323690ec@163.com>
+From: Bartosz Golaszewski <brgl@bgdev.pl>
+Date: Fri, 21 Jun 2024 08:36:17 +0200
+Message-ID: <CAMRc=Mf2C4ywa+wQ6pcq5RtehQD00dDhzvS6sDcD8tAn=UypUA@mail.gmail.com>
+Subject: Re: [PATCH v9 0/2] pwrseq: introduce the subsystem and first driver
+To: Lk Sii <lk_sii@163.com>
+Cc: patchwork-bot+bluetooth@kernel.org, marcel@holtmann.org, 
+	luiz.dentz@gmail.com, davem@davemloft.net, edumazet@google.com, 
+	kuba@kernel.org, pabeni@redhat.com, robh@kernel.org, 
+	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org, kvalo@kernel.org, 
+	andersson@kernel.org, konrad.dybcio@linaro.org, lgirdwood@gmail.com, 
+	broonie@kernel.org, catalin.marinas@arm.com, will@kernel.org, 
+	bhelgaas@google.com, saravanak@google.com, geert+renesas@glider.be, 
+	arnd@arndb.de, neil.armstrong@linaro.org, m.szyprowski@samsung.com, 
+	elder@linaro.org, srinivas.kandagatla@linaro.org, gregkh@linuxfoundation.org, 
+	abel.vesa@linaro.org, mani@kernel.org, lukas@wunner.de, 
+	dmitry.baryshkov@linaro.org, amit.pundir@linaro.org, wuxilin123@gmail.com, 
+	linux-bluetooth@vger.kernel.org, netdev@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-wireless@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
+	linux-pm@vger.kernel.org, bartosz.golaszewski@linaro.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jun 21, 2024 at 03:15:19AM +0000, Michael Kelley wrote:
-> From: Wei Liu <wei.liu@kernel.org> Sent: Thursday, June 20, 2024 6:48 PM
-> > 
-> > The intent of the code snippet is to always return 0 for both fields.
-> > The check is wrong though. Fix that.
-> > 
-> > This is discovered by this call in VFIO:
-> > 
-> >     pci_read_config_byte(vdev->pdev, PCI_INTERRUPT_PIN, &pin);
-> > 
-> > The old code does not set *val to 0 because the second half of the check is
-> > incorrect.
-> > 
-> > Fixes: 4daace0d8ce85 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V
-> > VMs")
-> > Cc: stable@kernel.org
-> > Signed-off-by: Wei Liu <wei.liu@kernel.org>
-> > ---
-> >  drivers/pci/controller/pci-hyperv.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-> > index 5992280e8110..eec087c8f670 100644
-> > --- a/drivers/pci/controller/pci-hyperv.c
-> > +++ b/drivers/pci/controller/pci-hyperv.c
-> > @@ -1130,8 +1130,8 @@ static void _hv_pcifront_read_config(struct hv_pci_dev
-> > *hpdev, int where,
-> >  		   PCI_CAPABILITY_LIST) {
-> >  		/* ROM BARs are unimplemented */
-> >  		*val = 0;
-> > -	} else if (where >= PCI_INTERRUPT_LINE && where + size <=
-> > -		   PCI_INTERRUPT_PIN) {
-> > +	} else if ((where == PCI_INTERRUPT_LINE || where == PCI_INTERRUPT_PIN) &&
-> > +		   size == 1) {
-> 
-> Any reason not to continue the pattern of the rest of the function,
-> and do the following to fix the bug?
-> 
->    	} else if (where >= PCI_INTERRUPT_LINE && where + size <= 
->   		   PCI_MIN_GNT) {
-> 
-> Your fix doesn't allow PCI_INTERRUPT_LINE and PCI_INTERRUPT_PIN
-> to be read together as a 2-byte access, though I don't know if that
-> matters.
+On Fri, Jun 21, 2024 at 3:14=E2=80=AFAM Lk Sii <lk_sii@163.com> wrote:
+>
+>
+>
+> On 2024/6/20 22:30, patchwork-bot+bluetooth@kernel.org wrote:
+> > Hello:
+> >
+> > This series was applied to bluetooth/bluetooth-next.git (master)
+> > by Bartosz Golaszewski <bartosz.golaszewski@linaro.org>:
+> >
+> Hi luiz,
+>
+> i am curious why Bartosz is able to merge his changes into bluetooth
+> development tree bluetooth-next directly.
+>
 
-I don't think this is a sane use case. Someone calls
-pci_read_config_word on PCI_INTERRUPT_LINE and then breaks the two
-fields out from a word size value.
+This conversation is getting progressively worse...
 
-There is only one in-tree instance attempting to read both fields at the
-same time.  And it gets away with it because it immediately writes the
-same value back to another register.
+> 1)
+> his changes should belong to *POWER* scope instead of *Bluetooth*
+> obviously, however, there are *NOT* any SOB tag from either power and
+> bluetooth maintainer. these changes currently only have below Acked-by
+> and Signed-off-by tags:
+>
+> Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+> Signed-off-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+>
 
-(Search for PCI_INTERRUPT_LINE in sound/pci/ctxfi/cthw20k1.c)
+It's a new subsystem that has been discussed and reviewed for months
+and thoroughly tested. Please refer to the cover letter under v8
+linked in this thread. It's not related to power-management or
+power-supply, it's its own thing but IMO the best place to put it is
+under drivers/power/. And I will maintain it.
 
-The rest of the code always does a byte read.
+> 2)
+> his changes have not merged into linus mainline tree yet.
+>
 
-I had a version that looked like this:
+This is why they are in next! They are scheduled to go in during the
+upcoming merge window. But since changes belong in multiple trees, we
+need a cross-tree merge.
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 5992280e8110..cdd5be16021d 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1130,8 +1130,8 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
-                   PCI_CAPABILITY_LIST) {
-                /* ROM BARs are unimplemented */
-                *val = 0;
--       } else if (where >= PCI_INTERRUPT_LINE && where + size <=
--                  PCI_INTERRUPT_PIN) {
-+       } else if ((where >= PCI_INTERRUPT_LINE && where + size <= PCI_INTERRUPT_PIN) ||
-+                  (where >= PCI_INTERRUPT_PIN && where + size <= PCI_MIN_GNT)) {
-                /*
-                 * Interrupt Line and Interrupt PIN are hard-wired to zero
-                 * because this front-end only supports message-signaled
+> 3)
+> perhaps, it is safer to pull his changes from linus mainline tree when
+> merged than to merge into bluetooth-next firstly.
+>
 
-It was consistent with the old style. But I thought it was a bit too
-tedious to read, so I changed to the current version.
+It's not safer at all, why would spending less time in next be safer?
 
-At the very least I would like to enforce the separation of the two
-fields. 
+> > On Wed,  5 Jun 2024 14:38:48 +0200 you wrote:
+> >> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+> >>
+> >> Hi!
+> >>
+> >> These are the power sequencing patches sent separately after some
+> >> improvements suggested by Bjorn Helgaas. I intend to pick them up into=
+ a
+> >> new branch and maintain the subsystem from now on. I then plan to
+> >> provide an immutable tag to the Bluetooth and PCI subsystems so that t=
+he
+> >> rest of the C changes can be applied. This new branch will then be
+> >> directly sent to Linus Torvalds for the next merge window.
+> >>
+> >> [...]
+> >
+> > Here is the summary with links:
+> >   - [v9,1/2] power: sequencing: implement the pwrseq core
+> >     https://git.kernel.org/bluetooth/bluetooth-next/c/249ebf3f65f8
+> >   - [v9,2/2] power: pwrseq: add a driver for the PMU module on the QCom=
+ WCN chipsets
+> >     https://git.kernel.org/bluetooth/bluetooth-next/c/2f1630f437df
+> >
+> > You are awesome, thank you!
+>
 
-I can send out the older version tomorrow -- just waiting for others to
-chime in.
+Why are you top-posting anyway?
 
-Thanks,
-Wei.
-
-
-> 
-> I have a slight preference for the more consistent approach, but
-> don't really object to what you've done.  Treat my idea as a
-> suggestion to consider, but if you want to go with your approach,
-> that's OK too.
-> 
-> Michael
-> 
-> >  		/*
-> >  		 * Interrupt Line and Interrupt PIN are hard-wired to zero
-> >  		 * because this front-end only supports message-signaled
-> > --
-> > 2.43.0
-> > 
-> 
-> 
+Bart
