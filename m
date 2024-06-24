@@ -1,75 +1,111 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-15.smtpout.orange.fr [80.12.242.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EB8319FA7C;
-	Mon, 24 Jun 2024 19:54:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FBF51CFBC;
+	Mon, 24 Jun 2024 20:18:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719258883; cv=none; b=KdPhk9yTK57rKzq3LoMBfgDAtZMPuNh2Wy7Z98rYeR//Q29AL7OQ9WVsBv4BBqznwvuH5KeSyS+7eNSHNesf03fRRfD17y8HjeXzT3ZdXDfJoYVjFF9K9MTcxOaCA8Hi5dR9OdgfRtloAu1PfgKMv+CXy8ouTKodfVsUgjxJCc8=
+	t=1719260314; cv=none; b=J5M8RiiJG+mJYD6CpNug0ie2CD1ycj66jhJVyPAT+86aZ+D4PPkh6ZBisVaktmq0QIeMbyQF4PhKIrUXSsO/eU9MAl9yZY0M75Zt8tDTtgklit/VKlMQ/DOjiplS+Mz8Dps6bWppAGy6iOIHUgA1FyU1FlkuWYvqF/ltedbgYW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719258883; c=relaxed/simple;
-	bh=YjeIZMTsd0omzx/GT5djMmpkMHF0TUzcmkFbGvfVmVI=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=YN7C9H8tqeV7cKjhlniGzJZHpc2+RcPWq+izeA7XrTw9FAjWvQjtbcHBvuxR53k9OZReJ76k7t+f53LphWAMsxvAwwVSzSH0OV5yFcQMBq8ljSIQlTi9fJlbgOcsby2EysREUlQoHC6MEZGWIA6N2H5SDJ5p83XbT1FiIAYRKLM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=mdn+WCiP; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1719260314; c=relaxed/simple;
+	bh=jAF20gD7kIYUViHBMXcExfj8B25lKFFEaqEeRRIJKmc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t8mv3sC5JNE4L3Ypt9uTYOV0wM9eMdE3vHmGQwxvJDp34dhEShO6067IqnmB0nNyKBOeDHZdBaYCe3cJIBg2zXFhE/Svx9sMNvACMZOj7WuH6Z/VAZRz7GHHdUU1L4DWVGpoOpon1Yd799LR2nYOXjVcYgNdheQilFqdv+UIQgQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=ifJ4WqkA; arc=none smtp.client-ip=80.12.242.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="mdn+WCiP"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=YjeIZMTsd0omzx/GT5djMmpkMHF0TUzcmkFbGvfVmVI=; b=mdn+WCiPlUD/e/xuATkjETArAY
-	n6Eb+FlQbES0RDhy/Z7P/A2jM/xplHg2O+Coq12Rk8c09YT5qCkYewIvscGHj+QqLfriHkOuQTyQT
-	NE8+GzCVW/3cI/736SyYclnQR0kAxcXlBJWqgjwPuEoKXScJbcB31ObM4mWrhnDLgQbtyjMVR16MI
-	zqgzC1wMo3c4u+Tt2A/reaeYdcSCc7yvg/c8WvBqnMwC3JnIUxXaxuMgZj+8cXhVFSFOvm2SyGBAj
-	m3SIrNieBIMrBgitaOEoD1q91yZGsivZ3xyRfXaaBLl9tUTUwWMa2f3+csMT9rhpNyp9XjjiTrCr8
-	YSHocFnA==;
-Received: from d104-157-31-28.abhsia.telus.net ([104.157.31.28] helo=[192.168.1.250])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1sLpP5-00AMSm-0E;
-	Mon, 24 Jun 2024 13:31:11 -0600
-Message-ID: <6e2dc59a-445d-435e-9066-4a00119acf02@deltatee.com>
-Date: Mon, 24 Jun 2024 13:31:01 -0600
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="ifJ4WqkA"
+Received: from fedora.home ([86.243.222.230])
+	by smtp.orange.fr with ESMTPA
+	id Lq8tsVsCWs2bgLq8tsSHG0; Mon, 24 Jun 2024 22:18:24 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1719260304;
+	bh=elAOlOG1WOr8pdRvT+PF6Vndcsz+yUNDpa4N3XRDGSw=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version;
+	b=ifJ4WqkAbLBGSWvEokziSvQHFJTuyUYl/RfhR/1tlyof7+bpgmvEoRQALwZQNtaEn
+	 ga/u/N2xFXPHx0IYqqC6E3XAA72bCLVsxYk9+kDwCOiJUDYjIoqweDdNS+fGhBL9wS
+	 0HsLTaOrs9xRyy3gLNIF52BViT1qdbJoy7I3/y4ZbAHQhPPJsAnLSJLq4/g/zgmsla
+	 Rx2jwVrPHyW2yy7201CyyB98m0BqJPPq6KlUw4V1BkLXsX34uOdAqAsTh3In7HNmGr
+	 IPHApck+2r0VajUHdKn+UdYXhIT0Aoi8B5yYS3sLmTBSil34Mx472NKw3t00kEEzR0
+	 gSBk/gLU7Qazw==
+X-ME-Helo: fedora.home
+X-ME-Auth: Y2hyaXN0b3BoZS5qYWlsbGV0QHdhbmFkb28uZnI=
+X-ME-Date: Mon, 24 Jun 2024 22:18:24 +0200
+X-ME-IP: 86.243.222.230
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: Hou Zhiqiang <Zhiqiang.Hou@nxp.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>
+Cc: linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] PCI: ls-gen4: Constify struct mobiveil_rp_ops
+Date: Mon, 24 Jun 2024 22:18:20 +0200
+Message-ID: <189fd881cc8fd80220e74e91820e12cf3a5be114.1719260294.git.christophe.jaillet@wanadoo.fr>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Bjorn Helgaas <helgaas@kernel.org>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: linux-pci@vger.kernel.org, bhelgaas@google.com,
- linux-kernel@vger.kernel.org, sumanesh.samanta@broadcom.com,
- sathya.prakash@broadcom.com
-References: <20240621205327.GA1374772@bhelgaas>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20240621205327.GA1374772@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 104.157.31.28
-X-SA-Exim-Rcpt-To: helgaas@kernel.org, shivasharan.srikanteshwara@broadcom.com, linux-pci@vger.kernel.org, bhelgaas@google.com, linux-kernel@vger.kernel.org, sumanesh.samanta@broadcom.com, sathya.prakash@broadcom.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH 1/2] switch_discovery: Add new module to discover inter
- switch links between PCI-to-PCI bridges
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Transfer-Encoding: 8bit
 
+'struct mobiveil_rp_ops' is not modified in this driver.
 
+Constifying this structure moves some data to a read-only section, so
+increase overall security.
 
-On 2024-06-21 14:53, Bjorn Helgaas wrote:
-> [+cc Logan]
+On a x86_64, with allmodconfig, as an example:
+Before:
+======
+   text	   data	    bss	    dec	    hex	filename
+   4446	    336	     32	   4814	   12ce	drivers/pci/controller/mobiveil/pcie-layerscape-gen4.o
 
-My apologies. I'm dealing with some health issues at the moment and I'm
-not able to review this in a timely fashion.
+After:
+=====
+   text	   data	    bss	    dec	    hex	filename
+   4454	    328	     32	   4814	   12ce	drivers/pci/controller/mobiveil/pcie-layerscape-gen4.o
 
-I'll try to review this when I'm able but that may not be for a few weeks.
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+Compile tested-only
+---
+ drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c | 2 +-
+ drivers/pci/controller/mobiveil/pcie-mobiveil.h        | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Thanks,
+diff --git a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+index d7b7350f02dd..5af22bee913b 100644
+--- a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
++++ b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+@@ -190,7 +190,7 @@ static void ls_g4_pcie_reset(struct work_struct *work)
+ 	ls_g4_pcie_enable_interrupt(pcie);
+ }
+ 
+-static struct mobiveil_rp_ops ls_g4_pcie_rp_ops = {
++static const struct mobiveil_rp_ops ls_g4_pcie_rp_ops = {
+ 	.interrupt_init = ls_g4_pcie_interrupt_init,
+ };
+ 
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+index 6082b8afbc31..e63abb887ee3 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+@@ -151,7 +151,7 @@ struct mobiveil_rp_ops {
+ struct mobiveil_root_port {
+ 	void __iomem *config_axi_slave_base;	/* endpoint config base */
+ 	struct resource *ob_io_res;
+-	struct mobiveil_rp_ops *ops;
++	const struct mobiveil_rp_ops *ops;
+ 	int irq;
+ 	raw_spinlock_t intx_mask_lock;
+ 	struct irq_domain *intx_domain;
+-- 
+2.45.2
 
-Logan
