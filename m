@@ -1,78 +1,79 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6240917D34C;
-	Wed, 26 Jun 2024 10:46:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CEFF17F4F0;
+	Wed, 26 Jun 2024 10:46:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719398808; cv=none; b=LmhgKDrqaR8+b0dii3XN+71qiidGDnJGCXcnpIITrHTx1+PVbl3dQ+yZS7TvFTECh3and9MLZPRG+RAcNsaB5yanOJBFOjcf7muM/9Zo4vndITFkBRvfnnZ4kjjWJDZZTpyp6ZNEOk0YGXKJ814MUcTtJn2fojdvVtzGVZ5QinI=
+	t=1719398810; cv=none; b=d2zub/v88sGBCQgTX7gcORe/eBcZI6CuY8vPQuFSv3VYyVz4hkfFXYmZm3DUz2ToFzDaIPGJOdz2xQRxYoaTKTskLnyxVfB6tkAjVpIbeB9XjKMMB3yT8DARnomIN29DSiE8IvOZHyrvxTA1HeSAUHoxeSPLTFb32acKQJ/m6oI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719398808; c=relaxed/simple;
-	bh=hBvKT+woKDc6d5S9L2xndSzH0DYvu4by448J24njEIg=;
+	s=arc-20240116; t=1719398810; c=relaxed/simple;
+	bh=k25WT7wQufddlnJMtTU17m/2MP4gRCuw4YxiroFBeWM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UO8NdJbRpR4zQjzM3PE3nZcPpsA7Ix3VdK5ieXaHVBlME2LIE4c0qXrOqwqaAAV9ojmbtDTcAHD1VWGSld6b3vf5as1SY01Sgtzoo/3cULFaN+TsLPxZGqtipJtFyvdgbGHSyeYuBjeQHYGrY4iRYqS3iXFflgkQojC8c/+qR38=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LYD0VyRe; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fWRKKU8/; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LYD0VyRe; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fWRKKU8/; arc=none smtp.client-ip=195.135.223.131
+	 MIME-Version; b=C1ZIzSfxOWk8Cn5DQH2ipYS9pHAyobaxCDIBeqMWYsPKiDWMKyy/tOYKDV+CmSeoqEnQx4YaWm88bcpoFxiVZQnB7alx1MJsJFOWKfXpLJeLjph+ZRppwBjnlagbNHezupL9Abr0JIKvfuipdLHOC8C13WGAasYbGAj0gJUrCys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=OTA7hDlZ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=lAhDT4gG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=OTA7hDlZ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=lAhDT4gG; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LYD0VyRe";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fWRKKU8/";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LYD0VyRe";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fWRKKU8/"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="OTA7hDlZ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="lAhDT4gG";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="OTA7hDlZ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="lAhDT4gG"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id B01371FB51;
-	Wed, 26 Jun 2024 10:46:44 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 35DC121A7B;
+	Wed, 26 Jun 2024 10:46:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719398804; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1719398801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rG7TLenaNhdBfSdkJB+HAnNqfUqW1wpICxeiaL35Lq0=;
-	b=LYD0VyRekFKWEwRAYMw1Rhuja3JXZPU0Tkp99PEGrGlWCxbPnjNUkAEzeC8W6Yoo1XgLGr
-	DKuruYHATU+5FkPPw7lJl4G+OFqj4BvyZn4dGUHoTzGYbOxG9WoSSTtjSCw295NA/BPDkG
-	qBeky35y7ao4zyLRft5sl/OBgd5FdX8=
+	bh=2434HIjtjtyvW7COVv7pzKRXGIJaqq7Io+dvzhKQV/M=;
+	b=OTA7hDlZvtG/bZHm8by33VFrSXcpX7MT+sb7qCMYZzVyh0BF4t154pmW8Jk7CWYSPP03eq
+	CDuktCnM+CZv5fNLqijeA3AFIRiUEKz99z9DDrIOifgcDV/UPwlIvjrmLOta6iVeJBx/Y4
+	fT2a09GSzLq9oyBBKKL4RsCuj/YMS/s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719398804;
+	s=susede2_ed25519; t=1719398801;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rG7TLenaNhdBfSdkJB+HAnNqfUqW1wpICxeiaL35Lq0=;
-	b=fWRKKU8/0R66UJsrYAUGbDLBRHGeXUaymd42YQaK6aTjxQr+FzbvO+YurxCxEr2FRxrKpq
-	TD0mnYXrWzoEayCw==
-Authentication-Results: smtp-out2.suse.de;
-	none
+	bh=2434HIjtjtyvW7COVv7pzKRXGIJaqq7Io+dvzhKQV/M=;
+	b=lAhDT4gGJfqHjccwgN9yOY4SFgz+JcNZ2vQZJAQo+v/rh3YxkFgbwtdgsNiW2rbrqjSBFg
+	KVzNkTay4aSo3eCQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=OTA7hDlZ;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=lAhDT4gG
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719398804; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1719398801; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rG7TLenaNhdBfSdkJB+HAnNqfUqW1wpICxeiaL35Lq0=;
-	b=LYD0VyRekFKWEwRAYMw1Rhuja3JXZPU0Tkp99PEGrGlWCxbPnjNUkAEzeC8W6Yoo1XgLGr
-	DKuruYHATU+5FkPPw7lJl4G+OFqj4BvyZn4dGUHoTzGYbOxG9WoSSTtjSCw295NA/BPDkG
-	qBeky35y7ao4zyLRft5sl/OBgd5FdX8=
+	bh=2434HIjtjtyvW7COVv7pzKRXGIJaqq7Io+dvzhKQV/M=;
+	b=OTA7hDlZvtG/bZHm8by33VFrSXcpX7MT+sb7qCMYZzVyh0BF4t154pmW8Jk7CWYSPP03eq
+	CDuktCnM+CZv5fNLqijeA3AFIRiUEKz99z9DDrIOifgcDV/UPwlIvjrmLOta6iVeJBx/Y4
+	fT2a09GSzLq9oyBBKKL4RsCuj/YMS/s=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719398804;
+	s=susede2_ed25519; t=1719398801;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rG7TLenaNhdBfSdkJB+HAnNqfUqW1wpICxeiaL35Lq0=;
-	b=fWRKKU8/0R66UJsrYAUGbDLBRHGeXUaymd42YQaK6aTjxQr+FzbvO+YurxCxEr2FRxrKpq
-	TD0mnYXrWzoEayCw==
+	bh=2434HIjtjtyvW7COVv7pzKRXGIJaqq7Io+dvzhKQV/M=;
+	b=lAhDT4gGJfqHjccwgN9yOY4SFgz+JcNZ2vQZJAQo+v/rh3YxkFgbwtdgsNiW2rbrqjSBFg
+	KVzNkTay4aSo3eCQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9B626139C2;
-	Wed, 26 Jun 2024 10:46:43 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2620013AD2;
+	Wed, 26 Jun 2024 10:46:40 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 0K4hI5Pxe2ZuDQAAD6G6ig
-	(envelope-from <svarbanov@suse.de>); Wed, 26 Jun 2024 10:46:43 +0000
+	id AJKUBpDxe2ZuDQAAD6G6ig
+	(envelope-from <svarbanov@suse.de>); Wed, 26 Jun 2024 10:46:40 +0000
 From: Stanimir Varbanov <svarbanov@suse.de>
 To: linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org,
@@ -95,9 +96,9 @@ Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Phil Elwell <phil@raspberrypi.com>,
 	Jonathan Bell <jonathan@raspberrypi.com>,
 	Stanimir Varbanov <svarbanov@suse.de>
-Subject: [PATCH 4/7] PCI: brcmstb: Reuse config structure
-Date: Wed, 26 Jun 2024 13:45:41 +0300
-Message-ID: <20240626104544.14233-5-svarbanov@suse.de>
+Subject: [PATCH 1/7] dt-bindings: interrupt-controller: Add bcm2712 MSI-X DT bindings
+Date: Wed, 26 Jun 2024 13:45:38 +0300
+Message-ID: <20240626104544.14233-2-svarbanov@suse.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240626104544.14233-1-svarbanov@suse.de>
 References: <20240626104544.14233-1-svarbanov@suse.de>
@@ -108,186 +109,131 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -1.30
+X-Rspamd-Queue-Id: 35DC121A7B
+X-Spam-Score: -1.51
 X-Spam-Level: 
 X-Spam-Flag: NO
-X-Spamd-Result: default: False [-1.30 / 50.00];
+X-Spamd-Result: default: False [-1.51 / 50.00];
 	BAYES_HAM(-3.00)[100.00%];
 	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_CONTAINS_FROM(1.00)[];
 	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[dt];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo];
+	MX_GOOD(-0.01)[];
 	RCPT_COUNT_TWELVE(0.00)[21];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FREEMAIL_CC(0.00)[linutronix.de,kernel.org,broadcom.com,gmail.com,google.com,linux.com,pengutronix.de,suse.com,raspberrypi.com,suse.de];
-	FROM_HAS_DN(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
 	FUZZY_BLOCKED(0.00)[rspamd.com];
-	R_RATELIMIT(0.00)[to_ip_from(RL7mwea5a3cdyragbzqhrtit3y)];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FREEMAIL_CC(0.00)[linutronix.de,kernel.org,broadcom.com,gmail.com,google.com,linux.com,pengutronix.de,suse.com,raspberrypi.com,suse.de];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim];
+	TAGGED_RCPT(0.00)[dt];
+	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	R_RATELIMIT(0.00)[to_ip_from(RLw7mkaud87zuqqztkur5718rm)];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
 	FREEMAIL_ENVRCPT(0.00)[gmail.com]
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-Instead of copying fields from pcie_cfg_data structure to
-brcm_pcie reference it directly.
+Adds DT bindings for bcm2712 MSI-X interrupt peripheral controller.
 
 Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 44 ++++++++++++---------------
- 1 file changed, 20 insertions(+), 24 deletions(-)
+ .../brcm,bcm2712-msix.yaml                    | 74 +++++++++++++++++++
+ 1 file changed, 74 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2712-msix.yaml
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index c08683febdd4..4ca509502336 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -184,9 +184,9 @@
- #define SSC_STATUS_PLL_LOCK_MASK	0x800
- #define PCIE_BRCM_MAX_MEMC		3
- 
--#define IDX_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_INDEX])
--#define DATA_ADDR(pcie)			(pcie->reg_offsets[EXT_CFG_DATA])
--#define PCIE_RGR1_SW_INIT_1(pcie)	(pcie->reg_offsets[RGR1_SW_INIT_1])
-+#define IDX_ADDR(pcie)			((pcie)->cfg->offsets[EXT_CFG_INDEX])
-+#define DATA_ADDR(pcie)			((pcie)->cfg->offsets[EXT_CFG_DATA])
-+#define PCIE_RGR1_SW_INIT_1(pcie)	((pcie)->cfg->offsets[RGR1_SW_INIT_1])
- 
- /* Rescal registers */
- #define PCIE_DVT_PMU_PCIE_PHY_CTRL				0xc700
-@@ -261,22 +261,19 @@ struct brcm_pcie {
- 	int			gen;
- 	u64			msi_target_addr;
- 	struct brcm_msi		*msi;
--	const int		*reg_offsets;
--	enum pcie_type		type;
- 	struct reset_control	*rescal;
- 	struct reset_control	*perst_reset;
- 	int			num_memc;
- 	u64			memc_size[PCIE_BRCM_MAX_MEMC];
- 	u32			hw_rev;
--	void			(*perst_set)(struct brcm_pcie *pcie, u32 val);
--	void			(*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
- 	struct subdev_regulators *sr;
- 	bool			ep_wakeup_capable;
-+	const struct pcie_cfg_data	*cfg;
- };
- 
- static inline bool is_bmips(const struct brcm_pcie *pcie)
- {
--	return pcie->type == BCM7435 || pcie->type == BCM7425;
-+	return pcie->cfg->type == BCM7435 || pcie->cfg->type == BCM7425;
- }
- 
- /*
-@@ -878,16 +875,16 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	int ret, memc;
- 
- 	/* Reset the bridge */
--	pcie->bridge_sw_init_set(pcie, 1);
-+	pcie->cfg->bridge_sw_init_set(pcie, 1);
- 
- 	/* Ensure that PERST# is asserted; some bootloaders may deassert it. */
--	if (pcie->type == BCM2711)
--		pcie->perst_set(pcie, 1);
-+	if (pcie->cfg->type == BCM2711)
-+		pcie->cfg->perst_set(pcie, 1);
- 
- 	usleep_range(100, 200);
- 
- 	/* Take the bridge out of reset */
--	pcie->bridge_sw_init_set(pcie, 0);
-+	pcie->cfg->bridge_sw_init_set(pcie, 0);
- 
- 	tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
- 	if (is_bmips(pcie))
-@@ -905,9 +902,9 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
- 	 */
- 	if (is_bmips(pcie))
- 		burst = 0x1; /* 256 bytes */
--	else if (pcie->type == BCM2711)
-+	else if (pcie->cfg->type == BCM2711)
- 		burst = 0x0; /* 128 bytes */
--	else if (pcie->type == BCM7278)
-+	else if (pcie->cfg->type == BCM7278)
- 		burst = 0x3; /* 512 bytes */
- 	else
- 		burst = 0x2; /* 512 bytes */
-@@ -1120,7 +1117,7 @@ static int brcm_pcie_start_link(struct brcm_pcie *pcie)
- 	int ret, i;
- 
- 	/* Unassert the fundamental reset */
--	pcie->perst_set(pcie, 0);
-+	pcie->cfg->perst_set(pcie, 0);
- 
- 	/*
- 	 * Wait for 100ms after PERST# deassertion; see PCIe CEM specification
-@@ -1320,7 +1317,7 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
- 	if (brcm_pcie_link_up(pcie))
- 		brcm_pcie_enter_l23(pcie);
- 	/* Assert fundamental reset */
--	pcie->perst_set(pcie, 1);
-+	pcie->cfg->perst_set(pcie, 1);
- 
- 	/* Deassert request for L23 in case it was asserted */
- 	tmp = readl(base + PCIE_MISC_PCIE_CTRL);
-@@ -1333,7 +1330,7 @@ static void brcm_pcie_turn_off(struct brcm_pcie *pcie)
- 	writel(tmp, base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
- 
- 	/* Shutdown PCIe bridge */
--	pcie->bridge_sw_init_set(pcie, 1);
-+	pcie->cfg->bridge_sw_init_set(pcie, 1);
- }
- 
- static int pci_dev_may_wakeup(struct pci_dev *dev, void *data)
-@@ -1413,7 +1410,7 @@ static int brcm_pcie_resume_noirq(struct device *dev)
- 		goto err_reset;
- 
- 	/* Take bridge out of reset so we can access the SERDES reg */
--	pcie->bridge_sw_init_set(pcie, 0);
-+	pcie->cfg->bridge_sw_init_set(pcie, 0);
- 
- 	/* SERDES_IDDQ = 0 */
- 	tmp = readl(base + PCIE_MISC_HARD_PCIE_HARD_DEBUG);
-@@ -1595,10 +1592,7 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 	pcie = pci_host_bridge_priv(bridge);
- 	pcie->dev = &pdev->dev;
- 	pcie->np = np;
--	pcie->reg_offsets = data->offsets;
--	pcie->type = data->type;
--	pcie->perst_set = data->perst_set;
--	pcie->bridge_sw_init_set = data->bridge_sw_init_set;
-+	pcie->cfg = data;
- 
- 	pcie->base = devm_platform_ioremap_resource(pdev, 0);
- 	if (IS_ERR(pcie->base))
-@@ -1645,7 +1639,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 		goto fail;
- 
- 	pcie->hw_rev = readl(pcie->base + PCIE_MISC_REVISION);
--	if (pcie->type == BCM4908 && pcie->hw_rev >= BRCM_PCIE_HW_REV_3_20) {
-+	if (pcie->cfg->type == BCM4908 &&
-+	    pcie->hw_rev >= BRCM_PCIE_HW_REV_3_20) {
- 		dev_err(pcie->dev, "hardware revision with unsupported PERST# setup\n");
- 		ret = -ENODEV;
- 		goto fail;
-@@ -1660,7 +1655,8 @@ static int brcm_pcie_probe(struct platform_device *pdev)
- 		}
- 	}
- 
--	bridge->ops = pcie->type == BCM7425 ? &brcm7425_pcie_ops : &brcm_pcie_ops;
-+	bridge->ops = pcie->cfg->type == BCM7425 ?
-+				&brcm7425_pcie_ops : &brcm_pcie_ops;
- 	bridge->sysdata = pcie;
- 
- 	platform_set_drvdata(pdev, pcie);
+diff --git a/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2712-msix.yaml b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2712-msix.yaml
+new file mode 100644
+index 000000000000..ca610e4467d9
+--- /dev/null
++++ b/Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2712-msix.yaml
+@@ -0,0 +1,74 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/interrupt-controller/brcm,bcm2712-msix.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Broadcom bcm2712 MSI-X Interrupt Peripheral support
++
++maintainers:
++  - Stanimir Varbanov <svarbanov@suse.de>
++
++description: >
++  This interrupt controller is used to provide intterupt vectors to the
++  generic interrupt controller (GIC) on bcm2712. It will be used as
++  external MSI-X controller for PCIe root complex.
++
++allOf:
++  - $ref: /schemas/interrupt-controller/msi-controller.yaml#
++
++properties:
++  compatible:
++    items:
++      - enum:
++          - "brcm,bcm2712-mip-intc"
++  reg:
++    maxItems: 1
++    description: >
++      Specifies the base physical address and size of the registers
++
++  interrupt-controller: true
++
++  "#interrupt-cells":
++    const: 2
++
++  msi-controller: true
++
++  brcm,msi-base-spi:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: The SGI number that MSIs start.
++
++  brcm,msi-num-spis:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: The number of SGIs for MSIs.
++
++  brcm,msi-offset:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    description: Shift the allocated MSIs up by N.
++
++  brcm,msi-pci-addr:
++    $ref: /schemas/types.yaml#/definitions/uint64
++    description: MSI-X message address.
++
++additionalProperties: false
++
++required:
++  - compatible
++  - reg
++  - interrupt-controller
++  - "#interrupt-cells"
++  - msi-controller
++
++examples:
++  - |
++    msi-controller@130000 {
++      compatible = "brcm,bcm2712-mip-intc";
++      reg = <0x00130000 0xc0>;
++      msi-controller;
++      interrupt-controller;
++      #interrupt-cells = <2>;
++      brcm,msi-base-spi = <128>;
++      brcm,msi-num-spis = <64>;
++      brcm,msi-offset = <0>;
++      brcm,msi-pci-addr = <0xff 0xfffff000>;
++    };
 -- 
 2.43.0
 
