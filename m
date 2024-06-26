@@ -1,78 +1,79 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFC6A180A67;
-	Wed, 26 Jun 2024 10:46:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66B59181BA3;
+	Wed, 26 Jun 2024 10:46:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719398812; cv=none; b=J7Per9McohwxDm/LLZFnuIttatWY590VgAGCpLzuNQK7QcOCwgyn3sNW5Q3J3fb8+5WdiWMoKg/XruRq+3wzDp5wB94unLBEd7cyV3ZkvVeSlHU20QWQpyRu20fpydQkahfRaA1R7g6qafwh826+Pjy+Kz2mD5Oa/tX2UPF3DvU=
+	t=1719398815; cv=none; b=StOsKqWymnRhJFV1aMjmsG94aX2xCXXdTTCIMzWJeY9D1buD63QQKGv1DivcweiaALLH/zLv+B+qe8lrKOJXfFQd/Rg57V7MWk8/yENwLO+oj0QhZIy/tpOP6gOGik5LljNARlJnxXABOi0QapR3lNJ1FJJVa1rxWz9qWfK3+uY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719398812; c=relaxed/simple;
-	bh=Mtzh34XJOYfDkd3WGKUdg6XQ25u+BNmvo+1kfI8h0IA=;
+	s=arc-20240116; t=1719398815; c=relaxed/simple;
+	bh=V0gOKP7yrJUfS37uyh8DXg0gXmOJJjQyp0M6f8WLuS4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YQbd+PEqkTpkKiXmA9TBsKTtP9T6TJgwx5eA6gifafq/wxz+kc7TwyITm0DBgPkuxh3g49NYroiXO8cisPXTOBFCgB96rJyhqINv7oaM9DMG0j1E7wjlNstFUFOAeiMm9OdaaMKmzFVQTJETSq9OnoSwSab7iu5gotagNxTemKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ME2T1xtA; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=wmkRsyl8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=KVdOcEAc; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=qxhwXl3d; arc=none smtp.client-ip=195.135.223.131
+	 MIME-Version; b=fmLJPN2ryf0o646T2HTdawiRWzH3jygWRm4csti8mCAcSeylDoythiRYwOQWZ+IYYluk2cbfANuz4o26+5prnklfKldZCcnflfHXosAuy1Fbhr8XNTZjWZc92bnWzgL2vDI4HpA3FxyfAvzQAFbFVmGQ9gHTg8DKp7Gg4s1Jtgs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=vq7nBfRq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=dmAtDw15; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=vq7nBfRq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=dmAtDw15; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ME2T1xtA";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="wmkRsyl8";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="KVdOcEAc";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="qxhwXl3d"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vq7nBfRq";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="dmAtDw15";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vq7nBfRq";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="dmAtDw15"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 3B31A1FB4B;
-	Wed, 26 Jun 2024 10:46:48 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id DA24E21AE3;
+	Wed, 26 Jun 2024 10:46:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719398809; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1719398805; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=x1K+UbnOxASb0mDJc9XuFog+OpnIoP1uonAtx5IplcA=;
-	b=ME2T1xtAoQvHjeAqmv4gIHAzLZKkr3Q9j54jJvOy24dUgKXkTwdbeVt75crc7zFwzyp6dY
-	VDAKcbU04/Mql1nq7y3JjkE0ewxMe4+6T9EC3iaXZjJeBlDE4T/sXUjVT9hg00jYfll/1k
-	765MiL+t9MG6JSisHgBKr1ROBJXZ4Js=
+	bh=8JIlwJA+a1DRRddGL8GnSOzHBrJfoo6yBvpc4TQle5I=;
+	b=vq7nBfRqbYW8GYU/74x1R9M85p+n7gZpR2yR7F2IvJ8ju1ggNcuYF6S/qVSy/qfyKay1kM
+	YD339wDPYaadcBzssBGGfaL29u3cnpoLaWj8ZC/QgTSsLH7LzZDDb6p5GLRWV0KsAt2WGF
+	//tNaGDA9DxvKRRQj6lpLcAQFpbm0Gs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719398809;
+	s=susede2_ed25519; t=1719398805;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=x1K+UbnOxASb0mDJc9XuFog+OpnIoP1uonAtx5IplcA=;
-	b=wmkRsyl8tlN80ahr/IupCsdKDiLkLJf/RkuBqQVu1hV2qcnlnuIjOTr6pnQvcsH1CUGYS8
-	aldb6jUlDn+/pXCw==
-Authentication-Results: smtp-out2.suse.de;
-	none
+	bh=8JIlwJA+a1DRRddGL8GnSOzHBrJfoo6yBvpc4TQle5I=;
+	b=dmAtDw150kIO0UPwYI35YACjrNWP81/xfsyFnOgGR8aDMhkFGWPDEbTu9R1S28GjuDIYVN
+	w6B9IufhWHlv4oAQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=vq7nBfRq;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=dmAtDw15
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1719398808; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1719398805; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=x1K+UbnOxASb0mDJc9XuFog+OpnIoP1uonAtx5IplcA=;
-	b=KVdOcEAcaZQpt+5Quj/Fm50BrvG+9rIH3LcFHSHNa1J0HGpAZoNXSW79VLjXRRKt1NB2Mm
-	HKLCzqiABlknDeh/Cv0idF8xxFuElsHz/q7F7c+ymJ+egvj3OeL1078pCP/1d56d2SQXLk
-	Sjsux4bIaw6O9hKd+Uu0+3RHZuhN9go=
+	bh=8JIlwJA+a1DRRddGL8GnSOzHBrJfoo6yBvpc4TQle5I=;
+	b=vq7nBfRqbYW8GYU/74x1R9M85p+n7gZpR2yR7F2IvJ8ju1ggNcuYF6S/qVSy/qfyKay1kM
+	YD339wDPYaadcBzssBGGfaL29u3cnpoLaWj8ZC/QgTSsLH7LzZDDb6p5GLRWV0KsAt2WGF
+	//tNaGDA9DxvKRRQj6lpLcAQFpbm0Gs=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1719398808;
+	s=susede2_ed25519; t=1719398805;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=x1K+UbnOxASb0mDJc9XuFog+OpnIoP1uonAtx5IplcA=;
-	b=qxhwXl3ds8mi71DqjO36m/V0MB7iZSFCFUsM5IRKmjLBCrZZgf3sKqbO7YdP3zy/xzcBku
-	180XLao+wsJ9GQBw==
+	bh=8JIlwJA+a1DRRddGL8GnSOzHBrJfoo6yBvpc4TQle5I=;
+	b=dmAtDw150kIO0UPwYI35YACjrNWP81/xfsyFnOgGR8aDMhkFGWPDEbTu9R1S28GjuDIYVN
+	w6B9IufhWHlv4oAQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 2573B13AD2;
-	Wed, 26 Jun 2024 10:46:47 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C22B513AD2;
+	Wed, 26 Jun 2024 10:46:44 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id OEluBpfxe2ZuDQAAD6G6ig
-	(envelope-from <svarbanov@suse.de>); Wed, 26 Jun 2024 10:46:47 +0000
+	id yJqxLJTxe2ZuDQAAD6G6ig
+	(envelope-from <svarbanov@suse.de>); Wed, 26 Jun 2024 10:46:44 +0000
 From: Stanimir Varbanov <svarbanov@suse.de>
 To: linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org,
@@ -95,9 +96,9 @@ Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Phil Elwell <phil@raspberrypi.com>,
 	Jonathan Bell <jonathan@raspberrypi.com>,
 	Stanimir Varbanov <svarbanov@suse.de>
-Subject: [PATCH 7/7] arm64: dts: broadcom: bcm2712: Add PCIe DT nodes
-Date: Wed, 26 Jun 2024 13:45:44 +0300
-Message-ID: <20240626104544.14233-8-svarbanov@suse.de>
+Subject: [PATCH 5/7] PCI: brcmstb: add phy_controllable flag
+Date: Wed, 26 Jun 2024 13:45:42 +0300
+Message-ID: <20240626104544.14233-6-svarbanov@suse.de>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240626104544.14233-1-svarbanov@suse.de>
 References: <20240626104544.14233-1-svarbanov@suse.de>
@@ -108,324 +109,129 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-1.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
+X-Rspamd-Queue-Id: DA24E21AE3
+X-Spam-Score: -1.44
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-1.44 / 50.00];
+	BAYES_HAM(-2.93)[99.71%];
 	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_CONTAINS_FROM(1.00)[];
 	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
 	NEURAL_HAM_SHORT(-0.20)[-1.000];
 	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
 	RCPT_COUNT_TWELVE(0.00)[21];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
 	ARC_NA(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FREEMAIL_CC(0.00)[linutronix.de,kernel.org,broadcom.com,gmail.com,google.com,linux.com,pengutronix.de,suse.com,raspberrypi.com,suse.de];
 	RCVD_TLS_ALL(0.00)[];
-	TO_DN_SOME(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
 	RCVD_COUNT_TWO(0.00)[2];
 	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[linutronix.de,kernel.org,broadcom.com,gmail.com,google.com,linux.com,pengutronix.de,suse.com,raspberrypi.com,suse.de];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,imap1.dmz-prg2.suse.org:helo];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:email,suse.de:dkim];
 	TAGGED_RCPT(0.00)[dt];
-	R_RATELIMIT(0.00)[to_ip_from(RL7mwea5a3cdyragbzqhrtit3y)];
+	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
+	R_RATELIMIT(0.00)[to_ip_from(RLw7mkaud87zuqqztkur5718rm)];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
 	FREEMAIL_ENVRCPT(0.00)[gmail.com]
-X-Spam-Flag: NO
-X-Spam-Score: -1.30
-X-Spam-Level: 
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 
-Add PCIe device tree nodes.
+Not all PCIe can control the phy block, add a flag
+in config structure to take that fact into account.
 
 Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
 ---
- arch/arm64/boot/dts/broadcom/bcm2712.dtsi | 218 ++++++++++++++++++++--
- 1 file changed, 202 insertions(+), 16 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 13 +++++++++++++
+ 1 file changed, 13 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/broadcom/bcm2712.dtsi b/arch/arm64/boot/dts/broadcom/bcm2712.dtsi
-index bccb7318ce7e..358b129a0f65 100644
---- a/arch/arm64/boot/dts/broadcom/bcm2712.dtsi
-+++ b/arch/arm64/boot/dts/broadcom/bcm2712.dtsi
-@@ -186,17 +186,30 @@ cma: linux,cma {
- 		};
- 	};
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index 4ca509502336..ff8e5e672ff0 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -224,6 +224,7 @@ enum pcie_type {
+ struct pcie_cfg_data {
+ 	const int *offsets;
+ 	const enum pcie_type type;
++	bool phy_controllable;
+ 	void (*perst_set)(struct brcm_pcie *pcie, u32 val);
+ 	void (*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
+ };
+@@ -1301,11 +1302,17 @@ static int brcm_phy_cntl(struct brcm_pcie *pcie, const int start)
  
--	soc: soc@107c000000 {
-+	soc: soc@0 {
- 		compatible = "simple-bus";
--		ranges = <0x00000000  0x10 0x00000000  0x80000000>;
--		#address-cells = <1>;
--		#size-cells = <1>;
-+		#address-cells = <2>;
-+		#size-cells = <2>;
+ static inline int brcm_phy_start(struct brcm_pcie *pcie)
+ {
++	if (!pcie->cfg->phy_controllable)
++		return 0;
 +
-+		ranges =
-+			<0x00 0x00000000  0x00 0x00000000  0x10 0x00000000>,
-+			<0x10 0x00000000  0x10 0x00000000  0x01 0x00000000>,
-+			<0x14 0x00000000  0x14 0x00000000  0x04 0x00000000>,
-+			<0x18 0x00000000  0x18 0x00000000  0x04 0x00000000>,
-+			<0x1c 0x00000000  0x1c 0x00000000  0x04 0x00000000>;
-+
-+		dma-ranges =
-+			<0x00 0x00000000  0x00 0x00000000  0x10 0x00000000>,
-+			<0x10 0x00000000  0x10 0x00000000  0x01 0x00000000>,
-+			<0x14 0x00000000  0x14 0x00000000  0x04 0x00000000>,
-+			<0x18 0x00000000  0x18 0x00000000  0x04 0x00000000>,
-+			<0x1c 0x00000000  0x1c 0x00000000  0x04 0x00000000>;
+ 	return pcie->rescal ? brcm_phy_cntl(pcie, 1) : 0;
+ }
  
- 		sdio1: mmc@fff000 {
- 			compatible = "brcm,bcm2712-sdhci",
- 				     "brcm,sdhci-brcmstb";
--			reg = <0x00fff000 0x260>,
--			      <0x00fff400 0x200>;
-+			reg = <0x10 0x00fff000 0x0 0x260>,
-+			      <0x10 0x00fff400 0x0 0x200>;
- 			reg-names = "host", "cfg";
- 			interrupts = <GIC_SPI 273 IRQ_TYPE_LEVEL_HIGH>;
- 			clocks = <&clk_emmc2>;
-@@ -206,7 +219,7 @@ sdio1: mmc@fff000 {
+ static inline int brcm_phy_stop(struct brcm_pcie *pcie)
+ {
++	if (!pcie->cfg->phy_controllable)
++		return 0;
++
+ 	return pcie->rescal ? brcm_phy_cntl(pcie, 0) : 0;
+ }
  
- 		system_timer: timer@7c003000 {
- 			compatible = "brcm,bcm2835-system-timer";
--			reg = <0x7c003000 0x1000>;
-+			reg = <0x10 0x7c003000 0x0 0x1000>;
- 			interrupts = <GIC_SPI 64 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 65 IRQ_TYPE_LEVEL_HIGH>,
- 				     <GIC_SPI 66 IRQ_TYPE_LEVEL_HIGH>,
-@@ -216,19 +229,19 @@ system_timer: timer@7c003000 {
- 
- 		mailbox: mailbox@7c013880 {
- 			compatible = "brcm,bcm2835-mbox";
--			reg = <0x7c013880 0x40>;
-+			reg = <0x10 0x7c013880 0x0 0x40>;
- 			interrupts = <GIC_SPI 33 IRQ_TYPE_LEVEL_HIGH>;
- 			#mbox-cells = <0>;
- 		};
- 
- 		local_intc: local-intc@7cd00000 {
- 			compatible = "brcm,bcm2836-l1-intc";
--			reg = <0x7cd00000 0x100>;
-+			reg = <0x10 0x7cd00000 0x0 0x100>;
- 		};
- 
- 		uart10: serial@7d001000 {
- 			compatible = "arm,pl011", "arm,primecell";
--			reg = <0x7d001000 0x200>;
-+			reg = <0x10 0x7d001000 0x0 0x200>;
- 			interrupts = <GIC_SPI 121 IRQ_TYPE_LEVEL_HIGH>;
- 			clocks = <&clk_uart>, <&clk_vpu>;
- 			clock-names = "uartclk", "apb_pclk";
-@@ -238,7 +251,7 @@ uart10: serial@7d001000 {
- 
- 		interrupt-controller@7d517000 {
- 			compatible = "brcm,bcm7271-l2-intc";
--			reg = <0x7d517000 0x10>;
-+			reg = <0x10 0x7d517000 0x0 0x10>;
- 			interrupts = <GIC_SPI 247 IRQ_TYPE_LEVEL_HIGH>;
- 			interrupt-controller;
- 			#interrupt-cells = <1>;
-@@ -246,7 +259,7 @@ interrupt-controller@7d517000 {
- 
- 		gio_aon: gpio@7d517c00 {
- 			compatible = "brcm,bcm7445-gpio", "brcm,brcmstb-gpio";
--			reg = <0x7d517c00 0x40>;
-+			reg = <0x10 0x7d517c00 0x0 0x40>;
- 			gpio-controller;
- 			#gpio-cells = <2>;
- 			brcm,gpio-bank-widths = <17 6>;
-@@ -258,13 +271,186 @@ gio_aon: gpio@7d517c00 {
- 
- 		gicv2: interrupt-controller@7fff9000 {
- 			compatible = "arm,gic-400";
--			reg = <0x7fff9000 0x1000>,
--			      <0x7fffa000 0x2000>,
--			      <0x7fffc000 0x2000>,
--			      <0x7fffe000 0x2000>;
-+			reg = <0x10 0x7fff9000 0x0 0x1000>,
-+			      <0x10 0x7fffa000 0x0 0x2000>,
-+			      <0x10 0x7fffc000 0x0 0x2000>,
-+			      <0x10 0x7fffe000 0x0 0x2000>;
- 			interrupt-controller;
- 			#interrupt-cells = <3>;
- 		};
-+
-+		mip0: msi-controller@130000 {
-+			compatible = "brcm,bcm2712-mip-intc";
-+			reg = <0x10 0x00130000 0x00 0xc0>;
-+			msi-controller;
-+			interrupt-controller;
-+			#interrupt-cells = <2>;
-+			brcm,msi-base-spi = <128>;
-+			brcm,msi-num-spis = <64>;
-+			brcm,msi-offset = <0>;
-+			brcm,msi-pci-addr = <0xff 0xfffff000>;
-+		};
-+
-+		mip1: msi-controller@131000 {
-+			compatible = "brcm,bcm2712-mip-intc";
-+			reg = <0x10 0x00131000 0x00 0xc0>;
-+			msi-controller;
-+			interrupt-controller;
-+			#interrupt-cells = <2>;
-+			brcm,msi-base-spi = <247>;
-+			/* Actually 20 total, but the others are
-+			 * both sparse and non-consecutive
-+			 */
-+			brcm,msi-num-spis = <8>;
-+			brcm,msi-offset = <8>;
-+			brcm,msi-pci-addr = <0xff 0xffffe000>;
-+		};
-+
-+		pcie_rescal: reset-controller@119500 {
-+			compatible = "brcm,bcm7216-pcie-sata-rescal";
-+			reg = <0x10 0x00119500 0x00 0x10>;
-+			#reset-cells = <0>;
-+		};
-+
-+		bcm_reset: reset-controller@1504318 {
-+			compatible = "brcm,brcmstb-reset";
-+			reg = <0x10 0x01504318 0x00 0x30>;
-+			#reset-cells = <1>;
-+		};
-+
-+		/* Single-lane Gen3 PCIe
-+		 * Outbound window at 14_0000_0000-17_ffff_ffff
-+		 */
-+		pcie0: pcie@100000 {
-+			compatible = "brcm,bcm2712-pcie";
-+			reg = <0x10 0x00100000  0x0 0x9310>;
-+			device_type = "pci";
-+			linux,pci-domain = <0>;
-+			max-link-speed = <2>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			/* Unused interrupts: 208: AER, 215: NMI, 216: PME */
-+			interrupt-parent = <&gicv2>;
-+			interrupts = <GIC_SPI 213 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 214 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "pcie", "msi";
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0 0 0 1 &gicv2 GIC_SPI 209 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gicv2 GIC_SPI 210 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gicv2 GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gicv2 GIC_SPI 212 IRQ_TYPE_LEVEL_HIGH>;
-+			resets = <&bcm_reset 42>, <&pcie_rescal>;
-+			reset-names = "bridge", "rescal";
-+			msi-controller;
-+			msi-parent = <&pcie0>;
-+
-+			ranges = <0x02000000 0x00 0x00000000
-+				  0x17 0x00000000
-+				  0x0 0xfffffffc>,
-+				 <0x43000000 0x04 0x00000000
-+				  0x14 0x00000000
-+				  0x3 0x00000000>;
-+
-+			dma-ranges = <0x43000000 0x10 0x00000000
-+				      0x00 0x00000000
-+				      0x10 0x00000000>;
-+
-+			status = "disabled";
-+		};
-+
-+		/* Single-lane Gen3 PCIe
-+		 * Outbound window at 18_0000_0000-1b_ffff_ffff
-+		 */
-+		pcie1: pcie@110000 {
-+			compatible = "brcm,bcm2712-pcie";
-+			reg = <0x10 0x00110000  0x0 0x9310>;
-+			device_type = "pci";
-+			linux,pci-domain = <1>;
-+			max-link-speed = <2>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <1>;
-+			#address-cells = <3>;
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			/* Unused interrupts: 218: AER, 225: NMI, 226: PME */
-+			interrupt-parent = <&gicv2>;
-+			interrupts = <GIC_SPI 223 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 224 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "pcie", "msi";
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0 0 0 1 &gicv2 GIC_SPI 219 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gicv2 GIC_SPI 220 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gicv2 GIC_SPI 221 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gicv2 GIC_SPI 222 IRQ_TYPE_LEVEL_HIGH>;
-+			resets = <&bcm_reset 43>, <&pcie_rescal>;
-+			reset-names = "bridge", "rescal";
-+			msi-controller;
-+			msi-parent = <&mip1>;
-+
-+			ranges = <0x02000000 0x00 0x00000000
-+				  0x1b 0x00000000
-+				  0x00 0xfffffffc>,
-+				 <0x43000000 0x04 0x00000000
-+				  0x18 0x00000000
-+				  0x03 0x00000000>;
-+
-+			dma-ranges = <0x03000000 0x10 0x00000000
-+				      0x00 0x00000000
-+				      0x10 0x00000000>;
-+
-+			status = "disabled";
-+		};
-+
-+		/* Quad-lane Gen3 PCIe
-+		 * Outbound window at 1c_0000_0000-1f_ffff_ffff
-+		 */
-+		pcie2: pcie@120000 {
-+			compatible = "brcm,bcm2712-pcie";
-+			reg = <0x10 0x00120000 0x00 0x9310>;
-+			device_type = "pci";
-+			linux,pci-domain = <2>;
-+			max-link-speed = <2>;
-+			bus-range = <0x00 0xff>;
-+			num-lanes = <4>;
-+			#address-cells = <3>;
-+			#interrupt-cells = <1>;
-+			#size-cells = <2>;
-+			/* Unused interrupts: 228: AER, 235: NMI, 236: PME */
-+			interrupt-parent = <&gicv2>;
-+			interrupts = <GIC_SPI 233 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "pcie", "msi";
-+			interrupt-map-mask = <0x0 0x0 0x0 0x7>;
-+			interrupt-map = <0 0 0 1 &gicv2 GIC_SPI 229 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &gicv2 GIC_SPI 230 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &gicv2 GIC_SPI 231 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &gicv2 GIC_SPI 232 IRQ_TYPE_LEVEL_HIGH>;
-+			resets = <&bcm_reset 44>, <&pcie_rescal>;
-+			reset-names = "bridge", "rescal";
-+			msi-parent = <&mip0>;
-+
-+			// ~4GB, 32-bit, non-prefetchable at PCIe 00_0000_0000
-+			ranges = <0x02000000 0x00 0x00000000
-+				  0x1f 0x00000000
-+				  0x0 0xfffffffc>,
-+			// 12GB, 64-bit, prefetchable at PCIe 04_0000_0000
-+				 <0x43000000 0x04 0x00000000
-+				  0x1c 0x00000000
-+				  0x03 0x00000000>;
-+
-+			// 64GB system RAM space at PCIe 10_0000_0000
-+			dma-ranges = <0x02000000 0x00 0x00000000
-+				      0x1f 0x00000000
-+				      0x00 0x00400000>,
-+				     <0x43000000 0x10 0x00000000
-+				      0x00 0x00000000
-+				      0x10 0x00000000>;
-+
-+			status = "disabled";
-+		};
- 	};
- 
- 	timer {
+@@ -1498,6 +1505,7 @@ static const int pcie_offsets_bmips_7425[] = {
+ static const struct pcie_cfg_data generic_cfg = {
+ 	.offsets	= pcie_offsets,
+ 	.type		= GENERIC,
++	.phy_controllable = true,
+ 	.perst_set	= brcm_pcie_perst_set_generic,
+ 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+ };
+@@ -1505,6 +1513,7 @@ static const struct pcie_cfg_data generic_cfg = {
+ static const struct pcie_cfg_data bcm7425_cfg = {
+ 	.offsets	= pcie_offsets_bmips_7425,
+ 	.type		= BCM7425,
++	.phy_controllable = true,
+ 	.perst_set	= brcm_pcie_perst_set_generic,
+ 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+ };
+@@ -1512,6 +1521,7 @@ static const struct pcie_cfg_data bcm7425_cfg = {
+ static const struct pcie_cfg_data bcm7435_cfg = {
+ 	.offsets	= pcie_offsets,
+ 	.type		= BCM7435,
++	.phy_controllable = true,
+ 	.perst_set	= brcm_pcie_perst_set_generic,
+ 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+ };
+@@ -1519,6 +1529,7 @@ static const struct pcie_cfg_data bcm7435_cfg = {
+ static const struct pcie_cfg_data bcm4908_cfg = {
+ 	.offsets	= pcie_offsets,
+ 	.type		= BCM4908,
++	.phy_controllable = true,
+ 	.perst_set	= brcm_pcie_perst_set_4908,
+ 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+ };
+@@ -1532,6 +1543,7 @@ static const int pcie_offset_bcm7278[] = {
+ static const struct pcie_cfg_data bcm7278_cfg = {
+ 	.offsets	= pcie_offset_bcm7278,
+ 	.type		= BCM7278,
++	.phy_controllable = true,
+ 	.perst_set	= brcm_pcie_perst_set_7278,
+ 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_7278,
+ };
+@@ -1539,6 +1551,7 @@ static const struct pcie_cfg_data bcm7278_cfg = {
+ static const struct pcie_cfg_data bcm2711_cfg = {
+ 	.offsets	= pcie_offsets,
+ 	.type		= BCM2711,
++	.phy_controllable = true,
+ 	.perst_set	= brcm_pcie_perst_set_generic,
+ 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+ };
 -- 
 2.43.0
 
