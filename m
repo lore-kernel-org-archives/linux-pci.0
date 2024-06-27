@@ -1,178 +1,103 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from raptorengineering.com (mail.raptorengineering.com [23.155.224.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA86E197A65;
-	Thu, 27 Jun 2024 16:22:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8746E199E89;
+	Thu, 27 Jun 2024 17:08:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.155.224.40
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719505352; cv=none; b=n8gtziQ0tENm+FMpkz7hvhB0gz3BE7ZSQQGC6ImzLLudzVDoyOyT4pb19tesETBNoi6CD6arzavNvOEy2NA5sP4hOniRe+a83u+SQ4hOvGBKUmCdkT/3Hf4A1/Pd+L5CMgqcxyo7vQ27Lc+60uEr1Hm7ZCIllBALbAB3bScBFsk=
+	t=1719508114; cv=none; b=a0DJgDTmYOYPDnyQms0zu7hhW3CaIA+h7Pi9AMHDj/Ltb8AoRhMQudoUaK1BYBYwl3JCBS8QPyGb1v3X0IS2twk5dGVXt9Dho3y0ZW/y0CCE+KhxKUkfjipbx1qtyMTLALl9l4M700pXTex03uVRRqVi8iWirTx6+Wsv57dAXVM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719505352; c=relaxed/simple;
-	bh=TMnrFsjqTQSFOQs7nIdl6/67gGRZGNEZGkvjDhvZqvo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ajKQR3+2EHorOBc119GRQ0ktl2lf/1Wc1eTg/HqCUKkxLqiUaqw7sRRG96EMRRA6SUiSjkc8APpPzs7QM97imP1MHTROZOWC2LyF4cWgyOvD9QDRy7uQujc8n6oWWx2oNTphDg6TigCicjKKnImb1BQsYD80sckea82V3zsiBxw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BkTVsFGh; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1719508114; c=relaxed/simple;
+	bh=gQjYhOI02FdcEBRinNKiAlBL2XjmR+KPxp9hT9vWYG4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ijKjd7gEu65yIcJ3R9e/Hv+jxS2D6iYbbd5XmkXgBT0XXKeyFt2cz1gn4gYfXRCuJIuGO0ZrvwY2UJlE7TzqUTvDx0wJZiRYbf5aeaDT7BcHhbKRl/JNFJWXrN+B7AV6c0ERbVGQ6qlv1BOuuTNunvrVXcVrtccVWM3IJNjpjXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raptorengineering.com; spf=pass smtp.mailfrom=raptorengineering.com; dkim=pass (1024-bit key) header.d=raptorengineering.com header.i=@raptorengineering.com header.b=tm27XbhM; arc=none smtp.client-ip=23.155.224.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raptorengineering.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raptorengineering.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BkTVsFGh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4AA85C2BBFC;
-	Thu, 27 Jun 2024 16:22:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1719505351;
-	bh=TMnrFsjqTQSFOQs7nIdl6/67gGRZGNEZGkvjDhvZqvo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BkTVsFGhqUuZ2Es9Q5UvBx5RFlrHO58V1O6B3TRwelvxkIyL4ySfxxS40sUY3F3R0
-	 FentU0+s3sWywiz8PAGk0HYmc6bJoktx8/hxRU2eFp6nIibWgWVJfXDMKR+TPE1bx/
-	 u6LiVVijXAVewGUbomz0Sxf5soBihgvSQtL/OmTPsE1bkr2iuQE0zYTuONKcmlWtd6
-	 EXsD7irBelwyIPfVS73FSPYlbGU3trPHNruS0MZGKj1KgZwZL2zHgVZ9SNnbwgYhdm
-	 5TaSnC8ioToQ0zwCa9D+oEW5JBpcvmEuLYT11jrmRZe/UsiUQiaK8jeK6XF6tnj/Z2
-	 hw9th42gY863g==
-Date: Thu, 27 Jun 2024 17:22:27 +0100
-From: Conor Dooley <conor@kernel.org>
-To: matthew.gerlach@linux.intel.com
-Cc: lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
-	bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
-	joyce.ooi@intel.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v7] dt-bindings: PCI: altera: Convert to YAML
-Message-ID: <20240627-finer-expel-2c7ab9f05733@spud>
-References: <20240614163520.494047-1-matthew.gerlach@linux.intel.com>
+	dkim=pass (1024-bit key) header.d=raptorengineering.com header.i=@raptorengineering.com header.b="tm27XbhM"
+Received: from localhost (localhost [127.0.0.1])
+	by mail.rptsys.com (Postfix) with ESMTP id 3DAFB8284676;
+	Thu, 27 Jun 2024 12:08:30 -0500 (CDT)
+Received: from mail.rptsys.com ([127.0.0.1])
+	by localhost (vali.starlink.edu [127.0.0.1]) (amavisd-new, port 10032)
+	with ESMTP id XdB8CVZdFTUe; Thu, 27 Jun 2024 12:08:28 -0500 (CDT)
+Received: from localhost (localhost [127.0.0.1])
+	by mail.rptsys.com (Postfix) with ESMTP id BEE9D8286EE7;
+	Thu, 27 Jun 2024 12:08:28 -0500 (CDT)
+DKIM-Filter: OpenDKIM Filter v2.10.3 mail.rptsys.com BEE9D8286EE7
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=raptorengineering.com; s=B8E824E6-0BE2-11E6-931D-288C65937AAD;
+	t=1719508108; bh=7vozx5pnO3XeEM4yE1MwWuRfVdToNevzVg4mxSfCvKs=;
+	h=Message-ID:Date:MIME-Version:To:From;
+	b=tm27XbhMcN3WAhiovueooUXESqDRJygPFvjey0yPzTGBNLnBlvOAaQQZNRgtfqHhj
+	 vybHcwIWpDcvpBSdZAXa92+dyH8B10GyrcT3FSBaytfWcap2Z69m67d8Wbj7Ig9Z61
+	 PvObo0h12TozzbGaSm+u0ledIX8Ng7XYHgt5wOZs=
+X-Virus-Scanned: amavisd-new at rptsys.com
+Received: from mail.rptsys.com ([127.0.0.1])
+	by localhost (vali.starlink.edu [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id jX-fwQJ2VSlB; Thu, 27 Jun 2024 12:08:28 -0500 (CDT)
+Received: from [10.11.0.2] (5.edge.rptsys.com [23.155.224.38])
+	by mail.rptsys.com (Postfix) with ESMTPSA id EF00F8284676;
+	Thu, 27 Jun 2024 12:08:27 -0500 (CDT)
+Message-ID: <888d3984-d00e-4148-a1ca-f7887c0af413@raptorengineering.com>
+Date: Thu, 27 Jun 2024 12:08:27 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="9ilwJNtWwmRhDcGd"
-Content-Disposition: inline
-In-Reply-To: <20240614163520.494047-1-matthew.gerlach@linux.intel.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/2] pci/hotplug/pnv_php: Fix hotplug driver crash on
+ Powernv
+To: Krishna Kumar <krishnak@linux.ibm.com>, mpe@ellerman.id.au,
+ npiggin@gmail.com
+Cc: nathanl@linux.ibm.com, aneesh.kumar@kernel.org,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+ christophe.leroy@csgroup.eu, gbatra@linux.ibm.com, bhelgaas@google.com,
+ tpearson@raptorengineering.com, oohall@gmail.com, brking@linux.vnet.ibm.com,
+ mahesh.salgaonkar@in.ibm.com, linuxppc-dev@lists.ozlabs.org
+References: <20240624121052.233232-1-krishnak@linux.ibm.com>
+ <20240624121052.233232-2-krishnak@linux.ibm.com>
+Content-Language: en-US
+From: Shawn Anastasio <sanastasio@raptorengineering.com>
+In-Reply-To: <20240624121052.233232-2-krishnak@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
+Hi Krishna,
 
---9ilwJNtWwmRhDcGd
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+On 6/24/24 7:09 AM, Krishna Kumar wrote:
+> Description of the problem: The hotplug driver for powerpc
+> (pci/hotplug/pnv_php.c) gives kernel crash when we try to
+> hot-unplug/disable the PCIe switch/bridge from the PHB.
+> 
+> Root Cause of Crash: The crash is due to the reason that, though the msi
+> data structure has been released during disable/hot-unplug path and it
+> has been assigned with NULL, still during unregistartion the code was
+> again trying to explicitly disable the msi which causes the Null pointer
+> dereference and kernel crash.
+> 
+> Proposed Fix : The fix is to correct the check during unregistration path
+> so that the code should not  try to invoke pci_disable_msi/msix() if its
+> data structure is already freed.
+> 
+> Cc: Michael Ellerman <mpe@ellerman.id.au>
+> Cc: Nicholas Piggin <npiggin@gmail.com>
+> Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
+> Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+> Cc: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Gaurav Batra <gbatra@linux.ibm.com>
+> Cc: Nathan Lynch <nathanl@linux.ibm.com>
+> Cc: Brian King <brking@linux.vnet.ibm.com>
+> 
+> Signed-off-by: Krishna Kumar <krishnak@linux.ibm.com>
 
-Been stalling replying here, was wondering if Rob would look given he
-reviewed the previous versions.
+As with v1, I can confirm that this patch solves the panic encountered
+when hotplugging PCIe bridges on POWER9.
 
-On Fri, Jun 14, 2024 at 11:35:20AM -0500, matthew.gerlach@linux.intel.com w=
-rote:
-> From: Matthew Gerlach <matthew.gerlach@linux.intel.com>
->=20
-> Convert the device tree bindings for the Altera Root Port PCIe controller
-> from text to YAML. Update the entries in the interrupt-map field to have
-> the correct number of address cells for the interrupt parent.
->=20
-> Signed-off-by: Matthew Gerlach <matthew.gerlach@linux.intel.com>
-> diff --git a/Documentation/devicetree/bindings/pci/altera-pcie.txt b/Docu=
-mentation/devicetree/bindings/pci/altera-pcie.txt
-> deleted file mode 100644
-> index 816b244a221e..000000000000
-> --- a/Documentation/devicetree/bindings/pci/altera-pcie.txt
-> +++ /dev/null
-> @@ -1,50 +0,0 @@
-> -* Altera PCIe controller
-> -
-> -Required properties:
-> -- compatible :	should contain "altr,pcie-root-port-1.0" or "altr,pcie-ro=
-ot-port-2.0"
-> -- reg:		a list of physical base address and length for TXS and CRA.
-> -		For "altr,pcie-root-port-2.0", additional HIP base address and length.
-> -- reg-names:	must include the following entries:
-> -		"Txs": TX slave port region
-> -		"Cra": Control register access region
-
-> -		"Hip": Hard IP region (if "altr,pcie-root-port-2.0")
-
-I think this should be constrained in the new yaml binding by setting
-maxItems: for reg/reg-names to 2 for 1.0 and, if I am not
-misunderstanding what "must include" means, minItems: to 3 for 2.0.
+Tested-by: Shawn Anastasio <sanastasio@raptorengineering.com>
 
 Thanks,
-Conor.
-
-> diff --git a/Documentation/devicetree/bindings/pci/altr,pcie-root-port.ya=
-ml b/Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
-> new file mode 100644
-> index 000000000000..0aaf5dbcc9cc
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
-> @@ -0,0 +1,93 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +# Copyright (C) 2015, 2019, 2024, Intel Corporation
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/altr,pcie-root-port.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Altera PCIe Root Port
-> +
-> +maintainers:
-> +  - Matthew Gerlach <matthew.gerlach@linux.intel.com>
-> +
-> +properties:
-> +  compatible:
-> +    enum:
-> +      - altr,pcie-root-port-1.0
-> +      - altr,pcie-root-port-2.0
-> +
-> +  reg:
-> +    items:
-> +      - description: TX slave port region
-> +      - description: Control register access region
-> +      - description: Hard IP region
-> +    minItems: 2
-> +
-> +  reg-names:
-> +    items:
-> +      - const: Txs
-> +      - const: Cra
-> +      - const: Hip
-> +    minItems: 2
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  interrupt-controller: true
-> +
-> +  interrupt-map-mask:
-> +    items:
-> +      - const: 0
-> +      - const: 0
-> +      - const: 0
-> +      - const: 7
-> +
-> +  interrupt-map:
-> +    maxItems: 4
-> +
-> +  "#interrupt-cells":
-> +    const: 1
-> +
-> +  msi-parent: true
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - reg-names
-> +  - interrupts
-> +  - "#interrupt-cells"
-> +  - interrupt-controller
-> +  - interrupt-map
-> +  - interrupt-map-mask
-> +
-> +allOf:
-> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
-
---9ilwJNtWwmRhDcGd
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZn2RwwAKCRB4tDGHoIJi
-0qYAAP4wDJobiNVvDe2lGN5IVp5yaFQBWs3S96o3aWzteZHlxwD/Rdn4PgaiT4i+
-MzHMBW+Uslp5+U4KxXeTXIBrp8WeSwA=
-=b0h0
------END PGP SIGNATURE-----
-
---9ilwJNtWwmRhDcGd--
+Shawn
