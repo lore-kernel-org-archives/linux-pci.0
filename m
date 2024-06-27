@@ -1,47 +1,50 @@
-Received: from raptorengineering.com (mail.raptorengineering.com [23.155.224.40])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDD6A197549;
-	Thu, 27 Jun 2024 17:12:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=23.155.224.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78BDB18645;
+	Thu, 27 Jun 2024 17:53:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719508378; cv=none; b=bipoJO2JYMufXLZLR3oNmHzECnyOyaS7gPf8Dh+qjRjaz+T/eH0n9YodiZcLglMM7LaqIOJp/mwS1W9pfcAu0et1d9h2T4uhTSupnIGrK/HARJHjVo7PCLkUg+LHk7gSP9fMQLTWh1HJH2mRe64fkzS44NNZI2ZuX7u7665AaOE=
+	t=1719510816; cv=none; b=uQ1M2FYn26604rPrz10iYWResSD0RG326Viss8G2++HaA1Iudyl+upjRoicyvKvBV0/YhOJum3dPcpHqTwS8IUrZfU62Sdc1DxIInsIQY2F0MtgdzB3D9H/AoRUKw6lJmZ4AOhvYmOFcWEksygmy3H85ti235E3zBhmUkUFzEEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719508378; c=relaxed/simple;
-	bh=x0paNmrzPbz/jmBMj25p+GgQaoamDJejk56BVcITTBQ=;
+	s=arc-20240116; t=1719510816; c=relaxed/simple;
+	bh=zR/DvixaFDlAESFnfJVYO12k6N/AVnfp7kdRgzhkGAA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sGtt2M1TrjDHRCDIVbhxsvxETaxwY3c5iyzIr072f5wpYoPWSki72Se8I/ImTdcClkcxhQ+stg9lRmXDCY0Zw54/RsXRbM2uYbWK//5L/qZiS8CzyPyXLu5xyzny+sKkyobrt11ARwYjlv1wiuMBpXdpWIzk/I688J1Sb8Jif0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raptorengineering.com; spf=pass smtp.mailfrom=raptorengineering.com; dkim=pass (1024-bit key) header.d=raptorengineering.com header.i=@raptorengineering.com header.b=UyJF5CEt; arc=none smtp.client-ip=23.155.224.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=raptorengineering.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raptorengineering.com
+	 In-Reply-To:Content-Type; b=lhqKwFj/zHqnKl5WfnaCIr+sjQNRwi2WTVH24D5IfPmDJdRy0lxKvijpwV4EoOi82kfGyVU7KcqL2Q/EVpIHzicN7DxM1jpImmpAzwwHrn8ZswXwe04MN9lxpt6qD+doQBCaFveiv3g6+N2QAyGVijljVNdMKGA5zo8EeW++u3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fjPjtTtx; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=raptorengineering.com header.i=@raptorengineering.com header.b="UyJF5CEt"
-Received: from localhost (localhost [127.0.0.1])
-	by mail.rptsys.com (Postfix) with ESMTP id 3899C82871B7;
-	Thu, 27 Jun 2024 12:04:05 -0500 (CDT)
-Received: from mail.rptsys.com ([127.0.0.1])
-	by localhost (vali.starlink.edu [127.0.0.1]) (amavisd-new, port 10032)
-	with ESMTP id Z0AZFKoChWpd; Thu, 27 Jun 2024 12:04:04 -0500 (CDT)
-Received: from localhost (localhost [127.0.0.1])
-	by mail.rptsys.com (Postfix) with ESMTP id 759F482871F3;
-	Thu, 27 Jun 2024 12:04:04 -0500 (CDT)
-DKIM-Filter: OpenDKIM Filter v2.10.3 mail.rptsys.com 759F482871F3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=raptorengineering.com; s=B8E824E6-0BE2-11E6-931D-288C65937AAD;
-	t=1719507844; bh=lxG8sC0/ltpBtPDS3WyH/p3fZxyBFAQa4wHnHvd9qOQ=;
-	h=Message-ID:Date:MIME-Version:To:From;
-	b=UyJF5CEtwodZS0AOmdl/Xe0uxiSxyqQJHRJ5WHGh794xkqqwdOw0GKBPwrDxZ+8eX
-	 3yO3V2HpVP1xLj4cvvlxmVk0QV3aTYmnq//UqGpCtjyKTkNfTIf2fiJFfd+rdW80Yq
-	 bI9E/iHQvuaAvotGXRWxmvkZBEDw24oMyhr/h8VU=
-X-Virus-Scanned: amavisd-new at rptsys.com
-Received: from mail.rptsys.com ([127.0.0.1])
-	by localhost (vali.starlink.edu [127.0.0.1]) (amavisd-new, port 10026)
-	with ESMTP id nqNGWJcLLn22; Thu, 27 Jun 2024 12:04:04 -0500 (CDT)
-Received: from [10.11.0.2] (5.edge.rptsys.com [23.155.224.38])
-	by mail.rptsys.com (Postfix) with ESMTPSA id C6C9682871B7;
-	Thu, 27 Jun 2024 12:04:03 -0500 (CDT)
-Message-ID: <4826c905-720d-43bf-98a8-c4be076a3ebe@raptorengineering.com>
-Date: Thu, 27 Jun 2024 12:04:03 -0500
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fjPjtTtx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1719510815; x=1751046815;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=zR/DvixaFDlAESFnfJVYO12k6N/AVnfp7kdRgzhkGAA=;
+  b=fjPjtTtxsCsYOlA3irkMTx25p5408nDA/bfkxEyInp4vbwnqZiac4tn9
+   y5gYJ0MP41/iNF5zuDa7eON9FXEETIbuIAa10H+dEUt8jbMkv6fnCftVP
+   oQneQcRevTLCcT9brMJXjNY/ZM+WDY7T8HgDmIHTJqWpuugpkIgcBfC7U
+   xQwKCbNtzVBHtMovrIMZfIrZI8zNsuzHnSiufBCZzlZaFML//XDn6PWmx
+   W6DYTV6bLs5vzKNG24My5d+3IsXUmblN4xpfpcmsMCkyZukTXrR8oiF3Y
+   ouSROMDpFmanZNOdjP9mO3hZrSWEWtnO5IpF5pR01ql7xFh8zfTIp/Aqi
+   w==;
+X-CSE-ConnectionGUID: FN6Hy3srRXuQMtAo8PZsCA==
+X-CSE-MsgGUID: uFEWNkfPTqOExAAOEpli3A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11116"; a="20423928"
+X-IronPort-AV: E=Sophos;i="6.09,166,1716274800"; 
+   d="scan'208";a="20423928"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2024 10:53:34 -0700
+X-CSE-ConnectionGUID: Yq+Sxb2XROudERi7TdRWpw==
+X-CSE-MsgGUID: TIq0IGmsTQaJ2ikmVlsROA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,166,1716274800"; 
+   d="scan'208";a="49427989"
+Received: from djiang5-mobl3.amr.corp.intel.com (HELO [10.125.110.45]) ([10.125.110.45])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 27 Jun 2024 10:53:34 -0700
+Message-ID: <da7d82d8-5fbd-4042-84be-16b520add8da@intel.com>
+Date: Thu, 27 Jun 2024 10:53:32 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,49 +52,105 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] pci/hotplug/pnv_php: Fix hotplug driver crash on
- Powernv
-To: Krishna Kumar <krishnak@linux.ibm.com>, mpe@ellerman.id.au,
- npiggin@gmail.com
-Cc: nathanl@linux.ibm.com, aneesh.kumar@kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- gbatra@linux.ibm.com, bhelgaas@google.com, tpearson@raptorengineering.com,
- oohall@gmail.com, brking@linux.vnet.ibm.com, mahesh.salgaonkar@in.ibm.com,
- linuxppc-dev@lists.ozlabs.org
-References: <20240509120644.653577-1-krishnak@linux.ibm.com>
- <20240509120644.653577-2-krishnak@linux.ibm.com>
+Subject: Re: [PATCH v5 1/2] cxl: Preserve the CDAT access_coordinate for an
+ endpoint
+To: Ira Weiny <ira.weiny@intel.com>, linux-cxl@vger.kernel.org,
+ linux-pci@vger.kernel.org
+Cc: dan.j.williams@intel.com, vishal.l.verma@intel.com,
+ alison.schofield@intel.com, Jonathan.Cameron@huawei.com, dave@stgolabs.net
+References: <20240618231730.2533819-1-dave.jiang@intel.com>
+ <20240618231730.2533819-2-dave.jiang@intel.com>
+ <667d77ee16b31_2ccbfb2949@iweiny-mobl.notmuch>
 Content-Language: en-US
-From: Shawn Anastasio <sanastasio@raptorengineering.com>
-In-Reply-To: <20240509120644.653577-2-krishnak@linux.ibm.com>
+From: Dave Jiang <dave.jiang@intel.com>
+In-Reply-To: <667d77ee16b31_2ccbfb2949@iweiny-mobl.notmuch>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-Hi Krishna,
 
-On 5/9/24 7:05 AM, Krishna Kumar wrote:
-> Description of the problem: The hotplug driver for powerpc
-> (pci/hotplug/pnv_php.c) gives kernel crash when we try to
-> hot-unplug/disable the PCIe switch/bridge from the PHB.
-> 
-> 
-> Root Cause of Crash: The crash is due to the reason that, though the msi
-> data structure has been released during disable/hot-unplug path and it
-> has been assigned with NULL, still during unregistartion the code was
-> again trying to explicitly disable the msi which causes the Null pointer
-> dereference and kernel crash.
-> 
-> 
-> Proposed Fix : The fix is to correct the check during unregistration path
-> so that the code should not  try to invoke pci_disable_msi/msix() if its
-> data structure is already freed.
-> 
-> 
-> Signed-off-by: Krishna Kumar <krishnak@linux.ibm.com>
 
-I've tested this on a POWER9 box and can confirm that it fixes the panics
-when hotplugging PCIe bridges.
+On 6/27/24 7:32 AM, Ira Weiny wrote:
+> Dave Jiang wrote:
+>> Keep the access_coordinate from the CDAT tables for region perf
+>> calculations. The region perf calculation requires all participating
+>> endpoints to have arrived in order to determine if there are limitations
+>> of bandwidth data due to shared uplink.
+>>
+>> Signed-off-by: Dave Jiang <dave.jiang@intel.com>
+>> ---
+>>  drivers/cxl/core/cdat.c | 10 ++++++----
+>>  drivers/cxl/cxlmem.h    |  1 +
+>>  2 files changed, 7 insertions(+), 4 deletions(-)
+>>
+>> diff --git a/drivers/cxl/core/cdat.c b/drivers/cxl/core/cdat.c
+>> index bb83867d9fec..fea214340d4b 100644
+>> --- a/drivers/cxl/core/cdat.c
+>> +++ b/drivers/cxl/core/cdat.c
+>> @@ -15,7 +15,7 @@ struct dsmas_entry {
+>>  	struct range dpa_range;
+>>  	u8 handle;
+>>  	struct access_coordinate coord[ACCESS_COORDINATE_MAX];
+>> -
+>> +	struct access_coordinate cdat_coord[ACCESS_COORDINATE_MAX];
+>>  	int entries;
+>>  	int qos_class;
+>>  };
+>> @@ -163,7 +163,7 @@ static int cdat_dslbis_handler(union acpi_subtable_headers *header, void *arg,
+>>  	val = cdat_normalize(le16_to_cpu(le_val), le64_to_cpu(le_base),
+>>  			     dslbis->data_type);
+>>  
+>> -	cxl_access_coordinate_set(dent->coord, dslbis->data_type, val);
+>> +	cxl_access_coordinate_set(dent->cdat_coord, dslbis->data_type, val);
+>>  
+>>  	return 0;
+>>  }
+>> @@ -220,7 +220,7 @@ static int cxl_port_perf_data_calculate(struct cxl_port *port,
+>>  	xa_for_each(dsmas_xa, index, dent) {
+>>  		int qos_class;
+>>  
+>> -		cxl_coordinates_combine(dent->coord, dent->coord, ep_c);
+>> +		cxl_coordinates_combine(dent->coord, dent->cdat_coord, ep_c);
+>>  		dent->entries = 1;
+>>  		rc = cxl_root->ops->qos_class(cxl_root,
+>>  					      &dent->coord[ACCESS_COORDINATE_CPU],
+>> @@ -241,8 +241,10 @@ static int cxl_port_perf_data_calculate(struct cxl_port *port,
+>>  static void update_perf_entry(struct device *dev, struct dsmas_entry *dent,
+>>  			      struct cxl_dpa_perf *dpa_perf)
+>>  {
+>> -	for (int i = 0; i < ACCESS_COORDINATE_MAX; i++)
+>> +	for (int i = 0; i < ACCESS_COORDINATE_MAX; i++) {
+>>  		dpa_perf->coord[i] = dent->coord[i];
+>> +		dpa_perf->cdat_coord[i] = dent->cdat_coord[i];
+>> +	}
+>>  	dpa_perf->dpa_range = dent->dpa_range;
+>>  	dpa_perf->qos_class = dent->qos_class;
+>>  	dev_dbg(dev,
+>> diff --git a/drivers/cxl/cxlmem.h b/drivers/cxl/cxlmem.h
+>> index 19aba81cdf13..fb365453f996 100644
+>> --- a/drivers/cxl/cxlmem.h
+>> +++ b/drivers/cxl/cxlmem.h
+>> @@ -402,6 +402,7 @@ enum cxl_devtype {
+>>  struct cxl_dpa_perf {
+>>  	struct range dpa_range;
+>>  	struct access_coordinate coord[ACCESS_COORDINATE_MAX];
+>> +	struct access_coordinate cdat_coord[ACCESS_COORDINATE_MAX];
+> 
+> Need to update the kdoc.
 
-Tested-by: Shawn Anastasio <sanastasio@raptorengineering.com>
+Will update.
 
-Thanks,
-Shawn
+> 
+> Other than that.
+> 
+> Reviewed-by: Ira Weiny <ira.weiny@intel.com>
+
+Thanks!
+> 
+>>  	int qos_class;
+>>  };
+>>  
+>> -- 
+>> 2.45.1
+>>
+> 
+> 
