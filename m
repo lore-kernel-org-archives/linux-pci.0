@@ -1,110 +1,79 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+Received: from mail-pj1-f49.google.com (mail-pj1-f49.google.com [209.85.216.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEE742AD0C;
-	Mon,  1 Jul 2024 20:26:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37E2816DEAD;
+	Mon,  1 Jul 2024 20:34:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1719865580; cv=none; b=a03mz81wQXvjjn/KSnHmsjVybCKhSNxDOIUX/Bic5LI+4Set0QlNN28s02cwTx4xNWc8DqHYD/hYLNXKdXmfrrj/+ABcHxz/vgCteqm6uTmjfrxIK1fmJCXhycpxfZIpQCmZzxBN624x/MDrIze0Slz5m/PrXPByoYtQE+DZX5o=
+	t=1719866072; cv=none; b=pQYj3Nc58ssQlXSWBCM/xIcMod+ZpyxSEiPneTvF9oe8rA5/Rueyf9qoX2blmYrxA8p2Macoe/cRgdMt7HCg0jnkJ2mFvhy0oU44U+qEe6GBGwXrCZAi2IYDex1doo0LyEtvHYjLVCo80QqjDt89+3LjEreng5avHHk1wMCcbNQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1719865580; c=relaxed/simple;
-	bh=eR3hh1+XS210oQnDU9n0EMfkctIm37rEsxObT0XcN7s=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=I+kVWQFRWz7tpCom7XOgRGB14UyZdd7uzdaIxo7/Cdd1D0pm0lXZKuZ6urSPySsnbqHwn4TkFubnKViM1+LJZ+2kZSOM7WxTaophLIjZ/7bdCdeMl3XoYq83//24mJBc4gMYcfZwqKYbIFBjJDaajyKBwWnMqmli3i3FrA76DnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=kernel.org
+	s=arc-20240116; t=1719866072; c=relaxed/simple;
+	bh=Wo6jYVKWt1XsfvW2kocRWwhdmJB1ArOA1W+ONgrcPUo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jeeTpVpQJILQUzP8XTq2bj4s3TzkB1JvVEK2tV5f5TRQfKECpXl0W35j7W6V+nx6Ao86LmhMck87rKc7Gcjqk+2HqUGMh5AOohZVbEfJR5ycEK6n5YtHcAUGs5gZEnDFfMmevC4roNwNlYV+cCsxeYqXiQxN6DK3qJQuc2JMEsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-1f9b364faddso19921735ad.3;
-        Mon, 01 Jul 2024 13:26:18 -0700 (PDT)
+Received: by mail-pj1-f49.google.com with SMTP id 98e67ed59e1d1-2c70c08d98fso2550204a91.0;
+        Mon, 01 Jul 2024 13:34:31 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1719865578; x=1720470378;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=AdHPbFHUncvFeJ/DAqyKKSF/mF1oyNKAV5RldPg7OyM=;
-        b=VkrCmTCc0RB9S80A+L8yaDBgEgbncwa7WNWLZzRe1CWZezq8sHWHA1f80curxo1N2l
-         ixwNroUxBcX7rd1H3eZlhGsyErD1TtYB6rChbCLwYwwlcKW3Kr91CpU8uoPLVUKVux9P
-         4ZKfy3qLGXoxiQupFDq6XGr0vZl6x1EYdZ91CXECY3Z8A2jq5QYzibm6QOTccy0Ahuzp
-         74zlz4kgqn2Ss3xmBzHspslbSzCzGN6iYV0U+9973dz1LxLwzhhLpq9G2ZhY2JRnKifK
-         pYSdNnYCO+FnCk6mhKVx6eE3ufCZsKFHNCtENXU2n88QHZGMRS9HY0iEHCB9nf3c0BV0
-         GxFw==
-X-Forwarded-Encrypted: i=1; AJvYcCW0/XNKC91LvHxioUG7++0rPBVTXNdFhDVj5Pbhq1nQgboqa6ElvfAl8xZ44IMbr5sI6m1GbvdiRKvp4VtSf1edpS/XQ9Rjv2h0+R2geny6BppQE5gKB24fN//VLgVx4J7Vckxs4DCy
-X-Gm-Message-State: AOJu0YyLpt94B+KbycCPVrjcJKzsoctVonTmDcotORPtAFtYibweNnfS
-	jMpo5jTOuZffiW77rj9rtI1Z6OfIi7kR50X/mXegPZMjHnN3QFGJgtdPHw==
-X-Google-Smtp-Source: AGHT+IFXsgetXTOH0qwRvAUhLUDyzqZQeQTG3maWudj/BKSHy5rle/iQ6aEa2iMUR5UuJP0Ll9kUvg==
-X-Received: by 2002:a17:902:f60a:b0:1fa:2c91:f004 with SMTP id d9443c01a7336-1fadbc736f9mr46987895ad.16.1719865577690;
-        Mon, 01 Jul 2024 13:26:17 -0700 (PDT)
-Received: from liuwe-devbox-debian-v2.lamzopl0uupeniq2etz1fddiyg.xx.internal.cloudapp.net ([20.69.120.36])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1fac1596920sm69135615ad.268.2024.07.01.13.26.16
+        d=1e100.net; s=20230601; t=1719866070; x=1720470870;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Gt/VCLG0XE9tYQ4KowekIVt6Vm28X9Pkg8zs7uMqPhA=;
+        b=soUasothld5V2uHGgPoIj2iqlw0/Q+DCUqFzx5jEVmpe63GPOMThtkKEOwu9bDv7lY
+         RirFesaJtGIgKQH92sc+xO17XsauDA2u2l4J4D5VR51abyfM05E+9hCPkLxJv1ZbTGcW
+         milM76ROyabOEwPuo0g3lxqE4FjjdLt9+JOOnLLhX9qL4Gqk12IrwAEAu6xE1t+lskX/
+         3BTLDTnBbkXNdwrjuxkbnLy8gvMM3BJcmAUfBw6+KzON6x7NDUqynpfVf3Aa1fTYMdUf
+         /JhF3vxOqj+y+9YymRLY2SJpUS+3sO3wcxCYX4hsMldwaiuwahyGezfkwle9YCFBjkIu
+         N61g==
+X-Forwarded-Encrypted: i=1; AJvYcCWwMbzTSPzfxlKzZU4OBMNcdbA1E4PMtB9vig428cxx5vVxTmGub+cugLXcVbd4f91sB91rX8mnZO7OLDHeJU/BCwINaxvO69NqwhnpPWgGebvI0gn11KQZgU2h4aP5u0V6qeTWw6+tsNuwYbhwZH3CMENddM3JH4KVDjG6BblLbWAOky0RH6H0
+X-Gm-Message-State: AOJu0YyHAQQtLp4z+HKVws6AherE0Hu4mwqopaNF5kAgf47SOkMCGexz
+	xkQZFyqclxCsC+huz/Rer1sPjGNutBHY6GENW84zjxmxQONOD0Z5
+X-Google-Smtp-Source: AGHT+IH37dM54+qflq0oEXeW4Muag9hwYXpu9YtpKLmCGG+T0D5FT3KmTqCArx3LOlD6TcYfx9xJMw==
+X-Received: by 2002:a17:90a:d70b:b0:2c2:d8d7:bf65 with SMTP id 98e67ed59e1d1-2c93d6d72famr5079101a91.7.1719866070429;
+        Mon, 01 Jul 2024 13:34:30 -0700 (PDT)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2c91ce425bdsm7306981a91.14.2024.07.01.13.34.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 01 Jul 2024 13:26:17 -0700 (PDT)
-From: Wei Liu <wei.liu@kernel.org>
-To: Linux on Hyper-V List <linux-hyperv@vger.kernel.org>
-Cc: Wei Liu <wei.liu@kernel.org>,
-	stable@kernel.org,
-	Michael Kelley <mhklinux@outlook.com>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Dexuan Cui <decui@microsoft.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Jake Oshins <jakeo@microsoft.com>,
-	linux-pci@vger.kernel.org (open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3] PCI: hv: Return zero, not garbage, when reading PCI_INTERRUPT_PIN
-Date: Mon,  1 Jul 2024 20:26:05 +0000
-Message-ID: <20240701202606.129606-1-wei.liu@kernel.org>
-X-Mailer: git-send-email 2.43.0
+        Mon, 01 Jul 2024 13:34:30 -0700 (PDT)
+Date: Tue, 2 Jul 2024 05:34:28 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To: Dan Carpenter <dan.carpenter@linaro.org>
+Cc: Frank Li <Frank.Li@nxp.com>, Jon Mason <jdmason@kudzu.us>,
+	Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, ntb@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: endpoint: fix a couple error handling bugs
+Message-ID: <20240701203428.GA412915@rocinante>
+References: <6eacdf8e-bb07-4e01-8726-c53a9a508945@moroto.mountain>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6eacdf8e-bb07-4e01-8726-c53a9a508945@moroto.mountain>
 
-The intent of the code snippet is to always return 0 for both
-PCI_INTERRUPT_LINE and PCI_INTERRUPT_PIN.
+Hello,
 
-The check misses PCI_INTERRUPT_PIN. This patch fixes that.
+> Two small error error handling and cleanup patches.  The first one fixes
+> an incorrect error message printed on success.  The other one fixes some
+> cleanup.  Which is probably not required because PCI code is generally
+> required for a functioning system...
 
-This is discovered by this call in VFIO:
+Applied to endpoint, thank you!
 
-    pci_read_config_byte(vdev->pdev, PCI_INTERRUPT_PIN, &pin);
+[01/02] PCI: endpoint: Clean up error handling in vpci_scan_bus()
+        https://git.kernel.org/pci/pci/c/72705e5b5957
 
-The old code does not set *val to 0 because it misses the check for
-PCI_INTERRUPT_PIN. Garbage is returned in that case.
+[02/02] PCI: endpoint: Fix error handling in epf_ntb_epc_cleanup()
+        https://git.kernel.org/pci/pci/c/05214340e133
 
-Fixes: 4daace0d8ce8 ("PCI: hv: Add paravirtual PCI front-end for Microsoft Hyper-V VMs")
-Cc: stable@kernel.org
-Signed-off-by: Wei Liu <wei.liu@kernel.org>
-Reviewed-by: Michael Kelley <mhklinux@outlook.com>
----
-v3:
-* Change commit subject line and message per Bjorn's suggestion
-v2:
-* Change the commit subject line and message
-* Change the code according to feedback
----
- drivers/pci/controller/pci-hyperv.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 5992280e8110..cdd5be16021d 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -1130,8 +1130,8 @@ static void _hv_pcifront_read_config(struct hv_pci_dev *hpdev, int where,
- 		   PCI_CAPABILITY_LIST) {
- 		/* ROM BARs are unimplemented */
- 		*val = 0;
--	} else if (where >= PCI_INTERRUPT_LINE && where + size <=
--		   PCI_INTERRUPT_PIN) {
-+	} else if ((where >= PCI_INTERRUPT_LINE && where + size <= PCI_INTERRUPT_PIN) ||
-+		   (where >= PCI_INTERRUPT_PIN && where + size <= PCI_MIN_GNT)) {
- 		/*
- 		 * Interrupt Line and Interrupt PIN are hard-wired to zero
- 		 * because this front-end only supports message-signaled
--- 
-2.43.0
-
+	Krzysztof
