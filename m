@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEEAA1A4F1D;
-	Thu,  4 Jul 2024 08:54:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9ED1A4F22;
+	Thu,  4 Jul 2024 08:54:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720083247; cv=none; b=OwDVJNvggyJuZgsiCkPyLp83CQhScVPphasvACKEGpelLsJ3AaFL8anKSnhBTDFNp/PHlHTaht4F6UR/b1APw1Jho8SmH3kXY77C7nikEyQv+k7UOLqwq+bHz8bxpDKPLl+ujTWAMN1m3+/6gXSkMyuTeoHE0NlMwaBpLuiqAwQ=
+	t=1720083248; cv=none; b=dYXxGrlUQJ95E26w5w6MnXuAheAfAplsW9liH68xlHrVDEQ/B+95KtZ625r6WGn+324HFwueN1Z2MxXQhf7BcMFlrsBWmZFJ8QmBF2AODNbfcgUi4tKvf4aag63K687KVoI76g4sqfOCy9HAJHPX24bB4Hv95IvmbWJEh3gsFT0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720083247; c=relaxed/simple;
-	bh=bfvc5FLaFeKYhbLLxS6MoY6PRX1DIf6hUoi6GjD3luQ=;
+	s=arc-20240116; t=1720083248; c=relaxed/simple;
+	bh=tqqJI6wD144Ba0q2mBEunzNzlWBhDW4D6RtTx5VSFGA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=DefGU27CLekxB6WHKEQHy8tBU/j0NBdAsbh52BrUgG2zsdzkl6OWZaqAvIU0TVyGS0FdwroIpj8nFwlwZEZnt8uv5ayiApsllPJY0N+ZPENX+dMcL19k/cA42C0/O+eGKhOpo6MnTbuT2lqKGlFt32CY27i1IoNPI3SJLunykWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Rsh0CDXL; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version:Content-Type; b=JMfrCFId0f4/bZLlrOP+n44QDL+l/CT6g+vetPN9dGp2lYOGVjDFnOMUYyzYq4oYk/1bmhqnAXNf2LSntMWXSeHQ6N8lxY6utzfe5vEn9cU1kheoEUwSluCE4fXjDEsWpNz3+2KlwYRR2rDL1y2JMGPXOuHkdLA3HZxKhoVDBoc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=AsMuDZ6J; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Rsh0CDXL"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="AsMuDZ6J"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1720083246; x=1751619246;
+  t=1720083247; x=1751619247;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=bfvc5FLaFeKYhbLLxS6MoY6PRX1DIf6hUoi6GjD3luQ=;
-  b=Rsh0CDXLhVKYGa8bZT+FswkLSQ8QPXdaG2+Ft2MX6TBVdZJmqdocbg5E
-   gNg6XVxCibEZNpbAL0tJ2C4GhsM+cLT5VEyIdwCJ9TZrqJ3xMAbQ6JVzK
-   /EXxlYMgMre6huAiPABw291DGMEfvgMnPko6UN6Ii3EqztJesRzNsmyvI
-   Z02KXu4TtZL9EHlqXAPN4auC25es6htQoRU3LPrbtyApFm5IWRVH5dCBw
-   Gj4nF+yv8nglS0EkHEugwMyomIcQ0H1qwLUnFVmGkT/dtPK7rGsKSon9h
-   Z+IuRQW3cZ8MSbiONyNtOBWAC/EnUznIZyn0nUX3+j4KlT4t5Mn4sKFaG
-   A==;
-X-CSE-ConnectionGUID: hlREBmXqQjeCenH+a+efrQ==
-X-CSE-MsgGUID: UaYV37lMRjeUur9Ha4eSiw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11122"; a="17300638"
+  bh=tqqJI6wD144Ba0q2mBEunzNzlWBhDW4D6RtTx5VSFGA=;
+  b=AsMuDZ6Jd6NZPEwfh+mhFnwYuEaOgEjDdLwfN/mL1y4fCPqSLoyImBMG
+   y+0MIWt+9MSUlt93DXWjS2zjur6N8lCx5yyHbqNt9l7iDpKMwQEx29Jg0
+   iaV1vxctQvh0nGD0MaqEBGkxliQx7mqNd/MPR/mTqi0FmJtcLK2n6B+mN
+   vKczR6JowWxr3QNkGGfcIdhrQLOEkWKrNnwGqJ+5icf34IGNuvI/Cf4O2
+   KDOB3weVKESTb2iAtD1/lgZzDDizRSnUge7OrpUPgj9wxCScdcqhgqfgM
+   QyeWUOFvO63Iglty5SwQ6ktBO8umzDLiFbUETvh4nt9JVxJ0YAjTmEUWu
+   g==;
+X-CSE-ConnectionGUID: 3Eilkjp7TZ6Ozg/Sa2+D8A==
+X-CSE-MsgGUID: tx+jcSZfSsKOOuYKJlDeZw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11122"; a="17300627"
 X-IronPort-AV: E=Sophos;i="6.09,183,1716274800"; 
-   d="scan'208";a="17300638"
+   d="scan'208";a="17300627"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 01:54:05 -0700
-X-CSE-ConnectionGUID: 3mW3Ax9FR7CK9fSQbNPv/g==
-X-CSE-MsgGUID: pQGtUe3PTnqCpJ8HA0ipnw==
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 01:54:02 -0700
+X-CSE-ConnectionGUID: xTETAE2ZTNaJKvgcdcv0wQ==
+X-CSE-MsgGUID: l7GzGtQ9SK6N+9G7AgNkiQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.09,183,1716274800"; 
-   d="scan'208";a="51708624"
+   d="scan'208";a="51708597"
 Received: from bergbenj-mobl1.ger.corp.intel.com (HELO pbossart-mobl6.intel.com) ([10.245.246.90])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 01:54:02 -0700
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2024 01:53:58 -0700
 From: Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
 To: linux-sound@vger.kernel.org
 Cc: alsa-devel@alsa-project.org,
@@ -51,10 +51,12 @@ Cc: alsa-devel@alsa-project.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org,
 	Bard Liao <yung-chuan.liao@linux.intel.com>,
+	Ranjani Sridharan <ranjani.sridharan@linux.intel.com>,
+	=?UTF-8?q?P=C3=A9ter=20Ujfalusi?= <peter.ujfalusi@linux.intel.com>,
 	Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
-Subject: [PATCH v3 6/6] ASoC: Intel: soc-acpi-intel-ptl-match: add rt722 l3 adr
-Date: Thu,  4 Jul 2024 10:53:30 +0200
-Message-ID: <20240704085330.371332-7-pierre-louis.bossart@linux.intel.com>
+Subject: [PATCH v3 5/6] ASoC: Intel: soc-acpi-intel-ptl-match: Add rt722 support
+Date: Thu,  4 Jul 2024 10:53:29 +0200
+Message-ID: <20240704085330.371332-6-pierre-louis.bossart@linux.intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20240704085330.371332-1-pierre-louis.bossart@linux.intel.com>
 References: <20240704085330.371332-1-pierre-louis.bossart@linux.intel.com>
@@ -64,47 +66,76 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 From: Bard Liao <yung-chuan.liao@linux.intel.com>
 
-Add rt722 support on SoundWire link 3.
+This patch adds match table for rt722 multiple
+function codec on link 0.
 
+Reviewed-by: Ranjani Sridharan <ranjani.sridharan@linux.intel.com>
+Reviewed-by: Péter Ujfalusi <peter.ujfalusi@linux.intel.com>
 Signed-off-by: Bard Liao <yung-chuan.liao@linux.intel.com>
 Signed-off-by: Pierre-Louis Bossart <pierre-louis.bossart@linux.intel.com>
 ---
- .../intel/common/soc-acpi-intel-ptl-match.c   | 24 +++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ .../intel/common/soc-acpi-intel-ptl-match.c   | 49 +++++++++++++++++++
+ 1 file changed, 49 insertions(+)
 
 diff --git a/sound/soc/intel/common/soc-acpi-intel-ptl-match.c b/sound/soc/intel/common/soc-acpi-intel-ptl-match.c
-index d01646f52d1f..8a0c3aa8efaa 100644
+index ce4234fd3895..d01646f52d1f 100644
 --- a/sound/soc/intel/common/soc-acpi-intel-ptl-match.c
 +++ b/sound/soc/intel/common/soc-acpi-intel-ptl-match.c
-@@ -65,6 +65,15 @@ static const struct snd_soc_acpi_adr_device rt722_0_single_adr[] = {
+@@ -22,6 +22,31 @@ static const struct snd_soc_acpi_endpoint single_endpoint = {
+ 	.group_id = 0,
+ };
+ 
++/*
++ * RT722 is a multi-function codec, three endpoints are created for
++ * its headset, amp and dmic functions.
++ */
++static const struct snd_soc_acpi_endpoint rt722_endpoints[] = {
++	{
++		.num = 0,
++		.aggregated = 0,
++		.group_position = 0,
++		.group_id = 0,
++	},
++	{
++		.num = 1,
++		.aggregated = 0,
++		.group_position = 0,
++		.group_id = 0,
++	},
++	{
++		.num = 2,
++		.aggregated = 0,
++		.group_position = 0,
++		.group_id = 0,
++	},
++};
++
+ static const struct snd_soc_acpi_adr_device rt711_sdca_0_adr[] = {
+ 	{
+ 		.adr = 0x000030025D071101ull,
+@@ -31,6 +56,24 @@ static const struct snd_soc_acpi_adr_device rt711_sdca_0_adr[] = {
  	}
  };
  
-+static const struct snd_soc_acpi_adr_device rt722_3_single_adr[] = {
++static const struct snd_soc_acpi_adr_device rt722_0_single_adr[] = {
 +	{
-+		.adr = 0x000330025d072201ull,
++		.adr = 0x000030025d072201ull,
 +		.num_endpoints = ARRAY_SIZE(rt722_endpoints),
 +		.endpoints = rt722_endpoints,
 +		.name_prefix = "rt722"
 +	}
 +};
 +
- static const struct snd_soc_acpi_link_adr ptl_rt722_only[] = {
- 	{
- 		.mask = BIT(0),
-@@ -74,6 +83,15 @@ static const struct snd_soc_acpi_link_adr ptl_rt722_only[] = {
- 	{}
- };
- 
-+static const struct snd_soc_acpi_link_adr ptl_rt722_l3[] = {
++static const struct snd_soc_acpi_link_adr ptl_rt722_only[] = {
 +	{
-+		.mask = BIT(3),
-+		.num_adr = ARRAY_SIZE(rt722_3_single_adr),
-+		.adr_d = rt722_3_single_adr,
++		.mask = BIT(0),
++		.num_adr = ARRAY_SIZE(rt722_0_single_adr),
++		.adr_d = rt722_0_single_adr,
 +	},
 +	{}
 +};
@@ -112,15 +143,15 @@ index d01646f52d1f..8a0c3aa8efaa 100644
  static const struct snd_soc_acpi_link_adr ptl_rvp[] = {
  	{
  		.mask = BIT(0),
-@@ -116,6 +134,12 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_ptl_sdw_machines[] = {
+@@ -67,6 +110,12 @@ struct snd_soc_acpi_mach snd_soc_acpi_intel_ptl_sdw_machines[] = {
  		.drv_name = "sof_sdw",
- 		.sof_tplg_filename = "sof-ptl-rt722-l0.tplg",
+ 		.sof_tplg_filename = "sof-ptl-rt711.tplg",
  	},
 +	{
-+		.link_mask = BIT(3),
-+		.links = ptl_rt722_l3,
++		.link_mask = BIT(0),
++		.links = ptl_rt722_only,
 +		.drv_name = "sof_sdw",
-+		.sof_tplg_filename = "sof-ptl-rt722-l3.tplg",
++		.sof_tplg_filename = "sof-ptl-rt722-l0.tplg",
 +	},
  	{},
  };
