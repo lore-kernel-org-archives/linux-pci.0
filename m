@@ -1,49 +1,49 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1ACF190686;
-	Wed, 10 Jul 2024 11:16:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D396191478;
+	Wed, 10 Jul 2024 11:16:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720610208; cv=none; b=nrblAdb4MBijBRExwCTLbcaWm/fWDsWM4HvDrAziWnw+mIQ7GnA1EK5XvtU+37wGfVFVxvqH57JcVOHJ0K7UrJprfgXEz3nd2nTfynAPsPOzRs4IBcxtWzh6nFqtWTJfg2t4I5WhXX+jFkRgHdYE+/2Pf3FJRKKIXxdXdqw+mKo=
+	t=1720610209; cv=none; b=Jzj3MyNIMOwqeEpJY+npZVHwYUOCBpqLIm1Pwms6T1D/B8k1mMYJ8HrZks1AZszEjcTc+H9Q0qOATiQzwXOCLekMYkqH95SXJXIr06O7INpCWJ4fzC5qm9ZPhlx+utVFzzfX8RlXCPyF+NwNE8dwzv0nlM6peUaA91f0O+5OCWc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720610208; c=relaxed/simple;
-	bh=1M69sQaj4QaAhL/abIhKk1HdzawocfPQ+g8t39LKD+8=;
+	s=arc-20240116; t=1720610209; c=relaxed/simple;
+	bh=Vb4VfWEEZ11hPnr63kIgpUnhSXDFicNz6OjjT6G1Dr4=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=kc8RDj5xJmUVAYP5oyyFlgsgxk1cQhFfTlpcIV3YPFjsLr40JdJPvPyzFfyb1v691moF8iOmHbsSKjl0GRjpUInvXRIxnrD6mrqyIDKWCfhsm24ZC4cNf1DzbPQWSQQ4KAHNBppJ24nu4mMGwfKMQK61EXKmosPFtA+YMQi/zQE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nsZFgH8P; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:CC; b=Xi///cwJoN5L5G71IHuZiSob5w+O8NDdcTsGuDjVYZT6wcXLdIILSUIUi4xyG6TqEmBsmr/upke0keGFWcLFNUyNZanK8/nXMDM2Es+MzbV2OMPLTNwqh8aDXQmSXw9DdTcTFOyjYPnfpLhuKzMF4cr9jLFjwIhKjB6vnkctUSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=MzfIGJ4p; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nsZFgH8P"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46A91fEA015275;
-	Wed, 10 Jul 2024 11:16:39 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MzfIGJ4p"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46A9s9Zn006570;
+	Wed, 10 Jul 2024 11:16:28 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	1IOPEQb5RHN8DhNQ66C/acpOyjcVqxojM0lRdgCCoOU=; b=nsZFgH8P57mxBNKM
-	8z+o9VUw+8JNGuP8H5hBTXuBVOjTXK4eBav/4kDLMN4EuRaZNebU+l63DJEf+SW5
-	E4JMXRQk5yBiniow0Ab/Jzlk9kjdnFbq1CumVDT3dr2bFUO2cq2td7dz7bU+dK6q
-	Qsx+gvBCH0kwqsC6Ldne9fURb3Wh5XtKcI6byD1Hha8SGD4lzv+JF6Y0TEuSNCOf
-	9VUpSxyVLwcrinw6QhNsFW78IbZ03oUJRca+VLMIDdvFn/WQHU8CSlbprh0AGb9G
-	76XyR2SmnYVYEx/lJhpiP/hvK8QEivJWNKcXD9Jo6ksxAIe235lpPLWgCpfbsSuh
-	or9JsA==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 406y3hgrpy-1
+	24yxeffEdWpV5EDkIZnw2qvG3lbLf/oEIK8MLUSOLR0=; b=MzfIGJ4pnKlzyGcK
+	zNkPcyeLZE3N20EviXh8eQ6chBz2KJi9hSWcaQMQ1GVDstrWYjVEqwuSOt6Vq5DJ
+	mpRLPZDfcKcUr/mlhCTFQFECLMqlQq893ObbOWJM3zyAW/fvDsG+9o4YLCCtISIR
+	P71FKgQnE5qT1naGvWjmcxKs7UTIA0QbhT8wI1bqOlJkcxw4jaOf+CTE94h/KZZU
+	U+r9YJafwOU4lr/3akHieEQ1GFOSx80jxSbwrzE1tndsNMc9U9BqBZ+Yij3SqUKA
+	6nqyYn4KOLlfdTgfYO5b2K4Vwpw+sGBcLVICNH8QptZblugemeUaEW29e/7WEikP
+	mv73Zg==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 406wmmsa24-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 10 Jul 2024 11:16:39 +0000 (GMT)
+	Wed, 10 Jul 2024 11:16:28 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 46ABGcuP016533
+	by NALASPPMTA03.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 46ABGRXl031443
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 10 Jul 2024 11:16:38 GMT
+	Wed, 10 Jul 2024 11:16:27 GMT
 Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 10 Jul 2024 04:16:33 -0700
+ 15.2.1544.9; Wed, 10 Jul 2024 04:16:22 -0700
 From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Date: Wed, 10 Jul 2024 16:46:11 +0530
-Subject: [PATCH v6 4/5] PCI: epf-mhi: Add wakeup host op
+Date: Wed, 10 Jul 2024 16:46:09 +0530
+Subject: [PATCH v6 2/5] PCI: dwc: Add wakeup host op to pci_epc_ops
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,7 +52,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20240710-wakeup_host-v6-4-ef00f31ea38d@quicinc.com>
+Message-ID: <20240710-wakeup_host-v6-2-ef00f31ea38d@quicinc.com>
 References: <20240710-wakeup_host-v6-0-ef00f31ea38d@quicinc.com>
 In-Reply-To: <20240710-wakeup_host-v6-0-ef00f31ea38d@quicinc.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
@@ -73,78 +73,78 @@ CC: <linux-pci@vger.kernel.org>, <linux-doc@vger.kernel.org>,
         "Krishna chaitanya
  chundru" <quic_krichai@quicinc.com>
 X-Mailer: b4 0.13-dev-83828
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1720610170; l=2176;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1720610170; l=1895;
  i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
- bh=1M69sQaj4QaAhL/abIhKk1HdzawocfPQ+g8t39LKD+8=;
- b=sr3xUwax6LaDVtz1X/8f9tQxuRDYT4xFRELvGwbyDb16BI0RVj4TG7VHZ+cFIR+JNcWiElBIp
- t+2o1TUZJtpCQ2J+rN28OpTwjCd/ALuOSqKNmMPmS3QIhwgRWMFA5FN
+ bh=Vb4VfWEEZ11hPnr63kIgpUnhSXDFicNz6OjjT6G1Dr4=;
+ b=C4mQURunhHONgdPzD5JysCo60TFXIObUcigEkQbQeQKiCcKph5sBjF7X4BRzw43rpHB8LsX2J
+ bnL0hLHdxCAATyc/mZNrRP7jHzO4M66VRDm1l48k5jm33MFWqrjhaOJ
 X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
  pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 4-fh2hsV7PJbYrM6dQc1Rwp87atu3mfm
-X-Proofpoint-GUID: 4-fh2hsV7PJbYrM6dQc1Rwp87atu3mfm
+X-Proofpoint-GUID: lCBykg9wxUA09Ul8Rfi0en9kApSD-Dny
+X-Proofpoint-ORIG-GUID: lCBykg9wxUA09Ul8Rfi0en9kApSD-Dny
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-07-10_06,2024-07-10_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 bulkscore=0
- spamscore=0 adultscore=0 mlxscore=0 lowpriorityscore=0 suspectscore=0
- clxscore=1015 mlxlogscore=879 impostorscore=0 phishscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 bulkscore=0 adultscore=0
+ impostorscore=0 suspectscore=0 malwarescore=0 mlxscore=0 mlxlogscore=823
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2406140001 definitions=main-2407100077
 
-Add wakeup host op for MHI EPF.
-If the D-state is in D3cold toggle wake signal, otherwise send PME.
+Add wakeup host op to wake up host from D3cold or D3hot.
 
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 ---
- drivers/pci/endpoint/functions/pci-epf-mhi.c | 11 +++++++++++
- include/linux/mhi_ep.h                       |  1 +
- 2 files changed, 12 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware-ep.c | 12 ++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h    |  1 +
+ 2 files changed, 13 insertions(+)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-index 6de9014e6e53..82fc52490324 100644
---- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
-@@ -708,6 +708,16 @@ static int pci_epf_mhi_dma_init(struct pci_epf_mhi *epf_mhi)
- 	return ret;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+index 43ba5c6738df..a20b6bec6078 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-ep.c
++++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+@@ -440,6 +440,17 @@ dw_pcie_ep_get_features(struct pci_epc *epc, u8 func_no, u8 vfunc_no)
+ 	return ep->ops->get_features(ep);
  }
  
-+static int pci_epf_mhi_wakeup_host(struct mhi_ep_cntrl *mhi_cntrl)
++static bool dw_pcie_ep_wakeup_host(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
++				   bool send_pme)
 +{
-+	struct pci_epf_mhi *epf_mhi = to_epf_mhi(mhi_cntrl);
-+	struct pci_epf *epf = epf_mhi->epf;
-+	struct pci_epc *epc = epf->epc;
++	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
 +
-+	return pci_epc_wakeup_host(epc, epf->func_no, epf->vfunc_no,
-+			(mhi_cntrl->dstate == PCI_D3cold) ? false : true);
++	if (!ep->ops->wakeup_host)
++		return false;
++
++	return ep->ops->wakeup_host(ep, func_no, send_pme);
 +}
 +
- static void pci_epf_mhi_dma_deinit(struct pci_epf_mhi *epf_mhi)
- {
- 	destroy_workqueue(epf_mhi->dma_wq);
-@@ -803,6 +813,7 @@ static int pci_epf_mhi_link_up(struct pci_epf *epf)
- 	mhi_cntrl->unmap_free = pci_epf_mhi_unmap_free;
- 	mhi_cntrl->read_sync = mhi_cntrl->read_async = pci_epf_mhi_iatu_read;
- 	mhi_cntrl->write_sync = mhi_cntrl->write_async = pci_epf_mhi_iatu_write;
-+	mhi_cntrl->wakeup_host = pci_epf_mhi_wakeup_host;
- 	if (info->flags & MHI_EPF_USE_DMA) {
- 		mhi_cntrl->read_sync = pci_epf_mhi_edma_read;
- 		mhi_cntrl->write_sync = pci_epf_mhi_edma_write;
-diff --git a/include/linux/mhi_ep.h b/include/linux/mhi_ep.h
-index 7c9e5895ea2c..04646cf7782b 100644
---- a/include/linux/mhi_ep.h
-+++ b/include/linux/mhi_ep.h
-@@ -165,6 +165,7 @@ struct mhi_ep_cntrl {
- 	int (*write_sync)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
- 	int (*read_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
- 	int (*write_async)(struct mhi_ep_cntrl *mhi_cntrl, struct mhi_ep_buf_info *buf_info);
-+	int (*wakeup_host)(struct mhi_ep_cntrl *mhi_cntrl);
+ static const struct pci_epc_ops epc_ops = {
+ 	.write_header		= dw_pcie_ep_write_header,
+ 	.set_bar		= dw_pcie_ep_set_bar,
+@@ -454,6 +465,7 @@ static const struct pci_epc_ops epc_ops = {
+ 	.start			= dw_pcie_ep_start,
+ 	.stop			= dw_pcie_ep_stop,
+ 	.get_features		= dw_pcie_ep_get_features,
++	.wakeup_host		= dw_pcie_ep_wakeup_host,
+ };
  
- 	enum mhi_state mhi_state;
+ /**
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 53c4c8f399c8..da15ccd7a3f5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -365,6 +365,7 @@ struct dw_pcie_ep_ops {
+ 	 */
+ 	unsigned int (*get_dbi_offset)(struct dw_pcie_ep *ep, u8 func_no);
+ 	unsigned int (*get_dbi2_offset)(struct dw_pcie_ep *ep, u8 func_no);
++	bool	(*wakeup_host)(struct dw_pcie_ep *ep, u8 func_no, bool send_pme);
+ };
  
+ struct dw_pcie_ep_func {
 
 -- 
 2.42.0
