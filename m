@@ -1,84 +1,89 @@
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DBBC148FE8
-	for <linux-pci@vger.kernel.org>; Thu, 11 Jul 2024 14:03:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70F3015ECCA;
+	Thu, 11 Jul 2024 14:21:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1720706596; cv=none; b=hQcHmANslBwjqh6OGAOHTymtVNGsI/qMJq8ljd9DQisr6fDhweLBMp1JJfKsF3D+Hja/yrM4otWffIMTFNaMRgojdlokC/nY37/ACHOG+uQmZBJiwxVSXfqwaxRDIdRUPeHQgVtolxbAyHfAFCVa0BtowDRGroI6HkoXQWGm7Qk=
+	t=1720707701; cv=none; b=b4uZ0IVaBcQjEJwh46z7iffzxMgTxMaCS+H1P+pDBgl3QwWv3FnHpEfnIuUBv+TWuLwnR481AQoHfFp5oNdIaUO0J03U2KwPv6Gl00Pa/WBARgTv4VumJBXqXiHGkkPXxjavTLYrS/aPPwyxKVoueccDyGimIxLb5Kopt1VGcdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1720706596; c=relaxed/simple;
-	bh=t+XITPWlygAIT+7eWE+kZgGUFe7VMs1vnO+2v5/XTNw=;
+	s=arc-20240116; t=1720707701; c=relaxed/simple;
+	bh=OFfgo+TtGVgSb9VZqT8NLJ9xp+qtpitkJFL8d+tpdrs=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CPByJJwpTCn9wAZqhLBNjI0ikcjd8z0vtRg5acdPbPlxxdID/jsYbK+PG2+caG/YUbk2HdTr9XoUzvYodm0s1O8mx1XgNRE2zppSmBi7r75c9nOFia8NVAh9knR7Y/6E6HHOiiYSSTSGTvloPRhUuc0p19OooGrIbqlpBLq7gXY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=hOsgDY5v; arc=none smtp.client-ip=156.67.10.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
+	 Content-Type:Content-Disposition:In-Reply-To; b=YDNcCpNf629Q3EbpoMpL4lMbJ6sZR8YD0tp7p6UuOcA8eAhIj98J7ZT7K4LigjmPPGu7rb/4nPNO/92K6cuWT5SOt+9+rCZdnbqH7XcCEtFOCfntCOaiX0NhtKqXwFZy8lGb0vBMpXvLjFQ5oPUe6w7sdJno8UcEzEo+stm1wf8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kG5dHIKQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="hOsgDY5v"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Transfer-Encoding:Content-Disposition:
-	Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:From:
-	Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Content-Disposition:
-	In-Reply-To:References; bh=cMgynrlmHnZndNkRrupm9f56CiHUS2Zhy0sYBOJLELs=; b=hO
-	sgDY5vhDyj9GKcuTYqWC4Wh7cYgPSu5bVXeSoIyO+Hk3Pw7+VyAxpH7XPYCkliwWU97iSRKTlW5Wu
-	BU+5Ydd1Wi2nbGWcCFSCgVVDdmDABTXpJskjjXE2PxJ4ueXcga4lDoWnmOWhC0ixiKH+4cTF2/LpQ
-	LPPh1xyBBkn+2eg=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1sRuO1-002K2h-Qm; Thu, 11 Jul 2024 16:03:05 +0200
-Date: Thu, 11 Jul 2024 16:03:05 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Marek =?iso-8859-1?Q?Beh=FAn?= <kabel@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kG5dHIKQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C80FBC32782;
+	Thu, 11 Jul 2024 14:21:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1720707701;
+	bh=OFfgo+TtGVgSb9VZqT8NLJ9xp+qtpitkJFL8d+tpdrs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kG5dHIKQy4zaAFULcBG6mIa0k+R7/V04a6hQOC7Ihi3uqvupF2HYF6k2e+PQ1haEc
+	 iW89G6csdeGntpVYH5gbI0HCtEPgQt5G/CQplddsq6IBgxq1NCAbNHJARTupI1eQ3l
+	 VEFDqz7pik/mrQn+BQ1I7pvO5/MQIp544p7HzoN5QCiI2LW2i7hAUysB3MKiB7txrO
+	 L8VdEAfYJRnJx8aL4rSEZ/mvv/L9Ik8I6czHwPwc7BUvUCmC1ck3n+BdwsI423a+kW
+	 oy3fZhacCZS7ysb/itUeEEnDkhRoRSN5D5NwWXncGmAxrNEshULSlj9q6PuFsSvwdQ
+	 1EUTLPWPp4nRg==
+Date: Thu, 11 Jul 2024 16:21:34 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Francesco Dolcini <francesco@dolcini.it>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Nishanth Menon <nm@ti.com>, Vignesh Raghavendra <vigneshr@ti.com>,
+	Tero Kristo <kristo@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Gregory Clement <gregory.clement@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: Re: [PATCH v2] PCI: mvebu: Dispose INTx IRQs before to removing INTx
- domain
-Message-ID: <584912d9-96a5-4c29-b881-ecea4d97f516@lunn.ch>
-References: <20240711132544.9048-1-kabel@kernel.org>
+	Francesco Dolcini <francesco.dolcini@toradex.com>,
+	linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-omap@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v1 0/2] PCI: ti: k3: Fix TI J721E PERST# polarity
+Message-ID: <Zo_qbspq0vA_p8VC@ryzen.lan>
+References: <20240703100036.17896-1-francesco@dolcini.it>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240711132544.9048-1-kabel@kernel.org>
+In-Reply-To: <20240703100036.17896-1-francesco@dolcini.it>
 
-On Thu, Jul 11, 2024 at 03:25:44PM +0200, Marek Behún wrote:
-> From: Pali Rohár <pali@kernel.org>
+On Wed, Jul 03, 2024 at 12:00:34PM +0200, Francesco Dolcini wrote:
+> From: Francesco Dolcini <francesco.dolcini@toradex.com>
 > 
-> The documentation for the irq_domain_remove() function says that all
-> mappings within the IRQ domain must be disposed before the domain is
-> removed.
+> Fix PCIe PERST# signal polarity in TI J721E used on TI K3 machines.
 > 
-> Currently, the INTx IRQs are not disposed in pci-mvebu driver .remove()
-> method, which causes the kernel to crash when unloading the driver and
-> then reading /sys/kernel/debug/irq/irqs/<num> or /proc/interrupts.
-> 
-> Unmapping of the IRQs at this point of the .remove() method is safe,
-> since the PCIe bus is already unregistered, and all its devices are
-> unbound from their drivers and removed. If there was indeed any
-> remaining use of PCIe resources, then it would mean that PCIe hotplug
-> code is broken, and we have bigger problems.
-> 
-> Fixes: ec075262648f ("PCI: mvebu: Implement support for legacy INTx interrupts")
-> Reported-by: Hajo Noerenberg <hajo-linux-bugzilla@noerenberg.de>
-> Signed-off-by: Pali Rohár <pali@kernel.org>
-> Reviewed-by: Marek Behún <kabel@kernel.org>
-> [ Marek: refactored a little, added more explanation to commit message ]
-> Signed-off-by: Marek Behún <kabel@kernel.org>
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> PCIe PERST# needs to be de-asserted for PCIe to work, however, the driver is
+> doing the opposite and the device tree files are defining the signal with the
+> wrong polarity to cope with that. Fix both the driver and the affected DT
+> files.
 
-Reviewed-by: Andrew Lunn <andrew@lunn.ch>
+Hello there,
 
-    Andrew
+While I understand why you want to fix this,
+I'm not sure if you can actually do so without breaking device tree backwards
+compatibility.
+
+Imagine e.g. a board that has the DTB in ROM.
+The user upgrades the kernel, and the DTB that was working with the old
+kernel will now no longer work with the new kernel (because of your driver
+change).
+
+Just because you update the DTS files, you cannot assume that all DTBs
+out there in the wild will automatically be updated.
+
+That is what the DT maintainers told me many years ago when I wanted to do a
+similar change as yours, for another PCIe controller driver.
+
+Perhaps you could add a comment in the driver and the DTS files explaining
+that the DTS is actually wrong, but cannot be changed because of DT backwards
+compatibility.
+
+
+Kind regards,
+Niklas
