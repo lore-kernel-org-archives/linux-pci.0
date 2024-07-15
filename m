@@ -1,102 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CA3B143878
-	for <linux-pci@vger.kernel.org>; Mon, 15 Jul 2024 11:49:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 890A52B9A3;
+	Mon, 15 Jul 2024 12:10:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721044146; cv=none; b=DanbB/J0oj5wIPebrNP7Y8sTk+aWeRlXjlWTe3NibVXFl/NicH3sb2xlmR+fSW6s1v83XRfzKFperraZudH47nHcO+yujCh9Bje8SqL9xSrI2dNOG5HvG1LIWpZN5zVAHrGrKPuxFFSHlN3fID1GWArJkP0CvcNZfRmGCFqT/Dk=
+	t=1721045415; cv=none; b=n9RE+o4M/LViYW5GBmoXB1dy7nngi//rIrH/WOSq8ZdsU83tlxQIwqXQ9OW3Ak3jzBF2o9YFDKvqO80NVlwCKh9vWcrX/DTGjZ1SKTiJbmOJY+bMUwnM1wCsOu2WQja8v4Cm6534KKhEb952mZo8lv8hVZg4M5/pDS4hMmWnrcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721044146; c=relaxed/simple;
-	bh=GBWvRjJ6Uyft1k+kSz5hldpNuIiPrjwuJYXhdOBdovA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RrHFv41I2pFm2B/sWLzR+kvhsLU1GNcXgnH2ovzYRHr7Hv0mTfT/S3azOWvxVredrPaFzABXlLUBCSjKQ0U2OWZmOgHsC0mhupPJtxT6L1r2QcoUJT82G+rUp4mkBur1hVHv2Qy7kx94Y5XyDS2AGW78mKsd4+qQS3a8y7DT9fM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EhS6XZKX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1721045415; c=relaxed/simple;
+	bh=Np7FjnMeZr9L2hYzr0T3jrWbzJznqSgUpJHIgVSxNYw=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ZcFowdCoV4OczaUmHUraDqq8GZoVNcYQRWoL+nU5INTOZNB0TwAxUdHSKdgx24yDrVvMi2Xf/AIMm/f6ewyEUxcDgK6JHt6dflXxPVi6VB1H0bG5LEvNEvcBQLYdhPclfwU3AzL5xFa53wdwg68j6d9nVc1QP2+J5KPCd1ZXG/Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=pxxqlX1s; arc=none smtp.client-ip=198.47.19.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EhS6XZKX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B0D2C4AF10;
-	Mon, 15 Jul 2024 11:49:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1721044145;
-	bh=GBWvRjJ6Uyft1k+kSz5hldpNuIiPrjwuJYXhdOBdovA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=EhS6XZKXwXzsjtqjy/rJaeb44sU681IzCcpp0DwpeVIAEGtX2j1axs8+3kGfSqN8C
-	 GEVA7dcOlqc/DzC8FL9g/VrntK6pP6S+6IjgZypPlgoRke6TOJQnFxfh6zLLlFpr0f
-	 hsnoUgXfT0mVw6e7biUQxB4ZJtxsii0LX0it9W9txkZtsUxHyXN4LryI35wcW30uv8
-	 XxvWSgds8nxXfzwBgb/fPzh9Zjlm+AIaMhJAMPGEysPQ8A5HgMcxjBX0IdO4/T4HOY
-	 0Q0lR2hCea/E7YVgCrm2eryS84RlnsUsxg9Fx/wLnlxHJu5hLdmh4lWJAZR3ly5hPs
-	 YvfAVtVJtRBOg==
-From: =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-To: Thomas Gleixner <tglx@linutronix.de>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@bootlin.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Rob Herring <robh@kernel.org>,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	=?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>
-Subject: [PATCH v3 2/2] PCI: mvebu: Dispose INTx IRQs before to removing INTx domain
-Date: Mon, 15 Jul 2024 13:48:54 +0200
-Message-ID: <20240715114854.4792-3-kabel@kernel.org>
-X-Mailer: git-send-email 2.44.2
-In-Reply-To: <20240715114854.4792-1-kabel@kernel.org>
-References: <20240715114854.4792-1-kabel@kernel.org>
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="pxxqlX1s"
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 46FC9pHT024084;
+	Mon, 15 Jul 2024 07:09:51 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1721045391;
+	bh=oWdZfGEhKAneWVQdWVjdFiCIeJCzvhKBZKftmlYHpQI=;
+	h=From:To:CC:Subject:Date:In-Reply-To:References;
+	b=pxxqlX1sg+1QpB6O8zFKbxwuSC6dl6NQIFtYC8UP1JY/SxRNAOt4+hblZ6KiEhzy6
+	 zbbsYxBowRyaOH8kJ7N2x6ZU1gIddWcAFsANr0SbxUcBm+bG2j7a3O5QO2iuNP6IzO
+	 jU4P0GIq5Ccbj+XKYSTONqceDya09mge1zxymNrA=
+Received: from DFLE105.ent.ti.com (dfle105.ent.ti.com [10.64.6.26])
+	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 46FC9pKk012700
+	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Mon, 15 Jul 2024 07:09:51 -0500
+Received: from DFLE110.ent.ti.com (10.64.6.31) by DFLE105.ent.ti.com
+ (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Mon, 15
+ Jul 2024 07:09:51 -0500
+Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE110.ent.ti.com
+ (10.64.6.31) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Mon, 15 Jul 2024 07:09:51 -0500
+Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [10.24.72.81])
+	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 46FC9anX060344;
+	Mon, 15 Jul 2024 07:09:46 -0500
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+To: <lee@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <bhelgaas@google.com>, <vigneshr@ti.com>, <kishon@kernel.org>
+CC: <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <srk@ti.com>, <s-vadapalli@ti.com>
+Subject: [PATCH 2/3] dt-bindings: PCI: ti,j721e-pci-host: Add ACSPCIE proxy control property
+Date: Mon, 15 Jul 2024 17:39:35 +0530
+Message-ID: <20240715120936.1150314-3-s-vadapalli@ti.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20240715120936.1150314-1-s-vadapalli@ti.com>
+References: <20240715120936.1150314-1-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
-From: Pali Rohár <pali@kernel.org>
+Add the "ti,syscon-acspcie-proxy-ctrl" device-tree property which is
+used to obtain a reference to the ACSPCIE Proxy Control register along
+with the details of the PAD IO Buffer output enable bits.
 
-The documentation for the irq_domain_remove() function says that all
-mappings within the IRQ domain must be disposed before the domain is
-removed.
+The ACSPCIE Proxy Control register is used to drive the reference clock
+for the PCIe Endpoint device via the PAD IO Buffers of the ACSPCIE module.
+The ACSPCIE module can be used as an alternative to either an on-board
+clock generator or an external clock generator for providing the reference
+clock to the PCIe Endpoint device.
 
-Use the new helper function pci_remove_irq_domain() that also disposes
-all IRQ mappings of a IRQ domain before removing sait domain.
-
-Currently, the INTx IRQs are not disposed in pci-mvebu driver .remove()
-method, which causes the kernel to crash when unloading the driver and
-then reading /sys/kernel/debug/irq/irqs/<num> or /proc/interrupts.
-
-Unmapping of the IRQs at this point of the .remove() method is safe,
-since the PCIe bus is already unregistered, and all its devices are
-unbound from their drivers and removed. If there was indeed any
-remaining use of PCIe resources, then it would mean that PCIe hotplug
-code is broken, and we have bigger problems.
-
-Fixes: ec075262648f ("PCI: mvebu: Implement support for legacy INTx interrupts")
-Reported-by: Hajo Noerenberg <hajo-linux-bugzilla@noerenberg.de>
-Signed-off-by: Pali Rohár <pali@kernel.org>
-Reviewed-by: Marek Behún <kabel@kernel.org>
-[ Marek: refactored a little, added more explanation to commit message ]
-Signed-off-by: Marek Behún <kabel@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 ---
- drivers/pci/controller/pci-mvebu.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../devicetree/bindings/pci/ti,j721e-pci-host.yaml     | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/pci/controller/pci-mvebu.c b/drivers/pci/controller/pci-mvebu.c
-index 29fe09c99e7d..590f121bd91a 100644
---- a/drivers/pci/controller/pci-mvebu.c
-+++ b/drivers/pci/controller/pci-mvebu.c
-@@ -1684,7 +1684,7 @@ static void mvebu_pcie_remove(struct platform_device *pdev)
+diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+index 15a2658ceeef..69b499c96c71 100644
+--- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
++++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
+@@ -38,6 +38,16 @@ properties:
+       - const: reg
+       - const: cfg
  
- 		/* Remove IRQ domains. */
- 		if (port->intx_irq_domain)
--			irq_domain_remove(port->intx_irq_domain);
-+			pci_remove_irq_domain(port->intx_irq_domain);
- 
- 		/* Free config space for emulated root bridge. */
- 		pci_bridge_emul_cleanup(&port->bridge);
++  ti,syscon-acspcie-proxy-ctrl:
++    $ref: /schemas/types.yaml#/definitions/phandle-array
++    items:
++      - items:
++          - description: Phandle to the ACSPCIE Proxy Control Register
++          - description: Bitmask corresponding to the PAD IO Buffer
++                         output enable fields (Active Low).
++    description: Specifier for enabling the ACSPCIE PAD outputs to drive
++                 the reference clock to the Endpoint device.
++
+   ti,syscon-pcie-ctrl:
+     $ref: /schemas/types.yaml#/definitions/phandle-array
+     items:
 -- 
-2.44.2
+2.40.1
 
