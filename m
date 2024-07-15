@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D909356440;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D907155E48;
 	Mon, 15 Jul 2024 17:33:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721064830; cv=none; b=XuCn/hVR3F8YUfGGVRF5/v2Z9ozQHQYVmQSbMXSAvmj5O76AKVtDRy8HMKcpTP/zo5EyJdhKLyhlmkspZ15u0nj7S5p5iYMxBgAfNN2SHc7Yn9OpmqEwadAVSpyaO2U43rEpfQgCSmb2YeAxsfmNUoyvx7mvTFmiCNHjtCojRPE=
+	t=1721064830; cv=none; b=N1zt2OUIMjkU+oAAKaftPb1id0kwLzdaC7gxeFNQZslqU+k1sUe/LzTzfBDQ+vOvrcRAXIkGoknjP9qFrDZ9ScbtOff9cbQ1hI7PnTqJDXNWycvAgULFQIX+gASblLIgeappyDyg355pijpenQT2Z7oKESRI/Cbn98zElDRbvVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1721064830; c=relaxed/simple;
-	bh=JodG2X/6iAMSp3kPrYKmjLQmZw4WuSJ7AGPo4O5dqYE=;
+	bh=LRGU1ZUSjT7pMjV8SjmoQEmYcbLwDjL9G1AFtQWIDsM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=UYtTd7+ZUfNz9+Qhcy6YxYZWYSrHe3/8jKPUQolUDWyT8ayQerv34njyspHVf4HGkqAMxIz5vVqIMPnpdt5k6MDAY+iMdiWozAvCGRKueS9fyXgxoV0J7So2WeQ7crr9j4z+SkfTI/N3xg3J6KCvoqrMj07/HUToYjFR7v7oIkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nlxo+Aq0; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=T3LzI+ZCgUWXu5Zi54HBgKZ6ZsF+ZEWqAX0eUV6VzdcaLpXmbVfOJiXZ7gmujXaR0IbkIvKdcFt8+l0XeP/FjiVQVk/A13U40R3+TUfIa9DW7eqbJrdFWbzhh8IW4VeZkmJW3IasASo0pzcPkuSZZFMu5N2N1JhlHShLIVJVwVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mzr7uV+8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nlxo+Aq0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 945E4C4AF16;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mzr7uV+8"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8156EC4AF15;
 	Mon, 15 Jul 2024 17:33:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1721064829;
-	bh=JodG2X/6iAMSp3kPrYKmjLQmZw4WuSJ7AGPo4O5dqYE=;
+	bh=LRGU1ZUSjT7pMjV8SjmoQEmYcbLwDjL9G1AFtQWIDsM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=Nlxo+Aq0mSRrMKNVBH2zTC1llFUIi7qB6dnngDD4S620PDaXF4Ly7qpTBnpWwsZvL
-	 Vg7obPVvz+mdrIU70bO5PlIoZ+gbuEY6uNlWgKKFcwJH5QL0erJq6JPNfsAV7B/H2y
-	 YsCxrrK+WTZuHkq55ikPVBaFERW5Y62oTYONQ9+hU+/0nYr+CF5+2eQJAY/G0gAl6l
-	 OFV4sB+Gb3FT6AgrCZKO42JLiuJ4tytYu+eFrYGrrH6GogWphVZLiLkVI4DqHgHiYP
-	 aoFJwMJvxw71h0HVhCZH2SuTwz81/mOQLC2BMvVkEGUv5Fd/z9RZ/bVLfiwlia014O
-	 m8Ix561W0PTug==
+	b=Mzr7uV+8K3jodRpcTwqfKCvE8yCXOXCM4+vRSkV7+Gi/c6Hdg6M9+P2SQzBR/66z4
+	 DpIeYCAdwOcklN9/ymqfaje6Km8qAUxl1lbZqlb76Dh86ikloz59NFCToNV29pRzOq
+	 AgKxGtHuJodic4yT5E84FdqN7ximKMLRNqp3YCSOo/FZ3mO5lbD6qXAXRFX62glBys
+	 3/Lg4M8LGOjOEVBgfY7wEXBHZSk29gaTC/OlAN/SOE0j/Ry08tb0RyK1gDod07nqRs
+	 xS/F/UdHj+QeyoGOoUzzkzBVQyMzLGavrIzxwnlQNf35CljLj1ijv7z2n3n6rnQ3On
+	 IsFtjvBmyhpGg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 88090C3DA61;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 74851C3DA4B;
 	Mon, 15 Jul 2024 17:33:49 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Mon, 15 Jul 2024 23:03:46 +0530
-Subject: [PATCH 04/14] dt-bindings: PCI: pci-ep: Document
- 'linux,pci-domain' property
+Date: Mon, 15 Jul 2024 23:03:45 +0530
+Subject: [PATCH 03/14] dt-bindings: PCI: pci-ep: Update Maintainers
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240715-pci-qcom-hotplug-v1-4-5f3765cc873a@linaro.org>
+Message-Id: <20240715-pci-qcom-hotplug-v1-3-5f3765cc873a@linaro.org>
 References: <20240715-pci-qcom-hotplug-v1-0-5f3765cc873a@linaro.org>
 In-Reply-To: <20240715-pci-qcom-hotplug-v1-0-5f3765cc873a@linaro.org>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -56,16 +55,16 @@ Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 X-Mailer: b4 0.12.4
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1493;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=988;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=AdGl5m97uW0nytJxHIv1uC0b7XTjC/3siXK0QubHe3A=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmlV14F9MHhAndakYHmQubDUeQEqYLKrlW9Kq/s
- a1PHQeg2yCJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZpVdeAAKCRBVnxHm/pHO
- 9RR/B/9xARyrbyS7qtcfVGThO0D22TMAVIFcHJjlb98oUOxms57Sz7OYbCh6MVwSk/ZfHGLEEwk
- uOfxUX/ficqQlv9euJIo2MNUoS/Z9X+/LmQctpOTyRa/DQOb1TQlBQc5mPSQI9JWvAyOuUkc+YM
- Gscnc/N8+05NATJ+7HOOImp8lvpoyMsQuFnl8Uf/LjNGMLNIBP1qN27ItK03xnozskJeYxPdFnE
- ftz6QmvjCLR5Fwx1KIsctuIb7Alb2dQhqz4eFZbAyni2Wn0El58ZG9w7wYmzGl6K/eAtsL5sh6z
- bxX5HVZzv0o0cKb0H5uEwNEYfyF4snrcXdWd9BuPZYwiubI6
+ bh=hjExGhGjQYtIRypMJXzdJurZJRAD466HOf0lMqV3fm8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmlV14KYPtRgTg3g5EoPeN8522vVrQhN1qaY7/c
+ kIik6AD35uJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZpVdeAAKCRBVnxHm/pHO
+ 9eSuB/9x6dRA5UTZGB8p96YqCmsRpqrOTNu+uvJvQVEwqOSETlWw4EnwEpB2LfPMRFLfmvUWBYt
+ wdyMR3qpMNxZgBlhnpz2eD7u0f6c4Mo1xkYKUBMzR4i7+rsGeV2ytOX28WYDiPdXtdF7nt156KJ
+ ExX80HAXszwxIUdGz3aovIr9cZV+xsmPvsLT9rBaXy6ax/2elU8LtYdJTB/fj430YEji5KeBvzc
+ TeBFn9SyiQ4VPaUr88aQht8PvKDy3hupt52CtnHcIWVWi1r+V4M+ZQPqb5WnpRQ5pM33nt32Qfn
+ GJjVn5Kr8wTiI5v920O+QkgudZkDT2he8eJ3xokaafDC7KpE
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -75,40 +74,29 @@ Reply-To: manivannan.sadhasivam@linaro.org
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-'linux,pci-domain' property provides the PCI domain number for the PCI
-endpoint controllers in a SoC. If this property is not present, then an
-unstable (across boots) unique number will be assigned.
-
-Devicetrees can specify the domain number based on the actual hardware
-instance of the PCI endpoint controllers in the SoC.
+Kishon's TI email ID is not active anymore, so use his korg ID. Also, since
+I've been maintaining the PCI endpoint framework, I'm willing to maintain
+the DT binding as well. So add myself as the Co-maintainer.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- Documentation/devicetree/bindings/pci/pci-ep.yaml | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ Documentation/devicetree/bindings/pci/pci-ep.yaml | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/Documentation/devicetree/bindings/pci/pci-ep.yaml b/Documentation/devicetree/bindings/pci/pci-ep.yaml
-index 0b5456ee21eb..f75000e3093d 100644
+index d1eef4825207..0b5456ee21eb 100644
 --- a/Documentation/devicetree/bindings/pci/pci-ep.yaml
 +++ b/Documentation/devicetree/bindings/pci/pci-ep.yaml
-@@ -42,6 +42,17 @@ properties:
-     default: 1
-     maximum: 16
+@@ -10,7 +10,8 @@ description: |
+   Common properties for PCI Endpoint Controller Nodes.
  
-+  linux,pci-domain:
-+    description:
-+      If present this property assigns a fixed PCI domain number to a PCI
-+      Endpoint Controller, otherwise an unstable (across boots) unique number
-+      will be assigned. It is required to either not set this property at all
-+      or set it for all PCI endpoint controllers in the system, otherwise
-+      potentially conflicting domain numbers may be assigned to endpoint
-+      controllers. The domain number for each endpoint controller in the system
-+      must be unique.
-+    $ref: /schemas/types.yaml#/definitions/uint32
-+
- required:
-   - compatible
+ maintainers:
+-  - Kishon Vijay Abraham I <kishon@ti.com>
++  - Kishon Vijay Abraham I <kishon@kernel.org>
++  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
  
+ properties:
+   $nodename:
 
 -- 
 2.25.1
