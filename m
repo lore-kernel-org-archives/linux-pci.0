@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7924183087;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C87018306E;
 	Wed, 17 Jul 2024 17:03:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721235795; cv=none; b=EzZIuTeWXh9FE2bwcweI0+5m1Rs3ZK8NXIyGioHfpub6M0R8nDWsasLLtFwh6U7+FS4OAIPdB6feImBGj0g7W9R+FU6eshKijtPu5fRwt1dhf6B64gBWb12XXc9vBFA6ALLOGX/bYCzNimi+TmFM1CWXLZLUjllui5a3Ze64mlA=
+	t=1721235795; cv=none; b=MmK8FJNUm4m7iryb/H5x6VbbO6IuxHdy015t6T4E5pcUJcFjte8azrmmd+RSOfAZzzxRQDaCQDHh/IMIl3Ifemn/y1TokDuCP40MXa4mvixhStxyqK/29uVGIEpK7uaM29iw70D0cNuvVNIAKeUdHK8uEaPwcrcU1tg1JubZlCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1721235795; c=relaxed/simple;
-	bh=xVSjQT1rCMYJ7JMW46sFrx5R4uNe8KS69JtmKEfBafc=;
+	bh=9SpPkeVArnB3rJ4nPZ0WPdvcC8ctAG/YXTHNpaqeYTk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Ddxojmz3Z0vhbIDQUOipJn7kTGuvh9NniJ8s3kwWr8OBpDcy2yhAfMF47FZppMk/hQxzoFl4BLqXxTw+wjLPN82W2OI6Z6/CJ8Ud5pzYzEkWQWWwkFuD8gGnelsnuH6nJ5CtoaFOlCymB/C8/OhagkaKpyaPNRinOOwN8Do1UA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gCVHsgWT; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=VIeyRCQkclH2mUPkaR4i5657Z4ya9A/NO1SReiZMd+QD4XyKyU+GB1LuTUeV2XaNlgjlu8kmJ/tABLHIIRWfi3lfgPwa6phViMiYOeXIj0EjwQ36CAPB1333Ekjf30AAEjD2WCsUD7CpoCQI31VuuTGzvLdwN0zZUb3KTWdWXLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OobH63Br; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gCVHsgWT"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7FD31C4AF49;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OobH63Br"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5E999C4AF1A;
 	Wed, 17 Jul 2024 17:03:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1721235795;
-	bh=xVSjQT1rCMYJ7JMW46sFrx5R4uNe8KS69JtmKEfBafc=;
+	bh=9SpPkeVArnB3rJ4nPZ0WPdvcC8ctAG/YXTHNpaqeYTk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=gCVHsgWT6P9ao5uav9wCTkWQiPtqqamO3t1STbDu0/FI9DJPpjzen01ciWN81MO4W
-	 uIZyFbw3F7Wv9nSSCdf4rqoHDEcbZcL379UYCs15xGomRRkDfL6IRefI6sBsvkZzi4
-	 KK8o+nRPUmfKjX2c1DLp0/O5TQBB3JakUZw0eBkqLYDbqnHNCwoK5i/DuuioxYK1/z
-	 Ux5zlGhrScqL4DlUwjBxwQJGXztDIYKiZys91V03k01LiMyxIdmu23b1Vt4ck1PLP1
-	 ELPITcePESJhQ74qWCJMya7mc2zqJ9qN3ayLQSBDnjiHUgh0fxl0LhJHi17qn0pXmQ
-	 5KHu575PsKUEw==
+	b=OobH63Brw5e3Wl00GuzcRP2jf+t3XLCUngEkFnINvwfybj6SyL81DSLEUjsHboTeD
+	 rnYSeSP7DWb01ej/VkNuPz1UA2tPDCsnBAQ+qa9l/ndtNYkaBv/2PipNSrvmEalpWR
+	 TReq7ReTvp9nQebNaCvVnocYWtoOXGvEemi7QXUI4C807+8cqA0RQy4iqqs9xgN/2D
+	 CDt9wRFYtQKQqNo26NOYxk+jtoSyHFFjhf1gfmBLW5M/rZ28Dakc43yYVhJINaaewA
+	 zFF7eDzXqGl177+jE4X5uZajrlpJWMZ6aa8ki1ADUIlpQ7DKB6mM3L3HCCaTRHCsKu
+	 KMY9XKc39cGBw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 72173C3DA62;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 4FCC4C3DA63;
 	Wed, 17 Jul 2024 17:03:15 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Wed, 17 Jul 2024 22:33:16 +0530
-Subject: [PATCH v2 11/13] dt-bindings: PCI: qcom,pcie-sm8450: Add 'global'
- interrupt
+Date: Wed, 17 Jul 2024 22:33:14 +0530
+Subject: [PATCH v2 09/13] arm64: dts: qcom: sa8775p: Add 'linux,pci-domain'
+ to PCIe EP controller nodes
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240717-pci-qcom-hotplug-v2-11-71d304b817f8@linaro.org>
+Message-Id: <20240717-pci-qcom-hotplug-v2-9-71d304b817f8@linaro.org>
 References: <20240717-pci-qcom-hotplug-v2-0-71d304b817f8@linaro.org>
 In-Reply-To: <20240717-pci-qcom-hotplug-v2-0-71d304b817f8@linaro.org>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -56,16 +56,16 @@ Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 X-Mailer: b4 0.12.4
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2121;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1289;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=WTYqEiAQrNsXkDUR6nKibzqYEnKaNCwK2nnJZ4g+zho=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBml/lP9ULqIWFizsPL1F7exFT3gCiltHrrGeD+r
- VHyeE2BUfKJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZpf5TwAKCRBVnxHm/pHO
- 9TrlB/9x3P5MCFvYHOJZ0ypEcPgHw43VN7IF/KoZBvA1IoFKnKPUoZzLGrdWSPEdc6UWFL0tQhl
- mmbcdHHyJqAi+jX7WepExANqKvvb3i0SUIIYF9WqvfWSqgorAmOMzpXg1LKSp+Qk2qJwxrXEooC
- rDEUuiw20CW6fCdrPFEhEkHfh2vMmHtRqaKU2FRQC7suZDvyFgGJ48h69B1INLSVSboUuroaTC8
- Lu1L92pHpTGcYY6wNctfRnrymsWoeBrbftVbgXohF+Nou0cRaS2ZVM7OkyARysWj8gPfa8z9zkc
- txNu6TZ2UhQb1Ne0aJRLxkF7053SBtAu5oVp5eFcnICg9XX0
+ bh=YKSy5vPklQvLJA99UbdPy4mFyoiPQChYvArhByAGkpA=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBml/lO0Dmif7USBFz5hYoCiza5W/fd8O+FngHr/
+ 24+q3osoLiJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZpf5TgAKCRBVnxHm/pHO
+ 9awtB/4kSxxPulCuNa6RgrOTzuAeI/hkw6WQQ97HhrEZToQEkUZvp8WMGZ2aQIHLxS2xYUQxE5R
+ EdJWwjl83+26qlrhNwwR60/fltegr6Wyb4g3dhiRBrYGav0cCt7hSwbEatBc5axOyxNNwf80eg3
+ y4xM9rVaSJICwe8FTw+d4oYXWwcS6HdAR9W8PJpcVI/iFGOr7Dtia2yH1XKywUNyVAdS/JynHxV
+ nQfS2SIHXiCs3b2v6xYBx1NBgGVcKZoh7CM1u0bWJkaY4s+QlWL1QMJEK1JkLAzstaWYk/W2lth
+ pQLivgbf7hZuXjpGbCnm8+FbHBu0Gd3uSXy1T4cSCTa33tsV
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -75,55 +75,39 @@ Reply-To: manivannan.sadhasivam@linaro.org
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Qcom PCIe RC controllers are capable of generating 'global' SPI interrupt
-to the host CPU. This interrupt can be used by the device driver to
-identify events such as PCIe link specific events, safety events, etc...
+'linux,pci-domain' property provides the PCI domain number for the PCI
+endpoint controllers in a SoC. If this property is not present, then an
+unstable (across boots) unique number will be assigned.
 
-Hence, document it in the binding along with the existing MSI interrupts.
+Use this property to specify the domain number based on the actual hardware
+instance of the PCI endpoint controllers in SA8775P SoC.
 
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml | 10 ++++++----
- 1 file changed, 6 insertions(+), 4 deletions(-)
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
-index d8c0afaa4b19..0d68ce073383 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
-@@ -55,11 +55,12 @@ properties:
-       - const: aggre1 # Aggre NoC PCIe1 AXI clock
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+index 23f1b2e5e624..198b39abde97 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+@@ -4618,6 +4618,7 @@ pcie0_ep: pcie-ep@1c00000 {
+ 		phy-names = "pciephy";
+ 		max-link-speed = <3>; /* FIXME: Limiting the Gen speed due to stability issues */
+ 		num-lanes = <2>;
++		linux,pci-domain = <0>;
  
-   interrupts:
--    minItems: 8
--    maxItems: 8
-+    minItems: 9
-+    maxItems: 9
+ 		status = "disabled";
+ 	};
+@@ -4775,6 +4776,7 @@ pcie1_ep: pcie-ep@1c10000 {
+ 		phy-names = "pciephy";
+ 		max-link-speed = <3>; /* FIXME: Limiting the Gen speed due to stability issues */
+ 		num-lanes = <4>;
++		linux,pci-domain = <1>;
  
-   interrupt-names:
-     items:
-+      - const: global
-       - const: msi0
-       - const: msi1
-       - const: msi2
-@@ -142,7 +143,8 @@ examples:
-                           "aggre0",
-                           "aggre1";
- 
--            interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-+            interrupts = <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-                          <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
-                          <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-                          <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
-@@ -150,7 +152,7 @@ examples:
-                          <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
-                          <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-                          <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
--            interrupt-names = "msi0", "msi1", "msi2", "msi3",
-+            interrupt-names = "global", "msi0", "msi1", "msi2", "msi3",
-                               "msi4", "msi5", "msi6", "msi7";
-             #interrupt-cells = <1>;
-             interrupt-map-mask = <0 0 0 0x7>;
+ 		status = "disabled";
+ 	};
 
 -- 
 2.25.1
