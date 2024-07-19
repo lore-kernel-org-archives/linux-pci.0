@@ -1,78 +1,45 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx.astralinux.ru (mx.astralinux.ru [89.232.161.68])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5210B12CD96;
-	Fri, 19 Jul 2024 11:58:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EA5813BC12;
+	Fri, 19 Jul 2024 12:22:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.232.161.68
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721390301; cv=none; b=eHaSGhTyuzjV8+8Dk+y4zhCTvxzLYaPUSKiH5L8ANn7FWTK0dEtW8OzNPjYO2unUIu7cKLQWgS4mwsmboktrBCN0ycN0ckozS5L7xdSJ7wCac2bCYbPqOZ8trkG6yWxxNVUjbfk8X/+iJofCKAzApIPKrIx2SY0HpFFE94JxXyE=
+	t=1721391766; cv=none; b=aFgEZKZjV4bkaBP4IC2gNtdvzX0LY92KLbU2M+i4hU530BYTn93+ERGn3z+FsObGTOj3GT4Ymlatp3zZnkIvNM0nRgBSMGzG36Fjm2KL7L3xM57iA4LyttQ8XifpMu22GRwgrWa8EVOPPdr5pzhSqcgKbmp6PXzWVSqBG77+XXU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721390301; c=relaxed/simple;
-	bh=sLHmBEB6uBc7dNYSEPGdj0uIBt0mLK9vw20uIX/LM1U=;
+	s=arc-20240116; t=1721391766; c=relaxed/simple;
+	bh=bxR3nS1VZl0CDwdrPeM6b2Wn4hUOxC+NEBSLsWj4C0A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YUdlfbdGF61zFAujt39+58lt9u/X9aqXMSTztCYC7dWdnSZCdvD8F4nklduZNjHIcPKhBWaW1jchg3S48mOrD6HYvcGMAaytix61B2XZjLco4I3D/H8HnFBB6S9pKK2lR2Aq7WOqo2ASVnpyaJiB20qpmj5xiGS3iMglO2WgQc0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=eLO0ElYh; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="eLO0ElYh"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-5a309d1a788so653352a12.3;
-        Fri, 19 Jul 2024 04:58:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1721390297; x=1721995097; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=rMZ2vwWWPohWA8coYDDEnLa959ZR+LHUBzwjlRfaBv8=;
-        b=eLO0ElYh1jr/ieef6lvjtsz3QBCFGtH+1Cw9cCY6TATpx0X72UVdTj/Im4JqLFR5Rp
-         OhxfQlunlz4rU0z+Ot15IYRstC+bbjCYUueG9ozwCsQBniG0BiZH8vlaqx8R1AudkWfU
-         kPq2VjM8UVRrNvwNsmB2apr1SEmBzdGxbQFvmsuW2XBQz2OZp7leKZTgnSlo3tys2JAo
-         4tzhByld/lOz6UwOuFoTGvYMrO9V1R77uTjYCpYoRXYokuhXGM5rZ6DRBK86418y2HPd
-         zuuFuDu1YbbVVMN86jpoqIqZpIsX7gQASHudZiuL4N86F1KPyawNTRG3BGtxHc8i/9Tr
-         Xklg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1721390297; x=1721995097;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=rMZ2vwWWPohWA8coYDDEnLa959ZR+LHUBzwjlRfaBv8=;
-        b=aUdoIOGr42tJHltqXECC1Wuf41yv89TaNi2yRYg7G+kIPlwVf+VTeSHm3pIgbqJo6J
-         bEm6U9Hs7sHBSBwxz8hh/6icqdkVm+O4NrLMbByvn2M4YxebbaUSIlaIQJUID6ErCs+m
-         7RbB0KeYfQ3ZxEhv1wou85K/kPthU7CzGKZUGZY28EseDUK7uRJEassILLbknZPtnMwh
-         T31c47s5BdbreawVP0FabGt0LhBRjpjl/Thj5ku+vLpYLA9AGlB5OE8RRHbKg7TW9gos
-         UZB9eaQEn02W3CC/6hwUy6ieo+39mw9AfoTJ09i1MaNnWtfkwX/paPLGwf2OYNd7quHj
-         3j8w==
-X-Forwarded-Encrypted: i=1; AJvYcCVl4h8dyWiOeDAHQS11copEOD9XXWNAeEDXOPXGjo+Iozy8aE8W4v60swxQThsLnrT5T1uhE5+zdb74Q2VGe3T+Rh76eY1pm3mbf8DyBj7adzIYp519co2teiUUwRjLa5Mx2p42a3KH
-X-Gm-Message-State: AOJu0Yyw1db4NsDnXruUDMNpivYWsfME/oELPhfD3kJPhxyEpO/MEq4i
-	TQnRepH2VCwdA3d9GFtdZkcw5a0tkxt1UJlaw0X60Wfq7tuiJi3J
-X-Google-Smtp-Source: AGHT+IGc6hAXUPZQKnBDnc0052YD3WK67HOr4rBNRgcSsKlruuZpUKTx5cO8Zv4m9lxTucgsDtNcBA==
-X-Received: by 2002:a50:aa98:0:b0:5a1:a447:9f9b with SMTP id 4fb4d7f45d1cf-5a1a447a35bmr2700292a12.27.1721390297463;
-        Fri, 19 Jul 2024 04:58:17 -0700 (PDT)
-Received: from A13PC04R.einet.ad.eivd.ch ([193.134.219.72])
-        by smtp.googlemail.com with ESMTPSA id 4fb4d7f45d1cf-5a30c2f869dsm1093824a12.65.2024.07.19.04.58.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Jul 2024 04:58:17 -0700 (PDT)
-From: Rick Wertenbroek <rick.wertenbroek@gmail.com>
-To: rick.wertenbroek@heig-vd.ch
-Cc: damien.lemoal@kernel.org,
-	alberto.dassatti@heig-vd.ch,
-	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	 MIME-Version; b=Rihfd1TMYt8HEP4wdHfj/SV8exQnHB/HPShL11zpelfH82nxvTaOt/3jVJWB9UOwC5YSWFx6r1+MoTYAUZCH4gXt7rbwP6z6xrttEX1PEhiykb7CVti1HFHg2M0pbZVZ1GOj1uNJfg/Gy3lo0irFO9Er9pIrxjH/0QkXJlIko8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru; spf=pass smtp.mailfrom=astralinux.ru; arc=none smtp.client-ip=89.232.161.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=astralinux.ru
+Received: from [10.177.185.109] (helo=new-mail.astralinux.ru)
+	by mx.astralinux.ru with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <adiupina@astralinux.ru>)
+	id 1sUmcY-002HTS-Db; Fri, 19 Jul 2024 15:21:58 +0300
+Received: from rbta-msk-lt-302690.astralinux.ru (unknown [10.177.234.121])
+	by new-mail.astralinux.ru (Postfix) with ESMTPA id 4WQTM82WHFzkWJv;
+	Fri, 19 Jul 2024 15:22:12 +0300 (MSK)
+From: Alexandra Diupina <adiupina@astralinux.ru>
+To: Xiaowei Song <songxiaowei@hisilicon.com>
+Cc: Alexandra Diupina <adiupina@astralinux.ru>,
+	Binghui Wang <wangbinghui@hisilicon.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Rob Herring <robh@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Frank Li <Frank.Li@nxp.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Lars-Peter Clausen <lars@metafoo.de>,
+	Mauro Carvalho Chehab <mchehab+huawei@kernel.org>,
 	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH 2/2] PCI: endpoint: pci-epf-test: Add support for controller with fixed addr BARs
-Date: Fri, 19 Jul 2024 13:57:39 +0200
-Message-Id: <20240719115741.3694893-3-rick.wertenbroek@gmail.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20240719115741.3694893-1-rick.wertenbroek@gmail.com>
-References: <20240719115741.3694893-1-rick.wertenbroek@gmail.com>
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org
+Subject: [PATCH v2] PCI: kirin: Fix buffer overflow
+Date: Fri, 19 Jul 2024 15:21:53 +0300
+Message-Id: <20240719122153.1987-1-adiupina@astralinux.ru>
+X-Mailer: git-send-email 2.30.2
+In-Reply-To: <20240712110756.3abe1806@foz.lan>
+References: 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -80,93 +47,47 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-DrWeb-SpamScore: 0
+X-DrWeb-SpamState: legit
+X-DrWeb-SpamDetail: gggruggvucftvghtrhhoucdtuddrgedvfedrvdehuddgtddvucetufdoteggodetrfcurfhrohhfihhlvgemucfftfghgfeunecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpefhvfevufffkffojghfggfgsedtkeertdertddtnecuhfhrohhmpeetlhgvgigrnhgurhgrucffihhuphhinhgruceorgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhuqeenucggtffrrghtthgvrhhnpeefkedufedvkeffuedtgfdugeeutdegvdffffejfffgleffieduhfejvdelffdvudenucffohhmrghinheplhhinhhugihtvghsthhinhhgrdhorhhgnecukfhppedutddrudejjedrvdefgedruddvudenucfrrghrrghmpehhvghloheprhgsthgrqdhmshhkqdhlthdqfedtvdeiledtrdgrshhtrhgrlhhinhhugidrrhhupdhinhgvthepuddtrddujeejrddvfeegrdduvddumeehudejkedtpdhmrghilhhfrhhomheprgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhupdhnsggprhgtphhtthhopeduuddprhgtphhtthhopehsohhnghigihgrohifvghisehhihhsihhlihgtohhnrdgtohhmpdhrtghpthhtoheprgguihhuphhinhgrsegrshhtrhgrlhhinhhugidrrhhupdhrtghpthhtohepfigrnhhgsghinhhghhhuiheshhhishhilhhitghonhdrtghomhdprhgtphhtthhopehlphhivghrrghlihhsiheskhgvrhhnvghlrdhorhhgpdhrtg
+ hpthhtohepkhifsehlihhnuhigrdgtohhmpdhrtghpthhtoheprhhosghhsehkvghrnhgvlhdrohhrghdprhgtphhtthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtohepmhgthhgvhhgrsgdohhhurgifvghisehkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugidqkhgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhvtgdqphhrohhjvggttheslhhinhhugihtvghsthhinhhgrdhorhhgnecuffhrrdghvggsucetnhhtihhsphgrmhemucenucfvrghgshem
+X-DrWeb-SpamVersion: Dr.Web Antispam 1.0.7.202406240#1721386332#02
+X-AntiVirus: Checked by Dr.Web [MailD: 11.1.19.2307031128, SE: 11.1.12.2210241838, Core engine: 7.00.65.05230, Virus records: 12057070, Updated: 2024-Jul-19 10:47:19 UTC]
 
-This patch demonstates how the new 'get_bar' API for fixed address
-PCI BARs is used alongside the previous 'pci_epf_alloa_space' and
-'set_bar'.
+In kirin_pcie_parse_port() pcie->num_slots is compared to
+pcie->gpio_id_reset size (MAX_PCI_SLOTS). Need to fix
+condition to pcie->num_slots + 1 >= MAX_PCI_SLOTS and move
+pcie->num_slots increment lower to avoid out-of-bounds
+array access.
 
-Signed-off-by: Rick Wertenbroek <rick.wertenbroek@gmail.com>
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Fixes: b22dbbb24571 ("PCI: kirin: Support PERST# GPIOs for HiKey970 external PEX 8606 bridge")
+Signed-off-by: Alexandra Diupina <adiupina@astralinux.ru>
 ---
- drivers/pci/endpoint/functions/pci-epf-test.c | 38 +++++++++++++++++--
- 1 file changed, 34 insertions(+), 4 deletions(-)
+v2: some changes
+ drivers/pci/controller/dwc/pcie-kirin.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
-index 7c2ed6eae53a..c6622894091c 100644
---- a/drivers/pci/endpoint/functions/pci-epf-test.c
-+++ b/drivers/pci/endpoint/functions/pci-epf-test.c
-@@ -698,6 +698,9 @@ static int pci_epf_test_set_bar(struct pci_epf *epf)
- 		if (!epf_test->reg[bar])
- 			continue;
+diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
+index d5523f302102..deab1e653b9a 100644
+--- a/drivers/pci/controller/dwc/pcie-kirin.c
++++ b/drivers/pci/controller/dwc/pcie-kirin.c
+@@ -412,12 +412,12 @@ static int kirin_pcie_parse_port(struct kirin_pcie *pcie,
+ 			if (pcie->gpio_id_reset[i] < 0)
+ 				continue;
  
-+		if (epf_test->epc_features->bar[bar].fixed_addr)
-+			continue;
-+
- 		ret = pci_epc_set_bar(epc, epf->func_no, epf->vfunc_no,
- 				      &epf->bar[bar]);
- 		if (ret) {
-@@ -722,6 +725,9 @@ static void pci_epf_test_clear_bar(struct pci_epf *epf)
- 		if (!epf_test->reg[bar])
- 			continue;
+-			pcie->num_slots++;
+-			if (pcie->num_slots > MAX_PCI_SLOTS) {
++			if (pcie->num_slots + 1 >= MAX_PCI_SLOTS) {
+ 				dev_err(dev, "Too many PCI slots!\n");
+ 				ret = -EINVAL;
+ 				goto put_node;
+ 			}
++			pcie->num_slots++;
  
-+		if (epf_test->epc_features->bar[bar].fixed_addr)
-+			continue;
-+
- 		pci_epc_clear_bar(epc, epf->func_no, epf->vfunc_no,
- 				  &epf->bar[bar]);
- 	}
-@@ -829,6 +835,7 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	enum pci_barno bar;
- 	const struct pci_epc_features *epc_features = epf_test->epc_features;
- 	size_t test_reg_size;
-+	int ret;
- 
- 	test_reg_bar_size = ALIGN(sizeof(struct pci_epf_test_reg), 128);
- 
-@@ -840,8 +847,19 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 	}
- 	test_reg_size = test_reg_bar_size + msix_table_size + pba_size;
- 
--	base = pci_epf_alloc_space(epf, test_reg_size, test_reg_bar,
--				   epc_features, PRIMARY_INTERFACE);
-+	if (!epc_features->bar[test_reg_bar].fixed_addr)
-+		base = pci_epf_alloc_space(epf, test_reg_size, test_reg_bar,
-+					   epc_features, PRIMARY_INTERFACE);
-+	else {
-+		ret = pci_epc_get_bar(epf->epc, epf->func_no, epf->vfunc_no,
-+				      test_reg_bar, &epf->bar[test_reg_bar]);
-+		if (ret < 0) {
-+			dev_err(dev, "Failed to get fixed address BAR\n");
-+			return ret;
-+		}
-+		base = epf->bar[test_reg_bar].addr;
-+	}
-+
- 	if (!base) {
- 		dev_err(dev, "Failed to allocated register space\n");
- 		return -ENOMEM;
-@@ -856,8 +874,20 @@ static int pci_epf_test_alloc_space(struct pci_epf *epf)
- 		if (bar == test_reg_bar)
- 			continue;
- 
--		base = pci_epf_alloc_space(epf, bar_size[bar], bar,
--					   epc_features, PRIMARY_INTERFACE);
-+		if (!epc_features->bar[bar].fixed_addr)
-+			base = pci_epf_alloc_space(epf, bar_size[bar], bar,
-+						   epc_features,
-+						   PRIMARY_INTERFACE);
-+		else {
-+			ret = pci_epc_get_bar(epf->epc, epf->func_no,
-+					      epf->vfunc_no, bar,
-+					      &epf->bar[bar]);
-+			if (ret < 0)
-+				base = NULL;
-+			else
-+				base = epf->bar[bar].addr;
-+		}
-+
- 		if (!base)
- 			dev_err(dev, "Failed to allocate space for BAR%d\n",
- 				bar);
+ 			ret = of_pci_get_devfn(child);
+ 			if (ret < 0) {
 -- 
-2.25.1
+2.30.2
 
