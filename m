@@ -1,53 +1,53 @@
-Received: from mout-p-103.mailbox.org (mout-p-103.mailbox.org [80.241.56.161])
+Received: from mout-p-201.mailbox.org (mout-p-201.mailbox.org [80.241.56.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28676152E1D;
-	Tue, 23 Jul 2024 13:32:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.161
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF080153517;
+	Tue, 23 Jul 2024 13:39:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721741545; cv=none; b=JAl+5Kwt7N4Nc4pUKxs14hXffzqV7n422a8IiDGRGZ1tekraAy3a5nHs+fvD6h09gNHPb9Loy2TGTe4QnJyZxe439cJD7Qqzukjj8wbBXcJO3AubqLqJSleCIuNoMTGchRouGIQjIoPbr/SOKX02XKysHaNdIDkcHxh/uAEP+xc=
+	t=1721741955; cv=none; b=Ynjkp2n0uZZmwRawckMJqbUu7PkOqI6KejqBqf20bhr0g8iKqKWcOgw49NLiOE4ZMfKv5BqBMgzmeYV0XjFLVk49SrfoBh4vffALR9rOvcux676t07BoYypDxhaLIwCVrF66KfVH2sLda9etQ7V3loBPT/CXrtBEkrM7jV2RcHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721741545; c=relaxed/simple;
-	bh=7VZx/BlyjiBZZAFGkoMkgwqr0PVQWJtSIlrphGmel4c=;
+	s=arc-20240116; t=1721741955; c=relaxed/simple;
+	bh=2hcCZejZ7oGC6phjSDoJCf9JWvfftsvdxX6Gcz5/zHQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=aV0tqaz3bTX+5hadRCAUjFQzZUkhKpBuJD2udHNOd8kUxMqiC94+RN5Zgu61e6vCNsa5SWGzMEA7vD9XWXSqpsVD35MqcDZRl6Ad0iwj/fuUjtYj40HvLk7XyXnROTrdA1nn3IFA9Rp5VEu5vro5KuQUfCR/mtoqqVfhAE+ybY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=cSza46MC; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=oDx8hHyt; arc=none smtp.client-ip=80.241.56.161
+	 MIME-Version:Content-Type; b=iRjy8ZvnVkrfO4xgZV1r5fqpuhV8ZNNuyb7eqq911ZMEhDciwYL0Yod0VemZmN1ZhGlLceemChniIB+zBNuobWimKttWgFLSQHSvt6MgAOwmODKd3ktMIRPs1VxX81LonjDalvsZDZiC76FwG/yG96NHAhyY9PbuHZhcUy2Fjao=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=GU/iI3ma; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=AB5QMkX5; arc=none smtp.client-ip=80.241.56.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="cSza46MC";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="oDx8hHyt"
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="GU/iI3ma";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="AB5QMkX5"
 Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-103.mailbox.org (Postfix) with ESMTPS id 4WSykF21CCz9spm;
-	Tue, 23 Jul 2024 15:32:21 +0200 (CEST)
+	by mout-p-201.mailbox.org (Postfix) with ESMTPS id 4WSyhg662lz9sb6;
+	Tue, 23 Jul 2024 15:30:59 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1721741541;
+	t=1721741459;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=uHqYl7ZhdlKmC3M9eCufqi3KN10HPkOjoc62IcJ1TAU=;
-	b=cSza46MC4axXuI8nPQc07bdKbiQychyj9MHn0Uqv/n65S5RBkA+lNd7QHgszSwchBJw4pd
-	+JwEVRGqsrP9J/BHxSP6uyQOcvQv9H7zL+Jdi61erSH9ObYkqg2bThj7RPkTzQ2NWBg0N0
-	7PMN2kHdNyz6OVnLEYXuEoUNWWUt/9ofxzSQT0QBUR/XQ/by+ilUe5m/8B2eMoWfVyskub
-	F+cfwWb2qPQBPLa1dTNncjBHuGMI032sCiPzscb/2kvATazUpoXTqGAlImrgfi/HmMpYDS
-	8smdUOD1TohZg0kTeDVhGPoCfZQju3gPbbHsZ49BVLWkQtNRCAvJohSTugQm6Q==
+	bh=tcRN85GohiPDnjZVbOLzobJNclaig7kgN61Z0CRqah4=;
+	b=GU/iI3ma44xTrHm+cy0gACgzOyg0lsW13A6wXhm01QVrZnnCFvsV7G+pLX1NDGi9k2rkBu
+	Zrq8G7aO5URckyWwGstXP4OjTn/9kWD/CC9wtHfo/xj2zW8RrmNtSvVMgYZ5t6t+kZg4Lp
+	NOSDShkDN3AMC7DhKVTpzcF5410jCbFFQ3z1+TKmIEHU8NWvEKy3D3laNFbJvr5D9iE1y0
+	DPjl1HlsjIGtSj6R42YIGcCo9RXxafCwK1LvgWyAEvWTi4Fya+TDjHI/XVB3DijYr6Wr7F
+	wZ0Sv08+a23FbuON3SgRufuCG8gFC7HN0fjYAVSqYx3pwTsq9BCZvHEm+LNb3w==
 From: Marek Vasut <marek.vasut+renesas@mailbox.org>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1721741538;
+	t=1721741457;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=uHqYl7ZhdlKmC3M9eCufqi3KN10HPkOjoc62IcJ1TAU=;
-	b=oDx8hHytmRditJ6W2cggjmmTsKITQWgRQroLXHcaepTdilrpCVXa54CppWi2r5HztcWQg+
-	i+uhVwX85V8Y9SusmHM9SSqbJuKHZtckRomfw5HkSk9E7Q6qEU36eF2cvWvUoPA2G1iMhm
-	+oJZpT2kA7Q97mnuWpNsz2uM50A2KJCsRuTheodPL/YUn/24qptHXgKJJ9/js/Nt5jxK1G
-	dWwjIGyHGtXN4B0A6F9yZ/ntHrJK5PMnB9bXjXw7C/88peq3XIQZGdP906aBf8FXoR0gGJ
-	5s4DMAbO77sk/q62hqqTTwB82FnFbLWZ8n0jAKjduDZx1kyDpwLmyYN70ysvmw==
+	bh=tcRN85GohiPDnjZVbOLzobJNclaig7kgN61Z0CRqah4=;
+	b=AB5QMkX5ny9otzdytFAig+47kXseLjYFMtfy7Jxilz8LY0p3QIqS23pz4icA5p48nViCrn
+	egOKefpciwmu+ACBhFO6SfLa6cp8f15c+ufIe6JrxR0oRsFfO8k0utUhD/84clG51gPoQA
+	v8VB8a1pCWiMPbfPEK8GYLSF8DL6sGbUoFs9DWNDMYmRpFXfck4dblnJWlMuNr0tXpSAs0
+	ZZH9ci+z03uLXnzspCco82s8Qml5aLcswUe/tEqrrdcc0cNUur9o00w+YWFaQp3OjnVR7/
+	8kzd9tDr1/Sd5/sa7Szpbqhbbjt5EP7BfUr4T7OG3mrTS2LK1OcI09HIHqeOtw==
 To: linux-pci@vger.kernel.org
 Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
@@ -93,9 +93,9 @@ Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
 	linux-renesas-soc@vger.kernel.org,
 	linux-rpi-kernel@lists.infradead.org,
 	linux-tegra@vger.kernel.org
-Subject: [PATCH v4 15/15] PCI: xilinx: Silence set affinity failed warning
-Date: Tue, 23 Jul 2024 15:27:15 +0200
-Message-ID: <20240723132958.41320-16-marek.vasut+renesas@mailbox.org>
+Subject: [PATCH v4 03/15] PCI: altera-msi: Silence set affinity failed warning
+Date: Tue, 23 Jul 2024 15:27:03 +0200
+Message-ID: <20240723132958.41320-4-marek.vasut+renesas@mailbox.org>
 In-Reply-To: <20240723132958.41320-1-marek.vasut+renesas@mailbox.org>
 References: <20240723132958.41320-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
@@ -106,9 +106,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: ed593b2c540759fff74
-X-MBO-RS-META: go35zz1zo5op1nwnubdcnmt5h4mgd8ux
-X-Rspamd-Queue-Id: 4WSykF21CCz9spm
+X-MBO-RS-ID: 791c915bf466de4d55a
+X-MBO-RS-META: r3rx9w7cafn5jmsybfzyqixn5shnqi9h
+X-Rspamd-Queue-Id: 4WSyhg662lz9sb6
 
 Use newly introduced MSI_FLAG_NO_AFFINITY, which keeps .irq_set_affinity unset
 and allows migrate_one_irq() code in cpuhotplug.c to exit right away, without
@@ -167,43 +167,41 @@ Cc: linux-tegra@vger.kernel.org
 ---
 V4: - New patch
 ---
- drivers/pci/controller/pcie-xilinx.c | 9 ++-------
- 1 file changed, 2 insertions(+), 7 deletions(-)
+ drivers/pci/controller/pcie-altera-msi.c | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-xilinx.c b/drivers/pci/controller/pcie-xilinx.c
-index cb6e9f7b0152c..0b534f73a9420 100644
---- a/drivers/pci/controller/pcie-xilinx.c
-+++ b/drivers/pci/controller/pcie-xilinx.c
-@@ -208,11 +208,6 @@ static struct irq_chip xilinx_msi_top_chip = {
- 	.irq_ack	= xilinx_msi_top_irq_ack,
+diff --git a/drivers/pci/controller/pcie-altera-msi.c b/drivers/pci/controller/pcie-altera-msi.c
+index 16336a525c167..e36a6e158d23c 100644
+--- a/drivers/pci/controller/pcie-altera-msi.c
++++ b/drivers/pci/controller/pcie-altera-msi.c
+@@ -81,8 +81,8 @@ static struct irq_chip altera_msi_irq_chip = {
  };
  
--static int xilinx_msi_set_affinity(struct irq_data *d, const struct cpumask *mask, bool force)
+ static struct msi_domain_info altera_msi_domain_info = {
+-	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
+-		     MSI_FLAG_PCI_MSIX),
++	.flags	= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
++		  MSI_FLAG_NO_AFFINITY | MSI_FLAG_PCI_MSIX,
+ 	.chip	= &altera_msi_irq_chip,
+ };
+ 
+@@ -99,16 +99,9 @@ static void altera_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+ 		(int)data->hwirq, msg->address_hi, msg->address_lo);
+ }
+ 
+-static int altera_msi_set_affinity(struct irq_data *irq_data,
+-				   const struct cpumask *mask, bool force)
 -{
--	return -EINVAL;
+-	 return -EINVAL;
 -}
 -
- static void xilinx_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- {
- 	struct xilinx_pcie *pcie = irq_data_get_irq_chip_data(data);
-@@ -225,7 +220,6 @@ static void xilinx_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
- 
- static struct irq_chip xilinx_msi_bottom_chip = {
- 	.name			= "Xilinx MSI",
--	.irq_set_affinity 	= xilinx_msi_set_affinity,
- 	.irq_compose_msi_msg	= xilinx_compose_msi_msg,
+ static struct irq_chip altera_msi_bottom_irq_chip = {
+ 	.name			= "Altera MSI",
+ 	.irq_compose_msi_msg	= altera_compose_msi_msg,
+-	.irq_set_affinity	= altera_msi_set_affinity,
  };
  
-@@ -271,7 +265,8 @@ static const struct irq_domain_ops xilinx_msi_domain_ops = {
- };
- 
- static struct msi_domain_info xilinx_msi_info = {
--	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS),
-+	.flags	= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-+		  MSI_FLAG_NO_AFFINITY,
- 	.chip	= &xilinx_msi_top_chip,
- };
- 
+ static int altera_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
 -- 
 2.43.0
 
