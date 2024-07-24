@@ -1,79 +1,92 @@
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+Received: from out28-97.mail.aliyun.com (out28-97.mail.aliyun.com [115.124.28.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29E9A364D6;
-	Wed, 24 Jul 2024 03:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F39111757E;
+	Wed, 24 Jul 2024 03:38:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.28.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721791393; cv=none; b=eLj9essFV32apFFPiTKraUrdrxlcBK6aImcmkIEdApViwdm3d75K++wogy9tIeDWyUs/NIgHM7ss7NNLLItgdbMicqD2hyI2/rxCUsiRZzYDSXKhC5DnznEKGlqZUVfMCylvTTEorgHZgMmDwILbx2MaBTOA6SfUNDjRqDTODSI=
+	t=1721792319; cv=none; b=WdyyEvJc998Fi7XHvJIIovoQFLYKehwduR0z1ix1xOej1+roo3+auowweJXkFKZV2LFaeMMzoJ22XAvQSpO3jBxFQ8+O8h+D+2bQNgwyrwo6EQLjDarl4mauAt4yt5Uk4+M4Mt0rjEAphLRaT/pbsLo6s4wwedPuEMutpMlsoKk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721791393; c=relaxed/simple;
-	bh=j3Kl8Sv7VJyGs5dZGEhFIOfTiItQE8Cq1+OH1qXcJuU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=p3gUr2oZInBLBb8bXklNIzVd9IYzePraqlanGvC+cxxz1+wC2Dz8U7uyeFSgNVT+2ZUhIBeTyAIduB+vUaEx0SjpZCOsUjv+V0CrXno1wUfwNmLBm9vlSijSUPnVYE+jgFWnyx/ESkXq7ZiedI42CuHLP2YWuY1DDmo86/jUlzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 61E762012A8;
-	Wed, 24 Jul 2024 05:23:05 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 2958620129D;
-	Wed, 24 Jul 2024 05:23:05 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id CC892180222B;
-	Wed, 24 Jul 2024 11:23:03 +0800 (+08)
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	shawnguo@kernel.org,
-	l.stach@pengutronix.de
-Cc: hongxing.zhu@nxp.com,
-	devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
+	s=arc-20240116; t=1721792319; c=relaxed/simple;
+	bh=ILkK4yINJMkVP4oDOmPuRu3IDjGB7GgtXICZ3nOzZ+Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=A/+krVeoEH6C+pNwp3jjijJP6Lc1RDMg/fXdXgg7e5xZ0rNIF53oxd1TMzqkC2BDc7wyoUQYvEqCWN8kK8eTZLsVCebURGEGJGHymoAkmpIUThpfCBjzbTOal7krqjXF7I7/RH4+3FI/ezW3CWPlo0IUln0V7JH/K8tUFhB5DRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ttyinfo.com; spf=pass smtp.mailfrom=ttyinfo.com; arc=none smtp.client-ip=115.124.28.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ttyinfo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ttyinfo.com
+X-Alimail-AntiSpam:AC=CONTINUE;BC=0.08271923|-1;CH=green;DM=|CONTINUE|false|;DS=CONTINUE|ham_system_inform|0.00984783-0.000131915-0.99002;FP=8659051540359214238|0|0|0|0|-1|-1|-1;HT=maildocker-contentspam033038033188;MF=zhoushengqing@ttyinfo.com;NM=1;PH=DS;RN=8;RT=8;SR=0;TI=SMTPD_---.YXxsy1Z_1721792310;
+Received: from tzl..(mailfrom:zhoushengqing@ttyinfo.com fp:SMTPD_---.YXxsy1Z_1721792310)
+          by smtp.aliyun-inc.com;
+          Wed, 24 Jul 2024 11:38:31 +0800
+From: Zhou Shengqing <zhoushengqing@ttyinfo.com>
+To: haifeng.zhao@linux.intel.com
+Cc: helgaas@kernel.org,
 	linux-kernel@vger.kernel.org,
-	kernel@pengutronix.de,
-	imx@lists.linux.dev
-Subject: [PATCH v2 4/4] dts: arm64: imx8mm: Add dbi2 and atu reg for i.MX8MM PCIe EP
-Date: Wed, 24 Jul 2024 11:03:56 +0800
-Message-Id: <1721790236-3966-5-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1721790236-3966-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1721790236-3966-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+	linux-pci@vger.kernel.org,
+	lkp@intel.com,
+	llvm@lists.linux.dev,
+	oe-kbuild-all@lists.linux.dev,
+	zhoushengqing@ttyinfo.com
+Subject: Re: [PATCH v4] Subject: PCI: Enable io space 1k granularity for intel cpu root port
+Date: Wed, 24 Jul 2024 03:38:29 +0000
+Message-Id: <20240724033829.4724-1-zhoushengqing@ttyinfo.com>
+X-Mailer: git-send-email 2.39.2
+In-Reply-To: <e5c1990b-8c40-4376-bd9f-3701bf4eab91@linux.intel.com>
+References: <e5c1990b-8c40-4376-bd9f-3701bf4eab91@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-Add dbi2 and iatu reg for i.MX8MM PCIe EP.
+> On 7/23/2024 4:04 PM, Zhou Shengqing wrote:
+> >> I think this has potential.  Can you include a more complete citation
+> >> for the Intel spec?  Complete name, document number if available,
+> >> revision, section?  Hopefully it's publically available?
+> > Most of intel CPU EDS specs are under NDA. But you can refer to
+> > https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/xeon-e5-v2-datasheet-vol-2.pdf
+> > keyword:"EN1K".
+> > ...
+> > 
+> > 	while ((d = pci_get_device(PCI_VENDOR_ID_INTEL, 0x09a2, d))) {
+> > 		if (pci_domain_nr(d->bus) == pci_domain_nr(dev->bus)) {
+> 
+> Perhaps it is enough to check if the 0x09a2 VT-d and the rootport are on the smae bus
+> e.g. On my SPR, domain 0000
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- arch/arm64/boot/dts/freescale/imx8mm.dtsi | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+Thank you for your comment.
 
-diff --git a/arch/arm64/boot/dts/freescale/imx8mm.dtsi b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
-index 9535dedcef59..4de3bf22902b 100644
---- a/arch/arm64/boot/dts/freescale/imx8mm.dtsi
-+++ b/arch/arm64/boot/dts/freescale/imx8mm.dtsi
-@@ -1375,9 +1375,11 @@ pcie0: pcie@33800000 {
- 
- 		pcie0_ep: pcie-ep@33800000 {
- 			compatible = "fsl,imx8mm-pcie-ep";
--			reg = <0x33800000 0x400000>,
--			      <0x18000000 0x8000000>;
--			reg-names = "dbi", "addr_space";
-+			reg = <0x33800000 0x100000>,
-+			      <0x18000000 0x8000000>,
-+			      <0x33900000 0x100000>,
-+			      <0x33b00000 0x100000>;
-+			reg-names = "dbi", "addr_space", "dbi2", "atu";
- 			num-lanes = <1>;
- 			interrupts = <GIC_SPI 127 IRQ_TYPE_LEVEL_HIGH>;
- 			interrupt-names = "dma";
--- 
-2.37.1
+Do you mean it shoud be like this?
 
+	while ((d = pci_get_device(PCI_VENDOR_ID_INTEL, 0x09a2, d))) {
+		if (d->bus->number == dev->bus->number) {
+			pci_read_config_word(d, 0x1c0, &en1k);
+			if (en1k & 0x4) {
+				pci_info(dev, "1K I/O windows enabled per %s EN1K setting\n", pci_name(d));
+				dev->io_window_1k = 1;
+			}
+		}
+	}
+
+> 
+> 00:00.0 System peripheral: Intel Corporation Device 09a2 (rev 20)
+> 00:0f.0 PCI bridge: Intel Corporation Device 1bbf (rev 10) (prog-if 00 [Normal decode])
+> 
+>   
+> 15:00.0 System peripheral: Intel Corporation Device 09a2 (rev 20)
+> 15:01.0 PCI bridge: Intel Corporation Device 352a (rev 04) (prog-if 00 [Normal decode])
+> 
+> and if you check domain number only, they might sit on different bus, perhaps that
+> would make thing complex, could you make sure the VT-d is on the upstream bus of the
+> bridge ?
+
+I checked it on ICX SPR EMR GNR, VT-d is always on the same bus with root port,
+and VT-d device and function number is always 0. 
+
+Please let me know if further modifications are needed.
+
+> 
+> Thanks,
+> Ethan
