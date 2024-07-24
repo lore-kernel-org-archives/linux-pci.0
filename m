@@ -1,136 +1,145 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7537F1B7E9;
-	Wed, 24 Jul 2024 02:28:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E92502595;
+	Wed, 24 Jul 2024 02:34:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1721788098; cv=none; b=d4X7WcOhFn0kKGM1cO8gVoRCKHvYaCmvMTZmWSX4GtNsZxyVw9QfhWOVWYpOFsQ7KhuufIqYcgq2mA1t6L04mJNoBXjIVZMud0zTsWsnQkGVB7q5l/EtjAot5He1D+CXDEOnWMHwJOo+XiRPinEMjv/a3Y8q/e5J8azbIOWApqg=
+	t=1721788478; cv=none; b=brWKW4V6Zy4IM+keAVOP+h0Y/aNS6E2JATLw0acZCDB9zTIhuHnRxnAhjBSmE/9qqIJwjpNpBvtpEhAvRis5g/0Z+6kq5v4eBZlVn+dU1z9tf+mWAuYMibCRMSKBId8rU5AHu6/6Uvpae6ElLPhwV0hWnhjTUrYrFR+pTs0VY3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1721788098; c=relaxed/simple;
-	bh=cDRYinNTcJfG3NFoF3+R+6ix6ze7FaT/m9QPqur/oJg=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=OXh74DIeqpBd8ssRtQYGcyd0+AJVnolOt6BOk7mz0ebZTJz6iB4fo+Gmfa/AvT3XR+gShbHYR01Y8lWJ3dc+QcujOBsIQZ39lqXYBpY/eoGbzbu4G20dmToCZtz8EBWjGYK+caL/yjRVtFy5NY8Ec2BLl0i8VoIEGOl3PPWE7fc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mrxqKlBm; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1721788478; c=relaxed/simple;
+	bh=49sitEwGOYl2Q6OgN0ebMfQVcpJ3UCgVODMPWgNQFts=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gHz8nW28jxgVcEsScQTDvuJE1M9SbKT79Ay+p457byOKLMtgcOfMZNSH18JuWqHzkxgase8vW+xYio38yCoM10o9mZ90AoidyDv98MftC5L1tEqWjq2GQP5Fgb30cqe9Biu+1vsJyjHdi+MTtOr7DbOua8VdJgdv4mVo9Rv5hik=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=IKV+1CUm; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mrxqKlBm"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46NHVRDO011183;
-	Wed, 24 Jul 2024 02:28:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=VSHU3mm7kCkNin9t6L5UA6
-	nFf9IJi8ADAKuZjNgyRRU=; b=mrxqKlBmRnYYo+WYCG7VIJrAyxVblQEVw/JFqL
-	ZGTnx85Run5fMroFhc74QOBVQJ3ZR7TfR4DPGvHRS2sl7avDoPi22bPaUxwLV6m/
-	I/oTU2REK5sHuHJje2pv9AYVnRfNbz2IrIpBXG3j/A2mh+nM49m7nHNWEUega4Zb
-	XuDwhCi77AVquDb1/gpdOg1OgAlg0cgsMQa7Kr3hMuTr/7o0lHuhLMltUA16Ssre
-	l/Cng9pCtIUP5dAoFAhU70aH5YwKY9IeakhK+zAIPV2E5ZxSm8TfRLGNA5yNKFKZ
-	ChrkszKFvadyPUFr38QpSUnFemq5lc4V81ngwAH93oOo0x5w==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40g2kn0ygx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Jul 2024 02:28:03 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA01.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 46O2S21J030621
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 24 Jul 2024 02:28:02 GMT
-Received: from hu-pyarlaga-lv.qualcomm.com (10.49.16.6) by
- nasanex01b.na.qualcomm.com (10.46.141.250) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 23 Jul 2024 19:28:01 -0700
-From: Prudhvi Yarlagadda <quic_pyarlaga@quicinc.com>
-To: <jingoohan1@gmail.com>, <manivannan.sadhasivam@linaro.org>,
-        <lpieralisi@kernel.org>, <kw@linux.com>, <robh@kernel.org>,
-        <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <quic_mrana@quicinc.com>,
-        <quic_pyarlaga@quicinc.com>
-Subject: [PATCH v3 0/2] PCI: qcom: Avoid DBI and ATU register space mirroring
-Date: Tue, 23 Jul 2024 19:27:17 -0700
-Message-ID: <20240724022719.2868490-1-quic_pyarlaga@quicinc.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="IKV+1CUm"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1721788476; x=1753324476;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=49sitEwGOYl2Q6OgN0ebMfQVcpJ3UCgVODMPWgNQFts=;
+  b=IKV+1CUmLyslmGUxuaTXxfPsPJUup9S0E/OhsIDgCVJjdwOfQlP/qa73
+   iYjP+6s2MzJZub6dUIEcoRrz1zC9ZDdE2A6BWm3Yms+aUzty7axsb1kdW
+   2x8f+VfVz+gyRvJYr5JqL8szDFFGmtt85QYy1Vy1GE56qa5Rgb0dc/0Cw
+   UK+LQ/uuW1qL+5XBSGrqO1a7RFmbXxUkyW8rr2v+eC/G31nOZLgT/6EN3
+   HizwHPIqviw65K215y62fRJbOwRILzoMGaKfraU89J2ikzTk0QIEt6uGQ
+   zDNBdYD+kdV0ofdacbFLGv1Yk/NoqS7tr45zcTMJl6/mUgCFyu9pPiNcV
+   A==;
+X-CSE-ConnectionGUID: 37QoE+zzSVmZpgXtj5R5/Q==
+X-CSE-MsgGUID: +N/6Sil8RauKi+I1Wp11Mg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11142"; a="41969888"
+X-IronPort-AV: E=Sophos;i="6.09,232,1716274800"; 
+   d="scan'208";a="41969888"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2024 19:34:35 -0700
+X-CSE-ConnectionGUID: AColBQhpQ86l10xKNojZNg==
+X-CSE-MsgGUID: IlEoyNzDSjeNjljnKGjX5Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,232,1716274800"; 
+   d="scan'208";a="57550296"
+Received: from zhaohaif-mobl.ccr.corp.intel.com (HELO [10.124.9.238]) ([10.124.9.238])
+  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2024 19:34:34 -0700
+Message-ID: <e5c1990b-8c40-4376-bd9f-3701bf4eab91@linux.intel.com>
+Date: Wed, 24 Jul 2024 10:34:31 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] Subject: PCI: Enable io space 1k granularity for intel
+ cpu root port
+To: Zhou Shengqing <zhoushengqing@ttyinfo.com>, helgaas@kernel.org
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, lkp@intel.com,
+ llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev
+References: <20240712184849.GA330337@bhelgaas>
+ <20240723080403.9764-1-zhoushengqing@ttyinfo.com>
+From: Ethan Zhao <haifeng.zhao@linux.intel.com>
+In-Reply-To: <20240723080403.9764-1-zhoushengqing@ttyinfo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nalasex01b.na.qualcomm.com (10.47.209.197) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: M9gkwsjG1BWfH2hMMTcyay3ibS_RCVfb
-X-Proofpoint-GUID: M9gkwsjG1BWfH2hMMTcyay3ibS_RCVfb
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-07-24_01,2024-07-23_02,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 bulkscore=0
- spamscore=0 mlxscore=0 priorityscore=1501 impostorscore=0 suspectscore=0
- adultscore=0 clxscore=1015 mlxlogscore=757 lowpriorityscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2407240017
 
-Qualcomm PCIe controller has a wrapper called PARF which supports the
-relocation of DBI and ATU address space within the system memory. PARF
-gets the location of DBI and ATU from PARF_DBI_BASE_ADDR and
-PARF_ATU_BASE_ADDR registers. PARF also mirrors the memory block
-containing DBI and ATU registers within the system memory. And the size
-of this memory block is programmed in PARF_SLV_ADDR_SPACE_SIZE register.
 
-Power on reset of values of the above mentioned registers are good enough
-on platforms which require smaller size (less than 16MB) BAR memory. For
-platforms that need bigger BAR memory size, this mirroring of DBI and ATU
-address space by PARF conflicts with BAR memory.
+On 7/23/2024 4:04 PM, Zhou Shengqing wrote:
+>> I think this has potential.  Can you include a more complete citation
+>> for the Intel spec?  Complete name, document number if available,
+>> revision, section?  Hopefully it's publically available?
+> Most of intel CPU EDS specs are under NDA. But you can refer to
+> https://www.intel.com/content/dam/www/public/us/en/documents/datasheets/xeon-e5-v2-datasheet-vol-2.pdf
+> keyword:"EN1K".
+>
+>> + /*
+>>> + * Per intel sever CPU EDS vol2(register) spec,
+>>> + * Intel Memory Map/Intel VT-d configuration space,
+>>> + * IIO MISC Control (IIOMISCCTRL_1_5_0_CFG) — Offset 1C0h
+>>> + * bit 2.
+>>> + * Enable 1K (EN1K):
+>>> + * This bit when set, enables 1K granularity for I/O space decode
+>>> + * in each of the virtual P2P bridges
+>>> + * corresponding to root ports, and DMI ports.
+>>> + */
+>>> + while ((d = pci_get_device(PCI_VENDOR_ID_INTEL, 0x09a2, d))) {
+>> To be safe, "d" (the [8086:09a2] device) should be on the same bus as
+>> "dev" (with VMD, I think we get Root Ports *below* the VMD bridge,
+>> which would be a different bus, and they presumably are not influenced
+>> by the EN1K bit.
+> I modified the code as follows, can you help me review it?
+>
+> /* Enable 1k I/O space granularity on the intel root port */
+> static void quirk_intel_rootport_1k_io(struct pci_dev *dev)
+> {
+> 	struct pci_dev *d = NULL;
+> 	u16 en1k = 0;
+>
+> 	if (!pci_is_pcie(dev) || pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+> 		return;
+>
+> 	/*
+> 	 * Per intel sever CPU (ICX SPR GNR)EDS vol2(register) spec,
+> 	 * Intel Memory Map/Intel VT-d configuration space,
+> 	 * IIO MISC Control (IIOMISCCTRL_1_5_0_CFG) — Offset 1C0h
+> 	 * bit 2.
+> 	 * Enable 1K (EN1K):
+> 	 * This bit when set, enables 1K granularity for I/O space decode
+> 	 * in each of the virtual P2P bridges
+> 	 * corresponding to root ports, and DMI ports.
+> 	 */
+> 	while ((d = pci_get_device(PCI_VENDOR_ID_INTEL, 0x09a2, d))) {
+> 		if (pci_domain_nr(d->bus) == pci_domain_nr(dev->bus)) {
 
-So to allow usage of bigger size of BAR, it is required to program
-PARF registers to prevent mirroring of DBI and ATU blocks and provide
-the physical addresses of DBI and ATU to PARF.
+Perhaps it is enough to check if the 0x09a2 VT-d and the rootport are on the smae bus
+e.g. On my SPR, domain 0000
 
-This patch series stores physical addresses of DBI and ATU address space
-in 'struct dw_pcie' and programs the required PARF registers in the
-pcie_qcom.c driver.
+00:00.0 System peripheral: Intel Corporation Device 09a2 (rev 20)
+00:0f.0 PCI bridge: Intel Corporation Device 1bbf (rev 10) (prog-if 00 [Normal decode])
 
-Changes in v3:
-- Updated the functions qcom_pcie_configure_dbi_atu_base() and
-  qcom_pcie_configure_dbi_base() to make having 'dbi_phys_addr' mandatory
-  before programming PARF_SLV_ADDR_SPACE_SIZE register as suggested by
-  Mayank Rana.
-- Link to v2: https://lore.kernel.org/linux-pci/20240718051258.1115271-1-quic_pyarlaga@quicinc.com/T/
+  
+15:00.0 System peripheral: Intel Corporation Device 09a2 (rev 20)
+15:01.0 PCI bridge: Intel Corporation Device 352a (rev 04) (prog-if 00 [Normal decode])
 
-Changes in v2:
-- Updated commit message as suggested by Bjorn Helgaas.
-- Updated function name from qcom_pcie_avoid_dbi_atu_mirroring()
-  to qcom_pcie_configure_dbi_atu_base() as suggested by Bjorn Helgaas.
-- Removed check for pdev in qcom_pcie_configure_dbi_atu_base() as
-  suggested by Bjorn Helgaas.
-- Moved the qcom_pcie_configure_dbi_atu_base() call in the
-  qcom_pcie_init_2_7_0() to the same place where PARF_DBI_BASE_ADDR
-  register is being programmed as suggested by Bjorn Helgaas.
-- Added 'dbi_phys_addr', 'atu_phys_addr' in the 'struct dw_pcie' to store
-  the physical addresses of dbi, atu base registers in
-  dw_pcie_get_resources() as suggested by Manivannan Sadhasivam.
-- Added separate functions qcom_pcie_configure_dbi_atu_base() and
-  qcom_pcie_configure_dbi_base() to program PARF register of different
-  PARF versions. This is to disable DBI mirroring in all Qualcomm PCIe
-  controllers as suggested by Manivannan Sadhasivam.
-- Link to v1: https://lore.kernel.org/linux-pci/a01404d2-2f4d-4fb8-af9d-3db66d39acf7@quicinc.com/T/
+and if you check domain number only, they might sit on different bus, perhaps that
+would make thing complex, could you make sure the VT-d is on the upstream bus of the
+bridge ?
 
-Tested:
-- Validated NVME functionality with PCIe6a on x1e80100 platform.
-- Validated WiFi functionality with PCIe4 on x1e80100 platform.
+Thanks,
+Ethan
+  
 
-Prudhvi Yarlagadda (2):
-  PCI: dwc: Add dbi_phys_addr and atu_phys_addr to struct dw_pcie
-  PCI: qcom: Avoid DBI and ATU register space mirror to BAR/MMIO region
-
- drivers/pci/controller/dwc/pcie-designware.c |  2 +
- drivers/pci/controller/dwc/pcie-designware.h |  2 +
- drivers/pci/controller/dwc/pcie-qcom.c       | 62 ++++++++++++++------
- 3 files changed, 49 insertions(+), 17 deletions(-)
-
--- 
-2.25.1
-
+> 			pci_read_config_word(d, 0x1c0, &en1k);
+> 			if (en1k & 0x4) {
+> 				pci_info(dev, "1K I/O windows enabled per %s EN1K setting\n", pci_name(d));
+> 				dev->io_window_1k = 1;
+> 			}
+> 		}
+> 	}
+> }
+> DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_INTEL,	PCI_ANY_ID,	quirk_intel_rootport_1k_io);
+>
+> If you have a better method, please let me know. If there are no issues,
+> I can submit a new patch.
+>
