@@ -1,69 +1,163 @@
-Received: from mail.toke.dk (mail.toke.dk [45.145.95.4])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A627194A49;
-	Tue, 30 Jul 2024 10:00:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.145.95.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE3A1993A4;
+	Tue, 30 Jul 2024 10:26:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722333611; cv=none; b=Yl5O0etByBEffg5mJQVrOqZ1KkUBOmUzufhzhoXE40iwO46vfKQS83Is0R8S2zDKSiWB++AfInYCcnThyOn6JZr7LH53F73F9qIDa2EXl1o3Xt/CMaAcBeKziQIg33FNC2XxE4RBaN9F6FJ0sEB/MZBHbJm0kL9uBTpmkKcJhFY=
+	t=1722335220; cv=none; b=emu5si1RqQx8KQkgBWXlrnXNd8xNJvfKP97IX9pbHQjRe3/eCF5jqrFsfox1HszJVtBnDvVABsRUAakYWHh0Hb6QW6HBlIolLiT04iXOBxzmjRPbYqPRroxPqbggPdoXD+6rg3UamvpBEHTRRnOmy/0G8sAHPPmSXpyq0mzeTJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722333611; c=relaxed/simple;
-	bh=VKVnO8jReJ4Bgh4LNYlqBwyBLVhtI+mxGjxwPRV7z8c=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=R/RwcRQtKc7HkEnRF6TDuZyQwTkX6Gu2FqrqCGDJmPiT8c1K6YoEvjry6r8kFMtsttdpcGA0VsGSnnoAvBP/TPqHCKQgwptGHpyo1x84BYWzVLFBw/HDsLmKlXZa5nTQUJLvzZAxaAXMS00kzDhr4yUdKC60DoKEn57oAUpKu28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk; spf=pass smtp.mailfrom=toke.dk; dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b=cFSTqbwb; arc=none smtp.client-ip=45.145.95.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=toke.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toke.dk
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toke.dk header.i=@toke.dk header.b="cFSTqbwb"
-From: Toke =?utf-8?Q?H=C3=B8iland-J=C3=B8rgensen?= <toke@toke.dk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=toke.dk; s=20161023;
-	t=1722333605; bh=VKVnO8jReJ4Bgh4LNYlqBwyBLVhtI+mxGjxwPRV7z8c=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=cFSTqbwbOGllqs/C6AyhNmJUNT8fIJHbdOndiuH51F2686RUEmCZA6gHtFjKxBGDb
-	 IY/iWUJjX+nc+CifkSvqMhjjmblcnY3jVahrkmYpAs0LrqKuJvwZBlM5GJ4xF/lANo
-	 ub9HkkIw/O3jrtgtT6rQaVFcqyqm9Dw5oM9V9eVInb73ZyA5GTz+XP4blXTSSV/qTv
-	 S62I5f4V0euyKGFzVlB8ixctYuXGCOXk6njbzTPOgKmTeLqVsBQdoftXTBe7xamPV+
-	 RmXchCtPTrmIofgvjfPhRcMZ9hM8X2Jc/eGW1pSn3IbbHJB/BZDP/D7An47yKG0w92
-	 YNodZsFf1FV5A==
-To: Heiner Kallweit <hkallweit1@gmail.com>, Kalle Valo <kvalo@kernel.org>,
- Andreas =?utf-8?Q?F=C3=A4rber?= <afaerber@suse.de>, Manivannan Sadhasivami
- <manivannan.sadhasivam@linaro.org>, Martin Blumenstingl
- <martin.blumenstingl@googlemail.com>
-Cc: linux-wireless <linux-wireless@vger.kernel.org>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>, linux-actions@lists.infradead.org,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] ath9k: use unmanaged PCI functions in
- ath9k_pci_owl_loader
-In-Reply-To: <3b46f6c7-4372-4cc9-9a7c-2c1c06d29324@gmail.com>
-References: <3b46f6c7-4372-4cc9-9a7c-2c1c06d29324@gmail.com>
-Date: Tue, 30 Jul 2024 11:59:50 +0200
-X-Clacks-Overhead: GNU Terry Pratchett
-Message-ID: <875xsnp5d5.fsf@toke.dk>
+	s=arc-20240116; t=1722335220; c=relaxed/simple;
+	bh=SeMhm/249KMHkoxDrL9fdexhBto+hEl1x7aVk0yhivc=;
+	h=Message-ID:From:Date:Subject:MIME-Version:Content-Type:To:Cc; b=Hs5VAEl4mY3kTLIcNaOdPOm9Qbu8keYwihzvVMwZ1NLAcF4dNsj3fIkGzC8N0uhzyqfkDeyPzPGa1UWrrJnrKAauKSzrV+sBMB+Ltq2D4scPuuMarHGDvwR7eWHw+I9EseQDXER55Q61xPkQVbkfsXUh0jD4dwdKzjyTInUf+Ak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with ESMTPS id BC76110189E0F;
+	Tue, 30 Jul 2024 12:26:55 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with ESMTPSA id 8E4A460FA4AF;
+	Tue, 30 Jul 2024 12:26:55 +0200 (CEST)
+X-Mailbox-Line: From 4d4ac43578f9aad9d7eee85a51833ae5e4b7cdb3 Mon Sep 17 00:00:00 2001
+Message-ID: <4d4ac43578f9aad9d7eee85a51833ae5e4b7cdb3.1722335040.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Tue, 30 Jul 2024 12:26:55 +0200
+Subject: [PATCH 5.10-stable] PCI/DPC: Fix use-after-free on concurrent DPC and
+ hot-removal
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Sasha Levin <sashal@kernel.org>
+Cc: stable@vger.kernel.org, linux-pci@vger.kernel.org, Keith Busch <kbusch@kernel.org>, Mika Westerberg <mika.westerberg@linux.intel.com>, Bjorn Helgaas <helgaas@kernel.org>, Krzysztof Wilczynski <kwilczynski@kernel.org>
 
-Heiner Kallweit <hkallweit1@gmail.com> writes:
+commit 11a1f4bc47362700fcbde717292158873fb847ed upstream.
 
-> Only managed PCI resource in the driver is the iomapped bar. However the =
-bar
-> is unmapped in the same function. Therefore using the device-managed
-> versions just causes overhead, w/o any benefit. Once this is switched to =
-the
-> non-managed versions, there's nothing left to be managed for
-> pcim_enable_device(). Therefore we can reduce overhead here too and switc=
-h to
-> the non-managed version as well. This includes removing the no longer nee=
-ded
-> call to pcim_pin_device().
->
-> Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+Keith reports a use-after-free when a DPC event occurs concurrently to
+hot-removal of the same portion of the hierarchy:
 
-Acked-by: Toke H=C3=B8iland-J=C3=B8rgensen <toke@toke.dk>
+The dpc_handler() awaits readiness of the secondary bus below the
+Downstream Port where the DPC event occurred.  To do so, it polls the
+config space of the first child device on the secondary bus.  If that
+child device is concurrently removed, accesses to its struct pci_dev
+cause the kernel to oops.
+
+That's because pci_bridge_wait_for_secondary_bus() neglects to hold a
+reference on the child device.  Before v6.3, the function was only
+called on resume from system sleep or on runtime resume.  Holding a
+reference wasn't necessary back then because the pciehp IRQ thread
+could never run concurrently.  (On resume from system sleep, IRQs are
+not enabled until after the resume_noirq phase.  And runtime resume is
+always awaited before a PCI device is removed.)
+
+However starting with v6.3, pci_bridge_wait_for_secondary_bus() is also
+called on a DPC event.  Commit 53b54ad074de ("PCI/DPC: Await readiness
+of secondary bus after reset"), which introduced that, failed to
+appreciate that pci_bridge_wait_for_secondary_bus() now needs to hold a
+reference on the child device because dpc_handler() and pciehp may
+indeed run concurrently.  The commit was backported to v5.10+ stable
+kernels, so that's the oldest one affected.
+
+Add the missing reference acquisition.
+
+Abridged stack trace:
+
+  BUG: unable to handle page fault for address: 00000000091400c0
+  CPU: 15 PID: 2464 Comm: irq/53-pcie-dpc 6.9.0
+  RIP: pci_bus_read_config_dword+0x17/0x50
+  pci_dev_wait()
+  pci_bridge_wait_for_secondary_bus()
+  dpc_reset_link()
+  pcie_do_recovery()
+  dpc_handler()
+
+Fixes: 53b54ad074de ("PCI/DPC: Await readiness of secondary bus after reset")
+Closes: https://lore.kernel.org/r/20240612181625.3604512-3-kbusch@meta.com/
+Link: https://lore.kernel.org/linux-pci/8e4bcd4116fd94f592f2bf2749f168099c480ddf.1718707743.git.lukas@wunner.de
+Reported-by: Keith Busch <kbusch@kernel.org>
+Tested-by: Keith Busch <kbusch@kernel.org>
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Reviewed-by: Keith Busch <kbusch@kernel.org>
+Reviewed-by: Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: stable@vger.kernel.org # v5.10+
+---
+ drivers/pci/pci.c | 19 ++++++++++++-------
+ 1 file changed, 12 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 530ced8f7abd..09d5fa637b98 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4817,7 +4817,7 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type,
+ 				      int timeout)
+ {
+ 	struct pci_dev *child;
+-	int delay;
++	int delay, ret = 0;
+ 
+ 	if (pci_dev_is_disconnected(dev))
+ 		return 0;
+@@ -4845,8 +4845,8 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type,
+ 		return 0;
+ 	}
+ 
+-	child = list_first_entry(&dev->subordinate->devices, struct pci_dev,
+-				 bus_list);
++	child = pci_dev_get(list_first_entry(&dev->subordinate->devices,
++					     struct pci_dev, bus_list));
+ 	up_read(&pci_bus_sem);
+ 
+ 	/*
+@@ -4856,7 +4856,7 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type,
+ 	if (!pci_is_pcie(dev)) {
+ 		pci_dbg(dev, "waiting %d ms for secondary bus\n", 1000 + delay);
+ 		msleep(1000 + delay);
+-		return 0;
++		goto put_child;
+ 	}
+ 
+ 	/*
+@@ -4877,7 +4877,7 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type,
+ 	 * until the timeout expires.
+ 	 */
+ 	if (!pcie_downstream_port(dev))
+-		return 0;
++		goto put_child;
+ 
+ 	if (pcie_get_speed_cap(dev) <= PCIE_SPEED_5_0GT) {
+ 		pci_dbg(dev, "waiting %d ms for downstream link\n", delay);
+@@ -4888,11 +4888,16 @@ int pci_bridge_wait_for_secondary_bus(struct pci_dev *dev, char *reset_type,
+ 		if (!pcie_wait_for_link_delay(dev, true, delay)) {
+ 			/* Did not train, no need to wait any further */
+ 			pci_info(dev, "Data Link Layer Link Active not set in 1000 msec\n");
+-			return -ENOTTY;
++			ret = -ENOTTY;
++			goto put_child;
+ 		}
+ 	}
+ 
+-	return pci_dev_wait(child, reset_type, timeout - delay);
++	ret = pci_dev_wait(child, reset_type, timeout - delay);
++
++put_child:
++	pci_dev_put(child);
++	return ret;
+ }
+ 
+ void pci_reset_secondary_bus(struct pci_dev *dev)
+-- 
+2.43.0
+
