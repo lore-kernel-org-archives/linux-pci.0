@@ -1,105 +1,103 @@
-Received: from mail-m15580.qiye.163.com (mail-m15580.qiye.163.com [101.71.155.80])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3952919DFBB
-	for <linux-pci@vger.kernel.org>; Tue, 30 Jul 2024 10:36:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.80
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C61D91DA32;
+	Tue, 30 Jul 2024 10:56:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722335792; cv=none; b=Ct0kNe/YBCmc3s69EozcBwLa0E4urLXSuxCbyFquwc/7laHmJqY6+UyjPtmB3HQZius+1NUyjgXuO420AaLN1bM4MQepvtZkInJeWXGGSyKaYnkE9BtegUgBVxMexOaAKb6DLVLCUjBgR9fO+J3mqIKCdhBYolpPbwW16Ivwc24=
+	t=1722336974; cv=none; b=XqVwjcBCgOj2Y7URnvnvz962pT5mwQFQSGY4VwY0et6n67/ha7ajrfetjmxUwiWqjGt8zKIu9IpjWmq1E76+u/TB0dJCD8wh2Fv3qG01oTb2QI7K0EmgE/4v+1G9Ii84bbYHo7QX0HXQ0I7WKp1ie+HlENp0nFRgUt/QvSTCWC0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722335792; c=relaxed/simple;
-	bh=99rqNyZ6Pv8TZH7iDf9+ne8M6i00yGUgswKlGBASsYg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OLBU6S3ni25j17E+/XVNF1QtfV9YsbvYv8ps6INZjXcyZo82qM/VsgcIGue3Ywl697oJ+ZTi/DvcuY/mjOQ73riIhp/Z39lVMONcjWRDaLRoD/zrsWwwj5FrJjedX7vd9zy/MnPrChv3aP+9E8kn6baIWzmef7GX9pwKNa/ZV4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sangfor.com.cn; spf=pass smtp.mailfrom=sangfor.com.cn; arc=none smtp.client-ip=101.71.155.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sangfor.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sangfor.com.cn
-Received: from [0.0.0.0] (unknown [IPV6:240e:3b7:327c:7080:144f:1ac1:3638:8460])
-	by smtp.qiye.163.com (Hmail) with ESMTPA id 8A7781A0C00;
-	Tue, 30 Jul 2024 17:57:45 +0800 (CST)
-Message-ID: <1580700a-95e6-45cc-a461-68fa1cc1b50c@sangfor.com.cn>
-Date: Tue, 30 Jul 2024 17:57:43 +0800
+	s=arc-20240116; t=1722336974; c=relaxed/simple;
+	bh=LWkqXbpJPzQ1iJyfPF6IqW1+UWKTyl4FjmF8qqq7+8Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cvDPhPkjH1WV7w9DXdHQW9lMjMhFN7dxdIR2+0CQfiNYfoOjC3dAQ69eySsnyfreyn00l2iyF0QeUAnSMCaNDj6/bd8LuxfnWg2wm7zziwljWwtUP0UrzTdBU+KGmOXXC20ZkXWc15cnsaxgpdmcJnIs0JELi3E9mRyk3NYe+Bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 47D45100FC263;
+	Tue, 30 Jul 2024 12:56:03 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 1BD2439C012; Tue, 30 Jul 2024 12:56:03 +0200 (CEST)
+Date: Tue, 30 Jul 2024 12:56:03 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Sasha Levin <sashal@kernel.org>, stable@vger.kernel.org,
+	linux-pci@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Krzysztof Wilczynski <kwilczynski@kernel.org>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 5.10-stable 1/3] locking: Introduce __cleanup() based
+ infrastructure
+Message-ID: <ZqjGwy2Yo9QJx0RV@wunner.de>
+References: <3c1751533b20c5ece6ff2296c1d79ac7580200a0.1722331565.git.lukas@wunner.de>
+ <2024073039-palace-savings-1849@gregkh>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI/ASPM: Update ASPM sysfs on MFD function removal to
- avoid use-after-free
-To: Jay Fang <f.fangjian@huawei.com>, bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org, jonathan.cameron@huawei.com,
- prime.zeng@hisilicon.com
-References: <20240730011639.2590846-1-f.fangjian@huawei.com>
-Content-Language: en-US
-From: Ding Hui <dinghui@sangfor.com.cn>
-In-Reply-To: <20240730011639.2590846-1-f.fangjian@huawei.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaTk5MVkIYHU0dTUoaS01CH1YVFAkWGhdVEwETFh
-	oSFyQUDg9ZV1kYEgtZQVlJT0seQUgZTEFISUwYQUxLQ0tBSk9PHUFKGhhKQUhNSENBQ09NS1lXWR
-	YaDxIVHRRZQVlPS0hVSktJT09PSFVKS0tVSkJLS1kG
-X-HM-Tid: 0a9103130cc703abkunm8a7781a0c00
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OU06Hgw4QjIyCzUUHx8OARM3
-	P04aChRVSlVKTElJSEhIT01NSk1IVTMWGhIXVR8SFRwTDhI7CBoVHB0UCVUYFBZVGBVFWVdZEgtZ
-	QVlJT0seQUgZTEFISUwYQUxLQ0tBSk9PHUFKGhhKQUhNSENBQ09NS1lXWQgBWUFISENJNwY+
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2024073039-palace-savings-1849@gregkh>
 
-On 2024/7/30 9:16, Jay Fang wrote:
->  From 'commit 456d8aa37d0f ("PCI/ASPM: Disable ASPM on MFD function removal
-> to avoid use-after-free")' we know that PCIe spec r6.0, sec 7.5.3.7,
-> recommends that software program the same ASPM Control(pcie_link_state)
-> value in all functions of multi-function devices, and free the
-> pcie_link_state when any child function is removed.
+On Tue, Jul 30, 2024 at 11:40:28AM +0200, Greg Kroah-Hartman wrote:
+> On Tue, Jul 30, 2024 at 11:30:51AM +0200, Lukas Wunner wrote:
+> > From: Peter Zijlstra <peterz@infradead.org>
+> > 
+> > commit 54da6a0924311c7cf5015533991e44fb8eb12773 upstream.
+> > 
+> > Use __attribute__((__cleanup__(func))) to build:
+> > 
+> >  - simple auto-release pointers using __free()
+> > 
+> >  - 'classes' with constructor and destructor semantics for
+> >    scope-based resource management.
+> > 
+> >  - lock guards based on the above classes.
+> > 
+> > Signed-off-by: Peter Zijlstra (Intel) <peterz@infradead.org>
+> > Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> > Link: https://lkml.kernel.org/r/20230612093537.614161713%40infradead.org
 > 
-> However, ASPM Control sysfs is still visible to other children even if it
-> has been removed by any child function, and careless use it will
-> trigger use-after-free error, e.g.:
-> 
->    # lspci -tv
->      -[0000:16]---00.0-[17]--+-00.0  Device 19e5:0222
->                              \-00.1  Device 19e5:0222
->    # echo 1 > /sys/bus/pci/devices/0000:17:00.0/remove       // pcie_link_state will be released
->    # echo 1 > /sys/bus/pci/devices/0000:17:00.1/link/l1_aspm // will trigger error
-> 
->    Unable to handle kernel NULL pointer dereference at virtual address 0000000000000030
->    Call trace:
->     aspm_attr_store_common.constprop.0+0x10c/0x154
->     l1_aspm_store+0x24/0x30
->     dev_attr_store+0x20/0x34
->     sysfs_kf_write+0x4c/0x5c
-> 
-> We can solve this problem by updating the ASPM Control sysfs of all
-> children immediately after ASPM Control have been freed.
-> 
-> Fixes: 456d8aa37d0f ("PCI/ASPM: Disable ASPM on MFD function removal to avoid use-after-free")
-> Signed-off-by: Jay Fang <f.fangjian@huawei.com>
-> ---
->   drivers/pci/pcie/aspm.c | 2 ++
->   1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index cee2365e54b8..eee9e6739924 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -1262,6 +1262,8 @@ void pcie_aspm_exit_link_state(struct pci_dev *pdev)
->   		pcie_config_aspm_path(parent_link);
->   	}
->   
-> +	pcie_aspm_update_sysfs_visibility(parent);
-> +
+> Do we really want this in 5.10?
 
-To be more rigorous, is there still a race window in aspm_attr_{show,store}_common or
-clkpm_{show,store} before updating the visibility, we can get an old or NULL pointer
-by pcie_aspm_get_link()?
+I think so because we may have to apply a lot more patches between now
+and Dec 2026 which use __cleanup variable attributes.
 
->   	mutex_unlock(&aspm_lock);
->   	up_read(&pci_bus_sem);
->   }
+(Dec 2026 is EOL for 5.10 and 5.15.)
 
--- 
+
+> Are there any compiler versions that
+> 5.10 still has to support that will break with this?
+
+No, apparently not.
+
+5.10 requires gcc >= 4.9 or clang >= 10.0.1
+5.15 requires gcc >= 5.1 or clang >= 10.0.1
+
+I've looked through gcc docs and the first version mentioning __cleanup
+is gcc 3.3.6.
+
+The situation around clang seems odd:  __cleanup isn't mentioned in their
+docs before 15.0.0, yet we're only requiring 13.0.1 in the just-released
+v6.10.
+
+
+> Same for 5.15.y, I'm loath to apply this to older kernels without loads
+> of testing.
+
+I'm sorry, I don't have the resources to perform that amount of testing.
+I've sent you a backport of the PCI/DPC patch instead which avoids
+__cleanup.
+
 Thanks,
-- Ding Hui
 
+Lukas
