@@ -1,46 +1,46 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4147013D62F;
-	Thu,  1 Aug 2024 05:48:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B781B158542;
+	Thu,  1 Aug 2024 05:48:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722491325; cv=none; b=B2T/G1IrG9nfZmZ2Y8vepc0c4JXj2KEcFqXJssLAOoS4PfrFWC/m3X4GHOXyUaF+q1ohrkXBW4gyxBofh8qD4zKPgwq1J9pR7ChbF2shoClPgWh3rmG/wVkodPPugJlcIzRhCGEVqzikQ3GZPc+bAivCfB9Jj5RYYn3LEvkbtaU=
+	t=1722491330; cv=none; b=ouNkB7gFD9FO5c96X0cEloiQGb/0xsC8T/1FXWFuYXAvDKGHM8C5tk0gCRzLduakS0W/eBol8UHlgpq2OD9rWQ4Q6JEEUWbJ8FoSVZpgVEt6/n445QuVdWGt8eh1NNSeAcoAtTr8Qoy/Y1HTMthFJL22qgIt8geaOtX7dlJTNvA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722491325; c=relaxed/simple;
-	bh=HRww8AFT74XwMikPlIa+yJyodREnJDAI/wvjvjD5cHc=;
+	s=arc-20240116; t=1722491330; c=relaxed/simple;
+	bh=IPhahkZ6qy7uRjZHpGdmaK0Lu+Kr00TpXw/OcLHYSfI=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pHtCDN+YivtVJjj7H9gbGmZLGJZdaE0m72f3beNm0YbBZ7lfQIWriQBe0Krn4aTWet+qqehfpzNWEWLDqLLQR0FY+oZYwPotUUvJ+rnZjlFU21Y1bouZPLhIQXGqt+rEVV1FzF7siCGGsHBaDoGjoJx7QHno1r5si8p64x1OvMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dKWDEkNh; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=H7Egv6XRwbJ+YpekVmTV5deobIAINw68R4uJf0qocHd5D9RVx0vNHVehMHxm/vWVJX3EoUK0Thpx1WiEBsREPZw0ucQxgAVHnUCM7JxeCpRAFuduvUQWu9X6pEHxPTpGBCQQB5+pRCI9aybK6L3oOG+6IBz/pBcaLoFQYyvh42g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=os5QWxR+; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dKWDEkNh"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4710OTgK010012;
-	Thu, 1 Aug 2024 05:48:26 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="os5QWxR+"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 46VMxS1A030520;
+	Thu, 1 Aug 2024 05:48:36 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	5tmIrHlyHSrFxq8tguGkzi2uakdoijh1Sm4arlSmcIw=; b=dKWDEkNhHMxF/UTm
-	b1JZd97pXaHbssmNkHxBdZ9yc2nJKHSrR3kOZQSTDMJ50593yP0OhlqEBox4ml85
-	gmVB633qYHctmIqfEkFIQRx2AdHVxni0lTPqhqd4TkhoO0ytYZerjpAczfDX5HFJ
-	u4WJalsmYE33/qaXFhYlJ5yX5PMplC/fzK3vWKPRVmXCAAdNxOLxCKfTHvyEXlUg
-	B/rk9arlKfNRm54IXi3HSOcg7tuhxJDgBEB9g6DpLf7YVW1QYtFm6iuJgiRohLSc
-	6DBmCA+x46+VL6yVh/kB1b2v3xVCpQlE5EKdlOAEz81bOCx0Fo6kRCoYHP+XP6PA
-	WLgfqA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40qnbaakrc-1
+	hGO9keNVUrvs9IXj4FJ+VEBdkTXZ7TVnpLE++TZrl9s=; b=os5QWxR+3BXCMtTN
+	AbMLiIuZNhyp5deKGmK9AefD2SqSwr0EdLGidwSVsNqgbdijxrKLY+pNHpB2AZUR
+	n+UMZ7NIPnEcSNOSaF13g8+IEoekh/JC2gUgr74LtuhZkCw6znEHiviUx1MvGXdA
+	NJmBGgO1/47nWLwIdnnGL1WFyfkkM6OP1CqO6um2eDoTn0fjPs0I9mf7dL+dLS5m
+	Jy06BuuFctVsux7a5NVpP4kAs2HTqTIaKfEA8WyUUGDJUg4uWwcTAbhAFwAXv3hq
+	qDdn7Jnziz2M4ez9rmhlLhKgypaiBnGVOno6P9r6jBbMf6opNsJYVsfmCk3Gj8o+
+	6QKaUA==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40qm082qxn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 01 Aug 2024 05:48:26 +0000 (GMT)
+	Thu, 01 Aug 2024 05:48:35 +0000 (GMT)
 Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA04.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4715mPmM017818
+	by NALASPPMTA03.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4715mZ1r011964
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 1 Aug 2024 05:48:25 GMT
+	Thu, 1 Aug 2024 05:48:35 GMT
 Received: from hu-srichara-blr.qualcomm.com (10.80.80.8) by
  nalasex01c.na.qualcomm.com (10.47.97.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 31 Jul 2024 22:48:20 -0700
+ 15.2.1544.9; Wed, 31 Jul 2024 22:48:30 -0700
 From: Sricharan R <quic_srichara@quicinc.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
@@ -49,9 +49,9 @@ To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>
 CC: <quic_srichara@quicinc.com>
-Subject: [PATCH V7 1/4] dt-bindings: PCI: qcom: Document the IPQ9574 PCIe controller
-Date: Thu, 1 Aug 2024 11:18:00 +0530
-Message-ID: <20240801054803.3015572-2-quic_srichara@quicinc.com>
+Subject: [PATCH V7 3/4] arm64: dts: qcom: ipq9574: Enable PCIe PHYs and controllers
+Date: Thu, 1 Aug 2024 11:18:02 +0530
+Message-ID: <20240801054803.3015572-4-quic_srichara@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20240801054803.3015572-1-quic_srichara@quicinc.com>
 References: <20240801054803.3015572-1-quic_srichara@quicinc.com>
@@ -67,113 +67,167 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01c.na.qualcomm.com (10.47.97.35)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: AGXTLrFeEIPHiKjBV7BmHjuWs7BFfLR6
-X-Proofpoint-GUID: AGXTLrFeEIPHiKjBV7BmHjuWs7BFfLR6
+X-Proofpoint-GUID: oUrSxAYDY2AM5Dd0FUSsy3HYokUTDhMy
+X-Proofpoint-ORIG-GUID: oUrSxAYDY2AM5Dd0FUSsy3HYokUTDhMy
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-01_02,2024-07-31_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- bulkscore=0 lowpriorityscore=0 mlxlogscore=999 phishscore=0 mlxscore=0
- impostorscore=0 clxscore=1015 suspectscore=0 adultscore=0 spamscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408010032
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 bulkscore=0
+ mlxscore=0 priorityscore=1501 mlxlogscore=941 spamscore=0 clxscore=1015
+ malwarescore=0 impostorscore=0 phishscore=0 lowpriorityscore=0
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2407110000 definitions=main-2408010031
 
 From: devi priya <quic_devipriy@quicinc.com>
 
-Document the PCIe controller on IPQ9574 platform.
+Enable the PCIe controller and PHY nodes corresponding to RDP 433.
 
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: devi priya <quic_devipriy@quicinc.com>
 Signed-off-by: Sricharan Ramabadhran <quic_srichara@quicinc.com>
 ---
- [V7] Picked up review tags
+ [V7] Fixed review comments from Konrad
 
- .../devicetree/bindings/pci/qcom,pcie.yaml    | 50 +++++++++++++++++++
- 1 file changed, 50 insertions(+)
+ arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts | 113 ++++++++++++++++++++
+ 1 file changed, 113 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-index f867746b1ae5..2d61fb9f206d 100644
---- a/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/qcom,pcie.yaml
-@@ -26,6 +26,7 @@ properties:
-           - qcom,pcie-ipq8064-v2
-           - qcom,pcie-ipq8074
-           - qcom,pcie-ipq8074-gen3
-+          - qcom,pcie-ipq9574
-           - qcom,pcie-msm8996
-           - qcom,pcie-qcs404
-           - qcom,pcie-sdm845
-@@ -161,6 +162,7 @@ allOf:
-             enum:
-               - qcom,pcie-ipq6018
-               - qcom,pcie-ipq8074-gen3
-+              - qcom,pcie-ipq9574
-     then:
-       properties:
-         reg:
-@@ -397,6 +399,53 @@ allOf:
-             - const: axi_m_sticky # AXI Master Sticky reset
-             - const: axi_s_sticky # AXI Slave Sticky reset
+diff --git a/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts b/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts
+index 1bb8d96c9a82..165ebbb59511 100644
+--- a/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts
++++ b/arch/arm64/boot/dts/qcom/ipq9574-rdp433.dts
+@@ -8,6 +8,7 @@
  
-+  - if:
-+      properties:
-+        compatible:
-+          contains:
-+            enum:
-+              - qcom,pcie-ipq9574
-+    then:
-+      properties:
-+        clocks:
-+          minItems: 6
-+          maxItems: 6
-+        clock-names:
-+          items:
-+            - const: axi_m # AXI Master clock
-+            - const: axi_s # AXI Slave clock
-+            - const: axi_bridge
-+            - const: rchng
-+            - const: ahb
-+            - const: aux
+ /dts-v1/;
+ 
++#include <dt-bindings/gpio/gpio.h>
+ #include "ipq9574-rdp-common.dtsi"
+ 
+ / {
+@@ -15,6 +16,45 @@ / {
+ 	compatible = "qcom,ipq9574-ap-al02-c7", "qcom,ipq9574";
+ };
+ 
++&pcie1_phy {
++	status = "okay";
++};
 +
-+        resets:
-+          minItems: 8
-+          maxItems: 8
-+        reset-names:
-+          items:
-+            - const: pipe # PIPE reset
-+            - const: sticky # Core Sticky reset
-+            - const: axi_s_sticky # AXI Slave Sticky reset
-+            - const: axi_s # AXI Slave reset
-+            - const: axi_m_sticky # AXI Master Sticky reset
-+            - const: axi_m # AXI Master reset
-+            - const: aux # AUX Reset
-+            - const: ahb # AHB Reset
++&pcie1 {
++	pinctrl-0 = <&pcie1_default>;
++	pinctrl-names = "default";
 +
-+        interrupts:
-+          minItems: 8
-+        interrupt-names:
-+          items:
-+            - const: msi0
-+            - const: msi1
-+            - const: msi2
-+            - const: msi3
-+            - const: msi4
-+            - const: msi5
-+            - const: msi6
-+            - const: msi7
++	perst-gpios = <&tlmm 26 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 27 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
 +
-   - if:
-       properties:
-         compatible:
-@@ -507,6 +556,7 @@ allOf:
-                 - qcom,pcie-ipq8064v2
-                 - qcom,pcie-ipq8074
-                 - qcom,pcie-ipq8074-gen3
-+                - qcom,pcie-ipq9574
-                 - qcom,pcie-qcs404
-     then:
-       required:
++&pcie2_phy {
++	status = "okay";
++};
++
++&pcie2 {
++	pinctrl-0 = <&pcie2_default>;
++	pinctrl-names = "default";
++
++	perst-gpios = <&tlmm 29 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 30 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&pcie3_phy {
++	status = "okay";
++};
++
++&pcie3 {
++	pinctrl-0 = <&pcie3_default>;
++	pinctrl-names = "default";
++
++	perst-gpios = <&tlmm 32 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 33 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
+ &sdhc_1 {
+ 	pinctrl-0 = <&sdc_default_state>;
+ 	pinctrl-names = "default";
+@@ -28,6 +68,79 @@ &sdhc_1 {
+ };
+ 
+ &tlmm {
++
++	pcie1_default: pcie1-default-state {
++		clkreq-n-pins {
++			pins = "gpio25";
++			function = "pcie1_clk";
++			drive-strength = <6>;
++			bias-pull-up;
++		};
++
++		perst-n-pins {
++			pins = "gpio26";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
++			output-low;
++		};
++
++		wake-n-pins {
++			pins = "gpio27";
++			function = "pcie1_wake";
++			drive-strength = <6>;
++			bias-pull-up;
++		};
++	};
++
++	pcie2_default: pcie2-default-state {
++		clkreq-n-pins {
++			pins = "gpio28";
++			function = "pcie2_clk";
++			drive-strength = <6>;
++			bias-pull-up;
++		};
++
++		perst-n-pins {
++			pins = "gpio29";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-down;
++			output-low;
++		};
++
++		wake-n-pins {
++			pins = "gpio30";
++			function = "pcie2_wake";
++			drive-strength = <6>;
++			bias-pull-up;
++		};
++	};
++
++	pcie3_default: pcie3-default-state {
++		clkreq-n-pins {
++			pins = "gpio31";
++			function = "pcie3_clk";
++			drive-strength = <6>;
++			bias-pull-up;
++		};
++
++		perst-n-pins {
++			pins = "gpio32";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-up;
++			output-low;
++		};
++
++		wake-n-pins {
++			pins = "gpio33";
++			function = "pcie3_wake";
++			drive-strength = <6>;
++			bias-pull-up;
++		};
++	};
++
+ 	sdc_default_state: sdc-default-state {
+ 		clk-pins {
+ 			pins = "gpio5";
 -- 
 2.34.1
 
