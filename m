@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19D3F1E4846;
-	Thu,  1 Aug 2024 00:38:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 675EB1E80BE;
+	Thu,  1 Aug 2024 00:40:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722472723; cv=none; b=WSVmF/VgGUODx6nomoAS5YWSGLu72ZIhRhYanM1o1FOyTrzGjn1IGQQ2sNXZqwOtxghPI/ckJaBg9SmmKEY63P701+0+UMRom0X6lWDp8EfHeRyMbUoaXX1/T3Z7Cr478wRE4fkDSB7YJa45TDoYpgvlUJYwfSODNC409rQ+VbE=
+	t=1722472813; cv=none; b=UCvX7aWcYKa/R9a3fb3msJclBxtGeuOQun+MMlhG7C8cmF7IvInzfBm9kIpWV/A8klC+8hzNliDtmmduDZJbs6W/GCaxlElwADAtFZQLr33YE7HtGucxgdgiODqXxfU6dzysrkoRBD7G5YOrNqZtZFnjBi7upiBAlLA5KnlXYz0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722472723; c=relaxed/simple;
-	bh=kL/XT7JAuxnxELhKNZfCLWr6WyRu/dxm9/mD3/aKmzQ=;
+	s=arc-20240116; t=1722472813; c=relaxed/simple;
+	bh=hDFH0xuVEwXXPx+0//7xppgQ92FJEKmcmTYJrdk8Hrs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=FCO7i/UM3v8edCkNrMqUS/HUk+zpObNxxmwgCZ3siSx1ETMg2XOLtoBonSBDYgcZSDZKr+LNkvfyEkLHftcIdzAQb8OO1e8VuzRlZhwGO41twndq7F/W0VZTmntXQy8qq45wXyqGrSMcqDJ1+93grr6Fcoy+K1YCs3UJwgUMzXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B2zoYwkc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Z9TNWBC+oayreV5jQxat2ABSK5oz39O/BGjbuqPUIQz6Y6Xb82LpIeFtGQJibaN0iOPBnA85So2YsnzO/F3QVGkOpc1Y3Ad8Bgdh1F8ciSYeEde0iB3gVkxT2fvWCFCfwlpnTzjOVGtvVDqA+Y2GOLXUAVXCAIdmZRBYgV58BP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RN2K7M3U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B2zoYwkc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 74E4BC4AF0C;
-	Thu,  1 Aug 2024 00:38:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RN2K7M3U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E423C4AF10;
+	Thu,  1 Aug 2024 00:40:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1722472722;
-	bh=kL/XT7JAuxnxELhKNZfCLWr6WyRu/dxm9/mD3/aKmzQ=;
+	s=k20201202; t=1722472813;
+	bh=hDFH0xuVEwXXPx+0//7xppgQ92FJEKmcmTYJrdk8Hrs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=B2zoYwkc4lZdSBFuhbV7el3KZaFHxBEHk0xs8+wX1+MotKUMzxVN3MOGV3b/T1WSG
-	 qxC7IRs6sdcbeSav0YPxDcsXuTnMDuWad5ot0FMApiVfkBZnixTburIKUR2EDUK0ZM
-	 adRga49ldiUky9cuO0yL4qUPP4g//5StjEX6ezKKJ/vmJHI/EpAvftQA5CfFvP6AlN
-	 t7Jxf7z2Xy1Qw5lF+fjUHg43oJ4QNIwNxhiIhS+zzEFvmBXaLSiQyIfgucGg1DlqFg
-	 1aa0+M6bpzYVZ4ANkvuBsNRN794oaZnTL69BlqSv+s+hHmWCJJU1kNMhSd4yw4yVq9
-	 +c/F5ZyFGM55w==
+	b=RN2K7M3U8Qgq2A6iJgKNgsmHLeB1N+zFlYsA8FEzdLlvDBUlu7ru2LpRxrYGVpP/T
+	 QdWkRr9ShCvJ/lZKmEXND89rR25qkp/a1LpwKR4zniuBvcLAffm0wWHbjibW+dAkOq
+	 JAwhJqabHkT0VyORT/dyjIU1piSPwG7PgqIexc9Gn6UuTWAhJuCTqGyHmnDm/yHiaY
+	 uW94kG7z7qp0r8d8ie6bKbYoXVHWFBqlLBTmXixuuFP1jM1d+uDk0zf7VSTKcLMrom
+	 USCeL2d4viVeKFXZjgJWhz6rywJ80Cld9laqgyV89HDrU/Hl4A3t4xWcsaowFnvj7w
+	 rRsKVofXZsJOg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
@@ -37,12 +37,12 @@ Cc: Krishna Kumar <krishnak@linux.ibm.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linuxppc-dev@lists.ozlabs.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 34/38] pci/hotplug/pnv_php: Fix hotplug driver crash on Powernv
-Date: Wed, 31 Jul 2024 20:35:40 -0400
-Message-ID: <20240801003643.3938534-34-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 18/22] pci/hotplug/pnv_php: Fix hotplug driver crash on Powernv
+Date: Wed, 31 Jul 2024 20:38:47 -0400
+Message-ID: <20240801003918.3939431-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20240801003643.3938534-1-sashal@kernel.org>
-References: <20240801003643.3938534-1-sashal@kernel.org>
+In-Reply-To: <20240801003918.3939431-1-sashal@kernel.org>
+References: <20240801003918.3939431-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,7 +51,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.223
+X-stable-base: Linux 5.4.281
 Content-Transfer-Encoding: 8bit
 
 From: Krishna Kumar <krishnak@linux.ibm.com>
@@ -84,10 +84,10 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
  1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/pci/hotplug/pnv_php.c b/drivers/pci/hotplug/pnv_php.c
-index 04565162a4495..cf9c0e75f0be4 100644
+index d7b2b47bc33eb..3824942618305 100644
 --- a/drivers/pci/hotplug/pnv_php.c
 +++ b/drivers/pci/hotplug/pnv_php.c
-@@ -38,7 +38,6 @@ static void pnv_php_disable_irq(struct pnv_php_slot *php_slot,
+@@ -35,7 +35,6 @@ static void pnv_php_disable_irq(struct pnv_php_slot *php_slot,
  				bool disable_device)
  {
  	struct pci_dev *pdev = php_slot->pdev;
@@ -95,7 +95,7 @@ index 04565162a4495..cf9c0e75f0be4 100644
  	u16 ctrl;
  
  	if (php_slot->irq > 0) {
-@@ -57,7 +56,7 @@ static void pnv_php_disable_irq(struct pnv_php_slot *php_slot,
+@@ -54,7 +53,7 @@ static void pnv_php_disable_irq(struct pnv_php_slot *php_slot,
  		php_slot->wq = NULL;
  	}
  
