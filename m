@@ -1,181 +1,97 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F2C61865A;
-	Sat,  3 Aug 2024 03:32:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53C91130A54;
+	Sat,  3 Aug 2024 04:33:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722655963; cv=none; b=j8XjSk5SufRocbvpoqCfDf8cRCJXbO7RiyUV1LiGk0JO0Fcf7W7jOLrBrJyNvdxsObQRjWwK615yzKS9X0Pp4cLtRk2yrt7nOjkod8+16nhAGkZ/UXrJ8NI25jCW6sXSJAVz49SlAzwY9LNzFQzrIapB9k7HrOgs8B9xlJbj5WQ=
+	t=1722659599; cv=none; b=FDImrvmQcSH2QAYmpd+LedJj2A09IZ2wor+YyicmBj5s4HtsgGy8xFF4w85EafvxS8YqDgKc0s8Y4od6FvSYniPA7zg/7B2/5sRBNazvDCJOln7VFL7ntiQ+YBuEXN3owSQjpW5N3HS32hMbeyWDmnGtcW6lB3cvp9O52LQZhAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722655963; c=relaxed/simple;
-	bh=BNdq8FSkhoMK/NJUbiAVkCRPx0d91MSHIhjn6/TAJng=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=GnG3kHtwrta9fN8RWB05O56f7RErT/pdqxOoiZfcV8lyg+hnNA2xtmgWYrb9REYQ2OxgDNL1feWdx/oqZiLVVzrLx9p1aekYWZu083Ldxqxpmpz7RX3I0WAvsfk0+u+V1VRMB/EEk57FhLDiOHDP9cSljZ+n8Bh/m9yAkIuPtFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mAcO4zqX; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1722659599; c=relaxed/simple;
+	bh=pKpCcF4Ikahp6VdzkjPmida2UGTxrv8uaII3qSDhGkQ=;
+	h=Date:Content-Type:MIME-Version:From:To:Cc:In-Reply-To:References:
+	 Message-Id:Subject; b=hTQJhFpRNppZVMX/+iSiSR76fzzUykYI4H/Kl04y6kumDgOjl/jBaY8I+MghyVq4LMJZ/OLDhRyO0JO4SxKXFsR4joFJuizwTlHsJC1xTpAWugf6Pv4bnVzis7y2j52Nxl+YF7iN9eXr/eP1qawW9DTuLRdWJkrz1Xfux7rf6gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c/MCcpvv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mAcO4zqX"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4732s8h9029072;
-	Sat, 3 Aug 2024 03:23:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	JlamVuYwQRG2qhorK3lFIHp5bEfeAMUDFaF0T1fFrnE=; b=mAcO4zqX5qpd9MCd
-	cBakGxH+IvdKh6IslI3oWceH8w+gkEjQeV7id9dI8qTKePzO7YzM88LeOp9ctrwQ
-	hDI75dRmuSodxOcYqG7LqhUf1YeH4kYMayD3ukNl/tgtCkCeWZ0+TqY6galePGps
-	l/7uOJOGNojPPux/lthICO97jc3j7vRJzXp8fIGyYstWprKVchAu/VmzOKrm5dGo
-	ZaXgjEldnff/qazmxeXyIVsfp/kM56JJCIMcOPq/a5CW7IBAL81iBRlQs1CAvz+L
-	ExsAfsQ1Y+UOq9+xstob7xYXO8YWZFVmepgOmwJ7+FXGggwvi5I3wybEp+XcjV80
-	j1PCfQ==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40sc4y010d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 03 Aug 2024 03:23:40 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4733Ndk3018900
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 3 Aug 2024 03:23:39 GMT
-Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
- nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Fri, 2 Aug 2024 20:23:34 -0700
-From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Date: Sat, 3 Aug 2024 08:52:52 +0530
-Subject: [PATCH v2 6/8] PCI: dwc: Add support for new pci function op
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c/MCcpvv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9A3DEC116B1;
+	Sat,  3 Aug 2024 04:33:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1722659598;
+	bh=pKpCcF4Ikahp6VdzkjPmida2UGTxrv8uaII3qSDhGkQ=;
+	h=Date:From:To:Cc:In-Reply-To:References:Subject:From;
+	b=c/MCcpvvpitEdeZCrrWC2G9BT0nZj5dh+2DWEdBQF+ZTtfboxhOk7rsDhf1yqkBXw
+	 FQymZ6GrsJHyLVE2DsYwXFeiA6ANYdBbZBXFN9H1WVCghwalARO/JYcj1y1mWA7NLl
+	 CZB9R4d4Kk2kDGQY6xHonCFRJbifvJ+dWdZ6qCRjD3TndtARNClFNDuaVwCpPthgSV
+	 uaqzhMOksXkvBzGNpaVw40rojGiw73TCBb+59GGswRmNFqnjCgdBls7+ovO7Y43Yvi
+	 1Ad19tF3XyiU7CfozKWZBsdRbq1uIYEKqH0PAB1ArCYt0y85uyD36ukrfTx+EXBYMG
+	 X9hc3TIfvUzYg==
+Date: Fri, 02 Aug 2024 22:33:17 -0600
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-ID: <20240803-qps615-v2-6-9560b7c71369@quicinc.com>
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Cc: cros-qcom-dts-watchers@chromium.org, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Jingoo Han <jingoohan1@gmail.com>, 
+ Konrad Dybcio <konrad.dybcio@linaro.org>, quic_vbadigan@quicinc.com, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, andersson@kernel.org, 
+ linux-kernel@vger.kernel.org, Conor Dooley <conor+dt@kernel.org>, 
+ linux-arm-msm@vger.kernel.org, 
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ linux-pci@vger.kernel.org, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, devicetree@vger.kernel.org
+In-Reply-To: <20240803-qps615-v2-1-9560b7c71369@quicinc.com>
 References: <20240803-qps615-v2-0-9560b7c71369@quicinc.com>
-In-Reply-To: <20240803-qps615-v2-0-9560b7c71369@quicinc.com>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring
-	<robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski
-	<krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Konrad Dybcio
-	<konrad.dybcio@linaro.org>,
-        <cros-qcom-dts-watchers@chromium.org>,
-        "Bartosz
- Golaszewski" <brgl@bgdev.pl>,
-        Jingoo Han <jingoohan1@gmail.com>,
-        "Manivannan
- Sadhasivam" <manivannan.sadhasivam@linaro.org>
-CC: <andersson@kernel.org>, <quic_vbadigan@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        "Bartosz
- Golaszewski" <bartosz.golaszewski@linaro.org>,
-        Krishna chaitanya chundru
-	<quic_krichai@quicinc.com>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1722655379; l=2566;
- i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
- bh=BNdq8FSkhoMK/NJUbiAVkCRPx0d91MSHIhjn6/TAJng=;
- b=+TAQAFX0CLNXpoCmFeDRS4xmubmZs/nFUqUMrsQbYt/vAnCuz8N7r8zHk+Zxwl1aDRqSCvn4l
- cR2Vu+7XdJsDeWo7kvmjvwFbYggxtsInmCPPkYZVm0MNZl/J/4Aga54
-X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
- pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 4vw7ZSdU1wN3iQgqOuQmcPJ2dtiEFaVr
-X-Proofpoint-GUID: 4vw7ZSdU1wN3iQgqOuQmcPJ2dtiEFaVr
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
- definitions=2024-08-02_20,2024-08-02_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 bulkscore=0
- spamscore=0 clxscore=1015 lowpriorityscore=0 impostorscore=0
- suspectscore=0 mlxscore=0 malwarescore=0 mlxlogscore=710 phishscore=0
- priorityscore=1501 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408030020
+ <20240803-qps615-v2-1-9560b7c71369@quicinc.com>
+Message-Id: <172265959745.856785.3854064719699930724.robh@kernel.org>
+Subject: Re: [PATCH v2 1/8] dt-bindings: PCI: Add binding for qps615
 
-Add the support for stop_link() and  start_link() function op.
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
----
- drivers/pci/controller/dwc/pcie-designware-host.c | 18 ++++++++++++++++++
- drivers/pci/controller/dwc/pcie-designware.h      | 16 ++++++++++++++++
- 2 files changed, 34 insertions(+)
+On Sat, 03 Aug 2024 08:52:47 +0530, Krishna chaitanya chundru wrote:
+> Add binding describing the Qualcomm PCIe switch, QPS615,
+> which provides Ethernet MAC integrated to the 3rd downstream port
+> and two downstream PCIe ports.
+> 
+> Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+> ---
+>  .../devicetree/bindings/pci/qcom,qps615.yaml       | 191 +++++++++++++++++++++
+>  1 file changed, 191 insertions(+)
+> 
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index a0822d5371bc..a1d994334ca5 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -697,10 +697,28 @@ void __iomem *dw_pcie_own_conf_map_bus(struct pci_bus *bus, unsigned int devfn,
- }
- EXPORT_SYMBOL_GPL(dw_pcie_own_conf_map_bus);
- 
-+static int dw_pcie_op_start_link(struct pci_bus *bus)
-+{
-+	struct dw_pcie_rp *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+
-+	return dw_pcie_host_start_link(pci);
-+}
-+
-+static void dw_pcie_op_stop_link(struct pci_bus *bus)
-+{
-+	struct dw_pcie_rp *pp = bus->sysdata;
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+
-+	dw_pcie_host_stop_link(pci);
-+}
-+
- static struct pci_ops dw_pcie_ops = {
- 	.map_bus = dw_pcie_own_conf_map_bus,
- 	.read = pci_generic_config_read,
- 	.write = pci_generic_config_write,
-+	.start_link = dw_pcie_op_start_link,
-+	.stop_link = dw_pcie_op_stop_link,
- };
- 
- static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 53c4c8f399c8..1aa1f8be8bda 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -402,6 +402,8 @@ struct dw_pcie_ops {
- 	enum dw_pcie_ltssm (*get_ltssm)(struct dw_pcie *pcie);
- 	int	(*start_link)(struct dw_pcie *pcie);
- 	void	(*stop_link)(struct dw_pcie *pcie);
-+	int	(*host_start_link)(struct dw_pcie *pcie);
-+	void	(*host_stop_link)(struct dw_pcie *pcie);
- };
- 
- struct dw_pcie {
-@@ -632,6 +634,20 @@ static inline void dw_pcie_stop_link(struct dw_pcie *pci)
- 		pci->ops->stop_link(pci);
- }
- 
-+static inline int dw_pcie_host_start_link(struct dw_pcie *pci)
-+{
-+	if (pci->ops && pci->ops->host_start_link)
-+		return pci->ops->host_start_link(pci);
-+
-+	return 0;
-+}
-+
-+static inline void dw_pcie_host_stop_link(struct dw_pcie *pci)
-+{
-+	if (pci->ops && pci->ops->host_stop_link)
-+		pci->ops->host_stop_link(pci);
-+}
-+
- static inline enum dw_pcie_ltssm dw_pcie_get_ltssm(struct dw_pcie *pci)
- {
- 	u32 val;
+My bot found errors running 'make dt_binding_check' on your patch:
 
--- 
-2.34.1
+yamllint warnings/errors:
+
+dtschema/dtc warnings/errors:
+Documentation/devicetree/bindings/pci/qcom,qps615.example.dts:33.26-101.19: Warning (pci_device_bus_num): /example-0/pcie/pcie@0/pcie@0,0: PCI bus number 1 out of range, expected (0 - 0)
+Documentation/devicetree/bindings/pci/qcom,qps615.example.dts:52.30-60.23: Warning (pci_device_bus_num): /example-0/pcie/pcie@0/pcie@0,0/pcie@1,0: PCI bus number 2 out of range, expected (0 - 0)
+Documentation/devicetree/bindings/pci/qcom,qps615.example.dts:62.30-70.23: Warning (pci_device_bus_num): /example-0/pcie/pcie@0/pcie@0,0/pcie@2,0: PCI bus number 2 out of range, expected (0 - 0)
+Documentation/devicetree/bindings/pci/qcom,qps615.example.dts:72.30-100.23: Warning (pci_device_bus_num): /example-0/pcie/pcie@0/pcie@0,0/pcie@3,0: PCI bus number 2 out of range, expected (0 - 0)
+Documentation/devicetree/bindings/pci/qcom,qps615.example.dts:81.39-89.32: Warning (pci_device_bus_num): /example-0/pcie/pcie@0/pcie@0,0/pcie@3,0/pcie@0,0: PCI bus number 4 out of range, expected (0 - 0)
+Documentation/devicetree/bindings/pci/qcom,qps615.example.dts:91.39-99.32: Warning (pci_device_bus_num): /example-0/pcie/pcie@0/pcie@0,0/pcie@3,0/pcie@0,1: PCI bus number 4 out of range, expected (0 - 0)
+
+doc reference errors (make refcheckdocs):
+
+See https://patchwork.ozlabs.org/project/devicetree-bindings/patch/20240803-qps615-v2-1-9560b7c71369@quicinc.com
+
+The base for the series is generally the latest rc1. A different dependency
+should be noted in *this* patch.
+
+If you already ran 'make dt_binding_check' and didn't see the above
+error(s), then make sure 'yamllint' is installed and dt-schema is up to
+date:
+
+pip3 install dtschema --upgrade
+
+Please check and re-submit after running the above command yourself. Note
+that DT_SCHEMA_FILES can be set to your schema file to speed up checking
+your schema. However, it must be unset to test all examples with your schema.
 
