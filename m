@@ -1,49 +1,49 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 786111755C;
-	Sat,  3 Aug 2024 03:31:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773DBF9F5;
+	Sat,  3 Aug 2024 03:31:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722655884; cv=none; b=Kygn2giogQwP6hikkxAnjX3x1k+EMwZtimw9bhhZuhENSM5PcJLzofR7hRaE45GNqVcVtr+kzVPGVxjHpkxgQdpxvZ7DEfDYPC6+NW3fWHibFly8zDxRQND9Iwpp7JJcI7IOroAMUnpl7WqdkrkU6C64r5U1nwHddoB5wYE4iaU=
+	t=1722655906; cv=none; b=kNK9Bd0JoeBVcwactePlW3N+45hQzD6InA3ZaRd5/+pBosjB9mohunhoWSJUOiOnOCrYK7VPHhe5EtYCj2w/cD9h9kZDpWJDKNSXsH8SyRsU8RbI3Nsnkn9Xj9SI4HjramixH/xKldbiliCtRn4eaaAJSOVLWr5P7x9HjPjJFEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722655884; c=relaxed/simple;
-	bh=6cavA9XLKIM3BgR3NHEgRZLrQUpWWMHMmofpuijT6oo=;
-	h=From:Subject:Date:Message-ID:MIME-Version:Content-Type:To:CC; b=FM2PoJ+gsXNUF5j9/eT61f6+eR4dQ8jRPzdOnaKFqZvMOaH4YAzCrJ37P22L/Iet7wRczoaAjWDjjDi7Suoq8kKofOJvZfZ4USDNId2G7rlY6dx23JMQ3KBSetd5HtYA5yjYaXOOqDsQyo0Qn8gnlb5VRB6Elf9oQcVe2mRs7jM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mgLaT2zj; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1722655906; c=relaxed/simple;
+	bh=fugzrPQuTxWwC0Jlq48X/itx0ETjlv+UiheKkDz9pac=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
+	 In-Reply-To:To:CC; b=rbM2tVdxguKInDqoJfHq7FOIJMsG4Rn7teklrdUB2CmoT9vHD7Ljf84Oeoxiq4p+3HNMUKhwX4T8C81QJ+pxOxDKPv+W74u5hFL9tQfaniCwYR82dQ1XA4cF2YAuhw7gVdIOyH7CCMFnt0AjVaOCbMBIyNKYCVIlnE2Q0rBYobQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=mGKGnlCy; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mgLaT2zj"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4733A2ZV000415;
-	Sat, 3 Aug 2024 03:23:06 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="mGKGnlCy"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4732BlS6029774;
+	Sat, 3 Aug 2024 03:23:35 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=a61VFykzxYtyzwTkkcjkY4
-	+QWZ7S28D3PmagGAlSBRk=; b=mgLaT2zjv5kDZVRlVtfV8QKrNGVoLgKMQxbGuv
-	rZRIhA8mfWRRIrGIg0epddFd3AfOcrKGLv7ijdZ5mNOx8AU8NwZMao8+xqsqKhwP
-	DGf1r+lBnKgfmDGH6sxgyqGGVI8KF1tGyqoUZG+jnSP9gLTu/xgdRptiYj8n3WjY
-	kTkjurUGGFW1foezrHTdZroXytg5SIri5klNIHMn5ppi39SQJKFCN9TuKas31LOq
-	ZhpqBUoRROJ7VfSBHipoEB30s1KSw0f2jKiBomCIoS7vdYN+g5/CD1xJMP6FOVlb
-	moLiau5mf38oHg2qry6271/xSRaG2nuAj0k5OXTN5bGdqHew==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40sbgrr21n-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	0bRob93PfL7mExfXgOVlkpqfMvJm3m0F1Q1oclI4iwE=; b=mGKGnlCyb5oY5Xqx
+	e8aQ4MEKc2yxWej6Ahtdg4XY1VUmaqtt6uMxYY7XMe0zKDeo2WioC4AdQbDVAlZ6
+	vtlYI++/jO3EYWUnwcyVnbTW4g+GcAQft5q+cnHvbITu+vzLhJYuPKUKQqlP4J+7
+	0JuNbQAYlU2fbSlqMJvsVrnCz3YQjxJnpLlWBXcrHpFJXMEKSWIWNCHumksfe6pb
+	pdaOjtUek/Lyn4EwwxodEr9W9LIWrstmOxtQ9E4CLX0Gf63xhw0A0fg40+B1vGU1
+	Ev3vGU6mPpW8++JV/v0DXK3vLOO8hGShcHm9pUZjqgTUIk0IchD+Yy6jfSaGFpzq
+	9P+k8w==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 40sbj6g28b-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 03 Aug 2024 03:23:06 +0000 (GMT)
+	Sat, 03 Aug 2024 03:23:35 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA02.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4733N5DN018288
+	by NALASPPMTA05.qualcomm.com (8.17.1.19/8.17.1.19) with ESMTPS id 4733NXQ9021756
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 3 Aug 2024 03:23:05 GMT
+	Sat, 3 Aug 2024 03:23:33 GMT
 Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Fri, 2 Aug 2024 20:23:00 -0700
+ 15.2.1544.9; Fri, 2 Aug 2024 20:23:28 -0700
 From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Subject: [PATCH v2 0/8] PCI: Enable Power and configure the QPS615 PCIe
- switch
-Date: Sat, 3 Aug 2024 08:52:46 +0530
-Message-ID: <20240803-qps615-v2-0-9560b7c71369@quicinc.com>
+Date: Sat, 3 Aug 2024 08:52:51 +0530
+Subject: [PATCH v2 5/8] PCI: Add new start_link() & stop_link function ops
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,9 +52,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAIairWYC/2XMQQ6CMBCF4auQWVtTBizFlfcwLLCdyiws0GqjI
- b27la3L/+Xl2yBSYIpwrjYIlDjy7EvgoQIzjf5Ogm1pQImt7LAT6xJVfRKEum/HRttGOSjnJZD
- j9w5dh9ITx+ccPrub8Lf+EQmFFNrc6t4q54p2WV9s2JujmR8w5Jy/AlE/iZ4AAAA=
+Message-ID: <20240803-qps615-v2-5-9560b7c71369@quicinc.com>
+References: <20240803-qps615-v2-0-9560b7c71369@quicinc.com>
+In-Reply-To: <20240803-qps615-v2-0-9560b7c71369@quicinc.com>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
         =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
         Rob Herring
@@ -78,102 +78,58 @@ CC: <andersson@kernel.org>, <quic_vbadigan@quicinc.com>,
         Krishna chaitanya chundru
 	<quic_krichai@quicinc.com>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1722655379; l=3676;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1722655379; l=1199;
  i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
- bh=6cavA9XLKIM3BgR3NHEgRZLrQUpWWMHMmofpuijT6oo=;
- b=/YzAIHJt439+4CTndqI64GLKUe1QJ+fWY+Q+exNah01wKp0y01ATu4qVq+WeA0K4HW1fifxxT
- BJwqwNcrHdGDGVWP5P8e6RtD+ucGDK8zx+1MibGYfErDaUNZuOgFfW5
+ bh=fugzrPQuTxWwC0Jlq48X/itx0ETjlv+UiheKkDz9pac=;
+ b=4zqKnLyl7m8czZ754L5/9Iks5fHb1+YY1/BtVsZ1wNiRwDML+iDpG2Dj+aNrZmSXeHI3X/SMI
+ xUfa/Bz7CkyC63FiULsR7FfnX0/F6iur6Uqh0H08vugDoxkdLOd9OF7
 X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
  pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Y_v6DKcPIHw1qvNbDN5vkrATq5p704Ui
-X-Proofpoint-GUID: Y_v6DKcPIHw1qvNbDN5vkrATq5p704Ui
+X-Proofpoint-ORIG-GUID: JTShVwGQ6Aq1tg6l-I2Wznbk1DWjMW5S
+X-Proofpoint-GUID: JTShVwGQ6Aq1tg6l-I2Wznbk1DWjMW5S
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-02_20,2024-08-02_01,2024-05-17_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- impostorscore=0 malwarescore=0 suspectscore=0 phishscore=0 mlxscore=0
- priorityscore=1501 lowpriorityscore=0 bulkscore=0 adultscore=0 spamscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2407110000 definitions=main-2408030020
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 suspectscore=0
+ priorityscore=1501 adultscore=0 mlxscore=0 lowpriorityscore=0 bulkscore=0
+ phishscore=0 mlxlogscore=610 clxscore=1015 malwarescore=0 impostorscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2407110000
+ definitions=main-2408030020
 
-QPS615 is the PCIe switch which has one upstream and three downstream
-ports. One of the downstream ports is used as endpoint device of Ethernet
-MAC. Other two downstream ports are supposed to connect to external
-device. One Host can connect to QPS615 by upstream port.
+Certain devices like QPS615 which uses PCI pwrctl framework
+needs to configure the device before PCI link is up.
 
-QPS615 switch power is controlled by the GPIO's. After powering on
-the switch will immediately participate in the link training. if the
-host is also ready by that time PCIe link will established. 
+If the controller driver already enables link training as part of
+its probe, after the device is powered on, controller and device
+participates in the link training and link can come up immediately
+and maynot have time to configure the device.
 
-The QPS615 needs to configured certain parameters like de-emphasis,
-disable unused port etc before link is established.
-
-The device tree properties are parsed per node under pci-pci bridge in the
-devicetree. Each node has unique bdf value in the reg property, driver
-uses this bdf to differentiate ports, as there are certain i2c writes to
-select particulat port.
- 
-As the controller starts link training before the probe of pwrctl driver,
-the PCIe link may come up before configuring the switch itself.
-To avoid this introduce two functions in pci_ops to start_link() &
-stop_link() which will disable the link training if the PCIe link is
-not up yet.
-
-Now PCI pwrctl device is the child of the pci-pcie bridge, if we want
-to enable the suspend resume for pwrctl device there may be issues
-since pci bridge will try to access some registers in the config which
-may cause timeouts or Un clocked access as the power can be removed in
-the suspend of pwrctl driver.
-
-To solve this make PCIe controller as parent to the pci pwr ctrl driver
-and create devlink between host bridge and pci pwrctl driver so that
-pci pwrctl driver will go suspend only after all the PCIe devices went
-to suspend.
+So we need to stop the link training by using stop_link() and enable
+them back after device is configured by using start_link().
 
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 ---
-Changes in V1:
-- Fix the code as per the comments given.
-- Removed D3cold D0 sequence in suspend resume for now as it needs
-  seperate discussion.
-- change to dt approach for configuring the switch instead of request_firmware() approach
-- Link to v1: https://lore.kernel.org/linux-pci/20240626-qps615-v1-4-2ade7bd91e02@quicinc.com/T/
----
+ include/linux/pci.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
----
-Krishna chaitanya chundru (8):
-      dt-bindings: PCI: Add binding for qps615
-      dt-bindings: trivial-devices: Add qcom,qps615
-      arm64: dts: qcom: qcs6490-rb3gen2: Add node for qps615
-      PCI: Change the parent to correctly represent pcie hierarchy
-      PCI: Add new start_link() & stop_link function ops
-      PCI: dwc: Add support for new pci function op
-      PCI: qcom: Add support for host_stop_link() & host_start_link()
-      PCI: pwrctl: Add power control driver for qps615
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4cf89a4b4cbc..0791d74951e9 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -802,6 +802,8 @@ struct pci_ops {
+ 	void __iomem *(*map_bus)(struct pci_bus *bus, unsigned int devfn, int where);
+ 	int (*read)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 *val);
+ 	int (*write)(struct pci_bus *bus, unsigned int devfn, int where, int size, u32 val);
++	int (*start_link)(struct pci_bus *bus);
++	void (*stop_link)(struct pci_bus *bus);
+ };
+ 
+ /*
 
- .../devicetree/bindings/pci/qcom,qps615.yaml       | 191 ++++++
- .../devicetree/bindings/trivial-devices.yaml       |   2 +
- arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts       | 121 ++++
- arch/arm64/boot/dts/qcom/sc7280.dtsi               |   2 +-
- drivers/pci/bus.c                                  |   3 +-
- drivers/pci/controller/dwc/pcie-designware-host.c  |  18 +
- drivers/pci/controller/dwc/pcie-designware.h       |  16 +
- drivers/pci/controller/dwc/pcie-qcom.c             |  39 ++
- drivers/pci/pwrctl/Kconfig                         |   7 +
- drivers/pci/pwrctl/Makefile                        |   1 +
- drivers/pci/pwrctl/core.c                          |   9 +-
- drivers/pci/pwrctl/pci-pwrctl-qps615.c             | 638 +++++++++++++++++++++
- include/linux/pci.h                                |   2 +
- 13 files changed, 1046 insertions(+), 3 deletions(-)
----
-base-commit: 1722389b0d863056d78287a120a1d6cadb8d4f7b
-change-id: 20240727-qps615-e2894a38d36f
-
-Best regards,
 -- 
-Krishna chaitanya chundru <quic_krichai@quicinc.com>
+2.34.1
 
