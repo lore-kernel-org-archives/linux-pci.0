@@ -1,177 +1,177 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB36715B57C;
-	Mon,  5 Aug 2024 15:24:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B20315A4AF
+	for <linux-pci@vger.kernel.org>; Mon,  5 Aug 2024 15:35:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1722871467; cv=none; b=lRrI0tsWqu7KxU63V20dHNZexxfe0HasU1yNnkZCL6bmunG2VM7L0PB7a7lQ6w0YDOccGnT1g3BnbSfGh95vpdZCTsksgYrXCk9A2NdNlRfBYEAvXm/2Z19Vh6UMK+8y7/LmFR3F5CcsbyLaYQbcL6kbxx7eufg1/gIy/BHn2VQ=
+	t=1722872155; cv=none; b=Nr4jcLF6EZ09CF87xAt2mvWIoSDco9nwv60xTnt9vnBys+jMkP2a0FFMmP6XOPFv0Eu6F2rfdbNgVMdUcakAJbb1s1TWZ5KESRdCa4e9vGq0n2p4Y3TdrCYuvEukB/ccxQ0w6Gb5EcCkzXLQnO4xmDfvXpJ2+66IIu+wbU/whB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1722871467; c=relaxed/simple;
-	bh=zO6iSk8R1JCdLWyy4O6A3cfcFyMwQqDks2Y7cB7hlsk=;
-	h=Message-Id:From:Date:Subject:To:Cc; b=OxPE3vNUGueLhsRZbhFLQaFMFSR//OxuUYf7blIa3kNpUBNVx00wh8FLMv1Tx6rF2t8WmeeevPXpos3MZY0e+ZmWvr16PdxwwBAWq0ouLffgDddHnyYAtRTU9UQQkf8e4AnuLCUN2jVlR/ZC9btLvr1hWJzI0FKpefvv8JtRE1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id E3C36300002AF;
-	Mon,  5 Aug 2024 17:24:14 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id CD9F8E4BC; Mon,  5 Aug 2024 17:24:14 +0200 (CEST)
-Message-Id: <7b970f7923e373d1b23784721208f93418720485.1722870934.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Mon, 5 Aug 2024 17:24:05 +0200
-Subject: [PATCH] s390/pci: Stop usurping pdev->dev.groups
-To: Niklas Schnelle <schnelle@linux.ibm.com>, Gerald Schaefer <gerald.schaefer@linux.ibm.com>, Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, Christian Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-s390@vger.kernel.org, linux-pci@vger.kernel.org, Alistair Francis <alistair23@gmail.com>, Jonathan.Cameron@huawei.com, alex.williamson@redhat.com, christian.koenig@amd.com, kch@nvidia.com, gregkh@linuxfoundation.org, logang@deltatee.com, chaitanyak@nvidia.com, rdunlap@infradead.org, Alistair Francis <alistair.francis@wdc.com>, Sebastian Ott <sebott@redhat.com>
+	s=arc-20240116; t=1722872155; c=relaxed/simple;
+	bh=v2ERA9o7/xVC+jk2zxDSTBfNpKA5+JJHS1aHhP5v/sg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Kwdfpn1uvdMa74wi+64fdmcjylUlJsuuNQMP5f1xOOIQmribxFqGSC9WlvBpcZkrnAqSGMPuJXU3FEuBZUPELS3S6GbZ8Eao4z/CPMeRpW+Zi0Qr7xNwLNrr9m6AkEyNZT9YS8IfT1hl5S0xbl5mDaiYW1i2aonx1v4/5bdqRTI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=gbcljqG+; arc=none smtp.client-ip=209.85.210.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gbcljqG+"
+Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-70eb73a9f14so8028389b3a.2
+        for <linux-pci@vger.kernel.org>; Mon, 05 Aug 2024 08:35:53 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1722872153; x=1723476953; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=kaNxJBlznx6y0vjgoBqt7rcaY0nzk8O5nbByfKyVdkM=;
+        b=gbcljqG+NpDriZ2wzLDdZYfIEhBjzUYwJJA328LRp3T2z+iTq8Iopvkd0vNy6JO8Pz
+         YtGuQzgBNQa6oTBrkt+zv+p6bALdttEp7l2ViQmQ+cVNC4TyT4bwrMHphn+UVka6BHg0
+         Q5Zpe3IrWZmT0Xrhzm4DsCA5NrVDWyi3tK1zay97gLUBBTdTi1udpXDgCMBBMDTc4QGp
+         u8lRVdvrd8eeKQnLdsmIWVdBu0UqONNipMRiXguERSiY2fJQ9U+/VRowTAkvkA3ZpomX
+         yA3DD65e7H2VfuqHf1KRtNtiWtk//GyQeblOvXdpADkU1OHvbYgyH0g233h6BAlc7L18
+         cD7g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1722872153; x=1723476953;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=kaNxJBlznx6y0vjgoBqt7rcaY0nzk8O5nbByfKyVdkM=;
+        b=l9He7Simn9fFKoriJGm80K6IWs7g/HjvQ2FJzNW0gY3IZGCjk4uD340cr1pRJZ4WZX
+         fjovIdBueIpbq3QYiQZRS62zqAwp6fcediJY/J4APZIJwKKQo1yWrj6Xabtj0turw/FC
+         jUCVNvKy8x+lbr5zjYT6Co6I+kKMuQJCNvI4y+a/QlrNaWiCRNqKKoWyuwgvXszU0bGa
+         +Q0tgaFY2MX5wbR+1KzADLSz1nfeTWo9LeuVumsOTgzkdeYMFV9Eqj1lk/HldpgI6Pu5
+         qPmw73zhXaVsyVR9+RvlEbx8xx85n0TRYZgvckqF4F0Lr/5/akrpfUSCxC5xNB3jo39O
+         Yh3Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUuxX89/iK47ralLni8PBsPmTSkTaOm7U3QAMo+IcMz5wDHOLBhIHVNOuu8MbS4e8Lxlfe1PRyYoHrFRS6ygMMrqRAbW47dtZbs
+X-Gm-Message-State: AOJu0YyNiGaTFWxNkGP3j6qYG34Rnv1ufFpKI0hctdT8e8RTX92J5vP+
+	fo74EHmcd2jTeHhuuT0Mu4t0R0yRiyFAC36dpHZJisoSh25nOAza0LaLBpya1w==
+X-Google-Smtp-Source: AGHT+IF/U0Q1PobUn7t5WL8VXgXR+W38KeWOWYVnqFO/t8f7Bw/Vwj5BN+d89aomfHaopFlJNaJ26g==
+X-Received: by 2002:a05:6a00:21cf:b0:70d:281d:ee8c with SMTP id d2e1a72fcca58-7106cfdca5dmr14410623b3a.18.1722872153206;
+        Mon, 05 Aug 2024 08:35:53 -0700 (PDT)
+Received: from thinkpad ([120.56.197.55])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7106ecfc344sm5543790b3a.151.2024.08.05.08.35.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 05 Aug 2024 08:35:52 -0700 (PDT)
+Date: Mon, 5 Aug 2024 21:05:46 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Hsin-Yi Wang <hsinyi@chromium.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+	lukas@wunner.de, mika.westerberg@linux.intel.com
+Subject: Re: [PATCH v4 3/4] PCI: Decouple D3Hot and D3Cold handling for
+ bridges
+Message-ID: <20240805153546.GE7274@thinkpad>
+References: <20240326-pci-bridge-d3-v4-0-f1dce1d1f648@linaro.org>
+ <20240326-pci-bridge-d3-v4-3-f1dce1d1f648@linaro.org>
+ <CAJMQK-hu+FrVtYaUiwfp=uuYLT_xBRcHb0JOfMBz5TYaktV6Ow@mail.gmail.com>
+ <20240802053302.GB4206@thinkpad>
+ <CAJMQK-gtPo4CVEXFDfRU9o+UXgZrsxZvroVsGorvLAdkzfjYmg@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <CAJMQK-gtPo4CVEXFDfRU9o+UXgZrsxZvroVsGorvLAdkzfjYmg@mail.gmail.com>
 
-Bjorn suggests using pdev->dev.groups for attribute_groups constructed
-on PCI device enumeration:
+On Fri, Aug 02, 2024 at 12:53:42PM -0700, Hsin-Yi Wang wrote:
 
-   "Is it feasible to build an attribute group in pci_doe_init() and
-    add it to dev->groups so device_add() will automatically add them?"
-    https://msgid.link/20231019165829.GA1381099@bhelgaas
+[...]
 
-Unfortunately on s390, pcibios_device_add() usurps pdev->dev.groups for
-arch-specific attribute_groups, preventing its use for anything else.
+> > > [   42.202016] mt7921e 0000:01:00.0: PM: calling
+> > > pci_pm_suspend_noirq+0x0/0x300 @ 77, parent: 0000:00:00.0
+> > > [   42.231681] mt7921e 0000:01:00.0: PCI PM: Suspend power state: D3hot
+> >
+> > Here I can see that the port entered D3hot
+> >
+> This one is the wifi device connected to the port.
+> 
 
-Introduce an ARCH_PCI_DEV_GROUPS macro which arches can define in
-<asm/pci.h>.  The macro is visible in drivers/pci/pci-sysfs.c through
-the inclusion of <linux/pci.h>, which in turn includes <asm/pci.h>.
+Ah, okay. You could've just shared the logs for the bridge/rootport.
 
-On s390, define the macro to the three attribute_groups previously
-assigned to pdev->dev.groups.  Thereby pdev->dev.groups is made
-available for use by the PCI core.
+> > > [   42.238048] mt7921e 0000:01:00.0: PM:
+> > > pci_pm_suspend_noirq+0x0/0x300 returned 0 after 26583 usecs
+> > > [   42.247083] pcieport 0000:00:00.0: PM: calling
+> > > pci_pm_suspend_noirq+0x0/0x300 @ 3196, parent: pci0000:00
+> > > [   42.296325] pcieport 0000:00:00.0: PCI PM: Suspend power state: D0
+> >
+> This is the port suspended with D0. If we hack power_manageable to
+> only consider D3hot, the state here for pcieport will become D3hot
+> (compared in below).
+> 
+> If it's D0 (and s2idle), in resume it won't restore config:
+> https://elixir.bootlin.com/linux/v6.10/source/drivers/pci/pci-driver.c#L959,
+> and in resume it would be an issue.
+> 
+> Comparison:
+> 1. pcieport can go to D3:
+> (suspend)
+> [   61.645809] mt7921e 0000:01:00.0: PM: calling
+> pci_pm_suspend_noirq+0x0/0x2f8 @ 1139, parent: 0000:00:00.0
+> [   61.675562] mt7921e 0000:01:00.0: PCI PM: Suspend power state: D3hot
+> [   61.681931] mt7921e 0000:01:00.0: PM:
+> pci_pm_suspend_noirq+0x0/0x2f8 returned 0 after 26502 usecs
+> [   61.690959] pcieport 0000:00:00.0: PM: calling
+> pci_pm_suspend_noirq+0x0/0x2f8 @ 3248, parent: pci0000:00
+> [   61.755359] pcieport 0000:00:00.0: PCI PM: Suspend power state: D3hot
+> [   61.761832] pcieport 0000:00:00.0: PM:
+> pci_pm_suspend_noirq+0x0/0x2f8 returned 0 after 61345 usecs
+> 
 
-As a side effect, arch/s390/pci/pci_sysfs.c no longer needs to be
-compiled into the kernel if CONFIG_SYSFS=n.
+Why the device state is not saved? Did you skip those logs?
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- arch/s390/include/asm/pci.h |  9 ++++++++-
- arch/s390/pci/Makefile      |  3 ++-
- arch/s390/pci/pci.c         |  1 -
- arch/s390/pci/pci_sysfs.c   | 14 ++++----------
- drivers/pci/pci-sysfs.c     |  5 +++++
- 5 files changed, 19 insertions(+), 13 deletions(-)
+> (resume)
+> [   65.243981] pcieport 0000:00:00.0: PM: calling
+> pci_pm_resume_noirq+0x0/0x190 @ 3258, parent: pci0000:00
+> [   65.253122] mtk-pcie-phy 16930000.phy: CKM_38=0x13040500,
+> GLB_20=0x0, GLB_30=0x0, GLB_38=0x30453fc, GLB_F4=0x1453b000
+> [   65.262725] pcieport 0000:00:00.0: PM:
+> pci_pm_resume_noirq+0x0/0x190 returned 0 after 175 usecs
+> [   65.273159] mtk-pcie-phy 16930000.phy: No calibration info
+> [   65.281903] mt7921e 0000:01:00.0: PM: calling
+> pci_pm_resume_noirq+0x0/0x190 @ 3259, parent: 0000:00:00.0
+> [   65.297108] mt7921e 0000:01:00.0: PM: pci_pm_resume_noirq+0x0/0x190
+> returned 0 after 329 usecs
+> 
+> 
+> 2. pcieport stays at D0 due to power_manageable returns false:
+> (suspend)
+> [   52.435375] mt7921e 0000:01:00.0: PM: calling
+> pci_pm_suspend_noirq+0x0/0x300 @ 2040, parent: 0000:00:00.0
+> [   52.465235] mt7921e 0000:01:00.0: PCI PM: Suspend power state: D3hot
+> [   52.471610] mt7921e 0000:01:00.0: PM:
+> pci_pm_suspend_noirq+0x0/0x300 returned 0 after 26602 usecs
+> [   52.480674] pcieport 0000:00:00.0: PM: calling
+> pci_pm_suspend_noirq+0x0/0x300 @ 143, parent: pci0000:00
+> [   52.529876] pcieport 0000:00:00.0: PCI PM: Suspend power state: D0
+>                 <-- port is still D0
+> [   52.536056] pcieport 0000:00:00.0: PCI PM: Skipped
+> 
+> (resume)
+> [   56.026298] pcieport 0000:00:00.0: PM: calling
+> pci_pm_resume_noirq+0x0/0x190 @ 3243, parent: pci0000:00
+> [   56.035379] mtk-pcie-phy 16930000.phy: CKM_38=0x13040500,
+> GLB_20=0x0, GLB_30=0x0, GLB_38=0x30453fc, GLB_F4=0x1453b000
+> [   56.044776] pcieport 0000:00:00.0: PM:
+> pci_pm_resume_noirq+0x0/0x190 returned 0 after 13 usecs
+> [   56.055409] mtk-pcie-phy 16930000.phy: No calibration info
+> [   56.064098] mt7921e 0000:01:00.0: PM: calling
+> pci_pm_resume_noirq+0x0/0x190 @ 3244, parent: 0000:00:00.0
+> [   56.078962] mt7921e 0000:01:00.0: Unable to change power state from
+> D3hot to D0, device inaccessible                    <-- resume failed.
 
-diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-index 30820a6..9d920ce 100644
---- a/arch/s390/include/asm/pci.h
-+++ b/arch/s390/include/asm/pci.h
-@@ -191,7 +191,14 @@ static inline bool zdev_enabled(struct zpci_dev *zdev)
- 	return (zdev->fh & (1UL << 31)) ? true : false;
- }
- 
--extern const struct attribute_group *zpci_attr_groups[];
-+extern const struct attribute_group zpci_attr_group;
-+extern const struct attribute_group pfip_attr_group;
-+extern const struct attribute_group zpci_ident_attr_group;
-+
-+#define ARCH_PCI_DEV_GROUPS &zpci_attr_group,		 \
-+			    &pfip_attr_group,		 \
-+			    &zpci_ident_attr_group,
-+
- extern unsigned int s390_pci_force_floating __initdata;
- extern unsigned int s390_pci_no_rid;
- 
-diff --git a/arch/s390/pci/Makefile b/arch/s390/pci/Makefile
-index 0547a10..2c21f03 100644
---- a/arch/s390/pci/Makefile
-+++ b/arch/s390/pci/Makefile
-@@ -3,7 +3,8 @@
- # Makefile for the s390 PCI subsystem.
- #
- 
--obj-$(CONFIG_PCI)	+= pci.o pci_irq.o pci_clp.o pci_sysfs.o \
-+obj-$(CONFIG_PCI)	+= pci.o pci_irq.o pci_clp.o \
- 			   pci_event.o pci_debug.o pci_insn.o pci_mmio.o \
- 			   pci_bus.o pci_kvm_hook.o
- obj-$(CONFIG_PCI_IOV)	+= pci_iov.o
-+obj-$(CONFIG_SYSFS)	+= pci_sysfs.o
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index cff4838..bd9624c 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -587,7 +587,6 @@ int pcibios_device_add(struct pci_dev *pdev)
- 	if (pdev->is_physfn)
- 		pdev->no_vf_scan = 1;
- 
--	pdev->dev.groups = zpci_attr_groups;
- 	zpci_map_resources(pdev);
- 
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-diff --git a/arch/s390/pci/pci_sysfs.c b/arch/s390/pci/pci_sysfs.c
-index 0f4f1e8..1f81f6f 100644
---- a/arch/s390/pci/pci_sysfs.c
-+++ b/arch/s390/pci/pci_sysfs.c
-@@ -197,7 +197,7 @@ static umode_t zpci_index_is_visible(struct kobject *kobj,
- 	NULL,
- };
- 
--static struct attribute_group zpci_ident_attr_group = {
-+const struct attribute_group zpci_ident_attr_group = {
- 	.attrs = zpci_ident_attrs,
- 	.is_visible = zpci_index_is_visible,
- };
-@@ -223,7 +223,7 @@ static umode_t zpci_index_is_visible(struct kobject *kobj,
- 	NULL,
- };
- 
--static struct attribute_group zpci_attr_group = {
-+const struct attribute_group zpci_attr_group = {
- 	.attrs = zpci_dev_attrs,
- 	.bin_attrs = zpci_bin_attrs,
- };
-@@ -235,14 +235,8 @@ static umode_t zpci_index_is_visible(struct kobject *kobj,
- 	&dev_attr_segment3.attr,
- 	NULL,
- };
--static struct attribute_group pfip_attr_group = {
-+
-+const struct attribute_group pfip_attr_group = {
- 	.name = "pfip",
- 	.attrs = pfip_attrs,
- };
--
--const struct attribute_group *zpci_attr_groups[] = {
--	&zpci_attr_group,
--	&pfip_attr_group,
--	&zpci_ident_attr_group,
--	NULL,
--};
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 40cfa71..5d0f4db 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -31,6 +31,10 @@
- #include <linux/aperture.h>
- #include "pci.h"
- 
-+#ifndef ARCH_PCI_DEV_GROUPS
-+#define ARCH_PCI_DEV_GROUPS
-+#endif
-+
- static int sysfs_initialized;	/* = 0 */
- 
- /* show configuration fields */
-@@ -1624,6 +1628,7 @@ static umode_t pcie_dev_attrs_are_visible(struct kobject *kobj,
- 	&pci_dev_acpi_attr_group,
- #endif
- 	&pci_dev_resource_resize_group,
-+	ARCH_PCI_DEV_GROUPS
- 	NULL,
- };
- 
+This means the port entered D3Cold? This is not expected during s2idle. During
+s2idle, devices should be put into low power state and their power should be
+preserved.
+
+Who is pulling the plug here?
+
+- Mani
+
 -- 
-2.43.0
-
+மணிவண்ணன் சதாசிவம்
