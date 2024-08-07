@@ -1,129 +1,322 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B1461DF667;
-	Wed,  7 Aug 2024 10:47:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F01351E3CA2;
+	Wed,  7 Aug 2024 11:20:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723027676; cv=none; b=EXCzHFkTOJhTNjKvxHCjVJmpM6utiQIZSg3yeAFaa423qGERSW/1rgyWY6ohlWxK1oNjN1yy7RgAqmfYGtKo6jikPZuWtsoOwNKzUkIo1yEO4MpYC3WEgzRVfTYK/AHoi8gT0uLBeA8m53Y9zluPbDSVkH/MyAitEpbPUImohEQ=
+	t=1723029657; cv=none; b=Hl5PObGijv6mcwh7jDmq1wfwug9Fgj3Hcia/XP6Kg0cchiNzMzM1xHQ5HrS53nvflVD+wTJfS3gzwNlW97uGyBmKxQYm7UEaJFR/bL+oxV3ZIC79p3VetpCoZ3l89jVtvkoZe2d08A3Vpeg3GsrHlRVoocUnC4ql91GwcIomX70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723027676; c=relaxed/simple;
-	bh=aKT1TNGY7N1VZKhJM3yrUJlvHm+MMYiI29thE1FOuK0=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A24BLZP32gUVBa9QXYofk/D1Vzmo/Bf6UyxPYTnretYJHtlzEZJWnPOe7svnahUOjp9/LPdUH6Tg9YQ0Vmbiq4VsnMgx5G3/0tyWjQB5JikLtGEubtxAPmoaHzILojAy0BuKti33DIyCbpG+q1Iuh2SfPysPlQMaxMeX5L9Fajg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.31])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Wf6J73CH2z6K5kM;
-	Wed,  7 Aug 2024 18:44:55 +0800 (CST)
-Received: from lhrpeml500005.china.huawei.com (unknown [7.191.163.240])
-	by mail.maildlp.com (Postfix) with ESMTPS id 115FC1400D9;
-	Wed,  7 Aug 2024 18:47:49 +0800 (CST)
-Received: from localhost (10.203.177.66) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 7 Aug
- 2024 11:47:48 +0100
-Date: Wed, 7 Aug 2024 11:47:47 +0100
-From: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: David Hunter <david.hunter.linux@gmail.com>, <bhelgaas@google.com>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<julia.lawall@inria.fr>, <skhan@linuxfoundation.org>,
-	<javier.carrasco.cruz@gmail.com>, Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH] of.c: replace of_node_put with __free improves cleanup
-Message-ID: <20240807114747.00002fc2@Huawei.com>
-In-Reply-To: <20240801235526.GA129068@bhelgaas>
-References: <20240719223805.102929-1-david.hunter.linux@gmail.com>
-	<20240801235526.GA129068@bhelgaas>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1723029657; c=relaxed/simple;
+	bh=IgSNN/sCJu3ISYNhHA9lUgEWt2hNzGyi0aYfmAPu5iU=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=HGdDmv2KNEn2v0CjFqRp0eOvd0BUgtelZKaZAVQEO5ZWtYHZRVW990jfL+6309XQ/8fYVIRiDmTlUbOSWIwrPCZct5SWAyBHAayQIOtVbOfq7xDiUaiNUJk9HHiyBTpK/aZ0cTXqw+Jy4W7AHCIW9P1Dr0cEGPibe6zctcJEEu8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gZSM7oWV; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gZSM7oWV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1723029655; x=1754565655;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=IgSNN/sCJu3ISYNhHA9lUgEWt2hNzGyi0aYfmAPu5iU=;
+  b=gZSM7oWVK8FgL6NWadfkhM6VQEKQQnevXjIkhFAOmGWgZE2nWkHYj8Ra
+   FhO+GOVH7TMHfk2EQJiY+Humur/gxdnNRtfJn2e3ANK3iRNO6qf255IqS
+   4QN0l59Wc2aF7j17PzZIUEF23A4y+qHZbQ94Y/EVxpZlrnqAThFGhzI2S
+   ISNXxqGqhSaZV5vATRRFdn4SmfUZY0sHD3aeMUj9SjZY8ZSqi3GH4s32o
+   QTxbLNl+KsnB/virVTIDh6CwNCWaBYpwgxIzA0Y8+7baOE3rf94V73rMK
+   UZobvj7b6MOw3P3weunN6wgam1+4CPQT0DhuT+xTtgjwKCPiK847P2mJF
+   g==;
+X-CSE-ConnectionGUID: 79DMSpyxSjaE70qhnSpLFQ==
+X-CSE-MsgGUID: O5ZQhDXmQRCnq/dyuMqpxg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11156"; a="31722592"
+X-IronPort-AV: E=Sophos;i="6.09,269,1716274800"; 
+   d="scan'208";a="31722592"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2024 04:20:53 -0700
+X-CSE-ConnectionGUID: 98N6okx5R+u24jFbxz3orQ==
+X-CSE-MsgGUID: E3RK+MBXTJezhyXhRcjbkw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.09,269,1716274800"; 
+   d="scan'208";a="61703544"
+Received: from ijarvine-desk1.ger.corp.intel.com (HELO localhost) ([10.245.244.202])
+  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Aug 2024 04:18:58 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Wed, 7 Aug 2024 14:18:54 +0300 (EEST)
+To: Jian-Hong Pan <jhp@endlessos.org>
+cc: david.e.box@linux.intel.com, Bjorn Helgaas <helgaas@kernel.org>, 
+    Johan Hovold <johan@kernel.org>, 
+    Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>, 
+    Mika Westerberg <mika.westerberg@linux.intel.com>, 
+    Damien Le Moal <dlemoal@kernel.org>, 
+    Nirmal Patel <nirmal.patel@linux.intel.com>, 
+    Jonathan Derrick <jonathan.derrick@linux.dev>, 
+    Paul M Stillwell Jr <paul.m.stillwell.jr@intel.com>, 
+    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
+    linux@endlessos.org
+Subject: Re: [PATCH v8 4/4] PCI/ASPM: Fix L1.2 parameters when enable link
+ state
+In-Reply-To: <CAPpJ_eeATLdcnH9CWpvJM_9juV5ok+OEYysTit_HparqBpQ3CQ@mail.gmail.com>
+Message-ID: <eb900245-5e13-bc6c-994a-43f2db8322ea@linux.intel.com>
+References: <20240719075200.10717-2-jhp@endlessos.org> <20240719080255.10998-2-jhp@endlessos.org> <CAPpJ_edybLMtrN_gxP2h9Z-BuYH+RG-qRqMqgZM1oSVoW1sP5A@mail.gmail.com> <e37536a435630583398307682e1a9aadbabfb497.camel@linux.intel.com>
+ <CAPpJ_eeATLdcnH9CWpvJM_9juV5ok+OEYysTit_HparqBpQ3CQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100005.china.huawei.com (7.191.160.25) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
+Content-Type: multipart/mixed; boundary="8323328-402323662-1723029534=:1138"
 
-On Thu, 1 Aug 2024 18:55:26 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-> [+cc Rob, Jonathan]
-> 
-> On Fri, Jul 19, 2024 at 06:38:05PM -0400, David Hunter wrote:
-> > The use of the __free function allows the cleanup to be based on scope
-> > instead of on another function called later. This makes the cleanup
-> > automatic and less susceptible to errors later.
-> > 
-> > This code was compiled without errors or warnings.  
-> 
-> I *think* this looks OK, but I'm not comfy with all this scope magic
-> yet, so would like Jonathan and/or Rob to take a peek too.
+--8323328-402323662-1723029534=:1138
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-I'm suspicious of usecases where there isn't a constructor / destructor pair.
+On Wed, 7 Aug 2024, Jian-Hong Pan wrote:
 
-This is more of a 'steal' the pointer and destroy it pattern.
+> David E. Box <david.e.box@linux.intel.com> =E6=96=BC 2024=E5=B9=B48=E6=9C=
+=886=E6=97=A5 =E9=80=B1=E4=BA=8C =E4=B8=8A=E5=8D=884:26=E5=AF=AB=E9=81=93=
+=EF=BC=9A
+> >
+> > Hi Jian-Hong,
+> >
+> > On Fri, 2024-08-02 at 16:24 +0800, Jian-Hong Pan wrote:
+> > > Jian-Hong Pan <jhp@endlessos.org> =E6=96=BC 2024=E5=B9=B47=E6=9C=8819=
+=E6=97=A5 =E9=80=B1=E4=BA=94 =E4=B8=8B=E5=8D=884:04=E5=AF=AB=E9=81=93=EF=BC=
+=9A
+> > > >
+> > > > Currently, when enable link's L1.2 features with __pci_enable_link_=
+state(),
+> > > > it configs the link directly without ensuring related L1.2 paramete=
+rs, such
+> > > > as T_POWER_ON, Common_Mode_Restore_Time, and LTR_L1.2_THRESHOLD hav=
+e been
+> > > > programmed.
+> > > >
+> > > > This leads the link's L1.2 between PCIe Root Port and child device =
+gets
+> > > > wrong configs when a caller tries to enabled it.
+> > > >
+> > > > Here is a failed example on ASUS B1400CEAE with enabled VMD:
+> > > >
+> > > > 10000:e0:06.0 PCI bridge: Intel Corporation 11th Gen Core Processor=
+ PCIe
+> > > > Controller (rev 01) (prog-if 00 [Normal decode])
+> > > >     ...
+> > > >     Capabilities: [200 v1] L1 PM Substates
+> > > >         L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1+ ASPM_L1.2+ ASPM_L1.1+
+> > > > L1_PM_Substates+
+> > > >                   PortCommonModeRestoreTime=3D45us PortTPowerOnTime=
+=3D50us
+> > > >         L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2+ ASPM_L1.1-
+> > > >                    T_CommonMode=3D45us LTR1.2_Threshold=3D101376ns
+> > > >         L1SubCtl2: T_PwrOn=3D50us
+> > > >
+> > > > 10000:e1:00.0 Non-Volatile memory controller: Sandisk Corp WD Blue =
+SN550
+> > > > NVMe SSD (rev 01) (prog-if 02 [NVM Express])
+> > > >     ...
+> > > >     Capabilities: [900 v1] L1 PM Substates
+> > > >         L1SubCap: PCI-PM_L1.2+ PCI-PM_L1.1- ASPM_L1.2+ ASPM_L1.1-
+> > > > L1_PM_Substates+
+> > > >                   PortCommonModeRestoreTime=3D32us PortTPowerOnTime=
+=3D10us
+> > > >         L1SubCtl1: PCI-PM_L1.2- PCI-PM_L1.1- ASPM_L1.2+ ASPM_L1.1-
+> > > >                    T_CommonMode=3D0us LTR1.2_Threshold=3D0ns
+> > > >         L1SubCtl2: T_PwrOn=3D10us
+> > > >
+> > > > According to "PCIe r6.0, sec 5.5.4", before enabling ASPM L1.2 on t=
+he PCIe
+> > > > Root Port and the child NVMe, they should be programmed with the sa=
+me
+> > > > LTR1.2_Threshold value. However, they have different values in this=
+ case.
+> > > >
+> > > > Invoke aspm_calc_l12_info() to program the L1.2 parameters properly=
+ before
+> > > > enable L1.2 bits of L1 PM Substates Control Register in
+> > > > __pci_enable_link_state().
+> > > >
+> > > > Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D218394
+> > > > Signed-off-by: Jian-Hong Pan <jhp@endlessos.org>
+> > > > ---
+> > > > v2:
+> > > > - Prepare the PCIe LTR parameters before enable L1 Substates
+> > > >
+> > > > v3:
+> > > > - Only enable supported features for the L1 Substates part
+> > > >
+> > > > v4:
+> > > > - Focus on fixing L1.2 parameters, instead of re-initializing whole=
+ L1SS
+> > > >
+> > > > v5:
+> > > > - Fix typo and commit message
+> > > > - Split introducing aspm_get_l1ss_cap() to "PCI/ASPM: Introduce
+> > > >   aspm_get_l1ss_cap()"
+> > > >
+> > > > v6:
+> > > > - Skipped
+> > > >
+> > > > v7:
+> > > > - Pick back and rebase on the new version kernel
+> > > > - Drop the link state flag check. And, always config link state's t=
+iming
+> > > >   parameters
+> > > >
+> > > > v8:
+> > > > - Because pcie_aspm_get_link() might return the link as NULL, move
+> > > >   getting the link's parent and child devices after check the link =
+is
+> > > >   not NULL. This avoids NULL memory access.
+> > > >
+> > > >  drivers/pci/pcie/aspm.c | 15 +++++++++++++++
+> > > >  1 file changed, 15 insertions(+)
+> > > >
+> > > > diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> > > > index 5db1044c9895..55ff1d26fcea 100644
+> > > > --- a/drivers/pci/pcie/aspm.c
+> > > > +++ b/drivers/pci/pcie/aspm.c
+> > > > @@ -1411,9 +1411,15 @@ EXPORT_SYMBOL(pci_disable_link_state);
+> > > >  static int __pci_enable_link_state(struct pci_dev *pdev, int state=
+, bool
+> > > > locked)
+> > > >  {
+> > > >         struct pcie_link_state *link =3D pcie_aspm_get_link(pdev);
+> > > > +       u32 parent_l1ss_cap, child_l1ss_cap;
+> > > > +       struct pci_dev *parent, *child;
+> > > >
+> > > >         if (!link)
+> > > >                 return -EINVAL;
+> > > > +
+> > > > +       parent =3D link->pdev;
+> > > > +       child =3D link->downstream;
+> > > > +
+> > > >         /*
+> > > >          * A driver requested that ASPM be enabled on this device, =
+but
+> > > >          * if we don't have permission to manage ASPM (e.g., on ACP=
+I
+> > > > @@ -1428,6 +1434,15 @@ static int __pci_enable_link_state(struct pc=
+i_dev
+> > > > *pdev, int state, bool locked)
+> > > >         if (!locked)
+> > > >                 down_read(&pci_bus_sem);
+> > > >         mutex_lock(&aspm_lock);
+> > > > +       /*
+> > > > +        * Ensure L1.2 parameters: Common_Mode_Restore_Times, T_POW=
+ER_ON and
+> > > > +        * LTR_L1.2_THRESHOLD are programmed properly before enable=
+ bits for
+> > > > +        * L1.2, per PCIe r6.0, sec 5.5.4.
+> > > > +        */
+> > > > +       parent_l1ss_cap =3D aspm_get_l1ss_cap(parent);
+> > > > +       child_l1ss_cap =3D aspm_get_l1ss_cap(child);
+> > > > +       aspm_calc_l12_info(link, parent_l1ss_cap, child_l1ss_cap);
+> >
+> > I still don't think this is the place to recalculate the L1.2 parameter=
+s
+> > especially when know the calculation was done but was cleared by
+> > pci_bus_reset(). Can't we just do a pci_save/restore_state() before/aft=
+er
+> > pci_bus_reset() in vmd.c?
+>=20
+> I have not thought pci_save/restore_state() around pci_bus_reset()
+> before.  It is an interesting direction.
+>=20
+> So, I prepare modification below for test.  Include "[PATCH v8 1/4]
+> PCI: vmd: Set PCI devices to D0 before enable PCI PM's L1 substates",
+> too.  Then, both the PCIe bridge and the PCIe device have the same
+> LTR_L1.2_THRESHOLD 101376ns as expected.
+>=20
+> diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+> index bbf4a47e7b31..6b8dd4f30127 100644
+> --- a/drivers/pci/controller/vmd.c
+> +++ b/drivers/pci/controller/vmd.c
+> @@ -727,6 +727,18 @@ static void vmd_copy_host_bridge_flags(struct
+> pci_host_bridge *root_bridge,
+>         vmd_bridge->native_dpc =3D root_bridge->native_dpc;
+>  }
+>=20
+> +static int vmd_pci_save_state(struct pci_dev *pdev, void *userdata)
+> +{
+> +       pci_save_state(pdev);
+> +       return 0;
+> +}
+> +
+> +static int vmd_pci_restore_state(struct pci_dev *pdev, void *userdata)
+> +{
+> +       pci_restore_state(pdev);
+> +       return 0;
+> +}
+> +
+>  /*
+>   * Enable ASPM and LTR settings on devices that aren't configured by BIO=
+S.
+>   */
+> @@ -927,6 +939,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd,
+> unsigned long features)
+>         pci_scan_child_bus(vmd->bus);
+>         vmd_domain_reset(vmd);
+>=20
+> +       pci_walk_bus(vmd->bus, vmd_pci_save_state, NULL);
+>         /* When Intel VMD is enabled, the OS does not discover the Root P=
+orts
+>          * owned by Intel VMD within the MMCFG space. pci_reset_bus() app=
+lies
+>          * a reset to the parent of the PCI device supplied as argument. =
+This
+> @@ -945,6 +958,7 @@ static int vmd_enable_domain(struct vmd_dev *vmd,
+> unsigned long features)
+>                         break;
+>                 }
+>         }
+> +       pci_walk_bus(vmd->bus, vmd_pci_restore_state, NULL);
 
-Also, bug in this case.... see below.
+Why not call pci_reset_bus() (or __pci_reset_bus()) then in=20
+vmd_enable_domain() which preserves state unlike pci_reset_bus()?
 
-> 
-> And is there some way to include a hint here about how to find the
-> implicit of_node_put()?  I think it's this from 9448e55d032d ("of: Add
-> cleanup.h based auto release via __free(device_node) markings"):
-> 
->   +DEFINE_FREE(device_node, struct device_node *, if (_T) of_node_put(_T))
+(Don't tell me naming of these functions is a horrible mess. :-/)
 
-Yes, it's that one.  Makes sense to add a reference to that in the
-patch description for these.
-> 
-> but it did take some looking to find it.
-> 
-> If it looks good, I'll tweak the commit log to use imperative mood:
-> https://chris.beams.io/posts/git-commit/
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?id=v6.9#n94
-> 
-> since this technically says what *could* happen but not what the patch
-> *does*.
-> 
-> > Signed-off-by: David Hunter <david.hunter.linux@gmail.com>
-> > ---
-> >  drivers/pci/of.c | 4 +---
-> >  1 file changed, 1 insertion(+), 3 deletions(-)
-> > 
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index b908fe1ae951..8b150982f5cd 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -616,16 +616,14 @@ int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
-> >  
-> >  void of_pci_remove_node(struct pci_dev *pdev)
-> >  {
-> > -	struct device_node *np;
-> > +	struct device_node *np __free(device_node) = pci_device_to_OF_node(pdev);
-> >  
-> > -	np = pci_device_to_OF_node(pdev);
-> >  	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
+--=20
+ i.
 
-Wil now put the node if that second check fails. Didn't do that before
-and I'm guessing we shouldn't?  Technically it calls the cleanup
-in the !np case but that is fine as we check for NULL pointer.
 
-So I'd leave this particular one alone.
-
-> >  		return;
-> >  	pdev->dev.of_node = NULL;
-> >  
-> >  	of_changeset_revert(np->data);
-> >  	of_changeset_destroy(np->data);
-> > -	of_node_put(np);
-> >  }
-> >  
-> >  void of_pci_make_dev_node(struct pci_dev *pdev)
-> > -- 
-> > 2.34.1
-> >   
-
+>=20
+>         pci_assign_unassigned_bus_resources(vmd->bus);
+>=20
+>=20
+> Jian-Hong Pan
+>=20
+> > > > +
+> > > >         link->aspm_default =3D pci_calc_aspm_enable_mask(state);
+> > > >         pcie_config_aspm_link(link, policy_to_aspm_state(link));
+> > > >
+> > > > --
+> > > > 2.45.2
+> > > >
+> > >
+> > > Hi Nirmal and Paul,
+> > >
+> > > It will be great to have your review here.
+> > >
+> > > I had tried to "set the threshold value in vmd_pm_enable_quirk()"
+> > > directly as Paul said [1].  However, it still needs to get the PCIe
+> > > link from the PCIe device to set the threshold value.
+> > > And, pci_enable_link_state_locked() gets the link. Then, it will be
+> > > great to calculate and programm L1 sub-states' parameters properly
+> > > before configuring the link's ASPM there.
+> > >
+> > > [1]:
+> > > https://lore.kernel.org/linux-kernel/20240624081108.10143-2-jhp@endle=
+ssos.org/T/#mc467498213fe1a6116985c04d714dae378976124
+> > >
+> > > Jian-Hong Pan
+> >
+>=20
+--8323328-402323662-1723029534=:1138--
