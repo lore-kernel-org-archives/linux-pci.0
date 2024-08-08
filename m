@@ -1,363 +1,208 @@
-Received: from mslow1.mail.gandi.net (mslow1.mail.gandi.net [217.70.178.240])
+Received: from EUR03-AM7-obe.outbound.protection.outlook.com (mail-am7eur03on2046.outbound.protection.outlook.com [40.107.105.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB06A190059;
-	Thu,  8 Aug 2024 15:48:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.178.240
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723132134; cv=none; b=dGkTZ844L5Taehww90I6MVf/ZVOKDhqObU7XRM7R2Ay42jgkMFoSwKrjvEqTTKJ1LlnOZ7KKWHe4BPqDDUNVYSD5y4G3czN931pvsKZc9mFEeSMwl6i+I5lGdGwqYjnKtVYixqhgOe4bMS6PvM/UVA+HdfyiwxmjEEAPA2BsXlg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723132134; c=relaxed/simple;
-	bh=IMlWCthgumadpKLsnPHNRY+YJmyEky4gMkioq3+QXO8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Kyz4C7bAlZS0X9RXBP7iw0wKevnbA1issBjLzNvLq1MK40C904YFFXONKuON+IlKwSEep64rPknJVLQF/7DiChMC1dP7Mzd8S3AtAUW7fPjKPpAbazP/q5CzUadWQdhKbx/NcrBdrektwZHHP2V2rWep8SLzklry1vnjtjRG9rw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=T934UErE; arc=none smtp.client-ip=217.70.178.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47C308003F;
+	Thu,  8 Aug 2024 16:02:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.105.46
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1723132955; cv=fail; b=WkYRzPvnKJizvMKJD8lF7nAMDifQ3NOit8+Jy7fMUsYZkMOLcbdS+UspNueIkSG5aPPtnkAV5KITHmJSP1PF28JXxILAvVtUQkmDqwaoKGwbv5+BByeDqGgutj3VjGq181YrDrSHsLAS0wn3239SWaBD3eCS0dgLM6VVzVOC4f0=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1723132955; c=relaxed/simple;
+	bh=8xJhXEGNef1oFZrgUzTA3l/zAK0Yrnl+MC2iBo/IpRE=;
+	h=From:Subject:Date:Message-Id:Content-Type:To:Cc:MIME-Version; b=K+I7zBiVE9wPnfH7k3OwAHzVO+VW3MwMe5yjUleNs1r+GcXEU4AqhH45XIztQVFrAOfdtFOwJSW3GoNs3768Zd0J7xaPOcCE0Fi7ZaymPmEDfEPUOXRPl7JUpRo753vvAFkgO9GazyKQY4mnXUUlCKtyufo+25IKcPoGgRpK8YQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=iU2bb4e9; arc=fail smtp.client-ip=40.107.105.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="T934UErE"
-Received: from relay7-d.mail.gandi.net (unknown [217.70.183.200])
-	by mslow1.mail.gandi.net (Postfix) with ESMTP id B3C12C5C2F;
-	Thu,  8 Aug 2024 15:47:44 +0000 (UTC)
-Received: by mail.gandi.net (Postfix) with ESMTPA id 5B72120007;
-	Thu,  8 Aug 2024 15:47:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1723132056;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=aXBJioeNV8RpjNiHawY0lmGxzirVjPVLqjUsn2BzB0g=;
-	b=T934UErESkris6q+5HGxD7t+02mDZ5FIZE6o/PI+SU81ms+L8DGHfJkcPIICfvSlx2Ze6m
-	qM4Nmmoz6G81XmZnaviOR1/zu+Da/4JpjINHU9i74k5mmM87R6ciYei/LsAKRr+w1GxtCF
-	ER7A9ZRwL88ffbp49/Yf68WMuevkLlUhjwwtBUxACzCDDI1tusrwruSsx4W/y0mBgNdcbJ
-	mSuwpMv0oyzy5/Rw+iwfbKb+zB2AQzdEWO0ZZivayX15I7As4NgPYufIs5A9IUdc9l2dYX
-	0KJUgQYAVu5JWObZJz8PB7Id95/6OtuJW/8ZGE4x3hQJ/aVwR/tgfowps3EvKA==
-From: Herve Codina <herve.codina@bootlin.com>
-To: Geert Uytterhoeven <geert@linux-m68k.org>,
-	Andy Shevchenko <andy.shevchenko@gmail.com>,
-	Simon Horman <horms@kernel.org>,
-	Lee Jones <lee@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Lars Povlsen <lars.povlsen@microchip.com>,
-	Steen Hegelund <Steen.Hegelund@microchip.com>,
-	Daniel Machon <daniel.machon@microchip.com>,
-	UNGLinuxDriver@microchip.com,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@google.com>
-Cc: "David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	linux-kernel@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	=?UTF-8?q?Cl=C3=A9ment=20L=C3=A9ger?= <clement.leger@bootlin.com>
-Subject: [PATCH v5 3/8] mfd: syscon: Add reference counting and device managed support
-Date: Thu,  8 Aug 2024 17:46:52 +0200
-Message-ID: <20240808154658.247873-4-herve.codina@bootlin.com>
-X-Mailer: git-send-email 2.45.0
-In-Reply-To: <20240808154658.247873-1-herve.codina@bootlin.com>
-References: <20240808154658.247873-1-herve.codina@bootlin.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="iU2bb4e9"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=Su0fRU1zMY9jEwTbyFjOW3eoaZHs7MhTp3EU7P7+T/Sht9+Djxq4OH5/uYKf7bp59Cfausp6NZO8FUuLF7Y1jnw33v0F6WPBf9KNEo/A8JI4pLwT1Ge90xhjr8tCgzpPk/zdLdMnxoSX01Y84ka1McpG2GulylyT3cEhn4PN7oJc3isHg7rM2zr5rKV4PNxFblDupBvseNmdeeH2LSJ5qgpLKjBVkqUMTEOkhks4aXMl0qDtveSsB3L4ljtxMN2xu//kPNH/hhAYO31Ynq6R/oCEe4Jv06vuRUGfXUNkvVEmIRImPD/drLpqQrGfQPFELhE4tJpg6RkcIei7voqBBw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=c2RWsWEO2+ihVdgvDuX19DBm7wWEBkUpmUUfXIm3pW4=;
+ b=wR/PWd5YjA5YCbMImk7HOR0C3Vrj1rh7t1mAJHbkbs+eeDxR85tQCouzhRWOZKHOAHFOjItxVgri+R/V+QjAFftEKkrFNdGrU5cnF8fn4oXY9Xn1lcIyc7MSxudj2L2wYHYjcUP0fwW1ZTS+MXc/SmgO4Xdk3K2JCcDemnqaml13HJH7X4Zug35CKenEKd/ROCgTsEAQXobUDuziuMqnh9+Hyp/Xp6BryN9uylprt8nMSBOL1zMMafM6NZ41vEG/KkrEM8jwnRQVOmmV7BqbxE/+Vdz9DRo/LyQeEFo+DXXerZlKw8RRJpSrQBSoHjkJzm2e/JGUwtPAhUWkrg3Qwg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=c2RWsWEO2+ihVdgvDuX19DBm7wWEBkUpmUUfXIm3pW4=;
+ b=iU2bb4e9osdORCFQhHK2Ujl2WmYpeX2y7/KBk40nWWm1n9Nux7C+evb05NnRBVDeZxsLpHZNUOfyh9bbgp/ZQu73ZNnhhz9abPbQ48WQSPKmo3d12DMWRImURPl6E4HT2rEXVba+TdLHlTJtAkgt4rEAhjEb02qga5j84INlxB6s5qAUp0T6oQLvj9rVd5fQWPd1hthk7CJTt4HUoQb94kcYJiiqBiYmV/Vx2qh7mP9IjJKi5nbUV5cgtxNpMcyN4iI1IGA+qhN6g4rt2hmMIJcyS1V6AG88ifZA7D18KdpWU2FACF4Nc3aaoKeibVg4NpdFKr+A03g+rVsul/W29A==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PAXPR04MB9642.eurprd04.prod.outlook.com (2603:10a6:102:240::14)
+ by PA4PR04MB9568.eurprd04.prod.outlook.com (2603:10a6:102:26e::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7828.27; Thu, 8 Aug
+ 2024 16:02:28 +0000
+Received: from PAXPR04MB9642.eurprd04.prod.outlook.com
+ ([fe80::9126:a61e:341d:4b06]) by PAXPR04MB9642.eurprd04.prod.outlook.com
+ ([fe80::9126:a61e:341d:4b06%5]) with mapi id 15.20.7828.023; Thu, 8 Aug 2024
+ 16:02:28 +0000
+From: Frank Li <Frank.Li@nxp.com>
+Subject: [PATCH 0/4] PCI: mobivel: Drop layerscape gen4 support
+Date: Thu, 08 Aug 2024 12:02:13 -0400
+Message-Id: <20240808-mobivel_cleanup-v1-0-f4f6ea5b16de@nxp.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAAXstGYC/x3MQQqAIBBA0avErBMsorSrRMSkUw2YhZIE0d2Tl
+ m/x/wORAlOEvnggUOLIh8+oygLMhn4lwTYbalk3Ukkl9mPmRG4yjtBfp1DYaYnWWN0i5OoMtPD
+ 9H4fxfT/L6LeCYQAAAA==
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Zhiqiang.Hou@nxp.com
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, imx@lists.linux.dev, 
+ Frank Li <Frank.Li@nxp.com>
+X-Mailer: b4 0.13-dev-e586c
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1723132945; l=1548;
+ i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
+ bh=8xJhXEGNef1oFZrgUzTA3l/zAK0Yrnl+MC2iBo/IpRE=;
+ b=QojBwUUcylfBJYYh6OCYe2rWeXCrroJRt75XUQhaaDwO1JyX0+OZ+Rt1bJADLocQPfhggT0a+
+ asazjzjHPauDWHywi9ZcLRaL3QEKndZbuQcuRk1LX5co0WhPa5M2LOP
+X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
+ pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
+X-ClientProxiedBy: SJ0PR13CA0203.namprd13.prod.outlook.com
+ (2603:10b6:a03:2c3::28) To PAXPR04MB9642.eurprd04.prod.outlook.com
+ (2603:10a6:102:240::14)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: herve.codina@bootlin.com
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAXPR04MB9642:EE_|PA4PR04MB9568:EE_
+X-MS-Office365-Filtering-Correlation-Id: bc7c5f4b-fb69-4156-7030-08dcb7c380a9
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|376014|52116014|366016|7416014|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?VGJKcUI0ZG84VEV0ajV0aFhXQjJ2YTlEN0dWWlNOUDh6ZDExekVGMU1oNTJZ?=
+ =?utf-8?B?RnllbDNUL1J6OEVMWmNNRk5veEl5VmhHUGJjbnhXMmc2aEZJQUhDaUJsNlJa?=
+ =?utf-8?B?WXVFUkthTERibTVzbVNQcXlLektMNDZJNUovdWtGcFNFRGV4VlFLaklFWUlI?=
+ =?utf-8?B?T2tJRFIzSnBCdVpwUGFxc1FUSWtZemczZFFVbFFGeEFXV3ZPYk5SaUxCUXU0?=
+ =?utf-8?B?MGl5cmZjanl1a003cDgvV0FodWduWE00Q21qemtuOGxFQzVMTTN2Mnd4cFpP?=
+ =?utf-8?B?MjZNS3EvREljMUV0WE5ROTYyL1pubVlzSmFya3dJUE5nZ2ZFekZIRUIrMWl1?=
+ =?utf-8?B?TUhQSmt2Um1mdjc4OWIrNFdHbEF2a2xSbFdoWjVycnBJbkRtQ1dzdWlnN0Ru?=
+ =?utf-8?B?Z0JTWEN1RGxIelI4eHVhblFBd1FCaEFCdnJyYzN5WWQxTFhTRURhWjdmRm1l?=
+ =?utf-8?B?a2pTM1pyTDhGWncxcnNHajM5WUhZQllYTHE0aU9tTk8vUnVFRm9oWTI0K0FU?=
+ =?utf-8?B?bUJaK3RmWVNHQW5GVm9xck1kYlJDeU5pdExGT0hzSktxMGZtV25OYVFaWTNt?=
+ =?utf-8?B?dmY4L3YvWCtRV1Jsc2tCamgyUTZPUG5ob1dMZjdQQityMDhwMEpIWUZwblc2?=
+ =?utf-8?B?M2JwTWFlUjJHSTBUS1c2YzFRMWZyN2NxeEt1SWFUZWloUUFnbWcvQnMrNDhi?=
+ =?utf-8?B?ZmtjaVRWdFRwYmU0NkVXQ1N3SkZBTXNLVkhGMHM2L2diTkZHZXFRdHlpcjJj?=
+ =?utf-8?B?REt2d3lhSEMzNE9Jb2R1b0JKMzIrNmVBenNXSDN5UFZJZW1JN3JJUGkwQlJm?=
+ =?utf-8?B?bFNQQXpEMlBQMnkzcWVXWFNrdkI5ZHQvdnlLVWUrbTVjRDlHMUI1VGoreGdp?=
+ =?utf-8?B?cmw3b1lYVFlRYW9EZHd0YnZTMWw1V2VHMHBEcFFkckhIY05wdlJLaDNPTlY0?=
+ =?utf-8?B?V2ptUWNMbnRhRFZJbWpvQmtkeG50N09mSmh1UUZtcEMxampET1NNUVFWaG5J?=
+ =?utf-8?B?b0NoaXRwWG81SlBuRFNTQjhYdTR1d29FekJScXBuK2VxenFsTUI1MGt1Tjdw?=
+ =?utf-8?B?NFgyamJYb05qQVJmN2lIM0xZeWV0U1BMUDI4K21nTXFtV25yc1o5TjYwRStM?=
+ =?utf-8?B?VjVHUFd4N01sS21laWltaHc4bE9yWkNyWTZ0ejZVMWZyclA0NHp4SnpmSDlq?=
+ =?utf-8?B?VnJxcGpIZXVrOERZYzZOSEhTQVVpMmlJQVM2cWE0a2w3TGp2bDZoWENDN2tw?=
+ =?utf-8?B?YjZYaVQ3ajBkMjZCKzM4eU1VblVnd3lQTjVydGtsNzg1MHdQTDQxMTJQTXZL?=
+ =?utf-8?B?M2ppSGZDY3NMNldBNWJHdG5CU096dnRpZ2VaUS9Zb1ZOWCtNMjR5TmpZbnVr?=
+ =?utf-8?B?bjFuTDh6dkpCbHdhd2dpdEJhWW1tN2g1YXdFSlJSeDNVM3R1VTFnTlQ2aXVr?=
+ =?utf-8?B?eDZLbm5rcUtYR1JscmEyR1FQNjNrYkRZUDAxK1JlQkt4dE9EaXRNN0FZbDNM?=
+ =?utf-8?B?Q2JUY2hmMHRhdXRJNkk5NG4xOWR4YmRZbVNpODhHU0VRbEVVNHg1K3JkbXFx?=
+ =?utf-8?B?WXVuUG1NWTVpV0FtdUpTb0FPdFcxaWh6N21uRHpYcHBDVnU2WVROekxmUW5z?=
+ =?utf-8?B?ajRxb09wUHlJd1B6QmI0T25tUXZUeDJuZHNEclc0TytSU1A0QlVLK2QyU2Nq?=
+ =?utf-8?B?ZTNwTlArZCtJekhIL3BpTDVGVTdYZnYzNVVZU05YWFB2Zm1PK2JsS2JYOXdD?=
+ =?utf-8?B?NExQKzR1dzVkalhtMTQ5NFN5YnI1MkczeitkK1FraFpUUW5rcCtOd2RiZVZ6?=
+ =?utf-8?B?QzFuRVZyYVg3S0FUVjNsUFJwZ25nY1o4QmRQL2hGYkt5eWYvcE44TDU1aStC?=
+ =?utf-8?B?MWcwbXhyTmthZDZEdWVyYmdPK0JRWUlneTd6ckhtY3JmM1E9PQ==?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9642.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(52116014)(366016)(7416014)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?akFINTRNV0g5R00wZTNxMXFHVmo3UnVFZkRoSTZKYm0xeGVYYUlLajhlUkFJ?=
+ =?utf-8?B?TmZ4Tk5zbEtBTVFuek1OT3BHZ2duWlhOVkVYdUFiL0QwbFpycjBIVTdxakF4?=
+ =?utf-8?B?STU3VjJKbHlmaVlWaUFlRU5MSUd5N0tuNUdEQVhZcUdqamttRUlyOG5KeStu?=
+ =?utf-8?B?U3NzRkczVnZsZjJuT0FmWVlrWW9aamsxdkNVeW1XUXBxMnFOT1RKVG4vejlX?=
+ =?utf-8?B?aXZDRUFzYUFEYnlpSGxPM012bThIZ2wrTEhiZXZMeHlxOW5uZXVTd2J6STVi?=
+ =?utf-8?B?V25lanhGMUxLOGQ3NEFpeXpURGg4SnNFR01Xd3BHcGlZcW1mZk15STFpdkNQ?=
+ =?utf-8?B?eE9JbVE2alhWbVRrNDFQUWJBTkg1djJWSmJqTWRHVTRzMGpJaUhIczZtVk9K?=
+ =?utf-8?B?WFdpb1llK2J4N0hERURMWDBMZmIvaW56YzAyK3BqUWdNQmFlRFo4enlkcGNz?=
+ =?utf-8?B?V0kvZDNuWEZXVjdOc1dzNjBPTjJKTjVoU2hhUE84eFNyWWFNU25yQ3l1OHhG?=
+ =?utf-8?B?UHdxQnVidUppQ01kb0M5NVdHS1JjSlVKdzJ0akRKTmkxdmk0VTlYdlhGelRT?=
+ =?utf-8?B?NEdaUnpzTUN6WnhRR2h1NzdKdnRuelhIc3B1eG1xZ1N6MExOSHU1Ynl3aXlD?=
+ =?utf-8?B?ZnVGU2Q0RlZNeUVSSFRmaVpQVlBQL3B1clZnZVlxWTAyMG5Qdk5ZVHlGUGFI?=
+ =?utf-8?B?WEN0eFJ1Uks1aHdvNDRkcGVyOFlxWEY5RlNXU213V2ZWV0orWUU3Yk50NXYz?=
+ =?utf-8?B?MUUvTVJQYWhxU29wUk5wYVlJRithZTl4ZFJOeDJtbFFEODR4emdneEUvV3BS?=
+ =?utf-8?B?K1hOazBOYzh5OENKc1lmMHJ0UEQ3ZHpwZmhxNTVlZFlHVE9mSThCMlhCeHh3?=
+ =?utf-8?B?V1NtNTJPVmZnakdaSjJnSUZGcnhkdTdNZTRpQmZJdUQxaFRyNVdxNTRMZnZh?=
+ =?utf-8?B?aWdMUVYrcVlzNUE3YnptbnA5NUhlckk4QllxMERNQmZCaEpWNy9kR2tHTVFt?=
+ =?utf-8?B?RW1tVThMKzYwT3RKZktjWW1Ra2kwYU4zNGdTeXNWeHNlajFyNFh0aUduNTg4?=
+ =?utf-8?B?RkdJcWJNb09lM2MzdmM2RzlWVUw0eEF3WXZyeUxlWGZPSHZLYzdkL09nVSt6?=
+ =?utf-8?B?cElOazNGb1lGblBiVERTNmlYMmcydVZnV3crQU52ajhsQ3NqNTljQk91OHhM?=
+ =?utf-8?B?NzN3bG0zM1IzVlpUa2tId0JvVEN4Z1B1L3NNUVRFZUprY0VCZVRkTzE4U2NC?=
+ =?utf-8?B?Q1loN29ZNVE4Ulk2VlpETTZZMTU2STJKZ3pEbXI2MnE2cTNwZllPS1NUemtn?=
+ =?utf-8?B?NlRyVSs2dkdkUEdQaTZUVFJSNGRlSGh5SnBSNDBhUEdBeGM4cmJLRWtDeWVo?=
+ =?utf-8?B?d3pHZzdma2FRS28zQ3ZVK0RKZXlkL0QyWjJ3UEtaNUhOaEZCS1BiTDJ6ZEc5?=
+ =?utf-8?B?MFRsaFluQzN4TWNFZTJFczZHaXBpOHNobjkrbWZhQm5GMWFrN0Vza0RPekJq?=
+ =?utf-8?B?RE5jUDJrcnJvSXVibUtsVUw5TytDc0tzQ2JBdkNWRmtkZ2w4TjV1cGdacFNr?=
+ =?utf-8?B?dGoyc3JiTU54emw4NU5VRXIvbDRkdzNqalh0YkhmWWF4dk12R25oanFmTGVh?=
+ =?utf-8?B?ZFdwS3JzN0ZzclYrNHdidFJjOGtJSitjN1pwNldkcTl5RHpvQ3FDekZ1MzRM?=
+ =?utf-8?B?S1JyUjFTQ25VcW5GczN6Qmx4UE9lSE1YcFNXT1R4Q1YvVHBka1F3TWg0V3Bk?=
+ =?utf-8?B?djRKREc3b2FxUzVOS2E2RlgwSjZPN3FIL241VlczS3ZLc3cvU3BNdUVmUlNt?=
+ =?utf-8?B?TkZVa1dOcFg2dkJnWXBxeW5HZkV1OHhsRFhVSnR5eHBoNUxONnBJTlJ2VGo1?=
+ =?utf-8?B?RVBKRDAvRFVTemI1YjREYXFWVTJHdnJ0WEFZbUxLcXhiQ1NXZDYzYTRpY2pS?=
+ =?utf-8?B?MjZqeXZSV2xJKzVFeUMzVXNkc2ppdU1lWWZ5TnBuZVMwSkNOa1d6ME0wejl6?=
+ =?utf-8?B?UHErUHp0b3VFVG5vbHd2TU9Sa1czWExuUE04WE5QQ3o1NldGRUtQMld0dXNU?=
+ =?utf-8?B?Q0U5eHBLeGUxdXFZSTRXRjh2N0VqSlJpOFFIaVk4Wi9BN0cvN3pyc0xLaEdj?=
+ =?utf-8?Q?keczE2Y7cyIkj7x/tRIUpTdLW?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: bc7c5f4b-fb69-4156-7030-08dcb7c380a9
+X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9642.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2024 16:02:28.5853
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: oLQeH1eBSns/G1ISciOMZZ9c5fg2kWusLRBDR5pTvouzBL/sCJ1Yp8rC4N6WbceWW51QAAyqz0AaYMb6XtHKVg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB9568
 
-From: Clément Léger <clement.leger@bootlin.com>
+Only lx2160 rev1 use mobivel PCIe controller. Rev2 switch to use designware
+PCIe controller. Rev2 is mass production version. Rev1 will not be
+maintained and used in future. And no road map to use mobivel PCIe
+controller. So drop related codes.
 
-Syscon releasing is not supported.
-Without release function, unbinding a driver that uses syscon whether
-explicitly or due to a module removal left the used syscon in a in-use
-state.
+To: Bjorn Helgaas <bhelgaas@google.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>
+To: Krzysztof Wilczyński <kw@linux.com>
+To: Rob Herring <robh@kernel.org>
+To: Krzysztof Kozlowski <krzk+dt@kernel.org>
+To: Conor Dooley <conor+dt@kernel.org>
+To: Zhiqiang.Hou@nxp.com
+Cc: linux-pci@vger.kernel.org
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: imx@lists.linux.dev
 
-For instance a syscon_node_to_regmap() call from a consumer retrieves a
-syscon regmap instance. Internally, syscon_node_to_regmap() can create
-syscon instance and add it to the existing syscon list. No API is
-available to release this syscon instance, remove it from the list and
-free it when it is not used anymore.
-
-Introduce reference counting in syscon in order to keep track of syscon
-usage using syscon_{get,put}() and add a device managed version of
-syscon_regmap_lookup_by_phandle(), to automatically release the syscon
-instance on the consumer removal.
-
-Signed-off-by: Clément Léger <clement.leger@bootlin.com>
-Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
 ---
- drivers/mfd/syscon.c       | 138 ++++++++++++++++++++++++++++++++++---
- include/linux/mfd/syscon.h |  16 +++++
- 2 files changed, 144 insertions(+), 10 deletions(-)
+Frank Li (4):
+      dt-bindings: PCI: layerscape-pci: drop compatible string fsl,lx2160a-pcie
+      dt-bindings: PCI: drop layerscape-pcie-gen4.txt
+      PCI: mobiveil: Drop layerscape-gen4 support
+      MAINTAINERS: drop NXP LAYERSCAPE GEN4 CONTROLLER
 
-diff --git a/drivers/mfd/syscon.c b/drivers/mfd/syscon.c
-index 33f1e07ab24d..a0f8737b8d63 100644
---- a/drivers/mfd/syscon.c
-+++ b/drivers/mfd/syscon.c
-@@ -34,6 +34,7 @@ struct syscon {
- 	struct regmap *regmap;
- 	struct reset_control *reset;
- 	struct list_head list;
-+	struct kref refcount;
- };
- 
- static const struct regmap_config syscon_regmap_config = {
-@@ -147,6 +148,8 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
- 
- 	syscon->regmap = regmap;
- 	syscon->np = np;
-+	of_node_get(syscon->np);
-+	kref_init(&syscon->refcount);
- 
- 	spin_lock(&syscon_list_slock);
- 	list_add_tail(&syscon->list, &syscon_list);
-@@ -168,7 +171,31 @@ static struct syscon *of_syscon_register(struct device_node *np, bool check_res)
- 	return ERR_PTR(ret);
- }
- 
--static struct regmap *device_node_get_regmap(struct device_node *np,
-+static void syscon_free(struct kref *kref)
-+{
-+	struct syscon *syscon = container_of(kref, struct syscon, refcount);
-+
-+	spin_lock(&syscon_list_slock);
-+	list_del(&syscon->list);
-+	spin_unlock(&syscon_list_slock);
-+
-+	regmap_exit(syscon->regmap);
-+	of_node_put(syscon->np);
-+	kfree(syscon);
-+}
-+
-+static struct syscon *syscon_get(struct syscon *syscon)
-+{
-+	kref_get(&syscon->refcount);
-+	return syscon;
-+}
-+
-+static void syscon_put(struct syscon *syscon)
-+{
-+	kref_put(&syscon->refcount, syscon_free);
-+}
-+
-+static struct syscon *device_node_get_syscon(struct device_node *np,
- 					     bool check_res)
- {
- 	struct syscon *entry, *syscon = NULL;
-@@ -183,9 +210,18 @@ static struct regmap *device_node_get_regmap(struct device_node *np,
- 
- 	spin_unlock(&syscon_list_slock);
- 
--	if (!syscon)
--		syscon = of_syscon_register(np, check_res);
-+	if (syscon)
-+		return syscon_get(syscon);
-+
-+	return of_syscon_register(np, check_res);
-+}
-+
-+static struct regmap *device_node_get_regmap(struct device_node *np,
-+					     bool check_res)
-+{
-+	struct syscon *syscon;
- 
-+	syscon = device_node_get_syscon(np, check_res);
- 	if (IS_ERR(syscon))
- 		return ERR_CAST(syscon);
- 
-@@ -246,12 +282,23 @@ struct regmap *device_node_to_regmap(struct device_node *np)
- }
- EXPORT_SYMBOL_GPL(device_node_to_regmap);
- 
--struct regmap *syscon_node_to_regmap(struct device_node *np)
-+static struct syscon *syscon_node_to_syscon(struct device_node *np)
- {
- 	if (!of_device_is_compatible(np, "syscon"))
- 		return ERR_PTR(-EINVAL);
- 
--	return device_node_get_regmap(np, true);
-+	return device_node_get_syscon(np, true);
-+}
-+
-+struct regmap *syscon_node_to_regmap(struct device_node *np)
-+{
-+	struct syscon *syscon;
-+
-+	syscon = syscon_node_to_syscon(np);
-+	if (IS_ERR(syscon))
-+		return ERR_CAST(syscon);
-+
-+	return syscon->regmap;
- }
- EXPORT_SYMBOL_GPL(syscon_node_to_regmap);
- 
-@@ -271,11 +318,11 @@ struct regmap *syscon_regmap_lookup_by_compatible(const char *s)
- }
- EXPORT_SYMBOL_GPL(syscon_regmap_lookup_by_compatible);
- 
--struct regmap *syscon_regmap_lookup_by_phandle(struct device_node *np,
--					const char *property)
-+static struct syscon *syscon_lookup_by_phandle(struct device_node *np,
-+					       const char *property)
- {
- 	struct device_node *syscon_np;
--	struct regmap *regmap;
-+	struct syscon *syscon;
- 
- 	if (property)
- 		syscon_np = of_parse_phandle(np, property, 0);
-@@ -285,12 +332,24 @@ struct regmap *syscon_regmap_lookup_by_phandle(struct device_node *np,
- 	if (!syscon_np)
- 		return ERR_PTR(-ENODEV);
- 
--	regmap = syscon_node_to_regmap(syscon_np);
-+	syscon = syscon_node_to_syscon(syscon_np);
- 
- 	if (property)
- 		of_node_put(syscon_np);
- 
--	return regmap;
-+	return syscon;
-+}
-+
-+struct regmap *syscon_regmap_lookup_by_phandle(struct device_node *np,
-+					       const char *property)
-+{
-+	struct syscon *syscon;
-+
-+	syscon = syscon_lookup_by_phandle(np, property);
-+	if (IS_ERR(syscon))
-+		return ERR_CAST(syscon);
-+
-+	return syscon->regmap;
- }
- EXPORT_SYMBOL_GPL(syscon_regmap_lookup_by_phandle);
- 
-@@ -341,6 +400,65 @@ struct regmap *syscon_regmap_lookup_by_phandle_optional(struct device_node *np,
- }
- EXPORT_SYMBOL_GPL(syscon_regmap_lookup_by_phandle_optional);
- 
-+static struct syscon *syscon_from_regmap(struct regmap *regmap)
-+{
-+	struct syscon *entry, *syscon = NULL;
-+
-+	spin_lock(&syscon_list_slock);
-+
-+	list_for_each_entry(entry, &syscon_list, list)
-+		if (entry->regmap == regmap) {
-+			syscon = entry;
-+			break;
-+		}
-+
-+	spin_unlock(&syscon_list_slock);
-+
-+	return syscon;
-+}
-+
-+void syscon_put_regmap(struct regmap *regmap)
-+{
-+	struct syscon *syscon;
-+
-+	syscon = syscon_from_regmap(regmap);
-+	if (!syscon)
-+		return;
-+
-+	syscon_put(syscon);
-+}
-+EXPORT_SYMBOL_GPL(syscon_put_regmap);
-+
-+static void devm_syscon_release(void *syscon)
-+{
-+	syscon_put(syscon);
-+}
-+
-+static struct regmap *__devm_syscon_get(struct device *dev,
-+					struct syscon *syscon)
-+{
-+	int ret;
-+
-+	if (IS_ERR(syscon))
-+		return ERR_CAST(syscon);
-+
-+	ret = devm_add_action_or_reset(dev, devm_syscon_release, syscon);
-+	if (ret)
-+		return ERR_PTR(ret);
-+
-+	return syscon->regmap;
-+}
-+
-+struct regmap *devm_syscon_regmap_lookup_by_phandle(struct device *dev,
-+						    struct device_node *np,
-+						    const char *property)
-+{
-+	struct syscon *syscon = syscon_lookup_by_phandle(np, property);
-+
-+	return __devm_syscon_get(dev, syscon);
-+}
-+EXPORT_SYMBOL_GPL(devm_syscon_regmap_lookup_by_phandle);
-+
- static int syscon_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-diff --git a/include/linux/mfd/syscon.h b/include/linux/mfd/syscon.h
-index aad9c6b50463..a3025b4efb4a 100644
---- a/include/linux/mfd/syscon.h
-+++ b/include/linux/mfd/syscon.h
-@@ -15,6 +15,7 @@
- #include <linux/errno.h>
- 
- struct device_node;
-+struct device;
- 
- #ifdef CONFIG_MFD_SYSCON
- struct regmap *device_node_to_regmap(struct device_node *np);
-@@ -30,6 +31,10 @@ struct regmap *syscon_regmap_lookup_by_phandle_optional(struct device_node *np,
- 							const char *property);
- int of_syscon_register_regmap(struct device_node *np,
- 			      struct regmap *regmap);
-+void syscon_put_regmap(struct regmap *regmap);
-+struct regmap *devm_syscon_regmap_lookup_by_phandle(struct device *dev,
-+						    struct device_node *np,
-+						    const char *property);
- #else
- static inline struct regmap *device_node_to_regmap(struct device_node *np)
- {
-@@ -73,6 +78,17 @@ static inline int of_syscon_register_regmap(struct device_node *np,
- 					struct regmap *regmap)
- {
- 	return -EOPNOTSUPP;
-+
-+static inline void syscon_put_regmap(struct regmap *regmap)
-+{
-+}
-+
-+static inline
-+struct regmap *devm_syscon_regmap_lookup_by_phandle(struct device *dev,
-+						    struct device_node *np,
-+						    const char *property)
-+{
-+	return NULL;
- }
- 
- #endif
--- 
-2.45.0
+ .../bindings/pci/fsl,layerscape-pcie.yaml          |   1 -
+ .../bindings/pci/layerscape-pcie-gen4.txt          |  52 -----
+ MAINTAINERS                                        |   8 -
+ drivers/pci/controller/mobiveil/Kconfig            |   9 -
+ drivers/pci/controller/mobiveil/Makefile           |   1 -
+ .../pci/controller/mobiveil/pcie-layerscape-gen4.c | 255 ---------------------
+ 6 files changed, 326 deletions(-)
+---
+base-commit: 1e391b34f6aa043c7afa40a2103163a0ef06d179
+change-id: 20240808-mobivel_cleanup-8a790adcd96a
+
+Best regards,
+---
+Frank Li <Frank.Li@nxp.com>
 
