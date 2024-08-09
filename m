@@ -1,119 +1,212 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 409F2193082
-	for <linux-pci@vger.kernel.org>; Fri,  9 Aug 2024 09:54:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 18A4110A1E;
+	Fri,  9 Aug 2024 11:16:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723197281; cv=none; b=Lg9o+xI8e5qIK83K1AGJzzIthcI9Q4NJyDzIYeGXP438jPorVVyr8URyAJ7LLAkrmlJfGr4X5rvfJQKhSolFi8ykXPggy3kOfU4IueXwN3QxaxmMo/FE85EehVxzjezFTM/l2Pe3T9zZYVLOmvL0IRlZl853WpNSRGKR89lU+d0=
+	t=1723202178; cv=none; b=PqTSh906GX0+ivsvsANbNYYqANyErA3reUNuNN79pQYf6El3VZugsEBGfSE6PXUaU5xbZ4DWUxUcJ/wLTOV9wohMKljD6mNEuS51odyoqsWqKY4KtNbATjgA+NcVjiWPQC55zLSAPFC+p18xflUG3yKojAyHcv+OxjilmN6w/sA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723197281; c=relaxed/simple;
-	bh=xJ86mrvynAe99UrnLkIu1EHSKyB0aE6RkOOA/aLdCYI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YSSJ0BBaIhVil3mYFEiXK63X8VhzHk0KdGrLwae2meR2xSHH+7WFzuVFDRN23mluuyUEvw689BjtILHMNzENLv0qLdMgrVJ43ve0J1F36PuoFywY7ZM3CRNlfQ7MPJkr4PgiZS/1kLNLCyzhj6zSUHW/dB6I+QpWHl+STpqQD9E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Q7RiH4yX; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1723202178; c=relaxed/simple;
+	bh=6Ym0oDETDrjgbvdG5mB7eZdQAUmgFHmwD4yMULqEwoA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Eg7/nPky2ILP86gyaqZNbPTLRsXlRIHZDKVaFWMbTSQLWVswid9JgcVfHsZMpq1Uy5IkF1qO1IybTMcCTfost2c6LB1P5wY+GIxa8S+k+4zaMSr5K5C98EMcxsxjmpcWhixeOsHCSJfmgKy5agzP+iTsYn1t1IW1xazideE9JrM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LxOw2go+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ZVJmJnqj; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LxOw2go+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ZVJmJnqj; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Q7RiH4yX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1723197278;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=Zpcp771OskatVYXZisRNAltmkrv7cYnDZw6pclj2zoU=;
-	b=Q7RiH4yX5wr+hGyL5yGP85D1BgH6iwhWrTZx3sslv8t7SDL/vDYG6GEtAo5+nwTTGKpcUE
-	WTR+SHexJZN+8Sd9JPkpbUX9VD7/mw5sS5OHhqlKvYOvUr9r5am97vkhbjqeVmEn0y8Nb8
-	oFg36b3vhTFSux2jgYe656MuQLTteu4=
-Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
- [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-678-bBtSrRDhNUqLc7QsKLo5Qw-1; Fri, 09 Aug 2024 05:54:36 -0400
-X-MC-Unique: bBtSrRDhNUqLc7QsKLo5Qw-1
-Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-4281d62be91so3714275e9.1
-        for <linux-pci@vger.kernel.org>; Fri, 09 Aug 2024 02:54:36 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723197275; x=1723802075;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Zpcp771OskatVYXZisRNAltmkrv7cYnDZw6pclj2zoU=;
-        b=n5q0uMYTzaW0uv7R5+kO6GN9WbgHjfmAAxlYwXg24Mqn4FhgaIJIK4AbYltAK61bXC
-         ZKfezkvCnbG2ZW+lcrKeXCCfWkxjLywEQnvY/wzEcFPoNMrpb3AaNplSGBjfQt6eV61p
-         10WqIQdUggpBtXmyrCyQ22I+1NiOvouXy0+S4mS/V7QyIGyiuQbFYYpeUoI9/JW7tyJO
-         Mq3Vn21o4bEretgTVihrl0St3F7bxjPe+BxGIhq5UtnVPYnBwCWHBiNMmvV8Cq3sbYM5
-         ketNftz8yAus9AAHhZHHzW+YS5vo/3ZAy9+ZgSAPtW5mt6tyP/tzvrNXmi20G4l3odfb
-         1sMA==
-X-Forwarded-Encrypted: i=1; AJvYcCXQMPpPGIrog4Gbv1DlLkPgrtBTXUjh5xwhUZXz2uUqVR67M85jdKU2wiq0zZPOcimXlcTnsph65EE=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxZLJquUkwtcWOVejgQdY0Id/3hMeKA+ewYCkl4EK3LX9qSZtX3
-	gTp079mMYhqcOdN3ssZicpwGga8El/eYVRKfLMpj3uUmcZEe1wTo/vGGghNgncS7tESwBvP0x2e
-	bFHxligU2+sUheQwroDNpF3KUmHhELsErsOS9OVhvnDXDDv8zil6jmIDt6A==
-X-Received: by 2002:a05:6000:154b:b0:367:95e3:e4c6 with SMTP id ffacd0b85a97d-36d5f3c5967mr579281f8f.1.1723197275282;
-        Fri, 09 Aug 2024 02:54:35 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGbGj5OVH3QAXRiEyZbBBhYCOVFAe/3JWA153ZxR0FYY6oLccO7DnrbGzPCX+nTOqZMIKtNGw==
-X-Received: by 2002:a05:6000:154b:b0:367:95e3:e4c6 with SMTP id ffacd0b85a97d-36d5f3c5967mr579264f8f.1.1723197274756;
-        Fri, 09 Aug 2024 02:54:34 -0700 (PDT)
-Received: from eisenberg.redhat.com (nat-pool-muc-t.redhat.com. [149.14.88.26])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-36d272290e6sm4708543f8f.99.2024.08.09.02.54.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Aug 2024 02:54:34 -0700 (PDT)
-From: Philipp Stanner <pstanner@redhat.com>
-To: Jonathan Corbet <corbet@lwn.net>,
-	Mark Brown <broonie@kernel.org>,
-	David Lechner <dlechner@baylibre.com>,
-	=?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@pengutronix.de>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Philipp Stanner <pstanner@redhat.com>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH RESEND] Documentation: devres: fix error about PCI devres
-Date: Fri,  9 Aug 2024 11:52:48 +0200
-Message-ID: <20240809095248.14220-2-pstanner@redhat.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LxOw2go+";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ZVJmJnqj";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LxOw2go+";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ZVJmJnqj"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 123DA1F7EA;
+	Fri,  9 Aug 2024 11:16:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723202175; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KoQephddyhrmFgErZqHzG4uceSyWf0Kb3FnNqXo2HNM=;
+	b=LxOw2go+PQySyA91JrDxgpTJ0Hvnrs/hAM2TH4CxnHvXoIEdSf0A+K8UwWxavlzqUp5Uyz
+	2iGJXSly3MR1HLPS8oqmc+C9VpGR078OChW3pAZucZQzwYLisDidQmkChvhtGe7PHqj2+5
+	CX0mD37+/4M8BBTo2FnjZxrHTrJ+5B0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723202175;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KoQephddyhrmFgErZqHzG4uceSyWf0Kb3FnNqXo2HNM=;
+	b=ZVJmJnqjS8cUJdeToSKx8+joDIhYAIQ+Dq/CkIH9F26HEKjKV/SFjrpmIsY39dVb5Q6W0R
+	jP4pV3+AyRLWPNCw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723202175; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KoQephddyhrmFgErZqHzG4uceSyWf0Kb3FnNqXo2HNM=;
+	b=LxOw2go+PQySyA91JrDxgpTJ0Hvnrs/hAM2TH4CxnHvXoIEdSf0A+K8UwWxavlzqUp5Uyz
+	2iGJXSly3MR1HLPS8oqmc+C9VpGR078OChW3pAZucZQzwYLisDidQmkChvhtGe7PHqj2+5
+	CX0mD37+/4M8BBTo2FnjZxrHTrJ+5B0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723202175;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=KoQephddyhrmFgErZqHzG4uceSyWf0Kb3FnNqXo2HNM=;
+	b=ZVJmJnqjS8cUJdeToSKx8+joDIhYAIQ+Dq/CkIH9F26HEKjKV/SFjrpmIsY39dVb5Q6W0R
+	jP4pV3+AyRLWPNCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0C9831379A;
+	Fri,  9 Aug 2024 11:16:14 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id wMpHAH76tWbCVwAAD6G6ig
+	(envelope-from <svarbanov@suse.de>); Fri, 09 Aug 2024 11:16:13 +0000
+Message-ID: <9c22a495-7b89-4df6-b57b-cb0f39b09c30@suse.de>
+Date: Fri, 9 Aug 2024 14:16:09 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 04/12] PCI: brcmstb: Use bridge reset if available
+To: Jim Quinlan <james.quinlan@broadcom.com>, linux-pci@vger.kernel.org,
+ Nicolas Saenz Julienne <nsaenz@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Cyril Brulebois <kibi@debian.org>, Stanimir Varbanov <svarbanov@suse.de>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Krzysztof Kozlowski <krzk@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com
+Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Rob Herring <robh@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-rpi-kernel@lists.infradead.org>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20240731222831.14895-1-james.quinlan@broadcom.com>
+ <20240731222831.14895-5-james.quinlan@broadcom.com>
+Content-Language: en-US
+From: Stanimir Varbanov <svarbanov@suse.de>
+In-Reply-To: <20240731222831.14895-5-james.quinlan@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Spam-Score: -4.29
+X-Spamd-Result: default: False [-4.29 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FREEMAIL_TO(0.00)[broadcom.com,vger.kernel.org,kernel.org,google.com,arm.com,debian.org,suse.de,linaro.org,gmail.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[19];
+	RCVD_TLS_ALL(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-The documentation states that pcim_enable_device() will make "all PCI
-ops" managed. This is totally false, only a small subset of PCI
-functions become managed that way. Implicating otherwise has caused at
-least one bug so far, namely in commit 8558de401b5f ("drm/vboxvideo: use
-managed pci functions").
+Hi Jim,
 
-Change the function summary so the functions dangerous behavior becomes
-obvious.
+On 8/1/24 01:28, Jim Quinlan wrote:
+> The 7712 SOC has a bridge reset which can be described in the device tree.
+> Use it if present.  Otherwise, continue to use the legacy method to reset
+> the bridge.
+> 
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 24 +++++++++++++++++++-----
+>  1 file changed, 19 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> index 7595e7009192..4d68fe318178 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -265,6 +265,7 @@ struct brcm_pcie {
+>  	enum pcie_type		type;
+>  	struct reset_control	*rescal;
+>  	struct reset_control	*perst_reset;
+> +	struct reset_control	*bridge_reset;
+>  	int			num_memc;
+>  	u64			memc_size[PCIE_BRCM_MAX_MEMC];
+>  	u32			hw_rev;
+> @@ -732,12 +733,19 @@ static void __iomem *brcm7425_pcie_map_bus(struct pci_bus *bus,
+>  
+>  static void brcm_pcie_bridge_sw_init_set_generic(struct brcm_pcie *pcie, u32 val)
+>  {
+> -	u32 tmp, mask =  RGR1_SW_INIT_1_INIT_GENERIC_MASK;
+> -	u32 shift = RGR1_SW_INIT_1_INIT_GENERIC_SHIFT;
+> +	if (val)
+> +		reset_control_assert(pcie->bridge_reset);
+> +	else
+> +		reset_control_deassert(pcie->bridge_reset);
+>  
+> -	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+> -	tmp = (tmp & ~mask) | ((val << shift) & mask);
+> -	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+> +	if (!pcie->bridge_reset) {
+> +		u32 tmp, mask =  RGR1_SW_INIT_1_INIT_GENERIC_MASK;
+> +		u32 shift = RGR1_SW_INIT_1_INIT_GENERIC_SHIFT;
+> +
+> +		tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+> +		tmp = (tmp & ~mask) | ((val << shift) & mask);
+> +		writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+> +	}
+>  }
+>  
+>  static void brcm_pcie_bridge_sw_init_set_7278(struct brcm_pcie *pcie, u32 val)
+> @@ -1621,10 +1629,16 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+>  	if (IS_ERR(pcie->perst_reset))
+>  		return PTR_ERR(pcie->perst_reset);
+>  
+> +	pcie->bridge_reset = devm_reset_control_get_optional_exclusive(&pdev->dev, "bridge");
 
-Signed-off-by: Philipp Stanner <pstanner@redhat.com>
----
-+CC PCI and Bjorn.
+Shouldn't this be devm_reset_control_get_optional_shared? See more below.
 
-Bjorn, btw. neither PCI nor you are printed by getmaintainers for the
-touched document. Possibly one might want to think about fixing that
-somehow.
-But I don't think it's a huge deal.
----
- Documentation/driver-api/driver-model/devres.rst | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> +	if (IS_ERR(pcie->bridge_reset))
+> +		return PTR_ERR(pcie->bridge_reset);
+> +
+>  	ret = clk_prepare_enable(pcie->clk);
+>  	if (ret)
+>  		return dev_err_probe(&pdev->dev, ret, "could not enable clock\n");
+>  
+> +	pcie->bridge_sw_init_set(pcie, 0);
 
-diff --git a/Documentation/driver-api/driver-model/devres.rst b/Documentation/driver-api/driver-model/devres.rst
-index ac9ee7441887..5f2ee8d717b1 100644
---- a/Documentation/driver-api/driver-model/devres.rst
-+++ b/Documentation/driver-api/driver-model/devres.rst
-@@ -391,7 +391,7 @@ PCI
-   devm_pci_remap_cfgspace()	: ioremap PCI configuration space
-   devm_pci_remap_cfg_resource()	: ioremap PCI configuration space resource
- 
--  pcim_enable_device()		: after success, all PCI ops become managed
-+  pcim_enable_device()		: after success, some PCI ops become managed
-   pcim_iomap()			: do iomap() on a single BAR
-   pcim_iomap_regions()		: do request_region() and iomap() on multiple BARs
-   pcim_iomap_regions_request_all() : do request_region() on all and iomap() on multiple BARs
--- 
-2.45.2
+According to reset_control_get_shared description looks like this
+.deassert is satisfying the requirements for _shared reset-control API
+variant.
+Is that the intention to call reset_control_deassert() here?
 
+> +
+>  	ret = reset_control_reset(pcie->rescal);
+>  	if (dev_err_probe(&pdev->dev, ret, "failed to deassert 'rescal'\n"))
+>  		goto clk_disable_unprepare;
+
+~Stan
