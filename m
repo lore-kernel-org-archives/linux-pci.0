@@ -1,109 +1,203 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EE3016D315;
-	Fri,  9 Aug 2024 07:36:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0742F190686;
+	Fri,  9 Aug 2024 09:53:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723189002; cv=none; b=APN0+gTv1lx33C4W2pLhiz//7enbbYMpSEDHwCTL0AcDpaZlxPVA7jmgwRSUqxOUeS6ec3ePuTGMauBnO5WLeUQH/yND6sJODmb7qU9XmEHIOuFUCID+u3N6PuY8bbeI85bSoS956q4rD4LbtlmnXJzr3puqfTFXhGXp1SeYmm8=
+	t=1723197190; cv=none; b=acJ4fXa4IY8VmM5dbM84ecHhxviIon8K3ydDd51yaUGu1ONqtJuGR4b+5m85f+rUZoo+4YVOWa2en1+97KjhW0dfHonJiv+2AAgpEp3Yjk3GCGJllUvfroLKcas+8A6LZ0Fl/2RL22PUCLm6uZd4yj3q77fEooBQ7vB34eKFltc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723189002; c=relaxed/simple;
-	bh=XZa+83SijQnBCpLMBFwNEPjA1kDA4UXyTv6Yv898LyI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P42pu1s7ZT3+EU5Xh0PJN2o8nefFi3v6jkJxEsIMM/uwfit/ttrRgAnT5nqyZ/qJD2O2SHZr3f30f03XtNR5vfzEPw4eWLwTpjB+ssPPs1eVH3BvydVusOXhz02umqPtzGvs0rVj+1Tb/HO0aEtE6LCVV/A3t+1u1la6cCYQMbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WZ/DwBjn; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1723197190; c=relaxed/simple;
+	bh=qgkuo5ZI9Fg8YOEQwDuCKy7wo3wnm2cbQdZX++Q6W/o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gefUU7eXBA71eS1TpL6IIbAO1H28YFbilwAN9iSkLFxIJXb1nYOvYEODnmcw1EZmKIiwFcFFEsBO+r4P9X6lselaIUPC4WKs9gmRYEbs1PUjoK0m9apu0UIP/W+0gZAAvB3z02EcgQx/aUKDCG8tuZwGx00eG+6nLX2rYxDEPkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xQSrO19j; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=cR84YcGw; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xQSrO19j; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=cR84YcGw; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WZ/DwBjn"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-1fc611a0f8cso16290815ad.2;
-        Fri, 09 Aug 2024 00:36:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1723189000; x=1723793800; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=dCcf6BLa+YFbQdbVYELqdFtAuzitYv4+8HazgULACT0=;
-        b=WZ/DwBjnVr04DSUk0clN+Dha046rqw3GW8S+sQBo6CGZMoTVrbgqTtDlr/Yu3zem8B
-         xqtQpfJyAFOa6GEXMYlq2oDjNCHZwcInBPqMM0iOHX1CyUIbGBI04FJ8Qu8Vq6K6RttF
-         fUwIGnqKC5Y7YbBLqqMKchQEg09QNOT3FaKMmaE92Xku2hNpPCvBX0sduzL/FN3pX5Ki
-         p7CXPlXXg+8YA56zW9XJZNno6Z8FlzmIQoR2CmCbf0qLMJpt0Y99BFQdw/T1Ac0yEncF
-         lmoDn+5WstQH/KOdTJmnIMWpdeb1uFpnmAWeItVFVp49xfZ1j6bO8hO1UBzCJEWXT1gz
-         K9nA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1723189000; x=1723793800;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=dCcf6BLa+YFbQdbVYELqdFtAuzitYv4+8HazgULACT0=;
-        b=qJZxZNURDVlfUnn4MRZfb8U0M/VUp36kYadmqphAW7M63gJyXMZXv8QPmhZ2jijy1T
-         VelNuOz0SM1Dicd5v/QP8qxoVlaAuycY4vYZra648sQsWO8Z2+1cOV336Z3jyeLuhf00
-         wZCBA0CwKWix69XnQ1tINhqs2B+AojdNlCI9uKg208JFSeNm1j96zF2xKVsc0uzolypX
-         mWHdd+5jbBfOoaqLE30Olzw0BaDcIuMFi2PMLmIODU6dyWxK6S0H0UBnzqFwWMCX86CF
-         g3gmMWhuQRiYCB4ErincgerFdMOBOJ+mHmhtcehgH9Jq9k9d8/uHAOughsqnK714pbt8
-         cl0g==
-X-Forwarded-Encrypted: i=1; AJvYcCUkNn2qClOgUbqjEGGxdIgZnO3jd3AQ5f5unqk7wFCQCDm+pVUtJY9v1cgWFC9GTGVS2mjb6+OIkRU240go8ot9eabGoU46AmQ8RTV1asNkDdBQ5yapKkrMJlvkmu4JTZDXmzYnPz+w
-X-Gm-Message-State: AOJu0Yxcd6cx4pvhCHkVjCH/pBICBe4wtFx0oZgzcklZzModrv8jTpsz
-	qQOLJ5ZV4nGxu+0syFSurKpHxHRJBX0zIfrkcMgQtDERpzEzvC4K
-X-Google-Smtp-Source: AGHT+IFqgjG/ZrWb/Pbr+iWfuP6MYtfTQEA9uAjaJ7m+O7kUCxqIuJ0GXMYR7yQXBdrAQ/yTcfLGTA==
-X-Received: by 2002:a17:902:ce8f:b0:1fb:a38b:c5a0 with SMTP id d9443c01a7336-200ae597aa7mr6144245ad.31.1723189000278;
-        Fri, 09 Aug 2024 00:36:40 -0700 (PDT)
-Received: from localhost.localdomain ([113.30.217.222])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-1ff58f5b349sm136588855ad.108.2024.08.09.00.36.36
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 09 Aug 2024 00:36:39 -0700 (PDT)
-From: Anand Moon <linux.amoon@gmail.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>
-Cc: Anand Moon <linux.amoon@gmail.com>,
-	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] PCI: dw-rockchip: Enable async probe by default
-Date: Fri,  9 Aug 2024 13:06:09 +0530
-Message-ID: <20240809073610.2517-1-linux.amoon@gmail.com>
-X-Mailer: git-send-email 2.44.0
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xQSrO19j";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="cR84YcGw";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xQSrO19j";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="cR84YcGw"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 015F31F801;
+	Fri,  9 Aug 2024 09:53:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723197187; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EL8ezaHLjYm5VgFZL0TrmF5rU96smvF6G4BYOd0Svog=;
+	b=xQSrO19jKxaLIX9hXf/gTgxSTf7jS+ShbPweaymqCTenDSxj04jtR14kZXxqDAZADHcbw9
+	m6yCc8U9g5ASmJHGrYpa7Riw7Slz6zwTfr6IW4ChM+3De910XcE6AD/4nAk4qo7rG2hrwk
+	HFFCF/mMa9erY67lJlisYivdSzn5dhc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723197187;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EL8ezaHLjYm5VgFZL0TrmF5rU96smvF6G4BYOd0Svog=;
+	b=cR84YcGwlK3zYtqv30Hj3ZNL1ypB1wEO3/soqZKsaZQgEqIjhV4Gl4N741/SlZ8KXs2nya
+	Y2mkjRHgAk1Pe0Cw==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=xQSrO19j;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=cR84YcGw
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1723197187; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EL8ezaHLjYm5VgFZL0TrmF5rU96smvF6G4BYOd0Svog=;
+	b=xQSrO19jKxaLIX9hXf/gTgxSTf7jS+ShbPweaymqCTenDSxj04jtR14kZXxqDAZADHcbw9
+	m6yCc8U9g5ASmJHGrYpa7Riw7Slz6zwTfr6IW4ChM+3De910XcE6AD/4nAk4qo7rG2hrwk
+	HFFCF/mMa9erY67lJlisYivdSzn5dhc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1723197187;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=EL8ezaHLjYm5VgFZL0TrmF5rU96smvF6G4BYOd0Svog=;
+	b=cR84YcGwlK3zYtqv30Hj3ZNL1ypB1wEO3/soqZKsaZQgEqIjhV4Gl4N741/SlZ8KXs2nya
+	Y2mkjRHgAk1Pe0Cw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 190951379A;
+	Fri,  9 Aug 2024 09:53:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id /WkwAwLntWZ0PgAAD6G6ig
+	(envelope-from <svarbanov@suse.de>); Fri, 09 Aug 2024 09:53:06 +0000
+Message-ID: <57f11aff-95f8-41fd-b35e-a9e5a85c68e3@suse.de>
+Date: Fri, 9 Aug 2024 12:53:05 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 05/12] PCI: brcmstb: Use swinit reset if available
+To: Jim Quinlan <james.quinlan@broadcom.com>, linux-pci@vger.kernel.org,
+ Nicolas Saenz Julienne <nsaenz@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Cyril Brulebois <kibi@debian.org>, Stanimir Varbanov <svarbanov@suse.de>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Krzysztof Kozlowski <krzk@kernel.org>,
+ bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com
+Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Rob Herring <robh@kernel.org>, Philipp Zabel <p.zabel@pengutronix.de>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-rpi-kernel@lists.infradead.org>,
+ "moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE"
+ <linux-arm-kernel@lists.infradead.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20240731222831.14895-1-james.quinlan@broadcom.com>
+ <20240731222831.14895-6-james.quinlan@broadcom.com>
+Content-Language: en-US
+From: Stanimir Varbanov <svarbanov@suse.de>
+In-Reply-To: <20240731222831.14895-6-james.quinlan@broadcom.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Spam-Level: 
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-3.50 / 50.00];
+	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	XM_UA_NO_VERSION(0.01)[];
+	MX_GOOD(-0.01)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	FREEMAIL_TO(0.00)[broadcom.com,vger.kernel.org,kernel.org,google.com,arm.com,debian.org,suse.de,linaro.org,gmail.com];
+	RCPT_COUNT_TWELVE(0.00)[19];
+	MIME_TRACE(0.00)[0:+];
+	MID_RHS_MATCH_FROM(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	TO_DN_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spam-Score: -3.50
+X-Rspamd-Queue-Id: 015F31F801
 
-Rockchip DWC PCIe driver currently waits for the combo PHY link
-(PCIe 3.0, PCIe 2.0, and SATA 3.0) to be established link training
-during boot, it also waits for the link to be up, which could consume
-several milliseconds during boot.
+Hi Jim,
 
-To optimize boot time, this commit allows asynchronous probing.
-This change enables the PCIe link establishment to occur in the
-background while other devices are being probed.
+On 8/1/24 01:28, Jim Quinlan wrote:
+> The 7712 SOC adds a software init reset device for the PCIe HW.
+> If found in the DT node, use it.
+> 
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 19 +++++++++++++++++++
+>  1 file changed, 19 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> index 4d68fe318178..948fd4d176bc 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -266,6 +266,7 @@ struct brcm_pcie {
+>  	struct reset_control	*rescal;
+>  	struct reset_control	*perst_reset;
+>  	struct reset_control	*bridge_reset;
+> +	struct reset_control	*swinit_reset;
+>  	int			num_memc;
+>  	u64			memc_size[PCIE_BRCM_MAX_MEMC];
+>  	u32			hw_rev;
+> @@ -1633,12 +1634,30 @@ static int brcm_pcie_probe(struct platform_device *pdev)
+>  	if (IS_ERR(pcie->bridge_reset))
+>  		return PTR_ERR(pcie->bridge_reset);
+>  
+> +	pcie->swinit_reset = devm_reset_control_get_optional_exclusive(&pdev->dev, "swinit");
+> +	if (IS_ERR(pcie->swinit_reset))
+> +		return PTR_ERR(pcie->swinit_reset);
+> +
+>  	ret = clk_prepare_enable(pcie->clk);
+>  	if (ret)
+>  		return dev_err_probe(&pdev->dev, ret, "could not enable clock\n");
+>  
+>  	pcie->bridge_sw_init_set(pcie, 0);
+>  
+> +	if (pcie->swinit_reset) {
+> +		ret = reset_control_assert(pcie->swinit_reset);
+> +		if (dev_err_probe(&pdev->dev, ret, "could not assert reset 'swinit'\n"))
+> +			goto clk_disable_unprepare;
+> +
+> +		/* HW team recommends 1us for proper sync and propagation of reset */
+> +		udelay(1);
 
-Signed-off-by: Anand Moon <linux.amoon@gmail.com>
----
-v2: update the commit message to describe the changs.
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 1 +
- 1 file changed, 1 insertion(+)
+Hmm, shouldn't this delay be part of .assert/.deassert reset_control
+driver?  I think this detail is reset-control hw specific and the
+consumers does not need to know it.
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 1170e1107508..7a895b66e4e4 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -616,6 +616,7 @@ static struct platform_driver rockchip_pcie_driver = {
- 		.name	= "rockchip-dw-pcie",
- 		.of_match_table = rockchip_pcie_of_match,
- 		.suppress_bind_attrs = true,
-+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
- 	},
- 	.probe = rockchip_pcie_probe,
- };
+> +
+> +		ret = reset_control_deassert(pcie->swinit_reset);
+> +		if (dev_err_probe(&pdev->dev, ret,
+> +				  "could not de-assert reset 'swinit' after asserting\n"))
+> +			goto clk_disable_unprepare;
+> +	}
+> +
+>  	ret = reset_control_reset(pcie->rescal);
+>  	if (dev_err_probe(&pdev->dev, ret, "failed to deassert 'rescal'\n"))
+>  		goto clk_disable_unprepare;
 
-base-commit: ee9a43b7cfe2d8a3520335fea7d8ce71b8cabd9d
--- 
-2.44.0
-
+~Stan
