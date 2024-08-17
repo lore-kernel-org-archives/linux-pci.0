@@ -1,110 +1,97 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-oa1-f45.google.com (mail-oa1-f45.google.com [209.85.160.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 660BD12FB0A;
-	Sat, 17 Aug 2024 05:39:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37DEB14A09C;
+	Sat, 17 Aug 2024 13:22:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1723873150; cv=none; b=Albf8nPisZSBlTJMTTGP82JwrHrGsGEYsII/skh0s5ypOekigvsgyU5r85R9WYJd5jf3ul0mTZ11jnv/3LvJHAXW/8+6BS/oH0KjJR84aEZ0xJ21N0j9dZGTbbov312YSF4FrB3c7AwoOdWw0YYo+t0ZGShSdhdecQUkqX0qMbY=
+	t=1723900969; cv=none; b=epGI8sfAdB2p5QedYNeOj+RWpd5Gno//kfjsqG0mgj0nMFlBpiRqr4AW4UFQ4C8ydKAwNIyIv+ilkBhHwoh3pA/9m7zyxvhN0PiHYOXx/qu+E1tzUW71qBqiTJ5nftfG2niBN4qMnD7zBEAdGdeRkmXmQw0t3UrTs2Zpve8KpfU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1723873150; c=relaxed/simple;
-	bh=L/27oyOVLbdmCNH9AknEU1c/3ghg8UF/LJ6ONoZ4cx4=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=t4CwFua+LQfWZHgq68H3YZaN4H5H+fdUc5DWfzwOFt6f9QsKqGaIV+rJlXMfPTPHuTRZhR7TQS+PCTn5zWEdDJJrEuE5WIU14b6v2sEUbJU5DPl6TUgIxw7jKOFftAsPHGz9CflGgZEdBJDWHytO0ToZlschefMdS28upC5V8BI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GA+g27nS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1723900969; c=relaxed/simple;
+	bh=kIz3WxiGw2b5pjKxeFQeh+US8XPzHOkBIlB6jxrVIQA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=dmuQG9a0Pup4Nsy1u6LYj+2th/uxEQ43CMNIGiKKgpj7WbLTJIpFZnUV2B1Ab5KAHv5Uj9vrVkaJhqVKqCH52y6KAsJSRjnFZd4cpHgP5aJt950JVqCuxDS3s/Ukp99zlF/me+x1T10L5OzYDSVXw3nE7DiHYD5SH33W07hj0ws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=AH1ybmn5; arc=none smtp.client-ip=209.85.160.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GA+g27nS"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DDA6CC4AF0F;
-	Sat, 17 Aug 2024 05:39:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1723873149;
-	bh=L/27oyOVLbdmCNH9AknEU1c/3ghg8UF/LJ6ONoZ4cx4=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=GA+g27nSGJyvwV98rp+I2FTrd3esE38DlJHaQxgwNFf/qZoSB9eGxll0OD1LyW2OC
-	 Z6TY+iF4QP4pLtoxsS4YPATeyywISDTruws+/wVEndamCapc35mliHgj9zNhGfy8Oi
-	 8CtCbENfZ/2nzEtOssoHMhiNQ2iOQHdNkYOwaVVyKPaqt013hWvA93O4OQI4xzwXeN
-	 JO4YCNtltKCRiHqmMV/YpBkjbUGqPeXNGgAcYxoQCCG0MZBfSs9FjeTlPZo+Qcg7I7
-	 sD7HED61pY0AKNsjdvCSBkYwkSzQtJscHXgWH4nr3kYPyrgmaXQSnKTLgbg1yfIUjF
-	 bx3FjnH1VGweA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id CD783C52D7F;
-	Sat, 17 Aug 2024 05:39:08 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Subject: [PATCH 0/2] PCI: {qcom-ep/tegra194}: Move endpoint cleanups to
- PERST# deassert handler
-Date: Sat, 17 Aug 2024 11:09:02 +0530
-Message-Id: <20240817-pci-qcom-ep-cleanup-v1-0-d6b958226559@linaro.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="AH1ybmn5"
+Received: by mail-oa1-f45.google.com with SMTP id 586e51a60fabf-2701a521f63so1193466fac.0;
+        Sat, 17 Aug 2024 06:22:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1723900967; x=1724505767; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kIz3WxiGw2b5pjKxeFQeh+US8XPzHOkBIlB6jxrVIQA=;
+        b=AH1ybmn5vMGeJBvast+Na0ugdFY9Rsxvm+hM4ekNF6MDs9YcLa/x2v4f7Ytuh8d5tU
+         JlGIx1F7pGJeDWYuExwa0IHwMDGjG8GtRA/eyueOOGZ60aLCn9p7oU1O0rVjjvSY1Rsj
+         upp9wk0qA7PioKwmo4iAB1//bw8/bMrZR9b2pKwaRbl2D6G/mCDqzFsRHAiOA4gt5VWU
+         LpFQJKSqBn1ewHt0rE7QDDB8pUk9D+4sDALH47463Hvjn1o/Ectf+F/wlKhz7E6iL1xe
+         ME/Mr2QIyZ6DFqwjeIQMdSfxvaIJFV6KK5nKN1f3X1MSSbcpVZOMtkUYW8SMJ8C3BxuM
+         i6hg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1723900967; x=1724505767;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kIz3WxiGw2b5pjKxeFQeh+US8XPzHOkBIlB6jxrVIQA=;
+        b=uIRuMC67ngoe2X9IWTGn+y0+QWS51hQ7LI1i+0+8f21KF8t3cC/6VAaCMLOFDF4R2e
+         zjLthl/vcQyZyXXn5kCp4ZHOtrxr/vTQ6ylIx7o5GBeQoKkOm3xXQ6wEoKtuNNUkDvxH
+         KY+KCFp+eeg4TiQrQYs2paYdiJY1E3ZtLDNyzDHIwmrJiHlWmNCgSF9ZI9iYNof5zkvs
+         sNxsOsnAR1OTTDQGtzUEOqTPN+/FpErk7Ekbe1Dy6LYNnYtcUJlLObPZZ1+2oCvpVMmD
+         4YKpM2Lik/e5/GCOMap7mZzCwTxy0BAZ6bnzZXFlja5nPyqIS1sAypG1wMRaYRgvWkm9
+         Bo+g==
+X-Forwarded-Encrypted: i=1; AJvYcCW3YVRqkVhwhTF3y8alQVtRtuAA/O+Y8LIZwhOew+NeYYNXSuUyLM7LRZYtNTQtpyFP+3h248iVzEenIzQvwgTFPnciqrzPZlKqx1vqwr0CoIBRZBSKwsxdNqRGhXohldljKtt0wGU5
+X-Gm-Message-State: AOJu0YwD1GaSkesjxP0Bi7/QEZBv3Mo7lAhd0pXy2U9fw/9eCbRLsgVo
+	CrUkZ2TuONaGBkORYJLe2BGbfcy7o8RSvde1b5LoiIfBtpYVMGp3MKZ9zgOPfJuGf7P7Ln4QMvs
+	wL4dxw5f5RFNLQ5pw0cuiWX4KiWX09Q==
+X-Google-Smtp-Source: AGHT+IHK2heb9nA7osGKnnkoacqf1MT3kEjpkSKOpqhsOVIrl2OikZXm+KXZVTW/PJAzQBHDVAM/Q8fNk01MNAk665Q=
+X-Received: by 2002:a05:687c:2b94:b0:25e:12b9:be40 with SMTP id
+ 586e51a60fabf-2701c3df3d9mr6032787fac.25.1723900967163; Sat, 17 Aug 2024
+ 06:22:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHY3wGYC/x3MQQqAIBBA0avErBtQMZSuEi1CpxooNaUIorsnL
- d/i/wcKZaYCffNAposLx1Ah2wbcOoWFkH01KKG0sNJgcoyHiztSQrfRFM6ERgujO1LSWwO1TJl
- mvv/rML7vB4Z5YAFlAAAA
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Jonathan Hunter <jonathanh@nvidia.com>, Vidya Sagar <vidyas@nvidia.com>
-Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
- linux-kernel@vger.kernel.org, Thierry Reding <treding@nvidia.com>, 
- linux-tegra@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1346;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=L/27oyOVLbdmCNH9AknEU1c/3ghg8UF/LJ6ONoZ4cx4=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmwDd5oSWJNpFaLg/slHpFuZZnWAOUt1u//hPmY
- mKDHR5xbhuJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZsA3eQAKCRBVnxHm/pHO
- 9d1sB/0WCIUlcJV87RKQ5qCtkHnD2ovZLEYil0rw3RCSmWyK//H4Tzkm9kMpbjxaISonGlWLOnm
- ThYAn02ruelSxvKg7TJOHjpRgtJ6CzXGfSammhX3XpzUgTL3ABNUpUgInAS60cHyyp4J3w4bzp3
- L+FWiGeX2mRVyt34Q1P7NgAiH8v2PGGYamFooJOYWTodSNEObHGoKZlZvrgaR9KrO9ODIox6Qm7
- zfSPmFIoKAO3uqB8ZNjkCGl2OcB26VQA7fKpr/LTqJo/82aU84DvZaqFa2/0r2mvHdiLrZdMOp2
- fMm/7p9QsGr5f3u2IhcFpTtLrxHqijs42qulAHGwT7e6B21a
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@linaro.org/default with auth_id=185
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reply-To: manivannan.sadhasivam@linaro.org
+References: <20240625104039.48311-1-linux.amoon@gmail.com> <20240815161135.GE2562@thinkpad>
+In-Reply-To: <20240815161135.GE2562@thinkpad>
+From: Anand Moon <linux.amoon@gmail.com>
+Date: Sat, 17 Aug 2024 18:52:30 +0530
+Message-ID: <CANAwSgR+FLRHpU1sJ3PvNzpAKqMus6iygjQs6yv4kmukuvUGzA@mail.gmail.com>
+Subject: Re: [PATCH v4 1/3] PCI: rockchip: Simplify clock handling by using
+ clk_bulk*() function
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
+	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, 
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-Hi,
+Hi Manivannan,
 
-This series moves the call to endpoint cleanup functions (dw_pcie_ep_cleanup()
-pci_epc_deinit_notify()) to PERST# deassert handler in qcom-ep and tegra194
-drivers. It aims to fix a crash that is seen with Qcom endpoint SoCs when host
-asserts PERST# and the cleanup functions are called without refclk.
+Thanks for your review comments.
 
-During the review of v1 [1], Bjorn suggested fixing up tegra194 driver as well
-as both drivers share the same design and require refclk from host for
-operation.
+On Thu, 15 Aug 2024 at 21:41, Manivannan Sadhasivam
+<manivannan.sadhasivam@linaro.org> wrote:
+>
+> On Tue, Jun 25, 2024 at 04:10:32PM +0530, Anand Moon wrote:
+> > Refactor the clock handling in the Rockchip PCIe driver,
+> > introducing a more robust and efficient method for enabling and
+> > disabling clocks using clk_bulk*() API. Using the clk_bulk APIs,
+> > the clock handling for the core clocks becomes much simpler.
+> >
+>
+> Why can't you just use devm_clk_bulk_get_all()? This gets rid of hardcoding the
+> clock names in driver.
+>
 
-Testing
-=======
+Sure, I will update the patch.
 
-The Qcom patch is tested on SM8450 development board. For tegra194, I'm
-expecting someone in the Cc list or the community will do the testing.
+> - Mani
+>
+Thanks
 
-[1] https://lore.kernel.org/linux-pci/20240815224717.GA53536@bhelgaas/
-
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
-Manivannan Sadhasivam (2):
-      PCI: qcom-ep: Move controller cleanups to qcom_pcie_perst_deassert()
-      PCI: tegra194: Move controller cleanups to pex_ep_event_pex_rst_deassert()
-
- drivers/pci/controller/dwc/pcie-qcom-ep.c  | 6 ++++--
- drivers/pci/controller/dwc/pcie-tegra194.c | 7 ++++---
- 2 files changed, 8 insertions(+), 5 deletions(-)
----
-base-commit: 8400291e289ee6b2bf9779ff1c83a291501f017b
-change-id: 20240817-pci-qcom-ep-cleanup-740745e21d87
-
-Best regards,
--- 
-Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-
+-Anand
