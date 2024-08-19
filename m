@@ -1,33 +1,40 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.smtpout.orange.fr (smtp-18.smtpout.orange.fr [80.12.242.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9227A15AAB8;
-	Mon, 19 Aug 2024 23:12:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDFE8B657;
+	Mon, 19 Aug 2024 23:59:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724109137; cv=none; b=cLU+nPt7D+++WcohxS2Q5IYW58zbiXaziT78EmbIKRyKSY98Zd52zWCNErepN0xbqgxJrZuU+CH/S/jUFWfyf+gOBXNgskdgbXdzgPF4y67EE4BJiGQwpPuqaoRE+MBONH1nHz77QzarRrnQX+C7to4OTjY35NIKONyMgbmjbRk=
+	t=1724111982; cv=none; b=XOF8bEeSb6NicyNCeMncWwAAFrom7/3bUVfTeXF3WP8bWa2T1OOuPShDHNBdbRbuIbrkyZ4Z783Tacmd5+8V1L6hnCvWZ5f+0Ifum0+wMisSiDc51WkVEtWszka42Flo3Tnmwo7mancmy1rHMztXt6NUFwfPRVEWUf1qGmdKgn8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724109137; c=relaxed/simple;
-	bh=VHEkD+dkDRyfNtL8bwaNRMNAG8RJ9dSBV/nM2A5T72M=;
+	s=arc-20240116; t=1724111982; c=relaxed/simple;
+	bh=yuIaNRdT2XsbRktrinM+nAtjGpiDnUSrUd78oiucAek=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U/1MFFG8nNwJqTfY5qDtsmXU1XJCeZk2E0Zqg0lZtaq7MqtXY4G2ZK6w8GbnLTedajatOFyMfKuUAAGqjqGvRQkx4wfEDGtWv23cslH4mdGzZsKgWIBHKGYTJUlXpfBPAUBvxDpa7aNMgaVysH6WaFm8HKlR0mgkq5cTYxclC6A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=h2kVampv; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=N2J//nk2eWjb5f7nQxAiHogMm1Tjrszgf//tPAvrXPYmGJzRbLMHXGuGGxbvTMyDwiKyBN56bG0ptxneE2X+KeII/szBvp+XurEd3YI1jwYVz0ZUj1kIvhXQPtaowFWJuFMsb7JveSu8rJJt6gmLaUxq2y/F5+JOX5xYHpoEenY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=mERexwoy; arc=none smtp.client-ip=80.12.242.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="h2kVampv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F21FC32782;
-	Mon, 19 Aug 2024 23:12:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1724109137;
-	bh=VHEkD+dkDRyfNtL8bwaNRMNAG8RJ9dSBV/nM2A5T72M=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=h2kVampvs0KyS47DVGtX4fkbEwUP6xyBzbsqkexpNBRiHgJ5dEkuMu8pXU4MOC+VR
-	 KecfCY8sdwrjRLIr972pzt1DNMVjZ/WnNquHnWZ4AJbFJg3NuwpqP2fOQ45rx0pAM+
-	 melWnggsX39WpqNYxwsmdR/Hid0np1uuv2JhI1tNU9j54Qsz1YzniTHBZ1RIv4PKbr
-	 DPDu2y4VoiFOLF+0ucSAab14QQBwOoWvkTP+PSl+ngcFmwPvmCDKvYzwztp+qZJlTL
-	 XA7W+f9COBcDJzRTVO/GPKoBa1nX1qBIGNi7M3UaA9ub5vh6wclKwXb60KYnV/0Y33
-	 mS8pV5+9/56VA==
-Message-ID: <e1f9013d-f520-44de-b961-bf60bdee8181@kernel.org>
-Date: Tue, 20 Aug 2024 08:12:14 +0900
+	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="mERexwoy"
+Received: from [192.168.1.37] ([90.11.132.44])
+	by smtp.orange.fr with ESMTPA
+	id g6yfszJBlQRySg6yfszKrO; Mon, 19 Aug 2024 20:19:44 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
+	s=t20230301; t=1724091584;
+	bh=i2piStncb9aJgwDrvhVqFSwNM+FZr5qttsR8sW3kpiA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:From;
+	b=mERexwoyPzlfOebBUEnIZsOtSDCyALgn06bAE0XuHJCOZf7MgURweOtCYf6D5ucvJ
+	 hMxqf1tym0+N1Yh1Kbtxnt/uiEN5D/QjnWk+qeYU1kf9fnNGIcOfFfUV8ildjug1Wj
+	 +AeJZMCJpizoL16BT/5H1yRsJWk4bK4mOJMcJ5w1C1DdkuK+LTxHCusEYR4OwF84Ku
+	 +LejUCxpLFrzVaYKQL35SlVlnRKXCLRCjGATL+8fj/YDf1K9GFn7lWZ/Qy8KDoyJRY
+	 4PIjpQAMLXkiwAulAoaPdD5hVIViRIDkDDoFS+N0BjfpoxS/HV8fdzvU2do0815ek2
+	 I0eIZaE9SrODA==
+X-ME-Helo: [192.168.1.37]
+X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
+X-ME-Date: Mon, 19 Aug 2024 20:19:44 +0200
+X-ME-IP: 90.11.132.44
+Message-ID: <74e9109a-ac59-49e2-9b1d-d825c9c9f891@wanadoo.fr>
+Date: Mon, 19 Aug 2024 20:19:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,53 +42,170 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI: endpoint: pci-epf-test: Move DMA check into
- read/write/copy functions
-To: Rick Wertenbroek <rick.wertenbroek@gmail.com>, rick.wertenbroek@heig-vd.ch
-Cc: alberto.dassatti@heig-vd.ch,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Niklas Cassel <cassel@kernel.org>,
- Frank Li <Frank.Li@nxp.com>, Lars-Peter Clausen <lars@metafoo.de>,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20240819120112.23563-1-rick.wertenbroek@gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20240819120112.23563-1-rick.wertenbroek@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Subject: Re: [PATCH 8/9] vdap: solidrun: Replace deprecated PCI functions
+To: Philipp Stanner <pstanner@redhat.com>, onathan Corbet <corbet@lwn.net>,
+ Jens Axboe <axboe@kernel.dk>, Wu Hao <hao.wu@intel.com>,
+ Tom Rix <trix@redhat.com>, Moritz Fischer <mdf@kernel.org>,
+ Xu Yilun <yilun.xu@intel.com>, Andy Shevchenko <andy@kernel.org>,
+ Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski
+ <brgl@bgdev.pl>, "David S. Miller" <davem@davemloft.net>,
+ Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
+ Paolo Abeni <pabeni@redhat.com>,
+ Alexandre Torgue <alexandre.torgue@foss.st.com>,
+ Jose Abreu <joabreu@synopsys.com>,
+ Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Alvaro Karsz <alvaro.karsz@solid-run.com>,
+ "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>,
+ Xuan Zhuo <xuanzhuo@linux.alibaba.com>, =?UTF-8?Q?Eugenio_P=C3=A9rez?=
+ <eperezma@redhat.com>, Richard Cochran <richardcochran@gmail.com>,
+ Mark Brown <broonie@kernel.org>
+Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-fpga@vger.kernel.org,
+ linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
+ linux-stm32@st-md-mailman.stormreply.com,
+ linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
+ virtualization@lists.linux.dev
+References: <20240819165148.58201-2-pstanner@redhat.com>
+ <20240819165148.58201-10-pstanner@redhat.com>
+Content-Language: en-US, fr-FR
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+In-Reply-To: <20240819165148.58201-10-pstanner@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On 8/19/24 21:01, Rick Wertenbroek wrote:
-> The pci-epf-test PCI endpoint function /drivers/pci/endpoint/function/pci-epf_test.c
-> is meant to be used in a PCI endpoint device inside a host computer with
-> the host side driver: /drivers/misc/pci_endpoint_test.c.
+Le 19/08/2024 à 18:51, Philipp Stanner a écrit :
+> solidrun utilizes pcim_iomap_regions(), which has been deprecated by the
+> PCI subsystem in commit e354bb84a4c1 ("PCI: Deprecate
+> pcim_iomap_table(), pcim_iomap_regions_request_all()"), among other
+> things because it forces usage of quite a complicated bitmask mechanism.
+> The bitmask handling code can entirely be removed by replacing
+> pcim_iomap_regions() and pcim_iomap_table().
 > 
-> The host side driver can request read/write/copy transactions from the
-> endpoint function and expects an IRQ from the endpoint function once
-> the read/write/copy transaction is finished. These can be issued with or
-> without DMA enabled. If the host side driver requests a read/write/copy
-> transaction with DMA enabled and the endpoint function does not support
-> DMA, the endpoint would only print an error message and wait for further
-> commands without sending an IRQ because pci_epf_test_raise_irq() is
-> skipped in pci_epf_test_cmd_handler(). This results in the host side
-> driver hanging indefinitely waiting for the IRQ.
+> Replace pcim_iomap_regions() and pcim_iomap_table() with
+> pci_iomap_region().
 > 
-> Move the DMA check into the pci_epf_test_read()/write()/copy() functions
-> so that they report a transfer (IO) error and that pci_epf_test_raise_irq()
-> is called when a transfer with DMA is requested, even if unsupported.
+> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
+> ---
+>   drivers/vdpa/solidrun/snet_main.c | 47 +++++++++++--------------------
+>   1 file changed, 16 insertions(+), 31 deletions(-)
 > 
-> The host side driver will no longer hang but report an error on transfer
-> (printing "NOT OKAY") thanks to the checksum because no data was moved.
-> 
-> Signed-off-by: Rick Wertenbroek <rick.wertenbroek@gmail.com>
+> diff --git a/drivers/vdpa/solidrun/snet_main.c b/drivers/vdpa/solidrun/snet_main.c
+> index 99428a04068d..abf027ca35e1 100644
+> --- a/drivers/vdpa/solidrun/snet_main.c
+> +++ b/drivers/vdpa/solidrun/snet_main.c
+> @@ -556,33 +556,24 @@ static const struct vdpa_config_ops snet_config_ops = {
+>   static int psnet_open_pf_bar(struct pci_dev *pdev, struct psnet *psnet)
+>   {
+>   	char name[50];
+> -	int ret, i, mask = 0;
+> +	int i;
+> +
+> +	snprintf(name, sizeof(name), "psnet[%s]-bars", pci_name(pdev));
+> +
+>   	/* We don't know which BAR will be used to communicate..
+>   	 * We will map every bar with len > 0.
+>   	 *
+>   	 * Later, we will discover the BAR and unmap all other BARs.
+>   	 */
+>   	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
+> -		if (pci_resource_len(pdev, i))
+> -			mask |= (1 << i);
+> -	}
+> -
+> -	/* No BAR can be used.. */
+> -	if (!mask) {
+> -		SNET_ERR(pdev, "Failed to find a PCI BAR\n");
+> -		return -ENODEV;
+> -	}
+> -
+> -	snprintf(name, sizeof(name), "psnet[%s]-bars", pci_name(pdev));
+> -	ret = pcim_iomap_regions(pdev, mask, name);
+> -	if (ret) {
+> -		SNET_ERR(pdev, "Failed to request and map PCI BARs\n");
+> -		return ret;
+> -	}
+> +		if (pci_resource_len(pdev, i)) {
+> +			psnet->bars[i] = pcim_iomap_region(pdev, i, name);
 
-Looks good.
+Hi,
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Unrelated to the patch, but is is safe to have 'name' be on the stack?
 
--- 
-Damien Le Moal
-Western Digital Research
+pcim_iomap_region()
+--> __pcim_request_region()
+--> __pcim_request_region_range()
+--> request_region() or __request_mem_region()
+--> __request_region()
+--> __request_region_locked()
+--> res->name = name;
+
+So an address on the stack ends in the 'name' field of a "struct resource".
+
+According to a few grep, it looks really unusual.
+
+I don't know if it is used, but it looks strange to me.
+
+
+If it is an issue, it was apparently already there before this patch.
+
+> +			if (IS_ERR(psnet->bars[i])) {
+> +				SNET_ERR(pdev, "Failed to request and map PCI BARs\n");
+> +				return PTR_ERR(psnet->bars[i]);
+> +			}
+> +		}
+>   
+> -	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
+> -		if (mask & (1 << i))
+> -			psnet->bars[i] = pcim_iomap_table(pdev)[i];
+>   	}
+>   
+>   	return 0;
+> @@ -591,18 +582,15 @@ static int psnet_open_pf_bar(struct pci_dev *pdev, struct psnet *psnet)
+>   static int snet_open_vf_bar(struct pci_dev *pdev, struct snet *snet)
+>   {
+>   	char name[50];
+> -	int ret;
+>   
+>   	snprintf(name, sizeof(name), "snet[%s]-bar", pci_name(pdev));
+>   	/* Request and map BAR */
+> -	ret = pcim_iomap_regions(pdev, BIT(snet->psnet->cfg.vf_bar), name);
+> -	if (ret) {
+> +	snet->bar = pcim_iomap_region(pdev, snet->psnet->cfg.vf_bar, name);
+
+Same
+
+Just my 2c.
+
+CJ
+
+> +	if (IS_ERR(snet->bar)) {
+>   		SNET_ERR(pdev, "Failed to request and map PCI BAR for a VF\n");
+> -		return ret;
+> +		return PTR_ERR(snet->bar);
+>   	}
+>   
+> -	snet->bar = pcim_iomap_table(pdev)[snet->psnet->cfg.vf_bar];
+> -
+>   	return 0;
+>   }
+>   
+> @@ -650,15 +638,12 @@ static int psnet_detect_bar(struct psnet *psnet, u32 off)
+>   
+>   static void psnet_unmap_unused_bars(struct pci_dev *pdev, struct psnet *psnet)
+>   {
+> -	int i, mask = 0;
+> +	int i;
+>   
+>   	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
+>   		if (psnet->bars[i] && i != psnet->barno)
+> -			mask |= (1 << i);
+> +			pcim_iounmap_region(pdev, i);
+>   	}
+> -
+> -	if (mask)
+> -		pcim_iounmap_regions(pdev, mask);
+>   }
+>   
+>   /* Read SNET config from PCI BAR */
 
