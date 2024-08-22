@@ -1,102 +1,143 @@
-Received: from mail-lf1-f42.google.com (mail-lf1-f42.google.com [209.85.167.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF727170A3E
-	for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2024 10:23:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72B59166F3D
+	for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2024 10:59:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724322235; cv=none; b=K1Y95Q/tT1PWibIWyeu3iU8N3Oi1/XU7bmoD7TWVl+bHMjsiCh2UMbIvJL5YnvpKrmAsif/I9n0Pk3iqLnpOeB+iozpkiLrT3asn6O0dovCdps0IQsJ071TRFXBFAQvD2igpUoY1TSq2SBNTVqaEXL0F2SNsbYigTGSzvBWHNcA=
+	t=1724324346; cv=none; b=i523Qz+aimRSpeDW5iEoY3tGAdXfRGgzVbZVPbHe6cAwqBpiKddffialcCeDxXn5ciAX/T7Zo1P0fHJBRN4hvqqgOLftl3GjZ3dvK8yzZiAWcF4VmTJZ9oyuY7jcd50l30I+W0P9P61MBgoGA8iF/ZoHAvUC4UwPrAKSv/yYcW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724322235; c=relaxed/simple;
-	bh=R6FvxR9deCLG09yOCyp8Lj2MV+f9zFcZ0deQ+LYWJoM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qy3VssJpWBTXbndfC6zWkTiiguhX9DZ0FCPV6t6ft3EpjXTkGPgCXdJw+RaJj+1GVu8uFMDfLEHaBrKY2kPHBx0df8/coZoQ5TskYWs6YYYqpTLGCpRDoNYlJJQthLkP69N4LbzZXeglYChKBA0HIjq+iGGn2Bz2ZfwcLjJ3TEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl; spf=none smtp.mailfrom=bgdev.pl; dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b=Z6KnSMSU; arc=none smtp.client-ip=209.85.167.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bgdev.pl
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bgdev.pl
+	s=arc-20240116; t=1724324346; c=relaxed/simple;
+	bh=X2aDawbwMPIx4BXYK3siJFaIvVYE9aya68VEcb9AzqM=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=WUinBL5i/NXdkhJiH2se2a0D+qweNdw0nkZvxCYkdKNUeybcSQhrvzZ6QJu1oW5XlRzBscnBSK1xOuyX0NyjhmWMAGfhBTokMtOMvGIb+JqEPXlOpaGRDJNJVWL45TUlnf1b9WmdVny4A8ZxnPeP3e9169wKT7WEwcbVgvtvPdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FQMoJo0/; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bgdev-pl.20230601.gappssmtp.com header.i=@bgdev-pl.20230601.gappssmtp.com header.b="Z6KnSMSU"
-Received: by mail-lf1-f42.google.com with SMTP id 2adb3069b0e04-5334a8a1af7so640902e87.2
-        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2024 03:23:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bgdev-pl.20230601.gappssmtp.com; s=20230601; t=1724322232; x=1724927032; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=e45XsMuvKuKXGP1RO13hjtFbIaK2zumMe5ngPJfelL0=;
-        b=Z6KnSMSUh6nxpXhPlRBKlpIHYtjyXRxk6PnapH9DtP+RzKS/N9019eIbmD36SYLp9g
-         PXADv+sNXU+CM+5bidqr7AMHaPzFwI9XTDHKHSu1q4os7JHPyIY0F6A+/WapRcOnWihU
-         Z/J3GCWPzHzelZTC94Rw6IzcH83En5l7+6KXzJDQkGS8Ztu38Zka0znkT7rFXwBL3zBv
-         KVMC6UoYnqGuonEUC1xjHZGiT/OGkU2UB13UzpjHvX5yWKhon7Bz3dCj/LuXpK8LdKvT
-         U+aoW3Vf2mRRi6YWcWQYODVLh4/vxP8Rh8PL3B7GJwjaD0LaVJH1B44320YBmfO4WnOu
-         jLyg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724322232; x=1724927032;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=e45XsMuvKuKXGP1RO13hjtFbIaK2zumMe5ngPJfelL0=;
-        b=hqztle+KRS6Th4Wv5BuTyjrr/O7qXJ/PE8TCcJqaLWf8MD7SUHJ/xwHFFFa4SI1hpK
-         0vMXGH8T5VutRb0FmweRma36J4wQXbTLUWG/uqa9zdUM9T8QAk/SZzDwdLl5oCmlAsiJ
-         EOsT6ETcQWiKTkbrEt0T3bUKV6N1WuFQ7GDvN9IrG/SWSI/swJZVDkqlgRRvnH6cb0Yt
-         5kyArkRxGkQ3kqxWuU37MnbueVNGkrBjHPPpC3XTRzCyC2esC5YkEPaqLWFZF9ubP4dP
-         yaE0/0AWYlS2txYdYsCYosRTNeggBb9TfK5T5bak134oBrjEij2xaHvamQPBklpHOHlD
-         j+RQ==
-X-Gm-Message-State: AOJu0YyMxTyYhvQ1KhBUtak1wKmx9RH5cYn6fsfP724+U319ptsz8O9O
-	n7qCVxORpA9MwRv2g9jRxn94Jw0xhs6Gp/aDVLvu2p77azgTAL9Xm8Ht9BqC+DJX+ATrziGsigq
-	zFUhdWbCroK/VG6fXb4yhkdXINjWQWLl9BEsXrA==
-X-Google-Smtp-Source: AGHT+IGL791QYbF0kzcxMmzPYHGq/lMsQK/STAf8o+ZpSVkQmYBqMW+XKfd6iiKtJPMEaRUNe0uqRDFd0YDgbwU1M7E=
-X-Received: by 2002:a05:6512:15a8:b0:52c:9383:4c16 with SMTP id
- 2adb3069b0e04-533485ae52fmr3332766e87.22.1724322230982; Thu, 22 Aug 2024
- 03:23:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FQMoJo0/"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724324344; x=1755860344;
+  h=date:from:to:cc:subject:message-id;
+  bh=X2aDawbwMPIx4BXYK3siJFaIvVYE9aya68VEcb9AzqM=;
+  b=FQMoJo0/omLO0CBqFhH+ncOh7TNppUaJvMKx8lSs01Q5k7iqnbh73kpg
+   d5EGAHuzdTu6w6rbPxcW0Aj8WkxulPd9NNPLbHG43CcWDtByNbDerzuJ4
+   z46ZKU8QKW1cAJjjYSJEVnJCOu9eyFeVGcdovODJzbtm0ywJLJgYpZGv8
+   OPxBcf44E18gyIJeJmLDnhJrkDB55qIJFr2/90cmOUoE1k8CRa3nFyGsw
+   MFrXKVN60Ja06tlXytVxt6Ncm+4TRbeDJ3Mb3J9LgleI2nZ+wIJUmtBLM
+   tmTFGX9x4wa8fEL/3I+0cVYrwJZa6LMyd+CFwagoQAdmbYZvHRNgi1/Sk
+   w==;
+X-CSE-ConnectionGUID: BDASTvncTeeB5WOn7wmgwg==
+X-CSE-MsgGUID: q7nVuCBhRz+MTxSqTWGzAA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11171"; a="26481779"
+X-IronPort-AV: E=Sophos;i="6.10,166,1719903600"; 
+   d="scan'208";a="26481779"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Aug 2024 03:59:04 -0700
+X-CSE-ConnectionGUID: svauxlCbRCak9RIZQuNkJw==
+X-CSE-MsgGUID: w4jdgRmNTp6X0BJUl4iXag==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,166,1719903600"; 
+   d="scan'208";a="61258390"
+Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 22 Aug 2024 03:59:02 -0700
+Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sh5Wt-000CgO-2z;
+	Thu, 22 Aug 2024 10:58:59 +0000
+Date: Thu, 22 Aug 2024 18:58:59 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:misc] BUILD SUCCESS
+ dbc3171194403d0d40e4bdeae666f6e76e428b53
+Message-ID: <202408221857.yYLurFbz-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20240819082445.10248-1-brgl@bgdev.pl>
-In-Reply-To: <20240819082445.10248-1-brgl@bgdev.pl>
-From: Bartosz Golaszewski <brgl@bgdev.pl>
-Date: Thu, 22 Aug 2024 12:23:39 +0200
-Message-ID: <CAMRc=McD=3_+XqtPj8Jum5Pz29S+NAZn=M1yJ=z5bQ8CympNRQ@mail.gmail.com>
-Subject: Re: [PATCH v2 0/2] PCI/pwrctl: fixes for v6.11
-To: Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Aug 19, 2024 at 10:24=E2=80=AFAM Bartosz Golaszewski <brgl@bgdev.pl=
-> wrote:
->
-> From: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
->
-> Here are two fixes addressing issues with PCI pwrctl detected in some
-> corner-cases.
->
-> v1 -> v2:
-> - use the scoped variant of for_each_child_of_node() to fix a memory
->   leak in patch 1/2
->
-> Bartosz Golaszewski (2):
->   PCI: don't rely on of_platform_depopulate() for reused OF-nodes
->   PCI/pwrctl: put the bus rescan on a different thread
->
->  drivers/pci/pwrctl/core.c              | 26 +++++++++++++++++++++++---
->  drivers/pci/pwrctl/pci-pwrctl-pwrseq.c |  2 +-
->  drivers/pci/remove.c                   | 16 +++++++++++++++-
->  include/linux/pci-pwrctl.h             |  3 +++
->  4 files changed, 42 insertions(+), 5 deletions(-)
->
-> --
-> 2.43.0
->
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git misc
+branch HEAD: dbc3171194403d0d40e4bdeae666f6e76e428b53  x86/PCI: Check pcie_find_root_port() return for NULL
 
-Bjorn,
+elapsed time: 845m
 
-We found another issue that will require extending and modifying of
-this series. Please disregard this iteration and I'll send a new
-version shortly.
+configs tested: 66
+configs skipped: 128
 
-Bart
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                            allyesconfig   gcc-13.3.0
+i386                             allmodconfig   clang-18
+i386                              allnoconfig   clang-18
+i386                             allyesconfig   clang-18
+i386         buildonly-randconfig-001-20240822   gcc-12
+i386         buildonly-randconfig-002-20240822   gcc-12
+i386         buildonly-randconfig-003-20240822   gcc-12
+i386         buildonly-randconfig-004-20240822   gcc-12
+i386         buildonly-randconfig-005-20240822   gcc-12
+i386         buildonly-randconfig-006-20240822   gcc-12
+i386                                defconfig   clang-18
+i386                  randconfig-001-20240822   gcc-12
+i386                  randconfig-002-20240822   gcc-12
+i386                  randconfig-003-20240822   gcc-12
+i386                  randconfig-004-20240822   gcc-12
+i386                  randconfig-005-20240822   gcc-12
+i386                  randconfig-006-20240822   gcc-12
+i386                  randconfig-011-20240822   gcc-12
+i386                  randconfig-012-20240822   gcc-12
+i386                  randconfig-013-20240822   gcc-12
+i386                  randconfig-014-20240822   gcc-12
+i386                  randconfig-015-20240822   gcc-12
+i386                  randconfig-016-20240822   gcc-12
+loongarch                        allmodconfig   gcc-14.1.0
+m68k                             allmodconfig   gcc-14.1.0
+m68k                             allyesconfig   gcc-14.1.0
+microblaze                       allmodconfig   gcc-14.1.0
+microblaze                       allyesconfig   gcc-14.1.0
+openrisc                          allnoconfig   gcc-14.1.0
+parisc                            allnoconfig   gcc-14.1.0
+powerpc                           allnoconfig   gcc-14.1.0
+riscv                             allnoconfig   gcc-14.1.0
+s390                             allmodconfig   clang-20
+s390                              allnoconfig   gcc-14.1.0
+s390                             allyesconfig   clang-20
+um                               allmodconfig   gcc-13.3.0
+um                                allnoconfig   gcc-14.1.0
+um                               allyesconfig   gcc-13.3.0
+x86_64                            allnoconfig   clang-18
+x86_64                           allyesconfig   clang-18
+x86_64       buildonly-randconfig-001-20240822   gcc-12
+x86_64       buildonly-randconfig-002-20240822   gcc-12
+x86_64       buildonly-randconfig-003-20240822   gcc-12
+x86_64       buildonly-randconfig-004-20240822   gcc-12
+x86_64       buildonly-randconfig-005-20240822   gcc-12
+x86_64       buildonly-randconfig-006-20240822   gcc-12
+x86_64                              defconfig   clang-18
+x86_64                randconfig-001-20240822   gcc-12
+x86_64                randconfig-002-20240822   gcc-12
+x86_64                randconfig-003-20240822   gcc-12
+x86_64                randconfig-004-20240822   gcc-12
+x86_64                randconfig-005-20240822   gcc-12
+x86_64                randconfig-006-20240822   gcc-12
+x86_64                randconfig-011-20240822   gcc-12
+x86_64                randconfig-012-20240822   gcc-12
+x86_64                randconfig-013-20240822   gcc-12
+x86_64                randconfig-014-20240822   gcc-12
+x86_64                randconfig-015-20240822   gcc-12
+x86_64                randconfig-016-20240822   gcc-12
+x86_64                randconfig-071-20240822   gcc-12
+x86_64                randconfig-072-20240822   gcc-12
+x86_64                randconfig-073-20240822   gcc-12
+x86_64                randconfig-074-20240822   gcc-12
+x86_64                randconfig-075-20240822   gcc-12
+x86_64                randconfig-076-20240822   gcc-12
+x86_64                          rhel-8.3-rust   clang-18
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
