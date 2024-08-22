@@ -1,22 +1,23 @@
 Received: from relmlie5.idc.renesas.com (relmlor1.renesas.com [210.160.252.171])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2D0F313B5AE;
-	Thu, 22 Aug 2024 06:45:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C3A8F13B5AE;
+	Thu, 22 Aug 2024 06:45:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.160.252.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724309105; cv=none; b=BRev2G13L1UaF5YgQZ3Wu4oct0hoG93tJIxcyMHu42uhPkWEMDonJ/QZgE8R1xIKvznIe1F1BQy/MlQmLmW91H2Dcs+RknGIkmp1P1uqE7LkUudaIFhcpIknszly1wNmy+dcDPNaRQjvdsHrgeiI0lAnrQmas4605hvHvhD2/bA=
+	t=1724309107; cv=none; b=be08twyOUxWfkXXrX+pFNG7e22JI/ScYgO/5ZSMadqFVHRbFBxqon00yF4d41wJpY7g28LElAd55i2jtJ4s9S2GPeEjzYaxDlRU88hrwVusW4RJE7764sJbR3WPt0+RF5BBdDVj+gmpmxnQmY5gqgd5RotZudsPFR2y+iUbtL6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724309105; c=relaxed/simple;
-	bh=UoiscaqvEmnMfzaQUl8ryIPywzTvN2Kt9DLWSSqOOdo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EgsZKVGLQ4w+/+GFanJXL3tTfiRXUdhfaN1Z6q02y0se6xAprlraBWQszHIcWPvHgvQjR5Hp7XAOIjeqOap9DLYCc41/n9Ag8SoRpUo5BL/geIjxK8uk5Rh1CP1Zv56hGGmkG6Naxjl1danLeBw/UjfnAfFvprJkT/o+1GJaUZY=
+	s=arc-20240116; t=1724309107; c=relaxed/simple;
+	bh=aqNBSgQKzAEbwDNJ0nI1ru/kNAPD8mR5CqdbrpPcrGE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Lbgloom9WH7Ox3zHTkbeF5TlYWsqOQCCKYqtgYnJ6qD3GH2dpBMNeRs5pILj4xiH4ttYcIVNkFyAS17Nx+pMyBRRHkfM8yZFzANcaPGG4ZDCUSMgcXZRy2alhLfDfl5qhKMdvh2tGqxfpSKPvll88WF5b4T90hFeTeiwPf17tqA=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com; spf=pass smtp.mailfrom=renesas.com; arc=none smtp.client-ip=210.160.252.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=renesas.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=renesas.com
 X-IronPort-AV: E=Sophos;i="6.10,166,1719846000"; 
-   d="scan'208";a="216265994"
+   d="scan'208";a="216265998"
 Received: from unknown (HELO relmlir6.idc.renesas.com) ([10.200.68.152])
   by relmlie5.idc.renesas.com with ESMTP; 22 Aug 2024 15:45:01 +0900
 Received: from localhost.localdomain (unknown [10.166.13.99])
-	by relmlir6.idc.renesas.com (Postfix) with ESMTP id 8ABA441890E4;
+	by relmlir6.idc.renesas.com (Postfix) with ESMTP id D28704188DE7;
 	Thu, 22 Aug 2024 15:45:01 +0900 (JST)
 From: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
 To: marek.vasut+renesas@gmail.com,
@@ -32,10 +33,12 @@ Cc: linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-renesas-soc@vger.kernel.org,
 	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Subject: [PATCH 0/2] PCI: rcar-gen4: Add R-Car V4M support
-Date: Thu, 22 Aug 2024 15:44:57 +0900
-Message-Id: <20240822064459.1133748-1-yoshihiro.shimoda.uh@renesas.com>
+Subject: [PATCH 2/2] dt-bindings: PCI: rcar-gen4-pci-ep: Add R-Car V4M compatible
+Date: Thu, 22 Aug 2024 15:44:59 +0900
+Message-Id: <20240822064459.1133748-3-yoshihiro.shimoda.uh@renesas.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20240822064459.1133748-1-yoshihiro.shimoda.uh@renesas.com>
+References: <20240822064459.1133748-1-yoshihiro.shimoda.uh@renesas.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,17 +47,25 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Now the pcie-rcar-gen4 driver can reuse r8a779h0 (R-Car V4M) without
-any driver modification. So, just add compatible to the dt bindings doc.
+Document bindings for R-Car V4M (R8A779H0) PCIe endpoint module.
 
-Yoshihiro Shimoda (2):
-  dt-bindings: PCI: rcar-gen4-pci-host: Add R-Car V4M compatible
-  dt-bindings: PCI: rcar-gen4-pci-ep: Add R-Car V4M compatible
+Signed-off-by: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+---
+ Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
- Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml   | 1 +
- Documentation/devicetree/bindings/pci/rcar-gen4-pci-host.yaml | 1 +
- 2 files changed, 2 insertions(+)
-
+diff --git a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+index 91b81ac75592..b23293314a6d 100644
+--- a/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/rcar-gen4-pci-ep.yaml
+@@ -19,6 +19,7 @@ properties:
+       - enum:
+           - renesas,r8a779f0-pcie-ep      # R-Car S4-8
+           - renesas,r8a779g0-pcie-ep      # R-Car V4H
++          - renesas,r8a779h0-pcie-ep      # R-Car V4M
+       - const: renesas,rcar-gen4-pcie-ep  # R-Car Gen4
+ 
+   reg:
 -- 
 2.25.1
 
