@@ -1,208 +1,214 @@
-Received: from mail-ej1-f42.google.com (mail-ej1-f42.google.com [209.85.218.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from APC01-PSA-obe.outbound.protection.outlook.com (mail-psaapc01on2054.outbound.protection.outlook.com [40.107.255.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 038C117C224
-	for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2024 10:04:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724321073; cv=none; b=HN+n5Q6j0uuoSxYBxGxvyazCrO0nGVqOkcOOFV9cWSJj2GDShKp1NoF85t+Isu0qwQ0LsfZb+TPomzGRr+ukGVKLpbQTFnW2gG+2J9KRSq83n9b+jrMG8SsfNOwr/eAKxUwPiaLT1PePy5bwg7hAWUvVrdqFvpcTdK07AsMcORQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724321073; c=relaxed/simple;
-	bh=xxyoPJfX24KJoyxO6jEzwtrU2Hoh+t/Pzgync5R29bw=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rjPuRP1ciy2YBHOm4WIkJV7fweey1Mr0tN49VwjVp626dTioVfI7k3PEnhjF4IJoW63x+0cQKW1oeJqbo8Neljwvt52ZcQfPY/yN9YgJCBuWxXruJyjMt7bF+I+p+jQd7LL5bH+BMod9vWVCFVK6jNc+mTHWxHPeOzGWXGuGfeM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=cjd0qZgh; arc=none smtp.client-ip=209.85.218.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF8A18309C;
+	Thu, 22 Aug 2024 10:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.255.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724321716; cv=fail; b=KrykU18mDg4zZA4I7fr/l/OjWx2+u4B94k7h5AvKTOqSKDtz9azfXQkLdFHbI+CrUtyfoGFGT7uX9Y/Mil2S928hRrhLAdJtTnb0aeMc8Zf3CRz8Ed5bipQ2iFcicuJ0Wb0rUOZJfvCPDR6QhMDkXfffh5uqEqfemcqPNWGz8nw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724321716; c=relaxed/simple;
+	bh=0l1kjpl1M2wJpCMDOCtWpkXwGQtdjtbUK14Kim8TSQE=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=qoqk8W+kVTtA0PJTEWKJSp2S7xiJWf197nTi9FbepesaivXYunvYvYa49n3igYKs6JRAjAbZxol45zlu+8S8ZhXbeb2vn9B1gcMv/pDEUAq+qCDTI4PMnPh1mgd4L0K01G0BSY71qcef9DiGZwQhbg5aoHQkkBq+jyANi7iJ0Cg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=aKbiAiev; arc=fail smtp.client-ip=40.107.255.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="cjd0qZgh"
-Received: by mail-ej1-f42.google.com with SMTP id a640c23a62f3a-a80eab3945eso71616366b.1
-        for <linux-pci@vger.kernel.org>; Thu, 22 Aug 2024 03:04:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1724321069; x=1724925869; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:date:from:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MpyK4IsQzJrI6qeJJhvprKefQNt+Ld7JQCqPLKfE9e0=;
-        b=cjd0qZghW7v0ktHKohaYYLp+lK+DySxFbu34qndmjCyWRs2wDG5qBO45dz0EwS0R0i
-         0ENCdE8+ChXf1PSynPrqXNYD4VPJpJaCOkc2cj/b468r//RB1wegrQdTUDpZURtZ7dOT
-         2vZ7wo0Gavo+Va1aEUOy2l13V5qayiFiohQQWgsRqnJiFZH2aB4MA3DrjNGgIYHL4zox
-         kn1PzOXREbrp3z7h2Sf1yy9VRyzBzIzyUl1BUGiDvB/X+I+QxNGjc2TBRn8ogA5e5aGI
-         BZPueo2fQcKSCGYnoI6NQ3hulR42mQJ/a7RsYYTkrJhoEvc7V0f7ZgsZmQ+EWCN4JqIQ
-         kRWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724321069; x=1724925869;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:date:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=MpyK4IsQzJrI6qeJJhvprKefQNt+Ld7JQCqPLKfE9e0=;
-        b=Fus8jVLRUlXRVOC6KitXeqkM+oKOe4RzHfal8C+KidhYhUF8hbT1gRgpEq2D+YhEVf
-         E9k8AyGOrQDyMHAJ+0vr6zPXPJDUjaHs88sPNZzeCPdP9l+ocuDAcaUukyiQPZuVfma8
-         S4/Z2a0iY0otZuSFLGsX1lu4rdN416zooltf9FUkgXc5gzOt0N1esg6r+vSTTMDszJDZ
-         LMBsk4kCNVFt+we5I83X7SfmctKsclQj9BiX9flNKI3t7tRatSZxbe4Fg4chrYWoqW6r
-         G5aipxpt/+lT0w6g7vG31AiFN0s4BMX4Zvm656krzp83A57snZCyZLSyuo+IgIug3pok
-         Lmdw==
-X-Forwarded-Encrypted: i=1; AJvYcCVfFjgrbWXy/Pnd4owWT+C80X2B2QGrZ8YpVldlpqWJGCu9jI9xTf+qoEeaPXqV3YTGWYnv6iZ4yjA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz0b3k43obEKm5N4u/3S9GYGroc+x+7gY08pvZpGimdtbKdLuMZ
-	gF0Ny4olrBSED5sC+PiE5X5sAsoWpdnse1zzcynIHOHFx2I0SGntp36lLK4enPM=
-X-Google-Smtp-Source: AGHT+IHlxXQHOoIG5Xms+dbKMTaH/vArkSFDYv8NHwvurq0I3OqBwEKhWmO0dZKyqjO8q42AqL7AQQ==
-X-Received: by 2002:a17:907:f14d:b0:a7a:9760:9aec with SMTP id a640c23a62f3a-a866f8c3418mr450021966b.43.1724321068912;
-        Thu, 22 Aug 2024 03:04:28 -0700 (PDT)
-Received: from localhost ([87.13.33.30])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a868f48a9b6sm96500966b.179.2024.08.22.03.04.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 22 Aug 2024 03:04:28 -0700 (PDT)
-From: Andrea della Porta <andrea.porta@suse.com>
-X-Google-Original-From: Andrea della Porta <aporta@suse.de>
-Date: Thu, 22 Aug 2024 12:04:34 +0200
-To: Simon Horman <horms@kernel.org>
-Cc: Andrea della Porta <andrea.porta@suse.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Lee Jones <lee@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Stefan Wahren <wahrenst@gmx.net>
-Subject: Re: [PATCH 06/11] clk: rp1: Add support for clocks provided by RP1
-Message-ID: <ZscNMk3hBWs5yKTH@apocalypse>
-Mail-Followup-To: Simon Horman <horms@kernel.org>,
-	Andrea della Porta <andrea.porta@suse.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Lee Jones <lee@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Stefan Wahren <wahrenst@gmx.net>
-References: <cover.1724159867.git.andrea.porta@suse.com>
- <a378cc652b7e92b4022141dd2f20711e1771eb72.1724159867.git.andrea.porta@suse.com>
- <20240821131757.GB6387@kernel.org>
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="aKbiAiev"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=H9x6U46ckfjWO2wd55vcLY8z/P64Sjo+yE1YUxXK0LtZCFzqTQodblrKVM/arroQSHlWtsE6z1QVp01kv3kJulW9jTVPFECFhYIJUtySKqxULEpWPwzsGHv6Pbmsah1PFahdGRzzAMVqZm+WBVXRt1bJphueBAe8LDLfUavCWl4O3In4qxjLx1OwoNwK2vbbb0oTVV3jUNcgAjnbAv+6TYoPZnvJR1FYCFCaR4MnPtVeCWJb60x3gCUSwU3XcLEYXLon60PpQQBDTbOHIX7X0KadZL81nuXgIXZu7n7jXRQJyLmyG5sCtdaU8gAGRSrLmV18yuFklMDgqlEj5GI2yw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Ru6pjjNs2mdiEJd/HSztW+qRuRGhQRs1IoJxnKMXu6Q=;
+ b=A/KaOgKn47mFuE9VJ/PG3FSvNuSV5GMOJz4eqou/OOBUy9oFk4MobWs4kV0sWjUXXsUnRhbXGksEUf8sdPZgkD8REEsXDx+ClYBiGLGBJvV0w8jkzn0Mp6oLusan4xKn+3NIUT7b0jYhUNOCfvc4z6tShUWgpG+GEYhDs4vtNhi0zivY+i0CtAW/maGA924W1ABll4X8lW3HO5aAuBoB2nLi5RnW2Hf9719PU1lZhJmLmPW0Sao6MYj8xTNGJqvx+nkiLUVSDT6LhrPHmrMn2ZhER2n5o3SJWhvoHCjZSc8qhP0QFM7MC7YR+VfvI/GiXP5q4/EYSefadZPMqpQ6cQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Ru6pjjNs2mdiEJd/HSztW+qRuRGhQRs1IoJxnKMXu6Q=;
+ b=aKbiAievOdbLRzrFg5li966kI84exL0hxPKkHChJSQNnWUeDg1CBw2qGcxPRMQJAw+W7Ka4koEMlthqCPv/stTNYo0Z0xEfYxiqvLC1uFa1QqutakvjvUc/MvljRnTTKR39xgZtixKhGx3nNH5O84Tt0Vlc9ZJ2/9a+R/+mYIWtuX6gJFPVRpjCk4KInI8y/TbUPVB5PgROAo1AfsL3n+k1hP/owqjqjvOQ1sIkbSdJYi0WNUQtbeSosD557lho7AUWbPNNfJQoTk/mJafTBOJznbL096s2v6dQOsLLwkqaY8gcp50gnmgiFPkaOJUvUqJsNf98FJQBco5WIGhkQpA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from PSAPR06MB4486.apcprd06.prod.outlook.com (2603:1096:301:89::11)
+ by SI6PR06MB7217.apcprd06.prod.outlook.com (2603:1096:4:24f::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7897.18; Thu, 22 Aug
+ 2024 10:15:11 +0000
+Received: from PSAPR06MB4486.apcprd06.prod.outlook.com
+ ([fe80::43cb:1332:afef:81e5]) by PSAPR06MB4486.apcprd06.prod.outlook.com
+ ([fe80::43cb:1332:afef:81e5%6]) with mapi id 15.20.7875.019; Thu, 22 Aug 2024
+ 10:15:11 +0000
+From: Wu Bo <bo.wu@vivo.com>
+To: linux-kernel@vger.kernel.org
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	Wu Bo <wubo.oduw@gmail.com>,
+	Wu Bo <bo.wu@vivo.com>
+Subject: [PATCH] PCI: armada8k: change to use devm_clk_get_enabled() helpers
+Date: Thu, 22 Aug 2024 04:29:52 -0600
+Message-Id: <20240822102952.1656027-1-bo.wu@vivo.com>
+X-Mailer: git-send-email 2.25.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR04CA0211.apcprd04.prod.outlook.com
+ (2603:1096:4:187::19) To PSAPR06MB4486.apcprd06.prod.outlook.com
+ (2603:1096:301:89::11)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240821131757.GB6387@kernel.org>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PSAPR06MB4486:EE_|SI6PR06MB7217:EE_
+X-MS-Office365-Filtering-Correlation-Id: a1058aca-f011-420b-1944-08dcc2934e4b
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|7416014|376014|52116014|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?WfksQO1iyMQOzYfkGuqmVMccFTN46uXPFj4KysmRBZbwxaP15sBQWbUItmYQ?=
+ =?us-ascii?Q?DcURJn6wsPzKvGyx/zfEZEKkPLCCbKIxxh2FbvoO9Su05gt7wruJVeFLhXU7?=
+ =?us-ascii?Q?DkSryZnw+aB1CQyEtWVLQxyLNfkuiLPBAuVgcuveKT/SStpj+ueTPmNSAq83?=
+ =?us-ascii?Q?2hMmyFuiuX6cWcCqz9GwC3aUQfgUg2RcBVv2c8KFSpn93vyM34my1E+vAcRf?=
+ =?us-ascii?Q?lslQc0BhoIV3H38jxBBexqVyWtOIFQnQjD5RzsRqaiTUwtlSiPafYMSQ2E9X?=
+ =?us-ascii?Q?xWJqh0Lj6XLdc0Co9y4l9Jbv3Zy5oY4P4/2VvI13PQTRnre2x+x6I2fLwwnj?=
+ =?us-ascii?Q?SDaTZkUIIwv+ozAddOAWq6rL6qgg2oAtrlVs1aqOOpQwy3Q/E321tEFAVtgO?=
+ =?us-ascii?Q?waDG5OkzYaz9dODveekTvwVyL5U07HchpUf23U9sDlwVgiKvqTj6tqHmTQL1?=
+ =?us-ascii?Q?35z+87inJ7jSAxa/Hx3amKH80HEq/eW1C5p57DvHHknsBjCDigbCEk1GYY8W?=
+ =?us-ascii?Q?N8u/Y/s4bnI7DKiRVNs7LwOzQwXqzbPx9gtrcXWkf0dHl1h3jDCkvShD1qsa?=
+ =?us-ascii?Q?RWGECFoY/CXnNQDO5TkUDcp0nmJBaNvqcEnhzNQZBkV+qlBLAiE3lXStHoSW?=
+ =?us-ascii?Q?MO2400gsywkI4tSYYFCOds+pj2qODxpUtnHTaSJAKe4zDDneM6SijPVIa1yc?=
+ =?us-ascii?Q?ho0ziYrdGLpR9hIZjHzpjj5Zdy52oEi7by56hUpAtG4JVHcMorLaVl/+rSP2?=
+ =?us-ascii?Q?V/vLXiPane+cQSoXj9DI4PQCvnxADhPG9Vi0nFp/Cdo3ZyhWS/hnfUy6iMdB?=
+ =?us-ascii?Q?S31ALQIs1bm58EbECJ4zov9bCGhFXs0rXjXSwOS9iFSWs/U7FHbkgHm+TAml?=
+ =?us-ascii?Q?KJSPNahQgCFePDoW8LSEYWj2OyIun0c7kE8kbWhwMREfTEKrxqKo+y7cuKjj?=
+ =?us-ascii?Q?V0nCSNkmGOYfa7LKSAOd7ERRftUOyHm9xNJcH1joqZHlA5galJ+eFtixys9C?=
+ =?us-ascii?Q?nst7y6ydDOeBEPqWejM1N3e4U1sjKQSaBddYPAo7tBI+v4h5nviMmGCiGwT7?=
+ =?us-ascii?Q?KQLBK3rTHMf9EKyVOcnGGSfgSAJkDWOttmpn7xgXdvCwhMUPIxiB1h8y8jdV?=
+ =?us-ascii?Q?q6UahA3NpAZH/NozzjI6B+vn400O++uwGZ5jP7HS9lMawpj69SjCZQ8rEfuc?=
+ =?us-ascii?Q?fNE8WN9uY+5mnEF/o1cAUprdelD/dRJx0DQXTzqk5HDB1VagFY1HgpOl7/xG?=
+ =?us-ascii?Q?4FhLW09KH039ReAvx+cSGZTHXvHmNZHO9tFD1NwyiP539PSV613NsglJpazl?=
+ =?us-ascii?Q?iU+GYVOWi+DI+tx4qepK/f7Y9Hv3p12pb5NODx0fbebzzaASznUPPhonc8aS?=
+ =?us-ascii?Q?2UB27wmwwOPekY6MHcnt3GZCUBYbUfucs4tezBIFYi7dIDWqGQ=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR06MB4486.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014)(52116014)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?5pxT23QGvf4ysT5gEVQ0C0GI2qt4XuDiDqPTVJ4xllJdydTmEQHTJHfqDBps?=
+ =?us-ascii?Q?mhWfDg9926dgHTx1ZPNPHs137c/+viKt79pzOfZTknpNZISmrcVRZi7Ixx2v?=
+ =?us-ascii?Q?9+M5NVnkCp5ofAW78Du1IhVHhaOFxfdZCVXLel9lm9UjwdQIVxv6ewYy3Dl6?=
+ =?us-ascii?Q?kYaDXHDsxtvpjtY3jQjrmQNno7au2GnNPdPPDSWOJ7cL/YlJV9aGDFl6fMPW?=
+ =?us-ascii?Q?by/tm5y5Cqhez114gcLrmiKDhmx22td6bPsWU0We89n6/OQPqnXt7ANz7myy?=
+ =?us-ascii?Q?mA9z0xXDGXT/EZyYGA+i7AZ1y+nEODIJWo5MaaY4HsP5lOAjHxHaKMa9b7kx?=
+ =?us-ascii?Q?omjXTfi9RVoc98XDdp//xSypnEdbBhDrBi+u+RCPI86K86rxhWMvzthaIVEb?=
+ =?us-ascii?Q?BoeQ+Y+CpuKYnxVHXNovND8gRzb96ya1dbxrtUSwPh5jKavPqz1C2+6GvvD8?=
+ =?us-ascii?Q?Hna2/BKk1YxrtsFppyQx0o8u9EPF6KFySP6+XDT6oKO3vz2SV+9XapLIkL6O?=
+ =?us-ascii?Q?G+EvtN8cLZMrovR4OoHd13qvtNbL/dmuwePXpBt4qfdeMn+QpjVz1s0fhaxI?=
+ =?us-ascii?Q?dZGpGam1rT/3zsgDQmHwqwLHbU8nLPQQL3UQtEbqhCqYaywCB6km8W6HVtp1?=
+ =?us-ascii?Q?8m8H08dbPpvveYx+Lhz8dksG35nRI/orZWOvhOoPoNyydSnUh2rzSHKViJIP?=
+ =?us-ascii?Q?N6gm3/c4814lmxT6NcfO0fSfiWHx+fN/+Eh5wllynjn466vR64rL57uMh12G?=
+ =?us-ascii?Q?MhUfb5GLdl2BXVTNZOgXJ5CN3yJGYh7fXbYq6EnNiQQynnQDQKSne5NWIh8k?=
+ =?us-ascii?Q?xm5pput0ymRXeAOs81OpPj70EfTycdDmftMDtE74Sk4uXrQ8HC9SafM5qoDS?=
+ =?us-ascii?Q?W+T8PucOkr3LU6l3NJHCFtlDoRPnhs66VHviqDO+5xmYkJRptYAwJScYmvaq?=
+ =?us-ascii?Q?e0e8HUEfTILYi1uLyqvolcbHFDmolXC61OB7+HejIQRxIzreAhIRyZr1C9HX?=
+ =?us-ascii?Q?P4Ib0vj7YRnmY54zkzznKoAtswayMGWXXh454ghKFfI5CfNTBQqok7MVSKZq?=
+ =?us-ascii?Q?5LWVFF8GfEcAAE7yfi1Cl7R0iknoK3YsH9Q73Rn91laUOmzvdN19ZjWCnxZk?=
+ =?us-ascii?Q?1SSjOW+xs9X+a7d/4EiGER3Ef2qTTisg85c8igTJhP3LLsEpRpod/aXKyRMq?=
+ =?us-ascii?Q?6wDyvhHQxGjlK+9Cv+qiKlcI9oZyBhKPwd80Lkaz17O0QzKNkzNrgjs+l7B1?=
+ =?us-ascii?Q?sVL7CPOst0eAZoxvFDT6zf6JFoHKmvNu3cMpJd/QbrRbjea0/pWtyfroI9+S?=
+ =?us-ascii?Q?dtspVozriL6/FNAN4SrAaOZ8cQW+GoB9PqXXTMQqWbVuhSF060eBySMsJrUp?=
+ =?us-ascii?Q?d8RkTnvWXVIcyYsLBn60dlbiFi7PdAHLuQUwMAAArgCuvzEElqHQ0m4aJ+v8?=
+ =?us-ascii?Q?pur2OGNt/asBRYmcoBAlOLzn5CWfj3jrN0Y3PA0ekwSCwmHyelunKN95wtM+?=
+ =?us-ascii?Q?DJQdGbcxiL+onHTcclXhh7rdo3FEjXzOaQXxcRURYG4Rce0xLO2KwsNKVHbl?=
+ =?us-ascii?Q?vXJqw2U3ZajKQ9IvlYKe+U4HFlUYpDKZyie9BEom?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a1058aca-f011-420b-1944-08dcc2934e4b
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR06MB4486.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Aug 2024 10:15:11.1035
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: x5AwaxTdZFOkjeBKOkgwdfIvu+xwrtlE3q9GFUkkSunRWRyC8AOcQ5uyihcHs1/HB9TtNFiQIUn/OdKSij1YEw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI6PR06MB7217
 
-Hi Simon,
+Make the code cleaner and avoid call clk_disable_unprepare()
 
-On 14:17 Wed 21 Aug     , Simon Horman wrote:
-> On Tue, Aug 20, 2024 at 04:36:08PM +0200, Andrea della Porta wrote:
-> > RaspberryPi RP1 is an MFD providing, among other peripherals, several
-> > clock generators and PLLs that drives the sub-peripherals.
-> > Add the driver to support the clock providers.
-> > 
-> > Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
-> 
-> ...
-> 
-> > diff --git a/drivers/clk/clk-rp1.c b/drivers/clk/clk-rp1.c
-> > new file mode 100644
-> > index 000000000000..d18e711c0623
-> > --- /dev/null
-> > +++ b/drivers/clk/clk-rp1.c
-> > @@ -0,0 +1,1655 @@
-> > +// SPDX-License-Identifier: GPL
-> 
-> checkpatch says:
-> 
-> WARNING: 'SPDX-License-Identifier: GPL' is not supported in LICENSES/...
->
+Signed-off-by: Wu Bo <bo.wu@vivo.com>
+---
+ drivers/pci/controller/dwc/pcie-armada8k.c | 29 ++++++----------------
+ 1 file changed, 7 insertions(+), 22 deletions(-)
 
-Alas, the system on which I executed checkpatch was missing git python module,
-so spdxcheck.py wasn't working properly, sorry about that. Fixed in the next
-release.
+diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
+index b5c599ccaacf..48009098fa6b 100644
+--- a/drivers/pci/controller/dwc/pcie-armada8k.c
++++ b/drivers/pci/controller/dwc/pcie-armada8k.c
+@@ -284,36 +284,25 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 
+ 	pcie->pci = pci;
+ 
+-	pcie->clk = devm_clk_get(dev, NULL);
++	pcie->clk = devm_clk_get_enabled(dev, NULL);
+ 	if (IS_ERR(pcie->clk))
+ 		return PTR_ERR(pcie->clk);
+ 
+-	ret = clk_prepare_enable(pcie->clk);
+-	if (ret)
+-		return ret;
+-
+-	pcie->clk_reg = devm_clk_get(dev, "reg");
+-	if (pcie->clk_reg == ERR_PTR(-EPROBE_DEFER)) {
+-		ret = -EPROBE_DEFER;
+-		goto fail;
+-	}
+-	if (!IS_ERR(pcie->clk_reg)) {
+-		ret = clk_prepare_enable(pcie->clk_reg);
+-		if (ret)
+-			goto fail_clkreg;
+-	}
++	pcie->clk_reg = devm_clk_get_enabled(dev, "reg");
++	if (pcie->clk_reg == ERR_PTR(-EPROBE_DEFER))
++		return -EPROBE_DEFER;
+ 
+ 	/* Get the dw-pcie unit configuration/control registers base. */
+ 	base = platform_get_resource_byname(pdev, IORESOURCE_MEM, "ctrl");
+ 	pci->dbi_base = devm_pci_remap_cfg_resource(dev, base);
+ 	if (IS_ERR(pci->dbi_base)) {
+ 		ret = PTR_ERR(pci->dbi_base);
+-		goto fail_clkreg;
++		goto out;
+ 	}
+ 
+ 	ret = armada8k_pcie_setup_phys(pcie);
+ 	if (ret)
+-		goto fail_clkreg;
++		goto out;
+ 
+ 	platform_set_drvdata(pdev, pcie);
+ 
+@@ -325,11 +314,7 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
+ 
+ disable_phy:
+ 	armada8k_pcie_disable_phys(pcie);
+-fail_clkreg:
+-	clk_disable_unprepare(pcie->clk_reg);
+-fail:
+-	clk_disable_unprepare(pcie->clk);
+-
++out:
+ 	return ret;
+ }
+ 
+-- 
+2.25.1
 
-> ...
-> 
-> > +static int rp1_clock_set_parent(struct clk_hw *hw, u8 index)
-> > +{
-> > +	struct rp1_clock *clock = container_of(hw, struct rp1_clock, hw);
-> > +	struct rp1_clockman *clockman = clock->clockman;
-> > +	const struct rp1_clock_data *data = clock->data;
-> > +	u32 ctrl, sel;
-> > +
-> > +	spin_lock(&clockman->regs_lock);
-> > +	ctrl = clockman_read(clockman, data->ctrl_reg);
-> > +
-> > +	if (index >= data->num_std_parents) {
-> > +		/* This is an aux source request */
-> > +		if (index >= data->num_std_parents + data->num_aux_parents)
-> 
-> It looks like &clockman->regs_lock needs to be unlocked here.
-> 
-> Flagged by Smatch, Sparse. and Coccinelle.
-
-Ack.
-
-Many thanks,
-Andrea
-
-> 
-> > +			return -EINVAL;
-> > +
-> > +		/* Select parent from aux list */
-> > +		ctrl = set_register_field(ctrl, index - data->num_std_parents,
-> > +					  CLK_CTRL_AUXSRC_MASK,
-> > +					  CLK_CTRL_AUXSRC_SHIFT);
-> > +		/* Set src to aux list */
-> > +		ctrl = set_register_field(ctrl, AUX_SEL, data->clk_src_mask,
-> > +					  CLK_CTRL_SRC_SHIFT);
-> > +	} else {
-> > +		ctrl = set_register_field(ctrl, index, data->clk_src_mask,
-> > +					  CLK_CTRL_SRC_SHIFT);
-> > +	}
-> > +
-> > +	clockman_write(clockman, data->ctrl_reg, ctrl);
-> > +	spin_unlock(&clockman->regs_lock);
-> > +
-> > +	sel = rp1_clock_get_parent(hw);
-> > +	WARN(sel != index, "(%s): Parent index req %u returned back %u\n",
-> > +	     data->name, index, sel);
-> > +
-> > +	return 0;
-> > +}
-> 
-> ...
