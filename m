@@ -1,243 +1,179 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2082.outbound.protection.outlook.com [40.107.21.82])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6CE3191F62
-	for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2024 18:21:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724437293; cv=none; b=OBcP0sid7lPLTcRc8GrFb6aCTEutXUSXbhIY84nPUvQgFCRLTUuZe4ROUGToeNM2w871OWIBTUKe6SWfOwl1J6UySv7nOKM2T5AJYsCelSITp1Q0pmekDzLWr4mhvzhCb/66p5/nTJYPmKg/ZXKCvarXRxNZnBUJvlghT9+lSjw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724437293; c=relaxed/simple;
-	bh=jVB1jWsmi+mWuFfri64okGdk5rpVup7RQiSy6BxP4uY=;
-	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=B3t92Fpu6FdMqXxi0RzFdKZUYlQtXZkAwfKlrynZrUV9t1/K3mUtVR6VxgI/FeRoZI53dm+rNY+bt5XbgLezoXuLZj+NWtePoTweR/YD2iYRveQ5aBCBN/God80mAIvoStwZiB9XVgdqnkljZeLBDJzf6Smwpj02VSCEyPtQm+s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=fwyGoh1x; arc=none smtp.client-ip=209.85.167.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B254191499;
+	Fri, 23 Aug 2024 18:59:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.21.82
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724439565; cv=fail; b=numpH2WnzMTivmgaNhcYzhqy3llQWD4Nb85ZLuhvWR5yiQzmQ5/4PNaDT9KE5UknZn4+V1qUKkWoVxS6qDuSjvMUPNNmrZc9+/ixTAQSWbDy4w64+6QdrDBqGuhaFQzZQHFZK6n46cBV84z3sPOkTjXd3GWTzUpM/Wo1D8uNT5w=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724439565; c=relaxed/simple;
+	bh=dduFh6vi4JiMytp7+kfzKYlqowbmjsl2yaGq08TOS+g=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=HjjDwUbtw5zRoar7wHFTHV2K3L/jsuJwy3JZKDfRSSwzUlqiLy1t9E80wycF9WBJ5za1MwXx+OzvIsjdupJS3SELVHw049+GAHQu/Ie982k2uLJI8dKUefbhRRmBtkv2WrYkQFGMs0EAnkWgwoTMUqdBGcWHk8ufb4UnO9GU+N4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=oK7ZVNsW; arc=fail smtp.client-ip=40.107.21.82
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="fwyGoh1x"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-533488ffaddso2959115e87.1
-        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2024 11:21:30 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1724437289; x=1725042089; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:date:from:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FICRI5lzPDPrWMcBNEaOg3XU9oTCEC3UNpnHrqnVnWY=;
-        b=fwyGoh1xgS7/u0NwaRSthfO/EDwxdbr8jJYUDp9TiJnvOXZFnuMnzGyYOnXDfvulxM
-         N1+FjERM3zeeOk7OTap4fCA/3HTuQB2O8HdrU+JA1UxhGl+erkyEFP2UL+Iv83vuijWI
-         ukEXgKMHPlAW3hsW3hGx/40+kqVKuBEeVc8umevlA7BcTG1yyxHAhuEXhtYmdqvfxo1X
-         9TiCmG7cbU0FotFuh9pJDtWINLvNP3+0QfBZmgapLPNB886brSFgyiX1GwfhtIXkpa3s
-         ehbDNIbm/ZGsoZga8H0AOMgOZR+vWd+ZFGoKZorqdp5luEP/3uLEDfqbtUHXqiHtV5EO
-         bBaA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724437289; x=1725042089;
-        h=in-reply-to:content-disposition:mime-version:references
-         :mail-followup-to:message-id:subject:cc:to:date:from
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=FICRI5lzPDPrWMcBNEaOg3XU9oTCEC3UNpnHrqnVnWY=;
-        b=ctGg3VeNXLxAdyGYFGK7MLG8CAnl+WD95nfdl8OVKx910qVR4jDqv+4oL3pAtGdeBF
-         BmT9aQkEllxOOUprLus787aYN6rfax+5J0pBYDLRR8vjBqa9tS3mzz8jJXUATqkNEIty
-         99oV2/eUtq4tzgA1ZWbmzQMRQrKT0Xmu4KKUrG0Z7XqhZ/ToBXzIEg+aYDaN/+qiS34B
-         hg/u9RrP6tvobRIOpj6q2B12hCKQcqrbIrPZdyKwTi+NNRZIRCLAcsP4JT7TK7pMCVzM
-         C1dc7ioLEVUmNq1v9DlbDdfV7K1FXs+6YbGFcoE0p/nLdHvhGxWlcnG0kJ6XATgKKH9z
-         UlkQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXRf5zTtgCDofrRI/KJ+o+0UQCO2o2qfmFt4oB4gziq3LJnATq3HqgobyAg515Cql//hhFojTQMx/g=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywk4HsfSKf1sMCCnmjwe9IEFVieEN7SjuedXEf1wv9IAbIv50cp
-	vmWrupd0d6jlXmvfPEuED81B1eSOo8v+gukRFi6w4qifzmf7jJgMscp35z4l+PI=
-X-Google-Smtp-Source: AGHT+IHGMmpORef4vYjLxEDkG4MSJEX/JfR9cTLIAj6QepyUfSPuFPKAHVyeeB5MysQZc4aa4suv7g==
-X-Received: by 2002:a05:6512:3e1b:b0:533:d3e:16e6 with SMTP id 2adb3069b0e04-53438784950mr2355588e87.25.1724437288497;
-        Fri, 23 Aug 2024 11:21:28 -0700 (PDT)
-Received: from localhost ([87.13.33.30])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a868f299d9asm292716766b.60.2024.08.23.11.21.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Aug 2024 11:21:28 -0700 (PDT)
-From: Andrea della Porta <andrea.porta@suse.com>
-X-Google-Original-From: Andrea della Porta <aporta@suse.de>
-Date: Fri, 23 Aug 2024 20:21:34 +0200
-To: Conor Dooley <conor@kernel.org>
-Cc: Krzysztof Kozlowski <krzk@kernel.org>,
-	Andrea della Porta <andrea.porta@suse.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="oK7ZVNsW"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=JcoRXukbvbu4qAoCx2IsR3XFNSzt+DHjHGEbmUL3/nUYo2GHHtnwSzJagLNPRzdQEwKSUY1W3OROCY58Iz0631Br+gUqlhprrwiwi4//MhXXbqGeZQmXwif3WPggjUohQw8TyznKuuyqRnKuNWME53+ImEnvg6YuQPl416RZq5E8x2rVf2sRhUUXJowvkIDCEUEliiWz4eq0cpmdY6F014tQTXjngDMmD3TPD5lna54m+zqqaB9E1eTvq6f/VjApJf26cSEseT0TnS/owFAZNc+2Z+MzVWAOYKHFd9tzT2vTxYV2JkdwzRxvANfibzPv+OSuBizVqePvlEvghRsaMA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Yao/OaFYngt2iMgvWy2pOVT34nmA2HLiSOJ4IP+fR44=;
+ b=D8Dw16OKX7MLTgKMUYFjaEtYfX5A3AlwO38GXSMV6GHckya1ZMj+vdpvYkXVaXlk5BzG5U42IS1YnZj3M7mChneTiueVmif2bEWTIwJpRRvDnUn4j/P9sK47q170SZ2k8Qrtn7kLSIv69FnhASGU1Bj8Vmu7Ylv3icSZ66rtses0VjVB5/m0ZaS51otvFMN8941eA67e/xp6/Ngq8Ygxdrf/DFK6rUSZRPkyHt1pYNnj/YWokjdnpFRY6XA4EEMdsUXsAy3sDHrGcRIPg51m8fTobswadhuxFAhOZne2+cotyRUDER89CV+P6zYIAow9NkWyuOwh2rcxyz4x2ga7Pg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=Yao/OaFYngt2iMgvWy2pOVT34nmA2HLiSOJ4IP+fR44=;
+ b=oK7ZVNsWusALnh1KUqa3Y0+fFOEIRvEmfNlqR6L3ALWqpSrb7WCd5u9UPfntnG/YfFmyj1aegsh/NkktLrheIig05ShshaBvWd2e71u+Uov+ifdByaARWpX8L8Du5LWLCYXmaRaDxwvjXTJZtG+fxU0b4cO5Mx3Nh8KCvMPhuesTsDX4YWFrke73jCcmlbJvSv6dD+9p+rHHieDIRJWSPBkNuBOoAu/IX0Oa8ekJnyIXfJ6W1MBt7dVZmMIq/nuObfVtuSWxDjt2UfOA9XuNHTQHp/2Q2gjzdcTir5tqmuuhGLflL1l2T1gMsKL+d8PR2+5HDjquCiRSYrlujRvAdA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PAXPR04MB9642.eurprd04.prod.outlook.com (2603:10a6:102:240::14)
+ by PA4PR04MB7869.eurprd04.prod.outlook.com (2603:10a6:102:c4::15) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7875.21; Fri, 23 Aug
+ 2024 18:59:12 +0000
+Received: from PAXPR04MB9642.eurprd04.prod.outlook.com
+ ([fe80::9126:a61e:341d:4b06]) by PAXPR04MB9642.eurprd04.prod.outlook.com
+ ([fe80::9126:a61e:341d:4b06%3]) with mapi id 15.20.7875.019; Fri, 23 Aug 2024
+ 18:59:12 +0000
+From: Frank Li <Frank.Li@nxp.com>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Lee Jones <lee@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Stefan Wahren <wahrenst@gmx.net>
-Subject: Re: [PATCH 01/11] dt-bindings: clock: Add RaspberryPi RP1 clock
- bindings
-Message-ID: <ZsjTLhgubiMN5BXm@apocalypse>
-Mail-Followup-To: Conor Dooley <conor@kernel.org>,
-	Krzysztof Kozlowski <krzk@kernel.org>,
-	Andrea della Porta <andrea.porta@suse.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Nicolas Ferre <nicolas.ferre@microchip.com>,
-	Claudiu Beznea <claudiu.beznea@tuxon.dev>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-gpio@vger.kernel.org, netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-arch@vger.kernel.org,
-	Lee Jones <lee@kernel.org>, Andrew Lunn <andrew@lunn.ch>,
-	Stefan Wahren <wahrenst@gmx.net>
-References: <cover.1724159867.git.andrea.porta@suse.com>
- <8d7dd7ca5da41f2a96e3ef4e2e3f29fd0d71906a.1724159867.git.andrea.porta@suse.com>
- <20240820-baritone-delegate-5711f7a0bc76@spud>
- <ZsTfoC3aKLdmFPCL@apocalypse>
- <20240821-exception-nearby-5adeaaf0178b@spud>
- <ZscGdxgoNJrifSgk@apocalypse>
- <399ff156-ffc9-4d50-8e5f-a86dc82da2fa@kernel.org>
- <20240822-refutable-railroad-a3f111ab1e3f@spud>
+	linux-pci@vger.kernel.org (open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS),
+	devicetree@vger.kernel.org (open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS),
+	linux-kernel@vger.kernel.org (open list)
+Cc: imx@lists.linux.dev
+Subject: [PATCH 1/1] dt-bindings: PCI: layerscape-pci: Add deprecated property 'num-viewport'
+Date: Fri, 23 Aug 2024 14:58:54 -0400
+Message-Id: <20240823185855.776904-1-Frank.Li@nxp.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BYAPR05CA0060.namprd05.prod.outlook.com
+ (2603:10b6:a03:74::37) To PAXPR04MB9642.eurprd04.prod.outlook.com
+ (2603:10a6:102:240::14)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240822-refutable-railroad-a3f111ab1e3f@spud>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAXPR04MB9642:EE_|PA4PR04MB7869:EE_
+X-MS-Office365-Filtering-Correlation-Id: 31c10818-8307-4547-b153-08dcc3a5acea
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|7416014|366016|52116014|376014|38350700014|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?B7SdswzHPzpr+mY7rU4rTbrPd4F84vghVXvvJzWW7R//TLQ4G3Lm59uy9yVc?=
+ =?us-ascii?Q?KgvQQvPu+PA8W1gxksMf0NdMTNRJzHmNG5Wi7EY1Q7ezhoZm6J7sXG55OaIi?=
+ =?us-ascii?Q?kLr1iZy4MOWTC0zc+NFYPxjkp6j3WhN4ROfPDAn4EpNxF+t0zAxLzNQFElEt?=
+ =?us-ascii?Q?0Jw+U7XUHS8AnxT8WBrUyH1jGcT+csY5+C6QVhyeruHLeRO6XIRSOWaK6FEm?=
+ =?us-ascii?Q?UWOP+FSq/1/wgUB7OR8q5KhllpORwr9u77TDYdhMJJ/ilhvmKNOepwtTYUSF?=
+ =?us-ascii?Q?9SiS7t2OktBfoAgNL4Xg4rVeEsZzOLvaD2i2OKrl7KWXEbspAYCjc/3l9SVG?=
+ =?us-ascii?Q?fkI+8Vs4Po7gDgYt2z/UJWK7RiOgCDdgFUFdd2wl3gN6CZTqXLenHaY99NBD?=
+ =?us-ascii?Q?ynVLN7fZL/UfTMe0umaquL2Ev1bw37Ur/RUHxmY63DneJ50k8BBqt1hmdIYT?=
+ =?us-ascii?Q?Qh7ZPDFgVxet0vw+3dkGR4PHXXYfJLKy0RWpG8FZuqSE+TroVya6AHFWbyxP?=
+ =?us-ascii?Q?TPPlVZnAGgPqBXoJiExy3VUoupOL3XJmu70fMYZHnMQJyakaLhUjeOy4ZHT/?=
+ =?us-ascii?Q?BxmHNxcRR2pT1Za6KMv1M4knkZOkXpHRzqm7QyDascw7rMQRnAp/IGDx5dTN?=
+ =?us-ascii?Q?IkJlslOceE77p4FxPgw6UppnkldvaeoYedXUrauyCaIlgGLANPZN4u0b6nWN?=
+ =?us-ascii?Q?ZFdzwZTfmHUqccwWAG+TGAqNQOnJBixSxcSAjt8jkPjLDSXrc4NyjYnDbi/k?=
+ =?us-ascii?Q?QEWJZuBPCyRX0O0LtHtB4hfbga60PD1joWIB9tmGRivkeIcXW8RdDxSV9PbW?=
+ =?us-ascii?Q?enAG6E2dvSoTHMoPNXtsK/RX0/gO3sZHODnj7FUGBWDRLRr+iiLIKJOs8FCq?=
+ =?us-ascii?Q?5SNsQUB87LJDyJ/wv2AfTGyuLFiPtn6f1W4pSmhyfRUBFA/3Gq84gxd+sXNG?=
+ =?us-ascii?Q?x/TLfS63yrxVsZSePGgPswcuPJRhn7WaucMAiqyuvh60lWL3kOCcbOGobRfF?=
+ =?us-ascii?Q?v0Hx9EHE1OcPWCNk6kiaw+i91ArB2kUZZ73ropF/3ok6PgdSa0gQyi5YxQQv?=
+ =?us-ascii?Q?1hzyCWNEPi4FACEVGu5Kxn95Msd5Cjt2fb8Ad2xFBy3PxSvgK/ml0cAlcOjr?=
+ =?us-ascii?Q?Q0VVMJdj0YEjaucRajVjhvUXyYs0YxeMdzGFN9oaz+oiNEXnA0FS5iu1nkUf?=
+ =?us-ascii?Q?PiHr583vpnLNxl9nqIUIjedAfyiqiPGhjeuMqoIg4nKK6o0ejgt3bwXldk81?=
+ =?us-ascii?Q?sB6ifwXxRoHcdy2jIIOXfOLZeEZs5/BNAqRju/ZaJun6qX2M+Kj2buS8jcCg?=
+ =?us-ascii?Q?WdACVl+l3gU6P6D5xwe1NRV3OzYHPSEJ/IH21T3PRnPBKyz6ugNdEfYbXUFY?=
+ =?us-ascii?Q?WzcT+g4A9ExyiS4EIXtv3sfiZIWd/QralnyNkz1GVGQPyfwZb6aRhpmG7EPF?=
+ =?us-ascii?Q?wATWjvz0Zh4=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB9642.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(366016)(52116014)(376014)(38350700014)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?1wgEBiXw0qr3kDA0TDE1ZBaFEbyItmrGlNPuTicNNRH4FBr6C0CdYcOtLXG6?=
+ =?us-ascii?Q?b3HHCWMQSdbgOMPUPTjymRWdFc5M5UJGJQkfn1WAqOyN8xF8sshZ6pLJgKaM?=
+ =?us-ascii?Q?8f5HiKBy16G33+Ebcc0Uh/QEHSwP9gHHbtqqAaVrrZe5ZEFzIUQa2EfN0ztu?=
+ =?us-ascii?Q?J0n6/aA/Q8aEJCwpBHxKDUK3NnscRofZ7C+hQTKMQKcOK1LyoxSKrIWFbx4H?=
+ =?us-ascii?Q?xp7B91VmFgCqk4fT1E0bI0U1/i9wWJlOHfbPQJuW3oPzeWVW2DHzb6oT4ash?=
+ =?us-ascii?Q?2CiXAk+aJY52wjf/wfbWQt2VVIgZWSCaaOWLc37B5Qt58WM8rYKR9oDdyQCu?=
+ =?us-ascii?Q?D2a3ZO5SV4WNfO8xMJvNqjMBg+5P6aWMyOt11ihR76k7HbR3xPjsch0aVvyG?=
+ =?us-ascii?Q?J4fgitIwV5IhGlMRN/1XQsZw8YYYbp/Isdq+WRmVyNBMeXbXla3zSU/+KPi9?=
+ =?us-ascii?Q?r4vojn1VLhgpXLFqDYR+flMqnC4wWLS8ZqXT2Ty0RHx/+cjQEF+6X8EuvmdG?=
+ =?us-ascii?Q?ChsMOa3SbKVtndmw0/qS3jvpHG7ctlQHY3p4GxU58V14q1fNLLzHvYUWR1zS?=
+ =?us-ascii?Q?Dst2EE77P2L+htBeRNW08JDBHsI/JryWm6+QFBcaA47uc8uruk74yU0eGQMt?=
+ =?us-ascii?Q?yIUXcmxHKKgYc+AeGi8UdV9BoQgE705eC1RC2TWI29zmvWd77VMaQKcuxznb?=
+ =?us-ascii?Q?/uhK+chdDnoBO4vwKwCiDwwhN0l+TnbkD7VaaLOE2vNTskwouE4+nJBgQ2ar?=
+ =?us-ascii?Q?l0myj5plAtEtPrnfrmTDX6F46DnPHwUH+pSrHQJ2pFU55dlqNz2+bhFSIK97?=
+ =?us-ascii?Q?57b4gGIg6tP+LBxp4BMquNs68cDwBcF25WMSfqtAB2e455OH8k/AFUAhQt/h?=
+ =?us-ascii?Q?pPard9EH2O/zfT72Hucuxyc42oyhIP+vxPgut5I3GhELXA/K95qrR+AIGlKN?=
+ =?us-ascii?Q?KjfhqiKb07/QpJ319jPjQ3lQ/5w8rEi/cEJgDBm8HsEPRwwJneowU6E1aqIQ?=
+ =?us-ascii?Q?csMmMb8JVzOBauQu/Lv1vMqWutT9N7q8xFcujBa222x0viLuix+VRL0WMbFy?=
+ =?us-ascii?Q?ugl8g4896whVQPOG1Vd2RFAp3f+t93kP0TaKUvV9iKpTsMz0iG1qnFPWiwuO?=
+ =?us-ascii?Q?LmD70NlxIwoU92qF2q7WMQP7G41L46K5LSD8E/kWRd5mjd1mObhMk2DimzG6?=
+ =?us-ascii?Q?hYtoDRFP91O1DhQhVtHqaQp0EfLLfrKqUrtjR7wQEfmZGH5aFutOkLb54ghU?=
+ =?us-ascii?Q?xGJZzrpavt6RdCTE4D0nTkrJo/N100alVpCi8UI+k4smUgZkqE/qyNkqGhMY?=
+ =?us-ascii?Q?ws/Pgb5geE73y+TNzjv4FXqMfARduWrNM6/NnrRbNq1B4LLBozXRb5Jgvm0z?=
+ =?us-ascii?Q?p6Phoz7A2JtI6mnj4GUfpYkpJcjbNTDHOXTIvyFA92rPf6xgDq+Samel0Z6o?=
+ =?us-ascii?Q?MVps/iXF3UP/whl5LZF+sW7qZDrfw7xAIdqjnwvfEvctjfng2WEQZ3b3wLQJ?=
+ =?us-ascii?Q?WXnelSTwel79YiAjMtUKMkL/N0Ogam2+pjRH5z88dPZu85eYIREH5WsMKtyf?=
+ =?us-ascii?Q?SyPWWYvmpW74RHMbbQc=3D?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 31c10818-8307-4547-b153-08dcc3a5acea
+X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB9642.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Aug 2024 18:59:12.0559
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 4c/ZdBFQMdURExluSzIlK5AnKeMc8DdMjFu3it5vEPllcwqTNbn+tdk/wo0U/jEa4UgwhiDij6T2oTgfCM/4Gg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR04MB7869
 
-Hi Conor and Krzysztof,
+Copy the 'num-viewport' property from snps,dw-pcie-common.yaml to
+fsl,layerscape-pcie.yaml to address the below warning. This is necessary
+due to historical reasons where fsl,layerscape-pcie.yaml does not
+directly reference snps,dw-pcie-common.yaml.
 
-On 17:23 Thu 22 Aug     , Conor Dooley wrote:
-> On Thu, Aug 22, 2024 at 11:52:27AM +0200, Krzysztof Kozlowski wrote:
-> 
-> > >>>>> +examples:
-> > >>>>> +  - |
-> > >>>>> +    #include <dt-bindings/clock/rp1.h>
-> > >>>>> +
-> > >>>>> +    rp1 {
-> > >>>>> +        #address-cells = <2>;
-> > >>>>> +        #size-cells = <2>;
-> > >>>>> +
-> > >>>>> +        rp1_clocks: clocks@18000 {
-> > >>>>
-> > >>>> The unit address does not match the reg property. I'm surprised that
-> > >>>> dtc doesn't complain about that.
-> > >>>
-> > >>> Agreed. I'll update the address with the reg value in the next release
-> > >>>
-> > >>>>
-> > >>>>> +            compatible = "raspberrypi,rp1-clocks";
-> > >>>>> +            reg = <0xc0 0x40018000 0x0 0x10038>;
-> > >>>>
-> > >>>> This is a rather oddly specific size. It leads me to wonder if this
-> > >>>> region is inside some sort of syscon area?
-> > >>>
-> > >>> >From downstream source code and RP1 datasheet it seems that the last addressable
-> > >>> register is at 0xc040028014 while the range exposed through teh devicetree ends
-> > >>> up at 0xc040028038, so it seems more of a little safe margin. I wouldn't say it
-> > >>> is a syscon area since those register are quite specific for video clock
-> > >>> generation and not to be intended to be shared among different peripherals.
-> > >>> Anyway, the next register aperture is at 0xc040030000 so I would say we can 
-> > >>> extend the clock mapped register like the following:
-> > >>>
-> > >>> reg = <0xc0 0x40018000 0x0 0x18000>;
-> > >>>
-> > >>> if you think it is more readable.
-> > >>
-> > >> I don't care
-> > > 
-> > > Ack.
-> > > 
-> > >>>>> +            #clock-cells = <1>;
-> > >>>>> +            clocks = <&clk_xosc>;
-> > >>>>> +
-> > >>>>> +            assigned-clocks = <&rp1_clocks RP1_PLL_SYS_CORE>,
-> > >>>
-> > >>>> FWIW, I don't think any of these assigned clocks are helpful for the
-> > >>>> example. That said, why do you need to configure all of these assigned
-> > >>>> clocks via devicetree when this node is the provider of them?
-> > >>>
-> > >>> Not sure to understand what you mean here, the example is there just to
-> > >>> show how to compile the dt node, maybe you're referring to the fact that
-> > >>> the consumer should setup the clock freq?
-> > >>
-> > >> I suppose, yeah. I don't think a particular configuration is relevant
-> > >> for the example binding, but simultaneously don't get why you are
-> > >> assigning the rate for clocks used by audio devices or ethernet in the
-> > >> clock provider node.
-> > >>
-> > > 
-> > > Honestly I don't have a strong preference here, I can manage to do some tests
-> > > moving the clock rate settings inside the consumer nodes but I kinda like
-> > > the curernt idea of a centralized node where clocks are setup beforehand.
-> > > In RP1 the clock generator and peripherals such as ethernet are all on-board
-> > > and cannot be rewired in any other way so the devices are not standalone
-> > > consumer in their own right (such it would be an ethernet chip wired to an
-> > > external CPU). But of course this is debatable, on the other hand the current
-> > > approach of provider/consumer is of course very clean. I'm just wondering
-> > > wthether you think I should take action on this or we can leave it as it is.
-> > > Please see also below.
-> > > 
-> > >>> Consider that the rp1-clocks
-> > >>> is coupled to the peripherals contained in the same RP1 chip so there is
-> > >>> not much point in letting the peripherals set the clock to their leisure.
-> > >>
-> > >> How is that any different to the many other SoCs in the kernel?
-> > > 
-> > > In fact, it isn't. Please take a look at:
-> > >  
-> > > arch/arm/boot/dts/st/stm32mp15xx-dhcom-som.dtsi
-> > > arch/arm/boot/dts/ti/omap/omap44xx-clocks.dtsi
-> > > arch/arm/boot/dts/ti/omap/dra7xx-clocks.dtsi
-> > > arch/arm/boot/dts/nxp/imx/imx7d-zii-rpu2.dts
-> > > 
-> > > and probably many others... they use the same approach, so I assumed it is at
-> > > least reasonable to assign the clock rate this way.
-> > 
-> > Please do not bring some ancient DTS, not really worked on, as example.
-> > stm32 could is moderately recent but dra and omap are not.
-> 
-> Right, there may be some examples like this, but there are many many
-> other SoCs where clocks are also not re-wireable, that do not. To me
-> this line of argument is akin to the clock driver calling enable on all
-> of the clocks because "all of the peripherals are always on the SoC".
-> The peripheral is the actual consumer of the clock that quote-unquote
-> wants the particular rate, not the clock provider, so having the rate
-> assignments in the consumers is the only thing that makes sense to me.
-> 
-> 
+/arch/arm64/boot/dts/freescale/fsl-ls1012a-frwy.dtb: pcie@3400000: Unevaluated properties are not allowed ('num-viewport' was unexpected)
 
-I'll try to cook something that move the rate definition to the consumer
-side, then.
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+ .../devicetree/bindings/pci/fsl,layerscape-pcie.yaml      | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-Many thanks,
-Andrea
+diff --git a/Documentation/devicetree/bindings/pci/fsl,layerscape-pcie.yaml b/Documentation/devicetree/bindings/pci/fsl,layerscape-pcie.yaml
+index 2f79551f6083c..ea7aa8c83a553 100644
+--- a/Documentation/devicetree/bindings/pci/fsl,layerscape-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/fsl,layerscape-pcie.yaml
+@@ -71,6 +71,14 @@ properties:
+     minItems: 1
+     maxItems: 2
+
++  num-viewport:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    deprecated: true
++    description:
++      Number of outbound view ports configured in hardware. It's the same as
++      the number of outbound AT windows.
++    maximum: 256
++
+ required:
+   - compatible
+   - reg
+--
+2.34.1
+
