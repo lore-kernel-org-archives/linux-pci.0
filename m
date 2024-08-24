@@ -1,68 +1,65 @@
-Received: from mail-ot1-f43.google.com (mail-ot1-f43.google.com [209.85.210.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248F315E97
-	for <linux-pci@vger.kernel.org>; Sat, 24 Aug 2024 02:19:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64A27EAD0;
+	Sat, 24 Aug 2024 04:26:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724466000; cv=none; b=u/pXoGumNG3GR3FZ3+2WeSwi0jeGQvrj8kdZtQWCJHqbu/H2ivEQQOkA/+YVU6ujdMru5aCpLyZfTyUCs3Q1pvUSaHTxAgLcDdfYr4JXtzHH8MB8QYOw7NN5JMkV5/8v/pZYEQvG1zzRzt+JXZuV226DtX/8DNXJeTt/Gc6x9Q4=
+	t=1724473602; cv=none; b=qov95gxWrHfKlxo3KvAtSTsmHl9N/KrdvUulB+jMYXyTrjrPnqQk1hlrXshIDyhXT9Un/1IqupwgsEpTGcGSMxyFQxitk9v5YoSRxX3J8uJ1QnfL8cr6FZ9cBEBvZyDatcTj/N9Qk1c73GOVfYgTK7HMC3PPin7clTaMoytez3E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724466000; c=relaxed/simple;
-	bh=9sQ6JCFssdZGtmsYy5s9QY2cnq9zziz23TvGEam7rTE=;
+	s=arc-20240116; t=1724473602; c=relaxed/simple;
+	bh=40GlEPNurYWTPJrHrKMNmjjvmAN4H33EaCA2SPTdpiw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tn/5KkNXiXa8H+EMqf5SHyA9x+D3AnehrrTMsvfQdl19lEnGCQnplpLLcQxD8zyl1KhzNesiLYq3kFC+tBHBf2xv+ojU21pC/dOYE7aRbVTGBsF5Mg9v7FoCpQ/IFhhsfs8aXhXnsUBsVUearKnKKCj7zZT/rJCzFcClgdg3mMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=StZa89Wu; arc=none smtp.client-ip=209.85.210.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=t2XWqmy92POZQSQRfMv0sFyBCkS72ADoB6MbI589z74kTBl7XswgLOyVXoSImTvoxsp3guDvZ3cWC/Q2ojgVGAs1oX+GuEmAG6nLBzSfRDYMXvCi8MawpurgOKcS6QrnUskkM2XgxHR9GjUufIDgvgZDdTHJ13sIUz0devq/sHE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lg9Tf/ws; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="StZa89Wu"
-Received: by mail-ot1-f43.google.com with SMTP id 46e09a7af769-70b3b62025dso2134003a34.0
-        for <linux-pci@vger.kernel.org>; Fri, 23 Aug 2024 19:19:58 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1724465998; x=1725070798; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=q9g7D4EjyQqlZkVFhMkSsFS8fbMF1DEOst87SjuDKg8=;
-        b=StZa89WucGiiLoyhYGdUbeWVd7glncTNSANrKtAH/CV1L7liBk3WFBRi9JYbrkoNuS
-         ulUir6qtXnuqN+4JgbLqWbWpDUsB7Nq/AHtiPCGEqRfzUt1VXCdaCsznj2v9hnyFT+7O
-         MYVbeVeTXsgWDtYiA6E/HwQje6eYUEXhfdJdFd8PGa/VRiCthMOCy5hwD/ZjnlgoVy2Q
-         w4LpYQTjBI2FXpfaFxcMuEhCydECb+R/s7m+jBAot8hz+MsNPLwu5U1Y7CHVVyaKbRNk
-         kF8l8O3wj8AavXeOUh7fKrxfqg5HmTXKnYVGbRXM01GUX9rEvUbuGY838R2llfv51aZp
-         FUng==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1724465998; x=1725070798;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=q9g7D4EjyQqlZkVFhMkSsFS8fbMF1DEOst87SjuDKg8=;
-        b=YD3AD7x59cYQ8dtzzoSwb59jody8RSlErDjNvGxAySZ+2IobF1U9q8Wxzs+lIrXYo5
-         oYqpVN7rKft2Gqf9lD/DEf4BIG8GOXoR5uVqqreq2XChMojv5M1zNktA6HXOQZwSNXzb
-         TtCWlKsW5MCkZjWLQ+2dOxf72PmMWd1IGNOD3AGPUH5kzOBXVMXG4EPlroT+ABx4M2Nq
-         KhUGHdK20JFxFPYkMKiSj8B7XpbHDBYVf9ax8ypU7FDVFaxSEAD8XLAsRCsXu5ogM7bQ
-         qw3H6GmLo5DFzBPnITeQJg/gKu+uK4JObXTEnHiMTCjg6VrPES238+EK0z4PsEuf6+nD
-         yqwA==
-X-Forwarded-Encrypted: i=1; AJvYcCWUMzT51IiUFK23JIoTjSofGjv1nbATRGTNmtyyfEDaw2D0Zb+reEBQCHjamhyGpgRZmrkA3RSvvvo=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwP0hLRhrBnLPsvCPBXHS3mLrwlT11icAA4GW6zwLrop4qc3Q2l
-	poX/FumuQ5Ln3HusXrC1AO5BpF+dUYVHn5DQ9fW2wpll2GrEvkSIMopz1cj+Fg==
-X-Google-Smtp-Source: AGHT+IGu8hxs5nyQH8QxjA1xEWXYw+NH7bSGHW27OjR19bep/VZUDM94F+d3I21JXE3DZ7Uw4A37gQ==
-X-Received: by 2002:a05:6830:6a8f:b0:709:3e0c:6735 with SMTP id 46e09a7af769-70e0eb2f327mr4524723a34.17.1724465998015;
-        Fri, 23 Aug 2024 19:19:58 -0700 (PDT)
-Received: from thinkpad ([120.60.50.97])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2d61968ecc7sm4601882a91.54.2024.08.23.19.19.54
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 23 Aug 2024 19:19:57 -0700 (PDT)
-Date: Sat, 24 Aug 2024 07:49:46 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lg9Tf/ws"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724473600; x=1756009600;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=40GlEPNurYWTPJrHrKMNmjjvmAN4H33EaCA2SPTdpiw=;
+  b=lg9Tf/wsmK4/ioVGMljUcyC78GBlP7sHrhd2QwHpA/+Qb/rvbFf2Xs1d
+   7XCQkv38bd3OfiNVcMyWtfXZ3dBAmwStaBzoyyF1+Sfmvvjvz/39j1Nxl
+   fpHOHI1+DZmqlLKE1h6sxBc3m1v5ciOX9GGUTtjVotNWlMtHWpk3mmFb+
+   76FMcynC69a43N6jt7OlR6WcFtTUXdq1O8De/nBYEwgHiYKS+pdqxkBZP
+   PFRzv72SGI9KxYnkUkKRFRhdDvQM6BxF9NIyEahv0bY4TCkj7c95nWF2h
+   Y4TSU22cZgKKXfjQFYBRxJ66mbArh1oZ6A+UEs/ht/2V7ZG3sJXFaAwLm
+   Q==;
+X-CSE-ConnectionGUID: aNIVscdIT2eCHjZq3vi+Cw==
+X-CSE-MsgGUID: IWSzamgvTuiYHmJN65sHeQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11173"; a="13188269"
+X-IronPort-AV: E=Sophos;i="6.10,172,1719903600"; 
+   d="scan'208";a="13188269"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Aug 2024 21:26:39 -0700
+X-CSE-ConnectionGUID: dqpdH3fxQnq9MiSUYdVs8Q==
+X-CSE-MsgGUID: gPFp6PdTSbKwUx3ojwzGwg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,172,1719903600"; 
+   d="scan'208";a="66938134"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orviesa004.jf.intel.com with ESMTP; 23 Aug 2024 21:26:37 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1001)
+	id 631CA27C; Sat, 24 Aug 2024 07:26:35 +0300 (EEST)
+Date: Sat, 24 Aug 2024 07:26:35 +0300
+From: Mika Westerberg <mika.westerberg@linux.intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	lpieralisi@kernel.org, robh@kernel.org, bhelgaas@google.com,
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] PCI: qcom-ep: Do not enable resources during probe()
-Message-ID: <20240824021946.s5jbzvysjxl5dcvt@thinkpad>
-References: <20240823044133.b27cgioefsg4sjlr@thinkpad>
- <20240823220436.GA387844@bhelgaas>
+Cc: Esther Shimanovich <eshimanovich@chromium.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rajat Jain <rajatja@google.com>,
+	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+	Mario Limonciello <mario.limonciello@amd.com>,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	iommu@lists.linux.dev, Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v4] PCI: Detect and trust built-in Thunderbolt chips
+Message-ID: <20240824042635.GM1532424@black.fi.intel.com>
+References: <20240823-trust-tbt-fix-v4-1-c6f1e3bdd9be@chromium.org>
+ <20240823211254.GA385934@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -71,93 +68,66 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240823220436.GA387844@bhelgaas>
+In-Reply-To: <20240823211254.GA385934@bhelgaas>
 
-On Fri, Aug 23, 2024 at 05:04:36PM -0500, Bjorn Helgaas wrote:
-> On Fri, Aug 23, 2024 at 10:11:33AM +0530, Manivannan Sadhasivam wrote:
-> > On Thu, Aug 22, 2024 at 12:31:33PM -0500, Bjorn Helgaas wrote:
-> > > On Thu, Aug 22, 2024 at 09:10:25PM +0530, Manivannan Sadhasivam wrote:
-> > > > On Thu, Aug 22, 2024 at 10:16:58AM -0500, Bjorn Helgaas wrote:
-> > > > > On Thu, Aug 22, 2024 at 12:18:23PM +0530, Manivannan Sadhasivam wrote:
-> > > > > > On Wed, Aug 21, 2024 at 05:56:18PM -0500, Bjorn Helgaas wrote:
-> > > > > > ...
-> > > > > 
-> > > > > > > Although I do have the question of what happens if the RC deasserts
-> > > > > > > PERST# before qcom-ep is loaded.  We probably don't execute
-> > > > > > > qcom_pcie_perst_deassert() in that case, so how does the init happen?
-> > > > > > 
-> > > > > > PERST# is a level trigger signal. So even if the host has asserted
-> > > > > > it before EP booted, the level will stay low and ep will detect it
-> > > > > > while booting.
-> > > > > 
-> > > > > The PERST# signal itself is definitely level oriented.
-> > > > > 
-> > > > > I'm still skeptical about the *interrupt* from the PCIe controller
-> > > > > being level-triggered, as I mentioned here:
-> > > > > https://lore.kernel.org/r/20240815224735.GA57931@bhelgaas
-> > > > 
-> > > > Sorry, that comment got buried into my inbox. So didn't get a chance
-> > > > to respond.
-> > > > 
-> > > > > tegra194 is also dwc-based and has a similar PERST# interrupt but
-> > > > > it's edge-triggered (tegra_pcie_ep_pex_rst_irq()), which I think
-> > > > > is a cleaner implementation.  Then you don't have to remember the
-> > > > > current state, switch between high and low trigger, worry about
-> > > > > races and missing a pulse, etc.
-> > > > 
-> > > > I did try to mimic what tegra194 did when I wrote the qcom-ep
-> > > > driver, but it didn't work. If we use the level triggered interrupt
-> > > > as edge, the interrupt will be missed if we do not listen at the
-> > > > right time (when PERST# goes from high to low and vice versa).
-> > > > 
-> > > > I don't know how tegra194 interrupt controller is wired up, but IIUC
-> > > > they will need to boot the endpoint first and then host to catch the
-> > > > PERST# interrupt.  Otherwise, the endpoint will never see the
-> > > > interrupt until host toggles it again.
-> > > 
-> > > Having to control the boot ordering of endpoint and host is definitely
-> > > problematic.
-> > > 
-> > > What is the nature of the crash when we try to enable the PHY when
-> > > Refclk is not available?  The endpoint has no control over when the
-> > > host asserts/deasserts PERST#.  If PERST# happens to be asserted while
-> > > the endpoint is enabling the PHY, and this causes some kind of crash
-> > > that the endpoint driver can't easily recover from, that's a serious
-> > > robustness problem.
+On Fri, Aug 23, 2024 at 04:12:54PM -0500, Bjorn Helgaas wrote:
+> On Fri, Aug 23, 2024 at 04:53:16PM +0000, Esther Shimanovich wrote:
+> > Some computers with CPUs that lack Thunderbolt features use discrete
+> > Thunderbolt chips to add Thunderbolt functionality. These Thunderbolt
+> > chips are located within the chassis; between the root port labeled
+> > ExternalFacingPort and the USB-C port.
+> 
+> Is this a firmware defect?  I asked this before, and I interpret your
+> answer of "ExternalFacingPort is not 100% accurate all of the time" as
+> "yes, this is a firmware defect."  That should be part of the commit
+> log and code comments.
+> 
+> We (of course) have to work around firmware defects, but workarounds
+> need to be labeled as such instead of masquerading as generic code.
+> 
+> > These Thunderbolt PCIe devices should be labeled as fixed and trusted,
+> > as they are built into the computer. Otherwise, security policies that
+> > rely on those flags may have unintended results, such as preventing
+> > USB-C ports from enumerating.
 > > 
-> > The whole endpoint SoC crashes if the refclk is not available during
-> > phy_power_on() as the PHY driver tries to access some register on Dmitry's
-> > platform (I did not see this crash on SM8450 SoC though).
+> > Detect the above scenario through the process of elimination.
 > > 
-> > If we keep the enable_resources() during probe() then the race condition you
-> > observed above could apply. So removing that from probe() will also make the
-> > race condition go away,
+> > 1) Integrated Thunderbolt host controllers already have Thunderbolt
+> >    implemented, so anything outside their external facing root port is
+> >    removable and untrusted.
+> > 
+> >    Detect them using the following properties:
+> > 
+> >      - Most integrated host controllers have the usb4-host-interface
+> >        ACPI property, as described here:
+> > Link: https://learn.microsoft.com/en-us/windows-hardware/drivers/pci/dsd-for-pcie-root-ports#mapping-native-protocols-pcie-displayport-tunneled-through-usb4-to-usb4-host-routers
+> > 
+> >      - Integrated Thunderbolt PCIe root ports before Alder Lake do not
+> >        have the usb4-host-interface ACPI property. Identify those with
+> >        their PCI IDs instead.
+> > 
+> > 2) If a root port does not have integrated Thunderbolt capabilities, but
+> >    has the ExternalFacingPort ACPI property, that means the manufacturer
+> >    has opted to use a discrete Thunderbolt host controller that is
+> >    built into the computer.
 > 
-> Example:
-> 
->   1) host deasserts PERST#
->   2) qcom-ep handles PERST# IRQ
->   3) qcom_pcie_ep_perst_irq_thread() calls qcom_pcie_perst_deassert()
->   4) host asserts PERST#, Refclk no longer valid
->   5) qcom_pcie_perst_deassert() calls qcom_pcie_enable_resources()
->   6) qcom_pcie_enable_resources() enables PHY
-> 
-> I don't see what prevents the PERST# assertion at 4.  It sounds like
-> the endpoint SoC crashes at 6.
+> Unconvincing.  If a Root Port has an external connector, is it
+> impossible to plug in a Thunderbolt device to that connector?  I
+> assume the wires from a Root Port could be traces on a PCB to a
+> soldered-down Thunderbolt controller, OR could be wires to a connector
+> where a Thunderbolt controller could be plugged in.  How could we tell
+> the difference?
 
-IDK why host would quickly assert the PERST# after deasserting during probe()
-unless someone intentionally does that from host side.
+You are talking about soldered down controller vs. add-in card (e.g PCIe
+slot)? We don't really distinguish those. The whole ExternalFacingPort
+and the like IOMMU protection is meant for exposed hot-pluggable ports
+on your laptop such as Type-C where a malicious charger for instance may
+have a PCIe endpoint that steals your secrets. Not something that
+requires dissasembly, opening the system cover and plugging in the
+controller, connecting all the wires etc.
 
-If that happens then there is a possibility of the endpoint SoC crash, but I'm
-not sure how we can avoid that.
-
-But what this patch fixes is a crash occuring in a sane scenario:
-
-1) Endpoint boots first (no refclk from host)
-2) Probe() calls qcom_pcie_enable_resources() --> Crash
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+(We have also an additional "line of defence" in Linux because we do not
+automatically create any PCIe tunnels and this is something user can
+even disable completely [there is a flip in GNOME settings that disables
+PCIe tunneling completely, which can be turned on whenever you are
+travelling for instance]).
