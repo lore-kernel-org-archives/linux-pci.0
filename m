@@ -1,190 +1,221 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47DD42D052;
-	Mon, 26 Aug 2024 07:55:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724658914; cv=none; b=C8RB2WqBgvtGzw9cajE4ObpkChubjypLLvg4sg/lCDG0fM8elENxk74x9q0zVDJumh6HH90HbbdIJwgH/Wm8k0fsjCbQpFEFhck97ARybm8t3SepQcPDMz2Dt2YF8KkxVZIf+oTZS6dP0eB7AtXl+lS93Su3WczSf6qoL7LCcsU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724658914; c=relaxed/simple;
-	bh=jJiYC1g7DDJ2SI7n4ZqSQeOupm9HEWP+pCn4FZGr1Vc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ErCntOiqEDbJBMQqsFdRvevLdtLUZIUn7FEItOXB5+J3hBcRGcZj+WfTpX784R4JeAGXiGBWaPULiSZGXsOT4iV3x2jgo9zCk86Q6gVdcTUoI6kyLVCi5kfnNW10jBo6cRVg1npCFYO8W/qxAkf4jTw2QbeYxRq2mOHmXqC1+uo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C4CFC8CDD4;
-	Mon, 26 Aug 2024 07:55:08 +0000 (UTC)
-Date: Mon, 26 Aug 2024 13:25:05 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Shashank Babu Chinta Venkata <quic_schintav@quicinc.com>
-Cc: agross@kernel.org, andersson@kernel.org, konrad.dybcio@linaro.org,
-	mani@kernel.org, quic_msarkar@quicinc.com,
-	quic_kraravin@quicinc.com,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	Serge Semin <fancer.lancer@gmail.com>,
-	Niklas Cassel <cassel@kernel.org>,
-	Conor Dooley <conor.dooley@microchip.com>,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v5 2/3] PCI: qcom: Add equalization settings for 16 GT/s
-Message-ID: <20240826075505.zg3tr7abs5rotkjo@thinkpad>
-References: <20240821170917.21018-1-quic_schintav@quicinc.com>
- <20240821170917.21018-3-quic_schintav@quicinc.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D722A4A2C;
+	Mon, 26 Aug 2024 08:39:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.14
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1724661601; cv=fail; b=F6CwzCcBKQ1wCSQGSzjLRiqRrS0DSj7T0g9l6yT/Y+LIkSFqgS+bM+LUZ4LMfXtuJWtLJnzDKQC9laoPB/+6x4Gaa/Yi8SCDyuB8oFpJ0aQms0KMmzlVNG8msLOgcktHnWrgwQDKpQajOC00oW682Wve/BBEuVi8+ENOvBqB9ps=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1724661601; c=relaxed/simple;
+	bh=oIu0Bt6ERsfpwrXT+iaAmFEXoVoshZQlFa34yBrQs+w=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=TyL0kDLwoVIaq+oiB79P8fNr9Fqx+YdNbt08nKsILtbtBDAIjVEVwj4oEeCwykKf3YWSDP+T8A7oTm8A4WTATbMkkpa2WvQW0cDJk3Ngkhlk8h00IyAW4zVklN+ldT35p7inn+KAKNtOxW9p3SjFpi1/mnXeEpnkE8nzuffSOJs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=XksPr7Bx; arc=fail smtp.client-ip=198.175.65.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="XksPr7Bx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724661600; x=1756197600;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=oIu0Bt6ERsfpwrXT+iaAmFEXoVoshZQlFa34yBrQs+w=;
+  b=XksPr7Bxof6lC4s0PeSCoLJ85DnHwTA98LTjadc0mwAhaMyz0LkUJB5N
+   6APY6KUlEhyry4OlOUjdcZqBGDs3KRzdcBK478wSZSmZyRc58ch5smgIm
+   BSbKtphd8fi6gJSTHR5+Cpq3CETrdYkKGeEySFbd0dRou5l4jAb7ub2Yt
+   j5tMj/YL1bK4i9fnnyyPBujFv9skM9kYWTXSPUwxFX2l2MNbTccMeTPh4
+   fu0oR1zx9tEcyl4YLTbZ6BurODWMlJimypX72gQbxoVd7O8f2W9OrBePV
+   Y86apiPcC4F9dmX7cnjf1fnieh21j64tTVuPDWEA9mVXazHJ9gNIRyEri
+   w==;
+X-CSE-ConnectionGUID: MD4KEUKNTPmzcVxHIPaMfg==
+X-CSE-MsgGUID: E1En8/2dTQKGCqRgkPS38A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11175"; a="26864388"
+X-IronPort-AV: E=Sophos;i="6.10,177,1719903600"; 
+   d="scan'208";a="26864388"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2024 01:39:40 -0700
+X-CSE-ConnectionGUID: ZPYbS3bWRDqqH0EPyNfBZA==
+X-CSE-MsgGUID: 79m0dDLpQbezDvDLaCUSLA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,177,1719903600"; 
+   d="scan'208";a="67340645"
+Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
+  by orviesa005.jf.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 26 Aug 2024 01:39:34 -0700
+Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Mon, 26 Aug 2024 01:39:33 -0700
+Received: from fmsmsx611.amr.corp.intel.com (10.18.126.91) by
+ fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Mon, 26 Aug 2024 01:39:33 -0700
+Received: from fmsedg602.ED.cps.intel.com (10.1.192.136) by
+ fmsmsx611.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39 via Frontend Transport; Mon, 26 Aug 2024 01:39:33 -0700
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (104.47.55.48) by
+ edgegateway.intel.com (192.55.55.71) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Mon, 26 Aug 2024 01:39:32 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KCy+tZ4UkWw2p2np9CwqI5qsdEoqALXYwhEqmbYSWdOBMjelWGndxwzJGgfW6GXw1h0+lwLD1Zz/ybW8jEm4pZQQYd3bxu3RF9i1tVOdG4UMpEo2NvlwW1X5mcququAEPxN20oHfnCbpZCHhzXPQLvjraTiF2BdZ2enJr0GEMCT3YxDJAAS8y4G1PM8jCnE6vZFUC6EMQgS4MbaMyDW6NMaxDyrIw8e0Rqh4KfqKNK2FcBpDoW2UkgraVxfK1YSbLzhNTSp5woCZRxpWft4Geu3y0U2B24572abYK7sHKx3fVLguLE2S7Ri78MOl9K0bLxSUw7or9n7mCgF9CUruWg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=oIu0Bt6ERsfpwrXT+iaAmFEXoVoshZQlFa34yBrQs+w=;
+ b=pRl4vXoEXhnJVpT2KGb5Bk6N65IDYb58WX1/MrUeNp0PsUJmCnMrSso3e+X3rrO5WSynhPuule5PX2LLHgueUvW3SLUPA4GNUTK9TqTC1pzrlQ4Qe5jGoXhN/y3kgglya3C5/iRMbCboIEyK9jlcy5so49LGqZgW8p7NPeRoJJCeIeokwTE93NmsOqkn3Rd0ru0KFozSo/RTmp0C66GEpY8U8mZQ1T/Y1Gc4l8GNSTilKX4uZ+BWbPTl4FmgAv6Qad1EOkjls85qHuHKofXWh2yIHwlInRsXBIDWR4VxdbBp5pzRu5+B7WTxas8+lqZ8WkpugR7oIamyz9OizKO4Ug==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com (2603:10b6:408:135::18)
+ by SN7PR11MB7668.namprd11.prod.outlook.com (2603:10b6:806:341::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.7897.24; Mon, 26 Aug
+ 2024 08:39:25 +0000
+Received: from BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::b576:d3bd:c8e0:4bc1]) by BN9PR11MB5276.namprd11.prod.outlook.com
+ ([fe80::b576:d3bd:c8e0:4bc1%3]) with mapi id 15.20.7897.021; Mon, 26 Aug 2024
+ 08:39:25 +0000
+From: "Tian, Kevin" <kevin.tian@intel.com>
+To: Alexey Kardashevskiy <aik@amd.com>, "kvm@vger.kernel.org"
+	<kvm@vger.kernel.org>
+CC: "iommu@lists.linux.dev" <iommu@lists.linux.dev>,
+	"linux-coco@lists.linux.dev" <linux-coco@lists.linux.dev>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>, "Suravee
+ Suthikulpanit" <suravee.suthikulpanit@amd.com>, Alex Williamson
+	<alex.williamson@redhat.com>, "Williams, Dan J" <dan.j.williams@intel.com>,
+	"pratikrajesh.sampat@amd.com" <pratikrajesh.sampat@amd.com>,
+	"michael.day@amd.com" <michael.day@amd.com>, "david.kaplan@amd.com"
+	<david.kaplan@amd.com>, "dhaval.giani@amd.com" <dhaval.giani@amd.com>,
+	Santosh Shukla <santosh.shukla@amd.com>, Tom Lendacky
+	<thomas.lendacky@amd.com>, Michael Roth <michael.roth@amd.com>, "Alexander
+ Graf" <agraf@suse.de>, Nikunj A Dadhania <nikunj@amd.com>, Vasant Hegde
+	<vasant.hegde@amd.com>, Lukas Wunner <lukas@wunner.de>, Jason Gunthorpe
+	<jgg@nvidia.com>, "david@redhat.com" <david@redhat.com>
+Subject: RE: [RFC PATCH 12/21] KVM: IOMMUFD: MEMFD: Map private pages
+Thread-Topic: [RFC PATCH 12/21] KVM: IOMMUFD: MEMFD: Map private pages
+Thread-Index: AQHa9WDSA4/jzf2jak2pyUws2LsQ4bI5OEgw
+Date: Mon, 26 Aug 2024 08:39:25 +0000
+Message-ID: <BN9PR11MB5276D14D4E3F9CB26FBDE36C8C8B2@BN9PR11MB5276.namprd11.prod.outlook.com>
+References: <20240823132137.336874-1-aik@amd.com>
+ <20240823132137.336874-13-aik@amd.com>
+In-Reply-To: <20240823132137.336874-13-aik@amd.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: BN9PR11MB5276:EE_|SN7PR11MB7668:EE_
+x-ms-office365-filtering-correlation-id: 7ac2514f-9cbb-4dba-9c44-08dcc5aa978c
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|7416014|376014|366016|38070700018;
+x-microsoft-antispam-message-info: =?us-ascii?Q?3q0POfcmGHCTOGAZzySsNXtXgiPVB7rHjMbNx4NFd+1BPLZQA/Ru34AwgPYR?=
+ =?us-ascii?Q?c0AQcr94P5Oc9lNMrlX2TA0GCTPcYHrloYZdZIyN48xnuwl61MEuvJFcvdHk?=
+ =?us-ascii?Q?N1NWCFcFsjKz8agbaQ/6oppUaj4luZf16XgMbxOQZ4ehBx3oD0W9sfqVlql5?=
+ =?us-ascii?Q?MuCtGzIv1AnfZ/eZBY9xld2xyzHtDVWLbbfT2bU1PNcp8shglvXMDukq6Hvp?=
+ =?us-ascii?Q?MIrwJ1H0ddWNA10wJUUi/pe5NAx2Kh9wZOSY6/ke9Oc5P9FUg262zaRHtfyb?=
+ =?us-ascii?Q?uvxiF+pRnjAENWFOoo7x+PbL3fGzcgQmNFeMNoD1CvfTHKP0HXDyY10aoH5K?=
+ =?us-ascii?Q?hTvDYOP+UgIn1TGcP+wpDXDjZvG79J0bB/w7SwBq1oLBQ3iZunVqWY3ztBIt?=
+ =?us-ascii?Q?CuxsXRt/xhysar5xvLmkHIjckeVzLrgt1cq4Wvc51qh24NHrFPBqF1To10By?=
+ =?us-ascii?Q?JZNR/N5LNHxqaKcL8yLAma17nEXE0jSn4nZ69ERAaAgkgzhUZNQ4rqMboyzd?=
+ =?us-ascii?Q?iJNFSHqVUIgDs8UysVVYjtnkrrVS8jpcglJnftRmAAqdhdO22AQ4n8R6v7Oq?=
+ =?us-ascii?Q?5MrY0/z6WJXzISxgKd57aDIm1QduklPDtcNog+sSLwzcHQ0eVnhHPGbi2bUh?=
+ =?us-ascii?Q?DrUJyDT8FzOd3woYDF50BAr8yTHgmWCjrrc4wEH8VE3fugZK7pDc1yN0+OId?=
+ =?us-ascii?Q?x7fvxscmXZTdGKX4wHaosMxAIi+Zr5pMGA/FGiPMC7XyGrmiKopHjK/BnhZl?=
+ =?us-ascii?Q?TN0RArnKXThHhZWLgbmUGJTa048CWoBOtKp+9ZWnIw5APlxRzNLClmQTgfGS?=
+ =?us-ascii?Q?nqBF2JpNgI7q2MDINTUg9I2yV+6r9dA5YP6VqbZuNvp1TQBuyYfL19xiwQrj?=
+ =?us-ascii?Q?LvCwwl5uteZsKVm09kD3dBV6w+zfQ88Vc5H6TCEi8G2PR1vJR+UYBu+AHOOP?=
+ =?us-ascii?Q?RGS1LW5PqbC2hf/x5n9Ac/oLHfF3Cfg7Rh1czyDOjjLZ5UGFuWuBTvXdoYJJ?=
+ =?us-ascii?Q?lR38IFyfsVSUkCXVNj5KQLPkOpqY4YReYyiWA9TL6cClzL9r+sFqBK1s/Knj?=
+ =?us-ascii?Q?5LJA2qcY/Qo1OaQ0Alywdr574ti1e8MwBZwa8dKiSEpRtxoXoJTJKcE6HLIL?=
+ =?us-ascii?Q?JjceIBV61slEftvbIE9Tw+KPIXugzDfoT93ERyAPPxIUzb7PoMPo7Gw7TzVl?=
+ =?us-ascii?Q?jhVwfsIJnNO5FNuaL+cwibEBeSkd3PFPWgKxJcZaYVJ/R0T4qs9b2e010fj6?=
+ =?us-ascii?Q?H06BXPIwUZ8rwL5Ch8MGoJg8wAEsgLSAFA5haVwuvplDtxRuVWEfStPH2vT2?=
+ =?us-ascii?Q?h3K+7c8RQIgVzPcD7H3w7zKj78M40XtqgMfeTlkLS6QHy4dQNgsbw2L8Fa73?=
+ =?us-ascii?Q?3SHvEKjKYJlomRxGWqzuZQLNCvVgHkiIR0qbn7eLlPQ0HxiplQ=3D=3D?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BN9PR11MB5276.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(366016)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?us-ascii?Q?BkY9Sy6BwuR8t6ELxb/8HpkXwX1cCK+mXGZ0Cngl/S34/IBrVGewWWa1+cS+?=
+ =?us-ascii?Q?2T1K7w/0vaXVRBzWz2bDouuWQIMrueqqkKz5ZWg4q7Zqm1Qs5fw8vBmnNt99?=
+ =?us-ascii?Q?ihMTO+DqrxM9NF79j7Rdl7E6MTB/7m8bvM5Pvxil+EG9yP2yZazA3wji2PlK?=
+ =?us-ascii?Q?W66uB77W/rJdPnzHKcvbullAFVCjbTFodaGCd1vXd0uNGnQdb3i7mNFDYL0y?=
+ =?us-ascii?Q?ncaQcXJlKfwu/2c3+0ESgFJGCeA+QNnO5gVWKWSME9nPG3VH9rm1JXI5oVEL?=
+ =?us-ascii?Q?qSkBJAfMUMZ9G8qcghBSilNcOCPj88nUwI5g8FW397PKxuRHIijpEguwyCLI?=
+ =?us-ascii?Q?qy17q9mYBOyyj1/roMm+9OTd6EpewGUkC709S9EvMpOXJn3ZRn85lJ593pDt?=
+ =?us-ascii?Q?r1ukMYx2hv5UieqcCTNfRBphxNwQkZXIaa8QpdKuN4+IFc8f/UY9gZnGFcwg?=
+ =?us-ascii?Q?5XpBr0v2O9D293cDJ7YPreTIeECfa11vtjqclukPci5j/IlEbiNR1cV5TEFv?=
+ =?us-ascii?Q?Zbl5AUGbbj/di0U39xHGddi+QpUqV2fos432uOhs+loIcPTKI/jDB34rIdo3?=
+ =?us-ascii?Q?CsmmqTnPRkwtIzTJgZ9+FGIcJZsLDI/K227CmZa49LA2mtlM0nkFPmzrbccM?=
+ =?us-ascii?Q?oWkAM5uQmTGTpvJaKpu73WzP/ZJULFbywuGXPJ7laKruVmk0qfbZzL/5smA/?=
+ =?us-ascii?Q?CT5Lq9ao384l701et5yJ1mpD7mCLQTOm1YEhd9a+jSQgBP9P383AQ5Cog6nf?=
+ =?us-ascii?Q?2q+GNUcX7VgWZBbfPGyfxC86OyGoKYm+OXVZxq0QdMeul/ZBy6MmE2yacZnF?=
+ =?us-ascii?Q?gYOsQ7GJz4uVVSai0VYZobaMj6WOtqHH9ykihSzYYC+OCuo9RYcEb+djU8pN?=
+ =?us-ascii?Q?fvOh7GnjUE2E240t0KlF9+V6DVGLK7cKb9CeABnZVmJ4g8GA1Dus4sxVIwoX?=
+ =?us-ascii?Q?xGdoTYgsBwYo2gHcxrH2rnJIr546UPTDoVyVBrngEk4iJRVBZWmtMBvd55Nt?=
+ =?us-ascii?Q?c30nSYBmkSrJsTvy6lF//X+OGbT/E/yEYiI350smxitbstXV0u0wAEldodS6?=
+ =?us-ascii?Q?kh3rC3mBPNl1ZxPdIRPvxfTncfXGueoLfO3QJ1c5s6GYBNprpAR6gyA6hAHe?=
+ =?us-ascii?Q?i3yCzGYLpY7H5Dl8IWz3QNn8SsqdbmNBKZLiALjzbChJVpNtH/dhoBwlbc+4?=
+ =?us-ascii?Q?EoBUMEgkxf4hjm1+WAirmRAFdRrdaejrkmaksUh3c9ljLmD8zLADQ6ck5Bdh?=
+ =?us-ascii?Q?G0RZ+j5Dugp6vRJ1RJDgqPD9AjIP5RynM9hMe/GgDTV8Ftwx07++oaLltfBQ?=
+ =?us-ascii?Q?4SH2gDx7hp0uycQUfoJo2TXn3BN473YXrKcLJQ/KKNygwW779pnt5ciISMW5?=
+ =?us-ascii?Q?MjyJNeJ+Q0PCm8hvFMJOy819ojBEOmgN9ibY5MOpHUqWb1aFo7MsRHAM3yBa?=
+ =?us-ascii?Q?AOTJdz5o5efrso/IGFE/QeAiCzEebmHrNAKLaeWHtJXbRy7q03YBKbG/cHp6?=
+ =?us-ascii?Q?MJB4+TcxWIMO1IhI7JOfdOr6v1ucceYjxx3rkQ+l7go4kpYmdZBZ9tV9wL4U?=
+ =?us-ascii?Q?hsTfYWoXXCznOolV3TfMumpPeaD9I/bA0JDGMclx?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20240821170917.21018-3-quic_schintav@quicinc.com>
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: BN9PR11MB5276.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7ac2514f-9cbb-4dba-9c44-08dcc5aa978c
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Aug 2024 08:39:25.7415
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: IVeyHXI7UAKUcJM5sPnPsxM/xeDJvrTrfHCeg6a8nvEiyWlEUJptm9AYmmtSjiBomnBI43SZ39o0U/lc58u5DA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR11MB7668
+X-OriginatorOrg: intel.com
 
-On Wed, Aug 21, 2024 at 10:08:43AM -0700, Shashank Babu Chinta Venkata wrote:
-> During high data transmission rates such as 16 GT/s , there is an
-> increased risk of signal loss due to poor channel quality and
-> interference. This can impact receiver's ability to capture signals
-> accurately. Hence, signal compensation is achieved through appropriate
-> lane equalization settings at both transmitter and receiver. This will
-> result in increased PCIe signal strength.
-> 
-> Signed-off-by: Shashank Babu Chinta Venkata <quic_schintav@quicinc.com>
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->  drivers/pci/controller/dwc/pcie-designware.h  | 12 ++++++
->  drivers/pci/controller/dwc/pcie-qcom-common.c | 37 +++++++++++++++++++
->  drivers/pci/controller/dwc/pcie-qcom-common.h |  1 +
->  drivers/pci/controller/dwc/pcie-qcom-ep.c     |  3 ++
->  drivers/pci/controller/dwc/pcie-qcom.c        |  3 ++
->  5 files changed, 56 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> index 53c4c8f399c8..50265a2fbb9f 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware.h
-> +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> @@ -126,6 +126,18 @@
->  #define GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT	24
->  #define GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)
->  
-> +#define GEN3_EQ_CONTROL_OFF			0x8a8
-> +#define GEN3_EQ_CONTROL_OFF_FB_MODE		GENMASK(3, 0)
-> +#define GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE	BIT(4)
-> +#define GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC	GENMASK(23, 8)
-> +#define GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL	BIT(24)
-> +
-> +#define GEN3_EQ_FB_MODE_DIR_CHANGE_OFF          0x8ac
-> +#define GEN3_EQ_FMDC_T_MIN_PHASE23		GENMASK(4, 0)
-> +#define GEN3_EQ_FMDC_N_EVALS			GENMASK(9, 5)
-> +#define GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA	GENMASK(13, 10)
-> +#define GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA	GENMASK(17, 14)
-> +
->  #define PCIE_PORT_MULTI_LANE_CTRL	0x8C0
->  #define PORT_MLTI_UPCFG_SUPPORT		BIT(7)
->  
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
-> index 1d8992147bba..e085075557cd 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-common.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
-> @@ -15,6 +15,43 @@
->  #include "pcie-designware.h"
->  #include "pcie-qcom-common.h"
->  
-> +void qcom_pcie_common_set_16gt_eq_settings(struct dw_pcie *pci)
-> +{
-> +	u32 reg;
-> +
-> +	/*
-> +	 * GEN3_RELATED_OFF register is repurposed to apply equalization
-> +	 * settings at various data transmission rates through registers
-> +	 * namely GEN3_EQ_*. RATE_SHADOW_SEL bit field of GEN3_RELATED_OFF
-> +	 * determines data rate for which this equalization settings are
-> +	 * applied.
-> +	 */
-> +	reg = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
-> +	reg &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
-> +	reg &= ~GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK;
-> +	reg |= FIELD_PREP(GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK, 0x1);
-> +	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, reg);
-> +
-> +	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF);
-> +	reg &= ~(GEN3_EQ_FMDC_T_MIN_PHASE23 |
-> +		GEN3_EQ_FMDC_N_EVALS |
-> +		GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
-> +		GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA);
-> +	reg |= FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
-> +		FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
-> +		FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
-> +		FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
-> +	dw_pcie_writel_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF, reg);
-> +
-> +	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
-> +	reg &= ~(GEN3_EQ_CONTROL_OFF_FB_MODE |
-> +		GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
-> +		GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
-> +		GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
-> +	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, reg);
-> +}
-> +EXPORT_SYMBOL_GPL(qcom_pcie_common_set_16gt_eq_settings);
-> +
->  struct icc_path *qcom_pcie_common_icc_get_resource(struct dw_pcie *pci, const char *path)
->  {
->  	struct icc_path *icc_p;
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.h b/drivers/pci/controller/dwc/pcie-qcom-common.h
-> index 897fa18e618a..c281582de12c 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-common.h
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-common.h
-> @@ -13,3 +13,4 @@
->  struct icc_path *qcom_pcie_common_icc_get_resource(struct dw_pcie *pci, const char *path);
->  int qcom_pcie_common_icc_init(struct dw_pcie *pci, struct icc_path *icc_mem, u32 bandwidth);
->  void qcom_pcie_common_icc_update(struct dw_pcie *pci, struct icc_path *icc_mem);
-> +void qcom_pcie_common_set_16gt_eq_settings(struct dw_pcie *pci);
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> index e1860026e134..823e33a4d745 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-> @@ -455,6 +455,9 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
->  		goto err_disable_resources;
->  	}
->  
-> +	if (pcie_link_speed[pci->link_gen] == PCIE_SPEED_16_0GT)
++Jason/David
 
-Abel reported that 'pci->link_gen' is not updated unless the 'max-link-speed'
-property is set in DT on his platform. I fixed that issue locally and this
-series will depend on those patches.
+> From: Alexey Kardashevskiy <aik@amd.com>
+> Sent: Friday, August 23, 2024 9:21 PM
+>=20
+> IOMMUFD calls get_user_pages() for every mapping which will allocate
+> shared memory instead of using private memory managed by the KVM and
+> MEMFD.
+>=20
+> Add support for IOMMUFD fd to the VFIO KVM device's KVM_DEV_VFIO_FILE
+> API
+> similar to already existing VFIO device and VFIO group fds.
+> This addition registers the KVM in IOMMUFD with a callback to get a pfn
+> for guest private memory for mapping it later in the IOMMU.
+> No callback for free as it is generic folio_put() for now.
+>=20
+> The aforementioned callback uses uptr to calculate the offset into
+> the KVM memory slot and find private backing pfn, copies
+> kvm_gmem_get_pfn() pretty much.
+>=20
+> This relies on private pages to be pinned beforehand.
+>=20
 
-Provided that you are having issues with your build environment as discussed
-offline, I'd like to take over the series to combine my patches and address the
-review comments. Let me know if you are OK with this or not.
+There was a related discussion [1] which leans toward the conclusion
+that the IOMMU page table for private memory will be managed by
+the secure world i.e. the KVM path.
 
-- Mani
+Obviously the work here confirms that it doesn't hold for SEV-TIO
+which still expects the host to manage the IOMMU page table.
 
-> +		qcom_pcie_common_set_16gt_eq_settings(pci);
-> +
->  	/*
->  	 * The physical address of the MMIO region which is exposed as the BAR
->  	 * should be written to MHI BASE registers.
-> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> index ee32590f1506..829b34391af1 100644
-> --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> @@ -280,6 +280,9 @@ static int qcom_pcie_start_link(struct dw_pcie *pci)
->  {
->  	struct qcom_pcie *pcie = to_qcom_pcie(pci);
->  
-> +	if (pcie_link_speed[pci->link_gen] == PCIE_SPEED_16_0GT)
-> +		qcom_pcie_common_set_16gt_eq_settings(pci);
-> +
->  	/* Enable Link Training state machine */
->  	if (pcie->cfg->ops->ltssm_enable)
->  		pcie->cfg->ops->ltssm_enable(pcie);
-> -- 
-> 2.46.0
-> 
-
--- 
-மணிவண்ணன் சதாசிவம்
+btw going down this path it's clearer to extend the MAP_DMA
+uAPI to accept {gmemfd, offset} than adding a callback to KVM.
