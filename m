@@ -1,177 +1,165 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from smtp-relay-internal-1.canonical.com (smtp-relay-internal-1.canonical.com [185.125.188.123])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B023C155A5D;
-	Mon, 26 Aug 2024 11:47:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B316E153824
+	for <linux-pci@vger.kernel.org>; Mon, 26 Aug 2024 12:03:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.125.188.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724672828; cv=none; b=YoUPPTQ0x0U0R26dVZpEaH7JE4lHJ5/bDp+bir7FDWdx+PljCyk773ZN1Jc33iVNIJPp6fVU/1DknA+LY0qkVXNr8iEJyFcjIadP1hEXVXzMkpon3fAOZgvkdGLdyFj1c6kAsq1WqIeMpwcZcTKKRB/twCIUrBzEuFsx36NxcGM=
+	t=1724673814; cv=none; b=j1y7OTdOYMMRwAoZs6wzGlmij6xAcuZekanOomAu2HS9e3t7oDQDZE+S8EtfYEzNyUQ+mbUj+1nJd/rmBfS9ZyqxWujSmpoaK3Ct8ZMzAtUUrH0b7OLJh1ucOCuTRvHg5IBmEEsMwrBq4yEE9a9jAEgRUcB+CXRSUczYT7lVG/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724672828; c=relaxed/simple;
-	bh=FIp0iRgd7S3IbgZ7/Eu/tmSZWUh2umZ9WKVSWgKLxko=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QuEeRgxJ8RcYsT5DodVR9znrsYHyypYqf6qZEuMlkw3ydYiHjnt9TjOU8b2Ly8dAUaP0ngFFgukbriFAyLrC2ANWdSRDk9a43g2a8NJjQgZxMIWwlEfOUkV9vD+CM+YP5cBm1g1+eXiYnRnC8OLHpXIiBQykKNVUjby5jtJEntQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E/UmmYQo; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1724673814; c=relaxed/simple;
+	bh=snM5Rm0gMzlD08AvqsH0+c3YOt73h0syTAjhL8mg4zU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=GgOkC/UepIMo6sWT62TRPzuCiN1/KQ7ex5PnhXkCS5XPE3m94Jiq2NlA/q2F3RS68Aall0lqCzoSFGuezBsvTSDZ02RI80iJcqruHlUOwYZAe4yj9+Iq+VgqxSrcjWPkx649uLlnIC2EarfLcL+UPnUqsBTsPUOsVNYUUZG1ffY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com; spf=pass smtp.mailfrom=canonical.com; dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b=l6iJXWjC; arc=none smtp.client-ip=185.125.188.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=canonical.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=canonical.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E/UmmYQo"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1724672827; x=1756208827;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=FIp0iRgd7S3IbgZ7/Eu/tmSZWUh2umZ9WKVSWgKLxko=;
-  b=E/UmmYQoqbVgT31qUeyHMzLt/YiSyBWy4eq6E9KY7yz1oTYrtFIG4k4a
-   iN/b3wtGVtwe+k6LYifyvHlycZ3r5FoZoA5hl1XspGcSvt+W/XDtYbBUC
-   nu5vW5Uv4LQQ65wkBEe7LLvRT3+aNUaxz2yHgrDi3eV2YHmV85n2jNAEs
-   x+Ye4/zd5g4db6iOLouDdUc7hQfyFMCW2Fj7eTW+eSc5iWxKkcGaNoldX
-   hKDZQnefdXUnropvh9i/NV8plXDJkz6Rwpq1CE1REeJhJXOlCOhMJ6Z/h
-   Ov+zuACgShuUiRYu/M1QWI/ha4GJOjrFNpqt4jc4+dw5mkRYrF4RUP+ou
-   w==;
-X-CSE-ConnectionGUID: hCtPuIcdSceOSxwPi+0D5w==
-X-CSE-MsgGUID: 08q8crEbRTWjAa2TitUnHA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11175"; a="23243771"
-X-IronPort-AV: E=Sophos;i="6.10,177,1719903600"; 
-   d="scan'208";a="23243771"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2024 04:47:06 -0700
-X-CSE-ConnectionGUID: NriRihhNQvW0cnXETzoSfw==
-X-CSE-MsgGUID: vO4WWXUwRQuZOP57+w9XPQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.10,177,1719903600"; 
-   d="scan'208";a="62183218"
-Received: from lkp-server01.sh.intel.com (HELO 9a732dc145d3) ([10.239.97.150])
-  by fmviesa007.fm.intel.com with ESMTP; 26 Aug 2024 04:47:00 -0700
-Received: from kbuild by 9a732dc145d3 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1siYBV-000H0F-2x;
-	Mon, 26 Aug 2024 11:46:57 +0000
-Date: Mon, 26 Aug 2024 19:46:22 +0800
-From: kernel test robot <lkp@intel.com>
-To: Wei Huang <wei.huang2@amd.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-doc@vger.kernel.org,
-	netdev@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	Jonathan.Cameron@huawei.com, helgaas@kernel.org, corbet@lwn.net,
-	davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
-	pabeni@redhat.com, alex.williamson@redhat.com, gospo@broadcom.com,
-	michael.chan@broadcom.com, ajit.khaparde@broadcom.com,
-	somnath.kotur@broadcom.com, andrew.gospodarek@broadcom.com,
-	manoj.panicker2@amd.com, Eric.VanTassell@amd.com,
-	wei.huang2@amd.com, vadim.fedorenko@linux.dev, horms@kernel.org,
-	bagasdotme@gmail.com, bhelgaas@google.com, lukas@wunner.de,
-	paul.e.luse@intel.com, jing2.liu@intel.com
-Subject: Re: [PATCH V4 07/12] PCI/TPH: Add pcie_tph_set_st_entry() to set ST
- tag
-Message-ID: <202408261902.hGVx0hL8-lkp@intel.com>
-References: <20240822204120.3634-8-wei.huang2@amd.com>
+	dkim=pass (2048-bit key) header.d=canonical.com header.i=@canonical.com header.b="l6iJXWjC"
+Received: from mail-pj1-f72.google.com (mail-pj1-f72.google.com [209.85.216.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-relay-internal-1.canonical.com (Postfix) with ESMTPS id 851603F327
+	for <linux-pci@vger.kernel.org>; Mon, 26 Aug 2024 12:03:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=canonical.com;
+	s=20210705; t=1724673809;
+	bh=ajfaokdeZHRMyKn6mvHqNgguJUu0Q4E54DToJ/+4STQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type;
+	b=l6iJXWjC15i57Dy0NGNJVULqcbC34v2Jx983q8ssp0iwHzcXrM9g5K5Yyj0vhvCVT
+	 pZESuBQpya1mVE7PMbMkoG3pLXndp9TxLEQhT9lBAvNgzSUrhyPvSOQKyNz5IG5nlE
+	 q2VYGWVoOqkrD2h0l4ItlXNCK1OkzjDpUSBbm+JsmCSXqXJeoH+3wxUR315B3Gw6xT
+	 zY4VepLC3O9eqWFSvwnGKo9Za+C/519nsT4daXZZcztBlzO1Vs5JdSoB023MKwetcY
+	 5K537UObarwAierriG9ZB4YqlOZSvHEX+lGsWCoTUMtD3drvD5bTv1q073IdIkrlGE
+	 8LgMviDbDHYfQ==
+Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-2d5dafe951eso4742042a91.3
+        for <linux-pci@vger.kernel.org>; Mon, 26 Aug 2024 05:03:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1724673808; x=1725278608;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ajfaokdeZHRMyKn6mvHqNgguJUu0Q4E54DToJ/+4STQ=;
+        b=N94SUBNFt64L0bTz5/uZKrENr/EhyOG0WWHjUd8zRTdI+jKUA0aKH4GimfbC6xoZ8X
+         Ons2tlfQyYEkSwfwHqNbSgV7l+NByO8mxV80APwLLSdsy0vmMpVitNCes3oW7LHJ9olz
+         uhas4ZQf+uEkYcXj6AeNUu8c5UQOp7pZYNeO5/WvY5E/DJ5caRHdSzk9YkQ8XRp4b0eq
+         vXntQqEFBmLetPv503VzPZ0IOF2qtjSmkL0BrrQOhUt9ycCyExvZEp9zt5ahrqyPXUe9
+         OkK/g3GnGTbZ50AMDcvCSm0ZzFw4LPcGZO8RVf1HWg/NZU6m54uxuJes0YS1TO8MRsAA
+         DN4A==
+X-Forwarded-Encrypted: i=1; AJvYcCWQ/AE/rP36fnn/4eh18IFvQrDkgv5ZFn5PbMYFkI1rLdsnjhrUn8q78l7TZLFui2NM/4u3qPL5MyI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwijIqEl7h2xswIoEToYWzaLsXK1veN8Y2kz44nTR3A/3W1Nwb/
+	F1ZGioefTsTTCavgpKk9vCd1R0+7eZr1WQJzHif/l/5IQjHB/Q1q4pn34dlSS2pi+r0q7V/T7IO
+	gIqtiYOmgNTvECqJlnN+PP1bnEHXd0FoeNimvXCRqeZaSpLXe6HZ7B7uLo00CxnWx/w5bBd99Zr
+	2hekydsCql8WNdgUOJtp5YiRhSmYyCz/P9yt1tAdzXUA/oJZEEwDulvRrD
+X-Received: by 2002:a17:90b:3144:b0:2d3:c8ed:f0be with SMTP id 98e67ed59e1d1-2d646d0ae37mr8318604a91.28.1724673807971;
+        Mon, 26 Aug 2024 05:03:27 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFxdSvdFt9fVbKAhweGqLpVEbbex/kMjEPiDlJ1rpZiXNZAj2f5L37oaVUXyQSovQsgnz8J0WOkVwo6b700X+g=
+X-Received: by 2002:a17:90b:3144:b0:2d3:c8ed:f0be with SMTP id
+ 98e67ed59e1d1-2d646d0ae37mr8318575a91.28.1724673807557; Mon, 26 Aug 2024
+ 05:03:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20240822204120.3634-8-wei.huang2@amd.com>
+References: <20240712062411.35732-1-kai.heng.feng@canonical.com> <6685e124-4a7d-44bb-80a9-fc5fa51269a9@amd.com>
+In-Reply-To: <6685e124-4a7d-44bb-80a9-fc5fa51269a9@amd.com>
+From: Kai-Heng Feng <kai.heng.feng@canonical.com>
+Date: Mon, 26 Aug 2024 20:03:15 +0800
+Message-ID: <CAAd53p5d6=m9MzC5pRS8HJSP54tiTxMBLR-Nd=fE2Tf2Sf+mpQ@mail.gmail.com>
+Subject: Re: [PATCH] PCI/PM: Put devices to low power state on shutdown
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: bhelgaas@google.com, mika.westerberg@linux.intel.com, 
+	linux-pci@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Wei,
+On Fri, Aug 23, 2024 at 3:28=E2=80=AFAM Mario Limonciello
+<mario.limonciello@amd.com> wrote:
+>
+> On 7/12/2024 01:24, Kai-Heng Feng wrote:
+> > Some laptops wake up after poweroff when HP Thunderbolt Dock G4 is
+> > connected.
+> >
+> > The following error message can be found during shutdown:
+> > pcieport 0000:00:1d.0: AER: Correctable error message received from 000=
+0:09:04.0
+> > pcieport 0000:09:04.0: PCIe Bus Error: severity=3DCorrectable, type=3DD=
+ata Link Layer, (Receiver ID)
+> > pcieport 0000:09:04.0:   device [8086:0b26] error status/mask=3D0000008=
+0/00002000
+> > pcieport 0000:09:04.0:    [ 7] BadDLLP
+> >
+> > Calling aer_remove() during shutdown can quiesce the error message,
+> > however the spurious wakeup still happens.
+> >
+> > The issue won't happen if the device is in D3 before system shutdown, s=
+o
+> > putting device to low power state before shutdown to solve the issue.
+> >
+> > I don't have a sniffer so this is purely guesswork, however I believe
+> > putting device to low power state it's the right thing to do.
+>
+> KH,
+>
+> I did testing with your patch along with a few others, and found that it
+> does the best job to put a majority of devices into a low power state
+> properly.
+>
+> I have the details of what happens at S5 outlined on this Gist:
+> https://gist.github.com/superm1/f8f81e52f5b1d55b64493fdaec38e31c
+>
+> * KH column is this patch.
+> * ML column is
+> https://lore.kernel.org/linux-usb/43594a1c-c0dd-4ae1-b2c4-f5198e3fe951@am=
+d.com/T/#m03d0b36f86fb4722009b24a8ee547011128db80b
+> * FS column is 0fab972eef49 being applied again
+>
+> I also have power testing data from an OEM's system that shows that it
+> improves things well enough that a previously failing energy star
+> certification is now passing.
 
-kernel test robot noticed the following build warnings:
+Thanks a lot for the testing.
 
-[auto build test WARNING on pci/next]
-[also build test WARNING on pci/for-linus linus/master v6.11-rc5 next-20240826]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Bjorn, do you think this patch is in good form to get included in next -rc1=
+?
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Wei-Huang/PCI-Introduce-PCIe-TPH-support-framework/20240826-121149
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-patch link:    https://lore.kernel.org/r/20240822204120.3634-8-wei.huang2%40amd.com
-patch subject: [PATCH V4 07/12] PCI/TPH: Add pcie_tph_set_st_entry() to set ST tag
-config: x86_64-allyesconfig (https://download.01.org/0day-ci/archive/20240826/202408261902.hGVx0hL8-lkp@intel.com/config)
-compiler: clang version 18.1.5 (https://github.com/llvm/llvm-project 617a15a9eac96088ae5e9134248d8236e34b91b1)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20240826/202408261902.hGVx0hL8-lkp@intel.com/reproduce)
+Kai-Heng
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202408261902.hGVx0hL8-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/pci/pcie/tph.c:116:9: warning: result of comparison of constant 18446744073709551615 with expression of type 'typeof (_Generic((mask), char: (unsigned char)0, unsigned char: (unsigned char)0, signed char: (unsigned char)0, unsigned short: (unsigned short)0, short: (unsigned short)0, unsigned int: (unsigned int)0, int: (unsigned int)0, unsigned long: (unsigned long)0, long: (unsigned long)0, unsigned long long: (unsigned long long)0, long long: (unsigned long long)0, default: (mask)))' (aka 'unsigned int') is always false [-Wtautological-constant-out-of-range-compare]
-     116 |         val |= FIELD_PREP(mask, tag);
-         |                ^~~~~~~~~~~~~~~~~~~~~
-   include/linux/bitfield.h:115:3: note: expanded from macro 'FIELD_PREP'
-     115 |                 __BF_FIELD_CHECK(_mask, 0ULL, _val, "FIELD_PREP: ");    \
-         |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/bitfield.h:72:53: note: expanded from macro '__BF_FIELD_CHECK'
-      72 |                 BUILD_BUG_ON_MSG(__bf_cast_unsigned(_mask, _mask) >     \
-         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
-      73 |                                  __bf_cast_unsigned(_reg, ~0ull),       \
-         |                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      74 |                                  _pfx "type of reg too small for mask"); \
-         |                                  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/build_bug.h:39:58: note: expanded from macro 'BUILD_BUG_ON_MSG'
-      39 | #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-         |                                     ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~
-   include/linux/compiler_types.h:510:22: note: expanded from macro 'compiletime_assert'
-     510 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-         |         ~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/compiler_types.h:498:23: note: expanded from macro '_compiletime_assert'
-     498 |         __compiletime_assert(condition, msg, prefix, suffix)
-         |         ~~~~~~~~~~~~~~~~~~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   include/linux/compiler_types.h:490:9: note: expanded from macro '__compiletime_assert'
-     490 |                 if (!(condition))                                       \
-         |                       ^~~~~~~~~
-   1 warning generated.
-
-
-vim +116 drivers/pci/pcie/tph.c
-
-    87	
-    88	/* Write ST to MSI-X vector control reg - Return 0 if OK, otherwise -errno */
-    89	static int write_tag_to_msix(struct pci_dev *pdev, int msix_idx, u16 tag)
-    90	{
-    91		struct msi_desc *msi_desc = NULL;
-    92		void __iomem *vec_ctrl;
-    93		u32 val, mask;
-    94		int err = 0;
-    95	
-    96		msi_lock_descs(&pdev->dev);
-    97	
-    98		/* Find the msi_desc entry with matching msix_idx */
-    99		msi_for_each_desc(msi_desc, &pdev->dev, MSI_DESC_ASSOCIATED) {
-   100			if (msi_desc->msi_index == msix_idx)
-   101				break;
-   102		}
-   103	
-   104		if (!msi_desc) {
-   105			err = -ENXIO;
-   106			goto err_out;
-   107		}
-   108	
-   109		/* Get the vector control register (offset 0xc) pointed by msix_idx */
-   110		vec_ctrl = pdev->msix_base + msix_idx * PCI_MSIX_ENTRY_SIZE;
-   111		vec_ctrl += PCI_MSIX_ENTRY_VECTOR_CTRL;
-   112	
-   113		val = readl(vec_ctrl);
-   114		mask = PCI_MSIX_ENTRY_CTRL_ST_LOWER | PCI_MSIX_ENTRY_CTRL_ST_UPPER;
-   115		val &= ~mask;
- > 116		val |= FIELD_PREP(mask, tag);
-   117		writel(val, vec_ctrl);
-   118	
-   119		/* Read back to flush the update */
-   120		val = readl(vec_ctrl);
-   121	
-   122	err_out:
-   123		msi_unlock_descs(&pdev->dev);
-   124		return err;
-   125	}
-   126	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+>
+> Reviewed-by: Mario Limonciello <mario.limonciello@amd.com>
+> Tested-by: Mario Limonciello <mario.limonciello@amd.com>
+>
+> >
+> > Link: https://bugzilla.kernel.org/show_bug.cgi?id=3D219036
+> > Signed-off-by: Kai-Heng Feng <kai.heng.feng@canonical.com>
+> > ---
+> >   drivers/pci/pci-driver.c | 8 ++++++++
+> >   1 file changed, 8 insertions(+)
+> >
+> > diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> > index af2996d0d17f..4c6f66f3eb54 100644
+> > --- a/drivers/pci/pci-driver.c
+> > +++ b/drivers/pci/pci-driver.c
+> > @@ -510,6 +510,14 @@ static void pci_device_shutdown(struct device *dev=
+)
+> >       if (drv && drv->shutdown)
+> >               drv->shutdown(pci_dev);
+> >
+> > +     /*
+> > +      * If driver already changed device's power state, it can mean th=
+e
+> > +      * wakeup setting is in place, or a workaround is used. Hence kee=
+p it
+> > +      * as is.
+> > +      */
+> > +     if (!kexec_in_progress && pci_dev->current_state =3D=3D PCI_D0)
+> > +             pci_prepare_to_sleep(pci_dev);
+> > +
+> >       /*
+> >        * If this is a kexec reboot, turn off Bus Master bit on the
+> >        * device to tell it to not continue to do DMA. Don't touch
+>
