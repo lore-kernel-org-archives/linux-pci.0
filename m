@@ -1,120 +1,67 @@
-Received: from lelv0143.ext.ti.com (lelv0143.ext.ti.com [198.47.23.248])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E7646EB64;
-	Tue, 27 Aug 2024 05:56:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.248
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6267BA49;
+	Tue, 27 Aug 2024 06:24:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724738177; cv=none; b=SppwU39P3zUpt2qPZ2ww9svuMZd/eIASadhVvqiiO+VS1F2r5D/mxw07xb4iramwQHfnqIKJw90ZTWBOR0LskQ7ECV+P712ZiiNT2g5kLqRNSt8xcCDX+fDnaj8na3HXvw4BXG/Qo0n4KV4yokUlLDwUZagJC1JiGmnfN7HwH9A=
+	t=1724739874; cv=none; b=mT924ntRswL7YYbKM+hxwfWYFYDiExR/HuZok+y8y/zKsRgTm7VTtS9KktcL5KuctkD+44bsD2ALtaGS9t+35C7GjfZwL94FQxJ3FdKdGEaGf+5bwkQ1Mnl+MXxCTsbXddwExGMjD9IaFtUPYJ/xEIuY/oX9E7DJKo7J6Gui2OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724738177; c=relaxed/simple;
-	bh=voxKAhttDJwVFYFPKi8/k0ScjZhitqmMJimn89K7fL8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OOMRR1OHc8QEvpkz0YOOm+1L3yO4wLEejQ3Iv7uEOCGKYpi2VklT7CZFEtiAZZ+BB+s8y8O8+q1/rRg6F8htWFaIwOmmSJ5IPD4hzoUpREnGiZYbKbUgVOgk9JMVHLopgPD444MYA1uletSYvw/RN+8mg/TprI0GNfH7ZRjLUcQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=VzCWsZzD; arc=none smtp.client-ip=198.47.23.248
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1724739874; c=relaxed/simple;
+	bh=eiyBCHlvira5vozuY4SS6oQOMVMr3NqhAQQh4AhxF8k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VWTMuFa/smDCcaXjm8OhicNXn+SYm+VIj74topn6PhUGEvCPbtNiN/0JoO41W3vVZFGv8jxtZsrErt5eJ18pl+3Cew6A+21cVmmrrNZsDkd7TpIc1SvRZuiko+89P0YzK0jlKmhtY7+Q8X8B3mbJ6PFQ2/qOz/qjLlIk+S3GYxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Z2gL4dQO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="VzCWsZzD"
-Received: from lelv0266.itg.ti.com ([10.180.67.225])
-	by lelv0143.ext.ti.com (8.15.2/8.15.2) with ESMTP id 47R5txuH086225;
-	Tue, 27 Aug 2024 00:55:59 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1724738159;
-	bh=QPaO3QsNv5NaAoPgz9ubqhBCpY5Raa+kHO4t56mOjpY=;
-	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=VzCWsZzDi+m+xIcvXoVZOhTdK2VfVQSNL7nRwMstghofeXlRItvqGrhRN90hpkDBq
-	 ZE29evwNoUL0nAubgPL9+PkPOxKe4yM200Uo8mZibwYdM+ommesrbLfsjIh+4LpcAl
-	 X1sHoE/vslgF9bPrsYQy9QyqLTAId1ENJol57t5M=
-Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
-	by lelv0266.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 47R5txm2086475
-	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Tue, 27 Aug 2024 00:55:59 -0500
-Received: from DLEE114.ent.ti.com (157.170.170.25) by DLEE113.ent.ti.com
- (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Tue, 27
- Aug 2024 00:55:59 -0500
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DLEE114.ent.ti.com
- (157.170.170.25) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Tue, 27 Aug 2024 00:55:59 -0500
-Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [10.24.72.81])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 47R5tn7e103422;
-	Tue, 27 Aug 2024 00:55:54 -0500
-From: Siddharth Vadapalli <s-vadapalli@ti.com>
-To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <krzk+dt@kernel.org>, <conor+dt@kernel.org>, <vigneshr@ti.com>,
-        <kishon@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <srk@ti.com>, <s-vadapalli@ti.com>
-Subject: [PATCH v3 1/2] dt-bindings: PCI: ti,j721e-pci-host: Add ACSPCIE proxy control property
-Date: Tue, 27 Aug 2024 11:25:47 +0530
-Message-ID: <20240827055548.901285-2-s-vadapalli@ti.com>
-X-Mailer: git-send-email 2.40.1
-In-Reply-To: <20240827055548.901285-1-s-vadapalli@ti.com>
-References: <20240827055548.901285-1-s-vadapalli@ti.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Z2gL4dQO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 754B3C4E68E;
+	Tue, 27 Aug 2024 06:24:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724739874;
+	bh=eiyBCHlvira5vozuY4SS6oQOMVMr3NqhAQQh4AhxF8k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Z2gL4dQOC+6Pa8coExiUQ62UkHTnr0v7NVrt4TDtf8rM5IC6FB4HPW39qU5a7R9nB
+	 VZUnmGhOvtnZP+4w/XFkIIV1JxfQhAKItyOzIkfK82ftI9zjB991tZjs8dsH5zi8TE
+	 GH2jg1OFqHKIDRkAPYbzvK15NX7VxAly1Fu+uRGEtvwDr65bz65i1VdgENRDO9ymQM
+	 dDfdGN7UN3izcnzpkfAJuT/zUwbGUEGrOHh7K/qL+eIrgukPZlTLctBvH+8yOPvtB7
+	 QYcl2HqVyw02l59nr3XSlf9MY0ZA1jeH7TXFz9rZ9kvzCbtfp8mZa5Rue7Qyf5QVnW
+	 mVgygtRnyIyRQ==
+Date: Tue, 27 Aug 2024 08:24:30 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Sricharan R <quic_srichara@quicinc.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com, 
+	manivannan.sadhasivam@linaro.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	vkoul@kernel.org, kishon@kernel.org, andersson@kernel.org, konradybcio@kernel.org, 
+	p.zabel@pengutronix.de, dmitry.baryshkov@linaro.org, quic_nsekar@quicinc.com, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org, robimarko@gmail.com
+Subject: Re: [PATCH V2 0/6] Enable IPQ5018 PCI support
+Message-ID: <wq5mfkqvvclubmacu5ogptdeaahxr77hk73dpmcvcelno5ylpv@4q4hfuolzky7>
+References: <20240827045757.1101194-1-quic_srichara@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20240827045757.1101194-1-quic_srichara@quicinc.com>
 
-Add the "ti,syscon-acspcie-proxy-ctrl" device-tree property which is
-used to obtain a reference to the ACSPCIE Proxy Control register along
-with the details of the PAD IO Buffer output enable bits.
+On Tue, Aug 27, 2024 at 10:27:51AM +0530, Sricharan R wrote:
+> From: Sricharan Ramabadhran <quic_srichara@quicinc.com>
+> 
+> This patch series adds the relevant phy and controller
+> DT configurations for enabling PCI gen2 support
+> on IPQ5018.
+> 
+> v2:
+>   Fixed all review comments from Krzysztof, Robert Marko,
+>   Dmitry Baryshkov, Manivannan Sadhasivam, Konrad Dybcio.
 
-The ACSPCIE Proxy Control register is used to drive the reference clock
-for the PCIe Endpoint device via the PAD IO Buffers of the ACSPCIE module.
-The ACSPCIE module can be used as an alternative to either an on-board
-clock generator or an external clock generator for providing the reference
-clock to the PCIe Endpoint device.
+That's not specific. What exactly did you do? You must list the
+changes.
 
-Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-Acked-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
-
-v2:
-https://lore.kernel.org/r/20240729092855.1945700-2-s-vadapalli@ti.com/
-Changes since v2:
-- Rebased patch on next-20240826.
-
-v1:
-https://lore.kernel.org/r/20240715120936.1150314-3-s-vadapalli@ti.com/
-Changes since v1:
-- Collected Acked-by tag from:
-  Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-  https://lore.kernel.org/r/1caa0c9a-1de7-41db-be2b-557b49f4a248@kernel.org/
-
- .../devicetree/bindings/pci/ti,j721e-pci-host.yaml     | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-index 15a2658ceeef..69b499c96c71 100644
---- a/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/ti,j721e-pci-host.yaml
-@@ -38,6 +38,16 @@ properties:
-       - const: reg
-       - const: cfg
- 
-+  ti,syscon-acspcie-proxy-ctrl:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    items:
-+      - items:
-+          - description: Phandle to the ACSPCIE Proxy Control Register
-+          - description: Bitmask corresponding to the PAD IO Buffer
-+                         output enable fields (Active Low).
-+    description: Specifier for enabling the ACSPCIE PAD outputs to drive
-+                 the reference clock to the Endpoint device.
-+
-   ti,syscon-pcie-ctrl:
-     $ref: /schemas/types.yaml#/definitions/phandle-array
-     items:
--- 
-2.40.1
+Best regards,
+Krzysztof
 
