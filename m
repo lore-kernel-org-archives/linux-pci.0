@@ -1,132 +1,99 @@
-Received: from jabberwock.ucw.cz (jabberwock.ucw.cz [46.255.230.98])
+Received: from fllv0015.ext.ti.com (fllv0015.ext.ti.com [198.47.19.141])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C71AB19EEBD;
-	Tue, 27 Aug 2024 12:23:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.255.230.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D29821B373D;
+	Tue, 27 Aug 2024 12:24:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.141
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724761410; cv=none; b=EORiGyLx92zi32gve1uk7WYUZLuxQzL0E3QwLFzHbLEpuFz1QhpySo7Z/UlezPoy8ZSXjBCq3IFM3HoTRtuCtGfOK5+V+X410YBLP0rbqNA+X5I0weGmrIyAQVTj+DJwGDc9Xu8OFYbnSj8gGAsOiFoTZXWQceQEB+KJOwhd/nQ=
+	t=1724761495; cv=none; b=GvQBHMT0aC1PtkOhJj5XZiWQsJ0H9ggsqaMs5wQ2H5NRxtNtBIDuaKyEVyeBzcNLnikmDk+///wgdbucLR8k4tNG4wQsTlTNVupi7KhEAK982hpUEZHlZFXnDBVXb4nKBhmzRc9abajaSJJNmJ86F7/3FLIBTv33k7dztJKwYfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724761410; c=relaxed/simple;
-	bh=DlcCI5dqbxV19MynyTVWrTsqnSy9wcndP02vRILSOJw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Z6Y5Mmo0TNUx6xt/OT3GLPCCgBBK/jPAHnMCCtxwfzbmHwTg1kgXOD9sPMPtgzn07r3czjoloJbEiUc6YX44VezvLWLCBdZ3xFnQr1SUW95mXlLNtHlFpTgi4DKGqXflEpOkS07elOC2MOKfjosCcoHywiBFQ1/MJEHbsTwcFWs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=denx.de; spf=fail smtp.mailfrom=denx.de; arc=none smtp.client-ip=46.255.230.98
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=denx.de
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=denx.de
-Received: by jabberwock.ucw.cz (Postfix, from userid 1017)
-	id 0E9F61C009B; Tue, 27 Aug 2024 14:23:27 +0200 (CEST)
-Date: Tue, 27 Aug 2024 14:23:26 +0200
-From: Pavel Machek <pavel@denx.de>
-To: Sasha Levin <sashal@kernel.org>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
-	Aleksandr Mishin <amishin@t-argos.ru>,
-	Bjorn Helgaas <helgaas@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>, jonnyc@amazon.com,
-	lpieralisi@kernel.org, kw@linux.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH AUTOSEL 5.15 25/47] PCI: al: Check IORESOURCE_BUS
- existence during probe
-Message-ID: <Zs3FPsfjnO5+6QcT@duo.ucw.cz>
-References: <20240801003256.3937416-1-sashal@kernel.org>
- <20240801003256.3937416-25-sashal@kernel.org>
+	s=arc-20240116; t=1724761495; c=relaxed/simple;
+	bh=zJe12w2yljz1E+qbXn4yBMsDN6lp3EUCmGpskNc8Fs8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=L97dtbjuv1h4+narUmCURJmQlgjT0vlv4dz4zCyKj+ONfPppPP2f8WkZL47dhZ8cu3cR5KmT32xG/nV1K4oxwk3enmWznRYZvjvTPhLYwwRm5LDqMdvBfNffMSg3NH/7ddDl610/Q0rO3p5LQIIygmW6WbbpWqKwGTqftquikg8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=QKqi8h4W; arc=none smtp.client-ip=198.47.19.141
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="QKqi8h4W"
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+	by fllv0015.ext.ti.com (8.15.2/8.15.2) with ESMTP id 47RCOYgn036679;
+	Tue, 27 Aug 2024 07:24:34 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1724761474;
+	bh=sO3DIbNT467egR5G/HnowhddSJHnw0sif6k+DnCg3s8=;
+	h=From:To:CC:Subject:Date:In-Reply-To:References;
+	b=QKqi8h4W+IFdQfxLJrFhBzHnt6rxz3qT0uyy5vYRvh18Zl4nqh2Lkge8MaVf9Ci9P
+	 l5IBFVJBTeqFMri39mGP2BGf996j0TxwvbxHGb/LXRCfRWlChebn+Ao8OKjuw8qb4U
+	 f6vKBay8cjpnTuHcYX3ofzJx59CPlbd4lbzhDKXI=
+Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
+	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 47RCOYKB025983
+	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Tue, 27 Aug 2024 07:24:34 -0500
+Received: from DFLE102.ent.ti.com (10.64.6.23) by DFLE100.ent.ti.com
+ (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Tue, 27
+ Aug 2024 07:24:33 -0500
+Received: from lelvsmtp6.itg.ti.com (10.180.75.249) by DFLE102.ent.ti.com
+ (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Tue, 27 Aug 2024 07:24:34 -0500
+Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [10.24.72.81])
+	by lelvsmtp6.itg.ti.com (8.15.2/8.15.2) with ESMTP id 47RCONYD011388;
+	Tue, 27 Aug 2024 07:24:29 -0500
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <robh@kernel.org>, <vigneshr@ti.com>, <kishon@kernel.org>,
+        <manivannan.sadhasivam@linaro.org>, <j-keerthy@ti.com>
+CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <stable@vger.kernel.org>, <u-kumar1@ti.com>, <srk@ti.com>,
+        <s-vadapalli@ti.com>
+Subject: [PATCH 1/2] PCI: dra7xx: Fix threaded IRQ request for "dra7xx-pcie-main" IRQ
+Date: Tue, 27 Aug 2024 17:54:21 +0530
+Message-ID: <20240827122422.985547-2-s-vadapalli@ti.com>
+X-Mailer: git-send-email 2.40.1
+In-Reply-To: <20240827122422.985547-1-s-vadapalli@ti.com>
+References: <20240827122422.985547-1-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="T0sGyw0kuOTLMwMR"
-Content-Disposition: inline
-In-Reply-To: <20240801003256.3937416-25-sashal@kernel.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-EXCLAIMER-MD-CONFIG: e1e8a2fd-e40a-4ac6-ac9b-f7e9cc9ee180
 
+Commit da87d35a6e51 ("PCI: dra7xx: Use threaded IRQ handler for
+"dra7xx-pcie-main" IRQ") switched from devm_request_irq() to
+devm_request_threaded_irq() for the "dra7xx-pcie-main" interrupt.
+Since the primary handler was set to NULL, the "IRQF_ONESHOT" flag
+should have also been set. Fix this.
 
---T0sGyw0kuOTLMwMR
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Fixes: da87d35a6e51 ("PCI: dra7xx: Use threaded IRQ handler for "dra7xx-pcie-main" IRQ")
+Cc: <stable@vger.kernel.org>
+Reported-by: Udit Kumar <u-kumar1@ti.com>
+Suggested-by: Vignesh Raghavendra <vigneshr@ti.com>
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-Hi!
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index 4fe3b0cb72ec..20fb50741f3d 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -850,7 +850,8 @@ static int dra7xx_pcie_probe(struct platform_device *pdev)
+ 	dra7xx->mode = mode;
+ 
+ 	ret = devm_request_threaded_irq(dev, irq, NULL, dra7xx_pcie_irq_handler,
+-			       IRQF_SHARED, "dra7xx-pcie-main", dra7xx);
++					IRQF_SHARED | IRQF_ONESHOT,
++					"dra7xx-pcie-main", dra7xx);
+ 	if (ret) {
+ 		dev_err(dev, "failed to request irq\n");
+ 		goto err_gpio;
+-- 
+2.40.1
 
-> [ Upstream commit a9927c2cac6e9831361e43a14d91277818154e6a ]
->=20
-> If IORESOURCE_BUS is not provided in Device Tree it will be fabricated in
-> of_pci_parse_bus_range(), so NULL pointer dereference should not happen
-> here.
->=20
-> But that's hard to verify, so check for NULL anyway.
->=20
-> Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-If the NULL can't happen, we should not really apply this to -stable.
-
-Best regards,
-								Pavel
-							=09
-> +++ b/drivers/pci/controller/dwc/pcie-al.c
-> @@ -242,18 +242,24 @@ static struct pci_ops al_child_pci_ops =3D {
->  	.write =3D pci_generic_config_write,
->  };
-> =20
-> -static void al_pcie_config_prepare(struct al_pcie *pcie)
-> +static int al_pcie_config_prepare(struct al_pcie *pcie)
->  {
->  	struct al_pcie_target_bus_cfg *target_bus_cfg;
->  	struct pcie_port *pp =3D &pcie->pci->pp;
->  	unsigned int ecam_bus_mask;
-> +	struct resource_entry *ft;
->  	u32 cfg_control_offset;
-> +	struct resource *bus;
->  	u8 subordinate_bus;
->  	u8 secondary_bus;
->  	u32 cfg_control;
->  	u32 reg;
-> -	struct resource *bus =3D resource_list_first_type(&pp->bridge->windows,=
- IORESOURCE_BUS)->res;
-> =20
-> +	ft =3D resource_list_first_type(&pp->bridge->windows, IORESOURCE_BUS);
-> +	if (!ft)
-> +		return -ENODEV;
-> +
-> +	bus =3D ft->res;
->  	target_bus_cfg =3D &pcie->target_bus_cfg;
-> =20
->  	ecam_bus_mask =3D (pcie->ecam_size >> PCIE_ECAM_BUS_SHIFT) - 1;
-> @@ -287,6 +293,8 @@ static void al_pcie_config_prepare(struct al_pcie *pc=
-ie)
->  	       FIELD_PREP(CFG_CONTROL_SEC_BUS_MASK, secondary_bus);
-> =20
->  	al_pcie_controller_writel(pcie, cfg_control_offset, reg);
-> +
-> +	return 0;
->  }
-> =20
->  static int al_pcie_host_init(struct pcie_port *pp)
-> @@ -305,7 +313,9 @@ static int al_pcie_host_init(struct pcie_port *pp)
->  	if (rc)
->  		return rc;
-> =20
-> -	al_pcie_config_prepare(pcie);
-> +	rc =3D al_pcie_config_prepare(pcie);
-> +	if (rc)
-> +		return rc;
-> =20
->  	return 0;
->  }
-
---=20
-DENX Software Engineering GmbH,        Managing Director: Erika Unter
-HRB 165235 Munich, Office: Kirchenstr.5, D-82194 Groebenzell, Germany
-
---T0sGyw0kuOTLMwMR
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iF0EABECAB0WIQRPfPO7r0eAhk010v0w5/Bqldv68gUCZs3FPgAKCRAw5/Bqldv6
-8vfvAJoD7xh8OBIk3HaGLcwuPv0YOpd8vQCgkzB1k0M8tLtvsEV6HojnZcVqV8Y=
-=j2Sj
------END PGP SIGNATURE-----
-
---T0sGyw0kuOTLMwMR--
