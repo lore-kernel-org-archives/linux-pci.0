@@ -1,52 +1,52 @@
-Received: from mx0a-00082601.pphosted.com (mx0b-00082601.pphosted.com [67.231.153.30])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87DA61CFEDC
-	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2024 19:28:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.153.30
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B77291D2F51
+	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2024 19:28:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724786928; cv=none; b=kmf/bUxEtNdxoWiYwPDDZ4txOur23WHQDnWUzkwR/TENenCchSfFMtHAj82andwjZ4CfFGup4Kw/q9J7y+Eq2XbYlXWu9XIOBTeZyUy0QTZuLOO6jTUanQEUutMsfDkCbZ/1oEb1hrtIlU6efLg3ZGjqidM/fnsqs5FTc0yjoSs=
+	t=1724786939; cv=none; b=kC/nU4kbbPIwtlDObBBxj8mkCf4yHleVMalTrKqR6AJV5lK0KEturl05oTmDEf160XAD2FXX5bAo3DPmpumbLUFWRPHQZOlIhm5iWgEBSMTGubwoQJApFLmfNPHwKB2aLz8MlU5IzEptJ64BT9FZzq9hkSYPoTO2koekTviQk+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724786928; c=relaxed/simple;
-	bh=WtOPoHH3ojk9bNzE7wbXIg0IreFI7gitEnQygH1FEic=;
+	s=arc-20240116; t=1724786939; c=relaxed/simple;
+	bh=tiCvGxXvIf6qJhtNJtaD3ZmT4CUNupTzQaXTk64jKdU=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=czl+Xh6qWRXbtha5+8H1OX0W326JBRxiixeyH7OyfbtMy9BKNAzpVGBQRgSb984efCR44J6HNnaf7s/mfAckA54FMZNCMuZOwYpzQ4gKM2xRlTKDDRFxRGpwXj2X0Fxc89lvFOSw1Rhci817hgBodhGZ3eBFPS8i9OHXTB/4acA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=cVrEs83y; arc=none smtp.client-ip=67.231.153.30
+	 MIME-Version:Content-Type; b=Z5F/bgdki9Cn/MeqQKwUfOlSciqKn0CD9ZRh7AD/Jk+A4WVmGvpl+mb1czpghjwiwqw7H0uJZLQwrAOCqbMI9t3Vy+G4K1ygG43quH0XSUd3zOcSJiJLMhv4yT9vJN0mxb/mVxK0KPSiYrQ5D5aPdf1XUgf541KjdtI/Kxw3WJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=Tg36DlMg; arc=none smtp.client-ip=67.231.145.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="cVrEs83y"
-Received: from pps.filterd (m0001303.ppops.net [127.0.0.1])
-	by m0001303.ppops.net (8.18.1.2/8.18.1.2) with ESMTP id 47RFt2T4007760
-	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2024 12:28:45 -0700
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="Tg36DlMg"
+Received: from pps.filterd (m0044012.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 47RIpS0q023565
+	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2024 12:28:57 -0700
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=from
 	:to:cc:subject:date:message-id:in-reply-to:references
 	:mime-version:content-transfer-encoding:content-type; s=
-	s2048-2021-q4; bh=9VsB0PPrNZTkTmlsWbAcw57wmOrI4jSQmU95eVUSBl4=; b=
-	cVrEs83yfZ31sli+wzx7H6JPjr8YOjGSPe3UjNO8FqXVsSDwlkSZi9okAEbb7pwD
-	yYiMUXnlEG0Z+WCx3QzUZFn/TigwXFfHh9jadw52/4G6yW0OU8DuqEpx5T9Vg7at
-	LfwnpE1AxmqZPjHYGAKPwW6ABdAvmC9gVqiHB7B7rzKPsqsDaQD3XYBoaHalWHGP
-	WI0+D9SRIcbrOaco695Ax2xlH0D6jgBfwQy7G2CFVFXBcpTaOZoBS4dtX9ll3bJ7
-	nzcL3xtC/2TJ/SgPMmYN/Egx/k/cNtxI76oWA7bELzwYS95n61Oyx1h5i7UPXks2
-	eWTRCAvtbTOCHsN0QjEPsw==
-Received: from mail.thefacebook.com ([163.114.134.16])
-	by m0001303.ppops.net (PPS) with ESMTPS id 419hv0spkq-4
+	s2048-2021-q4; bh=WtLjBrrKmUt0MuqC5UcDaN4lAOZ5FTZEdBCR44av+GY=; b=
+	Tg36DlMgYN+c2AeEM8N/WBUNKuH/ix68+aPOhKvZpna2N9UR6rd2nV2Aev1V+xCM
+	MaRxYM9wCshkqLum8ikdRSIuzHT/Aj1H6Ez2X1mCz8Yo+1M1mxdx3JhlEwHx9igQ
+	+rMa0GMSIDNDvA1F5oVXc+6MJJw3pej5MZ3/GyfK23zgYlJdV/qGakqJEN9dyDqm
+	6ESuSZsT+D8SB7nobWDDl59b/KJAhLMrv6KIe0MoffWNdWV+Yfv2jqvno4AOWmQE
+	apW83l9rleknvOZSzcxv0VFp8pDFu47t1wVmUok8OyoEj/C6+q2FCQCH7pEWkSsl
+	K53JPnCDs5rdOAj7+ycyKw==
+Received: from maileast.thefacebook.com ([163.114.130.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 419meg8836-9
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2024 12:28:45 -0700 (PDT)
-Received: from twshared12613.02.ash9.facebook.com (2620:10d:c085:108::4) by
- mail.thefacebook.com (2620:10d:c08b:78::c78f) with Microsoft SMTP Server
+	for <linux-pci@vger.kernel.org>; Tue, 27 Aug 2024 12:28:57 -0700 (PDT)
+Received: from twshared26656.07.ash9.facebook.com (2620:10d:c0a8:1c::1b) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.1544.11; Tue, 27 Aug 2024 19:28:42 +0000
+ 15.2.1544.11; Tue, 27 Aug 2024 19:28:38 +0000
 Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
-	id 61516124FD6FB; Tue, 27 Aug 2024 12:28:27 -0700 (PDT)
+	id 87F00124FD705; Tue, 27 Aug 2024 12:28:27 -0700 (PDT)
 From: Keith Busch <kbusch@meta.com>
 To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
 CC: Keith Busch <kbusch@kernel.org>,
         Jonathan Cameron
 	<Jonathan.Cameron@huawei.com>
-Subject: [PATCHv2 1/5] pci: make pci_stop_dev concurrent safe
-Date: Tue, 27 Aug 2024 12:28:22 -0700
-Message-ID: <20240827192826.710031-2-kbusch@meta.com>
+Subject: [PATCHv2 5/5] pci: unexport pci_walk_bus_locked
+Date: Tue, 27 Aug 2024 12:28:26 -0700
+Message-ID: <20240827192826.710031-6-kbusch@meta.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <20240827192826.710031-1-kbusch@meta.com>
 References: <20240827192826.710031-1-kbusch@meta.com>
@@ -59,94 +59,36 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 X-FB-Internal: Safe
 Content-Type: text/plain
-X-Proofpoint-GUID: dqN3zLU7dCgk-m1FlhkNgsrRrykEMlUL
-X-Proofpoint-ORIG-GUID: dqN3zLU7dCgk-m1FlhkNgsrRrykEMlUL
+X-Proofpoint-GUID: cENQFERb-aGWNtV2iUKz4qiZ0sdsl5oK
+X-Proofpoint-ORIG-GUID: cENQFERb-aGWNtV2iUKz4qiZ0sdsl5oK
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.28.16
  definitions=2024-08-27_10,2024-08-27_01,2024-05-17_01
 
 From: Keith Busch <kbusch@kernel.org>
 
-Use the atomic ADDED bit flag to safely ensure concurrent callers can't
-attempt to stop the device multiple times. Callers should currently be
-holding the pci_rescan_remove_lock, so there shouldn't be fixing any
-existing race. But that global lock can cause lock dependency issues, so
-this is preparing to reduce reliance on that lock by using the existing
-atomic bit ops.
+There's only one user of this, and it's internal, so no need to export
+it.
 
 Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Keith Busch <kbusch@kernel.org>
 ---
- drivers/pci/bus.c    |  2 +-
- drivers/pci/pci.h    |  9 +++++++--
- drivers/pci/remove.c | 18 ++++++++----------
- 3 files changed, 16 insertions(+), 13 deletions(-)
+ drivers/pci/bus.c | 1 -
+ 1 file changed, 1 deletion(-)
 
 diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 55c8536860518..e41dfece0d969 100644
+index 8491e9c7f0586..30620f3bb0e2d 100644
 --- a/drivers/pci/bus.c
 +++ b/drivers/pci/bus.c
-@@ -348,7 +348,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	if (retval < 0 && retval !=3D -EPROBE_DEFER)
- 		pci_warn(dev, "device attach failed (%d)\n", retval);
+@@ -435,7 +435,6 @@ void pci_walk_bus_locked(struct pci_bus *top, int (*c=
+b)(struct pci_dev *, void *
 =20
--	pci_dev_assign_added(dev, true);
-+	pci_dev_assign_added(dev);
-=20
- 	if (dev_of_node(&dev->dev) && pci_is_bridge(dev)) {
- 		retval =3D of_platform_populate(dev_of_node(&dev->dev), NULL, NULL,
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 0e9b1c7b94a5a..802f7eac53115 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -444,9 +444,14 @@ static inline int pci_dev_set_disconnected(struct pc=
-i_dev *dev, void *unused)
- #define PCI_DPC_RECOVERED 1
- #define PCI_DPC_RECOVERING 2
-=20
--static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
-+static inline void pci_dev_assign_added(struct pci_dev *dev)
- {
--	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
-+	set_bit(PCI_DEV_ADDED, &dev->priv_flags);
-+}
-+
-+static inline bool pci_dev_test_and_clear_added(struct pci_dev *dev)
-+{
-+	return test_and_clear_bit(PCI_DEV_ADDED, &dev->priv_flags);
+ 	__pci_walk_bus(top, cb, userdata);
  }
+-EXPORT_SYMBOL_GPL(pci_walk_bus_locked);
 =20
- static inline bool pci_dev_is_added(const struct pci_dev *dev)
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index 910387e5bdbf9..ec3064a115bf8 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -16,17 +16,15 @@ static void pci_free_resources(struct pci_dev *dev)
-=20
- static void pci_stop_dev(struct pci_dev *dev)
+ struct pci_bus *pci_bus_get(struct pci_bus *bus)
  {
--	pci_pme_active(dev, false);
--
--	if (pci_dev_is_added(dev)) {
--		of_platform_depopulate(&dev->dev);
--		device_release_driver(&dev->dev);
--		pci_proc_detach_device(dev);
--		pci_remove_sysfs_dev_files(dev);
--		of_pci_remove_node(dev);
-+	if (!pci_dev_test_and_clear_added(dev))
-+		return;
-=20
--		pci_dev_assign_added(dev, false);
--	}
-+	pci_pme_active(dev, false);
-+	of_platform_depopulate(&dev->dev);
-+	device_release_driver(&dev->dev);
-+	pci_proc_detach_device(dev);
-+	pci_remove_sysfs_dev_files(dev);
-+	of_pci_remove_node(dev);
- }
-=20
- static void pci_destroy_dev(struct pci_dev *dev)
 --=20
 2.43.5
 
