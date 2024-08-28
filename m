@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D49511A38FA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB9791A3BB8;
 	Wed, 28 Aug 2024 15:46:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724859984; cv=none; b=cAEDCpTu0hI660DmmPKf9latfe9rlo9VHySz55cDnqJ7ejoFC7ns7EdxD4SGTN/aDlcs0Ef2+Ow4cbSVwWUfWmRxP34U02eQQqnZn/PNQPfEPkePnAzEEtv33isYw+jcoqRDzi1Lt+j5eZw5sPX8UBZrar/ymmuG6yZ00IoFvpY=
+	t=1724859985; cv=none; b=LPzaz3LBWgLv5SsnlwcM0zM1M60G2LabE3RwlRw/QrANBmvBmCySeHJxOkp1lZl0L3Ty+eU7tKXniiABH7ozKXPIwhNdbdnbmvBaohFn0jy5wTtOGWtwQrdaOIk3d09k+SgX8fxKmVeMrfO8AiZ0kQkwxG1iysqgUdQU8pinb5M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724859984; c=relaxed/simple;
-	bh=Q0K9d834m1CQs7L6nrAh8i7+sVcfqEywtcVG4UQJkH8=;
+	s=arc-20240116; t=1724859985; c=relaxed/simple;
+	bh=I2wSRHaYDVrxwX11GGk6+ukp4VyqQ6OrIa6J7s/t3jQ=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Ih42AoXTVV+z20ABzdJRyVs+U1Dx+NVqj9R38zme0DJ3ljUoDnUVwJZ5vuLBel0c1JsOHG9KsYNWmS6JoboA8cL4wzvlkcvDJ5IuJg1oIZan02keV4uRDirdKfXNKRqWxaA71bOFOYKpvxL24FKtgd4T7LWVYpYRw7wO8+JMxJI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pn6VBCOZ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=uj3GO3Qn+M+0CMKvEdIOcViUPqRkW/bWEa6sWfiNgG18zRDbMNWSRl8wWIx78m5MNYhris+M9mkVJkcSTIQJBi1SNMhze7+MAY4w3zg9CN/jluorfpFpj62lo6QJFT1cVcTJrDQQL+IgujkRacKBki/jXCW+6EZ+TAXURH5FRxw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DUgvdM3R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pn6VBCOZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 7EA0BC4CEE2;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DUgvdM3R"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B522AC4CEC7;
 	Wed, 28 Aug 2024 15:46:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1724859984;
-	bh=Q0K9d834m1CQs7L6nrAh8i7+sVcfqEywtcVG4UQJkH8=;
+	bh=I2wSRHaYDVrxwX11GGk6+ukp4VyqQ6OrIa6J7s/t3jQ=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=pn6VBCOZbu5cvk64b9UxCl77GJUpXrd5dXmyg25JH+vole0CDMrFBTr4MxfyoOTo1
-	 FxsiFXr4V9QzVlSlGZkJXNWtNLt8esspRkEE/EcZm8FFQTRYKJw+oVJ69yMqbE1CCR
-	 L5DSHotG4lp0X8BsG7ghBkEEr+NvPbIr0JuwbKo2xPZ+QDsBoEH0ojzR7yE5Cpg0N/
-	 CZfVcNngJgJSQ6zv0295v8wysEFC5DmxmdoZkbZPEQj9BN3iXSm+DqWGXx+QiFmHLU
-	 6gSyxnZ+Dj4TVR7vNFUnCc3I/qikGtZJHI811N0ty63lcDdYMrzH6JNBbk/mYwsPV5
-	 fkNgH08J2xCkQ==
+	b=DUgvdM3Rl5ZbxCGaaOIoONbnLXZrtxo8G+QfwMGpEDp1+hmQPFZ+W3FUEzFjPp/ds
+	 U60XHDdKiS20393XTKdHE0WEy/05GzzBCL6RDzRy9O4BVDK7pgQGljzb1Ym4ctrLhr
+	 AB/aubhVA2jAkuKr+WzCJ7QvXN29sbsgw59AA1CmaeWQSqt/ncsrxJ+EXJ/cHScMjF
+	 X7lh+EVTGpA02MAuiWUmGSD9/wZzq/3SggBktiscynLVsXzbGTHsbfrVq+YyOyjblr
+	 ocGqSMHL8poaJJP9S1rV4N6BeuqDwEPpHKUh+t5rkJDEP1gw71gTOtY8e04hsCvCmi
+	 hTu8ep/dvzq3w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 74EB2C61DB8;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ADCE7C61DB8;
 	Wed, 28 Aug 2024 15:46:24 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Wed, 28 Aug 2024 21:16:16 +0530
-Subject: [PATCH v4 06/12] PCI: qcom-ep: Modify 'global_irq' and 'perst_irq'
- IRQ device names
+Date: Wed, 28 Aug 2024 21:16:18 +0530
+Subject: [PATCH v4 08/12] ARM: dts: qcom: sdx65: Add 'linux,pci-domain' to
+ PCIe EP controller node
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20240828-pci-qcom-hotplug-v4-6-263a385fbbcb@linaro.org>
+Message-Id: <20240828-pci-qcom-hotplug-v4-8-263a385fbbcb@linaro.org>
 References: <20240828-pci-qcom-hotplug-v4-0-263a385fbbcb@linaro.org>
 In-Reply-To: <20240828-pci-qcom-hotplug-v4-0-263a385fbbcb@linaro.org>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -57,16 +57,16 @@ Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
  Konrad Dybcio <konrad.dybcio@linaro.org>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2506;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=961;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=XIcVOnjgniiauSeztC2lx8OOqKBgQWPfU4mlz79I8zw=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmz0ZMJeRwBKZl9ti5NFbMzFzxx2sLFKYLKVjgX
- KFkM1P+Yw2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZs9GTAAKCRBVnxHm/pHO
- 9REAB/sEt58nq25RLnw0HfIv6PjsjV3e48I2L8y+h1KA3Exi5n4IWe+dT2UpnzEYRXAD2ElAAJm
- /GLyqMRvavA3M+hMAJN+K16Kn2lg2Br5Xa528Kghp51WZIe9nbasUwkQwSGXWyVjlQFFVzitb4M
- H3c3CbAvSC1ooH7fhhVuu0LLaKXZ+0DwD4f2gHmayoqcGXIGVpgdrNpMQ91llb1NbtCzlsNzoQx
- i4NLLnDWo53+8rG5LkFRJjTOLrQKGXGi9m7mQz68cnkgXE6EbaLNOXhb5sDRzHn5F4a1R9dU5lE
- Nfc0uRJt3LI21V+XFwDEtKuylGQMvUIFznOMbv0dLB8QBhe2
+ bh=4ksb8gQi6XxtqZHvRIfOuO8m7D/GXep6HzglfrtwSCA=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmz0ZMcCAWuNfIslxrX4tmDNzHiHcwDPbSkkENj
+ sUmCBTArPyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZs9GTAAKCRBVnxHm/pHO
+ 9bL6B/9rkFj8vlPARTFTa3DZ4FFTrCkpbDbqJHbBLKdXwQzG6jGQIpJ6pzV9klmkPXc9cnN76Wg
+ G4IgIamHddxgW+nfOLgdfuSmTRipWuFz6FUm/xNEVfCE6rqMmrPDCy9rav9eX7wFgZSjwtqdQlL
+ 9g4iOJkPVwrR8GPS1wkQvkIWCiioGJjAkVfs4dtxDsQW+KON2cdEIVIIo5V6MHFGTXzojYGNOwp
+ +/k7/liaYzED6Vp3fPQMgtsCLMhcMWry/Skisr50qTDYafouyj7G+i3VIbFGo9ZdOZotlyy0Se2
+ cjDdAgN2KXzyZ3ijdfHc4SjqL3dP3HJVpdSTKlFxKm08Ju5L
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -76,69 +76,31 @@ Reply-To: manivannan.sadhasivam@linaro.org
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Currently, the IRQ device name for both of these IRQs doesn't have Qcom
-specific prefix and PCIe domain number. This causes 2 issues:
+'linux,pci-domain' property provides the PCI domain number for the PCI
+endpoint controllers in a SoC. If this property is not present, then an
+unstable (across boots) unique number will be assigned.
 
-1. Pollutes the global IRQ namespace since 'global' is a common name.
-2. When more than one EP controller instance is present in the SoC, naming
-conflict will occur.
-
-Hence, add 'qcom_pcie_ep_' prefix and PCIe domain number suffix to the IRQ
-names to uniquely identify the IRQs and also to fix the above mentioned
-issues.
+Use this property to specify the domain number based on the actual hardware
+instance of the PCI endpoint controllers in SDX65 SoC.
 
 Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 16 ++++++++++++++--
- 1 file changed, 14 insertions(+), 2 deletions(-)
+ arch/arm/boot/dts/qcom/qcom-sdx65.dtsi | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index 0bb0a056dd8f..d0a27fa6fdc8 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -711,8 +711,15 @@ static irqreturn_t qcom_pcie_ep_perst_irq_thread(int irq, void *data)
- static int qcom_pcie_ep_enable_irq_resources(struct platform_device *pdev,
- 					     struct qcom_pcie_ep *pcie_ep)
- {
-+	struct device *dev = pcie_ep->pci.dev;
-+	char *name;
- 	int ret;
+diff --git a/arch/arm/boot/dts/qcom/qcom-sdx65.dtsi b/arch/arm/boot/dts/qcom/qcom-sdx65.dtsi
+index a949454212e9..fcfec4228670 100644
+--- a/arch/arm/boot/dts/qcom/qcom-sdx65.dtsi
++++ b/arch/arm/boot/dts/qcom/qcom-sdx65.dtsi
+@@ -345,6 +345,7 @@ pcie_ep: pcie-ep@1c00000 {
  
-+	name = devm_kasprintf(dev, GFP_KERNEL, "qcom_pcie_ep_global_irq%d",
-+			      pcie_ep->pci.ep.epc->domain_nr);
-+	if (!name)
-+		return -ENOMEM;
-+
- 	pcie_ep->global_irq = platform_get_irq_byname(pdev, "global");
- 	if (pcie_ep->global_irq < 0)
- 		return pcie_ep->global_irq;
-@@ -720,18 +727,23 @@ static int qcom_pcie_ep_enable_irq_resources(struct platform_device *pdev,
- 	ret = devm_request_threaded_irq(&pdev->dev, pcie_ep->global_irq, NULL,
- 					qcom_pcie_ep_global_irq_thread,
- 					IRQF_ONESHOT,
--					"global_irq", pcie_ep);
-+					name, pcie_ep);
- 	if (ret) {
- 		dev_err(&pdev->dev, "Failed to request Global IRQ\n");
- 		return ret;
- 	}
+ 			max-link-speed = <3>;
+ 			num-lanes = <2>;
++			linux,pci-domain = <0>;
  
-+	name = devm_kasprintf(dev, GFP_KERNEL, "qcom_pcie_ep_perst_irq%d",
-+			      pcie_ep->pci.ep.epc->domain_nr);
-+	if (!name)
-+		return -ENOMEM;
-+
- 	pcie_ep->perst_irq = gpiod_to_irq(pcie_ep->reset);
- 	irq_set_status_flags(pcie_ep->perst_irq, IRQ_NOAUTOEN);
- 	ret = devm_request_threaded_irq(&pdev->dev, pcie_ep->perst_irq, NULL,
- 					qcom_pcie_ep_perst_irq_thread,
- 					IRQF_TRIGGER_HIGH | IRQF_ONESHOT,
--					"perst_irq", pcie_ep);
-+					name, pcie_ep);
- 	if (ret) {
- 		dev_err(&pdev->dev, "Failed to request PERST IRQ\n");
- 		disable_irq(pcie_ep->global_irq);
+ 			status = "disabled";
+ 		};
 
 -- 
 2.25.1
