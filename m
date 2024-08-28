@@ -1,469 +1,111 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09DE813C3D5;
-	Wed, 28 Aug 2024 15:39:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85BBE83A18;
+	Wed, 28 Aug 2024 15:46:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724859579; cv=none; b=PeHskwIk3Ke7PIwqsTJjcJd0Dl6H54+cVn9a3/m77BvwyJ4o6U1tmh1BYRWvNZItNo40bcrhikFTazvy0L0/+PGEnvwNu1uGhN4zcyqqIXBY+C8uGMIW/k+WcZXMW5w/4bP565771PaFPxRqlnni7e/hk+g9QnG7eVfyS8g/KCc=
+	t=1724859984; cv=none; b=RNeyoMlrrg2mcJ1TbX2ZUoCd4JCrYwvA6s7U/QUy1Vb2fcijJqbU8wpJSvN5CjAX1HsaxCD91pDQj84UDyhYwplLn/vG2EvydVI5IHOUt/rs5Lp7tm6CdKv1bYhmzlqBqDNjeX2S8NQRQO8agamJ/TmpPevI3y95WmIOglKHNZA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724859579; c=relaxed/simple;
-	bh=xbdydoh2u22vINByRrRMIya2lqnh9w4150zXJqURBUw=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OMq2Uv3WDywh7xtz9dX0IEiW4E7YJ9v81bWMRLNGwT9vFQCeo9uH0qIP6yHTlftZwhZ0qKHMKs6Nrv2DYhw0ZirZGVQWmsWDuUkvhiHnXJqBMcrXVx0KDXaQ6jWLaFVlTbVeYi3DMLdAfufC0fBMtcwrondRe6/omGT7XADpAvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.231])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Wv7mZ3bWYz6K99Y;
-	Wed, 28 Aug 2024 23:36:14 +0800 (CST)
-Received: from lhrpeml500005.china.huawei.com (unknown [7.191.163.240])
-	by mail.maildlp.com (Postfix) with ESMTPS id 236191400D4;
-	Wed, 28 Aug 2024 23:39:33 +0800 (CST)
-Received: from localhost (10.203.177.66) by lhrpeml500005.china.huawei.com
- (7.191.163.240) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 28 Aug
- 2024 16:39:32 +0100
-Date: Wed, 28 Aug 2024 16:39:31 +0100
-From: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To: Alexey Kardashevskiy <aik@amd.com>
-CC: <kvm@vger.kernel.org>, <iommu@lists.linux.dev>,
-	<linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>, "Suravee
- Suthikulpanit" <suravee.suthikulpanit@amd.com>, Alex Williamson
-	<alex.williamson@redhat.com>, Dan Williams <dan.j.williams@intel.com>,
-	<pratikrajesh.sampat@amd.com>, <michael.day@amd.com>, <david.kaplan@amd.com>,
-	<dhaval.giani@amd.com>, Santosh Shukla <santosh.shukla@amd.com>, Tom Lendacky
-	<thomas.lendacky@amd.com>, "Michael Roth" <michael.roth@amd.com>, Alexander
- Graf <agraf@suse.de>, "Nikunj A Dadhania" <nikunj@amd.com>, Vasant Hegde
-	<vasant.hegde@amd.com>, "Lukas Wunner" <lukas@wunner.de>
-Subject: Re: [RFC PATCH 08/21] crypto/ccp: Implement SEV TIO firmware
- interface
-Message-ID: <20240828163931.0000673b@Huawei.com>
-In-Reply-To: <20240823132137.336874-9-aik@amd.com>
-References: <20240823132137.336874-1-aik@amd.com>
-	<20240823132137.336874-9-aik@amd.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1724859984; c=relaxed/simple;
+	bh=+Tkqhar4vQYGZIgL28NlgG1tVNG3i9So+0zA8BWKYOU=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=kpY0Wz0lbGNON+wOeUxgqHEsiiuSL/GfquLyJREiAQVRKPGlAE7KqrKB7H3b6WAS6N7Yeq7ek5l/uw1G3LXXIcQYVvVE8HK6ge0DOVbb5+5sqbCd9N5ZpUsYqLihd8/jabfobhju2QckMVukkGIzgLFUrQPIdShw3fYkxq+xXFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wni5p08Y; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wni5p08Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3B09CC4AF17;
+	Wed, 28 Aug 2024 15:46:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1724859984;
+	bh=+Tkqhar4vQYGZIgL28NlgG1tVNG3i9So+0zA8BWKYOU=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=Wni5p08Y4poqJ7JER7adnz1qawx2bLu9g3YNgIuzMOYx9sidu3IqiZYbUk+wnR1iI
+	 ZozrhbHH+XRKdmv9+0EB5xQCkgpsKtKY1yacx61cSHK2xgFDDQja4LDyIPxw5o3KSd
+	 peVqNOmQz0aYvU0BFOywptpS07TnwFnvcTajpAAoXDQC+SVBmv5KtKvZYhUkR8dkKK
+	 PwP9Q9xUYFJJ3YP5y/Vc3XkB0UbiS1BXf7dDeyg8boMlL07U74IzjnJIZCGbi3cEn3
+	 AOOid9h/+I03RurhNbQkbMFYOJ4kxv+Q/akh0YGsUKuMlksxs9f4SRpB/VxYmhuvk5
+	 nsx8KCyFv62iA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 24E2CC61CF0;
+	Wed, 28 Aug 2024 15:46:24 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
+Date: Wed, 28 Aug 2024 21:16:12 +0530
+Subject: [PATCH v4 02/12] PCI: qcom-ep: Reword the error message for
+ receiving unknown global IRQ event
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml500004.china.huawei.com (7.191.163.9) To
- lhrpeml500005.china.huawei.com (7.191.163.240)
+Message-Id: <20240828-pci-qcom-hotplug-v4-2-263a385fbbcb@linaro.org>
+References: <20240828-pci-qcom-hotplug-v4-0-263a385fbbcb@linaro.org>
+In-Reply-To: <20240828-pci-qcom-hotplug-v4-0-263a385fbbcb@linaro.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, 
+ Konrad Dybcio <konradybcio@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Konrad Dybcio <konrad.dybcio@linaro.org>
+X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1256;
+ i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
+ bh=B8RUdvVv9QEg4h2fDtSWIh3luhRVOKTDULQMHpO/Rk0=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBmz0ZLNt9QNPKv9NKAKbZ5eVVEDlJxVPTsCl4yZ
+ H4jVagxg8KJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZs9GSwAKCRBVnxHm/pHO
+ 9cEpB/4hP+YKCmtIoOu2Hobc2nRJn8ozN5UY9byuFg1YQ5A1UEpxS1qIj/AsDmQdV9VTq5uHzGM
+ 328jQY5jYgixBeIhqP4j1hMIWYRj1u/IsKn0n+dIuIU3dG6LE/YZ7nEKXToBSR72kQDRqO59alz
+ WzXQTeR8g87j1LgD4ZjW61UaFEEWMFrDZFHezITn8NV9Oy0lbwJRaV7QDzlVgpuIWPkP2a7Kzhl
+ dc2+VD7cLBgch/22b8vPvycHUyVl+UzorHJhFDRkSBx8eu7jpX78UD738y9xO7ESP5/Z9JwJNKC
+ ucR+cweFjvWOdffPpzPYLz3GBumFwjJcJEGsVOy2gwP8c/UG
+X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@linaro.org/default with auth_id=185
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reply-To: manivannan.sadhasivam@linaro.org
 
-On Fri, 23 Aug 2024 23:21:22 +1000
-Alexey Kardashevskiy <aik@amd.com> wrote:
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-> Implement SEV TIO PSP command wrappers in sev-dev-tio.c, these make
-> SPDM calls and store the data in the SEV-TIO-specific structs.
-> 
-> Implement tsm_ops for the hypervisor, the TSM module will call these
-> when loaded on the host and its tsm_set_ops() is called. The HV ops
-> are implemented in sev-dev-tsm.c.
-> 
-> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
-Superficial comments online inline.
+Current error message just prints the contents of PARF_INT_ALL_STATUS
+register as if like the IRQ event number. It could mislead the users.
+Reword it to make it clear that the error message is actually showing the
+interrupt status register to help debug spurious IRQ events.
 
-Jonathan
+While at it, let's also switch over to dev_WARN_ONCE() so that any IRQ
+storm won't flood the kernel log buffer.
 
-> ---
->  drivers/crypto/ccp/Makefile      |    2 +
->  arch/x86/include/asm/sev.h       |   20 +
->  drivers/crypto/ccp/sev-dev-tio.h |  105 ++
->  drivers/crypto/ccp/sev-dev.h     |    2 +
->  include/linux/psp-sev.h          |   60 +
->  drivers/crypto/ccp/sev-dev-tio.c | 1565 ++++++++++++++++++++
->  drivers/crypto/ccp/sev-dev-tsm.c |  397 +++++
->  drivers/crypto/ccp/sev-dev.c     |   10 +-
->  8 files changed, 2159 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/crypto/ccp/Makefile b/drivers/crypto/ccp/Makefile
-> index 394484929dae..d9871465dd08 100644
-> --- a/drivers/crypto/ccp/Makefile
-> +++ b/drivers/crypto/ccp/Makefile
-> @@ -11,6 +11,8 @@ ccp-$(CONFIG_PCI) += sp-pci.o
->  ccp-$(CONFIG_CRYPTO_DEV_SP_PSP) += psp-dev.o \
->                                     sev-dev.o \
->                                     tee-dev.o \
-> +				   sev-dev-tio.o \
-> +				   sev-dev-tsm.o \
-spaces vs tabs. I guess go for consistency.
+Reviewed-by: Konrad Dybcio <konrad.dybcio@linaro.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-qcom-ep.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
->                                     platform-access.o \
->                                     dbc.o \
->                                     hsti.o
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 972a90eba494..0bb0a056dd8f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -679,7 +679,8 @@ static irqreturn_t qcom_pcie_ep_global_irq_thread(int irq, void *data)
+ 		dw_pcie_ep_linkup(&pci->ep);
+ 		pcie_ep->link_status = QCOM_PCIE_EP_LINK_UP;
+ 	} else {
+-		dev_err(dev, "Received unknown event: %d\n", status);
++		dev_WARN_ONCE(dev, 1, "Received unknown event. INT_STATUS: 0x%08x\n",
++			      status);
+ 	}
+ 
+ 	return IRQ_HANDLED;
 
-> diff --git a/drivers/crypto/ccp/sev-dev-tio.c b/drivers/crypto/ccp/sev-dev-tio.c
-> new file mode 100644
-> index 000000000000..42741b17c747
-> --- /dev/null
-> +++ b/drivers/crypto/ccp/sev-dev-tio.c
-> @@ -0,0 +1,1565 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-
-> +static size_t sla_dobj_id_to_size(u8 id)
-> +{
-> +	size_t n;
-> +
-> +	BUILD_BUG_ON(sizeof(struct spdm_dobj_hdr_resp) != 0x10);
-> +	switch (id) {
-> +	case SPDM_DOBJ_ID_REQ:
-> +		n = sizeof(struct spdm_dobj_hdr_req);
-> +		break;
-> +	case SPDM_DOBJ_ID_RESP:
-> +		n = sizeof(struct spdm_dobj_hdr_resp);
-> +		break;
-> +	case SPDM_DOBJ_ID_CERTIFICATE:
-> +		n = sizeof(struct spdm_dobj_hdr_cert);
-> +		break;
-> +	case SPDM_DOBJ_ID_MEASUREMENT:
-> +		n = sizeof(struct spdm_dobj_hdr_meas);
-> +		break;
-> +	case SPDM_DOBJ_ID_REPORT:
-> +		n = sizeof(struct spdm_dobj_hdr_report);
-> +		break;
-> +	default:
-> +		WARN_ON(1);
-> +		n = 0;
-> +		break;
-> +	}
-> +
-> +	return n;
-
-Early returns will make this more readable.
-
-> +}
-
-
-> +/**
-> + * struct sev_data_tio_dev_connect - TIO_DEV_CONNECT
-> + *
-> + * @length: Length in bytes of this command buffer.
-> + * @spdm_ctrl: SPDM control structure defined in Section 5.1.
-> + * @device_id: The PCIe Routing Identifier of the device to connect to.
-> + * @root_port_id: The PCIe Routing Identifier of the root port of the device.
-> + * @segment_id: The PCIe Segment Identifier of the device to connect to.
-
-Doesn't seem to be there.
-
-> + * @dev_ctx_sla: Scatter list address of the device context buffer.
-> + * @tc_mask: Bitmask of the traffic classes to initialize for SEV-TIO usage.
-> + *           Setting the kth bit of the TC_MASK to 1 indicates that the traffic
-> + *           class k will be initialized.
-> + * @cert_slot: Slot number of the certificate requested for constructing the SPDM session.
-> + * @ide_stream_id: IDE stream IDs to be associated with this device.
-> + *                 Valid only if corresponding bit in TC_MASK is set.
-> + */
-> +struct sev_data_tio_dev_connect {
-> +	u32 length;
-> +	u32 reserved1;
-> +	struct spdm_ctrl spdm_ctrl;
-> +	u8 reserved2[8];
-> +	struct sla_addr_t dev_ctx_sla;
-> +	u8 tc_mask;
-> +	u8 cert_slot;
-> +	u8 reserved3[6];
-> +	u8 ide_stream_id[8];
-> +	u8 reserved4[8];
-> +} __packed;
-> +
-
-
-> +/**
-> + * struct sev_data_tio_guest_request - TIO_GUEST_REQUEST command
-> + *
-> + * @length: Length in bytes of this command buffer
-> + * @spdm_ctrl: SPDM control structure defined in Chapter 2.
-
-Some more fields that aren't documented.  They all should be for
-kernel-doc or the scripts will moan. 
-I'd just run the script and fixup all the warnings and errors.
-
-
-> + * @gctx_paddr: system physical address of guest context page
-> + * @tdi_ctx_paddr: SPA of page donated by hypervisor
-> + * @req_paddr: system physical address of request page
-> + * @res_paddr: system physical address of response page
-> + */
-> +struct sev_data_tio_guest_request {
-> +	u32 length;				/* In */
-> +	u32 reserved;
-> +	struct spdm_ctrl spdm_ctrl;		/* In */
-> +	struct sla_addr_t dev_ctx_sla;
-> +	struct sla_addr_t tdi_ctx_sla;
-> +	u64 gctx_paddr;
-> +	u64 req_paddr;				/* In */
-> +	u64 res_paddr;				/* In */
-> +} __packed;
-> +
-
-
-
-> +int sev_tio_tdi_status(struct tsm_dev_tio *dev_data, struct tsm_tdi_tio *tdi_data,
-> +		       struct tsm_spdm *spdm)
-> +{
-> +	struct sev_tio_tdi_status_data *data = (struct sev_tio_tdi_status_data *) dev_data->data;
-> +	struct sev_data_tio_tdi_status status = {
-> +		.length = sizeof(status),
-> +		.dev_ctx_sla = dev_data->dev_ctx,
-> +		.tdi_ctx_sla = tdi_data->tdi_ctx,
-> +	};
-> +	int ret;
-> +
-> +	if (IS_SLA_NULL(dev_data->dev_ctx) || IS_SLA_NULL(tdi_data->tdi_ctx))
-> +		return -ENXIO;
-> +
-> +	memset(data, 0, sizeof(*data));
-> +
-> +	spdm_ctrl_init(spdm, &status.spdm_ctrl, dev_data);
-> +	status.status_paddr = __psp_pa(data);
-> +
-> +	ret = sev_tio_do_cmd(SEV_CMD_TIO_TDI_STATUS, &status, sizeof(status),
-> +			     &dev_data->psp_ret, dev_data, spdm);
-> +
-> +	return ret;
-
-return sev_tio_do_cmd()
-
-Same in other similar cases.
-
-> +}
-
-
-> diff --git a/drivers/crypto/ccp/sev-dev-tsm.c b/drivers/crypto/ccp/sev-dev-tsm.c
-> new file mode 100644
-> index 000000000000..a11dea482d4b
-> --- /dev/null
-> +++ b/drivers/crypto/ccp/sev-dev-tsm.c
-> @@ -0,0 +1,397 @@
-> +// SPDX-License-Identifier: GPL-2.0-only
-> +
-> +// Interface to CCP/SEV-TIO for generic PCIe TDISP module
-> +
-> +#include <linux/pci.h>
-> +#include <linux/pci-doe.h>
-> +#include <linux/tsm.h>
-> +
-> +#include <linux/smp.h>
-> +#include <asm/sev-common.h>
-> +
-> +#include "psp-dev.h"
-> +#include "sev-dev.h"
-> +#include "sev-dev-tio.h"
-> +
-> +static int mkret(int ret, struct tsm_dev_tio *dev_data)
-> +{
-> +	if (ret)
-> +		return ret;
-> +
-> +	if (dev_data->psp_ret == SEV_RET_SUCCESS)
-> +		return 0;
-> +
-> +	pr_err("PSP returned an error %d\n", dev_data->psp_ret);
-I'm not totally convinced this is worth while vs simply checking
-at call sites.
-
-> +	return -EINVAL;
-> +}
-> +
-> +static int dev_connect(struct tsm_dev *tdev, void *private_data)
-> +{
-> +	u16 device_id = pci_dev_id(tdev->pdev);
-> +	u16 root_port_id = 0; // FIXME: this is NOT PCI id, need to figure out how to calculate this
-> +	u8 segment_id = tdev->pdev->bus ? pci_domain_nr(tdev->pdev->bus) : 0;
-> +	struct tsm_dev_tio *dev_data = tdev->data;
-> +	int ret;
-> +
-> +	if (!dev_data) {
-> +		dev_data = kzalloc(sizeof(*dev_data), GFP_KERNEL);
-> +		if (!dev_data)
-> +			return -ENOMEM;
-> +
-> +		ret = sev_tio_dev_create(dev_data, device_id, root_port_id, segment_id);
-> +		if (ret)
-> +			goto free_exit;
-> +
-> +		tdev->data = dev_data;
-> +	}
-...
-
-> +
-> +free_exit:
-> +	sev_tio_dev_reclaim(dev_data, &tdev->spdm);
-> +	kfree(dev_data);
-
-Correct to free even if not allocated here?
-Perhaps a comment if so.
-
-> +
-> +	return ret;
-> +}
-> +
-
-
-> +static int ide_refresh(struct tsm_dev *tdev, void *private_data)
-> +{
-> +	struct tsm_dev_tio *dev_data = tdev->data;
-> +	int ret;
-> +
-> +	if (!dev_data)
-> +		return -ENODEV;
-> +
-> +	ret = sev_tio_ide_refresh(dev_data, &tdev->spdm);
-> +
-> +	return ret;
-
-	return sev_tio_ide_refresh()
-
-> +}
-
-> +
-> +static int tdi_create(struct tsm_tdi *tdi)
-> +{
-> +	struct tsm_tdi_tio *tdi_data = tdi->data;
-> +	int ret;
-> +
-> +	if (tdi_data)
-> +		return -EBUSY;
-> +
-> +	tdi_data = kzalloc(sizeof(*tdi_data), GFP_KERNEL);
-> +	if (!tdi_data)
-> +		return -ENOMEM;
-> +
-> +	ret = sev_tio_tdi_create(tdi->tdev->data, tdi_data, pci_dev_id(tdi->pdev),
-> +				 tdi->rseg, tdi->rseg_valid);
-> +	if (ret)
-> +		kfree(tdi_data);
-	if (ret) {
-		kfree(tdi_data);
-		return ret;
-	}
-
-	tid->data = tdi_data;
-
-	return 0;
-
-is slightly longer but a more standard form so easier to review.
-
-> +	else
-> +		tdi->data = tdi_data;
-> +
-> +	return ret;
-> +}
-> +
-
-> +
-> +static int guest_request(struct tsm_tdi *tdi, u32 guest_rid, u64 kvmid, void *req_data,
-
-Probably wrap nearer 80 chars.
-
-> +			 enum tsm_tdisp_state *state, void *private_data)
-> +{
-> +	struct tsm_dev_tio *dev_data = tdi->tdev->data;
-> +	struct tio_guest_request *req = req_data;
-> +	int ret;
-> +
-> +	if (!tdi->data)
-> +		return -EFAULT;
-> +
-> +	if (dev_data->cmd == 0) {
-> +		ret = sev_tio_guest_request(&req->data, guest_rid, kvmid,
-> +					    dev_data, tdi->data, &tdi->tdev->spdm);
-> +		req->fw_err = dev_data->psp_ret;
-
-If the above returned an error is psp_ret always set? I think not.
-So maybe separate if (ret) condition, then set this and finally call
-the code below.
-
-> +		ret = mkret(ret, dev_data);
-> +		if (ret > 0)
-> +			return ret;
-> +	} else if (dev_data->cmd == SEV_CMD_TIO_GUEST_REQUEST) {
-> +		ret = sev_tio_continue(dev_data, &tdi->tdev->spdm);
-> +		ret = mkret(ret, dev_data);
-> +		if (ret > 0)
-> +			return ret;
-> +	}
-> +
-> +	if (dev_data->cmd == 0 && state) {
-> +		ret = sev_tio_tdi_status(tdi->tdev->data, tdi->data, &tdi->tdev->spdm);
-> +		ret = mkret(ret, dev_data);
-> +		if (ret > 0)
-> +			return ret;
-> +	} else if (dev_data->cmd == SEV_CMD_TIO_TDI_STATUS) {
-> +		ret = sev_tio_continue(dev_data, &tdi->tdev->spdm);
-> +		ret = mkret(ret, dev_data);
-> +		if (ret > 0)
-> +			return ret;
-> +
-> +		ret = sev_tio_tdi_status_fin(tdi->tdev->data, tdi->data, state);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +static int tdi_status(struct tsm_tdi *tdi, void *private_data, struct tsm_tdi_status *ts)
-> +{
-> +	struct tsm_dev_tio *dev_data = tdi->tdev->data;
-> +	int ret;
-> +
-> +	if (!tdi->data)
-> +		return -ENODEV;
-> +
-> +#if 0 /* Not implemented yet */
-> +	if (dev_data->cmd == 0) {
-> +		ret = sev_tio_tdi_info(tdi->tdev->data, tdi->data, ts);
-> +		ret = mkret(ret, dev_data);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +#endif
-> +
-> +	if (dev_data->cmd == 0) {
-> +		ret = sev_tio_tdi_status(tdi->tdev->data, tdi->data, &tdi->tdev->spdm);
-> +		ret = mkret(ret, dev_data);
-> +		if (ret)
-> +			return ret;
-> +
-> +		ret = sev_tio_tdi_status_fin(tdi->tdev->data, tdi->data, &ts->state);
-
-Given code as it stands. Might as well return here.
-
-> +	} else if (dev_data->cmd == SEV_CMD_TIO_TDI_STATUS) {
-Making this just an if.
-
-> +		ret = sev_tio_continue(dev_data, &tdi->tdev->spdm);
-> +		ret = mkret(ret, dev_data);
-> +		if (ret)
-> +			return ret;
-> +
-> +		ret = sev_tio_tdi_status_fin(tdi->tdev->data, tdi->data, &ts->state);
-and here.
-
-> +	} else {
-
-Making this the inline code as no need for else.
-
-> +		pci_err(tdi->pdev, "Wrong state, cmd 0x%x in flight\n",
-> +			dev_data->cmd);
-> +	}
-> +
-> +	return ret;
-> +}
-> +
-> +struct tsm_ops sev_tsm_ops = {
-> +	.dev_connect = dev_connect,
-> +	.dev_reclaim = dev_reclaim,
-> +	.dev_status = dev_status,
-> +	.ide_refresh = ide_refresh,
-> +	.tdi_bind = tdi_bind,
-> +	.tdi_reclaim = tdi_reclaim,
-> +	.guest_request = guest_request,
-> +	.tdi_status = tdi_status,
-> +};
+-- 
+2.25.1
 
 
