@@ -1,210 +1,189 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C42114A603
-	for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2024 04:11:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6C85182
+	for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2024 04:16:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1724991114; cv=none; b=YOiA0v0wgvT0wvLJFoLJLTSYJ8iS4VAbNU1d7Et64iv8+xFuE629OOrL3etM1eP5IhQTHZRd6gYX/CiLd4GuEu+Ajl0rq3xr3DBy2qM+ET9qLnnT8K2fW3tWPYXU+A/lDQ6OsPqndYevocZCIru/7PEC+7dzgMByhyn4en88Y9Q=
+	t=1724991413; cv=none; b=PlglV+P2TCv8VDhOZmgL0T3FgHt17I6JFbQe2b85uEuqVX8/1LVtVJvxj2PzLY9BTMcd2qgML/J6MlnP9wCRh91tS9Y79J3OUY1vsbd8GiRJIQ618AEYNenxPHoGpj3dUWPbw6SzvGNp/meuFyowMjpXg8paG7c+PNPH1lZWqC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1724991114; c=relaxed/simple;
-	bh=/bPJADL8ENVgMa0jR3/Q8ShiF8ld7+yblGtJm9+3JXA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NHXzdrX6lSqJLndAWFG7pl7b2cCFmolCCaWUzZkNe05GNehN6X1e2uKArbatPsU21JkcwrA3gQnz7nPyO2kCvXbrnVH7hN85PBQ1lTxKsXf+X54PzsopnK42Otj/h9THnc2FVI1NQO0mKLIMf9z3wrWus1K0zha96EeiGLNEMkA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4Ww4NL3S9KzQrB8;
-	Fri, 30 Aug 2024 12:06:58 +0800 (CST)
-Received: from kwepemf500003.china.huawei.com (unknown [7.202.181.241])
-	by mail.maildlp.com (Postfix) with ESMTPS id 2C4B01401F3;
-	Fri, 30 Aug 2024 12:11:50 +0800 (CST)
-Received: from huawei.com (10.175.112.208) by kwepemf500003.china.huawei.com
- (7.202.181.241) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Fri, 30 Aug
- 2024 12:11:48 +0800
-From: Zhang Zekun <zhangzekun11@huawei.com>
-To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
-	<lpieralisi@kernel.org>, <kw@linux.com>, <manivannan.sadhasivam@linaro.org>,
-	<robh@kernel.org>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<ryder.lee@mediatek.com>, <jianjun.wang@mediatek.com>,
-	<sergio.paracuellos@gmail.com>, <angelogioacchino.delregno@collabora.com>,
-	<matthias.bgg@gmail.com>, <alyssa@rosenzweig.io>, <maz@kernel.org>,
-	<thierry.reding@gmail.com>, <Jonathan.Cameron@Huawei.com>
-CC: <zhangzekun11@huawei.com>
-Subject: [PATCH v2 6/6] PCI: tegra: Use helper function for_each_child_of_node_scoped()
-Date: Fri, 30 Aug 2024 11:58:19 +0800
-Message-ID: <20240830035819.13718-7-zhangzekun11@huawei.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20240830035819.13718-1-zhangzekun11@huawei.com>
-References: <20240830035819.13718-1-zhangzekun11@huawei.com>
+	s=arc-20240116; t=1724991413; c=relaxed/simple;
+	bh=3p9upc8zjvD00t8Dd4R0ADLHwdmm/jrNUwxIKHCG8DQ=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=T48IdzMF7eZxakf2/z9fqNmuHbvf9lpVELGtjY3qk6wZIhQylDyts9EcG232gjVrZ8z6FDXLQEFcvb91TeZLKQ6tSNqeDkx/wqq/CbM/WvcWS0Ak1gcV9Sydye+4Gm3VTvgrpOdfwc3/KOqFQshYtkIDpKYG1fVupQM2Ji8C/+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JuX4PNuC; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JuX4PNuC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1724991412; x=1756527412;
+  h=date:from:to:cc:subject:message-id;
+  bh=3p9upc8zjvD00t8Dd4R0ADLHwdmm/jrNUwxIKHCG8DQ=;
+  b=JuX4PNuCq7awVl1rw+KqA6GZ4ApNEcKmZLOOuuUX3XLcAuuZu3ij78eN
+   jMEz5EuefadDbitMqGr05XbBzlJAYtTFg8rQfdYi34ng6Re9abWWpNWIn
+   pL3ULGJuGgYSZWkocVO3k1YwVWd+eAgovKQRNbrgax9//9gKN0ux1DLEF
+   5xbjE6RfluaZxKuDvT2VBcD8Dh9z8Tb/4nbq+Z4fyenFoK24VR/+KwTow
+   mHz7gXxCkrbktdG1HIcd6drwczz/GLDSop9n+GqFpvy4LSLn1jSsWtpTO
+   yRF5fYUhWVS96mgjwZne8SOLkf/84XhyKKyvaQi+pAEyydHUYYX1OQiPG
+   w==;
+X-CSE-ConnectionGUID: 5pw+xx1xQne4KWnlYz4Bcw==
+X-CSE-MsgGUID: ZEAwiLFlTz+2GSNI0HSxqg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11179"; a="41120507"
+X-IronPort-AV: E=Sophos;i="6.10,187,1719903600"; 
+   d="scan'208";a="41120507"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Aug 2024 21:16:51 -0700
+X-CSE-ConnectionGUID: fUcX7TEWSmKxXjdHdynXCA==
+X-CSE-MsgGUID: Cb34NAccTCKBoY9CayrivA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.10,187,1719903600"; 
+   d="scan'208";a="63474922"
+Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
+  by fmviesa007.fm.intel.com with ESMTP; 29 Aug 2024 21:16:50 -0700
+Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1sjt44-00011U-0Y;
+	Fri, 30 Aug 2024 04:16:48 +0000
+Date: Fri, 30 Aug 2024 12:16:11 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:misc] BUILD SUCCESS
+ 2ac11a2fdcc3aa210d76b65c61c6758f44ac6c54
+Message-ID: <202408301209.7LvG7aln-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
-X-ClientProxiedBy: dggems702-chm.china.huawei.com (10.3.19.179) To
- kwepemf500003.china.huawei.com (7.202.181.241)
 
-for_each_child_of_node_scoped() provides a scope-based cleanup
-functionality to put the device_node automatically, and we don't need to
-call of_node_put() directly.  Let's simplify the code a bit with the use
-of these functions.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git misc
+branch HEAD: 2ac11a2fdcc3aa210d76b65c61c6758f44ac6c54  PCI/VPD: Remove pci_vpd_release() unused declarations
 
-Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
----
-v2:
-- Use dev_err_probe() to simplify code.
-- Fix spelling error in commit message.
+elapsed time: 1781m
 
- drivers/pci/controller/pci-tegra.c | 74 ++++++++++--------------------
- 1 file changed, 23 insertions(+), 51 deletions(-)
+configs tested: 112
+configs skipped: 5
 
-diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
-index d7517c3976e7..94a768a4616d 100644
---- a/drivers/pci/controller/pci-tegra.c
-+++ b/drivers/pci/controller/pci-tegra.c
-@@ -2106,47 +2106,36 @@ static int tegra_pcie_get_regulators(struct tegra_pcie *pcie, u32 lane_mask)
- static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- {
- 	struct device *dev = pcie->dev;
--	struct device_node *np = dev->of_node, *port;
-+	struct device_node *np = dev->of_node;
- 	const struct tegra_pcie_soc *soc = pcie->soc;
- 	u32 lanes = 0, mask = 0;
- 	unsigned int lane = 0;
- 	int err;
- 
- 	/* parse root ports */
--	for_each_child_of_node(np, port) {
-+	for_each_child_of_node_scoped(np, port) {
- 		struct tegra_pcie_port *rp;
- 		unsigned int index;
- 		u32 value;
- 		char *label;
- 
- 		err = of_pci_get_devfn(port);
--		if (err < 0) {
--			dev_err(dev, "failed to parse address: %d\n", err);
--			goto err_node_put;
--		}
-+		if (err < 0)
-+			return dev_err_probe(dev, err, "failed to parse address\n");
- 
- 		index = PCI_SLOT(err);
- 
--		if (index < 1 || index > soc->num_ports) {
--			dev_err(dev, "invalid port number: %d\n", index);
--			err = -EINVAL;
--			goto err_node_put;
--		}
-+		if (index < 1 || index > soc->num_ports)
-+			return dev_err_probe(dev, -EINVAL, "invalid port number: %d\n", index);
- 
- 		index--;
- 
- 		err = of_property_read_u32(port, "nvidia,num-lanes", &value);
--		if (err < 0) {
--			dev_err(dev, "failed to parse # of lanes: %d\n",
--				err);
--			goto err_node_put;
--		}
-+		if (err < 0)
-+			return dev_err_probe(dev, err, "failed to parse # of lanes\n");
- 
--		if (value > 16) {
--			dev_err(dev, "invalid # of lanes: %u\n", value);
--			err = -EINVAL;
--			goto err_node_put;
--		}
-+		if (value > 16)
-+			return dev_err_probe(dev, -EINVAL, "invalid # of lanes: %u\n", value);
- 
- 		lanes |= value << (index << 3);
- 
-@@ -2159,16 +2148,12 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		lane += value;
- 
- 		rp = devm_kzalloc(dev, sizeof(*rp), GFP_KERNEL);
--		if (!rp) {
--			err = -ENOMEM;
--			goto err_node_put;
--		}
-+		if (!rp)
-+			return -ENOMEM;
- 
- 		err = of_address_to_resource(port, 0, &rp->regs);
--		if (err < 0) {
--			dev_err(dev, "failed to parse address: %d\n", err);
--			goto err_node_put;
--		}
-+		if (err < 0)
-+			return dev_err_probe(dev, err, "failed to parse address\n");
- 
- 		INIT_LIST_HEAD(&rp->list);
- 		rp->index = index;
-@@ -2177,16 +2162,12 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		rp->np = port;
- 
- 		rp->base = devm_pci_remap_cfg_resource(dev, &rp->regs);
--		if (IS_ERR(rp->base)) {
--			err = PTR_ERR(rp->base);
--			goto err_node_put;
--		}
-+		if (IS_ERR(rp->base))
-+			return PTR_ERR(rp->base);
- 
- 		label = devm_kasprintf(dev, GFP_KERNEL, "pex-reset-%u", index);
--		if (!label) {
--			err = -ENOMEM;
--			goto err_node_put;
--		}
-+		if (!label)
-+			return -ENOMEM;
- 
- 		/*
- 		 * Returns -ENOENT if reset-gpios property is not populated
-@@ -2201,32 +2182,23 @@ static int tegra_pcie_parse_dt(struct tegra_pcie *pcie)
- 		if (IS_ERR(rp->reset_gpio)) {
- 			if (PTR_ERR(rp->reset_gpio) == -ENOENT) {
- 				rp->reset_gpio = NULL;
--			} else {
--				dev_err(dev, "failed to get reset GPIO: %ld\n",
--					PTR_ERR(rp->reset_gpio));
--				err = PTR_ERR(rp->reset_gpio);
--				goto err_node_put;
--			}
-+			} else
-+				return dev_err_probe(dev, PTR_ERR(rp->reset_gpio),
-+						     "failed to get reset GPIO\n");
- 		}
- 
- 		list_add_tail(&rp->list, &pcie->ports);
- 	}
- 
- 	err = tegra_pcie_get_xbar_config(pcie, lanes, &pcie->xbar_config);
--	if (err < 0) {
--		dev_err(dev, "invalid lane configuration\n");
--		return err;
--	}
-+	if (err < 0)
-+		return dev_err_probe(dev, err, "invalid lane configuration\n");
- 
- 	err = tegra_pcie_get_regulators(pcie, mask);
- 	if (err < 0)
- 		return err;
- 
- 	return 0;
--
--err_node_put:
--	of_node_put(port);
--	return err;
- }
- 
- /*
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                             allnoconfig   gcc-14.1.0
+alpha                            allyesconfig   clang-20
+alpha                               defconfig   gcc-14.1.0
+arc                              allmodconfig   clang-20
+arc                               allnoconfig   gcc-14.1.0
+arc                              allyesconfig   clang-20
+arc                                 defconfig   gcc-14.1.0
+arm                              allmodconfig   clang-20
+arm                               allnoconfig   gcc-14.1.0
+arm                              allyesconfig   clang-20
+arm                                 defconfig   gcc-14.1.0
+arm                   milbeaut_m10v_defconfig   gcc-14.1.0
+arm                        multi_v7_defconfig   gcc-14.1.0
+arm                           tegra_defconfig   gcc-14.1.0
+arm64                            allmodconfig   clang-20
+arm64                             allnoconfig   gcc-14.1.0
+arm64                               defconfig   gcc-14.1.0
+csky                              allnoconfig   gcc-14.1.0
+csky                                defconfig   gcc-14.1.0
+hexagon                          allmodconfig   clang-20
+hexagon                           allnoconfig   gcc-14.1.0
+hexagon                          allyesconfig   clang-20
+hexagon                             defconfig   gcc-14.1.0
+i386                             allmodconfig   clang-18
+i386                              allnoconfig   clang-18
+i386                             allyesconfig   clang-18
+i386                                defconfig   clang-18
+loongarch                        allmodconfig   gcc-14.1.0
+loongarch                         allnoconfig   gcc-14.1.0
+loongarch                           defconfig   gcc-14.1.0
+m68k                             allmodconfig   gcc-14.1.0
+m68k                              allnoconfig   gcc-14.1.0
+m68k                             allyesconfig   gcc-14.1.0
+m68k                                defconfig   gcc-14.1.0
+m68k                          hp300_defconfig   gcc-14.1.0
+m68k                       m5275evb_defconfig   gcc-14.1.0
+microblaze                       allmodconfig   gcc-14.1.0
+microblaze                        allnoconfig   gcc-14.1.0
+microblaze                       allyesconfig   gcc-14.1.0
+microblaze                          defconfig   gcc-14.1.0
+mips                              allnoconfig   gcc-14.1.0
+mips                      fuloong2e_defconfig   gcc-14.1.0
+nios2                             allnoconfig   gcc-14.1.0
+nios2                               defconfig   gcc-14.1.0
+openrisc                          allnoconfig   clang-20
+openrisc                         allyesconfig   gcc-14.1.0
+openrisc                            defconfig   gcc-12
+parisc                           allmodconfig   gcc-14.1.0
+parisc                            allnoconfig   clang-20
+parisc                           allyesconfig   gcc-14.1.0
+parisc                              defconfig   gcc-12
+parisc64                            defconfig   gcc-14.1.0
+powerpc                          allmodconfig   gcc-14.1.0
+powerpc                           allnoconfig   clang-20
+powerpc                          allyesconfig   gcc-14.1.0
+powerpc                      bamboo_defconfig   gcc-14.1.0
+powerpc                   bluestone_defconfig   gcc-14.1.0
+powerpc                 mpc836x_rdk_defconfig   gcc-14.1.0
+powerpc                      pmac32_defconfig   gcc-14.1.0
+powerpc                       ppc64_defconfig   gcc-14.1.0
+powerpc                     tqm5200_defconfig   gcc-14.1.0
+powerpc64                        alldefconfig   gcc-14.1.0
+riscv                             allnoconfig   clang-20
+riscv                               defconfig   gcc-12
+s390                             allmodconfig   gcc-14.1.0
+s390                              allnoconfig   clang-20
+s390                             allyesconfig   gcc-14.1.0
+s390                                defconfig   gcc-12
+s390                                defconfig   gcc-14.1.0
+sh                               allmodconfig   gcc-14.1.0
+sh                                allnoconfig   gcc-14.1.0
+sh                               allyesconfig   gcc-14.1.0
+sh                                  defconfig   gcc-12
+sh                             shx3_defconfig   gcc-14.1.0
+sparc                            allmodconfig   gcc-14.1.0
+sparc64                             defconfig   gcc-12
+um                               allmodconfig   clang-20
+um                                allnoconfig   clang-20
+um                               allyesconfig   clang-20
+um                                  defconfig   gcc-12
+um                             i386_defconfig   gcc-12
+um                           x86_64_defconfig   gcc-12
+x86_64                            allnoconfig   clang-18
+x86_64                           allyesconfig   clang-18
+x86_64       buildonly-randconfig-001-20240830   clang-18
+x86_64       buildonly-randconfig-002-20240830   clang-18
+x86_64       buildonly-randconfig-003-20240830   clang-18
+x86_64       buildonly-randconfig-004-20240830   clang-18
+x86_64       buildonly-randconfig-005-20240830   clang-18
+x86_64       buildonly-randconfig-006-20240830   clang-18
+x86_64                              defconfig   clang-18
+x86_64                randconfig-001-20240830   clang-18
+x86_64                randconfig-002-20240830   clang-18
+x86_64                randconfig-003-20240830   clang-18
+x86_64                randconfig-004-20240830   clang-18
+x86_64                randconfig-005-20240830   clang-18
+x86_64                randconfig-006-20240830   clang-18
+x86_64                randconfig-011-20240830   clang-18
+x86_64                randconfig-012-20240830   clang-18
+x86_64                randconfig-013-20240830   clang-18
+x86_64                randconfig-014-20240830   clang-18
+x86_64                randconfig-015-20240830   clang-18
+x86_64                randconfig-016-20240830   clang-18
+x86_64                randconfig-071-20240830   clang-18
+x86_64                randconfig-072-20240830   clang-18
+x86_64                randconfig-073-20240830   clang-18
+x86_64                randconfig-074-20240830   clang-18
+x86_64                randconfig-075-20240830   clang-18
+x86_64                randconfig-076-20240830   clang-18
+x86_64                          rhel-8.3-rust   clang-18
+xtensa                            allnoconfig   gcc-14.1.0
+xtensa                          iss_defconfig   gcc-14.1.0
+
 -- 
-2.17.1
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
