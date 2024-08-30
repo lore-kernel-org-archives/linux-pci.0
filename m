@@ -1,186 +1,171 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DDA715099A
-	for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2024 08:06:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA92F15099A
+	for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2024 08:12:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725005190; cv=none; b=cFOAYK0FoJV3TNNa71F9DpJ9NxeZFRU80oOOrnLYPX5mX1c5ja0Z6NZooe+CuzaDo7mzBCC0FCUIjPztn19AEiJYVby3oVs06jOwI1vhqDdlGBEsmtrjwdYUL5zU5oQ+ntnR1QvD/OVNNB3boO+piNHlY+iLQAc1Fff3jHzotIo=
+	t=1725005535; cv=none; b=eJ/8Dj/c4vm4BWPzBy/GAWCvScnO7/XyOygHW+fiQsL8yxWcWRAGONb8Mnybuc3V/gDgekLiga8mUH/ULxqSqL/8wdbk9ruXJcDSAAyk2r/r/TNjtnhiZpmEN61e8jdrZBazLLA+Sa+ozt+Ecr91CipINI7oqmH84fU1HillaAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725005190; c=relaxed/simple;
-	bh=71gPXzApkUJkbbo3sc3sJH3nklCpJRWVUVpfiyyleDM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=K9eqgNAM7GMtcliwVCJE1Az9vFpzmTF/Ev8p4tJ5ponH0aKA7zTpNGKK8zw4gxSIiOnnqAiPAvYLl1RerMyEIEXfQxxcTp/F0vMKfBvl7aI1FgnocNsHxSsC1zrbNn40n+21dGS3fwbqU8zfBIjmZKmsT5PzYBc1vje5ShCgX+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KXMurrdJ; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1725005535; c=relaxed/simple;
+	bh=Q5bXYbl4dV+VYYIPMv/Rb99ZiL+XzXzN25xBOihod3Y=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Edkqy4vBk81gb54KbBoOeba7ObHy7DwKQCpLpiIWov9DU+LtiTqZC4sjbddxrX5OdyAO2G3PwFA3SuZdMNzahrKODuYaKZx6+JqhTWSQoMx4S2lyyVL+mhM2gm/+HKYpdeu+f1jW7g0LUNlhDDAxR7wNieyhM5XahmL9W+0Tr70=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=p+0ucVEV; arc=none smtp.client-ip=209.85.215.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KXMurrdJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1725005187;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=71gPXzApkUJkbbo3sc3sJH3nklCpJRWVUVpfiyyleDM=;
-	b=KXMurrdJSWi/NjM0k0S7xW0yLSH8wUpRXZDKD0zETzSpwA5Ze3rxY2Plp1CCtHqJD/IG6t
-	gSPai8A6cevo2/PivW2T0y43BmUo1g9To0FRX5lYJkyS5EUphW/ugf3c50ctDqCAgLWnO3
-	db0zIYPmxZKZEz7ebBFEArJsXD0gBfA=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-375-Nfsv_KAlP4e84EmeuiVDCw-1; Fri, 30 Aug 2024 04:05:17 -0400
-X-MC-Unique: Nfsv_KAlP4e84EmeuiVDCw-1
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-428e0d30911so14396925e9.2
-        for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2024 01:05:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="p+0ucVEV"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-7cd835872ceso1126775a12.3
+        for <linux-pci@vger.kernel.org>; Fri, 30 Aug 2024 01:12:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1725005533; x=1725610333; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=aUHV0wbyIdVXwPB5dolmt5OPeFFiHv5Yfm1U7ilTAZ0=;
+        b=p+0ucVEVXbe6yrAIbm1gphBMUslR2F4/xe2krIfjfb8iIaFeOtWQnUuvAkkKkl7pcX
+         r277bZSPnxaIvv0qMY6RQX1FPryNiOj1AB+4stXyEqg76ey1XTNAFgMGjhRAjYOgrvjQ
+         CQOM9LAveneujVIMciWzPzZogQezRqnnY8mHytTHaPDEVB8OL7Az4lC/X7XWWT4wNTol
+         CYrUNoaN7X0h/treDopdYBupQQFw/bdNXN5repbBDmUn3Ao8SKxc2dm9avRQbi6vq9AR
+         u/GM1nbdAM2JRJ+vTQJm7XxAss9JfV4Rxvoomz3NqOkS3zPMXdBgUg+SfjCH+fBkVZzj
+         lcqA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1725005116; x=1725609916;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=71gPXzApkUJkbbo3sc3sJH3nklCpJRWVUVpfiyyleDM=;
-        b=kpVmjYPq7lRg09DTmKW07Jh0X9YtoZEJ3KXVGBeKGDympARWyf1mou6+TMy6UPFfqG
-         wzO+F5OOsWG8o7AqI++DaaYdjMGlutOqiPt/YE87gDrSGybHvoZT7KuVhtXqKJaUE6Vv
-         wpOA87tzeTDL2pEGuFlRt4yVi3qKkmr1wbyQfntLiJxrU5dxZCpyUJ7DvYDwpCXeKGeQ
-         oaha8SLrlQayD6WeH4ALZkETNM7MUr4l5lSazottc1acaBV6+naKonHQVppMhb3svqXG
-         O9f0yOV2Okax+LY0292wMLMXVQvrtoTP3rkMZnq09QWecwW62YHjI2pHKB3STDHebKXd
-         ES1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVrpMYxxEmFB81SEEYYnrpcPrg/6vvkC0O7030HZC2S56uI5cjn0PtLDCfCQ1jDeApyHt/iW20xxi0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwNDe+jR9DF66rGmP3c42DdpCivXx8C3+PIBPN0wXfMXDIV5Fgx
-	qBipVnrTrO6yCICnnrmFbfKJRd4vF9i4mppECH6XAPuybgHzpXdlRGsYvSz1nGYrKKWz3/QTvyX
-	wOOP0eq0sherpjQFeon/KOMaftjFoVnoKhHxga21Ha9I+FtLuVeTkJXj8KA==
-X-Received: by 2002:a05:600c:1914:b0:42b:afbb:1704 with SMTP id 5b1f17b1804b1-42bb0281326mr42324595e9.6.1725005115856;
-        Fri, 30 Aug 2024 01:05:15 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IElMHHa1ss0AjuIdZRhm4Z2kioy67ZZmuCCx+UBXe8jQVj10UPNfr/s1tjKN2uvyTW+vaIl2g==
-X-Received: by 2002:a05:600c:1914:b0:42b:afbb:1704 with SMTP id 5b1f17b1804b1-42bb0281326mr42324235e9.6.1725005115323;
-        Fri, 30 Aug 2024 01:05:15 -0700 (PDT)
-Received: from eisenberg.fritz.box (200116b82d2f1b0080ee39dcd7d81ce9.dip.versatel-1u1.de. [2001:16b8:2d2f:1b00:80ee:39dc:d7d8:1ce9])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3749ef7f329sm3287195f8f.70.2024.08.30.01.05.13
+        d=1e100.net; s=20230601; t=1725005533; x=1725610333;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=aUHV0wbyIdVXwPB5dolmt5OPeFFiHv5Yfm1U7ilTAZ0=;
+        b=ZqkMIshAmRYE0y0OG8yq8dGJreRETDjgXsH5UiqWKeyiqjVhFavNEQBUDfmDQc/hq6
+         ORyyJ5bVPktedI12gBJ//PAvykz68ZWOnzazrss6P2iFndDXDvnYyI3+OU9KiBLFgSBD
+         uBAXHDmc+FLYXQpwW+AQhzHFI/fXWFXRQ7YEoepcufPlcv99FXVl6sbXokJHXXXY0HGz
+         ISRF2+SgsKiHZTrsdPlB9pE4LRkkoiAfOCz2B9CpJBdenajiA4L4Z4ohXcqpGFNav72P
+         BcjB71fCEylL6JY9n+2jRp07LJbuAys2KyiSEX5q1CPPvOrHJDC+ga4Jxm01qbTG0LwU
+         0YKg==
+X-Forwarded-Encrypted: i=1; AJvYcCULZyg8ewtIFUHmM6A+7EDP9nXA/0zsGQqDuovIu7OlTOJT1sbjwedOt9Svt4ziRDtiAaleiudrUnM=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzViJVCi5ngssie4oWcGzjCkDFxRXWQQoPMC//IRPRs/LSUh+FH
+	EEHHFMVJdURxJEIbtFdOJVGCLoFA92Hx9hsHyBH/IRQ3z1qYXNisEHNDhk5MtQ==
+X-Google-Smtp-Source: AGHT+IE/BW3u6yWbfrYcy/l5d0lHQgaNZ0qFHfjJAZ8BG59rWjAxYM55Dn1n/0jPPnypv9IrkiwExw==
+X-Received: by 2002:a17:903:35ce:b0:202:1a0b:7cfd with SMTP id d9443c01a7336-2050c3dbf8fmr54516345ad.28.1725005532965;
+        Fri, 30 Aug 2024 01:12:12 -0700 (PDT)
+Received: from thinkpad ([117.193.213.95])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-20515551e79sm22132855ad.248.2024.08.30.01.12.09
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 30 Aug 2024 01:05:14 -0700 (PDT)
-Message-ID: <ff637570c16c6a15be414839ec4878e49ecd2350.camel@redhat.com>
-Subject: Re: [PATCH v5 6/7] vdpa: solidrun: Fix UB bug with devres
-From: Philipp Stanner <pstanner@redhat.com>
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Andy Shevchenko <andy.shevchenko@gmail.com>, Jens Axboe
- <axboe@kernel.dk>,  Wu Hao <hao.wu@intel.com>, Tom Rix <trix@redhat.com>,
- Moritz Fischer <mdf@kernel.org>, Xu Yilun <yilun.xu@intel.com>, Andy
- Shevchenko <andy@kernel.org>, Linus Walleij <linus.walleij@linaro.org>,
- Bartosz Golaszewski <brgl@bgdev.pl>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski
- <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>, Bjorn Helgaas
- <bhelgaas@google.com>, Alvaro Karsz <alvaro.karsz@solid-run.com>, Jason
- Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, Eugenio
- =?ISO-8859-1?Q?P=E9rez?= <eperezma@redhat.com>, Richard Cochran
- <richardcochran@gmail.com>, Damien Le Moal <dlemoal@kernel.org>, Hannes
- Reinecke <hare@suse.de>, John Garry <john.g.garry@oracle.com>,
- linux-block@vger.kernel.org,  linux-kernel@vger.kernel.org,
- linux-fpga@vger.kernel.org,  linux-gpio@vger.kernel.org,
- netdev@vger.kernel.org, linux-pci@vger.kernel.org, 
- virtualization@lists.linux.dev, stable@vger.kernel.org, Christophe JAILLET
- <christophe.jaillet@wanadoo.fr>
-Date: Fri, 30 Aug 2024 10:05:12 +0200
-In-Reply-To: <20240829110902-mutt-send-email-mst@kernel.org>
-References: <20240829141844.39064-1-pstanner@redhat.com>
-	 <20240829141844.39064-7-pstanner@redhat.com>
-	 <20240829102320-mutt-send-email-mst@kernel.org>
-	 <CAHp75Ve7O6eAiNx0+v_SNR2vuYgnkeWrPD1Umb1afS3pf7m8MQ@mail.gmail.com>
-	 <20240829104124-mutt-send-email-mst@kernel.org>
-	 <2cc5984b65beb6805f8d60ffd9627897b65b7700.camel@redhat.com>
-	 <20240829110902-mutt-send-email-mst@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.52.4 (3.52.4-1.fc40) 
+        Fri, 30 Aug 2024 01:12:12 -0700 (PDT)
+Date: Fri, 30 Aug 2024 13:42:05 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
+	robh@kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+Subject: Re: [PATCH v2] PCI: qcom-ep: Enable controller resources like PHY
+ only after refclk is available
+Message-ID: <20240830081205.x3ucsausk5znk27e@thinkpad>
+References: <20240829164455.ts2j46dfxwp3pa2f@thinkpad>
+ <20240829170624.GA67120@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20240829170624.GA67120@bhelgaas>
 
-On Thu, 2024-08-29 at 11:10 -0400, Michael S. Tsirkin wrote:
-> On Thu, Aug 29, 2024 at 04:49:50PM +0200, Philipp Stanner wrote:
-> > On Thu, 2024-08-29 at 10:41 -0400, Michael S. Tsirkin wrote:
-> > > On Thu, Aug 29, 2024 at 05:26:39PM +0300, Andy Shevchenko wrote:
-> > > > On Thu, Aug 29, 2024 at 5:23=E2=80=AFPM Michael S. Tsirkin
-> > > > <mst@redhat.com>
-> > > > wrote:
-> > > > >=20
-> > > > > On Thu, Aug 29, 2024 at 04:16:25PM +0200, Philipp Stanner
-> > > > > wrote:
-> > > > > > In psnet_open_pf_bar() and snet_open_vf_bar() a string
-> > > > > > later
-> > > > > > passed to
-> > > > > > pcim_iomap_regions() is placed on the stack. Neither
-> > > > > > pcim_iomap_regions() nor the functions it calls copy that
-> > > > > > string.
-> > > > > >=20
-> > > > > > Should the string later ever be used, this, consequently,
-> > > > > > causes
-> > > > > > undefined behavior since the stack frame will by then have
-> > > > > > disappeared.
-> > > > > >=20
-> > > > > > Fix the bug by allocating the strings on the heap through
-> > > > > > devm_kasprintf().
-> > > > > >=20
-> > > > > > Cc: stable@vger.kernel.org=C2=A0=C2=A0=C2=A0 # v6.3
-> > > > > > Fixes: 51a8f9d7f587 ("virtio: vdpa: new SolidNET DPU
-> > > > > > driver.")
-> > > > > > Reported-by: Christophe JAILLET
-> > > > > > <christophe.jaillet@wanadoo.fr>
-> > > > > > Closes:
-> > > > > > https://lore.kernel.org/all/74e9109a-ac59-49e2-9b1d-d825c9c9f89=
-1@wanadoo.fr/
-> > > > > > Suggested-by: Andy Shevchenko <andy@kernel.org>
-> > > > > > Signed-off-by: Philipp Stanner <pstanner@redhat.com>
-> > > > >=20
-> > > > > Post this separately, so I can apply?
-> > > >=20
-> > > > Don't you use `b4`? With it it as simple as
-> > > >=20
-> > > > =C2=A0 b4 am -P 6 $MSG_ID_OF_THIS_SERIES
-> > > >=20
-> > > > --=20
-> > > > With Best Regards,
-> > > > Andy Shevchenko
-> > >=20
-> > > I can do all kind of things, but if it's posted as part of a
-> > > patchset,
-> > > it is not clear to me this has been tested outside of the
-> > > patchset.
-> > >=20
-> >=20
-> > Separating it from the series would lead to merge conflicts,
-> > because
-> > patch 7 depends on it.
-> >=20
-> > If you're responsible for vdpa in general I could send patches 6
-> > and 7
-> > separately to you.
-> >=20
-> > But number 7 depends on number 1, because pcim_iounmap_region()
-> > needs
-> > to be public. So if patches 1-5 enter through a different tree than
-> > yours, that could be a problem.
-> >=20
-> >=20
-> > P.
->=20
-> Defer 1/7 until after the merge window, this is what is normally
-> done.
+On Thu, Aug 29, 2024 at 12:06:24PM -0500, Bjorn Helgaas wrote:
+> On Thu, Aug 29, 2024 at 10:14:55PM +0530, Manivannan Sadhasivam wrote:
+> > On Thu, Aug 29, 2024 at 07:38:08AM -0500, Bjorn Helgaas wrote:
+> > > On Thu, Aug 29, 2024 at 11:07:20AM +0530, Manivannan Sadhasivam wrote:
+> > > > On Wed, Aug 28, 2024 at 03:59:45PM -0500, Bjorn Helgaas wrote:
+> > > > > On Wed, Aug 28, 2024 at 07:31:08PM +0530, Manivannan Sadhasivam wrote:
+> > > > > > qcom_pcie_enable_resources() is called by qcom_pcie_ep_probe() and it
+> > > > > > enables the controller resources like clocks, regulator, PHY. On one of the
+> > > > > > new unreleased Qcom SoC, PHY enablement depends on the active refclk. And
+> > > > > > on all of the supported Qcom endpoint SoCs, refclk comes from the host
+> > > > > > (RC). So calling qcom_pcie_enable_resources() without refclk causes the
+> > > > > > whole SoC crash on the new SoC.
+> > > > > > 
+> > > > > > qcom_pcie_enable_resources() is already called by
+> > > > > > qcom_pcie_perst_deassert() when PERST# is deasserted, and refclk is
+> > > > > > available at that time.
+> > > > > > 
+> > > > > > Hence, remove the unnecessary call to qcom_pcie_enable_resources() from
+> > > > > > qcom_pcie_ep_probe() to prevent the crash.
+> > > > > > 
+> > > > > > Fixes: 869bc5253406 ("PCI: dwc: ep: Fix DBI access failure for drivers requiring refclk from host")
+> > > > > > Tested-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
+> > > > > > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > > > > > ---
+> > > > > > 
+> > > > > > Changes in v2:
+> > > > > > 
+> > > > > > - Changed the patch description to mention the crash clearly as suggested by
+> > > > > >   Bjorn
+> > > > > 
+> > > > > Clearly mentioning the crash as rationale for the change is *part* of
+> > > > > what I was looking for.
+> > > > > 
+> > > > > The rest, just as important, is information about what sort of crash
+> > > > > this is, because I hope and suspect the crash is recoverable, and we
+> > > > > *should* recover from it because PERST# may occur at arbitrary times,
+> > > > > so trying to avoid it is never going to be reliable.
+> > > > 
+> > > > I did mention 'whole SoC crash' which typically means unrecoverable
+> > > > state as the SoC would crash (not just the driver). On Qcom SoCs,
+> > > > this will also lead the SoC to boot into EDL (Emergency Download)
+> > > > mode so that the users can collect dumps on the crash.
+> > > 
+> > > IIUC we're talking about an access to a PHY register, and the access
+> > > requires Refclk from the host.  I assume the SoC accesses the register
+> > > by doing an MMIO load.  If nothing responds, I assume the SoC would
+> > > take a machine check or similar because there's no data to complete
+> > > the load instruction.  So I assume again that the Linux on the SoC
+> > > doesn't know how to recover from such a machine check?  If that's the
+> > > scenario, is the machine check unrecoverable in principle, or is it
+> > > potentially recoverable but nobody has done the work to do it?  My
+> > > guess would be the latter, because the former would mean that it's
+> > > impossible to build a robust endpoint around this SoC.  But obviously
+> > > this is all complete speculation on my part.
+> > 
+> > Atleast on Qcom SoCs, doing a MMIO read without enabling the
+> > resources would result in a NoC (Network On Chip) error, which then
+> > end up as an exception to the Trustzone and Trustzone will finally
+> > convert it to a SoC crash so that the users could take a crash dump
+> > and do the analysis on why the crash has happened.
+> > 
+> > I know that it may sound strange to developers coming from x86 world
+> > :)
+> 
+> It's only strange if the system design forces a crash for events that
+> happen in normal operation.  Sounds like part of the problem here is
+> the non-SRIS mode that depends on Refclk from the host.  That and the
+> fact that operating in non-SRIS mode has an unavoidable race where
+> PERST# from the host at the wrong time can crash the endpoint.
+> 
 
-1 cannot be deferred. Take a look what 1 does.
+Precisely.
 
-Your message is not comprehensible. Be so kind and write some more
-sentences.
-*What* is normally done? Sending patches? It's up to subsystem
-maintainers to queue them for the right cycle.
+> I think users of non-SRIS mode need to be aware of this issue, and
+> this patch to narrow the race window, but not close it completely, is
+> one good place to mention it.
+> 
 
-> Adding new warnings is not nice, anyway.
+Okay. I'll mention it in patch description.
 
-What?
+> > But this NoC error is something NVidia has also reported before, so
+> > I wouldn't assume that this is a Qcom specific issue but rather for
+> > SoCs depending on refclk from host.
+> 
+> Are there other drivers that need a similar band-aid?
+> 
 
+AFAIK, only tegra194 and qcom-pcie-ep drivers require refclk from host. Rest of
+the endpoint drivers seem to have independent clock.
 
+- Mani
 
->=20
-
+-- 
+மணிவண்ணன் சதாசிவம்
