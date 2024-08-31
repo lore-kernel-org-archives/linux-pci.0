@@ -1,29 +1,29 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD566139CFE
-	for <linux-pci@vger.kernel.org>; Sat, 31 Aug 2024 04:17:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB61B3611B
+	for <linux-pci@vger.kernel.org>; Sat, 31 Aug 2024 04:17:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725077867; cv=none; b=O0tU/mVzQX3XnQr2GiiDobfOsJR94PGZDQVKB5NwOW/V/Ah4MzVavUajvPy3RzgHQ8ZTrBO3ypEv+MbbhF0PhseNRabEBT1L02IlBt2sC8tuTR6DukS8nRbgFSVxdBPW715z+bHhZhUK35WqEfptSfQo/KQvR+tblB/+A08aj0s=
+	t=1725077867; cv=none; b=JaOc+CB682v9vFug5WYTGWowQKdo5byyN5exucouLSOgBrLa2wgNT7k/xHvqT3XLQgGi9unRv7awt2xxsH1zF/hMZR5CeX7A5FHtDigK5WMF1LmTO9M/qg+aWa5N8luXXwkxMT+5e244AhJ7qavOpPjeUZKehEuU3twQpZ+kxtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1725077867; c=relaxed/simple;
-	bh=0xw/K5I2fGYGkhiRZfrrYY+14vkd1Z0mhjwMFzZOYys=;
+	bh=49Ow1kO12qALPYi7338X/bYneYFnzwYtQr6Fsm4oHQ8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PnWWET+FGZX8h0M63N+e18Kh1GCHc28DTFn3a4/YEyZf1i/cE77CG3zPGkNIZrSCsuSmdSkwkst7+yPaJJpo/ea8nw2zdOV/x3HJipyY/zZrSfwB8Lja9i9WXyLvzv6hUSuwpVu0CGmLJGYWjWT8DCxoslN6cUPbd7lEXGUogt0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
+	 MIME-Version:Content-Type; b=qrDPvioha1jBKIHFyAZEAyLg6niLjIzuAaYdevyEHyxfwgeeKwOMTCyT3Wj4hw+D/tJkzpQAjPtqEyTVM631C6O8rmZSZ5dTLfzR4MAC4USl0Hx3gat5uE6ZtSUVmWhZ8GNpn8nJnr6DOCqsTPORrqdQ0yPI0E9Qj3qPwFyxqYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WwhXC0j3RzpV8t;
-	Sat, 31 Aug 2024 12:15:55 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WwhZ050npz2CpHq;
+	Sat, 31 Aug 2024 12:17:28 +0800 (CST)
 Received: from kwepemf500003.china.huawei.com (unknown [7.202.181.241])
-	by mail.maildlp.com (Postfix) with ESMTPS id 3FA8D1400CF;
-	Sat, 31 Aug 2024 12:17:41 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 847D4180043;
+	Sat, 31 Aug 2024 12:17:43 +0800 (CST)
 Received: from huawei.com (10.175.112.208) by kwepemf500003.china.huawei.com
  (7.202.181.241) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 31 Aug
- 2024 12:17:39 +0800
+ 2024 12:17:42 +0800
 From: Zhang Zekun <zhangzekun11@huawei.com>
 To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
 	<lpieralisi@kernel.org>, <kw@linux.com>, <manivannan.sadhasivam@linaro.org>,
@@ -33,9 +33,9 @@ To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
 	<matthias.bgg@gmail.com>, <alyssa@rosenzweig.io>, <maz@kernel.org>,
 	<thierry.reding@gmail.com>, <Jonathan.Cameron@Huawei.com>
 CC: <zhangzekun11@huawei.com>
-Subject: [PATCH v3 2/6] PCI: kirin: Tidy up _probe() related function with dev_err_probe()
-Date: Sat, 31 Aug 2024 12:04:09 +0800
-Message-ID: <20240831040413.126417-3-zhangzekun11@huawei.com>
+Subject: [PATCH v3 4/6] PCI: mt7621: Use helper function for_each_available_child_of_node_scoped()
+Date: Sat, 31 Aug 2024 12:04:11 +0800
+Message-ID: <20240831040413.126417-5-zhangzekun11@huawei.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20240831040413.126417-1-zhangzekun11@huawei.com>
 References: <20240831040413.126417-1-zhangzekun11@huawei.com>
@@ -49,95 +49,62 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  kwepemf500003.china.huawei.com (7.202.181.241)
 
-The combination of dev_err() and the returned error code could be
-replaced by dev_err_probe() in driver's probe function. Let's,
-converting to dev_err_probe() to make code more simple.
+for_each_available_child_of_node_scoped() provides a scope-based cleanup
+functionality to put the device_node automatically, and we don't need to
+call of_node_put() directly.  Let's simplify the code a bit with the use
+of these functions.
 
-Suggested-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
+Reviewed-by: Sergio Paracuellos <sergio.paracuellos@gmail.com>
 Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
 ---
-v3: Wrap the line which is too long.
+v3: Fix spelling error in commit message.
 
- drivers/pci/controller/dwc/pcie-kirin.c | 40 ++++++++++---------------
- 1 file changed, 16 insertions(+), 24 deletions(-)
+v2: Use dev_perr_probe to simplify code.
 
-diff --git a/drivers/pci/controller/dwc/pcie-kirin.c b/drivers/pci/controller/dwc/pcie-kirin.c
-index e9bda1746ca5..3c9d8da3a241 100644
---- a/drivers/pci/controller/dwc/pcie-kirin.c
-+++ b/drivers/pci/controller/dwc/pcie-kirin.c
-@@ -216,10 +216,9 @@ static int hi3660_pcie_phy_start(struct hi3660_pcie_phy *phy)
+ drivers/pci/controller/pcie-mt7621.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-mt7621.c b/drivers/pci/controller/pcie-mt7621.c
+index 9b4754a45515..354d401428f0 100644
+--- a/drivers/pci/controller/pcie-mt7621.c
++++ b/drivers/pci/controller/pcie-mt7621.c
+@@ -258,30 +258,25 @@ static int mt7621_pcie_parse_dt(struct mt7621_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+ 	struct platform_device *pdev = to_platform_device(dev);
+-	struct device_node *node = dev->of_node, *child;
++	struct device_node *node = dev->of_node;
+ 	int err;
  
- 	usleep_range(PIPE_CLK_WAIT_MIN, PIPE_CLK_WAIT_MAX);
- 	reg_val = kirin_apb_phy_readl(phy, PCIE_APB_PHY_STATUS0);
--	if (reg_val & PIPE_CLK_STABLE) {
--		dev_err(dev, "PIPE clk is not stable\n");
--		return -EINVAL;
--	}
-+	if (reg_val & PIPE_CLK_STABLE)
-+		return dev_err_probe(dev, -EINVAL,
-+				     "PIPE clk is not stable\n");
+ 	pcie->base = devm_platform_ioremap_resource(pdev, 0);
+ 	if (IS_ERR(pcie->base))
+ 		return PTR_ERR(pcie->base);
+ 
+-	for_each_available_child_of_node(node, child) {
++	for_each_available_child_of_node_scoped(node, child) {
+ 		int slot;
+ 
+ 		err = of_pci_get_devfn(child);
+-		if (err < 0) {
+-			of_node_put(child);
+-			dev_err(dev, "failed to parse devfn: %d\n", err);
+-			return err;
+-		}
++		if (err < 0)
++			return dev_err_probe(dev, err, "failed to parse devfn\n");
+ 
+ 		slot = PCI_SLOT(err);
+ 
+ 		err = mt7621_pcie_parse_port(pcie, child, slot);
+-		if (err) {
+-			of_node_put(child);
++		if (err)
+ 			return err;
+-		}
+ 	}
  
  	return 0;
- }
-@@ -371,10 +370,9 @@ static int kirin_pcie_get_gpio_enable(struct kirin_pcie *pcie,
- 	if (ret < 0)
- 		return 0;
- 
--	if (ret > MAX_PCI_SLOTS) {
--		dev_err(dev, "Too many GPIO clock requests!\n");
--		return -EINVAL;
--	}
-+	if (ret > MAX_PCI_SLOTS)
-+		return dev_err_probe(dev, -EINVAL,
-+				     "Too many GPIO clock requests!\n");
- 
- 	pcie->n_gpio_clkreq = ret;
- 
-@@ -421,16 +419,14 @@ static int kirin_pcie_parse_port(struct kirin_pcie *pcie,
- 			}
- 
- 			pcie->num_slots++;
--			if (pcie->num_slots > MAX_PCI_SLOTS) {
--				dev_err(dev, "Too many PCI slots!\n");
--				return -EINVAL;
--			}
-+			if (pcie->num_slots > MAX_PCI_SLOTS)
-+				return dev_err_probe(dev, -EINVAL,
-+						     "Too many PCI slots!\n");
- 
- 			ret = of_pci_get_devfn(child);
--			if (ret < 0) {
--				dev_err(dev, "failed to parse devfn: %d\n", ret);
--				return ret;
--			}
-+			if (ret < 0)
-+				return dev_err_probe(dev, ret,
-+						     "failed to parse devfn\n");
- 
- 			slot = PCI_SLOT(ret);
- 
-@@ -725,16 +721,12 @@ static int kirin_pcie_probe(struct platform_device *pdev)
- 	struct dw_pcie *pci;
- 	int ret;
- 
--	if (!dev->of_node) {
--		dev_err(dev, "NULL node\n");
--		return -EINVAL;
--	}
-+	if (!dev->of_node)
-+		return dev_err_probe(dev, -EINVAL, "NULL node\n");
- 
- 	data = of_device_get_match_data(dev);
--	if (!data) {
--		dev_err(dev, "OF data missing\n");
--		return -EINVAL;
--	}
-+	if (!data)
-+		return dev_err_probe(dev, -EINVAL, "OF data missing\n");
- 
- 	kirin_pcie = devm_kzalloc(dev, sizeof(struct kirin_pcie), GFP_KERNEL);
- 	if (!kirin_pcie)
 -- 
 2.17.1
 
