@@ -1,63 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8696A139CF6;
-	Sat, 31 Aug 2024 04:11:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC5F22086
+	for <linux-pci@vger.kernel.org>; Sat, 31 Aug 2024 04:17:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725077501; cv=none; b=oe6eIhuSG4NYVaL3RJxwc0oeAgK6hLlBksOfPaT5AZJt/sX7laDgxPfXtv/L2Cr6//82JnBUt7LQ/4gRcYD46uQPudrmynkGT3EgrDW6s3wGbZqqEoO7BXUXqLMZ+6JQb/cnnk5ziXEcknye//E9+ChCNBekChqA4STSY9YP92E=
+	t=1725077864; cv=none; b=KjBD6NnYslpTrEZiZOHoIJxGcFafHq0wYJEN03fBTIQYgnM1Cs7XLEGyQwOjwH6bf8nSouklze8hT8CIC9O327SRuZkAFlF0dW32wiwC1y6YE0SxsNGWZaXL7HIQlduJSlmEiofKSlpCvFu9tgQM6gunBWvaSx4C0Eo6xA12pqk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725077501; c=relaxed/simple;
-	bh=OSKeTIHTj62GwoUlIBmNlFLWBcYniasR2WlcaU5gu4s=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=tZMz9dLSj2tk0wjxWs46nNdqHLHOSuHRoJTq97CX36usvkPnYsdAMXTrNnlVnyCLmfNIbIhlpwzXgdxolUdAtR0j/JRBAcp/hb7rOV168d25gh0fPyUnJk/GgclKty6ucaAi+icuOOlmuN2AQDFdhSc1ukVEx9mOy8wcOCAcACk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=APxbfoc9; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="APxbfoc9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04832C4CECC;
-	Sat, 31 Aug 2024 04:11:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1725077501;
-	bh=OSKeTIHTj62GwoUlIBmNlFLWBcYniasR2WlcaU5gu4s=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=APxbfoc9BbQ8UElBRsWBnlAT6XNpEKE9EHvl/WzizzkZdqAfptHZNZHVlDEH6Z2Lk
-	 R6/1HWL6WdD6G6UxVyDtTCpnm7ks/AtBv+nfqN+2eEOcHFPgYKiFOZ8Y7NK3tzkhpL
-	 icGKHQPd4HZ3FgSwJy9Gjr9eEWvwYLmXpafFtlRZw/hMdsLBOV9szsJoVimn2C+lQV
-	 QvxUamEjnpN5FnXq7iJOFHDZoBEqOHw4ytvfPkyNzg4T5qU84jmkwxYk065t18rLQ8
-	 Clu2cJU5iuTJB6pkopJC8TxHM1+GcN+tYmu5d3af9/LqGfha177h7r1lmRmby0Mnfl
-	 NPdXTdGV3I5/w==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id AE9FA3809A80;
-	Sat, 31 Aug 2024 04:11:42 +0000 (UTC)
-Subject: Re: [GIT PULL] PCI fixes for v6.11
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <20240830205733.GA126293@bhelgaas>
-References: <20240830205733.GA126293@bhelgaas>
-X-PR-Tracked-List-Id: <linux-pci.vger.kernel.org>
-X-PR-Tracked-Message-Id: <20240830205733.GA126293@bhelgaas>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v6.11-fixes-2
-X-PR-Tracked-Commit-Id: 150b572a7c1df30f5d32d87ad96675200cca7b80
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 8101b2766d5bfee43a4de737107b9592db251470
-Message-Id: <172507750132.2790816.13533355901080312493.pr-tracker-bot@kernel.org>
-Date: Sat, 31 Aug 2024 04:11:41 +0000
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Frank Li <Frank.Li@nxp.com>
+	s=arc-20240116; t=1725077864; c=relaxed/simple;
+	bh=b7uH07utdHrwM1ZOx1yquIktJbmv9P89DRy+i9zwsSI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JMuiFbgEUqZx2GcATmxoExDKVdYT4p6GW8B4t4U8xfPuP1Cvv7HZwqFk7RTCOGIj6c7N9xzahW6WMlhGEzVVbMkHHDPfPJrRY1YilgJvj9sLY5HO5QH4zzoHcRYh5dZLzsK51uWqcnz/RGiVqEhvhUz63M9DXzARnBT8gsBiPyQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.163])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WwhSZ4Yh9z20n3Z;
+	Sat, 31 Aug 2024 12:12:46 +0800 (CST)
+Received: from kwepemf500003.china.huawei.com (unknown [7.202.181.241])
+	by mail.maildlp.com (Postfix) with ESMTPS id 01E8A180043;
+	Sat, 31 Aug 2024 12:17:39 +0800 (CST)
+Received: from huawei.com (10.175.112.208) by kwepemf500003.china.huawei.com
+ (7.202.181.241) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 31 Aug
+ 2024 12:17:37 +0800
+From: Zhang Zekun <zhangzekun11@huawei.com>
+To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
+	<lpieralisi@kernel.org>, <kw@linux.com>, <manivannan.sadhasivam@linaro.org>,
+	<robh@kernel.org>, <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<ryder.lee@mediatek.com>, <jianjun.wang@mediatek.com>,
+	<sergio.paracuellos@gmail.com>, <angelogioacchino.delregno@collabora.com>,
+	<matthias.bgg@gmail.com>, <alyssa@rosenzweig.io>, <maz@kernel.org>,
+	<thierry.reding@gmail.com>, <Jonathan.Cameron@Huawei.com>
+CC: <zhangzekun11@huawei.com>
+Subject: [PATCH v3 0/6] Simplify code with _scoped() helper functions
+Date: Sat, 31 Aug 2024 12:04:07 +0800
+Message-ID: <20240831040413.126417-1-zhangzekun11@huawei.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain
+X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
+ kwepemf500003.china.huawei.com (7.202.181.241)
 
-The pull request you sent on Fri, 30 Aug 2024 15:57:33 -0500:
+Use _scoped() functions to iterate through the child node, and we don't
+need to call of_node_put() manually. This can simplify the code a bit.
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pci-v6.11-fixes-2
+v2:
+- Use dev_err_probe() to simplify code.
+- Fix spelling error in commit message.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/8101b2766d5bfee43a4de737107b9592db251470
+v3:
+- Fix a spelling error.
+- wrap the line when it is too long.
 
-Thank you!
+Zhang Zekun (6):
+  PCI: kirin: Use helper function
+    for_each_available_child_of_node_scoped()
+  PCI: kirin: Tidy up _probe() related function with dev_err_probe()
+  PCI: mediatek: Use helper function
+    for_each_available_child_of_node_scoped()
+  PCI: mt7621: Use helper function
+    for_each_available_child_of_node_scoped()
+  PCI: apple: Use helper function for_each_child_of_node_scoped()
+  PCI: tegra: Use helper function for_each_child_of_node_scoped()
+
+ drivers/pci/controller/dwc/pcie-kirin.c | 50 ++++++----------
+ drivers/pci/controller/pci-tegra.c      | 80 +++++++++----------------
+ drivers/pci/controller/pcie-apple.c     |  4 +-
+ drivers/pci/controller/pcie-mediatek.c  | 15 ++---
+ drivers/pci/controller/pcie-mt7621.c    | 15 ++---
+ 5 files changed, 58 insertions(+), 106 deletions(-)
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.17.1
+
