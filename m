@@ -1,28 +1,29 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC5F22086
-	for <linux-pci@vger.kernel.org>; Sat, 31 Aug 2024 04:17:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD50E13958C
+	for <linux-pci@vger.kernel.org>; Sat, 31 Aug 2024 04:17:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725077864; cv=none; b=KjBD6NnYslpTrEZiZOHoIJxGcFafHq0wYJEN03fBTIQYgnM1Cs7XLEGyQwOjwH6bf8nSouklze8hT8CIC9O327SRuZkAFlF0dW32wiwC1y6YE0SxsNGWZaXL7HIQlduJSlmEiofKSlpCvFu9tgQM6gunBWvaSx4C0Eo6xA12pqk=
+	t=1725077866; cv=none; b=kKKPfNmuRZRxZ/0w6nZ4TMAOdRYZGZPUtz+9hLNFgsYSSHP/JTUVknqUA1GvmGaiDq4P6utQDlrxoOXluLTocvvWklXw3ur6XAuWECMwogqTCfn6jdmJ70XGLWVGkT4kax3WK3oq2Zf7OvNq4aAkZrm+8F5aYHy4NRB8zJBC8pc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725077864; c=relaxed/simple;
-	bh=b7uH07utdHrwM1ZOx1yquIktJbmv9P89DRy+i9zwsSI=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=JMuiFbgEUqZx2GcATmxoExDKVdYT4p6GW8B4t4U8xfPuP1Cvv7HZwqFk7RTCOGIj6c7N9xzahW6WMlhGEzVVbMkHHDPfPJrRY1YilgJvj9sLY5HO5QH4zzoHcRYh5dZLzsK51uWqcnz/RGiVqEhvhUz63M9DXzARnBT8gsBiPyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+	s=arc-20240116; t=1725077866; c=relaxed/simple;
+	bh=HvM5+IHzUhJCsL1YaLw+A52Oj3dNsCeQkbzL0Gli1YQ=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=WvSRtCSF3XDKPavr9vezCdWN7twSx3WcMegJq6SdMsksTF4NF5iOcdyNDF7p9RD10V1jcCZmIrF+H4ipUjwX82M+ZLN7rZqHEEHl7dcILMQShoOTbhdY/uzK07Pn/FSNCjYR4rbz+rwpoi82jqOUQf1nEyHRqetLBsUuiN/BRsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.188
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4WwhSZ4Yh9z20n3Z;
-	Sat, 31 Aug 2024 12:12:46 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4WwhWs1TbKzgYj7;
+	Sat, 31 Aug 2024 12:15:37 +0800 (CST)
 Received: from kwepemf500003.china.huawei.com (unknown [7.202.181.241])
-	by mail.maildlp.com (Postfix) with ESMTPS id 01E8A180043;
-	Sat, 31 Aug 2024 12:17:39 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 63D081800CF;
+	Sat, 31 Aug 2024 12:17:42 +0800 (CST)
 Received: from huawei.com (10.175.112.208) by kwepemf500003.china.huawei.com
  (7.202.181.241) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 31 Aug
- 2024 12:17:37 +0800
+ 2024 12:17:41 +0800
 From: Zhang Zekun <zhangzekun11@huawei.com>
 To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
 	<lpieralisi@kernel.org>, <kw@linux.com>, <manivannan.sadhasivam@linaro.org>,
@@ -32,10 +33,12 @@ To: <songxiaowei@hisilicon.com>, <wangbinghui@hisilicon.com>,
 	<matthias.bgg@gmail.com>, <alyssa@rosenzweig.io>, <maz@kernel.org>,
 	<thierry.reding@gmail.com>, <Jonathan.Cameron@Huawei.com>
 CC: <zhangzekun11@huawei.com>
-Subject: [PATCH v3 0/6] Simplify code with _scoped() helper functions
-Date: Sat, 31 Aug 2024 12:04:07 +0800
-Message-ID: <20240831040413.126417-1-zhangzekun11@huawei.com>
+Subject: [PATCH v3 3/6] PCI: mediatek: Use helper function for_each_available_child_of_node_scoped()
+Date: Sat, 31 Aug 2024 12:04:10 +0800
+Message-ID: <20240831040413.126417-4-zhangzekun11@huawei.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20240831040413.126417-1-zhangzekun11@huawei.com>
+References: <20240831040413.126417-1-zhangzekun11@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,35 +49,65 @@ Content-Type: text/plain
 X-ClientProxiedBy: dggems701-chm.china.huawei.com (10.3.19.178) To
  kwepemf500003.china.huawei.com (7.202.181.241)
 
-Use _scoped() functions to iterate through the child node, and we don't
-need to call of_node_put() manually. This can simplify the code a bit.
+for_each_available_child_of_node_scoped() provides a scope-based cleanup
+functionality to put the device_node automatically, and we don't need to
+call of_node_put() directly.  Let's simplify the code a bit with the use
+of these functions.
 
+Signed-off-by: Zhang Zekun <zhangzekun11@huawei.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+---
 v2:
 - Use dev_err_probe() to simplify code.
 - Fix spelling error in commit message.
 
-v3:
-- Fix a spelling error.
-- wrap the line when it is too long.
+ drivers/pci/controller/pcie-mediatek.c | 15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
-Zhang Zekun (6):
-  PCI: kirin: Use helper function
-    for_each_available_child_of_node_scoped()
-  PCI: kirin: Tidy up _probe() related function with dev_err_probe()
-  PCI: mediatek: Use helper function
-    for_each_available_child_of_node_scoped()
-  PCI: mt7621: Use helper function
-    for_each_available_child_of_node_scoped()
-  PCI: apple: Use helper function for_each_child_of_node_scoped()
-  PCI: tegra: Use helper function for_each_child_of_node_scoped()
-
- drivers/pci/controller/dwc/pcie-kirin.c | 50 ++++++----------
- drivers/pci/controller/pci-tegra.c      | 80 +++++++++----------------
- drivers/pci/controller/pcie-apple.c     |  4 +-
- drivers/pci/controller/pcie-mediatek.c  | 15 ++---
- drivers/pci/controller/pcie-mt7621.c    | 15 ++---
- 5 files changed, 58 insertions(+), 106 deletions(-)
-
+diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+index 9be3cebd862e..0457b9d0ad8b 100644
+--- a/drivers/pci/controller/pcie-mediatek.c
++++ b/drivers/pci/controller/pcie-mediatek.c
+@@ -1042,24 +1042,22 @@ static int mtk_pcie_subsys_powerup(struct mtk_pcie *pcie)
+ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ {
+ 	struct device *dev = pcie->dev;
+-	struct device_node *node = dev->of_node, *child;
++	struct device_node *node = dev->of_node;
+ 	struct mtk_pcie_port *port, *tmp;
+ 	int err, slot;
+ 
+ 	slot = of_get_pci_domain_nr(dev->of_node);
+ 	if (slot < 0) {
+-		for_each_available_child_of_node(node, child) {
++		for_each_available_child_of_node_scoped(node, child) {
+ 			err = of_pci_get_devfn(child);
+-			if (err < 0) {
+-				dev_err(dev, "failed to get devfn: %d\n", err);
+-				goto error_put_node;
+-			}
++			if (err < 0)
++				return dev_err_probe(dev, err, "failed to get devfn\n");
+ 
+ 			slot = PCI_SLOT(err);
+ 
+ 			err = mtk_pcie_parse_port(pcie, child, slot);
+ 			if (err)
+-				goto error_put_node;
++				return err;
+ 		}
+ 	} else {
+ 		err = mtk_pcie_parse_port(pcie, node, slot);
+@@ -1080,9 +1078,6 @@ static int mtk_pcie_setup(struct mtk_pcie *pcie)
+ 		mtk_pcie_subsys_powerdown(pcie);
+ 
+ 	return 0;
+-error_put_node:
+-	of_node_put(child);
+-	return err;
+ }
+ 
+ static int mtk_pcie_probe(struct platform_device *pdev)
 -- 
 2.17.1
 
