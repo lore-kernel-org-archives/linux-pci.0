@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610BC14900E
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77CC5149C69
 	for <linux-pci@vger.kernel.org>; Mon,  2 Sep 2024 07:53:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725263631; cv=none; b=PHnAykdKQ9rgcQeebY6l9dabXilwtsLKj4pubYGpXyhJGShmWUITc0lOGfLEhMa9BuxUNNv5iy0aK1clgLZqohHS3SKNx2/p1bC8/0XdJak+qvOjns5NA9lkWVTkG3falvcj2joPygzDaSN+EJ88jdocvzveeqPUzoXd73m+ymk=
+	t=1725263632; cv=none; b=UQYVR4B/al22ZivCzXB85c5qSPGcUibdfjuYvci6ZaxjbXd5zoiyTaXPgQnIwX9e9UvE5t1s6zhAKJjdrJ73+sVFH0btC0nRQN+SYoR1hqgnnYX/+SNPhPalmI9gKa8uYJd89Tz4IhzIBUslH1A7Ix7aGKO6NsmHljYDlviPKd4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725263631; c=relaxed/simple;
-	bh=B+t5FvP1JkCjQ6xF3nfbYal5mjuF03gYoSlAFMh/BJI=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=LY1nuaQcjpHeIw2k9l5hocW4mjCfN1laQotXfkc3rDm2h4O2kV7GuRdSArUC711WnC+w7nmwkJ/1dRNxCuRLFdgm0mWPr5vJw3K4+0wB01ki2jxPpJYlA1BxZngOPpDoANRS/wCU7CalIYLjVY0jPbcjIHxcPxtK5Vi/QpcL2KI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=joz3upeF; arc=none smtp.client-ip=198.175.65.16
+	s=arc-20240116; t=1725263632; c=relaxed/simple;
+	bh=l09qjR76aGQ8ZUzTJq9VoGicF4GvvxaVw64t+KhJf/o=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Gv4Vtv1VLiehb8Iu3+qmRnTIGHq6dcwYtp3TTKFPuR0MVgKYj89QutKO1XSk7MvbJGhTdPVetgPQyo8TnAqT25E0WLj/PXk6fWdRzgKg30TVY2iT73yb2d09DiVBdax0RDffa/+84SzuO184eyF88RDjjVEU/TzIaFba+tB91sU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bKKj1Twj; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="joz3upeF"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bKKj1Twj"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1725263630; x=1756799630;
   h=date:from:to:cc:subject:message-id:mime-version;
-  bh=B+t5FvP1JkCjQ6xF3nfbYal5mjuF03gYoSlAFMh/BJI=;
-  b=joz3upeFFerUCkyDKoqXsEFNM74poi/6oVlsHCklSLC5EJNU+wRqUHzN
-   rCzu2uM/z7AULcoTjAJzJ7DMlFQwRo3LyP4tWZ++gZu8nIGXJrrB3tDCW
-   WU3xMF4feyJD6pwDFrHsLblqUUSi+cHPJOYDOeC/RGz+Rvsk2y/8lBCy6
-   VSc1vqDpKjH3fdRn9kaLtKx3uyaIumWM05mpmlYknCWr/X5LTpJ12U993
-   gh9w5sINDxHl4th1PPMP+4Ncts7coRVkbDDIqDibEVCVmvlW9fmDW55QR
-   lPjIZKEN6qY3DEGxSQUuwKulMd3P1A/tL3eSG1MpAzmPN/bdFog+3TdbR
-   Q==;
-X-CSE-ConnectionGUID: 0WFfxX7lTC2TTpHrD6wBvA==
-X-CSE-MsgGUID: /tzOYDWIR6Gr0OBgJgfrKQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11182"; a="23950417"
+  bh=l09qjR76aGQ8ZUzTJq9VoGicF4GvvxaVw64t+KhJf/o=;
+  b=bKKj1TwjLh1EApb9tG8HqPHSG5uoZWI7TZIqYYwqTxPlHp3iAbSrDquO
+   3OX1VNljT8WuV/9vJbd6mOAjzOWSvA0ilzkrQQP6Tm77mn5V4V+Vis45M
+   MY1Z/JJim7us077zjkriew/IN37g0Vl+rfpqCAspBPrOiTH4MtWQ6zDL3
+   4TIDq9xwfgST1ynEwztSam97lq148Pote/6Y9HiR9o2YqQdLX/H6XuSu3
+   kSExyGLDLxotfdeYcMCuv7dnJkKfp6TLG1d3e+M/DBk/OCa+GZFypg90Q
+   /JalXq3l2G0y+FeZTx+JMRf/U1pBk82D7SyvWVwt3lh4pSdrRYUDG43r6
+   A==;
+X-CSE-ConnectionGUID: o2Ap51HlSD6DUozwviqFcw==
+X-CSE-MsgGUID: yt+61ujeQP2FEyMG9kUKxg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11182"; a="34990350"
 X-IronPort-AV: E=Sophos;i="6.10,195,1719903600"; 
-   d="scan'208";a="23950417"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 00:53:49 -0700
-X-CSE-ConnectionGUID: bLygYdJ4TT+k0MxC16/8jg==
-X-CSE-MsgGUID: 6m/8ymE8SPyoO6Vi2J38MQ==
+   d="scan'208";a="34990350"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 00:53:49 -0700
+X-CSE-ConnectionGUID: qV/YqcPFQWaaom7+c/0B8A==
+X-CSE-MsgGUID: G1O8tf1oQtK8zYD7FF6X/Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,195,1719903600"; 
-   d="scan'208";a="64566983"
+   d="scan'208";a="101995472"
 Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
-  by fmviesa009.fm.intel.com with ESMTP; 02 Sep 2024 00:53:48 -0700
+  by orviesa001.jf.intel.com with ESMTP; 02 Sep 2024 00:53:48 -0700
 Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1sl1sf-0005Ge-18;
+	id 1sl1sf-0005Gc-14;
 	Mon, 02 Sep 2024 07:53:45 +0000
-Date: Mon, 02 Sep 2024 15:53:38 +0800
+Date: Mon, 02 Sep 2024 15:53:08 +0800
 From: kernel test robot <lkp@intel.com>
 To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/imx6] BUILD SUCCESS
- 3474e6ceabdc9020271033edac79017a3de927d3
-Message-ID: <202409021535.hjHDOnt3-lkp@intel.com>
+Subject: [pci:aer] BUILD SUCCESS
+ 3ee1a6b5d78f07bc026f71ea0664d8df2a7d1280
+Message-ID: <202409021506.C8l40rA2-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -61,10 +61,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/imx6
-branch HEAD: 3474e6ceabdc9020271033edac79017a3de927d3  PCI: imx6: Add i.MX8Q PCIe Root Complex (RC) support
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git aer
+branch HEAD: 3ee1a6b5d78f07bc026f71ea0664d8df2a7d1280  PCI/AER: Use PCI_DEVID() macro in aer_inject()
 
-elapsed time: 767m
+elapsed time: 845m
 
 configs tested: 166
 configs skipped: 3
