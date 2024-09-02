@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CC7D3C00
-	for <linux-pci@vger.kernel.org>; Mon,  2 Sep 2024 07:50:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610BC14900E
+	for <linux-pci@vger.kernel.org>; Mon,  2 Sep 2024 07:53:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725263452; cv=none; b=krS/C/AIAOF/Uol0bHAe0ANO9bz6lJd70dUrghTV/iSlrbhOY/eGcX8coDvg8wlDKoqHhkno4nrbe0YEt5cKzSyDqVKGmAeu4jjLlSIkUzl49g6rRkmJK+TxmFGZNQrojgCkAK7NayAUZXDM4yOTd3N9UVXyDsHxNIRWmIKUEHM=
+	t=1725263631; cv=none; b=PHnAykdKQ9rgcQeebY6l9dabXilwtsLKj4pubYGpXyhJGShmWUITc0lOGfLEhMa9BuxUNNv5iy0aK1clgLZqohHS3SKNx2/p1bC8/0XdJak+qvOjns5NA9lkWVTkG3falvcj2joPygzDaSN+EJ88jdocvzveeqPUzoXd73m+ymk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725263452; c=relaxed/simple;
-	bh=aumQLgLNmd5KD9fDq+RljZMZ8G4oA8cPbflelb/8M54=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=Ia+U0D8lWAjIDzcLmz/bMhsFce6VmzhcSuRHBabCzIEtpe6/afphV8xe0lTwGod+HIfCm+4UT/bKRyaPDhXuylgApbOfVnXhiALi+nL24piIKr1iQZfeOwRowO75PLebR7aumvFf5i/wiEKT7MyQ8U0s8vTeOjCHZ5/4HGbJ6lo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=d38dcsF6; arc=none smtp.client-ip=192.198.163.17
+	s=arc-20240116; t=1725263631; c=relaxed/simple;
+	bh=B+t5FvP1JkCjQ6xF3nfbYal5mjuF03gYoSlAFMh/BJI=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=LY1nuaQcjpHeIw2k9l5hocW4mjCfN1laQotXfkc3rDm2h4O2kV7GuRdSArUC711WnC+w7nmwkJ/1dRNxCuRLFdgm0mWPr5vJw3K4+0wB01ki2jxPpJYlA1BxZngOPpDoANRS/wCU7CalIYLjVY0jPbcjIHxcPxtK5Vi/QpcL2KI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=joz3upeF; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="d38dcsF6"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="joz3upeF"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1725263450; x=1756799450;
+  t=1725263630; x=1756799630;
   h=date:from:to:cc:subject:message-id:mime-version;
-  bh=aumQLgLNmd5KD9fDq+RljZMZ8G4oA8cPbflelb/8M54=;
-  b=d38dcsF6kd1rXJJnTWNA5xIoNjLOA51FYHp6lK0CZk7oISRgyAOVFwg4
-   8txRlHSwhuK+/jM/DTOGkQpK2r95owMk1c+2kcKPo0G6UiI+Sy0D4LRG8
-   53WuQZWVi67yJXpDYBqQ7kP7E9D28zI6Vu2fkIrb72ll4UVaJqsxOLeEt
-   bcEJSOp6kVBW1GIQOk46H+uhwFjhcb9++yUHAl42fCUiC67ieeMnRhifH
-   cckYW9gRIICfpABPdvTc1RsWaGEfaA9+pP3vEfMZvlxOpCuApFd6NeKng
-   4HyaCZsAYH1pfB7NF+vtAfVwUSRN1/HWxexyqgdIahUEarQe0ABsuoKCD
-   A==;
-X-CSE-ConnectionGUID: HUXWTuvGRgSzly2F0V8hrg==
-X-CSE-MsgGUID: jwAIh+ZuSbeFdBTAfXb3RQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11182"; a="23707943"
+  bh=B+t5FvP1JkCjQ6xF3nfbYal5mjuF03gYoSlAFMh/BJI=;
+  b=joz3upeFFerUCkyDKoqXsEFNM74poi/6oVlsHCklSLC5EJNU+wRqUHzN
+   rCzu2uM/z7AULcoTjAJzJ7DMlFQwRo3LyP4tWZ++gZu8nIGXJrrB3tDCW
+   WU3xMF4feyJD6pwDFrHsLblqUUSi+cHPJOYDOeC/RGz+Rvsk2y/8lBCy6
+   VSc1vqDpKjH3fdRn9kaLtKx3uyaIumWM05mpmlYknCWr/X5LTpJ12U993
+   gh9w5sINDxHl4th1PPMP+4Ncts7coRVkbDDIqDibEVCVmvlW9fmDW55QR
+   lPjIZKEN6qY3DEGxSQUuwKulMd3P1A/tL3eSG1MpAzmPN/bdFog+3TdbR
+   Q==;
+X-CSE-ConnectionGUID: 0WFfxX7lTC2TTpHrD6wBvA==
+X-CSE-MsgGUID: /tzOYDWIR6Gr0OBgJgfrKQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11182"; a="23950417"
 X-IronPort-AV: E=Sophos;i="6.10,195,1719903600"; 
-   d="scan'208";a="23707943"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 00:50:48 -0700
-X-CSE-ConnectionGUID: vgrC1XcdTYKb+ow8A135Eg==
-X-CSE-MsgGUID: Rmcn8MquTJSMmSRxdp9IeQ==
+   d="scan'208";a="23950417"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Sep 2024 00:53:49 -0700
+X-CSE-ConnectionGUID: bLygYdJ4TT+k0MxC16/8jg==
+X-CSE-MsgGUID: 6m/8ymE8SPyoO6Vi2J38MQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.10,195,1719903600"; 
-   d="scan'208";a="64499966"
+   d="scan'208";a="64566983"
 Received: from lkp-server01.sh.intel.com (HELO 9c6b1c7d3b50) ([10.239.97.150])
-  by orviesa009.jf.intel.com with ESMTP; 02 Sep 2024 00:50:47 -0700
+  by fmviesa009.fm.intel.com with ESMTP; 02 Sep 2024 00:53:48 -0700
 Received: from kbuild by 9c6b1c7d3b50 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1sl1pl-0005GE-0d;
-	Mon, 02 Sep 2024 07:50:45 +0000
-Date: Mon, 02 Sep 2024 15:50:18 +0800
+	id 1sl1sf-0005Ge-18;
+	Mon, 02 Sep 2024 07:53:45 +0000
+Date: Mon, 02 Sep 2024 15:53:38 +0800
 From: kernel test robot <lkp@intel.com>
 To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/rcar-gen4] BUILD SUCCESS
- 5603a3491b368faf180472f4bdc6480c13c7385e
-Message-ID: <202409021516.Zgx2jFnh-lkp@intel.com>
+Subject: [pci:controller/imx6] BUILD SUCCESS
+ 3474e6ceabdc9020271033edac79017a3de927d3
+Message-ID: <202409021535.hjHDOnt3-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -61,10 +61,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rcar-gen4
-branch HEAD: 5603a3491b368faf180472f4bdc6480c13c7385e  PCI: rcar-gen4: Make read-only const array check_addr static
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/imx6
+branch HEAD: 3474e6ceabdc9020271033edac79017a3de927d3  PCI: imx6: Add i.MX8Q PCIe Root Complex (RC) support
 
-elapsed time: 842m
+elapsed time: 767m
 
 configs tested: 166
 configs skipped: 3
