@@ -1,54 +1,40 @@
-Received: from mta-65-226.siemens.flowmailer.net (mta-65-226.siemens.flowmailer.net [185.136.65.226])
+Received: from bg5.exmail.qq.com (bg5.exmail.qq.com [43.154.197.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16F0516F27F
-	for <linux-pci@vger.kernel.org>; Mon,  9 Sep 2024 17:04:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.65.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8830116BE0D;
+	Mon,  9 Sep 2024 17:22:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.154.197.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725901450; cv=none; b=Ue66N8HJAG/3gQFEF2KDhzM0FVGmFF+6ivZFrr9Fc84QCABNPuEvBDPHXx8mpGhnYbarL5RU+nZ+vDGjKUOm1XXgsfiNOfiv0eMPS+4XCdbScLTROLEOCZqRoj2IVHioPAVo1uyHvhYjyxIIpxy7QfgiOIHECqMEEBDgzGIK/SQ=
+	t=1725902528; cv=none; b=JIT6azr6NH7A5c8Kwigv+tqnlqx/vEQFkYyBhSCedG/z9zwFknv0BCmffjDcNfp/36unNz9jf2xjqjSf0eUeZavTc64Np92r71Z9jvMq13vztKHKIMNiNq+OLdXgQONVb1LzPLoDgpxhJ5KyiixfSk2Fo2KndEdR8TapY/mZBSw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1725901450; c=relaxed/simple;
-	bh=YFhEhD2DDFAzOc5YRN506WbRhSuqs9WezZihnyy8brI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pIgxuFGLgJHTcwzybZekqAH6HVDaahFgP8mDJ7uPzu1GntO+2jC61FELbPq4Oes0yIeBivBaBTB1LLV0Y1EffL6fD633MtZ9lW94JmUg0Hei6G6eK0zf1wDnGcHFuJoaHRvR2sCvaWYnJUNeWn8Pw+FDtpI5bUuCpXuiZkxEwME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=jan.kiszka@siemens.com header.b=JratCYA+; arc=none smtp.client-ip=185.136.65.226
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=siemens.com header.i=jan.kiszka@siemens.com header.b="JratCYA+"
-Received: by mta-65-226.siemens.flowmailer.net with ESMTPSA id 202409091704039256fc421dc492a366
-        for <linux-pci@vger.kernel.org>;
-        Mon, 09 Sep 2024 19:04:04 +0200
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=fm1;
- d=siemens.com; i=jan.kiszka@siemens.com;
- h=Date:From:Subject:To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Cc:References:In-Reply-To;
- bh=lEToRIXgwmYCaLisxjDuneMdvn7veaPhbgDLaE9G4uY=;
- b=JratCYA+vxPMGwri2jLrg5gYEFpK0ZcEAI3VUD1YPqTGoeqeCzuMeruJW7p1PnpN3Fbt67
- 5fBU/D+6aDzKLGrzuG8NP1OD0+FBeNb7QP/D4K7G3EzkepRT85nsxPz05kl551TejHzS11br
- glmXhSK3l26Fa71clFBNLYK2VKyrLT3d0d/JhZQ6vs1LqaUQmVQWagVkmrCDro5nAS+lc0Zb
- jDb5drOa287okWaAr5KFcmYUwWDx+IzRYjBLUkLGLBdOat0IJ+DHpZg1be3+KRMY6jyh0V83
- 7LCjiyebk8mRtqPJ3Q8YMl0nWummSng1wVWqQMxHDYVY84IzmkbcMSUA==;
-From: Jan Kiszka <jan.kiszka@siemens.com>
-To: Nishanth Menon <nm@ti.com>,
-	Santosh Shilimkar <ssantosh@kernel.org>,
-	Vignesh Raghavendra <vigneshr@ti.com>,
-	Tero Kristo <kristo@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: linux-arm-kernel@lists.infradead.org,
+	s=arc-20240116; t=1725902528; c=relaxed/simple;
+	bh=DzTpytYGvgdN0PHH7Y9LUIfnfmObdHK1eIzDaF1+Mk0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=e5WRXIgxgcJbYOitfPcKN+8AKWNmP+WMW9BjinA15hKYvBkrNh0MNoTLfbQjWDlbn8ehoHoul1+akX3py2RDkOI1/uy4HDdyvD/Al82Fzr80d4FlJpsROu0L9NPBFKuifQiC/hLs6AWGU5L9xzaQphDxQiG6SMTdWL7wtDqtDJ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=m.fudan.edu.cn; spf=pass smtp.mailfrom=m.fudan.edu.cn; arc=none smtp.client-ip=43.154.197.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=m.fudan.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=m.fudan.edu.cn
+X-QQ-mid: bizesmtpsz3t1725902448twab10l
+X-QQ-Originating-IP: +5iLoBII1Ivhz94e4UdgQWic1w1egFqCbuPe+rQNgVM=
+Received: from localhost.localdomain ( [183.193.124.18])
+	by bizesmtp.qq.com (ESMTP) with 
+	id ; Tue, 10 Sep 2024 01:20:44 +0800 (CST)
+X-QQ-SSF: 0000000000000000000000000000000
+X-QQ-GoodBg: 0
+X-BIZMAIL-ID: 16883648514648128508
+From: Kaixin Wang <kxwang23@m.fudan.edu.cn>
+To: logang@deltatee.com
+Cc: 21302010073@m.fudan.edu.cn,
+	21210240012@m.fudan.edu.cn,
+	dave.jiang@intel.com,
 	linux-pci@vger.kernel.org,
-	Siddharth Vadapalli <s-vadapalli@ti.com>,
-	Bao Cheng Su <baocheng.su@siemens.com>,
-	Hua Qian Li <huaqian.li@siemens.com>,
-	Diogo Ivo <diogo.ivo@siemens.com>
-Subject: [PATCH v6 5/7] arm64: dts: ti: k3-am65-main: Add PVU nodes
-Date: Mon,  9 Sep 2024 19:03:58 +0200
-Message-ID: <a747b4df2ed36a9339b157d4f8011e1e7a37eeb6.1725901439.git.jan.kiszka@siemens.com>
-In-Reply-To: <cover.1725901439.git.jan.kiszka@siemens.com>
-References: <cover.1725901439.git.jan.kiszka@siemens.com>
+	linux-kernel@vger.kernel.org,
+	kurt.schwemmer@microsemi.com,
+	bhelgaas@google.com,
+	Kaixin Wang <kxwang23@m.fudan.edu.cn>
+Subject: [PATCH] ntb: ntb_hw_switchtec: Fix use after free vulnerability in switchtec_ntb_remove due to race condition
+Date: Tue, 10 Sep 2024 01:20:07 +0800
+Message-Id: <20240909172007.1863-1-kxwang23@m.fudan.edu.cn>
+X-Mailer: git-send-email 2.39.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -56,51 +42,47 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Flowmailer-Platform: Siemens
-Feedback-ID: 519:519-294854:519-21489:flowmailer
+X-QQ-SENDSIZE: 520
+Feedback-ID: bizesmtpsz:m.fudan.edu.cn:qybglogicsvrsz:qybglogicsvrsz4a-0
 
-From: Jan Kiszka <jan.kiszka@siemens.com>
+In the switchtec_ntb_add function, it can call switchtec_ntb_init_sndev
+function, then &sndev->check_link_status_work is bound with
+check_link_status_work. switchtec_ntb_link_notification may be called
+to start the work.
 
-Add nodes for the two PVUs of the AM65. Keep them disabled, though,
-because the board has to additionally define DMA pools and the devices
-to be isolated.
+If we remove the module which will call switchtec_ntb_remove to make
+cleanup, it will free sndev through kfree(sndev), while the work
+mentioned above will be used. The sequence of operations that may lead
+to a UAF bug is as follows:
 
-Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+CPU0                                 CPU1
+
+                        | check_link_status_work
+switchtec_ntb_remove    |
+kfree(sndev);           |
+                        | if (sndev->link_force_down)
+                        | // use sndev
+
+Fix it by ensuring that the work is canceled before proceeding with
+the cleanup in switchtec_ntb_remove.
+
+Signed-off-by: Kaixin Wang <kxwang23@m.fudan.edu.cn>
 ---
- arch/arm64/boot/dts/ti/k3-am65-main.dtsi | 20 ++++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
-index ba43325c0eec..2582dad68dff 100644
---- a/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
-+++ b/arch/arm64/boot/dts/ti/k3-am65-main.dtsi
-@@ -841,6 +841,26 @@ main_cpts_mux: refclk-mux {
- 				assigned-clock-parents = <&k3_clks 118 5>;
- 			};
- 		};
-+
-+		ti_pvu0: iommu@30f80000 {
-+			compatible = "ti,am654-pvu";
-+			reg = <0 0x30f80000 0 0x1000>,
-+			<0 0x36000000 0 0x100000>;
-+			reg-names = "cfg", "tlbif";
-+			interrupts-extended = <&intr_main_navss 390>;
-+			interrupt-names = "pvu";
-+			status = "disabled";
-+		};
-+
-+		ti_pvu1: iommu@30f81000 {
-+			compatible = "ti,am654-pvu";
-+			reg = <0 0x30f81000 0 0x1000>,
-+			<0 0x36100000 0 0x100000>;
-+			reg-names = "cfg", "tlbif";
-+			interrupts-extended = <&intr_main_navss 389>;
-+			interrupt-names = "pvu";
-+			status = "disabled";
-+		};
- 	};
- 
- 	main_gpio0: gpio@600000 {
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index 31946387badf..ad1786be2554 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -1554,6 +1554,7 @@ static void switchtec_ntb_remove(struct device *dev)
+ 	switchtec_ntb_deinit_db_msg_irq(sndev);
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ 	switchtec_ntb_deinit_crosslink(sndev);
++	cancel_work_sync(&sndev->check_link_status_work);
+ 	kfree(sndev);
+ 	dev_info(dev, "ntb device unregistered\n");
+ }
 -- 
-2.43.0
+2.39.1.windows.1
 
