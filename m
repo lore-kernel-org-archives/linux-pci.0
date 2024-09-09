@@ -1,33 +1,33 @@
-Received: from mta-64-226.siemens.flowmailer.net (mta-64-226.siemens.flowmailer.net [185.136.64.226])
+Received: from mta-65-225.siemens.flowmailer.net (mta-65-225.siemens.flowmailer.net [185.136.65.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBD324D8DA
-	for <linux-pci@vger.kernel.org>; Mon,  9 Sep 2024 17:04:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.64.226
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 691F9170A00
+	for <linux-pci@vger.kernel.org>; Mon,  9 Sep 2024 17:04:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.65.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1725901449; cv=none; b=kousuXt+MhzSYS2oBFekZAn4wYoM1002Uyw2jNGrEAtAP9wxODWbkVq+qYrZDIJcYWOY26MenJgGTRg/pxxvuioUsMV2I5zpdvfKeVrJxDC/qD1udMO4kIt5vPXrOE8V+05h2/6oArI62Q/5JrXTIDlTmhdxoIQ2aBoH3VUM0S8=
+	t=1725901449; cv=none; b=GhyVdJADufxJj7uJZ+xlaP0NFg8XG0hTsvQBnZKxeOal30paf0qaaRMrBt13PTUqs2FtnyUbOZg64UnTUnFIQY4XbGX6YzZFi7sjNjFVfJlLDDgB8VQqKbqWq0M97jS6TwTQnWL3584NN+R1OJDru1CRKiaSrkxrpH6fCbbXPdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1725901449; c=relaxed/simple;
-	bh=jvaPt0+IphYXMI1rF9+cVjsVdNcsqc5xkrDGtcZ9a9o=;
+	bh=8DZAIx78tX09RUB958aT4rufSeZEMPqRli6/uDdiQJw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=M9hptAb2tJ/xNDSQUZs8vXXu1RLTim7oJcKV5EN3J2o5sJ8V+jZdIQl4H2bMb5UvxnYF+4cesdPYp+j4PDPIqnzgKiK70SI4EdoKqRX9QsZjDHU9pCVdpSdnI6T/h9QuzuMsfRjOVShRNlmdABE2Glndp/YDc50ilLLmF4iXuqk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=jan.kiszka@siemens.com header.b=JvtFVpmO; arc=none smtp.client-ip=185.136.64.226
+	 MIME-Version; b=C9+AtKNHE3LKMtLHZ8xr2x1c6f+VS3dl7RE9Y8pavv5bRvfiKfqs4/qTzikuf5LJOjRZKorEKsizjbPj7Rml1uzpB8cDnXGWhW6mfGfZIifEEedQpefMb3VQoaBOMt+DsxiYiG3hdicQkybZ79v3IuBgdD6FNDEPeslvDMr3RFg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=jan.kiszka@siemens.com header.b=TXp52kMx; arc=none smtp.client-ip=185.136.65.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=siemens.com header.i=jan.kiszka@siemens.com header.b="JvtFVpmO"
-Received: by mta-64-226.siemens.flowmailer.net with ESMTPSA id 20240909170403cf280c63f81c5815f6
+	dkim=pass (2048-bit key) header.d=siemens.com header.i=jan.kiszka@siemens.com header.b="TXp52kMx"
+Received: by mta-65-225.siemens.flowmailer.net with ESMTPSA id 20240909170404e191c9bdb540234969
         for <linux-pci@vger.kernel.org>;
-        Mon, 09 Sep 2024 19:04:03 +0200
+        Mon, 09 Sep 2024 19:04:05 +0200
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=fm1;
  d=siemens.com; i=jan.kiszka@siemens.com;
  h=Date:From:Subject:To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Cc:References:In-Reply-To;
- bh=zzmLaklWQjTzvGkzTiEWxr4awCiJVS73Qbgs4hUWCQY=;
- b=JvtFVpmOU/nZ3T8MmNSNkT4n9oYS8FZb+oMF/577McylfTOnuacrQs+pEhPgVkkJFHFcKC
- e8FOARl3wiTJ7bmlmr7xzcy1Bh8n+YBMroAaq9e71SmMvJRxlwg0KtXQvypxIaHJHFOD/eGc
- 1VLwTS7PhYKZ7zzpXJ/ntXaQljmGWFHIOIHsoqVahUy9a6Wk/ulUl8S/lDfQ2G9oh+jX0u15
- LGlFM7bs9BLaAFt/ZPJ07DS7nl9eY9lUT0cqdPvCnZqyN+3Q4+0CLX9hcTWQverMAMUdNE87
- YBbXkbpNeHpCODgW2OUe+aeE3OTqgZ8npCZZqCm3dRBwRQ6Q8q8c1+yQ==;
+ bh=iFfd2t0Dq0yUbDlytZqHUfYp4qV0roKUDvsOPNNJEZ0=;
+ b=TXp52kMxIC1YO4MDnCBvHdIeb/njL4BjGQHk8EDtu4UbAGNTPXRXOAAM5R5KFA5SqLs6Zu
+ sr78vBctTX3nhxviJyxMHiyv/opkIKrUP3SYenrCgdAYmqK5BLVEb7s2+mZTEHo+HK0MwThG
+ OAwyz4pEx9hQmf60TZZoQTL2GB+fcshrN3eIUNoGTUH1juScvaluExzuM1YTprLK7gJtqmw2
+ H3GEG8p6rpLRW1aguFDjyu7kcafvPG+K8edRkFVK6VLnOeGFUqGGvA2/80N0QXoR3wX3J5M3
+ WaNxJDGAktJBg79DnjT6kaVc05lHHzmAjlxhGdU3c4BWrUyklCDdyqyA==;
 From: Jan Kiszka <jan.kiszka@siemens.com>
 To: Nishanth Menon <nm@ti.com>,
 	Santosh Shilimkar <ssantosh@kernel.org>,
@@ -43,13 +43,10 @@ Cc: linux-arm-kernel@lists.infradead.org,
 	Siddharth Vadapalli <s-vadapalli@ti.com>,
 	Bao Cheng Su <baocheng.su@siemens.com>,
 	Hua Qian Li <huaqian.li@siemens.com>,
-	Diogo Ivo <diogo.ivo@siemens.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v6 4/7] PCI: keystone: Add support for PVU-based DMA isolation on AM654
-Date: Mon,  9 Sep 2024 19:03:57 +0200
-Message-ID: <f6ea60ec075e981a9b587b42baec33649e3f3918.1725901439.git.jan.kiszka@siemens.com>
+	Diogo Ivo <diogo.ivo@siemens.com>
+Subject: [PATCH v6 7/7] arm64: dts: ti: iot2050: Add overlay for DMA isolation for devices behind PCI RC
+Date: Mon,  9 Sep 2024 19:04:00 +0200
+Message-ID: <6cc76d4f83e725353e9508d5b5814daec6df92e8.1725901439.git.jan.kiszka@siemens.com>
 In-Reply-To: <cover.1725901439.git.jan.kiszka@siemens.com>
 References: <cover.1725901439.git.jan.kiszka@siemens.com>
 Precedence: bulk
@@ -58,187 +55,95 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-Flowmailer-Platform: Siemens
 Feedback-ID: 519:519-294854:519-21489:flowmailer
 
 From: Jan Kiszka <jan.kiszka@siemens.com>
 
-The AM654 lacks an IOMMU, thus does not support isolating DMA requests
-from untrusted PCI devices to selected memory regions this way. Use
-static PVU-based protection instead. The PVU, when enabled, will only
-accept DMA requests that address previously configured regions.
+Reserve a 64M memory region and ensure that all PCI devices do their DMA
+only inside that region. This is configured via a restricted-dma-pool
+and enforced with the help of the first PVU.
 
-Use the availability of a restricted-dma-pool memory region as trigger
-and register it as valid DMA target with the PVU. In addition, enable
-the mapping of requester IDs to VirtIDs in the PCI RC. Use only a single
-VirtID so far, catching all devices. This may be extended later on.
+Applying this isolation is not totally free in terms of overhead and
+memory consumption. It  makes only sense for variants that support
+secure booting, and generally only when this is actually enable.
+Therefore model it as overlay that can be activated on demand. The
+firmware will take care of this via DT fixup during boot and will also
+provide a way to adjust the pool size.
 
 Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
 ---
-CC: Lorenzo Pieralisi <lpieralisi@kernel.org>
-CC: "Krzysztof Wilczyński" <kw@linux.com>
-CC: Bjorn Helgaas <bhelgaas@google.com>
-CC: linux-pci@vger.kernel.org
----
- drivers/pci/controller/dwc/pci-keystone.c | 108 ++++++++++++++++++++++
- 1 file changed, 108 insertions(+)
+ arch/arm64/boot/dts/ti/Makefile               |  5 +++
+ ...am6548-iot2050-advanced-dma-isolation.dtso | 33 +++++++++++++++++++
+ 2 files changed, 38 insertions(+)
+ create mode 100644 arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-dma-isolation.dtso
 
-diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
-index 2219b1a866fa..a5954cae6d5d 100644
---- a/drivers/pci/controller/dwc/pci-keystone.c
-+++ b/drivers/pci/controller/dwc/pci-keystone.c
-@@ -19,6 +19,7 @@
- #include <linux/mfd/syscon.h>
- #include <linux/msi.h>
- #include <linux/of.h>
-+#include <linux/of_address.h>
- #include <linux/of_irq.h>
- #include <linux/of_pci.h>
- #include <linux/phy/phy.h>
-@@ -26,6 +27,7 @@
- #include <linux/regmap.h>
- #include <linux/resource.h>
- #include <linux/signal.h>
-+#include <linux/ti-pvu.h>
- 
- #include "../../pci.h"
- #include "pcie-designware.h"
-@@ -111,6 +113,16 @@
- 
- #define PCI_DEVICE_ID_TI_AM654X		0xb00c
- 
-+#define KS_PCI_VIRTID			0
+diff --git a/arch/arm64/boot/dts/ti/Makefile b/arch/arm64/boot/dts/ti/Makefile
+index bcd392c3206e..b6ee943be8c6 100644
+--- a/arch/arm64/boot/dts/ti/Makefile
++++ b/arch/arm64/boot/dts/ti/Makefile
+@@ -74,8 +74,10 @@ k3-am654-gp-evm-dtbs := k3-am654-base-board.dtb \
+ k3-am654-evm-dtbs := k3-am654-base-board.dtb k3-am654-icssg2.dtbo
+ k3-am654-idk-dtbs := k3-am654-evm.dtb k3-am654-idk.dtbo k3-am654-pcie-usb2.dtbo
+ k3-am6548-iot2050-advanced-m2-bkey-ekey-pcie-dtbs := k3-am6548-iot2050-advanced-m2.dtb \
++	k3-am6548-iot2050-advanced-dma-isolation.dtbo \
+ 	k3-am6548-iot2050-advanced-m2-bkey-ekey-pcie.dtbo
+ k3-am6548-iot2050-advanced-m2-bkey-usb3-dtbs := k3-am6548-iot2050-advanced-m2.dtb \
++	k3-am6548-iot2050-advanced-dma-isolation.dtbo \
+ 	k3-am6548-iot2050-advanced-m2-bkey-usb3.dtbo
+ dtb-$(CONFIG_ARCH_K3) += k3-am6528-iot2050-basic.dtb
+ dtb-$(CONFIG_ARCH_K3) += k3-am6528-iot2050-basic-pg2.dtb
+@@ -240,7 +242,10 @@ DTC_FLAGS_k3-am62p5-sk += -@
+ DTC_FLAGS_k3-am642-evm += -@
+ DTC_FLAGS_k3-am642-phyboard-electra-rdk += -@
+ DTC_FLAGS_k3-am642-tqma64xxl-mbax4xxl += -@
++DTC_FLAGS_k3-am6548-iot2050-advanced += -@
+ DTC_FLAGS_k3-am6548-iot2050-advanced-m2 += -@
++DTC_FLAGS_k3-am6548-iot2050-advanced-pg2 += -@
++DTC_FLAGS_k3-am6548-iot2050-advanced-sm += -@
+ DTC_FLAGS_k3-am68-sk-base-board += -@
+ DTC_FLAGS_k3-am69-sk += -@
+ DTC_FLAGS_k3-j721e-common-proc-board += -@
+diff --git a/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-dma-isolation.dtso b/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-dma-isolation.dtso
+new file mode 100644
+index 000000000000..dfd75d2dc245
+--- /dev/null
++++ b/arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-dma-isolation.dtso
+@@ -0,0 +1,33 @@
++// SPDX-License-Identifier: GPL-2.0
++/*
++ * IOT2050, overlay for isolating DMA requests via PVU
++ * Copyright (c) Siemens AG, 2024
++ *
++ * Authors:
++ *   Jan Kiszka <jan.kiszka@siemens.com>
++ */
 +
-+#define PCIE_VMAP_xP_CTRL		0x0
-+#define PCIE_VMAP_xP_REQID		0x4
-+#define PCIE_VMAP_xP_VIRTID		0x8
++/dts-v1/;
++/plugin/;
 +
-+#define PCIE_VMAP_xP_CTRL_EN		BIT(0)
++&{/reserved-memory} {
++	#address-cells = <2>;
++	#size-cells = <2>;
 +
-+#define PCIE_VMAP_xP_VIRTID_VID_MASK	0xfff
++	pci_restricted_dma_region: restricted-dma@c0000000 {
++		compatible = "restricted-dma-pool";
++		reg = <0 0xc0000000 0 0x4000000>;
++	};
++};
 +
- struct ks_pcie_of_data {
- 	enum dw_pcie_device_mode mode;
- 	const struct dw_pcie_host_ops *host_ops;
-@@ -1125,6 +1137,96 @@ static const struct of_device_id ks_pcie_of_match[] = {
- 	{ },
- };
- 
-+#ifdef CONFIG_TI_PVU
-+static int ks_init_vmap(struct platform_device *pdev, const char *vmap_name)
-+{
-+	struct resource *res;
-+	void __iomem *base;
-+	u32 val;
++&pcie0_rc {
++	memory-region = <&pci_restricted_dma_region>;
++};
 +
-+	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, vmap_name);
-+	base = devm_pci_remap_cfg_resource(&pdev->dev, res);
-+	if (IS_ERR(base))
-+		return PTR_ERR(base);
++&pcie1_rc {
++	memory-region = <&pci_restricted_dma_region>;
++};
 +
-+	writel(0, base + PCIE_VMAP_xP_REQID);
-+
-+	val = readl(base + PCIE_VMAP_xP_VIRTID);
-+	val &= ~PCIE_VMAP_xP_VIRTID_VID_MASK;
-+	val |= KS_PCI_VIRTID;
-+	writel(val, base + PCIE_VMAP_xP_VIRTID);
-+
-+	val = readl(base + PCIE_VMAP_xP_CTRL);
-+	val |= PCIE_VMAP_xP_CTRL_EN;
-+	writel(val, base + PCIE_VMAP_xP_CTRL);
-+
-+	return 0;
-+}
-+
-+static int ks_init_restricted_dma(struct platform_device *pdev)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct of_phandle_iterator it;
-+	struct resource phys;
-+	int err;
-+
-+	/* Only process the first restricted dma pool, more are not allowed */
-+	of_for_each_phandle(&it, err, dev->of_node, "memory-region",
-+			    NULL, 0) {
-+		if (of_device_is_compatible(it.node, "restricted-dma-pool"))
-+			break;
-+	}
-+	if (err)
-+		return err == -ENOENT ? 0 : err;
-+
-+	err = of_address_to_resource(it.node, 0, &phys);
-+	if (err < 0) {
-+		dev_err(dev, "failed to parse memory region %pOF: %d\n",
-+			it.node, err);
-+		return 0;
-+	}
-+
-+	/* Map all incoming requests on low and high prio port to virtID 0 */
-+	err = ks_init_vmap(pdev, "vmap_lp");
-+	if (err)
-+		return err;
-+	err = ks_init_vmap(pdev, "vmap_hp");
-+	if (err)
-+		return err;
-+
-+	/*
-+	 * Enforce DMA pool usage with the help of the PVU.
-+	 * Any request outside will be dropped and raise an error at the PVU.
-+	 */
-+	return ti_pvu_create_region(KS_PCI_VIRTID, &phys);
-+}
-+
-+static void ks_release_restricted_dma(struct platform_device *pdev)
-+{
-+	struct of_phandle_iterator it;
-+	struct resource phys;
-+	int err;
-+
-+	of_for_each_phandle(&it, err, pdev->dev.of_node, "memory-region",
-+			    NULL, 0) {
-+		if (of_device_is_compatible(it.node, "restricted-dma-pool") &&
-+		    of_address_to_resource(it.node, 0, &phys) == 0) {
-+			ti_pvu_remove_region(KS_PCI_VIRTID, &phys);
-+			break;
-+		}
-+	}
-+}
-+#else
-+static inline int ks_init_restricted_dma(struct platform_device *pdev)
-+{
-+	return 0;
-+}
-+
-+static inline void ks_release_restricted_dma(struct platform_device *pdev)
-+{
-+}
-+#endif
-+
- static int ks_pcie_probe(struct platform_device *pdev)
- {
- 	const struct dw_pcie_host_ops *host_ops;
-@@ -1273,6 +1375,10 @@ static int ks_pcie_probe(struct platform_device *pdev)
- 	if (ret < 0)
- 		goto err_get_sync;
- 
-+	ret = ks_init_restricted_dma(pdev);
-+	if (ret < 0)
-+		goto err_get_sync;
-+
- 	switch (mode) {
- 	case DW_PCIE_RC_TYPE:
- 		if (!IS_ENABLED(CONFIG_PCI_KEYSTONE_HOST)) {
-@@ -1354,6 +1460,8 @@ static void ks_pcie_remove(struct platform_device *pdev)
- 	int num_lanes = ks_pcie->num_lanes;
- 	struct device *dev = &pdev->dev;
- 
-+	ks_release_restricted_dma(pdev);
-+
- 	pm_runtime_put(dev);
- 	pm_runtime_disable(dev);
- 	ks_pcie_disable_phy(ks_pcie);
++&ti_pvu0 {
++	status = "okay";
++};
 -- 
 2.43.0
 
