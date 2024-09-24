@@ -1,301 +1,202 @@
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4B57208A9;
-	Tue, 24 Sep 2024 03:59:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D77F1FB4;
+	Tue, 24 Sep 2024 05:52:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727150385; cv=none; b=TNsdv8zcs9WWd9hGdadN8T/Dg2JYjRzpYzmfivy2pzt2d2ED/AWr4zqUWim8ZmNv7+w0XNjCpe2SVr/lVsPceLdAEaxP7ibZ9k2nKlwtCcGF7Beye7zqW0IgghdFLXSGUEZ9vKtTJR9fU1gSeXKfQs2XJGlL3AZmpoUM2BvTD2o=
+	t=1727157157; cv=none; b=XkERiYVEJckQw8abQ4Bfyf2+AWPPc+15Lz5ieC6I+y0xmWD+X25bs0vzQg3/GoHxrfgKFF4re3an7KoqTaiL0aqURud7QD5WgrgslNzRYXOzPlEBWxoUkep6ZGSY8E61NMHkqJ2W10EMhegJ4Jtvfc6PUPcg9qVPwxYhDVCMF8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727150385; c=relaxed/simple;
-	bh=w+29zCeYYbGxDe2F16yEwMmSjD2xfS1sr6CA3aPadNo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=M2whKs6+Hp6AhMjmKxv6Se25594YYz747qeY8t75Kqm/B5UTq06B70WWz2fAtoYqTof28CHB4OmF+WqONh21dtnI7vr7CmFjVHCCm6hNgUSvV8M1DePIFMGzaUazex2tT7+dc5wl6mPvn9xiFZsh0bQqWoVCKmngKZPikbnfpJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 37EE020080A;
-	Tue, 24 Sep 2024 05:50:32 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id F248D2006D1;
-	Tue, 24 Sep 2024 05:50:31 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id D8967183DC02;
-	Tue, 24 Sep 2024 11:50:29 +0800 (+08)
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: l.stach@pengutronix.de,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	frank.li@nxp.com,
-	robh+dt@kernel.org,
-	conor+dt@kernel.org,
-	shawnguo@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org,
-	festevam@gmail.com,
-	s.hauer@pengutronix.de
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	kernel@pengutronix.de,
-	imx@lists.linux.dev,
-	Frank Li <Frank.Li@nxp.com>,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v1 7/9] PCI: imx6: Use dwc common suspend resume method
-Date: Tue, 24 Sep 2024 11:27:42 +0800
-Message-Id: <1727148464-14341-8-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1727148464-14341-1-git-send-email-hongxing.zhu@nxp.com>
-References: <1727148464-14341-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+	s=arc-20240116; t=1727157157; c=relaxed/simple;
+	bh=bdDtutD2AX+b8M/zUVUc8osppsP9U2nJtxRBvla7F38=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SoVLwpIXDzLP5cL9oBsCN0tWtEzJ/C5oKre6GvRTymWojNa21bd3Nfg+ITAE08kUGNhlIVBvPlSzQ48xP0r9jheggh038DBmMmwQM0IEbaoeyOYhhVY0VzdX6bijKTDDQPOXCH8FNJIwozfUblx70TjTi9gVnHR3N23b9TNdlaQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Rzzr9Ap+; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Rzzr9Ap+"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48NLea8W018674;
+	Tue, 24 Sep 2024 05:52:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	juHGuZAvU1EMEN/6xg5NxWUpAOPzcKBMkLjcPFHV5Fw=; b=Rzzr9Ap+9g9z3tnb
+	rIuEEB4LXEU+JBp2WlSjwo7MeXplu32PpG3SrWm2R+k50K15gTbxZwadwHEBSx7T
+	rPUZVaxi+Tpw8tgrXIqQDqdkVgl8zCxT1emULBH03bq/IlD2Oxy0j8xuHu7cuJu4
+	7jIGjG40xNiBBfGxXTup7tX2LWtFFrmriLMNheI0j+3H9zs33z7TFM7/bFK9kqb2
+	BalHTBHKcFCnHB8Q4ZS0+Sf8wffeZxjnaROtrxT4lZSkHrKMDUmtKwDpz3Bc7CmL
+	scPWPNx6CNHpxP7Iyvikfst1y/NL2yNn1naUOS19dvG/Uh3zLNpahgX9Tk4e1vzh
+	cJVxlw==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41sn3s74mx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Sep 2024 05:52:23 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 48O5qMxA009443
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Sep 2024 05:52:22 GMT
+Received: from [10.231.195.67] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 23 Sep
+ 2024 22:52:18 -0700
+Message-ID: <b51c89f0-035a-4e94-adc3-e1b4fc31dfdd@quicinc.com>
+Date: Tue, 24 Sep 2024 13:52:17 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: unexptect ACPI GPE wakeup on Lenovo platforms
+To: Mario Limonciello <mario.limonciello@amd.com>, <rafael@kernel.org>,
+        <mika.westerberg@linux.intel.com>, <ulf.hansson@linaro.org>,
+        <bhelgaas@google.com>, <Basavaraj.Natikar@amd.com>,
+        <Shyam-sundar.S-k@amd.com>, <mpearson@lenovo.com>,
+        <markpearson@lenovo.com>, Kalle Valo <kvalo@kernel.org>,
+        Jeff Johnson <quic_jjohnson@quicinc.com>
+CC: <linux-acpi@vger.kernel.org>, <linux-gpio@vger.kernel.org>,
+        <linux-pm@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+        <platform-driver-x86@vger.kernel.org>
+References: <370d023e-ec53-4bf2-a005-48524c9cb4b2@quicinc.com>
+ <79d288c6-6042-4f73-b465-0ddcde14509a@amd.com>
+Content-Language: en-US
+From: Baochen Qiang <quic_bqiang@quicinc.com>
+In-Reply-To: <79d288c6-6042-4f73-b465-0ddcde14509a@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: D305zhPoFIQ_AWylgJW0zGAa734KzMXY
+X-Proofpoint-ORIG-GUID: D305zhPoFIQ_AWylgJW0zGAa734KzMXY
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 phishscore=0
+ mlxscore=0 impostorscore=0 spamscore=0 malwarescore=0 suspectscore=0
+ priorityscore=1501 lowpriorityscore=0 mlxlogscore=999 clxscore=1011
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2408220000 definitions=main-2409240038
 
-From: Frank Li <Frank.Li@nxp.com>
 
-Call common dwc suspend/resume function. Use dwc common iATU method to send
-out PME_TURN_OFF message. Old platform such as iMX6SX and iMX6QP, iATU
-CTRL2 bit 22 (PCIE_ATU_INHIBIT_PAYLOAD) are reserved. So can't send out MSG
-without data by dummy MMIO write. Without PCIE_ATU_INHIBIT_PAYLOAD, MSGD
-will be sent out instead of MSG. So keep old method to send PME_TURN_OFF
-MSG.
 
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
----
- drivers/pci/controller/dwc/pci-imx6.c | 97 ++++++++++-----------------
- 1 file changed, 36 insertions(+), 61 deletions(-)
+On 9/23/2024 9:37 PM, Mario Limonciello wrote:
+> On 9/23/2024 05:07, Baochen Qiang wrote:
+>> Hi,
+>>
+>> recently it is reported that on some Lenovo machines (P16v, Z13 etc.) unexpected ACPI event wakeup is seen with kernel 6.10 [1][2]. To summary, the unexpected wakeup is triggered by simply unplug AC power or close lid of the laptop. Regression test shows this is caused by below commit, and with that reverted the issue is gone:
+>>
+>> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/ath/ath11k?id=166a490f59ac10340ee5330e51c15188ce2a7f8f
+>>
+>> Well what confuses me is that this commit basically resets WLAN hardware before going to suspend. that said, WLAN target maintains limited functionality (PCIe link handling etc...) during system suspend and is thus not expected to wakeup system.
+>>
+>> kernel log shows this is an ACPI GPE event wakeup:
+>>
+>> Sep 22 22:34:32 fedora kernel: PM: Triggering wakeup from IRQ 9
+>> Sep 22 22:34:32 fedora kernel: ACPI: PM: ACPI non-EC GPE wakeup
+>> ...
+>> Sep 22 22:34:32 fedora kernel: PM: noirq resume of devices complete after 693.757 msecs
+>> Sep 22 22:34:32 fedora kernel: ACPI: GPE event 0x07
+>> Sep 22 22:34:32 fedora kernel: ACPI: GPE event 0x0e
+>>
+>> Consulting ACPI tables show GPE 0x07 is used by the EC and GPE 0x0e is used by GPP6 device:
+>>
+>> Scope (\_SB.PCI0.GPP6)
+>> {
+>>      ...
+>>      Method (_PRW, 0, NotSerialized)  // _PRW: Power Resources for Wake
+>>      {
+>>          M460 ("PLA-ASL-\\_SB.PCI0.GPP6._PRW Return GPRW (0xE, 0x4)\n", 0x00, 0x00, 0x00, 0x00, 0x00, 0x00)
+>>          Return (Package (0x02)
+>>          {
+>>              0x0E,
+>>              0x04
+>>          })
+>>      }
+>>      ...
+>> }
+>>
+>> while GPP6 is the PCI bridge (the PCIe root port in this case) to which WLAN target is attached to:
+>>
+>> Device (GPP6)
+>> {
+>>      Name (_ADR, 0x00020002)  // _ADR: Address
+>>      ...
+>> }
+>>
+>> Scope (_SB.PCI0.GPP6)
+>> {
+>>      Device (WLAN)
+>>      {
+>>          ...
+>>      }
+>>      ...
+>> }
+>>
+>> and lspci also shows such relationship:
+>>
+>> $ lspci -vt
+>> -[0000:00]-+-00.0  Advanced Micro Devices, Inc. [AMD] Device 14e8
+>>             ...
+>>             +-02.2-[03]----00.0  Qualcomm Technologies, Inc QCNFA765 Wireless Network Adapter
+>>             ....
+>>
+>> Based on above info:
+>> #1 is that valid to get the conclusion that this unexpected wakeup is triggered directly by PCIe bridge?
+>> #2 if this is related to WLAN (seems so based on the regression test), is it the WLAN wake pin (a GPIO pin?) that originally triggers this? and how does it affect the bridge?
+>> #3 quick tests show that with GPP6 wakeup disabled this issue is gone. so a workaround is to disable GPP6 wakeup before going to suspend and enable it back after resume. But is it safe to do so?
+>>
+>>
+>>
+>> [1] https://bugzilla.kernel.org/show_bug.cgi?id=219196
+>> [2] https://bugzilla.redhat.com/show_bug.cgi?id=2301921
+>>
+> 
+> With pinctrl-amd there is an extra debugging message present [1] that is activated when you enable '/sys/power/pm_debug_messages' which will tell you if a GPIO is active during the suspend cycle.  That can help you to rule out whether this is the WoWLAN GPIO pin causing the behavior.
+> 
+> [1] https://github.com/torvalds/linux/blob/v6.11/drivers/pinctrl/pinctrl-amd.c#L626
+Thanks for the reminder, Mario.
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 5ec43d9f9784..36df439d43ae 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -33,6 +33,7 @@
- #include <linux/pm_domain.h>
- #include <linux/pm_runtime.h>
- 
-+#include "../../pci.h"
- #include "pcie-designware.h"
- 
- #define IMX8MQ_GPR_PCIE_REF_USE_PAD		BIT(9)
-@@ -82,6 +83,7 @@ enum imx_pcie_variants {
- #define IMX_PCIE_FLAG_HAS_SERDES		BIT(6)
- #define IMX_PCIE_FLAG_SUPPORT_64BIT		BIT(7)
- #define IMX_PCIE_FLAG_CPU_ADDR_FIXUP		BIT(8)
-+#define IMX_PCIE_FLAG_CUSTOM_PME_TURNOFF	BIT(9)
- 
- #define imx_check_flag(pci, val)	(pci->drvdata->flags & val)
- 
-@@ -106,19 +108,18 @@ struct imx_pcie_drvdata {
- 	int (*init_phy)(struct imx_pcie *pcie);
- 	int (*enable_ref_clk)(struct imx_pcie *pcie, bool enable);
- 	int (*core_reset)(struct imx_pcie *pcie, bool assert);
-+	const struct dw_pcie_host_ops *ops;
- };
- 
- struct imx_pcie {
- 	struct dw_pcie		*pci;
- 	struct gpio_desc	*reset_gpiod;
--	bool			link_is_up;
- 	struct clk_bulk_data	clks[IMX_PCIE_MAX_CLKS];
- 	struct regmap		*iomuxc_gpr;
- 	u16			msi_ctrl;
- 	u32			controller_id;
- 	struct reset_control	*pciephy_reset;
- 	struct reset_control	*apps_reset;
--	struct reset_control	*turnoff_reset;
- 	u32			tx_deemph_gen1;
- 	u32			tx_deemph_gen2_3p5db;
- 	u32			tx_deemph_gen2_6db;
-@@ -898,13 +899,11 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
- 		dev_info(dev, "Link: Only Gen1 is enabled\n");
- 	}
- 
--	imx_pcie->link_is_up = true;
- 	tmp = dw_pcie_readw_dbi(pci, offset + PCI_EXP_LNKSTA);
- 	dev_info(dev, "Link up, Gen%i\n", tmp & PCI_EXP_LNKSTA_CLS);
- 	return 0;
- 
- err_reset_phy:
--	imx_pcie->link_is_up = false;
- 	dev_dbg(dev, "PHY DEBUG_R0=0x%08x DEBUG_R1=0x%08x\n",
- 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG0),
- 		dw_pcie_readl_dbi(pci, PCIE_PORT_DEBUG1));
-@@ -1023,9 +1022,33 @@ static u64 imx_pcie_cpu_addr_fixup(struct dw_pcie *pcie, u64 cpu_addr)
- 	return (cpu_addr - offset);
- }
- 
-+/*
-+ * Old dwc iATU ctrl2 bit 22 (PCIE_ATU_INHIBIT_PAYLOAD) are reserved. So can't
-+ * send out MSG without data by dummy MMIO write. Without
-+ * PCIE_ATU_INHIBIT_PAYLOAD, MSGD will be sent out. So have to keep old method
-+ * to send PME_TURN_OFF MSG.
-+ */
-+static void imx_pcie_pm_turn_off(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
-+
-+	regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12, IMX6SX_GPR12_PCIE_PM_TURN_OFF);
-+	regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12, IMX6SX_GPR12_PCIE_PM_TURN_OFF);
-+
-+	usleep_range(PCIE_PME_TO_L2_TIMEOUT_US/10, PCIE_PME_TO_L2_TIMEOUT_US);
-+}
-+
-+
- static const struct dw_pcie_host_ops imx_pcie_host_ops = {
- 	.init = imx_pcie_host_init,
- 	.deinit = imx_pcie_host_exit,
-+	.pme_turn_off = imx_pcie_pm_turn_off,
-+};
-+
-+static const struct dw_pcie_host_ops imx_pcie_host_dw_pme_ops = {
-+	.init = imx_pcie_host_init,
-+	.deinit = imx_pcie_host_exit,
- };
- 
- static const struct dw_pcie_ops dw_pcie_ops = {
-@@ -1146,43 +1169,6 @@ static int imx_add_pcie_ep(struct imx_pcie *imx_pcie,
- 	return 0;
- }
- 
--static void imx_pcie_pm_turnoff(struct imx_pcie *imx_pcie)
--{
--	struct device *dev = imx_pcie->pci->dev;
--
--	/* Some variants have a turnoff reset in DT */
--	if (imx_pcie->turnoff_reset) {
--		reset_control_assert(imx_pcie->turnoff_reset);
--		reset_control_deassert(imx_pcie->turnoff_reset);
--		goto pm_turnoff_sleep;
--	}
--
--	/* Others poke directly at IOMUXC registers */
--	switch (imx_pcie->drvdata->variant) {
--	case IMX6SX:
--	case IMX6QP:
--		regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6SX_GPR12_PCIE_PM_TURN_OFF,
--				IMX6SX_GPR12_PCIE_PM_TURN_OFF);
--		regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
--				IMX6SX_GPR12_PCIE_PM_TURN_OFF, 0);
--		break;
--	default:
--		dev_err(dev, "PME_Turn_Off not implemented\n");
--		return;
--	}
--
--	/*
--	 * Components with an upstream port must respond to
--	 * PME_Turn_Off with PME_TO_Ack but we can't check.
--	 *
--	 * The standard recommends a 1-10ms timeout after which to
--	 * proceed anyway as if acks were received.
--	 */
--pm_turnoff_sleep:
--	usleep_range(1000, 10000);
--}
--
- static void imx_pcie_msi_save_restore(struct imx_pcie *imx_pcie, bool save)
- {
- 	u8 offset;
-@@ -1206,36 +1192,26 @@ static void imx_pcie_msi_save_restore(struct imx_pcie *imx_pcie, bool save)
- static int imx_pcie_suspend_noirq(struct device *dev)
- {
- 	struct imx_pcie *imx_pcie = dev_get_drvdata(dev);
--	struct dw_pcie_rp *pp = &imx_pcie->pci->pp;
- 
- 	if (!(imx_pcie->drvdata->flags & IMX_PCIE_FLAG_SUPPORTS_SUSPEND))
- 		return 0;
- 
- 	imx_pcie_msi_save_restore(imx_pcie, true);
--	imx_pcie_pm_turnoff(imx_pcie);
--	imx_pcie_stop_link(imx_pcie->pci);
--	imx_pcie_host_exit(pp);
--
--	return 0;
-+	return dw_pcie_suspend_noirq(imx_pcie->pci);
- }
- 
- static int imx_pcie_resume_noirq(struct device *dev)
- {
- 	int ret;
- 	struct imx_pcie *imx_pcie = dev_get_drvdata(dev);
--	struct dw_pcie_rp *pp = &imx_pcie->pci->pp;
- 
- 	if (!(imx_pcie->drvdata->flags & IMX_PCIE_FLAG_SUPPORTS_SUSPEND))
- 		return 0;
- 
--	ret = imx_pcie_host_init(pp);
-+	ret = dw_pcie_resume_noirq(imx_pcie->pci);
- 	if (ret)
- 		return ret;
- 	imx_pcie_msi_save_restore(imx_pcie, false);
--	dw_pcie_setup_rc(pp);
--
--	if (imx_pcie->link_is_up)
--		imx_pcie_start_link(imx_pcie->pci);
- 
- 	return 0;
- }
-@@ -1267,11 +1243,14 @@ static int imx_pcie_probe(struct platform_device *pdev)
- 
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
--	pci->pp.ops = &imx_pcie_host_ops;
- 
- 	imx_pcie->pci = pci;
- 	imx_pcie->drvdata = of_device_get_match_data(dev);
- 
-+	pci->pp.ops = &imx_pcie_host_dw_pme_ops;
-+	if (imx_pcie->drvdata->ops)
-+		pci->pp.ops = imx_pcie->drvdata->ops;
-+
- 	/* Find the PHY if one is defined, only imx7d uses it */
- 	np = of_parse_phandle(node, "fsl,imx7d-pcie-phy", 0);
- 	if (np) {
-@@ -1340,13 +1319,6 @@ static int imx_pcie_probe(struct platform_device *pdev)
- 		break;
- 	}
- 
--	/* Grab turnoff reset */
--	imx_pcie->turnoff_reset = devm_reset_control_get_optional_exclusive(dev, "turnoff");
--	if (IS_ERR(imx_pcie->turnoff_reset)) {
--		dev_err(dev, "Failed to get TURNOFF reset control\n");
--		return PTR_ERR(imx_pcie->turnoff_reset);
--	}
--
- 	if (imx_pcie->drvdata->gpr) {
- 	/* Grab GPR config register range */
- 		imx_pcie->iomuxc_gpr =
-@@ -1425,6 +1397,7 @@ static int imx_pcie_probe(struct platform_device *pdev)
- 		if (ret < 0)
- 			return ret;
- 	} else {
-+		pci->pp.use_atu_msg = true;
- 		ret = dw_pcie_host_init(&pci->pp);
- 		if (ret < 0)
- 			return ret;
-@@ -1488,6 +1461,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 		.init_phy = imx6sx_pcie_init_phy,
- 		.enable_ref_clk = imx6sx_pcie_enable_ref_clk,
- 		.core_reset = imx6sx_pcie_core_reset,
-+		.ops = &imx_pcie_host_ops,
- 	},
- 	[IMX6QP] = {
- 		.variant = IMX6QP,
-@@ -1505,6 +1479,7 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 		.init_phy = imx_pcie_init_phy,
- 		.enable_ref_clk = imx6q_pcie_enable_ref_clk,
- 		.core_reset = imx6qp_pcie_core_reset,
-+		.ops = &imx_pcie_host_ops,
- 	},
- 	[IMX7D] = {
- 		.variant = IMX7D,
--- 
-2.37.1
+I do notice that some reporters mentioned about this [1]. and I can also see this on my P16v machine:
+
+[  881.799289] PM: suspend entry (s2idle)
+...
+[  897.491440] PM: Triggering wakeup from IRQ 9
+[  897.491714] ACPI: PM: ACPI non-EC GPE wakeup
+[  897.491720] PM: resume from suspend-to-idle
+...
+[  898.153259] PM: noirq resume of devices complete after 556.675 msecs
+[  898.153443] ACPI: GPE event 0x07
+[  898.153502] ACPI: GPE event 0x0e //GPE 0x0e triggered for the 1st time
+...
+[  898.314804] mhi mhi0: Requested to power ON //WLAN begin to reinitialize
+[  898.314841] mhi mhi0: Power on setup success
+[  898.694562] mhi mhi0: Wait for device to enter SBL or Mission mode
+[  899.305898] GPIO 18 is active: 0x10157a00 //I guess this is the WoWLAN GPIO pin
+[  899.306089] ACPI: GPE event 0x0e //GPE 0x0e triggered for the 2nd time
+[  899.333158] ath11k_pci 0000:03:00.0: chip_id 0x12 chip_family 0xb board_id 0xff soc_id 0x400c1211
+[  899.333190] ath11k_pci 0000:03:00.0: fw_version 0x1106196e fw_build_timestamp 2024-01-12 11:30 fw_build_id WLAN.HSP.1.1-03125-QCAHSPSWPL_V1_V2_SILICONZ_LITE-3.6510.37
+...
+[  899.826378] PM: suspend exit
+
+
+But I don;t think it is the wakeup source, it is just toggled during WLAN reinitialize AFTER system wakeup. actually even with ath11k module removed I can also see this GPE wakeup, but without GPIO 18 toggled:
+
+[ 2640.849342] PM: suspend entry (s2idle)
+...
+[ 2650.806234] PM: Triggering wakeup from IRQ 9
+...
+[ 2651.467653] PM: noirq resume of devices complete after 558.943 msecs
+[ 2651.467880] ACPI: GPE event 0x07
+[ 2651.467961] ACPI: GPE event 0x0e
+...
+[ 2651.848848] PM: suspend exit
+
+
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=219286
 
