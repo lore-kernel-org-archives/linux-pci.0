@@ -1,143 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EE0D1B85DA;
-	Tue, 24 Sep 2024 02:46:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F16118E1F;
+	Tue, 24 Sep 2024 03:50:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727145997; cv=none; b=JWd7GHHyXM7HWInQJYVy02vFhAgitTQ/q9YcTus3ga77f/JO2v5Z9zVgUCFCkihi4fdAiJxU+GDxxcCJfS8rgjD+6SWfGrT/ltyr+yrApKM6/b9X326kdXlRshXB8HrFXxpX+vIrZTWg1NfSSPJ2ki9EPElOpERKYG2skW09PRA=
+	t=1727149832; cv=none; b=jjAYmEiJZnMEShPC1yyNSng54wgoWVCqLZ/VSfjqcD9/0nDMV4Bm9c0vwrB64rns+rUR3bdoMYkK8ARmL1RMZKrlVcv3Y8VDqhHOF7QTTz6wGAYZrAnKUwnzBxhnaYNIACtWOXTa7pFg3/pAAKaw38Q7APg9qVZFl7CcBU9WL18=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727145997; c=relaxed/simple;
-	bh=saapds3Tco5OXwRJK6gEwmbqTm5hd9R5EEGQWhxcueg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qyOAfFgzCYU8EisbdYa8/H+uNkLE9RJ+tyILs9HjHHJityjhj5nH7XcCG5kQgzCGiiEDui9ckqzRUG+2WixUTpe2FYDI5vo3BjvVo6SAq6kLOTWihNK8eGFoX5mZieBsK9EBpsEPlTDYC30dMgC6uDJ9tLVsNLI/FsaDreMDfmc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CXbc8IZr; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CXbc8IZr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 34100C4CEDA;
-	Tue, 24 Sep 2024 02:46:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727145997;
-	bh=saapds3Tco5OXwRJK6gEwmbqTm5hd9R5EEGQWhxcueg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=CXbc8IZrs+le1x6K8gPklyx59P7UO2MaFH+aBs6qULAOOByQjWz2EwDcFxVQwMXR8
-	 uDC4rvtiiFp1YHSpIIi29Vyf5Xk9vyunyVGL0G9cl9ifmzROQ7XhuRrCY9E2V8NhBk
-	 NDzmD2DsOyPUjbix144H2Z24mARaXizk1TP49VwMXmKKfHfmAtmYD4+5Ro9/+walcc
-	 8e/UpjKbHbslIF1BtWRTkehIxG8ySOToyaah2hOXVz/SmYL/DEtbJVH0X1Y9bKwZHm
-	 s2J769cmRTcYSDwtMzoQbzlIuCXMMyW1wQ6anVZgK2E+vY6MsMycmVCSN0RP/pMgWi
-	 nHBBJxy7ma/AQ==
-Received: by mail-lf1-f53.google.com with SMTP id 2adb3069b0e04-53660856a21so4826564e87.2;
-        Mon, 23 Sep 2024 19:46:37 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUVJXZ8o2fiFRGN34OFI7v4marGFjwMO4b9/YdDkndTX1SJR9PrrDV/uupJfNVvInOYbBwlbnxISIRTKw==@vger.kernel.org, AJvYcCV4qnhlXmd/pNtynF6EoKBLlofyH2WNGeaWZdYcDMDWO1rP70Yx44MSZYDcQ3wPWrQp0HxUNUcLswtD@vger.kernel.org, AJvYcCV8sJpN9/p5r1bthDfvVl05PMAS5ortaswtv0Lv6ySiT324sU8rj4O7XAdtFU4qxR6/EvYetQtSXzsQy/HF@vger.kernel.org, AJvYcCVe0322POMCrVO5cX7/fFNKZseqmP/a2N+6gAG+uknz6i7yxpWtloHo+ctB+ZZBjp5nFJgb7tui/PVY@vger.kernel.org, AJvYcCWc3DP4gCs7l9SHGJDIMKfQ6kLqkhxjKjtfqhi1o7n7uZ7XiIX6gRcd8ZwaammH7u2h8NNCHU2T5TJzkQ==@vger.kernel.org, AJvYcCX7hS7NeoYQHliRuUPyPgSliNiX06FLRz4PI13Lw7xjMxnxKIGE3bafucD8zeR0X953ufD2xYCZsbBG9ODX@vger.kernel.org, AJvYcCXIX6+z9AYMUrgZA6PSF5cAdZFktVUAvNR6vrvu1/Je4+icsqo/glaHp87I9w17aG9e+vQ6QtyS@vger.kernel.org, AJvYcCXTMkWqeZ8UBi7wEXPSjzraiuobgkP94FtHaoXaRSU/x6cw4Wd9uIheSsi4IrIioFs57vDjv8RH7Edx@vger.kernel.org
-X-Gm-Message-State: AOJu0YwIjQmszHN58JgXnSDBpAbIiugia5Jx9c+tkCI5yRRHl9Fdr/JH
-	Daai9wOchvMNlFc/5QCY8QBv4NMu0pG2xrrg0B/nv7QZ1OJKvPAE4D1NEgbSBjh8Bon5vtGZ1tl
-	Tyv8yAHTYU6fZrCR2YvbbDmsFKng=
-X-Google-Smtp-Source: AGHT+IGbFPw/bTRm+UErpcrDrhXiYrSHOwzSiG4p3e4jUUEDfOTfASqMN5Pcr7Ww2ei18DiP8qOt5I2z7sBy9E6rsKI=
-X-Received: by 2002:a05:6512:158e:b0:533:d3e:16f5 with SMTP id
- 2adb3069b0e04-536ac334255mr7477512e87.38.1727145995657; Mon, 23 Sep 2024
- 19:46:35 -0700 (PDT)
+	s=arc-20240116; t=1727149832; c=relaxed/simple;
+	bh=pGlGsxgPKnRVfhVB8HEjH1qepg790OX1wMdwznXzSUY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=PwnncaAIpn5p+ezpSaAOFiSLGsvXremLSrbtM7VHHAodbUA4uH3SyR1oH2noi1yURhEIqga4o0MDSJ6z/947l8G+BKvEr+6OgLcd/YZh7ZrDmOQ0JemGih2huMa1d+0Rp04pvHW540e6/ooKkt3cFXLHOMEc5oXOAuAgD15VS7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+Received: from inva020.nxp.com (localhost [127.0.0.1])
+	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 0E0071A1E2A;
+	Tue, 24 Sep 2024 05:50:29 +0200 (CEST)
+Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
+	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id CA4F51A1DC4;
+	Tue, 24 Sep 2024 05:50:28 +0200 (CEST)
+Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
+	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id BF9E0183DC02;
+	Tue, 24 Sep 2024 11:50:26 +0800 (+08)
+From: Richard Zhu <hongxing.zhu@nxp.com>
+To: l.stach@pengutronix.de,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	frank.li@nxp.com,
+	robh+dt@kernel.org,
+	conor+dt@kernel.org,
+	shawnguo@kernel.org,
+	krzysztof.kozlowski+dt@linaro.org,
+	festevam@gmail.com,
+	s.hauer@pengutronix.de
+Cc: linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	kernel@pengutronix.de,
+	imx@lists.linux.dev,
+	Richard Zhu <hongxing.zhu@nxp.com>
+Subject: [PATCH v1 5/9] PCI: imx6: Make core reset assertion deassertion symmetric
+Date: Tue, 24 Sep 2024 11:27:40 +0800
+Message-Id: <1727148464-14341-6-git-send-email-hongxing.zhu@nxp.com>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1727148464-14341-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1727148464-14341-1-git-send-email-hongxing.zhu@nxp.com>
+X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <cover.1724159867.git.andrea.porta@suse.com> <12d0909b1612fb6d2caa42b4fda5e5ae63d623a3.1724159867.git.andrea.porta@suse.com>
- <2113b8df52164733a0ee3860bb793d6e.sboyd@kernel.org> <ZtcBHvI9JxgH9iFT@apocalypse>
- <d87530b846d0dc9e78789234cfcb602a.sboyd@kernel.org> <CAK7LNAQEx52BYMYfNu+xj8sNmdtH9XfPapdhJDrsbDo43aD3Dg@mail.gmail.com>
- <146d3866ec57e963713cd07b9eaf5a71.sboyd@kernel.org>
-In-Reply-To: <146d3866ec57e963713cd07b9eaf5a71.sboyd@kernel.org>
-From: Masahiro Yamada <masahiroy@kernel.org>
-Date: Tue, 24 Sep 2024 11:45:58 +0900
-X-Gmail-Original-Message-ID: <CAK7LNAQ1oUvuMcHs-idZcPxE-c4fJgMDt-cURATsrVkjjFPNWg@mail.gmail.com>
-Message-ID: <CAK7LNAQ1oUvuMcHs-idZcPxE-c4fJgMDt-cURATsrVkjjFPNWg@mail.gmail.com>
-Subject: Re: [PATCH 05/11] vmlinux.lds.h: Preserve DTB sections from being
- discarded after init
-To: Stephen Boyd <sboyd@kernel.org>
-Cc: Andrea della Porta <andrea.porta@suse.com>, Andrew Lunn <andrew@lunn.ch>, Arnd Bergmann <arnd@arndb.de>, 
-	Bjorn Helgaas <bhelgaas@google.com>, 
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Claudiu Beznea <claudiu.beznea@tuxon.dev>, 
-	Conor Dooley <conor+dt@kernel.org>, "David S. Miller" <davem@davemloft.net>, 
-	Derek Kiernan <derek.kiernan@amd.com>, Dragan Cvetic <dragan.cvetic@amd.com>, 
-	Eric Dumazet <edumazet@google.com>, Florian Fainelli <florian.fainelli@broadcom.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jakub Kicinski <kuba@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Lee Jones <lee@kernel.org>, 
-	Linus Walleij <linus.walleij@linaro.org>, Michael Turquette <mturquette@baylibre.com>, 
-	Nicolas Ferre <nicolas.ferre@microchip.com>, Paolo Abeni <pabeni@redhat.com>, 
-	Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@google.com>, Stefan Wahren <wahrenst@gmx.net>, 
-	Will Deacon <will@kernel.org>, devicetree@vger.kernel.org, linux-arch@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-rpi-kernel@lists.infradead.org, 
-	netdev@vger.kernel.org, linux-kbuild@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 24, 2024 at 3:13=E2=80=AFAM Stephen Boyd <sboyd@kernel.org> wro=
-te:
->
-> Quoting Masahiro Yamada (2024-09-22 01:14:12)
-> >
-> > Rather, I'd modify my patch as follows:
-> >
-> > --- a/scripts/Makefile.dtbs
-> > +++ b/scripts/Makefile.dtbs
-> > @@ -34,12 +34,14 @@ $(obj)/dtbs-list: $(dtb-y) FORCE
-> >  # Assembly file to wrap dtb(o)
-> >  # --------------------------------------------------------------------=
--------
-> >
-> > +builtin-dtb-section =3D $(if $(filter arch/%, $(obj)),.dtb.init.rodata=
-,.rodata)
->
-> I think we want to free the empty root dtb that's always builtin. That
-> is in drivers/of/ right?
+Add apps_reset deassertion in the imx_pcie_deassert_core_reset().
+Let it be symmetric with imx_pcie_assert_core_reset().
 
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-drivers/of/empty_root.dts is really small.
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index d49154dbb1bd..f306f2e9dcce 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -770,6 +770,7 @@ static void imx_pcie_assert_core_reset(struct imx_pcie *imx_pcie)
+ static int imx_pcie_deassert_core_reset(struct imx_pcie *imx_pcie)
+ {
+ 	reset_control_deassert(imx_pcie->pciephy_reset);
++	reset_control_deassert(imx_pcie->apps_reset);
+ 
+ 	if (imx_pcie->drvdata->core_reset)
+ 		imx_pcie->drvdata->core_reset(imx_pcie, false);
+-- 
+2.37.1
 
-That is not a big deal even if empty_root.dtb
-remains in the .rodata section.
-
-
-
-> And I worry that an overlay could be in arch/
-> and then this breaks again. That's why it feels more correct to treat
-> dtbo.o vs. dtb.o differently. Perhaps we can check $(obj) for dtbo vs
-> dtb?
-
-
-This is not a problem either.
-
-
-Checking $(obj)/ is temporary.
-
-See this later patch:
-
-https://lore.kernel.org/linux-kbuild/20240904234803.698424-16-masahiroy@ker=
-nel.org/T/#u
-
-After my work is completed, DTB and DTBO will go
-to the .rodata section unconditionally.
-
-
-
-> Also, modpost code looks for .init* named sections and treats them as
-> initdata already. Can we rename .dtb.init.rodata to .init.dtb.rodata so
-> that modpost can find that?
-
-
-My previous patch checked .dtb.init.rodata.
-
-I do not mind renaming it to .init.dtb.rodata.
-
-
-
-
-
-
-
---=20
-Best Regards
-Masahiro Yamada
