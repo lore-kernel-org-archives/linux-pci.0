@@ -1,83 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6059B170A3D;
-	Tue, 24 Sep 2024 10:08:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 854C41482F6;
+	Tue, 24 Sep 2024 10:14:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727172506; cv=none; b=ELrymS5/B6bIsXyqAZPv5jwwdNtWCKUV+0eajffPwyJfxfsBboEJxl3nGFE9de4lW13/VoCYZjdpHaJGMLd8s9ttA+SM+dDj02BU1+xMUTuaMauoLZ62VW4+qVyu94Mbz6MeUu7tngTo+voHZiFQPTsiNpNtIj1+be9Q/3/eaKw=
+	t=1727172899; cv=none; b=ETuy1I+EyQ2TUN6HezEIOIlK3T3/Sm+rNZg7N6IIi/86F8xGOfmChc2c5yiDZyQ5Lj8k+ODvWxC6j1VKNKQFTPt1hbWet8b9hRhrOYjv2yxX6OeAfeQVaGDgRnMLLu9ciYPFQ3Sv+HixA6fETawfE3/10Nk8YVp+I2AZk+fH15U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727172506; c=relaxed/simple;
-	bh=qjRcD8XaCQtfC+CXj8B3RS3iMr5qqtfxn/9w1+Vpwoo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=QVMhjtNoPK6CjHQkBb4NhrZAZqCrjeHg7KLArTO23b9QlmjBCIHt3K77P2OZaMy0q4iK6Xj6spwN0r3wFLJivU1lpfDtsXWR7uU5X2dtLX6VqwSY2tFIGkpoV3dijo6J5OaKxqQRjcOTdqs4cD+FuMAwB8CuY4RzCFU6c1TqEzs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SqzYzQp9; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1727172899; c=relaxed/simple;
+	bh=sOKcqGX4UZHwenPSjHPtTDzhT/8VpI0ge79oPvoda0A=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=BqXHbALDsBsoK3B7g4JkLl7+UWGHK1sAXeXTVIFYD9X2V+sGYsQcUKYsMHU65/k4U/EF9MAWa2hzFGf43iIm4CcLDZ4Qs3E03073TxWzpXtdoRwQE6bfWeWZ4vmTX/KGPiRZC6U5/4YA2zF7s/FD4VUJIEoDk1/z9gMtkRQlVOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=c+5WOEo0; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SqzYzQp9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6654DC4CEC4;
-	Tue, 24 Sep 2024 10:08:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1727172505;
-	bh=qjRcD8XaCQtfC+CXj8B3RS3iMr5qqtfxn/9w1+Vpwoo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SqzYzQp93dGUwuK3crgxPjosYaZsJEloYZeMqEihgotzZQM/CDv8CASzjYnufILO5
-	 taIViMjN5jBlchcv6+6gBgO/UxbQbixJvRaO4uwSENJ6IYUPZjYs4nw6NxJRa1MmRa
-	 AjrKROcGgot0hbWzNsynhn72O8xNROSGRUMMAzlm2ilYTLu4FIefRlrh2MCwAZY1l1
-	 JEunDpHWEfS0EUeDmr9/MPgYV/zsQ5yB4UhciO6ZVy0K5bmj6Y7juXBbtiVcx7++ex
-	 EIPfX47cskTKbsSMV/qGaPYbgpu3LMhRX7iZhi2W6aCfVBLKzh6IvnmlSQKsGTjJ3X
-	 VK7f45vLMyBSg==
-Date: Tue, 24 Sep 2024 11:08:20 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Richard Zhu <hongxing.zhu@nxp.com>
-Cc: l.stach@pengutronix.de, kwilczynski@kernel.org, bhelgaas@google.com,
-	lpieralisi@kernel.org, frank.li@nxp.com, robh+dt@kernel.org,
-	conor+dt@kernel.org, shawnguo@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org, festevam@gmail.com,
-	s.hauer@pengutronix.de, linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org, kernel@pengutronix.de,
-	imx@lists.linux.dev
-Subject: Re: [PATCH v1 1/9] dt-bindings: imx6q-pcie: Add ref clock for i.MX95
- PCIe
-Message-ID: <20240924-ended-unlaced-cc7ddf87af90@spud>
-References: <1727148464-14341-1-git-send-email-hongxing.zhu@nxp.com>
- <1727148464-14341-2-git-send-email-hongxing.zhu@nxp.com>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="c+5WOEo0"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 48O6jNfW004886;
+	Tue, 24 Sep 2024 10:14:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=R8apB/HC6zb
+	dmOM/osprUzGSdJFwFC3SdC4+94ASLH8=; b=c+5WOEo0AlyvGu47cwn0OEq5fVx
+	04dN67UN8A5vrdSyLUP/pvroiy/5UX9ZUIjBN5JcE1rPT1pULr6OqhGwD+W90Z4b
+	kshY17BEWqtOVbM0GNukvOW64QrAR+KfSazzMdpe9rc+OIRH91H6IhVS173mYBJs
+	4EJPi3oNGhUG8VpY54zXSNi+2ebngGRHAy40CAIRNw6unBG/gJGhHfxunvQNLeig
+	PCBLmyfeFp53dH25W8CK89hYpPYI3+AupSbHXgVYBvF9BdGrf+vb/EcByLp1uFSb
+	uhcUSz4YBe3kzZMaqJzPgvKA3HnA9UCAfe2fkxJDEQ4IYBntjFIAJDywHoQ==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 41sqe97xr1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Sep 2024 10:14:48 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 48OA73rn021327;
+	Tue, 24 Sep 2024 10:14:47 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 41uq4230sh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Sep 2024 10:14:47 +0000
+Received: from NALASPPMTA03.qualcomm.com (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 48OAA0aC025708;
+	Tue, 24 Sep 2024 10:14:47 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-qianyu-lv.qualcomm.com [10.81.25.114])
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 48OAElSD002181
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 24 Sep 2024 10:14:47 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 4098150)
+	id 416F765F; Tue, 24 Sep 2024 03:14:47 -0700 (PDT)
+From: Qiang Yu <quic_qianyu@quicinc.com>
+To: manivannan.sadhasivam@linaro.org, vkoul@kernel.org, kishon@kernel.org,
+        robh@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, mturquette@baylibre.com,
+        sboyd@kernel.org, abel.vesa@linaro.org, quic_msarkar@quicinc.com,
+        quic_devipriy@quicinc.com
+Cc: dmitry.baryshkov@linaro.org, kw@linux.com, lpieralisi@kernel.org,
+        neil.armstrong@linaro.org, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-clk@vger.kernel.org, Qiang Yu <quic_qianyu@quicinc.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>
+Subject: [PATCH v4 1/6] dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Document the X1E80100 QMP PCIe PHY Gen4 x8
+Date: Tue, 24 Sep 2024 03:14:39 -0700
+Message-Id: <20240924101444.3933828-2-quic_qianyu@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20240924101444.3933828-1-quic_qianyu@quicinc.com>
+References: <20240924101444.3933828-1-quic_qianyu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="QPsNdq4s/PN2L3Fw"
-Content-Disposition: inline
-In-Reply-To: <1727148464-14341-2-git-send-email-hongxing.zhu@nxp.com>
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: ZPIaJV9GDFcdQqNYnDYoz5gwgjr1ab21
+X-Proofpoint-GUID: ZPIaJV9GDFcdQqNYnDYoz5gwgjr1ab21
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ mlxlogscore=999 spamscore=0 lowpriorityscore=0 adultscore=0 mlxscore=0
+ suspectscore=0 malwarescore=0 phishscore=0 impostorscore=0 clxscore=1015
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2408220000 definitions=main-2409240071
 
+PCIe 3rd instance of X1E80100 supports Gen 4 x8 which needs different
+8 lane capable QMP PCIe PHY with hardware revision v6.30. Document Gen
+4 x8 PHY as separate module.
 
---QPsNdq4s/PN2L3Fw
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Signed-off-by: Qiang Yu <quic_qianyu@quicinc.com>
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
+---
+ .../devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml    | 3 +++
+ 1 file changed, 3 insertions(+)
 
-On Tue, Sep 24, 2024 at 11:27:36AM +0800, Richard Zhu wrote:
-> Add one ref clock for i.MX95 PCIe. Increase clocks' maxItems to 5 and
-> keep the same restriction with other compatible string.
->=20
-> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
+index dcf4fa55fbba..680ec3113c2b 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
+@@ -41,6 +41,7 @@ properties:
+       - qcom,x1e80100-qmp-gen3x2-pcie-phy
+       - qcom,x1e80100-qmp-gen4x2-pcie-phy
+       - qcom,x1e80100-qmp-gen4x4-pcie-phy
++      - qcom,x1e80100-qmp-gen4x8-pcie-phy
+ 
+   reg:
+     minItems: 1
+@@ -172,6 +173,7 @@ allOf:
+               - qcom,sc8280xp-qmp-gen3x2-pcie-phy
+               - qcom,sc8280xp-qmp-gen3x4-pcie-phy
+               - qcom,x1e80100-qmp-gen4x4-pcie-phy
++              - qcom,x1e80100-qmp-gen4x8-pcie-phy
+     then:
+       properties:
+         clocks:
+@@ -201,6 +203,7 @@ allOf:
+               - qcom,sm8550-qmp-gen4x2-pcie-phy
+               - qcom,sm8650-qmp-gen4x2-pcie-phy
+               - qcom,x1e80100-qmp-gen4x2-pcie-phy
++              - qcom,x1e80100-qmp-gen4x8-pcie-phy
+     then:
+       properties:
+         resets:
+-- 
+2.34.1
 
-It'd be really good to mention why this clock is appearing now, when it
-did not before. You're just explaining what you've done, which can be
-seen in the diff, but not why you did it.
-
---QPsNdq4s/PN2L3Fw
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZvKPlAAKCRB4tDGHoIJi
-0gdqAP9OZE7f2j2BJ6kK0OX4ojssKFgoNCVvarSmVjUoswwluAD9GJRlsy4e4cVO
-V+bFllNycrn9H5nOyRGfT0fu8JdWTw8=
-=I93h
------END PGP SIGNATURE-----
-
---QPsNdq4s/PN2L3Fw--
