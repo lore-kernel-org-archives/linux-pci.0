@@ -1,124 +1,100 @@
-Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C22611591FC;
-	Wed, 25 Sep 2024 06:47:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E1A8157492;
+	Wed, 25 Sep 2024 07:50:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727246838; cv=none; b=MzHGjCSMClgFkTwpuQwc1K9Ix5Wgmx7IRgt2N9Sjl1/4xt61z51OCeAjhbMsK9SOPbmvHMcllPY53nAAjSpnN4c7X35CpzaAODpS+q4DFoZAVEYrXATMpYpozxEkGZOEKCeWEmW1ps1KzJhzaAdRf61gwewE0HvaaArt7OVyaBw=
+	t=1727250611; cv=none; b=KvxmfgqKblMrXVo6Wfjnf/nR2E+NsKNn8wMVif9aCvhAOoZW7FNoooY+AL4rNUpb4kQArYEekXauqAjIiJmsL66Sl1lOHm8MLCRssWwHE6TKPMgq+7t/KKq4F4156ez434SxwG3tlk2XtpaJp0MleCAG9D7EUwbnrRmoY8ETJm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727246838; c=relaxed/simple;
-	bh=dhtuowUS90bkYojYwsBSh7oyuNPvGYsFGnGhqpWqytA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=Pv0TCyLD3X3emj5gWNIlPZy6lGEgoG0quaD32Eu7lb0+HzpWZ+zY2xz0AO5RkUUIlpg+3Z25y5vmm/6j/srvFrrjCS5/s6FHtcGmmVmrkVWKNVs89SENF8eGYCRjxwE31bqMBOdXxtxRZ3ktx08PmhSsCH9RgMv02xdLszPS144=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Received: from inva021.nxp.com (localhost [127.0.0.1])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 3A2AA2029F5;
-	Wed, 25 Sep 2024 08:47:15 +0200 (CEST)
-Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 0B582202000;
-	Wed, 25 Sep 2024 08:47:15 +0200 (CEST)
-Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 08037183AD44;
-	Wed, 25 Sep 2024 14:47:12 +0800 (+08)
-From: Richard Zhu <hongxing.zhu@nxp.com>
-To: l.stach@pengutronix.de,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	frank.li@nxp.com,
-	robh+dt@kernel.org,
-	conor+dt@kernel.org,
-	shawnguo@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org,
-	festevam@gmail.com,
-	s.hauer@pengutronix.de
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	kernel@pengutronix.de,
-	imx@lists.linux.dev,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v2 9/9] arm64: dts: imx95: Add ref clock for i.MX95 PCIe
-Date: Wed, 25 Sep 2024 14:24:37 +0800
-Message-Id: <1727245477-15961-10-git-send-email-hongxing.zhu@nxp.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1727245477-15961-1-git-send-email-hongxing.zhu@nxp.com>
+	s=arc-20240116; t=1727250611; c=relaxed/simple;
+	bh=jpwCPw9gO66yBXZYDqQ9z6hyrzpWpbRkEarKWVXKXSI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ISPENZmNRAHxt35zCIgbnJw4S7hz2Z5Mecmm/ZSBB1rer/uKQpJLa+uMxjbwH6e7iuLa4yrkXUausPOwnlOg5+V7PMagL1SlA9Y+c/0t3lf2iZm1tJ/L9NVMUUJPW4ASjqYL10Ry33iz+OFH7dZwuEi8o4S3G/qnSdn+LXvaojE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FCd0kQSH; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FCd0kQSH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A9FDC4CEC6;
+	Wed, 25 Sep 2024 07:50:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1727250610;
+	bh=jpwCPw9gO66yBXZYDqQ9z6hyrzpWpbRkEarKWVXKXSI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FCd0kQSHfT/NK8Yc6CwRmfutmQESaE7UFlSTa3Se47Uz6Bh+yc0DBQ+LYx9fym8Tg
+	 xXjjq4xWJGgArkHMGywBkOav7eW/pzkVriKUDtR4JASw/VvabZmIbViT+Zzws3kp6e
+	 pRFtn6tJdsSEPMZXfU+2KRdibFffIRa9zMFUDySFySjqwrIeh625j86j30zn6PGzmU
+	 dHiK/sLnIleh4/lH4+c/7O65/u0BtNt5LoD1qNZzEkPyqPYOUblJGeorkwYokdtwXf
+	 1rB/SyA5JqUAj+iZR3FGFrhza3qCoUyxNM8/mo8YWGtbJVkbf4DQLwFQg8Qce0XMqT
+	 Aab1KNASbH6KQ==
+Date: Wed, 25 Sep 2024 09:50:06 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Richard Zhu <hongxing.zhu@nxp.com>
+Cc: l.stach@pengutronix.de, kwilczynski@kernel.org, bhelgaas@google.com, 
+	lpieralisi@kernel.org, frank.li@nxp.com, robh+dt@kernel.org, conor+dt@kernel.org, 
+	shawnguo@kernel.org, krzysztof.kozlowski+dt@linaro.org, festevam@gmail.com, 
+	s.hauer@pengutronix.de, linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, kernel@pengutronix.de, 
+	imx@lists.linux.dev
+Subject: Re: [PATCH v2 1/9] dt-bindings: imx6q-pcie: Add ref clock for i.MX95
+ PCIe
+Message-ID: <vtrxj3r4wy6htxyl44rzjyao4zso6z2idexkvxrh3cg4wazcdc@gffmfu22jiyh>
 References: <1727245477-15961-1-git-send-email-hongxing.zhu@nxp.com>
-X-Virus-Scanned: ClamAV using ClamSMTP
+ <1727245477-15961-2-git-send-email-hongxing.zhu@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <1727245477-15961-2-git-send-email-hongxing.zhu@nxp.com>
 
-Add ref clock for i.MX95 PCIe.
+On Wed, Sep 25, 2024 at 02:24:29PM +0800, Richard Zhu wrote:
+> Previous reference clock of i.MX95 is on when system boot to kernel. But
+> boot firmware change the behavor, it is off when boot. So it needs be turn
+> on when it is used. Also it needs be turn off/on when suspend and resume.
 
-Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
----
- arch/arm64/boot/dts/freescale/imx95.dtsi | 25 ++++++++++++++++++++----
- 1 file changed, 21 insertions(+), 4 deletions(-)
+That's an old platform... How come that you changed bootloader just now?
+Like 7 or 8 years after?
 
-diff --git a/arch/arm64/boot/dts/freescale/imx95.dtsi b/arch/arm64/boot/dts/freescale/imx95.dtsi
-index 1bbf9a0468f6..83a6b0a8da3e 100644
---- a/arch/arm64/boot/dts/freescale/imx95.dtsi
-+++ b/arch/arm64/boot/dts/freescale/imx95.dtsi
-@@ -221,6 +221,13 @@ core5 {
- 		};
- 	};
- 
-+	clk_dummy: clock-dummy {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-frequency = <0>;
-+		clock-output-names = "clk_dummy";
-+	};
-+
- 	clk_ext1: clock-ext1 {
- 		compatible = "fixed-clock";
- 		#clock-cells = <0>;
-@@ -1055,6 +1062,14 @@ smmu: iommu@490d0000 {
- 			};
- 		};
- 
-+		hsio_blk_ctl: syscon@4c0100c0 {
-+			compatible = "nxp,imx95-hsio-blk-ctl", "syscon";
-+			reg = <0x0 0x4c0100c0 0x0 0x4>;
-+			#clock-cells = <1>;
-+			clocks = <&clk_dummy>;
-+			power-domains = <&scmi_devpd IMX95_PD_HSIO_TOP>;
-+		};
-+
- 		pcie0: pcie@4c300000 {
- 			compatible = "fsl,imx95-pcie";
- 			reg = <0 0x4c300000 0 0x10000>,
-@@ -1082,8 +1097,9 @@ pcie0: pcie@4c300000 {
- 			clocks = <&scmi_clk IMX95_CLK_HSIO>,
- 				 <&scmi_clk IMX95_CLK_HSIOPLL>,
- 				 <&scmi_clk IMX95_CLK_HSIOPLL_VCO>,
--				 <&scmi_clk IMX95_CLK_HSIOPCIEAUX>;
--			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux";
-+				 <&scmi_clk IMX95_CLK_HSIOPCIEAUX>,
-+				 <&hsio_blk_ctl 0>;
-+			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "ref";
- 			assigned-clocks =<&scmi_clk IMX95_CLK_HSIOPLL_VCO>,
- 					 <&scmi_clk IMX95_CLK_HSIOPLL>,
- 					 <&scmi_clk IMX95_CLK_HSIOPCIEAUX>;
-@@ -1149,8 +1165,9 @@ pcie1: pcie@4c380000 {
- 			clocks = <&scmi_clk IMX95_CLK_HSIO>,
- 				 <&scmi_clk IMX95_CLK_HSIOPLL>,
- 				 <&scmi_clk IMX95_CLK_HSIOPLL_VCO>,
--				 <&scmi_clk IMX95_CLK_HSIOPCIEAUX>;
--			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux";
-+				 <&scmi_clk IMX95_CLK_HSIOPCIEAUX>,
-+				 <&hsio_blk_ctl 0>;
-+			clock-names = "pcie", "pcie_bus", "pcie_phy", "pcie_aux", "ref";
- 			assigned-clocks =<&scmi_clk IMX95_CLK_HSIOPLL_VCO>,
- 					 <&scmi_clk IMX95_CLK_HSIOPLL>,
- 					 <&scmi_clk IMX95_CLK_HSIOPCIEAUX>;
--- 
-2.37.1
+For the future: you should document all clock inputs, not only ones
+needed for given bootloader...
+
+> 
+> Add one ref clock for i.MX95 PCIe. Increase clocks' maxItems to 5 and keep
+> the same restriction with other compatible string.
+
+<form letter>
+Please use scripts/get_maintainers.pl to get a list of necessary people
+and lists to CC (and consider --no-git-fallback argument). It might
+happen, that command when run on an older kernel, gives you outdated
+entries. Therefore please be sure you base your patches on recent Linux
+kernel.
+
+Tools like b4 or scripts/get_maintainer.pl provide you proper list of
+people, so fix your workflow. Tools might also fail if you work on some
+ancient tree (don't, instead use mainline) or work on fork of kernel
+(don't, instead use mainline). Just use b4 and everything should be
+fine, although remember about  if you added new
+patches to the patchset.
+</form letter>
+
+and I was wondering why I cannot find this and previous thread in my
+inbox... So please stop developing on two year old kernels (and before
+you say "I do not", well, then fix way how you use tools).
+
+
+> 
+> Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+> ---
+>  .../bindings/pci/fsl,imx6q-pcie-common.yaml   |  4 +--
+>  .../bindings/pci/fsl,imx6q-pcie.yaml          | 25 ++++++++++++++++---
+>  2 files changed, 23 insertions(+), 6 deletions(-)
+> 
+
+You missed to update ep binding.
+
+Best regards,
+Krzysztof
 
