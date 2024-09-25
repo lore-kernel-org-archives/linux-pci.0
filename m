@@ -1,27 +1,27 @@
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D756157E88;
-	Wed, 25 Sep 2024 06:47:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51B2E155C98;
+	Wed, 25 Sep 2024 06:47:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727246832; cv=none; b=A/3UhO0p7KslfHfCkGYbA5gwaOzGzsWUd56XJ/QpatVwYVKrZ67uUyEf9qs4TdftFlTj+HOoTj8SKbql5Qpq/tUX9MUQwyPbpg27250tdAcJEkpSwmDNNqdfMktK+zRxwoUf5yzo3WUlYzw8e9CmbCqE7LZE/VPUJW4vlTlSOjU=
+	t=1727246834; cv=none; b=WxW0fX9eR5UGABF6zgoK2A71AoaLYmlWFM7dEoeG5yZS+/37XapulZJ5EktZCvoG9ZPiN3ocPd7tXcd2CkGfIolhifr5fYLtdaaa+zKFqBDISXbbTRzLwJkXC7vnYoUN2kQPig2hLrZwhSOyB4aEv2utROCzYuz9Dsn5xXBXLXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727246832; c=relaxed/simple;
-	bh=afvAKIHmWPRVCIw7juwXjk4oeFecKkCmQ+VPiaqDARA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=sTp6QGzJTuW4SMW37iYnIk3U6cqltghORCzCaol2XJ6kFp8nuq0SuG018j//AJTUIX50iy079JajRhOrh+KnKnR9RlpNYxttK/rDJQQ1HoNRLqb10+ZT58zaA5wbUe5S3e5VmmICiwoabICYGBkH4iO1IlD7C3Y4j56mz0Gv+dw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.13
+	s=arc-20240116; t=1727246834; c=relaxed/simple;
+	bh=7ZpNiD7tY5SBAwXzJX0hhcSxJEYI1B75yTGDjOyP1Yc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=gK6f3lYA5lwFJwLiHRtPUgxd6RcXOb23UYib+SGrx7xQSE0nG2hMtRyduWOg8Z51f+nuHuNTbq/vNDsEG6AHbDI9hOZcUlJki81EFHEajiM2KbE/fno2x9fcbZdRb9fT0tUsvIUpzvIMA8emD67L1SvC6jvqcOjmgfRbDG9idAE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 075941A06C4;
-	Wed, 25 Sep 2024 08:47:04 +0200 (CEST)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id AE8C7200CA9;
+	Wed, 25 Sep 2024 08:47:10 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id C4F731A1795;
-	Wed, 25 Sep 2024 08:47:03 +0200 (CEST)
+	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 72AF22003B4;
+	Wed, 25 Sep 2024 08:47:10 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 25905183AD46;
-	Wed, 25 Sep 2024 14:47:02 +0800 (+08)
+	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 58D8B183AD46;
+	Wed, 25 Sep 2024 14:47:08 +0800 (+08)
 From: Richard Zhu <hongxing.zhu@nxp.com>
 To: l.stach@pengutronix.de,
 	kwilczynski@kernel.org,
@@ -41,9 +41,9 @@ Cc: linux-pci@vger.kernel.org,
 	kernel@pengutronix.de,
 	imx@lists.linux.dev,
 	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v2 2/9] PCI: imx6: Add ref clock for i.MX95 PCIe
-Date: Wed, 25 Sep 2024 14:24:30 +0800
-Message-Id: <1727245477-15961-3-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v2 6/9] PCI: imx6: Make *_enable_ref_clk() function symmetric
+Date: Wed, 25 Sep 2024 14:24:34 +0800
+Message-Id: <1727245477-15961-7-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1727245477-15961-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1727245477-15961-1-git-send-email-hongxing.zhu@nxp.com>
@@ -54,42 +54,90 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Add "ref" clock to enable reference clock.
-
-If use external clock, ref clock should point to external reference.
-
-If use internal clock, CREF_EN in LAST_TO_REG controls reference output,
-which implement in drivers/clk/imx/clk-imx95-blk-ctl.c.
+Ensure the *_enable_ref_clk() function is symmetric by addressing missing
+disable parts on some platforms. Also, remove the duplicate
+imx7d_pcie_init_phy() function as it is the same as
+imx7d_pcie_enable_ref_clk().
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 Reviewed-by: Frank Li <Frank.Li@nxp.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 33 +++++++++++----------------
+ 1 file changed, 13 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 0dbc333adcff..2aa02674c817 100644
+index f306f2e9dcce..5ec43d9f9784 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -1480,6 +1480,7 @@ static const char * const imx8mm_clks[] = {"pcie_bus", "pcie", "pcie_aux"};
- static const char * const imx8mq_clks[] = {"pcie_bus", "pcie", "pcie_phy", "pcie_aux"};
- static const char * const imx6sx_clks[] = {"pcie_bus", "pcie", "pcie_phy", "pcie_inbound_axi"};
- static const char * const imx8q_clks[] = {"mstr", "slv", "dbi"};
-+static const char * const imx95_clks[] = {"pcie_bus", "pcie", "pcie_phy", "pcie_aux", "ref"};
+@@ -388,13 +388,6 @@ static int imx8mq_pcie_init_phy(struct imx_pcie *imx_pcie)
+ 	return 0;
+ }
  
- static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX6Q] = {
-@@ -1593,8 +1594,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
- 	[IMX95] = {
- 		.variant = IMX95,
- 		.flags = IMX_PCIE_FLAG_HAS_SERDES,
--		.clk_names = imx8mq_clks,
--		.clks_cnt = ARRAY_SIZE(imx8mq_clks),
-+		.clk_names = imx95_clks,
-+		.clks_cnt = ARRAY_SIZE(imx95_clks),
- 		.ltssm_off = IMX95_PE0_GEN_CTRL_3,
- 		.ltssm_mask = IMX95_PCIE_LTSSM_EN,
- 		.mode_off[0]  = IMX95_PE0_GEN_CTRL_1,
+-static int imx7d_pcie_init_phy(struct imx_pcie *imx_pcie)
+-{
+-	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12, IMX7D_GPR12_PCIE_PHY_REFCLK_SEL, 0);
+-
+-	return 0;
+-}
+-
+ static int imx_pcie_init_phy(struct imx_pcie *imx_pcie)
+ {
+ 	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+@@ -593,13 +586,13 @@ static int imx_pcie_attach_pd(struct device *dev)
+ 
+ static int imx6sx_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+-	if (enable)
+-		regmap_clear_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				  IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
+-
++	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			   IMX6SX_GPR12_PCIE_TEST_POWERDOWN,
++			   enable ? 0 : IMX6SX_GPR12_PCIE_TEST_POWERDOWN);
+ 	return 0;
+ }
+ 
++
+ static int imx6q_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+ 	if (enable) {
+@@ -625,19 +618,20 @@ static int imx8mm_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+ 	int offset = imx_pcie_grp_offset(imx_pcie);
+ 
+-	if (enable) {
+-		regmap_clear_bits(imx_pcie->iomuxc_gpr, offset, IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE);
+-		regmap_set_bits(imx_pcie->iomuxc_gpr, offset, IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN);
+-	}
+-
++	regmap_update_bits(imx_pcie->iomuxc_gpr, offset,
++			   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE,
++			   enable ? 0 : IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE);
++	regmap_update_bits(imx_pcie->iomuxc_gpr, offset,
++			   IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN,
++			   enable ? IMX8MQ_GPR_PCIE_CLK_REQ_OVERRIDE_EN : 0);
+ 	return 0;
+ }
+ 
+ static int imx7d_pcie_enable_ref_clk(struct imx_pcie *imx_pcie, bool enable)
+ {
+-	if (!enable)
+-		regmap_set_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
+-				IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
++	regmap_update_bits(imx_pcie->iomuxc_gpr, IOMUXC_GPR12,
++			   IMX7D_GPR12_PCIE_PHY_REFCLK_SEL,
++			   enable ? 0 : IMX7D_GPR12_PCIE_PHY_REFCLK_SEL);
+ 	return 0;
+ }
+ 
+@@ -1522,7 +1516,6 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 		.clks_cnt = ARRAY_SIZE(imx6q_clks),
+ 		.mode_off[0] = IOMUXC_GPR12,
+ 		.mode_mask[0] = IMX6Q_GPR12_DEVICE_TYPE,
+-		.init_phy = imx7d_pcie_init_phy,
+ 		.enable_ref_clk = imx7d_pcie_enable_ref_clk,
+ 		.core_reset = imx7d_pcie_core_reset,
+ 	},
 -- 
 2.37.1
 
