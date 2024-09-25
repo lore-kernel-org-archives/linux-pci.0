@@ -1,27 +1,27 @@
 Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1182AE6C;
-	Wed, 25 Sep 2024 06:11:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E35CB152787;
+	Wed, 25 Sep 2024 06:11:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727244681; cv=none; b=txtLpjAVDAg3pVfe+G+1S229hUkYd6bQmcmN8DdREQCrFHHpYKiT34zSocSEsqQz4RBq7AVGlh3T667dN8nUj/2C3sXKR9lDjdW0SuVkf6+3E/Ne5BL23t80ljWUkfIJDIeSxiGyZdyoOm7rYFLeQ11sysC65CbTp0vGQPR0n0Y=
+	t=1727244682; cv=none; b=I0MmyHs96RZoKIcVuux6hRldP7VY0ptDyBI3TQOzu0+xTsNF9HVCdyxLfrLraBqLM3awfe1mSjXIq2/U2MayAWC4/5YAqDWcdj5Dt1XZrBpWs4yD+2pZ+nQAd2NnaypwGbiTsr0rydNIpEL+kCrqNPrXyl/vNLiyb+d5GxbsuW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727244681; c=relaxed/simple;
-	bh=baM9HjeqwvVdEQ+R+/2xqWkWEJPW7mlAMefzFNiLkEE=;
-	h=From:To:Cc:Subject:Date:Message-Id; b=D3CB1DX8MT6T/q3GQ7Fz9t5Luly22P/mSDXqg+5Tfts0seK/yzhnWwnC8IhCqnY4tSbcd2VvhH/sK4SES5FtP2IxbCVDbUlTn3J+9TQMeuyOCw07p+o7v5lMq8q0EJjhn+Kul39zi/WEVjtjncwVRRy6sTVfd3VDUmjhI7pR8bk=
+	s=arc-20240116; t=1727244682; c=relaxed/simple;
+	bh=/Na4mmXiKLt8UcFVI72fQXazUo7b1yDzIc3NeYd3v20=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=l7AWw/9qjljl/pvKEJttaVmGJN67niMBrUdW31nQgCoGZ+lyX8uyw/ghBERpLTj7WmaDCzl5LgGT7WWqQ2wjCoRATaX/XINwpOPLJIN4WFxktO+2lsuf8838rsM6ugJEgyjkX+KTPeak1BRtBimUB2auXByRpCHyoK3aJlPtvf8=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Received: from inva021.nxp.com (localhost [127.0.0.1])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 31E6C20059A;
-	Wed, 25 Sep 2024 08:11:12 +0200 (CEST)
+	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 92CB7201FD3;
+	Wed, 25 Sep 2024 08:11:13 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id BDEB8201FF5;
-	Wed, 25 Sep 2024 08:11:11 +0200 (CEST)
+	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 2DD93201FE7;
+	Wed, 25 Sep 2024 08:11:13 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id B51EE183AD44;
-	Wed, 25 Sep 2024 14:11:09 +0800 (+08)
+	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id C5AB7183AD51;
+	Wed, 25 Sep 2024 14:11:11 +0800 (+08)
 From: Richard Zhu <hongxing.zhu@nxp.com>
 To: jingoohan1@gmail.com,
 	manivannan.sadhasivam@linaro.org,
@@ -32,11 +32,14 @@ To: jingoohan1@gmail.com,
 	robh@kernel.org
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	imx@lists.linux.dev
-Subject: [PATCH v1 0/2] Bug fixes when dwc generic suspend/resume functions are used
-Date: Wed, 25 Sep 2024 13:48:35 +0800
-Message-Id: <1727243317-15729-1-git-send-email-hongxing.zhu@nxp.com>
+	imx@lists.linux.dev,
+	Richard Zhu <hongxing.zhu@nxp.com>
+Subject: [PATCH v1 2/2] PCI: dwc: Do stop link in the dw_pcie_suspend_noirq
+Date: Wed, 25 Sep 2024 13:48:37 +0800
+Message-Id: <1727243317-15729-3-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1727243317-15729-1-git-send-email-hongxing.zhu@nxp.com>
+References: <1727243317-15729-1-git-send-email-hongxing.zhu@nxp.com>
 X-Virus-Scanned: ClamAV using ClamSMTP
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -44,16 +47,32 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-Two bug fixes when dwc generic suspend/resume callbacks are used.
+On i.MX8QM, PCIe link can't be re-established again in
+dw_pcie_resume_noirq(), if the LTSSM_EN bit is not cleared properly in
+dw_pcie_suspend_noirq().
 
-The patch #1 is issued before, but it's not applied yet refer to [1].
-Combine these two bug fixes into one series and send here.
+Add dw_pcie_stop_link() into dw_pcie_suspend_noirq() to fix this issue and
+keep symmetric in suspend/resume function since there is
+dw_pcie_start_link() in dw_pcie_resume_noirq().
 
-[1] https://patchwork.kernel.org/project/linux-pci/patch/1721628913-1449-1-git-send-email-hongxing.zhu@nxp.com/
+Fixes: 4774faf854f5 ("PCI: dwc: Implement generic suspend/resume functionality")
+Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-[PATCH v1 1/2] PCI: dwc: Fix resume failure if no EP is connected on
-[PATCH v1 2/2] PCI: dwc: Do stop link in the dw_pcie_suspend_noirq
-
-drivers/pci/controller/dwc/pcie-designware-host.c | 31 ++++++++++++++++---------------
-1 file changed, 16 insertions(+), 15 deletions(-)
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index cb8c3c2bcc79..9ca33895456f 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -952,6 +952,7 @@ int dw_pcie_suspend_noirq(struct dw_pcie *pci)
+ 		}
+ 	}
+ 
++	dw_pcie_stop_link(pci);
+ 	if (pci->pp.ops->deinit)
+ 		pci->pp.ops->deinit(&pci->pp);
+ 
+-- 
+2.37.1
 
