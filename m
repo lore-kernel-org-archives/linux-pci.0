@@ -1,27 +1,27 @@
-Received: from inva020.nxp.com (inva020.nxp.com [92.121.34.13])
+Received: from inva021.nxp.com (inva021.nxp.com [92.121.34.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 424881586C9;
-	Wed, 25 Sep 2024 06:47:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DFF6158A19;
+	Wed, 25 Sep 2024 06:47:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=92.121.34.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1727246835; cv=none; b=XrnPxvnK1/I7Rs0GV18ucFTHBxr9S0U/+5aPU9l5XBsgn268fHcbex1fKU5JA5lny+rnaMJUOBcldUikh08Gt0E4qYECW87BLTSR/4J61jDUS9uNJYAaeElbThFr59iHMbSN0R0fh5apRARZOWps3HSDRVMox2lPNSD7nL4f3WM=
+	t=1727246836; cv=none; b=tW8A+GJ3mj7HlYfQXbOv4zCHVL+/YgplYayYyDssIkDlEVJfiV10SYu2AI/wYKv0HiiHL78XP0CO/2XuLD8HerhSgkBGTiFvMKxGiiDUxqyTv9ZIrNbVlC3/eMOYkqCOskXMwC8C7Iljsl6Ev9BkpNmviVmYkZtT5U6zvl/cTPU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1727246835; c=relaxed/simple;
-	bh=4STIZlG5644NEpm8w1LIHNSX8bw4B3sgniWEiwXw4s4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=J5N5pMPC892xZy/k5/on4ezWp9q3LuXLD3kWQKG43TwvgpZOXJ3QpHxRLaMsQW7HrfiX61G18XWg7pei0mJtLGLJ19mx4Vpeqpv43xA8GvXPiS0JXRcYf6pw0/U6ouybrGD4nAOSptOn346r8KcgxdsLDXG8yvObRK6D+p2pQA4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.13
+	s=arc-20240116; t=1727246836; c=relaxed/simple;
+	bh=SGOfHYZeKGSHd0W9j9kxAEOwDChEv5eLNk9JAYnJkZs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=s83esml4H0CuDZZV8gaKIppm287+WUhx6CAqDUWCF3pAqrQkJdYJiiUUnCzrYe9rOGbx+9U0nwcV+VQzBXBhk3WKPK8NTwtctT7IYVn+ZW+o/SVqlIt8aI3fjUiNB/e+83gybjwZgwlxNBfqUnFoH2gLF+Hj3RbQYuHk7CbPmhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; arc=none smtp.client-ip=92.121.34.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
-Received: from inva020.nxp.com (localhost [127.0.0.1])
-	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 7659C1A1F78;
-	Wed, 25 Sep 2024 08:47:07 +0200 (CEST)
+Received: from inva021.nxp.com (localhost [127.0.0.1])
+	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id B51F22003B4;
+	Wed, 25 Sep 2024 08:47:13 +0200 (CEST)
 Received: from aprdc01srsp001v.ap-rdc01.nxp.com (aprdc01srsp001v.ap-rdc01.nxp.com [165.114.16.16])
-	by inva020.eu-rdc02.nxp.com (Postfix) with ESMTP id 3D4031A0C2C;
-	Wed, 25 Sep 2024 08:47:07 +0200 (CEST)
+	by inva021.eu-rdc02.nxp.com (Postfix) with ESMTP id 7CB0720053B;
+	Wed, 25 Sep 2024 08:47:13 +0200 (CEST)
 Received: from localhost.localdomain (shlinux2.ap.freescale.net [10.192.224.44])
-	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 361B1183AD46;
-	Wed, 25 Sep 2024 14:47:05 +0800 (+08)
+	by aprdc01srsp001v.ap-rdc01.nxp.com (Postfix) with ESMTP id 799E9183AD50;
+	Wed, 25 Sep 2024 14:47:11 +0800 (+08)
 From: Richard Zhu <hongxing.zhu@nxp.com>
 To: l.stach@pengutronix.de,
 	kwilczynski@kernel.org,
@@ -41,9 +41,9 @@ Cc: linux-pci@vger.kernel.org,
 	kernel@pengutronix.de,
 	imx@lists.linux.dev,
 	Richard Zhu <hongxing.zhu@nxp.com>
-Subject: [PATCH v2 4/9] PCI: imx6: Correct controller_id generation logic for i.MX7D
-Date: Wed, 25 Sep 2024 14:24:32 +0800
-Message-Id: <1727245477-15961-5-git-send-email-hongxing.zhu@nxp.com>
+Subject: [PATCH v2 8/9] PCI: imx6: Add i.MX8MQ i.MX8Q and i.MX95 PCIe PM support
+Date: Wed, 25 Sep 2024 14:24:36 +0800
+Message-Id: <1727245477-15961-9-git-send-email-hongxing.zhu@nxp.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <1727245477-15961-1-git-send-email-hongxing.zhu@nxp.com>
 References: <1727245477-15961-1-git-send-email-hongxing.zhu@nxp.com>
@@ -54,28 +54,46 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-i.MX7D only has one PCIe controller, so controller_id should always be 0.
-The previous code is incorrect although yielding the correct result. Fix by
-removing IMX7D from the switch case branch.
+Add iMX8MQ i.MX8Q and i.MX95 PCIe suspend/resume support.
 
 Signed-off-by: Richard Zhu <hongxing.zhu@nxp.com>
 Reviewed-by: Frank Li <Frank.Li@nxp.com>
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/pci/controller/dwc/pci-imx6.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index e8e401729893..d49154dbb1bd 100644
+index 36df439d43ae..a8505cd3b53d 100644
 --- a/drivers/pci/controller/dwc/pci-imx6.c
 +++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -1338,7 +1338,6 @@ static int imx_pcie_probe(struct platform_device *pdev)
- 	switch (imx_pcie->drvdata->variant) {
- 	case IMX8MQ:
- 	case IMX8MQ_EP:
--	case IMX7D:
- 		if (dbi_base->start == IMX8MQ_PCIE2_BASE_ADDR)
- 			imx_pcie->controller_id = 1;
- 		break;
+@@ -1497,7 +1497,8 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 	[IMX8MQ] = {
+ 		.variant = IMX8MQ,
+ 		.flags = IMX_PCIE_FLAG_HAS_APP_RESET |
+-			 IMX_PCIE_FLAG_HAS_PHY_RESET,
++			 IMX_PCIE_FLAG_HAS_PHY_RESET |
++			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 		.gpr = "fsl,imx8mq-iomuxc-gpr",
+ 		.clk_names = imx8mq_clks,
+ 		.clks_cnt = ARRAY_SIZE(imx8mq_clks),
+@@ -1535,13 +1536,15 @@ static const struct imx_pcie_drvdata drvdata[] = {
+ 	[IMX8Q] = {
+ 		.variant = IMX8Q,
+ 		.flags = IMX_PCIE_FLAG_HAS_PHYDRV |
+-			 IMX_PCIE_FLAG_CPU_ADDR_FIXUP,
++			 IMX_PCIE_FLAG_CPU_ADDR_FIXUP |
++			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 		.clk_names = imx8q_clks,
+ 		.clks_cnt = ARRAY_SIZE(imx8q_clks),
+ 	},
+ 	[IMX95] = {
+ 		.variant = IMX95,
+-		.flags = IMX_PCIE_FLAG_HAS_SERDES,
++		.flags = IMX_PCIE_FLAG_HAS_SERDES |
++			 IMX_PCIE_FLAG_SUPPORTS_SUSPEND,
+ 		.clk_names = imx95_clks,
+ 		.clks_cnt = ARRAY_SIZE(imx95_clks),
+ 		.ltssm_off = IMX95_PE0_GEN_CTRL_3,
 -- 
 2.37.1
 
