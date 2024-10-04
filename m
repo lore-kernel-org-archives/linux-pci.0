@@ -1,43 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 940AD1F5BC0;
-	Fri,  4 Oct 2024 18:22:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A04C1F5BF4;
+	Fri,  4 Oct 2024 18:22:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728066171; cv=none; b=kqxECKwjeGm941lz7JsC8Ozp0TcaNiLdCvW4h8OADVkbkOO36tWrcUw7iHdBPAj6O77nXmwhMbaFhD5ZxvAFtwAoiVj/Rr2fm1rTufZia2ZQ6ren3sa8m0uhdsUh/zfDdUC0M6XlK209hh8e/nQM2ImmDnkrACzplX49Qo5XgLA=
+	t=1728066178; cv=none; b=nnQi1UKxMYKbv/e4IWGShXChXHqHQADfN5jWFN2MNynDJsXIUH/ZDuiFIBQpLVuJJdtbDhNl2c30ujH2Ks/yhSJZRgnOAUrJxth0kOHllmTm+YBur1LN+VR57fFtWpGAZ62WAmjs+3VXN4Xuqsn2aeAQfMkTb0causd+6deN96o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728066171; c=relaxed/simple;
-	bh=tqSLOFPfKEnqGdn4qjmQhLMprXa7jx1CfgoRF+aYnQ0=;
+	s=arc-20240116; t=1728066178; c=relaxed/simple;
+	bh=7biog2O1wtlDY/U3f/tEE7P320v8j07FtsbL4Do3tIg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gNdHFi5hPvHjCoCoJMRuwZFYvnV/Hise7I2dHmpDXS+Q9OvHFfYMOMUeLXKDA58mAIFOrPoXPS6qqpbb5rn/OJvu3NjQx4PCmGJOAzcX/guaUfDaLyL9+vNQxUc6h2j5xgUmzb8vKv3EiTkWUZWbRDyi1xClWGfAEXJ57gRg/Ck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MXUI8Zq1; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=C3IlP61Nwm6R5KuQtuCdYIyzL6z3w7xpCih9d6mVo2Epzi8YIJ30dKQYuO78cFYvsYsMtTvPfg+An2VzNLU6P02e4WNvEm9SI25UGDRiE3n1M7TwEvEdiIvpmx8GJ4DbIDWXZzzey0qrRN8eXRYXxTN7BaJwi/fS7P/m/n99SWM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=r7cJlccX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MXUI8Zq1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92895C4CECE;
-	Fri,  4 Oct 2024 18:22:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="r7cJlccX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD8D0C4CECE;
+	Fri,  4 Oct 2024 18:22:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728066171;
-	bh=tqSLOFPfKEnqGdn4qjmQhLMprXa7jx1CfgoRF+aYnQ0=;
+	s=k20201202; t=1728066178;
+	bh=7biog2O1wtlDY/U3f/tEE7P320v8j07FtsbL4Do3tIg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=MXUI8Zq1qoDeEwiuIkOpmDPGTuvq/LKlOE5eMyjlQa9UaBNklGF7EPuQ0hF0H+SUU
-	 vLjbg6C9gDucIpjp8+wkQ8E9uzVK+qTFBj5MVlHCvBGXvxJQzidys7iI0J5wtTbmRR
-	 OyhnyokhT5EEN51fbSGCUbzcR5rkx6vA2nKYRFbZzxOQSMWJpVJptEXRFJFag39lT2
-	 Otc1BhDS36LnQlyM4dZ6a+EZhzE8Ua7Kb0VdcrouEAUMbgmHtd2dEN/F/hKB4/JhUn
-	 igrgqOulyBGaKInb0HHrlZL69wNs6WQ86/4878Kz2R3eI1g9zTpKcsot2mzreus87w
-	 CX6piwJ+86Z+Q==
+	b=r7cJlccXkRMExy+Vd3yIaKIgmjuJ8h3w3pa3clFFF+ye5gpmJjvGz4mJUZRXYrhXe
+	 E+xSxdM6mYSLnEwulrdw5ThZKHkmGrcco53TYO6Dl0naoAc16e9fQOGPMaXCUrkKPS
+	 P84zup5iD1zMEfeorVeWss89r0+VFBJes3/t5JFKfGcBODavI8Ha21ln0O6xSc0Hb5
+	 qDLo0CaH0akTQ7n6oE0PIGF38n9GGBvKlCr+MPydm/SRj/t7J6Odo5HI9YAhNZm0ru
+	 itI/ts5isVMQmOb0LKf2WSjr0oj17Wj8ri6cCEVTJUCVinK8fku1rJ1UN/B8nU4t64
+	 eeyapEAOzV9qw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Alex Williamson <alex.williamson@redhat.com>,
-	zdravko delineshev <delineshev@outlook.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+Cc: Kaixin Wang <kxwang23@m.fudan.edu.cn>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Jon Mason <jdmason@kudzu.us>,
 	Sasha Levin <sashal@kernel.org>,
-	bhelgaas@google.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.10 28/70] PCI: Mark Creative Labs EMU20k2 INTx masking as broken
-Date: Fri,  4 Oct 2024 14:20:26 -0400
-Message-ID: <20241004182200.3670903-28-sashal@kernel.org>
+	kurt.schwemmer@microsemi.com,
+	dave.jiang@intel.com,
+	allenbh@gmail.com,
+	linux-pci@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: [PATCH AUTOSEL 6.10 32/70] ntb: ntb_hw_switchtec: Fix use after free vulnerability in switchtec_ntb_remove due to race condition
+Date: Fri,  4 Oct 2024 14:20:30 -0400
+Message-ID: <20241004182200.3670903-32-sashal@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20241004182200.3670903-1-sashal@kernel.org>
 References: <20241004182200.3670903-1-sashal@kernel.org>
@@ -47,46 +50,56 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.10.13
 Content-Transfer-Encoding: 8bit
 
-From: Alex Williamson <alex.williamson@redhat.com>
+From: Kaixin Wang <kxwang23@m.fudan.edu.cn>
 
-[ Upstream commit 2910306655a7072640021563ec9501bfa67f0cb1 ]
+[ Upstream commit e51aded92d42784313ba16c12f4f88cc4f973bbb ]
 
-Per user reports, the Creative Labs EMU20k2 (Sound Blaster X-Fi
-Titanium Series) generates spurious interrupts when used with
-vfio-pci unless DisINTx masking support is disabled.
+In the switchtec_ntb_add function, it can call switchtec_ntb_init_sndev
+function, then &sndev->check_link_status_work is bound with
+check_link_status_work. switchtec_ntb_link_notification may be called
+to start the work.
 
-Thus, quirk the device to mark INTx masking as broken.
+If we remove the module which will call switchtec_ntb_remove to make
+cleanup, it will free sndev through kfree(sndev), while the work
+mentioned above will be used. The sequence of operations that may lead
+to a UAF bug is as follows:
 
-Closes: https://lore.kernel.org/all/VI1PR10MB8207C507DB5420AB4C7281E0DB9A2@VI1PR10MB8207.EURPRD10.PROD.OUTLOOK.COM
-Link: https://lore.kernel.org/linux-pci/20240912215331.839220-1-alex.williamson@redhat.com
-Reported-by: zdravko delineshev <delineshev@outlook.com>
-Signed-off-by: Alex Williamson <alex.williamson@redhat.com>
-[kwilczynski: commit log]
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+CPU0                                 CPU1
+
+                        | check_link_status_work
+switchtec_ntb_remove    |
+kfree(sndev);           |
+                        | if (sndev->link_force_down)
+                        | // use sndev
+
+Fix it by ensuring that the work is canceled before proceeding with
+the cleanup in switchtec_ntb_remove.
+
+Signed-off-by: Kaixin Wang <kxwang23@m.fudan.edu.cn>
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Signed-off-by: Jon Mason <jdmason@kudzu.us>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/quirks.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/ntb/hw/mscc/ntb_hw_switchtec.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index e616add85b134..d2875e04378a4 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -3608,6 +3608,8 @@ DECLARE_PCI_FIXUP_FINAL(0x1814, 0x0601, /* Ralink RT2800 802.11n PCI */
- 			quirk_broken_intx_masking);
- DECLARE_PCI_FIXUP_FINAL(0x1b7c, 0x0004, /* Ceton InfiniTV4 */
- 			quirk_broken_intx_masking);
-+DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_CREATIVE, PCI_DEVICE_ID_CREATIVE_20K2,
-+			quirk_broken_intx_masking);
- 
- /*
-  * Realtek RTL8169 PCI Gigabit Ethernet Controller (rev 10)
+diff --git a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+index d6bbcc7b5b90d..0a94c634ddc27 100644
+--- a/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
++++ b/drivers/ntb/hw/mscc/ntb_hw_switchtec.c
+@@ -1554,6 +1554,7 @@ static void switchtec_ntb_remove(struct device *dev)
+ 	switchtec_ntb_deinit_db_msg_irq(sndev);
+ 	switchtec_ntb_deinit_shared_mw(sndev);
+ 	switchtec_ntb_deinit_crosslink(sndev);
++	cancel_work_sync(&sndev->check_link_status_work);
+ 	kfree(sndev);
+ 	dev_info(dev, "ntb device unregistered\n");
+ }
 -- 
 2.43.0
 
