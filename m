@@ -1,126 +1,136 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A4F0137C2A;
-	Wed,  9 Oct 2024 09:10:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60DD817BB35;
+	Wed,  9 Oct 2024 09:15:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728465049; cv=none; b=NA+iMhkOQLp7Z+0Ztu+dFwvsr2rzz2jUNimp2UBLErZYTBL4ljoskOCPkX+cNDL4UDuGU1iURZg0E6XqKtrf+tyZLpDF1dQKxRhn/kiZZ1Y65AH6m0pTwFH1GQeEBjfNF8o6oE5RV1794OUnG6jdf5CkysHb9o7xlpt4SxNCv9Q=
+	t=1728465356; cv=none; b=im0Q7Yyr09NLipI6UC5SJg8Z03vHhOSeSjJmIjrxKVwS8Tug7sg7nPNKQd2ZtmlDTD7RdeUBubE4VaUpajYSuOno5YTJAyAogJL3ObMoM5z06sdp/pgi75kw3BGmFkWz3PoUSCo31bi+dVGGWL+DFZwO5Z49DHZiDWVWIe2+hfs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728465049; c=relaxed/simple;
-	bh=SeiKUnM1DO48iG3Gr3JzhpZfh6fszoAqw+yG9jEe454=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aSTU9xhoZlwWrsDLTczz6mH6j/s3JFHC4ZDXX7HpVn03m0it4QI5lINv4BYsERaiTPaJE4upeb3Ax6p+hHxdZ9W3/9WBH6fO9J5k9YkK0WSg3UFkyWIZyaBhzroWFBQxjbuUxJjGh8wEb5vKKXnpbp6lv1ranLwJ2StGlq0VQ7o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=apgg8LYb; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728465356; c=relaxed/simple;
+	bh=XVqBF3uU6H3gRvE1VXGdpEedqjqbhY5OV4rF9o9T3RA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=svmJHp9HFW6oNGMQKkamUMrDj+ievGxQyLaWtAJwzp5+pWXsYfTaT1lLGfguBQwery7vDQ+vgC818xzzaF5/NyJltyxDiOZm523K5AQfH4LSoz8HHEfohRUNn0gEu46r+rZQ4NsIxKdwNvwvdRccrIycwJlkImvBNoF957DJY7A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Uz8Gni29; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="apgg8LYb"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4C87BC4CEC5;
-	Wed,  9 Oct 2024 09:10:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728465048;
-	bh=SeiKUnM1DO48iG3Gr3JzhpZfh6fszoAqw+yG9jEe454=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=apgg8LYblMD4qcg07qq3Mkgt0ywwQuc+3xw0JHmyyo9R1mWrfGxw8wTc4OdVdv86c
-	 9NvoStQW9y9swxeftz9Y/d+2+eWrhl8IJ+ehaoOKL5kcWGNnsVpJgR/dEBQtmS3u1T
-	 rdBzExB9GsjgYbIOJpmcB5A2VggPdQMDCHWytgB566ZNT/uK6NwYLIDILg88BAHeQz
-	 vk/SHdbAb6yjKubsySQAdtJ9+53NgxwB7giJMbQu+dDrvvT9iCnDXeZaC9YE6mq48L
-	 2OdUXj462FwW5nDBk2woP+WbDOgZfiJhnt/gsiFXjp+bfi2iB8hwnrHQlGtidEcPDH
-	 jr9p8eMo3AZKg==
-Message-ID: <5f785dda-b2d7-466f-96c3-23faf0b80975@kernel.org>
-Date: Wed, 9 Oct 2024 18:10:39 +0900
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Uz8Gni29"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4998FNL9001750;
+	Wed, 9 Oct 2024 09:15:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=AdcktK5D9O1
+	N/CDpsnC+gVeX8zMqbfI9hnTcbdr6Dss=; b=Uz8Gni29Nm3wV/wyQeauOVV7TFW
+	yJsK+SN8jZy8ipaFW78Q+NomxKv+WivOAHeeq/7bbWZgcIJIx0Gv4+JM0496AK+T
+	Jn6Z37Xlee9+EeyO3TsWnR99wIpTqncOi9oUjF0wr8u2ZQSkLFecJ3lOtvizH9b8
+	H4SfCHY30UOKYdhYOxjH/sRAFzjlQiEc2wZ1o5GAjg82P24tlrBIyRh3kxf5MNsw
+	T/qvOejlf+iW0G+WbON6Qja8em2KVaWf1MIQwTZQWoUzvCCf6E8HLTrNoHGrW5hv
+	NKleL+vXZA+gltPwSI+3c42/ZAMm68/oFBNTbKywzQqPnoDM+AVc9IEZeOQ==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42513u3nwm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 09 Oct 2024 09:15:45 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4999Bsaw024666;
+	Wed, 9 Oct 2024 09:15:45 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 425fv1uthj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 09 Oct 2024 09:15:45 +0000
+Received: from NALASPPMTA03.qualcomm.com (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49999E9b016589;
+	Wed, 9 Oct 2024 09:15:45 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-qianyu-lv.qualcomm.com [10.81.25.114])
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 4999FikA002510
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 09 Oct 2024 09:15:45 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 4098150)
+	id B03B3656; Wed,  9 Oct 2024 02:15:44 -0700 (PDT)
+From: Qiang Yu <quic_qianyu@quicinc.com>
+To: manivannan.sadhasivam@linaro.org, vkoul@kernel.org, kishon@kernel.org,
+        robh@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, mturquette@baylibre.com,
+        sboyd@kernel.org, abel.vesa@linaro.org, quic_msarkar@quicinc.com,
+        quic_devipriy@quicinc.com
+Cc: dmitry.baryshkov@linaro.org, kw@linux.com, lpieralisi@kernel.org,
+        neil.armstrong@linaro.org, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-clk@vger.kernel.org, Qiang Yu <quic_qianyu@quicinc.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>
+Subject: [PATCH v5 2/7] dt-bindings: PCI: qcom: Move OPP table to qcom,pcie-common.yaml
+Date: Wed,  9 Oct 2024 02:15:35 -0700
+Message-Id: <20241009091540.1446-3-quic_qianyu@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241009091540.1446-1-quic_qianyu@quicinc.com>
+References: <20241009091540.1446-1-quic_qianyu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH 01/13] PCI: Prepare removing devres from pci_intx()
-To: Philipp Stanner <pstanner@redhat.com>, Niklas Cassel <cassel@kernel.org>,
- Sergey Shtylyov <s.shtylyov@omp.ru>,
- Basavaraj Natikar <basavaraj.natikar@amd.com>, Jiri Kosina
- <jikos@kernel.org>, Benjamin Tissoires <bentiss@kernel.org>,
- Arnd Bergmann <arnd@arndb.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Alex Dubov
- <oakad@yahoo.com>, Sudarsana Kalluru <skalluru@marvell.com>,
- Manish Chopra <manishc@marvell.com>, "David S. Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- Rasesh Mody <rmody@marvell.com>, GR-Linux-NIC-Dev@marvell.com,
- Igor Mitsyanko <imitsyanko@quantenna.com>,
- Sergey Matyukevich <geomatsi@gmail.com>, Kalle Valo <kvalo@kernel.org>,
- Sanjay R Mehta <sanju.mehta@amd.com>,
- Shyam Sundar S K <Shyam-sundar.S-k@amd.com>, Jon Mason <jdmason@kudzu.us>,
- Dave Jiang <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Alex Williamson <alex.williamson@redhat.com>, Juergen Gross
- <jgross@suse.com>, Stefano Stabellini <sstabellini@kernel.org>,
- Oleksandr Tyshchenko <oleksandr_tyshchenko@epam.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- Mario Limonciello <mario.limonciello@amd.com>, Chen Ni <nichen@iscas.ac.cn>,
- Ricky Wu <ricky_wu@realtek.com>, Al Viro <viro@zeniv.linux.org.uk>,
- Breno Leitao <leitao@debian.org>, Kevin Tian <kevin.tian@intel.com>,
- Thomas Gleixner <tglx@linutronix.de>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
- Mostafa Saleh <smostafa@google.com>,
- Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
- Hannes Reinecke <hare@suse.de>, John Garry <john.g.garry@oracle.com>,
- Soumya Negi <soumya.negi97@gmail.com>, Jason Gunthorpe <jgg@ziepe.ca>,
- Yi Liu <yi.l.liu@intel.com>, "Dr. David Alan Gilbert" <linux@treblig.org>,
- Christian Brauner <brauner@kernel.org>, Ankit Agrawal <ankita@nvidia.com>,
- Reinette Chatre <reinette.chatre@intel.com>,
- Eric Auger <eric.auger@redhat.com>, Ye Bin <yebin10@huawei.com>,
- =?UTF-8?Q?Marek_Marczykowski-G=C3=B3recki?=
- <marmarek@invisiblethingslab.com>,
- Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Kai Vehmanen <kai.vehmanen@linux.intel.com>,
- Peter Ujfalusi <peter.ujfalusi@linux.intel.com>,
- Rui Salvaterra <rsalvaterra@gmail.com>, Marc Zyngier <maz@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-input@vger.kernel.org, netdev@vger.kernel.org,
- linux-wireless@vger.kernel.org, ntb@lists.linux.dev,
- linux-pci@vger.kernel.org, linux-staging@lists.linux.dev,
- kvm@vger.kernel.org, xen-devel@lists.xenproject.org,
- linux-sound@vger.kernel.org
-References: <20241009083519.10088-1-pstanner@redhat.com>
- <20241009083519.10088-2-pstanner@redhat.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20241009083519.10088-2-pstanner@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: CdHOyEjbYpjGLZqyO6O_QqTRb6lv3jf3
+X-Proofpoint-GUID: CdHOyEjbYpjGLZqyO6O_QqTRb6lv3jf3
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
+ lowpriorityscore=0 mlxlogscore=999 malwarescore=0 spamscore=0
+ priorityscore=1501 impostorscore=0 phishscore=0 suspectscore=0 bulkscore=0
+ mlxscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2409260000 definitions=main-2410090060
 
-On 10/9/24 17:35, Philipp Stanner wrote:
-> pci_intx() is a hybrid function which sometimes performs devres
-> operations, depending on whether pcim_enable_device() has been used to
-> enable the pci_dev. This sometimes-managed nature of the function is
-> problematic. Notably, it causes the function to allocate under some
-> circumstances which makes it unusable from interrupt context.
-> 
-> To, ultimately, remove the hybrid nature from pci_intx(), it is first
-> necessary to provide an always-managed and a never-managed version
-> of that function. Then, all callers of pci_intx() can be ported to the
-> version they need, depending whether they use pci_enable_device() or
-> pcim_enable_device().
-> 
-> An always-managed function exists, namely pcim_intx(), for which
-> __pcim_intx(), a never-managed version of pci_intx() had been
+OPP table is a generic property that is also required by other qcom
+platforms. Hence move this property to qcom,pcie-common.yaml so that PCIe
+on other qcom platforms is able to adjust power domain performance state
+and ICC peak bw according to PCIe gen speed and link width.
 
-s/had/has ? Not sure about this, English is not my first language :)
+Signed-off-by: Qiang Yu <quic_qianyu@quicinc.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Krzysztof Kozlowski <krzk@kernel.org>
+---
+ Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml | 4 ++++
+ Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml | 4 ----
+ 2 files changed, 4 insertions(+), 4 deletions(-)
 
-> implemented.
-> 
-> Make __pcim_intx() a public function under the name
-> pci_intx_unmanaged(). Make pcim_intx() a public function.
-> 
-> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
-
-Regardless of the above nit, looks OK to me.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+index 704c0f58eea5..3c6430fe9331 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-common.yaml
+@@ -78,6 +78,10 @@ properties:
+     description: GPIO controlled connection to WAKE# signal
+     maxItems: 1
+ 
++  operating-points-v2: true
++  opp-table:
++    type: object
++
+ required:
+   - reg
+   - reg-names
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
+index 46bd59eefadb..6e0a6d8f0ed0 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-sm8450.yaml
+@@ -70,10 +70,6 @@ properties:
+       - const: msi7
+       - const: global
+ 
+-  operating-points-v2: true
+-  opp-table:
+-    type: object
+-
+   resets:
+     maxItems: 1
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.34.1
+
