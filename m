@@ -1,86 +1,160 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEAA1210C02
-	for <linux-pci@vger.kernel.org>; Fri, 11 Oct 2024 10:12:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A17BD213ED8;
+	Fri, 11 Oct 2024 10:42:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728641565; cv=none; b=Tov18OzQheATDYBGDGniY0kZh2Hr0JTUBwgZaCGaS8Q133yldvIuLJfRyDNVCuiBHJSaGvOAqZN/0TELXK/Q3KbhdJvlY328aUolE7jQIrnnzFE69vq190K1nX0vfrj6yYqvg3tbJ6vT2P7lRSEqiPUxuqywsfGLb9sWvbxBFpk=
+	t=1728643329; cv=none; b=EUCVAH9TFuuK+Il/KRW4FrNS0rLBbLHrk95z+iFq8CJpvxySFPFOXIEVR5NIE32f0FrPfN9ZHyiDSFwJrAz7sKegVXl7YSA8zE3vlvocoLKxQZ6KURkyvfiMZC3PHSPyUMRDJZ4Eru1iTQONdlFRKJvUlCCnPpfqeslZU+p56Nw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728641565; c=relaxed/simple;
-	bh=/dQczJZbtRPZnXfYQLETebiNAkck5yrp8R/8FJYTYio=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oxfB0QzArUiJdS4kiXK4PJPPi90L+AFVmj6ZvHwVOZeW4U/1HQ2RNbT+mYUkX0kM7EGRV+WMVyidJIcV+iO4Upsnk1XkDDy2fbf4We4iYkWr4Hq0PcWb1vSYkDs1MByLpfmMEHB04CKQJX7Z4xHOtdlcZtgApwZIGwijfu0WRQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id AA0D02800B6FE;
-	Fri, 11 Oct 2024 12:12:39 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 930371FCD0D; Fri, 11 Oct 2024 12:12:39 +0200 (CEST)
-Date: Fri, 11 Oct 2024 12:12:39 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Mika Westerberg <mika.westerberg@linux.intel.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Dennis Wassenberg <Dennis.Wassenberg@secunet.com>,
-	Rafael Wysocki <rafael@kernel.org>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-pci@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
-	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Mathias Krause <minipli@grsecurity.net>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	Stuart Hayes <stuart.w.hayes@gmail.com>
-Subject: Re: [PATCH] PCI: Fix use-after-free of slot->bus on hot remove
-Message-ID: <Zwj6Fycjyp6jlgY5@wunner.de>
-References: <4bfd4c0e976c1776cd08e76603903b338cf25729.1728579288.git.lukas@wunner.de>
- <20241011054115.GG275077@black.fi.intel.com>
+	s=arc-20240116; t=1728643329; c=relaxed/simple;
+	bh=H1ziV5tyupxzZh4Cd1MkMsrgUXkihHsPR7l8O8TlpOg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=WLtQsYsMBOOsEXKNzvjN3lylWjLeKT2GhK06CHrQJIbLRkjQU5E8bes9rXNS5gEcGcMYwOoXvmEJtmhMYK7y9cwgMdQovRKpbVA/lTOvSBSi02E+HYbHe3tW1jAizXoTc5XNNZ1FxskWz7uG3PSXqNsivTourAfmAYbtBnwpNaM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=lKaxJGWH; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="lKaxJGWH"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49B3aUd8027261;
+	Fri, 11 Oct 2024 10:41:49 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=fM+DrFtFwy1
+	+oio8hpHJjcoOsNaQT5+Glmr5yzAR83g=; b=lKaxJGWH32hvgH5dZe2CPNjm/TJ
+	azew8lrajBRWhcKR5JWAKWRiKjJ0COzmebUogISxwyCMGOd/Vyv4Bdy0nELzMahq
+	KySVnC3KuB4YKuWxbdNjEEULnjkwriTbsp5H+xpJTcO/AxU8zZOyrhuswMFOSQ/H
+	NVkJ8E4Fv9zNxdGlg1T24CZ7o/g7S1EVFDRFldbHHpIXEGB441IWsWS5i4W4IQvG
+	iq/h5sItCOOvJ3HJUzGwVIjbfJSZaSBvumkDgLLda/2qLV/XKg3hz8E8NVAPluSv
+	viC72vxtbiUNVELFUbM7LFpxRg4ZGUvsw403Zl+1jIT6tra3MURW12qrhRw==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 426fj6u1a1-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 11 Oct 2024 10:41:48 +0000 (GMT)
+Received: from pps.filterd (NALASPPMTA02.qualcomm.com [127.0.0.1])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 49BAU4NY016719;
+	Fri, 11 Oct 2024 10:41:47 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 426uxek3yb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 11 Oct 2024 10:41:47 +0000
+Received: from NALASPPMTA02.qualcomm.com (NALASPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 49BAfl4a000500;
+	Fri, 11 Oct 2024 10:41:47 GMT
+Received: from hu-devc-lv-u22-c.qualcomm.com (hu-qianyu-lv.qualcomm.com [10.81.25.114])
+	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 49BAfkjj000499
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 11 Oct 2024 10:41:47 +0000
+Received: by hu-devc-lv-u22-c.qualcomm.com (Postfix, from userid 4098150)
+	id DA296651; Fri, 11 Oct 2024 03:41:46 -0700 (PDT)
+From: Qiang Yu <quic_qianyu@quicinc.com>
+To: manivannan.sadhasivam@linaro.org, vkoul@kernel.org, kishon@kernel.org,
+        robh@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, mturquette@baylibre.com,
+        sboyd@kernel.org, abel.vesa@linaro.org, quic_msarkar@quicinc.com,
+        quic_devipriy@quicinc.com
+Cc: dmitry.baryshkov@linaro.org, kw@linux.com, lpieralisi@kernel.org,
+        neil.armstrong@linaro.org, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-clk@vger.kernel.org, Qiang Yu <quic_qianyu@quicinc.com>,
+        stable@vger.kernel.org, Mike Tipton <quic_mdtipton@quicinc.com>,
+        Johan Hovold <johan+linaro@kernel.org>
+Subject: [PATCH v6 5/8] clk: qcom: gcc-x1e80100: Fix halt_check for pipediv2 clocks
+Date: Fri, 11 Oct 2024 03:41:39 -0700
+Message-Id: <20241011104142.1181773-6-quic_qianyu@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241011104142.1181773-1-quic_qianyu@quicinc.com>
+References: <20241011104142.1181773-1-quic_qianyu@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241011054115.GG275077@black.fi.intel.com>
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: CkvloQ8YEJCuLTC0qJycda0ol7u3FqzL
+X-Proofpoint-ORIG-GUID: CkvloQ8YEJCuLTC0qJycda0ol7u3FqzL
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 mlxlogscore=954
+ lowpriorityscore=0 spamscore=0 malwarescore=0 adultscore=0 suspectscore=0
+ clxscore=1015 mlxscore=0 impostorscore=0 priorityscore=1501 phishscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
+ definitions=main-2410110073
 
-On Fri, Oct 11, 2024 at 08:41:15AM +0300, Mika Westerberg wrote:
-> On Thu, Oct 10, 2024 at 07:10:34PM +0200, Lukas Wunner wrote:
-> > Dennis reports a boot crash on recent Lenovo laptops with a USB4 dock.
-> > 
-> > Since commit 0fc70886569c ("thunderbolt: Reset USB4 v2 host router") and
-> > commit 59a54c5f3dbd ("thunderbolt: Reset topology created by the boot
-> > firmware"), USB4 v2 and v1 Host Routers are reset on probe of the
-> > thunderbolt driver.
-> > 
-> > The reset clears the Presence Detect State and Data Link Layer Link Active
-> > bits at the USB4 Host Router's Root Port and thus causes hot removal of
-> > the dock.
-> 
-> Can't this happen also simply unplug at some part of the PCIe topology?
-> I don't think this is specific to TB/USB4.
+The pipediv2_clk's source from the same mux as pipe clock. So they have
+same limitation, which is that the PHY sequence requires to enable these
+local CBCs before the PHY is actually outputting a clock to them. This
+means the clock won't actually turn on when we vote them. Hence, let's
+skip the halt bit check of the pipediv2_clk, otherwise pipediv2_clk may
+stuck at off state during bootup.
 
-The crash seems to occur because the boot-time invocation of
-pci_bus_add_devices() races with pciehp's pci_stop_and_remove_bus_device().
+Cc: stable@vger.kernel.org
+Fixes: 161b7c401f4b ("clk: qcom: Add Global Clock controller (GCC) driver for X1E80100")
+Suggested-by: Mike Tipton <quic_mdtipton@quicinc.com>
+Signed-off-by: Qiang Yu <quic_qianyu@quicinc.com>
+Reviewed-by: Konrad Dybcio <konradybcio@kernel.org>
+Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
+---
+ drivers/clk/qcom/gcc-x1e80100.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-In principle, yes, on a non-USB4 system you could unplug the dock exactly
-when pci_bus_add_devices() is running and cause the same crash, even though
-the Host Router is not reset.  But that's very hard to reproduce.
-You need to unplug at just the right moment.
+diff --git a/drivers/clk/qcom/gcc-x1e80100.c b/drivers/clk/qcom/gcc-x1e80100.c
+index 0f578771071f..81ba5ceab342 100644
+--- a/drivers/clk/qcom/gcc-x1e80100.c
++++ b/drivers/clk/qcom/gcc-x1e80100.c
+@@ -3123,7 +3123,7 @@ static struct clk_branch gcc_pcie_3_pipe_clk = {
+ 
+ static struct clk_branch gcc_pcie_3_pipediv2_clk = {
+ 	.halt_reg = 0x58060,
+-	.halt_check = BRANCH_HALT_VOTED,
++	.halt_check = BRANCH_HALT_SKIP,
+ 	.clkr = {
+ 		.enable_reg = 0x52020,
+ 		.enable_mask = BIT(5),
+@@ -3248,7 +3248,7 @@ static struct clk_branch gcc_pcie_4_pipe_clk = {
+ 
+ static struct clk_branch gcc_pcie_4_pipediv2_clk = {
+ 	.halt_reg = 0x6b054,
+-	.halt_check = BRANCH_HALT_VOTED,
++	.halt_check = BRANCH_HALT_SKIP,
+ 	.clkr = {
+ 		.enable_reg = 0x52010,
+ 		.enable_mask = BIT(27),
+@@ -3373,7 +3373,7 @@ static struct clk_branch gcc_pcie_5_pipe_clk = {
+ 
+ static struct clk_branch gcc_pcie_5_pipediv2_clk = {
+ 	.halt_reg = 0x2f054,
+-	.halt_check = BRANCH_HALT_VOTED,
++	.halt_check = BRANCH_HALT_SKIP,
+ 	.clkr = {
+ 		.enable_reg = 0x52018,
+ 		.enable_mask = BIT(19),
+@@ -3511,7 +3511,7 @@ static struct clk_branch gcc_pcie_6a_pipe_clk = {
+ 
+ static struct clk_branch gcc_pcie_6a_pipediv2_clk = {
+ 	.halt_reg = 0x31060,
+-	.halt_check = BRANCH_HALT_VOTED,
++	.halt_check = BRANCH_HALT_SKIP,
+ 	.clkr = {
+ 		.enable_reg = 0x52018,
+ 		.enable_mask = BIT(28),
+@@ -3649,7 +3649,7 @@ static struct clk_branch gcc_pcie_6b_pipe_clk = {
+ 
+ static struct clk_branch gcc_pcie_6b_pipediv2_clk = {
+ 	.halt_reg = 0x8d060,
+-	.halt_check = BRANCH_HALT_VOTED,
++	.halt_check = BRANCH_HALT_SKIP,
+ 	.clkr = {
+ 		.enable_reg = 0x52010,
+ 		.enable_mask = BIT(28),
+-- 
+2.34.1
 
-In this case however the reset of the Host Router seems to reliably
-reproduce the conditions to cause the crash, so I thought it's worth
-calling that out explicitly.  USB4 Host Routers are readily available
-in the field and becoming more and more commonplace, so chances that
-users experience the crash are high -- specifically if they're booting
-a USB4 system with attached Thunderbolt devices.
-
-Thanks,
-
-Lukas
