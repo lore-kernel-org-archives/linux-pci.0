@@ -1,111 +1,103 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 736E8215026
-	for <linux-pci@vger.kernel.org>; Fri, 11 Oct 2024 12:19:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C72D215026
+	for <linux-pci@vger.kernel.org>; Fri, 11 Oct 2024 12:19:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728649197; cv=none; b=QNCe+7vVduSq2kGFH7/oqf/nPVXjFhrTk6pXrVsgovBs6O8uPxnVMY/fQEhAgi/vTpNloh3yaVzbnwLxDG1L80h6ci29vbOHmJSP1zyvQwcqpMtxjy/zgkRl7G27YJJKjI6kHc1QDnGAvKUb0rqYj5AQ1CpEtuwwUhjaWB4pjnU=
+	t=1728649199; cv=none; b=pkvEfirzZbVWfNWXXg8qTbEB930+vb8iYXVLJ9nXyTdwOzz0+5IfjdyfZPri7v5XVlpEqrUtaNHCNxueC8wlO0aNG+dNT7INVfowrbVYs2pc8cO9ZmQYIJrE/AhYj3FdkoZrO0xVz49qzO6d4ERM7uG1G4OJJeoQY3xCVq1fVDg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728649197; c=relaxed/simple;
-	bh=8frkqHspwtYgdjGC4V5jgJNxl+2wXirskl3xM5xICLs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HuYVY98KYT5OmYGP1Fa6lq6KDdSIwsc06WioD4/tIFukvrDUN+LfOsJtRPko5FrBGN6MieRQyxjcyTysbDVteiPgS8zfNS34D7P7viEipjZNLCiDOXCrv23FXLtJ4BJcsipmx9incNpTmuW8DRfgIYqZDQopZrYwIE24KK4F1To=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AU6rg5/z; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1728649199; c=relaxed/simple;
+	bh=USrx1eSbx00KxGW5SNsqKGkCfe9T8LfwHwehSbOrR1g=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lb2SOUVdevCivZ1UnB1pfFd+Y1AjgQmR0eHpeuuCHMrP0aMrSpje956AOzQxc8hP72525Z5SAnWXL2VC6z705IRpVhprO/zxKXXpoVAnt+BripDJW1Jm4tLuiHIQJHCUWzKMzwm59aAtPRezIxvGzlSkufGuLDrhcxqMhx32PnE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XcGXmSZ5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AU6rg5/z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 989FBC4CECC;
-	Fri, 11 Oct 2024 12:19:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XcGXmSZ5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F006C4CECF;
+	Fri, 11 Oct 2024 12:19:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728649197;
-	bh=8frkqHspwtYgdjGC4V5jgJNxl+2wXirskl3xM5xICLs=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=AU6rg5/zhekzGfTpYAScGUh6pnBp1AVXuR4LqlTbFQHKnAseQ0RwXw6pPKSFfq+gc
-	 COaFjqEuYgtvtFsaBJJ0/+AJk8FielVx751jupzLtm4zSL76GFT1OCRAtHi1kFKl5D
-	 pDHVIykkwe4lv6wSA6u/gGK5s2juk+YfpOfpWtyHssw5wlx7jErNmbZmK/bth6f7S6
-	 jV3n5Nmh5rHIqIgkztOnOs7Idm6PEkmxDtyOzx4Zz4W877QFe1Ubz6b0OJMDUYrrlr
-	 0OIVPACbGoGs2EOQpggNzBPaVTsCrLNDQIhfR1N6nnIitUqiwo8qjn6Ywcq9LLp4d1
-	 T+CUQBeImeIAg==
-Date: Fri, 11 Oct 2024 14:19:51 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	s=k20201202; t=1728649198;
+	bh=USrx1eSbx00KxGW5SNsqKGkCfe9T8LfwHwehSbOrR1g=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=XcGXmSZ5EBdyza640mDUbyYFCHJvq6TMDw8IAWU758p7dl/BSOWqNRNZyd9UGI3lJ
+	 nC/Ukp2LR8pFOUI6a0J8ZF0o236l0qyZjtGMBguHNp7uhQ5YXSsDKotCD+yXK8WyMg
+	 LvXrSFHlR1IPfdb02QSUKinQVmICK2jKXjI4+nVqqjOz82xPOfcQAXMgTa0ZOkdGEW
+	 0c4UpPQyH4cp6xjG68G4yIBiu5zDJMhfvUEmnENbKugPuxKzvKyaP+2AASFX4C4M5x
+	 TH+cv63Gq91FtIgeRIByVI8bxYNGQZzYHq7omHm9BTteTWlbZo1+xAEmW1PgWRmpjm
+	 dBq0nWJIyrGGg==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: linux-nvme@lists.infradead.org,
+	Keith Busch <kbusch@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
 	Kishon Vijay Abraham I <kishon@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Rob Herring <robh@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
-	Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
-	Rick Wertenbroek <rick.wertenbroek@gmail.com>
-Subject: Re: [PATCH v5 6/6] PCI: dwc: endpoint: Implement the
- pci_epc_ops::get_mem_map() operation
-Message-ID: <ZwkX5-5YZSE41ByM@ryzen.lan>
-References: <20241011120115.89756-1-dlemoal@kernel.org>
- <20241011120115.89756-7-dlemoal@kernel.org>
+	linux-pci@vger.kernel.org
+Cc: Rick Wertenbroek <rick.wertenbroek@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v2 2/5] nvmef: export nvmef_create_ctrl()
+Date: Fri, 11 Oct 2024 21:19:48 +0900
+Message-ID: <20241011121951.90019-3-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.46.2
+In-Reply-To: <20241011121951.90019-1-dlemoal@kernel.org>
+References: <20241011121951.90019-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241011120115.89756-7-dlemoal@kernel.org>
+Content-Transfer-Encoding: 8bit
 
-On Fri, Oct 11, 2024 at 09:01:15PM +0900, Damien Le Moal wrote:
-> The function dw_pcie_prog_outbound_atu() used to program outbound ATU
-> entries for mapping RC PCI addresses to local CPU addresses does not
-> allow PCI addresses that are not aligned to the value of region_align
-> of struct dw_pcie. This value is determined from the iATU hardware
-> registers during probing of the iATU (done by dw_pcie_iatu_detect()).
-> This value is thus valid for all DWC PCIe controllers, and valid
-> regardless of the hardware configuration used when synthesizing the
-> DWC PCIe controller.
-> 
-> Implement the ->get_mem_map() endpoint controller operation to allow
-> this mapping alignment to be transparently handled by endpoint function
-> drivers through the function pci_epc_mem_map().
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-ep.c | 15 +++++++++++++++
->  1 file changed, 15 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> index 43ba5c6738df..b65f4f0f5856 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> @@ -268,6 +268,20 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
->  	return -EINVAL;
->  }
->  
-> +static int dw_pcie_ep_get_mem_map(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> +				  struct pci_epc_map *map)
-> +{
-> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	size_t mask = pci->region_align - 1;
-> +
-> +	map->map_pci_addr = map->pci_addr & ~mask;
-> +	map->map_ofst = map->pci_addr & mask;
-> +	map->map_size = ALIGN(map->map_ofst + map->pci_size, ep->page_size);
-> +
-> +	return 0;
-> +}
-> +
->  static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
->  				  phys_addr_t addr)
->  {
-> @@ -444,6 +458,7 @@ static const struct pci_epc_ops epc_ops = {
->  	.write_header		= dw_pcie_ep_write_header,
->  	.set_bar		= dw_pcie_ep_set_bar,
->  	.clear_bar		= dw_pcie_ep_clear_bar,
-> +	.get_mem_map		= dw_pcie_ep_get_mem_map,
->  	.map_addr		= dw_pcie_ep_map_addr,
->  	.unmap_addr		= dw_pcie_ep_unmap_addr,
->  	.set_msi		= dw_pcie_ep_set_msi,
-> -- 
-> 2.47.0
-> 
+Export nvmef_create_ctrl() to allow drivers to directly call this
+function instead of forcing the creation of a fabrics host controller
+with a write to /dev/nvmef. The export is restricted to the NVME_FABRICS
+namespace.
 
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/nvme/host/fabrics.c | 4 ++--
+ drivers/nvme/host/fabrics.h | 1 +
+ 2 files changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/nvme/host/fabrics.c b/drivers/nvme/host/fabrics.c
+index 432efcbf9e2f..e3c990d50704 100644
+--- a/drivers/nvme/host/fabrics.c
++++ b/drivers/nvme/host/fabrics.c
+@@ -1276,8 +1276,7 @@ EXPORT_SYMBOL_GPL(nvmf_free_options);
+ 				 NVMF_OPT_FAIL_FAST_TMO | NVMF_OPT_DHCHAP_SECRET |\
+ 				 NVMF_OPT_DHCHAP_CTRL_SECRET)
+ 
+-static struct nvme_ctrl *
+-nvmf_create_ctrl(struct device *dev, const char *buf)
++struct nvme_ctrl *nvmf_create_ctrl(struct device *dev, const char *buf)
+ {
+ 	struct nvmf_ctrl_options *opts;
+ 	struct nvmf_transport_ops *ops;
+@@ -1346,6 +1345,7 @@ nvmf_create_ctrl(struct device *dev, const char *buf)
+ 	nvmf_free_options(opts);
+ 	return ERR_PTR(ret);
+ }
++EXPORT_SYMBOL_NS_GPL(nvmf_create_ctrl, NVME_FABRICS);
+ 
+ static const struct class nvmf_class = {
+ 	.name = "nvme-fabrics",
+diff --git a/drivers/nvme/host/fabrics.h b/drivers/nvme/host/fabrics.h
+index 21d75dc4a3a0..2dd3aeb8c53a 100644
+--- a/drivers/nvme/host/fabrics.h
++++ b/drivers/nvme/host/fabrics.h
+@@ -214,6 +214,7 @@ static inline unsigned int nvmf_nr_io_queues(struct nvmf_ctrl_options *opts)
+ 		min(opts->nr_poll_queues, num_online_cpus());
+ }
+ 
++struct nvme_ctrl *nvmf_create_ctrl(struct device *dev, const char *buf);
+ int nvmf_reg_read32(struct nvme_ctrl *ctrl, u32 off, u32 *val);
+ int nvmf_reg_read64(struct nvme_ctrl *ctrl, u32 off, u64 *val);
+ int nvmf_reg_write32(struct nvme_ctrl *ctrl, u32 off, u32 val);
+-- 
+2.47.0
+
