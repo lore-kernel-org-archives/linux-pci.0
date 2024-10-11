@@ -1,184 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BDF1802
-	for <linux-pci@vger.kernel.org>; Fri, 11 Oct 2024 12:19:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 736E8215026
+	for <linux-pci@vger.kernel.org>; Fri, 11 Oct 2024 12:19:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728649197; cv=none; b=oP8wCh/aTnc7LoKMkR+fJmEZgRVe/q/TY0iFXmaQUBcnYjV5xejNxucXczKNaCMkBg71RLDySXZNFH1UsN334aqytfDx4nrZdJtay3hmUx7RGB6d7FLT2bPnwGMZUy6Ol40FR3MQSI7nQ5X3NY16OzVRXGdaX+CaKiKyf+65ubY=
+	t=1728649197; cv=none; b=QNCe+7vVduSq2kGFH7/oqf/nPVXjFhrTk6pXrVsgovBs6O8uPxnVMY/fQEhAgi/vTpNloh3yaVzbnwLxDG1L80h6ci29vbOHmJSP1zyvQwcqpMtxjy/zgkRl7G27YJJKjI6kHc1QDnGAvKUb0rqYj5AQ1CpEtuwwUhjaWB4pjnU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1728649197; c=relaxed/simple;
-	bh=d7+U9CxxyPqSKY2n/y+GDBVMjr19oSCqwuEa33sYgf4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JWwwIfi/oMVfb+P9itg2Nwdw60+cav60EdutZECpFkRsjO/I2ynhAKBWnpwCqxUCgxBREzkVZV1qB5/aEKCNzfP2we1nPwxaqx+E1pnu9FJvqL39GJE3eRRHV9hosORYWl5QCuNf76ihLZv4d1SWsBHsp6uB3O5db4e1f+wU68w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=byNuwZgT; arc=none smtp.client-ip=10.30.226.201
+	bh=8frkqHspwtYgdjGC4V5jgJNxl+2wXirskl3xM5xICLs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HuYVY98KYT5OmYGP1Fa6lq6KDdSIwsc06WioD4/tIFukvrDUN+LfOsJtRPko5FrBGN6MieRQyxjcyTysbDVteiPgS8zfNS34D7P7viEipjZNLCiDOXCrv23FXLtJ4BJcsipmx9incNpTmuW8DRfgIYqZDQopZrYwIE24KK4F1To=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AU6rg5/z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="byNuwZgT"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18AEDC4CED1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AU6rg5/z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 989FBC4CECC;
 	Fri, 11 Oct 2024 12:19:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728649196;
-	bh=d7+U9CxxyPqSKY2n/y+GDBVMjr19oSCqwuEa33sYgf4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=byNuwZgTyvV3fYCB0bsicI3k6znK8ufQlD5nM7G4u5gArpT7bG8WOdn+l3M6tKNnA
-	 6zGCwGhzozfl2qvM+ESXJQxTOhpRCtXcrEiPagwvlBJwqM1521rLlltDkeAl1lkSSW
-	 nMzYUzuC/CctZIPLII1DpDqBlgL5fwwjozJpca0xCPnAbR1HyPiTX2SfJjug/XE49f
-	 Wj0AclgPK3KwTvnmopym2jD2eJHjNLQiSM2XGZ0cD2lYOOqT8HrjM7H3LWa1tMyqbr
-	 AWvzkvTBE42ZIawOgeuQ+tkiXrXUVbfx3tsh+pCLLE0/nuiOGw+CiLy0qCWC8QmSZV
-	 0Y3fVRO0NXogA==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-nvme@lists.infradead.org,
-	Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	s=k20201202; t=1728649197;
+	bh=8frkqHspwtYgdjGC4V5jgJNxl+2wXirskl3xM5xICLs=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=AU6rg5/zhekzGfTpYAScGUh6pnBp1AVXuR4LqlTbFQHKnAseQ0RwXw6pPKSFfq+gc
+	 COaFjqEuYgtvtFsaBJJ0/+AJk8FielVx751jupzLtm4zSL76GFT1OCRAtHi1kFKl5D
+	 pDHVIykkwe4lv6wSA6u/gGK5s2juk+YfpOfpWtyHssw5wlx7jErNmbZmK/bth6f7S6
+	 jV3n5Nmh5rHIqIgkztOnOs7Idm6PEkmxDtyOzx4Zz4W877QFe1Ubz6b0OJMDUYrrlr
+	 0OIVPACbGoGs2EOQpggNzBPaVTsCrLNDQIhfR1N6nnIitUqiwo8qjn6Ywcq9LLp4d1
+	 T+CUQBeImeIAg==
+Date: Fri, 11 Oct 2024 14:19:51 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
 	Kishon Vijay Abraham I <kishon@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	linux-pci@vger.kernel.org
-Cc: Rick Wertenbroek <rick.wertenbroek@gmail.com>,
-	Niklas Cassel <cassel@kernel.org>
-Subject: [PATCH v2 1/5] nvmet: rename and move nvmet_get_log_page_len()
-Date: Fri, 11 Oct 2024 21:19:47 +0900
-Message-ID: <20241011121951.90019-2-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.46.2
-In-Reply-To: <20241011121951.90019-1-dlemoal@kernel.org>
-References: <20241011121951.90019-1-dlemoal@kernel.org>
+	Rob Herring <robh@kernel.org>, Jonathan Corbet <corbet@lwn.net>,
+	Jingoo Han <jingoohan1@gmail.com>, linux-pci@vger.kernel.org,
+	Rick Wertenbroek <rick.wertenbroek@gmail.com>
+Subject: Re: [PATCH v5 6/6] PCI: dwc: endpoint: Implement the
+ pci_epc_ops::get_mem_map() operation
+Message-ID: <ZwkX5-5YZSE41ByM@ryzen.lan>
+References: <20241011120115.89756-1-dlemoal@kernel.org>
+ <20241011120115.89756-7-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241011120115.89756-7-dlemoal@kernel.org>
 
-The code for nvmet_get_log_page_len() has no pedendency on nvme target
-code and only depends on struct nvme_command. Move this helper function
-out of drivers/nvme/target/admin-cmd.c and inline it as part of the
-generic definitions in include/linux/nvme.h. Apply the same modification
-to nvmet_get_log_page_offset().
+On Fri, Oct 11, 2024 at 09:01:15PM +0900, Damien Le Moal wrote:
+> The function dw_pcie_prog_outbound_atu() used to program outbound ATU
+> entries for mapping RC PCI addresses to local CPU addresses does not
+> allow PCI addresses that are not aligned to the value of region_align
+> of struct dw_pcie. This value is determined from the iATU hardware
+> registers during probing of the iATU (done by dw_pcie_iatu_detect()).
+> This value is thus valid for all DWC PCIe controllers, and valid
+> regardless of the hardware configuration used when synthesizing the
+> DWC PCIe controller.
+> 
+> Implement the ->get_mem_map() endpoint controller operation to allow
+> this mapping alignment to be transparently handled by endpoint function
+> drivers through the function pci_epc_mem_map().
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-ep.c | 15 +++++++++++++++
+>  1 file changed, 15 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index 43ba5c6738df..b65f4f0f5856 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -268,6 +268,20 @@ static int dw_pcie_find_index(struct dw_pcie_ep *ep, phys_addr_t addr,
+>  	return -EINVAL;
+>  }
+>  
+> +static int dw_pcie_ep_get_mem_map(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+> +				  struct pci_epc_map *map)
+> +{
+> +	struct dw_pcie_ep *ep = epc_get_drvdata(epc);
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +	size_t mask = pci->region_align - 1;
+> +
+> +	map->map_pci_addr = map->pci_addr & ~mask;
+> +	map->map_ofst = map->pci_addr & mask;
+> +	map->map_size = ALIGN(map->map_ofst + map->pci_size, ep->page_size);
+> +
+> +	return 0;
+> +}
+> +
+>  static void dw_pcie_ep_unmap_addr(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  				  phys_addr_t addr)
+>  {
+> @@ -444,6 +458,7 @@ static const struct pci_epc_ops epc_ops = {
+>  	.write_header		= dw_pcie_ep_write_header,
+>  	.set_bar		= dw_pcie_ep_set_bar,
+>  	.clear_bar		= dw_pcie_ep_clear_bar,
+> +	.get_mem_map		= dw_pcie_ep_get_mem_map,
+>  	.map_addr		= dw_pcie_ep_map_addr,
+>  	.unmap_addr		= dw_pcie_ep_unmap_addr,
+>  	.set_msi		= dw_pcie_ep_set_msi,
+> -- 
+> 2.47.0
+> 
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/target/admin-cmd.c | 20 +-------------------
- drivers/nvme/target/discovery.c |  4 ++--
- drivers/nvme/target/nvmet.h     |  3 ---
- include/linux/nvme.h            | 19 +++++++++++++++++++
- 4 files changed, 22 insertions(+), 24 deletions(-)
-
-diff --git a/drivers/nvme/target/admin-cmd.c b/drivers/nvme/target/admin-cmd.c
-index 081f0473cd9e..64434654b713 100644
---- a/drivers/nvme/target/admin-cmd.c
-+++ b/drivers/nvme/target/admin-cmd.c
-@@ -12,19 +12,6 @@
- #include <linux/unaligned.h>
- #include "nvmet.h"
- 
--u32 nvmet_get_log_page_len(struct nvme_command *cmd)
--{
--	u32 len = le16_to_cpu(cmd->get_log_page.numdu);
--
--	len <<= 16;
--	len += le16_to_cpu(cmd->get_log_page.numdl);
--	/* NUMD is a 0's based value */
--	len += 1;
--	len *= sizeof(u32);
--
--	return len;
--}
--
- static u32 nvmet_feat_data_len(struct nvmet_req *req, u32 cdw10)
- {
- 	switch (cdw10 & 0xff) {
-@@ -35,11 +22,6 @@ static u32 nvmet_feat_data_len(struct nvmet_req *req, u32 cdw10)
- 	}
- }
- 
--u64 nvmet_get_log_page_offset(struct nvme_command *cmd)
--{
--	return le64_to_cpu(cmd->get_log_page.lpo);
--}
--
- static void nvmet_execute_get_log_page_noop(struct nvmet_req *req)
- {
- 	nvmet_req_complete(req, nvmet_zero_sgl(req, 0, req->transfer_len));
-@@ -319,7 +301,7 @@ static void nvmet_execute_get_log_page_ana(struct nvmet_req *req)
- 
- static void nvmet_execute_get_log_page(struct nvmet_req *req)
- {
--	if (!nvmet_check_transfer_len(req, nvmet_get_log_page_len(req->cmd)))
-+	if (!nvmet_check_transfer_len(req, nvme_get_log_page_len(req->cmd)))
- 		return;
- 
- 	switch (req->cmd->get_log_page.lid) {
-diff --git a/drivers/nvme/target/discovery.c b/drivers/nvme/target/discovery.c
-index 28843df5fa7c..71c94a54bcd8 100644
---- a/drivers/nvme/target/discovery.c
-+++ b/drivers/nvme/target/discovery.c
-@@ -163,8 +163,8 @@ static void nvmet_execute_disc_get_log_page(struct nvmet_req *req)
- 	const int entry_size = sizeof(struct nvmf_disc_rsp_page_entry);
- 	struct nvmet_ctrl *ctrl = req->sq->ctrl;
- 	struct nvmf_disc_rsp_page_hdr *hdr;
--	u64 offset = nvmet_get_log_page_offset(req->cmd);
--	size_t data_len = nvmet_get_log_page_len(req->cmd);
-+	u64 offset = nvme_get_log_page_offset(req->cmd);
-+	size_t data_len = nvme_get_log_page_len(req->cmd);
- 	size_t alloc_len;
- 	struct nvmet_subsys_link *p;
- 	struct nvmet_port *r;
-diff --git a/drivers/nvme/target/nvmet.h b/drivers/nvme/target/nvmet.h
-index 190f55e6d753..6e9499268c28 100644
---- a/drivers/nvme/target/nvmet.h
-+++ b/drivers/nvme/target/nvmet.h
-@@ -541,9 +541,6 @@ u16 nvmet_copy_from_sgl(struct nvmet_req *req, off_t off, void *buf,
- 		size_t len);
- u16 nvmet_zero_sgl(struct nvmet_req *req, off_t off, size_t len);
- 
--u32 nvmet_get_log_page_len(struct nvme_command *cmd);
--u64 nvmet_get_log_page_offset(struct nvme_command *cmd);
--
- extern struct list_head *nvmet_ports;
- void nvmet_port_disc_changed(struct nvmet_port *port,
- 		struct nvmet_subsys *subsys);
-diff --git a/include/linux/nvme.h b/include/linux/nvme.h
-index b58d9405d65e..1f6d8cd0389a 100644
---- a/include/linux/nvme.h
-+++ b/include/linux/nvme.h
-@@ -10,6 +10,7 @@
- #include <linux/bits.h>
- #include <linux/types.h>
- #include <linux/uuid.h>
-+#include <asm/byteorder.h>
- 
- /* NQN names in commands fields specified one size */
- #define NVMF_NQN_FIELD_LEN	256
-@@ -1856,6 +1857,24 @@ static inline bool nvme_is_write(const struct nvme_command *cmd)
- 	return cmd->common.opcode & 1;
- }
- 
-+static inline __u32 nvme_get_log_page_len(struct nvme_command *cmd)
-+{
-+	__u32 len = le16_to_cpu(cmd->get_log_page.numdu);
-+
-+	len <<= 16;
-+	len += le16_to_cpu(cmd->get_log_page.numdl);
-+	/* NUMD is a 0's based value */
-+	len += 1;
-+	len *= sizeof(__u32);
-+
-+	return len;
-+}
-+
-+static inline __u64 nvme_get_log_page_offset(struct nvme_command *cmd)
-+{
-+	return le64_to_cpu(cmd->get_log_page.lpo);
-+}
-+
- enum {
- 	/*
- 	 * Generic Command Status:
--- 
-2.47.0
-
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
