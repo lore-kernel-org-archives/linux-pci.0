@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83E3315531A
-	for <linux-pci@vger.kernel.org>; Mon, 14 Oct 2024 09:10:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83F5D28E3F
+	for <linux-pci@vger.kernel.org>; Mon, 14 Oct 2024 09:12:09 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728897041; cv=none; b=PPiHO3W99+Hz/93C4u1cxpMRweGoTM6LauIUcxxMyGnInTeEHtH73+oMzQt81ytv//UCsq7pfbGDX1uNhpGzZAz35UUG5UmtG1VDdtPiOA5zvV+Dy816ORfviZ+Uk9h2lXISjg2NPVQP8bjG6YaSbavTznvLHhE+Bl1VZUYJTCw=
+	t=1728897129; cv=none; b=Kd5Ja5UGINMhEwq9aGUQrAAz4tKyh7REijF9vz71hGvc1xCqXrwXpoF4SI4NuSX2FA9GxfmoSKdM+/X7xBIgy63VUiMjOdS9ZuRVXj+uUN8HXUTL7/1podznbTIQfexlGwoSy9JobZcLjz16TiQHlwHrRu6fhlStbsRNH9BL1CE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728897041; c=relaxed/simple;
-	bh=trSRhS03qp4HKvL2dERLbqHVvB36sFOgTjMjlWIPVuY=;
+	s=arc-20240116; t=1728897129; c=relaxed/simple;
+	bh=opZczmtnmAC46lzsiMq5o6DHbppnV5C1bXWNocZ2GT4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pTuDqHv0sOf/MXEXWpUZPrRzm25iVbLm0pSR3m397NJporzGRXvmIw0AD2gBxK+fKqoVGRtDCoU00abWgAJ15+WQU+pl13euFLhPJoSwcmZgJIx+vUDrn2YNlBdkRLariecSmD4k5bGJKYVeizdharS7h9pIgZbtezJ7t2GRLW8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XtFuW5uC; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=DOIcSs3n5cc90WAj/6bRwOmpLF7cQXEyyDVtcOooIoV+dDK/H3S+PP+rJuGmQQb8egl5WlbdFpQTeuLBC1CeAr4fxKuo5K2h0fI/gQXNRf1pSGqKXeDR6n0ZuEfm4ugeW1UFI7SECkQ0xoYBJJb4Dthi4gmzJ2QGCUNOmOd/sIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cYw2BJcV; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XtFuW5uC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 53DCFC4CEC3;
-	Mon, 14 Oct 2024 09:10:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cYw2BJcV"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 46244C4CEC3;
+	Mon, 14 Oct 2024 09:12:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1728897041;
-	bh=trSRhS03qp4HKvL2dERLbqHVvB36sFOgTjMjlWIPVuY=;
+	s=k20201202; t=1728897129;
+	bh=opZczmtnmAC46lzsiMq5o6DHbppnV5C1bXWNocZ2GT4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=XtFuW5uCiYp7xKZwDdaxhC1273sMW+l6VbwktiGz9lUaAAg4emkH2wQfmRnCavdkD
-	 KqS631jpHLYiV3m2bugF5fx2tsb2RHLX3NPJUvSyzO3KT4blNSmkBy2uHW0d/IW8lN
-	 KOT7CTsY+vtgoIETjqiYlZYpms7vDj8UdiO5LdrfjvtZm6DZ6q+SM+8hrutVaS7Puj
-	 sOUrevOdahGVztw+riR9FifEiFEpsaC9vrWJBsEqoJRMPgEVstl7kLrU3QiEVWARgI
-	 Htbu+EAKTgFYR+QfBiU+6byHzoRKRoo1XbTNUxsBa+rMRIRaNRg/0n1dHS3HP/yWCz
-	 +RZA/I2mbv5Ig==
-Message-ID: <62ba5cda-338e-48bf-b82e-60e4721b1bfb@kernel.org>
-Date: Mon, 14 Oct 2024 18:10:36 +0900
+	b=cYw2BJcV5MYv0VOc4XtiMyTpD06KJORp1C0uGNyEpo495rD3VwUtSfZ7mQ/sASKfL
+	 7qtgJQLT4BkTHush3lmtKhq29iKTQ+9lyVH671GG3g9Jwtp23a+Ftebo7K/ufD/LiN
+	 uJeyPBiyLZUq1XBd6dYDwy5AjtcdVcfPI7B3zuolf46xx6Qt5EU3Ja9+fT1SoEvZyb
+	 0KA3WJT7mzus2QBolm2mdY+rQXWObVzPNj+VoeeRwnybWURjc5pZBE0pFRlJTTb4wh
+	 SfSoEg+t9RD3swROV2Ih3OjS9WTDkbOqTta2KZv9x9pMib1JrasbG9dCvZnV6FhfpF
+	 gbMhSp3tUDe2Q==
+Message-ID: <afabc1b5-e1c8-4b45-ba9a-57e0481d6d87@kernel.org>
+Date: Mon, 14 Oct 2024 18:12:06 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -35,7 +35,7 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/5] nvmef: export nvmef_create_ctrl()
+Subject: Re: [PATCH v2 3/5] nvmef: Introduce the NVME_OPT_HIDDEN_NS option
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
  Sagi Grimberg <sagi@grimberg.me>,
@@ -47,42 +47,32 @@ Cc: linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
  Rick Wertenbroek <rick.wertenbroek@gmail.com>,
  Niklas Cassel <cassel@kernel.org>
 References: <20241011121951.90019-1-dlemoal@kernel.org>
- <20241011121951.90019-3-dlemoal@kernel.org> <20241014084219.GA23780@lst.de>
+ <20241011121951.90019-4-dlemoal@kernel.org> <20241014084258.GB23780@lst.de>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20241014084219.GA23780@lst.de>
+In-Reply-To: <20241014084258.GB23780@lst.de>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/14/24 17:42, Christoph Hellwig wrote:
-> s/nvmef_create_ctrl/nvmf_create_ctrl/
+> On Fri, Oct 11, 2024 at 09:19:49PM +0900, Damien Le Moal wrote:
+>> Introduce the NVME fabrics option NVME_OPT_HIDDEN_NS to allow a host
+>> controller to be created without any user visible or internally usable
+>> namespace devices. That is, if set, this option will result in the
+>> controller having no character device and no block device for any of its
+>> namespaces.
+>>
+>> This option should be used only when the nvme controller will be
+>> managed using passthrough commands using the controller character
+>> device, either by the user or by another device driver.
 > 
-> But evem looking at the code later using it I fail how this could
-> work.
-> 
-> nvmf_create_ctrl is used to implement writes to the /dev/nvme-fabrics
-> control device to create a fabrics controller out of thin air. The
-> biggest part of it is parsing the options provided as a string,
-> which most importantly includes the actual transport used.
-> 
-> But you really need to force a pcie transport type here, which
-> as far as I can tell isn't even added anywhere.
+> That doesn't make any sense whatsover.  Why would you create a
+> passthrough controller to support PCIe?
 
-Nope, the PCIe "transport" is the front-end of the endpoint driver.
-What this patch does is to allow this driver to be created by passing it a
-string that is normally used for "nvme connect" command, which calls
-nvmf_create_ctrl().
-
-The entire thing was created to not add a PCIe host transport but rather to use
-a locally created fabric host controller which connect to whatever the user
-wants. That is: the PCI endpoint driver can implement a PCI interface which uses
-a loop nvme device, or a tcp nvme device (and if you have a board that can do
-rdma or fc, that can also be used as the backend nvme device used from the pci
-endpoint driver).
-
-I only need this function exported so that I can call it from the configfs
-writes of the pci endpoint when the user sets up the endpoint.
+PCIe is handled by the PCI endpoint driver and that driver only passes the nvme
+commands it gets to the local fabrics controller that is being used (which can
+be a loopback or tcp or whatever nvmf supports).
 
 
 -- 
