@@ -1,149 +1,155 @@
-Received: from fout-a7-smtp.messagingengine.com (fout-a7-smtp.messagingengine.com [103.168.172.150])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f170.google.com (mail-yw1-f170.google.com [209.85.128.170])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E68417E016;
-	Tue, 15 Oct 2024 08:05:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.150
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7EE720EB
+	for <linux-pci@vger.kernel.org>; Tue, 15 Oct 2024 08:44:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1728979511; cv=none; b=HU26WbQAkdAkBYiln+CIEN7siTdQdPVeewKHpjUNHS45wbASoDpdw5eaTjc3zXnzCRjauSlsOj/l6IMqJlkvtQVXRhtQImsGxmRm46HHC9AhpNbCP8dSA5qqXDiShogHlc9gEoitW+D6uTix0kPIeMl+rTr696ZzB74oPFq5s8Q=
+	t=1728981874; cv=none; b=C3GbljsktXSitIwQtiODn28PCR803q1UX+mPAPHLzqb66F+KTf+nam6UNCbuD5wvx9I95aWjx6QYVe56J2/5AbnVVCVFFKmQJVt6H3V/pmfI/7PkjjJV8eefkwzY5K+q4FsuRna9t+hObqMsh4xrQJMMhZSRyV/CTJQhgnDqnZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1728979511; c=relaxed/simple;
-	bh=x/TeRj6cEpOdaGdpxqJpNOT4NsSJ7ImzlvyFM3qEBCg=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=G8eYHkmcyRUsl/A9u2eYQ2L7lUzg7Lj9CwkdFnwJUtLy6NgicWMHEekMFiJzrQk/14ca9UMdo1DVhQ5N45BntpGriMEeUGqo+jm9WHavhPh4/08TgHxYzefVJ7YPbrQUayNIJ3bLvjUhKSh5kQxcfjpsRLxf89SmNlnts/Zv2zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ljones.dev; spf=none smtp.mailfrom=ljones.dev; dkim=pass (2048-bit key) header.d=ljones.dev header.i=@ljones.dev header.b=LejBiwmz; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=gxZKk+7d; arc=none smtp.client-ip=103.168.172.150
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ljones.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=ljones.dev
+	s=arc-20240116; t=1728981874; c=relaxed/simple;
+	bh=j5WsRaFh897jmadK1YuA7gdX4HYeWmzFc2CXep5iFlw=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=BzBo/UWPATQQSzvxzISOS4mtndgJxe2KEImqbroaoyb6akSnWWVQZ8s0PPgNskQ77zYadKLVbUOUymsJ51GiXq7p9Nc05txzeoQwOQYIJTcEJhX2uvz4Q2Rj4C8k01ZhA/byrXy6OpQe3S5ciX4/6JliHf4tUdeTMzu1B1Ymtc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=giDKSgSg; arc=none smtp.client-ip=209.85.128.170
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ljones.dev header.i=@ljones.dev header.b="LejBiwmz";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="gxZKk+7d"
-Received: from phl-compute-08.internal (phl-compute-08.phl.internal [10.202.2.48])
-	by mailfout.phl.internal (Postfix) with ESMTP id A4EDA138060C;
-	Tue, 15 Oct 2024 04:05:07 -0400 (EDT)
-Received: from phl-imap-01 ([10.202.2.91])
-  by phl-compute-08.internal (MEProxy); Tue, 15 Oct 2024 04:05:07 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ljones.dev; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm1; t=1728979507;
-	 x=1729065907; bh=2tg0AJwlbHilJUx1GHU+g8sA1HCyQhKZDaJQ8Aaub10=; b=
-	LejBiwmzhvrWszfCK+0j5DznXwrfltvaYZzRuyBUq9JzOA1sngjyN/mhsW7Vbu5n
-	T2zExFV6ngL4yNTxHzR2Lqe+Tk8HKSTDMkZOIcGmxWnqDer9gG8KevGtv5EEw5OC
-	enWc70FxPifjThN59HZ7MSFCkEebM0OYSD608PCb6ubQnPJ5Mkvvw7ufXZhKNv1R
-	NwRgP1mREXphRxmWXCupw7x4AdbNR38QDR73ui7AnmNsIOTl1GHHd3XW8fpXTZf/
-	hS/6WQcJ4JbSY8e7ZOb91e3gSSJ+7HZiE0T9ytszP31B0qtBzt4vdz0aaJA8ok5j
-	eyh30hAwFuPhFfiICjKqkg==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm2; t=1728979507; x=
-	1729065907; bh=2tg0AJwlbHilJUx1GHU+g8sA1HCyQhKZDaJQ8Aaub10=; b=g
-	xZKk+7dc2OPTmUSLNH/aoB9RjLxWOH+lWW4YU/2ohFgTNm8c0lECO3AM0KclLH/a
-	qFpqlXqi5xnysXMsZToSCD34L6bOhBtidW9gBDNVRFaOL1NZQDeugtorZSQdXCT4
-	ULK4RDzlt0QXBI79WFvh35xsJdOU41rPRTFJOHPo7HrzSlPs7BpCqqKbMF2LvkZ8
-	zfCXsdcU+5/qG3wT0kbrP1JewODoOoQGf0dTQJanGZ0RUeP9YKBD8reQPBQ3eQuf
-	eAERcg5Xm57IAvZKMaqlvhBKsa4/ZbTlwdwCdsnOTzMjH+WErDHegIMjCQzY73al
-	rJF6XFg+QfM4EF6LCgiRQ==
-X-ME-Sender: <xms:MyIOZ7uUg5fISSUqy7lPRbBFuFpfmONn0oRxoq9ljT5Yq5DGG68IYg>
-    <xme:MyIOZ8dxAEnxU7tkc_N2NrQNj2kXEzaj4QXnryAx07s8ZzUN5ozo1-LVufkIiSy5s
-    h4pqQl6AIhKWG6SAVc>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeftddrvdegiedguddvlecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpggftfghnshhusghstghrihgsvgdp
-    uffrtefokffrpgfnqfghnecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivg
-    hnthhsucdlqddutddtmdenucfjughrpefoggffhffvvefkjghfufgtgfesthejredtredt
-    tdenucfhrhhomhepfdfnuhhkvgculfhonhgvshdfuceolhhukhgvsehljhhonhgvshdrug
-    gvvheqnecuggftrfgrthhtvghrnheptdehuefhhedvhffgvdeludfhhfdufefggfdvhffh
-    teejjefhudduhfefjeeghfdunecuffhomhgrihhnpehfrhgvvgguvghskhhtohhprdhorh
-    hgnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheplhhu
-    khgvsehljhhonhgvshdruggvvhdpnhgspghrtghpthhtohepjedpmhhouggvpehsmhhtph
-    houhhtpdhrtghpthhtoheprghlvgigrghnuggvrhdruggvuhgthhgvrhesrghmugdrtgho
-    mhdprhgtphhtthhopehmrghrihhordhlihhmohhntghivghllhhosegrmhgurdgtohhmpd
-    hrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhopehs
-    uhhpvghrmhdusehkvghrnhgvlhdrohhrghdprhgtphhtthhopegurhhiqdguvghvvghlse
-    hlihhsthhsrdhfrhgvvgguvghskhhtohhprdhorhhgpdhrtghpthhtoheplhhinhhugidq
-    khgvrhhnvghlsehvghgvrhdrkhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhugi
-    dqphgtihesvhhgvghrrdhkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:MyIOZ-yTPejwj26-tsNUkBhERX80fpimUiqlXDEUoiO3u139qvxrvw>
-    <xmx:MyIOZ6NvkX8MQGnozecvZgrCH0Z1mFSDnpZ_DhLFDaJ11id81c-Arw>
-    <xmx:MyIOZ7--wHsw3i27Cb4g4t3BfrvyN7NcDoEbSmXLu7ID4QTzgT0ddw>
-    <xmx:MyIOZ6Vta9cgfxnO4FqS2LB8ekD1BIrcnrB4OgZOcE7OYu1-dFLPwA>
-    <xmx:MyIOZ2k_yqJI8rAvoUdJoiP1uVkXyWjSxkgWfHO7PFmITVcRDCI0XSes>
-Feedback-ID: i5ec1447f:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 5EEC13360077; Tue, 15 Oct 2024 04:05:07 -0400 (EDT)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="giDKSgSg"
+Received: by mail-yw1-f170.google.com with SMTP id 00721157ae682-6e2e41bd08bso52669047b3.2
+        for <linux-pci@vger.kernel.org>; Tue, 15 Oct 2024 01:44:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1728981872; x=1729586672; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=CV/sELMrizY0LAaxVmZiIiYO2WTkFOHnkTeI6q1+hGo=;
+        b=giDKSgSg/ny4k1QXLL37QKtjY9JxENs/DhWnpEFDArn7znIk9b+91fbd7aXugQczzk
+         37nYzYBlF0nb4A4uWt+p2ANDqIaS/RSYjnafuw/G5B6knuuvwXB3RSsEzAa94a6yxEnV
+         vDgaDwJmbYJaiv7MVvgxJys0XUP0yHQ40CQOtD8kDd3Q8TSKus1dJSPGHcCsDC3yyP5H
+         2qc6WPfX3YVirxZ+8MGQCSgcHMB8MJeYQvCT671gh8bnv+sKTQKjFOGrYAC4aQeQXStH
+         nIwfivQL0R3UxDCG8K7qml9eW9dhgQUwpCPni0CnOCZpgU5Dzk4jgrjhrKYM7yKBwRRG
+         KBDA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1728981872; x=1729586672;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CV/sELMrizY0LAaxVmZiIiYO2WTkFOHnkTeI6q1+hGo=;
+        b=lrzGg29rsXUPTuvQVPNIGdY4+C48TD78W+mKIZNgiS3bdwAKcPTbldqnoFLO/znH5k
+         QFi/jkrzUhwsKljNAeaIoAr/cMyptkWM1x89Yov/C6dzTPSKN3h23d9+CK/USBnBq9rf
+         cAwDbWImQwIrnAEME5kZT38298+E4vlL52ib8Z9LqZJ0/u38+Hb3Yeg5HMucioz5fz4k
+         2Sz9eUxfGHJgA2JwZZUT0eYQMJeFMKyBSRBXtWnXXkd5qglgt9RkHcFdWSvwP1FnJoME
+         f87MzVWELVXtv7KJv5QOrzfG4KQGyd1HwdmB9o2KWNqLoyxwgbbD82hUFUe52fke0Uva
+         9zjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXd5n3TP47uE22jwnoIPxcxlhP+8YBSk4a9l9wfJYEySmA32YRg9KIoxRCo/MJKjgK/pt4BoQr+kDU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YykUWkH4W9ixgpcoLS54Fox0ptJ+l3bDI/pkXGdAjqvekYOhxcz
+	dMjr713CaOae+u0jV5w8WWL71PlbTRiq22myvj255sdlqhNEvkDXwVnVpuuAuvmqfgKaSGIW6NA
+	2V3Fk6yFk/BgSo8C7hT1LzFcCAy0=
+X-Google-Smtp-Source: AGHT+IHp41ZUkuy8t7fW+V6Whg6mEvkLnWx7GtgpRR6diON7/DFFNPw9PcdirYwTH3qUiuNr6Bp3chZK6A07LJ5SjII=
+X-Received: by 2002:a05:690c:6f88:b0:6e3:ed8:7f17 with SMTP id
+ 00721157ae682-6e36413ac6bmr92912517b3.16.1728981871826; Tue, 15 Oct 2024
+ 01:44:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Tue, 15 Oct 2024 10:04:47 +0200
-From: "Luke Jones" <luke@ljones.dev>
-To: "Mario Limonciello" <superm1@kernel.org>,
- "Bjorn Helgaas" <bhelgaas@google.com>
-Cc: "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- "open list" <linux-kernel@vger.kernel.org>, dri-devel@lists.freedesktop.org,
- "Mario Limonciello" <mario.limonciello@amd.com>,
- "Alex Deucher" <alexander.deucher@amd.com>
-Message-Id: <20b48c6f-7ea9-4571-a39c-f20a9cf62319@app.fastmail.com>
-In-Reply-To: <20241014152502.1477809-1-superm1@kernel.org>
-References: <20241014152502.1477809-1-superm1@kernel.org>
-Subject: Re: [PATCH] PCI/VGA: Don't assume only VGA device found is the boot VGA device
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+References: <CALfBBTuhUcdBAQgKFhGP+9gMqEthA_dOE6V3RGn6HTZm7nNBYg@mail.gmail.com>
+ <20241004215657.GA362992@bhelgaas> <CALfBBTtjXJiZBSfFTUAPsD+G15nPQQsn-2sCrAt1UwPsrNsqNg@mail.gmail.com>
+In-Reply-To: <CALfBBTtjXJiZBSfFTUAPsD+G15nPQQsn-2sCrAt1UwPsrNsqNg@mail.gmail.com>
+From: Maverickk 78 <maverickk1778@gmail.com>
+Date: Tue, 15 Oct 2024 14:14:20 +0530
+Message-ID: <CALfBBTtfbriqSoffdU-cV-OkMbomX_1o8hosaBvA6EJvC+paQQ@mail.gmail.com>
+Subject: Re: pcie hotplug driver probe is not getting called
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Keith Busch <kbusch@kernel.org>, linux-pci@vger.kernel.org, 
+	Matthew W Carlis <mattc@purestorage.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Mon, 14 Oct 2024, at 5:25 PM, Mario Limonciello wrote:
-> From: Mario Limonciello <mario.limonciello@amd.com>
->
-> The ASUS GA605W has a NVIDIA PCI VGA device and an AMD PCI display device.
->
-> ```
-> 65:00.0 VGA compatible controller: NVIDIA Corporation AD106M [GeForce 
-> RTX 4070 Max-Q / Mobile] (rev a1)
-> 66:00.0 Display controller: Advanced Micro Devices, Inc. [AMD/ATI] 
-> Strix [Radeon 880M / 890M] (rev c1)
-> ```
->
-> The fallback logic in vga_is_boot_device() flags the NVIDIA dGPU as the
-> boot VGA device, but really the eDP is connected to the AMD PCI display
-> device.
->
-> Drop this case to avoid marking the NVIDIA dGPU as the boot VGA device.
->
-> Suggested-by: Alex Deucher <alexander.deucher@amd.com>
-> Reported-by: Luke D. Jones <luke@ljones.dev>
-> Closes: https://gitlab.freedesktop.org/drm/amd/-/issues/3673
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
-> ---
->  drivers/pci/vgaarb.c | 7 -------
->  1 file changed, 7 deletions(-)
->
-> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
-> index 78748e8d2dba..05ac2b672d4b 100644
-> --- a/drivers/pci/vgaarb.c
-> +++ b/drivers/pci/vgaarb.c
-> @@ -675,13 +675,6 @@ static bool vga_is_boot_device(struct vga_device *vgadev)
->  		return true;
->  	}
-> 
-> -	/*
-> -	 * Vgadev has neither IO nor MEM enabled.  If we haven't found any
-> -	 * other VGA devices, it is the best candidate so far.
-> -	 */
-> -	if (!boot_vga)
-> -		return true;
-> -
->  	return false;
->  }
-> 
-> -- 
-> 2.43.0
+Hello,
 
-Hi Mario,
+The freeze was a platform issue, it's fixed and things are working as expected.
 
-I can verify that this does leave the `boot_vga` attribute set as 0 for the NVIDIA device.
+Using this patch from "Matthew W Carlis <mattc@purestorage.com>", will
+this patch be merged in future ?
 
-Tested-by: Luke D. Jones <luke@ljones.dev>
+https://patchwork.ozlabs.org/project/linux-pci/patch/20231223212235.34293-2-mattc@purestorage.com/
+
+diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
+index 14a4b89a3b83..8e023aa97672 100644
+--- a/drivers/pci/pcie/portdrv.c
++++ b/drivers/pci/pcie/portdrv.c
+@@ -257,12 +257,19 @@  static int get_port_device_capability(struct
+pci_dev *dev)
+  }
+
+  /*
++ * _OSC AER Control is required by the OS & requires OS to control AER,
++ * but _OSC DPC Control isn't required by the OS to control DPC; however
++ * it does require the OS to control DPC. _OSC DPC Control also requres
++ * _OSC EDR Control (Error Disconnect Recovery) (PCI Firmware - DPC ECN rev3.2)
++ * PCI_Express_Base 6.1, 6.2.11 Determination of DPC Control recommends
++ * platform fw or OS always link control of DPC to AER.
++ *
+  * With dpc-native, allow Linux to use DPC even if it doesn't have
+  * permission to use AER.
+  */
+  if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_DPC) &&
+-    pci_aer_available() &&
+-    (pcie_ports_dpc_native || (services & PCIE_PORT_SERVICE_AER)))
++    pci_aer_available() && (pcie_ports_dpc_native ||
++    (dev->aer_cap && host->native_aer)))
+  services |= PCIE_PORT_SERVICE_DPC;
+
+  if (pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM ||
+
+On Mon, 7 Oct 2024 at 22:15, Maverickk 78 <maverickk1778@gmail.com> wrote:
+>
+> Very helpful!
+>
+> Yes, bios doesn't support hotplug or dpc.
+>
+> I used the patches listed in previous mail to enable both dpc & pciehp with command line Param "pcie_port=native"
+>
+> Hotplug works fine, but dpc trigger after hotplug causes complete freeze, I suspect platform issue, may be issue with backdoor mechanism of hotplug is causing it, will inspect and come back.
+>
+>
+> On Sat, 5 Oct 2024, 03:27 Bjorn Helgaas, <helgaas@kernel.org> wrote:
+>>
+>> On Fri, Oct 04, 2024 at 11:50:28PM +0530, Maverickk 78 wrote:
+>> > The platform I am working on is rtl simulation of pcie switch(Gen6)
+>> > with a backdoor mechanism to trigger the HotPlug event.
+>> >
+>> > Tried following patches independently to have both hotplug and dpc
+>> > driver register and handle respective events.
+>> >
+>> > https://patchwork.ozlabs.org/project/linux-pci/patch/20231223212235.34293-2-mattc@purestorage.com/
+>> > https://patchwork.kernel.org/project/linux-pci/patch/20240108194642.30460-1-mattc@purestorage.com/#25680870
+>> >
+>> > Tried following
+>> >
+>> > - Trigger hot removal and add, the event is triggered and respective
+>> > msi in /proc/interrupt increments and kernel logs the event(dmesg)
+>> > - Trigger hot removal and add, the event is triggered and respective
+>> > msi in /proc/interrupt increments and kernel logs the event(dmesg)
+>> > - Trigger DPC using "DPC software trigger" in DPC control register
+>> >
+>> > The kernel hangs, the console is non-responsive.
+>> >
+>> > Can dpc and pciehp co-exist and handle the events?
+>>
+>> Yes, they're intended to coexist.  Your platform firmware doesn't
+>> advertise support for it, though:
+>>
+>> [    1.736168] acpi PNP0A08:00: _OSC: platform does not support [PCIeHotplug LTR DPC]
+>>
+>> I don't think there's a kernel parameter to force DPC usage if the
+>> platform doesn't advertise it.  There should be a message like "DPC:
+>> enabled with IRQ X" if the dpc driver is active.
+>>
+>> Even if the dpc driver isn't active, I don't think the kernel should
+>> hang if you trigger DPC.  Since this is a QEMU guest, you should be
+>> able to use a debugger to figure out why it's hung.
+>>
+>> Bjorn
