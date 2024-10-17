@@ -1,132 +1,210 @@
-Received: from mail-oa1-f42.google.com (mail-oa1-f42.google.com [209.85.160.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CB014AD2D;
-	Thu, 17 Oct 2024 06:03:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7C7D144D21;
+	Thu, 17 Oct 2024 07:50:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729145020; cv=none; b=tTt72BqjW3arSl+g3fZRh/uzpl8M/LgdMFYRAtsNstPS/0SNZjw2VREFpR+ztGp+Od8970GBFHxOHv4Xl3FsiM++TWTlbd+5sbXYD1VlaXYn+8naXv8snpCAHa4ggzc5T9FgD1YEETZ00wIWcOmBk3oE+Ips6kfkGQcGK1uTjVY=
+	t=1729151414; cv=none; b=Zd9JescGMv3GVvj4U7KSzibRMGKBbtSnKse6T3BPYatM7ijFm4Q3TCTvC0WIqeF+0mOMH5Ylkf+dn0LMCaWoOhbA3VzQhtZdCXucNlqmI/DsMnQguewcdxu8KP8YeGLK04sefsF4kVYfYK1Q4pV4Ct93VOno0vQaJqFTkostVt4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729145020; c=relaxed/simple;
-	bh=iD9onH6cXMjOVhbOxjnOcgYVA8etcnhKUQF7QMAypMY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=HmQtcY1ZK0jD9ylFb40oLo+wOQ+bi2LZa8PeUpoFG5+fH7NKn704ko6k2n+LxiiHWAPbr4pnIzY0uPmaFKbGjJErBuf73U8+XoILcgIvQNNwKEKL1/waqS214eDnFMLzh1kW5NX0ak77a2mB9i/m8eDUu1x3Dszp9xXIGII/fRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X9YDgnaX; arc=none smtp.client-ip=209.85.160.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1729151414; c=relaxed/simple;
+	bh=uYn2gVEAgPj1s74huNKtqM2HJe3OpErKE+EWC0unssc=;
+	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DxOAr5sgcVddscL2zDchiqdMY3O/7660Ox0+RrfqqB3DTW28vxx5KKEjpmNs2LR3q4xx7LYL4SjL6VJbyq8j8jWzuChB0JIGRTizxUIrsiUcYQaJEaaFpIinHMFdnRBUKBmbGn+2dStfXHsCQzN5fQqrZdLRzjG9TcUwslxWZIA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fnZP/6eq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X9YDgnaX"
-Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-2884a6b897cso235224fac.3;
-        Wed, 16 Oct 2024 23:03:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1729145017; x=1729749817; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=iD9onH6cXMjOVhbOxjnOcgYVA8etcnhKUQF7QMAypMY=;
-        b=X9YDgnaXWYyIa9/lReJ7cFrkQEKKVXLbJLtqtT//0wr/MrGrvMI6rvQd5qTyuO5D4h
-         +9nz+iK2oyPsfQVOovV0x7RfpJu8eynDFVHDDSi8uQH5L4Qo3m5DX4R2XAmApxWFkfQk
-         NT9Tmx4Ro62gp9R3ctTVxPedI+KFCBEBhKGJjWYt3f20Tk0v7PeW5GoMBDvVkdMcdefx
-         P9gSn3frDXoAVfthV2aiKJHS9bPyFlDKyHzIO4wBCdO4QqBvT1dSBObpwPIuFO7xKX3C
-         2uWmTaH0jgIeV7yceTEHbqcHgd9nem0vjuxQ/HLxA8QYmRTjLu7YAanMwRML41YYmo/F
-         9Fug==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1729145017; x=1729749817;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=iD9onH6cXMjOVhbOxjnOcgYVA8etcnhKUQF7QMAypMY=;
-        b=rnd8aLgLakwFFm7AMlGA4J5YPi9h6CApbMx6n0W3t9vmuN2ueCS1JroV3GGeNGvhZ9
-         xVwahT3DNhpLjIKw/+eQuxe6iileSXPDXzW8dOxL7dXR7Llhi9NFmgoGzcx8nPDAKocA
-         IuuFK2vjXOOXWYyfysriXA/8kEZXmtupI3DZWVpdzdwF1LzCbW3IQJBpNg9ucLWMoFqb
-         Xx7V5MC15jq06imkF/zY4nPOXXuPAeEMie9lFg/mX8Ct9viMLzW1nEHKc5SGFrKXhcGf
-         SPMJd6werhXbWhhynkLKWnPlxvPT1WEOYd1vUzVU1MsN7pk1Qnz5TGQABOkvx4gcXbtS
-         R1Hg==
-X-Forwarded-Encrypted: i=1; AJvYcCUDRnd0A1bfCYmsqP5uvS0FNXdHJox5BdUnywrDyluyIyDfaG0I6FKngoUGIEjJLHu41r8XgFhseV31@vger.kernel.org, AJvYcCXwLuZi3Smpg58Td81vZFfxCZPBk3+EGGGaia09T0mF+bmxnNAaDk7OwHtfMfu9gPecm97Ws2VCvESmJAU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+Fv1pY8/hRnXxenffc7SopCf2huoQBmWEXm91mNZ0aRFVONuG
-	Be3TJ7XxegdQgZ3MjzwBlvJsWRK+FRWr5jneG9HEOlPZWNZTcUjF5Q1zUOZhHAyYq8wL5ylftMl
-	siGKVvhKqYYhZs7RIGwZGzeDALDg=
-X-Google-Smtp-Source: AGHT+IG6y46zeLJj5fn7vo6K0/8lukV4iLeUpBsTMojcWCqJe8Hac7uIw5IEZ3mC1+Jq86JcRevq9Rf2HjUvbpGCrVs=
-X-Received: by 2002:a05:6870:911f:b0:287:b133:8aca with SMTP id
- 586e51a60fabf-288edead059mr5274887fac.25.1729145017495; Wed, 16 Oct 2024
- 23:03:37 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fnZP/6eq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B956C4CEC5;
+	Thu, 17 Oct 2024 07:50:14 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729151414;
+	bh=uYn2gVEAgPj1s74huNKtqM2HJe3OpErKE+EWC0unssc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=fnZP/6eqJezfNW/r6VsumK6jR9TZ0D18TsvkukiaxSpFVRjV6o3aUUmI+IohmBzGM
+	 rrph7vLniNkNcfmE3o2TkK/yc/371sZSrROIuSqq8ZvSAi+Uyy/WM7YVIK6KfwNdJS
+	 pNq1XqbGxhq9+rgbTLjqDReMmI95HPsfYsDR0yvwgw6oUf3TajgJdHbzseIOwZxR7f
+	 hXJZuV2Kz15XXty/WQWnO5KIY/BHZd/xW/eXqZ0FKMvFheyWakz6sDyWl2AnNMwdNC
+	 KyZq+6MkLWK6WjxSsRInwqCVxfgS3Jpe5RO07Khp9cIoxIrEpd0vESTxVMrOxrla3o
+	 BDTtPhdlY/a/Q==
+Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
+	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.95)
+	(envelope-from <maz@kernel.org>)
+	id 1t1LGt-004KMb-Qk;
+	Thu, 17 Oct 2024 08:50:11 +0100
+Date: Thu, 17 Oct 2024 08:50:11 +0100
+Message-ID: <86v7xr418s.wl-maz@kernel.org>
+From: Marc Zyngier <maz@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Johan Hovold <johan@kernel.org>,	Bjorn Helgaas <helgaas@kernel.org>,
+	Pali =?UTF-8?B?Um9ow6Fy?= <pali@kernel.org>,	Johan Hovold
+ <johan+linaro@kernel.org>,	Kishon Vijay Abraham I <kishon@ti.com>,	Xiaowei
+ Song <songxiaowei@hisilicon.com>,	Binghui Wang <wangbinghui@hisilicon.com>,
+	Thierry Reding <thierry.reding@gmail.com>,	Ryder Lee
+ <ryder.lee@mediatek.com>,	Jianjun Wang <jianjun.wang@mediatek.com>,
+	linux-pci@vger.kernel.org,	Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?=
+ <kw@linux.com>,	Ley Foon Tan <ley.foon.tan@intel.com>,
+	linux-kernel@vger.kernel.org
+Subject: Re: Why set .suppress_bind_attrs even though .remove() implemented?
+In-Reply-To: <20241017052335.iue4jhvk5q4efigv@thinkpad>
+References: <Yt+6azfwd/LuMzoG@hovoldconsulting.com>
+	<20220727195716.GA220011@bhelgaas>
+	<YuJ+PZIhg8mDrdlX@hovoldconsulting.com>
+	<20241017052335.iue4jhvk5q4efigv@thinkpad>
+User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
+ FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/29.4
+ (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20241016114915.2823-1-linux.amoon@gmail.com> <20241016114915.2823-3-linux.amoon@gmail.com>
- <20241016182343.vocxyi5ry33btw5o@thinkpad> <CANAwSgRnd5jaZjoNtCLcq6nRGz3gC-VwjhxsiG7haiowrmZs_w@mail.gmail.com>
- <20241017052829.umil6en3rwsz7dvr@thinkpad>
-In-Reply-To: <20241017052829.umil6en3rwsz7dvr@thinkpad>
-From: Anand Moon <linux.amoon@gmail.com>
-Date: Thu, 17 Oct 2024 11:33:22 +0530
-Message-ID: <CANAwSgSU=EA9NpVt1cBSjVV-MQjhCn0GAJxvjf=k5o4UusfQKA@mail.gmail.com>
-Subject: Re: [PATCH v9 2/3] PCI: rockchip: Simplify reset control handling by
- using reset_control_bulk*() function
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Philipp Zabel <p.zabel@pengutronix.de>, 
-	"open list:PCIE DRIVER FOR ROCKCHIP" <linux-pci@vger.kernel.org>, 
-	"open list:PCIE DRIVER FOR ROCKCHIP" <linux-rockchip@lists.infradead.org>, 
-	"moderated list:ARM/Rockchip SoC support" <linux-arm-kernel@lists.infradead.org>, 
-	open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
+Content-Type: text/plain; charset=US-ASCII
+X-SA-Exim-Connect-IP: 185.219.108.64
+X-SA-Exim-Rcpt-To: manivannan.sadhasivam@linaro.org, johan@kernel.org, helgaas@kernel.org, pali@kernel.org, johan+linaro@kernel.org, kishon@ti.com, songxiaowei@hisilicon.com, wangbinghui@hisilicon.com, thierry.reding@gmail.com, ryder.lee@mediatek.com, jianjun.wang@mediatek.com, linux-pci@vger.kernel.org, kw@linux.com, ley.foon.tan@intel.com, linux-kernel@vger.kernel.org
+X-SA-Exim-Mail-From: maz@kernel.org
+X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-Hi
-
-On Thu, 17 Oct 2024 at 10:58, Manivannan Sadhasivam
-<manivannan.sadhasivam@linaro.org> wrote:
->
-> On Thu, Oct 17, 2024 at 09:17:35AM +0530, Anand Moon wrote:
-> > Hi Manivannan,
+On Thu, 17 Oct 2024 06:23:35 +0100,
+Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org> wrote:
+> 
+> On Thu, Jul 28, 2022 at 02:17:01PM +0200, Johan Hovold wrote:
+> > On Wed, Jul 27, 2022 at 02:57:16PM -0500, Bjorn Helgaas wrote:
+> > > On Tue, Jul 26, 2022 at 11:56:59AM +0200, Johan Hovold wrote:
+> > > > On Mon, Jul 25, 2022 at 06:35:27PM +0100, Marc Zyngier wrote:
+> > > > > On Mon, 25 Jul 2022 16:18:48 +0100,
+> > > > > Johan Hovold <johan@kernel.org> wrote:
+> > > > 
+> > > > > > Since when is unloading modules something that is expected to
+> > > > > > work perfectly? I keep hearing "well, don't do that then" when
+> > > > > > someone complains about unloading this module while doing this
+> > > > > > or that broke something. (And it's only root that can unload
+> > > > > > modules in the first place.)
+> > > > > 
+> > > > > Well, maybe I have higher standards. For the stuff I maintain, I
+> > > > > now point-blank refuse to support module unloading if this can
+> > > > > result in a crash. Or worse.
+> > > > 
+> > > > That makes sense for regular interrupt controllers where its hard to
+> > > > tell that all consumers are gone, but I don't think that should
+> > > > limit the usefulness of having modular PCI controller drivers where
+> > > > we know that the consumers are gone after deregistering the bus
+> > > > (i.e. the consumers are descendants of the controller in the device
+> > > > tree).
+> > > 
+> > > Those consumers are endpoint drivers, so I think this depends on those
+> > > drivers correctly unmapping the interrupts they use, right?
+> > 
+> > Right. For MSI this means that pci_alloc_irq_vectors() in probe should
+> > be matched by pci_free_irq_vectors() on remove.
+> > 
+> > For legacy interrupts, which can be shared, the mapping is created by
+> > PCI core when binding to the first device and can only be disposed by
+> > the host-bridge driver once all descendants have been removed.
+> > 
+> > The endpoint drivers still need to disable their interrupts of course.
+> > 
+> > Buggy endpoint-driver remove implementations can lead to all sorts of
+> > crashes (e.g. after failing to deregister a class device), and if that's
+> > a worry then don't unload modules (and possibly disable it completely
+> > using CONFIG_MODULE_UNLOAD).
+> > 
+> > > > > > It's useful for developers, but use it at your own risk.
+> > > > > > 
+> > > > > > That said, I agree that if something is next to impossible to
+> > > > > > get right, as may be the case with interrupt controllers
+> > > > > > generally, then fine, let's disable module unloading for that
+> > > > > > class of drivers.
+> > > > > > 
+> > > > > > And this would mean disabling driver unbind for the 20+ driver
+> > > > > > PCI drivers that currently implement it to some degree.
+> > > > > 
+> > > > > That would be Bjorn's and Lorenzo's call.
+> > > > 
+> > > > Sure, but I think it would be the wrong decision here. Especially,
+> > > > since the end result will likely just be that more drivers will
+> > > > become always compiled-in.
+> > > 
+> > > Can you elaborate on this?  I think Marc is suggesting that these PCI
+> > > controller drivers be modular but not removable.  Why would that cause
+> > > more of them to be compiled-in?
+> > 
+> > As mentioned earlier in this thread, we only appear to have some 60
+> > drivers in the entire tree that bother to try to implement that. I fear
+> > that blocking the use of modules (including being able to unload them)
+> > will just make people submit drivers that can only be built in.
+> > 
+> > Not everyone cares about Android's GKI, but being able to unload a
+> > module during development is very useful (and keeping that out-of-tree
+> > prevents sharing the implementation and make it susceptible to even
+> > further bit rot).
+> > 
+> > So continuing to supporting modules properly is a win for everyone (e.g.
+> > GKI and developers).
+> >  
+> > > > > > > > Turns out the pcie-qcom driver does not support legacy
+> > > > > > > > interrupts so there's no risk of there being any lingering
+> > > > > > > > mappings if I understand things correctly.
+> > > > > > > 
+> > > > > > > It still does MSIs, thanks to dw_pcie_host_init(). If you can
+> > > > > > > remove the driver while devices are up and running with MSIs
+> > > > > > > allocated, things may get ugly if things align the wrong way
+> > > > > > > (if a driver still has a reference to an irq_desc or irq_data,
+> > > > > > > for example).
+> > > > > > 
+> > > > > > That is precisely the way I've been testing it and everything
+> > > > > > appears to be tore down as it should.
+> > > > > >
+> > > > > > And a PCI driver that has been unbound should have released its
+> > > > > > resources, or that's a driver bug. Right?
+> > > > > 
+> > > > > But that's the thing: you can easily remove part of the
+> > > > > infrastructure without the endpoint driver even noticing. It may
+> > > > > not happen in your particular case if removing the RC driver will
+> > > > > also nuke the endpoints in the process, but I can't see this is an
+> > > > > absolute guarantee. The crash pointed to by an earlier email is
+> > > > > symptomatic of it.
+> > > > 
+> > > > But that was arguably due to a driver bug, which we know how to fix.
+> > > > For MSIs the endpoint driver will free its interrupts and all is
+> > > > good.
+> > > > 
+> > > > The key observation is that the driver model will make sure that any
+> > > > endpoint drivers have been unbound before the bus is deregistered.
+> > > > 
+> > > > That means there are no longer any consumers of the interrupts,
+> > > > which can be disposed. For MSI this is handled by
+> > > > pci_free_irq_vectors() when unbinding the endpoint drivers. For
+> > > > legacy interrupts, which can be shared, the PCIe RC driver needs to
+> > > > manage this itself after the consumers are gone.
+> > > 
+> > > The driver model ensures that endpoint drivers have been unbound. But
+> > > doesn't the interrupt disposal depend on the correct functioning of
+> > > those endpoint drivers?  So if a buggy endpoint driver failed to
+> > > dispose of them, we're still vulnerable?
+> > 
+> > Just as you are if an endpoint-driver fails to clean up after itself in
+> > some other way (e.g. leaves the interrupt enabled).
 > >
-> > On Wed, 16 Oct 2024 at 23:53, Manivannan Sadhasivam
-> > <manivannan.sadhasivam@linaro.org> wrote:
-> > >
-> > > On Wed, Oct 16, 2024 at 05:19:07PM +0530, Anand Moon wrote:
-> > > > Currently, the driver acquires and asserts/deasserts the resets
-> > > > individually thereby making the driver complex to read. But this
-> > > > can be simplified by using the reset_control_bulk APIs.
-> > > > Use devm_reset_control_bulk_get_exclusive() API to acquire all
-> > > > the resets and use reset_control_bulk_{assert/deassert}() APIs to
-> > > > assert/deassert them in bulk.
-> > > >
-> > > > Following the recommendations in 'Rockchip RK3399 TRM v1.3 Part2':
-> > > >
-> > > > 1. Split the reset controls into two groups as per section '17.5.8.1.1 PCIe
-> > > > as Root Complex'.
-> > > >
-> > > > 2. Deassert the 'Pipe, MGMT Sticky, MGMT, Core' resets in groups as per
-> > > > section '17.5.8.1.1 PCIe as Root Complex'. This is accomplished using the
-> > > > reset_control_bulk APIs.
-> > > >
-> > > > Signed-off-by: Anand Moon <linux.amoon@gmail.com>
-> > > > ---
-> > > > v9: Improved the commit message and try to fix few review comments.
-> > >
-> > > You haven't fixed all of them... Please take a look at all of my comments.
-> >
-> > It is becoming a nightmare for me, my confidence is a the lowest.
->
-> Me too. It makes me go crazy if the trivial comments are not addressed in
-> multiple revisions and it results in waste of time for both of us.
->
+> 
+> The IRQ disposal issue should hopefully fixed by this series:
+> https://lore.kernel.org/linux-pci/20240715114854.4792-3-kabel@kernel.org/
+> 
+> Then if the dwc driver calls pci_remove_irq_domain() instead of
+> irq_domain_remove(), we can be sure that all the IRQs are disposed during the
+> driver remove.
+> 
+> So can we proceed with the series making Qcom driver modular?
 
-I must apologize to you for my failure not being able to address this.
-I promise to tidy up from my end in the future.
+Who is volunteering to fix the drivers that will invariably explode
+once we allow this?
 
-> > Can you fix this while applying or I will resend it with the fix?
->
-> I don't merge the dwc patches, so I cannot do that. But what's preventing you
-> from addressing those comments. You cannot put the burden on the maintainers for
-> your mistake, sorry.
->
-Ok I understand this will try to send in the next version
-> - Mani
->
+Because if the outcome is that we let things bitrot even more than
+they already are, I don't think this is going in the correct direction
+-- as in *the direction of correctness*.
 
-Thanks
--Anand
+	M.
+
+-- 
+Without deviation from the norm, progress is not possible.
