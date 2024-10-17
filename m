@@ -1,184 +1,202 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2041.outbound.protection.outlook.com [40.107.21.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 712361D2200;
-	Thu, 17 Oct 2024 08:02:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729152172; cv=none; b=IeXEsl4Y6FwJ8EIOs9kj/6fzXtvJvJXlLVX7+EC/9ZmlPMRfDo0gVEg4lz7ZLijfS0k0CdDlQmWKBX72OCbMGgJ4iJBjJRpTdJ+ugDBJcgizj12MezjEcU7cFuOJVhm6ySyikynXnVQAbu4zO5/zTkrR8Cl7oTArfuJJZq/Rbj8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729152172; c=relaxed/simple;
-	bh=V4BJk5KxBF4m37hxR/CxOWtyY33ThgFlaqbsXRJ6+Sk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JuD6kJ2SabWFKgd58qjFQO0zkbrr8V/0O5P7QetQpe5xJKTLz/a/+TiGV3WmkwEbfAI5WpJ9Mz2Q6BhIrjkhns3rIGnP17l3QVFLWa90Dw81SlB5C4luD69onTGESpqY0KcMLzFNbGrRq07Uon7ce6IqKKEdORaZiK4L3Ojmw+I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qKZ+7nKW; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nQ4t7L+A; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qKZ+7nKW; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=nQ4t7L+A; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 913461D8E0D;
+	Thu, 17 Oct 2024 08:02:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.21.41
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729152177; cv=fail; b=hH4XYDldC8zXVuznwXzTpgT3EYcK9DxEE5fpz34PEw+eVWmU5iW2J7T6mG+sdM9ZkSaxe6w0BU2EvKaW5v29jpgERYafvCqcQHDj/LKQPL84zujnHMt+4eAs+sILwBtLOaxdS1qcYxp2HW6L4PHrv8T3o1ZY/7tcBKbMTqP+z6U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729152177; c=relaxed/simple;
+	bh=Y9VB2lMkXu7TqIIpxe6/+zkAzDT407nFiUlSvUQF1+w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=tZqUY5E8iOpJHikcK2ogTNDespIGPRjYxlBAFZw6IPZVKHT28XcI9MdEBmj2ykXRI3RAfLvFaeMJaZZoDtqPdeyLoki8chpBpA2yEw7TKq3XNQU2aQO8kadwI5x3sA+faksiypr43UD5NSTGI4ZYDSVuO0YejabZW8wrhvSIuAU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=ldYuBMjX; arc=fail smtp.client-ip=40.107.21.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qKZ+7nKW";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nQ4t7L+A";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qKZ+7nKW";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="nQ4t7L+A"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 1DE6421C53;
-	Thu, 17 Oct 2024 08:02:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1729152163; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lef/WUqsQk/+4fftS5U7JFsSwY0sjGlKvSnKtlvMSmE=;
-	b=qKZ+7nKWYqY5XkDVYxLzj/ojWgM/RqddCk8hoew7r6cqPU+gtJX6Y86/yAKjvGqk/43sc3
-	tZTBhl3dSC9S3kV7Deugq7VeEPM6QkvFq5Kpts8FEE+WI/f0IQMIl4ocPdMHT148q3Nc5V
-	PTX4U4ArReUyN+v5Ri3zJ2qGrb38n10=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1729152163;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lef/WUqsQk/+4fftS5U7JFsSwY0sjGlKvSnKtlvMSmE=;
-	b=nQ4t7L+AkFxPs24GgcuxYBF7kuD/jIUHbez6gLDbZL2vYy76BzorlSC0gB70yH4UuJlaVU
-	pPZx+bhPXDxo9PDw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1729152163; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lef/WUqsQk/+4fftS5U7JFsSwY0sjGlKvSnKtlvMSmE=;
-	b=qKZ+7nKWYqY5XkDVYxLzj/ojWgM/RqddCk8hoew7r6cqPU+gtJX6Y86/yAKjvGqk/43sc3
-	tZTBhl3dSC9S3kV7Deugq7VeEPM6QkvFq5Kpts8FEE+WI/f0IQMIl4ocPdMHT148q3Nc5V
-	PTX4U4ArReUyN+v5Ri3zJ2qGrb38n10=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1729152163;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=lef/WUqsQk/+4fftS5U7JFsSwY0sjGlKvSnKtlvMSmE=;
-	b=nQ4t7L+AkFxPs24GgcuxYBF7kuD/jIUHbez6gLDbZL2vYy76BzorlSC0gB70yH4UuJlaVU
-	pPZx+bhPXDxo9PDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 061F713A53;
-	Thu, 17 Oct 2024 08:02:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id XJ6SOqHEEGdGMAAAD6G6ig
-	(envelope-from <svarbanov@suse.de>); Thu, 17 Oct 2024 08:02:41 +0000
-Message-ID: <27c18374-8120-40bd-87d2-183c40945fbf@suse.de>
-Date: Thu, 17 Oct 2024 11:02:33 +0300
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="ldYuBMjX"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ZkISyW2sPzz8ubM3tgJVQgU7ImIyv7K/3BHrAxnT6I/LUgW0JY0eD9zRZX/BXvvwlitV1k8huXjIF4NnAVTn9xx+Pkn/IwqOadexAw4D56D5Pp7gtZvq5KhDy1BEDKnLK2JFWzZy6fdUaHOVFdhLuAU3wsXOMnIrcPYKcaDt02xDPn+ktFKKSMS4cdduo52xIDoI/a0KR2XWvA8DIUIEZ1AAoz7zaZ8Vouo4xwZ0UF0/zURGlUh4IOeE0huh6aPH8AgUPlCa9u9A8sO5DGcmD5hid9zUvCj5Ln8Y2TksXAFU/hSTUkjFWwvowfO79TRRxgx+Z+1k/MUURY8VR3yQzA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bud6rPBs/2UfmNduq5sq+WL5/0HR6qF4vB7lNEIW+go=;
+ b=cxL52XH0MG+w/0yQZjfKv8KiV45HidbWVC1gSitLkwC+0cLAOOJSKdEbBcqt5+mm2sQfjMeOD+NZB8ko2bJUNmIm5SNLqGo2pBKWmSJE7BOxeqp+NRTxZx0lPt8MiXkkNWnbSx8JZyL8Yt6JS4Ioo9XJksvdd6Egw9AsF0CW7s3HvPvWPOZu10EJHnSkJXW3GCTtOGssHHFCMsfc3Beim88vu+UAZ0U0GPY1VfNGTynvB87vGQOEzw8OhAbm4AJq8CWp/kgpMT+ILdqVNt5ZPAl1MDWYt8YBZFAZQwYKkCwc3NI7eK9g66MnuAVIahcQq4To333wDM8QZNVE0e0reA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bud6rPBs/2UfmNduq5sq+WL5/0HR6qF4vB7lNEIW+go=;
+ b=ldYuBMjXaf9YIOKgLM114Cen/ol/iREADXqrYrwQ1tLt18GQCVVTBjvRsgvlX7gXdl0uK5T+S9Q5WknBn67Sw1or8iXSL08FwBz6w04NOw+3ZxLjozMjRrPOVhUXTENSH6oAHht9IqypmAXZXKZ4kUoQqCXUQqyn2GwiJ+xt/Hyi4hmE0QqP11MRLByc/99KwIa/nSQQsSX/qrqWhCwb4MEGl5FTcIvdQkW8wHDaNC8TrrEPG/z0/j4cOeDsuUvqeRNVohL/fb5i7hvTr7cG2G/AnFAFeQ9uLpAbyJrWoZ/N9omCPQJkDZGE0xJV1puqjOK4xlJvuSmosKEeeb2QHQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+Received: from PAXPR04MB8510.eurprd04.prod.outlook.com (2603:10a6:102:211::7)
+ by DBAPR04MB7304.eurprd04.prod.outlook.com (2603:10a6:10:1ab::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8069.18; Thu, 17 Oct
+ 2024 08:02:50 +0000
+Received: from PAXPR04MB8510.eurprd04.prod.outlook.com
+ ([fe80::a7c2:e2fa:8e04:40db]) by PAXPR04MB8510.eurprd04.prod.outlook.com
+ ([fe80::a7c2:e2fa:8e04:40db%7]) with mapi id 15.20.8048.020; Thu, 17 Oct 2024
+ 08:02:50 +0000
+From: Wei Fang <wei.fang@nxp.com>
+To: davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	vladimir.oltean@nxp.com,
+	claudiu.manoil@nxp.com,
+	xiaoning.wang@nxp.com,
+	Frank.Li@nxp.com,
+	christophe.leroy@csgroup.eu,
+	linux@armlinux.org.uk,
+	bhelgaas@google.com,
+	horms@kernel.org
+Cc: imx@lists.linux.dev,
+	netdev@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 net-next 09/13] net: enetc: add i.MX95 EMDIO support
+Date: Thu, 17 Oct 2024 15:46:33 +0800
+Message-Id: <20241017074637.1265584-10-wei.fang@nxp.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241017074637.1265584-1-wei.fang@nxp.com>
+References: <20241017074637.1265584-1-wei.fang@nxp.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI2PR01CA0051.apcprd01.prod.exchangelabs.com
+ (2603:1096:4:193::6) To PAXPR04MB8510.eurprd04.prod.outlook.com
+ (2603:10a6:102:211::7)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 04/11] PCI: brcmstb: Expand inbound size calculation
- helper
-To: Bjorn Helgaas <helgaas@kernel.org>, Jim Quinlan <jim2101024@gmail.com>
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
- Stanimir Varbanov <svarbanov@suse.de>, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-rpi-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Thomas Gleixner
- <tglx@linutronix.de>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Nicolas Saenz Julienne <nsaenz@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, kw@linux.com,
- Philipp Zabel <p.zabel@pengutronix.de>,
- Andrea della Porta <andrea.porta@suse.com>,
- Phil Elwell <phil@raspberrypi.com>, Jonathan Bell <jonathan@raspberrypi.com>
-References: <20241016193802.GA645895@bhelgaas>
-Content-Language: en-US
-From: Stanimir Varbanov <svarbanov@suse.de>
-In-Reply-To: <20241016193802.GA645895@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-6.80 / 50.00];
-	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCPT_COUNT_TWELVE(0.00)[22];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_TO(0.00)[kernel.org,gmail.com];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TAGGED_RCPT(0.00)[dt];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid]
-X-Spam-Score: -6.80
-X-Spam-Flag: NO
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PAXPR04MB8510:EE_|DBAPR04MB7304:EE_
+X-MS-Office365-Filtering-Correlation-Id: dd7fe6b4-fd90-4366-df75-08dcee821817
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|7416014|366016|376014|1800799024|52116014|921020|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?cuxmgKRtIk5qS4+TJXBSw+85nKtyakXl85hxtAaQUc2PtEaVNd7RglHlaQ1l?=
+ =?us-ascii?Q?VP3G176/NRJOyaqHTw6s5O4U3w0kfJdZ600IPg/xyWJ0LOknTTkv3sNdb7Wc?=
+ =?us-ascii?Q?oMgZB5TSB/VWNSQebqLD58Ssapnyj+MpVBbNzrC0wKVbQ1idm1MwBIXUuNfU?=
+ =?us-ascii?Q?dcCtPlJj27WogbFG0EZrYAk4g+/kqTFToFSLKP5FiqGbTF/xXgAGLEQGZasl?=
+ =?us-ascii?Q?bR60xTqTezno1DxxRCGcjVqjf7ewd1ZSA4B6Y4MVoCECIdV+r8F5hjIJQEWn?=
+ =?us-ascii?Q?pEXpiEvZKMsiIjvgR6S2aKAOSBLvprexsAyGNGc83Lf4+deZ4TLsJq9fkmYi?=
+ =?us-ascii?Q?F5JOOFYhs8lPwF7AdoCdk9AlUuKj7XOYdQlGgXBUStIKGOYQGgmm0TSWuymV?=
+ =?us-ascii?Q?AE+VS+CRvn4ahv4NkowYcqGmYA0Kg5wAtEXumYkFYbyWpozD1IUPwcwTdPUe?=
+ =?us-ascii?Q?/Ib/eWKTl7ZSu1g3OoZzmiG4V8sIeoi7GdpNOWKEKPPIlUdnlVO1qBJIkjbT?=
+ =?us-ascii?Q?zasIy//RRo6fxu9Q2u/Xkwf8+Po8GeiQmXpStDeDrTHzRaghpHJJ9QLGqyuj?=
+ =?us-ascii?Q?3NDQRGNigP2XdGpbaA8ezcA0YdMJbAIsRNvsch7YhyVErjmwHNLRvzAJzPBa?=
+ =?us-ascii?Q?2cYZatgfRFVCtnsFzymwoXm7Ynod3LgYR5N+3zSJldRMslBkOjo4Oc1ntMbi?=
+ =?us-ascii?Q?04ljy1ZfbF6y1gurDJOmh+r6CEaWLE8AhUWQ7SW1sRBFAON5Qt37OWh1nVHX?=
+ =?us-ascii?Q?rc5Q6pVovU8qRdueljcqzydNRklP+eNp2vymTfIzYX0eJHJWCMyVjw+Xp4Ta?=
+ =?us-ascii?Q?8z4DpmenBcwANdPTt6ulOBKsT/3rrJRZpSh5XZtIe7eUyWkHJNidYwrR2x5h?=
+ =?us-ascii?Q?sGaI0FYD4+ny89X7zruUrsOXupA+xdIn5AGrA5afguDlKsq5ProyZuaD7LIl?=
+ =?us-ascii?Q?Y4F1fqmNLg4+IRoJp0YMPHErnvrPUIhPniiA69HZFtCi/abPwHsisNlokvX3?=
+ =?us-ascii?Q?OHn+JPGgFFx3HTWxpb8yYDCx1SZTUJZXglsLMCOsI2PTUDAVFAwMv2ejENiy?=
+ =?us-ascii?Q?t4otZ811PDhMkKxwzefiAtP8Gwy7wwWF6zCWBMEz/3Ips60in4t5BGko6A7M?=
+ =?us-ascii?Q?QRofIlFZe3TsKb6OtmRjPdWzfUkmCWg6z0lv2tl1Yn2cZTfyVMS1RKkOSGol?=
+ =?us-ascii?Q?hkCWBL8rQRgilUfU2WmEquPbirSxdFYqZuKP9l24QjzMU1sZfOkZqCvVtQ5F?=
+ =?us-ascii?Q?E0P175MO/LSogGUJZBRArQI2cRKIKtBS9YP5ywdhbSN1UqQNJgmCDHuSF0pD?=
+ =?us-ascii?Q?LV1tumSGDTHYKrf6AmsxL4X7xM1aP24A56DwAle9j8qNHtng25NbU6vWShJc?=
+ =?us-ascii?Q?/qV7yyPhGm3k1/X5lrzpmCy2ienb?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB8510.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(366016)(376014)(1800799024)(52116014)(921020)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?bxVCSKBXxlfExLH/fSH6wisbxjCSAttWi6p1ZMDD/fjXkmCEVTazVEPuROVY?=
+ =?us-ascii?Q?P12SFaxdu+2iVEebZ/rPcDyGfll3HUtbXGzOR36xI1EtpQZxprwI5vlYl9H5?=
+ =?us-ascii?Q?0GNPXa7vnqEu3eVbIZh5y9YJ0YhBdpEdoFSTovJgyKB8LceVS+hr6kCPq2Gq?=
+ =?us-ascii?Q?krRj8loOE2OLMjjRTw3epnNqxyScpk1MxZ43cciRHNDqlP3Q4M0QBdUI/ESF?=
+ =?us-ascii?Q?OpHjGG3sN4DMLRcV24CTXlYnGmf2LR+a0qL6L/GmuIkusu5LDY+xBxtUxfXM?=
+ =?us-ascii?Q?juecxmv6gljyGpZ+k4P15Rg8cuoLdtqcN6VVWPjvvbzgQGQEHELxZ6XBXOUA?=
+ =?us-ascii?Q?6Ww+bXutZ5b27UMHqAC7yXTBiRLEtA89O8j+PwlFhd9Rh0dcC51DJXsJUqg2?=
+ =?us-ascii?Q?P+Cv4AnWJak5Nza8AQt/lQiVHF6LpSq0YvY04Xoax/jdyRO/Zu37Iu1uJDS2?=
+ =?us-ascii?Q?tTvPlbjFMfxMsEEboWxZJ2aXDwN67TRO0XaUkUvQDPmkK+hAEejgXUAV2th8?=
+ =?us-ascii?Q?Ka4snNnzuryK47ehph9p6fz/WJrA9zB5wNBoWdxPwnJzvA/2B/5xw3eKYhh9?=
+ =?us-ascii?Q?Yf8JaIlObaFRZbET1+1GPJA7zTWoTquh998hd87Ot2zS5bjsXmYByWlf3U1H?=
+ =?us-ascii?Q?EQoGorPVmsQL0EVKS3x8XkkmEf4d18wQP2+t6M6Hljd1MDwEzdQhDh0hmcZA?=
+ =?us-ascii?Q?G0bRCUvwA06xARO7lgRO31FJpasHEKkzgFVt3g/o71iDinEK4j4LGHKAPQIn?=
+ =?us-ascii?Q?ddbbIMyNj2f7DWb9T/BTQJH/7twJvQJJ9D5oHF008yTAGaNCz4eJZex2hTMl?=
+ =?us-ascii?Q?P8z0xaGHRXRt59iuzyIvJrotaIcwobHJUlCV6PICVoxr/p6mh9B159jiWxxL?=
+ =?us-ascii?Q?scW7n1UQVKVjVyaP5rZ3aPkeshp0G0TjvlYoOdKEyXd4GMjfz6TdRkN19pRo?=
+ =?us-ascii?Q?dVH27TPJ++WBwyg4GrkyKOQtAZ2FvHYqPb4NOfSI4vdVM7B20+Bj7f1Qf34e?=
+ =?us-ascii?Q?fVedKFAbdnnap47DhfzeQ1WY7tVqlqpRL2cLKWEGzZsb/hCMaVBc2rMCKTkz?=
+ =?us-ascii?Q?/YKEiQbWlfZzBP8RYop5cLZZSh0F9qAX5VdfOMPiYGTyWGQ/o+mRdNzAK4GV?=
+ =?us-ascii?Q?ZMN0QGee6dMuVNv1JsddaBJIn79h4WBGvm2k1NWVCRkJ7qjYK+5gvZrf6GUT?=
+ =?us-ascii?Q?dNr3KJwr7hb/oES/dhAjF5Q9MrEK+iKUuuIsagW/W1MtWFAdmx9R97aTQmL5?=
+ =?us-ascii?Q?/OVSOFKUt+m2loWivpcC43JQYSUtE6NI605tsHNe9B9YHp1deGlzv5c+JnY+?=
+ =?us-ascii?Q?amWD/UFHu4jm940OWYDlaWGVyMwQaGGzxWNEP8MKzgrc9LTJSwtDtFEaP2iB?=
+ =?us-ascii?Q?4QNb+cfaPybRFV6LUqLAuvt6vUdBrYyohpOnKLyLe9yShlI2ZqqPi7A8H/TB?=
+ =?us-ascii?Q?H8bQN9+T/s/S8lNRInuzB32gWqyJiia3dgLLps8TRjGnRlOPeIRcTB3cTRtP?=
+ =?us-ascii?Q?mla50zS9mjofEwYcrtXjrjALOywj17nSLz3EHnt/Xr5td5tmb7CZz4u2Jf3u?=
+ =?us-ascii?Q?wkeqdHLK2/avdrTu0bAst3nPe27kQ7Dvaau1RfY8?=
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: dd7fe6b4-fd90-4366-df75-08dcee821817
+X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB8510.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Oct 2024 08:02:50.3031
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: M6v8rbgpqX5oUsKn40r7tzy05X31y5DRmmpusPQdeirCNiS7vzDmqM7vu1Vh+MUJi0zJY8rpUDT4+wzSBbgh3A==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DBAPR04MB7304
 
-Hi Bjorn,
+The verdor ID and device ID of i.MX95 EMDIO are different from LS1028A
+EMDIO, so add new vendor ID and device ID to pci_device_id table to
+support i.MX95 EMDIO. And the i.MX95 EMDIO has two pins that need to be
+controlled, namely MDC and MDIO.
 
-On 10/16/24 22:38, Bjorn Helgaas wrote:
-> On Wed, Oct 16, 2024 at 01:09:00PM -0400, Jim Quinlan wrote:
->> On Mon, Oct 14, 2024 at 1:25 PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->>> On Mon, Oct 14, 2024 at 10:10:11AM -0700, Florian Fainelli wrote:
->>>> On 10/14/24 09:57, Bjorn Helgaas wrote:
->>>>> On Mon, Oct 14, 2024 at 04:07:03PM +0300, Stanimir Varbanov wrote:
->>>>>> BCM2712 memory map can supports up to 64GB of system
->>>>>> memory, thus expand the inbound size calculation in
->>>>>> helper function up to 64GB.
->>>>>
->>>>> The fact that the calculation is done in a helper isn't important
->>>>> here.  Can you make the subject line say something about supporting
->>>>> DMA for up to 64GB of system memory?
->>>>>
->>>>> This is being done specifically for BCM2712, but I assume it's safe
->>>>> for *all* brcmstb devices, right?
->>>>
->>>> It is safe in the sense that all brcmstb devices with this PCIe
->>>> controller will adopt the same encoding of the size, all of the
->>>> currently supported brcmstb devices have a variety of
->>>> limitations when it comes to the amount of addressable DRAM
->>>> however. Typically we have a hard limit at 4GB of DRAM per
->>>> memory controller, some devices can do 2GB x3, 4GB x2, or 4GB
->>>> x1.
->>>>
->>>> Does that answer your question?
->>>
->>> I'd like something in the commit log to the effect that while
->>> we're doing this to support more system memory on BCM2712, this
->>> change is safe for other SoCs that don't support as much system
->>> memory.
->>
->> This setting configures the size of an RC's inbound window to system
->> memory.  Any inbound access outside of all of the inbound windows
->> will be discarded.
->>
->> Some existing SoCs cannot support the 64GB size.  Configuring such
->> an SoC to 64GB will effectively disable the entire window.
-> 
-> So I *think* you're saying that this patch will break existing SoCs
-> that don't support the 64GB size, right?
+Signed-off-by: Wei Fang <wei.fang@nxp.com>
+Reviewed-by: Frank Li <Frank.Li@nxp.com>
+---
+v2: no changes
+v3: no changes
+---
+ drivers/net/ethernet/freescale/enetc/enetc_pci_mdio.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-Existing SoCs will not be impacted. It could be theoretically possible
-to break inbound window translations only if you wrongly populate window
-sizes in DT.
+diff --git a/drivers/net/ethernet/freescale/enetc/enetc_pci_mdio.c b/drivers/net/ethernet/freescale/enetc/enetc_pci_mdio.c
+index 2445e35a764a..9968a1e9b5ef 100644
+--- a/drivers/net/ethernet/freescale/enetc/enetc_pci_mdio.c
++++ b/drivers/net/ethernet/freescale/enetc/enetc_pci_mdio.c
+@@ -2,6 +2,7 @@
+ /* Copyright 2019 NXP */
+ #include <linux/fsl/enetc_mdio.h>
+ #include <linux/of_mdio.h>
++#include <linux/pinctrl/consumer.h>
+ #include "enetc_pf.h"
+ 
+ #define ENETC_MDIO_DEV_ID	0xee01
+@@ -71,6 +72,8 @@ static int enetc_pci_mdio_probe(struct pci_dev *pdev,
+ 		dev_info(&pdev->dev, "Enabled ERR050089 workaround\n");
+ 	}
+ 
++	pinctrl_pm_select_default_state(dev);
++
+ 	err = of_mdiobus_register(bus, dev->of_node);
+ 	if (err)
+ 		goto err_mdiobus_reg;
+@@ -113,6 +116,7 @@ static void enetc_pci_mdio_remove(struct pci_dev *pdev)
+ 
+ static const struct pci_device_id enetc_pci_mdio_id_table[] = {
+ 	{ PCI_DEVICE(PCI_VENDOR_ID_FREESCALE, ENETC_MDIO_DEV_ID) },
++	{ PCI_DEVICE(PCI_VENDOR_ID_NXP2, PCI_DEVICE_ID_NXP2_NETC_EMDIO) },
+ 	{ 0, } /* End of table. */
+ };
+ MODULE_DEVICE_TABLE(pci, enetc_pci_mdio_id_table);
+-- 
+2.34.1
 
-~Stan
