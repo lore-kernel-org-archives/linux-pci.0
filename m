@@ -1,165 +1,112 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED2B219C556;
-	Tue, 22 Oct 2024 10:28:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FFA219CC21
+	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 11:57:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729592884; cv=none; b=LaHSkVIHTkPAdeFJqoddboBlY0EvX3I1DMq1VZHR5NgPhgGZO9ov5w0Qip0kv54O+ipQSUWe/2ajKRt7M6zbmt9Y1KRv6ahtuN6FrArhfzdnHyhezTZlOdK2DwhrMAWrtOb1Eq0f1IM8Rlo60OBbsAE3j0cwGB/jfDgHrjeesSA=
+	t=1729598224; cv=none; b=feXbeVJAgNIvq+0wY33prUpRzSwh0CqBjYfQLsNpQribiKRe7SrAX5Jky+gz377T6tvH0J5LsWF8/UgxuDM40YgHXDJ/TxoJbAUAQ1m7JdmLW1TyC5+quKP7yIqljvS3VuIwbBhNgA5M1i7ee7L8JrOx5WlfujQLoO2uJVBWkBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729592884; c=relaxed/simple;
-	bh=iDI1BQiua45IUMp/ZWP+8paKKCC+IFjowSEqYFTeTFw=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Azb9UeLbH9rJ4oFhPm6qqIbbdbeNyPZvotUgb0w5SfauvXLJOVT7uz6z6sl6zqHcyXP0rKYLeF46t0WJJfhYj0HtOncnD/GlIWDp8pNfuJ2tXGokI41xsnoa9qZes+mmHg+0FbwZbdF8GVyGkm/1P9Wqq/ft08Dyapl1d/EVsII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FWGng+KD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729598224; c=relaxed/simple;
+	bh=/isuBtDJ+qspniIuPbrBAIHMCWCNGINnskQ2X2oaHOk=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=KydIWf4kWPE+9hNbtCqqfr0x771vIgV22poRpEASdwnS/TrJJOwIxTo/AtR05yEAJ2pRu5UhlRSjTyAoNBDgh0LK/iUqBcICJKl6/f6O1R4ZsWi5FUr5dc4qbfcIS8BB8U9OwE+WCWc7v+hobapviyRus+anHhNPY+ZLfMpz0RQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pY2WpYjm; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FWGng+KD"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 72D42C4CEE7;
-	Tue, 22 Oct 2024 10:28:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pY2WpYjm"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44F41C4CEC3;
+	Tue, 22 Oct 2024 11:57:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729592883;
-	bh=iDI1BQiua45IUMp/ZWP+8paKKCC+IFjowSEqYFTeTFw=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=FWGng+KDqH8huUQF9VFFp44Xz8Rxi9Tpq+eXsoHWU4W19sqAnvjSZ9IPmSk72eDsb
-	 gKAqyer04Rlgl2TbsgclYZcLuK+VeQ8R1m4Xtf7XjLHgCcimSM31vUHEbq77nsCT+V
-	 kEKV7b3WiV5zc9lSvL6/fv4hwEHpgoEG6V2NxNgH3q9ftpBTodLXn6GLx0Qo7Gbqp6
-	 DBzX5/WO1RaOOrGrXA/qb8W+F05+Hk3r6oSMNMQ4jyDZ+MyICpmDlzSSMimCHUuPsS
-	 hr3BkznjcXBPh6TX0NRDvMmMu9OKLCo6rSg0lyUMPYtW5h9ge/KalOF3bpGBZCRLBJ
-	 sbJZ0VprT2nPw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 67C1CD1CDD8;
-	Tue, 22 Oct 2024 10:28:02 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Tue, 22 Oct 2024 15:57:32 +0530
-Subject: [PATCH 4/5] PCI/pwrctl: Move pwrctl device creation to its own
- helper function
+	s=k20201202; t=1729598224;
+	bh=/isuBtDJ+qspniIuPbrBAIHMCWCNGINnskQ2X2oaHOk=;
+	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+	b=pY2WpYjmW087MDwejOweCl2DyejDBXD4vIWuvuFALhDEE0ZXtXK8epEBb3bN5CEPP
+	 gwQ4r1dV+uTFwY6ixwKWactzKgMiyi2DN4YGMIVOy6UuemzsH/FDSKYt7YdYQqt5rk
+	 OVZkim+x24Fx55C+g5DuIsuIZuo8M8KeJqMbmaYBBnJIJBtkASwqAQLNRwM7bpHJCg
+	 7tv90mahzvrt8oji3FrPkwUQVYhWwV6jvvuLLu5e7ddL1nZwIzngwWqAn8FDcG8vw+
+	 O9i9GmOr0Ee3Hk3IUxpmqHzepYUtyYpBhhcpki71QfDkksLHwwJc12KnyIWw2XF9NJ
+	 uWJlKhufsabeQ==
+Message-ID: <0a174951-3c0d-4a34-a631-a62f452663d3@kernel.org>
+Date: Tue, 22 Oct 2024 20:57:01 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH v6 0/6] Improve PCI memory mapping API
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>,
+ Jonathan Corbet <corbet@lwn.net>, Jingoo Han <jingoohan1@gmail.com>,
+ linux-pci@vger.kernel.org, Rick Wertenbroek <rick.wertenbroek@gmail.com>
+References: <20241021221956.GA851955@bhelgaas>
+ <848f676b-afce-472e-872d-53a32af094c1@kernel.org>
+ <ZxdkopcSp9/P4f6k@x1-carbon.wireless.wdc>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <ZxdkopcSp9/P4f6k@x1-carbon.wireless.wdc>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241022-pci-pwrctl-rework-v1-4-94a7e90f58c5@linaro.org>
-References: <20241022-pci-pwrctl-rework-v1-0-94a7e90f58c5@linaro.org>
-In-Reply-To: <20241022-pci-pwrctl-rework-v1-0-94a7e90f58c5@linaro.org>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Dmitry Baryshkov <dmitry.baryshkov@linaro.org>, 
- Johan Hovold <johan+linaro@kernel.org>, Abel Vesa <abel.vesa@linaro.org>, 
- Stephan Gerhold <stephan.gerhold@linaro.org>, 
- Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
- Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2866;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=ysOLKy+185AD3GOipcG2TEA807qZUk22GeUQ5Y6pe4o=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnF34vmsof+M+5wL5XmngmSZCCByb+moVH/g2gE
- BwhvmPs2BiJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZxd+LwAKCRBVnxHm/pHO
- 9RUxB/9DKZS3wBi+FU7eP7EVhMTHc/nh9MECM0XNE1queAtb+/Si7BtnEdjcqvRwamCngW/kN0R
- q8U9RflthcVPaEor0YjkTnlPMM49we3BVurBjFoZp833MNguajLNFZJlC5308PwNEuxBfPfkRny
- jjZACCHEWlxya5zXo5YjqbQpsp71GtpuqqlQbU9bAUFwAdd0Pk8ygGygSZ47awBmhuyUGLUsm0Z
- 2qwuluPr00FNCLDRqtBbw4p6EnlJztA9DX1EdeXj7oYXa30GA+1gKUEk1MBcYmQyFm+mC7OhJRz
- ZPdOVSoenL2EiN2B2i9vDphxWm3XFnVHb2L1RZm011JfFtnY
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@linaro.org/default with auth_id=185
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reply-To: manivannan.sadhasivam@linaro.org
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+On 10/22/24 17:38, Niklas Cassel wrote:
+> On Tue, Oct 22, 2024 at 10:51:53AM +0900, Damien Le Moal wrote:
+>> On 10/22/24 07:19, Bjorn Helgaas wrote:
+>>> On Sat, Oct 12, 2024 at 08:32:40PM +0900, Damien Le Moal wrote:
+>>
+>> DMA transfers that can be done using dedicated DMA rx/tx channels associated
+>> with the endpoint controller do not need to use this API as the mapping to
+>> the host PCI address space is automatically handled by the DMA driver.
+> 
+> I disagree with this part. It think that it depends on the DMA controller.
+> 
+> Looking at the manual for e.g. the embedded DMA controller on the DWC
+> controller (eDMA):
+> ""
+> When you do not want the iATU to translate outbound requests that are generated by the
+> internal DMA module, then you must implement one of the following approaches:
+> - Ensure that the combination of DMA channel programming and iATU control register
+> programming, causes no translation of DMA traffic to be done in the iATU.
+> or
+> - Activate the DMA bypass mode to allow request TLPs which are initiated by the DMA
+> controller to pass through the iATU untranslated. You can activate DMA bypass mode by
+> setting the DMA Bypass field of the iATU Control 2 Register (IATU_REGION_C-
+> TRL_OFF_2_OUTBOUND_0).
+> ""
+> 
+> However, we also know that, if there is no match in the iATU table:
+> ""
+> The default behavior of the ATU when there is no address match in the outbound direction or no
+> TLP attribute match in the inbound direction, is to pass the transaction through.
+> ""
+> 
+> I.e. if there is a iATU mapping (which is what pci_epc_map_addr() sets up),
+> the eDMA will take that into account. If there is none, it will go through
+> untranslated.
+> 
+> 
+> So for the eDMA embedded on the DWC controller, we do not strictly need to
+> call pci_epc_map_addr(). (However, we probably want to do it anyway, as long
+> as we haven't enabled DMA bypass mode, just to make sure that there is no
+> other iATU mapping in the mapping table that will affect our transfer.)
+> 
+> However, if you think about a generic DMA controller, e.g. an ARM primecell
+> pl330, I don't see how it that DMA controller will be able to perform
+> transfers correctly if there is not an iATU mapping for the region that it
+> is reading/writing to.
+> 
+> So the safest thing, that will work with any DMA controller is probably to
+> always call pci_epc_map_addr() before doing the transfer.
 
-This makes the pci_bus_add_device() API easier to maintain. Also add more
-comments to the helper to describe how the devices are created.
-
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
----
- drivers/pci/bus.c | 59 ++++++++++++++++++++++++++++++++++++++-----------------
- 1 file changed, 41 insertions(+), 18 deletions(-)
-
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 351af581904f..c4cae1775c9e 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -321,6 +321,46 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
- 
- void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
- 
-+/*
-+ * Create pwrctl devices (if required) for the PCI devices to handle the power
-+ * state.
-+ */
-+static void pci_pwrctl_create_devices(struct pci_dev *dev)
-+{
-+	struct device_node *np = dev_of_node(&dev->dev);
-+	struct device *parent = &dev->dev;
-+	struct platform_device *pdev;
-+
-+	/*
-+	 * First ensure that we are starting from a PCI bridge and it has a
-+	 * corresponding devicetree node.
-+	 */
-+	if (np && pci_is_bridge(dev)) {
-+		/*
-+		 * Now look for the child PCI device nodes and create pwrctl
-+		 * devices for them. The pwrctl device drivers will manage the
-+		 * power state of the devices.
-+		 */
-+		for_each_child_of_node_scoped(np, child) {
-+			/*
-+			 * First check whether the pwrctl device really needs to
-+			 * be created or not. This is decided based on at least
-+			 * one of the power supplies being defined in the
-+			 * devicetree node of the device.
-+			 */
-+			if (!of_pci_is_supply_present(child)) {
-+				pci_dbg(dev, "skipping OF node: %s\n", child->name);
-+				return;
-+			}
-+
-+			/* Now create the pwrctl device */
-+			pdev = of_platform_device_create(child, NULL, parent);
-+			if (!pdev)
-+				pci_err(dev, "failed to create OF node: %s\n", child->name);
-+		}
-+	}
-+}
-+
- /**
-  * pci_bus_add_device - start driver for a single device
-  * @dev: device to add
-@@ -345,24 +385,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	pci_proc_attach_device(dev);
- 	pci_bridge_d3_update(dev);
- 
--	if (dev_of_node(&dev->dev) && pci_is_bridge(dev)) {
--		for_each_child_of_node_scoped(dn, child) {
--			/*
--			 * First check whether the pwrctl device needs to be
--			 * created or not. This is decided based on at least
--			 * one of the power supplies being defined in the
--			 * devicetree node of the device.
--			 */
--			if (!of_pci_is_supply_present(child)) {
--				pci_dbg(dev, "skipping OF node: %s\n", child->name);
--				continue;
--			}
--
--			pdev = of_platform_device_create(child, NULL, &dev->dev);
--			if (!pdev)
--				pci_err(dev, "failed to create OF node: %s\n", child->name);
--		}
--	}
-+	pci_pwrctl_create_devices(dev);
- 
- 	/*
- 	 * Create a device link between the PCI device and pwrctl device (if
+Indeed, I think you are right. Not doing the mapping before DMA with the RK3588
+works fine, but that may not be the case for all controllers.
 
 -- 
-2.25.1
-
-
+Damien Le Moal
+Western Digital Research
