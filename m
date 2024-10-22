@@ -1,211 +1,122 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66C0218DF6B
-	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 22:30:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FFE61C8FCF
+	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 22:49:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729636220; cv=none; b=sbYbrEjxLxKHIKyS2hBGneimLFrY3Bw59xPx6cjyv2NzlhQo3z5d+1xhsdmJUimZOtAZropgfTpej0jb0SbwLpF9bEgxCWvPXbnJ9vz/u2KAOnyvtSh2jsjEMfXnaffrs09f9OQnF5Ma49QHwXLx0Bam0GIFV5FJS/6PhIrOC7w=
+	t=1729637350; cv=none; b=u1FandBt4hLcvIGZXxDhD/vFYWIqzAXO+rqLeeL3vyU235P6aqKVZdqEZIMiyvQeKgCPgL6RD1/zk6xWejfmMImUSYEVHysilcVxZu+JxydeX1QOSfgciG1j4z4Kbwpfaz6cm3WMpDaWBNOPiYmcxg4Kahug4CYqciVsWUUCQPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729636220; c=relaxed/simple;
-	bh=/5lwgxPVYA/hx5f+pZQF0u5+5dmb0rPTDv9dYP889HM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PgqwSCuRSM8W9C9q+JfQ1eLDZ+p/qetkmnsp7SAKT+IYuMIPp9aSXlLs6TfnT8XgOxjJuwM6aUOU/32qWi9T8JibqaixGOzdIRDIfj+htmskQJgo46imqRYNWG5x8pHf9UL2eT/0Q4ex0w82/aXzni734Da0D6V87tItLyoOn7I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mI786ddg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729637350; c=relaxed/simple;
+	bh=a15521MOGeqZ1cJ69vj9iYsK5ut2rHJLwjyWRShlC5k=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Q3+L+Lq2i4U7E9mCsrwhOTp4qEekIH2KjHC+AabKjuFJD+PPOBnaatYW8wQRJpZZSHOASjyOL4gyhgbuWtOaQZXzJg9OzMVGFf1nT3ImivbiZS8hhLZxcqtFoFzziyddlFOqYY/7e/VTOVxNtMA7hVnxpLnvLIkKCTW91jM5fd4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=GrCrj5pA; arc=none smtp.client-ip=67.231.145.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mI786ddg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD866C4CEC3;
-	Tue, 22 Oct 2024 22:30:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1729636219;
-	bh=/5lwgxPVYA/hx5f+pZQF0u5+5dmb0rPTDv9dYP889HM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=mI786ddgabQJ6eMgsz79Ag5/Og6RJHTpa8PBF6iEKUTj3RlHJYVr6yJi7Hv3OzaFO
-	 J28ZOErqxYklrBPeFvYZUF/Ud9Tf19hWWLKf+WGZ4XqJQxVpujLRLCqGUs9CU1q37D
-	 drdtmtSRynMbG2R1o4FQZ3JXpjTtrD8q+LQo5LK22ZBkpcfIN3FXD0xcLSgOPv0lSq
-	 9UdTOa4twNEfx3jMW6dD6InUCgVFov/cNm+eotRLI04EipYrknbK8erXOXcVLs2Npr
-	 K7EvkZYJvyD6//unCKF6jCn0Ua3QLXjDwtI35FETxTtK1miMpUo+QDXsDuZFul3+z1
-	 UneBFbyHpE5ZQ==
-Date: Tue, 22 Oct 2024 17:30:18 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Ajay Agarwal <ajayagarwal@google.com>
-Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	"David E. Box" <david.e.box@linux.intel.com>,
-	Johan Hovold <johan+linaro@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Manu Gautam <manugautam@google.com>,
-	Sajid Dalvi <sdalvi@google.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Vidya Sagar <vidyas@nvidia.com>,
-	Shuai Xue <xueshuai@linux.alibaba.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v3] PCI/ASPM: Disable L1 before disabling L1ss
-Message-ID: <20241022223018.GA893095@bhelgaas>
+	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="GrCrj5pA"
+Received: from pps.filterd (m0044010.ppops.net [127.0.0.1])
+	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49MLYUaf013198
+	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 15:49:07 -0700
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=s2048-2021-q4;
+	 bh=JliJt//HLigc9llM64OOEVUe6/OfzydkWpVzE1gpEC0=; b=GrCrj5pA6zlQ
+	sO6uEr21khIIyMqAJ6wdV0KRV2UHtkJaHf4WfHrE89jXj9HZytg0Fe8pDbJMWb34
+	emqtQ8/C4T1o6JohY4o/5oS2m4WS004tv2uv1cVYRsDDM8ZE5U93v419m3EaxXGG
+	ADl1OGyohJrLIDb7hg8F7XmjZ1gCIDhfbdGBkAWPZAdYyTsqZccm80VJJMK4fRyL
+	7xddR6cVav3SJ8jPQaYBxVdJ3tJds0Bd01zInzKVh2RMY7nOD+KjMFX39squkSQT
+	bliwoI8b2mMC711V9Ct9dRvbtM0ZNdgBHu1VDSM3oIoI93h1J3GvgXVbrj70+XSr
+	kbOl4HiRnQ==
+Received: from maileast.thefacebook.com ([163.114.135.16])
+	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 42em38ge1u-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 15:49:07 -0700 (PDT)
+Received: from twshared11284.02.ash9.facebook.com (2620:10d:c0a8:fe::f072) by
+ mail.thefacebook.com (2620:10d:c0a9:6f::8fd4) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.2.1544.11; Tue, 22 Oct 2024 22:49:06 +0000
+Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
+	id 8E25F14610C98; Tue, 22 Oct 2024 15:48:53 -0700 (PDT)
+From: Keith Busch <kbusch@meta.com>
+To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
+CC: <lukas@wunner.de>, Keith Busch <kbusch@kernel.org>,
+        Jonathan Cameron
+	<Jonathan.Cameron@huawei.com>
+Subject: [PATCHv3 2/5] pci: make pci_destroy_dev concurrent safe
+Date: Tue, 22 Oct 2024 15:48:48 -0700
+Message-ID: <20241022224851.340648-3-kbusch@meta.com>
+X-Mailer: git-send-email 2.43.5
+In-Reply-To: <20241022224851.340648-1-kbusch@meta.com>
+References: <20241022224851.340648-1-kbusch@meta.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241007032917.872262-1-ajayagarwal@google.com>
+Content-Transfer-Encoding: quoted-printable
+X-FB-Internal: Safe
+Content-Type: text/plain
+X-Proofpoint-GUID: VUl-_-60KvDO1KcBOpkebdueZ54on7K0
+X-Proofpoint-ORIG-GUID: VUl-_-60KvDO1KcBOpkebdueZ54on7K0
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
+ definitions=2024-10-05_03,2024-10-04_01,2024-09-30_01
 
-On Mon, Oct 07, 2024 at 08:59:17AM +0530, Ajay Agarwal wrote:
-> The current sequence in the driver for L1ss update is as follows.
-> 
-> Disable L1ss
-> Disable L1
-> Enable L1ss as required
-> Enable L1 if required
-> 
-> With this sequence, a bus hang is observed during the L1ss
-> disable sequence when the RC CPU attempts to clear the RC L1ss
-> register after clearing the EP L1ss register. It looks like the
-> RC attempts to enter L1ss again and at the same time, access to
-> RC L1ss register fails because aux clk is still not active.
-> 
-> PCIe spec r6.2, section 5.5.4, recommends that setting either
-> or both of the enable bits for ASPM L1 PM Substates must be done
-> while ASPM L1 is disabled. My interpretation here is that
-> clearing L1ss should also be done when L1 is disabled. Thereby,
-> change the sequence as follows.
-> 
-> Disable L1
-> Disable L1ss
-> Enable L1ss as required
-> Enable L1 if required
-> 
-> Signed-off-by: Ajay Agarwal <ajayagarwal@google.com>
+From: Keith Busch <kbusch@kernel.org>
 
-Applied to pci/aspm for v6.13, thank you, Ajay!
+Use an atomic flag instead of the racey check against the device's kobj
+parent. We shouldn't be poking into device implementation details at
+this level anyway.
 
-> ---
-> Changelog since v2:
->  - Add the logic in pcie_aspm_cap_init()
-> 
-> Changelog since v1:
->  - Move the L1 disable/enable logic to pcie_config_aspm_link()
->  - Add detailed comments including spec version and section number
-> 
->  drivers/pci/pcie/aspm.c | 66 +++++++++++++++++++++++++----------------
->  1 file changed, 40 insertions(+), 26 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-> index cee2365e54b8..50997e378631 100644
-> --- a/drivers/pci/pcie/aspm.c
-> +++ b/drivers/pci/pcie/aspm.c
-> @@ -805,6 +805,15 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->  	pcie_capability_read_word(parent, PCI_EXP_LNKCTL, &parent_lnkctl);
->  	pcie_capability_read_word(child, PCI_EXP_LNKCTL, &child_lnkctl);
->  
-> +	/* Make sure L0s/L1 are disabled before updating L1SS config */
-> +	if (FIELD_GET(PCI_EXP_LNKCTL_ASPMC, child_lnkctl) ||
-> +	    FIELD_GET(PCI_EXP_LNKCTL_ASPMC, parent_lnkctl)) {
-> +		pcie_capability_write_word(child, PCI_EXP_LNKCTL,
-> +					   child_lnkctl & ~PCI_EXP_LNKCTL_ASPMC);
-> +		pcie_capability_write_word(parent, PCI_EXP_LNKCTL,
-> +					   parent_lnkctl & ~PCI_EXP_LNKCTL_ASPMC);
-> +	}
-> +
->  	/*
->  	 * Setup L0s state
->  	 *
-> @@ -829,6 +838,13 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->  
->  	aspm_l1ss_init(link);
->  
-> +	/* Restore L0s/L1 if they were enabled */
-> +	if (FIELD_GET(PCI_EXP_LNKCTL_ASPMC, child_lnkctl) ||
-> +	    FIELD_GET(PCI_EXP_LNKCTL_ASPMC, parent_lnkctl)) {
-> +		pcie_capability_write_word(parent, PCI_EXP_LNKCTL, parent_lnkctl);
-> +		pcie_capability_write_word(child, PCI_EXP_LNKCTL, child_lnkctl);
-> +	}
-> +
->  	/* Save default state */
->  	link->aspm_default = link->aspm_enabled;
->  
-> @@ -848,17 +864,13 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
->  /* Configure the ASPM L1 substates */
->  static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state)
->  {
-> -	u32 val, enable_req;
-> +	u32 val;
->  	struct pci_dev *child = link->downstream, *parent = link->pdev;
->  
-> -	enable_req = (link->aspm_enabled ^ state) & state;
-> -
->  	/*
-> -	 * Here are the rules specified in the PCIe spec for enabling L1SS:
-> +	 * Spec r6.2, section 5.5.4, mentions the rules for enabling L1SS:
->  	 * - When enabling L1.x, enable bit at parent first, then at child
->  	 * - When disabling L1.x, disable bit at child first, then at parent
-> -	 * - When enabling ASPM L1.x, need to disable L1
-> -	 *   (at child followed by parent).
->  	 * - The ASPM/PCIPM L1.2 must be disabled while programming timing
->  	 *   parameters
->  	 *
-> @@ -871,16 +883,6 @@ static void pcie_config_aspm_l1ss(struct pcie_link_state *link, u32 state)
->  				       PCI_L1SS_CTL1_L1SS_MASK, 0);
->  	pci_clear_and_set_config_dword(parent, parent->l1ss + PCI_L1SS_CTL1,
->  				       PCI_L1SS_CTL1_L1SS_MASK, 0);
-> -	/*
-> -	 * If needed, disable L1, and it gets enabled later
-> -	 * in pcie_config_aspm_link().
-> -	 */
-> -	if (enable_req & (PCIE_LINK_STATE_L1_1 | PCIE_LINK_STATE_L1_2)) {
-> -		pcie_capability_clear_word(child, PCI_EXP_LNKCTL,
-> -					   PCI_EXP_LNKCTL_ASPM_L1);
-> -		pcie_capability_clear_word(parent, PCI_EXP_LNKCTL,
-> -					   PCI_EXP_LNKCTL_ASPM_L1);
-> -	}
->  
->  	val = 0;
->  	if (state & PCIE_LINK_STATE_L1_1)
-> @@ -937,21 +939,33 @@ static void pcie_config_aspm_link(struct pcie_link_state *link, u32 state)
->  		dwstream |= PCI_EXP_LNKCTL_ASPM_L1;
->  	}
->  
-> +	/*
-> +	 * Spec r6.2, section 5.5.4, recommends that setting either or both of
-> +	 * the enable bits for ASPM L1 PM Substates must be done while ASPM L1
-> +	 * is disabled. So disable L1 here, and it gets enabled later after the
-> +	 * L1ss configuration has been completed.
-> +	 *
-> +	 * Spec r6.2, section 7.5.3.7, mentions that ASPM L1 must be enabled by
-> +	 * software in the Upstream component on a Link prior to enabling ASPM
-> +	 * L1 in the Downstream component on the Link. When disabling L1,
-> +	 * software must disable ASPM L1 in the Downstream component on a Link
-> +	 * prior to disabling ASPM L1 in the Upstream component on that Link.
-> +	 *
-> +	 * Spec doesn't mention L0s.
-> +	 *
-> +	 * Disable L1 and L0s here, and they get enabled later after the L1ss
-> +	 * configuration has been completed.
-> +	 */
-> +	list_for_each_entry(child, &linkbus->devices, bus_list)
-> +		pcie_config_aspm_dev(child, 0);
-> +	pcie_config_aspm_dev(parent, 0);
-> +
->  	if (link->aspm_capable & PCIE_LINK_STATE_L1SS)
->  		pcie_config_aspm_l1ss(link, state);
->  
-> -	/*
-> -	 * Spec 2.0 suggests all functions should be configured the
-> -	 * same setting for ASPM. Enabling ASPM L1 should be done in
-> -	 * upstream component first and then downstream, and vice
-> -	 * versa for disabling ASPM L1. Spec doesn't mention L0S.
-> -	 */
-> -	if (state & PCIE_LINK_STATE_L1)
-> -		pcie_config_aspm_dev(parent, upstream);
-> +	pcie_config_aspm_dev(parent, upstream);
->  	list_for_each_entry(child, &linkbus->devices, bus_list)
->  		pcie_config_aspm_dev(child, dwstream);
-> -	if (!(state & PCIE_LINK_STATE_L1))
-> -		pcie_config_aspm_dev(parent, upstream);
->  
->  	link->aspm_enabled = state;
->  
-> -- 
-> 2.47.0.rc0.187.ge670bccf7e-goog
-> 
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Keith Busch <kbusch@kernel.org>
+---
+ drivers/pci/pci.h    | 6 ++++++
+ drivers/pci/remove.c | 2 +-
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index c4cceec006d0d..cae4f55d5a4be 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -469,6 +469,7 @@ static inline int pci_dev_set_disconnected(struct pci=
+_dev *dev, void *unused)
+ #define PCI_DEV_ADDED 0
+ #define PCI_DPC_RECOVERED 1
+ #define PCI_DPC_RECOVERING 2
++#define PCI_DEV_REMOVED 3
+=20
+ static inline void pci_dev_assign_added(struct pci_dev *dev)
+ {
+@@ -487,6 +488,11 @@ static inline bool pci_dev_is_added(const struct pci=
+_dev *dev)
+ 	return test_bit(PCI_DEV_ADDED, &dev->priv_flags);
+ }
+=20
++static inline bool pci_dev_test_and_set_removed(struct pci_dev *dev)
++{
++	return test_and_set_bit(PCI_DEV_REMOVED, &dev->priv_flags);
++}
++
+ #ifdef CONFIG_PCIEAER
+ #include <linux/aer.h>
+=20
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index e0d4402ec3391..2e940101ce1bf 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -45,7 +45,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+=20
+ static void pci_destroy_dev(struct pci_dev *dev)
+ {
+-	if (!dev->dev.kobj.parent)
++	if (pci_dev_test_and_set_removed(dev))
+ 		return;
+=20
+ 	pci_npem_remove(dev);
+--=20
+2.43.5
+
