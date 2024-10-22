@@ -1,157 +1,194 @@
-Received: from mx0a-00082601.pphosted.com (mx0a-00082601.pphosted.com [67.231.145.42])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B15EC1CDFAE
-	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 22:49:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.145.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53C0615CD52;
+	Tue, 22 Oct 2024 23:03:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729637359; cv=none; b=NWkdm8qgmZBYDqggwJ1saOQO/yTHOjPPans92n+skawx202FtiCPY+pxVarBdRNyKm2I/CUxTH1M8azTRU1rRgmGxuel0ZjsCqLUuhcDzy6cVIyYH2iC77oQhOQelCOrF8AN//4RFaOYszgImoW0sWc81tAwKHSZT2YjwVnmYqc=
+	t=1729638233; cv=none; b=agUZZeEnyrjZctA0yR2nrgb1xy2RgWoJYM2ZLiZbilcgyOHHQGsFW8rFNkN5ykNDXxr4jGOuEURZH5tvPb66FZdUDtH1AL3zCsTOU6abkXUD/C9ozGgTxIbT5IP1Guzy2ZVVtuKXzyS9ErGEDi5fhjrrwjFZGYVs3fkAyyLenBM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729637359; c=relaxed/simple;
-	bh=viiuCp8o8xe/WgY+254iES/RD5a7szdU4pB3fCcKt5Q=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lTGWJJDSx/60eUn0/56N9cKqbJ+TGWIrFAv2VLnBQouTUJrxWZrlFu0hfGwBL8zHb/d4i/s2t4kEkfWWk1iOeUHnWDnR6xjWt/3N0UFUimd0DzraeECKRUuFgsIQM6Qi2D3ugTzHCo2RNIGo0ZfOqRj5LL5hyvbuCPGTpY2lfY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com; spf=pass smtp.mailfrom=meta.com; dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b=b6AIl4fV; arc=none smtp.client-ip=67.231.145.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=meta.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=meta.com
+	s=arc-20240116; t=1729638233; c=relaxed/simple;
+	bh=n8lD8DCqOlH73Gu9VQdGu1O0WqrfAycD1MpavnIEgK8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MwGvUbJSVUOXhQ8B03vY6MNx+Lu3EZ/UO36MHZ3B1fq11MqFgolGX7QPQpUeaVY/Xukv3FXWBGRpHkNRSOd3CntRDuSXXllTQgid3+0qE8hh3C3hLcJMRmxg4uDpHx2rqAkNsQuS4yPjKsTT9tyZkjy3yqoD+42CwhGfTHeJOoA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JoXnp6mT; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=meta.com header.i=@meta.com header.b="b6AIl4fV"
-Received: from pps.filterd (m0109334.ppops.net [127.0.0.1])
-	by mx0a-00082601.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 49MLZgaY000394
-	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 15:49:17 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=meta.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=s2048-2021-q4;
-	 bh=s5DkJC0dpxojjbkkf8DNyHozhv8fkFdulB2c6JVTBlw=; b=b6AIl4fV3oPL
-	ZRVFJYRkG0bl9sYUREjryVlmeWNie2LlTaAE+yAN+JgsT2icbcLEPARrghP+0rbT
-	rgvZTaxmALeaAmBYECxWi6mav+lvDhenERbZuJQ/fd10Et8CJIoV4RqWfvZBIQMC
-	WdezCAJJGytijzAwa2dT+2MB7Y3e8Chn53dx4wMBXzvHTXuJmZ+heH/TaB8V9CL9
-	p9ppgJdZGaklb10grm02DN/LyDG0G4U52wYuTi6aaosOXpihTSGuriglFHWN0Y+0
-	7BphSwp2NqherMfmo7c4f9Xfq4ypSKOTSvRr7Eb8jAwMaLEHKn/1Kk0LKELel4sd
-	KbyJ+pLcZw==
-Received: from maileast.thefacebook.com ([163.114.135.16])
-	by mx0a-00082601.pphosted.com (PPS) with ESMTPS id 42em3h0dsm-12
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 22 Oct 2024 15:49:16 -0700 (PDT)
-Received: from twshared4872.05.ash9.facebook.com (2620:10d:c0a8:1b::2d) by
- mail.thefacebook.com (2620:10d:c0a9:6f::237c) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.2.1544.11; Tue, 22 Oct 2024 22:49:08 +0000
-Received: by devbig638.nha1.facebook.com (Postfix, from userid 544533)
-	id 8600414610C96; Tue, 22 Oct 2024 15:48:53 -0700 (PDT)
-From: Keith Busch <kbusch@meta.com>
-To: <linux-pci@vger.kernel.org>, <bhelgaas@google.com>
-CC: <lukas@wunner.de>, Keith Busch <kbusch@kernel.org>,
-        Jonathan Cameron
-	<Jonathan.Cameron@huawei.com>
-Subject: [PATCHv3 1/5] pci: make pci_stop_dev concurrent safe
-Date: Tue, 22 Oct 2024 15:48:47 -0700
-Message-ID: <20241022224851.340648-2-kbusch@meta.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <20241022224851.340648-1-kbusch@meta.com>
-References: <20241022224851.340648-1-kbusch@meta.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JoXnp6mT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9FF69C4CEC3;
+	Tue, 22 Oct 2024 23:03:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729638232;
+	bh=n8lD8DCqOlH73Gu9VQdGu1O0WqrfAycD1MpavnIEgK8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=JoXnp6mT6m+lDTaXdvJEIlJtW4bAiMGbBfY/KkVwxf/niiZWtXDh0jwsmIk0RF2aC
+	 Dtphi9WPKduVkHpN62lAgTa6Ub9xTP/3kNB3SEAQIsaDfFG8sHqhY4KazThi9FOGo5
+	 JK8clH2eVpGpkOfp3jryMK3iC2Fo6E5AqrPljxT1H+1LwX4NU/3RvDyzizRvtcxXBG
+	 ksKfCJ8DF+0Af7abdCQZCCLNOfOXZLKxOkn+Qht4fLCx1tI8BC6zYFbP2P5jyBE2xd
+	 3CEujJ53dLqFyCKADwqeknKlNmE0gfX4vT0xxIEANkP4YBDzjAMbNQeEZYP71IO9mD
+	 KYxb2xfmv/w8g==
+Date: Tue, 22 Oct 2024 18:03:51 -0500
+From: Rob Herring <robh@kernel.org>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: gregkh@linuxfoundation.org, rafael@kernel.org, bhelgaas@google.com,
+	ojeda@kernel.org, alex.gaynor@gmail.com, boqun.feng@gmail.com,
+	gary@garyguo.net, bjorn3_gh@protonmail.com, benno.lossin@proton.me,
+	tmgross@umich.edu, a.hindborg@samsung.com, aliceryhl@google.com,
+	airlied@gmail.com, fujita.tomonori@gmail.com, lina@asahilina.net,
+	pstanner@redhat.com, ajanulgu@redhat.com, lyude@redhat.com,
+	daniel.almeida@collabora.com, saravanak@google.com,
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 14/16] rust: of: add `of::DeviceId` abstraction
+Message-ID: <20241022230351.GA1848992-robh@kernel.org>
+References: <20241022213221.2383-1-dakr@kernel.org>
+ <20241022213221.2383-15-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-FB-Internal: Safe
-Content-Type: text/plain
-X-Proofpoint-GUID: _5JMbL-jI-cdjh5Ra0ektapL2jD1-yhL
-X-Proofpoint-ORIG-GUID: _5JMbL-jI-cdjh5Ra0ektapL2jD1-yhL
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1051,Hydra:6.0.680,FMLib:17.12.62.30
- definitions=2024-10-05_02,2024-10-04_01,2024-09-30_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241022213221.2383-15-dakr@kernel.org>
 
-From: Keith Busch <kbusch@kernel.org>
+On Tue, Oct 22, 2024 at 11:31:51PM +0200, Danilo Krummrich wrote:
+> `of::DeviceId` is an abstraction around `struct of_device_id`.
+> 
+> This is used by subsequent patches, in particular the platform bus
+> abstractions, to create OF device ID tables.
+> 
+> Signed-off-by: Danilo Krummrich <dakr@kernel.org>
+> ---
+>  MAINTAINERS                     |  1 +
+>  rust/bindings/bindings_helper.h |  1 +
+>  rust/kernel/lib.rs              |  1 +
+>  rust/kernel/of.rs               | 63 +++++++++++++++++++++++++++++++++
+>  4 files changed, 66 insertions(+)
+>  create mode 100644 rust/kernel/of.rs
+> 
+> diff --git a/MAINTAINERS b/MAINTAINERS
+> index d9c512a3e72b..87eb9a7869eb 100644
+> --- a/MAINTAINERS
+> +++ b/MAINTAINERS
+> @@ -17340,6 +17340,7 @@ T:	git git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux.git
+>  F:	Documentation/ABI/testing/sysfs-firmware-ofw
+>  F:	drivers/of/
+>  F:	include/linux/of*.h
+> +F:	rust/kernel/of.rs
+>  F:	scripts/dtc/
+>  F:	tools/testing/selftests/dt/
+>  K:	of_overlay_notifier_
+> diff --git a/rust/bindings/bindings_helper.h b/rust/bindings/bindings_helper.h
+> index cd4edd6496ae..312f03cbdce9 100644
+> --- a/rust/bindings/bindings_helper.h
+> +++ b/rust/bindings/bindings_helper.h
+> @@ -15,6 +15,7 @@
+>  #include <linux/firmware.h>
+>  #include <linux/jiffies.h>
+>  #include <linux/mdio.h>
+> +#include <linux/of_device.h>
 
-Use the atomic ADDED flag to safely ensure concurrent callers can't
-attempt to stop the device multiple times. Callers should currently all
-be holding the pci_rescan_remove_lock, so there shouldn't be an existing
-race. But that global lock can cause lock dependency issues, so this is
-preparing to reduce reliance on that lock by using the existing existing
-atomic bit ops.
+Technically, you don't need this for *this* patch. You need 
+mod_devicetable.h for of_device_id. Best to not rely on implicit 
+includes. I've tried removing it and it still built, so I guess there is 
+another implicit include somewhere...
 
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Signed-off-by: Keith Busch <kbusch@kernel.org>
----
- drivers/pci/bus.c    |  2 +-
- drivers/pci/pci.h    | 11 +++++++++--
- drivers/pci/remove.c | 20 +++++++++-----------
- 3 files changed, 19 insertions(+), 14 deletions(-)
+>  #include <linux/pci.h>
+>  #include <linux/phy.h>
+>  #include <linux/refcount.h>
+> diff --git a/rust/kernel/lib.rs b/rust/kernel/lib.rs
+> index 3ec690eb6d43..5946f59f1688 100644
+> --- a/rust/kernel/lib.rs
+> +++ b/rust/kernel/lib.rs
+> @@ -51,6 +51,7 @@
+>  pub mod list;
+>  #[cfg(CONFIG_NET)]
+>  pub mod net;
+> +pub mod of;
+>  pub mod page;
+>  pub mod prelude;
+>  pub mod print;
+> diff --git a/rust/kernel/of.rs b/rust/kernel/of.rs
+> new file mode 100644
+> index 000000000000..a37629997974
+> --- /dev/null
+> +++ b/rust/kernel/of.rs
+> @@ -0,0 +1,63 @@
+> +// SPDX-License-Identifier: GPL-2.0
+> +
+> +//! Open Firmware abstractions.
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index e0a2441be6d32..aec08e81abff7 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -358,7 +358,7 @@ void pci_bus_add_device(struct pci_dev *dev)
- 	if (retval < 0 && retval !=3D -EPROBE_DEFER)
- 		pci_warn(dev, "device attach failed (%d)\n", retval);
-=20
--	pci_dev_assign_added(dev, true);
-+	pci_dev_assign_added(dev);
-=20
- 	if (dev_of_node(&dev->dev) && pci_is_bridge(dev)) {
- 		retval =3D of_platform_populate(dev_of_node(&dev->dev), NULL, NULL,
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index d89fdbf04f363..c4cceec006d0d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -470,9 +470,16 @@ static inline int pci_dev_set_disconnected(struct pc=
-i_dev *dev, void *unused)
- #define PCI_DPC_RECOVERED 1
- #define PCI_DPC_RECOVERING 2
-=20
--static inline void pci_dev_assign_added(struct pci_dev *dev, bool added)
-+static inline void pci_dev_assign_added(struct pci_dev *dev)
- {
--	assign_bit(PCI_DEV_ADDED, &dev->priv_flags, added);
-+	smp_mb__before_atomic();
-+	set_bit(PCI_DEV_ADDED, &dev->priv_flags);
-+	smp_mb__after_atomic();
-+}
-+
-+static inline bool pci_dev_test_and_clear_added(struct pci_dev *dev)
-+{
-+	return test_and_clear_bit(PCI_DEV_ADDED, &dev->priv_flags);
- }
-=20
- static inline bool pci_dev_is_added(const struct pci_dev *dev)
-diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
-index e4ce1145aa3ee..e0d4402ec3391 100644
---- a/drivers/pci/remove.c
-+++ b/drivers/pci/remove.c
-@@ -31,18 +31,16 @@ static int pci_pwrctl_unregister(struct device *dev, =
-void *data)
-=20
- static void pci_stop_dev(struct pci_dev *dev)
- {
--	pci_pme_active(dev, false);
--
--	if (pci_dev_is_added(dev)) {
--		device_for_each_child(dev->dev.parent, dev_of_node(&dev->dev),
--				      pci_pwrctl_unregister);
--		device_release_driver(&dev->dev);
--		pci_proc_detach_device(dev);
--		pci_remove_sysfs_dev_files(dev);
--		of_pci_remove_node(dev);
-+	if (!pci_dev_test_and_clear_added(dev))
-+		return;
-=20
--		pci_dev_assign_added(dev, false);
--	}
-+	pci_pme_active(dev, false);
-+	device_for_each_child(dev->dev.parent, dev_of_node(&dev->dev),
-+			      pci_pwrctl_unregister);
-+	device_release_driver(&dev->dev);
-+	pci_proc_detach_device(dev);
-+	pci_remove_sysfs_dev_files(dev);
-+	of_pci_remove_node(dev);
- }
-=20
- static void pci_destroy_dev(struct pci_dev *dev)
---=20
-2.43.5
+s/Open Firmware/Devicetree/
 
+Or keep both that prior versions of this code had. Most of DT/OF today 
+is not OpenFirmware.
+
+> +//!
+> +//! C header: [`include/linux/of_*.h`](srctree/include/linux/of_*.h)
+
+I haven't quite figured out how this gets used. I guess just a link in 
+documentation? I somewhat doubt this file is going to handle all DT
+abstractions. That might become quite long. Most of of_address.h and 
+of_irq.h I actively don't want to see Rust bindings for because they 
+are mainly used by higher level interfaces (e.g. platform dev 
+resources). There's a slew of "don't add new users" APIs which I need to 
+document. Also, the main header is of.h which wasn't included here.
+
+As of now, only the mod_devicetable.h header is used by this file, so I 
+think you should just put it until that changes. Maybe there would be 
+some savings if all of mod_devicetable.h was handled by 1 rust file?
+
+> +
+> +use crate::{bindings, device_id::RawDeviceId, prelude::*};
+> +
+> +/// An open firmware device id.
+> +#[derive(Clone, Copy)]
+> +pub struct DeviceId(bindings::of_device_id);
+> +
+> +// SAFETY:
+> +// * `DeviceId` is a `#[repr(transparent)` wrapper of `struct of_device_id` and does not add
+> +//   additional invariants, so it's safe to transmute to `RawType`.
+> +// * `DRIVER_DATA_OFFSET` is the offset to the `data` field.
+> +unsafe impl RawDeviceId for DeviceId {
+> +    type RawType = bindings::of_device_id;
+> +
+> +    const DRIVER_DATA_OFFSET: usize = core::mem::offset_of!(bindings::of_device_id, data);
+> +
+> +    fn index(&self) -> usize {
+> +        self.0.data as _
+> +    }
+> +}
+> +
+> +impl DeviceId {
+> +    /// Create a new device id from an OF 'compatible' string.
+> +    pub const fn new(compatible: &'static CStr) -> Self {
+> +        let src = compatible.as_bytes_with_nul();
+> +        // Replace with `bindings::of_device_id::default()` once stabilized for `const`.
+> +        // SAFETY: FFI type is valid to be zero-initialized.
+> +        let mut of: bindings::of_device_id = unsafe { core::mem::zeroed() };
+> +
+> +        let mut i = 0;
+> +        while i < src.len() {
+> +            of.compatible[i] = src[i] as _;
+> +            i += 1;
+> +        }
+
+AFAICT, this loop will go away when C char maps to u8. Perhaps a note 
+to that extent or commented code implementing that.
+
+> +
+> +        Self(of)
+> +    }
+> +
+> +    /// The compatible string of the embedded `struct bindings::of_device_id` as `&CStr`.
+> +    pub fn compatible<'a>(&self) -> &'a CStr {
+> +        // SAFETY: `self.compatible` is a valid `char` pointer.
+> +        unsafe { CStr::from_char_ptr(self.0.compatible.as_ptr()) }
+> +    }
+
+I don't think we need this. The usage model is checking does a node's 
+compatible string(s) match a compatible in the table. Most of the time 
+we don't even need that. We just need the match data.
+
+Rob
