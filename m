@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C485E165F01;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDAD8199237;
 	Fri, 25 Oct 2024 07:55:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729842902; cv=none; b=SQQhEyJuT85wgXCpgRfAGPpl5hsV4wdwgnddT3QzxlWbdxvvsHAoixDGZAkBnCVGnmuQctyjXLyMZCcGdk0Oif2cEHZEhXfck6D2IP0dIBdCmslZacFrdsl1zENrCJg6/gHH9AM+t7r+ogZaHcQcIc9kSg2z7SIO7pV9Eru8aJI=
+	t=1729842903; cv=none; b=eDzRdNuBFZvVhMqDWco2avZ4Bj+1vGeY7xDCYa1QLRUwxt5rVS9i3gThvtV6kO+5ZjXd71sZyHxgzU3Z45zzGv4ASNVB8k7jb4GfqTwPHGCqXhjNAiaz/OgtiBy4pnW9Sa2AH88+7wjbh7SaPHuUyomxElc4QJLOGVdZ9Lat/N8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729842902; c=relaxed/simple;
-	bh=/P9q2KbiK+vcSshfBjILffb3hynuvF5fiM7tfFtChPU=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=PMNxX7ecOqh8/nEZsm0XwyuG+bjp//vwhLzENFtgIBdAZDdqybUsWd9OMpyHcgwqEKyCfn530DNKhnbviMNJIp+C+79mA9hutgfs0h74bh+sINrw7fCFnFJP6pUnkckwJT/3GEOuP/E2AHYdlY53CPopBuBZ69irqzpxduTV/9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=unKwLtUY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1729842903; c=relaxed/simple;
+	bh=xsioCY39TMmED4dmq57286M326Pu5X0lo5xq75LORhM=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=jpbgIwGsBdbgjRwsxCRbNrgh4QQhKXD4boo4hLwpfCq/W64nPx8FYzU3+LF6J2XQClfoW0SBd1ie4LNxQ2MZzUGi8oaAFQu4p5GKQcEwmxRBbX0q4E3AcAkVfN4sxZzfuniIJSyr/b+pW1yyREmrRsDPaNKYfHpcLStrWxYhgS8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hFPTLDMB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="unKwLtUY"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 5E676C4CEC3;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hFPTLDMB"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 9E914C4CEE8;
 	Fri, 25 Oct 2024 07:55:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1729842902;
-	bh=/P9q2KbiK+vcSshfBjILffb3hynuvF5fiM7tfFtChPU=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=unKwLtUYbvMAaxxDDaj46kDvk6obQPVAC/rnCe6cWZXUIr6yLcl6dE/8qGtyApsot
-	 /pW++6RbNZ5Wr664GEWcgLLWGVkiCOCitP4Wqq6lV4V997PghAc8qnKRe9n3lBc9dF
-	 LLaSHDhEBgduhEZO4zhggCBcEP4NeWQFVFq/Bl2RB3zLzvdwm1Y0Teh3N5Rwqr+gOH
-	 hzxTghUaDxepTIJC93ouZsYIceBv/JyGQ93G210XkK2Sa+Xe9+BNUai64vRnLJ1wC8
-	 nco5JAkI8C/Xn6qwQWthvOdYvq8HZ25GLUgJYNdtwFpNkBrYpVkZrw6sd4fGug1vbN
-	 cURnq0HEWUp8A==
+	bh=xsioCY39TMmED4dmq57286M326Pu5X0lo5xq75LORhM=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=hFPTLDMB2EIwbwnDV5uPvFVg4rp4l7feinLaAWUrv5XcTxwnKL2PRQ8Rglf3o6p+u
+	 TmbOt1fomWK9Cg+zg/d+LjEWH47ILV3Xy3RfdWKsEo1LBS93Mpof9lBMhEA/QFO0l1
+	 LqRQyaVhsAoRYXa0TjGjaAMskalBts3c5VwpnTrdYoyp0/iDJGfG0bMI3S+BdbGbQ5
+	 5fCJPjbFxWBSBAMUVQB6MHuAq5njovLFW80TyTwbk/1KvOi5QmF/Iyxwq3iztQLkjj
+	 ChgyciUrLQoh8o6uib+vuJkiq2CM1U+Pux3NBsLo3FTpLBa0sTb89ZgS68dR/DFkVI
+	 GrXyzv1u7NBMw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 45E2ED1171B;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 94A63D1171C;
 	Fri, 25 Oct 2024 07:55:02 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Subject: [PATCH v2 0/5] PCI/pwrctl: Ensure that the pwrctl drivers are
- probed before PCI client drivers
-Date: Fri, 25 Oct 2024 13:24:50 +0530
-Message-Id: <20241025-pci-pwrctl-rework-v2-0-568756156cbe@linaro.org>
+Date: Fri, 25 Oct 2024 13:24:54 +0530
+Subject: [PATCH v2 4/5] PCI/pwrctl: Move pwrctl device creation to its own
+ helper function
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,9 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAMpOG2cC/32NQQqDMBBFryKz7pQkGKpd9R7iIk1HHSpGJhJbx
- Ls3eoAu3//89zeIJEwR7sUGQokjhymDuRTgBzf1hPzKDEaZUitjcPaM8yp+GVFoDfJGp59HaSt
- rLeTdLNTx53Q2beaB4xLke14kfaT/bEmjwrp0N6pVZytvHyNPTsI1SA/tvu8/7mwmobMAAAA=
+Message-Id: <20241025-pci-pwrctl-rework-v2-4-568756156cbe@linaro.org>
+References: <20241025-pci-pwrctl-rework-v2-0-568756156cbe@linaro.org>
+In-Reply-To: <20241025-pci-pwrctl-rework-v2-0-568756156cbe@linaro.org>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
  Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
  Bartosz Golaszewski <brgl@bgdev.pl>
@@ -54,19 +54,18 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
  Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Krishna chaitanya chundru <quic_krichai@quicinc.com>, 
- stable+noautosel@kernel.org
+ Krishna chaitanya chundru <quic_krichai@quicinc.com>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1932;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3016;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=/P9q2KbiK+vcSshfBjILffb3hynuvF5fiM7tfFtChPU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnG07Swl0G4ixBGpbr+vGMdccGZh0t6UayFam6Z
- lb+jRhARDOJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZxtO0gAKCRBVnxHm/pHO
- 9ULRCACW7PS0HfebJvSt6rB4hkHg2sIdTDJJxVgdVvmfX0motvf7zRQpEVsBhCBakf83kuwdNh/
- +wiKL2PimBQbnxReXcmmQjCqRufHCSPxaPdl4KnnNCPr0fNxigeXBcU1WUJctymADBjSIS6T6yZ
- eG8r1IeyCmoq2lQWSwsEykPRg11bTyDzQ02810G26b4x7c5V3jQrQWE4GLzKgJxjeqIStwj7XL7
- M3pYz4hPauk0aHMqvhB6b/FfutLh1VdwTD9Gje+zLj9yHTp8U6RKOCq3bFxlLiXniUh2UcFddsx
- /4ml60f5t44g+dPvAUYYkoRBkqdMS8soTXSfT98GaOjRZtmA
+ bh=umde/gEf3xryIYWhEQXTOZb+OYyr+RucmbbfjNEuNcQ=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnG07UGAg9nkrolL4cB2g9Lnx0saPQGfzOUZKEF
+ 4f39fULM7uJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZxtO1AAKCRBVnxHm/pHO
+ 9XIyCACmIiZaGcBALCNfIceqSQuEMavLpnbUGB4PRhmxgVrRK3KsjTE3altX3gKuayVDbA6MR3Z
+ YiUMRxKobB14WbeJfc/fRDsre7fZ2+azeqIhWHn+u8UYO7SH7+jOE+hh+9jmwrebUljwPUfz8JH
+ +8vK8++I8r4WniCN1YNdSVFJHIIhhG1UAbNsC+1wnoFEuM03eV6J0EQ9+4TB68NzIe2r0laSe0h
+ 1THtkvz3FZ7xxNR3pX5foODZnCS6KsBzIagXJ2Woiv+gNZ1nkt6A0bFU20MFJj+r+In1XBy79lE
+ Ysj3gxw/BxiBmLvcIRKdN9h8CNds8DilRH01bXxFviD4AVYd
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -74,49 +73,97 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Reply-To: manivannan.sadhasivam@linaro.org
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-This series reworks the PCI/pwrctl integration to ensure that the pwrctl drivers
-are always probed before the PCI client drivers. This series addresses a race
-condition when both pwrctl and pwrctl/pwrseq drivers probe parallely (even when
-the later one probes last). One such issue was reported for the Qcom X13s
-platform with WLAN module and fixed with 'commit a9aaf1ff88a8 ("power:
-sequencing: request the WLAN enable GPIO as-is")'.
+This makes the pci_bus_add_device() API easier to maintain. Also add more
+comments to the helper to describe how the devices are created.
 
-Though the issue was fixed with a hack in the pwrseq driver, it was clear that
-the issue is applicable to all pwrctl drivers. Hence, this series tries to
-address the issue in the PCI/pwrctl integration.
-
-- Mani
-
+Tested-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Tested-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
-Changes in v2:
-- Used for_each_available_child_of_node_scoped() to iterate over child nodes
-  (Bartosz)
-- Collected tags
-- Link to v1: https://lore.kernel.org/r/20241022-pci-pwrctl-rework-v1-0-94a7e90f58c5@linaro.org
+ drivers/pci/bus.c | 59 ++++++++++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 18 deletions(-)
 
----
-Manivannan Sadhasivam (5):
-      PCI/pwrctl: Use of_platform_device_create() to create pwrctl devices
-      PCI/pwrctl: Create pwrctl devices only if at least one power supply is present
-      PCI/pwrctl: Ensure that the pwrctl drivers are probed before the PCI client drivers
-      PCI/pwrctl: Move pwrctl device creation to its own helper function
-      PCI/pwrctl: Remove pwrctl device without iterating over all children of pwrctl parent
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 645bbb75f8f9..6e38984e576d 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -321,6 +321,46 @@ void __weak pcibios_resource_survey_bus(struct pci_bus *bus) { }
+ 
+ void __weak pcibios_bus_add_device(struct pci_dev *pdev) { }
+ 
++/*
++ * Create pwrctl devices (if required) for the PCI devices to handle the power
++ * state.
++ */
++static void pci_pwrctl_create_devices(struct pci_dev *dev)
++{
++	struct device_node *np = dev_of_node(&dev->dev);
++	struct device *parent = &dev->dev;
++	struct platform_device *pdev;
++
++	/*
++	 * First ensure that we are starting from a PCI bridge and it has a
++	 * corresponding devicetree node.
++	 */
++	if (np && pci_is_bridge(dev)) {
++		/*
++		 * Now look for the child PCI device nodes and create pwrctl
++		 * devices for them. The pwrctl device drivers will manage the
++		 * power state of the devices.
++		 */
++		for_each_available_child_of_node_scoped(np, child) {
++			/*
++			 * First check whether the pwrctl device really needs to
++			 * be created or not. This is decided based on at least
++			 * one of the power supplies being defined in the
++			 * devicetree node of the device.
++			 */
++			if (!of_pci_is_supply_present(child)) {
++				pci_dbg(dev, "skipping OF node: %s\n", child->name);
++				return;
++			}
++
++			/* Now create the pwrctl device */
++			pdev = of_platform_device_create(child, NULL, parent);
++			if (!pdev)
++				pci_err(dev, "failed to create OF node: %s\n", child->name);
++		}
++	}
++}
++
+ /**
+  * pci_bus_add_device - start driver for a single device
+  * @dev: device to add
+@@ -345,24 +385,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	pci_proc_attach_device(dev);
+ 	pci_bridge_d3_update(dev);
+ 
+-	if (dev_of_node(&dev->dev) && pci_is_bridge(dev)) {
+-		for_each_available_child_of_node_scoped(dn, child) {
+-			/*
+-			 * First check whether the pwrctl device needs to be
+-			 * created or not. This is decided based on at least
+-			 * one of the power supplies being defined in the
+-			 * devicetree node of the device.
+-			 */
+-			if (!of_pci_is_supply_present(child)) {
+-				pci_dbg(dev, "skipping OF node: %s\n", child->name);
+-				continue;
+-			}
+-
+-			pdev = of_platform_device_create(child, NULL, &dev->dev);
+-			if (!pdev)
+-				pci_err(dev, "failed to create OF node: %s\n", child->name);
+-		}
+-	}
++	pci_pwrctl_create_devices(dev);
+ 
+ 	/*
+ 	 * Create a device link between the PCI device and pwrctl device (if
 
- drivers/pci/bus.c         | 64 +++++++++++++++++++++++++++++++++++++++++------
- drivers/pci/of.c          | 27 ++++++++++++++++++++
- drivers/pci/pci.h         |  5 ++++
- drivers/pci/pwrctl/core.c | 10 --------
- drivers/pci/remove.c      | 17 ++++++-------
- 5 files changed, 96 insertions(+), 27 deletions(-)
----
-base-commit: 48dc7986beb60522eb217c0016f999cc7afaf0b7
-change-id: 20241022-pci-pwrctl-rework-a1b024158555
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+2.25.1
 
 
