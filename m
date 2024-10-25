@@ -1,208 +1,123 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98E4C1F7566;
-	Fri, 25 Oct 2024 13:39:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF01D212168
+	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2024 14:00:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729863573; cv=none; b=OIj3Y4GPZWvdjEJO1HMmv5F4rUa/bW8fROhlJ/tl5gvX2VDShThgX8huBbnBZe6GmiMwEI1Rk3AFmtoWkHbZVwT0hgLN9ea2pWeIAGAJu92BWzvXBU/Sxb3OduD9whWGaBrj5lIBKNF4BCLtbkkmWxC5ekKdAawIq/HgLPw/QKo=
+	t=1729864833; cv=none; b=pBaabvwvPKa7HvYc9OFrBniVsQCyZeHCrkErSTbTeAE4MsmKjQ68jI6QuxNcsorqi8P7z22iEp4KJ9KAPSd/4kS5mGxc09pq7xqdklewNpfMmEjsIIDyJSKQDLUkv5nywHleoYvsQAdO42KZNPk9jmOAEJS7Xj32puQjR2Tus8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729863573; c=relaxed/simple;
-	bh=/HnzH8LIxgCAWX0/LLh1puQjwqcQ1NSbusIo7Y2Mm3Q=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=gu2G+DRsc/IDw/hI/yWgdzXNE6/dQ7fZkL9yPY3JaeUb0WyF/L1EJe8pDJ3o31w2qMRWD4he0UO9BTSGQftLYoOkWd3hOA9C+mG4R8q0xVRlWAJweAxGPS/MxXwVf7vpF65TVf0jrGQtbgVY3xyL0NqL9Vqva0EeNgQmMrQpPB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TzUt3tKJ; arc=none smtp.client-ip=198.175.65.15
+	s=arc-20240116; t=1729864833; c=relaxed/simple;
+	bh=jq85rSYy0OYaAZe1ng59EUawTwKmW5sahE7Yftyn95o=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=M6iMEEuYibps+uJ/mFDksubsjMDgI9DGjiClJVoh1RJ6wRdS7TJmjUZsW9PoB+dQ6yBSeJElLLt9NcZ/oEetN/5trzQkneGWFZz0+YxEt24nvrRM9Ll/qc0yupRk3xbsW5bCrix4ry2YRWLpXO4Ot4zQP9YGNjioV0FrWwP+F/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LT/2BYst; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TzUt3tKJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LT/2BYst"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729863571; x=1761399571;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=/HnzH8LIxgCAWX0/LLh1puQjwqcQ1NSbusIo7Y2Mm3Q=;
-  b=TzUt3tKJKFyWLwOZpsSNOr/CnNVKenZRKHG7W7CnzmIvtePLpj65CEuU
-   i4u/9oKhYKSrhXR/JTgJHIcyNSgqvDtCrYYWdGpQTkJPZxZITte1aymn8
-   STXIxnuchSQd/hrem4IxS7CRquATMxqGrmJIvg2frEEIFa4qI7O+0VKrd
-   UUkPIbkGLiB9X9jAg6EeXYkzSpxAQl3fcDpOU6hFU505upV33xK7C+Cc9
-   /7YDBgL5qNQSRaWNZ+O50IhUirpZXMsEqTajvWj8Bx/7y5ZDs/ChO9aMc
-   4YFLLhUE9E23MS5lPKBSydenv0cT8kXujCpplEglmYBWV1Ide7PwAZkwi
+  t=1729864832; x=1761400832;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=jq85rSYy0OYaAZe1ng59EUawTwKmW5sahE7Yftyn95o=;
+  b=LT/2BYst3t13FutyqY4qtJnrgda5uHhvP3/Dw+HNKI4k0lYx7n67Q1Zs
+   Kd7kAhYTOxoS74OgmMJGcnIAQSVMWR8KMIcmwj7NtxXeFSCQDx2cBG05L
+   XPtzSyZnJLziZh5ECuBXUaJeHeBexi3M6BrpStFfCXi/598i5jEgyrz6+
+   iduePmXnms6m/MhrL0IIUwx42V4+U98vTRMTXKYA8LqEbGgvdfohypbrt
+   sU8BresdEC/ASgr4bcuEvjv7Kzu1hIcXsEV/O34Sl9p6qo02cPtmwPGRc
+   mU3wOVD2rdFzIxcu39j/57NsOiVD4/EpR3kHoXLqz/4vmvxzWJG7yVQfH
    Q==;
-X-CSE-ConnectionGUID: uVvo5VE1Q9egw6uoeGAbIA==
-X-CSE-MsgGUID: 8uQtQPinRPihbf92JuzMWw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="33229180"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="33229180"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 06:39:30 -0700
-X-CSE-ConnectionGUID: 2L9XHif8SVm9IHuMKA3KaQ==
-X-CSE-MsgGUID: m60xT2EDQUCcPtzhB4axHA==
+X-CSE-ConnectionGUID: 2rXkBgT7Rfm+ijNCweuDZg==
+X-CSE-MsgGUID: HbY7UWwDSoCkZKVGe8TDHw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11236"; a="29752832"
+X-IronPort-AV: E=Sophos;i="6.11,231,1725346800"; 
+   d="scan'208";a="29752832"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 07:00:31 -0700
+X-CSE-ConnectionGUID: TPEQ/WyJTia+sbcMH2i7jw==
+X-CSE-MsgGUID: g7pvVteORMy9/mkiAZvrSw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,231,1725346800"; 
-   d="scan'208";a="111752941"
-Received: from ettammin-desk.ger.corp.intel.com (HELO localhost) ([10.245.244.225])
-  by orviesa002-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 06:39:25 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 25 Oct 2024 16:39:21 +0300 (EEST)
-To: Yazen Ghannam <yazen.ghannam@amd.com>
-cc: linux-edac@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-    tony.luck@intel.com, x86@kernel.org, avadhut.naik@amd.com, 
-    john.allen@amd.com, mario.limonciello@amd.com, bhelgaas@google.com, 
-    Shyam-sundar.S-k@amd.com, richard.gong@amd.com, jdelvare@suse.com, 
-    linux@roeck-us.net, clemens@ladisch.de, 
-    Hans de Goede <hdegoede@redhat.com>, linux-pci@vger.kernel.org, 
-    linux-hwmon@vger.kernel.org, platform-driver-x86@vger.kernel.org, 
-    naveenkrishna.chatradhi@amd.com, carlos.bilbao.osdev@gmail.com
-Subject: Re: [PATCH 14/16] x86/amd_smn, platform/x86/amd/hsmp: Have HSMP use
- SMN
-In-Reply-To: <20241024160625.GC965@yaz-khff2.amd.com>
-Message-ID: <d44f45c1-a550-de07-d1fa-91dfe0adb47f@linux.intel.com>
-References: <20241023172150.659002-1-yazen.ghannam@amd.com> <20241023172150.659002-15-yazen.ghannam@amd.com> <2797ecc5-935d-21a2-bb43-273a7eae3a12@linux.intel.com> <20241024160625.GC965@yaz-khff2.amd.com>
+   d="scan'208";a="81232280"
+Received: from arl-s-03.igk.intel.com ([10.91.111.103])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 07:00:30 -0700
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+To: helgaas@kernel.org
+Cc: Szymon Durawa <szymon.durawa@linux.intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Subject: [RFC PATCH v1 0/3] VMD add PCH rootbus support
+Date: Fri, 25 Oct 2024 17:01:50 +0200
+Message-Id: <20241025150153.983306-1-szymon.durawa@linux.intel.com>
+X-Mailer: git-send-email 2.39.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-983401245-1729863561=:946"
+Content-Transfer-Encoding: 8bit
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+This patch series implements the Intel VMD PCH rootbus support inside VMD
+module. Current implementation allows VMD to take ownership of devices only on
+IOC (Rootbus0). Starting from Intel Arrow Lake VMD exposes PCH rootbus to
+allow VMD to own devices on PCH bus (Rootbus1) as well.
 
---8323328-983401245-1729863561=:946
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Patch 3 : WA for PCH bus enumeration. VMD PCH primary bus number is 0x80 and
+          it is correct value. Unfortunately, pci_scan_bridge_extend() function
+          assigns setup as broken for bus primary number different than zero.
+          Until VMD was limited to IOC, rootbus primary was always set to 0 and
+          therfore bus->number was irrelevant. With PCH rootbus primary bus is
+          different than 0 (set to 0x80) and pci_scan_bridge_extend() code marks
+          setup as broken and restarts enumeration.
 
-On Thu, 24 Oct 2024, Yazen Ghannam wrote:
+I don't know whether pci_scan_bridge_extend() implementation is correct and
+whether it can be safety reworked. I propse WA which does not impact on PCI
+stack. It updates bus->number to the same number as primary bus value which
+allows to pass check for sensible setup in pci_scan_bridge_extend().
+From lspci tool perspective this WA is irrelevant:
 
-> On Thu, Oct 24, 2024 at 04:23:55PM +0300, Ilpo J=E4rvinen wrote:
-> > On Wed, 23 Oct 2024, Yazen Ghannam wrote:
-> >=20
-> > > The HSMP interface is just an SMN interface with different offsets.
-> > >=20
-> > > Define an HSMP wrapper in the SMN code and have the HSMP platform dri=
-ver
-> > > use that rather than a local solution.
-> > >=20
-> > > Also, remove the "root" member from AMD_NB, since there are no more
-> > > users of it.
-> > >=20
-> > > Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
-> > > ---
-> > >  arch/x86/include/asm/amd_nb.h    |  1 -
-> > >  arch/x86/include/asm/amd_smn.h   |  3 +++
-> > >  arch/x86/kernel/amd_nb.c         |  1 -
-> > >  arch/x86/kernel/amd_smn.c        |  9 +++++++++
-> > >  drivers/platform/x86/amd/Kconfig |  2 +-
-> > >  drivers/platform/x86/amd/hsmp.c  | 32 +++++-------------------------=
---
-> > >  6 files changed, 18 insertions(+), 30 deletions(-)
-> > >=20
-> > > diff --git a/arch/x86/include/asm/amd_nb.h b/arch/x86/include/asm/amd=
-_nb.h
-> > > index 55c03d3495bc..cbe31e316e39 100644
-> > > --- a/arch/x86/include/asm/amd_nb.h
-> > > +++ b/arch/x86/include/asm/amd_nb.h
-> > > @@ -27,7 +27,6 @@ struct amd_l3_cache {
-> > >  };
-> > > =20
-> > >  struct amd_northbridge {
-> > > -=09struct pci_dev *root;
-> > >  =09struct pci_dev *misc;
-> > >  =09struct pci_dev *link;
-> > >  =09struct amd_l3_cache l3_cache;
-> > > diff --git a/arch/x86/include/asm/amd_smn.h b/arch/x86/include/asm/am=
-d_smn.h
-> > > index 6850de69f863..f0eb12859c42 100644
-> > > --- a/arch/x86/include/asm/amd_smn.h
-> > > +++ b/arch/x86/include/asm/amd_smn.h
-> > > @@ -8,4 +8,7 @@
-> > >  int __must_check amd_smn_read(u16 node, u32 address, u32 *value);
-> > >  int __must_check amd_smn_write(u16 node, u32 address, u32 value);
-> > > =20
-> > > +/* Should only be used by the HSMP driver. */
-> > > +int __must_check amd_smn_hsmp_rdwr(u16 node, u32 address, u32 *value=
-, bool write);
-> > > +
-> > >  #endif /* _ASM_X86_AMD_SMN_H */
-> > > diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-> > > index 10cdeddeda02..4c22317a6dfe 100644
-> > > --- a/arch/x86/kernel/amd_nb.c
-> > > +++ b/arch/x86/kernel/amd_nb.c
-> > > @@ -73,7 +73,6 @@ static int amd_cache_northbridges(void)
-> > >  =09amd_northbridges.nb =3D nb;
-> > > =20
-> > >  =09for (i =3D 0; i < amd_northbridges.num; i++) {
-> > > -=09=09node_to_amd_nb(i)->root =3D amd_node_get_root(i);
-> > >  =09=09node_to_amd_nb(i)->misc =3D amd_node_get_func(i, 3);
-> > >  =09=09node_to_amd_nb(i)->link =3D amd_node_get_func(i, 4);
-> > >  =09}
-> > > diff --git a/arch/x86/kernel/amd_smn.c b/arch/x86/kernel/amd_smn.c
-> > > index 997fd3edd9c0..527dda8e3a2b 100644
-> > > --- a/arch/x86/kernel/amd_smn.c
-> > > +++ b/arch/x86/kernel/amd_smn.c
-> > > @@ -18,6 +18,9 @@ static DEFINE_MUTEX(smn_mutex);
-> > >  #define SMN_INDEX_OFFSET=090x60
-> > >  #define SMN_DATA_OFFSET=09=090x64
-> > > =20
-> > > +#define HSMP_INDEX_OFFSET=090xc4
-> > > +#define HSMP_DATA_OFFSET=090xc8
-> > > +
-> > >  /*
-> > >   * SMN accesses may fail in ways that are difficult to detect here i=
-n the called
-> > >   * functions amd_smn_read() and amd_smn_write(). Therefore, callers =
-must do
-> > > @@ -100,6 +103,12 @@ int __must_check amd_smn_write(u16 node, u32 add=
-ress, u32 value)
-> > >  }
-> > >  EXPORT_SYMBOL_GPL(amd_smn_write);
-> > > =20
-> > > +int __must_check amd_smn_hsmp_rdwr(u16 node, u32 address, u32 *value=
-, bool write)
-> > > +{
-> > > +=09return __amd_smn_rw(HSMP_INDEX_OFFSET, HSMP_DATA_OFFSET, node, ad=
-dress, value, write);
-> > > +}
-> > > +EXPORT_SYMBOL_GPL(amd_smn_hsmp_rdwr);
-> > > +
-> > >  static int amd_cache_roots(void)
-> > >  {
-> > >  =09u16 node, num_nodes =3D amd_num_nodes();
-> > > diff --git a/drivers/platform/x86/amd/Kconfig b/drivers/platform/x86/=
-amd/Kconfig
-> > > index f88682d36447..e100b315c62b 100644
-> > > --- a/drivers/platform/x86/amd/Kconfig
-> > > +++ b/drivers/platform/x86/amd/Kconfig
-> > > @@ -8,7 +8,7 @@ source "drivers/platform/x86/amd/pmc/Kconfig"
-> > > =20
-> > >  config AMD_HSMP
-> > >  =09tristate "AMD HSMP Driver"
-> > > -=09depends on AMD_NB && X86_64 && ACPI
-> > > +=09depends on AMD_SMN && X86_64 && ACPI
-> > >  =09help
-> > >  =09  The driver provides a way for user space tools to monitor and m=
-anage
-> > >  =09  system management functionality on EPYC server CPUs from AMD.
-> > > diff --git a/drivers/platform/x86/amd/hsmp.c b/drivers/platform/x86/a=
-md/hsmp.c
-> > > index 8fcf38eed7f0..544efb0255c0 100644
-> > > --- a/drivers/platform/x86/amd/hsmp.c
-> > > +++ b/drivers/platform/x86/amd/hsmp.c
-> >=20
-> > FYI, there has been major restructuring done for this driver in=20
-> > pdx86/for-next.
-> >
->=20
-> Yep, no problem. I can rebase these changes on top of those.
->=20
-> Any comments on the general approach?
+# lspci -s 10000:80:1d.4 -v
+10000:80:1d.4 PCI bridge: Intel Corporation Device 7f34 (rev 10) (prog-if 00 [Normal decode])
+    Flags: bus master, fast devsel, latency 0, IRQ 213
+    Bus: primary=80, secondary=f1, subordinate=f1, sec-latency=0
 
-I deemed looking deeper into the patch waste of my time due to the=20
-expected changes, so no comments at this time.
+lspci tree presentation:
+# lspci -tv
+-+-[10000:e0]---01.0-[e2]----00.0  Sandisk Corp Western Digital WD Black SN850X NVMe SSD
+ +-[10000:80]-+-1d.0  Intel Corporation RST VMD Managed Controller
+ |            \-1d.4-[f1]----00.0  Sandisk Corp PC SN735 NVMe SSD (DRAM-less)
+ +-[0000:80]-+-12.0  Intel Corporation Device 7f78
+[...]
+ |           +-1f.5  Intel Corporation Device 7f24
+ |           \-1f.6  Intel Corporation Device 550d
+ \-[0000:00]-+-00.0  Intel Corporation Device 7d1a
+             +-01.0  Intel Corporation RST VMD Managed Controller
 
---=20
- i.
+This workaround is a main reason it is send as RFC. To move this forward I need
+to get maintainer decision whether it is acceptable or not. If not,
+it would be great if you can take a look and propose a better solution.
 
---8323328-983401245-1729863561=:946--
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+
+Szymon Durawa (3):
+  PCI: vmd: Clean up vmd_enable_domain function
+  PCI: vmd: Add VMD PCH rootbus support
+  PCI: vmd: Add WA for VMD PCH rootbus support
+
+ drivers/pci/controller/vmd.c | 446 +++++++++++++++++++++++++++--------
+ 1 file changed, 343 insertions(+), 103 deletions(-)
+ mode change 100644 => 100755 drivers/pci/controller/vmd.c
+
+-- 
+2.39.3
+
