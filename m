@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDB941C07DA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 472521C4622;
 	Fri, 25 Oct 2024 07:55:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729842903; cv=none; b=MWvyLUonFWJN1tG53d0/FSkRz9eUEKwDm7EcFPKLoobI/OQwBP3fVMzf3tcHX8ECvgCVx1JPYgCQvtSz/nu54uG7nK1WwEtn1uEie3SRX4whInC2gG0uSJgz4vPHPhsYA7NLdmY64U00n2xvPjyBB2YVQe5Vjkf8+YvgrtqypIM=
+	t=1729842903; cv=none; b=BbKxldvZ2uVfv/2QPu8sCqs5ubwy11mEOdxRfJIKBxbaJ5U12RNQATSsB9Molkvs+BvxpO4FkHuW3P/de8aRS7f0LWHR5uutLLSfjzzE7eV26hrQVehCdgtmIjtILvBCZWOFL1ctG7rlB2FyxH8WnPAM2N5bT3cTQtlWh9m4cGw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1729842903; c=relaxed/simple;
-	bh=NQ0rYXvCzXCekz1zJkqr8dXaO2BDwBfsvs5WWor/i3c=;
+	bh=oQKJemLv+DazWWrWtxj8bo8GJRraMiPexo9TrSDVMUw=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=YKaXc+QHNSOj84hSTJDT+LR8FlO/7ZTFJAWUwcY48It31jcRW5U7XNNlvqZpUSbxIVkNuLIQs29iv8VI0Zx5nu97onHrrzwAjgMRFIadb8PaNwB6Cye9prWycGMlwGTDeUc0Jg7eArKjXKUnhdAdoq1XmdG+ZAr2bbas9PY2ods=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=haN3NeWk; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=ADUNO1fR3fwRD1oCOI4WNlOdnUTw7wzZYGAtHqk8/AJE/mT8IoeM7Uv1b/O4T7xebvTQ2kd9+urTgI7aA+iHjz6zYw+qJ0PHm6zn/U2/fw/RpwzJkp+zVOnAHc7QfR5VWFevicNHMEidj+/V8FFM8Z7mewY5F78SvWBDtjNoTjs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X7ra5R3S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="haN3NeWk"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 804BBC4CECC;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X7ra5R3S"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id ABD3AC4CEEB;
 	Fri, 25 Oct 2024 07:55:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1729842902;
-	bh=NQ0rYXvCzXCekz1zJkqr8dXaO2BDwBfsvs5WWor/i3c=;
+	bh=oQKJemLv+DazWWrWtxj8bo8GJRraMiPexo9TrSDVMUw=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=haN3NeWkxQXnd5zuCrz3Tc7Wl+AbRT99BBZYH2r3mwOjRhLB1sM9akvxgbf06hMmI
-	 OxYV4nfBJ3o3DQ31LOY0CQoJm/9oP0axIUbvkwt0o1O1ChU+jxGplf0P6LCklGN61q
-	 4Vdr+Q601MEdlZxESdhM5ZVWQAePhIQgfc6rh1rUfY38BppAvAGdP3LxoRaNWCYw5h
-	 cvv+cfL9sKLXx8VkgC/O3rbL/uUblBCAF2RFzZsHONRo4XYGzyQZ7njzO68Ev+SCjW
-	 /8YxdiyfGVD8/qkB02sSJIsjG7+NqVTIE9w4LdpNKUZwbgqIRoz+E6u4AHYaLqUOPm
-	 R3vL83fV4fdpQ==
+	b=X7ra5R3SxN/kvMECqGOUhOGf5mwqrNhRmBJAWYAmPMZKSGQ49Hr3QSX0QOXS9Fuft
+	 xzjUJSotuqXmXcoLJoS2A7yMayCa+VAHLbEGe/n0EzwUTdB14RvmzkNjFBK6if0aV0
+	 pWE9Qvi0Fjh1qy+TwC/+UQPXP1uA591FLbpzmqO1c7qY/L+YeTeBwj/V1+SBPdoZbn
+	 IBtOPr3cns8vdLiH50NRKcj9X61S6D4vHviVV6gg10Oax9D44fPgskp4ceVvzTMErA
+	 Cec/RifNnTPnQVk5n2hOBQ4vTiTd3a9Byq1UygcZk54h391toN8a0B1AJVtUVcU87i
+	 JoXJpBaeb4VVg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 6EBBBD11718;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id A1AF2D1171F;
 	Fri, 25 Oct 2024 07:55:02 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Fri, 25 Oct 2024 13:24:52 +0530
-Subject: [PATCH v2 2/5] PCI/pwrctl: Create pwrctl devices only if at least
- one power supply is present
+Date: Fri, 25 Oct 2024 13:24:55 +0530
+Subject: [PATCH v2 5/5] PCI/pwrctl: Remove pwrctl device without iterating
+ over all children of pwrctl parent
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20241025-pci-pwrctl-rework-v2-2-568756156cbe@linaro.org>
+Message-Id: <20241025-pci-pwrctl-rework-v2-5-568756156cbe@linaro.org>
 References: <20241025-pci-pwrctl-rework-v2-0-568756156cbe@linaro.org>
 In-Reply-To: <20241025-pci-pwrctl-rework-v2-0-568756156cbe@linaro.org>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
@@ -54,19 +54,18 @@ Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
  Srinivas Kandagatla <srinivas.kandagatla@linaro.org>, 
  Bjorn Andersson <bjorn.andersson@oss.qualcomm.com>, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- stable+noautosel@kernel.org, 
  Krishna chaitanya chundru <quic_krichai@quicinc.com>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3752;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2043;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=0FY5vkiC5PpJEJdcjgkvaOcvdHuhyY/wQ5scqIVPEeI=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnG07TayXM1r3dwqeQe2GSxL/SytuTklHNyH5pt
- 7HB3USY6AyJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZxtO0wAKCRBVnxHm/pHO
- 9Y88B/497DHOm4It5o4WYHFiLBngDSxzYRtGuIsLZVRYRMesmVZ7k0bDjGTfZXXgUh6/g7/7n3D
- 6pF1bfl7YhKap9GGdHg9pYOwXWOr/LdSlIlqZvrZkqvv9/Fq9ZS/sw+rNGY95KwRVxMJOjna1FB
- aQV2oJiBRtSEwZ320MRM4tUtun1tvoc3069jLRxc3yk18R+8EbBAhYNrho9lR14QYJZ1TDteqgv
- Y+7rPkAPJg1gMchKQHKYPesRBlBK/dF/5HLxTalhJSw1UgyvInX2J2nuvSSQ/LwmHA3zFDYI6oe
- OBvS7S7/rezgxFKOtnuuMIK0wXUEGpaiB6yrEtvRCiiT+stG
+ bh=ZMmwlwCRSzjhOUE5z4PNfZQoS9fl60qTZUGrmIa0oTI=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBnG07UrEI+ygFFYRiJquOhxF3/HIbsroWH7tQhL
+ aK5AVibzrqJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZxtO1AAKCRBVnxHm/pHO
+ 9RnwB/0Wzu1JRJdjBTy8WSMsnT+5odUgmGM2uRrgVJHOE75GND9wNiKEqdu3tffLo3uQIe4l+QN
+ q2huoKlgRmUe88U77wsCXrHnZBdLjwByElTa4uP1CoSJfC7RJvx9a+2+BtWVezy4ufj0FYN/Ca/
+ kC75FJPe4y8bCWDgA20i2nbRfZ1kUi56iOGrhN9QOUg4UHPaa7bewh0WAyDGsp5TcIE/Bz8gg41
+ PbB0Q+ucWngtUGqsttOdjhn+CMjo+udGDfJgdC+aI2VdRbd1OYdgUe4xbMSuKwgkd65wmEXq1g2
+ V+n8/BxngjXH+alX4zivvBwsnFiU42THzJRmBsptvG0Dk3b9
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -76,114 +75,60 @@ Reply-To: manivannan.sadhasivam@linaro.org
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Currently, pwrctl devices are created if the corresponding PCI nodes are
-defined in devicetree. But this is not correct, because not all PCI nodes
-defined in devicetree require pwrctl support. Pwrctl comes into picture
-only when the device requires kernel to manage its power state. This can
-be determined using the power supply properties present in the devicetree
-node of the device.
+There is no need to iterate over all children of the pwrctl device parent
+to remove the pwrctl device. Since the pwrctl device associated with the
+PCI device can be found using of_find_device_by_node() API, use it directly
+instead.
 
-So add a new API, of_pci_is_supply_present() that checks the devicetree
-node if at least one power supply property is present or not. If present,
-then the pwrctl device will be created for that PCI node. Otherwise, it
-will be skipped.
+If any pwrctl devices lying around without getting associated with the PCI
+devices, then those will be removed once their parent device gets removed.
 
-Cc: stable+noautosel@kernel.org # Depends on of_platform_device_create() rework
-Fixes: 8fb18619d910 ("PCI/pwrctl: Create platform devices for child OF nodes of the port node")
-Suggested-by: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>
 Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Tested-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 Tested-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- drivers/pci/bus.c | 11 +++++++++++
- drivers/pci/of.c  | 27 +++++++++++++++++++++++++++
- drivers/pci/pci.h |  5 +++++
- 3 files changed, 43 insertions(+)
+ drivers/pci/remove.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index 9d278d3a19ff..02a492aa5f17 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -354,6 +354,17 @@ void pci_bus_add_device(struct pci_dev *dev)
- 
- 	if (dev_of_node(&dev->dev) && pci_is_bridge(dev)) {
- 		for_each_available_child_of_node_scoped(dn, child) {
-+			/*
-+			 * First check whether the pwrctl device needs to be
-+			 * created or not. This is decided based on at least
-+			 * one of the power supplies being defined in the
-+			 * devicetree node of the device.
-+			 */
-+			if (!of_pci_is_supply_present(child)) {
-+				pci_dbg(dev, "skipping OF node: %s\n", child->name);
-+				continue;
-+			}
-+
- 			pdev = of_platform_device_create(child, NULL, &dev->dev);
- 			if (!pdev)
- 				pci_err(dev, "failed to create OF node: %s\n", child->name);
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index dacea3fc5128..1f6a15a35a82 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -728,6 +728,33 @@ void of_pci_make_dev_node(struct pci_dev *pdev)
- }
- #endif
- 
-+/**
-+ * of_pci_is_supply_present() - Check if the power supply is present for the PCI
-+ *				device
-+ * @np: Device tree node
-+ *
-+ * Check if the power supply for the PCI device is present in the device tree
-+ * node or not.
-+ *
-+ * Return: true if at least one power supply exists; false otherwise.
-+ */
-+bool of_pci_is_supply_present(struct device_node *np)
-+{
-+	struct property *prop;
-+	char *supply;
-+
-+	if (!np)
-+		return false;
-+
-+	for_each_property_of_node(np, prop) {
-+		supply = strrchr(prop->name, '-');
-+		if (supply && !strcmp(supply, "-supply"))
-+			return true;
-+	}
-+
-+	return false;
-+}
-+
- #endif /* CONFIG_PCI */
- 
- /**
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 14d00ce45bfa..c8081b427267 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -746,6 +746,7 @@ void pci_set_bus_of_node(struct pci_bus *bus);
- void pci_release_bus_of_node(struct pci_bus *bus);
- 
- int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge);
-+bool of_pci_is_supply_present(struct device_node *np);
- 
- #else
- static inline int
-@@ -793,6 +794,10 @@ static inline int devm_of_pci_bridge_init(struct device *dev, struct pci_host_br
- 	return 0;
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index e4ce1145aa3e..3dd9b3024956 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -17,16 +17,16 @@ static void pci_free_resources(struct pci_dev *dev)
+ 	}
  }
  
-+static inline bool of_pci_is_supply_present(struct device_node *np);
-+{
-+	return false;
-+}
- #endif /* CONFIG_OF */
+-static int pci_pwrctl_unregister(struct device *dev, void *data)
++static void pci_pwrctl_unregister(struct device *dev)
+ {
+-	struct device_node *pci_node = data, *plat_node = dev_of_node(dev);
++	struct platform_device *pdev;
  
- struct of_changeset;
+-	if (dev_is_platform(dev) && plat_node && plat_node == pci_node) {
+-		of_device_unregister(to_platform_device(dev));
+-		of_node_clear_flag(plat_node, OF_POPULATED);
+-	}
++	pdev = of_find_device_by_node(dev_of_node(dev));
++	if (!pdev)
++		return;
+ 
+-	return 0;
++	of_device_unregister(pdev);
++	of_node_clear_flag(dev_of_node(dev), OF_POPULATED);
+ }
+ 
+ static void pci_stop_dev(struct pci_dev *dev)
+@@ -34,8 +34,7 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 	pci_pme_active(dev, false);
+ 
+ 	if (pci_dev_is_added(dev)) {
+-		device_for_each_child(dev->dev.parent, dev_of_node(&dev->dev),
+-				      pci_pwrctl_unregister);
++		pci_pwrctl_unregister(&dev->dev);
+ 		device_release_driver(&dev->dev);
+ 		pci_proc_detach_device(dev);
+ 		pci_remove_sysfs_dev_files(dev);
 
 -- 
 2.25.1
