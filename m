@@ -1,125 +1,145 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E572A143744
-	for <linux-pci@vger.kernel.org>; Fri, 25 Oct 2024 14:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129AB70815;
+	Fri, 25 Oct 2024 14:07:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729864858; cv=none; b=S6Mqrq2BPgl8O34i/TUIKFa3WnG3c/wlzkby3XubmPrQqkWMP7ArtYI1ZkdL1c2o4I/HT4ACAjJ2dWJWM46wixntYBxC4HD8dvfHDa4vCJSUQhMdQcKA1HXeB4lOqxXOgK11Db178pX98wd8EivdSbdhrE81hSqfBIIW7PTWVVU=
+	t=1729865267; cv=none; b=Rqdlaf5VtzFRW7oGGoW55uwvWw7TpnTjqBdMgh8Gc2539Gk/eY6RDqlK55ijYyr6+S42H6efxoaDoMok1yUIomjsKdBvmT0JW5wwTbEK2lqALEINF89N8eGCWgeMU3s//cpqsCq3k19K+YajALwpu+KsdXU82H5VynJljZ5yPVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729864858; c=relaxed/simple;
-	bh=sfeMvxnsKa610l3g0XtcCqYynCw85W+htMeF3y49fBk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nnRUMuSwt7uE3Cl7CZpCeMAW4cQ9NyiVGZWhMp1RGxpvPSz+/zldSQBvyWilKQYdrl+rB/xaBB1wxS/g4oc+P9yFq8HRnO1YfeIHBvZp+i2YeSOH2jLuI4SQ9SVZBtoC+U3S4bgGMOKXnfj9xH8tthtxXtis5bGHniJJghTpi4M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KrUIqS5a; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1729865267; c=relaxed/simple;
+	bh=gND61iG+K/9p0y+1117PkpZdIqHcRUWD0xS62lpezW0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eEz0P4ws49u3v2cLuYKjR6kYPhwwzExiro49YkNc1oIYxJ/z5Toy6XiPk1zzDdioz0/x7gxy0U9H4suOAiwRDYhSdUuqOQE194iMoAA2VCQxSKAFNayUUq7STx18yej77bohT2saOVec2FaLs808h+EOuQNvYYxL933XFmA6CLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BX+p1F+S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KrUIqS5a"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729864857; x=1761400857;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=sfeMvxnsKa610l3g0XtcCqYynCw85W+htMeF3y49fBk=;
-  b=KrUIqS5a/+f7ty9lNVPjEwFgVgUMAcWg9uJlP5zIwWDH/eRD7q3PTFI2
-   G5rLY0pP/Y14gnYIPNOulDiRBZswUEo+/kaMio9nFLgb4TbMlp564YoqG
-   +o+LYlYrJp0wk7aLH8gtemdabFXYlx5KzCF3ej06VeeXF/3q816smIBpM
-   8r/6e0k/LUZMdMkzRZK3BBbPZsYnG87pwOmDm/HaVskTyUM5BlqZvQK3X
-   +rPn+lTiu2JDIK4XKEhrYm7MtnG4cn65E2VY4IoR+6EsyIzFTE20b48UV
-   j3MwxWyI++pxjkoDZ79KhS41K0OcVT18yNtMPogvhwX5Trz2Lgpa9WV8Z
-   w==;
-X-CSE-ConnectionGUID: Aj+DE7MBSGukLCAX9OwNjg==
-X-CSE-MsgGUID: ujME5DWuQxaOWsvdTnqgEQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11236"; a="29752865"
-X-IronPort-AV: E=Sophos;i="6.11,231,1725346800"; 
-   d="scan'208";a="29752865"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 07:00:57 -0700
-X-CSE-ConnectionGUID: eqvnk4ZLSZaIvmMwjt4bvA==
-X-CSE-MsgGUID: j4hfAorlSRizJL5KyhWycA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,231,1725346800"; 
-   d="scan'208";a="81232310"
-Received: from arl-s-03.igk.intel.com ([10.91.111.103])
-  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 07:00:55 -0700
-From: Szymon Durawa <szymon.durawa@linux.intel.com>
-To: helgaas@kernel.org
-Cc: Szymon Durawa <szymon.durawa@linux.intel.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	linux-pci@vger.kernel.org,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Subject: [RFC PATCH v1 3/3] PCI: vmd: Add WA for VMD PCH rootbus support
-Date: Fri, 25 Oct 2024 17:01:53 +0200
-Message-Id: <20241025150153.983306-4-szymon.durawa@linux.intel.com>
-X-Mailer: git-send-email 2.39.3
-In-Reply-To: <20241025150153.983306-1-szymon.durawa@linux.intel.com>
-References: <20241025150153.983306-1-szymon.durawa@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BX+p1F+S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D212C4CEE3;
+	Fri, 25 Oct 2024 14:07:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1729865266;
+	bh=gND61iG+K/9p0y+1117PkpZdIqHcRUWD0xS62lpezW0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BX+p1F+SOzZT9BkIcdyNjKmbv0cIonvd2FBG7v4LLrUCE9nZWrKB4xgODPeXhH1wy
+	 zS26PxyXHhrkDjqT09rbiaOkpAEt3YnunzGQv8/+4g+KH9Xy5rW3MB6VnBpxIvkdpS
+	 yhgorz6fW+bZp+ymmwA9Fb6WX0PU3csGuuyB02Ydo1qYNwITtxDRCzrg0euJAR4fMC
+	 8z7xhswj7lgeX4doIYje1k9n5hGZ3lkrd9lvqDKx/KqDl93ykkarMI/yRLyM8oeRoH
+	 uE4Jrovawz/TPYCHoYGWZtdwyqwMyBCOcpSLVU6SxX9eMOsZgk9Vl5JUHSZ9kwvaXn
+	 SGqQl7N6VjFQw==
+Date: Fri, 25 Oct 2024 09:07:45 -0500
+From: Rob Herring <robh@kernel.org>
+To: Wei Fang <wei.fang@nxp.com>
+Cc: davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+	pabeni@redhat.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	vladimir.oltean@nxp.com, claudiu.manoil@nxp.com,
+	xiaoning.wang@nxp.com, Frank.Li@nxp.com,
+	christophe.leroy@csgroup.eu, linux@armlinux.org.uk,
+	bhelgaas@google.com, horms@kernel.org, imx@lists.linux.dev,
+	netdev@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	alexander.stein@ew.tq-group.com
+Subject: Re: [PATCH v5 net-next 02/13] dt-bindings: net: add i.MX95 ENETC
+ support
+Message-ID: <20241025140745.GA2021164-robh@kernel.org>
+References: <20241024065328.521518-1-wei.fang@nxp.com>
+ <20241024065328.521518-3-wei.fang@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241024065328.521518-3-wei.fang@nxp.com>
 
-VMD PCH rootbus primary number is 0x80 and pci_scan_bridge_extend()
-cannot assign it as "hard-wired to 0" and marks setup as broken. To
-avoid this, PCH bus number has to be the same as PCH primary number.
+On Thu, Oct 24, 2024 at 02:53:17PM +0800, Wei Fang wrote:
+> The ENETC of i.MX95 has been upgraded to revision 4.1, and the vendor
+> ID and device ID have also changed, so add the new compatible strings
+> for i.MX95 ENETC. In addition, i.MX95 supports configuration of RGMII
+> or RMII reference clock.
+> 
+> Signed-off-by: Wei Fang <wei.fang@nxp.com>
+> ---
+> v2: Remove "nxp,imx95-enetc" compatible string.
+> v3:
+> 1. Add restriction to "clcoks" and "clock-names" properties and rename
+> the clock, also remove the items from these two properties.
+> 2. Remove unnecessary items for "pci1131,e101" compatible string.
+> v4: Move clocks and clock-names to top level.
+> v5: Add items to clocks and clock-names
+> ---
+>  .../devicetree/bindings/net/fsl,enetc.yaml    | 34 +++++++++++++++++--
+>  1 file changed, 31 insertions(+), 3 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/net/fsl,enetc.yaml b/Documentation/devicetree/bindings/net/fsl,enetc.yaml
+> index e152c93998fe..72d2d5d285cd 100644
+> --- a/Documentation/devicetree/bindings/net/fsl,enetc.yaml
+> +++ b/Documentation/devicetree/bindings/net/fsl,enetc.yaml
+> @@ -20,14 +20,23 @@ maintainers:
+>  
+>  properties:
+>    compatible:
+> -    items:
+> +    oneOf:
+> +      - items:
+> +          - enum:
+> +              - pci1957,e100
+> +          - const: fsl,enetc
+>        - enum:
+> -          - pci1957,e100
+> -      - const: fsl,enetc
+> +          - pci1131,e101
+>  
+>    reg:
+>      maxItems: 1
+>  
+> +  clocks:
+> +    maxItems: 1
+> +
+> +  clock-names:
+> +    maxItems: 1
+> +
+>    mdio:
+>      $ref: mdio.yaml
+>      unevaluatedProperties: false
+> @@ -40,6 +49,25 @@ required:
+>  allOf:
+>    - $ref: /schemas/pci/pci-device.yaml
+>    - $ref: ethernet-controller.yaml
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - pci1131,e101
+> +    then:
+> +      properties:
+> +        clocks:
+> +          items:
+> +            - description: MAC transmit/receiver reference clock
 
-Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
----
- drivers/pci/controller/vmd.c | 26 ++++++++++++++++++++++++--
- 1 file changed, 24 insertions(+), 2 deletions(-)
+This goes in the top-level or can just be dropped.
 
-diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
-index 842b70a21325..bb47e0a76c89 100755
---- a/drivers/pci/controller/vmd.c
-+++ b/drivers/pci/controller/vmd.c
-@@ -404,8 +404,22 @@ static inline u8 vmd_has_pch_rootbus(struct vmd_dev *vmd)
- static void __iomem *vmd_cfg_addr(struct vmd_dev *vmd, struct pci_bus *bus,
- 				  unsigned int devfn, int reg, int len)
- {
--	unsigned int busnr_ecam = bus->number - vmd->busn_start[VMD_BUS_0];
--	u32 offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
-+	unsigned char bus_number;
-+	unsigned int busnr_ecam;
-+	u32 offset;
-+
-+	/*
-+	 * VMD WA: for PCH rootbus, bus number is set to VMD_PRIMARY_PCH_BUS
-+	 * (see comment in vmd_create_pch_bus()) but original value is 0xE1
-+	 * which is stored in vmd->busn_start[VMD_BUS_1].
-+	 */
-+	if (vmd_has_pch_rootbus(vmd) && bus->number == VMD_PRIMARY_PCH_BUS)
-+		bus_number = vmd->busn_start[VMD_BUS_1];
-+	else
-+		bus_number = bus->number;
-+
-+	busnr_ecam = bus_number - vmd->busn_start[VMD_BUS_0];
-+	offset = PCIE_ECAM_OFFSET(busnr_ecam, devfn, reg);
- 
- 	if (offset + len >= resource_size(&vmd->dev->resource[VMD_CFGBAR]))
- 		return NULL;
-@@ -1023,6 +1037,14 @@ static int vmd_create_pch_bus(struct vmd_dev *vmd, struct pci_sysdata *sd,
- 	 */
- 	vmd->bus[VMD_BUS_1]->primary = VMD_PRIMARY_PCH_BUS;
- 
-+	/* This is a workaround for pci_scan_bridge_extend() code.
-+	 * It assigns setup as broken when primary != bus->number and
-+	 * for PCH rootbus primary is not "hard-wired to 0".
-+	 * To avoid this, vmd->bus[VMD_BUS_1]->number and
-+	 * vmd->bus[VMD_BUS_1]->primary are updated to the same value.
-+	 */
-+	vmd->bus[VMD_BUS_1]->number = VMD_PRIMARY_PCH_BUS;
-+
- 	vmd_copy_host_bridge_flags(
- 		pci_find_host_bridge(vmd->dev->bus),
- 		to_pci_host_bridge(vmd->bus[VMD_BUS_1]->bridge));
--- 
-2.39.3
+> +
+> +        clock-names:
+> +          items:
+> +            - const: ref
 
+This goes in the top-level.
+
+
+> +    else:
+
+Then negate the 'if' schema (not: contains: ...) and you just need the 
+part below:
+
+> +      properties:
+> +        clocks: false
+> +        clock-names: false
+>  
+>  unevaluatedProperties: false
+>  
+> -- 
+> 2.34.1
+> 
