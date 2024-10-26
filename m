@@ -1,156 +1,234 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from EUR05-AM6-obe.outbound.protection.outlook.com (mail-am6eur05on2071.outbound.protection.outlook.com [40.107.22.71])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32944B665;
-	Sat, 26 Oct 2024 01:34:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1729906489; cv=none; b=h3NViOV2PfXhRuwlkSNRyd8R/ACDrRDVN5QKgCnqE8XX9ZpflVE6X0HrBUYKWORZIg+0b5Ik7P567nEhWKtybYOrwrO5LK9KXsR0GtLSCOmU8hWpkZJpLaL3pbYunZAtUd3Zj9/BnE2vAn3utgSyfJ5WWtr7pWudz1GLNP5G13g=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1729906489; c=relaxed/simple;
-	bh=AvdnhwNRiXKf7G4bRAt5xJWxJrdRaqp5+mhlW0iRbJo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hNbIf4HP2RchtvP6YmDJn1SVKYYRVZcTCNaP1bcXenvpEgJYZFEi+vzmP4VHurnQ9b9hxOu7iT39DkuC7wde5HmNMTD/SlXs2ixwFh1hTbLSJxKhaemezKJnvjBSA/pMO9XeRpa5qVAX5vyVwL4oBmUQFcOMP0yVfaV/1h1Etjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Wq7WzRrR; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED7468BEE;
+	Sat, 26 Oct 2024 02:37:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.22.71
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1729910239; cv=fail; b=bcBCKnj1Yk1AGzbi3nVaMWotcvORLHFHShOham6ktcwa9hO8mxiyF2FySH9aZRhB7qpglYm1rzHS2Zf2uztlJr4wFDVKZ+h6M2bYTi7XFU6QY0drgJpxfJ2zPfLK/3mQ19efexuyQ3hLdQtW6MlrHdjIFA8fsnHNdKI9nKQlqOY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1729910239; c=relaxed/simple;
+	bh=tfAtoI2bPDuSasfyAMoFzo9YwDB4rkN+fBoQ8TgmbAQ=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=cORZrzzd6ygcBIIy+FGLSUvcaLczrHauM7ss9K/0wGGO0YYn2HbS0eiAh9jLv7PZyFjt7luxVhlpozUvd5mHjLP7acDYQKBz0q+2mzh4ypCY3nXVLlwK09uHomxv5aGncPagriawyNtRWGGJ+qiJp8gflwWKaMY6Mx9DWZ7XdyQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=MpC/iZMR; arc=fail smtp.client-ip=40.107.22.71
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Wq7WzRrR"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1729906487; x=1761442487;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=AvdnhwNRiXKf7G4bRAt5xJWxJrdRaqp5+mhlW0iRbJo=;
-  b=Wq7WzRrRZOXME271vy48jIpUUW/IrhcI+rjbnGTGmnm4NnBJhZYkZCum
-   1RZlAGvZRCFn3MeLh9wjPWFXPQjSp9sQQXLHMmLOaxSGSkoBd/qyAD08a
-   fNnuwq0UTbDwimFLlCvk/16xXnbjd9ZLu6/BeARopus98t53DuBd6rO0R
-   TKAakvo319Hl6i6Qnvx5Mj8bcDEuk+LHaseyXhsoBcWaQq1do9rTe1AI6
-   AZtG0NjtbACdFlA84UVhq36pq7r2Mv67cs8UGsNWalUaNJekNEWmEt6OC
-   d0nnNRJZGbdynOAx9+auYYA0ID7sou98NZIhW/cqtj/RF0l80WJcnWVmd
-   Q==;
-X-CSE-ConnectionGUID: FaefWCtwROqymHOsvIrMDQ==
-X-CSE-MsgGUID: OjnkeOHSShGIQxvQ0UYmHA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="29536586"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="29536586"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Oct 2024 18:34:46 -0700
-X-CSE-ConnectionGUID: 70ikL1t/Sde4q68jIS/rvg==
-X-CSE-MsgGUID: SbfZrTSgSn69iYeE81rvuA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,233,1725346800"; 
-   d="scan'208";a="111925452"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa002.jf.intel.com with ESMTP; 25 Oct 2024 18:34:41 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t4VhO-000Z8C-1i;
-	Sat, 26 Oct 2024 01:34:38 +0000
-Date: Sat, 26 Oct 2024 09:34:36 +0800
-From: kernel test robot <lkp@intel.com>
-To: Wei Fang <wei.fang@nxp.com>, davem@davemloft.net, edumazet@google.com,
-	kuba@kernel.org, pabeni@redhat.com, robh@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, vladimir.oltean@nxp.com,
-	claudiu.manoil@nxp.com, xiaoning.wang@nxp.com, Frank.Li@nxp.com,
-	christophe.leroy@csgroup.eu, linux@armlinux.org.uk,
-	bhelgaas@google.com, horms@kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	imx@lists.linux.dev, netdev@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, alexander.stein@ew.tq-group.com
-Subject: Re: [PATCH v5 net-next 05/13] net: enetc: extract common ENETC PF
- parts for LS1028A and i.MX95 platforms
-Message-ID: <202410260911.fvWnX8cx-lkp@intel.com>
-References: <20241024065328.521518-6-wei.fang@nxp.com>
+	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="MpC/iZMR"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kMGdyJS5TyICqobKkYTYO+A50Clvgz0gd2ibuBWkPinRHX4avuCQBCf678RuwijEZis9rcuw1AJYRdPCcOGXv9yBsrgVfiVnNzzzv/oQY+V0rtaK+hkzemN0qDdINCanTegHAq/h+6Q+uLlNJYPQgs58iOJgB9OsdUNgsvzz6GjfgeGfT2yCUS81OrQmdGnmMMwg9oCztRR932BNzgoZ6jVl/u9L8X1kmJ2O0VhXYRzLqxMoTAR602JioSYEosM9xvjs6JY5QBct4wBJynZOaiTkcU8cBYvIkyzcDhIW2qGCzmUCODsTEQUDxLg6Ts6RKy6kutPKVgyETzkVhh89Uw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ivrgg77Dh1XuNjig3lFgryt34y8sdQ1ctiJumOr+BRg=;
+ b=eJ8PaOgbRdTk5fvfD/4osX3FqUumXWBGLhbQWzy74FLIdOkI6+HtqN6lZClpcshPi2oeqOfU4dCf2UsdIiWaohjc8cWe0oyAyGi26YEmMvWsIzAiPBagpTm+x47miY8dI1uMP4LD0A2preG2SGOKaL0hSAOcZTjAJHleCAAIE/hcJ87i3cqomlAJ37T3Qj3HeFSwq7h5Ds3dOUCedrhpWZCTVwOAdtnN0wUSuV9k/z1PuRw822z4hIKayCz/uUTgqOjyoykmMriZpIHO3OVUcEGNZZdXJahFAsRLdIez6QmYjETVulctDwjv/7jTBvFCI16UGpJVT5rbVQGXHhh3Zw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
+ header.d=nxp.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ivrgg77Dh1XuNjig3lFgryt34y8sdQ1ctiJumOr+BRg=;
+ b=MpC/iZMR5tSBLusdAG3yEfB8sIAkHVKoC3BTEUY3L7J8qFqqS+/GcfSO7bJ/dddcvBesehvLv4QKW8178peNfffD7FoYZUzYfoG3sF1PAe8jreXVUxYp31zRpvgLfAp06+wMmTC0XB0KiAiG0e6YyK2VgMGl8baNmw7jRARQQet15dzcmCDp7t3GJI6eWw0sa+tWbKcsE/oRm/n7fhLKqIB5ZsxHjWuyDBfoZeqojmmZNI7GgQd/9PB6ZfpHwjcmyaJc2J//0KtHAn/R+66sIfNOOw4m1vjt6JV/mITheYCgMdmmIzo7Lo9vUHJlBPktYxIBn5x/CLVQXrsYLzYHVQ==
+Received: from PAXPR04MB8510.eurprd04.prod.outlook.com (2603:10a6:102:211::7)
+ by PR3PR04MB7418.eurprd04.prod.outlook.com (2603:10a6:102:8b::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8093.23; Sat, 26 Oct
+ 2024 02:37:12 +0000
+Received: from PAXPR04MB8510.eurprd04.prod.outlook.com
+ ([fe80::a7c2:e2fa:8e04:40db]) by PAXPR04MB8510.eurprd04.prod.outlook.com
+ ([fe80::a7c2:e2fa:8e04:40db%7]) with mapi id 15.20.8069.027; Sat, 26 Oct 2024
+ 02:37:12 +0000
+From: Wei Fang <wei.fang@nxp.com>
+To: Vladimir Oltean <vladimir.oltean@nxp.com>
+CC: "davem@davemloft.net" <davem@davemloft.net>, "edumazet@google.com"
+	<edumazet@google.com>, "kuba@kernel.org" <kuba@kernel.org>,
+	"pabeni@redhat.com" <pabeni@redhat.com>, "robh@kernel.org" <robh@kernel.org>,
+	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "conor+dt@kernel.org"
+	<conor+dt@kernel.org>, Claudiu Manoil <claudiu.manoil@nxp.com>, Clark Wang
+	<xiaoning.wang@nxp.com>, Frank Li <frank.li@nxp.com>,
+	"christophe.leroy@csgroup.eu" <christophe.leroy@csgroup.eu>,
+	"linux@armlinux.org.uk" <linux@armlinux.org.uk>, "bhelgaas@google.com"
+	<bhelgaas@google.com>, "horms@kernel.org" <horms@kernel.org>,
+	"imx@lists.linux.dev" <imx@lists.linux.dev>, "netdev@vger.kernel.org"
+	<netdev@vger.kernel.org>, "devicetree@vger.kernel.org"
+	<devicetree@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "linux-pci@vger.kernel.org"
+	<linux-pci@vger.kernel.org>, "alexander.stein@ew.tq-group.com"
+	<alexander.stein@ew.tq-group.com>
+Subject: RE: [PATCH v5 net-next 11/13] net: enetc: optimize the allocation of
+ tx_bdr
+Thread-Topic: [PATCH v5 net-next 11/13] net: enetc: optimize the allocation of
+ tx_bdr
+Thread-Index: AQHbJeO2tXEnxtLkY0+lfmVV8KleR7KXOzQAgAEYEvA=
+Date: Sat, 26 Oct 2024 02:37:11 +0000
+Message-ID:
+ <PAXPR04MB85108D88299951702116B92388482@PAXPR04MB8510.eurprd04.prod.outlook.com>
+References: <20241024065328.521518-1-wei.fang@nxp.com>
+ <20241024065328.521518-1-wei.fang@nxp.com>
+ <20241024065328.521518-12-wei.fang@nxp.com>
+ <20241024065328.521518-12-wei.fang@nxp.com>
+ <20241025095136.dlft7ixliiixejkv@skbuf>
+In-Reply-To: <20241025095136.dlft7ixliiixejkv@skbuf>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nxp.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PAXPR04MB8510:EE_|PR3PR04MB7418:EE_
+x-ms-office365-filtering-correlation-id: 36c6407f-3ee9-4ce5-309a-08dcf5671863
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|7416014|366016|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?zUgVs3Q8uZc5Tsh+Zv1OfDrLYfHqL1Q7oGI0a5kYS6jLPwwqHUetcH8uWSZ7?=
+ =?us-ascii?Q?1uwIMnZs3zgOPAckyT3+OKG9wJxWMqRcZdB6P8RZxHc92fpWlY7VGm2VkEwI?=
+ =?us-ascii?Q?lbNr5s7mivwoBExdpFx7WFrGXA6MDwXULb4H5znTWulAWGlD8dWIz8vk3ZoT?=
+ =?us-ascii?Q?tbfk5o7d+/HEPYY0tV8v6rbyMIY/NC1t7HOAv4TrNY2zI8vioNrjmUhAgInp?=
+ =?us-ascii?Q?YcvBo3y3PqFBiPIm5H7K8RmWoM0Vv/EMml15IqUSg/pYMZxI36ol/bDGWCNN?=
+ =?us-ascii?Q?YXx03NXebhxTQD1VlLbxm/r0DEhZK0pXtmm5ITKQDHoNmjATZdCSbmkNVAj/?=
+ =?us-ascii?Q?lLPjCoUPkOBaMhFEbchve5KfCY6F+pmPaf3fVLiD0bXKurqx4+p1EeLedGQf?=
+ =?us-ascii?Q?ypYIZEsrEXQctFoUKEid78eYDXtq7Dl+O/wyqI8Bm+n2W9wtgg18jDw6MP5k?=
+ =?us-ascii?Q?LWOwf1kZuSCRApwzZeU85eMnzdasdDgnqmp3wwQ4Az4ZHPD/UqB7z/0EkOtn?=
+ =?us-ascii?Q?9Qy9uY7VdVORmV/Oymi4XT5zcGZbnD+FOcBMlBES6SN6wVfyKmzxdLrm3M1r?=
+ =?us-ascii?Q?4BggO4gVnZ/9dkyKGZr+6xaLRDPuEEnuwdpahD5i7lj6/KRw90s3MZoUrU1g?=
+ =?us-ascii?Q?LyZDUBwy+2oWzWwlfROPBP44ZnMXjebINRCqvMOkouC60FVDOoDV+322xHjk?=
+ =?us-ascii?Q?rHxzMInw0zeSsc1sziuAtmBff5W66pxSUcKD6LkiQpw3fL523VXL3qduphMq?=
+ =?us-ascii?Q?MoNxnbis4lvaXo43SdKEc1gIw1Yw/JzYVnPHzuGNT6N7Gga561mnQnKBIl0h?=
+ =?us-ascii?Q?SurCa8wn/0OdZr3qLZGYPmjpRAjmEzyO0BG9J48DfbmBzl+ERsX0R0pm8HPt?=
+ =?us-ascii?Q?QCTfPqzKjdxF3Bkaf0FnqflaelYLVJtCk8OA7Uog53DuPF0Ge/Hj02fzP00S?=
+ =?us-ascii?Q?NZwYCZSpGV9hpht6hiVhMSO+YpYh3g9yvpDYFNpWLUvOJODFvLVhmDHw09VD?=
+ =?us-ascii?Q?ItmA1v0LN5qrBxOOLyC2LgeNX6aCeMgh2Ondw0vQIs4MYixu1M9sxyDEWkVG?=
+ =?us-ascii?Q?GBiruxNWJ/O3NWbvrZMMzVjq4wMJjE3ryswr74NE2oAJwLufyUlLcInVvRPu?=
+ =?us-ascii?Q?Fnqm9uHHhACcLpND5OvqFS9MAHPISfUS5gUPdjAQSOd1EDsMaRxVZLJ6hiG9?=
+ =?us-ascii?Q?d+x5PDJtTNbVXi0ZTBnOMC9RZay7kj1csLe+d6QoMHA5QC7Q9W8o2DBOfwvF?=
+ =?us-ascii?Q?k9loykIdZjr+5v3RWJQYH6LFvZdE0ZC2lmGKtAiM2EWnNV/B06TB4uN6r5is?=
+ =?us-ascii?Q?8/juRD+xX1BIwZBbG8yFK5OsBGEWXSaMew+sRgGgB9hzmMuyh7QrCsjt+6Rv?=
+ =?us-ascii?Q?CGygECQ=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB8510.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?r1Fq7Dy4VNGB+AaOJxIu4U/HIb/K9KoV50HKMvJbfJOd6IHRTn5wp0egLMcv?=
+ =?us-ascii?Q?wQ1R+o3EWyBo+FDfjx/6dlTR0+VjMKI9R6ToPQMuu3abydS+mG5ZiG+8EE/O?=
+ =?us-ascii?Q?azEWsxmfmHRZWVo/bJQ2u/ZREE36ODiX9aXMHpprwT3TwTRrEy3ubDu7kn+s?=
+ =?us-ascii?Q?/G9sj0xik+YEM5tuXQvOA5QLWZRMnK/x+TOESsA8VpA22/O9wDNforzVP9tx?=
+ =?us-ascii?Q?AQhq09g2RL68AyGps2K7Wz5CJqKtlxoepiS2NWSHSGLCxH4k5BmtC5HRajKX?=
+ =?us-ascii?Q?6zL9C4frZZLxYBNFz1HcExKLi6CNHafi7DGmivGnp//pWUkZDviJ5e1EsHMP?=
+ =?us-ascii?Q?X5Wvc1NcTYhI0RR2wwXFazxNJ1nu6itTGuYGem7l18QjhYY99EWshcKAZNOt?=
+ =?us-ascii?Q?hXCu4HpvXHzIw0pAo2uEbw3tfxHMxCEXekDdBy5RIoFgffMgEB+QLLb6vbS9?=
+ =?us-ascii?Q?fx33HB6MbeZk2LRq1CMXjsnb35FuFCF/rsA6Xz1vytmLcdCD3dCGfpOd+6YG?=
+ =?us-ascii?Q?zUgwOxu1MM5dkjoWqRruY9I99QjzH3hXvsfWihLZzspoYoQYcbBCkQqEpqzb?=
+ =?us-ascii?Q?5oiaZMIcAzF+tyvkjY8ft324IQ7p4TiQn2IWqRqTTwIGrKD3DJ0GMF9fo0em?=
+ =?us-ascii?Q?u3KW6HbSIn9i9V5N7e12CAhTCBiOprabpunsM1YWgO5mWnGGlqPje5LgoGtc?=
+ =?us-ascii?Q?PtbnX+mK6xrn1vLHETok3EJEACxupt9EAKiAX1x7/FM22vZdkrS9vUWwWIAj?=
+ =?us-ascii?Q?zDh4HrgOusqOprGuJNy+WZyiw5BjiBNCIVPcrE2LCP1BWZKORJUfsR9VP41o?=
+ =?us-ascii?Q?G8aDkaFdgZcLmfTF8jiVGKm9n6C0140ofqGXXA5aVtBS42/M49b5ZgdOJO1t?=
+ =?us-ascii?Q?W5lbhxWE7A8SbZV+zXLKa1Ipcs4mXu/9RgmeE+JXfGazHPQrfIymNiuLzOsu?=
+ =?us-ascii?Q?CdXWQ4Io9aR3kRjjHgC2hax6R53asd0OjU6mUNLu0fUHOmtbln4fd0t+xGCF?=
+ =?us-ascii?Q?kxEKMDPsAAaXbI9Q8jb/+ZfX2aI9ZXN5pPXqvWdlDEHi29uOXQN6q2r2qSdC?=
+ =?us-ascii?Q?p2dGLw7cSNZvvvv9cCCaAsIJP8ZfdHwDJ0PqWMcpJUVy4L27zRPlvWe34qD3?=
+ =?us-ascii?Q?nKhrkXbtnCpDxfyhzfoRiUxpgupOxefLwpwfNm0Zaa9K6dmIvVs14dHZX1qp?=
+ =?us-ascii?Q?tCZGaRn6W4QuM2pnQSqMhjRG+/TcDj4l/faI+aDGrwqLufq2bL1tug6DPUax?=
+ =?us-ascii?Q?kNYZp89sb6VP3dK46G0ZYdY2w4dqtYDKs117J/XRALbIUYfxXXcGAC4ze2JS?=
+ =?us-ascii?Q?pTlPnaFIRqcWfe9k3/Wi71gwgAXoy0W0epeO0quA4eIqCsvMmnular3HG3VR?=
+ =?us-ascii?Q?1H1U3T3lm+3SZWocqjjRRph9DXAxD5rfcWq65jH88lweQbzGd5715pPyogcs?=
+ =?us-ascii?Q?IIQsTzc2loxhzK5syrS9gf75nQxeRs5kzxW8swVVN6iA62I9zNRPrfVws9cy?=
+ =?us-ascii?Q?l1dPAMP0vIfy3n0htdcPX7ra9odCKgxqzwzCvSbMzID4cjJAb8uncFTwq3gx?=
+ =?us-ascii?Q?ulZl0hysqsXcXWBbOlI=3D?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20241024065328.521518-6-wei.fang@nxp.com>
+X-OriginatorOrg: nxp.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB8510.eurprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 36c6407f-3ee9-4ce5-309a-08dcf5671863
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Oct 2024 02:37:11.8890
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: +9pYEJvL3ys8Sx7fmEvVzJ70q6CWMz+gEH3AZbN7uu2TKAD83hlNAKGsM6rtn2U3ECWEF6cq6f8D4iRSd/FLmw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PR3PR04MB7418
 
-Hi Wei,
+> On Thu, Oct 24, 2024 at 02:53:26PM +0800, Wei Fang wrote:
+> > From: Clark Wang <xiaoning.wang@nxp.com>
+> >
+> > There is a situation where num_tx_rings cannot be divided by bdr_int_nu=
+m.
+> > For example, num_tx_rings is 8 and bdr_int_num is 3. According to the
+> > previous logic, this results in two tx_bdr corresponding memories not
+> > being allocated, so when sending packets to tx ring 6 or 7, wild pointe=
+rs
+> > will be accessed. Of course, this issue doesn't exist on LS1028A, becau=
+se
+> > its num_tx_rings is 8, and bdr_int_num is either 1 or 2. However, there
+> > is a risk for the upcoming i.MX95. Therefore, it is necessary to ensure
+> > that each tx_bdr can be allocated to the corresponding memory.
+> >
+> > Signed-off-by: Clark Wang <xiaoning.wang@nxp.com>
+> > Signed-off-by: Wei Fang <wei.fang@nxp.com>
+> > Reviewed-by: Claudiu Manoil <claudiu.manoil@nxp.com>
+> > Reviewed-by: Frank Li <Frank.Li@nxp.com>
+> > ---
+> > v5: no changes
+> > ---
+> >  drivers/net/ethernet/freescale/enetc/enetc.c | 7 +++++--
+> >  1 file changed, 5 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/net/ethernet/freescale/enetc/enetc.c
+> b/drivers/net/ethernet/freescale/enetc/enetc.c
+> > index bd725561b8a2..bccbeb1f355c 100644
+> > --- a/drivers/net/ethernet/freescale/enetc/enetc.c
+> > +++ b/drivers/net/ethernet/freescale/enetc/enetc.c
+> > @@ -3049,10 +3049,10 @@ static void enetc_int_vector_destroy(struct
+> enetc_ndev_priv *priv, int i)
+> >  int enetc_alloc_msix(struct enetc_ndev_priv *priv)
+> >  {
+> >  	struct pci_dev *pdev =3D priv->si->pdev;
+> > +	int v_tx_rings, v_remainder;
+> >  	int num_stack_tx_queues;
+> >  	int first_xdp_tx_ring;
+> >  	int i, n, err, nvec;
+> > -	int v_tx_rings;
+> >
+> >  	nvec =3D ENETC_BDR_INT_BASE_IDX + priv->bdr_int_num;
+> >  	/* allocate MSIX for both messaging and Rx/Tx interrupts */
+> > @@ -3066,9 +3066,12 @@ int enetc_alloc_msix(struct enetc_ndev_priv
+> *priv)
+> >
+> >  	/* # of tx rings per int vector */
+> >  	v_tx_rings =3D priv->num_tx_rings / priv->bdr_int_num;
+> > +	v_remainder =3D priv->num_tx_rings % priv->bdr_int_num;
+> >
+> >  	for (i =3D 0; i < priv->bdr_int_num; i++) {
+> > -		err =3D enetc_int_vector_init(priv, i, v_tx_rings);
+> > +		int num_tx_rings =3D i < v_remainder ? v_tx_rings + 1 : v_tx_rings;
+>=20
+> It took me a moment to understand the mechanism through which this
+> works, even though I read the intention in the commit message.
+>=20
+> Do you think this additional comment would help?
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on net-next/main]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Wei-Fang/dt-bindings-net-add-compatible-string-for-i-MX95-EMDIO/20241024-151502
-base:   net-next/main
-patch link:    https://lore.kernel.org/r/20241024065328.521518-6-wei.fang%40nxp.com
-patch subject: [PATCH v5 net-next 05/13] net: enetc: extract common ENETC PF parts for LS1028A and i.MX95 platforms
-config: x86_64-buildonly-randconfig-001-20241026 (https://download.01.org/0day-ci/archive/20241026/202410260911.fvWnX8cx-lkp@intel.com/config)
-compiler: clang version 19.1.2 (https://github.com/llvm/llvm-project 7ba7d8e2f7b6445b60679da826210cdde29eaf8b)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241026/202410260911.fvWnX8cx-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202410260911.fvWnX8cx-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from drivers/net/ethernet/freescale/enetc/enetc_pf.c:7:
-   In file included from include/linux/of_net.h:9:
-   In file included from include/linux/phy.h:16:
-   In file included from include/linux/ethtool.h:18:
-   In file included from include/linux/if_ether.h:19:
-   In file included from include/linux/skbuff.h:17:
-   In file included from include/linux/bvec.h:10:
-   In file included from include/linux/highmem.h:8:
-   In file included from include/linux/cacheflush.h:5:
-   In file included from arch/x86/include/asm/cacheflush.h:5:
-   In file included from include/linux/mm.h:2213:
-   include/linux/vmstat.h:518:36: warning: arithmetic between different enumeration types ('enum node_stat_item' and 'enum lru_list') [-Wenum-enum-conversion]
-     518 |         return node_stat_name(NR_LRU_BASE + lru) + 3; // skip "nr_"
-         |                               ~~~~~~~~~~~ ^ ~~~
->> drivers/net/ethernet/freescale/enetc/enetc_pf.c:906:14: error: call to undeclared function 'of_find_compatible_node'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-     906 |         ierb_node = of_find_compatible_node(NULL, NULL,
-         |                     ^
->> drivers/net/ethernet/freescale/enetc/enetc_pf.c:906:12: error: incompatible integer to pointer conversion assigning to 'struct device_node *' from 'int' [-Wint-conversion]
-     906 |         ierb_node = of_find_compatible_node(NULL, NULL,
-         |                   ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     907 |                                             "fsl,ls1028a-enetc-ierb");
-         |                                             ~~~~~~~~~~~~~~~~~~~~~~~~~
->> drivers/net/ethernet/freescale/enetc/enetc_pf.c:908:21: error: call to undeclared function 'of_device_is_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-     908 |         if (!ierb_node || !of_device_is_available(ierb_node))
-         |                            ^
->> drivers/net/ethernet/freescale/enetc/enetc_pf.c:912:2: error: call to undeclared function 'of_node_put'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-     912 |         of_node_put(ierb_node);
-         |         ^
-   drivers/net/ethernet/freescale/enetc/enetc_pf.c:1115:14: error: call to undeclared function 'of_device_is_available'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1115 |         if (node && of_device_is_available(node))
-         |                     ^
-   1 warning and 5 errors generated.
-
-
-vim +/of_find_compatible_node +906 drivers/net/ethernet/freescale/enetc/enetc_pf.c
-
-07bf34a50e3279 Vladimir Oltean 2021-02-04  900  
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  901  static int enetc_pf_register_with_ierb(struct pci_dev *pdev)
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  902  {
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  903  	struct platform_device *ierb_pdev;
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  904  	struct device_node *ierb_node;
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  905  
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17 @906  	ierb_node = of_find_compatible_node(NULL, NULL,
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  907  					    "fsl,ls1028a-enetc-ierb");
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17 @908  	if (!ierb_node || !of_device_is_available(ierb_node))
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  909  		return -ENODEV;
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  910  
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  911  	ierb_pdev = of_find_device_by_node(ierb_node);
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17 @912  	of_node_put(ierb_node);
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  913  
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  914  	if (!ierb_pdev)
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  915  		return -EPROBE_DEFER;
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  916  
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  917  	return enetc_ierb_register_pf(ierb_pdev, pdev);
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  918  }
-e7d48e5fbf30f8 Vladimir Oltean 2021-04-17  919  
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Yeah, it does help users understand quickly. I will add this comment.
+>=20
+> 		/* Distribute the remaining TX rings to the first
+> 		 * v_tx_rings interrupt vectors
+> 		 */
+>=20
+> > +
+> > +		err =3D enetc_int_vector_init(priv, i, num_tx_rings);
+> >  		if (err)
+> >  			goto fail;
+> >  	}
+> > --
+> > 2.34.1
+> >
