@@ -1,58 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15DF119066B
-	for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2024 08:42:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 522A1762E0;
+	Mon, 28 Oct 2024 09:32:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730104968; cv=none; b=QOmYcqpdTlkjhGzm0LdBqY71zmwM8Yp/T2Z7KO55vyKpb+frQPyT5QdKhcHSCP9MtphR3dEV3z3UGZZh30x+lHCuM8Bvl//JO5VdTyBVwCxbHWyLUpwncbEkqS6pad1QmFvLTb9w/4yiorPkgKYhlakDyT3SpNLT3GZHSaV+kpE=
+	t=1730107963; cv=none; b=To8kxv5if613Qd4kj2QOxoG47P526flwsodckIBC5+KDe9nG3dmQRYEzUinruANZOh+y+c3RyKLrH9oxiiinP7cgGgVj+NtV2IoXEH8q5ZbRnIi/HilSqqpb9yuqv44ElD3sIKWlyBcg+FpxWLljyA8DGpjnGKFBbyqA8z47r+Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730104968; c=relaxed/simple;
-	bh=YIu1HP4sI50Z5aHvOjfhEQqOsFYfFhCeUCs9hX3X5PM=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=YnyEbd8iVKmMCiVJYnKLBpHhaaNs/hq2hhylEi5ULXem9B4bE7uzSUk+k5SiqKYBkRBBkETL1Br9CBM9O4csj5SxOtMmFHWnqHeWbGCmjzg3HbYVJ/F9Q4FxYY0d1X0oM3kZZFgXiYvqwVSefSkPadqFs0YwamOlnjxVXjooTEc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=B9Uhjx/G; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1730107963; c=relaxed/simple;
+	bh=jHYX6x1sSyIZMS3Ae4dRPqlmWRl9NIWGJ6MG3Ic6j6s=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ll/yMwegyJW5nZzVLZqu8zBP377E6/NXQM2SVjPK2DQ17/ovtl2PgxmoN1FJkO2+Y87BC0sK/CCIDeGlMGtN/DP62hb2dEH7D/vjr2LQP7rv8oTU92HbQ52A2xB2p9euuGmNg8oVQOKaOAAzal9/5WuMe5Td4Ajt5zTU2PZgq7s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GQbbWfAD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="B9Uhjx/G"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730104965; x=1761640965;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=YIu1HP4sI50Z5aHvOjfhEQqOsFYfFhCeUCs9hX3X5PM=;
-  b=B9Uhjx/GsE9gU1CnkMSqZkAn1SGc4rP2Be1XNS8WbNxUgLIWcJ/Vsoc5
-   74qFcoKkSTh+5DPA0xy1wFSS9FodZBscyKeFPs+iw3I2y/jxB1M2AE1z0
-   NOhWDYmeX8ofCI6eXUm4oOAIuuRYKYZUISOgT/nHityzjYFZsrv1Qn5pQ
-   Usryi1to4x/W/bEL6iyhmYPZSPOU/AKFi0Vd84gL59svqwIxZ/rEKK6Nf
-   KzuuuigHg1rwOmfqOwQktUlTvTlJkIrDirCgGwc2GATQw7mmtsKruzTHS
-   4U4tSpbmLMXE2cJPS8o0/4gvF0KhAWE8Ab0LznqWyleeWO/T5nksLNv/H
-   A==;
-X-CSE-ConnectionGUID: /n8Bow6sTuuoG1HsMh/p9A==
-X-CSE-MsgGUID: x1y/SlcUTZGoh5+zmq+mOA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="29467604"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="29467604"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 01:42:44 -0700
-X-CSE-ConnectionGUID: /eanFjL/RUqD1EfLf0UTUg==
-X-CSE-MsgGUID: kv7ZBU7PQZekXfGw1bY4fg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,238,1725346800"; 
-   d="scan'208";a="82363703"
-Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
-  by orviesa008.jf.intel.com with ESMTP; 28 Oct 2024 01:42:43 -0700
-Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1t5LKj-000cDY-0T;
-	Mon, 28 Oct 2024 08:42:41 +0000
-Date: Mon, 28 Oct 2024 16:42:33 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc] BUILD SUCCESS
- 12dd12821f1eb2755643914df2cc900c5e8c9d12
-Message-ID: <202410281619.evviDlvJ-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GQbbWfAD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CA3FC4CEC3;
+	Mon, 28 Oct 2024 09:32:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730107962;
+	bh=jHYX6x1sSyIZMS3Ae4dRPqlmWRl9NIWGJ6MG3Ic6j6s=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=GQbbWfAD7Zn4qd90donpPj898f9FGSqhmY+Su2xiXClSOj/RhCNCqstfRDiMaj8Il
+	 /OLvJ/CN0V6wvSOgoQRrJmtYDPZBIsk6KI1WAuh2D/CtWJ6SXliDz0kWkFr0L+lcer
+	 cuKarAMEEB51ul3/UKCed5DaoBMdFFpDUZNJHS5wG9/VPkR3J2umx1exfkhZwn0mbc
+	 WuZd53s1rii8deBpfG/HQvl1XXF6lqXgemMKe1W+X5rG7xJrwduJSFBIa0UprAe8dN
+	 ccw3DyqR6TclORq2HD4F/oPPmuBmmXyv3d6pI0x17ejzBZfWkx7wiqNfI3dpkrnF3p
+	 m8SDho1PfdJGQ==
+Date: Mon, 28 Oct 2024 10:32:34 +0100
+From: Danilo Krummrich <dakr@kernel.org>
+To: Rob Herring <robh@kernel.org>
+Cc: gregkh@linuxfoundation.org, rafael@kernel.org, bhelgaas@google.com,
+	ojeda@kernel.org, alex.gaynor@gmail.com, boqun.feng@gmail.com,
+	gary@garyguo.net, bjorn3_gh@protonmail.com, benno.lossin@proton.me,
+	tmgross@umich.edu, a.hindborg@samsung.com, aliceryhl@google.com,
+	airlied@gmail.com, fujita.tomonori@gmail.com, lina@asahilina.net,
+	pstanner@redhat.com, ajanulgu@redhat.com, lyude@redhat.com,
+	daniel.almeida@collabora.com, saravanak@google.com,
+	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
+Subject: Re: [PATCH v3 16/16] samples: rust: add Rust platform sample driver
+Message-ID: <Zx9aMguDJWqDVnJf@pollux>
+References: <20241022213221.2383-1-dakr@kernel.org>
+ <20241022213221.2383-17-dakr@kernel.org>
+ <20241023000408.GC1848992-robh@kernel.org>
+ <Zxie5Lu2z_Xc_RXM@pollux>
+ <20241023153703.GA1064929-robh@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,176 +52,79 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241023153703.GA1064929-robh@kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
-branch HEAD: 12dd12821f1eb2755643914df2cc900c5e8c9d12  PCI: dwc: endpoint: Clear outbound address on unmap
+On Wed, Oct 23, 2024 at 10:37:03AM -0500, Rob Herring wrote:
+> On Wed, Oct 23, 2024 at 08:59:48AM +0200, Danilo Krummrich wrote:
+> > On Tue, Oct 22, 2024 at 07:04:08PM -0500, Rob Herring wrote:
+> > > On Tue, Oct 22, 2024 at 11:31:53PM +0200, Danilo Krummrich wrote:
+> > > > Add a sample Rust platform driver illustrating the usage of the platform
+> > > > bus abstractions.
+> > > > 
+> > > > This driver probes through either a match of device / driver name or a
+> > > > match within the OF ID table.
+> > > 
+> > > I know if rust compiles it works, but how does one actually use/test 
+> > > this? (I know ways, but I might be in the minority. :) )
+> > 
+> > For testing a name match I just used platform_device_register_simple() in a
+> > separate module.
+> > 
+> > Probing through the OF table is indeed a bit more tricky. Since I was too lazy
+> > to pull out a random ARM device of my cupboard I just used QEMU on x86 and did
+> > what drivers/of/unittest.c does. If you're smart you can also just enable those
+> > unit tests and change the compatible string to "unittest". :)
+> > 
+> > > 
+> > > The DT unittests already define test platform devices. I'd be happy to 
+> > > add a device node there. Then you don't have to muck with the DT on some 
+> > > device and it even works on x86 or UML.
+> > 
+> > Sounds good, I'll add one in there for this sample driver -- any preferences?
+> 
+> I gave this a spin and added the patch below in. Feel free to squash it 
+> into this one.
 
-elapsed time: 726m
+Looks good -- it only works if the sample driver is built-in though, but I think
+that should be fine.
 
-configs tested: 156
-configs skipped: 4
-
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                            alldefconfig    gcc-13.2.0
-alpha                             allnoconfig    gcc-14.1.0
-alpha                            allyesconfig    clang-20
-alpha                               defconfig    gcc-14.1.0
-arc                              allmodconfig    clang-20
-arc                               allnoconfig    gcc-14.1.0
-arc                              allyesconfig    clang-20
-arc                          axs101_defconfig    gcc-13.2.0
-arc                                 defconfig    gcc-14.1.0
-arc                     haps_hs_smp_defconfig    gcc-13.2.0
-arc                     nsimosci_hs_defconfig    gcc-13.2.0
-arc                           tb10x_defconfig    clang-20
-arm                              allmodconfig    clang-20
-arm                               allnoconfig    gcc-14.1.0
-arm                              allyesconfig    clang-20
-arm                                 defconfig    gcc-14.1.0
-arm                          ep93xx_defconfig    clang-20
-arm                         nhk8815_defconfig    clang-20
-arm                         s5pv210_defconfig    gcc-13.2.0
-arm64                            allmodconfig    clang-20
-arm64                             allnoconfig    gcc-14.1.0
-arm64                               defconfig    gcc-14.1.0
-csky                             alldefconfig    clang-20
-csky                              allnoconfig    gcc-14.1.0
-csky                                defconfig    gcc-14.1.0
-hexagon                          allmodconfig    clang-20
-hexagon                           allnoconfig    gcc-14.1.0
-hexagon                          allyesconfig    clang-20
-hexagon                             defconfig    gcc-14.1.0
-i386                             allmodconfig    clang-19
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    clang-19
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    clang-19
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20241028    gcc-12
-i386        buildonly-randconfig-002-20241028    clang-19
-i386        buildonly-randconfig-003-20241028    clang-19
-i386        buildonly-randconfig-004-20241028    clang-19
-i386        buildonly-randconfig-005-20241028    clang-19
-i386        buildonly-randconfig-006-20241028    clang-19
-i386                                defconfig    clang-19
-i386                  randconfig-001-20241028    clang-19
-i386                  randconfig-002-20241028    gcc-12
-i386                  randconfig-003-20241028    gcc-12
-i386                  randconfig-004-20241028    clang-19
-i386                  randconfig-005-20241028    clang-19
-i386                  randconfig-006-20241028    clang-19
-i386                  randconfig-011-20241028    gcc-11
-i386                  randconfig-012-20241028    clang-19
-i386                  randconfig-013-20241028    clang-19
-i386                  randconfig-014-20241028    clang-19
-i386                  randconfig-015-20241028    gcc-12
-i386                  randconfig-016-20241028    clang-19
-loongarch                        allmodconfig    gcc-14.1.0
-loongarch                         allnoconfig    gcc-14.1.0
-loongarch                           defconfig    gcc-14.1.0
-m68k                             allmodconfig    gcc-14.1.0
-m68k                              allnoconfig    gcc-14.1.0
-m68k                             allyesconfig    gcc-14.1.0
-m68k                                defconfig    gcc-14.1.0
-m68k                        m5307c3_defconfig    clang-20
-m68k                        m5407c3_defconfig    clang-20
-m68k                            q40_defconfig    clang-20
-microblaze                       allmodconfig    gcc-14.1.0
-microblaze                        allnoconfig    gcc-14.1.0
-microblaze                       allyesconfig    gcc-14.1.0
-microblaze                          defconfig    gcc-14.1.0
-mips                              allnoconfig    gcc-14.1.0
-mips                          ath79_defconfig    clang-20
-mips                        bcm63xx_defconfig    clang-20
-mips                   sb1250_swarm_defconfig    gcc-13.2.0
-nios2                             allnoconfig    gcc-14.1.0
-nios2                               defconfig    gcc-14.1.0
-openrisc                          allnoconfig    clang-20
-openrisc                         allyesconfig    gcc-14.1.0
-openrisc                            defconfig    gcc-12
-parisc                           allmodconfig    gcc-14.1.0
-parisc                            allnoconfig    clang-20
-parisc                           allyesconfig    gcc-14.1.0
-parisc                              defconfig    gcc-12
-parisc                generic-32bit_defconfig    clang-20
-parisc64                            defconfig    gcc-14.1.0
-powerpc                          allmodconfig    gcc-14.1.0
-powerpc                           allnoconfig    clang-20
-powerpc                          allyesconfig    gcc-14.1.0
-powerpc                     ksi8560_defconfig    gcc-13.2.0
-riscv                            allmodconfig    gcc-14.1.0
-riscv                             allnoconfig    clang-20
-riscv                            allyesconfig    gcc-14.1.0
-riscv                               defconfig    clang-20
-riscv                               defconfig    gcc-12
-s390                             allmodconfig    gcc-14.1.0
-s390                              allnoconfig    clang-20
-s390                             allyesconfig    gcc-14.1.0
-s390                                defconfig    gcc-12
-sh                               allmodconfig    gcc-14.1.0
-sh                                allnoconfig    gcc-14.1.0
-sh                               allyesconfig    gcc-14.1.0
-sh                         apsh4a3a_defconfig    gcc-13.2.0
-sh                                  defconfig    gcc-12
-sh                               j2_defconfig    clang-20
-sh                            migor_defconfig    clang-20
-sh                          rsk7264_defconfig    clang-20
-sh                          sdk7780_defconfig    clang-20
-sh                          sdk7786_defconfig    gcc-13.2.0
-sh                           se7206_defconfig    gcc-13.2.0
-sh                           se7343_defconfig    clang-20
-sh                           se7343_defconfig    gcc-13.2.0
-sh                   sh7770_generic_defconfig    gcc-13.2.0
-sh                        sh7785lcr_defconfig    gcc-13.2.0
-sparc                            allmodconfig    gcc-14.1.0
-sparc64                             defconfig    gcc-12
-um                               allmodconfig    clang-20
-um                                allnoconfig    clang-20
-um                               allyesconfig    clang-20
-um                                  defconfig    gcc-12
-um                             i386_defconfig    gcc-12
-um                             i386_defconfig    gcc-13.2.0
-um                           x86_64_defconfig    gcc-12
-x86_64                            allnoconfig    clang-19
-x86_64                           allyesconfig    clang-19
-x86_64      buildonly-randconfig-001-20241028    gcc-12
-x86_64      buildonly-randconfig-002-20241028    gcc-12
-x86_64      buildonly-randconfig-003-20241028    gcc-12
-x86_64      buildonly-randconfig-004-20241028    gcc-12
-x86_64      buildonly-randconfig-005-20241028    gcc-12
-x86_64      buildonly-randconfig-006-20241028    gcc-12
-x86_64                              defconfig    clang-19
-x86_64                              defconfig    gcc-11
-x86_64                                  kexec    clang-19
-x86_64                randconfig-001-20241028    gcc-12
-x86_64                randconfig-002-20241028    gcc-12
-x86_64                randconfig-003-20241028    gcc-12
-x86_64                randconfig-004-20241028    gcc-12
-x86_64                randconfig-005-20241028    gcc-12
-x86_64                randconfig-006-20241028    gcc-12
-x86_64                randconfig-011-20241028    gcc-12
-x86_64                randconfig-012-20241028    gcc-12
-x86_64                randconfig-013-20241028    gcc-12
-x86_64                randconfig-014-20241028    gcc-12
-x86_64                randconfig-015-20241028    gcc-12
-x86_64                randconfig-016-20241028    gcc-12
-x86_64                randconfig-071-20241028    gcc-12
-x86_64                randconfig-072-20241028    gcc-12
-x86_64                randconfig-073-20241028    gcc-12
-x86_64                randconfig-074-20241028    gcc-12
-x86_64                randconfig-075-20241028    gcc-12
-x86_64                randconfig-076-20241028    gcc-12
-x86_64                               rhel-8.3    gcc-12
-x86_64                           rhel-8.3-bpf    clang-19
-x86_64                         rhel-8.3-kunit    clang-19
-x86_64                           rhel-8.3-ltp    clang-19
-x86_64                          rhel-8.3-rust    clang-19
-xtensa                            allnoconfig    gcc-14.1.0
-xtensa                generic_kc705_defconfig    clang-20
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+> 
+> 8<----------------------------------------------------------------
+> From: "Rob Herring (Arm)" <robh@kernel.org>
+> Date: Wed, 23 Oct 2024 10:29:47 -0500
+> Subject: [PATCH] of: unittest: Add a platform device node for rust platform
+>  driver sample
+> 
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
+> 
+> diff --git a/drivers/of/unittest-data/tests-platform.dtsi b/drivers/of/unittest-data/tests-platform.dtsi
+> index fa39611071b3..575ea260a877 100644
+> --- a/drivers/of/unittest-data/tests-platform.dtsi
+> +++ b/drivers/of/unittest-data/tests-platform.dtsi
+> @@ -33,6 +33,11 @@ dev@100 {
+>                                         reg = <0x100>;
+>                                 };
+>                         };
+> +
+> +                       test-device@2 {
+> +                               compatible = "test,rust-device";
+> +                               reg = <0x2>;
+> +                       };
+>                 };
+>         };
+>  };
+> diff --git a/samples/rust/rust_driver_platform.rs b/samples/rust/rust_driver_platform.rs
+> index 55caaaa4f216..5cf4a8f86c13 100644
+> --- a/samples/rust/rust_driver_platform.rs
+> +++ b/samples/rust/rust_driver_platform.rs
+> @@ -15,7 +15,7 @@ struct SampleDriver {
+>      MODULE_OF_TABLE,
+>      <SampleDriver as platform::Driver>::IdInfo,
+>      [(
+> -        of::DeviceId::new(c_str!("redhat,rust-sample-platform-driver")),
+> +        of::DeviceId::new(c_str!("test,rust-device")),
+>          Info(42)
+>      )]
+>  );
+> 
