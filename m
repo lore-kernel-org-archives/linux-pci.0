@@ -1,153 +1,95 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E84F1547CA;
-	Mon, 28 Oct 2024 18:18:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EF3F1DF266;
+	Mon, 28 Oct 2024 18:28:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730139528; cv=none; b=d02uC/ZcMlMekHLSlH5lcr9sX9UCZ228LswhHHzRlJb/+zNyTxaQr54GguBwzjzrLfqsrRu+wn9FTor/x084szND6rhpq+5G4irqtcMmqblhLKwquaMCENPg8nWFllSYuT94FEyhJLHnBFqzhoBq/ULhsCUHt9GEySpVZWOgSt0=
+	t=1730140092; cv=none; b=pW6dssa28rzocVKYJMtPEFLytAYmmchKPdzaDDcP1cOo+td2rvpY86CPmcCgf5Z5iyZdQK6JVuE/lPydKhgSlazu5iVoNJoJFvxB4SreznZcGJ6XILji2Ry8u7QhKtV2KPxfHWXbRTxp9qHTQ5uOBVvH6ms4POXVBY4E86/tNIk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730139528; c=relaxed/simple;
-	bh=R2DVy8iU7fbfJEnyj+dAeHE6Oyfz71RsNxNurlp22O8=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=UNJdmIuQPU2ghcF99I5cG4KFOWUzA3d9WzwfgeXuc+KNQC3G91Poy6Eo6DBixsExwlKfB66hC7VzpI+z2w3zRWn/h+PFhWh7axXh+onaK5cPBpHM/BHTBRPHzdboXmNU9y/q5akfQzibCMv/jDp9Q4QfkbRMSzv34zF+3/tm/08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DfzpFEJN; arc=none smtp.client-ip=198.175.65.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1730140092; c=relaxed/simple;
+	bh=jysc9seah1CkGTogQocmaGVdqs178PC3SgenoTMtVGU=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
+	 Content-Type:Subject; b=YIZH5js2bZpjzPlV2WDCLlUBbZ54xciUVZXz7tbkF9DoWhuqu2uYf9kfrHOX4aLVLAT4bcMLIWEFMuDKxrZBM3e7/UBIQ6LxRNVFU95l0ZhMICiq4GZy083F0qSRl82+xOAe/sScdR68GOwW3DURXbtV8pBCpllYIZYIvNwDukY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=WMjqOgKe; arc=none smtp.client-ip=204.191.154.188
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DfzpFEJN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730139526; x=1761675526;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=R2DVy8iU7fbfJEnyj+dAeHE6Oyfz71RsNxNurlp22O8=;
-  b=DfzpFEJNEJCnb9R7Mt1JIKBxOvPlziISPLdVwVGExwcAmHPykv+IKKTV
-   HL6r2YmztsoJqMs0xvFw6FKpFPKLEkg0pY7zRminCgMTnqXPLbQA5iYMH
-   6j4T8aHC1vvTgXjYCjm+wVwyPy/pWQc5RKTHvfUlnEy2rQGlp70vkTJnM
-   mNK9WvpLjFon7JZPFHrHiDVKML3mSY+JKBeGn30LJlZXJzRAfGsU8Hmv0
-   fnwf2GTzkPM8ba8a1P9ZqcbZjYJcCv+ns7zKat0j0kB4fBeTbmPwU+SWh
-   ZVQk8pAvhFgk2zj3Ed4YMm5p3+eCWJJX4xL5tVKo+YVhk1l5cuB5iLE1J
-   A==;
-X-CSE-ConnectionGUID: luYixyotSDGEq9NLiImvJw==
-X-CSE-MsgGUID: wBCtcbrERNCrgQNAE+D+sw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="29890417"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="29890417"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 11:18:45 -0700
-X-CSE-ConnectionGUID: nlwtlu05TdqCiPMMaaJHTQ==
-X-CSE-MsgGUID: a1iIFpFwRWOLai9o3BreiA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.11,239,1725346800"; 
-   d="scan'208";a="85647119"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.203])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Oct 2024 11:18:43 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Mon, 28 Oct 2024 20:18:39 +0200 (EET)
-To: Keith Busch <kbusch@kernel.org>
-cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 2/3] PCI/sysfs: Use __free() in reset_method_store()
-In-Reply-To: <8862b34b-26b3-af75-5d23-d765fb41b5d4@linux.intel.com>
-Message-ID: <d07973e2-0ac1-d3e0-25f0-7b1270ca4a15@linux.intel.com>
-References: <20241028174046.1736-1-ilpo.jarvinen@linux.intel.com> <20241028174046.1736-3-ilpo.jarvinen@linux.intel.com> <Zx_Pt2ObNKIS8cu2@kbusch-mbp> <8862b34b-26b3-af75-5d23-d765fb41b5d4@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="WMjqOgKe"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
+	MIME-Version:Date:Message-ID:content-disposition;
+	bh=xfwaAlX8xBNBzzQd8cWtPopo9omhZXUl1zo673gmZPU=; b=WMjqOgKeRu8KLmj0e+FfaKQ5nw
+	SgLTeMPtlxn7YvNSwEXm9WRVO6V3OfUYWzBkFxex8g5DhluJnjtGZAOP88y+oEYbhTswl001wqbjC
+	VAMp0KBM1cV3pxfWiT9t7GEpH6PP3iHvzxFOSltTDDGP1nFT4qfRwTkyuhh+Ij31rgOzU9qZSzueN
+	FXFsu3EvxwXrCsD6Ddkf3+5bHEPJculCmwf5FKruYO+4w5MEugAU88AXgFQlK1emwFsWfp6VAnMOR
+	XgGvOU7wsYcyzcO9LPQQNiLmuWtrD8A0tY2Ryo4R36g1lHw3F9kJrwi9exvBKqXcTantt6HmE9C2I
+	NC3mHOlg==;
+Received: from d104-157-31-28.abhsia.telus.net ([104.157.31.28] helo=[192.168.1.250])
+	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.96)
+	(envelope-from <logang@deltatee.com>)
+	id 1t5UT4-002Zeg-0P;
+	Mon, 28 Oct 2024 12:27:54 -0600
+Message-ID: <9db04bd9-81e1-4e60-a590-0882cd86052f@deltatee.com>
+Date: Mon, 28 Oct 2024 12:27:51 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-1788405296-1730139519=:947"
-
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
-
---8323328-1788405296-1730139519=:947
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-
-On Mon, 28 Oct 2024, Ilpo J=E4rvinen wrote:
-
-> On Mon, 28 Oct 2024, Keith Busch wrote:
->=20
-> > On Mon, Oct 28, 2024 at 07:40:45PM +0200, Ilpo J=E4rvinen wrote:
-> > > @@ -1430,7 +1431,7 @@ static ssize_t reset_method_store(struct device=
- *dev,
-> > >  =09=09=09=09  const char *buf, size_t count)
-> > >  {
-> > >  =09struct pci_dev *pdev =3D to_pci_dev(dev);
-> > > -=09char *options, *tmp_options, *name;
-> > > +=09char *tmp_options, *name;
-> > >  =09int m, n;
-> > >  =09u8 reset_methods[PCI_NUM_RESET_METHODS] =3D { 0 };
-> > > =20
-> > > @@ -1445,7 +1446,7 @@ static ssize_t reset_method_store(struct device=
- *dev,
-> > >  =09=09return count;
-> > >  =09}
-> > > =20
-> > > -=09options =3D kstrndup(buf, count, GFP_KERNEL);
-> > > +=09char *options __free(kfree) =3D kstrndup(buf, count, GFP_KERNEL);
-> >=20
-> > We should avoid mixing declarations with code. Please declare it with
-> > the cleanup attribute at the top like before, and just initialize it to
-> > NULL.
->=20
-> Hi,
->=20
-> I don't exactly disagree with you myself and would prefer to keep=20
-> declarations at top, but I think as done now is exactly what Bjorn wants=
-=20
-> for the specific case where __free() is used. This was discussed earlier=
-=20
-> on the list.
-
-Hi again,
-
-I went to archives and found out it had already made itself into=20
-include/linux/cleanup.h which now says this:
-
-"
- * Now, when a function uses both __free() and guard(), or multiple
- * instances of __free(), the LIFO order of variable definition order
- * matters. GCC documentation says:
- *
- * "When multiple variables in the same scope have cleanup attributes,
- * at exit from the scope their associated cleanup functions are run in
- * reverse order of definition (last defined, first cleanup)."
- *
- * When the unwind order matters it requires that variables be defined
- * mid-function scope rather than at the top of the file.
-
-[...snip examples...]
-
- * Given that the "__free(...) =3D NULL" pattern for variables defined at
- * the top of the function poses this potential interdependency problem
- * the recommendation is to always define and assign variables in one
- * statement and not group variable definitions at the top of the
- * function when __free() is used.
-"
-
-After reading the documentation for real now myself :-), I realized it's
-not just about maintainer preferences but about order of releasing things,=
-=20
-so it's a BAD PATTERN to put those declarations into the usual place when
-using __free().
+User-Agent: Mozilla Thunderbird
+To: Leon Romanovsky <leon@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Robin Murphy <robin.murphy@arm.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>
+Cc: Keith Busch <kbusch@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Yishai Hadas <yishaih@nvidia.com>,
+ Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+ Kevin Tian <kevin.tian@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Marek Szyprowski <m.szyprowski@samsung.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Jonathan Corbet <corbet@lwn.net>,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+ iommu@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-pci@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org
+References: <cover.1730037261.git.leon@kernel.org>
+ <34d44537a65aba6ede215a8ad882aeee028b423a.1730037261.git.leon@kernel.org>
+Content-Language: en-CA
+From: Logan Gunthorpe <logang@deltatee.com>
+In-Reply-To: <34d44537a65aba6ede215a8ad882aeee028b423a.1730037261.git.leon@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-SA-Exim-Connect-IP: 104.157.31.28
+X-SA-Exim-Rcpt-To: leon@kernel.org, axboe@kernel.dk, jgg@ziepe.ca, robin.murphy@arm.com, joro@8bytes.org, will@kernel.org, hch@lst.de, sagi@grimberg.me, kbusch@kernel.org, bhelgaas@google.com, yishaih@nvidia.com, shameerali.kolothum.thodi@huawei.com, kevin.tian@intel.com, alex.williamson@redhat.com, m.szyprowski@samsung.com, jglisse@redhat.com, akpm@linux-foundation.org, corbet@lwn.net, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-rdma@vger.kernel.org, iommu@lists.linux.dev, linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org
+X-SA-Exim-Mail-From: logang@deltatee.com
+X-Spam-Level: 
+Subject: Re: [RFC PATCH 2/7] block: don't merge different kinds of P2P
+ transfers in a single bio
+X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
+X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
 
-For completeness, the discussion thread (there might have been another=20
-thread earlier than these):
 
-https://lore.kernel.org/linux-pci/171140738438.1574931.15717256954707430472=
-=2Estgit@dwillia2-xfh.jf.intel.com/T/#u
+On 2024-10-27 08:21, Leon Romanovsky wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> To get out of the dma mapping helpers having to check every segment for
+> it's P2P status, ensure that bios either contain P2P transfers or non-P2P
+> transfers, and that a P2P bio only contains ranges from a single device.
+> 
+> This means we do the page zone access in the bio add path where it should
+> be still page hot, and will only have do the fairly expensive P2P topology
+> lookup once per bio down in the dma mapping path, and only for already
+> marked bios.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 
-> If I misunderstood the conclusion of the earlier cleanup related=20
-> discussion, can you please correct me Bjorn?
->=20
->=20
+Looks good to me.
 
---=20
- i.
+Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
 
---8323328-1788405296-1730139519=:947--
