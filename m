@@ -1,57 +1,57 @@
-Received: from mail-ed1-f66.google.com (mail-ed1-f66.google.com [209.85.208.66])
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F5A1DD86C
-	for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2024 14:07:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDD2E1DDC21
+	for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2024 14:07:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730124444; cv=none; b=SNqOFIU4M2LiLT7TsMo1YuGZ4r/5dLV3sbSl5mPKvjz9HNikBU1jmFL79eeT2OsYA8TcHJrcCugPYfLh8dF0yU0e+KyhRESXGtz4+omXiOYCmKoxa/TRV0fkxXBtd0WqdJENYf7NTcBtvDNj/Rwy8RmTlghHZalAnPvP21/nfe0=
+	t=1730124445; cv=none; b=NByx3Y3nrW3jnq+JcR9KMptKBqxsOi019+41NkrkfCfUrO0jUIQHvxN6fE9XBjFtwRkPCLMDAUWVkEI99mcXJsIVQNh61iFxrBYmF8h6rwy9WiN21nw4MEDdtdIo88cWSflViRWs+wQJbLx07B/Zvdzeg4kwIjueXNNv6kkqgu8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730124444; c=relaxed/simple;
-	bh=37BIVVxAvp06DoclbS8nrf/h7HI7daZAV/SbOYBjkus=;
+	s=arc-20240116; t=1730124445; c=relaxed/simple;
+	bh=bBaN0X0jScd/15W+2/fScdw6Spc8ffLYU0CeQxKdTas=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BtnxEJB01gXdLrShbeoS1nR2zlGcYMDutJrdySxMCTHG039TyC8Non3uo1JlybVTAuRRo8ZIWxz1SVZHKYGddjt9S5JcMp01zwlmpgkAbkue3cOVCfTXOtlThiUCqRsJ7PWmcbefnvu/blLkqdeu7cjs72b9P5MhweniY+0a7zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=cKW6f0KG; arc=none smtp.client-ip=209.85.208.66
+	 MIME-Version; b=dxgHuTK9J12cnOFqAjfB9N1qccJbNVrJoAMrWmrNH4xSqCWVlipp5a7R0XZBbppL3SnPY/HKJAc+XUzpZDxublb7s7ImKCIij2h11DN5XKceJL/cO651c7bqJ269QZ7jIDVqSyBDH0cs6yMS9etcHgUZALOVEFsVly4vxmfm3Iw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=BomfZmJl; arc=none smtp.client-ip=209.85.218.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="cKW6f0KG"
-Received: by mail-ed1-f66.google.com with SMTP id 4fb4d7f45d1cf-5c937b5169cso6743294a12.1
-        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2024 07:07:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="BomfZmJl"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-a9a2209bd7fso648687066b.2
+        for <linux-pci@vger.kernel.org>; Mon, 28 Oct 2024 07:07:21 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1730124438; x=1730729238; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1730124440; x=1730729240; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=SI9eKYh0F26+LR3GPe1sodJ7zzCtCgj8qtPEzcqglJE=;
-        b=cKW6f0KGXDvrHC7G7k/BAaAJ3jvEXC7fyAodzN1DHl64lDld9JPbwHheE4xMRuU/be
-         BfCjTNjMi6GwuxqG/yY4b8ALrVa12tOP0zucc5A2lU3vba9TaIBLicuKLKAx8lUJKSEC
-         PX/gZzdsI9cP6y84OYl6oODL8B69QnqF+tam8IYXDEia+kpCj/XSgGAedTIlgoXgK+kg
-         l0AG0LGsMLZjPJanlobKS0U7SrssbvVRUb9P7KLZGWqT2YpJ+Qg3oYw9G4VhCHv3LX35
-         HhY3JJx4gSnB2pSuMACuiMJ92IqetqXXbfDEdMosY+8lCz6PZJhyJ+CUiNos4Zqj0+LT
-         2WeQ==
+        bh=yqh56MHAf6NGyxNJb5XjKGyAFS1Pm7/dh/+rsUlSsqw=;
+        b=BomfZmJlug7ZwpBY6Rw8s/hVg8VMdkshumj8yk04yvy72sDEPdWUREZq2Hhg0S4M8u
+         gDJLYX5zIJAZF8guDj4/4a90eBM3JPx9O0eCsZcovLXelDNFW8lhr1XuhO+f5Gvoq7g3
+         2RdzF8Kxnj7MBV34UnZqFH2k0c+uRLezZBRIdtqqBM/tm9eFS1sZwatTjloHuVjTalmY
+         zWOifKCEMs/rR3S8FsrgqmN4a6oOLrCl1Kij/mBRZAeQtNAhcyiw67Q6tS/z+fQ2avFr
+         Ez9u30lvsd49FVcTxDrg25C5V4aYUUTUIBTe9iCyGrwRcaxRllKu5u32vLi7PRUTt0BG
+         +OMQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1730124438; x=1730729238;
+        d=1e100.net; s=20230601; t=1730124440; x=1730729240;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=SI9eKYh0F26+LR3GPe1sodJ7zzCtCgj8qtPEzcqglJE=;
-        b=d7NwVRkgfLLpr2KWxsfXV54yG+r5G9alzyV8p9NdPzavkGHGcINB232saM/gxegQLD
-         F5iaue3dQ8CWKocnkX94cYKyd4r7AVQtm7BGKaauSF7gluxCLnHSVwHKjx8oe2bZWVcx
-         WOCBfpG7kRZ/PR6i3UQO0VvnC7vQ0CfeLedQzDeF3uqfRU/AXYZHCtWXQ7uK345hQmBo
-         FKaZXQLGrOOK2eT6ioApQLWPAkaLPR5b//ztzeoDkF6qZWOILxP6RFwi13YWrLwhMvjX
-         G2LjD8x8bKqNwPoSTuzrl4MSn+YyqQhDfIwpH/Z6jOaFOFrhVEl1LFeRVCAmmvuXYrYt
-         bHCg==
-X-Forwarded-Encrypted: i=1; AJvYcCUQYCiiW1/+Gn83HBboljbyN60OfRFM+E+zvknudMrOOgCUtkeFuHYbprPm45I697tBY5neb0OxfKg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yybk2B204ZpFMvMpETX1aVRNhnDXDNnAfP0CKmYe1hwWGTadI06
-	bbCKmqA0FR3MCngx2CrxoVR5tIOADmnER0kjvb4jl31miGxxIcHb1uanRgwPr/k=
-X-Google-Smtp-Source: AGHT+IF5qNRgzKfi4MHhOJRZ8tqZIPrE0osHzwKattDyJF+pEfAMuUnEueh0yzfRuzZGt6IlIDK4Xg==
-X-Received: by 2002:a05:6402:1ed2:b0:5c8:df99:a6ec with SMTP id 4fb4d7f45d1cf-5cbbf20f089mr7633425a12.14.1730124438052;
-        Mon, 28 Oct 2024 07:07:18 -0700 (PDT)
+        bh=yqh56MHAf6NGyxNJb5XjKGyAFS1Pm7/dh/+rsUlSsqw=;
+        b=wwYG7o0MkIdW4AZqZF/Vh3UrSPuV9YHRC4O8kG9/LAlTu3TI1mJJqaffxGxzVtHoo5
+         lwmPhGgkcNgsJbojS1jpJtUqDMLClRlBPoCXJQ4gwVoI0qnlcRkwid0q6hcC6kWqGhjr
+         fuFXrTgIAwcEuqcIRpef5pjXlelaxLPekF+9S6etI49m76U3ZnX993f8WYlI0AA917fI
+         h8kqWWOdy8KewvjaXJdKPvBsXxOX2AKze/P7p+xVn9xeNVmeOtyLCcFypJUV/H9aWSe6
+         EcXUlwOzl0Cfmnd3m1d+3KT+bLmmn1JOhdn+hz6J6M4Jhdn/CSoRiId7rdhtye5f8ksZ
+         HKzA==
+X-Forwarded-Encrypted: i=1; AJvYcCXrhLFxoTgYXRye5AYCyA8TlPemrmMXLN9oFyFbHXiYmCIt0CC7ZziTu1TXVsA+r3Q0Wt7ajmICbNU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxkFemnVz/GUM5RBcCGGHJyJlgTxZxKCJUfxgLpNoTNFldD9UTp
+	EPM/SqHk4Efyh9O/rUfXBl6bV8xbc1/K6bOFJmOYxaxPzT9QFnMby7AYfCRZmtY=
+X-Google-Smtp-Source: AGHT+IEJsXz3JLUo8t8BMAbJDLTmQNDfk74M3MzGZPfukI0B32f64s3so2uEdukAd0Pl42XLPpmBkw==
+X-Received: by 2002:a17:907:3e1a:b0:a99:f4be:7a6c with SMTP id a640c23a62f3a-a9de61669cdmr835551966b.52.1730124440047;
+        Mon, 28 Oct 2024 07:07:20 -0700 (PDT)
 Received: from localhost (host-79-35-211-193.retail.telecomitalia.it. [79.35.211.193])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5cbb631a24dsm3186275a12.74.2024.10.28.07.07.17
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-a9b32455a14sm388970666b.178.2024.10.28.07.07.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 28 Oct 2024 07:07:17 -0700 (PDT)
+        Mon, 28 Oct 2024 07:07:19 -0700 (PDT)
 From: Andrea della Porta <andrea.porta@suse.com>
 To: Andrea della Porta <andrea.porta@suse.com>,
 	Michael Turquette <mturquette@baylibre.com>,
@@ -87,9 +87,9 @@ To: Andrea della Porta <andrea.porta@suse.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH v3 03/12] dt-bindings: pci: Add common schema for devices accessible through PCI BARs
-Date: Mon, 28 Oct 2024 15:07:20 +0100
-Message-ID: <2948fdf8ccf8d83f59814d0b2a85ce8dac938764.1730123575.git.andrea.porta@suse.com>
+Subject: [PATCH v3 05/12] PCI: of_property: Assign PCI instead of CPU bus address to dynamic bridge nodes
+Date: Mon, 28 Oct 2024 15:07:22 +0100
+Message-ID: <f6b445b764312fd8ab96745fe4e97fb22f91ae4c.1730123575.git.andrea.porta@suse.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <cover.1730123575.git.andrea.porta@suse.com>
 References: <cover.1730123575.git.andrea.porta@suse.com>
@@ -101,96 +101,30 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Common YAML schema for devices that exports internal peripherals through
-PCI BARs. The BARs are exposed as simple-buses through which the
-peripherals can be accessed.
-
-This is not intended to be used as a standalone binding, but should be
-included by device specific bindings.
+When populating "ranges" property for a PCI bridge, of_pci_prop_ranges()
+incorrectly use the CPU bus address of the resource. Since this is a PCI-PCI
+bridge, the window should instead be in PCI address space. Call
+pci_bus_address() on the resource in order to obtain the PCI bus
+address.
 
 Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
 ---
- .../devicetree/bindings/pci/pci-ep-bus.yaml   | 58 +++++++++++++++++++
- MAINTAINERS                                   |  1 +
- 2 files changed, 59 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/pci-ep-bus.yaml
+ drivers/pci/of_property.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/pci-ep-bus.yaml b/Documentation/devicetree/bindings/pci/pci-ep-bus.yaml
-new file mode 100644
-index 000000000000..e532621f226b
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/pci-ep-bus.yaml
-@@ -0,0 +1,58 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/pci-ep-bus.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Common Properties for PCI MFD Endpoints with Peripherals Addressable from BARs
-+
-+maintainers:
-+  - Andrea della Porta  <andrea.porta@suse.com>
-+
-+description:
-+  Define a generic node representing a PCI endpoint which contains several sub-
-+  peripherals. The peripherals can be accessed through one or more BARs.
-+  This common schema is intended to be referenced from device tree bindings, and
-+  does not represent a device tree binding by itself.
-+
-+properties:
-+  '#address-cells':
-+    const: 3
-+
-+  '#size-cells':
-+    const: 2
-+
-+  ranges:
-+    minItems: 1
-+    maxItems: 6
-+    items:
-+      maxItems: 8
-+      additionalItems: true
-+      items:
-+        - maximum: 5  # The BAR number
-+        - const: 0
-+        - const: 0
-+
-+patternProperties:
-+  '^pci-ep-bus@[0-5]$':
-+    type: object
-+    description:
-+      One node for each BAR used by peripherals contained in the PCI endpoint.
-+      Each node represent a bus on which peripherals are connected.
-+      This allows for some segmentation, e.g. one peripheral is accessible
-+      through BAR0 and another through BAR1, and you don't want the two
-+      peripherals to be able to act on the other BAR. Alternatively, when
-+      different peripherals need to share BARs, you can define only one node
-+      and use 'ranges' property to map all the used BARs.
-+
-+    additionalProperties: true
-+
-+    properties:
-+      compatible:
-+        const: simple-bus
-+
-+    required:
-+      - compatible
-+
-+additionalProperties: true
-+...
-diff --git a/MAINTAINERS b/MAINTAINERS
-index c55d12550246..ccf123b805c8 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -19384,6 +19384,7 @@ RASPBERRY PI RP1 PCI DRIVER
- M:	Andrea della Porta <andrea.porta@suse.com>
- S:	Maintained
- F:	Documentation/devicetree/bindings/clock/raspberrypi,rp1-clocks.yaml
-+F:	Documentation/devicetree/bindings/pci/pci-ep-bus.yaml
- F:	Documentation/devicetree/bindings/pinctrl/raspberrypi,rp1-gpio.yaml
- F:	include/dt-bindings/clock/rp1.h
- F:	include/dt-bindings/misc/rp1.h
+diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+index 5a0b98e69795..886c236e5de6 100644
+--- a/drivers/pci/of_property.c
++++ b/drivers/pci/of_property.c
+@@ -126,7 +126,7 @@ static int of_pci_prop_ranges(struct pci_dev *pdev, struct of_changeset *ocs,
+ 		if (of_pci_get_addr_flags(&res[j], &flags))
+ 			continue;
+ 
+-		val64 = res[j].start;
++		val64 = pci_bus_address(pdev, &res[j] - pdev->resource);
+ 		of_pci_set_address(pdev, rp[i].parent_addr, val64, 0, flags,
+ 				   false);
+ 		if (pci_is_bridge(pdev)) {
 -- 
 2.35.3
 
