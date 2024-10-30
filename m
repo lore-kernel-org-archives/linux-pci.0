@@ -1,74 +1,180 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4978F21503F;
-	Wed, 30 Oct 2024 15:13:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EE7621503F;
+	Wed, 30 Oct 2024 15:13:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730301218; cv=none; b=eyqh1UOvIxa8bBucPlX9/5SGnwQLQyYNL1WSfkS7D7A9mhd8A7/Ooml6GQ7ZsINoaeL9xLQxrRrESrbj1KOFI2lXqnY+Z2HJSTHGPeC0TH8TL7w7wy/ssDDveBhzG8SgrXiqFGIb/LOdI1ZC1wegyfmzYREcS8VWRnvxeb2FXlA=
+	t=1730301220; cv=none; b=Ddudn6a3QMwN6N4lVOsf2Pt1hzUEw+60RS0MShicw+JvbnEXLP5L9QSfNlZS+rMSd1KvqYeB+v/c3WO2P9/yXFzy0CIf1uscVcWnRaShUlP3rZIrhhm/ugRq4cR10RtvVwSml6qmFUGsYWAn915oQK+QLtwRL/puV+OozGQuKok=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730301218; c=relaxed/simple;
-	bh=IgNI8lgYFQbAt0dJNQpNKncmbTgA/OCnxxHvT/Lwx9Q=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e9MzI+IcMOre4VObwGBRShcBLD2VxFro0jEzf8aNuFuXpUNfxTAwpwRILhoXrdB6iChxsLlZZg0vAMRisjrHRkMkybTnRnC+AHVnMYMdQ3cRnrVmOd+PiSHMUkDDVmYoKkul7OAhAqWu0oE5lyRw7aNFGJwRmXHk7y+qdxQJJq0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.31])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Xdr9j3MWvz6GDsD;
-	Wed, 30 Oct 2024 23:08:41 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id AC7FD140498;
-	Wed, 30 Oct 2024 23:13:32 +0800 (CST)
-Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 30 Oct
- 2024 16:13:31 +0100
-Date: Wed, 30 Oct 2024 15:13:30 +0000
-From: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To: Terry Bowman <terry.bowman@amd.com>
-CC: <ming4.li@intel.com>, <linux-cxl@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<vishal.l.verma@intel.com>, <dan.j.williams@intel.com>,
-	<bhelgaas@google.com>, <mahesh@linux.ibm.com>, <ira.weiny@intel.com>,
-	<oohall@gmail.com>, <Benjamin.Cheatham@amd.com>, <rrichter@amd.com>,
-	<nathan.fontenot@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>
-Subject: Re: [PATCH v2 02/14] PCI/AER: Rename AER driver's interfaces to
- also indicate CXL PCIe port support
-Message-ID: <20241030151330.00005e54@Huawei.com>
-In-Reply-To: <20241025210305.27499-3-terry.bowman@amd.com>
-References: <20241025210305.27499-1-terry.bowman@amd.com>
-	<20241025210305.27499-3-terry.bowman@amd.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1730301220; c=relaxed/simple;
+	bh=XGQ1NR355bwszo+JrznVV1hbHviA7CQrxv/BERy+y90=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=qBbRCmZdFwU0hDRJ8REWwTs6ZYNjKjaMw75GNMCsTYmYOHphuMuTlUNOA4bM57vJLFDVEUXhHE2BGitFehBxjPAfhfLXFFDsn/rpaREbEF4p5eEerj6DPYF8XVNLROeBATxs4bgQWwzqX7dVGwi9yennulUgSofp7LHY0jNipFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LmPDkamq; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LmPDkamq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13913C4CECE;
+	Wed, 30 Oct 2024 15:13:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730301219;
+	bh=XGQ1NR355bwszo+JrznVV1hbHviA7CQrxv/BERy+y90=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=LmPDkamqTEpX+kwqmBANPlqtlaFChfErvXzZhGcch88a2LmIU2YivyLFbxjH/hzDZ
+	 UNXh/XXgTFkZfi9o/NrVNl/D2NwKGhCbDbxrukedWRjZezPUNgu3cjHDkBmHwB1ipi
+	 ToolLhizyQGeQxxr9bWcbopr2T3qyqnWcemFq8LORVDrrnGTOu7T2CVKojWMqU0aQy
+	 +EYFhYN45wrl8n2fh86UD+fmcagGwz4cCmHXzXzOmvR9DGTd+10cF2ZIGLyWyxQLVv
+	 N2MVluX7uYAEpW4yfHdfhNE3yxm+LfwU2OgZ2tF67RMlGpA+rFfIfD9Nx5spoyzjvo
+	 M+eW1/GKIlmtg==
+From: Leon Romanovsky <leon@kernel.org>
+To: Jens Axboe <axboe@kernel.dk>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>
+Cc: Keith Busch <kbusch@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org,
+	linux-mm@kvack.org
+Subject: [PATCH v1 06/17] iommu/dma: Factor out a iommu_dma_map_swiotlb helper
+Date: Wed, 30 Oct 2024 17:12:52 +0200
+Message-ID: <38bd0f07e18f4c74f2ab77f268e9d0424569f69f.1730298502.git.leon@kernel.org>
+X-Mailer: git-send-email 2.46.2
+In-Reply-To: <cover.1730298502.git.leon@kernel.org>
+References: <cover.1730298502.git.leon@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100001.china.huawei.com (7.191.160.183) To
- frapeml500008.china.huawei.com (7.182.85.71)
+Content-Transfer-Encoding: 8bit
 
-On Fri, 25 Oct 2024 16:02:53 -0500
-Terry Bowman <terry.bowman@amd.com> wrote:
+From: Christoph Hellwig <hch@lst.de>
 
-> The AER service driver already includes support for CXL restricted host
-> (RCH) downstream port error handling. The current implementation is based
-> on CXL1.1 using a root complex event collector.
-> 
-> Rename function interfaces and parameters where necessary to include
-> virtual hierarchy (VH) mode CXL PCIe port error handling alongside the RCH
-> handling.[1] The CXL PCIe port error handling will be added in a future
-> patch.
-> 
-> Limit changes to renaming variable and function names. No functional
-> changes are added.
-> 
-> [1] CXL 3.1 Spec, 9.12.2 CXL Virtual Hierarchy
-> 
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Split the iommu logic from iommu_dma_map_page into a separate helper.
+This not only keeps the code neatly separated, but will also allow for
+reuse in another caller.
+
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ drivers/iommu/dma-iommu.c | 73 ++++++++++++++++++++++-----------------
+ 1 file changed, 41 insertions(+), 32 deletions(-)
+
+diff --git a/drivers/iommu/dma-iommu.c b/drivers/iommu/dma-iommu.c
+index 127150f63c95..e1eaad500d27 100644
+--- a/drivers/iommu/dma-iommu.c
++++ b/drivers/iommu/dma-iommu.c
+@@ -1161,6 +1161,43 @@ void iommu_dma_sync_sg_for_device(struct device *dev, struct scatterlist *sgl,
+ 			arch_sync_dma_for_device(sg_phys(sg), sg->length, dir);
+ }
+ 
++static phys_addr_t iommu_dma_map_swiotlb(struct device *dev, phys_addr_t phys,
++		size_t size, enum dma_data_direction dir, unsigned long attrs)
++{
++	struct iommu_domain *domain = iommu_get_dma_domain(dev);
++	struct iova_domain *iovad = &domain->iova_cookie->iovad;
++
++	if (!is_swiotlb_active(dev)) {
++		dev_warn_once(dev, "DMA bounce buffers are inactive, unable to map unaligned transaction.\n");
++		return DMA_MAPPING_ERROR;
++	}
++
++	trace_swiotlb_bounced(dev, phys, size);
++
++	phys = swiotlb_tbl_map_single(dev, phys, size, iova_mask(iovad), dir,
++			attrs);
++
++	/*
++	 * Untrusted devices should not see padding areas with random leftover
++	 * kernel data, so zero the pre- and post-padding.
++	 * swiotlb_tbl_map_single() has initialized the bounce buffer proper to
++	 * the contents of the original memory buffer.
++	 */
++	if (phys != DMA_MAPPING_ERROR && dev_is_untrusted(dev)) {
++		size_t start, virt = (size_t)phys_to_virt(phys);
++
++		/* Pre-padding */
++		start = iova_align_down(iovad, virt);
++		memset((void *)start, 0, virt - start);
++
++		/* Post-padding */
++		start = virt + size;
++		memset((void *)start, 0, iova_align(iovad, start) - start);
++	}
++
++	return phys;
++}
++
+ dma_addr_t iommu_dma_map_page(struct device *dev, struct page *page,
+ 	      unsigned long offset, size_t size, enum dma_data_direction dir,
+ 	      unsigned long attrs)
+@@ -1174,42 +1211,14 @@ dma_addr_t iommu_dma_map_page(struct device *dev, struct page *page,
+ 	dma_addr_t iova, dma_mask = dma_get_mask(dev);
+ 
+ 	/*
+-	 * If both the physical buffer start address and size are
+-	 * page aligned, we don't need to use a bounce page.
++	 * If both the physical buffer start address and size are page aligned,
++	 * we don't need to use a bounce page.
+ 	 */
+ 	if (dev_use_swiotlb(dev, size, dir) &&
+ 	    iova_offset(iovad, phys | size)) {
+-		if (!is_swiotlb_active(dev)) {
+-			dev_warn_once(dev, "DMA bounce buffers are inactive, unable to map unaligned transaction.\n");
+-			return DMA_MAPPING_ERROR;
+-		}
+-
+-		trace_swiotlb_bounced(dev, phys, size);
+-
+-		phys = swiotlb_tbl_map_single(dev, phys, size,
+-					      iova_mask(iovad), dir, attrs);
+-
++		phys = iommu_dma_map_swiotlb(dev, phys, size, dir, attrs);
+ 		if (phys == DMA_MAPPING_ERROR)
+-			return DMA_MAPPING_ERROR;
+-
+-		/*
+-		 * Untrusted devices should not see padding areas with random
+-		 * leftover kernel data, so zero the pre- and post-padding.
+-		 * swiotlb_tbl_map_single() has initialized the bounce buffer
+-		 * proper to the contents of the original memory buffer.
+-		 */
+-		if (dev_is_untrusted(dev)) {
+-			size_t start, virt = (size_t)phys_to_virt(phys);
+-
+-			/* Pre-padding */
+-			start = iova_align_down(iovad, virt);
+-			memset((void *)start, 0, virt - start);
+-
+-			/* Post-padding */
+-			start = virt + size;
+-			memset((void *)start, 0,
+-			       iova_align(iovad, start) - start);
+-		}
++			return phys;
+ 	}
+ 
+ 	if (!coherent && !(attrs & DMA_ATTR_SKIP_CPU_SYNC))
+-- 
+2.46.2
+
