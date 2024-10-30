@@ -1,80 +1,151 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mail-relay.contabo.net (mail-relay.contabo.net [207.180.195.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9399D26AD4;
-	Wed, 30 Oct 2024 14:57:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D8212D1FA;
+	Wed, 30 Oct 2024 15:02:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.180.195.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730300243; cv=none; b=TmMVml5HcqQjy3VPGLQikG19waN6fGWD9RMdPk8Yx1ke8OJfDGxD69qsJGhfM4OyEfDoK2HwjKwuXCW/tdTlthe8409lbTXtrCkYd0m3wjICj6rqAJ6LsEy4ebB6NI0LKrm1j182LACnki+IaI+T/xWT1pHVs+QvS4NJNkf8ua0=
+	t=1730300563; cv=none; b=RO8EaBEOJB32X2ara0vszYm5sdhIJkV0smNx2SpDLzkyu13FAllpRBZHzSvPmJgtHnWoZSQ+lr80Z8neB+jWJoBrcWHvL/Va53TqnI08Xyidemb53o5927xQcKbzYKA8KaA7Q4O0ge7StmLRjZA5bsFO7Bu8iLCMxdVdNAga4ag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730300243; c=relaxed/simple;
-	bh=NFNwA1nAENuRUepB0mrjvJghMwFFjdV9BjvwSmBmWQU=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BG4yzX1EXiv9OP9JI15xdX/vhdIhEw3g0oT2KnYNoNR7Tju8tSYcOi5LsRb5ZHEfRN8Z2+F4uflvytwWr2vj8pX+AgACqS8zSeUehGziCjUJpOyErJ7Hd7Ywo3mVk2phqc5gYxJLUF50Y/JifNCmQLZi5WYsJjuqqxGSgZ/Axo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=Huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.31])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Xdqpz1946z6GFD4;
-	Wed, 30 Oct 2024 22:52:27 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id 65FF3140158;
-	Wed, 30 Oct 2024 22:57:18 +0800 (CST)
-Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 30 Oct
- 2024 15:57:17 +0100
-Date: Wed, 30 Oct 2024 14:57:15 +0000
-From: Jonathan Cameron <Jonathan.Cameron@Huawei.com>
-To: Terry Bowman <terry.bowman@amd.com>
-CC: <ming4.li@intel.com>, <linux-cxl@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
-	<vishal.l.verma@intel.com>, <dan.j.williams@intel.com>,
-	<bhelgaas@google.com>, <mahesh@linux.ibm.com>, <ira.weiny@intel.com>,
-	<oohall@gmail.com>, <Benjamin.Cheatham@amd.com>, <rrichter@amd.com>,
-	<nathan.fontenot@amd.com>, <Smita.KoralahalliChannabasappa@amd.com>
-Subject: Re: [PATCH v2 03/14] cxl/pci: Introduce helper functions
- pcie_is_cxl() and pcie_is_cxl_port()
-Message-ID: <20241030145715.00001d78@Huawei.com>
-In-Reply-To: <20241025210305.27499-4-terry.bowman@amd.com>
-References: <20241025210305.27499-1-terry.bowman@amd.com>
-	<20241025210305.27499-4-terry.bowman@amd.com>
-Organization: Huawei Technologies Research and Development (UK) Ltd.
-X-Mailer: Claws Mail 4.1.0 (GTK 3.24.33; x86_64-w64-mingw32)
+	s=arc-20240116; t=1730300563; c=relaxed/simple;
+	bh=tisj9MRLY8sAb+Wz9LAPF3LrcExkszWJ6y5pi5FUEUg=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=WmRDqYp4zOoQ8jXcxiisBIzEj8e4PGgEcDRmvcrxMOT0NoI1g1cBVy227xHaAqkQmz9oZ9g/Kz8N8oaQLO/WC+FlW9nNeWLmzJdBsy4JwV3aZLtSrV9iYEE1ISlNRSM7O0+BuOBdpBFgtSzMuq6BnaC/kGUZxsquBhuF/39i9hE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=odyss3us.net; spf=pass smtp.mailfrom=odyss3us.net; dkim=pass (2048-bit key) header.d=odyss3us.net header.i=@odyss3us.net header.b=LGzKhVKJ; arc=none smtp.client-ip=207.180.195.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=odyss3us.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=odyss3us.net
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=odyss3us.net header.i=@odyss3us.net header.b="LGzKhVKJ"
+Received: from pxmg2.contabo.net (localhost.localdomain [127.0.0.1])
+	by mail-relay.contabo.net (Proxmox) with ESMTP id 2BAE07C26B8;
+	Wed, 30 Oct 2024 15:55:02 +0100 (CET)
+Received: from m2712.contaboserver.net (m2712.contaboserver.net [91.194.91.201])
+	by mail-relay.contabo.net (Proxmox) with ESMTPS id F388F7C26D0;
+	Wed, 30 Oct 2024 15:55:01 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=odyss3us.net; s=default; h=MIME-Version:Content-Transfer-Encoding:
+	Content-Type:References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=tisj9MRLY8sAb+Wz9LAPF3LrcExkszWJ6y5pi5FUEUg=; b=LGzKhVKJ5E2qTIXPvO+Pt4seOR
+	v+FRvs0g0Qs78tpmUIZK5XJUU+aFPDvgMok5z3MHHEkVlym2rq9GGMj8lt3JAPYm4LZs2a7B3A3LU
+	pDngWut3rfZqE9TT4h6b820cX46qywqsBAQTe7RmLUD7w9suHpIagp95n99Xxms17hHknJ+i2rXhe
+	NVxE6Yv3fqQUcL+sdJrQjmBCi2UG86TI9jFo0pkgYp79YPYUahXhhrmyKs5BgkePtk5GcB+z2rX0M
+	248ZHTmFnKH3cf80A+cYxgyHvMQc9M74bVMRM/R76AFcuQ20JKMfFE6sLid7yCieAoOY6G9Z0cFYM
+	Gox1s9bA==;
+Received: from pd95ebe22.dip0.t-ipconnect.de ([217.94.190.34]:53344 helo=void-3.local)
+	by m2712.contaboserver.net with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.96.2)
+	(envelope-from <g@odyss3us.net>)
+	id 1t6A67-002j6X-1C;
+	Wed, 30 Oct 2024 15:55:01 +0100
+Message-ID: <47b0f9fe0038baabb3b0c2d489a66a554a021e92.camel@odyss3us.net>
+Subject: Re: Kernel maintainer *CENSORED* on LKML [WAS: linux: Goodbye from
+ a Linux community volunteer]
+From: Goran <g@odyss3us.net>
+To: metux <metux@gmx.de>, Dragan =?UTF-8?Q?Milivojevi=C4=87?=
+ <d.milivojevic@gmail.com>, "Enrico Weigelt, metux IT consult"
+ <info@metux.net>
+Cc: Peter Cai <peter@typeblog.net>, phoronix@phoronix.com, James Bottomley
+ <James.Bottomley@hansenpartnership.com>, Serge Semin
+ <fancer.lancer@gmail.com>,  Jon Mason <jdmason@kudzu.us>, Dave Jiang
+ <dave.jiang@intel.com>, Allen Hubbe <allenbh@gmail.com>, 
+ ntb@lists.linux.dev, Andy Shevchenko <andy@kernel.org>, Andy Shevchenko
+ <andriy.shevchenko@linux.intel.com>, Kory Maincent
+ <kory.maincent@bootlin.com>,  Cai Huoqing <cai.huoqing@linux.dev>,
+ dmaengine@vger.kernel.org, Mark Brown <broonie@kernel.org>, 
+ linux-spi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>, 
+ linux-ide@vger.kernel.org, Paul Burton <paulburton@kernel.org>, Thomas
+ Bogendoerfer <tsbogend@alpha.franken.de>, Arnd Bergmann <arnd@arndb.de>,
+ Jiaxun Yang <jiaxun.yang@flygoat.com>,  linux-mips@vger.kernel.org, Bjorn
+ Helgaas <bhelgaas@google.com>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, Yoshihiro Shimoda
+ <yoshihiro.shimoda.uh@renesas.com>,  linux-pci@vger.kernel.org, "David S.
+ Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>, Paolo
+ Abeni <pabeni@redhat.com>, Andrew Lunn <andrew@lunn.ch>, Russell King
+ <linux@armlinux.org.uk>, Vladimir Oltean <olteanv@gmail.com>, Keguang Zhang
+ <keguang.zhang@gmail.com>, Yanteng Si <siyanteng@loongson.cn>, 
+ netdev@vger.kernel.org, Rob Herring <robh@kernel.org>, Krzysztof Kozlowski
+ <krzk@kernel.org>, Guenter Roeck <linux@roeck-us.net>, 
+ linux-hwmon@vger.kernel.org, Borislav Petkov <bp@alien8.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, Andrew Halaney
+ <ajhalaney@gmail.com>, Nikita Travkin <nikita@trvn.ru>, Ivan Kokshaysky
+ <ink@jurassic.park.msu.ru>, Alexander Shiyan <shc_work@mail.ru>, Dmitry
+ Kozlov <xeb@mail.ru>, Sergey Shtylyov <s.shtylyov@omp.ru>, Evgeniy
+ Dushistov <dushistov@mail.ru>, Geert Uytterhoeven <geert@linux-m68k.org>,
+ Sergio Paracuellos <sergio.paracuellos@gmail.com>,  Nikita Shubin
+ <nikita.shubin@maquefel.me>, linux-renesas-soc@vger.kernel.org,
+ linux-kernel@vger.kernel.org,  Kexy Biscuit <kexybiscuit@aosc.io>,
+ jeffbai@aosc.io, Linus Torvalds <torvalds@linux-foundation.org>, "[DNG]"
+ <dng@lists.dyne.org>, redaktion@golem.de, dev mail list <dev@suckless.org>
+Date: Wed, 30 Oct 2024 15:54:57 +0100
+In-Reply-To: <b410a7fb-58c0-4d17-b818-54ec3476833a@gmx.de>
+References: 
+	<2m53bmuzemamzc4jzk2bj7tli22ruaaqqe34a2shtdtqrd52hp@alifh66en3rj>
+	 <e7d548a7fc835f9f3c9cb2e5ed97dfdfa164813f.camel@HansenPartnership.com>
+	 <6beb4070-1946-4387-bd0e-34608a76b19e@typeblog.net>
+	 <CALtW_agj1rurb3DRrPd9o2mkfku5fq_M3CEKY5sW+Zz7shKYHA@mail.gmail.com>
+	 <6d37175d-1b0b-4b82-80f0-c5b4e61badbf@metux.net>
+	 <2f12ee89-af9f-4af1-8ec8-ede1d5256592@metux.net>
+	 <CALtW_agiJyX3sTaBKgwPF7X920=+fFrRgXMPt4x_GCDOMfZy_w@mail.gmail.com>
+	 <CALtW_aimN531aZKSSG4hVLeQDk6bUoujopkhCh57xsaxfJrYgA@mail.gmail.com>
+	 <b410a7fb-58c0-4d17-b818-54ec3476833a@gmx.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.52.2 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100012.china.huawei.com (7.191.174.184) To
- frapeml500008.china.huawei.com (7.182.85.71)
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - m2712.contaboserver.net
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - odyss3us.net
+X-Get-Message-Sender-Via: m2712.contaboserver.net: authenticated_id: g@odyss3us.net
+X-Authenticated-Sender: m2712.contaboserver.net: g@odyss3us.net
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
 
-On Fri, 25 Oct 2024 16:02:54 -0500
-Terry Bowman <terry.bowman@amd.com> wrote:
+Widely accepted spam lists are few and once on one it will get hard to
+get cleared.
 
-> CXL and AER drivers need the ability to identify CXL devices and CXL port
-> devices.
-> 
-> First, add set_pcie_cxl() with logic checking for CXL Flexbus DVSEC
-> presence. The CXL Flexbus DVSEC presence is used because it is required
-> for all the CXL PCIe devices.[1]
-> 
-> Add boolean 'struct pci_dev::is_cxl' with the purpose to cache the CXL
-> Flexbus presence.
-> 
-> Add pcie_is_cxl() as a macro to return 'struct pci_dev::is_cxl',
-> 
-> Add pcie_is_cxl_port() to check if a device is a CXL root port, CXL
-> upstream switch port, or CXL downstream switch port. Also, verify the
-> CXL extensions DVSEC for port is present.[1]
-> 
-> [1] CXL 3.1 Spec, 8.1.1 PCIe Designated Vendor-Specific Extended
->     Capability (DVSEC) ID Assignment, Table 8-2
-> 
-> Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-Make sense to improve the trace point info if nothing else.
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Maybe Devuan has no clue that your domain is on one or multiple spam
+list. They are just using spam lists to block.
+
+Spam lists can be used for such nasty things.
+
+Am Mittwoch, dem 30.10.2024 um 14:48 +0100 schrieb metux:
+> On 29.10.24 20:33, Dragan Milivojevi=C4=87 wrote:
+>=20
+> Hi,
+>=20
+> > > > First I've thought it's just when replying specific mails, but
+> > > > now
+> > > > turned out *all* my mails are blocked, even totally unrelated
+> > > > things.
+> > > > I can confirm it's not by the message content, but my mail
+> > > > address or
+> > > > domain. I'm blocked from whole kernel.org
+> > >=20
+> > > Same thing on my end, partial sample: https://imgur.com/a/l4Jcfhk
+> >=20
+> > And it is spreading, previous message to dng@lists.dyne.org=C2=A0was
+> > rejected with:
+> >=20
+> > "Message rejected by filter rule match"
+>=20
+> Do you have some evidence that Devuan's mail server is really
+> blocking
+> us ?
+>=20
+> If so, I'd be exceptionally surprised.
+>=20
+>=20
+> --mtx
+
+
