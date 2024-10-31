@@ -1,50 +1,50 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB3A81BBBDA;
-	Thu, 31 Oct 2024 16:25:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2264F1BBBE5;
+	Thu, 31 Oct 2024 16:27:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730391948; cv=none; b=CfNo/oy3847e6YRkQurlkyhbt6E3P9vRRo9dNdXvTrgXDDVhu1/nUZhsES9wUg0xtvp7TCDJM02onZaPhTLDYMjhnI4R5l28ZlmgAC5W0Y/DOF2i0Qh+uRZYg43QXQHvDMRymqibUg5w2QpsvNu/xfAiUDGTWiLNxcOFm4gemwU=
+	t=1730392034; cv=none; b=AqcybxrJ4atyBLXwvwMszRmFqKcVSrdCqYGLovL9HOrOt1H9YoVMjPZmaj+tVkXMP0mj6pd/je7qftXXIeiFfuclXZLsjwnHIk91oCqL+oNUqK1GRu3SMoxkck9OrC7cM/I/IucHRJgUaZuqaP3MavTfK+wvZTy5qliRjh1Df/4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730391948; c=relaxed/simple;
-	bh=JjE5x1eGkkaUcr30PcTK0N+rFI8UzjKI7Uv+XWdOyhI=;
+	s=arc-20240116; t=1730392034; c=relaxed/simple;
+	bh=x3VGYA7MwWp6jzN6/+h9SPAxStwbeYk1Po1rpI6RtDw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=USsMxMoeunqLXx5eqTRhrxkUVV3KeukFo4I+9z/nMhVpEAy99eGJm5n/hzUlprEKf5ccrFxpO27USryibTo2hF+ksWPajYa0HOiY2S23/P29UyANxbMcvAvmo+3lQ4ls68/ahRxCkkYmSPXHZHKX8kMCZznV4dd0Ppz76i6e2xo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dGy78zBy; arc=none smtp.client-ip=192.198.163.15
+	 In-Reply-To:Content-Type; b=PaE0mCsDXFtQu7eGLXjTsBOyRWN4xPErybfsJ91Tog6JDAOSScK0wQZp+O4WgEyF25aB8vlPQpQoPrejj3NkG5s0TrOZWc379iXLckiMldey+zpp6MKDPZkqlhe0dEZdW2xUbYQomwQ2M4oA9Eeby1aMwn8l0yZeWYS/uNH73Tc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZjSDf+yZ; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dGy78zBy"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZjSDf+yZ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1730391946; x=1761927946;
+  t=1730392032; x=1761928032;
   h=message-id:date:mime-version:subject:to:references:from:
    in-reply-to:content-transfer-encoding;
-  bh=JjE5x1eGkkaUcr30PcTK0N+rFI8UzjKI7Uv+XWdOyhI=;
-  b=dGy78zByvdzLOnljGtIkzE5SdfXe5wlkictUq0S9eCFHWDntSSDWh2Lx
-   oy1oC2rX+MolqMndTEJikP/y4oHtIux6BrkP6MKANIuZBigOwfWw47vPn
-   OAf37jZ4UA+F3lHTTgmPvGx1h7wyw5h9s623h03mtu2UZtNySFYdX9+gm
-   KYoBz1oEKIHKGdi+RcS302kzDHnxCQ/hnCx8U0dDzGsN8fqomm4Nx6UEY
-   C2kde+sq3CA+lnNemT8QDsCAT9EPfgbk2IjRz2cx265RRv/u6VxJet6So
-   AK5sqZIC0MDyirm2kguOT5ZFhy1/EPMGR1sKm+03H9JpDnp1rSFmrWDSv
-   A==;
-X-CSE-ConnectionGUID: OHHNNLvdQNy3zPEfmvA/kw==
-X-CSE-MsgGUID: sj3Yf3RpQjeI0S4aXv2fAA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11242"; a="30259021"
+  bh=x3VGYA7MwWp6jzN6/+h9SPAxStwbeYk1Po1rpI6RtDw=;
+  b=ZjSDf+yZCzfeSe4f76dsMAmeFRSf1MoCQz4HcwhoAomkvbeFtYhNAhct
+   YMU/i+85y94J7L++bsgxf8d+fjOFDheHhm6ND2CVRpPvUTXq/6K8mf2PE
+   pxa35IrKHi4gqq5jtydCny6FyRVs+9HvNyXhX5Z205IyRH+sVL7RiMuRM
+   7MsAwvBmHZQglNRW4VNWgqY7yAQAx7Wy/YercxH5pxchzzzC4MFO/V7JO
+   51duPkPVXXJF83k6BY3/Wfybsyjjno7ktJ7rpqOUDnoBVj6XXqhSYsKDR
+   /a9lguCQitWlEKcUUThq/vEJNWmsNdz1owQMzxQzkL3k9/I/SXLudQP+E
+   w==;
+X-CSE-ConnectionGUID: CWzcs4kzQaS7jg2b/N7G6g==
+X-CSE-MsgGUID: +hQDnnxpQ0GdQlaHi6WfwA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11242"; a="30259150"
 X-IronPort-AV: E=Sophos;i="6.11,247,1725346800"; 
-   d="scan'208";a="30259021"
+   d="scan'208";a="30259150"
 Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2024 09:25:44 -0700
-X-CSE-ConnectionGUID: To6RB4RqS4iiAlKXKXqx8w==
-X-CSE-MsgGUID: HaSDEYG2QKet9nTN59Uyeg==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2024 09:27:12 -0700
+X-CSE-ConnectionGUID: viogqThGRGaTbUW0jFYyZA==
+X-CSE-MsgGUID: esvJn3cCS3a4UmUJRkrf8A==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.11,247,1725346800"; 
-   d="scan'208";a="113522642"
+   d="scan'208";a="113522798"
 Received: from dwoodwor-mobl2.amr.corp.intel.com (HELO [10.125.108.232]) ([10.125.108.232])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2024 09:25:42 -0700
-Message-ID: <a68f58d4-d79d-4c91-855f-9bfb36013cc4@intel.com>
-Date: Thu, 31 Oct 2024 09:25:41 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 31 Oct 2024 09:27:10 -0700
+Message-ID: <271e1830-11a3-4ee7-a87b-4585b93438fb@intel.com>
+Date: Thu, 31 Oct 2024 09:27:09 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,8 +52,8 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/14] cxl/pci: Introduce helper functions
- pcie_is_cxl() and pcie_is_cxl_port()
+Subject: Re: [PATCH v2 04/14] PCI/AER: Modify AER driver logging to report CXL
+ or PCIe bus error type
 To: Terry Bowman <terry.bowman@amd.com>, ming4.li@intel.com,
  linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
  linux-pci@vger.kernel.org, dave@stgolabs.net, jonathan.cameron@huawei.com,
@@ -63,134 +63,127 @@ To: Terry Bowman <terry.bowman@amd.com>, ming4.li@intel.com,
  rrichter@amd.com, nathan.fontenot@amd.com,
  Smita.KoralahalliChannabasappa@amd.com
 References: <20241025210305.27499-1-terry.bowman@amd.com>
- <20241025210305.27499-4-terry.bowman@amd.com>
+ <20241025210305.27499-5-terry.bowman@amd.com>
 Content-Language: en-US
 From: Dave Jiang <dave.jiang@intel.com>
-In-Reply-To: <20241025210305.27499-4-terry.bowman@amd.com>
+In-Reply-To: <20241025210305.27499-5-terry.bowman@amd.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 
 
 On 10/25/24 2:02 PM, Terry Bowman wrote:
-> CXL and AER drivers need the ability to identify CXL devices and CXL port
-> devices.
+> The AER driver and aer_event tracing currently log 'PCIe Bus Type'
+> for all errors.
 > 
-> First, add set_pcie_cxl() with logic checking for CXL Flexbus DVSEC
-> presence. The CXL Flexbus DVSEC presence is used because it is required
-> for all the CXL PCIe devices.[1]
-> 
-> Add boolean 'struct pci_dev::is_cxl' with the purpose to cache the CXL
-> Flexbus presence.
-> 
-> Add pcie_is_cxl() as a macro to return 'struct pci_dev::is_cxl',
-> 
-> Add pcie_is_cxl_port() to check if a device is a CXL root port, CXL
-> upstream switch port, or CXL downstream switch port. Also, verify the
-> CXL extensions DVSEC for port is present.[1]
-> 
-> [1] CXL 3.1 Spec, 8.1.1 PCIe Designated Vendor-Specific Extended
->     Capability (DVSEC) ID Assignment, Table 8-2
+> Update the driver and aer_event tracing to log 'CXL Bus Type' for CXL devices.
 > 
 > Signed-off-by: Terry Bowman <terry.bowman@amd.com>
-
 Reviewed-by: Dave Jiang <dave.jiang@intel.com>
+
 > ---
->  drivers/pci/pci.c             | 14 ++++++++++++++
->  drivers/pci/probe.c           | 10 ++++++++++
->  include/linux/pci.h           |  4 ++++
->  include/uapi/linux/pci_regs.h |  3 ++-
->  4 files changed, 30 insertions(+), 1 deletion(-)
+>  drivers/pci/pcie/aer.c  | 14 ++++++++------
+>  include/ras/ras_event.h |  9 ++++++---
+>  2 files changed, 14 insertions(+), 9 deletions(-)
 > 
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index 7d85c04fbba2..c1b243aec61c 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -5034,6 +5034,20 @@ static u16 cxl_port_dvsec(struct pci_dev *dev)
->  					 PCI_DVSEC_CXL_PORT);
->  }
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index fe6edf26279e..53e9a11f6c0f 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -699,13 +699,14 @@ static void __aer_print_error(struct pci_dev *dev,
 >  
-> +bool pcie_is_cxl_port(struct pci_dev *dev)
-> +{
-> +	if (!pcie_is_cxl(dev))
-> +		return false;
-> +
-> +	if ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_UPSTREAM) &&
-> +	    (pci_pcie_type(dev) != PCI_EXP_TYPE_DOWNSTREAM))
-> +		return false;
-> +
-> +	return cxl_port_dvsec(dev);
-> +}
-> +EXPORT_SYMBOL_GPL(pcie_is_cxl_port);
-> +
->  static bool cxl_sbr_masked(struct pci_dev *dev)
+>  void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
 >  {
->  	u16 dvsec, reg;
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 4f68414c3086..9324eb345f11 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -1631,6 +1631,14 @@ static void set_pcie_thunderbolt(struct pci_dev *dev)
->  		dev->is_thunderbolt = 1;
+> +	const char *bus_type = pcie_is_cxl(dev) ? "CXL"  : "PCIe";
+>  	int layer, agent;
+>  	int id = pci_dev_id(dev);
+>  	const char *level;
+>  
+>  	if (!info->status) {
+> -		pci_err(dev, "PCIe Bus Error: severity=%s, type=Inaccessible, (Unregistered Agent ID)\n",
+> -			aer_error_severity_string[info->severity]);
+> +		pci_err(dev, "%s Bus Error: severity=%s, type=Inaccessible, (Unregistered Agent ID)\n",
+> +			bus_type, aer_error_severity_string[info->severity]);
+>  		goto out;
+>  	}
+>  
+> @@ -714,8 +715,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+>  
+>  	level = (info->severity == AER_CORRECTABLE) ? KERN_WARNING : KERN_ERR;
+>  
+> -	pci_printk(level, dev, "PCIe Bus Error: severity=%s, type=%s, (%s)\n",
+> -		   aer_error_severity_string[info->severity],
+> +	pci_printk(level, dev, "%s Bus Error: severity=%s, type=%s, (%s)\n",
+> +		   bus_type, aer_error_severity_string[info->severity],
+>  		   aer_error_layer[layer], aer_agent_string[agent]);
+>  
+>  	pci_printk(level, dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+> @@ -730,7 +731,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+>  	if (info->id && info->error_dev_num > 1 && info->id == id)
+>  		pci_err(dev, "  Error of this Agent is reported first\n");
+>  
+> -	trace_aer_event(dev_name(&dev->dev), (info->status & ~info->mask),
+> +	trace_aer_event(dev_name(&dev->dev), bus_type, (info->status & ~info->mask),
+>  			info->severity, info->tlp_header_valid, &info->tlp);
 >  }
 >  
-> +static void set_pcie_cxl(struct pci_dev *dev)
-> +{
-> +	u16 dvsec = pci_find_dvsec_capability(dev, PCI_VENDOR_ID_CXL,
-> +					      PCI_DVSEC_CXL_FLEXBUS);
-> +	if (dvsec)
-> +		dev->is_cxl = 1;
-> +}
-> +
->  static void set_pcie_untrusted(struct pci_dev *dev)
+> @@ -764,6 +765,7 @@ EXPORT_SYMBOL_GPL(cper_severity_to_aer);
+>  void pci_print_aer(struct pci_dev *dev, int aer_severity,
+>  		   struct aer_capability_regs *aer)
 >  {
->  	struct pci_dev *parent;
-> @@ -1945,6 +1953,8 @@ int pci_setup_device(struct pci_dev *dev)
->  	/* Need to have dev->cfg_size ready */
->  	set_pcie_thunderbolt(dev);
+> +	const char *bus_type = pcie_is_cxl(dev) ? "CXL"  : "PCIe";
+>  	int layer, agent, tlp_header_valid = 0;
+>  	u32 status, mask;
+>  	struct aer_err_info info;
+> @@ -798,7 +800,7 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
+>  	if (tlp_header_valid)
+>  		__print_tlp_header(dev, &aer->header_log);
 >  
-> +	set_pcie_cxl(dev);
-> +
->  	set_pcie_untrusted(dev);
->  
->  	/* "Unknown power state" */
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 106ac83e3a7b..d3b1af9fb273 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -443,6 +443,7 @@ struct pci_dev {
->  	unsigned int	is_hotplug_bridge:1;
->  	unsigned int	shpc_managed:1;		/* SHPC owned by shpchp */
->  	unsigned int	is_thunderbolt:1;	/* Thunderbolt controller */
-> +	unsigned int	is_cxl:1;               /* CXL alternate protocol */
->  	/*
->  	 * Devices marked being untrusted are the ones that can potentially
->  	 * execute DMA attacks and similar. They are typically connected
-> @@ -743,6 +744,9 @@ static inline bool pci_is_vga(struct pci_dev *pdev)
->  	return false;
+> -	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
+> +	trace_aer_event(dev_name(&dev->dev), bus_type, (status & ~mask),
+>  			aer_severity, tlp_header_valid, &aer->header_log);
 >  }
+>  EXPORT_SYMBOL_NS_GPL(pci_print_aer, CXL);
+> diff --git a/include/ras/ras_event.h b/include/ras/ras_event.h
+> index e5f7ee0864e7..1bf8e7050ba8 100644
+> --- a/include/ras/ras_event.h
+> +++ b/include/ras/ras_event.h
+> @@ -297,15 +297,17 @@ TRACE_EVENT(non_standard_event,
 >  
-> +#define pcie_is_cxl(dev) (dev->is_cxl)
-> +bool pcie_is_cxl_port(struct pci_dev *dev);
-> +
->  #define for_each_pci_bridge(dev, bus)				\
->  	list_for_each_entry(dev, &bus->devices, bus_list)	\
->  		if (!pci_is_bridge(dev)) {} else
-> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-> index 12323b3334a9..5df6c74963c5 100644
-> --- a/include/uapi/linux/pci_regs.h
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -1186,9 +1186,10 @@
->  #define PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL		0x00ff0000
->  #define PCI_DOE_DATA_OBJECT_DISC_RSP_3_NEXT_INDEX	0xff000000
+>  TRACE_EVENT(aer_event,
+>  	TP_PROTO(const char *dev_name,
+> +		 const char *bus_type,
+>  		 const u32 status,
+>  		 const u8 severity,
+>  		 const u8 tlp_header_valid,
+>  		 struct pcie_tlp_log *tlp),
 >  
-> -/* Compute Express Link (CXL r3.1, sec 8.1.5) */
-> +/* Compute Express Link (CXL r3.1, sec 8.1) */
->  #define PCI_DVSEC_CXL_PORT				3
->  #define PCI_DVSEC_CXL_PORT_CTL				0x0c
->  #define PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
-> +#define PCI_DVSEC_CXL_FLEXBUS				7
+> -	TP_ARGS(dev_name, status, severity, tlp_header_valid, tlp),
+> +	TP_ARGS(dev_name, bus_type, status, severity, tlp_header_valid, tlp),
 >  
->  #endif /* LINUX_PCI_REGS_H */
+>  	TP_STRUCT__entry(
+>  		__string(	dev_name,	dev_name	)
+> +		__string(	bus_type,	bus_type	)
+>  		__field(	u32,		status		)
+>  		__field(	u8,		severity	)
+>  		__field(	u8, 		tlp_header_valid)
+> @@ -314,6 +316,7 @@ TRACE_EVENT(aer_event,
+>  
+>  	TP_fast_assign(
+>  		__assign_str(dev_name);
+> +		__assign_str(bus_type);
+>  		__entry->status		= status;
+>  		__entry->severity	= severity;
+>  		__entry->tlp_header_valid = tlp_header_valid;
+> @@ -325,8 +328,8 @@ TRACE_EVENT(aer_event,
+>  		}
+>  	),
+>  
+> -	TP_printk("%s PCIe Bus Error: severity=%s, %s, TLP Header=%s\n",
+> -		__get_str(dev_name),
+> +	TP_printk("%s %s Bus Error: severity=%s, %s, TLP Header=%s\n",
+> +		__get_str(dev_name), __get_str(bus_type),
+>  		__entry->severity == AER_CORRECTABLE ? "Corrected" :
+>  			__entry->severity == AER_FATAL ?
+>  			"Fatal" : "Uncorrected, non-fatal",
 
