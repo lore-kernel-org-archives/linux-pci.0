@@ -1,129 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08DA01B2197;
-	Mon,  4 Nov 2024 11:18:48 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DC3C185B4D;
+	Mon,  4 Nov 2024 11:39:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730719129; cv=none; b=rGvNyuGwZGdChZRTum+7zxI1nT3wxJ78qyj8tgpg/amzVjWD1rol4g7YjytvxQfqWMwQ+Qw3f63p3baqqale20JF903abuKb0c243B0ZWYy2WK+JpD1E+k/4OoTYJ/ea+TOW/ufWL3BikGHrHEoxmOzWsNlA75qGG679eiyVOFI=
+	t=1730720369; cv=none; b=IfXP4NHpuW3B2eJ8lYZxrEY/8SzRa3zN2jfDv3NV5EdzB52FMbbfKFGNZpEaRqTIpG5Y3BpEL+q0GUrFDjGjSwAF8xxhC1Z8wayKx2J7akm4FRT1EJ6ljZ3kk05q0b2Z9nSGrWkjrB7cL/QoOlVXMIPGp3NryKVAO1tY2qkSiRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730719129; c=relaxed/simple;
-	bh=dPYBbaZDduNI0r2YV+lknaETuYjrZTPFY+763BUwGkY=;
+	s=arc-20240116; t=1730720369; c=relaxed/simple;
+	bh=NEDVbMitndD/iK6JWHs2o1S6pn7h57zEQ83wRjOGbwM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lIaQ++59JuputfPxKNkoCb6x9FqwDB/IjbBaVYSpm/8mAYIByjkrHsUdWBJUvxSXS56BJDiR2jVJCQKP9T2hjea8BQVCOiNmKZYS8Anp8cVUw4lWCSnUMp9Cg4H4Iwo4FBDJfdFvRmnvlB0cGe5UsFAkd0iu5jTSF5NIpRSmNrs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NhPiOPq/; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=T4X21Z2//bEFcE/Mnm7SRAEbSe2Hv30g+1ieVBA2BegoCMvZRAoZOdSYFpbC4l5dWo/3l6/XioIhCYr0byPK6IIo/c0GUEkwnb/QtZ52vhrykbqbJ639Y5Z0Py3PptiFz59LSlKcCL2rXk+pa2DGBNiLTqUUqvjENG+VpJVB3hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FCNZl80y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NhPiOPq/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DB53EC4CECE;
-	Mon,  4 Nov 2024 11:18:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FCNZl80y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9E43EC4CECE;
+	Mon,  4 Nov 2024 11:39:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730719128;
-	bh=dPYBbaZDduNI0r2YV+lknaETuYjrZTPFY+763BUwGkY=;
+	s=k20201202; t=1730720366;
+	bh=NEDVbMitndD/iK6JWHs2o1S6pn7h57zEQ83wRjOGbwM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NhPiOPq/MAF8Mgv5z5c4nAv+K8Ik4BEZpQjtnrhmvqQyuNX8cCKcOpodWGW9nZzbC
-	 5Lw4uqvaC40QVKSsifKjEPR4EsQyGDK3gdJ8DaBu+XYeoOYQoJ7SeeCNa5il9fl8ye
-	 hy181fS9Ea1zvX4xW46q/Bt91sREIC9jqvgmDyDym8foGP7bw2AtT7zGNuFeCM2IlS
-	 DhPlhYXwwmw/Fad6wM73qKYUnYAEPTVyutMMoUs6wUW4gF3lFff+4yChlZqU5fnEKb
-	 DMQ//FpswkWeAG29nUamJDziZhp06JmCNLCFdE7ljDVjOj2jrVYJk6GrMF361g9A/u
-	 PsRz7WQzSF9tA==
-Date: Mon, 4 Nov 2024 11:18:43 +0000
-From: Conor Dooley <conor@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Conor Dooley <conor.dooley@microchip.com>,
-	Daire McNamara <daire.mcnamara@microchip.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org
-Subject: Re: [PATCH v5 2/2] PCI: microchip: rework reg region handing to
- support using either instance 1 or 2
-Message-ID: <20241104-stabilize-friday-94705c3dc244@spud>
-References: <20240814-outmost-untainted-cedd4adcd551@spud>
- <20241101195129.GA1318063@bhelgaas>
+	b=FCNZl80yEk5l8SaYaoCBd/ngvAnMVCC2ZjSDbwZfQ8mrGoQAQHq0KZ0YySad2w6iD
+	 bhKUdk2VJPuLxk2n0zNkeYqVTjWimCe0KY+EoWT4fqvV1+YLhQUvABpjnzxQEgdqFM
+	 2BpPxg0LwBCTYbhkxkUYZgp3KkOsOZRDo+BKC3lH3JeAsOEk2fzj8ARLQQ14RhFnrX
+	 uXWBkNGPfoaMl6N4kDz6OiMk0Mf/BwrYcYvvPP+t71xWn1ZjQA3Q6lgcGNVObYG5Gq
+	 GbS2qup3wwHfcN9yIP+AIN4pioJI5Luew6aYTY7gCJ1DnGQC9xzlf55e02PVxyG0ae
+	 QwBznLzmgrROQ==
+Date: Mon, 4 Nov 2024 13:39:20 +0200
+From: Leon Romanovsky <leon@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Robin Murphy <robin.murphy@arm.com>, Jens Axboe <axboe@kernel.dk>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	Keith Busch <kbusch@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-rdma@vger.kernel.org, iommu@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v1 00/17] Provide a new two step DMA mapping API
+Message-ID: <20241104113920.GD99170@unreal>
+References: <cover.1730298502.git.leon@kernel.org>
+ <3567312e-5942-4037-93dc-587f25f0778c@arm.com>
+ <20241104095831.GA28751@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="TfnHo0vXNK+c6Gwh"
-Content-Disposition: inline
-In-Reply-To: <20241101195129.GA1318063@bhelgaas>
-
-
---TfnHo0vXNK+c6Gwh
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+In-Reply-To: <20241104095831.GA28751@lst.de>
 
-On Fri, Nov 01, 2024 at 02:51:29PM -0500, Bjorn Helgaas wrote:
-> On Wed, Aug 14, 2024 at 09:08:42AM +0100, Conor Dooley wrote:
-> > From: Conor Dooley <conor.dooley@microchip.com>
-> >=20
-> > The PCI host controller on PolarFire SoC has multiple "instances", each
-> > with their own bridge and ctrl address spaces. The original binding has
-> > an "apb" register region, and it is expected to be set to the base
-> > address of the host controllers register space. Defines in the driver
-> > were used to compute the addresses of the bridge and ctrl address ranges
-> > corresponding to instance1. Some customers want to use instance0 however
-> > and that requires changing the defines in the driver, which is clearly
-> > not a portable solution.
->=20
-> The subject mentions "instance 1 or 2".
->=20
-> This paragraph implies adding support for "instance0" ("customers want
-> to use instance0").
->=20
-> The DT patch suggests that we're adding support for "instance2"
-> ("customers want to use instance2").
->=20
-> Both patches suggest that the existing support is for "instance 1".
->=20
-> Maybe what's being added is "instance 2", and this commit log should
-> s/instance0/instance 2/ ?  And probably s/instance1/instance 1/ so the
-> style is consistent?
+On Mon, Nov 04, 2024 at 10:58:31AM +0100, Christoph Hellwig wrote:
+> On Thu, Oct 31, 2024 at 09:17:45PM +0000, Robin Murphy wrote:
 
-Hmm no, it would be s/instance1/instance 2/ & s/instance0/instance 1/.
-The indices are 1-based, not 0-based.
+<...>
 
-> Is this a "pick one or the other but not both" situation, or does this
-> device support two independent PCIe controllers?
->=20
-> I first thought this driver supported a single PCIe controller, and
-> you were adding support for a second independent controller.
->=20
+> >>   2. VFIO PCI live migration code is building a very large "page list"
+> >>      for the device. Instead of allocating a scatter list entry per allocated
+> >>      page it can just allocate an array of 'struct page *', saving a large
+> >>      amount of memory.
+> >
+> > VFIO already assumes a coherent device with (realistically) an IOMMU which 
+> > it explicitly manages - why is it even pretending to need a generic DMA 
+> > API?
+> 
+> AFAIK that does isn't really vfio as we know it but the control device
+> for live migration.  But Leon or Jason might fill in more.
 
-I don't know if they are fully independent (Daire would have to confirm)
-but as far as the driver in linux is concerned they are. As far as I
-know, you could operate both instances at the same time, but I've not
-heard of any customer that is actually doing that nor tested it myself.
-Operating both instances would require another node in the devicetree,
-which should work fine given the private data structs are allocated at
-runtime. I think the config space is shared.
+Yes, you are right, as it is written above "VFIO PCI live migration ...".
+That piece of code directly connected to the underlying real HW device
+and uses DMA API to provide live migration functionality to/from that
+device.
 
-> But the fact that you say "the [singular] host controller on
-> PolarFire", and you're not changing mc_host_probe() to call
-> pci_host_common_probe() more than once makes me think there is only a
-> single PCIe controller, and for some reason you can choose to operate
-> it using either register set 1 or register set 2.
+> 
+> The point is that quite a few devices have these page list based APIs
+> (RDMA where mlx5 comes from, NVMe with PRPs, AHCI, GPUs).
+> 
+> >
+> >>   3. NVMe PCI demonstrates how a BIO can be converted to a HW scatter
+> >>      list without having to allocate then populate an intermediate SG table.
+> >
+> > As above, given that a bio_vec still deals in struct pages, that could 
+> > seemingly already be done by just mapping the pages, so how is it proving 
+> > any benefit of a fragile new interface?
+> 
+> Because we only need to preallocate the tiny constant sized dma_iova_state
+> as part of the request instead of an additional scatterlist that requires
+> sizeof(struct page *) + sizeof(dma_addr_t) + 3 * sizeof(unsigned int)
+> per segment, including a memory allocation per I/O for that.
+> 
+> > My big concern here is that a thin and vaguely-defined wrapper around the 
+> > IOMMU API is itself a step which smells strongly of "abuse and design 
+> > mistake", given that the basic notion of allocating DMA addresses in 
+> > advance clearly cannot generalise. Thus it really demands some considered 
+> > justification beyond "We must do something; This is something; Therefore we 
+> > must do this." to be convincing.
+> 
+> At least for the block code we have a nice little core wrapper that is
+> very easy to use, and provides a great reduction of memory use and
+> allocations.  The HMM use case I'll let others talk about.
 
-The wording I've used mostly stems from conversations with Daire. We've
-kinda been saying that there's a single controller with two root port
-instances. Each root port instance is connected to different IOs,
-they're more than just different registers for accessing the same thing.
+I'm not sure about which wrappers Robin talks, but if we are talking
+about HMM wrappers, they gave us perfect combination of usability,
+performance and maintenance. All HMM users use same pattern, same
+structures and don't need to worry about internal DMA/IOMMU details.
 
---TfnHo0vXNK+c6Gwh
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZyitkwAKCRB4tDGHoIJi
-0tNQAP9ldG40/6k9HNbXDTXUEnTF1pjijRt/gdkaj938jXDjRgD/cJ24UOeT9ncp
-xClPvRUyDFamEevdesGEqLyarnTIzg0=
-=TAA0
------END PGP SIGNATURE-----
-
---TfnHo0vXNK+c6Gwh--
+Thanks
