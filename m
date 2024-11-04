@@ -1,192 +1,115 @@
-Received: from sonic314-13.consmr.mail.bf2.yahoo.com (sonic314-13.consmr.mail.bf2.yahoo.com [74.6.132.123])
+Received: from mail-qv1-f48.google.com (mail-qv1-f48.google.com [209.85.219.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E20E7C0BE
-	for <linux-pci@vger.kernel.org>; Mon,  4 Nov 2024 12:10:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.132.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C62541B4F17
+	for <linux-pci@vger.kernel.org>; Mon,  4 Nov 2024 12:19:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730722223; cv=none; b=kRHFuS2Wllrb956JoCmTQL+5kLRrOVtPfmagzGp9RnfhbfD7qjhteZeDEtDGSW2ILZZutfSUiIKIMPBGRBXl3bOGyuzLbm5ygmmslWE/Wd4BjzqeiulyzD3CP8p7Ev2U825uAlavSxQQ+2Jf3Go2Y1N/2glnSko0h0NogacJ1xI=
+	t=1730722770; cv=none; b=RyEZqRxvNxZoPgP/G0l9LgtKllUNP9NemeYNqTIvBnxsmSZgZLbsj4GkTMS6Ao6ngU89z1Vw183oh39TKbmbrYOSl1wUz7oqhYibwezcMsW6sLOtEzKIUNir+03CcVle8gJloKkGHKa7IwmKtAKPTYN+5KR/cdkLJ6eYFNB05Xc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730722223; c=relaxed/simple;
-	bh=FldXILWzWY07EtXv/SRtvQpX+GIvMUI6P7kJY2tiWwI=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Content-Type:
-	 References; b=JnGQNr0qBbg6xH9BXx24YwOgCe3nTFpaTPpUuU6pmTNkbYIFOc69vvmhbSTuCXNKwQOu/jFncv8PP2dRqnmT3uwIG+0LPaNZ6TOh1yypxp6gbC/5VYv9gsH9bJoKNgbQkDZGXGYeAX4pvIIBR8NPt2hocGHgpOO23YpmLmuZ2Lc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=b/lJ1GZY; arc=none smtp.client-ip=74.6.132.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
+	s=arc-20240116; t=1730722770; c=relaxed/simple;
+	bh=WafvJUVr8z2C1zDRQCvtKO+6K1W+UrIoTEdLDQdvuUQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VCW6e9RoABZNNPoHoy0z4F9lN/TiOtQH54m8rOFxQfrEF4Z48gNghBo2jj9pLvEGKn1rV920w1EuE7SaBuH5rxgucvmx0a0d2D6lWtdQzsY+gdRlbAjKbpXXmJV4Vf1IOlSCPNl81dZTbFyltEb19XViv2wMYeML6uddFaQiONk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=bU/bwQTR; arc=none smtp.client-ip=209.85.219.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="b/lJ1GZY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1730722221; bh=xnuu0VNGoKG9cEmMS7zoTpNtBtoXO4IgEf/opEOn014=; h=Date:From:Subject:To:References:From:Subject:Reply-To; b=b/lJ1GZYoTArzpLSIMKE77J0LP0zgFNgs2BLbIFTXzlj+nc/OgK76D5AZC+qKg/VOpaRdJsgkdyrXfr/d2yyj9RlH9cyVPyRbcWe88AYTGPwFqhlQ5AdjRkNz7+hb8snlqr4h+bB36SO9kc1hm/K+AgQYFNz7eg3/0jhxiVa3uL/6+pldqGuFfk1g4AoHIDk54T+t4UBeq/wC0gNJOFrq+6/isBdY9CfhHEMgBgO1EfwcMK8FWICI46UZy6ntRA77yqRkfcHRy8I7rQ4SmRzSDPQ7C23t9rZLIARWKvumzR0MdMJLypvm55s1PhctY4zRu8YIk0SmjY8RqaipXA4mQ==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1730722221; bh=IbNDMYkm3rESW5ZNiU+UI5gmXW33I4LS41tczgQMqtU=; h=X-Sonic-MF:Date:From:Subject:To:From:Subject; b=tj1R1JNesPd0F0iqu2Xlyzh/ABgLdHvii3Jk2XhESepZDRYUaBzsZ1dmz5kZS7wYi8MHOMgv8eEDwAiaEOWFtEJBilkl6vdCjj0MOQiPR/EAJVWO5NbYxtsnOGDrul4X5S3SpRP0avV57TjauK9fRe4IYLiztSY+dUD5mYP7BxRVhSl+Yc0/aVNcojGB56lfk/zCupetDSA6zPwVoQav3cN8LXyMtuxkrjuZkpY6wkIKdY6Q7KUmS+TNbEs5Jnol6mj7jpeA7Aj9S+mHi4WvGT/5lmnPjyNMlrvFnteC6azZExV0jlT+WjiniDZ99hjsz46Gs4G9l+r4g9vUccxEVg==
-X-YMail-OSG: 6C0oxpgVM1mUPJgoBxwJCVkIxTFGGlg7Epfxti4.1iDycDayw5iytxIf.3H5i25
- p3qlBUZqMDmCVxfTnLIgd0IS2Riwey4PwfbfhNPqVmaHIb56DhPFOZaH3_og55FMEq8ZgUyi1wYY
- X6W_rDtHa69GzUDqu_cLe3hUuv342J0us.897CYjRcMdSXEfH_RTQvoGLAGjhlyvH4ASQWel0iYK
- M110mDgW_hTE.vTKXXYm4yaKWKWaDTZMWezVhzVtQYPMfY2pzIdOGiyhL6aOgXipoyZRY_I.8eA2
- ZG9jaxtinki72ZVlzxHOwmjnFYUp0bjHdEJ8LsBUi1_TTpCiCZ4RvLVUB7.r7w4SSDTJvFZ1y_3w
- SHTvc5.21OKeyCe2yToj0A03VkkCsuVwGKm0htn4WbwI7IELKmIj91V8fr2_xnksoBKu8RTLNwF9
- kIStk3aDiPnU7FrjVLUmfg92.6AdoUIbXT0KpPYpzhX_KqK9jVmvXe1KiuZdo8DVc6vNKSanMJ30
- j0y2wpKcGDebmk6VmwgibstR8rDwJYppigoMoG7Pm.kqnBFnWAlebKmH9qA2jUv479p8dLZPN3F7
- 8UWtENVMYtYckMAwTXzrtD79VSrwR6vuyyJgeYTXE304RkxDXxnfwRiJ8fJRIOecivtS4QAOUM4i
- KjvDP_XqmJ1eAF2vBUgXn7iwYebNVbViFXyVD9prN35lYnI5HGF16C1VxWjoWODYH8JcN12KOlbg
- BVylPYkAe37Ul4vNy0PmA6NOMDvq0w8Jb2PQJqhWopYCs0fikRWgvYgfNK13rGnSJ8nvqeb2EQRH
- DpIJPQz6wAC2Qk05FGgZ_43yoji.xSrgwI3NrzKblDgPoeKIHSDIjEop8o9K_18KcdAe5Etj2tm9
- qQwLPG8HGAeA8BPzR0QeG17ktiwgZlIXNW760UQMwzRgd129IhLJbjAcQcchYvuLqItPhthviK2h
- Cas3S6TSDrN8T46ZsvjhwaqKyl6YA6lkos5U20kZ9Gb2w_niCP4jpeeh0GtEOrpWLiEf9tMAGFl9
- XnyIzs_rxB1IeKOpY4jEYj4sPbE_QpEeZfRy.fdxKT.bK.0fInHAvSfrN5M3AmDcRG1mmRRVcpoE
- mZ_zTBTkhvcPhIexC8fxPHWXxSuJKRrCJm0UcNsMHXa90Q5K3V5tImeSGfjYekEEXsDPzSa6Gn0j
- 0gDqxQDkTOx1IKyZs53GpakdrNwSiGYi92cOBDz083h5QRRlG_dIAoR4CvSNaqw_ISGQZgHtjIoZ
- Hwe.shZRIMaA2uQnfoTMLnFg7qFXOAOeeXtIq3CcQN0lYYffiqOXP4xGtXE2BWmwApg.nPOC5DMU
- g0qnXiWp9DvY_VlpM79CAzbaiaLJckebaBCzgpj3D3BdiZQVoIae3_w9.2Jo0E_c4f303qpOvPAd
- PZwGiIlGkcMsczPMoDEz8LQrCWZ45eg4H6dUbiQ4ECmDgwyyjqCABah4Q5ZIUmU1vFsBfqq6w96K
- .4C7zhH0USBCuh_ZvFknTgYC_mlqbNrrAYlO0tkZcTamuf0deDV6jHSRGdZTu1epoG2pssar6r3Q
- TMeKCQLY_UBkJBu3tTYOvOEZScvahWljJoK00w8x3NU8dm1umKDYKBtl78DK3Y7yten04AeAmXgp
- Htr7PjQUHi8QIZ2nrF0yZgUjQ7CHKS8ZGhDY7ubciqHOxJ9ikR0mwF865Wp6QZo.JD5DTqTpBlBt
- VVNSxYhoiOT22ktHTaaIDgrrbvRxk3F6uu9s8oJV3QA1Q.jeKvux4Z.eYZx.E3ZTK9fBipiTjLSU
- LHIaL4wkHRcWyTNSgrYaHLVwS.SMggHr2xtifL7cW4bbUjf32ym1TYuUHuHJeTGPoeo0oHG5NviP
- cLAX5kav1bU.ajcLcH_4Izue4byVLMaR8XeAFSt_FT1jrHjcLIugmY3VoVRLUIvVTiFd69i4rqbg
- JSIvvCB7I0fpjB_UkNRPOHKsWkJ_0Qm87S7ATP7iUwcs1iu7QPG87vxV_.fZmUl7ymz3PX1OsrU6
- 9RSq2_TygdoBhG5Of9dcO1nK2bbdwEciqi0o6QSqD7NlnpwF_LedmlypHcN3PYGFaTDHd8maZQr2
- QoPB4qKVYe68xoBiVfwJo9jSQpax58M9YB8.ZpDo09BOBYpxz8xMlg_AOOWnZch_.jE5mp4bLPyw
- oYL134XMQnH_Gld2es30lnv4eY5BJ4OORDVfJF2Bq5mYqqYZfhpQUHi4SBpfJQ7smh0IW_xoJ4mO
- eLzmHHbY_wRSTL_CIYozTigzrUUapDNpCnGjTfmpcRHepXLkqXApcBHesUgPAtwjafA--
-X-Sonic-MF: <dullfire@yahoo.com>
-X-Sonic-ID: 8537fcc7-3c7f-42cf-b245-83a4b26012c0
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic314.consmr.mail.bf2.yahoo.com with HTTP; Mon, 4 Nov 2024 12:10:21 +0000
-Received: by hermes--production-ne1-bfc75c9cd-2wx42 (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 2a7edba291e48226fc2fd13ff57f133b;
-          Mon, 04 Nov 2024 11:50:02 +0000 (UTC)
-Message-ID: <f7c43842-270e-48f8-ba89-9b5e67910131@yahoo.com>
-Date: Mon, 4 Nov 2024 05:34:42 -0600
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="bU/bwQTR"
+Received: by mail-qv1-f48.google.com with SMTP id 6a1803df08f44-6d36f7cf765so14328466d6.0
+        for <linux-pci@vger.kernel.org>; Mon, 04 Nov 2024 04:19:27 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1730722767; x=1731327567; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=tx1bOostXz+VH0GPtKgcyKswUQOWFhDDl/A9OfJb8HU=;
+        b=bU/bwQTRIAnSnu3ity+sjC0E2sq7Lx/G0WwuhQK1tFta0i+JHHb4ZgDaI+BwMp0GjP
+         mTuJkPdog3bS5cRlvNdXCOGo6r9C6lL8DpawfLdS9WQBuXkSkb3uRvVJ+3Jft2TU0l4z
+         Z7KQQ+bkelEINXuk6QjGwNJ1comMgCWJsIkvNFZ5eRsjDjojgELoEC7yc5lG8mAlNej8
+         74E5s7BmIpYr0/slUqyH43XmVbIAUeR4ArRinA/7yHVjpHr70CAydaCZc60vL5kQVRHN
+         60rPc+umLegF9M1e2Yl3TaNdXedLwfhi/5tJn9HzowNouiuDeuDVDwHWq3Uougepuohw
+         t3eQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1730722767; x=1731327567;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tx1bOostXz+VH0GPtKgcyKswUQOWFhDDl/A9OfJb8HU=;
+        b=f+p9wbNM+P1cY7ZsNAfnvQbzJ/oTTFYobefzwjp9z9+6aTqQmTrlpdVsoP5AqPSKXO
+         jJQFgtjYP+RRcOgEpPf2x0768/Gske/JMfMP4wXXCsnwkEmu/QajTyQuvEHcALz37cOH
+         5z81zas4JQJ4eeDJ7ObY9dYORbG9PZon6QJf3amqozfpOh+6Ge94aeFNiLA//Hs0Y2RY
+         KUGFChyffl/RjSVJwKn/l2MP4KPN9wJzq+pgia38qhEt0KVM52B/+BH4XPltPUj5PIR3
+         3BqeQhkIFyTO2CBcPOvKDyU4izjGdafLUKbg4cVz6Yt6S7iyNU756YkAoezuWVUhlYVM
+         vCrQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXPZVGwXNoPfA0UBSqADpXxs3FJzvlCRKePMKzSi7+Stt5G1Rb7/uw5ySfIRfHHDxj91B6rgUcYDaQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwLKwVMeKe7LkZC1IvpVeHtqbdq/pBJ5b3jiGbiHulSF41xJ3xx
+	SDDR6UcZ2aqAOmp8psz5QhlZ27ZewKhPFtHE3TeuWudCO9bvuz1v6ucx/1lQgDk=
+X-Google-Smtp-Source: AGHT+IGGw97HgDqXEc70DPdglFSAiLC2/hvL6iix2sWZheUlrSMhSyN4gGvDNAQMyTZfPVibvICZkw==
+X-Received: by 2002:a05:6214:3a8b:b0:6cb:c199:462a with SMTP id 6a1803df08f44-6d35c137657mr208089456d6.27.1730722766648;
+        Mon, 04 Nov 2024 04:19:26 -0800 (PST)
+Received: from ziepe.ca (hlfxns017vw-142-68-128-5.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.68.128.5])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6d353fc718csm47611946d6.38.2024.11.04.04.19.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 04 Nov 2024 04:19:25 -0800 (PST)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1t7w3I-00000000hJn-3gHO;
+	Mon, 04 Nov 2024 08:19:24 -0400
+Date: Mon, 4 Nov 2024 08:19:24 -0400
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Robin Murphy <robin.murphy@arm.com>, Leon Romanovsky <leon@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	Leon Romanovsky <leonro@nvidia.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	=?utf-8?B?SsOpcsO0bWU=?= Glisse <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-rdma@vger.kernel.org, iommu@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, linux-mm@kvack.org
+Subject: Re: [PATCH v1 07/17] dma-mapping: Implement link/unlink ranges API
+Message-ID: <20241104121924.GC35848@ziepe.ca>
+References: <cover.1730298502.git.leon@kernel.org>
+ <f8c7f160c9ae97fef4ccd355f9979727552c7374.1730298502.git.leon@kernel.org>
+ <51c5a5d5-6f90-4c42-b0ef-b87791e00f20@arm.com>
+ <20241104091048.GA25041@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Content-Language: en-US
-From: Dullfire <dullfire@yahoo.com>
-Subject: Kernel panic with niu module
-To: davem@davemloft.net, sparclinux@vger.kernel.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-References: <f7c43842-270e-48f8-ba89-9b5e67910131.ref@yahoo.com>
-X-Mailer: WebService/1.1.22806 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241104091048.GA25041@lst.de>
 
-Hello,
+On Mon, Nov 04, 2024 at 10:10:48AM +0100, Christoph Hellwig wrote:
+> >> +		arch_sync_dma_for_device(phys, size, dir);
+> >
+> > Plus if the aim is to pass P2P and whatever arbitrary physical addresses 
+> > through here as well, how can we be sure this isn't going to explode?
+> 
+> That's a good point.  Only mapped through host bridge P2P can even
+> end up here, so the address is a perfectly valid physical address
+> in the host.  But I'm not sure if all arch_sync_dma_for_device
+> implementations handle IOMMU memory fine.
 
-I am working on a set of patches that address a panic on bind in the niu
-module. However, none of the approaches I see integrate well with the kernels
-frameworks, so any feed back you could provide would be appreciated.
+I was told on x86 if you do a cache flush operation on MMIO there is a
+chance it will MCE. Recently had some similar discussions about ARM
+where it was asserted some platforms may have similar.
 
-On sparcv9 systems (and possibly others), when the niu drivers sets up the
-MSIX IRQ vectors, a fatal trap[0] is encountered. I have done a number of
-tests[1]. From these tests I have believe that any read from a specific MSIX
-table entry must come after a write to it's PCI_MSIX_ENTRY_DATA field,
-otherwise it will cause a fatal trap.
+It would be safest to only call arch flushing calls on memory that is
+mapped cachable. We can assume that a P2P target is never CPU
+mapped cachable, regardless of how the DMA is routed.
 
-I see types of approaches:
-1) Add writes to the ENTRY_DATA field to niu before it call into the 
-    msi(x) code.
-2) Adjust the MSIX code to either skip the read, or write to ENTRY_DATA first
-3) Add a PCI quirk for this device to "initialize" the MSIX vector table.
-
-Approach 1 encounters issues in needing to write to the MSIX table. The
-functions needed to do this are internal to msi.c (or drivers/pci/msi/msi.h),
-so they would have to either be reproduces in niu, or exposed in a public
-header. Neither of those seem like a good approach to me.
-
-Approach 2 can be done in a small amount of code, but it would either require
-the addition of a struct pci_dev flag of some sort, or it would be invasive
-to lots of other devices.
-
-While approach 3 seems to be the most correct location, it suffers many of
-the same issues as approach 1.
-
-I have also bisected the kernel, and determined that  upstream commit
-7d5ec3d3612396dc6d4b76366d20ab9fc06f399f revealed this issue. This commit
-adds read to the mask status before any write to PCI_MSIX_ENTRY_DATA, thus
-provoking the issue.
-
-If you have any suggestions, please let me know.
-
-Regards,
-Jonathan Currier
-
-
-[0] The trap looks like this:
------------------------------------------------------------------------------
-[   25.166817] niu: niu.c:v1.1 (Apr 22, 2010)
-[   25.166952] niu 0001:04:00.0: enabling device (0144 -> 0146)
-[   25.174100] niu: niu0: Found PHY 002063b0 type MII at phy_port 26
-[   25.174559] niu: niu0: Found PHY 002063b0 type MII at phy_port 27
-[   25.175004] niu: niu0: Found PHY 002063b0 type MII at phy_port 28
-[   25.175449] niu: niu0: Found PHY 002063b0 type MII at phy_port 29
-[   25.176298] niu: niu0: Port 0 [4 RX chans] [6 TX chans]
-[   25.176405] niu: niu0: Port 1 [4 RX chans] [6 TX chans]
-[   25.176507] niu: niu0: Port 2 [4 RX chans] [6 TX chans]
-[   25.176548] niu: niu0: Port 3 [4 RX chans] [6 TX chans]
-[   25.176590] niu: niu0: Port 0 RDC tbl(0) [ 0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 3 ]
-[   25.176757] niu: niu0: Port 0 RDC tbl(1) [ 0 1 2 3 0 1 2 3 0 1 2 3 0 1 2 3 ]
-[   25.176890] niu: niu0: Port 1 RDC tbl(2) [ 4 5 6 7 4 5 6 7 4 5 6 7 4 5 6 7 ]
-[   25.177053] niu: niu0: Port 1 RDC tbl(3) [ 4 5 6 7 4 5 6 7 4 5 6 7 4 5 6 7 ]
-[   25.177185] niu: niu0: Port 2 RDC tbl(4) [ 8 9 10 11 8 9 10 11 8 9 10 11 8 9 10 11 ]
-[   25.177349] niu: niu0: Port 2 RDC tbl(5) [ 8 9 10 11 8 9 10 11 8 9 10 11 8 9 10 11 ]
-[   25.177483] niu: niu0: Port 3 RDC tbl(6) [ 12 13 14 15 12 13 14 15 12 13 14 15 12 13 14 15 ]
-[   25.177649] niu: niu0: Port 3 RDC tbl(7) [ 12 13 14 15 12 13 14 15 12 13 14 15 12 13 14 15 ]
-[   25.245863] NON-RESUMABLE ERROR: Reporting on cpu 64
-[   25.245973] NON-RESUMABLE ERROR: TPC [0x00000000005f6900] <msix_prepare_msi_desc+0x90/0xa0>
-[   25.246106] NON-RESUMABLE ERROR: RAW [4010000000000016:00000e37f93e32ff:0000000202000080:ffffffffffffffff
-[   25.246215] NON-RESUMABLE ERROR:      0000000800000000:0000000000000000:0000000000000000:0000000000000000]
-[   25.246291] NON-RESUMABLE ERROR: handle [0x4010000000000016] stick [0x00000e37f93e32ff]
-[   25.246335] NON-RESUMABLE ERROR: type [precise nonresumable]
-[   25.246373] NON-RESUMABLE ERROR: attrs [0x02000080] < ASI sp-faulted priv >
-[   25.246435] NON-RESUMABLE ERROR: raddr [0xffffffffffffffff]
-[   25.246476] NON-RESUMABLE ERROR: insn effective address [0x000000c50020000c]
-[   25.246517] NON-RESUMABLE ERROR: size [0x8]
-[   25.246544] NON-RESUMABLE ERROR: asi [0x00]
-[   25.246573] CPU: 64 UID: 0 PID: 745 Comm: kworker/64:1 Not tainted 6.11.5 #63
-[   25.246625] Workqueue: events work_for_cpu_fn
-[   25.246671] TSTATE: 0000000011001602 TPC: 00000000005f6900 TNPC: 00000000005f6904 Y: 00000000    Not tainted
-[   25.246729] TPC: <msix_prepare_msi_desc+0x90/0xa0>
-[   25.246771] g0: 00000000000002e9 g1: 000000000000000c g2: 000000c50020000c g3: 0000000000000100
-[   25.246815] g4: ffff8000470307c0 g5: ffff800fec5be000 g6: ffff800047a08000 g7: 0000000000000000
-[   25.246861] o0: ffff800014feb000 o1: ffff800047a0b620 o2: 0000000000000011 o3: ffff800047a0b620
-[   25.246906] o4: 0000000000000080 o5: 0000000000000011 sp: ffff800047a0ad51 ret_pc: 00000000005f7128
-[   25.246951] RPC: <__pci_enable_msix_range+0x3cc/0x460>
-[   25.247004] l0: 000000000000000d l1: 000000000000c01f l2: ffff800014feb0a8 l3: 0000000000000020
-[   25.247049] l4: 000000000000c000 l5: 0000000000000001 l6: 0000000020000000 l7: ffff800047a0b734
-[   25.247094] i0: ffff800014feb000 i1: ffff800047a0b730 i2: 0000000000000001 i3: 000000000000000d
-[   25.247138] i4: 0000000000000000 i5: 0000000000000000 i6: ffff800047a0ae81 i7: 00000000101888b0
-[   25.247182] I7: <niu_try_msix.constprop.0+0xc0/0x130 [niu]>
-[   25.247321] Call Trace:
-[   25.247346] [<00000000101888b0>] niu_try_msix.constprop.0+0xc0/0x130 [niu]
-[   25.247442] [<000000001018f840>] niu_get_invariants+0x183c/0x207c [niu]
-[   25.247536] [<00000000101902fc>] niu_pci_init_one+0x27c/0x2fc [niu]
-[   25.247630] [<00000000005ef3e4>] local_pci_probe+0x28/0x74
-[   25.247677] [<0000000000469240>] work_for_cpu_fn+0x8/0x1c
-[   25.247726] [<000000000046b008>] process_scheduled_works+0x144/0x210
-[   25.247782] [<000000000046b518>] worker_thread+0x13c/0x1c0
-[   25.247833] [<00000000004710e0>] kthread+0xb8/0xc8
-[   25.247874] [<00000000004060c8>] ret_from_fork+0x1c/0x2c
-[   25.247931] [<0000000000000000>] 0x0
-[   25.247961] Kernel panic - not syncing: Non-resumable error.
------------------------------------------------------------------------------
-
-[1] Tests I have done (and their results)
-All tests done on a T5240 (UltaSPARC T2).
-In my test cases: niu driver tries to use up to 13 vectors (table size of 32 entries).
-"SUCCCESS" - Test case booted with functional networking
-"FAILED" - Test case experienced a fatal trap after loading the niu module 
- - writing 0 to all of the MSIX table entrys' ENTRY_VECTOR_CTRL: FAILED 
- - writing 0 to all of the MSIX table entrys' ENTRY_LOWER_ADDR: FAILED 
- - writing 0 to all of the MSIX table entrys' ENTRY_UPPER_ADDR: FAILED 
- - writing 0 to all of the MSIX table entrys' ENTRY_DATA: SUCCESS
- - writing 0 to only one MSIX table entry's ENTRY_DATA: FAILED
- - writing 0 to only the first 1/2 of the MSIX table entrys' ENTRY_DATA: SUCCESS
- - writing ~0 to only the first 1/2 of the MSIX table entrys' ENTRY_DATA: SUCCESS
- - writing 0 to only the first 12 of the MSIX table entrys' ENTRY_DATA: FAILED
- - writing 0 to only the first 13 of the MSIX table entrys' ENTRY_DATA: SUCCESS
- - reading ENTRY_DATA before writing it: FAILED 
- - reading ENTRY_LOWER_ADDR before writing it: FAILED 
- - reading ENTRY_UPPER_ADDR before writing it: FAILED
+Jason
