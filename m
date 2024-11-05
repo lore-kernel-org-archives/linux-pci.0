@@ -1,114 +1,91 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.alien8.de (mail.alien8.de [65.109.113.108])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 694BF20E023;
-	Tue,  5 Nov 2024 19:59:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3A72215C5D;
+	Tue,  5 Nov 2024 19:59:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=65.109.113.108
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730836793; cv=none; b=RZydz5lWGIuINTZ03Y8FyyOB3h0qkvjt/wAkeOePLTadRMEAkuzkc7nT2/O/8t2vnF1gq6Rp7tcVmSGDTuUbBbpEVpr1zjwNjfap88hGELvygwtX2rPnaVGd2ccNn5NMAEAIEHnyF2vBqzZfo7SkoQAJCPPR09E6rlWpLLHkC0w=
+	t=1730836795; cv=none; b=KAm4L+X65P2CzDjrUuBlxFKJk9XfYQmv3McNzLsnyMpOy6hnQvPm1mBJ/BAeDpmNGYw2arIsWdILoBjkIvIVVDk5+Wu2koOggmlLKtU91WazaqV+BaunH4fbOzgBzBZx48XUV7Xita+UNh8xja6fIqTIjWBjRA+FCsiEiZFr+jc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730836793; c=relaxed/simple;
-	bh=EbMymFeRSoH9+NLlqY/J0qe19NUpw6JijuyIE3ui+mI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=sShtt70hQttU6gmevZFp9uk6TkEqFmzQm/SO+O0cyfraDCHw+//3KiEAAe8BvYN7ppJPNUdzGglQ2EPoF5KAihTD0NdrrmeJlSyhT43cNpr2SHBkByXcwCGKtxs3KuHWjIzUHYooRVLfrQnAuzcUSuwTubxOwvyuOp5YWIEJcSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MBu9kNBr; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730836795; c=relaxed/simple;
+	bh=j41Kh1BtbgPWZYM0Buh0jvF4cjs2tf3j0qf7oQkqDRU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NW9JW0iAPyzDiurNQmT39EKO0etjKFisubjFLlbJT3QaBI6sJnqmNNfAFrGkcXmYmeJ7Q64HIswXIGuz1wiipRJqg3ZY6XjA8kf7gu/lS8fV5kznxxKabyC0HQdDCI1vUp7NWjoH0ud2Ay3oPKvscBI5K59miVHr2DtItC5l8aw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de; spf=pass smtp.mailfrom=alien8.de; dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b=LSyZ8AbX; arc=none smtp.client-ip=65.109.113.108
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=alien8.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=alien8.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MBu9kNBr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D5FB0C4CED1;
-	Tue,  5 Nov 2024 19:59:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730836792;
-	bh=EbMymFeRSoH9+NLlqY/J0qe19NUpw6JijuyIE3ui+mI=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=MBu9kNBrUTKT9ecai7ouX6RYn9md0wlU5WDnrV9IW3zEDKNFmFmRatRLGqM80+pj8
-	 LnkK3UeO4+GsqBzcq7jqwG3H9xUkx5UD2Q3rfN5+xviimoekXKLs6RtQFYKHc93RAH
-	 rXfzaEmWdKYVvi9/U1sVeak5C1QU8/kSdKG9IHy7+3DpR25He+Twu32oLoDQZuwjiL
-	 Wuly0MaH9DdtfyCbPK1x2snn2xfgoolJKBJuBwjlaH0igbdcxy2HehR1JeY5Vlo4FH
-	 vMyRbH7qyMXAzKPDYDQmpdikksbOuVe2ZoxFV3R2Ffca1UWh3ayPBuhxmPoF87JgnW
-	 nu1ZuwJ7OWy1A==
-Received: by mail-yb1-f170.google.com with SMTP id 3f1490d57ef6-e29327636f3so5122840276.2;
-        Tue, 05 Nov 2024 11:59:52 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCU1DXqJZAbCwMvOq/sQAc/ENjUCMefqovYNQRZqZYnPSzxutp7lwAdnBKCv9fdh+kSAzapysxn1V/Rg@vger.kernel.org, AJvYcCW9KC8YDhQ5KSn2yDbvZsrAk/vyyYrYGZvCjz81uzHtllWJWgU4LCIQUK9RMdoz7CIeFCqRy0jxbGwA@vger.kernel.org, AJvYcCXqJCRxe2eFJq7VBQmx6AEAcQ3awvjelNxWTIc2Bj1/gYoiiZxPmABgKBcXEuWHEqkFsDjrvnlPj82M7WaD@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSQU+2oqLKAEgrEeT77neoSNU6qED+IUQCdNPp+ZnyvkgkrlDg
-	BboTs3eZUbd9ZGv+CtWNBT2lphiGqXtxe2ISDHLpH9tQkNsWwzcNKhL07sVdFxJVDDAKieiACWP
-	W7zufCMtcL3t5u+VPRr9n4gNn1Q==
-X-Google-Smtp-Source: AGHT+IGJAaHDb+/VclImdFQD91atuq0Ptp9vTGB8pxv1hGMyNjDy9wa8nd83p4kPL0hlndsVs2uj4SHRnma9VOJG0nk=
-X-Received: by 2002:a05:6902:2605:b0:e2b:cfb7:b0d9 with SMTP id
- 3f1490d57ef6-e33025622a4mr15705888276.16.1730836791971; Tue, 05 Nov 2024
- 11:59:51 -0800 (PST)
+	dkim=pass (4096-bit key) header.d=alien8.de header.i=@alien8.de header.b="LSyZ8AbX"
+Received: from localhost (localhost.localdomain [127.0.0.1])
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTP id 7047240E0266;
+	Tue,  5 Nov 2024 19:59:51 +0000 (UTC)
+X-Virus-Scanned: Debian amavisd-new at mail.alien8.de
+Authentication-Results: mail.alien8.de (amavisd-new); dkim=pass (4096-bit key)
+	header.d=alien8.de
+Received: from mail.alien8.de ([127.0.0.1])
+	by localhost (mail.alien8.de [127.0.0.1]) (amavisd-new, port 10026)
+	with ESMTP id WY4hckbG8ZsB; Tue,  5 Nov 2024 19:59:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=alien8.de; s=alien8;
+	t=1730836787; bh=QaGrq4jRM1c6jhfUKBGPNxJah5e27K7X6DEAeC/Yyww=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LSyZ8AbXnPcvAN1jszLwx4nRqEh54bPrd9i8ExUV2DT1lABL7BbXAn45DkF6yIUeS
+	 +LULeqa+SA79VXafwcww7n5Da+9v6e0uEpsjY0oPG3z7wE3cSTwe2qcP2JkF99aXq6
+	 9/ti1RnqzsVjXeW9e6cSf6WV/zc0q3YWj540KlLRXLk0P3Ivvd3TkRAAxQtFBiaHtB
+	 83IaNXeGv6qwMyCWc0pP0yf5wjVuW8K7BkQWmyli5uNx+JgE0CAOxsSsn/eMkmjQV3
+	 EZVFeILbzn9oIWlK5qAyWK8C/Ycl0HDOBcAxS6sUuHkOtjtNgpJt9aeVC3n5kKXJhY
+	 PXPGqgO/NAKViVOGTDI8Q6XmZKm+J1507MXmZo30zeUGK7oTRmQDMXbHsJLfRFtVPg
+	 GBvwYxWzLSMXZ15xNJkJGRd+WhdMtNMjPoT7kQeqyk1WUGydvak9/LH8ZSK00H2BCr
+	 Wwyel44SCb1qU+os0+MEnSiUawwWnKiJwum/i4DyKSVeTRV3C5cqYIaBBsxP2PD+l/
+	 jpNwQvHGV///Y/V/neSgnHmfw9QjIypg3JYbkZMkfv6kL9/OgAtKES/ZpbqiEKR0eT
+	 FiQeTldyST3uTBe4CSXndQlhheTKsCdGJytuvG7g6befgHoF8wlzVWXRFmnDkGmHG3
+	 78DY2fwWRpQN4F+OMRobqXnM=
+Received: from zn.tnic (p5de8e8eb.dip0.t-ipconnect.de [93.232.232.235])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature ECDSA (P-256) server-digest SHA256)
+	(No client certificate requested)
+	by mail.alien8.de (SuperMail on ZX Spectrum 128k) with ESMTPSA id E131940E0191;
+	Tue,  5 Nov 2024 19:59:25 +0000 (UTC)
+Date: Tue, 5 Nov 2024 20:59:24 +0100
+From: Borislav Petkov <bp@alien8.de>
+To: Mario Limonciello <mario.limonciello@amd.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Yazen Ghannam <yazen.ghannam@amd.com>, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tony.luck@intel.com, x86@kernel.org,
+	avadhut.naik@amd.com, john.allen@amd.com, Shyam-sundar.S-k@amd.com,
+	richard.gong@amd.com, jdelvare@suse.com, linux@roeck-us.net,
+	clemens@ladisch.de, hdegoede@redhat.com,
+	ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
+	linux-hwmon@vger.kernel.org, platform-driver-x86@vger.kernel.org,
+	naveenkrishna.chatradhi@amd.com, carlos.bilbao.osdev@gmail.com
+Subject: Re: [PATCH 16/16] x86/amd_smn: Add support for debugfs access to SMN
+ registers
+Message-ID: <20241105195924.GIZyp5HLel7Pi2oAo3@fat_crate.local>
+References: <20241023172150.659002-1-yazen.ghannam@amd.com>
+ <20241023172150.659002-17-yazen.ghannam@amd.com>
+ <20241105192124.GXZypwNJ26qqahcpOZ@fat_crate.local>
+ <2b539169-8acd-40c6-9261-47c0252df91a@amd.com>
+ <20241105195329.GHZyp3uVMKHAF3BEmV@fat_crate.local>
+ <9137b724-d342-4f35-b554-0e56ef37b2d9@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241104172001.165640-1-herve.codina@bootlin.com>
- <20241104201507.GA361448-robh@kernel.org> <20241105184433.1798fe55@bootlin.com>
-In-Reply-To: <20241105184433.1798fe55@bootlin.com>
-From: Rob Herring <robh@kernel.org>
-Date: Tue, 5 Nov 2024 13:59:40 -0600
-X-Gmail-Original-Message-ID: <CAL_JsqK-UhnaJ8TgV1PzCO5yO99NQq3ZZcagKvkvg0YgcxFXug@mail.gmail.com>
-Message-ID: <CAL_JsqK-UhnaJ8TgV1PzCO5yO99NQq3ZZcagKvkvg0YgcxFXug@mail.gmail.com>
-Subject: Re: [PATCH 0/6] Add support for the root PCI bus device-tree node creation.
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Saravana Kannan <saravanak@google.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Lizhi Hou <lizhi.hou@amd.com>, linux-kernel@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org, 
-	Allan Nielsen <allan.nielsen@microchip.com>, Horatiu Vultur <horatiu.vultur@microchip.com>, 
-	Steen Hegelund <steen.hegelund@microchip.com>, 
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <9137b724-d342-4f35-b554-0e56ef37b2d9@amd.com>
 
-On Tue, Nov 5, 2024 at 11:44=E2=80=AFAM Herve Codina <herve.codina@bootlin.=
-com> wrote:
->
-> Hi Rob,
->
-> On Mon, 4 Nov 2024 14:15:07 -0600
-> Rob Herring <robh@kernel.org> wrote:
->
-> ...
-> > > With those modifications, the LAN966x PCI device is working on x86 sy=
-stems.
-> >
-> > That's nice, but I don't have a LAN966x device nor do I want one. We
-> > already have the QEMU PCI test device working with the existing PCI
-> > support. Please ensure this series works with it as well.
-> >
->
-> I will check.
->
-> Can you confirm that you are talking about this test:
->   https://elixir.bootlin.com/linux/v6.12-rc6/source/drivers/of/unittest.c=
-#L4188
->
-> The test needs QEMU with a specific setup and I found this entry point:
->   https://lore.kernel.org/all/fa208013-7bf8-80fc-2732-814f380cebf9@amd.co=
-m/
+On Tue, Nov 05, 2024 at 01:56:23PM -0600, Mario Limonciello wrote:
+> OK got it.  Considering that I think after this series lands we need to
+> re-open the conversation about PCI config space access to userspace;
+> particularly on regions that have been marked as exclusions.
 
-Yes, that's it.
+I could imagine a patch that goes and requests those regions exclusively if
+luserspace has no business poking there. 
 
-> Do you have an "official" QEMU setup on your side to run the test or any
-> other pointers related to the QEMU command/setup you use?
+-- 
+Regards/Gruss,
+    Boris.
 
-No, it's just something based on what you linked. Here's what I have:
-
-qemu-system-aarch64 -machine virt -cpu cortex-a72 -machine type=3Dvirt
--nographic -smp 1 -m 2048 -kernel ../linux.git/arch/arm64/boot/Image
---append console=3DttyAMA0 -device
-pcie-root-port,port=3D0x10,chassis=3D9,id=3Dpci.9,bus=3Dpcie.0,multifunctio=
-n=3Don,addr=3D0x3
--device pcie-root-port,port=3D0x11,chassis=3D10,id=3Dpci.10,bus=3Dpcie.0,ad=
-dr=3D0x3.0x1
--device x3130-upstream,id=3Dpci.11,bus=3Dpci.9,addr=3D0x0 -device
-xio3130-downstream,port=3D0x0,chassis=3D11,id=3Dpci.12,bus=3Dpci.11,multifu=
-nction=3Don,addr=3D0x0
--device i82801b11-bridge,id=3Dpci.13,bus=3Dpcie.0,addr=3D0x4 -device
-pci-bridge,chassis_nr=3D14,id=3Dpci.14,bus=3Dpci.13,addr=3D0x0 -device
-pci-testdev,bus=3Dpci.12,addr=3D0x0
-
-Of course, you'll need a few changes to use ACPI.
-
-Rob
+https://people.kernel.org/tglx/notes-about-netiquette
