@@ -1,158 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from sonic314-13.consmr.mail.bf2.yahoo.com (sonic314-13.consmr.mail.bf2.yahoo.com [74.6.132.123])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 506912022EE;
-	Wed,  6 Nov 2024 16:26:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5C413C67C
+	for <linux-pci@vger.kernel.org>; Wed,  6 Nov 2024 16:30:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.132.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730910367; cv=none; b=uELXKpurLOSaCAcmkTQOTpUbmQq2K5G1neSY08haU5utNMjJw//FUHWbouRp+vDkgTC3Waa0xu63n/MXCRA8W1UwTNf8deN/4wOQuVWfnCyspaWy9IE9VLlbmw5EUyJ4c+l/yUHJ+x4WY2mYl3dQvGwOwHmmo5saDEtdZ1hD3sw=
+	t=1730910618; cv=none; b=dE8GWglKz0/KRGZ17U1j01Jz3kb2rF60XyikpPaJhCMCEWGXcQapUB91ziy/FUSzCYoBxRxoz/n/6DJAxWY7KuK0GJwFXVxNOPiTswYzc8HtNjR7p4eO23QZViTfemVfbO7NoXVYSqez0ubOVTS41K6OEFrMGqGJOSt/YgLJVro=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730910367; c=relaxed/simple;
-	bh=SEV9bd+GX/2qf2FHLXeJIP4QQb00PuGWxAb2OJDbHH4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bzGOUxm3XjXtqIKVcdfhOgCQSGVAnQyi2N4elnsevO+cHQgqVmLXMQ566G2yMofC0vEE23CRzFuvzwHjYMc21+cwR9xoCmAMG3onIHEeLAZz83h/KI2KykZwqnnv+hiSj3+9zqb0UX/jXNcjLxHFXmL9GQq/5g7gB/kDSAtwI0M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SVgvAAkq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730910618; c=relaxed/simple;
+	bh=fvAFf0JaFeBYm+F2wvaYY1CZI8BimVIWOliOUZ1LMAE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I/nD72WI+Cn/biHvyvqXeKKrONnoWAMK8DkG5yx3FlLv2eKtfDftkDhS4+4pJDtxu7YZCX4XuB5XEmJy4gNRnklbaY1uq2N0n2wrNICHmG9VymlU/6znVei7fMbcI8OitGoh9WvllVI1dicN25CMMCMm7Zf6HZaNFWQ0D1kYWIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=RaZGVFe5; arc=none smtp.client-ip=74.6.132.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SVgvAAkq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5A8D1C4CEC6;
-	Wed,  6 Nov 2024 16:26:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730910366;
-	bh=SEV9bd+GX/2qf2FHLXeJIP4QQb00PuGWxAb2OJDbHH4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SVgvAAkqitwp3CRjcYwtzVTYcZps3/+UsLrpka7Kuzuwj0PL6LVYtp/VKr3YSx5b6
-	 W9uV5xvoZG8glsIw7QD7pVmQ+m5Jg7Dy8zkNIwLLbhpwUfqBlIzo5FR0UW9+zdC3HZ
-	 8ryHGTmawTKI37MqbBxPTWh4wVV0Wv6Lr/t8YXm1Y5l+0U3PCIRE0QdQUIxZoimvpu
-	 oCoIoDeo1bu4GSvQ+pYmFukpPYsGPMR9ulXkbxjP2dVOfDV28AYWLeAexY8MTuYCh9
-	 w/XMkqn7EdAT2u28KwDOWLfdrzjz9yThyRcyp1XraJo6d5RDmpiQHjLWtwuleyozIQ
-	 7OKq0beIoHrNA==
-Date: Wed, 6 Nov 2024 16:26:02 +0000
-From: Conor Dooley <conor@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org, Conor Dooley <conor.dooley@microchip.com>,
-	Daire McNamara <daire.mcnamara@microchip.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-riscv@lists.infradead.org
-Subject: Re: [PATCH v5 2/2] PCI: microchip: rework reg region handing to
- support using either instance 1 or 2
-Message-ID: <20241106-eats-anthology-657e2238e271@spud>
-References: <20241104-stabilize-friday-94705c3dc244@spud>
- <20241105171828.GA1474726@bhelgaas>
+	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="RaZGVFe5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1730910609; bh=W0ieKc3ap2ATG+t73oWiPacelFjiXkyZM757F906zV8=; h=Date:Subject:To:Cc:References:From:In-Reply-To:From:Subject:Reply-To; b=RaZGVFe5QGta3h9qs80DqR42kbDiabkMl9CRH+h/WChFQkOZAT0iTrc/7cT6UPAEc/ef+OcKtJmbuYc6rxL+4q4GxnujHLhWgT6vi2Y/AhzF2UZOnMqcey6aDemb7WxVsn75Y4eLTcM497E/gjBb1EjhfMFLqxBzEdz8v0ySlmxAsP3kkuhtPdt1eEJdsWI6ApxsvJinNqgOjyV2PzDT39uLWmprrV8dl0ky8iSU7TGGJEcm6FMJJ1kLkO6J2R3vWMC70f0UIm+qTIvEtuNeAhxShoVJIPeNHb+6wTqATgca4UIvQ/ZkXlU+jQ5ogmp8iiLsXEndvOn5p/MVH9QZBQ==
+X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1730910609; bh=xIm/gVHdVbXUTMEEmq4fgNqo6t3oO7kM3lhDfrfrOKn=; h=X-Sonic-MF:Date:Subject:To:From:From:Subject; b=Y1dQyNEJ5I4/1MFx8hKWteZCpLA6dGdPF0K5SAs1RoGsWcPll++kzkEuAF5GzQFDj8jnGWWDjhByNTEpKPp9PQf2mtdMB2/2+NKE730TRGBz4GnimpJQ4dW+LN1ded5rnQ8haNzcNvJjQT8M2W3CuUC+pT325rt2sQlQr3veXxXVe/GrqRTimw5nnVNEb9xWEKJoYLcAf9Tzpv8L1beHsRLmIGcI3IxKTsEezB5DOJjQff96x7m+Z8HXZ6sTsAYEp6NWEXcH0PxlqP/icW1VK9zGOcwvfa3y2JyqiaCgNVSih9scls8fHSkkAxeSJI9HbpXd2h6o7Hn4dKXBC14j8w==
+X-YMail-OSG: Itp9kHgVM1mb1p7LBBg2BiXephJb3Ielz00JP7e28KGT05Kw.7.hRs6rEqV26Hq
+ L3vssA6zBOOcHeAicnDpij40x3Uned20II46HK_mmbROrW2sgjnKtQjX9mxMOIEXfgOZNxXu5JoI
+ JJsmuVnqORUUp465NbzIgTmS0P78De7YgJLM8MOh49HZ0ZhWx.kNjgUbkRLMBnblhfEAHtQJGRGl
+ k4Q7YjuN.0Sw88eMMXNcXG70XGw53D.ctV42bDC6_bi5U8RAZRBiLWSlrCuiDGcCbIaxLtZ4gA.7
+ llRQdKlij70oOUdOTem1YYC6.iubp.6uSmwhxHavxPXSGtnlYmb7CoDd_lWC7O9ulYI3l1b8170m
+ Et8S8WNymmeA9_8aSv5MFVUdAWo9jMztPlf89Een6o_YscuwtiObSMeNIZZG.FscoMe_Jsxd6Rkh
+ 55QT6nLIgkDRKhgb76wLwpX29hGyNojlfFBIAyQavEw3xgMq0L6p7EpflsAtP14CECDZ0fiprxGo
+ hKLEIPL51aJKEy0i6zXQXboWLBRkqzyV0s.dFLXld4CI8hxysVxB7myK6TDpoEjTrPaDCgz5NkwH
+ 8z2SuxW2kDDm9f_ZFvMAXrj893YvoXQlay9NxfFuVhUgGYibE8icLJPigqM0SGLA70mg2aPrBtsw
+ .QiPBdIMdavndblI6aLZvkdqQHNPnZqWTfJba8KCEPeiCpOZADH6C5JGyg6EByDE3W9_KIwSMPg0
+ DaxAZ0fSn4pDSasgqAce3nMPMfeBVAmKBJJWCwM.XoRRiS0JzhDxl9m4SH332Hk8aleGJe.IE8Be
+ _nMsw_Ttmhzyho8IPPOmQSdK8EdfGxamepHAA95rovcjoGMn1Jy08ljjTIoYugWIvBLhTDVin2Eh
+ fiAcj0uRrSkp2.CoIB6GsQUogCj1qpwKamf0a3XhK1uHGM5msH1I8xchOElubos1iSfp.eNycOTs
+ EL8nxn7rwxou0ft_chooUAhmtQX.aC8c5CV5FsvU1OkP9eiJQv6aCvfX9tvAnTZ5rVlqnCQcDSWy
+ iSIKZ4VFhlMfz_U0fcZgLjG3.BB1huYkxpm3AcfP8xfuMHxCYyu9iwI.xGQKCVbEeM7TE6yPJsHy
+ F3D7VfqdiESlDe9Q98vNYzRHcCNhIuXCB5uBQvHmC3E9HRtUd0bOjQYq3NR5RWQQfSe5ZpOxpKR5
+ WUe0j4WT01X3BZwtnUOdlxL16p619iPB7No.mC7FGJJNii8lwcUTlYXF1wOna7yOqgGomR1JbNwv
+ oSRUGbaG_jDDsXbdwn2DR9X7d1vpWs1.OE6V95_DOu.SyD8rqG20mbJ59EtKOq.QCpKFCcVEIU.B
+ ti3GaZ.YxqFQVym52Y9_hQd4Gu4XM_EtCl8sCQLUKfEO_.waGTYKHk_1SutQrksXquAuflquVrUZ
+ AGgLLjqDv5aSQsMtELkPmKFETm1YWuBmqktilY4jwOfMF82bHZwaIxUNh4S8HdJlZVT65E_v4D23
+ izxFxagQyPR95zZXAZs8toVfFb0gD5rU.JOYivWuxTGYkpqL_w2_7VUsz0JnsrZG5fREvb9QNeOV
+ oOad9CEWNfZ_Rq4jcwv_3ENYj4oxFnau7wDZ3dECZPnGoo3GTVMaQm35h2h3ICIRBTeorlZ6K176
+ fnn4pKiYD7EBGLNngkFE.4JVJF.g.pMPpxHgHvYeZfJoe3DWPtuEal2uDWple6ztCKq0zciMOuzX
+ 9xYTqozvI9yb5M9prbRtRaggntygIul5_jVLqv9x63UjOkikXsNHJvc591CIjTaDMJMdhMN111ey
+ fBcaNaDDUqyDD6la5yIcDdLYehCH5BbmCVLek0jw21sEcSaaSfgUiRJsBp58aUuB4uRmdjpPYo4s
+ IS8FsQHoUVCJIhNjFpbCb5HRGdY3baMOK0VYF98c8ALjhrZqEpBAPjHczBLJ1M.ZYLtBheq_L7Ul
+ Et2LL8SEuItwXW0XTbM9b6r2ViW77pkA4CSdK0vKCie0OApbF1_qF6RbxS3zKiLeGd6dd3K.6V5g
+ YaPg8NkJdeK_2H._GVf53BsaWzDfFXh6Rr3MRbPxKKdEfhFMJPhFUFqKupCtdVYP1HRVg9uZ0YlQ
+ JxmxvXprBK4uGfzo_pffDZFm__j3.XYGaViZZ7Q8q1Ge1PmGR4L2wenbTEfmwocUse4sYTUU0DLJ
+ W2AHLIkuiDKkAIhmHN1z3xZsMhMX4jG5aUI2i7N_qrKW9rww2UjCv3LkZQVdsJ4XAGiTEpc467xw
+ SFhQr4ZYir_N2R_4GWlWTldhL5eRTM.Z187WeWpOoWX_UDqkC30n14jDyBiZ3
+X-Sonic-MF: <dullfire@yahoo.com>
+X-Sonic-ID: b8509b16-6bc8-4ea9-8dc9-b2f922c1dad1
+Received: from sonic.gate.mail.ne1.yahoo.com by sonic314.consmr.mail.bf2.yahoo.com with HTTP; Wed, 6 Nov 2024 16:30:09 +0000
+Received: by hermes--production-ne1-bfc75c9cd-rq64s (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 9ac2812bfb1d027bbae0833a8fb18759;
+          Wed, 06 Nov 2024 16:19:58 +0000 (UTC)
+Message-ID: <973e2e20-51d9-4fe4-a361-0e07bcf95bab@yahoo.com>
+Date: Wed, 6 Nov 2024 10:04:40 -0600
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="00d4RwnxQ06JtKcq"
-Content-Disposition: inline
-In-Reply-To: <20241105171828.GA1474726@bhelgaas>
+User-Agent: Mozilla Thunderbird
+Subject: Re: Kernel panic with niu module
+Content-Language: en-US
+To: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <helgaas@kernel.org>
+Cc: davem@davemloft.net, sparclinux@vger.kernel.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org
+References: <20241104234412.GA1446170@bhelgaas> <87fro4pe6i.ffs@tglx>
+From: Dullfire <dullfire@yahoo.com>
+In-Reply-To: <87fro4pe6i.ffs@tglx>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Mailer: WebService/1.1.22806 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+
+> 7d5ec3d36123 had the mask_all() invocation _before_ setting up the the
+> entries and reading back the descriptors. So that commit cannot break
+> the niu device when your problem analysis is correct.
+
+In 7d5ec3d36123 (and later) msix_mask_all() only writes to
+PCI_MSIX_ENTRY_VECTOR_CTRL. I have tried all the MSIX registers, and only 
+writes to PCI_MSIX_ENTRY_DATA were able to prevent a fatal trap on a read.
+However the only write to PCI_MSIX_ENTRY_DATA I see is in
+__pci_write_msi_msg() for 7d5ec3d36123, or pci_write_msg_msix(), in 6.11.5.
+
+> 83dbf898a2d4 moved the mask_all() invocation after setting up MSI-X into
+> the success path to handle a bonkers Marvell NVME device. That then
+> matches your problem desription as the read proceeds the write.
+>
+> I've never heard of a similiar problem, so I'm pretty sure that's truly
+> niu specific.
+>
+> Thanks,
+>
+>         tglx
 
 
---00d4RwnxQ06JtKcq
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-
-On Tue, Nov 05, 2024 at 11:18:28AM -0600, Bjorn Helgaas wrote:
-> On Mon, Nov 04, 2024 at 11:18:43AM +0000, Conor Dooley wrote:
-> > On Fri, Nov 01, 2024 at 02:51:29PM -0500, Bjorn Helgaas wrote:
-> > > On Wed, Aug 14, 2024 at 09:08:42AM +0100, Conor Dooley wrote:
-> > > > From: Conor Dooley <conor.dooley@microchip.com>
-> > > >=20
-> > > > The PCI host controller on PolarFire SoC has multiple "instances", =
-each
-> > > > with their own bridge and ctrl address spaces. The original binding=
- has
-> > > > an "apb" register region, and it is expected to be set to the base
-> > > > address of the host controllers register space. Defines in the driv=
-er
-> > > > were used to compute the addresses of the bridge and ctrl address r=
-anges
-> > > > corresponding to instance1. Some customers want to use instance0 ho=
-wever
-> > > > and that requires changing the defines in the driver, which is clea=
-rly
-> > > > not a portable solution.
-> > >=20
-> > > The subject mentions "instance 1 or 2".
-> > >=20
-> > > This paragraph implies adding support for "instance0" ("customers want
-> > > to use instance0").
-> > >=20
-> > > The DT patch suggests that we're adding support for "instance2"
-> > > ("customers want to use instance2").
-> > >=20
-> > > Both patches suggest that the existing support is for "instance 1".
-> > >=20
-> > > Maybe what's being added is "instance 2", and this commit log should
-> > > s/instance0/instance 2/ ?  And probably s/instance1/instance 1/ so the
-> > > style is consistent?
-> >=20
-> > Hmm no, it would be s/instance1/instance 2/ & s/instance0/instance 1/.
-> > The indices are 1-based, not 0-based.
-> >=20
-> > > Is this a "pick one or the other but not both" situation, or does this
-> > > device support two independent PCIe controllers?
-> > >=20
-> > > I first thought this driver supported a single PCIe controller, and
-> > > you were adding support for a second independent controller.
-> >=20
-> > I don't know if they are fully independent (Daire would have to confirm)
-> > but as far as the driver in linux is concerned they are. As far as I
-> > know, you could operate both instances at the same time, but I've not
-> > heard of any customer that is actually doing that nor tested it myself.
-> > Operating both instances would require another node in the devicetree,
-> > which should work fine given the private data structs are allocated at
-> > runtime. I think the config space is shared.
-> >=20
-> > > But the fact that you say "the [singular] host controller on
-> > > PolarFire", and you're not changing mc_host_probe() to call
-> > > pci_host_common_probe() more than once makes me think there is only a
-> > > single PCIe controller, and for some reason you can choose to operate
-> > > it using either register set 1 or register set 2.
-> >=20
-> > The wording I've used mostly stems from conversations with Daire. We've
-> > kinda been saying that there's a single controller with two root port
-> > instances.=20
->=20
-> If these are two separate Root Ports, can we call them "Root Ports"
-> instead of "instances"?  Common terminology makes for common
-> understanding.
-
-Sure.
-
-> > Each root port instance is connected to different IOs,
-> > they're more than just different registers for accessing the same thing.
->=20
-> Sounds like some customers use Root Port 1 and others use Root Port 2,
-> maybe based on things like which pins are more convenient to route.
-
-Aye, the user that motivated the patchset uses a very small package and
-was not able to use root port 1 for that reason.
-
-> I would very much like to reword these commit logs using as much
-> standard PCIe terminology as possible.  Most of these native PCIe
-> controller drivers have Root Complex and Root Port concepts all mixed
-> together, and anything we can do to standardize them will be a
-> benefit.
-
-I can do that tomorrow.
-
---00d4RwnxQ06JtKcq
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCZyuYmgAKCRB4tDGHoIJi
-0s4TAP9ih6PFRzTbgox+CHVwQgWCULG9sxCQ63YThXWRx/E+oAD/UR0qA0IMkUcN
-5OWxK/mfq+PpID6qtsDwHr1Wd0qMogE=
-=zqeK
------END PGP SIGNATURE-----
-
---00d4RwnxQ06JtKcq--
+Regards,
+Jonathan Currier
