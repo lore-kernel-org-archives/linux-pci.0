@@ -1,46 +1,46 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05E2A20C48E;
-	Wed,  6 Nov 2024 22:14:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AA2320CCC6;
+	Wed,  6 Nov 2024 22:14:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730931254; cv=none; b=ZqCuiWrUxyd1o6V+o418U9XuacOBdWU9gxur2VgHPye7DuGMUABfzef8ECM/gLST+9wz2OV3v2L5S9ugX3p6K9QuWHzpskpqiXeGJE1vRvM7Ze+7RoYpkx+6VrMWJgZlMwISce3rIKXDOLHxzHPeXSe4mjExy8uv5MnLFdVMr9A=
+	t=1730931256; cv=none; b=YJOS/gxah+5tqY0c05s4CJGeB+kwg7yuSR0jbTmIO+hDJl0TxWgxJRP4lMnzbjpu5HRZxdmvBpHqWEO3duWwqsljd85aJyt+yaU+6hoRgLF/v3UKeWVj8v4w94MNtW4xj7IUVEJg0MD6bMf4u+DmPxOiHNy1hGubijSZw9OV0cs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730931254; c=relaxed/simple;
-	bh=rTLsE1kldVPsuTTbdVYCd0WFm5cpz7uOaVeMlPNdVbo=;
+	s=arc-20240116; t=1730931256; c=relaxed/simple;
+	bh=KRGj942UvE+uLjnvQ1RnPKt7mrlSaWFQ5enJ5cOt4xQ=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=AMSFMPO0iNlYsU2lVQP6ePHCa4epgEzuCmxEaBK3cpDfriwpvi10RWmpCUBVdEB0t3Ij98yJOzKxgL9SGORtNM4GMDCsaXSztc/0/WnwEvTQDmxlrx2GS8aFxgnKfp1RB6k21AjVk82DJyE1/pixcioOSc1NLcobNuqoucmILyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=e8vktU4V; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=Gu0gWJprPGJJEDY9qskeGDd1X3xTK86agcBk3lzjFG0sR8SAUv6neY77nxZmuzyV17dPiSd8OdPS7M3Md5W8KQv68Cw1sXoLaKS1+hQJcO5g6pt9LtaCxOVDYC0MzmSDx12nZv4+q6SJHHSkzBz4v6ZzK5Wma+XroFfLmf2sKCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=jLhjvmot; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="e8vktU4V"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A6KwCk0016645;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="jLhjvmot"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4A6G2ocd013219;
 	Wed, 6 Nov 2024 22:14:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	5nR6+V6U7q0J7E2kZg8qsGgrETSooB11Sn3Bhng7/uo=; b=e8vktU4V9ujGREw4
-	+kPEtu98leAAZ8vRum1WQc0Y1qxdaNofBOM/p3oKQA6fSRLdbC5ZNDaxDqVIvbLb
-	G3bQdnDdB5OQZcyVKgRlESD6wfWDYNRsOL5jysXhf9r4kV0rdPILm9j/hJiQ7ctC
-	09lHO/4EclHoqKzlKoyo4sLypATPfP9c2+89qYZsFyUlLQE2SkJdQZDXyfh4ok90
-	69WYDUZGpR1fGsXFOYjlRNwNVoo3E3qVDpxfAYJaq9TU+9f/OnaqvZProOAxkSVY
-	0j5Zxm9/1n3/UvaKSBENa5W5PdTylmLkI+FaZOg2Dfp60u94aEfvX/cRTbVew9wS
-	I3NmgA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42qvg3u8jf-1
+	bIcFx6LoYs55AK/fOEYhEuqBF9RZPZfLcL/g1CWM5l4=; b=jLhjvmotv9OMm+oC
+	yYwQeKqfojVBCy7HdSy1kwNQPvcD3i+XkHbQJQNzuO21zy9WyVcrvMdv/40epKq+
+	N6YcfIprpiWBajYsiDknjBtjALo9Fc2dAZvrzUs5p9TXWuPA0EOUxe6YgbefjZgE
+	PLgDmemE5vL0PdWgikElxCYq429QW2tIQzNpdCQNFv8IJf/CSXGlyjs7hTWNA8YH
+	bgEqbzfOIU4Eb3DWAiwIwga1ZZMtKaooLa1iBzqFycTp7KQKL3y0GU9w+4T/GbRX
+	CwwwxI76Jx6zCjrigeFEomi68Ti7jyzr+HlFQS8g6+yIhSWHPgCVdnqhGxU+fnkR
+	uXEB+g==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42qp2rvcgf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Wed, 06 Nov 2024 22:14:06 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4A6ME5M1011726
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4A6ME4Qv016602
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 6 Nov 2024 22:14:05 GMT
+	Wed, 6 Nov 2024 22:14:04 GMT
 Received: from hu-mrana-lv.qualcomm.com (10.49.16.6) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Wed, 6 Nov 2024 14:14:05 -0800
+ 15.2.1544.9; Wed, 6 Nov 2024 14:14:04 -0800
 From: Mayank Rana <quic_mrana@quicinc.com>
 To: <jingoohan1@gmail.com>, <manivannan.sadhasivam@linaro.org>,
         <will@kernel.org>, <lpieralisi@kernel.org>, <kw@linux.com>,
@@ -49,9 +49,9 @@ CC: <linux-pci@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <quic_krichai@quicinc.com>,
         Mayank Rana
 	<quic_mrana@quicinc.com>
-Subject: [PATCH v3 4/4] PCI: qcom: Add Qualcomm SA8255p based PCIe root complex functionality
-Date: Wed, 6 Nov 2024 14:13:41 -0800
-Message-ID: <20241106221341.2218416-5-quic_mrana@quicinc.com>
+Subject: [PATCH v3 1/4] PCI: dwc: Export dwc MSI controller related APIs
+Date: Wed, 6 Nov 2024 14:13:38 -0800
+Message-ID: <20241106221341.2218416-2-quic_mrana@quicinc.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20241106221341.2218416-1-quic_mrana@quicinc.com>
 References: <20241106221341.2218416-1-quic_mrana@quicinc.com>
@@ -67,236 +67,157 @@ X-ClientProxiedBy: nalasex01c.na.qualcomm.com (10.47.97.35) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 0bfY7odcx6WSLLzI9n4dO-rIcgJR0G0U
-X-Proofpoint-GUID: 0bfY7odcx6WSLLzI9n4dO-rIcgJR0G0U
+X-Proofpoint-GUID: TTf5raw4Njl36L2INkEmqzpX-JNJz01M
+X-Proofpoint-ORIG-GUID: TTf5raw4Njl36L2INkEmqzpX-JNJz01M
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxlogscore=999
- lowpriorityscore=0 priorityscore=1501 clxscore=1015 mlxscore=0 spamscore=0
- suspectscore=0 bulkscore=0 phishscore=0 adultscore=0 impostorscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 clxscore=1015
+ bulkscore=0 priorityscore=1501 impostorscore=0 lowpriorityscore=0
+ mlxlogscore=999 suspectscore=0 spamscore=0 mlxscore=0 phishscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
  engine=8.19.0-2409260000 definitions=main-2411060170
 
-On SA8255p ride platform, PCIe root complex is firmware managed as well
-configured into ECAM compliant mode. This change adds functionality to
-enable resource management (system resource as well PCIe controller and
-PHY configuration) through firmware, and enumerating ECAM compliant root
-complex.
+To allow dwc PCIe controller based MSI functionality from ECAM pcie
+driver, export dw_pcie_msi_host_init(), dw_pcie_msi_init() and
+dw_pcie_msi_free() APIs. Also move MSI IRQ related initialization code
+into dw_pcie_msi_init() as this code executes before dw_pcie_msi_init()
+API to use with ECAM driver.
 
 Signed-off-by: Mayank Rana <quic_mrana@quicinc.com>
 ---
- drivers/pci/controller/dwc/Kconfig     |   1 +
- drivers/pci/controller/dwc/pcie-qcom.c | 116 +++++++++++++++++++++++--
- 2 files changed, 108 insertions(+), 9 deletions(-)
+ .../pci/controller/dwc/pcie-designware-host.c | 38 ++++++++++---------
+ drivers/pci/controller/dwc/pcie-designware.h  | 14 +++++++
+ 2 files changed, 34 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index b6d6778b0698..0fe76bd39d69 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -275,6 +275,7 @@ config PCIE_QCOM
- 	select PCIE_DW_HOST
- 	select CRC8
- 	select PCIE_QCOM_COMMON
-+	select PCI_HOST_COMMON
- 	help
- 	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
- 	  PCIe controller uses the DesignWare core plus Qualcomm-specific
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index ef44a82be058..2cb74f902baf 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -21,7 +21,9 @@
- #include <linux/limits.h>
- #include <linux/init.h>
- #include <linux/of.h>
-+#include <linux/of_pci.h>
- #include <linux/pci.h>
-+#include <linux/pci-ecam.h>
- #include <linux/pm_opp.h>
- #include <linux/pm_runtime.h>
- #include <linux/platform_device.h>
-@@ -254,10 +256,12 @@ struct qcom_pcie_ops {
-   * @ops: qcom PCIe ops structure
-   * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache
-   * snooping
-+  * @firmware_managed: Set if PCIe root complex is firmware managed
-   */
- struct qcom_pcie_cfg {
- 	const struct qcom_pcie_ops *ops;
- 	bool override_no_snoop;
-+	bool firmware_managed;
- 	bool no_l0s;
- };
- 
-@@ -1415,6 +1419,10 @@ static const struct qcom_pcie_cfg cfg_sc8280xp = {
- 	.no_l0s = true,
- };
- 
-+static const struct qcom_pcie_cfg cfg_fw_managed = {
-+	.firmware_managed = true,
-+};
-+
- static const struct dw_pcie_ops dw_pcie_ops = {
- 	.link_up = qcom_pcie_link_up,
- 	.start_link = qcom_pcie_start_link,
-@@ -1566,6 +1574,51 @@ static irqreturn_t qcom_pcie_global_irq_thread(int irq, void *data)
- 	return IRQ_HANDLED;
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 3e41865c7290..25020a090db8 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -250,7 +250,7 @@ int dw_pcie_allocate_domains(struct dw_pcie_rp *pp)
+ 	return 0;
  }
  
-+static void qcom_pci_free_msi(void *ptr)
-+{
-+	struct dw_pcie_rp *pp = (struct dw_pcie_rp *)ptr;
-+
-+	if (pp && pp->has_msi_ctrl)
-+		dw_pcie_free_msi(pp);
-+}
-+
-+static int qcom_pcie_ecam_host_init(struct pci_config_window *cfg)
-+{
-+	struct device *dev = cfg->parent;
-+	struct dw_pcie_rp *pp;
-+	struct dw_pcie *pci;
-+	int ret;
-+
-+	pci = devm_kzalloc(dev, sizeof(*pci), GFP_KERNEL);
-+	if (!pci)
-+		return -ENOMEM;
-+
-+	pci->dev = dev;
-+	pp = &pci->pp;
-+	pci->dbi_base = cfg->win;
-+	pp->num_vectors = MSI_DEF_NUM_VECTORS;
-+
-+	ret = dw_pcie_msi_host_init(pp);
-+	if (ret)
-+		return ret;
-+
-+	pp->has_msi_ctrl = true;
-+	dw_pcie_msi_init(pp);
-+
-+	ret = devm_add_action_or_reset(dev, qcom_pci_free_msi, pp);
-+	return ret;
-+}
-+
-+/* ECAM ops */
-+const struct pci_ecam_ops pci_qcom_ecam_ops = {
-+	.init		= qcom_pcie_ecam_host_init,
-+	.pci_ops	= {
-+		.map_bus	= pci_ecam_map_bus,
-+		.read		= pci_generic_config_read,
-+		.write		= pci_generic_config_write,
-+	}
-+};
-+
- static int qcom_pcie_probe(struct platform_device *pdev)
+-static void dw_pcie_free_msi(struct dw_pcie_rp *pp)
++void dw_pcie_free_msi(struct dw_pcie_rp *pp)
  {
- 	const struct qcom_pcie_cfg *pcie_cfg;
-@@ -1580,11 +1633,52 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	char *name;
+ 	u32 ctrl;
  
- 	pcie_cfg = of_device_get_match_data(dev);
--	if (!pcie_cfg || !pcie_cfg->ops) {
--		dev_err(dev, "Invalid platform data\n");
-+	if (!pcie_cfg) {
-+		dev_err(dev, "No platform data\n");
-+		return -EINVAL;
+@@ -263,19 +263,34 @@ static void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+ 	irq_domain_remove(pp->msi_domain);
+ 	irq_domain_remove(pp->irq_domain);
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_free_msi);
+ 
+-static void dw_pcie_msi_init(struct dw_pcie_rp *pp)
++void dw_pcie_msi_init(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	u64 msi_target = (u64)pp->msi_data;
++	u32 ctrl, num_ctrls;
+ 
+ 	if (!pci_msi_enabled() || !pp->has_msi_ctrl)
+ 		return;
+ 
++	num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
++
++	/* Initialize IRQ Status array */
++	for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
++		dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK +
++				    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
++				    pp->irq_mask[ctrl]);
++		dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_ENABLE +
++				    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
++				    ~0);
 +	}
 +
-+	if (!pcie_cfg->firmware_managed && !pcie_cfg->ops) {
-+		dev_err(dev, "No platform ops\n");
- 		return -EINVAL;
- 	}
+ 	/* Program the msi_data */
+ 	dw_pcie_writel_dbi(pci, PCIE_MSI_ADDR_LO, lower_32_bits(msi_target));
+ 	dw_pcie_writel_dbi(pci, PCIE_MSI_ADDR_HI, upper_32_bits(msi_target));
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_msi_init);
  
-+	pm_runtime_enable(dev);
-+	ret = pm_runtime_get_sync(dev);
-+	if (ret < 0)
-+		goto err_pm_runtime_put;
-+
-+	if (pcie_cfg->firmware_managed) {
-+		struct pci_host_bridge *bridge;
-+		struct pci_config_window *cfg;
-+
-+		bridge = devm_pci_alloc_host_bridge(dev, 0);
-+		if (!bridge) {
-+			ret = -ENOMEM;
-+			goto err_pm_runtime_put;
-+		}
-+
-+		of_pci_check_probe_only();
-+		/* Parse and map our Configuration Space windows */
-+		cfg = gen_pci_init(dev, bridge, &pci_qcom_ecam_ops);
-+		if (IS_ERR(cfg)) {
-+			ret = PTR_ERR(cfg);
-+			goto err_pm_runtime_put;
-+		}
-+
-+		bridge->sysdata = cfg;
-+		bridge->ops = (struct pci_ops *)&pci_qcom_ecam_ops.pci_ops;
-+		bridge->msi_domain = true;
-+
-+		ret = pci_host_probe(bridge);
-+		if (ret) {
-+			dev_err(dev, "pci_host_probe() failed:%d\n", ret);
-+			goto err_pm_runtime_put;
-+		}
-+
-+		return ret;
-+	}
-+
- 	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
- 	if (!pcie)
- 		return -ENOMEM;
-@@ -1593,11 +1687,6 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 	if (!pci)
- 		return -ENOMEM;
- 
--	pm_runtime_enable(dev);
--	ret = pm_runtime_get_sync(dev);
--	if (ret < 0)
--		goto err_pm_runtime_put;
--
- 	pci->dev = dev;
- 	pci->ops = &dw_pcie_ops;
- 	pp = &pci->pp;
-@@ -1739,9 +1828,13 @@ static int qcom_pcie_probe(struct platform_device *pdev)
- 
- static int qcom_pcie_suspend_noirq(struct device *dev)
+ static int dw_pcie_parse_split_msi_irq(struct dw_pcie_rp *pp)
  {
--	struct qcom_pcie *pcie = dev_get_drvdata(dev);
-+	struct qcom_pcie *pcie;
- 	int ret = 0;
+@@ -317,7 +332,7 @@ static int dw_pcie_parse_split_msi_irq(struct dw_pcie_rp *pp)
+ 	return 0;
+ }
  
-+	if (of_device_is_compatible(dev->of_node, "qcom,pcie-sa8255p"))
-+		return 0;
-+
-+	pcie = dev_get_drvdata(dev);
- 	/*
- 	 * Set minimum bandwidth required to keep data path functional during
- 	 * suspend.
-@@ -1795,9 +1888,13 @@ static int qcom_pcie_suspend_noirq(struct device *dev)
- 
- static int qcom_pcie_resume_noirq(struct device *dev)
+-static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
++int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
  {
--	struct qcom_pcie *pcie = dev_get_drvdata(dev);
-+	struct qcom_pcie *pcie;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct device *dev = pci->dev;
+@@ -391,6 +406,7 @@ static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_msi_host_init);
+ 
+ static void dw_pcie_host_request_msg_tlp_res(struct dw_pcie_rp *pp)
+ {
+@@ -802,7 +818,7 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
+ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	u32 val, ctrl, num_ctrls;
++	u32 val;
  	int ret;
  
-+	if (of_device_is_compatible(dev->of_node, "qcom,pcie-sa8255p"))
-+		return 0;
+ 	/*
+@@ -813,20 +829,6 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+ 
+ 	dw_pcie_setup(pci);
+ 
+-	if (pp->has_msi_ctrl) {
+-		num_ctrls = pp->num_vectors / MAX_MSI_IRQS_PER_CTRL;
+-
+-		/* Initialize IRQ Status array */
+-		for (ctrl = 0; ctrl < num_ctrls; ctrl++) {
+-			dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_MASK +
+-					    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+-					    pp->irq_mask[ctrl]);
+-			dw_pcie_writel_dbi(pci, PCIE_MSI_INTR0_ENABLE +
+-					    (ctrl * MSI_REG_CTRL_BLOCK_SIZE),
+-					    ~0);
+-		}
+-	}
+-
+ 	dw_pcie_msi_init(pp);
+ 
+ 	/* Setup RC BARs */
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 347ab74ac35a..ef748d82c663 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -679,6 +679,9 @@ static inline enum dw_pcie_ltssm dw_pcie_get_ltssm(struct dw_pcie *pci)
+ 
+ #ifdef CONFIG_PCIE_DW_HOST
+ irqreturn_t dw_handle_msi_irq(struct dw_pcie_rp *pp);
++void dw_pcie_msi_init(struct dw_pcie_rp *pp);
++int dw_pcie_msi_host_init(struct dw_pcie_rp *pp);
++void dw_pcie_free_msi(struct dw_pcie_rp *pp);
+ int dw_pcie_setup_rc(struct dw_pcie_rp *pp);
+ int dw_pcie_host_init(struct dw_pcie_rp *pp);
+ void dw_pcie_host_deinit(struct dw_pcie_rp *pp);
+@@ -691,6 +694,17 @@ static inline irqreturn_t dw_handle_msi_irq(struct dw_pcie_rp *pp)
+ 	return IRQ_NONE;
+ }
+ 
++static void dw_pcie_msi_init(struct dw_pcie_rp *pp)
++{ }
 +
-+	pcie = dev_get_drvdata(dev);
- 	if (pm_suspend_target_state != PM_SUSPEND_MEM) {
- 		ret = icc_enable(pcie->icc_cpu);
- 		if (ret) {
-@@ -1830,6 +1927,7 @@ static const struct of_device_id qcom_pcie_match[] = {
- 	{ .compatible = "qcom,pcie-ipq8074-gen3", .data = &cfg_2_9_0 },
- 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
- 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
-+	{ .compatible = "qcom,pcie-sa8255p", .data = &cfg_fw_managed },
- 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_sc8280xp },
- 	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_34_0},
- 	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
++static int dw_pcie_msi_host_init(struct dw_pcie_rp *pp)
++{
++	return -ENODEV;
++}
++
++static void dw_pcie_free_msi(struct dw_pcie_rp *pp)
++{ }
++
+ static inline int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
+ {
+ 	return 0;
 -- 
 2.25.1
 
