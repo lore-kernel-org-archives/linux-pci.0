@@ -1,311 +1,239 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out30-111.freemail.mail.aliyun.com (out30-111.freemail.mail.aliyun.com [115.124.30.111])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21EA31D5AA8
-	for <linux-pci@vger.kernel.org>; Wed,  6 Nov 2024 09:00:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A6151D7E43;
+	Wed,  6 Nov 2024 09:03:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.111
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730883625; cv=none; b=O24k4+hBAXuSXUKTE4Y9/8svyF8hDKKtgWPHZbL0U+MmfowKmUZHBCjAuqEeBuCI/ugnyaciapkxUFS0PhICKo+q0+wX71u3gHbnABaWF3URtbMS05+JMQDpAibXZvMZow5Of8iOnRDXe4eHiJKq/WWRrHWzN5SWetbRc8eNSgM=
+	t=1730883837; cv=none; b=rE6GImjzW6ZBZPkJYfFm2jctr7TylDjrXm8stR0iP8TysevhU3hDzezDzT9rEMx0p+mZNbP0SHBrgIFrQq7w1HAQmcRDbtK/Dc+Z5SAO5Kcy5Yuc2JJhSDcm1owo63b0DZ8edzYPCqAPjm91mHnjjtop7DbTYhAUdS9dMg+tBmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730883625; c=relaxed/simple;
-	bh=i4Ev19x4r1KpbvsNuBMn0gkQ2RGKLU2bi+TU9lP0swg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eZpvqfP52I4YhgruVhZ/bHIS0XTGYJGHqRdbvNGb+yRqVaysI5vDsz/kVC/t/PkwNj8vyCZMqhbCseNT/adVHKihphkBY5NHGKHjGGUpYo4n7FAvsMoZco6XcOXozp3YAzgz1uUVn+XFLf+8xZ7gDVmsQwOUIqgMEKivOS5Kc+A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HuPtxo8Q; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1730883837; c=relaxed/simple;
+	bh=hSk5uJpzBExlePYCdMBdO38yMGHGT7ad4Xa5nZEaNvw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=jZivfozOtTTb1hsWHMBXDyoIw8qGW/5r7CQrC46EqNoOvp8zcv96IjrhFDr2CffqyY1RT42VRhcrb3qdw8bHGDpkjOSF5SrAgkqB3IDzNNYZbWbRrEYH7kqCDKg4z1pv0LTyKbTfNhFIj5MxdZAdjdNKfmzJ1NpsLdcCLSgdbeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=E9BhX1hg; arc=none smtp.client-ip=115.124.30.111
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HuPtxo8Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2688DC4CECD;
-	Wed,  6 Nov 2024 09:00:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1730883624;
-	bh=i4Ev19x4r1KpbvsNuBMn0gkQ2RGKLU2bi+TU9lP0swg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HuPtxo8QtJejlT7FWdhi+ZC8IzeIO6l6ngKU++Yr3bMu61u89/BFVWM6IkuiRj/tm
-	 Pcyis3k88IwX3dPVP2WNjsUvuCDp9/kbzDSbJOMjjmgvcJ0ztAF4VQ5OncpJFfKHTI
-	 3xIin/lcTQZxfqEXjsC+Qy2VbsLIHiOpgkk4xZpPEA9JR1c9qs8lkr7FRdyfQthBHd
-	 6pFnyVA/w6D/J/KXtUrDJdPf84Ax5yJ/fuqknn3rD5/+I+C97Wk/4YOGfuMH2YiPCp
-	 Ijt8Pmj9rhEJpOo5qZoKzdp3QlD4QlQS+aypv2rW5yO+gSSEm8kCDhF80YZ1GCuF3/
-	 P0Y6ON40TqL9g==
-Date: Wed, 6 Nov 2024 10:00:21 +0100
-From: "lorenzo@kernel.org" <lorenzo@kernel.org>
-To: Jianjun Wang =?utf-8?B?KOeOi+W7uuWGmyk=?= <Jianjun.Wang@mediatek.com>
-Cc: "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
-	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
-	"ansuelsmth@gmail.com" <ansuelsmth@gmail.com>,
-	Hui Ma =?utf-8?B?KOmprOaFpyk=?= <Hui.Ma@airoha.com>,
-	"robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
-	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
-	"matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
-	"bhelgaas@google.com" <bhelgaas@google.com>,
-	"lpieralisi@kernel.org" <lpieralisi@kernel.org>,
-	Ryder Lee <Ryder.Lee@mediatek.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	upstream <upstream@airoha.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v2] PCI: mediatek-gen3: Avoid PCIe resetting via
- PCIE_RSTB for Airoha EN7581 SoC
-Message-ID: <ZyswJbwWOaElvpdr@lore-desk>
-References: <20241104-pcie-en7581-rst-fix-v2-1-ffe5839c76d8@kernel.org>
- <f827f7c45094722aa3c254eda32ada157156444a.camel@mediatek.com>
- <Zynlw7wzyeucc2iT@lore-desk>
- <d6faf3f169c33d3c9c392c0cc4ef9efe517fdcdf.camel@mediatek.com>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="E9BhX1hg"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1730883832; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=sY7Z9BR09yOOlGFLTTGT6/8MnEXmmjsyzvm3AoRrWco=;
+	b=E9BhX1hgR8kEoCCtDTYktwfeMbwG9h/5TPdpIUE1tr9fLOsfxi9Sp3cyRnS/ltCQwWmpCX84hgELBLOvDg+CSGkJcLzbuGhvVg+uhSqAavXeKMY+TAG0JkqGc6alyk5N5TMl8ngCfqc/vnkgXobGobKXDA3MfS1u6BBdNRTQS3c=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WIqmpD6_1730883830 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Wed, 06 Nov 2024 17:03:51 +0800
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+To: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org
+Cc: bhelgaas@google.com,
+	mahesh@linux.ibm.com,
+	oohall@gmail.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com,
+	xueshuai@linux.alibaba.com
+Subject: [RFC PATCH v1 1/2] PCI/AER: run recovery on device that detected the error
+Date: Wed,  6 Nov 2024 17:03:38 +0800
+Message-ID: <20241106090339.24920-2-xueshuai@linux.alibaba.com>
+X-Mailer: git-send-email 2.44.0
+In-Reply-To: <20241106090339.24920-1-xueshuai@linux.alibaba.com>
+References: <20241106090339.24920-1-xueshuai@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="27J7gfKq5EBYskZa"
-Content-Disposition: inline
-In-Reply-To: <d6faf3f169c33d3c9c392c0cc4ef9efe517fdcdf.camel@mediatek.com>
+Content-Transfer-Encoding: 8bit
 
+The current implementation of pcie_do_recovery() assumes that the
+recovery process is executed on the device that detected the error.
+However, the DPC driver currently passes the error port that experienced
+the DPC event to pcie_do_recovery().
 
---27J7gfKq5EBYskZa
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Use the SOURCE ID register to correctly identify the device that detected the
+error. By passing this error-detecting device to pcie_do_recovery(), subsequent
+patches will be able to accurately access the AER error status.
 
-> On Tue, 2024-11-05 at 10:30 +0100, lorenzo@kernel.org wrote:
-> > > On Mon, 2024-11-04 at 23:00 +0100, Lorenzo Bianconi wrote:
-> > > > External email : Please do not click links or open attachments
-> > > > until
-> > > > you have verified the sender or the content.
-> > > >=20
-> > > >=20
-> > > > Airoha EN7581 has a hw bug asserting/releasing PCIE_PE_RSTB
-> > > > signal
-> > > > causing occasional PCIe link down issues. In order to overcome
-> > > > the
-> > > > problem, PCIE_RSTB signals are not asserted/released during
-> > > > device
-> > > > probe or
-> > > > suspend/resume phase and the PCIe block is reset using
-> > > > REG_PCI_CONTROL
-> > > > (0x88) and REG_RESET_CONTROL (0x834) registers available via the
-> > > > clock
-> > > > module.
-> > > > Introduce flags field in the mtk_gen3_pcie_pdata struct in order
-> > > > to
-> > > > specify per-SoC capabilities.
-> > > >=20
-> > > > Tested-by: Hui Ma <hui.ma@airoha.com>
-> > > > Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
-> > > > ---
-> > > > Changes in v2:
-> > > > - introduce flags field in mtk_gen3_pcie_flags struct instead of
-> > > > adding
-> > > >   reset callback
-> > > > - fix the leftover case in mtk_pcie_suspend_noirq routine
-> > > > - add more comments
-> > > > - Link to v1:=20
-> > > >=20
-> https://lore.kernel.org/r/20240920-pcie-en7581-rst-fix-v1-1-1043fb63ffc9@=
-kernel.org
-> > > > ---
-> > > >  drivers/pci/controller/pcie-mediatek-gen3.c | 59
-> > > > ++++++++++++++++++++---------
-> > > >  1 file changed, 41 insertions(+), 18 deletions(-)
-> > > >=20
-> > > > diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c
-> > > > b/drivers/pci/controller/pcie-mediatek-gen3.c
-> > > > index
-> > > > 66ce4b5d309bb6d64618c70ac5e0a529e0910511..8e4704ff3509867fc0ff799
-> > > > e9fb
-> > > > 99e71e46756cd 100644
-> > > > --- a/drivers/pci/controller/pcie-mediatek-gen3.c
-> > > > +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-> > > > @@ -125,10 +125,18 @@
-> > > >=20
-> > > >  struct mtk_gen3_pcie;
-> > > >=20
-> > > > +enum mtk_gen3_pcie_flags {
-> > > > +       SKIP_PCIE_RSTB  =3D BIT(0), /* skip PCIE_RSTB signals
-> > > > configuration
-> > > > +                                  * during device probing or
-> > > > suspend/resume
-> > > > +                                  * phase in order to avoid hw
-> > > > bugs/issues.
-> > > > +                                  */
-> > > > +};
-> > > > +
-> > > >  /**
-> > > >   * struct mtk_gen3_pcie_pdata - differentiate between host
-> > > > generations
-> > > >   * @power_up: pcie power_up callback
-> > > >   * @phy_resets: phy reset lines SoC data.
-> > > > + * @flags: pcie device flags.
-> > > >   */
-> > > >  struct mtk_gen3_pcie_pdata {
-> > > >         int (*power_up)(struct mtk_gen3_pcie *pcie);
-> > > > @@ -136,6 +144,7 @@ struct mtk_gen3_pcie_pdata {
-> > > >                 const char *id[MAX_NUM_PHY_RESETS];
-> > > >                 int num_resets;
-> > > >         } phy_resets;
-> > > > +       u32 flags;
-> > > >  };
-> > > >=20
-> > > >  /**
-> > > > @@ -402,22 +411,33 @@ static int mtk_pcie_startup_port(struct
-> > > > mtk_gen3_pcie *pcie)
-> > > >         val |=3D PCIE_DISABLE_DVFSRC_VLT_REQ;
-> > > >         writel_relaxed(val, pcie->base + PCIE_MISC_CTRL_REG);
-> > > >=20
-> > > > -       /* Assert all reset signals */
-> > > > -       val =3D readl_relaxed(pcie->base + PCIE_RST_CTRL_REG);
-> > > > -       val |=3D PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
-> > > > PCIE_PE_RSTB;
-> > > > -       writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
-> > > > -
-> > > >         /*
-> > > > -        * Described in PCIe CEM specification sections 2.2
-> > > > (PERST#
-> > > > Signal)
-> > > > -        * and 2.2.1 (Initial Power-Up (G3 to S0)).
-> > > > -        * The deassertion of PERST# should be delayed 100ms
-> > > > (TPVPERL)
-> > > > -        * for the power and clock to become stable.
-> > > > +        * Airoha EN7581 has a hw bug asserting/releasing
-> > > > PCIE_PE_RSTB signal
-> > > > +        * causing occasional PCIe link down. In order to
-> > > > overcome
-> > > > the issue,
-> > > > +        * PCIE_RSTB signals are not asserted/released at this
-> > > > stage
-> > > > and the
-> > > > +        * PCIe block is reset using REG_PCI_CONTROL (0x88) and
-> > > > +        * REG_RESET_CONTROL (0x834) registers available via the
-> > > > clock module.
-> > > >          */
-> > > > -       msleep(100);
-> > > > -
-> > > > -       /* De-assert reset signals */
-> > > > -       val &=3D ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB | PCIE_BRG_RSTB |
-> > > > PCIE_PE_RSTB);
-> > > > -       writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
-> > >=20
-> > > What will happen if the EN7581 use this reset flow? Will it still
-> > > work
-> > > after this link down?
-> >=20
-> > Hi Jianjun Wang,
-> >=20
-> > This has been described here by Hui Ma:
-> >=20
-> https://lore.kernel.org/r/20240920-pcie-en7581-rst-fix-v1-1-1043fb63ffc9@=
-kernel.org
-> >=20
-> > Setting PCIE_PE_RSTB bit on EN7581 SoC during reset triggers
-> > occasional PCIe link
-> > down issues caused by a hw problem.
->=20
-> Hi Lorenzo,
->=20
-> I'm wondering if we can ignore the previous reset and take this one as
-> the initial reset?
+Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+---
+ drivers/pci/pci.h      |  2 +-
+ drivers/pci/pcie/dpc.c | 30 ++++++++++++++++++++++++------
+ drivers/pci/pcie/edr.c | 35 ++++++++++++++++++-----------------
+ 3 files changed, 43 insertions(+), 24 deletions(-)
 
-Hi Jianjun Wang,
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 14d00ce45bfa..0866f79aec54 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -521,7 +521,7 @@ struct rcec_ea {
+ void pci_save_dpc_state(struct pci_dev *dev);
+ void pci_restore_dpc_state(struct pci_dev *dev);
+ void pci_dpc_init(struct pci_dev *pdev);
+-void dpc_process_error(struct pci_dev *pdev);
++struct pci_dev *dpc_process_error(struct pci_dev *pdev);
+ pci_ers_result_t dpc_reset_link(struct pci_dev *pdev);
+ bool pci_dpc_recovered(struct pci_dev *pdev);
+ #else
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 2b6ef7efa3c1..62a68cde4364 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -257,10 +257,17 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+ 	return 1;
+ }
+ 
+-void dpc_process_error(struct pci_dev *pdev)
++/**
++ * dpc_process_error - handle the DPC error status
++ * @pdev: the port that experienced the containment event
++ *
++ * Return the device that experienced the error.
++ */
++struct pci_dev *dpc_process_error(struct pci_dev *pdev)
+ {
+ 	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
+ 	struct aer_err_info info;
++	struct pci_dev *err_dev = NULL;
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_SOURCE_ID, &source);
+@@ -283,6 +290,13 @@ void dpc_process_error(struct pci_dev *pdev)
+ 		 "software trigger" :
+ 		 "reserved error");
+ 
++	if (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE ||
++	    reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE)
++		err_dev = pci_get_domain_bus_and_slot(pci_domain_nr(pdev->bus),
++					    PCI_BUS_NUM(source), source & 0xff);
++	else
++		err_dev = pci_dev_get(pdev);
++
+ 	/* show RP PIO error detail information */
+ 	if (pdev->dpc_rp_extensions &&
+ 	    reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_IN_EXT &&
+@@ -295,6 +309,8 @@ void dpc_process_error(struct pci_dev *pdev)
+ 		pci_aer_clear_nonfatal_status(pdev);
+ 		pci_aer_clear_fatal_status(pdev);
+ 	}
++
++	return err_dev;
+ }
+ 
+ static void pci_clear_surpdn_errors(struct pci_dev *pdev)
+@@ -350,21 +366,23 @@ static bool dpc_is_surprise_removal(struct pci_dev *pdev)
+ 
+ static irqreturn_t dpc_handler(int irq, void *context)
+ {
+-	struct pci_dev *pdev = context;
++	struct pci_dev *err_port = context, *err_dev = NULL;
+ 
+ 	/*
+ 	 * According to PCIe r6.0 sec 6.7.6, errors are an expected side effect
+ 	 * of async removal and should be ignored by software.
+ 	 */
+-	if (dpc_is_surprise_removal(pdev)) {
+-		dpc_handle_surprise_removal(pdev);
++	if (dpc_is_surprise_removal(err_port)) {
++		dpc_handle_surprise_removal(err_port);
+ 		return IRQ_HANDLED;
+ 	}
+ 
+-	dpc_process_error(pdev);
++	err_dev = dpc_process_error(err_port);
+ 
+ 	/* We configure DPC so it only triggers on ERR_FATAL */
+-	pcie_do_recovery(pdev, pci_channel_io_frozen, dpc_reset_link);
++	pcie_do_recovery(err_dev, pci_channel_io_frozen, dpc_reset_link);
++
++	pci_dev_put(err_dev);
+ 
+ 	return IRQ_HANDLED;
+ }
+diff --git a/drivers/pci/pcie/edr.c b/drivers/pci/pcie/edr.c
+index e86298dbbcff..6ac95e5e001b 100644
+--- a/drivers/pci/pcie/edr.c
++++ b/drivers/pci/pcie/edr.c
+@@ -150,7 +150,7 @@ static int acpi_send_edr_status(struct pci_dev *pdev, struct pci_dev *edev,
+ 
+ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
+ {
+-	struct pci_dev *pdev = data, *edev;
++	struct pci_dev *pdev = data, *err_port, *err_dev = NULL;
+ 	pci_ers_result_t estate = PCI_ERS_RESULT_DISCONNECT;
+ 	u16 status;
+ 
+@@ -169,36 +169,36 @@ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
+ 	 * may be that port or a parent of it (PCI Firmware r3.3, sec
+ 	 * 4.6.13).
+ 	 */
+-	edev = acpi_dpc_port_get(pdev);
+-	if (!edev) {
++	err_port = acpi_dpc_port_get(pdev);
++	if (!err_port) {
+ 		pci_err(pdev, "Firmware failed to locate DPC port\n");
+ 		return;
+ 	}
+ 
+-	pci_dbg(pdev, "Reported EDR dev: %s\n", pci_name(edev));
++	pci_dbg(pdev, "Reported EDR dev: %s\n", pci_name(err_port));
+ 
+ 	/* If port does not support DPC, just send the OST */
+-	if (!edev->dpc_cap) {
+-		pci_err(edev, FW_BUG "This device doesn't support DPC\n");
++	if (!err_port->dpc_cap) {
++		pci_err(err_port, FW_BUG "This device doesn't support DPC\n");
+ 		goto send_ost;
+ 	}
+ 
+ 	/* Check if there is a valid DPC trigger */
+-	pci_read_config_word(edev, edev->dpc_cap + PCI_EXP_DPC_STATUS, &status);
++	pci_read_config_word(err_port, err_port->dpc_cap + PCI_EXP_DPC_STATUS, &status);
+ 	if (!(status & PCI_EXP_DPC_STATUS_TRIGGER)) {
+-		pci_err(edev, "Invalid DPC trigger %#010x\n", status);
++		pci_err(err_port, "Invalid DPC trigger %#010x\n", status);
+ 		goto send_ost;
+ 	}
+ 
+-	dpc_process_error(edev);
+-	pci_aer_raw_clear_status(edev);
++	err_dev = dpc_process_error(err_port);
++	pci_aer_raw_clear_status(err_port);
+ 
+ 	/*
+ 	 * Irrespective of whether the DPC event is triggered by ERR_FATAL
+ 	 * or ERR_NONFATAL, since the link is already down, use the FATAL
+ 	 * error recovery path for both cases.
+ 	 */
+-	estate = pcie_do_recovery(edev, pci_channel_io_frozen, dpc_reset_link);
++	estate = pcie_do_recovery(err_dev, pci_channel_io_frozen, dpc_reset_link);
+ 
+ send_ost:
+ 
+@@ -207,15 +207,16 @@ static void edr_handle_event(acpi_handle handle, u32 event, void *data)
+ 	 * to firmware. If not successful, send _OST(0xF, BDF << 16 | 0x81).
+ 	 */
+ 	if (estate == PCI_ERS_RESULT_RECOVERED) {
+-		pci_dbg(edev, "DPC port successfully recovered\n");
+-		pcie_clear_device_status(edev);
+-		acpi_send_edr_status(pdev, edev, EDR_OST_SUCCESS);
++		pci_dbg(err_port, "DPC port successfully recovered\n");
++		pcie_clear_device_status(err_port);
++		acpi_send_edr_status(pdev, err_port, EDR_OST_SUCCESS);
+ 	} else {
+-		pci_dbg(edev, "DPC port recovery failed\n");
+-		acpi_send_edr_status(pdev, edev, EDR_OST_FAILED);
++		pci_dbg(err_port, "DPC port recovery failed\n");
++		acpi_send_edr_status(pdev, err_port, EDR_OST_FAILED);
+ 	}
+ 
+-	pci_dev_put(edev);
++	pci_dev_put(err_port);
++	pci_dev_put(err_dev);
+ }
+ 
+ void pci_acpi_add_edr_notifier(struct pci_dev *pdev)
+-- 
+2.39.3
 
-according to my understanding from Hui Ma's description, EN7581 has a hw is=
-sue
-with PCIE_PE_RSTB and it can't rely on it.
-
-Regards,
-Lorenzo
-
->=20
-> Thanks.
->=20
-> >=20
-> > Regards,
-> > Lorenzo
-> >=20
-> > >=20
-> > > > +       if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
-> > > > +               /* Assert all reset signals */
-> > > > +               val =3D readl_relaxed(pcie->base +
-> > > > PCIE_RST_CTRL_REG);
-> > > > +               val |=3D PCIE_MAC_RSTB | PCIE_PHY_RSTB |
-> > > > PCIE_BRG_RSTB
-> > > > >=20
-> > > >=20
-> > > > +                      PCIE_PE_RSTB;
-> > > > +               writel_relaxed(val, pcie->base +
-> > > > PCIE_RST_CTRL_REG);
-> > > > +
-> > > > +               /*
-> > > > +                * Described in PCIe CEM specification sections
-> > > > 2.2
-> > > > (PERST# Signal)
-> > > > +                * and 2.2.1 (Initial Power-Up (G3 to S0)).
-> > > > +                * The deassertion of PERST# should be delayed
-> > > > 100ms
-> > > > (TPVPERL)
-> > > > +                * for the power and clock to become stable.
-> > > > +                */
-> > > > +               msleep(PCIE_T_PVPERL_MS);
-> > > > +
-> > > > +               /* De-assert reset signals */
-> > > > +               val &=3D ~(PCIE_MAC_RSTB | PCIE_PHY_RSTB |
-> > > > PCIE_BRG_RSTB |
-> > > > +                        PCIE_PE_RSTB);
-> > > > +               writel_relaxed(val, pcie->base +
-> > > > PCIE_RST_CTRL_REG);
-> > > > +       }
-> > > >=20
-> > > >         /* Check if the link is up or not */
-> > > >         err =3D readl_poll_timeout(pcie->base +
-> > > > PCIE_LINK_STATUS_REG,
-> > > > val,
-> > > > @@ -1160,10 +1180,12 @@ static int mtk_pcie_suspend_noirq(struct
-> > > > device *dev)
-> > > >                 return err;
-> > > >         }
-> > > >=20
-> > > > -       /* Pull down the PERST# pin */
-> > > > -       val =3D readl_relaxed(pcie->base + PCIE_RST_CTRL_REG);
-> > > > -       val |=3D PCIE_PE_RSTB;
-> > > > -       writel_relaxed(val, pcie->base + PCIE_RST_CTRL_REG);
-> > > > +       if (!(pcie->soc->flags & SKIP_PCIE_RSTB)) {
-> > > > +               /* Pull down the PERST# pin */
-> > > > +               val =3D readl_relaxed(pcie->base +
-> > > > PCIE_RST_CTRL_REG);
-> > > > +               val |=3D PCIE_PE_RSTB;
-> > > > +               writel_relaxed(val, pcie->base +
-> > > > PCIE_RST_CTRL_REG);
-> > > > +       }
-> > > >=20
-> > > >         dev_dbg(pcie->dev, "entered L2 states successfully");
-> > > >=20
-> > > > @@ -1214,6 +1236,7 @@ static const struct mtk_gen3_pcie_pdata
-> > > > mtk_pcie_soc_en7581 =3D {
-> > > >                 .id[2] =3D "phy-lane2",
-> > > >                 .num_resets =3D 3,
-> > > >         },
-> > > > +       .flags =3D SKIP_PCIE_RSTB,
-> > > >  };
-> > > >=20
-> > > >  static const struct of_device_id mtk_pcie_of_match[] =3D {
-> > > >=20
-> > > > ---
-> > > > base-commit: 3102ce10f3111e4c3b8fb233dc93f29e220adaf7
-> > > > change-id: 20240920-pcie-en7581-rst-fix-8161658c13c4
-> > > >=20
-> > > > Best regards,
-> > > > --
-> > > > Lorenzo Bianconi <lorenzo@kernel.org>
-> > > >=20
-> > > >=20
-
---27J7gfKq5EBYskZa
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQTquNwa3Txd3rGGn7Y6cBh0uS2trAUCZyswJQAKCRA6cBh0uS2t
-rAcUAQCfSbnSXBZoz2p99kl/DLMEJDu8StYkAzJCea9jv4M2zQEA3NVek08N+ECj
-QkLXfccmP+v5A3BTdmoXxyivSYp55QU=
-=SGcr
------END PGP SIGNATURE-----
-
---27J7gfKq5EBYskZa--
