@@ -1,101 +1,124 @@
-Received: from sonic314-13.consmr.mail.bf2.yahoo.com (sonic314-13.consmr.mail.bf2.yahoo.com [74.6.132.123])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF5C413C67C
-	for <linux-pci@vger.kernel.org>; Wed,  6 Nov 2024 16:30:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.132.123
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E0F713C67C;
+	Wed,  6 Nov 2024 16:39:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1730910618; cv=none; b=dE8GWglKz0/KRGZ17U1j01Jz3kb2rF60XyikpPaJhCMCEWGXcQapUB91ziy/FUSzCYoBxRxoz/n/6DJAxWY7KuK0GJwFXVxNOPiTswYzc8HtNjR7p4eO23QZViTfemVfbO7NoXVYSqez0ubOVTS41K6OEFrMGqGJOSt/YgLJVro=
+	t=1730911175; cv=none; b=hGUDRqulQ0UKNepwbUNXfnCs3m7oCzQ5bqhf618SYiPDTJPlTBYh6wUqa4i8Vk0swkzyhQBk0sjf9ztFN6wG/B9INJrUEQrSql25iscEzkTxoBxToqhWKIbv0a5WyH6CKBcTgF+T+niN97Ydyk4ejdk/BQtJiEspPCTCJ70J+P8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1730910618; c=relaxed/simple;
-	bh=fvAFf0JaFeBYm+F2wvaYY1CZI8BimVIWOliOUZ1LMAE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=I/nD72WI+Cn/biHvyvqXeKKrONnoWAMK8DkG5yx3FlLv2eKtfDftkDhS4+4pJDtxu7YZCX4XuB5XEmJy4gNRnklbaY1uq2N0n2wrNICHmG9VymlU/6znVei7fMbcI8OitGoh9WvllVI1dicN25CMMCMm7Zf6HZaNFWQ0D1kYWIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=RaZGVFe5; arc=none smtp.client-ip=74.6.132.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
+	s=arc-20240116; t=1730911175; c=relaxed/simple;
+	bh=qgyfwsgI0NGyv3rTn5MDG6QtmrGNHZk4smbSHtOhvkU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=l6tLL4pKre6LGLV3Jjfy8DjWlAR/+wU0EKAuNbq7Uj9GFGTulw7ty1A7BvW0oesA37pXEJ13N6s8HjQ4p9jKSQMuMaulEsB8Ar3skDIcWErh3wxt63uzHKnBWDcKdqY42HVDSGoWk7DCCY9hTIahl8nW/Q1YC290SJlmXVCa3zA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LhGoVNcM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="RaZGVFe5"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1730910609; bh=W0ieKc3ap2ATG+t73oWiPacelFjiXkyZM757F906zV8=; h=Date:Subject:To:Cc:References:From:In-Reply-To:From:Subject:Reply-To; b=RaZGVFe5QGta3h9qs80DqR42kbDiabkMl9CRH+h/WChFQkOZAT0iTrc/7cT6UPAEc/ef+OcKtJmbuYc6rxL+4q4GxnujHLhWgT6vi2Y/AhzF2UZOnMqcey6aDemb7WxVsn75Y4eLTcM497E/gjBb1EjhfMFLqxBzEdz8v0ySlmxAsP3kkuhtPdt1eEJdsWI6ApxsvJinNqgOjyV2PzDT39uLWmprrV8dl0ky8iSU7TGGJEcm6FMJJ1kLkO6J2R3vWMC70f0UIm+qTIvEtuNeAhxShoVJIPeNHb+6wTqATgca4UIvQ/ZkXlU+jQ5ogmp8iiLsXEndvOn5p/MVH9QZBQ==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1730910609; bh=xIm/gVHdVbXUTMEEmq4fgNqo6t3oO7kM3lhDfrfrOKn=; h=X-Sonic-MF:Date:Subject:To:From:From:Subject; b=Y1dQyNEJ5I4/1MFx8hKWteZCpLA6dGdPF0K5SAs1RoGsWcPll++kzkEuAF5GzQFDj8jnGWWDjhByNTEpKPp9PQf2mtdMB2/2+NKE730TRGBz4GnimpJQ4dW+LN1ded5rnQ8haNzcNvJjQT8M2W3CuUC+pT325rt2sQlQr3veXxXVe/GrqRTimw5nnVNEb9xWEKJoYLcAf9Tzpv8L1beHsRLmIGcI3IxKTsEezB5DOJjQff96x7m+Z8HXZ6sTsAYEp6NWEXcH0PxlqP/icW1VK9zGOcwvfa3y2JyqiaCgNVSih9scls8fHSkkAxeSJI9HbpXd2h6o7Hn4dKXBC14j8w==
-X-YMail-OSG: Itp9kHgVM1mb1p7LBBg2BiXephJb3Ielz00JP7e28KGT05Kw.7.hRs6rEqV26Hq
- L3vssA6zBOOcHeAicnDpij40x3Uned20II46HK_mmbROrW2sgjnKtQjX9mxMOIEXfgOZNxXu5JoI
- JJsmuVnqORUUp465NbzIgTmS0P78De7YgJLM8MOh49HZ0ZhWx.kNjgUbkRLMBnblhfEAHtQJGRGl
- k4Q7YjuN.0Sw88eMMXNcXG70XGw53D.ctV42bDC6_bi5U8RAZRBiLWSlrCuiDGcCbIaxLtZ4gA.7
- llRQdKlij70oOUdOTem1YYC6.iubp.6uSmwhxHavxPXSGtnlYmb7CoDd_lWC7O9ulYI3l1b8170m
- Et8S8WNymmeA9_8aSv5MFVUdAWo9jMztPlf89Een6o_YscuwtiObSMeNIZZG.FscoMe_Jsxd6Rkh
- 55QT6nLIgkDRKhgb76wLwpX29hGyNojlfFBIAyQavEw3xgMq0L6p7EpflsAtP14CECDZ0fiprxGo
- hKLEIPL51aJKEy0i6zXQXboWLBRkqzyV0s.dFLXld4CI8hxysVxB7myK6TDpoEjTrPaDCgz5NkwH
- 8z2SuxW2kDDm9f_ZFvMAXrj893YvoXQlay9NxfFuVhUgGYibE8icLJPigqM0SGLA70mg2aPrBtsw
- .QiPBdIMdavndblI6aLZvkdqQHNPnZqWTfJba8KCEPeiCpOZADH6C5JGyg6EByDE3W9_KIwSMPg0
- DaxAZ0fSn4pDSasgqAce3nMPMfeBVAmKBJJWCwM.XoRRiS0JzhDxl9m4SH332Hk8aleGJe.IE8Be
- _nMsw_Ttmhzyho8IPPOmQSdK8EdfGxamepHAA95rovcjoGMn1Jy08ljjTIoYugWIvBLhTDVin2Eh
- fiAcj0uRrSkp2.CoIB6GsQUogCj1qpwKamf0a3XhK1uHGM5msH1I8xchOElubos1iSfp.eNycOTs
- EL8nxn7rwxou0ft_chooUAhmtQX.aC8c5CV5FsvU1OkP9eiJQv6aCvfX9tvAnTZ5rVlqnCQcDSWy
- iSIKZ4VFhlMfz_U0fcZgLjG3.BB1huYkxpm3AcfP8xfuMHxCYyu9iwI.xGQKCVbEeM7TE6yPJsHy
- F3D7VfqdiESlDe9Q98vNYzRHcCNhIuXCB5uBQvHmC3E9HRtUd0bOjQYq3NR5RWQQfSe5ZpOxpKR5
- WUe0j4WT01X3BZwtnUOdlxL16p619iPB7No.mC7FGJJNii8lwcUTlYXF1wOna7yOqgGomR1JbNwv
- oSRUGbaG_jDDsXbdwn2DR9X7d1vpWs1.OE6V95_DOu.SyD8rqG20mbJ59EtKOq.QCpKFCcVEIU.B
- ti3GaZ.YxqFQVym52Y9_hQd4Gu4XM_EtCl8sCQLUKfEO_.waGTYKHk_1SutQrksXquAuflquVrUZ
- AGgLLjqDv5aSQsMtELkPmKFETm1YWuBmqktilY4jwOfMF82bHZwaIxUNh4S8HdJlZVT65E_v4D23
- izxFxagQyPR95zZXAZs8toVfFb0gD5rU.JOYivWuxTGYkpqL_w2_7VUsz0JnsrZG5fREvb9QNeOV
- oOad9CEWNfZ_Rq4jcwv_3ENYj4oxFnau7wDZ3dECZPnGoo3GTVMaQm35h2h3ICIRBTeorlZ6K176
- fnn4pKiYD7EBGLNngkFE.4JVJF.g.pMPpxHgHvYeZfJoe3DWPtuEal2uDWple6ztCKq0zciMOuzX
- 9xYTqozvI9yb5M9prbRtRaggntygIul5_jVLqv9x63UjOkikXsNHJvc591CIjTaDMJMdhMN111ey
- fBcaNaDDUqyDD6la5yIcDdLYehCH5BbmCVLek0jw21sEcSaaSfgUiRJsBp58aUuB4uRmdjpPYo4s
- IS8FsQHoUVCJIhNjFpbCb5HRGdY3baMOK0VYF98c8ALjhrZqEpBAPjHczBLJ1M.ZYLtBheq_L7Ul
- Et2LL8SEuItwXW0XTbM9b6r2ViW77pkA4CSdK0vKCie0OApbF1_qF6RbxS3zKiLeGd6dd3K.6V5g
- YaPg8NkJdeK_2H._GVf53BsaWzDfFXh6Rr3MRbPxKKdEfhFMJPhFUFqKupCtdVYP1HRVg9uZ0YlQ
- JxmxvXprBK4uGfzo_pffDZFm__j3.XYGaViZZ7Q8q1Ge1PmGR4L2wenbTEfmwocUse4sYTUU0DLJ
- W2AHLIkuiDKkAIhmHN1z3xZsMhMX4jG5aUI2i7N_qrKW9rww2UjCv3LkZQVdsJ4XAGiTEpc467xw
- SFhQr4ZYir_N2R_4GWlWTldhL5eRTM.Z187WeWpOoWX_UDqkC30n14jDyBiZ3
-X-Sonic-MF: <dullfire@yahoo.com>
-X-Sonic-ID: b8509b16-6bc8-4ea9-8dc9-b2f922c1dad1
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic314.consmr.mail.bf2.yahoo.com with HTTP; Wed, 6 Nov 2024 16:30:09 +0000
-Received: by hermes--production-ne1-bfc75c9cd-rq64s (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 9ac2812bfb1d027bbae0833a8fb18759;
-          Wed, 06 Nov 2024 16:19:58 +0000 (UTC)
-Message-ID: <973e2e20-51d9-4fe4-a361-0e07bcf95bab@yahoo.com>
-Date: Wed, 6 Nov 2024 10:04:40 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LhGoVNcM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AABC1C4CEC6;
+	Wed,  6 Nov 2024 16:39:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1730911175;
+	bh=qgyfwsgI0NGyv3rTn5MDG6QtmrGNHZk4smbSHtOhvkU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LhGoVNcMYeHEA4ME2kQFjw1bmyNAIEA2RYwH55JxP901y/PHC72sdYajCH6JQjjtO
+	 zyApsTGwQYYdBNjLScNkKrFHAH8m6c6jDBOijF36PL/NewB3xFe21DIajIWk22hIVE
+	 S+RjiJ0b9/FSGt8IkgN1KjVpPFdw3C2+o3wbfAXFrLMvY4MvAJ3lbcU1+ldUZQuppL
+	 9CJHiGk3BUEZDi+kNQlMpZheWyKV+kj5LR07o644tWRMARQDHYdQqQu9cjsazEaFxv
+	 njgVulySb9zQBHq+ZwkrRal5sl5/m6I6ybq54vN5dcWq/G4joas37wisZ6X3ykhmIB
+	 xkwBtrZpi1vKQ==
+Date: Wed, 6 Nov 2024 09:39:32 -0700
+From: Keith Busch <kbusch@kernel.org>
+To: Shuai Xue <xueshuai@linux.alibaba.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com,
+	mahesh@linux.ibm.com, oohall@gmail.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com
+Subject: Re: [RFC PATCH v1 2/2] PCI/AER: report fatal errors of RCiEP and EP
+ if link recoverd
+Message-ID: <ZyubxGBL7TvchZI_@kbusch-mbp>
+References: <20241106090339.24920-1-xueshuai@linux.alibaba.com>
+ <20241106090339.24920-3-xueshuai@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Kernel panic with niu module
-Content-Language: en-US
-To: Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: davem@davemloft.net, sparclinux@vger.kernel.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org
-References: <20241104234412.GA1446170@bhelgaas> <87fro4pe6i.ffs@tglx>
-From: Dullfire <dullfire@yahoo.com>
-In-Reply-To: <87fro4pe6i.ffs@tglx>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Mailer: WebService/1.1.22806 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241106090339.24920-3-xueshuai@linux.alibaba.com>
 
-> 7d5ec3d36123 had the mask_all() invocation _before_ setting up the the
-> entries and reading back the descriptors. So that commit cannot break
-> the niu device when your problem analysis is correct.
+On Wed, Nov 06, 2024 at 05:03:39PM +0800, Shuai Xue wrote:
+> +int aer_get_device_fatal_error_info(struct pci_dev *dev, struct aer_err_info *info)
+> +{
+> +	int type = pci_pcie_type(dev);
+> +	int aer = dev->aer_cap;
+> +	u32 aercc;
+> +
+> +	pci_info(dev, "type :%d\n", type);
+> +
+> +	/* Must reset in this function */
+> +	info->status = 0;
+> +	info->tlp_header_valid = 0;
+> +	info->severity = AER_FATAL;
+> +
+> +	/* The device might not support AER */
+> +	if (!aer)
+> +		return 0;
+> +
+> +
+> +	if (type == PCI_EXP_TYPE_ENDPOINT || type == PCI_EXP_TYPE_RC_END) {
+> +		/* Link is healthy for IO reads now */
+> +		pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS,
+> +			&info->status);
+> +		pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_MASK,
+> +			&info->mask);
+> +		if (!(info->status & ~info->mask))
+> +			return 0;
+> +
+> +		/* Get First Error Pointer */
+> +		pci_read_config_dword(dev, aer + PCI_ERR_CAP, &aercc);
+> +		info->first_error = PCI_ERR_CAP_FEP(aercc);
+> +
+> +		if (info->status & AER_LOG_TLP_MASKS) {
+> +			info->tlp_header_valid = 1;
+> +			pcie_read_tlp_log(dev, aer + PCI_ERR_HEADER_LOG, &info->tlp);
+> +		}
 
-In 7d5ec3d36123 (and later) msix_mask_all() only writes to
-PCI_MSIX_ENTRY_VECTOR_CTRL. I have tried all the MSIX registers, and only 
-writes to PCI_MSIX_ENTRY_DATA were able to prevent a fatal trap on a read.
-However the only write to PCI_MSIX_ENTRY_DATA I see is in
-__pci_write_msi_msg() for 7d5ec3d36123, or pci_write_msg_msix(), in 6.11.5.
+This matches the uncorrectable handling in aer_get_device_error_info, so
+perhaps a helper to reduce duplication.
 
-> 83dbf898a2d4 moved the mask_all() invocation after setting up MSI-X into
-> the success path to handle a bonkers Marvell NVME device. That then
-> matches your problem desription as the read proceeds the write.
->
-> I've never heard of a similiar problem, so I'm pretty sure that's truly
-> niu specific.
->
-> Thanks,
->
->         tglx
+> +	}
+> +
+> +	return 1;
+> +}
 
+Returning '1' even if type is root or downstream port?
 
-Regards,
-Jonathan Currier
+>  static inline void aer_process_err_devices(struct aer_err_info *e_info)
+>  {
+>  	int i;
+> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+> index 31090770fffc..a74ae6a55064 100644
+> --- a/drivers/pci/pcie/err.c
+> +++ b/drivers/pci/pcie/err.c
+> @@ -196,6 +196,7 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  	struct pci_dev *bridge;
+>  	pci_ers_result_t status = PCI_ERS_RESULT_CAN_RECOVER;
+>  	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
+> +	struct aer_err_info info;
+>  
+>  	/*
+>  	 * If the error was detected by a Root Port, Downstream Port, RCEC,
+> @@ -223,6 +224,10 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+>  			pci_warn(bridge, "subordinate device reset failed\n");
+>  			goto failed;
+>  		}
+> +
+> +		/* Link recovered, report fatal errors on RCiEP or EP */
+> +		if (aer_get_device_fatal_error_info(dev, &info))
+> +			aer_print_error(dev, &info);
+
+This will always print the error info even for root and downstream
+ports, but you initialize "info" status and mask only if it's an EP or
+RCiEP.
