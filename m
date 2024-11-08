@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C30B23AD
-	for <linux-pci@vger.kernel.org>; Fri,  8 Nov 2024 02:06:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D1F414A90
+	for <linux-pci@vger.kernel.org>; Fri,  8 Nov 2024 02:06:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731031606; cv=none; b=JzZD3q7pDCM4UDvrxgZyHWnUNf4PMfj+Fu9h5jycv5+CIba7bf0EtjRBVHI5KzBSXVuEpjpeBLdiK+/3e6ml8HH8Df/PAuj0jDDq0/N08ePM28WmxvaoeoXSKVsSGn43gvoR89va3rR3V0w/Kwf08BMJXVlwmUZ6+pjufEAy49U=
+	t=1731031608; cv=none; b=t0hPboWPNYG8F0fVJVuyIytuKCp2cN5fOnAHt6G4HcA467yx+pMBFOjcFIQ1Ddj+MXPM/kOR1d+eHsi+WwouLo9e57xpN8eZmYBBjj+AI2cGv8lOMfCw7wmX1W0hfdynfWm1OuYDITC9EhgUrWTE6P9ALBxO9ArIaJTrDYHYU7Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731031606; c=relaxed/simple;
-	bh=vu++4knXcRh5+TzdykYDPM0Nvzs6PWfk4jfi71QQSgU=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=q2aCftgB2o15CE3LUMD0xFTImYu695IDhQ2z+SnWHii3QawOm0mE6jlPW+EywxZVkVF8x+Bv6C5l8NNRxcAOZI6qccgQPSXBizG7CTlyIwExwhGK79rNeTZEy3EmnX7wAOMoFpbveIKrG8AE3VW+yHWSHixU6pXbjdO0bBalBIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KG6sPhFM; arc=none smtp.client-ip=192.198.163.12
+	s=arc-20240116; t=1731031608; c=relaxed/simple;
+	bh=mRlhbbAKT9S0gYE2bgV45wD3/mZYK7gxRbgVu85/5/0=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=qQJWMNVSuoC1nAzu50MKrgnBq0/M8fuNwgztgdxp/QUmwqOoCt2tb5nCzwV+/jJ6abLkAeZulS0LoOkDdDqUZierQVjrek3nz+1NDpqoLo13id9adNBfGbA+qrfO5j/CsbjAFbIydK18oscEFjDbrn5q7pKFszveR2I/yuRglts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=C7jgSVew; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KG6sPhFM"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="C7jgSVew"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731031605; x=1762567605;
+  t=1731031606; x=1762567606;
   h=date:from:to:cc:subject:message-id;
-  bh=vu++4knXcRh5+TzdykYDPM0Nvzs6PWfk4jfi71QQSgU=;
-  b=KG6sPhFMCvTYRGamSu/XnmgLTW49lMox0ZpS9Bg88Q4S54Ne5OGnSclI
-   sx18NPSQVRpVi4nEhP9U83SC6WVkO3JGse88Y8FnPPF1Avu4VR9W7JWj9
-   oXedqxjMpndk1KspyGv2V4tzV0zmZqIqm8cSUqpWY9OPTDOj5yiZFVz9s
-   Ub2mp4Nu5pDhKBzUIMFcfBW2II4PbLrk39V0oxdwU6QF9WRhU4Q86R1Tf
-   sgtE+19YZmC6M10wisaQWFTFct1PaVKfYCQqxEdIG+bA/Lw12wwPTSuRa
-   tuc92jLbXR+E2yakSCGcnsSDI+rnmywql+5brlDQcR66R3JBr/R6Tr9Rz
-   A==;
-X-CSE-ConnectionGUID: YpshtqWPSUejHNFQRVHodg==
-X-CSE-MsgGUID: NU7z77AxQ2+eIOxbcUTlTg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11249"; a="34828025"
+  bh=mRlhbbAKT9S0gYE2bgV45wD3/mZYK7gxRbgVu85/5/0=;
+  b=C7jgSVewix+F1kRTRXV4BLMkK8YKo/sDxERTHvP05Z7k3uxHVCiTqSb1
+   JiRHsG39IX3W1iTC/SkfvGFGsSjgcft0Efvg3k9BVDtmjWMK8dyulvrMU
+   Sh7ITBTRetHbFwSp9CZPbm2CTRj1Hub3Q/Lja9dbvR88Eqjp3Kg06PSaQ
+   p7V+rXiwNKZyQNmH2O0VrkT3cRM1XAvqZgDCStcgi/Z/U7SfveUwlMPj5
+   g3FFTtKxLOGlYaCLNxdghaZErDDMoyz9SoeFHBN/00C+Vh6ruPwkCqJJs
+   JI8BuKRr7qZ75q/nwl/fgvYPUFhWmDfimoYxR9+Ya9V8bwBQGEj+fFFR2
+   w==;
+X-CSE-ConnectionGUID: gS1yu0BrQ1iVHiyq6rorCw==
+X-CSE-MsgGUID: k/1WMkL0R4y+F1n1/ixq/A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11249"; a="34828027"
 X-IronPort-AV: E=Sophos;i="6.12,136,1728975600"; 
-   d="scan'208";a="34828025"
+   d="scan'208";a="34828027"
 Received: from orviesa004.jf.intel.com ([10.64.159.144])
   by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Nov 2024 18:06:44 -0800
-X-CSE-ConnectionGUID: xBqg/H7VTTqM/YtsTBpaIg==
-X-CSE-MsgGUID: aQucjA7nT7al7ykSbaIkcA==
+X-CSE-ConnectionGUID: Hns8aNlFSAerMVIx5sEFbg==
+X-CSE-MsgGUID: wRDz8WS6Qa66b/MDs5mb8w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,136,1728975600"; 
-   d="scan'208";a="90459069"
+   d="scan'208";a="90459070"
 Received: from lkp-server01.sh.intel.com (HELO a48cf1aa22e8) ([10.239.97.150])
   by orviesa004.jf.intel.com with ESMTP; 07 Nov 2024 18:06:43 -0800
 Received: from kbuild by a48cf1aa22e8 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1t9EOW-000quw-0x;
+	id 1t9EOW-000quy-10;
 	Fri, 08 Nov 2024 02:06:40 +0000
-Date: Fri, 08 Nov 2024 10:06:21 +0800
+Date: Fri, 08 Nov 2024 10:05:57 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:devm] BUILD SUCCESS
- 64fe9bc34f781538682af34e7adb6aee1a52c425
-Message-ID: <202411081015.x4B3Q0lP-lkp@intel.com>
+Subject: [pci:pwrctl] BUILD SUCCESS
+ f1fba106b06a395159219a91bfc3c91855af3788
+Message-ID: <202411081050.mk14whff-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,10 +59,10 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git devm
-branch HEAD: 64fe9bc34f781538682af34e7adb6aee1a52c425  ethernet: cavium: Replace deprecated PCI functions
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git pwrctl
+branch HEAD: f1fba106b06a395159219a91bfc3c91855af3788  PCI/pwrctl: Remove pwrctl device without iterating over all children of pwrctl parent
 
-elapsed time: 727m
+elapsed time: 725m
 
 configs tested: 221
 configs skipped: 6
