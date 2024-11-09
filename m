@@ -1,68 +1,68 @@
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2061.outbound.protection.outlook.com [40.107.92.61])
+Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2057.outbound.protection.outlook.com [40.107.96.57])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D37B1422A2;
-	Sat,  9 Nov 2024 05:49:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.92.61
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91B0A143C63;
+	Sat,  9 Nov 2024 05:49:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.96.57
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731131347; cv=fail; b=grjAtl5E2v5P3gTG5Mo8RDi+x2VsdBpkVIpJZlqP9cKu+7FN3HYj+Fhd/qvYWPdTpVFD8HFhq8Z0x5MRBFKo+NPIZ85qKKyJf2RZZWxM+pkhlU8vLnPM0Y4dGdgKLBVFo18dGftYtBswBi5mKbtvSJp+gm5e3sxUbBLons3r/f4=
+	t=1731131349; cv=fail; b=F3ISVQdx+njaGXW++yCRJCRZ3jhSMTSxwQf+oF8tgIcFimzS1X33csoWoLpjIGHZ7/+4kDdgjAadIHex5s12wluBVNWmX+qWmaZP1lHD1VJAC4MHzvWUfmJwhgyPcjtKSI43RUDUHXBh5pWxDX3hbqC0ADEbAoB0v78flC8lNZM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731131347; c=relaxed/simple;
-	bh=5BumytWSkFhG3+elXDqyCD+enOUCf/4J5M0Cis4hV8s=;
+	s=arc-20240116; t=1731131349; c=relaxed/simple;
+	bh=eZLahTikRNRUaHH4pZY2Hw9vVCJ6h1D4j0g5q8bvhZ0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sarq4zAAa6GIw+qwiphWKyNkEkMv1oqwj1jU8sUVnLePG9qpQ/Z8lGj7Pz7iorVop3LottwqTMH9UHiiEFq11GoWtgopaPMi2uSuPAplQzWykZklSJtqKp46ah354ksj7IYnsplZd2UV4Hear+telXloPHaof6fESfk0G5GbcMs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=OSWkJMtx; arc=fail smtp.client-ip=40.107.92.61
+	 MIME-Version:Content-Type; b=Ytg9RLqJQ7MDDQmJn4LMzqYb4YJqG0HIGD3c7hsf/mDnRpTtTGcnq7DoaUKMlHmEJaTmk9lOGR9/S+ZjNl6CYOqMmIM3PzrcaSo9skB+NE4W2K2VxlAWsABAbTYIZPv/j+YcKo7hpm/zuGxGX5zQLCjzbc2YpVg9s+EchB07IIY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=ABe8A5CN; arc=fail smtp.client-ip=40.107.96.57
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="OSWkJMtx"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="ABe8A5CN"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XTupTSBhp99HnwYx/mD6r5Z3dpDYxGldo6jHq75avYgdU8/56hX5QNIBRJUqY560/1sUq3r0M8VhR7GzF9sU1i7rsVeHRdmC0AEU6JCJtQ4qokdo6zYmkxd8obN/Uw5e0XMxyOnwMqe42ASZt/FpflfY0VZntEInjkS7qiZlCazaAHLRgSsu1cJk7OrJbulcAm/yZ4UK1JJUcp4qhv0dqGsWQWYlWWiIGFrQ7YFqyXVBJoPCJicZwgKOksq+j6yDGzzNq7zi/Lj0/rG9KLLpSy6/+VLEAJK1ZEZg64dWffHn6SZM73ReYAE1VOojwej40jqniCYBWWn2iP6lS58ffw==
+ b=uP9PeMqGyWX6FsyOgYUqEvv/zYwq2y4WIx2SnVAdeSqRgAztttpifcrtaCYKBPFnxq0kPLqIrpEcIaG8C0hHIlg2u8ppzd55NSaW8/c2zm2UmTLj/3j5JCJBP/A8t5+YHPYRiW6c47Iu51/BZ8bjO8JF8+rTr1b7IGspypCkj0w0EONXUdrJhiFx4hG0w7KPdIcEjXUAMDjoResiBi3md0rWp25CpEt0dOZLIV6s22Z+y47WaBNkOrPmFy7gCMbMkIT+tVppDia7e+ufoRu94HP03VTc0ybyi5V37lz70iQsKvDDBDNbo9hjQTQ5T6plK5EQwNnaeB4nJ6ymZUpsSw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ruRAryFycAyiD/dpV5N9aeYNczxwUmEkz1V3M3BrpVc=;
- b=CnKw0BK63Vbugn4nLCwK7XXjlulQrjYWYNbjxL6gpufZ6mrZpCGfm8MfbBpQEllUddFyWdQdQl6u/JamMcJ4ztmk39NbAZtvsOgfxs7BQDoU/k8AbAaWbw0lbSm1CFv+19faKuO9n5sUGsVNT26VtawTfW7yL4TLINzmxoyGqCv4BPbWmAGLjsi1tzUz2/6jk6RBJHdLxlHRzLzaTAv9VtRp5lywWJZaUWuWUdMxzb4YxCKR7SerH9pWM3zss7+vGUj+EqVK/PUHssgOLRFxMUU+OH0WlrNXSTEEZxJxJfL8+DIsD58A3Wh6eg2Ff/xi1txrGW86wtewiDl4TPodwA==
+ bh=XSeFbvMpl5Yo9vXT0GJbfiR8ITLquv0llC5EFsauH+Q=;
+ b=Q/MF8RseTUJZzj+6OREdyQK7I+h7AIk7lHhuclH8KGVSsfB+f0I6KrcLS3R7WoqveCK64Ca7qZx0+bZBrwiZ1ZKhqxCXVZdf5GqdN3cXAjQoj3lFEzfSXU1HdhyAnh2LIzGpAsttRSny3XT+cITJoljSsvyOus3kHYEOjWcNHLiTIvJQE/Azo5jJL85Q3XMoAYY8iEWhafiftM4/nyc2ppo+LJ0YIrm4VglZdqxsrZ6/vFSAx0cw77nfsQjvI1yVYYzJ8Y/VHvrgKARclq3sp+XsTSi8hJ7NtnHu43wkV4/JCm22BADqqFy1Jnjet7aBhK+EX2eQFmLav0rXuSzRPA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.118.233) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
+ 216.228.118.232) smtp.rcpttodomain=kernel.org smtp.mailfrom=nvidia.com;
  dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=ruRAryFycAyiD/dpV5N9aeYNczxwUmEkz1V3M3BrpVc=;
- b=OSWkJMtxk9X6Q3uyxjDS972ylr2ymka91VRSXH0LzTYpCcV3vgDxIDYMLL9RBymlwIxkcG13rZDWPswvrRjkMR5B+FuiKLFlBGvoL2bbM2R/SOs9UC0nTWO3YeKYiSJmXMH+r7mAbwZTIKqXO2OgX2+A/dcG2yKvc0Hlz8g8TWyMG2rM9aKcI9dO62OKP50TRhMRn4A/k5tXbFfLvetDVv5oHOmRQJpHGg0H5d1tviwKDgpjrYEDn3RRshiib3xrBkHEKkUwMg+KARKbnrVu9wOv6pwF8XCxC8LHjVaAiYdIH3MWzeTYCemxDlGE7/qonHfvWsWHIacvDh5tKNox5Q==
-Received: from MN2PR01CA0044.prod.exchangelabs.com (2603:10b6:208:23f::13) by
- BL3PR12MB6475.namprd12.prod.outlook.com (2603:10b6:208:3bb::22) with
+ bh=XSeFbvMpl5Yo9vXT0GJbfiR8ITLquv0llC5EFsauH+Q=;
+ b=ABe8A5CNg4f2JUiwPo5a4XC+M8LeIGGugk0pFY/ApX5tYMHf5IYnSsy+laCkTvVxBbbsvzKkiVbeNddGdnLImnPld/Db5t9Gj1ihElYmFOYKqnCESLHXZ0p/RO+0BcQ4+j3rcJlM0i+RMylEQwylJPQzBzwCP7Vl2k6/c9JkP/wibV6O32hyWBg2Eb+20G7/hM7TXKnwbSDHTN7pBxH5VVzMuNQFZfUrxHAtUIF7jVFwJajLQe6uNCzLKJ4lzF7VWNwM4jP7BXOtJG2PmTS8Coo6wQRfJbC6mQv4WSClD46d4K6PFM6Ww9CibZ+CLW5jly65r8sGFxG679NvlZnISQ==
+Received: from SJ0PR03CA0226.namprd03.prod.outlook.com (2603:10b6:a03:39f::21)
+ by MN2PR12MB4390.namprd12.prod.outlook.com (2603:10b6:208:26e::21) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.22; Sat, 9 Nov
- 2024 05:49:00 +0000
-Received: from BL02EPF0001A102.namprd05.prod.outlook.com
- (2603:10b6:208:23f:cafe::e0) by MN2PR01CA0044.outlook.office365.com
- (2603:10b6:208:23f::13) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.21 via Frontend
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.21; Sat, 9 Nov
+ 2024 05:49:01 +0000
+Received: from SJ1PEPF00001CE9.namprd03.prod.outlook.com
+ (2603:10b6:a03:39f:cafe::2c) by SJ0PR03CA0226.outlook.office365.com
+ (2603:10b6:a03:39f::21) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8137.20 via Frontend
  Transport; Sat, 9 Nov 2024 05:49:00 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
  smtp.mailfrom=nvidia.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=nvidia.com;
 Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.118.233) by
- BL02EPF0001A102.mail.protection.outlook.com (10.167.241.134) with Microsoft
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ SJ1PEPF00001CE9.mail.protection.outlook.com (10.167.242.25) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.20.8137.17 via Frontend Transport; Sat, 9 Nov 2024 05:49:00 +0000
-Received: from drhqmail201.nvidia.com (10.126.190.180) by mail.nvidia.com
- (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Fri, 8 Nov 2024
- 21:48:57 -0800
+ 21:49:00 -0800
 Received: from drhqmail203.nvidia.com (10.126.190.182) by
- drhqmail201.nvidia.com (10.126.190.180) with Microsoft SMTP Server
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.4; Fri, 8 Nov 2024 21:48:56 -0800
+ 15.2.1544.4; Fri, 8 Nov 2024 21:48:59 -0800
 Received: from Asurada-Nvidia.nvidia.com (10.127.8.13) by mail.nvidia.com
  (10.126.190.182) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
- Transport; Fri, 8 Nov 2024 21:48:55 -0800
+ Transport; Fri, 8 Nov 2024 21:48:58 -0800
 From: Nicolin Chen <nicolinc@nvidia.com>
 To: <maz@kernel.org>, <tglx@linutronix.de>, <bhelgaas@google.com>,
 	<alex.williamson@redhat.com>
@@ -76,9 +76,9 @@ CC: <jgg@nvidia.com>, <leonro@nvidia.com>,
 	<nipun.gupta@amd.com>, <marek.vasut+renesas@mailbox.org>,
 	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <kvm@vger.kernel.org>
-Subject: [PATCH RFCv1 1/7] genirq/msi: Allow preset IOVA in struct msi_desc for MSI doorbell address
-Date: Fri, 8 Nov 2024 21:48:46 -0800
-Message-ID: <b164a69649f3cfc72c54d4f0dbdc00c9b825ddaf.1731130093.git.nicolinc@nvidia.com>
+Subject: [PATCH RFCv1 3/7] PCI/MSI: Pass in msi_iova to msi_domain_insert_msi_desc
+Date: Fri, 8 Nov 2024 21:48:48 -0800
+Message-ID: <32fe78c5ec4a08bf0414d80ce9ed9121270b9cb0.1731130093.git.nicolinc@nvidia.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <cover.1731130093.git.nicolinc@nvidia.com>
 References: <cover.1731130093.git.nicolinc@nvidia.com>
@@ -93,134 +93,139 @@ Content-Type: text/plain
 X-NV-OnPremToCloud: ExternallySecured
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BL02EPF0001A102:EE_|BL3PR12MB6475:EE_
-X-MS-Office365-Filtering-Correlation-Id: 1f5d5392-9d74-41d5-4c0a-08dd008235ea
+X-MS-TrafficTypeDiagnostic: SJ1PEPF00001CE9:EE_|MN2PR12MB4390:EE_
+X-MS-Office365-Filtering-Correlation-Id: 11d964e9-49a7-44e8-c6a8-08dd008235bf
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|7416014|376014|82310400026|36860700013;
+	BCL:0;ARA:13230040|36860700013|376014|7416014|82310400026|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?t/S9K0XP4NZ0tg1+bxB+qfMa9SC0pV7WHw1QHoPygbgdTHgg3p7RzN5Pa6M1?=
- =?us-ascii?Q?YqXoRwFRlyAYZ85gPdxplb1oQmzoeydmoPbInJWXEPUOYgKiG7KEC8C6OjUm?=
- =?us-ascii?Q?dGEgrD5MT77Rsslxks782kTRGitx1vv0JxjNDYu4lytP9guzv6yC1g9LUIPR?=
- =?us-ascii?Q?0shtj9d3HmUGKKaOJhinu3AKwZn48J++zDxjh6+L58Sgl1JWtvV4QBy9m3bM?=
- =?us-ascii?Q?RUZYhnqawjUyiIMXNJk15gMyl43wVBgWNyuJhCz+tTmqpyqo/idCGQSBJwSW?=
- =?us-ascii?Q?wFKAvXFDjL+P33YSBxXDYBKpbg+lWdfxF6MHFCOSvznpM1GkMz+neEq2fnlO?=
- =?us-ascii?Q?Mep+0wUqELkWY5P9OsvFCSemDzm2Ujx7J6GSNOrbJJTsAtNhA/xHxtHxPmNk?=
- =?us-ascii?Q?sa0NLUhyBbAHppRf5Qjmqg7m/D1wAHfZ7uUvSwqKQuAxC0E4JQi9q+evY9un?=
- =?us-ascii?Q?S7otiEDiAm7VKeFXAAd2mzeyNeUh0zmxFQplTpWXQMc2fGdkAYagkd7D3j7B?=
- =?us-ascii?Q?dnyqhoTX6SJodapG998cI9PVzhEsyAHp0zxoW4Jk3X0aBM5LeJKWPRguHniM?=
- =?us-ascii?Q?nw8wySpWSd0hBH0LD1eUVLn4onJhok5w6boAvH4GTwN8BZ5qe9ueypTD8RDz?=
- =?us-ascii?Q?/a9jIms44gw0nQNKAXYtjhs5fzbRTo5ySer4+M74F/WCWkBaZsQQEB0UV9xN?=
- =?us-ascii?Q?ixH+BLt9cB1UqxklH2VLWIZiB6htP0RCDLex02zilyJv6kuFw3LnXEPMCuxf?=
- =?us-ascii?Q?2HFudNbEM04g/+XgHD4wKCmHl3kkjkS2HcKLfkME60EiVaKQzQKxZNkVzahd?=
- =?us-ascii?Q?19R5DSOSe9L2x7sfAPR6wNNU8ZAYGiPxY7e4NjvM8i4Lezp+yA05Yg0fbpNo?=
- =?us-ascii?Q?F0CS2AWmk+czNM4ywOBa2RsR0alV26f+dMU7XsnFrArwajyjC7n5vdbds4w/?=
- =?us-ascii?Q?e7OJp45TOjLbFI6axyqRAn0GVS1IEeY82hsxX28PuF2eM+xeV82TI2Ytm8Et?=
- =?us-ascii?Q?gBEhh9ePMzsYcp1Wh2WpA8X38AQqoSX9MBg2SXMcVEZ30l9t2daTP8hSVX0Y?=
- =?us-ascii?Q?VVV19XZMrHwgunky/Y5KB8Ptbj0Qnzukieh1iNc/fT9oS7zQY483Q/to69Tz?=
- =?us-ascii?Q?4rkHNzQvhSJ76RKeixaxgloPzMBWCg0E7vR6AmWjNMQMBQg0KILfVqCaRWT2?=
- =?us-ascii?Q?YlWT2S1XuXZm50rfD2Dm53bCXm2VSQtNlrQm6q07fmsslwyT4Ot3iJPv5H0t?=
- =?us-ascii?Q?ws+47sAVcMfFbaLEU2+zN8EA8Njy39xyR+TuwHOG/M8O5ynxgjU2cjNIgkaV?=
- =?us-ascii?Q?IyDVnNlN2cSiPXVBFA2AwydoMJkzrY0wcGIO7tpyDtzNzaATWz4/CQqjNS8a?=
- =?us-ascii?Q?7Bcchh+EBsY4mHC2ewxWjjDT15rYmvoeqHdtic0lVSBGZS9pzA=3D=3D?=
+	=?us-ascii?Q?Iwzk/sRcq3Sfumzqc/pu1OcERoHst/OzZ6ikpkHYwAg0+UivW3AbAHlAeXAy?=
+ =?us-ascii?Q?euztMLKZVZG7C/Zw0fwIG3VPTVji3aOh+XTm97mKN/X6H7A5L6rpMQwBSBx8?=
+ =?us-ascii?Q?6nvY9+M3OL7wwGCglkdr61xvG9POWqvycIknGPBz7UPMM2K7wqZoBcG9a8rU?=
+ =?us-ascii?Q?4tNieO7egF7FqRXQEHObU/rTTYxrWj9FZeqmW/liFDXxD8n9XYDwrdZ+HP48?=
+ =?us-ascii?Q?mIGAvUuZcYWiPPgjo5QP8jkgpzNNJLVM8aPGkrelgqOxClUXoWJAmZqnAdfK?=
+ =?us-ascii?Q?KIxFuabxpNlpqHBJgzrvnTlyQjr79M2eR4QR0P3jQztC8UtM8qUrBgAsBVLm?=
+ =?us-ascii?Q?GQ99zksmcFBNKTdjeFbSzkxggmFiZrXLukjTQ3V2QepSZESzN6d9YqVp2o6T?=
+ =?us-ascii?Q?GuP7THPRlaPA0aZBUHVLkOR/evsDfI5CJI8HAijE5w7zy6xQ0LTApwSutvpS?=
+ =?us-ascii?Q?gkjoyL014TgWZAFiL5XPIufOrsku4dJUUYw6oiLX2zm8doPAEZYQ9OLQLBgN?=
+ =?us-ascii?Q?x57j49krFKpTJ5TB/n3tEJC3m75YricxbRn9clYmH0ZgS0YnmyQEegFArdMi?=
+ =?us-ascii?Q?hl0nP+H3BtZfOQouCO6rFQqOy2ywJDj+9F8twXq553CzraveNFTD3Z4MhFOS?=
+ =?us-ascii?Q?uwVV8vThi13/7zABwpc4CSNf5lug/TwAFkdeA6mXCPdQMS1hbdInFup/EuM/?=
+ =?us-ascii?Q?0Q9eLuC9uinGi5P6cqwB7RQ/gnv+tsNtZX8UrGtMv2csvYBCF3m1fRHzxf25?=
+ =?us-ascii?Q?Xg58jUnIwLqv6ZD5C9KSVf5VydsWfDqZoGL35EF8GyFptPAEzSaUjm9Jg6eb?=
+ =?us-ascii?Q?/JKAfAS2t1MCnBMxYGkXby82oZPb8dvt3Evd5uRBorJShui+ul5+RjzjW5WV?=
+ =?us-ascii?Q?lhLCHRcnBDJjDmCTYyNOfGV4oIRcHGEOmjJAlL1jHO9Av3RcI0rCvrZnvoyW?=
+ =?us-ascii?Q?gwDFMQioO+qL5LYXw3uxUgs/Mpsq5fstntra4N5853eY3jYSRRPiNp7wzW7x?=
+ =?us-ascii?Q?/S879AlLs8bqdnjpzWX003so5mTiTvTkv1aEg74I/hO3HaEACw/6Oy7kruZ6?=
+ =?us-ascii?Q?3o+Tkj2IcvFJBFB4fVkRZCZKH+YKJuJjaIfrXc8m/7RJuZLJVX1SqQFW5qcI?=
+ =?us-ascii?Q?YE9XE6VdmXJQC6Mn9qrGQwcGSQsXnnUwV7jfqex3HFnnvgcwJJGfKg1v29sv?=
+ =?us-ascii?Q?KzTSIvc9K0VaAWGBnkWv7EwjkHzpPyLDF06cM54A1ydolfN9LbY+a68rm+uj?=
+ =?us-ascii?Q?7Xd1mP3mxgK9apVWS9Ty7qLa0GfcSREPEp7/h38Q0krUmDkbw/n1yLCgeLe4?=
+ =?us-ascii?Q?L+1Mx+BChu+TJa3YmmG2nSSPCYYwWi1sdAdHg9k3ZxGG5/Wip+5hRKK3D4WU?=
+ =?us-ascii?Q?7Ex21NqCU2LOn4UB/0jQv3PLRSryLOFmjPOfwWZniDNC8vgAQA=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(82310400026)(36860700013);DIR:OUT;SFP:1101;
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(36860700013)(376014)(7416014)(82310400026)(1800799024);DIR:OUT;SFP:1101;
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2024 05:49:00.4743
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Nov 2024 05:49:00.3675
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1f5d5392-9d74-41d5-4c0a-08dd008235ea
+X-MS-Exchange-CrossTenant-Network-Message-Id: 11d964e9-49a7-44e8-c6a8-08dd008235bf
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	BL02EPF0001A102.namprd05.prod.outlook.com
+	SJ1PEPF00001CE9.namprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL3PR12MB6475
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4390
 
-Currently, the IOVA and its mapping (to physical doorbell address) is done
-by the dma-iommu via the iommu_cookie in the struct msi_desc, which is the
-structure used by three parties: genirq, irqchip and dma-iommu.
+msi_setup_msi_descs and msix_setup_msi_descs are the two callers of genirq
+helper msi_domain_insert_msi_desc that is now ready for a preset msi_iova.
 
-However, when dealing with a nested translation on ARM64, the MSI doorbell
-address is behind the SMMU (IOMMU on ARM64), thus HW needs to be programed
-with the stage-1 IOVA, i.e. guest-level IOVA, rather than asking dma-iommu
-to allocate one.
-
-To support a guest-programmable pathway, first we need to make sure struct
-msi_desc will allow a preset IOVA v.s. using iommu_cookie. Add an msi_iova
-to the structure and init its value to PHYS_ADDR_MAX. And provide a helper
-for drivers to get the msi_iova out of an msi_desc object.
-
-A following patch will change msi_setup_msi_descs and msix_setup_msi_descs
-to call msi_domain_insert_msi_desc and finish the actual value forwarding.
+So, do the same in these two callers. Note MSIx supports multiple entries,
+so use struct msix_entry to pass msi_iova in.
 
 Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
 ---
- include/linux/msi.h | 11 +++++++++++
- kernel/irq/msi.c    |  6 ++++++
- 2 files changed, 17 insertions(+)
+ include/linux/pci.h   |  1 +
+ drivers/pci/msi/msi.c | 18 ++++++++++++++----
+ 2 files changed, 15 insertions(+), 4 deletions(-)
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index b10093c4d00e..873094743065 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -185,6 +185,7 @@ struct msi_desc {
- 	struct irq_affinity_desc	*affinity;
- #ifdef CONFIG_IRQ_MSI_IOMMU
- 	const void			*iommu_cookie;
-+	dma_addr_t			msi_iova;
- #endif
- #ifdef CONFIG_SYSFS
- 	struct device_attribute		*sysfs_attrs;
-@@ -296,6 +297,11 @@ static inline void msi_desc_set_iommu_cookie(struct msi_desc *desc,
- {
- 	desc->iommu_cookie = iommu_cookie;
- }
-+
-+static inline dma_addr_t msi_desc_get_iova(struct msi_desc *desc)
-+{
-+	return desc->msi_iova;
-+}
- #else
- static inline const void *msi_desc_get_iommu_cookie(struct msi_desc *desc)
- {
-@@ -306,6 +312,11 @@ static inline void msi_desc_set_iommu_cookie(struct msi_desc *desc,
- 					     const void *iommu_cookie)
- {
- }
-+
-+static inline dma_addr_t msi_desc_get_iova(struct msi_desc *desc)
-+{
-+	return PHYS_ADDR_MAX;
-+}
- #endif
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 573b4c4c2be6..68ebb9d42f7f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1652,6 +1652,7 @@ int pci_set_vga_state(struct pci_dev *pdev, bool decode,
+ struct msix_entry {
+ 	u32	vector;	/* Kernel uses to write allocated vector */
+ 	u16	entry;	/* Driver uses to specify entry, OS writes */
++	u64	iova;	/* Kernel uses to override doorbell address */
+ };
  
- int msi_domain_insert_msi_desc(struct device *dev, unsigned int domid,
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index 3a24d6b5f559..f3159ec0f036 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -81,6 +81,9 @@ static struct msi_desc *msi_alloc_desc(struct device *dev, int nvec,
+ #ifdef CONFIG_PCI_MSI
+diff --git a/drivers/pci/msi/msi.c b/drivers/pci/msi/msi.c
+index 3a45879d85db..95caa81d3421 100644
+--- a/drivers/pci/msi/msi.c
++++ b/drivers/pci/msi/msi.c
+@@ -282,7 +282,7 @@ static void pci_msi_set_enable(struct pci_dev *dev, int enable)
+ 	pci_write_config_word(dev, dev->msi_cap + PCI_MSI_FLAGS, control);
+ }
  
- 	desc->dev = dev;
- 	desc->nvec_used = nvec;
+-static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
++static int msi_setup_msi_desc(struct pci_dev *dev, int nvec, dma_addr_t iova,
+ 			      struct irq_affinity_desc *masks)
+ {
+ 	struct msi_desc desc;
+@@ -312,6 +312,10 @@ static int msi_setup_msi_desc(struct pci_dev *dev, int nvec,
+ 	else
+ 		desc.pci.mask_pos = dev->msi_cap + PCI_MSI_MASK_32;
+ 
 +#ifdef CONFIG_IRQ_MSI_IOMMU
-+	desc->msi_iova = PHYS_ADDR_MAX;
++	desc.msi_iova = iova;
 +#endif
- 	if (affinity) {
- 		desc->affinity = kmemdup_array(affinity, nvec, sizeof(*desc->affinity), GFP_KERNEL);
- 		if (!desc->affinity) {
-@@ -158,6 +161,9 @@ int msi_domain_insert_msi_desc(struct device *dev, unsigned int domid,
++
+ 	/* Save the initial mask status */
+ 	if (desc.pci.msi_attrib.can_mask)
+ 		pci_read_config_dword(dev, desc.pci.mask_pos, &desc.pci.msi_mask);
+@@ -349,7 +353,7 @@ static int msi_verify_entries(struct pci_dev *dev)
+  * which could have been allocated.
+  */
+ static int msi_capability_init(struct pci_dev *dev, int nvec,
+-			       struct irq_affinity *affd)
++			       struct irq_affinity *affd, dma_addr_t iova)
+ {
+ 	struct irq_affinity_desc *masks = NULL;
+ 	struct msi_desc *entry, desc;
+@@ -370,7 +374,7 @@ static int msi_capability_init(struct pci_dev *dev, int nvec,
+ 		masks = irq_create_affinity_masks(nvec, affd);
  
- 	/* Copy type specific data to the new descriptor. */
- 	desc->pci = init_desc->pci;
+ 	msi_lock_descs(&dev->dev);
+-	ret = msi_setup_msi_desc(dev, nvec, masks);
++	ret = msi_setup_msi_desc(dev, nvec, iova, masks);
+ 	if (ret)
+ 		goto fail;
+ 
+@@ -456,7 +460,7 @@ int __pci_enable_msi_range(struct pci_dev *dev, int minvec, int maxvec,
+ 				return -ENOSPC;
+ 		}
+ 
+-		rc = msi_capability_init(dev, nvec, affd);
++		rc = msi_capability_init(dev, nvec, affd, PHYS_ADDR_MAX);
+ 		if (rc == 0)
+ 			return nvec;
+ 
+@@ -625,6 +629,12 @@ static int msix_setup_msi_descs(struct pci_dev *dev, struct msix_entry *entries,
+ 	memset(&desc, 0, sizeof(desc));
+ 
+ 	for (i = 0, curmsk = masks; i < nvec; i++, curmsk++) {
 +#ifdef CONFIG_IRQ_MSI_IOMMU
-+	desc->msi_iova = init_desc->msi_iova;
++		if (entries && entries[i].iova)
++			desc.msi_iova = (dma_addr_t)entries[i].iova;
++		else
++			desc.msi_iova = PHYS_ADDR_MAX;
 +#endif
- 
- 	return msi_insert_desc(dev, desc, domid, init_desc->msi_index);
- }
+ 		desc.msi_index = entries ? entries[i].entry : i;
+ 		desc.affinity = masks ? curmsk : NULL;
+ 		desc.pci.msi_attrib.is_virtual = desc.msi_index >= vec_count;
 -- 
 2.43.0
 
