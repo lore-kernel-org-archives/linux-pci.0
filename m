@@ -1,231 +1,135 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 037E9206E61;
-	Tue, 12 Nov 2024 16:01:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4553204000;
+	Tue, 12 Nov 2024 16:01:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731427293; cv=none; b=DqKta/rPgfGQYlTHvVHNnELGp2IEHogQUZFuIly6MmQOboxjAhNdyD2EV5hFSazv1XSUBdGMC0KsfjfjaHmNW1tPSXqcGNJIsCQ4aZjjkZonCBPV6k2jkI2Z8PCaPKusavvWL6rxi3SIbnUUNcVZiKwZ/ZtxvI8x9aCEy/ruGq4=
+	t=1731427321; cv=none; b=LCJw0NX2csrGwZroY2FthDuCh2bERwHXDj4BCLbaGIlj8/KlXpek/UperEnoHxvLoc/rS5iW447vIqeb5WyYQKgdMxzmztLCc5/3oZZM5wXj+XfelQkPux6mS4ZIfWT+wRhJgnE6kZzUw9UIyhfTaS0D7pqAdkwd1h6P3rBMRwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731427293; c=relaxed/simple;
-	bh=rE1n742XV6Hh13YXAK03XaqAi+NRIgacwErEEh/8Nto=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Tgk4q+bPAJhgGQ8eGWIb+SgFnFiPRsgnOd9cYN6kS/xamsUZTWzXF0Li7ph7GNYCpuTZYQhkU32qKaM/kxxpnru4Ny0RBYHWc/nJTSFYXZ6qaluQl7V4+HED8AUZcVPi5Xmqrcpfs4kv0uoH0s38DG/RU1BXxO7EQ4i0He9Oy7k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DUJRdw6M; arc=none smtp.client-ip=198.175.65.11
+	s=arc-20240116; t=1731427321; c=relaxed/simple;
+	bh=iaYaUStprZ8SceeIhaWWBwFLmxeVYeoQCC7M5tVJmxo=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=CeBIjAkT0Q0E9nhxRylBhcxQ2C3OKS40ZrMZuyiU57zowEgiFKw8vonSE9vYMWl/ehIT8bVgUaMfbQw/teGhcOb2azcNaLjUzNQKPrU5MOcerAS1kwoiNQ/hb6Dump+5XVFHKNcsqW9uxlAx+GKDnarWSZiKM8ZW+EbXwQjWmR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kZuJTRYS; arc=none smtp.client-ip=198.175.65.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DUJRdw6M"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kZuJTRYS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731427292; x=1762963292;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=rE1n742XV6Hh13YXAK03XaqAi+NRIgacwErEEh/8Nto=;
-  b=DUJRdw6Mux3ocdraaH8w4dphmI5Kxh0+lvt9V1QT80U2KSRoA3US2JG9
-   xur+QDzg2Ux0eqTkQF0Nda9D8Vzs+eZ4xnzU4HYX7I1SoOTvvp6YegTyh
-   4f9hlrLCQ+SM7jt6Cax5xfY3FXer2LRVYRc+xll5gDXMobCjAH+FDqO+7
-   4V3xY3u3HBXxdUIt2w4q1navglVz7ZZLYTlc1cQn0cxV1BBoxVs1c+IrY
-   ICYrVQ8KaKNXr62hK7cqiHMVLbq5d9gNjxp34oqAEAtqrEWrxpJxveORn
-   BP5PONUCrFlRZkqoTINgFv0/B9m5Tm+2yOvfw6Fz98mwzPtAS5I6UTNLP
-   w==;
-X-CSE-ConnectionGUID: r00eIVo0RXWAump5SFMEpA==
-X-CSE-MsgGUID: ryj38hkrTmmaXlz06P6hWg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="41831474"
+  t=1731427320; x=1762963320;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=iaYaUStprZ8SceeIhaWWBwFLmxeVYeoQCC7M5tVJmxo=;
+  b=kZuJTRYSbdt4Dqm2BSkywySafk5A17AbojvKpvTbKjE22QWXF+OYHbRa
+   XV04rnxxMkC5zTwXIYlUmpyZz5g4kDyJwAwDjZ1euJp/pBFaAIQytS14M
+   G/fyQDirnAk+u6MMhEEG39/M1x7+fN7JIzf9eVQFbMtWIPQxxGeMyRdc/
+   HR1PaBiZ5S0GJF3/T4+dxiLNy59jQvggDOhuSFg6btMbY4QHMdCn/Uc+v
+   D6ZksUT9LAwb5ZLpd9ZpbxNc2oXp1hlJOWWRBNj4toHANn6hjLv6wA+8D
+   +fCL9sDx0kqBFYVBI32k80HJYV2g7LahTraxjIE52BpG9BQu7Mtmaczp1
+   A==;
+X-CSE-ConnectionGUID: hzfe6WZOTB2i8QU7k8axag==
+X-CSE-MsgGUID: jayRqt+KSOK63CAlG97FEA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="41831582"
 X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="41831474"
+   d="scan'208";a="41831582"
 Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 08:01:31 -0800
-X-CSE-ConnectionGUID: 7Orz8rzdQA+vB3J+K3Cg1A==
-X-CSE-MsgGUID: UQQKbw39RLis5EwXPvg7zw==
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 08:01:59 -0800
+X-CSE-ConnectionGUID: MweyGtHOTjm8Wi5P6z1maw==
+X-CSE-MsgGUID: 5dCRf5GdQ6GAPRIdDJIe+w==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.12,148,1728975600"; 
-   d="scan'208";a="87489572"
-Received: from black.fi.intel.com ([10.237.72.28])
-  by orviesa009.jf.intel.com with ESMTP; 12 Nov 2024 08:01:28 -0800
-Received: by black.fi.intel.com (Postfix, from userid 1003)
-	id 440FA1BE; Tue, 12 Nov 2024 18:01:27 +0200 (EET)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Mathias Nyman <mathias.nyman@linux.intel.com>,
-	Fenghua Yu <fenghua.yu@intel.com>,
-	linux-usb@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Cc: Peter Chen <peter.chen@kernel.org>,
-	Pawel Laszczak <pawell@cadence.com>,
-	Roger Quadros <rogerq@kernel.org>,
-	Mathias Nyman <mathias.nyman@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Subject: [PATCH v1 1/1] usb: cdns3: Synchronise PCI IDs via common data base
-Date: Tue, 12 Nov 2024 18:01:25 +0200
-Message-ID: <20241112160125.2340972-1-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.43.0.rc1.1336.g36b5255a03ac
+   d="scan'208";a="87489721"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.234])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 08:01:53 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Tue, 12 Nov 2024 18:01:50 +0200 (EET)
+To: Lukas Wunner <lukas@wunner.de>, 
+    Jonathan Cameron <Jonathan.Cameron@huawei.com>
+cc: linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>, 
+    Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, 
+    Rob Herring <robh@kernel.org>, Krzysztof Wilczy??ski <kw@linux.com>, 
+    "Maciej W . Rozycki" <macro@orcam.me.uk>, 
+    Alexandru Gagniuc <mr.nuke.me@gmail.com>, 
+    Krishna chaitanya chundru <quic_krichai@quicinc.com>, 
+    Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>, 
+    "Rafael J . Wysocki" <rafael@kernel.org>, linux-pm@vger.kernel.org, 
+    Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>, 
+    LKML <linux-kernel@vger.kernel.org>, 
+    Daniel Lezcano <daniel.lezcano@linaro.org>, 
+    Amit Kucheria <amitk@kernel.org>, Zhang Rui <rui.zhang@intel.com>, 
+    Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH v9 7/9] PCI/bwctrl: Add API to set PCIe Link Speed
+In-Reply-To: <ZzN4pO0lJDTSySaz@wunner.de>
+Message-ID: <4f4ee107-1b25-f866-832e-6a35c8c7c35a@linux.intel.com>
+References: <20241018144755.7875-1-ilpo.jarvinen@linux.intel.com> <20241018144755.7875-8-ilpo.jarvinen@linux.intel.com> <ZzN4pO0lJDTSySaz@wunner.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: multipart/mixed; boundary="8323328-1027285098-1731427310=:13135"
 
-There are a few places in the kernel where PCI IDs for different Cadence
-USB controllers are being used. Besides different naming, they duplicate
-each other. Make this all in order by providing common definitions via
-PCI IDs database and use in all users. While doing that, rename
-definitions as Roger suggested.
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
 
-Suggested-by: Roger Quadros <rogerq@kernel.org>
-Suggested-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/usb/cdns3/cdns3-pci-wrap.c       |  4 +---
- drivers/usb/cdns3/cdnsp-pci.c            | 26 +++++++++---------------
- drivers/usb/gadget/udc/cdns2/cdns2-pci.c |  3 +--
- drivers/usb/host/xhci-pci.c              |  5 ++---
- include/linux/pci_ids.h                  |  4 ++++
- 5 files changed, 18 insertions(+), 24 deletions(-)
+--8323328-1027285098-1731427310=:13135
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-diff --git a/drivers/usb/cdns3/cdns3-pci-wrap.c b/drivers/usb/cdns3/cdns3-pci-wrap.c
-index 591d149de8f3..3b3b3dc75f35 100644
---- a/drivers/usb/cdns3/cdns3-pci-wrap.c
-+++ b/drivers/usb/cdns3/cdns3-pci-wrap.c
-@@ -37,8 +37,6 @@ struct cdns3_wrap {
- #define PCI_DRIVER_NAME		"cdns3-pci-usbss"
- #define PLAT_DRIVER_NAME	"cdns-usb3"
- 
--#define PCI_DEVICE_ID_CDNS_USB3	0x0100
--
- static struct pci_dev *cdns3_get_second_fun(struct pci_dev *pdev)
- {
- 	struct pci_dev *func;
-@@ -189,7 +187,7 @@ static void cdns3_pci_remove(struct pci_dev *pdev)
- }
- 
- static const struct pci_device_id cdns3_pci_ids[] = {
--	{ PCI_VDEVICE(CDNS, PCI_DEVICE_ID_CDNS_USB3) },
-+	{ PCI_VDEVICE(CDNS, PCI_DEVICE_ID_CDNS_USBSS) },
- 	{ 0, }
- };
- 
-diff --git a/drivers/usb/cdns3/cdnsp-pci.c b/drivers/usb/cdns3/cdnsp-pci.c
-index 2d05368a6745..a51144504ff3 100644
---- a/drivers/usb/cdns3/cdnsp-pci.c
-+++ b/drivers/usb/cdns3/cdnsp-pci.c
-@@ -28,12 +28,6 @@
- #define PCI_DRIVER_NAME		"cdns-pci-usbssp"
- #define PLAT_DRIVER_NAME	"cdns-usbssp"
- 
--#define PCI_DEVICE_ID_CDNS_USB3		0x0100
--#define PCI_DEVICE_ID_CDNS_UDC		0x0200
--
--#define PCI_CLASS_SERIAL_USB_CDNS_USB3	(PCI_CLASS_SERIAL_USB << 8 | 0x80)
--#define PCI_CLASS_SERIAL_USB_CDNS_UDC	PCI_CLASS_SERIAL_USB_DEVICE
--
- static struct pci_dev *cdnsp_get_second_fun(struct pci_dev *pdev)
- {
- 	/*
-@@ -41,10 +35,10 @@ static struct pci_dev *cdnsp_get_second_fun(struct pci_dev *pdev)
- 	 * Platform has two function. The fist keeps resources for
- 	 * Host/Device while the secon keeps resources for DRD/OTG.
- 	 */
--	if (pdev->device == PCI_DEVICE_ID_CDNS_UDC)
--		return pci_get_device(pdev->vendor, PCI_DEVICE_ID_CDNS_USB3, NULL);
--	if (pdev->device == PCI_DEVICE_ID_CDNS_USB3)
--		return pci_get_device(pdev->vendor, PCI_DEVICE_ID_CDNS_UDC, NULL);
-+	if (pdev->device == PCI_DEVICE_ID_CDNS_USBSSP)
-+		return pci_get_device(pdev->vendor, PCI_DEVICE_ID_CDNS_USBSS, NULL);
-+	if (pdev->device == PCI_DEVICE_ID_CDNS_USBSS)
-+		return pci_get_device(pdev->vendor, PCI_DEVICE_ID_CDNS_USBSSP, NULL);
- 
- 	return NULL;
- }
-@@ -221,12 +215,12 @@ static const struct dev_pm_ops cdnsp_pci_pm_ops = {
- };
- 
- static const struct pci_device_id cdnsp_pci_ids[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC),
--	  .class = PCI_CLASS_SERIAL_USB_CDNS_UDC },
--	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_UDC),
--	  .class = PCI_CLASS_SERIAL_USB_CDNS_USB3 },
--	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USB3),
--	  .class = PCI_CLASS_SERIAL_USB_CDNS_USB3 },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
-+	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSSP),
-+	  .class = PCI_CLASS_SERIAL_USB_CDNS },
-+	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USBSS),
-+	  .class = PCI_CLASS_SERIAL_USB_CDNS },
- 	{ 0, }
- };
- 
-diff --git a/drivers/usb/gadget/udc/cdns2/cdns2-pci.c b/drivers/usb/gadget/udc/cdns2/cdns2-pci.c
-index b1a8f772467c..e589593b4cbf 100644
---- a/drivers/usb/gadget/udc/cdns2/cdns2-pci.c
-+++ b/drivers/usb/gadget/udc/cdns2/cdns2-pci.c
-@@ -15,7 +15,6 @@
- #include "cdns2-gadget.h"
- 
- #define PCI_DRIVER_NAME		"cdns-pci-usbhs"
--#define PCI_DEVICE_ID_CDNS_USB2	0x0120
- #define PCI_BAR_DEV		0
- #define PCI_DEV_FN_DEVICE	0
- 
-@@ -113,7 +112,7 @@ static const struct dev_pm_ops cdns2_pci_pm_ops = {
- };
- 
- static const struct pci_device_id cdns2_pci_ids[] = {
--	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USB2),
-+	{ PCI_DEVICE(PCI_VENDOR_ID_CDNS, PCI_DEVICE_ID_CDNS_USB),
- 	  .class = PCI_CLASS_SERIAL_USB_DEVICE },
- 	{ 0, }
- };
-diff --git a/drivers/usb/host/xhci-pci.c b/drivers/usb/host/xhci-pci.c
-index 47c4f70793e4..b21474e81482 100644
---- a/drivers/usb/host/xhci-pci.c
-+++ b/drivers/usb/host/xhci-pci.c
-@@ -82,8 +82,6 @@
- #define PCI_DEVICE_ID_ASMEDIA_3042_XHCI			0x3042
- #define PCI_DEVICE_ID_ASMEDIA_3242_XHCI			0x3242
- 
--#define PCI_DEVICE_ID_CDNS_SSP				0x0200
--
- static const char hcd_name[] = "xhci_hcd";
- 
- static struct hc_driver __read_mostly xhci_pci_hc_driver;
-@@ -475,8 +473,9 @@ static void xhci_pci_quirks(struct device *dev, struct xhci_hcd *xhci)
- 		if (pdev->device == 0x9203)
- 			xhci->quirks |= XHCI_ZHAOXIN_TRB_FETCH;
- 	}
-+
- 	if (pdev->vendor == PCI_VENDOR_ID_CDNS &&
--	    pdev->device == PCI_DEVICE_ID_CDNS_SSP)
-+	    pdev->device == PCI_DEVICE_ID_CDNS_USBSSP)
- 		xhci->quirks |= XHCI_CDNS_SCTX_QUIRK;
- 
- 	/* xHC spec requires PCI devices to support D3hot and D3cold */
-diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
-index e4bddb927795..d2402bf4aea2 100644
---- a/include/linux/pci_ids.h
-+++ b/include/linux/pci_ids.h
-@@ -121,6 +121,7 @@
- #define PCI_CLASS_SERIAL_USB_OHCI	0x0c0310
- #define PCI_CLASS_SERIAL_USB_EHCI	0x0c0320
- #define PCI_CLASS_SERIAL_USB_XHCI	0x0c0330
-+#define PCI_CLASS_SERIAL_USB_CDNS	0x0c0380
- #define PCI_CLASS_SERIAL_USB_DEVICE	0x0c03fe
- #define PCI_CLASS_SERIAL_FIBER		0x0c04
- #define PCI_CLASS_SERIAL_SMBUS		0x0c05
-@@ -2421,6 +2422,9 @@
- #define PCI_VENDOR_ID_QCOM		0x17cb
- 
- #define PCI_VENDOR_ID_CDNS		0x17cd
-+#define PCI_DEVICE_ID_CDNS_USBSS	0x0100
-+#define PCI_DEVICE_ID_CDNS_USB		0x0120
-+#define PCI_DEVICE_ID_CDNS_USBSSP	0x0200
- 
- #define PCI_VENDOR_ID_ARECA		0x17d3
- #define PCI_DEVICE_ID_ARECA_1110	0x1110
--- 
-2.43.0.rc1.1336.g36b5255a03ac
+On Tue, 12 Nov 2024, Lukas Wunner wrote:
 
+> On Fri, Oct 18, 2024 at 05:47:53PM +0300, Ilpo J=E4rvinen wrote:
+> > +EXPORT_SYMBOL_GPL(pcie_set_target_speed);
+>=20
+> My apologies for another belated comment on this series.
+> This patch is now a688ab21eb72 on pci/bwctrl:
+>=20
+> I note that pcie_set_target_speed() is not called my a modular user
+> (CONFIG_PCIE_THERMAL is bool, not tristate), so the above-quoted export
+> isn't really necessary right now.  I don't know if it was added
+> intentionally because some modular user is expected to show up
+> in the near future.
+
+Its probably a thinko to add it at all but then there have been talk about=
+=20
+other users interested in the API too so it's not far fetched we could see=
+=20
+a user. No idea about timelines though.
+
+There are some AMD GPU drivers tweaking the TLS field on their own but=20
+they also touch some HW specific registers (although, IIRC, they only=20
+touch Endpoint'sTLS). I was thinking of converting them but I'm unsure if=
+=20
+that yields something very straightforward and ends up producing a working=
+=20
+conversion or not (without ability to test with the HW). But TBH, not on=20
+my highest priority item.
+
+> > @@ -135,6 +296,7 @@ static int pcie_bwnotif_probe(struct pcie_device *s=
+rv)
+> >  =09if (!data)
+> >  =09=09return -ENOMEM;
+> > =20
+> > +=09devm_mutex_init(&srv->device, &data->set_speed_mutex);
+> >  =09ret =3D devm_request_threaded_irq(&srv->device, srv->irq, NULL,
+> >  =09=09=09=09=09pcie_bwnotif_irq_thread,
+> >  =09=09=09=09=09IRQF_SHARED | IRQF_ONESHOT,
+>=20
+> We generally try to avoid devm_*() functions in port service drivers
+> because if we later on move them into the PCI core (which is the plan),
+> we'll have to unroll them.  Not the end of the world that they're used
+> here, just not ideal.
+
+I think Jonathan disagrees with you on that:
+
+https://lore.kernel.org/linux-pci/20241017114812.00005e67@Huawei.com/
+
+:-)
+
+--=20
+ i.
+
+--8323328-1027285098-1731427310=:13135--
