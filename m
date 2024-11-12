@@ -1,93 +1,115 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5B22123FD;
-	Tue, 12 Nov 2024 17:29:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D3C99213EE8;
+	Tue, 12 Nov 2024 17:48:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731432593; cv=none; b=LdGQGyall74LLRFYQEN/szqSZFiyNESzW0rIlMUDqN+NNJdVBYs9bDecVmmBn/XS8dpEMu8iaXr+z/8y6ZCJvEqoOd1agt+bSdXatSVeNf3sf9P89AXOdG537PrqbaTl6ujWB7Q9uQhby99qEGn4bLeT0I/RraV4xWZjWB5uX6A=
+	t=1731433703; cv=none; b=ZxaZUTlzzK9PLFYx9wTdxEDs3l5O1adfdo/JYeiYf0E9peTr8VPADz2vuh7Eoi7xSdkBqD3LEf/jivssp/h8obnvIJd1Os9obISAd6Z05M3Ava+78J0bK0zKGjqhqZ/EGwIe8E/vd2ztqfnGNPQrKc3Nq7eU8kmkr4KOkQ2Krco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731432593; c=relaxed/simple;
-	bh=KtuHsvBkXKyb4/BS1eV+SQXhdNFVGLr8frMmDpXLEes=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XSNbQctPUkKTLb1bzguXJUj9OvAqcxQLNNds3SlNyeKwK/f7PciGblSODvgntkF099VwcCYIr6q+yAXYwd+1OTXO3JZMR3xT5/+Qu7OmU1CJeZcWiewpz/WW9OXvJLSVdfR98GIIY7qxBlKzuXOKLVeYFMIixdBo9qSMJD1yAbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eIwU9wI/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731433703; c=relaxed/simple;
+	bh=MK+ASg1m69L5TLSwqsabPOqvNcQt6Y5JecMXgxOWODc=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=CBTZKIYJBLjCnUp7OSo642GRsCMy/fYbDzyNgFAjNxHIKYHR/pNqIYMzHIjjYEkApjyrqxKoLUk7O480+B482NwML96oH9X50hb6bl3HJ5iRqAZM4f2My/1IOLbIbpl6AanmV/6JWQiI4l4Xc/7cDKfXVT+BkuVFF0u6E2DgKHA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kXZ348Br; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eIwU9wI/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09109C4CECD;
-	Tue, 12 Nov 2024 17:29:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kXZ348Br"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 282DEC4CECD;
+	Tue, 12 Nov 2024 17:48:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731432593;
-	bh=KtuHsvBkXKyb4/BS1eV+SQXhdNFVGLr8frMmDpXLEes=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=eIwU9wI/63KEVgKlLB5MPJHrTlsfAgH2RsYY7yKRUbcanp83jQjDd0ro1ZLLICxyo
-	 I2ZoEO6Lll2jXNrlfxCh5MpkCD+hc8uHdRULw5dvtAF2N73qY/Dq7jBFk0quc6ghh8
-	 JovS+ZBSKjIyvJdM1e1rKhlv+gtw4kNZV3s7Cp7IrUvIr5+eOvXRltASoAWm5dnV8+
-	 MMyxs9ZjjF2PputR56oBSXNxOAwRoBjB2yGtmQ5mbXLc4GMDRXwjeo9sOKzgq1Vw7n
-	 z6d8EhY8rcpKGQ9g9iWEacB1krNiB3CI/Q7/bqgYHpHb9+GWR2YHr9KaLrCKr4e1n9
-	 k9Va/SiGaZxyw==
-Received: from johan by xi.lan with local (Exim 4.97.1)
-	(envelope-from <johan@kernel.org>)
-	id 1tAui3-000000007ti-2RDk;
-	Tue, 12 Nov 2024 18:29:48 +0100
-Date: Tue, 12 Nov 2024 18:29:47 +0100
-From: Johan Hovold <johan@kernel.org>
-To: Qiang Yu <quic_qianyu@quicinc.com>
-Cc: manivannan.sadhasivam@linaro.org, vkoul@kernel.org, kishon@kernel.org,
-	robh@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
-	krzk+dt@kernel.org, conor+dt@kernel.org, mturquette@baylibre.com,
-	sboyd@kernel.org, abel.vesa@linaro.org, quic_msarkar@quicinc.com,
-	quic_devipriy@quicinc.com, dmitry.baryshkov@linaro.org,
-	kw@linux.com, lpieralisi@kernel.org, neil.armstrong@linaro.org,
-	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
-	johan+linaro@kernel.org
-Subject: Re: [PATCH v8 5/5] arm64: dts: qcom: x1e80100: Add support for PCIe3
- on x1e80100
-Message-ID: <ZzOQi0PpRZYts-B0@hovoldconsulting.com>
-References: <20241101030902.579789-1-quic_qianyu@quicinc.com>
- <20241101030902.579789-6-quic_qianyu@quicinc.com>
- <ZyjbrLEn8oSJjaZN@hovoldconsulting.com>
- <de5f40ab-90b7-4c75-b981-dd5824650660@quicinc.com>
- <c558f9eb-d190-4b77-b5a3-7af6b7de68d8@quicinc.com>
+	s=k20201202; t=1731433703;
+	bh=MK+ASg1m69L5TLSwqsabPOqvNcQt6Y5JecMXgxOWODc=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=kXZ348BrVPRVtn0Qu3Mh0QMajTVjY8EdzMD88qXP5XBv7EcuJBGTy6emumzssWpA1
+	 G+IUKTgLryZZX5UUHAyVTnv+9JOIrw/KZp++9aP030obPyXDtZqRrShCbMPxhNvoqV
+	 BlSjJYVwBWby33XHrdUQJV3f8hAyO9Ly4XdW0IEC5W/hdFB5K/vRQWEre4fiBC6aq0
+	 7gMutJa41lqQweacIx8+bPBtzq1QSiM9wGiF9ORI/nIA8I1YDMwQUCJgnLEkYTi1pS
+	 Ct5IlsvKnuGQtdTQigXewm4wsdb1RAWdugsF9ZLAKDcVQ2YMuoh2FdGpOFzGFY6n9w
+	 BTV/nuEt2C9JQ==
+Date: Tue, 12 Nov 2024 11:48:21 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mengyuan Lou <mengyuanlou@net-swift.com>
+Cc: linux-pci@vger.kernel.org, netdev@vger.kernel.org,
+	jiawenwu@trustnetic.com, duanqiangwen@net-swift.com
+Subject: Re: [PATCH PCI] PCI: Add ACS quirk for Wangxun FF5XXX NICS
+Message-ID: <20241112174821.GA1849315@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <c558f9eb-d190-4b77-b5a3-7af6b7de68d8@quicinc.com>
+In-Reply-To: <B12683A3B81C24B5+20241112111816.37290-1-mengyuanlou@net-swift.com>
 
-On Mon, Nov 11, 2024 at 11:44:17AM +0800, Qiang Yu wrote:
-> On 11/5/2024 1:28 PM, Qiang Yu wrote:
-> > On 11/4/2024 10:35 PM, Johan Hovold wrote:
-> >> On Thu, Oct 31, 2024 at 08:09:02PM -0700, Qiang Yu wrote:
+On Tue, Nov 12, 2024 at 07:18:16PM +0800, Mengyuan Lou wrote:
+> Wangxun FF5XXX NICs are same as selection of SFxxx, RP1000 and
+> RP2000 NICS. They may be multi-function devices, but the hardware
+> does not advertise ACS capability.
+>
+> Add this ACS quirk for FF5XXX NICs in pci_quirk_wangxun_nic_acs
+> so the functions can be in independent IOMMU groups.
+> 
+> Signed-off-by: Mengyuan Lou <mengyuanlou@net-swift.com>
 
-> >>> +            ranges = <0x01000000 0x0 0x00000000 0x0 0x78200000 0x0 
-> >>> 0x100000>,
-> >>> +                 <0x02000000 0x0 0x78300000 0x0 0x78300000 0x0 
-> >>> 0x3d00000>,
+I propose the following commit log and comment updates to be clear
+that the hardware actually enforces this isolation.  Please
+confirm that they are accurate.
 
-> >> Can you double check the size here so that it is indeed correct and not
-> >> just copied from the other nodes which initially got it wrong:
-> >>
-> >>     https://lore.kernel.org/lkml/20240710-topic-barman-v1-1-5f63fca8d0fc@linaro.org/
+  PCI: Add ACS quirk for Wangxun FF5xxx NICs
 
-> BTW, regions of PCIe6a, PCIe4, PCIe5 are 64MB, 32MB, 32MB, respectively.
-> Why range size is set to 0x1d00000 for PCIe6a, any issue is reported on 
-> PCIe6a?
+  Wangxun FF5xxx NICs are similar to SFxxx, RP1000 and RP2000 NICs.
+  They may be multi-function devices, but they do not advertise an ACS
+  capability.
 
-Thanks for checking. It seems the patch linked to above was broken for
-PCIe6a then.
+  But the hardware does isolate FF5xxx functions as though it had an
+  ACS capability and PCI_ACS_RR and PCI_ACS_CR were set in the ACS
+  Control register, i.e., all peer-to-peer traffic is directed
+  upstream instead of being routed internally.
 
-We did see PCIe5 probe breaking due to the overlap with PCIe4 but the
-patch predates PCIe5 support being posted and merged so it was probably
-just based on inspection.
+  Add ACS quirk for FF5xxx NICs in pci_quirk_wangxun_nic_acs() so the
+  functions can be in independent IOMMU groups.
 
-Could you send a fix for PCIe6a?
+> ---
+>  drivers/pci/quirks.c | 10 ++++++----
+>  1 file changed, 6 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index dccb60c1d9cc..d1973a8fd70c 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -4996,18 +4996,20 @@ static int pci_quirk_brcm_acs(struct pci_dev *dev, u16 acs_flags)
+>  }
+>  
+>  /*
+> - * Wangxun 10G/1G NICs have no ACS capability, and on multi-function
+> + * Wangxun 40G/25G/10G/1G NICs have no ACS capability, and on multi-function
+>   * devices, peer-to-peer transactions are not be used between the functions.
+>   * So add an ACS quirk for below devices to isolate functions.
 
-Johan
+  Wangxun 40G/25G/10G/1G NICs have no ACS capability, but on
+  multi-function devices, the hardware isolates the functions by
+  directing all peer-to-peer traffic upstream as though PCI_ACS_RR and
+  PCI_ACS_CR were set.
+
+>   * SFxxx 1G NICs(em).
+>   * RP1000/RP2000 10G NICs(sp).
+> + * FF5xxx 40G/25G/10G NICs(aml).
+>   */
+>  static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u16 acs_flags)
+>  {
+>  	switch (dev->device) {
+> -	case 0x0100 ... 0x010F:
+> -	case 0x1001:
+> -	case 0x2001:
+> +	case 0x0100 ... 0x010F: /* EM */
+> +	case 0x1001: case 0x2001: /* SP */
+> +	case 0x5010: case 0x5025: case 0x5040: /* AML */
+> +	case 0x5110: case 0x5125: case 0x5140: /* AML */
+>  		return pci_acs_ctrl_enabled(acs_flags,
+>  			PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
+>  	}
+> -- 
+> 2.43.2
+> 
