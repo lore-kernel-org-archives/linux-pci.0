@@ -1,162 +1,146 @@
-Received: from out30-130.freemail.mail.aliyun.com (out30-130.freemail.mail.aliyun.com [115.124.30.130])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 634251F778B;
-	Tue, 12 Nov 2024 11:59:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75F9B143C4C;
+	Tue, 12 Nov 2024 13:26:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731412756; cv=none; b=kSXADqmRA5D9GglMFBz0AZVLvVQcHqGPEGHjwioibsxTy8Mjb0K6IMURhygSbvHfGLU9Hg7ZKqDWMGitBkRWEH/gVYPeSwti1roZhwpRU2wHtuN1fTEslfXC0oTnO18KyvAi2JbAaz3Tv1ZKrqo8VGeiH6OEEhbP3Jj8EUp0Pr0=
+	t=1731417994; cv=none; b=UN4t61BoNvIZ/Qr45uCq9jN05qcE6gzTurzhpWkSi4kn5/w4KsitjMkZZwN9l3K0ZmQgcV/wFWRRX9AdRzUlUtn6RMQNWez5n5rhJ2ZgIIbVQnvjthOQf9MIRW4qLLXXk5YvsfbzDuS0/WdU7SiHJ0t7eYBBv/9ktBmKX/6p+50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731412756; c=relaxed/simple;
-	bh=Ap/l3omHJrawAz/AJvQPhDYsp+GUXJzj9zpoEP54D5Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=vEwuU1FQs7UuqCA6+9okkJAmOQBUdv6kP7/S4oT41SoIc6UPA63xHqTFKsOHP8QJ+WTENdgS7LauxWKYJ3+CJs2E7Jes2ZRxdX0I+J6y1UdJMTSA3I39dDERIXQuWN7gJDyxZjIXxRif/ZRNG3gJWvr0IH7xwB5KwzDZ25cYc3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=nMl2PzJO; arc=none smtp.client-ip=115.124.30.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1731417994; c=relaxed/simple;
+	bh=sqDWvlYnzmw5LmAND0lJq+irtLs9bjKycO9yQSXxH7o=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=n4sip+i9gmbqgSsJQ0tlsE6R6gE+fPDCU/R9sG79Xp/aBjx2AeIi22LP1SxmJuohJ6egYmiqtHdygMNvmfFu765cN0rjMQGt7lKWPeXPQ+ZLH2k0v7e8LHl/LC39JKRZKkh9Ye09dehPEaP2+PH8E/FZukw5XjPRBei08ggfgbA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=u2eY277K; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="nMl2PzJO"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1731412745; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=235CE37JET+UgH7IPnuOtnr+0hOs1QWXhkBWfkJD5SA=;
-	b=nMl2PzJOAvABO6xTPixIuXGLAV7BgUProlcz0rM+dwSQs5Scxk5U4TrzeRLk9Ype6bJXwcJmCzt5yU2QYFkFkcumsCZxVfNbTVvK+Jt+8FSP4n7r0NNNYFIQVMGNntraNvVzIGay8wRMxbesKz0SDJokBWIdiPx/JVpAlCkdvWo=
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WJHYqws_1731412744 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 12 Nov 2024 19:59:04 +0800
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-To: lukas@wunner.de,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-edac@vger.kernel.org
-Cc: bhelgaas@google.com,
-	tony.luck@intel.com,
-	bp@alien8.de,
-	xueshuai@linux.alibaba.com
-Subject: [PATCH v2 1/2] PCI: hotplug: Add a generic RAS tracepoint for hotplug event
-Date: Tue, 12 Nov 2024 19:58:51 +0800
-Message-ID: <20241112115852.52980-2-xueshuai@linux.alibaba.com>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <20241112115852.52980-1-xueshuai@linux.alibaba.com>
-References: <20241112115852.52980-1-xueshuai@linux.alibaba.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="u2eY277K"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 778D0C4CED0;
+	Tue, 12 Nov 2024 13:26:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731417993;
+	bh=sqDWvlYnzmw5LmAND0lJq+irtLs9bjKycO9yQSXxH7o=;
+	h=From:Subject:Date:To:Cc:From;
+	b=u2eY277K1Z+ejda+K3q64uVaWGIanQ+OQOkOviyw8rNIM+nuh6K9X8/wOTsCX3IT5
+	 U4grL2kpat1CYVn+deagHXvhrq0Hw7tJ7XgdRSojsEs1R+jQR52KqWMt8wDhMYOCld
+	 OcVCuVF7k426B1dSXuhiLR/hHcRhOAo6T/iN8psTkF+SAVeQ6PNnNovv6VgT/v/KZR
+	 ERtvj4WPMENMTOfefcps47JoqqoGW0Nr6qiVzoM0F6mi2H4TDm9UDVQjE8NWtCceVv
+	 oKYcBw+C9Bou+L1IwAd8WRr5zeR1bm+Rxe0lsSAlOEfGZqp5dl6LDg+qqLTBYADLzY
+	 04JDH+5ZHtcMw==
+From: Daniel Wagner <wagi@kernel.org>
+Subject: [PATCH v3 0/8] blk: refactor queue affinity helpers
+Date: Tue, 12 Nov 2024 14:26:15 +0100
+Message-Id: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAHdXM2cC/4XOTQ6CMBAF4KuQri3pDwi44h6GRUun0EgAW2gkh
+ LtbMOqS2b3J5HuzIgfWgEO3aEUWvHFm6EPglwjVregbwEaFjBhhCSkowxa0qKfBYtk9sNDa9GZ
+ acAvdCNbhjOSFLFKZSEpQMMZwbl6Hf68+2cJzDjXTf9kaF8Dl+MHTffut4yd1nmKCcyBprrNMa
+ MpKNzuIFaDd9exn0TBnFguW5leilFCMU1E+wPbQxYNtULVt2xsamRUELAEAAA==
+X-Change-ID: 20240912-refactor-blk-affinity-helpers-7089b95b4b10
+To: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>, 
+ "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
+ Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+ =?utf-8?q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
+ Sagi Grimberg <sagi@grimberg.me>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org, virtualization@lists.linux.dev, 
+ linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
+ mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, 
+ storagedev@microchip.com, linux-nvme@lists.infradead.org, 
+ Daniel Wagner <wagi@kernel.org>
+X-Mailer: b4 0.14.2
 
-Hotplug events are critical indicators for analyzing hardware health,
-particularly in AI supercomputers where surprise link downs can
-significantly impact system performance and reliability. The failure
-characterization analysis illustrates the significance of failures
-caused by the Infiniband link errors. Meta observes that 2% in a machine
-learning cluster and 6% in a vision application cluster of Infiniband
-failures co-occur with GPU failures, such as falling off the bus, which
-may indicate a correlation with PCIe.[1]
+As suggested by Christoph I've dropped the special case for hisi_sas v2,
+so the open coded loop will stay. That means for the isolcpus patches, I
+just need to open code that thing there as well. But overall, this should
+be okay and it avoids adding a wierd interface to blk-mq APIs.
 
-Add a generic RAS tracepoint for hotplug event to help healthy check.
+Original cover letter:
 
-[1]https://arxiv.org/abs/2410.21680
+These patches were part of 'honor isolcpus configuration' [1] series. To
+simplify the review process I decided to send this as separate series
+because I think it's a nice cleanup independent of the isolcpus feature.
 
-Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
- drivers/pci/hotplug/trace.h | 68 +++++++++++++++++++++++++++++++++++++
- include/uapi/linux/pci.h    |  7 ++++
- 2 files changed, 75 insertions(+)
- create mode 100644 drivers/pci/hotplug/trace.h
+Changes in v3:
+- dropped the additinal argument in blk_mq_hctx_map_queues.
+  leave open coded version in hisi_sas_v2.
+- splitted "blk-mp: introduce blk_mq_hctx_map_queues" patch into
+  three patches.
+- dropped local variable in pci_device_irq_get_affinity
+- Link to v2: https://lore.kernel.org/r/20241111-refactor-blk-affinity-helpers-v2-0-f360ddad231a@kernel.org
 
-diff --git a/drivers/pci/hotplug/trace.h b/drivers/pci/hotplug/trace.h
-new file mode 100644
-index 000000000000..a56e22534bc0
---- /dev/null
-+++ b/drivers/pci/hotplug/trace.h
-@@ -0,0 +1,68 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#if !defined(_TRACE_HW_EVENT_PCI_HP_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_HW_EVENT_PCI_HP_H
-+
-+#include <linux/tracepoint.h>
-+
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM hotplug
-+
-+#define PCI_HP_TRANS_STATE					\
-+	EM(PCI_HOTPLUG_LINK_UP,			"Link Up")	\
-+	EM(PCI_HOTPLUG_LINK_DOWN,		"Link Down")	\
-+	EM(PCI_HOTPLUG_CARD_PRESENT,		"Card present")	\
-+	EMe(PCI_HOTPLUG_CARD_NO_PRESENT,	"Card not present")
-+
-+/* Enums require being exported to userspace, for user tool parsing */
-+#undef EM
-+#undef EMe
-+#define EM(a, b)	TRACE_DEFINE_ENUM(a);
-+#define EMe(a, b)	TRACE_DEFINE_ENUM(a);
-+
-+PCI_HP_TRANS_STATE
-+
-+/*
-+ * Now redefine the EM() and EMe() macros to map the enums to the strings
-+ * that will be printed in the output.
-+ */
-+#undef EM
-+#undef EMe
-+#define EM(a, b)	{a, b},
-+#define EMe(a, b)	{a, b}
-+
-+TRACE_EVENT(pci_hp_event,
-+
-+	TP_PROTO(const char *port_name,
-+		 const char *slot,
-+		 const int trans_state),
-+
-+	TP_ARGS(port_name, slot, trans_state),
-+
-+	TP_STRUCT__entry(
-+		__string(	port_name,	port_name	)
-+		__string(	slot,		slot		)
-+		__field(	int,		trans_state	)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(port_name);
-+		__assign_str(slot);
-+		__entry->trans_state = trans_state;
-+	),
-+
-+	TP_printk("%s slot:%s, trans_state:%s\n",
-+		__get_str(port_name),
-+		__get_str(slot),
-+		__print_symbolic(__entry->trans_state, PCI_HP_TRANS_STATE)
-+	)
-+);
-+
-+#endif /* _TRACE_HW_EVENT_PCI_HP_H */
-+
-+#undef TRACE_INCLUDE_PATH
-+#define TRACE_INCLUDE_PATH  ../../drivers/pci/hotplug
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_FILE trace
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
-index a769eefc5139..1f751785a43d 100644
---- a/include/uapi/linux/pci.h
-+++ b/include/uapi/linux/pci.h
-@@ -39,4 +39,11 @@
- #define PCIIOC_MMAP_IS_MEM	(PCIIOC_BASE | 0x02)	/* Set mmap state to MEM space. */
- #define PCIIOC_WRITE_COMBINE	(PCIIOC_BASE | 0x03)	/* Enable/disable write-combining. */
- 
-+enum pci_hotplug_trans_type {
-+	PCI_HOTPLUG_LINK_UP,
-+	PCI_HOTPLUG_LINK_DOWN,
-+	PCI_HOTPLUG_CARD_PRESENT,
-+	PCI_HOTPLUG_CARD_NO_PRESENT,
-+};
-+
- #endif /* _UAPILINUX_PCI_H */
+Changes in v2:
+- added new callback to struct bus_type and call directly the affinity
+  helpers from there.
+- Link to v1: https://lore.kernel.org/r/20240913-refactor-blk-affinity-helpers-v1-0-8e058f77af12@suse.de
+
+Changes in v1:
+- renamed blk_mq_dev_map_queues to blk_mq_hctx_map_queues
+- squased 'virito: add APIs for retrieving vq affinity' into
+  'blk-mq: introduce blk_mq_hctx_map_queues'
+- moved hisi_sas changed into a new patch
+- hisi_sas use define instead of hard coded value
+- moved helpers into their matching subsystem, removed
+  blk-mq-pci and blk-mq-virtio files
+- fix spelling/typos
+- fixed long lines in docu (yep new lines in brief descriptions are
+  supported, tested ti)
+- based on the first part of
+  [1] https://lore.kernel.org/all/20240806-isolcpus-io-queues-v3-0-da0eecfeaf8b@suse.de
+
+---
+Daniel Wagner (8):
+      driver core: bus: add irq_get_affinity callback to bus_type
+      PCI: hookup irq_get_affinity callback
+      virtio: hookup irq_get_affinity callback
+      blk-mp: introduce blk_mq_hctx_map_queues
+      scsi: replace blk_mq_pci_map_queues with blk_mq_hctx_map_queues
+      nvme: replace blk_mq_pci_map_queues with blk_mq_hctx_map_queues
+      virtio: blk/scsi: replace blk_mq_virtio_map_queues with blk_mq_hctx_map_queues
+      blk-mq: remove unused queue mapping helpers
+
+ block/Makefile                            |  2 --
+ block/blk-mq-cpumap.c                     | 37 +++++++++++++++++++++++++
+ block/blk-mq-pci.c                        | 46 -------------------------------
+ block/blk-mq-virtio.c                     | 46 -------------------------------
+ drivers/block/virtio_blk.c                |  4 +--
+ drivers/nvme/host/fc.c                    |  1 -
+ drivers/nvme/host/pci.c                   |  3 +-
+ drivers/pci/pci-driver.c                  | 14 ++++++++++
+ drivers/scsi/fnic/fnic_main.c             |  3 +-
+ drivers/scsi/hisi_sas/hisi_sas.h          |  1 -
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    |  4 +--
+ drivers/scsi/megaraid/megaraid_sas_base.c |  3 +-
+ drivers/scsi/mpi3mr/mpi3mr.h              |  1 -
+ drivers/scsi/mpi3mr/mpi3mr_os.c           |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c      |  3 +-
+ drivers/scsi/pm8001/pm8001_init.c         |  2 +-
+ drivers/scsi/pm8001/pm8001_sas.h          |  1 -
+ drivers/scsi/qla2xxx/qla_nvme.c           |  3 +-
+ drivers/scsi/qla2xxx/qla_os.c             |  4 +--
+ drivers/scsi/smartpqi/smartpqi_init.c     |  7 ++---
+ drivers/scsi/virtio_scsi.c                |  3 +-
+ drivers/virtio/virtio.c                   | 19 +++++++++++++
+ include/linux/blk-mq-pci.h                | 11 --------
+ include/linux/blk-mq-virtio.h             | 11 --------
+ include/linux/blk-mq.h                    |  2 ++
+ include/linux/device/bus.h                |  3 ++
+ 26 files changed, 92 insertions(+), 144 deletions(-)
+---
+base-commit: c9af98a7e8af266bae73e9d662b8341da1ec5824
+change-id: 20240912-refactor-blk-affinity-helpers-7089b95b4b10
+
+Best regards,
 -- 
-2.39.3
+Daniel Wagner <wagi@kernel.org>
 
