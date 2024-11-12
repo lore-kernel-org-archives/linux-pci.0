@@ -1,49 +1,50 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D3FB200CAE;
-	Tue, 12 Nov 2024 15:02:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90EE41FF7A9;
+	Tue, 12 Nov 2024 15:02:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731423737; cv=none; b=pmtym25NniC5v0LGrOTDocRpGfwp4NoC0vcGgSp62ZjDc1zi/ugurk7Yj62DptXtVMxzT/gcDX9YBtGIBaF0n41zRMZuNEIaSImY5Fw4W4vkj85dx1Co910m0vuSlMXGNiWx6HYPdAaJv6YfByHeyBuN+4jtLc2vwl6decVNWBI=
+	t=1731423744; cv=none; b=NVh6OWTVf+k8QoDymdNZ4fj6Wa6PIR2FVhOgdRkRGR+w0KuqPbbjpfv19xlTYIFPNnCA7WYSzH0oDTL+Dp494kRc00d6MSEqSN55CLsXLtYagOvM1ysb513Zy+P92gPjjMB+Nk0hYPkBb52lEwlKYwHjVzAojYZ3tjylAP40ZzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731423737; c=relaxed/simple;
-	bh=y5zwbwdP91oKRtbUAddeJWBahdA4vNRB9M41llfF0Q4=;
+	s=arc-20240116; t=1731423744; c=relaxed/simple;
+	bh=tddq7pUZzlNUQNY/CYLff5ZlSGW9MVnVYoZSGuxWwho=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-ID:References:
-	 In-Reply-To:To:CC; b=LBBXOaK3ObDQdZmbDYcvU7Zdeh50BT9X9funuVAunSuqHEJqvqs3srSXiVOj52x0upr8RtDIy4jZ3uaxb2kB4X3E/dSvslkGjSTLIz9kRUlOe2cfm/bltYTYSfvd4n27lKTQGCPgXhyg48PTkeft3gx9x8hF3fnFccPbq+1VXEw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=M8IDAbN3; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:To:CC; b=UcDlyosoy4zwc21pfqHDgcRtQ/1Qpc9WE6SDwWxxccL95jr2v1ok+U3B73vX/GulvFngfZKRe5OEf8tNbPb2HSqYAlifRO4ZdyfJVmF09GnZ2GYISMU1Ffbqt6EodDOKMSkYYmvlOzK4IYlqxr4gxP19CIpLv5/rMpAzHFX8CLA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=JY1t825z; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="M8IDAbN3"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AC9f0LD025084;
-	Tue, 12 Nov 2024 15:02:02 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="JY1t825z"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ACCaNSn000954;
+	Tue, 12 Nov 2024 15:02:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	KvjTKyTC+nGvQjd4HOn2InSv+BQXoVS+uUjtShLLOvU=; b=M8IDAbN3X2Fxdho3
-	4RO4Wo0+S4dH3UryVMx9o+Sx74QwtFjJsVylUi+VcpZG9dVeQBYekrDlu/Tsb53p
-	2B3J/V7H091qJfljROLDpxyYy2hmjb3NELwavGMF3VrGvf6xsgeMpZneJkkQzbPj
-	Q9+mGNSvwg4pwTAvEuxM2XY4IKzR+abnfsbOLrGZasphcUDzGIcPXM2f5FmlUcNP
-	LGZkLMaR+Jubghxk++6n+JcU1deNY9k2jjFkvq9nAB/+nABs0CVE2dfk3tZi7/oS
-	wHiZ3QacBoGZZTj7vAuF7lW8gyp+iYSRFL0f1ITrqA/oGixu0L8tXHrXXHR4Bcda
-	GpoMXw==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42v4kqrsqx-1
+	xDUk8lt0qJgSqfvLRpmFIpBseHCwrPxvpmQ4cS2Jz48=; b=JY1t825zGvlqbIYT
+	+GNOi3nxnZEZa5GMJoDftkEaQUDRcQzTiYBfyqQiURr+NmnpssJxXQ4B24feIijl
+	BLS87pyAbgSd4TFTt1YwYDYNRi/uEes5a3h1wCI6qZtW5pZmM/PO/ujm+4/6Tnye
+	RWu5IoVvj4fUHOCnN02a2OlcYsHelFhfn8+eArhRpeNm4oLTDBGKfiKjZGL+vQsq
+	sQ1O60nPWXfgDx3liqOulowr7CdQ64tIXVwa1CNajgQRsb3+wK0sIFr8fpcxaQmy
+	GueROBGRPMhhJMu6b9/Dwf9IBk/7/azaeGeRGeJ79dBejLlq4N5EnBqIRPQJ8KI2
+	Sreekw==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 42t0gkyh9w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Nov 2024 15:02:02 +0000 (GMT)
+	Tue, 12 Nov 2024 15:02:07 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4ACF21RR001336
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4ACF26fq026813
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Nov 2024 15:02:01 GMT
+	Tue, 12 Nov 2024 15:02:06 GMT
 Received: from hu-krichai-hyd.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Tue, 12 Nov 2024 07:01:56 -0800
+ 15.2.1544.9; Tue, 12 Nov 2024 07:02:01 -0800
 From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Date: Tue, 12 Nov 2024 20:31:33 +0530
-Subject: [PATCH v3 1/6] dt-bindings: PCI: Add binding for qps615
+Date: Tue, 12 Nov 2024 20:31:34 +0530
+Subject: [PATCH v3 2/6] arm64: dts: qcom: qcs6490-rb3gen2: Add node for
+ qps615
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,7 +53,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-ID: <20241112-qps615_pwr-v3-1-29a1e98aa2b0@quicinc.com>
+Message-ID: <20241112-qps615_pwr-v3-2-29a1e98aa2b0@quicinc.com>
 References: <20241112-qps615_pwr-v3-0-29a1e98aa2b0@quicinc.com>
 In-Reply-To: <20241112-qps615_pwr-v3-0-29a1e98aa2b0@quicinc.com>
 To: <andersson@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
@@ -73,248 +74,194 @@ CC: <quic_vbadigan@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
         Krishna chaitanya chundru
 	<quic_krichai@quicinc.com>
 X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1731423711; l=6624;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1731423711; l=4202;
  i=quic_krichai@quicinc.com; s=20230907; h=from:subject:message-id;
- bh=y5zwbwdP91oKRtbUAddeJWBahdA4vNRB9M41llfF0Q4=;
- b=pY8Dob4EXrVUj/kFO27BhLEZJSXXM0D7Pe/L3IIgQ172KGN2v5Yi6roDMwiHLynaj3IRpxQnF
- offEA5iYHX3C/8DDjqPYEyTlg8PJFrIWdLjo5xBOHCv00qolFwnCeGD
+ bh=tddq7pUZzlNUQNY/CYLff5ZlSGW9MVnVYoZSGuxWwho=;
+ b=3+JPL9Y2QM7sorWB17mHA5TvWJzwgl/BtbVrRqsMmpDYxCSSG+JHaCZ4ZppzfxjWR4+S2CnGZ
+ V4Pq0Iw35n0CnTN+YLGbeYnyDXBLlXKb0H9ABfuEGk/HkuX1nZXGuOe
 X-Developer-Key: i=quic_krichai@quicinc.com; a=ed25519;
  pk=10CL2pdAKFyzyOHbfSWHCD0X0my7CXxj8gJScmn1FAg=
 X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: PmCzQXWvbiNqBW5wePCktB8XY9DjhMvn
-X-Proofpoint-GUID: PmCzQXWvbiNqBW5wePCktB8XY9DjhMvn
+X-Proofpoint-ORIG-GUID: uMq6xajO2Rxqf59ZKflo7AL2tcIirn6B
+X-Proofpoint-GUID: uMq6xajO2Rxqf59ZKflo7AL2tcIirn6B
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 bulkscore=0 impostorscore=0
- adultscore=0 priorityscore=1501 lowpriorityscore=0 phishscore=0
- malwarescore=0 spamscore=0 clxscore=1015 mlxscore=0 mlxlogscore=999
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2409260000 definitions=main-2411120121
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 phishscore=0
+ spamscore=0 clxscore=1015 mlxscore=0 mlxlogscore=999 lowpriorityscore=0
+ impostorscore=0 adultscore=0 priorityscore=1501 malwarescore=0 bulkscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2409260000
+ definitions=main-2411120120
 
-Add binding describing the Qualcomm PCIe switch, QPS615,
-which provides Ethernet MAC integrated to the 3rd downstream port
-and two downstream PCIe ports.
+Add QPS615 PCIe switch node which has 3 downstream ports and in one
+downstream port two embedded ethernet devices are present.
+
+Power to the QPS615 is supplied through two LDO regulators, controlled
+by two GPIOs, these are added as fixed regulators. And the QPS615 is
+configured through i2c.
 
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 ---
- .../devicetree/bindings/pci/qcom,qps615.yaml       | 205 +++++++++++++++++++++
- 1 file changed, 205 insertions(+)
+ arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts | 115 +++++++++++++++++++++++++++
+ arch/arm64/boot/dts/qcom/sc7280.dtsi         |   2 +-
+ 2 files changed, 116 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,qps615.yaml b/Documentation/devicetree/bindings/pci/qcom,qps615.yaml
-new file mode 100644
-index 000000000000..e6a63a0bb0f3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/qcom,qps615.yaml
-@@ -0,0 +1,205 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/qcom,qps615.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+index 0d45662b8028..0e890841b600 100644
+--- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
++++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+@@ -202,6 +202,30 @@ vph_pwr: vph-pwr-regulator {
+ 		regulator-min-microvolt = <3700000>;
+ 		regulator-max-microvolt = <3700000>;
+ 	};
 +
-+title: Qualcomm QPS615 PCIe switch
++	vdd_ntn_0p9: regulator-vdd-ntn-0p9 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_NTN_0P9";
++		gpio = <&pm8350c_gpios 2 GPIO_ACTIVE_HIGH>;
++		regulator-min-microvolt = <899400>;
++		regulator-max-microvolt = <899400>;
++		enable-active-high;
++		pinctrl-0 = <&ntn_0p9_en>;
++		pinctrl-names = "default";
++		regulator-enable-ramp-delay = <4300>;
++	};
 +
-+maintainers:
-+  - Krishna chaitanya chundru <quic_krichai@quicinc.com>
++	vdd_ntn_1p8: regulator-vdd-ntn-1p8 {
++		compatible = "regulator-fixed";
++		regulator-name = "VDD_NTN_1P8";
++		gpio = <&pm8350c_gpios 3 GPIO_ACTIVE_HIGH>;
++		regulator-min-microvolt = <1800000>;
++		regulator-max-microvolt = <1800000>;
++		enable-active-high;
++		pinctrl-0 = <&ntn_1p8_en>;
++		pinctrl-names = "default";
++		regulator-enable-ramp-delay = <10000>;
++	};
+ };
+ 
+ &apps_rsc {
+@@ -684,6 +708,75 @@ &mdss_edp_phy {
+ 	status = "okay";
+ };
+ 
++&pcie1_port {
++	pcie@0,0 {
++		compatible = "pci1179,0623";
++		reg = <0x10000 0x0 0x0 0x0 0x0>;
++		#address-cells = <3>;
++		#size-cells = <2>;
 +
-+description: |
-+  Qualcomm QPS615 PCIe switch has one upstream and three downstream
-+  ports. The 3rd downstream port has integrated endpoint device of
-+  Ethernet MAC. Other two downstream ports are supposed to connect
-+  to external device.
++		device_type = "pci";
++		ranges;
++		bus-range = <0x2 0xff>;
 +
-+  The QPS615 PCIe switch can be configured through I2C interface before
-+  PCIe link is established to change FTS, ASPM related entry delays,
-+  tx amplitude etc for better power efficiency and functionality.
++		vddc-supply = <&vdd_ntn_0p9>;
++		vdd18-supply = <&vdd_ntn_1p8>;
++		vdd09-supply = <&vdd_ntn_0p9>;
++		vddio1-supply = <&vdd_ntn_1p8>;
++		vddio2-supply = <&vdd_ntn_1p8>;
++		vddio18-supply = <&vdd_ntn_1p8>;
 +
-+properties:
-+  compatible:
-+    enum:
-+      - pci1179,0623
++		i2c-parent = <&i2c0 0x77>;
 +
-+  reg:
-+    maxItems: 1
++		reset-gpios = <&pm8350c_gpios 1 GPIO_ACTIVE_LOW>;
 +
-+  i2c-parent:
-+    $ref: /schemas/types.yaml#/definitions/phandle-array
-+    description: |
-+      A phandle to the parent I2C node and the slave address of the device
-+      used to do configure qps615 to change FTS, tx amplitude etc.
-+    items:
-+      - description: Phandle to the I2C controller node
-+      - description: I2C slave address
++		pcie@1,0 {
++			reg = <0x20800 0x0 0x0 0x0 0x0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
 +
-+  vdd18-supply: true
++			device_type = "pci";
++			ranges;
++			bus-range = <0x3 0xff>;
++		};
 +
-+  vdd09-supply: true
++		pcie@2,0 {
++			reg = <0x21000 0x0 0x0 0x0 0x0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
 +
-+  vddc-supply: true
++			device_type = "pci";
++			ranges;
++			bus-range = <0x4 0xff>;
++		};
 +
-+  vddio1-supply: true
++		pcie@3,0 {
++			reg = <0x21800 0x0 0x0 0x0 0x0>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			device_type = "pci";
++			ranges;
++			bus-range = <0x5 0xff>;
 +
-+  vddio2-supply: true
++			pcie@0,0 {
++				reg = <0x50000 0x0 0x0 0x0 0x0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				device_type = "pci";
++				ranges;
++			};
 +
-+  vddio18-supply: true
++			pcie@0,1 {
++				reg = <0x50100 0x0 0x0 0x0 0x0>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				device_type = "pci";
++				ranges;
++			};
++		};
++	};
++};
 +
-+  reset-gpios:
-+    maxItems: 1
-+    description:
-+      GPIO controlling the RESX# pin.
+ &pmk8350_rtc {
+ 	status = "okay";
+ };
+@@ -812,6 +905,28 @@ lt9611_rst_pin: lt9611-rst-state {
+ 	};
+ };
+ 
++&pm8350c_gpios {
++	ntn_0p9_en: ntn-0p9-en-state {
++		pins = "gpio2";
++		function = "normal";
 +
-+  qps615,axi-clk-freq-hz:
-+    description:
-+      AXI clock rate which is internal bus of the switch
-+      The switch only runs in two frequencies i.e 250MHz and 125MHz.
-+    enum: [125000000, 250000000]
++		bias-disable;
++		input-disable;
++		output-enable;
++		power-source = <0>;
++	};
 +
-+allOf:
-+  - $ref: "#/$defs/qps615-node"
++	ntn_1p8_en: ntn-1p8-en-state {
++		pins = "gpio3";
++		function = "normal";
 +
-+patternProperties:
-+  "@1?[0-9a-f](,[0-7])?$":
-+    description: child nodes describing the internal downstream ports
-+      the qps615 switch.
-+    type: object
-+    $ref: "#/$defs/qps615-node"
-+    unevaluatedProperties: false
++		bias-disable;
++		input-disable;
++		output-enable;
++		power-source = <0>;
++	};
++};
 +
-+$defs:
-+  qps615-node:
-+    type: object
-+
-+    properties:
-+      qcom,l0s-entry-delay-ns:
-+        description: Aspm l0s entry delay.
-+
-+      qcom,l1-entry-delay-ns:
-+        description: Aspm l1 entry delay.
-+
-+      qcom,tx-amplitude-millivolt:
-+        $ref: /schemas/types.yaml#/definitions/uint32
-+        description: Change Tx Margin setting for low power consumption.
-+
-+      qcom,no-dfe-support:
-+        type: boolean
-+        description: Disable DFE (Decision Feedback Equalizer), which mitigates
-+          intersymbol interference and some reflections caused by impedance mismatches.
-+
-+      qcom,nfts:
-+        $ref: /schemas/types.yaml#/definitions/uint32
-+        description:
-+          Number of Fast Training Sequence (FTS) used during L0s to L0 exit
-+          for bit and Symbol lock.
-+
-+    allOf:
-+      - $ref: /schemas/pci/pci-bus.yaml#
-+
-+unevaluatedProperties: false
-+
-+required:
-+  - vdd18-supply
-+  - vdd09-supply
-+  - vddc-supply
-+  - vddio1-supply
-+  - vddio2-supply
-+  - vddio18-supply
-+  - i2c-parent
-+  - reset-gpios
-+
-+examples:
-+  - |
-+
-+    #include <dt-bindings/gpio/gpio.h>
-+
-+    pcie {
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+
-+        pcie@0 {
-+            device_type = "pci";
-+            reg = <0x0 0x0 0x0 0x0 0x0>;
-+
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+            ranges;
-+            bus-range = <0x01 0xff>;
-+
-+            pcie@0,0 {
-+                compatible = "pci1179,0623";
-+                reg = <0x10000 0x0 0x0 0x0 0x0>;
-+                device_type = "pci";
-+                #address-cells = <3>;
-+                #size-cells = <2>;
-+                ranges;
-+                bus-range = <0x02 0xff>;
-+
-+                i2c-parent = <&qup_i2c 0x77>;
-+
-+                vdd18-supply = <&vdd>;
-+                vdd09-supply = <&vdd>;
-+                vddc-supply = <&vdd>;
-+                vddio1-supply = <&vdd>;
-+                vddio2-supply = <&vdd>;
-+                vddio18-supply = <&vdd>;
-+
-+                reset-gpios = <&gpio 1 GPIO_ACTIVE_LOW>;
-+
-+                pcie@1,0 {
-+                    reg = <0x20800 0x0 0x0 0x0 0x0>;
-+                    #address-cells = <3>;
-+                    #size-cells = <2>;
-+                    device_type = "pci";
-+                    ranges;
-+                    bus-range = <0x03 0xff>;
-+
-+                    qcom,no-dfe-support;
-+                };
-+
-+                pcie@2,0 {
-+                    reg = <0x21000 0x0 0x0 0x0 0x0>;
-+                    #address-cells = <3>;
-+                    #size-cells = <2>;
-+                    device_type = "pci";
-+                    ranges;
-+                    bus-range = <0x04 0xff>;
-+
-+                    qcom,nfts = <10>;
-+                };
-+
-+                pcie@3,0 {
-+                    reg = <0x21800 0x0 0x0 0x0 0x0>;
-+                    #address-cells = <3>;
-+                    #size-cells = <2>;
-+                    device_type = "pci";
-+                    ranges;
-+                    bus-range = <0x05 0xff>;
-+
-+                    qcom,tx-amplitude-millivolt = <10>;
-+                    pcie@0,0 {
-+                        reg = <0x50000 0x0 0x0 0x0 0x0>;
-+                        #address-cells = <3>;
-+                        #size-cells = <2>;
-+                        device_type = "pci";
-+                        ranges;
-+
-+                        qcom,l1-entry-delay-ns = <10>;
-+                    };
-+
-+                    pcie@0,1 {
-+                        reg = <0x50100 0x0 0x0 0x0 0x0>;
-+                        #address-cells = <3>;
-+                        #size-cells = <2>;
-+                        device_type = "pci";
-+                        ranges;
-+
-+                        qcom,l0s-entry-delay-ns = <10>;
-+                    };
-+                };
-+            };
-+        };
-+    };
+ &tlmm {
+ 	lt9611_irq_pin: lt9611-irq-state {
+ 		pins = "gpio24";
+diff --git a/arch/arm64/boot/dts/qcom/sc7280.dtsi b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+index 3d8410683402..82434f085ff0 100644
+--- a/arch/arm64/boot/dts/qcom/sc7280.dtsi
++++ b/arch/arm64/boot/dts/qcom/sc7280.dtsi
+@@ -2279,7 +2279,7 @@ pcie1: pcie@1c08000 {
+ 
+ 			status = "disabled";
+ 
+-			pcie@0 {
++			pcie1_port: pcie@0 {
+ 				device_type = "pci";
+ 				reg = <0x0 0x0 0x0 0x0 0x0>;
+ 				bus-range = <0x01 0xff>;
 
 -- 
 2.34.1
