@@ -1,53 +1,93 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4D2420651E;
-	Tue, 12 Nov 2024 16:56:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A5B22123FD;
+	Tue, 12 Nov 2024 17:29:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731430610; cv=none; b=Zni70L9RwogWFZRzRq8DE208Itq13zhLG1BGCOpMkApRnCFpWn0JdCO17zKbvDSWHe7Quy3x70l5TrxznQ9XIA2Bkzg7Wzyr9039O2qLvbn9Cj7h7Jab3Nv88pm9JhuEStqyWQNlBGYcyonLjoXe7bjqyVmR7pydmknR4TcgIMw=
+	t=1731432593; cv=none; b=LdGQGyall74LLRFYQEN/szqSZFiyNESzW0rIlMUDqN+NNJdVBYs9bDecVmmBn/XS8dpEMu8iaXr+z/8y6ZCJvEqoOd1agt+bSdXatSVeNf3sf9P89AXOdG537PrqbaTl6ujWB7Q9uQhby99qEGn4bLeT0I/RraV4xWZjWB5uX6A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731430610; c=relaxed/simple;
-	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
+	s=arc-20240116; t=1731432593; c=relaxed/simple;
+	bh=KtuHsvBkXKyb4/BS1eV+SQXhdNFVGLr8frMmDpXLEes=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=BB4C4gJquGbGF3nzna+CWBhGsAlPUmM1MafYRORzPHb5FTGRbQUlf3pWuHVN2Ds7Odr8H/PK/QZkQTnG/Q4qB0PWaFCXJ1cdI7x3yAQDyxKFQATRLZthiwS7G25xsh5a7in0DM3yaqjASAd0pO8Dd3+CSCCHYrA/rNsa0KPN/ms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id DE04068AFE; Tue, 12 Nov 2024 17:56:45 +0100 (CET)
-Date: Tue, 12 Nov 2024 17:56:45 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
-	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, virtualization@lists.linux.dev,
-	linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com,
-	storagedev@microchip.com, linux-nvme@lists.infradead.org
-Subject: Re: [PATCH v3 4/8] blk-mp: introduce blk_mq_hctx_map_queues
-Message-ID: <20241112165645.GD20057@lst.de>
-References: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org> <20241112-refactor-blk-affinity-helpers-v3-4-573bfca0cbd8@kernel.org>
+	 Content-Type:Content-Disposition:In-Reply-To; b=XSNbQctPUkKTLb1bzguXJUj9OvAqcxQLNNds3SlNyeKwK/f7PciGblSODvgntkF099VwcCYIr6q+yAXYwd+1OTXO3JZMR3xT5/+Qu7OmU1CJeZcWiewpz/WW9OXvJLSVdfR98GIIY7qxBlKzuXOKLVeYFMIixdBo9qSMJD1yAbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eIwU9wI/; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eIwU9wI/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09109C4CECD;
+	Tue, 12 Nov 2024 17:29:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731432593;
+	bh=KtuHsvBkXKyb4/BS1eV+SQXhdNFVGLr8frMmDpXLEes=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=eIwU9wI/63KEVgKlLB5MPJHrTlsfAgH2RsYY7yKRUbcanp83jQjDd0ro1ZLLICxyo
+	 I2ZoEO6Lll2jXNrlfxCh5MpkCD+hc8uHdRULw5dvtAF2N73qY/Dq7jBFk0quc6ghh8
+	 JovS+ZBSKjIyvJdM1e1rKhlv+gtw4kNZV3s7Cp7IrUvIr5+eOvXRltASoAWm5dnV8+
+	 MMyxs9ZjjF2PputR56oBSXNxOAwRoBjB2yGtmQ5mbXLc4GMDRXwjeo9sOKzgq1Vw7n
+	 z6d8EhY8rcpKGQ9g9iWEacB1krNiB3CI/Q7/bqgYHpHb9+GWR2YHr9KaLrCKr4e1n9
+	 k9Va/SiGaZxyw==
+Received: from johan by xi.lan with local (Exim 4.97.1)
+	(envelope-from <johan@kernel.org>)
+	id 1tAui3-000000007ti-2RDk;
+	Tue, 12 Nov 2024 18:29:48 +0100
+Date: Tue, 12 Nov 2024 18:29:47 +0100
+From: Johan Hovold <johan@kernel.org>
+To: Qiang Yu <quic_qianyu@quicinc.com>
+Cc: manivannan.sadhasivam@linaro.org, vkoul@kernel.org, kishon@kernel.org,
+	robh@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, mturquette@baylibre.com,
+	sboyd@kernel.org, abel.vesa@linaro.org, quic_msarkar@quicinc.com,
+	quic_devipriy@quicinc.com, dmitry.baryshkov@linaro.org,
+	kw@linux.com, lpieralisi@kernel.org, neil.armstrong@linaro.org,
+	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-clk@vger.kernel.org,
+	johan+linaro@kernel.org
+Subject: Re: [PATCH v8 5/5] arm64: dts: qcom: x1e80100: Add support for PCIe3
+ on x1e80100
+Message-ID: <ZzOQi0PpRZYts-B0@hovoldconsulting.com>
+References: <20241101030902.579789-1-quic_qianyu@quicinc.com>
+ <20241101030902.579789-6-quic_qianyu@quicinc.com>
+ <ZyjbrLEn8oSJjaZN@hovoldconsulting.com>
+ <de5f40ab-90b7-4c75-b981-dd5824650660@quicinc.com>
+ <c558f9eb-d190-4b77-b5a3-7af6b7de68d8@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20241112-refactor-blk-affinity-helpers-v3-4-573bfca0cbd8@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c558f9eb-d190-4b77-b5a3-7af6b7de68d8@quicinc.com>
 
-Looks good:
+On Mon, Nov 11, 2024 at 11:44:17AM +0800, Qiang Yu wrote:
+> On 11/5/2024 1:28 PM, Qiang Yu wrote:
+> > On 11/4/2024 10:35 PM, Johan Hovold wrote:
+> >> On Thu, Oct 31, 2024 at 08:09:02PM -0700, Qiang Yu wrote:
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> >>> +            ranges = <0x01000000 0x0 0x00000000 0x0 0x78200000 0x0 
+> >>> 0x100000>,
+> >>> +                 <0x02000000 0x0 0x78300000 0x0 0x78300000 0x0 
+> >>> 0x3d00000>,
 
+> >> Can you double check the size here so that it is indeed correct and not
+> >> just copied from the other nodes which initially got it wrong:
+> >>
+> >>     https://lore.kernel.org/lkml/20240710-topic-barman-v1-1-5f63fca8d0fc@linaro.org/
+
+> BTW, regions of PCIe6a, PCIe4, PCIe5 are 64MB, 32MB, 32MB, respectively.
+> Why range size is set to 0x1d00000 for PCIe6a, any issue is reported on 
+> PCIe6a?
+
+Thanks for checking. It seems the patch linked to above was broken for
+PCIe6a then.
+
+We did see PCIe5 probe breaking due to the overlap with PCIe4 but the
+patch predates PCIe5 support being posted and merged so it was probably
+just based on inspection.
+
+Could you send a fix for PCIe6a?
+
+Johan
