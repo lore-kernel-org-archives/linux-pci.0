@@ -1,219 +1,191 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F164D200C82;
-	Tue, 12 Nov 2024 16:16:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D639A205AB0;
+	Tue, 12 Nov 2024 16:28:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731428210; cv=none; b=Q/Dz0yQcEISBaMVyF+SVAXx8H1qHEbNZrgl/9ckTH58Q1iColEscIsBqmzcjXMfsZ3rFIGKpF9SEICsCzMfl/ipLXJpOxE7NW+3ND5b7uvLqbGGlVntqBMDkPzR/AvZ4X0n1U+MsGwB2D/xRpdmLPkRA4fxj/SxgSoj6na+LuRk=
+	t=1731428889; cv=none; b=U3KEaKCILf1XpZm4uu56zGz4Xf6D86mnj53VQ+wq2GOk+7ZlKzfOony8GZW7Cf+d6vmzn1fA2CzMfxyx23byy6f+59oc/WINyxbE0dimmXK73CantSC9t0bxbkctPDrswGkG/b2RAUfKw0+H+RNLFVsp+xGBXu+EqYS61dU1Tk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731428210; c=relaxed/simple;
-	bh=xiGLaR6s5tScsDovvjCdd16Pe39oJDYnOIa7LeChxRc=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=HtEymY7ZA/uMdNtr3GLa8+ZOlWy2ravtCEWfVXXjJ/SZL/qTsPBPPhPomWAEuxIHiSQl2g7of78q6EdK1NKWYTjiJ1PCTSZgHV5YC/ikJIKqFSg3Oade/ZpvrKBJ4xual6WkprtmS/crGsbIVTtWAdg0dLnLC7pz3cGRlcp7VRo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=X1IvGOUu; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1731428889; c=relaxed/simple;
+	bh=BQBq2KwyTn0BX6cEv2Ucx0Vx/gddarbz/pp8l7bdnbg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hzmvX5WSmlxO+ZfwvRU+1UwmeIVz7bQqVgqdp0ONysm1rwcD4w3/pgwsLKx4odsNc+qvuveDgMyuSDmTcGAPvnt908gRBBYupG2e09HgAygxhfEgHuNyjfQzLtgBsKzJiblASeqaghrGwGpcs+S1hfWhrAhogUIENLCkOkv39fY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=tiy4gtBq; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="X1IvGOUu"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731428208; x=1762964208;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version:content-id;
-  bh=xiGLaR6s5tScsDovvjCdd16Pe39oJDYnOIa7LeChxRc=;
-  b=X1IvGOUusrh0AclVaeUY4wB6y2eHKWsFOCKQggo5V8x/A4oKAQoobDnX
-   XwPfuKA7Bo2/oXZCPpdP4H05TcnKgiN1K5KwneQQK4et43xHUiAq63SGA
-   3wVRaiPIjX+dYe2MLM6QmauQGr8p4bhzTYTYHnNpRThhKLwughge1tFK0
-   2MoT2e+VGUmSeBngYpZVR13/r/VqqBSUXxKx2hy9dOXOBuN22GReEGdiw
-   NohHIQ0BYtgBxzg0+T1vORTh4Q1NszJMzZeeICi2cQ8cw/5tOYcCABVSw
-   ffm6Sp+MqoWLNaF0jrbLEIoI+ur5ht68lqWWVmPWZbecqOanwNKcArHm9
-   A==;
-X-CSE-ConnectionGUID: PWRCae1ITsep5q14hhwZ9w==
-X-CSE-MsgGUID: xpP4W2QDSe2Dtpd5BASPLQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="34976708"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="34976708"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 08:16:47 -0800
-X-CSE-ConnectionGUID: UevQ1+sOSk+GzPsJtfgI3w==
-X-CSE-MsgGUID: ZwgLARPZSkGMj6ZpfZNZcA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,148,1728975600"; 
-   d="scan'208";a="87700355"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.234])
-  by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 08:16:46 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Tue, 12 Nov 2024 18:16:41 +0200 (EET)
-To: =?ISO-8859-15?Q?Christian_K=F6nig?= <christian.koenig@amd.com>
-cc: =?ISO-8859-2?Q?Micha=B3_Winiarski?= <michal.winiarski@intel.com>, 
-    Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH] PCI: Fix BAR resizing when VF BARs are assigned
-In-Reply-To: <9e3b6a38-6f23-45cc-ac3d-d0ebc929dee3@amd.com>
-Message-ID: <965c4c84-be1a-ba30-400a-62481ae7400a@linux.intel.com>
-References: <20241112134225.9837-1-ilpo.jarvinen@linux.intel.com> <a22a321a-0e60-474b-971c-8512189a69ca@amd.com> <c5d1b5d8-8669-5572-75a7-0b480f581ac1@linux.intel.com> <9e3b6a38-6f23-45cc-ac3d-d0ebc929dee3@amd.com>
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="tiy4gtBq"
+Received: from pps.filterd (m0241204.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ACCREXx025206;
+	Tue, 12 Nov 2024 17:24:42 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	M79B9yXRhahhsdQQ5jt3NuyPZPc3ZVTz3ctnb7+EBi4=; b=tiy4gtBq+20FlFJ1
+	tY1F6oe843WF14AFHeJzF37W2dZbs4848CWrC2xdgw/TPSVXPmEgAwp97F+zcqxC
+	6xyjsWcuMEcCIFNpkKPb8TcTK5Yt1t4Zt1cUu8rK82wzWbDTYVloPOP+ZV/uVBoe
+	ad4Cfgs2EsI2usGlg/jZMDSxh51ZLRpdtiQFRX1Jkp0fgnLpGHePs+CynbRaOnIY
+	ib3TPh2ZUPqLV0DV0OeqNzfCpLTjZZQ1tcq3+fLDnRK+GxP5JShR9p+aSaHNVCj4
+	6pHRaWTiKuZplFW/uxdTGpr3E6hc/K1Wl/8/nh2K0+39FFYcGDfUikULFKm8APoG
+	H0g9VQ==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 42syy1ndgb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 12 Nov 2024 17:24:42 +0100 (CET)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 9773840059;
+	Tue, 12 Nov 2024 17:23:21 +0100 (CET)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 16E912AC00C;
+	Tue, 12 Nov 2024 17:20:28 +0100 (CET)
+Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
+ (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Tue, 12 Nov
+ 2024 17:20:27 +0100
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
+        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+        Christian Bruel <christian.bruel@foss.st.com>
+Subject: [PATCH 3/5] dt-bindings: PCI: Add STM32MP25 PCIe endpoint bindings
+Date: Tue, 12 Nov 2024 17:19:23 +0100
+Message-ID: <20241112161925.999196-4-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241112161925.999196-1-christian.bruel@foss.st.com>
+References: <20241112161925.999196-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; BOUNDARY="8323328-839605812-1731425866=:13135"
-Content-ID: <7e1a46b8-5363-59dd-f9b5-297d734337a3@linux.intel.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+STM32MP25 PCIe Controller is based on the DesignWare core configured as
+end point mode from the SYSCFG register.
 
---8323328-839605812-1731425866=:13135
-Content-Type: text/plain; CHARSET=ISO-8859-15
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Content-ID: <834106cb-5bed-0b65-33fa-99b8cd44f04b@linux.intel.com>
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+---
+ .../bindings/pci/st,stm32-pcie-ep.yaml        | 97 +++++++++++++++++++
+ 1 file changed, 97 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
 
-On Tue, 12 Nov 2024, Christian K=F6nig wrote:
+diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
+new file mode 100644
+index 000000000000..f0d215982794
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
+@@ -0,0 +1,97 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/st,stm32-pcie-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: STM32MP25 PCIe endpoint driver
++
++maintainers:
++  - Christian Bruel <christian.bruel@foss.st.com>
++
++description:
++  PCIe endpoint controller based on the Synopsys DesignWare PCIe core.
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
++
++properties:
++  compatible:
++    const: st,stm32mp25-pcie-ep
++
++  reg:
++    items:
++      - description: Data Bus Interface (DBI) registers.
++      - description: PCIe configuration registers.
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: addr_space
++
++  clocks:
++    maxItems: 1
++    description: PCIe system clock
++
++  clock-names:
++    const: core
++
++  resets:
++    maxItems: 1
++
++  reset-names:
++    const: core
++
++  phys:
++    maxItems: 1
++
++  phy-names:
++    const: pcie-phy
++
++  reset-gpios:
++    description: GPIO controlled connection to PERST# signal
++    maxItems: 1
++
++  access-controllers:
++    maxItems: 1
++
++  power-domains:
++    maxItems: 1
++
++required:
++  - resets
++  - reset-names
++  - clocks
++  - clock-names
++  - phys
++  - phy-names
++  - reset-gpios
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
++    #include <dt-bindings/gpio/gpio.h>
++    #include <dt-bindings/phy/phy.h>
++    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
++
++    pcie-ep@48400000 {
++        compatible = "st,stm32mp25-pcie-ep";
++        num-lanes = <1>;
++        reg = <0x48400000 0x400000>,
++              <0x10000000 0x8000000>;
++        reg-names = "dbi", "addr_space";
++        clocks = <&rcc CK_BUS_PCIE>;
++        clock-names = "core";
++        phys = <&combophy PHY_TYPE_PCIE>;
++        phy-names = "pcie-phy";
++        resets = <&rcc PCIE_R>;
++        reset-names = "core";
++        pinctrl-names = "default", "init";
++        pinctrl-0 = <&pcie_pins_a>;
++        pinctrl-1 = <&pcie_init_pins_a>;
++        reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
++        power-domains = <&CLUSTER_PD>;
++        access-controllers = <&rifsc 68>;
++    };
+-- 
+2.34.1
 
-> Am 12.11.24 um 15:28 schrieb Ilpo J=E4rvinen:
->=20
-> On Tue, 12 Nov 2024, Christian K=F6nig wrote:
->=20
-> Am 12.11.24 um 14:42 schrieb Ilpo J=E4rvinen:
->=20
-> __resource_resize_store() attempts to release all resources of the
-> device before attempting the resize. The loop, however, only covers
-> standard BARs (< PCI_STD_NUM_BARS). If a device has VF BARs that are
-> assigned, pci_reassign_bridge_resources() finds the bridge window still
-> has some assigned child resources and returns -NOENT which makes
-> pci_resize_resource() to detect an error and abort the resize.
->=20
->=20
-> Looks good in general, but a couple of comments.
->=20
-> Similarly, an assigned Expansion ROM resource prevents the resize.
->=20
->=20
-> Expansion ROMs were intentionally left untouched by the initial patch sin=
-ce those are
-> usually 32bit resources and the resize was implemented only for 64bit BAR=
-s.
->=20
-> Change the release loop to cover both the VF BARs and Expansion ROM
-> which allows the resize operation to release the bridge windows and
-> attempt to assigned them again with the different size.
->=20
->=20
-> I'm not sure if Expansion ROMs should be touched here. Those are 32bit re=
-sources
-> usually and notoriously broken in the ACPI tables.
->=20
-> What I've seen multiple times that after releasing them you can't move no=
-r assign
-> them again to their original position.
->=20
-> Background is that some ACPI table denotes the location of the ROM as res=
-erved and we
-> only accept the Expansion ROM at that location because of a quirk (which =
-is of course
-> not applied when you resize).
->=20
-> On the other hand do we have use cases for resizing 32bit BARs? So far we=
- resized
-> those only by accident.
->=20
-> Thanks for taking a look!
->=20
-> This is not about resizing 32bit BARs.
->=20
-> Is that somehow enforced so they cannot end up into the same bridge=20
-> window? Because we can only resize a bridge window if we release all its=
-=20
-> child resources.
->=20
->=20
-> Good question, I'm not 100% sure either.
->=20
-> IIRC the PCI subsystem has a fallback which tries to squeeze 64bit BARs i=
-nto 32bit
-> windows of bridges if nothing else works.
-
-Yes, as far as I understand the code, that can happen.
-
-> But the PCI subsystem never does that the other way around. Simply becaus=
-e a 32bit
-> BAR doesn't necessary work in a 64bit window.
->
-> So you should never need to free up a 32bit BAR to resize and/or move a 6=
-4bit BAR
-> because that operation should move the 64bit BAR into the 64bit window an=
-yway.
-
-I fail to follow your logic here. Why exactly the 64bit resizable BAR=20
-couldn't end up into a bridge window that is shared with Expansion ROM=20
-(and perhaps other 32-bit resources) consider the fallbacks? And why=20
-couldn't the resize be attempted there?
-
-> That we only free up resources with the same flags is taken care of this =
-code here:
->=20
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 if (pci_resource_len(pdev, =
-i) &&
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci_resource_fl=
-ags(pdev, i) =3D=3D flags)
-> =A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 pci=
-_release_resource(pdev, i);
->=20
-> The flags should contain IORESOURCE_MEM_64 for 64bit BARs. So we most lik=
-ely don't
-> need a special handling for Expansion ROMs or 32bit BARs.
-
-Most likely true, neither would get released and the resize ends up=20
-failing.
-
-However, now that you brought it up, I question if that flags check there=
-=20
-is correct at all. I think it would simply want to check if the resource=20
-to be resized shares the bridge window with the i'th resource? Do you=20
-agree? (And that check has nothing to do with 32/64bit.)
-
-This is far from the only inconsistency I've come across while recently=20
-trying to address a number of issues in the resource fitting and=20
-assignment logic. I'm slowly trying to come into understanding of mess=20
-this ->flags and resource fitting & allocation is and hopefully=20
-eventually make it something that is actually tractable (yeah, wish me=20
-luck :-/).
-
-So I don't want to accept "we most likely don't need a special handling=20
-for Expansion ROMs or 32bit BARs" just because it happens to work, I'd=20
-want that check to make sense too.
-
-It would always be possible to explicitly do something if we detect=20
-Expansion ROM resource that is assigned (and perhaps not disabled?) but=20
-even then, preventing resize from proceeding just because something bad=20
-might happen to the Expansion ROM seems a bit big hammer to me (but=20
-could certainly e.g. print a warning if that gets attempted for ROM).
-
---=20
- i.
-
-> Regards,
-> Christian.
->=20
-> As __resource_resize_store() checks first that no driver is bound to
-> the PCI device before resizing is allowed, SR-IOV cannot be enabled
-> during resize so it is safe to release also the IOV resources.
->=20
-> Fixes: 8bb705e3e79d ("PCI: Add pci_resize_resource() for resizing BARs")
->=20
->=20
-> The code in question was added by 91fa127794ac ("PCI: Expose PCIe Resizab=
-le BAR
-> support via sysfs").
->=20
-> Oh right. I don't know why I ended up picking that other commit (sure, I=
-=20
-> was also looking that other diff but maybe it was just a copy-paste=20
-> error).
->=20
->=20
->=20
->=20
---8323328-839605812-1731425866=:13135--
