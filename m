@@ -1,104 +1,101 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from out30-100.freemail.mail.aliyun.com (out30-100.freemail.mail.aliyun.com [115.124.30.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCDA28614E;
-	Tue, 12 Nov 2024 13:42:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 691B11FBCBC;
+	Tue, 12 Nov 2024 13:54:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731418958; cv=none; b=uP6RUQj0YxudSnsCOUzIUgoEfJgBlMPIzH7jpRa9Ftt1+GcrWJKIk0M67ju/xgU09b9WYTd85AKIdsBI/O+zOfG6wmIlabb6B+mHPNR6d3t1En+fJGsCf3xC8ru7pPIG1/tukVkPWEwHEyLfnT1TWxCJR0U6ji07+KrDwmaGr6E=
+	t=1731419677; cv=none; b=iEil5rznQ0UL/uR3995calO/vPg2v4ah3EYG13tsgEiqwcKG31NibYXNl6y729NbYm73A89ZH/FsExdcyqVx0p73Z3GKF5OYR16fUvP8WICighCjKTdm/a5PUmz28dy96N0Aj0avNolUMhas9fozWDXDoScHK59g6jlQ8uoAOmY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731418958; c=relaxed/simple;
-	bh=7tbqlEq0BGuzVf0SVSuxaMB9hCOlShsw/+ReKdtFfzg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=XOHV2G+WZL4q/rQ++1c2cqasZVnaQkjpj0qUjHXIec7L6s5C+5OeWTh8Yzf0AF3U4Rrb5oT905HdDYYtvPYLsRoSO0yrQVfU2tmNTDYVgH3wB7j+F89IWgbYiZuZ/dbcnV1lZtZRlFZgPD4OzlV8bF5+EKQUj9bvWoMaL1u0KHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b4Bq6TYI; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1731419677; c=relaxed/simple;
+	bh=rpxkM6gpo4MMArNHaYrI67rjGFHShjJaUXVq85AD6Og=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=D5vdEVTUkKvF8k7ZDxv4U31fe0SfW1tIkoEWJ41ensJPXapPcFTTnYtCYvOV409v1OsNK4Vx7lr3cC3HeHdCbg2t5dZc8qmGxpX6zvNUv8MEfhFjhGB/w0uLQBgG29j8MJrZR166zHC5VnAAtn7r+P0n9TZU9pawQln/VBU1OKY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=YVHuN7m7; arc=none smtp.client-ip=115.124.30.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b4Bq6TYI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731418957; x=1762954957;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=7tbqlEq0BGuzVf0SVSuxaMB9hCOlShsw/+ReKdtFfzg=;
-  b=b4Bq6TYIn9e/7o+0SecrlwCtIZ+hwe1BxO0MnjDMcAuZGxkqBXaWhQi9
-   dNWMTxpQPHU2DXXO9t13XGUk2/RsSBMohKZZomboG/TCszV/uAQEfnYi9
-   E9rKpHuRT65ntXRrYGQLPxUr/8dLT0eyPO/eFOa0hENqiTU9fRJCMc0OA
-   qW96Q0THDfWlDZuJd4khbaeKLVhz7WbNr6WngiXwaYDWWwgYVCAm5Tb9I
-   YP10RF8F3DA+0s7E+885dFFZJbOcaJZ4fW9qCtJYw97qqUcx3WOkUVUeq
-   de0MEahKE2bMu7IvHtm91SH9A+cIB9iCsxQWoCyiY/YuyMJdV85XHGXKJ
-   Q==;
-X-CSE-ConnectionGUID: Rw3vIpXjQ86Sux8Fy/OU1g==
-X-CSE-MsgGUID: cJDuN1HYRKausux1O6qMrg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="31213033"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="31213033"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 05:42:35 -0800
-X-CSE-ConnectionGUID: NEuytxN8TqiOZRnq950Cjg==
-X-CSE-MsgGUID: wn7vMLI6SwqMoaQvBsDduw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,148,1728975600"; 
-   d="scan'208";a="91499895"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.234])
-  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Nov 2024 05:42:33 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: =?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH] PCI: Fix BAR resizing when VF BARs are assigned
-Date: Tue, 12 Nov 2024 15:42:25 +0200
-Message-Id: <20241112134225.9837-1-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="YVHuN7m7"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1731419671; h=From:To:Subject:Date:Message-ID:MIME-Version;
+	bh=J0yoky5hVi3m0oetpcrW8t6Yucb2Ph3LMUU2z7W3hCI=;
+	b=YVHuN7m7uxlieR/w02yOOLWfiwfr+J/WvNCgziGtb3cjZ7UGqgoITQPI7GAJkFIBeRWkisnM4qqsUHkUT/7oNLbTSc0iJZNNUGuRBh05KgvNkyJ5X/FeYLg5FJArLzcSPFQI905vTNKWNQ9If3zxFSOgbHj5irnEv60TmoxbphQ=
+Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WJHmH-E_1731419670 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 12 Nov 2024 21:54:31 +0800
+From: Shuai Xue <xueshuai@linux.alibaba.com>
+To: linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	bhelgaas@google.com,
+	kbusch@kernel.org
+Cc: mahesh@linux.ibm.com,
+	oohall@gmail.com,
+	sathyanarayanan.kuppuswamy@linux.intel.com,
+	xueshuai@linux.alibaba.com
+Subject: [PATCH v2 0/2] PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
+Date: Tue, 12 Nov 2024 21:54:17 +0800
+Message-ID: <20241112135419.59491-1-xueshuai@linux.alibaba.com>
+X-Mailer: git-send-email 2.44.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-__resource_resize_store() attempts to release all resources of the
-device before attempting the resize. The loop, however, only covers
-standard BARs (< PCI_STD_NUM_BARS). If a device has VF BARs that are
-assigned, pci_reassign_bridge_resources() finds the bridge window still
-has some assigned child resources and returns -NOENT which makes
-pci_resize_resource() to detect an error and abort the resize.
+changes since v1:
+- rewrite commit log per Bjorn
+- refactor aer_get_device_error_info to reduce duplication per Keith
+- fix to avoid reporting fatal errors twice for root and downstream ports per Keith
 
-Similarly, an assigned Expansion ROM resource prevents the resize.
+The AER driver has historically avoided reading the configuration space of an
+endpoint or RCiEP that reported a fatal error, considering the link to that
+device unreliable. Consequently, when a fatal error occurs, the AER and DPC
+drivers do not report specific error types, resulting in logs like:
 
-Change the release loop to cover both the VF BARs and Expansion ROM
-which allows the resize operation to release the bridge windows and
-attempt to assigned them again with the different size.
+  pcieport 0000:30:03.0: EDR: EDR event received
+  pcieport 0000:30:03.0: DPC: containment event, status:0x0005 source:0x3400
+  pcieport 0000:30:03.0: DPC: ERR_FATAL detected
+  pcieport 0000:30:03.0: AER: broadcast error_detected message
+  nvme nvme0: frozen state error detected, reset controller
+  nvme 0000:34:00.0: ready 0ms after DPC
+  pcieport 0000:30:03.0: AER: broadcast slot_reset message
 
-As __resource_resize_store() checks first that no driver is bound to
-the PCI device before resizing is allowed, SR-IOV cannot be enabled
-during resize so it is safe to release also the IOV resources.
+AER status registers are sticky and Write-1-to-clear. If the link recovered
+after hot reset, we can still safely access AER status of the error device.
+In such case, report fatal errors which helps to figure out the error root
+case.
 
-Fixes: 8bb705e3e79d ("PCI: Add pci_resize_resource() for resizing BARs")
-Reported-by: Michał Winiarski <michal.winiarski@intel.com>
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/pci/pci-sysfs.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+- Patch 1/2 identifies the error device by SOURCE ID register
+- Patch 2/3 reports the AER status if link recoverd.
 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 5d0f4db1cab7..80b01087d3ef 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1440,7 +1440,7 @@ static ssize_t __resource_resize_store(struct device *dev, int n,
- 
- 	pci_remove_resource_files(pdev);
- 
--	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
-+	for (i = 0; i < PCI_BRIDGE_RESOURCES; i++) {
- 		if (pci_resource_len(pdev, i) &&
- 		    pci_resource_flags(pdev, i) == flags)
- 			pci_release_resource(pdev, i);
+After this patch set, the logs like:
+
+  pcieport 0000:30:03.0: EDR: EDR event received
+  pcieport 0000:30:03.0: DPC: containment event, status:0x0005 source:0x3400
+  pcieport 0000:30:03.0: DPC: ERR_FATAL detected
+  pcieport 0000:30:03.0: AER: broadcast error_detected message
+  nvme nvme0: frozen state error detected, reset controller
+  pcieport 0000:30:03.0: waiting 100 ms for downstream link, after activation
+  nvme 0000:34:00.0: ready 0ms after DPC
+  nvme 0000:34:00.0: PCIe Bus Error: severity=Uncorrectable (Fatal), type=Data Link Layer, (Receiver ID)
+  nvme 0000:34:00.0:   device [144d:a804] error status/mask=00000010/00504000
+  nvme 0000:34:00.0:    [ 4] DLP                    (First)
+  pcieport 0000:30:03.0: AER: broadcast slot_reset message
+
+Shuai Xue (2):
+  PCI/DPC: Run recovery on device that detected the error
+  PCI/AER: Report fatal errors of RCiEP and EP if link recoverd
+
+ drivers/pci/pci.h      |  5 +++--
+ drivers/pci/pcie/aer.c | 11 +++++++----
+ drivers/pci/pcie/dpc.c | 32 +++++++++++++++++++++++++-------
+ drivers/pci/pcie/edr.c | 35 ++++++++++++++++++-----------------
+ drivers/pci/pcie/err.c |  9 +++++++++
+ 5 files changed, 62 insertions(+), 30 deletions(-)
+
 -- 
-2.39.5
+2.39.3
 
