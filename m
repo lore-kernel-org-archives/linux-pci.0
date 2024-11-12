@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A19F21A6ED;
-	Tue, 12 Nov 2024 21:41:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EF7543AA1;
+	Tue, 12 Nov 2024 21:43:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731447696; cv=none; b=h/rbQ40RM/Bah+BsCMZ0j8C/jNglbiAa4VhnE4sekJouiLE+Fgoc8Y4lFC+j+OHO9KTOZSWh2AYzr+fBEtS12o2ZFi0CpktaAI02aVlpXbsJKfB70nHoKOTbXeidJRMplU/e3hI6kdQdQcwjoPx5QwTgfUkgSuYC8nZZQCQblWw=
+	t=1731447819; cv=none; b=tMtvVRKNTTmeDcZyx4jKSa5VP6bmAVerkGD9/OEbTsVP/N2DwoSGzr+NvEzo2DflQar8g/fAz3kkrjFPD/xCTR//XoN281g5PYtsG6Y17sAhZt6E5fSJKdD1+PekKrFfNKdkZ36gtblSny6ECCbJWYYWx1aJUAk1ONxP2snXXAQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731447696; c=relaxed/simple;
-	bh=+r1zjWFmIgf8fAjGCmjFjRtm3GAxhQNL1/z2KLtcs9g=;
+	s=arc-20240116; t=1731447819; c=relaxed/simple;
+	bh=TSBvSL3F8utvdtRSv0V0b72Rr2Qwe8DnowxnXL+/4GU=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=t4klvUUvm/SuWr1kqku1ZZPdB1BswU3No7Lq84MLZwrEyLvFy9+7XP/YNNQjaZIzX0vgi2ZlCLpWhLMIeBZxGoplnYNvGbDSg//cQXqLyn+bVDN7QzlE0fkQZojHITrsLp0320zq/HFFLPN57KSVA4VrAoWc0/T5JgF1z3GWH1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qK8PUPXg; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=Rf5kQjLJfgEAIN/XU6oM+X8askCTOT0HnVraWAS0SzShYHXsCOvrwDrYp30OYMvKdBqdvyBKjUb/8QOkbPKPPB0GUpesY/PbtiVAij2S7z29q2ezbQYvTjqZUeqO6+BpYMWNXhuZiTiL1oo9XtHB4RA8mK2591XBfT/53aJzUPs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Zwgf7eGD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qK8PUPXg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 013FBC4CED6;
-	Tue, 12 Nov 2024 21:41:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Zwgf7eGD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE84EC4CECD;
+	Tue, 12 Nov 2024 21:43:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731447696;
-	bh=+r1zjWFmIgf8fAjGCmjFjRtm3GAxhQNL1/z2KLtcs9g=;
+	s=k20201202; t=1731447819;
+	bh=TSBvSL3F8utvdtRSv0V0b72Rr2Qwe8DnowxnXL+/4GU=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=qK8PUPXg/DWALAXo3BBuqgdkp4YMaXv9aQkA5TNaW23k41Ku4q60rQWaXnQr7CvJX
-	 ZAI4TeJa5/FmFwju6GXCUUMDaYND+pA9iQxbI0MmLP6EpY5u3EflRf5tPGuHFe2wTO
-	 d+jnQ1f7iMEPiFCedEld/kRnoynqu127yAdbcCK9Tuj8eHSzOLhh1aftYo97RD+PeJ
-	 f/1XN91h0rk4beRpQuSgNVpYllOorY3XcGEx8hYD9Zr1ODKf/Nr5+YqGM4dANa4pEA
-	 AnBD+B6r+mMVvA7Im3xPW1v/AfE2Ia69phuOyxY9ACg3mka3hNV/Amw/lGyCvxmRNa
-	 89PVAabGdknsg==
-Date: Tue, 12 Nov 2024 15:41:34 -0600
+	b=Zwgf7eGDinLJJQzHU5fzK0CcK8hMSQrpqCuhZlg5fCb9cZyYhPFFEaf5s1Jioe20y
+	 dtIgb9DZHNR3rivnptyX2Q3U9V6ySlrzPyuu2V9GbpfouD2cLKom+s8ZjMocS4Y5/7
+	 hlUW9sEc92udhXpwDVyMGoIdLA3/WShXbAxKRuUhIKuf9Y1shUh9VCV61EWCLjHLlD
+	 OUyFCvw7gNvZPdYLVoXY5BT84gPmgGkKoepMdRiKP+POu45iD+rN1eexkEVSX2M0A6
+	 XxfB/BW2DZZFZds0G7xrv/TpVMQd5k8AKjidTo5cOZHuWn6l8u8X0C8fbo9jFin1pq
+	 JNOvJD0KBeA7g==
+Date: Tue, 12 Nov 2024 15:43:37 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Jenishkumar Maheshbhai Patel <jpatel2@marvell.com>
 Cc: lpieralisi@kernel.org, thomas.petazzoni@bootlin.com, kw@linux.com,
@@ -34,8 +34,8 @@ Cc: lpieralisi@kernel.org, thomas.petazzoni@bootlin.com, kw@linux.com,
 	bhelgaas@google.com, linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
 	salee@marvell.com, dingwei@marvell.com
-Subject: Re: [PATCH 1/1] PCI: armada8k: use reset controller to reset mac
-Message-ID: <20241112214134.GA1861807@bhelgaas>
+Subject: Re: [PATCH 1/1] PCI: armada8k: Disable LTSSM on link down interrupts
+Message-ID: <20241112214337.GA1861873@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,101 +44,94 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241112070745.759678-1-jpatel2@marvell.com>
+In-Reply-To: <20241112064241.749493-1-jpatel2@marvell.com>
 
-Observe subject line capitalization convention.
+On Mon, Nov 11, 2024 at 10:42:41PM -0800, Jenishkumar Maheshbhai Patel wrote:
+> When a PCI link down condition is detected, the link training state
+> machine must be disabled immediately.
 
-On Mon, Nov 11, 2024 at 11:07:45PM -0800, Jenishkumar Maheshbhai Patel wrote:
-> change mac reset and mac reset bits to reset controller
+Why?
 
-Capitalize sentence.
-
-s/mac/MAC/
-
-Explain why we want this.  Apparently you're changing from one MAC
-reset method to another method?
-
-Collect these into a series instead of posting individual random
-patches.
+"Immediately" has no meaning here.  Arbitrary delays are possible and
+must not break anything.
 
 > Signed-off-by: Jenishkumar Maheshbhai Patel <jpatel2@marvell.com>
 > ---
->  drivers/pci/controller/dwc/pcie-armada8k.c | 30 +++++++---------------
->  1 file changed, 9 insertions(+), 21 deletions(-)
+>  drivers/pci/controller/dwc/pcie-armada8k.c | 38 ++++++++++++++++++++++
+>  1 file changed, 38 insertions(+)
 > 
 > diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-> index 9a48ef60be51..f9d6907900d1 100644
+> index b5c599ccaacf..07775539b321 100644
 > --- a/drivers/pci/controller/dwc/pcie-armada8k.c
 > +++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-> @@ -21,7 +21,7 @@
->  #include <linux/platform_device.h>
->  #include <linux/resource.h>
->  #include <linux/of_pci.h>
-> -#include <linux/mfd/syscon.h>
-> +#include <linux/reset.h>
->  #include <linux/regmap.h>
->  #include <linux/of_gpio.h>
+> @@ -53,6 +53,10 @@ struct armada8k_pcie {
+>  #define PCIE_INT_C_ASSERT_MASK		BIT(11)
+>  #define PCIE_INT_D_ASSERT_MASK		BIT(12)
 >  
-> @@ -35,11 +35,10 @@ struct armada8k_pcie {
->  	struct clk *clk_reg;
->  	struct phy *phy[ARMADA8K_PCIE_MAX_LANES];
->  	unsigned int phy_count;
-> -	struct regmap *sysctrl_base;
-> -	u32 mac_rest_bitmask;
->  	struct work_struct recover_link_work;
->  	enum of_gpio_flags flags;
->  	struct gpio_desc *reset_gpio;
-> +	struct reset_control *reset;
->  };
+> +#define PCIE_GLOBAL_INT_CAUSE2_REG	(PCIE_VENDOR_REGS_OFFSET + 0x24)
+> +#define PCIE_GLOBAL_INT_MASK2_REG	(PCIE_VENDOR_REGS_OFFSET + 0x28)
+> +#define PCIE_INT2_PHY_RST_LINK_DOWN	BIT(1)
+> +
+>  #define PCIE_ARCACHE_TRC_REG		(PCIE_VENDOR_REGS_OFFSET + 0x50)
+>  #define PCIE_AWCACHE_TRC_REG		(PCIE_VENDOR_REGS_OFFSET + 0x54)
+>  #define PCIE_ARUSER_REG			(PCIE_VENDOR_REGS_OFFSET + 0x5C)
+> @@ -204,6 +208,11 @@ static int armada8k_pcie_host_init(struct dw_pcie_rp *pp)
+>  	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
+>  	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG, reg);
 >  
->  #define PCIE_VENDOR_REGS_OFFSET		0x8000
-> @@ -257,12 +256,9 @@ static void armada8k_pcie_recover_link(struct work_struct *ws)
->  	msleep(100);
+> +	/* Also enable link down interrupts */
+> +	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG);
+> +	reg |= PCIE_INT2_PHY_RST_LINK_DOWN;
+> +	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG, reg);
+> +
+>  	return 0;
+>  }
 >  
->  	/* Reset mac */
-> -	regmap_update_bits_base(pcie->sysctrl_base, UNIT_SOFT_RESET_CONFIG_REG,
-> -				pcie->mac_rest_bitmask, 0, NULL, false, true);
-> +	reset_control_assert(pcie->reset);
->  	udelay(1);
-> -	regmap_update_bits_base(pcie->sysctrl_base, UNIT_SOFT_RESET_CONFIG_REG,
-> -				pcie->mac_rest_bitmask, pcie->mac_rest_bitmask,
-> -				NULL, false, true);
-> +	reset_control_deassert(pcie->reset);
->  	udelay(1);
+> @@ -221,6 +230,35 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+>  	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG);
+>  	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG, val);
 >  
->  	ret = dw_pcie_setup_rc(pp);
-> @@ -331,7 +327,7 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
->  		 * initiate a link retrain. If link retrains were
->  		 * possible, that is.
->  		 */
-> -		if (pcie->sysctrl_base && pcie->mac_rest_bitmask)
-> +		if (pcie->reset)
->  			schedule_work(&pcie->recover_link_work);
+> +	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE2_REG);
+> +
+> +	if (PCIE_INT2_PHY_RST_LINK_DOWN & val) {
+> +		u32 ctrl_reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+
+Add blank line.
+
+> +		/*
+> +		 * The link went down. Disable LTSSM immediately. This
+> +		 * unlocks the root complex config registers. Downstream
+> +		 * device accesses will return all-Fs
+> +		 */
+> +		ctrl_reg &= ~(PCIE_APP_LTSSM_EN);
+> +		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, ctrl_reg);
+
+And here.
+
+> +		/*
+> +		 * Mask link down interrupts. They can be re-enabled once
+> +		 * the link is retrained.
+> +		 */
+> +		ctrl_reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG);
+> +		ctrl_reg &= ~PCIE_INT2_PHY_RST_LINK_DOWN;
+> +		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK2_REG, ctrl_reg);
+
+And here.  Follow existing coding style in this file.
+
+> +		/*
+> +		 * At this point a worker thread can be triggered to
+> +		 * initiate a link retrain. If link retrains were
+> +		 * possible, that is.
+> +		 */
+> +		dev_dbg(pci->dev, "%s: link went down\n", __func__);
+> +	}
+> +
+> +	/* Now clear the second interrupt cause. */
+> +	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE2_REG, val);
+> +
+>  	return IRQ_HANDLED;
+>  }
 >  
->  		dev_dbg(pci->dev, "%s: link went down\n", __func__);
-> @@ -440,18 +436,10 @@ static int armada8k_pcie_probe(struct platform_device *pdev)
->  	if (gpio_is_valid(reset_gpio))
->  		pcie->reset_gpio = gpio_to_desc(reset_gpio);
->  
-> -	pcie->sysctrl_base = syscon_regmap_lookup_by_phandle(pdev->dev.of_node,
-> -						       "marvell,system-controller");
-> -	if (IS_ERR(pcie->sysctrl_base)) {
-> -		dev_warn(dev, "failed to find marvell,system-controller\n");
-> -		pcie->sysctrl_base = 0x0;
-> -	}
-> -
-> -	ret = of_property_read_u32(pdev->dev.of_node, "marvell,mac-reset-bit-mask",
-> -				   &pcie->mac_rest_bitmask);
-> -	if (ret < 0) {
-> -		dev_warn(dev, "couldn't find mac reset bit mask: %d\n", ret);
-> -		pcie->mac_rest_bitmask = 0x0;
-> +	pcie->reset = devm_reset_control_get_exclusive(&pdev->dev, NULL);
-> +	if (IS_ERR(pcie->reset)) {
-> +		dev_warn(dev, "failed to find mac reset\n");
-> +		pcie->reset = 0x0;
->  	}
->  	ret = armada8k_pcie_setup_phys(pcie);
->  	if (ret)
 > -- 
 > 2.25.1
 > 
