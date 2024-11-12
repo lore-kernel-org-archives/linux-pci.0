@@ -1,100 +1,126 @@
-Received: from mx08-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8ACC8205AB1;
-	Tue, 12 Nov 2024 16:30:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAE3820EA35;
+	Tue, 12 Nov 2024 16:53:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731429044; cv=none; b=Z0O7ual8QEw/nhMF/KP9b0sIT+tVWf+fxTvOugCwlcbSCiG6OaLfaL2dbmxuxzR5hVip/FQqv77/z/0Sd/A08H+3nu61yt+LseTb/zobw8vooj2NSkrOxe1jnUE27WSkyXj7oZsnXBmx24mv37/3xAmmVQL9tG+86D9rqsG4ayc=
+	t=1731430431; cv=none; b=GgmjNDFhSNMHcnVBRP4z26fwrgMPUgKoVe0OBmTysRpufAqedHiTXvXxlL7WOOAbNKjyFokol4SC9yOGig1LRNThNb5SvnXZsELkB9iX6/Ib0wmUKSO7taMJeBAe6so+/Hx7KkhxJhgkhIsj+Wlo/La34hTXJnlE4MML9aajrB4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731429044; c=relaxed/simple;
-	bh=Gqh0NgjmRLJL1MmJQqSXeXTGwLwgL3tcdsbQOFQ3jv4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=N7EFPM9XJLmKoXDJRMXC4KxlcCU/0UMKMCRK1AyD+KpShEt+BriQ57L5fdArnu9I9Zs5vMy0i76USuCjLGeuUU97pBhQ8tKeoFHZFofa/G/E3yHeEiUnZLOHZhX11V8wf9oNFF/jKUNOAZYXC87qgPkNQaBYAxYkXy9UAi4UH2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=CYAeaJNI; arc=none smtp.client-ip=91.207.212.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	s=arc-20240116; t=1731430431; c=relaxed/simple;
+	bh=ODw1HrrVUx4XDdn+NA3ZiM07EdzE1pUd7SlEHngh474=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ld58Ybm/MAHieV267qpQSdC8nH1xbEtDduRvA4FZTQnDFY1AaRHLd0cMtHCSp2VZp4N4HPGVjd0drzkHsUceKTSJncr5+C1/7gcopjtmeQiOJDYf3z41gdpHOFMQKZqL6RrqEE6hiWuDxTcu2hdtcB4USdWPbGClW6hkp4AZGgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=YPpko2qb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="CYAeaJNI"
-Received: from pps.filterd (m0369457.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4ACDB1KK029351;
-	Tue, 12 Nov 2024 17:22:37 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=selector1; bh=grK3TrtRCUh5vGmrMEKFGC
-	hLMBkQA+p427mP9eM/nRQ=; b=CYAeaJNIyVM03AaUJEH9Qb0Pi4LeJevj5Y/GaI
-	sDFMK1XBipiIJ9wlkDipotAYGXr57Hd6r772a+ggyoOaDWlgG4b+JWk1/9Fuwn76
-	7TjHrsnhO7TTwjc89LrH0yLFKdHH4wDT0aKSQ6uMvHbU4YR1kn+g9ZL3ZFdVSiQR
-	Gtld1vrvibknO1nrVKvO5BkV2Q20t7S6W+84DVRKvoYxUC+UYyiAhuMtul4YArl3
-	lg0Mzxl7q0en8xJf1gw8PTnyYTHUZvP8cD/UYyzC8X03ZSNwAy+uTTX28K4fHvbL
-	goTXnmx5YR2oV7fB4UU9eoReTpFvq1VAbXIcenLlhFeGnEpg==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 42tkjnjs7t-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Nov 2024 17:22:37 +0100 (CET)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 17B1D4002D;
-	Tue, 12 Nov 2024 17:21:11 +0100 (CET)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 39CDE2C6353;
-	Tue, 12 Nov 2024 17:20:06 +0100 (CET)
-Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
- (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Tue, 12 Nov
- 2024 17:20:05 +0100
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
-        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        Christian Bruel <christian.bruel@foss.st.com>
-Subject: [PATCH 0/5] Add STM32MP25 PCIe drivers
-Date: Tue, 12 Nov 2024 17:19:20 +0100
-Message-ID: <20241112161925.999196-1-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="YPpko2qb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 71BF8C4CECD;
+	Tue, 12 Nov 2024 16:53:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1731430430;
+	bh=ODw1HrrVUx4XDdn+NA3ZiM07EdzE1pUd7SlEHngh474=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YPpko2qbSkx3B/Yke7goINBZ5S4Gf38HLGrkUd18K0+NDW5TDc2VM8SjUAEi81sCE
+	 VWJR7e47xV/EaMi8Ut+FCVeSu/Se2MCM1NoE5AuqTmi3OjltsAR34taDLR9bK7barr
+	 x0PRbnboZ7eYnBg6m7u87Mtvx+l0Csa6qtyBnsc0=
+Date: Tue, 12 Nov 2024 17:53:47 +0100
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+To: Daniel Wagner <dwagner@suse.de>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Xuan Zhuo <xuanzhuo@linux.alibaba.com>,
+	Eugenio =?iso-8859-1?Q?P=E9rez?= <eperezma@redhat.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org,
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com,
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v3 4/8] blk-mp: introduce blk_mq_hctx_map_queues
+Message-ID: <2024111212-rash-suffocate-dc13@gregkh>
+References: <20241112-refactor-blk-affinity-helpers-v3-0-573bfca0cbd8@kernel.org>
+ <20241112-refactor-blk-affinity-helpers-v3-4-573bfca0cbd8@kernel.org>
+ <2024111202-parish-prowess-78bc@gregkh>
+ <c8c671c1-267a-4aa7-a64b-51a461176ad3@flourine.local>
+ <2024111215-jury-unlighted-3953@gregkh>
+ <5967d256-037e-4ac8-a509-c6955b03db05@flourine.local>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5967d256-037e-4ac8-a509-c6955b03db05@flourine.local>
 
-This patch series adds PCIe drivers STM32MP25 SoC from STMicrolectronics
-and respective yaml schema for the root complex and device modes.
+On Tue, Nov 12, 2024 at 05:15:31PM +0100, Daniel Wagner wrote:
+> On Tue, Nov 12, 2024 at 04:42:40PM +0100, Greg Kroah-Hartman wrote:
+> > On Tue, Nov 12, 2024 at 04:33:09PM +0100, Daniel Wagner wrote:
+> > > On Tue, Nov 12, 2024 at 02:58:43PM +0100, Greg Kroah-Hartman wrote:
+> > > > > +void blk_mq_hctx_map_queues(struct blk_mq_queue_map *qmap,
+> > > > > +			    struct device *dev, unsigned int offset)
+> > > > > +
+> > > > > +{
+> > > > > +	const struct cpumask *mask;
+> > > > > +	unsigned int queue, cpu;
+> > > > > +
+> > > > > +	if (!dev->bus->irq_get_affinity)
+> > > > > +		goto fallback;
+> > > > 
+> > > > I think this is better than hard-coding it, but are you sure that the
+> > > > bus will always be bound to the device here so that you have a valid
+> > > > bus-> pointer?
+> > > 
+> > > No, I just assumed the bus pointer is always valid. If it is possible to
+> > > have a device without a bus, than I'll better extend the condition to
+> > > 
+> > > 	if (!dev->bus || !dev->bus->irq_get_affinity)
+> > >         	goto fallback;
+> > 
+> > I don't know if it's possible as I don't know what codepaths are calling
+> > this, it was hard to unwind.  But you should check "just to be safe" :)
+> 
+> The main path to map_queues is via the probe functions. There are some
+> more paths like when updating a tagset after the number of queues but
+> that is all after the probe function.
+> 
+> nvme_probe
+>   nvme_alloc_admin_tag_set
+>     blk_mq_alloc_tag_set
+>        blk_mq_update_queue_map
+>           set->ops->map_queues
+> 	     blk_mq_htcx_map_queues
+>   nvme_alloc_io_tag_set
+>     blk_mq_alloc_tag_set
+>       blk_mq_update_queue_map
+>         set->ops->map_queues
+>           blk_mq_htcx_map_queues
+> 
+> virtscsi_probe, hisi_sas_v3_probe, ...
+>   scsi_add_host
+>     scsi_add_host_with_dma
+>       scsi_mq_setup_tags
+>          blk_mq_alloc_tag_set
+>            blk_mq_update_queue_map
+>              set->ops->map_queues
+>                blk_mq_htcx_map_queues
+> 
+> virtblk_probe
+>   blk_mq_alloc_tag_set
+>     blk_mq_update_queue_map
+>       set->ops->map_queues
+>         blk_mq_htcx_map_queues
+> 
+> Does this help?
 
-Christian Bruel (5):
-  dt-bindings: PCI: Add STM32MP25 PCIe root complex bindings
-  PCI: stm32: Add PCIe host support for STM32MP25
-  dt-bindings: PCI: Add STM32MP25 PCIe endpoint bindings
-  PCI: stm32: Add PCIe endpoint support for STM32MP25
-  MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
+Ok, that seems fine.  Worst case, you crash and it's obvious that it
+needs to be checked in the future :)
 
- .../bindings/pci/st,stm32-pcie-ep.yaml        |  97 ++++
- .../bindings/pci/st,stm32-pcie-host.yaml      | 149 ++++++
- MAINTAINERS                                   |   7 +
- drivers/pci/controller/dwc/Kconfig            |  23 +
- drivers/pci/controller/dwc/Makefile           |   2 +
- drivers/pci/controller/dwc/pcie-stm32-ep.c    | 433 +++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.c       | 493 ++++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.h       |  24 +
- 8 files changed, 1228 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32-ep.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.h
+thanks,
 
--- 
-2.34.1
-
+greg k-h
