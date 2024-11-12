@@ -1,48 +1,49 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DF9C20409A;
-	Tue, 12 Nov 2024 15:59:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C48EC205ABC;
+	Tue, 12 Nov 2024 15:59:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731427156; cv=none; b=aaNeMedXmHyYlJ2pk8yQ2V4tmx+0G3gBouKmFMMlBJYB4JUvtGwfp1i/p2TTQcqFvWPLHwv5EY/EMNVsdbIn5X1eyit1hLk1/JNmSTsUkm84lIuqBsdDk0W5HYxyNbY7GVZEcC+jGLNPb1iUth6PgmdAStXExd0v3nnStrHRiRM=
+	t=1731427194; cv=none; b=GwOMjUaabKcmOktJSfq0GUM4RlsMuO4Q1IbHvRYDU8wpnZbs9o5t3kD3AD3l8CpLUm6OL1UgwmVrcOpP/6SkGkbwg0JV3QcxsTlbwaP6POhNYibyItcRZTTILmOOCP/+eZ4RPMoG2hQpCEOpRviNeWcMqdAwFQqYNXGfr7bFgk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731427156; c=relaxed/simple;
-	bh=BleI3g/9Mgelj0hSQNkzA4/4uDaRN4Z/XLhqKzmcEOI=;
+	s=arc-20240116; t=1731427194; c=relaxed/simple;
+	bh=gBjlmgJ7MyxGZeccQfr/1Hu9wSchf/D5jYM91Po354w=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cazjbap+KJlvxcGfuRQUG2BPtDdbi8qHieJmpNgZVK3v8Mh1Q6evJIpBDDE7m66HsCAoshu/F1DNSDVyuThXWMn3NH2YQfPuRdqdhZYz7Ri5+oMcRKqVWL2gkePbtiolTiyeUdUz4mA8jpBb9IMassrE9qPc9ClgemRGO7m6kxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DYOBihfF; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=LEQ7VWbpPIvKZFeLuJyFI/t9hiMSCkXzTE7GeA9imDT/gjFQUh/bMmJczHL8F30v5tPZrGS0s6IOa7DRHXtckN+WnpcNggrOK17rl4o9hpIN/a0LnrK4ih6c9AtcBV1aphsSqDeuMX2wt4hyuUiKAvHzNnaUBuRd7gKwMpnCnv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iWvVb36D; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DYOBihfF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A6CB1C4CECD;
-	Tue, 12 Nov 2024 15:59:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iWvVb36D"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 035E0C4CECD;
+	Tue, 12 Nov 2024 15:59:53 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731427155;
-	bh=BleI3g/9Mgelj0hSQNkzA4/4uDaRN4Z/XLhqKzmcEOI=;
+	s=k20201202; t=1731427194;
+	bh=gBjlmgJ7MyxGZeccQfr/1Hu9wSchf/D5jYM91Po354w=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DYOBihfFEvWfaR9x6HoxpRiixjrLPzdHw3AC7d65JT0zJmFcqRaDU3DqumpVMuP3U
-	 L+dKz61++MfqjLtTY8YrAE+kOlFaGCXB6xfFwbOymCnKB0chgXMfkf9+lPjXgMO5+S
-	 cwZyeqY6VIAYir3vd2tPSscqw9BxZ/kEXtl8m0ZE7gFkcjlNef36otxZHhOX4dsyVl
-	 y8BRMr1SGH7a0VdwTaoU7QGu3Cob6eoURtLb6XqbXddsLah+3aeWxixUn/tyBgIxiT
-	 1mLoTxCaYtAYx9MyyXv4FzmlKk6pu8kBQOtIC8XOE+OciASiGo53fIb9IshrIi4kjj
-	 B9gyxnpKVOfxw==
-Date: Tue, 12 Nov 2024 09:59:13 -0600
-From: Rob Herring <robh@kernel.org>
+	b=iWvVb36DyQUc0f490/M+aYYcPJequR1HxJGMbbA0I3/CQq4qbEwlNT2i8sAJuD+hk
+	 wBTyCmyMj6nvu8P0e/3LYcunIXU86wXV2X7Z73fUWkyp1fg8F3jcZNXAFdc0mxTH05
+	 JpkMAMdBRsy0OFXxr2utdrWh81QPlqEl3FFr53d/8Xz8oAwKLGblMQst2TU32q3bkJ
+	 I3AuZusHyoN/TiMcAXo5OKvfE1Ug7Nc7LnMCuM5tjA+pS7qt/nZ0xToOfGde1zK6Zr
+	 5FNACUBDtyW83L68lxOPIbCscNeb/uYRAx/RqHE9Cq8oJXXOBPqLHaw41uvvDgxUQ2
+	 SztJmfUlN/34Q==
+Date: Tue, 12 Nov 2024 09:59:52 -0600
+From: "Rob Herring (Arm)" <robh@kernel.org>
 To: Chen Wang <unicornxw@gmail.com>
-Cc: kw@linux.com, u.kleine-koenig@baylibre.com, aou@eecs.berkeley.edu,
-	arnd@arndb.de, bhelgaas@google.com, unicorn_wang@outlook.com,
-	conor+dt@kernel.org, guoren@kernel.org, inochiama@outlook.com,
-	krzk+dt@kernel.org, lee@kernel.org, lpieralisi@kernel.org,
-	manivannan.sadhasivam@linaro.org, palmer@dabbelt.com,
-	paul.walmsley@sifive.com, pbrobinson@gmail.com,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-riscv@lists.infradead.org,
-	chao.wei@sophgo.com, xiaoguang.xing@sophgo.com,
+Cc: paul.walmsley@sifive.com, inochiama@outlook.com, lpieralisi@kernel.org,
+	pbrobinson@gmail.com, guoren@kernel.org, conor+dt@kernel.org,
+	chao.wei@sophgo.com, manivannan.sadhasivam@linaro.org,
+	linux-pci@vger.kernel.org, lee@kernel.org,
+	u.kleine-koenig@baylibre.com, unicorn_wang@outlook.com,
+	kw@linux.com, xiaoguang.xing@sophgo.com, bhelgaas@google.com,
+	krzk+dt@kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, aou@eecs.berkeley.edu, arnd@arndb.de,
+	palmer@dabbelt.com, linux-riscv@lists.infradead.org,
 	fengchun.li@sophgo.com
-Subject: Re: [PATCH 1/5] dt-bindings: pci: Add Sophgo SG2042 PCIe host
-Message-ID: <20241112155913.GA973575-robh@kernel.org>
+Subject: Re: [PATCH 3/5] dt-bindings: mfd: syscon: Add sg2042 pcie ctrl
+ compatible
+Message-ID: <173142719146.983081.8984976211275970968.robh@kernel.org>
 References: <cover.1731303328.git.unicorn_wang@outlook.com>
- <1edbed1276a459a144f0cb0815859a1eb40bfcbf.1731303328.git.unicorn_wang@outlook.com>
+ <4f030066767c2a3b3acabe24e3dfbb8d87b42bfe.1731303328.git.unicorn_wang@outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,133 +52,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <1edbed1276a459a144f0cb0815859a1eb40bfcbf.1731303328.git.unicorn_wang@outlook.com>
+In-Reply-To: <4f030066767c2a3b3acabe24e3dfbb8d87b42bfe.1731303328.git.unicorn_wang@outlook.com>
 
-On Mon, Nov 11, 2024 at 01:59:37PM +0800, Chen Wang wrote:
+
+On Mon, 11 Nov 2024 14:00:15 +0800, Chen Wang wrote:
 > From: Chen Wang <unicorn_wang@outlook.com>
 > 
-> Add binding for Sophgo SG2042 PCIe host controller.
+> Document SOPHGO SG2042 compatible for PCIe control registers.
+> These registers are shared by pcie controller nodes.
 > 
 > Signed-off-by: Chen Wang <unicorn_wang@outlook.com>
 > ---
->  .../bindings/pci/sophgo,sg2042-pcie-host.yaml | 88 +++++++++++++++++++
->  1 file changed, 88 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/pci/sophgo,sg2042-pcie-host.yaml
+>  Documentation/devicetree/bindings/mfd/syscon.yaml | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
-> diff --git a/Documentation/devicetree/bindings/pci/sophgo,sg2042-pcie-host.yaml b/Documentation/devicetree/bindings/pci/sophgo,sg2042-pcie-host.yaml
-> new file mode 100644
-> index 000000000000..d4d2232f354f
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/pci/sophgo,sg2042-pcie-host.yaml
-> @@ -0,0 +1,88 @@
-> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/pci/sophgo,sg2042-pcie-host.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Sophgo SG2042 PCIe Host (Cadence PCIe Wrapper)
-> +
-> +description: |+
 
-Don't need '|+'
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
 
-> +  Sophgo SG2042 PCIe host controller is based on the Cadence PCIe core.
-
-> +  It shares common features with the PCIe core and inherits common properties
-> +  defined in Documentation/devicetree/bindings/pci/cdns-pcie-host.yaml.
-
-That's clear from the $ref. No need to say that in prose.
-
-> +
-> +maintainers:
-> +  - Chen Wang <unicorn_wang@outlook.com>
-> +
-> +properties:
-> +  compatible:
-> +    const: sophgo,sg2042-pcie-host
-> +
-> +  reg:
-> +    maxItems: 2
-> +
-> +  reg-names:
-> +    items:
-> +      - const: reg
-> +      - const: cfg
-> +
-> +  sophgo,syscon-pcie-ctrl:
-> +    $ref: /schemas/types.yaml#/definitions/phandle
-> +    description: Phandle to the SYSCON entry
-
-Please describe what you need to access.
-
-> +
-> +  sophgo,link-id:
-> +    $ref: /schemas/types.yaml#/definitions/uint32
-> +    description: Cadence IP link ID.
-
-Is this an index or related to the syscon? Nak for the former, use 
-linux,pci-domain. For the latter, add an arg to sophgo,syscon-pcie-ctrl.
-
-> +
-> +  sophgo,internal-msi:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: Identifies whether the PCIE node uses internal MSI controller.
-
-Wouldn't 'msi-parent' work for this purpose?
-
-> +
-> +  vendor-id:
-> +    const: 0x1f1c
-> +
-> +  device-id:
-> +    const: 0x2042
-> +
-> +  interrupts:
-> +    maxItems: 1
-> +
-> +  interrupt-names:
-> +    const: msi
-> +
-> +allOf:
-> +  - $ref: cdns-pcie-host.yaml#
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +  - reg-names
-> +  - sophgo,syscon-pcie-ctrl
-> +  - sophgo,link-id
-> +  - vendor-id
-> +  - device-id
-> +  - ranges
-
-ranges is already required in the common schemas.
-
-> +
-> +additionalProperties: true
-> +
-> +examples:
-> +  - |
-> +    pcie@62000000 {
-> +      compatible = "sophgo,sg2042-pcie-host";
-> +      device_type = "pci";
-> +      reg = <0x62000000  0x00800000>,
-> +            <0x48000000  0x00001000>;
-> +      reg-names = "reg", "cfg";
-> +      #address-cells = <3>;
-> +      #size-cells = <2>;
-> +      ranges = <0x81000000 0 0x00000000 0xde000000 0 0x00010000>,
-> +               <0x82000000 0 0xd0400000 0xd0400000 0 0x0d000000>;
-> +      bus-range = <0x80 0xbf>;
-> +      vendor-id = <0x1f1c>;
-> +      device-id = <0x2042>;
-> +      cdns,no-bar-match-nbits = <48>;
-> +      sophgo,link-id = <0>;
-> +      sophgo,syscon-pcie-ctrl = <&cdns_pcie1_ctrl>;
-> +      sophgo,internal-msi;
-> +      interrupt-parent = <&intc>;
-> +    };
-> -- 
-> 2.34.1
-> 
