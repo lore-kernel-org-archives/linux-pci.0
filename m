@@ -1,83 +1,75 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65EC41FC7F8;
-	Tue, 12 Nov 2024 20:39:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EBE81FA829;
+	Tue, 12 Nov 2024 20:43:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731443973; cv=none; b=CoiZQ+WNdpRef9lUHkOjzgEPcRvyfEUt9P1AgXGjn2FyXRT6omUYHGtG1FDsSjgKtCsOa1WMcsJg2teEXV1sJq8sXCRRLqXNd+/0/NQhg4FjJGK0OMzy3wdmuqNizOtDdzyvHaH+T3zLrP/QFDRdSxDOumEFOT6Z2HCnvpMsSrg=
+	t=1731444199; cv=none; b=svVf0AUGwU72E2R3zVAFeUkMPP0cu3aE09Hx0SidUNzrXMtImjvDZnH0pac9YO8Rc63y+eTup2ZKDD9WI3b5lDXnc6qPkghHkV0e7srLnM9xoT5FOY9q7iHOVJyPaiZGjsI3y5MIcy4GMea8xlEgjHOVq4RzcZU5kOCn1gRVHYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731443973; c=relaxed/simple;
-	bh=Cz4bRV94/5MKAskZbYAn+TUSR0LBQP5CIfaO0PQZ+eA=;
+	s=arc-20240116; t=1731444199; c=relaxed/simple;
+	bh=uCIUvFOHKd4vWrNkE3Ky5+joDIchMtFW/pXudOijcjE=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=sp48npVFD5Gxlt19Y3Ejev9NVAjnj6ZeQfP6uoqHhryeLTZwGhEAEcLnckfTbWwBhy5AWs6VLkMWBSv4ST6nixff5oF/43m0rVHUsRocWy/hebh1baPovuHZnCV44BRPcvrzGQrOrjcIL2D+FeCw5I/LqCJri0qzQkvkXT0gxh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ff1apUwp; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=U2n0G4G2dx/44rZEqwadQRcNDKmccSTdz1lJL+mTsMdXa0OZliZUd/CjduACHsnxvvaiNopgXnWj7ZoXp4+8OCX/OYqJdT7w0FBd6yraNr/Ap1knbsMPFzaXS+TCYgzfh2uiJbFrH2kS4B7DoHCZWX70uVKzh7y9hzNY7AEGi18=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nnm9qj4Y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ff1apUwp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A76B9C4CED7;
-	Tue, 12 Nov 2024 20:39:32 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nnm9qj4Y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F4147C4CED5;
+	Tue, 12 Nov 2024 20:43:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731443972;
-	bh=Cz4bRV94/5MKAskZbYAn+TUSR0LBQP5CIfaO0PQZ+eA=;
+	s=k20201202; t=1731444199;
+	bh=uCIUvFOHKd4vWrNkE3Ky5+joDIchMtFW/pXudOijcjE=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=Ff1apUwpOiGPDm+i+5r5B3s5dmMB2dJgxctx3edd+b8FqF8Nq3n93rQlg+41y6zOA
-	 EPwhloVc6oGbcSWc3w0fax5DWB8hXhLMxLQJDc4PLLIMp5u3XuwJGwYPr+k0fxj1JN
-	 TvpI1koK8FK9Jz1qa6gsTyhc3PzbzilN2ZW+SDXjPgB15ms1yNhVgTOmpQE8s7gjNQ
-	 CYy8yCHHLYst8fgwZop0vbGlqErCDK4gxLXQdkg4avOvz8LJtuxCVfYTHZF2biblwf
-	 5JfB0NGw1U2oK8kbGhKypOx4xWcXZKafm1zqdSAGge/7VCqmssFPjEgxVbe5+4yk3k
-	 Gp8simaEgiFCg==
-Date: Tue, 12 Nov 2024 14:39:31 -0600
+	b=nnm9qj4YO7t7yRtay8zlvvq7BjmYiabXd9kX+zwB/11CmC6Z37UjzdCFiG41vjqEs
+	 BtFolebgwazQ/41k0XWr01u6Vhtkx1JPhyK+rTHLAgotDA+UlkKKLhpWCUoN8c1w2W
+	 eKjYRecKuHMTfWxKzrqU9bVDX9oOpt78IklIRaaPa2Ij+1hjj9qXd1xGL7uk7/wKGn
+	 EtPRo8fuy0y4vwGyJCb44LhN63jug3g+bH+dx7Rf//il61BtCKNW6qIYiMQjY2Us1H
+	 8YTJf5rv6ltdQVLuYbLtstfncNYtE4wSctg1/ih2LCIT1Izp3/n+oPuFkb7+823pkf
+	 //8rkL7WKGbbA==
+Date: Tue, 12 Nov 2024 14:43:17 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Christian Bruel <christian.bruel@foss.st.com>
-Cc: lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org,
-	robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org,
-	conor+dt@kernel.org, mcoquelin.stm32@gmail.com,
-	alexandre.torgue@foss.st.com, p.zabel@pengutronix.de,
-	cassel@kernel.org, quic_schintav@quicinc.com,
-	fabrice.gasnier@foss.st.com, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-stm32@st-md-mailman.stormreply.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 5/5] MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-Message-ID: <20241112203931.GA1858001@bhelgaas>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	linux-pci@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Rob Herring <robh@kernel.org>, Krzysztof Wilczy??ski <kw@linux.com>,
+	"Maciej W . Rozycki" <macro@orcam.me.uk>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Alexandru Gagniuc <mr.nuke.me@gmail.com>,
+	Krishna chaitanya chundru <quic_krichai@quicinc.com>,
+	Srinivas Pandruvada <srinivas.pandruvada@linux.intel.com>,
+	"Rafael J . Wysocki" <rafael@kernel.org>, linux-pm@vger.kernel.org,
+	Smita Koralahalli <Smita.KoralahalliChannabasappa@amd.com>,
+	linux-kernel@vger.kernel.org,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Amit Kucheria <amitk@kernel.org>, Zhang Rui <rui.zhang@intel.com>,
+	Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH v9 7/9] PCI/bwctrl: Add API to set PCIe Link Speed
+Message-ID: <20241112204317.GA1858532@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <20241112161925.999196-6-christian.bruel@foss.st.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZzN4pO0lJDTSySaz@wunner.de>
 
-On Tue, Nov 12, 2024 at 05:19:25PM +0100, Christian Bruel wrote:
-> Add myself as STM32MP25 PCIe host and PCIe endpoint drivers
-
-s/as STM32MP25/as maintainer of STM32MP25/
-
-> Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-> ---
->  MAINTAINERS | 7 +++++++
->  1 file changed, 7 insertions(+)
+On Tue, Nov 12, 2024 at 04:47:48PM +0100, Lukas Wunner wrote:
+> On Fri, Oct 18, 2024 at 05:47:53PM +0300, Ilpo Järvinen wrote:
+> > +EXPORT_SYMBOL_GPL(pcie_set_target_speed);
 > 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 4803908768e8..277e1cc0769e 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -17912,6 +17912,13 @@ L:	linux-samsung-soc@vger.kernel.org
->  S:	Maintained
->  F:	drivers/pci/controller/dwc/pci-exynos.c
->  
-> +PCI DRIVER FOR STM32MP25
-> +M:	Christian Bruel <christian.bruel@foss.st.com>
-> +L:	linux-pci@vger.kernel.org
-> +S:	Maintained
-> +F:	Documentation/devicetree/bindings/pci/st,stm32-pcie-*.yaml
-> +F:	drivers/pci/controller/dwc/*stm32*
-> +
->  PCI DRIVER FOR SYNOPSYS DESIGNWARE
->  M:	Jingoo Han <jingoohan1@gmail.com>
->  M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> -- 
-> 2.34.1
+> My apologies for another belated comment on this series.
+> This patch is now a688ab21eb72 on pci/bwctrl:
 > 
+> I note that pcie_set_target_speed() is not called my a modular user
+> (CONFIG_PCIE_THERMAL is bool, not tristate), so the above-quoted export
+> isn't really necessary right now.  I don't know if it was added
+> intentionally because some modular user is expected to show up
+> in the near future.
+
+Dropped the export for now, we can add it back if/when needed.
+
+Bjorn
