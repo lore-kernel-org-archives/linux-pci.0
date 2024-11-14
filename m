@@ -1,89 +1,73 @@
-Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B4B6199935;
-	Thu, 14 Nov 2024 16:55:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 118E7126C03;
+	Thu, 14 Nov 2024 17:02:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731603308; cv=none; b=WPcaNZuI7WIGuZgh8s4rNPHpN7P5brQtWN58yZ7qyyBa8fIjUU8uuUhl2WuuXN5mV16SVJ11sRU277E4JKP4E4jS9Ve5NFASUBunPG1WoKIvlQ5Pyb1gpxgURk36ZtPSbx5EhzUnHrMNgbQ4ez4gmKGQmfNyA+otNA7uTjK1/tA=
+	t=1731603774; cv=none; b=l4GlxCOB0X8dzK6SiBc+myppYKIp1VTn7jhuGDmAUBPbvZvvWMwh1OaYS/Ma0FrUQxk6EIxPA1vx4eRJN2BpEUSAE2wjhU8dLt2FQFOxhPrJluZrRA/eh+lxAeEBi358u5bYbhAvIUaMjd//0MSh/xiBF1gbugIGqPBhGfgC0ic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731603308; c=relaxed/simple;
-	bh=d2CSBkGniD1g0Zd5IbjtbUBcIhdorGbcXo+psM4v8qA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AadaXxkHuFU0pzEpg1hGcYT8EOYfOdIJOs8NK9lZ3tnzVZucTNIKqvvHIEI2aamzjhShne0wSTYdS1h4pizElVNneFx6qudctJ4p6UAC+VnHW1G81otTeUvoJFroe3/lF6J1iayg7fr4IcQCjIajAj9/kCqXmIX2zogUEz3nlow=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=VPJLotSB; arc=none smtp.client-ip=217.70.183.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="VPJLotSB"
-Received: by mail.gandi.net (Postfix) with ESMTPA id 7C90CE000D;
-	Thu, 14 Nov 2024 16:54:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1731603297;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IbCjH7pO14MiXwzgxsl9nSqpGImZn4JYlN31kU+nsak=;
-	b=VPJLotSB7hZyMyJwbWUnKitXEhLctmC3hy1X81AvEKuWjQBGprShhOb+eB7HrOzf+lQRz/
-	/dOdszsEOFCxW4BqsjSA5VE4SKeR+VtJ/iMJotlzeMLBa076LjZiaJkf3jViYiTA1JaxeT
-	t+g5adsc5JOpAVPRdsMu24LFpRyDGUwpxr+ViRpzG0pZRuwm/I/jRkasFeARYXFCpjGwPm
-	mEoTuEsu6pZnzRny2rfwJ+5TvP5s4AJfTdppMhQRnYe16XrttaDTlJ0QPbg5IrdtrBVc4s
-	V0/qB+ygk+G1ILB8fJ8v289w5JoMnruYwbBS6wXmWg8NgnRC5lWV03EEcycbPA==
-From: Herve Codina <herve.codina@bootlin.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@google.com>,
+	s=arc-20240116; t=1731603774; c=relaxed/simple;
+	bh=36OSqPoAQyVIULHWPhuhVBJ+iSHV5/kk5o+So/6AzXs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=jOEKx1njhCp0EuP66mEtEnZH17Wj2uaQEjaZDeITbB6fJjgO/3trOVgjb/mREhysx9tNIoVj+Ep0DvWnIvsEiyiPjWt0dsR4g5zabiEYmDrHTLgb7DQwpcApsoGWD8TWSYc/Q2CGWL0Dc+YZY6k/GfCddR1baEkSoxQ+aws9Hzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 51BBB68C7B; Thu, 14 Nov 2024 18:02:47 +0100 (CET)
+Date: Thu, 14 Nov 2024 18:02:47 +0100
+From: Christoph Hellwig <hch@lst.de>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Robin Murphy <robin.murphy@arm.com>,
+	Jens Axboe <axboe@kernel.dk>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Joerg Roedel <joro@8bytes.org>, ill Deacon <will@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>, Keith Busch <kbusch@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Lizhi Hou <lizhi.hou@amd.com>
-Cc: linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v3 4/6] PCI: of_property: Constify parameter in of_pci_get_addr_flags()
-Date: Thu, 14 Nov 2024 17:54:40 +0100
-Message-ID: <20241114165446.611458-5-herve.codina@bootlin.com>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241114165446.611458-1-herve.codina@bootlin.com>
-References: <20241114165446.611458-1-herve.codina@bootlin.com>
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-rdma@vger.kernel.org, iommu@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org, linux-mm@kvack.org,
+	Randy Dunlap <rdunlap@infradead.org>
+Subject: Re: [PATCH v3 00/17] Provide a new two step DMA mapping API
+Message-ID: <20241114170247.GA5813@lst.de>
+References: <cover.1731244445.git.leon@kernel.org> <20241112072040.GG71181@unreal> <20241114133011.GA606631@unreal> <20241114163622.GA3121@lst.de> <20241114164823.GB606631@unreal>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: herve.codina@bootlin.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241114164823.GB606631@unreal>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-The res parameter has no reason to be a pointer to an un-const struct
-resource. Indeed, struct resource is not supposed to be modified by the
-function.
+On Thu, Nov 14, 2024 at 06:48:23PM +0200, Leon Romanovsky wrote:
+> It is fine, but as a bare minimum, I would expect some sort of response,
+> so I won't sit and wait for unknown date when this API will be acknowledged/NACKed.
+> 
+> I would like to start to work on next step, e.g removing SG from RDMA,
+> and I need to know if this foundation is stable to do so.
+> 
+> > 
+> > No changs to dma-iommu.c are going to get merged without an explicit
+> > ACK from Robin, and while there is no 100% for the core dma-mapping
+> > code I will also not merge anything that hasn't been resolved with
+> > my most trusted reviewer first, not even code I wrote myself.
+> 
+> And do you know what is not resolved here? I don't.
+> All technical questions/issues were handled.
 
-Constify the res parameter.
-
-Signed-off-by: Herve Codina <herve.codina@bootlin.com>
----
- drivers/pci/of_property.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-index 59cc5c851fc3..e56159cc48e8 100644
---- a/drivers/pci/of_property.c
-+++ b/drivers/pci/of_property.c
-@@ -69,7 +69,7 @@ static void of_pci_set_address(struct pci_dev *pdev, u32 *prop, u64 addr,
- 	}
- }
- 
--static int of_pci_get_addr_flags(struct resource *res, u32 *flags)
-+static int of_pci_get_addr_flags(const struct resource *res, u32 *flags)
- {
- 	u32 ss;
- 
--- 
-2.47.0
+Let's just wait a little bit, we're all overworked can't instantly
+context switch.
 
