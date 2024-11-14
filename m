@@ -1,132 +1,145 @@
-Received: from relay1-d.mail.gandi.net (relay1-d.mail.gandi.net [217.70.183.193])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 151BB18FDBB;
-	Thu, 14 Nov 2024 15:45:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A65731487CD
+	for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2024 16:06:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731599160; cv=none; b=lIGEye0WFhEccOj9bkPSZ3og4l6UWuoRK1uJ/PqCPp1hGdR6XwWWddBlxWZoUsjfeQYUxwQKcmfx64MjVef4aZ1QBtnMC9E6WgdBQshPoS+5OcJVUeVs4vmilf1GDXjDinXj/6d3+nD5k6clAyeZ34qIefUna0Jc7GxAmWn9Q2M=
+	t=1731600392; cv=none; b=q6zQGY9SK4UPcRoFaO+5kknb3uV8Pyjwg1960qMOe4EAgLy0DW6F/ZdSCxg5LNtgJtW0kDgCmxpFNiJpEe6qrYNEBd/dPxpDyqYD6arLw6Xq2Q7KbAD36otq5ZeNlCiebIJtc2ciEyoAcwBw0B3ki9bFhsJwH6QrPrnn95kNh5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731599160; c=relaxed/simple;
-	bh=5z0brDtQRBtx4SXaYJbzWU/yguAU4LV0GO74WH+JMqE=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KOVmXscUo0LlqbrQf+Vov8Ks/F0PNDAwflLplure3/sinECVk0HiDHu3AhnYZKGNG8tQjWkRSvd7lgreGSq84B+XJlTYencPn8oBQc1dUYrT7h9GHnZXrmjANlkq5RsfTPLiDqDVGTTHAyvOLEwiCgNOjIs9mJHpaqTDehzrnR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=k86e9dLW; arc=none smtp.client-ip=217.70.183.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1731600392; c=relaxed/simple;
+	bh=ywFggH7DHjF/wt5XHrh2nb1enocjSba/y9NwbJjGawM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=BdikJvD2QhSSl0LCiq0HQRHXfqv6m90NDEZQVXwNBPQkkeNov+7QjWnqtdeOwbVaaoHOjTtcuSDXak8dPRqgHUDZvOzxhO+Xm3Xn/AHsVMn4eqScjtGVFcpCoECSAtG4zRzixJukqzj8pI6nBRXoQ/1Y5jwKkpKQyboRUHz1xJs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smile.fr; spf=pass smtp.mailfrom=smile.fr; dkim=pass (1024-bit key) header.d=smile.fr header.i=@smile.fr header.b=QCgR3nzG; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=smile.fr
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=smile.fr
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="k86e9dLW"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id AEE96240003;
-	Thu, 14 Nov 2024 15:45:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1731599155;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=PVd4FspoJAAUQaVK/sgQzSkqs6EdCPL13NCZ5VJz7fw=;
-	b=k86e9dLWi4x6VwQGxiSQmmGbjdenEI5HBux7FE811k8PyybyCldwAMpyPuqWzwDU2Lbrho
-	UCNzU7O+/ZTUoNfquKTMmylkmIOHrPl26ZTsLBnKx+asr2x09Co4u5vNxgvNCQnRNhDnWG
-	rP4b1xH0xRIEr4RMwgM3W2c7Om/R0rRdfFnCbzYWzMXQMYE9KmayoQoqy6htuEteElsEaW
-	jzn2NLBRtT1oIoazJGbNRdNJnNn0yPJmkDlI+Koz96A73l89zgJ+8R9w4fJjDDU4cCpus+
-	zpwTzL7aNZvPKLHp/kCJfB0t/CVPqcvSFIssh2fwzvOdLJe0nt1igDDesUFfJA==
-Date: Thu, 14 Nov 2024 16:45:51 +0100
-From: Herve Codina <herve.codina@bootlin.com>
-To: Andrea della Porta <andrea.porta@suse.com>
-Cc: Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
- <sboyd@kernel.org>, Rob Herring <robh@kernel.org>, Krzysztof Kozlowski
- <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, Florian Fainelli
- <florian.fainelli@broadcom.com>, Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>, Lorenzo Pieralisi
- <lpieralisi@kernel.org>, Krzysztof Wilczynski <kw@linux.com>, Manivannan
- Sadhasivam <manivannan.sadhasivam@linaro.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Linus Walleij <linus.walleij@linaro.org>, Catalin
- Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Bartosz
- Golaszewski <brgl@bgdev.pl>, Derek Kiernan <derek.kiernan@amd.com>, Dragan
- Cvetic <dragan.cvetic@amd.com>, Arnd Bergmann <arnd@arndb.de>, Greg
- Kroah-Hartman <gregkh@linuxfoundation.org>, Saravana Kannan
- <saravanak@google.com>, linux-clk@vger.kernel.org,
- devicetree@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org, Masahiro Yamada
- <masahiroy@kernel.org>, Stefan Wahren <wahrenst@gmx.net>, Luca Ceresoli
- <luca.ceresoli@bootlin.com>, Thomas Petazzoni
- <thomas.petazzoni@bootlin.com>, Andrew Lunn <andrew@lunn.ch>,
- stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: of_property: Assign PCI instead of CPU bus address
- to dynamic PCI nodes
-Message-ID: <20241114164551.46664f5d@bootlin.com>
-In-Reply-To: <ZzYWso5jLkUMehQ6@apocalypse>
-References: <20241108094256.28933-1-andrea.porta@suse.com>
-	<20241108110938.622014f5@bootlin.com>
-	<Zy3koxz4KnV39__V@apocalypse>
-	<ZzYWso5jLkUMehQ6@apocalypse>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.43; x86_64-redhat-linux-gnu)
+	dkim=pass (1024-bit key) header.d=smile.fr header.i=@smile.fr header.b="QCgR3nzG"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-43161c0068bso6993475e9.1
+        for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2024 08:06:30 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=smile.fr; s=google; t=1731600389; x=1732205189; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=e5TLZGaea6sK0nDhRbM1AqBwYwcNqZLYrWSOBUJRLlo=;
+        b=QCgR3nzGkUZq5bGImbobrDejODY7z2mAK5G2J35UFVIn2hBksmqP9bzPryHsuGJ7kY
+         38/iBZywSGyXHrKU0alUlU0P3911ztR/OuqDMdPhM72EFZ1PJ0A4deWOOt4h6rmzR5IZ
+         IY5mTzXlKJwiFVDqI+RlBII2g+8NF1vrQLr3k=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1731600389; x=1732205189;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=e5TLZGaea6sK0nDhRbM1AqBwYwcNqZLYrWSOBUJRLlo=;
+        b=a4yfa+qVttImY8JOLlnUBGdKe5glY9QiiRkE520JEcne1VSjAFpT7oAOLCRIi3vVh4
+         n/0Fb4y39CFsuM46BoOB0RuRehUHxunjYwvU64dI/DjrMufu5522EVtBq274soBGzQe3
+         5MG9Cd5aKG0gb5i8+UKvsmBkF0O96/f3uIGvlRAAo8WLxowhpuY5nl2vmLvVHcsdit6h
+         xoaF8Bd1tWjUCX+T8vJcuC0gzDFyOQnNS3cAQ/acIxUDtPymuv0ekRGnngQJN51bGkYh
+         WUWvgmBWK6jyMNmEmW3aXePgbi0bn39lMzJ6MAIlyMXgbNEyu73Wu9DiAbcbwsuBzBZ6
+         N2ig==
+X-Forwarded-Encrypted: i=1; AJvYcCWWWmTha3EDtu502TGC4uV+gax8CBSUN8TUvBnJcR8cRMoyVt7cxO/9uHhAp+SnVHFNtPH/hx9RKiQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyBe/oHRMdSLvbXgz4fIpKWP6GuqXgWjw6PaWrhy3LL3r4kURaa
+	sJ2AbVbkHQaXqJJTOBoOd9cDm1JSzVefnGHRsirLqIsMbMt4kdXNhc49n8Rx/0c=
+X-Google-Smtp-Source: AGHT+IHiRvA7cvPqYtmkmMJTpiDBV+hOJMvmFWxQg/urdzyZGoSaSsnyLrYY+OtzP3hMqJjyuSbZ4w==
+X-Received: by 2002:a05:600c:3ac9:b0:42c:bae0:f065 with SMTP id 5b1f17b1804b1-432da767a0bmr25517525e9.5.1731600388469;
+        Thu, 14 Nov 2024 08:06:28 -0800 (PST)
+Received: from ?IPV6:2a01:cb05:949d:5800:e3ef:2d7a:4131:71f? (2a01cb05949d5800e3ef2d7a4131071f.ipv6.abo.wanadoo.fr. [2a01:cb05:949d:5800:e3ef:2d7a:4131:71f])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-432dac1fbf9sm25337705e9.41.2024.11.14.08.06.27
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 14 Nov 2024 08:06:28 -0800 (PST)
+Message-ID: <fa92518d-396a-4a50-9287-4832a7f5d813@smile.fr>
+Date: Thu, 14 Nov 2024 17:06:27 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/15] ARM: dts: Configure interconnect target module for
+ dra7 sata
+To: Roger Quadros <rogerq@kernel.org>, Tony Lindgren <tony@atomide.com>,
+ linux-omap@vger.kernel.org
+Cc: =?UTF-8?Q?Beno=C3=AEt_Cousson?= <bcousson@baylibre.com>,
+ devicetree@vger.kernel.org, Bjorn Helgaas <bhelgaas@google.com>,
+ Kishon Vijay Abraham I <kishon@ti.com>,
+ Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+ Vignesh Raghavendra <vigneshr@ti.com>, linux-pci@vger.kernel.org,
+ Kevin Hilman <khilman@baylibre.com>, Robin Murphy <robin.murphy@arm.com>
+References: <20210126124004.52550-1-tony@atomide.com>
+ <20210126124004.52550-8-tony@atomide.com>
+ <c583e1bb-f56b-4489-8012-ce742e85f233@smile.fr>
+ <45e6b7d4-706e-4f91-b452-4fa80c25b944@kernel.org>
+ <2f715724-31c1-4228-b140-55aefb14af5c@smile.fr>
+ <7821de41-6f71-4865-9d64-3d5be4602a9b@kernel.org>
+Content-Language: en-US
+From: Romain Naour <romain.naour@smile.fr>
+In-Reply-To: <7821de41-6f71-4865-9d64-3d5be4602a9b@kernel.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-GND-Sasl: herve.codina@bootlin.com
 
-Hi Andrea,
-
-On Thu, 14 Nov 2024 16:26:42 +0100
-Andrea della Porta <andrea.porta@suse.com> wrote:
-
-> Hi,
+Le 14/11/2024 à 16:08, Roger Quadros a écrit :
 > 
-> On 11:14 Fri 08 Nov     , Andrea della Porta wrote:
-> > Hi herve,
-> > 
-> > On 11:09 Fri 08 Nov     , Herve Codina wrote:  
-> > > Hi Andrea,
-> > > 
-> > > On Fri,  8 Nov 2024 10:42:56 +0100
-> > > Andrea della Porta <andrea.porta@suse.com> wrote:
-> > >   
-> > > > When populating "ranges" property for a PCI bridge or endpoint,
-> > > > of_pci_prop_ranges() incorrectly use the CPU bus address of the resource.
-> > > > In such PCI nodes, the window should instead be in PCI address space. Call
-> > > > pci_bus_address() on the resource in order to obtain the PCI bus
-> > > > address.
-> > > > 
-> > > > Fixes: 407d1a51921e ("PCI: Create device tree node for bridge")
-> > > > Cc: stable@vger.kernel.org
-> > > > Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
-> > > > Acked-by: Bjorn Helgaas <bhelgaas@google.com>
-> > > > Tested-by: Herve Codina <herve.codina@bootlin.com>
-> > > > ---
-> > > > This patch, originally preparatory for a bigger patchset (see [1]), has
-> > > > been splitted in a standalone one for better management and because it
-> > > > contains a bugfix which is probably of interest to stable branch.  
-> > > 
-> > > Nothing to say for the patch itself.
-> > > 
-> > > Just here, you mentioned "see [1]" but you didn't provide the link.
-> > > 
-> > > IMHO, this is not blocking for applying the patch but, just for other people
-> > > looking at this email in the mailing list, can you reply providing the link?  
-> > 
-> > Thanks for pointing that out, sorry about that. Here it is:
-> > 
-> > [1] - https://lore.kernel.org/all/f6b445b764312fd8ab96745fe4e97fb22f91ae4c.1730123575.git.andrea.porta@suse.com/  
 > 
-> Do I have to resubmit the patch with the referenced url fixed or is it
-> ok as it is?
+> On 14/11/2024 15:50, Romain Naour wrote:
+>> Hi Roger, Robin, All,
+>>
+>> Le 14/11/2024 à 12:02, Roger Quadros a écrit :
 
-This reference is after the '---' marker line and so will not be present in
-the changelog once the patch is applied.
+[...]
 
-For this reason, I don't think you have to resubmit the patch.
+>>
+>> Thanks for your reply!
+>>
+>> It seems l4_cfg can inherit dma-ranges property from ocp node using
+>> "dma-ranges;". But then segment@100000 node (0x4a100000) needs "dma-ranges;" too.
+>>
+>> With the following patch applied, the SATA drive works correctly.
+>>
+>> diff --git a/arch/arm/boot/dts/dra7-l4.dtsi b/arch/arm/boot/dts/dra7-l4.dtsi
+>> index 1aaffd034c39..3ac770298844 100644
+>> --- a/arch/arm/boot/dts/dra7-l4.dtsi
+>> +++ b/arch/arm/boot/dts/dra7-l4.dtsi
+>> @@ -12,6 +12,7 @@ &l4_cfg {                                             /*
+>> 0x4a000000 */
+>>         ranges = <0x00000000 0x4a000000 0x100000>,      /* segment 0 */
+>>                  <0x00100000 0x4a100000 0x100000>,      /* segment 1 */
+>>                  <0x00200000 0x4a200000 0x100000>;      /* segment 2 */
+>> +       dma-ranges;
+>>
+>>         segment@0 {                                     /* 0x4a000000 */
+>>                 compatible = "simple-pm-bus";
+>> @@ -557,6 +558,7 @@ segment@100000 {                                    /*
+>> 0x4a100000 */
+>>                          <0x0007e000 0x0017e000 0x001000>,      /* ap 124 */
+>>                          <0x00059000 0x00159000 0x001000>,      /* ap 125 */
+>>                          <0x0005a000 0x0015a000 0x001000>;      /* ap 126 */
+>> +               dma-ranges;
+>>
+>>                 target-module@2000 {                    /* 0x4a102000, ap 27 3c.0 */
+>>                         compatible = "ti,sysc";
+>>
+>>
+>> Sorry, I'm not familliar with property inheritance between devicetree nodes,
+>> especially with dma-ranges. Does this change seem correct to you?
+> 
+> I think this is correct.
+> A similar fix [4] was done for PCIe as well.
+> 
+> [4] https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/?id=90d4d3f4ea45370d482fa609dbae4d2281b4074f
 
-If you need to resubmit the patch for any other reasons (resent because
-the patch was applied, modification needed, ...) resubmit it with the
-referenced url fixed.
+Thank you for your help, I just sent the patch:
+
+https://lore.kernel.org/linux-omap/20241114155759.1155567-1-romain.naour@smile.fr/T/#u
 
 Best regards,
-Hervé
+Romain
+
+
+> 
+>>
+>> Best regards,
+>> Romain
+
