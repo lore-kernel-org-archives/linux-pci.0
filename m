@@ -1,46 +1,44 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16861166F25;
-	Thu, 14 Nov 2024 16:36:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C8D1F126C03;
+	Thu, 14 Nov 2024 16:44:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731602189; cv=none; b=BLdVIDr3vsW5vyxJVJMOgJKfiXu04oPeiCbMVLgeYRpjfjDVv5QD95uGse4rnC+mG+2f4DP9iKH0to4dy2UGzQgFqTs2PJXIP6NaqE6xtmPTTEtdvf2z6INtGSJc6hA7jdt67CZAVB+4yTAwDo2rsK9kVHurmI71OlHY/JWzlmg=
+	t=1731602674; cv=none; b=QTVyCnvEitj5i8Bi7eGkUEoO1v74mKrhDWLlHMlqpllUUARwUvIktaPCtT94ESwW+l56Y4WG80rcoy6ygF/7qQRufTq46gL3TDIonfmKpjjzFOr+iuv5VrO6sa/Vuqk0/0r7oEr/UE4grg0xqyYyfCjdbZ3xrpscVXImifP+Ch0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731602189; c=relaxed/simple;
-	bh=9CnMQTj/kx8j380p/9NSdXuITEG2atOw34vAty/glmk=;
+	s=arc-20240116; t=1731602674; c=relaxed/simple;
+	bh=yTTebUgilUcScFJvsEz7xDxnwIE2WJs/ED3QOn9Z1oI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Vt3f9L/oC7wuGidpebDtDDo+LCgOdrmQOSgxvbQZdL/2B2UgSX2E02enk7rm5lwn3fTnrwmJZCPSxgIz2RosxKnhmlESAfX1Fwmz+DZNMjw8lNGM29ER3z6Sw73KdNLA6yQtrzQqpGTDE7Vu20kSF3aTfvZuNfDm2zoWkMtBB3c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id A019B68C7B; Thu, 14 Nov 2024 17:36:22 +0100 (CET)
-Date: Thu, 14 Nov 2024 17:36:22 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Robin Murphy <robin.murphy@arm.com>, Christoph Hellwig <hch@lst.de>,
-	Jens Axboe <axboe@kernel.dk>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Joerg Roedel <joro@8bytes.org>, ill Deacon <will@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>, Keith Busch <kbusch@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-rdma@vger.kernel.org, iommu@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org, linux-mm@kvack.org,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: Re: [PATCH v3 00/17] Provide a new two step DMA mapping API
-Message-ID: <20241114163622.GA3121@lst.de>
-References: <cover.1731244445.git.leon@kernel.org> <20241112072040.GG71181@unreal> <20241114133011.GA606631@unreal>
+	 Content-Type:Content-Disposition:In-Reply-To; b=Y7I+n0Tlhn+VX5H4yqm5Qax1lAnDMz7r2lEAHUsPbj05lgsikniUzccyP+AZrdb0xdzazxSPcCoxLP327AD58R72jBqv24S4shn9xdQgELZg7uLYoWGM7UeHiHPIDet6FBaYF9fw3PQUhfw4/jw1iGaky7OP0O9hkErLdMLmUGg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout2.hostsharing.net (Postfix) with ESMTPS id EBAA82800A273;
+	Thu, 14 Nov 2024 17:44:22 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id D2A893C3D3B; Thu, 14 Nov 2024 17:44:22 +0100 (CET)
+Date: Thu, 14 Nov 2024 17:44:22 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, nifan.cxl@gmail.com, ming4.li@intel.com,
+	dave@stgolabs.net, jonathan.cameron@huawei.com,
+	dave.jiang@intel.com, alison.schofield@intel.com,
+	vishal.l.verma@intel.com, dan.j.williams@intel.com,
+	bhelgaas@google.com, mahesh@linux.ibm.com, ira.weiny@intel.com,
+	oohall@gmail.com, Benjamin.Cheatham@amd.com, rrichter@amd.com,
+	nathan.fontenot@amd.com, Smita.KoralahalliChannabasappa@amd.com
+Subject: Re: [PATCH v3 05/15] PCI/AER: Add CXL PCIe port correctable error
+ support in AER service driver
+Message-ID: <ZzYo5hNkcIjKAZ4i@wunner.de>
+References: <20241113215429.3177981-1-terry.bowman@amd.com>
+ <20241113215429.3177981-6-terry.bowman@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,23 +47,43 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20241114133011.GA606631@unreal>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+In-Reply-To: <20241113215429.3177981-6-terry.bowman@amd.com>
 
-On Thu, Nov 14, 2024 at 03:30:11PM +0200, Leon Romanovsky wrote:
-> > All technical concerns were handled and this series is ready to be merged.
-> > 
-> > Robin, can you please Ack the dma-iommu patches?
-> 
-> I don't see any response, so my assumption is that this series is ready
-> to be merged. Let's do it this cycle and save from us the burden of
-> having dependencies between subsystems.
+On Wed, Nov 13, 2024 at 03:54:19PM -0600, Terry Bowman wrote:
+> @@ -1115,8 +1131,11 @@ static void pci_aer_handle_error(struct pci_dev *dev, struct aer_err_info *info)
+>  
+>  static void handle_error_source(struct pci_dev *dev, struct aer_err_info *info)
+>  {
+> -	cxl_handle_error(dev, info);
+> -	pci_aer_handle_error(dev, info);
+> +	if (is_internal_error(info) && handles_cxl_errors(dev))
+> +		cxl_handle_error(dev, info);
+> +	else
+> +		pci_aer_handle_error(dev, info);
+> +
+>  	pci_dev_put(dev);
+>  }
 
-Slow down, please.  Nothing of this complexity is going to get merged
-half a week before a release.
+If you just do this at the top of cxl_handle_error()...
 
-No changs to dma-iommu.c are going to get merged without an explicit
-ACK from Robin, and while there is no 100% for the core dma-mapping
-code I will also not merge anything that hasn't been resolved with
-my most trusted reviewer first, not even code I wrote myself.
+	if (!is_internal_error(info))
+		return;
 
+...you avoid the need to move is_internal_error() around and the
+patch becomes simpler and easier to review.
+
+
+> The AER service driver supports handling downstream port protocol errors in
+> restricted CXL host (RCH) mode also known as CXL1.1. It needs the same
+> functionality for CXL PCIe ports operating in virtual hierarchy (VH)
+> mode.[1]
+
+This is somewhat minor but by convention, patches in the PCI subsystem
+adhere to spec language and capitalization, e.g. "Downstream Port"
+instead of "downstream port".  Makes it easier to connect the commit
+message or code comments to the spec.  So maybe you want to consider
+that if/when respinning.
+
+Thanks,
+
+Lukas
