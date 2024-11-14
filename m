@@ -1,58 +1,92 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 344901F4268
-	for <linux-pci@vger.kernel.org>; Thu, 14 Nov 2024 07:36:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C10441CAAC;
+	Thu, 14 Nov 2024 07:54:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731569764; cv=none; b=mXMb9fRAKcf0bkQIGXKKdCS85EWYPGnCWa2Ld6ARZB+s0SFGoIx5TC7pHY9LVYXdBIpkWLenb5VGh7/VNFxccU1yBIBDBThtASmkVN2h4K+DloTyvXWtd5ZMu5gCKk+hcAbYcuqNLmslgRHtSiWV1mFDL/bCgMWrAvVrSAKtwpE=
+	t=1731570890; cv=none; b=E1Ef8GLXFtIcEMS0J4MnV8G1X0gLxbmITMYT624aLOOHHnwrdOq41WPjUsEoAXjZCVnIgNCswDsuMjHTxRSFd09U1TSLofy0vuQmMCiv13Mbutm9flxrbEs5EKACqzkU1xkzZ/d8Q9jlDnJr095dCxdGdp5Msyk4e6XYOxkcjKA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731569764; c=relaxed/simple;
-	bh=MD/A5zGoXGHiWeU6bfNjfRtdq4yjBItb79qAE8u/87A=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=HpAemxqjWTYImLutY1VC2uPdbSIzU12QM2I6/kaWqqgC6vvpC5a60Rek2k/UfANcliIAw/v78NtjOEkfTGIJFPkMX5U3mpnw3SfyEY+Pa80QTKOBS+ytG2zd6sFFGQ8jgnfnztDvset7isdftnBsU4LU0oL13JbmIgV8H1oi75Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=EhsChSv3; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1731570890; c=relaxed/simple;
+	bh=qpHPqvyCCYzqYEOCriYI3vUcZNTa6fXXadKZM0uAwWE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dgMyxhMdTkgXut0TUTsPC9tYGJYOme/Mgvde74unbHbbTwkMR4hThXxaZi43JhzEbxYA/g82KbNa1hzNY63CW0nDxLvTaQh02ztIkrgYm5W0lzoZrePPyZyagDAJpAfrrkHABVjgU/DxbcFezl9NpIQnfYQedcMBDadKY/eJlAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GiE9vj8x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kwNAhIDy; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GiE9vj8x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kwNAhIDy; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="EhsChSv3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731569763; x=1763105763;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=MD/A5zGoXGHiWeU6bfNjfRtdq4yjBItb79qAE8u/87A=;
-  b=EhsChSv3aMLOuiadEsOy98MOQ7X238r7z/2Ziqo/NzgLSfwcLVwdwB5L
-   NB4EV1Mkr84YpzkbPcFtZcr/dsgkA/w0ZbSyK2TVp9jrAukXT8raBFKYY
-   LCUejJU5XPTidS5pePB+BeVa15sTZQE6lrvrpuj7DnpCi4Lj9cKul6pCh
-   +d2pVpnF1ey76nUsueACVnqvpzdV/RqIPStP9lCtYq19zu2A2yp5nJG2Q
-   2Q5a31lc/ZXdW8TNb2sFmOvj53w00DM0f1zSFQB6lIlSTDBcuBGISyw0V
-   GKX9i/gVkxg3J4+9cFWgJD12oqynJpabn7++FUKf4FQMSphDqgtAKtUJD
-   w==;
-X-CSE-ConnectionGUID: TZHE9hgrSa+oeqSSs7hZHw==
-X-CSE-MsgGUID: ZwUuNmmGRc2LmVoH2eNQGA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11222"; a="35203769"
-X-IronPort-AV: E=Sophos;i="6.11,199,1725346800"; 
-   d="scan'208";a="35203769"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2024 23:36:02 -0800
-X-CSE-ConnectionGUID: K8C537MHQvyG9XqAR805/w==
-X-CSE-MsgGUID: /FYIZ+d6QO2gG0ukrbIUHQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,153,1728975600"; 
-   d="scan'208";a="88001921"
-Received: from lkp-server01.sh.intel.com (HELO 8eed2ac03994) ([10.239.97.150])
-  by orviesa010.jf.intel.com with ESMTP; 13 Nov 2024 23:36:01 -0800
-Received: from kbuild by 8eed2ac03994 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tBUOU-00004E-2I;
-	Thu, 14 Nov 2024 07:35:58 +0000
-Date: Thu, 14 Nov 2024 14:13:08 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/cadence] BUILD SUCCESS
- e3e309b2bea8d2c37ed6f52c837848b601d3245e
-Message-ID: <202411141459.WTXxkHnq-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GiE9vj8x";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kwNAhIDy";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GiE9vj8x";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kwNAhIDy"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 184CF2195D;
+	Thu, 14 Nov 2024 07:54:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731570887; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=GiE9vj8x1O1N5ASVREAFOUMEMISoo31skDN+DgSWv9F2Fov+Dl7ZwEGzVuLgSeDUImvPzB
+	nD/flv8/De3SgoqQTqvBuesuFSaBX0SreRUJR/RgCtacsNzS7MJB35cynn5tyUxX/ZSsVn
+	srR7BEEzrPNRRZlmDxCKW2rW8chD8E0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731570887;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=kwNAhIDyRojzPQtx06qL5++OAHC3R3V5i01m97PIeo0DP0kPGjdHi3kKGaBh4sYavHIgvv
+	rVEHds2mLLEUvEBg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1731570887; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=GiE9vj8x1O1N5ASVREAFOUMEMISoo31skDN+DgSWv9F2Fov+Dl7ZwEGzVuLgSeDUImvPzB
+	nD/flv8/De3SgoqQTqvBuesuFSaBX0SreRUJR/RgCtacsNzS7MJB35cynn5tyUxX/ZSsVn
+	srR7BEEzrPNRRZlmDxCKW2rW8chD8E0=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1731570887;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=q1M4KBBuOBQeKqCrAK5JFelRyjsClhaHzFF8BcJuDmI=;
+	b=kwNAhIDyRojzPQtx06qL5++OAHC3R3V5i01m97PIeo0DP0kPGjdHi3kKGaBh4sYavHIgvv
+	rVEHds2mLLEUvEBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E8BD513794;
+	Thu, 14 Nov 2024 07:54:46 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id o2HIOMasNWfVawAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Thu, 14 Nov 2024 07:54:46 +0000
+Date: Thu, 14 Nov 2024 08:54:46 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Bjorn Helgaas <bhelgaas@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	John Garry <john.g.garry@oracle.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org, virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, 
+	megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v4 05/10] blk-mq: introduce blk_mq_hctx_map_queues
+Message-ID: <9fa26099-1922-4b99-883e-bd5f6c58162a@flourine.local>
+References: <20241113-refactor-blk-affinity-helpers-v4-0-dd3baa1e267f@kernel.org>
+ <20241113-refactor-blk-affinity-helpers-v4-5-dd3baa1e267f@kernel.org>
+ <ZzVZQbZOYhNF08LX@fedora>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -60,111 +94,59 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <ZzVZQbZOYhNF08LX@fedora>
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[25];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_DN_SOME(0.00)[]
+X-Spam-Score: -4.30
+X-Spam-Flag: NO
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/cadence
-branch HEAD: e3e309b2bea8d2c37ed6f52c837848b601d3245e  PCI: cadence: Lower severity of message when phy-names property is absent in DTS
+On Thu, Nov 14, 2024 at 09:58:25AM +0800, Ming Lei wrote:
+> > +void blk_mq_hctx_map_queues(struct blk_mq_queue_map *qmap,
+> 
+> Some drivers may not know hctx at all, maybe blk_mq_map_hw_queues()?
 
-elapsed time: 733m
+I am not really attach to the name, I am fine with renaming it to
+blk_mq_map_hw_queues.
 
-configs tested: 91
-configs skipped: 4
+> > +	if (dev->driver->irq_get_affinity)
+> > +		irq_get_affinity = dev->driver->irq_get_affinity;
+> > +	else if (dev->bus->irq_get_affinity)
+> > +		irq_get_affinity = dev->bus->irq_get_affinity;
+> 
+> It is one generic API, I think both 'dev->driver' and
+> 'dev->bus' should be validated here.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+What do you have in mind here if we get two masks? What should the
+operation be: AND, OR?
 
-tested configs:
-alpha                allnoconfig    gcc-14.2.0
-alpha               allyesconfig    clang-20
-alpha                  defconfig    gcc-14.2.0
-arc                 allmodconfig    clang-20
-arc                  allnoconfig    gcc-14.2.0
-arc                 allyesconfig    clang-20
-arc                    defconfig    gcc-14.2.0
-arc           vdk_hs38_defconfig    gcc-14.2.0
-arm                 alldefconfig    gcc-14.2.0
-arm                 allmodconfig    clang-20
-arm                  allnoconfig    gcc-14.2.0
-arm                 allyesconfig    clang-20
-arm                    defconfig    gcc-14.2.0
-arm               dove_defconfig    gcc-14.2.0
-arm            socfpga_defconfig    gcc-14.2.0
-arm64               allmodconfig    clang-20
-arm64                allnoconfig    gcc-14.2.0
-arm64                  defconfig    gcc-14.2.0
-csky                 allnoconfig    gcc-14.2.0
-csky                   defconfig    gcc-14.2.0
-hexagon             allmodconfig    clang-20
-hexagon              allnoconfig    gcc-14.2.0
-hexagon             allyesconfig    clang-20
-hexagon                defconfig    gcc-14.2.0
-i386                allmodconfig    clang-19
-i386                 allnoconfig    clang-19
-i386                allyesconfig    clang-19
-i386                   defconfig    clang-19
-loongarch           allmodconfig    gcc-14.2.0
-loongarch            allnoconfig    gcc-14.2.0
-loongarch              defconfig    gcc-14.2.0
-m68k                allmodconfig    gcc-14.2.0
-m68k                 allnoconfig    gcc-14.2.0
-m68k                allyesconfig    gcc-14.2.0
-m68k                   defconfig    gcc-14.2.0
-m68k           m5272c3_defconfig    gcc-14.2.0
-m68k           m5307c3_defconfig    gcc-14.2.0
-m68k               q40_defconfig    gcc-14.2.0
-microblaze          allmodconfig    gcc-14.2.0
-microblaze           allnoconfig    gcc-14.2.0
-microblaze          allyesconfig    gcc-14.2.0
-microblaze             defconfig    gcc-14.2.0
-mips                 allnoconfig    gcc-14.2.0
-mips         bmips_stb_defconfig    gcc-14.2.0
-mips        loongson1b_defconfig    gcc-14.2.0
-nios2                allnoconfig    gcc-14.2.0
-nios2                  defconfig    gcc-14.2.0
-openrisc             allnoconfig    clang-20
-openrisc            allyesconfig    gcc-14.2.0
-openrisc               defconfig    gcc-12
-openrisc     or1klitex_defconfig    gcc-14.2.0
-parisc              allmodconfig    gcc-14.2.0
-parisc               allnoconfig    clang-20
-parisc              allyesconfig    gcc-14.2.0
-parisc                 defconfig    gcc-12
-parisc64               defconfig    gcc-14.2.0
-powerpc             allmodconfig    gcc-14.2.0
-powerpc              allnoconfig    clang-20
-powerpc             allyesconfig    gcc-14.2.0
-powerpc           cell_defconfig    gcc-14.2.0
-powerpc          ebony_defconfig    gcc-14.2.0
-powerpc        mpc83xx_defconfig    gcc-14.2.0
-powerpc       socrates_defconfig    gcc-14.2.0
-riscv               allmodconfig    gcc-14.2.0
-riscv                allnoconfig    clang-20
-riscv               allyesconfig    gcc-14.2.0
-riscv                  defconfig    gcc-12
-s390                allmodconfig    gcc-14.2.0
-s390                 allnoconfig    clang-20
-s390                allyesconfig    gcc-14.2.0
-s390                   defconfig    gcc-12
-sh                  allmodconfig    gcc-14.2.0
-sh                   allnoconfig    gcc-14.2.0
-sh                  allyesconfig    gcc-14.2.0
-sh                     defconfig    gcc-12
-sh              se7721_defconfig    gcc-14.2.0
-sparc               allmodconfig    gcc-14.2.0
-sparc64                defconfig    gcc-12
-um                  allmodconfig    clang-20
-um                   allnoconfig    clang-20
-um                  allyesconfig    clang-20
-um                     defconfig    gcc-12
-um                i386_defconfig    gcc-12
-um              x86_64_defconfig    gcc-12
-x86_64               allnoconfig    clang-19
-x86_64              allyesconfig    clang-19
-x86_64                 defconfig    clang-19
-x86_64                     kexec    gcc-12
-x86_64                  rhel-8.3    gcc-12
-xtensa               allnoconfig    gcc-14.2.0
-xtensa             iss_defconfig    gcc-14.2.0
+This brings up another topic I left out in this series.
+blk_mq_map_queues does almost the same thing except it starts with the
+mask returned by group_cpus_evenely. If we figure out how this could be
+combined in a sane way it's possible to cleanup even a bit more. A bunch
+of drivers do
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+		if (i != HCTX_TYPE_POLL && offset)
+			blk_mq_hctx_map_queues(map, dev->dev, offset);
+		else
+			blk_mq_map_queues(map);
+
+IMO it would be nice just to have one blk_mq_map_queues() which handles
+this correctly for both cases.
