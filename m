@@ -1,35 +1,35 @@
 Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B25C188703;
-	Thu, 14 Nov 2024 16:55:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 979FA18CC17;
+	Thu, 14 Nov 2024 16:55:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731603304; cv=none; b=OwqQYottiLeT4K1M+c3s9T7/oTCWDB3qzwuCi2juaKYx+If4YOJEuZFASm5G9ZLW+9Uy87gqv3lApi0fP/SA+ubsA1Vns5fZW5mOSZxTutDXF5qjS37zJJNctZG5rg4t6hoIe9MhuykZ5xPMqEhiwxS41vtIxRDr8sGoollvfJM=
+	t=1731603305; cv=none; b=OnA/Oh/g4IAzRJdkDyz8twNo7VGb5pusctLDu/VymTc1MVQEICOBfoyUa6nWwOcWIIvkD7+ugduu30FypLWvlyN+JRX51FprzwC6/wl8EALuZ/m9nogfikKanrpiPSFK9mE6l+lpUIYwVB6wfutNXB7HS8bk7N/lP7oFG/qgFJU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731603304; c=relaxed/simple;
-	bh=X1jO5oMtyP0jfnGU/DCU9nbdHu4XbZA426BHwEzqcTo=;
+	s=arc-20240116; t=1731603305; c=relaxed/simple;
+	bh=y7UfqEIoih8giw2/xvN6zrV6STbUrwOt/eHmznTRb6I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cW2LlX22KdNZip7LzW/L9wkn41bug2BErGgo+BqpxonY2L8x0S7bE1Eb73X56AYMri2p68wNC+63m8E+c4UhtBHop3fJ4uqojkZOps10VzjfYUi1HhZ1q6dm/DLPY2x9AxGgQKtMLU2LUjjQvohzbJPSI7uBSn3+ZyJ+2F01kL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=jCJ5sEf0; arc=none smtp.client-ip=217.70.183.196
+	 MIME-Version; b=TohHYxx1vzdn6SMwmKwB6XJLP2eLEUHqas1dV5glf3PtlKrOB8KWxeai4YifZHn+TOGJXY9Z6BI79VAj5s8A9L8zFO+6LCxxHMpwtY9hkLiK2sF6tndcLeQE/mFNYghqOZfcpDwpxV5qFA4Wmt/jYMXuf1l5vOjd5p6gk/8Y0Rg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=Q3YIq7E6; arc=none smtp.client-ip=217.70.183.196
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="jCJ5sEf0"
-Received: by mail.gandi.net (Postfix) with ESMTPA id 1BC5BE0009;
-	Thu, 14 Nov 2024 16:54:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="Q3YIq7E6"
+Received: by mail.gandi.net (Postfix) with ESMTPA id A5E18E0008;
+	Thu, 14 Nov 2024 16:54:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1731603294;
+	t=1731603296;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=YlXInP/Xt7ICdvkV8lP0MjBbO+8189YppAjVn2WwHNM=;
-	b=jCJ5sEf09yZRkk9kiemm+UfpCRzPPrbXXusSXUjuasdCfNsdS086oGM9FkDHpM9HefbdFh
-	8w/HSVtL6/4syEPCGjtZcsjDKVjL4P8bSkt6WvGGcR4UVg52UuhYB2F2n8xUJxxToHriOV
-	jKcm7i2DO5s8nIwHQ3y1hmiKjlg/Vy6WyoGNVJyI1R8zwqQc1ka97K2Iv04fHOmrF/fVow
-	bpx56SchRzxYUvEMBqqsxFnvHzq4u6/vnZxVHuEWuzRRk5GnVWTRsh/nq+o5r43zGzABTu
-	xzVacbPSgxXw7vz+nirx5XEEnDTZdYH7X71nPfge/kjte4hsCnpc/p6/rzQbgQ==
+	bh=CYnZpR2PVcDtwerz6jVB6zxz6ALZiGsj9xwvZUhzrrY=;
+	b=Q3YIq7E64KHvZceCfFBivPi2zyq06HIa6Ju60ZhAFWA1NCG9l2hYl6Bmq8GqOLFHKRkpXE
+	QAA2kENSr/0nSuY5oLTFPdSH8ZZnNivmDWbSLMXNe+ngUABr38TC61Sm5tpCUuqG+yguOZ
+	cA88jzANa7oV0vygqq5MZBT3zAsMBM4j8ya1S887wQTblM4Dahagy6odcktkl/pXYOczAU
+	6QTSPjeFIiNu4fKyS2PW0aOW83Bp7psp5mdv4Fggz/pCCKaoTkzxmC6F6qaZiYZzsCKE+I
+	5NI5T4ZIyxhvfiFHo/5AivoI9Oqoq2naqPzIhcDXfTay/wVOsgwbLOtT778QYw==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -45,9 +45,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v3 1/6] driver core: Introduce device_{add,remove}_of_node()
-Date: Thu, 14 Nov 2024 17:54:37 +0100
-Message-ID: <20241114165446.611458-2-herve.codina@bootlin.com>
+Subject: [PATCH v3 3/6] PCI: of_property: Add support for NULL pdev in of_pci_set_address()
+Date: Thu, 14 Nov 2024 17:54:39 +0100
+Message-ID: <20241114165446.611458-4-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241114165446.611458-1-herve.codina@bootlin.com>
 References: <20241114165446.611458-1-herve.codina@bootlin.com>
@@ -60,100 +60,42 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-GND-Sasl: herve.codina@bootlin.com
 
-An of_node can be set to a device using device_set_node().
-This function cannot prevent any of_node and/or fwnode overwrites.
+The pdev (pointer to a struct pci_dev) parameter of of_pci_set_address()
+cannot be NULL.
 
-When adding an of_node on an already present device, the following
-operations need to be done:
-- Attach the of_node if no of_node were already attached
-- Attach the of_node as a fwnode if no fwnode were already attached
+In order to reuse of_pci_set_address() when creating the PCI root bus
+node, this function needs to support a NULL pdev parameter. Indeed, in
+the case of the PCI root bus node creation, no pdev are available and
+of_pci_set_address() will be used with the bridge windows.
 
-This is the purpose of device_add_of_node().
-device_remove_of_node() reverts the operations done by
-device_add_of_node().
+Allow to call of_pci_set_address() with a NULL pdev.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 ---
- drivers/base/core.c    | 52 ++++++++++++++++++++++++++++++++++++++++++
- include/linux/device.h |  2 ++
- 2 files changed, 54 insertions(+)
+ drivers/pci/of_property.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/base/core.c b/drivers/base/core.c
-index 24c572031403..0aa63371f55d 100644
---- a/drivers/base/core.c
-+++ b/drivers/base/core.c
-@@ -5118,6 +5118,58 @@ void set_secondary_fwnode(struct device *dev, struct fwnode_handle *fwnode)
- }
- EXPORT_SYMBOL_GPL(set_secondary_fwnode);
- 
-+/**
-+ * device_remove_of_node - Remove an of_node from a device
-+ * @dev: device whose device-tree node is being removed
-+ */
-+void device_remove_of_node(struct device *dev)
-+{
-+	dev = get_device(dev);
-+	if (!dev)
-+		return;
+diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+index 5a0b98e69795..59cc5c851fc3 100644
+--- a/drivers/pci/of_property.c
++++ b/drivers/pci/of_property.c
+@@ -54,9 +54,13 @@ enum of_pci_prop_compatible {
+ static void of_pci_set_address(struct pci_dev *pdev, u32 *prop, u64 addr,
+ 			       u32 reg_num, u32 flags, bool reloc)
+ {
+-	prop[0] = FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
+-		FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
+-		FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
++	if (pdev)
++		prop[0] = FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
++			  FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
++			  FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
++	else
++		prop[0] = 0;
 +
-+	if (!dev->of_node)
-+		goto end;
-+
-+	if (dev->fwnode == of_fwnode_handle(dev->of_node))
-+		dev->fwnode = NULL;
-+
-+	of_node_put(dev->of_node);
-+	dev->of_node = NULL;
-+
-+end:
-+	put_device(dev);
-+}
-+EXPORT_SYMBOL_GPL(device_remove_of_node);
-+
-+/**
-+ * device_add_of_node - Add an of_node to an existing device
-+ * @dev: device whose device-tree node is being added
-+ * @of_node: of_node to add
-+ */
-+void device_add_of_node(struct device *dev, struct device_node *of_node)
-+{
-+	if (!of_node)
-+		return;
-+
-+	dev = get_device(dev);
-+	if (!dev)
-+		return;
-+
-+	if (WARN(dev->of_node, "%s: Cannot replace node %pOF with %pOF\n",
-+		 dev_name(dev), dev->of_node, of_node))
-+		goto end;
-+
-+	dev->of_node = of_node_get(of_node);
-+
-+	if (!dev->fwnode)
-+		dev->fwnode = of_fwnode_handle(of_node);
-+
-+end:
-+	put_device(dev);
-+}
-+EXPORT_SYMBOL_GPL(device_add_of_node);
-+
- /**
-  * device_set_of_node_from_dev - reuse device-tree node of another device
-  * @dev: device whose device-tree node is being set
-diff --git a/include/linux/device.h b/include/linux/device.h
-index b4bde8d22697..e3aa25ce1f90 100644
---- a/include/linux/device.h
-+++ b/include/linux/device.h
-@@ -1146,6 +1146,8 @@ int device_online(struct device *dev);
- void set_primary_fwnode(struct device *dev, struct fwnode_handle *fwnode);
- void set_secondary_fwnode(struct device *dev, struct fwnode_handle *fwnode);
- void device_set_node(struct device *dev, struct fwnode_handle *fwnode);
-+void device_add_of_node(struct device *dev, struct device_node *of_node);
-+void device_remove_of_node(struct device *dev);
- void device_set_of_node_from_dev(struct device *dev, const struct device *dev2);
- 
- static inline struct device_node *dev_of_node(struct device *dev)
+ 	prop[0] |= flags | reg_num;
+ 	if (!reloc) {
+ 		prop[0] |= OF_PCI_ADDR_FIELD_NONRELOC;
 -- 
 2.47.0
 
