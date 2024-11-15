@@ -1,185 +1,111 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 440182B9B7
-	for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2024 08:15:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C23CA2B9B7
+	for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2024 08:24:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731658540; cv=none; b=uHgXst3wpc9Xn3P89+5E+/poaHx6N84jz8z3DeQ01snSe+WaP0FegdGhUP0ZjnfgWBRZrMcQDtJFK/3m9CZB6ydjqJCFN0353qY7OIkrdRsgayb0mctVrYTA5HPmF3prrHM8gQjRfjfIZ35YGkVvQgLMbNlRnp+KGlUDKrNQFJ0=
+	t=1731659082; cv=none; b=OHKiJtE1fYqAykDeecYTcN1lAF+l/9ln6XcSe05TMSR6erzyOIABZxILWZhgM8LOW9qNBsHS+D0j62rRS2tBo51J4k/ZIchOkmhT9U+vFWN7z0ZBet3WyH74uqoHjweGHkA+Qcj/aTjCodhJAu1hRQhto+6JTYa0Utjjsr0qTqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731658540; c=relaxed/simple;
-	bh=qb1EqVjy+N6VtdnAaxbLLICIMKpDLDUxnqmDHbT7RsA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M7NiMXnhg2Wk9nnzqySt7pkgMtSoLFvvWu9Lsrq0+VnEmx3yOdZES1lHJPiWe7tV4zqVHERJ7IjAyVE3yYJL7+2HtE2Dzkzg8AYZpH3ud5+dXMZXYBPUbXGeFggHJd/xHMC5rI3zmRynt/fUwgLBj8nNcGDCCNN+6ZxiOjik0fo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CkdyC5LW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1731659082; c=relaxed/simple;
+	bh=1rpa2h0Ydyfhg+ZMjSOkMq+HrUlLc/S/Do6lxT2jELs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EF2ig6w6n96IaabTYnIE682ztocfvsLF97UFzJlKkkc/1a70ao1wdyMzzGYNxX2R2sL/AFQnVvOqXJjouKZbPm0H4UyzXLsNHhhDuoTpVqFMmk0SJfVuwpRP57exJPz4yRIISo66khDDRBzPrECRhu84JXEZAiPEINu6nOJfTOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hmJCwP6D; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CkdyC5LW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98DEDC4CECF;
-	Fri, 15 Nov 2024 08:15:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1731658539;
-	bh=qb1EqVjy+N6VtdnAaxbLLICIMKpDLDUxnqmDHbT7RsA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CkdyC5LWo4W6lwv6CrLNVysqfsQmMUHrY0vdSH3Okfh8kiwdgyRCiWLlGFoEAnrjn
-	 +lybZFX0YGkUz3sPiznvmG0HYM9sP5U1I9LMZzaiMdCfVOqrhpeMq1ZSyPhWhiZmFW
-	 EqveRvPrqwWlokhr9i3uL44Nj1xql+7TNX760VP9Nw1VXnGojvMC8MA/4tbx8h/0Mv
-	 NIOtpZVZ8I5n+M0+/fkZRU+QjeGD3sHQPpob7im9Vvk0B0J6+aiM23E1nRvH/4GUj3
-	 xSrCowOC5BctPfmP00HvefNqkMBjsgoW333dTH24QzrB88laoR4ITRNXwodJ7KCCQG
-	 80YFkAJJpeYJw==
-Date: Fri, 15 Nov 2024 09:15:34 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Frank Li <Frank.li@nxp.com>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Jesper Nilsson <jesper.nilsson@axis.com>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 3/3] PCI: dwc: ep: Improve alignment check in
- dw_pcie_prog_ep_inbound_atu()
-Message-ID: <ZzcDJo_U0zz3OQe7@ryzen>
-References: <20241114110326.1891331-5-cassel@kernel.org>
- <20241114110326.1891331-8-cassel@kernel.org>
- <ZzYxslV+c1QxsJCM@lizhi-Precision-Tower-5810>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hmJCwP6D"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1731659081; x=1763195081;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=1rpa2h0Ydyfhg+ZMjSOkMq+HrUlLc/S/Do6lxT2jELs=;
+  b=hmJCwP6DyJxDDWzkD1atfJJ9anZDqOJFz6C2DoJjAgrWpjuOLUxVR8Fo
+   7/G9R3+ZzIMN/183tX0UU3wx3rzHZ2CF36WCeDTpYzvobWamWmx7cOJ9P
+   aGOP+f3NFyctEgfXTM3oKtDFan2FHXv1SL0pNng3wdwhmyoXbEXkfHzoE
+   lYeDLPcMcA1yyz1lrzdXWFpjDGAUw2otKjvyKgyhX4y+02+v53E33OSrZ
+   zw0T+xDTCJY5xFKluxenSSJGsBKYrTACjWPyH0CVK0xzjZSHJZuUtA7M+
+   5zTlBE7mXrM+cZpHiXQrcJ7RQrqNNdC3YbPkl8Hk6DAi5txPapfs5tldW
+   A==;
+X-CSE-ConnectionGUID: v1Z88HmASlGRI4ziUPJpqQ==
+X-CSE-MsgGUID: F4gra3N1Rw+/s7VTtvM7TA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11256"; a="42185282"
+X-IronPort-AV: E=Sophos;i="6.12,156,1728975600"; 
+   d="scan'208";a="42185282"
+Received: from fmviesa009.fm.intel.com ([10.60.135.149])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2024 00:24:41 -0800
+X-CSE-ConnectionGUID: KJHXFsm8Rau4eXYjzZaybw==
+X-CSE-MsgGUID: O8io4X9NTQiF34z0mdZz+g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,156,1728975600"; 
+   d="scan'208";a="88898560"
+Received: from arl-s-03.igk.intel.com ([10.91.111.103])
+  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2024 00:24:38 -0800
+From: Szymon Durawa <szymon.durawa@linux.intel.com>
+To: helgaas@kernel.org
+Cc: Szymon Durawa <szymon.durawa@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	linux-pci@vger.kernel.org,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Subject: [PATCH v2 0/8] VMD add second rootbus support
+Date: Fri, 15 Nov 2024 10:22:48 +0100
+Message-Id: <20241115092256.2525264-1-szymon.durawa@linux.intel.com>
+X-Mailer: git-send-email 2.39.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ZzYxslV+c1QxsJCM@lizhi-Precision-Tower-5810>
+Content-Transfer-Encoding: 8bit
 
-On Thu, Nov 14, 2024 at 12:21:54PM -0500, Frank Li wrote:
-> On Thu, Nov 14, 2024 at 12:03:29PM +0100, Niklas Cassel wrote:
-> 
-> according to patch, subject look like
-> 
-> "Add 'address' alignment to 'size' check in dw_pcie_prog_ep_inbound_atu()."
+This patch series implements second rootbus support inside Intel VMD module.
+Current implementation allows VMD to take ownership of devices only on first
+bus (Rootbus0). Starting from Intel Arrow Lake, VMD exposes second bus 
+(Rootbus1) to allow VMD to own devices on this bus as well. VMD MMIO BARs
+(CFGBAR. MEMBAR1 and MEMBAR2) are now shared between Rootbus0 and Rootbus1.
+Reconfiguration of 3 MMIO BARs is required by resizing current MMIO BARs ranges.
+It allows to find/register Rootbus1 and discovers devices behind it.
 
-Sure.
+Patches 1 to 6 introduce code refactoring without functional changes.
+Patch 7 implements VMD Rootbus1 and patch 8 provides workaround for rootbus
+number hardwired to fixed non-zero value. Patch 8 is necessary for correct 
+enumeration attached devices behind Rottbus1. Without it user cannot access
+those devices.
 
+Changes from v1:
+- splitting series into more commits, requested by Bjorn
+- adding helper functions, suggested by Bjorn
+- minor typos and unclear wording updated, suggested by Bjorn
 
-> 
-> > dw_pcie_prog_ep_inbound_atu() is used to program an inbound iATU in
-> > "BAR Match Mode".
-> >
-> > While a memory address returned by kmalloc() is guaranteed to be naturally
-> > aligned (aligned to the size of the allocation), it is not guaranteed that
-> > the address that is supplied to pci_epc_set_bar() (and thus the addres that
-> > is supplied to dw_pcie_prog_ep_inbound_atu()) is naturally aligned.
-> 
-> short sentence may be better
-> 
-> The memory address returned by kmalloc() is guaranteed to be naturally
-> aligned (aligned to the size of the allocation), but it may not align when
-> pass to pci_epc_set_bar().
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Dan Williams <dan.j.williams@intel.com>
+Cc: Lukas Wunner <lukas@wunner.de>
+Cc: linux-pci@vger.kernel.org
+Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
+Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
+Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
 
-I do not think that this is better.
+Szymon Durawa (8):
+  PCI: vmd: Add vmd_bus_enumeration()
+  PCI: vmd: Add vmd_configure_cfgbar()
+  PCI: vmd: Add vmd_configure_membar() and
+    vmd_configure_membar1_membar2()
+  PCI: vmd: Add vmd_create_bus()
+  PCI: vmd: Replace hardcoded values with enum and defines
+  PCI: vmd: Convert bus and busn_start to an array
+  PCI: vmd: Add support for second rootbus under VMD
+  PCI: vmd: Add workaround for rootbus number hardwired to fixed
+    non-zero value
 
-The memory address returned by kmalloc() is naturally aligned, and will still
-be naturally aligned when passed to pci_epc_set_bar().
+ drivers/pci/controller/vmd.c | 467 ++++++++++++++++++++++++++---------
+ 1 file changed, 357 insertions(+), 110 deletions(-)
+ mode change 100644 => 100755 drivers/pci/controller/vmd.c
 
-The problem is if the address supplied to pci_epc_set_bar() did not come from
-something that was kmalloc():ed. E.g. the ITS address.
+-- 
+2.39.3
 
-I can rephrase this sentence to make that clearer in v2.
-
-
-Kind regards,
-Niklas
-
-
-> 
-> >
-> > See the register description for IATU_LWR_TARGET_ADDR_OFF_INBOUND_i,
-> > specifically fields LWR_TARGET_RW and LWR_TARGET_HW in the DWC Databook.
-> >
-> > "Field size depends on log2(BAR_MASK+1) in BAR match mode."
-> >
-> > I.e. only the upper bits are writable, and the number of writable bits is
-> > dependent on the configured BAR_MASK.
-> >
-> > Add a check to ensure that the physical address programmed in the iATU is
-> > aligned to the size of the BAR (BAR_MASK+1), as without this, we can get
-> > hard to debug errors, as we could write to bits that are read-only (without
-> > getting a write error), which could cause the iATU to end up redirecting to
-> > a physical address that is different from the address that we intended.
-> >
-> > Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> > ---
-> >  drivers/pci/controller/dwc/pcie-designware-ep.c | 8 +++++---
-> >  drivers/pci/controller/dwc/pcie-designware.c    | 5 +++--
-> >  drivers/pci/controller/dwc/pcie-designware.h    | 2 +-
-> >  3 files changed, 9 insertions(+), 6 deletions(-)
-> >
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > index 507e40bd18c8f..4ad6ebd2ea320 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-> > @@ -128,7 +128,8 @@ static int dw_pcie_ep_write_header(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> >  }
-> >
-> >  static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
-> > -				  dma_addr_t cpu_addr, enum pci_barno bar)
-> > +				  dma_addr_t cpu_addr, enum pci_barno bar,
-> > +				  size_t size)
-> >  {
-> >  	int ret;
-> >  	u32 free_win;
-> > @@ -145,7 +146,7 @@ static int dw_pcie_ep_inbound_atu(struct dw_pcie_ep *ep, u8 func_no, int type,
-> >  	}
-> >
-> >  	ret = dw_pcie_prog_ep_inbound_atu(pci, func_no, free_win, type,
-> > -					  cpu_addr, bar);
-> > +					  cpu_addr, bar, size);
-> >  	if (ret < 0) {
-> >  		dev_err(pci->dev, "Failed to program IB window\n");
-> >  		return ret;
-> > @@ -229,7 +230,8 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
-> >  	else
-> >  		type = PCIE_ATU_TYPE_IO;
-> >
-> > -	ret = dw_pcie_ep_inbound_atu(ep, func_no, type, epf_bar->phys_addr, bar);
-> > +	ret = dw_pcie_ep_inbound_atu(ep, func_no, type, epf_bar->phys_addr, bar,
-> > +				     size);
-> >  	if (ret)
-> >  		return ret;
-> >
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-> > index 6d6cbc8b5b2c6..3c683b6119c39 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware.c
-> > +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> > @@ -597,11 +597,12 @@ int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
-> >  }
-> >
-> >  int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
-> > -				int type, u64 cpu_addr, u8 bar)
-> > +				int type, u64 cpu_addr, u8 bar, size_t size)
-> >  {
-> >  	u32 retries, val;
-> >
-> > -	if (!IS_ALIGNED(cpu_addr, pci->region_align))
-> > +	if (!IS_ALIGNED(cpu_addr, pci->region_align) ||
-> > +	    !IS_ALIGNED(cpu_addr, size))
-> >  		return -EINVAL;
-> >
-> >  	dw_pcie_writel_atu_ib(pci, index, PCIE_ATU_LOWER_TARGET,
-> > diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-> > index 347ab74ac35aa..fc08727116725 100644
-> > --- a/drivers/pci/controller/dwc/pcie-designware.h
-> > +++ b/drivers/pci/controller/dwc/pcie-designware.h
-> > @@ -491,7 +491,7 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
-> >  int dw_pcie_prog_inbound_atu(struct dw_pcie *pci, int index, int type,
-> >  			     u64 cpu_addr, u64 pci_addr, u64 size);
-> >  int dw_pcie_prog_ep_inbound_atu(struct dw_pcie *pci, u8 func_no, int index,
-> > -				int type, u64 cpu_addr, u8 bar);
-> > +				int type, u64 cpu_addr, u8 bar, size_t size);
-> >  void dw_pcie_disable_atu(struct dw_pcie *pci, u32 dir, int index);
-> >  void dw_pcie_setup(struct dw_pcie *pci);
-> >  void dw_pcie_iatu_detect(struct dw_pcie *pci);
-> > --
-> > 2.47.0
-> >
