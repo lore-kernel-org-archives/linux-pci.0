@@ -1,117 +1,259 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EDF5126C10;
-	Fri, 15 Nov 2024 16:27:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C2A21D47A0;
+	Fri, 15 Nov 2024 16:36:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731688062; cv=none; b=bDL/DoDqlmfujaD7pUjR425Uuch5ER8q+JgmLd0hJMW8Y7KMzUyXtbz9mIiNghWvwkkMQCbF48ly0VTxiCpD162SlU/4/ac79ppMZMJu1s+fEJDmidzZ1HRqZ3T2IXY3xV3DeKHms0xG5KWwAh/zANBeZMsGADu0GjosSLOg/D0=
+	t=1731688566; cv=none; b=ra0hMr9O7DOoH2mBfzJtZSW/xjd43U9gMD+wOsueovBPfmZKeTYue4LSP2McG16K2Inm78tqgWrtQNgh+RkJyTSsb+qiEOHzk+wOLJuZaOQzMxWdXXxIlZ88zXCBZk2L3lyqvjVb8AVUXP1FGV5xImxNZ2Z/4cWzWadZlTF66QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731688062; c=relaxed/simple;
-	bh=oK/ecY8SVQjsxicQV/tUD92mrzRYTPcQsFmw2JJDW/g=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=rixBU9WD/6vCU+jfTnEwvG/rV1QF9DmQF4xKmP3jfnShrW2emny6iSQY7CqoTGqsB+2K4elMpmchwPSsN7g7HKy9/UqZxYlf3QzPdvgn5qBPxPbsHTHVoAC5/ufzdMk4ZC9nB7W/PVPIgaUdNxCVeSJhDAiAIepIgZRlv/w6w98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cf10LL0X; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1731688566; c=relaxed/simple;
+	bh=6yQrzL+pY0s5bWYhKAenvAd4K3vkSdTM9mFizd+1r8E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YzBUFPLUuYzGgkOk7bUp/7lu42Y8IfKJA7EEGuU0Pykb35tohhsey+P8GV9z7vNvnH34Hm8iICqCX/cLS1zCXhzRlzqXeCikWhzDGNGQAZU+7RjIXl1aF2qfv6dP4JXFvcDiJSpxVXhiZoxV40toyWuhC1/WviB4OM9qusq+yYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H99tUUBj; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cf10LL0X"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731688060; x=1763224060;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=oK/ecY8SVQjsxicQV/tUD92mrzRYTPcQsFmw2JJDW/g=;
-  b=cf10LL0XK2t2PBGZug6VNrNrtMZ2t4Ddg634UObpVj+SzQMwTH5fwDMj
-   iH/U2kdwvRl7GknQEgkvx3qX7VovkRZKAs4N20Q6M3+o98+k6Sr+durt7
-   E0HY+UdCJJqrbfuul7WcLIyfBmkPcyfOuNYtDTiz+g2WUITtLf+EvnJ3s
-   IuomxpNfDRmSBFl7NCcZBXDolVXwjx7TA3bS47gta92KYQnM5fncfcUFi
-   OfsUaIhUyIo19MDrHYAdmiUzPtOqQkIieJfAMNx/OGSmxuQMjSe+nY7tU
-   p2ybh9Qr9PUST6wAqskVrP+o/Bl8LGtQ9Vc35WyFHQi83hynZcOFBR1Mu
-   A==;
-X-CSE-ConnectionGUID: +yi6HbtlRgqw8evKt9zwoQ==
-X-CSE-MsgGUID: q6fC0XTISfi+NZ8HhNzXGw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11257"; a="34572018"
-X-IronPort-AV: E=Sophos;i="6.12,157,1728975600"; 
-   d="scan'208";a="34572018"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2024 08:27:39 -0800
-X-CSE-ConnectionGUID: H0U1k8MRTRSwIU8xkOKmwA==
-X-CSE-MsgGUID: GK+31EqdRk2Tz36M3cEF8Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,157,1728975600"; 
-   d="scan'208";a="93545937"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.244.142])
-  by orviesa005-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2024 08:27:38 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Fri, 15 Nov 2024 18:27:34 +0200 (EET)
-To: Lukas Wunner <lukas@wunner.de>
-cc: Stefan Wahren <wahrenst@gmx.net>, 
-    Florian Fainelli <florian.fainelli@broadcom.com>, 
-    Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas <bhelgaas@google.com>, 
-    linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
-Subject: Re: [PATCH 1/1] PCI/PME+pciehp: Request IRQF_ONESHOT because bwctrl
- shares IRQ
-In-Reply-To: <ZzdF1zrgQNNRlkgP@wunner.de>
-Message-ID: <ca3008f1-d4ba-a68e-5a3c-a9e2e075eaa0@linux.intel.com>
-References: <20241114142034.4388-1-ilpo.jarvinen@linux.intel.com> <ZzdF1zrgQNNRlkgP@wunner.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H99tUUBj"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E232C4CED5;
+	Fri, 15 Nov 2024 16:36:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1731688565;
+	bh=6yQrzL+pY0s5bWYhKAenvAd4K3vkSdTM9mFizd+1r8E=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=H99tUUBjROYIibs7vXroxAi3KXnmtRNRe1yk//et3sKkQZfVPW2DCaDJlHgMsrnAK
+	 Y6iuBeAZFRfUzJZcbT2178fMPypgrYxiE/oWrhYWdNN0qbdZA+UsYJjonG5XV9hTnU
+	 ELMQnXVNxjU30qSBtvn1KcZyVyrzBjvk0LH6C2LXAMDqTMcdUj5/183weCY3T7jw8L
+	 RFds4A3qvgQD2FmsqcARtCjpAig8ANEpgfBcn7kfTUVGl7nS7Id4DXdqaAa7R84K+H
+	 yKEcNGIULnpqYwTkfwqboyI1zpC1GvA7Q5bkfAEy+QsJ/aToJ/Zuc4jZxaRvsIdG7E
+	 pNnt/nYpycq0Q==
+Date: Fri, 15 Nov 2024 10:36:03 -0600
+From: Rob Herring <robh@kernel.org>
+To: Christian Bruel <christian.bruel@foss.st.com>
+Cc: lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org,
+	bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
+	p.zabel@pengutronix.de, cassel@kernel.org,
+	quic_schintav@quicinc.com, fabrice.gasnier@foss.st.com,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex
+ bindings
+Message-ID: <20241115163603.GA3188739-robh@kernel.org>
+References: <20241112161925.999196-1-christian.bruel@foss.st.com>
+ <20241112161925.999196-2-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-269478299-1731688054=:940"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241112161925.999196-2-christian.bruel@foss.st.com>
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+On Tue, Nov 12, 2024 at 05:19:21PM +0100, Christian Bruel wrote:
+> Document the bindings for STM32MP25 PCIe Controller configured in
+> root complex mode.
+> Supports 4 legacy interrupts and MSI interrupts from the ARM
+> GICv2m controller.
+> 
+> Allow tuning to change payload (default 128B) thanks to the
+> st,max-payload-size entry.
+> Can also limit the Maximum Read Request Size on downstream devices to the
+> minimum possible value between 128B and 256B.
+> 
+> STM32 PCIE may be in a power domain which is the case for the STM32MP25
+> based boards.
+> Supports wake# from wake-gpios
+> 
+> Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+> ---
+>  .../bindings/pci/st,stm32-pcie-host.yaml      | 149 ++++++++++++++++++
+>  1 file changed, 149 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+> new file mode 100644
+> index 000000000000..d7d360b63a08
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+> @@ -0,0 +1,149 @@
+> +# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/pci/st,stm32-pcie-host.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: STM32MP25 PCIe root complex driver
+> +
+> +maintainers:
+> +  - Christian Bruel <christian.bruel@foss.st.com>
+> +
+> +description:
+> +  PCIe root complex controller based on the Synopsys DesignWare PCIe core.
+> +
+> +select:
+> +  properties:
+> +    compatible:
+> +      const: st,stm32mp25-pcie-rc
+> +  required:
+> +    - compatible
+> +
+> +allOf:
+> +  - $ref: /schemas/pci/pci-host-bridge.yaml#
+> +  - $ref: /schemas/pci/snps,dw-pcie-common.yaml#
 
---8323328-269478299-1731688054=:940
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+snps,dw-pcie.yaml instead of these 2.
 
-On Fri, 15 Nov 2024, Lukas Wunner wrote:
+> +
+> +properties:
+> +  compatible:
+> +    const: st,stm32mp25-pcie-rc
+> +
+> +  reg:
+> +    items:
+> +      - description: Data Bus Interface (DBI) registers.
+> +      - description: PCIe configuration registers.
+> +
+> +  reg-names:
+> +    items:
+> +      - const: dbi
+> +      - const: config
+> +
+> +  resets:
+> +    maxItems: 1
+> +
+> +  reset-names:
+> +    const: core
 
-> On Thu, Nov 14, 2024 at 04:20:34PM +0200, Ilpo J=E4rvinen wrote:
-> > --- a/drivers/pci/hotplug/pciehp_hpc.c
-> > +++ b/drivers/pci/hotplug/pciehp_hpc.c
-> > @@ -68,7 +68,8 @@ static inline int pciehp_request_irq(struct controlle=
-r *ctrl)
-> > =20
-> >  =09/* Installs the interrupt handler */
-> >  =09retval =3D request_threaded_irq(irq, pciehp_isr, pciehp_ist,
-> > -=09=09=09=09      IRQF_SHARED, "pciehp", ctrl);
-> > +=09=09=09=09      IRQF_SHARED | IRQF_ONESHOT,
-> > +=09=09=09=09      "pciehp", ctrl);
-> >  =09if (retval)
-> >  =09=09ctrl_err(ctrl, "Cannot get irq %d for the hotplug controller\n",
-> >  =09=09=09 irq);
->=20
-> I don't think this will work.  The IRQ thread pciehp_ist() may write
-> to the Slot Control register and await a Command Completed event,
-> e.g. when turning Slot Power on/off, changing LEDs, etc.
->=20
-> What happens then is, the hardware sets the Command Completed bit in
-> the Slot Status register and signals an interrupt.  The hardirq handler
-> pciehp_isr() reads the Slot Status register, acknowledges the
-> Command Completed event, sets "ctrl->cmd_busy =3D 0" and wakes up the
-> waiting IRQ thread.
->=20
-> In other words, pciehp does need the interrupt to stay enabled while
-> the IRQ thread is running so that the hardirq handler can receive
-> Command Completed interrupts.
->=20
-> Note that DPC also does not use IRQF_ONESHOT, so you'd have to change
-> that as well in this patch.  The Raspberry Pi happens to not support
-> DPC, so Stefan didn't see an error related to it.
->=20
-> I'm afraid you need to amend bwctrl to work without IRQF_ONESHOT rather
-> than changing all the others.
+-names with a single entry is kind of pointless.
 
-That isn't complicated. The current irq thread handler is simple enough=20
-that it will just work as hardirq handler without any changes.
+> +
+> +  clocks:
+> +    maxItems: 1
+> +    description: PCIe system clock
+> +
+> +  clock-names:
+> +    const: core
+> +
+> +  phys:
+> +    maxItems: 1
+> +
+> +  phy-names:
+> +    const: pcie-phy
+> +
+> +  num-lanes:
+> +    const: 1
+> +
+> +  msi-parent:
+> +    maxItems: 1
 
---=20
- i.
+Just 'msi-parent: true'. It's already only ever 1 entry.
 
---8323328-269478299-1731688054=:940--
+> +
+> +  reset-gpios:
+> +    description: GPIO controlled connection to PERST# signal
+> +    maxItems: 1
+> +
+> +  wake-gpios:
+> +    description: GPIO controlled connection to WAKE# input signal
+> +    maxItems: 1
+> +
+
+> +  st,limit-mrrs:
+> +    description: If present limit downstream MRRS to 256B
+> +    type: boolean
+> +
+> +  st,max-payload-size:
+> +    description: Maximum Payload size to use
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +    enum: [128, 256]
+> +    default: 128
+
+IIRC, other hosts have similar restrictions, so you should be able to do 
+the same and imply it from the compatible. Though I'm open to a common 
+property as Bjorn suggested.
+
+> +
+> +  wakeup-source: true
+> +
+> +  power-domains:
+> +    maxItems: 1
+> +
+> +  access-controllers:
+> +    maxItems: 1
+> +
+> +if:
+> +  required:
+> +    - wakeup-source
+> +then:
+> +  required:
+> +    - wake-gpios
+
+This can be just:
+
+dependentRequired:
+  wakeup-source: [ wake-gpios ]
+
+(dependentRequired supercedes dependencies)
+
+> +
+> +required:
+> +  - interrupt-map
+> +  - interrupt-map-mask
+> +  - ranges
+> +  - resets
+> +  - reset-names
+> +  - clocks
+> +  - clock-names
+> +  - phys
+> +  - phy-names
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
+> +    #include <dt-bindings/gpio/gpio.h>
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +    #include <dt-bindings/phy/phy.h>
+> +    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
+> +
+> +    pcie@48400000 {
+> +        compatible = "st,stm32mp25-pcie-rc";
+> +        device_type = "pci";
+> +        num-lanes = <1>;
+> +        reg = <0x48400000 0x400000>,
+> +              <0x10000000 0x10000>;
+> +        reg-names = "dbi", "config";
+> +        #interrupt-cells = <1>;
+> +        interrupt-map-mask = <0 0 0 7>;
+> +        interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
+> +                        <0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
+> +                        <0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
+> +                        <0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
+> +        #address-cells = <3>;
+> +        #size-cells = <2>;
+> +        ranges = <0x01000000 0 0x10010000 0x10010000 0 0x10000>,
+> +                 <0x02000000 0 0x10020000 0x10020000 0 0x7fe0000>,
+> +                 <0x42000000 0 0x18000000 0x18000000 0 0x8000000>;
+> +        bus-range = <0x00 0xff>;
+
+Don't need this unless it's restricted to less than bus 0-255.
+
+> +        clocks = <&rcc CK_BUS_PCIE>;
+> +        clock-names = "core";
+> +        phys = <&combophy PHY_TYPE_PCIE>;
+> +        phy-names = "pcie-phy";
+> +        resets = <&rcc PCIE_R>;
+> +        reset-names = "core";
+> +        msi-parent = <&v2m0>;
+> +        wakeup-source;
+> +        wake-gpios = <&gpioh 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
+> +        access-controllers = <&rifsc 76>;
+> +        power-domains = <&CLUSTER_PD>;
+> +    };
+> -- 
+> 2.34.1
+> 
