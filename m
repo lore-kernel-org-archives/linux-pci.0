@@ -1,111 +1,117 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mx08-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C23CA2B9B7
-	for <linux-pci@vger.kernel.org>; Fri, 15 Nov 2024 08:24:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 490DC1E522;
+	Fri, 15 Nov 2024 08:30:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731659082; cv=none; b=OHKiJtE1fYqAykDeecYTcN1lAF+l/9ln6XcSe05TMSR6erzyOIABZxILWZhgM8LOW9qNBsHS+D0j62rRS2tBo51J4k/ZIchOkmhT9U+vFWN7z0ZBet3WyH74uqoHjweGHkA+Qcj/aTjCodhJAu1hRQhto+6JTYa0Utjjsr0qTqc=
+	t=1731659427; cv=none; b=Rr6iaX58wkpjq2TzAQvlqXFCL+JjKBNJ2yddo/P5wAGEBhd/iWCmqnjPQlXm74KFyYVEALIl8Gw5V/pemL2Pn2XuyPdw0UAqsfVSwBzRIVkUnGpXQi0sEkq0rAWiZmaPcSTsR1Nf6td6geNuTAk7Q+a6l43nsygLFYUc6IJktVk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731659082; c=relaxed/simple;
-	bh=1rpa2h0Ydyfhg+ZMjSOkMq+HrUlLc/S/Do6lxT2jELs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=EF2ig6w6n96IaabTYnIE682ztocfvsLF97UFzJlKkkc/1a70ao1wdyMzzGYNxX2R2sL/AFQnVvOqXJjouKZbPm0H4UyzXLsNHhhDuoTpVqFMmk0SJfVuwpRP57exJPz4yRIISo66khDDRBzPrECRhu84JXEZAiPEINu6nOJfTOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hmJCwP6D; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1731659427; c=relaxed/simple;
+	bh=AwNaowL+z3r5T3Dhk/DjATV1Gtv4vvKbU0QkuO3KiTk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=SqtYvrSDoTtqQXFPh5b5TukQXuU67fRJkbEetqUlVWOYd5IFwPMXPr9WpHpzc1VHm1puCxD4vBs4Ws4nCIGoqJHoHPUpu49f8J9S8uRdPCoBAJEnsy/s86RCzCzH3JDAWjewbKc7L/u+nCVuX5VYGW88LlofsX53g4obSfEjk8Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=baiy+g4p; arc=none smtp.client-ip=91.207.212.93
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hmJCwP6D"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1731659081; x=1763195081;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=1rpa2h0Ydyfhg+ZMjSOkMq+HrUlLc/S/Do6lxT2jELs=;
-  b=hmJCwP6DyJxDDWzkD1atfJJ9anZDqOJFz6C2DoJjAgrWpjuOLUxVR8Fo
-   7/G9R3+ZzIMN/183tX0UU3wx3rzHZ2CF36WCeDTpYzvobWamWmx7cOJ9P
-   aGOP+f3NFyctEgfXTM3oKtDFan2FHXv1SL0pNng3wdwhmyoXbEXkfHzoE
-   lYeDLPcMcA1yyz1lrzdXWFpjDGAUw2otKjvyKgyhX4y+02+v53E33OSrZ
-   zw0T+xDTCJY5xFKluxenSSJGsBKYrTACjWPyH0CVK0xzjZSHJZuUtA7M+
-   5zTlBE7mXrM+cZpHiXQrcJ7RQrqNNdC3YbPkl8Hk6DAi5txPapfs5tldW
-   A==;
-X-CSE-ConnectionGUID: v1Z88HmASlGRI4ziUPJpqQ==
-X-CSE-MsgGUID: F4gra3N1Rw+/s7VTtvM7TA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11256"; a="42185282"
-X-IronPort-AV: E=Sophos;i="6.12,156,1728975600"; 
-   d="scan'208";a="42185282"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2024 00:24:41 -0800
-X-CSE-ConnectionGUID: KJHXFsm8Rau4eXYjzZaybw==
-X-CSE-MsgGUID: O8io4X9NTQiF34z0mdZz+g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,156,1728975600"; 
-   d="scan'208";a="88898560"
-Received: from arl-s-03.igk.intel.com ([10.91.111.103])
-  by fmviesa009-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Nov 2024 00:24:38 -0800
-From: Szymon Durawa <szymon.durawa@linux.intel.com>
-To: helgaas@kernel.org
-Cc: Szymon Durawa <szymon.durawa@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	linux-pci@vger.kernel.org,
-	Nirmal Patel <nirmal.patel@linux.intel.com>,
-	Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Subject: [PATCH v2 0/8] VMD add second rootbus support
-Date: Fri, 15 Nov 2024 10:22:48 +0100
-Message-Id: <20241115092256.2525264-1-szymon.durawa@linux.intel.com>
-X-Mailer: git-send-email 2.39.3
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="baiy+g4p"
+Received: from pps.filterd (m0369457.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AF80KYe008356;
+	Fri, 15 Nov 2024 09:29:48 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	hV7BxhQ3eifJYS/TNyu+Lmhdj2uo69md9n/Ratf2lvI=; b=baiy+g4pS4xqJe22
+	Z6PA5mWy2Cs7RSvM4GWc/IW5XjATX0WHk5aElMwUw/pwK9CpSSscsnc7jsM9CeyR
+	QEq2GV4QxD8TyYOW181ziqZmw5yhaaKydrpjuzIVukdoM1LOLT0M00b6LSK7BYDs
+	l0thJ4hekFeNA/SvfdvacMOkRUulYxED4boG5uqMuo4yk7hHl7HXMUpn0cIjjpwI
+	+AeXVvV9dd+rpoicCf30pqcuLp99gFd68FH9DmP7HITTjjpB2UuzfThRd+DJ3TGQ
+	/7eA1+kCT+AI7u9NVgv5359Vsk7melk4XVMB2WrFp7D29rfd+TjSf/eepa2oNHaZ
+	DeVOwg==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 42whe9ukqu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 15 Nov 2024 09:29:48 +0100 (CET)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 5632340053;
+	Fri, 15 Nov 2024 09:28:22 +0100 (CET)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 31155263566;
+	Fri, 15 Nov 2024 09:27:14 +0100 (CET)
+Received: from [10.129.178.212] (10.129.178.212) by SHFDAG1NODE3.st.com
+ (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Fri, 15 Nov
+ 2024 09:27:13 +0100
+Message-ID: <2b52093a-103f-4dd4-bb6d-c04dc9f68e98@foss.st.com>
+Date: Fri, 15 Nov 2024 09:27:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex
+ bindings
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
+        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+References: <20241112182809.GA1853254@bhelgaas>
+Content-Language: en-US
+From: Christian Bruel <christian.bruel@foss.st.com>
+In-Reply-To: <20241112182809.GA1853254@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
 
-This patch series implements second rootbus support inside Intel VMD module.
-Current implementation allows VMD to take ownership of devices only on first
-bus (Rootbus0). Starting from Intel Arrow Lake, VMD exposes second bus 
-(Rootbus1) to allow VMD to own devices on this bus as well. VMD MMIO BARs
-(CFGBAR. MEMBAR1 and MEMBAR2) are now shared between Rootbus0 and Rootbus1.
-Reconfiguration of 3 MMIO BARs is required by resizing current MMIO BARs ranges.
-It allows to find/register Rootbus1 and discovers devices behind it.
 
-Patches 1 to 6 introduce code refactoring without functional changes.
-Patch 7 implements VMD Rootbus1 and patch 8 provides workaround for rootbus
-number hardwired to fixed non-zero value. Patch 8 is necessary for correct 
-enumeration attached devices behind Rottbus1. Without it user cannot access
-those devices.
 
-Changes from v1:
-- splitting series into more commits, requested by Bjorn
-- adding helper functions, suggested by Bjorn
-- minor typos and unclear wording updated, suggested by Bjorn
+On 11/12/24 19:28, Bjorn Helgaas wrote:
+> On Tue, Nov 12, 2024 at 05:19:21PM +0100, Christian Bruel wrote:
+>> Document the bindings for STM32MP25 PCIe Controller configured in
+>> root complex mode.
+>> Supports 4 legacy interrupts and MSI interrupts from the ARM
+>> GICv2m controller.
+>>
+>> Allow tuning to change payload (default 128B) thanks to the
+>> st,max-payload-size entry.
+>> Can also limit the Maximum Read Request Size on downstream devices to the
+>> minimum possible value between 128B and 256B.
+>>
+>> STM32 PCIE may be in a power domain which is the case for the STM32MP25
+>> based boards.
+>> Supports wake# from wake-gpios
+> 
+>> +  st,limit-mrrs:
+>> +    description: If present limit downstream MRRS to 256B
+>> +    type: boolean
+>> +
+>> +  st,max-payload-size:
+>> +    description: Maximum Payload size to use
+>> +    $ref: /schemas/types.yaml#/definitions/uint32
+>> +    enum: [128, 256]
+>> +    default: 128
+> 
+> MRRS and MPS are not specific to this device.  Not sure why you need
+> them, but if you do need them, I think they should be generic.
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Dan Williams <dan.j.williams@intel.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org
-Suggested-by: Nirmal Patel <nirmal.patel@linux.intel.com>
-Reviewed-by: Mariusz Tkaczyk <mariusz.tkaczyk@linux.intel.com>
-Signed-off-by: Szymon Durawa <szymon.durawa@linux.intel.com>
+Agree. On a second thought, this was to fix an old errata and can be 
+dropped now, as well as the associated quirks.
 
-Szymon Durawa (8):
-  PCI: vmd: Add vmd_bus_enumeration()
-  PCI: vmd: Add vmd_configure_cfgbar()
-  PCI: vmd: Add vmd_configure_membar() and
-    vmd_configure_membar1_membar2()
-  PCI: vmd: Add vmd_create_bus()
-  PCI: vmd: Replace hardcoded values with enum and defines
-  PCI: vmd: Convert bus and busn_start to an array
-  PCI: vmd: Add support for second rootbus under VMD
-  PCI: vmd: Add workaround for rootbus number hardwired to fixed
-    non-zero value
+Will re-post as generic if needed later on
 
- drivers/pci/controller/vmd.c | 467 ++++++++++++++++++++++++++---------
- 1 file changed, 357 insertions(+), 110 deletions(-)
- mode change 100644 => 100755 drivers/pci/controller/vmd.c
+thanks,
 
--- 
-2.39.3
-
+Christian
