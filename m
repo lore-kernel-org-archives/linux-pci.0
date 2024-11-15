@@ -1,71 +1,95 @@
-Received: from out30-112.freemail.mail.aliyun.com (out30-112.freemail.mail.aliyun.com [115.124.30.112])
+Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 728EE18CC1C;
-	Fri, 15 Nov 2024 09:22:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.112
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D1DB189F39;
+	Fri, 15 Nov 2024 09:35:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731662576; cv=none; b=fX0M5puiWpSjfwoFKGH3oUjhMpJUFRPL7B6olIa2rN3dEJKLmU4MG6MZ6NWskbIxoP7RoX5o4+M7ikI76b4Qq4KpwNUpylA16kZWpSJpzph/kg9Z61p/OLUeOo4lqnGZUw1kUVQKkrxi/Rl3lNexyd1C+rrmqihUWfwDh2q6Dr8=
+	t=1731663319; cv=none; b=GJ4ENXaNZbYg7pavTwsSHmEEQeZMBMiKxYiz0oMHTMrkvSt9eE3gPh21g1GisiwNWDVhtiX55/lvOIvE87IRyIqPw5WwUJJLavXJYyqiBc/VpU/elYzPyNeYBUjqPL7r1NjboQhxaP4HZAUNMO1Rtx1Ed+T+JSIXfzchJ1mMRYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731662576; c=relaxed/simple;
-	bh=HvfeLyx8bM9mz4+sEE+lLsT1rWLWP5byK/u6zORttUU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QgjvDP5rzmGYp5+t+tBxNErLa5kiBWLZIN0wtxAN7bIOhVmwWTTb1HiQXlufvFdumQ1Nt9Hz765ww0qLhENL2aBqV1orzUtJQ7+VUPvI07/RWNkk92jLaWFzo1u/wWBXmIvanMDpsQOTbcZy/9NSKrz3iA6Vkf+HaZviVSw1ax4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=sR1Qvi1O; arc=none smtp.client-ip=115.124.30.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="sR1Qvi1O"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1731662571; h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type;
-	bh=jQVm0XiX/O8PJTXPSVm2F+Gp9S8SqG9V8Sljy7gMQ70=;
-	b=sR1Qvi1OUkf8VvbSiASuP/sGhleuz7pGyoDk6R2x1IC95d/bRKHfihgKjbFU6MkWpSPamw/yPwSK2+uVt+OkooFeX0n2kHVkp71BZG+c114aY24eoSQDWyb+jurpRTKhQXicJayk1IVl7mRqTMLi1QpYeKIm+hQYnglaJ83UzyI=
-Received: from 30.246.162.170(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WJTCOoc_1731662568 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Fri, 15 Nov 2024 17:22:50 +0800
-Message-ID: <ae12f2f1-3626-4af7-b42a-b3a16e8a7a95@linux.alibaba.com>
-Date: Fri, 15 Nov 2024 17:22:47 +0800
+	s=arc-20240116; t=1731663319; c=relaxed/simple;
+	bh=FqFc6TLGuxk07hm5TrVP+dHDlEr4YWXsWODFt2U9+xo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mdtvirYAg/aLai3XSQV94yUsN3fvH5Sw47q0QH5xnywyhkG2q/HLpe7wINrG1ibPqrzXsbC0/ycbQETmJvZ9wy4w4bU35Za7Mpg1wPO+Xy6RnCS749D4jr8m+VPjPhS+Xwp/oA2gob7zNtgcPxfHAT2ccJQsn/svl/5AZfwA4DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout1.hostsharing.net (Postfix) with ESMTPS id 905D43000A0D2;
+	Fri, 15 Nov 2024 10:35:10 +0100 (CET)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 7E4703D0A00; Fri, 15 Nov 2024 10:35:10 +0100 (CET)
+Date: Fri, 15 Nov 2024 10:35:10 +0100
+From: Lukas Wunner <lukas@wunner.de>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: linux-cxl@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, nifan.cxl@gmail.com, ming4.li@intel.com,
+	dave@stgolabs.net, jonathan.cameron@huawei.com,
+	dave.jiang@intel.com, alison.schofield@intel.com,
+	vishal.l.verma@intel.com, dan.j.williams@intel.com,
+	bhelgaas@google.com, mahesh@linux.ibm.com, ira.weiny@intel.com,
+	oohall@gmail.com, Benjamin.Cheatham@amd.com, rrichter@amd.com,
+	nathan.fontenot@amd.com, Smita.KoralahalliChannabasappa@amd.com,
+	Shuai Xue <xueshuai@linux.alibaba.com>,
+	Keith Busch <kbusch@kernel.org>
+Subject: Re: [PATCH v3 06/15] PCI/AER: Change AER driver to read UCE fatal
+ status for all CXL PCIe port devices
+Message-ID: <ZzcVzpCXk2IpR7U3@wunner.de>
+References: <20241113215429.3177981-1-terry.bowman@amd.com>
+ <20241113215429.3177981-7-terry.bowman@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] PCI/AER: Report fatal errors of RCiEP and EP if
- link recoverd
-To: Lukas Wunner <lukas@wunner.de>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxppc-dev@lists.ozlabs.org, bhelgaas@google.com, kbusch@kernel.org,
- mahesh@linux.ibm.com, oohall@gmail.com,
- sathyanarayanan.kuppuswamy@linux.intel.com
-References: <20241112135419.59491-1-xueshuai@linux.alibaba.com>
- <20241112135419.59491-3-xueshuai@linux.alibaba.com>
- <ZzcPMxWqtvDWh3cq@wunner.de>
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-In-Reply-To: <ZzcPMxWqtvDWh3cq@wunner.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241113215429.3177981-7-terry.bowman@amd.com>
 
-
-
-在 2024/11/15 17:06, Lukas Wunner 写道:
-> On Tue, Nov 12, 2024 at 09:54:19PM +0800, Shuai Xue wrote:
->> The AER driver has historically avoided reading the configuration space of
->> an endpoint or RCiEP that reported a fatal error, considering the link to
->> that device unreliable.
+On Wed, Nov 13, 2024 at 03:54:20PM -0600, Terry Bowman wrote:
+> The AER service driver's aer_get_device_error_info() function doesn't read
+> uncorrectable (UCE) fatal error status from PCIe upstream port devices,
+> including CXL upstream switch ports. As a result, fatal errors are not
+> logged or handled as needed for CXL PCIe upstream switch port devices.
 > 
-> It would be good if you could mention the relevant commit here:
+> Update the aer_get_device_error_info() function to read the UCE fatal
+> status for all CXL PCIe port devices. Make the change to not affect
+> non-CXL PCIe devices.
 > 
-> 9d938ea53b26 ("PCI/AER: Don't read upstream ports below fatal errors")
-> 
-> Thanks,
-> 
-> Lukas
+> The fatal error status will be used in future patches implementing
+> CXL PCIe port uncorrectable error handling and logging.
+[...]
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -1250,7 +1250,8 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+>  	} else if (type == PCI_EXP_TYPE_ROOT_PORT ||
+>  		   type == PCI_EXP_TYPE_RC_EC ||
+>  		   type == PCI_EXP_TYPE_DOWNSTREAM ||
+> -		   info->severity == AER_NONFATAL) {
+> +		   info->severity == AER_NONFATAL ||
+> +		   (pcie_is_cxl(dev) && type == PCI_EXP_TYPE_UPSTREAM)) {
+>  
+>  		/* Link is still healthy for IO reads */
+>  		pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_STATUS,
 
-Sure, will add it.
+Just a heads-up, there's another patch pending by Shuai Xue (+cc)
+which touches the same code lines.  It re-enables error reporting
+for PCIe Upstream Ports (as well as Endpoints) under certain
+conditions:
 
-Thank you.
-Best Regards,
-Shuai
+https://lore.kernel.org/all/20241112135419.59491-3-xueshuai@linux.alibaba.com/
+
+That was originally disabled by Keith Busch (+cc) with commit
+9d938ea53b26 ("PCI/AER: Don't read upstream ports below fatal errors").
+
+There's some merge conflict potential here if your series goes into
+the cxl tree and Shuai's patch into the pci tree in the next cycle.
+
+Thanks,
+
+Lukas
