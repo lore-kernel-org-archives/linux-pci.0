@@ -1,132 +1,145 @@
-Received: from fout-a4-smtp.messagingengine.com (fout-a4-smtp.messagingengine.com [103.168.172.147])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DE8FD53F;
-	Sat, 16 Nov 2024 14:32:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.147
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D05812940D;
+	Sat, 16 Nov 2024 14:40:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1731767567; cv=none; b=jRJPeOeJLJhx+4XiPBWwBAovmHeRR37aJFqaoQIOZ8Dyz1P5lPukdWznCYP7YrHzc+gWZbVVZ692ys2oNSU7ACvRXfZ6J3q3++jt3HT9fgtosWnb87YvyJR9Z9h6BpEfztLFa9WyQqjSzVQ9T44OaX/RAcGT85NnsAZ97m11LG8=
+	t=1731768059; cv=none; b=Wfh57OB+aAAqx+r0Lv0zTPCbs0CxkSzXuLn8aVzuI9qRoPhatIwG3cqVlniTJ/Ot6O6knoYE5w/d/U9LDPbJyTVh8ulIWU6schxpjX9j/a1ih2mydyMhOZNZx89eDLCpBX9dx9XiQqIlzdkZFUtHgyOgjmBM+YNtqZnvSSSyrqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1731767567; c=relaxed/simple;
-	bh=Qf1YtplSqboVrrQeSa+gApRr86YTzv1m+laATy0yACw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ahj1qaSove5I2wEdJ9u5gD3VD4qbYWn73DIW7zIY0qjmbVsu8HElfZA+XJS6GvNXP/1asp0VRXfRiUa3/taq2KQs6ogYERnYlIzOAdY/zlnjYp2HYBPmQlY7xEWbsVK73shGpQCgCR2LiGwtBMNrdf6s7CVnFXylywKqXt2sFXk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net; spf=pass smtp.mailfrom=jannau.net; dkim=pass (2048-bit key) header.d=jannau.net header.i=@jannau.net header.b=f9poJhrv; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=Y4OCLt9e; arc=none smtp.client-ip=103.168.172.147
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=jannau.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=jannau.net
+	s=arc-20240116; t=1731768059; c=relaxed/simple;
+	bh=O9hmtxuZAwYgYSd+bW6jcmwA71WFHHSz0MRm6IsL8KM=;
+	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=AGftS0+wUpooW6STMtl3b+pboOCnSZIt6ZdRqN6UrvqxS7CLZ5UbPe8YCYetsvOJS0/8c8hVUKfCWm4O/GL7sDtAAappJB1CJ/EhvFPjrCVVb5hF102XhuHPzKIMiU5E7ESqY7MAkR2V3XgcOhMU6/tMRHlmFBFSTylVXI8WxQY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DiFfL00p; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=jannau.net header.i=@jannau.net header.b="f9poJhrv";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="Y4OCLt9e"
-Received: from phl-compute-03.internal (phl-compute-03.phl.internal [10.202.2.43])
-	by mailfout.phl.internal (Postfix) with ESMTP id 8E1A213801CA;
-	Sat, 16 Nov 2024 09:32:43 -0500 (EST)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-03.internal (MEProxy); Sat, 16 Nov 2024 09:32:43 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=jannau.net; h=cc
-	:cc:content-type:content-type:date:date:from:from:in-reply-to
-	:in-reply-to:message-id:mime-version:references:reply-to:subject
-	:subject:to:to; s=fm2; t=1731767563; x=1731853963; bh=MoWHSBImfy
-	kRca31mkake2h91ckcx0gjiNgQduzFP54=; b=f9poJhrvgBmc+nEAuEnws3V3cG
-	Fbf1oEbXoDgrP0dVvIUWlkKfBuDcFz68o8epnXPVsL8Y/iAJxHS8+fOanHrrPcCD
-	mhuacUlbIc44xvXvnbgQXBe9HXrU8dbeDnjm3lX85twBSAbPlPVSyWx9kLNjXrhL
-	4FGkDIfrDVMHqpBeLyYim2IS0DYiiKHGeB22ffLd0vHsfHUvAPNraaxj5kTTIcj8
-	OOP6pBvsqumJPwjNcLE3XzH9i5YqTz8iwLc1PdLV9QudosqO0e9AYUnXEw1YzvFi
-	pj7QpqnQt/qa5TG1Ka1vxAsspO4Rl6Y1eSGGMN5/3+/GW0B/L4u+aSm29Mww==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1731767563; x=1731853963; bh=MoWHSBImfykRca31mkake2h91ckcx0gjiNg
-	QduzFP54=; b=Y4OCLt9ezShbISTXv+1QZudz9h8a59Z9UW9Q/gIA5alJrVKwnDR
-	XQLJWtoI7D7UC/qLEtM29PwmeR36H7FztxMZvm14cBoanutWxlj9rvswhaQg+qHU
-	VPSAQgy6QzlqtLfe4+6/2dnFUOHCV5EjagkxzhU5TA2eMzL1RdXXE2narLbfzsrI
-	qc+hc2Y1wyCuj0M54p+H3cdNSoaLGye/+zJzE0BvyaaQc5lbseLNtSCxVN0hTfrU
-	68fjmXDtBKL4QiXV1ZI0CTIg6rlJrr8yHR0yIHfMzX8k5rWTWY2VOBwy7xZrC9N8
-	iSY8SfNlg1Fty+UuHv1znfqwhuvnWWqLYhQ==
-X-ME-Sender: <xms:Cq04ZyOKji-4pI8hx6pJJltp96UBMvVKeSXu03m2TjRERmO4m2kpmQ>
-    <xme:Cq04Zw9fBkoo8ZTJ8e5WR-17gDQGKi5dZsrwvIyVqzpOjVV-cwTzB3F2qflGjlT0I
-    wWAhme2ajbXd4TC1ds>
-X-ME-Received: <xmr:Cq04Z5RLUtk4ex1CG0bgSSiyI8L6FcKvej7ysYvU2vY0YIVbDj9dknqg25lHfOt20An9NI_nISMai61o3RITMhfnRUZdXeRrVe8>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefuddrvdeigdeifecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpggftfghnshhusghstghrihgsvgdpuffr
-    tefokffrpgfnqfghnecuuegrihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnth
-    hsucdlqddutddtmdenucfjughrpeffhffvvefukfhfgggtuggjsehttdertddttdejnecu
-    hfhrohhmpeflrghnnhgvucfirhhunhgruhcuoehjsehjrghnnhgruhdrnhgvtheqnecugg
-    ftrfgrthhtvghrnhepgfdvffevleegudejfeefheehkeehleehfefgjefffeetudegtefh
-    uedufeehfeetnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrh
-    homhepjhesjhgrnhhnrghurdhnvghtpdhnsggprhgtphhtthhopedvjedpmhhouggvpehs
-    mhhtphhouhhtpdhrtghpthhtohepuggrkhhrsehkvghrnhgvlhdrohhrghdprhgtphhtth
-    hopehgrhgvghhkhheslhhinhhugihfohhunhgurghtihhonhdrohhrghdprhgtphhtthho
-    pehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepsghhvghlghgrrghsse
-    hgohhoghhlvgdrtghomhdprhgtphhtthhopehojhgvuggrsehkvghrnhgvlhdrohhrghdp
-    rhgtphhtthhopegrlhgvgidrghgrhihnohhrsehgmhgrihhlrdgtohhmpdhrtghpthhtoh
-    epsghoqhhunhdrfhgvnhhgsehgmhgrihhlrdgtohhmpdhrtghpthhtohepghgrrhihsehg
-    rghrhihguhhordhnvghtpdhrtghpthhtohepsghjohhrnhefpghghhesphhrohhtohhnmh
-    grihhlrdgtohhm
-X-ME-Proxy: <xmx:Cq04ZyuSRMGiRDET4GjSh-DZWmojqbdLgnVCGsAb4YjTB_eEL7-cHA>
-    <xmx:Cq04Z6eibCtRYLVxf16cOaPpU7CZ_SVNHp1L4mLhJq4RZLv_xjJnKw>
-    <xmx:Cq04Z23nPVwBImd73lhnHE9rfcn1EoWrKLwniePvGneAiLX1gi5WHQ>
-    <xmx:Cq04Z-8IYTVTJF2xfoXZcm9ukKQYMJcmPK1YaH1FkGx_nbZujxG_zA>
-    <xmx:C604Z7NO8WXzVMxwZP3N3gLb0z4RYZF7dKTDmp4e0ysp-VB3n7Os-Yiu>
-Feedback-ID: i47b949f6:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
- 16 Nov 2024 09:32:41 -0500 (EST)
-Date: Sat, 16 Nov 2024 15:32:40 +0100
-From: Janne Grunau <j@jannau.net>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, bhelgaas@google.com,
-	ojeda@kernel.org, alex.gaynor@gmail.com, boqun.feng@gmail.com,
-	gary@garyguo.net, bjorn3_gh@protonmail.com, benno.lossin@proton.me,
-	tmgross@umich.edu, a.hindborg@samsung.com, aliceryhl@google.com,
-	airlied@gmail.com, fujita.tomonori@gmail.com, lina@asahilina.net,
-	pstanner@redhat.com, ajanulgu@redhat.com, lyude@redhat.com,
-	robh@kernel.org, daniel.almeida@collabora.com, saravanak@google.com,
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	asahi@lists.linux.dev
-Subject: Re: [PATCH v3 00/16] Device / Driver PCI / Platform Rust abstractions
-Message-ID: <20241116143240.GA1490760@robin.jannau.net>
-References: <20241022213221.2383-1-dakr@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DiFfL00p"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1731768058; x=1763304058;
+  h=from:date:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=O9hmtxuZAwYgYSd+bW6jcmwA71WFHHSz0MRm6IsL8KM=;
+  b=DiFfL00p2LV0FPkc/9Jqnl/ts1JTgrcekmTcGCFa9a2W0wi72Mkli0a0
+   xiV+7rFbiQvXWAEfW3+MN4jDV42fpnJZwV3Na/OWY0/bwjFwAs6tK13Lj
+   o42YocrfxGxHGnCdLNuXFNgEAknjWcxQTebYpIsKyYGWvf0uI+Gsyr6DE
+   dAPYT7TcRQmqI2RcQ8KUz+EgtPciHgO9xeZGa2etDzwbRbK0fJf2J2A6M
+   L3Wz3I/vCx8wjdB4sEbOyWPnA+IyHP6W0sT1hibNHP+GSEX3zFp9jFLUN
+   WCNwzmthvZKg+oP3Uzis/ARz3DWhe/g4INS9vQgtS8D/xqRcbnzxzN9FO
+   Q==;
+X-CSE-ConnectionGUID: 0swqIwO0SBuBdrX313cOgQ==
+X-CSE-MsgGUID: k0X77+eSRfqwZo61ejcw5Q==
+X-IronPort-AV: E=McAfee;i="6700,10204,11258"; a="31520832"
+X-IronPort-AV: E=Sophos;i="6.12,160,1728975600"; 
+   d="scan'208";a="31520832"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2024 06:40:57 -0800
+X-CSE-ConnectionGUID: P3Dsm0r/QQ6IIFO+0QYJLA==
+X-CSE-MsgGUID: hV5n2tGpTUmHGLHVpMYTiw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,160,1728975600"; 
+   d="scan'208";a="88926974"
+Received: from fdefranc-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.42])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Nov 2024 06:40:54 -0800
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Date: Sat, 16 Nov 2024 16:40:51 +0200 (EET)
+To: Bjorn Helgaas <helgaas@kernel.org>
+cc: Stefan Wahren <wahrenst@gmx.net>, 
+    Florian Fainelli <florian.fainelli@broadcom.com>, 
+    Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <bhelgaas@google.com>, 
+    Jonathan Cameron <Jonathan.Cameron@huawei.com>, linux-pci@vger.kernel.org, 
+    LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 1/1] PCI/bwctrl: Remove IRQF_ONESHOT and handle hardirqs
+ instead
+In-Reply-To: <20241115210217.GA2057245@bhelgaas>
+Message-ID: <ec7f9169-26dc-cc0e-e321-b66ca9d3f40e@linux.intel.com>
+References: <20241115210217.GA2057245@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: multipart/mixed; boundary="8323328-1380601243-1731768051=:935"
+
+  This message is in MIME format.  The first part should be readable text,
+  while the remaining parts are likely unreadable without MIME-aware tools.
+
+--8323328-1380601243-1731768051=:935
 Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20241022213221.2383-1-dakr@kernel.org>
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 
-On Tue, Oct 22, 2024 at 11:31:37PM +0200, Danilo Krummrich wrote:
-> This patch series implements the necessary Rust abstractions to implement
-> device drivers in Rust.
-> 
-> This includes some basic generalizations for driver registration, handling of ID
-> tables, MMIO operations and device resource handling.
-> 
-> Those generalizations are used to implement device driver support for two
-> busses, the PCI and platfrom bus (with OF IDs) in order to provide some evidence
-> that the generalizations work as intended.
-> 
-> The patch series also includes two patches adding two driver samples, one PCI
-> driver and one platform driver.
-> 
-> The PCI bits are motivated by the Nova driver project [1], but are used by at
-> least one more OOT driver (rnvme [2]).
-> 
-> The platform bits, besides adding some more evidence to the base abstractions,
-> are required by a few more OOT drivers aiming at going upstream, i.e. rvkms [3],
-> cpufreq-dt [4], asahi [5] and the i2c work from Fabien [6].
+On Fri, 15 Nov 2024, Bjorn Helgaas wrote:
 
-A rebase of the asahi driver onto this series still probes the platform
-device and the driver works as expected.
+> On Fri, Nov 15, 2024 at 06:57:17PM +0200, Ilpo J=C3=A4rvinen wrote:
+> > bwctrl cannot use IRQF_ONESHOT because it shares interrupt with other
+> > service drivers that are not using IRQF_ONESHOT nor compatible with it.
+> >=20
+> > Remove IRQF_ONESHOT from bwctrl and convert the irq thread to hardirq
+> > handler. Rename the handler to pcie_bwnotif_irq() to indicate its new
+> > purpose.
+> >=20
+> > The IRQ handler is simple enough to not require not require other
+> > changes.
+> >=20
+> > Fixes: 058a4cb11620 ("PCI/bwctrl: Re-add BW notification portdrv as PCI=
+e BW controller")
+> > Reported-by: Stefan Wahren <wahrenst@gmx.net>
+> > Link: https://lore.kernel.org/linux-pci/dcd660fd-a265-4f47-8696-776a85e=
+097a0@gmx.net/
+> > Signed-off-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
+>=20
+> Squashed into 058a4cb11620, thanks!
+>=20
+> Also added your tested-by, Stefan, thanks very much for doing that!
 
-Feel free to add
-Tested-by: Janne Grunau <j@jannau>
+Hi Bjorn,
 
-We plan to import this series for the Asahi Linux downstream kernel
-starting with v6.12 and replace the old rust-for-linux Device/Driver
-abstractions with this.
+You might want to also remove "3) ..." part from the commit message as it=
+=20
+still refers to threaded IRQ and IRQF_ONESHOT so it won't confuse anybody=
+=20
+when looking at this years from now :-).
 
-Janne
+--=20
+ i.
+
+> > ---
+> >  drivers/pci/pcie/bwctrl.c | 8 +++-----
+> >  1 file changed, 3 insertions(+), 5 deletions(-)
+> >=20
+> > diff --git a/drivers/pci/pcie/bwctrl.c b/drivers/pci/pcie/bwctrl.c
+> > index ff5d12e01f9c..a6c65bbe3735 100644
+> > --- a/drivers/pci/pcie/bwctrl.c
+> > +++ b/drivers/pci/pcie/bwctrl.c
+> > @@ -230,7 +230,7 @@ static void pcie_bwnotif_disable(struct pci_dev *po=
+rt)
+> >  =09=09=09=09   PCI_EXP_LNKCTL_LBMIE | PCI_EXP_LNKCTL_LABIE);
+> >  }
+> > =20
+> > -static irqreturn_t pcie_bwnotif_irq_thread(int irq, void *context)
+> > +static irqreturn_t pcie_bwnotif_irq(int irq, void *context)
+> >  {
+> >  =09struct pcie_device *srv =3D context;
+> >  =09struct pcie_bwctrl_data *data =3D srv->port->link_bwctrl;
+> > @@ -302,10 +302,8 @@ static int pcie_bwnotif_probe(struct pcie_device *=
+srv)
+> >  =09if (ret)
+> >  =09=09return ret;
+> > =20
+> > -=09ret =3D devm_request_threaded_irq(&srv->device, srv->irq, NULL,
+> > -=09=09=09=09=09pcie_bwnotif_irq_thread,
+> > -=09=09=09=09=09IRQF_SHARED | IRQF_ONESHOT,
+> > -=09=09=09=09=09"PCIe bwctrl", srv);
+> > +=09ret =3D devm_request_irq(&srv->device, srv->irq, pcie_bwnotif_irq,
+> > +=09=09=09       IRQF_SHARED, "PCIe bwctrl", srv);
+> >  =09if (ret)
+> >  =09=09return ret;
+> > =20
+> > --=20
+> > 2.39.5
+> >=20
+>=20
+--8323328-1380601243-1731768051=:935--
