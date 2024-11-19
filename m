@@ -1,182 +1,102 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 068531D1309
-	for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2024 17:14:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 377C51D1E8E;
+	Tue, 19 Nov 2024 17:27:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732036458; cv=none; b=B25b7kf6ywfrfXo/mW0xmlgQ9jNOeybq+oSJFpsl7AF2jy9Q1E1/OWfq1suceaB7svSFhJRy6urVwSYSLTIurWnHgvGBKc++xB5U7oqQzHy2IZludcLCUxSjBZABiVZWFo2Dq2P6wSb3EUluWddxditXqy2Tyzh2JRfrgYe/EQk=
+	t=1732037230; cv=none; b=dIgeTtxYwbo4K1lJsUG2DTjjm5b9toutTJQzL3yFxEF8lRYtI21qJWvNQ5HDacdyldrAYrKChy7KwH2nxbeGkTg8T/ru2svBJ7Py03iLkjtRxxi5kVe6D/55EiyQT7PAC/PRpkv1u29QTC6B7KLUChyuZUEiM9LYXA4qI6m9MfE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732036458; c=relaxed/simple;
-	bh=SX+ujNoDRD3mvlaICyLqqJRRt/GLi42jp2Aj0M3gNrs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OFYe4GmmBAg+RnXCmblpLgaZdoJG/vgqk9Te6oWj5ekw/KwhAWJUx285x9abXeQzgaYG8UIsgwXhINd8K/nI8OTk+yGPDVzvgn2bsEItU4NEVxdQXMwaV77zJu3kC8CY8ob2QdNrrKLkDmO1vkMPEcOqTCiM20dq1dmHYMHld84=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=l9MVG8Tn; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1732037230; c=relaxed/simple;
+	bh=DaA+xZ+OZeK05SotfgPNfTPRkNsT8TPkrpHepr+rIvE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AlQDsdQI4xt7AdU8mDR/QrKKMfFYFp08i4wgb7Gp7QqPfMA1/hPXVZNgpE9qUKtmMz+VRJUXaZV4ESpHs9hwqS3fikZbB+/q7TwwWhoXrsqaV15HD7cj4jbSS7LTf2zjbe3YIM8mnoO3xN9NSU5wmefzbT/dRgsHv5GWAxvh3c0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UBxcQb29; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="l9MVG8Tn"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-72487ebd2f5so2744128b3a.1
-        for <linux-pci@vger.kernel.org>; Tue, 19 Nov 2024 09:14:16 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1732036456; x=1732641256; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=JOPaWaZUHYjXPotZyfSD4LXFtM0q+jqcbxN+bmnPOLY=;
-        b=l9MVG8TnjrXQ1gGymCtNRsYSJXBGFv46mgwgufueXuJC0wMiPynPVHUosdjyQJ/EMd
-         oQNORPPHy71Sqbtmp7URxu2qFYOy4CS1mdLCBMHwkpGLyq4Z6DSdZVGWumXkEXlL9NPY
-         dn1eEv1y9x6SaC/TrxP+PybGs8kweoepGHsG5aAUNI/zgijNrMId/f7zDTJ2urTwAwu1
-         258MBzx7F77Byz/U7C7PB526zMV7qZrcknuj2WN2mgQECSxz69h2ecPqoFoZQZb1JW9o
-         qVHT/5H84A8TQcKQvokSUTaHhLThuSgBuLuZHvyq2wM6FiPBqtzzqVo5zsAzOvhAzyxi
-         8QaQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732036456; x=1732641256;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=JOPaWaZUHYjXPotZyfSD4LXFtM0q+jqcbxN+bmnPOLY=;
-        b=Wu7Q03j2NuwJxU1dTI6RcttsI73t6dtMx/qWZ66+Ximvt1effppKH0H4UsqCV9GtpK
-         3pCqseNt0U1EXbY6oS+fpf7mNM7+EGLzuVvIOfnI3bunky2rzaDEM4wNmAWWeYmYnNk1
-         MSm9k9ofQfDS5ZGSdsLkIpyIZTzHuQQXznCoLa8OfgCAjQ3d+plffdQ9yW5x1S7OBD/K
-         wZPtBSar3gYrEk2y49idxGzrHuADuqiTIqJOAVEg8AWH6JsS0e0cDaMRpNso6P5PXgQ6
-         GTS88suZsyPGPciTEEjOyh6pFDEuGUSsW2kliXp+c08qCDEq+fsLvLw/ly/o39geac+F
-         mE3A==
-X-Forwarded-Encrypted: i=1; AJvYcCWLHJUjR6BR7/mi88Eg5tFciodWi0oiQT60yAs+GtIBZFU+Ghab3UiVw+mJl8ixIenjmyxI29WE6V4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxJDlFfBM9LO3dxeXiRvvqg/35tdz250HMVRYBVJBWz7+V5WJwN
-	TeUTkKro+Q3vZKurtyqIYgHFU20HgP0IWTWsG9MZx0/HTmPBeK5S+oXBTvCV7A==
-X-Google-Smtp-Source: AGHT+IGeT3nxBKPZxsFv2Ced8vI6Xd2I6Y/xx+FKsDpYt9zHSCohV576pySs3XbRWfyd0k0/wHLdeQ==
-X-Received: by 2002:a05:6a00:991:b0:71e:14c:8d31 with SMTP id d2e1a72fcca58-72476d4317cmr20377160b3a.16.1732036455951;
-        Tue, 19 Nov 2024 09:14:15 -0800 (PST)
-Received: from thinkpad ([36.255.17.169])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-724771229d2sm8316878b3a.80.2024.11.19.09.14.12
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 19 Nov 2024 09:14:15 -0800 (PST)
-Date: Tue, 19 Nov 2024 22:44:10 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Mayank Rana <quic_mrana@quicinc.com>
-Cc: jingoohan1@gmail.com, will@kernel.org, lpieralisi@kernel.org,
-	kw@linux.com, robh@kernel.org, bhelgaas@google.com, krzk@kernel.org,
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org, quic_krichai@quicinc.com
-Subject: Re: [PATCH v3 4/4] PCI: qcom: Add Qualcomm SA8255p based PCIe root
- complex functionality
-Message-ID: <20241119171410.fdbjseaplah35n62@thinkpad>
-References: <20241106221341.2218416-1-quic_mrana@quicinc.com>
- <20241106221341.2218416-5-quic_mrana@quicinc.com>
- <20241115112504.anaatuqitdvjubyx@thinkpad>
- <f039e0ca-7c80-4495-bc67-ddca62774447@quicinc.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UBxcQb29"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B24DAC4AF09;
+	Tue, 19 Nov 2024 17:27:09 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1732037229;
+	bh=DaA+xZ+OZeK05SotfgPNfTPRkNsT8TPkrpHepr+rIvE=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=UBxcQb29tAr7n2K7HH7/HhMJmwaW67adu0dNvOU8oWiYH5Zmh4MbSzxB0fOfVid5m
+	 8S/jKfVEklCUMzRwdvpgQL8g91sPKsjfNzcPWMoIfDNrsjEbuh2gxMqVbNEXpsd0yP
+	 qdC6D65fS+LTU3BIHTZOHwUPAoz6P7AR4gWZROuXkkR/XTqpjVCWTCnRHc8QDqCVhX
+	 Urrtw+fS3zCR0H1iL3oxzLCRlksFnTC656zrgjc+U1dFJgZJ2HlCka+m033h7ttNO8
+	 cPdUgvwR+VlJPs/FYYj0CoAH6GuUY6Y3rKiiCQkqYxPNq7k2PjJVqplrNt3lFKCu2s
+	 R6pYvz2xOT9dw==
+Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-6ea339a41f1so38256137b3.2;
+        Tue, 19 Nov 2024 09:27:09 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCVNGqhxucAN9kRX0ZTYWHkbaacJHJ3uFbwAwfM3WA+oO3djbmBYFFUiY4qXzCOT+da6On13y/2VFWKYR3rD@vger.kernel.org, AJvYcCVfomINOHvr47uzxV+WGjHse1bVP+CtK7bOeD9MwIHYzrB993gPT9MEyvqK+cfKLoqfO9pVh70w9Fnk@vger.kernel.org, AJvYcCX+XeslPu5jo7dcNAvvmqIZCAOf2qVcf93xLcdRj4cKiuR0Krb908kxW4nnWQtOlqDl2XzDfa7x09uz@vger.kernel.org
+X-Gm-Message-State: AOJu0YwaBK7PifidZmtp4tSDU66RD1y3NYHCWIODb0decXlN3QnVM2zs
+	Sj/iVJ4Ilhg59ovM+tg9j99eH0V4yMnlcO5LiHc7mJp/niOssOOgUhkW7GdskGk4IMOb+Vhs2Z8
+	bNbe2QTz/2wPgBGIQIEGKnMv+2w==
+X-Google-Smtp-Source: AGHT+IHkteJ/psAzQJmr8xucfqpuL92nsGtTyCx9eKYX8nx+clTDPGwCQ1VJMa6h1sFnHAnY6yxduBndo5IYsN6W3C0=
+X-Received: by 2002:a05:690c:dc7:b0:64b:5cc7:bcbc with SMTP id
+ 00721157ae682-6ee55c56725mr180226977b3.32.1732037228801; Tue, 19 Nov 2024
+ 09:27:08 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f039e0ca-7c80-4495-bc67-ddca62774447@quicinc.com>
+References: <20241105213217.442809-1-robh@kernel.org> <20241115072604.yre2d7yiclt5d3w5@thinkpad>
+ <CAL_JsqLkVUSgL-r1YvdSOTQGeN0r4Co=NRxvX1WL6q6yt0zN6g@mail.gmail.com> <20241119170421.xxku2gkp3wea2xvf@thinkpad>
+In-Reply-To: <20241119170421.xxku2gkp3wea2xvf@thinkpad>
+From: Rob Herring <robh@kernel.org>
+Date: Tue, 19 Nov 2024 11:26:57 -0600
+X-Gmail-Original-Message-ID: <CAL_JsqJY43z5exVft4vYvbrMSoVFFD4E7KVJ+isC1mdQ5H3=CA@mail.gmail.com>
+Message-ID: <CAL_JsqJY43z5exVft4vYvbrMSoVFFD4E7KVJ+isC1mdQ5H3=CA@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: PCI: snps,dw-pcie: Drop "#interrupt-cells"
+ from example
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Gustavo Pimentel <gustavo.pimentel@synopsys.com>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 15, 2024 at 10:28:23AM -0800, Mayank Rana wrote:
-> 
-> 
-> On 11/15/2024 3:25 AM, Manivannan Sadhasivam wrote:
-> > On Wed, Nov 06, 2024 at 02:13:41PM -0800, Mayank Rana wrote:
-> > > On SA8255p ride platform, PCIe root complex is firmware managed as well
-> > > configured into ECAM compliant mode. This change adds functionality to
-> > > enable resource management (system resource as well PCIe controller and
-> > > PHY configuration) through firmware, and enumerating ECAM compliant root
-> > > complex.
-> > > 
-> > > Signed-off-by: Mayank Rana <quic_mrana@quicinc.com>
-> > > ---
-> > >   drivers/pci/controller/dwc/Kconfig     |   1 +
-> > >   drivers/pci/controller/dwc/pcie-qcom.c | 116 +++++++++++++++++++++++--
-> > >   2 files changed, 108 insertions(+), 9 deletions(-)
-> > > 
-> > > diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-> > > index b6d6778b0698..0fe76bd39d69 100644
-> > > --- a/drivers/pci/controller/dwc/Kconfig
-> > > +++ b/drivers/pci/controller/dwc/Kconfig
-> > > @@ -275,6 +275,7 @@ config PCIE_QCOM
-> > >   	select PCIE_DW_HOST
-> > >   	select CRC8
-> > >   	select PCIE_QCOM_COMMON
-> > > +	select PCI_HOST_COMMON
-> > >   	help
-> > >   	  Say Y here to enable PCIe controller support on Qualcomm SoCs. The
-> > >   	  PCIe controller uses the DesignWare core plus Qualcomm-specific
-> > > diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-> > > index ef44a82be058..2cb74f902baf 100644
-> > > --- a/drivers/pci/controller/dwc/pcie-qcom.c
-> > > +++ b/drivers/pci/controller/dwc/pcie-qcom.c
-> > > @@ -21,7 +21,9 @@
-> > >   #include <linux/limits.h>
-> > >   #include <linux/init.h>
-> > >   #include <linux/of.h>
-> > > +#include <linux/of_pci.h>
-> > >   #include <linux/pci.h>
-> > > +#include <linux/pci-ecam.h>
-> > >   #include <linux/pm_opp.h>
-> > >   #include <linux/pm_runtime.h>
-> > >   #include <linux/platform_device.h>
-> > > @@ -254,10 +256,12 @@ struct qcom_pcie_ops {
-> > >     * @ops: qcom PCIe ops structure
-> > >     * @override_no_snoop: Override NO_SNOOP attribute in TLP to enable cache
-> > >     * snooping
-> > > +  * @firmware_managed: Set if PCIe root complex is firmware managed
-> > 
-> > ecam_compliant?
-> I assume you mean to update as Set if ECAM compliant PCIe root complex is
-> firmware manage
-> > >     */
-> > >   struct qcom_pcie_cfg {
-> > >   	const struct qcom_pcie_ops *ops;
-> > >   	bool override_no_snoop;
-> > > +	bool firmware_managed;
-> > >   	bool no_l0s;
-> > >   };
-> > > @@ -1415,6 +1419,10 @@ static const struct qcom_pcie_cfg cfg_sc8280xp = {
-> > >   	.no_l0s = true,
-> > >   };
-> > > +static const struct qcom_pcie_cfg cfg_fw_managed = {
-> > 
-> > cfg_ecam?
-> Putting more emphasize on fw_managed as don't want to conflict with new work
-> in progress (krishna is working on it)
-> to make Qualcomm PCIe root complex as ECAM compliant (non firmware managed
-> one). are you OK with using cfg_ecam_fw_managed ?
-> 
+On Tue, Nov 19, 2024 at 11:04=E2=80=AFAM Manivannan Sadhasivam
+<manivannan.sadhasivam@linaro.org> wrote:
+>
+> On Fri, Nov 15, 2024 at 08:07:07AM -0600, Rob Herring wrote:
+> > On Fri, Nov 15, 2024 at 1:26=E2=80=AFAM Manivannan Sadhasivam
+> > <manivannan.sadhasivam@linaro.org> wrote:
+> > >
+> > > On Tue, Nov 05, 2024 at 03:32:16PM -0600, Rob Herring (Arm) wrote:
+> > > > "#interrupt-cells" is not valid without a corresponding "interrupt-=
+map"
+> > > > or "interrupt-controller" property. As the example has neither, dro=
+p
+> > > > "#interrupt-cells". This fixes a dtc interrupt_provider warning.
+> > > >
+> > >
+> > > But the DWC controllers have an in-built MSI controller. Shouldn't we=
+ add
+> > > 'interrrupt-controller' property then?
+> >
+> > Why? Is that needed for the MSI controller to function? I don't think s=
+o.
+> >
+>
+> No. I was asking from bindings perspective.
+>
+> > Now we do have "interrupt-controller" present for a number of MSI
+> > providers. I suspect that's there to get OF_DECLARE to work, but I
+> > doubt we really need MSI controllers initialized early.
+> >
+>
+> Again no, for this case. I was under the assumption that all interrupt
+> providers should have the 'interrupt-controller' property in their nodes.
 
-Ah, I completely missed that. Ignore my comments about renaming to ecam.
+Yes. What interrupts is the DW controller providing? Only the PCI
+legacy interrupts which are optional. An msi-controller and an
+interrupt-controller are 2 distinct providers. An MSI provider is not
+an interrupt provider, but an interrupt consumer. Some bindings define
+both, but I think many of those cases are probably wrong.
 
-> > > +	.firmware_managed = true,
-> > > +};
-> > > +
-
-[...]
-
-> > > +		/* Parse and map our Configuration Space windows */
-> > > +		cfg = gen_pci_init(dev, bridge, &pci_qcom_ecam_ops);
-> > > +		if (IS_ERR(cfg)) {
-> > > +			ret = PTR_ERR(cfg);
-> > > +			goto err_pm_runtime_put;
-> > > +		}
-> > > +
-> > > +		bridge->sysdata = cfg;
-> > > +		bridge->ops = (struct pci_ops *)&pci_qcom_ecam_ops.pci_ops;
-> > > +		bridge->msi_domain = true;
-> > > +
-> > > +		ret = pci_host_probe(bridge);
-> > 
-> > return pci_host_probe()...
-> need to perform pm_runtime_put_sync() and pm_runtime_disable() in failure
-> case.
-> Hence checking error here and doing goto err_pm_runtime_put
-
-Right. This one I overlooked.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
+Rob
