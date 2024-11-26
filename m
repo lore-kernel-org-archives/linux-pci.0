@@ -1,46 +1,48 @@
-Received: from mx08-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
+Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 548B51DDC16;
-	Tue, 26 Nov 2024 15:55:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC83F1DCB0E;
+	Tue, 26 Nov 2024 15:55:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732636527; cv=none; b=PCQfsiGg+8SoZ8z6F/2scwtx2Wk691+W9JA+RJoPIHcjxu2LI9ffRqPN0z6RXmm3/4djdaRHvTbJDfAr5pl0AzFwtvc+EnSPzOStyjB6p8UFcB/MFG0B/bCx89VzowiSvewHHFAWHIcnTWKX/ANq/awWjRM6wsAfswoeZTz33R8=
+	t=1732636530; cv=none; b=mCJCOlEAIXwTAw3Rqd/ueD9uWsrsw/w75oov14kMP/fmFSYTzLk73UyQEyIn1VFmliSiQC+jFKXtkd1/kw928D2qkrqBzBn9I4qgFU1849P0OzTRq369VjHw6ka8iCh5EoDxmiG19rmGH8LxdmlOXu007VrnfYO32yqzRRoxNdY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732636527; c=relaxed/simple;
-	bh=Oo6ywGlbiB40iuvrwv/cQmjt29AdJXkc7lFx/7J3nF8=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=XBciNQRFNETtLgubOFZYFXYVTSbPv/ghStxrDaqE+c3yBadgDXI8qlfO4o2S/LK0SUNmRU+1ggRgd2aZq993uisj95KzJ6mDVgDq1/tQvtwwTJNHMpmrzZIW9HDD5TCG5jrq46q8dbhGZQ1c7k4/TEXAXJAElZMKQRtdCpZQLg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=Uc3ZNNMO; arc=none smtp.client-ip=91.207.212.93
+	s=arc-20240116; t=1732636530; c=relaxed/simple;
+	bh=cBDcw6MY+Oq4uidtM01Vq+OPI1urLBoDdxYLI1m/Ius=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fsSwt+xiVFWl33ZkC37we+1LKyuE5aFxwGkPtWzQd7HtKILL7QAba925c1FQCSJM8HC/XlYNIxlsRWO+pDyj+Eb1xhLTr4zvFxufzpksuWJckdKOHR2WEg0KeC1X2AEoZ4HdLGVxvh/lXXeMWUfA0//igtPei/tQpx8FZX7/rN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=m3Qkyury; arc=none smtp.client-ip=91.207.212.93
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="Uc3ZNNMO"
-Received: from pps.filterd (m0369457.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AQAk6Hh013064;
-	Tue, 26 Nov 2024 16:54:52 +0100
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="m3Qkyury"
+Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AQAl0MV023732;
+	Tue, 26 Nov 2024 16:55:07 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=selector1; bh=OCFqWclPmUiwBGMA9TvOm8
-	HW+jw9fUr1fqfQLbTs/3g=; b=Uc3ZNNMOGjnqkvgFgH4+Y3M0wPp0tRezlOzyPh
-	C2aodbCr018B2nroJVqc/r3SSrKVtN+f7s/Hyj+YvoqAWFfM2hcACekQCcgw2sNP
-	Jo7kgdcjurzMWQldJtYKdB/dftyF44I6BN9v8SkDocieUcmzWmIm4dGnfnHYNN6w
-	BF6Iqqa3Pn3P3wxDE159EknrSqkUzbRRvFrP2hmFp9vk+GsAn1y0kcPlqihx+IkB
-	HKif0rCn5F0nFEuDxq3SK8zBi8yDmClzNgI/KtFNLF7JP6fiN+Ygy2Bj8d6VI4rE
-	JmosNWc/o9I2+Wg6DPiL5fQvSgtpVhqFsKF9SLvpbLtdB+Yg==
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	yZhwlZeZQoMpb1RlyyjILd8T/ILSIB2hivP2H9gbW7g=; b=m3QkyuryZz+MB9Di
+	tBKaf3IHOjyjHLRLAnTsTi6mhQaghQMzXkDJv2YGOPzlnYjrAKtQQ4U5vLhgxf3V
+	UO6+KKNDcT5Up2JrfYobMDw7lPI5TWWiZ8a0UKk4inoC0NSprGkvFFGGF0ZaIWRG
+	QJlb98i+x4jfvNEQomssec7zA17pJIEfxToUjbkhk6rsirHc5Upshu+XZOwBC1bt
+	LAz3+feLB4v3WuWws3XWAJYtm44F8qAVBImYiR/mr2zbWFK3KbBI+2ucamkYguE8
+	mwv563r7oKy+IzbUQTDDBF4hQs1YS3A5P50Z0meqfgL55wK2S+may/Rq1WObtJMU
+	Z7vuTg==
 Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 433tvnk7yr-1
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 4335295yhu-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 26 Nov 2024 16:54:52 +0100 (CET)
+	Tue, 26 Nov 2024 16:55:07 +0100 (CET)
 Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 7C84E40045;
-	Tue, 26 Nov 2024 16:53:26 +0100 (CET)
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 356C140048;
+	Tue, 26 Nov 2024 16:53:45 +0100 (CET)
 Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 9469529DE92;
-	Tue, 26 Nov 2024 16:51:36 +0100 (CET)
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 7DA7927B400;
+	Tue, 26 Nov 2024 16:52:39 +0100 (CET)
 Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
  (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Tue, 26 Nov
- 2024 16:51:36 +0100
+ 2024 16:52:39 +0100
 From: Christian Bruel <christian.bruel@foss.st.com>
 To: <lpieralisi@kernel.org>, <kw@linux.com>,
         <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
@@ -52,10 +54,12 @@ CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-stm32@st-md-mailman.stormreply.com>,
         <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
         Christian Bruel <christian.bruel@foss.st.com>
-Subject: [PATCH v2 0/5] Add STM32MP25 PCIe drivers
-Date: Tue, 26 Nov 2024 16:51:14 +0100
-Message-ID: <20241126155119.1574564-1-christian.bruel@foss.st.com>
+Subject: [PATCH v2 5/5] MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
+Date: Tue, 26 Nov 2024 16:51:19 +0100
+Message-ID: <20241126155119.1574564-6-christian.bruel@foss.st.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241126155119.1574564-1-christian.bruel@foss.st.com>
+References: <20241126155119.1574564-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -70,47 +74,31 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
 
-This patch series adds PCIe drivers STM32MP25 SoC from STMicrolectronics
-and respective yaml schema for the root complex and device modes.
+Add myself as maintainer of STM32MP25 PCIe host and PCIe endpoint drivers
 
-Changes in v2:
-   - Fix st,stm32-pcie-common.yaml dt_binding_check	
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+---
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-Changes in v1:
-   Address comments from Rob Herring and Bjorn Helgaas:
-   - Drop st,limit-mrrs and st,max-payload-size from this patchset
-   - Remove single reset and clocks binding names and misc yaml cleanups
-   - Split RC/EP common bindings to a separate schema file
-   - Use correct PCIE_T_PERST_CLK_US and PCIE_T_RRS_READY_MS defines
-   - Use .remove instead of .remove_new
-   - Fix bar reset sequence in EP driver
-   - Use cleanup blocks for error handling
-   - Cosmetic fixes
-   
-Christian Bruel (5):
-  dt-bindings: PCI: Add STM32MP25 PCIe root complex bindings
-  PCI: stm32: Add PCIe host support for STM32MP25
-  dt-bindings: PCI: Add STM32MP25 PCIe endpoint bindings
-  PCI: stm32: Add PCIe endpoint support for STM32MP25
-  MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-
- .../bindings/pci/st,stm32-pcie-common.yaml    |  45 ++
- .../bindings/pci/st,stm32-pcie-ep.yaml        |  61 +++
- .../bindings/pci/st,stm32-pcie-host.yaml      |  99 ++++
- MAINTAINERS                                   |   7 +
- drivers/pci/controller/dwc/Kconfig            |  24 +
- drivers/pci/controller/dwc/Makefile           |   2 +
- drivers/pci/controller/dwc/pcie-stm32-ep.c    | 445 ++++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.c       | 402 ++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.h       |  17 +
- 9 files changed, 1102 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32-ep.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.h
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 4803908768e8..277e1cc0769e 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -17912,6 +17912,13 @@ L:	linux-samsung-soc@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/controller/dwc/pci-exynos.c
+ 
++PCI DRIVER FOR STM32MP25
++M:	Christian Bruel <christian.bruel@foss.st.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/st,stm32-pcie-*.yaml
++F:	drivers/pci/controller/dwc/*stm32*
++
+ PCI DRIVER FOR SYNOPSYS DESIGNWARE
+ M:	Jingoo Han <jingoohan1@gmail.com>
+ M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 -- 
 2.34.1
 
