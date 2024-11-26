@@ -1,158 +1,254 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB73B17591;
-	Tue, 26 Nov 2024 15:17:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9882C1D89F7;
+	Tue, 26 Nov 2024 15:55:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732634250; cv=none; b=baLu7Oh9Yfx7trxQswlhczEsXD4I0DCr5Fb7+526UrynFhCA+La0TOexAro7HQxc/mkzfLCwkr8mJVzlAFGyoOYm9GCS2w0X2nbL6B4+TedzckHd0sitAibP5Vp1ZiyfeT1BYSNQDSB3BtvbvEEQfUHZXrbMqrAu5Mippc7VU40=
+	t=1732636519; cv=none; b=imRAYeinHR4Km8Y4tzIqeLP1JTFARmFt5VWod+rA7JgjCHv1PibWjjSwAVhDnZD+HmOCKnkt1kpKQblTqByP/6SfxD5GEggw1ZBrxqUxTC8YnF2j6XFyEVXEeibhZMgUwDVTdRal/BFjeVIDrhkQKK6xboro8Wwyz2egpgwl1s8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732634250; c=relaxed/simple;
-	bh=31VYdU13LysCO/yvKvq+N5wabf3c68mQyQuU1zSGNlA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A6xcPBDtIX6Ypm7fiB5TMc5KLUk4+6FtnM6j8ztVMbJOBy4vnOb8Uai6aWRYSupAmcgNL2NUEwcssWYNDiY5WSJ2wD2r4jsI7QcSJNBKDH5Ns8wNNOmZr6E6YbJJPVTG3F/7zyp/cmNG6mcQ1yF+MOCQpf/jj0R9OoGs22hOVLY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mENdPAck; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1732636519; c=relaxed/simple;
+	bh=fe4DB9Z7QiZLM+Fb94CTtjjzbVrDS5pB9yCpgwMJ8oU=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=g5i1cCkFZvOexUVnKJhdAzr0aBtIJcsD2xm7ZDDL25VQY3psJ+GOHloaAm8KH7nJ84GZDxYG+09QpzHTcU6BHv/y6R0if0TD45Pw3heVEym6f29MClzQKoN8/13XCrDlEWSbkEelpKGDAuHqPcJU96nXsRhurtrPUwhKDLejNR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=BUBdaeIw; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mENdPAck"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 59871C4CECF;
-	Tue, 26 Nov 2024 15:17:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1732634249;
-	bh=31VYdU13LysCO/yvKvq+N5wabf3c68mQyQuU1zSGNlA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mENdPAcka6aUcWnm2cD849yzIT163GdRQ45x0k2OeyEQe2W8IUskkxqt6Neba6i6X
-	 f3TpOZbIQx/dQphGvL7P2mff/j/oYry1r1ZJELlVoM5Ba8S6ur6aFDwW+Av6VAcQ9R
-	 Eo4yB67IXhNJys+zdEeaVyZs6BrNBIk0xV7PMIMcBTheMmzl4K6lMNgtxF20h5W3cu
-	 QeOuw7udZoe3C2b9GnB6DW0PSXbLS8j4ccKB+nt/bujFJZTtrMwJbqsylRAyZE1p4H
-	 Jd/bBPr1Uk3yiG9Bh0E3F9jMTgeVaqHLFkRwXi/sJzCavRpR5AGqvuuz1810n22dRK
-	 jKxwwE2XA2DjQ==
-Date: Tue, 26 Nov 2024 16:17:21 +0100
-From: Danilo Krummrich <dakr@kernel.org>
-To: Rob Herring <robh@kernel.org>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, bhelgaas@google.com,
-	ojeda@kernel.org, alex.gaynor@gmail.com, boqun.feng@gmail.com,
-	gary@garyguo.net, bjorn3_gh@protonmail.com, benno.lossin@proton.me,
-	tmgross@umich.edu, a.hindborg@samsung.com, aliceryhl@google.com,
-	airlied@gmail.com, fujita.tomonori@gmail.com, lina@asahilina.net,
-	pstanner@redhat.com, ajanulgu@redhat.com, lyude@redhat.com,
-	daniel.almeida@collabora.com, saravanak@google.com,
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, devicetree@vger.kernel.org
-Subject: Re: [PATCH v3 15/16] rust: platform: add basic platform device /
- driver abstractions
-Message-ID: <Z0XmgXwwNikW6oJw@cassiopeiae>
-References: <20241022213221.2383-1-dakr@kernel.org>
- <20241022213221.2383-16-dakr@kernel.org>
- <20241022234712.GB1848992-robh@kernel.org>
- <ZxibWpcswZxz5A07@pollux>
- <20241023142355.GA623906-robh@kernel.org>
- <Zx9kR4OhT1pErzEk@pollux>
- <CAL_JsqLVdoQNSSDCfGcf0wCZE9VQphRhHKANxhpei_UoFzkN9g@mail.gmail.com>
- <Z0XBbLb8NRQg_dek@cassiopeiae>
- <CAL_Jsq+TV486zw=hAWkFnNbPeA08mJh_4kVVJLSXiYkzWcOVDg@mail.gmail.com>
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="BUBdaeIw"
+Received: from pps.filterd (m0241204.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AQAkAEJ029955;
+	Tue, 26 Nov 2024 16:54:52 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	dEFqpwvFBOahKBFYGzVlW8NZlc8J7PjUaETqIykE3YI=; b=BUBdaeIwopyrZ7zE
+	wl8a/P7SdOXP40QRJ+GNX13wz9A8Mug9vJTp9XffqoOhIgJMnx5RnxnpHRAG8vMQ
+	ZS7DOX3HBSahg0TvoEZumhSgnW4n+iQh6uFfYsuNh3JAZ2b3PnB0K+YaQk9OkDAS
+	BTsfUMNXVwejC93OlsNwqyDkf5ZMeLyE9Daz03tFPC0oHfi/RtZP47nYDnWoKGdt
+	8wzdPMXBT1FIz3if/Gqjb8sPKNd8UwNDj+9S/zanZojHaRgxhoMhc3kvWXcucao0
+	zqxffj21F+WT51NIaRgFAZ7tz6lWOKZXfTa2Pvo7C7tDzHwqv255aSawSerxgJxZ
+	QH/qtg==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 433791ww76-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 26 Nov 2024 16:54:52 +0100 (CET)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 8006340049;
+	Tue, 26 Nov 2024 16:53:26 +0100 (CET)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 3243129DE93;
+	Tue, 26 Nov 2024 16:51:37 +0100 (CET)
+Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
+ (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Tue, 26 Nov
+ 2024 16:51:36 +0100
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
+        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+        Christian Bruel <christian.bruel@foss.st.com>
+Subject: [PATCH v2 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex bindings
+Date: Tue, 26 Nov 2024 16:51:15 +0100
+Message-ID: <20241126155119.1574564-2-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241126155119.1574564-1-christian.bruel@foss.st.com>
+References: <20241126155119.1574564-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAL_Jsq+TV486zw=hAWkFnNbPeA08mJh_4kVVJLSXiYkzWcOVDg@mail.gmail.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
 
-On Tue, Nov 26, 2024 at 08:44:19AM -0600, Rob Herring wrote:
-> > > > > The DT type and name fields are pretty much legacy, so I don't think the
-> > > > > rust bindings need to worry about them until someone converts Sparc and
-> > > > > PowerMac drivers to rust (i.e. never).
-> > > > >
-> > > > > I would guess the PCI cases might be questionable, too. Like DT, drivers
-> > > > > may be accessing the table fields, but that's not best practice. All the
-> > > > > match fields are stored in pci_dev, so why get them from the match
-> > > > > table?
-> > > >
-> > > > Fair question, I'd like to forward it to Greg. IIRC, he explicitly requested to
-> > > > make the corresponding struct pci_device_id available in probe() at Kangrejos.
-> 
-> Making it available is not necessarily the same thing as passing it in
-> via probe.
+Document the bindings for STM32MP25 PCIe Controller configured in
+root complex mode.
 
-IIRC, that was exactly the request.
+Supports 4 legacy interrupts and MSI interrupts from the ARM
+GICv2m controller.
 
-> I agree it may need to be available in probe(), but that
-> can be an explicit call to get it.
+STM32 PCIe may be in a power domain which is the case for the STM32MP25
+based boards.
 
-Sure, I did exactly that for the platform abstraction, because there we may
-probe through different ID tables.
+Supports wake# from wake-gpios
 
-A `struct pci_driver`'s probe function has the following signature [1] though:
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+---
+ .../bindings/pci/st,stm32-pcie-common.yaml    | 45 +++++++++
+ .../bindings/pci/st,stm32-pcie-host.yaml      | 99 +++++++++++++++++++
+ 2 files changed, 144 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
 
-`int (*probe)(struct pci_dev *dev, const struct pci_device_id *id)`
+diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
+new file mode 100644
+index 000000000000..479c03134da3
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
+@@ -0,0 +1,45 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/st,stm32-pcie-common.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: STM32MP25 PCIe RC/EP controller
++
++maintainers:
++  - Christian Bruel <christian.bruel@foss.st.com>
++
++description:
++  STM32MP25 PCIe RC/EP common properties
++
++properties:
++  clocks:
++    maxItems: 1
++    description: PCIe system clock
++
++  resets:
++    maxItems: 1
++
++  phys:
++    maxItems: 1
++
++  phy-names:
++    const: pcie-phy
++
++  power-domains:
++    maxItems: 1
++
++  access-controllers:
++    maxItems: 1
++
++  reset-gpios:
++    description: GPIO controlled connection to PERST# signal
++    maxItems: 1
++
++required:
++  - clocks
++  - resets
++  - phys
++  - phy-names
++
++additionalProperties: true
+diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+new file mode 100644
+index 000000000000..18083cc69024
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+@@ -0,0 +1,99 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/st,stm32-pcie-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: STM32MP25 PCIe root complex driver
++
++maintainers:
++  - Christian Bruel <christian.bruel@foss.st.com>
++
++description:
++  PCIe root complex controller based on the Synopsys DesignWare PCIe core.
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++  - $ref: /schemas/pci/st,stm32-pcie-common.yaml#
++
++select:
++  properties:
++    compatible:
++      const: st,stm32mp25-pcie-rc
++  required:
++    - compatible
++
++properties:
++  compatible:
++    const: st,stm32mp25-pcie-rc
++
++  reg:
++    items:
++      - description: Data Bus Interface (DBI) registers.
++      - description: PCIe configuration registers.
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: config
++
++  num-lanes:
++    const: 1
++
++  msi-parent:
++    maxItems: 1
++
++  wake-gpios:
++    description: GPIO controlled connection to WAKE# input signal
++    maxItems: 1
++
++  wakeup-source: true
++
++dependentRequired:
++  wakeup-source: [ wake-gpios ]
++
++required:
++  - interrupt-map
++  - interrupt-map-mask
++  - ranges
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
++    #include <dt-bindings/gpio/gpio.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/phy/phy.h>
++    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
++
++    pcie@48400000 {
++        compatible = "st,stm32mp25-pcie-rc";
++        device_type = "pci";
++        num-lanes = <1>;
++        reg = <0x48400000 0x400000>,
++              <0x10000000 0x10000>;
++        reg-names = "dbi", "config";
++        #interrupt-cells = <1>;
++        interrupt-map-mask = <0 0 0 7>;
++        interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        ranges = <0x01000000 0 0x10010000 0x10010000 0 0x10000>,
++                 <0x02000000 0 0x10020000 0x10020000 0 0x7fe0000>,
++                 <0x42000000 0 0x18000000 0x18000000 0 0x8000000>;
++        clocks = <&rcc CK_BUS_PCIE>;
++        phys = <&combophy PHY_TYPE_PCIE>;
++        phy-names = "pcie-phy";
++        resets = <&rcc PCIE_R>;
++        msi-parent = <&v2m0>;
++        wakeup-source;
++        wake-gpios = <&gpioh 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
++        reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
++        access-controllers = <&rifsc 68>;
++        power-domains = <&CLUSTER_PD>;
++    };
++
+-- 
+2.34.1
 
-[1] https://elixir.bootlin.com/linux/v6.12/source/include/linux/pci.h#L950
-
-> 
-> > > Which table gets passed in though? Is the IdInfo parameter generic and
-> > > can be platform_device_id, of_device_id or acpi_device_id? Not sure if
-> > > that's possible in rust or not.
-> >
-> > Not sure I can follow you here.
-> >
-> > The `IdInfo` parameter is of a type given by the driver for driver specific data
-> > for a certain ID table entry.
-> >
-> > It's analogue to resolving `pci_device_id::driver_data` in C.
-> 
-> As I said below, the PCI case is simpler than for platform devices.
-> Platform devices have 3 possible match tables. The *_device_id type we
-> end up with is determined at runtime (because matching is done at
-> runtime), so IdInfo could be any of those 3 types.
-
-`IdInfo` is *not* any of the three *_device_id types. It's the type of the
-drivers private data associated with an entry of any of the three ID tables.
-
-It is true that a driver, which registers multiple out of those three tables is
-currently forced to have the same private data type for all of them.
-
-I don't think this is a concern, is it? If so, it's easily resolvable by just
-adding two more associated types, e.g. `PlatformIdInfo`, `DtIdInfo` and
-`AcpiIdInfo`.
-
-In this case we would indeed need accessor functions like `dt_match_data`,
-`platform_match_data`, `acpi_match_data`, since we don't know the type at
-compile time anymore.
-
-I don't think that's necessary though.
-
-> Is the exact type
-> opaque to probe() and will that magically work in rust? Or do we need
-> to pass in the 'driver_data' ptr (or reference) itself? The matched
-> driver data is generally all the driver needs or cares about. We can
-> probably assume that it is the same type no matter which match table
-> is used whether it is platform_device_id::driver_data,
-> of_device_id::data, or acpi_device_id::driver_data. Nothing in the C
-> API guarantees that, but that's just best practice. Best practice in C
-> looks like this:
-> 
-> my_probe()
-> {
->   struct my_driver_data *data = device_get_match_data();
->   ...
-> }
-> 
-> device_get_match_data() is just a wrapper to handle the 3 possible match tables.
-> 
-> The decision for rust is whether we pass in "data" to probe or have an
-> explicit call. There is a need to get to the *_device_id entry, but
-> that's the exception. I would go as far as saying we may never need
-> that in rust drivers.
-> 
-> Rob
-> 
-> > > PCI is the exception, not the rule here, in that it only matches with
-> > > pci_device_id. At least I think that is the case currently, but it is
-> > > entirely possible we may want to do ACPI/DT matching like every other
-> > > bus. There are cases where PCI devices are described in DT.
-> > >
-> > > Rob
-> > >
-> 
