@@ -1,64 +1,65 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 536A01BDAAF
-	for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2024 10:22:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17A23195FEF
+	for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2024 10:22:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732616579; cv=none; b=P3KS8h1jqRAjY0tUDrgCzkaqa0sxtHKFMxo/C5JXJrSfqoYVhf98/PsBI368g6SMjAd5AF2lFc/Z/PUhLRHztpdus5dTYIbo4pdHui9SSEogvKaGAAImX9ogxoT15Gbwn0YX2cpRD+0Qn5SV/erBi5e6hT+Gn9A5a9UQA6j3xVs=
+	t=1732616580; cv=none; b=VGBCUH76hCiXZ+JVoRL6bIy6qy+DTo1TDCut268htjupjRVy//6fr0zXmA7EIT8UY7hR1pXY7058vWq0IbzpteFmjzYzGd+qVZ0CBOAZWgXdtCupf4HZ7rfsoi9KvlR/o74MkKNDsMbTr45uFSLrcCp5HDelb5Q1Yp8dZVWD1Xw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732616579; c=relaxed/simple;
-	bh=1/Q61X77d+wJnDnxSzR1szzWu1q7VOUzcUHJ7AVCSHs=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=DtC3FID/0oPMj+XAsAYBU7YuTb8V0trfNyK8TS1A07YQ7Rw6m7dVDHzkCbehzR83G3dpSi+6wYcHGBMHSXllUSVnBirZbeLU4VJ8TDqLVKLj00OoGedGeC7e54T/+7ZHRAHmONoeNN47y/kq2+4wSO/igZr5VJVHaM9USOoWLOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=a8+b3FQc; arc=none smtp.client-ip=209.85.128.49
+	s=arc-20240116; t=1732616580; c=relaxed/simple;
+	bh=DSfkUxtAoj5mu81yWWFvAAd0RzmXItr4kWCdyj1bISk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=F0b28tfn7tr1EHhrcb0OALJT18aKHsbWXfkf7TDdfAYyZ/rN/bZbgzR5XC6ONviGYFu+sl8WfRuNoAkEgzc3m87RZKW5JPiB/lhRaylLoiXtyLwuW7wfzkr1QCXXBB0Kp3albTJIpROLBxW1BsyEeWJL3CnJeyFpj/2SHYtiS/o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=S3bJ1CGm; arc=none smtp.client-ip=209.85.128.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="a8+b3FQc"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-4315e9e9642so50045085e9.0
-        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2024 02:22:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="S3bJ1CGm"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-434a1833367so9053785e9.1
+        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2024 02:22:58 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1732616576; x=1733221376; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=k0xLkYt2qRmhHcxTp08v9mIoJ8dCMB1v2JskS0o4438=;
-        b=a8+b3FQc03Ual1vUYqZp53I6txKAUHCZLRzy4JUhmGaxSarMa0KkYzSXVLBFyAHdV8
-         8QdC6x1svRO/5uLyQdJnzqKOFNT88js7G6ej0LsdXYOMCG8jYbQFklc9P2YlfDjZGOSh
-         QL4D2pzwxh1eQHSG0nwgohQk4xP8pynVY9wZWzKeJEp2d8VNQucIv7eH8zOcnitYr25/
-         tooE2ddUniyf5CljY1ijQatdPuaoHM0wfO2Z30gkl2DiCaORbL9MQ43dKyDDXvKLNbqd
-         O2JjsIrkQQvRMDln9w/5a0dz7QqdJjxu8xrJ+tA9kuZGBEeUowieVPaxVS212lH9mLPN
-         QZQQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1732616576; x=1733221376;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=linaro.org; s=google; t=1732616577; x=1733221377; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=k0xLkYt2qRmhHcxTp08v9mIoJ8dCMB1v2JskS0o4438=;
-        b=DAdL4Z0siPuAvHlZaoD2/pWFl/2GbXw6P5rij+jXS/Lm2xeylzag7sVdHWn+7pCzQS
-         MLPeYh5IjLAbN5oZ03m8GuJtcyvsOGK8AftP5UKg2wS7dhPmeuLUksM6yXUgXu+6Lw3H
-         tcL3LT/dFzX8/0IDBRQHBS9RyVdu0it4GU83AKT9lPFQ9Cs2eRW0L6w7NJnsnJ3bhFDt
-         DhPUscOqvJG//gh/YeX/0ysX9z1RlQqk96jAFmk7pniLviXnCYJVF17oEtiS8VoVJAwS
-         n9ox75tDo7vwuSMQ7gkAa2AGAvXltz6kLji1ffOZ1aLM7rkuBocD1ROwvU4qgm4Pr7Ez
-         gSxQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWK2s1fRhy5tnPVOiAZzgB7Q6Yz0btcFad/GPcfSjsR5E2NoyuZqTGMSUScoiP1eL8TAdz4aJSxkaQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxALJqE+d97M5bsgzgmQ16UONiyfKj8pubiKYQoE1PThPCXC1rk
-	jjZMAE0aF6TQMYHqmuqqzMiNH6MybLL49ypcv4QcEchAjX17t7nYetpAvmPdpb4=
-X-Gm-Gg: ASbGnctHf1hnjEIjYx+/IB0519uco9jC+rUkbivY8oj2BxDQkejD3o8e889PTb6F0fb
-	2o2JmO6oJmF1dWuLSGQIMRGk4qfaye4xFEPvxCf1WVYjq5cc4Tm7O3HC6nhEKXVR1Gm+Gh0bGK+
-	tq7nkphQpP3v4Ng3iygsAquKSOwh8kUIxx4OUP+duBVI5S50AjfcO8GPqJt9Xcmqmp+UJSO/H06
-	rkLpstGeGd4+uhseRk/xJugTWTAN8IrffH4DzbiUBZtMOFPBQ+ECPX8SNKeW7+Sb3zC7xI=
-X-Google-Smtp-Source: AGHT+IHEmm5r+ZACNObMId0YdkCRExn4aSTNKuXwdL5JuzF4jUF9M5xtk4DUMu5W/U1bD4v2974C7Q==
-X-Received: by 2002:a05:600c:3b91:b0:434:a29d:6c71 with SMTP id 5b1f17b1804b1-434a29d6d6bmr37700835e9.27.1732616575739;
-        Tue, 26 Nov 2024 02:22:55 -0800 (PST)
+        bh=yGY7qn3T/vVH05XwetJnmcN100gMBe4kn/nqWGga67s=;
+        b=S3bJ1CGml+rVJGVxl4jTciWrCEhbfod+SdDcZiH5zPZbRcQ+og0nmEeMZcEtFuAkof
+         tm6KGVXO4YkmOIb1I+BZZiE8YfafcgbqDJyvJxXNkiFcHjeN/SzAqS+iX6hzsyeBGhkM
+         TelUbSVscGXMiVtvPqlcz+mFsUOUoiHS162M6EgKYGXOFTcM1zcwFYyjg/x8Y4y5kc8l
+         WgAmcLbSf52PqzsBqqlE9VQGVOVh0n8fbHEhLn34kNv5mYkMdvKq9cXzLjbeRWedOKry
+         JC96+Ku/tTc/ArZVq6qGwtm+RfQzruY6DYP7IVEwiRg7dSydcIKn3Xvp9/l61FUWd+sO
+         UqEg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732616577; x=1733221377;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=yGY7qn3T/vVH05XwetJnmcN100gMBe4kn/nqWGga67s=;
+        b=KV1ozhJXqXu5uN0t+82EVOxhOlOYFl4yAs2JUs1EtAYF+HDmXMGcPwAFwzRtomCx/U
+         31J9E60kwCPr6hq7JMW9REO5tOnJA3s7FE+ELSep9COcU1A91wo9r085ToP7c8x2ZuLt
+         fmQg8GeWLashiQGYNghvH5qGludCFI1Zi48tpk8ro/bxnfzK4Qa1JQSJCQpzKAnNueWC
+         VSRPuavb5oTJj4vblWBZameXO1QU3h5M7SQ0ztNhzIWJzze0ndfRZ3dLU/qUChKViq6T
+         D/VeD90PqoFPYL4d0/axnQKt3AVNI4LpXkG8zct8RaSj7BhkaRP4eCuPzRHnK+jnyr4H
+         wxrw==
+X-Forwarded-Encrypted: i=1; AJvYcCXG1zJ6RP0J8HyQfH4bK/3X9HZHVD2ndIL9pQOYSbU4fAp7S7S/hEeXdQvWYHpuqFIdrZhJ4qYpvVY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwZcruao1MwjSs9lHsn3V9qjOyAloDd+bb5Shegd+eTLf79LyEs
+	/dkeZkvWmcvTvSqCExy5qUbMWjoACVKoYL2KsFH8MAzSr52aF4Uow4DfcSzi7XE=
+X-Gm-Gg: ASbGncuugbw3q650CkLf6tmVpfjcRrHet443bGCNeVkGg6lokXIvVuJj2ABPhM70yZ3
+	aXzhaas8Ab0CSJObvDnqKknDS3xtcCH1HEItCLcCttufvnlopFHFJ1HjuPGEq/2E21GBUnajLep
+	jIXOxdoZVaZ6rNV4WKmSEvKRnxIMyO1W+ove98Hw3LqSD5KROSkk8K8CbrjrSJkRBEhPesjYxU6
+	9gZ9NUYDmmXk86PJ8hrtygqg8cdxP0uvPeFGVpZfI9Pz7Rerl/okPfDEam+PLMhfLfshjc=
+X-Google-Smtp-Source: AGHT+IGPAdKF60KJgbdHpQ0rkkHhQT35BoPjigPNj6uM+GadsiYB0acZNjOjuCklQM7MHaWYJOgR3g==
+X-Received: by 2002:a05:600c:3552:b0:431:55f3:d34e with SMTP id 5b1f17b1804b1-434a4e97451mr21967545e9.15.1732616577530;
+        Tue, 26 Nov 2024 02:22:57 -0800 (PST)
 Received: from arrakeen.starnux.net ([2a01:e0a:982:cbb0:52eb:f6ff:feb3:451a])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-433b01e1046sm228378075e9.4.2024.11.26.02.22.54
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-433b01e1046sm228378075e9.4.2024.11.26.02.22.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Nov 2024 02:22:55 -0800 (PST)
+        Tue, 26 Nov 2024 02:22:57 -0800 (PST)
 From: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: [PATCH 0/3] PCI: qcom-sm8[56]50: document and add 'global'
- interrupt
-Date: Tue, 26 Nov 2024 11:22:48 +0100
-Message-Id: <20241126-topic-sm8x50-pcie-global-irq-v1-0-4049cfccd073@linaro.org>
+Date: Tue, 26 Nov 2024 11:22:50 +0100
+Subject: [PATCH 2/3] arm64: dts: qcom: sm8550: Add 'global' interrupt to
+ the PCIe RC nodes
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,10 +68,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHihRWcC/x3MQQ5AMBAAwK/Inm2iG0p8RRyoxSZotSKSxt81j
- nOZCIG9cIA2i+D5liD2SFB5BmYdjoVRpmSggkqlSONlnRgMe/NUBTojjMtmx2FD8SfWiiZdN2N
- FpCEVzvMsz993/ft+VptvZm4AAAA=
-X-Change-ID: 20241126-topic-sm8x50-pcie-global-irq-712d678b5226
+Message-Id: <20241126-topic-sm8x50-pcie-global-irq-v1-2-4049cfccd073@linaro.org>
+References: <20241126-topic-sm8x50-pcie-global-irq-v1-0-4049cfccd073@linaro.org>
+In-Reply-To: <20241126-topic-sm8x50-pcie-global-irq-v1-0-4049cfccd073@linaro.org>
 To: Bjorn Helgaas <bhelgaas@google.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
@@ -82,46 +82,79 @@ Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
  Neil Armstrong <neil.armstrong@linaro.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1054;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2127;
  i=neil.armstrong@linaro.org; h=from:subject:message-id;
- bh=1/Q61X77d+wJnDnxSzR1szzWu1q7VOUzcUHJ7AVCSHs=;
- b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBnRaF9Li69UPAhTjUCO90AsqcZajhzFAsAYvJ/Qtaj
- L4YUEVaJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCZ0WhfQAKCRB33NvayMhJ0a5mEA
- DQxIFxszCHIR66PIquhim8mW52Dc00Hwhwck0ElHJFzg3yTZBTClFgly2fq2QwDr8LIanA34qXR7xb
- 1CK1kMoWSuJfAqg5kY+YaKBFrEKMiUb6PsjoLSUt/jRRV81wN2+hqSO8QRzTsGKblS2sFMy5vFnVyy
- vTE8n20//6Q4txgXNubnlEdRnWG7Tn3BhtHTugkaLEZ19gpl7DXiamMR+YafbngHL+mxd6B6D+yiBP
- X+4aX45qMvEKjvQpgEIC0DWgbhOQCmDcRVasqX6vjsJ0WHnZQ9RBb8LheC7aJ0phJHh1ZzNe0IhDRv
- 3pCYjazWOu7JKI1xSGz7TRvtIxRHG5l5rXXBSo88dPqqiOP+C0y49oI10jrVxK0EgnC5dji2Iqab86
- XPfF/isbTlXibM8YuPUkydkBcFHoHSSZOjuxq3D1erbJUBdRbdhmgEEMPCE7KYNoLWlWKPNRrQLlgo
- EdL5FeQtpvu0rEkOHZ3jy8xeBP/yHsoJ4h1wUG8zNjX6qj5oirNthznB4NfPolm6w0cYBlQ2O2cqIl
- 6YqzA+uCzf2Sve+h4sejJiuh6+f/OwfGqlFBQ9pKz911RCIqNpTBFRlIOu+nGWOC4u0EDc9fyesz1I
- JMLwigtevzn/WNL1Qr4FVyxqH6WcbHuP8gGafllu0QiJmGGArXMKgPN75EsQ==
+ bh=DSfkUxtAoj5mu81yWWFvAAd0RzmXItr4kWCdyj1bISk=;
+ b=owEBbQKS/ZANAwAKAXfc29rIyEnRAcsmYgBnRaF9prwC2FE/20VAFkxL2ILMYJ+aAmceOxTvbWRS
+ z4ZM7MOJAjMEAAEKAB0WIQQ9U8YmyFYF/h30LIt33NvayMhJ0QUCZ0WhfQAKCRB33NvayMhJ0bHOEA
+ CG5c18zN7eCFM7GX/zPfQuFA7GTJzLR2x/AC88IfhPfsmqMToQCucnNGm8OhNoq92kLLMMv7P/6qR3
+ uhlj9VIvuZCbODoAKm+9fDgi6A0qGikNYp5X5y/39351trqDgEQfsEVOqXlHAW8PUvL574nffugOjP
+ 3brwvr89SeGqpVci8pCM/MNwukm8MTPax0eTl/k6gEJGbZIKtl4TYRTlBIsMi0K76pwI11qXuYNHB9
+ X4T3KzeeueNn7XvKlB8ZFarJfNd6n8WQAVHZ8Sh76nHPMLi/aPsC+J0NCpI/Pt/Oc6pr2PQ/dB3xWK
+ YJNrcqQSEXQGjLEnGACG5LLBkRkvAsYRokxV/cSrMVBCL2wMPJCM4Ciesk1kkLEiJqgMV4jJh5CdHB
+ cZdfTfRlmx5SbM1KIwQNRYg3lEcvJt0Bnd5D6XBbBxQ9hQGd4bhmUTaBBEeJpquDLPqHuIli7+xooF
+ 0cLHpXR9IPykR7iA8QlDAAKqW+YRgu/HEg51nt7c+X0IbuZjBBlJFmVVeb6Noyc6kwCeEHrquVIydJ
+ nvx8YrkpTgqVJqDI5rK5Q+DY/W8K6sVCbWlTTuh1G7FdKPmNrKH5Mf8c4MYue7D5iGk5VJBBBIgdDW
+ +sqPlG/LpvsT/V8qkgbh6FVHgdIwC4Ado8JpIZXGqJRsU0G5b4Kkfy7hK0xA==
 X-Developer-Key: i=neil.armstrong@linaro.org; a=openpgp;
  fpr=89EC3D058446217450F22848169AB7B1A4CFF8AE
 
-Following [1], document the global irq for the PCIe RC and
-add the interrupt for the SM8550 & SM8650 PCIe RC nodes.
+Qcom PCIe RC controllers are capable of generating 'global' SPI interrupt
+to the host CPUs. This interrupt can be used by the device driver to
+identify events such as PCIe link specific events, safety events, etc...
 
-Tested on SM8550-QRD, SM8650-QRD and SM8650-HDK.
-
-[1] https://lore.kernel.org/all/20240731-pci-qcom-hotplug-v3-0-a1426afdee3b@linaro.org/
+Hence, add it to the PCIe RC node along with the existing MSI interrupts.
 
 Signed-off-by: Neil Armstrong <neil.armstrong@linaro.org>
 ---
-Neil Armstrong (3):
-      dt-bindings: PCI: qcom,pcie-sm8550: document 'global' interrupt
-      arm64: dts: qcom: sm8550: Add 'global' interrupt to the PCIe RC nodes
-      arm64: dts: qcom: sm8650: Add 'global' interrupt to the PCIe RC nodes
+ arch/arm64/boot/dts/qcom/sm8550.dtsi | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
- Documentation/devicetree/bindings/pci/qcom,pcie-sm8550.yaml |  9 ++++++---
- arch/arm64/boot/dts/qcom/sm8550.dtsi                        | 12 ++++++++----
- arch/arm64/boot/dts/qcom/sm8650.dtsi                        | 12 ++++++++----
- 3 files changed, 22 insertions(+), 11 deletions(-)
----
-base-commit: adc218676eef25575469234709c2d87185ca223a
-change-id: 20241126-topic-sm8x50-pcie-global-irq-712d678b5226
+diff --git a/arch/arm64/boot/dts/qcom/sm8550.dtsi b/arch/arm64/boot/dts/qcom/sm8550.dtsi
+index 9dc0ee3eb98f8711e01934e47331b99e3bb73682..44613fbe0c7f352ea0499782ca825cbe2a257aab 100644
+--- a/arch/arm64/boot/dts/qcom/sm8550.dtsi
++++ b/arch/arm64/boot/dts/qcom/sm8550.dtsi
+@@ -1734,7 +1734,8 @@ pcie0: pcie@1c00000 {
+ 				     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>;
++				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
+ 			interrupt-names = "msi0",
+ 					  "msi1",
+ 					  "msi2",
+@@ -1742,7 +1743,8 @@ pcie0: pcie@1c00000 {
+ 					  "msi4",
+ 					  "msi5",
+ 					  "msi6",
+-					  "msi7";
++					  "msi7",
++					  "global";
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 0x7>;
+ 			interrupt-map = <0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
+@@ -1850,7 +1852,8 @@ pcie1: pcie@1c08000 {
+ 				     <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 314 IRQ_TYPE_LEVEL_HIGH>,
+ 				     <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>;
++				     <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>,
++				     <GIC_SPI 306 IRQ_TYPE_LEVEL_HIGH>;
+ 			interrupt-names = "msi0",
+ 					  "msi1",
+ 					  "msi2",
+@@ -1858,7 +1861,8 @@ pcie1: pcie@1c08000 {
+ 					  "msi4",
+ 					  "msi5",
+ 					  "msi6",
+-					  "msi7";
++					  "msi7",
++					  "global";
+ 			#interrupt-cells = <1>;
+ 			interrupt-map-mask = <0 0 0 0x7>;
+ 			interrupt-map = <0 0 0 1 &intc 0 0 0 434 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
 
-Best regards,
 -- 
-Neil Armstrong <neil.armstrong@linaro.org>
+2.34.1
 
