@@ -1,254 +1,122 @@
-Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f179.google.com (mail-pg1-f179.google.com [209.85.215.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D44A1BDA89;
-	Tue, 26 Nov 2024 13:05:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 408631D27BB
+	for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2024 13:20:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1732626333; cv=none; b=jJWr++p90TyYz51JDO9xR5zXwVqJZPNW775dpnCqQkyuM55mvNFOMlaHRwRjdHEO7toY9VgzLdkv+/vpuf0eLQjqaTRBXI7ddSFF/lZuFTKkoTvkh7lhXyfJeC7H8axT8kRIpW+Qf+1wQp2xLfiR8Ap2r9LHEZOdAhCNS0bX/aM=
+	t=1732627237; cv=none; b=jazzjGdAVqbfnvVJASX652BmURLhaevM0Vd7hkvZsLrdAyVGm0hDpSMDy1lSbMEOBvTWgpNNztxvmdmh1RhdDegQEhNvEcaqben8Pn9I4byT+mzwW0wbQjwLIym0HxnlxsntzVqcNzUtrIBoAoI8zEm/ttZ4q81i+yM4gCzBc6k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1732626333; c=relaxed/simple;
-	bh=nZv4b95OPxmH6mPZAMvb0Wv5uEEKGpz0lPjDDK8wgsU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=neDHPt0xESJv3fzq/bBO93zboA+5LgP9j4rbsCXemVh2SUq86fOajdgY5TRW3zFDZ01OZxH1Ead02/9OOIRvNmk66xdZ5X5sTF1ZNJPeSobYwGfvdkRuVRbF3GS3Vok3K8RX/BRul1+TLs3We2yqjNQfd4VSlA4PjTLh/Yex58A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=eyu60JWP; arc=none smtp.client-ip=91.207.212.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	s=arc-20240116; t=1732627237; c=relaxed/simple;
+	bh=KDm+Mq0a5lEfnpK/IGyKQJoyOpf9PXCVAPk6aBEyMRE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Fqqdp53HUx/6871YhP+DzruM+8nJhBgFAjbdsELuMINlrlcxIFMwpPBb/nCOTc92Fj92LxHv4CS7haXRK0lKz+c92Gfz7AEAHcfz03LE2S4J0Ci6goNA9hbOmIecJOy0dnFvdOWCIejOZPQyahfpwHMHILkklRyr3czKe4lDILs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=mK2YVYUt; arc=none smtp.client-ip=209.85.215.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="eyu60JWP"
-Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4AQAk54u003890;
-	Tue, 26 Nov 2024 14:05:09 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	JvNOF9bsL5PPLJr2ogI8eqfXc8/WsuwSeO/LJiy4fVA=; b=eyu60JWPhwMD1rZM
-	KuX+yAVXdg5EDTjokHGGyTecPqlsLTfHn//9VLRdAUKXviwLEHA5+AHjUQXFFMnp
-	DYvx3ao2bwpfxOTy75ncNQydz7ymboeBd/KW5prLwGsLSeMMOGM+izOr+5L8Iyri
-	Bn3wTbTVog1EpOUca9Q5NP3tf0XbQTR9ZIdsWRQ/Z8edEH/mMISFQ2l+W9vCv53g
-	9HILEIfK4aYqKTUCdOQnMG2FCKVwuYW2kedsnuudRlN2uWNia2rJe4jE/rstSsNx
-	UMN2lCWulQDEDz0V4wzn6GD5CBOPaHNBDEA9pb7Bitvl1VOIrlPyy0oZEjnEnWxO
-	mic+9A==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 4336tfmxe2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 26 Nov 2024 14:05:09 +0100 (CET)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id B3DF640049;
-	Tue, 26 Nov 2024 14:03:28 +0100 (CET)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 0051626F233;
-	Tue, 26 Nov 2024 14:00:27 +0100 (CET)
-Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
- (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Tue, 26 Nov
- 2024 14:00:26 +0100
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
-        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        Christian Bruel <christian.bruel@foss.st.com>
-Subject: [PATCH v1 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex bindings
-Date: Tue, 26 Nov 2024 14:00:00 +0100
-Message-ID: <20241126130004.1570091-2-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20241126130004.1570091-1-christian.bruel@foss.st.com>
-References: <20241126130004.1570091-1-christian.bruel@foss.st.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="mK2YVYUt"
+Received: by mail-pg1-f179.google.com with SMTP id 41be03b00d2f7-7fc41dab8e3so724934a12.3
+        for <linux-pci@vger.kernel.org>; Tue, 26 Nov 2024 05:20:36 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1732627235; x=1733232035; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=7ZAZjsTcG8rmGX1lmOUx9+9I9EDjkqjr8nVDzMoOc8s=;
+        b=mK2YVYUtB6MXCFQFDN/n/2B833x7m9XiEty3ZTbc/xeNcG8sTckXG4xqslOpoqtxfK
+         7EtHp1SfWV3vemCXRseEFMQd3TURZ6JZbsR3ezlhl5W+zANaBumtDb8NGp9hHN0BDJ4G
+         yIu8o/+UVmfnIbSw73bIjo2Wfwx4lVsYEW6hRzrX7DJ2e7xeayr/vRNe1Vb49YqLSJpA
+         Q3Hm4mQEYVWW0D7K93WX3rc8Bz3CKjbI+252jOgrqRvxG1o7rWeR06wpxiZZFSi4PKEY
+         LuNOKERp4xMYUY10DSxpmgDVLS+lrfMLQE0ZR23PKlBK5C79LgI2G2w832Zv4SnrrF1A
+         EBjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1732627235; x=1733232035;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7ZAZjsTcG8rmGX1lmOUx9+9I9EDjkqjr8nVDzMoOc8s=;
+        b=ndHEA38g8BJ67pOZApwHSQDMVA5W8t9JbB8gD/HfxUc0Xr8+fDzOicRXp0JLjOSZM1
+         r6EEMnvL5VWDoIIiQcEorntqKMcl0Gx0mkRSaT9Ogt20O9rvBML2iujw86xCCwQQYRd4
+         z3mpoKrz7qU1erG6nV7CeTgsPcs5nSWfeYwJ3BzcqBP+K+Tc/NBo4UMofZC2yNXMRlQt
+         eXkSAW+e9dQeiytoR8bdps69ClDkG5cNTR/xqo27bIwCs2NnRSNdQumcI/johlw3G/zY
+         pmR+5E0a2fZf4lnNJP7wGFnlees805biLdTFCDOKWnN8KXMIQDuqaWz3LwfQy8EcrxGE
+         hERg==
+X-Forwarded-Encrypted: i=1; AJvYcCV/pJNVd+YfZ0BVPHY+zf1RLPcO+734aisxKwulYbdh1QhYjKsPy1uUsrXt0zNuENYsSlUSHubJ0xQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxhC5CTsDuNjjtAohNr2olE5DooCaQWkebI4CNdEz9bC7jNHteE
+	Uyk8sG2R9oUUXTKGs2ClDsmf+hhTrlKCb3sda7BXLKAUoKywZibGvIHtQ8lFgA==
+X-Gm-Gg: ASbGncsAgxJvD0u4C9iXSTU/Mp1htCUFiPRian23Hteoa9roNwD4ReqatHxYdXa8u87
+	jj6HnXgXnRfsSZAaBstZF/sIxAR3havyJji+PlKiI0Xspk5gNdvRZRAdUEO/ydF/Zj6yht7WmXt
+	8xp/VCklT8D2xeLjVpz/EWtsk5YiL2ggNvLGOV5Wv1dRAK9XUoW8i7Xr1FBXdorQkq/9RIulynx
+	DLMrPYRKgo3e2cr+b+tkdwoHbH0lJT06OeU6GKQbDKFJi575xaeTxOosEyu
+X-Google-Smtp-Source: AGHT+IET0RgL1Oz/nFQSi7koI3C7X3ynD6Kn5BZCjzR9y5l02OedHw0Xt/TC1lpUE205Y9sZghFmkw==
+X-Received: by 2002:a17:90b:3b48:b0:2ea:4c8d:c7ad with SMTP id 98e67ed59e1d1-2eb0e8854d0mr21594882a91.35.1732627235499;
+        Tue, 26 Nov 2024 05:20:35 -0800 (PST)
+Received: from thinkpad ([120.60.136.64])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2eb0d048e94sm8758055a91.40.2024.11.26.05.20.32
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Nov 2024 05:20:35 -0800 (PST)
+Date: Tue, 26 Nov 2024 18:50:20 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org,
+	Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v2 0/2] PCI endpoint test: Add support for capabilities
+Message-ID: <20241126132020.efpyad6ldvvwfaki@thinkpad>
+References: <20241121152318.2888179-4-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+In-Reply-To: <20241121152318.2888179-4-cassel@kernel.org>
 
-Document the bindings for STM32MP25 PCIe Controller configured in
-root complex mode.
+On Thu, Nov 21, 2024 at 04:23:19PM +0100, Niklas Cassel wrote:
+> Hello all,
+> 
+> The pci-epf-test driver recently moved to the pci_epc_mem_map() API.
+> This API call handle unaligned addresses seamlessly, if the EPC driver
+> being used has implemented the .align_addr callback.
+> 
+> This means that pci-epf-test no longer need any special padding to the
+> buffers that is allocated on the host side. (This was only done in order
+> to satisfy the EPC's alignment requirements.)
+> 
+> In fact, to test that the pci_epc_mem_map() API is working as intended,
+> it is important that the host side does not only provide buffers that
+> are nicely aligned.
+> 
 
-Supports 4 legacy interrupts and MSI interrupts from the ARM
-GICv2m controller.
+I don't agree with the idea of testing the endpoint internal API behavior with
+the pci_endpoint_test driver. The driver is supposed to test the functionality
+of the endpoint, which it already does. By adding these kind of checks, we are
+just going to make the driver bloat.
 
-STM32 PCIe may be in a power domain which is the case for the STM32MP25
-based boards.
+I suppose if the API behavior is wrong, then it should be caught in the existing
+READ/WRITE tests, no?
 
-Supports wake# from wake-gpios
+> However, since not all EPC drivers have implemented the .align_addr
+> callback, add support for capabilities in pci-epf-test, and if the
+> EPC driver implements the .align_addr callback, set a new
+> CAP_UNALIGNED_ACCESS capability. If CAP_UNALIGNED_ACCESS is set, do not
+> allocate overly sized buffers on the host side.
+> 
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
----
- .../bindings/pci/st,stm32-pcie-common.yaml    | 45 +++++++++
- .../bindings/pci/st,stm32-pcie-host.yaml      | 99 +++++++++++++++++++
- 2 files changed, 144 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+This also feels wrong to me. The host driver should care about the alignment
+restrictions of the endpoint and then allocate the buffers accordingly, not the
+other way.
 
-diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
-new file mode 100644
-index 000000000000..694d5046e632
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
-@@ -0,0 +1,45 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/st,stm32-pcie-common.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: STM32MP25 PCIe RC/EP controller
-+
-+maintainers:
-+  - Christian Bruel <christian.bruel@foss.st.com>
-+
-+description:
-+  STM32MP25 PCIe RC/EP common properties
-+
-+properties:
-+  clocks:
-+    maxItems: 1
-+    description: PCIe system clock
-+
-+  resets:
-+    maxItems: 1
-+
-+  phys:
-+    maxItems: 1
-+
-+  phy-names:
-+    const: pcie-phy
-+
-+  power-domains:
-+    maxItems: 1
-+
-+  access-controllers:
-+    maxItems: 1
-+
-+  reset-gpios:
-+    description: GPIO controlled connection to PERST# signal
-+    maxItems: 1
-+
-+required:
-+  - clocks
-+  - resets
-+  - phys
-+  - phy-names
-+
-+
-diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
-new file mode 100644
-index 000000000000..18083cc69024
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
-@@ -0,0 +1,99 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/st,stm32-pcie-host.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: STM32MP25 PCIe root complex driver
-+
-+maintainers:
-+  - Christian Bruel <christian.bruel@foss.st.com>
-+
-+description:
-+  PCIe root complex controller based on the Synopsys DesignWare PCIe core.
-+
-+allOf:
-+  - $ref: /schemas/pci/snps,dw-pcie.yaml#
-+  - $ref: /schemas/pci/st,stm32-pcie-common.yaml#
-+
-+select:
-+  properties:
-+    compatible:
-+      const: st,stm32mp25-pcie-rc
-+  required:
-+    - compatible
-+
-+properties:
-+  compatible:
-+    const: st,stm32mp25-pcie-rc
-+
-+  reg:
-+    items:
-+      - description: Data Bus Interface (DBI) registers.
-+      - description: PCIe configuration registers.
-+
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: config
-+
-+  num-lanes:
-+    const: 1
-+
-+  msi-parent:
-+    maxItems: 1
-+
-+  wake-gpios:
-+    description: GPIO controlled connection to WAKE# input signal
-+    maxItems: 1
-+
-+  wakeup-source: true
-+
-+dependentRequired:
-+  wakeup-source: [ wake-gpios ]
-+
-+required:
-+  - interrupt-map
-+  - interrupt-map-mask
-+  - ranges
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+    #include <dt-bindings/phy/phy.h>
-+    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
-+
-+    pcie@48400000 {
-+        compatible = "st,stm32mp25-pcie-rc";
-+        device_type = "pci";
-+        num-lanes = <1>;
-+        reg = <0x48400000 0x400000>,
-+              <0x10000000 0x10000>;
-+        reg-names = "dbi", "config";
-+        #interrupt-cells = <1>;
-+        interrupt-map-mask = <0 0 0 7>;
-+        interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
-+                        <0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
-+                        <0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
-+                        <0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
-+        #address-cells = <3>;
-+        #size-cells = <2>;
-+        ranges = <0x01000000 0 0x10010000 0x10010000 0 0x10000>,
-+                 <0x02000000 0 0x10020000 0x10020000 0 0x7fe0000>,
-+                 <0x42000000 0 0x18000000 0x18000000 0 0x8000000>;
-+        clocks = <&rcc CK_BUS_PCIE>;
-+        phys = <&combophy PHY_TYPE_PCIE>;
-+        phy-names = "pcie-phy";
-+        resets = <&rcc PCIE_R>;
-+        msi-parent = <&v2m0>;
-+        wakeup-source;
-+        wake-gpios = <&gpioh 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-+        reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
-+        access-controllers = <&rifsc 68>;
-+        power-domains = <&CLUSTER_PD>;
-+    };
-+
+That being said, I really like to get rid of the hardcoded
+'pci_endpoint_test_data::alignment' field and make the driver learn about it
+dynamically. I'm just thinking out loud here.
+
+- Mani
+ 
 -- 
-2.34.1
-
+மணிவண்ணன் சதாசிவம்
