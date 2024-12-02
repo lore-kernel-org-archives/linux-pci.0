@@ -1,137 +1,165 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE6892040AA
-	for <linux-pci@vger.kernel.org>; Mon,  2 Dec 2024 11:19:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B92320968A
+	for <linux-pci@vger.kernel.org>; Mon,  2 Dec 2024 12:59:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733138361; cv=none; b=EmuLiWafLX4AlfVAqZk82oNpJBkuBUl2fx7jKA/CrmK/h5yxBfq9KkWXrrvi9E8LLA8eHpNny4mQgldXL1qJyJGJdTgPZjoSrK6Q/iZ2kVfWd+L0c89+6FldbE/IBxnu2FjpmKhc2mfo6EgHDe3Z1TsSUrHvgAWf+sAvS27z9ZU=
+	t=1733144344; cv=none; b=bTyWd76TMYuHLrufQyaFIxgzb1BT9Vn83NWX4gCBBD2L4kAlTcNOqbCb8+OiFibtBevB7s3mv+qGf/ISvXwqx1B2mGkImVXUp+M6XgNU2YbYKRxRd4WkN1UyCPWzvqtnFsGdRU9KSZRog9yHTFViUHVqCZTvMQmVbD7Wp+8Xors=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733138361; c=relaxed/simple;
-	bh=5wKv3990qTqArMWxDC8JoNsA96O0HLgsLUAOsCHU91I=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YvziJQgBbSNjcwTjDOl9L6gPo3fVupse8hJArBddtNJGJJ28phBJiMkbF6vqQx0dOHqh+YVu7p4CCRYlcmasAtnEE38JgUYNbDbOOnusVAXQtPijUxs+VmBUTsdk+oHkQPQSZ45piAbpxustKbtgtouErFlsvIrWd0ERETEtlDg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=NCFyGBHm; arc=none smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1733144344; c=relaxed/simple;
+	bh=84F50RDLSxwvaiL/Ut5/RJLgaAhNDidEJM6Aelx6NOw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=SoGsfGzqlnznxaJKpVSY/nVzYmF+IBarEVf58nrFrjIMYpJTE4SP1tZGcAFdQkjfIgEthCkc5UpM5D0H90ybcPCKcIAvMZid2q/P0qpblL+hcfWTNjTRLzfP1clekI1f4w+GEMTZeBr+1X5AyFPzb7Mbw75udGesBE+Ix03LYew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DKyK0hww; arc=none smtp.client-ip=209.85.214.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="NCFyGBHm"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-5cec9609303so4896155a12.1
-        for <linux-pci@vger.kernel.org>; Mon, 02 Dec 2024 03:19:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DKyK0hww"
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-215853ed047so12544575ad.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Dec 2024 04:59:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1733138354; x=1733743154; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=P/DXYP0gmkoHCujxUnsFn55701rZVWVknkTyMB7ADmU=;
-        b=NCFyGBHmPbQC4JUKeBrMhZOaLAN/tRkmQEf4rq9AA0EF05KaaLWXSJA5PNxHJGfzMZ
-         oM7omQU6QTQ4yBVY+t3BXoO6Xeb2/HyTV6tIFBwuPX7LyZdjYBfTBMMgTcYffpBmLW1Y
-         bdsKZm+f5kmiqZx9zR2ws2rnoDDRQlsut4UD54zNmnYrN4ZnYIxwUyuvEg4/ph4L1kyp
-         LFFGo6LdYu2ihJFSYeGLmprgVyIlBOcQPVbaPsRdS9dMAmltZ32VGjLPVg9+e4pnUFFK
-         XEv0jGt4Ou99JJWeJfp1a4F47uP6FuHwXzqD+gkEDtEciLESka60XQ46nhpuADsFqjDC
-         df8w==
+        d=linaro.org; s=google; t=1733144341; x=1733749141; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=6CCvtQVXQrLvAOM+4VRXFfpLmG3wrstufKddBuVhAJQ=;
+        b=DKyK0hwwQNncIv2W+kktnDsm+uwGi61NVsPGfzI7wRLdfQ3Ka06Bz5srnrjKpCnLN5
+         2vBDGzgB4LEll0nb7jnCWNlmaUxAEPbSBgTDoGA7A316P+8f9B3GuYx+WfJ2oH8bi51z
+         JUdDipAhSc/o+zOrFYarR7G3a/EkeY3zFAyIG9pHwDE2SoefVa107fA1iheDoY6FOGM6
+         p6ek52PQAGAnJySRRmfaBdQQQktJV4gtRdlcIUmqY6JG5BS1+1B/DwtoXBJtsTiSJW6V
+         HDDYwwwFxkTVUFck4r8P4zxAW5DJDOqJ/xH6D/g33C0zG8Q4VXCOv0iRf8Gy7G3Folys
+         yJow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733138354; x=1733743154;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=P/DXYP0gmkoHCujxUnsFn55701rZVWVknkTyMB7ADmU=;
-        b=YfKWCJqzxUIEH+u+1mHYmCH73qxYkjhfHhJdMlg18De1BZlNPnAkYG6gEpk+lhCvgL
-         ZMQ74fV0VjfjQmzIulciWwkDJamzATU58Wb8Yx+49/iosSta8BPuE2Il9oGCZme+zceK
-         +TJ/UUbFSR/kAwVUzdyVQFfieccpmdRmzh99pROE63bvPTXmNQUB4XrFXtOA9wo35QfN
-         PPvH6Sm67UydX6Wh0r4GQeRS+SF6c34oRcKWSss7FQtYP44cKVCPQWdBKKHiKk6iNnAS
-         63D3yrsvr2rMZBR0qIEIvmqQm+3dSj49gIVS2VxhHSkFMJ4hM3RnJ8frPXQu74bA5AEZ
-         J8pw==
-X-Forwarded-Encrypted: i=1; AJvYcCWLkzgsFh4w7iH8MniHpFXRxYeRTw+b0GLRnwydSTvhqm1C7DxU4bXkN0AwQPGPJ32Uk9X7pk7/I0E=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzbC6s4Z1x/QwHLC84IoWwxXbtExwHZoRwZ6cC1yYcUi0zIBSPx
-	U5B1CcnRdFisoZRZ0hbSQi2WnSvvk2DSAqjRtRUYLMsmhUuNkHOhufrFBC4l2Ik=
-X-Gm-Gg: ASbGncv0GHi9AeCH/pR4vkdrWpUFW5w69At/NuVR2+mKxHZUF6nFK5rj9NUfoqhlbkZ
-	Fa03gBDPGh5Usz8kojQIfPKPcPhFE/Cb8ykDzr6h/tlfjUFAhFNFdsl69dBMiJZa1wCThBcqJl7
-	/VBr1/QM/wpiwKsZjYCi65qxGtLvWGVqevoxCijAp2R40xUUnlb5rqE2Q3uD8Rfl2mkmyRwKeCq
-	FMuFNZrTcfNR0vNI5urh24aPndMsWXdSIulq4scQvMMpLr6I4XGFOYlX1sn2MZP0DsOaVaSTfq0
-	RQERvWlCn7W6Y38pezIi
-X-Google-Smtp-Source: AGHT+IHeFnhQVvvNV6Unz5SbIu5RmIoxGk3I5zBFBtPc8jG8aJ1mwarpKQV7x9LB7y94ybUWdyYebQ==
-X-Received: by 2002:a05:6402:5206:b0:5d0:f088:c675 with SMTP id 4fb4d7f45d1cf-5d0f088cc59mr2379116a12.21.1733138353742;
-        Mon, 02 Dec 2024 03:19:13 -0800 (PST)
-Received: from localhost (host-87-20-211-251.retail.telecomitalia.it. [87.20.211.251])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5d0e1b6903esm1763679a12.19.2024.12.02.03.19.13
+        d=1e100.net; s=20230601; t=1733144341; x=1733749141;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=6CCvtQVXQrLvAOM+4VRXFfpLmG3wrstufKddBuVhAJQ=;
+        b=mVCICjRjB213pBdPudmcDPTBQluwr9f9wrPHclaApLUe86BY2n6j2seIhbBBDTWIBJ
+         c4CuHu/bCoRGcdm900OJhpVD8VY0rVix016NooxP07ke5PRT2XyVq4oRngf43zNIif1S
+         L3xZHIx7MHBqE3O0dF+LH7AJTyTX3Mzl/cg/oeMw8jHlLS3zRdYL6e4BxWpbALvWHutQ
+         a2c3bM6W+hWDcg7X9w4LB7iLvGAAWzyHZdTnGakI2boQbcWHJ2cfvtKVw6XRRp4P3mvf
+         ntwbuz1DecXffHJImQRQXFe3Pvz4UFUg9Mm0cfcM/QtAjuWJicdYrt84OPgHLTDcPtbL
+         JMeA==
+X-Forwarded-Encrypted: i=1; AJvYcCXfe0pPGNCWUBSLw6s2UxnytyRCB0zbuelc6S2ujJrrqbf2vAB4NjPWB9/Kemfs8JNiEayxnSmlKhY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxBqVvtNXrXThytvO1BJkBhG+OzxiYhUV17trko6NuLMMKWVVe1
+	bC/EvuZTB3M6KcBBwINEyoc5xxS15S1U/zUhfNEz9Wm8MC5fZGWDiYop6YLcGA==
+X-Gm-Gg: ASbGncvLO4sXz6jEQS2PDuzz8FSH4z5bNvJ8/gHV9s39QbWXLyoosb0vbFaMInlACsj
+	or7KeONzx0Tb/iahTbbarTfBFXOIxAmoUtvLnlGEyh1uXVCnz0KvYvawpRp5a7ztz0csA/VgoaF
+	yxaEaD0y6lMoLZt5tWHNsXEPI58sy7CygDivWXcVz3uU0SELRpNuRXNxsCJUFHNIuNGyXL2OlMq
+	gBMup80oN4vTJNYeUNMuFsD80YFWNSPe4kfzAhvJOkrKhK8z8pKDHueU0ZKtg==
+X-Google-Smtp-Source: AGHT+IGb8lymZBMlKvEv3D6XKmMObg2pfnQBEi8/oeAOIIzR3QMSbRXUP7cxeVvRLLDRh2EmtlIy1g==
+X-Received: by 2002:a17:902:e5c5:b0:215:6cb2:787e with SMTP id d9443c01a7336-2156cb27b96mr105778365ad.9.1733144341390;
+        Mon, 02 Dec 2024 04:59:01 -0800 (PST)
+Received: from thinkpad ([120.60.140.110])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2156c99a827sm34935945ad.166.2024.12.02.04.58.56
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 02 Dec 2024 03:19:13 -0800 (PST)
-From: Andrea della Porta <andrea.porta@suse.com>
-To: Andrea della Porta <andrea.porta@suse.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof Wilczynski <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Saravana Kannan <saravanak@google.com>,
-	linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Stefan Wahren <wahrenst@gmx.net>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Andrew Lunn <andrew@lunn.ch>
-Subject: [PATCH v5 09/10] arm64: dts: bcm2712: Add external clock for RP1 chipset on Rpi5
-Date: Mon,  2 Dec 2024 12:19:33 +0100
-Message-ID: <8b4dda91fae156a7f28f2807cd6d64ac2ec07dd7.1733136811.git.andrea.porta@suse.com>
-X-Mailer: git-send-email 2.44.0
-In-Reply-To: <cover.1733136811.git.andrea.porta@suse.com>
-References: <cover.1733136811.git.andrea.porta@suse.com>
+        Mon, 02 Dec 2024 04:59:00 -0800 (PST)
+Date: Mon, 2 Dec 2024 18:28:45 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: kw@linux.com, gregkh@linuxfoundation.org, arnd@arndb.de,
+	lpieralisi@kernel.org, shuah@kernel.org, kishon@kernel.org,
+	aman1.gupta@samsung.com, p.rajanbabu@samsung.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	bhelgaas@google.com, linux-arm-msm@vger.kernel.org, robh@kernel.org,
+	linux-kselftest@vger.kernel.org, stable+noautosel@kernel.org
+Subject: Re: [PATCH v2 1/4] PCI: qcom-ep: Mark BAR0/BAR2 as 64bit BARs and
+ BAR1/BAR3 as RESERVED
+Message-ID: <20241202125845.rp4vc7ape52v4bwd@thinkpad>
+References: <20241129092415.29437-2-manivannan.sadhasivam@linaro.org>
+ <20241129195537.GA2770926@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241129195537.GA2770926@bhelgaas>
 
-The RP1 found on Raspberry Pi 5 board needs an external crystal at 50MHz.
-Add clk_rp1_xosc node to provide that.
+On Fri, Nov 29, 2024 at 01:55:37PM -0600, Bjorn Helgaas wrote:
+> On Fri, Nov 29, 2024 at 02:54:12PM +0530, Manivannan Sadhasivam wrote:
+> > On all Qcom endpoint SoCs, BAR0/BAR2 are 64bit BARs by default and software
+> > cannot change the type. So mark the those BARs as 64bit BARs and also mark
+> > the successive BAR1/BAR3 as RESERVED BARs so that the EPF drivers cannot
+> > use them.
+> 
+> "Default" implies an initial setting that can be changed, but you say
+> "by default" and also "software cannot change the type."  Can they be
+> anything *other* than 64-bit BARs?
+> 
+> If they're hardwired to be 64-bit BARs, I would just say that.
+> 
+> > Cc: stable+noautosel@kernel.org # depends on patch introducing only_64bit flag
+> 
+> If stable maintainers need to act on this, do they need to search for
+> the patch introducing only_64bit flag?  That seems onerous; is there a
+> SHA1 that would make it easier?
+> 
 
-Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
----
- arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts | 7 +++++++
- 1 file changed, 7 insertions(+)
+But that's not the point of having noautosel tag, AFAIK.
 
-diff --git a/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts b/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts
-index 2bdbb6780242..ae3c0c153cea 100644
---- a/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts
-+++ b/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts
-@@ -16,6 +16,13 @@ chosen: chosen {
- 		stdout-path = "serial10:115200n8";
- 	};
- 
-+	clk_rp1_xosc: clock-50000000 {
-+		compatible = "fixed-clock";
-+		#clock-cells = <0>;
-+		clock-output-names = "rp1-xosc";
-+		clock-frequency = <50000000>;
-+	};
-+
- 	/* Will be filled by the bootloader */
- 	memory@0 {
- 		device_type = "memory";
+Documentation/process/stable-kernel-rules.rst clearly says that this tag is to
+be used when we do not want the stable team to backport the commit due to a
+missing dependency.
+
+If we really want stable team to backport the change with dependencies, then the
+dependencies should be mentioned using the SHAs:
+
+From Documentation/process/stable-kernel-rules.rst:
+
+```
+* Specify any additional patch prerequisites for cherry picking::
+
+    Cc: <stable@vger.kernel.org> # 3.3.x: a1f84a3: sched: Check for idle
+    Cc: <stable@vger.kernel.org> # 3.3.x: 1b9508f: sched: Rate-limit newidle
+    Cc: <stable@vger.kernel.org> # 3.3.x: fd21073: sched: Fix affinity logic
+    Cc: <stable@vger.kernel.org> # 3.3.x
+    Signed-off-by: Ingo Molnar <mingo@elte.hu>
+
+  The tag sequence has the meaning of::
+
+    git cherry-pick a1f84a3
+    git cherry-pick 1b9508f
+    git cherry-pick fd21073
+    git cherry-pick <this commit>
+```
+
+Here I did not intend to backport this change with commit adding only_64bit flag
+because, I'm not sure if that dependency alone would be sufficient. If someone
+really cares about backporting this change, then they should figure out the
+dependencies, test the functionality and then ask the stable team.
+
+- Mani
+
+> > Fixes: f55fee56a631 ("PCI: qcom-ep: Add Qualcomm PCIe Endpoint controller driver")
+> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > ---
+> >  drivers/pci/controller/dwc/pcie-qcom-ep.c | 4 ++++
+> >  1 file changed, 4 insertions(+)
+> > 
+> > diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> > index e588fcc54589..f925c4ad4294 100644
+> > --- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> > +++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+> > @@ -823,6 +823,10 @@ static const struct pci_epc_features qcom_pcie_epc_features = {
+> >  	.msi_capable = true,
+> >  	.msix_capable = false,
+> >  	.align = SZ_4K,
+> > +	.bar[BAR_0] = { .only_64bit = true, },
+> > +	.bar[BAR_1] = { .type = BAR_RESERVED, },
+> > +	.bar[BAR_2] = { .only_64bit = true, },
+> > +	.bar[BAR_3] = { .type = BAR_RESERVED, },
+> >  };
+> >  
+> >  static const struct pci_epc_features *
+> > -- 
+> > 2.25.1
+> > 
+
 -- 
-2.35.3
-
+மணிவண்ணன் சதாசிவம்
