@@ -1,131 +1,143 @@
-Received: from relay6-d.mail.gandi.net (relay6-d.mail.gandi.net [217.70.183.198])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4880C201015;
-	Mon,  2 Dec 2024 13:15:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.198
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8065AAD5E;
+	Mon,  2 Dec 2024 13:49:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733145359; cv=none; b=dqZ2kgocMnaVY7DW55X3LNoqYbY+B6qfiyd3g+P5+pXTkTKXU6WO4u8x273xYsMs6iXgafzpWez6WM09x3woiMymZmmOxWwG8Y/XPnFlXPslpWjF99U2NoDGpq3EEDTt88x32x3xkP4WYF9eE5FWXlwkAv0DVTMRipjq+MLUuW8=
+	t=1733147346; cv=none; b=fHTI97Vi58/z+zI0yDtINEJbIA9xS2ZYEhyDl0tElHA08w9rzv9QGvu99v2cVMES3gm4geFst+/QxgHTRKpEo81x2II5PEavsh5qV3mrXhJStedhhdlWe3GWTXsAyk6MctFq0GaIymy4arWeskWCAE750lVT0G6T3/sGkQ7TdAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733145359; c=relaxed/simple;
-	bh=TOW/EzyDbIvADmJ/cMQpnmtwR6NOgiVR9PmYtOf7bXI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TYwGzxO6NBw/yQJmzwqzZuCxLR03AZumD7tEwQJOj8MOKyOGpqN9VaG+4TdSuFBDZ7Sj76dhpcohDryjJUBmRjEDWLp7KfUbKEl7ZBMZte/xxCHjaw6/Sdl8ISnVZ85VIxBeaXGoKkuOmu48rEmS2tUs30+atQLT4/rSDxmM1po=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=WgTv8Mtd; arc=none smtp.client-ip=217.70.183.198
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1733147346; c=relaxed/simple;
+	bh=Ah5hWMdfPFzst6CBjRABiissd/71Qcp2TxJFwtVPowE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EtPdsBjTAF5vz9m86450CrUcK57BYQDdgTWuZDcc8VsWQOggH7GlaqrJepeJnr1l/Rv+rRv+3TUrB7TYkjWPxGed/7HXZBxGO2PLNLiC0L3XBSgY64AJhbRMHLRPiaXfpN2SiyNTuBwVRPKUNertjhXPPV2aiu9Q0MaG9IerApc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zSnEGhJM; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SVggcK2d; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zSnEGhJM; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SVggcK2d; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="WgTv8Mtd"
-Received: by mail.gandi.net (Postfix) with ESMTPA id 2F446C000D;
-	Mon,  2 Dec 2024 13:15:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1733145348;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zSnEGhJM";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SVggcK2d";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zSnEGhJM";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SVggcK2d"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 57201211CF;
+	Mon,  2 Dec 2024 13:49:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1733147342; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=hVpn7dEumaHVgEROgoe+qNLD7BNzHl5S0UXnNdPNwZ4=;
-	b=WgTv8MtdQGa1MyCqNQZZ2awfM8pOrl9Xx9hEjsIidxSFjhZq+uj48dDS3X0YLAwrpCXe8g
-	gPWJThY0m3D877rqBc5FVQfqAeX2zpyxqjUX5Fw7RwYXcAu7FVz8PiqfgYrm+GCaKGGr2J
-	2khUfjou6YphHNFRHAZhBQrGkMHlBvExA7OlSj+TV5nhPRr4YECCgmWaiaj+X+HVmtOVCh
-	+ZwhrPfiQgFm9ggssVhB7XDC9aKBJtI99TScF+bteDKIetV/SoVp20OhpEb4fCkBT8fbmn
-	KY/ZE6hp52DFG9TsJomztvaL0uDvwi96C+uqvPumKbBKuV9Pjuk/JL40MCN7ag==
-From: Herve Codina <herve.codina@bootlin.com>
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lizhi Hou <lizhi.hou@amd.com>
-Cc: linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v4 5/6] of: Add #address-cells/#size-cells in the device-tree root empty node
-Date: Mon,  2 Dec 2024 14:15:17 +0100
-Message-ID: <20241202131522.142268-6-herve.codina@bootlin.com>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241202131522.142268-1-herve.codina@bootlin.com>
-References: <20241202131522.142268-1-herve.codina@bootlin.com>
+	bh=9qx7nVrFeR9OVdYomOaMq/GvODW8JLvzaL2rbW3wAPU=;
+	b=zSnEGhJMpzAV7OPerK/ECYunLFUvgXM1b9Cj1v+CMbAyPWhC6r9BRXGm9I36SC8/QOGB9N
+	X4DjAEO5M9Vzy4XTjE3SWfhNNbXnYt8JHI0M8G1gnlD9f2GW1I1qjh+LYSqcdujkfmDaO9
+	NboozgDQOZdNyLFrVqIs+qwi7ABoUvY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1733147342;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9qx7nVrFeR9OVdYomOaMq/GvODW8JLvzaL2rbW3wAPU=;
+	b=SVggcK2dh8P33y3NX+FkAluNvDieRYd5y8E3ZgL18r4zVEz4jPqzVqmweaLt0CDetRTb6Z
+	rmcbXOcAxo9d0KCw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1733147342; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9qx7nVrFeR9OVdYomOaMq/GvODW8JLvzaL2rbW3wAPU=;
+	b=zSnEGhJMpzAV7OPerK/ECYunLFUvgXM1b9Cj1v+CMbAyPWhC6r9BRXGm9I36SC8/QOGB9N
+	X4DjAEO5M9Vzy4XTjE3SWfhNNbXnYt8JHI0M8G1gnlD9f2GW1I1qjh+LYSqcdujkfmDaO9
+	NboozgDQOZdNyLFrVqIs+qwi7ABoUvY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1733147342;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=9qx7nVrFeR9OVdYomOaMq/GvODW8JLvzaL2rbW3wAPU=;
+	b=SVggcK2dh8P33y3NX+FkAluNvDieRYd5y8E3ZgL18r4zVEz4jPqzVqmweaLt0CDetRTb6Z
+	rmcbXOcAxo9d0KCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 45906139C2;
+	Mon,  2 Dec 2024 13:49:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id ekEDEM66TWf9EQAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Mon, 02 Dec 2024 13:49:02 +0000
+Date: Mon, 2 Dec 2024 14:48:53 +0100
+From: Daniel Wagner <dwagner@suse.de>
+To: John Garry <john.g.garry@oracle.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Bjorn Helgaas <bhelgaas@google.com>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	Jason Wang <jasowang@redhat.com>, Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
+	Eugenio =?utf-8?B?UMOpcmV6?= <eperezma@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>, 
+	linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	virtualization@lists.linux.dev, linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, storagedev@microchip.com, 
+	linux-nvme@lists.infradead.org
+Subject: Re: [PATCH v5 4/8] blk-mq: introduce blk_mq_map_hw_queues
+Message-ID: <95035ac7-8707-4a69-8425-86a47841c15d@flourine.local>
+References: <20241115-refactor-blk-affinity-helpers-v5-0-c472afd84d9f@kernel.org>
+ <20241115-refactor-blk-affinity-helpers-v5-4-c472afd84d9f@kernel.org>
+ <8b303ed8-f819-4fa2-b447-8d8f4a42b380@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-GND-Sasl: herve.codina@bootlin.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <8b303ed8-f819-4fa2-b447-8d8f4a42b380@oracle.com>
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[25];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+X-Spam-Flag: NO
+X-Spam-Level: 
 
-On systems where ACPI is enabled or when a device-tree is not passed to
-the kernel by the bootloader, a device-tree root empty node is created.
-This device-tree root empty node does not have the #address-cells and
-the #size-cells properties
+On Thu, Nov 21, 2024 at 09:08:02AM +0000, John Garry wrote:
+> > +/**
+> > + * blk_mq_map_hw_queues - Create CPU to hardware queue mapping
+> > + * @qmap:	CPU to hardware queue map.
+> > + * @dev:	The device to map queues.
+> > + * @offset:	Queue offset to use for the device.
+> 
+> supernit: maybe no '.'
 
-This leads to the use of the default address cells and size cells values
-which are defined in the code to 1 for the address cells value and 1 for
-the size cells value.
+np. I've followed the style of the function right above. Dropped them.
 
-According to the devicetree specification and the OpenFirmware standard
-(IEEE 1275-1994) the default value for #address-cells should be 2.
+> is there still a blank line at the bottom of the file?
 
-Also, according to the devicetree specification, the #address-cells and
-the #size-cells are required properties in the root node.
+It ends with (vim):
 
-The device tree compiler already uses 2 as default value for address
-cells and 1 for size cells. The powerpc PROM code also uses 2 as default
-value for address cells and 1 for size cells. Modern implementation
-should have the #address-cells and the #size-cells properties set and
-should not rely on default values.
+	}
+	EXPORT_SYMBOL_GPL(blk_mq_map_hw_queues);
+	~
 
-On x86, this root empty node is used and the code default values are
-used.
+I hope that is what it supposed to be.
 
-In preparation of the support for device-tree overlay on PCI devices
-feature on x86 (i.e. the creation of the PCI root bus device-tree node),
-the default value for #address-cells needs to be updated. Indeed, on
-x86_64, addresses are on 64bits and the upper part of an address is
-needed for correct address translations. On x86_32 having the default
-value updated does not lead to issues while the upper part of a 64-bit
-value is zero.
-
-Changing the default value for all architectures may break device-tree
-compatibility. Indeed, existing dts file without the #address-cells
-property set in the root node will not be compatible with this
-modification.
-
-Instead of updating default values, add both required #address-cells
-and #size-cells properties in the device-tree empty node.
-
-Use 2 for both properties value in order to fully support 64-bit
-addresses and sizes on systems using this empty root node.
-
-Signed-off-by: Herve Codina <herve.codina@bootlin.com>
----
- drivers/of/empty_root.dts | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/of/empty_root.dts b/drivers/of/empty_root.dts
-index cf9e97a60f48..cbe169ba3db5 100644
---- a/drivers/of/empty_root.dts
-+++ b/drivers/of/empty_root.dts
-@@ -2,5 +2,12 @@
- /dts-v1/;
- 
- / {
--
-+	/*
-+	 * #address-cells/#size-cells are required properties at root node.
-+	 * Use 2 cells for both address cells and size cells in order to fully
-+	 * support 64-bit addresses and sizes on systems using this empty root
-+	 * node.
-+	 */
-+	#address-cells = <0x02>;
-+	#size-cells = <0x02>;
- };
--- 
-2.47.0
-
+Daniel
