@@ -1,230 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f175.google.com (mail-pf1-f175.google.com [209.85.210.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08458208974;
-	Mon,  2 Dec 2024 14:00:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C498C205ADA
+	for <linux-pci@vger.kernel.org>; Mon,  2 Dec 2024 14:59:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733148047; cv=none; b=mQ9hTsvRluI5H/S9pBILLogXlAMdWboY1UVdsBSF+HmGKXI/n80TbdR3ZDUl3KupO5vRRbhp+D9AyFXgr5MPUUXtaZ5rJtPuTxRmivY90rF2WshldgQIZxth81PwP1yFZRSOjyZi0C1fUou+c/pNaRCFb6hngzZInYRZpMUgSpc=
+	t=1733151580; cv=none; b=Wocg3oHD3I8qcCcVFdGHOARTQZWR7sq+8zIc++xy/GVGg5+ZluJwDgZFU20o86bvoGE3eq195LlS1IiMALtYPVqiBdggnaKTP5E93vUTR9oUfO4Q1yASxuNKmeLeWFiDN55K/nniRC6WwDEfelrSkrMP2bsf4ryXnPdeRKDCTeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733148047; c=relaxed/simple;
-	bh=GgBXOt/yTNJCKGurhv9gWr0yQvLzy+TZ2LlXcvom+9s=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=h/0ysymXHharu7IlyvNVdfZVV4G1bBJz2CwQfvLvklofE1b7qaAm17lM6Ik/I7CBkeZcbeNi/URwjLJ7l4hZncAC0qAQpfVFG03Wxv2hcfGJeg/HivuMonYhsfxUgxSxh2Y6DDtZ3GvQPqno3pBsQL3n4FM7DSWRQt0TG79jNg0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lJFxR3ey; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733151580; c=relaxed/simple;
+	bh=eoMDpvdSrW/IuE6tWQhPLD0TMa2/13xTFFot0aFscv8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cpuSuABwy+pTtS3O7MhsaEXBtLVfNDT2wd/Veg4JpSWz9p8SLsjDjO5wA85JF3lLNr0gAc6wzwOd2/KRSZhevSPIvfnvoN9sDVyMJt5WNuCbmXWDM0m1MKfoc9H47Rmj12E7hnULK9HfE6EutMJkJTMSbYJ4cw60gwW2gOvczhM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=xGB5UOal; arc=none smtp.client-ip=209.85.210.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lJFxR3ey"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EC0AC4CED1;
-	Mon,  2 Dec 2024 14:00:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733148046;
-	bh=GgBXOt/yTNJCKGurhv9gWr0yQvLzy+TZ2LlXcvom+9s=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=lJFxR3eyMIUSBNjOr5Qk7RXrDNutHXUb+GQd/pL/xAmrg1N81vj+j00HXpvQo75e4
-	 JIOzDPoourZKz87zKFPXBhx3M8zr8sCYR3x+T0kAMfU8AQlDXT/GuQN4STpjfWtYZT
-	 0g+LjsLTU9ooOXXxhNd6+TybvftS8ENh1Nz9wzhCqDwVOSiCxsWsc/gowY7Giap9uE
-	 gYrKHLuf4EAxCLuDKdWESxy7T5n/+jQ2JhLWrnrsQIqtxVwGE4uOtukXkyYrM2uafA
-	 T15kogr+0BSU5l54et6cfwy3HhkcoyJZol699sGMqsfQszXkOkEH4jdRfcKb1nRRrv
-	 N5dihk7Je5h3A==
-From: Daniel Wagner <wagi@kernel.org>
-Date: Mon, 02 Dec 2024 15:00:16 +0100
-Subject: [PATCH v6 8/8] blk-mq: remove unused queue mapping helpers
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="xGB5UOal"
+Received: by mail-pf1-f175.google.com with SMTP id d2e1a72fcca58-724f0f6300aso4856271b3a.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Dec 2024 06:59:38 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1733151578; x=1733756378; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=WgF/4kcAR5ywQOr3IwzI+nF+D01WGBejA8XPwY6tGHM=;
+        b=xGB5UOal9nC2ZhiOGMrftpxnrPBm+sPjxzq6bYAN2PYQQd7TMDFLEkflE76b3yHb+8
+         O1u6GdECptjr91TyqpLUe2Umqm0W/7NK65PApnDGVuv4fA0zfuNCsMMi6dBKUSZhvK62
+         UuC3L1rC/UJsAMEOE+CUamJJTzTTVuuCaS7ASnLq2PxjImEoXj/lm8SZQSVEL35KLfZw
+         Cow6093zM5ccfbH0xVU1q8Ls3+W6F2BweL1K858FtEmwbvazuEA9Yz//g+rIrt69Yt8+
+         Q3Vp/eXlvygMIWvbIjdf8IpW7yLsaYwPido432SaQ/eNUpSelWSZbW/239/ovG/V3IBW
+         FIig==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1733151578; x=1733756378;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=WgF/4kcAR5ywQOr3IwzI+nF+D01WGBejA8XPwY6tGHM=;
+        b=hOjl5dDDmIFsX75MfUgmmHuFHyUx4pPBTX7ZpE0dszVR7n32DMd+MwoH47OfTeJurc
+         SBA1Lgk9HS4iuykg1FGysKF4Z9aWYH0wC28rIqaQHpWyYN58oOViU+crgj7+Mc8O1+PP
+         dPCk2CbSNdAUC50d/lHf7vhbV8k0wbgjtWIiJE0Uoray+DHvXoZq+x9G7IP9i7PKz0DJ
+         plspbV+U/ZqzK1ytSoEygPAD/IXwMRIAORsa8juMmvYY1hAt03GCdCV5srH+Ab0m8HS+
+         JVGlc2ozUDOBawrZ43PfYB1DkOsQWfJE0M3WjVkeauGw6rNJTgWc9JVuaI2qNELhJu3T
+         KTlg==
+X-Forwarded-Encrypted: i=1; AJvYcCXkZ+IhV2ZuKVOQzNeLe9YmkYLJtnO2qrazx07Hk1L50TnG8M9RG3pfGa+FnrAUO+wh4G65TVzYyKQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyTu7zMcyIlqC1RXF3PH/+mY4UQFwwanFZryb8wjcw1i/LRbl+d
+	NuZ2VelPt8QZmAHO8BXc2GAQLO+YA9GfHvz2oI1enpU+BmYbqMQNVtKkddeIgA==
+X-Gm-Gg: ASbGncumoEP0+qHY0Gjs4PN4FRl5xF0yrIkKVYG2OaWovQKzal1ZHidL5Mnevjgswfn
+	D43/QDMb7oAMcGK0le3Nho0QZN+W89lhcvWWfWFTy40xJsuPG/VdlrWvqeXYqIE/HPss/8FT/Jt
+	16QLgWY/V9iHeBd34DGyeWJ04CaApeRQD7EUw2xJnmdNGE/B4I7fNTGMSUyoLSFMe5J8K3OMOdn
+	o3Zq8fJ9D0HSSJhXjbqlPuxTWOF0svKUtsxIXrNQ7SOlzkOZACfmvOrAdhBJw==
+X-Google-Smtp-Source: AGHT+IHgG+f2vTl6EqIIXMvz6jhpHEi3UtNHtTewd/BkPPiHdBuHK6on+aYbHzhIO2Aft6WgAvaZ/w==
+X-Received: by 2002:a05:6a00:181b:b0:71e:4655:59ce with SMTP id d2e1a72fcca58-7252fe113f6mr29871251b3a.0.1733151578094;
+        Mon, 02 Dec 2024 06:59:38 -0800 (PST)
+Received: from thinkpad ([120.60.140.110])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7254f689085sm6557728b3a.131.2024.12.02.06.59.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Dec 2024 06:59:37 -0800 (PST)
+Date: Mon, 2 Dec 2024 20:29:32 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>, Frank Li <Frank.Li@nxp.com>,
+	Jon Mason <jdmason@kudzu.us>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jesper Nilsson <jesper.nilsson@axis.com>, linux-pci@vger.kernel.org
+Subject: Re: DWC PCIe endpoint iATU vs BAR MASK ordering
+Message-ID: <20241202145932.5gj72erze57jh66r@thinkpad>
+References: <ZzxeBrjYRvYgMFdv@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20241202-refactor-blk-affinity-helpers-v6-8-27211e9c2cd5@kernel.org>
-References: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
-In-Reply-To: <20241202-refactor-blk-affinity-helpers-v6-0-27211e9c2cd5@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>, Bjorn Helgaas <bhelgaas@google.com>, 
- "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, 
- Xuan Zhuo <xuanzhuo@linux.alibaba.com>, 
- =?utf-8?q?Eugenio_P=C3=A9rez?= <eperezma@redhat.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
- Sagi Grimberg <sagi@grimberg.me>, John Garry <john.g.garry@oracle.com>, 
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
- Hannes Reinecke <hare@suse.de>, Ming Lei <ming.lei@redhat.com>
-Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-pci@vger.kernel.org, virtualization@lists.linux.dev, 
- linux-scsi@vger.kernel.org, megaraidlinux.pdl@broadcom.com, 
- mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com, 
- storagedev@microchip.com, linux-nvme@lists.infradead.org, 
- Daniel Wagner <wagi@kernel.org>
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <ZzxeBrjYRvYgMFdv@ryzen>
 
-There are no users left of the pci and virtio queue mapping helpers.
-Thus remove them.
+On Tue, Nov 19, 2024 at 10:44:38AM +0100, Niklas Cassel wrote:
+> Hello DWC PCIe endpoint developers,
+> 
+> 
+> As I wrote in patch [1] (please review):
+> The DWC Databook description for the LWR_TARGET_RW and LWR_TARGET_HW fields
+> in the IATU_LWR_TARGET_ADDR_OFF_INBOUND_i registers state that:
+> "Field size depends on log2(BAR_MASK+1) in BAR match mode."
+> 
+> I.e. only the upper bits are writable, and the number of writable bits is
+> dependent on the configured BAR_MASK.
+> 
+> While patch [1] is a nice fail-safe that we definitely want to have...
+> I can see that the DWC PCIe EP driver is currently broken (and has been
+> since the beginning).
+> 
+> We are programming the iATU _before_ configuring the BAR:
+> https://github.com/torvalds/linux/blob/v6.12/drivers/pci/controller/dwc/pcie-designware-ep.c#L232-L247
+> 
+> The problem is of course that the iATU registers depend on the BAR mask
+> (the number of read-only bits depends on the currently set BAR mask),
+> so the iATU registers should be done _after_ configuring the BAR.
+> 
+> Doing it in this was makes a lot of sense.
+> First you configure the BAR, then you configure the address translation
+> for that BAR. (Since the iATU in BAR match mode obviously depends on how
+> the BAR is configured.)
+> 
+> 
+> Now, I would like to send a patch to change this order, so that we actually
+> write things in the only order that makes sense, my problem is this line:
+> https://github.com/torvalds/linux/blob/v6.12/drivers/pci/controller/dwc/pcie-designware-ep.c#L236-L237
+> 
+> This code makes no sense to me whatsoever.
+> 
+> If I look at the commit that introduced this early return:
+> 4284c88fff0e ("PCI: designware-ep: Allow pci_epc_set_bar() update inbound map address")
+> 
+> It is not signed off by any of the regular PCI maintainers, neither does it
+> have any Acked-by by any of the regular PCI maintainers, so I kind of wonder
+> why this patch is there is the first place...
+> (Taking something via a different tree is fine, but that would still require
+> an Acked-by by one of the maintainers for the tree which owns that file.)
+> 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Daniel Wagner <wagi@kernel.org>
----
- block/Makefile                |  2 --
- block/blk-mq-pci.c            | 46 -------------------------------------------
- block/blk-mq-virtio.c         | 46 -------------------------------------------
- include/linux/blk-mq-pci.h    | 11 -----------
- include/linux/blk-mq-virtio.h | 11 -----------
- 5 files changed, 116 deletions(-)
+It was one such occurence where the PCI EP maintainer didn't respond promptly
+(not me) and the NTB maintainer merged the patch. I did complain about it:
+https://lore.kernel.org/linux-pci/20220818060230.GA12008@thinkpad
 
-diff --git a/block/Makefile b/block/Makefile
-index ddfd21c1a9ffc9c4f49efca9875bd8a1cbf81e4d..33748123710b368a1a3a7b099bbd90d27b24c69b 100644
---- a/block/Makefile
-+++ b/block/Makefile
-@@ -27,8 +27,6 @@ bfq-y				:= bfq-iosched.o bfq-wf2q.o bfq-cgroup.o
- obj-$(CONFIG_IOSCHED_BFQ)	+= bfq.o
- 
- obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o t10-pi.o
--obj-$(CONFIG_BLK_MQ_PCI)	+= blk-mq-pci.o
--obj-$(CONFIG_BLK_MQ_VIRTIO)	+= blk-mq-virtio.o
- obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
- obj-$(CONFIG_BLK_WBT)		+= blk-wbt.o
- obj-$(CONFIG_BLK_DEBUG_FS)	+= blk-mq-debugfs.o
-diff --git a/block/blk-mq-pci.c b/block/blk-mq-pci.c
-deleted file mode 100644
-index d47b5c73c9eb715be7627a2952ad0ef921dd5bc6..0000000000000000000000000000000000000000
---- a/block/blk-mq-pci.c
-+++ /dev/null
-@@ -1,46 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2016 Christoph Hellwig.
-- */
--#include <linux/kobject.h>
--#include <linux/blkdev.h>
--#include <linux/blk-mq-pci.h>
--#include <linux/pci.h>
--#include <linux/module.h>
--
--#include "blk-mq.h"
--
--/**
-- * blk_mq_pci_map_queues - provide a default queue mapping for PCI device
-- * @qmap:	CPU to hardware queue map.
-- * @pdev:	PCI device associated with @set.
-- * @offset:	Offset to use for the pci irq vector
-- *
-- * This function assumes the PCI device @pdev has at least as many available
-- * interrupt vectors as @set has queues.  It will then query the vector
-- * corresponding to each queue for it's affinity mask and built queue mapping
-- * that maps a queue to the CPUs that have irq affinity for the corresponding
-- * vector.
-- */
--void blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
--			   int offset)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
--
--	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = pci_irq_get_affinity(pdev, queue + offset);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			qmap->mq_map[cpu] = qmap->queue_offset + queue;
--	}
--
--	return;
--
--fallback:
--	WARN_ON_ONCE(qmap->nr_queues > 1);
--	blk_mq_clear_mq_map(qmap);
--}
--EXPORT_SYMBOL_GPL(blk_mq_pci_map_queues);
-diff --git a/block/blk-mq-virtio.c b/block/blk-mq-virtio.c
-deleted file mode 100644
-index 68d0945c0b08a2be116125f46c3a56fcdb02aea8..0000000000000000000000000000000000000000
---- a/block/blk-mq-virtio.c
-+++ /dev/null
-@@ -1,46 +0,0 @@
--// SPDX-License-Identifier: GPL-2.0
--/*
-- * Copyright (c) 2016 Christoph Hellwig.
-- */
--#include <linux/device.h>
--#include <linux/blk-mq-virtio.h>
--#include <linux/virtio_config.h>
--#include <linux/module.h>
--#include "blk-mq.h"
--
--/**
-- * blk_mq_virtio_map_queues - provide a default queue mapping for virtio device
-- * @qmap:	CPU to hardware queue map.
-- * @vdev:	virtio device to provide a mapping for.
-- * @first_vec:	first interrupt vectors to use for queues (usually 0)
-- *
-- * This function assumes the virtio device @vdev has at least as many available
-- * interrupt vectors as @set has queues.  It will then query the vector
-- * corresponding to each queue for it's affinity mask and built queue mapping
-- * that maps a queue to the CPUs that have irq affinity for the corresponding
-- * vector.
-- */
--void blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
--		struct virtio_device *vdev, int first_vec)
--{
--	const struct cpumask *mask;
--	unsigned int queue, cpu;
--
--	if (!vdev->config->get_vq_affinity)
--		goto fallback;
--
--	for (queue = 0; queue < qmap->nr_queues; queue++) {
--		mask = vdev->config->get_vq_affinity(vdev, first_vec + queue);
--		if (!mask)
--			goto fallback;
--
--		for_each_cpu(cpu, mask)
--			qmap->mq_map[cpu] = qmap->queue_offset + queue;
--	}
--
--	return;
--
--fallback:
--	blk_mq_map_queues(qmap);
--}
--EXPORT_SYMBOL_GPL(blk_mq_virtio_map_queues);
-diff --git a/include/linux/blk-mq-pci.h b/include/linux/blk-mq-pci.h
-deleted file mode 100644
-index ca544e1d3508f34ab6e198b0bb17efe88de4d14d..0000000000000000000000000000000000000000
---- a/include/linux/blk-mq-pci.h
-+++ /dev/null
-@@ -1,11 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--#ifndef _LINUX_BLK_MQ_PCI_H
--#define _LINUX_BLK_MQ_PCI_H
--
--struct blk_mq_queue_map;
--struct pci_dev;
--
--void blk_mq_pci_map_queues(struct blk_mq_queue_map *qmap, struct pci_dev *pdev,
--			   int offset);
--
--#endif /* _LINUX_BLK_MQ_PCI_H */
-diff --git a/include/linux/blk-mq-virtio.h b/include/linux/blk-mq-virtio.h
-deleted file mode 100644
-index 13226e9b22dd53e4289d506d49c52671de036ee8..0000000000000000000000000000000000000000
---- a/include/linux/blk-mq-virtio.h
-+++ /dev/null
-@@ -1,11 +0,0 @@
--/* SPDX-License-Identifier: GPL-2.0 */
--#ifndef _LINUX_BLK_MQ_VIRTIO_H
--#define _LINUX_BLK_MQ_VIRTIO_H
--
--struct blk_mq_queue_map;
--struct virtio_device;
--
--void blk_mq_virtio_map_queues(struct blk_mq_queue_map *qmap,
--		struct virtio_device *vdev, int first_vec);
--
--#endif /* _LINUX_BLK_MQ_VIRTIO_H */
+- Mani
 
 -- 
-2.47.0
-
+மணிவண்ணன் சதாசிவம்
