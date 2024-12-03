@@ -1,75 +1,83 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F36911DE8A7;
-	Mon,  2 Dec 2024 19:39:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A612F3398B
+	for <linux-pci@vger.kernel.org>; Tue,  3 Dec 2024 04:43:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733168380; cv=none; b=d2nE5BzPzFDdJAsqu3pTPiTwMnZ+REUV4iljaGKQrs2lYrqGEm0UQFb5pdmHATVM04dckO+MwqiAR7d8xm0jgsPsvrewLSbzSlVCLNU9r9HwqXvNMZt4Op6ZdptoG/Rcnrq7Od/svLmkobE4qP6j7TUHIJBic2V4pecoNWbpMC8=
+	t=1733200994; cv=none; b=pQ5045esPlxalWjXu5/HIPG4rl3obJDJaYsUPkXpts9rhE/YEZrIOWvT2RBOWHt6N3NbnKTOsBczmRbNISMKUCpFB4GNib6MxCxNMCtcjzphEJKa7H7b+Z3HxQ+kXcs29E8ho3/hfgY3NQzMzkIHTpvEg2DxgkQhbg260iRThRU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733168380; c=relaxed/simple;
-	bh=sN+BusGiAXrcqhWl1VTOqKR/W6+1lgZS845M6w7upCw=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=RaZjTDmfHw6aWAjhLmoo/8zcDN2uljkmn+80KDfGcFPjxyaZ/9rRbVGLDByq0GSQndEuJQ5bRT8sqfq9iZMDxb+o8KdykTxu4giP+wPvkGEGCOs22ID78RRtyD8F9XyFswzrRoQl4hCexkmrRD2MpCt4G0lN0a/c1sV70QVucj4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=sHiO1QK6; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1733200994; c=relaxed/simple;
+	bh=cKOxT6qnr18ddJasqXiVSZmz2RrQrNoSER9FEShbRIM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GMqhmU6G0A4nuTDyx+2062xMuMB12rXs80OScHu2pI7JkX9p89WHT3AFsa5TK5MwlP4FHPhM9D9XOLrthzLjGldlESae2RtMw9jmB3gI+aBb1HeUH8UgVnlCwsaNWXzCgxZ4+6mrDW2uTjN7rctDz7Kq7kTIB4AKns/zlMlyKWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tF+Hp87U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="sHiO1QK6"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=tckQN36YPgB8u8XCuGTMiAPwciU1S6zlefvWMXkUjgs=; b=sHiO1QK6zN9pjOhhlylsZYFDkU
-	EE+a8JKnuXu8gVlewZy35dnckWr61e3jScDXWwGbHAtwg4VP7MrsaRvoiw6FDxhsaQZNxQOZYoYap
-	HY6k2gaYGwwHTRenjkeOqtSmWp8z67Kn79G8fDxaJbdzjIiuWb/Lx+sN8qjnhkz3K3AB5Dmj8laC4
-	6itUtLoOZ8l62AM+BuhzdfJWfzgqC7Ni42WtAr9EjRHLHtq6O80B5RF9hF+gvPbhtX6JRVrPKbn5/
-	NqUnjJbCEIi4o7YpZyqA2k2sbyWz9bK9zj/7sK8NdUIZjcuGXaM/t3MnD3wsUonSFv7rndhPWuGQ8
-	scznTSag==;
-Received: from d104-157-31-28.abhsia.telus.net ([104.157.31.28] helo=[192.168.1.250])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1tIBlh-005alK-0z;
-	Mon, 02 Dec 2024 12:07:36 -0700
-Message-ID: <003d2d13-13be-4f05-80f8-61e14ddb9c83@deltatee.com>
-Date: Mon, 2 Dec 2024 12:07:34 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tF+Hp87U"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AF0FCC4CECF;
+	Tue,  3 Dec 2024 04:43:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733200994;
+	bh=cKOxT6qnr18ddJasqXiVSZmz2RrQrNoSER9FEShbRIM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=tF+Hp87UAv9+prGo5ovGE2s1+J/yQv+/xOluSGCLm5Fo7lQiq+m4tafpOhz8RQEOg
+	 NWZ5xiwdZF1CSc/SC2dWHoMFYWhFP+lgcTZSTVopMmPaQEjI6i7maKkszZCSAyUw91
+	 JEeGOQFuD3n+QWrtuU8bsO3y6zVhsqB90Grutwpg34JUJByCqNEpyt6yxBW/8vti+9
+	 gAlTBUaEf67mXMuyLgy7rYmQbxv7jyzLg2HKbfOissA39ue62AwXLx6j34JkN2DZwe
+	 17mbBPbrIqHOcRJkGa7CuhB4FxVxQcHqPZKtnZxfvWj1EgqO0XTZcsij69fD7dRsT8
+	 JxEYl9lbjPxZw==
+Date: Tue, 3 Dec 2024 05:43:10 +0100
+From: Niklas Cassel <cassel@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-pci@vger.kernel.org,
+	Frank Li <Frank.Li@nxp.com>
+Subject: Re: [PATCH v2 1/2] PCI: endpoint: pci-epf-test: Add support for
+ capabilities
+Message-ID: <Z06MXj2K4dcWMZff@x1-carbon>
+References: <20241121152318.2888179-4-cassel@kernel.org>
+ <20241121152318.2888179-5-cassel@kernel.org>
+ <20241130081245.2gjrw26d5cbbsde5@thinkpad>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <linux@weissschuh.net>,
- Bjorn Helgaas <bhelgaas@google.com>, "Rafael J. Wysocki"
- <rafael@kernel.org>, Len Brown <lenb@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-acpi@vger.kernel.org
-References: <20241202-sysfs-const-bin_attr-pci-v1-0-c32360f495a7@weissschuh.net>
- <20241202-sysfs-const-bin_attr-pci-v1-3-c32360f495a7@weissschuh.net>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20241202-sysfs-const-bin_attr-pci-v1-3-c32360f495a7@weissschuh.net>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 104.157.31.28
-X-SA-Exim-Rcpt-To: linux@weissschuh.net, bhelgaas@google.com, rafael@kernel.org, lenb@kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH 3/4] PCI/P2PDMA: Constify 'struct bin_attribute'
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241130081245.2gjrw26d5cbbsde5@thinkpad>
 
+Hello Mani,
 
-
-On 2024-12-02 12:02, Thomas Weißschuh wrote:
-> The sysfs core now allows instances of 'struct bin_attribute' to be
-> moved into read-only memory. Make use of that to protect them against
-> accidental or malicious modifications.
+On Sat, Nov 30, 2024 at 01:42:45PM +0530, Manivannan Sadhasivam wrote:
+> >  
+> >  struct pci_epf_test {
+> > @@ -74,6 +76,7 @@ struct pci_epf_test_reg {
+> >  	u32	irq_type;
+> >  	u32	irq_number;
+> >  	u32	flags;
+> > +	u32	caps;
 > 
-> Signed-off-by: Thomas Weißschuh <linux@weissschuh.net>
+> Can we rename the 'magic' register? It is not used since the beginning and I
+> don't know if we will ever have a usecase for it.
 
-Looks good to me, thanks!
+It is actually used!
 
-Logan Gunthorpe <logang@deltatee.com>
+When doing PCITEST_BAR (pci_endpoint_test_bar()),
+and barno == test->test_reg_bar, we are only filling the first 4 bytes,
+rather than filling the whole BAR:
+https://github.com/torvalds/linux/blob/v6.13-rc1/drivers/misc/pci_endpoint_test.c#L293-L294
 
+These first 4 bytes are stored in the magic register.
+
+I do agree that the magic register name is slightly misleading, but that
+seems completely unrelated to this patch.
+
+If you can come up with a better name, send a patch and you shall have
+my Reviewed-by tag :)
+
+
+Kind regards,
+Niklas
