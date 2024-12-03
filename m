@@ -1,133 +1,94 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8671DE4ED;
-	Tue,  3 Dec 2024 22:15:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E571DF268;
+	Tue,  3 Dec 2024 22:25:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733264131; cv=none; b=fgyevD4iAWNduTZhdCiq5o/EpBGrW9ehj7tX5pigpnRh3skxsMARUnN2Pqa7y5fTFhqgAg255c93SAwbUKT8EHAXiCS1ueIsihg3loAZeRC3h4R80YkL+mBw77x3iZZmvgV+PgB/qwQ/2IlaCLEMFQE1diBDrTUv5fNTfGOMurs=
+	t=1733264717; cv=none; b=tzJeEgcP3lHJN/Xl9//CHpCxg9ndNukWTTAwkoJVdk62xtvXCyiODw4zhfmT0W7ncRb7IoF61lxFMgFfg3QAgfRkCHDx6PEcH9g+80Dg3uWrsQCBWj3hft/9r53IIPIFFN799bpOMkRkHfF4i+RBSJ17+lWdWY7FupLCh/rK7dU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733264131; c=relaxed/simple;
-	bh=8XuFcFnDcJL7u534/BtVROTSEJaBWvv2JGMbPhdQamU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=oR/MYK8RDjXltg8AGzDrPf7Tw7b81xjGXdXaFnV53M48XaVoLny3lMFYG60a0RpM9PpNEqsPY3CK9QzFRZ2toO24knkJYHpVBqC3M+rkf3zZHuNYPa958SEbId4yXut6x/Fx1vFcz0u44N7aAvqynCf7sNqAjzg0mp396btpV7U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=hhK5/zg4; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=QK96Kw7V; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
+	s=arc-20240116; t=1733264717; c=relaxed/simple;
+	bh=Z15C0mt3XM7YpivR1T5/W0M5swvKfGcdZ7nyxNwhLoQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ZJ7TnyYwh3UlC9ONx6cJnCtV85XQSOGX6ZtzUwtgF64Ta2a5LA4ww2yjHJEadBznIYPEP61WacyMPI5bDTMclzkFSvYc8wMYHC/giJnaLeP5ILO0N7Qq0syxNv1npTsGiNLrm11qjIyad0JJu5DdX5zu3Vk/R3ieul2L+4k5PV8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qhLj8p8e; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hhK5/zg4";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="QK96Kw7V"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1733264128;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V31hYngk1/z1337VHAKio+Kr+AiCQmhz4fdflOnNyHU=;
-	b=hhK5/zg48RnP9TlQD1XZ8GRUf0ubPSZc0uimaCTZhMJB9K3n0EYZ/habXisOdTLuJ4/Ebu
-	ULYXH1pcMm1AIPQtiy3VOVladF0OFcPBKkJiuz3sGA9uOA/5Yaa6lYn+qT3deN89jRswvz
-	YGuen/tbeJXoJ3WiRmVba7wN4nb9KhqRmK8kofSBBv0VRA3lsWlCise46i1sshKEDtbH/k
-	lWlYskSKf9PcUEsA3b1JlGY5DjiQJPfaFu6xf7ONLqLchn98B8weJ9Or1FgWFD0LeWqgnP
-	hjntlE76YzX5w/6s7L32IE0VmP0gNgd7i2TAnaXGxLroLqm9r4++t03JldGXog==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1733264128;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=V31hYngk1/z1337VHAKio+Kr+AiCQmhz4fdflOnNyHU=;
-	b=QK96Kw7Ve+EsFrjOp0cfmyMGrsHCDxCkwE9Q653JhZorYo8ZHRQBnZfSL6vEIZuBI1nR6N
-	7d6bqwDQqsn2pNCA==
-To: Frank Li <Frank.Li@nxp.com>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
- <kw@linux.com>,
- Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas
- <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Anup Patel <apatel@ventanamicro.com>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- imx@lists.linux.dev, Niklas Cassel <cassel@kernel.org>,
- dlemoal@kernel.org, maz@kernel.org, jdmason@kudzu.us, Frank Li
- <Frank.Li@nxp.com>
-Subject: Re: [PATCH v9 2/6] PCI: endpoint: Add RC-to-EP doorbell support
- using platform MSI controller
-In-Reply-To: <20241203-ep-msi-v9-2-a60dbc3f15dd@nxp.com>
-References: <20241203-ep-msi-v9-0-a60dbc3f15dd@nxp.com>
- <20241203-ep-msi-v9-2-a60dbc3f15dd@nxp.com>
-Date: Tue, 03 Dec 2024 23:15:27 +0100
-Message-ID: <87v7w0s9a8.ffs@tglx>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qhLj8p8e"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 81806C4CEDC;
+	Tue,  3 Dec 2024 22:25:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733264716;
+	bh=Z15C0mt3XM7YpivR1T5/W0M5swvKfGcdZ7nyxNwhLoQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=qhLj8p8eyWJXXP2R4fcik2XxZ1g4PpArVVeC4x2S0kXCH2O24HAt7vH4EuYcRZa9U
+	 agS0BM2aYhGkfRoh8AXjL7O1WEuoUtSxGq8aIPSUqUqT7p5kfpOKmj6WTOkNfWb6ae
+	 gesaNcOwa2CvKG0o081fcGYQyV1Aiw4aQQ57Md9Ffuda70Vw/Z/TP0AI/31q1JMnlr
+	 R4TnoXjduLP3en1w119e6ZYjMoLmpmNHSCdjvW4PMO4Sika9XCgkDNvThTj90uvqnI
+	 HFrNGoNAfsgTkVZtdnf4kK7COX0g/5hcp3ydpoWWf+O0KZ2vGTem5n36fzY7c/FExp
+	 rrf6y623PwJTQ==
+Date: Tue, 3 Dec 2024 16:25:15 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Christian Bruel <christian.bruel@foss.st.com>,
+	Rob Herring <robh+dt@kernel.org>
+Cc: lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org,
+	bhelgaas@google.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	mcoquelin.stm32@gmail.com, alexandre.torgue@foss.st.com,
+	p.zabel@pengutronix.de, cassel@kernel.org,
+	quic_schintav@quicinc.com, fabrice.gasnier@foss.st.com,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-stm32@st-md-mailman.stormreply.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex
+ bindings
+Message-ID: <20241203222515.GA2967814@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241126155119.1574564-2-christian.bruel@foss.st.com>
 
-On Tue, Dec 03 2024 at 15:36, Frank Li wrote:
-> +static void pci_epc_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
-> +{
-> +	struct pci_epc *epc;
-> +	struct pci_epf *epf;
-> +
-> +	epc = pci_epc_get(dev_name(msi_desc_to_dev(desc)));
-> +	if (!epc)
+On Tue, Nov 26, 2024 at 04:51:15PM +0100, Christian Bruel wrote:
+> Document the bindings for STM32MP25 PCIe Controller configured in
+> root complex mode.
+> 
+> Supports 4 legacy interrupts and MSI interrupts from the ARM
+> GICv2m controller.
 
-This is wrong as pci_epc_get() never returns NULL on failure. It returns
-an error pointer.
+s/legacy/INTx/
 
-> +		return;
-> +
-> +	epf = list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list);
+> STM32 PCIe may be in a power domain which is the case for the STM32MP25
+> based boards.
+> 
+> Supports wake# from wake-gpios
 
-How can the list be empty?
+s/wake#/WAKE#/
 
-> +	if (epf && epf->db_msg && desc->msi_index < epf->num_db)
-> +		memcpy(&epf->db_msg[desc->msi_index].msg, msg, sizeof(*msg));
+> +  wake-gpios:
+> +    description: GPIO controlled connection to WAKE# input signal
 
-So now the message is copied out into that db_msg array which is
-somewhere in the memory which was allocated on the EP side.
+I'm not a hardware guy, but this sounds like a GPIO that *reads*
+WAKE#, not controls it.
 
-How is the host side supposed to know about the change of the message?
+> +    pcie@48400000 {
+> +        compatible = "st,stm32mp25-pcie-rc";
+> +        device_type = "pci";
+> +        num-lanes = <1>;
 
-This only works reliably if:
+num-lanes applies to a Root Port, not to a Root Complex.  I know most
+bindings conflate Root Ports with the Root Complex, maybe because many
+of these controllers only support a single Root Port?
 
-  1) the message address/data pair is immutable once it is set up and
-     subsequent affinity changes are not affecting it
+But are we ever going to separate these out?  I assume someday
+controllers will support multiple Root Ports and/or additional devices
+on the root bus, like RCiEPs, RCECs, etc., and we'll need per-RP phys,
+max-link-speed, num-lanes, reset-gpios, etc.
 
-  2) The ordering on the EP driver is:
+Seems like it would be to our benefit to split out the Root Ports when
+we can, even if the current hardware only supports one, so we can
+start untangling the code and data structures.
 
-     request_irq()
-     publish_msg_to_host()
-     tell_host_that_message_is_ready()
-
-#2 is a documentation problem, but #1 needs some thought.
-
-It only works for MSI parent domains which use a translation table and
-affinity changes only happen at the translation table level, which means
-the address/data pair is unaffected.
-
-Sure GIC-ITS, AMD/Intel remap domains work that way, but what happens if
-the underlying MSI parent domain actually changes the message
-(address/data pair) during an affinity change?
-
-These domains expect that the message is known to the other side at the
-time when irq_set_affinity() returns. In case of regular PCI/MSI this is
-not a problem because the message is written to the device before the
-function returns, but in this EP case nothing guarantees that the
-modified message is host visible at that point.
-
-The fact that a MSI parent domain supports DOMAIN_BUS_DEVICE_MSI does
-not guarantee that the parent is translation table based.
-
-As this is intended to be a generic library for all sorts of EP
-implementations, there needs to be
-
-  - either a mechanism to prevent the initialization if the underlying
-    MSI parent domain does not provide immutable messages
-
-  - or support for endpoint specific msi_write_msg() implementations
-
-Thanks,
-
-        tglx
-
+Bjorn
