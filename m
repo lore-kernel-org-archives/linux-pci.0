@@ -1,184 +1,133 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D20A1E00BE
-	for <linux-pci@vger.kernel.org>; Tue,  3 Dec 2024 22:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D8671DE4ED;
+	Tue,  3 Dec 2024 22:15:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733263589; cv=none; b=rTzBVI7y7zOu/IN0NsoZJJnBaHe4coIkX8jsQYA3NaD6Y4q17oMsNMy4jtMJMq6x2+mq221zUUM7xbO78p0vonKNG68HcPLXZ0xKmbTpASD6PS+fxFk4Ip7BVPBeROo89RuZyTxed4uhw3G+A209R/ecxRvmu4MwFypzHdwD2fs=
+	t=1733264131; cv=none; b=fgyevD4iAWNduTZhdCiq5o/EpBGrW9ehj7tX5pigpnRh3skxsMARUnN2Pqa7y5fTFhqgAg255c93SAwbUKT8EHAXiCS1ueIsihg3loAZeRC3h4R80YkL+mBw77x3iZZmvgV+PgB/qwQ/2IlaCLEMFQE1diBDrTUv5fNTfGOMurs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733263589; c=relaxed/simple;
-	bh=AD9m5l1akbuPM1ybWrq29tq8zaQy3+HM6xJLensm4Qg=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=odcmvoqzBZHHNSvRdg8p1/ikLBt1WJQa24vzFpXKKKNbeH187qr6oNwv//ZZYyuP9NID58Ufk7ZGTUubznJO+ULyyr4TxT6F4Tm77474l/K4LzqH3JuKL7ylpn+d8ACfLRi69DiWeLO5hhJl5+pjjsdJIKevq5nKLY6NGs4clPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bqc7qY9M; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1733264131; c=relaxed/simple;
+	bh=8XuFcFnDcJL7u534/BtVROTSEJaBWvv2JGMbPhdQamU=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=oR/MYK8RDjXltg8AGzDrPf7Tw7b81xjGXdXaFnV53M48XaVoLny3lMFYG60a0RpM9PpNEqsPY3CK9QzFRZ2toO24knkJYHpVBqC3M+rkf3zZHuNYPa958SEbId4yXut6x/Fx1vFcz0u44N7aAvqynCf7sNqAjzg0mp396btpV7U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=hhK5/zg4; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=QK96Kw7V; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bqc7qY9M"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1733263586;
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="hhK5/zg4";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="QK96Kw7V"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1733264128;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=WIePSw9erBGB0EkQKOgbCaIeXQNXPbcij9sycEa1gJw=;
-	b=bqc7qY9M13k/fi+/eIXlGtXlprb+CXf1VHQJYi8cz74ZjHWY3tsF3MKiX09BHDZ1pjCAvQ
-	NhQCqfPtarVJD0TtRoFfqOn84USLCHGUSE+4Dz9cyd6YTcsqIOX5CtKy0NRVVsAYPFXcgy
-	vMFQo0sIUaP/GEjloQa+aQ6PjLjeFW8=
-Received: from mail-ot1-f70.google.com (mail-ot1-f70.google.com
- [209.85.210.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-211-zp9UeeQoPvmzWB4QRKnUbw-1; Tue, 03 Dec 2024 17:06:25 -0500
-X-MC-Unique: zp9UeeQoPvmzWB4QRKnUbw-1
-X-Mimecast-MFC-AGG-ID: zp9UeeQoPvmzWB4QRKnUbw
-Received: by mail-ot1-f70.google.com with SMTP id 46e09a7af769-71d4b284637so959722a34.0
-        for <linux-pci@vger.kernel.org>; Tue, 03 Dec 2024 14:06:25 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1733263584; x=1733868384;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=WIePSw9erBGB0EkQKOgbCaIeXQNXPbcij9sycEa1gJw=;
-        b=gjfL2pc0Oohr5nEnfxDQo5Rl+t37Sh8pr5i7jDH5m5CtUJ8T9AdR0Qa4NpzoIgzInH
-         At3EWcFJXpDrSL3sXHQta9w+wFltzq0/PyqUVJFRX0GlXaPO2wbqL2FLf3uHPzIGmoEV
-         BuNo7zk/w+Wkauqw3mUJP8uZ7nrPq3bjR1uOCzVfh/+hAyt5b+6Cg2nAfElrsvBtoaiD
-         TWw72c5lpyacQTTThwWayKamGB57Y5ffNbKv8xor3+HrW8KO9TEox6mME5v9v4PJu9PK
-         ruQzvgPLGFzEbRiqZMktDHknHGhse0IwteZCPw5GOrhcZVxHmpeQ6v0JCQ5Vi9+2P127
-         tCMA==
-X-Gm-Message-State: AOJu0YyRVY519O6+AhrqHLryfEMSGe3pY4Si5Ou2CP/VtPAVzN0KUI8u
-	+Mx2dboeRhOEYQz4lW7di07u2YNStc7DyPWK4z9ineW2y+0lIy5ut49XkK2jpeNAZAyMTIO39r9
-	vb7+luTz3mGKUBD/uFa/KchSgMvw7OEpfBbA7vE0YtOK868zFdRyZoY4fsw==
-X-Gm-Gg: ASbGncui+phBotcyulmPWrOFm5ZRotXE31QLpJKJV96H6vdeL7WLaO2xhRNddPOUYzL
-	liZaWsaWwTeTxtAdf7KM5PM8JK3V/rRikDUR8VlLT4bjUIjtihS8zWjmNyAYCezkNy4FNroJ6hd
-	CIr5iJApOzFYfoZJvzLWdaEsotS9YroT8zyrlbp/J8BvdTjh8ZeyJaanZz0IiMjSWV3edmTcj8I
-	qLr6TtjLdTtVeOLNycI74v2mrE35Z4s/WPOuRm6lQzGWXYd/SGaQw==
-X-Received: by 2002:a05:6870:82a0:b0:29e:723c:8e9d with SMTP id 586e51a60fabf-29e8864ab96mr932474fac.4.1733263584306;
-        Tue, 03 Dec 2024 14:06:24 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IH7jGvGfB3Me4o3Jd6sSOMboIoUa4ByGG2+wC0X4ZrR+2bwV76NNF/fqntlqJRNv1VOTSapnA==
-X-Received: by 2002:a05:6870:82a0:b0:29e:723c:8e9d with SMTP id 586e51a60fabf-29e8864ab96mr932465fac.4.1733263583944;
-        Tue, 03 Dec 2024 14:06:23 -0800 (PST)
-Received: from redhat.com ([38.15.36.11])
-        by smtp.gmail.com with ESMTPSA id 586e51a60fabf-29de9945bc7sm4029719fac.43.2024.12.03.14.06.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 03 Dec 2024 14:06:23 -0800 (PST)
-Date: Tue, 3 Dec 2024 15:06:20 -0700
-From: Alex Williamson <alex.williamson@redhat.com>
-To: Mitchell Augustin <mitchell.augustin@canonical.com>
-Cc: linux-pci@vger.kernel.org, kvm@vger.kernel.org, Bjorn Helgaas
- <bhelgaas@google.com>, linux-kernel@vger.kernel.org
-Subject: Re: drivers/pci: (and/or KVM): Slow PCI initialization during VM
- boot with passthrough of large BAR Nvidia GPUs on DGX H100
-Message-ID: <20241203150620.15431c5c.alex.williamson@redhat.com>
-In-Reply-To: <CAHTA-uZWGmoLr0R4L608xzvBAxnr7zQPMDbX0U4MTfN3BAsfTQ@mail.gmail.com>
-References: <CAHTA-uYp07FgM6T1OZQKqAdSA5JrZo0ReNEyZgQZub4mDRrV5w@mail.gmail.com>
-	<20241126103427.42d21193.alex.williamson@redhat.com>
-	<CAHTA-ubXiDePmfgTdPbg144tHmRZR8=2cNshcL5tMkoMXdyn_Q@mail.gmail.com>
-	<20241126154145.638dba46.alex.williamson@redhat.com>
-	<CAHTA-uZp-bk5HeE7uhsR1frtj9dU+HrXxFZTAVeAwFhPen87wA@mail.gmail.com>
-	<20241126170214.5717003f.alex.williamson@redhat.com>
-	<CAHTA-uY3pyDLH9-hy1RjOqrRR+OU=Ko6hJ4xWmMTyoLwHhgTOQ@mail.gmail.com>
-	<20241127102243.57cddb78.alex.williamson@redhat.com>
-	<CAHTA-uaGZkQ6rEMcRq6JiZn8v9nZPn80NyucuSTEXuPfy+0ccw@mail.gmail.com>
-	<20241203122023.21171712.alex.williamson@redhat.com>
-	<CAHTA-uZWGmoLr0R4L608xzvBAxnr7zQPMDbX0U4MTfN3BAsfTQ@mail.gmail.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.43; x86_64-redhat-linux-gnu)
+	bh=V31hYngk1/z1337VHAKio+Kr+AiCQmhz4fdflOnNyHU=;
+	b=hhK5/zg48RnP9TlQD1XZ8GRUf0ubPSZc0uimaCTZhMJB9K3n0EYZ/habXisOdTLuJ4/Ebu
+	ULYXH1pcMm1AIPQtiy3VOVladF0OFcPBKkJiuz3sGA9uOA/5Yaa6lYn+qT3deN89jRswvz
+	YGuen/tbeJXoJ3WiRmVba7wN4nb9KhqRmK8kofSBBv0VRA3lsWlCise46i1sshKEDtbH/k
+	lWlYskSKf9PcUEsA3b1JlGY5DjiQJPfaFu6xf7ONLqLchn98B8weJ9Or1FgWFD0LeWqgnP
+	hjntlE76YzX5w/6s7L32IE0VmP0gNgd7i2TAnaXGxLroLqm9r4++t03JldGXog==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1733264128;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=V31hYngk1/z1337VHAKio+Kr+AiCQmhz4fdflOnNyHU=;
+	b=QK96Kw7Ve+EsFrjOp0cfmyMGrsHCDxCkwE9Q653JhZorYo8ZHRQBnZfSL6vEIZuBI1nR6N
+	7d6bqwDQqsn2pNCA==
+To: Frank Li <Frank.Li@nxp.com>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?=
+ <kw@linux.com>,
+ Kishon Vijay Abraham I <kishon@kernel.org>, Bjorn Helgaas
+ <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Anup Patel <apatel@ventanamicro.com>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ imx@lists.linux.dev, Niklas Cassel <cassel@kernel.org>,
+ dlemoal@kernel.org, maz@kernel.org, jdmason@kudzu.us, Frank Li
+ <Frank.Li@nxp.com>
+Subject: Re: [PATCH v9 2/6] PCI: endpoint: Add RC-to-EP doorbell support
+ using platform MSI controller
+In-Reply-To: <20241203-ep-msi-v9-2-a60dbc3f15dd@nxp.com>
+References: <20241203-ep-msi-v9-0-a60dbc3f15dd@nxp.com>
+ <20241203-ep-msi-v9-2-a60dbc3f15dd@nxp.com>
+Date: Tue, 03 Dec 2024 23:15:27 +0100
+Message-ID: <87v7w0s9a8.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 
-On Tue, 3 Dec 2024 14:33:10 -0600
-Mitchell Augustin <mitchell.augustin@canonical.com> wrote:
+On Tue, Dec 03 2024 at 15:36, Frank Li wrote:
+> +static void pci_epc_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
+> +{
+> +	struct pci_epc *epc;
+> +	struct pci_epf *epf;
+> +
+> +	epc = pci_epc_get(dev_name(msi_desc_to_dev(desc)));
+> +	if (!epc)
 
-> Thanks.
-> 
-> I'm thinking about the cleanest way to accomplish this:
-> 
-> 1. I'm wondering if replacing the pci_info() calls with equivalent
-> printk_deferred() calls might be sufficient here. This works in my
-> initial test, but I'm not sure if this is definitive proof that we
-> wouldn't have any issues in all deployments, or if my configuration is
-> just not impacted by this kind of deadlock.
+This is wrong as pci_epc_get() never returns NULL on failure. It returns
+an error pointer.
 
-Just switching to printk_deferred() alone seems like wishful thinking,
-but if you were also to wrap the code in console_{un}lock(), that might
-be a possible low-impact solution.
+> +		return;
+> +
+> +	epf = list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list);
 
-> 2. I did also draft a patch that would just eliminate the redundancy
-> and disable the impacted logs by default, and allow them to be
-> re-enabled with a new kernel command line option
-> "pci=bar_logging_enabled" (at the cost of the performance gains due to
-> reduced redundancy). This works well in all of my tests.
+How can the list be empty?
 
-I suspect Bjorn would prefer not to add yet another pci command line
-option and as we've seen here, the logs are useful by default.
- 
-> Do you think either of those approaches would work / be appropriate?
-> Ultimately I am trying to avoid messy changes that would require
-> actually propagating all of the info needed for these logs back up to
-> pci_read_bases(), if at all possible, since there seems like no
-> obvious way to do that without changing the signature of
-> __pci_read_base() or tracking additional state.
+> +	if (epf && epf->db_msg && desc->msi_index < epf->num_db)
+> +		memcpy(&epf->db_msg[desc->msi_index].msg, msg, sizeof(*msg));
 
-The calling convention of __pci_read_base() is already changing if
-we're having the caller disable decoding and it doesn't have a lot of
-callers, so I don't think I'd worry about changing the signature.
+So now the message is copied out into that db_msg array which is
+somewhere in the memory which was allocated on the EP side.
 
-I think maybe another alternative that doesn't hold off the console
-would be to split the BAR sizing and resource processing into separate
-steps.  For example pci_read_bases() might pass arrays like:
+How is the host side supposed to know about the change of the message?
 
-        u32 bars[PCI_STD_NUM_BARS] = { 0 };
-        u32 romsz = 0;
+This only works reliably if:
 
-To a function like:
+  1) the message address/data pair is immutable once it is set up and
+     subsequent affinity changes are not affecting it
 
-void __pci_read_bars(struct pci_dev *dev, u32 *bars, u32 *romsz,
-                     int num_bars, int rom)
-{
-        u16 orig_cmd;
-        u32 tmp;
-        int i;
+  2) The ordering on the EP driver is:
 
-        if (!dev->mmio_always_on) {
-                pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
-                if (orig_cmd & PCI_COMMAND_DECODE_ENABLE) {
-                        pci_write_config_word(dev, PCI_COMMAND,
-                                orig_cmd & ~PCI_COMMAND_DECODE_ENABLE);
-                }
-        }
+     request_irq()
+     publish_msg_to_host()
+     tell_host_that_message_is_ready()
 
-        for (i = 0; i < num_bars; i++) {
-                unsigned int pos = PCI_BASE_ADDRESS_0 + (i << 2);
+#2 is a documentation problem, but #1 needs some thought.
 
-                pci_read_config_dword(dev, pos, &tmp);
-                pci_write_config_dword(dev, pos, ~0);
-                pci_read_config_dword(dev, pos, &bars[i]);
-                pci_write_config_dword(dev, pos, tmp);
-        }
-                
-        if (rom) {
-                pci_read_config_dword(dev, rom, &tmp);
-                pci_write_config_dword(dev, rom, PCI_ROM_ADDRESS_MASK);
-                pci_read_config_dword(dev, rom, romsz);
-                pci_write_config_dword(dev, rom, tmp);
-        }
+It only works for MSI parent domains which use a translation table and
+affinity changes only happen at the translation table level, which means
+the address/data pair is unaffected.
 
-        if (!dev->mmio_always_on && (orig_cmd & PCI_COMMAND_DECODE_ENABLE))
-                pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
-}
+Sure GIC-ITS, AMD/Intel remap domains work that way, but what happens if
+the underlying MSI parent domain actually changes the message
+(address/data pair) during an affinity change?
 
-pci_read_bases() would then iterate in a similar way that it does now,
-passing pointers to the stashed data to __pci_read_base(), which would
-then only do the resource processing and could freely print.
+These domains expect that the message is known to the other side at the
+time when irq_set_affinity() returns. In case of regular PCI/MSI this is
+not a problem because the message is written to the device before the
+function returns, but in this EP case nothing guarantees that the
+modified message is host visible at that point.
 
-To me that seems better than blocking the console... Maybe there are
-other ideas on the list.  Thanks,
+The fact that a MSI parent domain supports DOMAIN_BUS_DEVICE_MSI does
+not guarantee that the parent is translation table based.
 
-Alex
+As this is intended to be a generic library for all sorts of EP
+implementations, there needs to be
+
+  - either a mechanism to prevent the initialization if the underlying
+    MSI parent domain does not provide immutable messages
+
+  - or support for endpoint specific msi_write_msg() implementations
+
+Thanks,
+
+        tglx
 
