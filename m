@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D8721B9831;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCC761C3F34;
 	Wed,  4 Dec 2024 12:46:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733316367; cv=none; b=QTOfbfEhOO1lGv+23hXd297L/ys6aNHyz1FMpAlOD6GzP4kbqx4NVZnlMz6ZcAzZ5viqs1L9RueGU9L0XzPmFuKKvb21H0sZXIr//gkh3T31Wz1ICkJBX57MlvbEcCyZ/WaFRuHleFautlZs8DypnC6lU+eOnYSl+ekjcwWTaPs=
+	t=1733316367; cv=none; b=UEmMVsvTWbxyJ19J35bf13wFpLbYHqNpCxljEpsPhnPwtp/eocNvFZZcS47EX+TbgZdsqt9k8x6ul7WsG4mnpB+BmM6inLhpahuKniCg1AxJqCDTtez4RVFx9s6xVXzkYuPII4Wbi/K9VY/4FNV/w9RJTZENZYYRppBKJ9pTmCU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1733316367; c=relaxed/simple;
-	bh=1V1FmvDMYnTWLajD7/gkCCe4tIOFd8A5mV3a3mgRPVM=;
+	bh=cMEyrhut2oPOzp4WCdsADd6Mhl4M3N9+iIzR7Vo4fus=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=CgXKMgXQ7ydpsZKuxy6U1oo1ZugrTjNmrXqFZLKpJO+6pY58IhA9qyf8dhaujjVz18a7746w0xZzhgXFieL/ugqXTp4BeaGIwKaOhhJV7K4Fnj+4/MX2REz1YvHAQVHDHKb8cJ90/XsZHxMSWfzBXXSmyWFe2I3U6ryNXhGC5A0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n3iG8HnO; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=UNZD1k+B698rtCuYW2w9HuZmMIj0agD1W1pxx1AyEx1Gl7zyNSjT3JvgNLYMtfQ7T7WLXeYkuH7oOJUudrjVxVpMKmUFvBqYJnwLaveFmSpLbn2k2q+8VlUemq2tXJ5cOrx/xutWPHhbNG8c55tqVY2rESPxE1jBS3UgYlOo6sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d7gJeuaA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n3iG8HnO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA059C4CEE1;
-	Wed,  4 Dec 2024 12:46:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d7gJeuaA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 47D82C4AF0E;
+	Wed,  4 Dec 2024 12:46:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733316366;
-	bh=1V1FmvDMYnTWLajD7/gkCCe4tIOFd8A5mV3a3mgRPVM=;
+	s=k20201202; t=1733316367;
+	bh=cMEyrhut2oPOzp4WCdsADd6Mhl4M3N9+iIzR7Vo4fus=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=n3iG8HnOi+ARtsWCUBL1CRJL9kMugczwqyYnB+XTeNHXx9L8y2GQ22sIoWSLtcxy6
-	 QXIPGa+mIuBiymtO45sUfVk8J0kI5TmsKayPVHsiyrhY4M9tmzCYgno6vJsJJgfUpj
-	 u9revKLDf+dC0ACsldoFraFy3jZSqA5a20y1KsX7Wc/lJ3dsAEXpD+Lnu20YAVnyu5
-	 9T4NwHb+gQenhY9XN1DvHJVLfUGJUkQbOcfpnLMFaXGoV1URNyDbP6vd8eXn55VWx/
-	 2/O3YOtPxLrX0Hwp0EmB8RWPAHQR6/6mg7t+SOeBxMApoznkpC2v9t6QEDVTQ9Nhvn
-	 KhMWJcvs1B++w==
+	b=d7gJeuaANLlfILMnAH0xfcFXpharXfkDKqBCeIrQPfX5u+LfRez7d2wcyvxDZeEju
+	 NBebxjvJDBKpWoj/KFquYuXVSv7J6GOJWuTw7921VMgO+XDikjIsWLk8Wh5LjAM5xl
+	 +7YSN6trmPfmtrNcjg1yQT0at4g11nZEx6VOJikdElShAWglpzcAWNQcvg16pqsnAe
+	 xBYvV+unmzueB+5j0TeOMcu7wMyRbIPN37UOpU3Rhlgz4YDbb5z/JElCmwS3hMABF3
+	 sOWXIaaZV/Ocpde/D3Cln9jWVW0Xn5TknjP/RCQ+kGMDKTU/yo+tApvxbeH/8NUeI+
+	 7i1zPiuWCJNTw==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1tIolY-000RHy-Uq;
+	id 1tIolZ-000RHy-Aj;
 	Wed, 04 Dec 2024 12:46:05 +0000
 From: Marc Zyngier <maz@kernel.org>
 To: iommu@lists.linux.dev,
@@ -63,9 +63,9 @@ Cc: Joerg Roedel <joro@8bytes.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Toan Le <toan@os.amperecomputing.com>,
 	Alyssa Rosenzweig <alyssa@rosenzweig.io>
-Subject: [PATCH 03/11] irqchip/gic: Convert to msi_create_parent_irq_domain() helper
-Date: Wed,  4 Dec 2024 12:45:41 +0000
-Message-Id: <20241204124549.607054-4-maz@kernel.org>
+Subject: [PATCH 04/11] irqchip/mvebu: Convert to msi_create_parent_irq_domain() helper
+Date: Wed,  4 Dec 2024 12:45:42 +0000
+Message-Id: <20241204124549.607054-5-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20241204124549.607054-1-maz@kernel.org>
 References: <20241204124549.607054-1-maz@kernel.org>
@@ -82,93 +82,101 @@ X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
 Now that we have a concise helper to create an MSI parent domain,
-switch the GIC family over to that.
+switch the mvebu family of interrupt controllers over to that.
 
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/irqchip/irq-gic-v2m.c    |  9 ++++-----
- drivers/irqchip/irq-gic-v3-its.c | 14 +++++---------
- drivers/irqchip/irq-gic-v3-mbi.c |  9 ++++-----
- 3 files changed, 13 insertions(+), 19 deletions(-)
+ drivers/irqchip/irq-mvebu-gicp.c | 12 +++++-------
+ drivers/irqchip/irq-mvebu-odmi.c | 13 +++++--------
+ drivers/irqchip/irq-mvebu-sei.c  | 14 +++++---------
+ 3 files changed, 15 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
-index db79ae622f3c4..4916743aed314 100644
---- a/drivers/irqchip/irq-gic-v2m.c
-+++ b/drivers/irqchip/irq-gic-v2m.c
-@@ -270,16 +270,15 @@ static __init int gicv2m_allocate_domains(struct irq_domain *parent)
- 	if (!v2m)
- 		return 0;
- 
--	inner_domain = irq_domain_create_hierarchy(parent, 0, 0, v2m->fwnode,
--						   &gicv2m_domain_ops, v2m);
-+	inner_domain = msi_create_parent_irq_domain(v2m->fwnode,
-+						    &gicv2m_msi_parent_ops,
-+						    &gicv2m_domain_ops,
-+						    0, 0, v2m, parent);
- 	if (!inner_domain) {
- 		pr_err("Failed to create GICv2m domain\n");
- 		return -ENOMEM;
+diff --git a/drivers/irqchip/irq-mvebu-gicp.c b/drivers/irqchip/irq-mvebu-gicp.c
+index b206b7fe03f17..783bfc83c2607 100644
+--- a/drivers/irqchip/irq-mvebu-gicp.c
++++ b/drivers/irqchip/irq-mvebu-gicp.c
+@@ -229,16 +229,14 @@ static int mvebu_gicp_probe(struct platform_device *pdev)
+ 		return -ENODEV;
  	}
  
--	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_NEXUS);
+-	inner_domain = irq_domain_create_hierarchy(parent_domain, 0,
+-						   gicp->spi_cnt,
+-						   of_node_to_fwnode(node),
+-						   &gicp_domain_ops, gicp);
++	inner_domain = msi_create_parent_irq_domain(of_node_to_fwnode(node),
++						    &gicp_msi_parent_ops,
++						    &gicp_domain_ops,
++						    0, gicp->spi_cnt, gicp,
++						    parent_domain);
+ 	if (!inner_domain)
+ 		return -ENOMEM;
+ 
+-	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_GENERIC_MSI);
 -	inner_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
--	inner_domain->msi_parent_ops = &gicv2m_msi_parent_ops;
+-	inner_domain->msi_parent_ops = &gicp_msi_parent_ops;
  	return 0;
  }
  
-diff --git a/drivers/irqchip/irq-gic-v3-its.c b/drivers/irqchip/irq-gic-v3-its.c
-index 334fd15be1de1..6f61ee7c5d394 100644
---- a/drivers/irqchip/irq-gic-v3-its.c
-+++ b/drivers/irqchip/irq-gic-v3-its.c
-@@ -5114,20 +5114,16 @@ static int its_init_domain(struct its_node *its)
- 	info->ops = &its_msi_domain_ops;
- 	info->data = its;
+diff --git a/drivers/irqchip/irq-mvebu-odmi.c b/drivers/irqchip/irq-mvebu-odmi.c
+index 0ba39fbdb451f..74308b1cc01f1 100644
+--- a/drivers/irqchip/irq-mvebu-odmi.c
++++ b/drivers/irqchip/irq-mvebu-odmi.c
+@@ -204,19 +204,16 @@ static int __init mvebu_odmi_init(struct device_node *node,
  
--	inner_domain = irq_domain_create_hierarchy(its_parent,
--						   its->msi_domain_flags, 0,
--						   its->fwnode_handle, &its_domain_ops,
--						   info);
-+	inner_domain = msi_create_parent_irq_domain(its->fwnode_handle,
-+						    &gic_v3_its_msi_parent_ops,
-+						    &its_domain_ops,
-+						    its->msi_domain_flags, 0,
-+						    info, its_parent);
+ 	parent_domain = irq_find_host(parent);
+ 
+-	inner_domain = irq_domain_create_hierarchy(parent_domain, 0,
+-						   odmis_count * NODMIS_PER_FRAME,
+-						   of_node_to_fwnode(node),
+-						   &odmi_domain_ops, NULL);
++	inner_domain = msi_create_parent_irq_domain(of_node_to_fwnode(node),
++						    &odmi_msi_parent_ops,
++						    &odmi_domain_ops, 0,
++						    odmis_count * NODMIS_PER_FRAME,
++						    NULL, parent_domain);
  	if (!inner_domain) {
- 		kfree(info);
- 		return -ENOMEM;
+ 		ret = -ENOMEM;
+ 		goto err_unmap;
  	}
  
--	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_NEXUS);
--
--	inner_domain->msi_parent_ops = &gic_v3_its_msi_parent_ops;
+-	irq_domain_update_bus_token(inner_domain, DOMAIN_BUS_GENERIC_MSI);
 -	inner_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
+-	inner_domain->msi_parent_ops = &odmi_msi_parent_ops;
 -
  	return 0;
- }
  
-diff --git a/drivers/irqchip/irq-gic-v3-mbi.c b/drivers/irqchip/irq-gic-v3-mbi.c
-index 63c658375fd55..e5f532f95148d 100644
---- a/drivers/irqchip/irq-gic-v3-mbi.c
-+++ b/drivers/irqchip/irq-gic-v3-mbi.c
-@@ -211,14 +211,13 @@ static int mbi_allocate_domain(struct irq_domain *parent)
- {
- 	struct irq_domain *nexus_domain;
+ err_unmap:
+diff --git a/drivers/irqchip/irq-mvebu-sei.c b/drivers/irqchip/irq-mvebu-sei.c
+index c12e650ae7c92..26e1a436af2d1 100644
+--- a/drivers/irqchip/irq-mvebu-sei.c
++++ b/drivers/irqchip/irq-mvebu-sei.c
+@@ -429,21 +429,17 @@ static int mvebu_sei_probe(struct platform_device *pdev)
+ 	irq_domain_update_bus_token(sei->ap_domain, DOMAIN_BUS_WIRED);
  
--	nexus_domain = irq_domain_create_hierarchy(parent, 0, 0, parent->fwnode,
--						   &mbi_domain_ops, NULL);
-+	nexus_domain = msi_create_parent_irq_domain(parent->fwnode,
-+						    &gic_v3_mbi_msi_parent_ops,
-+						    &mbi_domain_ops,
-+						    0, 0, NULL, parent);
- 	if (!nexus_domain)
- 		return -ENOMEM;
+ 	/* Create the 'MSI' domain */
+-	sei->cp_domain = irq_domain_create_hierarchy(sei->sei_domain, 0,
+-						     sei->caps->cp_range.size,
+-						     of_node_to_fwnode(node),
+-						     &mvebu_sei_cp_domain_ops,
+-						     sei);
++	sei->cp_domain = msi_create_parent_irq_domain(of_node_to_fwnode(node),
++						      &sei_msi_parent_ops,
++						      &mvebu_sei_cp_domain_ops,
++						      0, sei->caps->cp_range.size,
++						      sei, sei->sei_domain);
+ 	if (!sei->cp_domain) {
+ 		pr_err("Failed to create CPs IRQ domain\n");
+ 		ret = -ENOMEM;
+ 		goto remove_ap_domain;
+ 	}
  
--	irq_domain_update_bus_token(nexus_domain, DOMAIN_BUS_NEXUS);
--	nexus_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
--	nexus_domain->msi_parent_ops = &gic_v3_mbi_msi_parent_ops;
- 	return 0;
- }
+-	irq_domain_update_bus_token(sei->cp_domain, DOMAIN_BUS_GENERIC_MSI);
+-	sei->cp_domain->flags |= IRQ_DOMAIN_FLAG_MSI_PARENT;
+-	sei->cp_domain->msi_parent_ops = &sei_msi_parent_ops;
+-
+ 	mvebu_sei_reset(sei);
  
+ 	irq_set_chained_handler_and_data(parent_irq, mvebu_sei_handle_cascade_irq, sei);
 -- 
 2.39.2
 
