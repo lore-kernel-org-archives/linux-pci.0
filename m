@@ -1,198 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D9E21F426E;
-	Wed,  4 Dec 2024 12:46:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A764318BC19;
+	Wed,  4 Dec 2024 13:08:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733316370; cv=none; b=N8GUin9Ro5oL9eX3F6aPC38MHeW1HPo7P+f2mjytl+EDA0W/oTAP1h4Qau8TED28d7qTAdcQpMznRnTyA6LCK/dN35vWBDLntdsoNjABHVLXJEq0Qb0auOjQ+9OY+uq48DnSD4i0Sdx0mO6jNlA2RSyf5C6V8sAShCJ8+GNLoOs=
+	t=1733317697; cv=none; b=fjE36QlpKwouZpUeLDuNzqse59vgVLAPYukOi3490uJurixvBypcTlumKzux9UzW7ojNZBVAditoxQyVcz9lOH6styYvTtcG2+TgkvPdU6e5opdqRKEy2nt+AoCGlQ5g5h2ylsnjOt4H6s4grUXy9mvR9G/NXZdtirroK0HAY+M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733316370; c=relaxed/simple;
-	bh=WovDOhGvJI34dfRdwLOil5noAJ5CREZZX4oJMEsuV3c=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JZInUacGoIJlqiN+9ZnWVoaiPIVScJEn+gdE3B6GPOC+U5D4cPK5DJT9LPqOcl6g9vk7XnZ0rSlk4qW15eGodnMY+VD2A18HS5vTpZR+tcacr9tshIfxWVYs9Z3grWxrvafY9++ODnoY0EJ1uB2X4eOvK6L3O/aSi6ZqqP1Mi6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eUOAOGxD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733317697; c=relaxed/simple;
+	bh=05RaxY8NTJZsdAMk/F+MVGS6iIIbXrpDd0cv9NTMgsY=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=UJ3bQja8mgGjFoymL7ol43LRxJOOCoEFHdTmKsDSn+CNNllZ9oETBl2IzfDLww1J3Fnr+c+yu6IFDQ4R4ITe3DYENjGIDpZ5lzST4xL/zA/dATBX8xKq7IzOdioW3orXgdx3ws7H8nT4qz1lVdL6dSi3vq0QR8wFPHngmqOVAv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=zFBy1gyA; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=6OVT3qJb; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eUOAOGxD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0D740C4CEE4;
-	Wed,  4 Dec 2024 12:46:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733316370;
-	bh=WovDOhGvJI34dfRdwLOil5noAJ5CREZZX4oJMEsuV3c=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=eUOAOGxDdJCpu9CKizY2dme6+QjXgFdhMgbIAtu+zIYKisA9lS0WvyerxS1fXCxPY
-	 t3j55q66bUY9eCYymATDsBvYYd+IqYHPtn1e7vQx3RJyDLiWiiZcmWyYHYRa/Yb0Ln
-	 MP23MO1U0GrTvYw679XpCjcEmsS67z6gvNhik4vdE+Epv3wWWPgKxGcKHztdtZTY8F
-	 N9Gp8NbO7A3+t5/Kz0j7J765cEhdqVSHzFEjI6t+yuOY4AYcZ2dLyldBbRb0UGDIw9
-	 fuFJc9P29p0HnKXgUxtCjZp6djxgFRjuSXkSuWYGjCHcqcKpWMnMXvvqIlIh5EjUI1
-	 7fYhjW87yzjFQ==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.95)
-	(envelope-from <maz@kernel.org>)
-	id 1tIolc-000RHy-5S;
-	Wed, 04 Dec 2024 12:46:08 +0000
-From: Marc Zyngier <maz@kernel.org>
-To: iommu@lists.linux.dev,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	loongarch@lists.linux.dev,
-	linux-riscv@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Cc: Joerg Roedel <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	David Woodhouse <dwmw2@infradead.org>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Huacai Chen <chenhuacai@kernel.org>,
-	WANG Xuerui <kernel@xen0n.name>,
-	Jiaxun Yang <jiaxun.yang@flygoat.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Gregory Clement <gregory.clement@bootlin.com>,
-	Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
-	Anup Patel <anup@brainfault.org>,
-	Paul Walmsley <paul.walmsley@sifive.com>,
-	Palmer Dabbelt <palmer@dabbelt.com>,
-	Albert Ou <aou@eecs.berkeley.edu>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Toan Le <toan@os.amperecomputing.com>,
-	Alyssa Rosenzweig <alyssa@rosenzweig.io>
-Subject: [PATCH 11/11] PCI: xgene: Convert to MSI parent infrastructure
-Date: Wed,  4 Dec 2024 12:45:49 +0000
-Message-Id: <20241204124549.607054-12-maz@kernel.org>
-X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20241204124549.607054-1-maz@kernel.org>
-References: <20241204124549.607054-1-maz@kernel.org>
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="zFBy1gyA";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="6OVT3qJb"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1733317692;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ai6Td+7Re4FB0bJzl00OhDz0NYYlW8jViszOUHsn54c=;
+	b=zFBy1gyAVOA9KgJwUcsOSY5q9TPYuTqu9LkGJXJC+RsJzCZ7aB9Hb8nslQDzhJxP91iwvv
+	ayQxv7NwBnF4sH3k8udsY2kj2yVSgy3UbvHYSc/TlBtYprapRncVYqnz9OqkYwl7zoVdus
+	WVNuh76NkV+R/LL6iczxXh3IyHhtj0znSpYq9EbcK+ddnOKFWaTbrCsVYKnVMMnzg2emje
+	dBeADw1CwksN/+R6mi+nyuwA7ICGcwnyCynmBocoNktqzyxhYZzFPMvUeKhlH4+dnC4qMq
+	SUHNdv4ZcG9KgMYfwso3Qa6O9aY8H93m3bWyRh3fQD81s5p3OtIIM+uCzLNuPQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1733317692;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=ai6Td+7Re4FB0bJzl00OhDz0NYYlW8jViszOUHsn54c=;
+	b=6OVT3qJb7QSbzkewvzZYWWbqCQIHPBJ/jiRUicmS4fVMvTkHZhy9KpkcqF9yl8uB0Mg8Yi
+	pXiq6/VkKOtt1zCA==
+To: Frank Li <Frank.li@nxp.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Krzysztof
+ =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>, Kishon Vijay Abraham I
+ <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, Greg
+ Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, Anup Patel <apatel@ventanamicro.com>,
+ linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+ imx@lists.linux.dev, Niklas Cassel <cassel@kernel.org>,
+ dlemoal@kernel.org, maz@kernel.org, jdmason@kudzu.us
+Subject: Re: [PATCH v9 2/6] PCI: endpoint: Add RC-to-EP doorbell support
+ using platform MSI controller
+In-Reply-To: <Z0+TFbH5uWgFq6xY@lizhi-Precision-Tower-5810>
+References: <20241203-ep-msi-v9-0-a60dbc3f15dd@nxp.com>
+ <20241203-ep-msi-v9-2-a60dbc3f15dd@nxp.com> <87v7w0s9a8.ffs@tglx>
+ <Z0+TFbH5uWgFq6xY@lizhi-Precision-Tower-5810>
+Date: Wed, 04 Dec 2024 14:08:12 +0100
+Message-ID: <87jzcfsiir.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: iommu@lists.linux.dev, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, loongarch@lists.linux.dev, linux-riscv@lists.infradead.org, linux-pci@vger.kernel.org, joro@8bytes.org, suravee.suthikulpanit@amd.com, dwmw2@infradead.org, baolu.lu@linux.intel.com, tglx@linutronix.de, shawnguo@kernel.org, s.hauer@pengutronix.de, festevam@gmail.com, chenhuacai@kernel.org, kernel@xen0n.name, jiaxun.yang@flygoat.com, andrew@lunn.ch, gregory.clement@bootlin.com, sebastian.hesselbarth@gmail.com, anup@brainfault.org, paul.walmsley@sifive.com, palmer@dabbelt.com, aou@eecs.berkeley.edu, lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org, bhelgaas@google.com, toan@os.amperecomputing.com, alyssa@rosenzweig.io
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+Content-Type: text/plain
 
-In an effort to move arm64 away from the legacy MSI setup,
-convert the xgene PCIe driver to the MSI-parent infrastructure
-and let each device have its own MSI domain.
+On Tue, Dec 03 2024 at 18:24, Frank Li wrote:
+> On Tue, Dec 03, 2024 at 11:15:27PM +0100, Thomas Gleixner wrote:
+>> The fact that a MSI parent domain supports DOMAIN_BUS_DEVICE_MSI does
+>> not guarantee that the parent is translation table based.
+>>
+>> As this is intended to be a generic library for all sorts of EP
+>> implementations, there needs to be
+>>
+>>   - either a mechanism to prevent the initialization if the underlying
+>>     MSI parent domain does not provide immutable messages
+>
+> How to know such information?
 
-Signed-off-by: Marc Zyngier <maz@kernel.org>
----
- drivers/pci/controller/Kconfig         |  1 +
- drivers/pci/controller/pci-xgene-msi.c | 44 +++++++++-----------------
- 2 files changed, 16 insertions(+), 29 deletions(-)
+It obviously needs to be flagged somehow in the domain and the EP magic
+needs to check that flag. 
 
-diff --git a/drivers/pci/controller/Kconfig b/drivers/pci/controller/Kconfig
-index 98a62f4559dfd..205e0e365c6b1 100644
---- a/drivers/pci/controller/Kconfig
-+++ b/drivers/pci/controller/Kconfig
-@@ -304,6 +304,7 @@ config PCI_XGENE_MSI
- 	bool "X-Gene v1 PCIe MSI feature"
- 	depends on PCI_XGENE
- 	depends on PCI_MSI
-+	select IRQ_MSI_LIB
- 	default y
- 	help
- 	  Say Y here if you want PCIe MSI support for the APM X-Gene v1 SoC.
-diff --git a/drivers/pci/controller/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
-index 88c0977bc41a4..d9e4d1e136f77 100644
---- a/drivers/pci/controller/pci-xgene-msi.c
-+++ b/drivers/pci/controller/pci-xgene-msi.c
-@@ -12,6 +12,7 @@
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/irqchip/chained_irq.h>
-+#include <linux/irqchip/irq-msi-lib.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
- #include <linux/of_pci.h>
-@@ -32,7 +33,6 @@ struct xgene_msi_group {
- struct xgene_msi {
- 	struct device_node	*node;
- 	struct irq_domain	*inner_domain;
--	struct irq_domain	*msi_domain;
- 	u64			msi_addr;
- 	void __iomem		*msi_regs;
- 	unsigned long		*bitmap;
-@@ -44,20 +44,6 @@ struct xgene_msi {
- /* Global data */
- static struct xgene_msi xgene_msi_ctrl;
- 
--static struct irq_chip xgene_msi_top_irq_chip = {
--	.name		= "X-Gene1 MSI",
--	.irq_enable	= pci_msi_unmask_irq,
--	.irq_disable	= pci_msi_mask_irq,
--	.irq_mask	= pci_msi_mask_irq,
--	.irq_unmask	= pci_msi_unmask_irq,
--};
--
--static struct  msi_domain_info xgene_msi_domain_info = {
--	.flags	= (MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
--		  MSI_FLAG_PCI_MSIX),
--	.chip	= &xgene_msi_top_irq_chip,
--};
--
- /*
-  * X-Gene v1 has 16 groups of MSI termination registers MSInIRx, where
-  * n is group number (0..F), x is index of registers in each group (0..7)
-@@ -235,34 +221,34 @@ static void xgene_irq_domain_free(struct irq_domain *domain,
- 	irq_domain_free_irqs_parent(domain, virq, nr_irqs);
- }
- 
--static const struct irq_domain_ops msi_domain_ops = {
-+static const struct irq_domain_ops xgene_msi_domain_ops = {
- 	.alloc  = xgene_irq_domain_alloc,
- 	.free   = xgene_irq_domain_free,
- };
- 
-+static const struct msi_parent_ops xgene_msi_parent_ops = {
-+	.supported_flags	= (MSI_GENERIC_FLAGS_MASK	|
-+				   MSI_FLAG_PCI_MSIX),
-+	.required_flags		= (MSI_FLAG_USE_DEF_DOM_OPS	|
-+				   MSI_FLAG_USE_DEF_CHIP_OPS),
-+	.bus_select_token	= DOMAIN_BUS_PCI_MSI,
-+	.init_dev_msi_info	= msi_lib_init_dev_msi_info,
-+};
-+
- static int xgene_allocate_domains(struct xgene_msi *msi)
- {
--	msi->inner_domain = irq_domain_add_linear(NULL, NR_MSI_VEC,
--						  &msi_domain_ops, msi);
-+	msi->inner_domain = msi_create_parent_irq_domain(of_node_to_fwnode(msi->node),
-+							 &xgene_msi_parent_ops,
-+							 &xgene_msi_domain_ops,
-+							 0, NR_MSI_VEC, msi, NULL);
- 	if (!msi->inner_domain)
- 		return -ENOMEM;
- 
--	msi->msi_domain = pci_msi_create_irq_domain(of_node_to_fwnode(msi->node),
--						    &xgene_msi_domain_info,
--						    msi->inner_domain);
--
--	if (!msi->msi_domain) {
--		irq_domain_remove(msi->inner_domain);
--		return -ENOMEM;
--	}
--
- 	return 0;
- }
- 
- static void xgene_free_domains(struct xgene_msi *msi)
- {
--	if (msi->msi_domain)
--		irq_domain_remove(msi->msi_domain);
- 	if (msi->inner_domain)
- 		irq_domain_remove(msi->inner_domain);
- }
--- 
-2.39.2
+>>
+>>   - or support for endpoint specific msi_write_msg() implementations
+>
+> Even provide specific msi_write_msg(), write to address/data to shared
+> memory.
+>
+> host driver:
+> 1. read address/data from shared memory
+> 2. write data to address.
+>
+> 1 and 2 is not atomic. So it can't avoid above raise conditon.
+
+Correct. So you cannot support that case, which in turn requires to have
+a mechanism to check for the immutable property.
+
+Thanks,
+
+        tglx
 
