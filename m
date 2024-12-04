@@ -1,178 +1,133 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC57A238740;
-	Wed,  4 Dec 2024 17:13:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA032202C39;
+	Wed,  4 Dec 2024 17:17:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733332439; cv=none; b=YTb6u0eR8DQ3OM+5oyHonh53dUmaYJgs92rhgVlu2g+nVBYZ0RcRp5dbm8g94tVUl9Gx0waYUFOU1BA0v8ijSoXyZi3S1u+XP3sfo2wVAcOpx5v20Lp5IojYsyv6gFY+buJMty1BzkhfpstgyvHkug2yOUt7VNXoLc/S2iWcOFE=
+	t=1733332639; cv=none; b=pKmSd9xd2TFAAezsfwk8nm9bJXIrR9BT7+dqux9/iesIG2FFTFT4cG9lIHXctnWbG/MQbjtJ9yKRsG2ocP2BIgV8NUC6ZNxAY+06rOcQDn27Lsores3B79kjwVdFui9CC4BtKWLd7kBAD+ROOo12jPC48mhU5J21w+H7R9xyPVY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733332439; c=relaxed/simple;
-	bh=nL2jMgDplLnwuxZm04PTOAyEHPsJP4TvdbcDsPszNz0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=t3Tpv+XzxN/2TW4RGtkwQAxJs0ZGXlRfo9yUcWhmegC2Y5Qkj6/8RMabpIA2l1piazMVjWuaAnlyqDHPbq7N6UVQrUpAHQhpsxcysV61YsLlaZQLPN2arnewuBL3CW8l+lsgRTXwVDAeJMT8WiHlljcNS9Z2EH3lIdnR2qvS3bM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=biuZ1QDD; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733332639; c=relaxed/simple;
+	bh=uSz+sEEw2oT3nyzLQJLoBEJ9EIAKnpYCcjWGceBwYHE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Zsq3Q2jG4ZHs6K6ixZ3R63Vb8mAFAgYZvZcgBjbC0c39LVvV73cXzuHB1AXsBuZyULrqvoEr7KtvMcG5B4S9y9seOHnHqV2WBMzIJMw6V10zjGo0Fsbtb4XwaQzY38XbEOGtQeraUXJI36ETQwfoU4t8WDBX3XNg9UMOAKA6D7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gzUcVkzg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="biuZ1QDD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C903C4CED6;
-	Wed,  4 Dec 2024 17:13:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gzUcVkzg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3789CC4CECD;
+	Wed,  4 Dec 2024 17:17:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733332439;
-	bh=nL2jMgDplLnwuxZm04PTOAyEHPsJP4TvdbcDsPszNz0=;
-	h=From:To:Cc:Subject:Date:From;
-	b=biuZ1QDDk7fsopP28DAxA9qhHGr7nV/eggEk4rPBRSNZL/toh96MK7o7WClDp3QKY
-	 hcw1RhRcyvXnea6kz08MCexDh0fqnuDhSnMBXY3W6gk1A6Eh0gNR9Q68JE5JxNKnk8
-	 2h09lAVbCCNY0tTaYwdslUfa1C2M5hFLv9q5lB+uy3qV5Z6Izy59JbSQQHbQvzkrgW
-	 k5BmpB8eZcRwqiKjC2/1V5OEV/eVo7sDf2LNT4hdlx7fcoy81BILJIyegIeSiB/YXE
-	 S/OaTF4FTgwnuT6/g+JX5IV3S/qw4qqxePw1zQPo+WKX90isBOvMh3uBYr1+W8gipu
-	 294t22P1tfnfQ==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Keith Busch <kbusch@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Amey Narkhede <ameynarkhede03@gmail.com>,
-	Sasha Levin <sashal@kernel.org>,
-	mariusz.tkaczyk@linux.intel.com,
-	ilpo.jarvinen@linux.intel.com,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 4.19] PCI: Add 'reset_subordinate' to reset hierarchy below bridge
-Date: Wed,  4 Dec 2024 11:02:36 -0500
-Message-ID: <20241204160239.2217532-1-sashal@kernel.org>
-X-Mailer: git-send-email 2.43.0
+	s=k20201202; t=1733332638;
+	bh=uSz+sEEw2oT3nyzLQJLoBEJ9EIAKnpYCcjWGceBwYHE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=gzUcVkzgIDOX+3sNoYZ2m5S8gUJkCgDRaK/qOGs/K9mg+UBc581dBYqWvYcPuVsHX
+	 smVWpgPqSmAECm/MFpowLEdhRa/m6uL9dPnzuPJ4vvEnWSR04cfKNI73xz6STBe2w3
+	 fcKl7kCelX0eX3rKmxLFFWY56VxNj4u5z6dyw1iwV/rcJKV9HuWQlTTSdeAaxrQ13L
+	 qM/jayOL5o6IwK059iR0WvSdxKKRKwdPPdxAD/BbGiladrytgutwZkvbQhx6DSzQP3
+	 T8mklJkZQM1Td4gHGr2q+XCam7Zh6eE+yvZ81qVW1G4x3kp2uslbhucxUc3I21eYPu
+	 TEoF/iCYF5woQ==
+Date: Wed, 4 Dec 2024 11:17:16 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Jon Mason <jdmason@kudzu.us>, Frank Li <Frank.Li@nxp.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Jesper Nilsson <jesper.nilsson@axis.com>, linux-pci@vger.kernel.org,
+	ntb@lists.linux.dev
+Subject: Re: [PATCH v5 2/6] PCI: dwc: ep: Add missing checks when dynamically
+ changing a BAR
+Message-ID: <20241204171716.GA2691918@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 4.19.324
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241127103016.3481128-10-cassel@kernel.org>
 
-From: Keith Busch <kbusch@kernel.org>
+[+cc NTB list, since NTB seems to be the main user of .set_bar()]
 
-[ Upstream commit 2fa046449a82a7d0f6d9721dd83e348816038444 ]
+Can we say something specific in the subject line, like "prevent
+changing size/flags" or whatever?
 
-The "bus" and "cxl_bus" reset methods reset a device by asserting Secondary
-Bus Reset on the bridge leading to the device.  These only work if the
-device is the only device below the bridge.
+On Wed, Nov 27, 2024 at 11:30:18AM +0100, Niklas Cassel wrote:
+> In commit 4284c88fff0e ("PCI: designware-ep: Allow pci_epc_set_bar() update
+> inbound map address") set_bar() was modified to support dynamically
+> changing the physical address of a BAR.
+> 
+> This means that set_bar() can be called twice, without ever calling
+> clear_bar(), as calling clear_bar() would clear the BAR's PCI address
+> assigned by the host).
 
-Add a sysfs 'reset_subordinate' attribute on bridges that can assert
-Secondary Bus Reset regardless of how many devices are below the bridge.
+Unpaired parenthesis at end.
 
-This resets all the devices below a bridge in a single command, including
-the locking and config space save/restore that reset methods normally do.
+Apparently calling .set_bar() twice without calling .clear_bar() is a
+problem?  What problem does it cause?  Sorry about my poor
+understanding of the endpoint and NTB code; I'm sure this would be
+obvious if I understood more.
 
-This may be the only way to reset devices that don't support other reset
-methods (ACPI, FLR, PM reset, etc).
+Maybe a hint about the reason why we need to call .set_bar() twice
+would help me understand.
 
-Link: https://lore.kernel.org/r/20241025222755.3756162-1-kbusch@meta.com
-Signed-off-by: Keith Busch <kbusch@kernel.org>
-[bhelgaas: commit log, add capable(CAP_SYS_ADMIN) check]
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Reviewed-by: Alex Williamson <alex.williamson@redhat.com>
-Reviewed-by: Amey Narkhede <ameynarkhede03@gmail.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- Documentation/ABI/testing/sysfs-bus-pci | 11 +++++++++++
- drivers/pci/pci-sysfs.c                 | 26 +++++++++++++++++++++++++
- drivers/pci/pci.c                       |  2 +-
- drivers/pci/pci.h                       |  1 +
- 4 files changed, 39 insertions(+), 1 deletion(-)
+> This can only be done if the new BAR configuration doesn't fundamentally
+> differ from the existing BAR configuration. Add these missing checks.
 
-diff --git a/Documentation/ABI/testing/sysfs-bus-pci b/Documentation/ABI/testing/sysfs-bus-pci
-index 44d4b2be92fd4..c68d1d9a4d479 100644
---- a/Documentation/ABI/testing/sysfs-bus-pci
-+++ b/Documentation/ABI/testing/sysfs-bus-pci
-@@ -125,6 +125,17 @@ Description:
- 		will be present in sysfs.  Writing 1 to this file
- 		will perform reset.
- 
-+What:		/sys/bus/pci/devices/.../reset_subordinate
-+Date:		October 2024
-+Contact:	linux-pci@vger.kernel.org
-+Description:
-+		This is visible only for bridge devices. If you want to reset
-+		all devices attached through the subordinate bus of a specific
-+		bridge device, writing 1 to this will try to do it.  This will
-+		affect all devices attached to the system through this bridge
-+		similiar to writing 1 to their individual "reset" file, so use
-+		with caution.
-+
- What:		/sys/bus/pci/devices/.../vpd
- Date:		February 2008
- Contact:	Ben Hutchings <bwh@kernel.org>
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index f68798763af8d..d5287dfac9171 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -507,6 +507,31 @@ static ssize_t dev_bus_rescan_store(struct device *dev,
- }
- static DEVICE_ATTR(rescan, (S_IWUSR|S_IWGRP), NULL, dev_bus_rescan_store);
- 
-+static ssize_t reset_subordinate_store(struct device *dev,
-+				struct device_attribute *attr,
-+				const char *buf, size_t count)
-+{
-+	struct pci_dev *pdev = to_pci_dev(dev);
-+	struct pci_bus *bus = pdev->subordinate;
-+	unsigned long val;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EPERM;
-+
-+	if (kstrtoul(buf, 0, &val) < 0)
-+		return -EINVAL;
-+
-+	if (val) {
-+		int ret = __pci_reset_bus(bus);
-+
-+		if (ret)
-+			return ret;
-+	}
-+
-+	return count;
-+}
-+static DEVICE_ATTR_WO(reset_subordinate);
-+
- #if defined(CONFIG_PM) && defined(CONFIG_ACPI)
- static ssize_t d3cold_allowed_store(struct device *dev,
- 				    struct device_attribute *attr,
-@@ -778,6 +803,7 @@ static struct attribute *pci_dev_attrs[] = {
- static struct attribute *pci_bridge_attrs[] = {
- 	&dev_attr_subordinate_bus_number.attr,
- 	&dev_attr_secondary_bus_number.attr,
-+	&dev_attr_reset_subordinate.attr,
- 	NULL,
- };
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index aa2be8d815048..e22040c8a0aec 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -5295,7 +5295,7 @@ EXPORT_SYMBOL_GPL(pci_probe_reset_bus);
-  *
-  * Same as above except return -EAGAIN if the bus cannot be locked
-  */
--static int __pci_reset_bus(struct pci_bus *bus)
-+int __pci_reset_bus(struct pci_bus *bus)
- {
- 	int rc;
- 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 39725b71300f8..1db9b8ff6043d 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -36,6 +36,7 @@ int pci_mmap_fits(struct pci_dev *pdev, int resno, struct vm_area_struct *vmai,
- int pci_probe_reset_function(struct pci_dev *dev);
- int pci_bridge_secondary_bus_reset(struct pci_dev *dev);
- int pci_bus_error_reset(struct pci_dev *dev);
-+int __pci_reset_bus(struct pci_bus *bus);
- 
- /**
-  * struct pci_platform_pm_ops - Firmware PM callbacks
--- 
-2.43.0
+Can you elaborate a bit on what "fundamentally differ" means?  Based
+on the patch, I guess it has to do with changing the size or type?
 
+And the problem this would cause is ...?  I guess it's a problem for
+some other entity that knows about the BAR and is doing MMIO or DMA to
+it?
+
+> While at it, add comments which clarifies the support for dynamically
+> changing the physical address of a BAR. (Which was also missing.)
+> 
+> Fixes: 4284c88fff0e ("PCI: designware-ep: Allow pci_epc_set_bar() update inbound map address")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> ---
+>  .../pci/controller/dwc/pcie-designware-ep.c   | 22 ++++++++++++++++++-
+>  1 file changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> index bad588ef69a4..01c739aaf61a 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-ep.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
+> @@ -222,8 +222,28 @@ static int dw_pcie_ep_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  	if ((flags & PCI_BASE_ADDRESS_MEM_TYPE_64) && (bar & 1))
+>  		return -EINVAL;
+>  
+> -	if (ep->epf_bar[bar])
+> +	/*
+> +	 * Certain EPF drivers dynamically change the physical address of a BAR
+> +	 * (i.e. they call set_bar() twice, without ever calling clear_bar(), as
+> +	 * calling clear_bar() would clear the BAR's PCI address assigned by the
+> +	 * host).
+> +	 */
+> +	if (ep->epf_bar[bar]) {
+> +		/*
+> +		 * We can only dynamically change a BAR if the new configuration
+> +		 * doesn't fundamentally differ from the existing configuration.
+> +		 */
+> +		if (ep->epf_bar[bar]->barno != bar ||
+> +		    ep->epf_bar[bar]->size != size ||
+> +		    ep->epf_bar[bar]->flags != flags)
+> +			return -EINVAL;
+> +
+> +		/*
+> +		 * When dynamically changing a BAR, skip writing the BAR reg, as
+> +		 * that would clear the BAR's PCI address assigned by the host.
+> +		 */
+>  		goto config_atu;
+> +	}
+>  
+>  	reg = PCI_BASE_ADDRESS_0 + (4 * bar);
+>  
+> -- 
+> 2.47.0
+> 
