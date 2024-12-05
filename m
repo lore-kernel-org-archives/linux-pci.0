@@ -1,383 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94DFF22F398;
-	Thu,  5 Dec 2024 13:22:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8360F218AD1;
+	Thu,  5 Dec 2024 13:46:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733404963; cv=none; b=j3/4Mwc7SXMO9xEufBLtntyhpb9vvpqT0yCk8temgwbtbjididbgpqSD9Wn0bB+8FiD1w4BUvwXe4bTnCqpAwsw6qA1DLzO2vkPOAJgsuWsrFBMzsciwAQq6vwkZl+rsIv5vbInWXfCcOlBc70S3+zqls8RvPo2D7RSv5/yUp+M=
+	t=1733406374; cv=none; b=uNWS3oFDQ9sXdR2w7izjjcxZMkMzjEBlaGWUg+KKPIJeVl9uVZ4RYUJDLFuWVNgB9vbPbCWGakgk7Inxx1sxtVMfd1RITkWLC4wT+Eiih2iBVqcdxs84qbEJNtY0blssw1OxeXF9EKbCm8nFn7j191dbf2WzU9e22qv/mDFRylE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733404963; c=relaxed/simple;
-	bh=ZAXuqfwbE1YV/7VCDuHJs9anauplEJ0b768sIkuVBXo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=f48Hxhk/mIEpwRlU5zq/ENccqm7kTT/jtcFg5jJXtmz2G5SPAigxngOy4oorjVT4aZIdOy+8XJEA77cuRayp0YNoHyV6fB7osTDMtGcUFYxN0t8pXQdFarafjv+IAeD8RUFkpZsQ7OvApjN07vNFwu+at7etvrQbXkeFpBp8yeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BoDO0y0k; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733406374; c=relaxed/simple;
+	bh=zXUtQdF3kJoehY2VsMC5IChMRcaxhXxdQd/mnE6ECdk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=QKkrRGWvmICBZRqqvetVnyGvCAnpTp0Sgv9lg2IimNNeK8HBna5iL8eyZsNowF+8yrohn7+ShEcYguXkrB6t+99IL6DKajmAPMvtii4BLdBGwI6ZmyAfu2jYkAkt9UkM5mlJ5bopMazYbQa7G91r1q9GOs+wdQSdDtzpqiHQ/WI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=hNJBtkMu; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BoDO0y0k"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C67ECC4CEDF;
-	Thu,  5 Dec 2024 13:22:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733404963;
-	bh=ZAXuqfwbE1YV/7VCDuHJs9anauplEJ0b768sIkuVBXo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BoDO0y0kTn2Uwvv6ummlT9vZvgliavKCH73Mk9+RAcKzMvFUeg4HN7ZXalkXGZ9fR
-	 G7PpR2VJ83mdtVfneTbeOf4/uB2cqhTmDCWkz2ukWU5Gh2edOMHDURR5TVjsoWQ0O9
-	 vP9AGCsyikolnyGiCXDpZ+DP/aPR5oNkEg1yqbhRfNi+W33+QIXXhhlO+riI9Z7m9q
-	 qlNKKiv7ahYRoD0qpl3UkecVGzjf4DLROsS5SZ1jsZ7vYUfjFcbC5cM6YCPTyDYpI5
-	 kq7zYwJwbcd145QXmq/+O4pwA/tjMWxn9ur9FR4c5qRmoYvIhn+H6IaCTYP+wzzwOA
-	 jBF8C3/fTyzgA==
-From: Leon Romanovsky <leon@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>
-Cc: Leon Romanovsky <leonro@nvidia.com>,
-	Keith Busch <kbusch@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-rdma@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org,
-	linux-mm@kvack.org,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v4 16/18] vfio/mlx5: Explicitly use number of pages instead of allocated length
-Date: Thu,  5 Dec 2024 15:21:15 +0200
-Message-ID: <a0f5064fbdedb65c9d468672b0079b16000e6bfb.1733398913.git.leon@kernel.org>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <cover.1733398913.git.leon@kernel.org>
-References: <cover.1733398913.git.leon@kernel.org>
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="hNJBtkMu"
+Received: from pps.filterd (m0241204.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4B5AWiAB022747;
+	Thu, 5 Dec 2024 14:45:36 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	9gu2Vz8xpuhrUOAG06JEy41cILvsNVFpEmqGgn17RPI=; b=hNJBtkMubMRskCIV
+	tJ9kgNC+p/g/+EdpcNlmMkE3AV1339M2Z7QAJSn7FahTLfLY5QApK9kvQNA4lAPk
+	RMuF0+Aiha0DVV8SzRvtTJIZu30TEUsO2JvNDo/qV3EbLAYHXpvarjk2KkG3g25k
+	FE7608a6Eu/k911tngGm6ODPB28VOE8U2PfIqzK7tC9epIps0jaaLArm83vhGnNn
+	R/LoSo2VFVZmq+SNylQXd9jL1Zbsuzk5nwzz+fio9f/wy6vmJXpJIjy0jAmUAGVa
+	fukvaD9QzHR6q/vZQRDUxDkmLjTelasVnJQVyhAgRPiBioPbXhHq/91zwSmukUSG
+	s7GVyQ==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 437tx2g7mq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 05 Dec 2024 14:45:36 +0100 (CET)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 94F6240047;
+	Thu,  5 Dec 2024 14:44:15 +0100 (CET)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 9A014264FCA;
+	Thu,  5 Dec 2024 14:41:27 +0100 (CET)
+Received: from [10.129.178.212] (10.129.178.212) by SHFDAG1NODE3.st.com
+ (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Thu, 5 Dec
+ 2024 14:41:26 +0100
+Message-ID: <569904ad-2b70-4a58-98fe-4f24e1089e17@foss.st.com>
+Date: Thu, 5 Dec 2024 14:41:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex
+ bindings
+To: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh+dt@kernel.org>
+CC: <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <bhelgaas@google.com>,
+        <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
+        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>,
+        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+References: <20241203222515.GA2967814@bhelgaas>
+Content-Language: en-US
+From: Christian Bruel <christian.bruel@foss.st.com>
+In-Reply-To: <20241203222515.GA2967814@bhelgaas>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
 
-From: Leon Romanovsky <leonro@nvidia.com>
 
-allocated_length is a multiple of page size and number of pages,
-so let's change the functions to accept number of pages. It opens
-us a venue to combine receive and send paths together with code
-readability improvement.
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/vfio/pci/mlx5/cmd.c  | 32 ++++++++++-----------
- drivers/vfio/pci/mlx5/cmd.h  | 10 +++----
- drivers/vfio/pci/mlx5/main.c | 56 +++++++++++++++++++++++-------------
- 3 files changed, 57 insertions(+), 41 deletions(-)
+On 12/3/24 23:25, Bjorn Helgaas wrote:
+> On Tue, Nov 26, 2024 at 04:51:15PM +0100, Christian Bruel wrote:
+>> Document the bindings for STM32MP25 PCIe Controller configured in
+>> root complex mode.
+>>
+>> Supports 4 legacy interrupts and MSI interrupts from the ARM
+>> GICv2m controller.
+> 
+> s/legacy/INTx/
+> 
+>> STM32 PCIe may be in a power domain which is the case for the STM32MP25
+>> based boards.
+>>
+>> Supports wake# from wake-gpios
+> 
+> s/wake#/WAKE#/
+> 
+>> +  wake-gpios:
+>> +    description: GPIO controlled connection to WAKE# input signal
+> 
+> I'm not a hardware guy, but this sounds like a GPIO that *reads*
+> WAKE#, not controls it.
 
-diff --git a/drivers/vfio/pci/mlx5/cmd.c b/drivers/vfio/pci/mlx5/cmd.c
-index a61d303d9b6a..9160b70c8142 100644
---- a/drivers/vfio/pci/mlx5/cmd.c
-+++ b/drivers/vfio/pci/mlx5/cmd.c
-@@ -318,8 +318,7 @@ static int _create_mkey(struct mlx5_core_dev *mdev, u32 pdn,
- 			struct mlx5_vhca_recv_buf *recv_buf,
- 			u32 *mkey)
- {
--	size_t npages = buf ? DIV_ROUND_UP(buf->allocated_length, PAGE_SIZE) :
--				recv_buf->npages;
-+	size_t npages = buf ? buf->npages : recv_buf->npages;
- 	int err = 0, inlen;
- 	__be64 *mtt;
- 	void *mkc;
-@@ -375,7 +374,7 @@ static int mlx5vf_dma_data_buffer(struct mlx5_vhca_data_buffer *buf)
- 	if (mvdev->mdev_detach)
- 		return -ENOTCONN;
- 
--	if (buf->dmaed || !buf->allocated_length)
-+	if (buf->dmaed || !buf->npages)
- 		return -EINVAL;
- 
- 	ret = dma_map_sgtable(mdev->device, &buf->table.sgt, buf->dma_dir, 0);
-@@ -445,7 +444,7 @@ static int mlx5vf_add_migration_pages(struct mlx5_vhca_data_buffer *buf,
- 
- 		if (ret)
- 			goto err_append;
--		buf->allocated_length += filled * PAGE_SIZE;
-+		buf->npages += filled;
- 		/* clean input for another bulk allocation */
- 		memset(page_list, 0, filled * sizeof(*page_list));
- 		to_fill = min_t(unsigned int, to_alloc,
-@@ -464,8 +463,7 @@ static int mlx5vf_add_migration_pages(struct mlx5_vhca_data_buffer *buf,
- }
- 
- struct mlx5_vhca_data_buffer *
--mlx5vf_alloc_data_buffer(struct mlx5_vf_migration_file *migf,
--			 size_t length,
-+mlx5vf_alloc_data_buffer(struct mlx5_vf_migration_file *migf, u32 npages,
- 			 enum dma_data_direction dma_dir)
- {
- 	struct mlx5_vhca_data_buffer *buf;
-@@ -477,9 +475,8 @@ mlx5vf_alloc_data_buffer(struct mlx5_vf_migration_file *migf,
- 
- 	buf->dma_dir = dma_dir;
- 	buf->migf = migf;
--	if (length) {
--		ret = mlx5vf_add_migration_pages(buf,
--				DIV_ROUND_UP_ULL(length, PAGE_SIZE));
-+	if (npages) {
-+		ret = mlx5vf_add_migration_pages(buf, npages);
- 		if (ret)
- 			goto end;
- 
-@@ -505,8 +502,8 @@ void mlx5vf_put_data_buffer(struct mlx5_vhca_data_buffer *buf)
- }
- 
- struct mlx5_vhca_data_buffer *
--mlx5vf_get_data_buffer(struct mlx5_vf_migration_file *migf,
--		       size_t length, enum dma_data_direction dma_dir)
-+mlx5vf_get_data_buffer(struct mlx5_vf_migration_file *migf, u32 npages,
-+		       enum dma_data_direction dma_dir)
- {
- 	struct mlx5_vhca_data_buffer *buf, *temp_buf;
- 	struct list_head free_list;
-@@ -521,7 +518,7 @@ mlx5vf_get_data_buffer(struct mlx5_vf_migration_file *migf,
- 	list_for_each_entry_safe(buf, temp_buf, &migf->avail_list, buf_elm) {
- 		if (buf->dma_dir == dma_dir) {
- 			list_del_init(&buf->buf_elm);
--			if (buf->allocated_length >= length) {
-+			if (buf->npages >= npages) {
- 				spin_unlock_irq(&migf->list_lock);
- 				goto found;
- 			}
-@@ -535,7 +532,7 @@ mlx5vf_get_data_buffer(struct mlx5_vf_migration_file *migf,
- 		}
- 	}
- 	spin_unlock_irq(&migf->list_lock);
--	buf = mlx5vf_alloc_data_buffer(migf, length, dma_dir);
-+	buf = mlx5vf_alloc_data_buffer(migf, npages, dma_dir);
- 
- found:
- 	while ((temp_buf = list_first_entry_or_null(&free_list,
-@@ -716,7 +713,7 @@ int mlx5vf_cmd_save_vhca_state(struct mlx5vf_pci_core_device *mvdev,
- 	MLX5_SET(save_vhca_state_in, in, op_mod, 0);
- 	MLX5_SET(save_vhca_state_in, in, vhca_id, mvdev->vhca_id);
- 	MLX5_SET(save_vhca_state_in, in, mkey, buf->mkey);
--	MLX5_SET(save_vhca_state_in, in, size, buf->allocated_length);
-+	MLX5_SET(save_vhca_state_in, in, size, buf->npages * PAGE_SIZE);
- 	MLX5_SET(save_vhca_state_in, in, incremental, inc);
- 	MLX5_SET(save_vhca_state_in, in, set_track, track);
- 
-@@ -738,8 +735,11 @@ int mlx5vf_cmd_save_vhca_state(struct mlx5vf_pci_core_device *mvdev,
- 	}
- 
- 	if (!header_buf) {
--		header_buf = mlx5vf_get_data_buffer(migf,
--			sizeof(struct mlx5_vf_migration_header), DMA_NONE);
-+		header_buf = mlx5vf_get_data_buffer(
-+			migf,
-+			DIV_ROUND_UP(sizeof(struct mlx5_vf_migration_header),
-+				     PAGE_SIZE),
-+			DMA_NONE);
- 		if (IS_ERR(header_buf)) {
- 			err = PTR_ERR(header_buf);
- 			goto err_free;
-diff --git a/drivers/vfio/pci/mlx5/cmd.h b/drivers/vfio/pci/mlx5/cmd.h
-index df421dc6de04..7d4a833b6900 100644
---- a/drivers/vfio/pci/mlx5/cmd.h
-+++ b/drivers/vfio/pci/mlx5/cmd.h
-@@ -56,7 +56,7 @@ struct mlx5_vhca_data_buffer {
- 	struct sg_append_table table;
- 	loff_t start_pos;
- 	u64 length;
--	u64 allocated_length;
-+	u32 npages;
- 	u32 mkey;
- 	enum dma_data_direction dma_dir;
- 	u8 dmaed:1;
-@@ -217,12 +217,12 @@ int mlx5vf_cmd_alloc_pd(struct mlx5_vf_migration_file *migf);
- void mlx5vf_cmd_dealloc_pd(struct mlx5_vf_migration_file *migf);
- void mlx5fv_cmd_clean_migf_resources(struct mlx5_vf_migration_file *migf);
- struct mlx5_vhca_data_buffer *
--mlx5vf_alloc_data_buffer(struct mlx5_vf_migration_file *migf,
--			 size_t length, enum dma_data_direction dma_dir);
-+mlx5vf_alloc_data_buffer(struct mlx5_vf_migration_file *migf, u32 npages,
-+			 enum dma_data_direction dma_dir);
- void mlx5vf_free_data_buffer(struct mlx5_vhca_data_buffer *buf);
- struct mlx5_vhca_data_buffer *
--mlx5vf_get_data_buffer(struct mlx5_vf_migration_file *migf,
--		       size_t length, enum dma_data_direction dma_dir);
-+mlx5vf_get_data_buffer(struct mlx5_vf_migration_file *migf, u32 npages,
-+		       enum dma_data_direction dma_dir);
- void mlx5vf_put_data_buffer(struct mlx5_vhca_data_buffer *buf);
- struct page *mlx5vf_get_migration_page(struct mlx5_vhca_data_buffer *buf,
- 				       unsigned long offset);
-diff --git a/drivers/vfio/pci/mlx5/main.c b/drivers/vfio/pci/mlx5/main.c
-index 8833e60d42f5..83247f016441 100644
---- a/drivers/vfio/pci/mlx5/main.c
-+++ b/drivers/vfio/pci/mlx5/main.c
-@@ -308,6 +308,7 @@ static struct mlx5_vhca_data_buffer *
- mlx5vf_mig_file_get_stop_copy_buf(struct mlx5_vf_migration_file *migf,
- 				  u8 index, size_t required_length)
- {
-+	u32 npages = DIV_ROUND_UP(required_length, PAGE_SIZE);
- 	struct mlx5_vhca_data_buffer *buf = migf->buf[index];
- 	u8 chunk_num;
- 
-@@ -315,12 +316,11 @@ mlx5vf_mig_file_get_stop_copy_buf(struct mlx5_vf_migration_file *migf,
- 	chunk_num = buf->stop_copy_chunk_num;
- 	buf->migf->buf[index] = NULL;
- 	/* Checking whether the pre-allocated buffer can fit */
--	if (buf->allocated_length >= required_length)
-+	if (buf->npages >= npages)
- 		return buf;
- 
- 	mlx5vf_put_data_buffer(buf);
--	buf = mlx5vf_get_data_buffer(buf->migf, required_length,
--				     DMA_FROM_DEVICE);
-+	buf = mlx5vf_get_data_buffer(buf->migf, npages, DMA_FROM_DEVICE);
- 	if (IS_ERR(buf))
- 		return buf;
- 
-@@ -373,7 +373,8 @@ static int mlx5vf_add_stop_copy_header(struct mlx5_vf_migration_file *migf,
- 	u8 *to_buff;
- 	int ret;
- 
--	header_buf = mlx5vf_get_data_buffer(migf, size, DMA_NONE);
-+	header_buf = mlx5vf_get_data_buffer(migf, DIV_ROUND_UP(size, PAGE_SIZE),
-+					    DMA_NONE);
- 	if (IS_ERR(header_buf))
- 		return PTR_ERR(header_buf);
- 
-@@ -388,7 +389,7 @@ static int mlx5vf_add_stop_copy_header(struct mlx5_vf_migration_file *migf,
- 	to_buff = kmap_local_page(page);
- 	memcpy(to_buff, &header, sizeof(header));
- 	header_buf->length = sizeof(header);
--	data.stop_copy_size = cpu_to_le64(migf->buf[0]->allocated_length);
-+	data.stop_copy_size = cpu_to_le64(migf->buf[0]->npages * PAGE_SIZE);
- 	memcpy(to_buff + sizeof(header), &data, sizeof(data));
- 	header_buf->length += sizeof(data);
- 	kunmap_local(to_buff);
-@@ -437,15 +438,20 @@ static int mlx5vf_prep_stop_copy(struct mlx5vf_pci_core_device *mvdev,
- 
- 	num_chunks = mvdev->chunk_mode ? MAX_NUM_CHUNKS : 1;
- 	for (i = 0; i < num_chunks; i++) {
--		buf = mlx5vf_get_data_buffer(migf, inc_state_size, DMA_FROM_DEVICE);
-+		buf = mlx5vf_get_data_buffer(
-+			migf, DIV_ROUND_UP(inc_state_size, PAGE_SIZE),
-+			DMA_FROM_DEVICE);
- 		if (IS_ERR(buf)) {
- 			ret = PTR_ERR(buf);
- 			goto err;
- 		}
- 
- 		migf->buf[i] = buf;
--		buf = mlx5vf_get_data_buffer(migf,
--				sizeof(struct mlx5_vf_migration_header), DMA_NONE);
-+		buf = mlx5vf_get_data_buffer(
-+			migf,
-+			DIV_ROUND_UP(sizeof(struct mlx5_vf_migration_header),
-+				     PAGE_SIZE),
-+			DMA_NONE);
- 		if (IS_ERR(buf)) {
- 			ret = PTR_ERR(buf);
- 			goto err;
-@@ -553,7 +559,8 @@ static long mlx5vf_precopy_ioctl(struct file *filp, unsigned int cmd,
- 	 * We finished transferring the current state and the device has a
- 	 * dirty state, save a new state to be ready for.
- 	 */
--	buf = mlx5vf_get_data_buffer(migf, inc_length, DMA_FROM_DEVICE);
-+	buf = mlx5vf_get_data_buffer(migf, DIV_ROUND_UP(inc_length, PAGE_SIZE),
-+				     DMA_FROM_DEVICE);
- 	if (IS_ERR(buf)) {
- 		ret = PTR_ERR(buf);
- 		mlx5vf_mark_err(migf);
-@@ -675,8 +682,8 @@ mlx5vf_pci_save_device_data(struct mlx5vf_pci_core_device *mvdev, bool track)
- 
- 	if (track) {
- 		/* leave the allocated buffer ready for the stop-copy phase */
--		buf = mlx5vf_alloc_data_buffer(migf,
--			migf->buf[0]->allocated_length, DMA_FROM_DEVICE);
-+		buf = mlx5vf_alloc_data_buffer(migf, migf->buf[0]->npages,
-+					       DMA_FROM_DEVICE);
- 		if (IS_ERR(buf)) {
- 			ret = PTR_ERR(buf);
- 			goto out_pd;
-@@ -917,11 +924,14 @@ static ssize_t mlx5vf_resume_write(struct file *filp, const char __user *buf,
- 				goto out_unlock;
- 			break;
- 		case MLX5_VF_LOAD_STATE_PREP_HEADER_DATA:
--			if (vhca_buf_header->allocated_length < migf->record_size) {
-+		{
-+			u32 npages = DIV_ROUND_UP(migf->record_size, PAGE_SIZE);
-+
-+			if (vhca_buf_header->npages < npages) {
- 				mlx5vf_free_data_buffer(vhca_buf_header);
- 
--				migf->buf_header[0] = mlx5vf_alloc_data_buffer(migf,
--						migf->record_size, DMA_NONE);
-+				migf->buf_header[0] = mlx5vf_alloc_data_buffer(
-+					migf, npages, DMA_NONE);
- 				if (IS_ERR(migf->buf_header[0])) {
- 					ret = PTR_ERR(migf->buf_header[0]);
- 					migf->buf_header[0] = NULL;
-@@ -934,6 +944,7 @@ static ssize_t mlx5vf_resume_write(struct file *filp, const char __user *buf,
- 			vhca_buf_header->start_pos = migf->max_pos;
- 			migf->load_state = MLX5_VF_LOAD_STATE_READ_HEADER_DATA;
- 			break;
-+		}
- 		case MLX5_VF_LOAD_STATE_READ_HEADER_DATA:
- 			ret = mlx5vf_resume_read_header_data(migf, vhca_buf_header,
- 							&buf, &len, pos, &done);
-@@ -944,12 +955,13 @@ static ssize_t mlx5vf_resume_write(struct file *filp, const char __user *buf,
- 		{
- 			u64 size = max(migf->record_size,
- 				       migf->stop_copy_prep_size);
-+			u32 npages = DIV_ROUND_UP(size, PAGE_SIZE);
- 
--			if (vhca_buf->allocated_length < size) {
-+			if (vhca_buf->npages < npages) {
- 				mlx5vf_free_data_buffer(vhca_buf);
- 
--				migf->buf[0] = mlx5vf_alloc_data_buffer(migf,
--							size, DMA_TO_DEVICE);
-+				migf->buf[0] = mlx5vf_alloc_data_buffer(
-+					migf, npages, DMA_TO_DEVICE);
- 				if (IS_ERR(migf->buf[0])) {
- 					ret = PTR_ERR(migf->buf[0]);
- 					migf->buf[0] = NULL;
-@@ -1037,8 +1049,11 @@ mlx5vf_pci_resume_device_data(struct mlx5vf_pci_core_device *mvdev)
- 	}
- 
- 	migf->buf[0] = buf;
--	buf = mlx5vf_alloc_data_buffer(migf,
--		sizeof(struct mlx5_vf_migration_header), DMA_NONE);
-+	buf = mlx5vf_alloc_data_buffer(
-+		migf,
-+		DIV_ROUND_UP(sizeof(struct mlx5_vf_migration_header),
-+			     PAGE_SIZE),
-+		DMA_NONE);
- 	if (IS_ERR(buf)) {
- 		ret = PTR_ERR(buf);
- 		goto out_buf;
-@@ -1148,7 +1163,8 @@ mlx5vf_pci_step_device_state_locked(struct mlx5vf_pci_core_device *mvdev,
- 					MLX5VF_QUERY_INC | MLX5VF_QUERY_CLEANUP);
- 		if (ret)
- 			return ERR_PTR(ret);
--		buf = mlx5vf_get_data_buffer(migf, size, DMA_FROM_DEVICE);
-+		buf = mlx5vf_get_data_buffer(migf,
-+				DIV_ROUND_UP(size, PAGE_SIZE), DMA_FROM_DEVICE);
- 		if (IS_ERR(buf))
- 			return ERR_CAST(buf);
- 		/* pre_copy cleanup */
--- 
-2.47.0
+Rephrasing as
+"GPIO used as WAKE# input signal" (output for the endpoint bindings)
 
+> 
+>> +    pcie@48400000 {
+>> +        compatible = "st,stm32mp25-pcie-rc";
+>> +        device_type = "pci";
+>> +        num-lanes = <1>;
+> 
+> num-lanes applies to a Root Port, not to a Root Complex.  I know most
+> bindings conflate Root Ports with the Root Complex, maybe because many
+> of these controllers only support a single Root Port?
+> 
+> But are we ever going to separate these out?  I assume someday
+> controllers will support multiple Root Ports and/or additional devices
+> on the root bus, like RCiEPs, RCECs, etc., and we'll need per-RP phys,
+> max-link-speed, num-lanes, reset-gpios, etc.
+> 
+> Seems like it would be to our benefit to split out the Root Ports when
+> we can, even if the current hardware only supports one, so we can
+> start untangling the code and data structures.
+
+OK. and we support only 1 lane anyway, so drop it.
+
+thanks,
+
+> 
+> Bjorn
