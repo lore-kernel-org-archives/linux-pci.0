@@ -1,94 +1,88 @@
-Received: from pv50p00im-ztdg10012001.me.com (pv50p00im-ztdg10012001.me.com [17.58.6.51])
+Received: from mail-m127218.xmail.ntesmail.com (mail-m127218.xmail.ntesmail.com [115.236.127.218])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7AA3FE56C
-	for <linux-pci@vger.kernel.org>; Thu,  5 Dec 2024 13:46:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=17.58.6.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D4A61DD87C;
+	Thu,  5 Dec 2024 14:05:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733406377; cv=none; b=rPxkiJk1CcwZdLwi0iguOnt9EM/efDOAu0W0pybkScbIbPrwcbiNCUSNlNChFh+s29f+qEXPg+QChydSjksfOfgv1w4USJQ5AtLZmqQaVWJ/bMl0zHo+yfxQUTvpna3LZjFpcEBll2p4g5vIBpy79Xjm9bB7iqIm91sVzDwtdJg=
+	t=1733407544; cv=none; b=nc5DSLre+FJsbHQlqr5vAf6vwo+NuqRl4y72T5Nb55T5thh7+Mqvh4NnLm0+1ux56TY2oMCM7C0DerU+oCbowLnKN3qvhi7pBz8tuTqtwMA8pqJRJLE9TC+/EDUCd9t+8dw9FUG30BPtkw0uSAP/eZ5WjfOjWb7lCgkqouAH9fo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733406377; c=relaxed/simple;
-	bh=Erzunq/73jwoVQ/pOglQgLKLnOsPy+Bf0Oo/OLzmmW0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZI+92yXa1sB0mdZwY2YBWJvRewdUFmgSkeujS2skH+sLw1EitHAcGmX8t4CdbmeOTWiWiB3dLaDFIn8tN60RFCLa2RIBrKFqvqozZGih+9I7UwlK3nupoPoBhQs4ZZTl/YQcgogCCKaemvX9pb65ErG8bxOaWPJDz6VwGaF4J+U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com; spf=pass smtp.mailfrom=icloud.com; dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b=xm90h+HI; arc=none smtp.client-ip=17.58.6.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=icloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=icloud.com
+	s=arc-20240116; t=1733407544; c=relaxed/simple;
+	bh=ztKqQuU4KCjQJjdRSBdTN6sXF9Y/8SDDL4APxpqvSwY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Q0oRhNjhzLg+QKMUoTj+shQjqO4oWH8RxvNRu3cEb7UKWiXFXMjjgIIilnER+iOh9CSrG5heURkeHqL/jLVD+1xQz1MUvKhtlRZl3Zfy82+lI5TMK7xX3VlPkxQBBBt6dGOsEbkNsbGb8FgTy7bxdyrbVmuEfxvtEHzKGU/3eyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=anhxgR45; arc=none smtp.client-ip=115.236.127.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=icloud.com header.i=@icloud.com header.b="xm90h+HI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=icloud.com;
-	s=1a1hai; t=1733406374;
-	bh=MPWGXb1Ff78zotVn43S71hljPg5nRkzHxsZYtR2AbFM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From:Content-Type:
-	 x-icloud-hme;
-	b=xm90h+HIa7Ltu/hPCkDXDB3SCy7idLoBXJXop05pUvFfj+M1iJR07GJmhz99jjPri
-	 PbhHVKbgXQKN3QGPe7ZsnzRj8gcwlR7SRrWW13tb5TmRSjd6fVrJfXN7DmfNm707JL
-	 YvjiACbOPRDHkXGYQd7B27dDmQg1Gw55EHlD4zwvGJMSmQ5VyIY4eGyzoTIgQ/X/gF
-	 DEfDh4PStfw8ipSqQ64CgJhKTbtp/ufoGW8oOkMyKMjeOSCuErU8J2FWZs0mLV0qvD
-	 quz/aoVJWuBt3c2cqEWK4KGaeiho70qOl+eOVrb7WCMp6FkOMizFAULrgMhqlRFy4X
-	 d0Myd7kgrFsgw==
-Received: from [192.168.1.26] (pv50p00im-dlb-asmtp-mailmevip.me.com [17.56.9.10])
-	by pv50p00im-ztdg10012001.me.com (Postfix) with ESMTPSA id 18DBBA006A;
-	Thu,  5 Dec 2024 13:46:08 +0000 (UTC)
-Message-ID: <e5238f8d-853a-4822-a384-0a3c929ed591@icloud.com>
-Date: Thu, 5 Dec 2024 21:46:05 +0800
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="anhxgR45"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 4cf7c95c;
+	Thu, 5 Dec 2024 18:36:28 +0800 (GMT+08:00)
+From: Kever Yang <kever.yang@rock-chips.com>
+To: heiko@sntech.de
+Cc: linux-rockchip@lists.infradead.org,
+	Kever Yang <kever.yang@rock-chips.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Simon Xue <xxm@rock-chips.com>,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH 1/6] dt-bindings: PCI: dwc: rockchip: Add rk3576 support
+Date: Thu,  5 Dec 2024 18:36:18 +0800
+Message-Id: <20241205103623.878181-2-kever.yang@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241205103623.878181-1-kever.yang@rock-chips.com>
+References: <20241205103623.878181-1-kever.yang@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] PCI: endpoint: fix bug for an API and simplify
- another API
-To: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Zijun Hu <quic_zijuhu@quicinc.com>, stable@vger.kernel.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Joao Pinto <jpinto@synopsys.com>
-References: <20241102-pci-epc-core_fix-v2-0-0785f8435be5@quicinc.com>
-Content-Language: en-US
-From: Zijun Hu <zijun_hu@icloud.com>
-In-Reply-To: <20241102-pci-epc-core_fix-v2-0-0785f8435be5@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: 4dqKGGNDq6xcwg8KrtzYKbxFXSzgBzok
-X-Proofpoint-ORIG-GUID: 4dqKGGNDq6xcwg8KrtzYKbxFXSzgBzok
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.272,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2024-12-05_11,2024-12-05_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 suspectscore=0
- malwarescore=0 mlxlogscore=749 mlxscore=0 bulkscore=0 spamscore=0
- adultscore=0 clxscore=1015 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2308100000 definitions=main-2412050099
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0hIGVZDGB4eGU5DThlCTB1WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
+	NVSktLVUpCS0tZBg++
+X-HM-Tid: 0a9396647c2a03afkunm4cf7c95c
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MRw6Qjo*KzIYMw0JHyMVCxgs
+	Qg0aCRxVSlVKTEhISEJPQkNCT05MVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
+	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFMTEs3Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=anhxgR45JOFGpKYa1kzJdcLz3u+TUdMFwNCxoA87+DdTw61fMspve3iNy1DjZNhpoUElFzHHaz82zHL/Z7AnKOKMpXZMAl5h37qDmi3Tli1Onw+YUAyoEGzB16SWA9y9CMV9CqPGeRf/zwOMOWkE2rdkuziEzOT1ib+2lh0C/Ic=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=HjmVk9gKLzWJyLcAvjRtiVX8Ir6tmlI7JsF/W31nlu4=;
+	h=date:mime-version:subject:message-id:from;
 
-On 2024/11/2 20:20, Zijun Hu wrote:
-> This patch series is to fix bug for API devm_pci_epc_destroy()
-> and simplify API pci_epc_get().
-> 
-> Signed-off-by: Zijun Hu <quic_zijuhu@quicinc.com>
-> ---
-> Changes in v2:
-> - Correct tile and commit message for patch 1/2.
-> - Add one more patch 2/2 to simplify API pci_epc_get().
-> - Link to v1: https://lore.kernel.org/r/20241020-pci-epc-core_fix-v1-1-3899705e3537@quicinc.com
-> 
-> ---
-> Zijun Hu (2):
->       PCI: endpoint: Fix that API devm_pci_epc_destroy() fails to destroy the EPC device
->       PCI: endpoint: Simplify API pci_epc_get() implementation
-> 
+rk3576 is using the same controller as rk3568.
 
-Hi Krzysztof,
+Signed-off-by: Kever Yang <kever.yang@rock-chips.com>
+---
 
-could you code review for this patch series ?
+ Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
->  drivers/pci/endpoint/pci-epc-core.c | 23 +++++++----------------
->  1 file changed, 7 insertions(+), 16 deletions(-)
-> ---
-> base-commit: 11066801dd4b7c4d75fce65c812723a80c1481ae
-> change-id: 20241020-pci-epc-core_fix-a92512fa9d19
-> 
-> Best regards,
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+index 550d8a684af3..5328ccad7130 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -26,6 +26,7 @@ properties:
+       - const: rockchip,rk3568-pcie
+       - items:
+           - enum:
++              - rockchip,rk3576-pcie
+               - rockchip,rk3588-pcie
+           - const: rockchip,rk3568-pcie
+ 
+-- 
+2.25.1
 
