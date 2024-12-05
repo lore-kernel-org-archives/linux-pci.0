@@ -1,218 +1,157 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3001CCEEC
-	for <linux-pci@vger.kernel.org>; Thu,  5 Dec 2024 22:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B639C1CDA15;
+	Thu,  5 Dec 2024 23:29:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733437461; cv=none; b=ayCh+m7tiMcnlyr6NVHczAFIMSfoPelCoXHjVGOMZol89nBPNR3/5jTYzp86SjAyhU1aPznjjuWMGvNBR8bcd5f0H6YKXsCRhRn1TwVjI2GBdzayhA5B7J0A4PtO0FqETLKU2Wn/fQ5S/LM7MvnenhylnZRkvG5wwKraaUurztY=
+	t=1733441343; cv=none; b=EuqJFU+d4AOA51KdVcBLMW4a5WmUD0q7dc80/7DAKMyEyoVIfO7KwtjoNF/Zdw1XPS/QgQytlSbDdk2mHZr5UYzkD3CDlr7siAWhRNrKy6NmoLQEmpb48qzEPkbMv8NSRBlZdojcvZXDYObJDcXt66wp5X2aAcAbCV+x3XGYUjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733437461; c=relaxed/simple;
-	bh=gQOPxSvG6K0KKylaZFce0IsL6P4x72QlIrlyr/E/AtA=;
-	h=Subject:From:To:Cc:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VtQwjs9lb91JH1JEI0z4+h+ijFpYTMqHoFFX1EsUuxtrAevWG6j76NirE9DwGCBz+Q09b2kr0vVlwfueOTt+X0YQNSmriQS+mBKyxWig+m79Tp89ic6F34H6PRxw/a5dSgBgOM8u6G62NeHM+o250epBpnRA+0Dq8KvL3rdKfpo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZUg8qA5k; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1733441343; c=relaxed/simple;
+	bh=+bqKJcKuzym60bZGjQJ4GJHjOSqCprR+fLaTkzPT5Ew=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=FqUHBHza5gOinLnTEM/I4ppUfSUIK6KT6dqiQgAE5zJxsMastOYYVMnlNtZ2pGcmKSkWZxqy34BsQ8mDRc+7kuEpVJrP47Qf8rc//caspnM3DW/FrDzafHG81MVSbjRftABvhzpmXe9Rw4O0ffouVlYLbdw26bzTkxfV5zU6DdM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=deFtp5ye; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZUg8qA5k"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1733437460; x=1764973460;
-  h=subject:from:to:cc:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=gQOPxSvG6K0KKylaZFce0IsL6P4x72QlIrlyr/E/AtA=;
-  b=ZUg8qA5kJAgEK4GL3FD3NsG+HI7MdtRUbTU8beKfCr73w0rLg5Hg2RkE
-   fHLsKr8yyfuqfSMf7iOQpnKvZ+5Oo4MQaXXyhXojWKkNLHoumoBg/Oj96
-   R9DvZQCjazRKtbNsj4pdpeVf2XAF/d05lQ7VXfn4Iop+ngE1CPJ1kZMFc
-   RI8OFdLn/9HjUDTrq402i3mPA36f0jGWB5Jkgk3HE9504vOdT289qQ4ST
-   OBRXNZUPJJMhukowFor7b45IIrmZ5IN/TuUi5jX+6iw3mZmIMBtZTEIxP
-   8W6wKc7OGyqE29RuMDRqaXF11kI5QzOIYRebwyJlWGR6QLXBZs2Uoh01p
-   A==;
-X-CSE-ConnectionGUID: zyvA6taGQeyfz/4JnMdRjg==
-X-CSE-MsgGUID: PWWZCo1+RXadTIANZVgCng==
-X-IronPort-AV: E=McAfee;i="6700,10204,11277"; a="44802885"
-X-IronPort-AV: E=Sophos;i="6.12,211,1728975600"; 
-   d="scan'208";a="44802885"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2024 14:24:20 -0800
-X-CSE-ConnectionGUID: plCRWCV5RVSWYRLX6YFPQQ==
-X-CSE-MsgGUID: cx9p9UcfTZK2EePkk5h3ZA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,211,1728975600"; 
-   d="scan'208";a="99301902"
-Received: from kcaccard-desk.amr.corp.intel.com (HELO dwillia2-xfh.jf.intel.com) ([10.125.108.178])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2024 14:24:20 -0800
-Subject: [PATCH 11/11] samples/devsec: Add sample IDE establishment
-From: Dan Williams <dan.j.williams@intel.com>
-To: linux-coco@lists.linux.dev
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
- Samuel Ortiz <sameo@rivosinc.com>, Alexey Kardashevskiy <aik@amd.com>,
- Xu Yilun <yilun.xu@linux.intel.com>, linux-pci@vger.kernel.org,
- gregkh@linuxfoundation.org
-Date: Thu, 05 Dec 2024 14:24:19 -0800
-Message-ID: <173343745958.1074769.12896997365766327404.stgit@dwillia2-xfh.jf.intel.com>
-In-Reply-To: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
-References: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
-User-Agent: StGit/0.18-3-g996c
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="deFtp5ye"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 113D2C4CED1;
+	Thu,  5 Dec 2024 23:29:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733441343;
+	bh=+bqKJcKuzym60bZGjQJ4GJHjOSqCprR+fLaTkzPT5Ew=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=deFtp5yecINLqt7hqACqQZa9xtYMkfvZ3pYK9207V2ZF5/fe01hdz8xJoILkxKsmg
+	 ot4TK+2A2p464xs/eMmyVle+Yq3PlX9Cup71VwZdzSFJ16+SDADdexq2dCK1tJckbc
+	 tI+alEjKL9qFJmwOBaa1TtSeF8CTgxLAe1gZvo9vJ5ULyDqI9TAjlicQJlU1tWfJ+m
+	 1Uoj5QSBDEzWRnwZmnoM0oGbRN/owKjCrlVJjahrRUDtprmIlTY1bzjGykqyTaKbIl
+	 hKjtEBnOve0/h+w05KpIWRq/cEr0p0jdTLpG2bVuU3hUv52rYnrByxGAosDpoFPWfT
+	 LYDR4dPqTqMxg==
+Date: Thu, 5 Dec 2024 17:29:00 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: kbusch@kernel.org, axboe@kernel.dk, hch@lst.de, sagi@grimberg.me,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, andersson@kernel.org,
+	konradybcio@kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH] nvme-pci: Shutdown the device if D3Cold is allowed by
+ the user
+Message-ID: <20241205232900.GA3072557@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241123090113.semecglxaqjvlmzp@thinkpad>
 
-Exercise common setup and teardown flows for a sample platform TSM
-driver that implements the TSM 'connect' and 'disconnect' flows.
+On Sat, Nov 23, 2024 at 02:31:13PM +0530, Manivannan Sadhasivam wrote:
+> On Fri, Nov 22, 2024 at 04:20:50PM -0600, Bjorn Helgaas wrote:
+> > On Mon, Nov 18, 2024 at 01:53:44PM +0530, Manivannan Sadhasivam wrote:
+> > > PCI core allows users to configure the D3Cold state for each PCI
+> > > device through the sysfs attribute
+> > > '/sys/bus/pci/devices/.../d3cold_allowed'. This attribute sets
+> > > the 'pci_dev:d3cold_allowed' flag and could be used by users to
+> > > allow/disallow the PCI devices to enter D3Cold during system
+> > > suspend.
+> > >
+> > > So make use of this flag in the NVMe driver to shutdown the NVMe
+> > > device during system suspend if the user has allowed D3Cold for
+> > > the device.  Existing checks in the NVMe driver decide whether
+> > > to shut down the device (based on platform/device limitations),
+> > > so use this flag as the last resort to keep the existing
+> > > behavior.
+> > > 
+> > > The default behavior of the 'pci_dev:d3cold_allowed' flag is to
+> > > allow D3Cold and the users can disallow it through sysfs if they
+> > > want.
+> > 
+> > What problem does this solve?  I guess there must be a case where
+> > suspend leaves NVMe in a higher power state than you want?
+> 
+> Yeah, this is the case for all systems that doesn't fit into the
+> existing checks in the NVMe suspend path:
+> 
+> 1. ACPI based platforms
+> 2. Controller doesn't support NPSS (hardware issue/limitation)
+> 3. ASPM not enabled
+> 4. Devices/systems setting NVME_QUIRK_SIMPLE_SUSPEND flag
+> 
+> In my case, all the Qualcomm SoCs using Devicetree doesn't fall into
+> the above checks. Hence, they were not fully powered down during
+> system suspend and always in low power state. This means, I cannot
+> achieve 'CX power collapse', a Qualcomm specific SoC powered down
+> state that consumes just enough power to wake up the SoC. Since the
+> controller driver keeps the PCI resource vote because of NVMe, the
+> firmware in the Qualcomm SoCs cannot put the SoC into above
+> mentioned low power state.
 
-This is both a template for platform specific implementations and a test
-case for the shared infrastructure.
+IIUC nvme_suspend() has two paths:
 
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Lukas Wunner <lukas@wunner.de>
-Cc: Samuel Ortiz <sameo@rivosinc.com>
-Cc: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
-Signed-off-by: Dan Williams <dan.j.williams@intel.com>
----
- samples/devsec/tsm.c |   85 ++++++++++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 82 insertions(+), 3 deletions(-)
+  - Do nvme_disable_prepare_reset() without calling pci_save_state(),
+    so the PCI core chooses and sets the low-power state.
 
-diff --git a/samples/devsec/tsm.c b/samples/devsec/tsm.c
-index d446ab8879d8..a8894d08f323 100644
---- a/samples/devsec/tsm.c
-+++ b/samples/devsec/tsm.c
-@@ -4,11 +4,14 @@
- #define dev_fmt(fmt) "devsec: " fmt
- #include <linux/platform_device.h>
- #include <linux/pci-tsm.h>
-+#include <linux/pci-ide.h>
- #include <linux/module.h>
- #include <linux/pci.h>
- #include <linux/tsm.h>
- #include "devsec.h"
- 
-+#define DEVSEC_NR_IDE_STREAMS 4
-+
- struct devsec_dsm {
- 	struct pci_dsm pci;
- };
-@@ -42,13 +45,60 @@ static void devsec_tsm_pci_remove(struct pci_dsm *dsm)
- 	kfree(devsec_dsm);
- }
- 
-+/* protected by tsm_ops lock */
-+static DECLARE_BITMAP(devsec_stream_ids, DEVSEC_NR_IDE_STREAMS);
-+static struct devsec_stream_info {
-+	struct pci_dev *pdev;
-+	struct pci_ide ide;
-+} devsec_streams[DEVSEC_NR_IDE_STREAMS];
-+
- static int devsec_tsm_connect(struct pci_dev *pdev)
- {
--	return -ENXIO;
-+	struct pci_ide *ide;
-+	int rc, stream_id;
-+
-+	stream_id =
-+		find_first_zero_bit(devsec_stream_ids, DEVSEC_NR_IDE_STREAMS);
-+	if (stream_id == DEVSEC_NR_IDE_STREAMS)
-+		return -EBUSY;
-+	set_bit(stream_id, devsec_stream_ids);
-+	ide = &devsec_streams[stream_id].ide;
-+	pci_ide_stream_probe(pdev, ide);
-+
-+	ide->stream_id = stream_id;
-+	rc = pci_ide_stream_setup(pdev, ide, PCI_IDE_SETUP_ROOT_PORT);
-+	if (rc)
-+		return rc;
-+	rc = tsm_register_ide_stream(pdev, ide);
-+	if (rc)
-+		goto err;
-+
-+	devsec_streams[stream_id].pdev = pdev;
-+	pci_ide_enable_stream(pdev, ide);
-+	return 0;
-+err:
-+	pci_ide_stream_teardown(pdev, ide, PCI_IDE_SETUP_ROOT_PORT);
-+	return rc;
- }
- 
- static void devsec_tsm_disconnect(struct pci_dev *pdev)
- {
-+	struct pci_ide *ide;
-+	int i;
-+
-+	for_each_set_bit(i, devsec_stream_ids, DEVSEC_NR_IDE_STREAMS)
-+		if (devsec_streams[i].pdev == pdev)
-+			break;
-+
-+	if (i >= DEVSEC_NR_IDE_STREAMS)
-+		return;
-+
-+	ide = &devsec_streams[i].ide;
-+	pci_ide_disable_stream(pdev, ide);
-+	tsm_unregister_ide_stream(ide);
-+	pci_ide_stream_teardown(pdev, ide, PCI_IDE_SETUP_ROOT_PORT);
-+	devsec_streams[i].pdev = NULL;
-+	clear_bit(i, devsec_stream_ids);
- }
- 
- static const struct pci_tsm_ops devsec_pci_ops = {
-@@ -63,16 +113,44 @@ static void devsec_tsm_remove(void *tsm)
- 	tsm_unregister(tsm);
- }
- 
-+static void set_nr_ide_streams(int nr)
-+{
-+	struct pci_dev *pdev = NULL;
-+
-+	for_each_pci_dev(pdev) {
-+		struct pci_host_bridge *hb;
-+
-+		if (pdev->sysdata != devsec_sysdata)
-+			continue;
-+		hb = pci_find_host_bridge(pdev->bus);
-+		if (hb->nr_ide_streams >= 0)
-+			continue;
-+		pci_set_nr_ide_streams(hb, nr);
-+	}
-+}
-+
-+static void devsec_tsm_ide_teardown(void *data)
-+{
-+	set_nr_ide_streams(-1);
-+}
-+
- static int devsec_tsm_probe(struct platform_device *pdev)
- {
- 	struct tsm_subsys *tsm;
-+	int rc;
- 
- 	tsm = tsm_register(&pdev->dev, NULL, &devsec_pci_ops);
- 	if (IS_ERR(tsm))
- 		return PTR_ERR(tsm);
- 
--	return devm_add_action_or_reset(&pdev->dev, devsec_tsm_remove,
--					tsm);
-+	rc = devm_add_action_or_reset(&pdev->dev, devsec_tsm_remove, tsm);
-+	if (rc)
-+		return rc;
-+
-+	set_nr_ide_streams(DEVSEC_NR_IDE_STREAMS);
-+
-+	return devm_add_action_or_reset(&pdev->dev, devsec_tsm_ide_teardown,
-+					NULL);
- }
- 
- static struct platform_driver devsec_tsm_driver = {
-@@ -109,5 +187,6 @@ static void __exit devsec_tsm_exit(void)
- }
- module_exit(devsec_tsm_exit);
- 
-+MODULE_IMPORT_NS(PCI_IDE);
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Device Security Sample Infrastructure: Platform TSM Driver");
+  - Put the device in an NVMe-specific low-power state and call
+    pci_save_state(), which prevents the PCI core from putting the
+    device in a low-power state.
 
+    (The PCI core part is in pci_pm_suspend_noirq(),
+    pci_pm_poweroff_noirq(), pci_pm_runtime_suspend())
+
+And I guess you want the first path for basically all systems?  The
+only systems that would use the NVMe-specific path are those where:
+
+  - !pm_suspend_via_firmware() (not an ACPI system), AND
+
+  - ctrl->npss (device supports NVMe power states), AND
+
+  - pcie_aspm_enabled(), AND
+
+  - !NVME_QUIRK_SIMPLE_SUSPEND (it's not something with a weird
+    quirk), AND
+
+  - !pdev->d3cold_allowed (user has cleared it via sysfs)
+
+This frankly seems almost unintelligible to me, so I'm glad I'm not
+responsible for nvme :)
+
+> > I'm not sure the use of pdev->d3cold_allowed here really expresses
+> > your underlying intent.  It suggests that you're really hoping for
+> > D3cold, but that's only a possibility if firmware supports it, and
+> > we have no visibility into that here.
+> 
+> I'm not relying on firmware to do anything here. If firmware has to
+> decide the suspend state, it should already satisfy the
+> pm_suspend_via_firmware() check in nvme_suspend(). ...
+
+I'm confused about this because we want to use PCI core power
+management, which chooses the new state with pci_target_state(),
+which looks like it will choose D3hot unless we're on an ACPI system
+and acpi_pci_choose_state() returns D3cold.
+
+But your system is not an ACPI system, so we should get D3hot, but yet
+you decide based on D3*cold* being allowed?
+
+> Here, the controller driver takes care of putting the device into
+> D3Cold.  Currently, the controller drivers cannot do it (on DT
+> platforms) because of NVMe driver's behavior.
+
+I'm missing the connection to the controller driver (I assume you mean
+qcom-pcie?).  Maybe it's that having the NVMe device in a PCI
+low-power state allows qcom_pcie_suspend_noirq() to reduce the ICC
+bandwidth vote and do other power-saving things?  And it can't do
+those things if we're using the NVMe low-power state because that
+state is not visible to qcom-pcie?
+
+> We did attempt to solve this problem in multiple ways, but the
+> lesson learned was, kernel cannot decide the power mode without help
+> from userspace. That's the reason I wanted to make use of this
+> 'd3cold_allowed' sysfs attribute to allow userspace to override the
+> D3Cold if it wants based on platform requirement.
+
+It seems sub-optimal that this only works how you want if the user
+intervenes.
+
+Bjorn
