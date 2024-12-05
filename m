@@ -1,47 +1,65 @@
-Received: from mail-m127218.xmail.ntesmail.com (mail-m127218.xmail.ntesmail.com [115.236.127.218])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D4A61DD87C;
-	Thu,  5 Dec 2024 14:05:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D6217579;
+	Thu,  5 Dec 2024 14:15:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733407544; cv=none; b=nc5DSLre+FJsbHQlqr5vAf6vwo+NuqRl4y72T5Nb55T5thh7+Mqvh4NnLm0+1ux56TY2oMCM7C0DerU+oCbowLnKN3qvhi7pBz8tuTqtwMA8pqJRJLE9TC+/EDUCd9t+8dw9FUG30BPtkw0uSAP/eZ5WjfOjWb7lCgkqouAH9fo=
+	t=1733408147; cv=none; b=KtFK2WeDh1p8jS82G4sc+xBRFBqYx12Kjlt+GcWd8K7PzxriOM8pRkKoVDeyMxvfYKbByqSWToeJqCUdgXFyHZNvoCQwrddtnH6bWwdjLwOnc3JqjeAfgGoCyf0O9LfgoV8cJT6fZfr1BIU0RoVXGtgQwUy2qxVkWiz3sld3yi0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733407544; c=relaxed/simple;
-	bh=ztKqQuU4KCjQJjdRSBdTN6sXF9Y/8SDDL4APxpqvSwY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Q0oRhNjhzLg+QKMUoTj+shQjqO4oWH8RxvNRu3cEb7UKWiXFXMjjgIIilnER+iOh9CSrG5heURkeHqL/jLVD+1xQz1MUvKhtlRZl3Zfy82+lI5TMK7xX3VlPkxQBBBt6dGOsEbkNsbGb8FgTy7bxdyrbVmuEfxvtEHzKGU/3eyI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=anhxgR45; arc=none smtp.client-ip=115.236.127.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1733408147; c=relaxed/simple;
+	bh=Dy0AOKEaGvg0o4zSFV8ZoWLPf9s5L2YbkQ6bOHtUYfs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MA9EbUCFewDVzK8u9CGKrsaQru/qvhtbB9yUa4e0wk7WNF0Y1bYaBSu+jHpuVoCnV1tHMQts3Oswv//d/C6u7ltIaiD3ujn8Ih+z1KuPl2nrfYzSCm9BRQYLOku298Yr2jveamjqNhB1wvT8H4Xo8V7mwoRG0RcwFvLrd4p3wYA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cChdmXGd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="anhxgR45"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 4cf7c95c;
-	Thu, 5 Dec 2024 18:36:28 +0800 (GMT+08:00)
-From: Kever Yang <kever.yang@rock-chips.com>
-To: heiko@sntech.de
-Cc: linux-rockchip@lists.infradead.org,
-	Kever Yang <kever.yang@rock-chips.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Rob Herring <robh@kernel.org>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Simon Xue <xxm@rock-chips.com>,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cChdmXGd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4294BC4CED1;
+	Thu,  5 Dec 2024 14:15:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733408147;
+	bh=Dy0AOKEaGvg0o4zSFV8ZoWLPf9s5L2YbkQ6bOHtUYfs=;
+	h=From:To:Cc:Subject:Date:From;
+	b=cChdmXGd/E4euD4cGLuKgifiYGyiJ98HpjRMbH/6EYL2sgYUhB93C/2UDMWpQdDbO
+	 0Xy2SM+AtKHCCYwVIkpZOv7ojF1Y5ltMz4Yn7zmgrbVA15w5OY2JpwVst2TnuUEDB2
+	 xPXv+IhELnlHmSSAjxfl+H3o/4UieCb4K4266EkSRng++LSbnGzWoGuTbvvb/LTmVs
+	 fTurUYoRfdXPw1j8oTGdZAvWvndslqOZXdETctNk7ILA7fUKkbIVB/eg2UgKGgIrzp
+	 EgB4NvJlGBM4NPxNXWmiXAQrGSjB7C0nwEy1f42qM5mS/Ci8A8GHaLK+sdcnuNsSxn
+	 lFm1LZORdn/Og==
+From: Danilo Krummrich <dakr@kernel.org>
+To: gregkh@linuxfoundation.org,
+	rafael@kernel.org,
+	bhelgaas@google.com,
+	ojeda@kernel.org,
+	alex.gaynor@gmail.com,
+	boqun.feng@gmail.com,
+	gary@garyguo.net,
+	bjorn3_gh@protonmail.com,
+	benno.lossin@proton.me,
+	tmgross@umich.edu,
+	a.hindborg@samsung.com,
+	aliceryhl@google.com,
+	airlied@gmail.com,
+	fujita.tomonori@gmail.com,
+	lina@asahilina.net,
+	pstanner@redhat.com,
+	ajanulgu@redhat.com,
+	lyude@redhat.com,
+	robh@kernel.org,
+	daniel.almeida@collabora.com,
+	saravanak@google.com,
+	dirk.behme@de.bosch.com,
+	j@jannau.net,
+	fabien.parent@linaro.org,
+	chrisi.schrefl@gmail.com
+Cc: rust-for-linux@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH 1/6] dt-bindings: PCI: dwc: rockchip: Add rk3576 support
-Date: Thu,  5 Dec 2024 18:36:18 +0800
-Message-Id: <20241205103623.878181-2-kever.yang@rock-chips.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20241205103623.878181-1-kever.yang@rock-chips.com>
-References: <20241205103623.878181-1-kever.yang@rock-chips.com>
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Danilo Krummrich <dakr@kernel.org>
+Subject: [PATCH v4 00/13] Device / Driver PCI / Platform Rust abstractions
+Date: Thu,  5 Dec 2024 15:14:31 +0100
+Message-ID: <20241205141533.111830-1-dakr@kernel.org>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,40 +67,203 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0hIGVZDGB4eGU5DThlCTB1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a9396647c2a03afkunm4cf7c95c
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MRw6Qjo*KzIYMw0JHyMVCxgs
-	Qg0aCRxVSlVKTEhISEJPQkNCT05MVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
-	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFMTEs3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=anhxgR45JOFGpKYa1kzJdcLz3u+TUdMFwNCxoA87+DdTw61fMspve3iNy1DjZNhpoUElFzHHaz82zHL/Z7AnKOKMpXZMAl5h37qDmi3Tli1Onw+YUAyoEGzB16SWA9y9CMV9CqPGeRf/zwOMOWkE2rdkuziEzOT1ib+2lh0C/Ic=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=HjmVk9gKLzWJyLcAvjRtiVX8Ir6tmlI7JsF/W31nlu4=;
-	h=date:mime-version:subject:message-id:from;
 
-rk3576 is using the same controller as rk3568.
+This patch series implements the necessary Rust abstractions to implement
+device drivers in Rust.
 
-Signed-off-by: Kever Yang <kever.yang@rock-chips.com>
----
+This includes some basic generalizations for driver registration, handling of ID
+tables, MMIO operations and device resource handling.
 
- Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml | 1 +
- 1 file changed, 1 insertion(+)
+Those generalizations are used to implement device driver support for two
+busses, the PCI and platform bus (with OF IDs) in order to provide some evidence
+that the generalizations work as intended.
 
-diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-index 550d8a684af3..5328ccad7130 100644
---- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
-@@ -26,6 +26,7 @@ properties:
-       - const: rockchip,rk3568-pcie
-       - items:
-           - enum:
-+              - rockchip,rk3576-pcie
-               - rockchip,rk3588-pcie
-           - const: rockchip,rk3568-pcie
- 
+The patch series also includes two patches adding two driver samples, one PCI
+driver and one platform driver.
+
+The PCI bits are motivated by the Nova driver project [1], but are used by at
+least one more OOT driver (rnvme [2]).
+
+The platform bits, besides adding some more evidence to the base abstractions,
+are required by a few more OOT drivers aiming at going upstream, i.e. rvkms [3],
+cpufreq-dt [4], asahi [5] and the i2c work from Fabien [6].
+
+The patches of this series can also be [7], [8] and [9].
+
+Changes in v4:
+==============
+- Revocable
+  - convert `Revocable::data` to `Opaque`
+  - introduce `revoke_nosync`, which does not wait for an RCU grace period
+  - fix minor typo
+
+- Device ID
+  - fix ID table export name to always be unique
+  - remove `#![allow(stable_features)]`
+  - move `#![allow(const_refs_to_cell)]` to the "stable in 1.83" list
+
+- I/O
+  - split `Io<SIZE>` in `IoRaw<SIZE>` and `Io<SIZE>`
+  - add rust helper for ioremap() and iounmap() (needed by doctests)
+
+- Devres
+  - optimze `drop` by using `revoke_nosync` (we're guaranteed there are no more
+    concurrent users, hence no need to wait for a full grace period)
+
+- OF
+  - rename "Open Firmware" -> "Device Tree / Open Firmware" (Rob)
+  - remove unused C header reference
+  - add TODO comment to loop in `DeviceId::new`
+  - remove `DeviceId::compatible`; was only used in sample code
+  - add missing `#[repr(transparent)]`
+  - use #[cfg(CONFIG_OF)] for the relevant functions
+
+- PCI
+  - let Rust helper for pci_resource_len() return resource_size_t
+
+- PCI Sample
+  - remove unnecessary `from_le`
+
+- Platform
+  - fix example compatible string
+  - add example for `platform::Driver`
+  - rename `ID_TABLE` to `OF_ID_TABLE`
+  - don't allow public use of `of_match_table`; convert to `of_id_info` to
+    retrieve the `of::DeviceId` to gather the corresponding `IdInfo`
+  - remove wrong example reference in the documentation of `platform::Driver`
+  - remove `as_dev`, as we already implement `AsRef` for `platform::Device`
+
+- Platform Sample
+  - fix compatible string; add corresponding entry to drivers/of/unittest-data/tests-platform.dtsi
+  - remove usage of `of_match_table`
+
+- MISC
+  - fix a few spelling mistakes
+  - rebase onto rust-next (v6.13-rc1)
+
+Changes in v3:
+==============
+- add commits for `Opaque::try_ffi_init` and `InPlaceModule`
+- rename `DriverOps` to `RegistrationOps`
+- rework device ID abstractions to get rid of almost all macro magic (thanks to
+  Gary Guo for working this out!)
+  - this is possible due to recently stabilized language features
+- add modpost alias generation for device ID tables
+  - unfortunately, this is the part that still requires some macro magic in the
+    device ID abstractions
+- PCI
+  - represent the driver private data with the driver specific `Driver` instance
+    and bind it's lifetime to the time of the driver being bound to a device
+    - this allows us to handle class / subsystem registrations in a cleaner way
+  - get rid of `Driver::remove`
+    - Rust drivers should bind cleanup code to the `Drop` implementation of the
+      corresponding structure instead and put it into their driver structure for
+      automatic cleanup
+  - add a sample PCI driver
+- add abstractions for `struct of_device_id`
+- add abstractions for the platform bus, including a sample driver
+- update the MAINTAINERS file accordingly
+  - currently this turns out a bit messy, but it should become better once the
+    build system supports a treewide distribution of the kernel crate
+  - I didn't add myself as maintainer, but (if requested) I'm willing to do so
+    and help with maintenance
+
+Changes in v2:
+==============
+- statically initialize driver structures (Greg)
+- move base device ID abstractions to a separate source file (Greg)
+- remove `DeviceRemoval` trait in favor of using a `Devres` callback to
+  unregister drivers
+- remove `device::Data`, we don't need this abstraction anymore now that we
+  `Devres` to revoke resources and registrations
+- pass the module name to `Module::init` and `InPlaceModule::init` in a separate
+  patch
+- rework of `Io` including compile time boundary checks (Miguel, Wedson)
+- adjust PCI abstractions accordingly and implement a `module_pci_driver!` macro
+- rework `pci::Bar` to support a const SIZE
+- increase the total amount of Documentation, rephrase some safety comments and
+  commit messages for less ambiguity
+- fix compilation issues with some documentation examples
+
+[1] https://gitlab.freedesktop.org/drm/nova/-/tree/nova-next
+[2] https://github.com/metaspace/linux/tree/rnvme
+[3] https://lore.kernel.org/all/20240930233257.1189730-1-lyude@redhat.com/
+[4] https://git.kernel.org/pub/scm/linux/kernel/git/vireshk/linux.git/log/?h=rust/cpufreq-dt
+[5] https://github.com/AsahiLinux/linux
+[6] https://github.com/Fabo/linux/tree/fparent/rust-i2c
+[7] https://github.com/Rust-for-Linux/linux/tree/staging/rust-device
+[8] https://github.com/Rust-for-Linux/linux/tree/staging/rust-pci
+[9] https://github.com/Rust-for-Linux/linux/tree/staging/dev
+
+
+Danilo Krummrich (11):
+  rust: pass module name to `Module::init`
+  rust: implement generic driver registration
+  rust: implement `IdArray`, `IdTable` and `RawDeviceId`
+  rust: add `io::{Io, IoRaw}` base types
+  rust: add devres abstraction
+  rust: pci: add basic PCI device / driver abstractions
+  rust: pci: implement I/O mappable `pci::Bar`
+  samples: rust: add Rust PCI sample driver
+  rust: of: add `of::DeviceId` abstraction
+  rust: platform: add basic platform device / driver abstractions
+  samples: rust: add Rust platform sample driver
+
+Wedson Almeida Filho (2):
+  rust: add rcu abstraction
+  rust: add `Revocable` type
+
+ MAINTAINERS                                  |   8 +
+ drivers/block/rnull.rs                       |   2 +-
+ drivers/of/unittest-data/tests-platform.dtsi |   5 +
+ rust/bindings/bindings_helper.h              |   3 +
+ rust/helpers/device.c                        |  10 +
+ rust/helpers/helpers.c                       |   5 +
+ rust/helpers/io.c                            | 101 +++++
+ rust/helpers/pci.c                           |  18 +
+ rust/helpers/platform.c                      |  13 +
+ rust/helpers/rcu.c                           |  13 +
+ rust/kernel/device_id.rs                     | 166 +++++++
+ rust/kernel/devres.rs                        | 179 ++++++++
+ rust/kernel/driver.rs                        | 120 ++++++
+ rust/kernel/io.rs                            | 260 +++++++++++
+ rust/kernel/lib.rs                           |  28 +-
+ rust/kernel/net/phy.rs                       |   2 +-
+ rust/kernel/of.rs                            |  57 +++
+ rust/kernel/pci.rs                           | 429 +++++++++++++++++++
+ rust/kernel/platform.rs                      | 222 ++++++++++
+ rust/kernel/revocable.rs                     | 235 ++++++++++
+ rust/kernel/sync.rs                          |   1 +
+ rust/kernel/sync/lock/global.rs              |   6 +-
+ rust/kernel/sync/rcu.rs                      |  47 ++
+ rust/macros/lib.rs                           |   6 +-
+ rust/macros/module.rs                        |   7 +-
+ samples/rust/Kconfig                         |  21 +
+ samples/rust/Makefile                        |   2 +
+ samples/rust/rust_driver_pci.rs              | 109 +++++
+ samples/rust/rust_driver_platform.rs         |  49 +++
+ samples/rust/rust_minimal.rs                 |   2 +-
+ samples/rust/rust_print_main.rs              |   2 +-
+ 31 files changed, 2114 insertions(+), 14 deletions(-)
+ create mode 100644 rust/helpers/device.c
+ create mode 100644 rust/helpers/io.c
+ create mode 100644 rust/helpers/pci.c
+ create mode 100644 rust/helpers/platform.c
+ create mode 100644 rust/helpers/rcu.c
+ create mode 100644 rust/kernel/device_id.rs
+ create mode 100644 rust/kernel/devres.rs
+ create mode 100644 rust/kernel/driver.rs
+ create mode 100644 rust/kernel/io.rs
+ create mode 100644 rust/kernel/of.rs
+ create mode 100644 rust/kernel/pci.rs
+ create mode 100644 rust/kernel/platform.rs
+ create mode 100644 rust/kernel/revocable.rs
+ create mode 100644 rust/kernel/sync/rcu.rs
+ create mode 100644 samples/rust/rust_driver_pci.rs
+ create mode 100644 samples/rust/rust_driver_platform.rs
+
+
+base-commit: 40384c840ea1944d7c5a392e8975ed088ecf0b37
 -- 
-2.25.1
+2.47.0
 
