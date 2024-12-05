@@ -1,108 +1,104 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40F834C9A
-	for <linux-pci@vger.kernel.org>; Fri,  6 Dec 2024 00:44:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BC071EEF9
+	for <linux-pci@vger.kernel.org>; Fri,  6 Dec 2024 00:48:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733445863; cv=none; b=cexeCwJA/sNWWXMcfkeLtRvUoOjbbx+bdT4VLaWw6mYVRk8pjoSZF+2dBs0h/8gMGyki9TcS4SpE4HIRi5c/WiRklrUIbtv5jwTz3UwL3GnskhURGlvpxiXnLcyYNgi8tFDDit1Yu3VFRSR41qWXUv4MfNyOKCwhjZc/NLMpSpw=
+	t=1733446134; cv=none; b=ILBFUStPnO8P7fFRgJF3SBw70s6uhtkubaNqnP3g0c4cHlioRWMjIBnuqLYx7XNk1/g4RhAsJ4nBP34xNqvo33XwhYfit26J6jvumFHVTq55UGVAapqpiyf0NLDK2dr4IxHoTOdgFOp6YU+vGelmUVHuMBCviRby9XNlX6aW/Qw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733445863; c=relaxed/simple;
-	bh=Sidk4+WOsBrKg86yCRr3g4nK7EJBgB78VBra7RMrLzc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WbJ43vOeoO2/57UIDgFQWJL4CexleOkk2tQ0uehIF9v8Writf6b/Nozmx4qzUL3P/pagF49UUFH/iOzD9d/IfDip38vQg9ApTbhEiAMRFSs4iBj8uJc1+eIg/Te2OYpGByohvxH023QLHeVVGY1k4+EOqhJfatHGa3dGUu/dhgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cvWFuFIF; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cvWFuFIF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1733445862; x=1764981862;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=Sidk4+WOsBrKg86yCRr3g4nK7EJBgB78VBra7RMrLzc=;
-  b=cvWFuFIF1xzkZPiEPHxuElDnMZYIITn5NO6lGaDoxm2J6cl/L5OAZnXB
-   go9aTLd25ilofdYYQkNK5HFvOIH3zmQKupwqkjZGv4wzG1NI+j3GkCGik
-   Tx78rTUAQVkaSONWYFPqZm5+E0GEmMEqTC3nBCApDWSb7cY5EhWeOuL8r
-   G5pWEn5CWproATe7lv1T/VwRV+nhgPsY8XsPVXEd48AyyuchJ6hruxrpk
-   iGadB3EJLcbPtWZqZNaqIgsH+cIxx4BhPfLiwZq6ZB9XU8rABH23oU2fZ
-   yu0dLOUhsjElAvfmIg1fl9Je02Pp3QNYf4QINbPexIn1ScyXZDI2JvlRT
-   g==;
-X-CSE-ConnectionGUID: xdB3LSvDQpedIW2tw7gxaw==
-X-CSE-MsgGUID: /8sGHrIaT8yZoUeZhWZk6A==
-X-IronPort-AV: E=McAfee;i="6700,10204,11277"; a="44259049"
-X-IronPort-AV: E=Sophos;i="6.12,211,1728975600"; 
-   d="scan'208";a="44259049"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Dec 2024 16:44:22 -0800
-X-CSE-ConnectionGUID: rDXGsGaSSxOrpoN+GxkWww==
-X-CSE-MsgGUID: byBQqlKARMChaF7ZpjPhUw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,211,1728975600"; 
-   d="scan'208";a="99081065"
-Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 05 Dec 2024 16:44:19 -0800
-Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tJMS9-0000Xn-0T;
-	Fri, 06 Dec 2024 00:44:17 +0000
-Date: Fri, 6 Dec 2024 08:43:40 +0800
-From: kernel test robot <lkp@intel.com>
-To: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev
-Cc: oe-kbuild-all@lists.linux.dev, Bjorn Helgaas <helgaas@kernel.org>,
-	Lukas Wunner <lukas@wunner.de>, Samuel Ortiz <sameo@rivosinc.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH 09/11] PCI/IDE: Report available IDE streams
-Message-ID: <202412060857.Kn0HyAFH-lkp@intel.com>
-References: <173343744869.1074769.12345445223792172558.stgit@dwillia2-xfh.jf.intel.com>
+	s=arc-20240116; t=1733446134; c=relaxed/simple;
+	bh=xUDucnHJtKB9qCB0joceE4i7W/dvOy6zqvaUbIKpUbk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Pal/95KE+IGLharLFVtkQlRGmdowwydhjHXFBVe/ZMDFDSpD16zxDqos7N+ECP2n+4YnrZRxx2W9on9ab7oXK1SqXHnbSj5gsrP9CJxw3lqrUMAtTI5L5ojAYSpKfVVKMpfYU04/8QjmfB4THD/ovQZFpzJVyAM91h6srrfAqs4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
+X-ASG-Debug-ID: 1733446123-086e2312d7235b0001-0c9NHn
+Received: from ZXSHMBX3.zhaoxin.com (ZXSHMBX3.zhaoxin.com [10.28.252.165]) by mx1.zhaoxin.com with ESMTP id g5HslGQGTrLcEaNR (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Fri, 06 Dec 2024 08:48:43 +0800 (CST)
+X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.165
+Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX3.zhaoxin.com
+ (10.28.252.165) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Fri, 6 Dec
+ 2024 08:48:42 +0800
+Received: from ZXSHMBX1.zhaoxin.com ([fe80::3066:e339:e3d6:5264]) by
+ ZXSHMBX1.zhaoxin.com ([fe80::3066:e339:e3d6:5264%7]) with mapi id
+ 15.01.2507.039; Fri, 6 Dec 2024 08:48:42 +0800
+X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.165
+Received: from xin.lan (10.32.64.1) by ZXBJMBX03.zhaoxin.com (10.29.252.7)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Thu, 5 Dec
+ 2024 19:40:51 +0800
+From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
+To: <rafael@kernel.org>, <lenb@kernel.org>, <james.morse@arm.com>,
+	<tony.luck@intel.com>, <bp@alien8.de>, <bhelgaas@google.com>,
+	<robert.moore@intel.com>, <avadhut.naik@amd.com>, <yazen.ghannam@amd.com>,
+	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <acpica-devel@lists.linux.dev>
+CC: <CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>,
+	<LeoLiu-oc@zhaoxin.com>
+Subject: [PATCH v4 2/3] PCI: Add AER bits #defines for PCIe to PCI/PCI-X Bridge
+Date: Thu, 5 Dec 2024 19:40:47 +0800
+X-ASG-Orig-Subj: [PATCH v4 2/3] PCI: Add AER bits #defines for PCIe to PCI/PCI-X Bridge
+Message-ID: <20241205114048.60291-3-LeoLiu-oc@zhaoxin.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20241205114048.60291-1-LeoLiu-oc@zhaoxin.com>
+References: <20241205114048.60291-1-LeoLiu-oc@zhaoxin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <173343744869.1074769.12345445223792172558.stgit@dwillia2-xfh.jf.intel.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
+ ZXBJMBX03.zhaoxin.com (10.29.252.7)
+X-Moderation-Data: 12/6/2024 8:48:41 AM
+X-Barracuda-Connect: ZXSHMBX3.zhaoxin.com[10.28.252.165]
+X-Barracuda-Start-Time: 1733446123
+X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
+X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at zhaoxin.com
+X-Barracuda-Scan-Msg-Size: 1196
+X-Barracuda-BRTS-Status: 1
+X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
+X-Barracuda-Spam-Score: -2.02
+X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
+X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.134151
+	Rule breakdown below
+	 pts rule name              description
+	---- ---------------------- --------------------------------------------------
 
-Hi Dan,
+From: LeoLiuoc <LeoLiu-oc@zhaoxin.com>
 
-kernel test robot noticed the following build warnings:
+Define secondary uncorrectable error mask register, secondary
+uncorrectable error severity register and secondary error capabilities and
+control register bits in AER capability for PCIe to PCI/PCI-X Bridge.
+Please refer to PCIe to PCI/PCI-X Bridge Specification r1.0, sec 5.2.3.2,
+5.2.3.3 and 5.2.3.4.
 
-[auto build test WARNING on 40384c840ea1944d7c5a392e8975ed088ecf0b37]
+Signed-off-by: LeoLiuoc <LeoLiu-oc@zhaoxin.com>
+---
+ include/uapi/linux/pci_regs.h | 3 +++
+ 1 file changed, 3 insertions(+)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Dan-Williams/configfs-tsm-Namespace-TSM-report-symbols/20241206-064224
-base:   40384c840ea1944d7c5a392e8975ed088ecf0b37
-patch link:    https://lore.kernel.org/r/173343744869.1074769.12345445223792172558.stgit%40dwillia2-xfh.jf.intel.com
-patch subject: [PATCH 09/11] PCI/IDE: Report available IDE streams
-config: i386-buildonly-randconfig-006 (https://download.01.org/0day-ci/archive/20241206/202412060857.Kn0HyAFH-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241206/202412060857.Kn0HyAFH-lkp@intel.com/reproduce)
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index 1601c7ed5fab..e0581a084fea 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -808,6 +808,9 @@
+ #define  PCI_ERR_ROOT_FATAL_RCV		0x00000040 /* Fatal Received */
+ #define  PCI_ERR_ROOT_AER_IRQ		0xf8000000 /* Advanced Error Interrupt Mess=
+age Number */
+ #define PCI_ERR_ROOT_ERR_SRC	0x34	/* Error Source Identification */
++#define PCI_ERR_UNCOR_MASK2	0x30    /* PCIe to PCI/PCI-X Bridge */
++#define PCI_ERR_UNCOR_SEVER2	0x34    /* PCIe to PCI/PCI-X Bridge */
++#define PCI_ERR_CAP2		0x38    /* PCIe to PCI/PCI-X Bridge */
+=20
+ /* Virtual Channel */
+ #define PCI_VC_PORT_CAP1	0x04
+--=20
+2.34.1
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202412060857.Kn0HyAFH-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/pci/probe.c:597:33: warning: 'pci_host_bridge_type' defined but not used [-Wunused-const-variable=]
-     597 | static const struct device_type pci_host_bridge_type = {
-         |                                 ^~~~~~~~~~~~~~~~~~~~
-
-
-vim +/pci_host_bridge_type +597 drivers/pci/probe.c
-
-   596	
- > 597	static const struct device_type pci_host_bridge_type = {
-   598		.groups = pci_host_bridge_groups,
-   599		.release = pci_release_host_bridge_dev,
-   600	};
-   601	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
