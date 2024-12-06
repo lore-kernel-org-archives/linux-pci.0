@@ -1,116 +1,78 @@
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 630F977112
-	for <linux-pci@vger.kernel.org>; Fri,  6 Dec 2024 01:01:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3241D1758B;
+	Fri,  6 Dec 2024 01:49:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733446874; cv=none; b=fpJ0mbIbDCf63mdpk+h6gGFCtL+19byrx9Mm/xo1ARn8gwobsrzU3jMsL/VLr3Oxk/DoK8yvuOhVbDRyUHMj2XmQsyhoUMGaiEg+AfjUoPqZb2bm6DqFWWvVosr+ZWbOxCzVinnNstIf4Cv+bxzvQu1uZZmagNKEZ+Uw/2JaOUs=
+	t=1733449778; cv=none; b=YCiHUn2O7if5DlFj8RP7Rg+j29qBcmLg9G5o7NceSu3TiE6jrDTTYf72rDynOOB5YXtXi50Ttu2geuSio5MeHdUWqtkglUyydyWq9UgsMkyXhUKLuXkI2t3t6vWqeOBoFkidmXXlNlU9Q00Tqjjl/AnswlDZtq9tTsHuOyFcvEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733446874; c=relaxed/simple;
-	bh=varYe/nsgd0jqbA8BxodQaB5K8QTJcOOiIbwkknH2VY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bcGinmitjmClIMbLEJxTeJqEg0VQpshxVLV91TTtRa9VKt5Fr2FPW712/lA0dLR1DrvT9HSCk+M8FT/xtcjwlj4Bu+Fs2yIlpjsaqS3oor7iHkh0BSN9MBY888eVE1Sod/XFnJxtp6lpdzsScCCXOyh307vgDSP7x0U1h5JR7ww=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
-X-ASG-Debug-ID: 1733446117-086e2312d5235a0001-0c9NHn
-Received: from ZXSHMBX1.zhaoxin.com (ZXSHMBX1.zhaoxin.com [10.28.252.163]) by mx1.zhaoxin.com with ESMTP id bQJAFLG4DCETpKhv (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Fri, 06 Dec 2024 08:48:37 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
-Received: from ZXSHMBX1.zhaoxin.com (10.28.252.163) by ZXSHMBX1.zhaoxin.com
- (10.28.252.163) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Fri, 6 Dec
- 2024 08:48:36 +0800
-Received: from ZXSHMBX1.zhaoxin.com ([fe80::3066:e339:e3d6:5264]) by
- ZXSHMBX1.zhaoxin.com ([fe80::3066:e339:e3d6:5264%7]) with mapi id
- 15.01.2507.039; Fri, 6 Dec 2024 08:48:36 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.163
-Received: from xin.lan (10.32.64.1) by ZXBJMBX03.zhaoxin.com (10.29.252.7)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Thu, 5 Dec
- 2024 19:40:48 +0800
-From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
-To: <rafael@kernel.org>, <lenb@kernel.org>, <james.morse@arm.com>,
-	<tony.luck@intel.com>, <bp@alien8.de>, <bhelgaas@google.com>,
-	<robert.moore@intel.com>, <avadhut.naik@amd.com>, <yazen.ghannam@amd.com>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <acpica-devel@lists.linux.dev>
-CC: <CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>,
-	<LeoLiu-oc@zhaoxin.com>
-Subject: [PATCH v4 0/3] Parse the HEST PCIe AER and set to relevant registers
-Date: Thu, 5 Dec 2024 19:40:45 +0800
-X-ASG-Orig-Subj: [PATCH v4 0/3] Parse the HEST PCIe AER and set to relevant registers
-Message-ID: <20241205114048.60291-1-LeoLiu-oc@zhaoxin.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1733449778; c=relaxed/simple;
+	bh=L4DXv199Z3VF0FFNAtlfPHVec44fIh6kYkZfjqUvd2E=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=bwOpTVSynkoRo8IK+XmznmnfeKWZ6/+XWV2j/zKM3BLe4G4VEofG//VuL95oaGpxc+NuFXUMF1k1dY8aitd1wA7C6kJ9gsvq7uBxlrhnZweHB6uzLns4HhjMLO/Ok39mLw7aBZAzQ+j/QMOLFYuHbYuQSA9xEfvuoCnQ3awhI6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EdQEP56w; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EdQEP56w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D6830C4CED1;
+	Fri,  6 Dec 2024 01:49:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733449777;
+	bh=L4DXv199Z3VF0FFNAtlfPHVec44fIh6kYkZfjqUvd2E=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=EdQEP56weDWGGpq3MZEWgWO2nZNrpnEwnoMicsmUyyunrex3x6Rbb89miDWIzDZfq
+	 4hfKYtzNbc0p7T1WcNCk7W2A3ix79OKIPhXNKMLPzcHWKygIeWmm2U7lRrpEq6A6V/
+	 ORmNSQ50Z+hDgyVpjl/J4ZdujO5PQMTlnKlwDzK2Ua/wk+Tp4XJsybYtQfNuXT4Uvr
+	 Kovgyqx8oW/S80i5AfSVEbyxfVUXzdlGiLaHbFFgPIsk4jsBU6Bo4ar49F85r3PLBi
+	 keCh/iopn5ZJ+joOsEO0xz2720Y1RFgpfkxir252Z8ySN78yCvpxtCEkJLh05Hbcrv
+	 0CtvB10R/3iig==
+Date: Thu, 5 Dec 2024 19:49:34 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: kbusch@kernel.org, axboe@kernel.dk, hch@lst.de, sagi@grimberg.me,
+	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, andersson@kernel.org,
+	konradybcio@kernel.org, "Rafael J. Wysocki" <rjw@rjwysocki.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>
+Subject: Re: [PATCH] nvme-pci: Shutdown the device if D3Cold is allowed by
+ the user
+Message-ID: <20241206014934.GA3081609@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Moderation-Data: 12/6/2024 8:48:35 AM
-X-Barracuda-Connect: ZXSHMBX1.zhaoxin.com[10.28.252.163]
-X-Barracuda-Start-Time: 1733446117
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 1755
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.134151
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241205232900.GA3072557@bhelgaas>
 
-From: LeoLiuoc <LeoLiu-oc@zhaoxin.com>
+On Thu, Dec 05, 2024 at 05:29:00PM -0600, Bjorn Helgaas wrote:
+> On Sat, Nov 23, 2024 at 02:31:13PM +0530, Manivannan Sadhasivam wrote:
+> > On Fri, Nov 22, 2024 at 04:20:50PM -0600, Bjorn Helgaas wrote:
+> > > On Mon, Nov 18, 2024 at 01:53:44PM +0530, Manivannan Sadhasivam wrote:
+> > > > PCI core allows users to configure the D3Cold state for each PCI
+> > > > device through the sysfs attribute
+> > > > '/sys/bus/pci/devices/.../d3cold_allowed'. This attribute sets
+> > > > the 'pci_dev:d3cold_allowed' flag and could be used by users to
+> > > > allow/disallow the PCI devices to enter D3Cold during system
+> > > > suspend.
+> ...
 
-According to the Section 18.3.2.4, 18.3.2.5 and 18.3.2.6 in ACPI SPEC r6.5,
-the register value form HEST PCI Express AER Structure should be written to
-relevant PCIe Device's AER Capabilities. So the purpose of the patch set is
-to extract register value from HEST PCI Express AER structures and program
-them into PCIe Device's AER registers. Refer to the ACPI SPEC r6.5 for the
-more detailed description.
+> > We did attempt to solve this problem in multiple ways, but the
+> > lesson learned was, kernel cannot decide the power mode without help
+> > from userspace. That's the reason I wanted to make use of this
+> > 'd3cold_allowed' sysfs attribute to allow userspace to override the
+> > D3Cold if it wants based on platform requirement.
+> 
+> It seems sub-optimal that this only works how you want if the user
+> intervenes.
 
-Changes in v2:
-- Move the definition of structure "hest_parse_aer_info" to file apei.h.
-- Link to v1: https://lore.kernel.org/all/20231115091612.580685-1-LeoLiu-oc=
-@zhaoxin.com/
+Oops, I think I got this part backwards.  The patch uses PCI PM if
+d3cold_allowed is set, and it's set by default, so it does what you
+need for the Qualcomm platform *without* user intervention.
 
-Changes in v3:
-- The applicable hardware for this patch is added to the commit
-  information.
-- Change the function name "program_hest_aer_endpoint" to
-  "program_hest_aer_common".
-- Add the comment to function "program_hest_aer_common".
-- Remove the "PCI_EXP_TYPE_PCIE_BRIDGE" branch handling in function
-  "program_hest_aer_params".
-- Link to v2: https://lore.kernel.org/all/20231218030430.783495-1-LeoLiu-oc=
-@zhaoxin.com/
-
-Changes in v4:
-- Fix some compilation warnings.
-- Link to v3: https://lore.kernel.org/all/20240718062405.30571-1-LeoLiu-oc@=
-zhaoxin.com/
-
-LeoLiuoc (3):
-  ACPI/APEI: Add hest_parse_pcie_aer()
-  PCI: Add AER bits #defines for PCIe to PCI/PCI-X Bridge
-  PCI/ACPI: Add pci_acpi_program_hest_aer_params()
-
- drivers/acpi/apei/hest.c      |  77 ++++++++++++++++++++++++-
- drivers/pci/pci-acpi.c        | 103 ++++++++++++++++++++++++++++++++++
- drivers/pci/pci.h             |   9 +++
- drivers/pci/probe.c           |   1 +
- include/acpi/apei.h           |  17 ++++++
- include/uapi/linux/pci_regs.h |   3 +
- 6 files changed, 208 insertions(+), 2 deletions(-)
-
---=20
-2.34.1
-
+But I guess using the flag allows users in other situations to force
+use of NVMe power management by clearing d3cold_allowed via sysfs.
+Does that mean some unspecified other platforms might only work
+correctly with that user intervention?
