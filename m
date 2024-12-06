@@ -1,169 +1,285 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A5C11E1C2B
-	for <linux-pci@vger.kernel.org>; Fri,  6 Dec 2024 08:34:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733474070; cv=none; b=a7s+GdfGCTSEB6g7/KQk3cmeZKq3QdnL906uno02KsWou2FnwuoE3FOE+gDsE2Qu0SedSScrpeH6iJRispCSmSrg25v3iAR7w2u9F7K8gGGYmEbUlD2J8iYXLquwI+mJH5E+lx4wNJj97CrWm0Zv5bxI1vBTh6ARtvOhsZg67ds=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733474070; c=relaxed/simple;
-	bh=EhEGYhxLSlKYz9DoJ7L+0wZRwDTYKR4K1VwaUOKojWM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:Content-Type:
-	 References; b=KY7TV/JV9qarEnUgR+4iAXmEqZMDiLc9yFnN13Nbmg4WO1LYqhCpAfhUqBPzOhly8cR0I8n73+NeW+iel2xVNdyX+3oixbKCC8ezYM2RQ5SEM2d2dOktB9qyK5oWB7qoYx5tMHeAUqQpJL9b+pSY7i+tZvb1NR1rj4jOZbNksoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=MS9kBJbb; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8106E1DD0EC
+	for <linux-pci@vger.kernel.org>; Fri,  6 Dec 2024 08:44:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=192.198.163.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1733474688; cv=fail; b=mOC3wohFl2NUMnulaUyNO0nkO3rrjYnjqoj0wjTQtAcYF3B8PV45uC4EwthVcukq++kXP2gBOXkfZDpVWg7o7Whqc0+UKHBP9B6zmghi9XYH90rplfbD3oorF2YfUk6prv+3v9cwUvS5+hY4cF0TddHDAMWdUsZQcyjDSddeo0g=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1733474688; c=relaxed/simple;
+	bh=OHl5AScEQftnBrLZqncfp9BB8XJvvwtv5qZaH3ZULa0=;
+	h=Date:From:To:CC:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=rb+5bJKcu2m1UCS7W5lY2z6h85FWSMr6sxXFecd/j2AwerDbzHOAe4cQ/P0mwqlgYgfAECPS9qeBqb+QUcUgqivvW10PLzkg7RR5hYVtYftlWmyZtAcyMt78uzdJjDwE6Zau22wEWsAVB4gzHpAep3hljw85oyrBxotqjoVi0ls=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TBgrMOjP; arc=fail smtp.client-ip=192.198.163.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="MS9kBJbb"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20241206083418epoutp036648d68e03015e9b6584c8337d2c4f21~OiXjStk3A2315423154epoutp03_
-	for <linux-pci@vger.kernel.org>; Fri,  6 Dec 2024 08:34:18 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20241206083418epoutp036648d68e03015e9b6584c8337d2c4f21~OiXjStk3A2315423154epoutp03_
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1733474058;
-	bh=8zKrIcn8Ku+bx3UX7Tz/EWhEyXC2fgMinelJIKpRG+A=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=MS9kBJbb30je8zmlMenh8NCmBwo9aBA6Wtuzd5yD3IXUjmiSe3XyEJjrWLyHsaxqw
-	 9PSTnL/gFjkcD3hja7ddjupd7M2Ah0WAukeNwGyEkJRZD8ooueJ8beWG6zI6F3+RGp
-	 snvz448ucqiY8Oh1i5R9e/ZENEV8YHW6Cte/CtsM=
-Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTP id
-	20241206083417epcas5p39c67cf3f045df165f9a8451468eb57a8~OiXip7BHT2819428194epcas5p3G;
-	Fri,  6 Dec 2024 08:34:17 +0000 (GMT)
-Received: from epsmges5p3new.samsung.com (unknown [182.195.38.175]) by
-	epsnrtp1.localdomain (Postfix) with ESMTP id 4Y4PgX1Sjzz4x9Q3; Fri,  6 Dec
-	2024 08:34:16 +0000 (GMT)
-Received: from epcas5p4.samsung.com ( [182.195.41.42]) by
-	epsmges5p3new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	E5.D7.19956.807B2576; Fri,  6 Dec 2024 17:34:16 +0900 (KST)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20241206074234epcas5p3bc1151ad713c702c34581b484e21292d~OhqYKverE2415924159epcas5p3V;
-	Fri,  6 Dec 2024 07:42:34 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20241206074234epsmtrp13fdff976ad6ec0a303a823bae8334a40~OhqYJ18dA1431314313epsmtrp1Q;
-	Fri,  6 Dec 2024 07:42:34 +0000 (GMT)
-X-AuditID: b6c32a4b-fd1f170000004df4-b2-6752b708311a
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	7B.0E.18949.AEAA2576; Fri,  6 Dec 2024 16:42:34 +0900 (KST)
-Received: from cheetah.samsungds.net (unknown [107.109.115.53]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20241206074231epsmtip1b892024f40d449e2eed582a8b6e08aa3~OhqVaDbkx1378213782epsmtip1C;
-	Fri,  6 Dec 2024 07:42:31 +0000 (GMT)
-From: Shradha Todi <shradha.t@samsung.com>
-To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, kw@linux.com,
-	robh@kernel.org, bhelgaas@google.com, jingoohan1@gmail.com,
-	Jonathan.Cameron@Huawei.com, fan.ni@samsung.com, a.manzanares@samsung.com,
-	pankaj.dubey@samsung.com, quic_nitegupt@quicinc.com,
-	quic_krichai@quicinc.com, gost.dev@samsung.com, Shradha Todi
-	<shradha.t@samsung.com>
-Subject: [PATCH v4 1/2] PCI: dwc: Add support for vendor specific capability
- search
-Date: Fri,  6 Dec 2024 13:14:55 +0530
-Message-Id: <20241206074456.17401-2-shradha.t@samsung.com>
-X-Mailer: git-send-email 2.17.1
-In-Reply-To: <20241206074456.17401-1-shradha.t@samsung.com>
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFprNJsWRmVeSWpSXmKPExsWy7bCmli7H9qB0gzXn2S2mH1a0WNKUYdG0
-	+i6rxc0DO5ksVnyZyW6xauE1NouGnt+sFpd3zWGzODvvOJtFy58WFou7LZ2sFou2fmG3ePCg
-	0qJzzhFmi/97drBb9B6udRDw2DnrLrvHgk2lHi1H3rJ6bFrVyeZx59oeNo8nV6YzeUzcU+fR
-	t2UVo8fnTXIBnFHZNhmpiSmpRQqpecn5KZl56bZK3sHxzvGmZgaGuoaWFuZKCnmJuam2Si4+
-	AbpumTlAHygplCXmlAKFAhKLi5X07WyK8ktLUhUy8otLbJVSC1JyCkwK9IoTc4tL89L18lJL
-	rAwNDIxMgQoTsjP2bljJWvCKr+L4wn3sDYwveLoYOTkkBEwkJq+exNTFyMUhJLCbUeLUs4ds
-	EM4nRomFF2dAOd8YJc59W8cI07LlRzs7RGIvo8Sxkwehqr4wSvy8s5ENpIpNQEui8WsXM4gt
-	ImAtcbh9C1gRs8BTJonW4z/BioQFQiWub9jPBGKzCKhK9L2ezgJi8wpYSZxraIRaJy+xesMB
-	oEEcHJxAg6b+CgCZIyGwkEPizZQ2dogaF4lL0w5D2cISr45vgbKlJF72w9SkS6zcPIMZws6R
-	+LZ5CROEbS9x4MocFpD5zAKaEut36UOEZSWmnloHVsIswCfR+/sJVDmvxI55MLayxJe/e1gg
-	bEmJeccus0LYHhJtZ3rBXhQS6GOUeLHYeQKj3CyEDQsYGVcxSqYWFOempxabFhjnpZbDYy05
-	P3cTIziVannvYHz04IPeIUYmDsZDjBIczEoivJVhgelCvCmJlVWpRfnxRaU5qcWHGE2BwTeR
-	WUo0OR+YzPNK4g1NLA1MzMzMTCyNzQyVxHlft85NERJITyxJzU5NLUgtgulj4uCUamA6lHCM
-	6/v19B2ZDp6njV+ENuqllqQ7Ld5cfXTx3z6RFQuurVlbuULI+KBLaLw2j4HSj7UmvN/e781W
-	2v2Q/dEnb5ejQSW3DzT2F5ixvo8+Ov1ggkxmaswdGz9FCfPuPVtdrB7dmpGfFnLzBveTgMhv
-	O1R2VSWXFnx6lCS5jSUzTW9TgcDfoDD7Wubnz1jq9Oum7zRmnjnde1VkCkd3+iaHS86GfJyX
-	4+5OqTdy0BfxaeDa/fLyqouneh5cCPE4FlrrzRzGqutYMfMVY/KsRqFra20FHZtnrJqmIbtv
-	nr2nBO/XIJvKTIYzq+JF1itxrL394CSjyfQuPo8IC/eM1QLW4QcZX98Nt1/z2P6NvxJLcUai
-	oRZzUXEiAKcbqJMuBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrILMWRmVeSWpSXmKPExsWy7bCSnO6rVUHpBscXcFtMP6xosaQpw6Jp
-	9V1Wi5sHdjJZrPgyk91i1cJrbBYNPb9ZLS7vmsNmcXbecTaLlj8tLBZ3WzpZLRZt/cJu8eBB
-	pUXnnCPMFv/37GC36D1c6yDgsXPWXXaPBZtKPVqOvGX12LSqk83jzrU9bB5Prkxn8pi4p86j
-	b8sqRo/Pm+QCOKO4bFJSczLLUov07RK4MvZuWMla8Iqv4vjCfewNjC94uhg5OSQETCS2/Ghn
-	72Lk4hAS2M0o8ebnfFaIhKTE54vrmCBsYYmV/56zg9hCAp8YJR4fFAex2QS0JBq/djGD2CIC
-	thL3H01mBRnELPCVSeLjpxtgCWGBYInFdxrBBrEIqEr0vZ7OAmLzClhJnGtoZIRYIC+xesMB
-	oHoODk4Ba4mpvwIgdllJrG/5zzaBkW8BI8MqRsnUguLc9NxiwwKjvNRyveLE3OLSvHS95Pzc
-	TYzgUNfS2sG4Z9UHvUOMTByMhxglOJiVRHgrwwLThXhTEiurUovy44tKc1KLDzFKc7AoifN+
-	e92bIiSQnliSmp2aWpBaBJNl4uCUamDatpZPpFVRYGehzlKfTI8FK7f/mzl3+tHGoPsr6+4n
-	//nkfnP+sQDB3S4WK8+Ifi2IaVLYsMGtRPV/eH6pyKLsV2dPzti9cNbVt3dWP3i5WFWUK8jB
-	1Nplw/UnXU/Tz18Snu9gkDBXeeH1vDUusj8OMgfOPqNxWSu1sku6M7zW49dER9eWZTxrfR2L
-	xIPaDs66Fy1zvYZtzl7FvQJb/JJtOOcs/GyxdLnE5481cz/+sdPifBttqtYwb5v85c2dVYGr
-	D0ZnTbWr9188Vadq6TLr+Me+rL3zDlbyyzifu9UVX3Ly14ftret5w/S4Zp1Wvqe+YO2CBYKd
-	ns/NWH6Er/hdom9yvc1g7SrtFcv1LfuvKLEUZyQaajEXFScCALe/QZzkAgAA
-X-CMS-MailID: 20241206074234epcas5p3bc1151ad713c702c34581b484e21292d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20241206074234epcas5p3bc1151ad713c702c34581b484e21292d
-References: <20241206074456.17401-1-shradha.t@samsung.com>
-	<CGME20241206074234epcas5p3bc1151ad713c702c34581b484e21292d@epcas5p3.samsung.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TBgrMOjP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1733474686; x=1765010686;
+  h=date:from:to:cc:subject:message-id:references:
+   in-reply-to:mime-version;
+  bh=OHl5AScEQftnBrLZqncfp9BB8XJvvwtv5qZaH3ZULa0=;
+  b=TBgrMOjP3TVkAVe70fZpe5MktPSjGw5eQoYmhHBwIMlXYE1hvwTVpTxt
+   ZstlDbEc7CfbmJ+RjWPmeGclWia9+vu1J5MxfEtxPYVx3UiM8nVF2qQVt
+   EF/NSBX6gyYKJC/tqjSyS0bi5QetXNuT+UQ0IBRnJeiI+nIfplS5DNq1D
+   gBews4qmMK4zK+mmhmAoc/nkMpY4ApZudjfLH5oPO6tG3TSNaYx5thmhe
+   wIMuXRe38E71Hl0lm6ZiYLTS+f1meGrtGufQ1fBbDkefZSLLEedSNYgGU
+   fgidk7M4P+FY0DrlV6FaOH0641KrFPt++yikS8AP1pUOQiUBwFtZQGUXC
+   g==;
+X-CSE-ConnectionGUID: lFwjGJaRTyizR4sUgRvdpw==
+X-CSE-MsgGUID: JSWFBSqfTJy8sJsk2kX78w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11277"; a="36653408"
+X-IronPort-AV: E=Sophos;i="6.12,212,1728975600"; 
+   d="scan'208";a="36653408"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 06 Dec 2024 00:44:46 -0800
+X-CSE-ConnectionGUID: cK83ce31RoqE1s2n1rkbvg==
+X-CSE-MsgGUID: U70cHEikTVy4AUXBLCtMPw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,212,1728975600"; 
+   d="scan'208";a="117596707"
+Received: from fmsmsx603.amr.corp.intel.com ([10.18.126.83])
+  by fmviesa002.fm.intel.com with ESMTP/TLS/AES256-GCM-SHA384; 06 Dec 2024 00:44:45 -0800
+Received: from fmsmsx603.amr.corp.intel.com (10.18.126.83) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39; Fri, 6 Dec 2024 00:44:45 -0800
+Received: from fmsedg601.ED.cps.intel.com (10.1.192.135) by
+ fmsmsx603.amr.corp.intel.com (10.18.126.83) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.39 via Frontend Transport; Fri, 6 Dec 2024 00:44:45 -0800
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (104.47.70.43) by
+ edgegateway.intel.com (192.55.55.70) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.1.2507.39; Fri, 6 Dec 2024 00:44:45 -0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=KImXlwGI2ZfXBk3r+UlUOgo85LZRqiTEnVFZW/veg3nrWJd5cWn3sNVbTXKQIZSQx8XUa1qVW1TMo+zTvzzVrlMu06PtSHm2DD7gqqWdWrwqWKm2C6+Xh2IbIsWCzvVExIz9JMW9DyYTIBR5To0ETgl2gqigI1DQSReM2V6ks3htG4Q4O/TiqRrFWnZaDKYPz25UrkS9fe8iRnoiHZkuQveCRXlfw4+hL2y1unE/HCRvf9DXil4p1CgrcVIjjQmKaA6Y2l5xUReJEqjfdJAUDRAREl4gatBUqsXTO09osgDTPWA+3YMCSmfC2BForuqR18hgkPoqG2bAc3D6YLiq4A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=Vg9gizakY/2dVti3YNm1UWVj67vyLv/grydtQUub5PY=;
+ b=hhQOvJO6v39buHQRUZ56F7aPJOW9VXrLEZaDBcLFytU/L4YVOykWCK4S0juFo/FLKgV3CxQOhGAdLJ/BK6OFoiaaEuzX4RBURnK7sJb8260M1LGUriFCJlZdp9oQ1ZPlixH1G4ryXQ1RnuTV21Ixbp6za8m/NR/mRPmrPuBrEJe0yw3CZY7VOvFYzo4LHXVRCVtq7yA1j8dhoOtTDzM39T4qF2xCLP/e6UZ5QYALDaoNCCel7KDQjtGWPRNKATu+DrHn4jifK5N6E+p3d8WsWjrf8aucrmCENpgRxIOQQinqfmm0lBqX98da+19bdsZPMklrBlIEl4WPeOkTlud1mw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
+ dkim=pass header.d=intel.com; arc=none
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=intel.com;
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
+ by DS0PR11MB7213.namprd11.prod.outlook.com (2603:10b6:8:132::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8207.19; Fri, 6 Dec
+ 2024 08:44:42 +0000
+Received: from PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
+ ([fe80::6b05:74cf:a304:ecd8%5]) with mapi id 15.20.8230.010; Fri, 6 Dec 2024
+ 08:44:41 +0000
+Date: Fri, 6 Dec 2024 00:44:39 -0800
+From: Dan Williams <dan.j.williams@intel.com>
+To: Greg KH <gregkh@linuxfoundation.org>, Dan Williams
+	<dan.j.williams@intel.com>
+CC: <linux-coco@lists.linux.dev>, Isaku Yamahata <isaku.yamahata@intel.com>,
+	Tom Lendacky <thomas.lendacky@amd.com>, Bjorn Helgaas <bhelgaas@google.com>,
+	Suzuki K Poulose <suzuki.poulose@arm.com>, Xu Yilun
+	<yilun.xu@linux.intel.com>, Wu Hao <hao.wu@intel.com>, Samuel Ortiz
+	<sameo@rivosinc.com>, Lukas Wunner <lukas@wunner.de>, Sami Mujawar
+	<sami.mujawar@arm.com>, Steven Price <steven.price@arm.com>, Xiaoyao Li
+	<xiaoyao.li@intel.com>, Yilun Xu <yilun.xu@intel.com>, Alexey Kardashevskiy
+	<aik@amd.com>, John Allen <john.allen@amd.com>, Ilpo
+ =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH 00/11] PCI/TSM: Core infrastructure for PCI device
+ security (TDISP)
+Message-ID: <6752b976f3241_10a083294a6@dwillia2-xfh.jf.intel.com.notmuch>
+References: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
+ <2024120625-baggage-balancing-48c5@gregkh>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <2024120625-baggage-balancing-48c5@gregkh>
+X-ClientProxiedBy: MW4PR03CA0118.namprd03.prod.outlook.com
+ (2603:10b6:303:b7::33) To PH8PR11MB8107.namprd11.prod.outlook.com
+ (2603:10b6:510:256::6)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|DS0PR11MB7213:EE_
+X-MS-Office365-Filtering-Correlation-Id: b3bda934-fe18-41a8-5183-08dd15d23a08
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?+rI5mbPiCGRc90bahyG8Fn0FDqDQNaof4eGkWqk9ola8oOaj7IxRYsX3WZ+8?=
+ =?us-ascii?Q?PBYxRV/hUBCJjgt2sBY5IKfhcl4NnCe/axrJJ9cr2LV8SSgw4aNtYVueiZTu?=
+ =?us-ascii?Q?dnkOtyaR0bhkKRpPzGxs2Cs4dedSUQ5E/CHNal4XfGoVXwFbDczACjV+oT71?=
+ =?us-ascii?Q?98FDcAsSMy3FukMTLYcjDapgN+yAgieK2qmSxpyCSD2umLNY76NKgWOeySps?=
+ =?us-ascii?Q?ecSEZTwJ/KOMPKwItUcQfnJSvWAbZrueYpl5m5Cm/AqoF4M2HzX7HVjuYpxW?=
+ =?us-ascii?Q?LztbEvx1GS3+gwL/ERz7LDJ2lK2BzyWuq0ZvpUVnVNk0J74DqBtyT7AW0Yx/?=
+ =?us-ascii?Q?N+JyvmnXx1vA9Dy0pgh84cPL3Yjn9Km270tfuPCKqZAttYGuVwc7rEreAa3h?=
+ =?us-ascii?Q?rbRb3HBNrWk00aTXnpqlv6+X17v9mxG9t/2lnOHR8XWfSAaRIGFC4t+gQW79?=
+ =?us-ascii?Q?E1pyBxjfAJ+4hv9iujyQZNT/E75AmDY/dbwPm7aRIlV8bMQRZ/ad2LQbcJpt?=
+ =?us-ascii?Q?RPBmneXioe0kba7/Jo1+uAWNA4q1JSNOCkyzbHoFiyxp6jeBw1NMbYwHwi1j?=
+ =?us-ascii?Q?5vCbhSK4akLkJRps/ScKJzFTQAsCeAmK+0EZMTtNoW9lo1GEVmuu17O40TQ4?=
+ =?us-ascii?Q?rUzEMmmRQIP9c3AU6WVaDDgRDphRK1g9xBe375btkGNj3AAwHiihVTP11r8M?=
+ =?us-ascii?Q?JHZE+chuNn+nRqR3MnyivQb8Sz/EmzpgKV/WiefXOp3tcK9ZGJutDPwNLG6v?=
+ =?us-ascii?Q?CbVrJLl9p199OfjccUo3MjFNBlvIyEQqKhyYDpJQn5Z5ee0GU/tHPOB8bflQ?=
+ =?us-ascii?Q?YWSNrayvpGFOiFtrGrR+qrTr7OxFGnrNmLz8AA4BUQxtjXe3Ney9SnnxoBhb?=
+ =?us-ascii?Q?vS100zFdPGw//7Kzk2ghxAV4y3m3MF9d2jxHff/ZxNC8Jc7zcLZtR06zVBVe?=
+ =?us-ascii?Q?yDxSLvhGy6eBV/e0vjvi2Ee6ks9zXtxDXX+jqGs9HCsjsMvgLEgXugEG6ZjO?=
+ =?us-ascii?Q?4+5+OpHfD6hZBQ/AWZSABSEqEAqU5ZgOVchfGU7gkC5/beyK9IFr038LhntA?=
+ =?us-ascii?Q?OLZ9g+2dyS20jVVp4xgZRpqVv/EHoVNBUwT3luoYQUclelpuBVSw9R2ITZb7?=
+ =?us-ascii?Q?sJ4lWciGI8ir7IiH+7wzPmV9tVudYxcH91ieJjbGKQtUcIwN1kadLRu6Abb2?=
+ =?us-ascii?Q?yldN5IgykR0jCeCT8Wvo29BnnnFwdUvpmr7rAgfhexVfgDfXcQF+khSCRNFt?=
+ =?us-ascii?Q?v4L/nysfaFlVyNVWvhekRTHqWiz1X1Xs+vRE5gDq7vHA49FPEjGQ3uoPX+ge?=
+ =?us-ascii?Q?AfGjPxzYk4JT6TMrTQF+ew67CNXcguGBUpOHBSxgZYEtXhJobPjFZOnioUH7?=
+ =?us-ascii?Q?8PV7GTw=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?MU9HdAT7Ogf39D+wmNnzG0z/3+tXpK6/qsfTlpx0wXU7SZlMB1kGk+p2f4JW?=
+ =?us-ascii?Q?YQIzTb7kE0i3Z7hGudBtarmXwVhF4Xvkqvdwqp9hJPRA3wqJzpXjTto4+0og?=
+ =?us-ascii?Q?KXKhAUwm1IjlKwSHpvQKAr483WoNTT8AOK+Rqoqiys3RSYvPxjGvmqwtsTvC?=
+ =?us-ascii?Q?rCdyyBMe54WmlRjZ6tmuWZRf5zLwKR3jJGFivPfkqOKmqN4dehOpUF0kL3CW?=
+ =?us-ascii?Q?s/mVqArKEmOvIAGs0lvrNXwH6e7Bm3GSkRaltNC6HKYNfWpcdrbFwEhGY/4U?=
+ =?us-ascii?Q?2yS4anFS6pOnPGjTRxX3AvORK7gc6gMOB5P84J3te/M6SM9ONr/X+OAxa6J4?=
+ =?us-ascii?Q?D0+7NHTfN98KymZyAzqmpx+TmVbx+KWMig8vZl3OIU+c03QTU1RA24daycxe?=
+ =?us-ascii?Q?45107H7v80Ck6eQW/Xy4eUEof/OQ9/ueB1A9EmYAcZUgOz6buoqKw/rhuWzo?=
+ =?us-ascii?Q?anbBK2+s+ntobQGxm9pdpZynGa1OxdyM7JMRRMa4BJm12NFr5JZ7qcCKrPls?=
+ =?us-ascii?Q?N+qPxNERqCjNRbiA+syvmCIhG1hBxj1QEs0TsGIFAWp6SzM+IFYl6HD7+fRU?=
+ =?us-ascii?Q?OVs4wInd6QZ7CvkIMxhnO4Iq61xiYG5sBsdCVrOiTEYTmuouBjwVuJieNotO?=
+ =?us-ascii?Q?5QOvQiMu+nfcmo5poq1U6IE5OLmwQWDraE1pb4fiNeH5DjtPT18lW++y0JKi?=
+ =?us-ascii?Q?SOMCAFoiuzd0O45ReLyLwBUIxXn+3Ok9SgQhtPg/FHHoEejGS07M9Tuan5xr?=
+ =?us-ascii?Q?peZFZPpBVpZkfYZZvppF/dHCwSfEjIwp/EvW8J0SZAmyfvZdGy19kcHJYNQi?=
+ =?us-ascii?Q?DeNHPkQ40I1W7yIJr1WHNglAfFjuh1Dn7l+X00sPWRSWPlaOF2b9HLUNnM+5?=
+ =?us-ascii?Q?le70GbNsUVQMnY73Ys7JwZ/Kxz4uDHUCILSRvNvADnE1LLK0DJWORamiABIo?=
+ =?us-ascii?Q?PzIDlXkMcWC+Y5/PYr/dIGMqXmDmOf92/fQWTojqtTt9M+aVaspvuQVnAO7+?=
+ =?us-ascii?Q?tAk5AdI+sKSDzCaoic0YLtcsqzyGtFc+jssRG3uvrqzA4LQUeOPSnal7vuTv?=
+ =?us-ascii?Q?VvYAvpsNy2gANlvUNGh/WF10v5/f8HEaIMAzSUGivcMnf2K6HhdEs6MOSbMl?=
+ =?us-ascii?Q?Brz6SKLVUd6Pbb50mGd4pA7k+cB2A7aoPe1ZJz3VBlJcqSQrfLO/ARWucGY/?=
+ =?us-ascii?Q?+3ytiTx6rtBM+MbYMpw6eErtm3ViuzxDm6caw9Fi/HEbwSRykBCN01u5gS/h?=
+ =?us-ascii?Q?SHR/3+vEPrroeELAfr+Bcg2DwXed3FLFxIYUlaGFqPjgad6POnkfgPqE5kWk?=
+ =?us-ascii?Q?ljm9uG1fe4lkFu4eg9o7AAeK9/s9PXkEbG1Opz8eAKssUfpEkZh1z/wtoKo5?=
+ =?us-ascii?Q?7hkmScFnomdo+Lbrp2dodf16kAsXUBGqfUoMXDAtOYV5KBDSZNjAf3hmo/IU?=
+ =?us-ascii?Q?DNTlzlk6b2UHy06bUoYWHEO6JgRiKTVi/r71txzciQVnce6B5KtH53IRkJg2?=
+ =?us-ascii?Q?wOFlWP8peMa2PTtH/h2uGogXWYSKL6CimWI/SgPkCq9QWwbYEwEV1JJLuqcq?=
+ =?us-ascii?Q?Ezn1VCOfAPJrZXh4TY8DQwEQCrheFOy+th8U5pmhKY8SKQPq1QkVbk54z0vK?=
+ =?us-ascii?Q?Pg=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: b3bda934-fe18-41a8-5183-08dd15d23a08
+X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Dec 2024 08:44:41.9142
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: Afq0elkG/213LUES61vu0c5rlEsrDmd0xnvCXAY1hGSDMzFhK/kgD4K+hKSu0HXyHTuyV8NaLCGJaameSlUquuZvrgUCabrVxy/SNE2YUWg=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB7213
+X-OriginatorOrg: intel.com
 
-Add vendor specific extended configuration space capability search API
-using struct dw_pcie pointer for DW controllers.
+Greg KH wrote:
+> On Thu, Dec 05, 2024 at 02:23:15PM -0800, Dan Williams wrote:
+> > Changes since the RFC [1]:
+> > - Wording changes and cleanups in "PCI/TSM: Authenticate devices via
+> >   platform TSM" (Bjorn)
+> > - Document /sys/class/tsm/tsm0 (Bjorn)
+> > - Replace the single ->exec(@op_code) operation with named operations
+> >   (Alexey, Yilun)
+> > - Locking fixup in drivers/pci/tsm.c (Yilun)
+> > - Drop pci_tsm_devs xarray (Alexey, Yilun)
+> > - Finish the host bridge stream id allocator implementation (Alexey)
+> > - Clarify pci_tsm_init() relative to IDE && !TEE devices (Alexey)
+> > - Add the IDE core helpers
+> > - Add devsec_tsm and devsec_bus sample driver and emulation
+> > 
+> > [1]: http://lore.kernel.org/171291190324.3532867.13480405752065082171.stgit@dwillia2-xfh.jf.intel.com
+> > 
+> > ---
+> > 
+> > Trusted execution environment (TEE) Device Interface Security Protocol
+> > (TDISP) is a chapter name in the PCI specification. It describes an
+> > alphabet soup of mechanisms, SPDM, CMA, IDE, TSM/DSM, that system
+> > software uses to establish trust in a device and assign it to a
+> > confidential virtual machine (CVM). It is protocol for dynamically
+> > extending the trusted computing boundary (TCB) of a CVM with a PCI
+> > device interface that can issue DMA to CVM private memory.
+> > 
+> > The acronym soup problem is enhanced by every major platform vendor
+> > having distinct TEE Security Manager (TSM) API implementations /
+> > capabilities, and to a lesser extent, every potential endpoint Device
+> > Security Manager (DSM) having its own idiosyncratic behaviors around
+> > TDISP state transitions.
+> 
+> Wow, you aren't kidding about the acronym soup problem, this is a mess.
+> And does any of this relate to the existing drivers/tee/ subsystem in
+> any way?
 
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
- drivers/pci/controller/dwc/pcie-designware.c | 16 ++++++++++++++++
- drivers/pci/controller/dwc/pcie-designware.h |  1 +
- 2 files changed, 17 insertions(+)
+No relation to the subsystem, but if I understand correctly the modern
+AMD security co-processor that runs SEV-SNP firmware is a descendant, at
+least conceptually, of the 'amdtee' device.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 6d6cbc8b5b2c..41230c5e4a53 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -277,6 +277,22 @@ static u16 dw_pcie_find_next_ext_capability(struct dw_pcie *pci, u16 start,
- 	return 0;
- }
- 
-+u16 dw_pcie_find_vsec_capability(struct dw_pcie *pci, u8 vsec_cap)
-+{
-+	u16 vsec = 0;
-+	u32 header;
-+
-+	while (vsec = dw_pcie_find_next_ext_capability(pci, vsec,
-+					PCI_EXT_CAP_ID_VNDR)) {
-+		header = dw_pcie_readl_dbi(pci, vsec + PCI_VNDR_HEADER);
-+		if (PCI_VNDR_HEADER_ID(header) == vsec_cap)
-+			return vsec;
-+	}
-+
-+	return 0;
-+}
-+EXPORT_SYMBOL_GPL(dw_pcie_find_vsec_capability);
-+
- u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap)
- {
- 	return dw_pcie_find_next_ext_capability(pci, 0, cap);
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 347ab74ac35a..98a057820bc7 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -476,6 +476,7 @@ void dw_pcie_version_detect(struct dw_pcie *pci);
- 
- u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap);
- u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap);
-+u16 dw_pcie_find_vsec_capability(struct dw_pcie *pci, u8 vsec_cap);
- 
- int dw_pcie_read(void __iomem *addr, int size, u32 *val);
- int dw_pcie_write(void __iomem *addr, int size, u32 val);
--- 
-2.17.1
+Meanwhile Intel, RISC-V and ARM implemented new CPU execution modes to
+run their platform security software.
 
+> Anyhow, this patch series looks sane, nice work.
+> 
+> > Note that devsec_tsm is for near term staging of vendor TSM
+> > implementations. The expectation is that every piece of new core
+> > infrastructure that devsec_tsm consumes must also have a vendor TSM
+> > driver consumer within 1 to 2 kernel development cycles.
+> 
+> How are you going to enforce this?
+
+Mainly by moving slowly and carefully.
+
+> By removing infrastructure?
+
+If necessary.
+
+> Normally we can't add infrastructure unless there's a real user, and
+> when you add a real user then you see all the things that need to be
+> chagned.
+
+What you see here is only 1/3 of the solution, and it has taken quite a
+while to get to this point. Meanwhile there are several "hardware
+validation" / RFC quality stacks floating around with the end-to-end
+flow supported (3/3 solution).
+
+So, there is a wealth of RFCs to draw from and have near constant line
+of sight on the next topic to build an upstream consensus solution.
+There is low risk that upstream carries something that does not have 2-3
+vendor implementations in mind or needs more than a couple kernel cycles
+to follow in behind the sample implementation.
+
+I hope to corral all those vendor staging trees into a unified staging
+tree where upstream-ready infra can bubble out of that cauldron, similar
+to Paolo's kvm-coco-queue.
+
+> So are you ok with the apis and interfaces moving around over time here?
+> I think I only see sysfs files being exported so hopefully this
+> shouldn't be that big of a deal for userspace to deal with, but I don't
+> know what userspace is supposed to do with any of this, is there
+> external tools to talk to / set up, these devices?
+
+For this first 1/3 of the effort I expect just a simple udev policy to
+say "for the 4 potential PCIe links that can be encrypted on this host,
+these are the 4 endpoint devices that get those resources, echo 1 to
+'connect' when you see them".
+
+For the 2nd 1/3 of the effort the ABI changes will be augmenting VFIO,
+GUEST_MEM_FD, and IOMMUFD ABI to coordinate secure device assignment to
+confidential VMs.
+
+The last 1/3 of the ABI will be guest side to fetch and validate device
+certificates and security measurements. Here I expect work-in-progress
+efforts like the TDM effort [1] to be the consumer of a new netlink ABI
+to pull this security collateral. At least, that was the consensus ABI
+discussed at Plumbers in this year's PCI device authentication BoF.
+
+So I expect to still be enjoying a large bowl of acronym soup well into
+next year.
+
+[1]: https://github.com/confidential-containers/guest-components/pull/290
+     (Samuel, is there a newer version of this somewhere?)
