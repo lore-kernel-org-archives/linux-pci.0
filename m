@@ -1,35 +1,35 @@
 Received: from relay7-d.mail.gandi.net (relay7-d.mail.gandi.net [217.70.183.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 101971E9B37;
-	Mon,  9 Dec 2024 13:03:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1164D1E9B38;
+	Mon,  9 Dec 2024 13:03:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733749440; cv=none; b=EVcvVJcK8+ai6jIFq04TYxlhkTOkeb6cBKVGasGrTvqbfEMcqmICDRC2IGzXJooXO3rbWwQpyJOxqGXwctY2iJVZAPuifWW1gxOoqb7+S2jg6AK5L22WH4nX7Rz2bKenF9JQVJYu0Kq3xBZJCJ1nuzhkZEbSFM9ogoMvs2vJU8E=
+	t=1733749440; cv=none; b=bFqrKxFVMcVU0HNAe3rr9GmwTn+M58Z8YYP8ig2GI3YhowEzP1LW4NUackDBHQ77dcrg5biItUYmWXnDVZKZADEKJwkLopcYvR6gygcUaY/YsteukTFVc5jqgtpy9K/7F7CirpYEVh60oDc8ha18As+bRdI7LL/g5Z9KnojLH20=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1733749440; c=relaxed/simple;
-	bh=H8MC/Q72vk0UPF9u8+tzJ8SETywEWYWPmMDVOO5AKeI=;
+	bh=PloGdo8yWaAB0mEU1AiYQL4TycpKuip5XLuZ2Uy87RU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bGwU2INzJOq6H34Pygii67Y+CRpcYfx04pZDiA613RT2iwNCFHl74x0qCLNMqqvWfiKXNFPyedcz6q9q2CiRVECM/YzGHrdiaB1CskMj1r/rDtxHw69YtN0SkZOpEoR8lzLKG4/2yxBiYr+/yHaLRKWckJEYOhWBPBU+zlsOPd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=fOjzEgHM; arc=none smtp.client-ip=217.70.183.200
+	 MIME-Version; b=LG7vZ0wF5bV1kkSTLKOjgCxWTxjlGjjxtEdRqjvy6iMWxoffQG7s6GA7pN87HZp2thwrBNO4yO5HnE7rnilaznmsI05S2aFH0sjY0OxUZJ+93OJM3tTMoMoLzzZ+R5U6hhbz7W0KjA5UG5bD/Jul6jfblRnn37yO98hX4HR3XfU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=eSDkOPjD; arc=none smtp.client-ip=217.70.183.200
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="fOjzEgHM"
-Received: by mail.gandi.net (Postfix) with ESMTPA id DBD752000E;
-	Mon,  9 Dec 2024 13:03:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="eSDkOPjD"
+Received: by mail.gandi.net (Postfix) with ESMTPA id 0C8E620007;
+	Mon,  9 Dec 2024 13:03:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1733749436;
+	t=1733749435;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lD+dgpGNPBxXSWsz/EZ9nW0M7S5/QsWHsehlXFF/WCY=;
-	b=fOjzEgHMaL4S9WOtg7h4mD1Tfs67P5LSiUk77jQC/AtsRO0bplZnDZJ2fno5naqy/HxCtB
-	ynZ7KrB+h5me2tcLVImJ3w/LCy1qbXPoF5vtHlxbco1x91N8X/cAsMcG9VWwmR7VrXtgKZ
-	5kIqHAUzSoy1zmURMJYLPCUVZP4OTdSBDRmKjGHM60jSLaQGRkzh+3tvSUhG65Oaji32JK
-	4KkV4o2NLk1dWzdkvjWdPnHKG+R0zQeu93IdoLp3Yx4uyJR0WHAtegIO10PgMltO0iLoa6
-	Tu7AU1xtxYMUVlZ/EoPd9dAiCpWMLUr7/jEzpB42lmhNvX6xBAvJQh4woUw51A==
+	bh=GU1Q5uwrUxslDSQGz6WRaqjWVuhawVTEJ7MmY7c/q20=;
+	b=eSDkOPjDW+OuUXFyxZwul4ngHtBCec+zKGXIq05ozEXmOzSM3FPX4jf45eReOIRJUkF7/p
+	NZuEs7ztSfJTc/HP9ztAZcqe74ckGfC3DXMl0ULD8rNHLz5sJ0MhoIF2DyNDbrX/OTR610
+	LHrPXxucHPa+q40WcwkL+MCg/Fz+KwCYUipaQJMQLw021I5G/kFL2Y/eiZQgaT+NjTBJuQ
+	SZD59eo8GkfE5cGda3o7TZOX/b92lhp0FqReuEba6BWCB+qqPVh5PrkwpxhTLpvNV5zGyx
+	BciXD4DXJeO0Ac2PSRZj0m9428Ufo6FlrAkP03XozT3W+yFuXEXx8fGT+Uzckw==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -45,9 +45,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v5 4/5] PCI: of_property: Constify parameter in of_pci_get_addr_flags()
-Date: Mon,  9 Dec 2024 14:03:36 +0100
-Message-ID: <20241209130339.81354-5-herve.codina@bootlin.com>
+Subject: [PATCH v5 3/5] PCI: of_property: Add support for NULL pdev in of_pci_set_address()
+Date: Mon,  9 Dec 2024 14:03:35 +0100
+Message-ID: <20241209130339.81354-4-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20241209130339.81354-1-herve.codina@bootlin.com>
 References: <20241209130339.81354-1-herve.codina@bootlin.com>
@@ -60,30 +60,42 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-GND-Sasl: herve.codina@bootlin.com
 
-The res parameter has no reason to be a pointer to an un-const struct
-resource. Indeed, struct resource is not supposed to be modified by the
-function.
+The pdev (pointer to a struct pci_dev) parameter of of_pci_set_address()
+cannot be NULL.
 
-Constify the res parameter.
+In order to reuse of_pci_set_address() when creating the PCI root bus
+node, this function needs to support a NULL pdev parameter. Indeed, in
+the case of the PCI root bus node creation, no pdev are available and
+of_pci_set_address() will be used with the bridge windows.
+
+Allow to call of_pci_set_address() with a NULL pdev.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 ---
- drivers/pci/of_property.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/of_property.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-index 8aff9ca1f222..400c4c2e434d 100644
+index 886c236e5de6..8aff9ca1f222 100644
 --- a/drivers/pci/of_property.c
 +++ b/drivers/pci/of_property.c
-@@ -69,7 +69,7 @@ static void of_pci_set_address(struct pci_dev *pdev, u32 *prop, u64 addr,
- 	}
- }
- 
--static int of_pci_get_addr_flags(struct resource *res, u32 *flags)
-+static int of_pci_get_addr_flags(const struct resource *res, u32 *flags)
+@@ -54,9 +54,13 @@ enum of_pci_prop_compatible {
+ static void of_pci_set_address(struct pci_dev *pdev, u32 *prop, u64 addr,
+ 			       u32 reg_num, u32 flags, bool reloc)
  {
- 	u32 ss;
- 
+-	prop[0] = FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
+-		FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
+-		FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
++	if (pdev)
++		prop[0] = FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
++			  FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
++			  FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
++	else
++		prop[0] = 0;
++
+ 	prop[0] |= flags | reg_num;
+ 	if (!reloc) {
+ 		prop[0] |= OF_PCI_ADDR_FIELD_NONRELOC;
 -- 
 2.47.0
 
