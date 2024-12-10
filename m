@@ -1,149 +1,172 @@
-Received: from mx08lb.world4you.com (mx08lb.world4you.com [81.19.149.118])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44AF9226869;
-	Tue, 10 Dec 2024 20:10:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.19.149.118
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91A5D22A1C3;
+	Tue, 10 Dec 2024 20:45:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733861419; cv=none; b=Gim4sgn+FqQ9pFJW+G2gkRt/8k+rDXAap8an4Je/UTPfIGEDlcaafvuz1Opbt8N37sKfOtcadChL8WNpZOUDsq/mL8TLx5wGAL8oC1pShKdbN3B3My+KFb38lTfazlorlqmG8KBzxw1d+ACrGMqApbUi6RagTuzMw9XyfRRQMDE=
+	t=1733863528; cv=none; b=XEMT6wx38qDmkSAqUr6pt6y7wtuQabmHxMBtUbcLZheSe3/ZYOJAm9CC3xNw0MPQ4tPH8yRwFUkCsnmsmUJBiRyHA0Pm9k6QZaUTwrSiQUV7TngZl9GsKumWTSDbeKcofFvTupgZgpIEaE1Q60xqviCpJV0gs9fAnmyEztSwOrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733861419; c=relaxed/simple;
-	bh=FYEQbT9tBWdrOaUmg/9LCm6UrMmwas/GkuSUSpaCRGs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=loxurJYRxtZ5HNKvHSnFbffnQYqoZoIuuTNhYhWGnLRGfFH33TamP1bRPDVpW0QBZRsFFtZD8pvyZnwIiUTNnZHfOgJa/1XFDA4u3bjtOBYc4m1DYvgGKOslUjFf8Obd4uxQb1Gidf7XOUGvMvoRU3kRxjOVMqpsbgQCXfoKwHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com; spf=pass smtp.mailfrom=engleder-embedded.com; dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b=OKBbQ14K; arc=none smtp.client-ip=81.19.149.118
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=engleder-embedded.com
+	s=arc-20240116; t=1733863528; c=relaxed/simple;
+	bh=ju4X+yZhI1BnsMkCLu3fV4gRYkOlFHLyiHLIqGY2oAI=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=XQa/wcEk6QKQvhRuASxSr/nVmg0/70awf+tc0fcocZjB7qBiOz3kluNNVAG361bgABl9TwTWk3QtflfcXmWqYYgbZ4bYlnlqoFuPVcJ/dPJgLPRETdpSqITy7VGwloW/q/h3XIeuye+zRN/wnVg5YPPlasokXU2ny2L0yJTWDpQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fuPefJyw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b="OKBbQ14K"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=engleder-embedded.com; s=dkim11; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=AhEWUKL5EhB8ncFdMFzQW4/lbKCtlIrg6mHUxIedBSE=; b=OKBbQ14KBlVrretGyyGUSDnClZ
-	9c2oso6nkDj80BeuVHcyvOzAYIat6gZoqf+CYD6T973bqp/G81KnARBGKRIj27Mf8w+H8Jx4sBzrR
-	3cM5y0P1b2GmVaC397CQbjq4mviSSnfEL83KrihNXJ4GizDLrJRN+1OmRanbx5ubNoaU=;
-Received: from [88.117.62.55] (helo=[10.0.0.160])
-	by mx08lb.world4you.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.97.1)
-	(envelope-from <gerhard@engleder-embedded.com>)
-	id 1tL5qY-000000002GY-3Sx5;
-	Tue, 10 Dec 2024 20:24:39 +0100
-Message-ID: <94752230-a901-4a15-abd1-f470a62e1047@engleder-embedded.com>
-Date: Tue, 10 Dec 2024 20:24:37 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fuPefJyw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C215C4CED6;
+	Tue, 10 Dec 2024 20:45:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733863526;
+	bh=ju4X+yZhI1BnsMkCLu3fV4gRYkOlFHLyiHLIqGY2oAI=;
+	h=Subject:From:To:Cc:Date:In-Reply-To:References:From;
+	b=fuPefJywZSC3M5DKCRmu3ip8euNlDXxGdFXxooGSAULaGIOQ5Nr3J7A8yuFDyXspy
+	 oQHvIsVL3v9/2MJzNtHGIBnOWUMkQV9CLVYggHAk4mUIFLn8ppTNLaDNDJ5mzYNClN
+	 VSAnWePQkypQYcUCAZYFVZbYW58OhC0MG5N26Q+r34e0hFf3ycJbcxEAjSzibf320q
+	 lE8PTVeXmLFx2jA3BhWto17ogq/CBBuZPWRn1hOW/idRHZkiH8d3NfUHD4mV420G9X
+	 OPPTNfH92OPYM86pO92Jhv5vAAilHptux61V7er22TPoa0+IyydzfwsiBKB9tsj9Ta
+	 dmZsLMaPudTMQ==
+Message-ID: <70829798889c6d779ca0f6cd3260a765780d1369.camel@kernel.org>
+Subject: Re: [PATCH] PCI/portdrv: Disable bwctrl service if port is fixed at
+ 2.5 GT/s
+From: Niklas Schnelle <niks@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Ilpo =?ISO-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>,  Bjorn
+ Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, Rob Herring
+ <robh@kernel.org>, Krzysztof Wilczy??ski	 <kw@linux.com>, "Maciej W .
+ Rozycki" <macro@orcam.me.uk>, Jonathan Cameron	
+ <Jonathan.Cameron@huawei.com>, Alexandru Gagniuc <mr.nuke.me@gmail.com>, 
+ Krishna chaitanya chundru	 <quic_krichai@quicinc.com>, Srinivas Pandruvada	
+ <srinivas.pandruvada@linux.intel.com>, "Rafael J . Wysocki"
+ <rafael@kernel.org>, 	linux-pm@vger.kernel.org, Smita Koralahalli	
+ <Smita.KoralahalliChannabasappa@amd.com>, linux-kernel@vger.kernel.org, 
+ Daniel Lezcano <daniel.lezcano@linaro.org>, Amit Kucheria
+ <amitk@kernel.org>, Zhang Rui <rui.zhang@intel.com>,  Christophe JAILLET
+ <christophe.jaillet@wanadoo.fr>, Mika Westerberg
+ <mika.westerberg@linux.intel.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>
+Date: Tue, 10 Dec 2024 21:45:18 +0100
+In-Reply-To: <Z1gSZCdv3fwnRRNk@wunner.de>
+References: <20241207-fix_bwctrl_thunderbolt-v1-1-b711f572a705@kernel.org>
+		 <Z1gSZCdv3fwnRRNk@wunner.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.54.2 
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [Intel-wired-lan] [PATCH iwl-next v2] e1000e: Fix real-time
- violations on link up
-To: Paul Menzel <pmenzel@molgen.mpg.de>
-Cc: intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
- anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
- andrew+netdev@lunn.ch, davem@davemloft.net, kuba@kernel.org,
- edumazet@google.com, pabeni@redhat.com, Gerhard Engleder <eg@keba.com>,
- Vitaly Lifshits <vitaly.lifshits@intel.com>, linux-pci@vger.kernel.org,
- Bjorn Helgaas <bhelgaas@google.com>
-References: <20241208184950.8281-1-gerhard@engleder-embedded.com>
- <7c4f3165-df86-47e1-9fc4-7087accf4a68@molgen.mpg.de>
-Content-Language: en-US
-From: Gerhard Engleder <gerhard@engleder-embedded.com>
-In-Reply-To: <7c4f3165-df86-47e1-9fc4-7087accf4a68@molgen.mpg.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-AV-Do-Run: Yes
 
-On 09.12.24 12:34, Paul Menzel wrote:
-> [Cc: +PCI folks]
-> 
-> Dear Gerhard,
-> 
-> 
-> Thank you for your patch.
-> 
-> 
-> Am 08.12.24 um 19:49 schrieb Gerhard Engleder:
->> From: Gerhard Engleder <eg@keba.com>
->>
->> From: Gerhard Engleder <eg@keba.com>
-> 
-> The from line is present twice. No idea, if git is going to remove both.
+On Tue, 2024-12-10 at 11:05 +0100, Lukas Wunner wrote:
+> On Sat, Dec 07, 2024 at 07:44:09PM +0100, Niklas Schnelle wrote:
+> > Trying to enable bwctrl on a Thunderbolt port causes a boot hang on som=
+e
+> > systems though the exact reason is not yet understood.
+>=20
+> Probably worth highlighting the discrete Thunderbolt chip which exhibits
+> this issue, i.e. Intel JHL7540 (Titan Ridge).
 
-It seems git send-email is adding this line again automatically.
-Will be fixed next time.
+Agree will ad for v2.
 
->> Link down and up triggers update of MTA table. This update executes many
->> PCIe writes and a final flush. Thus, PCIe will be blocked until all 
->> writes
->> are flushed. As a result, DMA transfers of other targets suffer from 
->> delay
->> in the range of 50us. This results in timing violations on real-time
->> systems during link down and up of e1000e.
->>
->> A flush after a low enough number of PCIe writes eliminates the delay
->> but also increases the time needed for MTA table update. The following
->> measurements were done on i3-2310E with e1000e for 128 MTA table entries:
->>
->> Single flush after all writes: 106us
->> Flush after every write:       429us
->> Flush after every 2nd write:   266us
->> Flush after every 4th write:   180us
->> Flush after every 8th write:   141us
->> Flush after every 16th write:  121us
->>
->> A flush after every 8th write delays the link up by 35us and the
->> negative impact to DMA transfers of other targets is still tolerable.
->>
->> Execute a flush after every 8th write. This prevents overloading the
->> interconnect with posted writes.
->>
->> Reviewed-by: Przemek Kitszel <przemyslaw.kitszel@intel.com>
->> CC: Vitaly Lifshits <vitaly.lifshits@intel.com>
->> Link: 
->> https://lore.kernel.org/netdev/f8fe665a-5e6c-4f95-b47a-2f3281aa0e6c@lunn.ch/T/
->> Signed-off-by: Gerhard Engleder <eg@keba.com>
->> ---
->> v2:
->> - remove PREEMPT_RT dependency (Andrew Lunn, Przemek Kitszel)
->> ---
->>   drivers/net/ethernet/intel/e1000e/mac.c | 7 ++++++-
->>   1 file changed, 6 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/net/ethernet/intel/e1000e/mac.c 
->> b/drivers/net/ethernet/intel/e1000e/mac.c
->> index d7df2a0ed629..7d1482a9effd 100644
->> --- a/drivers/net/ethernet/intel/e1000e/mac.c
->> +++ b/drivers/net/ethernet/intel/e1000e/mac.c
->> @@ -331,8 +331,13 @@ void e1000e_update_mc_addr_list_generic(struct 
->> e1000_hw *hw,
->>       }
->>       /* replace the entire MTA table */
->> -    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--)
->> +    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--) {
->>           E1000_WRITE_REG_ARRAY(hw, E1000_MTA, i, hw->mac.mta_shadow[i]);
->> +
->> +        /* do not queue up too many writes */
-> 
-> Maybe make the comment more elaborate?
+>=20
+> > --- a/drivers/pci/pcie/portdrv.c
+> > +++ b/drivers/pci/pcie/portdrv.c
+> > @@ -270,7 +270,8 @@ static int get_port_device_capability(struct pci_de=
+v *dev)
+> >  		u32 linkcap;
+> > =20
+> >  		pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &linkcap);
+> > -		if (linkcap & PCI_EXP_LNKCAP_LBNC)
+> > +		if (linkcap & PCI_EXP_LNKCAP_LBNC &&
+> > +		    (linkcap & PCI_EXP_LNKCAP_SLS) !=3D PCI_EXP_LNKCAP_SLS_2_5GB)
+> >  			services |=3D PCIE_PORT_SERVICE_BWCTRL;
+> >  	}
+>=20
+> This is fine in principle because PCIe r6.2 sec 8.2.1 states:
+>=20
+>    "A device must support 2.5 GT/s and is not permitted to skip support
+>     for any data rates between 2.5 GT/s and the highest supported rate."
+>=20
+> However the Implementation Note at the end of PCIe r6.2 sec 7.5.3.18
+> cautions:
+>=20
+>    "It is strongly encouraged that software primarily utilize the
+>     Supported Link Speeds Vector instead of the Max Link Speed field,
 
-I will try to extend based on comments from the other thread.
+>     so that software can determine the exact set of supported speeds
+>     on current and future hardware. This can avoid software being
+>     confused if a future specification defines Links that do not
+>     require support for all slower speeds."
+>=20
+> First of all, the Supported Link Speeds field in the Link Capabilities
+> register (which you're querying here) was renamed to Max Link Speed in
+> PCIe r3.1=C2=A0and a new Link Capabilities 2 register was added which con=
+tains
+> a new Supported Link Speeds field.  Software is supposed to query the
+> latter if the device implements the Link Capabilities 2 register
+> (see the other Implementation Note at the end of PCIe r6.2 sec 7.5.3.18).
 
->> +        if ((i % 8) == 0 && i != 0)
->> +            e1e_flush();
->> +    }
->>       e1e_flush();
->>   }
-> 
-> 
-> Kind regards,
-> 
-> Paul
+Would it maybe make sense to update the comment for PCI_EXP_LNKCAP_SLS
+in pci_regs.h to point out that in PCIe r3.1 and newer this is called
+the Max Link Speed field? This would certainly helped me here.
 
-Thank you for the review!
+>=20
+> Second, the above-quoted Implementation Note says that software should
+> not rely on future spec versions to mandate that *all* link speeds
+> (2.5 GT/s and all intermediate speeds up to the maximum supported speed)
+> are supported.
+>=20
+> Since v6.13-rc1, we cache the supported speeds in the "supported_speeds"
+> field in struct pci_dev, taking care of the PCIe 3.0 versus later version=
+s
+> issue.
+>=20
+> So to make this future-proof what you could do is check whether only a
+> *single* speed is supported (which could be something else than 2.5 GT/s
+> if future spec versions allow that), i.e.:
+>=20
+> -		if (linkcap & PCI_EXP_LNKCAP_LBNC)
+> +		if (linkcap & PCI_EXP_LNKCAP_LBNC &&
+> +		    hweight8(dev->supported_speeds) > 1)
 
-Gerhard
+This also makes sense to me in that the argument holds that if there is
+only one supported speed bwctrl can't control it. That said it is
+definitely more general than this patch.
+
+Sadly, I tried it and in my case it doesn't work. Taking a closer look
+at lspci -vvv of the Thunderbolt port as well as a debug print reveals
+why:
+
+07:00.0 PCI bridge: Intel Corporation JHL7540 Thunderbolt 3 Bridge [Titan R=
+idge 4C 2018] (rev 06) (prog-if 00 [Normal decode])
+       ...
+                LnkCap: Port #0, Speed 2.5GT/s, Width x4, ASPM L1, Exit Lat=
+ency L1 <1us
+                        ClockPM- Surprise- LLActRep- BwNot+ ASPMOptComp+
+                LnkCtl: ASPM Disabled; LnkDisable- CommClk+
+                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
+                LnkSta: Speed 2.5GT/s, Width x4
+                        TrErr- Train- SlotClk+ DLActive- BWMgmt+ ABWMgmt-
+	...
+                LnkCap2: Supported Link Speeds: 2.5-8GT/s, Crosslink- Retim=
+er- 2Retimers- DRS-
+                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- Speed=
+Dis-, Selectable De-emphasis: -6dB
+                         Transmit Margin: Normal Operating Range, EnterModi=
+fiedCompliance- ComplianceSOS-
+                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0=
+dB preshoot
+	...
+
+So it seems that on this Thunderbolt chip the LnkCap field
+says 2.5 GT/s only as per the USB 4 spec you quoted but LnkCap2
+is 0x0E i.e. 2.5-8 GT/s.
+
+I wonder if this is related to why the hang occurs. Could it be that
+bwctrl tries to enable speeds above 2.5 GT/s and that causes links to
+fail?
+
+Thanks,
+Niklas
+
