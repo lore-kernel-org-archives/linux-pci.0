@@ -1,44 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CE4D214231;
-	Tue, 10 Dec 2024 19:21:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 467A9226864;
+	Tue, 10 Dec 2024 19:24:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733858502; cv=none; b=HBzuwo2IchfxhRh/DspxcXCvmXnkODTmag4DUJnMuqCj/WNiO4VuI1DPsZlnYY55u81ULm0ZijunDqSxergXd9wVVPwZPoUDfRURbOrvP0sLXwFEjg1m0BSQ8XQ/kjlN/auI9U7Of/+TplhP0rQrL6Cz8LilgW/i1Ar9kshMR70=
+	t=1733858686; cv=none; b=MkAKOnq7Z8dTT3Z3I4o9Rs2NFhugxpNooNYuvMJmjKXht3oift+LyYO6SEs4J0nSkNt3rFTwxdERF1y1511MoohBo2wHZVoEwJayGhcJtog+hTMPTp2swZzRnUb6z4zGamIfruyu9uP5OAC+oCFJ6qvLj8eRW51e/IiyP5Ds5QE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733858502; c=relaxed/simple;
-	bh=230wSQ1wYeQaQouNCrsTwnLI6v3KuSOxEyYSkJf45H8=;
+	s=arc-20240116; t=1733858686; c=relaxed/simple;
+	bh=wF/gTlY74rp2rVeF9vGO4vwlHjzWG1ZRXLox74bBq1I=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=PPE7Fvo40lj89bt+oorzw3rvx4vcE8uNzFsvZJz1O+qyrG2xyppaXYy5oeKW9oGQPnz8r3zeLMZ3vSElRAlfQN0mAz3t1SPkXU+hN1hNnwzoS/bflo9K3mKupg4ZSZ+xPgbG2Ldg6ohWXmHZqQO5jojvK7v3oQhaRk7a6QEVFao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JYOTZdqG; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=PaJmf/mxtDU4Fi23za1vizIn7HztMAShSnrRwhBg2hF6VuMs2AnCB+Ttit0zi0/B7UdyBFPBBo6E5YasqZSIDjSQzFdHX80ajQ+tXGQrjG0a9cKPjhNErLsDsXpIljm3Dw0c5XMB57xpigOrqVHApJxMW4k9ig1RwxS0ok7c8zU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P7SPAqVW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JYOTZdqG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8707DC4CED6;
-	Tue, 10 Dec 2024 19:21:41 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P7SPAqVW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 02990C4CED6;
+	Tue, 10 Dec 2024 19:24:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733858501;
-	bh=230wSQ1wYeQaQouNCrsTwnLI6v3KuSOxEyYSkJf45H8=;
+	s=k20201202; t=1733858686;
+	bh=wF/gTlY74rp2rVeF9vGO4vwlHjzWG1ZRXLox74bBq1I=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=JYOTZdqGXDurHfjZ7OK1P+GAUVX34qsCrNS8oivNtlGejwYDeUFmMEc9xo+YQ/Dhc
-	 UGKqBr5ljQq6FmLcAm7rCZOlDcB8BGiY7/pwDt1e5Og2jXsXuTxm9vSgfdCpZygmMH
-	 GwDNAoOwOfIke227UPl0OE15smllVujQUUim5PO55h5mr3cc5Lo0VW6RTCLwe09M7+
-	 M4+7C5LV5pWvzf4wrKmJeVdp98afINhGjG/LH/dCB9b6+RPUbTbQ0XO5nXleH8sajv
-	 IVSjUpzwZewG5S5ZmEiv8YRfuvLbYK54ezUlOhvT0/H0xpvgvhowHB1MEux1bg8Gba
-	 c1hSuC4UTp+xQ==
-Date: Tue, 10 Dec 2024 13:21:40 -0600
+	b=P7SPAqVW7vDZUzTEKGTpTADl6lAJaDJh9pzupw6180C+t49MLH9tuph/P8eTySuDW
+	 IAr4Fe27iWDJOf++F3cDUca41anOU40bJ9/TVaHAZcMy6TT4xhHwO5/6LL0zo56GdU
+	 WTj+wHC99ovUqTqkpJxY0KbSzygXpUEk2cKXtpyUIeBLWxl3Ef+sTq8N6r00wTWpH6
+	 pu5MtZc3ww2ugaK9l0jw3PVodG9oKUJxvmDTOCfCWNZ1joG2ygXNKPB0qHPtkA9IOg
+	 iArcfBd+2RNmrF9/F6qOVPtaKScKa5L6FdmQGcWje9kZyiHIoDAoWnK6ivIV5H25wP
+	 60fPWQVxWENKg==
+Date: Tue, 10 Dec 2024 13:24:44 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-coco@lists.linux.dev, Lukas Wunner <lukas@wunner.de>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH 07/11] PCI: Add PCIe Device 3 Extended Capability
- enumeration
-Message-ID: <20241210192140.GA3079633@bhelgaas>
+Cc: linux-coco@lists.linux.dev, Alexey Kardashevskiy <aik@amd.com>,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org
+Subject: Re: [PATCH 04/11] PCI/IDE: Selective Stream IDE enumeration
+Message-ID: <20241210192444.GA3079017@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,30 +41,42 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <173343743678.1074769.15403889527436764173.stgit@dwillia2-xfh.jf.intel.com>
+In-Reply-To: <173343741936.1074769.17093052628585780785.stgit@dwillia2-xfh.jf.intel.com>
 
-On Thu, Dec 05, 2024 at 02:23:56PM -0800, Dan Williams wrote:
-> PCIe 6.2 Section 7.7.9 Device 3 Extended Capability Structure,
-> enumerates new link capabilities and status added for Gen 6 devices. One
-> of the link details enumerated in that register block is the "Segment
-> Captured" status in the Device Status 3 register. That status is
-> relevant for enabling IDE (Integrity & Data Encryption) whereby
-> Selective IDE streams can be limited to a given requester id range
-> within a given segment.
+I try to make the first word of the subject a verb that says something
+about what the patch does, maybe "Enumerate" in this case?
 
-s/requester id/Requester ID/ to match spec usage
+On Thu, Dec 05, 2024 at 02:23:39PM -0800, Dan Williams wrote:
+> Link encryption is a new PCIe capability defined by "PCIe 6.2 section
+> 6.33 Integrity & Data Encryption (IDE)". While it is a standalone port
 
-> +++ b/include/uapi/linux/pci_regs.h
-> @@ -749,6 +749,7 @@
->  #define PCI_EXT_CAP_ID_NPEM	0x29	/* Native PCIe Enclosure Management */
->  #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
->  #define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
-> +#define PCI_EXT_CAP_ID_DEV3	0x2F	/* Device 3 Capability/Control/Status */
+Since sec 6.33 doesn't cover the "IDE Extended Capability" (sec
+7.9.26), I would word this as "a new PCIe feature" here.
 
-It doesn't look like lspci knows about this; is there something in
-progress to add that?
+> and endpoint capability, it is also a building block for device security
+> defined by "PCIe 6.2 section 11 TEE Device Interface Security Protocol
+> (TDISP)". That protocol coordinates device security setup between the
+> platform TSM (TEE Security Manager) and device DSM (Device Security
+> Manager). While the platform TSM can allocate resources like stream-ids
+> and manage keys, it still requires system software to manage the IDE
+> capability register block.
 
-https://git.kernel.org/pub/scm/utils/pciutils/pciutils.git/tree/lib/header.h?id=v3.13.0#n257
+s/stream-ids/Stream IDs/ to match spec usage
 
->  #define PCI_EXT_CAP_ID_IDE	0x30    /* Integrity and Data Encryption */
->  #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_IDE
+> Add register definitions and basic enumeration for a "selective-stream"
+> IDE capability, a follow on change will select the new CONFIG_PCI_IDE
+> symbol. Note that while the IDE specifications defines both a
+> point-to-point "Link" stream and a root-port-to-endpoint "Selective"
+> stream, only "Selective" is considered for now for platform TSM
+> coordination.
+
+s/root-port/Root Port/ to match spec usage, also below
+
+> +void pci_ide_init(struct pci_dev *pdev)
+> +{
+> ...
+
+> +			 * lets not entertain devices that do not have a
+> +			 * constant number of address association blocks
+
+s/lets/Let's/
