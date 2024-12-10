@@ -1,96 +1,92 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A2E211264;
-	Tue, 10 Dec 2024 22:51:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C70821126D;
+	Tue, 10 Dec 2024 22:54:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733871101; cv=none; b=tUT0AP0Io4t4HEwqF+ZAIHvyxI7kq7EoGBrr9wEKLf8zLQT4x0RroB668EMAwVn7gk8DIqSm6mZdsXaeGilv/HNNK4nCOxzaqGvLfUXEqVIwbs0x0VPqMvPG54arJw2lXiFxSwMoU9DsZEtBF+BkZuCNRR5vyjI1xKUKPU7VTBM=
+	t=1733871243; cv=none; b=ciXq3MyMFwglQ0fD7O37MC8+AVl1kzW+5YodwpK0rmli7J0BQ6IH01JGzqkNVxyNoQScVpdSgRqZ8TX1a1CL6BQj3tPjw55IKkV1tOxCGFxIGwMgxRvT42CDv87uE9X6k1q7F6NNh5QmJ3vjo8CMOhWiRJeVydo+rSQNN4OvY9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733871101; c=relaxed/simple;
-	bh=5bRC9IpLxj0D0qXMFpV6n22XRLzh6hoh8/W5/HtC2vM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jh8xs11r4T4ObyIgPXeSO48gI6Tk20o5A5ta/bnI7DRzBR3NKNOVofhSLuj8Vm+Q/cAPTX3K6WoM3BL4weKz7VDAgKnPwHtR8cymHc8bKYqnCryed2Ip4ix34rjpmKdpYqipiH827rXQrtkzo2bYjVWt+iEZqKFiGK1WdeHaC0c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QPLkR8fQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733871243; c=relaxed/simple;
+	bh=xHboJ6Nj+jUBjuysVSh5kzHiNcpv6miOBLy03WABifE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gWM2aqIKQ6FpCUQZlaKCPrQl8Bhvnxv1DhHsUlGJw6kQCc9tvzDTCcBqdAck6yWoT1CuXnVK+dJLlOwkfjLst4fUILk2zCTlDMwz0IQcZ+SaGiTx1C4GRl10kat7oaw18AWWELaFthvsb5kz/2DKI+b/4oNHSEvYiANPN0Xo+7w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F6RNkTpo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QPLkR8fQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94183C4CEE5;
-	Tue, 10 Dec 2024 22:51:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F6RNkTpo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DD594C4CEDE;
+	Tue, 10 Dec 2024 22:54:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733871100;
-	bh=5bRC9IpLxj0D0qXMFpV6n22XRLzh6hoh8/W5/HtC2vM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=QPLkR8fQq/yP5+Z4/5jDf5zfedAwKU1GLQ+8e+cClNw03AeOUB4UPVwQB3KFaGZig
-	 rWjua9nVKEWKfUGYo2Zwl7omkuhR8UEEYM8N9LOTMxuCNzx9JUh8qA1ZA9gMzqrqJ9
-	 xhoRH4jsplj5mbb/8velCJAZu+Pfar2cAaJZ4El2rSae0x+AkuZ4abkpSxyRMy+lSX
-	 KrcJxRsz1qA0WSx22HFKttt1ip/c4pANWxPJsFqys7RHu9dEXNVU8aZ2jmbfSO0y0H
-	 l1ia6FUk7QPBVi4SxA0bcNdbVUcIpwZvpLo7fj9JccD1QNi+HTsk3zjQNrD4pWkPlD
-	 In6mGV8cF0KWQ==
-From: Danilo Krummrich <dakr@kernel.org>
-To: gregkh@linuxfoundation.org,
-	rafael@kernel.org,
-	bhelgaas@google.com,
-	ojeda@kernel.org,
-	alex.gaynor@gmail.com,
-	boqun.feng@gmail.com,
-	gary@garyguo.net,
-	bjorn3_gh@protonmail.com,
-	benno.lossin@proton.me,
-	tmgross@umich.edu,
-	a.hindborg@samsung.com,
-	aliceryhl@google.com,
-	airlied@gmail.com,
-	fujita.tomonori@gmail.com,
-	lina@asahilina.net,
-	pstanner@redhat.com,
-	ajanulgu@redhat.com,
-	lyude@redhat.com,
-	robh@kernel.org,
-	daniel.almeida@collabora.com,
-	saravanak@google.com,
-	dirk.behme@de.bosch.com,
-	j@jannau.net,
-	fabien.parent@linaro.org,
-	chrisi.schrefl@gmail.com
-Cc: rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Danilo Krummrich <dakr@kernel.org>
-Subject: [PATCH v5 16/16] MAINTAINERS: add Danilo to DRIVER CORE
-Date: Tue, 10 Dec 2024 23:46:43 +0100
-Message-ID: <20241210224947.23804-17-dakr@kernel.org>
-X-Mailer: git-send-email 2.47.0
-In-Reply-To: <20241210224947.23804-1-dakr@kernel.org>
-References: <20241210224947.23804-1-dakr@kernel.org>
+	s=k20201202; t=1733871243;
+	bh=xHboJ6Nj+jUBjuysVSh5kzHiNcpv6miOBLy03WABifE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F6RNkTporGLhP919FrAvtVaRdlwD6OHKF9LVyCWvSPhS6/L86mghmTp3sWhxV6wNb
+	 QlFBLBsCx5p3BCADTSSJlGiZoVGQUxg0BvJZURibCzW7PEsrxr547c8BfR2mdkLGk9
+	 jxaD+B41ZsnY4nGwKXLpOJSOokz1SfQvjul3MYuG+BmUdjAfMYOfMCzqvxr7mfk3gD
+	 RfUh0l8GKGMp71ka3TfjDrVw0L/2n83cPMNl5jULVNenO4kzoUP92Oqil4RgXC7Abq
+	 10g9W6QDZj1WACB3tkQ++E5BONJ7jF+yNA9r5RaNIdkhA5tl3jpAH7Uvt55OeEaQRl
+	 lMW6sHikMq9hg==
+Date: Tue, 10 Dec 2024 16:54:01 -0600
+From: "Rob Herring (Arm)" <robh@kernel.org>
+To: Andrea della Porta <andrea.porta@suse.com>
+Cc: Krzysztof Wilczynski <kw@linux.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	devicetree@vger.kernel.org, Saravana Kannan <saravanak@google.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	linux-arm-kernel@lists.infradead.org,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	linux-pci@vger.kernel.org, linux-clk@vger.kernel.org,
+	Stephen Boyd <sboyd@kernel.org>,
+	Michael Turquette <mturquette@baylibre.com>,
+	linux-kernel@vger.kernel.org, Stefan Wahren <wahrenst@gmx.net>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	linux-rpi-kernel@lists.infradead.org,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Masahiro Yamada <masahiroy@kernel.org>,
+	Dragan Cvetic <dragan.cvetic@amd.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Derek Kiernan <derek.kiernan@amd.com>, linux-gpio@vger.kernel.org,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Will Deacon <will@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v5 03/10] dt-bindings: pci: Add common schema for devices
+ accessible through PCI BARs
+Message-ID: <173387124038.751229.17185539657512592303.robh@kernel.org>
+References: <cover.1733136811.git.andrea.porta@suse.com>
+ <92fe1c6eb3ae1e7e7c151423568be2d13f19b55a.1733136811.git.andrea.porta@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <92fe1c6eb3ae1e7e7c151423568be2d13f19b55a.1733136811.git.andrea.porta@suse.com>
 
-Let's keep an eye on the Rust abstractions; add myself as reviewer to
-DRIVER CORE.
 
-Signed-off-by: Danilo Krummrich <dakr@kernel.org>
----
- MAINTAINERS | 1 +
- 1 file changed, 1 insertion(+)
+On Mon, 02 Dec 2024 12:19:27 +0100, Andrea della Porta wrote:
+> Common YAML schema for devices that exports internal peripherals through
+> PCI BARs. The BARs are exposed as simple-buses through which the
+> peripherals can be accessed.
+> 
+> This is not intended to be used as a standalone binding, but should be
+> included by device specific bindings.
+> 
+> Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
+> ---
+>  .../devicetree/bindings/pci/pci-ep-bus.yaml   | 58 +++++++++++++++++++
+>  MAINTAINERS                                   |  1 +
+>  2 files changed, 59 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/pci/pci-ep-bus.yaml
+> 
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 47b1a82dfdd0..ca3546f9f3b5 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7021,6 +7021,7 @@ F:	include/linux/component.h
- DRIVER CORE, KOBJECTS, DEBUGFS AND SYSFS
- M:	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
- R:	"Rafael J. Wysocki" <rafael@kernel.org>
-+R:	Danilo Krummrich <dakr@kernel.org>
- S:	Supported
- T:	git git://git.kernel.org/pub/scm/linux/kernel/git/gregkh/driver-core.git
- F:	Documentation/core-api/kobject.rst
--- 
-2.47.0
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 
