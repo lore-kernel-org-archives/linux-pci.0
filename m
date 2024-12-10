@@ -1,132 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx08lb.world4you.com (mx08lb.world4you.com [81.19.149.118])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E6C22A1FB;
-	Tue, 10 Dec 2024 19:56:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44AF9226869;
+	Tue, 10 Dec 2024 20:10:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.19.149.118
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733860589; cv=none; b=jo9O2rf80ZcfdIk/1yrw/wz+pjSyToUb1V0uT2y5/xkQVqtMngsQ4/bd/PUopoupCUvlEqcxkb6O3wzlOXDQIrrOKpoWE7JzBq05b+tpz/0kM2GXRA5feQAKLYEPzf2ofTqDu9/LPmOaK83kAcx2VwhhigTsEFxgiHMHK12YoO8=
+	t=1733861419; cv=none; b=Gim4sgn+FqQ9pFJW+G2gkRt/8k+rDXAap8an4Je/UTPfIGEDlcaafvuz1Opbt8N37sKfOtcadChL8WNpZOUDsq/mL8TLx5wGAL8oC1pShKdbN3B3My+KFb38lTfazlorlqmG8KBzxw1d+ACrGMqApbUi6RagTuzMw9XyfRRQMDE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733860589; c=relaxed/simple;
-	bh=TN49SkV3Q2NAbIusEHwgWMfJZk5D1+79QAs+gi2Q9W4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=t7cil74vOqTiSGH+tc+qfW6aOW3Ui0ZpSA048IBk5u2m2pwBVJnUz0poXZtX02AKhk2eWjvmn9KG3I8acLVC3Im1ey0EoJHfilifbDbyLB5PAEzsDCR9KEn/9ab8ZB8MHhEOZoi+fGesHHW/elQ5CT3sGEqnHsTCxsbakzjDdm0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PHRwmL5K; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1733861419; c=relaxed/simple;
+	bh=FYEQbT9tBWdrOaUmg/9LCm6UrMmwas/GkuSUSpaCRGs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=loxurJYRxtZ5HNKvHSnFbffnQYqoZoIuuTNhYhWGnLRGfFH33TamP1bRPDVpW0QBZRsFFtZD8pvyZnwIiUTNnZHfOgJa/1XFDA4u3bjtOBYc4m1DYvgGKOslUjFf8Obd4uxQb1Gidf7XOUGvMvoRU3kRxjOVMqpsbgQCXfoKwHM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com; spf=pass smtp.mailfrom=engleder-embedded.com; dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b=OKBbQ14K; arc=none smtp.client-ip=81.19.149.118
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=engleder-embedded.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PHRwmL5K"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CD499C4CEE2;
-	Tue, 10 Dec 2024 19:56:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1733860586;
-	bh=TN49SkV3Q2NAbIusEHwgWMfJZk5D1+79QAs+gi2Q9W4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=PHRwmL5Khwz8NewLBLZtrHTh8I8BnZ5O15622gsAM/SNmaDa58QBlXDUwvUvXelsi
-	 eZ8TCFYFGjMz5OWH8R7nnX/X00bJGlb17lNAqRvBBQqf0ox+Zrfil6IYg2DJH/GlnW
-	 qci6SUZa1xYUj2aZz0TEoE6vnMIWYtMKii3eSbG0yt+3uflbxDKRjD5cnPCNyaqLRO
-	 bxSV9ivk3BnOk0XiDKY2Evk/LOUM2zh5OtFKKq8gBnqAG/Tx4YTK/EzgSNFmkihc3W
-	 Go49hJoRogJTHU8bEM0tNozQ77HCq38Rj9fF/kDI5+5sowY9VGdHfLYH4bhJ1EbZJN
-	 /svSesQhsg7Kw==
-Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-71e1728c307so137662a34.2;
-        Tue, 10 Dec 2024 11:56:26 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCW6WpLaVkY/t3Cya0X0MrBYlAVrDBXA1/dbnqLg3IGA/sd/T+QkiEUr+YuB0ifSgckmmCPPixP5TPdO@vger.kernel.org, AJvYcCW6zNuai8tQQywyrs9uYqYgbMBImG0XAgb52BHVT9xHvgo5NHpHC5ha8mxUJ1Zh9HG1EABwe0dRi0f4z28l@vger.kernel.org, AJvYcCXlnVNJCc7VygTx5WohLMlL2TzQ9sITI6PMC1dVLHmeNeMyC3JS0Nzmk3XRHMUNDl52F1tSeUmb8gAi@vger.kernel.org
-X-Gm-Message-State: AOJu0YwJZZ40jgeC5WkXR/nBA0H48xjpAIB5uKTAniW/7M3np4LR1gKE
-	MuaADDfWMD+vjDIlSm01C7FVkFIfs6zulXw15/0Dy9QFsu+7c6b2r16Mv1QFkE2a2UbrsiOlDYB
-	+3RCEtoF/2wSx6DFxWCaJyvgfQ/E=
-X-Google-Smtp-Source: AGHT+IF58PAttsbbmJ/Rov0YEMNJsP/Y44yag8OUwwhu58IcZU7Aq2+zXt+OkF2Mesyw9I+Sfy+BL43vDIgAJ01JPbM=
-X-Received: by 2002:a05:6830:6c10:b0:71d:5084:3223 with SMTP id
- 46e09a7af769-71e197dee93mr81708a34.15.1733860586092; Tue, 10 Dec 2024
- 11:56:26 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b="OKBbQ14K"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=engleder-embedded.com; s=dkim11; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=AhEWUKL5EhB8ncFdMFzQW4/lbKCtlIrg6mHUxIedBSE=; b=OKBbQ14KBlVrretGyyGUSDnClZ
+	9c2oso6nkDj80BeuVHcyvOzAYIat6gZoqf+CYD6T973bqp/G81KnARBGKRIj27Mf8w+H8Jx4sBzrR
+	3cM5y0P1b2GmVaC397CQbjq4mviSSnfEL83KrihNXJ4GizDLrJRN+1OmRanbx5ubNoaU=;
+Received: from [88.117.62.55] (helo=[10.0.0.160])
+	by mx08lb.world4you.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.97.1)
+	(envelope-from <gerhard@engleder-embedded.com>)
+	id 1tL5qY-000000002GY-3Sx5;
+	Tue, 10 Dec 2024 20:24:39 +0100
+Message-ID: <94752230-a901-4a15-abd1-f470a62e1047@engleder-embedded.com>
+Date: Tue, 10 Dec 2024 20:24:37 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241114030424.45074-1-zhoushengqing@ttyinfo.com> <20241210195001.GA3254053@bhelgaas>
-In-Reply-To: <20241210195001.GA3254053@bhelgaas>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Tue, 10 Dec 2024 20:56:14 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0g66WmqeouN6AWADE+J3e-f30wMGyLX-Upk+w7Y+i2OxA@mail.gmail.com>
-Message-ID: <CAJZ5v0g66WmqeouN6AWADE+J3e-f30wMGyLX-Upk+w7Y+i2OxA@mail.gmail.com>
-Subject: Re: [PATCHv2] PCI/ACPI: _DSM PRESERVE_BOOT_CONFIG function rev id
- doesn't match with spec.
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Zhou Shengqing <zhoushengqing@ttyinfo.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Len Brown <lenb@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [Intel-wired-lan] [PATCH iwl-next v2] e1000e: Fix real-time
+ violations on link up
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+ anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
+ andrew+netdev@lunn.ch, davem@davemloft.net, kuba@kernel.org,
+ edumazet@google.com, pabeni@redhat.com, Gerhard Engleder <eg@keba.com>,
+ Vitaly Lifshits <vitaly.lifshits@intel.com>, linux-pci@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>
+References: <20241208184950.8281-1-gerhard@engleder-embedded.com>
+ <7c4f3165-df86-47e1-9fc4-7087accf4a68@molgen.mpg.de>
+Content-Language: en-US
+From: Gerhard Engleder <gerhard@engleder-embedded.com>
+In-Reply-To: <7c4f3165-df86-47e1-9fc4-7087accf4a68@molgen.mpg.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-AV-Do-Run: Yes
 
-On Tue, Dec 10, 2024 at 8:50=E2=80=AFPM Bjorn Helgaas <helgaas@kernel.org> =
-wrote:
->
-> [+cc Ben, original author of a78cf9657ba5]
->
-> On Thu, Nov 14, 2024 at 03:04:24AM +0000, Zhou Shengqing wrote:
-> > Per PCI Firmware Specification Revision 3.3 Table 4-7 _DSM Definitions
-> > for PCI. Preserve PCI Boot Configuration Initial Revision ID is 2. But
-> > the code is 1.
->
-> This _DSM function 5 was added in PCI Firmware r3.1, released Dec 13,
-> 2010.  It's listed in sec 4.6 with Revision 2 (as *all* the defined
-> functions are, even functions 1-4, which were included in r3.0 with
-> Revision 1).
->
-> But the actual definition that was added in r3.1 is in sec 4.6.5,
-> which specifies Revision ID 1.
->
-> PCI Firmware r3.2, released Jan 26, 2015, was the newest available at
-> the time Ben implemented a78cf9657ba5 ("PCI/ACPI: Evaluate PCI Boot
-> Configuration _DSM"), and sec 4.6.5 still specified Revision ID 1.
->
-> So I think Ben's addition used the correct Revision ID (1).
->
-> PCI Firmware r3.3, released Jan 20, 2021, changed sec 4.6.5 to say
-> "lowest valid Revision ID value: 2"
->
-> I think it's a mistake to make the kernel change below because
-> platforms in the field implemented function 5 with revision 1 (per the
-> r3.1 and r3.2 specs), and we have no idea whether they implement
-> function 5 revision 2.
->
-> It's quite likely that newer platforms following r3.3 will implement
-> function 5 revision 2, but NOT revision 1, and the existing code won't
-> work for them.
->
-> I think the fix is to try revision 1 and, if that isn't implemented,
-> we should try revision 2.  The semantics stayed the same, so they
-> should both work the same.
+On 09.12.24 12:34, Paul Menzel wrote:
+> [Cc: +PCI folks]
+> 
+> Dear Gerhard,
+> 
+> 
+> Thank you for your patch.
+> 
+> 
+> Am 08.12.24 um 19:49 schrieb Gerhard Engleder:
+>> From: Gerhard Engleder <eg@keba.com>
+>>
+>> From: Gerhard Engleder <eg@keba.com>
+> 
+> The from line is present twice. No idea, if git is going to remove both.
 
-Or call Function 0 with the new revision and check the result?
+It seems git send-email is adding this line again automatically.
+Will be fixed next time.
 
-> > Fixes: 9d7d5db8e78e ("PCI: Move PRESERVE_BOOT_CONFIG _DSM evaluation to=
- pci_register_host_bridge()")
-> > Origin fixes: a78cf9657ba5 ("PCI/ACPI: Evaluate PCI Boot Configuration =
-_DSM")
-> >
-> > Signed-off-by: Zhou Shengqing <zhoushengqing@ttyinfo.com>
-> > ---
-> >  drivers/pci/pci-acpi.c | 2 +-
-> >  1 file changed, 1 insertion(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-> > index af370628e583..7a4cad0c1f00 100644
-> > --- a/drivers/pci/pci-acpi.c
-> > +++ b/drivers/pci/pci-acpi.c
-> > @@ -132,7 +132,7 @@ bool pci_acpi_preserve_config(struct pci_host_bridg=
-e *host_bridge)
-> >                */
-> >               obj =3D acpi_evaluate_dsm_typed(ACPI_HANDLE(&host_bridge-=
->dev),
-> >                                             &pci_acpi_dsm_guid,
-> > -                                           1, DSM_PCI_PRESERVE_BOOT_CO=
-NFIG,
-> > +                                           2, DSM_PCI_PRESERVE_BOOT_CO=
-NFIG,
-> >                                             NULL, ACPI_TYPE_INTEGER);
-> >               if (obj && obj->integer.value =3D=3D 0)
-> >                       return true;
-> > --
-> > 2.39.2
-> >
+>> Link down and up triggers update of MTA table. This update executes many
+>> PCIe writes and a final flush. Thus, PCIe will be blocked until all 
+>> writes
+>> are flushed. As a result, DMA transfers of other targets suffer from 
+>> delay
+>> in the range of 50us. This results in timing violations on real-time
+>> systems during link down and up of e1000e.
+>>
+>> A flush after a low enough number of PCIe writes eliminates the delay
+>> but also increases the time needed for MTA table update. The following
+>> measurements were done on i3-2310E with e1000e for 128 MTA table entries:
+>>
+>> Single flush after all writes: 106us
+>> Flush after every write:       429us
+>> Flush after every 2nd write:   266us
+>> Flush after every 4th write:   180us
+>> Flush after every 8th write:   141us
+>> Flush after every 16th write:  121us
+>>
+>> A flush after every 8th write delays the link up by 35us and the
+>> negative impact to DMA transfers of other targets is still tolerable.
+>>
+>> Execute a flush after every 8th write. This prevents overloading the
+>> interconnect with posted writes.
+>>
+>> Reviewed-by: Przemek Kitszel <przemyslaw.kitszel@intel.com>
+>> CC: Vitaly Lifshits <vitaly.lifshits@intel.com>
+>> Link: 
+>> https://lore.kernel.org/netdev/f8fe665a-5e6c-4f95-b47a-2f3281aa0e6c@lunn.ch/T/
+>> Signed-off-by: Gerhard Engleder <eg@keba.com>
+>> ---
+>> v2:
+>> - remove PREEMPT_RT dependency (Andrew Lunn, Przemek Kitszel)
+>> ---
+>>   drivers/net/ethernet/intel/e1000e/mac.c | 7 ++++++-
+>>   1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/net/ethernet/intel/e1000e/mac.c 
+>> b/drivers/net/ethernet/intel/e1000e/mac.c
+>> index d7df2a0ed629..7d1482a9effd 100644
+>> --- a/drivers/net/ethernet/intel/e1000e/mac.c
+>> +++ b/drivers/net/ethernet/intel/e1000e/mac.c
+>> @@ -331,8 +331,13 @@ void e1000e_update_mc_addr_list_generic(struct 
+>> e1000_hw *hw,
+>>       }
+>>       /* replace the entire MTA table */
+>> -    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--)
+>> +    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--) {
+>>           E1000_WRITE_REG_ARRAY(hw, E1000_MTA, i, hw->mac.mta_shadow[i]);
+>> +
+>> +        /* do not queue up too many writes */
+> 
+> Maybe make the comment more elaborate?
+
+I will try to extend based on comments from the other thread.
+
+>> +        if ((i % 8) == 0 && i != 0)
+>> +            e1e_flush();
+>> +    }
+>>       e1e_flush();
+>>   }
+> 
+> 
+> Kind regards,
+> 
+> Paul
+
+Thank you for the review!
+
+Gerhard
