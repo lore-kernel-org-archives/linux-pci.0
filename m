@@ -1,26 +1,33 @@
-Received: from mail-m15593.qiye.163.com (mail-m15593.qiye.163.com [101.71.155.93])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FB271CC8AE
-	for <linux-pci@vger.kernel.org>; Wed, 11 Dec 2024 08:10:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DE2F1C5CD6;
+	Wed, 11 Dec 2024 08:12:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1733904625; cv=none; b=ZUSLEZxLMvuchpBwBw6pBpVsXzVsJNs0NMU6Xuo2rvtTCH5YxsqtjPXPNQ1sy+dKv1knwAY4aa96KFGwV2w9CuXiMDH3U2ENPX14+vSPfMiFUEISIz6q/RoUMtun37gchOtYRLFF058oo+oATLgnhD5O7AetamDbEHpObD9KWnw=
+	t=1733904734; cv=none; b=lMbIMQC3UW2NGYUizFZ34seNAcgUmyiS5pRuJVgkLiMGIoNoz5uJJsHMaTEJY48iiuBnrySV2b98bAiL1S+fYt6fx87zTp+ygC0UdjZnLeeNFqD9N4x7bGMHYZZ9NTjzlM32wcxeDnlXpVGcHb3fypOWp0agzuC6yYJrXqzRGJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1733904625; c=relaxed/simple;
-	bh=PbdxYntF4Sc+HQl8xKRm4SjWFviXl81QghqTPZRDZJg=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=qnbFccwP0NS9SFN02ibr7VimwxHvi3j/AcCXCM3fhAvXnfxp0IX20oqm4Duh5Xh6Yx9JWrlUuNBVw8EJ/vbIh5GOm+0bo/Kk+MsKb/SYJap0V7GJrdW4EVr3A92DlwRCKpehAAV204MYQCbk8WYs/GmG+cE+d7JocGW5Wh1uwjc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=ebfRRvq2; arc=none smtp.client-ip=101.71.155.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1733904734; c=relaxed/simple;
+	bh=N/ItqLYj3QbF6/FwQkGMvHs86qw3nQZyuArAK4zXrYY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=egz5f5i1VQhomqw5G7PVcqoRmAvYk/DKP+ePY7kIfoUBlFHH9tiPOBpNzu7vibahKc5VQcsNq80CpWg0fQNQamPechRPaw3R5Tede3YT542V5Iq4UfK6X3goSkRYqu+UUkjA+lksDsUYfZgq2RXtdC6LCJeqP6ka79uFvegR0Js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mDJprwK3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="ebfRRvq2"
-Received: from [172.16.12.45] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 55cd080a;
-	Wed, 11 Dec 2024 11:34:22 +0800 (GMT+08:00)
-Message-ID: <6503180f-fcc2-49db-9e68-1cefac18af79@rock-chips.com>
-Date: Wed, 11 Dec 2024 11:34:22 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mDJprwK3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A2BC4CED2;
+	Wed, 11 Dec 2024 08:12:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1733904733;
+	bh=N/ItqLYj3QbF6/FwQkGMvHs86qw3nQZyuArAK4zXrYY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=mDJprwK3H7OMiqmWp/AzG+vx1Cwn/Bxx4puSrnAuZ4gnHhJ59WXRt8OLbw/030wSk
+	 vPcKhhy1e5UsmSRVccoRDrET8jSb4ifpPFKqT/vWLaKsRo0OO6a4IEGSlobd4GBRCS
+	 1US4BrpmyrEiIfTorRQ9t04HtOGFvGK9mcLr1lMDATYfaEKey5AlcdPofV/hbdZVm1
+	 C+qC0fhgZdfwpjVZnLRcIM3J6YLPX7PFrfLdwRcnTmfeK1y8u6w/DF4SKORVVQqQth
+	 FDH49GX5IUXzUuN0p8yjbjRMJ/DFKjse1Aue1XzeCIrK8rtIzVf9WNhO+ZF7QF7M+c
+	 xuUehVCXY0mVQ==
+Message-ID: <7e5e8390-9602-4ee5-9940-40e195a0b521@kernel.org>
+Date: Wed, 11 Dec 2024 09:12:06 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -28,122 +35,105 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Cc: shawn.lin@rock-chips.com, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 2/2] perf/dwc_pcie: Add support for Rockchip SoCs
-To: Shuai Xue <xueshuai@linux.alibaba.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Jing Zhang
- <renyu.zj@linux.alibaba.com>, Will Deacon <will@kernel.org>,
- Mark Rutland <mark.rutland@arm.com>
-References: <1733885598-107771-1-git-send-email-shawn.lin@rock-chips.com>
- <1733885598-107771-2-git-send-email-shawn.lin@rock-chips.com>
- <0883f9ec-b984-4374-b54e-9a4c881e9be3@linux.alibaba.com>
-Content-Language: en-GB
-From: Shawn Lin <shawn.lin@rock-chips.com>
-In-Reply-To: <0883f9ec-b984-4374-b54e-9a4c881e9be3@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQx8eQlYYHU5NSE4eTUJDT01WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
-	hVSktLVUpCS0tZBg++
-X-HM-Tid: 0a93b3c833d909cckunm55cd080a
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OTI6Pxw4PjIPEDMvCC0sFjER
-	SAEKFB1VSlVKTEhIQ0NDS01ISElOVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUhPSEM3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=ebfRRvq2mlB7D9Bi2m/3xmso1O0G4UHobGS1deoUc6Db27IMDaMZrwTyiu4xINk3II6E9i7DTphUCYS7OrXAG6TJbVV0f+H3f4YS/5N7WLAfY/q311aSrU2q67OzHzLG/bDDpI+OBhHVFtBdAqwZx8bTpgfxEMEwvEqDGoHOyRE=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=p0jbOg/Zh+QXxKL+pqw5TDFwt2PV04bHvV8wBupdZ/o=;
-	h=date:mime-version:subject:message-id:from;
+Subject: Re: [PATCH v2 1/1] dt-bindings: PCI: mobiveil: convert
+ mobiveil-pcie.txt to yaml format
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Frank Li <Frank.Li@nxp.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
+ <conor+dt@kernel.org>, Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+ Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, Frank <Li@nxp.com>,
+ "open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS"
+ <linux-pci@vger.kernel.org>,
+ "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS"
+ <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>,
+ imx@lists.linux.dev
+References: <20241210170742.GA3246646@bhelgaas>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20241210170742.GA3246646@bhelgaas>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-在 2024/12/11 11:06, Shuai Xue 写道:
-> 
-> 
-> 在 2024/12/11 10:53, Shawn Lin 写道:
->> Add support for Rockchip SoCs by adding vendor ID to the vendor list.
->> And fix the lane-event based enable/disable/read process which is 
->> slightly
->> different on Rockchip SoCs, by checking vendor ID.
+On 10/12/2024 18:07, Bjorn Helgaas wrote:
+> On Tue, Dec 10, 2024 at 09:42:31AM +0100, Krzysztof Kozlowski wrote:
+>> On Mon, Dec 09, 2024 at 05:51:21PM -0600, Bjorn Helgaas wrote:
+>>> On Fri, Dec 06, 2024 at 05:25:27PM -0500, Frank Li wrote:
+>>>> Convert device tree binding doc mobiveil-pcie.txt to yaml format. Merge
+>>>> layerscape-pcie-gen4.txt into this file.
+>>>>
+>>>> Additional change:
+>>>> - interrupt-names: "aer", "pme", "intr", which align order in examples.
+>>>> - reg-names: csr_axi_slave, config_axi_slave, which align existed dts file.
+>>>
+>>> Is there any way to split this into two patches:
+>>>
+>>>   - Convert to yaml and update MAINTAINERS
+>>>   - Update interrupt-names, reg-names
+>>>
+>>> It's hard to review the interrupt-names, reg-names when they're mixed
+>>> in with the yaml conversion.
 >>
->> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
->> ---
->>
->>   drivers/perf/dwc_pcie_pmu.c | 21 +++++++++++++++++++++
->>   1 file changed, 21 insertions(+)
->>
->> diff --git a/drivers/perf/dwc_pcie_pmu.c b/drivers/perf/dwc_pcie_pmu.c
->> index 9cbea96..b3276b8 100644
->> --- a/drivers/perf/dwc_pcie_pmu.c
->> +++ b/drivers/perf/dwc_pcie_pmu.c
->> @@ -108,6 +108,7 @@ static const struct dwc_pcie_vendor_id 
->> dwc_pcie_vendor_ids[] = {
->>       {.vendor_id = PCI_VENDOR_ID_ALIBABA },
->>       {.vendor_id = PCI_VENDOR_ID_AMPERE },
->>       {.vendor_id = PCI_VENDOR_ID_QCOM },
->> +    {.vendor_id = PCI_VENDOR_ID_ROCKCHIP },
+>> The conversion should result in a correct binding, so if original
+>> binding had some issues (and TXT bindings often have: missing or
+>> stale/not-udpated properties), then we expect any fixes in the same
+>> commit.  New things, not supported by existing in-kernel upstream users
+>> or bindings, should be of course in separate patch.
 > 
-> Hi, Shawn,
-> 
-> Bjorn is working on fixing the VSEC matching[1], could you rebase on his 
-> lastest patch?
-> 
-> [1] https://lore.kernel.org/r/20231012162512.GA1069387@bhelgaas
+> Maybe they could be added to the original TXT binding first in one
+> patch, and then converted to yaml in a second patch?
 
-Sure, thanks for reminding me about this.
 
-> 
-> Best Regards,
-> Shuai
-> 
->>       {} /* terminator */
->>   };
->> @@ -256,12 +257,27 @@ static const struct attribute_group 
->> *dwc_pcie_attr_groups[] = {
->>       NULL
->>   };
->> +static void dwc_pcie_pmu_lane_event_enable_for_rk(struct pci_dev *pdev,
->> +                          u16 ras_des_offset,
->> +                          bool enable)
->> +{
->> +    if (enable)
->> +        pci_write_config_dword(pdev, ras_des_offset + 
->> DWC_PCIE_EVENT_CNT_CTL,
->> +                       DWC_PCIE_CNT_ENABLE | DWC_PCIE_PER_EVENT_ON);
->> +    else
->> +        pci_clear_and_set_config_dword(pdev, ras_des_offset + 
->> DWC_PCIE_EVENT_CNT_CTL,
->> +                       DWC_PCIE_CNT_ENABLE, DWC_PCIE_PER_EVENT_ON);
->> +}
->> +
->>   static void dwc_pcie_pmu_lane_event_enable(struct dwc_pcie_pmu 
->> *pcie_pmu,
->>                          bool enable)
->>   {
->>       struct pci_dev *pdev = pcie_pmu->pdev;
->>       u16 ras_des_offset = pcie_pmu->ras_des_offset;
->> +    if (pdev->vendor == PCI_VENDOR_ID_ROCKCHIP)
->> +        return dwc_pcie_pmu_lane_event_enable_for_rk(pdev, 
->> ras_des_offset, enable);
->> +
->>       if (enable)
->>           pci_clear_and_set_config_dword(pdev,
->>                       ras_des_offset + DWC_PCIE_EVENT_CNT_CTL,
->> @@ -287,9 +303,14 @@ static u64 
->> dwc_pcie_pmu_read_lane_event_counter(struct perf_event *event)
->>   {
->>       struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
->>       struct pci_dev *pdev = pcie_pmu->pdev;
->> +    int event_id = DWC_PCIE_EVENT_ID(event);
->>       u16 ras_des_offset = pcie_pmu->ras_des_offset;
->>       u32 val;
->> +    if (pdev->vendor == PCI_VENDOR_ID_ROCKCHIP)
->> +        pci_write_config_dword(pdev, ras_des_offset + 
->> DWC_PCIE_EVENT_CNT_CTL,
->> +                       event_id << 16);
->> +
->>       pci_read_config_dword(pdev, ras_des_offset + 
->> DWC_PCIE_EVENT_CNT_DATA, &val);
->>       return val;
-> 
-> 
+This would solve one thing and cause another issues: you add lines in
+one commit which are immediately removed in the next commit, plus we
+don't want any changes in TXT because absolute lack of means for
+verification/testing.
 
+
+Best regards,
+Krzysztof
