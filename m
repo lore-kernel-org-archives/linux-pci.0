@@ -1,46 +1,46 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC561E3DF4;
-	Fri, 13 Dec 2024 13:51:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8776E1E5018;
+	Fri, 13 Dec 2024 13:51:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734097873; cv=none; b=SiERP9ZGMA0cZKySVcUyic0cg4ZgqL5OaQyf+fuEPw0+6gmZXLTMt4El5Efw+4sWlRbrU5I27503eIyn0Ujxn7oK1/pDTYGkmGZD32/Nk1U6ihN1uTRs0bZWnHY37ryYwaf3IrnUTudsJ7Vmcaa/smaRB0oKdl38KYAIpQgpz9k=
+	t=1734097882; cv=none; b=EhHe1gaAR+ZtcqPUJ1kNekL+BaKtKW+E5J1iAXE/CgLe4Z0qAvCuH7TJ1E9x8jG07fwpc3tRgwxhhADs6N/NIbuR6XUtL/9cWhYmBvq9gO50nEQ17hNGbeogOfKP4ynE75laI3s0k/sJIf2+Ra4oB/cduKwtcUNDjksA7SM+CPQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734097873; c=relaxed/simple;
-	bh=GZipg7h6DWmPJaMvVMe3pCQLAKHop6MGFLjAdjXuVRg=;
+	s=arc-20240116; t=1734097882; c=relaxed/simple;
+	bh=35rpOLZTuKn1JoNxYdKdBlZrM1hqlfPdJpdyP5RqjQc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NOac3hsusMiAvc1CEGtbi2hOhYnemhtYB5SlOP+dzBk/wtOCTNQJaH6Y/2li3e3XIKYZ3U+0CT6PgBxqxLLbAI3sR6oNvwRRSqevb0f2abcBV9BetTSPLzYCvsA2xlNV5CJHpNvc3H6GI8IdIUUkl7SIzQEZGLhSKDWkDMn1csk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=AjB2TWVt; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version:Content-Type; b=YgU3sD7vfBlDxX2ehYpF2wQG+PZt3VBJrgmaPu535ebF5sdWl6rCwBfBjdOTMknJW/I0AHn8IxiLoV8juzxel8VZzlXdwNGeG5ooNM0vQKRLjHHBvSeFZyA5o2HC7CZ0qxupDYrNnhG8RLIBWRxRFD+6OMj/8XYyTV3YDbXvMHs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Jkzf+ODm; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="AjB2TWVt"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BD9Zpj1006041;
-	Fri, 13 Dec 2024 13:51:01 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Jkzf+ODm"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BD9pMCa018931;
+	Fri, 13 Dec 2024 13:51:13 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tPxQLS6L9qg4PnYBRfZP6c11YFbfwHkjvedsJyuKDtk=; b=AjB2TWVtbq4Wi6yS
-	DXr232mx1W3zMm+inV9lI4wOSp4hQsPR+VADeE0LKseMCB9AUg+AUWvfpwG72J24
-	eDO2aitGTyWOQqFH+hb2RZaSrfAWPV+DQML7Su8ydHUR1tuALesjFxC5kzy3N9XV
-	NHK1nYJ07HVjBE3q8T+bx0Nd+mwxcNbePdeaSvqKp38PbEe1eRzgdh1Tw0Sjamir
-	n+ridMYugHSUOvzbOhNotEJDFUHIKlW6vNUvCXgr+xoBOw1JuEAdAH+mBMMs8hU+
-	NCQsvH90vl3fYnIF+FmrgSpZxc+4LUfdoRf7WAQNQvhUZyMLhRKVCKtLk0qGJrRt
-	gRgHEg==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43g6xutawa-1
+	QY3x+fvaGYsolbcf2gLHAsROmiERfQsyGe0qtS0BT9U=; b=Jkzf+ODmacZVK8gE
+	3Y5Xd/MfD41vCi166jEbzPPvO3JGWD63bagFcbxEc4mIn7hBOzGiJW2EbS763NeZ
+	6TsQV4KgqslBsrEqBsFj+Tb4CfmIjOJUjvbLDaiuqQl77Aivfo1v/ok86edw5d1C
+	01XL7Kz2xKQoaUN7ibiu4AcLx1yAzLlUhJsx5SxPXvckKEKk7vo6xPPrFVYBl49e
+	RaG1ypvre6+SQxQgbSI54GchuA7AN8YGBLHKW2q0yLxQS0ifyR5dLhPJcFvc+CKx
+	6su3lHFjbpG+x5u+N/Wmu4i6qfNpPD8irixOL6UmxmNqhBope9vuchAUK9Sld1K+
+	JJeF/A==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43gjnb0nw9-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 13:51:01 +0000 (GMT)
+	Fri, 13 Dec 2024 13:51:13 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BDDp0F1014645
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 4BDDpBf4003420
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 13 Dec 2024 13:51:00 GMT
+	Fri, 13 Dec 2024 13:51:11 GMT
 Received: from hu-mmanikan-blr.qualcomm.com (10.80.80.8) by
  nalasex01a.na.qualcomm.com (10.47.209.196) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.9; Fri, 13 Dec 2024 05:50:55 -0800
+ 15.2.1544.9; Fri, 13 Dec 2024 05:51:06 -0800
 From: Manikanta Mylavarapu <quic_mmanikan@quicinc.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
@@ -50,9 +50,9 @@ To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-phy@lists.infradead.org>
 CC: <quic_srichara@quicinc.com>, <quic_varada@quicinc.com>
-Subject: [PATCH 2/4] dt-bindings: phy: qcom,ipq8074-qmp-pcie: Document the IPQ5424 QMP PCIe PHYs
-Date: Fri, 13 Dec 2024 19:19:48 +0530
-Message-ID: <20241213134950.234946-3-quic_mmanikan@quicinc.com>
+Subject: [PATCH 4/4] arm64: dts: qcom: ipq5424: Enable PCIe PHYs and controllers
+Date: Fri, 13 Dec 2024 19:19:50 +0530
+Message-ID: <20241213134950.234946-5-quic_mmanikan@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241213134950.234946-1-quic_mmanikan@quicinc.com>
 References: <20241213134950.234946-1-quic_mmanikan@quicinc.com>
@@ -68,58 +68,82 @@ X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: 8K-98vrUQl7pTPSfJ339j17zbYxGDDlz
-X-Proofpoint-GUID: 8K-98vrUQl7pTPSfJ339j17zbYxGDDlz
+X-Proofpoint-ORIG-GUID: JPxU4yIbrG50UIYmaEt5--DFMAljZriY
+X-Proofpoint-GUID: JPxU4yIbrG50UIYmaEt5--DFMAljZriY
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
- impostorscore=0 clxscore=1015 malwarescore=0 adultscore=0 mlxlogscore=999
- suspectscore=0 spamscore=0 phishscore=0 lowpriorityscore=0 bulkscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412130097
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0
+ lowpriorityscore=0 bulkscore=0 clxscore=1015 phishscore=0
+ priorityscore=1501 impostorscore=0 adultscore=0 malwarescore=0 mlxscore=0
+ suspectscore=0 mlxlogscore=923 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2411120000 definitions=main-2412130098
 
-Document the PCIe phy on the IPQ5424 platform using the
-IPQ9574 bindings as a fallback, since the PCIe phy on the
-IPQ5424 is similar to IPQ9574.
+Enable the PCIe controller and PHY nodes corresponding to RDP466.
 
 Signed-off-by: Manikanta Mylavarapu <quic_mmanikan@quicinc.com>
 ---
- .../phy/qcom,ipq8074-qmp-pcie-phy.yaml        | 21 +++++++++++++------
- 1 file changed, 15 insertions(+), 6 deletions(-)
+ arch/arm64/boot/dts/qcom/ipq5424-rdp466.dts | 43 +++++++++++++++++++++
+ 1 file changed, 43 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,ipq8074-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,ipq8074-qmp-pcie-phy.yaml
-index 58ce2d91d28c..f60804687412 100644
---- a/Documentation/devicetree/bindings/phy/qcom,ipq8074-qmp-pcie-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/qcom,ipq8074-qmp-pcie-phy.yaml
-@@ -15,12 +15,21 @@ description:
+diff --git a/arch/arm64/boot/dts/qcom/ipq5424-rdp466.dts b/arch/arm64/boot/dts/qcom/ipq5424-rdp466.dts
+index d4d31026a026..8857b64df1be 100644
+--- a/arch/arm64/boot/dts/qcom/ipq5424-rdp466.dts
++++ b/arch/arm64/boot/dts/qcom/ipq5424-rdp466.dts
+@@ -45,6 +45,26 @@ data-pins {
+ 			bias-pull-up;
+ 		};
+ 	};
++
++	pcie2_default_state: pcie2-default-state {
++		perst-n-pins {
++			pins = "gpio31";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-up;
++			output-low;
++		};
++	};
++
++	pcie3_default_state: pcie3-default-state {
++		perst-n-pins {
++			pins = "gpio34";
++			function = "gpio";
++			drive-strength = <8>;
++			bias-pull-up;
++			output-low;
++		};
++	};
+ };
  
- properties:
-   compatible:
--    enum:
--      - qcom,ipq6018-qmp-pcie-phy
--      - qcom,ipq8074-qmp-gen3-pcie-phy
--      - qcom,ipq8074-qmp-pcie-phy
--      - qcom,ipq9574-qmp-gen3x1-pcie-phy
--      - qcom,ipq9574-qmp-gen3x2-pcie-phy
-+    oneOf:
-+      - enum:
-+          - qcom,ipq6018-qmp-pcie-phy
-+          - qcom,ipq8074-qmp-gen3-pcie-phy
-+          - qcom,ipq8074-qmp-pcie-phy
-+          - qcom,ipq9574-qmp-gen3x1-pcie-phy
-+          - qcom,ipq9574-qmp-gen3x2-pcie-phy
-+      - items:
-+          - enum:
-+              - qcom,ipq5424-qmp-gen3x1-pcie-phy
-+          - const: qcom,ipq9574-qmp-gen3x1-pcie-phy
-+      - items:
-+          - enum:
-+              - qcom,ipq5424-qmp-gen3x2-pcie-phy
-+          - const: qcom,ipq9574-qmp-gen3x2-pcie-phy
+ &uart1 {
+@@ -57,3 +77,26 @@ &xo_board {
+ 	clock-frequency = <24000000>;
+ };
  
-   reg:
-     items:
++&pcie2_phy {
++	status = "okay";
++};
++
++&pcie2 {
++	pinctrl-0 = <&pcie2_default_state>;
++	pinctrl-names = "default";
++
++	perst-gpios = <&tlmm 31 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
++
++&pcie3_phy {
++	status = "okay";
++};
++
++&pcie3 {
++	pinctrl-0 = <&pcie3_default_state>;
++	pinctrl-names = "default";
++
++	perst-gpios = <&tlmm 34 GPIO_ACTIVE_LOW>;
++	status = "okay";
++};
 -- 
 2.34.1
 
