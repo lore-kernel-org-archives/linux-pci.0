@@ -1,106 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m12796.qiye.163.com (mail-m12796.qiye.163.com [115.236.127.96])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 861481B6CFD;
-	Fri, 13 Dec 2024 10:30:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C6451D88D0
+	for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2024 11:14:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.96
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734085856; cv=none; b=ExWiUu+qloeSOTopfgIQ9bPgCOOylAEjCHTZrBRaZpNeLCL4dnSX2ydekr6qxtmiZkMZnaEakQhRa1z2Cma+cCgVmK+aNVFtVA/CPkIpNL/SDJomq/gJUJFPZSmQiTPzwAEtWoMC1yMsFSg6/aq863ygOIvMH9+ArmeNWzMJE3U=
+	t=1734088486; cv=none; b=S9hIAekgMWarCAGdbZ4TUiSCcx5Vkxv2/5lXkaRgzwdPc8gUxGVIGkPXnxgEgzARLZf5r9KZyjdjY5gPpo1ut8tTjSrjv5Nx6pENmBs7RH4QzVrzWagGx27BREW+m1I7ijPq6+apXgJdfOE/96Z206R7kXu6x0qxY1z4JefJ6Z8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734085856; c=relaxed/simple;
-	bh=BTQhG+pcPpVWdFU7M6WGNSEHiOAWlPk9OMovbRGe8jk=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:Message-ID:
-	 MIME-Version:Content-Type; b=dnKbCgMEx1TUk/UVLXfkPV6OB9XV2Fse775L3/C86brW6n5/9Ax5EqtJDZ7F9AxqcmUF1IwI9wRjUcktS2q+fO2FtqFG2HaoHwFDqlDlRq6Yv+yKAoetO4sb16Z8KJQqxCGiND+c9GM/a1SvPK1W0UfXn8jxQ9lBz8mTmQ5H6kI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KwAmFDLe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734088486; c=relaxed/simple;
+	bh=7FkDXT6Ps3HcwwsjQJ/olClzyRrmIocbisQLgLKrf1M=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=I3m0B8hZuIGquFmHGaYpu8JtFIZ25DuotCuJeBFJZ4W4EhtXo5HQVHkY/hpV/VFsxctQ/SaPuhRS6Hn3o0hy4V+ezOpHh0yEusIudiEZ+MGJKptf6ouSgTdMyGjtOLxUqFJvxVVz9pApVTSo+3HYKtMCOYmRgV+Fe7EfBOcUGYk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=KZgeTGxk; arc=none smtp.client-ip=115.236.127.96
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KwAmFDLe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65922C4CED0;
-	Fri, 13 Dec 2024 10:30:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734085855;
-	bh=BTQhG+pcPpVWdFU7M6WGNSEHiOAWlPk9OMovbRGe8jk=;
-	h=From:To:Cc:Subject:References:Date:In-Reply-To:From;
-	b=KwAmFDLewAK8qtG2JcgTDln5oAPvX7T6s21n+sVrQK/zovEQltlKTZMfOOydVCYBZ
-	 wexQmXSVYI3h7TBHmpxxuKJCAtIKDA3xJNa8/Im/UBR7LXeWQh180GN2AD0v8T0VFC
-	 xau4jIIld3rUWglJe0O5Ly1c3n+LVRPKkn4Ap2bFPikm9rfX1t0FvFxCEdhmOO7GmQ
-	 T1Kv1o7hm5xTuEGg8jC3v4laVOub2r/1lqEAAYkD9VqHdQWO6/vYMu4tQswLjScRFC
-	 qcBNgWj6+WXQRdmWrvKriaNXsmUfp6QHYu1lvvdq1sD36YHJ/Kyex37L0CjkCkv8o5
-	 SYIrwECkF64TQ==
-From: Kalle Valo <kvalo@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Philipp Stanner <pstanner@redhat.com>,  Igor Mitsyanko
- <imitsyanko@quantenna.com>,  amien Le Moal <dlemoal@kernel.org>,  Niklas
- Cassel <cassel@kernel.org>,  Basavaraj Natikar
- <basavaraj.natikar@amd.com>,  Jiri Kosina <jikos@kernel.org>,  Benjamin
- Tissoires <bentiss@kernel.org>,  Arnd Bergmann <arnd@arndb.de>,  Sergey
- Matyukevich <geomatsi@gmail.com>,  Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,  Alex Dubov <oakad@yahoo.com>,  Sudarsana
- Kalluru <skalluru@marvell.com>,  Manish Chopra <manishc@marvell.com>,
-  Andrew Lunn <andrew+netdev@lunn.ch>,  "David S. Miller"
- <davem@davemloft.net>,  Eric Dumazet <edumazet@google.com>,  Jakub
- Kicinski <kuba@kernel.org>,  Paolo Abeni <pabeni@redhat.com>,  Rasesh Mody
- <rmody@marvell.com>,  GR-Linux-NIC-Dev@marvell.com,  Sanjay R Mehta
- <sanju.mehta@amd.com>,  Shyam Sundar S K <Shyam-sundar.S-k@amd.com>,  Jon
- Mason <jdmason@kudzu.us>,  Dave Jiang <dave.jiang@intel.com>,  Allen Hubbe
- <allenbh@gmail.com>,  Bjorn Helgaas <bhelgaas@google.com>,  Alex
- Williamson <alex.williamson@redhat.com>,  Juergen Gross <jgross@suse.com>,
-  Stefano Stabellini <sstabellini@kernel.org>,  Oleksandr Tyshchenko
- <oleksandr_tyshchenko@epam.com>,  Mario Limonciello
- <mario.limonciello@amd.com>,  Chen Ni <nichen@iscas.ac.cn>,  Ricky Wu
- <ricky_wu@realtek.com>,  Al Viro <viro@zeniv.linux.org.uk>,  Breno Leitao
- <leitao@debian.org>,  Thomas Gleixner <tglx@linutronix.de>,  Kevin Tian
- <kevin.tian@intel.com>,  Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>,  Mostafa Saleh <smostafa@google.com>,
-  Jason Gunthorpe <jgg@ziepe.ca>,  Yi Liu <yi.l.liu@intel.com>,  Kunwu Chan
- <chentao@kylinos.cn>,  Dan Carpenter <dan.carpenter@linaro.org>,  "Dr.
- David Alan Gilbert" <linux@treblig.org>,  Ankit Agrawal
- <ankita@nvidia.com>,  Reinette Chatre <reinette.chatre@intel.com>,  Eric
- Auger <eric.auger@redhat.com>,  Ye Bin <yebin10@huawei.com>,
-  linux-ide@vger.kernel.org,  linux-kernel@vger.kernel.org,
-  linux-input@vger.kernel.org,  netdev@vger.kernel.org,
-  linux-wireless@vger.kernel.org,  ntb@lists.linux.dev,
-  linux-pci@vger.kernel.org,  kvm@vger.kernel.org,
-  xen-devel@lists.xenproject.org
-Subject: Re: [PATCH v3 09/11] wifi: qtnfmac: use always-managed version of
- pcim_intx()
-References: <20241212192935.GA3360239@bhelgaas>
-Date: Fri, 13 Dec 2024 12:30:42 +0200
-In-Reply-To: <20241212192935.GA3360239@bhelgaas> (Bjorn Helgaas's message of
-	"Thu, 12 Dec 2024 13:29:35 -0600")
-Message-ID: <87cyhvoox9.fsf@kernel.org>
-User-Agent: Gnus/5.13 (Gnus v5.13) Emacs/28.2 (gnu/linux)
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="KZgeTGxk"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 59d5a5d5;
+	Fri, 13 Dec 2024 12:25:01 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Shuai Xue <xueshuai@linux.alibaba.com>,
+	Jing Zhang <renyu.zj@linux.alibaba.com>,
+	Will Deacon <will@kernel.org>,
+	Mark Rutland <mark.rutland@arm.com>
+Cc: linux-pci@vger.kernel.org,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Krzysztof Wilczynski <kw@linux.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>
+Subject: [PATCH v3 1/2] PCI: Add Rockchip vendor ID
+Date: Fri, 13 Dec 2024 12:24:02 +0800
+Message-Id: <1734063843-188144-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ01KTFZJGBpJSBpPHxlKGUpWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a93be434a9009cckunm59d5a5d5
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6ODY6Lio5FzIUFCgRKksBQwhI
+	MBwaCStVSlVKTEhPS01IQktJT0hCVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUlOTU83Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=KZgeTGxkmxD1GgSCMuO9gHLsTtQEJLEKyu+56C2zNvGuSaHLL2dTCfQmuELuPhTeVaFfZzYn6kez9KJzca8231KYyI+cpYjaln7ImQ8LRHchwzxf7/+qt2vFCsHphWJSZP5/YwYpBHI9liIfAD5RsAwxZIgh8V0Gm8jreGtSOys=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=IDXftlRgx9+YslsF9zqhm6+zImztC1u2xkzKxCCg7QI=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain
 
-Bjorn Helgaas <helgaas@kernel.org> writes:
+This patch moves PCI_VENDOR_ID_ROCKCHIP from pci_endpoint_test.c to
+pci_ids.h. And reuse it in pcie-rockchip-host.c.
 
-> [cc->to: Igor]
->
-> On Mon, Dec 09, 2024 at 02:06:31PM +0100, Philipp Stanner wrote:
->> pci_intx() is a hybrid function which can sometimes be managed through
->> devres. To remove this hybrid nature from pci_intx(), it is necessary to
->> port users to either an always-managed or a never-managed version.
->> 
->> qtnfmac enables its PCI-Device with pcim_enable_device(). Thus, it needs
->> the always-managed version.
->> 
->> Replace pci_intx() with pcim_intx().
->> 
->> Signed-off-by: Philipp Stanner <pstanner@redhat.com>
->> Acked-by: Kalle Valo <kvalo@kernel.org>
->
-> Hoping for an ack from Igor, too.
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Krzysztof Wilczynski <kw@linux.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
 
-Igor hasn't been around for a while so I'm not expecting see an ack from
-him, I think the whole qtnfmac driver should be removed in the future.
-Feel free to take the patch as is.
+---
 
+Changes in v3:
+- add commit log and reuse this ID for more places
+
+Changes in v2: None
+
+ drivers/misc/pci_endpoint_test.c            | 1 -
+ drivers/pci/controller/pcie-rockchip-host.c | 2 +-
+ drivers/pci/controller/pcie-rockchip.h      | 1 -
+ include/linux/pci_ids.h                     | 2 ++
+ 4 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index 3aaaf47..b5c8422 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -85,7 +85,6 @@
+ #define PCI_DEVICE_ID_RENESAS_R8A774E1		0x0025
+ #define PCI_DEVICE_ID_RENESAS_R8A779F0		0x0031
+ 
+-#define PCI_VENDOR_ID_ROCKCHIP			0x1d87
+ #define PCI_DEVICE_ID_ROCKCHIP_RK3588		0x3588
+ 
+ static DEFINE_IDA(pci_endpoint_test_ida);
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 5adac6a..6a46be1 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -367,7 +367,7 @@ static int rockchip_pcie_host_init_port(struct rockchip_pcie *rockchip)
+ 		}
+ 	}
+ 
+-	rockchip_pcie_write(rockchip, ROCKCHIP_VENDOR_ID,
++	rockchip_pcie_write(rockchip, PCI_VENDOR_ID_ROCKCHIP,
+ 			    PCIE_CORE_CONFIG_VENDOR);
+ 	rockchip_pcie_write(rockchip,
+ 			    PCI_CLASS_BRIDGE_PCI_NORMAL << 8,
+diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
+index a51b087..f9eaac9 100644
+--- a/drivers/pci/controller/pcie-rockchip.h
++++ b/drivers/pci/controller/pcie-rockchip.h
+@@ -198,7 +198,6 @@
+ #define AXI_WRAPPER_NOR_MSG			0xc
+ 
+ #define PCIE_RC_SEND_PME_OFF			0x11960
+-#define ROCKCHIP_VENDOR_ID			0x1d87
+ #define PCIE_LINK_IS_L2(x) \
+ 	(((x) & PCIE_CLIENT_DEBUG_LTSSM_MASK) == PCIE_CLIENT_DEBUG_LTSSM_L2)
+ #define PCIE_LINK_TRAINING_DONE(x) \
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d2402bf..6f68267 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2604,6 +2604,8 @@
+ 
+ #define PCI_VENDOR_ID_ZHAOXIN		0x1d17
+ 
++#define PCI_VENDOR_ID_ROCKCHIP		0x1d87
++
+ #define PCI_VENDOR_ID_HYGON		0x1d94
+ 
+ #define PCI_VENDOR_ID_META		0x1d9b
 -- 
-https://patchwork.kernel.org/project/linux-wireless/list/
+2.7.4
 
-https://wireless.wiki.kernel.org/en/developers/documentation/submittingpatches
