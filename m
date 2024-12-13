@@ -1,127 +1,108 @@
-Received: from mail-m1973189.qiye.163.com (mail-m1973189.qiye.163.com [220.197.31.89])
+Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47B1D18C03B
-	for <linux-pci@vger.kernel.org>; Fri, 13 Dec 2024 06:47:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.89
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66F27126BFF;
+	Fri, 13 Dec 2024 07:02:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734072456; cv=none; b=OKYXfK0CZsrwdDSG6FCIk5JkcM4ZM6nGppXJN/oldWjD+cucA+kOpVgG8Cu6zme/FEiiOR36c8Ms76LOpqBZi/lyYUV5zLpx2j1HozKFpbmTiiIzstLoV6cClOSxazn4G8cllM268Tl7I0OM+TxJQyyn12nFqxdgkbHfZ08Xm8E=
+	t=1734073381; cv=none; b=P48FtSejbDZsHPBSrmQIypsUgpSLUjtbbg9V7Pf7rjCgGCSNd45P83p8scC2DOur2oAV1y96yr/iinVJARYWQQot/Y7729lVYCRXfmUz0F+FEcdMYnI7GSEJ8iI9gHVZUT1XFeNOYTg7onp1p4ZgP3eS3DS8D4Mu97bAwlkixFY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734072456; c=relaxed/simple;
-	bh=PfFBxxqBsrfSTPD05tZ98ztyI/YLGrFgtqa+ZxVUFjM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=TKXHxn7Likzjk14kfZnynZpsOBFE/JlNJDtsuT2/losS93CTOvS9u9NUnPo+uVbhxwas3rnWxfwC3w8z2D2xbXToks3zy4WK8Y8L8wdRs/BqcyKxJI2XmdMu2kPaEccj79Z5yDS2/k0TFh8NMO47a1VlTrJ/XbBjfO9UmTna75w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=ClVzhtY3; arc=none smtp.client-ip=220.197.31.89
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1734073381; c=relaxed/simple;
+	bh=xWARNHWpdIw0YwmV+NPOqmqXZAziskKTF7FQ1IFdtRE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WvvLp4C5WIJBA0669/OXcP2gJqWsmFobzENOfvwrJkVtTH7pZrBOIgD35FIBRQSK/2AR3CTCqdFsvbIkjjineS7SOhCjJAv+sYnUaORn/szabuEiLg5v5mL6jP9zmgRVrKWGZhZfmtLdHBmwmI3k2eTzt6Y3YCj1w7M4X968LbE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=DmXRYRGb; arc=none smtp.client-ip=67.231.156.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="ClVzhtY3"
-Received: from localhost.localdomain (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 59d5a5dd;
-	Fri, 13 Dec 2024 12:25:03 +0800 (GMT+08:00)
-From: Shawn Lin <shawn.lin@rock-chips.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Shuai Xue <xueshuai@linux.alibaba.com>,
-	Jing Zhang <renyu.zj@linux.alibaba.com>,
-	Will Deacon <will@kernel.org>,
-	Mark Rutland <mark.rutland@arm.com>
-Cc: linux-pci@vger.kernel.org,
-	Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH v3 2/2] perf/dwc_pcie: Add support for Rockchip SoCs
-Date: Fri, 13 Dec 2024 12:24:03 +0800
-Message-Id: <1734063843-188144-2-git-send-email-shawn.lin@rock-chips.com>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1734063843-188144-1-git-send-email-shawn.lin@rock-chips.com>
-References: <1734063843-188144-1-git-send-email-shawn.lin@rock-chips.com>
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0MaT1ZOT09LGEIYGR1DQkhWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCS0
-	NVSktLVUpCWQY+
-X-HM-Tid: 0a93be4352e409cckunm59d5a5dd
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MT46NDo*IzIWSSgeOksIQxIL
-	GkIwCT1VSlVKTEhPS01IQktPSE9PVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
-	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUlOSk43Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=ClVzhtY3Z3mh8wYBSeZJbJo20gPm9FFsLjh62S17Yn/Ymh9g9Yn4iuE6Gysag15Z65H0qdi5JUARUZPlhDUFK18MS4BiLliH8LE9q06wWa2z6wJ0ypmBYbuLmoz28EgI62cu1URsxrMFW4MOBB1tNFyvc/aAB/6kuWzmu3cCkTQ=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=Cshq1RwCXcGI6mKIyJp7j0jn9Uct0z6UaFLXnK3Sd5Y=;
-	h=date:mime-version:subject:message-id:from;
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="DmXRYRGb"
+Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BCKhOtM009093;
+	Thu, 12 Dec 2024 23:02:57 -0800
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=pfpt0220; bh=Q852wDm2iEFiT0yruWVrISx
+	73a9xTXKcTLWoM/d8lwY=; b=DmXRYRGb1RlpmIBMLiwOTnZp9AcIUusJJeTiV20
+	YqfTKcWIqMHHYikDtMIj7Zkk3UIRSROyQHTaDqEXYS7+EWkqexkVC91nqN32T5Pj
+	e8rxSSJmx6Xy+DYb8wx95ZGQpgjdBSSgJFIJZTJ+tM/ii6dFhgoFLlCO7GfVsy61
+	WP9A9MJOmEee6xLc1JZJCcthn2E+ssTyODFrwFy1hI+3Uj3H2bVIQAuuOHLrSx15
+	KKxT3peLL5S9z1ctzh+8HaelMUJfypd9vuinHg3PzWUev+MWqwbrCaIJ+rAcFIPJ
+	cBhg4tqIsdggGORgLsPmewsKFfKrdbF7wjwusfSMhmsCFzg==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 43eyqh60eb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 12 Dec 2024 23:02:56 -0800 (PST)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.4; Thu, 12 Dec 2024 23:02:55 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.4 via Frontend
+ Transport; Thu, 12 Dec 2024 23:02:55 -0800
+Received: from IPBU-BLR-SERVER1.marvell.com (IPBU-BLR-SERVER1.marvell.com [10.28.8.41])
+	by maili.marvell.com (Postfix) with ESMTP id 8720E3F7076;
+	Thu, 12 Dec 2024 23:02:53 -0800 (PST)
+From: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+To: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>
+CC: Gowthami Thiagarajan <gthiagarajan@marvell.com>
+Subject: [PATCH v2] PCI : Fix pcie_flag_reg in set_pcie_port_type
+Date: Fri, 13 Dec 2024 12:32:41 +0530
+Message-ID: <20241213070241.3334854-1-gthiagarajan@marvell.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-GUID: BROr9gZMnevdJfB8MYMnv1Yy4BzeNkh7
+X-Proofpoint-ORIG-GUID: BROr9gZMnevdJfB8MYMnv1Yy4BzeNkh7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
+ definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
 
-Add support for Rockchip SoCs by adding vendor ID to the vendor list.
-And fix the lane-event based enable/disable/read process which is slightly
-different on Rockchip SoCs, by checking vendor ID.
+When an invalid PCIe topology is detected, the set_pcie_port_type function 
+does not set the port type correctly. This issue can occur in 
+configurations such as:
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+	Root Port ---> Downstream Port ---> Root Port
 
+In such cases, the topology is identified as invalid and due to the incorrect 
+port type setting, the extended configuration space of the child device becomes 
+inaccessible.
+
+Signed-off-by: Gowthami Thiagarajan <gthiagarajan@marvell.com>
 ---
+v1->v2:
+	Updated commit description
 
-Changes in v3: None
-Changes in v2:
-- rebase on Bejorn's new patch about Qualifing VSEC Capability by Vendor, Revision
+ drivers/pci/probe.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
- drivers/perf/dwc_pcie_pmu.c | 22 ++++++++++++++++++++++
- 1 file changed, 22 insertions(+)
-
-diff --git a/drivers/perf/dwc_pcie_pmu.c b/drivers/perf/dwc_pcie_pmu.c
-index d022f49..ba6d5116 100644
---- a/drivers/perf/dwc_pcie_pmu.c
-+++ b/drivers/perf/dwc_pcie_pmu.c
-@@ -116,6 +116,8 @@ static const struct dwc_pcie_pmu_vsec_id dwc_pcie_pmu_vsec_ids[] = {
- 	  .vsec_id = 0x02, .vsec_rev = 0x4 },
- 	{ .vendor_id = PCI_VENDOR_ID_QCOM,
- 	  .vsec_id = 0x02, .vsec_rev = 0x4 },
-+	{ .vendor_id = PCI_VENDOR_ID_ROCKCHIP,
-+	  .vsec_id = 0x02, .vsec_rev = 0x4 },
- 	{} /* terminator */
- };
- 
-@@ -264,12 +266,27 @@ static const struct attribute_group *dwc_pcie_attr_groups[] = {
- 	NULL
- };
- 
-+static void dwc_pcie_pmu_lane_event_enable_for_rk(struct pci_dev *pdev,
-+						  u16 ras_des_offset,
-+						  bool enable)
-+{
-+	if (enable)
-+		pci_write_config_dword(pdev, ras_des_offset + DWC_PCIE_EVENT_CNT_CTL,
-+				DWC_PCIE_CNT_ENABLE | DWC_PCIE_PER_EVENT_ON);
-+	else
-+		pci_clear_and_set_config_dword(pdev, ras_des_offset + DWC_PCIE_EVENT_CNT_CTL,
-+				DWC_PCIE_CNT_ENABLE, DWC_PCIE_PER_EVENT_ON);
-+}
-+
- static void dwc_pcie_pmu_lane_event_enable(struct dwc_pcie_pmu *pcie_pmu,
- 					   bool enable)
- {
- 	struct pci_dev *pdev = pcie_pmu->pdev;
- 	u16 ras_des_offset = pcie_pmu->ras_des_offset;
- 
-+	if (pdev->vendor == PCI_VENDOR_ID_ROCKCHIP)
-+		return dwc_pcie_pmu_lane_event_enable_for_rk(pdev, ras_des_offset, enable);
-+
- 	if (enable)
- 		pci_clear_and_set_config_dword(pdev,
- 					ras_des_offset + DWC_PCIE_EVENT_CNT_CTL,
-@@ -295,9 +312,14 @@ static u64 dwc_pcie_pmu_read_lane_event_counter(struct perf_event *event)
- {
- 	struct dwc_pcie_pmu *pcie_pmu = to_dwc_pcie_pmu(event->pmu);
- 	struct pci_dev *pdev = pcie_pmu->pdev;
-+	int event_id = DWC_PCIE_EVENT_ID(event);
- 	u16 ras_des_offset = pcie_pmu->ras_des_offset;
- 	u32 val;
- 
-+	if (pdev->vendor == PCI_VENDOR_ID_ROCKCHIP)
-+		pci_write_config_dword(pdev, ras_des_offset + DWC_PCIE_EVENT_CNT_CTL,
-+				       event_id << 16);
-+
- 	pci_read_config_dword(pdev, ras_des_offset + DWC_PCIE_EVENT_CNT_DATA, &val);
- 
- 	return val;
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4f68414c3086..263ec21451d9 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1596,7 +1596,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 		if (pcie_downstream_port(parent)) {
+ 			pci_info(pdev, "claims to be downstream port but is acting as upstream port, correcting type\n");
+ 			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+-			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM;
++			pdev->pcie_flags_reg |= PCI_EXP_TYPE_UPSTREAM << 4;
+ 		}
+ 	} else if (type == PCI_EXP_TYPE_UPSTREAM) {
+ 		/*
+@@ -1607,7 +1607,7 @@ void set_pcie_port_type(struct pci_dev *pdev)
+ 		if (pci_pcie_type(parent) == PCI_EXP_TYPE_UPSTREAM) {
+ 			pci_info(pdev, "claims to be upstream port but is acting as downstream port, correcting type\n");
+ 			pdev->pcie_flags_reg &= ~PCI_EXP_FLAGS_TYPE;
+-			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM;
++			pdev->pcie_flags_reg |= PCI_EXP_TYPE_DOWNSTREAM << 4;
+ 		}
+ 	}
+ }
 -- 
-2.7.4
+2.25.1
 
