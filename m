@@ -1,88 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx18lb.world4you.com (mx18lb.world4you.com [81.19.149.128])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24C6F20A5FD;
-	Mon, 16 Dec 2024 19:43:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 022D720C49C;
+	Mon, 16 Dec 2024 19:51:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.19.149.128
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734378216; cv=none; b=KxMmfzsXpsKtwR2k2pvEansv4S0qC/yHGODU2u94tzQEqpopHcqAGU+EeYVBPmFWweEMqcneLn9UQ4WWKtayyezK7ayvHEQcbMR7UoM9b/FdkTgauhw7sNxsYD3RGdk9Y4m+vAWh6vEW3EkKujta/w+cnH/VZ/tIYQt5v7yn0MY=
+	t=1734378717; cv=none; b=tLmAk+bl+e/CmBEwIUmEg1tIla2D07rPThMoFniBK3RXPSVosfC9NokkSShE9WGMoyFndIi1JzpAc9hDRw4fWPgRdNjfFWBJvIyjvKde3UoMEgK/89S5u4DrgEW0n7suMtwoKhbUZVEHAj3VK7jMVCKz4hajvdY1meRbwalxYZQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734378216; c=relaxed/simple;
-	bh=bLCUG42w9Rd2j2ctr/dQMjIHxW6uq1VaCrTcAGQt3vQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=O2sfq9MODD8qcuj1cQ1/I4AReoML4jZXHnyM+ABRzZyOtdXq6Sk/9+A7ipgiZ4oLZrIUnuKvkiHwUft5CeYEWJ8wury/VimeOZfa6nIxLOvX7sb9KDxjTlq1IDnnZtIBo45Hnafzq1fFukO8Y7aR/u9rmzh/Thj3TjLxjNNxw9Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R0Rs4OZk; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1734378717; c=relaxed/simple;
+	bh=EC8xfRN5+YzDliZbYQ0yX+kHJRiKa2+JlNwYpk54GIM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=heL07Gw8EiV/EBBxZE75GVHdnvAKxB2/+MsgnNP/wBwKXa2mRN0FTikkp2tvRmoG2cwfX9Vghs6TnUT0XmCQh8khHTpZ5s4QKAxgzAGzzbg0ZSLt7tb/G9okRgXCjKIWfOpBPqlEtQfvK96KzGUlQDhS+pQ/JfaN4gpUu989Cds=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com; spf=pass smtp.mailfrom=engleder-embedded.com; dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b=M/waF/MV; arc=none smtp.client-ip=81.19.149.128
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=engleder-embedded.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R0Rs4OZk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 87DF4C4CED0;
-	Mon, 16 Dec 2024 19:43:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1734378215;
-	bh=bLCUG42w9Rd2j2ctr/dQMjIHxW6uq1VaCrTcAGQt3vQ=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=R0Rs4OZkNJFFbVLkxGZkocsVxkqWzRWQUbF7JQOf7Ia5kzkKZIBNEyWgaYt0laS02
-	 v6bniI96SOM8buGJQCOS6vEEsLRfDFYfBKQmQoOIpSJGsjEgO6zjMQj7tVbZYfXGND
-	 gED7MAQU1bO1u8uSKJi2VEnV/U9unIpshjn5CHXmHnBB7iIZkB3wIqpgsDuRxb3Xn1
-	 ktzzVZV20cTNjbxORcBPdnepF+e3UT5CP6Yv0UGUh6oIPYbwdOwOcRl3gKHjOsGk8k
-	 GtDA9dkjnif9DXvhiaics/9Xy9KfVGCJxvRT8DRvppRDkvpMEp6s8cQgdR48iGT7OD
-	 aJG2KRR6r1DLQ==
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-3eb8559b6b0so2471302b6e.1;
-        Mon, 16 Dec 2024 11:43:35 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCUUWLvqgPqBepfvXyuhcqqJJWQ43ef9TG7WQwwx0AmN98/AyouYRaA/TjKhj93k2ZIuMTCbhf6rgVGdwKQ=@vger.kernel.org, AJvYcCVtWDR1IYAuqyLgAIkhM/FOL2Ss3BHdw4YyDvRoOrSCawK8Jsp/dnz2/4sxOI7ASBQo6rk088Oeb0BQ@vger.kernel.org, AJvYcCXux2aqM3833boqqyeTMmkbYhS3VuDabMpG5byqzEyec6vJJulzamp4PAWkkxOBKZkt86GJSpNSLcw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YycfYKbKNsSPedv0jIZWwQkA7kq6Hc0ptp1VBZZ8QWEwFfrbMCN
-	OJqOI8cZNdo0k/UTDbIyRIx+VfOXhfzsAmjNQ8dct8XNEQx1gPH1qpQewSkkq1QowFAZUo+VRZY
-	9EPrj2KjMcbJbrvCv+YKFVyAYBig=
-X-Google-Smtp-Source: AGHT+IHBIkkg9ryeWoXUjvDA+eOStEt8YeUf9CRTqn6A5LAOHY0mQEKE5h0I8dvOns0NI/pgRtXFEf2n3JxCdyuWQY4=
-X-Received: by 2002:a05:6808:2448:b0:3eb:60e9:eae1 with SMTP id
- 5614622812f47-3ebcb33635dmr15143b6e.29.1734378214876; Mon, 16 Dec 2024
- 11:43:34 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b="M/waF/MV"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=engleder-embedded.com; s=dkim11; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=jZMoa6c8V2RLO1SfPCDM3oUntBeI3z7ggEZ6Kaa61BY=; b=M/waF/MV2RXEMR3oDfl2pFU4iq
+	eCYoR4hWa4ROygWywRg5W/MftFYY6131NEcb27QecaKxoeLI9xcay1k7Vcn2vnegBqY1OvgEe7GqI
+	1IX9dL7u1ymi3xQlc1ENqQ2K11b32B5npD5Zpjvb2yMUhVw4yeCQfIm3c0tfqj8x/rVU=;
+Received: from [88.117.62.55] (helo=[10.0.0.160])
+	by mx18lb.world4you.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.97.1)
+	(envelope-from <gerhard@engleder-embedded.com>)
+	id 1tNGgM-000000003sc-1v0e;
+	Mon, 16 Dec 2024 20:23:06 +0100
+Message-ID: <047738af-69af-49aa-ae91-7dbca40ae559@engleder-embedded.com>
+Date: Mon, 16 Dec 2024 20:23:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <13662231.uLZWGnKmhe@rjwysocki.net> <CAPDyKFrxEjHFB6B2r7JbryYY6=E4CxX_xTmLDqO6+26E+ULz6A@mail.gmail.com>
- <20241212151354.GA7708@lst.de> <CAJZ5v0gUpDw_NjTDtHGCUnKK0C+x0nrW6mP0tHQoXsgwR2RH8g@mail.gmail.com>
- <20241214063023.4tdvjbqd2lrylb7o@thinkpad> <CAJZ5v0gLMx+tBo+MA3AQZ7qP28Z91d04oVBHVeTNcd-QD=kJZg@mail.gmail.com>
- <20241216171108.6ssulem3276rkycb@thinkpad> <CAJZ5v0j+4xjSOOy8TYE0pBuqd_GdQa683Qq0GEyJ9WAFad9Z=A@mail.gmail.com>
- <20241216175210.mnc5kp6646sq7vzm@thinkpad> <CAJZ5v0grRdTYaamSnKSF-HyMmCHDEZ4haLo+ziSBxhDg1PbjRQ@mail.gmail.com>
- <Z2CCH5HAbx8ECDin@kbusch-mbp.dhcp.thefacebook.com>
-In-Reply-To: <Z2CCH5HAbx8ECDin@kbusch-mbp.dhcp.thefacebook.com>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Mon, 16 Dec 2024 20:43:23 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0jfaNjgjNAQPa3QPNdU8BCoocsbo4Vfo5obTxcyTKOUWw@mail.gmail.com>
-Message-ID: <CAJZ5v0jfaNjgjNAQPa3QPNdU8BCoocsbo4Vfo5obTxcyTKOUWw@mail.gmail.com>
-Subject: Re: [PATCH] nvme-pci: Shutdown the device if D3Cold is allowed by the user
-To: Keith Busch <kbusch@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Christoph Hellwig <hch@lst.de>, 
-	Ulf Hansson <ulf.hansson@linaro.org>, "Rafael J. Wysocki" <rjw@rjwysocki.net>, 
-	Bjorn Helgaas <helgaas@kernel.org>, axboe@kernel.dk, sagi@grimberg.me, 
-	linux-nvme@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, andersson@kernel.org, konradybcio@kernel.org, 
-	Len Brown <len.brown@intel.com>, linux-pm@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH iwl-next v3] e1000e: Fix real-time violations on link up
+To: "Lifshits, Vitaly" <vitaly.lifshits@intel.com>,
+ intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
+ linux-pci@vger.kernel.org
+Cc: anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
+ andrew+netdev@lunn.ch, davem@davemloft.net, kuba@kernel.org,
+ edumazet@google.com, pabeni@redhat.com, bhelgaas@google.com,
+ pmenzel@molgen.mpg.de, Gerhard Engleder <eg@keba.com>
+References: <20241214191623.7256-1-gerhard@engleder-embedded.com>
+ <231abdb7-3b16-4c3c-be17-5d0e6a556f28@intel.com>
+Content-Language: en-US
+From: Gerhard Engleder <gerhard@engleder-embedded.com>
+In-Reply-To: <231abdb7-3b16-4c3c-be17-5d0e6a556f28@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-AV-Do-Run: Yes
 
-On Mon, Dec 16, 2024 at 8:40=E2=80=AFPM Keith Busch <kbusch@kernel.org> wro=
-te:
->
-> On Mon, Dec 16, 2024 at 08:34:24PM +0100, Rafael J. Wysocki wrote:
-> > However, there is an additional concern that putting an NVMe device
-> > into D3cold every time during system suspend on Android might cause it
-> > to wear out more quickly.
-> >
-> > Is there anything else?
->
-> I recall a previous reason for this behavior was because the resume
-> latency was significantly faster if we don't prepare the device for D3,
-> and the nvme protocol specific power states for some platforms was
-> sufficiently low enough. Apparently this choice hasn't been universally
-> optimal.
+>> @@ -331,8 +331,15 @@ void e1000e_update_mc_addr_list_generic(struct 
+>> e1000_hw *hw,
+>>       }
+>>       /* replace the entire MTA table */
+>> -    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--)
+>> +    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--) {
+>>           E1000_WRITE_REG_ARRAY(hw, E1000_MTA, i, hw->mac.mta_shadow[i]);
+>> +
+>> +        /* do not queue up too many posted writes to prevent increased
+>> +         * latency for other devices on the interconnect
+>> +         */
+>> +        if ((i % 8) == 0 && i != 0)
+>> +            e1e_flush();
+> 
+> 
+> I would prefer to avoid adding this code to all devices, particularly 
+> those that don't operate on real-time systems. Implementing this code 
+> will introduce three additional MMIO transactions which will increase 
+> the driver start time in various flows (up, probe, etc.).
+> 
+> Is there a specific reason not to use if (IS_ENABLED(CONFIG_PREEMPT_RT)) 
+> as Andrew initially suggested?
 
-Thanks for chiming in!
+Andrew made two suggestions: IS_ENABLED(CONFIG_PREEMPT_RT) which I used
+in the first version after the RFC. And he suggested to check for a
+compromise between RT and none RT performance, as some distros might
+enable PREEMPT_RT in the future.
+Przemek suggested to remove the PREEMPT_RT check as "this change sounds
+reasonable also for the standard kernel" after the first version with
+IS_ENABLED(CONFIG_PREEMPT_RT).
 
-I'm recalling some other reasons too (mentioned in one of my previous
-messages), but overall this is a driver design choice, it is not done
-to adhere to some general rule.
+I used the PREEMPT_RT dependency to limit effects to real-time systems,
+to not make none real-time systems slower. But I could also follow the
+reasoning of Andrew and Przemek. With that said, I have no problem to
+add IS_ENABLED(CONFIG_PREEMPT_RT) again.
+
+Gerhard
