@@ -1,77 +1,72 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF03E101DE
-	for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2024 05:21:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A44A17DE36
+	for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2024 05:33:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734326480; cv=none; b=tM/5T5DqI5QGCSb3OFjvpN1F34RivOmCcGiaNHCmGESF5UZpG6dL8gpU7rKx7wKpDJk7Ol5yhkYrHHF8xm5iuFweIsXbmbTO/fK1mRykj6L1f9u9Jvfoq4tzF3kZWrQz02knZHhqnn+xbUP85K9Tlb2BTMcrihFDvd8ga5JZBX4=
+	t=1734327184; cv=none; b=D2low/5zELpX6cajud+VeYaeSW0JJRzZPrhIVHQDvrJCwb0kIXNpO2yWuLrimgFPhagJ0jOiiSCcSBBjMxcsc8QklG8HRU/cSYrnOpzYZIdrPucwUA97M8Aaza5jTS/k443T9ZfpR1+p6hF/rAD61A25mxcjoo7Rp74f5OUEeSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734326480; c=relaxed/simple;
-	bh=Y8BBnzSAQCrOq/vZCN+HTxvR9YBoCNxrtJ37hzJJipE=;
+	s=arc-20240116; t=1734327184; c=relaxed/simple;
+	bh=Kwq68aWDO6GJ8+k6YThM9/3tvRFmIeAl8WjioZc2kRc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GThYkv1pe5RwhYjMhc0QCLteKKB7ZkEiupNL5DEqFbmxNNFsE8JoAUzr5JDGjG6rTnWuXbE1XVheFA1HzogWWQVdnZ/5b2rBQSDurPOat1QuLnNx3ALQb3FMyDf476JbL96W7qQhSJk0Tt1IB3FxJDRj85gwprZqsNCs2xLT0k0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=cUG9tTOi; arc=none smtp.client-ip=209.85.214.172
+	 Content-Type:Content-Disposition:In-Reply-To; b=jlt3Dh8z/tN6silOQ2PlcFw88kLC03KaCbGzPercF2JKdZJv1JHkXIV7hVzwXiRQ29eXt8GQsgXl1IMoLguKqYSsTKb6Uu1zWwUQcXReSSNVwGD0DKRa2RcP7Z5CwtRN+RW3eAnjWoFaxdLuk1tXkkMsZxwP8ZHtQ9Q1YdO/3XA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=QoZqvn6e; arc=none smtp.client-ip=209.85.214.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="cUG9tTOi"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2161eb95317so33106195ad.1
-        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2024 21:21:18 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="QoZqvn6e"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-216395e151bso23381305ad.0
+        for <linux-pci@vger.kernel.org>; Sun, 15 Dec 2024 21:33:02 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1734326478; x=1734931278; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1734327182; x=1734931982; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=4dODE1oLOneIGU2zuf4IE3qsFOnpfwOB30wuyhRbPCE=;
-        b=cUG9tTOiww1RjLO67ZF7MZEBx2ZWhWnzPi/yxjBMmDuekjT8o3yKrvJMMLid22EiH8
-         4Fh6xrtWO5jAqEHa9z3/fP3PG1YKX7+sQM2ddvQWEMcezqf3rQVrpLMcTGndJWKL6zlc
-         5XhXN0etfUEgWGRHOwlsH6ig1kqVd1SidyMLiNyw5PuQivJb5HX1oYF/CRg3hT9FKA6A
-         ASaE1OFJZ9zTYD4+WEzhx7p7M4+ky72RFoR49kauCnLVkZoFmTOF8ceyOd262C6ldK7w
-         PihgrHJrSbgOMShVw2ERnk0B+3uxmE0hI3ED05KglhpHWPRY2miDrySLJdTsdtEEeT9o
-         Pfbg==
+        bh=lEeBxgz2ocYTqkJRwHWNc0CCWq6wo0kC/ZkpzEKfNuo=;
+        b=QoZqvn6esI5L+El8FHJdwCrG6sfZrPHhNpFe43zePBytm8L0Yv91Lkm6G6KhPC+w/K
+         YTrFkO15xV33RZewNu4DcsLwl0qbySul4kCuQDOE5QSQuf+w052aDhPs4n7VomNDRYLR
+         AXwz/0xtFeJoOLdtjIw/gDThyXJe854c1NvTtBAnxPtJYmhfwBkSj8jXfmYb0/T0RMcn
+         +CXBXeXkzqBilCSmJ7nTwWXs01d4pNf39uTFt+Bhj1lLSEk8BVCYB4BtVvpnAk2hsdLx
+         wuMNlewyCUPNRhuPmEc+1CenaC311ZLpxpHKiUYZQ38IahyZa2VHxE6OxrUNRXUjuj/i
+         ovlA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734326478; x=1734931278;
+        d=1e100.net; s=20230601; t=1734327182; x=1734931982;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4dODE1oLOneIGU2zuf4IE3qsFOnpfwOB30wuyhRbPCE=;
-        b=JfPXRtB3MERwE5UuQGfUq8QNs418OMwvk8LiavobvcIl9bH3yx8c7Ku2qJaieRnc8F
-         o4q/ScyfbBsDwjhTF37rHGzxBIT2hWf7mESp1UWoyuyloCqr+1GQSMj+CVsT2j8LPNke
-         5DC8x4zzE81/7M5eha4hsWYdLURLMiMAQCmC/7odvqJ2LhkCmNzFSl8KF1D4sa483p+R
-         WploCNRd5pMgu0B4XxVL7WdG235H0K04X6Sa/fO8lyN7EKztcYUAGEaCS9RQjegMt8zu
-         TIYdMmmYg+Ic/PPh4VByuDPaQmGlpR3cBkRFuzwcsP6oMu1RLrTThlWw52r8k6BjnRHn
-         etfQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWksborxY/OyS1hFcssi5y6AhIxQ+VbZrW66VNDMpVLaIuyKpPpwtxe8i9S4W7vMQZ2v362PLbwvHQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxduYzN9lonjGzCpMF7ozvnFiC4qrZoHq2ZfY7idL4o6WTuGCx+
-	e/8hI8Vo5SiuPbpg1ny7VKlwJALeP//dKcSJtdyvPMfUtHSxwVInz7gkHy4o6Q==
-X-Gm-Gg: ASbGncuPQ7YYVertFAp33VjSv5h/fm9PMb049TydglzZw0u6tq0heTotZh3vtt6tpb7
-	EP3uTS/WDHm/y7U3E0Chf4lAxIkPg8ykG0PpFpvzLxwYga5GJwg3PIPUnz6F70zxYV3V1/kHWnl
-	o1dfCVIDhvtyU/YyQl+RaExajWRAt1yzvBEOjPMCDju/24R4UXiupB73zZAJyDUCoDClIRHb5Ue
-	MjlMBCEa1BpON9Ut2kqi+Fo6ov/bAOwk/H7OndkTVnFAUYKx5adaEn0NWtHC01uDVk=
-X-Google-Smtp-Source: AGHT+IH1mSVhE67FzmlPZUxDT5sePvi+vkzZfYMDKYk51As1yvOgwpFk9uK6IoSy8DGi01snoWjo4g==
-X-Received: by 2002:a17:902:d2c5:b0:215:97a3:5ec5 with SMTP id d9443c01a7336-218929c8eccmr158587875ad.22.1734326478043;
-        Sun, 15 Dec 2024 21:21:18 -0800 (PST)
+        bh=lEeBxgz2ocYTqkJRwHWNc0CCWq6wo0kC/ZkpzEKfNuo=;
+        b=CRiJXS1Uxgnt8lvsKUOdLXpP06NeRFEQtRhyxZe3eUTnXjihdGUpGbPevQdazkCBQR
+         bob9UOuDR8qmSrmPKJC+da4Lxblv5/08CVdXcKcmYW4VP9obrUAiGIU69QbI7BMhxu8w
+         eO7sRDr4KF0NCwqdQo6bX2JSCaZKxPEfR6KGAWJ5u5iHRS3f83XEazIDrLFK2gWR7+lx
+         cDlWcZyzqw4ceJmc9SJGJmM4wRVBbVauEkaN760QyoMmy7xyMOG/vMTYSbBFJBfydvc7
+         KIky25hNJw3FascCs7mIjO8lmDMUftg3tMk9unK5kIg8/qnXIG6HgkXvRdr02VrR73xa
+         5M1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCW8ojMKwUmMbpqT6M7+xULEmDX3Q7PUAwdhkxr1xTXHR9DlhA+EpS/d35CVeu3BXpHrCGSu3M275yQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyTPTpCNr8BKCsl8gCPuuJ5+/5Ym6W0jieqMQn4se5uhg4ulYHt
+	KzkgWVnsHV1x/YB5iJ1UsCvpps8X5U4mTd85NEdhKmN1pB4v7sXlEprmEm6qqg==
+X-Gm-Gg: ASbGncvDwSvxfQ13AwEmXrUWu9Oem66FfidVZXAPmKfZTpjnB7O6ldi06GGHABezarE
+	l5SGbjUsun1fHqwxBjqiVClVXZVZfM/gwDo8pOaoSTNWfo82cg0S+wX9T6Q0kYfjFIlauvJUC2M
+	fRe/oDi3L0YQ9FFGV5aZ1fw1lPdiUcPj02yCJoVi9ojmBNUHVIYYbh69SKhZCXgne51UGZarlHg
+	yjuSDDcQwrOAz6ZlMRb5X1HB2yqa5Kt7g3hB7DubMMjyus0csY7njQ39n4hQM6HOmk=
+X-Google-Smtp-Source: AGHT+IHJQ5xMKrFsSZ5ugUe3p7k4cPG0E77U3s0GdMhWv0t/MHX+qLpC6AC4ccVA+hjZFvljcNc6uQ==
+X-Received: by 2002:a17:902:da8a:b0:216:4122:ab3a with SMTP id d9443c01a7336-2178c7b6821mr238859485ad.1.1734327181704;
+        Sun, 15 Dec 2024 21:33:01 -0800 (PST)
 Received: from thinkpad ([120.60.56.176])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-218a1e6416csm34490965ad.230.2024.12.15.21.21.14
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-218a1e6416csm34673535ad.230.2024.12.15.21.32.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 15 Dec 2024 21:21:17 -0800 (PST)
-Date: Mon, 16 Dec 2024 10:51:07 +0530
+        Sun, 15 Dec 2024 21:33:01 -0800 (PST)
+Date: Mon, 16 Dec 2024 11:02:52 +0530
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Qiang Yu <quic_qianyu@quicinc.com>, Bjorn Helgaas <bhelgaas@google.com>,
-	Bartosz Golaszewski <brgl@bgdev.pl>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
-	Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>
-Subject: Re: [PATCH 0/4] PCI/pwrctrl: Rework pwrctrl driver integration and
- add driver for PCI slot
-Message-ID: <20241216052107.tyhwzh4g3tmnp5ll@thinkpad>
-References: <20241210-pci-pwrctrl-slot-v1-0-eae45e488040@linaro.org>
- <c5c9b7fc-a484-438a-aa97-35785f25d576@quicinc.com>
- <Z18SkkuPbVgTYD8k@wunner.de>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	linux-pci@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>
+Subject: Re: [PATCH] PCI: rockchip: Add missing fields descriptions for
+ struct rockchip_pcie_ep
+Message-ID: <20241216053252.r422k64oosbci25e@thinkpad>
+References: <20241215022813.35381-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -81,61 +76,51 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z18SkkuPbVgTYD8k@wunner.de>
+In-Reply-To: <20241215022813.35381-1-dlemoal@kernel.org>
 
-On Sun, Dec 15, 2024 at 06:32:02PM +0100, Lukas Wunner wrote:
-> On Wed, Dec 11, 2024 at 05:55:48PM +0800, Qiang Yu wrote:
-> > PCIe3 is able to link up after applying your patch. Slot power is turned on
-> > correctly.
-> > But see "NULL pointer dereference" when I try to remove device.
+On Sun, Dec 15, 2024 at 11:28:13AM +0900, Damien Le Moal wrote:
+> When compiling the rockchip endpoint driver with -W=1, gcc output the
+> following warnings:
 > 
-> There's a WARN splat occurring before the NULL pointer deref.
-> Was this happening before or is it new?  Probably makes sense
-> to debug that first before looking into the NULL pointer deref,
-> which could be a result of it.
+> drivers/pci/controller/pcie-rockchip-ep.c:59: warning: Function parameter or struct member 'perst_irq' not described in 'rockchip_pcie_ep'
+> drivers/pci/controller/pcie-rockchip-ep.c:59: warning: Function parameter or struct member 'perst_asserted' not described in 'rockchip_pcie_ep'
+> drivers/pci/controller/pcie-rockchip-ep.c:59: warning: Function parameter or struct member 'link_up' not described in 'rockchip_pcie_ep'
+> drivers/pci/controller/pcie-rockchip-ep.c:59: warning: Function parameter or struct member 'link_training' not described in 'rockchip_pcie_ep'
 > 
+> Avoid these warnings by adding the missing field descriptions in
+> struct rockchip_pcie_ep kdoc comment.
+> 
+> Reported-by: Bjorn Helgaas <helgaas@kernel.org>
+> Fixes: a7137cbf6bd5 ("PCI: rockchip-ep: Handle PERST# signal in EP mode")
+> Fixes: bd6e61df4b2e ("PCI: rockchip-ep: Improve link training")
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>  drivers/pci/controller/pcie-rockchip-ep.c | 4 ++++
+>  1 file changed, 4 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/pcie-rockchip-ep.c b/drivers/pci/controller/pcie-rockchip-ep.c
+> index 1064b7b06cef..36b868530769 100644
+> --- a/drivers/pci/controller/pcie-rockchip-ep.c
+> +++ b/drivers/pci/controller/pcie-rockchip-ep.c
+> @@ -40,6 +40,10 @@
+>   * @irq_pci_fn: the latest PCI function that has updated the mapping of
+>   *		the MSI/INTX IRQ dedicated outbound region.
+>   * @irq_pending: bitmask of asserted INTX IRQs.
+> + * @perst_irq: IRQ used for perst# signal.
 
-Precisely.
+s/perst#/PERST#
 
-> 
-> > [   38.757726] WARNING: CPU: 1 PID: 816 at drivers/regulator/core.c:5857
-> > regulator_unregister+0x13c/0x160
-> > [   38.767288] Modules linked in: phy_qcom_qmp_combo aux_bridge
-> > drm_kms_helper drm nvme backlight pinctrl_sm8550_lpass_lpi pci_pwrctl_slot
-> > pci_pwrctrl_core nvme_core phy_qcom_edp phy_qcom_eusb2_repeater
-> > dispcc_x1e80100 pinctrl_lpass_lpi phy_qcom_snps_eusb2 lpasscc_sc8280xp typec
-> > gpucc_x1e80100 phy_qcom_qmp_pcie
-> > [   38.795279] CPU: 1 UID: 0 PID: 816 Comm: bash Not tainted
-> > 6.12.0-next-20241128-00005-g6178bf6ce3c2-dirty #50
-> > [   38.805359] Hardware name: Qualcomm IDP, BIOS
-> > 6.0.240607.BOOT.MXF.2.4-00348.1-HAMOA-1.67705.7 06/ 7/2024
-> > [   38.815088] pstate: 61400005 (nZCv daif +PAN -UAO -TCO +DIT -SSBS
-> > BTYPE=--)
-> > [   38.822239] pc : regulator_unregister+0x13c/0x160
-> > [   38.827081] lr : regulator_unregister+0xc0/0x160
-> 
-> The WARN splat seems to be caused by:
-> 
-> 	WARN_ON(rdev->open_count);
-> 
-> So the regulator is unregistered although it's still in use.
-> Is there maybe a multifunction PCIe device in your system
-> so that multiple devices are using the same regulator?
-> 
+here and below
 
-Maybe the regulator is shared with other peripherals (not just PCIe) in the
-system.
+> + * @perst_asserted: perst# signal state (true if perst# was asserted).
+> + * @link_up: PCI link state (true if the link is up).
 
-@Qiang: I referred your patch [1] that added the slot regulators, but they were
-not used by any peripherals other than PCIe. Could you please post the list of
-consumers of the 3 slot regulators?
+This is not holding PCIe link state, but just indication of whether link is up
+or not. So how about:
 
-FYI, I did test root port remove on RB5 board (with dummy fixed regulators) and
-it worked fine.
+	@link_up: True if link is up
 
 - Mani
-
-[1] https://lore.kernel.org/linux-pci/20240827063631.3932971-8-quic_qianyu@quicinc.com/
 
 -- 
 மணிவண்ணன் சதாசிவம்
