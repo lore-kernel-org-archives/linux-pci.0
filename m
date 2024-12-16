@@ -1,96 +1,169 @@
-Received: from mx18lb.world4you.com (mx18lb.world4you.com [81.19.149.128])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 022D720C49C;
-	Mon, 16 Dec 2024 19:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.19.149.128
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA251D4342
+	for <linux-pci@vger.kernel.org>; Mon, 16 Dec 2024 21:05:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734378717; cv=none; b=tLmAk+bl+e/CmBEwIUmEg1tIla2D07rPThMoFniBK3RXPSVosfC9NokkSShE9WGMoyFndIi1JzpAc9hDRw4fWPgRdNjfFWBJvIyjvKde3UoMEgK/89S5u4DrgEW0n7suMtwoKhbUZVEHAj3VK7jMVCKz4hajvdY1meRbwalxYZQ=
+	t=1734383151; cv=none; b=HBMSHyRRSQFaoNu+XWyRuyM3n04xf0D0CrcOVVj1BVGlFThodVuWZ0mPp5SF5a1S9A+0VLhQqLhR/CD0bTIybQy+m/G9CxFezrP85dGoZgQ31QF+UX8OpNecsB4E4UKXOK15QLcpJH4VGDh1hJMwAi9FNWnNHFRd41hFm4XAKt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734378717; c=relaxed/simple;
-	bh=EC8xfRN5+YzDliZbYQ0yX+kHJRiKa2+JlNwYpk54GIM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=heL07Gw8EiV/EBBxZE75GVHdnvAKxB2/+MsgnNP/wBwKXa2mRN0FTikkp2tvRmoG2cwfX9Vghs6TnUT0XmCQh8khHTpZ5s4QKAxgzAGzzbg0ZSLt7tb/G9okRgXCjKIWfOpBPqlEtQfvK96KzGUlQDhS+pQ/JfaN4gpUu989Cds=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com; spf=pass smtp.mailfrom=engleder-embedded.com; dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b=M/waF/MV; arc=none smtp.client-ip=81.19.149.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=engleder-embedded.com
+	s=arc-20240116; t=1734383151; c=relaxed/simple;
+	bh=5ruA/fM3L78iMPD6pDUO2Hh+Hw86GR3xyBSYIE59vrc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oa90Z49H4EwpM6aqoBuCPocXTzEIV9O3J4jfOgeZY4yWDtsEQvDufV4nbvoBu3dJh61hXVC/bI7BIUSBOJVDEOkeKICr72wp9FcB5HzhVJHW2We6Txhbj3c4v7bYIeOjt1I7g+EQvsp32Jf94s1OPHDe/wUMRrLz5C2z+BVIChg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZyaRZnnf; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b="M/waF/MV"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=engleder-embedded.com; s=dkim11; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=jZMoa6c8V2RLO1SfPCDM3oUntBeI3z7ggEZ6Kaa61BY=; b=M/waF/MV2RXEMR3oDfl2pFU4iq
-	eCYoR4hWa4ROygWywRg5W/MftFYY6131NEcb27QecaKxoeLI9xcay1k7Vcn2vnegBqY1OvgEe7GqI
-	1IX9dL7u1ymi3xQlc1ENqQ2K11b32B5npD5Zpjvb2yMUhVw4yeCQfIm3c0tfqj8x/rVU=;
-Received: from [88.117.62.55] (helo=[10.0.0.160])
-	by mx18lb.world4you.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.97.1)
-	(envelope-from <gerhard@engleder-embedded.com>)
-	id 1tNGgM-000000003sc-1v0e;
-	Mon, 16 Dec 2024 20:23:06 +0100
-Message-ID: <047738af-69af-49aa-ae91-7dbca40ae559@engleder-embedded.com>
-Date: Mon, 16 Dec 2024 20:23:04 +0100
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZyaRZnnf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1734383149; x=1765919149;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=5ruA/fM3L78iMPD6pDUO2Hh+Hw86GR3xyBSYIE59vrc=;
+  b=ZyaRZnnfE2RumI0g3FT2LJp6BVO2T9JdMJZS3ghFMo0Y8hAIPqlvMnwx
+   kXAfiwIJHM6CVZukxrU+XLU5jKKqBukdylcMLu2dEFP9/bUA8ANmt/eZ5
+   KwB111uVmkYTq0BTHmlEqlZfBoHPS6j2eN80itBpRxKETpPbUt9sGO7KH
+   fmfl81vS+SF5lLqCh77S1N/d/sqzZAWoX5rwYi9prvjzhto0IqJ6XYS5T
+   voal95MQtYw0+14iCW2ndK227KK8URSekgRXGuU6TbXo8MosLhdcHhE6m
+   7HUtNtVXO8/AOHXbndEwUdWbEnHtWZvF842M2t05AcESMjdo0RRgcCGTR
+   w==;
+X-CSE-ConnectionGUID: Rl8Df0c9S66VyvrZ7D3h3w==
+X-CSE-MsgGUID: Bd/IpTrTRKyBPlLT5z18Kg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11282"; a="46198981"
+X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
+   d="scan'208";a="46198981"
+Received: from orviesa004.jf.intel.com ([10.64.159.144])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2024 13:05:48 -0800
+X-CSE-ConnectionGUID: n+dVGZE8SHSBjPQs7IPDvA==
+X-CSE-MsgGUID: DhWqMBeJROCKcJmBl25rQQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,239,1728975600"; 
+   d="scan'208";a="102346360"
+Received: from lkp-server01.sh.intel.com (HELO 82a3f569d0cb) ([10.239.97.150])
+  by orviesa004.jf.intel.com with ESMTP; 16 Dec 2024 13:05:45 -0800
+Received: from kbuild by 82a3f569d0cb with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tNIHe-000ETS-2L;
+	Mon, 16 Dec 2024 21:05:42 +0000
+Date: Tue, 17 Dec 2024 05:05:20 +0800
+From: kernel test robot <lkp@intel.com>
+To: Damien Le Moal <dlemoal@kernel.org>, linux-nvme@lists.infradead.org,
+	Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>, linux-pci@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev,
+	Rick Wertenbroek <rick.wertenbroek@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH v3 16/17] nvmet: New NVMe PCI endpoint target driver
+Message-ID: <202412170432.ZuybGalF-lkp@intel.com>
+References: <20241210093408.105867-17-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH iwl-next v3] e1000e: Fix real-time violations on link up
-To: "Lifshits, Vitaly" <vitaly.lifshits@intel.com>,
- intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org
-Cc: anthony.l.nguyen@intel.com, przemyslaw.kitszel@intel.com,
- andrew+netdev@lunn.ch, davem@davemloft.net, kuba@kernel.org,
- edumazet@google.com, pabeni@redhat.com, bhelgaas@google.com,
- pmenzel@molgen.mpg.de, Gerhard Engleder <eg@keba.com>
-References: <20241214191623.7256-1-gerhard@engleder-embedded.com>
- <231abdb7-3b16-4c3c-be17-5d0e6a556f28@intel.com>
-Content-Language: en-US
-From: Gerhard Engleder <gerhard@engleder-embedded.com>
-In-Reply-To: <231abdb7-3b16-4c3c-be17-5d0e6a556f28@intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-AV-Do-Run: Yes
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20241210093408.105867-17-dlemoal@kernel.org>
 
->> @@ -331,8 +331,15 @@ void e1000e_update_mc_addr_list_generic(struct 
->> e1000_hw *hw,
->>       }
->>       /* replace the entire MTA table */
->> -    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--)
->> +    for (i = hw->mac.mta_reg_count - 1; i >= 0; i--) {
->>           E1000_WRITE_REG_ARRAY(hw, E1000_MTA, i, hw->mac.mta_shadow[i]);
->> +
->> +        /* do not queue up too many posted writes to prevent increased
->> +         * latency for other devices on the interconnect
->> +         */
->> +        if ((i % 8) == 0 && i != 0)
->> +            e1e_flush();
-> 
-> 
-> I would prefer to avoid adding this code to all devices, particularly 
-> those that don't operate on real-time systems. Implementing this code 
-> will introduce three additional MMIO transactions which will increase 
-> the driver start time in various flows (up, probe, etc.).
-> 
-> Is there a specific reason not to use if (IS_ENABLED(CONFIG_PREEMPT_RT)) 
-> as Andrew initially suggested?
+Hi Damien,
 
-Andrew made two suggestions: IS_ENABLED(CONFIG_PREEMPT_RT) which I used
-in the first version after the RFC. And he suggested to check for a
-compromise between RT and none RT performance, as some distros might
-enable PREEMPT_RT in the future.
-Przemek suggested to remove the PREEMPT_RT check as "this change sounds
-reasonable also for the standard kernel" after the first version with
-IS_ENABLED(CONFIG_PREEMPT_RT).
+kernel test robot noticed the following build warnings:
 
-I used the PREEMPT_RT dependency to limit effects to real-time systems,
-to not make none real-time systems slower. But I could also follow the
-reasoning of Andrew and Przemek. With that said, I have no problem to
-add IS_ENABLED(CONFIG_PREEMPT_RT) again.
+[auto build test WARNING on pci/next]
+[also build test WARNING on pci/for-linus linus/master v6.13-rc3 next-20241216]
+[cannot apply to hch-configfs/for-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Gerhard
+url:    https://github.com/intel-lab-lkp/linux/commits/Damien-Le-Moal/nvmet-Add-vendor_id-and-subsys_vendor_id-subsystem-attributes/20241210-174321
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+patch link:    https://lore.kernel.org/r/20241210093408.105867-17-dlemoal%40kernel.org
+patch subject: [PATCH v3 16/17] nvmet: New NVMe PCI endpoint target driver
+config: i386-randconfig-003-20241217 (https://download.01.org/0day-ci/archive/20241217/202412170432.ZuybGalF-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20241217/202412170432.ZuybGalF-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202412170432.ZuybGalF-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/nvme/target/pci-ep.c: In function 'nvmet_pciep_iod_name':
+   drivers/nvme/target/pci-ep.c:658:16: error: implicit declaration of function 'nvme_opcode_str'; did you mean 'nvme_opcode_name'? [-Werror=implicit-function-declaration]
+     658 |         return nvme_opcode_str(iod->sq->qid, iod->cmd.common.opcode);
+         |                ^~~~~~~~~~~~~~~
+         |                nvme_opcode_name
+>> drivers/nvme/target/pci-ep.c:658:16: warning: returning 'int' from a function with return type 'const char *' makes pointer from integer without a cast [-Wint-conversion]
+     658 |         return nvme_opcode_str(iod->sq->qid, iod->cmd.common.opcode);
+         |                ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   In file included from include/linux/bits.h:7,
+                    from include/linux/bitops.h:6,
+                    from include/linux/log2.h:12,
+                    from arch/x86/include/asm/div64.h:8,
+                    from include/linux/math.h:6,
+                    from include/linux/delay.h:12,
+                    from drivers/nvme/target/pci-ep.c:10:
+   drivers/nvme/target/pci-ep.c: In function 'nvmet_pciep_enable_ctrl':
+   include/uapi/linux/bits.h:9:19: warning: right shift count is negative [-Wshift-count-negative]
+       9 |          (~_UL(0) >> (__BITS_PER_LONG - 1 - (h))))
+         |                   ^~
+   include/linux/bits.h:35:38: note: in expansion of macro '__GENMASK'
+      35 |         (GENMASK_INPUT_CHECK(h, l) + __GENMASK(h, l))
+         |                                      ^~~~~~~~~
+   drivers/nvme/target/pci-ep.c:1842:26: note: in expansion of macro 'GENMASK'
+    1842 |         pci_addr = acq & GENMASK(63, 12);
+         |                          ^~~~~~~
+   include/uapi/linux/bits.h:9:19: warning: right shift count is negative [-Wshift-count-negative]
+       9 |          (~_UL(0) >> (__BITS_PER_LONG - 1 - (h))))
+         |                   ^~
+   include/linux/bits.h:35:38: note: in expansion of macro '__GENMASK'
+      35 |         (GENMASK_INPUT_CHECK(h, l) + __GENMASK(h, l))
+         |                                      ^~~~~~~~~
+   drivers/nvme/target/pci-ep.c:1852:26: note: in expansion of macro 'GENMASK'
+    1852 |         pci_addr = asq & GENMASK(63, 12);
+         |                          ^~~~~~~
+   drivers/nvme/target/pci-ep.c: In function 'nvmet_pciep_init_bar':
+>> include/uapi/linux/bits.h:8:31: warning: left shift count >= width of type [-Wshift-count-overflow]
+       8 |         (((~_UL(0)) - (_UL(1) << (l)) + 1) & \
+         |                               ^~
+   include/linux/bits.h:35:38: note: in expansion of macro '__GENMASK'
+      35 |         (GENMASK_INPUT_CHECK(h, l) + __GENMASK(h, l))
+         |                                      ^~~~~~~~~
+   drivers/nvme/target/pci-ep.c:1949:23: note: in expansion of macro 'GENMASK'
+    1949 |         ctrl->cap &= ~GENMASK(35, 32);
+         |                       ^~~~~~~
+   include/uapi/linux/bits.h:9:19: warning: right shift count is negative [-Wshift-count-negative]
+       9 |          (~_UL(0) >> (__BITS_PER_LONG - 1 - (h))))
+         |                   ^~
+   include/linux/bits.h:35:38: note: in expansion of macro '__GENMASK'
+      35 |         (GENMASK_INPUT_CHECK(h, l) + __GENMASK(h, l))
+         |                                      ^~~~~~~~~
+   drivers/nvme/target/pci-ep.c:1949:23: note: in expansion of macro 'GENMASK'
+    1949 |         ctrl->cap &= ~GENMASK(35, 32);
+         |                       ^~~~~~~
+   cc1: some warnings being treated as errors
+
+
+vim +658 drivers/nvme/target/pci-ep.c
+
+   655	
+   656	static inline const char *nvmet_pciep_iod_name(struct nvmet_pciep_iod *iod)
+   657	{
+ > 658		return nvme_opcode_str(iod->sq->qid, iod->cmd.common.opcode);
+   659	}
+   660	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
