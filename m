@@ -1,86 +1,105 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id E166E4D8CE
-	for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2024 12:13:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+Received: from mail-lf1-f45.google.com (mail-lf1-f45.google.com [209.85.167.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D5421DFE8
+	for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2024 13:00:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734437588; cv=none; b=N1WivW5lr7e71GMRTnH201fSfKTaqNkmR6LaxR/pOjJbC36R9BY9FDaYzfHjOUo/qhlOKAtlUtAompen1Xm8vv1mOAfJSyim5OzEJRws/VTUKbInJwBxJL7yiA0IspbAuQ0jMtGVNYv0mEFake3Vy9BaYTZ/Fgxr9Qje71FN6Nw=
+	t=1734440449; cv=none; b=m/pD+IwrGP+esZEohoYM/qrRRU/RW+gMEZvkkb3Acra7uHCr2bBGF2X8Y8tTX/rtceNtGsIPj3kjzIq5uoIs+F2xfHhX1nu5EAePwodgfFQ9N0p43jlaHssshVVy6XCIE07q+XCpsMUW7Y6DilN2g/YjhgRoKrbzCtqs53MvXkc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734437588; c=relaxed/simple;
-	bh=9qnMXPea0TMkfAUZ7DwfhizkPmA5yDstwmaR49DRQOE=;
-	h=From:To:Cc:Subject:Date:Message-Id; b=T7Cbt2OWKq0m6celLcPfuWhwl4POyNsfTlxMelfh3UXiPRc75tiVNSs5HIfJ8ODkN/tLL2vw11rHRm4LYc1ZazlWWH9a1BEtEV1qqYj/ede6SrDwCR0p03GCGInA/JcA5W1iV6YezKcI89ONrE8StDCz5MjnooDDAB+rIKoh3P4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gd20w65/; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1734440449; c=relaxed/simple;
+	bh=GQIWeq5N/1+/+kDvpSpnt8IVUMXNOzsNCXvdUhT2KmU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=T3qLlSXy2WDfVszj6mI94lkY9eKzbokL7qJ0mhLDmAKbhchMBlaFo9sVarAUQCiSDgecIiCXYUC8OmS2ODdCvB1MVSQCYw/hyspWgvN9iBLGyasXYVmVujkpSWZ46PGvf9lh8znxNxcdG2DRee1ChFvkHtacoHlTX3AijuMj42s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=oDshkeoo; arc=none smtp.client-ip=209.85.167.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gd20w65/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id; bh=+jKgIThs09MvIq8+Vw
-	z+A+qwUGnSTOUWB4siy6x5W8Q=; b=gd20w65/p5KLVhs7SOYxVm+mD4Xw9wDzae
-	fKWrNj8b9S7zl6Ikr+tT/IudXPGY22yakq7aNUQC84fSVzWmRmICfRtt5g1RRzNn
-	UwLGp6qDS1HH3/EzfFZvO9LodM3YcEUDnKHmy1+C455O3wx9LUwm3c44dREL7Sh/
-	CB7NI1dRM=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD3N+SnamFnuE+xBA--.30878S2;
-	Tue, 17 Dec 2024 20:12:25 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: manivannan.sadhasivam@linaro.org
-Cc: kw@linux.com,
-	kishon@kernel.org,
-	arnd@arndb.de,
-	gregkh@linuxfoundation.org,
-	linux-pci@vger.kernel.org,
-	inux-kernel@vger.kernel.org,
-	rockswang7@gmail.com,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH] misc: pci_endpoint_test: fixed pci_resource_len return value out of bounds.
-Date: Tue, 17 Dec 2024 07:12:20 -0500
-Message-Id: <20241217121220.19676-1-18255117159@163.com>
-X-Mailer: git-send-email 2.17.1
-X-CM-TRANSID:_____wD3N+SnamFnuE+xBA--.30878S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJr4kCw4xZFWDJF1DtFyftFb_yoW8Gr1kpr
-	ZIkw109F4UtrWDGws2g3WkCF9YyFsrXry7XFW5Aw1avFnxAFyFyF1UGrWjgryxCF4IvF1j
-	yrs8tayv9a1UAaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jUwIgUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiDwm3o2dfexme7QAEs-
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="oDshkeoo"
+Received: by mail-lf1-f45.google.com with SMTP id 2adb3069b0e04-53f757134cdso5943140e87.2
+        for <linux-pci@vger.kernel.org>; Tue, 17 Dec 2024 05:00:48 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1734440446; x=1735045246; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=GQIWeq5N/1+/+kDvpSpnt8IVUMXNOzsNCXvdUhT2KmU=;
+        b=oDshkeoomomkIWzWQtd40b2V5rwgwFkhB7Eu7YBZGDvIYVgrDvlPqAjvxUdLBWF9uu
+         2eSFlFRSUmS3lgz62kRmWj+Fway0aioruT2H4RepwD0PYuC+KOO67uBEYJ1b420tKwyX
+         SzPj/DWyPya0fN1WIQP7kluPUlE/7mpclvMFDagnOQp+RTL9iepc57XYBCISnMeDeRlJ
+         ey5hJ4amtgEWvmvw8ebabxfDkQdp5xB3O+4ZeLIVHkDbNDlE/2HNVsS1StdG73epPkrX
+         zwawVFoq/IDIcv+gE8TCRFc31FGfhttkRGDvdPHSItlFlhNPBYqBZoG6gpgOl2sb9ZEz
+         Yovg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1734440446; x=1735045246;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=GQIWeq5N/1+/+kDvpSpnt8IVUMXNOzsNCXvdUhT2KmU=;
+        b=Y0vZNHE2bjaVb1KyK59zD4Ooesqq2dwSJhXd4GaBB98Cl1sp1V56rLL8doiL9xZsdM
+         00Sh3fxfG/JJ0y9v/k2tQtR38rKrgXNvWd5prvtDTJqTEGcKweajvkdMoE8VnHjgoLMl
+         e+CnEudhcWcBvkh5hxdKoQVSiOg8eEUZt0jG8ydSUb5MtVdeIw9nWjrUhjNHDDwIgmdr
+         A2gO3NPa6Qmgl4joHZ+BhB4o4hN0+MrZTJ6ShHRUVWf9aIFw2GYOXUtvBnz3oL0mfNNA
+         Lxvev9+JaqiFEDTuJQh833QbOn9ftweQpHd6rGzHWcVcESXaDRmuuQ8bxNPSsEBpCxk2
+         ju2w==
+X-Forwarded-Encrypted: i=1; AJvYcCWw9X626L27mPmGSOrvcDsJ/z+HGScj9lBvpP5PlOBGmzpzLvJ0agpOjoEZ0VwhXtFsTisLQ9MM7MY=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7p7orPo/gYv5dSq3FiX+2eivZyeCgx9bEUegrkUCODQG+tEOw
+	AIjazRpTox9C8g/4kjj4qJXMTLe5tPneATtAPj6kRMSDpn0O23aGrPUr7vXyLeHENJeRjkInCwx
+	rtf1xKGaEXNI+20pc1eyE0Lk3Pb40NxbNiyIhHA==
+X-Gm-Gg: ASbGncu0zZXCKWf2y7GSVwB3Eo10nCL2PW0Uttm8aEVZ3XIRZOGCRt7+nmKqbL9Qrci
+	GXbjiG9PHoKTI98T3kYIimwCmpbEalaPyj1bHKw==
+X-Google-Smtp-Source: AGHT+IE11omUaJ4WXf3M872hwf4LKHvl3NeeSE6hV/ORlMdadi+NJj5MwYpomF9yj0vKXlTRigYPF4Zh1hB/AzSqds8=
+X-Received: by 2002:a05:6512:220c:b0:540:3566:5760 with SMTP id
+ 2adb3069b0e04-541310a37fbmr1037395e87.35.1734440446299; Tue, 17 Dec 2024
+ 05:00:46 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <cover.1733136811.git.andrea.porta@suse.com> <42e09506979d878547d1140d7f6bf68ace76549b.1733136811.git.andrea.porta@suse.com>
+In-Reply-To: <42e09506979d878547d1140d7f6bf68ace76549b.1733136811.git.andrea.porta@suse.com>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Tue, 17 Dec 2024 14:00:35 +0100
+Message-ID: <CACRpkdY+6QPRH-Pd9SwXV6dsdah-otMa8bkt=-avzF6Aiaz7gA@mail.gmail.com>
+Subject: Re: [PATCH v5 02/10] dt-bindings: pinctrl: Add RaspberryPi RP1
+ gpio/pinctrl/pinmux bindings
+To: Andrea della Porta <andrea.porta@suse.com>
+Cc: Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
+	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Florian Fainelli <florian.fainelli@broadcom.com>, 
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof Wilczynski <kw@linux.com>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, 
+	Bartosz Golaszewski <brgl@bgdev.pl>, Derek Kiernan <derek.kiernan@amd.com>, 
+	Dragan Cvetic <dragan.cvetic@amd.com>, Arnd Bergmann <arnd@arndb.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Saravana Kannan <saravanak@google.com>, 
+	linux-clk@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-rpi-kernel@lists.infradead.org, linux-arm-kernel@lists.infradead.org, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, Masahiro Yamada <masahiroy@kernel.org>, 
+	Stefan Wahren <wahrenst@gmx.net>, Herve Codina <herve.codina@bootlin.com>, 
+	Luca Ceresoli <luca.ceresoli@bootlin.com>, Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+	Andrew Lunn <andrew@lunn.ch>, Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The return type of the API is inconsistent. Inconsistencies may
-result in out-of-bounds. If the bar size of the EP device exceeds
-4G, this bar_Size will be equal to 0.
+On Mon, Dec 2, 2024 at 12:19=E2=80=AFPM Andrea della Porta
+<andrea.porta@suse.com> wrote:
 
-For example, there is an EP device, the bar0 size is 16MB, bar1
-size is 32MB, bar2 size is 8GB. When testing bar2, barno equals
-BAR2. Then run pcitest -b 2, console will output "TEST FAILED".
+> Add device tree bindings for the gpio/pin/mux controller that is part of
+> the RP1 multi function device, and relative entries in MAINTAINERS file.
+>
+> Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
+> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-Variable declaration of bar_size is int, the range less than or
-equal 2G. The return value of pci_resource_len is resource_size_t.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/misc/pci_endpoint_test.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+I can also just merge this patch to the pin control tree if you like,
+tell me what
+you desire.
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 3aaaf47fa4ee..414c4e55fb0a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -280,10 +280,11 @@ static int pci_endpoint_test_bar_memcmp(struct pci_endpoint_test *test,
- static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
- 				  enum pci_barno barno)
- {
--	int j, bar_size, buf_size, iters, remain;
- 	void *write_buf __free(kfree) = NULL;
- 	void *read_buf __free(kfree) = NULL;
- 	struct pci_dev *pdev = test->pdev;
-+	int j, buf_size, iters, remain;
-+	resource_size_t bar_size;
- 
- 	if (!test->bar[barno])
- 		return false;
--- 
-2.17.1
-
+Yours,
+Linus Walleij
