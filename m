@@ -1,50 +1,39 @@
-Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail.tuxedocomputers.com (mail.tuxedocomputers.com [157.90.84.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E781F76C0;
-	Tue, 17 Dec 2024 15:57:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5421D1FC7E0;
+	Tue, 17 Dec 2024 15:58:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=157.90.84.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734451034; cv=none; b=JF/ccnTFtow6DOdjljdWK6vKUxOTslXf2BZayvG3huE9wcdbu/oJ6XgdmfJEag8u0n8EUHS8isdtK+p9SkIhzq1NOAFEiuafHovBETdi9KnRoj7zcORn4xZXVBK3rSmQ0cKA60d5wTPxqgbjni3HeuSxPxvlsm22WrRuyTtvWl4=
+	t=1734451130; cv=none; b=VaFi2TUYaouO6kyJ4BYnDDTuAev/hnXIxxyu4URcbEi9/hU+ch54YYJ7wblXP0hwgwDypXqYqdXYyZXPvVQ7aVszO+/RAy3LLnDpRU09XWm0aMtynoyUhAllgVxEtqrGRrwSO7VGxMnZbdZo/IEY1e1brLZUIgCmPVtNyr4oi48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734451034; c=relaxed/simple;
-	bh=/MmuCsb0Bx/C8hEyi1WpLxVrpg9+UPiKHWpNphU9Wj4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=rRKN4NNbDIPW9RMl9FPqwlO6gwImoIJIDvvGipJADObnrjaIrcq6Ih1rtsp8lh65tFKIsy49apzhVhybgmBPyU/4iJnRu7EU+2P5OhVqcgNAILnyxzNfhAV26yPhKuZZaX4KKu1aPVD5j3Bdc0ox5sZ746Otj7a7ECGZhhSrmFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=7NQexlbe; arc=none smtp.client-ip=91.207.212.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	s=arc-20240116; t=1734451130; c=relaxed/simple;
+	bh=g7AMDJkTw7BxKeivuzpxUA1diySyBp+hk0KgUQrCSzc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Oz8eQSOpkdFmUwUrflvpUBbsAkZ41VK1EbGFswYtgFFnvFxtHQoVfY1dviTZ6Rv8Sx0chEITx9d7QBqkl63BYAyNJzZ2NzIM1yM5wPMdnzItD4hTC9iDpT6xMFghweIr0GARjsGlfxxrdUzNOcBg1jJZbEaYZ+84cfUvRoV9FxU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuxedocomputers.com; spf=pass smtp.mailfrom=tuxedocomputers.com; dkim=pass (1024-bit key) header.d=tuxedocomputers.com header.i=@tuxedocomputers.com header.b=F6qiXHl1; arc=none smtp.client-ip=157.90.84.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=tuxedocomputers.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxedocomputers.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="7NQexlbe"
-Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BHFCWv3017128;
-	Tue, 17 Dec 2024 16:56:24 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	kDmS9Ambq1maXFpKniL040Nqs3Zdh9aLWBYPyXwJm2U=; b=7NQexlbe5zKhhrpU
-	N2ofTiGRp+mreCoG4VCHgGu6UaeETr5Bv6hR8B5EXga7t6lsKfxM5hVr/KgHc3OD
-	wJGwr2ErWIVvW+zfyiE1NQpCxurX6yV5mxinLY+OVYMCBEyqZ3m91/JOaP6Grg3e
-	14GemyeQ+cR0n9qrnV2lfn29TuA1wFw3jMULYMZZBYJBi+zhnYn6Bn8Vyvn+vKL0
-	8qavgJkB7Jh7MfgRPut7h1DGnFoMsUXGbBX0Qnu6eJOxZX2nIOoxJ6JhCf7T/iw6
-	FmYSwrwyqmSxlIOAGb8TjkFXUMeN+z8TSXoR7FBjNRSGeuWoKJCbPB/nEoOnH3lg
-	itsBDg==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 43kbr683r9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 17 Dec 2024 16:56:24 +0100 (CET)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id DB36640050;
-	Tue, 17 Dec 2024 16:54:59 +0100 (CET)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id E6BF9276678;
-	Tue, 17 Dec 2024 16:53:49 +0100 (CET)
-Received: from [10.129.178.212] (10.129.178.212) by SHFDAG1NODE3.st.com
- (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.37; Tue, 17 Dec
- 2024 16:53:49 +0100
-Message-ID: <d976d74c-80c0-4446-bb9b-960a990c552b@foss.st.com>
-Date: Tue, 17 Dec 2024 16:53:48 +0100
+	dkim=pass (1024-bit key) header.d=tuxedocomputers.com header.i=@tuxedocomputers.com header.b="F6qiXHl1"
+Received: from [192.168.42.116] (p5de4533f.dip0.t-ipconnect.de [93.228.83.63])
+	(Authenticated sender: wse@tuxedocomputers.com)
+	by mail.tuxedocomputers.com (Postfix) with ESMTPSA id A50762FC0055;
+	Tue, 17 Dec 2024 16:58:39 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=tuxedocomputers.com;
+	s=default; t=1734451120;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=79SZt7lkJkRX29XZfbWou0Bi23zCf6f0o7evxNOXn14=;
+	b=F6qiXHl1R7ewBrVr16JBs0vNhPSpuXx34PCKa4QEiDNYfQ+PX2oA7PKKMvDzMfGmpjkb0l
+	pjuMJqk48qwTMqDFrkHwzPqHZsYQkT/0TfByuNA4Rt0xOJ+0w9C5yxNJicIINBVRPjlk6C
+	WWEXxJv/ba9MEk8iO7IvZjOjZFR+brE=
+Authentication-Results: mail.tuxedocomputers.com;
+	auth=pass smtp.auth=wse@tuxedocomputers.com smtp.mailfrom=wse@tuxedocomputers.com
+Message-ID: <7a9353d3-b9db-4499-a054-c7050bc7b4d5@tuxedocomputers.com>
+Date: Tue, 17 Dec 2024 16:58:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -52,101 +41,68 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/5] dt-bindings: PCI: Add STM32MP25 PCIe root complex
- bindings
-To: Bjorn Helgaas <helgaas@kernel.org>, Rob Herring <robh+dt@kernel.org>
-CC: <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <bhelgaas@google.com>,
-        <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <cassel@kernel.org>,
-        <quic_schintav@quicinc.com>, <fabrice.gasnier@foss.st.com>,
-        <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-References: <20241205172022.GA3053765@bhelgaas>
+Subject: Re: [PATCH v2] PCI: Avoid putting some root ports into D3 on some
+ Ryzen chips
+To: Mario Limonciello <mario.limonciello@amd.com>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>
+Cc: ggo@tuxedocomputers.com, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20241209193614.535940-1-wse@tuxedocomputers.com>
+ <215cd12e-6327-4aa6-ac93-eac2388e7dab@amd.com>
+ <23c6140b-946e-4c63-bba4-a7be77211948@tuxedocomputers.com>
+ <823c393d-49f6-402b-ae8b-38ff44aeabc4@amd.com>
+ <2b38ea7b-d50e-4070-80b6-65a66d460152@tuxedocomputers.com>
+ <e0ee3415-4670-4c0c-897a-d5f70e0f65eb@amd.com>
+ <90631333-fda0-42cf-9e32-8289c353549f@tuxedocomputers.com>
+ <4dac3ff2-e3ab-42c0-b39f-379d5badca42@amd.com>
 Content-Language: en-US
-From: Christian Bruel <christian.bruel@foss.st.com>
-In-Reply-To: <20241205172022.GA3053765@bhelgaas>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SHFCAS1NODE2.st.com (10.75.129.73) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
+From: Werner Sembach <wse@tuxedocomputers.com>
+In-Reply-To: <4dac3ff2-e3ab-42c0-b39f-379d5badca42@amd.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
 
-> Makes sense.  What about phys, resets, etc?  I'm pretty sure a PHY
-> would be a per-Root Port thing, and some resets and wakeup signals
-> also.
-> 
-> For new drivers, I think we should start adding Root Port stanzas to
-> specifically associate those things with the Root Port, e.g.,
-> something like this?
-> 
->    pcie@48400000 {
->      compatible = "st,stm32mp25-pcie-rc";
-> 
->      pcie@0,0 {
->        reg = <0x0000 0 0 0 0>;
->        phys = <&combophy PHY_TYPE_PCIE>;
->        phy-names = "pcie-phy";
->      };
->    };
-> 
-> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/devicetree/bindings/pci/mediatek,mt7621-pcie.yaml?id=v6.12#n111
-> is one binding that does this, others include apple,pcie.yaml,
-> brcm,stb-pcie.yaml, hisilicon,kirin-pcie.yaml.
-> 
+Am 17.12.24 um 15:11 schrieb Mario Limonciello:
+> On 12/17/2024 08:07, Werner Sembach wrote:
+>
+>>> '''
+>>> Platform may hang resuming.  Upgrade your firmware or add pcie_port_pm=off 
+>>> to kernel command line if you have problems
+>>> '''
+>> Yes, full log attached (kernel 6.13-rc3 one time without sudo one time with 
+>> sudo)
+>
+> Yes; I see it in your log.
+>
+>>> "quirk: disabling D3cold for suspend"
+>> On the fixed BIOS I see that line. On the unfixed BIOS it aborts the 
+>> functions at "if (pm_suspend_target_state == PM_SUSPEND_ON)". Skipping the 
+>> check on the unfixed BIOS it still hangs on resume.
+>>>
+>>> I'm /suspecting/ you do see it, but you're having problems with another root 
+>>> port.
+>>>
+>>> I mentioned this in my previous iterations of patches that eventually landed 
+>>> on that quirk, but Windows and Linux handle root ports differently at 
+>>> suspend time and that could be why it's exposing your BIOS bug.
+>>>
+>>> If you can please narrow down which root ports actually need the quirk for 
+>>> your side (feel free to do a similar style to 7d08f21f8c630) I think we 
+>>> could land on something more narrow and upstreamable.
+>>>
+>>> At a minimum what you're doing today is covering both Rembrandt and Phoenix 
+>>> and it should only apply to Phoenix.
+>>
+>> I also try to find out how many devices where actually shipped with this very 
+>> first BIOS version.
+>
+> OK.
 
-On a second thought, moving the PHY to the root-port part would 
-introduce a discrepancy with the pcie_ep binding, whereas the PHY is 
-required on the pcie_ep node.
+Ok found out that the initial bios actually works, then there is one in between 
+bios where it doesn't and the next one it works again.
 
-Even for the pcie_rc, the PHY is needed to enable the core_clk to access
-the PCIe core registers,
+So i need to find out if the the in between bios was actually shipped, if not, 
+this issue is actually void.
 
-So that would make 2 different required PHY locations for RC and EP:
-
-     pcie_rc: pcie@48400000 {
-       compatible = "st,stm32mp25-pcie-rc";
-
-       pcie@0,0 {
-         reg = <0x0000 0 0 0 0>;
-         phys = <&combophy PHY_TYPE_PCIE>;
-         phy-names = "pcie-phy";
-       };
-     };
-
-     pcie_ep pcie@48400000 {
-       compatible = "st,stm32mp25-pcie-ep";
-       phys = <&combophy PHY_TYPE_PCIE>;
-       phy-names = "pcie-phy";
-     };
-
-Simplest seems to keep the PHY required for the pcie core regardless of 
-the mode and keep the empty root port to split the design
-
-     pcie_rc: pcie@48400000 {
-       compatible = "st,stm32mp25-pcie-rc";
-       phys = <&combophy PHY_TYPE_PCIE>;
-       phy-names = "pcie-phy";
-
-         pcie@0,0 {
-         reg = <0x0000 0 0 0 0>;
-       };
-     };
-
-     pcie_ep: pcie@48400000 {
-       compatible = "st,stm32mp25-pcie-ep";
-       phys = <&combophy PHY_TYPE_PCIE>;
-       phy-names = "pcie-phy";
-     };
-
-But I have no experience with multiple root-port systems, I'm open for 
-the best :)
-
-Thanks
-
-Christian
