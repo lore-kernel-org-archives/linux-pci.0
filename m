@@ -1,53 +1,53 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460FF1A2C0B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B8E1A83F7;
 	Fri, 20 Dec 2024 05:54:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734674060; cv=none; b=n3eDq2/my03ZCP0OXzE+1uBsVjUVLFw0D2zDvRlt9R+Dsqt+TH0cIZIN22LL9Dnip8MwFib5yRpVnuF8Q9577i/1as26Pj2bvcfY8m8J/Cq5ETPzQB1Ye2T4/WN4ylmnNsB+GWDmQGu4dDnBbyV1AbDcV82OaqPHAYimwG1S+mI=
+	t=1734674061; cv=none; b=orN1Vs6K8dqZx55hGLE8caHC9t7/keqDpC2ViKhN8MVZL3xWu/LECazJJEWv18js1Rzb+KKxrkbcUs3wbMM1mH2qIIsolirH2SDj0Ot+sk2bEEqhL4wfCQTRZ5JEYSdSt7k7JUyT5h1+XXG3jVI8QOg1AhUHZqx3jBwrQrxj3uo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734674060; c=relaxed/simple;
-	bh=JDmxumleWLVJQCY+OI7NTcCMiXiBIzuCIXT1RnGA9uQ=;
+	s=arc-20240116; t=1734674061; c=relaxed/simple;
+	bh=0HEzWQD8XDJ0kiCocomVKoVvHp8GZaTJjNwWYpGhRMg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=a1Bf51JwJgi6JbMC2wQQkDYWta4JkIF9yJ11glHcrju7L4dTvrGWtp5/kOxeLI1HtSsAmTvD3j/H+kC2CCMKBvwshp19+v0WwEElY6GOzfYOVaixZfc2r/ZL22Ba/tICuZ6XkcDZPUVKvAW7tH2pE5TD3to9xBKgrrQ7ZYJWGoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=c4vFIlbq; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=PT278k/KxLR+u1Bv0fn3Oc7AVfZ7l3OW/qerztLp7VEjovvF7eBZODbuYlIh9SeYUPWtLp6+ohrCN4DbHVmN2Hpn56axWg5Eq10Ij7M1R0w6g2sGOCKG/dpQw92LpgCzXU2UZFXEL9D/kg/vdbxoQMIUBWvIR8EAZlEG6oFCvb4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=N7sthofO; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="c4vFIlbq"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BJJrU50024248;
-	Fri, 20 Dec 2024 05:54:08 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="N7sthofO"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BJHKrpY015075;
+	Fri, 20 Dec 2024 05:54:06 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=cXZH0+BMKtF
-	+YyJ8cTuN0wA+v6mRNPKggR4Rs3Sn2Jc=; b=c4vFIlbqyDuq7dnEM2u3D267T57
-	ZCAmpruh2NrHvfNBLRgnW01VVCncEbyYfpcHjytGuCbLYpEGEi0u4G0YXHkaxjWI
-	G8mnuWpS8XhjhFBaYydA0fjn/Uwp1/G52ZWTpJ60mK5+WOhTYiRSrHIB1FU73wkg
-	V2nAtIPG4SwGRqxpqwx5eZz2yGSgJ/HrKk2QOYqukppREgoob+SUO0dGoRanojmi
-	FH7u8pngy6kxo5vyKs/ee4ZvEvkwguUI2NEopVqeUutRqBf2U5o192/6nJ0ngGj6
-	MQtY3WKkpGrX6J5bdvYcwRM8aVDD+JYBDh1e9J082rttpwDlu/hS3pWaPDg==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=9lq+2NYwzqu
+	nGCZ2Xfc9UUA8f4aGQkhgfBDDji8ziLY=; b=N7sthofOppRv92B7Ahal5deFevE
+	nNCWJFsHRWCZIcDp6UybUlvvtVO9p8SOYC5N0C0SmEoi5fHxEwehF2Rs1bFn8k4x
+	dBgUdswll2DrZE9EXaNbneFjZxoZ9IOQChywV9BTTLZLWckQGjCVr+cNXzp9if4B
+	jaE8O74Y429NBkHfAnMFjCZeHn4AqG+D0WCqvj4WMJEjjzTr24DGtQF9zguxu6Gx
+	pvDi3GJKVDHTm7yz7xRJNzWZ1ZyxHMoqhcDeX7YflRIxxWh3dYAfulPx6DsTOfIO
+	LLXOfY6Bk6cFofMJ4Pr5b+kvAD+qwE2/BByFcAHPlJ3EUnQ3vLFOLto4syw==
 Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43mt1ws4hr-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43mqt81e4x-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Dec 2024 05:54:07 +0000 (GMT)
+	Fri, 20 Dec 2024 05:54:06 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BK5s5oE024013;
-	Fri, 20 Dec 2024 05:54:05 GMT
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 4BK5s4hF023979;
+	Fri, 20 Dec 2024 05:54:04 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 43h33kv4qs-1
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 43h33kv4qf-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Dec 2024 05:54:05 +0000
+	Fri, 20 Dec 2024 05:54:04 +0000
 Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4BK5s5lA024004;
-	Fri, 20 Dec 2024 05:54:05 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 4BK5s4Ek023972;
+	Fri, 20 Dec 2024 05:54:04 GMT
 Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4BK5s4qM023990
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4BK5s3Nq023961
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Dec 2024 05:54:05 +0000
+	Fri, 20 Dec 2024 05:54:04 +0000
 Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id E6A3E1C3B; Fri, 20 Dec 2024 13:54:03 +0800 (CST)
+	id C387F1C3E; Fri, 20 Dec 2024 13:54:02 +0800 (CST)
 From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 To: vkoul@kernel.org, kishon@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
         conor+dt@kernel.org, dmitry.baryshkov@linaro.org,
@@ -59,9 +59,9 @@ Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
         linux-pci@vger.kernel.org, quic_qianyu@quicinc.com,
         quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
         Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-Subject: [PATCH v3 8/8] arm64: dts: qcom: qcs8300: enable pcie1 for qcs8300 platform
-Date: Fri, 20 Dec 2024 13:52:39 +0800
-Message-Id: <20241220055239.2744024-9-quic_ziyuzhan@quicinc.com>
+Subject: [PATCH v3 4/8] PCI: qcom: Add QCS8300 PCIe support
+Date: Fri, 20 Dec 2024 13:52:35 +0800
+Message-Id: <20241220055239.2744024-5-quic_ziyuzhan@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20241220055239.2744024-1-quic_ziyuzhan@quicinc.com>
 References: <20241220055239.2744024-1-quic_ziyuzhan@quicinc.com>
@@ -76,83 +76,37 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 3byS_kPkS6BE0kL4cXTKSRZfh1oX_qWv
-X-Proofpoint-ORIG-GUID: 3byS_kPkS6BE0kL4cXTKSRZfh1oX_qWv
+X-Proofpoint-ORIG-GUID: UK4ZwxP1mwLWiegJlhx16gS3NxrhSKY4
+X-Proofpoint-GUID: UK4ZwxP1mwLWiegJlhx16gS3NxrhSKY4
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
  definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 impostorscore=0
- suspectscore=0 mlxlogscore=835 priorityscore=1501 mlxscore=0 spamscore=0
- clxscore=1015 phishscore=0 bulkscore=0 malwarescore=0 adultscore=0
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412200048
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 bulkscore=0
+ suspectscore=0 priorityscore=1501 spamscore=0 mlxlogscore=999
+ malwarescore=0 impostorscore=0 phishscore=0 clxscore=1015
+ lowpriorityscore=0 adultscore=0 classifier=spam adjust=0 reason=mlx
+ scancount=1 engine=8.19.0-2411120000 definitions=main-2412200048
 
-Add configurations in devicetree for PCIe1, board related gpios,
-PMIC regulators, etc.
+Add support for QCS8300 SoC that uses controller version 5.90 so reusing
+the 1.34.0 config.
 
 Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 ---
- arch/arm64/boot/dts/qcom/qcs8300-ride.dts | 40 +++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
-index fe3200914f79..d4b0488a2e23 100644
---- a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
-+++ b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
-@@ -213,6 +213,23 @@ &pcie0_phy {
- 	status = "okay";
- };
- 
-+&pcie1 {
-+	perst-gpios = <&tlmm 23 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
-+
-+	pinctrl-0 = <&pcie1_default_state>;
-+	pinctrl-names = "default";
-+
-+	status = "okay";
-+};
-+
-+&pcie1_phy {
-+	vdda-phy-supply = <&vreg_l6a>;
-+	vdda-pll-supply = <&vreg_l5a>;
-+
-+	status = "okay";
-+};
-+
- &qupv3_id_0 {
- 	status = "okay";
- };
-@@ -255,6 +272,29 @@ perst-pins {
- 			bias-pull-down;
- 		};
- 	};
-+
-+	pcie1_default_state: pcie1-default-state {
-+		wake-pins {
-+			pins = "gpio21";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+
-+		clkreq-pins {
-+			pins = "gpio22";
-+			function = "pcie1_clkreq";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+
-+		perst-pins {
-+			pins = "gpio23";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-down;
-+		};
-+	};
- };
- 
- &uart7 {
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index dc102d8bd58c..e4e77facfb47 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1843,6 +1843,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-ipq9574", .data = &cfg_2_9_0 },
+ 	{ .compatible = "qcom,pcie-msm8996", .data = &cfg_2_3_2 },
+ 	{ .compatible = "qcom,pcie-qcs404", .data = &cfg_2_4_0 },
++	{ .compatible = "qcom,pcie-qcs8300", .data = &cfg_1_34_0 },
+ 	{ .compatible = "qcom,pcie-sa8540p", .data = &cfg_sc8280xp },
+ 	{ .compatible = "qcom,pcie-sa8775p", .data = &cfg_1_34_0},
+ 	{ .compatible = "qcom,pcie-sc7280", .data = &cfg_1_9_0 },
 -- 
 2.34.1
 
