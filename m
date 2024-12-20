@@ -1,116 +1,116 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mail-m3274.qiye.163.com (mail-m3274.qiye.163.com [220.197.32.74])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DABE1C1F09
-	for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2024 10:17:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29A642C859;
+	Fri, 20 Dec 2024 10:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1734689850; cv=none; b=lFpozo1JVvVAqmQ8zr7+nm+srRVgEMlUnQliZW0yvAKngYveri9ZYEkilHsmylJQgR7gLBRRb8y+ws7jOYrU/v3jnK6m+Xojj7CixAe1YrJ73TzXDtzBm70BJ6ThOkqq5mUSueSYI/ArO4vWzg2FK7NGkEqbThicgkaiBtKXePM=
+	t=1734690685; cv=none; b=ir1otobs0FHmHh2GljlIqMUZv6cfMTc8n8dJRzuyEn7afHS8mCtPlFsI0nvsxkfacoUW1LbDBiEN4l6Jyh84IMFL1DxHCW1VMezqJRDeh2b6n4mdRyJY2W+qM97LY+HIeUElrX67OumL2qG+KY4rMz3+LMO0DsxH++FPcd/mfS0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1734689850; c=relaxed/simple;
-	bh=SFDPgxVu6wtDC2GsMxKEW9jpJd3//ZBI6GCKoD59BXg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lYm7uFwiY+zelBf/4nzAgMgMFWPess9bgZUq3H+UrH6HtFxR2/4hSe4iwEp1jm9aKD4ZfIiv8O0Y96ZzC2uavEDuHLnSxbgSqZNaq3O9WkysxoIB/eXSvv7VgsnjWmqGKMPaLBe9REfT9y8JeoRoO7jdZh2K9AtWEgnx5jjS76Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hAxU+lgF; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1734690685; c=relaxed/simple;
+	bh=yXHWiE9/FyvKkEE27E9iLAFO54uYXqZeToPAFIxMpYk=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jvXl0ntD3gjcckRQv8Xj3PPhfQ3Da5YdYET2nYJ44CCWeB9qk3O8TfFQ4bRBzUQYtkByt7rR/uEAeiDnE5nVwPxXh19zYUpmFLC92fsRPK5VFht/G1jHwju1AIrTsn0Zcw2Ip8JlLEcMsHJb4fLzC/Wm4JoJkuzg2s2D+j9IFLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=THE7JQgD; arc=none smtp.client-ip=220.197.32.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hAxU+lgF"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 4BK7M0E1028939
-	for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2024 10:17:27 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	wrpm/RvJv4pqacQSl95wP5M/EJZnFTnri3TZQLQlVCA=; b=hAxU+lgFGE2X/6wu
-	NdYIb+VZLP0ogvuttHDlq34Q1iUgb07Fn+CSka9QhOucMSGFyfoqogBKHhL4iMcn
-	qpu+ifJCdiFiRQq41YqstBOF4ThFX+LNjitowUzzSJTndh4u53F1DAVsRZsRhuFO
-	nse171owuVycrLxtG5JIagm50Mf3w3jkZxAr3+7WTmAGl+RlZgsePv7IrUU6xnm6
-	xoPbMxsDscCTiVwPUp2Z7g6mh+d7Qomrdj9PM0qoG8A/A30Mz70IrMrOsP3uRSVK
-	EBzE9VElQU5N2by+dMl/VpMuYrDEH28sknxojrHeDYID0053jzZIZX1bKxaaY2MN
-	9vnImg==
-Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 43n44hrgdx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2024 10:17:27 +0000 (GMT)
-Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-467922cf961so4391411cf.0
-        for <linux-pci@vger.kernel.org>; Fri, 20 Dec 2024 02:17:27 -0800 (PST)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1734689846; x=1735294646;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=wrpm/RvJv4pqacQSl95wP5M/EJZnFTnri3TZQLQlVCA=;
-        b=wwpU3EuokT23UAT8+/ogHuphH2fWEIk7ZpPGKac0qY6C1yMaW+KMgJjsDq5D+X3oSU
-         pbDFYa+e6QnZke7l54YaDX61YBzVJnwBXxFqERzQfm6bXSLTMLNaSDuafe1qUQAaRV89
-         O4xxfRZCFVQO2OhL63Q9apArRCNtfsS8m+rvSGyygoKSE6/V1gNmNgY82lodj505C9lh
-         NfxIUO701EjOfQMEiQEZIDVfZWbapvV6Iub/Wnf8tL2taI4nZeSe2Mg2MsOFa51qJjPA
-         pcGCuSNZWQwLz4uLCS9xNMEyvZzgF+VLER9tdqBXbUZW7zlF7B//iNo0kRxRMU7C75f8
-         B1Rg==
-X-Forwarded-Encrypted: i=1; AJvYcCXOZBnNd0Jp8gGa7tKkanoY13oG5nlhX+qrhDV+ydPh3ifZUOrfJVzAxnas/NPW70J09ondMSHZ9IA=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9tlXk5roPDc6clNTO6mPbxDSDohFB4TAxm4nsqai52DlVTwkr
-	0Z2AJw5E1k8nvmZCbWaz0K00wfcP8/70uBUDTelha6jYGSUiuGroRy7EqgLi5iIHdA/fC2KIpJc
-	RYDjNAUKAxLa97uA3Ty9a04A8w8z3Ct4nCdAiXTHEbVxRwILKO4e9uBE+kEA=
-X-Gm-Gg: ASbGncs98Drlh/eClmakcVp18w1pbh9uyTkGJdGrWpHYXLskO5DxzQ09w4jp4Cs6SAn
-	1QWu77QO3yUKGrXnfDcwuHCILwRozTUA6NCrQVTCnll8x4L7yG23Y1Iy1IHkwWgvdTJxrj+0C41
-	S5WoXiT9K1LsR1Oi9yfrwcxd+BPrlYHx1732xlA9Hk/+OR0yY2pE5gKf6TgVwjilO5/m3i8WrsB
-	K45SbjIFo6HO0a+6hqA5aHghzKyxbk99tt44Z8uuV6mMsItV43iGyonZAgRVpFVHlB2kkQe66uv
-	h++lNjTeYTaZxaPmQRiBe1Q0tqJm/wCYrL4=
-X-Received: by 2002:a05:620a:4455:b0:7a9:bc9b:b27 with SMTP id af79cd13be357-7b9ba733805mr115535985a.6.1734689846244;
-        Fri, 20 Dec 2024 02:17:26 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHWt/HpECNmTA7E5A2IgoO13Yn8mzdDwcbQ+XpPB87YicCL8ukox//oEwyNPqrgS2GNb+JyvQ==
-X-Received: by 2002:a05:620a:4455:b0:7a9:bc9b:b27 with SMTP id af79cd13be357-7b9ba733805mr115534485a.6.1734689845814;
-        Fri, 20 Dec 2024 02:17:25 -0800 (PST)
-Received: from [192.168.65.90] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aac0e82f5f4sm159878766b.6.2024.12.20.02.17.22
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 20 Dec 2024 02:17:25 -0800 (PST)
-Message-ID: <ab23e0ca-3c2f-44ab-b6d1-cfcf63f29f74@oss.qualcomm.com>
-Date: Fri, 20 Dec 2024 11:17:22 +0100
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="THE7JQgD"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 655ee901;
+	Fri, 20 Dec 2024 18:15:56 +0800 (GMT+08:00)
+From: Kever Yang <kever.yang@rock-chips.com>
+To: heiko@sntech.de
+Cc: linux-rockchip@lists.infradead.org,
+	Kever Yang <kever.yang@rock-chips.com>,
+	Simon Xue <xxm@rock-chips.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	linux-kernel@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	devicetree@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v2 2/7] dt-bindings: PCI: dwc: rockchip: Add rk3576 support
+Date: Fri, 20 Dec 2024 18:15:46 +0800
+Message-Id: <20241220101551.3505917-3-kever.yang@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20241220101551.3505917-1-kever.yang@rock-chips.com>
+References: <20241220101551.3505917-1-kever.yang@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 8/8] arm64: dts: qcom: qcs8300: enable pcie1 for
- qcs8300 platform
-To: Ziyue Zhang <quic_ziyuzhan@quicinc.com>, vkoul@kernel.org,
-        kishon@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, dmitry.baryshkov@linaro.org,
-        neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, kw@linux.com,
-        bhelgaas@google.com, andersson@kernel.org, konradybcio@kernel.org
-Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, quic_qianyu@quicinc.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com
-References: <20241220055239.2744024-1-quic_ziyuzhan@quicinc.com>
- <20241220055239.2744024-9-quic_ziyuzhan@quicinc.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20241220055239.2744024-9-quic_ziyuzhan@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: 0uqlbwT25E3HZNV5KZY1WzPqwJ0TOScQ
-X-Proofpoint-ORIG-GUID: 0uqlbwT25E3HZNV5KZY1WzPqwJ0TOScQ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1039,Hydra:6.0.680,FMLib:17.12.60.29
- definitions=2024-09-06_09,2024-09-06_01,2024-09-02_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 spamscore=0 mlxscore=0
- mlxlogscore=696 phishscore=0 malwarescore=0 impostorscore=0 bulkscore=0
- adultscore=0 suspectscore=0 clxscore=1015 priorityscore=1501
- lowpriorityscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2411120000 definitions=main-2412200085
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGhoaQlZNQ0pNSkIZT0xPGB1WFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a93e39114ed03afkunm655ee901
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Oio6Kww*IzIKUQg3Gj4UM0kR
+	DTpPFC5VSlVKTEhPTUNCTE5MTE9JVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
+	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFKTUJCNwY+
+DKIM-Signature:a=rsa-sha256;
+	b=THE7JQgD3wkpGn/fIZ2+kXZ88uI5KGMUWGbMe12I0XcVFP9yXnDGsFOSRHvuSuBY6S0MYgOUPe0Fd0aO3tFl4ihtyKvM2RK9b76Ugz3/GFthyJ0MkaIjeQTBCpUzHDPRoB0MCrrd0jpncCNH0Z/x3dvC5/ZbtQ3tPZ+FG/u4XMw=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=iKsAiUjaHjXs6Wl1aegp3PErWmUFhkBymoXghyPrcIg=;
+	h=date:mime-version:subject:message-id:from;
 
-On 20.12.2024 6:52 AM, Ziyue Zhang wrote:
-> Add configurations in devicetree for PCIe1, board related gpios,
-> PMIC regulators, etc.
-> 
-> Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-> ---
+rk3576 is using dwc controller, but use msi interrupt instead of its,
+so the msi-map is not required, and need to add a new 'msi' interrupt name.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Signed-off-by: Kever Yang <kever.yang@rock-chips.com>
+---
 
-Konrad
+Changes in v2:
+- remove required 'msi-map'
+- add interrupt name 'msi'
+
+ .../devicetree/bindings/pci/rockchip-dw-pcie-common.yaml      | 1 +
+ Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml   | 4 +---
+ 2 files changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
+index cc9adfc7611c..e5e1a2c7ae05 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
+@@ -81,6 +81,7 @@ properties:
+       - const: msg
+       - const: legacy
+       - const: err
++      - const: msi
+       - const: dma0
+       - const: dma1
+       - const: dma2
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+index 550d8a684af3..9a464731fa4a 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -26,6 +26,7 @@ properties:
+       - const: rockchip,rk3568-pcie
+       - items:
+           - enum:
++              - rockchip,rk3576-pcie
+               - rockchip,rk3588-pcie
+           - const: rockchip,rk3568-pcie
+ 
+@@ -71,9 +72,6 @@ properties:
+ 
+   vpcie3v3-supply: true
+ 
+-required:
+-  - msi-map
+-
+ unevaluatedProperties: false
+ 
+ examples:
+-- 
+2.25.1
+
