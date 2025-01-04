@@ -1,115 +1,136 @@
-Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
+Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CFA13FD83;
-	Sat,  4 Jan 2025 08:53:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C5694409
+	for <linux-pci@vger.kernel.org>; Sat,  4 Jan 2025 10:09:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1735980793; cv=none; b=RD4dtPQ6gxDuO1Y1hJ9wkeuAiUNSsXu30hCNKz4pvBSY5HN5UwI14mb8UkcH+XGdcj8B4LWpjJfSypmRHX4XOTa8tL8QMdcU8nTYKO1liqQo0XJPuR83N5TNTYb9q1ikXNQbJzDZrSIVVf61/67ymjM5JDfkAFkejV/KZznoOmI=
+	t=1735985371; cv=none; b=pSAZbCKbW1OM15ocTTAErsa2GLWwm5tVzzh9HbaHpolMfdT3E/lnyF7sRIxZUjKMJgh6IP5gSWQI1tHMw34YGT5z43ZyEFuW7T3Ebuex2y4NAK83OF1cL/jQaxRuDZtw2tpZGcX9Hy4j94+M8J7fN22I7B4JypAuNY3ENQS+MZg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1735980793; c=relaxed/simple;
-	bh=Rnx7AvPJ/Nt5jm1Mb12jy+VXzcwtUez2+aAy1eZFTG4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=HiwFEzb6ydG4GIFmcJE2nCTy8xHjQaN5qmnTYTdHwbqdIaa0X7xNWGA3PpcM7Sawu9Ksn3dVoRUXa7cCcqOyLIVb+QpcTBM4WKZ6LCyBX+Ts6R022204okFn1kJQByHPJrCpjAy+su1Y0xjBLT+w/XmY6KxEoStxXkqVlFf0POk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
-Received: from [192.168.2.102] (213.87.90.50) by msexch01.omp.ru (10.188.4.12)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Sat, 4 Jan
- 2025 11:37:50 +0300
-Message-ID: <5f8d43fe-25e3-450d-b5c2-2d69b9bc9923@omp.ru>
-Date: Sat, 4 Jan 2025 11:37:47 +0300
+	s=arc-20240116; t=1735985371; c=relaxed/simple;
+	bh=MqSpK5fFd6N+R5mZZ92BhKCeBMY+lWUeeaTnSP4d/O4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HwFbG8ItyFTCpJzGWY7O4SKiRZDmp9+Pqo51rAwPwPLYgx3Xz61+ujwravvkvwIrTlWCl/FuNc1ZA8AR/2JYFz/wmpQhS3ljmUng3gWYtBaHpMfSo3L/wP2rwrG5jStOlP5GZSA2xUi1/yNR2DkwtWaiZ/VBcl1U7ZdgfFdHQG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=GaveecPW; arc=none smtp.client-ip=209.85.214.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="GaveecPW"
+Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-21628b3fe7dso177150655ad.3
+        for <linux-pci@vger.kernel.org>; Sat, 04 Jan 2025 02:09:29 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1735985369; x=1736590169; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=tYkm1Xgk1B4FMxTw5DYysTX0sfirekp6Ox1vn7NLYbc=;
+        b=GaveecPWMXGHamsG0Enec5X2oKeqJ5FeIYgVhKwC6lHE2QSZx0LyXVYCbv26AvnibQ
+         m3+HnpFJj5kYO6YsYcZRLff3PGpDwB9sjAE/GZ5MercPCSYoOe2vdbCcekjBolBp4sWA
+         4ZObaJVR2QQINg+p86DHw/9mx0unIa2kPQA4TlOqfA8Steu/u/Su9sSJ9DBsXIh+iwxQ
+         sOyJa6oDjXiDAvS1xRT5i5i2jSrUhFXygy/B48LXbi7fO2tyGwcUDeoKyAePQUdaWrKC
+         7N25tgWQQJE3nTsOFf2Qwp4b6OGeUmFDZfGxLHm6RUho+IHJlCS+dd9oAM9XS85E/3c3
+         f77w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1735985369; x=1736590169;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=tYkm1Xgk1B4FMxTw5DYysTX0sfirekp6Ox1vn7NLYbc=;
+        b=ZhMOhRKeZ9fzOepDnGfcziC2lA3TiTF7PpjlRE/MzJQvssbY1lOv8WjMqzGL585yuv
+         TLNdWi9IzDmQEXDZjH716/p8Y2w1u22s+99pCA+MxHcQ5Kv0SzIkzdBEGZR8bZa9AOqC
+         LDxzAG4zTGdZay0/zb+2YZMdhS6rWIPVt9rCnZqn8K8TgvYRKaZGuwl5kX/VnWw9WlvN
+         zWwHZVkkN4/stmlxM2Tep5bjUoAVr0Jwlxz5ABmDhjoA1VNPfqBBHcT47fwoSfJoCs9a
+         Nfuep2T/9pRze4fmLNs7FTCkAA0CmeXqcJd0/vWGzvPDLDK4pGydzc2moqcGwbG9T0/f
+         unmg==
+X-Forwarded-Encrypted: i=1; AJvYcCWzKgqPsMX1dr/VqNYJV0kmHvEcOMWcy+AANpPqy6UfLt5D18skTkm2XPKqb/G8oo363SwPM/NK640=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzvmMBj5eDTLzlOWhgQ+JMnaMOjRmtRhVBBfVYaCaMaHDBhTmtZ
+	AdQOkYwLe6NHgkVx1FD6eMOgiRZMV1jhklDFI28Crciv3IiU4xAN6WjYX1vOsw==
+X-Gm-Gg: ASbGnct7eMnkAvVLE8gy9leP9L8aqWRRZ/8Xe3CYHXfkhcVASYTCDKrxxsCIRboHcod
+	ld2Yjwv9XWSEDw/QyMXK+NnC5jRBjuYMrKIrAcQGhEInGM7TK/doTAlokXN9SQw6llOWuG0HfnA
+	dbIWDt+9QhQ+F7UJLWV6fpwBXe74Lx+uMFlHPgRyUp6jmRBRv6No58vtxpZx6GaMBvtwsqTydhl
+	nUiXFH6GbYnt2KOdHhPqq/YOK2W4d7Z8170ZThaHf2Ziz5932i/tpZiRmpuxnqwnBQ=
+X-Google-Smtp-Source: AGHT+IHtkoc+gwBG8JkQY2U036cUunWcFUlsLHte5uNHKR+ROX9udn+t+L8BjTgm8bqr/MnXqGsG6w==
+X-Received: by 2002:a17:902:f542:b0:216:2426:7668 with SMTP id d9443c01a7336-219e6e9a26emr756868055ad.13.1735985369505;
+        Sat, 04 Jan 2025 02:09:29 -0800 (PST)
+Received: from thinkpad ([36.255.17.199])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-219dca02b4bsm257640505ad.270.2025.01.04.02.09.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sat, 04 Jan 2025 02:09:29 -0800 (PST)
+Date: Sat, 4 Jan 2025 15:39:23 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org, Rob Herring <robh@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Marc Zyngier <maz@kernel.org>
+Subject: Re: [PATCH] PCI: dwc: Use level-triggered handler for MSI IRQs
+Message-ID: <20250104100923.67tmfgiuyu2h7zzd@thinkpad>
+References: <20250103174955.GA4182381@bhelgaas>
+ <20250103175839.GA4182486@bhelgaas>
+ <Z3ho7eJMWvAy3HHC@google.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: rcar-ep: Fix the issue of the name parameter when
- calling devm_request_mem_region
-To: <kingdix10@qq.com>, <marek.vasut+renesas@gmail.com>,
-	<yoshihiro.shimoda.uh@renesas.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-	<manivannan.sadhasivam@linaro.org>, <robh@kernel.org>, <bhelgaas@google.com>
-CC: <linux-pci@vger.kernel.org>, <linux-renesas-soc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-References: <tencent_59625EFD404130F5900D6FB48840AD428F05@qq.com>
-Content-Language: en-US
-From: Sergey Shtylyov <s.shtylyov@omp.ru>
-Organization: Open Mobile Platform
-In-Reply-To: <tencent_59625EFD404130F5900D6FB48840AD428F05@qq.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
- (10.188.4.12)
-X-KSE-ServerInfo: msexch01.omp.ru, 9
-X-KSE-AntiSpam-Interceptor-Info: scan successful
-X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 01/04/2025 08:15:05
-X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
-X-KSE-AntiSpam-Method: none
-X-KSE-AntiSpam-Rate: 19
-X-KSE-AntiSpam-Info: Lua profiles 190178 [Jan 03 2025]
-X-KSE-AntiSpam-Info: Version: 6.1.1.7
-X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
-X-KSE-AntiSpam-Info: LuaCore: 49 0.3.49
- 28b3b64a43732373258a371bd1554adb2caa23cb
-X-KSE-AntiSpam-Info: {rep_avail}
-X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
-X-KSE-AntiSpam-Info: {SMTP from is not routable}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.90.50 in (user)
- b.barracudacentral.org}
-X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.90.50 in (user) dbl.spamhaus.org}
-X-KSE-AntiSpam-Info:
-	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
-X-KSE-AntiSpam-Info: FromAlignment: s
-X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.90.50
-X-KSE-AntiSpam-Info: {DNS response errors}
-X-KSE-AntiSpam-Info: Rate: 19
-X-KSE-AntiSpam-Info: Status: not_detected
-X-KSE-AntiSpam-Info: Method: none
-X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
- smtp.mailfrom=omp.ru;dkim=none
-X-KSE-Antiphishing-Info: Clean
-X-KSE-Antiphishing-ScanningType: Heuristic
-X-KSE-Antiphishing-Method: None
-X-KSE-Antiphishing-Bases: 01/04/2025 08:18:00
-X-KSE-Antivirus-Interceptor-Info: scan successful
-X-KSE-Antivirus-Info: Clean, bases: 1/4/2025 6:00:00 AM
-X-KSE-Attachment-Filter-Triggered-Rules: Clean
-X-KSE-Attachment-Filter-Triggered-Filters: Clean
-X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <Z3ho7eJMWvAy3HHC@google.com>
 
-On 1/4/25 6:39 AM, kingdix10@qq.com wrote:
-
-> From: King Dix <kingdix10@qq.com>
-> 
-> When using devm_request_mem_region to request a resource, if the passed
-> variable is a stack string variable, it will lead to an oops issue when
-> eecuting the command cat /proc/iomem.
-> 
-> Fix this by replacing outbound_name with the name of the previously
-> requested resource.
-> 
-> Signed-off-by: King Dix <kingdix10@qq.com>
-> ---
->  drivers/pci/controller/pcie-rcar-ep.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rcar-ep.c b/drivers/pci/controller/pcie-rcar-ep.c
-> index 047e2cef5afc..464f8f29390c 100644
-> --- a/drivers/pci/controller/pcie-rcar-ep.c
-> +++ b/drivers/pci/controller/pcie-rcar-ep.c
-> @@ -107,7 +107,7 @@ static int rcar_pcie_parse_outbound_ranges(struct rcar_pcie_endpoint *ep,
->  		}
->  		if (!devm_request_mem_region(&pdev->dev, res->start,
->  					     resource_size(res),
-> -					     outbound_name)) {
-> +						 res->name)) {
-
-   Why this strange indentation?
+On Fri, Jan 03, 2025 at 02:47:09PM -0800, Brian Norris wrote:
 
 [...]
 
-MBR, Sergey
+> > Oh, and it would be awesome if we can motivate this patch by mentioning
+> > an actual problem it can avoid.
+> > 
+> > It sounds like there really *is* a problem at least in some
+> > topologies, so I think we should describe that problem before
+> > explaining why we haven't seen it yet.
+> 
+> Yeah, that's probably a good idea ... I'm still working out the nature
+> of a problem I'm dealing with here, but it has to do with when (due to
+> HW bugs) I have to configure the parent interrupt (GIC) as
+> edge-triggered. It turns out this change alone doesn't resolve all my
+> problems, but:
+> 
+> (a) I was hoping to get feedback on whether this change is sensible
+>     regardless of the adjacent HW bug I'm dealing with (I think it is);
+>     and
 
+This patch alone (with your proposed commit message change) makes sense to me.
+Since DWC MSI controller is a hierarchial interrupt controller and most of the
+designs chose to use level triggered SPI to signal GIC, we never had to face an
+issue. GIC would mask the interrupt first and then unmask it after handling. So
+even if the DWC MSI is level/edge triggered, the behavior would mostly be the
+same.
+
+But we should model the interrupt as per the hardware design. So your patch is
+doing the right thing.
+
+> (b) I don't think I have a great publishable explanation of my HW bug(s)
+>     yet.
+> 
+
+This is not a blocker for this patch IMO.
+
+> I understand (b) is not really a great situation for public review and
+> would understand if that delays/defers any action here. But I'm also not
+> really an IRQ expert (though I have to dabble quite a lot) and am
+> interested in (a) still.
+> 
+> (If it helps, I can try to summarize the above in a commit message, even
+> if it's still a bit vague.)
+> 
+
+Your bug is not strictly relevant to this patch. Quoting the spec reference and
+changing the commit message as per Bjorn's suggestion is enough.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
