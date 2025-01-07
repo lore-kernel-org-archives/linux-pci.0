@@ -1,98 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96DAD2594B3;
-	Wed,  8 Jan 2025 08:16:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C174E1A2544
+	for <linux-pci@vger.kernel.org>; Wed,  8 Jan 2025 08:20:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736324199; cv=none; b=kmMJs3ddpUqumYx2s+lXE/oXnuoydscbxRWrSjwVLR0f1mIVUpE77qVuSndyIWqiL2NlrXD6w9zPpDTgEm+gpKF2uZVAoHAcVwDJHPEqyRBYWBoacLeJF/Uo7Rpc+ndyCgw7V+VzGhrqyXfT5zG5ji0bAvB2rpuZZWaCDeQ+C9k=
+	t=1736324433; cv=none; b=glnJjB5d06uo4wkvZCGG3RS1dh8M39qddxczUHVOctNxrPTFNbwI193WqfsJqNnBx00cmIB13x05nqCeXgjSIsggX7RaLJTID5lgCI12/ITf2uAfnmh/m0v3R+KJUfz75HWI1j9Ltz+93wD6ZiJg91IUbAQ3V63D62K2T3smnzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736324199; c=relaxed/simple;
-	bh=RYpqzehaxcbuCAQe6zrPlG3oflSe5JINhcfNw0oboaw=;
+	s=arc-20240116; t=1736324433; c=relaxed/simple;
+	bh=Qrig+2WRbeLJ7X9pjWW5VY7wN4QWxSYejSzEJVqLhHc=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=asFocF7PjHVBovXA+WUtz611NNiSfm3IkhQT64egIJSQBlRZ+BUXGLSkgHiw+wEOydSNpjJtfdeEulQHD3fi670MLeWn1BuFbT8md/LwHpbjGL+AS0dR4zmZX0Ta1QyA/8WbjQgzCL2z0BNgZ3VKvzy1oKiJZxPiz7hBOwy4Hb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SN9rihRi; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FIMadtdNGfbmBPpZL7Kt10EDXxHtY9dITKli6Ey/wdn4SUyWsgW8oG7IK/cuJr7huYwvgp0P3IzAFeFHDGiLG+picmDnFbDLeHHAhJia3KW+QCVATV+ExMpkRbkFTLKbn5SbdDv2BryjFhfRdZqVp8QWW7KgwPO9dizSDulCou4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f2QoVOIL; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SN9rihRi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 63AC8C4CEE0;
-	Wed,  8 Jan 2025 08:16:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736324199;
-	bh=RYpqzehaxcbuCAQe6zrPlG3oflSe5JINhcfNw0oboaw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SN9rihRiNeZ6JiTIV9G8AhvKNqTV65xqUUlJ6zm3F6KFLgu21kpDjS7GaMDz/nlj1
-	 7AEZWS6jajD7fdAa9NdRFU+z29OUbylvSL9N2/fvCjkH1itEXOr8uovDc/n5pmRRR/
-	 pRd6B9NjZhNcQhFeuTU9YRYRgvnbY7LdgOcPQ9eBwJ0GeT8OGD1jLY2QcRTcomk9/b
-	 eGJf/tY+XVwTrCLBpR1qGY0M2vDb5DlKLyFkJvyG4EuLPUmXzfhEJvA0GqP1Zb8/Ps
-	 6stQQ35xCMsudVnMco5Sv8x8WNMIgXprRSzPzULtFEWsJEFROzMEXEERRovyteLcHh
-	 4c5v4d0woNtMQ==
-Date: Wed, 8 Jan 2025 09:16:35 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Kever Yang <kever.yang@rock-chips.com>
-Cc: heiko@sntech.de, linux-rockchip@lists.infradead.org, 
-	Simon Xue <xxm@rock-chips.com>, Conor Dooley <conor+dt@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>, linux-kernel@vger.kernel.org, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, devicetree@vger.kernel.org, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, linux-arm-kernel@lists.infradead.org
-Subject: Re: [PATCH v4 2/7] dt-bindings: PCI: dw: rockchip: Add rk3576 support
-Message-ID: <tsxho4vhadrl6tsb2k5e2vxaeuun3k5pdkojzwjruqkof54dyd@gs3wsuxzwu4a>
-References: <20250107074911.550057-1-kever.yang@rock-chips.com>
- <20250107074911.550057-3-kever.yang@rock-chips.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f2QoVOIL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1736324431; x=1767860431;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Qrig+2WRbeLJ7X9pjWW5VY7wN4QWxSYejSzEJVqLhHc=;
+  b=f2QoVOILD1v8UtnSAbeQB/SvbjDDUZjh64KxOEZ+aJxIg2ymP5BIOtwf
+   mYg3M4EHbPJZwqSR3JHAANNkc2Aglxa7FTVo+jvK46IssEGV5SWR2OH5O
+   /gCreiz2oKegiqPl/F1GqZ/zVNB3Y5oAqCJla+zIe1lujP7ZNG2kT20JI
+   l7HvC/VVjkx6HcXsCcHWEK5uFEYUq/sZZ602PwMh122PaVWM0dTeqwNLL
+   3y4iKMXFrNEpbfrd9WIxVsDdL7LZ9HhJbslDwwOKuq0Ymgz+q9zMWmiob
+   c0SC9ZHzgZZ9kpcRZ1HFGaZzdoNEl6jdDDhKaD5BRGNNHmGvd96V9pWEl
+   g==;
+X-CSE-ConnectionGUID: 01kcFSjRRauk+KBEqhV2fA==
+X-CSE-MsgGUID: CCYVLR+MTcaPdxgYXZFKKA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11308"; a="36422010"
+X-IronPort-AV: E=Sophos;i="6.12,297,1728975600"; 
+   d="scan'208";a="36422010"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2025 00:20:31 -0800
+X-CSE-ConnectionGUID: us/pXiBeQtaLkONx4oLKPA==
+X-CSE-MsgGUID: 99MfGIcSQY+a7X0G+natVA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,297,1728975600"; 
+   d="scan'208";a="102938144"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by fmviesa007.fm.intel.com with ESMTP; 08 Jan 2025 00:20:29 -0800
+Date: Wed, 8 Jan 2025 04:19:28 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Samuel Ortiz <sameo@rivosinc.com>,
+	Alexey Kardashevskiy <aik@amd.com>, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org
+Subject: Re: [PATCH 08/11] PCI/IDE: Add IDE establishment helpers
+Message-ID: <Z32MUFBIyp0IKyzC@yilunxu-OptiPlex-7050>
+References: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
+ <173343744264.1074769.10935494914881159519.stgit@dwillia2-xfh.jf.intel.com>
+ <yq5ay10oz0kz.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250107074911.550057-3-kever.yang@rock-chips.com>
+In-Reply-To: <yq5ay10oz0kz.fsf@kernel.org>
 
-On Tue, Jan 07, 2025 at 03:49:06PM +0800, Kever Yang wrote:
-> rk3576 is using dwc controller, with msi interrupt directly to gic instead
-> of to gic its, so
-> - no its support is required and the 'msi-map' is not need anymore,
-> - a new 'msi' interrupt is needed.
+On Tue, Dec 10, 2024 at 08:49:40AM +0530, Aneesh Kumar K.V wrote:
 > 
-> Signed-off-by: Kever Yang <kever.yang@rock-chips.com>
-> ---
+> Hi Dan,
 > 
-> Changes in v4:
-> - Fix wrong indentation in dt_binding_check report by Rob
+> Dan Williams <dan.j.williams@intel.com> writes:
+> > +int pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide,
+> > +			 enum pci_ide_flags flags)
+> > +{
+> > +	struct pci_host_bridge *hb = pci_find_host_bridge(pdev->bus);
+> > +	struct pci_dev *rp = pcie_find_root_port(pdev);
+> > +	int mem = 0, rc;
+> > +
+> > +	if (ide->stream_id < 0 || ide->stream_id > U8_MAX) {
+> > +		pci_err(pdev, "Setup fail: Invalid stream id: %d\n", ide->stream_id);
+> > +		return -ENXIO;
+> > +	}
+> > +
+> > +	if (test_and_set_bit_lock(ide->stream_id, hb->ide_stream_ids)) {
+> > +		pci_err(pdev, "Setup fail: Busy stream id: %d\n",
+> > +			ide->stream_id);
+> > +		return -EBUSY;
+> > +	}
+> > +
 > 
-> Changes in v3:
-> - Fix dtb check broken on rk3588
-> - Update commit message
-> 
-> Changes in v2:
-> - remove required 'msi-map'
-> - add interrupt name 'msi'
-> 
->  .../devicetree/bindings/pci/rockchip-dw-pcie-common.yaml      | 4 +++-
->  Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml   | 4 +---
->  2 files changed, 4 insertions(+), 4 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
-> index cc9adfc7611c..e4fcc2dff413 100644
-> --- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
-> +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
-> @@ -81,7 +81,9 @@ properties:
->        - const: msg
->        - const: legacy
->        - const: err
-> -      - const: dma0
-> +      - enum:
-> +          - msi
-> +          - dma0
+> Considering we are using the hostbridge ide_stream_ids bitmap, why is
+> the stream_id allocation not generic? ie, any reason why a stream id alloc
+> like below will not work?
 
-Commit msg said new interrupt, but this basically replaces existing DMA0
-interrupt. Maybe that's the problem with this common binding and you
-just miss constraining in each device binding. If so: fix also them.
+Should be illustrating in commit log.
 
-Also: your interrupts property does not match this anymore.
+"The other design detail for TSM-coordinated IDE establishment is that
+the TSM manages allocation of stream-ids, this is why the stream_id is
+passed in to pci_ide_stream_setup()."
 
-Best regards,
-Krzysztof
+This is true for Intel TDX.
 
+Thanks,
+Yilun
+
+> 
+> static int pcie_ide_sel_streamid_alloc(struct pci_dev *pdev)
+> {
+> 	int stream_id;
+> 	struct pci_host_bridge *hb;
+> 
+> 	hb = pci_find_host_bridge(pdev->bus);
+> 
+> 	stream_id = find_first_zero_bit(hb->ide_stream_ids, hb->nr_ide_streams);
+> 	if (stream_id >= hb->nr_ide_streams)
+> 		return -EBUSY;
+> 
+> 	return stream_id;
+> }
+
+
+
+> 
+> -aneesh
+> 
