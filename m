@@ -1,46 +1,46 @@
-Received: from NAM12-BN8-obe.outbound.protection.outlook.com (mail-bn8nam12on2068.outbound.protection.outlook.com [40.107.237.68])
+Received: from NAM11-CO1-obe.outbound.protection.outlook.com (mail-co1nam11on2085.outbound.protection.outlook.com [40.107.220.85])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCAFE19883C;
-	Tue,  7 Jan 2025 22:29:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.237.68
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97E1F1F868C;
+	Tue,  7 Jan 2025 22:29:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.220.85
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736288956; cv=fail; b=jhNoxWSOf5LEXL/n7Y4sZ9f0IE9NIO2UtZIz05ltB2d6xpVMOpVU0BEx1RUoh+t8Uepc03lA+UujxJFoRuzouHyds1MjsVQPZ92P9pZDEtp3j2gmG12XURu12GMNL2jwEd0ZgaE1xWlj5LQmo8RYwcCyRABojREtdo5Otz9B4X0=
+	t=1736288956; cv=fail; b=ATZZbSnIixRaXH1TlCfKA6J7/GmAFk1pylDXlJEgJXMrJG704U7GmaJ8QXr30JvcLGdyLhLbGGVJ/CQHZsaY/+T+Q2WynvRHMIuQTMifkYtH6PJpfjm2y544jlK6rMtZaVnlnBhSA30kTBu0iRpHYZ13PPcO8A4MJQ1ZXRK5Lz0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1736288956; c=relaxed/simple;
-	bh=eT4QOn6i+F42MOvmmgrHNgO4yOFqO6H1OoWI43V8N6w=;
+	bh=u2S9aZVe7VkTtPyZ6crvTi07twyxSl63c8v3Cu8mGlM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ad4GClz3/3Bj/l7DdBuoGOvTxnPUtYbT6pkMWJg4vUNZ/nJgxrQLzljHxM0Bgu5bxNFVzNXuKoTc9nAzzw2k6L4YyuzW6zj1s0rqBNGT9n564zWU/2/kfm3tDYGUziJZ415ZmCjyrsm+chCDoIskGEQwHGTu9B2WZh3Qdv3qoEM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=ZsfPxcri; arc=fail smtp.client-ip=40.107.237.68
+	 MIME-Version:Content-Type; b=T2Lp93EzpCBydVCCKgl8Kc8paNz1+L6PnKBs2LOWaqVN0ITFTyl6waLZ7uWgN4Tc1nJPlHU6G9oqaa6BlzTcNca/pDLN2lvGnyEy+cHaojp+E0VERqcQISbLBZAwuYSUfwZB1JNJ8RzWYvShkIMG2Ibwza02VglO86saABCNunM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=kZsQd3aJ; arc=fail smtp.client-ip=40.107.220.85
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="ZsfPxcri"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="kZsQd3aJ"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=k3uSGGePGyTvDCjlrse7F7qwNO66U+kcqw4E9EaNTJ9ukWkgNeJGKC29RANgNMvKs4LOAbZXQSy9Ay8pSfrWO3TIoPjfdxnPuJsL9p6WPe9MXk6Ljma9odGhuTW/rYy7MWGLwrN0/pbQs5Dm0+Tl+qUt1kHNcXItaoG+NP4p+9j9dikmOlFR2iT44hEYWO0X6T0f3FoQVezmJZ96gJfIcymRqVLZVtWY7GnIovX3bft5jkDNw322g+I+RPrKRUjnBVScZYld9UuI3jgSV7jCL5lilRwCJP0E/FfKOSChrXpjTxEgZ/IlwGIXJJG4Ruuj4YveHvH+sFPPy5yHW1kEaw==
+ b=D7AVVHjfIsn0mFI137Jgo3WEP5HEoaP9CbrrjLsiPqZpaYf85TT18kWajaAE97lRofVKN13fQQsPhH87h2y4BLVBBSR5YCHdKPAif6DltPkYA5ysBQ9P30oiVkHC13AKrrWqivUefVs69xha/LBJWAfIcB3yUT7d98kr/wQNQPyjXVUGHYD4F92/nipC3vevcaKZmjxeE/O5iQVkjYHrUFfiIpYTgtE0t9jlnLjTrM09Vs1iq4a+lqdhPPVOHnTfk5AVibEcBE0aWUz3I36KDnDBgeN+SgoNHnZh+fjP9HHLIn1n2py7ukeGuycflQmTOf99E3pHwJwT+TYqSGh6Tw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=4oO3rzNo163jw8vfGuuZzx4tfRUSllfmNOA9/1VzM3k=;
- b=apkn/SYTq24zsDc6V+ERDXQlQvtLKzyE82LRkvdj5zFnSIHioel2fjorWLvpLJAS+J37RO9PDHlnT705nfTaNmABAG4s6JjORs8RghUM7lgR93pElLHUwKb7W486PrgMQrcPoEjQXWcKIE9+ExHA7SJVKyK8XQklh/2vVL/0eKeYgotdXl/0FgSZKlYiz+yHcqVdpjtM+1mxKuwkVFyltaRD0vkxjH9VeEhA+XtPg3K+Q+/zxwdjAHhIwEWZgTWJMuzrdDXmPIhskEYFTkCAtI2EGrAbdNiWu+SrCkHITr2DH5NWRSPMuhTNAuc30RlCUDY+gnVPzNqRuG6ufXbihA==
+ bh=ASLIZt+8VZEvwznx9Extt7ddUnmIOjinyY2p6eMY/ok=;
+ b=nueZA02UfnTFBfNDgyJlEJ8Q6fJPvPfD3XCVXVZ5XP2p2CZqBqWfYuetobioj0GU48oMesopieZN08E1tpF0VxFX14CdmnVTK9MY1drcDDNRHYwCfwrhFa6cXEuWJ0a6ViDn75FvrRx8wovLnoHwIBegLF9kvmjSVSt+yYBmse5mSwhRduuRkjdqZao/UeEmNSx8epszP6qMG+3ovafibtAC1Xp73eD8++i6GYHpbEnnOGKESARy28BxTYeEOZOqSMCNC9SsSfNdmHLLmdj2BHvXGM2tXXS7+UswStswcuwBfOUYjHSWPip3iRwuiZW4DOpqtamwoksdE9+Shf2TYg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=kernel.org smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=4oO3rzNo163jw8vfGuuZzx4tfRUSllfmNOA9/1VzM3k=;
- b=ZsfPxcriv8+ylipvIvpQZRf5xpyuC0IbkJqh9HSTMrRLgkCaHqFCniEaVz/P5H8cEaRUo5Aj0OaI425taomukhQHy9DE8Mm8as4Y6qgHkoaa2AeDzKZxVoE1qzFsj7Du31hIADg0sqVmtDIV/H2cvZJx2sNf3NRDRxSH3MBgfJM=
-Received: from SJ0PR13CA0224.namprd13.prod.outlook.com (2603:10b6:a03:2c1::19)
- by CY5PR12MB6250.namprd12.prod.outlook.com (2603:10b6:930:22::10) with
+ bh=ASLIZt+8VZEvwznx9Extt7ddUnmIOjinyY2p6eMY/ok=;
+ b=kZsQd3aJbyhM324xn7oItzyM/REoGTzZhTFHUPZ8efY1phypZo6ReIH+5rVhNTkJVFZny7pIA5ThbNRUcV4oDfr/QjZYeBUGAqo8BOLCupLphjWL5C7johPmnqxvLzWkShkmeP32jeb+eCrI406up4J9gmmGcLDnsunbfKSiJfg=
+Received: from SJ0PR13CA0212.namprd13.prod.outlook.com (2603:10b6:a03:2c1::7)
+ by SJ2PR12MB7799.namprd12.prod.outlook.com (2603:10b6:a03:4d3::12) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8314.17; Tue, 7 Jan
- 2025 22:29:06 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8335.10; Tue, 7 Jan
+ 2025 22:29:09 +0000
 Received: from CO1PEPF000066E7.namprd05.prod.outlook.com
- (2603:10b6:a03:2c1:cafe::9a) by SJ0PR13CA0224.outlook.office365.com
- (2603:10b6:a03:2c1::19) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.8335.10 via Frontend Transport; Tue,
- 7 Jan 2025 22:29:05 +0000
+ (2603:10b6:a03:2c1:cafe::76) by SJ0PR13CA0212.outlook.office365.com
+ (2603:10b6:a03:2c1::7) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.8314.7 via Frontend Transport; Tue, 7
+ Jan 2025 22:29:09 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -50,11 +50,11 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
 Received: from SATLEXMB04.amd.com (165.204.84.17) by
  CO1PEPF000066E7.mail.protection.outlook.com (10.167.249.9) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.8335.7 via Frontend Transport; Tue, 7 Jan 2025 22:29:05 +0000
+ 15.20.8335.7 via Frontend Transport; Tue, 7 Jan 2025 22:29:08 +0000
 Received: from purico-9eb2host.amd.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Tue, 7 Jan
- 2025 16:29:03 -0600
+ 2025 16:29:06 -0600
 From: Yazen Ghannam <yazen.ghannam@amd.com>
 To: <yazen.ghannam@amd.com>, <x86@kernel.org>, Tony Luck
 	<tony.luck@intel.com>, Mario Limonciello <mario.limonciello@amd.com>, "Bjorn
@@ -66,9 +66,9 @@ To: <yazen.ghannam@amd.com>, <x86@kernel.org>, Tony Luck
 CC: <linux-kernel@vger.kernel.org>, <linux-edac@vger.kernel.org>,
 	<linux-pci@vger.kernel.org>, <linux-hwmon@vger.kernel.org>,
 	<platform-driver-x86@vger.kernel.org>
-Subject: [PATCH v3 06/12] x86/amd_nb: Use topology info to get AMD node count
-Date: Tue, 7 Jan 2025 22:28:41 +0000
-Message-ID: <20250107222847.3300430-7-yazen.ghannam@amd.com>
+Subject: [PATCH v3 09/12] x86/amd_nb: Move SMN access code to a new amd_node driver
+Date: Tue, 7 Jan 2025 22:28:44 +0000
+Message-ID: <20250107222847.3300430-10-yazen.ghannam@amd.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250107222847.3300430-1-yazen.ghannam@amd.com>
 References: <20250107222847.3300430-1-yazen.ghannam@amd.com>
@@ -78,143 +78,510 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
 X-ClientProxiedBy: SATLEXMB04.amd.com (10.181.40.145) To SATLEXMB04.amd.com
  (10.181.40.145)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CO1PEPF000066E7:EE_|CY5PR12MB6250:EE_
-X-MS-Office365-Filtering-Correlation-Id: 67c36c6c-a29e-4877-a0b5-08dd2f6ab226
+X-MS-TrafficTypeDiagnostic: CO1PEPF000066E7:EE_|SJ2PR12MB7799:EE_
+X-MS-Office365-Filtering-Correlation-Id: 976f082f-b6a0-4d61-168e-08dd2f6ab401
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|376014|1800799024|36860700013|921020;
+	BCL:0;ARA:13230040|7416014|376014|1800799024|82310400026|36860700013|921020;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?C6Rw2a6BL/0VqKQTBT0FwqMDZ9KG8C5MC5uj9UjVQkdYIAVzzs+hLL2VVuNp?=
- =?us-ascii?Q?Mm4mFAK5vx4/7V1d2mJxcYNnXJNLxuGM9gw8sfb1vTL1NoQqpKJ6IDq+Wn/k?=
- =?us-ascii?Q?55OfzdLJLVRs0JiNgVDpLHYFv/AmmY0MruTaK+evAkb5vR+ykOCe17VV1x+i?=
- =?us-ascii?Q?Xdea9YG2Rie16Gm1YL3iojykmd9rcfT5HzefnSn1riQ7COdjIqY5oC9XTZUr?=
- =?us-ascii?Q?CP0wyHB0Wl3YcmDartxQoR2lgMIwrte7O8PnVyyZnY+jUvuWXKLmQzt4W0O7?=
- =?us-ascii?Q?36+sGhtOgIacjMrSy6L/ta9Sa4Wt3SS92vA7PZnWdiNl57fRJLIC9Fs8LhKE?=
- =?us-ascii?Q?DjfDlOiKjWk9+Ddy0LgvgaJPwzz9mt+nXswJnOZaOvdye9prLsp8IVJgITPV?=
- =?us-ascii?Q?s+WR7+jKQx/Ed1eDg8lqzqRKVnm43gfWpsjXMrzf18fB0tRRp2jHe0k2LQbu?=
- =?us-ascii?Q?5zFWGReLYulCy9ZvzhNCq0yDV1wbxhtql01paScbDBWWBw8vM3DNDKh63mfJ?=
- =?us-ascii?Q?ySkU9xJiq2vqW4qBys0ghCmyIoGwhga26MdtFwoldQZSksPPq8W4CCynGPJl?=
- =?us-ascii?Q?8r8dYNTf96I9I1eSwAaDRBoGWVOvhMRsMaXul5+eUDY5qFWQIiqOe4gTUhXV?=
- =?us-ascii?Q?gpsRKt50ndiZzzJlZJQr3oVXIPkCl6vaVECXnm+vDxfhUsw+gA3LpCzAUxim?=
- =?us-ascii?Q?SmzDwg55e1j1pgxEcjG1QJlxlcdkgoDsmwYgP/2pvpkUDDsV78mKSYXtWVtP?=
- =?us-ascii?Q?ditbY4e3qhBaDFx00/1OdvM2ARMvtzerOOtnmd/eo3VfhGiSNZI42IAyxB5h?=
- =?us-ascii?Q?P97G9t76+NqOlqF7bIt630QtikKI6JrdV0oODM+tR9DqUfKnwmiFXHbaGj6G?=
- =?us-ascii?Q?IYc2+Kju+Dvoi7GDb+zPpbwGcLblD5uHtrgIyW3iaAzfXDV3Ysw2PAXlBsyt?=
- =?us-ascii?Q?FO1d0hJHeaItb4+yjlb0hcsIIEbPaXaJxu0Gur7y2iq8Wq6k60Nn5yuUHQXZ?=
- =?us-ascii?Q?1b3pybPK6i3IL7THJKQ7GrMHkmIzKKApptYvoTPTPvDYT5ZNgDUYcaXRmyDV?=
- =?us-ascii?Q?E1pEG/ff4yRnTx4xw/ojkgHK2wV5PXRu3gioQ4BcRk2XRfOIN/AWtaQHIjQt?=
- =?us-ascii?Q?Y1It3jytaGg3ei/IWk0U0iYkgOrZx+e6yWqqL7m4WKt8PJHgIZUY4jPuT19k?=
- =?us-ascii?Q?FcwMToz9EgYuPvVMlGyPhhwQkKCVYDqpjoRV0SA0RvztB/jiMR/BQ2eaNBS+?=
- =?us-ascii?Q?IwfFVjy5PugKU9xmqSVyXncIR6/UTFlpAG0xNbSPbJI4I9+A1RxSCmkmuGbc?=
- =?us-ascii?Q?Q1F3LSVdTuw/GRw3jp/lqg4TpPf1V6RF2o6BnkdOB4jZiTV+ggnR499WjstM?=
- =?us-ascii?Q?qXwt6bsITktIVNpX5P9pv/ncOBxkJhRJ7mJFcyXnQsXXRRsDNX7tjQDhN3CV?=
- =?us-ascii?Q?mUOV6Vb3A82ny3goYQxlBj9M6HY86xLOYIgzbS/glPC9ZdOwpmpFLfU5OhWh?=
- =?us-ascii?Q?jfkLADFLIz5RMG46Tl3DjYH/5s+hQHB07xRv?=
+	=?utf-8?B?UUN0WGVnSUZ3Wk9kTHM5aCt6M0J1YUgyb0h5ejZIdENsODUzQjI1d3VLOXFQ?=
+ =?utf-8?B?TFcvYVJNQ0pHOU5uY1gwSkR1VUJ4VmVQWjFTb3Rwa3hXdzdWc0RZRHBveVRK?=
+ =?utf-8?B?eVhqN2l6T2VSSmd2OTMwalBRTlAwSDNHdU5mT2h5UjRvNjF0TEdMZEZsc0Ur?=
+ =?utf-8?B?OEI1RzFkRmlTRVBIQjVZSFViaVZNTS9PRjdoMmxGN0NTVWhMcnBJeDlCc0pa?=
+ =?utf-8?B?aDJRNUZyWmpDcExqbVFEZXI0TzR6MGFOQnBURUczTThqWmpkbFM3RGxMdHpz?=
+ =?utf-8?B?Yzk3TnhRcGFFWG9aUVBmNkxhRFBtT2JLd2w5ejNKSzEvL0Mrc2xTM2lYSXU3?=
+ =?utf-8?B?bmVFMGhOM3RjYnFKNkgvYUh3Zm5kZmRLanZkdTJWYlpaek1pOHNEMHBSd1Uy?=
+ =?utf-8?B?QTlmZFgwNzMxNmhIckJMd3M5UEJ3dFdYcS9BUm5VTjdHSmxpOEhnM25idDdC?=
+ =?utf-8?B?YTVEck5OWVdLM080blllYmd6SkNXWnpHUlQyQUxXUHVEQ0I5U0dyMExmOG4x?=
+ =?utf-8?B?TUE4d0FWa253aEFKY0doNDJ3R1N3UWN6OGQvT250RjRyM1FuajR1c0xRdVpH?=
+ =?utf-8?B?TFpNM2MrdmdyRThHN2JEUzcwWFdraTJZNWlVQ0I0NTNRcmcwVFcyb2RyM24v?=
+ =?utf-8?B?WEVjRlZxcDl1UEdMT3BNRlRuN3MyRHZhOEd6SzBiK1ZYN1VDNHN5M1RONW1U?=
+ =?utf-8?B?UEZZUHc4YnkrazhyZjN3VjlaSXdZZUZRZHhReEJBcWxxTkozNXpCQjBpSk9E?=
+ =?utf-8?B?VmszS0o3V1RRYng4MDh4dy9SMjNSTVBxa09SMHJmd0sxTW9uMVdNemEvTUZm?=
+ =?utf-8?B?WXJhc2lOQWtNWTdwTzgrUGFoNHhIYkhIODRkSko5Mlg2eEM5RVd0eWUzVFZt?=
+ =?utf-8?B?azdGMEM1c3RVQkQwV1ZYME1TZm1vV1lqU2tGNjR6akNFOEdabjZsOUkrb1I4?=
+ =?utf-8?B?T3dlSmRxS1B1ZEF2WTBmU1V6ZzU3a3pFM3lWNDh4cVAwcmx4UEhwZ1Y1M3FO?=
+ =?utf-8?B?SGk5M3MwKzNFUWJJMDdlUmNhcVhNYVBZbFJheFhSTWQ4M3BFNHFYN3BWZkJs?=
+ =?utf-8?B?bmQzZFBZVVZzY1FQYlNWbWxCTkJXMTBQOFJxVWpNb2hmd2J3cmd4V1F4dS9t?=
+ =?utf-8?B?Z3p3K01CMlVpZE5GODdGTzBYRkZjYksyTjkrTWlFL3gzS2Y3cFkrNVdxM0Ji?=
+ =?utf-8?B?Y2w0N1hVTXBXY3lmZEIydlJhQWFhcWFVR1N5RnRPNkNjYTlMK0s1OTdVMkdy?=
+ =?utf-8?B?REpqbzhZMXNjMGsxNFlIcGV2OGpTU002VW1QVEpPazNMbFc0UkdPSUI4VHk3?=
+ =?utf-8?B?RnFHaUNYQVMwbzBiZnRMZEdSQmVrY2RSVk4vLzZOUmxxaWxMNHJjUS96UWhW?=
+ =?utf-8?B?cHcyNEhySUduZTg0a1U5blpEY0lWTzNFSXpGZnBoTnlPcUJtUUQ5ZXlUQysy?=
+ =?utf-8?B?cHE3aXpWcldjZDU5Q1B6TnBaMnVpN0ZyTWszZjZoWVRncWVQS3VXUWkzR3JZ?=
+ =?utf-8?B?aXN3c3dTUW9aUlhJMDIyUTl2Q1lLMDkrbFNJc2RMREIvaE91YWlTUWZ6cmxQ?=
+ =?utf-8?B?WldCZnNZY09TbUZ4dEN3NkN4aU5xU0tXdk80a3BqQVZTNldJNis0cVd0UWxE?=
+ =?utf-8?B?Rnc0cG9MWHM0T3RNN0R5Vlh0VWpXUndvb0xQdEhGOHVpNGZNS2RVcFJYSmU4?=
+ =?utf-8?B?dU1WSVBWV1lZVmdIZEIzQ215V3A2U21MbXNYanlCY2htZzlZMWhlK0llaUkx?=
+ =?utf-8?B?aGF6T3dWbEQ4SWlFMkRDMGxRS2dqbEJPRmJkd2lpcXRJN3FvNUNvcEg4aHlI?=
+ =?utf-8?B?OVVhZ2gvam1BVjNsMVQ5VFordHFHY0F2WGZQTEU1azBlRjlxQ3Y5V2NpMGph?=
+ =?utf-8?B?TTNncjl1eTF2c01QUnBXZC83dHNYZzVidlpuNDlhcDBBMmluYlJLVytZd2Ja?=
+ =?utf-8?B?OEtxMFIzTzRiSXRGOGdsS2dkS3VnN0w1M1FPeU44UHYvMEJnYlpETEI0b25m?=
+ =?utf-8?B?Wm1HZEJ0czArWEV3d1NtT053R2lQUmd1TGJETDlyYnNDRzE3SDFMSUNLRzMv?=
+ =?utf-8?Q?YVQ41n?=
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(1800799024)(36860700013)(921020);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(82310400026)(36860700013)(921020);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2025 22:29:05.6830
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 07 Jan 2025 22:29:08.7924
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 67c36c6c-a29e-4877-a0b5-08dd2f6ab226
+X-MS-Exchange-CrossTenant-Network-Message-Id: 976f082f-b6a0-4d61-168e-08dd2f6ab401
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
 	CO1PEPF000066E7.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY5PR12MB6250
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ2PR12MB7799
 
-Currently, the total AMD node count is determined by searching and
-counting CPU/node devices using PCI IDs.
+From: Mario Limonciello <mario.limonciello@amd.com>
 
-However, AMD node information is already available through topology
-CPUID/MSRs. The recent topology rework has made this info easier to
-access.
+SMN access was bolted into amd_nb mostly as convenience.  This has
+limitations though that require incurring tech debt to keep it working.
 
-Replace the node counting code with a simple product of topology info.
+Move SMN access to the newly introduced AMD Node driver.
 
-Every node/northbridge is expected to have a 'misc' device. Clear
-everything out if a 'misc' device isn't found on a node.
-
+Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 Signed-off-by: Yazen Ghannam <yazen.ghannam@amd.com>
 Signed-off-by: Borislav Petkov (AMD) <bp@alien8.de>
-Link: https://lore.kernel.org/r/20241206161210.163701-8-yazen.ghannam@amd.com
+Acked-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com> # pdx86
+Link: https://lore.kernel.org/r/20241206161210.163701-11-yazen.ghannam@amd.com
 ---
- arch/x86/include/asm/amd_node.h |  5 +++++
- arch/x86/kernel/amd_nb.c        | 22 +++++++++++++---------
- 2 files changed, 18 insertions(+), 9 deletions(-)
+ MAINTAINERS                          |  1 +
+ arch/x86/include/asm/amd_nb.h        |  3 -
+ arch/x86/include/asm/amd_node.h      |  3 +
+ arch/x86/kernel/amd_nb.c             | 89 ---------------------------
+ arch/x86/kernel/amd_node.c           | 90 ++++++++++++++++++++++++++++
+ arch/x86/pci/fixup.c                 |  4 +-
+ drivers/edac/Kconfig                 |  1 +
+ drivers/edac/amd64_edac.c            |  1 +
+ drivers/hwmon/Kconfig                |  2 +-
+ drivers/hwmon/k10temp.c              |  2 +-
+ drivers/platform/x86/amd/pmc/Kconfig |  2 +-
+ drivers/platform/x86/amd/pmc/pmc.c   |  3 +-
+ drivers/platform/x86/amd/pmf/Kconfig |  2 +-
+ drivers/platform/x86/amd/pmf/core.c  |  2 +-
+ drivers/ras/amd/atl/Kconfig          |  1 +
+ drivers/ras/amd/atl/internal.h       |  1 +
+ 16 files changed, 107 insertions(+), 100 deletions(-)
 
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 290989ab9f72..27a5bc2fc49b 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -1122,6 +1122,7 @@ S:	Supported
+ F:	drivers/i2c/busses/i2c-amd-asf-plat.c
+ 
+ AMD NODE DRIVER
++M:	Mario Limonciello <mario.limonciello@amd.com>
+ M:	Yazen Ghannam <yazen.ghannam@amd.com>
+ L:	linux-kernel@vger.kernel.org
+ S:	Supported
+diff --git a/arch/x86/include/asm/amd_nb.h b/arch/x86/include/asm/amd_nb.h
+index 094c3be81a8d..5e0333534abc 100644
+--- a/arch/x86/include/asm/amd_nb.h
++++ b/arch/x86/include/asm/amd_nb.h
+@@ -21,9 +21,6 @@ extern int amd_numa_init(void);
+ extern int amd_get_subcaches(int);
+ extern int amd_set_subcaches(int, unsigned long);
+ 
+-int __must_check amd_smn_read(u16 node, u32 address, u32 *value);
+-int __must_check amd_smn_write(u16 node, u32 address, u32 value);
+-
+ struct amd_l3_cache {
+ 	unsigned indices;
+ 	u8	 subcaches[4];
 diff --git a/arch/x86/include/asm/amd_node.h b/arch/x86/include/asm/amd_node.h
-index 3f097dd479f8..419a0ad13ef2 100644
+index 419a0ad13ef2..113ad3e8ee40 100644
 --- a/arch/x86/include/asm/amd_node.h
 +++ b/arch/x86/include/asm/amd_node.h
-@@ -25,4 +25,9 @@
- struct pci_dev *amd_node_get_func(u16 node, u8 func);
- struct pci_dev *amd_node_get_root(u16 node);
+@@ -30,4 +30,7 @@ static inline u16 amd_num_nodes(void)
+ 	return topology_amd_nodes_per_pkg() * topology_max_packages();
+ }
  
-+static inline u16 amd_num_nodes(void)
-+{
-+	return topology_amd_nodes_per_pkg() * topology_max_packages();
-+}
++int __must_check amd_smn_read(u16 node, u32 address, u32 *value);
++int __must_check amd_smn_write(u16 node, u32 address, u32 value);
 +
  #endif /*_ASM_X86_AMD_NODE_H_*/
 diff --git a/arch/x86/kernel/amd_nb.c b/arch/x86/kernel/amd_nb.c
-index 6218a0428c77..6371fe96b988 100644
+index e335d89ddad7..11fac09e3a8c 100644
 --- a/arch/x86/kernel/amd_nb.c
 +++ b/arch/x86/kernel/amd_nb.c
-@@ -186,7 +186,6 @@ static int amd_cache_northbridges(void)
- 	const struct pci_device_id *misc_ids = amd_nb_misc_ids;
- 	struct pci_dev *misc;
- 	struct amd_northbridge *nb;
--	u16 misc_count = 0;
- 	u16 i;
+@@ -15,9 +15,6 @@
+ #include <linux/pci_ids.h>
+ #include <asm/amd_nb.h>
  
- 	if (amd_northbridges.num)
-@@ -196,25 +195,30 @@ static int amd_cache_northbridges(void)
- 		misc_ids = hygon_nb_misc_ids;
- 	}
- 
--	misc = NULL;
--	while ((misc = next_northbridge(misc, misc_ids)))
--		misc_count++;
+-/* Protect the PCI config register pairs used for SMN. */
+-static DEFINE_MUTEX(smn_mutex);
 -
--	if (!misc_count)
--		return -ENODEV;
-+	amd_northbridges.num = amd_num_nodes();
+ static u32 *flush_words;
  
--	nb = kcalloc(misc_count, sizeof(struct amd_northbridge), GFP_KERNEL);
-+	nb = kcalloc(amd_northbridges.num, sizeof(struct amd_northbridge), GFP_KERNEL);
- 	if (!nb)
- 		return -ENOMEM;
+ static const struct pci_device_id amd_nb_misc_ids[] = {
+@@ -59,92 +56,6 @@ struct amd_northbridge *node_to_amd_nb(int node)
+ }
+ EXPORT_SYMBOL_GPL(node_to_amd_nb);
  
- 	amd_northbridges.nb = nb;
--	amd_northbridges.num = misc_count;
+-/*
+- * SMN accesses may fail in ways that are difficult to detect here in the called
+- * functions amd_smn_read() and amd_smn_write(). Therefore, callers must do
+- * their own checking based on what behavior they expect.
+- *
+- * For SMN reads, the returned value may be zero if the register is Read-as-Zero.
+- * Or it may be a "PCI Error Response", e.g. all 0xFFs. The "PCI Error Response"
+- * can be checked here, and a proper error code can be returned.
+- *
+- * But the Read-as-Zero response cannot be verified here. A value of 0 may be
+- * correct in some cases, so callers must check that this correct is for the
+- * register/fields they need.
+- *
+- * For SMN writes, success can be determined through a "write and read back"
+- * However, this is not robust when done here.
+- *
+- * Possible issues:
+- *
+- * 1) Bits that are "Write-1-to-Clear". In this case, the read value should
+- *    *not* match the write value.
+- *
+- * 2) Bits that are "Read-as-Zero"/"Writes-Ignored". This information cannot be
+- *    known here.
+- *
+- * 3) Bits that are "Reserved / Set to 1". Ditto above.
+- *
+- * Callers of amd_smn_write() should do the "write and read back" check
+- * themselves, if needed.
+- *
+- * For #1, they can see if their target bits got cleared.
+- *
+- * For #2 and #3, they can check if their target bits got set as intended.
+- *
+- * This matches what is done for RDMSR/WRMSR. As long as there's no #GP, then
+- * the operation is considered a success, and the caller does their own
+- * checking.
+- */
+-static int __amd_smn_rw(u16 node, u32 address, u32 *value, bool write)
+-{
+-	struct pci_dev *root;
+-	int err = -ENODEV;
+-
+-	if (node >= amd_northbridges.num)
+-		goto out;
+-
+-	root = node_to_amd_nb(node)->root;
+-	if (!root)
+-		goto out;
+-
+-	mutex_lock(&smn_mutex);
+-
+-	err = pci_write_config_dword(root, 0x60, address);
+-	if (err) {
+-		pr_warn("Error programming SMN address 0x%x.\n", address);
+-		goto out_unlock;
+-	}
+-
+-	err = (write ? pci_write_config_dword(root, 0x64, *value)
+-		     : pci_read_config_dword(root, 0x64, value));
+-
+-out_unlock:
+-	mutex_unlock(&smn_mutex);
+-
+-out:
+-	return err;
+-}
+-
+-int __must_check amd_smn_read(u16 node, u32 address, u32 *value)
+-{
+-	int err = __amd_smn_rw(node, address, value, false);
+-
+-	if (PCI_POSSIBLE_ERROR(*value)) {
+-		err = -ENODEV;
+-		*value = 0;
+-	}
+-
+-	return err;
+-}
+-EXPORT_SYMBOL_GPL(amd_smn_read);
+-
+-int __must_check amd_smn_write(u16 node, u32 address, u32 value)
+-{
+-	return __amd_smn_rw(node, address, &value, true);
+-}
+-EXPORT_SYMBOL_GPL(amd_smn_write);
+-
+ static int amd_cache_northbridges(void)
+ {
+ 	struct amd_northbridge *nb;
+diff --git a/arch/x86/kernel/amd_node.c b/arch/x86/kernel/amd_node.c
+index 4eea8c7d8090..95e5ca0acc90 100644
+--- a/arch/x86/kernel/amd_node.c
++++ b/arch/x86/kernel/amd_node.c
+@@ -8,6 +8,7 @@
+  * Author: Yazen Ghannam <Yazen.Ghannam@amd.com>
+  */
  
- 	misc = NULL;
- 	for (i = 0; i < amd_northbridges.num; i++) {
- 		node_to_amd_nb(i)->root = amd_node_get_root(i);
- 		node_to_amd_nb(i)->misc = misc =
- 			next_northbridge(misc, misc_ids);
++#include <asm/amd_nb.h>
+ #include <asm/amd_node.h>
+ 
+ /*
+@@ -88,3 +89,92 @@ struct pci_dev *amd_node_get_root(u16 node)
+ 	pci_dbg(root, "is root for AMD node %u\n", node);
+ 	return root;
+ }
 +
-+		/*
-+		 * Each Northbridge must have a 'misc' device.
-+		 * If not, then uninitialize everything.
-+		 */
-+		if (!node_to_amd_nb(i)->misc) {
-+			amd_northbridges.num = 0;
-+			kfree(nb);
-+			return -ENODEV;
-+		}
++/* Protect the PCI config register pairs used for SMN. */
++static DEFINE_MUTEX(smn_mutex);
 +
- 		node_to_amd_nb(i)->link = amd_node_get_func(i, 4);
- 	}
++/*
++ * SMN accesses may fail in ways that are difficult to detect here in the called
++ * functions amd_smn_read() and amd_smn_write(). Therefore, callers must do
++ * their own checking based on what behavior they expect.
++ *
++ * For SMN reads, the returned value may be zero if the register is Read-as-Zero.
++ * Or it may be a "PCI Error Response", e.g. all 0xFFs. The "PCI Error Response"
++ * can be checked here, and a proper error code can be returned.
++ *
++ * But the Read-as-Zero response cannot be verified here. A value of 0 may be
++ * correct in some cases, so callers must check that this correct is for the
++ * register/fields they need.
++ *
++ * For SMN writes, success can be determined through a "write and read back"
++ * However, this is not robust when done here.
++ *
++ * Possible issues:
++ *
++ * 1) Bits that are "Write-1-to-Clear". In this case, the read value should
++ *    *not* match the write value.
++ *
++ * 2) Bits that are "Read-as-Zero"/"Writes-Ignored". This information cannot be
++ *    known here.
++ *
++ * 3) Bits that are "Reserved / Set to 1". Ditto above.
++ *
++ * Callers of amd_smn_write() should do the "write and read back" check
++ * themselves, if needed.
++ *
++ * For #1, they can see if their target bits got cleared.
++ *
++ * For #2 and #3, they can check if their target bits got set as intended.
++ *
++ * This matches what is done for RDMSR/WRMSR. As long as there's no #GP, then
++ * the operation is considered a success, and the caller does their own
++ * checking.
++ */
++static int __amd_smn_rw(u16 node, u32 address, u32 *value, bool write)
++{
++	struct pci_dev *root;
++	int err = -ENODEV;
++
++	if (node >= amd_nb_num())
++		goto out;
++
++	root = node_to_amd_nb(node)->root;
++	if (!root)
++		goto out;
++
++	mutex_lock(&smn_mutex);
++
++	err = pci_write_config_dword(root, 0x60, address);
++	if (err) {
++		pr_warn("Error programming SMN address 0x%x.\n", address);
++		goto out_unlock;
++	}
++
++	err = (write ? pci_write_config_dword(root, 0x64, *value)
++		     : pci_read_config_dword(root, 0x64, value));
++
++out_unlock:
++	mutex_unlock(&smn_mutex);
++
++out:
++	return err;
++}
++
++int __must_check amd_smn_read(u16 node, u32 address, u32 *value)
++{
++	int err = __amd_smn_rw(node, address, value, false);
++
++	if (PCI_POSSIBLE_ERROR(*value)) {
++		err = -ENODEV;
++		*value = 0;
++	}
++
++	return err;
++}
++EXPORT_SYMBOL_GPL(amd_smn_read);
++
++int __must_check amd_smn_write(u16 node, u32 address, u32 value)
++{
++	return __amd_smn_rw(node, address, &value, true);
++}
++EXPORT_SYMBOL_GPL(amd_smn_write);
+diff --git a/arch/x86/pci/fixup.c b/arch/x86/pci/fixup.c
+index 0681ecfe3430..592fb9d97e77 100644
+--- a/arch/x86/pci/fixup.c
++++ b/arch/x86/pci/fixup.c
+@@ -9,7 +9,7 @@
+ #include <linux/pci.h>
+ #include <linux/suspend.h>
+ #include <linux/vgaarb.h>
+-#include <asm/amd_nb.h>
++#include <asm/amd_node.h>
+ #include <asm/hpet.h>
+ #include <asm/pci_x86.h>
+ 
+@@ -828,7 +828,7 @@ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_ATI, 0x7910, rs690_fix_64bit_dma);
+ 
+ #endif
+ 
+-#ifdef CONFIG_AMD_NB
++#ifdef CONFIG_AMD_NODE
+ 
+ #define AMD_15B8_RCC_DEV2_EPF0_STRAP2                                  0x10136008
+ #define AMD_15B8_RCC_DEV2_EPF0_STRAP2_NO_SOFT_RESET_DEV2_F0_MASK       0x00000080L
+diff --git a/drivers/edac/Kconfig b/drivers/edac/Kconfig
+index 06f7b43a6f78..cb97d7bdae31 100644
+--- a/drivers/edac/Kconfig
++++ b/drivers/edac/Kconfig
+@@ -78,6 +78,7 @@ config EDAC_GHES
+ config EDAC_AMD64
+ 	tristate "AMD64 (Opteron, Athlon64)"
+ 	depends on AMD_NB && EDAC_DECODE_MCE
++	depends on AMD_NODE
+ 	imply AMD_ATL
+ 	help
+ 	  Support for error detection and correction of DRAM ECC errors on
+diff --git a/drivers/edac/amd64_edac.c b/drivers/edac/amd64_edac.c
+index ddfbdb66b794..29465088639c 100644
+--- a/drivers/edac/amd64_edac.c
++++ b/drivers/edac/amd64_edac.c
+@@ -2,6 +2,7 @@
+ #include <linux/ras.h>
+ #include "amd64_edac.h"
+ #include <asm/amd_nb.h>
++#include <asm/amd_node.h>
+ 
+ static struct edac_pci_ctl_info *pci_ctl;
+ 
+diff --git a/drivers/hwmon/Kconfig b/drivers/hwmon/Kconfig
+index dd376602f3f1..ea13ea482a63 100644
+--- a/drivers/hwmon/Kconfig
++++ b/drivers/hwmon/Kconfig
+@@ -324,7 +324,7 @@ config SENSORS_K8TEMP
+ 
+ config SENSORS_K10TEMP
+ 	tristate "AMD Family 10h+ temperature sensor"
+-	depends on X86 && PCI && AMD_NB
++	depends on X86 && PCI && AMD_NODE
+ 	help
+ 	  If you say yes here you get support for the temperature
+ 	  sensor(s) inside your CPU. Supported are later revisions of
+diff --git a/drivers/hwmon/k10temp.c b/drivers/hwmon/k10temp.c
+index cefa8cd184c8..d0b4cc9a5011 100644
+--- a/drivers/hwmon/k10temp.c
++++ b/drivers/hwmon/k10temp.c
+@@ -20,7 +20,7 @@
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/pci_ids.h>
+-#include <asm/amd_nb.h>
++#include <asm/amd_node.h>
+ #include <asm/processor.h>
+ 
+ MODULE_DESCRIPTION("AMD Family 10h+ CPU core temperature monitor");
+diff --git a/drivers/platform/x86/amd/pmc/Kconfig b/drivers/platform/x86/amd/pmc/Kconfig
+index 94f9563d8be7..eeffdafd686e 100644
+--- a/drivers/platform/x86/amd/pmc/Kconfig
++++ b/drivers/platform/x86/amd/pmc/Kconfig
+@@ -5,7 +5,7 @@
+ 
+ config AMD_PMC
+ 	tristate "AMD SoC PMC driver"
+-	depends on ACPI && PCI && RTC_CLASS && AMD_NB
++	depends on ACPI && PCI && RTC_CLASS && AMD_NODE
+ 	depends on SUSPEND
+ 	select SERIO
+ 	help
+diff --git a/drivers/platform/x86/amd/pmc/pmc.c b/drivers/platform/x86/amd/pmc/pmc.c
+index 26b878ee5191..941b7753dd78 100644
+--- a/drivers/platform/x86/amd/pmc/pmc.c
++++ b/drivers/platform/x86/amd/pmc/pmc.c
+@@ -10,7 +10,6 @@
+ 
+ #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+ 
+-#include <asm/amd_nb.h>
+ #include <linux/acpi.h>
+ #include <linux/bitfield.h>
+ #include <linux/bits.h>
+@@ -28,6 +27,8 @@
+ #include <linux/seq_file.h>
+ #include <linux/uaccess.h>
+ 
++#include <asm/amd_node.h>
++
+ #include "pmc.h"
+ 
+ /* SMU communication registers */
+diff --git a/drivers/platform/x86/amd/pmf/Kconfig b/drivers/platform/x86/amd/pmf/Kconfig
+index 99d67cdbd91e..25b8f7ae3abd 100644
+--- a/drivers/platform/x86/amd/pmf/Kconfig
++++ b/drivers/platform/x86/amd/pmf/Kconfig
+@@ -7,7 +7,7 @@ config AMD_PMF
+ 	tristate "AMD Platform Management Framework"
+ 	depends on ACPI && PCI
+ 	depends on POWER_SUPPLY
+-	depends on AMD_NB
++	depends on AMD_NODE
+ 	select ACPI_PLATFORM_PROFILE
+ 	depends on TEE && AMDTEE
+ 	depends on AMD_SFH_HID
+diff --git a/drivers/platform/x86/amd/pmf/core.c b/drivers/platform/x86/amd/pmf/core.c
+index 06a97c533cb8..7f88f3121cf5 100644
+--- a/drivers/platform/x86/amd/pmf/core.c
++++ b/drivers/platform/x86/amd/pmf/core.c
+@@ -8,13 +8,13 @@
+  * Author: Shyam Sundar S K <Shyam-sundar.S-k@amd.com>
+  */
+ 
+-#include <asm/amd_nb.h>
+ #include <linux/debugfs.h>
+ #include <linux/iopoll.h>
+ #include <linux/module.h>
+ #include <linux/pci.h>
+ #include <linux/platform_device.h>
+ #include <linux/power_supply.h>
++#include <asm/amd_node.h>
+ #include "pmf.h"
+ 
+ /* PMF-SMU communication registers */
+diff --git a/drivers/ras/amd/atl/Kconfig b/drivers/ras/amd/atl/Kconfig
+index 551680073e43..6e03942cd7da 100644
+--- a/drivers/ras/amd/atl/Kconfig
++++ b/drivers/ras/amd/atl/Kconfig
+@@ -10,6 +10,7 @@
+ config AMD_ATL
+ 	tristate "AMD Address Translation Library"
+ 	depends on AMD_NB && X86_64 && RAS
++	depends on AMD_NODE
+ 	depends on MEMORY_FAILURE
+ 	default N
+ 	help
+diff --git a/drivers/ras/amd/atl/internal.h b/drivers/ras/amd/atl/internal.h
+index 143d04c779a8..f9be26d25348 100644
+--- a/drivers/ras/amd/atl/internal.h
++++ b/drivers/ras/amd/atl/internal.h
+@@ -18,6 +18,7 @@
+ #include <linux/ras.h>
+ 
+ #include <asm/amd_nb.h>
++#include <asm/amd_node.h>
+ 
+ #include "reg_fields.h"
  
 -- 
 2.43.0
