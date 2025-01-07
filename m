@@ -1,156 +1,164 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bali.collaboradmins.com (bali.collaboradmins.com [148.251.105.195])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EC1680BFF;
-	Tue,  7 Jan 2025 11:33:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0645D1EB9EF;
+	Tue,  7 Jan 2025 11:44:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.251.105.195
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736249626; cv=none; b=H7vJ4pw0Boqsqx3PlNUG1Id4Xft9u6/SHKorB3/lJR2Cxg4dnvIbBxZWKyYRSiOBF0vmyNzT5eS0Yg+C4B6cM/9mQbwdtTVntO0WKzBo0vSrdTnGJAVMcw3OXBXMUDvgOffDsssNOnIe6DyGEb++2+fagsOGMT6w5UNWSziv7x8=
+	t=1736250290; cv=none; b=fgxU5zPtBL+zJGDccy7PqjeBr0NIm5op43Zu5wmTTVcbXRyQrPPRoxkR3jtbiDFlIeyzaOZQZ+29acvpzf7mlV8G1mzxOa3wA0NBhvfpt1WSmg5JLadoAbvrCy23FIV9E1Ig/1ER+cZE3j6myVDYXukl7h5CtdZQee7Bca0vjFs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736249626; c=relaxed/simple;
-	bh=ksruuDZx3xVvjNieC2+9EyxiYTolra0b6ZDoZFT6Mbw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YyrIalFxpq8y3hOPgodgxGa3SynXiBLlILxCS7Lq6m7kO+NRA5wov1HfgdbmGItWh6FjiLLtlGK6xVnRfRpcPY+WvpoiQFXWMVfk4c3JdrNaLPZXVyg6a8JCGTR8GlcSkCF2wrzkZNDpyfQKMBHvJcQZlo/uxIYNP92dTdetXB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xa06xBUY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1736250290; c=relaxed/simple;
+	bh=nvqMeuDTfZgH1m0kgkeC9rUI30xVUZ5If34vfsgD108=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=uTDkm5T5CmRZACSgDi6TCx7Gk77V6md+0+1K61xak2KD3B868Dg+okAyuEkf3884OqtZf0cB8IcFkEESe9GnqIEzja/8E0l1K0OYPmiUspk9W/Ia8Ztv5UeRsTWRIfwaEZdEWzxiiB+U9iOFN1EaiBT+evq7TqSLcTxMjtDxTMg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b=EFuOI6mN; arc=none smtp.client-ip=148.251.105.195
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xa06xBUY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 97D1CC4CED6;
-	Tue,  7 Jan 2025 11:33:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736249625;
-	bh=ksruuDZx3xVvjNieC2+9EyxiYTolra0b6ZDoZFT6Mbw=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Xa06xBUYd9d7GAUFabsR8Bjy/TzG+A5SmsiZy/9JGxHCxDti3kT9Z3aa3SKp9MU+5
-	 yB5AnOp8nztGSr/enJkr3m21R7WwtQ8xVlyFkQFZWvZfdPxl0KdXVFsd0TpB/UjpmA
-	 lqB6w92ge76JoAp4Ws3WmT9lm7O6DeDzllVUZttxvydUGYRu09m/+d0awhQ0W6+tvY
-	 gb6pqUO27f/LH3HDAqdjILDmMOj6LfH6aUnsMO5orvnnYmEILmGP8ruHH49s5tMoLV
-	 FjbtdZU/5ulvFbrLPAdJKfqAB5/LOgeUe8aFj3rjTW1P/0OYKXGJNhrnqF6S+lca7H
-	 g14XyKtSSdKvA==
-Date: Tue, 7 Jan 2025 12:33:40 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: manivannan.sadhasivam@linaro.org, kw@linux.com, kishon@kernel.org,
-	arnd@arndb.de, gregkh@linuxfoundation.org,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	rockswang7@gmail.com
-Subject: Re: [v8] misc: pci_endpoint_test: Fix overflow of bar_size
-Message-ID: <Z30RFBcOI61784bI@ryzen>
-References: <20250104151652.1652181-1-18255117159@163.com>
- <Z3vDLcq9kWL4ueq7@ryzen>
- <d79d5a72-d1b0-4442-a0a3-e53516726204@163.com>
- <Z30CywAKGRYE_p28@ryzen>
- <96b3a0f7-f144-4f2a-9f84-82c31d8ec23e@163.com>
+	dkim=pass (2048-bit key) header.d=collabora.com header.i=@collabora.com header.b="EFuOI6mN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=collabora.com;
+	s=mail; t=1736250285;
+	bh=nvqMeuDTfZgH1m0kgkeC9rUI30xVUZ5If34vfsgD108=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=EFuOI6mN+NcYESN+8h5Lm8qNaeVahsukk+9CT10YTgVzCyd+4f7/sDH9+bQujFO/b
+	 fs5W4sudz5V5xsdbHVZB2aXZfYakIjViPDwXxQDntq+r3SMr5lgCMJY3aAG68Onkng
+	 hR4jp9m3rHf5NVDvwwimGRzZIIKpUr47Omh+E4zKnB8RWmuWsqYeLW0bEX+YKVdieU
+	 t1sz2Xm7HY06OUFJycn91NMyXWp9HThlOqBEbE1XPE0mW1ZIUvwdE5udJp1kqV6HOT
+	 wWbEhOBSpLmIVG2HT7DP+qG6PHBHqxO5x2B3AtugpRBdIjba78ySFEieWEj7N/Gdh1
+	 EBUiqSVn9+Gag==
+Received: from [192.168.1.100] (2-237-20-237.ip236.fastwebnet.it [2.237.20.237])
+	(using TLSv1.3 with cipher TLS_AES_128_GCM_SHA256 (128/128 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits))
+	(No client certificate requested)
+	(Authenticated sender: kholk11)
+	by bali.collaboradmins.com (Postfix) with ESMTPSA id 3965017E1562;
+	Tue,  7 Jan 2025 12:44:44 +0100 (CET)
+Message-ID: <1a48feae-f55f-4df8-b165-84c1cb2f6658@collabora.com>
+Date: Tue, 7 Jan 2025 12:44:43 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <96b3a0f7-f144-4f2a-9f84-82c31d8ec23e@163.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/5] PCI: mediatek-gen3: Disable ASPM L0s
+To: =?UTF-8?B?Smlhbmp1biBXYW5nICjnjovlu7rlhpsp?= <Jianjun.Wang@mediatek.com>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "robh@kernel.org" <robh@kernel.org>, "kw@linux.com" <kw@linux.com>,
+ "bhelgaas@google.com" <bhelgaas@google.com>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>
+Cc: "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ Ryder Lee <Ryder.Lee@mediatek.com>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ =?UTF-8?B?WGF2aWVyIENoYW5nICjlvLXnjbvmlocp?= <Xavier.Chang@mediatek.com>
+References: <20250103060035.30688-1-jianjun.wang@mediatek.com>
+ <20250103060035.30688-4-jianjun.wang@mediatek.com>
+ <b5ef9501-e07d-4150-9518-dd982518919e@collabora.com>
+ <cecd7ebf0ccac9638b8e93b28fcf4df5bb81a794.camel@mediatek.com>
+From: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Content-Language: en-US
+In-Reply-To: <cecd7ebf0ccac9638b8e93b28fcf4df5bb81a794.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jan 07, 2025 at 07:27:24PM +0800, Hans Zhang wrote:
+Il 07/01/25 03:18, Jianjun Wang (王建军) ha scritto:
+> On Fri, 2025-01-03 at 10:16 +0100, AngeloGioacchino Del Regno wrote:
+>> External email : Please do not click links or open attachments until
+>> you have verified the sender or the content.
+>>
+>>
+>> Il 03/01/25 07:00, Jianjun Wang ha scritto:
+>>> Disable ASPM L0s support because it does not significantly save
+>>> power
+>>> but impacts performance.
+>>>
+>>
+>> That may be a good idea but, without numbers to support your
+>> statement, it's a bit
+>> difficult to say.
+>>
+>> How much power does ASPM L0s save on MediaTek SoCs, in microwatts?
+>> How is the performance impacted, and on which specific device(s) on
+>> the PCIe bus?
 > 
+> It's hard to tell the exact number because it is difficult to measure,
+> and the number of entries into the L0s state may vary even in the same
+> test scenario.
 > 
-> On 2025/1/7 18:32, Niklas Cassel wrote:
-> > > > > ---
-> > > > >    drivers/misc/pci_endpoint_test.c | 12 +++++++++---
-> > > > >    1 file changed, 9 insertions(+), 3 deletions(-)
-> > > > > 
-> > > > > diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-> > > > > index 3aaaf47fa4ee..50d4616119af 100644
-> > > > > --- a/drivers/misc/pci_endpoint_test.c
-> > > > > +++ b/drivers/misc/pci_endpoint_test.c
-> > > > > @@ -280,10 +280,11 @@ static int pci_endpoint_test_bar_memcmp(struct pci_endpoint_test *test,
-> > > > >    static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
-> > > > >    				  enum pci_barno barno)
-> > > > >    {
-> > > > > -	int j, bar_size, buf_size, iters, remain;
-> > > > >    	void *write_buf __free(kfree) = NULL;
-> > > > >    	void *read_buf __free(kfree) = NULL;
-> > > > >    	struct pci_dev *pdev = test->pdev;
-> > > > > +	int j, buf_size, iters, remain;
-> > > > > +	resource_size_t bar_size;
-> > > 
-> > > Fix resource_size_t to u64 bar_size.
-> > > u64 bar_size;
-> > > 
-> > > > >    	if (!test->bar[barno])
-> > > > >    		return false;
-> > > > > @@ -307,13 +308,18 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
-> > > > >    	if (!read_buf)
-> > > > >    		return false;
-> > > > > -	iters = bar_size / buf_size;
-> > > > > +	if (IS_ENABLED(CONFIG_PHYS_ADDR_T_64BIT)) {
-> > > > > +		remain = do_div(bar_size, buf_size);
-> > > > > +		iters = bar_size;
-> > > > > +	} else {
-> > > > > +		iters = bar_size / buf_size;
-> > > > > +		remain = bar_size % buf_size;
-> > > > > +	}
-> > > 
-> > > Removed IS_ENABLED(CONFIG_PHYS_ADDR_T_64BIT), Execute the following code.
-> > > 
-> > > remain = do_div(bar_size, buf_size);
-> > > iters = bar_size;
-> > 
-> > Perhaps keep it as resource_size_t and then cast it to u64 in the do_div()
-> > call?
+> However, we have encountered some compatibility issues when connected
+> with some PCIe EPs, and disabling the L0s can fix it. I think disabling
+> L0s might be the better way, since we usually use L1ss for power-saving
+> when the link is idle.
 > 
-> 
-> Hi Niklas,
-> 
-> resource_size_t bar_size;
-> remain = do_div((u64)bar_size, buf_size);
-> 
-> It works for the arm platform.
-> 
-> arch/arm/include/asm/div64.h
-> static inline uint32_t __div64_32(uint64_t *n, uint32_t base)
-> {
-> 	register unsigned int __base      asm("r4") = base;
-> 	register unsigned long long __n   asm("r0") = *n;
-> 	register unsigned long long __res asm("r2");
-> 	unsigned int __rem;
-> 	asm(	__asmeq("%0", "r0")
-> 		__asmeq("%1", "r2")
-> 		__asmeq("%2", "r4")
-> 		"bl	__do_div64"
-> 		: "+r" (__n), "=r" (__res)
-> 		: "r" (__base)
-> 		: "ip", "lr", "cc");
-> 	__rem = __n >> 32;
-> 	*n = __res;
-> 	return __rem;
-> }
-> #define __div64_32 __div64_32
-> 
-> #define do_div(n, base) __div64_32(&(n), base)
-> 
-> 
-> For X86 platforms, do_div is a macro definition, and the first parameter
-> does not define its type. If the macro definition is replaced directly, an
-> error will be reported in the ubuntu20.04 release.
 
-What is the error?
+To actually decide, we should know what's actually broken, then.
 
-We don't need to use do_div().
-The current code that does normal / and % works fine on both
-32-bit and 64-bit if you just do:
+Is the MediaTek controller broken, or is the device broken?
+So, is it a MTK quirk, or a device quirk?
 
- static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
-                                  enum pci_barno barno)
- {
--       int j, bar_size, buf_size, iters, remain;
-+       int j, buf_size, iters, remain;
-        void *write_buf __free(kfree) = NULL;
-        void *read_buf __free(kfree) = NULL;
-        struct pci_dev *pdev = test->pdev;
-+       u64 bar_size;
+If the problem is actually device-related, then this should be handled as
+a device-specific quirk, as not just MediaTek platforms would be affected
+by compatibility issues.
 
-No?
+If the MediaTek PCIe controller is at fault, instead, I agree about just
+disabling L0s at the controller level - but then this shall be mentioned
+in the commit message, and should have a Fixes tag as well.
 
+Cheers,
+Angelo
 
-Kind regards,
-Niklas
+> Thanks.
+> 
+>>
+>> Cheers,
+>> Angelo
+>>
+>>> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+>>> ---
+>>>    drivers/pci/controller/pcie-mediatek-gen3.c | 11 +++++++++++
+>>>    1 file changed, 11 insertions(+)
+>>>
+>>> diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c
+>>> b/drivers/pci/controller/pcie-mediatek-gen3.c
+>>> index ed3c0614486c..4bd3b39eebe2 100644
+>>> --- a/drivers/pci/controller/pcie-mediatek-gen3.c
+>>> +++ b/drivers/pci/controller/pcie-mediatek-gen3.c
+>>> @@ -84,6 +84,9 @@
+>>>    #define PCIE_MSI_SET_ENABLE_REG             0x190
+>>>    #define PCIE_MSI_SET_ENABLE         GENMASK(PCIE_MSI_SET_NUM - 1,
+>>> 0)
+>>>
+>>> +#define PCIE_LOW_POWER_CTRL_REG              0x194
+>>> +#define PCIE_FORCE_DIS_L0S           BIT(8)
+>>> +
+>>>    #define PCIE_PIPE4_PIE8_REG         0x338
+>>>    #define PCIE_K_FINETUNE_MAX         GENMASK(5, 0)
+>>>    #define PCIE_K_FINETUNE_ERR         GENMASK(7, 6)
+>>> @@ -458,6 +461,14 @@ static int mtk_pcie_startup_port(struct
+>>> mtk_gen3_pcie *pcie)
+>>>        val &= ~PCIE_INTX_ENABLE;
+>>>        writel_relaxed(val, pcie->base + PCIE_INT_ENABLE_REG);
+>>>
+>>> +     /*
+>>> +      * Disable L0s support because it does not significantly save
+>>> power
+>>> +      * but impacts performance.
+>>> +      */
+>>> +     val = readl_relaxed(pcie->base + PCIE_LOW_POWER_CTRL_REG);
+>>> +     val |= PCIE_FORCE_DIS_L0S;
+>>> +     writel_relaxed(val, pcie->base + PCIE_LOW_POWER_CTRL_REG);
+>>> +
+>>>        /* Disable DVFSRC voltage request */
+>>>        val = readl_relaxed(pcie->base + PCIE_MISC_CTRL_REG);
+>>>        val |= PCIE_DISABLE_DVFSRC_VLT_REQ;
+>>
+>>
+
