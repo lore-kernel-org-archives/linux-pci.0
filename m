@@ -1,120 +1,128 @@
-Received: from mail-m15574.qiye.163.com (mail-m15574.qiye.163.com [101.71.155.74])
+Received: from mail-m12789.qiye.163.com (mail-m12789.qiye.163.com [115.236.127.89])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 046F71DDC1F;
-	Tue,  7 Jan 2025 07:48:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E712C1EA90;
+	Tue,  7 Jan 2025 07:54:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.89
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736236098; cv=none; b=gpfOi1QfG5bfL86QI9bxiJbBBSjRRAdNZvQpc9CQOeGRYAsowye5h6T3KDjVoOYETVxY5mBYxRYSadAjUYBAXJCd+2MMFtn6KNfrxkgephqtdki36Nq4exfz/IYYaumSDh8cXm9OIaaJ3V1sIqWo892JVb1ltx5/HjWD/paV/UA=
+	t=1736236473; cv=none; b=gXLHmQYuZfSs/PmwR30l7HO/IS1VJorXYIaFqI0wapiX5Mk1JMIkXXTe/iYGX/lzYbMeQTj3CdKk/yzqBY1s5J3GPZ1xKOBvU7V+U8de1IfruE/+ddSHSgr1nPADBm2zveKSRWwRWZUaIVF39AadTfPD3p97UdtAGfSIQbP0SOM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736236098; c=relaxed/simple;
-	bh=gGptPtNh89lKw8ky5xWKZn1GCqD63iRpNzT9mYL9C2o=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=UEXuJhMvnz27QrwnsUnbD2P3gtNAy80XDFyy5BhJ4FEY814qomW+6OA3s2OvcVngiUZMY+me4/73oNIsdedC1Szhfb3mZhGjxay4nVPgU6tnGzwtSMm/pxO3z7nwUA1OZ+8OERVevaU74ywyT4WUt/2ILgD78ScDKvep26qTZh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=StPlvgmg; arc=none smtp.client-ip=101.71.155.74
+	s=arc-20240116; t=1736236473; c=relaxed/simple;
+	bh=pKA8jpzKaW5dKjEwQuXs4llhlt4fJHqtUFCK44fLSlU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=KxW6QJqP7J2U2Ko15CtzbLH4ZEgDEwPteKJAJ6eR45S9qhkBAjn2M3Dr0389Btf63Xc5sPzgc7PIgFvikhtI3QTggnJaeNvU3+jiBJajOG6Pfvfk6aICNxcRm9xcbwePFQEHc5nvynNNxlCc+x76s+C9LatWyWvOIFv3xF9hGSI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=ULXNgOJr; arc=none smtp.client-ip=115.236.127.89
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="StPlvgmg"
-Received: from [172.16.12.67] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 7f39843f;
-	Tue, 7 Jan 2025 15:48:08 +0800 (GMT+08:00)
-Message-ID: <82848f35-73d8-4254-a818-59495f96bcf2@rock-chips.com>
-Date: Tue, 7 Jan 2025 15:48:08 +0800
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="ULXNgOJr"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 7f3b5a7a;
+	Tue, 7 Jan 2025 15:49:16 +0800 (GMT+08:00)
+From: Kever Yang <kever.yang@rock-chips.com>
+To: heiko@sntech.de
+Cc: linux-rockchip@lists.infradead.org,
+	Kever Yang <kever.yang@rock-chips.com>,
+	Simon Xue <xxm@rock-chips.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	linux-kernel@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	devicetree@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v4 2/7] dt-bindings: PCI: dw: rockchip: Add rk3576 support
+Date: Tue,  7 Jan 2025 15:49:06 +0800
+Message-Id: <20250107074911.550057-3-kever.yang@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250107074911.550057-1-kever.yang@rock-chips.com>
+References: <20250107074911.550057-1-kever.yang@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-From: Kever Yang <kever.yang@rock-chips.com>
-Subject: Re: [PATCH v3 2/7] dt-bindings: PCI: dw: rockchip: Add rk3576 support
-To: "Rob Herring (Arm)" <robh@kernel.org>
-Cc: linux-kernel@vger.kernel.org, heiko@sntech.de,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- linux-arm-kernel@lists.infradead.org, Simon Xue <xxm@rock-chips.com>,
- linux-rockchip@lists.infradead.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski
- <krzk+dt@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- Conor Dooley <conor+dt@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>
-References: <20241223110637.3697974-1-kever.yang@rock-chips.com>
- <20241223110637.3697974-3-kever.yang@rock-chips.com>
- <173495701750.480868.16123444058526675248.robh@kernel.org>
-Content-Language: en-US
-In-Reply-To: <173495701750.480868.16123444058526675248.robh@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ08ZSVYaThhKGhoYT0NDTkJWFRQJFh
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGRgZT1YaS0geSRlPQ0wYGUNWFRQJFh
 	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
 	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a943fbc3d6a03afkunm7f39843f
+X-HM-Tid: 0a943fbd47fc03afkunm7f3b5a7a
 X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NDY6HAw4EzIXVhMwIjJISE02
-	GCtPCgxVSlVKTEhNSUhNS0JLT09LVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
-	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFJS0pNNwY+
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OBg6Cyo6EzILORMoIi8zSAEU
+	FS9PChxVSlVKTEhNSUhNSk5DSE1LVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
+	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFKQk1JNwY+
 DKIM-Signature:a=rsa-sha256;
-	b=StPlvgmgCk5NjJLGBsbH6e3x0WpRSjrU469Y9tqJ9Aq67rrJyxLlDernhB6kB+Sl0M+l6f4NjPGze89Qz1Vx/j6HzIh4b6iCY2k8Wm3hLVy4kb/z90+aLL4LYWcARNQue3FGR2L34kCCkBsaq4HBomb0fOpCWsyymIo/uDADHEU=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=7dY7cGRSnsKC1U8wn2NYn8pujnABECXqtMmusYeeylE=;
+	b=ULXNgOJr/FibT+0J2+sVLlSdQbjM7qUhkAcAdPFN6pgx11Nwgw0mDiMRcnsruEBSf08bspsf4XIdJiPbdSl5L/G5UPQz65KsfBSvSn9wtJzLQtJVWlc5RD1jvxenI8pNlb8vHba6dG92JxPF445EFIROB7V76TSob50zOBL52+Q=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=QnjYnNQ2cd6uU6QMuLion5/AeCzvzi5/5NXyDr58wf4=;
 	h=date:mime-version:subject:message-id:from;
 
-Hi Rob,
+rk3576 is using dwc controller, with msi interrupt directly to gic instead
+of to gic its, so
+- no its support is required and the 'msi-map' is not need anymore,
+- a new 'msi' interrupt is needed.
 
-On 2024/12/23 20:30, Rob Herring (Arm) wrote:
-> On Mon, 23 Dec 2024 19:06:32 +0800, Kever Yang wrote:
->> rk3576 is using dwc controller, with msi interrupt directly to gic instead
->> of to gic its, so
->> - no its suport is required and the 'msi-map' is not need anymore,
->> - a new 'msi' interrupt is needed.
->>
->> Signed-off-by: Kever Yang<kever.yang@rock-chips.com>
->> ---
->>
->> Changes in v3:
->> - Fix dtb check broken on rk3588
->> - Update commit message
->>
->> Changes in v2:
->> - remove required 'msi-map'
->> - add interrupt name 'msi'
->>
->>   .../devicetree/bindings/pci/rockchip-dw-pcie-common.yaml      | 4 +++-
->>   Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml   | 4 +---
->>   2 files changed, 4 insertions(+), 4 deletions(-)
->>
-> My bot found errors running 'make dt_binding_check' on your patch:
->
-> yamllint warnings/errors:
-> ./Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml:85:9: [warning] wrong indentation: expected 10 but found 8 (indentation)
+Signed-off-by: Kever Yang <kever.yang@rock-chips.com>
+---
 
-Sorry, I'm not so good at the yaml grammar, I will fix it in next version.
+Changes in v4:
+- Fix wrong indentation in dt_binding_check report by Rob
 
-But when I run the make dt_binding_check, I can't find this warning in 
-my side, maybe the tool has version required?
+Changes in v3:
+- Fix dtb check broken on rk3588
+- Update commit message
 
+Changes in v2:
+- remove required 'msi-map'
+- add interrupt name 'msi'
 
-Thanks,
-- Kever
-> dtschema/dtc warnings/errors:
->
-> doc reference errors (make refcheckdocs):
->
-> Seehttps://patchwork.ozlabs.org/project/devicetree-bindings/patch/20241223110637.3697974-3-kever.yang@rock-chips.com
->
-> The base for the series is generally the latest rc1. A different dependency
-> should be noted in *this* patch.
->
-> If you already ran 'make dt_binding_check' and didn't see the above
-> error(s), then make sure 'yamllint' is installed and dt-schema is up to
-> date:
->
-> pip3 install dtschema --upgrade
->
-> Please check and re-submit after running the above command yourself. Note
-> that DT_SCHEMA_FILES can be set to your schema file to speed up checking
-> your schema. However, it must be unset to test all examples with your schema.
->
->
+ .../devicetree/bindings/pci/rockchip-dw-pcie-common.yaml      | 4 +++-
+ Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml   | 4 +---
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
+index cc9adfc7611c..e4fcc2dff413 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
+@@ -81,7 +81,9 @@ properties:
+       - const: msg
+       - const: legacy
+       - const: err
+-      - const: dma0
++      - enum:
++          - msi
++          - dma0
+       - const: dma1
+       - const: dma2
+       - const: dma3
+diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+index 550d8a684af3..9a464731fa4a 100644
+--- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml
+@@ -26,6 +26,7 @@ properties:
+       - const: rockchip,rk3568-pcie
+       - items:
+           - enum:
++              - rockchip,rk3576-pcie
+               - rockchip,rk3588-pcie
+           - const: rockchip,rk3568-pcie
+ 
+@@ -71,9 +72,6 @@ properties:
+ 
+   vpcie3v3-supply: true
+ 
+-required:
+-  - msi-map
+-
+ unevaluatedProperties: false
+ 
+ examples:
+-- 
+2.25.1
+
