@@ -1,293 +1,307 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B4F01FBC92
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jan 2025 13:22:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 666F61FC7E8
+	for <linux-pci@vger.kernel.org>; Wed,  8 Jan 2025 13:55:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736342569; cv=none; b=LQoJ4PKruHsgc9Gq6LRmSFziILW4OjM0HMeg9xRfZBolE6ecl4n2r4Y6zKCkw37Skxu14TJHcASUh9nJYVuRivdpx/C5OXwTg+MVFenkyID9c74pNFsozipvl/u8J3jm7YfTRpfxEPMi7b0xqAIaz00bFBQj6piioRcc75ePNeY=
+	t=1736344552; cv=none; b=ADROYGO6XDLz1rjRxAIKbKzKwYNcSLvmQIllNCQWdE0ZW9ne9YPSFAwEdVv3HFYfKaxejue3hcTkHQLcXvQC+SeY73IsgvToom8de4HCrrU0bisi5qHF6yOEiP/gz10v78SNPjeGiePLVqaYnqDa22xJO++COF8ISUDoCRVXARo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736342569; c=relaxed/simple;
-	bh=Dpg2Wb5I47smoJMY9zxlEd9D/QcsYMbGnyKqAhDGG88=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VJhbmA0rZGIM40sJ5H+5qmZe4rhvHhVWeQccq29eTXgEo1t+AV2xeSMJ4r6uzjaAvKZFy2cMPy3061ss7kt8D2WIVoY3k2P+c/tDP3q8t6oe6ehFA9ojdmlnN6p3cj1kOiIFgCeNFMVXREwQs56ek3r0kOSewAjHYdaF6F83BgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hI4ejmQU; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1736344552; c=relaxed/simple;
+	bh=cE+CkEfdYfYmu0Pe/5GPYizeJq6asGOES1Wjx2/ScKI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=rKh0e3Z/f4DKJGy6Cl6peul4+AECAI6ZXdl5KefOzt9nszqeRlxKdmOkG2TcEF+LrDqMMygcapiSVKahtfrB58MIWAcU3kYVJBm37QpTLBob8lb3rQm1BjWRSP2j3XmCI7yIhbEo/398fWIsNjlUiIoQEwPIcSQe+oqm8yzu7Oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=TApuNS1c; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hI4ejmQU"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-2163b0c09afso246605165ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 08 Jan 2025 05:22:46 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1736342566; x=1736947366; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=uGQ6gTUaI3ZQFf1nCYXuOnJ+ZKOpQdsJP9iOpS9TOig=;
-        b=hI4ejmQUnfASu1kUE7slRbne0vD0YZoF29Gwo0k/siTAMksZXChQETizCheoJWHgyd
-         lGWTzC6gHEInqHuy7zK6gQB/r18MFozGjRgX0aq53yL5cqncZjsl3sEjlRN4/339kVjS
-         2pnqJIO+r+hriKv2WKMrcZH/O/TSYdtpMKZ99chE+0AmOC76/THfOLfuUL3KmEX110XZ
-         UvoxA6nYPGa4RgAXIP7xFr7zH2warQ6iecOnBkpVoPo2u/YnQeC1D9kUVceV/Rs0xdP+
-         Y9xqAM7l/tyjTsKrgEVt3cQTx2iKz7hjVVaZDKCbz4H41OhBu9CjEAp2HIEozXIDMFJO
-         TPjg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1736342566; x=1736947366;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=uGQ6gTUaI3ZQFf1nCYXuOnJ+ZKOpQdsJP9iOpS9TOig=;
-        b=SFK+1PY9/64gORFPkpQZWBG/WVpfmkgopFPtPPMvVHrrrq9Z6hDVpU52NST0rZ3j/v
-         CroBy4UiHKLvQ+idTJdU/l4TMaqRbjgmJZEcYHUMZBokPbqWRhVGAhyaYwz8T1ErSwkM
-         7wrxEfTcwxmVD9Vunu5XMiA8RS81b7VSoAu0VXejtty2nDgpIcQmShi8UxmkuAansGA2
-         bSCnOSjU8WRwXE5qzF/5Ad7KofrnjGDgI4ygZIp0jHweLbneYXNL9BJ9fnmy29yBeBNA
-         34hhmNN5BrS1OmJ9YTXBOu1WsTl5ufqhVJHXy1l66+au/TjWB+NLl6HDEZvSc4oa/7+C
-         tMig==
-X-Forwarded-Encrypted: i=1; AJvYcCVFNHbT1q2kCzMf4h0rYD+dd5u0C/v5mjQdVawItTTreEgDyoKd7/JmZYXeonilG/hsPHC19ryo9Ms=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyBxgdkcS0Q/pMgVjUmqyLqYSupDBNrLyqa0UD9BYElW60EoTE/
-	J9t12+BPfuqarJ2eepw+Y/WERYXWF2qh2U2bznncPJqjMaL6kv8WoQCyRiDOZA==
-X-Gm-Gg: ASbGnctWRBNemRK/r8yBxkl+zLHdkqciRXdYpGc9VpnD/8dLfnChSDqgFdT9tkW8QGk
-	Rn7RDHerx5/1zUSwAT0XrDMa3i/jbYvK4aJVru8Kf7DeTWnBJJnIMHiU5RFURdVKKo2b9xNrhgr
-	LhSFwUDvOf5F0quroGZ9zqrMI2fx+I27yC3v/Ot91CJ80lfKJw6DEbDCNRlE1tfndkz0Tx/BWr7
-	ePzyvUKj/PJoXBtPLNkdp62vmzv0tPjvCVs0S1lcSXrwfT2dc3+dISf0izFdPimwX+X
-X-Google-Smtp-Source: AGHT+IECtsM/gRYWLFY3hTWl1Cc6HjpXQcF89x7voGNTV2OpqZVBPzam7oV8L4vtfZfa5pZdqlOIuA==
-X-Received: by 2002:a17:903:2b08:b0:216:70b6:8723 with SMTP id d9443c01a7336-21a83fb5af8mr47573525ad.44.1736342566329;
-        Wed, 08 Jan 2025 05:22:46 -0800 (PST)
-Received: from thinkpad ([117.213.97.234])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-219dc970c8fsm327792835ad.60.2025.01.08.05.22.40
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 08 Jan 2025 05:22:45 -0800 (PST)
-Date: Wed, 8 Jan 2025 18:52:35 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Varadarajan Narayanan <quic_varada@quicinc.com>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	vkoul@kernel.org, kishon@kernel.org, andersson@kernel.org,
-	konradybcio@kernel.org, p.zabel@pengutronix.de,
-	quic_nsekar@quicinc.com, dmitry.baryshkov@linaro.org,
-	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	Praveenkumar I <quic_ipkumar@quicinc.com>,
-	Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: Re: [PATCH v5 4/5] arm64: dts: qcom: ipq5332: Add PCIe related nodes
-Message-ID: <20250108132235.gh6p5d6t7wklzpm7@thinkpad>
-References: <20250102113019.1347068-1-quic_varada@quicinc.com>
- <20250102113019.1347068-5-quic_varada@quicinc.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TApuNS1c"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5081u3u8015483;
+	Wed, 8 Jan 2025 13:55:48 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=corp-2023-11-20; bh=E1N2H
+	JvPbEq4aJi2zzN6ZikHJ+Zv4mP4gsJPpOeMWK4=; b=TApuNS1cDsguqynT0JTDd
+	RGGhSdyujm2ds4w6ug6fBvtag7q8Hz5SjZB6PRUqhI4fa0yOuC/RfdEiwU6sYAF2
+	YgS4Rk8bkw6wXIQgXcL3vBxLvaTrcuJuXs37keNdkuZZqdOA81XOWepTCx4POJfI
+	J/GIhxT1hdBhM8P4GCbtxPeT5TBCwBH8laQbsBfWpefNERRcUz9b6651X3y22L/t
+	9zb4KAp9aKoqd0hbsI++U+LVaT28+3/nF2/3lbz4OdlafXrHKfPZQ55gGRCRPZDW
+	vbcj/O39qo7flxl6FSMbl+SV/yTKMk1DCvdsWrPYjxo0y5RKgpvQ4XZs/bAR5NO/
+	Q==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 43xuk074rr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 08 Jan 2025 13:55:48 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 508C7Dp6026550;
+	Wed, 8 Jan 2025 13:55:47 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 43xuea1g91-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 08 Jan 2025 13:55:47 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 508Dtjww011911;
+	Wed, 8 Jan 2025 13:55:47 GMT
+Received: from kstolare-e5-ol8.osdevelopmeniad.oraclevcn.com (kstolare-e5-ol8.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.254.20])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 43xuea1g3k-2;
+	Wed, 08 Jan 2025 13:55:47 +0000
+From: Karolina Stolarek <karolina.stolarek@oracle.com>
+To: linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Martin Petersen <martin.petersen@oracle.com>,
+        Ben Fuller <ben.fuller@oracle.com>
+Subject: [PATCH RESEND 1/4] PCI/AER: Use the same log level for all messages
+Date: Wed,  8 Jan 2025 13:55:31 +0000
+Message-ID: <edd77011aafad4c0654358a26b4e538d0c5a321d.1736341506.git.karolina.stolarek@oracle.com>
+X-Mailer: git-send-email 2.43.5
+In-Reply-To: <cover.1736341506.git.karolina.stolarek@oracle.com>
+References: <cover.1736341506.git.karolina.stolarek@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250102113019.1347068-5-quic_varada@quicinc.com>
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-08_03,2025-01-08_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 spamscore=0 adultscore=0
+ malwarescore=0 phishscore=0 bulkscore=0 mlxlogscore=999 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2411120000
+ definitions=main-2501080115
+X-Proofpoint-ORIG-GUID: rZuyMjH47WkltiRYA2zTpXJ_BD8liqEz
+X-Proofpoint-GUID: rZuyMjH47WkltiRYA2zTpXJ_BD8liqEz
 
-On Thu, Jan 02, 2025 at 05:00:18PM +0530, Varadarajan Narayanan wrote:
-> From: Praveenkumar I <quic_ipkumar@quicinc.com>
-> 
-> Add phy and controller nodes for pcie0_x1 and pcie1_x2.
-> 
-> Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-> Signed-off-by: Praveenkumar I <quic_ipkumar@quicinc.com>
-> Signed-off-by: Varadarajan Narayanan <quic_varada@quicinc.com>
-> ---
-> v5: Add 'num-lanes' to "pcie1_phy: phy@4b1000"
->     Make ipq5332 as main and ipq9574 as fallback compatible
->     Move controller nodes per address
->     Having Konrad's Reviewed-By
-> 
-> v4: Remove 'reset-names' as driver uses bulk APIs
->     Remove 'clock-output-names' as driver uses bulk APIs
->     Add missing reset for pcie1_phy
->     Convert 'reg-names' to a vertical list
->     Move 'msi-map' before interrupts
-> 
-> v3: Fix compatible string for phy nodes
->     Use ipq9574 as backup compatible instead of new compatible for ipq5332
->     Fix mixed case hex addresses
->     Add "mhi" space
->     Removed unnecessary comments and stray blank lines
-> 
-> v2: Fix nodes' location per address
-> ---
->  arch/arm64/boot/dts/qcom/ipq5332.dtsi | 221 +++++++++++++++++++++++++-
->  1 file changed, 219 insertions(+), 2 deletions(-)
-> 
-> diff --git a/arch/arm64/boot/dts/qcom/ipq5332.dtsi b/arch/arm64/boot/dts/qcom/ipq5332.dtsi
-> index d3c3e215a15c..89daf955e4bd 100644
-> --- a/arch/arm64/boot/dts/qcom/ipq5332.dtsi
-> +++ b/arch/arm64/boot/dts/qcom/ipq5332.dtsi
-> @@ -186,6 +186,43 @@ rng: rng@e3000 {
->  			clock-names = "core";
->  		};
->  
-> +		pcie0_phy: phy@4b0000 {
-> +			compatible = "qcom,ipq5332-uniphy-pcie-phy";
-> +			reg = <0x004b0000 0x800>;
-> +
-> +			clocks = <&gcc GCC_PCIE3X1_0_PIPE_CLK>,
-> +				 <&gcc GCC_PCIE3X1_PHY_AHB_CLK>;
-> +
-> +			resets = <&gcc GCC_PCIE3X1_0_PHY_BCR>,
-> +				 <&gcc GCC_PCIE3X1_PHY_AHB_CLK_ARES>,
-> +				 <&gcc GCC_PCIE3X1_0_PHY_PHY_BCR>;
-> +
-> +			#clock-cells = <0>;
-> +
-> +			#phy-cells = <0>;
-> +			status = "disabled";
-> +		};
-> +
-> +		pcie1_phy: phy@4b1000 {
-> +			compatible = "qcom,ipq5332-uniphy-pcie-phy";
-> +			reg = <0x004b1000 0x1000>;
-> +
-> +			clocks = <&gcc GCC_PCIE3X2_PIPE_CLK>,
-> +				 <&gcc GCC_PCIE3X2_PHY_AHB_CLK>;
-> +
-> +			resets = <&gcc GCC_PCIE3X2_PHY_BCR>,
-> +				 <&gcc GCC_PCIE3X2_PHY_AHB_CLK_ARES>,
-> +				 <&gcc GCC_PCIE3X2PHY_PHY_BCR>;
-> +
-> +			#clock-cells = <0>;
-> +
-> +			#phy-cells = <0>;
-> +
-> +			num-lanes = <2>;
-> +
-> +			status = "disabled";
-> +		};
-> +
->  		tlmm: pinctrl@1000000 {
->  			compatible = "qcom,ipq5332-tlmm";
->  			reg = <0x01000000 0x300000>;
-> @@ -212,8 +249,8 @@ gcc: clock-controller@1800000 {
->  			#interconnect-cells = <1>;
->  			clocks = <&xo_board>,
->  				 <&sleep_clk>,
-> -				 <0>,
-> -				 <0>,
-> +				 <&pcie1_phy>,
-> +				 <&pcie0_phy>,
->  				 <0>;
->  		};
->  
-> @@ -479,6 +516,186 @@ frame@b128000 {
->  				status = "disabled";
->  			};
->  		};
-> +
-> +		pcie1: pcie@18000000 {
+When reporting an AER error, we check its type multiple times
+to determine the log level for each message. Do this check only
+in the top-level function and propagate the result down the call
+chain. Make aer_print_port_info output to match the level of the
+reported error.
 
-pcie@
+Signed-off-by: Karolina Stolarek <karolina.stolarek@oracle.com>
+---
+ drivers/pci/pci.h      |  2 +-
+ drivers/pci/pcie/aer.c | 64 ++++++++++++++++++++++--------------------
+ drivers/pci/pcie/dpc.c |  2 +-
+ 3 files changed, 36 insertions(+), 32 deletions(-)
 
-> +			compatible = "qcom,pcie-ipq5332", "qcom,pcie-ipq9574";
-> +			reg = <0x00088000 0x3000>,
-> +			      <0x18000000 0xf1d>,
-> +			      <0x18000f20 0xa8>,
-> +			      <0x18001000 0x1000>,
-> +			      <0x18100000 0x1000>,
-> +			      <0x0008b000 0x1000>;
-> +			reg-names = "parf",
-> +				    "dbi",
-> +				    "elbi",
-> +				    "atu",
-> +				    "config",
-> +				    "mhi";
-> +			device_type = "pci";
-> +			linux,pci-domain = <1>;
-> +			bus-range = <0x00 0xff>;
-> +			num-lanes = <2>;
-> +			#address-cells = <3>;
-> +			#size-cells = <2>;
-> +
-> +			ranges = <0x01000000 0 0x18200000 0x18200000 0 0x00100000>,
-
-I/O address space should start from 0. Please refer other SoCs.
-
-Also, use 0x0 for consistency.
-
-> +				 <0x02000000 0 0x18300000 0x18300000 0 0x07d00000>;
-> +
-> +			msi-map = <0x0 &v2m0 0x0 0xffd>;
-> +
-> +			interrupts = <GIC_SPI 403 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 404 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 405 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 406 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 407 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 408 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 409 IRQ_TYPE_LEVEL_HIGH>,
-> +				     <GIC_SPI 410 IRQ_TYPE_LEVEL_HIGH>;
-> +			interrupt-names = "msi0",
-> +					  "msi1",
-> +					  "msi2",
-> +					  "msi3",
-> +					  "msi4",
-> +					  "msi5",
-> +					  "msi6",
-> +					  "msi7";
-
-Is there a 'global' interrupt? If so, please add it.
-
-> +
-> +			#interrupt-cells = <1>;
-> +			interrupt-map-mask = <0 0 0 0x7>;
-> +			interrupt-map = <0 0 0 1 &intc 0 0 412 IRQ_TYPE_LEVEL_HIGH>,
-> +					<0 0 0 2 &intc 0 0 413 IRQ_TYPE_LEVEL_HIGH>,
-> +					<0 0 0 3 &intc 0 0 414 IRQ_TYPE_LEVEL_HIGH>,
-> +					<0 0 0 4 &intc 0 0 415 IRQ_TYPE_LEVEL_HIGH>;
-> +
-> +			clocks = <&gcc GCC_PCIE3X2_AXI_M_CLK>,
-> +				 <&gcc GCC_PCIE3X2_AXI_S_CLK>,
-> +				 <&gcc GCC_PCIE3X2_AXI_S_BRIDGE_CLK>,
-> +				 <&gcc GCC_PCIE3X2_RCHG_CLK>,
-> +				 <&gcc GCC_PCIE3X2_AHB_CLK>,
-> +				 <&gcc GCC_PCIE3X2_AUX_CLK>;
-> +			clock-names = "axi_m",
-> +				      "axi_s",
-> +				      "axi_bridge",
-> +				      "rchng",
-> +				      "ahb",
-> +				      "aux";
-> +
-> +			resets = <&gcc GCC_PCIE3X2_PIPE_ARES>,
-> +				 <&gcc GCC_PCIE3X2_CORE_STICKY_ARES>,
-> +				 <&gcc GCC_PCIE3X2_AXI_S_STICKY_ARES>,
-> +				 <&gcc GCC_PCIE3X2_AXI_S_CLK_ARES>,
-> +				 <&gcc GCC_PCIE3X2_AXI_M_STICKY_ARES>,
-> +				 <&gcc GCC_PCIE3X2_AXI_M_CLK_ARES>,
-> +				 <&gcc GCC_PCIE3X2_AUX_CLK_ARES>,
-> +				 <&gcc GCC_PCIE3X2_AHB_CLK_ARES>;
-> +			reset-names = "pipe",
-> +				      "sticky",
-> +				      "axi_s_sticky",
-> +				      "axi_s",
-> +				      "axi_m_sticky",
-> +				      "axi_m",
-> +				      "aux",
-> +				      "ahb";
-> +
-> +			phys = <&pcie1_phy>;
-> +			phy-names = "pciephy";
-> +
-> +			interconnects = <&gcc MASTER_SNOC_PCIE3_2_M &gcc SLAVE_SNOC_PCIE3_2_M>,
-> +					<&gcc MASTER_ANOC_PCIE3_2_S &gcc SLAVE_ANOC_PCIE3_2_S>;
-> +			interconnect-names = "pcie-mem", "cpu-pcie";
-
-Can you check if the controller supports cache coherency? If so, you need to add
-'dma-coherent'.
-
-> +
-> +			status = "disabled";
-
-Please define the root port node as well.
-
-All the above comments applies to 2nd controller node as well.
-
-- Mani
-
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 2e40fc63ba31..139ea4f01448 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -546,7 +546,7 @@ struct aer_err_info {
+ };
+ 
+ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info);
+-void aer_print_error(struct pci_dev *dev, struct aer_err_info *info);
++void aer_print_error(struct pci_dev *dev, struct aer_err_info *info, const char *level);
+ #endif	/* CONFIG_PCIEAER */
+ 
+ #ifdef CONFIG_PCIEPORTBUS
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 80c5ba8d8296..b13690fd172f 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -672,20 +672,18 @@ static void __print_tlp_header(struct pci_dev *dev, struct pcie_tlp_log *t)
+ }
+ 
+ static void __aer_print_error(struct pci_dev *dev,
+-			      struct aer_err_info *info)
++			      struct aer_err_info *info,
++			      const char *level)
+ {
+ 	const char **strings;
+ 	unsigned long status = info->status & ~info->mask;
+-	const char *level, *errmsg;
++	const char *errmsg;
+ 	int i;
+ 
+-	if (info->severity == AER_CORRECTABLE) {
++	if (info->severity == AER_CORRECTABLE)
+ 		strings = aer_correctable_error_string;
+-		level = KERN_WARNING;
+-	} else {
++	else
+ 		strings = aer_uncorrectable_error_string;
+-		level = KERN_ERR;
+-	}
+ 
+ 	for_each_set_bit(i, &status, 32) {
+ 		errmsg = strings[i];
+@@ -698,11 +696,11 @@ static void __aer_print_error(struct pci_dev *dev,
+ 	pci_dev_aer_stats_incr(dev, info);
+ }
+ 
+-void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
++void aer_print_error(struct pci_dev *dev, struct aer_err_info *info,
++		     const char *level)
+ {
+ 	int layer, agent;
+ 	int id = pci_dev_id(dev);
+-	const char *level;
+ 
+ 	if (!info->status) {
+ 		pci_err(dev, "PCIe Bus Error: severity=%s, type=Inaccessible, (Unregistered Agent ID)\n",
+@@ -713,8 +711,6 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	layer = AER_GET_LAYER_ERROR(info->severity, info->status);
+ 	agent = AER_GET_AGENT(info->severity, info->status);
+ 
+-	level = (info->severity == AER_CORRECTABLE) ? KERN_WARNING : KERN_ERR;
+-
+ 	pci_printk(level, dev, "PCIe Bus Error: severity=%s, type=%s, (%s)\n",
+ 		   aer_error_severity_string[info->severity],
+ 		   aer_error_layer[layer], aer_agent_string[agent]);
+@@ -722,7 +718,7 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 	pci_printk(level, dev, "  device [%04x:%04x] error status/mask=%08x/%08x\n",
+ 		   dev->vendor, dev->device, info->status, info->mask);
+ 
+-	__aer_print_error(dev, info);
++	__aer_print_error(dev, info, level);
+ 
+ 	if (info->tlp_header_valid)
+ 		__print_tlp_header(dev, &info->tlp);
+@@ -735,16 +731,17 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 			info->severity, info->tlp_header_valid, &info->tlp);
+ }
+ 
+-static void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info)
++static void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info,
++				const char *level)
+ {
+ 	u8 bus = info->id >> 8;
+ 	u8 devfn = info->id & 0xff;
+ 
+-	pci_info(dev, "%s%s error message received from %04x:%02x:%02x.%d\n",
+-		 info->multi_error_valid ? "Multiple " : "",
+-		 aer_error_severity_string[info->severity],
+-		 pci_domain_nr(dev->bus), bus, PCI_SLOT(devfn),
+-		 PCI_FUNC(devfn));
++	pci_printk(level, dev, "%s%s error message received from %04x:%02x:%02x.%d\n",
++		   info->multi_error_valid ? "Multiple " : "",
++		   aer_error_severity_string[info->severity],
++		   pci_domain_nr(dev->bus), bus, PCI_SLOT(devfn),
++		   PCI_FUNC(devfn));
+ }
+ 
+ #ifdef CONFIG_ACPI_APEI_PCIEAER
+@@ -767,15 +764,18 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
+ {
+ 	int layer, agent, tlp_header_valid = 0;
+ 	u32 status, mask;
++	const char *level;
+ 	struct aer_err_info info;
+ 
+ 	if (aer_severity == AER_CORRECTABLE) {
+ 		status = aer->cor_status;
+ 		mask = aer->cor_mask;
++		level = KERN_WARNING;
+ 	} else {
+ 		status = aer->uncor_status;
+ 		mask = aer->uncor_mask;
+ 		tlp_header_valid = status & AER_LOG_TLP_MASKS;
++		level = KERN_ERR;
+ 	}
+ 
+ 	layer = AER_GET_LAYER_ERROR(aer_severity, status);
+@@ -787,14 +787,14 @@ void pci_print_aer(struct pci_dev *dev, int aer_severity,
+ 	info.mask = mask;
+ 	info.first_error = PCI_ERR_CAP_FEP(aer->cap_control);
+ 
+-	pci_err(dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
+-	__aer_print_error(dev, &info);
+-	pci_err(dev, "aer_layer=%s, aer_agent=%s\n",
+-		aer_error_layer[layer], aer_agent_string[agent]);
++	pci_printk(level, dev, "aer_status: 0x%08x, aer_mask: 0x%08x\n", status, mask);
++	__aer_print_error(dev, &info, level);
++	pci_printk(level, dev, "aer_layer=%s, aer_agent=%s\n",
++		   aer_error_layer[layer], aer_agent_string[agent]);
+ 
+ 	if (aer_severity != AER_CORRECTABLE)
+-		pci_err(dev, "aer_uncor_severity: 0x%08x\n",
+-			aer->uncor_severity);
++		pci_printk(level, dev, "aer_uncor_severity: 0x%08x\n",
++			   aer->uncor_severity);
+ 
+ 	if (tlp_header_valid)
+ 		__print_tlp_header(dev, &aer->header_log);
+@@ -1255,14 +1255,15 @@ int aer_get_device_error_info(struct pci_dev *dev, struct aer_err_info *info)
+ 	return 1;
+ }
+ 
+-static inline void aer_process_err_devices(struct aer_err_info *e_info)
++static inline void aer_process_err_devices(struct aer_err_info *e_info,
++					   const char *level)
+ {
+ 	int i;
+ 
+ 	/* Report all before handle them, not to lost records by reset etc. */
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+ 		if (aer_get_device_error_info(e_info->dev[i], e_info))
+-			aer_print_error(e_info->dev[i], e_info);
++			aer_print_error(e_info->dev[i], e_info, level);
+ 	}
+ 	for (i = 0; i < e_info->error_dev_num && e_info->dev[i]; i++) {
+ 		if (aer_get_device_error_info(e_info->dev[i], e_info))
+@@ -1280,6 +1281,7 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+ {
+ 	struct pci_dev *pdev = rpc->rpd;
+ 	struct aer_err_info e_info;
++	const char *level;
+ 
+ 	pci_rootport_aer_stats_incr(pdev, e_src);
+ 
+@@ -1290,19 +1292,21 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+ 	if (e_src->status & PCI_ERR_ROOT_COR_RCV) {
+ 		e_info.id = ERR_COR_ID(e_src->id);
+ 		e_info.severity = AER_CORRECTABLE;
++		level = KERN_WARNING;
+ 
+ 		if (e_src->status & PCI_ERR_ROOT_MULTI_COR_RCV)
+ 			e_info.multi_error_valid = 1;
+ 		else
+ 			e_info.multi_error_valid = 0;
+-		aer_print_port_info(pdev, &e_info);
++		aer_print_port_info(pdev, &e_info, level);
+ 
+ 		if (find_source_device(pdev, &e_info))
+-			aer_process_err_devices(&e_info);
++			aer_process_err_devices(&e_info, level);
+ 	}
+ 
+ 	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
+ 		e_info.id = ERR_UNCOR_ID(e_src->id);
++		level = KERN_ERR;
+ 
+ 		if (e_src->status & PCI_ERR_ROOT_FATAL_RCV)
+ 			e_info.severity = AER_FATAL;
+@@ -1314,10 +1318,10 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+ 		else
+ 			e_info.multi_error_valid = 0;
+ 
+-		aer_print_port_info(pdev, &e_info);
++		aer_print_port_info(pdev, &e_info, level);
+ 
+ 		if (find_source_device(pdev, &e_info))
+-			aer_process_err_devices(&e_info);
++			aer_process_err_devices(&e_info, level);
+ 	}
+ }
+ 
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 2b6ef7efa3c1..9e48d571d9e7 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -291,7 +291,7 @@ void dpc_process_error(struct pci_dev *pdev)
+ 	else if (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_UNCOR &&
+ 		 dpc_get_aer_uncorrect_severity(pdev, &info) &&
+ 		 aer_get_device_error_info(pdev, &info)) {
+-		aer_print_error(pdev, &info);
++		aer_print_error(pdev, &info, KERN_ERR);
+ 		pci_aer_clear_nonfatal_status(pdev);
+ 		pci_aer_clear_fatal_status(pdev);
+ 	}
 -- 
-மணிவண்ணன் சதாசிவம்
+2.43.5
+
