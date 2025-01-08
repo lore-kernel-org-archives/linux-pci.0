@@ -1,184 +1,128 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E761A8F6B
-	for <linux-pci@vger.kernel.org>; Wed,  8 Jan 2025 08:01:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 167021E131A;
+	Wed,  8 Jan 2025 08:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736323308; cv=none; b=gOiJMQUkoCfYcqQwHs0SZF3tu/5EqDO/G/z9MWIc99F6MqvTdePD/qCYOkll9S60SS84eHs57NOeNKU7hmYMSTeOmQOnW3veAWpRKw7YynumMNpTeKXjgEXtq2raxIkc1ZuuZzkdT+pQMezAcZ9rOnS6X3leKTv7aXs9TPOoJ4w=
+	t=1736323902; cv=none; b=dTTCu9964aTxcwFQj9iZKNOIsBmqB0bWxTjC2e6/a3M1wDc7GfG+f9+ZObrUt6TbuhfB9xvlh7l1oNF2Pn4CPLA+TTSABDGOxD6Ygf/Bph3MjzoYJ/GoPD0nh2HZkAqunido1qVt92ZkioywHIGGPkDymoNsoE1Z6N2HJmjwANM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736323308; c=relaxed/simple;
-	bh=pw1KQHMt/ygdy09xhNVxbdYTD3WT24Qle6Az2Fp4BCY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GEdNBC004a7bhybLm5rTefDQa2VUeNw54WeXiKkb5QMTR3k4WL90h7McxY38uF9S5TsQQ8qjQGDrexEic0aDzRj7DcXHaC6ZPtohEiiM0D2MB0fi2QQ0G8fZlZYYmQxpfSFw38Kkp9hHwDGKyz+If5nCtr/hFakqSDS4v8Y5f5Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iGqpH/W3; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1736323902; c=relaxed/simple;
+	bh=q9iRDQVQ78G1hGB1JPBL1qLU8lZPLaQJrJJ/dGPagIU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=pI7a/SD+ab4ISeJHJ35tlKBlXLvcagPv8p4TKi40vzxxM3KyUQKM/bYnTD+iNBLHQX1LGVIofqx4dF0E1blNe4MhRLQbL33tE/KXGptMV1Sy//RiBxa69l2gEsHfZJkq+R5/Atr9BSJ7FtGC5OYzhhHNTSWfjpUFUbhIy///Pj0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=oAE5bP0k; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iGqpH/W3"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1736323306; x=1767859306;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=pw1KQHMt/ygdy09xhNVxbdYTD3WT24Qle6Az2Fp4BCY=;
-  b=iGqpH/W3betOBgoZ+Gb47Tp6GK7uVF+hEYDZlaA2qpw+8Uv5dVAbTKpI
-   HUyp73PXlOhivQ8HTwoOenD3lewUNadZ0TL2L5i7mWw5j6ksvFyAMSlf1
-   KKr15uN2DXyzNunvt2qa78ehBZJ/0JKXA5uGgxzcTOKIeiWE0+jYrbz6t
-   Hc0FtlB5n9h+8R/lXxe1p9nNjgG3Fm4D7yyeuRs5fPlzoi0azhVK/P+/F
-   dj5cVFaMCjPNJutxbwbbWwJsJrjwfkwXGUNGEl4WEZZf4H6uDPfsmY1jl
-   el8sQ8ujHpukO1556cb8QLCgDJO8M6gidiebkHKrGarj8GDLPWvszXyJo
-   A==;
-X-CSE-ConnectionGUID: 1qFLH1dPSyKV5JFlwkLr9g==
-X-CSE-MsgGUID: UTRzzRm4QyCch2t+l5P8jw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11308"; a="59001637"
-X-IronPort-AV: E=Sophos;i="6.12,297,1728975600"; 
-   d="scan'208";a="59001637"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Jan 2025 00:01:29 -0800
-X-CSE-ConnectionGUID: xZAfw/h8T3SiFXgz3hAdFA==
-X-CSE-MsgGUID: unBBLsoXT8Ov99s1AfuApw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,297,1728975600"; 
-   d="scan'208";a="103525226"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa009.fm.intel.com with ESMTP; 08 Jan 2025 00:01:26 -0800
-Date: Wed, 8 Jan 2025 04:00:25 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Alexey Kardashevskiy <aik@amd.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Samuel Ortiz <sameo@rivosinc.com>, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org
-Subject: Re: [PATCH 08/11] PCI/IDE: Add IDE establishment helpers
-Message-ID: <Z32H2Tzd1UHCQEt5@yilunxu-OptiPlex-7050>
-References: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
- <173343744264.1074769.10935494914881159519.stgit@dwillia2-xfh.jf.intel.com>
- <9f151a74-cc5c-4a7c-8304-1714159e4b2c@amd.com>
- <6d50f215-93c4-49a5-9ee2-f9775b740f92@amd.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="oAE5bP0k"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=ZptBK
+	0K04q8zYSaMPbBz5I6UurDi65fUBNkXQbP03Wk=; b=oAE5bP0k77gaHiYWwuGoY
+	0n3KvucbSe0OctJBpSimONQ/Pl7CU0dgdMjs8I06m6WAV9TVirL1+53hnH+icWR7
+	hQ32chHN1oYlr2eLqAU8SKWf8GDxoQNiBUxzWBDcSWeTw2Yr08YjnwdgJHYsdg5K
+	ZlwEfmeILdda1Y4rjjAeyk=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wBH9z0ZM35ntarHEg--.53777S4;
+	Wed, 08 Jan 2025 16:11:10 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: manivannan.sadhasivam@linaro.org
+Cc: kw@linux.com,
+	kishon@kernel.org,
+	arnd@arndb.de,
+	gregkh@linuxfoundation.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	rockswang7@gmail.com,
+	Hans Zhang <18255117159@163.com>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [v10 2/2] misc: pci_endpoint_test: Fix overflow of bar_size
+Date: Wed,  8 Jan 2025 16:09:51 +0800
+Message-Id: <20250108080951.1700230-3-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250108080951.1700230-1-18255117159@163.com>
+References: <20250108080951.1700230-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <6d50f215-93c4-49a5-9ee2-f9775b740f92@amd.com>
+X-CM-TRANSID:_____wBH9z0ZM35ntarHEg--.53777S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Aw18Gw1ruw4DJrWxZFyDAwb_yoW8KrWkpF
+	Z0kr1vvF4Ut348Gan7G3ZrCFyYya9rJry7WFW5Aw1FvFnxZFn5t3W0grWYgrnruFsF9F18
+	A3ZIya1vgw12kFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j4oGQUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxDOo2d+KwjgNgAAse
 
-> > > +static void __pci_ide_stream_setup(struct pci_dev *pdev, struct
-> > > pci_ide *ide)
-> > > +{
-> > > +    int pos;
-> > > +    u32 val;
-> > > +
-> > > +    pos = sel_ide_offset(pdev->sel_ide_cap, ide->stream_id,
-> > > +                 pdev->nr_ide_mem);
-> > > +
-> > > +    val = FIELD_PREP(PCI_IDE_SEL_RID_1_LIMIT_MASK, ide->devid_end);
-> > > +    pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_1, val);
-> > > +
-> > > +    val = FIELD_PREP(PCI_IDE_SEL_RID_2_VALID, 1) |
-> > > +          FIELD_PREP(PCI_IDE_SEL_RID_2_BASE_MASK, ide->devid_start) |
-> > > +          FIELD_PREP(PCI_IDE_SEL_RID_2_SEG_MASK, ide->domain);
-> > > +    pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_2, val);
-> > > +
-> > > +    for (int i = 0; i < ide->nr_mem; i++) {
-> > 
-> > 
-> > This needs to test that (pdev->nr_ide_mem >= ide->nr_mem), easy to miss
-> > especially when PCI_IDE_SETUP_ROOT_PORT. Thanks,
+With 8GB BAR2, running pcitest -b 2 fails with "TEST FAILED".
 
-Yes, but nr_ide_mem is limited HW resource and may easily smaller than
-device memory region number. In this case, maybe we have to merge the
-memory regions into one big range.
+The return value of the `pci_resource_len` interface is not an integer.
+Using `pcitest` with an 8GB BAR2, the bar_size of integer type will
+overflow.
 
-> > 
-> > 
-> > 
-> > > +        val = FIELD_PREP(PCI_IDE_SEL_ADDR_1_VALID, 1) |
-> > > +              FIELD_PREP(PCI_IDE_SEL_ADDR_1_BASE_LOW_MASK,
-> > > +                 lower_32_bits(ide->mem[i].start) >>
-> > > +                     PCI_IDE_SEL_ADDR_1_BASE_LOW_SHIFT) |
-> > > +              FIELD_PREP(PCI_IDE_SEL_ADDR_1_LIMIT_LOW_MASK,
-> > > +                 lower_32_bits(ide->mem[i].end) >>
-> > > +                     PCI_IDE_SEL_ADDR_1_LIMIT_LOW_SHIFT);
-> > > +        pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_1(i), val);
-> > > +
-> > > +        val = upper_32_bits(ide->mem[i].end);
-> > > +        pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_2(i), val);
-> > > +
-> > > +        val = upper_32_bits(ide->mem[i].start);
-> > > +        pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_3(i), val);
-> > > +    }
-> > > +}
-> > > +
-> > > +/*
-> > > + * Establish IDE stream parameters in @pdev and, optionally, its
-> > > root port
-> > > + */
-> > > +int pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide,
-> > > +             enum pci_ide_flags flags)
-> > > +{
-> > > +    struct pci_host_bridge *hb = pci_find_host_bridge(pdev->bus);
-> > > +    struct pci_dev *rp = pcie_find_root_port(pdev);
-> > > +    int mem = 0, rc;
-> > > +
-> > > +    if (ide->stream_id < 0 || ide->stream_id > U8_MAX) {
-> > > +        pci_err(pdev, "Setup fail: Invalid stream id: %d\n",
-> > > ide->stream_id);
-> > > +        return -ENXIO;
-> > > +    }
-> > > +
-> > > +    if (test_and_set_bit_lock(ide->stream_id, hb->ide_stream_ids)) {
-> > > +        pci_err(pdev, "Setup fail: Busy stream id: %d\n",
-> > > +            ide->stream_id);
-> > > +        return -EBUSY;
-> > > +    }
-> > > +
-> > > +    ide->name = kasprintf(GFP_KERNEL, "stream%d:%s", ide->stream_id,
-> > > +                  dev_name(&pdev->dev));
-> > > +    if (!ide->name) {
-> > > +        rc = -ENOMEM;
-> > > +        goto err_name;
-> > > +    }
-> > > +
-> > > +    rc = sysfs_create_link(&hb->dev.kobj, &pdev->dev.kobj, ide->name);
-> > > +    if (rc)
-> > > +        goto err_link;
-> > > +
-> > > +    for (mem = 0; mem < ide->nr_mem; mem++)
-> > > +        if (!__request_region(&hb->ide_stream_res, ide->mem[mem].start,
-> > > +                      range_len(&ide->mem[mem]), ide->name,
-> > > +                      0)) {
-> > > +            pci_err(pdev,
-> > > +                "Setup fail: stream%d: address association conflict
-> > > [%#llx-%#llx]\n",
-> > > +                ide->stream_id, ide->mem[mem].start,
-> > > +                ide->mem[mem].end);
-> > > +
-> > > +            rc = -EBUSY;
-> > > +            goto err;
-> > > +        }
-> > > +
-> > > +    __pci_ide_stream_setup(pdev, ide);
-> > > +    if (flags & PCI_IDE_SETUP_ROOT_PORT)
-> > > +        __pci_ide_stream_setup(rp, ide);
-> 
-> Oh, when we do this, the root port gets the same devid_start/end as the
-> device which is not correct, what should be there, the rootport bdfn? Need
+Change the data type of bar_size from integer to u64, to fix the above
+issue.
 
-"Indicates the lowest/highest value RID in the range
-associated with this Stream ID at the IDE *Partner* Port"
+Signed-off-by: Hans Zhang <18255117159@163.com>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+---
+Changes since v8-v9:
+https://lore.kernel.org/linux-pci/20250104151652.1652181-1-18255117159@163.com/
 
-My understanding is that device should fill the RP bdfn, and the RP
-should fill the device bdfn for RID association registers. Same for Addr
-association registers.
+- Split the patch.
 
-Thanks,
-Yilun
+Changes since v4-v7:
+https://lore.kernel.org/linux-pci/20250102120222.1403906-1-18255117159@163.com/
 
-> to dig that but PCI_IDE_SETUP_ROOT_PORT should detect that it is a root
-> port. Thanks,
-> 
+- Fix 32-bit OS warnings and errors.
+- Fix undefined reference to `__udivmoddi4`
+
+Changes since v3:
+https://lore.kernel.org/linux-pci/20241221141009.27317-1-18255117159@163.com/
+
+- The patch subject were modified.
+
+Changes since v2:
+https://lore.kernel.org/linux-pci/20241220075253.16791-1-18255117159@163.com/
+
+- Fix "changes" part goes below the --- line
+- The patch commit message were modified.
+
+Changes since v1:
+https://lore.kernel.org/linux-pci/20241217121220.19676-1-18255117159@163.com/
+
+- The patch subject and commit message were modified.
+---
+ drivers/misc/pci_endpoint_test.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
+index f78c7540c52c..812508308187 100644
+--- a/drivers/misc/pci_endpoint_test.c
++++ b/drivers/misc/pci_endpoint_test.c
+@@ -280,10 +280,11 @@ static int pci_endpoint_test_bar_memcmp(struct pci_endpoint_test *test,
+ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
+ 				  enum pci_barno barno)
+ {
+-	int j, bar_size, buf_size, iters;
++	int j, buf_size, iters;
+ 	void *write_buf __free(kfree) = NULL;
+ 	void *read_buf __free(kfree) = NULL;
+ 	struct pci_dev *pdev = test->pdev;
++	u64 bar_size;
+ 
+ 	if (!test->bar[barno])
+ 		return false;
+@@ -307,7 +308,8 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
+ 	if (!read_buf)
+ 		return false;
+ 
+-	iters = bar_size / buf_size;
++	do_div(bar_size, buf_size);
++	iters = bar_size;
+ 	for (j = 0; j < iters; j++)
+ 		if (pci_endpoint_test_bar_memcmp(test, barno, buf_size * j,
+ 						 write_buf, read_buf, buf_size))
+-- 
+2.25.1
+
