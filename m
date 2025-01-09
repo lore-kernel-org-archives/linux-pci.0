@@ -1,165 +1,229 @@
-Received: from mail-m32104.qiye.163.com (mail-m32104.qiye.163.com [220.197.32.104])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4338B2066F4;
-	Fri, 10 Jan 2025 08:34:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.104
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1F8A209F56
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2025 09:29:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736498072; cv=none; b=PZzb2QaGmoE4qa2SiqDbxSwezRAtc+QbHe0Wl9BmgTwXwa2jQhkC6cR4pUMT3G5+G/dv36JxWFAQPWcFrDBK1AB+K4mafnvgBwDQ07tCvaC9CPshJGNCSi65IG6/Q4XJbweaqi7PphCUpN3iDw2gPUoSI3KKfXjggAW/9Uiim8c=
+	t=1736501382; cv=none; b=OXtOz89LZx4S0tmEYVK0rcdPFUTzDk5n/ZKTx0achmISTnMOKgaDzjcnSBZvtjdDbTnUKVylTqIBBB3fuWMhIbfN9DXWKL6DI751ceJsRU5j2tL6T6+Ckrr3rHcToKnMhA/Bidh+cQtweRAzNJOMfMg58YsM568+IAE4BzQwC0Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736498072; c=relaxed/simple;
-	bh=qEqPTF4nULWoVTAeKGSvjXgapT7N5A2egnTUmjMD040=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KbV3dSDwk50QJXJWxszOm1L54bz24j7cZYXBGsQ+DGIK/WptC0bG5PeDQpSYJWksvwouiTdDb+W2iwK7/eMMbhuLCGimJ0VHcJ5lh/xMbpX4rMq4X6qotJrhpabLUwMTmxSHdewJcsGCOa637k/8hH2krkcySWr0FJMmBke9kPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=VWXK7s8d; arc=none smtp.client-ip=220.197.32.104
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1736501382; c=relaxed/simple;
+	bh=6+odOW9J5AxdrGgIHYh9PZ0RZzvlAD2SrSXnzkcC8A8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NGkKa7EvGI0gtLeHJfJeI7ekW44qIff2D82r93nN2n5rf3BbXXmE4zz9NDkRvIkHXJS06QnDDLvX31g2bJnhkjLV6k4VG//FE8K0n9YYmwFkRdYb3+vqnSalk50TrYwRkUzt6mYe9XUGPSZ0SyzD/BAHRnvL4M12xCHm59f0DTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CuFrd8HU; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="VWXK7s8d"
-Received: from [172.16.12.67] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 851e8425;
-	Fri, 10 Jan 2025 15:58:45 +0800 (GMT+08:00)
-Message-ID: <3460b2a3-9579-4a12-9eff-6e2f1a1cc91c@rock-chips.com>
-Date: Fri, 10 Jan 2025 15:58:44 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CuFrd8HU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1736501381; x=1768037381;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:content-transfer-encoding:in-reply-to;
+  bh=6+odOW9J5AxdrGgIHYh9PZ0RZzvlAD2SrSXnzkcC8A8=;
+  b=CuFrd8HURbFPKb8YyiavHzMJMlJLL1BXhEHPPOJmxo0YyhvpGsdjRWuq
+   7ALa5ef9FjYy01ar8pvVe2CmAPjddEZ44aXxumAwW00UcwdYs/mw9BUSW
+   gtnTpRVBfFoRQIC4oTJbvVFhw97K4oZ6vpUxO1z9xScMlBo8iEkXotK9M
+   3boI3Q3L8xEfHDt/mln/6WjnqOQhNvQk5j/FP0DKCpyzM6VWsQdCKgjb6
+   R++dbRjWzmTPUMmhI5lF+4qqXqGdAWDUCrPEW2YU6sMVIeT7RzGlyXI5M
+   PBDgqdSOtGqY82FLZXzSCt1XlJ21tL/ItyORBf/63mDlYK6EXr16c9MBz
+   w==;
+X-CSE-ConnectionGUID: EN8wg/XGQWOt8lDIWQ88cg==
+X-CSE-MsgGUID: Thc943yMTEGlUqHVYdiVrA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11310"; a="62161196"
+X-IronPort-AV: E=Sophos;i="6.12,303,1728975600"; 
+   d="scan'208";a="62161196"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Jan 2025 01:29:40 -0800
+X-CSE-ConnectionGUID: vlJlS4ksS4eV/KQbhZ484w==
+X-CSE-MsgGUID: 2IAuBw7SSECCXUd7BJeXHw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,303,1728975600"; 
+   d="scan'208";a="103738097"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa006.jf.intel.com with ESMTP; 10 Jan 2025 01:29:38 -0800
+Date: Fri, 10 Jan 2025 05:28:35 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+	Samuel Ortiz <sameo@rivosinc.com>, linux-pci@vger.kernel.org,
+	gregkh@linuxfoundation.org
+Subject: Re: [PATCH 08/11] PCI/IDE: Add IDE establishment helpers
+Message-ID: <Z4A/g5Yyu4Whncuu@yilunxu-OptiPlex-7050>
+References: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
+ <173343744264.1074769.10935494914881159519.stgit@dwillia2-xfh.jf.intel.com>
+ <9f151a74-cc5c-4a7c-8304-1714159e4b2c@amd.com>
+ <6d50f215-93c4-49a5-9ee2-f9775b740f92@amd.com>
+ <Z32H2Tzd1UHCQEt5@yilunxu-OptiPlex-7050>
+ <d71dd5c5-4c20-4e8e-abaa-fe2cdea4f3b2@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/17] rockchip: Add rk3562 support
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: heiko@sntech.de, linux-rockchip@lists.infradead.org,
- Simon Xue <xxm@rock-chips.com>, Guenter Roeck <linux@roeck-us.net>,
- Mark Brown <broonie@kernel.org>, Chris Morgan <macromorgan@hotmail.com>,
- Frank Wang <frank.wang@rock-chips.com>, Jamie Iles <jamie@jamieiles.com>,
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
- Jonas Karlman <jonas@kwiboo.se>, Johan Jonker <jbx6244@gmail.com>,
- David Airlie <airlied@gmail.com>, dri-devel@lists.freedesktop.org,
- Sebastian Reichel <sebastian.reichel@collabora.com>,
- linux-i2c@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>,
- Simona Vetter <simona@ffwll.ch>, Elaine Zhang <zhangqing@rock-chips.com>,
- Conor Dooley <conor+dt@kernel.org>, Finley Xiao
- <finley.xiao@rock-chips.com>, Maxime Ripard <mripard@kernel.org>,
- =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
- FUKAUMI Naoki <naoki@radxa.com>, linux-pwm@vger.kernel.org,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Andy Yan <andyshrk@163.com>,
- linux-serial@vger.kernel.org, Michael Riesch
- <michael.riesch@wolfvision.net>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Jiri Slaby <jirislaby@kernel.org>, Andi Shyti <andi.shyti@kernel.org>,
- devicetree@vger.kernel.org, Diederik de Haas <didi.debian@cknow.org>,
- linux-watchdog@vger.kernel.org, Rob Herring <robh@kernel.org>,
- Lee Jones <lee@kernel.org>,
- Cristian Ciocaltea <cristian.ciocaltea@collabora.com>,
- Wim Van Sebroeck <wim@linux-watchdog.org>,
- Shresth Prasad <shresthprasad7@gmail.com>, Tim Lunn <tim@feathertop.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- linux-arm-kernel@lists.infradead.org, Ulf Hansson <ulf.hansson@linaro.org>,
- Jisheng Zhang <jszhang@kernel.org>, Dragan Simic <dsimic@manjaro.org>,
- Detlev Casanova <detlev.casanova@collabora.com>, linux-mmc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-spi@vger.kernel.org,
- linux-usb@vger.kernel.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Thomas Zimmermann <tzimmermann@suse.de>,
- =?UTF-8?Q?Uwe_Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
-References: <20241224094920.3821861-1-kever.yang@rock-chips.com>
- <sasnc2ocxnlfp4kprsobu5gkajjb5wdxhld73bg6xocgb3foah@yjmphtvpmyff>
-Content-Language: en-US
-From: Kever Yang <kever.yang@rock-chips.com>
-In-Reply-To: <sasnc2ocxnlfp4kprsobu5gkajjb5wdxhld73bg6xocgb3foah@yjmphtvpmyff>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZGh4dTlYZGR1MSR1MTk5JGkJWFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCS0
-	NVSktLVUpCWQY+
-X-HM-Tid: 0a944f3909e403afkunm851e8425
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6OTY6FBw4LDIQPQ8VMiJKC0lO
-	K0kaCUlVSlVKTEhNT0JOQklCSkNLVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
-	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFJQktCNwY+
-DKIM-Signature:a=rsa-sha256;
-	b=VWXK7s8da0RDYOHxSWhWmVquzr9JT8B4nkrF/smFefecdntF1wQ00XwWP/W6zJg+9nzjib8DolV9vW+B7e4x9e94nqGrRa3NUYOfsb8LiB93JM1o4goCzIFl5gMoV51sQZuv+O5c3/QadXRtYtLINbjhyZzW/2jq4/AD/N9qfGU=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=jhJHF5kfM0cVe+RkIB8dEyszOtU3eaBDxOU11VNcLG4=;
-	h=date:mime-version:subject:message-id:from;
+In-Reply-To: <d71dd5c5-4c20-4e8e-abaa-fe2cdea4f3b2@amd.com>
 
-Hi Krzysztof,
+On Thu, Jan 09, 2025 at 01:35:58PM +1100, Alexey Kardashevskiy wrote:
+> 
+> 
+> On 8/1/25 07:00, Xu Yilun wrote:
+> > > > > +static void __pci_ide_stream_setup(struct pci_dev *pdev, struct
+> > > > > pci_ide *ide)
+> > > > > +{
+> > > > > +    int pos;
+> > > > > +    u32 val;
+> > > > > +
+> > > > > +    pos = sel_ide_offset(pdev->sel_ide_cap, ide->stream_id,
+> > > > > +                 pdev->nr_ide_mem);
+> > > > > +
+> > > > > +    val = FIELD_PREP(PCI_IDE_SEL_RID_1_LIMIT_MASK, ide->devid_end);
+> > > > > +    pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_1, val);
+> > > > > +
+> > > > > +    val = FIELD_PREP(PCI_IDE_SEL_RID_2_VALID, 1) |
+> > > > > +          FIELD_PREP(PCI_IDE_SEL_RID_2_BASE_MASK, ide->devid_start) |
+> > > > > +          FIELD_PREP(PCI_IDE_SEL_RID_2_SEG_MASK, ide->domain);
+> > > > > +    pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_2, val);
+> > > > > +
+> > > > > +    for (int i = 0; i < ide->nr_mem; i++) {
+> > > > 
+> > > > 
+> > > > This needs to test that (pdev->nr_ide_mem >= ide->nr_mem), easy to miss
+> > > > especially when PCI_IDE_SETUP_ROOT_PORT. Thanks,
+> > 
+> > Yes, but nr_ide_mem is limited HW resource and may easily smaller than
+> > device memory region number.
+> 
+> My rootport does not have any range (instead, it relies on C-bit in MMIO
 
-     Thanks very much for your review.
+It seems strange, then how the RP decide which stream id to use.
 
-On 2024/12/27 15:38, Krzysztof Kozlowski wrote:
-> On Tue, Dec 24, 2024 at 05:49:03PM +0800, Kever Yang wrote:
->> This patch set adds rk3562 SoC and its evb support.
->>
->> Split out patches belong to different subsystem.
->>
->> Test with GMAC, USB, PCIe, EMMC, SD Card.
->>
->> This patch set is base on the patche set for rk3576 evb1 support.
->>
->> Changes in v2:
->> - Update in sort order
->> - remove grf in cru
->> - Update some properties order
->>
->> Finley Xiao (2):
->>    arm64: dts: rockchip: add core dtsi for RK3562 Soc
->>    arm64: dts: rockchip: Add RK3562 evb2 devicetree
->>
->> Kever Yang (15):
->>    dt-bindings: PCI: dwc: rockchip: Add rk3562 support
->>    dt-bindings: mmc: Add support for rk3562 eMMC
->>    dt-bindings: mmc: rockchip-dw-mshc: Add rk3562 compatible string
->>    dt-bindings: power: rockchip: Add bindings for rk3562
->>    dt-bindings: i2c: i2c-rk3x: Add rk3562 compatible
->>    dt-bindings: gpu: Add rockchip,rk3562-mali compatible
->>    dt-bindings: watchdog: Add rk3562 compatible
->>    dt-bindings: spi: Add rockchip,rk3562-spi compatible
->>    dt-bindings: serial: snps-dw-apb-uart: Add support for rk3562
->>    dt-bindings: usb: dwc3: add compatible for rk3562
->>    dt-bindings: pwm: rockchip: Add rockchip,rk3562-pwm
->>    dt-bindings: rockchip: pmu: Add rk3562 compatible
->>    dt-bindings: soc: rockchip: Add rk3562 syscon compatibles
->>    dt-bindings: arm: rockchip: Add rk3562 evb2 board
->>    dt-bindings: mfd: syscon: Add rk3562 QoS register compatible
-> You squezzed here like 12 different subsystems. Some of these changes
-> suggest missing drivers.
-I have split out all the patches with driver change as separate patch set.
-All the other dt-binding patches in this patchset is re-use the driver 
-without any change,
-but only add a new "rockchip, rk3562-" based compatible entry, and also 
-no more info
-need to explain in the commit message which I usually copy from commit 
-msg already in tree
-and change the soc to rk3562.
-I think this patch set will be clear enough for the new soc/board 
-support. So do you mean
-I have to send the 1st~15th of this patchset one by one separately so 
-that they can reach
-to different subsystems? I believe there is no much useful change for 
-the cc list is provide
-by the tool automatically and the commit msg can update as Uwe's 
-suggestion:
+> access to set T-bit). The device got just one (which is no use here as I
+> understand).
 
-	The PWM core on Rockchip's RK3562 is the same as the one already
-	included in RK3328. Extend the binding accordingly to allow
+I also have no idea from SPEC how to use the IDE register blocks on EP,
+except stream ENABLE bit.
 
-		compatible = "rockchip,rk3562-pwm", "rockchip,rk3328-pwm";
+And no matter how I program the RID/ADDR association registers, it
+always work...
+
+Call for help.
+
+> 
+> 
+> > In this case, maybe we have to merge the
+> > memory regions into one big range.
+> 
+> > > > 
+> > > > 
+> > > > 
+> > > > > +        val = FIELD_PREP(PCI_IDE_SEL_ADDR_1_VALID, 1) |
+> > > > > +              FIELD_PREP(PCI_IDE_SEL_ADDR_1_BASE_LOW_MASK,
+> > > > > +                 lower_32_bits(ide->mem[i].start) >>
+> > > > > +                     PCI_IDE_SEL_ADDR_1_BASE_LOW_SHIFT) |
+> > > > > +              FIELD_PREP(PCI_IDE_SEL_ADDR_1_LIMIT_LOW_MASK,
+> > > > > +                 lower_32_bits(ide->mem[i].end) >>
+> > > > > +                     PCI_IDE_SEL_ADDR_1_LIMIT_LOW_SHIFT);
+> > > > > +        pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_1(i), val);
+> > > > > +
+> > > > > +        val = upper_32_bits(ide->mem[i].end);
+> > > > > +        pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_2(i), val);
+> > > > > +
+> > > > > +        val = upper_32_bits(ide->mem[i].start);
+> > > > > +        pci_write_config_dword(pdev, pos + PCI_IDE_SEL_ADDR_3(i), val);
+> > > > > +    }
+> > > > > +}
+> > > > > +
+> > > > > +/*
+> > > > > + * Establish IDE stream parameters in @pdev and, optionally, its
+> > > > > root port
+> > > > > + */
+> > > > > +int pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide,
+> > > > > +             enum pci_ide_flags flags)
+> > > > > +{
+> > > > > +    struct pci_host_bridge *hb = pci_find_host_bridge(pdev->bus);
+> > > > > +    struct pci_dev *rp = pcie_find_root_port(pdev);
+> > > > > +    int mem = 0, rc;
+> > > > > +
+> > > > > +    if (ide->stream_id < 0 || ide->stream_id > U8_MAX) {
+> > > > > +        pci_err(pdev, "Setup fail: Invalid stream id: %d\n",
+> > > > > ide->stream_id);
+> > > > > +        return -ENXIO;
+> > > > > +    }
+> > > > > +
+> > > > > +    if (test_and_set_bit_lock(ide->stream_id, hb->ide_stream_ids)) {
+> > > > > +        pci_err(pdev, "Setup fail: Busy stream id: %d\n",
+> > > > > +            ide->stream_id);
+> > > > > +        return -EBUSY;
+> > > > > +    }
+> > > > > +
+> > > > > +    ide->name = kasprintf(GFP_KERNEL, "stream%d:%s", ide->stream_id,
+> > > > > +                  dev_name(&pdev->dev));
+> > > > > +    if (!ide->name) {
+> > > > > +        rc = -ENOMEM;
+> > > > > +        goto err_name;
+> > > > > +    }
+> > > > > +
+> > > > > +    rc = sysfs_create_link(&hb->dev.kobj, &pdev->dev.kobj, ide->name);
+> > > > > +    if (rc)
+> > > > > +        goto err_link;
+> > > > > +
+> > > > > +    for (mem = 0; mem < ide->nr_mem; mem++)
+> > > > > +        if (!__request_region(&hb->ide_stream_res, ide->mem[mem].start,
+> > > > > +                      range_len(&ide->mem[mem]), ide->name,
+> > > > > +                      0)) {
+> > > > > +            pci_err(pdev,
+> > > > > +                "Setup fail: stream%d: address association conflict
+> > > > > [%#llx-%#llx]\n",
+> > > > > +                ide->stream_id, ide->mem[mem].start,
+> > > > > +                ide->mem[mem].end);
+> > > > > +
+> > > > > +            rc = -EBUSY;
+> > > > > +            goto err;
+> > > > > +        }
+> > > > > +
+> > > > > +    __pci_ide_stream_setup(pdev, ide);
+> > > > > +    if (flags & PCI_IDE_SETUP_ROOT_PORT)
+> > > > > +        __pci_ide_stream_setup(rp, ide);
+> > > 
+> > > Oh, when we do this, the root port gets the same devid_start/end as the
+> > > device which is not correct, what should be there, the rootport bdfn? Need
+> > 
+> > "Indicates the lowest/highest value RID in the range
+> > associated with this Stream ID at the IDE *Partner* Port"
+> > 
+> > My understanding is that device should fill the RP bdfn, and the RP
+> > should fill the device bdfn for RID association registers. Same for Addr
+> > association registers.
+> 
+> Oh. Yeah, this sounds right. So most of the setup needs to be done on the
+> root port and not on the device (which only needs to enable the stream),
+> which is not what the patch does. Or I got it wrong? Thanks,
+
+I don't get you. This patch does IDE setup for 2 partners:
+
+__pci_ide_stream_setup(pdev, ide);  This is the setup on RP
+__pci_ide_stream_setup(rp, ide);    This is the setup on device
+
+unless AMD setup IDE by firmware, and didn't set the PCI_IDE_SETUP_ROOT_PORT flag.
 
 Thanks,
-- Kever
+Yilun
 
-
->
-> Please read basic upstreaming guide, some previous discussions and get
-> internal rock-chips help so we want repeat basics over and over.
->
-> Bindings are with drivers. Send them to respective subsystems.
->
-> Best regards,
-> Krzysztof
->
->
+> 
+> > 
+> > Thanks,
+> > Yilun
+> > 
+> > > to dig that but PCI_IDE_SETUP_ROOT_PORT should detect that it is a root
+> > > port. Thanks,
+> > > 
+> 
+> -- 
+> Alexey
+> 
