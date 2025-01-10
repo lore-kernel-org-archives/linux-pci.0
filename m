@@ -1,123 +1,101 @@
-Received: from mail-m127206.xmail.ntesmail.com (mail-m127206.xmail.ntesmail.com [115.236.127.206])
+Received: from relay7-d.mail.gandi.net (relay7-d.mail.gandi.net [217.70.183.200])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80FCB207656;
-	Fri, 10 Jan 2025 07:39:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.236.127.206
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F92E8F54;
+	Fri, 10 Jan 2025 08:21:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.200
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736494745; cv=none; b=c4VBG5W0RZ27KJZYdA9AVtxbba/1NTePJMAgbS1FZejR8zrFZPulXQKXR/6OxPIMraaZgqJkmx+uoK48sjbvcVCYxebP8+fgEjklJg9FsedGTIyUy4ZOqTF8rBPa7hJzQRPAtH9rSZCg1R/zg72aw7++H3Acc450yXKnW5RHKvc=
+	t=1736497320; cv=none; b=FmcQmGpvZden+FFSugpHCfIdSH+H1d/T/asGrf6Ku8F1RG0fZ5ehWv4H5eU9Hs3kE5gSnatUnX2N7ZkQrcXmqS+ZGJ3k0CctNwpmvKuVY0WLyywc0BpxCjzN5bVcxxgP7NBxG/eHL5FVsDP4ZeUgfWU5jH+L1lxCff3+GYoC6zA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736494745; c=relaxed/simple;
-	bh=qZYG4Qfz84oaePgwKuQ+EMUlJvfwgjR748WmO28agoE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n2ggFxEzi4pdoDLVZFEfrftj6qJu/gOlo+5tFSce3IUbOJPk521VZcuvzqWrxm8CTbnsdtVsIRmQE4PZpoSi56BsYQUeuoZjIWdHkXTaUNDrQ5yi1HauHcntzECSaDgouJFozRib/JOt6ITXWFxP12Rvf+RHuy/5EXmZXvfu0h4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=cUCg55WI; arc=none smtp.client-ip=115.236.127.206
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1736497320; c=relaxed/simple;
+	bh=P+Y9UraIZhvdw5UcVwbrlExRQcniBwLNbPoCHyp5MBw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=RUG8LcfeTVC8l2xqBxRK/8gKf+/NDvs6hc2mYpOkpLjoT/i2zwSlyRXfcxgeftGBey9NwtyfiDjjiIBiC1peNBwoLDgd9GN3OquFuBZOOkBbaxoSXtTB472+w0ie1ZfyuMwdgk1HBBE+bpeRcjdlUwzwQFgz0btwfrJm2jcfm1c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=h9ZBQiTN; arc=none smtp.client-ip=217.70.183.200
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="cUCg55WI"
-Received: from [172.16.12.67] (unknown [58.22.7.114])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 8511728f;
-	Fri, 10 Jan 2025 15:33:49 +0800 (GMT+08:00)
-Message-ID: <5025409d-5021-41b4-99ef-94ebde6f9828@rock-chips.com>
-Date: Fri, 10 Jan 2025 15:33:49 +0800
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="h9ZBQiTN"
+Received: by mail.gandi.net (Postfix) with ESMTPA id 4DFE82000A;
+	Fri, 10 Jan 2025 08:21:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
+	t=1736497316;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=l3exH2D4DHGEwR8WFnd1f/VkSRJ5bE65THJQbo6YCV8=;
+	b=h9ZBQiTNYYJsPvzribTbTE8aKxVKfnMqB2Nbe2VV278x4sLXz4AQrOljNHZZRuoMPFrGQR
+	fNLJ99jxv11q260FnjrWXp4S9CJO+V3vKfuZvi8NG2Bv+T4iuHhYFOA7/4TVRVhwJi8VBN
+	p9t+J0GFfTdICwpRNSyahDpt9J+8Qwm/zT52G18z0Jv459Feu9yDc75xiL9BbzHlR8utL5
+	yw5MsGyaJkl1z2iJaZF4S2851G61t1X32jHO+QVeljHie/UJrCABfaNlVJ1745GLOkAyRO
+	+mhXmHPQIhHVtXaHa0SJYwy5lKpNvap8AFBec4KyWQKMQM19Yp/LeIGEWiG3JA==
+From: Herve Codina <herve.codina@bootlin.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@google.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lizhi Hou <lizhi.hou@amd.com>
+Cc: linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	Allan Nielsen <allan.nielsen@microchip.com>,
+	Horatiu Vultur <horatiu.vultur@microchip.com>,
+	Steen Hegelund <steen.hegelund@microchip.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Herve Codina <herve.codina@bootlin.com>
+Subject: [PATCH v6 3/5] PCI: of_property: Add support for NULL pdev in of_pci_set_address()
+Date: Fri, 10 Jan 2025 09:21:39 +0100
+Message-ID: <20250110082143.917590-4-herve.codina@bootlin.com>
+X-Mailer: git-send-email 2.47.1
+In-Reply-To: <20250110082143.917590-1-herve.codina@bootlin.com>
+References: <20250110082143.917590-1-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/7] dt-bindings: PCI: dw: rockchip: Add rk3576 support
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: heiko@sntech.de, linux-rockchip@lists.infradead.org,
- Simon Xue <xxm@rock-chips.com>, Conor Dooley <conor+dt@kernel.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- linux-pci@vger.kernel.org, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
- <kw@linux.com>, linux-kernel@vger.kernel.org,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, devicetree@vger.kernel.org,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Shawn Lin <shawn.lin@rock-chips.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- linux-arm-kernel@lists.infradead.org
-References: <20250107074911.550057-1-kever.yang@rock-chips.com>
- <20250107074911.550057-3-kever.yang@rock-chips.com>
- <tsxho4vhadrl6tsb2k5e2vxaeuun3k5pdkojzwjruqkof54dyd@gs3wsuxzwu4a>
-Content-Language: en-US
-From: Kever Yang <kever.yang@rock-chips.com>
-In-Reply-To: <tsxho4vhadrl6tsb2k5e2vxaeuun3k5pdkojzwjruqkof54dyd@gs3wsuxzwu4a>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQ0NCHVZNSEhOSh5OGUtDHh1WFRQJFh
-	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSUhCSE
-	NVSktLVUpCS0tZBg++
-X-HM-Tid: 0a944f22372003afkunm8511728f
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6K0k6HRw5TTIPTA8jFiMXPzIs
-	AxIaFBhVSlVKTEhNT0JPT0hKTUJLVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
-	EgtZQVlOQ1VJSVVMVUpKT1lXWQgBWUFJS0xPNwY+
-DKIM-Signature:a=rsa-sha256;
-	b=cUCg55WIgxh7Krkfj5w+j2tmu5+OrqTz198q9yBn6KHGeWg4DqxM0S6ixBBrvTZlZThXX+QKAfbbYtXiZwoJVDrTYlZaFbNtNpWcybdvlQCOGmN7aIjPj4YT37Y9zkC7vhcUdAbJsavbzJHWRLuLsPev/ZlwcdV9gywUhcaRSHw=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
-	bh=TOxPOUhClqqhDKpCo7Jmi3oX0GLglQHl4yT+VgEP/lI=;
-	h=date:mime-version:subject:message-id:from;
+Content-Transfer-Encoding: 8bit
+X-GND-Sasl: herve.codina@bootlin.com
 
-Hi Krzysztof,
+The pdev (pointer to a struct pci_dev) parameter of of_pci_set_address()
+cannot be NULL.
 
-On 2025/1/8 16:16, Krzysztof Kozlowski wrote:
-> On Tue, Jan 07, 2025 at 03:49:06PM +0800, Kever Yang wrote:
->> rk3576 is using dwc controller, with msi interrupt directly to gic instead
->> of to gic its, so
->> - no its support is required and the 'msi-map' is not need anymore,
->> - a new 'msi' interrupt is needed.
->>
->> Signed-off-by: Kever Yang <kever.yang@rock-chips.com>
->> ---
->>
->> Changes in v4:
->> - Fix wrong indentation in dt_binding_check report by Rob
->>
->> Changes in v3:
->> - Fix dtb check broken on rk3588
->> - Update commit message
->>
->> Changes in v2:
->> - remove required 'msi-map'
->> - add interrupt name 'msi'
->>
->>   .../devicetree/bindings/pci/rockchip-dw-pcie-common.yaml      | 4 +++-
->>   Documentation/devicetree/bindings/pci/rockchip-dw-pcie.yaml   | 4 +---
->>   2 files changed, 4 insertions(+), 4 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
->> index cc9adfc7611c..e4fcc2dff413 100644
->> --- a/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
->> +++ b/Documentation/devicetree/bindings/pci/rockchip-dw-pcie-common.yaml
->> @@ -81,7 +81,9 @@ properties:
->>         - const: msg
->>         - const: legacy
->>         - const: err
->> -      - const: dma0
->> +      - enum:
->> +          - msi
->> +          - dma0
-> Commit msg said new interrupt, but this basically replaces existing DMA0
-> interrupt. Maybe that's the problem with this common binding and you
-> just miss constraining in each device binding. If so: fix also them.
-rk3588 has 9 interrupt, and the 6th-9th is dma0-3;
-rk3568 only has 5 interrupts, no dma0-3;
-rk3576 add one more "msi" interrupt which is the 6th interrupt;
-The upcomming rk3562 is the same as rk3576.
-I'm sorry I'm not so good at this yaml grammar, how should I take care 
-of this case?
+In order to reuse of_pci_set_address() when creating the PCI root bus
+node, this function needs to support a NULL pdev parameter. Indeed, in
+the case of the PCI root bus node creation, no pdev are available and
+of_pci_set_address() will be used with the bridge windows.
 
+Allow to call of_pci_set_address() with a NULL pdev.
 
-Thanks,
-- Kever
->
-> Also: your interrupts property does not match this anymore.
->
-> Best regards,
-> Krzysztof
->
->
+Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+---
+ drivers/pci/of_property.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+index 886c236e5de6..8aff9ca1f222 100644
+--- a/drivers/pci/of_property.c
++++ b/drivers/pci/of_property.c
+@@ -54,9 +54,13 @@ enum of_pci_prop_compatible {
+ static void of_pci_set_address(struct pci_dev *pdev, u32 *prop, u64 addr,
+ 			       u32 reg_num, u32 flags, bool reloc)
+ {
+-	prop[0] = FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
+-		FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
+-		FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
++	if (pdev)
++		prop[0] = FIELD_PREP(OF_PCI_ADDR_FIELD_BUS, pdev->bus->number) |
++			  FIELD_PREP(OF_PCI_ADDR_FIELD_DEV, PCI_SLOT(pdev->devfn)) |
++			  FIELD_PREP(OF_PCI_ADDR_FIELD_FUNC, PCI_FUNC(pdev->devfn));
++	else
++		prop[0] = 0;
++
+ 	prop[0] |= flags | reg_num;
+ 	if (!reloc) {
+ 		prop[0] |= OF_PCI_ADDR_FIELD_NONRELOC;
+-- 
+2.47.1
+
