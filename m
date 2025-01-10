@@ -1,123 +1,119 @@
-Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643462063C9;
-	Fri, 10 Jan 2025 13:46:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400EE20FAAF
+	for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2025 14:02:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736516805; cv=none; b=a0wEphDdzr5Ms0rDVxUh08/CroNXG8+sa6i4CB5yEd8HzzEIfla7nx0F9PMTXPnxon/cEvSRvWamP+cmNgdZ6AgqC0jgbRCSKziEIYNgdw5WQOYjudhrgY9P4gacQ4wipg+gqXzbhEaBDeewPeWlvWOkRqqbUy4jVRxiwL+tKNg=
+	t=1736517723; cv=none; b=uNo+rM0IJPN8l9tzyNoDRzPv0cJES+KPHGBTRr4kZUkjSMfJd8Dd/1TUu2D+iqRSYlgCRu1Otwpz+6cPmzFB0qnWDLYpk2DXZIc5Um3+kBlSHt7qG065aSrhNvxV7jMMu//mCFlffwIWMN71NPb6HAKfYK/OZitGDPAGfR1pr9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736516805; c=relaxed/simple;
-	bh=oZawplHCNRT8BruZ7AHnDuMCVbBUTqmmU1w72cdFPW8=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=cmXU6J/wEzCiSmbz1NzYYOWMa6hp3XgBBjcC+nhAB6SyyFT8dtL78fLae5WZe4yl1I52oml1K9x+eTv2Zeb94F/fDOjpbXDsAV9+3TEuFIrchhqufPwABzGhjg0Osruu4e469VYDgWCxbISF3xnL/8reN6TeALrgZvx2zqaMOvs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=JPyBWRZG; arc=none smtp.client-ip=162.62.58.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1736517723; c=relaxed/simple;
+	bh=jkblsDlsUSxYsT+VxyH05FNCYvRrKBfkKwtrrzDlM7s=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=l1p4Xl9UG77bNZ9qEVhLxW8LkcMb3kUPVK224yzS1WRsvvyoTPIjU6UCXJ7nyjIGHCZN92moZh39O4xazC9niOAB7QwMDzCiD1VT/Ou2T+gV8uqszXW+CBYO4plfBDx1YJlpjCmJbIZwFmMBd2E7QYFrT6ctMW9kiJmMRv8yNVc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com; spf=pass smtp.mailfrom=cloud.com; dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b=S+hzhv5r; arc=none smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=citrix.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cloud.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="JPyBWRZG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1736516792; bh=sv735Zju32zbddEntk9l6cBvbBc4hC1Divb3zrT5+Pk=;
-	h=From:To:Cc:Subject:Date;
-	b=JPyBWRZGvX8dq1p0TkA5La1VbTuNfrd/wZTK18OFCZg0alCh8jb4n5FWXR7kByYEh
-	 wuWbixcNayrfT95ouiM6XJ+gfhiDuGWV+MiXE4CM7mgFo084qI960JdmrZpDHzubHW
-	 DrnrWqTNWV+C0Z21jUfgir37yeF7SDY1ATcSMbxs=
-Received: from jiwei-VirtualBox.lenovo.com ([120.244.62.107])
-	by newxmesmtplogicsvrszgpua8-0.qq.com (NewEsmtp) with SMTP
-	id A0E03ABA; Fri, 10 Jan 2025 21:40:14 +0800
-X-QQ-mid: xmsmtpt1736516414t5m8cmw5w
-Message-ID: <tencent_753C9F9DFEC140A750F2778E6879E1049406@qq.com>
-X-QQ-XMAILINFO: M1rD3f8svNzn/roit6RvG8nk1osforKZTegtUm3EH8/PLOXQhK9iCzAql5LsEV
-	 peeOO+Gz37CklgAjiiuG/xc+WnWOQXfdwFiRFJfv0PaV8A6ATafjF2pjOBk9fRleCYnue06z1BNJ
-	 qezvP27nVicxwFsKRakPUNlHxwKwAkK35rXrZmxu8ZAZS/hWwvOB6BeGXMlYEBeD7Du1NdtM7btZ
-	 lLyXbJePXNe4jWLNJCHdbiUACXBK4LeCx8tJT71KUOT1+ffZma2b7uMk5R24jXRut5m3z1952qQZ
-	 tWPBpF9Xi6j00v7QETSZJSxO01qiwItnURFaYfWzTuoXLGbM3T3+Dil6gKac76Rzos8qLtgzR6ZA
-	 sirCHE3a0ljgV5quH057w9npW4GwFtHrDzxIbXA4mIhQEMseKfTgRXxZyFnSoYMbAaDLlAavdxsk
-	 HGcZHTsiJhWqImswAp4V811xkGkGLaDPWnyjnss1Ixc7JO2n3OUbHFM7vXKDe7ObRBO1UG204Kvp
-	 c8K+zHBfxmdzRVNbjJK4HEyjkMfpCEpkvW6UlN5WdoeywUshRHG8/lCK9bNTdFjesM6xzsIZxdoC
-	 ECDPipv6DY6JNLGHfF7BBMVfGrXk6KzxbUORP/TAU3c4ViUpsu1wLaagoahE47DMg899a8IWcaye
-	 U2ssqRKazAze7mIiZPVZaZuIFmMRJOcTleD/XKc87Hl7Lv0PFDiWBw+FXgrVlyUcD15zmLjsT1oc
-	 yZrfRwQK1Fs/Jckr38uFy0HOlNlUEFwDRHTXyJIGjjxNATdHRTqfhAAORv89S/gJcXXnqDjiWUy6
-	 vdfk2nFkhv7cuUbiq6FCWgfj0h1pAL9J56GMRgaz6reIXgW/Cd0jJKzGNcLnbFug6FmAZWdIGRj2
-	 eUHc5qanWPZk6Sid2ohCsWp9lFGseGT+Plz1AYnUW0lguG6K3kkA8OHOteqSjFU7d6CI7mKTDguC
-	 nE4J0tekemH6i6SOBFlrX902ar0Qq+W/xCF579Ad/YBjfp215brTbv4IY/mMCSKvMDEpMiWZFEOg
-	 xLyXI2XA/rsc2agCiYWxRIaS4XbuahSJSmEKI8TYAc/LjFeQlX0RKPIvMJecMnwdOF9aUU/g==
-X-QQ-XMRINFO: NI4Ajvh11aEj8Xl/2s1/T8w=
-From: Jiwei Sun <jiwei.sun.bj@qq.com>
-To: macro@orcam.me.uk,
-	ilpo.jarvinen@linux.intel.com,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	guojinhui.liam@bytedance.com,
-	helgaas@kernel.org,
-	lukas@wunner.de,
-	ahuang12@lenovo.com,
-	sunjw10@lenovo.com,
-	jiwei.sun.bj@qq.com
-Subject: [PATCH 1/2] PCI: Fix the wrong reading of register fields
-Date: Fri, 10 Jan 2025 21:40:06 +0800
-X-OQ-MSGID: <20250110134006.33527-1-jiwei.sun.bj@qq.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=citrix.com header.i=@citrix.com header.b="S+hzhv5r"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-aaeec07b705so338208066b.2
+        for <linux-pci@vger.kernel.org>; Fri, 10 Jan 2025 06:02:00 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=citrix.com; s=google; t=1736517719; x=1737122519; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=c/I7HoDRHZV0XTx2nTCcpli5SpYI0/lHKSshoL/AVNY=;
+        b=S+hzhv5rircbWM0IFWempym1Mth+Urk9ahOV/UUkFYoik9QDdmdU2Zme+JVf//ftNP
+         OYX+gwnPKh/2K/YUry34z7gkV+/mtrAsjPXUybeMCGXWvdUkdaJmgOarQgnycHMTpPRz
+         zBkFHEFhkvWMSdj6rwrnsm5yLi04+UObVaVx4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736517719; x=1737122519;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=c/I7HoDRHZV0XTx2nTCcpli5SpYI0/lHKSshoL/AVNY=;
+        b=QRSramFGFkG5cvxEyV7V201ku6PdGoYWK0ZikEoTvJRdjTxjMSBXRQVUJM57ETmZk0
+         1jhSC8RuyDOkHpXLfP1BqUS7Yhtr1IgalJF/QI2AIIqmUZqPTg+G87xRh9vOoglyCk9W
+         mC4TadkYhrpJgU5O2HshADx7KLfq7AYp1aIxOpAeRPSfUYld29Q+2YyhsfvFCSGQPaN4
+         7LvJrqDxpLPRzDz4cl6jPN523i6nA3O1qx6XulyZvUNQEY8BwDL8IL/56K31b2f/s3Ae
+         0HRsP7smV+Aw51nIWcxo/YX6WHsDK98/o6IJfxIlZqvZCGoaol8kzGvi0gB1QltirKeU
+         J5kA==
+X-Forwarded-Encrypted: i=1; AJvYcCWRP8u6A2drZkJxxvZS7GtG45gWHn2oQ5C5qkS4V+syUvaCa0AssILIYSwMUxRqsSGqb830k2GN3pw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx6dWSQLOHi0qkjvKcFDFgmaFXeVAcyPG87XnnW5cAuGhKaIEq7
+	+kgoL9vAm5GojM5xzkzXouRZirw/ISFsafjfF0Xeoa8kklX0hAarWqkp5Zt8aXw=
+X-Gm-Gg: ASbGncv0OHhMwITgPg40u2O5hBSnO7ht6JwSrQVlTBvJmcSd+Mbi3csoKSbqo40L3A/
+	l4R3ntsOkokW8dnePdAAuGhzCNLjRE+i6esbBURRROEsjsV2WMbGQQZgh7wzcusj/60U2NcvpTi
+	o2rWRlXq/e6bP10Q9y5ZcuAxEcaOtjQ3na9X1NXVBzdMAGb92dphUN4gpD4EVAf+vsI97Zom9H1
+	7+3Rc1bzctwv3kJoWwCtwy/hjvIe0lX8vcTYFHRDW0Byuz6FNZKx7+TlqP4vaYfjIU=
+X-Google-Smtp-Source: AGHT+IHQABlx0ljsChy/AaNgLOa5tG+fbxwnozWPPmywCwKrdUKAOZN8SDFE4NcVHC8wzrW5y/A8Dw==
+X-Received: by 2002:a17:907:c588:b0:ab2:c208:732d with SMTP id a640c23a62f3a-ab2c2087cbbmr743393166b.40.1736517719125;
+        Fri, 10 Jan 2025 06:01:59 -0800 (PST)
+Received: from localhost ([84.78.159.3])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab2c95af680sm172606166b.141.2025.01.10.06.01.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Jan 2025 06:01:58 -0800 (PST)
+From: Roger Pau Monne <roger.pau@citrix.com>
+To: linux-kernel@vger.kernel.org,
+	xen-devel@lists.xenproject.org,
+	linux-pci@vger.kernel.org
+Cc: Roger Pau Monne <roger.pau@citrix.com>,
+	Nirmal Patel <nirmal.patel@linux.intel.com>,
+	Jonathan Derrick <jonathan.derrick@linux.dev>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 2/3] vmd: disable MSI remapping bypass under Xen
+Date: Fri, 10 Jan 2025 15:01:49 +0100
+Message-ID: <20250110140152.27624-3-roger.pau@citrix.com>
+X-Mailer: git-send-email 2.46.0
+In-Reply-To: <20250110140152.27624-1-roger.pau@citrix.com>
+References: <20250110140152.27624-1-roger.pau@citrix.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Jiwei Sun <sunjw10@lenovo.com>
+MSI remapping bypass (directly configuring MSI entries for devices on the VMD
+bus) won't work under Xen, as Xen is not aware of devices in such bus, and
+hence cannot configure the entries using the pIRQ interface in the PV case, and
+in the PVH case traps won't be setup for MSI entries for such devices.
 
-Since commit de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set
-PCIe Link Speed"), there are two potential issues in the function
-pcie_failed_link_retrain().
+Until Xen is aware of devices in the VMD bus prevent the
+VMD_FEAT_CAN_BYPASS_MSI_REMAP capability from being used when running as any
+kind of Xen guest.
 
-(1) The macro PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() just
-uses the link speed field of the registers. However, there are many other
-different function fields in the Link Control 2 Register or the Link
-Capabilities Register. If the register value is directly used by the two
-macros, it may cause getting an error link speed value (PCI_SPEED_UNKNOWN).
-
-(2) In the pcie_failed_link_retrain(), the local variable lnkctl2 is not
-changed after reading from PCI_EXP_LNKCTL2. It might cause that the
-removing 2.5GT/s downstream link speed restriction codes are not executed.
-
-In order to avoid the above-mentioned potential issues, only keep link
-speed field of the two registers before using by pcie_set_target_speed()
-and reread the Link Control 2 Register before using.
-
-Fixes: de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set PCIe Link Speed")
-Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
+Signed-off-by: Roger Pau Monné <roger.pau@citrix.com>
 ---
- drivers/pci/quirks.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/controller/vmd.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
-index 76f4df75b08a..605628c810a5 100644
---- a/drivers/pci/quirks.c
-+++ b/drivers/pci/quirks.c
-@@ -118,11 +118,13 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
- 		ret = pcie_set_target_speed(dev, PCIE_SPEED_2_5GT, false);
- 		if (ret) {
- 			pci_info(dev, "retraining failed\n");
-+			oldlnkctl2 &= PCI_EXP_LNKCTL2_TLS;
- 			pcie_set_target_speed(dev, PCIE_LNKCTL2_TLS2SPEED(oldlnkctl2),
- 					      true);
- 			return ret;
- 		}
+diff --git a/drivers/pci/controller/vmd.c b/drivers/pci/controller/vmd.c
+index 264a180403a0..d9b7510ace29 100644
+--- a/drivers/pci/controller/vmd.c
++++ b/drivers/pci/controller/vmd.c
+@@ -965,6 +965,15 @@ static int vmd_probe(struct pci_dev *dev, const struct pci_device_id *id)
+ 	struct vmd_dev *vmd;
+ 	int err;
  
-+		pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &lnkctl2);
- 		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
- 	}
++	if (xen_domain())
++		/*
++		 * Xen doesn't have knowledge about devices in the VMD bus.
++		 * Bypass of MSI remapping won't work in that case as direct
++		 * write to the MSI entries won't result in functional
++		 * interrupts.
++		 */
++		features &= ~VMD_FEAT_CAN_BYPASS_MSI_REMAP;
++
+ 	if (resource_size(&dev->resource[VMD_CFGBAR]) < (1 << 20))
+ 		return -ENOMEM;
  
-@@ -133,6 +135,7 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
- 
- 		pci_info(dev, "removing 2.5GT/s downstream link speed restriction\n");
- 		pcie_capability_read_dword(dev, PCI_EXP_LNKCAP, &lnkcap);
-+		lnkcap &= PCI_EXP_LNKCAP_SLS;
- 		ret = pcie_set_target_speed(dev, PCIE_LNKCAP_SLS2SPEED(lnkcap), false);
- 		if (ret) {
- 			pci_info(dev, "retraining failed\n");
 -- 
-2.34.1
+2.46.0
 
