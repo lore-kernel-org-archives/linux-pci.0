@@ -1,100 +1,72 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id CF04824A7E4;
-	Wed, 15 Jan 2025 13:42:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Received: from mail-pl1-f175.google.com (mail-pl1-f175.google.com [209.85.214.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 230D624A7F4;
+	Wed, 15 Jan 2025 14:02:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736948571; cv=none; b=rZd3DcMsYlX0RYDHMlDEOUFRPe6c7Re3135KVZws1g+qXF5aWbr2ocDmkwhSWrB0guwPqK/srxG3vpX9dnKxtzAS2n8K1NQn574AbKWRVFI1ytAFAL54FN4F6FkFfkLuisb2H6xc00ogckraki/7n2vJ6GX6GqE1QtpQI5IJcVs=
+	t=1736949764; cv=none; b=JguuypCoKgTgxcMEEZ4m0E/oKxnW2+YPN5BlbDKMb2U86K7gWSIE3O9n8duJJk2uaQIHZcVwQ4YQiClEQJ32smNHGxlAsufy7GqMhxtSpzwJTbUwmywwdw4BWpCyTg8nc56Muf29o9HXLO5YwsGJJGyriaOCjenLHF64PgLLhBc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736948571; c=relaxed/simple;
-	bh=2Hph0zj3rVGlA0O406s0z8SA/dHRuzQTuX8s7DmTXTg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=m6ziBgqXq4n+qNcQAelt46pSktOhgbNGxsdZmQ0gJicD58AfOeflMgmPbt3Hs3iJBa9/7hZRVKXTdjkBeIEfkSFFC62Xz+lidR1nSL5lH8nWpUpZOx5zJuablRSoJw1Kyp/4UYb0TdjHOmJtB6Mt8ypl9HDeuCa4LE1mXRlnOKQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Pf24oP8V; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Pf24oP8V"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=eNWYvqZLKMQR1VLwrvBJcFbkXUvUEfzlqkN50e+tY9E=;
-	b=Pf24oP8VJq6rl7aZwW9wy3o0XKOTLhk6BTojVVjQVzUMCroh0zholwXHi+dD1k
-	/BWwCVYZdW7XPt2J1P2RDD/hfCTP0MEhNuSlR8ShJm7pRo+93MuDgkBdaL+WaVEH
-	NtZNzC63o60ifYjmwQsct+NoGzmweIherKdydkAtieHnU=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wDnFHcku4dnv58iGA--.58526S2;
-	Wed, 15 Jan 2025 21:41:57 +0800 (CST)
-From: Jiwei Sun <sjiwei@163.com>
-To: macro@orcam.me.uk,
-	ilpo.jarvinen@linux.intel.com,
-	bhelgaas@google.com
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	helgaas@kernel.org,
-	lukas@wunner.de,
-	ahuang12@lenovo.com,
-	sunjw10@lenovo.com,
-	jiwei.sun.bj@qq.com,
-	sunjw10@outlook.com
-Subject: [PATCH v2 0/2] PCI: Fix the wrong reading of register fields
-Date: Wed, 15 Jan 2025 21:41:52 +0800
-Message-Id: <20250115134154.9220-1-sjiwei@163.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1736949764; c=relaxed/simple;
+	bh=WuxMkrZ47yCUHHq/4ZOKXuTnlG/oYsKVy/e2x5ZkkDc=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mL4hrhqPM9PNi/arF6PWQa+mYz4wcYqrhapXTzFOHm6ZPNdCQNBDJTUXG8CBw5eM2Zw1Jxt64dRadeYfCV1ah23otquri+Y+BBOUs7A3rSQXQIIe05dlUdUsYAmPV8QHBHhuzmD0qVur+PxBEZTGcvvTRNqCZuq7G1IEBJKcrvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-pl1-f175.google.com with SMTP id d9443c01a7336-2164b662090so119226345ad.1;
+        Wed, 15 Jan 2025 06:02:42 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736949762; x=1737554562;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=/6Abd61QTGWfNTGUT7qQjuILBQviFEk/X5pOA3ZgjdA=;
+        b=bpQTmJqtpgQX8FRauYhaAwq335bmP5itYyh5+De9fs9ebZyx+EotzUqPOdKSILVuFi
+         Y8//3VRJuYgsx1BR6/e0Ht+HAzv4U4GLXxmIGZDtDFvKgZ0M7VZZHe9CvCy2jxlKrnsj
+         h6nXGjFxwTOx8gMl9YbVPF7+AG3Lo91ga7WjG8fenofXGxtRXv9jOykzWX9qT0Ok3kCC
+         zP7fccL/dvBXmYvdHjwFMkMpZCIx13VzoYGXVZS/A0ZDdKXVGVY5D7SkvvfsfWGq6tym
+         QwprcQ90zVM1J1+w887Bm4C87Vnf55gSxcWTi7t2P/WVlX0Oi8MzdVv8EBnCWWK60qpF
+         W8bQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUfJx8mU/AIzPy8xTSf0hI+bVtDn13GqigYrHUxiFCgcZIykzaX3jBVtKbKvty4fiOW8PXOWk1hIlom@vger.kernel.org, AJvYcCXZSlVOyuKG4q7Exji9BV4XMdbho394sY1GoTsKiejH8egyUsCl2qvs+oJqaX/1wsFnsRUp6By+2Z2kark=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx0fjnbwbGYfREKQvUvP2/CheDBv2QO7DsoNkZBg/WClAIdm/e0
+	tA6icvgXCHHUP4WsKJAi98uYIqQZa/qAqieffrfwIvXPJ5ppPvRe
+X-Gm-Gg: ASbGncuU8bHE/90NpMZZvkGr2nzFd3CLA9C0u8NlWfzrEenidfzW0Cuxt39PWyWzIoc
+	ga8NbyOf/xiytbt2vq+L4mJUUiSUCGQuxVxZxshGfBfHOa4A7fuGvy+cExp+q64WtjC+mfTe0yv
+	WcfqM59EQC5QqhezoM/Npah+NLSL9vlSnX9i4vMc9Vr+iVkaWpRKb2Ap9pYfsLKlTPPH2p8UBmv
+	luwtPMtax/567iThT15vGTiqXQoDVBi7b/KIOfPrxpOSST3Y3VDHk0YVfOiBurTyrIY5UawwH2h
+	nErWXNIBKgOdfFc=
+X-Google-Smtp-Source: AGHT+IHO8kXoaQqHHCB3ktl9U+rZsZzaaji5zMKv/IAG0+EE8t5n4wgAm7mvOmvFK6qk2Dojsv5hKg==
+X-Received: by 2002:a17:902:e545:b0:219:e4b0:4286 with SMTP id d9443c01a7336-21a83f7293bmr494954315ad.29.1736949762370;
+        Wed, 15 Jan 2025 06:02:42 -0800 (PST)
+Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21a9f10f86bsm82137995ad.36.2025.01.15.06.02.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jan 2025 06:02:41 -0800 (PST)
+Date: Wed, 15 Jan 2025 23:02:40 +0900
+From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
+To: Hans Zhang <18255117159@163.com>
+Cc: manivannan.sadhasivam@linaro.org, kishon@kernel.org, arnd@arndb.de,
+	gregkh@linuxfoundation.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, rockswang7@gmail.com
+Subject: Re: [v11 0/2] misc: pci_endpoint_test: Fix overflow of bar_size.
+Message-ID: <20250115140240.GA1234819@rocinante>
+References: <20250109094556.1724663-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDnFHcku4dnv58iGA--.58526S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WrWDXrW3Jw4UXw45Zr4rGrg_yoW8Aw48p3
-	yfC3W3tF4kX34rZFs3X3WxZFyUuan3AFW8uw18G34DZr13C34Fka1avF4FgFyjyrW0ka1Y
-	qF1Sq3409w1UArJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jjPfdUUUUU=
-X-CM-SenderInfo: 5vml4vrl6rljoofrz/1tbiDwjVmWeHtuJNVAAAsm
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250109094556.1724663-1-18255117159@163.com>
 
-From: Jiwei Sun <sunjw10@lenovo.com>
+Hello,
 
-Since commit de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set
-PCIe Link Speed"), there are two potential issues in the function
-pcie_failed_link_retrain().
+> 1. Remove the "remainder" code.
+> 2. Fix overflow of bar_size.
 
-(1) The macro PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() just
-uses the link speed field of the registers. However, there are many other
-different function fields in the Link Control 2 Register or the Link
-Capabilities Register. If the register value is directly used by the two
-macros, it may cause getting an error link speed value (PCI_SPEED_UNKNOWN).
+Applied to misc for v6.14, thank you!
 
-(2) In the pcie_failed_link_retrain(), the local variable lnkctl2 is not
-changed after reading from PCI_EXP_LNKCTL2. It might cause that the
-removing 2.5GT/s downstream link speed restriction codes are not executed.
-
-In order to avoid the above-mentioned potential issues, only keep link
-speed field of the two registers before using and reread the Link Control 2
-Register before using.
-
-This series focuses on the first patch of the original series [1]. The
-second one of the original series will submitted via the other single
-patch.
-
-Fixes: de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set PCIe Link Speed")
-
-[1] https://lore.kernel.org/linux-pci/tencent_DD9CBE5B44210B43A04EF8DAF52506A08509@qq.com/
----
-v2 changes:
- https://lore.kernel.org/linux-pci/tencent_753C9F9DFEC140A750F2778E6879E1049406@qq.com/
- - divide the two issues into different patches
- - get fixed inside the macros
----
-
-Jiwei Sun (2):
-  PCI: Fix the wrong reading of register fields
-  PCI: reread the Link Control 2 Register before using
-
- drivers/pci/pci.h    | 30 +++++++++++++++++-------------
- drivers/pci/quirks.c |  1 +
- 2 files changed, 18 insertions(+), 13 deletions(-)
-
--- 
-2.34.1
-
+	Krzysztof
