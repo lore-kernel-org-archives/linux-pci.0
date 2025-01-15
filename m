@@ -1,158 +1,166 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D672246A06;
-	Wed, 15 Jan 2025 08:58:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A07324816F;
+	Wed, 15 Jan 2025 09:24:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736931534; cv=none; b=gdNr5cO3dVEba85gg5Qc+7Nf8pc7N9U/xwM35b03f53jUmp3gQE9K2sD2QhVzyhg98wh6H+FBVxQ3beEf0qAkN0qnmk0ikllPYjJOoapURnEWHRdVldmCa1XZ0lH1fwfT0/1iur9MkneA7QI4hmOT9+TWj2z3qGtdWLY3F/BnIY=
+	t=1736933080; cv=none; b=XLaSV+RLNfeXGezbxG/cEX4UMCaXpDZfKy4TBAFg9Wy0LmDe10NovNx6n142ObG/43arNUaSRjlT9vuw7OnX0YskhVHymOGYkuuZkjy8GEoDkeXI5ZRpFGMR5u6qV07AJxh2YS6v2KCh3ajPiuKgh4Rno0W6xe3+dYw/653+ILI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736931534; c=relaxed/simple;
-	bh=vI6Xwhvptn1zlvH6NJeG2RVQFhP751RykEiTaO65sxM=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mkLcCiN+XaQgHvDdD0W+bm47KmSxcPKpY02UwBThuUjILjgEkB/Dquh+M6E8N3MNqff2TmtdSqqnih875Q0CyqSm56HW5RHtivqsTrz9NhQV4oW4Xsg+U4I149U2+KZqR3hO1q7vL18RInIUt4hhJd8zQuvvIjkR12lhlx1cBkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dhqVzbb1; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1736933080; c=relaxed/simple;
+	bh=83YrZtehFjJI7zOoODP41zx8FYAhzKUz4lMpt1BA8AU=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=a69tS8WelL2VPHgtWYg46/Tmj+WMcyS576lKAGlYkbdeTAX7sCPgG24W4VvEKRM4gNNW3/0u1mzVngMfi9pwYJT7eMHmPX2EZRHRvx4N3AWKf5STUwN5HgZI5oiiSzIe68Fw+VRQptLfmcZB7+eGLlrYOfDwi3wea4vGh1HXEtQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=lEH+4YHa; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dhqVzbb1"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A94D2C4CEE1;
-	Wed, 15 Jan 2025 08:58:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1736931533;
-	bh=vI6Xwhvptn1zlvH6NJeG2RVQFhP751RykEiTaO65sxM=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=dhqVzbb1B+OzzHH3tYcq27OtXwx3B8QUMRaVh7eMTaHQmCLYDZ8dNqqiNj6BXCxNo
-	 Cij4B3TpjBMH137MMS/VkjM8jhuE39hz1Ez9BIz+VjgDMwEuJ8Bf2dwbAIPw27QJQj
-	 b3OnQbxlQU4b5+zpEvhIYr8MdGmK9g6Gx+8IxTW+JCm+uAo87+eGvqEyKWLd7Tyb06
-	 i77XWUK3y6NVbctrB/iiyV7Ov379qzGBlfSIlkCadz2oZ2l9FEQ/rYc6e/Z1E2Q5qc
-	 ekHRD8Bvr2DA44oRnNP6Z2z1gdNUEZTCUKMj2K5Y1EjWAkqVzFDxQDuyXOGHa36GuI
-	 brV0E6djZUfTg==
-Received: from sofa.misterjones.org ([185.219.108.64] helo=goblin-girl.misterjones.org)
-	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.95)
-	(envelope-from <maz@kernel.org>)
-	id 1tXzEg-00CPh3-Pf;
-	Wed, 15 Jan 2025 08:58:51 +0000
-Date: Wed, 15 Jan 2025 08:58:50 +0000
-Message-ID: <86bjw8wj05.wl-maz@kernel.org>
-From: Marc Zyngier <maz@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Frank Li <Frank.Li@nxp.com>,	Bjorn Helgaas <bhelgaas@google.com>,
-	Richard Zhu <hongxing.zhu@nxp.com>,	Lucas Stach <l.stach@pengutronix.de>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,	Krzysztof =?UTF-8?B?V2lsY3p5?=
- =?UTF-8?B?xYRza2k=?= <kw@linux.com>,	Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>,	Rob Herring <robh@kernel.org>,	Shawn
- Guo <shawnguo@kernel.org>,	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,	Fabio Estevam
- <festevam@gmail.com>,	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,	alyssa@rosenzweig.io,	bpf@vger.kernel.org,
-	broonie@kernel.org,	jgg@ziepe.ca,	joro@8bytes.org,	lgirdwood@gmail.com,
-	p.zabel@pengutronix.de,	robin.murphy@arm.com,	will@kernel.org
-Subject: Re: [PATCH v9 0/2] PCI: add enabe(disable)_device() hook for bridge
-In-Reply-To: <20250114223341.GA495433@bhelgaas>
-References: <20250114-imx95_lut-v9-0-39f58dbed03a@nxp.com>
-	<20250114223341.GA495433@bhelgaas>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) SEMI-EPG/1.14.7 (Harue)
- FLIM-LB/1.14.9 (=?UTF-8?B?R29qxY0=?=) APEL-LB/10.8 EasyPG/1.0.0 Emacs/29.4
- (aarch64-unknown-linux-gnu) MULE/6.0 (HANACHIRUSATO)
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="lEH+4YHa"
+Received: from pps.filterd (m0369458.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50F3vKUO006090;
+	Wed, 15 Jan 2025 10:24:08 +0100
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	E7S85c4Y0E5TqsJR+kGhRM5uoFqDVJHSE8JHQoztWec=; b=lEH+4YHaA9tXQocX
+	mRSkc3y9js/HlO6PzZEyajU2GGsXg7rjkZxohvBeSQoo+CYDT9NL4IUiaWkZaxHy
+	sTV3Yv0q3bzE0Ybu14ETfPS2lbCV7TFth6INqIWjnoMGxSQrPPkfrOSyhwGQ2RAQ
+	rfPigpam0HQepRskgiJNi58OIyFQAGZ2QuQM+5T1HCETe+Q0CvNU3LtPx6KXxOh1
+	mmGQgvJP0R/eKC8yVhdL53TEB/hcK7470m7nZXm1dDLsT6CsacxKK+8MYpDkt+fD
+	s3zRMYoGY5RyX7egDAWMn6pSXA02ehQ2FxjYE/KwXkObW+CplR5ZDyg+tx2QFDRr
+	OlrNUg==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 4465jns5fn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 15 Jan 2025 10:24:07 +0100 (CET)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 2858840046;
+	Wed, 15 Jan 2025 10:22:43 +0100 (CET)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id D2F4B2442A9;
+	Wed, 15 Jan 2025 10:22:42 +0100 (CET)
+Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
+ (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 15 Jan
+ 2025 10:22:42 +0100
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <christian.bruel@foss.st.com>, <bhelgaas@google.com>,
+        <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <jingoohan1@gmail.com>, <p.zabel@pengutronix.de>,
+        <johan+linaro@kernel.org>, <quic_schintav@quicinc.com>,
+        <cassel@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+        <fabrice.gasnier@foss.st.com>
+Subject: [PATCH v3 04/10] dt-bindings: PCI: Add STM32MP25 PCIe Endpoint bindings
+Date: Wed, 15 Jan 2025 10:21:28 +0100
+Message-ID: <20250115092134.2904773-5-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250115092134.2904773-1-christian.bruel@foss.st.com>
+References: <20250115092134.2904773-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-SA-Exim-Connect-IP: 185.219.108.64
-X-SA-Exim-Rcpt-To: helgaas@kernel.org, Frank.Li@nxp.com, bhelgaas@google.com, hongxing.zhu@nxp.com, l.stach@pengutronix.de, lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org, robh@kernel.org, shawnguo@kernel.org, s.hauer@pengutronix.de, kernel@pengutronix.de, festevam@gmail.com, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev, alyssa@rosenzweig.io, bpf@vger.kernel.org, broonie@kernel.org, jgg@ziepe.ca, joro@8bytes.org, lgirdwood@gmail.com, p.zabel@pengutronix.de, robin.murphy@arm.com, will@kernel.org
-X-SA-Exim-Mail-From: maz@kernel.org
-X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SHFCAS1NODE2.st.com (10.75.129.73) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-01-15_03,2025-01-15_02,2024-11-22_01
 
-On Tue, 14 Jan 2025 22:33:41 +0000,
-Bjorn Helgaas <helgaas@kernel.org> wrote:
->=20
-> On Tue, Jan 14, 2025 at 03:37:07PM -0500, Frank Li wrote:
-> > Some system's IOMMU stream(master) ID bits(such as 6bits) less than
-> > pci_device_id (16bit). It needs add hardware configuration to enable
-> > pci_device_id to stream ID convert.
-> >=20
-> > https://lore.kernel.org/imx/20240622173849.GA1432357@bhelgaas/
-> > This ways use pcie bus notifier (like apple pci controller), when new P=
-CIe
-> > device added, bus notifier will call register specific callback to hand=
-le
-> > look up table (LUT) configuration.
-> >=20
-> > https://lore.kernel.org/imx/20240429150842.GC1709920-robh@kernel.org/
-> > which parse dt's 'msi-map' and 'iommu-map' property to static config LUT
-> > table (qcom use this way). This way is rejected by DT maintainer Rob.
-> >=20
-> > Above ways can resolve LUT take or stream id out of usage the problem. =
-If
-> > there are not enough stream id resource, not error return, EP hardware
-> > still issue DMA to do transfer, which may transfer to wrong possition.
-> >=20
-> > Add enable(disable)_device() hook for bridge can return error when not
-> > enough resource, and PCI device can't enabled.
-> >=20
-> > Basicallly this version can match Bjorn's requirement:
-> > 1: simple, because it is rare that there are no LUT resource.
-> > 2: EP driver probe failure when no LUT, but lspci can see such device.
-> >=20
-> > [    2.164415] nvme nvme0: pci function 0000:01:00.0
-> > [    2.169142] pci 0000:00:00.0: Error enabling bridge (-1), continuing
-> > [    2.175654] nvme 0000:01:00.0: probe with driver nvme failed with er=
-ror -12
-> >=20
-> > > lspci
-> > 0000:00:00.0 PCI bridge: Philips Semiconductors Device 0000
-> > 0000:01:00.0 Non-Volatile memory controller: Micron Technology Inc 2100=
-AI NVMe SSD [Nitro] (rev 03)
-> >=20
-> > To: Bjorn Helgaas <bhelgaas@google.com>
-> > To: Richard Zhu <hongxing.zhu@nxp.com>
-> > To: Lucas Stach <l.stach@pengutronix.de>
-> > To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> > To: Krzysztof Wilczy=C5=84ski <kw@linux.com>
-> > To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> > To: Rob Herring <robh@kernel.org>
-> > To: Shawn Guo <shawnguo@kernel.org>
-> > To: Sascha Hauer <s.hauer@pengutronix.de>
-> > To: Pengutronix Kernel Team <kernel@pengutronix.de>
-> > To: Fabio Estevam <festevam@gmail.com>
-> > Cc: linux-pci@vger.kernel.org
-> > Cc: linux-kernel@vger.kernel.org
-> > Cc: linux-arm-kernel@lists.infradead.org
-> > Cc: imx@lists.linux.dev
-> > Cc: Frank.li@nxp.com \
-> > Cc: alyssa@rosenzweig.io \
-> > Cc: bpf@vger.kernel.org \
-> > Cc: broonie@kernel.org \
-> > Cc: jgg@ziepe.ca \
-> > Cc: joro@8bytes.org \
-> > Cc: l.stach@pengutronix.de \
-> > Cc: lgirdwood@gmail.com \
-> > Cc: maz@kernel.org \
-> > Cc: p.zabel@pengutronix.de \
-> > Cc: robin.murphy@arm.com \
-> > Cc: will@kernel.org \
-> > Cc: Robin Murphy <robin.murphy@arm.com>
-> > Cc: Marc Zyngier <maz@kernel.org>
-> >=20
-> > Signed-off-by: Frank Li <Frank.Li@nxp.com>
->=20
-> Applied to pci/controller/imx6 for v6.14, thanks!  And thanks for your
-> patience.
+STM32MP25 PCIe Controller is based on the DesignWare core configured as
+end point mode from the SYSCFG register.
 
-While you're at it, could you please consider [1], which builds on top
-of the same infrastructure to remove the Apple PCIe IOMMU hack?
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ .../bindings/pci/st,stm32-pcie-ep.yaml        | 68 +++++++++++++++++++
+ 1 file changed, 68 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
 
-Thanks,
+diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
+new file mode 100644
+index 000000000000..457ceea2d215
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
+@@ -0,0 +1,68 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/st,stm32-pcie-ep.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: STMicroelectronics STM32MP25 PCIe Endpoint
++
++maintainers:
++  - Christian Bruel <christian.bruel@foss.st.com>
++
++description:
++  PCIe endpoint controller based on the Synopsys DesignWare PCIe core.
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
++  - $ref: /schemas/pci/st,stm32-pcie-common.yaml#
++
++properties:
++  compatible:
++    const: st,stm32mp25-pcie-ep
++
++  reg:
++    items:
++      - description: Data Bus Interface (DBI) registers.
++      - description: PCIe configuration registers.
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: addr_space
++
++  phys:
++    maxItems: 1
++
++  phy-names:
++    const: pcie-phy
++
++required:
++  - phys
++  - phy-names
++  - reset-gpios
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
++    #include <dt-bindings/gpio/gpio.h>
++    #include <dt-bindings/phy/phy.h>
++    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
++
++    pcie-ep@48400000 {
++        compatible = "st,stm32mp25-pcie-ep";
++        reg = <0x48400000 0x400000>,
++              <0x10000000 0x8000000>;
++        reg-names = "dbi", "addr_space";
++        clocks = <&rcc CK_BUS_PCIE>;
++        phys = <&combophy PHY_TYPE_PCIE>;
++        phy-names = "pcie-phy";
++        resets = <&rcc PCIE_R>;
++        pinctrl-names = "default", "init";
++        pinctrl-0 = <&pcie_pins_a>;
++        pinctrl-1 = <&pcie_init_pins_a>;
++        reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
++        access-controllers = <&rifsc 68>;
++        power-domains = <&CLUSTER_PD>;
++    };
+-- 
+2.34.1
 
-	M.
-
-[1] https://lore.kernel.org/linux-pci/20241204150145.800408-1-maz@kernel.or=
-g/
-
---=20
-Without deviation from the norm, progress is not possible.
