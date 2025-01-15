@@ -1,303 +1,177 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CF3418A93E
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2025 17:23:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2947B1990C5
+	for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2025 17:32:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1736961811; cv=none; b=ElZ0auaTkrBiK/mhFnlb20Vu+kf7xfcRXJdVzXvACLhp1Zw/YikWFFJ7yVqxibS2gxLgmni3W0VGERhLCtQZLiqjB7OwVuck+wZS8cYC2UVGBva1BPB4tq/dcnIVYZb+1Bot2P5TzbEiFcOujtDjiKn0XOLhze7/FoKCwLqM++M=
+	t=1736962331; cv=none; b=jV6UO4jZESxuGiZtyyT3lLZgnukV5bJ//zorucpDwi240li0ITM7uJ+iZab4TkQ4/pX1dmIK10go+PIcKdLFKP/UFnUlpnY/njL3qHi94OUjk+2FF01aTUMWbB1aHez4rrCvQ/78K6Gqa2zzlGAbzmn3rSCiKHm5/nisx9gTGDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1736961811; c=relaxed/simple;
-	bh=dS1GxqFui0Gf2+lpmwQKRKlNiDkLcmPOhBe5o8KqxVI=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=jSMSOwHB7C3GG+Ys4yy1rXe5Xv0uqbdWrdJIxf8/B1Ya9WmxynBgrwSM5eVqfDMGhOiwQcXhS1evkPS7xs5CPvzYiedOJpYgEcqGdshhKad2AQHsaq1Ra7pD8hQGwfaZiRIngTC4GY7yyxjdztenWfkZ+eF282irDTbVveNt1NU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=p1AFli7Z; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1736962331; c=relaxed/simple;
+	bh=XlgRTd4Zx+OlM5PahflOwmKhPGSoYvzyix33P1fFNvE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aT6n0MF3VW5svRd+zIHBYpjzs+4aODCZUpbQooXltZgwh4uPvKrZpnCxjfuA0OTY1XtGj3dCMewzzHL2DM9RWfLs7NBtdS/j10zJIs9FBwN/lyiudaTc8P0LNwGMrML9zzaa7BPFHPfDR6AuF6sVjq4qBBFcDv47c7CBUJvUNWQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=r4XCWv0V; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="p1AFli7Z"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250115172320epoutp02710ab458550aec0880fa530e95aef310~a7Y4NXe8s3022530225epoutp02J
-	for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2025 17:23:20 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250115172320epoutp02710ab458550aec0880fa530e95aef310~a7Y4NXe8s3022530225epoutp02J
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1736961800;
-	bh=Xz66nAzgv0QS0vXEA+LVNwy41dAQe7U9gGrpuzzplGc=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=p1AFli7ZPcqpp2Ap6HGDlSoWV4ZtaJaUtYahxGmn5SlLXJ6MX3Euo/mn7Fnh8cqXE
-	 3nJCYhBi9O2MRyyv+XVXcTzj3sBw/S4qApZpTPNSdiHdRJMDPu8pOSaqxmSnqJ3GiB
-	 Jvi8AaVf1QWQ2ZzgjpDAQkVycVVO4YjrV/Wva0MQ=
-Received: from epsnrtp2.localdomain (unknown [182.195.42.163]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTP id
-	20250115172319epcas5p113d0017786ead758d8c983a07adc0a7f~a7Y3kbvqO2816728167epcas5p1x;
-	Wed, 15 Jan 2025 17:23:19 +0000 (GMT)
-Received: from epsmges5p1new.samsung.com (unknown [182.195.38.175]) by
-	epsnrtp2.localdomain (Postfix) with ESMTP id 4YYCWV1Ybtz4x9Pt; Wed, 15 Jan
-	2025 17:23:18 +0000 (GMT)
-Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
-	epsmges5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	C3.CB.20052.60FE7876; Thu, 16 Jan 2025 02:23:18 +0900 (KST)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250115170321epcas5p1a89a92befb3a4dd8a6885edf8f9daf67~a7HbpXA_C2225922259epcas5p12;
-	Wed, 15 Jan 2025 17:03:21 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250115170321epsmtrp29658356f1a61dd3a9816cdaa4542ab27~a7HbnL38h0445204452epsmtrp2Y;
-	Wed, 15 Jan 2025 17:03:21 +0000 (GMT)
-X-AuditID: b6c32a49-3d20270000004e54-11-6787ef06b823
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	6A.6B.18729.95AE7876; Thu, 16 Jan 2025 02:03:21 +0900 (KST)
-Received: from FDSFTE462 (unknown [107.122.81.248]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250115170319epsmtip1fcd6d509d6a148ab749207723a5ffef2~a7HZVpFZh0180001800epsmtip1m;
-	Wed, 15 Jan 2025 17:03:19 +0000 (GMT)
-From: "Shradha Todi" <shradha.t@samsung.com>
-To: "'Manivannan Sadhasivam'" <manivannan.sadhasivam@linaro.org>, "'Bjorn
- Helgaas'" <helgaas@kernel.org>
-Cc: <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<lpieralisi@kernel.org>, <kw@linux.com>, <robh@kernel.org>,
-	<bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<Jonathan.Cameron@huawei.com>, <fan.ni@samsung.com>,
-	<a.manzanares@samsung.com>, <pankaj.dubey@samsung.com>,
-	<quic_nitegupt@quicinc.com>, <quic_krichai@quicinc.com>,
-	<gost.dev@samsung.com>
-In-Reply-To: <20250115162953.yiwhq2m5s5nf7b33@thinkpad>
-Subject: RE: [PATCH v4 1/2] PCI: dwc: Add support for vendor specific
- capability search
-Date: Wed, 15 Jan 2025 22:33:18 +0530
-Message-ID: <009301db676f$61935d40$24ba17c0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="r4XCWv0V"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2163b0c09afso132128065ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 15 Jan 2025 09:32:08 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1736962328; x=1737567128; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=mefQhuFSpESwaWyEeCQcodcETTlSwT/UegGsRwZi/b0=;
+        b=r4XCWv0VDF1QdNkZ5tt6Mk+8LD3nj3bXQBaqACIjflDvEh1od71WhU/IeMyk2mvk9s
+         XUBjg/WK4qXwNA4Qy6qrpHfSo87RCAI2uk5aIhJiJVPPyEgzcwg0PQcHermHEfCXcgJy
+         FcR9sqyO7bxGjP/vBK7klcTrkEFTWBCk9DI5edZSTfoOmme6wxZyelEHIo6OyzMWFmeK
+         AIll8KJQJyHjMdQTZzQD+PKxFm6J/lawJE1E+Lx/fdk/hB+yVt/2Fs2jO2TLcx9L4EWF
+         m60zk/pG0jmr1hmpF4SrKVPROYmZ3frzMVzsNobF9TkJ7E3XifVInlA2oE2SffXBqei9
+         NOiw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1736962328; x=1737567128;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=mefQhuFSpESwaWyEeCQcodcETTlSwT/UegGsRwZi/b0=;
+        b=dDS4tCoQE3xEc8yiOWnloWTrATWMIG8SO7h/vwQyNAGiLgZ/loc5R3bMAPvTCD6Qak
+         T1GI54B/y93exTOIG1kCAg0Xxzqc3sYRUwBUIq+Yqdkifb4oyYtCcryOVk4R1qcLZ0ji
+         0Kab67+k/EhAF/MysYr0vC7cqHNmtUj3GuAFP6X7std+qEN5wsIU6Re+ZxTOBqx2fa1F
+         SyxNmDq1ramdLnPgpgO3XTA/e1i3GAGR6Hukgb6OG4/cgozzmVM+Aci2bqrgBszJGF+3
+         lKsltCngfQMAdthIfgp/6QxIkWQH2x5YJfR9lsx5/AYRqUD54TVz7MgnzIRtY14kMZtP
+         LG4g==
+X-Forwarded-Encrypted: i=1; AJvYcCXFRA5mwPHxSwipvM6PFt3X8wLb/MYwJGyp/UOHf3XFqskOt+K8HzUlh0AKzNW1jPcFj0Qh4N65u/k=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyyu2EKCe4ddfatG8rXOIZFtTyr2AiRk+SFj4WZ9JIAfApP8MNX
+	uAefto2CQUFH5JgzAQphdKLWpuq/ab9Y6e+nyucijoX2//cX8PCaOeNsMRJHFQ==
+X-Gm-Gg: ASbGnctQJS9i1R9uFU79OA4H249u9eAKlA8vAke0O7VPtQg1UmQHKlwW5FlQ1arYURN
+	CaxA+KBQa6It0KdNHGVPBi+Z6B4YDR5XTlQuEvRSLHlOkCs1Q2ISYJ6v4RzxF0wmmXPXeqraRwD
+	kKhCm9gibbcRmpTPwLVq70lVq84byc4LKoGImsuNvUjN5UjtMJOz9PZnVyPEql0hQKhQAKgwEJc
+	bzbvLj1Vb0FkaINNJSfE30VNYqgX2J09IwurjJs/qf5RFbO7XEmfOCKj6VvTjdcPzY=
+X-Google-Smtp-Source: AGHT+IFoPbnCjN1tgNPCYljOFQm2tsMB7bBFWGIOdh7Y1887G14VhNx7Fz3KiZvw9oD86u6cjeHF0g==
+X-Received: by 2002:a17:90a:e18f:b0:2ee:5bc9:75b5 with SMTP id 98e67ed59e1d1-2f548ea6493mr42162362a91.4.1736962328427;
+        Wed, 15 Jan 2025 09:32:08 -0800 (PST)
+Received: from thinkpad ([120.60.139.68])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2f72c1cc867sm1643077a91.26.2025.01.15.09.32.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 15 Jan 2025 09:32:06 -0800 (PST)
+Date: Wed, 15 Jan 2025 23:01:56 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Jianjun Wang <jianjun.wang@mediatek.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Ryder Lee <ryder.lee@mediatek.com>, linux-pci@vger.kernel.org,
+	linux-mediatek@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: Re: [PATCH] PCI: mediatek: Remove the usage of virt_to_phys
+Message-ID: <20250115173156.a73ntoyyn3xy52ze@thinkpad>
+References: <20250107052108.8643-1-jianjun.wang@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKWsodhYC6NSirBymwM1Ar2SvsMdgIPlXY2AuD9S+YB7UyiObFqhjag
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA01Te0xTVxzeuff29mIou1aHRxYBrzPEB9iyttwy0CUa7DKXsZElVZdBA3ct
-	UNqmDxwbWzqtYSgbz42HDauuMq28XykIA6FQmYhxAm5xBBKZU8fDIGAYMNf24sZ/3+93vu98
-	v+88CJR/Fw8iUjVGRq9RqCl8A9bauyssHJ/NUQos91C6tHc7bT+pok9eGePQv3W3IfTjwRqc
-	vjRfzqUd50dx2py3zKHvtFtx+malG6ctKxaMHrPkcugLLfNcemIii861ulD6eYeT+yYpa6sY
-	48psjSaZxTXNkTU6cnHZ76MduGxyuBSRFXZ8Ifum2QFkTxuD4/2OpceoGEUKow9lNMnalFSN
-	MpZ6OyHxYKJYIhCGC6V0FBWqUWQwsdShI/HhcalqTwQqNFOhNnla8QqDgdq3P0avNRmZUJXW
-	YIylGF2KWifSRRgUGQaTRhmhYYzRQoEgUuwhJqWrnBd6Ed3MgU9+qr2GmkFN5BngR0BSBFsL
-	B9EzYAPBJ68CmPejmcsWcwCeLnJgbLEIYK17yEMjfJKqie1svxPAQVf1GukhgH1PqrnefXFy
-	L5wcXkG9eDOZBv+euYV7SSg5j8CO28Uc74IfGQXLBnIQ766byKOw6oFPi5E74aVnJT4Kj5TC
-	dtsQxuKNcKB80odRcg+sOv8XymYIhUt/VHFYrzjouNkIWM4W2LeU58sGySkCjs7ZMFZwCOYX
-	WgGLN8HH7mYui4Pg05lOnMVKeLmpbM1ADReb7AiLD8DuYSvmnRkld8G69n1sexv89udahPUN
-	gF8vT67RedBZ+QLvgPOrHWsjbIWV/Xc4BYCqWBetYl20inURKv53swHMAbYyOkOGkjGIdUIN
-	c+K/C0/WZjQC3wvf/ZYTjE08iegBCAF6ACRQajPPjp9W8nkpiqxPGb02UW9SM4YeIPacdyEa
-	9Eqy1vNFNMZEoUgqEEkkEpH0dYmQ2sI71WZR8kmlwsikM4yO0b/QIYRfkBn5oMRtdh0uOwaq
-	+dmn3LMhBXv8g59NLcxfJBDBzqwfMuW99XXNE/7fXylx/RJzXfTe1I6zIdmr+OfFX15bdM/+
-	Op1gHRSeqGUe5F3tOi4cCEvTaoZazpbaRiJnQNLHEQEx41/NYUELH5arG1q2ue7Hpd23y+QR
-	aUVyU0xTytLQ7cxo3a3iogJyVT/uvB73RmdLiIj/6Dv7yMOPVFM5LX57b1x8GZuWh1ir6xf6
-	/Uv0CaVZd83vL9eG7W+NrmHG8cB3P7N3HSdBHdqMBdTZs6WBIw19r57rzn8+cvm11IaCd5LF
-	kq70R/UD8oN/Dt6Y6o/PjVpJEh91zhx+6d7GwPx/uMEUZlAphLtRvUHxL4/71ONqBAAA
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFtrPIsWRmVeSWpSXmKPExsWy7bCSnG7kq/Z0g+tnVS2mH1a0WNKUYdG0
-	+i6rxc0DO5ksXp1Zy2ax4stMdotVC6+xWTT0/Ga1uLxrDpvF2XnH2Sxa/rSwWNxt6WS1WLT1
-	C7vFgweVFp1zjjBb/N+zg91BwGPnrLvsHgs2lXq0HHnL6rFpVSebx51re9g8nlyZzuQxcU+d
-	R9+WVYwenzfJBXBGcdmkpOZklqUW6dslcGXce3qJrWCJfcXs3U/YGhj3GHYxcnBICJhILHug
-	2MXIxSEksJtRYtmx+axdjJxAcUmJzxfXMUHYwhIr/z1nhyh6xiix9tl5NpAEm4COxJMrf5hB
-	BokIZElcOw5WwyzQxCyxa9NrZoiGa4wStye9ZgFp4BQwl5hxsh1sqrBAuMTNL2fA4iwCqhIr
-	vk8B28wrYCmxa8E5FghbUOLkzCdgNrOAtkTvw1ZGGHvZQpAFINcpSPx8ugysV0TATWLV2U1Q
-	NeISR3/2ME9gFJ6FZNQsJKNmIRk1C0nLAkaWVYySqQXFuem5xYYFhnmp5XrFibnFpXnpesn5
-	uZsYwXGspbmDcfuqD3qHGJk4GA8xSnAwK4nwLmFrTRfiTUmsrEotyo8vKs1JLT7EKM3BoiTO
-	K/6iN0VIID2xJDU7NbUgtQgmy8TBKdXAtPH+lK3cC90srl/rChNOrC+tt3x/RM/Ebvp554v8
-	nPu77MSb495FR+VqObBt6ch88e/oS9bm6okbp7kxM59zeStxcMfCO6mFZX0fIy8mXqk8Iqnz
-	kfXnhMZa/v0bEjhLlPT7VNlOSossV8pz6bm94s+/Y7Mj163/Wbp26wPTWff+rC7bLW/55Fho
-	/luNpXLTNnyt7kwVl776sfDoh0neDtc1kv2SFsy8kJ5xXunwpLiNVnw6Exb+kjvF2KhZL2SW
-	9nqr0UQuq+lt7a7yHCxGAlwrZOuDlf7rL+qPz0m05OqIWu8+jW/DxCsZf6KFPm/0aJzmrLhI
-	ePdSI7E5RcVMG/lK3jo3rLCd+O9A6t8SJZbijERDLeai4kQA3VTy31IDAAA=
-X-CMS-MailID: 20250115170321epcas5p1a89a92befb3a4dd8a6885edf8f9daf67
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-DLP-Filter: Pass
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250115163012epcas5p185dd4aebcdf093c2760aadea8480b8a5
-References: <20250115152742.yhb57c6cbbwrnjcg@thinkpad>
-	<20250115161201.GA532637@bhelgaas>
-	<CGME20250115163012epcas5p185dd4aebcdf093c2760aadea8480b8a5@epcas5p1.samsung.com>
-	<20250115162953.yiwhq2m5s5nf7b33@thinkpad>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250107052108.8643-1-jianjun.wang@mediatek.com>
 
+On Tue, Jan 07, 2025 at 01:20:58PM +0800, Jianjun Wang wrote:
+> Remove the usage of virt_to_phys, as it will cause sparse warnings when
+> building on some platforms.
+> 
 
+Strange. What are those warnings and platforms?
 
-> -----Original Message-----
-> From: Manivannan Sadhasivam <manivannan.sadhasivam=40linaro.org>
-> Sent: 15 January 2025 22:00
-> To: Bjorn Helgaas <helgaas=40kernel.org>
-> Cc: Shradha Todi <shradha.t=40samsung.com>; linux-kernel=40vger.kernel.or=
-g; linux-pci=40vger.kernel.org; lpieralisi=40kernel.org;
-> kw=40linux.com; robh=40kernel.org; bhelgaas=40google.com; jingoohan1=40gm=
-ail.com; Jonathan.Cameron=40huawei.com;
-> fan.ni=40samsung.com; a.manzanares=40samsung.com; pankaj.dubey=40samsung.=
-com; quic_nitegupt=40quicinc.com;
-> quic_krichai=40quicinc.com; gost.dev=40samsung.com
-> Subject: Re: =5BPATCH v4 1/2=5D PCI: dwc: Add support for vendor specific=
- capability search
->=20
-> On Wed, Jan 15, 2025 at 10:12:01AM -0600, Bjorn Helgaas wrote:
-> > On Wed, Jan 15, 2025 at 08:57:42PM +0530, Manivannan Sadhasivam wrote:
-> > > On Wed, Dec 11, 2024 at 08:43:30AM -0600, Bjorn Helgaas wrote:
-> > > > On Wed, Dec 11, 2024 at 05:15:50PM +0530, Shradha Todi wrote:
-> > > > > > -----Original Message-----
-> > > > > > From: Bjorn Helgaas <helgaas=40kernel.org>
-> > > > > > Sent: 06 December 2024 21:43
-> > > > > > To: Shradha Todi <shradha.t=40samsung.com>
-> > > > > > Cc: linux-kernel=40vger.kernel.org; linux-pci=40vger.kernel.org=
-;
-> > > > > > manivannan.sadhasivam=40linaro.org; lpieralisi=40kernel.org;
-> > > > > > kw=40linux.com; robh=40kernel.org; bhelgaas=40google.com;
-> > > > > > jingoohan1=40gmail.com; Jonathan.Cameron=40huawei.com;
-> > > > > > fan.ni=40samsung.com; a.manzanares=40samsung.com;
-> > > > > > pankaj.dubey=40samsung.com; quic_nitegupt=40quicinc.com;
-> > > > > > quic_krichai=40quicinc.com; gost.dev=40samsung.com
-> > > > > > Subject: Re: =5BPATCH v4 1/2=5D PCI: dwc: Add support for vendo=
-r
-> > > > > > specific capability search
-> > > > > >
-> > > > > > On Fri, Dec 06, 2024 at 01:14:55PM +0530, Shradha Todi wrote:
-> > > > > > > Add vendor specific extended configuration space capability
-> > > > > > > search API using struct dw_pcie pointer for DW controllers.
-> > > > > > >
-> > > > > > > Signed-off-by: Shradha Todi <shradha.t=40samsung.com>
-> > > > > > > ---
-> > > > > > >  drivers/pci/controller/dwc/pcie-designware.c =7C 16
-> > > > > > > ++++++++++++++++
-> > > > > > > drivers/pci/controller/dwc/pcie-designware.h =7C  1 +
-> > > > > > >  2 files changed, 17 insertions(+)
-> > > > > > >
-> > > > > > > diff --git a/drivers/pci/controller/dwc/pcie-designware.c
-> > > > > > > b/drivers/pci/controller/dwc/pcie-designware.c
-> > > > > > > index 6d6cbc8b5b2c..41230c5e4a53 100644
-> > > > > > > --- a/drivers/pci/controller/dwc/pcie-designware.c
-> > > > > > > +++ b/drivers/pci/controller/dwc/pcie-designware.c
-> > > > > > > =40=40 -277,6 +277,22 =40=40 static u16 dw_pcie_find_next_ext=
-_capability(struct dw_pcie *pci, u16 start,
-> > > > > > >  	return 0;
-> > > > > > >  =7D
-> > > > > > >
-> > > > > > > +u16 dw_pcie_find_vsec_capability(struct dw_pcie *pci, u8
-> > > > > > > +vsec_cap)
-> > > > > >
-> > > > > > To make sure that we find a VSEC ID that corresponds to the
-> > > > > > expected vendor, I think this interface needs to be the same
-> > > > > > as pci_find_vsec_capability().  In particular, it needs to
-> > > > > > take a
-> > > > > > =22u16 vendor=22
-> > > > >
-> > > > > As per my understanding, Synopsys is the vendor here when we
-> > > > > talk about vsec capabilities.  VSEC cap IDs are fixed for each
-> > > > > vendor
-> > > > > (eg: For Synopsys Designware controllers, 0x2 is always RAS CAP,
-> > > > > 0x4 is always PTM responder and so on).
-> > > >
-> > > > For VSEC, the vendor that matters is the one identified at 0x0 in
-> > > > config space.  That's why pci_find_vsec_capability() checks the
-> > > > supplied =22vendor=22 against =22dev->vendor=22.
-> > > >
-> > > > > So no matter if the DWC IP is being integrated by Samsung, NVDIA
-> > > > > or Qcom, the vendor specific CAP IDs will remain constant. Now
-> > > > > since this function is being written as part of designware file,
-> > > > > the control will reach here only when the PCIe IP is DWC. So, we
-> > > > > don't really require a vendor ID to be checked here. EG: If 0x2
-> > > > > VSEC ID is present in any DWC controller, it means RAS is
-> > > > > supported. Please correct me if I'm wrong.
-> > > >
-> > > > In this case, the Vendor ID is typically Samsung, NVIDIA, Qcom,
-> > > > etc., even though it may contain Synopsys DWC IP.  Each vendor
-> > > > assigns VSEC IDs independently, so VSEC ID 0x2 may mean something
-> > > > different to Samsung than it does to NVIDIA or Qcom.
-> > > >
-> > > > PCIe r6.0, sec 7.9.5 has the details, but the important part is thi=
-s:
-> > > >
-> > > >   With a PCI Express Function, the structure and definition of the
-> > > >   vendor-specific Registers area is determined by the vendor indica=
-ted
-> > > >   by the Vendor ID field located at byte offset 00h in PCI-compatib=
-le
-> > > >   Configuration Space.
-> > > >
-> > > > There IS a separate DVSEC (=22Designated Vendor-Specific=22)
-> > > > Capability; see sec 7.9.6.  That one does include a DVSEC Vendor
-> > > > ID in the Capability itself, and this would make more sense for thi=
-s situation.
-> > > >
-> > > > If Synopsys assigned DVSEC ID 0x2 from the Synopsys namespace for
-> > > > RAS, then devices from Samsung, NVIDIA, Qcom, etc., could
-> > > > advertise a DVSEC Capability that contained a DVSEC Vendor ID of
-> > > > PCI_VENDOR_ID_SYNOPSYS with DVSEC ID 0x2, and all those devices cou=
-ld easily locate it.
-> > > >
-> > > > Unfortunately Samsung et al used VSEC instead of DVSEC, so we're
-> > > > stuck with having to specify the device vendor and the VSEC ID
-> > > > assigned by that vendor, and those VSEC IDs might be different per =
-vendor.
-> > >
-> > > Atleast on Qcom platforms, VSEC_ID is 0x2 for RAS. But this is not
-> > > guaranteed to be the same as per the PCIe spec as you mentioned.
-> > > Though, I think it is safe to go with it since we have seen the same
-> > > IDs on 2 platforms (my gut feeling is that it is going to be the
-> > > same on other DWC vendor platforms as well). If we encounter
-> > > different IDs, then we can add vendor id check.
-> >
-> > This series uses:
-> >
-> >   dw_pcie_find_vsec_capability(pci, DW_PCIE_VSEC_EXT_CAP_RAS_DES)
-> >
-> > in dwc_pcie_rasdes_debugfs_init(), but I don't see any calls of that
-> > function yet.
->=20
-> I guess that the caller got missed unintentionally in patch 2/2.
+- Mani
 
-Actually the missing caller is intentional. Jonathan rightly pointed out in=
- the
-previous version that the function : dw_pcie_setup() was being called in th=
-e
-resume path as well and so I thought it would be best to leave it up to the
-platform drivers to decide when and how to call the rasdes init. Do you sug=
-gest any
-other approach?
+> Signed-off-by: Jianjun Wang <jianjun.wang@mediatek.com>
+> ---
+>  drivers/pci/controller/pcie-mediatek.c | 19 ++++++++++++-------
+>  1 file changed, 12 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-mediatek.c b/drivers/pci/controller/pcie-mediatek.c
+> index 3bcfc4e58ba2..dc1e5fd6c7aa 100644
+> --- a/drivers/pci/controller/pcie-mediatek.c
+> +++ b/drivers/pci/controller/pcie-mediatek.c
+> @@ -178,6 +178,7 @@ struct mtk_pcie_soc {
+>   * @phy: pointer to PHY control block
+>   * @slot: port slot
+>   * @irq: GIC irq
+> + * @msg_addr: MSI message address
+>   * @irq_domain: legacy INTx IRQ domain
+>   * @inner_domain: inner IRQ domain
+>   * @msi_domain: MSI IRQ domain
+> @@ -198,6 +199,7 @@ struct mtk_pcie_port {
+>  	struct phy *phy;
+>  	u32 slot;
+>  	int irq;
+> +	phys_addr_t msg_addr;
+>  	struct irq_domain *irq_domain;
+>  	struct irq_domain *inner_domain;
+>  	struct irq_domain *msi_domain;
+> @@ -393,12 +395,10 @@ static struct pci_ops mtk_pcie_ops_v2 = {
+>  static void mtk_compose_msi_msg(struct irq_data *data, struct msi_msg *msg)
+>  {
+>  	struct mtk_pcie_port *port = irq_data_get_irq_chip_data(data);
+> -	phys_addr_t addr;
+>  
+>  	/* MT2712/MT7622 only support 32-bit MSI addresses */
+> -	addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+>  	msg->address_hi = 0;
+> -	msg->address_lo = lower_32_bits(addr);
+> +	msg->address_lo = lower_32_bits(port->msg_addr);
+>  
+>  	msg->data = data->hwirq;
+>  
+> @@ -510,10 +510,8 @@ static int mtk_pcie_allocate_msi_domains(struct mtk_pcie_port *port)
+>  static void mtk_pcie_enable_msi(struct mtk_pcie_port *port)
+>  {
+>  	u32 val;
+> -	phys_addr_t msg_addr;
+>  
+> -	msg_addr = virt_to_phys(port->base + PCIE_MSI_VECTOR);
+> -	val = lower_32_bits(msg_addr);
+> +	val = lower_32_bits(port->msg_addr);
+>  	writel(val, port->base + PCIE_IMSI_ADDR);
+>  
+>  	val = readl(port->base + PCIE_INT_MASK);
+> @@ -913,6 +911,7 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+>  	struct mtk_pcie_port *port;
+>  	struct device *dev = pcie->dev;
+>  	struct platform_device *pdev = to_platform_device(dev);
+> +	struct resource *regs;
+>  	char name[10];
+>  	int err;
+>  
+> @@ -921,12 +920,18 @@ static int mtk_pcie_parse_port(struct mtk_pcie *pcie,
+>  		return -ENOMEM;
+>  
+>  	snprintf(name, sizeof(name), "port%d", slot);
+> -	port->base = devm_platform_ioremap_resource_byname(pdev, name);
+> +	regs = platform_get_resource_byname(pdev, IORESOURCE_MEM, name);
+> +	if (!regs)
+> +		return -EINVAL;
+> +
+> +	port->base = devm_ioremap_resource(dev, regs);
+>  	if (IS_ERR(port->base)) {
+>  		dev_err(dev, "failed to map port%d base\n", slot);
+>  		return PTR_ERR(port->base);
+>  	}
+>  
+> +	port->msg_addr = regs->start + PCIE_MSI_VECTOR;
+> +
+>  	snprintf(name, sizeof(name), "sys_ck%d", slot);
+>  	port->sys_ck = devm_clk_get(dev, name);
+>  	if (IS_ERR(port->sys_ck)) {
+> -- 
+> 2.46.0
+> 
 
->=20
-> >  If it is called only from code that already knows the device vendor
-> > has assigned VSEC ID 0x02 for the DWC RAS functionality, I guess it is
-> > =22safe=22.
-> >
->=20
-> It should be called from the DWC code driver (pcie-desginware-host.c).
->=20
-> > But I think it would be a bad idea because it perpetuates the
-> > misunderstanding that DesignWare can independently claim ownership of
-> > VSEC ID 0x02 for *all* vendors, and other vendors have already used
-> > VSEC ID 0x02 for different things (examples at =5B1=5D).  If any of the=
-m
-> > incorporates this DWC IP, they will have to use a different VSEC ID to
-> > avoid a collision with their existing VSEC ID 0x02.
-> >
->=20
-> Fair enough. I was trying to avoid updating the vendor id table for enabl=
-ing the RAS DES debug feature, but I think it would be worth
-> doing so (perf driver is also doing the same).
-
-Makes sense to add the vendor ID check. Will include it in the next version=
-.
-
->=20
-> So yeah, I'm OK with the idea of having the vendor_id check in this API.
->=20
-> (Also, I don't see the VSEC_IDs defined in the DWC reference manual that =
-I got access to).
->=20
-> - Mani
->=20
-> --
-> =E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=
-=E0=AF=8D=20=E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=
-=E0=AF=8D=0D=0A=0D=0A
+-- 
+மணிவண்ணன் சதாசிவம்
