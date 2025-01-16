@@ -1,158 +1,114 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1FD22A7E9;
-	Thu, 16 Jan 2025 13:52:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2B4E22B5BC;
+	Thu, 16 Jan 2025 14:09:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737035556; cv=none; b=gIqkwSdSu8+LOOcVY34JVouBSe2JNw1yPbqSHE3VOLw9zGkqljUGGoZbfVhOeRxLVLnSTtR0jHmJnfoUZnPjXqISSfquYQ9IhwG+FNvFxsG/VBgwGwQdqpXYMppvIxvUMBhD4WNXW7GRETYeFCaNa3WNPVUF9wTl6I2+3+zikmg=
+	t=1737036560; cv=none; b=L+usuHGz0R3MOAkD3Aay7p2uQxQGEHoTNpJLfCn8pib/FBp4UPvykkdQ3mJcdHQpP6zNvrqu4+InMAE9HhzmJc7viGp6+0mXU2A2761yHurgeniHF/zpf0Iy5S/oYsfThheLuDdUdpkjwaB17IuNd1kWgKZR4JzNpAxg4sD48CI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737035556; c=relaxed/simple;
-	bh=GmMZGm+EJvJa00cjNmjRzRyY+cidd/NriOcOvG5pad4=;
-	h=From:Date:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=GITOEe26uu0vK/e4c7BR/RRagN0C5Eus+fj4/ZXEiPNCBK/FvV6q62tWwCoKtt3FJKmjxS759Hi70j4LI/R483Ach0Aj3mS9mxuonBNit5l/IdncWNdQhjyU6PKqj/EG5hczpEyKlcPrnA49iF9vCL0Dh5IoaXiLjJ2DBWMLth8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=KT9SeX88; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1737036560; c=relaxed/simple;
+	bh=pJh5AXQbg+1t0rZcEXAK+EutSUZovxAeK8iPRrFkzhw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=Q1lsKJl6YqEugYAkbbnDHPsSH5zXJwj7ZaV3+WBPpYuPEmxxOHJAolRcDGbKna89ocQfuceAwZihYfoTkAljlBI69fRct1jAFhiTsOo9ghBOlWlhMEAOO0jyAlsXDT7x1Fe8H27jr6GTxwym5XU6/DQjuKLEE+gc6x9UxwTE134=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bqoBfa4m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="KT9SeX88"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1737035556; x=1768571556;
-  h=from:date:to:cc:subject:in-reply-to:message-id:
-   references:mime-version;
-  bh=GmMZGm+EJvJa00cjNmjRzRyY+cidd/NriOcOvG5pad4=;
-  b=KT9SeX88/vE/hANZl+9RWOXPm6gcZEBuS/bP/CAhWUsDN4mX5wv1GbjR
-   BQhP1IfacsllnDhvCdIjKhCa1SudNkm9ci59rqxM1rzbtNP6ilr3xFVI3
-   iaySxq0ZTY27DPbdxrmAXsir4C1IH2JfUWMPJrwFNzVz30g5X0OFNh65w
-   nYVeJpSU74FsNhUQDx5YtpOeyUyeLzCHMrSYgg68DkG3t7pQFZh8q0G9B
-   wsTjMeLCtHwV1fKwlICa8MWM6CGPTzwGNBkerQ/TaJg+Fbx4pf7WSHU9Z
-   wdTSARNeemOVm6sqRwPXBozVmFYFf1k8NWdABRGLrVFYrL2m1riFYIKL6
-   Q==;
-X-CSE-ConnectionGUID: kkhnuDxqT/WrM36hw5WJ7Q==
-X-CSE-MsgGUID: hrOfqje7SCKLxaENbClqHA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11316"; a="41185259"
-X-IronPort-AV: E=Sophos;i="6.13,209,1732608000"; 
-   d="scan'208";a="41185259"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2025 05:52:34 -0800
-X-CSE-ConnectionGUID: qZRWdrVkSRKQ+usnV9prBA==
-X-CSE-MsgGUID: 8QHx7i2USlGehLFVBYDJkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,209,1732608000"; 
-   d="scan'208";a="110518556"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.116])
-  by orviesa004-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Jan 2025 05:52:29 -0800
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Date: Thu, 16 Jan 2025 15:52:26 +0200 (EET)
-To: Jiwei Sun <sjiwei@163.com>
-cc: macro@orcam.me.uk, bhelgaas@google.com, linux-pci@vger.kernel.org, 
-    LKML <linux-kernel@vger.kernel.org>, helgaas@kernel.org, 
-    Lukas Wunner <lukas@wunner.de>, ahuang12@lenovo.com, sunjw10@lenovo.com, 
-    jiwei.sun.bj@qq.com, sunjw10@outlook.com
-Subject: Re: [PATCH v2 1/2] PCI: Fix the wrong reading of register fields
-In-Reply-To: <20250115134154.9220-2-sjiwei@163.com>
-Message-ID: <8441fdc4-de28-a3ba-27d6-8a5351d4ea19@linux.intel.com>
-References: <20250115134154.9220-1-sjiwei@163.com> <20250115134154.9220-2-sjiwei@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bqoBfa4m"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 97454C4CEE1;
+	Thu, 16 Jan 2025 14:09:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737036559;
+	bh=pJh5AXQbg+1t0rZcEXAK+EutSUZovxAeK8iPRrFkzhw=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=bqoBfa4m1EFBx3JKZ4mHvMyyN74QfKzCEnrKxUjXyr1SvUn0CyrzZbYkgKKMIE7yt
+	 fjyx0qWLyn6LD3RcAeXg/QYc+z3gcRUcYbGiLRLkUZTDicpoRNbEPYBgXrNXQ303iV
+	 JoRfyNLVLvLksROEj0pWkO+4w8/FG5I655wQEVcd3YHZvU+hjDGkBYnfsjHqG/PHNr
+	 Fe8Pz07MNFREN7kmqX/yqf2cA++UNvIrLI46SrVXqdioeK4K9h4YmFUnhMpfPzrHph
+	 /++rFMwADjvrd6+A9CRS3MwU+STeKPJ/sN4rL3H+isUOHqN1THXBz1Ym0xqbck7DCz
+	 cewEfTSUchPRQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86539C02183;
+	Thu, 16 Jan 2025 14:09:19 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
+Date: Thu, 16 Jan 2025 19:39:12 +0530
+Subject: [PATCH v3 2/5] PCI/pwrctrl: Move pci_pwrctrl_unregister() to
+ pci_destroy_dev()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/mixed; boundary="8323328-2131764559-1737035546=:933"
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250116-pci-pwrctrl-slot-v3-2-827473c8fbf4@linaro.org>
+References: <20250116-pci-pwrctrl-slot-v3-0-827473c8fbf4@linaro.org>
+In-Reply-To: <20250116-pci-pwrctrl-slot-v3-0-827473c8fbf4@linaro.org>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ devicetree@vger.kernel.org, 
+ Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Lukas Wunner <lukas@wunner.de>
+X-Mailer: b4 0.14.1
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1293;
+ i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
+ bh=R/h8mRffg4ftb0mSxAjhuMkQ2AXNpRy+KTjYeuy7GyY=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBniRMMOWMQy8+n9GIwCMLzD7wUlVwcsEa099OMM
+ 3k4LrMp4qSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZ4kTDAAKCRBVnxHm/pHO
+ 9fz3B/41s7dYud9Tcx8ri0aE9DFjyc7ivSLEw3hvTLDaM5fCfyUm/2yHb7XvUmp3DbMBB3lZW/n
+ AHWZ+8yyUFj0CY74T9LbYWvmkJ0cQr4iwEf3yFJ7gsdCFb1upPxEtmshzWE5EhOiPDkmzlvXyGv
+ EmYs4d2VTZaPEHS01+zStRE0JiFQp7TXu9INhxhvfa/NDshfkppWi1OcXcmm9nPhCHHWaroFWM3
+ Nw3A+/d8Z5TsWHBj0SQHaCUiN+xQP+zbPzCM0/1UHrIFoE+Ae0o1TEvh56WZO/k9Uk+8moIEZC6
+ AzBd5h4ih3U9xKPDJSbnUu4GxPoefXlr5OHoLpT6+/xrtPti
+X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@linaro.org/default with auth_id=185
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reply-To: manivannan.sadhasivam@linaro.org
 
-  This message is in MIME format.  The first part should be readable text,
-  while the remaining parts are likely unreadable without MIME-aware tools.
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
---8323328-2131764559-1737035546=:933
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+PCI core will try to access the devices even after pci_stop_dev() for
+things like Data Object Exchange (DOE), ASPM etc... So move
+pci_pwrctrl_unregister() to the near end of pci_destroy_dev() to make sure
+that the devices are powered down only after the PCI core is done with
+them.
 
-On Wed, 15 Jan 2025, Jiwei Sun wrote:
+Suggested-by: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Lukas Wunner <lukas@wunner.de>
+Tested-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/remove.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> From: Jiwei Sun <sunjw10@lenovo.com>
->=20
-> The macro PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() just uses
-> the link speed field of the registers. However, there are many other
-> different function fields in the Link Control 2 Register or the Link
-> Capabilities Register. If the register value is directly used by the two
-> macros, it may cause getting an error link speed value (PCI_SPEED_UNKNOWN=
-).
->=20
-> In order to avoid the above-mentioned potential issue, only keep link
-> speed field of the two registers before using.
->
-> Suggested-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-> Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
+diff --git a/drivers/pci/remove.c b/drivers/pci/remove.c
+index efc37fcb73e2..58859f9d92f7 100644
+--- a/drivers/pci/remove.c
++++ b/drivers/pci/remove.c
+@@ -41,7 +41,6 @@ static void pci_stop_dev(struct pci_dev *dev)
+ 	if (!pci_dev_test_and_clear_added(dev))
+ 		return;
+ 
+-	pci_pwrctrl_unregister(&dev->dev);
+ 	device_release_driver(&dev->dev);
+ 	pci_proc_detach_device(dev);
+ 	pci_remove_sysfs_dev_files(dev);
+@@ -64,6 +63,7 @@ static void pci_destroy_dev(struct pci_dev *dev)
+ 	pci_doe_destroy(dev);
+ 	pcie_aspm_exit_link_state(dev);
+ 	pci_bridge_d3_update(dev);
++	pci_pwrctrl_unregister(&dev->dev);
+ 	pci_free_resources(dev);
+ 	put_device(&dev->dev);
+ }
 
-Missing Fixes tag.
-
-> ---
->  drivers/pci/pci.h | 30 +++++++++++++++++-------------
->  1 file changed, 17 insertions(+), 13 deletions(-)
->=20
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 2e40fc63ba31..b7e5af859517 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -337,12 +337,13 @@ void pci_bus_put(struct pci_bus *bus);
-> =20
->  #define PCIE_LNKCAP_SLS2SPEED(lnkcap)=09=09=09=09=09\
->  ({=09=09=09=09=09=09=09=09=09\
-> -=09((lnkcap) =3D=3D PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :=09\
-> -=09 (lnkcap) =3D=3D PCI_EXP_LNKCAP_SLS_32_0GB ? PCIE_SPEED_32_0GT :=09\
-> -=09 (lnkcap) =3D=3D PCI_EXP_LNKCAP_SLS_16_0GB ? PCIE_SPEED_16_0GT :=09\
-> -=09 (lnkcap) =3D=3D PCI_EXP_LNKCAP_SLS_8_0GB ? PCIE_SPEED_8_0GT :=09\
-> -=09 (lnkcap) =3D=3D PCI_EXP_LNKCAP_SLS_5_0GB ? PCIE_SPEED_5_0GT :=09\
-> -=09 (lnkcap) =3D=3D PCI_EXP_LNKCAP_SLS_2_5GB ? PCIE_SPEED_2_5GT :=09\
-> +=09u32 __lnkcap =3D (lnkcap) & PCI_EXP_LNKCAP_SLS;=09=09\
-> +=09(__lnkcap =3D=3D PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :=09\
-
-It would be nice to have an empty line here and below as is in "normal=20
-functions" (obviously the \ continuation at the end of the line is=20
-required).
-
-Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-
-This is quite important fix IMO.
-
-> +=09 __lnkcap =3D=3D PCI_EXP_LNKCAP_SLS_32_0GB ? PCIE_SPEED_32_0GT :=09\
-> +=09 __lnkcap =3D=3D PCI_EXP_LNKCAP_SLS_16_0GB ? PCIE_SPEED_16_0GT :=09\
-> +=09 __lnkcap =3D=3D PCI_EXP_LNKCAP_SLS_8_0GB ? PCIE_SPEED_8_0GT :=09\
-> +=09 __lnkcap =3D=3D PCI_EXP_LNKCAP_SLS_5_0GB ? PCIE_SPEED_5_0GT :=09\
-> +=09 __lnkcap =3D=3D PCI_EXP_LNKCAP_SLS_2_5GB ? PCIE_SPEED_2_5GT :=09\
->  =09 PCI_SPEED_UNKNOWN);=09=09=09=09=09=09\
->  })
-> =20
-> @@ -357,13 +358,16 @@ void pci_bus_put(struct pci_bus *bus);
->  =09 PCI_SPEED_UNKNOWN)
-> =20
->  #define PCIE_LNKCTL2_TLS2SPEED(lnkctl2) \
-> -=09((lnkctl2) =3D=3D PCI_EXP_LNKCTL2_TLS_64_0GT ? PCIE_SPEED_64_0GT : \
-> -=09 (lnkctl2) =3D=3D PCI_EXP_LNKCTL2_TLS_32_0GT ? PCIE_SPEED_32_0GT : \
-> -=09 (lnkctl2) =3D=3D PCI_EXP_LNKCTL2_TLS_16_0GT ? PCIE_SPEED_16_0GT : \
-> -=09 (lnkctl2) =3D=3D PCI_EXP_LNKCTL2_TLS_8_0GT ? PCIE_SPEED_8_0GT : \
-> -=09 (lnkctl2) =3D=3D PCI_EXP_LNKCTL2_TLS_5_0GT ? PCIE_SPEED_5_0GT : \
-> -=09 (lnkctl2) =3D=3D PCI_EXP_LNKCTL2_TLS_2_5GT ? PCIE_SPEED_2_5GT : \
-> -=09 PCI_SPEED_UNKNOWN)
-> +({=09=09=09=09=09=09=09=09=09\
-> +=09u16 __lnkctl2 =3D (lnkctl2) & PCI_EXP_LNKCTL2_TLS;=09\
-> +=09(__lnkctl2 =3D=3D PCI_EXP_LNKCTL2_TLS_64_0GT ? PCIE_SPEED_64_0GT : \
-> +=09 __lnkctl2 =3D=3D PCI_EXP_LNKCTL2_TLS_32_0GT ? PCIE_SPEED_32_0GT : \
-> +=09 __lnkctl2 =3D=3D PCI_EXP_LNKCTL2_TLS_16_0GT ? PCIE_SPEED_16_0GT : \
-> +=09 __lnkctl2 =3D=3D PCI_EXP_LNKCTL2_TLS_8_0GT ? PCIE_SPEED_8_0GT : \
-> +=09 __lnkctl2 =3D=3D PCI_EXP_LNKCTL2_TLS_5_0GT ? PCIE_SPEED_5_0GT : \
-> +=09 __lnkctl2 =3D=3D PCI_EXP_LNKCTL2_TLS_2_5GT ? PCIE_SPEED_2_5GT : \
-> +=09 PCI_SPEED_UNKNOWN);=09=09=09=09=09=09\
-> +})
-> =20
->  /* PCIe speed to Mb/s reduced by encoding overhead */
->  #define PCIE_SPEED2MBS_ENC(speed) \
->=20
+-- 
+2.25.1
 
 
---=20
- i.
-
---8323328-2131764559-1737035546=:933--
