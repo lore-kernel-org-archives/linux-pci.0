@@ -1,125 +1,187 @@
-Received: from sonic307-1.consmr.mail.bf2.yahoo.com (sonic307-1.consmr.mail.bf2.yahoo.com [74.6.134.40])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1040B1DFE16
-	for <linux-pci@vger.kernel.org>; Mon, 20 Jan 2025 12:56:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.6.134.40
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2DC11BEF87;
+	Mon, 20 Jan 2025 13:01:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737377816; cv=none; b=Q5MxeArK5nXsEuwsmM90dNuLMJoHImynF4jhsvhutKtPJJ0WQVoo36fEUAoc3ecQefELT4Xry2ONAC/tBc9ao5DJ8a+2A+g1u9njW7QReZtTziE0qHYtha7RHgtqj4eTICrQseyQWtcFd2AQuhvRJ+jvwoi2COBdxbkYI6uwXjo=
+	t=1737378108; cv=none; b=suahDSzhIDYUEXsndQw9RrEeHiOik3PjRGqWH3dsFwimx5GDx9qBqyEAZDxg7/5B2BVC9Xjl3viR1rC8PaVzZBwbxeaDHuRcpBxjqc2Z0qmDCNWQm0LEQ6ascmmcj/0eZ1ZouAYNWgWsUGXaaagOaZZYNI6Zk0BZTaP24X2xOB0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737377816; c=relaxed/simple;
-	bh=awoA4f9sL5W63XhDxfMWAOf9cG6/2ina8dOwCzpXbXE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MzES0+HrpdyoRW48H/22BKiN8crz6pEGZc4Q6DsTZRdbZSHLDAKuErIic4WWwuIfB9pbXTCrXJhWNQsNI3DhrsduBf3L9ICw7s7ASJntqNLtO6sj8lMAzSS7A8/RRBspAmiDKSPHrwCwySHFwqyNfDqbmrf2m5w+1WxBxjc69cc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com; spf=pass smtp.mailfrom=yahoo.com; dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b=aU4fQmq7; arc=none smtp.client-ip=74.6.134.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yahoo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yahoo.com
+	s=arc-20240116; t=1737378108; c=relaxed/simple;
+	bh=YYENTLaFuYhkD3cS4qSuwFLmyVFfxRdFewt36ZcUfKk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=g/rXeYn6M/RBxWWSZVjawlEsG7NojwTurjvJlci1QwibEqTAY5+9ls5vXhusThtM5TUzZtAnE1Pp1LB7gaQcp3AuJ1gsnbOcAMFYWelUV9+flgCl7Tn9AyG+paGLGHU3BI5Yh1WSO9Fw1vGIVGCq4s5eTObtVmirSwWPm+uqOj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=XniOJ6O2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xu7SzZEO; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=XniOJ6O2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=xu7SzZEO; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=yahoo.com header.i=@yahoo.com header.b="aU4fQmq7"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1737377808; bh=fQYkZCImzzOwlRwH2mZG/bc5/vHITdYcTTfQQ26okDU=; h=Date:Subject:To:Cc:References:From:In-Reply-To:From:Subject:Reply-To; b=aU4fQmq7eGK9Xu2UlQ5RHwmYWgMWqnD5rNVZWr2p3YzFIGnaw5imtyET6iIoNdGQAiWJ1nNA8zvbQx2Ij6yGPBaaiDpOzNrPQv9onSmBiqHKP18lETO6h5MId8pjZj55RduWAWXOYwk7mZpEVEU4Ub5/gC8juULRjW82zmuVZQex2n5O1qXNPVSDoV/6RawCI3Gj3tw5TKwA7bjezIGOs1ru+/mTcY+1npkvcgrTNoyuRj2bOVHLRNviEMZLGgz+4swsoQh63u4cRyZH+lS1vElhe0cmQSE+HD9U8zukb6KeBy+7S3clzXdzj1/pOP3ifUCW2cdHNqUD+aBl71kZwQ==
-X-SONIC-DKIM-SIGN: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yahoo.com; s=s2048; t=1737377808; bh=ZjQDT8hxV8LNQHPUbjURxRLBPiM93Or0brglODveL8Z=; h=X-Sonic-MF:Date:Subject:To:From:From:Subject; b=Wg8+xibHRoNtuJk8FXDS/ddgnWDPhYp4JWjRTia+tmbOJB6q+lmDrI8jkUa1ktV30+MhVLoDtWaG5PHkufkyTtXvqQc59ogHGPavrAH3Vf2UYXK5ADG1OXimglzCYk/q3wnmA2jTgumSC2yg61VMKx/bP9v6b1OsVw1facOVTS3lhqrbU6lyjILnKgkWOSLxjixjmFWlsVM3XvNYGQFVVqjTDdp8lIQmZ+G1V+R7XdDj4E/6ZwsqMLtl3qIriGgWzk0JIIwM+9uo9kgkiXSeZUDRRt5Zo+UrYVWymDXu7FHlbA2C2tJ3fDbSv33yhcabkG6rjDQFsMY0Q0Lsojbyyw==
-X-YMail-OSG: 69vWWBoVM1liWpYkcOO4Cc8dWfv6BCtEjW5TeGi_O_nxoD2tZkrJ7HZWWVBU7Td
- DDIbwqCpXvAFXl8j5InDgVC.95zE23z1rTIim3PmoX.zpSNb1uRmK99x4Y7NwC20WXaEnqqaneHE
- JondmTQCeZ0AJP1LqsejZOPP0ViqrdyXZ3GZR96Kp2FaWnHHaRobTpMcMsPObTaPl8cZyLacOr2P
- fo2eYWMBwnjKbTKaoxf7amu09bk7VC9634RGWftXYIRhntS5LmIe_x50qMTzfML7ktZ0Tbx7_1nL
- yvh0jYhJhLTaeMlVyu_lK3C8a142TRirRZPb..TYHRvZ11fS2CKtu6f2f0HQEQUyvTqVuasXJLNT
- g298xaABbXQ_Bl4JwloXlwvtffS6Ta.sR7R4Y2W8Kw5jL5ZtzXabz32xZcoPs66anQLuhrThq.hA
- KOx6dpSP0e9AgxIpPH.Wiqph1OdAiCnHdEqOviZzt2ZpIvOHiv4R0lUhxerMkN8r_CJJG.jChaIL
- fg5Ph0Kefe7TP7wytxlM.swELmBnjnfxT0mGdaBrz57o9Z1CFHqcH7NqXRDEb6NclR1xgCzsN5rp
- ohLzxBn9OnRJtL0DTFZHr7IojC_PeODDsktCEZFP_Ub73jye3ySyl.L07JE0Zi3ahgmkMJwSDHtW
- XZi0Nu4.WZn41afkSIjr3U3d8xQ_TaqID__VWKCDiAZXcoyg2VGiLRjbiJsX09mMGCF2SeUhYsln
- gvxh5xbAWmaR3RW.MSYUobyeZ8oDa00MBasyAHkp7x0jOPNio2dI_viiHD3nXuzgdR0mdjH9a0XE
- 0QwEBdYmEk24UqmFAYmgYdkMwAVTOVYQ0k9QPoGxBLePyPUaI8w1DXSKArUtR083JXxrrfOUFK7b
- 4kzuUPDeyQ2u.IQsk8IHGzD6Iu9gdGVQEr6_wh4vpPdIIGh_fuyC92AKQoqJl0RSCGUwg6V9Fr6g
- .ScYqmcxEiBmCYSrG8xMa_Y3LGBeYvuAA72geqJQ.jHS0hwe2sH_CtH.uIct_72V7veIHXqKs9TX
- 3Py6a14.RwILO2FJWX4PtnLxRggvYqsaAQAYrxP_q1az3S8Q6oY3jgSVIFSndR1W2iE3w9XvYfgh
- 5yGdD1RZJMb6VGsWor1r_gUqNLzaIM3kOp6d6YQVv5c6TGBFoM2C2SNcqXTDRbmtIfJHooHdc1I3
- RQR88ZzkuFjyVpohIawdecaE0ZOdsTNKwwQedjgUngZUZTPar17u94omoLnSjn2bx9l7Wn5KmXe5
- vd38LcmXdDoFtWlYdSsk2X3GpoUJZMYtN5ac6s81LEeDhaAUBcq9yKNC7WA_VEwKxH9JimI9TdXR
- qPsXjYwgkWJIoh0OBRzXWpgSO2nAPLHW6bltAYgVD5ObalJoI494caDuTXc1Cqphy1ZM9W41mnXR
- ZdCpnUyeNTfj_Oag18lqz7CxP7v4Ahey4oE_pUfdtuFrdPnJJiga2RsgD4JJralTVVGl8zWrLOZB
- 2PyA8Dczidx_4YPFEYoRH0DVsPvpPkVlIVqORCLpAA3NrbYvm.dTJoXafSAcV57jwNnyMOYMiimU
- g0mIAe_lJCuwFiSed3aoTwUL9SAoE99J0rOfCl13eF9CVv1NkKXP_4O6S_QrAqXeeLWMcMWQsXum
- 2zfsfy7l15Z.8WvwlW_JlKk.LCkNKQ6WwbFculTlaP0CfzGTIOfEgU7HeOMqXPftWgoQiU4zcilY
- ajqhf5H5vWPPckRydbFZ0oKymtne8AkmX9TQ7eTMehPKYWcMZGOzm3mb9kk5tTnZybGBJBhPVxeT
- fF5aSk0mwdX_3XoVveS_29satTwFWg_Iuq4wK92jTJEsNp33EcjWlqOqYFy8Wnp4xLJ7fUNMicI0
- gs8eC1c5o6QFxpoJKaK.usrAZbrVGvi7rkUnqcL6yaTWqK6o7kdfG9Yk3fS2JE3UbvR2c3eqoGTO
- sf6lELZLQOiiLKaOngPlmokg8c0THfH_F14Coru8euLDeNKKarxaJKrQDxEB8s7x6aMVa4Vrrti5
- nhSzN0uUEMOhoNNoxXFQFXuWHTxFjUINvnJOyj0o7FbbUA91NGfMDz.GJWETCruWS36.MzPfIu.L
- wjw3jalqbJTnf6nYeqSht6sJiConcDZX9iDTZbOHAPhreUg2OB0LDpumhJfRByqntTgmxPG7F.SP
- CyRc_zrbFSHLpAWmtFWWi5qYQ2RtVcr6cLwEwQzgUIbr.DiNK7o65OKV.g2U_a0nApbdBX1U9a_Q
- EsBcZWecjxK.dJPwy_TET8X0omoMIoMugMUphcLejbCWZMPrPOcWejpI5vt40VqXZ
-X-Sonic-MF: <dullfire@yahoo.com>
-X-Sonic-ID: ef09f872-6111-460c-81c7-1702da353bc6
-Received: from sonic.gate.mail.ne1.yahoo.com by sonic307.consmr.mail.bf2.yahoo.com with HTTP; Mon, 20 Jan 2025 12:56:48 +0000
-Received: by hermes--production-ne1-bfc75c9cd-scmkf (Yahoo Inc. Hermes SMTP Server) with ESMTPA ID 288457ee09884436370c264f9119b1d1;
-          Mon, 20 Jan 2025 12:56:46 +0000 (UTC)
-Message-ID: <5a580609-aa5e-4153-b8dd-a6751af72685@yahoo.com>
-Date: Mon, 20 Jan 2025 06:38:19 -0600
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="XniOJ6O2";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xu7SzZEO";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="XniOJ6O2";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="xu7SzZEO"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 116CA2115D;
+	Mon, 20 Jan 2025 13:01:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1737378105; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=SyTzT5pv3y66+h4CWiY6o2neUIUBscg8lb1Kk7WLuaE=;
+	b=XniOJ6O20qc73fK/fA688yxzfq35OK9WxDy8jQAa1m/Mil7ctcWB2eWRNvcBj9jGkerRsK
+	HIEvonn59SGyeWHVqLtstPCrEVDwAG//088SrVHFb7tkFiRZ2dhhxSdZ1B2IVRId2dOs5H
+	UTBEW8YYJ0WPSB5ujtsZ9JagLx1uFYE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1737378105;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=SyTzT5pv3y66+h4CWiY6o2neUIUBscg8lb1Kk7WLuaE=;
+	b=xu7SzZEO7WkgfTqbpBW8aBsVNnN3yuMYey3EkW3NE2myW2AQKyNdGMQ3bvtNVCDT1oyJ4u
+	90p3m62ieOEseyCw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=XniOJ6O2;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=xu7SzZEO
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1737378105; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=SyTzT5pv3y66+h4CWiY6o2neUIUBscg8lb1Kk7WLuaE=;
+	b=XniOJ6O20qc73fK/fA688yxzfq35OK9WxDy8jQAa1m/Mil7ctcWB2eWRNvcBj9jGkerRsK
+	HIEvonn59SGyeWHVqLtstPCrEVDwAG//088SrVHFb7tkFiRZ2dhhxSdZ1B2IVRId2dOs5H
+	UTBEW8YYJ0WPSB5ujtsZ9JagLx1uFYE=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1737378105;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
+	bh=SyTzT5pv3y66+h4CWiY6o2neUIUBscg8lb1Kk7WLuaE=;
+	b=xu7SzZEO7WkgfTqbpBW8aBsVNnN3yuMYey3EkW3NE2myW2AQKyNdGMQ3bvtNVCDT1oyJ4u
+	90p3m62ieOEseyCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 143801393E;
+	Mon, 20 Jan 2025 13:01:44 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id WZSOAjhJjmc4XQAAD6G6ig
+	(envelope-from <svarbanov@suse.de>); Mon, 20 Jan 2025 13:01:44 +0000
+From: Stanimir Varbanov <svarbanov@suse.de>
+To: linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>
+Cc: Thomas Gleixner <tglx@linutronix.de>,
+	Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Jim Quinlan <jim2101024@gmail.com>,
+	Nicolas Saenz Julienne <nsaenz@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	kw@linux.com,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Andrea della Porta <andrea.porta@suse.com>,
+	Phil Elwell <phil@raspberrypi.com>,
+	Jonathan Bell <jonathan@raspberrypi.com>,
+	Dave Stevenson <dave.stevenson@raspberrypi.com>,
+	Stanimir Varbanov <svarbanov@suse.de>
+Subject: [PATCH v5 -next 00/11] Add PCIe support for bcm2712
+Date: Mon, 20 Jan 2025 15:01:08 +0200
+Message-ID: <20250120130119.671119-1-svarbanov@suse.de>
+X-Mailer: git-send-email 2.47.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI/MSI: Add MSIX option to write to ENTRY_DATA
- before any reads
-Content-Language: en-US
-To: Paolo Abeni <pabeni@redhat.com>, "David S . Miller"
- <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Jacob Keller <jacob.e.keller@intel.com>, Simon Horman <horms@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>, Mostafa Saleh <smostafa@google.com>,
- Marc Zyngier <maz@kernel.org>, netdev@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Cc: stable@vger.kernel.org
-References: <20241117234843.19236-1-dullfire@yahoo.com>
- <20241117234843.19236-2-dullfire@yahoo.com>
- <a292cdfe-e319-4bbd-bcc0-a74c16db9053@redhat.com>
- <07726755-f9e7-4c01-9a3f-1762e90734af@yahoo.com>
- <4f621a9d-f527-4148-831b-aad577a6e097@redhat.com>
-From: Dullfire <dullfire@yahoo.com>
-In-Reply-To: <4f621a9d-f527-4148-831b-aad577a6e097@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Mailer: WebService/1.1.23187 mail.backend.jedi.jws.acl:role.jedi.acl.token.atz.jws.hermes.yahoo
+Content-Transfer-Encoding: 8bit
+X-Rspamd-Queue-Id: 116CA2115D
+X-Spam-Level: 
+X-Spamd-Result: default: False [-1.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	MID_CONTAINS_FROM(1.00)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_MISSING_CHARSET(0.50)[];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[22];
+	ARC_NA(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FREEMAIL_CC(0.00)[linutronix.de,kernel.org,broadcom.com,gmail.com,google.com,linux.com,pengutronix.de,suse.com,raspberrypi.com,suse.de];
+	RCVD_TLS_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TAGGED_RCPT(0.00)[dt];
+	DKIM_TRACE(0.00)[suse.de:+];
+	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com]
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -1.51
+X-Spam-Flag: NO
 
+Here is v5 of the series which aims to add support for PCIe on bcm2712 SoC
+used by RPi5. Previous v4 can be found at [1].
 
-On 11/21/24 04:28, Paolo Abeni wrote:
-> On 11/21/24 10:22, Dullfire wrote:
->> On 11/21/24 02:55, Paolo Abeni wrote:
->>> On 11/18/24 00:48, dullfire@yahoo.com wrote:
->>>> From: Jonathan Currier <dullfire@yahoo.com>
->>>>
->>>> Commit 7d5ec3d36123 ("PCI/MSI: Mask all unused MSI-X entries")
->>>> introduces a readl() from ENTRY_VECTOR_CTRL before the writel() to
->>>> ENTRY_DATA. This is correct, however some hardware, like the Sun Neptune
->>>> chips, the niu module, will cause an error and/or fatal trap if any MSIX
->>>> table entry is read before the corresponding ENTRY_DATA field is written
->>>> to. This patch adds an optional early writel() in msix_prepare_msi_desc().
->>> Why the issue can't be addressed into the relevant device driver? It
->>> looks like an H/W bug, a driver specific fix looks IMHO more fitting.
->>
->> I considered this approach, and thus asked about it in the mailing lists here:
->> https://lore.kernel.org/sparclinux/7de14cca-e2fa-49f7-b83e-5f8322cc9e56@yahoo.com/T/
-> 
-> I forgot about such thread, thank you for the reminder. Since the more
-> hackish code is IRQ specific, if Thomas is fine with that, I'll not oppose.
-> 
->>> A cross subsystem series, like this one, gives some extra complication
->>> to maintainers.
-> 
-> The niu driver is not exactly under very active development, I guess the
-> whole series could go via the IRQ subsystem, if Thomas agrees.
-> 
-> Cheers,
-> 
-> Paolo
-> 
+Based the series on linux-next because of vc4 gpu node in bcm2712.dtsi.
 
-Thomas, does this work for you, or is there something else you would to see in this series?
+v4 -> v5 changes include:
+ - Addressed comments to interrupt-controller driver. (Thomas)
+ - Fixed DTB warnings  broadcom/bcm2712-rpi-5-b.dtb.
+ - New patch in the series to fix missing of_node_put.
+ - New patch to make a softdep to a MIP MSI-X driver.
+ - Dropped the patch which adds MSI-X support in pcie-brcmstb driver,
+   and instead use DT dma-ranges to pass the needed information. (Jim)
 
+For more detailed info check patches.
 
-Sincerely,
-Jonathan Currier
+Comments are welcome!
+~Stan
+
+[1] https://patchwork.kernel.org/project/linux-pci/cover/20241025124515.14066-1-svarbanov@suse.de/
+
+Stanimir Varbanov (11):
+  dt-bindings: interrupt-controller: Add bcm2712 MSI-X DT bindings
+  dt-bindings: PCI: brcmstb: Update bindings for PCIe on bcm2712
+  irqchip: Add Broadcom bcm2712 MSI-X interrupt controller
+  PCI: brcmstb: Reuse config structure
+  PCI: brcmstb: Expand inbound window size up to 64GB
+  PCI: brcmstb: Add bcm2712 support
+  PCI: brcmstb: Adjust PHY PLL setup to use a 54MHz input refclk
+  PCI: brcmstb: Adding a softdep to MIP MSI-X driver
+  PCI: brcmstb: Fix for missing of_node_put
+  arm64: dts: broadcom: bcm2712: Add PCIe DT nodes
+  arm64: dts: broadcom: bcm2712-rpi-5-b: Enable PCIe DT nodes
+
+ .../brcm,bcm2712-msix.yaml                    |  60 ++++
+ .../bindings/pci/brcm,stb-pcie.yaml           |   6 +-
+ .../boot/dts/broadcom/bcm2712-rpi-5-b.dts     |   8 +
+ arch/arm64/boot/dts/broadcom/bcm2712.dtsi     | 147 +++++++++
+ drivers/irqchip/Kconfig                       |  16 +
+ drivers/irqchip/Makefile                      |   1 +
+ drivers/irqchip/irq-bcm2712-mip.c             | 292 ++++++++++++++++++
+ drivers/pci/controller/pcie-brcmstb.c         | 147 ++++++---
+ 8 files changed, 632 insertions(+), 45 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/interrupt-controller/brcm,bcm2712-msix.yaml
+ create mode 100644 drivers/irqchip/irq-bcm2712-mip.c
+
+-- 
+2.47.0
+
