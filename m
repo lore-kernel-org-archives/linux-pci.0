@@ -1,198 +1,103 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A5242CAB
-	for <linux-pci@vger.kernel.org>; Tue, 21 Jan 2025 09:10:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+Received: from mail.loongson.cn (mail.loongson.cn [114.242.206.163])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E03521B140D
+	for <linux-pci@vger.kernel.org>; Tue, 21 Jan 2025 11:42:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=114.242.206.163
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737450636; cv=none; b=JWFVMzRyNg9Ea3aSDyhFa6cPYFTqcpnBF9sZwjFyMrCXl7ADWky88pDdJm5JiT/974sG/XmP69gOcDMWZ1vPVHH99xlvbmiluYAGSGyFHEWGoRoWApe0uydIGdqjc6NuA+3KUjumWGhq4TEYY74fNqSxdTuvJysKykT0aaDGpjE=
+	t=1737459758; cv=none; b=TOnKwt08oRnGrmSMmaxptJEV2Wtok8qbk0N5KM6mquWYFv4awamSRDeUbOTa62KLy2VLkF0VjeG0Ui2k+xdqj+QknjZm7E3CAqSnw4PgR/gyXMBkaL0d3p5IiZiwOXUr8Isbp5rP7+Egb9s7wX+X0DTOUVQ5ZfJ8wL1Ui8ve++M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737450636; c=relaxed/simple;
-	bh=K5T7b3eRbFvAok5Z08Rs50pfAaNQrf2j18kDL2o2udg=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=LJIN/CAo35UIo7Iss5mxkjuAuQNZNJ/mBUvXTITvfRz6vlbKN4ZUpK3MQwnjTlcrE9lNAHGABkNBiK1hTqVJ7hcZZrvqQSKNRQANS4tTmJuIjrlAtqPUjZ+RVpl9LIbLWb3ZP9cSG+5mdJwjZ98W6kpNse0AuMrkRSQAKv904H8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q8hJrysI; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q8hJrysI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1737450634; x=1768986634;
-  h=date:from:to:cc:subject:message-id;
-  bh=K5T7b3eRbFvAok5Z08Rs50pfAaNQrf2j18kDL2o2udg=;
-  b=Q8hJrysIsBwjsdcAwU2Rr0KDWlE3MCNgQjBF14k3k0mCFa9o97JVBWk/
-   wo6xfCAUw8yQA/oNbXpM3LpuqcJMPNXmPMtGqmdc1NKjNTO3yRA93uCde
-   /9WVLCLMU/+jbpTGROM6vPsngVvDF5SXh4k0QAboII4KM5SsophgOnYSn
-   KeeGW0fCdGFc8VNkL6rOSz492JpJ8HlSw7IxujqF8pizEGcBapEtOyaUl
-   ZXYe2CDCiQ9JV/LpxKrWMhLoLwmfDvbKVPCZXa4snlmwE86GoOJe9OfAz
-   CJPTiIPdGwg4onOJgXgXoCQ0+JijBFKts9EuA0wQMjpSqO8tnc/xlKgHl
-   w==;
-X-CSE-ConnectionGUID: fuXp+bDuQsahmyESSTdZmA==
-X-CSE-MsgGUID: wP9dfKuYSRCnH6kjKWwPoA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11321"; a="49249729"
-X-IronPort-AV: E=Sophos;i="6.13,221,1732608000"; 
-   d="scan'208";a="49249729"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Jan 2025 01:10:33 -0800
-X-CSE-ConnectionGUID: Wkr1wL7ZS46yr9w6h9CrPg==
-X-CSE-MsgGUID: gV7Fla/IT36kC5CSvWo5fw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,221,1732608000"; 
-   d="scan'208";a="106863501"
-Received: from lkp-server01.sh.intel.com (HELO d63d4d77d921) ([10.239.97.150])
-  by fmviesa008.fm.intel.com with ESMTP; 21 Jan 2025 01:10:32 -0800
-Received: from kbuild by d63d4d77d921 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1taAHG-000XsJ-1l;
-	Tue, 21 Jan 2025 09:10:30 +0000
-Date: Tue, 21 Jan 2025 17:10:25 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/dwc] BUILD SUCCESS
- 1108d677dae296d2f05664bc71fd1d50bd61eb1f
-Message-ID: <202501211719.WWW4qCCW-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	s=arc-20240116; t=1737459758; c=relaxed/simple;
+	bh=KSZmkpxQKg3ZkrQ62fdMgngv12KD0Txt//P/QmdQvxI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SvSWoprNK5pd1oGh7JJkJ8s9HJ9cfkD8OeIYwaipNlMy/H0lw1FTJz9ei5OT+stTb+d6gi5UxNfOUTMJD8S+TWbLqaIL+HKB+2LpSDabw/aoX/LW62g0M7+MyRR8/DAh9gEEyYFArmrq+vQ4TrdBOFMUo5ldiM3gw45ISHb/x5U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn; spf=pass smtp.mailfrom=loongson.cn; arc=none smtp.client-ip=114.242.206.163
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=loongson.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=loongson.cn
+Received: from loongson.cn (unknown [223.64.68.63])
+	by gateway (Coremail) with SMTP id _____8Cx73MoiI9nyMBmAA--.15553S3;
+	Tue, 21 Jan 2025 19:42:32 +0800 (CST)
+Received: from localhost.localdomain (unknown [223.64.68.63])
+	by front1 (Coremail) with SMTP id qMiowMAxvsUkiI9nIcwpAA--.19982S2;
+	Tue, 21 Jan 2025 19:42:32 +0800 (CST)
+From: Huacai Chen <chenhuacai@loongson.cn>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org,
+	Jianmin Lv <lvjianmin@loongson.cn>,
+	Xuefeng Li <lixuefeng@loongson.cn>,
+	Huacai Chen <chenhuacai@gmail.com>,
+	Jiaxun Yang <jiaxun.yang@flygoat.com>,
+	Huacai Chen <chenhuacai@loongson.cn>
+Subject: [PATCH] PCI: loongson: Add quirk for OHCI device rev 0x02
+Date: Tue, 21 Jan 2025 19:42:25 +0800
+Message-ID: <20250121114225.2727684-1-chenhuacai@loongson.cn>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:qMiowMAxvsUkiI9nIcwpAA--.19982S2
+X-CM-SenderInfo: hfkh0x5xdftxo6or00hjvr0hdfq/
+X-Coremail-Antispam: 1Uk129KBj93XoW7WF4kGr1UArW7trWxWFW5CFX_yoW8Wryfpa
+	9xXFZrGF4rtF15CrnIqrykG3ySvFn3CryUCFZrWw12g3Z7Ka4UXw13G3WrtFZxJF1kXFW2
+	vFn8Aw4IgFZ8C3XCm3ZEXasCq-sJn29KB7ZKAUJUUUU7529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUvEb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1Y6r17M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Xr0_Ar1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr0_Cr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_
+	GcCE3s1ln4kS14v26r1Y6r17M2AIxVAIcxkEcVAq07x20xvEncxIr21l57IF6xkI12xvs2
+	x26I8E6xACxx1l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1D
+	McIj6I8E87Iv67AKxVW8JVWxJwAm72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr4
+	1l42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1l4IxYO2xFxVAFwI0_Jrv_
+	JF1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17
+	CE14v26r1q6r43MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0
+	I7IYx2IY6xkF7I0E14v26r1j6r4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I
+	8E87Iv67AKxVW8JVWxJwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73
+	UjIFyTuYvjxU466zUUUUU
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
-branch HEAD: 1108d677dae296d2f05664bc71fd1d50bd61eb1f  PCI: dwc: Simplify config resource lookup
+The OHCI controller (rev 0x02) under LS7A PCI host has a hardware flaw.
+MMIO register with offset 0x60/0x64 is treated as legacy PS2-compatible
+keyboard/mouse interface, which confuse the OHCI controller. Since OHCI
+only use a 4KB BAR resource indeed, the LS7A OHCI controller's 32KB BAR
+is wrapped around (the second 4KB BAR space is the same as the first 4KB
+internally). So we can add an 4KB offset (0x1000) to the BAR resource as
+a workaround.
 
-elapsed time: 828m
+Signed-off-by: Huacai Chen <chenhuacai@loongson.cn>
+---
+ drivers/pci/controller/pci-loongson.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-configs tested: 121
-configs skipped: 3
+diff --git a/drivers/pci/controller/pci-loongson.c b/drivers/pci/controller/pci-loongson.c
+index bc630ab8a283..977f7b15f3a7 100644
+--- a/drivers/pci/controller/pci-loongson.c
++++ b/drivers/pci/controller/pci-loongson.c
+@@ -32,6 +32,7 @@
+ #define DEV_LS7A_CONF	0x7a10
+ #define DEV_LS7A_GNET	0x7a13
+ #define DEV_LS7A_EHCI	0x7a14
++#define DEV_LS7A_OHCI	0x7a24
+ #define DEV_LS7A_DC2	0x7a36
+ #define DEV_LS7A_HDMI	0x7a37
+ 
+@@ -144,6 +145,13 @@ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+ DECLARE_PCI_FIXUP_EARLY(PCI_VENDOR_ID_LOONGSON,
+ 			DEV_LS7A_PCIE_PORT6, loongson_mrrs_quirk);
+ 
++static void loongson_ohci_quirk(struct pci_dev *dev)
++{
++	if (dev->revision == 0x2)
++		dev->resource[0].start += 0x1000;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LOONGSON, DEV_LS7A_OHCI, loongson_ohci_quirk);
++
+ static void loongson_pci_pin_quirk(struct pci_dev *pdev)
+ {
+ 	pdev->pin = 1 + (PCI_FUNC(pdev->devfn) & 3);
+-- 
+2.47.1
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig    gcc-14.2.0
-alpha                            allyesconfig    gcc-14.2.0
-arc                              allmodconfig    gcc-13.2.0
-arc                               allnoconfig    gcc-13.2.0
-arc                              allyesconfig    gcc-13.2.0
-arc                        nsimosci_defconfig    gcc-13.2.0
-arc                   randconfig-001-20250121    gcc-13.2.0
-arc                   randconfig-002-20250121    gcc-13.2.0
-arm                              allmodconfig    gcc-14.2.0
-arm                               allnoconfig    clang-17
-arm                              allyesconfig    gcc-14.2.0
-arm                   randconfig-001-20250121    clang-18
-arm                   randconfig-002-20250121    gcc-14.2.0
-arm                   randconfig-003-20250121    gcc-14.2.0
-arm                   randconfig-004-20250121    gcc-14.2.0
-arm64                            allmodconfig    clang-18
-arm64                             allnoconfig    gcc-14.2.0
-arm64                 randconfig-001-20250121    gcc-14.2.0
-arm64                 randconfig-002-20250121    gcc-14.2.0
-arm64                 randconfig-003-20250121    gcc-14.2.0
-arm64                 randconfig-004-20250121    clang-18
-csky                              allnoconfig    gcc-14.2.0
-csky                  randconfig-001-20250121    gcc-14.2.0
-csky                  randconfig-002-20250121    gcc-14.2.0
-hexagon                          allmodconfig    clang-20
-hexagon                           allnoconfig    clang-20
-hexagon               randconfig-001-20250121    clang-19
-hexagon               randconfig-002-20250121    clang-20
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20250121    gcc-12
-i386        buildonly-randconfig-002-20250121    clang-19
-i386        buildonly-randconfig-003-20250121    gcc-12
-i386        buildonly-randconfig-004-20250121    gcc-12
-i386        buildonly-randconfig-005-20250121    gcc-12
-i386        buildonly-randconfig-006-20250121    clang-19
-i386                                defconfig    clang-19
-loongarch                        allmodconfig    gcc-14.2.0
-loongarch                         allnoconfig    gcc-14.2.0
-loongarch             randconfig-001-20250121    gcc-14.2.0
-loongarch             randconfig-002-20250121    gcc-14.2.0
-m68k                             allmodconfig    gcc-14.2.0
-m68k                              allnoconfig    gcc-14.2.0
-m68k                             allyesconfig    gcc-14.2.0
-microblaze                       allmodconfig    gcc-14.2.0
-microblaze                        allnoconfig    gcc-14.2.0
-microblaze                       allyesconfig    gcc-14.2.0
-mips                              allnoconfig    gcc-14.2.0
-mips                          ath79_defconfig    gcc-14.2.0
-mips                        bcm47xx_defconfig    clang-20
-nios2                             allnoconfig    gcc-14.2.0
-nios2                 randconfig-001-20250121    gcc-14.2.0
-nios2                 randconfig-002-20250121    gcc-14.2.0
-openrisc                          allnoconfig    gcc-14.2.0
-openrisc                         allyesconfig    gcc-14.2.0
-openrisc                            defconfig    gcc-14.2.0
-parisc                           allmodconfig    gcc-14.2.0
-parisc                            allnoconfig    gcc-14.2.0
-parisc                           allyesconfig    gcc-14.2.0
-parisc                              defconfig    gcc-14.2.0
-parisc                randconfig-001-20250121    gcc-14.2.0
-parisc                randconfig-002-20250121    gcc-14.2.0
-powerpc                          allmodconfig    gcc-14.2.0
-powerpc                           allnoconfig    gcc-14.2.0
-powerpc                          allyesconfig    clang-16
-powerpc               randconfig-001-20250121    clang-20
-powerpc               randconfig-002-20250121    gcc-14.2.0
-powerpc               randconfig-003-20250121    gcc-14.2.0
-powerpc                     tqm5200_defconfig    gcc-14.2.0
-powerpc64             randconfig-001-20250121    gcc-14.2.0
-powerpc64             randconfig-002-20250121    clang-20
-powerpc64             randconfig-003-20250121    clang-16
-riscv                            allmodconfig    clang-20
-riscv                             allnoconfig    gcc-14.2.0
-riscv                            allyesconfig    clang-20
-riscv                               defconfig    clang-19
-riscv                 randconfig-001-20250121    gcc-14.2.0
-riscv                 randconfig-002-20250121    gcc-14.2.0
-s390                             allmodconfig    clang-19
-s390                              allnoconfig    clang-20
-s390                             allyesconfig    gcc-14.2.0
-s390                                defconfig    clang-15
-s390                  randconfig-001-20250121    clang-15
-s390                  randconfig-002-20250121    gcc-14.2.0
-s390                       zfcpdump_defconfig    clang-19
-sh                               allmodconfig    gcc-14.2.0
-sh                                allnoconfig    gcc-14.2.0
-sh                               allyesconfig    gcc-14.2.0
-sh                                  defconfig    gcc-14.2.0
-sh                    randconfig-001-20250121    gcc-14.2.0
-sh                    randconfig-002-20250121    gcc-14.2.0
-sh                      rts7751r2d1_defconfig    gcc-14.2.0
-sh                             sh03_defconfig    gcc-14.2.0
-sparc                            allmodconfig    gcc-14.2.0
-sparc                             allnoconfig    gcc-14.2.0
-sparc                 randconfig-001-20250121    gcc-14.2.0
-sparc                 randconfig-002-20250121    gcc-14.2.0
-sparc64                             defconfig    gcc-14.2.0
-sparc64               randconfig-001-20250121    gcc-14.2.0
-sparc64               randconfig-002-20250121    gcc-14.2.0
-um                               allmodconfig    clang-20
-um                                allnoconfig    clang-18
-um                               allyesconfig    gcc-12
-um                                  defconfig    clang-20
-um                             i386_defconfig    gcc-12
-um                    randconfig-001-20250121    clang-16
-um                    randconfig-002-20250121    gcc-12
-um                           x86_64_defconfig    clang-15
-x86_64                            allnoconfig    clang-19
-x86_64                           allyesconfig    clang-19
-x86_64      buildonly-randconfig-001-20250121    gcc-12
-x86_64      buildonly-randconfig-002-20250121    clang-19
-x86_64      buildonly-randconfig-003-20250121    gcc-12
-x86_64      buildonly-randconfig-004-20250121    clang-19
-x86_64      buildonly-randconfig-005-20250121    clang-19
-x86_64      buildonly-randconfig-006-20250121    gcc-12
-x86_64                              defconfig    gcc-11
-xtensa                            allnoconfig    gcc-14.2.0
-xtensa                randconfig-001-20250121    gcc-14.2.0
-xtensa                randconfig-002-20250121    gcc-14.2.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
