@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BBB2B136E3B;
-	Thu, 23 Jan 2025 05:52:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id F006F1C3BE3;
+	Thu, 23 Jan 2025 05:52:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737611568; cv=none; b=dvKtY2e2rRtT0xlLWPjcZ/q5ijg0pODEu2cfVXRo/wzsvDbErfqjRT+n/YkEyuHm/qxO9JtkO0YCqXOIyFgH36NvyDUj4uZmmr8axsSzVFZYUC93iTQDEFqZkZTwsZSpLG5SWu+qqThghQA8mLT26Myd0lHG7iiI6mN+VVwdLjU=
+	t=1737611574; cv=none; b=fpWw2+cJ/UN2a8l4jLvbeEIJh0yMfQsbkWG4IaT22YWoWRtQjCx8QQEoXdiaocFiVG3Atwk92dJ3AVxkT/po5Qh6xVSfuhxqzfCCb2yoLD4JfTjj4o91467x42HyqFIHSbS4ctY4VyDNk4Jkn/lffN4FC1dtRwh5HLzftWA/bLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737611568; c=relaxed/simple;
-	bh=6jzhOeaxOia8RYTSOe+nbDlCKjzyrlGJ2yIAnwG1dBo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=NW5TD7NTFYnzWESpOeucVITkdTVUUgTH+u4dS/si0Bqy1J+l/vW2UOUuahNXG/0xLEFc6bgOenMzMdyiHYVIw3nANM+s3ZU/bI/D5lFsPevgSneb78Te562+AExjFX+DhhxCKYF9636Fr6hBLKIJDJSOKROWFWDaVIWC9YJNtwQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Wlai763R; arc=none smtp.client-ip=220.197.31.4
+	s=arc-20240116; t=1737611574; c=relaxed/simple;
+	bh=YJcYy6FvcSP7a5L9SPKEAovX+VDxR/9OmnxzR18avRc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mMhd8w/NXFFrW+XmWiJdi12OCh+vhEUDW3w/ScSEE6CAzMa8sSRKTfZC4mq4JJj+L6jnp35HnMIWCM+YtV73nCify0/QAOlBzo+E5gcdxt1J/f2a2g+C9Dqp4GK1h+1auExeqxnsrRzcJtYqyzKlCYaik0L/0z7t6z3kvmYiKTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Q5zc2V49; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Wlai763R"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Q5zc2V49"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=2YW1FZ+hTW73m/bMzH2iIib4JfkDZYbytR5zU0F5dzE=;
-	b=Wlai763RUljlOpvhyxfP2ETI6gdzzC0dxnJ6fCQBUg5H11KIIXXZSQKz0tioRD
-	ZdsQ/Lynamzy3QxHesCdpoxaOVbYRiab/rBT3zw2bpqZwiQxw8Fl3yzTN5JdmWuM
-	it8k6bn4ZfPmcU/KTvR8qrhvrTaXOmz88aXZk12IhiYJo=
+	Content-Type; bh=HZPg+6roJ7x4xUK2gSmzafnHFMqskHkdEYTKOCV7+vc=;
+	b=Q5zc2V49ZZqwR9LpWUsbF3j4hGglg9o+i4zTy8nhhs/aT+8uy/cWE6t1haC5yq
+	u6QYxTnGyPVEfagCga7A2zrfBXv6yJP2exlqNgHQ9r4RYe0qg53RvgrATLuxboK7
+	sb52TSzQkNpo7L/uA4H4W5HiGHMzvFjl/yWKBOnNMrEp4=
 Received: from jiwei-VirtualBox.lenovo.com (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDXxy392JFnt3jOHw--.51666S2;
-	Thu, 23 Jan 2025 13:51:58 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDXxy392JFnt3jOHw--.51666S4;
+	Thu, 23 Jan 2025 13:52:00 +0800 (CST)
 From: Jiwei Sun <sjiwei@163.com>
 To: macro@orcam.me.uk,
 	ilpo.jarvinen@linux.intel.com,
@@ -34,10 +35,12 @@ Cc: linux-pci@vger.kernel.org,
 	sunjw10@lenovo.com,
 	jiwei.sun.bj@qq.com,
 	sunjw10@outlook.com
-Subject: [PATCH v4 0/2] PCI: Fix the issue of failed speed limit lifting
-Date: Thu, 23 Jan 2025 13:51:53 +0800
-Message-Id: <20250123055155.22648-1-sjiwei@163.com>
+Subject: [PATCH v4 2/2] PCI: Adjust the position of reading the Link Control 2 register
+Date: Thu, 23 Jan 2025 13:51:55 +0800
+Message-Id: <20250123055155.22648-3-sjiwei@163.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250123055155.22648-1-sjiwei@163.com>
+References: <20250123055155.22648-1-sjiwei@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,59 +49,67 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXxy392JFnt3jOHw--.51666S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WrWDXrW3Jw4UXw45Zr4rGrg_yoW8CF1Dp3
-	yfG3Wayr4kJa4fJFn3JF47ZFy5uan3JFWDuw1xG3yUZF15G3s5Ja1SyFWFgFyjkrW0ya12
-	vr1Yqrykuw1jkrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jbkuxUUUUU=
-X-CM-SenderInfo: 5vml4vrl6rljoofrz/1tbiDwzdmWeRzSK77AAAsJ
+X-CM-TRANSID:_____wDXxy392JFnt3jOHw--.51666S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uryDXF45uFW3urykAF47Jwb_yoW8Kw15pF
+	WfWry7tr1kGr47Z3yDWayfXFyDu3ZxCay7G3y7W3s8ZFy3tws5XF4FkF43t3W5Zrs7u34U
+	XFW5trWkAa1YgFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07j7J5rUUUUU=
+X-CM-SenderInfo: 5vml4vrl6rljoofrz/xtbBDwXdmWeRy1vXuQAAsG
 
 From: Jiwei Sun <sunjw10@lenovo.com>
 
-Since commit de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set
-PCIe Link Speed"), there are two potential issues in the function
-pcie_failed_link_retrain().
+In the commit a89c82249c37 ("PCI: Work around PCIe link training
+failures"), if the speed limit is set to 2.5 GT/s and the retraining is
+successful, an attempt will be made to lift the speed limit. One condition
+for lifting the speed limit is to check whether the link speed field of
+the Link Control 2 register is PCI_EXP_LNKCTL2_TLS_2_5GT.
 
-(1) The macro PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() just
-use the link speed field of the registers. However, there are many other
-different function fields in the Link Control 2 Register or the Link
-Capabilities Register. If the register value is directly used by the two
-macros, it may cause getting an error link speed value (PCI_SPEED_UNKNOWN).
+However, since the commit de9a6c8d5dbf ("PCI/bwctrl: Add
+pcie_set_target_speed() to set PCIe Link Speed"), the `lnkctl2` local
+variable does not undergo any changes during the speed limit setting and
+retraining process. As a result, the code intended to lift the speed limit
+is not executed.
 
-(2) In the pcie_failed_link_retrain(), the local variable lnkctl2 is not
-changed after reading from PCI_EXP_LNKCTL2. It might cause that the
-removing 2.5GT/s downstream link speed restriction codes are not executed.
+To address this issue, adjust the position of the Link Control 2 register
+read operation in the code and place it before its use.
 
-In order to avoid the above-mentioned potential issues, only keep link
-speed field of the two registers before using and reread the Link Control 2
-Register before using.
-
-This series focuses on the first patch of the original series [1]. The
-second one of the original series will submitted via the other single
-patch.
-
-[1] https://lore.kernel.org/linux-pci/tencent_DD9CBE5B44210B43A04EF8DAF52506A08509@qq.com/
+Fixes: de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set PCIe Link Speed")
+Suggested-by: Maciej W. Rozycki <macro@orcam.me.uk>
+Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
 ---
-v4 changes:
- - rename the variable name in the macro
+ drivers/pci/quirks.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-v3 changes:
- - add fix tag in the commit messages of first patch
- - add an empty line after the local variable definition in the macro
- - adjust the position of reading the Link Control 2 register in the code
-
-v2 changes:
- - divide the two issues into different patches
- - get fixed inside the macros
-
-Jiwei Sun (2):
-  PCI: Fix the wrong reading of register fields
-  PCI: Adjust the position of reading the Link Control 2 register
-
- drivers/pci/pci.h    | 32 +++++++++++++++++++-------------
- drivers/pci/quirks.c |  6 ++++--
- 2 files changed, 23 insertions(+), 15 deletions(-)
-
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index 76f4df75b08a..c2344706ba61 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -108,13 +108,13 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
+ 	    !pcie_cap_has_lnkctl2(dev) || !dev->link_active_reporting)
+ 		return ret;
+ 
+-	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &lnkctl2);
+ 	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+ 	if (!(lnksta & PCI_EXP_LNKSTA_DLLLA) && pcie_lbms_seen(dev, lnksta)) {
+-		u16 oldlnkctl2 = lnkctl2;
++		u16 oldlnkctl2;
+ 
+ 		pci_info(dev, "broken device, retraining non-functional downstream link at 2.5GT/s\n");
+ 
++		pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &oldlnkctl2);
+ 		ret = pcie_set_target_speed(dev, PCIE_SPEED_2_5GT, false);
+ 		if (ret) {
+ 			pci_info(dev, "retraining failed\n");
+@@ -126,6 +126,8 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
+ 		pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+ 	}
+ 
++	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &lnkctl2);
++
+ 	if ((lnksta & PCI_EXP_LNKSTA_DLLLA) &&
+ 	    (lnkctl2 & PCI_EXP_LNKCTL2_TLS) == PCI_EXP_LNKCTL2_TLS_2_5GT &&
+ 	    pci_match_id(ids, dev)) {
 -- 
 2.34.1
 
