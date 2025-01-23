@@ -1,28 +1,27 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D5472C2FD;
-	Thu, 23 Jan 2025 05:52:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BBB2B136E3B;
+	Thu, 23 Jan 2025 05:52:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737611552; cv=none; b=SRZC3f/EeuThmWtcArOFmnV6VTTecsbPwQaDLhb04Sr0uCpj2WmZ6pXnx8t1kUdd1VDka9JaLOdvHNvhjKfJycoLOn8uQhfXxUCYQKglXv4CGjA/4xOSE+91EAX+5OdY90UMBZjHzL4fvDbMBagmX1l8tqxbjPokgHA5eMCvJZk=
+	t=1737611568; cv=none; b=dvKtY2e2rRtT0xlLWPjcZ/q5ijg0pODEu2cfVXRo/wzsvDbErfqjRT+n/YkEyuHm/qxO9JtkO0YCqXOIyFgH36NvyDUj4uZmmr8axsSzVFZYUC93iTQDEFqZkZTwsZSpLG5SWu+qqThghQA8mLT26Myd0lHG7iiI6mN+VVwdLjU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737611552; c=relaxed/simple;
-	bh=zPfd2wsYvCHUkuP7O8rme07rC0QW8LHh5xBKN9/yqRA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EcfzpPQ1HyjZ7EW/hytgKibIJBj5S5ur9TCQoR41V9qVWg00oyLlFPwb+t8ky8Ga3EVVr0Qqtb37esdeeGACMmNAvbwQGAvLDPPRFNE/i/QMv1CkEP4StXy0vw9Of32CPbm+fG4A3ED5rfc6hgnd5LGmcwuaJQWTHG/brk4NlDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fuoDHjAL; arc=none smtp.client-ip=220.197.31.5
+	s=arc-20240116; t=1737611568; c=relaxed/simple;
+	bh=6jzhOeaxOia8RYTSOe+nbDlCKjzyrlGJ2yIAnwG1dBo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=NW5TD7NTFYnzWESpOeucVITkdTVUUgTH+u4dS/si0Bqy1J+l/vW2UOUuahNXG/0xLEFc6bgOenMzMdyiHYVIw3nANM+s3ZU/bI/D5lFsPevgSneb78Te562+AExjFX+DhhxCKYF9636Fr6hBLKIJDJSOKROWFWDaVIWC9YJNtwQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Wlai763R; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fuoDHjAL"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Wlai763R"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=m2D3TK/wDGpgftow+9dKzgwXIks/NmyWWEukqak6kfU=;
-	b=fuoDHjAL+pXnW8UaL91wJy1m0qMVEi8EfZN6nv2pUR+iOrNgUMsd6oyruTMbBY
-	4O1xV26O+PZ9HakEIathEDU5Cyyky1vnR33TGxfNe2XOUaEk/Rd31QyiDujh7SX6
-	bgWzlccGa6l/zP+YVpeBY3AgpwBVyuezx5GqDiV/QWx3s=
+	Content-Type; bh=2YW1FZ+hTW73m/bMzH2iIib4JfkDZYbytR5zU0F5dzE=;
+	b=Wlai763RUljlOpvhyxfP2ETI6gdzzC0dxnJ6fCQBUg5H11KIIXXZSQKz0tioRD
+	ZdsQ/Lynamzy3QxHesCdpoxaOVbYRiab/rBT3zw2bpqZwiQxw8Fl3yzTN5JdmWuM
+	it8k6bn4ZfPmcU/KTvR8qrhvrTaXOmz88aXZk12IhiYJo=
 Received: from jiwei-VirtualBox.lenovo.com (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDXxy392JFnt3jOHw--.51666S3;
-	Thu, 23 Jan 2025 13:52:00 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDXxy392JFnt3jOHw--.51666S2;
+	Thu, 23 Jan 2025 13:51:58 +0800 (CST)
 From: Jiwei Sun <sjiwei@163.com>
 To: macro@orcam.me.uk,
 	ilpo.jarvinen@linux.intel.com,
@@ -35,12 +34,10 @@ Cc: linux-pci@vger.kernel.org,
 	sunjw10@lenovo.com,
 	jiwei.sun.bj@qq.com,
 	sunjw10@outlook.com
-Subject: [PATCH v4 1/2] PCI: Fix the wrong reading of register fields
-Date: Thu, 23 Jan 2025 13:51:54 +0800
-Message-Id: <20250123055155.22648-2-sjiwei@163.com>
+Subject: [PATCH v4 0/2] PCI: Fix the issue of failed speed limit lifting
+Date: Thu, 23 Jan 2025 13:51:53 +0800
+Message-Id: <20250123055155.22648-1-sjiwei@163.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250123055155.22648-1-sjiwei@163.com>
-References: <20250123055155.22648-1-sjiwei@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -49,83 +46,59 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDXxy392JFnt3jOHw--.51666S3
-X-Coremail-Antispam: 1Uf129KBjvJXoWxuF4rtFWDWw15uF1DGw4Uurg_yoW5uFyxp3
-	W3ur90yrW8Gw47u3s5Gas7Xa4xXFn3GF129rnrWrn0qFyrJ34kAF10k3sIqry7Ar40kry8
-	X3srZr45G3W2kFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jzYLkUUUUU=
-X-CM-SenderInfo: 5vml4vrl6rljoofrz/1tbiWx3dmWeR07BWzwAAsO
+X-CM-TRANSID:_____wDXxy392JFnt3jOHw--.51666S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7WrWDXrW3Jw4UXw45Zr4rGrg_yoW8CF1Dp3
+	yfG3Wayr4kJa4fJFn3JF47ZFy5uan3JFWDuw1xG3yUZF15G3s5Ja1SyFWFgFyjkrW0ya12
+	vr1Yqrykuw1jkrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jbkuxUUUUU=
+X-CM-SenderInfo: 5vml4vrl6rljoofrz/1tbiDwzdmWeRzSK77AAAsJ
 
 From: Jiwei Sun <sunjw10@lenovo.com>
 
-The macro PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() just use
-the link speed field of the registers. However, there are many other
+Since commit de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set
+PCIe Link Speed"), there are two potential issues in the function
+pcie_failed_link_retrain().
+
+(1) The macro PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() just
+use the link speed field of the registers. However, there are many other
 different function fields in the Link Control 2 Register or the Link
 Capabilities Register. If the register value is directly used by the two
 macros, it may cause getting an error link speed value (PCI_SPEED_UNKNOWN).
 
-In order to avoid the above-mentioned potential issue, only keep link speed
-field of the two registers before using.
+(2) In the pcie_failed_link_retrain(), the local variable lnkctl2 is not
+changed after reading from PCI_EXP_LNKCTL2. It might cause that the
+removing 2.5GT/s downstream link speed restriction codes are not executed.
 
-Fixes: de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set PCIe Link Speed")
-Suggested-by: Maciej W. Rozycki <macro@orcam.me.uk>
-Suggested-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Signed-off-by: Jiwei Sun <sunjw10@lenovo.com>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+In order to avoid the above-mentioned potential issues, only keep link
+speed field of the two registers before using and reread the Link Control 2
+Register before using.
+
+This series focuses on the first patch of the original series [1]. The
+second one of the original series will submitted via the other single
+patch.
+
+[1] https://lore.kernel.org/linux-pci/tencent_DD9CBE5B44210B43A04EF8DAF52506A08509@qq.com/
 ---
- drivers/pci/pci.h | 32 +++++++++++++++++++-------------
- 1 file changed, 19 insertions(+), 13 deletions(-)
+v4 changes:
+ - rename the variable name in the macro
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 2e40fc63ba31..aeca10ce2028 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -337,12 +337,14 @@ void pci_bus_put(struct pci_bus *bus);
- 
- #define PCIE_LNKCAP_SLS2SPEED(lnkcap)					\
- ({									\
--	((lnkcap) == PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :	\
--	 (lnkcap) == PCI_EXP_LNKCAP_SLS_32_0GB ? PCIE_SPEED_32_0GT :	\
--	 (lnkcap) == PCI_EXP_LNKCAP_SLS_16_0GB ? PCIE_SPEED_16_0GT :	\
--	 (lnkcap) == PCI_EXP_LNKCAP_SLS_8_0GB ? PCIE_SPEED_8_0GT :	\
--	 (lnkcap) == PCI_EXP_LNKCAP_SLS_5_0GB ? PCIE_SPEED_5_0GT :	\
--	 (lnkcap) == PCI_EXP_LNKCAP_SLS_2_5GB ? PCIE_SPEED_2_5GT :	\
-+	u32 lnkcap_sls = (lnkcap) & PCI_EXP_LNKCAP_SLS;			\
-+									\
-+	(lnkcap_sls == PCI_EXP_LNKCAP_SLS_64_0GB ? PCIE_SPEED_64_0GT :	\
-+	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_32_0GB ? PCIE_SPEED_32_0GT :	\
-+	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_16_0GB ? PCIE_SPEED_16_0GT :	\
-+	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_8_0GB ? PCIE_SPEED_8_0GT :	\
-+	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_5_0GB ? PCIE_SPEED_5_0GT :	\
-+	 lnkcap_sls == PCI_EXP_LNKCAP_SLS_2_5GB ? PCIE_SPEED_2_5GT :	\
- 	 PCI_SPEED_UNKNOWN);						\
- })
- 
-@@ -357,13 +359,17 @@ void pci_bus_put(struct pci_bus *bus);
- 	 PCI_SPEED_UNKNOWN)
- 
- #define PCIE_LNKCTL2_TLS2SPEED(lnkctl2) \
--	((lnkctl2) == PCI_EXP_LNKCTL2_TLS_64_0GT ? PCIE_SPEED_64_0GT : \
--	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_32_0GT ? PCIE_SPEED_32_0GT : \
--	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_16_0GT ? PCIE_SPEED_16_0GT : \
--	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_8_0GT ? PCIE_SPEED_8_0GT : \
--	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_5_0GT ? PCIE_SPEED_5_0GT : \
--	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_2_5GT ? PCIE_SPEED_2_5GT : \
--	 PCI_SPEED_UNKNOWN)
-+({									\
-+	u16 lnkctl2_tls = (lnkctl2) & PCI_EXP_LNKCTL2_TLS;		\
-+									\
-+	(lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_64_0GT ? PCIE_SPEED_64_0GT :	\
-+	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_32_0GT ? PCIE_SPEED_32_0GT :	\
-+	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_16_0GT ? PCIE_SPEED_16_0GT :	\
-+	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_8_0GT ? PCIE_SPEED_8_0GT :	\
-+	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_5_0GT ? PCIE_SPEED_5_0GT :	\
-+	 lnkctl2_tls == PCI_EXP_LNKCTL2_TLS_2_5GT ? PCIE_SPEED_2_5GT :	\
-+	 PCI_SPEED_UNKNOWN);						\
-+})
- 
- /* PCIe speed to Mb/s reduced by encoding overhead */
- #define PCIE_SPEED2MBS_ENC(speed) \
+v3 changes:
+ - add fix tag in the commit messages of first patch
+ - add an empty line after the local variable definition in the macro
+ - adjust the position of reading the Link Control 2 register in the code
+
+v2 changes:
+ - divide the two issues into different patches
+ - get fixed inside the macros
+
+Jiwei Sun (2):
+  PCI: Fix the wrong reading of register fields
+  PCI: Adjust the position of reading the Link Control 2 register
+
+ drivers/pci/pci.h    | 32 +++++++++++++++++++-------------
+ drivers/pci/quirks.c |  6 ++++--
+ 2 files changed, 23 insertions(+), 15 deletions(-)
+
 -- 
 2.34.1
 
