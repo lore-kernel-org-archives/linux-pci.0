@@ -1,125 +1,197 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 68E283C6BA;
-	Sun, 26 Jan 2025 14:31:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 336DE25A621;
+	Sun, 26 Jan 2025 18:59:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1737901902; cv=none; b=qBFLvZxq0FfG+e9DP1u50CvJsH9vR7SK+CZd3DuFYSiNXthRr6RLPV2D0ObRwGiVGGvC99dIuRI8mu//nknej6lADPXYPhgHxF22DtfdDC/4tH8yMvlQqwFQd9rNPXHtue+HjEo0kBZ9LqubAcMYqv1iAUyuuM0gZ+4qm4o2aMo=
+	t=1737917946; cv=none; b=Sb8ylXpbq/Npw3pK2T1N/yUyLfXW72++OT/gA9YSDaUnsncX00HqJYctsJcBQkcvdVAnFH5lXT/bd4P6Eg8VO9hCx90HoQx8HOnicXcZ9oB5+Dl34LHgIULqB2D8Dxug2lWgK+Babu47QHALKgHWokRbjA04dRU1mnwfLH0u5jU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1737901902; c=relaxed/simple;
-	bh=HB2lN5d0SuVD+cOMzSEDJtUpamrurHr61EOgl0US3QY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bAypfYdz3tIJS3fJ/rtkwJ/u89Ab2xYwp9bb+lyCI5diWCAEamaLJOZFDLCdJTSkZYdPepow+dTzBbAmHrgVeYhlkeUeX9vYxk4s5PyIOh6rAJxWSmIQZ+fpWnW7Pj1Ru1hcoqwffsz+0p/gLlZOHK1bThtBD+7gqcFJea0Z3zw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=f1CMTGVc; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1737917946; c=relaxed/simple;
+	bh=PfmNx/8FKpi9tfUAdO7gZEl/uHyfgKgSWW2BXdSdoIQ=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=T4x/gJwhwDYSFGgzaSQtOgccdsypeI+nbvNywSaKAxDiWDM0V7iMG4icbHmCtM0K9j9l+lXq2mr+ii7F7AP+iau4e4LfuJ8kNhJp8UzyoC9zXw0Kp+qx5lh5/kecmGdhQ9ur8FJ103ae4TFBhX8Xuay2UgzhnuMsyHa5TiBu3gg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hlBl+2Me; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="f1CMTGVc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=9zj5YLlC6MuqAHM+6WlEjPhhtNgrnfLSEGTKpQ3uVoU=;
-	b=f1CMTGVcu7p2vwK/9Uafvmu94jrtWXnMsM/FlP79j2nQ0qoZDQ5BeKKUQx70Ku
-	FpiAgfN4Y1ULCKUJdcwLa6C5kzJ8AnA9HDQUmIws5T3lIQm8h/3qnz+eeXYMjidH
-	3zJFdSRHRXHf1ftZ2Qhb1Lv2+HeFGI4C7JUlLTYhdK1nY=
-Received: from [192.168.174.52] (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDn3x8SR5Zn1JEVIg--.20587S2;
-	Sun, 26 Jan 2025 22:30:43 +0800 (CST)
-Message-ID: <bfd2b930-d18d-4ab4-a5b5-aef22fd068ab@163.com>
-Date: Sun, 26 Jan 2025 22:30:42 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hlBl+2Me"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AC328C4CEEA;
+	Sun, 26 Jan 2025 18:59:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1737917945;
+	bh=PfmNx/8FKpi9tfUAdO7gZEl/uHyfgKgSWW2BXdSdoIQ=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=hlBl+2Mepw3J0ugLK7PkI8UhzdeeqA/WiddWAV3kijb7ZnCtkPlAyMnYcEBRKzM8i
+	 szPVi3M92ZsLsWNMLoZRauZkytz+GVITyoORsXs1LFwgUKIAOBOcRIUeYEWQYIQB5A
+	 3eYI/ojthnmUg2xz45MP76X0LM9NAfOUXljfNym5onKAeu0ORIKBMlYvLyLg52/MUk
+	 LP3i9Yb0exACSUyS2RblZUbAjiM5bIAdcVQXNSsneEpXLdeRhG/5cYZlCmEpLJjcp8
+	 rux3S6W1R4QAF0j7ZLLp6ihPOh92E4FabI0Z7i9XcG/fELKiegSW1Clla/onX+AYxA
+	 1R41p4+M9CSFQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 959D7C0218F;
+	Sun, 26 Jan 2025 18:59:05 +0000 (UTC)
+From: =?utf-8?q?J=2E_Neusch=C3=A4fer_via_B4_Relay?= <devnull+j.ne.posteo.net@kernel.org>
+Date: Sun, 26 Jan 2025 19:58:57 +0100
+Subject: [PATCH 2/9] dt-bindings: ata: Convert fsl,pq-sata binding to YAML
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] PCI: dwc: Add the sysfs property to provide the LTSSM
- status of the PCIe link
-To: Frank Li <Frank.li@nxp.com>
-Cc: jingoohan1@gmail.com, manivannan.sadhasivam@linaro.org,
- lpieralisi@kernel.org, kw@linux.com, robh@kernel.org, bhelgaas@google.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, rockswang7@gmail.com
-References: <20250123071326.1810751-1-18255117159@163.com>
- <Z5JrXsDDM2IManp+@lizhi-Precision-Tower-5810>
- <54428aa3-2178-45d0-83d3-0b6254347bb5@163.com>
- <Z5O5VsMLYE9R+loz@lizhi-Precision-Tower-5810>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <Z5O5VsMLYE9R+loz@lizhi-Precision-Tower-5810>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDn3x8SR5Zn1JEVIg--.20587S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WF13Aw1xKF43CrWUCrW3KFg_yoW8Aw4rpr
-	W8AayjyF42vw1jy3WYq3Z5XF4Dt3WSyF4qkr45XFWxJa4vyrnxKFW5Jr4jkrykGr17Kr42
-	yw13ZFn3GryrG37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UOzV8UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxPgo2eWQlUrRwAAsB
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20250126-ppcyaml-v1-2-50649f51c3dd@posteo.net>
+References: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
+In-Reply-To: <20250126-ppcyaml-v1-0-50649f51c3dd@posteo.net>
+To: devicetree@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
+Cc: Scott Wood <oss@buserror.net>, 
+ Madhavan Srinivasan <maddy@linux.ibm.com>, 
+ Michael Ellerman <mpe@ellerman.id.au>, Nicholas Piggin <npiggin@gmail.com>, 
+ Christophe Leroy <christophe.leroy@csgroup.eu>, 
+ Naveen N Rao <naveen@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Damien Le Moal <dlemoal@kernel.org>, 
+ Niklas Cassel <cassel@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
+ "David S. Miller" <davem@davemloft.net>, Lee Jones <lee@kernel.org>, 
+ Vinod Koul <vkoul@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, 
+ =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>, 
+ Wim Van Sebroeck <wim@linux-watchdog.org>, 
+ Guenter Roeck <linux@roeck-us.net>, Mark Brown <broonie@kernel.org>, 
+ Miquel Raynal <miquel.raynal@bootlin.com>, 
+ Richard Weinberger <richard@nod.at>, Vignesh Raghavendra <vigneshr@ti.com>, 
+ linux-kernel@vger.kernel.org, linux-ide@vger.kernel.org, 
+ linux-crypto@vger.kernel.org, dmaengine@vger.kernel.org, 
+ linux-pci@vger.kernel.org, linux-watchdog@vger.kernel.org, 
+ linux-spi@vger.kernel.org, linux-mtd@lists.infradead.org, 
+ =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1737917943; l=3504;
+ i=j.ne@posteo.net; s=20240329; h=from:subject:message-id;
+ bh=48lSRCoXCpxIM3oWRMWEs2/wzI+AW7ICjxV1sPl67HM=;
+ b=bLScZP/2+P6PR65AL0gqKUI72UMsRCVo5PvGbwA6A20OrYb8mo+L9jUpwnATuOGNgbYUCZiMa
+ IDQ1X0kek+XC8PpxrWEqVS4GPZSevrgs3kbZPbmh63BNiFb2AkiKb0p
+X-Developer-Key: i=j.ne@posteo.net; a=ed25519;
+ pk=NIe0bK42wNaX/C4bi6ezm7NJK0IQE+8MKBm7igFMIS4=
+X-Endpoint-Received: by B4 Relay for j.ne@posteo.net/20240329 with
+ auth_id=156
+X-Original-From: =?utf-8?q?J=2E_Neusch=C3=A4fer?= <j.ne@posteo.net>
+Reply-To: j.ne@posteo.net
 
+From: "J. Neuschäfer" <j.ne@posteo.net>
 
+Convert the Freescale PowerQUICC SATA controller binding from text form
+to YAML. The list of compatible strings reflects current usage.
 
-On 2025/1/25 00:01, Frank Li wrote:
-> On Fri, Jan 24, 2025 at 09:12:49PM +0800, Hans Zhang wrote:
->>
->>
->> On 2025/1/24 00:16, Frank Li wrote:
->>>> +static char *dw_ltssm_sts_string(enum dw_pcie_ltssm ltssm)
->>>> +{
->>>> +	char *str;
->>>> +
->>>> +	switch (ltssm) {
->>>> +#define DW_PCIE_LTSSM_NAME(n) case n: str = #n; break
->>>> +	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_QUIET);
->>>> +	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_DETECT_ACT);
->>>> +	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_ACTIVE);
->>>> +	DW_PCIE_LTSSM_NAME(DW_PCIE_LTSSM_POLL_COMPLIANCE);
->>>> +	...
->>>> +	default:
->>>> +		str = "DW_PCIE_LTSSM_UNKNOWN";
->>>> +		break;
->>>
->>> I prefer
->>> const char * str[] =
->>> {
->>> 	"detect_quitet",
->>> 	"detect_act",
->>> 	...
->>> }
->>>
->>> 	return str[ltssm];
->>>
->>> Or
->>> 	#define DW_PCIE_LTSSM_NAME(n) case n: return #n;
->>> 	...
->>> 	default:
->>> 		return "DW_PCIE_LTSSM_UNKNOWN";
->> Hi Frank,
->>
->> I considered the two methods you mentioned before I submitted this patch.
->>
->> The first, I think, will increase the memory overhead.
->>
->> +static const char * const dw_pcie_ltssm_str[] = {
->> +	[DW_PCIE_LTSSM_DETECT_QUIET] = "DETECT_QUIET",
->> +	[DW_PCIE_LTSSM_DETECT_ACT] = "DETECT_ACT",
->> +	[DW_PCIE_LTSSM_POLL_ACTIVE] = "POLL_ACTIVE",
->> +	[DW_PCIE_LTSSM_POLL_COMPLIANCE] = "POLL_COMPLIANCE",
->> 	...
->>
->>
->> The second, ./scripts/checkpatch.pl checks will have a warning
->>
->> WARNING: Macros with flow control statements should be avoided
->> #121: FILE: drivers/pci/controller/dwc/pcie-designware.h:329:
->> +#define DW_PCIE_LTSSM_NAME(n) case n: return #n
->>
-> 
-> Okay, it is not big deal
-> can you return
-> 	str + strlen("DW_PCIE_LTSSM_");
-> 
-> Or trim useless "DW_PCIE_LTSSM_" information.
+Signed-off-by: J. Neuschäfer <j.ne@posteo.net>
+---
+ .../devicetree/bindings/ata/fsl,pq-sata.yaml       | 59 ++++++++++++++++++++++
+ Documentation/devicetree/bindings/ata/fsl-sata.txt | 28 ----------
+ 2 files changed, 59 insertions(+), 28 deletions(-)
 
-Ok, thanks Frank for the advice.
+diff --git a/Documentation/devicetree/bindings/ata/fsl,pq-sata.yaml b/Documentation/devicetree/bindings/ata/fsl,pq-sata.yaml
+new file mode 100644
+index 0000000000000000000000000000000000000000..6af31ffbcad5e9cc83118a0bd8eaf45351a2823f
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ata/fsl,pq-sata.yaml
+@@ -0,0 +1,59 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ata/fsl,pq-sata.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: Freescale 8xxx/3.0 Gb/s SATA nodes
++
++maintainers:
++  - J. Neuschäfer <j.ne@posteo.net>
++
++description: |
++  SATA nodes are defined to describe on-chip Serial ATA controllers.
++  Each SATA port should have its own node.
++
++properties:
++  compatible:
++    oneOf:
++      - items:
++          - enum:
++              - fsl,mpc8377-sata
++              - fsl,mpc8536-sata
++              - fsl,mpc8315-sata
++              - fsl,mpc8379-sata
++          - const: fsl,pq-sata
++      - const: fsl,pq-sata-v2
++
++  reg:
++    maxItems: 1
++
++  interrupts:
++    maxItems: 1
++
++  cell-index:
++    $ref: /schemas/types.yaml#/definitions/uint32
++    enum: [1, 2, 3, 4]
++    description: |
++      1 for controller @ 0x18000
++      2 for controller @ 0x19000
++      3 for controller @ 0x1a000
++      4 for controller @ 0x1b000
++
++required:
++  - compatible
++  - interrupts
++  - cell-index
++
++additionalProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++    sata@18000 {
++        compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
++        reg = <0x18000 0x1000>;
++        cell-index = <1>;
++        interrupts = <44 IRQ_TYPE_LEVEL_LOW>;
++        interrupt-parent = <&ipic>;
++    };
+diff --git a/Documentation/devicetree/bindings/ata/fsl-sata.txt b/Documentation/devicetree/bindings/ata/fsl-sata.txt
+deleted file mode 100644
+index fd63bb3becc9363c520a8fd06629fdc52c4d4299..0000000000000000000000000000000000000000
+--- a/Documentation/devicetree/bindings/ata/fsl-sata.txt
++++ /dev/null
+@@ -1,28 +0,0 @@
+-* Freescale 8xxx/3.0 Gb/s SATA nodes
+-
+-SATA nodes are defined to describe on-chip Serial ATA controllers.
+-Each SATA port should have its own node.
+-
+-Required properties:
+-- compatible        : compatible list, contains 2 entries, first is
+-		 "fsl,CHIP-sata", where CHIP is the processor
+-		 (mpc8315, mpc8379, etc.) and the second is
+-		 "fsl,pq-sata"
+-- interrupts        : <interrupt mapping for SATA IRQ>
+-- cell-index        : controller index.
+-                          1 for controller @ 0x18000
+-                          2 for controller @ 0x19000
+-                          3 for controller @ 0x1a000
+-                          4 for controller @ 0x1b000
+-
+-Optional properties:
+-- reg               : <registers mapping>
+-
+-Example:
+-	sata@18000 {
+-		compatible = "fsl,mpc8379-sata", "fsl,pq-sata";
+-		reg = <0x18000 0x1000>;
+-		cell-index = <1>;
+-		interrupts = <2c 8>;
+-		interrupt-parent = < &ipic >;
+-	};
 
-Best regards
-Hans
+-- 
+2.48.0.rc1.219.gb6b6757d772
+
 
