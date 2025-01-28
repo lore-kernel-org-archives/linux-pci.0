@@ -1,46 +1,48 @@
-Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
+Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F343019C561;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0047819D083;
 	Tue, 28 Jan 2025 12:12:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738066379; cv=none; b=UZW8l3hZZQgPCTKJSnCYSiB4qApDR4cMd8xX8pXY0K2w3PnnzE4zVh2nguOn1Q6WhjZcYdIBO0oHis9yAV6DZX5j0ad4ud62T6Z+CrGqdkpEeAEEzzjOTczosgWLxdZn46RXfocNn9bvOJpro1zt1LOpyvcGVixL9Z7qlX4DRhs=
+	t=1738066379; cv=none; b=ni+/HlaOncLFUyRg8Tku26+VnRhLTmb4Pys0Vte4WEBFo9nYpMhSgPtkU3+vrk6jwhKC8FOPy+DxpG8R+M/VEvTcs/WAgCEosyaKreeAK6+ibUOUngjR+H/gDzJPWx9xyuaTk8Fn6YrGHbGqcQqvWfCS9ASe5b0Cj+Mges2H7YQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1738066379; c=relaxed/simple;
-	bh=aUULOMEZETnZG8zYO2VFqIwK6ypr6n2ocG8p2Dakkt4=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Df4ZGfQmfyEVX7XnC00dpBMC2cIDoXLRyX4tFAbe1uF5UMUWk7gIBQT+j3+leb0qFwSlv+VR+fSRyDq977MmttUAm2l4ZmyY5pqcHqz64/QzIeR5kG1dN5tEgj6hjW0Yv2AuUvX0V4AxkMkm9H7Ao6XdCjDUk1iHx1qybMUTsmY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=mGt0dCKS; arc=none smtp.client-ip=185.132.182.106
+	bh=IQmkhMhiJyltVaIbAD3p+H4elHy6SYijq73/vY0qYu8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mtve+4llcx3P3Gx5N9Heuqc6mOAyIZ7GWXSi542MLMC/oS755SSCaDgUC3xA/xfMdBuURmSm32SGGw9HnFzbNyXpSTnTLiUO71f7yL94JgWkLBqlcDJJIJanKzr/sxCD34TwItLLd3TmUF9vFdi00Wnr+hwDb8km89p2OD0wS8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=mlU/4WKC; arc=none smtp.client-ip=91.207.212.93
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="mGt0dCKS"
-Received: from pps.filterd (m0288072.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50S9U0fL022157;
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="mlU/4WKC"
+Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50S9U0m5025055;
 	Tue, 28 Jan 2025 13:12:27 +0100
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=selector1; bh=x/YFBhVdilzRMm69uU1Zia
-	Yb9Wr2nP0eArCPiZOgv1I=; b=mGt0dCKSXtKr21VzLsflS4bPxfQeDrCYerB/DK
-	IMc6NEvAcDt0404g/YXJ6BIrLTYq1ZQ0oXjvzz8JmGQ2G3FmCoWuuYjv/TGbGHU+
-	EutuHTenvKYj74CQEDooDNLZ54w7Zisi/3JEKBbZr6vkdHyQitDixUjekOwZ7gfm
-	EWRVSuBmF99XUpOO0Ff3qemD+JdIqdeekICBb6XIrAn2NNA2V9Dol9TlfjwnqD4T
-	LofHTgj9Lsc3NsOPqzL3aZJVUoBfZfRU4eeO6ekbMpcp6/qHUyPBv8qvxPCBLgV6
-	brCr25a+0GQG6JcnXLMiTqMIBLrmsV7DmZliYt7ykOQDA5aQ==
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	pWl1eEN1iUk9ieX08HFfz+2vM8A6BpuZsHouPY02aXE=; b=mlU/4WKCQL6qIvej
+	QuMrAiTViBG7wQ0V4qSgelm+pO/bAF9fhRId5E1S+S/H9+XAwZUx0KFeVoNnS4ym
+	wH47fvW8q13O4JNKzI459UbTiIkuXvRhKpkbzYjILeexF+n7RBuAXAnts/3p6L7R
+	LI5c975SGlknRpC1eHTM9y/Rjhz6LmSvBNgFkn+QsHR8nfcOBNRs61d6X5NbT7iH
+	A4GFM+/pN3ddtmHFeiWoPkvIt01wUcynxtCPioMJzJ1OuXuDJo3kaGOpOBojyGHJ
+	nKtkxSVeHUbwRRIx8Kdk5jQsYbI1F5Q1hE0zjwX6/tYhHxhQ6Unwxs99lC997ioT
+	FOLmAA==
 Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 44eeqxk54a-1
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 44ebcbktnx-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Tue, 28 Jan 2025 13:12:27 +0100 (CET)
 Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id F379C40063;
-	Tue, 28 Jan 2025 13:10:58 +0100 (CET)
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 23C884004B;
+	Tue, 28 Jan 2025 13:11:06 +0100 (CET)
 Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 80E632CDDFC;
-	Tue, 28 Jan 2025 13:08:01 +0100 (CET)
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id F24B82CE641;
+	Tue, 28 Jan 2025 13:08:11 +0100 (CET)
 Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
  (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Tue, 28 Jan
- 2025 13:08:01 +0100
+ 2025 13:08:11 +0100
 From: Christian Bruel <christian.bruel@foss.st.com>
 To: <christian.bruel@foss.st.com>, <bhelgaas@google.com>,
         <lpieralisi@kernel.org>, <kw@linux.com>,
@@ -54,10 +56,12 @@ CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-stm32@st-md-mailman.stormreply.com>,
         <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
         <fabrice.gasnier@foss.st.com>
-Subject: [PATCH v4 00/10] Add STM32MP25 PCIe drivers
-Date: Tue, 28 Jan 2025 13:07:35 +0100
-Message-ID: <20250128120745.334377-1-christian.bruel@foss.st.com>
+Subject: [PATCH v4 02/10] PCI: dwc: Add dw_pcie_wake_irq_handler helper
+Date: Tue, 28 Jan 2025 13:07:37 +0100
+Message-ID: <20250128120745.334377-3-christian.bruel@foss.st.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250128120745.334377-1-christian.bruel@foss.st.com>
+References: <20250128120745.334377-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,73 +76,58 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-01-28_04,2025-01-27_01,2024-11-22_01
 
-Changes in v4:
-   Address bindings comments Rob Herring
-   - Remove phy property form common yaml
-   - Remove phy-name property
-   - Move wake_gpio and reset_gpio to the host root port
-   
-Changes in v3:
-   Address comments from Manivanna, Rob and Bjorn:
-   - Move host wakeup helper to dwc core (Mani)
-   - Drop num-lanes=<1> from bindings (Rob)
-   - Fix PCI address of I/O region (Mani)
-   - Moved PHY to a RC rootport subsection (Bjorn, Mani)
-   - Replaced dma-limit quirk by dma-ranges property (Bjorn)
-   - Moved out perst assert/deassert from start/stop link (Mani)
-   - Drop link_up test optim (Mani)
-   - DT and comments rephrasing (Bjorn)
-   - Add dts entries now that the combophy entries has landed
-   - Drop delaying Configuration Requests
+Introduce dw_pcie_wake_irq_handler function to support host wakeup from
+the WAKE# irq.
 
-Changes in v2:
-   - Fix st,stm32-pcie-common.yaml dt_binding_check	
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 15 +++++++++++++++
+ drivers/pci/controller/dwc/pcie-designware.h      |  2 ++
+ 2 files changed, 17 insertions(+)
 
-Changes in v1:
-   Address comments from Rob Herring and Bjorn Helgaas:
-   - Drop st,limit-mrrs and st,max-payload-size from this patchset
-   - Remove single reset and clocks binding names and misc yaml cleanups
-   - Split RC/EP common bindings to a separate schema file
-   - Use correct PCIE_T_PERST_CLK_US and PCIE_T_RRS_READY_MS defines
-   - Use .remove instead of .remove_new
-   - Fix bar reset sequence in EP driver
-   - Use cleanup blocks for error handling
-   - Cosmetic fixes
-
-Christian Bruel (10):
-  dt-bindings: PCI: Add STM32MP25 PCIe Root Complex bindings
-  PCI: dwc: Add dw_pcie_wake_irq_handler helper
-  PCI: stm32: Add PCIe host support for STM32MP25
-  dt-bindings: PCI: Add STM32MP25 PCIe Endpoint bindings
-  PCI: stm32: Add PCIe Endpoint support for STM32MP25
-  MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-  arm64: dts: st: add PCIe pinctrl entries in stm32mp25-pinctrl.dtsi
-  arm64: dts: st: Add PCIe Rootcomplex mode on stm32mp251
-  arm64: dts: st: Add PCIe Endpoint mode on stm32mp251
-  arm64: dts: st: Enable PCIe on the stm32mp257f-ev1 board
-
- .../bindings/pci/st,stm32-pcie-common.yaml    |  33 ++
- .../bindings/pci/st,stm32-pcie-ep.yaml        |  67 +++
- .../bindings/pci/st,stm32-pcie-host.yaml      | 116 +++++
- MAINTAINERS                                   |   7 +
- arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi |  20 +
- arch/arm64/boot/dts/st/stm32mp251.dtsi        |  60 ++-
- arch/arm64/boot/dts/st/stm32mp257f-ev1.dts    |  22 +
- drivers/pci/controller/dwc/Kconfig            |  24 +
- drivers/pci/controller/dwc/Makefile           |   2 +
- .../pci/controller/dwc/pcie-designware-host.c |  15 +
- drivers/pci/controller/dwc/pcie-designware.h  |   2 +
- drivers/pci/controller/dwc/pcie-stm32-ep.c    | 420 ++++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.c       | 372 ++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.h       |  16 +
- 14 files changed, 1175 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32-ep.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.h
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index ef4799effa03..5a67bee5bf3c 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -16,6 +16,7 @@
+ #include <linux/of_pci.h>
+ #include <linux/pci_regs.h>
+ #include <linux/platform_device.h>
++#include <linux/suspend.h>
+ 
+ #include "../../pci.h"
+ #include "pcie-designware.h"
+@@ -1054,3 +1055,17 @@ int dw_pcie_resume_noirq(struct dw_pcie *pci)
+ 	return ret;
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_resume_noirq);
++
++irqreturn_t dw_pcie_wake_irq_handler(int irq, void *arg)
++{
++	struct device *dev = arg;
++
++	dev_dbg(dev, "host wakeup by EP");
++
++	/* Notify PM core we are wakeup source */
++	pm_wakeup_event(dev, 0);
++	pm_system_wakeup();
++
++	return IRQ_HANDLED;
++}
++EXPORT_SYMBOL_GPL(dw_pcie_wake_irq_handler);
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index f8bf9c89a152..f54cf7b01cbd 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -511,6 +511,8 @@ void dw_pcie_edma_remove(struct dw_pcie *pci);
+ int dw_pcie_suspend_noirq(struct dw_pcie *pci);
+ int dw_pcie_resume_noirq(struct dw_pcie *pci);
+ 
++irqreturn_t dw_pcie_wake_irq_handler(int irq, void *arg);
++
+ static inline void dw_pcie_writel_dbi(struct dw_pcie *pci, u32 reg, u32 val)
+ {
+ 	dw_pcie_write_dbi(pci, reg, 0x4, val);
 -- 
 2.34.1
 
