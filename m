@@ -1,106 +1,267 @@
-Received: from mx08-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A5C61D5AA8;
-	Tue, 28 Jan 2025 12:13:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C45F2198E91
+	for <linux-pci@vger.kernel.org>; Tue, 28 Jan 2025 12:17:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738066392; cv=none; b=hGE8qN29gju4e8vy394lC/juKPa0YUST047LZcVp6x2Rtnewzt85DeCkhDKSiHhUmuyYSg6y1QoK17A9Yt2x88SwNto2KqyvHaelA/Hg79c6tiJAhFg0myoj8Zp7BKK2a6FvL3q36PL/bYD+7aa6yDqDXuV8rFQLDVSsCYlVtJE=
+	t=1738066671; cv=none; b=h9sIaDK0UKFNhKthCB4L69Ow1M5FdZJ1VDNNyeJb56gxIP9lkuK901aNmOoD7P5paeaLbkykL8Q4sdPJxM1uG6jmltdfhyKLL3YnG2gDnH4RerCgNKupBl458lN+QaJ9mwuvAIU3Ke/5zDaQ83XDnt4Fbv3J3tVm0yJk/rsTZGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738066392; c=relaxed/simple;
-	bh=vKDi5xgvTrZCoKFl1m7ddGnON65Hg5ZWsSaeio9sU+g=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=S8zYoWugfYGpDLYCYVX3UhOSKcLuogRF8IAELX+e7EhDcCLsgW+wT2z6/4QHKy9snzE/z65lx3h3uZnd1tkBc+kzF8XcoEjDdTzVgYU5Y4XrX1feRpWpfCrwWijq2u+wEyx9a84pfKgZdxKvt5nEJDjHZBAxYgHbLK/SIlNiCNo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=mEm2BxPg; arc=none smtp.client-ip=91.207.212.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="mEm2BxPg"
-Received: from pps.filterd (m0369457.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 50SC5RF5029927;
-	Tue, 28 Jan 2025 13:12:54 +0100
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	uDpJOAomZghklfUCnDYi43O2k6CX4C8BmcC2QxhH3UY=; b=mEm2BxPgi+3tKAs1
-	Egl2YNuObmOrIhDiBXe7RZ+IeI/mHnKBc1OQzSxEjkV+ZJeMjzbMHijckVkje+S0
-	d8uzcWB1w43WPanf+fTdAvB42FLnJ26FotdixHP73+weIa30UuuSAZDNg1zGINQ6
-	E325SlZJKlvxSPNC9D9UV1zp2HXnaoEFPi37cNovD4rKbL4Kp5y5bv2sGm+8Y/DQ
-	XhwbekfdJAkRvuGiszP9FHN1Hfo93uryh/aLxeGoRdPGUt7DTFVosOsfMQk1m2Oy
-	D+M7TdT0Hs0+XeOLAzV1ZuJh8TSPV0Q96l+/uHYGx1rwZc8RcD79lamTWlGRS1Sa
-	HkXxTw==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 44exxc012c-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Jan 2025 13:12:54 +0100 (CET)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 27A624006F;
-	Tue, 28 Jan 2025 13:11:26 +0100 (CET)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 513552DE899;
-	Tue, 28 Jan 2025 13:09:36 +0100 (CET)
-Received: from localhost (10.129.178.212) by SHFDAG1NODE3.st.com
- (10.75.129.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Tue, 28 Jan
- 2025 13:09:36 +0100
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <christian.bruel@foss.st.com>, <bhelgaas@google.com>,
-        <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <jingoohan1@gmail.com>, <p.zabel@pengutronix.de>,
-        <johan+linaro@kernel.org>, <quic_schintav@quicinc.com>,
-        <cassel@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        <fabrice.gasnier@foss.st.com>
-Subject: [PATCH v4 06/10] MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-Date: Tue, 28 Jan 2025 13:07:41 +0100
-Message-ID: <20250128120745.334377-7-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250128120745.334377-1-christian.bruel@foss.st.com>
-References: <20250128120745.334377-1-christian.bruel@foss.st.com>
+	s=arc-20240116; t=1738066671; c=relaxed/simple;
+	bh=gwJt95vNJCqzrkdYQJcU71cNTn+0azjl3k3Hf4t0UB8=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lsTQsYYoPqz3ZucEU0sSc10Zfdd3SSBJoPeBO3cwRuvUulu/BT3GbGY+rxe6JRmhd46XdrpoHK0+PwHkinkzsDBrFGM2pNGLTHMES0ETjjEf5jgvEkreXG1aS0QGC/W2mQCQCZo8717astpEJhz9scxeeenShBTQmxZHUsMmIU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.231])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Yj46K59tsz6K92N;
+	Tue, 28 Jan 2025 20:17:13 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id B664D140A35;
+	Tue, 28 Jan 2025 20:17:46 +0800 (CST)
+Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 28 Jan
+ 2025 13:17:46 +0100
+Date: Tue, 28 Jan 2025 12:17:44 +0000
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Dan Williams <dan.j.williams@intel.com>
+CC: <linux-coco@lists.linux.dev>, Xiaoyao Li <xiaoyao.li@intel.com>, "Isaku
+ Yamahata" <isaku.yamahata@intel.com>, Alexey Kardashevskiy <aik@amd.com>,
+	Yilun Xu <yilun.xu@intel.com>, Tom Lendacky <thomas.lendacky@amd.com>, "John
+ Allen" <john.allen@amd.com>, <linux-pci@vger.kernel.org>,
+	<gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 03/11] coco/tsm: Introduce a class device for TEE
+ Security Managers
+Message-ID: <20250128121744.00003188@huawei.com>
+In-Reply-To: <173343741358.1074769.14824760616956254302.stgit@dwillia2-xfh.jf.intel.com>
+References: <173343739517.1074769.13134786548545925484.stgit@dwillia2-xfh.jf.intel.com>
+	<173343741358.1074769.14824760616956254302.stgit@dwillia2-xfh.jf.intel.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-01-28_04,2025-01-27_01,2024-11-22_01
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500002.china.huawei.com (7.191.160.78) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-Add myself as maintainer of STM32MP25 PCIe host and PCIe endpoint drivers
+On Thu, 05 Dec 2024 14:23:33 -0800
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+> A "TSM" is a platform component that provides an API for securely
+> provisioning resources for a confidential guest (TVM) to consume. The
+> name originates from the PCI specification for platform agent that
+> carries out operations for PCIe TDISP (TEE Device Interface Security
+> Protocol).
+> 
+> Instances of this class device are parented by a device representing the
+> platform security capability like CONFIG_CRYPTO_DEV_CCP or
+> CONFIG_INTEL_TDX_HOST.
+> 
+> This class device interface is a frontend to the aspects of a TSM and
+> TEE I/O that are cross-architecture common. This includes mechanisms
+> like enumerating available platform TEE I/O capabilities and
+> provisioning connections between the platform TSM and device DSMs
+> (Device Security Manager (TDISP)).
+> 
+> For now this is just the scaffolding for registering a TSM device sysfs
+> interface.
+> 
+> Cc: Xiaoyao Li <xiaoyao.li@intel.com>
+> Cc: Isaku Yamahata <isaku.yamahata@intel.com>
+> Cc: Alexey Kardashevskiy <aik@amd.com>
+> Cc: Yilun Xu <yilun.xu@intel.com>
+> Cc: Tom Lendacky <thomas.lendacky@amd.com>
+> Cc: John Allen <john.allen@amd.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 33b9cd11a3a4..d8f2de1a3543 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -18108,6 +18108,13 @@ L:	linux-samsung-soc@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/controller/dwc/pci-exynos.c
- 
-+PCI DRIVER FOR STM32MP25
-+M:	Christian Bruel <christian.bruel@foss.st.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/st,stm32-pcie-*.yaml
-+F:	drivers/pci/controller/dwc/*stm32*
-+
- PCI DRIVER FOR SYNOPSYS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
- M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
--- 
-2.34.1
+A couple of generic comments inline.
+
+> diff --git a/drivers/virt/coco/Kconfig b/drivers/virt/coco/Kconfig
+> index 819a97e8ba99..14e7cf145d85 100644
+> --- a/drivers/virt/coco/Kconfig
+> +++ b/drivers/virt/coco/Kconfig
+> @@ -14,3 +14,5 @@ source "drivers/virt/coco/tdx-guest/Kconfig"
+>  source "drivers/virt/coco/arm-cca-guest/Kconfig"
+>  
+>  source "drivers/virt/coco/guest/Kconfig"
+> +
+> +source "drivers/virt/coco/host/Kconfig"
+> diff --git a/drivers/virt/coco/Makefile b/drivers/virt/coco/Makefile
+> index 885c9ef4e9fc..73f1b7bc5b11 100644
+> --- a/drivers/virt/coco/Makefile
+> +++ b/drivers/virt/coco/Makefile
+> @@ -8,3 +8,4 @@ obj-$(CONFIG_SEV_GUEST)		+= sev-guest/
+>  obj-$(CONFIG_INTEL_TDX_GUEST)	+= tdx-guest/
+>  obj-$(CONFIG_ARM_CCA_GUEST)	+= arm-cca-guest/
+>  obj-$(CONFIG_TSM_REPORTS)	+= guest/
+> +obj-y				+= host/
+> diff --git a/drivers/virt/coco/host/Kconfig b/drivers/virt/coco/host/Kconfig
+> new file mode 100644
+> index 000000000000..4fbc6ef34f12
+> --- /dev/null
+> +++ b/drivers/virt/coco/host/Kconfig
+> @@ -0,0 +1,6 @@
+> +# SPDX-License-Identifier: GPL-2.0-only
+> +#
+> +# TSM (TEE Security Manager) Common infrastructure and host drivers
+> +#
+> +config TSM
+> +	tristate
+> diff --git a/drivers/virt/coco/host/Makefile b/drivers/virt/coco/host/Makefile
+> new file mode 100644
+> index 000000000000..be0aba6007cd
+> --- /dev/null
+> +++ b/drivers/virt/coco/host/Makefile
+> @@ -0,0 +1,6 @@
+> +# SPDX-License-Identifier: GPL-2.0-only
+> +#
+> +# TSM (TEE Security Manager) Common infrastructure and host drivers
+> +
+> +obj-$(CONFIG_TSM) += tsm.o
+> +tsm-y := tsm-core.o
+> diff --git a/drivers/virt/coco/host/tsm-core.c b/drivers/virt/coco/host/tsm-core.c
+> new file mode 100644
+> index 000000000000..0ee738fc40ed
+> --- /dev/null
+> +++ b/drivers/virt/coco/host/tsm-core.c
+> @@ -0,0 +1,113 @@
+> +// SPDX-License-Identifier: GPL-2.0-only
+> +/* Copyright(c) 2024 Intel Corporation. All rights reserved. */
+> +
+> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
+> +
+> +#include <linux/tsm.h>
+> +#include <linux/rwsem.h>
+> +#include <linux/device.h>
+> +#include <linux/module.h>
+> +#include <linux/cleanup.h>
+> +
+> +static DECLARE_RWSEM(tsm_core_rwsem);
+> +static struct class *tsm_class;
+> +static struct tsm_subsys {
+> +	struct device dev;
+> +} *tsm_subsys;
+
+This naming seems a bit confusing. To me tsm_sybsys could be:
+a) The subsystem itself.  So something we'd expect to remove only alongside
+class destroy.
+b) A subsystem of a tsm (confusing here in a subsystem for tsms). Expectation
+   being that a given tsm would register more than one of these.
+c) What I think it is which is, which is the device added to register with
+   the tsm subsystem.  
+
+Mind you I'm not immediately sure what a better naming is.
+tsm_class_dev maybe?  Though that sounds like it should be a struct device.
+
+
+> +
+> +static struct tsm_subsys *
+> +alloc_tsm_subsys(struct device *parent, const struct attribute_group **groups)
+> +{
+> +	struct tsm_subsys *subsys = kzalloc(sizeof(*subsys), GFP_KERNEL);
+> +	struct device *dev;
+> +
+> +	if (!subsys)
+> +		return ERR_PTR(-ENOMEM);
+> +	dev = &subsys->dev;
+> +	dev->parent = parent;
+> +	dev->groups = groups;
+> +	dev->class = tsm_class;
+> +	device_initialize(dev);
+> +	return subsys;
+> +}
+> +
+> +static void put_tsm_subsys(struct tsm_subsys *subsys)
+> +{
+> +	if (!IS_ERR_OR_NULL(subsys))
+
+If you are calling this with it as an error or null then
+that smells like a bad bug we shouldn't paper over.
+The only case I can think of is the define free you have
+below which correctly has the same check.
+
+> +		put_device(&subsys->dev);
+> +}
+> +
+> +DEFINE_FREE(put_tsm_subsys, struct tsm_subsys *,
+> +	    if (!IS_ERR_OR_NULL(_T)) put_tsm_subsys(_T))
+> +struct tsm_subsys *tsm_register(struct device *parent,
+> +				const struct attribute_group **groups)
+> +{
+> +	struct device *dev;
+> +	int rc;
+> +
+> +	guard(rwsem_write)(&tsm_core_rwsem);
+> +	if (tsm_subsys) {
+> +		dev_warn(parent, "failed to register: %s already registered\n",
+> +			 dev_name(tsm_subsys->dev.parent));
+> +		return ERR_PTR(-EBUSY);
+> +	}
+> +
+> +	struct tsm_subsys *subsys __free(put_tsm_subsys) =
+> +		alloc_tsm_subsys(parent, groups);
+> +	if (IS_ERR(subsys))
+> +		return subsys;
+> +
+> +	dev = &subsys->dev;
+> +	rc = dev_set_name(dev, "tsm0");
+> +	if (rc)
+> +		return ERR_PTR(rc);
+> +
+> +	rc = device_add(dev);
+> +	if (rc)
+> +		return ERR_PTR(rc);
+> +
+> +	tsm_subsys = no_free_ptr(subsys);
+> +
+> +	return tsm_subsys;
+> +}
+> +EXPORT_SYMBOL_GPL(tsm_register);
+> +
+> +void tsm_unregister(struct tsm_subsys *subsys)
+> +{
+> +	guard(rwsem_write)(&tsm_core_rwsem);
+> +	if (!tsm_subsys || subsys != tsm_subsys) {
+> +		pr_warn("failed to unregister, not currently registered\n");
+> +		return;
+> +	}
+> +
+> +	device_unregister(&subsys->dev);
+> +	tsm_subsys = NULL;
+> +}
+> +EXPORT_SYMBOL_GPL(tsm_unregister);
+> +
+> +static void tsm_release(struct device *dev)
+> +{
+> +	struct tsm_subsys *subsys = container_of(dev, typeof(*subsys), dev);
+> +
+> +	kfree(subsys);
+> +}
+> +
+> +static int __init tsm_init(void)
+> +{
+> +	tsm_class = class_create("tsm");
+> +	if (IS_ERR(tsm_class))
+> +		return PTR_ERR(tsm_class);
+> +
+> +	tsm_class->dev_release = tsm_release;
+> +	return 0;
+> +}
+> +module_init(tsm_init)
+> +
+> +static void __exit tsm_exit(void)
+> +{
+> +	class_destroy(tsm_class);
+> +}
+> +module_exit(tsm_exit)
+> +
+> +MODULE_LICENSE("GPL");
+> +MODULE_DESCRIPTION("TEE Security Manager core");
+
 
