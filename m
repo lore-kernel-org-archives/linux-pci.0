@@ -1,145 +1,163 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F2D38172A
-	for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2025 13:54:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B7EE1AE005;
+	Wed, 29 Jan 2025 14:02:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738158886; cv=none; b=WUYx7AfTX19K2N0aJLWnq/KaAAVNGEiORkkIY9Aa2LcuU6IfJ2r11mmj+QJLu4x1AA3NepaRb3QQfWn1692Xj8J9xDEbxHJz0zwMgGiY6mCNjaoG4BT1+5nx8DnM39rdlp71lLu00QfEC3WIx2R53JftCEAmyLCtQlYgqPynvms=
+	t=1738159371; cv=none; b=By/OLX9KjJUp0oIt+Lkh/77IHaQAHMMODm2XN3WTyQgTIvkf64uXAs1gDo3v+qAjGGS4SEeq31M32hUyqPznJjpHlLxNzlU1p8mrJVaHoPLXkVmpRiT+Ky7x+5uPFySCwSVrDMKkpAduTqksbbXndlwwZDBo0o6taLhiAkL3NTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738158886; c=relaxed/simple;
-	bh=Bp8j6cdeU44uJZZirV15PQkOdv67IumSfT+gpLwKhU0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oQJYS2CrALR+W3vW1g7VJzT09mUUrkamJ/g+5iTL5x45rNzHwMOnaAO6j8yP/mLDukhnilzdDrjh7wq0muEp+vcN6FLTGAA6O09hDmQWjcB0GfaqDSKjhp7xgS6rD6DnvmcTykdKCuCe992VARV4oParonQD4wC4PN9X/2lkNIk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=a9KJyHZH; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1738159371; c=relaxed/simple;
+	bh=h3BiyePwgRDcjQeL6qET8v8kWhgl+0ZhiwBZ8mB1zMw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=cyU6Y8c5pv0iCqILWxashTa8T7GdKX5GqAVyK7ecm5KM69Cdap56hZ9pivb/h44l5owSDiIGQ5E+geA1KwcdA2B2Pb4N1YcF6CfX+AJt29Gb/bUHpQY+9iOoci69hD3OgwKRiqtxHR1A3nnPNeEOmthdEr4LFda4LKFPNxW0rcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jLLcf+A0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="a9KJyHZH"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-5d3bdccba49so12607125a12.1
-        for <linux-pci@vger.kernel.org>; Wed, 29 Jan 2025 05:54:43 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1738158882; x=1738763682; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=OAzk2HvSci2RB9DJCTTtog02Zihvy8J06+hb0uPWlXE=;
-        b=a9KJyHZH63EyingF5dKwGYhpj9U27AIyC4HQSk1tqbhip+0FmWgpqAHfDA18xN7vqu
-         NFlodoKyOu89S3oqbG415tMGgXmrg4xHPmrMdfk6CbKdW3aJd71mT94K3oTfGslT7ZPs
-         Nef/j1yi1km/O89yYbk2H43a8Du1N2dvALwLlNJvUfASwGYvljpCkGwkDFfebHXCDRtu
-         T8luBhXvx+wWvyS5We3gso8Cn5VD1p1KhnraFjvICAcJT6+gUbxpMnyeccegRU/GQ/N7
-         vejBFpM1QSxROuGWqX3QzAhx0YziX4cVlNWRO1lODxcB7lxS9QpNaJequ+TwmfBBSm8P
-         0G/Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738158882; x=1738763682;
-        h=content-transfer-encoding:in-reply-to:autocrypt:from
-         :content-language:references:cc:to:subject:user-agent:mime-version
-         :date:message-id:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=OAzk2HvSci2RB9DJCTTtog02Zihvy8J06+hb0uPWlXE=;
-        b=JKmqTL9Jiv0ZGmDEFmmufWM3t6ZKNhUWjFk6cUrtemGxdsSAvkecfD+sXPfsK7YAou
-         oounp624U96kW5EybPhtz4GZfxaD4i07GbkQbWs/bli2mIiUlEhbXZx4FH+EVzWeP8zv
-         EOHrRC9Cy/93VjJD+ghhB1j3XWgiVFAtLYQmNdLL5PfHL5f1DavtL68eFddt/86R4FcM
-         BUJaBGSvOLBphOTfs8zLM7Z+t/4ZXxqw3Ye3SWRsMHi/Fp+q9yzrka/zyEFqivHTxNeg
-         mAc1s3iNbzIqrlTtYyjHASHpqAb/h6n4kHMSVS10D4ejVDA8c/LooDdW5Uc3Kw0qKnqB
-         93vw==
-X-Forwarded-Encrypted: i=1; AJvYcCX7fz4Pw5iZXqXkNkkg9+sdOqXPSxVXVLU0o0Wv6ObyvGRsdre9K3PSg5QR8K95s870tnpdQBNn1r0=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz4oGzPJfbyJgILHuIZRkJuwg0zG70vTdHj0lED0rjv8zU+YCx4
-	Zyt8XFJpUEjWEID9hYUQJOap30UEWRN+oyjuRW2i0rPe7UfmeelJTgwzWuU53Q==
-X-Gm-Gg: ASbGncuhhK1uuRNekDExTHi1X4Ny6IDJ/T1b7oSgDIWB7TzTD5qp38Z5IMn1zBLtQi3
-	Mrk6oNoFcdxazAO6t1j3LS2T6/6qav/Y10mf0DX9zZcJXfKgk4KZA7S+qXJzoQCYAnblTCsM0cf
-	3eF+j2dtqrUqmS5zOdWZPEF+BlVL9bvsGomikczuL4QCXphi7+X8uTwuHGjz+5pnxAGmpF29Dm1
-	hFi1UVup6Zrb1ZLm2qEb2XSTDFeFjBCxYRg75OiWOY3rmBDhzK0T40Y91i80Kq/y2huMBklzPVd
-	+GRuUNOlv5rrVVNEyuqVw8jC88ih+8ovSphztCWPu18CPgC7esiOGymYzOaEBlLyKcQ83gwG2I0
-	9HBFzc7lHc9w=
-X-Google-Smtp-Source: AGHT+IFyfwTg1PMxVWwmOGjd5ZetF6IndRyOwzliuiWStKYzttmQsbLKfxXAr/xuK9TPm1p1YNzOiA==
-X-Received: by 2002:a17:907:7b85:b0:aa6:81dc:6638 with SMTP id a640c23a62f3a-ab6cfcbb881mr280647966b.16.1738158882265;
-        Wed, 29 Jan 2025 05:54:42 -0800 (PST)
-Received: from [10.156.60.236] (ip-037-024-206-209.um08.pools.vodafone-ip.de. [37.24.206.209])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ab6760fbb2esm985639866b.140.2025.01.29.05.54.41
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 29 Jan 2025 05:54:42 -0800 (PST)
-Message-ID: <8acfd9b2-caae-4fe7-8d37-19e2d9be23a8@suse.com>
-Date: Wed, 29 Jan 2025 14:54:41 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jLLcf+A0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 305C4C4CEE1;
+	Wed, 29 Jan 2025 14:02:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738159371;
+	bh=h3BiyePwgRDcjQeL6qET8v8kWhgl+0ZhiwBZ8mB1zMw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=jLLcf+A03mt7xIWUAadbRMFhd0SErlyk2AidwRI2Nx7cHxPHb0NikPA6PFODRfp0R
+	 XOgQU/iac2cq2u1fiP6p3PW+a2BZifKv9e69Ptp0r8dUtndm1elBgu1GsZp7pCKhWv
+	 psPL1dUT8domsrnblMwihnU8Ia7A0t/ONPqBqEOtGuOGGgq+vNtOs/NQvV8+NUrqG7
+	 a6MnisJ3tQlJPznT6hKIHZd9A+bjzzwdlWNey+vnxM68BSMWiF1RfmMwXHNnyxVSHe
+	 KSnc2tI69LpNC6+a1JOQA/F6ofaCBr6s4ABMEDoEByhBVB+lwhPRt6GsNytD2Bz7sd
+	 D7z2up9PW0NqQ==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Sasha Levin <sashal@kernel.org>,
+	sudipm.mukherjee@gmail.com,
+	jirislaby@kernel.org,
+	bhelgaas@google.com,
+	arnd@kernel.org,
+	crescentcy.hsieh@moxa.com,
+	peterz@infradead.org,
+	dlemoal@kernel.org,
+	schnelle@linux.ibm.com,
+	linux-serial@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.13 2/8] serial: 8250_pci: Share WCH IDs with parport_serial driver
+Date: Wed, 29 Jan 2025 07:58:55 -0500
+Message-Id: <20250129125904.1272926-2-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250129125904.1272926-1-sashal@kernel.org>
+References: <20250129125904.1272926-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: Config space access to Mediatek MT7922 doesn't work after device
- reset in Xen PV dom0 (regression, Linux 6.12)
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: =?UTF-8?Q?Marek_Marczykowski-G=C3=B3recki?=
- <marmarek@invisiblethingslab.com>, Bjorn Helgaas <bhelgaas@google.com>,
- =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>,
- =?UTF-8?Q?Roger_Pau_Monn=C3=A9?= <roger.pau@citrix.com>,
- Boris Ostrovsky <boris.ostrovsky@oracle.com>,
- xen-devel <xen-devel@lists.xenproject.org>, linux-kernel@vger.kernel.org,
- regressions@lists.linux.dev, Felix Fietkau <nbd@nbd.name>,
- Lorenzo Bianconi <lorenzo@kernel.org>, Ryder Lee <ryder.lee@mediatek.com>,
- linux-pci@vger.kernel.org
-References: <20250129132843.GA451331@bhelgaas>
-Content-Language: en-US
-From: Jan Beulich <jbeulich@suse.com>
-Autocrypt: addr=jbeulich@suse.com; keydata=
- xsDiBFk3nEQRBADAEaSw6zC/EJkiwGPXbWtPxl2xCdSoeepS07jW8UgcHNurfHvUzogEq5xk
- hu507c3BarVjyWCJOylMNR98Yd8VqD9UfmX0Hb8/BrA+Hl6/DB/eqGptrf4BSRwcZQM32aZK
- 7Pj2XbGWIUrZrd70x1eAP9QE3P79Y2oLrsCgbZJfEwCgvz9JjGmQqQkRiTVzlZVCJYcyGGsD
- /0tbFCzD2h20ahe8rC1gbb3K3qk+LpBtvjBu1RY9drYk0NymiGbJWZgab6t1jM7sk2vuf0Py
- O9Hf9XBmK0uE9IgMaiCpc32XV9oASz6UJebwkX+zF2jG5I1BfnO9g7KlotcA/v5ClMjgo6Gl
- MDY4HxoSRu3i1cqqSDtVlt+AOVBJBACrZcnHAUSuCXBPy0jOlBhxPqRWv6ND4c9PH1xjQ3NP
- nxJuMBS8rnNg22uyfAgmBKNLpLgAGVRMZGaGoJObGf72s6TeIqKJo/LtggAS9qAUiuKVnygo
- 3wjfkS9A3DRO+SpU7JqWdsveeIQyeyEJ/8PTowmSQLakF+3fote9ybzd880fSmFuIEJldWxp
- Y2ggPGpiZXVsaWNoQHN1c2UuY29tPsJgBBMRAgAgBQJZN5xEAhsDBgsJCAcDAgQVAggDBBYC
- AwECHgECF4AACgkQoDSui/t3IH4J+wCfQ5jHdEjCRHj23O/5ttg9r9OIruwAn3103WUITZee
- e7Sbg12UgcQ5lv7SzsFNBFk3nEQQCACCuTjCjFOUdi5Nm244F+78kLghRcin/awv+IrTcIWF
- hUpSs1Y91iQQ7KItirz5uwCPlwejSJDQJLIS+QtJHaXDXeV6NI0Uef1hP20+y8qydDiVkv6l
- IreXjTb7DvksRgJNvCkWtYnlS3mYvQ9NzS9PhyALWbXnH6sIJd2O9lKS1Mrfq+y0IXCP10eS
- FFGg+Av3IQeFatkJAyju0PPthyTqxSI4lZYuJVPknzgaeuJv/2NccrPvmeDg6Coe7ZIeQ8Yj
- t0ARxu2xytAkkLCel1Lz1WLmwLstV30g80nkgZf/wr+/BXJW/oIvRlonUkxv+IbBM3dX2OV8
- AmRv1ySWPTP7AAMFB/9PQK/VtlNUJvg8GXj9ootzrteGfVZVVT4XBJkfwBcpC/XcPzldjv+3
- HYudvpdNK3lLujXeA5fLOH+Z/G9WBc5pFVSMocI71I8bT8lIAzreg0WvkWg5V2WZsUMlnDL9
- mpwIGFhlbM3gfDMs7MPMu8YQRFVdUvtSpaAs8OFfGQ0ia3LGZcjA6Ik2+xcqscEJzNH+qh8V
- m5jjp28yZgaqTaRbg3M/+MTbMpicpZuqF4rnB0AQD12/3BNWDR6bmh+EkYSMcEIpQmBM51qM
- EKYTQGybRCjpnKHGOxG0rfFY1085mBDZCH5Kx0cl0HVJuQKC+dV2ZY5AqjcKwAxpE75MLFkr
- wkkEGBECAAkFAlk3nEQCGwwACgkQoDSui/t3IH7nnwCfcJWUDUFKdCsBH/E5d+0ZnMQi+G0A
- nAuWpQkjM1ASeQwSHEeAWPgskBQL
-In-Reply-To: <20250129132843.GA451331@bhelgaas>
-Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.13
 Content-Transfer-Encoding: 8bit
 
-On 29.01.2025 14:28, Bjorn Helgaas wrote:
-> On Wed, Jan 29, 2025 at 10:17:20AM +0100, Jan Beulich wrote:
->> On 29.01.2025 04:22, Marek Marczykowski-Górecki wrote:
->>> On Tue, Jan 28, 2025 at 09:03:15PM -0600, Bjorn Helgaas wrote:
->>>> The report claims the problem only happens with Xen.  I'm not a Xen
->>>> person, and I don't know how to find the relevant config accessors.
->>>> The snippets of kernel messages I see at [1] all mention pciback, so
->>>> that's my only clue of where to look.  Bottom line, I have no idea
->>>> what the config accessor path is, and maybe we could learn something
->>>> by looking at whatever it is.
->>>
->>> AFAIK there are no separate config accessors under Xen dom0, the default
->>> ones are used. xen-pcifront takes over PCI config space access (and few
->>> more) only in a domU (and only for PV), when PCI passthrough is used.
->>> Here, it didn't went that far...
->>>
->>> But then, Xen may intercept such access [2]. If I read it right, it
->>> should allow all access (is_hardware_domain(dom0)==true, and also the
->>> device is not on ro_map - otherwise reset wouldn't work at all).
->>
->> The other day you mentioned (on Matrix I think) that you observe mmcfg
->> not being used on that system. Am I misremembering? (Since the capability
->> where the control bit lives is an extended one, that capability would
->> neither be read nor modified when mmcfg is unavailable.)
-> 
-> If you're referring to the Configuration RRS Software Visibility
-> Enable bit, that's in the PCIe Capability Root Control register, which
-> is in the PCI-compatible config space (the first 256 bytes), not the
-> extended config space.
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Oh, I clearly didn't read Marek's earlier mail correctly. I'm sorry for that.
+[ Upstream commit 535a07698b8b3e6f305673102d297262cae2360a ]
 
-Jan
+parport_serial driver uses subset of WCH IDs that are present in 8250_pci.
+Share them via pci_ids.h and switch parport_serial to use defined constants.
+
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Link: https://lore.kernel.org/r/20241204031114.1029882-3-andriy.shevchenko@linux.intel.com
+Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/parport/parport_serial.c   | 12 ++++++++----
+ drivers/tty/serial/8250/8250_pci.c | 10 ++--------
+ include/linux/pci_ids.h            | 11 +++++++++++
+ 3 files changed, 21 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/parport/parport_serial.c b/drivers/parport/parport_serial.c
+index 3644997a83425..24d4f3a3ec3d0 100644
+--- a/drivers/parport/parport_serial.c
++++ b/drivers/parport/parport_serial.c
+@@ -266,10 +266,14 @@ static struct pci_device_id parport_serial_pci_tbl[] = {
+ 	{ 0x1409, 0x7168, 0x1409, 0xd079, 0, 0, timedia_9079c },
+ 
+ 	/* WCH CARDS */
+-	{ 0x4348, 0x5053, PCI_ANY_ID, PCI_ANY_ID, 0, 0, wch_ch353_1s1p},
+-	{ 0x4348, 0x7053, 0x4348, 0x3253, 0, 0, wch_ch353_2s1p},
+-	{ 0x1c00, 0x3050, 0x1c00, 0x3050, 0, 0, wch_ch382_0s1p},
+-	{ 0x1c00, 0x3250, 0x1c00, 0x3250, 0, 0, wch_ch382_2s1p},
++	{ PCI_VENDOR_ID_WCHCN, PCI_DEVICE_ID_WCHCN_CH353_1S1P,
++	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, wch_ch353_1s1p },
++	{ PCI_VENDOR_ID_WCHCN, PCI_DEVICE_ID_WCHCN_CH353_2S1P,
++	  0x4348, 0x3253, 0, 0, wch_ch353_2s1p },
++	{ PCI_VENDOR_ID_WCHIC, PCI_DEVICE_ID_WCHIC_CH382_0S1P,
++	  0x1c00, 0x3050, 0, 0, wch_ch382_0s1p },
++	{ PCI_VENDOR_ID_WCHIC, PCI_DEVICE_ID_WCHIC_CH382_2S1P,
++	  0x1c00, 0x3250, 0, 0, wch_ch382_2s1p },
+ 
+ 	/* BrainBoxes PX272/PX306 MIO card */
+ 	{ PCI_VENDOR_ID_INTASHIELD, 0x4100,
+diff --git a/drivers/tty/serial/8250/8250_pci.c b/drivers/tty/serial/8250/8250_pci.c
+index dfac79744d377..df4d0d832e542 100644
+--- a/drivers/tty/serial/8250/8250_pci.c
++++ b/drivers/tty/serial/8250/8250_pci.c
+@@ -64,23 +64,17 @@
+ #define PCIE_DEVICE_ID_NEO_2_OX_IBM	0x00F6
+ #define PCI_DEVICE_ID_PLX_CRONYX_OMEGA	0xc001
+ #define PCI_DEVICE_ID_INTEL_PATSBURG_KT 0x1d3d
+-#define PCI_VENDOR_ID_WCHCN		0x4348
++
+ #define PCI_DEVICE_ID_WCHCN_CH352_2S	0x3253
+-#define PCI_DEVICE_ID_WCHCN_CH353_4S	0x3453
+-#define PCI_DEVICE_ID_WCHCN_CH353_2S1PF	0x5046
+-#define PCI_DEVICE_ID_WCHCN_CH353_1S1P	0x5053
+-#define PCI_DEVICE_ID_WCHCN_CH353_2S1P	0x7053
+ #define PCI_DEVICE_ID_WCHCN_CH355_4S	0x7173
++
+ #define PCI_VENDOR_ID_AGESTAR		0x5372
+ #define PCI_DEVICE_ID_AGESTAR_9375	0x6872
+ #define PCI_DEVICE_ID_BROADCOM_TRUMANAGE 0x160a
+ #define PCI_DEVICE_ID_AMCC_ADDIDATA_APCI7800 0x818e
+ 
+-#define PCI_VENDOR_ID_WCHIC		0x1c00
+-#define PCI_DEVICE_ID_WCHIC_CH382_2S1P	0x3250
+ #define PCI_DEVICE_ID_WCHIC_CH384_4S	0x3470
+ #define PCI_DEVICE_ID_WCHIC_CH384_8S	0x3853
+-#define PCI_DEVICE_ID_WCHIC_CH382_2S	0x3253
+ 
+ #define PCI_DEVICE_ID_MOXA_CP102E	0x1024
+ #define PCI_DEVICE_ID_MOXA_CP102EL	0x1025
+diff --git a/include/linux/pci_ids.h b/include/linux/pci_ids.h
+index d2402bf4aea2d..de5deb1a0118f 100644
+--- a/include/linux/pci_ids.h
++++ b/include/linux/pci_ids.h
+@@ -2593,6 +2593,11 @@
+ 
+ #define PCI_VENDOR_ID_REDHAT		0x1b36
+ 
++#define PCI_VENDOR_ID_WCHIC		0x1c00
++#define PCI_DEVICE_ID_WCHIC_CH382_0S1P	0x3050
++#define PCI_DEVICE_ID_WCHIC_CH382_2S1P	0x3250
++#define PCI_DEVICE_ID_WCHIC_CH382_2S	0x3253
++
+ #define PCI_VENDOR_ID_SILICOM_DENMARK	0x1c2c
+ 
+ #define PCI_VENDOR_ID_AMAZON_ANNAPURNA_LABS	0x1c36
+@@ -2647,6 +2652,12 @@
+ #define PCI_VENDOR_ID_AKS		0x416c
+ #define PCI_DEVICE_ID_AKS_ALADDINCARD	0x0100
+ 
++#define PCI_VENDOR_ID_WCHCN		0x4348
++#define PCI_DEVICE_ID_WCHCN_CH353_4S	0x3453
++#define PCI_DEVICE_ID_WCHCN_CH353_2S1PF	0x5046
++#define PCI_DEVICE_ID_WCHCN_CH353_1S1P	0x5053
++#define PCI_DEVICE_ID_WCHCN_CH353_2S1P	0x7053
++
+ #define PCI_VENDOR_ID_ACCESSIO		0x494f
+ #define PCI_DEVICE_ID_ACCESSIO_WDG_CSM	0x22c0
+ 
+-- 
+2.39.5
+
