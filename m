@@ -1,172 +1,154 @@
-Received: from fout-a5-smtp.messagingengine.com (fout-a5-smtp.messagingengine.com [103.168.172.148])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC0C374F1;
-	Wed, 29 Jan 2025 03:47:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.148
+Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 20E572F30;
+	Wed, 29 Jan 2025 07:54:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.248.49.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738122456; cv=none; b=ffOLxyDGkH9px1TAFHntobHwiHChlzJy3RslKhtlsSbwisT+pQutDSCMY42ti49aSPVLmcAhbYw1pz5yldUoAlyybhivB4yCBrosWKf4YTGEH0ohy1CtTA/Cmto5qcDcneS6jISNu5sA3qkPA7ufSLKv0iILDI7MVNHFtzTbuiA=
+	t=1738137297; cv=none; b=lfIohIJIOMX/2eXnPOOpv05fshu6fLiZIaflub4kp0c06SKsnxUad1EU6xfVNJm4qIBZeYDC6dio5MCtBNdd/TrhgdqwwdtcLjFKB5wnWFjdmeijzjWsADuazdnxQFrZc27WuJcomqoIqMqBsXZ9Z7u17A3Lmp4gyAS6R3lkUiQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738122456; c=relaxed/simple;
-	bh=5kkhYrCup5eOhBCbfkJvMJXHmkZeY8UBnRrVlgqIsCE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pf7aP4vak1JOVOJEquqhNWLaxxW/485kZUYak36lOnVBSa6nl9g2zvyDGan8P9nKKPkj7IY0eW+CN9Yh0d2exSqM591ED+2tb9Bi5BZ9bCgA8CDo9KZcJeLeSKGWVCmSh5tuYkbZwD/OwcDuEBe7OVVH1x7pz7VPo/fCpQnFc1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=invisiblethingslab.com; spf=pass smtp.mailfrom=invisiblethingslab.com; dkim=pass (2048-bit key) header.d=invisiblethingslab.com header.i=@invisiblethingslab.com header.b=NONUYCTT; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=TM4pHChT; arc=none smtp.client-ip=103.168.172.148
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=invisiblethingslab.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=invisiblethingslab.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=invisiblethingslab.com header.i=@invisiblethingslab.com header.b="NONUYCTT";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="TM4pHChT"
-Received: from phl-compute-08.internal (phl-compute-08.phl.internal [10.202.2.48])
-	by mailfout.phl.internal (Postfix) with ESMTP id 42D0713810B0;
-	Tue, 28 Jan 2025 22:47:33 -0500 (EST)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-08.internal (MEProxy); Tue, 28 Jan 2025 22:47:33 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	invisiblethingslab.com; h=cc:cc:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1738122453;
-	 x=1738208853; bh=o/1Pq66neLKeF3uzOf3AklSlktzoEb7gsLHB0A1fQMc=; b=
-	NONUYCTT3uKA5H2Dy+HXhrloi+CdBqOUY4ukgbmSpaQ0OfU/14Wdx/FuxOc24wPl
-	6yscww1n2JwGz4Cy/hJ8bD06HacU75RfKY4nWswSGZ+LgQ4k4pU/H5yGbb4aIZuI
-	gk08bFpstHGW4gDDFyO0okI/Aw/4BsLIxL8O1wBEUp8DCdg7CZ67EHxALiR6ZgeB
-	QmKG/eT0+IX+csth6TnAJvJAzXBTDfYtTiZfS1g5dqtOO9Hy/N0bDS3HN1aNAXXy
-	O8u2TKVo5Y13EeB1EZDUTfkR0gWg+YteQVMOTWBfmwtIRRQAFy3VBQzLTbjMY6qZ
-	24CRQbsDVh8V42JZQhi4GQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1738122453; x=1738208853; bh=o/1Pq66neLKeF3uzOf3AklSlktzoEb7gsLH
-	B0A1fQMc=; b=TM4pHChTAekVyb75Y9zF2M4yGbrVgX19HcjTRtwgZ7wW3RXudb+
-	Qfpi8XB4or0NN8+p8Zj4OMTyEqO8BUYyRZiNXQskN4sg2GuKwt0ujgIEFzn49uXU
-	g1HLQ7YBdcqA4F0VatOTv56fbv52XaciRcrJFTiu+XQ5JktUyZunf7+rQw+Lkx0C
-	9S4urxLmUkBDwLiRT/VVchGdQdUDmMF3hp+3Y4FlIe5w80hT303OiXL40NWsFGYG
-	DZ8g4pKCCWR9Zvj7Z4H7h0u2OlHxC8O+rFYEZ0jPZpZYVnItr2G8H8hHbb8ZfQXa
-	z8TecXg/hw0C5TZvXxGQljtjM621D+ox94g==
-X-ME-Sender: <xms:1KSZZ13ZfgNkun5W8b0ONvIUFymvnsahaUwx4glxJ2OPdbD0EO_tFg>
-    <xme:1KSZZ8E2_sONjGRDobSD_NxvDFczQn1qPfFtXGOM_jN8wD-PSNA6Ct7LqkDPg3mNg
-    Ku15XST0my7Qw>
-X-ME-Received: <xmr:1KSZZ14Ou6evhyt-4rWHBegMBpedxfwmb6ykxv5G46BgAd7loHUsLj-WrvOmpVeyWci-l8zi4MevsQhjymWxtrktKunzbq5Ajg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduleehucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggvpdfu
-    rfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpihgvnh
-    htshculddquddttddmnecujfgurhepfffhvfevuffkfhggtggujgesghdtreertddtjeen
-    ucfhrhhomhepofgrrhgvkhcuofgrrhgtiiihkhhofihskhhiqdfikphrvggtkhhiuceomh
-    grrhhmrghrvghksehinhhvihhsihgslhgvthhhihhnghhslhgrsgdrtghomheqnecuggft
-    rfgrthhtvghrnhepvedthedtheekhfeiudelfffgheegfedttdeiudevudejfeelgeekhf
-    dvfedvvddunecuffhomhgrihhnpehgihhthhhusgdrtghomhdpgigvnhdrohhrghdpkhgv
-    rhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilh
-    hfrhhomhepmhgrrhhmrghrvghksehinhhvihhsihgslhgvthhhihhnghhslhgrsgdrtgho
-    mhdpnhgspghrtghpthhtohepuddvpdhmohguvgepshhmthhpohhuthdprhgtphhtthhope
-    hhvghlghgrrghssehkvghrnhgvlhdrohhrghdprhgtphhtthhopegshhgvlhhgrggrshes
-    ghhoohhglhgvrdgtohhmpdhrtghpthhtohepjhhgrhhoshhssehsuhhsvgdrtghomhdprh
-    gtphhtthhopehrohhgvghrrdhprghusegtihhtrhhigidrtghomhdprhgtphhtthhopegs
-    ohhrihhsrdhoshhtrhhovhhskhihsehorhgrtghlvgdrtghomhdprhgtphhtthhopeigvg
-    hnqdguvghvvghlsehlihhsthhsrdigvghnphhrohhjvggtthdrohhrghdprhgtphhtthho
-    pehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtth
-    hopehrvghgrhgvshhsihhonhhssehlihhsthhsrdhlihhnuhigrdguvghvpdhrtghpthht
-    ohepnhgsugesnhgsugdrnhgrmhgv
-X-ME-Proxy: <xmx:1KSZZy3-GIEB8tFjmJxoGuB_Zyoh3IqiGxIPQB5_fs4PiU0ggnBnbg>
-    <xmx:1KSZZ4FrwP-qMVaOMGwp3Tck6D-MWkOrTKO5BRCKH-NTdHIQk_r3NQ>
-    <xmx:1KSZZz9IVj_Gfzl0usFjFH3GRbCZMhKyBmMLqAL31NOqn1vKKDVvDQ>
-    <xmx:1KSZZ1nuVis6_sETM3Anf092AdCvJYU3cwdr9r98xGCQzC9a2tUTYA>
-    <xmx:1aSZZ_c277VQrGGvpBzr7TdTQFiyvNw4in-oJDuQR1mZ-N5TxHISn-Id>
-Feedback-ID: i1568416f:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 28 Jan 2025 22:47:30 -0500 (EST)
-Date: Wed, 29 Jan 2025 04:47:28 +0100
-From: Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>,
-	Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	xen-devel <xen-devel@lists.xenproject.org>,
-	linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
-	Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>, linux-pci@vger.kernel.org
-Subject: Re: Config space access to Mediatek MT7922 doesn't work after device
- reset in Xen PV dom0 (regression, Linux 6.12)
-Message-ID: <Z5mk0K5xltK6iZXN@mail-itl>
-References: <Z5mfA32bvEn6yD-C@mail-itl>
- <20250129034018.GA398969@bhelgaas>
+	s=arc-20240116; t=1738137297; c=relaxed/simple;
+	bh=3z7U0+GxeSanoE7V2Ah7ljJeeessQQSQKUHKd62z0Vw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XyD3yYYzT7GoauJLuF29qyepzvj1JB8kg4aaYNwHOdSrP+IoJp2TJzanW15vn+f8LofQi0zX+Hn+TQZGqm2Gf1HWgOY1+KLXj22mlja5HnbgmbnXjH7vD8+W2i9R2JXeiQR7dPBSS13pvtRmpE76AaGIgIglrpPwFxGJpMh+2ZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=socionext.com; spf=pass smtp.mailfrom=socionext.com; arc=none smtp.client-ip=202.248.49.38
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=socionext.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=socionext.com
+Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
+  by mx.socionext.com with ESMTP; 29 Jan 2025 16:54:47 +0900
+Received: from mail.mfilter.local (mail-arc02.css.socionext.com [10.213.46.40])
+	by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 8639B2019755;
+	Wed, 29 Jan 2025 16:54:47 +0900 (JST)
+Received: from iyokan2.css.socionext.com ([172.31.9.53]) by m-FILTER with ESMTP; Wed, 29 Jan 2025 16:54:47 +0900
+Received: from [10.212.246.222] (unknown [10.212.246.222])
+	by iyokan2.css.socionext.com (Postfix) with ESMTP id BBB64AB186;
+	Wed, 29 Jan 2025 16:54:46 +0900 (JST)
+Message-ID: <2cdb5e43-47e0-43ba-ba17-87e8d5dc602d@socionext.com>
+Date: Wed, 29 Jan 2025 16:54:46 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha256;
-	protocol="application/pgp-signature"; boundary="7HtAp5iYbaAmPKI3"
-Content-Disposition: inline
-In-Reply-To: <20250129034018.GA398969@bhelgaas>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/3] misc: pci_endpoint_test: Avoid issue of interrupts
+ remaining after request_irq error
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
+ Kishon Vijay Abraham I <kishon@kernel.org>, Arnd Bergmann <arnd@arndb.de>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, stable@vger.kernel.org
+References: <20250122022446.2898248-1-hayashi.kunihiko@socionext.com>
+ <20250122022446.2898248-2-hayashi.kunihiko@socionext.com>
+ <20250128141242.pog2tuorvqmobain@thinkpad>
+Content-Language: en-US
+From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
+In-Reply-To: <20250128141242.pog2tuorvqmobain@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+Hi Manivannan,
 
---7HtAp5iYbaAmPKI3
-Content-Type: text/plain; protected-headers=v1; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
-Date: Wed, 29 Jan 2025 04:47:28 +0100
-From: Marek =?utf-8?Q?Marczykowski-G=C3=B3recki?= <marmarek@invisiblethingslab.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	=?utf-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>,
-	Roger Pau =?utf-8?B?TW9ubsOp?= <roger.pau@citrix.com>,
-	Boris Ostrovsky <boris.ostrovsky@oracle.com>,
-	xen-devel <xen-devel@lists.xenproject.org>,
-	linux-kernel@vger.kernel.org, regressions@lists.linux.dev,
-	Felix Fietkau <nbd@nbd.name>, Lorenzo Bianconi <lorenzo@kernel.org>,
-	Ryder Lee <ryder.lee@mediatek.com>, linux-pci@vger.kernel.org
-Subject: Re: Config space access to Mediatek MT7922 doesn't work after device
- reset in Xen PV dom0 (regression, Linux 6.12)
+On 2025/01/28 23:12, Manivannan Sadhasivam wrote:
+> On Wed, Jan 22, 2025 at 11:24:44AM +0900, Kunihiko Hayashi wrote:
+>> After devm_request_irq() fails with error,
+>> pci_endpoint_test_free_irq_vectors() is called to free allocated vectors
+>> with pci_free_irq_vectors().
+>>
+> 
+> You should mention the function name which you are referring to. Here it is,
+> pci_endpoint_test_request_irq().
 
-On Tue, Jan 28, 2025 at 09:40:18PM -0600, Bjorn Helgaas wrote:
-> I guess the code at [2] is running in user mode and uses Linux
-> syscalls for config access?  Is it straceable?
+I see. I'll make the commit message more clear.
 
-Nope, it's running as the hypervisor and mediates Linux's access to the
-hardware. In fact, Linux PV kernel (which dom0 is by default under Xen)
-is running in ring 3...
+>> However some requested IRQs are still allocated, so there are still
+> 
+> This is confusing. Are you saying that the previously requested IRQs are not
+> freed when an error happens during the for loop in
+> pci_endpoint_test_request_irq()?
 
-But I can add some more logging there.
+Yes, after jumping to "fail:" label, it just prints an error message and
+returns the function.
 
-> Can you reproduce this without Xen at all?  If so, can you post a
-> complete dmesg and complete lspci -vv somewhere?
+The pci_endpoint_test_request_irq() is called from the following functions:
+- pci_endpoint_test_probe()
+- pci_endpoint_test_set_irq()
 
-I haven't managed to reproduce it without Xen so far. But I can't
-exclude it's some race condition that is simply unlikely to hit when
-Linux runs natively.=20
+Both call pci_endpoint_test_free_irq_vectors() after the error, though,
+requested IRQs are not freed anywhere.
 
-> > > [1] https://github.com/QubesOS/qubes-issues/issues/9689#issuecomment-=
-2582927149
-> >=20
-> > [2] https://xenbits.xen.org/gitweb/?p=3Dxen.git;a=3Dblob;f=3Dxen/arch/x=
-86/pv/emul-priv-op.c;h=3D70150c27227661baa253af8693ff00f2ab640a98;hb=3DHEAD=
-#l295
->=20
-> [3] https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tr=
-ee/drivers/pci/probe.c?id=3Dv6.13#n1208
+>> /proc/irq/* entries remaining and we encounters WARN() with the following
+>> message:
+>>
+>>      remove_proc_entry: removing non-empty directory 'irq/30', leaking at
+>>      least 'pci-endpoint-test.0'
+>>      WARNING: CPU: 0 PID: 80 at fs/proc/generic.c:717 remove_proc_entry
+>>      +0x190/0x19c
+> 
+> When did you encounter this WARN?
 
---=20
-Best Regards,
-Marek Marczykowski-G=C3=B3recki
-Invisible Things Lab
+Usually request_irq() can successfully get an interrupt.
+If request_irq() returned an error, pci_endpoint_test_free_irq_vectors() was
+called and the following call-trace was obtained:
 
---7HtAp5iYbaAmPKI3
-Content-Type: application/pgp-signature; name="signature.asc"
+[   18.772522] Call trace:
+[   18.773743]  remove_proc_entry+0x190/0x19c
+[   18.775789]  unregister_irq_proc+0xd0/0x104
+[   18.777881]  free_desc+0x4c/0xcc
+[   18.779495]  irq_free_descs+0x68/0x8c
+[   18.781325]  irq_domain_free_irqs+0x15c/0x1bc
+[   18.783502]  msi_domain_free_locked.part.0+0x184/0x1d4
+[   18.786069]  msi_domain_free_irqs_all_locked+0x64/0x8c
+[   18.788637]  pci_msi_teardown_msi_irqs+0x48/0x54
+[   18.790947]  pci_free_msi_irqs+0x18/0x38
+[   18.792907]  pci_free_irq_vectors+0x64/0x8c
+[   18.794997]  pci_endpoint_test_ioctl+0x7e8/0xf40
+[   18.797304]  __arm64_sys_ioctl+0xa4/0xe8
+[   18.799265]  invoke_syscall+0x48/0x110
+[   18.801139]  el0_svc_common.constprop.0+0x40/0xe8
+[   18.803489]  do_el0_svc+0x20/0x2c
+[   18.805145]  el0_svc+0x30/0xd0
+[   18.806673]  el0t_64_sync_handler+0x13c/0x158
+[   18.808850]  el0t_64_sync+0x190/0x194
+[   18.810680] ---[ end trace 0000000000000000 ]---
 
------BEGIN PGP SIGNATURE-----
+>> To solve this issue, set the number of remaining IRQs and release the IRQs
+>> in advance by calling pci_endpoint_test_release_irq().
+>>
+> 
+> First of all, using devm_request_irq() is wrong here as
+> pci_endpoint_test_request_irq() might be called multiple times by the userspace.
+> So we cannot use managed version of request_irq(). It is infact pointless since
+> pci_endpoint_test_clear_irq() would free them anyway. Instead we should just use
+> request_irq() and call pci_endpoint_test_clear_irq() in the error path as like
+> this patch does.
 
-iQEzBAEBCAAdFiEEhrpukzGPukRmQqkK24/THMrX1ywFAmeZpNAACgkQ24/THMrX
-1yyzZgf+NFIFR+LpsTBUlwEyR+b9DhblSPdvomnx7u3lNOlRGrdkrFsdqTkMnOE/
-mAgHDjmiK5Dfz+8IiAtKNjvz78klTW2+VCwHAwZi7vu1x9YgJL5Yn6hejG3JOgEQ
-knJaEarUmzkdmYZrrseSV5n+/SGKRflXKm0VG8M0dDCm8c//GieJIhc5q9TJdAlh
-efkH3E54iieRcvlae6NmmKZUZmhUnsHJxmUgurjgoL8BWN1rqZgaP4tIzFPDyV2g
-nGu3aK2D4oFu6aQTclHqkoPqUWw29ywLOnXNH4Uf9rBeTw17vsxSJAWy8JEtmA+X
-UPDcdOmnHXWyeUqQCweCD6Q9u6OFLQ==
-=FIrq
------END PGP SIGNATURE-----
+The pci_endpoint_test_clear_irq() will free all the number of IRQs.
+However, in this error case, since only some IRQs are allocated, need to change the
+number of IRQs that need to be freed.
 
---7HtAp5iYbaAmPKI3--
+And pci_endpoint_test_free_irq_vectors() is called just before return from the function,
+call only pci_endpoint_test_release_irq() in the error case of
+pci_endpoint_test_request_irq().
+
+For example:
+   pci_endpoint_test_set_irq()
+     pci_endpoint_test_request_irq()
+       request_irq()
+       fail:
+       >> test->num_irqs = i                // add in this patch
+       >> pci_endpoint_test_release_irq()   // add in this patch
+     err:
+     pci_endpoint_test_free_irq_vectors()
+
+> But this should be a separate patch.
+
+Agreed. I'll add another patch to use non-managed version.
+
+Thank you,
+
+---
+Best Regards
+Kunihiko Hayashi
