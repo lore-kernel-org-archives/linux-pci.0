@@ -1,112 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out199-10.us.a.mail.aliyun.com (out199-10.us.a.mail.aliyun.com [47.90.199.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 066011FFC58;
-	Mon,  3 Feb 2025 23:44:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3AF139579;
+	Tue,  4 Feb 2025 05:53:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.199.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738626286; cv=none; b=U5+DmBL+8QvB6HlaBcZbH/rwHElC1k25b7zCO7TpB2mTSjjfv0AQ5xFSJE13+MBYJPZnZrqGrjfJ1ulbwBzoFuTagyVesd0pY29+yU5RhCUfOCQpQdzhZ4UHcBJ/t8v0gw+8z25ypqcc5+FrjVIzsTzdEtkXiDChB4aFIp6/GbU=
+	t=1738648435; cv=none; b=uVhhkq+LxaJPDR1jpUm/3pMVDHRUQRGajiHMHmWY7sOxABUnzKoAQrRjXNAyLGxWMxPBInA1HCvVMUfp2LbKunpvuGRejGk1h9RtWXpuXGxQMFVTEMK+az76VVzQvFR1Wv+Ch2O47i7pGNdwmng/+a73lwd3vk1xHeXpKBQ1pF8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738626286; c=relaxed/simple;
-	bh=v+AuDIgJ0k5UvEy9luF0KK3FYg1kQKwaER5D0fle/no=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=HrYxnhfQt/AaWyTa670eLAQ1DqmXtclqNuiDvcbJhAA2bCj7UEN93/gkRq415LwFI7c3UMt/IbbgesFKE0IAuMpLqdTR8+ljDTddsVYjxWFhzHFMaXFc0j/skUFiK0Xy1/DMeLv30Umla68cGaYC3YZ4vPmBDZSYHJ+fdqdgagY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U2XgL4fp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738648435; c=relaxed/simple;
+	bh=iCct0DBbP2W1vpi6THSTibm+AfRcjlGe0lKnkdNC8X8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=QzR3odS+cKJsts4/CtHPJt7VojZ1ZfPQoR5Cuv9TPDb1O+1XBsWrmocW9mveG+nbm9cjnohX7nCwiqWmpTkVGcgWsy+a8Q3HH0ULAZ2nKB6LNetZ+KNTNxS4WIhoLQUMigYmGy2QIm2cexe3/44DeBmV03fQ0MI73/xwP7biTgg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=H7GPRfKI; arc=none smtp.client-ip=47.90.199.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U2XgL4fp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C69AC4CEE0;
-	Mon,  3 Feb 2025 23:44:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738626285;
-	bh=v+AuDIgJ0k5UvEy9luF0KK3FYg1kQKwaER5D0fle/no=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=U2XgL4fpLohrYMGFQsDpDmoiPq6PrVe58w/FVxQ1fSm6Umxk/MnowFc4T+9SDrFJ4
-	 mcrvcRiXNn8XAyBuXP6FdT/090h2HmDh+4AsGf+/H8UIx403WZM75wXVaMTu7Lg3Mk
-	 f10mFaCI98UMvtWTqWCyi2/t1D3fAesnYY+vDIj7be9yqMpr58hdzQVh+y90LdjZ5K
-	 E0E+8eTLfmvHVDd/8Ye4KIa/wmqM5KZpeEvhhawF5g1ZOULtfi6dgqFk0SfZU03wfP
-	 1ChFA5M2zxRLWUNuMBOXLINQZLiRZDQBluRBFZHdHZbDsGoqztoJE8eidGzWW2NiBT
-	 IBmBMulY3HlhQ==
-Date: Mon, 3 Feb 2025 17:44:43 -0600
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Andrea della Porta <andrea.porta@suse.com>
-Cc: Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof Wilczynski <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Saravana Kannan <saravanak@google.com>, linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-gpio@vger.kernel.org,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Stefan Wahren <wahrenst@gmx.net>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Andrew Lunn <andrew@lunn.ch>
-Subject: Re: [PATCH v6 05/10] clk: rp1: Add support for clocks provided by RP1
-Message-ID: <20250203234443.GA810409@bhelgaas>
+	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="H7GPRfKI"
+DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
+	d=linux.alibaba.com; s=default;
+	t=1738648418; h=From:To:Subject:Date:Message-Id:MIME-Version;
+	bh=74IslISy4mrgKNiJWv1O1Q22rD/RFRZQPMLY7Tnw3a4=;
+	b=H7GPRfKIQmgQGgLVsOEZSYmGv5JXh768BThMiv93ezFWbezU77TALKx7r+B26TL5WibStCBGnj8Z6ktMlh18VDkhq7mXYbHF4o0MzCqAaSjSgDXhhtyfFJ3Sy0nZV5DXUFDhSW12+otpKn9aA42dSG5TW0AIfKqaCbuh3kyPpzY=
+Received: from localhost(mailfrom:feng.tang@linux.alibaba.com fp:SMTPD_---0WOjXThs_1738647479 cluster:ay36)
+          by smtp.aliyun-inc.com;
+          Tue, 04 Feb 2025 13:37:59 +0800
+From: Feng Tang <feng.tang@linux.alibaba.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Jonathan Cameron <Jonthan.Cameron@huawei.com>,
+	ilpo.jarvinen@linux.intel.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Feng Tang <feng.tang@linux.alibaba.com>
+Subject: [PATCH 2/2] PCI: Disable PCIE hotplug interrupts early when msi is disabled
+Date: Tue,  4 Feb 2025 13:37:58 +0800
+Message-Id: <20250204053758.6025-2-feng.tang@linux.alibaba.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20250204053758.6025-1-feng.tang@linux.alibaba.com>
+References: <20250204053758.6025-1-feng.tang@linux.alibaba.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <b12caa1c8c674a56afa7b2de780d9ae5423159a3.1736776658.git.andrea.porta@suse.com>
+Content-Transfer-Encoding: 8bit
 
-On Mon, Jan 13, 2025 at 03:58:04PM +0100, Andrea della Porta wrote:
-> RaspberryPi RP1 is an MFD providing, among other peripherals, several
-> clock generators and PLLs that drives the sub-peripherals.
-> Add the driver to support the clock providers.
+There was a irq storm bug when testing "pci=nomsi" case, and the root
+cause is: 'nomsi' will disable MSI and let devices and root ports use
+legacy INTX inerrupt, and likely make several devices/ports share one
+interrupt. In the failure case, BIOS doesn't disable the PCIE hotplug
+interrupts, and  actually asserts the command-complete interrupt.
+As MSI is disabled, ACPI initialization code will not enumerate root
+port's PCIE hotplug capability, and pciehp service driver wont' be
+enabled for the root port to handle that interrupt, later on when it is
+shared and enabled by other device driver like NVME or NIC, the "nobody
+care irq storm" happens.
 
-> +#define PLL_PRIM_DIV1_SHIFT		16
-> +#define PLL_PRIM_DIV1_WIDTH		3
-> +#define PLL_PRIM_DIV1_MASK		GENMASK(PLL_PRIM_DIV1_SHIFT + \
-> +						PLL_PRIM_DIV1_WIDTH - 1, \
-> +						PLL_PRIM_DIV1_SHIFT)
-> +
-> +#define PLL_PRIM_DIV2_SHIFT          12
-> +#define PLL_PRIM_DIV2_WIDTH          3
-> +#define PLL_PRIM_DIV2_MASK           GENMASK(PLL_PRIM_DIV2_SHIFT + \
-> +                                             PLL_PRIM_DIV2_WIDTH - 1, \
-> +                                             PLL_PRIM_DIV2_SHIFT)
+So disable the pcie hotplug CCIE/HPIE interrupt in early boot phase when
+MSI is not enbaled.
 
-Maybe this is standard drivers/clk style, but this seems like overkill
-to me.  I think this would be sufficient and easier to read:
+Signed-off-by: Feng Tang <feng.tang@linux.alibaba.com>
+---
+ drivers/pci/probe.c | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-  #define PLL_PRIM_DIV1_MASK   GENMASK(18, 16)
-  #define PLL_PRIM_DIV2_MASK   GENMASK(14, 12)
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index b6536ed599c3..10d72156da9a 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1664,6 +1664,15 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
+ 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
+ 	if (reg32 & PCI_EXP_SLTCAP_HPC)
+ 		pdev->is_hotplug_bridge = 1;
++
++	/*
++	 * When MSI is disabled, root port will use legacy INTX, and likely
++	 * share INTX interrupt line with other devices like NIC/NVME. There
++	 * was real world issue that the CCIE IRQ is asserted afer boot, but
++	 * will not be handled well and cause IRQ storm. So disable it early.
++	 */
++	if (!pci_msi_enabled())
++		pcie_disable_hp_interrupts_early(pdev);
+ }
+ 
+ static void set_pcie_thunderbolt(struct pci_dev *dev)
+-- 
+2.43.5
 
-> +static unsigned long rp1_pll_recalc_rate(struct clk_hw *hw,
-> +					 unsigned long parent_rate)
-> +{
-> +	struct rp1_clk_desc *pll = container_of(hw, struct rp1_clk_desc, hw);
-> +	struct rp1_clockman *clockman = pll->clockman;
-> +	const struct rp1_pll_data *data = pll->data;
-> +	u32 prim, prim_div1, prim_div2;
-> +
-> +	prim = clockman_read(clockman, data->ctrl_reg);
-> +	prim_div1 = (prim & PLL_PRIM_DIV1_MASK) >> PLL_PRIM_DIV1_SHIFT;
-> +	prim_div2 = (prim & PLL_PRIM_DIV2_MASK) >> PLL_PRIM_DIV2_SHIFT;
-
-And then here, I think you can just use FIELD_GET():
-
-  prim_div1 = FIELD_GET(PLL_PRIM_DIV1_MASK, prim);
-  prim_div2 = FIELD_GET(PLL_PRIM_DIV2_MASK, prim);
-
-It looks like the same could be done for PLL_SEC_DIV_MASK,
-PLL_CS_REFDIV_SHIFT, PLL_PH_PHASE_SHIFT, CLK_CTRL_AUXSRC_MASK, etc.
