@@ -1,127 +1,127 @@
-Received: from mx05lb.world4you.com (mx05lb.world4you.com [81.19.149.115])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91D38203710;
-	Tue,  4 Feb 2025 20:34:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=81.19.149.115
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0761A2046B1;
+	Tue,  4 Feb 2025 20:39:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738701290; cv=none; b=qGoWoqRU1VOpM/1eroaB/8mzMdcX55DEljpdnI2a3PI1itPYryJKijUmtqxF9A5JBt9UzesBY1FeQ9Hb7vk+Pn0huf68XjvDva7+jjz4o2xpsf9vDho/9zJJZDGd29B+ltVJ/VwBRcHX3Uji/yStejxUdfW3KdLXBQ9ro7IXuz0=
+	t=1738701579; cv=none; b=TJh5elCR4rDpVW908lA4uU1EEc51ltL3Mw5DGPhIavcZa3Mb9PrC4q5sq0yrS5HzP6xWyuJoRgCqUrdQW7anZfRyLD6RO5LwLG+LO+RkMmBc7ucgvc3JsMo7ZkjnEcU9aSgEferGwko640cfBc8kv6MiKOXh9nq8GeMs2yWl+f8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738701290; c=relaxed/simple;
-	bh=iu18eYYQR4fLthqgNOhu/VAmwYelaQmKNYCEv86pKn4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=u4CXL+rqF+zaFMnwGA7hnG0ztzdMjb+U5Umf1PIIm9h0gc5J5th5j/GjfaH3O2LGVp3PWjEGk3SLOgRlmUqlwMlksCVKKEpEKGD5VSAbNWYtCbS4tb5J7xcAXBxikxqxUztiXnsl4tVkzaxcGEEgnmgrS5Fvq21mx9FKeiHYolU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com; spf=pass smtp.mailfrom=engleder-embedded.com; dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b=wH/g5+st; arc=none smtp.client-ip=81.19.149.115
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=engleder-embedded.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=engleder-embedded.com
+	s=arc-20240116; t=1738701579; c=relaxed/simple;
+	bh=f4g6bqfAT9+Gt7eiCy02v5g9+I4V2HS1JOGUwyG51iQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=auKLfpK0lnZEK97nzpHwVEyMFcgojrZwE6TK/CNBFbNNiZdsV30Gn0+qhb+vFa3L2BKyAg7uCRm8FKTQZDBhYckVSg5FiNBBCHFUZOZvJ9KbQA7l5KRVUc5RibRE43K7hgBOhScRgYr1GFXF0mSDIroDGRlMTaAy91zBPxXSkbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WyGNvxeD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=engleder-embedded.com header.i=@engleder-embedded.com header.b="wH/g5+st"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=engleder-embedded.com; s=dkim11; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=Dso1EsGyxnhW5FWhayp/zMY4aUV2+LaYO3ijOICijXI=; b=wH/g5+strem6Fjbax6JIGuA4jI
-	zAz+g1rjHx2TLNWIJccj9GLm/xwcXe9FkCI5BIZFy3yXAWoaU1WMs4Zn7YjJLn7dKfMhLeavUdNJh
-	/pjcw3iMEz4nrkA+a8xScAmUKmcEE2XhzLwCPfjRK+kna7A46CgYgiZ/bdZ8qkKkDPPs=;
-Received: from [88.117.60.28] (helo=[10.0.0.160])
-	by mx05lb.world4you.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.97.1)
-	(envelope-from <gerhard@engleder-embedded.com>)
-	id 1tfPNK-000000005UN-3Y68;
-	Tue, 04 Feb 2025 21:18:27 +0100
-Message-ID: <bd604c16-0f5c-479c-aa13-932f1570e5b5@engleder-embedded.com>
-Date: Tue, 4 Feb 2025 21:18:25 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WyGNvxeD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39C53C4CEDF;
+	Tue,  4 Feb 2025 20:39:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1738701578;
+	bh=f4g6bqfAT9+Gt7eiCy02v5g9+I4V2HS1JOGUwyG51iQ=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=WyGNvxeDRjt3Zv+K1eAJfX1iuKoV43u6V51makn4ADDUZSjejXchnDkdKarEecxiA
+	 GFXa+6vBUv9EYLCV6xLj1TLqSONt9kCP0pX/qcsgN2lAnghFv3VV1SjGp0g38jjuIQ
+	 Se4a3AzXf8D+/WyIq+FfxrIR7SdCuB1VqBiOfG+TE2qrulQP2eYhJVQZbP9Yk7qZT3
+	 GxFsoI4bkjFMJ8VmLR0dY+Dm6gpX0XBNrLBun4EUFrxSGqBJGGkNzW5nCFEZZrH+5E
+	 1aDpLIAZJlAo/BCp84ei5FowM6c+R0Dkr6fEbVSZ8p8K1DFGUHi2QVfsJKZtBU9Ev0
+	 J9whJjwrEkO5w==
+Date: Tue, 4 Feb 2025 14:39:36 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Jian-Hong Pan <jhp@endlessos.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	=?utf-8?B?TmlrbMSBdnMgS2/EvGVzxYZpa292cw==?= <pinkflames.linux@gmail.com>,
+	"Rafael J. Wysocki" <rjw@rjwysocki.net>
+Subject: Re: [PATCH 1/1] PCI/ASPM: Fix L1SS saving
+Message-ID: <20250204203936.GA860339@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH iwl-next v4] e1000e: Fix real-time violations on link up
-To: anthony.l.nguyen@intel.com
-Cc: intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org,
- linux-pci@vger.kernel.org, przemyslaw.kitszel@intel.com,
- andrew+netdev@lunn.ch, davem@davemloft.net, kuba@kernel.org,
- edumazet@google.com, pabeni@redhat.com, bhelgaas@google.com,
- pmenzel@molgen.mpg.de, aleksander.lobakin@intel.com,
- Gerhard Engleder <eg@keba.com>, Vitaly Lifshits <vitaly.lifshits@intel.com>,
- Avigail Dahan <avigailx.dahan@intel.com>, Simon Horman <horms@kernel.org>
-References: <20241219192743.4499-1-gerhard@engleder-embedded.com>
- <20250106111752.GC4068@kernel.org>
-Content-Language: en-US
-From: Gerhard Engleder <gerhard@engleder-embedded.com>
-In-Reply-To: <20250106111752.GC4068@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AV-Do-Run: Yes
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250131152913.2507-1-ilpo.jarvinen@linux.intel.com>
 
-On 06.01.25 12:17, Simon Horman wrote:
-> On Thu, Dec 19, 2024 at 08:27:43PM +0100, Gerhard Engleder wrote:
->> From: Gerhard Engleder <eg@keba.com>
->>
->> Link down and up triggers update of MTA table. This update executes many
->> PCIe writes and a final flush. Thus, PCIe will be blocked until all
->> writes are flushed. As a result, DMA transfers of other targets suffer
->> from delay in the range of 50us. This results in timing violations on
->> real-time systems during link down and up of e1000e in combination with
->> an Intel i3-2310E Sandy Bridge CPU.
->>
->> The i3-2310E is quite old. Launched 2011 by Intel but still in use as
->> robot controller. The exact root cause of the problem is unclear and
->> this situation won't change as Intel support for this CPU has ended
->> years ago. Our experience is that the number of posted PCIe writes needs
->> to be limited at least for real-time systems. With posted PCIe writes a
->> much higher throughput can be generated than with PCIe reads which
->> cannot be posted. Thus, the load on the interconnect is much higher.
->> Additionally, a PCIe read waits until all posted PCIe writes are done.
->> Therefore, the PCIe read can block the CPU for much more than 10us if a
->> lot of PCIe writes were posted before. Both issues are the reason why we
->> are limiting the number of posted PCIe writes in row in general for our
->> real-time systems, not only for this driver.
->>
->> A flush after a low enough number of posted PCIe writes eliminates the
->> delay but also increases the time needed for MTA table update. The
->> following measurements were done on i3-2310E with e1000e for 128 MTA
->> table entries:
->>
->> Single flush after all writes: 106us
->> Flush after every write:       429us
->> Flush after every 2nd write:   266us
->> Flush after every 4th write:   180us
->> Flush after every 8th write:   141us
->> Flush after every 16th write:  121us
->>
->> A flush after every 8th write delays the link up by 35us and the
->> negative impact to DMA transfers of other targets is still tolerable.
->>
->> Execute a flush after every 8th write. This prevents overloading the
->> interconnect with posted writes.
->>
->> Signed-off-by: Gerhard Engleder <eg@keba.com>
->> Link: https://lore.kernel.org/netdev/f8fe665a-5e6c-4f95-b47a-2f3281aa0e6c@lunn.ch/T/
->> CC: Vitaly Lifshits <vitaly.lifshits@intel.com>
->> Reviewed-by: Przemek Kitszel <przemyslaw.kitszel@intel.com>
->> Tested-by: Avigail Dahan <avigailx.dahan@intel.com>
->> ---
->> v4:
->> - add PREEMPT_RT dependency again (Vitaly Lifshits)
->> - fix comment styple (Alexander Lobakin)
->> - add to comment each 8th and explain why (Alexander Lobakin)
->> - simplify check for every 8th write (Alexander Lobakin)
->>
->> v3:
->> - mention problematic platform explicitly (Bjorn Helgaas)
->> - improve comment (Paul Menzel)
->>
->> v2:
->> - remove PREEMPT_RT dependency (Andrew Lunn, Przemek Kitszel)
+[+cc Rafael]
+
+On Fri, Jan 31, 2025 at 05:29:13PM +0200, Ilpo Järvinen wrote:
+> The commit 1db806ec06b7 ("PCI/ASPM: Save parent L1SS config in
+> pci_save_aspm_l1ss_state()") aimed to perform L1SS config save for both
+> the Upstream Port and its upstream bridge when handling an Upstream
+> Port, which matches what the L1SS restore side does. However,
+> parent->state_saved can be set true at an earlier time when the
+> upstream bridge saved other parts of its state. 
+
+So I guess the scenario is that we got here because some driver called
+pci_save_state(pdev):
+
+  pci_save_state
+    dev->state_saved = true                <--
+    pci_save_pcie_state
+      pci_save_aspm_l1ss_state
+        if (pcie_downstream_port(pdev))
+          return
+        # save pdev L1SS state here
+        if (parent->state_saved)           <--
+          return
+        # save parent L1SS state here
+
+and the problem is that we previously called pci_save_state(parent),
+which set "parent->state_saved = true" but did not save its L1SS state
+because pci_save_aspm_l1ss_state() is a no-op for Downstream Ports,
+right?
+
+But I would think this would be a very common situation because
+pcie_portdrv_probe() calls pci_save_state() for Downstream Ports when
+pciehp, AER, PME, etc, are enabled, and this would happen before the
+pci_save_state() calls from Endpoint drivers.
+
+So I'm a little surprised that this didn't blow up for everybody
+immediately.  Is there something that makes this unusual?
+
+> Then later when
+> attempting to save the L1SS config while handling the Upstream Port,
+> parent->state_saved is true in pci_save_aspm_l1ss_state() resulting in
+> early return and skipping saving bridge's L1SS config because it is
+> assumed to be already saved. Later on restore, junk is written into
+> L1SS config which causes issues with some devices.
 > 
-> Reviewed-by: Simon Horman <horms@kernel.org>
-
-Is there anything left from my side to get this change over iwl-next
-into net-next?
-
-Gerhard
+> Remove parent->state_saved check and unconditionally save L1SS config
+> also for the upstream bridge from an Upstream Port which ought to be
+> harmless from correctness point of view. With the Upstream Port check
+> now present, saving the L1SS config more than once for the bridge is no
+> longer a problem (unlike when the parent->state_saved check got
+> introduced into the fix during its development).
+> 
+> Fixes: 1db806ec06b7 ("PCI/ASPM: Save parent L1SS config in pci_save_aspm_l1ss_state()")
+> Closes: https://bugzilla.kernel.org/show_bug.cgi?id=219731
+> Reported-by: Niklāvs Koļesņikovs <pinkflames.linux@gmail.com>
+> Tested-by: Niklāvs Koļesņikovs <pinkflames.linux@gmail.com>
+> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+> ---
+>  drivers/pci/pcie/aspm.c | 3 ---
+>  1 file changed, 3 deletions(-)
+> 
+> diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
+> index e0bc90597dca..da3e7edcf49d 100644
+> --- a/drivers/pci/pcie/aspm.c
+> +++ b/drivers/pci/pcie/aspm.c
+> @@ -108,9 +108,6 @@ void pci_save_aspm_l1ss_state(struct pci_dev *pdev)
+>  	pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL2, cap++);
+>  	pci_read_config_dword(pdev, pdev->l1ss + PCI_L1SS_CTL1, cap++);
+>  
+> -	if (parent->state_saved)
+> -		return;
+> -
+>  	/*
+>  	 * Save parent's L1 substate configuration so we have it for
+>  	 * pci_restore_aspm_l1ss_state(pdev) to restore.
+> 
+> base-commit: 72deda0abee6e705ae71a93f69f55e33be5bca5c
+> -- 
+> 2.39.5
+> 
