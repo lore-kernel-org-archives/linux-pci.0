@@ -1,35 +1,35 @@
 Received: from relay4-d.mail.gandi.net (relay4-d.mail.gandi.net [217.70.183.196])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB2F7204C1D;
-	Tue,  4 Feb 2025 07:35:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39D9A2063DA;
+	Tue,  4 Feb 2025 07:35:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.196
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738654519; cv=none; b=u5P+medRJ+tIokSmRYU7IxyD5R0qX9gOR8I/zPNgvJ9E92nDU/DDiyVynfoM+7mXwJoftl7kTwtIAcovzNdKMZ6X3FlhOoUOpvuy2sJ4bhQagoc7vSuzOgp7L4pYJDNpyLGaKr30Y0zfAMLkTbt4qoxgHUDHLLrmfzYLk8SLpYQ=
+	t=1738654520; cv=none; b=bJaLgXKsJiRUmLva4vzGiAFJb+5bsVBYEjDPGHCTysq5CzjXWyHD//lg1HAToLsfFGVEwjOyi7+rGo2ziIfM3S8aoubStRxWq1DlTY0E42dndYLDALBXYAZEYmgcVkePb7T/SijgoLXOrjW4m/TPEWG0TNz4TrljbwzQnf/xmkQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738654519; c=relaxed/simple;
-	bh=2M503OvHvoRmWCpank1mJVuBmwGQs429DHHS9kKURYc=;
+	s=arc-20240116; t=1738654520; c=relaxed/simple;
+	bh=Z92Iij4ppO//2iG1VjApoeSswpj3ZvFmkzJ2X3J/kqM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=obZZBMk/WBpLUPa3Vmb0v+MQl/09o6NlJWn/PsnG2iaGeC06N4y/FxARirZu6c1TE1AOjRYGpQ8ibN9qdwvcjWGSciKFIC1XtI9UVdLcXzA6DlhYLnBAtqLbkTWosxgjlgVJXV3VVkI5fkfKAefnffZIMJsrckil8fEjL+k107s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=jndpBWda; arc=none smtp.client-ip=217.70.183.196
+	 MIME-Version; b=ofosoWnHfqoxhnCeOCrAEsejKCtrnWu7/A54bAPLRvbbQemyvx+5tzBpIqFBHhoFTtV8I5w3hAkNHkUkznPji8crv1J1eglzGiiCKnM+8aMAxnSyAbFeArDbvpvJO+Eb0uJ7Qw8Dkx1CHq/f4GIsxOukS6+NVmGxBD+x3ZNdx80=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=mS2Vuabh; arc=none smtp.client-ip=217.70.183.196
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="jndpBWda"
-Received: by mail.gandi.net (Postfix) with ESMTPA id 7344A44402;
-	Tue,  4 Feb 2025 07:35:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="mS2Vuabh"
+Received: by mail.gandi.net (Postfix) with ESMTPA id 0722144417;
+	Tue,  4 Feb 2025 07:35:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1738654514;
+	t=1738654515;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=xiD8UramHvEcUARfSgVu7SkVw5gcFuebpD/DDan/ap8=;
-	b=jndpBWdasbdVCWWTfVXW/szfj7rzjQLn0kzL8T4SsTmN+JWSTBxnAdAhRUfs+j/X9NV+fY
-	DcbS3JU5QMNrORc2U8iwzPP9Imxj3n34vjpdO7TsdRBCdCPOzr280O8eaOB+ucbDTAmakJ
-	IcDLQ7eZp8x1J7bVKbcIjJt1eOa+FLHgfEUAhyUUnWRYSEsI03Fd6l6LRrv2EuphsDsSJC
-	aIAp3n0cApOIyyQrv4z+7R77YJSMRWTkhaGShpbAoihbHBooEZsLkxt3yRj16LpezXMdaS
-	cuAm4DZXns+TaBILwNDf4LNh91Am3LdFqmSNQ9JrFVa6q/rsXUVlxqNGS7gNFw==
+	bh=CmiwcnqKRWvJz2/o0/LToxXtK0VEDLbdaqIJoBX7Vg4=;
+	b=mS2Vuabhq4EJiME1PPuz0umI4Sck4sQZkUt3NkBUcNUUcS/obFp8j+MgjqNriQio0pbFsE
+	xyuU4h1bFUl5vRZulfvBhI4sO0NFdoQvG+O2eLHMr0gxhEnyT5tJagg+R8E6lHqFiytgOk
+	qQ5LLkb3HNMzv3WA0AW9YiCeFkWLf5tvHXL/0YnGTuovNxmYmCsUUPyvZu1fqhci6YYAnx
+	88WTniYkG672xKWfXrsSqAiUP8J6uILKrp0r70wpwGlhMGIZnei+qW/Cyn/SuM9WrDuXYB
+	BzhK48hpTqsrD0w13YqiagR4CUD3xpbKNh6HiJHcX/iwID/jWvmxhd9im+8B+g==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
 	"Rafael J. Wysocki" <rafael@kernel.org>,
@@ -46,9 +46,9 @@ Cc: linux-kernel@vger.kernel.org,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
 	Herve Codina <herve.codina@bootlin.com>
-Subject: [PATCH v7 2/5] PCI: of: Use device_{add,remove}_of_node() to attach of_node to existing device
-Date: Tue,  4 Feb 2025 08:34:57 +0100
-Message-ID: <20250204073501.278248-3-herve.codina@bootlin.com>
+Subject: [PATCH v7 4/5] PCI: of_property: Constify parameter in of_pci_get_addr_flags()
+Date: Tue,  4 Feb 2025 08:34:59 +0100
+Message-ID: <20250204073501.278248-5-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.47.1
 In-Reply-To: <20250204073501.278248-1-herve.codina@bootlin.com>
 References: <20250204073501.278248-1-herve.codina@bootlin.com>
@@ -65,58 +65,30 @@ X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgdduleelvdcutefuodetggdotef
  hgvlhdrohhrghdprhgtphhtthhopehsrghrrghvrghnrghksehgohhoghhlvgdrtghomhdprhgtphhtthhopegshhgvlhhgrggrshesghhoohhglhgvrdgtohhmpdhrtghpthhtoheplhhiiihhihdrhhhouhesrghmugdrtghomhdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrgh
 X-GND-Sasl: herve.codina@bootlin.com
 
-The commit 407d1a51921e ("PCI: Create device tree node for bridge")
-creates of_node for PCI devices. The newly created of_node is attached
-to an existing device. This is done setting directly pdev->dev.of_node
-in the code.
+The res parameter has no reason to be a pointer to an un-const struct
+resource. Indeed, struct resource is not supposed to be modified by the
+function.
 
-Even if pdev->dev.of_node cannot be previously set, this doesn't handle
-the fwnode field of the struct device. Indeed, this field needs to be
-set if it hasn't already been set.
-
-device_{add,remove}_of_node() have been introduced to handle this case.
-
-Use them instead of the direct setting.
+Constify the res parameter.
 
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
 ---
- drivers/pci/of.c | 11 +++++++++--
- 1 file changed, 9 insertions(+), 2 deletions(-)
+ drivers/pci/of_property.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index 7a806f5c0d20..fb5e6da1ead0 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -653,8 +653,8 @@ void of_pci_remove_node(struct pci_dev *pdev)
- 	np = pci_device_to_OF_node(pdev);
- 	if (!np || !of_node_check_flag(np, OF_DYNAMIC))
- 		return;
--	pdev->dev.of_node = NULL;
+diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
+index 962d2e8cc095..b17dcb04de18 100644
+--- a/drivers/pci/of_property.c
++++ b/drivers/pci/of_property.c
+@@ -69,7 +69,7 @@ static void of_pci_set_address(struct pci_dev *pdev, u32 *prop, u64 addr,
+ 	}
+ }
  
-+	device_remove_of_node(&pdev->dev);
- 	of_changeset_revert(np->data);
- 	of_changeset_destroy(np->data);
- 	of_node_put(np);
-@@ -711,11 +711,18 @@ void of_pci_make_dev_node(struct pci_dev *pdev)
- 		goto out_free_node;
+-static int of_pci_get_addr_flags(struct resource *res, u32 *flags)
++static int of_pci_get_addr_flags(const struct resource *res, u32 *flags)
+ {
+ 	u32 ss;
  
- 	np->data = cset;
--	pdev->dev.of_node = np;
-+
-+	ret = device_add_of_node(&pdev->dev, np);
-+	if (ret)
-+		goto out_revert_cset;
-+
- 	kfree(name);
- 
- 	return;
- 
-+out_revert_cset:
-+	np->data = NULL;
-+	of_changeset_revert(cset);
- out_free_node:
- 	of_node_put(np);
- out_destroy_cset:
 -- 
 2.47.1
 
