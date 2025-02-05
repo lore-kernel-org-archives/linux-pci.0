@@ -1,176 +1,120 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 471E11FCCE1;
-	Wed,  5 Feb 2025 18:27:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7642B1FFC46
+	for <linux-pci@vger.kernel.org>; Wed,  5 Feb 2025 19:12:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738780039; cv=none; b=Jujpi7DXCaa6+co9OIsxWBBvy62aHMfCuQWJ3t4cIZ1miJ5SYN0bUhe1WEG5KIdOgy9/X69E+XGXxFBVms6RAagz7o+QRs0uGQ6s5elqVKCNh4VjEUmLqwj3oX8KXz5lKS5RZBLRtE1uXBqDUjyM9PKH4+lfrh1GXxTr45nAEuw=
+	t=1738782752; cv=none; b=lU7GiZ46QHFuEjl+FcuCAdg9MyogZUv/CvAIB3gtdTk67B/ZlV5H3EFv8wDN22t1yv+PaUVdL0qLr5YGlT7g/Vu1xl5c/wZb0gDke6unQzs/PQoXaMR7atlIFELpOdKsUpNwgryUvMuqbz1c/AL9FqRfAwmDwd5dSkZq4DQ5N9o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738780039; c=relaxed/simple;
-	bh=XTlhPmk51GDVC6DlWA9yXxy+ISHtOrb+IWkiux/fELw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=M+QHBiIpNhl6a74bB6QDxDmQw7dbI+WeNV8D938vW8wh0+cNcuDVyg2OGy4dhwuveQhHntzF72vM50qg9l9llS9KBYbdrSC9b9gck7r3bKgL8FX/GnSDRDaoa1ML0f+rQ/vd8hy3Ax7MS39deWvX/Q+c8YKGXfFDxX1UYU68qiY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=m7edtQC/; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1738782752; c=relaxed/simple;
+	bh=pnzOH1e2axdVqJngQp6tdqFmDskboQFLalroUwFTUdc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Bx1OkPJ6ra6kK+oXIGFdH5VIz5oR06XX4CxPJgD1FPTZyF18gs/JdNoWjsLsz+8x9uOTL/xXoYqnOlCv/F3WBEXOC73EAgOQp/MaFXPe0EENaPxEsjDkVHXOW+SHXTNaeQI6H4KZJBcH2BnvSBW1cDa1dPgR9oe1tqw4uNFhA2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=G34l7Riw; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="m7edtQC/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738780037; x=1770316037;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=XTlhPmk51GDVC6DlWA9yXxy+ISHtOrb+IWkiux/fELw=;
-  b=m7edtQC/oyshDa6xiUVPV2aEEudl0BIUPlqq4XQkfC9Ik/oWHHm5NGcg
-   1G1r3ltMWtKQ3NcH4Yj/RuL1LTqTWtT1ZG7D+VDt1YKNl7ZAge2kFvatf
-   34lTEmNEK21ttBVDA0xTOAmLzNOQooB9qK+XefdHlfmmwcmWg/6yob17z
-   74nbO4TbH2Y0rUzICRh9t0NRloky3WGgQKtcchzuz3z2nYPB8h2RTkaE7
-   p9hzZ7x0ODofCjx/5KmeVBTOrJyfg2JV83q45PVNCfgJ+0R8EGah0Wtt0
-   X8hP2tlR1Idq5P53kqGKtHFqdYeb1zjRaXR1wPrnAbc+lh0Fum1hlvYFj
-   w==;
-X-CSE-ConnectionGUID: 7h97O7OnRZed1KX7+tew/w==
-X-CSE-MsgGUID: MS8nEX73TkWf8+MZ0NbjNQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11336"; a="39388164"
-X-IronPort-AV: E=Sophos;i="6.13,262,1732608000"; 
-   d="scan'208";a="39388164"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2025 10:27:16 -0800
-X-CSE-ConnectionGUID: HyM0g3kIQx2POYoCUoS8FA==
-X-CSE-MsgGUID: 0tZY022HQkipK2/4msdY7w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,262,1732608000"; 
-   d="scan'208";a="110870664"
-Received: from daliomra-mobl3.amr.corp.intel.com (HELO [10.124.220.14]) ([10.124.220.14])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Feb 2025 10:27:16 -0800
-Message-ID: <7e5e9bad-b66b-4a7f-8868-af5f1ab2fda1@linux.intel.com>
-Date: Wed, 5 Feb 2025 10:26:59 -0800
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="G34l7Riw"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-216728b1836so3469675ad.0
+        for <linux-pci@vger.kernel.org>; Wed, 05 Feb 2025 11:12:31 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1738782750; x=1739387550; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=rshGoTVKNv7yJ8UG0ncdA2L3Ez+eMRudoZQa+hQwzgo=;
+        b=G34l7Riw5CEHbbRxZts1CYc48HpXGjRfgWl5FQoMWp8Oo28jSTwQRwdu3DvfK5RjfP
+         yX58EoHrk8Ndjp+fezovoQh9xvZDb2lqna+hPkT9ECX8e2NDwNXRN0pxx0PFLrkwJ/km
+         Mqq2WEcfwyhhkuuNOMUS769/Nj8gI2tCmzI/4=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738782750; x=1739387550;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=rshGoTVKNv7yJ8UG0ncdA2L3Ez+eMRudoZQa+hQwzgo=;
+        b=kIZUzSjevn650LcnXlZcv6DyMJZQ1yYHqHkSS5pOYXBLgVMtq3KLvBieyFq3VPBf93
+         9N2Vy3YWuRTtnF7NPuFTHj6uWZn3UrJX/bhYvX/+L6deDUrxiulXxP1XfhY/V6Cn7QJL
+         j0tJfoQigHyQvOwCpXSbCkndzX0mlCXWYalbdi5+WMm5OwLAn62pNMF59QgLG8hyRBRs
+         kcbk4pXVnnC0KurYX+QhROJ45skSnQL/gPsJ2HCpWiplS2mWwzlrGFJKm9rQWVOxmikM
+         5kVsf1gQ7iwgod7PwMhhxPpylNwwxMC78o642o5LryIivtG9wbLBLIHl8mwDTHAXZrPt
+         tmnQ==
+X-Gm-Message-State: AOJu0Yz0B9Oivl8UvawZppYs4JVuZ0UOCuZi2TGpAWvSFBR34P29PhWf
+	RNzfCrVXmqaQEczapjT3N2WGVRsV2gOflTmjnmYFZ0ouREXrikBBH/iSRbYlOjnp/lFDTs+iuMG
+	PgNoH/DLU4/5f8rEqGAwMMFFUSAT94Keg8H3M5umPxD+XywvOxwvcBr441NmFatZ4nWR0u9mbVz
+	pbH9cXYVmc7ss7lB5pk0LRfqnRvQxzinVRWflQBT1rTDPs2NfK
+X-Gm-Gg: ASbGncuqFexCwXWRiidU/KenVY0wT0b24d1ywaNHpBL82JadrIR2CyFNIN2WlWEoqOf
+	Vts2GjpzNQEQiwwWBKwy30joFM7r48ZEZGQE5WWHzWZbT448n7YByQz+zp5dKCJzV9IWTgMaJ2i
+	1h19fd67LzP12IdAWu5sgey/7ED8/4+3qz9nyKAtHM0jq82TYQ1xNoyiKrruQCW8rjWvKYdI/l3
+	eJGwvc4DfExAeCQJWNJyV7QjTS6TSSwt+b/cRa2XfFTxFMzdDD3vtj/kDY7SZ3YLuja9DMMeEFd
+	7SDao5wTtl1cqN3a2FvbBTcOCkqi0UUA1AGyoe6g0ZNpXdtxxjEsI+yg9csInZMTitrzmF0=
+X-Google-Smtp-Source: AGHT+IEvH1UsOv2Pdep53yziZn/D7SThmLNGW4jFaeetD7lQZsfU1M4mdvMGq8u34jzx7Ya85/+NnQ==
+X-Received: by 2002:a05:6a20:2d0b:b0:1ea:ddd1:2fa7 with SMTP id adf61e73a8af0-1ede88b9994mr7396175637.28.1738782750080;
+        Wed, 05 Feb 2025 11:12:30 -0800 (PST)
+Received: from stbsrv-and-02.and.broadcom.net ([192.19.144.250])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe69ceb1csm12670842b3a.151.2025.02.05.11.12.27
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Feb 2025 11:12:29 -0800 (PST)
+From: Jim Quinlan <james.quinlan@broadcom.com>
+To: linux-pci@vger.kernel.org,
+	Nicolas Saenz Julienne <nsaenz@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	Cyril Brulebois <kibi@debian.org>,
+	Stanimir Varbanov <svarbanov@suse.de>,
+	bcm-kernel-feedback-list@broadcom.com,
+	jim2101024@gmail.com,
+	james.quinlan@broadcom.com
+Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
+	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v1 2/6] PCI: brcmstb: Fix error path upon call of regulator_bulk_get()
+Date: Wed,  5 Feb 2025 14:12:02 -0500
+Message-ID: <20250205191213.29202-3-james.quinlan@broadcom.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250205191213.29202-1-james.quinlan@broadcom.com>
+References: <20250205191213.29202-1-james.quinlan@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] PCI/portdrv: Add necessary delay for disabling
- hotplug events
-To: Feng Tang <feng.tang@linux.alibaba.com>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: Jonathan Cameron <Jonthan.Cameron@huawei.com>,
- ilpo.jarvinen@linux.intel.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250204053758.6025-1-feng.tang@linux.alibaba.com>
-Content-Language: en-US
-From: Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <20250204053758.6025-1-feng.tang@linux.alibaba.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+If regulator_bulk_get() returns an error, no regulators are
+created and we need to set their number to zero.  If we do
+not do this and the PCIe link-up fails, regulator_bulk_free()
+will be invoked and effect a panic.
 
-On 2/3/25 9:37 PM, Feng Tang wrote:
-> According to PCIe 6.1 spec, section 6.7.3.2, software need to wait at
-> least 1 second for the command-complete event, before resending the cmd
-> or sending a new cmd.
->
-> Currently get_port_device_capability() sends slot control cmd to disable
-> PCIe hotplug interrupts without waiting for its completion and there was
-> real problem reported for the lack of waiting.
+Also print out the error value, as we cannot return an error
+upwards as Linux will WARN on an error from add_bus().
 
-Can you include the error log associated with this issue? What is the
-actual issue you are seeing and in which hardware?
+Fixes: 9e6be018b263 ("PCI: brcmstb: Enable child bus device regulators from DT")
+Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+---
+ drivers/pci/controller/pcie-brcmstb.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
->
-> Add the necessary wait to comply with PCIe spec. The waiting logic refers
-> existing pcie_poll_cmd().
->
-> Signed-off-by: Feng Tang <feng.tang@linux.alibaba.com>
-> ---
->   drivers/pci/pci.h          |  2 ++
->   drivers/pci/pcie/portdrv.c | 33 +++++++++++++++++++++++++++++++--
->   2 files changed, 33 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index 01e51db8d285..c1e234d1b81d 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -759,12 +759,14 @@ static inline void pcie_ecrc_get_policy(char *str) { }
->   #ifdef CONFIG_PCIEPORTBUS
->   void pcie_reset_lbms_count(struct pci_dev *port);
->   int pcie_lbms_count(struct pci_dev *port, unsigned long *val);
-> +void pcie_disable_hp_interrupts_early(struct pci_dev *dev);
->   #else
->   static inline void pcie_reset_lbms_count(struct pci_dev *port) {}
->   static inline int pcie_lbms_count(struct pci_dev *port, unsigned long *val)
->   {
->   	return -EOPNOTSUPP;
->   }
-> +static inline void pcie_disable_hp_interrupts_early(struct pci_dev *dev) {}
->   #endif
->   
->   struct pci_dev_reset_methods {
-> diff --git a/drivers/pci/pcie/portdrv.c b/drivers/pci/pcie/portdrv.c
-> index 02e73099bad0..16010973bfe2 100644
-> --- a/drivers/pci/pcie/portdrv.c
-> +++ b/drivers/pci/pcie/portdrv.c
-> @@ -18,6 +18,7 @@
->   #include <linux/string.h>
->   #include <linux/slab.h>
->   #include <linux/aer.h>
-> +#include <linux/delay.h>
->   
->   #include "../pci.h"
->   #include "portdrv.h"
-> @@ -205,6 +206,35 @@ static int pcie_init_service_irqs(struct pci_dev *dev, int *irqs, int mask)
->   	return 0;
->   }
->   
-> +static int pcie_wait_sltctl_cmd_raw(struct pci_dev *pdev)
-> +{
-> +	u16 slot_status;
-> +	/* 1000 ms, according toPCIe spec 6.1, section 6.7.3.2 */
-> +	int timeout = 1000;
-> +
-> +	do {
-> +		pcie_capability_read_word(pdev, PCI_EXP_SLTSTA, &slot_status);
-> +		if (slot_status & PCI_EXP_SLTSTA_CC) {
-> +			pcie_capability_write_word(pdev, PCI_EXP_SLTSTA,
-> +						   PCI_EXP_SLTSTA_CC);
-> +			return 0;
-> +		}
-> +		msleep(10);
-> +		timeout -= 10;
-> +	} while (timeout);
-> +
-> +	/* Timeout */
-> +	return  -1;
-> +}
-
-May be this logic can be simplified using readl_poll_timeout()?
-
-> +
-> +void pcie_disable_hp_interrupts_early(struct pci_dev *dev)
-> +{
-> +	pcie_capability_clear_word(dev, PCI_EXP_SLTCTL,
-> +		  PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
-> +	if (pcie_wait_sltctl_cmd_raw(dev))
-> +		pci_info(dev, "Timeout on disabling hot-plug interrupts\n");
-> +}
-> +
->   /**
->    * get_port_device_capability - discover capabilities of a PCI Express port
->    * @dev: PCI Express port to examine
-> @@ -230,8 +260,7 @@ static int get_port_device_capability(struct pci_dev *dev)
->   		 * Disable hot-plug interrupts in case they have been enabled
->   		 * by the BIOS and the hot-plug service driver is not loaded.
->   		 */
-> -		pcie_capability_clear_word(dev, PCI_EXP_SLTCTL,
-> -			  PCI_EXP_SLTCTL_CCIE | PCI_EXP_SLTCTL_HPIE);
-> +		pcie_disable_hp_interrupts_early(dev);
->   	}
->   
->   #ifdef CONFIG_PCIEAER
-
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index f8fc3d620ee2..bf919467cbcd 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -1417,7 +1417,8 @@ static int brcm_pcie_add_bus(struct pci_bus *bus)
+ 
+ 		ret = regulator_bulk_get(dev, sr->num_supplies, sr->supplies);
+ 		if (ret) {
+-			dev_info(dev, "No regulators for downstream device\n");
++			dev_info(dev, "Did not get regulators; err=%d\n", ret);
++			sr->num_supplies = 0;
+ 			goto no_regulators;
+ 		}
+ 
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.43.0
 
