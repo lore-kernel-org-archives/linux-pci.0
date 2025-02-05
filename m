@@ -1,60 +1,58 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+Received: from mail-pj1-f44.google.com (mail-pj1-f44.google.com [209.85.216.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A4141FFC5D
-	for <linux-pci@vger.kernel.org>; Wed,  5 Feb 2025 19:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF324204589
+	for <linux-pci@vger.kernel.org>; Wed,  5 Feb 2025 19:12:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738782765; cv=none; b=HC0UwGviaCw4n43+G/Y0AJbDoB+S2VK5yD91mPQon7SV0vO+zLvCPwn1UQYKVF3wZF4+LCtnBEnrLuaGqmUYWlDsVWy2TuiyRJmhx54xy9GUi6HD6OhxSwuXKfqbTQbSFIeUwbGimBA28l9BvxQGikI7J+BWw4Eu6/QXudGMpOs=
+	t=1738782776; cv=none; b=GnIJ/yFx8LHKuUgpdHsvwvR/L8E6iv+maHCDtFFusxoUtq8oBYbM0YAZJATbyL14HY0iYn65ciYu6gCm6t/Wyx7v8wjdabrxRZ+76FxRUzDg2Q5oxn4kLFLhaApo3r7Za4QMDGrrxBxhD5fzLE+tWVZv6pZpUn1RW8XyrhBj744=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738782765; c=relaxed/simple;
-	bh=QXoJSTy8Qec/wV8sRxRD2VX9SrJlzd1/bepXCqAcBgA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Wn5tVEwNrxqzT35eacytIkFuNoHNcRKiWzmAip0F7FykSHwD7J68yymAKCeo7AVBHRy2/j6CLwB5V+XWHwBO1a1asolDJgRHt7Fst5moMV5fr1cgGAtkog0dVr81XAeU4qNvTmJJlMv7seY4Gv6J6bv22kAKMmBO5WN2vZLgy3o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=CWZ0OJDO; arc=none smtp.client-ip=209.85.214.170
+	s=arc-20240116; t=1738782776; c=relaxed/simple;
+	bh=ZOMqMG5fUMiH/uGKPF/PKnAEFx6wMoFRNCk+yrSLd9M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=cCs9uNR6eryF3iQWdIsQb9C/RxgeaO+gEzjygpxNXzFO5KIlExaMNslC/L7ucv4bQPxI3UZ01bNKCc30kBoCKBFl56j/lTqboOnk3oFgsFRJcdl1cmSgOV2uDmSmjoxcO39RywU1FvCVOKUviSkAlPuSpKbxFe8zJQcbjJc6G/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=bkganJ07; arc=none smtp.client-ip=209.85.216.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="CWZ0OJDO"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-2161eb95317so3841745ad.1
-        for <linux-pci@vger.kernel.org>; Wed, 05 Feb 2025 11:12:43 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bkganJ07"
+Received: by mail-pj1-f44.google.com with SMTP id 98e67ed59e1d1-2f9bac7699aso60817a91.1
+        for <linux-pci@vger.kernel.org>; Wed, 05 Feb 2025 11:12:54 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1738782763; x=1739387563; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=X0ZTsssVvHzsc0e1DxaZAFNaCnLOP9m4uEkLrLv90vI=;
-        b=CWZ0OJDOmwGP708rLU98leg72Av/z5pMPNC1hmOYXttjcyY4glyYSPI0l5gogUSePi
-         nkAXgToTQLOCnbjZrs6B8aUVm38gDbmi1qfYR1UdVDNJmIWmlBeHJUBS+fav/Inz543S
-         ealfqxIFkE+375jly1Rs9TCuM7Icg47RPyuoM=
+        d=broadcom.com; s=google; t=1738782774; x=1739387574; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=K3SR5rYqhar5HSluEhYKtptLhpVhd2aXLVfmSOkbzz8=;
+        b=bkganJ07d8IlsNEbi6W1PyEZuYTGKPghyFss8f+vF8WUPzzOYRwzT9GWC9A3k/PuIQ
+         ELoAw8rHb2VOZhEGCTqaGAljAg1ONJlNqXClGybbF1NBzMb/gxwiFMs1x0vpa/CrLyoZ
+         9ZYxw07ss8lKBASXNzOKr2RtXqjfIVBI5h2eQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1738782763; x=1739387563;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=X0ZTsssVvHzsc0e1DxaZAFNaCnLOP9m4uEkLrLv90vI=;
-        b=LfqCzmrY4Z4tBhTZS+DAR7ciumdmDhxmj6TBJdrK5sF7N0X2Zi14C90SU3nYmDAwE6
-         F9IgfkKrWjWz7a8FIa80b/o+KAb/B5Gu1C+rII9Lg2jTMTTalnjXXmVLgbF8rGHgUXCv
-         WmyMvL7og4CESwxIJ02rmIMhfFa0LHNCilrlGyk1jRGN/j5H09IigHelhChSjSW8ktei
-         /Jo9BftaC1IWAmYfvLZlUNoCms+NYn2L65Kp2XrFdZQ+EOvb+o12VMepoluOtABC6TzZ
-         qcLjti5+I3OStguTMf99rUnhsbeI8q1U/XpQXbZjQRA+adnApWhVgmInn/aHuWEzXhaM
-         sJOQ==
-X-Gm-Message-State: AOJu0Yz3KfDZmKBMZ6FdRnK6MkdE4zbQDX9G6U5JrEy2NpcJhMDoPzw4
-	9RE7D4UjejtixKvkYqP9UqtaiSYphXDU40hAQOmyjCOwNHGPspvZlBzyiljIu5gtoDtMmcnOflX
-	+qQ+7Zur9Y/kfFYTwPCTdYI61HIEs2wtar3CXg9FhdT8I/hu8Xxom7WZjhlPK4IZi62p9WLucoW
-	paSysnSagh/h3tztZUXeoUa5CHabwx8FhgL3vWG+UQ1rZAhihx
-X-Gm-Gg: ASbGnctfGuPxXGNdLbcnvFjTqICSsGpEH5bxgPOwzAlfSuXCqe/F5xxiZ79lCfagVOq
-	JImnU2UsNPSX0F4z8WJOJWa5Rg3xITGEr/OIICxq2867pnZwm1MK5MkZNaevQRBL4XRbLNYfeoM
-	XfWTYO4u/wqkZdtAsJFCPPtvsxBiLRf2naPLN3YBh8bEWvJnQN3AcX8UPL1VgLFkAMtXfSiR8oM
-	7sagUjhbsT7b/feNYLu8hytalbWXjPARHW/fYiTq7lSkQisXjyRhh3ltbifltBoDDO1K+00GF8u
-	6tTCEfddpdql1Z6A49xwCTW9O7wmtfzPAOZN+j8tFNVQXoO+3u6qa9a0btWM3vpdYwjzXDk=
-X-Google-Smtp-Source: AGHT+IEXcZFzv42qZ8TJ/klgDwqqS/+A00tWNgeMvaWCk7kbJI8shXduYKzokviPveKCUA311SJ4wA==
-X-Received: by 2002:a05:6a00:851:b0:725:96f2:9e63 with SMTP id d2e1a72fcca58-73035224858mr7975973b3a.24.1738782762954;
-        Wed, 05 Feb 2025 11:12:42 -0800 (PST)
+        d=1e100.net; s=20230601; t=1738782774; x=1739387574;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=K3SR5rYqhar5HSluEhYKtptLhpVhd2aXLVfmSOkbzz8=;
+        b=EP3cd+UePeM9Qb7dTQEVQQ80+QdAIOyAESvfWiFZl7hOiOrFbcRyYTrpVSQ5nB1EBw
+         aIXlammLD14nQITvG9cedZSlNgejOnad/LBrWxXQp8LtpH9t/xZEEfo0s/EdJlRH8XOD
+         szg7Z78BcOzd4Ku6ZCYZJ0ZKcdgGF5E5WMBr+Hpexiq3qFF20xQGRQqgGsmGskBXBdhU
+         KCa9GVgamw6Zq1Ag/DuGh/ILPDCLzE+qnFznP9sI6w/i0/TZf/tFi85RdM7Ez67/xFUb
+         smCn9M0ydzh1J4YCoA8iaGZGY1qunhYu9uBD4K6woACETZpOCsFcKAR1DMFsVAxw8Fpk
+         f13Q==
+X-Gm-Message-State: AOJu0YzZPXZkF2Ho6jslIe0Ovh9MmAvG8LryD6F6N9ultxn8Nnn3YTvO
+	klMM6Nems2c5rDaNJ/lxdB6kyk8Kr7tUCU8zsc1iZh/lsMiDPqQduxENoQcqjXzoGBC64D1deWg
+	8qHKaSfoHpJ6YgDz2bpBVpalhiNhZCzYtHAZI7DI0shrX8lNcUWPoWD2gna3/Sa8WB/7TBB+Hmp
+	xD5fenUNqTqAscJvLtSxIMayfnZXR5mviLMDOt5toZqnWaotmN
+X-Gm-Gg: ASbGnct6EdqR8/bQZFYfqBRsOCB7OnZhWp7JoncgWFJ3rouLrARM419OS3Fr2axzSGi
+	YT1pO/YrFrLp2k6lmHjXtM0Wl6q3FhmJlc9t1c+dJ7ok6ZxCwZWywzRwJhgT/Q88LYkegXT3fKa
+	9DwN0GK0Bq8cuibIH2I7eLlnvU9Bqrb8DcZZExj5CTLnk6cWwFrWA1OehBRwTv3BS3GwZZZFAQB
+	Be6AvJglM6/B7d98GTl3gKENxWeabvuiUyKykImsRdyBFllt0UHS/Gzj5kqrk17pWH2e8Rdi0zT
+	Fkjxz6CUmBAAvDD26vgYuQV3/3w7ffaDhNZ5cLhK9fknV+mjiNNLQDXeH4bW7U8hGbxGyX0=
+X-Google-Smtp-Source: AGHT+IGXI/zeQKWdy9WGXNP0IFCmaXexbux+MNSbbXKXHNOnb9/pDSTNXOi7k9q65haUFvvYkJLYBA==
+X-Received: by 2002:a05:6a00:9095:b0:72a:8f07:2bf2 with SMTP id d2e1a72fcca58-73035117eabmr6665165b3a.9.1738782743623;
+        Wed, 05 Feb 2025 11:12:23 -0800 (PST)
 Received: from stbsrv-and-02.and.broadcom.net ([192.19.144.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe69ceb1csm12670842b3a.151.2025.02.05.11.12.40
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-72fe69ceb1csm12670842b3a.151.2025.02.05.11.12.21
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Feb 2025 11:12:42 -0800 (PST)
+        Wed, 05 Feb 2025 11:12:23 -0800 (PST)
 From: Jim Quinlan <james.quinlan@broadcom.com>
 To: linux-pci@vger.kernel.org,
 	Nicolas Saenz Julienne <nsaenz@kernel.org>,
@@ -65,20 +63,15 @@ To: linux-pci@vger.kernel.org,
 	bcm-kernel-feedback-list@broadcom.com,
 	jim2101024@gmail.com,
 	james.quinlan@broadcom.com
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Rob Herring <robh@kernel.org>,
-	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
 	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
-	linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v1 6/6] PCI: brcmstb: Cast an int variable to an irq_hw_number_t
-Date: Wed,  5 Feb 2025 14:12:06 -0500
-Message-ID: <20250205191213.29202-7-james.quinlan@broadcom.com>
+	linux-kernel@vger.kernel.org (open list),
+	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE)
+Subject: [PATCH v1 0/6] PCI: brcmstb: Misc small tweaks and fixes
+Date: Wed,  5 Feb 2025 14:12:00 -0500
+Message-ID: <20250205191213.29202-1-james.quinlan@broadcom.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250205191213.29202-1-james.quinlan@broadcom.com>
-References: <20250205191213.29202-1-james.quinlan@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -87,27 +80,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Just make it clear to the reader that there is a conversion happening,
-in this case from an int type to an irq_hw_number_t, an unsigned long int.
+Six small fixes and improvements for the driver.  This may be applied
+before or after Stan's V5 [1] on pci-next (they should not conflict).
 
-Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
----
- drivers/pci/controller/pcie-brcmstb.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+[1] https://lore.kernel.org/linux-pci/20250127113251.b2tqacoalcjrtcap@localhost.localdomain/T/#rfe31466507e3e540ad681278924e0ae4e0b8a727
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index da7b10036948..1e24e7fc895c 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -560,7 +560,7 @@ static int brcm_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
- 		return hwirq;
- 
- 	for (i = 0; i < nr_irqs; i++)
--		irq_domain_set_info(domain, virq + i, hwirq + i,
-+		irq_domain_set_info(domain, virq + i, (irq_hw_number_t)hwirq + i,
- 				    &brcm_msi_bottom_irq_chip, domain->host_data,
- 				    handle_edge_irq, NULL, NULL);
- 	return 0;
+Jim Quinlan (6):
+  PCI: brcmstb: Refactor max speed limit functionality
+  PCI: brcmstb: Fix error path upon call of regulator_bulk_get()
+  PCI: brcmstb: Fix potential premature regluator disabling
+  PCI: brcmstb: Use same constant table for config space access
+  PCI: brcmstb: Make two changes in MDIO register fields
+  PCI: brcmstb: Cast an int variable to an irq_hw_number_t
+
+ drivers/pci/controller/pcie-brcmstb.c | 41 ++++++++++++++-------------
+ 1 file changed, 22 insertions(+), 19 deletions(-)
+
+
+base-commit: 647d69605c70368d54fc012fce8a43e8e5955b04
+prerequisite-patch-id: 17728ad3425bcbd72e06271f2537a5aeec9ec0f2
+prerequisite-patch-id: fab98130bbf5ffc881704b02153e387aa4a08e87
+prerequisite-patch-id: 0d2d8d02821ca742aed46f16e9ed60db2ead359d
+prerequisite-patch-id: 8cddbbc69bd26c0284784d29f5abcc30db1c8327
+prerequisite-patch-id: b5d9165e3627079a44c08faaa306c17ef735fc9f
+prerequisite-patch-id: 95858e79f69b693a7955cf12549ff1ce8df27699
+prerequisite-patch-id: cc66e7df1fc7acef4ce10f99033a39359b6d57ab
+prerequisite-patch-id: af00ddbf164acf1742020616d8c0f05cbd5c1fa0
+prerequisite-patch-id: e37b800216e856a32ec7e7231d5191f17026ebc9
+prerequisite-patch-id: edeed902cf9a962e3431132dacbd95781b1cf970
+prerequisite-patch-id: da4f731901ffc44f2f1a3e69c1c35213d531fcae
 -- 
 2.43.0
 
