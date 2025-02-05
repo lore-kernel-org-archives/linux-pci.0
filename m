@@ -1,225 +1,110 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.web.de (mout.web.de [212.227.15.3])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6C86222566;
-	Wed,  5 Feb 2025 14:42:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 032C4186284;
+	Wed,  5 Feb 2025 15:10:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738766525; cv=none; b=RjLHpdaQkNdYCmcigxnAtDwzYXj96JBeXROeHQePj9VPZsjHR/enMEHOUriZLgOLHmd1ZeV8XvPx7GTs2hEwTGIbigfDepqJvauKMIZokxkA6qYV2CuPHqdPIMyFYYaHpQRhSIsRWVe0YbFxp3Lzw3RzhvL+cN5AUQ9Dqjz9goY=
+	t=1738768238; cv=none; b=oV6lu1fm2naFvtqk4g9W9ImlTnS16nHcZQfiR4YBcubO9DNth/mJMIdpmllyJfA3taX1Qge5GT+blMnlfuGzV5BbAqRlH6Gnal6CH0d6u3OgZNCZEfIgyDBH1qdn4siGa2qYiyx+2mWTa6I8orbeYfdTs0cE38Z4O6j8TdpLf4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738766525; c=relaxed/simple;
-	bh=7aNBsgnJ1xpYJupIDdeW59JsJ73w9EGqwdcut5LVDS4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ihRZQVYEdOmbRfz7cByQIfpAT4n6Mp8wL4VZL38J3z9dIk4WV64a09ASPb4zwAQUZK+/5HlIg/Q4Ir0+i3XEk0YVj5QGeyCj+jTeDWLgjFzgHcAFgvWgWxXljGJGhiQSS5JrTp5r9VXngTTDFv211IbtRRGxzOmKsVPUcqbgOzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=W2YNA18v; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1738768238; c=relaxed/simple;
+	bh=5bnC+RMJy9Go74Xk7wf5n2n16fM9EiwTk6qRnyxUz0M=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=e/ecxW3EvZ+86i/+kIu72eDcNKFUI0YGbRH6bT1wrWqV3DUWvJUyfFe24pUuQHuqnMlJjc7tNrZHwliU7lS31LTV8FT2wCJlZnXcEaNOSUKZVJnLwnuTfu6u4Gm/CD6GPeCcqqhjbmGb6hmQ2TbztEpfkEDSh5roj8xwCvJR+vA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=FuNkhrAH; arc=none smtp.client-ip=212.227.15.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="W2YNA18v"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93270C4CEE3;
-	Wed,  5 Feb 2025 14:42:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1738766525;
-	bh=7aNBsgnJ1xpYJupIDdeW59JsJ73w9EGqwdcut5LVDS4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=W2YNA18v52GskOrMKLkrTwzfQn8Km0PjGIUu87kMojGGjoog/10G95TBZ6vnkCJOA
-	 YBN2VL9nccEhcQB+VjXd8HFCxCAmenqSYB1f1SLAze41y9IxYfGcUyvzovhFkucE4f
-	 p08Hgr2aFu7TPrkMKUHPLcHRhBWfTuIFNxLXuqn9BzHXEN+JSM2GV9t331JEbLcVO1
-	 GSPh9+fHX0PFZ54Xj0VKJbbudJl6ZriCoRRfT0mEAv2qtfV12c5C2YyCHBJpXp/Avp
-	 6rDEaptuPvVVvZW3SFE4g/gPs6SQsVGFwUV+bcIiAAsYiTd1k+zUacXb4F76FSGdZJ
-	 rbwrAoMwir3bw==
-From: Leon Romanovsky <leon@kernel.org>
-To: Christoph Hellwig <hch@lst.de>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Robin Murphy <robin.murphy@arm.com>
-Cc: Leon Romanovsky <leonro@nvidia.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Keith Busch <kbusch@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-rdma@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org,
-	linux-mm@kvack.org,
-	Randy Dunlap <rdunlap@infradead.org>
-Subject: [PATCH v7 14/17] RDMA/umem: Separate implicit ODP initialization from explicit ODP
-Date: Wed,  5 Feb 2025 16:40:34 +0200
-Message-ID: <f6ae7422e8df156e18c5b5a98a334f09d95f3519.1738765879.git.leonro@nvidia.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <cover.1738765879.git.leonro@nvidia.com>
-References: <cover.1738765879.git.leonro@nvidia.com>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="FuNkhrAH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1738768233; x=1739373033; i=markus.elfring@web.de;
+	bh=ZTYLfFE7cC+DQ7FxXv045p/gA84CPFiSe7CIyfB3gPw=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=FuNkhrAHcHpgcrJ1R8UThkvUXb5tSzPA65qjDDR8C+8Ln1RsWNgPC1kwuWw+D2x+
+	 sQSA6o1sB6KWw63NXRridI7fAinIMGr/b3iLr1jUSlI4jMll9qL4wTAWVTf0na6Z7
+	 wmHGUDV9/JW0uFeN2jr/R6pBXHGPsFFSWNWdCi9/WFzZN2UVUOF3t8QTJOjsGNa8X
+	 wUMd9HJt1vyPv/2ZwKQ2Zi4engNWhj7TPap7MeOJ7KSuPzfwRA7W9EaHS5Gf2pAeH
+	 b7J8fE3F+tiebfZ2ULuUM8rZ+jrnh8O92salF599hYHKM/A9SZKqoW6+P1UTFw9sR
+	 DYA37Pen7SJ5SHGgTw==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.93.30]) by smtp.web.de (mrweb005
+ [213.165.67.108]) with ESMTPSA (Nemesis) id 1M5Qq9-1tgVrR1wk1-00EhNq; Wed, 05
+ Feb 2025 16:10:32 +0100
+Message-ID: <f5462109-1603-4866-895c-b5c349261296@web.de>
+Date: Wed, 5 Feb 2025 16:10:29 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
+ linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ Bjorn Helgaas <bhelgaas@google.com>, Conor Dooley <conor+dt@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84s?=
+ =?UTF-8?Q?ki?= <kw@linux.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ Rob Herring <robh@kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>,
+ Jingoo Han <jingoohan1@gmail.com>, Michal Simek <michal.simek@amd.com>
+References: <20250129113029.64841-4-thippeswamy.havalige@amd.com>
+Subject: Re: [PATCH v8 3/3] PCI: amd-mdb: Add AMD MDB Root Port driver
+Content-Language: en-GB
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20250129113029.64841-4-thippeswamy.havalige@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:hHjPFyBsqQkZjlLdf4YmgMoKUnnN3S+V7S4jHFw41yxYr9N7tJm
+ tLjQOZeqby2CZ2iUWA3XQisRnZinluElcoVSzF7Bk2mYG17d8pYNmBL0m7ASl2N3jNxeP9d
+ ENWs60isQuYfdknyekw1fol5plBXXIY3jEo8iXA0aqWglpqMUbV7v49SscFmXL8tO40I+y0
+ GOUr8Tmt2HhKeRQM2ZYYw==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:y5KBcZ97QHc=;mvS+lr44qC0nRsDpM6iISqhJSIV
+ GodAgrZ7cY5pH7w+jTGJjqHQiK6hgXyN8SyvMhAOOL2vk0yckSftL0a82908aQjXmaSfmVKRJ
+ sjAxdzdKIcPpGS1rIYDN0apgN+Bph7qsh1yyG0knegLgYahfN4EJhhNwjqFHnpCkbn8uaUwy8
+ FSUTC6vA4isva94mNFMOdVZDtDJHzlvQVN5ZToOiA71QOp1VDKOy0ipSCT1Ty335UltlKtVm2
+ eClKjwNUpYmkHWni9MNGXLCpyCd1Ai+aQtOw7mQcSCy9u3NjweqlqAtwF0iIXV/e59IFRDm06
+ 5dsyD4wI4PLBKKNaKRm7YdX4b1MgagmAQy45J3zhWw/2MU0+/QvPUEuXJ8J/54vpI8fKKivVF
+ YrbK+CcuHhTMtZ7rJkrccr0qw2m4dO0hAYX8avPX3AYxUoSvgj5FHU0uI5/Ue4H3UJTUuJ8kr
+ 1uERLFdPHa+9LLgAFipXP/c2hn0GRnqUvkbCgnfTAERITqCIcPQSWoZ5gt/fAR5TBC63CH4t7
+ 1bUf9GHLT30ma6kY84DgDgtvfoomE4fh5OHy1ltgiVIlAqj3eHmj9u9eZ2k1wpFkegIXqcNBY
+ n18Nsc9e9Mky517yjzAz31PemdczFALiyaw1oboy092+0HufoLsG57xJSJqJx6VEc0Z01e0rv
+ fP1rwhnkxHuFjyY8U4rsa0G11qTvjmc39vTRm/LI/zdZTZI5OtB4kn4ZGZNFJHArWxyEvpvqb
+ tJHxIrsI08EUo+iiCGggg6rjn0OwM6hzaWfY2/qd9kYL5qDgHWJqAKHoPi0HxzKsitOKoWy7t
+ U8fcmz338g0+xeVGUn+1Ig1DZPundegragMR7tKXQwBHIwPJNexdIL+S2GVKRxybre1YL4oM1
+ U68jlEHc/02IZtqyNgKR5a3YGf9MXO/gB5IrZ/OOdqhmc2TV0m0r4NmVYmFWxWKoCmmpLUaN5
+ svQthnALpcUVwG+qQS29uLJtUD4UrpNU/82pZGVb51mKYUvjDWoCJQ3eF37dqPOtqQOkvgSMY
+ ep2TSANTlVfqBwB1izge1VFblK8YHmrJPvCdw+VwwXJr4U6g/eGDqAG5oRJyz4F+zzApmW8Qd
+ DLcJn4Mctuu5hzGzoDQCv8Ta+ThXjxUQVldjJGrfM0I8CZpPZaWGuFMhEAoxsaqCB/RQVIen5
+ DK0xCI5GxGFg0W2llqFmNz+XKm/vojNOjkpn0HFkx+zw+AvWIRgBMB/LYfhaemArqRkREUA2i
+ Mk6n6Bw5jF2A7IigPioCpWXTjdsjm1kzWJ+Dvdb/jJE+HgDYUskzmj13RBDn6OU+SQ5MeuTTC
+ trD4t/q9h8e+R0fn6lqAGcxb2d6otOD6hITu3s9Nv7Qe5pyIJiaJ5lD+Dt0DEZKApLZE7W3Zb
+ ye5/HolT3GB4cOXPmvd+6wgke0n0Mrkm1oWznoCEl3SmXiqkD+VCmVdPy2yEikaRi9yJIesZu
+ 32uoDKjN8otSwfT7w7aO5NgggYMU=
 
-From: Leon Romanovsky <leonro@nvidia.com>
+=E2=80=A6
+> +++ b/drivers/pci/controller/dwc/pcie-amd-mdb.c
+> @@ -0,0 +1,476 @@
+=E2=80=A6
+> +static void amd_mdb_mask_intx_irq(struct irq_data *data)
+> +{
+=E2=80=A6
+> +	raw_spin_lock_irqsave(&port->lock, flags);
+> +	val =3D pcie_read(pcie, AMD_MDB_TLP_IR_MASK_MISC);
+> +	pcie_write(pcie, (val & (~mask)), AMD_MDB_TLP_IR_ENABLE_MISC);
+> +	raw_spin_unlock_irqrestore(&port->lock, flags);
+> +}
+=E2=80=A6
 
-Create separate functions for the implicit ODP initialization
-which is different from the explicit ODP initialization.
+Under which circumstances would you become interested to apply a statement
+like =E2=80=9Cguard(raw_spinlock_irqsave)(&port->lock);=E2=80=9D?
+https://elixir.bootlin.com/linux/v6.13.1/source/include/linux/spinlock.h#L=
+551
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/infiniband/core/umem_odp.c | 91 +++++++++++++++---------------
- 1 file changed, 46 insertions(+), 45 deletions(-)
-
-diff --git a/drivers/infiniband/core/umem_odp.c b/drivers/infiniband/core/umem_odp.c
-index 30cd8f353476..51d518989914 100644
---- a/drivers/infiniband/core/umem_odp.c
-+++ b/drivers/infiniband/core/umem_odp.c
-@@ -48,41 +48,44 @@
- 
- #include "uverbs.h"
- 
--static inline int ib_init_umem_odp(struct ib_umem_odp *umem_odp,
--				   const struct mmu_interval_notifier_ops *ops)
-+static void ib_init_umem_implicit_odp(struct ib_umem_odp *umem_odp)
-+{
-+	umem_odp->is_implicit_odp = 1;
-+	umem_odp->umem.is_odp = 1;
-+	mutex_init(&umem_odp->umem_mutex);
-+}
-+
-+static int ib_init_umem_odp(struct ib_umem_odp *umem_odp,
-+			    const struct mmu_interval_notifier_ops *ops)
- {
- 	struct ib_device *dev = umem_odp->umem.ibdev;
-+	size_t page_size = 1UL << umem_odp->page_shift;
-+	unsigned long start;
-+	unsigned long end;
- 	int ret;
- 
- 	umem_odp->umem.is_odp = 1;
- 	mutex_init(&umem_odp->umem_mutex);
- 
--	if (!umem_odp->is_implicit_odp) {
--		size_t page_size = 1UL << umem_odp->page_shift;
--		unsigned long start;
--		unsigned long end;
--
--		start = ALIGN_DOWN(umem_odp->umem.address, page_size);
--		if (check_add_overflow(umem_odp->umem.address,
--				       (unsigned long)umem_odp->umem.length,
--				       &end))
--			return -EOVERFLOW;
--		end = ALIGN(end, page_size);
--		if (unlikely(end < page_size))
--			return -EOVERFLOW;
--
--		ret = hmm_dma_map_alloc(dev->dma_device, &umem_odp->map,
--					(end - start) >> PAGE_SHIFT,
--					1 << umem_odp->page_shift);
--		if (ret)
--			return ret;
--
--		ret = mmu_interval_notifier_insert(&umem_odp->notifier,
--						   umem_odp->umem.owning_mm,
--						   start, end - start, ops);
--		if (ret)
--			goto out_free_map;
--	}
-+	start = ALIGN_DOWN(umem_odp->umem.address, page_size);
-+	if (check_add_overflow(umem_odp->umem.address,
-+			       (unsigned long)umem_odp->umem.length, &end))
-+		return -EOVERFLOW;
-+	end = ALIGN(end, page_size);
-+	if (unlikely(end < page_size))
-+		return -EOVERFLOW;
-+
-+	ret = hmm_dma_map_alloc(dev->dma_device, &umem_odp->map,
-+				(end - start) >> PAGE_SHIFT,
-+				1 << umem_odp->page_shift);
-+	if (ret)
-+		return ret;
-+
-+	ret = mmu_interval_notifier_insert(&umem_odp->notifier,
-+					   umem_odp->umem.owning_mm, start,
-+					   end - start, ops);
-+	if (ret)
-+		goto out_free_map;
- 
- 	return 0;
- 
-@@ -106,7 +109,6 @@ struct ib_umem_odp *ib_umem_odp_alloc_implicit(struct ib_device *device,
- {
- 	struct ib_umem *umem;
- 	struct ib_umem_odp *umem_odp;
--	int ret;
- 
- 	if (access & IB_ACCESS_HUGETLB)
- 		return ERR_PTR(-EINVAL);
-@@ -118,16 +120,10 @@ struct ib_umem_odp *ib_umem_odp_alloc_implicit(struct ib_device *device,
- 	umem->ibdev = device;
- 	umem->writable = ib_access_writable(access);
- 	umem->owning_mm = current->mm;
--	umem_odp->is_implicit_odp = 1;
- 	umem_odp->page_shift = PAGE_SHIFT;
- 
- 	umem_odp->tgid = get_task_pid(current->group_leader, PIDTYPE_PID);
--	ret = ib_init_umem_odp(umem_odp, NULL);
--	if (ret) {
--		put_pid(umem_odp->tgid);
--		kfree(umem_odp);
--		return ERR_PTR(ret);
--	}
-+	ib_init_umem_implicit_odp(umem_odp);
- 	return umem_odp;
- }
- EXPORT_SYMBOL(ib_umem_odp_alloc_implicit);
-@@ -248,7 +244,7 @@ struct ib_umem_odp *ib_umem_odp_get(struct ib_device *device,
- }
- EXPORT_SYMBOL(ib_umem_odp_get);
- 
--void ib_umem_odp_release(struct ib_umem_odp *umem_odp)
-+static void ib_umem_odp_free(struct ib_umem_odp *umem_odp)
- {
- 	struct ib_device *dev = umem_odp->umem.ibdev;
- 
-@@ -258,14 +254,19 @@ void ib_umem_odp_release(struct ib_umem_odp *umem_odp)
- 	 * It is the driver's responsibility to ensure, before calling us,
- 	 * that the hardware will not attempt to access the MR any more.
- 	 */
--	if (!umem_odp->is_implicit_odp) {
--		mutex_lock(&umem_odp->umem_mutex);
--		ib_umem_odp_unmap_dma_pages(umem_odp, ib_umem_start(umem_odp),
--					    ib_umem_end(umem_odp));
--		mutex_unlock(&umem_odp->umem_mutex);
--		mmu_interval_notifier_remove(&umem_odp->notifier);
--		hmm_dma_map_free(dev->dma_device, &umem_odp->map);
--	}
-+	mutex_lock(&umem_odp->umem_mutex);
-+	ib_umem_odp_unmap_dma_pages(umem_odp, ib_umem_start(umem_odp),
-+				    ib_umem_end(umem_odp));
-+	mutex_unlock(&umem_odp->umem_mutex);
-+	mmu_interval_notifier_remove(&umem_odp->notifier);
-+	hmm_dma_map_free(dev->dma_device, &umem_odp->map);
-+}
-+
-+void ib_umem_odp_release(struct ib_umem_odp *umem_odp)
-+{
-+	if (!umem_odp->is_implicit_odp)
-+		ib_umem_odp_free(umem_odp);
-+
- 	put_pid(umem_odp->tgid);
- 	kfree(umem_odp);
- }
--- 
-2.48.1
-
+Regards,
+Markus
