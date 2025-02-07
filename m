@@ -1,27 +1,27 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0157753A7;
-	Fri,  7 Feb 2025 10:33:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 73D3A1547F8;
+	Fri,  7 Feb 2025 10:38:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738924386; cv=none; b=JW2M/dwXxge/fFOd6GSoXI31HCUSNpeGBHBPytAmM8PYcT+fuEG5mJLlCCbO4cIA9+n8cp8XWe39W7Yta/BgxTY16oeF6D8yNRGoeGx0EprtGwRrXHDo+2mi2GnHD2gk2G9O8KR84XhMhdgNaDJxA0MaeQH1bQm3Io51+giIDOA=
+	t=1738924735; cv=none; b=Mvh1q47BpPEXhWia0OiwOQrfxhH3m/2Rjj84fZ/DJAZNL1d4hST7ecQLCmP4qwIwtVUkIyzZKTwVMtxlVK1oZJE3rcviw9hsOrUJciX4QYpYNddgWpvHEM/03fzzlneiXF/xeJj0dnwIP+6Lnbk81amrJb20lHMcAW7/EDIJXHQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738924386; c=relaxed/simple;
-	bh=WTDr/G1skVjWh8EnYLcNXt+LRgyLBrCm/eeyjKJlj/4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=aCu6+JpGergC9Ssif3ghH5tCqVBmroNJ7jRmHFYRntvPaJrfiSg/f9kdQo3mCEndqyASwtvXBgr6Hj1kSOxIk2jz2n10Lo7NozrxXCAQ+EbBFE7WoFNLt1B08MxUpSHk0A9vPF6WAgeHnZS7wAyGUbJjmV2U8x6x8mVp6ZVhJnk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=mqmKUKFO; arc=none smtp.client-ip=117.135.210.2
+	s=arc-20240116; t=1738924735; c=relaxed/simple;
+	bh=AjQmVnWtw8F5HofRM0sXBi7i5Mahhq6ucirVF6AS0rg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=GSbFBKIurQD8w9or+spIuu4X8+p8gBhY8P49lookIM4G+Sc4ZTW5S6LKxbGbfqTW7ErlV4aA/7RDzfGLm4x/DA69NLMiE2OhA7yVRKLRqrb/UnMk6qpKo1Fm7+7HEsLF6KBTuLBNaNJpiefcGQBBsxfZQ7+ECVj8XxGMeMsI0y0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=FjZdW4L/; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="mqmKUKFO"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="FjZdW4L/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=eGngS
-	niGDrpZdwRnlYe6zvDuqB1QaaruKTmGkVzWykQ=; b=mqmKUKFOh3Qufl1/u/9Cb
-	2VuNFBU2ymjULKWifLfcBMdH+Eg6oqU5RPxVlSNPqgp532PpoBZq6H2AfUlx2a17
-	go1ld8S14sq21CvO+fWg8e7v5nlDxFKBuiXV57x4145sVYdC8glJD4m2oDsW/UaZ
-	2Mt4RLqMQKEBk1zUxDE2wI=
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=XeFo3
+	i6QthcUbUcb1/Cr1T2tbBVsvF+gxHzd92ZIAMs=; b=FjZdW4L/fXB1Mn49dAyv7
+	KrpQTWcAbkdfi0rvIPb3cMvW/dEWMMxypso0t7spHhs+EieFOmc9utIIVuVqiO7q
+	F1atWgcx44qSbzeVoNM5NgCIkY5Eo3kSOucTGoHHZZnUF4VSc17LhQMfBGPKQCed
+	mRMV0VDYC3FdeK728whoIM=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgB3gALo4KVn4NbiBg--.39589S2;
-	Fri, 07 Feb 2025 18:31:06 +0800 (CST)
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wCHBVuI4qVn3ILoKA--.28738S2;
+	Fri, 07 Feb 2025 18:38:02 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org
 Cc: kw@linux.com,
@@ -35,10 +35,11 @@ Cc: kw@linux.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	rockswang7@gmail.com,
-	"hans.zhang" <hans.zhang@cixtech.com>
-Subject: [PATCH] PCI: cadence: Fix sending message with data or without data
-Date: Fri,  7 Feb 2025 18:31:01 +0800
-Message-Id: <20250207103101.31287-1-18255117159@163.com>
+	Hans Zhang <18255117159@163.com>,
+	"hans . zhang" <hans.zhang@cixtech.com>
+Subject: [v2] PCI: cadence: Fix sending message with data or without data
+Date: Fri,  7 Feb 2025 18:37:57 +0800
+Message-Id: <20250207103757.31958-1-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -47,14 +48,12 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PygvCgB3gALo4KVn4NbiBg--.39589S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJr13Cw1fJw45CF4rtw48tFb_yoW8CF1xpF
-	yUG34Syw1xJrWavan5Z3WDXF13JFnayF9rJw4q934fuF17u34UGr12kFyrGFW5GrWvqr17
+X-CM-TRANSID:_____wCHBVuI4qVn3ILoKA--.28738S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJr13Cw1fJw45CF4rtw48tFb_yoW8CF1UpF
+	yUGrySy3WxXrWavan5Z3WDWF13JFn3tF9rJw4v934fuF17u34UGFy2yFyrGFW5GrWvqr17
 	uw1DtF9rGF4fA3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jIzuJUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiDxvso2el3j8yPQAAs3
-
-From: "hans.zhang" <hans.zhang@cixtech.com>
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zE4E_JUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwrso2el4eYKdAAAsl
 
 View from cdns document cdn_pcie_gen4_hpa_axi_ips_ug_v1.04.pdf.
 In section 9.1.7.1 AXI Subordinate to PCIe Address Translation
@@ -63,6 +62,9 @@ Registers below:
 axi_s_awaddr bits 16 is 1 for MSG with data and 0 for MSG without data.
 
 Signed-off-by: hans.zhang <hans.zhang@cixtech.com>
+---
+Changes since v1:
+- Change email number
 ---
  drivers/pci/controller/cadence/pcie-cadence-ep.c | 3 +--
  drivers/pci/controller/cadence/pcie-cadence.h    | 2 +-
