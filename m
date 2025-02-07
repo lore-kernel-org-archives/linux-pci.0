@@ -1,270 +1,130 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f45.google.com (mail-pj1-f45.google.com [209.85.216.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D02CC18F2C3
-	for <linux-pci@vger.kernel.org>; Fri,  7 Feb 2025 17:06:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B82D318DB3A
+	for <linux-pci@vger.kernel.org>; Fri,  7 Feb 2025 17:11:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1738947998; cv=none; b=GjbnTWY2/b9CHy96/hSBvPIloaFJ0G3Tmm+IMhjtX/pWQb9R9Aq6dq6dvRFm9wbWrkpJKOUCmhe6d97KQfIhXkn2loAW10E5n3l4RS+DY/OlvJdLWDZIcQB7YyvR4sARVQVRbWgf+MKKUtP2BiUGEOuBh8iGss/mN9BSUBiqX5M=
+	t=1738948306; cv=none; b=eZl8vXL66pbvQQmVHm/3mo5sb+4DXGfMSCeQACkdywp63XXEJzLV6fmZscjqkW6Jk+KMfS3x7NxGQ2OMkPXV/ppE5sOgQzKPQzx8tjhB17uNP65Qyz5yzq3Et5clpvj4Wmoupg4p0c22X2EFWKdelJv2yE2GBWi1Kxu7R5UHxU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1738947998; c=relaxed/simple;
-	bh=DANT/5hXWue2N5M2F0nBUFQ3JCGuB0XwHaDpGfg3hNU=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=FzIEP1sbFRRO1oTkDc8HPDkrI543wy9+N1qWNaoTxj6MmdzJQBApzUvhDEUx0gLzPdMDcJrm9fEI1w/tJhqDL5Wvcl4LqWLoTvILUMayCN4YN28FF9IATocJNB9n8PGtD9ri6Fy0S/ZsRMvX+cZRjigoHh+9bSLqEaU24giaaO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UCFDYtxn; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1738948306; c=relaxed/simple;
+	bh=3oqMFK9uVk8Im6p2fViZxYDLyfCXJ/tL1uHJc+oNhVE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bItKyHefSdhXC4REENyexOajcj+PxIv0tkIUBrbYYjDXl6QIgqjq8pJLm8NP1hEtNZ4a3PBY+PuQ8l6I8fTMslqQeQ/4aU7NL3CuvGl+RamLBVhbqRLur8DBlCn2lt9emTYrB7kaWfRSgAZ3c20H/ZTmX1FQjeJ2cSXmxPp2sr0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=BMMRa0tg; arc=none smtp.client-ip=209.85.216.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UCFDYtxn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1738947997; x=1770483997;
-  h=date:from:to:cc:subject:message-id;
-  bh=DANT/5hXWue2N5M2F0nBUFQ3JCGuB0XwHaDpGfg3hNU=;
-  b=UCFDYtxn8Nf26cL8A3xLbFifwV2UHdDziKEw9wlvsqa1xiq8H/8ZPTSI
-   +yFlw3Br/1HgT9Z+FsoIHkXmSihpuiamBfRT5jvYXwlE0HVAXnHBK+VxR
-   p86ZzEyhaPQKt6R+BfUEmpl/2tt5u7Tw5mblVf8QBajcaocDgJ8voNr2R
-   MKcymvAMhFDQCXL3PldwgZ6qlnfECPXq1eUXqPWlrBBM8wY44Dguzm4j0
-   ZEC16kr2jfOf/cTO3urlRrXyWnSP6qeYMRFC6AeCuOkZLYHQ4Dx5eBApk
-   26gYZsU7Jg7up9+tQ5lEmBBw4OPEvK4djeB8jWwFiUm7ywBRWe1iOcqnX
-   g==;
-X-CSE-ConnectionGUID: D4S2peKXR7OcJ6cA2MiWxg==
-X-CSE-MsgGUID: gNxc4TFpTzKTjyNAljeisw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11338"; a="64953194"
-X-IronPort-AV: E=Sophos;i="6.13,267,1732608000"; 
-   d="scan'208";a="64953194"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Feb 2025 09:06:36 -0800
-X-CSE-ConnectionGUID: rE9x1+Y6QcOwF0OiYjbDZA==
-X-CSE-MsgGUID: gS9mYkyVTn6yw076xsxP0A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,267,1732608000"; 
-   d="scan'208";a="111406310"
-Received: from lkp-server01.sh.intel.com (HELO d63d4d77d921) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 07 Feb 2025 09:06:35 -0800
-Received: from kbuild by d63d4d77d921 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tgRoG-000yev-34;
-	Fri, 07 Feb 2025 17:06:32 +0000
-Date: Sat, 08 Feb 2025 01:05:47 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:for-linus] BUILD SUCCESS
- 6f64b83d9fe9729000a0616830cb1606945465d8
-Message-ID: <202502080137.V1hIfj8C-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="BMMRa0tg"
+Received: by mail-pj1-f45.google.com with SMTP id 98e67ed59e1d1-2fa40c0bab2so99823a91.0
+        for <linux-pci@vger.kernel.org>; Fri, 07 Feb 2025 09:11:44 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1738948304; x=1739553104; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=ZLSQYabb/lSxt6fjBtaqzp3dajokNagRpgNUe0b1zuo=;
+        b=BMMRa0tgAdYR3dP/wUBVb2espgM/SPBbElNKaJkRXItX/1ltu4Q51NrBRZVDuZrTmF
+         9J5MD5UUKyQNEmC7GNKhoq6YwMR5jhxgcLejbewnSEmaufQmgul7afqjHOtPq2vVW278
+         /FK31n9U2ZG6zcwVuRLW45LaW5zJLST4AJYOLGB3xe8qmg1OSj6kIPzhMTLyZ7QAZGnb
+         9MkBMMcqe58EXmwGipvZWNeRy+/rRuU40fXe2SskmIjnO8kZFjHef/QzrXyKnw9A5hcc
+         iXIpYx+Gr4Xw1AWpFpg2MmY+YBds5zkjCcYTIgc7QoOJwhl3FVWlEIic7/7oGQ9KUxHc
+         n/cw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1738948304; x=1739553104;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZLSQYabb/lSxt6fjBtaqzp3dajokNagRpgNUe0b1zuo=;
+        b=w0ZMGx49/nwZ/w+IRF+PxgulMHew83y9B0TkNlcln/UmrnXA+kEowQn8eSbTOMgOPK
+         7ueYiydVUb69gPqx3Do9Fo/yLG4Znd946yeSoQbk0DEzpMolw5RD+7ie6v6Kh0wlTjp2
+         xhCLK4kExlTOIgt4JE9M+hw3SWYmsvH+vbqrfavqbg+WTbwl5g4Fp4HiRWTVZefonA4g
+         v4ZkRjDndIsA4KPJP2qIuifziVgSQT535xRh4HiUQXScNV92iUsPcbRgQ8r5XkcPT2GR
+         oS/a917ZS+TN6H9hlSJCRoY5810GgKcYLnp6UXjIV+5RbDVXoYNBczi2N2MCwa3nv21l
+         YFGw==
+X-Forwarded-Encrypted: i=1; AJvYcCXXBk/x46IqLlojPL9ghlg/4dCOPkxNS9klEtR7ZrSjeyoGP6E6GbMjbt2KvKVfCaLkRfKpWErHkoE=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8yaNsh+Yf0g9WQMwJ+lPMEOsG9GD/WacfTf+JtSZqAab3kRZw
+	DeBKKVME/Q/UoziF7jukWvu+dEirHfjmyrGoqp2YVC2rFpLD2O/fwg4yzF1W/w==
+X-Gm-Gg: ASbGncuftRpQJuuzIv1c+DeBwsB84ewJ9oUwWLCk1BMiGOiNdkr5vmJIL2lYIxgnyaB
+	BHPtSvRz4hBghfZjtYcWil3dlV0spuf8aehRr78kpHlXzObtNCyB5AdSUyrPaV6fMayTd2kVbha
+	Zqjp2j7RkbjJ9FL5fAdpqo2qYAyDqZ55qEF9mm8cx0sLqUJT51UJWZzhOMz6PioZFNUY2sVUsML
+	xxWgy7tf7elAnmAQCbHkpwVCXCLkaxuQrxtWYbnNo5Z+xymGPWDzhiyaX5fwXmWSt8uGepILZdE
+	+7NnAfdJkCh8L00EoOZwn4TiRg==
+X-Google-Smtp-Source: AGHT+IFtcomA6DEgyFHtU/vkPC/XD5zQT3e5gfj40oA9PVVdGW4FaLDWXXz6aAFVD/jXpdRoCbUUNg==
+X-Received: by 2002:a17:90b:23d0:b0:2fa:13f7:960 with SMTP id 98e67ed59e1d1-2fa2406a099mr5927820a91.13.1738948303969;
+        Fri, 07 Feb 2025 09:11:43 -0800 (PST)
+Received: from thinkpad ([120.60.76.168])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-21f3683d8desm32895195ad.155.2025.02.07.09.11.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Feb 2025 09:11:43 -0800 (PST)
+Date: Fri, 7 Feb 2025 22:41:39 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Udit Kumar <u-kumar1@ti.com>, Vignesh Raghavendra <vigneshr@ti.com>,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH v4 2/7] PCI: endpoint: Add pci_epc_bar_size_to_rebar_cap()
+Message-ID: <20250207171139.v2xtqgaglfgfsk6j@thinkpad>
+References: <20250131182949.465530-9-cassel@kernel.org>
+ <20250131182949.465530-11-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250131182949.465530-11-cassel@kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git for-linus
-branch HEAD: 6f64b83d9fe9729000a0616830cb1606945465d8  PCI/TPH: Restore TPH Requester Enable correctly
+On Fri, Jan 31, 2025 at 07:29:51PM +0100, Niklas Cassel wrote:
+> Add a helper function to convert a size to the representation used by the
+> Resizable BAR Capability Register.
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-elapsed time: 1456m
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-configs tested: 193
-configs skipped: 4
+One nit below.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+> ---
+>  drivers/pci/endpoint/pci-epc-core.c | 27 +++++++++++++++++++++++++++
+>  include/linux/pci-epc.h             |  1 +
+>  2 files changed, 28 insertions(+)
+> 
+> diff --git a/drivers/pci/endpoint/pci-epc-core.c b/drivers/pci/endpoint/pci-epc-core.c
+> index 10dfc716328e..5d6aef956b13 100644
+> --- a/drivers/pci/endpoint/pci-epc-core.c
+> +++ b/drivers/pci/endpoint/pci-epc-core.c
+> @@ -638,6 +638,33 @@ int pci_epc_set_bar(struct pci_epc *epc, u8 func_no, u8 vfunc_no,
+>  }
+>  EXPORT_SYMBOL_GPL(pci_epc_set_bar);
+>  
+> +/**
+> + * pci_epc_bar_size_to_rebar_cap() - convert a size to the representation used
+> + *				     by the Resizable BAR Capability Register
+> + * @size: the size to convert
+> + * @cap: where to store the result
+> + *
+> + * Returns 0 on success and a negative error code in case of error.
+> + */
+> +int pci_epc_bar_size_to_rebar_cap(size_t size, u32 *cap)
+> +{
+> +	/*
+> +	 * According to PCIe base spec, min size for a resizable BAR is 1 MB,
+> +	 * thus disallow a requested BAR size smaller than 1 MB.
+> +	 * Disallow a requested BAR size larger than 128 TB.
+> +	 */
+> +	if (size < SZ_1M || (u64)size > (SZ_128G * 1024))
 
-tested configs:
-alpha                             allnoconfig    gcc-14.2.0
-alpha                            allyesconfig    clang-21
-alpha                            allyesconfig    gcc-14.2.0
-alpha                               defconfig    clang-19
-alpha                               defconfig    gcc-14.2.0
-arc                              allmodconfig    clang-18
-arc                              allmodconfig    gcc-13.2.0
-arc                               allnoconfig    gcc-14.2.0
-arc                              allyesconfig    clang-18
-arc                              allyesconfig    gcc-13.2.0
-arc                                 defconfig    gcc-14.2.0
-arc                     haps_hs_smp_defconfig    clang-19
-arc                   randconfig-001-20250207    gcc-13.2.0
-arc                   randconfig-002-20250207    gcc-13.2.0
-arm                              allmodconfig    clang-18
-arm                              allmodconfig    gcc-14.2.0
-arm                               allnoconfig    gcc-14.2.0
-arm                              allyesconfig    clang-18
-arm                              allyesconfig    gcc-14.2.0
-arm                                 defconfig    gcc-14.2.0
-arm                         lpc32xx_defconfig    gcc-14.2.0
-arm                          pxa910_defconfig    gcc-14.2.0
-arm                   randconfig-001-20250207    gcc-13.2.0
-arm                   randconfig-001-20250207    gcc-14.2.0
-arm                   randconfig-002-20250207    gcc-13.2.0
-arm                   randconfig-002-20250207    gcc-14.2.0
-arm                   randconfig-003-20250207    gcc-13.2.0
-arm                   randconfig-003-20250207    gcc-14.2.0
-arm                   randconfig-004-20250207    clang-21
-arm                   randconfig-004-20250207    gcc-13.2.0
-arm                         s3c6400_defconfig    clang-19
-arm                         wpcm450_defconfig    clang-19
-arm64                            allmodconfig    clang-18
-arm64                             allnoconfig    gcc-14.2.0
-arm64                               defconfig    gcc-14.2.0
-arm64                 randconfig-001-20250207    gcc-13.2.0
-arm64                 randconfig-001-20250207    gcc-14.2.0
-arm64                 randconfig-002-20250207    gcc-13.2.0
-arm64                 randconfig-002-20250207    gcc-14.2.0
-arm64                 randconfig-003-20250207    clang-16
-arm64                 randconfig-003-20250207    gcc-13.2.0
-arm64                 randconfig-004-20250207    clang-21
-arm64                 randconfig-004-20250207    gcc-13.2.0
-csky                              allnoconfig    gcc-14.2.0
-csky                                defconfig    gcc-14.2.0
-csky                  randconfig-001-20250207    gcc-14.2.0
-csky                  randconfig-002-20250207    gcc-14.2.0
-hexagon                          allmodconfig    clang-21
-hexagon                           allnoconfig    gcc-14.2.0
-hexagon                          allyesconfig    clang-18
-hexagon                          allyesconfig    clang-21
-hexagon                             defconfig    gcc-14.2.0
-hexagon               randconfig-001-20250207    clang-21
-hexagon               randconfig-001-20250207    gcc-14.2.0
-hexagon               randconfig-002-20250207    clang-17
-hexagon               randconfig-002-20250207    gcc-14.2.0
-i386                             allmodconfig    clang-19
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    clang-19
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    clang-19
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20250207    gcc-12
-i386        buildonly-randconfig-002-20250207    gcc-12
-i386        buildonly-randconfig-003-20250207    gcc-12
-i386        buildonly-randconfig-004-20250207    gcc-12
-i386        buildonly-randconfig-005-20250207    clang-19
-i386        buildonly-randconfig-005-20250207    gcc-12
-i386        buildonly-randconfig-006-20250207    clang-19
-i386        buildonly-randconfig-006-20250207    gcc-12
-i386                                defconfig    clang-19
-i386                  randconfig-001-20250207    gcc-12
-i386                  randconfig-002-20250207    gcc-12
-i386                  randconfig-003-20250207    gcc-12
-i386                  randconfig-004-20250207    gcc-12
-i386                  randconfig-005-20250207    gcc-12
-i386                  randconfig-006-20250207    gcc-12
-i386                  randconfig-007-20250207    gcc-12
-i386                  randconfig-011-20250207    gcc-12
-i386                  randconfig-012-20250207    gcc-12
-i386                  randconfig-013-20250207    gcc-12
-i386                  randconfig-014-20250207    gcc-12
-i386                  randconfig-015-20250207    gcc-12
-i386                  randconfig-016-20250207    gcc-12
-i386                  randconfig-017-20250207    gcc-12
-loongarch                         allnoconfig    gcc-14.2.0
-loongarch                           defconfig    gcc-14.2.0
-loongarch             randconfig-001-20250207    gcc-14.2.0
-loongarch             randconfig-002-20250207    gcc-14.2.0
-m68k                              allnoconfig    gcc-14.2.0
-m68k                                defconfig    gcc-14.2.0
-microblaze                        allnoconfig    gcc-14.2.0
-microblaze                          defconfig    gcc-14.2.0
-mips                              allnoconfig    gcc-14.2.0
-mips                           gcw0_defconfig    clang-19
-nios2                             allnoconfig    gcc-14.2.0
-nios2                               defconfig    gcc-14.2.0
-nios2                 randconfig-001-20250207    gcc-14.2.0
-nios2                 randconfig-002-20250207    gcc-14.2.0
-openrisc                          allnoconfig    clang-21
-openrisc                            defconfig    gcc-12
-parisc                            allnoconfig    clang-21
-parisc                              defconfig    gcc-12
-parisc                randconfig-001-20250207    gcc-14.2.0
-parisc                randconfig-002-20250207    gcc-14.2.0
-parisc64                            defconfig    gcc-14.2.0
-powerpc                     akebono_defconfig    gcc-14.2.0
-powerpc                           allnoconfig    clang-21
-powerpc                 canyonlands_defconfig    clang-19
-powerpc                          g5_defconfig    gcc-14.2.0
-powerpc                      ppc44x_defconfig    gcc-14.2.0
-powerpc               randconfig-001-20250207    clang-21
-powerpc               randconfig-001-20250207    gcc-14.2.0
-powerpc               randconfig-002-20250207    clang-21
-powerpc               randconfig-002-20250207    gcc-14.2.0
-powerpc               randconfig-003-20250207    gcc-14.2.0
-powerpc                     tqm5200_defconfig    clang-19
-powerpc                     tqm8540_defconfig    gcc-14.2.0
-powerpc64             randconfig-001-20250207    gcc-14.2.0
-powerpc64             randconfig-002-20250207    clang-21
-powerpc64             randconfig-002-20250207    gcc-14.2.0
-powerpc64             randconfig-003-20250207    gcc-14.2.0
-riscv                             allnoconfig    clang-21
-riscv                               defconfig    gcc-12
-riscv                 randconfig-001-20250207    gcc-14.2.0
-riscv                 randconfig-002-20250207    gcc-14.2.0
-s390                             allmodconfig    clang-19
-s390                             allmodconfig    gcc-14.2.0
-s390                              allnoconfig    clang-21
-s390                             allyesconfig    gcc-14.2.0
-s390                          debug_defconfig    gcc-14.2.0
-s390                                defconfig    gcc-12
-s390                  randconfig-001-20250207    gcc-14.2.0
-s390                  randconfig-002-20250207    clang-21
-s390                  randconfig-002-20250207    gcc-14.2.0
-sh                               allmodconfig    gcc-14.2.0
-sh                                allnoconfig    gcc-14.2.0
-sh                               allyesconfig    gcc-14.2.0
-sh                                  defconfig    gcc-12
-sh                    randconfig-001-20250207    gcc-14.2.0
-sh                    randconfig-002-20250207    gcc-14.2.0
-sh                              ul2_defconfig    gcc-14.2.0
-sparc                            allmodconfig    gcc-14.2.0
-sparc                             allnoconfig    gcc-14.2.0
-sparc                 randconfig-001-20250207    gcc-14.2.0
-sparc                 randconfig-002-20250207    gcc-14.2.0
-sparc64                             defconfig    gcc-12
-sparc64               randconfig-001-20250207    gcc-14.2.0
-sparc64               randconfig-002-20250207    gcc-14.2.0
-um                               allmodconfig    clang-21
-um                                allnoconfig    clang-21
-um                               allyesconfig    clang-21
-um                               allyesconfig    gcc-12
-um                                  defconfig    gcc-12
-um                             i386_defconfig    gcc-12
-um                    randconfig-001-20250207    clang-21
-um                    randconfig-001-20250207    gcc-14.2.0
-um                    randconfig-002-20250207    gcc-12
-um                    randconfig-002-20250207    gcc-14.2.0
-um                           x86_64_defconfig    gcc-12
-x86_64                            allnoconfig    clang-19
-x86_64                           allyesconfig    clang-19
-x86_64      buildonly-randconfig-001-20250207    clang-19
-x86_64      buildonly-randconfig-001-20250207    gcc-12
-x86_64      buildonly-randconfig-002-20250207    clang-19
-x86_64      buildonly-randconfig-003-20250207    clang-19
-x86_64      buildonly-randconfig-004-20250207    clang-19
-x86_64      buildonly-randconfig-005-20250207    clang-19
-x86_64      buildonly-randconfig-006-20250207    clang-19
-x86_64                              defconfig    clang-19
-x86_64                              defconfig    gcc-11
-x86_64                                  kexec    clang-19
-x86_64                randconfig-001-20250207    clang-19
-x86_64                randconfig-002-20250207    clang-19
-x86_64                randconfig-003-20250207    clang-19
-x86_64                randconfig-004-20250207    clang-19
-x86_64                randconfig-005-20250207    clang-19
-x86_64                randconfig-006-20250207    clang-19
-x86_64                randconfig-007-20250207    clang-19
-x86_64                randconfig-008-20250207    clang-19
-x86_64                randconfig-071-20250207    gcc-12
-x86_64                randconfig-072-20250207    gcc-12
-x86_64                randconfig-073-20250207    gcc-12
-x86_64                randconfig-074-20250207    gcc-12
-x86_64                randconfig-075-20250207    gcc-12
-x86_64                randconfig-076-20250207    gcc-12
-x86_64                randconfig-077-20250207    gcc-12
-x86_64                randconfig-078-20250207    gcc-12
-x86_64                               rhel-9.4    clang-19
-xtensa                            allnoconfig    gcc-14.2.0
-xtensa                randconfig-001-20250207    gcc-14.2.0
-xtensa                randconfig-002-20250207    gcc-14.2.0
-xtensa                         virt_defconfig    clang-19
+You could've used (SZ_1T * 128). But no need to respin just for this.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
