@@ -1,45 +1,63 @@
-Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id DED411BE251;
-	Mon, 10 Feb 2025 07:58:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.248.49.38
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.17])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68C37185B62;
+	Mon, 10 Feb 2025 08:16:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.17
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739174308; cv=none; b=qxawv4uTc75kMFIWrde33mOuMPvAGEiZ/ReIGU4/+QWnSOcoVqB9xAF9Pz05cDmW2NbeXDFFQY8biiO30K94U5WtAFJ5NAhhk3o/QY7iNli3YANJP2rXdjbcJwktTj52+AUftqksD+jRKwVLk7VWAWWCMm9O/L8cezNRB2+QEso=
+	t=1739175417; cv=none; b=aaImDCPM5T4NXnp+/b+OHg2g3sG2L24KhcU1T3gBvQyltSER5FDMbBf5aP05UXqSm1PDMEzSfpk88jLnZv0BjHKzCbRs9gjm+LslVbVIC77Zb1dIAGMcdC0ry6q9i+raOE9/5Cy7qh289SD2GGzePe+fZxXAv1755tIx1XRfzo0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739174308; c=relaxed/simple;
-	bh=/Ryx2/B0BD2rHffc0Fha4W4Sr0eXx1nvnHkVyR4nwA8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=lN9wSBpM6lr974NjglD4QkqtCqg9eJppjGPS3HRIztDV6K+UJ12utxVCMMmhlueU5R0arKOzjHzrfmvgkyxsRLSHEZGs927Mw8D07h92FQs0F9c8vwhHnjv1zX2p4P9RdF30mZ8GJ5ZdxRi812sghvLzbDmCoCNvGxGG12XFm04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=socionext.com; spf=pass smtp.mailfrom=socionext.com; arc=none smtp.client-ip=202.248.49.38
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=socionext.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=socionext.com
-Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 10 Feb 2025 16:58:22 +0900
-Received: from mail.mfilter.local (mail-arc01.css.socionext.com [10.213.46.36])
-	by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 6CDB02006EA4;
-	Mon, 10 Feb 2025 16:58:22 +0900 (JST)
-Received: from kinkan2.css.socionext.com ([172.31.9.51]) by m-FILTER with ESMTP; Mon, 10 Feb 2025 16:58:22 +0900
-Received: from plum.e01.socionext.com (unknown [10.212.245.39])
-	by kinkan2.css.socionext.com (Postfix) with ESMTP id 15B8F1CDD;
-	Mon, 10 Feb 2025 16:58:22 +0900 (JST)
-From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Krzysztof Wilczynski  <kw@linux.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Gustavo Pimentel <gustavo.pimentel@synopsys.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v3 2/5] misc: pci_endpoint_test: Fix disyplaying irq_type after request_irq error
-Date: Mon, 10 Feb 2025 16:58:09 +0900
-Message-Id: <20250210075812.3900646-3-hayashi.kunihiko@socionext.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250210075812.3900646-1-hayashi.kunihiko@socionext.com>
-References: <20250210075812.3900646-1-hayashi.kunihiko@socionext.com>
+	s=arc-20240116; t=1739175417; c=relaxed/simple;
+	bh=RUtPk1rDw/fT5TrMDeTltRRfah+6wBW+dWQgNzcvTiM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=DW4Um2M/mudT4j7vDt9zKTQNZaEE5ACRA9rBMIxKSAh3ZJDl6OycotcAl3EgFAsmE8TSJ2bt46+SGME021FhljKY/WY4PW8yf4ZEfhAhfAgbKalGLdFqxzX4/ffUm+4bUHeCRLCEQebO9ZbSxf9NPk93Tjo0mRK9MYEbqU8cr7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Wd6+Jbfw; arc=none smtp.client-ip=192.198.163.17
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Wd6+Jbfw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1739175416; x=1770711416;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=RUtPk1rDw/fT5TrMDeTltRRfah+6wBW+dWQgNzcvTiM=;
+  b=Wd6+JbfwMhGtbQ/WfWnCuSBFWIecAQzP2RNdPtLBfTnKDfO0rrPEgBva
+   NoaKTBEs8JUEwepyXctilWNh+U/XhzCuAq2jF6lgcwW7JIqviHzHJ3GZe
+   JrChlw8Q9yiF0m0T8kIoyAcl6jA5W78m+5HO8jN8fTzXUZngi2bQAbxBL
+   LyRYKwunxDcJKgrPANS0BHO0UwCbkjisgwtQFe4t4VRSYo/Xe2sMp25xW
+   qCn6CY8JlpZ+0z7mC3Zxe65fSanBAv/4ljd9a5xjiXL85qhdc84t5Oii7
+   cKgju5fFS71gRF8PEJFCj7AM18rmpz4y1Y6SSDQJT7FS+mqhd8Tn+XRuT
+   w==;
+X-CSE-ConnectionGUID: 2bq2DPmNTkSamZ4mpAxY/w==
+X-CSE-MsgGUID: fcDKp/xOR3mZmWlix6Ja7w==
+X-IronPort-AV: E=McAfee;i="6700,10204,11340"; a="39629758"
+X-IronPort-AV: E=Sophos;i="6.13,274,1732608000"; 
+   d="scan'208";a="39629758"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by fmvoesa111.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2025 00:16:53 -0800
+X-CSE-ConnectionGUID: qG1G8AYhTsWuqCyvEDaLbA==
+X-CSE-MsgGUID: hhlq+FQqR4Gb4FmfxZxaDw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.13,274,1732608000"; 
+   d="scan'208";a="112638684"
+Received: from slindbla-desk.ger.corp.intel.com (HELO pujfalus-desk.intel.com) ([10.245.246.224])
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Feb 2025 00:16:49 -0800
+From: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>
+To: lgirdwood@gmail.com,
+	broonie@kernel.org,
+	tiwai@suse.com
+Cc: linux-sound@vger.kernel.org,
+	kai.vehmanen@linux.intel.com,
+	ranjani.sridharan@linux.intel.com,
+	yung-chuan.liao@linux.intel.com,
+	pierre-louis.bossart@linux.dev,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH v2 0/4] ASoC/SOF/PCI/Intel: add PantherLake H support
+Date: Mon, 10 Feb 2025 10:17:26 +0200
+Message-ID: <20250210081730.22916-1-peter.ujfalusi@linux.intel.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,46 +66,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There are two variables that indicate the interrupt type to be used
-in the next test execution, global "irq_type" and test->irq_type.
+Hi,
 
-The former is referenced from pci_endpoint_test_get_irq() to preserve
-the current type for ioctl(PCITEST_GET_IRQTYPE).
+Changes since v1:
+- Updated the commit messages
+- added the Acked-by from Bjorn and Mark
 
-In pci_endpoint_test_request_irq(), since this global variable is
-referenced when an error occurs, the unintended error message is
-displayed.
+The audio IP in PTL-H is identical to the already supported PTL but the
+PCI-ID has been changes due to the differences in the product's
+configuration outside of audio.
 
-For example, the following message shows "MSI 3" even if the current
-irq type becomes "MSI-X".
+To support PTL-H we really just need to wire up the new ID.
 
-    # pcitest -i 2
-    pci-endpoint-test 0000:01:00.0: Failed to request IRQ 30 for MSI 3
-    SET IRQ TYPE TO MSI-X:          NOT OKAY
+Regards,
+Peter
+--- 
+Peter Ujfalusi (1):
+  ASoC: SOF: Intel: pci-ptl: Add support for PTL-H
 
-Fix this issue by using test->irq_type instead of global "irq_type".
+Pierre-Louis Bossart (3):
+  PCI: pci_ids: add INTEL_HDA_PTL_H
+  ALSA: hda: intel-dsp-config: Add PTL-H support
+  ALSA: hda: hda-intel: add Panther Lake-H support
 
-Cc: stable@vger.kernel.org
-Fixes: b2ba9225e031 ("misc: pci_endpoint_test: Avoid using module parameter to determine irqtype")
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
----
- drivers/misc/pci_endpoint_test.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ include/linux/pci_ids.h       | 1 +
+ sound/hda/intel-dsp-config.c  | 5 +++++
+ sound/pci/hda/hda_intel.c     | 2 ++
+ sound/soc/sof/intel/pci-ptl.c | 1 +
+ 4 files changed, 9 insertions(+)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index bbcccd425700..f13fa32ef91a 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -242,7 +242,7 @@ static int pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
- 	return 0;
- 
- fail:
--	switch (irq_type) {
-+	switch (test->irq_type) {
- 	case IRQ_TYPE_INTX:
- 		dev_err(dev, "Failed to request IRQ %d for Legacy\n",
- 			pci_irq_vector(pdev, i));
 -- 
-2.25.1
+2.48.1
 
