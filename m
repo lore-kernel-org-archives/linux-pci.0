@@ -1,26 +1,26 @@
 Received: from mx.socionext.com (mx.socionext.com [202.248.49.38])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0BB1C1BEF6F;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DED411BE251;
 	Mon, 10 Feb 2025 07:58:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.248.49.38
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739174307; cv=none; b=TiFgD7oBTC4qGLlogSmrHlQ6xhpU79HDQB3jgNIwsNypkaOLDZgjaIBV+q6pCGqPGVh7YVvUalDNKXE+pGL2OzIcYJlaDc7U7AKwcoJxbolgz13sjf/N4aF1gVVmuSiMQLYdE9sBYWLgweDxrxuJSERFsk55xsI4mdNpvNVuaC0=
+	t=1739174308; cv=none; b=qxawv4uTc75kMFIWrde33mOuMPvAGEiZ/ReIGU4/+QWnSOcoVqB9xAF9Pz05cDmW2NbeXDFFQY8biiO30K94U5WtAFJ5NAhhk3o/QY7iNli3YANJP2rXdjbcJwktTj52+AUftqksD+jRKwVLk7VWAWWCMm9O/L8cezNRB2+QEso=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739174307; c=relaxed/simple;
-	bh=1/idm9AJ+1pOB6k9pyLer3mBBTzxI9dHzyA4ixoFR/I=;
+	s=arc-20240116; t=1739174308; c=relaxed/simple;
+	bh=/Ryx2/B0BD2rHffc0Fha4W4Sr0eXx1nvnHkVyR4nwA8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BDw+BXAbAPMM4mE/C+pnGQKkP/JZxZwUf5BWEPrxm+KumoywAiFqteEZAxaWK4C0M7k7taZJUZHz5R4Mfbv1Vne81v8z9XHRbQ2XNVgzE7nU3bNflVIHakNH6hUkX6BBy0Ryd5+DjEWQffBFKHroto99xbr5K7CUn5aDHwNAqOk=
+	 MIME-Version; b=lN9wSBpM6lr974NjglD4QkqtCqg9eJppjGPS3HRIztDV6K+UJ12utxVCMMmhlueU5R0arKOzjHzrfmvgkyxsRLSHEZGs927Mw8D07h92FQs0F9c8vwhHnjv1zX2p4P9RdF30mZ8GJ5ZdxRi812sghvLzbDmCoCNvGxGG12XFm04=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=socionext.com; spf=pass smtp.mailfrom=socionext.com; arc=none smtp.client-ip=202.248.49.38
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=socionext.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=socionext.com
 Received: from unknown (HELO kinkan2-ex.css.socionext.com) ([172.31.9.52])
-  by mx.socionext.com with ESMTP; 10 Feb 2025 16:58:24 +0900
+  by mx.socionext.com with ESMTP; 10 Feb 2025 16:58:22 +0900
 Received: from mail.mfilter.local (mail-arc01.css.socionext.com [10.213.46.36])
-	by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 6EFBC2006EA4;
-	Mon, 10 Feb 2025 16:58:24 +0900 (JST)
-Received: from kinkan2.css.socionext.com ([172.31.9.51]) by m-FILTER with ESMTP; Mon, 10 Feb 2025 16:58:24 +0900
+	by kinkan2-ex.css.socionext.com (Postfix) with ESMTP id 6CDB02006EA4;
+	Mon, 10 Feb 2025 16:58:22 +0900 (JST)
+Received: from kinkan2.css.socionext.com ([172.31.9.51]) by m-FILTER with ESMTP; Mon, 10 Feb 2025 16:58:22 +0900
 Received: from plum.e01.socionext.com (unknown [10.212.245.39])
-	by kinkan2.css.socionext.com (Postfix) with ESMTP id 1621C1CDD;
-	Mon, 10 Feb 2025 16:58:24 +0900 (JST)
+	by kinkan2.css.socionext.com (Postfix) with ESMTP id 15B8F1CDD;
+	Mon, 10 Feb 2025 16:58:22 +0900 (JST)
 From: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Krzysztof Wilczynski  <kw@linux.com>,
@@ -32,10 +32,11 @@ To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>
 Cc: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: [PATCH v3 5/5] misc: pci_endpoint_test: Do not use managed irq functions
-Date: Mon, 10 Feb 2025 16:58:12 +0900
-Message-Id: <20250210075812.3900646-6-hayashi.kunihiko@socionext.com>
+	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+	stable@vger.kernel.org
+Subject: [PATCH v3 2/5] misc: pci_endpoint_test: Fix disyplaying irq_type after request_irq error
+Date: Mon, 10 Feb 2025 16:58:09 +0900
+Message-Id: <20250210075812.3900646-3-hayashi.kunihiko@socionext.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250210075812.3900646-1-hayashi.kunihiko@socionext.com>
 References: <20250210075812.3900646-1-hayashi.kunihiko@socionext.com>
@@ -47,46 +48,46 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The pci_endpoint_test_request_irq() and pci_endpoint_test_release_irq()
-are called repeatedly by the users through pci_endpoint_test_set_irq().
-So using the managed version of IRQ functions within these functions
-has no effect.
+There are two variables that indicate the interrupt type to be used
+in the next test execution, global "irq_type" and test->irq_type.
 
-Suggested-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+The former is referenced from pci_endpoint_test_get_irq() to preserve
+the current type for ioctl(PCITEST_GET_IRQTYPE).
+
+In pci_endpoint_test_request_irq(), since this global variable is
+referenced when an error occurs, the unintended error message is
+displayed.
+
+For example, the following message shows "MSI 3" even if the current
+irq type becomes "MSI-X".
+
+    # pcitest -i 2
+    pci-endpoint-test 0000:01:00.0: Failed to request IRQ 30 for MSI 3
+    SET IRQ TYPE TO MSI-X:          NOT OKAY
+
+Fix this issue by using test->irq_type instead of global "irq_type".
+
+Cc: stable@vger.kernel.org
+Fixes: b2ba9225e031 ("misc: pci_endpoint_test: Avoid using module parameter to determine irqtype")
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
 ---
- drivers/misc/pci_endpoint_test.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/misc/pci_endpoint_test.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index 8d98cd18634d..9465d2ab259a 100644
+index bbcccd425700..f13fa32ef91a 100644
 --- a/drivers/misc/pci_endpoint_test.c
 +++ b/drivers/misc/pci_endpoint_test.c
-@@ -212,10 +212,9 @@ static void pci_endpoint_test_release_irq(struct pci_endpoint_test *test)
- {
- 	int i;
- 	struct pci_dev *pdev = test->pdev;
--	struct device *dev = &pdev->dev;
+@@ -242,7 +242,7 @@ static int pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
+ 	return 0;
  
- 	for (i = 0; i < test->num_irqs; i++)
--		devm_free_irq(dev, pci_irq_vector(pdev, i), test);
-+		free_irq(pci_irq_vector(pdev, i), test);
- 
- 	test->num_irqs = 0;
- }
-@@ -228,9 +227,9 @@ static int pci_endpoint_test_request_irq(struct pci_endpoint_test *test)
- 	struct device *dev = &pdev->dev;
- 
- 	for (i = 0; i < test->num_irqs; i++) {
--		ret = devm_request_irq(dev, pci_irq_vector(pdev, i),
--				       pci_endpoint_test_irqhandler,
--				       IRQF_SHARED, test->name, test);
-+		ret = request_irq(pci_irq_vector(pdev, i),
-+				  pci_endpoint_test_irqhandler, IRQF_SHARED,
-+				  test->name, test);
- 		if (ret)
- 			goto fail;
- 	}
+ fail:
+-	switch (irq_type) {
++	switch (test->irq_type) {
+ 	case IRQ_TYPE_INTX:
+ 		dev_err(dev, "Failed to request IRQ %d for Legacy\n",
+ 			pci_irq_vector(pdev, i));
 -- 
 2.25.1
 
