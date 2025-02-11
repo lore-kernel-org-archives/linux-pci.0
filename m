@@ -1,36 +1,38 @@
-Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
+Received: from out-183.mta0.migadu.com (out-183.mta0.migadu.com [91.218.175.183])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB5332638A5
-	for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2025 19:54:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F0A8B2641C3
+	for <linux-pci@vger.kernel.org>; Tue, 11 Feb 2025 19:54:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.183
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739303687; cv=none; b=SaNvUh9jFkzCmHWix/U+xuW8u++aHoWimt/Quyf4kANuvVxH7nfiQe8LTr8wAr7xhWaEcvJNTotI0gUfocjlnElKtjzd8pJauJ5+aVwFTb+26YggZuq1otoIDUGYdfJpCbHCuPn+QOYkzeFmkW7FZfH8x9SXWIeZRwpbny2h8NU=
+	t=1739303688; cv=none; b=om5PwjYAT63f+OdgjfWxdtrVm778CRxpeU4Qz3ZE64YayIvITvhsqEWWzE09pdTgxFOq4XXPu98meYiv5dUtVD5KETHbwOVWXyqsZaqRRhB2N9lxfs2Rv4fAo3gTMr8pRc0Zqt2F6TtS94KPbZKwiG16W1YjH4SL3K1CLEm4HxE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739303687; c=relaxed/simple;
-	bh=vLPYepmCn4mhfGlDn5smbuR/5pRrA54KLcq81jDIMU0=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=BzolE4AakC8w68JjYcxHSTWgJ2S8yNdIckjOqiPOd7DtBQFiz5FtrfA6o9z+3hu4c7yLaTdjy5FLSfrSzm/gyt4B1+kGA+q+bAbMB7K7I85UKEs/ERo7HLcP+a97r+M/So1/IKBpepFM0s51XXosb1B52Y3g+/CR/zc9KJUz9wQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosenzweig.io; spf=pass smtp.mailfrom=rosenzweig.io; dkim=pass (2048-bit key) header.d=rosenzweig.io header.i=@rosenzweig.io header.b=a5DtbJVv; arc=none smtp.client-ip=91.218.175.180
+	s=arc-20240116; t=1739303688; c=relaxed/simple;
+	bh=evSzVy4TRIqrGWVSEbIbvZOoeJKoVhbPp7EMTz7edvY=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=XvN6CV3u/F4qSkGstUz+6/Bb0oWMrz7xOWIuSGi0zm9iP7xOzKHhb58ZN7U2c2t0mjkADH86qgEMlAz/IKIW9UK87gVBtMgBkKPFkPcymjGGLbSKU6tuRLttADiwMgrKwvzhJYPwfAQUkB+QsNkvQajdcaEjWY7jL0LaQYO32f8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosenzweig.io; spf=pass smtp.mailfrom=rosenzweig.io; dkim=pass (2048-bit key) header.d=rosenzweig.io header.i=@rosenzweig.io header.b=WAV47Fv5; arc=none smtp.client-ip=91.218.175.183
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=rosenzweig.io
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rosenzweig.io
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rosenzweig.io header.i=@rosenzweig.io header.b="a5DtbJVv"
+	dkim=pass (2048-bit key) header.d=rosenzweig.io header.i=@rosenzweig.io header.b="WAV47Fv5"
 X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=rosenzweig.io;
-	s=key1; t=1739303673;
+	s=key1; t=1739303684;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=bjtWxBs83BeuDmTbDt+EHDOyKdhyT00WLwVNCX8IS6s=;
-	b=a5DtbJVvwtvk4xeAZlHBtFv9PNrT5Ibudy9tbKBSrDOeYgmOY/LhvzgXaqIKmHU1rVRGR1
-	lNMhh4/6bI/At3zCJVrIrDttdqUXM8Sl9oQL+fAs5hgs/DJIkWZJ76RfQixqvNhHeJrzIN
-	4wsV1Eomj/5177fqUXxiQLl63Q731+b5Jvc0k/ZlQ1SkYIWlOIfO73OCNIfX7CS8K20mzM
-	+Vyha15mA1vpWiOVmPaRTS9XBhDmYUP0gqtfPGgu93Z6ghvXIx51Jxt0GbE/06f+4/rLE5
-	x2NxelrrE4Ibh4JhDXqXi5kHM1FINGakkaulLE6b9SKPuBfKEu9jsjxdlmdQ0g==
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Pj4w2leCnY/nj4Xl2+RPpzvbfj+hrlWDBqoX2zhbX4Y=;
+	b=WAV47Fv5coixIPh40DlrjI71Eq2UE+VFWRb6xZwNZtFAD1xQYEM1YywP237pxCdsgS93un
+	JkOD5klQGvgNks1BaiVC1Jp8vEoHQonyzzb/cOv5ziiw3zuJvfaVu3Y9bpnu/+85zmu8Yo
+	A4PxdAgNSTfQurQHGeOGPCMYg9WdZ4nvVLaQHYNk85hW41vlMf7Ok0MaKWMmyfXsfBSd43
+	t2iuJAKQp7WUI/D3MTHjzyKrCedBNMGILmWavt96sgWQd1pEWeLFc9Hj7yRWLpndDPwZjQ
+	BrZhr7rC87/XYNbFbZrS8NU17dFORc9USZYHKnNJJ+CD4pR1VqGSw4h3I6igTg==
 From: Alyssa Rosenzweig <alyssa@rosenzweig.io>
-Subject: [PATCH 0/7] PCI: apple: support t6020
-Date: Tue, 11 Feb 2025 14:54:25 -0500
-Message-Id: <20250211-pcie-t6-v1-0-b60e6d2501bb@rosenzweig.io>
+Date: Tue, 11 Feb 2025 14:54:29 -0500
+Subject: [PATCH 4/7] PCI: apple: Move port PHY registers to their own reg
+ items
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,10 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAPGqq2cC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDI1MDI0ND3YLkzFTdEjNd4zQTC0uL5FTLJMMUJaDqgqLUtMwKsEnRsbW1AIz
- yLv1ZAAAA
-X-Change-ID: 20250211-pcie-t6-3f4898ce9b1d
+Message-Id: <20250211-pcie-t6-v1-4-b60e6d2501bb@rosenzweig.io>
+References: <20250211-pcie-t6-v1-0-b60e6d2501bb@rosenzweig.io>
+In-Reply-To: <20250211-pcie-t6-v1-0-b60e6d2501bb@rosenzweig.io>
 To: Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>, 
  Bjorn Helgaas <bhelgaas@google.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -54,53 +55,156 @@ To: Hector Martin <marcan@marcan.st>, Sven Peter <sven@svenpeter.dev>,
 Cc: asahi@lists.linux.dev, linux-arm-kernel@lists.infradead.org, 
  linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
  linux-kernel@vger.kernel.org, Alyssa Rosenzweig <alyssa@rosenzweig.io>, 
- Janne Grunau <j@jannau.net>, stable@vger.kernel.org
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1159; i=alyssa@rosenzweig.io;
- h=from:subject:message-id; bh=vLPYepmCn4mhfGlDn5smbuR/5pRrA54KLcq81jDIMU0=;
- b=owEBbQKS/ZANAwAIAf7+UFoK9VgNAcsmYgBnq6r1hX/zYTOcr8IsxIdT6f8LIeprpn21i7hFi
- FMMsjhwAHmJAjMEAAEIAB0WIQRDXuCbsK8A0B2q9jj+/lBaCvVYDQUCZ6uq9QAKCRD+/lBaCvVY
- DQBfD/9Vrm3zDhNnwWZJlv0XHhz5dXaXNFpop4FmbBwlOS1GI18cZWC6vaX65sUOGm2pLgG4i6F
- Tf9Vo6DRIEdQYPMkzZMg6AvsXjLrPO2CypPLGd8TOkmk9VowXTedeU+ub2KgUJXmOY7LQEO6VtY
- T+JF8DkiGLjvlxHrjkhRm0R7seTPpMfIP5Z+lSeJ3bS+LhkxSfC24d+CcX+1A02MZNAudHhiqWm
- SkxTDbiHRvJm5mjkXfnoIg0Q+2c4re8xd5TC0pk6wnTN+5XvZbZC3DirRGxAcEAN02OUddXVpVC
- Ong9Db+NV9xXoaRUhEiinE+emBlAabt1lIAdJOXe5pCWvP+8LZmtaeCofozy5ztqIWU+C1YjDY/
- Hrt9EZFGQUpypV0USyXLl/LAepePjC9SVaBhCcI2iSVV66RW4VBNyn3TZkQOlEneA/PzmG0jIHt
- sSgxbr19Yz0IHLZURp12jlSXDHojbbWknY1uPrrmL/llw8YoQQacVI5s6mfCYEiXDfwXv6w4WwK
- bwP5XF7iiqm8ZToXwAAhfzHfro6D/Ep6r0f6RuyNxJ2SHKJYavuyaDY8yQs0k6lhiorhWIOR1wg
- ykDz6mRLBMLq2oXcp9Jpvb1/VJH4/+wznxYsYZahNfiSVGPu8Sh4MP5unjkI5x5Y3WY4m+CkqA6
- iwEjEi2dojl2iGA==
+ Janne Grunau <j@jannau.net>
+X-Developer-Signature: v=1; a=openpgp-sha256; l=5194; i=alyssa@rosenzweig.io;
+ h=from:subject:message-id; bh=c4UQnZ1yNlclQoJA6wxg/GcH8AshzfypyEZtc8NzpfA=;
+ b=owEBbQKS/ZANAwAIAf7+UFoK9VgNAcsmYgBnq6r28yiuwKDywRkuV4aqnNe+dXu92ZsWlKTPV
+ s6mWRrrVkqJAjMEAAEIAB0WIQRDXuCbsK8A0B2q9jj+/lBaCvVYDQUCZ6uq9gAKCRD+/lBaCvVY
+ DVVnEACeJNc9vIWHJBSk0ckG+ZbgcKCacOEMIvWjDMQ6lAQFlSky2E1m1vfg8Zj6rEg0bVuW+Gm
+ MTgqZ+D5kXP81x1f1npaL7un3sQFAXo6bk2e/lY9u9bnnkrRZ4wVbReZvDX3TO0wrYSLeBku3fz
+ v3vzc5MfRe8kKPOH1Ovhhf/sC6bnPqHoW8CkeaVGNq/+hItn+A5lto1kegEmGnLc4/EInaj3ngE
+ HredW4OIJPQh6uobM3fsOIx3IGbZhrCkgZ/tG1LB5tTVfPwLv75WFP0oX4rv6CD9Li152t4uaGt
+ A395PMZ/VAPB2bqlX9w2eaPnC/NF05xReZRt0AmqzgtT1LRaH2jmWSGKm/jtxWfvKjHMWmue3rs
+ JsDCwPp5x8jLnkpDLfjYMX13xB/Ockv4Gdiq//YTIMssmM1UFgmqqzAfsPcMZUpBTH8dDqIYnoI
+ jENd9oafevAryp1zy/vOVoRpotyM1qG+DZs4qVIGqyzbhtbZtHAHN9VMYzs2uzYp3F7csVkbF9h
+ HeUklORh5bRQXwoCUW31DbdLqRV2nWYruQcK75gjPprDElzbfoIJLW1ha/dYs4btKRpU7+V72iP
+ vOdNLksJxugD40vStmwGFF8IBMxleIPnFqwwo4+F/Egb4XNlEgVNhFqgvuwPMN/+gN/KMBODfDM
+ OgnIfSHt+eKc4LA==
 X-Developer-Key: i=alyssa@rosenzweig.io; a=openpgp;
  fpr=435EE09BB0AF00D01DAAF638FEFE505A0AF5580D
 X-Migadu-Flow: FLOW_OUT
 
-This series adds T6020 support to the Apple PCIe controller. Mostly
-Apple shuffled registers around (presumably to accommodate the larger
-configurations on those machines). So there's a bit of churn here but
-not too much in the way of functional changes.
+From: Hector Martin <marcan@marcan.st>
 
+T602x PCIe cores move these registers around. Instead of hardcoding in
+another offset, let's move them into their own reg entries. This matches
+what Apple does on macOS device trees too.
+
+Maintains backwards compatibility with old DTs by using the old offsets.
+
+Note that we open code devm_platform_ioremap_resource_byname() to avoid
+error messages on older platforms with missing resources in the pcie
+node. ("pcie-apple 590000000.pcie: invalid resource (null)" on probe)
+
+Co-developed-by: Janne Grunau <j@jannau.net>
+Signed-off-by: Janne Grunau <j@jannau.net>
+Signed-off-by: Hector Martin <marcan@marcan.st>
 Signed-off-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 ---
-Alyssa Rosenzweig (1):
-      dt-bindings: pci: apple,pcie: Add t6020 support
+ drivers/pci/controller/pcie-apple.c | 55 +++++++++++++++++++++++++------------
+ 1 file changed, 37 insertions(+), 18 deletions(-)
 
-Hector Martin (5):
-      PCI: apple: Fix missing OF node reference in apple_pcie_setup_port
-      PCI: apple: Move port PHY registers to their own reg items
-      PCI: apple: Drop poll for CORE_RC_PHYIF_STAT_REFCLK
-      PCI: apple: Use gpiod_set_value_cansleep in probe flow
-      PCI: apple: Add T602x PCIe support
+diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+index 958cf459d4c64dffa1f993e57b7a58cfb2199b8f..806eeb911bbd4f1ae5832b34f775fa18c866670b 100644
+--- a/drivers/pci/controller/pcie-apple.c
++++ b/drivers/pci/controller/pcie-apple.c
+@@ -39,14 +39,18 @@
+ #define   CORE_RC_STAT_READY		BIT(0)
+ #define CORE_FABRIC_STAT		0x04000
+ #define   CORE_FABRIC_STAT_MASK		0x001F001F
+-#define CORE_LANE_CFG(port)		(0x84000 + 0x4000 * (port))
+-#define   CORE_LANE_CFG_REFCLK0REQ	BIT(0)
+-#define   CORE_LANE_CFG_REFCLK1REQ	BIT(1)
+-#define   CORE_LANE_CFG_REFCLK0ACK	BIT(2)
+-#define   CORE_LANE_CFG_REFCLK1ACK	BIT(3)
+-#define   CORE_LANE_CFG_REFCLKEN	(BIT(9) | BIT(10))
+-#define CORE_LANE_CTL(port)		(0x84004 + 0x4000 * (port))
+-#define   CORE_LANE_CTL_CFGACC		BIT(15)
++
++#define CORE_PHY_DEFAULT_BASE(port)	(0x84000 + 0x4000 * (port))
++
++#define PHY_LANE_CFG			0x00000
++#define   PHY_LANE_CFG_REFCLK0REQ	BIT(0)
++#define   PHY_LANE_CFG_REFCLK1REQ	BIT(1)
++#define   PHY_LANE_CFG_REFCLK0ACK	BIT(2)
++#define   PHY_LANE_CFG_REFCLK1ACK	BIT(3)
++#define   PHY_LANE_CFG_REFCLKEN		(BIT(9) | BIT(10))
++#define   PHY_LANE_CFG_REFCLKCGEN	(BIT(30) | BIT(31))
++#define PHY_LANE_CTL			0x00004
++#define   PHY_LANE_CTL_CFGACC		BIT(15)
+ 
+ #define PORT_LTSSMCTL			0x00080
+ #define   PORT_LTSSMCTL_START		BIT(0)
+@@ -145,6 +149,7 @@ struct apple_pcie_port {
+ 	struct apple_pcie	*pcie;
+ 	struct device_node	*np;
+ 	void __iomem		*base;
++	void __iomem		*phy;
+ 	struct irq_domain	*domain;
+ 	struct list_head	entry;
+ 	DECLARE_BITMAP(sid_map, MAX_RID2SID);
+@@ -473,26 +478,26 @@ static int apple_pcie_setup_refclk(struct apple_pcie *pcie,
+ 	if (res < 0)
+ 		return res;
+ 
+-	rmw_set(CORE_LANE_CTL_CFGACC, pcie->base + CORE_LANE_CTL(port->idx));
+-	rmw_set(CORE_LANE_CFG_REFCLK0REQ, pcie->base + CORE_LANE_CFG(port->idx));
++	rmw_set(PHY_LANE_CTL_CFGACC, port->phy + PHY_LANE_CTL);
++	rmw_set(PHY_LANE_CFG_REFCLK0REQ, port->phy + PHY_LANE_CFG);
+ 
+-	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
+-					 stat, stat & CORE_LANE_CFG_REFCLK0ACK,
++	res = readl_relaxed_poll_timeout(port->phy + PHY_LANE_CFG,
++					 stat, stat & PHY_LANE_CFG_REFCLK0ACK,
+ 					 100, 50000);
+ 	if (res < 0)
+ 		return res;
+ 
+-	rmw_set(CORE_LANE_CFG_REFCLK1REQ, pcie->base + CORE_LANE_CFG(port->idx));
+-	res = readl_relaxed_poll_timeout(pcie->base + CORE_LANE_CFG(port->idx),
+-					 stat, stat & CORE_LANE_CFG_REFCLK1ACK,
++	rmw_set(PHY_LANE_CFG_REFCLK1REQ, port->phy + PHY_LANE_CFG);
++	res = readl_relaxed_poll_timeout(port->phy + PHY_LANE_CFG,
++					 stat, stat & PHY_LANE_CFG_REFCLK1ACK,
+ 					 100, 50000);
+ 
+ 	if (res < 0)
+ 		return res;
+ 
+-	rmw_clear(CORE_LANE_CTL_CFGACC, pcie->base + CORE_LANE_CTL(port->idx));
++	rmw_clear(PHY_LANE_CTL_CFGACC, port->phy + PHY_LANE_CTL);
+ 
+-	rmw_set(CORE_LANE_CFG_REFCLKEN, pcie->base + CORE_LANE_CFG(port->idx));
++	rmw_set(PHY_LANE_CFG_REFCLKEN, port->phy + PHY_LANE_CFG);
+ 	rmw_set(PORT_REFCLK_EN, port->base + PORT_REFCLK);
+ 
+ 	return 0;
+@@ -512,8 +517,10 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 	struct platform_device *platform = to_platform_device(pcie->dev);
+ 	struct apple_pcie_port *port;
+ 	struct gpio_desc *reset;
++	struct resource *res;
+ 	u32 stat, idx;
+ 	int ret, i;
++	char name[16];
+ 
+ 	reset = devm_fwnode_gpiod_get(pcie->dev, of_fwnode_handle(np), "reset",
+ 				      GPIOD_OUT_LOW, "PERST#");
+@@ -533,10 +540,22 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 	port->pcie = pcie;
+ 	port->np = np;
+ 
+-	port->base = devm_platform_ioremap_resource(platform, port->idx + 2);
++	snprintf(name, sizeof(name), "port%d", port->idx);
++	res = platform_get_resource_byname(platform, IORESOURCE_MEM, name);
++	if (res)
++		port->base = devm_ioremap_resource(&platform->dev, res);
++	else
++		port->base = devm_platform_ioremap_resource(platform, port->idx + 2);
+ 	if (IS_ERR(port->base))
+ 		return PTR_ERR(port->base);
+ 
++	snprintf(name, sizeof(name), "phy%d", port->idx);
++	res = platform_get_resource_byname(platform, IORESOURCE_MEM, name);
++	if (res)
++		port->phy = devm_ioremap_resource(&platform->dev, res);
++	else
++		port->phy = pcie->base + CORE_PHY_DEFAULT_BASE(port->idx);
++
+ 	rmw_set(PORT_APPCLK_EN, port->base + PORT_APPCLK);
+ 
+ 	/* Assert PERST# before setting up the clock */
 
-Janne Grunau (1):
-      PCI: apple: Set only available ports up
-
- .../devicetree/bindings/pci/apple,pcie.yaml        |   1 +
- drivers/pci/controller/pcie-apple.c                | 189 ++++++++++++++++-----
- 2 files changed, 146 insertions(+), 44 deletions(-)
----
-base-commit: 2014c95afecee3e76ca4a56956a936e23283f05b
-change-id: 20250211-pcie-t6-3f4898ce9b1d
-
-Best regards,
 -- 
-Alyssa Rosenzweig <alyssa@rosenzweig.io>
+2.48.1
 
