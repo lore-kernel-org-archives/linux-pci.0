@@ -1,157 +1,126 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC82020110B
-	for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2025 17:30:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04DA6204684;
+	Thu, 13 Feb 2025 17:37:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739467802; cv=none; b=YP9BQJ0E/4HzlPyLG8BQGonOKAlYKHHpbAImQuwA+g0TvYgFjToSlhB2Qcj4sYgpGVgHQyda5V/77a+bFf6P8k+A4VX51+6Q3RSfPJzfpMxvtCzM023YRXM2P3lt/MfkHVaoqxoOeKoPAEoXIP+drHer8vb7ZSbr7l6VXcbJvOs=
+	t=1739468256; cv=none; b=oztXc6CxW7Pm+q++AH72r2vUSNAfgmXm3I6RogfUYzT3Tw3TW3jYKRdZDLIhfvujHSOWaGi89d8XFx4gB7c4hip/twZxFodPZZSRLXUDqe5V/1ErGFJ4cVRgClP0bSZNAKh1EAOelZunL7PMeH6wje0C5LSzCiqO2M2pKskgwI8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739467802; c=relaxed/simple;
-	bh=zCyaallTEZbcZi+JylNVW9wmEI/TBI8/RQryPjwOpa8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iUqJhz3Pl4dgfIJF9y63vdMCeGw8u7y5+0ElQUgdzdvRBbZtf+JBxlFQK8Jm9qflMQjkylZYSF/SH8OLIm9Sv5FhxXzF5TIaJfvL+C0Jm3i2MXz8AXtQr9ah96xJsevvoKy5uR3gcbNPnmOIgVn6Rr9jCHKelbBiOuOh8birj1g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=raspberrypi.com; spf=pass smtp.mailfrom=raspberrypi.com; dkim=pass (2048-bit key) header.d=raspberrypi.com header.i=@raspberrypi.com header.b=CDFqEyi6; arc=none smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=raspberrypi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=raspberrypi.com
+	s=arc-20240116; t=1739468256; c=relaxed/simple;
+	bh=Kag1yQsukjTOP+S5Jjyl/xScN3/K1pOC6cQmUcAjDkI=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=Jy3zVQxKZzWO/IK5V2ze+ajO3Hcihn4rJxDhQycPquU6netcX/3TyR6008xOBAcH5UlUvPTJ9ED9YzSACAF+pyfdrVcvv3VTpGDnPgaRLXVAqclj2F4QYq+UPKwaWV6vrTSC2/kubKFFmfqLB37Jbu8HUqnR1eMHr+Wu8xfGv0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JVjQkhFH; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=raspberrypi.com header.i=@raspberrypi.com header.b="CDFqEyi6"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-ab7d451f7c4so175744566b.0
-        for <linux-pci@vger.kernel.org>; Thu, 13 Feb 2025 09:30:00 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=raspberrypi.com; s=google; t=1739467799; x=1740072599; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=zCyaallTEZbcZi+JylNVW9wmEI/TBI8/RQryPjwOpa8=;
-        b=CDFqEyi6Bv1HleC6Cy5siHHPDLJcf1a8cOladBbrJPFmDSCj334wcT0TT2E1pub8Rf
-         LUG1nNpfJkCazIiYf2tXd0UrjkIps4ePzQRuqgiB7mXMtjC8acdpxZtwIk7nHV86Eoz5
-         L00571aJCrVOWwF4ktJPpY1HjgK7i9G6SyM2KCi+FeY1wB2gArrUebDZKNjJj5bkZwP/
-         WKPi82jRW/5qvsAZtvh2jPudofvlki+RrzyXNElThwP/gDj6dCwhJ8aRVEe872XEBFou
-         bDj2rNyCMXhJjIJ0IkmHlZ3KMcRqAUnCJ4hxaU7zVqoFb42MzSDcoAEx36Oaxs06DoJA
-         beWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739467799; x=1740072599;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=zCyaallTEZbcZi+JylNVW9wmEI/TBI8/RQryPjwOpa8=;
-        b=fVRCQJuR52+1xoVSk401m1BJFEqGN5auTMG+J6227opCRi37hzTgJfQQk+aM8gL/Wl
-         s1WKVitdT+df5O1Di1J9co4rIFVbZPFzCucrciF7B5eOTmtccewF/55Ab8jEIeyENIF0
-         UNozuy91/L5siFm5KonoEK8nR0Eyiu0leBwc+gZpIT52wSPKkHB1Zbrw3se6Q46Y4bno
-         YUb2C+BCFDScV8SxYEFDpCLffu07J3vLOcj8iQ/+7Wn3HcI9f6Dl8liEZzlVzVV2DS1r
-         8wHvlrJhOqEMMAqtSGJcVzNbg/9MbdvmD5gQsjZXrT1rm2ze2mqfV3CyCLdyYy+LQ9aF
-         K1fQ==
-X-Forwarded-Encrypted: i=1; AJvYcCWSey7zmx0leGS0WpwtrZbDt6iwKCAaOeKb+V+9keIfLUeTg6qzMScU06cWhuL0wZndmBkyZGZ2bDA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyblPn/mtQeNkFopxnq0PWL/cPBHb9p0Lbz0deQ4OmrqsWvnqPC
-	rwA73CgXBxk7ZZNpRNj5Ky5JCo5iv+JFJB3TpA65/CkzbZoW9IPbpbsInQtgQXlmaiZkZ64lFTA
-	5/JL+Wme0Jnf2jQfcBD/BG4Vc2E7fOVlpTIJYUA==
-X-Gm-Gg: ASbGncvpL1qbSm8d7XzCAJK0p5cDyvdV7JmKXpyDFWyUHHQLMq14wZ0GqoO3BpvoBXD
-	DSkNjdpGvTP1qAmIGHCyun7EmoYsQ/nevlyHQrR//2UHB+W0BLAgwuDrjC+X+NzplUTlzDU9KaD
-	HWfxTW0Y5xQfG0hwhg1G0xU8QnAcxO
-X-Google-Smtp-Source: AGHT+IEHpzGOhWWzUiRDzPOLNzp9YXUJMsGD72YcUx4PUeutR3aym3wR77yLoxsgRGXTk2VSMsiRI1k+qJ+nezQ3KC8=
-X-Received: by 2002:a17:907:86a7:b0:ab7:c284:7245 with SMTP id
- a640c23a62f3a-ab7f339c875mr683201066b.18.1739467799148; Thu, 13 Feb 2025
- 09:29:59 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JVjQkhFH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1739468255; x=1771004255;
+  h=date:from:to:cc:subject:in-reply-to:message-id:
+   references:mime-version;
+  bh=Kag1yQsukjTOP+S5Jjyl/xScN3/K1pOC6cQmUcAjDkI=;
+  b=JVjQkhFHOzmKXwr6jbYjevnxj6zsSpgGuNFia3zje2Ik9oALIwWeMQpl
+   3tcI5tWcajN/77S1g+tita1Ov6BOQWXj/2kZDFxv9f/xGqAScMjgklyT1
+   OhsqCdMd1MC0N3ZZ+Tt+28fEd4x6bsn+CW4YI3FtOe6G8JfLK3UHabHsU
+   l3zufgdZSIC9Tl5xLCLt4ilHAgWIuKEOFWQEhbJ0ru+slMW+3IPmXwfWg
+   Rs5Casq61833QepjCOdGh41VEWpmVAjQrlQFP5nc4f7l719ESUjKFnrLc
+   PkbA02H3Ghiv3z7dRweisSZrZV431F55+8AHZ5vvheYNQc3xuYos93Z1w
+   g==;
+X-CSE-ConnectionGUID: wp5JQYCWTJebTRL3ivTeow==
+X-CSE-MsgGUID: 8g/infmpQpqrA9FXAvWlSg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11344"; a="40449831"
+X-IronPort-AV: E=Sophos;i="6.13,282,1732608000"; 
+   d="scan'208";a="40449831"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2025 09:37:34 -0800
+X-CSE-ConnectionGUID: x4aqHW16SCmMS8G5LPToIQ==
+X-CSE-MsgGUID: hKz1t8f0ReqqU7j3y875Tg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
+   d="scan'208";a="150385334"
+Received: from sj-2308-osc3.sj.altera.com ([10.244.138.69])
+  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Feb 2025 09:37:34 -0800
+Date: Thu, 13 Feb 2025 09:37:33 -0800 (PST)
+From: matthew.gerlach@linux.intel.com
+To: Krzysztof Kozlowski <krzk@kernel.org>
+cc: lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org, 
+    robh@kernel.org, bhelgaas@google.com, krzk+dt@kernel.org, 
+    conor+dt@kernel.org, dinguyen@kernel.org, joyce.ooi@intel.com, 
+    linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+    linux-kernel@vger.kernel.org, matthew.gerlach@altera.com, 
+    peter.colberg@altera.com
+Subject: Re: [PATCH v6 2/7] arm64: dts: agilex: Fix fixed-clock schema
+ warnings
+In-Reply-To: <8bf87b59-fe80-4bb5-a558-bff35d876e67@kernel.org>
+Message-ID: <d6b453b-5819-d663-7cc1-6ef154c5d965@linux.intel.com>
+References: <20250211151725.4133582-1-matthew.gerlach@linux.intel.com> <20250211151725.4133582-3-matthew.gerlach@linux.intel.com> <8bf87b59-fe80-4bb5-a558-bff35d876e67@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAMEGJJ3=W8_R0xBvm8r+Q7iExZx8xPBHEWWGAT9ngpGWDSKCaQ@mail.gmail.com>
- <20250213171435.1c2ce376@bootlin.com> <a3c5103c-829a-4301-ba53-6ef9bd1e74e7@lunn.ch>
- <CAMEGJJ3-JXhin_Ht76EqUNAwLiNisa9PrCrdUzCgj=msGZfb5A@mail.gmail.com> <20250213180733.11999e07@bootlin.com>
-In-Reply-To: <20250213180733.11999e07@bootlin.com>
-From: Phil Elwell <phil@raspberrypi.com>
-Date: Thu, 13 Feb 2025 17:29:47 +0000
-X-Gm-Features: AWEUYZklu9_MY3YY8SePLjBKtjUgGs0eTYBH-ezMm1VNb2UMos7_-NKxbQAJTns
-Message-ID: <CAMEGJJ2FB-wwyOtjjCmPJ-vUDpZaV-8MMXxV13qXnKxYSzt9pw@mail.gmail.com>
-Subject: Re: [PATCH v6 00/10] Add support for RaspberryPi RP1 PCI device using
- a DT overlay
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Andrew Lunn <andrew@lunn.ch>, Andrea della Porta <andrea.porta@suse.com>, Arnd Bergmann <arnd@arndb.de>, 
-	"maintainer:BROADCOM BCM7XXX ARM ARCHITECTURE" <bcm-kernel-feedback-list@broadcom.com>, bhelgaas@google.com, brgl@bgdev.pl, 
-	Catalin Marinas <catalin.marinas@arm.com>, Conor Dooley <conor+dt@kernel.org>, derek.kiernan@amd.com, 
-	devicetree@vger.kernel.org, dragan.cvetic@amd.com, 
-	Florian Fainelli <florian.fainelli@broadcom.com>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, krzk+dt@kernel.org, kw@linux.com, 
-	Linus Walleij <linus.walleij@linaro.org>, 
-	linux-arm-kernel <linux-arm-kernel@lists.infradead.org>, linux-clk@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, 
-	"open list:PCI NATIVE HOST BRIDGE AND ENDPOINT DRIVERS" <linux-pci@vger.kernel.org>, 
-	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-rpi-kernel@lists.infradead.org>, lpieralisi@kernel.org, 
-	luca.ceresoli@bootlin.com, manivannan.sadhasivam@linaro.org, 
-	masahiroy@kernel.org, Michael Turquette <mturquette@baylibre.com>, 
-	Rob Herring <robh@kernel.org>, saravanak@google.com, Stephen Boyd <sboyd@kernel.org>, 
-	thomas.petazzoni@bootlin.com, Stefan Wahren <wahrenst@gmx.net>, 
-	Will Deacon <will@kernel.org>, Dave Stevenson <dave.stevenson@raspberrypi.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII; format=flowed
 
-Herv=C3=A9,
 
-On Thu, 13 Feb 2025 at 17:07, Herve Codina <herve.codina@bootlin.com> wrote=
-:
+
+On Wed, 12 Feb 2025, Krzysztof Kozlowski wrote:
+
+> On 11/02/2025 16:17, Matthew Gerlach wrote:
+>> Add required clock-frequency property to fixed-clock nodes
+>> to fix schema check warnings.
+>>
+>> Signed-off-by: Matthew Gerlach <matthew.gerlach@linux.intel.com>
+>> ---
+>> v6:
+>>  - New patch to series.
+>> ---
+>>  arch/arm64/boot/dts/intel/socfpga_agilex.dtsi | 4 ++++
+>>  1 file changed, 4 insertions(+)
+>>
+>> diff --git a/arch/arm64/boot/dts/intel/socfpga_agilex.dtsi b/arch/arm64/boot/dts/intel/socfpga_agilex.dtsi
+>> index 1235ba5a9865..42cb24cfa6da 100644
+>> --- a/arch/arm64/boot/dts/intel/socfpga_agilex.dtsi
+>> +++ b/arch/arm64/boot/dts/intel/socfpga_agilex.dtsi
+>> @@ -114,21 +114,25 @@ clocks {
+>>  		cb_intosc_hs_div2_clk: cb-intosc-hs-div2-clk {
+>>  			#clock-cells = <0>;
+>>  			compatible = "fixed-clock";
+>> +			clock-frequency = <0>;
 >
-> On Thu, 13 Feb 2025 16:30:44 +0000
-> Phil Elwell <phil@raspberrypi.com> wrote:
+> That's not a correct frequency. You silence some error by introducing
+> incorrect properties. That's wrong.
+
+A clock-frequency of 0 seems valid for a clock that is disabled or not 
+used on a particular board. I chose this approach because it already has 
+widespread usage in the kernel:
+
+ 	grep 'clock-frequency = <0>' arch/arm64/boot/dts/*/*.dtsi | wc -l
+ 	198
+
 >
-> > Hi Andrew,
-> >
-> > On Thu, 13 Feb 2025 at 16:27, Andrew Lunn <andrew@lunn.ch> wrote:
-> > >
-> > > On Thu, Feb 13, 2025 at 05:14:35PM +0100, Herve Codina wrote:
-> > > > Hi Phil,
-> > > >
-> > > > On Thu, 13 Feb 2025 15:18:45 +0000
-> > > > Phil Elwell <phil@raspberrypi.com> wrote:
-> > > >
-> > > > > Hi Andrea,
-> > > > >
-> > > > > The problem with this approach (loading an overlay from the RP1 P=
-CIe
-> > > > > driver), and it's one that I have raised with you offline, is tha=
-t
-> > > > > (unless anyone can prove otherwise) it becomes impossible to crea=
-te a
-> > > > > Pi 5 DTS file which makes use of the RP1's resources. How do you
-> > > > > declare something as simple as a button wired to an RP1 GPIO, or =
-fan
-> > > > > connected to a PWM output?
-> > >
-> > > Where is this button or fan? On a pluggable board? Isn't that what
-> > > overlays are for, and they are stackable. So when you probe the
-> > > pluggable board via its eeprom etc, you find the overlay and load it?
-> >
-> > In the Raspberry Pi ecosystem it would be the firmware that applies
-> > the overlay, and it can't do that if the resources the overlay refers
-> > to are not yet present in the dtb.
+> Don't fix the warnings just to silence them, while keeping actual errors
+> still in the code.
+
+I actually want to fix the existing warnings, but it seems appropriate to 
+only address the existing warnings that are related to this patch set of 
+adding PCIe Root Port support to the Agilex family of chips. This patch 
+set requires touching the file, socfpga_agilex.dtsi; so I fixed the 
+warnings I thought were in this file. I believe the other warnings need to 
+be fixed by converting text binding descriptions to yaml or by touching 
+files unrelated to this patch set.
+
+Setting the value of the status property to "disabled" also silences the 
+particular fixed-clock, but I didn't see any other usage by a fixed-clock. 
+What do suggest is the best way to handle this warning?
+
 >
-> What do you mean by the 'the resources are not yet present in the dtb' ?
+> Best regards,
+> Krzysztof
+>
 
-Consider the fan connector on the Pi 5 PCB. It is wired to GPIO 45 on
-RP1. In our current Pi 5 dtb there is an instance of pwm-fan whose
-"pwms" property links to rp1_pwm node, which declares a PWM block on
-RP1. Similarly, the camera and display ports make use of I2C
-interfaces on RP1. The camera and display overlays, applied by the
-firmware, have references to those interfaces.
-
-If RP1 is not present in the dtb then neither of those scenarios -
-board features and overlays applied the firmware - will work because
-the necessary nodes and symbols are not present until the kernel has
-started running, at which point dtb has been handed over.
-
-> Also what you call the 'firmware' is the bootloader ? the kernel ?
-> Can you tell me who is the 'firmware' what is the mecanisme it uses to
-> load the overlay.
-
-In the case of the Pi 5, the firmware is an EEPROM image containing
-code run by the VPU embedded processor. It can load overlays using the
-same mechanisms it uses to load the kernel - SD/EMMC, NVME, USB, TFTP,
-etc. The same problem would exist for U-boot. Even though RP1 has a
-standard XHCI controller, U-boot wouldn't be able to detect it and
-make use of it, say to load a kernel from a USB stick, because it
-isn't declared in the DTB.
-
-Phil
+Thanks for the feedback,
+Matthew Gerlach
