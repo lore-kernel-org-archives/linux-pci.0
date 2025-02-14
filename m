@@ -1,187 +1,144 @@
-Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D51C2253E8
-	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 09:34:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6585120B20B;
+	Fri, 14 Feb 2025 09:38:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739525663; cv=none; b=Bk5XbGpKNGw9Ff50MYYYzQ+K7IEy51ukorD92l1V8RCSzCdOnbI180ivyyZdtmYu9th3nmlb+DUwqTx1/82KHDItrYZdthgLKmBI0UfvW16abKRjkOS8E4vyT2WyPh0+ZV9Td4MvI4esH/+dnNsH2PdWnn85xHv3VmJIfmS6lQs=
+	t=1739525942; cv=none; b=fNHq4Ryi928TBkXebuaFmk3SNwO5Vy/lyjI9y9kxTfYuwAp4HYtPlPAktP+UvSWPA7upnYv1fCqp1q27K6tsCZveis0EmBAxBiwuyxjFsEJUCNfstg4ZyR7AebeljFlR6Cp0sEbCJHX3yweIB78CB9rusefZXG1veEy3Tyg9QM8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739525663; c=relaxed/simple;
-	bh=2tRaXOF0v8LaZTAj5JP6mDSWvTyNjRID6Lm1XvMJFxM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=W+zUIuin/Wgy7iB6BCJ2huaSFIovW1oW7j2J3/ZCRhHTnheCjwEsrL7HdzsAzD2hhDXwX+GxvJCDrRrVYA8GZS1b2uflFnKSMgsqWt2Go2V/Q4wx5sn8TVqmhzaO67tKDF+35HCR8Zkb1rLEuLxkQU7RpzY7MjwBMI82Dl+uGpI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=P6I0aDEA; arc=none smtp.client-ip=209.85.214.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1739525942; c=relaxed/simple;
+	bh=9ijsm6HczVi5ThTYceuVfLfvKtxB6vu8r1DXvKU3eT4=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=uFpTphxMUjtCR9JZgu3d2GghbznQ0JQa+U/qzezu2z5ieIGY7r5k16zMFU10dgZTftmY2nrGgcXpZn0MMz357fL69/O+4S8oAjDbKINOVBU3YNVUL30fmA46ai2YFzITCH5kbZtBAkQKHi4UFQ2udhjkl33oSp+ZRu460N6l3FI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MRgDN+vm; dkim=fail (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HW9X1JV7 reason="signature verification failed"; arc=none smtp.client-ip=192.198.163.9; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="P6I0aDEA"
-Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-220e989edb6so21259345ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 01:34:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1739525661; x=1740130461; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=u26Rj75SNGL2cIMYIyNITm7VqBxru2ajzzSchaDjSJ4=;
-        b=P6I0aDEAAo2m2Wtx5cFN/bvOWlrTwAAiFb8NFixm46nkSSECiLwNwq2NTKd4QeX8Gh
-         wLtvo2AjyHwyts9y4uLTZxFORupb5QR3/wYXHKWOP4+T8ytrQw6slqDA35yMlmWUBMBn
-         bs8fSUIGNuwsmZeYQb1wVstSG626Bl8K0I2H5af4/5/6bsyubuqGyxfOlzt1tPuTpD+D
-         eXo9QgsmYxQixYXkQ2yCUoxRxMjSeEVAETsRIpPBFGKV/a8yKBkPAaSTCwP7mhwSiJsb
-         upVEluZ6L1FaC5WAWtBb7Crw1KTMfkAGGuqyOCLYBdVJ5DFl2ks1p+wNr56JP82wP4vp
-         Zr+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1739525661; x=1740130461;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=u26Rj75SNGL2cIMYIyNITm7VqBxru2ajzzSchaDjSJ4=;
-        b=v9Y9nlJ5zbHi7+w5+f3dw+2balewSD7iFdws1QfQbhg34UVNQdMeMOKBl5bBLlRbTc
-         5ZR6AckbgN8QOOhSugXdRooAd+6TPdOZIzE9E7PW1U+rq7dwwFO01KbFU58xkjiiwywH
-         Pb8KXTwYqRmCh7X7kzRgPCLiZBPLw9ul4qqDms6v52DYoLWHAk3FRyC+kta5fiMPFj2e
-         RMFeFMoKnkPMCH/ucRczgw0PCuTarzd+Jf1dRdV2YBURkewLJ4Zh1kmNfhJrkCirgxUw
-         BOd8nxbY+bvSV0hZx3hgCa9tlHrbnhapTeSK+I/hKo2ok/skA7tS1aNEmXFFIsQLqPP3
-         gKLg==
-X-Forwarded-Encrypted: i=1; AJvYcCUCGTRoLlqRKjquKTbw+e5WY+T45j0/i46ohDo+hBOc/UPAjocJuiVyEfdyyfBpV4cacm31y6g0XFg=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+Shtl87DPj8rvrikAjlXq1GylHajHtP80L48G9BTxqWIeEhTq
-	EdkuzLwDF/DzRKoU6Zo2bK1qDcbxru4zqdoSRqcnILotovk580j/T9H5PFQW/Q==
-X-Gm-Gg: ASbGnctxjz2poSdwO9b2jYIAPYXBWUeiEfvu/qkOMRJdulyn2TiEBcDRsLzdZSwTTrX
-	SjNzp8MjoCl9iyBKcPp1eFT+VK2aarDDnPafIoyxTDAI4X7DKYoGdqyKAt6+Fqo5AdmOZZmR4hz
-	dAQ1A0dxr+HDzqQZDa6g17n3hV6a5DB8jKXX32PoqKpsaVJpZvIjlaIZUoXEVrG2iiG0jfR0KI5
-	GF34LvEqdiWnIWhpffbuV1Mldm9OARU3dr67uOWTmqhUiKLRNUQsO8JIdSkEM2+rIVBs+8FoNCE
-	DjwBnuvJYNEdM/8AgyCgbtXhg7hYsww=
-X-Google-Smtp-Source: AGHT+IFZVE4yp9yE89oIpu/FQ04E4OEh1OdT4RRLsnSnVNmqpa4GLTJHeV+HTwobROJu0Q6OkCB1tg==
-X-Received: by 2002:a05:6a20:728c:b0:1ee:67a2:f67d with SMTP id adf61e73a8af0-1ee6b36026cmr13591167637.22.1739525661324;
-        Fri, 14 Feb 2025 01:34:21 -0800 (PST)
-Received: from thinkpad ([2409:40f4:304f:ad8a:a164:8397:3a17:bb49])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-adb586186c9sm2480167a12.35.2025.02.14.01.34.16
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Feb 2025 01:34:20 -0800 (PST)
-Date: Fri, 14 Feb 2025 15:04:14 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: Bjorn Andersson <andersson@kernel.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MRgDN+vm";
+	dkim=fail reason="signature verification failed" (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HW9X1JV7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version:
+	Content-Type; bh=ylGJXpb+Bo8SVziuzHuBH78Q+ZTnsfQrMC8w/UlfR/I=;
+	b=MRgDN+vmbXHc1Si0FGxPFbZA4tQL3M5f1RMe0D58x/3UBvkG4riMgf6DeqAfMu
+	9naV+K3VEb+seX8wF/dP4eVTlllaZYl6mshvAQEX0e18rP1ExaUAmKe7hB9fEHaP
+	5x0LnKBZXvYKFyCv2rWZEaE8wBmIGDQ3cUJfqbZy4WtNk=
+Received: from os-l3a203-yehs1-dev01.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBHX9AYD69nO4JaMA--.38086S2;
+	Fri, 14 Feb 2025 17:38:33 +0800 (CST)
+From: Xiaochun Lee <lixiaochun.2888@163.com>
+To: xiaocli@redhat.com,
+	740797925@qq.com,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-	quic_mrana@quicinc.com, quic_vbadigan@quicinc.com
-Subject: Re: [PATCH v6 4/4] PCI: dwc: Add support for configuring lane
- equalization presets
-Message-ID: <20250214093414.pvx6nab7ewy4nvzb@thinkpad>
-References: <20250210-preset_v6-v6-0-cbd837d0028d@oss.qualcomm.com>
- <20250210-preset_v6-v6-4-cbd837d0028d@oss.qualcomm.com>
+	linux-pci@vger.kernel.org,
+	=?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
+	Igor Mammedov <imammedo@redhat.com>
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH 00/25] PCI: Resource fitting/assignment fixes and cleanups
+Date: Fri, 14 Feb 2025 17:59:02 +0800
+Message-ID: <20241216175632.4175-1-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 1.8.3.1
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9]) (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits)) (No client certificate requested) by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1D46206F09; Mon, 16 Dec 2024 17:56:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=intel.com; i=@intel.com; q=dns/txt; s=Intel; t=1734371805; x=1765907805; h=from:to:cc:subject:date:message-id:mime-version: content-transfer-encoding; bh=YI6S04K1iTSvj1Cp/dFALikn59iuWUReV9PISgS7tbM=; b=HW9X1JV7+FfLVfK5qDkZGICNeNafmtTGUoDa882sBctqOoJosxyCvpjo vs2uwd/doc5KQb9OiA6dRqJRcltw6lKcg9tqd7qpJmkZ1OC00d9bGTOnu qU7qrePAbJdAiFA3QYfA8rmprKuyw4aZ7seDMUQzT21Qatl1KfrXJSI79 PSDJqZtAiq+NsV6LzkYUuVgz5NGVaCjcB0CH7C+7h+XLBNdtyeA3gQFuq CALYsDZwqQJyXs3J0PDwg4OMiq7FXJtl8s2VGAIxw/FOteEfDtnS3E8Yk wN8gepy0wxJB/1ualpuIfKoMTJJDlaf0fWG5RSBGRLL5NpzYRw2ZuRO3+ g==;
+X-CSE-ConnectionGUID: rx0qJFnjSW+DeTuYoki4RA==
+X-CSE-MsgGUID: 9LfrqKeBRAK+uYCLB+OydQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11288"; a="45465699"
+X-IronPort-AV: E=Sophos;i="6.12,239,1728975600";  d="scan'208";a="45465699"
+Received: from orviesa006.jf.intel.com ([10.64.159.146]) by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2024 09:56:45 -0800
+X-CSE-ConnectionGUID: VpnYpi5JRPSI+feKgInibg==
+X-CSE-MsgGUID: 7k4hsoGrSvOr6eVD+2Atig==
+X-IronPort-AV: E=Sophos;i="6.12,239,1728975600";  d="scan'208";a="97309253"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.29]) by orviesa006-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Dec 2024 09:56:42 -0800
+X-Mailer: git-send-email 2.39.5
+Precedence: bulk
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250210-preset_v6-v6-4-cbd837d0028d@oss.qualcomm.com>
+X-CM-TRANSID:_____wBHX9AYD69nO4JaMA--.38086S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGFWkCr43XFyDKF43Ar43Jrb_yoW5ZrW3pr
+	WfWw48tFWkJry7Jrs5Aw1xAFs3Xa1vy3y5JFyft3s3Za98ZFy2qrn5tayrX3y3GrWxCF1a
+	vF4jvrn8uFWDAaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jUeOJUUUUU=
+X-CM-SenderInfo: 5ol0xtprfk30aosymmi6rwjhhfrp/1tbioAvyQGetuKzg-wABsZ
+Message-ID: <20250214095902.RaapUYfV8MPtw_a4e6c8tQl76NlAC3QhojQEytN8pA0@z>
 
-On Mon, Feb 10, 2025 at 01:00:03PM +0530, Krishna Chaitanya Chundru wrote:
-> PCIe equalization presets are predefined settings used to optimize
-> signal integrity by compensating for signal loss and distortion in
-> high-speed data transmission.
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+
+> Hi all,
 > 
-> Based upon the number of lanes and the data rate supported, write
-> the preset data read from the device tree in to the lane equalization
-> control registers.
+> This series focuses on PCI resource fitting and assignment algorithms.
+> I've further changes in works to enable handling resizable BARs better
+> during resource fitting built on top of these, but that's still WIP and
+> this series seems way too large as is to have more stuff included.
 > 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  drivers/pci/controller/dwc/pcie-designware-host.c | 53 +++++++++++++++++++++++
->  drivers/pci/controller/dwc/pcie-designware.h      |  3 ++
->  include/uapi/linux/pci_regs.h                     |  3 ++
->  3 files changed, 59 insertions(+)
+> First there are small tweaks and fixes to the relaxed tail alignment
+> code and applying the lessons learned to other similar cases. They are
+> sort of independent of the rest. Then a large set of pure cleanups and
+> refactoring that are not intended to make any functional changes.
+> Finally, starting from "PCI: Extend enable to check for any optional
+> resource" are again patches that aim to make behavioral changes to fix
+> bridge window sizing to consider expansion ROM as an optional resource
+> (to fix a remove/rescan cycle issue) and improve resource fitting
+> algorithm in general.
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-> index dd56cc02f4ef..7d5f16f77e2f 100644
-> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
-> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-> @@ -507,6 +507,10 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
->  	if (pci->num_lanes < 1)
->  		pci->num_lanes = dw_pcie_link_get_max_link_width(pci);
->  
-> +	ret = of_pci_get_equalization_presets(dev, &pp->presets, pci->num_lanes);
-> +	if (ret)
-> +		goto err_free_msi;
-> +
->  	/*
->  	 * Allocate the resource for MSG TLP before programming the iATU
->  	 * outbound window in dw_pcie_setup_rc(). Since the allocation depends
-> @@ -808,6 +812,54 @@ static int dw_pcie_iatu_setup(struct dw_pcie_rp *pp)
->  	return 0;
->  }
->  
-> +static void dw_pcie_program_presets(struct dw_pcie_rp *pp, enum pci_bus_speed speed)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	u8 lane_eq_offset, lane_reg_size, cap_id;
-> +	u8 *presets;
-> +	u32 cap;
-> +	int i;
-> +
-> +	if (speed == PCIE_SPEED_8_0GT) {
-> +		presets = (u8 *)pp->presets.eq_presets_8gts;
-> +		lane_eq_offset =  PCI_SECPCI_LE_CTRL;
-> +		cap_id = PCI_EXT_CAP_ID_SECPCI;
-> +		/* For data rate of 8 GT/S each lane equalization control is 16bits wide*/
-> +		lane_reg_size = 0x2;
-> +	} else if (speed == PCIE_SPEED_16_0GT) {
-> +		presets = pp->presets.eq_presets_Ngts[EQ_PRESET_TYPE_16GTS];
-> +		lane_eq_offset = PCI_PL_16GT_LE_CTRL;
-> +		cap_id = PCI_EXT_CAP_ID_PL_16GT;
-> +		lane_reg_size = 0x1;
-> +	}
-> +
-> +	if (presets[0] == PCI_EQ_RESV)
-> +		return;
-> +
-> +	cap = dw_pcie_find_ext_capability(pci, cap_id);
-> +	if (!cap)
-> +		return;
-> +
-> +	/*
-> +	 * Write preset values to the registers byte-by-byte for the given
-> +	 * number of lanes and register size.
-> +	 */
-> +	for (i = 0; i < pci->num_lanes * lane_reg_size; i++)
-> +		dw_pcie_writeb_dbi(pci, cap + lane_eq_offset + i, presets[i]);
-> +}
-> +
-> +static void dw_pcie_config_presets(struct dw_pcie_rp *pp)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-> +	enum pci_bus_speed speed = pcie_link_speed[pci->max_link_speed];
-> +
+> The series includes one of the change from Michał Winiarski
+> <michal.winiarski@intel.com> as these changes also touch the same IOV
+> checks.
+> 
+> Please let me know if you'd prefer me to order the changes differently
+> or split it into smaller chunks.
+> 
+> 
+> I've extensively tested this series over the hosts in our lab which
+> have quite heterogeneous PCI setup each. There were no losses of any
+> important resource. Without pci=realloc, there's some churn in which of
+> the disabled expansion ROMs gets a scarce memory space assigned (with
+> pci=realloc, they are all assigned large enough bridge window).
+> 
+> 
+> Ilpo Järvinen (24):
+>   PCI: Remove add_align overwrite unrelated to size0
+>   PCI: size0 is unrelated to add_align
+>   PCI: Simplify size1 assignment logic
+>   PCI: Optional bridge window size too may need relaxing
+>   PCI: Fix old_size lower bound in calculate_iosize() too
+>   PCI: Use SZ_* instead of literals in setup-bus.c
+>   PCI: resource_set_range/size() conversions
+>   PCI: Check resource_size() separately
+>   PCI: Add pci_resource_num() helper
+>   PCI: Add dev & res local variables to resource assignment funcs
+>   PCI: Converge return paths in __assign_resources_sorted()
+>   PCI: Refactor pdev_sort_resources() & __dev_sort_resources()
+>   PCI: Use while loop and break instead of gotos
+>   PCI: Rename retval to ret
+>   PCI: Consolidate assignment loop next round preparation
+>   PCI: Remove wrong comment from pci_reassign_resource()
+>   PCI: Add restore_dev_resource()
+>   PCI: Extend enable to check for any optional resource
+>   PCI: Always have realloc_head in __assign_resources_sorted()
+>   PCI: Indicate optional resource assignment failures
+>   PCI: Add debug print when releasing resources before retry
+>   PCI: Use res->parent to check is resource is assigned
+>   PCI: Perform reset_resource() and build fail list in sync
+>   PCI: Rework optional resource handling
+> 
+> Michał Winiarski (1):
+>   PCI: Add a helper to identify IOV resources
+> 
+>  drivers/pci/pci.h       |  44 +++-
+>  drivers/pci/setup-bus.c | 566 +++++++++++++++++++++++-----------------
+>  drivers/pci/setup-res.c |   8 +-
+>  3 files changed, 364 insertions(+), 254 deletions(-)
+> 
+Tested-by: Xiaochun XC17 Li <lixc17@lenovo.com>
+> -- 
+> 2.39.5
 
-Please add a comment stating that the equalization needs to be performed at all
-lower data rates for each lane.
 
-> +	if (speed >= PCIE_SPEED_8_0GT)
-> +		dw_pcie_program_presets(pp, PCIE_SPEED_8_0GT);
-> +
-> +	if (speed >= PCIE_SPEED_16_0GT)
-> +		dw_pcie_program_presets(pp, PCIE_SPEED_16_0GT);
-
-I think we need to check 'Link Equalization Request' before performing
-equalization? This will also help us to warn users if they didn't specify the
-property in DT if hardware expects equalization.
-
-Currently, even if DT specifies equalization presets for 32GT/s, driver is not
-making use of them.
-
-- Mani
-
--- 
-மணிவண்ணன் சதாசிவம்
