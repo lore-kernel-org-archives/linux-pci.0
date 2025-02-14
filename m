@@ -1,196 +1,147 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f48.google.com (mail-pj1-f48.google.com [209.85.216.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84BC123A992;
-	Fri, 14 Feb 2025 13:11:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D509264A90
+	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 13:21:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739538691; cv=none; b=eu7M4Gw9e9BmAPYhUP2lX/xrflv8tb1oHlyi1trDY7c74srWB6YVT2QDIGYj0XWsIxSI0pVRvWtGfOVDRWJoQlzTf/W5ZjOQq+RoJVeYT0BM762+TPzV7K1XV+Q33BTo8wVY2ohvcCY2fTJQ7VbCMGt1+XFh7y2TdNdgmfxfSTk=
+	t=1739539285; cv=none; b=h9TuY+0hRo0nTF72sLaTvboWHfu2RYM+/0cPtpeglrBXlcJh9dKgZn32zY/64L7PKWQEMhdO+nMl4Hi/wLMiuxQvWpeBnbZyAsXTaIMzyN+nV5lMJ7y3g/IA4bkDD0bnEPn4Gsfn1nu4NZBwYAkh+KMgW6kghNS9H8Kwy53Btp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739538691; c=relaxed/simple;
-	bh=oZzm7bjnXY99I6Zc3jVr5s2rPCWnBBpDlteWHQeKPAg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WGrnl+CkhgFO9RM8HcDx6gt8evUU8aqGwZyeC/FUU6kTIUUKhMdFcFtsHFOb2yFG/Vo2yx1wb+69uiLWEiRPqTfwRBZaFi3P4aei015Dd7hwy7qMj09R5HR/xn/lx8koRUBM3ZeGB1AUkrgT5tKUkEfNZ8iTOJ5bj4ZomN/9xjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=rotjHjcz; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1739539285; c=relaxed/simple;
+	bh=iUpdeyeQQjXOQvrBPlDvQAeSvEhUZLpAr5hoCBShPAE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HVSXj98X/1dVBXGjqyud+4sYNLbU33ekb5s1vB7NdxyBv5oDGMTerb01exzX8WCGwJQGmshPNHxGVomYVGaO83HVRW6OndzRrq22UJpez0r6M8k7KHpMDVPk0E/uMMZokRypeiOBlatkwUf/ghEybJtWRABcbqaOXb6v3pH5SHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=yYdOZ9z6; arc=none smtp.client-ip=209.85.216.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="rotjHjcz"
-Received: from pps.filterd (m0356516.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51E44kDs015865;
-	Fri, 14 Feb 2025 13:11:13 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=iQNQDA
-	TVZJVA7sMUS+nMqNiPw40LRstanI4kXZIak5Y=; b=rotjHjcztgpss0h9YnYueE
-	fH2y9zIuCZGV/2X4lQySlVSw9Uw9MUzZxhtUW/J6wWPWVGEbqCKTU1tyEHFBOmNw
-	RpGLCayrLEGrVMqA8RfGS6slP2Qf28tD9ORr6tBL2tf5lboa4+Tup0l1L0Z0fslG
-	ceDoKGdLHXmhb5gWlYm3hTwWOnAPxRjS82N/vZDqv2j/wLxwfPBl1z5prePxggL3
-	ieNm5pG+dSefWzOKI7xiA4iqH6YUGl1o0nEdsKRlhPxgS+8sJlNAfaD7VvGDfnho
-	FFjxb0RFVjqEkuFZW4SheItIxRCFWb8fk4MfiHScdliDFXZlM66iASvqsJcWb8KA
-	==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44skjuwe49-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Feb 2025 13:11:13 +0000 (GMT)
-Received: from m0356516.ppops.net (m0356516.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 51ED9RZW019399;
-	Fri, 14 Feb 2025 13:11:12 GMT
-Received: from ppma22.wdc07v.mail.ibm.com (5c.69.3da9.ip4.static.sl-reverse.com [169.61.105.92])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 44skjuwe46-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Feb 2025 13:11:12 +0000 (GMT)
-Received: from pps.filterd (ppma22.wdc07v.mail.ibm.com [127.0.0.1])
-	by ppma22.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 51EAK5cH028221;
-	Fri, 14 Feb 2025 13:11:11 GMT
-Received: from smtprelay02.wdc07v.mail.ibm.com ([172.16.1.69])
-	by ppma22.wdc07v.mail.ibm.com (PPS) with ESMTPS id 44phyyuug1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Feb 2025 13:11:11 +0000
-Received: from smtpav05.dal12v.mail.ibm.com (smtpav05.dal12v.mail.ibm.com [10.241.53.104])
-	by smtprelay02.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 51EDBAnZ29426278
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 14 Feb 2025 13:11:10 GMT
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 2C19D5806B;
-	Fri, 14 Feb 2025 13:11:10 +0000 (GMT)
-Received: from smtpav05.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 5E71458052;
-	Fri, 14 Feb 2025 13:11:07 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-	by smtpav05.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Fri, 14 Feb 2025 13:11:07 +0000 (GMT)
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-Date: Fri, 14 Feb 2025 14:10:54 +0100
-Subject: [PATCH v6 3/3] PCI: s390: Enable HAVE_PCI_MMAP on s390 and
- restrict mmap() of resources to mappable BARs
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="yYdOZ9z6"
+Received: by mail-pj1-f48.google.com with SMTP id 98e67ed59e1d1-2fc3db58932so89775a91.2
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 05:21:22 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1739539282; x=1740144082; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=D6X7TbU2TKSA6FfWi/bx/2Zh2Uwig40zqLcYQUHDpnM=;
+        b=yYdOZ9z6UK1QaqaMp4oCgDQa+dDPShDLe7gf1uGn3L8Ab4eVKyOTOAr9fYefJ4Q/E7
+         V2nbvqf9lPbG/VpcflrFzczZHXd6NfKULMXmWBxPoNV9ECWPovEb4j9InJDdGPGNbx+r
+         aSAVzfgDB9fqZ/Ul22I44w2uroJkGJRrO57AR+s+R1S3Z5HX3zqDesBvxTVJDwVH7NU7
+         6HobBgsaA5ZWi8OdoYAeVLyMJhQYvj0b5veaQr9yFg374PFZIE1HBiociH0jFW+DOCvY
+         sg5aEhSXcnsQigI3eOjreCWw/xme6RgpMmIOYllOYgFq5Zttp6V/Fzfql+yBbUgEUued
+         g4Nw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739539282; x=1740144082;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=D6X7TbU2TKSA6FfWi/bx/2Zh2Uwig40zqLcYQUHDpnM=;
+        b=v4x5WhxmdbGVBqEUma22Ce72RPGsI/F727fExccsXOA1uxlDaUNxu401xsnJjFp+jB
+         MJv21Fszgh846AbDpphMO8QDEA3Z2JsaVbQ3SAhdUpvKit2nQFdZRPBDUF73ykh7Gd1p
+         mGDmqn1Y5mnoP157HxpI0ORFuv1aebmECKTh9B2xX3RBHxUdh/DJhFfZnmJVf0JhX859
+         HGh9EMOaTSxynpRprUSZ/K0mJUf3EOK3sxMiUTQugEhw52ZES4q1iacfkVeAT5vkW3hg
+         AQkiSQ5skVE1xGG36pbc/wGeVJdItBY3StcH20dht1ARpPEiE8cIJ7TLxy+SoFvmQIsB
+         srUw==
+X-Forwarded-Encrypted: i=1; AJvYcCWWiJsc+urntRY9+2UEGwfJDoLiaASwi0D/GSgDwv2sIVH0AR//GQgyWWyb0vEr9kJN1tQtpF5FujE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwVqpIEapxcSazzxIMlQR5Bkk4HLjKj4N+PdTUOQ8bQiZd2z/z9
+	r5HtGy9GZznkbzfDXAjBRLfYWDQn6ptSGseuUcXXYSb71E16mpp2p5MpRNkifw==
+X-Gm-Gg: ASbGnctGbIlUJOxlATPaJQTfrrjZigIREbpb00fgpjYMBWrqTNxj7qwytf6Nfx/+zik
+	BJcudlDcjBNG5nkWW/36fu4eX+p0CWX/DLXJM8ZuHMiOUJNzUUSYDvMFopBcCGIC2lv/6PDcaWd
+	5ynaIEwrNUTc+DKRXt0BO0tv7o/vAAQg4wu1G+wI8t3JJfJ1Fh5laNsSZ0qHEjwnTiC5rssCaoQ
+	BMzA7rDSuyxVh64pPWwideiSKqEtDYhGC+6gmxBa3OTV1IwpCA5xzl8tqmWp5EJ3aBkOKvckhT4
+	82cuKGJ9FI/pQ2zCtPzo8nEMdAZhHmU=
+X-Google-Smtp-Source: AGHT+IFojHOCI81P67j+Pdb6NB1BhabP8Ji4yZG9LPBDN4to6OWIQ20bBJz01hSrYBfB9Y6LZ3Z0iw==
+X-Received: by 2002:a17:90b:4b06:b0:2ee:f687:6ad5 with SMTP id 98e67ed59e1d1-2fbf8957f05mr16448954a91.2.1739539282301;
+        Fri, 14 Feb 2025 05:21:22 -0800 (PST)
+Received: from thinkpad ([2409:40f4:304f:ad8a:250c:8408:d2ac:10db])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-2fbf999b5b4sm5588794a91.30.2025.02.14.05.21.18
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 14 Feb 2025 05:21:21 -0800 (PST)
+Date: Fri, 14 Feb 2025 18:51:15 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
+	bhelgaas@google.com, bwawrzyn@cisco.com, cassel@kernel.org,
+	wojciech.jasko-EXT@continental-corporation.com, a-verma1@ti.com,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	rockswang7@gmail.com
+Subject: Re: [v3] PCI: cadence: Fix sending message with data or without data
+Message-ID: <20250214132115.fpiqq65tqtowl2wa@thinkpad>
+References: <20250207103923.32190-1-18255117159@163.com>
+ <20250214073030.4vckeq2hf6wbb4ez@thinkpad>
+ <7eb9fedc-67c9-4886-9470-d747273f136c@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250214-vfio_pci_mmap-v6-3-6f300cb63a7e@linux.ibm.com>
-References: <20250214-vfio_pci_mmap-v6-0-6f300cb63a7e@linux.ibm.com>
-In-Reply-To: <20250214-vfio_pci_mmap-v6-0-6f300cb63a7e@linux.ibm.com>
-To: Bjorn Helgaas <helgaas@kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Alexandra Winter <wintera@linux.ibm.com>,
-        Alex Williamson <alex.williamson@redhat.com>,
-        Gerd Bayer <gbayer@linux.ibm.com>,
-        Matthew Rosato <mjrosato@linux.ibm.com>,
-        Jason Gunthorpe <jgg@ziepe.ca>,
-        Thorsten Winkler <twinkler@linux.ibm.com>,
-        Bjorn Helgaas <bhelgaas@google.com>
-Cc: Julian Ruess <julianr@linux.ibm.com>, Halil Pasic <pasic@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>, linux-s390@vger.kernel.org,
-        linux-kernel@vger.kernel.org, kvm@vger.kernel.org,
-        linux-pci@vger.kernel.org, Niklas Schnelle <schnelle@linux.ibm.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3239;
- i=schnelle@linux.ibm.com; h=from:subject:message-id;
- bh=oZzm7bjnXY99I6Zc3jVr5s2rPCWnBBpDlteWHQeKPAg=;
- b=owGbwMvMwCX2Wz534YHOJ2GMp9WSGNLXOzx05VXpUpY6Pt1s8m0+ztVTdd9OSeXY+bDWV8JHg
- zvJPsWno5SFQYyLQVZMkWVRl7PfuoIppnuC+jtg5rAygQxh4OIUgIm8y2RkuDz5b+HScxEHFm2S
- 6Vt5T77nbanDil93WVZHHVfV/LD0fDDDPy3rYoVurirDs88tE1kfZ0yZ1BcnsTKE7cQX/djkxLI
- cVgA=
-X-Developer-Key: i=schnelle@linux.ibm.com; a=openpgp;
- fpr=9DB000B2D2752030A5F72DDCAFE43F15E8C26090
-X-TM-AS-GCONF: 00
-X-Proofpoint-GUID: l-dImMFPgbWZdTA0gSjIhc-jmoW6UfA5
-X-Proofpoint-ORIG-GUID: MicYpK5s-NuHQl-dwLUgCzVIoGTeeour
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-02-14_05,2025-02-13_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 clxscore=1015 phishscore=0
- mlxlogscore=651 lowpriorityscore=0 mlxscore=0 spamscore=0 suspectscore=0
- priorityscore=1501 bulkscore=0 malwarescore=0 adultscore=0 impostorscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2501170000
- definitions=main-2502140096
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <7eb9fedc-67c9-4886-9470-d747273f136c@163.com>
 
-So far s390 does not select HAVE_PCI_MMAP. This is partly because access
-to mapped PCI resources requires special PCI load/store instructions and
-prior to commit 71ba41c9b1d9 ("s390/pci: provide support for MIO
-instructions") even required use of special syscalls. This really isn't
-a showstopper though and in fact lack of HAVE_PCI_MMAP has previously
-caused extra work when testing and debugging PCI devices and drivers.
+On Fri, Feb 14, 2025 at 04:23:33PM +0800, Hans Zhang wrote:
+> 
+> 
+> On 2025/2/14 15:30, Manivannan Sadhasivam wrote:
+> > On Fri, Feb 07, 2025 at 06:39:23PM +0800, Hans Zhang wrote:
+> > > View from cdns document cdn_pcie_gen4_hpa_axi_ips_ug_v1.04.pdf.
+> > > In section 9.1.7.1 AXI Subordinate to PCIe Address Translation
+> > > Registers below:
+> > > 
+> > > axi_s_awaddr bits 16 is 1 for MSG with data and 0 for MSG without data.
+> > > 
+> > > Signed-off-by: hans.zhang <18255117159@163.com>
+> > > ---
+> > > Changes since v1-v2:
+> > > - Change email number and Signed-off-by
+> > > ---
+> > >   drivers/pci/controller/cadence/pcie-cadence-ep.c | 3 +--
+> > >   drivers/pci/controller/cadence/pcie-cadence.h    | 2 +-
+> > >   2 files changed, 2 insertions(+), 3 deletions(-)
+> > > 
+> > > diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> > > index e0cc4560dfde..0bf4cde34f51 100644
+> > > --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> > > +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> > > @@ -352,8 +352,7 @@ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn, u8 intx,
+> > >   	spin_unlock_irqrestore(&ep->lock, flags);
+> > >   	offset = CDNS_PCIE_NORMAL_MSG_ROUTING(MSG_ROUTING_LOCAL) |
+> > > -		 CDNS_PCIE_NORMAL_MSG_CODE(msg_code) |
+> > > -		 CDNS_PCIE_MSG_NO_DATA;
+> > > +		 CDNS_PCIE_NORMAL_MSG_CODE(msg_code);
+> > >   	writel(0, ep->irq_cpu_addr + offset);
+> > >   }
+> > > diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+> > > index f5eeff834ec1..39ee9945c903 100644
+> > > --- a/drivers/pci/controller/cadence/pcie-cadence.h
+> > > +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+> > > @@ -246,7 +246,7 @@ struct cdns_pcie_rp_ib_bar {
+> > >   #define CDNS_PCIE_NORMAL_MSG_CODE_MASK		GENMASK(15, 8)
+> > >   #define CDNS_PCIE_NORMAL_MSG_CODE(code) \
+> > >   	(((code) << 8) & CDNS_PCIE_NORMAL_MSG_CODE_MASK)
+> > > -#define CDNS_PCIE_MSG_NO_DATA			BIT(16)
+> > > +#define CDNS_PCIE_MSG_DATA			BIT(16)
+> > 
+> > Oops! So how did you spot the issue? Did INTx triggering ever worked? RC should
+> > have reported it as malformed TLP isn't it?
+> > 
+> In our first generation SOC, sending messages did not work, and the length
+> of messages was all 1. Cadence fixed this problem in the second generation
+> SOC. And I have verified in the EMU environment that it is OK to send
+> various messages, including INTx.
+> 
+> And that's what Cadence's release documentation says:
+> axi_s_awaddr bits 16 is 1 for MSG with data and 0 for MSG without data.
 
-Another issue when looking at HAVE_PCI_MMAP however comes from the
-virtual ISM devices. These present 256 TiB BARs which really can't be
-accessed via a mapping to user-space.
+I'm confused now. So the change in axi_s_awaddr bit applies to second generation
+SoCs only? What about the first ones?
 
-Now, the newly added pdev->non_mappable_bars flag provides a way to
-exclude devices whose BARs can't be mapped to user-space including the
-s390 ISM device. So honor this flag also in the mmap() paths protected
-by HAVE_PCI_MMMAP and with the ISM device thus excluded enable
-HAVE_PCI_MMAP for s390.
+Are you saying that the first generation SoCs can never send any message TLPs at
+all? This sounds horrible.
 
-Note that most distributions enable CONFIG_IO_STRICT_DEVMEM=y and
-require unbinding drivers before resources can be mapped. This makes it
-extremely unlikely that any existing programs on s390 will now suddenly
-fail after succeeding to mmap() resources and then trying to access the
-mapping without use of the special PCI instructions.
-
-Link: https://lore.kernel.org/lkml/20250212132808.08dcf03c.alex.williamson@redhat.com/
-Suggested-by: Alex Williamson <alex.williamson@redhat.com>
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
----
- arch/s390/include/asm/pci.h | 4 ++++
- drivers/pci/pci-sysfs.c     | 4 ++++
- drivers/pci/proc.c          | 4 ++++
- 3 files changed, 12 insertions(+)
-
-diff --git a/arch/s390/include/asm/pci.h b/arch/s390/include/asm/pci.h
-index 474e1f8d1d3c2fc5685b459cc68b67ac651ea3e9..518dd71a78c83c74dc7b29778e299d5c8cabcc59 100644
---- a/arch/s390/include/asm/pci.h
-+++ b/arch/s390/include/asm/pci.h
-@@ -11,6 +11,10 @@
- #include <asm/pci_insn.h>
- #include <asm/sclp.h>
- 
-+#define HAVE_PCI_MMAP			1
-+#define ARCH_GENERIC_PCI_MMAP_RESOURCE	1
-+#define arch_can_pci_mmap_wc()		1
-+
- #define PCIBIOS_MIN_IO		0x1000
- #define PCIBIOS_MIN_MEM		0x10000000
- 
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index b46ce1a2c5542cdea0a3f9df324434fdb7e8a4d2..7373eca0a4943bf896b4a177124e0d4572baec2b 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1257,6 +1257,10 @@ static int pci_create_resource_files(struct pci_dev *pdev)
- 	int i;
- 	int retval;
- 
-+	/* Skip devices with non-mappable BARs */
-+	if (pdev->non_mappable_bars)
-+		return 0;
-+
- 	/* Expose the PCI resources from this device as files */
- 	for (i = 0; i < PCI_STD_NUM_BARS; i++) {
- 
-diff --git a/drivers/pci/proc.c b/drivers/pci/proc.c
-index f967709082d654a101039091b5493b2dec5f57b4..9348a0fb808477ca9be80a8b88bbc036565bc411 100644
---- a/drivers/pci/proc.c
-+++ b/drivers/pci/proc.c
-@@ -251,6 +251,10 @@ static int proc_bus_pci_mmap(struct file *file, struct vm_area_struct *vma)
- 	    security_locked_down(LOCKDOWN_PCI_ACCESS))
- 		return -EPERM;
- 
-+	/* Skip devices with non-mappable BARs */
-+	if (dev->non_mappable_bars)
-+		return -EINVAL;
-+
- 	if (fpriv->mmap_state == pci_mmap_io) {
- 		if (!arch_can_pci_mmap_io())
- 			return -EINVAL;
+- Mani
 
 -- 
-2.45.2
-
+மணிவண்ணன் சதாசிவம்
