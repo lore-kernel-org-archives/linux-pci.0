@@ -1,48 +1,72 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D891263C77;
-	Fri, 14 Feb 2025 12:57:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2978C23A992
+	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 13:11:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739537880; cv=none; b=J5fwKjaeHV3Qnzz1X4UvboVjhW2bdTAdH/83E9VTOOm9S9C8BS8nPvpm1vKx2bvZeFjvmJnafFkSv9aIFEZ3hNQNR/4rKMfELubC6pmaD9jDWz8AohnuDiWu2ETUHUhmisUBKtPj8IvdJAQkdHI1l1ydNJ4Yy26YofaAeijuPIs=
+	t=1739538666; cv=none; b=qMYhF82oHbUTrjNcjCnARZsSmqYPOJSqo72yVYJGzLjQH9WWWntLU3LULBR4BhTFl9b0OA5wk8ebuMbRFqywUUQe4JA7I/On6Rvw5zcB5npJsWKSx4cY/8/IRLUb4Tth0g4cqqjSnZIlilmPxRrJJmrFjr8Mjriso5gTRFwQ1WY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739537880; c=relaxed/simple;
-	bh=alONTJ5izPBs5NVNtGqcxXXw/F3dPnAoYUIDkZtfNoY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=BqztOKEDT5pqFX+41gKyLw8QifQRplG0M+WdCj38dD5HeUnwaUpJwnnEYmsHZfkdJ4O1spJNgVzJrUewzv1tyyKnTMTNf9maNXXM4qfwdh839w13YE9JKOrpgJAH+hoM2lEUiJjawp40eMu3HWRDbnf+1X71ITgl9Lf6asPLy9k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PVgUCeCE; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1739538666; c=relaxed/simple;
+	bh=6qmhCZ/VNbfXLMvjVMotO5S9MhLkOwAbj5PUvPSdtkQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rzoXqzGiGoVdU6M2dR2y33xgDuY0yrEHoVackZExZ5meiyLNgaL77nLbxlkf4W91BS1OPCX0+wW7Axw0yKvmn13O7lgRVMkii7wYclFlT4tthR4W5LnTSPKHxFnFVtq6o54ThJvDiqK3cgOh5kz1wmS32vr+pe0MTkf2KnTBnl8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=nPQlIjKa; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PVgUCeCE"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51E7i2wV015968;
-	Fri, 14 Feb 2025 12:57:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="nPQlIjKa"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51EBgqQR018132
+	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 13:11:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Eeic6vXkmMzY8YnqF8B8+d/0s0ePlY9ZRC/bULfVz9M=; b=PVgUCeCE9F2rRhXX
-	GzjSWiCH6P5O+kLbZtt+AEZ00puhiZnlYoo/pAAzuLWkhBph/rjI4DZd31iJmfi+
-	w8+AAy73Zwm+JekXLLMZIvS6Ece5ErQBvOEiS3OtI8glWeY7G+9ldBueMK0Cgu8u
-	TbUH8HTI5gRptoBqobtu0Tl0aCekLv5NbM6DNccHsjO2N53bm4O7uEDQYBkZj1jR
-	rtsOVsh7C9fJ6ZGGqC559iqh2qMu4nciP3boqhzPVDa7Olvt5Nm6hIeQ9cN8WusZ
-	uS6VK7KmdOLPDBV/uMM9CUtT6PG2PoEptRYrFYV8arfJO4DbPSyQ5594X99aCh4C
-	wkBp+g==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44sde8btc2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Feb 2025 12:57:26 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 51ECvPfS025861
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 14 Feb 2025 12:57:25 GMT
-Received: from [10.219.56.14] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 14 Feb
- 2025 04:57:18 -0800
-Message-ID: <2a090f80-e145-410d-8d02-efdaf324c8c9@quicinc.com>
-Date: Fri, 14 Feb 2025 18:27:14 +0530
+	fTW/+eSXYK27SAIhtTq5ZN9ZI4lOMHVi64iiQFK1Qbo=; b=nPQlIjKaTrY/dTcy
+	pxyj8+wG9yovtgNaXTA3gf1gCSlfA4RPjaMf4NNsWNdLFZa1KLRZuvMueopIk/aE
+	LfO5NNoatF3tkqZq5IC1ny8axu+jW7Xv+09J23MqRvP7nDQK9BzxXGA5GUQK5Rkx
+	WMDIJhzO9xItTp+D9qABBPKuvavlwUH4ELighfUmzLsNphcXZHR/CWcpBwqIidxV
+	ub3I1aM+ce9HvBP0LkalZXIYZwsW6b1MJrssGhVo5tmdpKFWiUOQnWAqugtvdxms
+	9BviAUmUs9u8oaWexzcZxmaO8hUrZhJiM5vQvclYxH53Yl1hjWSb96B32esM3u7s
+	y80cKA==
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 44t56vg6m4-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 13:11:01 +0000 (GMT)
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-6e456cecdddso3145006d6.0
+        for <linux-pci@vger.kernel.org>; Fri, 14 Feb 2025 05:11:01 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739538661; x=1740143461;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=fTW/+eSXYK27SAIhtTq5ZN9ZI4lOMHVi64iiQFK1Qbo=;
+        b=CNqnqJn0z4lvPQlM6n3ioPuG6mY3icC/7fJbTWRjBH6taDs3WJgrwA3mLJ2KIQdzfD
+         yEvms2TUxrpzWGte9Zv8MQU52hDo+3Hm8aYkEhKcOYGdj50K6ONgiyFSslhIyxo5yXJG
+         AzmkyDY0VUcIWfPWwISmqYO4/SA2hs7jSukHoc0if75f/8ITfEdoiB5xKB6UqW+5crtK
+         MPP6KxNUlCjNx1C0/M1BoKaIoUlV7wcCpVE19Ldnlb0hDPkhA308hwfn2fwM69Ikf4F3
+         ztiXOP/Tag0tO8YejWDbNR7+PM8LjuoQUTr5f/aCySS2fMR99KEzwg+MVJKqfCKI7uYP
+         oypw==
+X-Forwarded-Encrypted: i=1; AJvYcCVbs2Yg8FKWfCtPBJvlmSFnGZZFcPKOavQuo6PH+6gQpzEyfK1cHHdgKIxn0TqEKeoGzjQPH5YFxjk=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOdadKaBUMJWqL3Hxfw5Lg3Ftd2A0qizrEj/0E4Az6Ys+Z+ooP
+	8cro61xGL+v5xh6wAulVTJ8rUUX2UAtLSAst7WR+QWtw038dAcJTBNyBOWUNPAtq7TeFCntMFj0
+	uRRkFOb0NL6+1D0L3vz3N+0d1wv0lcF29c1OmSIIMYU42/ZhdxDTWcHF65Z8=
+X-Gm-Gg: ASbGncuMS/2KYuzQ5lLEXfDdUv7ZEDPHSRB2V4JEG/FUWi4Mfw5OX4HVldpwEvKG21a
+	haWVjtgM20I+G++HYyBHlB184hLxx5DQh6aXw9XnmISfiRlag1mcU3K2JFckoC/3sZOe/d5DDwE
+	+JtT9fJuaNZ6SBkyh76z+jD1LeDizNOqlACYr28xbb50ppIsRqAIRwYHGt453gFIj8mM/mXAFMa
+	+iSorNXDdwvosu+71oHtVqeA7ZLAwY4O6+Vddm03eZHEkfI5SIFpPinRCHtuhcsuco3NQ6lXtjW
+	/NUOQpZVFJCWnd6Gi3JSStreQxJH1u/TtUIeXPcNwFGhtY9gwPGDQ6Ubt64=
+X-Received: by 2002:a05:6214:301e:b0:6e6:5bd5:f3b5 with SMTP id 6a1803df08f44-6e66520e0d3mr14986756d6.8.1739538660873;
+        Fri, 14 Feb 2025 05:11:00 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IEij9NAIiSKVCTx7RPlhN8aNMMVTWNYr9ptSc3QOaFHm7mvQ0JMabORxG1HdQlMS7ugfZxdPQ==
+X-Received: by 2002:a05:6214:301e:b0:6e6:5bd5:f3b5 with SMTP id 6a1803df08f44-6e66520e0d3mr14986596d6.8.1739538660507;
+        Fri, 14 Feb 2025 05:11:00 -0800 (PST)
+Received: from [192.168.65.90] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-aba532832d1sm336935366b.81.2025.02.14.05.10.58
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 14 Feb 2025 05:10:59 -0800 (PST)
+Message-ID: <659ba3dd-0991-4660-9dd6-feda682f15e1@oss.qualcomm.com>
+Date: Fri, 14 Feb 2025 14:10:56 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,120 +74,86 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] iommu: Handle race with default domain setup
-To: Robin Murphy <robin.murphy@arm.com>,
+Subject: Re: [PATCH v6 1/4] arm64: dts: qcom: x1e80100: Add PCIe lane
+ equalization preset properties
+To: Krishna Chaitanya Chundru <quic_krichai@quicinc.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Jingoo Han <jingoohan1@gmail.com>,
         Lorenzo Pieralisi
-	<lpieralisi@kernel.org>,
-        Hanjun Guo <guohanjun@huawei.com>,
-        Sudeep Holla
-	<sudeep.holla@arm.com>,
-        "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown
-	<lenb@kernel.org>,
-        Russell King <linux@armlinux.org.uk>,
-        Greg Kroah-Hartman
-	<gregkh@linuxfoundation.org>,
-        Danilo Krummrich <dakr@kernel.org>, Stuart
- Yoder <stuyoder@gmail.com>,
-        Laurentiu Tudor <laurentiu.tudor@nxp.com>,
-        Nipun
- Gupta <nipun.gupta@amd.com>,
-        Nikhil Agarwal <nikhil.agarwal@amd.com>,
-        Joerg
- Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
-        Rob Herring
-	<robh@kernel.org>, Saravana Kannan <saravanak@google.com>,
-        Bjorn Helgaas
-	<bhelgaas@google.com>
-CC: <linux-acpi@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <iommu@lists.linux.dev>,
-        <devicetree@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <cover.1739486121.git.robin.murphy@arm.com>
- <87bd187fa98a025c9665747fbfe757a8bf249c18.1739486121.git.robin.murphy@arm.com>
+ <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?=
+ <kw@linux.com>,
+        linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        quic_mrana@quicinc.com, quic_vbadigan@quicinc.com
+References: <20250210-preset_v6-v6-0-cbd837d0028d@oss.qualcomm.com>
+ <20250210-preset_v6-v6-1-cbd837d0028d@oss.qualcomm.com>
+ <20250214084427.5ciy5ks6oypr3dvg@thinkpad>
+ <be824a70-380e-84d0-8ada-f849b9453ac0@quicinc.com>
 Content-Language: en-US
-From: Charan Teja Kalla <quic_charante@quicinc.com>
-In-Reply-To: <87bd187fa98a025c9665747fbfe757a8bf249c18.1739486121.git.robin.murphy@arm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 8MPMEM59TFtEpOVHpTq1BK9dVBJIHPE2
-X-Proofpoint-ORIG-GUID: 8MPMEM59TFtEpOVHpTq1BK9dVBJIHPE2
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <be824a70-380e-84d0-8ada-f849b9453ac0@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-ORIG-GUID: bnrMoH1Z0f9-bMxe0xWq4dJNBqmUcugx
+X-Proofpoint-GUID: bnrMoH1Z0f9-bMxe0xWq4dJNBqmUcugx
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-02-14_05,2025-02-13_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 suspectscore=0
- adultscore=0 priorityscore=1501 bulkscore=0 lowpriorityscore=0
- clxscore=1011 mlxscore=0 mlxlogscore=999 spamscore=0 impostorscore=0
- malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.19.0-2501170000 definitions=main-2502140095
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0 clxscore=1015
+ impostorscore=0 lowpriorityscore=0 phishscore=0 spamscore=0 malwarescore=0
+ suspectscore=0 bulkscore=0 mlxlogscore=999 mlxscore=0 priorityscore=1501
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.19.0-2501170000
+ definitions=main-2502140097
 
-Thanks a lot for posting these patches, Robin.
-
-On 2/14/2025 5:18 AM, Robin Murphy wrote:
->  drivers/iommu/iommu.c | 5 +++++
->  1 file changed, 5 insertions(+)
+On 14.02.2025 9:48 AM, Krishna Chaitanya Chundru wrote:
 > 
-> diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
-> index 870c3cdbd0f6..2486f6d6ef68 100644
-> --- a/drivers/iommu/iommu.c
-> +++ b/drivers/iommu/iommu.c
-> @@ -3097,6 +3097,11 @@ int iommu_device_use_default_domain(struct device *dev)
->  		return 0;
->  
->  	mutex_lock(&group->mutex);
-> +	/* We may race against bus_iommu_probe() finalising groups here */
-> +	if (!group->default_domain) {
-> +		ret = -EPROBE_DEFER;
-> +		goto unlock_out;
-> +	}
+> 
+> On 2/14/2025 2:14 PM, Manivannan Sadhasivam wrote:
+>> On Mon, Feb 10, 2025 at 01:00:00PM +0530, Krishna Chaitanya Chundru wrote:
+>>> Add PCIe lane equalization preset properties for 8 GT/s and 16 GT/s data
+>>> rates used in lane equalization procedure.
+>>>
+>>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>>> ---
+>>> This patch depends on the this dt binding pull request which got recently
+>>> merged: https://github.com/devicetree-org/dt-schema/pull/146
+>>> ---
+>>> ---
+>>>   arch/arm64/boot/dts/qcom/x1e80100.dtsi | 13 +++++++++++++
+>>>   1 file changed, 13 insertions(+)
+>>>
+>>> diff --git a/arch/arm64/boot/dts/qcom/x1e80100.dtsi b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+>>> index 4936fa5b98ff..1b815d4eed5c 100644
+>>> --- a/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+>>> +++ b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+>>> @@ -3209,6 +3209,11 @@ &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+>>>               phys = <&pcie3_phy>;
+>>>               phy-names = "pciephy";
+>>>   +            eq-presets-8gts = /bits/ 16 <0x5555 0x5555 0x5555 0x5555>,
+>>> +                      /bits/ 16 <0x5555 0x5555 0x5555 0x5555>;
+>>
+>> Why 2 16bit arrays?
+>>
+> Just to keep line length below 100, if I use single line it is crossing
+> 100 lines.
 
-We just hit the issue again even after picking up this patch, though
-very hard to reproduce, on 6.6 LTS.
+Oh I didn't notice this.. Ideally we would have <A0>, <A1>, ..., <An>;
 
-After code inspection, it seems the issue is that - default domain is
-setup in the bus_iommu_probe() before hitting of this replay.
+But it seems like /bits/ applies individually to each entry? That's a bit
+weird, but I'll add it to my list of things I don't like about dtc..
 
-A:async client probe in platform_dma_configure(), B:bus_iommu_probe() :-
+Let's do:
+eq-presets-8gts = /bits/ 16 <0x5555 0x5555 0x5555 0x5555
+			     0x5555 0x5555 0x5555 0x5555>;
 
-1) A: sets up iommu_fwspec under iommu_probe_device_lock.
-
-2) B: Sets the dev->iommu_group under iommu_probe_device_lock. Domain
-setup is deferred.
-
-3) A: Returns with out allocating the default domain, as
-dev->iommu_group is set, whose checks are also made under the same
-'iommu_probe_device_lock'. __This miss setting of the valid dev->dma_ops__.
-
-4) B: Sets up the group->default_domain under group->mutex.
-
-5) A: iommu_device_use_default_domain(): Relies on this
-group->default_domain, under the same mutex, to decide if need to go for
-replay, which is skipped. This is skipping the setting up of valid
-dma_ops and that's an issue.
-
-But I don't think that the same issue exists on 6.13 because of your
-patch, b67483b3c44e ("iommu/dma: Centralise iommu_setup_dma_ops()").
-bus_iommu_probe():
-     list_for_each_entry_safe(group, next, &group_list, entry) {
-		mutex_lock(&group->mutex);
-		for_each_group_device(group, gdev)
-			iommu_setup_dma_ops(gdev->dev);
-		mutex_unlock(&group->mutex);
-     }
-
-This makes the step4 above force to use the valid dma_iommu api, thus I
-see no issue when there is no probe deferral.
-
-So, I think we are good with this patch on 6.13.
-
-Now coming back to 6.6 LTS, any ideas you have here, please?
-
->  	if (group->owner_cnt) {
->  		if (group->domain != group->default_domain || group->owner ||
->  		    !xa_empty(&group->pasid_array)) {
+for now
 
 
-Thanks,
-Charan
+Konrad
