@@ -1,38 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEBE826AA94;
-	Tue, 18 Feb 2025 14:36:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1DA8526B2DB;
+	Tue, 18 Feb 2025 14:37:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739889418; cv=none; b=Je2xI8yv9X6fW22w+myjeeg1gPbTt15Fx5nKDoq1Yq+reiUTzVAKvHZpJVcIkqd/eERA5vMQ0LJWgmJKBnYWnHpZJQbHeiLSdu7V32Dpb8VpFIypE7RtSNb56nzI/6kJeSGn9rPqDyIWyk63rQFZvRlz70DNliLtkDk64svBOpo=
+	t=1739889472; cv=none; b=pYSap0VBHWCZ52iRCkfO3cwNV9WIpu/GN8FW8Rsp6MEs3APr8n691XmVGfb0Cj6MwE4PBbr7j8pCwYELLHXe6HooxhNQDBYNpb0Z8h70DZlOFiPEZZoIZUCD5dNd0PWDDj69PAEwCYkU/COGV3ehwIU4BPfY+I+cNTP2mo82F0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739889418; c=relaxed/simple;
-	bh=o4GSDwcgCMz6AI4qFmm6hqFIO8SQo/fCcVqaBA7mmiA=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=hDxeQmHDnkZt6MHaYQpUnnxGAkreKkdBg7xmxTy5HpdwDJ9xNLP+qcu/mObu28aiyHUHTjeNBtB8DnYXTtH9qF8HlrdbWFjb2nQ9nBFU8+GQ+GiZCVPFqfTFxfQDGYv7QjWyvPHvs/bgieeQIlx/WBw99E36z6n9TqSEsjYtjeQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TnaEI9PN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1739889472; c=relaxed/simple;
+	bh=kTZkgisOeW801Sth2+lerhok9tOzKPXAzYpArOKOy6U=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=J818UMEMoN7kyeX9AA1h2v0skWOjla0QEkb2wWJZdhY8rXury5bri5UuUUh+LYpaBsJbeDmhg+sTVlyBKIO/yYNyUtCcRKkx6abHLk0yePrpx9ZCqHlmScAJg65mf4gO9FRQmEfRpAyxogLZk9oUdfkUUdr/OLbKK65VFQdPN5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PBE19Myi; arc=none smtp.client-ip=209.85.160.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TnaEI9PN"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 42349C4CEE6;
-	Tue, 18 Feb 2025 14:36:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1739889418;
-	bh=o4GSDwcgCMz6AI4qFmm6hqFIO8SQo/fCcVqaBA7mmiA=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=TnaEI9PNS6TDXzIPducf6m7rFu5FiYShedTbFhQZN5UbBqQqzjIqcU13fDgVoSafu
-	 imVxDSeAkxrcmzB4bGtEHn3hV9Cp4EnZBP66WaxvBwMM6TEi/dHOEeQHfRTQldeJaK
-	 IYLv+tPSpYSmXgZ6J7PMwniTFcsc2kHMF7hVysuzQFBrk5cjLm0z8x+UJ8d3P5s0vR
-	 ON7uOcZnSaPLdgt0l4pMT+z36dI2FtUpZlZm5f4B88SECkVHX2mAza/x6q5SOseKJR
-	 oyGYVUwsOGcKaH7E6sI2MxKGzQduY3KE6rtGEinVF+YOxR/8wVSf7rrHQExrXB0gDi
-	 +3eck03/JPvVw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2BB4CC021AD;
-	Tue, 18 Feb 2025 14:36:58 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.linaro.org@kernel.org>
-Date: Tue, 18 Feb 2025 20:06:40 +0530
-Subject: [PATCH 1/4] perf/dwc_pcie: Move common DWC struct definitions to
- 'pcie-dwc.h'
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PBE19Myi"
+Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-471f257f763so16314031cf.0;
+        Tue, 18 Feb 2025 06:37:50 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1739889470; x=1740494270; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=+HcaZw8R1wNpH+/hwT2VE9RWMhIZpp47OuhMJQ43oHw=;
+        b=PBE19MyiA6N1yIcjTl3Mz55/aM9hzFAqGPkNCe8ia8XxGCl6ZWu/5dSM7UyLj819T2
+         cwA6H6s1A9sg/ukSUc85PQA0SX2BmIfgYZntwYat705J5wyoaNSLRFvjNjGe+sL4FvU1
+         LMyRAnlPaww/RNpzDlcT2WDe/3PtudgmMRVWmgyaOH0xodA0uJTy5Bn8AwM40snfRBHP
+         yyLZGNvJdqVznhR26ilLvVul56HrD6J7OdIZfkh22KsYI2Tc7ms/Vpm+Ga7qx0LYoFz/
+         aL8UVrfkYh69IPs+8WMmlUa7gbSz+myJ+iq5NSwgmH8m9n15w1L7OopM5bxZo+5SsUr0
+         BVeg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1739889470; x=1740494270;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=+HcaZw8R1wNpH+/hwT2VE9RWMhIZpp47OuhMJQ43oHw=;
+        b=upozvza4G3c74X4obCFPODUbB8D6ZvGTrMpSCI3alApyNiLOPtpevwOwqAmuvG38qp
+         oEGX5ky/m1Hb7ioyTqGO8WvgZHDk7wHstBWlrQeFfeYMMew6awXqBfaWRtqKRc2K9iuP
+         e7FRRNflavwxeTnn6Tsj6aBgwrY6A1oF+9rUdagnKG8mJY3ivUzM/IU/MZTWQZ0PXqRt
+         fJp3ysUaTN1lZtmSKcnip4uG8m4Y8nCdxCnHRm6Ar/j2LhJbsGe6o4nA2dHkSQIZznyp
+         KusTRO5g3u1egmAT/zNMsRlvoYi38sfRoV9nsVXnREQhjqNjZVZNA9kUIGcETZUW0ilf
+         yhCw==
+X-Forwarded-Encrypted: i=1; AJvYcCVAfvoK6RB6qhBoEr1M8WIFUDGYmp4nfiK3KpPVqmO8tHs/CqlgC/yCDAZbQ0hEwA2s0/WKuIKz0XNxcI81@vger.kernel.org, AJvYcCVB9HRsGJH7LVdnGn6ligFKPQVigb/iDBgUtiPAZLEwt8PnWVhV3PAxflL+5MwE65ZYqO3SGUMQqOXH@vger.kernel.org, AJvYcCWZhdbTPYp2BABtbR5QsFt/KXlySxVRvwQWEFtYe15k4aV6WcXZOo0sVMHkX0R/zYFtr9cb4NnpY9DGaR8c@vger.kernel.org, AJvYcCWpGQGoq7npRrIkgLctAOipmBibiqw3C91tHFrzzCR/goppMgDUsz0hC852hMF8CgXwttx/ycnpr5DdHawfl70=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxDJvnEe2QHztdf4u/sYPRK35GhCkWN47wbX+vS1Kr4+grXhNMl
+	ZV0BoiToGQ6JDGtpUtEgzabNJEodr9Uq5duqA0uXk8hR0ej5xw4l1JeHeI9P
+X-Gm-Gg: ASbGncsbtshNGC2+WZY8l+FX270Uc/UteUxdlrj1Nb0kuYqSjCKxTnpOW+2TpKuT1l9
+	jrqmQy43oCw+ASZz/2zphvZwikcFwEt8uQBclH/lJnyojufAcwdQGV0I4YApe8+DEi0J1cnBa2k
+	gPXwhgnLYsbX0KiPWgWC+g+qMGAyNLHObHaK+AllWQVuXfjTiwJ9Eo+bVGBF4O+W9rG4Avfsf0e
+	aJB/XTSad/Mk3yeV60h4zT8akcubM2qIBUJUjpKRKn6qpfAw5nfripA7Eh6SPiWdKYxhjALuqES
+	9FyssthjZkniXP3GuQNMUgcu4Bc55joxMYBrh1k=
+X-Google-Smtp-Source: AGHT+IG7VJe+61wvnIsolh0sANxc/xJbP61UOhGcDR2IAysdCbfSG3tsR8slb+Tj/RTbi9efoyXXNg==
+X-Received: by 2002:ac8:5892:0:b0:471:cdae:ac44 with SMTP id d75a77b69052e-471dbe978a2mr220943451cf.47.1739889469779;
+        Tue, 18 Feb 2025 06:37:49 -0800 (PST)
+Received: from tamird-mac.local ([2600:4041:5be7:7c00:283f:a857:19c2:7622])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-471ef0a5943sm24409281cf.51.2025.02.18.06.37.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Feb 2025 06:37:49 -0800 (PST)
+From: Tamir Duberstein <tamird@gmail.com>
+Subject: [PATCH v17 0/3] rust: xarray: Add a minimal abstraction for XArray
+Date: Tue, 18 Feb 2025 09:37:42 -0500
+Message-Id: <20250218-rust-xarray-bindings-v17-0-f3a99196e538@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,153 +66,123 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250218-pcie-qcom-ptm-v1-1-16d7e480d73e@linaro.org>
-References: <20250218-pcie-qcom-ptm-v1-0-16d7e480d73e@linaro.org>
-In-Reply-To: <20250218-pcie-qcom-ptm-v1-0-16d7e480d73e@linaro.org>
-To: Shuai Xue <xueshuai@linux.alibaba.com>, 
- Jing Zhang <renyu.zj@linux.alibaba.com>, Will Deacon <will@kernel.org>, 
- Mark Rutland <mark.rutland@arm.com>, Jingoo Han <jingoohan1@gmail.com>, 
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIADabtGcC/3XSzW7DIAwH8Fepch4VNpiEnfoe0w5AIEVqko2kU
+ auq7z6afTRSlqMt/OMP8q0YfIp+KF53tyL5KQ6x73IB5cuucEfTNZ7FOjcK5CiBI2fpPIzsYlI
+ yV2ZjV8euGZj1gUCCRK2qIo9+JB/iZXbf3nMdUt+y8Zi8+cO44BoFaSz3oCoNxJC1znTmdIiNO
+ UWzd337YyX/ec7Rxid4jMPYp+uce9KP7ndCgOr/hJNmnAkE7WpLQlV0aFoTT/MlD3ACvlC23pl
+ PZcYgWbTcBqpwxcCTQS62GMgMVUZTDaL0bs3gggHcYvDBaGO1hSBr9CtGLJnNNCIzlSICJb1CG
+ VaMXDLlFiMzo4MPwvngrIQVQ78M5U1SWwzNX4yWamecsWLFqCWzmUZlBklZ7oIWytZL5n6/fwF
+ gM3Xg+wIAAA==
+X-Change-ID: 20241020-rust-xarray-bindings-bef514142968
+To: Danilo Krummrich <dakr@kernel.org>, Miguel Ojeda <ojeda@kernel.org>, 
+ Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
+ Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Benno Lossin <benno.lossin@proton.me>, 
+ Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+ Trevor Gross <tmgross@umich.edu>, Matthew Wilcox <willy@infradead.org>, 
  Bjorn Helgaas <bhelgaas@google.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Rob Herring <robh@kernel.org>
-Cc: Shradha Todi <shradha.t@samsung.com>, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, linux-perf-users@vger.kernel.org, 
- linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-X-Mailer: b4 0.14.1
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3403;
- i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=6d2Yb8pZtN0A+yfWOqcZ9eUeZfdnTNPaYMX4prFPOcU=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBntJsHNIhzToT44AY+uhNUlCsCN6bOgu98Qogla
- 8fEUJTYaTeJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCZ7SbBwAKCRBVnxHm/pHO
- 9WZ0B/9Nin9btaLnESIchxC1r4blWqXKP9BhZLaYFCxr61YM/Ph8gTp0V8EHuv2b7Va1fr0QWky
- 5PGPDx8LXDlVdLyoPq0tz0t1jnv6USht1n+8SCWYLUAwUfMNU2iXopohMhcY3flFWFgGmOqatQq
- MC5k05B6r4WatPiN/s1AIbo8QlGoAp/nPJsgttnQrtWvKcuA84LYi01Hg0XZBt7fuTzr3hyY8nY
- 7Yys0rTVKtBQn6s6eCcPu7I7fBpcgpfuHAAjHfpsPry7KpQxAK8KweQ+1xrzA2Iu6GzKJ90T2Ib
- Mpp00V379HiuU/qgoo7PcgX/ik+4LfjwG993avYaYGYGEue5
-X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@linaro.org/default with auth_id=185
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reply-To: manivannan.sadhasivam@linaro.org
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Tamir Duberstein <tamird@gmail.com>, 
+ FUJITA Tomonori <fujita.tomonori@gmail.com>, 
+ "Rob Herring (Arm)" <robh@kernel.org>
+Cc: =?utf-8?q?Ma=C3=ADra_Canal?= <mcanal@igalia.com>, 
+ Asahi Lina <lina@asahilina.net>, rust-for-linux@vger.kernel.org, 
+ linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-pci@vger.kernel.org
+X-Mailer: b4 0.15-dev
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+This is a reimagining relative to earlier versions[0] by Asahi Lina and
+Maíra Canal.
 
-Since these are common to all Desginware PCIe IPs, move them to a new
-header, 'pcie-dwc.h' so that other drivers could make use of them.
+It is needed to support rust-binder, though this version only provides
+enough machinery to support rnull.
 
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Link: https://lore.kernel.org/rust-for-linux/20240309235927.168915-2-mcanal@igalia.com/ [0]
 ---
- MAINTAINERS                 |  1 +
- drivers/perf/dwc_pcie_pmu.c | 23 ++---------------------
- include/linux/pcie-dwc.h    | 34 ++++++++++++++++++++++++++++++++++
- 3 files changed, 37 insertions(+), 21 deletions(-)
+Changes in v17:
+- Drop patch "rust: remove redundant `as _` casts". (Danilo Krummrich)
+- Drop trailers for shared commit from configfs series[0]. (Danilo
+  Krummrich)
+- Avoid shadowing expressions with .cast() calls. (Danilo Krummrich)
+- Link to v16: https://lore.kernel.org/r/20250207-rust-xarray-bindings-v16-0-256b0cf936bd@gmail.com
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 896a307fa065..b4d09d52a750 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -18123,6 +18123,7 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/pci/snps,dw-pcie-ep.yaml
- F:	Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
- F:	drivers/pci/controller/dwc/*designware*
-+F:	include/linux/pcie-dwc.h
- 
- PCI DRIVER FOR TI DRA7XX/J721E
- M:	Vignesh Raghavendra <vigneshr@ti.com>
-diff --git a/drivers/perf/dwc_pcie_pmu.c b/drivers/perf/dwc_pcie_pmu.c
-index cccecae9823f..05b37ea7cf16 100644
---- a/drivers/perf/dwc_pcie_pmu.c
-+++ b/drivers/perf/dwc_pcie_pmu.c
-@@ -13,6 +13,7 @@
- #include <linux/errno.h>
- #include <linux/kernel.h>
- #include <linux/list.h>
-+#include <linux/pcie-dwc.h>
- #include <linux/perf_event.h>
- #include <linux/pci.h>
- #include <linux/platform_device.h>
-@@ -99,26 +100,6 @@ struct dwc_pcie_dev_info {
- 	struct list_head dev_node;
- };
- 
--struct dwc_pcie_pmu_vsec_id {
--	u16 vendor_id;
--	u16 vsec_id;
--	u8 vsec_rev;
--};
--
--/*
-- * VSEC IDs are allocated by the vendor, so a given ID may mean different
-- * things to different vendors.  See PCIe r6.0, sec 7.9.5.2.
-- */
--static const struct dwc_pcie_pmu_vsec_id dwc_pcie_pmu_vsec_ids[] = {
--	{ .vendor_id = PCI_VENDOR_ID_ALIBABA,
--	  .vsec_id = 0x02, .vsec_rev = 0x4 },
--	{ .vendor_id = PCI_VENDOR_ID_AMPERE,
--	  .vsec_id = 0x02, .vsec_rev = 0x4 },
--	{ .vendor_id = PCI_VENDOR_ID_QCOM,
--	  .vsec_id = 0x02, .vsec_rev = 0x4 },
--	{} /* terminator */
--};
--
- static ssize_t cpumask_show(struct device *dev,
- 					 struct device_attribute *attr,
- 					 char *buf)
-@@ -529,7 +510,7 @@ static void dwc_pcie_unregister_pmu(void *data)
- 
- static u16 dwc_pcie_des_cap(struct pci_dev *pdev)
- {
--	const struct dwc_pcie_pmu_vsec_id *vid;
-+	const struct dwc_pcie_vsec_id *vid;
- 	u16 vsec;
- 	u32 val;
- 
-diff --git a/include/linux/pcie-dwc.h b/include/linux/pcie-dwc.h
-new file mode 100644
-index 000000000000..261ae11d75a4
---- /dev/null
-+++ b/include/linux/pcie-dwc.h
-@@ -0,0 +1,34 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Copyright (C) 2021-2023 Alibaba Inc.
-+ *
-+ * Copyright 2025 Linaro Ltd.
-+ * Author: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-+ */
-+
-+#ifndef LINUX_PCIE_DWC_H
-+#define LINUX_PCIE_DWC_H
-+
-+#include <linux/pci_ids.h>
-+
-+struct dwc_pcie_vsec_id {
-+	u16 vendor_id;
-+	u16 vsec_id;
-+	u8 vsec_rev;
-+};
-+
-+/*
-+ * VSEC IDs are allocated by the vendor, so a given ID may mean different
-+ * things to different vendors.  See PCIe r6.0, sec 7.9.5.2.
-+ */
-+static const struct dwc_pcie_vsec_id dwc_pcie_pmu_vsec_ids[] = {
-+	{ .vendor_id = PCI_VENDOR_ID_ALIBABA,
-+	  .vsec_id = 0x02, .vsec_rev = 0x4 },
-+	{ .vendor_id = PCI_VENDOR_ID_AMPERE,
-+	  .vsec_id = 0x02, .vsec_rev = 0x4 },
-+	{ .vendor_id = PCI_VENDOR_ID_QCOM,
-+	  .vsec_id = 0x02, .vsec_rev = 0x4 },
-+	{} /* terminator */
-+};
-+
-+#endif /* LINUX_PCIE_DWC_H */
+Changes in v16:
+- Extract prequel patch for `as _` casts. (Danilo Krummrich)
+- Improve doc and safety comments. (Boqun Feng)
+- Pull trailers for shared commit from configfs series[0]. (Andreas Hindborg, Alice Ryhl, Fiona Behrens)
+- Link to configfs series: https://lore.kernel.org/rust-for-linux/20250131-configfs-v1-1-87947611401c@kernel.org/
+- Link to v15: https://lore.kernel.org/r/20250206-rust-xarray-bindings-v15-0-a22b5dcacab3@gmail.com
 
+Changes in v15:
+- Rebase on v6.14-rc1.
+- Add MAINTAINERS entry.
+- Link to v14: https://lore.kernel.org/r/20241217-rust-xarray-bindings-v14-0-9fef3cefcb41@gmail.com
+
+Changes in v14:
+- Remove TODO made stale by Gary Guo's FFI type series.
+- Link: https://lore.kernel.org/all/20240913213041.395655-5-gary@garyguo.net/
+- Link to v13: https://lore.kernel.org/r/20241213-rust-xarray-bindings-v13-0-8655164e624f@gmail.com
+
+Changes in v13:
+- Replace `bool::then` with `if`. (Miguel Ojeda)
+- Replace `match` with `let` + `if`. (Miguel Ojeda)
+- Link to v12: https://lore.kernel.org/r/20241212-rust-xarray-bindings-v12-0-59ab9b1f4d2e@gmail.com
+
+Changes in v12:
+- Import `core::ptr::NonNull`. (Alice Ryhl)
+- Introduce `StoreError` to allow `?` to be used with `Guard::store`.
+  (Alice Ryhl)
+- Replace `{crate,core}::ffi::c_ulong` and clarify TODO with respect to
+  `usize`. (Alice Ryhl)
+- Drop `T: Sync` bound on `impl Sync for XArray<T>`. (Alice Ryhl)
+- Reword `Send` and `Sync` safety comments to match the style used in
+  `lock.rs`. (Alice Ryhl and Andreas
+  Hindborg)
+- Link to v11: https://lore.kernel.org/r/20241203-rust-xarray-bindings-v11-0-58a95d137ec2@gmail.com
+
+Changes in v11:
+- Consolidate imports. (Alice Ryhl)
+- Use literal `0` rather than `MIN`. (Alice Ryhl)
+- Use bulleted list in SAFETY comment. (Alice Ryhl)
+- Document (un)locking behavior of `Guard::store`. (Alice Ryhl)
+- Document Normal API behavior WRT `XA_ZERO_ENTRY`. (Alice Ryhl)
+- Rewrite `unsafe impl Sync` SAFETY comment. (Andreas Hindborg)
+- Link to v10: https://lore.kernel.org/r/20241120-rust-xarray-bindings-v10-0-a25b2b0bf582@gmail.com
+
+Changes in v10:
+- Guard::get takes &self instead of &mut self. (Andreas Hindborg)
+- Guard is !Send. (Boqun Feng)
+- Add Inspired-by tags. (Maíra Canal and Asahi Lina)
+- Rebase on linux-next, use NotThreadSafe. (Alice Ryhl)
+- Link to v9: https://lore.kernel.org/r/20241118-rust-xarray-bindings-v9-0-3219cdb53685@gmail.com
+
+---
+Tamir Duberstein (3):
+      rust: types: add `ForeignOwnable::PointedTo`
+      rust: xarray: Add an abstraction for XArray
+      MAINTAINERS: add entry for Rust XArray API
+
+ MAINTAINERS                     |  11 ++
+ rust/bindings/bindings_helper.h |   6 +
+ rust/helpers/helpers.c          |   1 +
+ rust/helpers/xarray.c           |  28 ++++
+ rust/kernel/alloc/kbox.rs       |  38 +++---
+ rust/kernel/lib.rs              |   1 +
+ rust/kernel/miscdevice.rs       |  10 +-
+ rust/kernel/pci.rs              |   2 +-
+ rust/kernel/platform.rs         |   2 +-
+ rust/kernel/sync/arc.rs         |  21 +--
+ rust/kernel/types.rs            |  46 ++++---
+ rust/kernel/xarray.rs           | 276 ++++++++++++++++++++++++++++++++++++++++
+ 12 files changed, 393 insertions(+), 49 deletions(-)
+---
+base-commit: 11668f3b4a446222f0f3fe89b21247c176928c72
+change-id: 20241020-rust-xarray-bindings-bef514142968
+
+Best regards,
 -- 
-2.25.1
-
+Tamir Duberstein <tamird@gmail.com>
 
