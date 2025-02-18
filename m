@@ -1,48 +1,77 @@
-Received: from out30-97.freemail.mail.aliyun.com (out30-97.freemail.mail.aliyun.com [115.124.30.97])
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2084.outbound.protection.outlook.com [40.107.236.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA0D91A08DB;
-	Tue, 18 Feb 2025 03:49:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.97
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1739850553; cv=none; b=cbjmwSmkcF3KY3YaXSnnC0U1E6B/jmOj++5GIDAVKaUMN/SWbCTrsaRTRwgZYIFTYnaOeF3BD3gFKQJKENuoG+c/Y4fF52ZU9JaSN6+6sg0MQO9HZWTdEHoDibwLuGqtRCIdM+mVtBrL9RTNL5Fwsud9Ry1ywSq+Pub7O5hKwjw=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1739850553; c=relaxed/simple;
-	bh=gZDwF2MK3WnQqkLHRxze35VFVWxiEl3ROncmqxTo7qE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=p6cJTUwZTsfu6pznoXUL2OaJmKkaI5BIYF8dZI+aYjHH+64dT3YfGPl1ffhFsW+KZX2YutEUfISwJRNtIEAEc+XdhBmAWOTMDO9jbe4Hs9kIw/E+a236sM2k2c5RwyOmlsrxA6xlAbMrFO1Sam5yVkdoAC0JGbVRI+i1vHl3rT0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=vQx3JXi8; arc=none smtp.client-ip=115.124.30.97
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F85910E5;
+	Tue, 18 Feb 2025 05:30:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.236.84
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1739856656; cv=fail; b=ltRukMfOZlAhUVFe79TCOPBMFC/ouMo7bWix/8CWs5Xu9EVyjqkj7dCVxovZadr6wOwpoGJDK21QrwDWIbjfauLAeQFKwu3+AN2FpMaFtXV4CYpteJ49jX1UnH/fkxAABkMZ+vPR7BvxSjAvf/uLzhTz6XJ9PLBRqmsJyvU4sj4=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1739856656; c=relaxed/simple;
+	bh=sWVLcByvdv1zgCmR6JhQuUi3/1+aDic5vEE5I7Js81k=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=rpRDcUZ8C/b0+xDyABFblbOnzdZsuTBK/nS6mV9KnSqAcuuz3hykoO/rJBMp17tggnk0MdlUWYbUgCNopgHXECdRUoTXrBHWXJDEgCCiapB1a6L6hPWaPdM9bQ40cEfMwsi1v4sT61dOsgJtmku40BLeQckLakvSoXvHxOCGcMU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=C5HhPCt/; arc=fail smtp.client-ip=40.107.236.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="vQx3JXi8"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1739850541; h=From:To:Subject:Date:Message-Id:MIME-Version;
-	bh=RoTkR/BoWRWXPU8Qu+KO1xpOJocUTVSiHDA/GEB6aOg=;
-	b=vQx3JXi8+76mez0C0X/qcA02ZbsxwJdNUWZr1FSjziJk+7YfhrfD/t8ayZ3ilo2Dl30NK1S4GWqyHv+vaWQiwkDdRc7k7rxHrjn1sLHwws87wS06w0oVquHoAov1FfdXxYDTLNZgdyDZCcR4OOO8l+UCYwUXlrO+vTRA8n7kLbY=
-Received: from localhost(mailfrom:feng.tang@linux.alibaba.com fp:SMTPD_---0WPkGLoe_1739850540 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Tue, 18 Feb 2025 11:49:00 +0800
-From: Feng Tang <feng.tang@linux.alibaba.com>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Liguang Zhang <zhangliguang@linux.alibaba.com>,
-	Guanghui Feng <guanghuifeng@linux.alibaba.com>,
-	rafael@kernel.org
-Cc: Markus Elfring <Markus.Elfring@web.de>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	ilpo.jarvinen@linux.intel.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Feng Tang <feng.tang@linux.alibaba.com>
-Subject: [PATCH v2 2/2] PCI: Disable PCIE hotplug interrupts early when msi is disabled
-Date: Tue, 18 Feb 2025 11:48:59 +0800
-Message-Id: <20250218034859.40397-2-feng.tang@linux.alibaba.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
-In-Reply-To: <20250218034859.40397-1-feng.tang@linux.alibaba.com>
-References: <20250218034859.40397-1-feng.tang@linux.alibaba.com>
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="C5HhPCt/"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kFAw16yqNc26fX9FZI9nmH0lRkyNPVrM7rYzFZiej7/mAPdZyiEL9pzJbtCZ7pP46VQef7aaqQ+Ujpm+65C7b+Xuc6v0ErPUDzIaQzZdYCR3Tca9P/f2Xp/TpZuuzLxI8pboiOa1+boPBhvaM7FAr5ZtfGOhoMvJyl6cSKtA/y4QEjvmNb+T0cLpo2FDZH22dIfNbUvSfqw+pnW9ZBSxOEM93ZzvDYjmTbmPJ6gJPUApARx7MojEue70N/YPwwF2qFPFuRExVnRy9GQWvqb7D3b4KdQNNFl5XAI1RuUPN9hiAolozyN1l5JAJgxc1fy/ixqK1dJ3qGQwSBtA1E4phQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=/E+wLam1fjJu+Ryf6lIYEDROYbIJAQn9hfFwNTora/Q=;
+ b=d6U53lMWYesTZP8dvBb73n3HBNyMmejAdu12/5iJLfDFiFZTZ3ShdTnZxmAB222uYJKLQPOUwcLyYyGC6nUvBhR7RPC20+S1F118Bqd610DW5AS/GMNnGxYRKCLQlKaW5ZT8ZkEkg9ssaoCr1QiQl9ouvOSUDBm5rQhZifGCUt56nqDliWu+s3OAg5yah6Rrd0L8kPJzCA/ELq/4yl3d5rLkZWWyyfCHHdilN2N1/oVFAMqWqdXWzVWW+WHsvF43BlTQTdqqlHgWx6oCYdTZjZp6ZotyQGEL0ZIhxn4wDCh3sz7N7N8RQr+IfzitsX5k6P/SsAUP9SjsFgo7Xw7YnA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
+ (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=/E+wLam1fjJu+Ryf6lIYEDROYbIJAQn9hfFwNTora/Q=;
+ b=C5HhPCt/miIo49BjFj76Tm9F8rNNv9d7y7T3hVJfaJ4YGW2Op5YBSU4nB6R05LX89a2THdSZdNYuxo+E5I+sxBJXSzFOaY8dpn0hF1zYmkDm1s8/ywEyosP+51OepUjoEypsMgMW501uZOzBguIfcV9mum48ZOZS8GP9zOSwu8I=
+Received: from SJ0PR03CA0382.namprd03.prod.outlook.com (2603:10b6:a03:3a1::27)
+ by SJ0PR12MB6781.namprd12.prod.outlook.com (2603:10b6:a03:44b::22) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8445.17; Tue, 18 Feb
+ 2025 05:30:51 +0000
+Received: from CO1PEPF000044F2.namprd05.prod.outlook.com
+ (2603:10b6:a03:3a1:cafe::67) by SJ0PR03CA0382.outlook.office365.com
+ (2603:10b6:a03:3a1::27) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.8445.17 via Frontend Transport; Tue,
+ 18 Feb 2025 05:30:51 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
+ smtp.mailfrom=amd.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=amd.com;
+Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
+ 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ CO1PEPF000044F2.mail.protection.outlook.com (10.167.241.72) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.20.8466.11 via Frontend Transport; Tue, 18 Feb 2025 05:30:50 +0000
+Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Mon, 17 Feb
+ 2025 23:30:49 -0600
+Received: from xhdthippesw40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
+ (10.181.40.145) with Microsoft SMTP Server id 15.1.2507.39 via Frontend
+ Transport; Mon, 17 Feb 2025 23:30:46 -0600
+From: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+	<manivannan.sadhasivam@linaro.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+	<conor+dt@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
+	<bharat.kumar.gogada@amd.com>, <jingoohan1@gmail.com>, Thippeswamy Havalige
+	<thippeswamy.havalige@amd.com>
+Subject: [PATCH v12 1/3] dt-bindings: PCI: dwc: Add AMD Versal2 mdb slcr support
+Date: Tue, 18 Feb 2025 11:00:37 +0530
+Message-ID: <20250218053039.714208-2-thippeswamy.havalige@amd.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250218053039.714208-1-thippeswamy.havalige@amd.com>
+References: <20250218053039.714208-1-thippeswamy.havalige@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,57 +79,93 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+Received-SPF: None (SATLEXMB03.amd.com: thippeswamy.havalige@amd.com does not
+ designate permitted sender hosts)
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CO1PEPF000044F2:EE_|SJ0PR12MB6781:EE_
+X-MS-Office365-Filtering-Correlation-Id: 8ca9eb96-741c-4826-ace2-08dd4fdd682c
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|7416014|36860700013|1800799024|82310400026;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?803LQ9ivTbdVUOSmoPny9Or7GeSRns2epn0g0bNYiivbCw5qp0JHt6PxhJat?=
+ =?us-ascii?Q?Gc5zqlIk+0y3HyukZrsmexI/4RcBz2vk0j74W0EmaHcsbXTWYummomH3kkXh?=
+ =?us-ascii?Q?iuhxksIfJBqTrtzYiimRw1ZaanEl4S//b61V3VozeMlb4TJ8/9tJNy5DQPUN?=
+ =?us-ascii?Q?NbixqxTXzqL8xZ4dZa0NW83ofkcXD8v4XUfZzTaZ4W11V81QfMfmVaP5jEyz?=
+ =?us-ascii?Q?pwYyDJRRUEUCqVXp5M1nZADaogRm4fyLCKCXpyyDlC1ftjYyNgLBLvcq2rUe?=
+ =?us-ascii?Q?qhp2hCom/4PD+kQo85FJARLkR34KstOLbnyMNc79iF2X5gCDKqBmG7QHszVs?=
+ =?us-ascii?Q?TxdAlZ2gK4HTWpRjUtEWvWFydPyx6BXAk1tkXj5qhzXask4094q2v4IO6ZrB?=
+ =?us-ascii?Q?VybMmjM5Fddyy2PxXXZzY1Va5mNStmkfK5WyYPRJd+cev18HJVxkPzjuTm+b?=
+ =?us-ascii?Q?RUyVIteb+WKXinvjYVQahG463doDJqm8KSH+uLG6LQ0xLkuX7khfcKBeDjsd?=
+ =?us-ascii?Q?5QzeEYn5e/woFRhejUX0jTbKQrZ79KeD4hV/bbwfXngwHu2JpjT2BDJYYWBy?=
+ =?us-ascii?Q?5xC2qjdWjLNZRpL1RjHbYuXRccvngp36vnzqPdboftwj6iTMkNCo8c9qnU8z?=
+ =?us-ascii?Q?zEaT7SkGRyI/MDn8fVkJHgmWFTeFwWi05kylfGFd09Afhpmybnga1vtMldHN?=
+ =?us-ascii?Q?xWgSM/R+MCjinuRMTG8PMBzioKxNMTbBcPHuIDuu5jl8/YcdcCMhmcTH6qfF?=
+ =?us-ascii?Q?Q5D4D75/rXU2o4yfpuKiPfN0VFzeC7vdxLpurtGBbHpUVCBT1ytTE9/H5riH?=
+ =?us-ascii?Q?J/HkMO4HsgC67urF70kpLESb2RSursH6RRnT7alYkeaZxVVmuHbsLtez3vNv?=
+ =?us-ascii?Q?KWtZnuiXW+9AMYNELr/aX8I0E4X6wVBZMR/aEZrsIn9PaEtlps9vGAo3RYES?=
+ =?us-ascii?Q?M7VU9kOT/GbBtTr2S3Tlr43cXaNautPkuDOrWwnKMaTg7ULPB+kI5wqF77wL?=
+ =?us-ascii?Q?sPLrf7liUyoYPMUX2OGLxjPyNfo6vABIYT3e5D7NL1LG+6UG4c9X2A5T5h7r?=
+ =?us-ascii?Q?b4ARXnlOQtmJf9YJh+DjOOPNT8wYHUw1Ambg59ISpYlIhbp8dUVZthzJ5jm2?=
+ =?us-ascii?Q?yFesVpmeHRnNlATrNh4AmCTnTTszUjpI+GXUfvu7ueA/ZKqOF02IV6pPAHEn?=
+ =?us-ascii?Q?3qKhrugW90s1+J2PuNdhDFcSRZgZj1Mscnl1QkTpO8ymW++xl6Ae+TbyazMI?=
+ =?us-ascii?Q?Myh7H22iFu06z2vvF4X8CDMRNXb2MaqapZ+504yjzM0AVKlfMhGoVexouJhE?=
+ =?us-ascii?Q?JQCc37/6BafyL5Tk1Ab/+9VPNfksyWMFJgkcn6XkbMviUiC1qAYFJhM8oUwP?=
+ =?us-ascii?Q?OMMp1UyEPJTpF4Rh7IcMlLNTUqfCqTblzYbJwgdb+XSedN0gBvpXu1ZJOQuv?=
+ =?us-ascii?Q?ZfjY5M96z4zroU4jFrm5OBWIyTlL9UNx2dO2q/CCdm3Hv01px6xMellT6cgY?=
+ =?us-ascii?Q?oPGRlZua6RfUfMc=3D?=
+X-Forefront-Antispam-Report:
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(7416014)(36860700013)(1800799024)(82310400026);DIR:OUT;SFP:1101;
+X-OriginatorOrg: amd.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Feb 2025 05:30:50.9041
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 8ca9eb96-741c-4826-ace2-08dd4fdd682c
+X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	CO1PEPF000044F2.namprd05.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6781
 
-There was an irq storm bug when testing "pci=nomsi" case, and the root
-cause is: 'nomsi' will disable MSI and let devices and root ports use
-legacy INTX interrupt, and likely make several devices/ports share one
-interrupt. In the failure case, BIOS doesn't disable the pcie hotplug
-interrupts, and actually asserts the command-complete interrupt.
+Add support for mdb slcr aperture that is only supported for AMD Versal2
+devices.
 
-So the timeline is:
-1. pciehp's CCIE/HPIE enabled and command-complete interrupts asserted
-2. the interrupt is shared by pcie root port and nvme/nic device
-3. nvme/nic driver's probe function enables the interrupt line
-4. pciehp driver is loaded later or not loaded
-
-And the "nobody cared irq storm" happens between 3 and 4. This is not
-an issue for normal MSI case, as each interrupt is controlled by its own
-driver. When the driver is not loaded, the interrupt won't get fired
-to kernel even if it is physically asserted.
-
-So disable the pcie hotplug CCIE/HPIE interrupt in early boot phase when
-MSI is not enabled.
-
-Signed-off-by: Feng Tang <feng.tang@linux.alibaba.com>
+Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
-Changlog:
- 
-  Since v1:
-    * Modify the commit log
+Changes in v3:
+-------------
+- Introduced below changes in dwc yaml schema.
+Changes in v5:
+-------------
+- Modify mdb_pcie_slcr as constant.
+Changes in v6:
+-------------
+-Modify slcr constant
+Changes in v11:
+-None
+---
+ Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
 
- drivers/pci/probe.c | 9 +++++++++
- 1 file changed, 9 insertions(+)
-
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index b6536ed599c3..10d72156da9a 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1664,6 +1664,15 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
- 	pcie_capability_read_dword(pdev, PCI_EXP_SLTCAP, &reg32);
- 	if (reg32 & PCI_EXP_SLTCAP_HPC)
- 		pdev->is_hotplug_bridge = 1;
-+
-+	/*
-+	 * When MSI is disabled, root port will use legacy INTX, and likely
-+	 * share INTX interrupt line with other devices like NIC/NVME. There
-+	 * was real world issue that the CCIE IRQ is asserted afer boot, but
-+	 * will not be handled well and cause IRQ storm. So disable it early.
-+	 */
-+	if (!pci_msi_enabled())
-+		pcie_disable_hp_interrupts_early(pdev);
- }
- 
- static void set_pcie_thunderbolt(struct pci_dev *dev)
+diff --git a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+index 205326fb2d75..fdecfe6ad5f1 100644
+--- a/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
++++ b/Documentation/devicetree/bindings/pci/snps,dw-pcie.yaml
+@@ -113,6 +113,8 @@ properties:
+               enum: [ smu, mpu ]
+             - description: Tegra234 aperture
+               enum: [ ecam ]
++            - description: AMD MDB PCIe slcr region
++              const: slcr
+     allOf:
+       - contains:
+           const: dbi
 -- 
-2.43.5
+2.43.0
 
