@@ -1,57 +1,57 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21DB525E475
-	for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2025 23:29:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70B9225E464
+	for <linux-pci@vger.kernel.org>; Wed, 19 Feb 2025 23:30:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740007789; cv=none; b=eQ1hgbARZFhytki/plC0IaXglL0F5oUoX5JoHe/ByEF14ztBBxNEYA62sZMjBo/WRbEKTcQRfrD79Rvf9YjrvSLh45tcAxzgp9dWelQqJfcUzIHDi3833Dhrv3xB/AgNv6VxRvmcoZSIZSBFeTQRK+O255nwfpAwU0UpJdQZtfk=
+	t=1740007849; cv=none; b=lHy23LO+m99nxjWaqGXvsWCwJrjioyqMDKmA4st7J30LaCZYcZf9nK2hAWwEx+imEFsZzE84HvS2yxJxh8vn1EgllfPFSWyrrQItDFqLYAL8nBh8Lc2UxsY9pKccQgBDOtWfZfEv4gTlgx/GVltj+o36M+mQwB2XLQ/1GXYTgIg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740007789; c=relaxed/simple;
-	bh=idfCjxowDJelTpYsj5JHmpUTciobSiCF7nf8NAq8f+Q=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=gySKX7TmRdZNBFmJRH2gVtrPJdi2AUw4d66orftuUZ8IFzLdlcHp2Ekcg5pt+E/Fz1LdvvstQi7XC4TSTK6/TQZ8n4HVLCJHjQQqlG6KyL4vx45H0T087jFs16h1IpLyoyqc1mzlIAZk6br37L0TkiUaWvhHc06SCNvalTH5NK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=f5yC01oJ; arc=none smtp.client-ip=192.198.163.8
+	s=arc-20240116; t=1740007849; c=relaxed/simple;
+	bh=rZwoFE5s+lPgR2KHLfx6AO4dIqShRiaDExfg1NmOIEk=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=M4pG+KympeFpC5UgLM/2Ufcj75/iZxq53/EVh857MYfv6lh7d3msNEjLlLYvE0is+p7CPhSboLtW1Lj6DMcUjY6smxfqgMQ57tEO3L7kvHgJD6hq1ygLAo8rlvMXGytR5PUWGe8eApJYiI+InUiypmwl7n3ZiBzdisgADfB2948=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l8Y1yrRP; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="f5yC01oJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l8Y1yrRP"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1740007788; x=1771543788;
+  t=1740007847; x=1771543847;
   h=date:from:to:cc:subject:message-id;
-  bh=idfCjxowDJelTpYsj5JHmpUTciobSiCF7nf8NAq8f+Q=;
-  b=f5yC01oJDFsGZMPbmOMYOnGIGvQoEyEizbmGwqGiHwmyy8Fsuky7HNZD
-   RfgvaoycQ0KjgtVCZUmhYT+ko6Ba7SqhWrE6gT8nasNUeScWHmUgL5fYc
-   5NOYO2ZVKuoazEJETbRCQwJHFy0nLMjTdcuoRObj1B/Y84gin4+KCZFkL
-   73vN+2BsQQpCQG4PBUYSICTttH2kOX8ByKJ3kVouBYn9yNhFCBXYM4Iip
-   BFR7YrNqnYTMF/aImnMYLFzVGcXMyKtOw3eY9DoPm+cQ8F8VC94xxw8e0
-   BlQiMSGXpmebozm1xbzZgub+7ad7ARLz+oZshtnv5iFdwv6YXGvaokmx2
+  bh=rZwoFE5s+lPgR2KHLfx6AO4dIqShRiaDExfg1NmOIEk=;
+  b=l8Y1yrRPgGHO+Alj9x7NWuzVOj2YfNeLf+awOf/tHJnNuFW/cf+u/I63
+   aLfVSED7yGYtwKWxitKCtUQ4KBt1tlLDluCD7YtUDkMsPbVRsZfpnzNlJ
+   tpS9swmRwslwRwNlTIItwNYEGhFGF84nIJmvlufLnBkmCC4LWSENuHbMZ
+   XJ7XVFHJcG7lOlqMYszSjoTXcqdQKAzSrU26zwHVHuZyt+CcrjgRoRA81
+   GqCQkuY2R5jDCabnr+hNrI+4hA/XwmIox/dPugVdqUtyPnHX1h8ldHPUL
+   i4i9rNNTM4MlR/TKg6l2FAM6kavgJ3fzbk/I8xqjMzFCT/478Ku1LA/H+
    A==;
-X-CSE-ConnectionGUID: YFeQnq+YRlKibXqdzLX2nA==
-X-CSE-MsgGUID: iV8T9wSWQGuqb2ZO8Z69hQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11350"; a="58311834"
+X-CSE-ConnectionGUID: DoLHWKKARi2vL1GCSwY2GQ==
+X-CSE-MsgGUID: uPJ486KXRE2bw1lEp5NgJA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11350"; a="51410193"
 X-IronPort-AV: E=Sophos;i="6.13,299,1732608000"; 
-   d="scan'208";a="58311834"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2025 15:29:47 -0800
-X-CSE-ConnectionGUID: PkSSDHJRTMapY8AoDoTcbw==
-X-CSE-MsgGUID: 1WkZwZkkTteaWsjVH34AKQ==
+   d="scan'208";a="51410193"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Feb 2025 15:30:47 -0800
+X-CSE-ConnectionGUID: vBaxBIZbRNy3XlHHv5bmdg==
+X-CSE-MsgGUID: /0+8JIVTSb6NBJBeAllV8w==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="120080012"
+X-IronPort-AV: E=Sophos;i="6.13,299,1732608000"; 
+   d="scan'208";a="119963727"
 Received: from lkp-server02.sh.intel.com (HELO 76cde6cc1f07) ([10.239.97.151])
-  by orviesa005.jf.intel.com with ESMTP; 19 Feb 2025 15:29:47 -0800
+  by fmviesa004.fm.intel.com with ESMTP; 19 Feb 2025 15:30:46 -0800
 Received: from kbuild by 76cde6cc1f07 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1tktVV-0003c7-27;
-	Wed, 19 Feb 2025 23:29:41 +0000
-Date: Thu, 20 Feb 2025 07:29:04 +0800
+	id 1tktWe-0003cB-07;
+	Wed, 19 Feb 2025 23:30:44 +0000
+Date: Thu, 20 Feb 2025 07:29:42 +0800
 From: kernel test robot <lkp@intel.com>
 To: Bjorn Helgaas <helgaas@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/rockchip] BUILD SUCCESS
- ce90c8108dffca139e7a1fc879f081f3a11ef6f0
-Message-ID: <202502200758.U8B03SPm-lkp@intel.com>
+Subject: [pci:next] BUILD SUCCESS
+ 6f01230b1cacf1bef07767ba141b8a42bb32a5cb
+Message-ID: <202502200736.1Ga8yKn3-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -59,12 +59,12 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/rockchip
-branch HEAD: ce90c8108dffca139e7a1fc879f081f3a11ef6f0  PCI: Add Rockchip Vendor ID
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
+branch HEAD: 6f01230b1cacf1bef07767ba141b8a42bb32a5cb  Merge branch 'pci/endpoint'
 
 elapsed time: 1458m
 
-configs tested: 74
+configs tested: 75
 configs skipped: 1
 
 The following configs have been built successfully.
@@ -107,6 +107,7 @@ loongarch            randconfig-001-20250219    gcc-14.2.0
 loongarch            randconfig-002-20250219    gcc-14.2.0
 nios2                randconfig-001-20250219    gcc-14.2.0
 nios2                randconfig-002-20250219    gcc-14.2.0
+openrisc                         allnoconfig    gcc-14.2.0
 parisc               randconfig-001-20250219    gcc-14.2.0
 parisc               randconfig-002-20250219    gcc-14.2.0
 powerpc              randconfig-001-20250219    clang-15
