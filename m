@@ -1,140 +1,216 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D182D1FBE9B;
-	Sat, 22 Feb 2025 10:44:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0847208961
+	for <linux-pci@vger.kernel.org>; Sat, 22 Feb 2025 10:57:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740221060; cv=none; b=HJz9cifn1xrzKr3QgCqs0M/jMiF4Sgz62nikBBo2PfxwQBMEQ3/GRPrVk6k5kNSnhjm+5hIu6bhBjGpAE95l0kyUrbH2y4zoXXOtPqXCOB268WlkdidSb4IjKx/htzUQEtu5g8jj5TM4+T9eIPxykf7XCRjH4EaG7lO+rLFEzGc=
+	t=1740221844; cv=none; b=ORKEJkE+ElguQt/E+630s/ZdKKpsx4tTnYvJCGgELkquCN4+eNTWmzA4LZI6UkndDzj5Yija++RoXpEIPmCj6z76780TL3v6JYmfKM9IVzKF8xZMNa1Yp9Y4oWs1CkNXCv4+evZMKKEHZGimJknk5VwnRZwmRgWL0iypJFTehDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740221060; c=relaxed/simple;
-	bh=KklBsnKcVFSuYBzhg3x4RUn9m/fVl0ZPRbgJvxFW3Kg=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=eLddnZnaWIjnQkbrBxB8iMdnc08VvaEjKxzWcCGUZPT4QctTpOLg/LUSQ+KGfznDTSn8vT476kQEV4jp50yIJUGddhsAsJ5tmOcyo9tU+dJ3JNHUf43EAwzfl/WKwG/zUCpQFL7YsuenRijvqfXmwmTZtvbupzH1nC95V2e8aBQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TAWwjkpd; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1740221844; c=relaxed/simple;
+	bh=e0erdF0twJYNSVrbGQobI/jjDPZ3kjL8JPlHMSiooE0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=b5IS939LYa/fuPRdVmWyIqHZoAYAxJUzmV3b0C8vH2f5IdapU3PRxl/XM0eMtM/N9cBD96GZgQVcNyYkUznXLLswdzPPd+UbsjLvDB9M0vaU/TtE7+ZmdHLT/mU+Zn+37/lnD+xFB5079IHQjFY/OkGmw6oEuIxOvFMbtucMaUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=GYXp/GXq; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TAWwjkpd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EF059C4CEE6;
-	Sat, 22 Feb 2025 10:44:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740221060;
-	bh=KklBsnKcVFSuYBzhg3x4RUn9m/fVl0ZPRbgJvxFW3Kg=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=TAWwjkpd+5cFg6+zzP9oLs1xn1rF2z5+dbD0nvnQlS8YjnyJWHp+/gQ+4ueZrNcX+
-	 V0O8iEW/VgTO8jrhysPvVMFU7IRTf8vApyrqogJRYxD04B55UpF/q1OQbTYv4Uzeyr
-	 Y+46wNkZA8wPM+Df41iCJz/K6YVexwN3W47XLGYlC8ufvCexlmHXozu9VGPZsixfq6
-	 tcvJNg2ATFeFuDPq/AU2abj3/aSJqLFBZYdO32ryolKyfrUqJjCF1bRvSlmKcxK3mR
-	 wllzj44pFCV6bMynfX6RT5XkQgByYhYo1surtZDfu7wWaqxxm9HCGRaHu2cAThwwy1
-	 OL9xpO93NtnOg==
-From: Lorenzo Bianconi <lorenzo@kernel.org>
-Date: Sat, 22 Feb 2025 11:43:45 +0100
-Subject: [PATCH v3 2/2] PCI: mediatek-gen3: Configure PBUS_CSR registers
- for EN7581 SoC
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="GYXp/GXq"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250222105720epoutp042a3db987a7b27bff95fa4c2cf985727c~mgotTADXj1535215352epoutp04c
+	for <linux-pci@vger.kernel.org>; Sat, 22 Feb 2025 10:57:20 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250222105720epoutp042a3db987a7b27bff95fa4c2cf985727c~mgotTADXj1535215352epoutp04c
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1740221840;
+	bh=GDrRxJdDKDeQsLoUyWU3HU1LlEhYeBjbVEKvneEwPbA=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=GYXp/GXqD2Dic8EuXYEAysvkDYMeGSY6HiwnB7lrUzsjwPH2I5Ri2br086yu0o6Z5
+	 DRoYb/nrHDIxOtRLoqabNnvczSBlTYr5R5m6Qt4XQ8T610GLftTVQILWsJ77RpzAsE
+	 rjalYyCBZdHGaU1l2N/lqxghkwRorDzrCjC/4y08=
+Received: from epsnrtp4.localdomain (unknown [182.195.42.165]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+	20250222105720epcas5p30631c60540b66daefad7ce8b0694f303~mgosqZVgq0573205732epcas5p3p;
+	Sat, 22 Feb 2025 10:57:20 +0000 (GMT)
+Received: from epsmgec5p1new.samsung.com (unknown [182.195.38.176]) by
+	epsnrtp4.localdomain (Postfix) with ESMTP id 4Z0P8Z29D0z4x9Pv; Sat, 22 Feb
+	2025 10:57:18 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+	epsmgec5p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	BF.F1.19710.E8DA9B76; Sat, 22 Feb 2025 19:57:18 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20250221132011epcas5p4dea1e9ae5c09afaabcd1822f3a7d15c5~mO8JJOwUe2791427914epcas5p4r;
+	Fri, 21 Feb 2025 13:20:11 +0000 (GMT)
+Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20250221132011epsmtrp22f7624b78aa3385ffea22835fa5d06a6~mO8JIRaK91906719067epsmtrp26;
+	Fri, 21 Feb 2025 13:20:11 +0000 (GMT)
+X-AuditID: b6c32a44-363dc70000004cfe-8d-67b9ad8eb5a4
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
+	EB.3F.33707.B8D78B76; Fri, 21 Feb 2025 22:20:11 +0900 (KST)
+Received: from cheetah.samsungds.net (unknown [107.109.115.53]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250221132008epsmtip24b146ccec521cc047535442a2ce80e91~mO8GTgdud0684606846epsmtip2x;
+	Fri, 21 Feb 2025 13:20:08 +0000 (GMT)
+From: Shradha Todi <shradha.t@samsung.com>
+To: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-perf-users@vger.kernel.org
+Cc: manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, kw@linux.com,
+	robh@kernel.org, bhelgaas@google.com, jingoohan1@gmail.com,
+	Jonathan.Cameron@Huawei.com, fan.ni@samsung.com, nifan.cxl@gmail.com,
+	a.manzanares@samsung.com, pankaj.dubey@samsung.com, cassel@kernel.org,
+	18255117159@163.com, xueshuai@linux.alibaba.com, renyu.zj@linux.alibaba.com,
+	will@kernel.org, mark.rutland@arm.com, Shradha Todi <shradha.t@samsung.com>
+Subject: [PATCH v7 0/5] Add support for debugfs based RAS DES feature in
+ PCIe DW
+Date: Fri, 21 Feb 2025 18:45:43 +0530
+Message-Id: <20250221131548.59616-1-shradha.t@samsung.com>
+X-Mailer: git-send-email 2.17.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrBJsWRmVeSWpSXmKPExsWy7bCmum7f2p3pBpev8Fhcaf/NbjH9sKLF
+	kqYMi2MTVjBbNK2+y2qx4stMdotVC6+xWTT0/Ga12PT4GqvF5V1z2CzOzjvOZnFl6zoWi5Y/
+	LSwWd1s6WS2WXr/IZPF3215Gi0Vbv7BbLGx+yWjxf88Odovew7UWLXdMLd7/3MzmIOaxeMUU
+	Vo8189YweuycdZfdY8GmUo+WI29ZPTat6mTzuHNtD5vHzoeWHk+uTGfy2Lyk3qNvyypGj8+b
+	5AJ4orJtMlITU1KLFFLzkvNTMvPSbZW8g+Od403NDAx1DS0tzJUU8hJzU22VXHwCdN0yc4C+
+	VVIoS8wpBQoFJBYXK+nb2RTll5akKmTkF5fYKqUWpOQUmBToFSfmFpfmpevlpZZYGRoYGJkC
+	FSZkZ9w5vYalYLZqxYb7X5gaGB/IdjFyckgImEi83vKXqYuRi0NIYDejxLsX7UwgCSGBT4wS
+	u6dkQySA7IMTF7PDdKyZ08QKkdjJKHFn3nso5wujxL2+j2BVbAJaEo1fu5hBbBGBVkaJI8/E
+	QIqYBbYxSxxYsQIsISwQJPFjXRsLiM0ioCrx/e98oGYODl4BK4k9K+0htslLrN5wAKycV0BQ
+	4uTMJ2DlzEDx5q2zmSFqvnBIfJnNB2G7SCzadQPqUmGJV8e3QNlSEp/f7WWDsNMlVm6eAdWb
+	I/Ft8xImCNte4sCVOSwgJzALaEqs36UPEZaVmHpqHRPEWj6J3t9PoMp5JXbMg7GVJb783cMC
+	YUtKzDt2mRXC9pDYufkh2EghgViJ/v+2ExjlZyF5ZhaSZ2YhLF7AyLyKUTK1oDg3PTXZtMAw
+	L7UcHq3J+bmbGMFJXstlB+ON+f/0DjEycTAeYpTgYFYS4dUt2ZEuxJuSWFmVWpQfX1Sak1p8
+	iNEUGMATmaVEk/OBeSavJN7QxNLAxMzMzMTS2MxQSZy3eWdLupBAemJJanZqakFqEUwfEwen
+	VAOTyWph2UVGD0z1j0+NvfvEdnGQ413ON1OnCFx4vMfJeqvN3Mp7Kx86NXwKsN+sdkziZXTt
+	kesTTnswSfQ/W1W2UrvUr+Mf14yGGbL9V1cY802NfhC1Su7CI57OFPH5lz5En/srKjG9MXbJ
+	wbvLF2vMuPtkX2nEE4bFtdvOlN1YvEY1xMF6apLnj5CG0sSSXn3PgKUsajzVWQ/TfU7n/lD5
+	bfjrwVJLhqPcRqoTSkq8zi29HTM1wO3dCcNfq6we9H4Sbrx8ef67MN+3L8NLzveyuAo5iV1+
+	s8+BVbngfu6khvO+c9YriUadC2QxkJvBY3eiVHQx3yuDqBXzeubVRsnkfzzpt9tl19/cGTOv
+	1GuzKrEUZyQaajEXFScCAMosolJ7BAAA
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrJIsWRmVeSWpSXmKPExsWy7bCSvG537Y50g2MLlC2utP9mt5h+WNFi
+	SVOGxbEJK5gtmlbfZbVY8WUmu8WqhdfYLBp6frNabHp8jdXi8q45bBZn5x1ns7iydR2LRcuf
+	FhaLuy2drBZLr19ksvi7bS+jxaKtX9gtFja/ZLT4v2cHu0Xv4VqLljumFu9/bmZzEPNYvGIK
+	q8eaeWsYPXbOusvusWBTqUfLkbesHptWdbJ53Lm2h81j50NLjydXpjN5bF5S79G3ZRWjx+dN
+	cgE8UVw2Kak5mWWpRfp2CVwZd06vYSmYrVqx4f4XpgbGB7JdjJwcEgImEmvmNLF2MXJxCAls
+	Z5Q4cm4FE0RCUuLzxXVQtrDEyn/P2SGKPjFKnLi3HyzBJqAl0fi1ixkkISLQySix98g7sCpm
+	gXPMEjM/tzCCVAkLBEicWbwezGYRUJX4/nc+UBEHB6+AlcSelfYQG+QlVm84wAxi8woISpyc
+	+YQFpIRZQF1i/TwhkDAzUEnz1tnMExj5ZyGpmoVQNQtJ1QJG5lWMoqkFxbnpuckFhnrFibnF
+	pXnpesn5uZsYwbGpFbSDcdn6v3qHGJk4GA8xSnAwK4nw6pbsSBfiTUmsrEotyo8vKs1JLT7E
+	KM3BoiTOq5zTmSIkkJ5YkpqdmlqQWgSTZeLglGpg4pjMtu2b3EL3R9/vnl2nEvFC55TM2YSA
+	my6J94qZeTt8782a/COa5zfzt5k3prcfseJ7luLkekH78Adlm03yN7mZkk1XMM56/M3uTPar
+	ex8KP295FMh6s2nhnKm/5osxdX5TKq3b61nX9iT1YXNdyKerQsdqYjgT+VaEJK99GX3A6He8
+	1XIWZ2vz9ffnsnQutJ2jtMajR/n7bM0NmbNmena/SZXhnfzD5alN2PFWrd0vK8Je8Blf3/b1
+	x9bwBX5/Yl/s/XhNzGKZrer2uvBbUQqvGNOWb17bYhX/xT3W2q3tpEjcHY7SxiIpxtc63+us
+	rinukH9y8IUFl3ej4vrW9/u/5z0wPMPHsW9quEntZSWW4oxEQy3mouJEAI4aFoM8AwAA
+X-CMS-MailID: 20250221132011epcas5p4dea1e9ae5c09afaabcd1822f3a7d15c5
+X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250222-en7581-pcie-pbus-csr-v3-2-e0cca1f4d394@kernel.org>
-References: <20250222-en7581-pcie-pbus-csr-v3-0-e0cca1f4d394@kernel.org>
-In-Reply-To: <20250222-en7581-pcie-pbus-csr-v3-0-e0cca1f4d394@kernel.org>
-To: Ryder Lee <ryder.lee@mediatek.com>, 
- Jianjun Wang <jianjun.wang@mediatek.com>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Matthias Brugger <matthias.bgg@gmail.com>, 
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
- Lorenzo Bianconi <lorenzo@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-mediatek@lists.infradead.org, 
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-X-Mailer: b4 0.14.2
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250221132011epcas5p4dea1e9ae5c09afaabcd1822f3a7d15c5
+References: <CGME20250221132011epcas5p4dea1e9ae5c09afaabcd1822f3a7d15c5@epcas5p4.samsung.com>
 
-Configure PBus base address and address mask to allow the hw
-to detect if a given address is accessible on PCIe controller.
+DesignWare controller provides a vendor specific extended capability
+called RASDES as an IP feature. This extended capability  provides
+hardware information like:
+ - Debug registers to know the state of the link or controller. 
+ - Error injection mechanisms to inject various PCIe errors including
+   sequence number, CRC
+ - Statistical counters to know how many times a particular event
+   occurred
 
-Fixes: f6ab898356dd ("PCI: mediatek-gen3: Add Airoha EN7581 support")
-Signed-off-by: Lorenzo Bianconi <lorenzo@kernel.org>
----
- drivers/pci/controller/pcie-mediatek-gen3.c | 34 ++++++++++++++++++++++++++++-
- 1 file changed, 33 insertions(+), 1 deletion(-)
+However, in Linux we do not have any generic or custom support to be
+able to use this feature in an efficient manner. This is the reason we
+are proposing this framework. Debug and bring up time of high-speed IPs
+are highly dependent on costlier hardware analyzers and this solution
+will in some ways help to reduce the HW analyzer usage.
 
-diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index 0f64e76e2111468e6a453889ead7fbc75804faf7..51103b7624c09ca957c22a25536dc9da25428e48 100644
---- a/drivers/pci/controller/pcie-mediatek-gen3.c
-+++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -15,6 +15,7 @@
- #include <linux/irqchip/chained_irq.h>
- #include <linux/irqdomain.h>
- #include <linux/kernel.h>
-+#include <linux/mfd/syscon.h>
- #include <linux/module.h>
- #include <linux/msi.h>
- #include <linux/of_device.h>
-@@ -24,6 +25,7 @@
- #include <linux/platform_device.h>
- #include <linux/pm_domain.h>
- #include <linux/pm_runtime.h>
-+#include <linux/regmap.h>
- #include <linux/reset.h>
- 
- #include "../pci.h"
-@@ -930,9 +932,13 @@ static int mtk_pcie_parse_port(struct mtk_gen3_pcie *pcie)
- 
- static int mtk_pcie_en7581_power_up(struct mtk_gen3_pcie *pcie)
- {
-+	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
- 	struct device *dev = pcie->dev;
-+	struct resource_entry *entry;
-+	u32 val, args[2], size, mask;
-+	struct regmap *pbus_regmap;
-+	resource_size_t addr;
- 	int err;
--	u32 val;
- 
- 	/*
- 	 * The controller may have been left out of reset by the bootloader
-@@ -944,6 +950,32 @@ static int mtk_pcie_en7581_power_up(struct mtk_gen3_pcie *pcie)
- 	/* Wait for the time needed to complete the reset lines assert. */
- 	msleep(PCIE_EN7581_RESET_TIME_MS);
- 
-+	/*
-+	 * Configure PBus base address and base address mask to allow the
-+	 * hw to detect if a given address is accessible on PCIe controller.
-+	 */
-+	pbus_regmap = syscon_regmap_lookup_by_phandle_args(dev->of_node,
-+							   "mediatek,pbus-csr",
-+							   ARRAY_SIZE(args),
-+							   args);
-+	if (IS_ERR(pbus_regmap))
-+		return PTR_ERR(pbus_regmap);
-+
-+	entry = resource_list_first_type(&host->windows, IORESOURCE_MEM);
-+	if (!entry)
-+		return -EINVAL;
-+
-+	addr = entry->res->start - entry->offset;
-+	err = regmap_write(pbus_regmap, args[0], lower_32_bits(addr));
-+	if (err)
-+		return err;
-+
-+	size = lower_32_bits(resource_size(entry->res));
-+	mask = size ? GENMASK(31, __fls(size)) : 0;
-+	err = regmap_write(pbus_regmap, args[1], mask);
-+	if (err)
-+		return err;
-+
- 	/*
- 	 * Unlike the other MediaTek Gen3 controllers, the Airoha EN7581
- 	 * requires PHY initialization and power-on before PHY reset deassert.
+The debugfs entries can be used to get information about underlying
+hardware and can be shared with user space. Separate debugfs entries has
+been created to cater to all the DES hooks provided by the controller.
+The debugfs entries interacts with the RASDES registers in the required
+sequence and provides the meaningful data to the user. This eases the
+effort to understand and use the register information for debugging.
+
+This series creates a generic debugfs framework for DesignWare PCIe
+controllers where other debug features apart from RASDES can also be
+added as and when required.
+
+v7:
+    - Moved the patches to make finding VSEC IDs common from Mani's patchset [1]
+      into this series to remove dependancy as discussed
+    - Addressed style related change requests from v6
+
+v6: https://lore.kernel.org/all/20250214105007.97582-1-shradha.t@samsung.com/
+    - Addressed Niklas's comment to make vsec ID finding similar to perf
+    - Minor changes in the driver to make the debugfs file common and
+      not specefic to RASDES so that other developers can add debug
+      related features to this file.
+
+v5: https://lore.kernel.org/all/20250121111421.35437-1-shradha.t@samsung.com/
+    - Addressed Fan's comment to split the patches for easier review
+    - Addressed Bjorn's comment to fix vendor specific cap search
+    - Addressed style related change requests from v4
+    - Added rasdes debugfs init call to common designware files for host
+      and EP.
+
+v4: https://lore.kernel.org/lkml/20241206074456.17401-1-shradha.t@samsung.com/
+    - Addressed comments from Manivannan, Bjorn and Jonathan
+    - Addressed style related change requests from v3
+    - Added Documentation under Documentation/ABI/testing and kdoc stype
+      comments wherever required for better understanding
+    - Enhanced error injection to include all possible error groups
+    - Removed debugfs init call from common designware file and left it
+      up to individual platform drivers to init/deinit as required.
+
+v3: https://lore.kernel.org/all/20240625093813.112555-1-shradha.t@samsung.com/
+    - v2 had suggestions about moving this framework to perf/EDAC instead of a
+      controller specific debugfs but after discussions we decided to go ahead
+      with the same. Rebased and posted v3 with minor style changes.
+
+v2: https://lore.kernel.org/lkml/20231130115044.53512-1-shradha.t@samsung.com/
+    - Addressed comments from Krzysztof Wilczyński, Bjorn Helgaas and
+      posted v2 with a changed implementation for a better code design
+
+v1: https://lore.kernel.org/all/20210518174618.42089-1-shradha.t@samsung.com/T/
+
+[1] https://lore.kernel.org/all/20250218-pcie-qcom-ptm-v1-0-16d7e480d73e@linaro.org/
+
+Manivannan Sadhasivam (1):
+  perf/dwc_pcie: Move common DWC struct definitions to 'pcie-dwc.h'
+
+Shradha Todi (4):
+  PCI: dwc: Add helper to find the Vendor Specific Extended Capability
+    (VSEC)
+  Add debugfs based silicon debug support in DWC
+  Add debugfs based error injection support in DWC
+  Add debugfs based statistical counter support in DWC
+
+ Documentation/ABI/testing/debugfs-dwc-pcie    | 144 +++++
+ MAINTAINERS                                   |   1 +
+ drivers/pci/controller/dwc/Kconfig            |  10 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ .../controller/dwc/pcie-designware-debugfs.c  | 564 ++++++++++++++++++
+ .../pci/controller/dwc/pcie-designware-ep.c   |   5 +
+ .../pci/controller/dwc/pcie-designware-host.c |   6 +
+ drivers/pci/controller/dwc/pcie-designware.c  |  46 ++
+ drivers/pci/controller/dwc/pcie-designware.h  |  21 +
+ drivers/perf/dwc_pcie_pmu.c                   |  25 +-
+ include/linux/pcie-dwc.h                      |  36 ++
+ 11 files changed, 837 insertions(+), 22 deletions(-)
+ create mode 100644 Documentation/ABI/testing/debugfs-dwc-pcie
+ create mode 100644 drivers/pci/controller/dwc/pcie-designware-debugfs.c
+ create mode 100644 include/linux/pcie-dwc.h
 
 -- 
-2.48.1
+2.17.1
 
