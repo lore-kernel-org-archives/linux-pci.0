@@ -1,52 +1,53 @@
-Received: from mail-pj1-f53.google.com (mail-pj1-f53.google.com [209.85.216.53])
+Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63DA978F4E
-	for <linux-pci@vger.kernel.org>; Sat, 22 Feb 2025 07:38:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C08513C3F2
+	for <linux-pci@vger.kernel.org>; Sat, 22 Feb 2025 07:40:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740209914; cv=none; b=fkTNyc/jvaNwG1fZnilMZUT2zBmp+DNawtOdvoTQfHVNaCTWKA4id7/jL/Zrfa+G/CzpTiuoieq8WJV4NUW02Zd5P9lLHhA/Z1EkqMkFfqG1BOLJ6apRtGfW3ckeKhFxtLWu2FTrZpzxhdbtLOeDb/8td2g6hSjwV8UYTRjArks=
+	t=1740210010; cv=none; b=Z+MdvosE9ywjHlMwewS6dPUu8CRGWOlguzQL2kYty+s9nD4jsSC7psHdAYcTzwhkCtJE1Gk+dkfpXGB9a+4a1HM3zMN3m/6D9EYh0UOAdP4dSLdI6/quNDYq1G8TyzKvUydPSg0dZX+i0rDu4bUtXOQhsaWUL2QxNDc+etzBzUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740209914; c=relaxed/simple;
-	bh=qu91disMdwxq3Nu1GPR/Q+BYrNxfC0ooqZ66KPz3qVU=;
+	s=arc-20240116; t=1740210010; c=relaxed/simple;
+	bh=GOLx66YwRenzrY6vtDmQExmbf5CIPnSop6Y3We2zvas=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gNRJjL9T8spjjp0GDEHWCmMtP+zfDHsEgvamgZtlJnGEVRy1CRtRGRBp/+LntXjAJ52ERoBRGHhR/ea0MxfROOk6kF5D0KcGYdPEXZz86oA+fg3P5lFAPP1cwS2OaSfkpLuZM2zT/M9LTwx3RYoR4krSBp5ODG+ND+KsO4mwDs8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.216.53
+	 Content-Type:Content-Disposition:In-Reply-To; b=j3WoVMH8f3vD4PLvhP3bcceT59/eLjhYd+GxSgHIDmS+nGTFmf2CCJhl+NAgoOrpZtkd/GBg88O/LXV7IC7XPN/iwJuhCypXanIr/ukBnZ5mCsB/gOwYCvWUw/6yMVkyEUSa+3mGBBIOHN373lZxOG/48z6Hj85MI0uagvb1+oQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.214.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=linux.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-pj1-f53.google.com with SMTP id 98e67ed59e1d1-2fc6272259cso4726191a91.0
-        for <linux-pci@vger.kernel.org>; Fri, 21 Feb 2025 23:38:33 -0800 (PST)
+Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-220d601886fso43418995ad.1
+        for <linux-pci@vger.kernel.org>; Fri, 21 Feb 2025 23:40:09 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1740209912; x=1740814712;
+        d=1e100.net; s=20230601; t=1740210009; x=1740814809;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=iQ0UFW2pdjOoWqROlGDZphwMQ2EIio94ZLPWcsQImvI=;
-        b=DjFE8TVAvMMe99/51Tj2FMHjR7/eMK+ghY+yLbVbQoS4ylNcCJKyyZ3JHOIUDBD6iP
-         CoB6yt3g2tAlqmREdeB/J/jOXEfT43TKqgf+uKLpuLAeitrdQd0Kj0rKGbNfPZQRl3tI
-         8WGT2iq8D8l36H3S8xPjbSG9W/FUnkZxluYPXnfzVvgk8fZ69dH5cJAeSXtEf6S88TbO
-         ZfNtJZLJQFoKNvKgWADVdXbbdZtyKySGrBl7AcW5s65gxFQTJhmf5c48zErCBIfdYUqt
-         u5GdZWa9GI+mLhXuq2JD4mf74lG7i0suMthWMdmtbC+WE9+UcUw7sT99muqY6hL+Hjc+
-         zcFw==
-X-Forwarded-Encrypted: i=1; AJvYcCXdPJVqOgl267DlUgBQpVV2acnEdETibqRpu9aRj2S1/bClu9JZYfNpGj237LeAfZS0rn81+EBzcLI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyHON8e+4v/JVl4ReIsKtmrekzCKs55vR8lZtD7CyHwo6hpwQxt
-	gZfROFwMzGxPZZSsIFXwzF6s0qho+9Tmn6i7Yx9s2pojmJUhcNtz
-X-Gm-Gg: ASbGncsfdGV6r61R1P730fHZ6BKg16bcTD5hwPDJgQqRHAwh2QUaFPvUD+mTGjdgc5q
-	Lm9XsIAJUJAbiDegBXPVmwEYg7dTmEwCFvwS7dvwpJ6D72Orz6Vo0b8akmk4i6XHcftt9ox1K2l
-	g4mB/ov8DEDKd6RIQ8CTvOBGQTrEazfjxfF16yl/zCGzBOmsiWgM6XFlzZOuwG/6Er98hPwAULm
-	K+rUobM9CasqyART3/H4eDGL8opIUkPyMXN9KQura8KdZBFuAVGoIST+hQrFoDBGC9rdaKc+vzp
-	sI/se6Z2ll6XRGA+dtP69NSmq/S+ZyjLMP8ouCiIbzt/697uaLtA+tXcdUkI
-X-Google-Smtp-Source: AGHT+IFThR433LcObShHk7gSPjGjLSI8AWlZ6U2G2AIgjEbAQv5VuI5xA/i3kLqSjTt2eyUi9Bp6Sg==
-X-Received: by 2002:a05:6a00:22d6:b0:730:94e5:1ea2 with SMTP id d2e1a72fcca58-73426c8d91bmr9220237b3a.4.1740209912568;
-        Fri, 21 Feb 2025 23:38:32 -0800 (PST)
+        bh=MIusnlIaDB7vYke+1e0zYGn7vFHQSaQaaWI2v/GjaBA=;
+        b=Uvua3cEzhfk4S0gJj1zPp5pW+dEYJHZ+rZxdZunVXoOi3EUeB82cwRGQViCW7uKExA
+         yIv1bVy+3e5STf6zAYy7jYLkhe8jq8505l4kbtBqHO2OorNeRODjWeGkWDvbg63Q7/k6
+         1lH5SSZOYlLjx0JSruVUC2NnOnveIxwonZbrR8hSt4/SQ+WTO3GfW63fwUWSEAk8GcGk
+         D8QRsh4YI9W9O6Pbm7szaJZoNtNFPwQ7A/8D729yw/+V5EJNVV/89VOv3k9gOagTPQyj
+         JdLhSFLmdlKrf6XK0qKXAnbU4zoK4o/2V8HgJvGjvSiMhzefnlmlSk3kNIOhUpapMrn1
+         /wWA==
+X-Forwarded-Encrypted: i=1; AJvYcCXh1XSNgKzd91EeyZkLv8Tb1H/0WU9//mvufc/wp4BPzFQRywqbLMLXAi8FHGZ96LwjKN3Zdrdo6w4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxBv86Zy3plCiY0LWZ5+bcPwlR0+sIwqVvzrbRDwpZC91f1W3EG
+	Hm7zgSUq9cYAYdc/6yTnXkLyD4zUm4jTwbpDekhxqZPwDsUZ/S//KR9Pf+IY
+X-Gm-Gg: ASbGncsqCwyvWgX42dkPkn8lEMYmGFOt0WVIHrwGHL/xpbaqTsZm50yGIKwHQhiRh8t
+	kUv9XM2Ja88e84qwzplirKrjiD8xaO4QzVXFcbieHRT/7HOHnUBQMGhBLBTYWRb0+KkXC1lEQ0+
+	EgZjhcR3t2wXtydQwWHmEG+5mt9ArrGR0NRccdbhSlT8OgeoL0w8dIXcl2Uqeh8Yz9ama0ec1mM
+	yFTu3ir1VMFjnZjMI9wSJiGuKJML0uz0yeCTulHQSTdqu+ruxSk+oUTF0vTkNIpNqjzvK7qguSE
+	2/1F/fNdObjNBVQGV3Ktlf+Jj5IwivOsflyhElaioZhTIt0fI0V7zDqrOYEl
+X-Google-Smtp-Source: AGHT+IFnWEQOVlYkIcAvpc+4gb6IcuOnH4l9CiuXOMRIhmSudHPiecnoG+O182vKhJcIbh+MxURY/A==
+X-Received: by 2002:a17:902:f684:b0:21f:68ae:56e3 with SMTP id d9443c01a7336-2219ffa36a7mr101568035ad.39.1740210008634;
+        Fri, 21 Feb 2025 23:40:08 -0800 (PST)
 Received: from localhost (fpd11144dd.ap.nuro.jp. [209.17.68.221])
-        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-73242568acesm17390081b3a.56.2025.02.21.23.38.31
+        by smtp.gmail.com with UTF8SMTPSA id d9443c01a7336-220d53674b1sm148319425ad.98.2025.02.21.23.40.07
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 21 Feb 2025 23:38:31 -0800 (PST)
-Date: Sat, 22 Feb 2025 16:38:29 +0900
+        Fri, 21 Feb 2025 23:40:08 -0800 (PST)
+Date: Sat, 22 Feb 2025 16:40:05 +0900
 From: Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
 	Heiko Stuebner <heiko@sntech.de>,
@@ -55,9 +56,9 @@ Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	linux-arm-kernel@lists.infradead.org,
 	linux-rockchip@lists.infradead.org
 Subject: Re: [PATCH 2/2] PCI: dw-rockchip: hide broken ATS capability
-Message-ID: <20250222073829.GA1158377@rocinante>
-References: <20250221202646.395252-3-cassel@kernel.org>
- <20250221202646.395252-4-cassel@kernel.org>
+Message-ID: <20250222074005.GB1158377@rocinante>
+References: <20250221202646.395252-4-cassel@kernel.org>
+ <20250222000029.GA373377@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,54 +67,50 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250221202646.395252-4-cassel@kernel.org>
+In-Reply-To: <20250222000029.GA373377@bhelgaas>
 
 Hello,
 
-> + * ATS does not work on rk3588 when running in EP mode.
+> > When running the rk3588 in endpoint mode, with an Intel host with IOMMU
+> > enabled, the host side prints:
+> > DMAR: VT-d detected Invalidation Time-out Error: SID 0
+> > 
+> > When running the rk3588 in endpoint mode, with an AMD host with IOMMU
+> > enabled, the host side prints:
+> > iommu ivhd0: AMD-Vi: Event logged [IOTLB_INV_TIMEOUT device=63:00.0 address=0x42b5b01a0]
+> 
+> Maybe add a blank line and indent the message since it's quoted
+> material?  E.g.,
+> 
+>   When running the rk3588 in endpoint mode, with an Intel IOMMU, the
+>   host side prints:
+> 
+>     DMAR: VT-d detected Invalidation Time-out Error: SID 0
+> 
+>   When running the rk3588 in endpoint mode, with an AMD ...
+> 
+>     iommu ivhd0: AMD-Vi: Event logged [IOTLB_INV_TIMEOUT device=63:00.0 address=0x42b5b01a0]
+> 
+> Too bad DMAR isn't smart enough to include a device ID in its message ;)
+> 
+> Can you include something here about what the issue is?  Based on the
+> subject line and the patch, I assume something is wrong with the ATS
+> Capability?  I guess this is some kind of rk3588 defect, right?
+> 
+> > Usually, to handle these issues, we add a quirk for the PCI vendor and
+> > device ID in drivers/pci/quirks.c with quirk_no_ats(). That is because
+> > we cannot usually modify the capabilities on the EP side.
+> > 
+> > In this case, we can modify the capabilties on the EP side. Thus, hide the
+> > broken ATS capability on rk3588 when running in EP mode. That way,
+> > we don't need any quirk on the host side, and we see no errors on the host
+> > side, and we can run pci_endpoint_test successfully, with the IOMMU
+> > enabled on the host side.
+> 
+> s/capabilties/capabilities/
 
-Would it be OK if we started to style "rk3588" as "RK3588", unless the
-lower-case is preferred?  I had a look at Rockchip's own datasheet, and the
-product code names seem to be styled with upper-case.  That said, I am not
-a Rockchip expert.  Just curious for the sake of consistency.
-
-> +static void rockchip_pcie_ep_hide_broken_ats_cap_rk3588(struct dw_pcie_ep *ep)
-> +{
-> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
-> +	struct device *dev = pci->dev;
-> +	unsigned int spcie_cap_offset, next_cap_offset;
-> +	u32 spcie_cap_header, next_cap_header;
-> +
-> +	/* only hide the ATS cap for rk3588 running in EP mode */
-> +	if (!of_device_is_compatible(dev->of_node, "rockchip,rk3588-pcie-ep"))
-> +		return;
-> +
-> +	spcie_cap_offset = dw_pcie_find_ext_capability(pci, PCI_EXT_CAP_ID_SECPCI);
-> +	if (!spcie_cap_offset)
-> +		return;
-> +
-> +	spcie_cap_header = dw_pcie_readl_dbi(pci, spcie_cap_offset);
-> +	next_cap_offset = PCI_EXT_CAP_NEXT(spcie_cap_header);
-> +
-> +	next_cap_header = dw_pcie_readl_dbi(pci, next_cap_offset);
-> +	if (PCI_EXT_CAP_ID(next_cap_header) != PCI_EXT_CAP_ID_ATS)
-> +		return;
-> +
-> +	/* clear next ptr */
-> +	spcie_cap_header &= ~GENMASK(31, 20);
-> +
-> +	/* set next ptr to next ptr of ATS_CAP */
-> +	spcie_cap_header |= next_cap_header & GENMASK(31, 20);
-> +
-> +	dw_pcie_dbi_ro_wr_en(pci);
-> +	dw_pcie_writel_dbi(pci, spcie_cap_offset, spcie_cap_header);
-> +	dw_pcie_dbi_ro_wr_dis(pci);
-> +}
-
-To keep things consistent, it would be nice to capitalise sentences in code
-comments, and end them with a full-stop where appropriate (e.g., longer
-sentences, etc.).  That said, this is something I can after applying, to
-save you the hassle of sending another versions.
+If there are no code changes here, then I can update the commit log
+directly on the branch itself once applied.
 
 Thank you!
 
