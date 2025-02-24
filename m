@@ -1,62 +1,63 @@
-Received: from NAM02-DM3-obe.outbound.protection.outlook.com (mail-dm3nam02on2075.outbound.protection.outlook.com [40.107.95.75])
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2053.outbound.protection.outlook.com [40.107.94.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92C89156F44;
-	Mon, 24 Feb 2025 15:50:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.95.75
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B57DC26157A;
+	Mon, 24 Feb 2025 15:50:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.94.53
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740412243; cv=fail; b=ZZNYhyGD7JTu+2XemtFhbRYJURbe7KrOF6woSxj1+nJsaU9c8ytxo8VYFF546DDeAFV+jDEUiCnlVh5JpUqPAuxBa4Jy1JZ/wpjO85srhMdKO8CdRo0/HNRpNuUVHMrVYfodeU4tOYuAIlgD6YuBPW3GPGR52pzLrtKawzBF2VY=
+	t=1740412248; cv=fail; b=nPSnJA3JRqggrwVO8gsOF0EN0SG6RWj60UPe1nNeJWSZkL+PATCoJ980l3GCIP0IdZAElU8zQxsu5pYa3ZWle8Ih9yPRd6h3GJuVWkaThB0GavpQmUWPKg7b+gxbA/tpw3CLA7ejGDGsGnEphrG3al8Enw8PvlS/EvuvylL1Z5w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740412243; c=relaxed/simple;
-	bh=YuaqAC024s4cW+CYJkFeg8/igmczIBJZELtgKUeFtgE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=DS7yu5dK2H7nHEweh+mJJZxA/wUhVvNUINztW5MNgN+nSqEXehREeYk/hwZmSUYl/TWHhPMx5okphkDxMmYfu2iWIsnpoFP2VA/Qx8WsY5HS8vE/I4daiRiQvm+faHd8GCbnviXHWrQabCNkkeHmTZ3l1hIzT7in8List01BJyM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=By2E8A8q; arc=fail smtp.client-ip=40.107.95.75
+	s=arc-20240116; t=1740412248; c=relaxed/simple;
+	bh=yKYPPxGuNopiJX972gaVEzZZD5L3YwPgsCWXktV4VUg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=CgV/++TCMb5xY9BYD4pJsq1F5J5eP2y8bNkWBaTsXkluvcCeoLhqGb/F9xbJYiiItBsCkN4Z29aohiBZOXsHsP5kJwHznyxceSN9aQBr5fAJIqoFIKmnJ7KYeym+Woia+hLarbwLK8BV9Wy2N07oJKBSveQMdD6+QozgmaXy2BA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=rXW93wew; arc=fail smtp.client-ip=40.107.94.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="By2E8A8q"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="rXW93wew"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=bebqjdVAOSne6OZdZVV2J6hk/T14gW/FEduKQv8WMfOMmLAMe5KHO490isfhewBoEKPDXiEQAgpxe/BYMbANTn2RMm5Jt3tL4G0dSGfRg5NHL/pwgbjLEOt+J+x9+LH1z/gnJIV+gM+ETOh5vPtYy+f3uLbPI1cRPClJVN6r2vs373Q6Elbasa3cc8LPY8s+IvWxMDCl2uIPdlUKD0J8IhVz2r5/T0qPHH0wB5Kkl0PnefSmIeKEhJfaQqW1vL9ZCCD9B8t5JmkEeCdvaU0XWoUwiAVMsirFokveU/q92tIOYOtlsPM9s92XyOWJKSy4Rym4n92pqRbaxTQWVbT0aA==
+ b=tGV6xOmn9CXlbGzGVUncQZye4qxG4slpTerZY71jubb8C4ErYyp+6EH71j0+m63NwhM0sjfXpK0JliD9bfCg0L8NItq61haKlfdCujO9T3bKTHTSmIAcEtgYj4WYI+07iiRxjpFWFemykyWM11RmfC+cc6jBJci6zeX6ijDKg3RgAaGwEqInZCmMxcFJqRLiDzRvZEvks6RfPqWAARmBoWtTU3WAw5TaeYEaEUGZpmdmh0dMLpQuT63EuNm408R7jK5ehd2eRYc090iAMFq4EJwEuD2RSi+QSwB1DO2gjRAQvTRnD2nuBLAtCKf24b63NjDrVQzFKCbRlsO0jiktpg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=jiTQgyrIUbk8KmC0fqbZmUAXxg13wxaLNn3sG0etunA=;
- b=mHrxQE9Iv7AByTx8AGB2Oz3zBC4H6ScYi22WizqjqIAwBU33SRZH/XHR7qZwBLRm0HUTRNQb99CCR+3R+221Q8KbSzXsiGbv6zXZ9IlN0p5aF6RZxq7gh1BApswkW6V0zmVmStflFHcDklN0dKWHALWUbv/Id29dL2O1CXKt7GL5lCECFSN3CIlAqvCkyAjMEfQq8O3w4VQyczfVppxywHV1JZotFgq5Y+a9O/mNBUbCexO6gnbnZFqZIMz120LF7zAz9jVF6o+c2O8ms/m8zQcP1Qbuke6jtG3CRX6Dcm5QS/G8ADXiR0n4bGasc03DKAdIZPC00JpecSiJiiIy7A==
+ bh=WS6vKUjNrwzBwmBLAOIseFiGCw82kPWhNVktwvX/eGo=;
+ b=Mn6kNpSFu/mvRRZB40n9011jSdGadqmEO0c2EFvvVmeZzmpEsdiyksNL3xVWfdBr6Te/wcfE+RG/7rKCGMq2UVgQLD0XWRbvAL+HRN1NA/oSlF95NppP66ELhJq35wksJ5V0swWBmOR9mvq7OKRcJeX6/big4e1rPT6dbPaVL/U9szroJ4xvkZ0m/6DzuN6fo577E8jTiw35Lkx0Lzq9ceVF6kNMc2LyJdya1S2YZDsw1EvW2IP/lCmCGQ62w+TcOBWCNX8S5aY9EPUol+n/vNnzzpXnBjIWz70B3Q+ehV0oosuw6s/AtmZmZSY+S/HDtwZw/+EmUEJF4pBmdLoXWg==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=google.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=jiTQgyrIUbk8KmC0fqbZmUAXxg13wxaLNn3sG0etunA=;
- b=By2E8A8qY7+qOeCRsIc5UHCz2vrtinU0mGO8y3/lzEod76aoNMjArm1gK6gsErXaFn2L8u8QxqZk/52yG3NHoB+toBDoILPertatueO8FSf4wBJZgmhm8QursbiAo4CK8s9nBOThOu+PGQMsZrsp+s16OWB8H4fVvDL+zUViik8=
-Received: from MW4PR04CA0244.namprd04.prod.outlook.com (2603:10b6:303:88::9)
- by DS0PR12MB8020.namprd12.prod.outlook.com (2603:10b6:8:14f::5) with
+ bh=WS6vKUjNrwzBwmBLAOIseFiGCw82kPWhNVktwvX/eGo=;
+ b=rXW93wew2cRgt2q+EL2y3y6zM86NLPKjYZ9NgHEfqIDPCQkavyEyB1ijDFqbc3msLk2DwsOVNmqBP8LK6siHycc589sZS7Lu2wA9+AAPcCP//T7TBF7OMhhB8a6Czwqfib9lRjRZSyBt2BQwr7OJVSU3kZ4Yqe/fDdcoIZnX58U=
+Received: from BN0PR03CA0055.namprd03.prod.outlook.com (2603:10b6:408:e7::30)
+ by DM6PR12MB4420.namprd12.prod.outlook.com (2603:10b6:5:2a7::8) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8466.20; Mon, 24 Feb
- 2025 15:50:32 +0000
-Received: from SJ5PEPF000001F7.namprd05.prod.outlook.com
- (2603:10b6:303:88:cafe::15) by MW4PR04CA0244.outlook.office365.com
- (2603:10b6:303:88::9) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8466.21; Mon, 24 Feb
+ 2025 15:50:39 +0000
+Received: from BL02EPF00029927.namprd02.prod.outlook.com
+ (2603:10b6:408:e7:cafe::6e) by BN0PR03CA0055.outlook.office365.com
+ (2603:10b6:408:e7::30) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.8466.20 via Frontend Transport; Mon,
- 24 Feb 2025 15:50:32 +0000
+ 24 Feb 2025 15:50:39 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
 Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=SATLEXMB04.amd.com; pr=C
-Received: from SATLEXMB04.amd.com (165.204.84.17) by
- SJ5PEPF000001F7.mail.protection.outlook.com (10.167.242.75) with Microsoft
+ client-ip=165.204.84.17; helo=SATLEXMB03.amd.com; pr=C
+Received: from SATLEXMB03.amd.com (165.204.84.17) by
+ BL02EPF00029927.mail.protection.outlook.com (10.167.249.52) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.20.8489.16 via Frontend Transport; Mon, 24 Feb 2025 15:50:31 +0000
-Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB04.amd.com
- (10.181.40.145) with Microsoft SMTP Server (version=TLS1_2,
+ 15.20.8489.16 via Frontend Transport; Mon, 24 Feb 2025 15:50:39 +0000
+Received: from SATLEXMB04.amd.com (10.181.40.145) by SATLEXMB03.amd.com
+ (10.181.40.144) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Mon, 24 Feb
- 2025 09:50:30 -0600
+ 2025 09:50:38 -0600
 Received: from xhdthippesw40.xilinx.com (10.180.168.240) by SATLEXMB04.amd.com
  (10.181.40.145) with Microsoft SMTP Server id 15.1.2507.39 via Frontend
- Transport; Mon, 24 Feb 2025 09:50:27 -0600
+ Transport; Mon, 24 Feb 2025 09:50:34 -0600
 From: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
 To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 	<manivannan.sadhasivam@linaro.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
@@ -64,11 +65,13 @@ To: <bhelgaas@google.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, <michal.simek@amd.com>,
 	<bharat.kumar.gogada@amd.com>, Thippeswamy Havalige
-	<thippeswamy.havalige@amd.com>
-Subject: [PATCH v5 0/3] Add support for Versal Net CPM5N Root Port controller
-Date: Mon, 24 Feb 2025 21:20:21 +0530
-Message-ID: <20250224155025.782179-1-thippeswamy.havalige@amd.com>
+	<thippeswamy.havalige@amd.com>, Conor Dooley <conor.dooley@microchip.com>
+Subject: [PATCH v5 2/3] dt-bindings: PCI: xilinx-cpm: Add compatible string for CPM5NC Versal Net host
+Date: Mon, 24 Feb 2025 21:20:23 +0530
+Message-ID: <20250224155025.782179-3-thippeswamy.havalige@amd.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250224155025.782179-1-thippeswamy.havalige@amd.com>
+References: <20250224155025.782179-1-thippeswamy.havalige@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,77 +80,88 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-Received-SPF: None (SATLEXMB04.amd.com: thippeswamy.havalige@amd.com does not
+Received-SPF: None (SATLEXMB03.amd.com: thippeswamy.havalige@amd.com does not
  designate permitted sender hosts)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SJ5PEPF000001F7:EE_|DS0PR12MB8020:EE_
-X-MS-Office365-Filtering-Correlation-Id: 43bb7e4b-9770-4381-e93c-08dd54eaf818
+X-MS-TrafficTypeDiagnostic: BL02EPF00029927:EE_|DM6PR12MB4420:EE_
+X-MS-Office365-Filtering-Correlation-Id: 51c9859a-cc51-4826-3720-08dd54eafc71
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
 	BCL:0;ARA:13230040|82310400026|376014|7416014|36860700013|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?oDiueU1soCt0F5hRLK0JzsvEMRuB+TQY9zw8FneunhLPbrEku1c+oAt8nt9n?=
- =?us-ascii?Q?r4I4RS8YqTsWJpEcDioa2H8jMBEqSZJFxGP4JamaSNZKuZfRe2kqBj1bM+xd?=
- =?us-ascii?Q?GTKlGJMTWW/iA6RllFyPY0L2ZfhA4FAwTbZVLRhBD4nyvDfHWU8lz5uaxejy?=
- =?us-ascii?Q?IWUiGZohpW5ajF3CTd+KVdaL6gHEHZVrslC8hsXwhFH3B5ZEl3tsBFVtFOb2?=
- =?us-ascii?Q?P3SbxezM4SJwV1d8YeGCXSng1w14jWdL+Dd1eZ9vv9IkiVztx1g6lmaiKz/M?=
- =?us-ascii?Q?0adTFS7If0+KXKU+fmju8w0ZyjUs8kFtpRr5Zk+dUeCfKyW9ZRRZxE11IvaK?=
- =?us-ascii?Q?JNmmlTyzQPEnWd+bHlHbASBHus23Nqt7VesaQjdniCWyLIXGmS9cdBUQOmg/?=
- =?us-ascii?Q?Pe8kE9vtAlFWH/x4w95hyX+f7WPglDycgJWk4WKtU20NNd3tMEcRHgw1cseu?=
- =?us-ascii?Q?0yUFFBbuQx4Kn/I4Ib1arxpFIeHOWpfjuPhsBla1qEEfzzoBkI2jkhQwtZjs?=
- =?us-ascii?Q?5oqJTyZ10O39qsKlakCT2neyfLVNu5Sy4PK1m0psGKsmSfy2unW6WXjOLrAJ?=
- =?us-ascii?Q?w0rUguK4CefaNCpBwOZ8uw8KnXZRQLAj55hgNJDnG6g6rOB7MqbZ1HRSFbCN?=
- =?us-ascii?Q?YtoywjXyBbqtJooTW2REQ0lEZ95BlspJlGE9Awyd8TgSQxo92y22io8bcG5B?=
- =?us-ascii?Q?FumLADhDL79yVMK8Q79OidBBXMRnMmaQ0StY7tc2lObZ5rnFKZgsFhu2BqK4?=
- =?us-ascii?Q?gP+S93aoPDG4S2vCauRAIMEepZ+XRDZdeDJAgzmuRs5Gh5HXQwXM8PaHOkWr?=
- =?us-ascii?Q?zQa4dDCrA5kld8Si7FMY8mi2UXUbU4de95pi/3MjSKYGDDZHuFpLwr6pdHLW?=
- =?us-ascii?Q?OAS/OrmB36MyhfPIEfsdz6l5Z6DodaMAC2AZc1MvXNUHk/1ffQPJNwLKgRoi?=
- =?us-ascii?Q?lv7yPhW7BKmD+0RW5TnGov6NMvgWEuFvX3Z4r3ZrW6wXPMacb9Ctn9hfpNLi?=
- =?us-ascii?Q?5iR8iqtAvwr0TlGpjpKWPDGVMMY0g795/YV7s04sxd/oAZq8Paz2G2iqKUcS?=
- =?us-ascii?Q?0ohCKP9rZyvfGVmnxSIHVbPuadnJpXQtghJMSrulBywFiMZOnoGOP6+Dw+Gz?=
- =?us-ascii?Q?cGBlgx6OOYbMkZWARAXTNqSA9Lq2qL1zX3/Aj9ilqEHr6j0vJszeF6wJXXDz?=
- =?us-ascii?Q?v6SiKhyz3iaIHAQLCxfIkjnbiImfwfLNuMgAA8IAYGaYyQHNpM/w/1Pzqty1?=
- =?us-ascii?Q?AmK2lGJ0svcf2pRNKtg1VI/1r62uoY84cbnfMMcFlH2PA1HP7yXulUUi3DKL?=
- =?us-ascii?Q?a40rk1EwSbEC/QLggX9EQk5SvgJyYw53XXwx8/0DM7gyQ7+XOpFNUAFgu80O?=
- =?us-ascii?Q?4xEC6TWJibt77PfH6Wo9D1vNd6luM7CJWNrI2Gc6f/wqQVHRPM6ScDDwJY63?=
- =?us-ascii?Q?2VSewzu5kH7UCH2fYBwbtJnHkrTjBpF2DZQPWsNBOOLn3pKgPyQrQtHEQuvt?=
- =?us-ascii?Q?PzaWvVzzfMvmSEY=3D?=
+	=?us-ascii?Q?UxYK6x8z2fcK7Iro41Tbg+6u+9bmQ7iO6ykYrAUtx+2XGmR0KfDaryDLA/BI?=
+ =?us-ascii?Q?jtTknL+cpjzTOPTH889cN6beyexGv1Ndsurak6iaYbf2RzOpg3UHsjY+SB3o?=
+ =?us-ascii?Q?zFT4TBh6B8YvVR09owbHdNLGQkV1O0vJAZCkxioG6IW7JO8kLY0c5kK31i40?=
+ =?us-ascii?Q?vHdq8MtcvyzxkhbYn/UHf9CrfV0banChv8+fNlmf9ewyL2ykw5Cmnlbf0X5n?=
+ =?us-ascii?Q?4lvD8S9sC8+SXqKa7tVgXcQn91tK0YPoQipTdMj+DU39LBgu7hcDtsz5MZ2O?=
+ =?us-ascii?Q?qOpiYcrTXjhoppl8H/hLWX5U8BdCjlrAIacn6q7tEVAEZ1E4QLcFieGS+Jzc?=
+ =?us-ascii?Q?S3IRayzlduoEngsm4Qgy7eJDVUkisjRdFBAUbLe6Mpm7kvNXfpo6qWE5vEQt?=
+ =?us-ascii?Q?hNRgNlhJyHKkauYu9AC/hA7rdY+OR1r/+RBaXbSnZg7UnKISs5a4znYEueQO?=
+ =?us-ascii?Q?fs/zmVVsZy9IAaHLdfFxUtLMrvNZ/0HD8nO9IitgEdE+jHsTR8s/gS7ZL7Hk?=
+ =?us-ascii?Q?9OfzietBsLrSfstcLYRIDNArhugQPk6U1ULzPKzA0QO5KMjd9N44WZKkCKmH?=
+ =?us-ascii?Q?RShVm6iYOTvMja3ZcCILcAcWGG8ckkHZQA3MHE8Kn285ondpdOnt+D314MyB?=
+ =?us-ascii?Q?j0+3JS1OV8uWScuaKdNjc+bWqV2ybazzBQ4PCljCbPdXu1JDLuUK9o44ILbI?=
+ =?us-ascii?Q?BdoqDcpr3jpiL0zfjD8O2GhAIfpTGcO5GGzCZCTehO7NV3swwZG/zg7HDy/6?=
+ =?us-ascii?Q?kwTuwQcnHG1NecY6EEQyMvBmzahb85J90F5evBaXXroSujTWihAucOpuX8US?=
+ =?us-ascii?Q?cmpi4KSIwlGaybIS8YD4qTQESdFF6mIGQ+62H2zIlUDlTpKFpfVIHByVan0E?=
+ =?us-ascii?Q?jUUW9R3+lh0rCtq8kmM8kID8zDYSFZDL60E3VkO3ZAY0Wq7jzwfu4ixMff+g?=
+ =?us-ascii?Q?VXiGmgBDQTWYJkLMpGzjh8v9XYufxBoRR808RJsfWn7WYSjZYMKN2FP/qRN8?=
+ =?us-ascii?Q?24exYiUDLs8GFZVuC/KDxvBaeuz7Mq28vncSjgOQuGUhGI3EvwnU2acMu3fA?=
+ =?us-ascii?Q?r9jF5aqNrwSoVo2jMrLixTVidqVzhBON09sIRfoRRdzwswgZcyRpCXTbOGzB?=
+ =?us-ascii?Q?ypX/77/wu7Sho38rD2P1nKSz9vjjPifkF+pQuPJ2h6IcP6Yx6HLmsZdf+CBZ?=
+ =?us-ascii?Q?Hzamo/d6t2TE/uzQ7Ww4CEDODREWVNkBGwLDw0Uf3qpve2eVVHaJdURlRFIl?=
+ =?us-ascii?Q?PFVg6luSlaKG2GgccGlBP72aNjz3asfmlMyWkv6WtPzXHxE1w/sqd4QZ27dG?=
+ =?us-ascii?Q?sxfRh2Tf0rfKvEbhhWnhwFlElJwy2vf599D7Uh6IuxnssD2YoTtwuatY414g?=
+ =?us-ascii?Q?hNqp++IH/UmdgmeEdMG7DjMoGpjwZYrWBKgK2Xs8+DhIqd2gbvPr7jdiDtx+?=
+ =?us-ascii?Q?TgUAySg0/Pl3l2zOA/hoPxRPIdjJsdVwcbpNI+EsjtjyEWh/vGtCRKdeN2Oo?=
+ =?us-ascii?Q?PNo0Fvc0xCPAYIs=3D?=
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB04.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(36860700013)(1800799024);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:SATLEXMB03.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(376014)(7416014)(36860700013)(1800799024);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2025 15:50:31.6222
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Feb 2025 15:50:39.0524
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 43bb7e4b-9770-4381-e93c-08dd54eaf818
+X-MS-Exchange-CrossTenant-Network-Message-Id: 51c9859a-cc51-4826-3720-08dd54eafc71
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB04.amd.com]
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[SATLEXMB03.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SJ5PEPF000001F7.namprd05.prod.outlook.com
+	BL02EPF00029927.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8020
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4420
 
-Add support for Versal Net CPM5NC Root Port controller 0.
+The Xilinx Versal Net series has Coherency and PCIe Gen5 Module
+Next-Generation compact (CPM5NC) block which supports Root Port
+controller functionality at Gen5 speed.
 
-The Versal-Net ACAP devices include CCIX-PCIe Module (CPM). The integrated
-block for CPM5NC along with the integrated bridge can function as PCIe Root
-Port.
+Error interrupts are handled CPM5NC specific interrupt line and
+INTx interrupt is not support.
 
-Bridge error in Versal-Net CPM5NC are handled using Versal-Net CPM5N
-specific interrupt line & there is no support for legacy interrupts.
+Signed-off-by: Thippeswamy Havalige <thippeswamy.havalige@amd.com>
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+Changes in v2:
+- Update commit message to INTx
+Changes in v3:
+- None
+---
+ Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml | 1 +
+ 1 file changed, 1 insertion(+)
 
-Thippeswamy Havalige (3):
-  PCI: xilinx-cpm: Fix IRQ domain leak in error path of probe.
-  dt-bindings: PCI: xilinx-cpm: Add compatible string for CPM5NC Versal
-    Net host
-  PCI: xilinx-cpm: Add support for Versal Net CPM5NC Root Port
-    controller
-
- .../bindings/pci/xilinx-versal-cpm.yaml       |  1 +
- drivers/pci/controller/pcie-xilinx-cpm.c      | 44 ++++++++++++++-----
- 2 files changed, 33 insertions(+), 12 deletions(-)
-
+diff --git a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
+index b63a759ec2d7..d674a24c8ccc 100644
+--- a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
++++ b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
+@@ -18,6 +18,7 @@ properties:
+       - xlnx,versal-cpm-host-1.00
+       - xlnx,versal-cpm5-host
+       - xlnx,versal-cpm5-host1
++      - xlnx,versal-cpm5nc-host
+ 
+   reg:
+     items:
 -- 
 2.43.0
 
