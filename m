@@ -1,78 +1,37 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D8EC1A7045
-	for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2025 08:36:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9004F1A7045
+	for <linux-pci@vger.kernel.org>; Mon, 24 Feb 2025 08:36:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740386206; cv=none; b=HjyMbr+AUANWBcI0enartOVR3fpt6iVHX9cvB8aNzDE7bFqnt0gUyF5XYEXCI+lL+7J6vJF14Lf8FSXMqQurCbw+t+yM2hgPqN1p5VhcgI8yY3jkDSxZl/IxmIuotHXZX0XfqHbrzxuMRQeQkL0nSIH3eLj8dLfUMpSkQM5HQ60=
+	t=1740386208; cv=none; b=iGuSm6+OQTH18aMcQReHYA8RdUQHwUpHHbIf0Gjh4HNuFX/PS8afN/pzzfaqBGDEcIt3c81af+Z7LmFcquU2yYmn+pKDSY8wdUYBPkD79V7iy0UA8e0h4rEEKWwSHG5Fh/35GZzxf+y6cCWIziPFafm8xkPA7TfGNEp7BvDlhdo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740386206; c=relaxed/simple;
-	bh=FNpQTuzeCGo31XNVzvjzELsSzegLVr7SicLD33GUca0=;
+	s=arc-20240116; t=1740386208; c=relaxed/simple;
+	bh=Pd4ovGe4OfDlM9Y6+GrY/bvH81WsomWPPK2G+sfj/zo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qoY7+L/4pNLcylx3F0ZnV1YdN9nQdyiUMPdMf7ZMB0ozWIhXFA/5HNrGGISRTdLh99x8Ot7SwrbWKCt5jVLKh5SAnxob3Z8R5sMqd0aBdTyDmVwVsp+AMBi2JHc9A+ZjQ7I5uHYNGUETwJzzgGlLJtw0DQ/vhoQ5YqDiZYbieOk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HxHfLoAY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=hJujK94I; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=HxHfLoAY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=hJujK94I; arc=none smtp.client-ip=195.135.223.130
+	 MIME-Version:Content-Type; b=GGdqVxycU5GmiD3Z0iL4DG8MYiT6OPgLtXRUovexNC2MErelC1Sr1h9Deqxpnkxpzs57sDIHTLPhss3lf6TAugheeqoydmAgmhwvnz4W863bVztI+nO7bTHV9VMZ4J43rT+wm+LjekXSTjniGNjxroXKUr/oiA9yPhTD9RhMoOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HxHfLoAY";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="hJujK94I";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="HxHfLoAY";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="hJujK94I"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id F0B492117A;
-	Mon, 24 Feb 2025 08:36:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1740386193; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AJkbniysythA0sc6bcyFOvbaXQUvqUuptYrqmjRM03c=;
-	b=HxHfLoAYslaqIO6423815klkNZWRCPfoRdxbGp8nJSn6VFMe/hwptOEmFg/kyXP5Kt0HOf
-	tr39j/TyCP9YLyZD8W/DfuqWisL+n2gdGqr8USf3vQKNW9q2yiETNBGlGJqDIfdPXSuzrg
-	3jiujW6B+xUNJSa5feBSWF3Y6gIFP+g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1740386193;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AJkbniysythA0sc6bcyFOvbaXQUvqUuptYrqmjRM03c=;
-	b=hJujK94IM4Jxo/iU82vWB+SRxP6gDIx8FFVo7pvpjfDe3MHeiDjuSevjiVeo1oaSRE6d6O
-	WebOi015HY+5dnAQ==
-Authentication-Results: smtp-out1.suse.de;
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 50CDE1F393;
+	Mon, 24 Feb 2025 08:36:38 +0000 (UTC)
+Authentication-Results: smtp-out2.suse.de;
 	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1740386193; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AJkbniysythA0sc6bcyFOvbaXQUvqUuptYrqmjRM03c=;
-	b=HxHfLoAYslaqIO6423815klkNZWRCPfoRdxbGp8nJSn6VFMe/hwptOEmFg/kyXP5Kt0HOf
-	tr39j/TyCP9YLyZD8W/DfuqWisL+n2gdGqr8USf3vQKNW9q2yiETNBGlGJqDIfdPXSuzrg
-	3jiujW6B+xUNJSa5feBSWF3Y6gIFP+g=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1740386193;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=AJkbniysythA0sc6bcyFOvbaXQUvqUuptYrqmjRM03c=;
-	b=hJujK94IM4Jxo/iU82vWB+SRxP6gDIx8FFVo7pvpjfDe3MHeiDjuSevjiVeo1oaSRE6d6O
-	WebOi015HY+5dnAQ==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A7E4813332;
-	Mon, 24 Feb 2025 08:36:31 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0C42F13332;
+	Mon, 24 Feb 2025 08:36:37 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id mJFGJo8vvGeJVAAAD6G6ig
-	(envelope-from <svarbanov@suse.de>); Mon, 24 Feb 2025 08:36:31 +0000
+	id oHtrAJUvvGeJVAAAD6G6ig
+	(envelope-from <svarbanov@suse.de>); Mon, 24 Feb 2025 08:36:37 +0000
 From: Stanimir Varbanov <svarbanov@suse.de>
 To: linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org,
@@ -96,11 +55,12 @@ Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Jonathan Bell <jonathan@raspberrypi.com>,
 	Dave Stevenson <dave.stevenson@raspberrypi.com>,
 	Stanimir Varbanov <svarbanov@suse.de>,
+	Jim Quinlan <james.quinlan@broadcom.com>,
 	"Ivan T. Ivanov" <iivanov@suse.de>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Subject: [PATCH v6 2/7] dt-bindings: PCI: brcmstb: Update bindings for PCIe on BCM2712
-Date: Mon, 24 Feb 2025 10:35:54 +0200
-Message-ID: <20250224083559.47645-3-svarbanov@suse.de>
+Subject: [PATCH v6 6/7] PCI: brcmstb: Expand inbound window size up to 64GB
+Date: Mon, 24 Feb 2025 10:35:58 +0200
+Message-ID: <20250224083559.47645-7-svarbanov@suse.de>
 X-Mailer: git-send-email 2.47.0
 In-Reply-To: <20250224083559.47645-1-svarbanov@suse.de>
 References: <20250224083559.47645-1-svarbanov@suse.de>
@@ -112,72 +72,54 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Spam-Score: -5.80
-X-Spamd-Result: default: False [-5.80 / 50.00];
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Spamd-Result: default: False [-4.00 / 50.00];
 	REPLY(-4.00)[];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCPT_COUNT_TWELVE(0.00)[24];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TAGGED_RCPT(0.00)[dt];
-	ARC_NA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[linutronix.de,kernel.org,broadcom.com,gmail.com,google.com,linux.com,pengutronix.de,suse.com,raspberrypi.com,suse.de];
-	R_RATELIMIT(0.00)[to_ip_from(RL7mwea5a3cdyragbzqhrtit3y)];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+	TAGGED_RCPT(0.00)[dt]
 X-Spam-Flag: NO
+X-Spam-Score: -4.00
+X-Rspamd-Queue-Id: 50CDE1F393
+X-Rspamd-Pre-Result: action=no action;
+	module=replies;
+	Message is reply to one we originated
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
 X-Spam-Level: 
 
-Update PCIe controller bindings with BCM2712 support.
+The BCM2712 memory map can support up to 64GB of system memory, thus
+expand the inbound window size in calculation helper function.
+
+The change is safe for the currently supported SoCs that have smaller
+inbound window sizes.
 
 Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
-Acked-by: Rob Herring (Arm) <robh@kernel.org>
 Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Reviewed-by: Jim Quinlan <james.quinlan@broadcom.com>
 Tested-by: Ivan T. Ivanov <iivanov@suse.de>
-Link: https://lore.kernel.org/r/20250120130119.671119-3-svarbanov@suse.de
+Link: https://lore.kernel.org/r/20250120130119.671119-6-svarbanov@suse.de
 [kwilczynski: commit log]
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 ---
- Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/pci/controller/pcie-brcmstb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-index 2ad1652c2584..29f0e1eb5096 100644
---- a/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-+++ b/Documentation/devicetree/bindings/pci/brcm,stb-pcie.yaml
-@@ -14,6 +14,7 @@ properties:
-     items:
-       - enum:
-           - brcm,bcm2711-pcie # The Raspberry Pi 4
-+          - brcm,bcm2712-pcie # Raspberry Pi 5
-           - brcm,bcm4908-pcie
-           - brcm,bcm7211-pcie # Broadcom STB version of RPi4
-           - brcm,bcm7216-pcie # Broadcom 7216 Arm
-@@ -101,7 +102,10 @@ properties:
- 
-   reset-names:
-     minItems: 1
--    maxItems: 3
-+    items:
-+      - enum: [perst, rescal]
-+      - const: bridge
-+      - const: swinit
- 
- required:
-   - compatible
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index 4ebcfd4a93f8..4c5fff1919ba 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -304,8 +304,8 @@ static int brcm_pcie_encode_ibar_size(u64 size)
+ 	if (log2_in >= 12 && log2_in <= 15)
+ 		/* Covers 4KB to 32KB (inclusive) */
+ 		return (log2_in - 12) + 0x1c;
+-	else if (log2_in >= 16 && log2_in <= 35)
+-		/* Covers 64KB to 32GB, (inclusive) */
++	else if (log2_in >= 16 && log2_in <= 36)
++		/* Covers 64KB to 64GB, (inclusive) */
+ 		return log2_in - 15;
+ 	/* Something is awry so disable */
+ 	return 0;
 -- 
 2.47.0
 
