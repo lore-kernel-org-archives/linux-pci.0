@@ -1,176 +1,74 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [176.9.242.54])
+Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA0E19ABD4
-	for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2025 17:25:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DDA7197A67;
+	Tue, 25 Feb 2025 17:30:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740504318; cv=none; b=NlhnhCxhrVMJbWl4yJGBd2VSq8AKf0ju6ObAzHrMl5JQIgV4JRs5s1HCOyqa+/E2EKgiVES0/HYA1qe3+Xk3rujX+Mp63xf44Gvt4jY4ZrB97Juun3HkQWSRtQiXr+5JNSbkgwLEKsRQ8V5IF5g17Uj7PThxi3D/HDvtbxYuWGI=
+	t=1740504648; cv=none; b=rAwXwuXImNZnHTNql5VTeUBrmNwVCYFOtpTJPqkCOlfSEkzeI5Ro+p38HIuTflfI6R4q9zlAQWqKj/TzF95W5u7U83Uz8SaQrP/WPLuNNom+fDJSrQX7ePwW8wTvlGugihHNX5x0Dc0q28XaLOsGyf/E8YxjbTvnoQFwcVWeb7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740504318; c=relaxed/simple;
-	bh=70sdq/sV8vV3YR0UN0Dy5ICvtW6RpqwECr/A9ot96/s=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=i3F5KL9V8ZccT6l9AZJCpPuYtgO+TVhE/rp3DhU2fDvGs3HnUx1BsdHFmcpAtAss2bR72a5rryRloVWGNv7Wjn6KDqWWbAwnAv9sOMIz9bCiwKf78SCdr00Zs2hp+MFqk9UYzHxHFALwARacKsdI/7NDcfwTOtHCeIDtsWhOAaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=176.9.242.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 198F6101E698A;
-	Tue, 25 Feb 2025 18:15:36 +0100 (CET)
-Received: from localhost (unknown [89.246.108.87])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by h08.hostsharing.net (Postfix) with ESMTPSA id CA97D60C8E39;
-	Tue, 25 Feb 2025 18:15:35 +0100 (CET)
-X-Mailbox-Line: From 603735bc50eb370bc7f1c358441ac671360bab25 Mon Sep 17 00:00:00 2001
-Message-ID: <603735bc50eb370bc7f1c358441ac671360bab25.1740501868.git.lukas@wunner.de>
-In-Reply-To: <cover.1740501868.git.lukas@wunner.de>
-References: <cover.1740501868.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 25 Feb 2025 18:06:01 +0100
-Subject: [PATCH 1/5] PCI: hotplug: Drop superfluous pci_hotplug_slot_list
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
+	s=arc-20240116; t=1740504648; c=relaxed/simple;
+	bh=itwgK22G9rllbagjd/8jiNO6p0Fq5QxWo+ez3b+qMAs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ly0K5mgYg/BZausavHXJUGQmIq5mHvxwmy7ChMv8zxhFuUxgjcmKohC289T+QnSmqDPsAHUKSF6qCBekq3BD4WuX0XBvRgH5BLCfU2yQVaDQkrrWGXlqhwvIH2mE+oANCZLvyAnHI/fEW2nEx1XkZzpweDH8t6x1e2vng3lRS/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=tpqM2TGw; arc=none smtp.client-ip=156.67.10.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="tpqM2TGw"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
+	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
+	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
+	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
+	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
+	bh=PoNy04ufD75FmyL3FJfDlJ+7bfM+YkXytgxrTMkPUTA=; b=tpqM2TGwG8r9JI43TiUsJZQcyV
+	N9QO1ezGwHjR2jGSg2DWKw7IZMrQHjxQSjawlFNPZvaa3Bk1qJ4f8DeGF+TfoSOStek9kDCizeVqN
+	092U3o64glZQQ2yDCbcURyVpo49zDdnuUcgq8IilS6S3WNpRIubzydAv62Rgm4aTiMxE=;
+Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
+	(envelope-from <andrew@lunn.ch>)
+	id 1tmylF-00HaE9-TD; Tue, 25 Feb 2025 18:30:25 +0100
+Date: Tue, 25 Feb 2025 18:30:25 +0100
+From: Andrew Lunn <andrew@lunn.ch>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	linux-pci@vger.kernel.org, Ariel Almog <ariela@nvidia.com>,
+	Aditya Prabhune <aprabhune@nvidia.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Heiner Kallweit <hkallweit1@gmail.com>,
+	Arun Easi <aeasi@marvell.com>, Jonathan Chocron <jonnyc@amazon.com>,
+	Bert Kenward <bkenward@solarflare.com>,
+	Matt Carlson <mcarlson@broadcom.com>,
+	Kai-Heng Feng <kai.heng.feng@canonical.com>,
+	Jean Delvare <jdelvare@suse.de>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
+	Jakub Kicinski <kuba@kernel.org>,
+	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
+	Stephen Hemminger <stephen@networkplumber.org>
+Subject: Re: [PATCH v4] PCI/sysfs: Change read permissions for VPD attributes
+Message-ID: <7ff54e42-a76c-42b1-b95c-1dd2ee47fe93@lunn.ch>
+References: <c93a253b24701513dbeeb307cb2b9e3afd4c74b5.1737271118.git.leon@kernel.org>
+ <20250225160542.GA507421@bhelgaas>
+ <20250225165746.GH53094@unreal>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250225165746.GH53094@unreal>
 
-The PCI hotplug core keeps a list of all registered slots.  Its sole
-purpose is to WARN() on slot removal if another slot is using the same
-name.
+> We always read VPD by using "sudo ..." command, until one of our customers
+> requested to provide a way to run monitoring library without any root access.
+> It runs on hypervisor and being non-root there is super important for them.
 
-But this can never happen because already on slot creation, an error is
-returned and multiple messages are emitted if a slot's name is
-duplicated:
+You can chmod files in sys. So the administrator can change the
+permissions, and then non-root users can access it.
 
-  pci_hp_register()
-    __pci_hp_register()
-      __pci_hp_initialize()
-        pci_create_slot()
-          kobject_init_and_add()
-            kobject_add_varg()
-              kobject_add_internal()
-                create_dir()
-                  sysfs_create_dir_ns()
-                    kernfs_create_dir_ns()
-                      sysfs_warn_dup()
-                        pr_warn("cannot create duplicate filename ...")
-                pr_err("%s failed for %s with -EEXIST, ...");
+This seems a more scalable solution that adding a special case in the
+kernel.
 
-Drop the superfluous list.
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pci_hotplug_core.c | 32 --------------------------
- include/linux/pci_hotplug.h            |  2 --
- 2 files changed, 34 deletions(-)
-
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index 36236ac88fd5..9e3cde91c167 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -18,14 +18,12 @@
- #include <linux/moduleparam.h>
- #include <linux/kernel.h>
- #include <linux/types.h>
--#include <linux/list.h>
- #include <linux/kobject.h>
- #include <linux/sysfs.h>
- #include <linux/pagemap.h>
- #include <linux/init.h>
- #include <linux/mount.h>
- #include <linux/namei.h>
--#include <linux/mutex.h>
- #include <linux/pci.h>
- #include <linux/pci_hotplug.h>
- #include <linux/uaccess.h>
-@@ -42,9 +40,6 @@
- /* local variables */
- static bool debug;
- 
--static LIST_HEAD(pci_hotplug_slot_list);
--static DEFINE_MUTEX(pci_hp_mutex);
--
- /* Weee, fun with macros... */
- #define GET_STATUS(name, type)	\
- static int get_##name(struct hotplug_slot *slot, type *value)		\
-@@ -375,17 +370,6 @@ static void fs_remove_slot(struct pci_slot *pci_slot)
- 	pci_hp_remove_module_link(pci_slot);
- }
- 
--static struct hotplug_slot *get_slot_from_name(const char *name)
--{
--	struct hotplug_slot *slot;
--
--	list_for_each_entry(slot, &pci_hotplug_slot_list, slot_list) {
--		if (strcmp(hotplug_slot_name(slot), name) == 0)
--			return slot;
--	}
--	return NULL;
--}
--
- /**
-  * __pci_hp_register - register a hotplug_slot with the PCI hotplug subsystem
-  * @slot: pointer to the &struct hotplug_slot to register
-@@ -484,10 +468,6 @@ int pci_hp_add(struct hotplug_slot *slot)
- 		return result;
- 
- 	kobject_uevent(&pci_slot->kobj, KOBJ_ADD);
--	mutex_lock(&pci_hp_mutex);
--	list_add(&slot->slot_list, &pci_hotplug_slot_list);
--	mutex_unlock(&pci_hp_mutex);
--	dbg("Added slot %s to the list\n", hotplug_slot_name(slot));
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(pci_hp_add);
-@@ -514,21 +494,9 @@ EXPORT_SYMBOL_GPL(pci_hp_deregister);
-  */
- void pci_hp_del(struct hotplug_slot *slot)
- {
--	struct hotplug_slot *temp;
--
- 	if (WARN_ON(!slot))
- 		return;
- 
--	mutex_lock(&pci_hp_mutex);
--	temp = get_slot_from_name(hotplug_slot_name(slot));
--	if (WARN_ON(temp != slot)) {
--		mutex_unlock(&pci_hp_mutex);
--		return;
--	}
--
--	list_del(&slot->slot_list);
--	mutex_unlock(&pci_hp_mutex);
--	dbg("Removed slot %s from the list\n", hotplug_slot_name(slot));
- 	fs_remove_slot(slot->pci_slot);
- }
- EXPORT_SYMBOL_GPL(pci_hp_del);
-diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
-index 3a10d6ec3ee7..ec77ccf1fc4d 100644
---- a/include/linux/pci_hotplug.h
-+++ b/include/linux/pci_hotplug.h
-@@ -50,7 +50,6 @@ struct hotplug_slot_ops {
- /**
-  * struct hotplug_slot - used to register a physical slot with the hotplug pci core
-  * @ops: pointer to the &struct hotplug_slot_ops to be used for this slot
-- * @slot_list: internal list used to track hotplug PCI slots
-  * @pci_slot: represents a physical slot
-  * @owner: The module owner of this structure
-  * @mod_name: The module name (KBUILD_MODNAME) of this structure
-@@ -59,7 +58,6 @@ struct hotplug_slot {
- 	const struct hotplug_slot_ops	*ops;
- 
- 	/* Variables below this are for use only by the hotplug pci core. */
--	struct list_head		slot_list;
- 	struct pci_slot			*pci_slot;
- 	struct module			*owner;
- 	const char			*mod_name;
--- 
-2.43.0
-
+	Andrew
