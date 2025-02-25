@@ -1,73 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [176.9.242.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B6A614A60A;
-	Tue, 25 Feb 2025 17:21:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FA0E19ABD4
+	for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2025 17:25:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740504090; cv=none; b=J5E+EGrfuESLRc5BonyOff4FeAX3Fl4Scwu3cqrPVp1knYoKokPKZhAIEBmJiRWJavCY0Z9XWxH76PNpxX3UJkl0b83BMJD9rH7PMu9Ow4yIDNyQAYZTtDFYMg7yiKKnExaxpaKFYRt1tVr6wh3NS4PoL3W15nCbVFw3AWjE7lA=
+	t=1740504318; cv=none; b=NlhnhCxhrVMJbWl4yJGBd2VSq8AKf0ju6ObAzHrMl5JQIgV4JRs5s1HCOyqa+/E2EKgiVES0/HYA1qe3+Xk3rujX+Mp63xf44Gvt4jY4ZrB97Juun3HkQWSRtQiXr+5JNSbkgwLEKsRQ8V5IF5g17Uj7PThxi3D/HDvtbxYuWGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740504090; c=relaxed/simple;
-	bh=c4aCbzvpC4OPRzag8tbbZyRbYav/HzlqEic//RGnM50=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C+jhu885KPOKqTZReA9+jnem5fVZsZRrfy9++ESNr6aVxaW30KCuDUVGBulS3hgDmUl8tKn0R7AS0C7fvJgeSz+9897tyM8M6RbREU7JplrXbGVNYKLN8M8C129zdPvVgMSUUqGjpSt3W3udJlvPI9wR9q8m2DaufMrV1XD97dE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pQBFDBkH; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pQBFDBkH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CB00FC4CEDD;
-	Tue, 25 Feb 2025 17:21:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1740504090;
-	bh=c4aCbzvpC4OPRzag8tbbZyRbYav/HzlqEic//RGnM50=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=pQBFDBkHOiyBhy/mAW0E84hm10c6PAX9Ku0+prxgkb7+EhgTa7ECdsYNiW2V/6fEK
-	 D9u6+TZVuOP1ZixIsqp+WL8eiZjV9Yor3oEKRVQ4QoYbzcRvjNjmMp73a7zT+/pbgL
-	 FrVuScma9NPfpg6EAceg//o3k4E6fUhEEAvxhf04BI1Ye7w5KVyE6zIvlz+AZjgPH+
-	 D/c8eey1FHRasm8hFL1JQONUaCqRyD15flt7yKpcE++TiTtOlQi0tCI9hDggU2CEzV
-	 1aLYrh0hQ7TulRA1hy/jHCdrvyl6OxRg/BSVIOTGkx5mVPnM52UaACHi0bYyGUvEnc
-	 xZI2V/glBgBBQ==
-Date: Tue, 25 Feb 2025 11:21:28 -0600
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Alexander Stein <alexander.stein@ew.tq-group.com>
-Cc: Lucas Stach <l.stach@pengutronix.de>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Shawn Guo <shawnguo@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Fabio Estevam <festevam@gmail.com>, linux@ew.tq-group.com,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Frank Li <Frank.li@nxp.com>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, Richard Zhu <hongxing.zhu@nxp.com>,
-	imx@lists.linux.dev
-Subject: Re: [PATCH 1/3] dt-bindings: PCI: fsl,imx6q-pcie: Add optional DMA
- interrupt
-Message-ID: <174050408775.2723311.3813891689598918931.robh@kernel.org>
-References: <20250225102726.654070-1-alexander.stein@ew.tq-group.com>
- <20250225102726.654070-2-alexander.stein@ew.tq-group.com>
+	s=arc-20240116; t=1740504318; c=relaxed/simple;
+	bh=70sdq/sV8vV3YR0UN0Dy5ICvtW6RpqwECr/A9ot96/s=;
+	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=i3F5KL9V8ZccT6l9AZJCpPuYtgO+TVhE/rp3DhU2fDvGs3HnUx1BsdHFmcpAtAss2bR72a5rryRloVWGNv7Wjn6KDqWWbAwnAv9sOMIz9bCiwKf78SCdr00Zs2hp+MFqk9UYzHxHFALwARacKsdI/7NDcfwTOtHCeIDtsWhOAaA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=176.9.242.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout3.hostsharing.net (Postfix) with ESMTPS id 198F6101E698A;
+	Tue, 25 Feb 2025 18:15:36 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with ESMTPSA id CA97D60C8E39;
+	Tue, 25 Feb 2025 18:15:35 +0100 (CET)
+X-Mailbox-Line: From 603735bc50eb370bc7f1c358441ac671360bab25 Mon Sep 17 00:00:00 2001
+Message-ID: <603735bc50eb370bc7f1c358441ac671360bab25.1740501868.git.lukas@wunner.de>
+In-Reply-To: <cover.1740501868.git.lukas@wunner.de>
+References: <cover.1740501868.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Tue, 25 Feb 2025 18:06:01 +0100
+Subject: [PATCH 1/5] PCI: hotplug: Drop superfluous pci_hotplug_slot_list
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250225102726.654070-2-alexander.stein@ew.tq-group.com>
 
+The PCI hotplug core keeps a list of all registered slots.  Its sole
+purpose is to WARN() on slot removal if another slot is using the same
+name.
 
-On Tue, 25 Feb 2025 11:27:21 +0100, Alexander Stein wrote:
-> i.MX8QM and i.MX8QXP/DXP have an additional interrupt for DMA.
-> 
-> Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
-> ---
->  Documentation/devicetree/bindings/pci/fsl,imx6q-pcie.yaml | 4 ++++
->  1 file changed, 4 insertions(+)
-> 
+But this can never happen because already on slot creation, an error is
+returned and multiple messages are emitted if a slot's name is
+duplicated:
 
-Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+  pci_hp_register()
+    __pci_hp_register()
+      __pci_hp_initialize()
+        pci_create_slot()
+          kobject_init_and_add()
+            kobject_add_varg()
+              kobject_add_internal()
+                create_dir()
+                  sysfs_create_dir_ns()
+                    kernfs_create_dir_ns()
+                      sysfs_warn_dup()
+                        pr_warn("cannot create duplicate filename ...")
+                pr_err("%s failed for %s with -EEXIST, ...");
+
+Drop the superfluous list.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c | 32 --------------------------
+ include/linux/pci_hotplug.h            |  2 --
+ 2 files changed, 34 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 36236ac88fd5..9e3cde91c167 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -18,14 +18,12 @@
+ #include <linux/moduleparam.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+-#include <linux/list.h>
+ #include <linux/kobject.h>
+ #include <linux/sysfs.h>
+ #include <linux/pagemap.h>
+ #include <linux/init.h>
+ #include <linux/mount.h>
+ #include <linux/namei.h>
+-#include <linux/mutex.h>
+ #include <linux/pci.h>
+ #include <linux/pci_hotplug.h>
+ #include <linux/uaccess.h>
+@@ -42,9 +40,6 @@
+ /* local variables */
+ static bool debug;
+ 
+-static LIST_HEAD(pci_hotplug_slot_list);
+-static DEFINE_MUTEX(pci_hp_mutex);
+-
+ /* Weee, fun with macros... */
+ #define GET_STATUS(name, type)	\
+ static int get_##name(struct hotplug_slot *slot, type *value)		\
+@@ -375,17 +370,6 @@ static void fs_remove_slot(struct pci_slot *pci_slot)
+ 	pci_hp_remove_module_link(pci_slot);
+ }
+ 
+-static struct hotplug_slot *get_slot_from_name(const char *name)
+-{
+-	struct hotplug_slot *slot;
+-
+-	list_for_each_entry(slot, &pci_hotplug_slot_list, slot_list) {
+-		if (strcmp(hotplug_slot_name(slot), name) == 0)
+-			return slot;
+-	}
+-	return NULL;
+-}
+-
+ /**
+  * __pci_hp_register - register a hotplug_slot with the PCI hotplug subsystem
+  * @slot: pointer to the &struct hotplug_slot to register
+@@ -484,10 +468,6 @@ int pci_hp_add(struct hotplug_slot *slot)
+ 		return result;
+ 
+ 	kobject_uevent(&pci_slot->kobj, KOBJ_ADD);
+-	mutex_lock(&pci_hp_mutex);
+-	list_add(&slot->slot_list, &pci_hotplug_slot_list);
+-	mutex_unlock(&pci_hp_mutex);
+-	dbg("Added slot %s to the list\n", hotplug_slot_name(slot));
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(pci_hp_add);
+@@ -514,21 +494,9 @@ EXPORT_SYMBOL_GPL(pci_hp_deregister);
+  */
+ void pci_hp_del(struct hotplug_slot *slot)
+ {
+-	struct hotplug_slot *temp;
+-
+ 	if (WARN_ON(!slot))
+ 		return;
+ 
+-	mutex_lock(&pci_hp_mutex);
+-	temp = get_slot_from_name(hotplug_slot_name(slot));
+-	if (WARN_ON(temp != slot)) {
+-		mutex_unlock(&pci_hp_mutex);
+-		return;
+-	}
+-
+-	list_del(&slot->slot_list);
+-	mutex_unlock(&pci_hp_mutex);
+-	dbg("Removed slot %s from the list\n", hotplug_slot_name(slot));
+ 	fs_remove_slot(slot->pci_slot);
+ }
+ EXPORT_SYMBOL_GPL(pci_hp_del);
+diff --git a/include/linux/pci_hotplug.h b/include/linux/pci_hotplug.h
+index 3a10d6ec3ee7..ec77ccf1fc4d 100644
+--- a/include/linux/pci_hotplug.h
++++ b/include/linux/pci_hotplug.h
+@@ -50,7 +50,6 @@ struct hotplug_slot_ops {
+ /**
+  * struct hotplug_slot - used to register a physical slot with the hotplug pci core
+  * @ops: pointer to the &struct hotplug_slot_ops to be used for this slot
+- * @slot_list: internal list used to track hotplug PCI slots
+  * @pci_slot: represents a physical slot
+  * @owner: The module owner of this structure
+  * @mod_name: The module name (KBUILD_MODNAME) of this structure
+@@ -59,7 +58,6 @@ struct hotplug_slot {
+ 	const struct hotplug_slot_ops	*ops;
+ 
+ 	/* Variables below this are for use only by the hotplug pci core. */
+-	struct list_head		slot_list;
+ 	struct pci_slot			*pci_slot;
+ 	struct module			*owner;
+ 	const char			*mod_name;
+-- 
+2.43.0
 
