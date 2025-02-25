@@ -1,74 +1,173 @@
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DDA7197A67;
-	Tue, 25 Feb 2025 17:30:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BB9716130C
+	for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2025 17:35:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740504648; cv=none; b=rAwXwuXImNZnHTNql5VTeUBrmNwVCYFOtpTJPqkCOlfSEkzeI5Ro+p38HIuTflfI6R4q9zlAQWqKj/TzF95W5u7U83Uz8SaQrP/WPLuNNom+fDJSrQX7ePwW8wTvlGugihHNX5x0Dc0q28XaLOsGyf/E8YxjbTvnoQFwcVWeb7s=
+	t=1740504944; cv=none; b=Gud7l27Cq0jHShLfZIwhDbKpkeNC2y2BEMw+GxbfSE6OKwBb3jJPBnU6Byya72FF7TDteuL+Ax3PdX0vj/pj3sxVYqoLi2ws9cMOn5OiqVpsIUft4y6rQds4n4ajpNYJFm8zktzJSK5D6jmAmXB0jpWgnYlOaPRy8f34t29gKn4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740504648; c=relaxed/simple;
-	bh=itwgK22G9rllbagjd/8jiNO6p0Fq5QxWo+ez3b+qMAs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ly0K5mgYg/BZausavHXJUGQmIq5mHvxwmy7ChMv8zxhFuUxgjcmKohC289T+QnSmqDPsAHUKSF6qCBekq3BD4WuX0XBvRgH5BLCfU2yQVaDQkrrWGXlqhwvIH2mE+oANCZLvyAnHI/fEW2nEx1XkZzpweDH8t6x1e2vng3lRS/I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=tpqM2TGw; arc=none smtp.client-ip=156.67.10.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="tpqM2TGw"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-	bh=PoNy04ufD75FmyL3FJfDlJ+7bfM+YkXytgxrTMkPUTA=; b=tpqM2TGwG8r9JI43TiUsJZQcyV
-	N9QO1ezGwHjR2jGSg2DWKw7IZMrQHjxQSjawlFNPZvaa3Bk1qJ4f8DeGF+TfoSOStek9kDCizeVqN
-	092U3o64glZQQ2yDCbcURyVpo49zDdnuUcgq8IilS6S3WNpRIubzydAv62Rgm4aTiMxE=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1tmylF-00HaE9-TD; Tue, 25 Feb 2025 18:30:25 +0100
-Date: Tue, 25 Feb 2025 18:30:25 +0100
-From: Andrew Lunn <andrew@lunn.ch>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	linux-pci@vger.kernel.org, Ariel Almog <ariela@nvidia.com>,
-	Aditya Prabhune <aprabhune@nvidia.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Arun Easi <aeasi@marvell.com>, Jonathan Chocron <jonnyc@amazon.com>,
-	Bert Kenward <bkenward@solarflare.com>,
-	Matt Carlson <mcarlson@broadcom.com>,
-	Kai-Heng Feng <kai.heng.feng@canonical.com>,
-	Jean Delvare <jdelvare@suse.de>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	linux-kernel@vger.kernel.org, netdev@vger.kernel.org,
-	Jakub Kicinski <kuba@kernel.org>,
-	Thomas =?iso-8859-1?Q?Wei=DFschuh?= <linux@weissschuh.net>,
-	Stephen Hemminger <stephen@networkplumber.org>
-Subject: Re: [PATCH v4] PCI/sysfs: Change read permissions for VPD attributes
-Message-ID: <7ff54e42-a76c-42b1-b95c-1dd2ee47fe93@lunn.ch>
-References: <c93a253b24701513dbeeb307cb2b9e3afd4c74b5.1737271118.git.leon@kernel.org>
- <20250225160542.GA507421@bhelgaas>
- <20250225165746.GH53094@unreal>
+	s=arc-20240116; t=1740504944; c=relaxed/simple;
+	bh=/4GUkjZyjx0w2OUJMGiBh1GGSWpFC7su/YzbE3lur9s=;
+	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=SdqROT87BUJ50RI1QGD5B/GRfmkqAv9pAMfFkHYOSQafn4c3R4R/Oaz+oHG5ia4eOqtDMdZM94iYM3jtWdBYYRsy/yFB/PDP+S6yH/s+Fre+9jnA50HkwGPwfeC+n2sHRNTEgGJBb7tIZc/aPFnrBQPp+4UXKfTFlF/96A+8Ato=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with ESMTPS id 3B438101917AC;
+	Tue, 25 Feb 2025 18:27:40 +0100 (CET)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with ESMTPSA id 0A35D6018168;
+	Tue, 25 Feb 2025 18:27:40 +0100 (CET)
+X-Mailbox-Line: From ed950fa2722967be4491146c7b867c1e7be11d37 Mon Sep 17 00:00:00 2001
+Message-ID: <ed950fa2722967be4491146c7b867c1e7be11d37.1740501868.git.lukas@wunner.de>
+In-Reply-To: <cover.1740501868.git.lukas@wunner.de>
+References: <cover.1740501868.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Tue, 25 Feb 2025 18:06:02 +0100
+Subject: [PATCH 2/5] PCI: hotplug: Drop superfluous try_module_get() calls
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250225165746.GH53094@unreal>
 
-> We always read VPD by using "sudo ..." command, until one of our customers
-> requested to provide a way to run monitoring library without any root access.
-> It runs on hypervisor and being non-root there is super important for them.
+In December 2002, historic commit
 
-You can chmod files in sys. So the administrator can change the
-permissions, and then non-root users can access it.
+  https://git.kernel.org/tglx/history/c/bec7aa00ffe5
+  ("[PATCH] more module warning fixes")
 
-This seems a more scalable solution that adding a special case in the
-kernel.
+amended the PCI hotplug core to acquire a reference on the hotplug
+driver module when a sysfs attribute is accessed.  That was necessary
+because back in the day, sysfs code did not take any precautions to
+prevent module unloading when an attribute was accessed.
 
-	Andrew
+Soon after in July 2003, historic commit
+
+  https://git.kernel.org/tglx/history/c/1cf6d20f6078
+  ("[PATCH] SYSFS: add module referencing to sysfs attribute files.")
+
+addressed that deficiency.  But the commit neglected to remove the now
+unnecessary reference acquisition from the PCI hotplug core.
+
+The commit acquired a module reference for the entire duration between
+open() and close() of a sysfs attribute.  This made it impossible to
+unload a module while attributes were kept open by user space.
+That's possible today:
+
+When a hotplug driver module is unloaded, it removes sysfs attributes of
+all its hotplug slots by calling pci_hp_del().  This will wait for any
+concurrent user space operation to finish:
+
+  pci_hp_del()
+    fs_remove_slot()
+      sysfs_remove_file()
+        sysfs_remove_file_ns()
+          kernfs_remove_by_name_ns()
+            __kernfs_remove()
+              kernfs_drain()
+
+A user space operation such as read() briefly acquires a reference on
+the attribute with kernfs_get_active().  kernfs_drain() waits until all
+such references are released before allowing attribute removal.  Once
+the attribute is removed, any subsequent user space operation on a still
+open attribute file will return -ENODEV.
+
+Thus, reference acquisition by the PCI hotplug core is still unnecessary
+today.  So drop it at long last.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/hotplug/pci_hotplug_core.c | 23 +----------------------
+ 1 file changed, 1 insertion(+), 22 deletions(-)
+
+diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
+index 9e3cde91c167..de5b501b40be 100644
+--- a/drivers/pci/hotplug/pci_hotplug_core.c
++++ b/drivers/pci/hotplug/pci_hotplug_core.c
+@@ -14,7 +14,7 @@
+  *   Scott Murray <scottm@somanetworks.com>
+  */
+ 
+-#include <linux/module.h>	/* try_module_get & module_put */
++#include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/kernel.h>
+ #include <linux/types.h>
+@@ -46,11 +46,8 @@ static int get_##name(struct hotplug_slot *slot, type *value)		\
+ {									\
+ 	const struct hotplug_slot_ops *ops = slot->ops;			\
+ 	int retval = 0;							\
+-	if (!try_module_get(slot->owner))				\
+-		return -ENODEV;						\
+ 	if (ops->get_##name)						\
+ 		retval = ops->get_##name(slot, value);			\
+-	module_put(slot->owner);					\
+ 	return retval;							\
+ }
+ 
+@@ -83,10 +80,6 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	power = (u8)(lpower & 0xff);
+ 	dbg("power = %d\n", power);
+ 
+-	if (!try_module_get(slot->owner)) {
+-		retval = -ENODEV;
+-		goto exit;
+-	}
+ 	switch (power) {
+ 	case 0:
+ 		if (slot->ops->disable_slot)
+@@ -102,9 +95,7 @@ static ssize_t power_write_file(struct pci_slot *pci_slot, const char *buf,
+ 		err("Illegal value specified for power\n");
+ 		retval = -EINVAL;
+ 	}
+-	module_put(slot->owner);
+ 
+-exit:
+ 	if (retval)
+ 		return retval;
+ 	return count;
+@@ -141,15 +132,9 @@ static ssize_t attention_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	attention = (u8)(lattention & 0xff);
+ 	dbg(" - attention = %d\n", attention);
+ 
+-	if (!try_module_get(slot->owner)) {
+-		retval = -ENODEV;
+-		goto exit;
+-	}
+ 	if (ops->set_attention_status)
+ 		retval = ops->set_attention_status(slot, attention);
+-	module_put(slot->owner);
+ 
+-exit:
+ 	if (retval)
+ 		return retval;
+ 	return count;
+@@ -207,15 +192,9 @@ static ssize_t test_write_file(struct pci_slot *pci_slot, const char *buf,
+ 	test = (u32)(ltest & 0xffffffff);
+ 	dbg("test = %d\n", test);
+ 
+-	if (!try_module_get(slot->owner)) {
+-		retval = -ENODEV;
+-		goto exit;
+-	}
+ 	if (slot->ops->hardware_test)
+ 		retval = slot->ops->hardware_test(slot, test);
+-	module_put(slot->owner);
+ 
+-exit:
+ 	if (retval)
+ 		return retval;
+ 	return count;
+-- 
+2.43.0
+
