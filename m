@@ -1,177 +1,88 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [176.9.242.54])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077BC19CC0E
-	for <linux-pci@vger.kernel.org>; Tue, 25 Feb 2025 17:46:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FDED19992C;
+	Tue, 25 Feb 2025 17:47:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740505595; cv=none; b=hgGeNMTrxLT6NO7soSDqdP0+mtMXDdYW6rnsSyp5KfT8ADtGWKc+F40tcx1tyrofnuj2Mdf/4SUEklirbRhuD3/+i+9jJabji0h5r+jkn9FcwzohI9IqnOMh+kDdr2fcMttYLNTEnL+akORwNcfdhOoVIg2jjXDnFlbzkp9FW6c=
+	t=1740505627; cv=none; b=lTrq43o2mUUuc7OUBqHuiH9ePphIpXFBaAPRNhEm2yhAG1+58P/jena6QV8ijM6VVk7JlBM6QVe2/fBZtWYY7R4wcQ3xOt3idsV2R4saeXU7L2TZLi5ETkO60X/lsTvuLca8iCDlGjCEoo7Kjq/NS4efODgi5wn8BoNOph5qJY8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740505595; c=relaxed/simple;
-	bh=6sxmmC+NKV3hbVTFUXekqgf7FUdZiF2I4RpriziH2AM=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=HlrDVX/MHdnw/QoiyJCke7Ep+KQo1Bn5uha4Ooi63pKZqxuRosVAkTzblTlBBxZiHPI7vqG2ByUBDwwOoJR3vQ8sCmue/ed+EDncVKydKN7pQc5hcEx8Iw+Mzx62hVorL73bkhTOY79fUyi+tcdmMzBjzzdrWVps09eQP+PQLF0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=176.9.242.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with ESMTPS id 3CE27101E69A4;
-	Tue, 25 Feb 2025 18:46:31 +0100 (CET)
-Received: from localhost (unknown [89.246.108.87])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by h08.hostsharing.net (Postfix) with ESMTPSA id E6FC56018C39;
-	Tue, 25 Feb 2025 18:46:30 +0100 (CET)
-X-Mailbox-Line: From c207f03cfe32ae9002d9b453001a1dd63d9ab3fb Mon Sep 17 00:00:00 2001
-Message-ID: <c207f03cfe32ae9002d9b453001a1dd63d9ab3fb.1740501868.git.lukas@wunner.de>
-In-Reply-To: <cover.1740501868.git.lukas@wunner.de>
-References: <cover.1740501868.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Tue, 25 Feb 2025 18:06:05 +0100
-Subject: [PATCH 5/5] PCI: hotplug: Inline pci_hp_{create,remove}_module_link()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
+	s=arc-20240116; t=1740505627; c=relaxed/simple;
+	bh=yJ9AFWppODyVrEr9uR6wXcH0kti09dQZ8V0up06BTsY=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ROr4kCkh24/R418sCVyZrY4Y0UsyS88UL6aaCGwU8MmvwGLi76SEOLUvVWDeHXhCYVgzHIt4Tl/tZuVujcfD/I8Z1tJRI9Q4C0pHJ78wO5i2vXZo8Vsl8Us1DHsUj0ZOiQrStd5C7GiSp0wY9HWdM7RuC1WJq6IWmRxQRup4RZA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nN957pH2; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nN957pH2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D6EFC4CEDD;
+	Tue, 25 Feb 2025 17:47:06 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740505626;
+	bh=yJ9AFWppODyVrEr9uR6wXcH0kti09dQZ8V0up06BTsY=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=nN957pH2SprSYJYtzecqNvmYr1xfpKShwYCQ2XRLS6+UM4JCpBi0befIteGe+92se
+	 ctjouRWIqnpO9MFEpR8MBFtFRSoIXzG9DSWngiNb8OIhatYB0SYCAspA61xY5GxO9e
+	 CPG3Et/RWGbCY2LaLcANCkNojaxC/vbmPToWYzcruc9RR6eHqPsp1BDZD+otkeM4Al
+	 43tXKWg9COmTRrn+OgoK1iGCOsSBVKbNmvaVqhreyxg2T2o5/4uqEXgxdK+GYKWF1r
+	 0V30/Gezrav9lTAiCAVZjiTAEMzz/ea0d6PHMz3HF1wBiHMnC03JFLnNargzkrrf7X
+	 O40w2GbccO4pg==
+Date: Tue, 25 Feb 2025 11:47:05 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Alexander Stein <alexander.stein@ew.tq-group.com>
+Cc: Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, Frank Li <Frank.li@nxp.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux@ew.tq-group.com
+Subject: Re: [PATCH 3/3] arm64: dts: mba8xx: Remove invalid propert
+Message-ID: <20250225174705.GA511096@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250225102726.654070-4-alexander.stein@ew.tq-group.com>
 
-For no apparent reason, the pci_hp_{create,remove}_module_link() helpers
-live in slot.c, even though they're only called from two functions in
-pci_hotplug_core.c.
+Subject line could include 'disable-gpio'
 
-Inline the helpers to reduce code size and number of exported symbols.
+And s/propert/property/
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- drivers/pci/hotplug/pci_hotplug_core.c | 14 +++++++--
- drivers/pci/slot.c                     | 42 --------------------------
- include/linux/pci.h                    |  5 ---
- 3 files changed, 11 insertions(+), 50 deletions(-)
+On Tue, Feb 25, 2025 at 11:27:23AM +0100, Alexander Stein wrote:
+> disable-gpio is an (old) downstream kernel property, which slipped into
+> DT. Remove it.
 
-diff --git a/drivers/pci/hotplug/pci_hotplug_core.c b/drivers/pci/hotplug/pci_hotplug_core.c
-index a992bf51af98..d30f1316c98e 100644
---- a/drivers/pci/hotplug/pci_hotplug_core.c
-+++ b/drivers/pci/hotplug/pci_hotplug_core.c
-@@ -245,10 +245,18 @@ static bool has_test_file(struct hotplug_slot *slot)
- 
- static int fs_add_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
- {
-+	struct kobject *kobj;
- 	int retval = 0;
- 
- 	/* Create symbolic link to the hotplug driver module */
--	pci_hp_create_module_link(pci_slot);
-+	kobj = kset_find_obj(module_kset, slot->mod_name);
-+	if (kobj) {
-+		retval = sysfs_create_link(&pci_slot->kobj, kobj, "module");
-+		if (retval)
-+			dev_err(&pci_slot->bus->dev,
-+				"Error creating sysfs link (%d)\n", retval);
-+		kobject_put(kobj);
-+	}
- 
- 	if (has_power_file(slot)) {
- 		retval = sysfs_create_file(&pci_slot->kobj,
-@@ -302,7 +310,7 @@ static int fs_add_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
- 	if (has_power_file(slot))
- 		sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_power.attr);
- exit_power:
--	pci_hp_remove_module_link(pci_slot);
-+	sysfs_remove_link(&pci_slot->kobj, "module");
- exit:
- 	return retval;
- }
-@@ -326,7 +334,7 @@ static void fs_remove_slot(struct hotplug_slot *slot, struct pci_slot *pci_slot)
- 	if (has_test_file(slot))
- 		sysfs_remove_file(&pci_slot->kobj, &hotplug_slot_attr_test.attr);
- 
--	pci_hp_remove_module_link(pci_slot);
-+	sysfs_remove_link(&pci_slot->kobj, "module");
- }
- 
- /**
-diff --git a/drivers/pci/slot.c b/drivers/pci/slot.c
-index dd6e80b7db09..50fb3eb595fe 100644
---- a/drivers/pci/slot.c
-+++ b/drivers/pci/slot.c
-@@ -7,7 +7,6 @@
- 
- #include <linux/kobject.h>
- #include <linux/slab.h>
--#include <linux/module.h>
- #include <linux/pci.h>
- #include <linux/err.h>
- #include "pci.h"
-@@ -325,47 +324,6 @@ void pci_destroy_slot(struct pci_slot *slot)
- }
- EXPORT_SYMBOL_GPL(pci_destroy_slot);
- 
--#if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
--#include <linux/pci_hotplug.h>
--/**
-- * pci_hp_create_module_link - create symbolic link to hotplug driver module
-- * @pci_slot: struct pci_slot
-- *
-- * Helper function for pci_hotplug_core.c to create symbolic link to
-- * the hotplug driver module.
-- */
--void pci_hp_create_module_link(struct pci_slot *pci_slot)
--{
--	struct hotplug_slot *slot = pci_slot->hotplug;
--	struct kobject *kobj = NULL;
--	int ret;
--
--	kobj = kset_find_obj(module_kset, slot->mod_name);
--	if (!kobj)
--		return;
--	ret = sysfs_create_link(&pci_slot->kobj, kobj, "module");
--	if (ret)
--		dev_err(&pci_slot->bus->dev, "Error creating sysfs link (%d)\n",
--			ret);
--	kobject_put(kobj);
--}
--EXPORT_SYMBOL_GPL(pci_hp_create_module_link);
--
--/**
-- * pci_hp_remove_module_link - remove symbolic link to the hotplug driver
-- * 	module.
-- * @pci_slot: struct pci_slot
-- *
-- * Helper function for pci_hotplug_core.c to remove symbolic link to
-- * the hotplug driver module.
-- */
--void pci_hp_remove_module_link(struct pci_slot *pci_slot)
--{
--	sysfs_remove_link(&pci_slot->kobj, "module");
--}
--EXPORT_SYMBOL_GPL(pci_hp_remove_module_link);
--#endif
--
- static int pci_slot_init(void)
- {
- 	struct kset *pci_bus_kset;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 47b31ad724fa..a0f5c8fcd9c7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -2447,11 +2447,6 @@ static inline resource_size_t pci_iov_resource_size(struct pci_dev *dev, int res
- static inline void pci_vf_drivers_autoprobe(struct pci_dev *dev, bool probe) { }
- #endif
- 
--#if defined(CONFIG_HOTPLUG_PCI) || defined(CONFIG_HOTPLUG_PCI_MODULE)
--void pci_hp_create_module_link(struct pci_slot *pci_slot);
--void pci_hp_remove_module_link(struct pci_slot *pci_slot);
--#endif
--
- /**
-  * pci_pcie_cap - get the saved PCIe capability offset
-  * @dev: PCI device
--- 
-2.43.0
+I guess the implication is that the driver has never used this.
 
+> Fixes: c01a26b8897a ("arm64: dts: mba8xx: Add PCIe support")
+> Signed-off-by: Alexander Stein <alexander.stein@ew.tq-group.com>
+> ---
+>  arch/arm64/boot/dts/freescale/mba8xx.dtsi | 1 -
+>  1 file changed, 1 deletion(-)
+> 
+> diff --git a/arch/arm64/boot/dts/freescale/mba8xx.dtsi b/arch/arm64/boot/dts/freescale/mba8xx.dtsi
+> index 117f657283191..c4b5663949ade 100644
+> --- a/arch/arm64/boot/dts/freescale/mba8xx.dtsi
+> +++ b/arch/arm64/boot/dts/freescale/mba8xx.dtsi
+> @@ -328,7 +328,6 @@ &pcieb {
+>  	pinctrl-0 = <&pinctrl_pcieb>;
+>  	pinctrl-names = "default";
+>  	reset-gpios = <&lsio_gpio4 0 GPIO_ACTIVE_LOW>;
+> -	disable-gpio = <&expander 7 GPIO_ACTIVE_LOW>;
+>  	vpcie-supply = <&reg_pcie_1v5>;
+>  	status = "okay";
+>  };
+> -- 
+> 2.43.0
+> 
