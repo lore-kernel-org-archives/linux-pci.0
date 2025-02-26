@@ -1,97 +1,126 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id AFE0725E800;
-	Wed, 26 Feb 2025 22:59:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E33B62620C8;
+	Wed, 26 Feb 2025 23:33:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740610796; cv=none; b=JICPmw3o4KvvlWHQ4gY3s2z7P8r77sIb9ktnGdAqpct9tdWHRu3i7ZzwdegbCe+i21PxTgHZlcWQ9fHQ2v98aOi7ZckQp2K8QOe85xmksQDFqmU0GrmhfpWe2SA1ID6nzoZTTiNiFNSP5ZOkgmo9z1HmxHg/0J6aRZguPdy3jsI=
+	t=1740612823; cv=none; b=ToNiWlKcWU+ClqUp9ifJZDA5ELImfj4Q0LQO2H06QqR68YEPlWrHDUoLCyaV2UaigmrKegAbvBRsxuFSN9LzFT3lhQzgoR+I07MI8yAj5lB99jAjM9jwvrMIMY064fpYsyocTF/Ke8DQFPhWQZZs5QSTLws6v5h85CrZqlUzP/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740610796; c=relaxed/simple;
-	bh=QohsatoNAoe0TQFSqGvJl126DEabaHO6T2dlFIpaGVU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XQ2+gCdSrtSqpH9/fnILMSWKzbW1vE6QhAC+KtIkkOF74dvsSWf/W9NCYM9UfVdomwsuL381ATtLCK7gwDJiY7QKJur8m0Yt2WrGX/QvxCR0ns9w2Q4axydHr4RPjAVswkATzbMpaRCoOJzyRVuXjSzlDrDfiXM4zuS0GVVKCjA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=c/O4t9/L; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1740612823; c=relaxed/simple;
+	bh=JU2kjfLvtCKvCAcKZzE2OOPkpTNFwZNgTF7Ciu+cRA4=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ehWFxzqKcU4ucnBUvvVcycE+IU/o1tBv58OVQ6eHXbXhFliDA3StmAd1ZXkuReM6i4Z4CFAxTOPgr5c+RU4cDdyyOvpfgzasnZfFGxzs9TXqmaic/sCoRf69m5/KT/lyXP9PKe7SoBctAOG18S6ZAqsS/7aZy2SckzARYGCjnUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mph1cYH0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="c/O4t9/L"
-Received: from [10.0.0.114] (c-67-182-156-199.hsd1.wa.comcast.net [67.182.156.199])
-	by linux.microsoft.com (Postfix) with ESMTPSA id D198E2109CE5;
-	Wed, 26 Feb 2025 14:59:53 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com D198E2109CE5
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1740610794;
-	bh=OCE0WBdUPXGKc2haUGWEgiDBQXQQk3jIxxuUZ6s5eCw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=c/O4t9/L8wDTZCI7cWXrk7oCLDPo5hzYnkRpLJUhJCs1cwcfjcc4tvyHn62imt4Vb
-	 3mbEAmnAyuD8SydWTRmSFSmJxJbOnkCU2GgMjCNN8wUtkc/QwMHYunFF0p6m+68t4G
-	 uVB1l5q7E+9pXofJm3HPkQD6YwINC0ds8MciIFg4=
-Message-ID: <f6115867-281d-4c97-87d2-3698e6474b7a@linux.microsoft.com>
-Date: Wed, 26 Feb 2025 14:59:53 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mph1cYH0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FD53C4CED6;
+	Wed, 26 Feb 2025 23:33:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1740612822;
+	bh=JU2kjfLvtCKvCAcKZzE2OOPkpTNFwZNgTF7Ciu+cRA4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=mph1cYH0/GtxEnkYNjCOOhVVx56YpsQjSOk1NStNxEAjASxrD7HdP89Eu4QiFsjQp
+	 FaY8Xks0fxxWsXbG0tGc1hVg1E8MwdMRqFTK8X7jjvATAcXjECwZqgiyPCvT3dHxUt
+	 qW1qWzKdtvNXzRAGOsnQSV66plI7HGitg8nnLwYby1irqcym0luHmdV+wN76k2JwOm
+	 iR34vJbsDmq6bIXion0gGlpstWi49EKe12WKUXlHfzk0KtCantRd19Hb9ATkeh73Qx
+	 sOq2e+gAUnuYFRHoKt4gCCqbzhMUX33KGRP89sfavZuSOlnmEtXD32v2ULnB/BGLti
+	 +yYugUjDQL0qQ==
+Date: Wed, 26 Feb 2025 17:33:39 -0600
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Frank Li <Frank.Li@nxp.com>
+Cc: Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, imx@lists.linux.dev,
+	Niklas Cassel <cassel@kernel.org>
+Subject: Re: [PATCH v9 4/7] PCI: dwc: Use devicetree 'ranges' property to get
+ rid of cpu_addr_fixup() callback
+Message-ID: <20250226233339.GA562682@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/7] x86/hyperv: Fix output argument to hypercall that
- changes page visibility
-To: mhklinux@outlook.com, kys@microsoft.com, haiyangz@microsoft.com,
- wei.liu@kernel.org, decui@microsoft.com, tglx@linutronix.de,
- mingo@redhat.com, bp@alien8.de, dave.hansen@linux.intel.com, hpa@zytor.com,
- lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org,
- robh@kernel.org, bhelgaas@google.com, arnd@arndb.de
-Cc: x86@kernel.org, linux-hyperv@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org
-References: <20250226200612.2062-1-mhklinux@outlook.com>
- <20250226200612.2062-2-mhklinux@outlook.com>
-Content-Language: en-US
-From: Nuno Das Neves <nunodasneves@linux.microsoft.com>
-In-Reply-To: <20250226200612.2062-2-mhklinux@outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250128-pci_fixup_addr-v9-4-3c4bb506f665@nxp.com>
 
-On 2/26/2025 12:06 PM, mhkelley58@gmail.com wrote:
-> From: Michael Kelley <mhklinux@outlook.com>
-> 
-> The hypercall in hv_mark_gpa_visibility() is invoked with an input
-> argument and an output argument. The output argument ostensibly returns
-> the number of pages that were processed. But in fact, the hypercall does
-> not provide any output, so the output argument is spurious.
-> 
-> The spurious argument is harmless because Hyper-V ignores it, but in the
-> interest of correctness and to avoid the potential for future problems,
-> remove it.
-> 
-> Signed-off-by: Michael Kelley <mhklinux@outlook.com>
-> ---
-> I have not provided a "Fixes:" tag because the error causes no impact.
-> There's no value in backporting the fix.
-> 
->  arch/x86/hyperv/ivm.c | 3 +--
->  1 file changed, 1 insertion(+), 2 deletions(-)
-> 
-> diff --git a/arch/x86/hyperv/ivm.c b/arch/x86/hyperv/ivm.c
-> index dd68d9ad9b22..ec7880271cf9 100644
-> --- a/arch/x86/hyperv/ivm.c
-> +++ b/arch/x86/hyperv/ivm.c
-> @@ -464,7 +464,6 @@ static int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
->  			   enum hv_mem_host_visibility visibility)
->  {
->  	struct hv_gpa_range_for_visibility *input;
-> -	u16 pages_processed;
->  	u64 hv_status;
->  	unsigned long flags;
->  
-> @@ -493,7 +492,7 @@ static int hv_mark_gpa_visibility(u16 count, const u64 pfn[],
->  	memcpy((void *)input->gpa_page_list, pfn, count * sizeof(*pfn));
->  	hv_status = hv_do_rep_hypercall(
->  			HVCALL_MODIFY_SPARSE_GPA_PAGE_HOST_VISIBILITY, count,
-> -			0, input, &pages_processed);
-> +			0, input, NULL);
->  	local_irq_restore(flags);
->  
->  	if (hv_result_success(hv_status))
+On Tue, Jan 28, 2025 at 05:07:37PM -0500, Frank Li wrote:
+> parent_bus_offset in resource_entry can indicate address information just
+> ahead of PCIe controller. Most system's bus fabric use 1:1 map between
+> input and output address. but some hardware like i.MX8QXP doesn't use 1:1
+> map. See below diagram:
+> ...
 
-Reviewed-by: Nuno Das Neves <nunodasneves@linux.microsoft.com>
+> @@ -448,6 +451,26 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>  	if (IS_ERR(pp->va_cfg0_base))
+>  		return PTR_ERR(pp->va_cfg0_base);
+>  
+> +	if (pci->use_parent_dt_ranges) {
+> +		if (pci->ops->cpu_addr_fixup) {
+> +			dev_err(dev, "Use parent bus DT ranges, cpu_addr_fixup() must be removed\n");
+> +			return -EINVAL;
+> +		}
+> +
+> +		index = of_property_match_string(np, "reg-names", "config");
+> +		if (index < 0)
+> +			return -EINVAL;
+> +
+> +		 /*
+> +		  * Retrieve the parent bus address of PCI config space.
+> +		  * If the parent bus ranges in the device tree provide
+> +		  * the correct address conversion information, set
+> +		  * 'use_parent_dt_ranges' to true, The
+> +		  * 'cpu_addr_fixup()' can be eliminated.
+> +		  */
+> +		of_property_read_reg(np, index, &pp->cfg0_base, NULL);
+> +	}
+
+I think all this code dealing with the "config" resource could go in a
+helper function.  It's kind of a lot of clutter in
+dw_pcie_host_init().
+
+It would be nice to assign pp->cfg0_base once, not assign res->start
+to it and then possibly overwrite it later.
+
+> @@ -841,6 +841,15 @@ void dw_pcie_iatu_detect(struct dw_pcie *pci)
+>  	pci->region_align = 1 << fls(min);
+>  	pci->region_limit = (max << 32) | (SZ_4G - 1);
+>  
+> +	if (pci->ops && pci->ops->cpu_addr_fixup) {
+> +		/*
+> +		 * If the parent 'ranges' property in DT correctly describes
+> +		 * the address translation, cpu_addr_fixup() callback is not
+> +		 * needed.
+> +		 */
+> +		dev_warn_once(pci->dev, "cpu_addr_fixup() usage detected. Please fix DT!\n");
+> +	}
+
+Can you split the warnings out to a separate patch?  I think we should
+warn once in every initialization path where .cpu_addr_fixup() could
+be used, i.e.,
+
+  dw_pcie_host_init()
+  dw_pcie_ep_init()
+  cdns_pcie_host_setup()
+  cdns_pcie_ep_setup()
+
+IMO these should warn if .cpu_addr_fixup() is implemented, regardless
+of use_parent_dt_ranges.
+
+I'm still puzzling over some of the rest of this, so no need to post a
+revised series yet.
+
+Bjorn
