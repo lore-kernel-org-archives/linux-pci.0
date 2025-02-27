@@ -1,154 +1,154 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6323A1FAA;
-	Thu, 27 Feb 2025 04:01:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDB671922D4
+	for <linux-pci@vger.kernel.org>; Thu, 27 Feb 2025 04:11:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1740628879; cv=none; b=auZhcbYP/KuDtPbjDJrFW/Hjc9C/uGn+fLF6dhMvAyncA8etykoGrIOKJyWIBu5c1H2At1JkE/+lJDrttvk8c67miyclfjnE0YoOSnlSrU+5cKllwe7BGfVHtAv4GxhEltyKlR/Yy5xloiF8018qujmjEiklaXrArdbrcRxP1BQ=
+	t=1740629512; cv=none; b=lEFe6SZQBmK8dKhb2GY1cAjE1xg4i+wOswbfOvPhXHrPN6SBBeQvrnNqcwLNOCtTPzg9HRAfo2xokIUPPH9T/VWtIvvrH17HjRHgn0I6qUEDGT0BtUqwPthP0cxNnGKzkMNns1AOQVZaNzDjkzaPm8Q/GNZbVbGWLvW7qk3iFaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1740628879; c=relaxed/simple;
-	bh=IEjTmlHtu/G6YONIHp7Nc7Bjed+wo/mNljfTGEMgYoU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Cf/ADUtpFTbKXGWi+64014aaIzxWC0yjw2JYA1XfVq0jbwL/WHeWvvkiWuNHg25RGRa/uJvX3Nf9QVVkhi6NJFL2j1Y+8Ho+ftSMB4osm88tIYKl5TmJXpkf2PdyuEU8oT61upZvY7KXbcVMHMIMpKIBSn1NgeDlT1PNFjAN22I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Pd9X2fgw; arc=none smtp.client-ip=192.198.163.8
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1740629512; c=relaxed/simple;
+	bh=5vRVGr82CGiZh2Cbzj7pVxhSTU8sAZM5XF2eIwvjp+M=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WyXt2u4sUDGyEgeS3GVHmWAxOzvIj6euTY2FnASgKeeLO86z2iy9sSa3xDtOZVpA+MKoVrpFdBEXXp2s1PtXmLiHDne6xWN6ZhXZjwkKGP7xYTWYU+UrNeUw7skX4Mu866qId97P5z3caynKQeaheXcGbDaRuXQjohtMg6OJg9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=AR5b7VId; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Pd9X2fgw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1740628878; x=1772164878;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=IEjTmlHtu/G6YONIHp7Nc7Bjed+wo/mNljfTGEMgYoU=;
-  b=Pd9X2fgwid4qKtl0iI2E/iRAqmnOmn+3x5xPGvTWN2R6nzmHr296/85n
-   Iik76mRPuhyb2W1PUFsUIPFiJn5wGvALoXHhAXu14heH35hm48Y7hc5J7
-   0PY0eEHJmekgymiXLCJOZlPpleYv0KFbmkyW9UQItSKFccl2vG0rui9Gd
-   cPiBlFvqogNyB+/VoMIzwBlJssOVfxZjUhEZTyLAYVlrhCWXGvS2mDlXX
-   XNYWKJ0c+CX81emJ1Jc98fbW9CPh+HkIeZNMq5e4P+j5LmsJjCb0Ve4JQ
-   oBJwxWoPwlBkanLlos+TxTsSs7ZPzzfa0Q9Xo76O0LWAVokazAOAKkRGW
-   A==;
-X-CSE-ConnectionGUID: fBgsCYisS8Gz5Ly79cBOxw==
-X-CSE-MsgGUID: n4Dwb/ZFQKOzB8RAi26kaA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11357"; a="59039514"
-X-IronPort-AV: E=Sophos;i="6.13,319,1732608000"; 
-   d="scan'208";a="59039514"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Feb 2025 20:01:17 -0800
-X-CSE-ConnectionGUID: 28vhRiITRbmufxYLAhfSWw==
-X-CSE-MsgGUID: Lc4yBGteRBCDAlNlAOIahA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.13,319,1732608000"; 
-   d="scan'208";a="117075567"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa008.fm.intel.com with ESMTP; 26 Feb 2025 20:01:10 -0800
-Date: Thu, 27 Feb 2025 11:59:18 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Alexey Kardashevskiy <aik@amd.com>, x86@kernel.org, kvm@vger.kernel.org,
-	linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
-	linux-arch@vger.kernel.org, Sean Christopherson <seanjc@google.com>,
-	Paolo Bonzini <pbonzini@redhat.com>,
-	Tom Lendacky <thomas.lendacky@amd.com>,
-	Ashish Kalra <ashish.kalra@amd.com>, Joerg Roedel <joro@8bytes.org>,
-	Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Christoph Hellwig <hch@lst.de>, Nikunj A Dadhania <nikunj@amd.com>,
-	Michael Roth <michael.roth@amd.com>,
-	Vasant Hegde <vasant.hegde@amd.com>,
-	Joao Martins <joao.m.martins@oracle.com>,
-	Nicolin Chen <nicolinc@nvidia.com>,
-	Lu Baolu <baolu.lu@linux.intel.com>,
-	Steve Sistare <steven.sistare@oracle.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
-	Suzuki K Poulose <suzuki.poulose@arm.com>,
-	Dionna Glaze <dionnaglaze@google.com>, Yi Liu <yi.l.liu@intel.com>,
-	iommu@lists.linux.dev, linux-coco@lists.linux.dev,
-	Zhi Wang <zhiw@nvidia.com>,
-	"Aneesh Kumar K . V" <aneesh.kumar@kernel.org>
-Subject: Re: [RFC PATCH v2 14/22] iommufd: Add TIO calls
-Message-ID: <Z7/jFhlsBrbrloia@yilunxu-OptiPlex-7050>
-References: <20250218111017.491719-1-aik@amd.com>
- <20250218111017.491719-15-aik@amd.com>
- <Z72GmixR6NkzXAl7@yilunxu-OptiPlex-7050>
- <2fe6b3c6-3eed-424d-87f0-34c4e7e1c906@amd.com>
- <Z77xrqLtJfB84dJF@yilunxu-OptiPlex-7050>
- <20250226131202.GH5011@ziepe.ca>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="AR5b7VId"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 51QJTPiV000821
+	for <linux-pci@vger.kernel.org>; Thu, 27 Feb 2025 04:11:50 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	FSAQvsYR3iMFmPabg5DWf8ziRODUsEKRzX7L+bsEUbE=; b=AR5b7VIdGtyIxdIO
+	XDWqh9b7PfITf0ErrUajHIGBZdCP8V2Bbqolk9ju1NQwt7g4ZTzmqnbsuAXl7Bbs
+	v8Ozs3ZToV2PMga0T3uFFJsr+uDDzEty6BG1Hzn34uS0zui/Ag2uLlvOxAxmBFzt
+	BOdrvPeSW0ypR1FW5Wr9nNWq4VNe0IE0t52zPZRnjmWe+RQZok2nKwTq+Z/LEsSr
+	JEWNroukeRz2iL6CycYLUJ9omVapte/XPS8c8OMcMg+m4YV9hxq1gdnwpsHlffnc
+	hKbGNF7kr8KD0DZVe8bPD3DcbwGC8TJ+azLWLF93f/Nfw7eMcbU+UmgXRLCKzyEF
+	BVvOMg==
+Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 451pu9c7w5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Thu, 27 Feb 2025 04:11:49 +0000 (GMT)
+Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-2fe8fa38f6eso1202033a91.2
+        for <linux-pci@vger.kernel.org>; Wed, 26 Feb 2025 20:11:49 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1740629509; x=1741234309;
+        h=content-transfer-encoding:in-reply-to:from:references:cc:to
+         :content-language:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=FSAQvsYR3iMFmPabg5DWf8ziRODUsEKRzX7L+bsEUbE=;
+        b=mlqsJ9LQ9Xz7SdwUE3SnbKd9Wydqx5OFj4AHUcoc/9ryNw+a/IlVX/pvO8wuJ8V7iP
+         rQFCAJQhGsZfbymj/ru4Ij3bGnwL+lzWb302hP8KVPgnaNk3yFABJE5uheIJ4WBWA27u
+         cdI+2MJIRPxoNmeOjVDQxlzj//Ed+CuxxrUnwsxOnBZ1LE9ivzr5AkUG7mM49tGtVAsD
+         MEe//zq/5lesTcwwv03QJFmI/ujiPn3y/Jc+Fcu1GKsqOtRcBYOj6zXgzO8G7VhJHo5w
+         MKMVsBIyW2T43QGSHSF47xg77pswGndCNOQyKTteaFfZ050p9NYPhZeZjjH1p/ApUbmI
+         7k/A==
+X-Forwarded-Encrypted: i=1; AJvYcCUQBljkZkzP1NqWzYFKquklBTeyXUJCoNMRviTZ5RYf2qxX46SwPo8FeztWTZhxCncp/ZTDTJhWtzU=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOUil/8B2rNppXQkV/5PYhavVeQNsRUArdX2PAxc6iDQUmwNu9
+	kX+rnzjDFQgdZHKkz8JvWVQL7xvh4nu81Kt/8Ztl4W1PE+BP5Q/uh02nJNb2hWnjdOWS5ZRfjI+
+	bmhFYlKei0WiJebuWowufsVZ/C5EnYPdGApUUFiiMht4/YoHSrQ4L700Wks4=
+X-Gm-Gg: ASbGncvN1jvYX9P3Ec5qTYrfAAwFdPNKJ4QUtRjBIMPcZryfnK3FBarkknIfE78AWL0
+	8NmoaBtyTaBiL5svwh2LjK41GRWvdcgp8yWo513MzqqrC93cacLwGQPXf8UVFCbI7McVtNGhOaI
+	TCVitc+1SRYKs3o7jaBO0dXs1XxBZdnxLqloC59Ly0w8wnIfey1kT1Vdj8GT21lYYVmZmpo287x
+	iGFAA6+LAoLKbZCF20pj24c3BXmUQIWnWxHy8V5//qPDMfM5lNjEhPeJckj9YjR24WXf8Y55AyL
+	T43VLSi4Ji8pkNgAd/iTLNgcp3hN9wkgzBKGoXYZ4FnE
+X-Received: by 2002:a05:6a21:32a8:b0:1ee:c598:7a90 with SMTP id adf61e73a8af0-1f0fc99bf90mr16869078637.39.1740629508934;
+        Wed, 26 Feb 2025 20:11:48 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IFRIX3IkvZiOUdHKEbb1/zqOV6uSSXIJDZqwMP6rxtAvZaceoDHFXvQadYXggDDykHwRSrVbA==
+X-Received: by 2002:a05:6a21:32a8:b0:1ee:c598:7a90 with SMTP id adf61e73a8af0-1f0fc99bf90mr16869027637.39.1740629508534;
+        Wed, 26 Feb 2025 20:11:48 -0800 (PST)
+Received: from [10.92.199.34] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-734a003eb65sm458168b3a.149.2025.02.26.20.11.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 26 Feb 2025 20:11:48 -0800 (PST)
+Message-ID: <0dffeb3b-63b3-266e-d1e9-b8adda7cc0ec@oss.qualcomm.com>
+Date: Thu, 27 Feb 2025 09:41:41 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250226131202.GH5011@ziepe.ca>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v4 00/10] PCI: Enable Power and configure the TC956x PCIe
+ switch
+Content-Language: en-US
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
+        Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        chaitanya chundru <quic_krichai@quicinc.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        cros-qcom-dts-watchers@chromium.org, Jingoo Han <jingoohan1@gmail.com>,
+        Bartosz Golaszewski <brgl@bgdev.pl>, quic_vbadigan@quicnic.com,
+        amitk@kernel.org, dmitry.baryshkov@linaro.org,
+        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        jorge.ramirez@oss.qualcomm.com,
+        Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
+References: <20250225-qps615_v4_1-v4-0-e08633a7bdf8@oss.qualcomm.com>
+ <20250227035737.q7qlexdcieubbphx@thinkpad>
+ <20250227035924.p43tpbtjmqszdww6@thinkpad>
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <20250227035924.p43tpbtjmqszdww6@thinkpad>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-GUID: 4v3YGAvzt8jZp2CN27oA-ZAbQ7Q_5L7Y
+X-Proofpoint-ORIG-GUID: 4v3YGAvzt8jZp2CN27oA-ZAbQ7Q_5L7Y
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1057,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-02-27_02,2025-02-26_01,2024-11-22_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 priorityscore=1501
+ phishscore=0 adultscore=0 spamscore=0 impostorscore=0 lowpriorityscore=0
+ bulkscore=0 mlxlogscore=836 malwarescore=0 suspectscore=0 clxscore=1015
+ mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2502100000 definitions=main-2502270029
 
-On Wed, Feb 26, 2025 at 09:12:02AM -0400, Jason Gunthorpe wrote:
-> On Wed, Feb 26, 2025 at 06:49:18PM +0800, Xu Yilun wrote:
+
+
+On 2/27/2025 9:29 AM, Manivannan Sadhasivam wrote:
+> On Thu, Feb 27, 2025 at 09:27:47AM +0530, Manivannan Sadhasivam wrote:
+>> On Tue, Feb 25, 2025 at 03:03:57PM +0530, Krishna Chaitanya Chundru wrote:
+>>> TC956x is the PCIe switch which has one upstream and three downstream
+>>> ports. To one of the downstream ports ethernet MAC is connected as endpoint
+>>> device. Other two downstream ports are supposed to connect to external
+>>> device. One Host can connect to TC956x by upstream port.
+>>>
+>>> TC956x switch power is controlled by the GPIO's. After powering on
+>>> the switch will immediately participate in the link training. if the
+>>> host is also ready by that time PCIe link will established.
+>>>
+>>> The TC956x needs to configured certain parameters like de-emphasis,
+>>> disable unused port etc before link is established.
+>>>
+>>> As the controller starts link training before the probe of pwrctl driver,
+>>> the PCIe link may come up as soon as we power on the switch. Due to this
+>>> configuring the switch itself through i2c will not have any effect as
+>>> this configuration needs to done before link training. To avoid this
+>>> introduce two functions in pci_ops to start_link() & stop_link() which
+>>> will disable the link training if the PCIe link is not up yet.
+>>>
+>>> Enable global IRQ for PCIe controller so that recan can happen when
+>>> link was up through global IRQ.
+>>>   
+>>
+>> Move these patches to a separate series.
+>>
 > 
-> > E.g. I don't think VFIO driver would expect its MMIO access suddenly
-> > failed without knowing what happened.
+> Or you can just drop them. I have a series that adds global IRQ to most of the
+> SoCs and sc7280 is one of them.
 > 
-> What do people expect to happen here anyhow? Do you still intend to
-> mmap any of the MMIO into the hypervisor? No, right? It is all locked
+> - Mani
+fine for me, I will drop.
 
-Not expecting mmap the MMIO, but I switched to another way. VFIO doesn't
-disallow mmap until bind, and if there is mmap on bind, bind failed.
-That's my understanding of your comments.
-
-https://lore.kernel.org/kvm/Z4Hp9jvJbhW0cqWY@yilunxu-OptiPlex-7050/#t
-
-
-Another concern is about dma-buf importer (e.g. KVM) mapping the MMIO.
-Recall we are working on the VFIO dma-buf solution, on bind/unbind the
-MMIO accessibility is being changed and importers should be notified to
-remove their mapping beforehand, and rebuild later if possible.
-An immediate requirement for Intel TDX is, KVM should remove secure EPT
-mapping for MMIO before unbind.
-
-So I think device is all locked down into CC mode AFTER bind and BEFORE
-unbind. It doesn't seems viommu/vdevice could control bind/unbind.
-
-There are other bus error handling cases, like AER when TDISP/SPDM/IDE
-state broken, that I don't have a clear solution now. But I cannot
-imagine they could be correctly handled without pci_driver support.
-
-> down?
+- Krishna Chaitanya.
 > 
-> So perhaps the answer is that the VFIO side has to put the device into
-> CC mode which disables MMAP/etc, then the viommu/vdevice iommufd
-> object can control it.
-> 
-> > Back to your concern, I don't think it is a problem. From your patch,
-> > vIOMMU doesn't know the guest BDFn by nature, it is just the user
-> > stores the id in vdevice via iommufd_vdevice_alloc_ioctl(). A proper
-> > VFIO API could also do this work.
-> 
-> We don't want duplication though. If the viommu/vdevice/vbdf are owned
-> and lifecycle controlled by iommufd then the operations against them
-> must go through iommufd and through it's locking regime.
-> > 
-> > The implementation is basically no difference from:
-> > 
-> > +       vdev = container_of(iommufd_get_object(ucmd->ictx, cmd->vdevice_id,
-> > +                                              IOMMUFD_OBJ_VDEVICE),
-> > 
-> > The real concern is the device owner, VFIO, should initiate the bind.
-> 
-> There is a big different, the above has correct locking, the other
-> does not :)
-
-Could you elaborate more on that? Any locking problem if we implement
-bind/unbind outside iommufd. Thanks in advance.
-
-Thanks,
-Yilun
-
-> 
-> Jason
