@@ -1,48 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4578B1EE7AD
-	for <linux-pci@vger.kernel.org>; Tue,  4 Mar 2025 18:59:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BC831D7995;
+	Tue,  4 Mar 2025 19:08:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741114752; cv=none; b=sLTd8HIUHzWSG163tf8YwyHn5sqdVm3L7xrHROgu43C257baYNB4I+5YwHU/JioZEJLEfoHNUhCoTh0rbF0yulBzjv+Vh66SyFpD4WRmI7208keMBUZIrvKVfk2dSsbF68rO9R1MKt9ye2YjcoTZcnXOx+UYP0ICVAqkpDGcR7Q=
+	t=1741115300; cv=none; b=cqRn6HRp5jD4/MO90EXAyuXixRl2sCmu/WH/HlgKnMtsTpEMbJs3Fg9Km8hwFEB7fRRiNHxkZvAGb87/N/6frV3Pp4AVJHAofqn9fYknNL+9Z8G0Fa/ldZYqnn9+ArIzf7NHRZiFrDsruw+JWgL/OG7ogH3b1h3bsB7huN6/kag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741114752; c=relaxed/simple;
-	bh=wUgcZ+CSDwZdsbW/1vulox4KPFlqgQLM/5tbf4czpak=;
+	s=arc-20240116; t=1741115300; c=relaxed/simple;
+	bh=g2ihsxLxAkJEVcm9wKXS60iX5wYnYkx5vGLDQ45KKSM=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=ST5bEN7QXUBCw+nc7tm68q51Zyx9bLljq+tsfvqQepu7zXPlzVRGY/qWuyZ2amq664c9PEqQ47Q4m0OgwWYIeq4y2rygP1XgsKX7GDMGvwpAmhprmLczmTeugBpeQFOdHtleri35RubULQ/ul9R05QckzTaWzwdA0BhJdj/Xslg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VcGp/ifr; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=tg09fCxeugCrrW/b5YgXuf2stzWRj3MnHQBot00dD5bp6SecnBLClcUfmSU8sdYvrSt3IhG9NkCK/z6/HViCetdtfErzclY76l2v6byO/vZkhB/lJOeriHlcTlN1ZL4ztB/I58TeS2c+aAU5Xj8RczJv+fBq/iqXyzOfVF2udB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KQuMUOIQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VcGp/ifr"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB101C4CEE5;
-	Tue,  4 Mar 2025 18:59:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KQuMUOIQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78B07C4CEE5;
+	Tue,  4 Mar 2025 19:08:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1741114752;
-	bh=wUgcZ+CSDwZdsbW/1vulox4KPFlqgQLM/5tbf4czpak=;
+	s=k20201202; t=1741115299;
+	bh=g2ihsxLxAkJEVcm9wKXS60iX5wYnYkx5vGLDQ45KKSM=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VcGp/ifrYBIHmxRQyo4jIJqe8kNJM9OH9gQ9XVfg8W6vYnEpHVRxWB+71dl+od6Tb
-	 S29KgZhqb2REs28UTnUgffbSKa85X1mtX0YMHIC+igHA1CEo4O8xbqWF7L7GyrBgxd
-	 ALIm+eWDCvwxuNHXyWR+KAxDX82kZlxQWX99/xar3ADLYNJKlCnr6PsP0ew7VzJ9Uc
-	 81MOPOFU0xD0k0cZGYw7O+iWik8xN/LvzQVLYZEpimgxgmKBqm6iqf7x4wgwJUz1A8
-	 Q5PZ3vsZho0Hfkb0QZRsMCnUeyy8e52DHXfEPr8d2UByTlbskbynrc8H9ValDCjZXd
-	 s5febDEECtWag==
-Date: Tue, 4 Mar 2025 12:59:10 -0600
+	b=KQuMUOIQDuJY1Z+DBI+r7oMOZa4+TNIQ0kCXWEpcLph/kilyCGrfVL7KVTMiIHW/O
+	 sBOigS+Dv/FjJEkIYJMAYbFEyWqDfLeQ/H/jnqggrTI11Wf+5AvG8vFSJts7oUKKHL
+	 +o8Y8zURkoCaQUnbwVqrmOz6CYoSQXdPM7VC8IpkCbmu57vT/VtpTXz2dsU9+O6//s
+	 mfVwocIj60zwAzBIKzo88qZqH1nAlV6SgdtJzNlARdXVNfv4qyUSmn7hzp/uonkIoK
+	 o2NsTwjGu+V9v4i8r7H/JRUGLzA1BIpPW8+Cya2g6dcaCBYcCL59+c0egfvZNP7kbp
+	 8vf8vyxOuVRtg==
+Date: Tue, 4 Mar 2025 13:08:16 -0600
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Jon Pan-Doh <pandoh@google.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Karolina Stolarek <karolina.stolarek@oracle.com>,
-	linux-pci@vger.kernel.org,
-	Martin Petersen <martin.petersen@oracle.com>,
-	Ben Fuller <ben.fuller@oracle.com>,
-	Drew Walton <drewwalton@microsoft.com>,
-	Anil Agrawal <anilagrawal@meta.com>,
-	Tony Luck <tony.luck@intel.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Lukas Wunner <lukas@wunner.de>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Subject: Re: [PATCH v2 2/8] PCI/AER: Use the same log level for all messages
-Message-ID: <20250304185910.GA251792@bhelgaas>
+To: Frank Li <Frank.Li@nxp.com>
+Cc: Jesper Nilsson <jesper.nilsson@axis.com>,
+	Lars Persson <lars.persson@axis.com>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-arm-kernel@axis.com,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH RFC NOT TESTED 2/2] PCI: artpec6: Use
+ use_parent_dt_ranges and clean up artpec6_pcie_cpu_addr_fixup()
+Message-ID: <20250304190816.GA253203@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -51,34 +50,16 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250214023543.992372-3-pandoh@google.com>
+In-Reply-To: <20250304-axis-v1-2-ed475ab3a3ed@nxp.com>
 
-On Thu, Feb 13, 2025 at 06:35:37PM -0800, Jon Pan-Doh wrote:
-> From: Karolina Stolarek <karolina.stolarek@oracle.com>
-> 
-> When reporting an AER error, we check its type multiple times
-> to determine the log level for each message. Do this check only
-> in the top-level function and propagate the result down the call
-> chain. Make aer_print_port_info output to match the level of the
-> reported error.
+On Tue, Mar 04, 2025 at 12:49:36PM -0500, Frank Li wrote:
+> Remove artpec6_pcie_cpu_addr_fixup() as the DT bus fabric should provide correct
+> address translation. Set use_parent_dt_ranges to allow the DWC core driver to
+> fetch address translation from the device tree.
 
-Can you mention the top-level function name?  I guess it's
-aer_isr_one_error()?  Nit: add "()" after function names.
-
-It *might* be possible to split this into two patches:
-
-  - Check level once and propagate down.  This would include the
-    changes to aer_isr_one_error(), aer_process_err_devices(),
-    aer_print_error(), __aer_print_error(), and probably
-    dpc_process_error().  It looks like this wouldn't change the
-    levels of any messages.
-
-  - Change log levels.  It looks like the main place is
-    pci_print_aer(), which previously always used pci_err() and would
-    now use either KERN_WARNING or KERN_ERR.
-
-pcie_print_tlp_log() also always uses pci_err().  Maybe that's only
-used for Uncorrectable errors?  I'm not sure what the rules are for
-the Header Log.
+Shouldn't we be able to detect platforms where DT doesn't describe the
+translation correctly?  E.g., by running .cpu_addr_fixup() on a
+res.start value and comparing the result to the parent_bus_addr()?
+Then we could complain about it if they don't match.
 
 Bjorn
