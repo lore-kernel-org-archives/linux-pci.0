@@ -1,219 +1,221 @@
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10on2041.outbound.protection.outlook.com [40.107.93.41])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EB2C3FBB3;
-	Wed,  5 Mar 2025 03:09:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.93.41
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741144168; cv=fail; b=E+EVuoqx0+/V1/WDwVr0sB2TG3r+07cr3HddPx6asBTp77sxJ76aaD/6kQWiWAJIfUKK28A2grIfX5+zWGazHDT2Yw/TVGO89iun3ARGDC9kr4bvzCIGELlphHBE/H2HCjmbV8gQtfZNvQou+e7JXJz+cJAFkaBD4N9A4u+PVY0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741144168; c=relaxed/simple;
-	bh=lW5Ri0kjJ5fOHf954fBxiSK8NMN/iFmhFDWjV5RmMII=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=PulPLKerW6ZxrPWfk1PpjCJT/t94pauFN8oPqrggKog9Wb8TCD6VHWNVMb5jayzcA1VW/cYKr5HZ+gMj6+X1Rky8rqDElBRxmyIC+LvhNGiEdxW2jWikq+PUJzQN4eUllHGnbgFXLEAHMecWvkYxgUdqIM+gkjomMdsZmrwmMz4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=LkaCWuZB; arc=fail smtp.client-ip=40.107.93.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDDC359B71
+	for <linux-pci@vger.kernel.org>; Wed,  5 Mar 2025 03:16:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1741144600; cv=none; b=b/rvypq2ALbbpUqzdITK5d9znCzRiJTS1+XnpV1uytxuWmk9HbmM1h+hmaJq5+Jt1wLXDxiwZI/r/jVUuJV5am7fmpKEn8WQjd7yDvZWhU74d/ZoFv9ydkQxL/lopA057331m32XcpQQYhBEFbthrLHDo/HdMA72+Ps3hNUzj4E=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1741144600; c=relaxed/simple;
+	bh=EsR4nGnyBDS/VIb+LpQZpmXrF5wEoCQl1Mo8HIK7ch4=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=FH2Q2h2zsDPtl3i4+6PnpH8RRz9JurLRrkoGEM6PTlHSQvOaGfHi7/8Orsaude/WiRbViPMW9grKlThetEblFiyrzhrs/ukcCJioaOEB5wzOsQRgr3cq+GrxWHYaPcQ4i616cetC8dnvUYPQ9hF1rqqix7W3ZdUc4yyrFs0qW/E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=S2kU2CI2; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="LkaCWuZB"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=ie/dEGvShq/bEqKIUpWc7913RtoS4uqVIQz57LjeyB7OVV5Rqfpgsh9hEUoG8/iwsRSX/PTkGqMPv5SNrrWnM9jvAWGQ4zlbPqpUSL75LNsYkjFwuIrVCp8bZaEp6yRCmYqxDCGJ4Ru8Mxc7nc9HPbDbfAkUjjUpFR6p6g0PTl1pttNtEGk6FNsNHjGvUC8yOU+h+J2OsDnYrWMBSQ3LNniY6ra2TYVAiG7sYyOPIPjlzx1bjlcjcekqXCaAwmFBJ/V+3LvSMACmAjGr6CxSLN7h4rTqqAm/Uv3GGLmEy4S+4CvXdZ4faygLjeSnpifFHMY7I5+VFQSvAWbkBkzbcQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=rHJY49zrPRm909rZzLMgVcIljaFiTqmzozXbJpA4zkE=;
- b=TO/FrIir+lFOEKwAkngiasVV8BcZg5+kVWLBm8bofHgWK9Xen3iIwX3nj/iOp+62LN9tlRrBaJfEbt0BXoLzqCYbVovUUyCxo/dn/bNMRzRi7ulIKMo2iNoKkY7RwdN6KlOd4ITDERMISpphI2bhMyJzmMVWCl3gAx+BnsK1HKfSdMA1b0wPVdJPywjsHdGlFuGGNyMHjVwOwuhF8wJ9RgURSkNTN8wp/drkYbiirTNeHq4EzjCVSI7002cHYEJwbtlDDNJk9K84iObWODFTqe0FBAGN1N8yFdpxPtD89znIDQOpPkqNewfOPWA6V7jaINEBJAD/33XBKJJHJFxchg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=amd.com; dmarc=pass action=none header.from=amd.com; dkim=pass
- header.d=amd.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=rHJY49zrPRm909rZzLMgVcIljaFiTqmzozXbJpA4zkE=;
- b=LkaCWuZBA+2ksek+hbIN4GeAZ8LwWKvbQbHAqeeXJbZ6udKX7JVGXHobv7QjlkW2sKjdlmOHyeYOnE6/Sq8hmlX7ySnplpmo3vz6x2v4EvklQGNKv4oGdxdMm/3pAVqZF1In4rbSmA/o86xpDNQSmS0HcODQG/UzaCfRjPS+qKE=
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=amd.com;
-Received: from CH3PR12MB9194.namprd12.prod.outlook.com (2603:10b6:610:19f::7)
- by MW4PR12MB7165.namprd12.prod.outlook.com (2603:10b6:303:21b::14) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8489.25; Wed, 5 Mar
- 2025 03:09:23 +0000
-Received: from CH3PR12MB9194.namprd12.prod.outlook.com
- ([fe80::53fb:bf76:727f:d00f]) by CH3PR12MB9194.namprd12.prod.outlook.com
- ([fe80::53fb:bf76:727f:d00f%3]) with mapi id 15.20.8489.025; Wed, 5 Mar 2025
- 03:09:23 +0000
-Message-ID: <4ae5eda3-824a-4bb5-b763-19083c085575@amd.com>
-Date: Wed, 5 Mar 2025 14:09:09 +1100
-User-Agent: Mozilla Thunderbird Beta
-Subject: Re: [RFC PATCH v2 14/22] iommufd: Add TIO calls
-Content-Language: en-US
-To: Jason Gunthorpe <jgg@ziepe.ca>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>, x86@kernel.org, kvm@vger.kernel.org,
- linux-crypto@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-arch@vger.kernel.org, Sean Christopherson <seanjc@google.com>,
- Paolo Bonzini <pbonzini@redhat.com>, Tom Lendacky <thomas.lendacky@amd.com>,
- Ashish Kalra <ashish.kalra@amd.com>, Joerg Roedel <joro@8bytes.org>,
- Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>,
- Robin Murphy <robin.murphy@arm.com>, Kevin Tian <kevin.tian@intel.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Dan Williams
- <dan.j.williams@intel.com>, Christoph Hellwig <hch@lst.de>,
- Nikunj A Dadhania <nikunj@amd.com>, Michael Roth <michael.roth@amd.com>,
- Vasant Hegde <vasant.hegde@amd.com>, Joao Martins
- <joao.m.martins@oracle.com>, Nicolin Chen <nicolinc@nvidia.com>,
- Lu Baolu <baolu.lu@linux.intel.com>,
- Steve Sistare <steven.sistare@oracle.com>, Lukas Wunner <lukas@wunner.de>,
- Jonathan Cameron <Jonathan.Cameron@huawei.com>,
- Suzuki K Poulose <suzuki.poulose@arm.com>,
- Dionna Glaze <dionnaglaze@google.com>, Yi Liu <yi.l.liu@intel.com>,
- iommu@lists.linux.dev, linux-coco@lists.linux.dev, Zhi Wang
- <zhiw@nvidia.com>, "Aneesh Kumar K . V" <aneesh.kumar@kernel.org>
-References: <20250218111017.491719-1-aik@amd.com>
- <20250218111017.491719-15-aik@amd.com>
- <Z72GmixR6NkzXAl7@yilunxu-OptiPlex-7050>
- <2fe6b3c6-3eed-424d-87f0-34c4e7e1c906@amd.com>
- <Z77xrqLtJfB84dJF@yilunxu-OptiPlex-7050> <20250226131202.GH5011@ziepe.ca>
- <433217be-55e3-477b-bc10-cf81f02ab21e@amd.com>
- <20250301003200.GQ5011@ziepe.ca>
-From: Alexey Kardashevskiy <aik@amd.com>
-In-Reply-To: <20250301003200.GQ5011@ziepe.ca>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: ME2PR01CA0100.ausprd01.prod.outlook.com
- (2603:10c6:201:2c::16) To CH3PR12MB9194.namprd12.prod.outlook.com
- (2603:10b6:610:19f::7)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="S2kU2CI2"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250305031635epoutp0216fb23c21310e7f63e39bc5b65ff0c09~pycj1VRfQ0633506335epoutp02D
+	for <linux-pci@vger.kernel.org>; Wed,  5 Mar 2025 03:16:35 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250305031635epoutp0216fb23c21310e7f63e39bc5b65ff0c09~pycj1VRfQ0633506335epoutp02D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1741144595;
+	bh=EsR4nGnyBDS/VIb+LpQZpmXrF5wEoCQl1Mo8HIK7ch4=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=S2kU2CI2xje+emjK4Jg/RqSa3jUUwct/k0/OAPWmDVT7bNcG9njUDddd6pyFnPPXs
+	 580vcBYClflQEHljRseFhrwy9+azvOjBcElBcpeZahTb6D0f8ueNkft4vzkWrk5Thr
+	 fKX5zjSmjSk36yE/SQiEF+IZvo1XWpzH1NeUZioM=
+Received: from epsnrtp1.localdomain (unknown [182.195.42.162]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTP id
+	20250305031635epcas5p32f97f9dce2000f5a89b131741355e606~pycjCzNs01185711857epcas5p38;
+	Wed,  5 Mar 2025 03:16:35 +0000 (GMT)
+Received: from epsmges5p2new.samsung.com (unknown [182.195.38.181]) by
+	epsnrtp1.localdomain (Postfix) with ESMTP id 4Z6yPs2WBxz4x9Pr; Wed,  5 Mar
+	2025 03:16:33 +0000 (GMT)
+Received: from epcas5p1.samsung.com ( [182.195.41.39]) by
+	epsmges5p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	DD.49.19933.112C7C76; Wed,  5 Mar 2025 12:16:33 +0900 (KST)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250304165250epcas5p39c2b800a8bfb14a9c5c1b01865e65869~pp78jai0Z1538215382epcas5p3e;
+	Tue,  4 Mar 2025 16:52:50 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20250304165250epsmtrp2f94931dc5f059ee5cd572b39f5f6e6ac~pp78iRIID0997409974epsmtrp2Y;
+	Tue,  4 Mar 2025 16:52:50 +0000 (GMT)
+X-AuditID: b6c32a4a-c1fda70000004ddd-9b-67c7c2114726
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	FF.51.23488.2EF27C76; Wed,  5 Mar 2025 01:52:50 +0900 (KST)
+Received: from FDSFTE462 (unknown [107.122.81.248]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250304165247epsmtip2e395c7a173fdc48666237081c1b53dbb~pp75iQzcE3269232692epsmtip22;
+	Tue,  4 Mar 2025 16:52:46 +0000 (GMT)
+From: "Shradha Todi" <shradha.t@samsung.com>
+To: =?UTF-8?Q?'Krzysztof_Wilczy=C5=84ski'?= <kw@linux.com>, "'Geert
+ Uytterhoeven'" <geert@linux-m68k.org>
+Cc: "'Fan Ni'" <nifan.cxl@gmail.com>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-perf-users@vger.kernel.org>, <manivannan.sadhasivam@linaro.org>,
+	<lpieralisi@kernel.org>, <robh@kernel.org>, <bhelgaas@google.com>,
+	<jingoohan1@gmail.com>, <Jonathan.Cameron@huawei.com>,
+	<a.manzanares@samsung.com>, <pankaj.dubey@samsung.com>, <cassel@kernel.org>,
+	<18255117159@163.com>, <xueshuai@linux.alibaba.com>,
+	<renyu.zj@linux.alibaba.com>, <will@kernel.org>, <mark.rutland@arm.com>,
+	"'Yoshihiro Shimoda'" <yoshihiro.shimoda.uh@renesas.com>, "'Linux-Renesas'"
+	<linux-renesas-soc@vger.kernel.org>
+In-Reply-To: <20250304154638.GB2310180@rocinante>
+Subject: RE: [PATCH v7 3/5] Add debugfs based silicon debug support in DWC
+Date: Tue, 4 Mar 2025 22:22:36 +0530
+Message-ID: <061201db8d25$dd1e2bd0$975a8370$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB9194:EE_|MW4PR12MB7165:EE_
-X-MS-Office365-Filtering-Correlation-Id: fcb4c789-5bdb-4ce3-4216-08dd5b932118
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|7416014|376014|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?c0FVNzZaUWNwYmlRYUIxWEJYaVFwZThJUnFIKzB3YmpicXpIZ0NES2Rnbmk0?=
- =?utf-8?B?MUN0ZzNYWmVZTk1oMWNSQStIdjVmWUtOdFkvWmhIaVlERFJ0NUxCVEJKeHNU?=
- =?utf-8?B?cm1uQlpVdVZESUdJdHRveS9YLzE3cjJqcnZBTzh0aHVaR1RndmJVSjJBZG13?=
- =?utf-8?B?UEFKRTZMOXlHQVBtSGFlOVVHRS9jeGV5WmJVWWt2NGpuSWphSlFGNVlJbXQx?=
- =?utf-8?B?WjNXR0Y1MXdvQnFSRElrd3FYU1E2ZHIwdzFiZkJSVXk1VXNaVHJEb3pzSVRC?=
- =?utf-8?B?bXNGTy82WDJ2WEZzSmExUEZQWU9tcGkvK1VEV1JzbExVMmdwcTMrY0F6dDYv?=
- =?utf-8?B?dUliSXozb2Rxc1QvVzVJVzJBQlBVNUNvdEFuakkwVGI5K2VmSEt5b0JXOVVx?=
- =?utf-8?B?M1FNRHlORENmR0ZOeDE4ckducmNnR1l1NmNEMjVPeGRXbTd4MmJHTTUwNnRu?=
- =?utf-8?B?Ymh6bENpRUlYS0Vaa21GcVRSb1NBS0dZdlF2S01KaVBLNGhOOGw4U0dnaVl5?=
- =?utf-8?B?dTRjdzQ2cVJFbWZhd2krMHRvYStoV2ZnNzZIYkZPVlZzVnRNR3F6VDZidUho?=
- =?utf-8?B?ZTVoQ1oyaWhaVTBNcmJVVUZkZlBpejJXZy8zZHUzei9kN1U3U0VoRC9xeFF5?=
- =?utf-8?B?cHFMK3RWQmNBRHZ2anBoNjltcHBrVk15WmxYdU9FT3V4T2F4OVY5dmpZaGNI?=
- =?utf-8?B?TnVkUjhidXN1NUQ2OHhWM1k2Z3FxUlprWXI5bnNHRXV3MDJUNk1VaGlvcVc5?=
- =?utf-8?B?UTg4bTdkZzlGRTFmSmh3MFkwMkZMRDJSb3FUMllOZ0dLZVM0RWRvMm1sM1BC?=
- =?utf-8?B?cTVyZjhHUEp3YUtDR3BISk9yU3B2U2xkcFJFMnFPODI1eFVWckV5RWxnSXhn?=
- =?utf-8?B?RllRSlZFSTJnOHUvVGpJclY2U3dzb2RjaXRsS2UrZXhaV1Z0MnZycmlObEl4?=
- =?utf-8?B?a2E1VkFBN216UGxDbUQ1cHhBK3Y4MDZpZTMySXpSY3NBaFpMUEMvK0VHWWxo?=
- =?utf-8?B?MU5ZQUdOcm8yOVF0MXhjQy9KaW5iV3B6TXArMzdnNlRGWTVuK3RsZzV6ZTln?=
- =?utf-8?B?bmtpT01DK0NLV0tmaEJWTlJFYVpJd2x1RXlJSVh3RDZCV0lRcVlSa3R6NjJX?=
- =?utf-8?B?aFhpaGNwaTNqTDZGQ2tJa1BERDJVVXpsN3Y4bng1cE55S0VTVURiU2tXZStv?=
- =?utf-8?B?K3pRWW52Qi95Y0VRRHJMU2p2U0I2c0xXZ0RZbzZjaHcrWE1jNVVxQ1BEMnJE?=
- =?utf-8?B?Q3pMS3dRNlpwNUhjR0JYRFV1Zms0eWNiR245UHVQMFNRUFp6eEYwZUdraUxw?=
- =?utf-8?B?N25ZTVZzWWMrKzVjNDBhd3YvcThiSFlYK1FMZzhSSTN3MXFHYnA5bW5XNnF3?=
- =?utf-8?B?V1lTRHdTbjRlU0ZiTEluRU41VU53Q0YxV1pNUE0vRGFCK2VwVGVIRXVKSEho?=
- =?utf-8?B?bEtBYnhGU3lOSzVWei9FZWF5V2VOYzZjczV6bUxLQTZ1VlhwdXR5eEV0anRx?=
- =?utf-8?B?ZG5RZGgxNmxLNzQ5Rnd6VVZhZU1FWS8wWUNKZjJOSEdhRitTU0dXNHp0dks0?=
- =?utf-8?B?djJPcEtPdFNlOEsrWmdVdFBGUGVnUnhOdGkyTzRIMHhZNERza1Izemx2OTgr?=
- =?utf-8?B?MVRSaEoyK1RVd251bzdZaTVsV2dXMGtVNEdjVTNYbjdialZBVWhUaU4zelBD?=
- =?utf-8?B?RXZ1R2VMdmFyYWpjckRIT1Y3Vjc0K3RXYlY3WWFHZ0FGQmJXWjBYWG1FWVMv?=
- =?utf-8?B?ckozdXU5VFZNOGZ2WVhMZ3V5Vk8reEEvaVJDaW1pZHlnSjFTQ2lveEdxQnBn?=
- =?utf-8?B?OSt1bmZwaHdER0xXSmpxMUM0NHduQkxod1FJUFFWc2tyNFJqSTdRVk4vZGxD?=
- =?utf-8?Q?y1K481HOkeMWG?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB9194.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?STJrd1VVTmtpTGFpcVBNcnNjeGRQbGRvaVpxM1FpNjFtRWhzcUNFb0lSYUlh?=
- =?utf-8?B?R2p3UTUwd3ZDanhpTVhkc3dxcXBobklRcWxuR3NFYWNMbHcvTmg1dlFCWVRV?=
- =?utf-8?B?RU1hRW51VDM4N3lKYXlHTCt1ajNuVnhWbEdoR29sTjZjcmZCclFVbkhQcEc0?=
- =?utf-8?B?eElRZVgramc4bllXVHBDWFd3czhYMnBPZW5mbHY3eXhmN1FTTDdTZzRZaUFt?=
- =?utf-8?B?VENyZ1VRdFg2Y2lLQ2RJR1M0b05sVFhNTXZnTHUwVjN5ZWNMeXFISHpQMXpQ?=
- =?utf-8?B?cmVvZVpET0V4UDhjVzBBSG04ZThwZjBsOEpEUFhFTTBHRkZOSms1ZUo5M0hh?=
- =?utf-8?B?My9RYVRBMHNuOUtsOHNFMTB0SEVaRmVaZWEzeUhNVXR4VWtMalcvZEtibHQv?=
- =?utf-8?B?enJDSyt5b0E0MTlQQVNVdE5zaGhMMkpsNkhUM0x2UE9VclBJbFBNNDB5bEw3?=
- =?utf-8?B?S0lOSGVvNWtOWGJwMExycVdJNTljVUtSR3BpSVlPL1A5RHRtWE1mb2dRcEhS?=
- =?utf-8?B?eUphMDNuZzNwckVOdTlzRnpHSjBnZlU1Z2dMNmNoMXczeldxbDlYQ09KKzJt?=
- =?utf-8?B?aWVTQnI2cmE2OHlERzZ2LzJ0cjUrOXlzWjBZUjR6cGd6cmZXQWRXc1lRVjdr?=
- =?utf-8?B?MzlhN1F6anJQWGV1TVFqUXZHTEZGMG8yMFRJd1hjaFNjUEVJYXMzV3M1dHd1?=
- =?utf-8?B?MjMvNVcvTTl3dW52MHdHQ3VPRisvUDBRdDBJNFJITnpWckJUczE3RFhLS0Zn?=
- =?utf-8?B?MmNSbDN6WWgyaU5UUjhJM1ZENE4rc2RqZGhqWmo2c1YrbUIyc2YraUpHUzJV?=
- =?utf-8?B?eHYyY0Y3WlEyYlpqWmVPUmVwWVNpOHpiaVFpQy85dnZLeGY5NWJjTTBhZnY0?=
- =?utf-8?B?bFlBcGFtZ293WEIwOUp5bE9vTjhteEhDaWh1YnNLZWtSUFkxd1BJSi9rN0t0?=
- =?utf-8?B?NVoyUjQrU3E0ZW9uZW4xTTNBNlFkQVJUb0E0dVhvUk8yYU5ZZEFETWdKVzZI?=
- =?utf-8?B?dktjZXh1SG5uMzcwUW15dy9pNVRMeTh2cm1OdDc2TFQ4b04rcHpTQ1NoaW02?=
- =?utf-8?B?T0xxRHRsVzdBUDMyeFFTMEtLZTk2OVRzS2VJNDVQbGgzMGRPQ2pGeVZNSCs1?=
- =?utf-8?B?bkwzVlVzZVhCd0UrNjRYakRnTzdrODFmQWVkWTUrQURtNjNHYk5yNkJJVGF6?=
- =?utf-8?B?UUZDSmV0TnloZVd5ZHYzU2o1UVNieFNMVWl1SUx2TEhHOGpnWGtYSUpwcEUy?=
- =?utf-8?B?TTZ5VkVvNnlKKzVpWDlmS3hIVWFYZGxYYWlySHRQRGttYWlmM2RoUGlwOGEy?=
- =?utf-8?B?bklZN2sxSTZvVDdQb3Z5U0tKVVhwQ2wxbzkrajlaVCtoSTkyWkN6aGRMOS9Y?=
- =?utf-8?B?N3QvSG5NT0ZZQURyMXIwbWNoUFdFWFliNDBYSS9XWHk5SE1KYWFhSEhabXpD?=
- =?utf-8?B?djVlZHFHdnRURUhYdThsOUUwVjVjQzdqbjNsZ24rWFFuM2RlQWg4dEZEdjlY?=
- =?utf-8?B?ZmhYV2d2QWhsQ3pld1ZCMTU4ODBuK2ZYbWRoN243MnU1dXM2RWIxK1M3Lzdz?=
- =?utf-8?B?R0YySUJPUVNYQ1ErWWNaVjNZSHBJNDJHcEhuaHNidUxNUTdFNWpLNGZqdVh1?=
- =?utf-8?B?NlZJOUZHQkFTQ3Urb05Pc21reVFaSWlGVjZCaEY4YVhPSzFKQWlYZ2Yya1Nl?=
- =?utf-8?B?dTR3a1J4NFVxS1kva3o4RWRrTVZNWmluSFlmTHVOUFA1TmV2UHRWTTJyUURE?=
- =?utf-8?B?VGJMYmlpSGcwR1h4a2dNTU9Na3VaZkw4M2xuTXdFZnUvYUZnR0ZFbGtZRUJ3?=
- =?utf-8?B?N1Q5cFZRYUhVR3lGUDlQWDNyTThZMlFBbTlIYVFKY09jZk44VUgyTVRMYnk5?=
- =?utf-8?B?MVlxR2RVRVhKVVlMSlBwQnRqUnAzV0ZncWJLOTlBUFE3Z0taWVJ6VlBvRU9M?=
- =?utf-8?B?WjlxRktUa2RpQmRMVDhkZWRtN25LNFAvK3VRYTkvZCtydWJFeitmQ0V1eXN1?=
- =?utf-8?B?T0t2RWs3RDVxTldtUThvZWpSRG5hSUVlNTRLSzRrRmpLWnI0c1ZHdm9mdFdj?=
- =?utf-8?B?Z3lyQkppV1VQWUpUT1JxeEFzTVRkbUQ5L2xRZEFUUEVqNXJIUlljK0lMelQw?=
- =?utf-8?Q?W4npUBtRleDXjkgX+aN+Vgf70?=
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fcb4c789-5bdb-4ce3-4216-08dd5b932118
-X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB9194.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Mar 2025 03:09:23.3195
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: pWIaE4L8TsxuLiFSGuxju17KAX7KIh/xk8xu9qufpz60YXwXx+nyS8BXTuSQ4DBPhYQS/mhwOoOShqXWmH1CpQ==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW4PR12MB7165
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQJfby7SiE0e/TbLvAHLJIl0P7SXpgHiQm8TAh/83CQB4BrFQwHvpDbsAQ7NFRkCkbJgbLH/1d8A
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA01Ta0xTZxjOaU8vgHWH4sYHC0t3ZHEwuRRpPVVQjGQ5ypZ0YHRjWfAEDuXS
+	mz0FcS4ZGx1TghaYl7UgwrgEuga0pQiMyuQqZm4SWVkmLBaYiog0A4ncZL3Axr/nfd7nvTzf
+	l5dN55axAtmZcjWpkhNSlOkNt/aE7Ajz7R6QRNqv+WDD3y6zsMs9b2O1X2dg/SUNdOzRn1Ya
+	1jCvY2GGahsTyy9eZmCmCRsDu99RwcTuVg4wsWFLE4xZpp7TMM2KBsbGNGcZWN3IEA1bbbVC
+	2A+WeRZWXTAFYWudbSxMMyrAZhfNTOyFdY4Z54/XNFxg4MZKI4S368dYeJUpB9f0zjBwk+Es
+	Ex+1dTLx7p4zzqRdhE8OX6bh5tov8YVfSmH8fIsBwudMb4m3JmfHZJBEGqnikfJURVqmXBKL
+	JiSlHEwRCCP5YXwRthvlyQkZGYvGfyAOez9T6nSP8nIJaY6TEhMUhUbsi1EpctQkL0NBqWNR
+	UpkmVUYrwylCRuXIJeFyUr2HHxkZJXAKj2dnDLZb6EpHVN7N608Y+dAtfhHkxQZINOhs/YZZ
+	BHmzuchPEJht6WF4gn8gMPRIS/cECxC4ojVCGyWtXdPrJVYINNc10F0JLvIEAit23IWZyE4w
+	Obzi5rch2WBVX+FuS0d0DKD/TsdyJbwQPhi80uTu6occBo12O+zCMBIM9NcMTg2bzUFEoP1l
+	kovmIL5gUDfpltCR90B99TTdsxAPLP5dz/DMSga63i6GR+MP+haL3Q4AcscLFNbdXXcQD6ZN
+	NqYH+4GnAy0sDw4Ec8+t67wENJq/Xx8gBQvmWpoH7wc/D1fArt3oSAho7ojw0EHg4p0mmmfu
+	VnBueXJdzgFtlRt4O5hf7YQ9OABU9t9nlECofpM1/SZr+k0W9P9Pq4JgAxRAKimZhKQEyig5
+	efK/D09VyEyQ+zhCD7dB9oeO8G6Ixoa6IcCmo9s4NUUDEi4njTj1OalSpKhypCTVDQmcz11K
+	D3w9VeG8Lrk6hR8tiowWCoXRol1CPurPKWjXSLiIhFCT2SSpJFUbdTS2V2A+7WqVd2i8TLb3
+	RuB+aryk9I8gv/KA2fm4AwlJxz7T5q1aXnGo8+nN4kPvNN47yO06VXxdvPbXBJl/YzRhV1lm
+	1Md1lZfQm7f8svz74dMjpwu15eP+CTKD7KmgLPhcwfiBpXKfj4qOWOsMJ7eUjTwwh5jSM3u7
+	DsWEpJ+YWcz+SrpTfwFfEidmjSOJO2oIiy2h/6XPdCLv09+NZ4ZGw4ilqomsvVUgAkRtae84
+	Kn8cfMn+xhdTD3V9L167Z+6zSGcuth7bI3sVFGfv3z7kEDk+tF3lrTmOjn2SXJ975Bkv4Ecj
+	OaO9DSfn9Zgdt5892C1MLy38VaU9Lsy1v/vmb77afcYTj1GYyiD4oXQVRfwLARpbpaUEAAA=
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFvrNIsWRmVeSWpSXmKPExsWy7bCSvO4j/ePpBm+O8Fhcaf/NbjH9sKLF
+	kqYMi2MTVjBbPLu1l8lixZeZ7BarFl5js2jo+c1qsenxNVaLy7vmsFmcnXeczeLK1nUsFltf
+	vmOyaPnTwmJxt6WT1WLp9YtMFn+37WW0WLT1C7vFwuaXjBb/9+xgt2i5Y2rx/udmNouvez+z
+	OYh7LF4xhdVjzbw1jB47Z91l91iwqdSj5chbVo9NqzrZPO5c28PmcehwB1DyoaXHkyvTmTw2
+	L6n3+HZmIotH35ZVjB6fN8kF8EVx2aSk5mSWpRbp2yVwZfw518pasEepYnb/Z9YGxr9SXYyc
+	HBICJhLb9r9m62Lk4hAS2M0osW3BRRaIhKTE54vrmCBsYYmV/56zQxQ9Y5T4MGsiM0iCTUBH
+	4smVP2C2iEC2xJTbNxhBipgF1rNKnLn8khmi4wmTxJWPi1lBqjgFDCVOzl3HCGILC3hJrHz4
+	EGwdi4CKxKwNq4BWcHDwClhK7PwRDBLmFRCUODnzCVgJs4C2RO/DVkYYe9nC18wQ1ylI/Hy6
+	jBXiiCiJmUf2s0LUiEsc/dnDPIFReBaSUbOQjJqFZNQsJC0LGFlWMUqmFhTnpucmGxYY5qWW
+	6xUn5haX5qXrJefnbmIEpw8tjR2M77416R9iZOJgPMQowcGsJMJr+vlYuhBvSmJlVWpRfnxR
+	aU5q8SFGaQ4WJXHelYYR6UIC6YklqdmpqQWpRTBZJg5OqQYmlr/h53kuaXvxZ39nmpl5wCE+
+	u12S+9zRxxsfqmjZagreer5VaNJRYUGWh2b+PzXqs2LS718JOOK7yiW/zVhl9vum+mdMIlPU
+	DHVXr9/RGN3+eYbRfhWn63suKpbM/dfPVnHp/zWR3ENuCVFt769W9L+V0jtvZ8Yz4Rl7naX/
+	5BV3Qk5O7T1a1ZRf+v7W/4MfT3wvTPXevUMmZOeSmnS2OZ3VD2PF3mSdb0xYoRT3Ncvr+Y7J
+	3fenT1t7P3/SAn6hVQZTGY4tb5FctWn1ZOOy84JdD/1Kl8QWcCR98RF9p8kmOm366s3bF0Ts
+	6Pj54kDPfkaZzkwzhwvGy0/0v3ojyXWuSGLy9YfvzN6+6H+cqMRSnJFoqMVcVJwIAAaza3SO
+	AwAA
+X-CMS-MailID: 20250304165250epcas5p39c2b800a8bfb14a9c5c1b01865e65869
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+DLP-Filter: Pass
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250221132035epcas5p47221a5198df9bf86020abcefdfded789
+References: <20250221131548.59616-1-shradha.t@samsung.com>
+	<CGME20250221132035epcas5p47221a5198df9bf86020abcefdfded789@epcas5p4.samsung.com>
+	<20250221131548.59616-4-shradha.t@samsung.com> <Z8XrYxP_pZr6tFU8@debian>
+	<20250303194647.GC1552306@rocinante>
+	<CAMuHMdWens9ZZrjNH1Bd2AN3PJEP1KSUGdiJcBCt0uPGH_GiiA@mail.gmail.com>
+	<20250304154638.GB2310180@rocinante>
 
 
 
-On 1/3/25 11:32, Jason Gunthorpe wrote:
-> On Thu, Feb 27, 2025 at 11:33:31AM +1100, Alexey Kardashevskiy wrote:
->>
->>
->> On 27/2/25 00:12, Jason Gunthorpe wrote:
->>> On Wed, Feb 26, 2025 at 06:49:18PM +0800, Xu Yilun wrote:
->>>
->>>> E.g. I don't think VFIO driver would expect its MMIO access suddenly
->>>> failed without knowing what happened.
->>>
->>> What do people expect to happen here anyhow? Do you still intend to
->>> mmap any of the MMIO into the hypervisor? No, right? It is all locked
->>> down?
->>
->> This patchset expects it to be mmap'able as this is how MMIO gets mapped in
->> the NPT and SEV-SNP still works with that (and updates the RMPs on top), the
->> host os is not expected to access these though. TDX will handle this somehow
->> different. Thanks,
-> 
-> I'm expecting you'll wrap that in a FD,
-
-A KVM memslot from VFIO's fd similar to gmemfd's fd, and skip VMA? 
-Doable but 1) creates a KVM->VFIO dependency to do gpa->hpa translation 
-2) is not necessary in the AMD case (although host-mmap of 
-guest-assigned private BAR is way too easy way of shooting yourself in 
-the foot).
-
- > since iommufd will not be accessing MMIO through mmaps.
-
-here I do not follow, why would iommufd care about MMIO? or it is about 
-p2p DMA? Thanks,
-
-> 
-> Jason
-
--- 
-Alexey
-
+> -----Original Message-----
+> From: Krzysztof Wilczy=C5=84ski=20<kw=40linux.com>=0D=0A>=20Sent:=2004=20=
+March=202025=2021:17=0D=0A>=20To:=20Geert=20Uytterhoeven=20<geert=40linux-m=
+68k.org>=0D=0A>=20Cc:=20Fan=20Ni=20<nifan.cxl=40gmail.com>;=20Shradha=20Tod=
+i=20<shradha.t=40samsung.com>;=20linux-kernel=40vger.kernel.org;=20linux-=
+=0D=0A>=20pci=40vger.kernel.org;=20linux-arm-kernel=40lists.infradead.org;=
+=20linux-perf-users=40vger.kernel.org;=20manivannan.sadhasivam=40linaro.org=
+;=0D=0A>=20lpieralisi=40kernel.org;=20robh=40kernel.org;=20bhelgaas=40googl=
+e.com;=20jingoohan1=40gmail.com;=20Jonathan.Cameron=40huawei.com;=0D=0A>=20=
+a.manzanares=40samsung.com;=20pankaj.dubey=40samsung.com;=20cassel=40kernel=
+.org;=2018255117159=40163.com;=0D=0A>=20xueshuai=40linux.alibaba.com;=20ren=
+yu.zj=40linux.alibaba.com;=20will=40kernel.org;=20mark.rutland=40arm.com;=
+=20Yoshihiro=20Shimoda=0D=0A>=20<yoshihiro.shimoda.uh=40renesas.com>;=20Lin=
+ux-Renesas=20<linux-renesas-soc=40vger.kernel.org>=0D=0A>=20Subject:=20Re:=
+=20=5BPATCH=20v7=203/5=5D=20Add=20debugfs=20based=20silicon=20debug=20suppo=
+rt=20in=20DWC=0D=0A>=20=0D=0A>=20Hello,=0D=0A>=20=0D=0A>=20>=20This=20patch=
+=20is=20now=20commit=201ff54f4cbaed9ec6=20(=22PCI:=20dwc:=20Add=20debugfs=
+=0D=0A>=20>=20based=20Silicon=20Debug=20support=20for=20DWC=22)=20in=20pci/=
+next=20(next-20250304).=0D=0A>=20>=0D=0A>=20>=20On=20Mon,=203=20Mar=202025=
+=20at=2020:47,=20Krzysztof=20Wilczy=C5=84ski=20<kw=40linux.com>=20wrote:=0D=
+=0A>=20>=20>=20=5B...=5D=0D=0A>=20>=20>=20>=20>=20+int=20dwc_pcie_debugfs_i=
+nit(struct=20dw_pcie=20*pci)=20=7B=0D=0A>=20>=20>=20>=20>=20+=20=20=20char=
+=20dirname=5BDWC_DEBUGFS_BUF_MAX=5D;=0D=0A>=20>=20>=20>=20>=20+=20=20=20str=
+uct=20device=20*dev=20=3D=20pci->dev;=0D=0A>=20>=20>=20>=20>=20+=20=20=20st=
+ruct=20debugfs_info=20*debugfs;=0D=0A>=20>=20>=20>=20>=20+=20=20=20struct=
+=20dentry=20*dir;=0D=0A>=20>=20>=20>=20>=20+=20=20=20int=20ret;=0D=0A>=20>=
+=20>=20>=20>=20+=0D=0A>=20>=20>=20>=20>=20+=20=20=20/*=20Create=20main=20di=
+rectory=20for=20each=20platform=20driver=20*/=0D=0A>=20>=20>=20>=20>=20+=20=
+=20=20snprintf(dirname,=20DWC_DEBUGFS_BUF_MAX,=20=22dwc_pcie_%s=22,=20dev_n=
+ame(dev));=0D=0A>=20>=20>=20>=20>=20+=20=20=20dir=20=3D=20debugfs_create_di=
+r(dirname,=20NULL);=0D=0A>=20>=20>=20>=20>=20+=20=20=20debugfs=20=3D=20devm=
+_kzalloc(dev,=20sizeof(*debugfs),=20GFP_KERNEL);=0D=0A>=20>=20>=20>=20>=20+=
+=20=20=20if=20(=21debugfs)=0D=0A>=20>=20>=20>=20>=20+=20=20=20=20=20=20=20=
+=20=20=20=20return=20-ENOMEM;=0D=0A>=20>=20>=20>=20>=20+=0D=0A>=20>=20>=20>=
+=20>=20+=20=20=20debugfs->debug_dir=20=3D=20dir;=0D=0A>=20>=20>=20>=20>=20+=
+=20=20=20pci->debugfs=20=3D=20debugfs;=0D=0A>=20>=20>=20>=20>=20+=20=20=20r=
+et=20=3D=20dwc_pcie_rasdes_debugfs_init(pci,=20dir);=0D=0A>=20>=20>=20>=20>=
+=20+=20=20=20if=20(ret)=0D=0A>=20>=20>=20>=20>=20+=20=20=20=20=20=20=20=20=
+=20=20=20dev_dbg(dev,=20=22RASDES=20debugfs=20init=20failed=5Cn=22);=0D=0A>=
+=20>=20>=20>=0D=0A>=20>=20>=20>=20What=20will=20happen=20if=20ret=20=21=3D=
+=200?=20still=20return=200?=0D=0A>=20>=0D=0A>=20>=20And=20that=20is=20exact=
+ly=20what=20happens=20on=20Gray=20Hawk=20Single=20with=20R-Car=0D=0A>=20>=
+=20V4M:=20dw_pcie_find_rasdes_capability()=20returns=20NULL,=20causing=0D=
+=0A>=20>=20dwc_pcie_rasdes_debugfs_init()=20to=20return=20-ENODEV.=0D=0A>=
+=20=0D=0A>=20Thank=20you=20for=20testing=20and=20for=20catching=20this=20is=
+sue.=20=20Much=20appreciated.=0D=0A>=20=0D=0A>=20>=20>=20Given=20that=20cal=
+lers=20of=20dwc_pcie_debugfs_init()=20check=20for=20errors,=0D=0A>=20>=0D=
+=0A>=20>=20Debugfs=20issues=20should=20never=20be=20propagated=20upstream=
+=21=0D=0A>=20=0D=0A>=20Makes=20complete=20sense.=20=20Sorry=20for=20breakin=
+g=20things=20here=21=0D=0A>=20=0D=0A>=20>=20>=20this=20probably=20should=20=
+correctly=20bubble=20up=20any=20failure=20coming=20from=0D=0A>=20>=20>=20dw=
+c_pcie_rasdes_debugfs_init().=0D=0A>=20>=20>=0D=0A>=20>=20>=20I=20made=20up=
+dates=20to=20the=20code=20directly=20on=20the=20current=20branch,=20have=20=
+a=20look:=0D=0A>=20>=0D=0A>=20>=20So=20while=20applying,=20you=20changed=20=
+this=20like:=0D=0A>=20>=0D=0A>=20>=20=20=20=20=20=20=20=20=20=20=20=20=20re=
+t=20=3D=20dwc_pcie_rasdes_debugfs_init(pci,=20dir);=0D=0A>=20>=20=20=20=20=
+=20-=20=20=20=20=20=20=20if=20(ret)=0D=0A>=20>=20=20=20=20=20-=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20dev_dbg(dev,=20=22RASDES=20debugfs=20init=
+=20failed=5Cn=22);=0D=0A>=20>=20=20=20=20=20+=20=20=20=20=20=20=20if=20(ret=
+)=20=7B=0D=0A>=20>=20=20=20=20=20+=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20dev_err(dev,=20=22failed=20to=20initialize=20RAS=20DES=20debugfs=5Cn=
+=22);=0D=0A>=20>=20=20=20=20=20+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+=20return=20ret;=0D=0A>=20>=20=20=20=20=20+=20=20=20=20=20=20=20=7D=0D=0A>=
+=20>=0D=0A>=20>=20=20=20=20=20=20=20=20=20=20=20=20=20return=200;=0D=0A>=20=
+>=0D=0A>=20>=20Hence=20this=20is=20now=20a=20fatal=20error,=20causing=20the=
+=20probe=20to=20fail.=0D=0A>=20=0D=0A>=20I=20removed=20the=20changed,=20and=
+=20also=20move=20the=20log=20level=20to=20be=20a=20warning,=20per:=0D=0A>=
+=20=0D=0A=0D=0AHey=20Krzysztof,=0D=0AI=20think=20we=20shouldn't=20move=20th=
+e=20log=20level=20to=20be=20a=20WARN.=20I=20believe=20many=20controllers=20=
+might=20not=20support=0D=0ARAS=20DES=20feature=20in=20their=20design=20and=
+=20giving=20a=20warn=20dump=20would=20draw=20unnecessary=20attention.=0D=0A=
+My=20opinion=20is=20to=20silently=20let=20it=20fail=20unless=20the=20user=
+=20is=20actually=20interested=20in=20getting=20the=20RAS=20DES=20feature=20=
+up.=0D=0AWe=20can=20wait=20for=20Mani's=20response=20though.=20But=20good=
+=20catch=20to=20also=20add=20the=20error=20type,=20that's=20definitely=20a=
+=20more=0D=0Ainformative=20error=20log.=0D=0A=0D=0A>=20=0D=0A>=20https://we=
+b.git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/commit/?h=3Dcontrolle=
+r/dwc&id=3Dc6759a967e69aba16aef0d92f43e527b=0D=0A>=20112e98a5=0D=0A>=20=0D=
+=0A>=20Would=20this=20be=20acceptable=20here?=0D=0A>=20=0D=0A>=20Mani,=20wo=
+uld=20this=20be=20acceptable=20to=20you,=20too?=20=20Given=20that=20you=20p=
+osted=20the=20following=20recently:=0D=0A>=20=0D=0A>=20=20=20https://lore.k=
+ernel.org/linux-pci/20250303200055.GA1881771=40rocinante/T/=23mab9cbd583439=
+0d259afea056eee9a73d8c3b435f=0D=0A>=20=0D=0A>=20That=20said,=20perhaps=20mo=
+ving=20the=20log=20level=20to=20a=20debug=20would=20be=20better=20served=20=
+here.=0D=0A>=20=0D=0A>=20=09Krzysztof=0D=0A=0D=0A
