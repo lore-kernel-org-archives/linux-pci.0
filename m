@@ -1,125 +1,142 @@
-Received: from fllvem-ot03.ext.ti.com (fllvem-ot03.ext.ti.com [198.47.19.245])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44B40244EAB;
-	Wed,  5 Mar 2025 13:20:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.245
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10AA023372D;
+	Wed,  5 Mar 2025 13:41:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741180839; cv=none; b=djVUQetD74adR0eN7YMfsCTMt9LzW2aknqqWJbh4VHgRZWgHrTPqfNJvGM3N5N/KW7HvOSiUZrjxBN+t6HD4hqNVTWc5vdj8rZhCZC0CgBNo5Nvq58jAGCjGTu9x+/icK8N1E0NBQo1EE2d24D5ebcAHsUeZhSuXps0dwAZLBaU=
+	t=1741182099; cv=none; b=GpbcBenAylEbm7kYN/39bTtx2mk1H0UJqXOQzaT6/j+rFnAt8l49CCs7RB10fwjKGqy2caT1Y2EaRxh7M6WSTfbSu+8oU+sMX0A28Zvql5WaOxal7HcBtrTwZQLcBdDzFgtZ32uLMLIHCzFyVQ/n/aZ3aCpaMXSK7ecYE+gCJhQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741180839; c=relaxed/simple;
-	bh=zH2/4JizMiAMVXhTiVjJB3Lhravh6eEMRHBsD4S9ULo=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=W6WyTsMMK9NXNUhgOKWGm0RjYQCvF69UD/Tm3NU6pYvcPEyDpkwVJ46IDmad4bAsDHhruNsqXkA8J8DdBq7i5TuVIv1WTWPUUTnBu1LS4Ae/Auqu5/Ru1MX/8OvoykMMEU84vYIp2c0sXfjo17pfCv3tgZFYdhZRKurROUdiItg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=TUrSuYzp; arc=none smtp.client-ip=198.47.19.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1741182099; c=relaxed/simple;
+	bh=PO4Jsj4JkP9gtVNS500UraGCc0IXgiDkg5KwFz7FGp4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fBMmruQ+pP1EFNkS9AtmaqKrSq9SckmEKBbxKPnN/Lj7UzUYLGDY4KnyjHWMWga9I03qb3/oTcGJfYS9HOEcL0mNYB/9HqFnx7GeXN6mnT53/bLqNfcEUV1FvJgPhA/LZA00kzrb1LzqpPrgagq43VXrKc94WUZfTvDdgxyACCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aWvcVARn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="TUrSuYzp"
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-	by fllvem-ot03.ext.ti.com (8.15.2/8.15.2) with ESMTPS id 525DKOoI3317275
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 5 Mar 2025 07:20:24 -0600
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1741180824;
-	bh=P/KXpuyFB30i1d562EaQZDZEqM46LSzSTn8A8q72DM0=;
-	h=From:To:CC:Subject:Date;
-	b=TUrSuYzpfWMoOwbN9hfX5/dawgO/BL8WRpXonYkwgg8GT0pwL81tQtkLl0WFuQzD2
-	 KNbuvw0VhzDo2ie+L1F90YGar5MZ2AuWnmxvzbxWt3ilYf5Zr49Wm4hTJwHTL1kcKK
-	 WELP7VjjvREuBwKpnhTARTW7jI3gtCmF8Imj2OrU=
-Received: from DLEE103.ent.ti.com (dlee103.ent.ti.com [157.170.170.33])
-	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 525DKOFq019757
-	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 5 Mar 2025 07:20:24 -0600
-Received: from DLEE111.ent.ti.com (157.170.170.22) by DLEE103.ent.ti.com
- (157.170.170.33) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Wed, 5
- Mar 2025 07:20:23 -0600
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DLEE111.ent.ti.com
- (157.170.170.22) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Wed, 5 Mar 2025 07:20:23 -0600
-Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [10.24.72.113])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 525DKJ35105399;
-	Wed, 5 Mar 2025 07:20:19 -0600
-From: Siddharth Vadapalli <s-vadapalli@ti.com>
-To: <lpieralisi@kernel.org>, <kw@linux.com>, <vigneshr@ti.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <rogerq@kernel.org>
-CC: <linux-omap@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-        <stable@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-arm-kernel@lists.infradead.org>, <srk@ti.com>,
-        <s-vadapalli@ti.com>
-Subject: [PATCH] PCI: j721e: Fix the value of linkdown_irq_regfield for J784S4
-Date: Wed, 5 Mar 2025 18:50:18 +0530
-Message-ID: <20250305132018.2260771-1-s-vadapalli@ti.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aWvcVARn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D975C4CEEB;
+	Wed,  5 Mar 2025 13:41:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741182098;
+	bh=PO4Jsj4JkP9gtVNS500UraGCc0IXgiDkg5KwFz7FGp4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=aWvcVARnA7fd8YWUBmT1HN8/fVMwWIkoCf3Q+QiRDKokF0+N5OBdbpD29PJHk/zkt
+	 Qfc5nroy/v48smGrRV68B7TDubZ6yba9xnMgfJtuqWImlkewSGNS5iEPGN7vQO/E4c
+	 rsHA/BFQFMu0/jbtYOJEpPaKeNGgWB5tezft2yePbf40aqmbrMdIKhOgBq5yJP6lTu
+	 999KHoBm3lNxsnsLcfuGSUDREmqcxOBq4TDAn+zakH54MpPpBguwlg4ADZ4XQETc+Z
+	 hNJoBH9snv4sgDSeBfBg3FqQo2cRcnLqkH/q1Ml5A7PzHEel+2iOI3Rd9Vdn3nptLz
+	 R8JJXx12MiVzg==
+Received: by mail-oo1-f45.google.com with SMTP id 006d021491bc7-5fc6fe05460so3881077eaf.1;
+        Wed, 05 Mar 2025 05:41:38 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUPbl/Ynz3ZR4Nnok4C+mDSk1P2/8YL0qvNyjy6+FK80MKMONMsBm0XQmWl8uT9uO9WjH/AdqqTWMYnaJmk@vger.kernel.org, AJvYcCW32u10CLLLpaXfuZzM2L+ojcEX7nH7VBqX3+8PIHJm9JAtC6eexKMfQ/z+R+6oeg/7/xO8s7zhmpXH@vger.kernel.org, AJvYcCXbRq1dxpAR1GcpGQN7PxKrWm8YdGrPEbxpMPb4VjTadLkBxsaL+4VpN9o9C0paONQObHEnWrft22W/@vger.kernel.org
+X-Gm-Message-State: AOJu0YxB8VYOPXeQrBy7iRKSZS5EybgiiQJxuk4wpwlXNQacc0QbyrH7
+	t69cP7XjHQTmdP3s1EYjpaA8aed1clfugbUDHUWEpeJetnuthpJoy67ewzO1QlJcBN9gtivaoG9
+	ZakvIN5s4HXKcFug2sPfeJv9Q7kg=
+X-Google-Smtp-Source: AGHT+IGPcCMLMQ2WrDCUyi/KjmpInyphx17IJnhTjXeEgLDqgtxF59DgweVVnVJ78q+UA0HlQWD5DVuGCMM18IdLS1g=
+X-Received: by 2002:a05:6820:1b1a:b0:5fc:b7f4:c013 with SMTP id
+ 006d021491bc7-6003358e57dmr1360365eaf.5.1741182097752; Wed, 05 Mar 2025
+ 05:41:37 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+References: <20241126151711.v5.1.Id0a0e78ab0421b6bce51c4b0b87e6aebdfc69ec7@changeid>
+ <20250228174509.GA58365@bhelgaas> <Z8IC_WDmix3YjOkv@google.com>
+In-Reply-To: <Z8IC_WDmix3YjOkv@google.com>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 5 Mar 2025 14:41:26 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0j_6jeMAQ7eFkZBe5Yi+USGzysxAgfemYh=-zq4h5W+Qg@mail.gmail.com>
+X-Gm-Features: AQ5f1JppUE7nECQCq6b9InHWQuU6lOpah0GYGxjTM0WTAGA_910spDA_NjX67D8
+Message-ID: <CAJZ5v0j_6jeMAQ7eFkZBe5Yi+USGzysxAgfemYh=-zq4h5W+Qg@mail.gmail.com>
+Subject: Re: [PATCH v5] PCI: Allow PCI bridges to go to D3Hot on all
+ Devicetree based platforms
+To: Brian Norris <briannorris@chromium.org>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>, Hsin-Yi Wang <hsinyi@chromium.org>, 
+	linux-kernel@vger.kernel.org, mika.westerberg@linux.intel.com, 
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org, lukas@wunner.de, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Commit under Fixes assigned the value of 'linkdown_irq_regfield' for the
-J784S4 SoC as 'LINK_DOWN' which corresponds to BIT(1). However, according
-to the Technical Reference Manual and Register Documentation for the J784S4
-SoC [0], BIT(1) corresponds to "ENABLE_SYS_EN_PCIE_DPA_1" which is __NOT__
-the field for the link-state interrupt. Instead, it is BIT(10) of the
-"PCIE_INTD_ENABLE_REG_SYS_2" register that corresponds to the link-state
-field named as "ENABLE_SYS_EN_PCIE_LINK_STATE".
+On Fri, Feb 28, 2025 at 7:40=E2=80=AFPM Brian Norris <briannorris@chromium.=
+org> wrote:
+>
+> Hi Bjorn,
+>
+> On Fri, Feb 28, 2025 at 11:45:09AM -0600, Bjorn Helgaas wrote:
+> > On Tue, Nov 26, 2024 at 03:17:11PM -0800, Brian Norris wrote:
+> > > From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> > >
+> > > Unlike ACPI based platforms, there are no known issues with D3Hot for
+> > > the PCI bridges in Device Tree based platforms.
+> >
+> > Can we elaborate on this a little bit?  Referring to "known issues
+> > with ACPI-based platforms" depends on a lot of domain-specific history
+> > that most readers (including me) don't know.
+>
+> Well, to me, the background here is simply the surrounding code context,
+> and the past discussions that I linked:
+>
+> https://lore.kernel.org/linux-pci/20240227225442.GA249898@bhelgaas/
+>
+> The whole reason we need this patch is that:
+> (a) there's some vaguely specified reason this function (which prevents
+>     standard-specified behavior) exists; and
+> (b) that function includes a condition that allows all systems with a
+>     DMI/BIOS newer than year 2015 to use this feature.
+>
+> Digging a bit further, it seems like maybe the only reason this feature
+> is prevented on DT systems is from commit ("9d26d3a8f1b0 PCI: Put PCIe
+> ports into D3 during suspend"), where the subtext is that it was written
+> by and for Intel in 2016, with an arbitrary time-based cutoff ("year
+> this was being developed") that only works for DMI systems. DT systems
+> do not tend to support DMI.
+>
+> If any of this is what you're looking for, I can try to
+> copy/paste/summarize a few more of those bits, if it helps.
+>
+> > I don't think "ACPI-based" or "devicetree-based" are good
+> > justifications for changing the behavior because they don't identify
+> > any specific reasons.  It's like saying "we can enable this feature
+> > because the platform spec is written in French."
+>
+> AIUI, It's involved because of the general strategy of this function
+> (per its comments, "recent enough PCIe ports"). So far, it sounds like
+> that reason (presumably, old BIOS with poor power management code)
+> doesn't really apply to a system based on device tree, where the power
+> management code is mostly/entirely in the OS.
 
-Hence, set 'linkdown_irq_regfield' to the macro 'J7200_LINK_DOWN' which
-expands to BIT(10) and was first defined for the J7200 SoC. Other SoCs
-already reuse this macro since it accurately represents the link-state
-field in their respective "PCIE_INTD_ENABLE_REG_SYS_2" register.
+No, it was about PCIe hardware failing to handle PM correctly on ports.
 
-[0]: https://www.ti.com/lit/zip/spruj52
-Fixes: e49ad667815d ("PCI: j721e: Add TI J784S4 PCIe configuration")
-Cc: stable@vger.kernel.org
-Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
----
+> But really, the original commit doesn't actually state reasons, so maybe
+> the "known issues" phrasing could be weakened a bit, to avoid implying
+> there were any stated reasons.
 
-Hello,
+There were hardware issues related to PM on x86 platforms predating
+the introduction of Connected Standby in Windows.  For instance,
+programming a port into D3hot by writing to its PMCSR might cause the
+PCIe link behind it to go down and the only way to revive it was to
+power cycle the Root Complex.  And similar.
 
-This patch is based on commit
-48a5eed9ad58 Merge tag 'devicetree-fixes-for-6.14-2' of git://git.kernel.org/pub/scm/linux/kernel/git/robh/linux
-of the master branch of Linux.
+Also, PM has never really worked correctly on PCI (non-PCIe) bridges
+and there is this case where the platform firmware handles hotplug and
+doesn't want the OS to get in the way (the bridge->is_hotplug_bridge
+&& !pciehp_is_native(bridge) check in pci_bridge_d3_possible()).
 
-Patch has been tested on J784S4-EVM, validating that disconnecting an
-Endpoint Device connected to J784S4-EVM results in the following message
-on the J784S4-EVM:
-	j721e-pcie 2900000.pcie: LINK DOWN!
-which wasn't seen earlier.
+The DMI check at the end of pci_bridge_d3_possible() is really
+something to the effect of "there is no particular reason to prevent
+this bridge from going into D3, but try to avoid platforms where it
+may not work".
 
-Regards,
-Siddharth.
+Basically, as far as I'm concerned, this check can be changed into
+something like
 
- drivers/pci/controller/cadence/pci-j721e.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+if (!IS_ENABLED(CONFIG_X86) || dmi_get_bios_year() >=3D 2015)
+        return true;
 
-diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
-index 0341d51d6aed..1da9d9918d0d 100644
---- a/drivers/pci/controller/cadence/pci-j721e.c
-+++ b/drivers/pci/controller/cadence/pci-j721e.c
-@@ -376,13 +376,13 @@ static const struct j721e_pcie_data j784s4_pcie_rc_data = {
- 	.mode = PCI_MODE_RC,
- 	.quirk_retrain_flag = true,
- 	.byte_access_allowed = false,
--	.linkdown_irq_regfield = LINK_DOWN,
-+	.linkdown_irq_regfield = J7200_LINK_DOWN,
- 	.max_lanes = 4,
- };
- 
- static const struct j721e_pcie_data j784s4_pcie_ep_data = {
- 	.mode = PCI_MODE_EP,
--	.linkdown_irq_regfield = LINK_DOWN,
-+	.linkdown_irq_regfield = J7200_LINK_DOWN,
- 	.max_lanes = 4,
- };
- 
--- 
-2.34.1
+which also requires updating the comment above it accordingly.
 
+This would have been better than the check added by the $subject patch IMV.
