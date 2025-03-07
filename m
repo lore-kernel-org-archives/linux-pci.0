@@ -1,30 +1,30 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3D81C2580F7;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id CA4E6258CF5;
 	Fri,  7 Mar 2025 22:03:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741384990; cv=none; b=fsmYfXS3OlIl8SDMuZpDejJvdSewpLxiU4ABQ3tVPmneJJDgWYRBcB+cxGuNit9eoyQdYdOD1ivvqTlcLaeAkUm1fRWobY4owHJDSWkMxsdjgE1NiHWM5OHEl0qwsEvqatcCcC/kzWnUxbnhfQ0g4W/4V1N5WbZZMEZz8MDT37s=
+	t=1741384990; cv=none; b=KisCL9vcTa6SiMUF5ZB2NfIJwi+6BwDmW/uI6BuQAjCcQ54ooIpxecF6r5HZ/yzAhtkKda+jZ0I1VtmRXIxR3qLmxMq6lHUL2m18OxF+usCahiXnD7slRQ7+0Az4IP4IE6b5KMi50OxiDmnKEOXJ4ku1evpfWYk725jrYmw+ic8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1741384990; c=relaxed/simple;
-	bh=79aHzr8RUR8X0QjS0Nutfo1COTiyDYExxJNO3oOJY7A=;
+	bh=OcRFfxdTjWsf6DOk0cwFXdBVoN5459lRKzBvVynoTQg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CY7hPYZhDo8MFCoc2WpPBQhUB7gso74JnCixJrJrtfR6+l51R0WA+TmGzVFE42ICWjxTbtfSaDZ6BQABiO6UsM5SSsLgQPECfOx855SIbG7sZy7jZZyzQLFqHReDu19WpSB6tZdIrJBgAHB+sCLDhpYgudQ00Zs4RufMRky+PuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=IpqejOvo; arc=none smtp.client-ip=13.77.154.182
+	 MIME-Version; b=XD/HJ/Qrm3CXY8ehjkBF0dms3u6MTOfA6J4WbQ5IESziU7u8011JsLldVFnr2OpNfnLAwLv4tKkKsUl/9g+smGGdy+0XgRSyLlw3uKPqMzkjpxBDolPfL1uuRa9CLJw5fZUxS36dpzn5TQNGalMt0rV2fk65uWPi2zZYEVV2UF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=dP08kpaQ; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="IpqejOvo"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="dP08kpaQ"
 Received: from romank-3650.corp.microsoft.com (unknown [131.107.160.188])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 6F4FE2038F42;
-	Fri,  7 Mar 2025 14:03:07 -0800 (PST)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 6F4FE2038F42
+	by linux.microsoft.com (Postfix) with ESMTPSA id 2CDDA2038F47;
+	Fri,  7 Mar 2025 14:03:08 -0800 (PST)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 2CDDA2038F47
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1741384987;
-	bh=6ejp9VKGmkMNi+YMzNEKy938J5ilfGRLZaNcUOciZXc=;
+	s=default; t=1741384988;
+	bh=iGuHmE2gbtDvOko+hzXt49EHmrzYrq8xqM8VYRFGXqM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=IpqejOvogwQq7fkkJFIx5UBw258yMNgVwiwVKJvbpy7zSfNJoFCESKEOdRtEsRVzU
-	 KtEBac0X5rQj0SiRXp2qHjP14FGW3zGctOmx//BDA18H70eNtXBrxpaTt9aPiUX8DM
-	 nM3PNV8Mzyu/hfO+lGVVs4oJe5vB/dYj7w9l6J10=
+	b=dP08kpaQ0+FluYjvhFx+l39uxftz+ykdKaCySFFfbst7F4t8LYKRKXhmhyDLM9c4U
+	 vV69jsYfc36IetKlG21KRoK0S4xRD3I8jHvNPPosiJqdz4TfyBbfcfZ+4dreINnf5C
+	 SS1ztKs4C+kM3RlAitAn+HrbVOiWFbr3tPjumNf4=
 From: Roman Kisel <romank@linux.microsoft.com>
 To: arnd@arndb.de,
 	bhelgaas@google.com,
@@ -68,9 +68,9 @@ Cc: apais@microsoft.com,
 	benhill@microsoft.com,
 	bperkins@microsoft.com,
 	sunilmut@microsoft.com
-Subject: [PATCH hyperv-next v5 05/11] arm64: hyperv: Initialize the Virtual Trust Level field
-Date: Fri,  7 Mar 2025 14:02:57 -0800
-Message-ID: <20250307220304.247725-6-romank@linux.microsoft.com>
+Subject: [PATCH hyperv-next v5 07/11] dt-bindings: microsoft,vmbus: Add interrupts and DMA coherence
+Date: Fri,  7 Mar 2025 14:02:59 -0800
+Message-ID: <20250307220304.247725-8-romank@linux.microsoft.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250307220304.247725-1-romank@linux.microsoft.com>
 References: <20250307220304.247725-1-romank@linux.microsoft.com>
@@ -82,30 +82,50 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Various parts of the hyperv code need to know what VTL
-the kernel runs at, most notably VMBus needs that to
-establish communication with the host.
+To boot on ARM64, VMBus requires configuring interrupts. Missing
+DMA coherence property is sub-optimal as the VMBus transations are
+cache-coherent.
 
-Initialize the Virtual Trust Level field to enable
-booting in the Virtual Trust Level.
+Add interrupts to be able to boot on ARM64. Add DMA coherence to
+avoid doing extra work on maintaining caches on ARM64.
 
 Signed-off-by: Roman Kisel <romank@linux.microsoft.com>
 ---
- arch/arm64/hyperv/mshyperv.c | 1 +
- 1 file changed, 1 insertion(+)
+ .../devicetree/bindings/bus/microsoft,vmbus.yaml          | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/arch/arm64/hyperv/mshyperv.c b/arch/arm64/hyperv/mshyperv.c
-index c647db56fd6b..a7db03f5413d 100644
---- a/arch/arm64/hyperv/mshyperv.c
-+++ b/arch/arm64/hyperv/mshyperv.c
-@@ -107,6 +107,7 @@ static int __init hyperv_init(void)
+diff --git a/Documentation/devicetree/bindings/bus/microsoft,vmbus.yaml b/Documentation/devicetree/bindings/bus/microsoft,vmbus.yaml
+index a8d40c766dcd..3ab7d0116626 100644
+--- a/Documentation/devicetree/bindings/bus/microsoft,vmbus.yaml
++++ b/Documentation/devicetree/bindings/bus/microsoft,vmbus.yaml
+@@ -28,13 +28,16 @@ properties:
+ required:
+   - compatible
+   - ranges
++  - interrupts
+   - '#address-cells'
+   - '#size-cells'
  
- 	if (ms_hyperv.priv_high & HV_ACCESS_PARTITION_ID)
- 		hv_get_partition_id();
-+	ms_hyperv.vtl = get_vtl();
+-additionalProperties: false
++additionalProperties: true
  
- 	ms_hyperv_late_init();
- 
+ examples:
+   - |
++    #include <dt-bindings/interrupt-controller/irq.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
+     soc {
+         #address-cells = <2>;
+         #size-cells = <1>;
+@@ -49,6 +52,9 @@ examples:
+                 #address-cells = <2>;
+                 #size-cells = <1>;
+                 ranges = <0x0f 0xf0000000 0x0f 0xf0000000 0x10000000>;
++                dma-coherent;
++                interrupt-parent = <&gic>;
++                interrupts = <GIC_PPI 2 IRQ_TYPE_EDGE_RISING>;
+             };
+         };
+     };
 -- 
 2.43.0
 
