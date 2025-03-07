@@ -1,152 +1,141 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from fllvem-ot04.ext.ti.com (fllvem-ot04.ext.ti.com [198.47.19.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08D061C84B5
-	for <linux-pci@vger.kernel.org>; Fri,  7 Mar 2025 10:03:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31504213246;
+	Fri,  7 Mar 2025 10:31:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.246
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741341782; cv=none; b=GTWtHyqdz0Veb+rOWFkXYFMwWClIdkFcVr6hbeO0C48K7NpMATWRZExJSR56p1iT3YTWuRG0WG7JBEmGiaqSG7n6BNF+3Clev8/duKbXutUyFB51lQETrC+BWRSPK2C06ujg05We+WJVlqMGa+bNkTRIUEd4Uf0uzdzmjfEeuHM=
+	t=1741343520; cv=none; b=OvK6B4a2rKS0E5kgDrOz/NmHlzW9sGxJovNtAqJMhjccvB2MsJwZITZ3AgQ14zE1KIPdyLqENIfvd3df1dhtn/N5dSKFkZn963l+xGqUPdwQ9MMdySGDLlSsNfUHPnuDRFUt5zGGcve5EQ5sQ0WeJyeEmu/BvLR26ZyNVAc5Nbg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741341782; c=relaxed/simple;
-	bh=Tc4VKvSUshLjDsgCC9xPDLNOPfo0rQWxrydx2X9C7b4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=udfWz6yzrPagKQjKE0OFwvZP1rs8JejC42jNmlQMJFqSuI0cN+tmlwckI0ltLCy8VRYrL+u5CFez1VkYi/uZ+irgRfX+vc7w5yfg6N7TO2PUYy3JAJ7aj49fGcuR9Gjulg5N+zza75gsm5QhC1nGqNZkg4cTlPOeiQEf10AYHVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=miRLqEj/; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1741343520; c=relaxed/simple;
+	bh=OKBAf6irmnU5/d+0U4T3dEDZmAxUVrX5t+/ekGw1Gd4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QIYx05Ni10++VVAI+edubnSlQmyfXz4wD6ymF5l+3CU6y1jQr+k5pAU6Vl6oXnOXHA+DCOP5H23jNUGR5DJxeMOMQHIoSTi/H3da+rwDxG4NYEJDTHRW/sYhWGCqaLtiIs3k8/J7DO/1brAsoBNBHjzWzxTTG3bsbyfM5F9sGgo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=Vf012oGj; arc=none smtp.client-ip=198.47.19.246
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="miRLqEj/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741341781; x=1772877781;
-  h=date:from:to:cc:subject:message-id:mime-version;
-  bh=Tc4VKvSUshLjDsgCC9xPDLNOPfo0rQWxrydx2X9C7b4=;
-  b=miRLqEj/U8JichSU9sgY9j18S7oBjfSZnUmZGL7Mb5b9aMEqCl9rgBKw
-   V9d2svoGPm1/lHvuWQXQsxS12vRIcf0H/E4eJghhg0gjJPnsAgdmdcpwh
-   vR3xnCn2YsKmeVVwi7yd1Uu1itnf5qazttyMlnWxyvFk4TP3sTxRJLU+p
-   QpM6ko5F1cp+5agU/Tp5PnFpQO/zqmeCsV7JBUpDi86njQIfAq4QRUiAZ
-   zPoQ3hTn19pSrDmxUoZJAx99IgUbJ6s650R8xIf6t2ws3YxJfg9rOd+XU
-   9VqtYotulVikMvGYXxIlfaYDTlI4WSneOrw5a+WsaxIT7Zk17XuxYPZ51
-   w==;
-X-CSE-ConnectionGUID: zaofPjF0TXGCw7uKcwYEKw==
-X-CSE-MsgGUID: 6jB0fSXBR7CtNFsMPzmwnw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11365"; a="42418171"
-X-IronPort-AV: E=Sophos;i="6.14,228,1736841600"; 
-   d="scan'208";a="42418171"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2025 02:03:00 -0800
-X-CSE-ConnectionGUID: 9qF/34sVQiumnsekpmaHZw==
-X-CSE-MsgGUID: DuvlnediR/SJalSVZjSDrg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.14,228,1736841600"; 
-   d="scan'208";a="119287019"
-Received: from lkp-server02.sh.intel.com (HELO a4747d147074) ([10.239.97.151])
-  by fmviesa007.fm.intel.com with ESMTP; 07 Mar 2025 02:02:59 -0800
-Received: from kbuild by a4747d147074 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tqUXh-0000H3-19;
-	Fri, 07 Mar 2025 10:02:57 +0000
-Date: Fri, 07 Mar 2025 18:02:15 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:scoped-cleanup] BUILD SUCCESS
- bffc72387aefc4545af04200be8affb51c3726cf
-Message-ID: <202503071809.C0hdACQv-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="Vf012oGj"
+Received: from lelv0265.itg.ti.com ([10.180.67.224])
+	by fllvem-ot04.ext.ti.com (8.15.2/8.15.2) with ESMTPS id 527AVYRl243376
+	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 7 Mar 2025 04:31:34 -0600
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1741343494;
+	bh=L8uOvoVLDeLOL1fDGRqGNDMqZxmbAi0wKgSFV9Fi1vY=;
+	h=From:To:CC:Subject:Date;
+	b=Vf012oGjFcG9hNrgbt4V3FRaWISgjJEy65aGrdFrjn/SN0YmbXfpFs91jqq6n2UiI
+	 1qT8m0N9Dm/WUfzJDTS5zLsYzzr4lXN43u6Mssy/zHgsy2PbA1omcpszd1bgNFVTHx
+	 ig981d7OJGsXFCxYkPPRtYmCISYCE/GQONw/L0fE=
+Received: from DFLE109.ent.ti.com (dfle109.ent.ti.com [10.64.6.30])
+	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 527AVXIB016599
+	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
+	Fri, 7 Mar 2025 04:31:33 -0600
+Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE109.ent.ti.com
+ (10.64.6.30) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Fri, 7
+ Mar 2025 04:31:33 -0600
+Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
+ Frontend Transport; Fri, 7 Mar 2025 04:31:33 -0600
+Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [10.24.72.113])
+	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 527AVSQ2016876;
+	Fri, 7 Mar 2025 04:31:29 -0600
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+To: <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <vigneshr@ti.com>, <kishon@kernel.org>,
+        <cassel@kernel.org>, <wojciech.jasko-EXT@continental-corporation.com>,
+        <thomas.richard@bootlin.com>, <bwawrzyn@cisco.com>
+CC: <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <srk@ti.com>, <s-vadapalli@ti.com>
+Subject: [PATCH 0/4] Loadable Module support for PCIe Cadence and J721E
+Date: Fri, 7 Mar 2025 16:01:24 +0530
+Message-ID: <20250307103128.3287497-1-s-vadapalli@ti.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git scoped-cleanup
-branch HEAD: bffc72387aefc4545af04200be8affb51c3726cf  PCI: tegra: Use helper function for_each_child_of_node_scoped()
+Hello,
 
-elapsed time: 1455m
+This series enables support to build the PCIe Cadence Controller drivers
+and the PCI J721E Application/Wrapper/Glue driver as Loadable Kernel
+Modules. The motivation for this series is that PCIe is not a necessity
+for booting the SoC, due to which it doesn't have to be a built-in
+module. Additionally, the defconfig doesn't enable the PCIe Cadence
+Controller drivers and the PCI J721E driver, due to which PCIe is not
+supported by default. Enabling the configs as of now (i.e. without this
+series) will result in built-in drivers i.e. a bloated Linux Image for
+everyone who doesn't have the PCIe Controller. Therefore, with this
+series, after enabling support for building the drivers as loadable
+modules, the driver configs can be enabled in the defconfig to build
+the drivers as loadable modules, thereby enabling PCIe.
 
-configs tested: 73
-configs skipped: 2
+Series is based on linux-next tagged next-20250306.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+--------------------------
+Series has been tested for
+--------------------------
+[1] Loading and Unloading the PCI J721E driver when operating in the
+Root-Complex mode on J721E-EVM with an NVMe SSD connected to the PCIe
+Connector. "hdparm" based reads of the NVMe SSD have been performed to
+validated functionality before and after a module unload-load sequence
+using modprobe. Logs:
+https://gist.github.com/Siddharth-Vadapalli-at-TI/085fd24d416bab5dc7d798156ce130b3
 
-tested configs:
-alpha                            allnoconfig    gcc-14.2.0
-alpha                           allyesconfig    gcc-14.2.0
-arc                              allnoconfig    gcc-13.2.0
-arc                  randconfig-001-20250306    gcc-13.2.0
-arc                  randconfig-002-20250306    gcc-13.2.0
-arm                              allnoconfig    clang-17
-arm                  randconfig-001-20250306    gcc-14.2.0
-arm                  randconfig-002-20250306    gcc-14.2.0
-arm                  randconfig-003-20250306    gcc-14.2.0
-arm                  randconfig-004-20250306    clang-18
-arm64                            allnoconfig    gcc-14.2.0
-arm64                randconfig-001-20250306    gcc-14.2.0
-arm64                randconfig-002-20250306    gcc-14.2.0
-arm64                randconfig-003-20250306    gcc-14.2.0
-arm64                randconfig-004-20250306    gcc-14.2.0
-csky                             allnoconfig    gcc-14.2.0
-csky                 randconfig-001-20250307    gcc-14.2.0
-csky                 randconfig-002-20250307    gcc-14.2.0
-hexagon                          allnoconfig    clang-21
-hexagon                         allyesconfig    clang-18
-hexagon              randconfig-001-20250307    clang-21
-hexagon              randconfig-002-20250307    clang-21
-i386                            allmodconfig    gcc-12
-i386                             allnoconfig    gcc-12
-i386                            allyesconfig    gcc-12
-i386       buildonly-randconfig-001-20250306    clang-19
-i386       buildonly-randconfig-002-20250306    clang-19
-i386       buildonly-randconfig-003-20250306    clang-19
-i386       buildonly-randconfig-004-20250306    gcc-12
-i386       buildonly-randconfig-005-20250306    gcc-12
-i386       buildonly-randconfig-006-20250306    clang-19
-i386                               defconfig    clang-19
-loongarch                        allnoconfig    gcc-14.2.0
-loongarch            randconfig-001-20250307    gcc-14.2.0
-loongarch            randconfig-002-20250307    gcc-14.2.0
-nios2                randconfig-001-20250307    gcc-14.2.0
-nios2                randconfig-002-20250307    gcc-14.2.0
-parisc               randconfig-001-20250307    gcc-14.2.0
-parisc               randconfig-002-20250307    gcc-14.2.0
-powerpc              randconfig-001-20250307    gcc-14.2.0
-powerpc              randconfig-002-20250307    clang-21
-powerpc              randconfig-003-20250307    clang-19
-powerpc64            randconfig-001-20250307    clang-21
-powerpc64            randconfig-002-20250307    gcc-14.2.0
-powerpc64            randconfig-003-20250307    gcc-14.2.0
-riscv                randconfig-001-20250306    clang-18
-riscv                randconfig-002-20250306    gcc-14.2.0
-s390                            allmodconfig    clang-19
-s390                            allyesconfig    gcc-14.2.0
-s390                 randconfig-001-20250306    gcc-14.2.0
-s390                 randconfig-002-20250306    clang-19
-sh                              allmodconfig    gcc-14.2.0
-sh                              allyesconfig    gcc-14.2.0
-sh                   randconfig-001-20250306    gcc-14.2.0
-sh                   randconfig-002-20250306    gcc-14.2.0
-sparc                           allmodconfig    gcc-14.2.0
-sparc                randconfig-001-20250306    gcc-14.2.0
-sparc                randconfig-002-20250306    gcc-14.2.0
-sparc64              randconfig-001-20250306    gcc-14.2.0
-sparc64              randconfig-002-20250306    gcc-14.2.0
-um                   randconfig-001-20250306    gcc-12
-um                   randconfig-002-20250306    clang-16
-x86_64                           allnoconfig    clang-19
-x86_64                          allyesconfig    clang-19
-x86_64     buildonly-randconfig-001-20250306    gcc-11
-x86_64     buildonly-randconfig-002-20250306    clang-19
-x86_64     buildonly-randconfig-003-20250306    clang-19
-x86_64     buildonly-randconfig-004-20250306    clang-19
-x86_64     buildonly-randconfig-005-20250306    clang-19
-x86_64     buildonly-randconfig-006-20250306    gcc-12
-x86_64                             defconfig    gcc-11
-xtensa               randconfig-001-20250306    gcc-14.2.0
-xtensa               randconfig-002-20250306    gcc-14.2.0
+[2] Loading and Unloading the PCI J721E driver when operating in the
+Endpoint mode on J784S4-EVM with 6 Physical Functions configured in the
+Endpoint and connected to the J721E-EVM as the Root-Complex. Logs:
+https://gist.github.com/Siddharth-Vadapalli-at-TI/1ec568a76bc3ebc1082d434aab4ab00b
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+The following changes to arch/arm64/configs/defconfig were made to test
+this series and will be posted as a patch after this series gets merged:
+diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
+index 3a3706db2982..0ca073141c3e 100644
+--- a/arch/arm64/configs/defconfig
++++ b/arch/arm64/configs/defconfig
+@@ -209,6 +209,12 @@ CONFIG_NFC=m
+ CONFIG_NFC_NCI=m
+ CONFIG_NFC_S3FWRN5_I2C=m
+ CONFIG_PCI=y
++CONFIG_PCI_J721E=m
++CONFIG_PCI_J721E_HOST=m
++CONFIG_PCI_J721E_EP=m
++CONFIG_PCIE_CADENCE=m
++CONFIG_PCIE_CADENCE_HOST=m
++CONFIG_PCIE_CADENCE_EP=m
+ CONFIG_PCIEPORTBUS=y
+ CONFIG_PCIEAER=y
+ CONFIG_PCI_IOV=y
+
+Regards,
+Siddharth.
+
+Kishon Vijay Abraham I (1):
+  PCI: cadence: Add support to build pcie-cadence library as a kernel
+    module
+
+Siddharth Vadapalli (3):
+  PCI: cadence-host: Introduce cdns_pcie_host_disable helper for cleanup
+  PCI: cadence-ep: Introduce cdns_pcie_ep_disable helper for cleanup
+  PCI: j721e: Add support to build as a loadable module
+
+ drivers/pci/controller/cadence/Kconfig        |  12 +-
+ drivers/pci/controller/cadence/pci-j721e.c    |  37 +++++-
+ .../pci/controller/cadence/pcie-cadence-ep.c  |  16 +++
+ .../controller/cadence/pcie-cadence-host.c    | 113 ++++++++++++++++++
+ drivers/pci/controller/cadence/pcie-cadence.c |  12 ++
+ drivers/pci/controller/cadence/pcie-cadence.h |  14 ++-
+ 6 files changed, 194 insertions(+), 10 deletions(-)
+
+-- 
+2.34.1
+
