@@ -1,134 +1,117 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE1FD25B668
-	for <linux-pci@vger.kernel.org>; Fri,  7 Mar 2025 23:29:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 912B833DF;
+	Fri,  7 Mar 2025 23:37:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741390190; cv=none; b=LjxKmZpei6zviTsdnt4OeSJ0mg1LbLmiSTVIOmgVCeOP1pyoEDKRmbtl+ijSiy5BSNwBQT2jTSNzodiReMujKx27usYrZw8RkpSm2Ktw8Xl4LddqTLI3zXnIgpOqJcJuZcpa2Tt569sVCI+pzVCFtHalwIICLVWcpLzwuM6FQKo=
+	t=1741390672; cv=none; b=SFw4VK6n108FlxLaajK1HdmV4TZaVnMEmoYWEf3/QqCSWMKueKOBdo5vHqIIoL1HG+y3GDsA6zSviMkBgTzDsl6QPrA2Cji5iet3SEQNwAO14lW6ez4pIeNrj1X/n/5DYIFUDLD6KGBDejQrYtPTw6sbpN1aKzuSriimu3PjtNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741390190; c=relaxed/simple;
-	bh=dsVyP+F9/FOS2chwdQOUBwI44jVk0evAz6KqZR9mD74=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=SGL6xjBC/Hjl9aD95eZ2UD2S+Pvgma03WaxijzVdZw0DIzHIGdV+JxX/WVOuqnlZ8pnZynFm6VDuUjRTwqOWfL6BXzYxjYUWbqqOPPwv8TEZKiPBO7xBHD2ImCMHsfojN3+3ejHNxh9DRzRFcB0UAOrSnVKaKADNbyhhki4OhNQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iqVf1Fh2; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1741390672; c=relaxed/simple;
+	bh=ntJVwAlnC7PYrvIOC5jK7B6yxVs/a1jXq1ba53Gp12E=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=usx/nWkpFcLVDx0gKqT+J/2ZjQtm66Xh5MY/PwpXSEdh5jQg9rIVbAlY+qmnMHUKrmEs9M6IpJjMQ4FsFuwQ7ItQXUtJGeTzWr2HnDtMRS4YU4uYV0ztp41FeOglINdapaurkCP9ZAuIIIRN/Pp6+oR7YGR3P39ifDvmDRQPLTE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uLya8N82; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iqVf1Fh2"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1741390189; x=1772926189;
-  h=date:from:to:cc:subject:message-id;
-  bh=dsVyP+F9/FOS2chwdQOUBwI44jVk0evAz6KqZR9mD74=;
-  b=iqVf1Fh2u3T8MiUMHy7BRh9SG9bAPZta/051lEK3rbabTffh4MR1wYhb
-   06xTcJL/QkMOMA0PF+tG+xmwziPk5ZSa4pL/c9AmarfyFL6oltk0Ux/t7
-   13Jb9a0zzLg6KUZcr2jc7zQkQDWnzFxfla7QTrUeFvcZBMOirDS+XIrin
-   a8IC9wo9YmUnbZKMBV08q4NtnIsj7Sh6ntT5xskI5Vk3BqtauLSxbIRZe
-   fW52yb2R/6zNIqD3y+7mAl5Dn0OcPKRUQzukqB0Gg9YLb3VcMiZ+sRkEd
-   DGVMeEkF7QQZVczm5m0RU5vK+4BeZDT2tLz0RLirb0THLLgGQaLAM0Vby
-   A==;
-X-CSE-ConnectionGUID: DcQIEHzHRd61hm6tbnKZqA==
-X-CSE-MsgGUID: WxN5gq0bRVWDo3nFwcXNTA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11366"; a="67821144"
-X-IronPort-AV: E=Sophos;i="6.14,230,1736841600"; 
-   d="scan'208";a="67821144"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Mar 2025 15:29:48 -0800
-X-CSE-ConnectionGUID: BJwurbKyRdCjO4EqxY2JYg==
-X-CSE-MsgGUID: 6kLvTh83QjCI+Lz3vrDNRQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.12,224,1728975600"; 
-   d="scan'208";a="156667047"
-Received: from lkp-server02.sh.intel.com (HELO a4747d147074) ([10.239.97.151])
-  by orviesa001.jf.intel.com with ESMTP; 07 Mar 2025 15:29:47 -0800
-Received: from kbuild by a4747d147074 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1tqh8S-0001Bh-1m;
-	Fri, 07 Mar 2025 23:29:44 +0000
-Date: Sat, 08 Mar 2025 07:28:49 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:doe] BUILD SUCCESS
- 216235b41a0d1aedc7243d7a93bdcdf5f1649d4a
-Message-ID: <202503080743.YUyczNA7-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uLya8N82"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D3A26C4CED1;
+	Fri,  7 Mar 2025 23:37:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1741390672;
+	bh=ntJVwAlnC7PYrvIOC5jK7B6yxVs/a1jXq1ba53Gp12E=;
+	h=From:To:Cc:Subject:Date:From;
+	b=uLya8N82ynikuLeVwl0uwksI1eaD3k60c8OjDE2TxI/rfoZC6qD9odpBM2qVC4tSv
+	 0t42V9ybYVU1PznQs3ZBnY8c/MKiauAjGnQz8dAlQo095PH1h9l1UNSsuMpFndvpWD
+	 CaUsPUNvOLBT8joky0bNXIuxaQnK5hB6xJ4288VdQ7VwPgVhlOyoBKM49S4cV+Y0Z9
+	 ISDeTw3g2z+CCbPhu2IzM5YAOQouFxRBh7pT3w0jqN7DybrRjxHufkgB/2OTr+JuD5
+	 XvCkZcpq3OdmFfjdoZ4DKBwY5hhtJpLAkarFmedPmTw4cm1LC4Gpm3vhTVadTMzdJg
+	 xAagsnBPxfhOw==
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Frank Li <Frank.Li@nxp.com>
+Cc: Rob Herring <robh@kernel.org>,
+	Saravana Kannan <saravanak@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Richard Zhu <hongxing.zhu@nxp.com>,
+	Lucas Stach <l.stach@pengutronix.de>,
+	Shawn Guo <shawnguo@kernel.org>,
+	Sascha Hauer <s.hauer@pengutronix.de>,
+	Pengutronix Kernel Team <kernel@pengutronix.de>,
+	Fabio Estevam <festevam@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	imx@lists.linux.dev,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH 0/4] PCI: dwc: .cpu_addr_fixup() sketch
+Date: Fri,  7 Mar 2025 17:37:40 -0600
+Message-Id: <20250307233744.440476-1-helgaas@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git doe
-branch HEAD: 216235b41a0d1aedc7243d7a93bdcdf5f1649d4a  PCI/DOE: Allow enabling DOE without CXL
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-elapsed time: 1448m
+This is not complete or ready to merge at all.  It's just a sketch to see
+if this approach to moving away from the .cpu_addr_fixup() approach is
+feasible.
 
-configs tested: 57
-configs skipped: 0
+This is based on Frank's series at
+https://lore.kernel.org/r/20250128-pci_fixup_addr-v9-0-3c4bb506f665@nxp.com,
+and these apply on top of these patches from that series, which applies on
+v6.15-rc1:
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+      PCI: dwc: Use resource start as iomap() input in dw_pcie_pme_turn_off()
+      PCI: dwc: Rename cpu_addr to parent_bus_addr for ATU configuration
+      PCI: Add parent_bus_offset to resource_entry
 
-tested configs:
-arc                  randconfig-001-20250307    gcc-13.2.0
-arc                  randconfig-002-20250307    gcc-13.2.0
-arm                  randconfig-001-20250307    clang-21
-arm                  randconfig-002-20250307    gcc-14.2.0
-arm                  randconfig-003-20250307    clang-19
-arm                  randconfig-004-20250307    clang-21
-arm64                randconfig-001-20250307    gcc-14.2.0
-arm64                randconfig-002-20250307    clang-15
-arm64                randconfig-003-20250307    gcc-14.2.0
-arm64                randconfig-004-20250307    clang-15
-csky                 randconfig-001-20250307    gcc-14.2.0
-csky                 randconfig-002-20250307    gcc-14.2.0
-hexagon              randconfig-001-20250307    clang-21
-hexagon              randconfig-002-20250307    clang-21
-i386       buildonly-randconfig-001-20250307    clang-19
-i386       buildonly-randconfig-002-20250307    clang-19
-i386       buildonly-randconfig-003-20250307    gcc-11
-i386       buildonly-randconfig-004-20250307    clang-19
-i386       buildonly-randconfig-005-20250307    gcc-12
-i386       buildonly-randconfig-006-20250307    clang-19
-loongarch            randconfig-001-20250307    gcc-14.2.0
-loongarch            randconfig-002-20250307    gcc-14.2.0
-nios2                randconfig-001-20250307    gcc-14.2.0
-nios2                randconfig-002-20250307    gcc-14.2.0
-parisc               randconfig-001-20250307    gcc-14.2.0
-parisc               randconfig-002-20250307    gcc-14.2.0
-powerpc              randconfig-001-20250307    gcc-14.2.0
-powerpc              randconfig-002-20250307    clang-21
-powerpc              randconfig-003-20250307    clang-19
-powerpc64            randconfig-001-20250307    clang-21
-powerpc64            randconfig-002-20250307    gcc-14.2.0
-powerpc64            randconfig-003-20250307    gcc-14.2.0
-riscv                randconfig-001-20250307    gcc-14.2.0
-riscv                randconfig-002-20250307    clang-19
-s390                            allmodconfig    clang-19
-s390                            allyesconfig    gcc-14.2.0
-s390                 randconfig-001-20250307    gcc-14.2.0
-s390                 randconfig-002-20250307    gcc-14.2.0
-sh                              allmodconfig    gcc-14.2.0
-sh                              allyesconfig    gcc-14.2.0
-sh                   randconfig-001-20250307    gcc-14.2.0
-sh                   randconfig-002-20250307    gcc-14.2.0
-sparc                           allmodconfig    gcc-14.2.0
-sparc                randconfig-001-20250307    gcc-14.2.0
-sparc                randconfig-002-20250307    gcc-14.2.0
-sparc64              randconfig-001-20250307    gcc-14.2.0
-sparc64              randconfig-002-20250307    gcc-14.2.0
-um                   randconfig-001-20250307    clang-17
-um                   randconfig-002-20250307    clang-21
-x86_64     buildonly-randconfig-001-20250307    clang-19
-x86_64     buildonly-randconfig-002-20250307    gcc-12
-x86_64     buildonly-randconfig-003-20250307    clang-19
-x86_64     buildonly-randconfig-004-20250307    clang-19
-x86_64     buildonly-randconfig-005-20250307    clang-19
-x86_64     buildonly-randconfig-006-20250307    gcc-12
-xtensa               randconfig-001-20250307    gcc-14.2.0
-xtensa               randconfig-002-20250307    gcc-14.2.0
+The idea is that on some systems the PCI controller lives in a different
+address space (an "intermediate" address space) than the CPU physical
+address space.  Frank has a beautiful picture of this at
+https://lore.kernel.org/r/20250128-pci_fixup_addr-v9-4-3c4bb506f665@nxp.com
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+The devicetree *should* describe the fabric address translation between the
+CPU and intermediate address spaces, but historically we haven't taken
+advantage of that and have used .cpu_addr_fixup() functions to convert CPU
+to intermediate addresses each time we program the ATU.
+
+What I tried to do here was to:
+
+  - Try to extract the offset from devicetree using the 'reg' property
+    (this is from Frank's patch at the link above)
+
+  - If a .cpu_addr_fixup() function exists, run that as well and compare
+    with the offset from devicetree
+
+  - Save the offset in struct dw_pcie_rp and apply that instead of calling
+    .cpu_addr_fixup() in the future
+
+  - Emit messages about devicetree offsets that don't match what
+    .cpu_addr_fixup() did, or about .cpu_addr_fixup() methods that are
+    superfluous because they *do* match the devicetree offset
+
+I only looked at the RC side and didn't do anything at all with the EP
+side.
+
+Bjorn Helgaas (4):
+  PCI: dwc: Move cfg0 setup to dw_pcie_cfg0_setup()
+  PCI: dwc: Delay cfg0 setup until after discovering bridge windows
+  PCI: dwc: Look up 'config' address
+  PCI: dwc: Use parent_bus_offset
+
+ .../pci/controller/dwc/pcie-designware-host.c | 88 +++++++++++++++----
+ drivers/pci/controller/dwc/pcie-designware.c  |  3 -
+ drivers/pci/controller/dwc/pcie-designware.h  |  1 +
+ 3 files changed, 72 insertions(+), 20 deletions(-)
+
+-- 
+2.34.1
+
