@@ -1,72 +1,72 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2C931ACECB
-	for <linux-pci@vger.kernel.org>; Sat,  8 Mar 2025 15:03:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D41C13DBA0
+	for <linux-pci@vger.kernel.org>; Sat,  8 Mar 2025 15:05:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741446220; cv=none; b=FVl5MBZbDokR6Rs9dxUbA289eG9v24MSrm8p62wQiQcN8HmhWPDJGJFdsXH28eNAF8xbvwiDF5VktZltDR5c1r6FnUMMX3Yj/doKiRr9WfBGyTirBNIzHE9QetZTtnI0lDp605IfpUnULeFQoJUlutD5dOjIwICKbJbwhtAqaQg=
+	t=1741446346; cv=none; b=W+tRJUJgthB/cRN2MzbIxF++TiRcC/f7yMu0596s+pEUEK0FO7RVIP2mtmDLb2cvQvMF9dcOu/QP7rkpsweT6T1cMAgLgR4gR+EHR5ofcCxXhC/xZEFWTAsEmS5GB6lGkONZnd37EHYpUHWoIQzM5aKdJUKF4ghWRzHHfeNbe3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741446220; c=relaxed/simple;
-	bh=e8SexFMLy+V7m84HKtVT7FdSZ56Nzyx3ZfiZYFbyK0s=;
+	s=arc-20240116; t=1741446346; c=relaxed/simple;
+	bh=p8FE6Yce4UFFPFp8RPlL6Zq6MyjvmqNXaWFwHY6Xcwk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rSlbD41poD2UXeyqjmyXXiaFcToxm8Hoi5CvQVYJOKCS5G/CfgwVNKMFldwlfLT7ZHETq9pl/yQ5HENTlTN+LZ6UETMPMgAVSbqy8HNPdYU0NemI4S3NLzeACc5ZP4EPpZj+S0O4+kGGYCFtE3hqEZcVGN+FiRxOWxLnTPB5tXU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=QStkJoM9; arc=none smtp.client-ip=205.220.168.131
+	 In-Reply-To:Content-Type; b=i/zipFBEGUdithflEZ/fkqh0phx1mPkIY5kapwbAFgltizMZWXH3xaX46qygDDUemN3eXsDL14E5RDXydQopTUey3+mTR5mQ1VeT+NQV4HHSKuzFFUaB3HgjPfMbt4SQcPdFADKmgGDbgP8Sxycqk9c6RQHw+svQGlxzQdBI3w0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XdlAcI8m; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="QStkJoM9"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 528EUJqP027431
-	for <linux-pci@vger.kernel.org>; Sat, 8 Mar 2025 15:03:38 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XdlAcI8m"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5287bBAY000451
+	for <linux-pci@vger.kernel.org>; Sat, 8 Mar 2025 14:25:11 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	IKPlg8KpcdilLw+MDQw3ribbQkf1W3yXLlwbnkUFVEo=; b=QStkJoM9yFDPRuKP
-	TAlN9Nx3GZ8AzY7PwGE6cY+IUQALBrunGtJ71X91Iydk32xhzHGO51JIXEG0/rVW
-	iSoEx9rxOAMom7RXWhrXa4KQHWX3Giv0qYI2bJIDaSizeOBOJFAFjZzWZkuCtLXE
-	KMrgw86aP/ossoee9Y7dn9i5D3NyfRy+6DVTn9vVIpTCkLkvOYN/9OgicGe9iA2l
-	bIzWZCP9i633tpIVaOpMKHGWRbEbSYrkDqsvrYfi4hrihwwr/5JpB8GaW3NnKmsm
-	plGuhK6NVVX4M6Fervj4CyTeD5QUU6MsXdfYyHzI7vGmqla/DFMRW152l8+7hIoE
-	hYoZVQ==
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 458f2m8qak-1
+	ajkDcMXkTChhLB9nQXqXX4w1XlD/zn/bmx5ISWyGiDE=; b=XdlAcI8mJvT5ZzSC
+	BYdYS14qi2YMrDMG0SARJc7twAMD4ylW/xAiRf7VdzLeQ0p2B88dgMBNI3Vd9/lB
+	yg5bLTeegaMxv8TOxoKsro/HOMyWUoyS4XxoEWam/FQftEmPaY8gg+TpfSGOCd41
+	5agraq4czLhmGRvhKscIk7UyEvzH1gk2B+vpDRV31EbIc+BIR50KmaoqruxUT+LY
+	LueVsidQh+p4yB6nHt5hsOnSE2AGC9vMWSo2R7P+0YGy2exaMsVMwEaqrIepPj5F
+	wUgZQnRQ2/y2AM5ss+YTNtGIe4uENpkPfwtM6bdha7fBjl3T7QTn8eZ/p/5Bbl94
+	vYh30w==
+Received: from mail-qt1-f200.google.com (mail-qt1-f200.google.com [209.85.160.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 458eyt0p6n-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Sat, 08 Mar 2025 15:03:37 +0000 (GMT)
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-6e4546f8c47so7460276d6.0
-        for <linux-pci@vger.kernel.org>; Sat, 08 Mar 2025 07:03:37 -0800 (PST)
+	for <linux-pci@vger.kernel.org>; Sat, 08 Mar 2025 14:25:10 +0000 (GMT)
+Received: by mail-qt1-f200.google.com with SMTP id d75a77b69052e-474f467e613so7926781cf.2
+        for <linux-pci@vger.kernel.org>; Sat, 08 Mar 2025 06:25:10 -0800 (PST)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1741446216; x=1742051016;
+        d=1e100.net; s=20230601; t=1741443910; x=1742048710;
         h=content-transfer-encoding:in-reply-to:from:content-language
          :references:cc:to:subject:user-agent:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=IKPlg8KpcdilLw+MDQw3ribbQkf1W3yXLlwbnkUFVEo=;
-        b=XBP55n16KSpvy8cJbeKA70I/LkrU5tIfPFhyRrk6v+yOV/m7ltppY9MeARcZK47bSW
-         qTER8yHUVs5ofJYqOBSNogbsUYQaFJIAvSdJwHaOgIxsPtkXHexf2JMP0Ztaasj/BecF
-         EKzjbFe64q7Rw2mmb+h7T9NAUoimxpykf4/8kgdZLd4NHJ/ta5XZwft40vJ3SUGBkLRd
-         5e08RfVTmvylgaSgh43FCRn6fDoAsuJ6mBv2g2gpj0Ou72nXgbF6pLOPcgmI4MxBZlK6
-         0TzO0x9KuzwyqjByTxlJzeevX5qhig+D5BoOk/WZs9hJrow1hfPivNIDmc899hQXayui
-         6fYA==
-X-Forwarded-Encrypted: i=1; AJvYcCVm5azhyZQRN1S3wQ//edQlOdydAiZ7ruoIWUkivtZIQcNo78ciskn9bCSskkJBWZxmqP5LZvgaqb4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YykXoqGAVPDEHmUG28Dy2Qg0QbC1FXCzGAhXYnlDAYe8YaytVpa
-	6CmPDOmBboMJgE3ePqzH1xHQq6yzH8J+TYv8aK7hvfpOxCD7Y75/0u78W0K9rQzZ5dSdt/c6r0Z
-	czoUgXILXZfm2b/1E165r0p2Td7J2F8Ezm5es7zGw2AZPOmpKF7CyHAHTvr8=
-X-Gm-Gg: ASbGnctHVRf/Wfb1iwpgX0i8mupIdVMtLdj5TsCVkTq+ahHIZOCsUFnJzStQ7NEE5r0
-	qLst+rSAeEIR7GTwsW7rOIPr3rUlsDr5f6xYcjYpNWIX6dPnqFR2ERGq/nlWq/bDAkc9HTHeE8f
-	0WJ8ILH4wTWNzw0B6Ie4VhsGf8jfiaaE1Yn4EYlTxCEHtYng0LjSqCgfLoJtzbe7w6BK8KYzAMI
-	4eZ7U3vOPZbGWTNmHhhvHqlb6X30YpLxKkjf67+a44irGU7kIw9OYUuE/ZQNKcRDjoo0ZiZX53Y
-	t8h60zOVfEsdgtkawH80Ln0HOK8EKOkbAgXxgJ8nSIalW/1GuGusEDC+gUi7QyiyrTORNA==
-X-Received: by 2002:a05:622a:2b0c:b0:474:e7de:8595 with SMTP id d75a77b69052e-47666ca49c3mr13703121cf.14.1741446216616;
-        Sat, 08 Mar 2025 07:03:36 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IG2C1ER2UZOIAo7ctUzp4nSuh/7gNp2uvGTLVNBhuB4jYEmqZINWmCWfInxvDC01eRy/YRnlQ==
-X-Received: by 2002:a05:622a:2b0c:b0:474:e7de:8595 with SMTP id d75a77b69052e-47666ca49c3mr13702851cf.14.1741446216104;
-        Sat, 08 Mar 2025 07:03:36 -0800 (PST)
+        bh=ajkDcMXkTChhLB9nQXqXX4w1XlD/zn/bmx5ISWyGiDE=;
+        b=mp8lqP7xeUsnLhAncrmeC05sNejOmF3QolvRgmDDQEAwb/+U5P0DsxzCC8NeVugTzO
+         /fXPBImf0VwkjnjbIE354mbIgU+RlstZGhIkydDdlsrY0rRGbVm0oRqb6qgeCBcjs9Gy
+         iSbsF4QDzVhXitB5zQnlWWs3LJ4Ecsj8rrld678XzFRCSumOETes7DoS2DVaZ61x8b0z
+         nxBkmAZWrwuM4o/KLhqX2UCHdXM9AGmhbJhZtbkkMtn/uCAy46+L/XhzvH4oE37mt/Ol
+         IcDiT/NErS3ePeGq6mEVLHAgLbiii9CbB1MvjxJPTTPchMNxMK5Xl9kzb7XiFZfehMNc
+         USaw==
+X-Forwarded-Encrypted: i=1; AJvYcCWmXKN227WS4EVokqBU2whM4mhlg/TFMQRivnUGyfKBLIH6b00mbGQiMS9mD4YJkrsvXTJhVk69Ss4=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzGrh11jSEWoE3DsmqIvs0HyHSIgnzNZ/Edi9gYEp0adMNYeNhy
+	YKuI3ChF6uhzjTSqGJDPUtjp3mfh0R216+79jqNKpWVuQzLXBuIpYlmtjepeoE9HvH0DQ1kVsio
+	MESYWhyW/L5iDIKXQTLqs/pxzT53Hz2DJ8PgKyEzWYJ+tAzZqWouSk/tLjJM=
+X-Gm-Gg: ASbGncv+RFHv1q9GCfZxjcSMX4GRJGXOGwey8tgRHmfOXEKJyQO6pDL6AUmgiD/+Jmq
+	4yqGZItEr0dEO1yKJvjXd55i7wcCbkB2KC/eYPwVoRJDA/gpWdinXkxfhUs4Q/sfEkK7TKUnDRK
+	Ew8BoTveP3f4evEuN5ni63rcyRhiPOpQUxpaNvaWSGEEYOMW3E8gXiw2eKU4uDtp6wgR12dFEx0
+	fv5O+BszZRYSvq2GYX+olPB2lHbrHby+eDC4p0u1y2Y6CmFC/KdKz17zdqW1kGcGYPHwxlGACCJ
+	OgEB5eQh15GuNIAAaY2YOUcUtjUen+aSpYixf8TctLNhGjsaeONLxrv67XEZSx1VATUB4g==
+X-Received: by 2002:a05:6214:d6b:b0:6e6:60f6:56db with SMTP id 6a1803df08f44-6e908d8568cmr15818296d6.6.1741443909924;
+        Sat, 08 Mar 2025 06:25:09 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IGf5Bpdb+EwGJ+DUwof9ezxDFy4IdGxQr6SUgAcI78hiBLBYecPa0sQ6yprSMZOTAU4uNWqGA==
+X-Received: by 2002:a05:6214:d6b:b0:6e6:60f6:56db with SMTP id 6a1803df08f44-6e908d8568cmr15818006d6.6.1741443909472;
+        Sat, 08 Mar 2025 06:25:09 -0800 (PST)
 Received: from [192.168.65.90] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-5e5c768f98asm3999255a12.68.2025.03.08.07.03.33
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ac23973b09asm438894266b.119.2025.03.08.06.25.06
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 08 Mar 2025 07:03:34 -0800 (PST)
-Message-ID: <df2f0bfb-665e-45a8-8103-5c6217dd194a@oss.qualcomm.com>
-Date: Sat, 8 Mar 2025 16:03:32 +0100
+        Sat, 08 Mar 2025 06:25:08 -0800 (PST)
+Message-ID: <e2d84147-c061-4f12-a44b-f60919625f77@oss.qualcomm.com>
+Date: Sat, 8 Mar 2025 15:25:05 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,50 +74,51 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 21/23] arm64: dts: qcom: sc8180x: Add 'global' PCIe
- interrupt
-To: manivannan.sadhasivam@linaro.org,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        cros-qcom-dts-watchers@chromium.org
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250227-pcie-global-irq-v1-0-2b70a7819d1e@linaro.org>
- <20250227-pcie-global-irq-v1-21-2b70a7819d1e@linaro.org>
+Subject: Re: [PATCH v3 2/6] phy: qualcomm: qcom-uniphy-pcie 28LP add support
+ for IPQ5018
+To: Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        George Moussalem <george.moussalem@outlook.com>
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, linux-phy@lists.infradead.org,
+        andersson@kernel.org, bhelgaas@google.com, conor+dt@kernel.org,
+        devicetree@vger.kernel.org, kishon@kernel.org, konradybcio@kernel.org,
+        krzk+dt@kernel.org, kw@linux.com, lpieralisi@kernel.org,
+        manivannan.sadhasivam@linaro.org, p.zabel@pengutronix.de,
+        quic_nsekar@quicinc.com, robh@kernel.org, robimarko@gmail.com,
+        vkoul@kernel.org, quic_srichara@quicinc.com
+References: <20250305134239.2236590-1-george.moussalem@outlook.com>
+ <DS7PR19MB8883A6C7E8FA6810089453149DCB2@DS7PR19MB8883.namprd19.prod.outlook.com>
+ <oeu6wkfhx2masvendoweoufzit6dcwwer5bakzvg75dz3uc4bj@bwuj4slnb24e>
 Content-Language: en-US
 From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20250227-pcie-global-irq-v1-21-2b70a7819d1e@linaro.org>
+In-Reply-To: <oeu6wkfhx2masvendoweoufzit6dcwwer5bakzvg75dz3uc4bj@bwuj4slnb24e>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: 7ED9a_78lv70q187AokzerXx-kWHIUAe
-X-Proofpoint-ORIG-GUID: 7ED9a_78lv70q187AokzerXx-kWHIUAe
-X-Authority-Analysis: v=2.4 cv=ab+bnQot c=1 sm=1 tr=0 ts=67cc5c4a cx=c_pps a=oc9J++0uMp73DTRD5QyR2A==:117 a=FpWmc02/iXfjRdCD7H54yg==:17 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=KKAkSRfTAAAA:8 a=EUspDBNiAAAA:8 a=x0-Ntm4DP0gVEan9CnAA:9 a=QEXdDO2ut3YA:10
- a=iYH6xdkBrDN1Jqds4HTS:22 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-ORIG-GUID: _hnaKXU3uRwoL3VHvo6gMNPyitYSg5V5
+X-Authority-Analysis: v=2.4 cv=CupFcm4D c=1 sm=1 tr=0 ts=67cc5346 cx=c_pps a=JbAStetqSzwMeJznSMzCyw==:117 a=FpWmc02/iXfjRdCD7H54yg==:17 a=IkcTkHD0fZMA:10 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=Bxonh79IiWxE7T-ZNUwA:9 a=QEXdDO2ut3YA:10
+ a=uxP6HrT_eTzRwkO_Te1X:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: _hnaKXU3uRwoL3VHvo6gMNPyitYSg5V5
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-03-08_05,2025-03-07_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0
- mlxlogscore=570 priorityscore=1501 lowpriorityscore=0 bulkscore=0
- mlxscore=0 impostorscore=0 phishscore=0 clxscore=1015 spamscore=0
- adultscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 clxscore=1015
+ suspectscore=0 phishscore=0 adultscore=0 impostorscore=0 malwarescore=0
+ bulkscore=0 spamscore=0 mlxlogscore=834 lowpriorityscore=0
+ priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502100000
- definitions=main-2503080113
+ definitions=main-2503080108
 
-On 27.02.2025 2:41 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+On 5.03.2025 9:39 PM, Dmitry Baryshkov wrote:
+> On Wed, Mar 05, 2025 at 05:41:27PM +0400, George Moussalem wrote:
+>> From: Sricharan Ramabadhran <quic_srichara@quicinc.com>
+>>
+>> From: Nitheesh Sekar <quic_nsekar@quicinc.com>
 > 
-> 'global' interrupt is used to receive PCIe controller and link specific
-> events.
-> 
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
+> Something is wrong here. There can't be two authors for the patch.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+It may be that Nitheesh was the original author, whose patch was then
+picked up by Sricharan for sending (no additional notices of
+co-development), but George later did the same, forgetting to remove
+Sricharan from the chain.
 
 Konrad
