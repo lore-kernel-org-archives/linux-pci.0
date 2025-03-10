@@ -1,123 +1,201 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 153C222D4DC;
-	Mon, 10 Mar 2025 15:11:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A4E22D4EB
+	for <linux-pci@vger.kernel.org>; Mon, 10 Mar 2025 15:14:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741619474; cv=none; b=atFanMx5pL6+ud/gGzd/RgstUjXBbGgyMjiQCgv5CFC4ih3Fw3Kbl51BpYz6N8WXcXWLzrQh4ShNA7A+imdv7SCYLImxbt1UlecrX/sdlBpO4LcAPYIYxxmTNzly9tA3gXwZsJLtDhnOM4doGC0u9YKzUguX/KPcuOxYqVe65e4=
+	t=1741619663; cv=none; b=u5Ke9dKTajCD4BgOQgbZgsla+WqAslmq8n5A49tMQ+CmYT+n7nkb28Ogzb/v++C5p+S7FOhzSd8cb8hFmh2g20saIn26RC6EDticqVXn3ug0RktrQcxoS5gHo2+EPkjmhz8YTv8W7w+Hd5lbwwknTyovKLO+EY69BwUT2iWhG4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741619474; c=relaxed/simple;
-	bh=QMcsbQVKT+fiuPq7AGkPf+0PAMbG6qvWcqcMmQ+Wr0c=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sfy1RXIV/hoe3cCJDzpI6EGb1Mt14ifGvBvbO+jgf8lec5ai+jBVICDiq0+2wrACSvyWqtZugQc11HsnL3o0OxSqpZJjLBmxTd7PO0EYyQqqXkjxS/fjZPGJKR+chD9ctXFzlOynkFkZatwZAUaQZbbj4jWseoxw3KObU4n+D1k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=UR/FD+r+; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1741619663; c=relaxed/simple;
+	bh=2Sp4y9+ug9u1S0Q4Qj+ZnRKbEB4KE8Qvb82tnAzOGDU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=PDG3yYxDECPf9hiGx2Vs5Sy308kzh7kYiAocsoJ06p5Wl3EuTBhRgwINHYGK0WwePqL5K+8N1ZWviAhUg+rbi1gPyocY2FDuKtSZS12oMX0+AyPikSqWzV2q8tY2nRRoAzw84icXE6g/HuD8id9s8KTTmJX8zHilmDLokVPMO2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SVWAxfmJ; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="UR/FD+r+"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=RJdV8dINmj0DyHz22Fro0RD9n3L+kRh/ucEwMBwHgpM=;
-	b=UR/FD+r+IyZhYJy7xAFkU4MSoKiS3ogTViwPKaS2CYi2flIrr1M7I/cpImtpEr
-	bEJor8ITunQwdcql9KgAlUXT8StrXUqU+Nh4TpBatwBO47+WsMw7GpIgzgK7yceQ
-	np49Tk/ncox8QaK5kjwWg+8SEFAIdSi7Icrc8e3ikeRqk=
-Received: from [192.168.71.45] (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wDnvyTAAM9nvU1pRw--.5995S2;
-	Mon, 10 Mar 2025 23:09:53 +0800 (CST)
-Message-ID: <9eee0ab5-d870-451d-bf38-41578f487854@163.com>
-Date: Mon, 10 Mar 2025 23:09:54 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SVWAxfmJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1741619661; x=1773155661;
+  h=date:from:to:cc:subject:message-id:mime-version;
+  bh=2Sp4y9+ug9u1S0Q4Qj+ZnRKbEB4KE8Qvb82tnAzOGDU=;
+  b=SVWAxfmJLCm46kwNZnFRpz5wilwA5BIrpQFM8mP8ylSX2lo5QEKOg+Sv
+   wpRdHleR/EU9mO7OV4Knv3GVbR/0De2XnFZ/dXRWg55L5NX29relzvrLN
+   orQAZXmtKUB3x19K+01UHIWL8394wX/BtYsaIdwVI/SBVJdL0LVc3MvE8
+   zzYym69agv9NNOVSy6uaqYxzc9vqPM+GcY7/39V9rUM2Id3VCl6Iyd9u2
+   uaCN0P0ThPyjB8bGL1zDprPsD2qHuukiPULyCJd/yw2EqSFs7X9Hnrnhj
+   UFbAVlZMERmxIqEEfWNaGP7JdGTLAeGXsdMA0tIJHUVFP3LK1bQ29l0Eb
+   w==;
+X-CSE-ConnectionGUID: Z+BQXQtOTCCLg2ESlhwHlg==
+X-CSE-MsgGUID: hsdstb0FR4C5UgNs0XGuHQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11369"; a="42530082"
+X-IronPort-AV: E=Sophos;i="6.14,236,1736841600"; 
+   d="scan'208";a="42530082"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Mar 2025 08:14:21 -0700
+X-CSE-ConnectionGUID: /ysAsUEjSOCc1kcnRGf77Q==
+X-CSE-MsgGUID: EtqwFH1wRF6nblrP2JNEtA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,236,1736841600"; 
+   d="scan'208";a="124926488"
+Received: from lkp-server02.sh.intel.com (HELO a4747d147074) ([10.239.97.151])
+  by orviesa003.jf.intel.com with ESMTP; 10 Mar 2025 08:14:20 -0700
+Received: from kbuild by a4747d147074 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1trepd-0004NL-0s;
+	Mon, 10 Mar 2025 15:14:17 +0000
+Date: Mon, 10 Mar 2025 23:13:21 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:controller/imx6] BUILD SUCCESS
+ c714e2585d06e8fb6356e6ac0aa6ebc8812ed6ca
+Message-ID: <202503102315.iIH959oN-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [v2] PCI: cadence: Add configuration space capability search API
-To: Siddharth Vadapalli <s-vadapalli@ti.com>
-Cc: lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org,
- robh@kernel.org, bhelgaas@google.com, bwawrzyn@cisco.com,
- thomas.richard@bootlin.com, wojciech.jasko-EXT@continental-corporation.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250308133903.322216-1-18255117159@163.com>
- <20250309023839.2cakdpmsbzn6pm7g@uda0492258>
- <3e6645a8-6de9-4125-8444-fa1a4f526881@163.com>
- <20250309054835.4ydiq4xpguxtbvkf@uda0492258>
- <bf9fc865-58b9-45ed-a346-ce82899d838c@163.com>
- <20250309100243.ihrxe6vfdugzpzsn@uda0492258>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20250309100243.ihrxe6vfdugzpzsn@uda0492258>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDnvyTAAM9nvU1pRw--.5995S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGF4fAFy8Xr1xZF1UWry5CFg_yoW5AF18pF
-	4Dtryay3WDJa1fZ3s7Ww4vgFyfZ3s7Jw15GF98Kwn5AwsIga42kF4Yyr1rua9rCrZ2qF1j
-	vrW3Xas7CFZ8JaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UVMKtUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwsMo2fO+J-xnQAAsJ
+Content-Type: text/plain; charset=us-ascii
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/imx6
+branch HEAD: c714e2585d06e8fb6356e6ac0aa6ebc8812ed6ca  PCI: imx6: Use domain number and replace hardcoded value
 
+elapsed time: 1092m
 
-On 2025/3/9 18:02, Siddharth Vadapalli wrote:
->> Hi Siddharth,
->>
->> Prior to this patch, I don't think hard-coded is that reasonable. Because
->> the SOC design of each company does not guarantee that the offset of each
->> capability is the same. This parameter can be configured when selecting PCIe
->> configuration options. The current code that just happens to hit the offset
->> address is the same.
-> 
-> 1. You are modifying the driver for the Cadence PCIe Controller IP and
-> not the one for your SoC (a.k.a the application/glue/wrapper driver).
-> 2. The offsets are tied to the Controller IP and not to your SoC. Any
-> differences that arise due to IP Integration into your SoC should be
-> handled in the Glue driver (the one which you haven't upstreamed yet).
-> 3. If the offsets in the Controller IP itself have changed, this
-> indicates a different IP version which has nothing to do with the SoC
-> that you are using.
-> 
-> Please clarify whether you are facing problems with the offsets due to a
-> difference in the IP Controller Version, or due to the way in which the IP
-> was integrated into your SoC.
-> 
+configs tested: 122
+configs skipped: 3
 
-Hi Siddharth,
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-I have consulted several PCIe RTL designers in the past two days. They 
-told me that the controller IP of Synopsys or Cadence can be configured 
-with the offset address of the capability. I don't think it has anything 
-to do with SOC, it's just a feature of PCIe controller IP. In 
-particular, the number of extended capability is relatively large. When 
-RTL is generated, one more configuration may cause the offset addresses 
-of extended capability to be different. Therefore, it is unreasonable to 
-assign all the offset addresses in advance.
+tested configs:
+alpha                             allnoconfig    gcc-14.2.0
+alpha                            allyesconfig    gcc-14.2.0
+arc                              allmodconfig    gcc-13.2.0
+arc                               allnoconfig    gcc-13.2.0
+arc                              allyesconfig    gcc-13.2.0
+arc                   randconfig-001-20250310    gcc-13.2.0
+arc                   randconfig-002-20250310    gcc-13.2.0
+arm                              allmodconfig    gcc-14.2.0
+arm                               allnoconfig    clang-17
+arm                              allyesconfig    gcc-14.2.0
+arm                          pxa3xx_defconfig    clang-21
+arm                   randconfig-001-20250310    clang-21
+arm                   randconfig-002-20250310    gcc-14.2.0
+arm                   randconfig-003-20250310    gcc-14.2.0
+arm                   randconfig-004-20250310    clang-21
+arm64                            allmodconfig    clang-18
+arm64                             allnoconfig    gcc-14.2.0
+arm64                 randconfig-001-20250310    clang-19
+arm64                 randconfig-002-20250310    clang-17
+arm64                 randconfig-003-20250310    clang-15
+arm64                 randconfig-004-20250310    clang-17
+csky                              allnoconfig    gcc-14.2.0
+csky                  randconfig-001-20250310    gcc-14.2.0
+csky                  randconfig-002-20250310    gcc-14.2.0
+hexagon                          allmodconfig    clang-21
+hexagon                           allnoconfig    clang-21
+hexagon                          allyesconfig    clang-18
+hexagon               randconfig-001-20250310    clang-21
+hexagon               randconfig-002-20250310    clang-21
+i386                             allmodconfig    gcc-12
+i386                              allnoconfig    gcc-12
+i386                             allyesconfig    gcc-12
+i386        buildonly-randconfig-001-20250310    clang-19
+i386        buildonly-randconfig-002-20250310    clang-19
+i386        buildonly-randconfig-003-20250310    clang-19
+i386        buildonly-randconfig-004-20250310    clang-19
+i386        buildonly-randconfig-005-20250310    clang-19
+i386        buildonly-randconfig-006-20250310    clang-19
+i386                                defconfig    clang-19
+loongarch                        allmodconfig    gcc-14.2.0
+loongarch                         allnoconfig    gcc-14.2.0
+loongarch             randconfig-001-20250310    gcc-14.2.0
+loongarch             randconfig-002-20250310    gcc-14.2.0
+m68k                             allmodconfig    gcc-14.2.0
+m68k                              allnoconfig    gcc-14.2.0
+m68k                             allyesconfig    gcc-14.2.0
+m68k                        m5307c3_defconfig    gcc-14.2.0
+microblaze                        allnoconfig    gcc-14.2.0
+microblaze                       allyesconfig    gcc-14.2.0
+mips                              allnoconfig    gcc-14.2.0
+nios2                             allnoconfig    gcc-14.2.0
+nios2                 randconfig-001-20250310    gcc-14.2.0
+nios2                 randconfig-002-20250310    gcc-14.2.0
+openrisc                          allnoconfig    gcc-14.2.0
+openrisc                         allyesconfig    gcc-14.2.0
+openrisc                            defconfig    gcc-14.2.0
+parisc                           allmodconfig    gcc-14.2.0
+parisc                            allnoconfig    gcc-14.2.0
+parisc                           allyesconfig    gcc-14.2.0
+parisc                              defconfig    gcc-14.2.0
+parisc                randconfig-001-20250310    gcc-14.2.0
+parisc                randconfig-002-20250310    gcc-14.2.0
+powerpc                          allmodconfig    gcc-14.2.0
+powerpc                           allnoconfig    gcc-14.2.0
+powerpc                          allyesconfig    clang-16
+powerpc                 canyonlands_defconfig    clang-19
+powerpc                    ge_imp3a_defconfig    gcc-14.2.0
+powerpc               randconfig-001-20250310    clang-17
+powerpc               randconfig-002-20250310    clang-21
+powerpc               randconfig-003-20250310    clang-17
+powerpc64             randconfig-001-20250310    gcc-14.2.0
+powerpc64             randconfig-002-20250310    gcc-14.2.0
+powerpc64             randconfig-003-20250310    gcc-14.2.0
+riscv                            allmodconfig    clang-21
+riscv                             allnoconfig    gcc-14.2.0
+riscv                            allyesconfig    clang-21
+riscv                               defconfig    clang-19
+riscv                 randconfig-001-20250310    clang-19
+riscv                 randconfig-002-20250310    gcc-14.2.0
+s390                             allmodconfig    clang-19
+s390                              allnoconfig    clang-15
+s390                             allyesconfig    gcc-14.2.0
+s390                                defconfig    clang-15
+s390                  randconfig-001-20250310    gcc-14.2.0
+s390                  randconfig-002-20250310    clang-18
+s390                       zfcpdump_defconfig    clang-19
+sh                               allmodconfig    gcc-14.2.0
+sh                                allnoconfig    gcc-14.2.0
+sh                               allyesconfig    gcc-14.2.0
+sh                                  defconfig    gcc-14.2.0
+sh                    randconfig-001-20250310    gcc-14.2.0
+sh                    randconfig-002-20250310    gcc-14.2.0
+sh                          rsk7203_defconfig    gcc-14.2.0
+sh                        sh7763rdp_defconfig    gcc-14.2.0
+sh                            titan_defconfig    gcc-14.2.0
+sparc                            allmodconfig    gcc-14.2.0
+sparc                             allnoconfig    gcc-14.2.0
+sparc                 randconfig-001-20250310    gcc-14.2.0
+sparc                 randconfig-002-20250310    gcc-14.2.0
+sparc64                             defconfig    gcc-14.2.0
+sparc64               randconfig-001-20250310    gcc-14.2.0
+sparc64               randconfig-002-20250310    gcc-14.2.0
+um                               allmodconfig    clang-21
+um                                allnoconfig    clang-18
+um                               allyesconfig    gcc-12
+um                                  defconfig    clang-21
+um                             i386_defconfig    gcc-12
+um                    randconfig-001-20250310    gcc-12
+um                    randconfig-002-20250310    clang-17
+um                           x86_64_defconfig    clang-15
+x86_64                            allnoconfig    clang-19
+x86_64                           allyesconfig    clang-19
+x86_64      buildonly-randconfig-001-20250310    gcc-12
+x86_64      buildonly-randconfig-002-20250310    clang-19
+x86_64      buildonly-randconfig-003-20250310    clang-19
+x86_64      buildonly-randconfig-004-20250310    clang-19
+x86_64      buildonly-randconfig-005-20250310    clang-19
+x86_64      buildonly-randconfig-006-20250310    gcc-12
+x86_64                              defconfig    gcc-11
+xtensa                            allnoconfig    gcc-14.2.0
+xtensa                randconfig-001-20250310    gcc-14.2.0
+xtensa                randconfig-002-20250310    gcc-14.2.0
 
-Here, I want to make Cadence PCIe common driver more general. When we 
-keep developing new SoCs, the capability or extended capability offset 
-address may eventually be inconsistent.
-
-Thank you very much Siddharth for discussing this patch with me. I would 
-like to know what other maintainers have to say about this.
-
->>
->> You can refer to the pci_find_*capability() or dw_pcie_find_*capability API.
->> The meaning of their appearance is the same as what I said, and the design
->> of each company may be different.
-> 
-> These APIs exits since there are multiple users with different Controllers
-> (in the case of pci_find_*capability()) or different versions of the
-> Controller (in the case of dw_pcie_find_*capability) due to which we cannot
-> hard-code offsets. In the case of the Cadence PCIe Controller, I see only
-> one user in Upstream Linux at the moment which happens to be the
-> "pci-j721e.c" driver. Maybe there are other users, but the offsets seem
-> to be compatible with their SoCs in that case.
-
-Yes. Cadence definitely has a lot of customers, and from what I 
-understand, not every customer wants to go upstream on their drive. Most 
-of these customers are just local modifications, probably mimicking the 
-API that the dwc driver already uses. We are, for example.
-
-Best regards,
-Hans
-
-
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
