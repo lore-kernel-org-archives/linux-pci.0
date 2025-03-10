@@ -1,53 +1,53 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A403781E;
-	Mon, 10 Mar 2025 06:56:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C1701D54EF;
+	Mon, 10 Mar 2025 06:56:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741589790; cv=none; b=SiFrjh08VRKid1hLmpyhmb0cfqZsIkJ7MkC0NCj8Vr5F7X8Qgc2IdxVwfQImW75P0EkyOGYebJphR7B9noyDnW62quCEbvouv36QJv8f6CA+pFRcUnDduyYFiKCVojcZyn1x3OZ21u06o/TJDsstXbCYoaHE+Bp2RbAFPthIs+w=
+	t=1741589793; cv=none; b=PvxOA4bOG6OZ2CTmJo5gsdNuVKumDdChzed030aQHF+9rOmEIIog4TadJQvvtunzKfvY1XD0WT4Pk/uWjzGRvrhGvta6ykHFiKDW1P1D+2xgJlNAV1ZAZ40S2vf8L6VE+8F6x2GbocbGG8L4rslOs4JO/0JHv1bEItcW0ifISCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741589790; c=relaxed/simple;
-	bh=tXrDgHIxecaivzfdXHIVZ/uGSlkI8nHfcrID3POCJ1A=;
+	s=arc-20240116; t=1741589793; c=relaxed/simple;
+	bh=jBhaJqfo0dJGYfjqgvkdBylI8D1YBFp27T/Q2c1WOys=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=kQNU/AQlrQW4CQQFWYTFrcC70z82Zg3NuqAFy+Z1tJXnwwZoKpw4dM11QjBrTrVb6PUtJND/kUV76eG1qEg2Rh/QD5H5vt5SuZEUaTOuGXD8FsMh8appHtKGL1ZKOwYR9xcYpbXiJIO4DMU02Kdx21JtuKsfHh2dz1N4cHFY/BM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=pybLA+qI; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version; b=Mz0i5qBfjaT3g2PFGB27wdEg9K33HUjtHomvN4l8xBm1cfIfwLhqce8GY7wEcLjQYHH8M1hWjiWVESczUktiM2X+hoefNVfOMVbXW3OWSIGEQeMPCuNJ2R56DO0hWUHC1FzlwN7SEUZtPQDy477zi62jK1RMgQ7bCWGlrPMrGhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EaWlw9zS; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="pybLA+qI"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 529KR1kg021547;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EaWlw9zS"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 529AnOWX029532;
 	Mon, 10 Mar 2025 06:56:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=OTmXY3gb2QG
-	4tbmLLX3afqFeTrJWYKTayvszVIcxDlo=; b=pybLA+qIPjb/kqPjRrhJhhwLQXF
-	hXP9rv7+E4JTJTKdItIJlSp1OuB5/iyswwUkemTHKSgnM0clcsX7YA2v59qGCkQ2
-	y4rKHS5cXHo79aYXkHWv07OS+gsVUp02MdZOUn1lliLR6t+5O46NPdldUZViRwZY
-	RU7KP3U1qSkgBSnPxgKNdxJQKNcr5UBFXqgxUl04JOGHjFrda36mBvNy/uWISDjD
-	XQJGRPPdVB6a9wgXaNsavMFHt9nNyH6R8AGj8ySq2FNjFTxCCJwaSlX5r1PSuasf
-	R4Jhu+XoaaIOXy3IE6D7BRcDf4mrmq9oj9iUFgGXlasupknMh6GHBAJ1pJw==
+	:mime-version:references:subject:to; s=qcppdkim1; bh=Q24jRMsqQu5
+	jYTHSBvlqYYQfhTsMmVKSjQnuUrx8eOM=; b=EaWlw9zSdqRIbMzrVyi2Y6WDGxP
+	i+jthvscaGJ/Hc3PiLSe4lfg5Vm/8lYNFW9eUml8XV6He3ZWwoBSdVylf2czpjzd
+	NFamZ6U70I/Hdg29q9f+yp8G2CfqXzsjBL4B8lDNk+KxQc886v7UqshvPnnvvS1A
+	6nKGe9Em6wF4/bFm0wDgCI+O5UKv5H37PQMO47jck5otYzKWxstZTmO0IsrwoylV
+	ZsPGARv3+7HqgVfNkb+NWGpU8h/lHEnxTzoRJyCF/a+jimEJ5OuXrkPHrd4Y+3Rr
+	XtI1+dfqyo2XzdEJN71iX2I9+j5pk/c3X8rwwIIoXWBbcl+ULkX40fK9e1w==
 Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 458ewpkshs-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 458f6abt99-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Mar 2025 06:56:18 +0000 (GMT)
+	Mon, 10 Mar 2025 06:56:19 +0000 (GMT)
 Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 52A6uGVT004001;
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 52A6uHn2004025;
 	Mon, 10 Mar 2025 06:56:17 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 458yu87jb1-1
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 458yu87jbc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Mar 2025 06:56:16 +0000
+	Mon, 10 Mar 2025 06:56:17 +0000
 Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 52A6uGY7003995;
-	Mon, 10 Mar 2025 06:56:16 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 52A6uGYA003995;
+	Mon, 10 Mar 2025 06:56:17 GMT
 Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 52A6uGrF003992
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 52A6uGW6003994
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 10 Mar 2025 06:56:16 +0000
+	Mon, 10 Mar 2025 06:56:17 +0000
 Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 4115F27CC; Mon, 10 Mar 2025 14:56:15 +0800 (CST)
+	id E6DED27CE; Mon, 10 Mar 2025 14:56:15 +0800 (CST)
 From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 To: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
         manivannan.sadhasivam@linaro.org, robh@kernel.org, krzk+dt@kernel.org,
@@ -59,10 +59,11 @@ Cc: quic_ziyuzhan@quicinc.com, quic_qianyu@quicinc.com,
         quic_krichai@quicinc.com, johan+linaro@kernel.org,
         linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
         devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org
-Subject: [PATCH v3 1/4] dt-bindings: PCI: qcom: Document the QCS615 PCIe Controller
-Date: Mon, 10 Mar 2025 14:56:10 +0800
-Message-Id: <20250310065613.151598-2-quic_ziyuzhan@quicinc.com>
+        linux-phy@lists.infradead.org,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: [PATCH v3 3/4] arm64: dts: qcom: qcs615-ride: Enable PCIe interface
+Date: Mon, 10 Mar 2025 14:56:12 +0800
+Message-Id: <20250310065613.151598-4-quic_ziyuzhan@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250310065613.151598-1-quic_ziyuzhan@quicinc.com>
 References: <20250310065613.151598-1-quic_ziyuzhan@quicinc.com>
@@ -77,199 +78,89 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: DAhSkC9CJd-biBapWJFpZhviHmtZxXOe
-X-Proofpoint-ORIG-GUID: DAhSkC9CJd-biBapWJFpZhviHmtZxXOe
-X-Authority-Analysis: v=2.4 cv=C5sTyRP+ c=1 sm=1 tr=0 ts=67ce8d13 cx=c_pps a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17 a=Vs1iUdzkB0EA:10 a=gEfo2CItAAAA:8 a=COk6AnOGAAAA:8 a=VwQbUJbxAAAA:8 a=KKAkSRfTAAAA:8 a=GBUzMPdPfdI7RGa8oQ4A:9
- a=sptkURWiP4Gy88Gu7hUp:22 a=TjNXssC_j7lpFel5tvFf:22 a=cvBusfyB2V15izCimMoJ:22
+X-Authority-Analysis: v=2.4 cv=WsDRMcfv c=1 sm=1 tr=0 ts=67ce8d13 cx=c_pps a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17 a=Vs1iUdzkB0EA:10 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=3zbVK_edIv7hY8gRkFcA:9 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: Mha5nQxLTidzuGF6ptJQyUmKO6YSc9DB
+X-Proofpoint-ORIG-GUID: Mha5nQxLTidzuGF6ptJQyUmKO6YSc9DB
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1093,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-03-10_02,2025-03-07_03,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 mlxscore=0 phishscore=0
- adultscore=0 clxscore=1015 bulkscore=0 lowpriorityscore=0 malwarescore=0
- impostorscore=0 suspectscore=0 spamscore=0 priorityscore=1501
- mlxlogscore=999 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2502100000
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 malwarescore=0 suspectscore=0
+ lowpriorityscore=0 priorityscore=1501 bulkscore=0 adultscore=0
+ impostorscore=0 phishscore=0 mlxscore=0 mlxlogscore=992 clxscore=1015
+ spamscore=0 classifier=spam authscore=0 authtc=n/a authcc= route=outbound
+ adjust=0 reason=mlx scancount=1 engine=8.19.0-2502100000
  definitions=main-2503100053
 
 From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 
-Add dedicated schema for the PCIe controllers found on QCS615.
-Due to qcs615's clock-names do not match any of the existing
-dt-bindings, a new compatible for qcs615 is needed.
+Add platform configurations in devicetree for PCIe, board related
+gpios, PMIC regulators, etc.
 
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 ---
- .../bindings/pci/qcom,qcs615-pcie.yaml        | 160 ++++++++++++++++++
- 1 file changed, 160 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/qcom,qcs615-pcie.yaml
+ arch/arm64/boot/dts/qcom/qcs8300-ride.dts | 40 +++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/qcom,qcs615-pcie.yaml b/Documentation/devicetree/bindings/pci/qcom,qcs615-pcie.yaml
-new file mode 100644
-index 000000000000..ad6159b05a96
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/qcom,qcs615-pcie.yaml
-@@ -0,0 +1,160 @@
-+# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/qcom,qcs615-pcie.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
+index b5c9f89b3435..80b946876f94 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
+@@ -285,6 +285,23 @@ queue3 {
+ 	};
+ };
+ 
++&pcie {
++	perst-gpios = <&tlmm 101 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 100 GPIO_ACTIVE_HIGH>;
 +
-+title: Qualcomm QCS615 PCI Express Root Complex
++	pinctrl-0 = <&pcie_default_state>;
++	pinctrl-names = "default";
 +
-+maintainers:
-+  - Bjorn Andersson <andersson@kernel.org>
-+  - Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
++	status = "okay";
++};
 +
-+description:
-+  Qualcomm QCS615 SoC (and compatible) PCIe root complex controller is based on
-+  the Synopsys DesignWare PCIe IP.
++&pcie_phy {
++	vdda-phy-supply = <&vreg_l5a>;
++	vdda-pll-supply = <&vreg_l12a>;
 +
-+properties:
-+  compatible:
-+    const: qcom,qcs615-pcie
++	status = "okay";
++};
 +
-+  reg:
-+    minItems: 6
-+    maxItems: 6
+ &qupv3_id_0 {
+ 	status = "okay";
+ };
+@@ -325,6 +342,29 @@ ethernet0_mdio: ethernet0-mdio-pins {
+ 			bias-pull-up;
+ 		};
+ 	};
 +
-+  reg-names:
-+    items:
-+      - const: parf # Qualcomm specific registers
-+      - const: dbi # DesignWare PCIe registers
-+      - const: elbi # External local bus interface registers
-+      - const: atu # ATU address space
-+      - const: config # PCIe configuration space
-+      - const: mhi # MHI registers
++	pcie_default_state: pcie-default-state {
++		clkreq-pins {
++			pins = "gpio90";
++			function = "pcie_clk_req";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
 +
-+  clocks:
-+    minItems: 6
-+    maxItems: 6
++		perst-pins {
++			pins = "gpio101";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
 +
-+  clock-names:
-+    items:
-+      - const: aux # Auxiliary clock
-+      - const: cfg # Configuration clock
-+      - const: bus_master # Master AXI clock
-+      - const: bus_slave # Slave AXI clock
-+      - const: slave_q2a # Slave Q2A clock
-+      - const: ref # REFERENCE clock
-+
-+  interrupts:
-+    minItems: 9
-+    maxItems: 9
-+
-+  interrupt-names:
-+    items:
-+      - const: msi0
-+      - const: msi1
-+      - const: msi2
-+      - const: msi3
-+      - const: msi4
-+      - const: msi5
-+      - const: msi6
-+      - const: msi7
-+      - const: global
-+
-+  resets:
-+    maxItems: 1
-+
-+  reset-names:
-+    items:
-+      - const: pci # PCIe core reset
-+
-+allOf:
-+  - $ref: qcom,pcie-common.yaml#
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/qcom,qcs615-gcc.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interconnect/qcom,qcs615-rpmh.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        pcie@1c08000 {
-+            compatible = "qcom,qcs615-pcie";
-+            reg = <0 0x01c08000 0 0x3000>,
-+                  <0 0x40000000 0 0xf1d>,
-+                  <0 0x40000f20 0 0xa8>,
-+                  <0 0x40001000 0 0x1000>,
-+                  <0 0x40100000 0 0x100000>,
-+                  <0 0x01c0b000 0 0x1000>;
-+            reg-names = "parf", "dbi", "elbi", "atu", "config", "mhi";
-+            ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
-+                     <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x3d00000>;
-+
-+            bus-range = <0x00 0xff>;
-+            device_type = "pci";
-+            linux,pci-domain = <0>;
-+            num-lanes = <1>;
-+
-+            #address-cells = <3>;
-+            #size-cells = <2>;
-+
-+            clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-+                     <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+                     <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+                     <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+                     <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>,
-+                     <&rpmhcc RPMH_CXO_CLK>;
-+            clock-names = "aux",
-+                          "cfg",
-+                          "bus_master",
-+                          "bus_slave",
-+                          "slave_q2a",
-+                          "ref";
-+
-+            dma-coherent;
-+
-+            interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+                         <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
-+            interrupt-names = "msi0", "msi1", "msi2", "msi3",
-+                              "msi4", "msi5", "msi6", "msi7", "global";
-+            #interrupt-cells = <1>;
-+            interrupt-map-mask = <0 0 0 0x7>;
-+            interrupt-map = <0 0 0 1 &intc 0 0 0 149 IRQ_TYPE_LEVEL_HIGH>, /* int_a */
-+                            <0 0 0 2 &intc 0 0 0 150 IRQ_TYPE_LEVEL_HIGH>, /* int_b */
-+                            <0 0 0 3 &intc 0 0 0 151 IRQ_TYPE_LEVEL_HIGH>, /* int_c */
-+                            <0 0 0 4 &intc 0 0 0 152 IRQ_TYPE_LEVEL_HIGH>; /* int_d */
-+
-+            interconnects = <&agree1_noc MASTER_PCIE 0 &mc_virt SLAVE_EBI1 0>,
-+                            <&gem_noc MASTER_APPSS_PROC 0 &cnoc_main SLAVE_PCIE_0 0>;
-+            interconnect-names = "pcie-mem", "cpu-pcie";
-+
-+            iommu-map = <0x0 &apps_smmu 0x400 0x1>,
-+                        <0x100 &apps_smmu 0x401 0x1>;
-+
-+            phys = <&pcie_phy>;
-+            phy-names = "pciephy";
-+
-+            pinctrl-0 = <&pcie_default_state>;
-+            pinctrl-names = "default";
-+
-+            power-domains = <&gcc PCIE_0_GDSC>;
-+
-+            resets = <&gcc GCC_PCIE_0_BCR>;
-+            reset-names = "pci";
-+
-+            perst-gpios = <&tlmm 101 GPIO_ACTIVE_LOW>;
-+            wake-gpios = <&tlmm 100 GPIO_ACTIVE_HIGH>;
-+        };
-+    };
++		wake-pins {
++			pins = "gpio100";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++	};
+ };
+ 
+ &uart7 {
 -- 
 2.25.1
 
