@@ -1,93 +1,144 @@
-Received: from mail-40133.protonmail.ch (mail-40133.protonmail.ch [185.70.40.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C854265CCF
-	for <linux-pci@vger.kernel.org>; Thu, 13 Mar 2025 10:52:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.40.133
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 65F661EDA17;
+	Thu, 13 Mar 2025 11:01:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741863163; cv=none; b=CxzAP3330O3s5gUtOrc6m3NO9U2JdTXAWQC4gI+pQFP0y59tZMQUG5XKmwk0WXqFCQw1ijvF4mL++HyAd50vLkOxVnKjVWXNkvv9qd/TT0dqMN5nuOw2F/ZXVcAwuGUQiIiB6FJLvNgXhsGQLfKCuJkW3zd5aVFXqUpwj72evj4=
+	t=1741863702; cv=none; b=nu0w+C1zMK4Av52TTrCN+All5roBil9U6UaphAKv1zzyCqJAcTL6t8Di606B62myCxfj0uIjI44hPlFd5fm/P1Z16ZL3XRDZ3rKXxtbdD7Vs5dkM2yqZ5Jo5mXeU0DdF6PXHCk7fjFzi6nLLce98Jj3IS67DQimqW6DUb7nq9GE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741863163; c=relaxed/simple;
-	bh=SMlqtJQIiBvNiW3snRb9OrOG9IbLmh4UpJ3FD32ol0M=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=IuoZl7PrcVAfdFT2qqnvCNYa+0UrapRqDnxh4EdU8v51YCjxeYdBIJ3rdmgvHnXvqprcYCJA5+nrXTUpUG0t5umt8fx9XJVCFpg0ddD3OteRUcp+brUSPLzT+P/dGg16Yt7Ssny8rX0X95grwzl8OP9Ax3mxya/dBxE+BOGdMR0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me; spf=pass smtp.mailfrom=proton.me; dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b=LLa0YVkw; arc=none smtp.client-ip=185.70.40.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=proton.me
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proton.me
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=proton.me header.i=@proton.me header.b="LLa0YVkw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=proton.me;
-	s=protonmail; t=1741863159; x=1742122359;
-	bh=nrPlHJ4v3ZNQyWRzzyvVL0yvd3474f+tE2cEaFpBUMc=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector:List-Unsubscribe:List-Unsubscribe-Post;
-	b=LLa0YVkw1QPQBaWerRKSFuw44p4w9BNebJawbPTyYmk+m/eqTTp6mH6ZsEkoCWAKM
-	 p7L1HSsnuH426EK4CUDpNHiP8c7E8CSy6cbF3/EurzqzMTY1wsWyOphAEY0L/YB6To
-	 HzbibgfXQ5Xay1oCZJokm6NAff2RXO2MvI0sCUr9BqwsTLEsjRGKlkzrtWUrevx9Fx
-	 FVgJL2CA8qv/prTcGZVrfoAOukHO9BzW5EOimneUZb1hmKjFdvJYpRMZzCyakEq1Dc
-	 D7KHL+JIvuarPqIkC6aF0BTjsxUhKCLihTqhy4ESlFgAYDXbezegec8bzy5u0mzd1k
-	 Z2HLf20vXOFnw==
-Date: Thu, 13 Mar 2025 10:52:34 +0000
-To: Danilo Krummrich <dakr@kernel.org>
-From: Benno Lossin <benno.lossin@proton.me>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, bhelgaas@google.com, ojeda@kernel.org, alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com, a.hindborg@kernel.org, aliceryhl@google.com, tmgross@umich.edu, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org
-Subject: Re: [PATCH 2/4] rust: device: implement device context marker
-Message-ID: <D8F2YBFHCTFL.3TH1E0TB11EHU@proton.me>
-In-Reply-To: <Z9K2PJEoymuhamT-@pollux>
-References: <20250313021550.133041-1-dakr@kernel.org> <20250313021550.133041-3-dakr@kernel.org> <D8F2GQ4WYT7Z.172Z7R7V8BIGR@proton.me> <Z9K2PJEoymuhamT-@pollux>
-Feedback-ID: 71780778:user:proton
-X-Pm-Message-ID: b297e6af7bf959966f08e2f649a842decb9c2b32
+	s=arc-20240116; t=1741863702; c=relaxed/simple;
+	bh=XefTSzn/nQqjD6JMR5JYpIY4KIl/yqcRheoDY2b+ilE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SWJggU+BI5x5FzF8dySMseJiNiSdVvnBDWWisLiGCKxzdIh5wZEut4gIvHGD2eRo5qsqHDSpr0RT60EO/iecNHSQdZ3G78lxBtAzFissZYg6aqnraswrels4schCNLx664w/WD3DUpZcFw7QSCS14hJOZxg7TGaXsARMLWeJlr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 21D5E1516;
+	Thu, 13 Mar 2025 04:01:50 -0700 (PDT)
+Received: from [10.57.40.246] (unknown [10.57.40.246])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id C60353F673;
+	Thu, 13 Mar 2025 04:01:35 -0700 (PDT)
+Message-ID: <417d6f59-0d78-4e81-ad0b-e06846f786b0@arm.com>
+Date: Thu, 13 Mar 2025 11:01:33 +0000
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 4/4] iommu: Get DT/ACPI parsing into the proper probe
+ path
+To: Marek Szyprowski <m.szyprowski@samsung.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Hanjun Guo
+ <guohanjun@huawei.com>, Sudeep Holla <sudeep.holla@arm.com>,
+ "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+ Russell King <linux@armlinux.org.uk>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Danilo Krummrich <dakr@kernel.org>, Stuart Yoder <stuyoder@gmail.com>,
+ Laurentiu Tudor <laurentiu.tudor@nxp.com>, Nipun Gupta
+ <nipun.gupta@amd.com>, Nikhil Agarwal <nikhil.agarwal@amd.com>,
+ Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>,
+ Rob Herring <robh@kernel.org>, Saravana Kannan <saravanak@google.com>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-acpi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org, iommu@lists.linux.dev,
+ devicetree@vger.kernel.org, linux-pci@vger.kernel.org,
+ Charan Teja Kalla <quic_charante@quicinc.com>
+References: <cover.1740753261.git.robin.murphy@arm.com>
+ <e3b191e6fd6ca9a1e84c5e5e40044faf97abb874.1740753261.git.robin.murphy@arm.com>
+ <CGME20250313095633eucas1p29cb55f2504b4bcf67c16b3bd3fa9b8cd@eucas1p2.samsung.com>
+ <9b358d68-332e-404e-9a75-740297f7b28d@samsung.com>
+From: Robin Murphy <robin.murphy@arm.com>
+Content-Language: en-GB
+In-Reply-To: <9b358d68-332e-404e-9a75-740297f7b28d@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Thu Mar 13, 2025 at 11:41 AM CET, Danilo Krummrich wrote:
-> On Thu, Mar 13, 2025 at 10:29:35AM +0000, Benno Lossin wrote:
->> On Thu Mar 13, 2025 at 3:13 AM CET, Danilo Krummrich wrote:
->> > +/// Marker trait for the context of a bus specific device.
->> > +///
->> > +/// Some functions of a bus specific device should only be called fro=
-m a certain context, i.e. bus
->> > +/// callbacks, such as `probe()`.
->> > +///
->> > +/// This is the marker trait for structures representing the context =
-of a bus specific device.
->> > +pub trait DeviceContext {}
->>=20
->> I would make this trait sealed. ie:
->>=20
->>     pub trait DeviceContext: private::Sealed {}
->>    =20
->>     mod private {
->>         pub trait Sealed {}
->>=20
->>         impl Sealed for super::Core {}
->>         impl Sealed for super::Normal {}
->>     }
->>=20
->> Since currently a user can create a custom context (it will be useless,
->> but then I think it still is better to give them a compile error).
->
-> That is intentional, some busses have bus specific callbacks, hence we ma=
-y want
-> a bus specific context at some point.
+On 2025-03-13 9:56 am, Marek Szyprowski wrote:
+[...]
+> This patch landed in yesterday's linux-next as commit bcb81ac6ae3c
+> ("iommu: Get DT/ACPI parsing into the proper probe path"). In my tests I
+> found it breaks booting of ARM64 RK3568-based Odroid-M1 board
+> (arch/arm64/boot/dts/rockchip/rk3568-odroid-m1.dts). Here is the
+> relevant kernel log:
 
-Then it's even better we went with the generics vs using mutable
-references :)
+...and the bug-flushing-out begins!
 
-> However, we can always change visibility as needed, so I'm fine making it=
- sealed
-> for now.
+> Unable to handle kernel NULL pointer dereference at virtual address
+> 00000000000003e8
+> Mem abort info:
+>     ESR = 0x0000000096000004
+>     EC = 0x25: DABT (current EL), IL = 32 bits
+>     SET = 0, FnV = 0
+>     EA = 0, S1PTW = 0
+>     FSC = 0x04: level 0 translation fault
+> Data abort info:
+>     ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+>     CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+>     GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+> [00000000000003e8] user address but active_mm is swapper
+> Internal error: Oops: 0000000096000004 [#1] PREEMPT SMP
+> Modules linked in:
+> CPU: 3 UID: 0 PID: 1 Comm: swapper/0 Not tainted 6.14.0-rc3+ #15533
+> Hardware name: Hardkernel ODROID-M1 (DT)
+> pstate: 00400009 (nzcv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
+> pc : devm_kmalloc+0x2c/0x114
+> lr : rk_iommu_of_xlate+0x30/0x90
+> ...
+> Call trace:
+>    devm_kmalloc+0x2c/0x114 (P)
+>    rk_iommu_of_xlate+0x30/0x90
 
-Couldn't you just add them here? Then sealing wouldn't be a problem.
+Yeah, looks like this is doing something a bit questionable which can't
+work properly. TBH the whole dma_dev thing could probably be cleaned up
+now that we have proper instances, but for now does this work?
 
+(annoyingly none of my Rockchip boards are set up for testing right now, 
+but I might have time to dig one out later)
+
+Thanks,
+Robin.
+
+----->8-----
+
+Subject: [PATCH] iommu/rockchip: Allocate per-device data sensibly
+
+Now that DT-based probing is finally happening in the right order again,
+it reveals an issue in Rockchip's of_xlate, which can now be called
+during registration, but is using the global dma_dev which is only
+assigned later. However, this makes little sense when we're already
+looking up the correct IOMMU device, who should logically be the owner
+of the devm allocation anyway.
+
+Fixes: bcb81ac6ae3c ("iommu: Get DT/ACPI parsing into the proper probe 
+path")
+Signed-off-by: Robin Murphy <robin.murphy@arm.com>
 ---
-Cheers,
-Benno
+  drivers/iommu/rockchip-iommu.c | 6 +++---
+  1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/iommu/rockchip-iommu.c b/drivers/iommu/rockchip-iommu.c
+index 323cc665c357..48826d1ccfd8 100644
+--- a/drivers/iommu/rockchip-iommu.c
++++ b/drivers/iommu/rockchip-iommu.c
+@@ -1148,12 +1148,12 @@ static int rk_iommu_of_xlate(struct device *dev,
+  	struct platform_device *iommu_dev;
+  	struct rk_iommudata *data;
+
+-	data = devm_kzalloc(dma_dev, sizeof(*data), GFP_KERNEL);
++	iommu_dev = of_find_device_by_node(args->np);
++
++	data = devm_kzalloc(&iommu_dev->dev, sizeof(*data), GFP_KERNEL);
+  	if (!data)
+  		return -ENOMEM;
+
+-	iommu_dev = of_find_device_by_node(args->np);
+-
+  	data->iommu = platform_get_drvdata(iommu_dev);
+  	data->iommu->domain = &rk_identity_domain;
+  	dev_iommu_priv_set(dev, data);
+-- 
+2.39.2.101.g768bb238c484.dirty
+
 
