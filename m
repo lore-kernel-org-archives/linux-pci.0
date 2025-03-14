@@ -1,217 +1,478 @@
-Received: from NAM10-DM6-obe.outbound.protection.outlook.com (mail-dm6nam10olkn2063.outbound.protection.outlook.com [40.92.41.63])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41881779AE;
-	Fri, 14 Mar 2025 05:57:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.92.41.63
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741931854; cv=fail; b=j/5cpQVg/bCpheV8jFSdQiTFOW/mIxzGxhX8CP4NlgMXxbrjTBMBoqMbuc+KxPXwpikvHWFtlg1/ym9o4TMBFwHknuUTnq8eainp6TjL/d5OAlQySDPGtjs+IF7mlnN8U0e1d3wsyRriBwa/Hm1eEJdJI+7HlpISU95KaZA2KkE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741931854; c=relaxed/simple;
-	bh=OKZtpbDAUx5nwdk5frgoeDi85rcTaszui0IO0NxPZJU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=L1O35BAcUV7zV9XaNFHV4xaWUc6DbML9P4ywXn5h1GU00T5WpJurtPAgSfL5lz6ha/YbDeM00sOqU60xB0FAguhBmtHRn5GLlpnfXZr2tOjZYhbOJDGNbG+MBLhoFD732CtyqW5IjSRgt/y5fcD878EAZ5M70jPamuHp8ZaR70s=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=gXnTSy3r; arc=fail smtp.client-ip=40.92.41.63
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE031459F6;
+	Fri, 14 Mar 2025 06:46:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1741934810; cv=none; b=dMD9CQUgC4aAGMjUAfQIALpZe4UdcnjuldqYegRuLhka0CFVeCzhT5RrEbZAESWGfozCgzH17p7WYOsfaNkgmZCF9POPYl4+to96NPbtBAFPhF0YhgU9yzpqn+txZSg++1StIrT4QhAQAJX26fd41W3MzZAyU+vznqLvBKafsVY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1741934810; c=relaxed/simple;
+	bh=PwZy2LvuHa0TDcVFLLz4m68zpq9Ia/g9vaB9uGWAXJY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=EBrz0LDLhqzB77FqBehP/UKufGFt2q/+Cd9UteCYxtk68//ZihLCMee7hTT2L41bfj0as4jIhS5KzNyeCKqdc8IAnod0ggqkptYU5ND6c/qfD+3g/ie3Wq9lsATpWDwz0Z7J9dX0/2DDlmdrU5GOB9WsVTXafyA+sx0+KoD8Pl0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=hRalku2S; arc=none smtp.client-ip=198.175.65.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="gXnTSy3r"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Rjjx6VZERs0YyUxJeJ1tFG+O9qY+CwEFonomXwglSgVSxXQsp5IXQQf5zDivG7n/aSkiVmgaYcc9uq1T1JrL/0psAsHep7aPMmaWHGJJJkHs5Yg/zFv9zy56y1BnRs3kENQGcbwjVn4GZG+Zx7bf6VozMfjC0/ZPo8i2iqb2MeCKb3hb2njQk1zhcWpSIzk1MzKWUd9hcUcsfPlJJFXZlja3si09N5NiHaSuoiDTM12OrEcRWfARhVUd9hwHF71tpaFmD3+eUIMFhzj4DOPOP08U042qvJDOrqbQO4/DoC2EHgU0NgRwpCQWLF3ToSQZW9DiagXunYSALgBKz6BcuQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WvPtXOMkIC6gnUJ6kvVDXw1M2PwIaR3tfl9e8ublL9w=;
- b=tikFBXpjZ7nS2bDvHEY2YC+1naUtVD1B/0yHE5VOBb04XPn19KyLmBYUPPCMML3K1CMDoHhPB9vqPS+HC1Oz7x7z2WpepvmL9x2mRaJaIMLmcZFEOQIr+iYwYXDs/CklXIllp/aR+h3LIxLe7nFWNKrOO9+2fhnrII9oeVIsyDlF2gcpJPjgkS1uxaA6fHqdTedKuQClY9Cui8xRYEidWYVRnpjKM5mMs6NwblbGerTLo4rGLRSCgO/DXber8jHlna8ftaq6nqKPR5BgLzAGctFcDGUKVDnkTii8vN3DIsnNja4ZKAhbsc+5aFCDbC0duCu57c8cX5V8B6Hgd2H6OQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WvPtXOMkIC6gnUJ6kvVDXw1M2PwIaR3tfl9e8ublL9w=;
- b=gXnTSy3r7qgo4JQv/qeBSTs+7zJoW/ADKeuzMlNISP+x4yspYVD0X1uIqh250WQauXN5+V9+imCOar641NYz1uuGG629bjESFAveyMsl2fRNcI7JD+pZmjC+RBajl4qQNg9wXPPDUilLDfoRhPmUAl2oQ3P0Y4/zsA6CguOupKKhpQkjSsK0N+ku84CsE5hiGf7l6fAZs7HHabLY/RKmQyqf5+DTHYaWozn+0tbTMXoDswDdIlcnNFXUcFDP/mkV+U9rUST/iZuyfrgr+SNKBVmhAb8pSwmE/Hb48EqfxyckjLndu/F4GRi3oLMqjEeSoygiQgT4mafp3jb2nkQnmQ==
-Received: from DS7PR19MB8883.namprd19.prod.outlook.com (2603:10b6:8:253::16)
- by SA3PR19MB7795.namprd19.prod.outlook.com (2603:10b6:806:300::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8511.27; Fri, 14 Mar
- 2025 05:57:30 +0000
-Received: from DS7PR19MB8883.namprd19.prod.outlook.com
- ([fe80::e0c2:5b31:534:4305]) by DS7PR19MB8883.namprd19.prod.outlook.com
- ([fe80::e0c2:5b31:534:4305%6]) with mapi id 15.20.8534.027; Fri, 14 Mar 2025
- 05:57:30 +0000
-From: George Moussalem <george.moussalem@outlook.com>
-To: linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	andersson@kernel.org,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="hRalku2S"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1741934809; x=1773470809;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=PwZy2LvuHa0TDcVFLLz4m68zpq9Ia/g9vaB9uGWAXJY=;
+  b=hRalku2Sd87D6/tOSDbqpzaqOCPx7Zwu8WJ7WEqAivbmNEssOo4PZmHC
+   hJfwhpugBkvVt3Deoc9HEVB+XaxrDM3HxbR5Quwl2bh+uaE4TiRMXcAmd
+   EPLNTs/W20DhRBd36Kb2xTlf4UxfsSufkW8fgPyn8oqQ5rdwC9VCQ4qpQ
+   vI267e+zgi83q9vF2HxL98aTYdNlNotLi8zuRl8XXVFQjYmhIeZyFXGEi
+   C9s0ZYE9JqXShnlDuuqEPdFO6LzVog6ljJfNXwMMOd2NWCUui9+fXtq2h
+   YaDXHF0kMu2CVWANaukV3kd93cgvgkBQW1dsuh8MonoQWYe4zT0JiEqs3
+   w==;
+X-CSE-ConnectionGUID: Ef+TmA66T7+E6UlvR47itA==
+X-CSE-MsgGUID: L1yjcl+ySYacOKX/4hOwlg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11372"; a="54456640"
+X-IronPort-AV: E=Sophos;i="6.14,246,1736841600"; 
+   d="scan'208";a="54456640"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Mar 2025 23:46:47 -0700
+X-CSE-ConnectionGUID: JT6lrTunTyWjap8z4B/fPg==
+X-CSE-MsgGUID: Xg3Jb6j3SGu6D2UzOoU3Bg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,246,1736841600"; 
+   d="scan'208";a="125371150"
+Received: from unknown (HELO BSINU234.iind.intel.com) ([10.66.226.146])
+  by fmviesa003.fm.intel.com with ESMTP; 13 Mar 2025 23:46:44 -0700
+From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+To: linux-bluetooth@vger.kernel.org
+Cc: linux-pci@vger.kernel.org,
 	bhelgaas@google.com,
-	conor+dt@kernel.org,
-	devicetree@vger.kernel.org,
-	lumag@kernel.org,
-	kishon@kernel.org,
-	konradybcio@kernel.org,
-	krzk+dt@kernel.org,
-	kw@linux.com,
-	lpieralisi@kernel.org,
-	manivannan.sadhasivam@linaro.org,
-	p.zabel@pengutronix.de,
-	quic_nsekar@quicinc.com,
-	robh@kernel.org,
-	robimarko@gmail.com,
-	vkoul@kernel.org,
-	george.moussalem@outlook.com
-Cc: quic_srichara@quicinc.com
-Subject: [PATCH v4 6/6] arm64: dts: qcom: ipq5018: Enable PCIe
-Date: Fri, 14 Mar 2025 09:56:44 +0400
-Message-ID:
- <DS7PR19MB8883B7B575808AA095C9C9069DD22@DS7PR19MB8883.namprd19.prod.outlook.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250314055644.32705-1-george.moussalem@outlook.com>
-References: <DS7PR19MB8883F2538AA7D047E13C102B9DD22@DS7PR19MB8883.namprd19.prod.outlook.com>
- <20250314055644.32705-1-george.moussalem@outlook.com>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: DX0P273CA0060.AREP273.PROD.OUTLOOK.COM
- (2603:1086:300:5a::13) To DS7PR19MB8883.namprd19.prod.outlook.com
- (2603:10b6:8:253::16)
-X-Microsoft-Original-Message-ID:
- <20250314055644.32705-6-george.moussalem@outlook.com>
+	ravishankar.srivatsa@intel.com,
+	chethan.tumkur.narayan@intel.com,
+	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>,
+	Kiran K <kiran.k@intel.com>
+Subject: [PATCH v1] Bluetooth: btintel_pcie: Support function level reset
+Date: Fri, 14 Mar 2025 12:16:13 +0200
+Message-Id: <20250314101613.3682010-1-chandrashekar.devegowda@intel.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-MessageSentRepresentingType: 1
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR19MB8883:EE_|SA3PR19MB7795:EE_
-X-MS-Office365-Filtering-Correlation-Id: 30516091-2cda-45ed-c12c-08dd62bd1aff
-X-Microsoft-Antispam:
-	BCL:0;ARA:14566002|5072599009|15080799006|8060799006|19110799003|461199028|7092599003|3412199025|440099028|1710799026;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?29EkTBlZjNamxhMVYcotNcauxrOqLTlm3MGu6pcTnj6jtsX15BreF+gBJBWQ?=
- =?us-ascii?Q?dbjXIJn7yJKuV30082yjVk1iyO5P+QDZltIhedULrAJ9hHYxb94hnRVUE6WL?=
- =?us-ascii?Q?OQe6pZxZCpDasAw8qxpgg2XYrSzo6ZLYjySodOJACcLt7CbcuKOYb7w4G0ie?=
- =?us-ascii?Q?2NCE8j3HfCU6ReY8YlNqPSd1tdES5UlP104QVtmk6g/qRs9eXBMG8CiMxuKo?=
- =?us-ascii?Q?x1TvcsxlRzdj0VORigfgvB5adEwSuWpcElhfs+2lFJ6jKC1osRYoUQsJr654?=
- =?us-ascii?Q?Na9JVewUM8XHXnQZpekbVotGnRk0otYcgVXPCL6FAbjlw1xfhBkzTCUkpht5?=
- =?us-ascii?Q?JIVuL3+KszQrOFzV7/jHtwQX4Kb/VuEqIumBzclkAIFL3sMyn2uzYS1IPgcz?=
- =?us-ascii?Q?C30f52SPz6Gy1imJDKrfCuL1CcZ2Ybd3ZfPK9v2Hd6uorpZ419MsTran3Hg3?=
- =?us-ascii?Q?tWN7jLYiD2pbz3QTTmpfbWPy3hvPFEQdSYXzzfUFVI3scmcHNceF1BP4U4Ie?=
- =?us-ascii?Q?8IyGbCna1yqtLqV+xgEQPHlUYPKHl/9Kwt7pnDTxOt7ZjN/mW7ruDujJcZWK?=
- =?us-ascii?Q?whwAXbudYgJNKtn822LaJWv8xW/+chpcYpFu3ZsiXULpAD6OugyZdMQ4plJw?=
- =?us-ascii?Q?6CRJOQSbiZhedqUeInQDllKHC394uvujHWZfdamqJ4YbvY8WtiLPKEqzJ2xC?=
- =?us-ascii?Q?U3GFNcW/XHT4pGw59pCgE6Cql92+quyD6W0IhqJ4DGlpQvKtgg6+v0MYzxT4?=
- =?us-ascii?Q?2dITU8rxe9LYwZ1jyq+98P0H/+4QWKwFRZTV231lcWMjT/blLKdZXz+k3t3U?=
- =?us-ascii?Q?ZRARoRJgdRKnyXsN1oqRtAZGF6d42xT8FWrJatXRuA2SI2vFjTIzMOXGqM6O?=
- =?us-ascii?Q?3nDjX9IOwZh0wtFLhCv7mDi4zJhMJobAu4ncwacZ7XVJPmL5I9HYFOaF726a?=
- =?us-ascii?Q?pxvx18J0n9JY+0ufEXlg6VQ7vnAHp2cnX8DhHWG9Wn06yNQtz40M7CIeKPNf?=
- =?us-ascii?Q?g9ik8Lw4lAfqXoUxoIZPyurYVR6n4WA7ju99w6gKr40QhxOsgoBEEsC0uqJq?=
- =?us-ascii?Q?D/Z3mJboo3zqy5pfCsgN9VaJBaC+X9Dx0jWa89GcJWB6YIuORZQ=3D?=
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?FHvPrCEjbMQj2kBk2A8Ys5CuefBleBMYfnSecwEEEHKhLasH7lJBrrGL8FtK?=
- =?us-ascii?Q?zYk7Yp4+M1uDiACHqq3lPexGmAQSfwCz7/C0c+OBjLaoVKr4cfgggvVi6ye7?=
- =?us-ascii?Q?9dgs+6KNfmNWmXkAevBSPo2jzmDO8TLk+IeGuy9kKt6jik+GOuSdRRdAgjXp?=
- =?us-ascii?Q?uEGGkQNmDw1f5d3yFAF/kx0IuDDaPicxk0FOzdyO0CNhARUS5nuRl/XIMpQI?=
- =?us-ascii?Q?omQtFm9ne0xj+x5uNAtoOCsdWAgeSNvSakQzwIgc1qHpmp0Xmz+IZWeQyWat?=
- =?us-ascii?Q?W5JTBN/7s0X3hfzZjteJMmh8lkcVALoqVrg5sGupwTJVJHx9Ec7hiCD69fzM?=
- =?us-ascii?Q?f1v/4f7x3VLjf8lYHeDinnFnFWK9B2XE0DuuSivBVBScTXL9yfLP9F5Xp3Z9?=
- =?us-ascii?Q?aUB0ZKjuvQLojSj2r1QO3h2r1qzT/zyYwHrc1CcE/DXNfgAjf3KuvRj/G7k+?=
- =?us-ascii?Q?jUY3joFpRZUN1RXM5IKhCc5N09LuJ31w02i9SmN9UqHfkkXtWgvYT742fOZs?=
- =?us-ascii?Q?pdZcBAH+GEx2vGDuATJ1MQKDqufbwO0ZHuUJ+LaUp6MV2r3qkCIfrWOXX/et?=
- =?us-ascii?Q?Uk053szlO5vzid+YcJ/oTb8tNSJ6zGUDKl9N2U8z2naq/Dn69EVnHiPWAoL5?=
- =?us-ascii?Q?isrG8C7ck7kb6MnHKYswNZ6bfQCYYHovlaDF799ZTLdcdC2HjHBLpPCunT/z?=
- =?us-ascii?Q?GqqEPWRQol823TL4/7xcLh8e/7TJEwqg046UU25sE94WIPKbZTEhNSiFCbsy?=
- =?us-ascii?Q?G1nA2OZaIj58yakHmWkVoOGyTe9vM2J7WgSTCpqOxf91y0s59QR2UJLMNhi9?=
- =?us-ascii?Q?FJBwtblp1bHzVmVC+/2I/wF7XIwyrqU5cfpjTRPcWj7WT3L1HzvlzFjxqNDH?=
- =?us-ascii?Q?Jk8lo4LbjHh/HLnNiV97/k7VcZlWvNtZSEEZxBrjI8ehbJtTIuEo+WhwvYwR?=
- =?us-ascii?Q?8SRm3xZu1gKcNk3w3pe13gXpgm0dH/RcLQ+8rD9iq6LsUEOaD1++iltLERMZ?=
- =?us-ascii?Q?B8DyXuuCxc2eCQuC+i6VYeJgoxmjClngarDRJ3+++59FcMn+MD6x65vPQJEt?=
- =?us-ascii?Q?OheHOIFjHK2CmnXqyTBRW5OIK1IOl/nadvKyeMjEqyQXjo/5SqkBbnGbKPPs?=
- =?us-ascii?Q?Tzd+zL+IyBDGDD06nmlAACsBzm0t8qlTIOHK80fKjfz0pfRx14WhwJVf1ui6?=
- =?us-ascii?Q?mQ1nIdHbvSflupxWwhhdQkdF7En1jx2OxjN1o9w7UC6BlAs3DRFNQNjreveS?=
- =?us-ascii?Q?6QGnINZ1j/MlEUUghA6t?=
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 30516091-2cda-45ed-c12c-08dd62bd1aff
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR19MB8883.namprd19.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Mar 2025 05:57:30.2210
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
-	00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA3PR19MB7795
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-From: Nitheesh Sekar <quic_nsekar@quicinc.com>
+Support function level reset (flr) on hardware exception to recover
+controller. Driver also implements the back-off time of 5 seconds and
+the maximum number of retries are limited to 5 before giving up.
 
-Enable the PCIe controller and PHY nodes for RDP 432-c2.
+The function btintel_acpi_reset_method() is made public and reused to
+invoke flr for pcie products.
 
-Signed-off-by: Nitheesh Sekar <quic_nsekar@quicinc.com>
-Signed-off-by: Sricharan Ramabadhran <quic_srichara@quicinc.com>
-Signed-off-by: George Moussalem <george.moussalem@outlook.com>
+Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Signed-off-by: Kiran K <kiran.k@intel.com>
 ---
- .../arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts | 38 +++++++++++++++++++
- 1 file changed, 38 insertions(+)
+ drivers/bluetooth/btintel.c      |  11 +-
+ drivers/bluetooth/btintel.h      |  12 ++
+ drivers/bluetooth/btintel_pcie.c | 246 ++++++++++++++++++++++++++++++-
+ 3 files changed, 260 insertions(+), 9 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts b/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts
-index 8460b538eb6a..c5c248435a91 100644
---- a/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts
-+++ b/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts
-@@ -28,6 +28,20 @@ &blsp1_uart1 {
- 	status = "okay";
- };
+diff --git a/drivers/bluetooth/btintel.c b/drivers/bluetooth/btintel.c
+index ec5e2c7a56ae..aae6a85d9f64 100644
+--- a/drivers/bluetooth/btintel.c
++++ b/drivers/bluetooth/btintel.c
+@@ -30,11 +30,6 @@
  
-+&pcie0 {
-+	pinctrl-0 = <&pcie0_default>;
-+	pinctrl-names = "default";
-+
-+	perst-gpios = <&tlmm 15 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 16 GPIO_ACTIVE_LOW>;
-+
-+	status = "okay";
+ #define BTINTEL_EFI_DSBR	L"UefiCnvCommonDSBR"
+ 
+-enum {
+-	DSM_SET_WDISABLE2_DELAY = 1,
+-	DSM_SET_RESET_METHOD = 3,
+-};
+-
+ #define CMD_WRITE_BOOT_PARAMS	0xfc0e
+ struct cmd_write_boot_params {
+ 	__le32 boot_addr;
+@@ -49,9 +44,10 @@ static struct {
+ 	u32        fw_build_num;
+ } coredump_info;
+ 
+-static const guid_t btintel_guid_dsm =
++const guid_t btintel_guid_dsm =
+ 	GUID_INIT(0xaa10f4e0, 0x81ac, 0x4233,
+ 		  0xab, 0xf6, 0x3b, 0x2a, 0xc5, 0x0e, 0x28, 0xd9);
++EXPORT_SYMBOL_GPL(btintel_guid_dsm);
+ 
+ int btintel_check_bdaddr(struct hci_dev *hdev)
+ {
+@@ -2547,7 +2543,7 @@ static void btintel_set_ppag(struct hci_dev *hdev, struct intel_version_tlv *ver
+ 	kfree_skb(skb);
+ }
+ 
+-static int btintel_acpi_reset_method(struct hci_dev *hdev)
++int btintel_acpi_reset_method(struct hci_dev *hdev)
+ {
+ 	int ret = 0;
+ 	acpi_status status;
+@@ -2586,6 +2582,7 @@ static int btintel_acpi_reset_method(struct hci_dev *hdev)
+ 	kfree(buffer.pointer);
+ 	return ret;
+ }
++EXPORT_SYMBOL_GPL(btintel_acpi_reset_method);
+ 
+ static void btintel_set_dsm_reset_method(struct hci_dev *hdev,
+ 					 struct intel_version_tlv *ver_tlv)
+diff --git a/drivers/bluetooth/btintel.h b/drivers/bluetooth/btintel.h
+index 19530ea14905..bc4edfe08216 100644
+--- a/drivers/bluetooth/btintel.h
++++ b/drivers/bluetooth/btintel.h
+@@ -64,6 +64,12 @@ struct intel_tlv {
+ 
+ #define BTINTEL_FWID_MAXLEN 64
+ 
++enum {
++	DSM_SET_WDISABLE2_DELAY = 1,
++	DSM_SET_RESET_METHOD = 3,
++	DSM_SET_RESET_METHOD_PCIE = 5 /* Used for PCIe products */
 +};
 +
-+&pcie0_phy {
-+	status = "okay";
+ struct intel_version_tlv {
+ 	u32	cnvi_top;
+ 	u32	cnvr_top;
+@@ -255,6 +261,7 @@ int btintel_shutdown_combined(struct hci_dev *hdev);
+ void btintel_hw_error(struct hci_dev *hdev, u8 code);
+ void btintel_print_fseq_info(struct hci_dev *hdev);
+ int btintel_diagnostics(struct hci_dev *hdev, struct sk_buff *skb);
++int btintel_acpi_reset_method(struct hci_dev *hdev);
+ #else
+ 
+ static inline int btintel_check_bdaddr(struct hci_dev *hdev)
+@@ -393,4 +400,9 @@ static inline int btintel_diagnostics(struct hci_dev *hdev, struct sk_buff *skb)
+ {
+ 	return -EOPNOTSUPP;
+ }
++
++static int btintel_acpi_reset_method(struct hci_dev *hdev)
++{
++	return -EOPNOTSUPP;
++}
+ #endif
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_pcie.c
+index 9114be1fc3ce..9346c8d68636 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -13,6 +13,7 @@
+ #include <linux/wait.h>
+ #include <linux/delay.h>
+ #include <linux/interrupt.h>
++#include <linux/acpi.h>
+ 
+ #include <linux/unaligned.h>
+ 
+@@ -22,6 +23,8 @@
+ #include "btintel.h"
+ #include "btintel_pcie.h"
+ 
++extern const guid_t btintel_guid_dsm;
++
+ #define VERSION "0.1"
+ 
+ #define BTINTEL_PCI_DEVICE(dev, subdev)	\
+@@ -41,6 +44,13 @@ static const struct pci_device_id btintel_pcie_table[] = {
+ };
+ MODULE_DEVICE_TABLE(pci, btintel_pcie_table);
+ 
++struct btintel_pcie_dev_restart_data {
++	struct list_head list;
++	u8 restart_count;
++	time64_t last_error;
++	char name[];
 +};
 +
- &sdhc_1 {
- 	pinctrl-0 = <&sdc_default_state>;
- 	pinctrl-names = "default";
-@@ -43,6 +57,30 @@ &sleep_clk {
+ /* Intel PCIe uses 4 bytes of HCI type instead of 1 byte BT SIG HCI type */
+ #define BTINTEL_PCIE_HCI_TYPE_LEN	4
+ #define BTINTEL_PCIE_HCI_CMD_PKT	0x00000001
+@@ -62,6 +72,9 @@ MODULE_DEVICE_TABLE(pci, btintel_pcie_table);
+ #define BTINTEL_PCIE_TRIGGER_REASON_USER_TRIGGER	0x17A2
+ #define BTINTEL_PCIE_TRIGGER_REASON_FW_ASSERT		0x1E61
+ 
++#define BTINTEL_PCIE_RESET_OK_TIME_SECS		5
++#define BTINTEL_PCIE_FLR_RESET_MAX_RETRY	5
++
+ /* Alive interrupt context */
+ enum {
+ 	BTINTEL_PCIE_ROM,
+@@ -99,6 +112,14 @@ struct btintel_pcie_dbgc_ctxt {
+ 	struct btintel_pcie_dbgc_ctxt_buf bufs[BTINTEL_PCIE_DBGC_BUFFER_COUNT];
  };
  
- &tlmm {
-+	pcie0_default: pcie0-default-state {
-+		clkreq-n-pins {
-+			pins = "gpio14";
-+			function = "pcie0_clk";
-+			drive-strength = <8>;
-+			bias-pull-up;
-+		};
++struct btintel_pcie_removal {
++	struct pci_dev *pdev;
++	struct work_struct work;
++};
 +
-+		perst-n-pins {
-+			pins = "gpio15";
-+			function = "gpio";
-+			drive-strength = <8>;
-+			bias-pull-up;
-+			output-low;
-+		};
++static LIST_HEAD(btintel_pcie_restart_data_list);
++static DEFINE_SPINLOCK(btintel_pcie_restart_data_lock);
 +
-+		wake-n-pins {
-+			pins = "gpio16";
-+			function = "pcie0_wake";
-+			drive-strength = <8>;
-+			bias-pull-up;
-+		};
-+	};
+ /* This function initializes the memory for DBGC buffers and formats the
+  * DBGC fragment which consists header info and DBGC buffer's LSB, MSB and
+  * size as the payload
+@@ -1804,6 +1825,9 @@ static int btintel_pcie_send_frame(struct hci_dev *hdev,
+ 	u32 type;
+ 	u32 old_ctxt;
+ 
++	if (test_bit(BTINTEL_PCIE_CORE_HALTED, &data->flags))
++		return -ENODEV;
 +
- 	sdc_default_state: sdc-default-state {
- 		clk-pins {
- 			pins = "gpio9";
+ 	/* Due to the fw limitation, the type header of the packet should be
+ 	 * 4 bytes unlike 1 byte for UART. In UART, the firmware can read
+ 	 * the first byte to get the packet type and redirect the rest of data
+@@ -2041,6 +2065,210 @@ static int btintel_pcie_setup(struct hci_dev *hdev)
+ 	return err;
+ }
+ 
++static struct btintel_pcie_dev_restart_data *btintel_pcie_get_restart_data(struct pci_dev *pdev,
++									   struct device *dev)
++{
++	struct btintel_pcie_dev_restart_data *tmp, *data = NULL;
++	const char *name = pci_name(pdev);
++	struct hci_dev *hdev = to_hci_dev(dev);
++
++	spin_lock(&btintel_pcie_restart_data_lock);
++	list_for_each_entry(tmp, &btintel_pcie_restart_data_list, list) {
++		if (strcmp(tmp->name, name))
++			continue;
++		data = tmp;
++		break;
++	}
++	spin_unlock(&btintel_pcie_restart_data_lock);
++
++	if (data) {
++		bt_dev_dbg(hdev, "Found restart data for BDF:%s", data->name);
++		return data;
++	}
++
++	/* First time allocate */
++	data = kzalloc(struct_size(data, name, strlen(name) + 1), GFP_ATOMIC);
++	if (!data)
++		return NULL;
++
++	strscpy(data->name, name, strlen(data->name) + 1);
++	spin_lock(&btintel_pcie_restart_data_lock);
++	list_add_tail(&data->list, &btintel_pcie_restart_data_list);
++	spin_unlock(&btintel_pcie_restart_data_lock);
++
++	return data;
++}
++
++static void btintel_pcie_free_restart_list(void)
++{
++	struct btintel_pcie_dev_restart_data *tmp;
++
++	while ((tmp = list_first_entry_or_null(&btintel_pcie_restart_data_list,
++					       typeof(*tmp), list))) {
++		list_del(&tmp->list);
++		kfree(tmp);
++	}
++}
++
++static void btintel_pcie_inc_restart_count(struct pci_dev *pdev, struct device *dev)
++{
++	struct btintel_pcie_dev_restart_data *data;
++	struct hci_dev *hdev = to_hci_dev(dev);
++	time64_t retry_window;
++
++	data = btintel_pcie_get_restart_data(pdev, dev);
++	if (!data)
++		return;
++
++	retry_window = ktime_get_boottime_seconds() - data->last_error;
++	if (data->restart_count == 0) {
++		/* First iteration initialise the time and counter */
++		data->last_error = ktime_get_boottime_seconds();
++		data->restart_count++;
++		bt_dev_dbg(hdev, "First iteration initialise. last_error:%lld seconds restart_count:%d",
++			   data->last_error, data->restart_count);
++	} else if (retry_window < BTINTEL_PCIE_RESET_OK_TIME_SECS &&
++		   data->restart_count <= BTINTEL_PCIE_FLR_RESET_MAX_RETRY) {
++		/* FLR triggered still within the Max retry time so
++		 * increment the counter
++		 */
++		data->restart_count++;
++		bt_dev_err(hdev, "FLR triggered still within the Max retry time so increment the restart_count:%d",
++			   data->restart_count);
++	} else if (retry_window > BTINTEL_PCIE_RESET_OK_TIME_SECS) {
++		/* FLR triggered out of the retry window so reset */
++		bt_dev_err(hdev, "FLR triggered OUT of the retry window so RESET counters last_error:%lld seconds restart_count:%d",
++			   data->last_error, data->restart_count);
++		data->last_error = 0;
++		data->restart_count = 0;
++	}
++}
++
++static void btintel_pcie_removal_work(struct work_struct *wk)
++{
++	struct btintel_pcie_removal *removal =
++		container_of(wk, struct btintel_pcie_removal, work);
++	struct pci_dev *pdev = removal->pdev;
++	struct pci_bus *bus;
++	struct btintel_pcie_data *data;
++
++	data = pci_get_drvdata(pdev);
++
++	pci_lock_rescan_remove();
++
++	bus = pdev->bus;
++	if (!bus)
++		goto out;
++
++	btintel_acpi_reset_method(data->hdev);
++	pci_stop_and_remove_bus_device(pdev);
++	pci_dev_put(pdev);
++
++	if (bus->parent)
++		bus = bus->parent;
++	pci_rescan_bus(bus);
++
++out:
++	pci_unlock_rescan_remove();
++	kfree(removal);
++}
++
++static void btintel_pcie_reset(struct hci_dev *hdev)
++{
++	struct btintel_pcie_removal *removal;
++	struct btintel_pcie_data *data;
++	union acpi_object *obj, argv4;
++	acpi_handle handle;
++	struct pldr_mode {
++		u16	cmd_type;
++		u16	cmd_payload;
++	} __packed mode;
++
++	data = hci_get_drvdata(hdev);
++	if (!btintel_test_flag(hdev, INTEL_FIRMWARE_LOADED)) {
++		bt_dev_dbg(hdev, "Firmware not loaded, so reset not supported");
++		return;
++	}
++
++	handle = ACPI_HANDLE(GET_HCIDEV_DEV(hdev));
++	if (!handle) {
++		bt_dev_dbg(hdev, "No support for bluetooth device in ACPI firmware");
++		return;
++	}
++
++	if (!acpi_has_method(handle, "_PRR")) {
++		bt_dev_err(hdev, "No support for _PRR ACPI method");
++		return;
++	}
++
++	if (!acpi_check_dsm(handle, &btintel_guid_dsm, 0,
++			    BIT(DSM_SET_RESET_METHOD_PCIE))) {
++		bt_dev_err(hdev, "No dsm support to set reset method for _PRR");
++		return;
++	}
++
++	/* set 1 for_PRR Mode */
++	mode.cmd_type = 1;
++	/* 0 – BT Core Reset (Default)
++	 * 1 – Product Reset (PLDR Abort flow)
++	 */
++	mode.cmd_payload = 0;
++
++	argv4.buffer.type = ACPI_TYPE_BUFFER;
++	argv4.buffer.length = sizeof(mode);
++	argv4.buffer.pointer = (void *)&mode;
++
++	obj = acpi_evaluate_dsm(handle, &btintel_guid_dsm, 0,
++				DSM_SET_RESET_METHOD_PCIE, &argv4);
++	if (!obj) {
++		bt_dev_err(hdev, "Failed to call dsm to set reset method");
++		return;
++	}
++	ACPI_FREE(obj);
++
++	removal = kzalloc(sizeof(*removal), GFP_ATOMIC);
++	if (!removal)
++		return;
++
++	removal->pdev = data->pdev;
++	INIT_WORK(&removal->work, btintel_pcie_removal_work);
++	pci_dev_get(removal->pdev);
++	schedule_work(&removal->work);
++}
++
++static void btintel_pcie_hw_error(struct hci_dev *hdev, u8 code)
++{
++	struct  btintel_pcie_dev_restart_data *data;
++	struct btintel_pcie_data *dev_data = hci_get_drvdata(hdev);
++	struct pci_dev *pdev = dev_data->pdev;
++	time64_t retry_window;
++
++	if (code == 0x13) {
++		bt_dev_err(hdev, "Encountered top exception");
++		return;
++	}
++
++	data = btintel_pcie_get_restart_data(pdev, &hdev->dev);
++	if (!data)
++		return;
++
++	retry_window = ktime_get_boottime_seconds() - data->last_error;
++
++	/* If within 5 seconds max 5 attempts have already been made
++	 * then stop any more retry and indicate to user for cold boot
++	 */
++	if (retry_window < BTINTEL_PCIE_RESET_OK_TIME_SECS &&
++	    data->restart_count >= BTINTEL_PCIE_FLR_RESET_MAX_RETRY) {
++		bt_dev_err(hdev, "Recovery options exhausted, Please cold boot!");
++		bt_dev_err(hdev, "Boot time:%lld seconds first_flr at:%lld seconds restart_count:%d",
++			   ktime_get_boottime_seconds(), data->last_error,
++			   data->restart_count);
++		return;
++	}
++	btintel_pcie_inc_restart_count(pdev, &hdev->dev);
++	btintel_pcie_reset(hdev);
++}
++
+ static int btintel_pcie_setup_hdev(struct btintel_pcie_data *data)
+ {
+ 	int err;
+@@ -2062,9 +2290,10 @@ static int btintel_pcie_setup_hdev(struct btintel_pcie_data *data)
+ 	hdev->send = btintel_pcie_send_frame;
+ 	hdev->setup = btintel_pcie_setup;
+ 	hdev->shutdown = btintel_shutdown_combined;
+-	hdev->hw_error = btintel_hw_error;
++	hdev->hw_error = btintel_pcie_hw_error;
+ 	hdev->set_diag = btintel_set_diag;
+ 	hdev->set_bdaddr = btintel_set_bdaddr;
++	hdev->reset = btintel_pcie_reset;
+ 
+ 	err = hci_register_dev(hdev);
+ 	if (err < 0) {
+@@ -2208,7 +2437,20 @@ static struct pci_driver btintel_pcie_driver = {
+ 	.driver.coredump = btintel_pcie_coredump
+ #endif
+ };
+-module_pci_driver(btintel_pcie_driver);
++
++static int __init btintel_pcie_init(void)
++{
++	return pci_register_driver(&btintel_pcie_driver);
++}
++
++static void __exit btintel_pcie_exit(void)
++{
++	pci_unregister_driver(&btintel_pcie_driver);
++	btintel_pcie_free_restart_list();
++}
++
++module_init(btintel_pcie_init);
++module_exit(btintel_pcie_exit);
+ 
+ MODULE_AUTHOR("Tedd Ho-Jeong An <tedd.an@intel.com>");
+ MODULE_DESCRIPTION("Intel Bluetooth PCIe transport driver ver " VERSION);
 -- 
-2.48.1
+2.34.1
 
