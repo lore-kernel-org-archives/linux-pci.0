@@ -1,144 +1,155 @@
-Received: from fllvem-ot04.ext.ti.com (fllvem-ot04.ext.ti.com [198.47.19.246])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A037512B94;
-	Fri, 14 Mar 2025 06:55:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.246
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D17218D634;
+	Fri, 14 Mar 2025 07:10:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741935307; cv=none; b=tRVufmsWmWHdMr5a2E8eE+P1dMwCNIV7egCNgVByExTa7duEnQ8dSvOtXoOWoM4+prNDsBJ0MG1SFpF9BgddE6gIu7apw8mtEuosNdarmMp6Xki/DdHy4AbIATu6irgc7Qr9p6UR9fD1eGhiNzgnvngHwbsWqwmXHkeitexnPrQ=
+	t=1741936261; cv=none; b=QfNQ2UNtK8ey7gFuW7PyC9Z3IrKPA9SPiRNFCnIuQwyXCcmeR3Qmlk2JFgtlT6IgJwSEcb7jYvRnCHyXnmR+tva49+sM4WmEtAo+gObi9zEI5pikZOyLZRXYZlrlkv/n9p8i11+8j/eXj9zceRRmqSo4GCsaL7rSGSvkvC7Q7aI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741935307; c=relaxed/simple;
-	bh=6gTzgQOVd3ne/8XxLFr1dWkRTC9CQZ+P5VXsdL+HTeU=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DfVUQkbHBlT2q4EaRHlHGwWG2HwtEtUWiUyqMlJ5KQI3hjv4ydYwjrsE3PmU37LwnDtyWKniSMp+9hyggHz2PULFaHyKM/fSX/bbatVgv1KOCJi7nrEcXRbJ8+VYpvVSHgPZRMlrTkMB/XwwdMa/nUPU8tx821RE7Q5bUGAYFqQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=kwK2PpU/; arc=none smtp.client-ip=198.47.19.246
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1741936261; c=relaxed/simple;
+	bh=IKdBA13JupXjDh3Rlpq56k/VtfWKKPwKkrryIgel3M0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=nFlPVTtRYFPEe5tcvEZ7SBXB+ikdcxztXgFFnaVOjGk7ETiKZsjOOr+dWfZBnuEI0SzB/9CMbbNLW9KYWeBpqAMYyxNWJN4Xeihr7LJ8MGiyKGmrpsrQ1wsrTsIWym99k0XEXUt1rSK2uqNVOt6r1xqmKZYOPyLCC/TMCI30eYc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=S/6ooFJU; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="kwK2PpU/"
-Received: from lelv0265.itg.ti.com ([10.180.67.224])
-	by fllvem-ot04.ext.ti.com (8.15.2/8.15.2) with ESMTPS id 52E6skUj2064774
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 14 Mar 2025 01:54:46 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1741935286;
-	bh=Dtma4NIIxwZ25QmncfJqv/YPoOIELjervTPth/gAlKU=;
-	h=Date:From:To:CC:Subject:References:In-Reply-To;
-	b=kwK2PpU/bjctEmztwr2AEu5GYAxTepORfZ7T/uDON7Do6KtcT/0PM7dHxR7ccWh/O
-	 kDgB6WtEZ5AJHuRsA32IK6VcZErzgbJ/J1f0NuXX6Yv77d+/pts2MX4WLk5Ew59+NJ
-	 gM1oxS9pfpG0xFPZweuyWIrit78DYbR9xWstwqDs=
-Received: from DFLE100.ent.ti.com (dfle100.ent.ti.com [10.64.6.21])
-	by lelv0265.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 52E6skSm003712
-	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Fri, 14 Mar 2025 01:54:46 -0500
-Received: from DFLE111.ent.ti.com (10.64.6.32) by DFLE100.ent.ti.com
- (10.64.6.21) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Fri, 14
- Mar 2025 01:54:46 -0500
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE111.ent.ti.com
- (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Fri, 14 Mar 2025 01:54:46 -0500
-Received: from localhost (uda0492258.dhcp.ti.com [10.24.72.113])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 52E6simv093913;
-	Fri, 14 Mar 2025 01:54:45 -0500
-Date: Fri, 14 Mar 2025 12:24:44 +0530
-From: Siddharth Vadapalli <s-vadapalli@ti.com>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: Siddharth Vadapalli <s-vadapalli@ti.com>, <lpieralisi@kernel.org>,
-        <kw@linux.com>, <robh@kernel.org>, <bhelgaas@google.com>,
-        <vigneshr@ti.com>, <kishon@kernel.org>, <cassel@kernel.org>,
-        <wojciech.jasko-EXT@continental-corporation.com>,
-        <thomas.richard@bootlin.com>, <bwawrzyn@cisco.com>,
-        <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <srk@ti.com>
-Subject: Re: [PATCH 1/4] PCI: cadence: Add support to build pcie-cadence
- library as a kernel module
-Message-ID: <20250314065444.fmvhyqmuefnm4mcq@uda0492258>
-References: <20250307103128.3287497-1-s-vadapalli@ti.com>
- <20250307103128.3287497-2-s-vadapalli@ti.com>
- <20250313174416.n3c4srf6hb2l3bvg@thinkpad>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="S/6ooFJU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1741936259; x=1773472259;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=IKdBA13JupXjDh3Rlpq56k/VtfWKKPwKkrryIgel3M0=;
+  b=S/6ooFJUq3S8esuLPHi2a3NmhCBHmguXa1GNRAHBQvLoBXg+m363u1a6
+   tcYNcKQTI50iSypl7lPrFVcqZBLPNQetic6279QN3gISqu++MO2JccqH5
+   JIlUoRw3MfaO5R4CCdrcVZvA13ImfjlMXyrdMSc5J93WPNiYCocP9wyFq
+   4F9DS0oSBDqo8oYWtOw0+KWi7DDaeKuXDSFRHaujjjb2/My/Bsjp04Tw3
+   cJs9wlj6udVeoBxmmTetXQao3opnrQDSsuyJVbPwe4Z9hrTTwEptYybBw
+   ACBGgp2gj4tYINcwsyQU69hllaTABL/ksQiaqOvjyuAK39A1triA81LGi
+   w==;
+X-CSE-ConnectionGUID: IuwbHh/HRwGw0KhvTcFYWg==
+X-CSE-MsgGUID: BREprz79SIe8h6RyMRcOhw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11372"; a="60477872"
+X-IronPort-AV: E=Sophos;i="6.14,246,1736841600"; 
+   d="scan'208";a="60477872"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 14 Mar 2025 00:10:58 -0700
+X-CSE-ConnectionGUID: eUsGcmroQlSQOhljXpJKeA==
+X-CSE-MsgGUID: FcXeWHeuQRmvAF80w9bpgw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,246,1736841600"; 
+   d="scan'208";a="121390713"
+Received: from lkp-server02.sh.intel.com (HELO a4747d147074) ([10.239.97.151])
+  by fmviesa008.fm.intel.com with ESMTP; 14 Mar 2025 00:10:52 -0700
+Received: from kbuild by a4747d147074 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tszBy-000ABs-0z;
+	Fri, 14 Mar 2025 07:10:50 +0000
+Date: Fri, 14 Mar 2025 15:10:26 +0800
+From: kernel test robot <lkp@intel.com>
+To: Antonio Hickey <contact@antoniohickey.com>,
+	Andreas Hindborg <a.hindborg@kernel.org>,
+	Boqun Feng <boqun.feng@gmail.com>, Miguel Ojeda <ojeda@kernel.org>,
+	Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>,
+	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
+	Benno Lossin <benno.lossin@proton.me>,
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Brendan Higgins <brendan.higgins@linux.dev>,
+	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
+	FUJITA Tomonori <fujita.tomonori@gmail.com>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev,
+	Antonio Hickey <contact@antoniohickey.com>,
+	linux-block@vger.kernel.org, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
+	kunit-dev@googlegroups.com, netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH 3/3] rust: replace `addr_of[_mut]!` with `&raw [mut]`
+Message-ID: <202503141434.n6oUhRIM-lkp@intel.com>
+References: <010001958dfec447-37d6d276-32f8-4b4e-b7bd-6d7ce2570ee2-000000@email.amazonses.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250313174416.n3c4srf6hb2l3bvg@thinkpad>
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+In-Reply-To: <010001958dfec447-37d6d276-32f8-4b4e-b7bd-6d7ce2570ee2-000000@email.amazonses.com>
 
-On Thu, Mar 13, 2025 at 11:14:16PM +0530, Manivannan Sadhasivam wrote:
+Hi Antonio,
 
-Hello Mani,
+kernel test robot noticed the following build warnings:
 
-> On Fri, Mar 07, 2025 at 04:01:25PM +0530, Siddharth Vadapalli wrote:
-> > From: Kishon Vijay Abraham I <kishon@ti.com>
-> > 
-> > Currently, the Cadence PCIe controller driver can be built as a built-in
-> > module only. Since PCIe functionality is not a necessity for booting, add
-> > support to build the Cadence PCIe driver as a loadable module as well.
-> > 
-> > Signed-off-by: Kishon Vijay Abraham I <kishon@ti.com>
-> > Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
-> 
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> 
-> > ---
-> >  drivers/pci/controller/cadence/Kconfig             |  6 +++---
-> >  drivers/pci/controller/cadence/pcie-cadence-ep.c   |  6 ++++++
-> >  drivers/pci/controller/cadence/pcie-cadence-host.c |  9 +++++++++
-> >  drivers/pci/controller/cadence/pcie-cadence.c      | 12 ++++++++++++
-> >  drivers/pci/controller/cadence/pcie-cadence.h      |  4 ++--
-> >  5 files changed, 32 insertions(+), 5 deletions(-)
-> > 
-> > diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
-> > index 8a0044bb3989..82b58096eea0 100644
-> > --- a/drivers/pci/controller/cadence/Kconfig
-> > +++ b/drivers/pci/controller/cadence/Kconfig
-> > @@ -4,16 +4,16 @@ menu "Cadence-based PCIe controllers"
-> >  	depends on PCI
-> >  
-> >  config PCIE_CADENCE
-> > -	bool
-> > +	tristate
-> >  
-> >  config PCIE_CADENCE_HOST
-> > -	bool
-> > +	tristate
-> >  	depends on OF
-> >  	select IRQ_DOMAIN
-> 
-> Even though this was added earlier, looks like not needed.
+[auto build test WARNING on rust/rust-next]
+[also build test WARNING on driver-core/driver-core-testing driver-core/driver-core-next driver-core/driver-core-linus linus/master v6.14-rc6 next-20250313]
+[cannot apply to shuah-kselftest/kunit shuah-kselftest/kunit-fixes pci/next pci/for-linus rust/rust-block-next]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Thank you for reviewing this patch.
+url:    https://github.com/intel-lab-lkp/linux/commits/Antonio-Hickey/rust-clippy-disable-addr_of-and-addr_of_mut-macros/20250313-133646
+base:   https://github.com/Rust-for-Linux/linux rust-next
+patch link:    https://lore.kernel.org/r/010001958dfec447-37d6d276-32f8-4b4e-b7bd-6d7ce2570ee2-000000%40email.amazonses.com
+patch subject: [PATCH 3/3] rust: replace `addr_of[_mut]!` with `&raw [mut]`
+config: x86_64-rhel-9.4-rust (https://download.01.org/0day-ci/archive/20250314/202503141434.n6oUhRIM-lkp@intel.com/config)
+compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
+rustc: rustc 1.78.0 (9b00956e5 2024-04-29)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250314/202503141434.n6oUhRIM-lkp@intel.com/reproduce)
 
-drivers/pci/controller/cadence/Kconfig has the following:
-...
-	config PCIE_CADENCE_HOST
-		bool
-		depends on OF
-		select IRQ_DOMAIN
-		select PCIE_CADENCE
-...
-	config PCI_J721E_HOST
-		bool "TI J721E PCIe controller (host mode)"
-		depends on ARCH_K3 || COMPILE_TEST
-		depends on OF
-		select PCIE_CADENCE_HOST
-		select PCI_J721E
-...
-So PCI_J721E_HOST selects PCIE_CADENCE_HOST which in turn selects
-PCIE_CADENCE. As of now, none of these configs are enabled in
-arm64-defconfig, and they also will not be accepted as built-in modules
-as it will bloat the Linux Image for everyone. For that reason, they are
-all being converted to loadable modules, and their configs will eventually
-be enabled in arm64-defconfig as loadable modules.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202503141434.n6oUhRIM-lkp@intel.com/
 
-Please let me know if I misunderstood your comment regarding the quoted
-change not being required.
+All warnings (new ones prefixed by >>):
 
-Regards,
-Siddharth.
+>> warning: consider removing unnecessary double parentheses
+   --> rust/kernel/faux.rs:48:41
+   |
+   48 |         unsafe { device::Device::as_ref((&raw mut (*self.as_raw()).dev)) }
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#double_parens
+   = note: `-W clippy::double-parens` implied by `-W clippy::all`
+   = help: to override `-W clippy::all` add `#[allow(clippy::double_parens)]`
+--
+>> warning: unnecessary parentheses around function argument
+   --> rust/kernel/faux.rs:48:41
+   |
+   48 |         unsafe { device::Device::as_ref((&raw mut (*self.as_raw()).dev)) }
+   |                                         ^                             ^
+   |
+   = note: `#[warn(unused_parens)]` on by default
+   help: remove these parentheses
+   |
+   48 -         unsafe { device::Device::as_ref((&raw mut (*self.as_raw()).dev)) }
+   48 +         unsafe { device::Device::as_ref(&raw mut (*self.as_raw()).dev) }
+   |
+--
+>> warning: immediately dereferencing a reference
+   --> rust/kernel/task.rs:260:28
+   |
+   260 |         let ptr = unsafe { *(&raw const (*self.as_ptr()).group_leader) };
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(*self.as_ptr()).group_leader`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#deref_addrof
+   = note: `-W clippy::deref-addrof` implied by `-W clippy::all`
+   = help: to override `-W clippy::all` add `#[allow(clippy::deref_addrof)]`
+--
+>> warning: immediately dereferencing a reference
+   --> rust/kernel/task.rs:272:18
+   |
+   272 |         unsafe { *(&raw const (*self.as_ptr()).pid) }
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `(*self.as_ptr()).pid`
+   |
+   = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#deref_addrof
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
