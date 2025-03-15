@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4DE13AD22
-	for <linux-pci@vger.kernel.org>; Sat, 15 Mar 2025 16:52:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1540202F9F
+	for <linux-pci@vger.kernel.org>; Sat, 15 Mar 2025 16:52:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742057572; cv=none; b=GQn1mI9wrbNXELEH/m47hPKySAgddXNiYaI5AuIgr9so7QZY56/OAcOmRp7SX9hv1ctmV1UC/GQ9h3hGxvEZmhOHdq/1VFW6946wYRfjvuigM15kxWrXPIm4A7G2/uMNG8844tHWD9WU65W/Uh/BDo8ObFdtI37qMDY9U2g6o6Y=
+	t=1742057574; cv=none; b=UAnNke8ez8bVRDn3oXr5MZ7sSkevqBZQIc6RInE8QZJn3OzJ52TORsKOV8lOq14m19Y4dQGS9zXhy6DzwokDwkNoPJaKP40erfrYwRdnjvb+12qtvgFgBI8SgGLuboBYCRsUAxxwU2wLLJKcQRBzHJftViLewdj2kkXNJc/J3Eg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742057572; c=relaxed/simple;
-	bh=l8ES+ZkyFzFrQ40pbXvJx2bzVVpz0QUTQjNnd0jIkus=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=oTEj+HzQo/xU5lFxoHBN08iQt3RESVF9UJlz0x7Wlb2lgEsfVH1bdT1Zewu5UmGxC8W8l5qsv1BqA4ku2HXcnYOP9IrI6lKbSzHaOwmxfp56ZdJuOIhhjoO3kvW+dQzvVtzLwMtAnpLFrC9mXeXCOzgirVdeKIRhkZ/gAa8nuV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=K74XEdPr; arc=none smtp.client-ip=192.198.163.7
+	s=arc-20240116; t=1742057574; c=relaxed/simple;
+	bh=uWthL3kePb8PFEeY3AzK/7qMS1ALnEACbSzGHPSa52Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=EpG/ttGrst8zXX+Hk86z2OdUxBmg90BNSavnaqt25+zSFEi/vSvrnpvCxX0cYjPea/0hb0/28hIaF82l/TwNR9PSs36ALkXp8bzuh1D3vbUG0gBGjPIwTk0XQH1BCRHIpMelYak+njnpY2Ko0P6NWY988ublzR4N1zFpwz54DRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GEpyy1T6; arc=none smtp.client-ip=192.198.163.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="K74XEdPr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GEpyy1T6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1742057571; x=1773593571;
+  t=1742057572; x=1773593572;
   h=date:from:to:cc:subject:message-id:mime-version;
-  bh=l8ES+ZkyFzFrQ40pbXvJx2bzVVpz0QUTQjNnd0jIkus=;
-  b=K74XEdPrnO9orkD7/2ArKdo8WYJMevKRpETMwJmDWn5dCHz684rwJEQC
-   W9i7MtV2P2A+PcW89ouH9bG50Y5BTKjTOg0Lvj1EnpFdS4lXh+3rPnvjn
-   PWzRczwgwuiTX0KKFqeFq/k+Zpo8k2U4eYogRl+fLT7hLBTiwS/x1c6TY
-   9uG7b4n1SZrzC2bbdQ6ly58SjJ8KrOyV3HulseZGzxLzkXgrWcPVJq6rj
-   y/+Wn4gJn+G5ULlXdn4cIdj+FUE8dxtr9MzSNM+wVe2+TO3DMjtM0xk6G
-   m+kw7XYsoJnCjBiKMwlJj73mT4VuviiHhc7xBbnF8Eks78f3cT8gGnaGm
-   g==;
-X-CSE-ConnectionGUID: 51+/amHITp2oWN+TMD+aYw==
-X-CSE-MsgGUID: 5Yjp2RjtRbGSaQTliY9Ndg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11374"; a="68556772"
+  bh=uWthL3kePb8PFEeY3AzK/7qMS1ALnEACbSzGHPSa52Q=;
+  b=GEpyy1T6tm/7dstuOgUyqBdZZl1qykrhZyL7eJ4A/B1uI14R+sr53hvB
+   ouARuWKNsB8IlzNUdC3ZTNKWpNjJZvoRDU391wwgZeWUl3Ew7ebOc1ADX
+   biGkLVp1Ut+sgBgYg2blqN/gg3Gmb316cZ6HjzOV+3Hlq50EU8u9yQAGt
+   Au3S3O90Ig505jXGt1EGst325IVy37wy6pCUCY3fYJ4BV30tqJx96m7NG
+   ahdRa9Wy3SPThQYF3KMQaDQCH3FxGQzIMcw+uPB1NaszMQTelKJfIrF7w
+   F+Ab9zAB5KkIxVDW+lJc+qdjK6MsUjVIazxhCqXXeRe8FkGSJdkyui7rz
+   Q==;
+X-CSE-ConnectionGUID: nD53zgIrQQ+3c/2O2cagNw==
+X-CSE-MsgGUID: PEb/bM7+QlK5N7E5yIbCoQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11374"; a="68556774"
 X-IronPort-AV: E=Sophos;i="6.14,250,1736841600"; 
-   d="scan'208";a="68556772"
+   d="scan'208";a="68556774"
 Received: from fmviesa003.fm.intel.com ([10.60.135.143])
   by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Mar 2025 09:52:50 -0700
-X-CSE-ConnectionGUID: UFgOoburTFKRKNRgtqIefw==
-X-CSE-MsgGUID: D5N5seRnTie3DfjEf9yNZg==
+X-CSE-ConnectionGUID: mlwAYuO8RwegSzQGcG4+1A==
+X-CSE-MsgGUID: xChW+D6KTBuh0eBx1iDzQg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.14,250,1736841600"; 
-   d="scan'208";a="125749370"
+   d="scan'208";a="125749371"
 Received: from lkp-server02.sh.intel.com (HELO a4747d147074) ([10.239.97.151])
   by fmviesa003.fm.intel.com with ESMTP; 15 Mar 2025 09:52:49 -0700
 Received: from kbuild by a4747d147074 with local (Exim 4.96)
 	(envelope-from <lkp@intel.com>)
-	id 1ttUkg-000BUP-2k;
+	id 1ttUkg-000BUN-2f;
 	Sat, 15 Mar 2025 16:52:46 +0000
-Date: Sun, 16 Mar 2025 00:52:37 +0800
+Date: Sun, 16 Mar 2025 00:52:07 +0800
 From: kernel test robot <lkp@intel.com>
 To: "Krzysztof =?utf-8?Q?Wilczy=C5=84ski"?= <kwilczynski@kernel.org>
 Cc: linux-pci@vger.kernel.org
-Subject: [pci:endpoint-test] BUILD SUCCESS
- c4aaa6b5b5ac14ea9b0abf1e0f4bf24c332a9b34
-Message-ID: <202503160031.rl0xXwzR-lkp@intel.com>
+Subject: [pci:controller/dwc] BUILD SUCCESS
+ 1f5a69f1b3132054d8d82b8d7546d0af6a2ed4f6
+Message-ID: <202503160001.Pl7bhH8L-lkp@intel.com>
 User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -61,8 +61,8 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git endpoint-test
-branch HEAD: c4aaa6b5b5ac14ea9b0abf1e0f4bf24c332a9b34  misc: pci_endpoint_test: Add support for PCITEST_IRQ_TYPE_AUTO
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/dwc
+branch HEAD: 1f5a69f1b3132054d8d82b8d7546d0af6a2ed4f6  PCI: dw-rockchip: Hide broken ATS capability for RK3588 running in EP mode
 
 elapsed time: 1450m
 
