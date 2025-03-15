@@ -1,209 +1,95 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A307E136341;
-	Sat, 15 Mar 2025 00:19:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8C3756AA7;
+	Sat, 15 Mar 2025 00:22:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1741997979; cv=none; b=IFCIHblR2T7o3nzxJ55Hvt9vvA0xji8xnmI+uehdNMXT0UdpBx860DSxGGwP1J2LzgVYYSE63fLBTSeTGULk3qxX0rCmsppY9dd802HCiicKvoKwRuvcXqPEe8suPekK4XOXBfhiDwtyKwvnTAbTwacujV+5Y1h/vywqB5S6+YY=
+	t=1741998165; cv=none; b=YBb9OzTpVgsgzPwZ+62Vv7e++yRfaVrBBj4kpPahoXXAzk9uyX1ysA3EhDoYtnmKtvpi8JGSTC46BoOe60XvzCaYwy5ZIkFrAQr+isPX7zKrdg7e+6Y/ZKK6abyeg2C7ct8vdu2ciZn82OYPseziSHp+oqiDNi90MwadHJX3cqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1741997979; c=relaxed/simple;
-	bh=uGmSpAEGDZeyXxYeVIIj2GHYy1p3noKlsHm92PaIOyE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bo2ZbPJvO0sLtZ3uSpCgtGrluj6naI1WaWrRJdzvfVWaXoCwjbZDgvJ2+mKxp1ekKXnoGpNQHjjN1Epx0MwtvhTUw9vQDo2Ava8m6Tqk4BSYJJlpm5RCNlx01QeIACHFLXCDUfWc5ky+VGliXznrnLrAPeX/iIhP77HMpnbL5bM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=D3YWiohi; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1741998165; c=relaxed/simple;
+	bh=u8l3PPVo1Iiwb1ppHvpxF+S0AOUWGysoAo1JGL6uZZs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AqY7/BxdsaaxfCtgZjfZdVpZa4Bsg9Uv2eQMYLjhfd33FtZFKYbg7fEJYgMlUJRvs3RKg+YQB8moPptSzpKpZTUS/vSyGB+D4Ns+NFiYFErPLFQo6uv7UB4iqTH8JhUCXYhOqKyKSB572gepZbwWctcpN0nZIuqzYOgP0HO5qxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fUEXWE0Z; arc=none smtp.client-ip=220.197.31.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="D3YWiohi"
-Received: from romank-3650.corp.microsoft.com (unknown [131.107.160.188])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 2D77D203345A;
-	Fri, 14 Mar 2025 17:19:37 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 2D77D203345A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1741997977;
-	bh=qoiV8JEcZx816GDjfYuKFeROgwdDGoW/daTWcBtz3rM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=D3YWiohiBFjX3mZopbBO+f7LIiod0cqcd08GA0nHnb92b2qf1cVESeIgVzRnJtICE
-	 TWJRaKv+tXXKU2ELcaDoYzJPOLN4ldq74OV/UhrH7XHink0C1I04iurLsaZtuaS48p
-	 dcto7CfDsuIy5AW4P/A10jkAPEzHzzdbum3hIyXk=
-From: Roman Kisel <romank@linux.microsoft.com>
-To: arnd@arndb.de,
-	bhelgaas@google.com,
-	bp@alien8.de,
-	catalin.marinas@arm.com,
-	conor+dt@kernel.org,
-	dan.carpenter@linaro.org,
-	dave.hansen@linux.intel.com,
-	decui@microsoft.com,
-	haiyangz@microsoft.com,
-	hpa@zytor.com,
-	joey.gouly@arm.com,
-	krzk+dt@kernel.org,
-	kw@linux.com,
-	kys@microsoft.com,
-	lenb@kernel.org,
-	lpieralisi@kernel.org,
-	manivannan.sadhasivam@linaro.org,
-	mark.rutland@arm.com,
-	maz@kernel.org,
-	mingo@redhat.com,
-	oliver.upton@linux.dev,
-	rafael@kernel.org,
-	robh@kernel.org,
-	ssengar@linux.microsoft.com,
-	sudeep.holla@arm.com,
-	suzuki.poulose@arm.com,
-	tglx@linutronix.de,
-	wei.liu@kernel.org,
-	will@kernel.org,
-	yuzenghui@huawei.com,
-	devicetree@vger.kernel.org,
-	kvmarm@lists.linux.dev,
-	linux-acpi@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-hyperv@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	x86@kernel.org
-Cc: apais@microsoft.com,
-	benhill@microsoft.com,
-	bperkins@microsoft.com,
-	sunilmut@microsoft.com
-Subject: [PATCH hyperv-next v6 11/11] PCI: hv: Get vPCI MSI IRQ domain from DeviceTree
-Date: Fri, 14 Mar 2025 17:19:31 -0700
-Message-ID: <20250315001931.631210-12-romank@linux.microsoft.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250315001931.631210-1-romank@linux.microsoft.com>
-References: <20250315001931.631210-1-romank@linux.microsoft.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fUEXWE0Z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
+	Content-Type; bh=109cFpcIHKvu71FujjmyGI5jYN6yUHpbo8pR6s+BNkA=;
+	b=fUEXWE0Z09WGc3M4wIMUbUjVKHU3sXa5Bon5RARqBp8quXhrJclZdTDB6Q2u3F
+	GA65sPiqd5eSghFK8+VIItlm1EB3Q8MQ2L5y72iCcvI7G7YHwf83TkVibukw2YF6
+	/u02GfCuD/BMf3H8OSowNMCX3PyuzB7B4nVMo1obPx+XU=
+Received: from [192.168.71.45] (unknown [])
+	by gzsmtp2 (Coremail) with SMTP id PSgvCgD3VwCcxNRnRjVaLA--.1942S2;
+	Sat, 15 Mar 2025 08:06:53 +0800 (CST)
+Message-ID: <88a44822-9b1a-4d59-a4ce-926d12f73147@163.com>
+Date: Sat, 15 Mar 2025 08:06:52 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [v2] PCI: cadence: Add configuration space capability search API
+To: Bjorn Helgaas <helgaas@kernel.org>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Siddharth Vadapalli <s-vadapalli@ti.com>, lpieralisi@kernel.org,
+ kw@linux.com, robh@kernel.org, bhelgaas@google.com, bwawrzyn@cisco.com,
+ thomas.richard@bootlin.com, wojciech.jasko-EXT@continental-corporation.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250314203157.GA793598@bhelgaas>
+Content-Language: en-US
+From: Hans Zhang <18255117159@163.com>
+In-Reply-To: <20250314203157.GA793598@bhelgaas>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:PSgvCgD3VwCcxNRnRjVaLA--.1942S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7uryUuFW8Wr4UZF1xGFW3Wrg_yoW8Xry8pr
+	W2qry3tF48JF43CFn7tay8tFySgwsrXasrtan5CrWDZws8W3saqFWvy345tFZrJr1rZr4Y
+	vFWUWa4kJ3s0vaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U9vtZUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxQRo2fUwmM+BQAAsU
 
-The hyperv-pci driver uses ACPI for MSI IRQ domain configuration on
-arm64. It won't be able to do that in the VTL mode where only DeviceTree
-can be used.
 
-Update the hyperv-pci driver to get vPCI MSI IRQ domain in the DeviceTree
-case, too.
 
-Signed-off-by: Roman Kisel <romank@linux.microsoft.com>
----
- drivers/pci/controller/pci-hyperv.c | 73 ++++++++++++++++++++++++++---
- 1 file changed, 67 insertions(+), 6 deletions(-)
+On 2025/3/15 04:31, Bjorn Helgaas wrote:
+> On Fri, Mar 14, 2025 at 06:35:11PM +0530, Manivannan Sadhasivam wrote:
+>> ...
+> 
+>> Even though this patch is mostly for an out of tree controller
+>> driver which is not going to be upstreamed, the patch itself is
+>> serving some purpose. I really like to avoid the hardcoded offsets
+>> wherever possible. So I'm in favor of this patch.
+>>
+>> However, these newly introduced functions are a duplicated version
+>> of DWC functions. So we will end up with duplicated functions in
+>> multiple places. I'd like them to be moved (both this and DWC) to
+>> drivers/pci/pci.c if possible. The generic function
+>> *_find_capability() can accept the controller specific readl/ readw
+>> APIs and the controller specific private data.
+> 
+> I agree, it would be really nice to share this code.
+> 
+> It looks a little messy to deal with passing around pointers to
+> controller read ops, and we'll still end up with a lot of duplicated
+> code between __pci_find_next_cap() and __cdns_pcie_find_next_cap(),
+> etc.
+> 
+> Maybe someday we'll make a generic way to access non-PCI "config"
+> space like this host controller space and PCIe RCRBs.
+> 
+> Or if you add interfaces that accept read/write ops, maybe the
+> existing pci_find_capability() etc could be refactored on top of them
+> by passing in pci_bus_read_config_word() as the accessor.
+> 
 
-diff --git a/drivers/pci/controller/pci-hyperv.c b/drivers/pci/controller/pci-hyperv.c
-index 6084b38bdda1..cbff19e8a07c 100644
---- a/drivers/pci/controller/pci-hyperv.c
-+++ b/drivers/pci/controller/pci-hyperv.c
-@@ -50,6 +50,7 @@
- #include <linux/irqdomain.h>
- #include <linux/acpi.h>
- #include <linux/sizes.h>
-+#include <linux/of_irq.h>
- #include <asm/mshyperv.h>
- 
- /*
-@@ -817,9 +818,17 @@ static int hv_pci_vec_irq_gic_domain_alloc(struct irq_domain *domain,
- 	int ret;
- 
- 	fwspec.fwnode = domain->parent->fwnode;
--	fwspec.param_count = 2;
--	fwspec.param[0] = hwirq;
--	fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
-+	if (is_of_node(fwspec.fwnode)) {
-+		/* SPI lines for OF translations start at offset 32 */
-+		fwspec.param_count = 3;
-+		fwspec.param[0] = 0;
-+		fwspec.param[1] = hwirq - 32;
-+		fwspec.param[2] = IRQ_TYPE_EDGE_RISING;
-+	} else {
-+		fwspec.param_count = 2;
-+		fwspec.param[0] = hwirq;
-+		fwspec.param[1] = IRQ_TYPE_EDGE_RISING;
-+	}
- 
- 	ret = irq_domain_alloc_irqs_parent(domain, virq, 1, &fwspec);
- 	if (ret)
-@@ -887,10 +896,47 @@ static const struct irq_domain_ops hv_pci_domain_ops = {
- 	.activate = hv_pci_vec_irq_domain_activate,
- };
- 
-+#ifdef CONFIG_OF
-+
-+static struct irq_domain *hv_pci_of_irq_domain_parent(void)
-+{
-+	struct device_node *parent;
-+	struct irq_domain *domain;
-+
-+	parent = of_irq_find_parent(hv_get_vmbus_root_device()->of_node);
-+	if (!parent)
-+		return NULL;
-+	domain = irq_find_host(parent);
-+	of_node_put(parent);
-+
-+	return domain;
-+}
-+
-+#endif
-+
-+#ifdef CONFIG_ACPI
-+
-+static struct irq_domain *hv_pci_acpi_irq_domain_parent(void)
-+{
-+	struct irq_domain *domain;
-+	acpi_gsi_domain_disp_fn gsi_domain_disp_fn;
-+
-+	if (acpi_irq_model != ACPI_IRQ_MODEL_GIC)
-+		return NULL;
-+	gsi_domain_disp_fn = acpi_get_gsi_dispatcher();
-+	if (!gsi_domain_disp_fn)
-+		return NULL;
-+	return irq_find_matching_fwnode(gsi_domain_disp_fn(0),
-+				     DOMAIN_BUS_ANY);
-+}
-+
-+#endif
-+
- static int hv_pci_irqchip_init(void)
- {
- 	static struct hv_pci_chip_data *chip_data;
- 	struct fwnode_handle *fn = NULL;
-+	struct irq_domain *irq_domain_parent = NULL;
- 	int ret = -ENOMEM;
- 
- 	chip_data = kzalloc(sizeof(*chip_data), GFP_KERNEL);
-@@ -907,9 +953,24 @@ static int hv_pci_irqchip_init(void)
- 	 * way to ensure that all the corresponding devices are also gone and
- 	 * no interrupts will be generated.
- 	 */
--	hv_msi_gic_irq_domain = acpi_irq_create_hierarchy(0, HV_PCI_MSI_SPI_NR,
--							  fn, &hv_pci_domain_ops,
--							  chip_data);
-+#ifdef CONFIG_ACPI
-+	if (!acpi_disabled)
-+		irq_domain_parent = hv_pci_acpi_irq_domain_parent();
-+#endif
-+#if defined(CONFIG_OF)
-+	if (!irq_domain_parent)
-+		irq_domain_parent = hv_pci_of_irq_domain_parent();
-+#endif
-+	if (!irq_domain_parent) {
-+		WARN_ONCE(1, "Invalid firmware configuration for VMBus interrupts\n");
-+		ret = -EINVAL;
-+		goto free_chip;
-+	}
-+
-+	hv_msi_gic_irq_domain = irq_domain_create_hierarchy(
-+		irq_domain_parent, 0, HV_PCI_MSI_SPI_NR,
-+		fn, &hv_pci_domain_ops,
-+		chip_data);
- 
- 	if (!hv_msi_gic_irq_domain) {
- 		pr_err("Failed to create Hyper-V arm64 vPCI MSI IRQ domain\n");
--- 
-2.43.0
+Hi Bjorn,
+
+I have already replied to an email, please help review whether it is 
+appropriate.
+
+Best regards,
+Hans
 
