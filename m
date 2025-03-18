@@ -1,134 +1,155 @@
-Received: from mail-wm1-f74.google.com (mail-wm1-f74.google.com [209.85.128.74])
+Received: from mail-qt1-f174.google.com (mail-qt1-f174.google.com [209.85.160.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80C5C20B818
-	for <linux-pci@vger.kernel.org>; Tue, 18 Mar 2025 12:29:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12C3228EC
+	for <linux-pci@vger.kernel.org>; Tue, 18 Mar 2025 13:07:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742300966; cv=none; b=a6SS/kFEkyWPvZ8VEVR0/dfQmGZocExF+IbsMbnvRAcaG1+lipSCZ4l0Bs4Yof+dp0JhBCNaKQdXNZaDfXs0b114FpwHsdjYUuCjQ6WlIpvQBDnNbHFMCoK34uDTwHStqGg7LGf6jrYc0NnLI1aD08TuRnLEXZ1FKJqEHrlaUo8=
+	t=1742303271; cv=none; b=c5SZj48Xr+RbBCvn5sdN3rnTTWiqFi87hfg3Pyd0ZgT2U0fKpnsBnD/Pos8JfRc8fJug++glV587FGg8O3iiyXYmzBsyLaiCiYe/Vm/qGpwkWcKWQxvjULo1rh5AILAIluutRAzU35F3uDmZQTHijaz/Qd9SQ2iW0AmjzRMZbfM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742300966; c=relaxed/simple;
-	bh=uZRIezSswVRQdoQoNwW4Q2XSahT1LKLGtDiBt3hrg0o=;
-	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=IETLENoE102kWmGsoRsCQAc1jRWVPokTauetGf2h+EII0Dbc0213gFbEOxom/67veeyBmH6n+R/9mjhmyFFl92zxgShUQsspY5YRb0WEu+6EJRjJD+fSVDv0IQoupefrsD3QbOtpEeofZYGnvJ+G04pXVDFRjFb+lXPbe/LcuR8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=zrZ7WPLp; arc=none smtp.client-ip=209.85.128.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--aliceryhl.bounces.google.com
+	s=arc-20240116; t=1742303271; c=relaxed/simple;
+	bh=b1QJS+wUU86PJfdjdg95OYXaCmb8RomGjog1qklmYwE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Xzt4pNddYkT9NaHZ8gcffY7ODVFSGLFfv4CkJkGHHoTswKuRB/XxMI3tJgXSiekJHBOYLk6NL6qnetx+skodSz3PZdA0yhecrC+dHIgLPiiZsvuikOAlkSVlRIOEEtwmQMZ2YzbZpguMqyvB0DbQNceJO/cIWgWhow9E1jQib10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=MiM6xnjg; arc=none smtp.client-ip=209.85.160.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="zrZ7WPLp"
-Received: by mail-wm1-f74.google.com with SMTP id 5b1f17b1804b1-43d0830c3f7so28110285e9.2
-        for <linux-pci@vger.kernel.org>; Tue, 18 Mar 2025 05:29:23 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="MiM6xnjg"
+Received: by mail-qt1-f174.google.com with SMTP id d75a77b69052e-4768f90bf36so46708061cf.0
+        for <linux-pci@vger.kernel.org>; Tue, 18 Mar 2025 06:07:48 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1742300962; x=1742905762; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=/4uc8oPSchxzVAiGTdez6IXx9stCzB5Vsutmi4LBJv0=;
-        b=zrZ7WPLprDfFC8OnWq1nuAuLdF1rZ/sbdlPk2AZSSfhBgH5s9j1ppfj3rYyyZm+vEm
-         oc94VmJ5XQ15KMR5hxuciuU/Rz4Qc1ThgEJNgAB5gJx/aTWW7ake86GJr12Emz/BBdHd
-         RG1zl3V7T9NI9dPw9j3RZtsKHxdDgFtwvw40ksa2x2mWtqnA2OTd65TjqOij71K/s1MB
-         HqL+w7t+levlmsuLI/BIqHwHqFOrUdj2lJsTg3nn2V60pkm51o/0Vh/cGBqq3vsOTfmx
-         xlFswVwBCMh9PhIqarCLGc5QKgq/Z1DeHoM1h4rGd0FeKX8QnSNWN6F6lIs4S74EPghY
-         Bftw==
+        d=gmail.com; s=20230601; t=1742303268; x=1742908068; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QLF2+GjN11c65uuWrIt4s8Uf0L2Flyd74x2vmpisKmU=;
+        b=MiM6xnjgCwn1yGwEWxarZUlZrwtPak9S5hcTH0imHgrgf7Uhq2brlXqkqaAHgeds+p
+         NzZ3O0p7Kd0VYeCEwQMEo12gInjxdAa4yXuYWg8HDI8YRbfEzERCrzTEEgFJYV91FaKg
+         3DVlvUwK+J+J5RStDzFqnb20mRgq3A6P4JJR/TAEREXe7ckj/dkf9vfhffFgwLVLWaGE
+         HlZrXaKcj9OuJHGKUCBY/HESKYkN7QDInmdj4ZvNwf8OwzutC1AlT0PbzTttmChVnRw5
+         Dvh+xMV2+7no20aCZ0TNyhKuxxLz/NdBlCQkd9qJnlzrm7M69goAKU6fnJ8sCgoL65lo
+         3gBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742300962; x=1742905762;
-        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
-         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/4uc8oPSchxzVAiGTdez6IXx9stCzB5Vsutmi4LBJv0=;
-        b=jbnuL9ikZX9j+qWTnH6PV+ngvEygD+XIFG7fgQnCQXZXtXa3RV37PuBzaPfN2AzGsW
-         p9MQwiTvkv8C4yDG/ZrO+IqhLFyFB2Kr0hMTu/5QsLVHm8Bv1vxqU6zGXB2xLxsKC0na
-         rfOI5fvVjhRiHRsZ5m15Q0ftrDnYeRz5HYEw4P5xEBiHxWb1LDJZ4P7QV+HfeOU0Rn22
-         zaEPZW7ZC9s8U8k+OdC1fTdMn26WOV0FmautDjdrMxgnaaMcLmb7LTJaHJ1yIRq6HB40
-         DbXjW6zzJkGHr2KwndrZwo7b2+2KRsBDE7HIn3HC4ilnbF61Jdxu+Ik+ZLu5ueWDRykF
-         FkmA==
-X-Forwarded-Encrypted: i=1; AJvYcCWuxEAqaCqceihYeAwMei9hUlcnr800qOP6T6JeWoGPAS1ZmP81flmMlYggfrY6p1Xqdt1GouKCsCU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywokh/teCFZZh28NVdZm3V3cg2/nCTXGCsHuG5ANDaJKXZYOZn/
-	nktcas+wheuzRrdDdde8nmahJHoB2EX4y+HGHUPy2EQ57fNcLZcNS7Cua4xWO+kOKkEHE+zy+Of
-	xNp0/fVgS65UUCw==
-X-Google-Smtp-Source: AGHT+IHTdWcjIEfhg6CLJJR2Oh32b985bMj+lx8iegeOAnBxJWcU7FmV4nt7+fy40gQUf7LkXWpBlfKNqoAPp/E=
-X-Received: from wmbep22.prod.google.com ([2002:a05:600c:8416:b0:43b:c9cc:b9b3])
- (user=aliceryhl job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:600c:490a:b0:43c:f64c:447f with SMTP id 5b1f17b1804b1-43d3ca66b73mr14926245e9.29.1742300961982;
- Tue, 18 Mar 2025 05:29:21 -0700 (PDT)
-Date: Tue, 18 Mar 2025 12:29:20 +0000
-In-Reply-To: <20250317-ptr-as-ptr-v5-6-5b5f21fa230a@gmail.com>
+        d=1e100.net; s=20230601; t=1742303268; x=1742908068;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QLF2+GjN11c65uuWrIt4s8Uf0L2Flyd74x2vmpisKmU=;
+        b=BRiWRNJvNSeKOOVjqbvT0qlLEQf3dRV331ilWD9MHDW1XH1fqYL52yPr1+Zlx9hRLK
+         zvVawUqKG014jkEJIASD9mUsWuG1IIJZP3JOkz+bEvUOpBRzMikQtJ9lJRIx7BOgOVmP
+         Lp2q2MLp6BBYAsrDnRCeeY+70XmoswBlIEbMEfx1rK+H2gcpprO1fwfNqNoSSdX5VLbl
+         zr8bItBjoAKzIRX6Ydtfj17g/guAhPyg0Y2X9N81gcxITxrXXI4zFPvmf5KgLWgx3Wj/
+         oL02m3JS5AmIZo8YXTEFLvHhzbRkGIO33gEiuG8FoPILpY1JM+lf1XXAg7s/qaXp1463
+         94MQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVbFOZ5L5pNgJiHKaJkv0Z46qXVAGB1S122doczJ7lTmLmmOin2eYtXMeaUn4id0QKLAsw0R63YNv4=@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywd5SPl+i7h9aY/gieqVDuaPgOPejnXHE5PplKTtIXUfz3GHErr
+	hkbImncwCg2k7e/enwMLYIYcgmJY1u8ens6ac1Ftpb4gTPeNA7Bwg/NGMLR69v5fBIwa6007lV5
+	IDtauQ7D/JhG2/Ylkt6C/zAC9HBA=
+X-Gm-Gg: ASbGncu/CP+KVL7aiiP3nhVRNYPLWWEO6LUqQPR3BVbzOqDOhtMcTYmdpOpH4l0WIJC
+	3VDgM/or1PLhEtFjHwRfgW5y5YD4bLQUpC3HnqDJgQnTy++7jjKkvdOYpds2ZGnbuH7TAQoF0hi
+	MA+9u18XZj/zpqS7j/0NLT+eKR
+X-Google-Smtp-Source: AGHT+IEBJV8GNccLIGwKiaqB6Vz2nIsx9WsE6o1ut05Qv6wavP+RTZXmbAyLJsH0IWKsxWrfv/1oFpC2NlsvT5zLb28=
+X-Received: by 2002:a05:622a:1193:b0:476:639e:edf1 with SMTP id
+ d75a77b69052e-476c815b8aemr264112801cf.23.1742303267742; Tue, 18 Mar 2025
+ 06:07:47 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-References: <20250317-ptr-as-ptr-v5-0-5b5f21fa230a@gmail.com> <20250317-ptr-as-ptr-v5-6-5b5f21fa230a@gmail.com>
-Message-ID: <Z9lnIJCcVSza6UVo@google.com>
-Subject: Re: [PATCH v5 6/6] rust: use strict provenance APIs
-From: Alice Ryhl <aliceryhl@google.com>
-To: Tamir Duberstein <tamird@gmail.com>
-Cc: Masahiro Yamada <masahiroy@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
-	Nicolas Schier <nicolas@fjasle.eu>, Miguel Ojeda <ojeda@kernel.org>, 
-	Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
-	Gary Guo <gary@garyguo.net>, 
-	"=?utf-8?B?QmrDtnJu?= Roy Baron" <bjorn3_gh@protonmail.com>, Benno Lossin <benno.lossin@proton.me>, 
-	Andreas Hindborg <a.hindborg@kernel.org>, Trevor Gross <tmgross@umich.edu>, 
-	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Brendan Higgins <brendan.higgins@linux.dev>, 
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Luis Chamberlain <mcgrof@kernel.org>, 
-	Russ Weight <russ.weight@linux.dev>, Rob Herring <robh@kernel.org>, 
-	Saravana Kannan <saravanak@google.com>, linux-kbuild@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
-	linux-pci@vger.kernel.org, linux-block@vger.kernel.org, 
-	devicetree@vger.kernel.org
-Content-Type: text/plain; charset="utf-8"
+MIME-Version: 1.0
+References: <20250121114225.2727684-1-chenhuacai@loongson.cn> <20250314195949.GA792185@bhelgaas>
+In-Reply-To: <20250314195949.GA792185@bhelgaas>
+From: Huacai Chen <chenhuacai@gmail.com>
+Date: Tue, 18 Mar 2025 21:07:10 +0800
+X-Gm-Features: AQ5f1JoNOAoKAvzVCzzN1x1ig2Lp6ipMUpIZm0PSxE1iVuqOUhr1ttS0IKruHXo
+Message-ID: <CAAhV-H7c9jkXqwn2STdYq-1g4jVELjKL5jaO2aASFAETW5FLHw@mail.gmail.com>
+Subject: Re: [PATCH] PCI: loongson: Add quirk for OHCI device rev 0x02
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Huacai Chen <chenhuacai@loongson.cn>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org, 
+	Jianmin Lv <lvjianmin@loongson.cn>, Xuefeng Li <lixuefeng@loongson.cn>, 
+	Jiaxun Yang <jiaxun.yang@flygoat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Mon, Mar 17, 2025 at 10:23:56AM -0400, Tamir Duberstein wrote:
-> Throughout the tree, use the strict provenance APIs stabilized in Rust
-> 1.84.0[1]. Retain backwards-compatibility by introducing forwarding
-> functions at the `kernel` crate root along with polyfills for rustc <
-> 1.84.0.
-> 
-> Use `#[allow(clippy::incompatible_msrv)]` to avoid warnings on rustc <
-> 1.84.0 as our MSRV is 1.78.0.
-> 
-> In the `kernel` crate, enable the strict provenance lints on rustc >=
-> 1.84.0; do this in `lib.rs` rather than `Makefile` to avoid introducing
-> compiler flags that are dependent on the rustc version in use.
-> 
-> Link: https://blog.rust-lang.org/2025/01/09/Rust-1.84.0.html#strict-provenance-apis [1]
-> Suggested-by: Benno Lossin <benno.lossin@proton.me>
-> Link: https://lore.kernel.org/all/D8EIXDMRXMJP.36TFCGWZBRS3Y@proton.me/
-> Signed-off-by: Tamir Duberstein <tamird@gmail.com>
+Hi, Bjorn,
 
-I'm not convinced that the pros of this change outweigh the cons. I
-think this is going to be too confusing for the C developers who look at
-this code.
+Sorry for the late reply.
 
-> diff --git a/rust/kernel/uaccess.rs b/rust/kernel/uaccess.rs
-> index 719b0a48ff55..96393bcf6bd7 100644
-> --- a/rust/kernel/uaccess.rs
-> +++ b/rust/kernel/uaccess.rs
-> @@ -226,7 +226,9 @@ pub fn read_raw(&mut self, out: &mut [MaybeUninit<u8>]) -> Result {
->          }
->          // SAFETY: `out_ptr` points into a mutable slice of length `len`, so we may write
->          // that many bytes to it.
-> -        let res = unsafe { bindings::copy_from_user(out_ptr, self.ptr as *const c_void, len) };
-> +        let res = unsafe {
-> +            bindings::copy_from_user(out_ptr, crate::with_exposed_provenance(self.ptr), len)
-> +        };
->          if res != 0 {
->              return Err(EFAULT);
->          }
-> @@ -264,7 +266,7 @@ pub fn read<T: FromBytes>(&mut self) -> Result<T> {
->          let res = unsafe {
->              bindings::_copy_from_user(
->                  out.as_mut_ptr().cast::<c_void>(),
-> -                self.ptr as *const c_void,
-> +                crate::with_exposed_provenance(self.ptr),
->                  len,
->              )
->          };
+On Sat, Mar 15, 2025 at 3:59=E2=80=AFAM Bjorn Helgaas <helgaas@kernel.org> =
+wrote:
+>
+> On Tue, Jan 21, 2025 at 07:42:25PM +0800, Huacai Chen wrote:
+> > The OHCI controller (rev 0x02) under LS7A PCI host has a hardware flaw.
+> > MMIO register with offset 0x60/0x64 is treated as legacy PS2-compatible
+> > keyboard/mouse interface, which confuse the OHCI controller. Since OHCI
+> > only use a 4KB BAR resource indeed, the LS7A OHCI controller's 32KB BAR
+> > is wrapped around (the second 4KB BAR space is the same as the first 4K=
+B
+> > internally). So we can add an 4KB offset (0x1000) to the BAR resource a=
+s
+> > a workaround.
+>
+> It looks like usb_hcd_pci_probe() only uses BAR 0 in the OHCI case, so
+> I assume this OHCI controller has a single 32KB BAR?
+Yes.
 
-That's especially true for cases like this. These are userspace pointers
-that are never dereferenced. It's not useful to care about provenance
-here.
+>
+> And you're saying that in that BAR, the 0x1000-0x1fff offsets are
+> aliases of the 0x0000-0x0fff area?
+Yes.
 
-Alice
+>
+> And this causes some kind of problem because the OCHI driver looks at
+> offsets 0x60 and 0x64 into the BAR and sees something it doesn't like?
+Yes.
+
+>
+> And this quirk adds 0x1000 to the BAR start, so the OHCI driver looks
+> at offsets 0x1060 and 0x1064 of the original BAR, and that somehow
+> avoids a problem?  Even though those are aliases of 0x0060 and 0x0064
+> of the original BAR?
+Yes.
+
+>
+> > +static void loongson_ohci_quirk(struct pci_dev *dev)
+> > +{
+> > +     if (dev->revision =3D=3D 0x2)
+> > +             dev->resource[0].start +=3D 0x1000;
+>
+> What does this do to the iomem_resource tree?  IIUC, dev->resource[0]
+> no longer correctly describes the PCI address space consumed by the
+> device.
+In the iomem_resource tree the whole 32KB is requested for the OHCI control=
+ler.
+
+>
+> If the BAR is actually programmed with [mem 0x20000000-0x20007fff],
+> the device responds to PCI accesses in that range.  Now you update
+> resource[0] so it describes the space [mem 0x20001000-0x20008fff].  So
+> the kernel *thinks* the space at [mem 0x20000000-0x20000fff] is free
+> and available for something else, which is not true, and that the
+> device responds at [mem 0x0x20008000-0x20008fff], which is also not
+> true.
+>
+> I think the resource has already been put into the iomem_resource tree
+> by the time the final fixups are run, so this also may corrupt the
+> sorting of the tree.
+>
+> This just doesn't look safe to me.
+OHCI only uses 4KB io resources (hardware designer told me that this
+is from USB specification). So if the BAR is [mem
+0x20000000-0x20007fff] and without this quirk, software will only use
+[mem 0x20000000-0x20000fff]; and if we do this quirk, software will
+only use [mem 0x20001000-0x20001fff]. Since the whole 32KB belongs to
+OHCI, there won't be corruption.
+
+Huacai
+
+>
+> > +}
+> > +DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_LOONGSON, DEV_LS7A_OHCI, loongso=
+n_ohci_quirk);
