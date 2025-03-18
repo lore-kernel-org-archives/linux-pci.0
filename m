@@ -1,87 +1,142 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F7531422AB
-	for <linux-pci@vger.kernel.org>; Tue, 18 Mar 2025 09:45:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56D69207A00;
+	Tue, 18 Mar 2025 09:52:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742291123; cv=none; b=gMoLTOi3JTka4vkjsO2GxHG9KruCTvwMMvkmHBqCgFq8c++HR1yhojYRFU9wLrmv+QhfIAfAOSStqmGzRgFCD/lyIKtkQ+CYRcl0c3SHq3AiTkqgJtIFNBY7BxaVy6lBw3g+LwLDbcG9GHSuZMEcKBGN2KK3wmaIE+vM+06fss0=
+	t=1742291566; cv=none; b=gnoWCrBa4cAOsGCn3E62JD54LDRqCUe4VFf6uBOJYtyyjvDZM+plSyEPnwVckzPc6n9sAVdotQRj78xeGkJ494V038YdRt4nw3nKO8/KcIw4A3kEQtjVDhEOKoFmDlYPQrm3BRysEBdyo+b1ThELbqKMCUU5p4a5+yo5WohQJ1g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742291123; c=relaxed/simple;
-	bh=1fw8U8SZ/DqBFc4GVCClJD4OaUI7V4yrp8Jqe7ixCHg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=M0h1lZPVH1bGkfKW1gg3Zbr89b27rYmYenA0j4jY3wueftBWidkPVk//zaLWudRUkH6aL/1A6pcyU5Thx+DgJ1ehgA/ey24TPIvEJQ2mMpbO5gUfK9FQtra/X0bQkI/z8E6VydAwGO9Q6BV1tU1tkw4rXdsZ4oYaG6PDUqZeyUg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rABMo/Lm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742291566; c=relaxed/simple;
+	bh=wbiT/Za974dRgPeik0jQmOKTA3pB34ji6ub1FSN3UNA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=rehV/wnFsUsab1JeffoqOetmqepZ3PYDHXhmd0BlNNc1fMH66llRDSaGrNHANOZ5YrUQSK5ldA771/muWiTu03P8Mw2DhRGyVGSRj67GaKdR8y3KR9CUFX4N1yImkR3BiXARQK9p16t7bIuTgk8g/+xbc7gYtWEjOwT25aJjv/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kWXjQD69; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rABMo/Lm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4FE30C4CEE9;
-	Tue, 18 Mar 2025 09:45:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kWXjQD69"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F3EBC4CEDD;
+	Tue, 18 Mar 2025 09:52:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742291122;
-	bh=1fw8U8SZ/DqBFc4GVCClJD4OaUI7V4yrp8Jqe7ixCHg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rABMo/LmC/OrTHFd33YA7Kt7pbqJLE64mTgvguLfaOqAvRb2IsdGcmtMuRHXiVu8Q
-	 2kEoDudo/rnSXfT5wUg92Rx4QwFaIjB791rQzHsFcSUeE0C9Zmg6cnjfbDMU9Zml/q
-	 yK+uGiKAqKd9dUD1rFI+1qsEGOAMIjY3SMDOBORgBPw9JyQff/mDctq9VI7Nc+U6k+
-	 YlTgflOGEsluTYev2lNKlwKhQK3tbHZhmsZ9TbM8nNdm68BjOrxiaOVManTuufGtjx
-	 af/Sk7YWhQ2hX0SIw2kMGCJ6o8oC58pKF+K8LdMB0TccW5iVuqfWi9rlzl6cmsyKbo
-	 n7KpZVFeWsKmw==
-Date: Tue, 18 Mar 2025 10:45:18 +0100
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: bhelgaas@google.com, kw@linux.com, linux-pci@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: Re: [PATCH 7/7] misc: pci_endpoint_test: Add support for
- PCITEST_IRQ_TYPE_AUTO
-Message-ID: <Z9lArl5AUA7vbKVA@ryzen>
-References: <20250310111016.859445-9-cassel@kernel.org>
- <20250310111016.859445-16-cassel@kernel.org>
- <20250314124548.inffbk3c4kw22rwb@thinkpad>
- <Z9Rmoh_vtrXzFG0X@ryzen>
- <20250318085656.q4aohbdvidhzn6af@thinkpad>
+	s=k20201202; t=1742291565;
+	bh=wbiT/Za974dRgPeik0jQmOKTA3pB34ji6ub1FSN3UNA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=kWXjQD69grngLEhzCwr/ums4RPyQEdIIbjf34Fr9DQJ9LCBwL20+MX07BfTyh31gv
+	 gVji2cbgGoB3ZJmK9U8lxC60IAS8z2oY5bDibjAoUpZyyBio0sVTWrZGDejUeWmQwA
+	 FVCJ1cMHpRFhsOAJnWSo0JOwyTO03JB3uUWbfsZ1gNFRV5NqkVASGUBQrs7vVkkrKc
+	 zCxLfOwwGBn8Z65ly63GjWPtn3oUUAe1dDdgkdBON9BqmY94pbfP136Z75idQrzQoC
+	 U5bjKwBhOeq8xu3nHDRskWGs0xKMq6brF3zADumASJjOXW8I5kmfRXIF84q/DfzsZQ
+	 5dpYXKfRjhngA==
+Message-ID: <afe7947b-ed71-40d0-aa2e-b16549fc6b7d@kernel.org>
+Date: Tue, 18 Mar 2025 10:52:37 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250318085656.q4aohbdvidhzn6af@thinkpad>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 1/2] dt-bindings: PCI: xilinx-cpm: Add reset-gpios for
+ PCIe RP PERST#
+To: Sai Krishna Musham <sai.krishna.musham@amd.com>, bhelgaas@google.com,
+ lpieralisi@kernel.org, kw@linux.com, manivannan.sadhasivam@linaro.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, cassel@kernel.org
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, michal.simek@amd.com,
+ bharat.kumar.gogada@amd.com, thippeswamy.havalige@amd.com
+References: <20250318092648.2298280-1-sai.krishna.musham@amd.com>
+ <20250318092648.2298280-2-sai.krishna.musham@amd.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <20250318092648.2298280-2-sai.krishna.musham@amd.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 18, 2025 at 02:26:56PM +0530, Manivannan Sadhasivam wrote:
-> > 
-> > I guess one option would be to remove the
-> > "pci_ep_ioctl(PCITEST_SET_IRQTYPE, 1);" calls from the test cases that you
-> > added, and then let the test cases themselves set the proper irq_type in
-> > the BAR register. But, wouldn't that be an API change? READ/WRITE/COPY
-> > test ioctls have always respected the (a successful) PCITEST_SET_IRQTYPE,
-> > now all of a sudden, they shouldn't?
-> > 
+On 18/03/2025 10:26, Sai Krishna Musham wrote:
+> Changes for v2:
+> - Add define from include/dt-bindings/gpio/gpio.h for PERST# polarity
+> - Update commit message
+> ---
+>  .../bindings/pci/xilinx-versal-cpm.yaml       | 21 ++++++++++++++-----
+>  1 file changed, 16 insertions(+), 5 deletions(-)
 > 
-> This makes no difference IMO. The previous behavior which you explained above,
-> ignored the result of 'pcitest -i 1'. And it was not user configurable. I think
-> the original intention was to use MSI for tests if available, else use whatever
-> the platform supports.
-> 
-> If you want to restore the original behavior, you should remove the ASSERT_EQ()
-> from READ/WRITE/COPY tests first. Then to ensure that the tests make use of the
-> supported IRQ type, you can have the logic in the READ/WRITE/COPY tests itself.
-> If test->irq_type != PCITEST_IRQ_TYPE_UNDEFINED, then just use whatever the
-> test->irq_type is. Otherwise, use whatever the platform supports.
+> diff --git a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
+> index d674a24c8ccc..904594138af2 100644
+> --- a/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
+> +++ b/Documentation/devicetree/bindings/pci/xilinx-versal-cpm.yaml
+> @@ -24,15 +24,20 @@ properties:
+>      items:
+>        - description: CPM system level control and status registers.
+>        - description: Configuration space region and bridge registers.
+> +      - description: CPM clock and reset control registers.
+>        - description: CPM5 control and status registers.
 
-I can submit a patch series that modifies PCITEST_{READ,WRITE,COPY} to always
-figure out the IRQ type to use by themselves.
+You cannot add items to the middle, that's an ABI break. Adding required
+properties is also an ABI break. Why you cannot add it to the end of the
+list?
 
-But you can't have the cake and eat it too.
-
-Either PCITEST_{READ,WRITE,COPY} always ignores PCITEST_SET_IRQTYPE or
-they don't always ignore PCITEST_SET_IRQTYPE.
-
-Only ignoring it "if test->irq_type != PCITEST_IRQ_TYPE_UNDEFINED"
-makes no sense IMO.
+Or at least explain ABI break impact in commit msg?
 
 
-Kind regards,
-Niklas
+> -    minItems: 2
+> +    minItems: 3
+>  
+>    reg-names:
+>      items:
+>        - const: cpm_slcr
+>        - const: cfg
+> +      - const: cpm_crx
+>        - const: cpm_csr
+> -    minItems: 2
+> +    minItems: 3
+> +
+> +  reset-gpios:
+> +    description: GPIO used as PERST# signal
+
+Isn't this already in pci-bus-common.yaml?
+
+
+Best regards,
+Krzysztof
