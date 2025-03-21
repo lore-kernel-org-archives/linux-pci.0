@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0C622836C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE036226CF8;
 	Fri, 21 Mar 2025 12:14:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742559287; cv=none; b=JT50scpeh39EzJxCY8nf6ZjEtZg7GzDTZcM252aaczgeHdr3dNiifzb1v+dzheYnq+EOyIPMUGiru/a/ECFdstwLMrhAeDCovlkjcvEB+FKhT54Bp6WfCzKbZzTQmOLNd0tNCnqXdRBcJvRwB1JJbovyP7V7JvQMBMaDaAMhIIE=
+	t=1742559286; cv=none; b=nIFpKr/da3+NUGh4Nct9Zw65Hk9JEZf1QWdrf87HvjBGgGb48WQRpggUIMbq0xAXD9KwzkKXAkOqkWOgWghxd77zxBMLPFTgz1zAH6fVFSqkTUsNQ4l65GiusRXCECABtUTMLpcfWwP+/tJnQWyHfveN8BPJDznJUgUaGehRBBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742559287; c=relaxed/simple;
-	bh=nnuDNLDyUo2HnSwQbCKlDNn2ZEgXZ5vT6V3g5jpmKio=;
+	s=arc-20240116; t=1742559286; c=relaxed/simple;
+	bh=tlVg37QeIwq/BVXEmQZGCinc72LFFyHRz41tzUQAGsk=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ahMYmt345E4Ogzfah71osBSnZIgUcoV0OCZHnIE2ejK3s6ytVAOqfCE4AucAq/EW89eM37PpsgdGkl5eQ+LtogjBL20Gf7refVoRuhsUWxARvl+krX9KTOsmt31b/3GDjkqUDarSTFO4wk76ttk2YRotqJm3mCjgkoE3KZ5lmB4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VNoThOAP; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=megIwCCB1BPVOy1a7mcP9FbmGurmcPaw1s4WfIyAD1QDpM9FBSTZNTN2Eg82svPJR/THB/NIIzcYD9fzvpN6HdeXNoiTSYhv5akL96VUbTPCO5kgCeXWvJQYWn7p0n845FMdIHw04kZk0/PUGXsDQk9HCzjv+jVLkAqqCgYOycg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ugqSrHxw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VNoThOAP"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 53D02C116B1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ugqSrHxw"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3066CC4AF0E;
 	Fri, 21 Mar 2025 12:14:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1742559286;
-	bh=nnuDNLDyUo2HnSwQbCKlDNn2ZEgXZ5vT6V3g5jpmKio=;
+	bh=tlVg37QeIwq/BVXEmQZGCinc72LFFyHRz41tzUQAGsk=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=VNoThOAPpjQ9G0y+s28YJoBGWyRhzLu1azJO6CZvoGkAWV1d6xxFhIXS+Uqj9vucG
-	 e22plLjbeNRJIYP7Pmlikn3uMqkAbyJoRh7HQqd976YpHKUV/g8lVFVpwNfIV/Qkae
-	 B/yPgIFmzj2uANWvQ1vPTBFeUHSMUcC3GTMZObCMQoo+tA1eY9D0ghPdaJzy2p8+lX
-	 Hp26/oFcAhm153lirile5bCA3QbhRJcmxzoQ785XKQssn39uCSMdW/EGiHXiCSsRjg
-	 xgq4XbicpK5IJrViIwt+5odTUT0fxlDoCQT6pBFN9/7hh07M2ZF6bioSIjgnzLGl7v
-	 iywZBPDm2lKXw==
+	b=ugqSrHxwo/6a1tVHleGY3nC+etdXs973UCba8ZVuTVRWa3Kv7hRP43XkQR5CxYgkV
+	 xwmkv8Z0sPhlTbvM8TLWoBFarjQhD1ksTRAfsa0yqPXlCfucn7PCLnY4WSmFHRu9lW
+	 XaO6Tqe49eZYxfwh/P2WaBkSR5S9Jov9qnGWQzqIw3YlZLSy4rGd8qAvFDukjtb21A
+	 XRsBbBWu5bDcLC39RnBmTQ5OEZ4+wKZZ8aA2TJbpAhOaBEe3uT6QBc+lRHCE3iIPGy
+	 of93qi6WN538qYaMPezctlWD0P6iHe7BjScbw/IYdjsuQKabGNZE8wnMqpEKFDRvC6
+	 j79e0R5O74rtQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 498E0C36002;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 26E00C36000;
 	Fri, 21 Mar 2025 12:14:46 +0000 (UTC)
 From: George Moussalem via B4 Relay <devnull+george.moussalem.outlook.com@kernel.org>
-Date: Fri, 21 Mar 2025 16:14:44 +0400
-Subject: [PATCH v6 6/6] arm64: dts: qcom: ipq5018: Enable PCIe
+Date: Fri, 21 Mar 2025 16:14:42 +0400
+Subject: [PATCH v6 4/6] PCI: qcom: Add support for IPQ5018
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250321-ipq5018-pcie-v6-6-b7d659a76205@outlook.com>
+Message-Id: <20250321-ipq5018-pcie-v6-4-b7d659a76205@outlook.com>
 References: <20250321-ipq5018-pcie-v6-0-b7d659a76205@outlook.com>
 In-Reply-To: <20250321-ipq5018-pcie-v6-0-b7d659a76205@outlook.com>
 To: Vinod Koul <vkoul@kernel.org>, 
@@ -59,13 +59,13 @@ Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
  devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-pci@vger.kernel.org, George Moussalem <george.moussalem@outlook.com>, 
  20250317100029.881286-2-quic_varada@quicinc.com, 
- Sricharan Ramabadhran <quic_srichara@quicinc.com>
+ Sricharan R <quic_srichara@quicinc.com>
 X-Mailer: b4 0.13.0
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1742559282; l=1810;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1742559282; l=1329;
  i=george.moussalem@outlook.com; s=20250321; h=from:subject:message-id;
- bh=aDrKqvqd+UP39quMJDnTOhOkR2gW/8ZVcG8WbwkiLrs=;
- b=7lZBmKLFQ3KtAnmMAeaVHaUvVUTADHpHpYCQZq9xoWlfiwZ9QZ6e/eutzAlkEX03b4IF3U/LQ
- qzmQNOwBuyTB8dBU4ldiAoJ8nBgKVtdOXpCYCNDNNQTc1UJDS6qFGKB
+ bh=hdHPuZTrjBVTUJ6XMbo2uB5TbhhbWj1SbVqmNl1k/ZI=;
+ b=dloC34ddXrnoi0F8aDwk0mIJUdN94t02LuAxYGJ234hUjg9zq8BOlPIv2wRTksRnqwNtSno1p
+ o00oz5MFbryBAtC8LfHJYwkdFqDTVm5y1/WK6Q+IZ6JE3DH59nh+GGY
 X-Developer-Key: i=george.moussalem@outlook.com; a=ed25519;
  pk=/PuRTSI9iYiHwcc6Nrde8qF4ZDhJBlUgpHdhsIjnqIk=
 X-Endpoint-Received: by B4 Relay for george.moussalem@outlook.com/20250321
@@ -75,80 +75,32 @@ Reply-To: george.moussalem@outlook.com
 
 From: Nitheesh Sekar <quic_nsekar@quicinc.com>
 
-Enable the PCIe controller and PHY nodes for RDP 432-c2.
+Add IPQ5018 platform with is based on Qcom IP rev. 2.9.0
+and Synopsys IP rev. 5.00a.
 
+The platform itself has two PCIe Gen2 controllers: one single-lane and
+one dual-lane. So let's add the IPQ5018 compatible and re-use 2_9_0 ops.
+
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Signed-off-by: Nitheesh Sekar <quic_nsekar@quicinc.com>
-Signed-off-by: Sricharan Ramabadhran <quic_srichara@quicinc.com>
+Signed-off-by: Sricharan R <quic_srichara@quicinc.com>
 Signed-off-by: George Moussalem <george.moussalem@outlook.com>
 ---
- arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts | 40 ++++++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts b/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts
-index 8460b538eb6a..43def95e9275 100644
---- a/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts
-+++ b/arch/arm64/boot/dts/qcom/ipq5018-rdp432-c2.dts
-@@ -9,6 +9,8 @@
- 
- #include "ipq5018.dtsi"
- 
-+#include <dt-bindings/gpio/gpio.h>
-+
- / {
- 	model = "Qualcomm Technologies, Inc. IPQ5018/AP-RDP432.1-C2";
- 	compatible = "qcom,ipq5018-rdp432-c2", "qcom,ipq5018";
-@@ -28,6 +30,20 @@ &blsp1_uart1 {
- 	status = "okay";
- };
- 
-+&pcie0 {
-+	pinctrl-0 = <&pcie0_default>;
-+	pinctrl-names = "default";
-+
-+	perst-gpios = <&tlmm 15 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 16 GPIO_ACTIVE_LOW>;
-+
-+	status = "okay";
-+};
-+
-+&pcie0_phy {
-+	status = "okay";
-+};
-+
- &sdhc_1 {
- 	pinctrl-0 = <&sdc_default_state>;
- 	pinctrl-names = "default";
-@@ -43,6 +59,30 @@ &sleep_clk {
- };
- 
- &tlmm {
-+	pcie0_default: pcie0-default-state {
-+		clkreq-n-pins {
-+			pins = "gpio14";
-+			function = "pcie0_clk";
-+			drive-strength = <8>;
-+			bias-pull-up;
-+		};
-+
-+		perst-n-pins {
-+			pins = "gpio15";
-+			function = "gpio";
-+			drive-strength = <8>;
-+			bias-pull-up;
-+			output-low;
-+		};
-+
-+		wake-n-pins {
-+			pins = "gpio16";
-+			function = "pcie0_wake";
-+			drive-strength = <8>;
-+			bias-pull-up;
-+		};
-+	};
-+
- 	sdc_default_state: sdc-default-state {
- 		clk-pins {
- 			pins = "gpio9";
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index dc98ae63362d..e91bbe218569 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -1840,6 +1840,7 @@ static const struct of_device_id qcom_pcie_match[] = {
+ 	{ .compatible = "qcom,pcie-apq8064", .data = &cfg_2_1_0 },
+ 	{ .compatible = "qcom,pcie-apq8084", .data = &cfg_1_0_0 },
+ 	{ .compatible = "qcom,pcie-ipq4019", .data = &cfg_2_4_0 },
++	{ .compatible = "qcom,pcie-ipq5018", .data = &cfg_2_9_0 },
+ 	{ .compatible = "qcom,pcie-ipq6018", .data = &cfg_2_9_0 },
+ 	{ .compatible = "qcom,pcie-ipq8064", .data = &cfg_2_1_0 },
+ 	{ .compatible = "qcom,pcie-ipq8064-v2", .data = &cfg_2_1_0 },
 
 -- 
 2.48.1
