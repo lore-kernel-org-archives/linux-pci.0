@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C6E4E78F30;
-	Fri, 21 Mar 2025 13:58:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 57412757EA;
+	Fri, 21 Mar 2025 13:58:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742565501; cv=none; b=XChysODE+dqG+zk96OTKqRS838d3KwHRU+tARzwYvfuDXOzWy+uX3aQ5fgrGJEOWmwT/B4PFKsAIfNXHQknSG1LvddPZJ4k0dHS9kIOLiZHh97QP1TphBDA9wVokztUfi8L9ZBU13Tk1jCdCK69rlbA7GU0bUQketcWMCScnS5k=
+	t=1742565541; cv=none; b=Ajc6W7vSp3LBlp7s1+8F3eada89SFEP4mVbsMX/FkR2KaYoGS+B42MVmiztOykI4YG9mH1aEMkInLJEP8GDur/3Pzd7o+WGr+Pxzplc/bJQoIGBF2P6rOO8NIr1BithZdGlqdsqV572skTQcgmxieaABalrZAebn4iC+pwxIF9I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742565501; c=relaxed/simple;
-	bh=u9+pCxJ+sZ+M8TFCYPDcfeJjTdyKSPr8xUSrtA8xXvs=;
+	s=arc-20240116; t=1742565541; c=relaxed/simple;
+	bh=1+xMaAvUHZ5L/ZUosrkBX9aJ4kmqhurq84tQsDKCjzE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OjFY7Bx37NqPXtqz2DHvMSWCUPnDYeo0g5jXia2a1USWS3AAErutpYV9HXsoKw+g+Z8jA7kJC8tl+0MLAi47xfNJ+9UiiEYYknZOrNvKQfhsnQfuJe+jJGAJw6kwDyIqquy9UqDpC7tMfPacHVZuvrqJrICD/ZJg05Nalprk4OA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jIXoe2XE; arc=none smtp.client-ip=117.135.210.2
+	 In-Reply-To:Content-Type; b=dT+IdbaJ7fR5AkarePDk1OUCkyd3yNRu3MI5q3yqrt2v37NV5+nONULwwPgxk/Jta8tex4g4eydm8CBhEjBHXZQivL6/+BqKZdhSqK3xAuypsjWP0Fc5i8ivfPxx3nf4rd0nAX26sgy6OY8JuCN5B5aM1RpoTV9Km5T4oFyVMlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=HB3nCaIB; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jIXoe2XE"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="HB3nCaIB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=0ySma77ZxxQ6aT+4clvHKO3TmdAoszwwa+Xa3O6R6WA=;
-	b=jIXoe2XEvdmHieMmZLKFmfn9bRsZ40xB9Xph0EmsS6hTbjmVUHa1zu4sA2psDY
-	zlEHxYbeSQyy+5K3sYXIDtNnZEG4ssuXHgDCk322wrJc3vs0vSHnOxtjtHA9UjXa
-	sX4ahOPrl6S8SG6jf/evgMeaI6vjnv5diWRIiL8TIBlvE=
+	Content-Type; bh=nqd7e7zbDGozqcjqqiNSeyoPQECWWH4BqOaiDl5o8DE=;
+	b=HB3nCaIBTOpmAUY4v/0rCBWoMiG8Rd2G/PWgvpL77gD8Avhf56R/Ruif16dOde
+	4imzRDMpvS2wHLN1n4qmW87M/e0qrWVENWyD4Hlx/wthP1GOShJrlLQNVUSkDHhL
+	2HCXakWLuh9GI1oZLKHq3YpdwqxpdB+pwyakfkaQ0jtOI=
 Received: from [192.168.60.52] (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDnL39RcN1nGTTLAw--.57738S2;
-	Fri, 21 Mar 2025 21:57:38 +0800 (CST)
-Message-ID: <370e4055-c44b-460c-9ac3-ccac37527c8f@163.com>
-Date: Fri, 21 Mar 2025 21:57:37 +0800
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wD36TmLcN1nkJycAw--.26212S2;
+	Fri, 21 Mar 2025 21:58:36 +0800 (CST)
+Message-ID: <4a1569a4-5a84-41ea-88c0-400a72c4f0c6@163.com>
+Date: Fri, 21 Mar 2025 21:58:35 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -32,78 +32,39 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [v4 1/4] PCI: Introduce generic capability search functions
+Subject: Re: [v4 3/4] PCI: cadence: Add configuration space capability search
+ API
 To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 Cc: lpieralisi@kernel.org, kw@linux.com, robh@kernel.org,
  bhelgaas@google.com, jingoohan1@gmail.com, thomas.richard@bootlin.com,
  linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 References: <20250321101710.371480-1-18255117159@163.com>
- <20250321101710.371480-2-18255117159@163.com>
- <20250321130010.s6svrtqlpdkgxmir@thinkpad>
+ <20250321101710.371480-4-18255117159@163.com>
+ <20250321130648.bnwf57qqsi7kkdby@thinkpad>
 Content-Language: en-US
 From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20250321130010.s6svrtqlpdkgxmir@thinkpad>
+In-Reply-To: <20250321130648.bnwf57qqsi7kkdby@thinkpad>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDnL39RcN1nGTTLAw--.57738S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tw18uF17ArWUJF43AF4UCFg_yoW8Gw4xpF
-	4rXFnayaykXr4SkF1qvF4UAFy3Gan7JrWxJF98G3sY9FnruF1Ig3yxt348uF9rJF17XF10
-	vF4jqrykuF1DZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UK1v3UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxAXo2fdalpqUwABsN
+X-CM-TRANSID:_____wD36TmLcN1nkJycAw--.26212S2
+X-Coremail-Antispam: 1Uf129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjxU4jjgUUUUU
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWx4Xo2fdalqunQABsJ
 
 
 
-On 2025/3/21 21:00, Manivannan Sadhasivam wrote:
-> On Fri, Mar 21, 2025 at 06:17:07PM +0800, Hans Zhang wrote:
->> Existing controller drivers (e.g., DWC, custom out-of-tree drivers)
->> duplicate logic for scanning PCI capability lists. This creates
->> maintenance burdens and risks inconsistencies.
->>
->> To resolve this:
->>
->> 1. Add pci_generic_find_capability() and pci_generic_find_ext_capability()
->> in drivers/pci/pci.c, accepting controller-specific read functions
->> and device data as parameters.
+On 2025/3/21 21:06, Manivannan Sadhasivam wrote:
+> On Fri, Mar 21, 2025 at 06:17:09PM +0800, Hans Zhang wrote:
+>> Add configuration space capability search API using struct cdns_pcie*
+>> pointer.
 >>
 > 
-> I'd reword pci_generic* as pci_host_bridge* to reflect the fact that these APIs
-> are meant for host bridges.
+> Please reuse the subject and description I provided in previous patch.
 > 
 
 Hi Mani,
 
 Thanks your for reply. Will change.
-
->> 2. Refactor dwc_pcie_find_capability() and similar functions to utilize
->> these new generic interfaces.
->>
-> 
-> This is not part of this patch. So should be dropped.
-
-Will change.
-
->> 3. Update out-of-tree drivers to leverage the common implementation,
->> eliminating code duplication.
->>
-> 
-> This also.
-
-Will change.
-
->> This approach:
->> - Centralizes critical PCI capability scanning logic
->> - Allows flexible adaptation to varied hardware access methods
->> - Reduces future maintenance overhead
->> - Aligns with kernel code reuse best practices
->>
->> Tested with DWC PCIe controller and CDNS PCIe drivers.
->>
-> 
-> This tested info is also not required since the DWC and CDNS changes are not
-> part of this patch.
-
-Will change.
 
 Best regards,
 Hans
