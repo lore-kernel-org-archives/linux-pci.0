@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D20641E9B16;
-	Fri, 21 Mar 2025 04:05:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A1C2C1E8348;
+	Fri, 21 Mar 2025 04:05:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742529903; cv=none; b=PEMAZmjZnd7E4NsULhEcFJ8kjUl5ComwzHL5IIt9GhjRuijcymoVYyFIlqbJ/gkhE9zSKdrXS+M3TlpWrIrgCZtErmFknjmXDHHkmMKNqhR08FSh2Dsp8zNcZjfuNn44ug3MfLlu76PEODNEcYnYxrIWlOUBeV/vSzkeyunnePo=
+	t=1742529911; cv=none; b=jj0AncpoMdAmvUTy4ZKvPB1iWyL/iQOs4S1jIvs7k3rqysGZnUIAJE6+FB+QOX6ZTO4Wa2r8+SdkUdy0NwNr9LYOWHTrpO3WyTHdzNUgeNnj5qDD7Ivlvw5VNsvGztucmdgsOxuC7lDhTi1hKpFJVLTbvxA1uQRFoUvi1e1dDPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742529903; c=relaxed/simple;
-	bh=FEBaXSU6MEItzx0UFzX2V7JtPTXHPx7p4i0guY4Sx/I=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=roDuTC+rcXXH1yA/3U7wnC+JwrbgHknR96l5wXliRW3n2NJ8EJUWMGKsZDYiccIWJkg6qVDQcWd24JgPVHpoCl1aDi5GNkELV73f+1+KvcBO9hNitc2vR+nIjs2yPDnGwcc8K9x+45Hd/sRPlX6GPYKmMtMKACwYrF9wQtOy7kw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PWqTRunS; arc=none smtp.client-ip=117.135.210.4
+	s=arc-20240116; t=1742529911; c=relaxed/simple;
+	bh=8wrzbj5ssYulxdONn+5PAZojqiM++bNYF+2hBtQlB8o=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=tDZsinh7LcaetfcJgpNoSdQuhAuqIqyseDabg4SZ/93tDhXDhky3MB7SZ7MohCN4Ewwb6ePZw0OzG3Ky1abCvQa/kKqLwRQKzWkF/WdHJcp/Q4Xf0oKLRkqIFAX5ernfmwfyn4v/G1PqFhZd4bCucNSKknjF2WyYC3bR2F0j4Oo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qRqQepu6; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PWqTRunS"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qRqQepu6"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=tLTY0
-	7DDgFf4nTrkH5HU5qGshr+vwCK0ikiqNVkWx08=; b=PWqTRunS8QfhShf2m5D9V
-	DXJYKjkmepIRF0Kl2MPW7dQtkNwUOpG5ck3ZXDf/bVXfx3aFowIoT0B50vFkTRGl
-	exEq68pmUHharU2LUFtwf8dUm8f00XsuvWXVtBXPzzmosPF+M2e3cRHspKZpDqZm
-	v+WtOU3RS2bzAnxksP80uc=
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=HzGL2
+	1t50mabge27U9hki9qzqcC6EARkMmCFBnRtxd0=; b=qRqQepu6tF/6GbNOY8tRk
+	g9Q6iQ3Sc1BMeiEwuSTOyTGW+veAuxs7ee5x7t7CRuZ88DksONokBqNeBATE+GiF
+	vvH7TJzxA/Hxvdap2qdIoCAEYX9DzUDI2FmYWIp2u5A/wnD5RVP4+ThiOrnYSVPw
+	mNqFOo7V85ppGmAC5ZctLA=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD3Hxsw5dxnbYNpAw--.34788S2;
-	Fri, 21 Mar 2025 12:04:02 +0800 (CST)
+	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD3Hxsw5dxnbYNpAw--.34788S5;
+	Fri, 21 Mar 2025 12:04:04 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org
 Cc: kw@linux.com,
@@ -33,10 +34,12 @@ Cc: kw@linux.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [v3 0/4] Introduce generic capability search functions
-Date: Fri, 21 Mar 2025 12:03:54 +0800
-Message-Id: <20250321040358.360755-1-18255117159@163.com>
+Subject: [v3 3/4] PCI: cadence: Add configuration space capability search API
+Date: Fri, 21 Mar 2025 12:03:57 +0800
+Message-Id: <20250321040358.360755-4-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250321040358.360755-1-18255117159@163.com>
+References: <20250321040358.360755-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,39 +47,72 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3Hxsw5dxnbYNpAw--.34788S2
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Gw43KFWfCrWfCw4kWF4fAFb_yoWkGrb_ZF
-	W7ZFyxtFW7WF9IkayIkwnayFyrZ3y2gF1jgFyvqFW5AF1Ivw1kGw47XrWUZ3WxWF4DAFy5
-	Xr1UZan5A3W2qjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRCxRhtUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxUXo2fc39fRTgAAsW
+X-CM-TRANSID:_____wD3Hxsw5dxnbYNpAw--.34788S5
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJry7AFy5Cr17ZrWUCr1fCrg_yoW8ur17pF
+	yDGFyfC3WrJrW3u3Z3Za45XF13JF9Yk347t39ak34fZF17CryUGF12gFyrtFZxKrZrWr17
+	XryDtFykGrn3trUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UopBDUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxUXo2fc32Nz2QAGsF
 
-1. Introduce generic capability search functions.
-2. Replace dw_pcie_find_capability() and dw_pcie_find_ext_capability().
-3. Add configuration space capability search API.
-4. Use cdns_pcie_find_*capability to find capability offset instead of
-hardcore.
+Add configuration space capability search API using struct cdns_pcie*
+pointer.
 
-Add and split into a series of patches.
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/cadence/pcie-cadence.c | 25 +++++++++++++++++++
+ drivers/pci/controller/cadence/pcie-cadence.h |  3 +++
+ 2 files changed, 28 insertions(+)
 
-Hans Zhang (4):
-  PCI: Introduce generic capability search functions
-  PCI: dwc: Replace dw_pcie_find_capability() and
-    dw_pcie_find_ext_capability()
-  PCI: cadence: Add configuration space capability search API
-  PCI: cadence: Use cdns_pcie_find_*capability to find capability offset
-    instead of hardcore
-
- .../pci/controller/cadence/pcie-cadence-ep.c  | 40 +++++----
- drivers/pci/controller/cadence/pcie-cadence.c | 25 ++++++
- drivers/pci/controller/cadence/pcie-cadence.h |  8 +-
- drivers/pci/controller/dwc/pcie-designware.c  | 71 ++--------------
- drivers/pci/pci.c                             | 83 +++++++++++++++++++
- include/linux/pci.h                           | 13 ++-
- 6 files changed, 151 insertions(+), 89 deletions(-)
-
-
-base-commit: a1cffe8cc8aef85f1b07c4464f0998b9785b795a
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
+index 204e045aed8c..ea9bfbe76cd6 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.c
++++ b/drivers/pci/controller/cadence/pcie-cadence.c
+@@ -8,6 +8,31 @@
+ 
+ #include "pcie-cadence.h"
+ 
++static u32 cdns_pcie_read_cfg(void *priv, int where, int size)
++{
++	struct cdns_pcie *pcie = priv;
++	u32 val;
++
++	if (size == 4)
++		val = readl(pcie->reg_base + where);
++	else if (size == 2)
++		val = readw(pcie->reg_base + where);
++	else if (size == 1)
++		val = readb(pcie->reg_base + where);
++
++	return val;
++}
++
++u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap)
++{
++	return pci_generic_find_capability(pcie, cdns_pcie_read_cfg, cap);
++}
++
++u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap)
++{
++	return pci_generic_find_ext_capability(pcie, cdns_pcie_read_cfg, cap);
++}
++
+ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
+ {
+ 	u32 delay = 0x3;
+diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+index f5eeff834ec1..6f4981fccb94 100644
+--- a/drivers/pci/controller/cadence/pcie-cadence.h
++++ b/drivers/pci/controller/cadence/pcie-cadence.h
+@@ -557,6 +557,9 @@ static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+ }
+ #endif
+ 
++u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap);
++u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap);
++
+ void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
+ 
+ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
 -- 
 2.25.1
 
