@@ -1,109 +1,60 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EFDD318B46E;
-	Fri, 21 Mar 2025 01:25:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 045741DED40;
+	Fri, 21 Mar 2025 01:42:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742520348; cv=none; b=i1a/tRtejf3VX7hklJBxdruUqLQ5+J0X+o3hFx9iKBePWV6RV+xuSRbEuNCf9HNZFmpdlbpIksY+u2f4FHIJOF6oJM/4X05SJ1lvsG03GD3SHB2dw7yhitX5dWxKivqreSNcp+4S146THIw0y7YjE7NlT96uAhZcyDpBQsw9i3U=
+	t=1742521338; cv=none; b=a3AJkSNIPHPMyDx22qHFSZn2gQUU/rYugdQenzrzg4/NfFJRnFjXZR92BMdZGG0Md3v+qNhoNaOg7Q9JnSdHSrvcjqa8eXNlDbxKoSBFqMxltRiQyYEN1gMifKjQSE5FpLwgFLbwFERllvpscz1b7v8aEzICeHOMZSDIR/FEgAo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742520348; c=relaxed/simple;
-	bh=6hgxpbkpbDkO08ThuWTkTEfQW6T6S+pBE+Yj1FcHSyM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=MziRi7MQh4mYc36evbNdc0y8YIpxCM/abc5LloRxi1Qg7myiyHYrX2ynTUW7k+UzWNFgkOE99IkIdvZ8cIdS9n5CNMmJccKCDtPlQcepGHQUnS6sIjL1A+q+Nk8C9TzrTHq/x1z3Jei/j1m7pO1jYvkmFEDvDzLV4fEwMIbUqZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Xdx09bTZ; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1742521338; c=relaxed/simple;
+	bh=PKIFXkU9dIe6Z2MC09sE1rh52+sss3Nm9eYgOLmZw4M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=i59aNsuhBc6xdToY08B0ULQ0rq5ENhIdCQLrFfxkjMU9n8+UVypiMo7pWzA18MP71tv4eOZrn2XPu1iG7dgo9h25wpKXFAhUlnbcDh8MNHbSeW1FbcVLIBz54bCPRZ2A+bSBxIZkSDbbSBii7VvlS9BveA3SsGqCRpDPaODAYk4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=S/CvSF1m; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Xdx09bTZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=uifaMK3p4YAnBcl9nmuoOP+YgcB1Z+c6e7VzG3GyQBU=;
-	b=Xdx09bTZU0+ogotAFgMkAWY+Q6kdmizf+mBT3DkHwCEm+0ia9CM576pVxDjEx5
-	3gxaDXai82xiJJjMofUPyzIAqDP1A19neDjdAR9sAnWDM6Xt/7w7CorAfZ+QJ7s0
-	TxL+tFDJhyqGj6AKRiuq++v9aXzq40SSk9Wt46FkkdCiU=
-Received: from [192.168.60.52] (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wDXNyZPvNxn7kA7Aw--.59013S2;
-	Fri, 21 Mar 2025 09:09:37 +0800 (CST)
-Message-ID: <0abc7fc9-3370-4f54-a230-ecc044928fcc@163.com>
-Date: Fri, 21 Mar 2025 09:09:35 +0800
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="S/CvSF1m"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45587C4CEDD;
+	Fri, 21 Mar 2025 01:42:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1742521336;
+	bh=PKIFXkU9dIe6Z2MC09sE1rh52+sss3Nm9eYgOLmZw4M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=S/CvSF1m+3OMbxeU5Y8/cwhrqY+35H4D0Wo9/CKc13zYzgrRNeIKsNXS5SQNTqi7S
+	 NE//RL2elf0ZYsR5h179FolvtnP+nQts00bNHy4FYZbpWiL2sx3t/OgS0dMhNGRPug
+	 afcsuqS/q1erQNjjxwWvZUw+7d0ujJ7mrqae4mAI=
+Date: Thu, 20 Mar 2025 18:40:56 -0700
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Danilo Krummrich <dakr@kernel.org>
+Cc: bhelgaas@google.com, rafael@kernel.org, ojeda@kernel.org,
+	alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net,
+	bjorn3_gh@protonmail.com, benno.lossin@proton.me,
+	a.hindborg@kernel.org, aliceryhl@google.com, tmgross@umich.edu,
+	linux-pci@vger.kernel.org, rust-for-linux@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2 1/4] rust: device: implement Device::parent()
+Message-ID: <2025032018-perceive-expectant-5c48@gregkh>
+References: <20250320222823.16509-1-dakr@kernel.org>
+ <20250320222823.16509-2-dakr@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [v2] PCI: cadence: Add configuration space capability search API
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Siddharth Vadapalli <s-vadapalli@ti.com>, lpieralisi@kernel.org,
- kw@linux.com, robh@kernel.org, bhelgaas@google.com, bwawrzyn@cisco.com,
- thomas.richard@bootlin.com, wojciech.jasko-EXT@continental-corporation.com,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250320212853.GA1100504@bhelgaas>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20250320212853.GA1100504@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDXNyZPvNxn7kA7Aw--.59013S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Ar1rtryxGFW8Gw47uF18uFg_yoW8uF4xpr
-	WUXa45KF48JF1fCFn7Ka10qF1fK397XF97Xan8G3yUZws09r93KFWvy34YkasrXr13ZF4j
-	vF45Xas7X34YvaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UgAwsUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwoXo2fctcL2XAAAsD
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250320222823.16509-2-dakr@kernel.org>
 
+On Thu, Mar 20, 2025 at 11:27:43PM +0100, Danilo Krummrich wrote:
+> Device::parent() returns a reference to the device' parent device, if
+> any.
 
+Ok, but why?  You don't use it in this series, or did I miss it?
 
-On 2025/3/21 05:28, Bjorn Helgaas wrote:
-> On Sat, Mar 15, 2025 at 08:06:52AM +0800, Hans Zhang wrote:
->> On 2025/3/15 04:31, Bjorn Helgaas wrote:
->>> On Fri, Mar 14, 2025 at 06:35:11PM +0530, Manivannan Sadhasivam wrote:
->>>> ...
->>>
->>>> Even though this patch is mostly for an out of tree controller
->>>> driver which is not going to be upstreamed, the patch itself is
->>>> serving some purpose. I really like to avoid the hardcoded offsets
->>>> wherever possible. So I'm in favor of this patch.
->>>>
->>>> However, these newly introduced functions are a duplicated version
->>>> of DWC functions. So we will end up with duplicated functions in
->>>> multiple places. I'd like them to be moved (both this and DWC) to
->>>> drivers/pci/pci.c if possible. The generic function
->>>> *_find_capability() can accept the controller specific readl/ readw
->>>> APIs and the controller specific private data.
->>>
->>> I agree, it would be really nice to share this code.
->>>
->>> It looks a little messy to deal with passing around pointers to
->>> controller read ops, and we'll still end up with a lot of duplicated
->>> code between __pci_find_next_cap() and __cdns_pcie_find_next_cap(),
->>> etc.
->>>
->>> Maybe someday we'll make a generic way to access non-PCI "config"
->>> space like this host controller space and PCIe RCRBs.
->>>
->>> Or if you add interfaces that accept read/write ops, maybe the
->>> existing pci_find_capability() etc could be refactored on top of them
->>> by passing in pci_bus_read_config_word() as the accessor.
->>
->> I have already replied to an email, please help review whether it is
->> appropriate.
-> 
-> URL to the email on lore.kernel.org?
-> 
-> If you mean this:
-> https://lore.kernel.org/r/3cadf8d5-c4d8-4941-ae2e-8b00ceb83a8f@163.com,
-> just post it as a v3 patch with the usual commit log and motivation
-> for the change, and it will automatically get picked up in patchwork
-> so it doesn't get forgotten.
-> 
-> Right now the urgency seems fairly low since (IIUC) it doesn't fix an
-> existing bug in the upstream code.
+A driver shouldn't care about the parent of a device, as it shouldn't
+really know what it is.  So what is this needed for?
 
-Hi Bjorn,
+thanks,
 
-Thanks your for reply. I will submit v3 patch.
-
-Best regards,
-Hans
-
+greg k-h
