@@ -1,176 +1,214 @@
-Received: from EUR05-VI1-obe.outbound.protection.outlook.com (mail-vi1eur05on2046.outbound.protection.outlook.com [40.107.21.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 453A71876;
-	Fri, 21 Mar 2025 02:58:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.21.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742525909; cv=fail; b=uOhRsLMjKgu72AjXM7X3lTmDbp8JtpxxRnmt0FVQhwctgLbnwsxFAm12JYUbo8m0WHJrazZefNfpiaWCmB/uyy3ei0GbUhNmZ8Svb5YYOFiSoDKoWbT1fOXiAd2CsQjRw1hxjsb+azmQzNal52U6/4T6E5XfuMkFK3wBB4O012g=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742525909; c=relaxed/simple;
-	bh=PAf0yyppvSwmyGZ5SasuLITxQ9R1+KO6FS1EDZcGR4Y=;
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E5D5F4120B;
+	Fri, 21 Mar 2025 04:04:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1742529893; cv=none; b=NB3jxI8RvnEAI29NHLI5Sa7Wj1vUKvVNwRTkgtcQNxPt8pNxcB3BAn9XaIlMH8e99X0IZ49PFwZhgeAkl0Nu83T6JfGZXgOaZQDXF+Gvv33AogNj0m1pXubjL9aGkfWek8umWBaijfU+DFM+Jc34Duul9yZMrVXz+W3czpb0zCA=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1742529893; c=relaxed/simple;
+	bh=kKaeIwqRQTK/Z3a1vplSclrEskxqJxM0XWjs825IJok=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=oJNxvgOhSBCJGLdH6FYYRSXorRBJALPTgRI96V1AVi+Nypq8wGGBYqmwv926VxnsSEcJWttLb8eDWfPNU4+YAvj7pTi11iAPY1h26B1J1CdWxoOfwKigBTjj94gQcRiPEIK05dULHC4anBe0y2Ef3lqRkB7vT46CgzTG1fTXiuw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com; spf=pass smtp.mailfrom=nxp.com; dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b=dEqML03q; arc=fail smtp.client-ip=40.107.21.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=nxp.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxp.com
+	 MIME-Version; b=iga7xoufVFOQZbv4dl43gQVlGzR+wetDKvllbFECl6qouC4t8b8k1AQK3MSh1aEDLdYCbAfwmUrNHwoqxNEkSZqfD5FIdiDoxOWYqtpX09v/7RedgMjLf1t7VYau/T53moTaLHyVbvrr/p2DrBjHGAK8qc5pXo302TPNCRnTAG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZLuJGqvM; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxp.com header.i=@nxp.com header.b="dEqML03q"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=XrxNbr7hw5+mZWwTFFVB2xCutsudvs+Bha7OL/+2ds8LFIeMJNQkxKzRL3mOGGC7l9G2lecGwseSJM9yDuahxhXPQYhtii2FbHfGlhY9EtrBRYAp6UkLFRoCHnTfneW8UnBRf2AecWrP4p9FcOcJGZhLY+TxQSwpXujzRkCNhTRb3Cf55Y1jgwM50HUO1EGUd/UTYVv+Zh3Rd+SAOFkQRbz00qdXmaN0D5ukbvDg7Rxg4f4P1UnZzUZkmI1I3aKKUaLR7kynAqT3fVGVKIoB3MPvZeUmhnJXyj7/xxID/CRe3dFehkkhfjegPTSVafQHPFSs9p4Qg+vE2lyUqmc/IA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=T39/czzcQHenCJlRCG/WEyJypp+F7f6XRld1DP2gGX8=;
- b=vGOuz9Dek2DEmaOra3GLosc/1SbTQd77aH7p/6WRWw0mfKI1G/fnnR/0HfEzyt1zgPfg5/PFrpa2CB/J+7JUmU+mii33igd8jVeziaEwZipqGp2gXKELgh/RZ83CHzQQMzQwzPIRsmN2/hHPkEJ1A8kH2f6D7RBKxJN+TtCeD27yJiU3fureuvtllLUS3MSwa3zTnd/ExuKDZAJ9EdjvOPJEYK0dBsAHOcfY7auY69LZE4frgiAfGd1YEnc18W+jr0FaqdrzdcISe4zCX6YYf7jysLXdmV9ZLZA18c23KRWZTdyutDQn/MVA2/YomdnNFMpGZMWQ2B4of+pOKGoX4A==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nxp.com; dmarc=pass action=none header.from=nxp.com; dkim=pass
- header.d=nxp.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxp.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=T39/czzcQHenCJlRCG/WEyJypp+F7f6XRld1DP2gGX8=;
- b=dEqML03qJzl8yaSFhceqEdSrajHVbKzUFOgyzH6qi0gMepyorD2n3SrxCZTlCbWn/gGKX0oU9lxJLFNO1jyL/bg4OAL9F07SnL/yydqfLZtAD/d48DsvhqL4AaYzERMl9I8SQ07ps5i4rt8gkXv1t0jU/ku1kB07dqbdDeyJAmmUfVYtnshXwVyHZ+xl6BAIyb+wjD1zJNYeTRlYHeKK1L40vEiFSKOwgBru5WivdU8sRsYXfvyzzZu6Y89qFu53RukAFUvFK0FdQWwrWkWgVjjSWULRB4ao5zam3UIUFHl0m0X70n2hGUcbFg/O65I/aGFYTpRN1ahQIORRQLnr1w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nxp.com;
-Received: from PAXPR04MB8510.eurprd04.prod.outlook.com (2603:10a6:102:211::7)
- by DB9PR04MB9233.eurprd04.prod.outlook.com (2603:10a6:10:361::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.34; Fri, 21 Mar
- 2025 02:58:24 +0000
-Received: from PAXPR04MB8510.eurprd04.prod.outlook.com
- ([fe80::a7c2:e2fa:8e04:40db]) by PAXPR04MB8510.eurprd04.prod.outlook.com
- ([fe80::a7c2:e2fa:8e04:40db%5]) with mapi id 15.20.8534.034; Fri, 21 Mar 2025
- 02:58:24 +0000
-From: Wei Fang <wei.fang@nxp.com>
-To: devnull+manivannan.sadhasivam.linaro.org@kernel.org
-Cc: bartosz.golaszewski@linaro.org,
-	bhelgaas@google.com,
-	brgl@bgdev.pl,
-	conor+dt@kernel.org,
-	devicetree@vger.kernel.org,
-	krzk+dt@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZLuJGqvM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=Iu8sw
+	yOIw5K+t0r0RVA6DVR/ICbwmaceAEuARoTDftY=; b=ZLuJGqvMuC8a8HIxYAM5+
+	uvAZI7Nndbi51CukyDdpmFTBbHZzFQ7zpfmwaXo9BEhI3cDy3LHjLYwzX+TperhW
+	NCeMABBWacnJ/teTV4OSExAk66+2cqaFkmDtHWxvZGYs/J6MRxJ/aqDVvTnNyPCT
+	NQDw8afxRiYvk27ZlMMCek=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD3Hxsw5dxnbYNpAw--.34788S3;
+	Fri, 21 Mar 2025 12:04:02 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org
+Cc: kw@linux.com,
 	manivannan.sadhasivam@linaro.org,
 	robh@kernel.org,
-	netdev@vger.kernel.org
-Subject: Re: [PATCH v3 3/5] PCI/pwrctrl: Skip scanning for the device further if pwrctrl device is created
-Date: Fri, 21 Mar 2025 10:59:40 +0800
-Message-Id: <20250321025940.2103854-1-wei.fang@nxp.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250116-pci-pwrctrl-slot-v3-3-827473c8fbf4@linaro.org>
-References: <20250116-pci-pwrctrl-slot-v3-3-827473c8fbf4@linaro.org>
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SI1PR02CA0038.apcprd02.prod.outlook.com
- (2603:1096:4:1f6::15) To PAXPR04MB8510.eurprd04.prod.outlook.com
- (2603:10a6:102:211::7)
+	bhelgaas@google.com,
+	jingoohan1@gmail.com,
+	thomas.richard@bootlin.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [v3 1/4] PCI: Introduce generic capability search functions
+Date: Fri, 21 Mar 2025 12:03:55 +0800
+Message-Id: <20250321040358.360755-2-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250321040358.360755-1-18255117159@163.com>
+References: <20250321040358.360755-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PAXPR04MB8510:EE_|DB9PR04MB9233:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5d5afbee-08cd-4711-49a6-08dd68243eed
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|52116014|366016|1800799024|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?yl2HkmZeLsl3hmtRNdPva9QQ4MT4AgZ25LolEay9EmmvoK7yE/6sjo9pT03f?=
- =?us-ascii?Q?PFKrLQ86DAZCm85vFtkepM6Pq0y1LwpsM5gkh0RI357CDa9xl1vY5sy8Hhp3?=
- =?us-ascii?Q?p2bwPrKFiqe2hfMfPhsWvFhOmUVmhMlixt5yz/KtkYdANvhfL9ijjwwoWeWb?=
- =?us-ascii?Q?TNabZ8VnEUZblrlNFJ5YkgGGF9MMGitmfyMox1orbE+vc7C/Lshjb89TV7qt?=
- =?us-ascii?Q?SZY4eKTbqBrxX6xuxeB9ZREIqc2GtX23q4cqYHWMySSwHdz/lAFb1888loG2?=
- =?us-ascii?Q?HbOru/s4dr7LwAcJrxdp/6Nu3j7sZGw78/t/pddXGWag8EGZ55TxMaBOzzWF?=
- =?us-ascii?Q?NTiyXVZdaYsmpsfZU3l8xPiVwHS0AatCCnjI7FsyRwd+dpYKQyT29uHSrUyD?=
- =?us-ascii?Q?bsot5cGM4wvK9A11Nt0IS/albOMS9KSSFnYgx1Kwg7qbKGSCMellgy62Bm20?=
- =?us-ascii?Q?i5TvNLKZvTQL6Y8jN/wfP3eL2pzNcYoI/R5bSOXJdyLd7H5ZpaWx7QbxOdHT?=
- =?us-ascii?Q?bHQlBYczIM7R0hiK2/XYnO5SrIrYDFGUqNRsEVqT9KesNvoG6QhSs16BlYM6?=
- =?us-ascii?Q?nj0wg9gY2IGRMN5iKZ8m6I7O4LVOk1PuXUkxAfVze8mL25MH3b1DSOtjkEAj?=
- =?us-ascii?Q?2udAKjhIgNQ/aotH36/Rz/EiFRvMhx2A3XLyuezFDgFq1EcKx65BwQdGitNm?=
- =?us-ascii?Q?Pn3hRYLnkSLRNLT+JEe1NgHnuZz4mf3qulnTEfrn1pJHZoD4ycVO4iWAa3I9?=
- =?us-ascii?Q?tLWUir7/3OUsaOZyak81sAwFWlvkhmgKHQFXyD6B63kkQozSxTvtCkG33cOm?=
- =?us-ascii?Q?6JiC2vaju8GELhDAHqJkd8y+PcIy+wWofG5j2dclwLzAth3ODcb6y7xZRpvE?=
- =?us-ascii?Q?yhPt6vgYzlqECAiFHYScE1dzH4EOUUC2CTFc+707Of/UDHnFFvOVxaUF0PIF?=
- =?us-ascii?Q?XXEuE7/77IkziWjRFK2ED8sWhKspbAQbm97//WY4LvcB5D741W/D/BPa+PW0?=
- =?us-ascii?Q?dtaBSFNc7aYMWmqCWGsPBckrtJOhh4cMYXwJ9KviZkQn9/XwvBn2zvw3ynr7?=
- =?us-ascii?Q?h4GE9rJqO9wjwGBsKCr0buFtZwzX7S7rAgOjAq0qZQs+yYZ5DJvVbo3INyUQ?=
- =?us-ascii?Q?omaxyoXY3DH2kZxpCORmgJBc2Uy6uyvfUWfhsuCXDRCJbRg5BvET55lsY6yD?=
- =?us-ascii?Q?27dDvsTcOuRw3zKGK4+AGvG0tqRTfin3dcLieBDEfL3ozNsf3YxiPuuXpmph?=
- =?us-ascii?Q?iFA1L9LCebronvX733sa6P23vhmDEcy3TxDiF4e4r6c9QaZ4oq9H9HaQusWX?=
- =?us-ascii?Q?L7H0GqyuW/Z8/R7GT/l/jBkMDMJbGh8+1BUyNMUh/koGOVaxS8ernKTK25Cz?=
- =?us-ascii?Q?d93P/0cg3nV+Taw6mxvZt/nXjCTNPCnQGFAta3b1Dej3kBXXRJThrUzjFf5b?=
- =?us-ascii?Q?Ng1NQnlN9u0FaRw3XAbo/9PJwuDtpfIJ?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PAXPR04MB8510.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(52116014)(366016)(1800799024)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?249Doqp4zydXTHee8v2IhqssB6KvRNYrSecZOH5QL/sujaNJiAy24z4oig89?=
- =?us-ascii?Q?Pnn4n76WTqHcDyWaeOv3+8VF0dxyM2q3cTb3FXX9GFBwhi1l4CReD/tT3xGr?=
- =?us-ascii?Q?xwvpj+6mNHKXu0MztBynfEMHa74rSd8AbjSQXV8mkw5SCCWJok54qj1i9XNl?=
- =?us-ascii?Q?b9IaH6Hsk3vdFMvUNP7T62YE8NvRlteXiryZ7WpCIhwhc3rZ4Y1sbw9Txl6a?=
- =?us-ascii?Q?Y37EFS9WnizG9OhnTeWec8OuQD2zX0ZjSTYKg9FFT3uHX2V5jDJaWyzx9MnL?=
- =?us-ascii?Q?ws9a5Ii/oJRvr4n71Hu61NSi4+Yj6Zuns2UDcYRDO9a+EVG3cX/hLXfXWFbp?=
- =?us-ascii?Q?wnFPSRJe9sHfpzXhdnxA2DuHGtJ97se6LPEHk4kmkMlJFwlltL8YFibFkJqB?=
- =?us-ascii?Q?ATGmpJYvKnaQA23YWo1WxEGcnwhwmY9+Sv8vRn51T52Gk1VUCCumdk+IQZYj?=
- =?us-ascii?Q?z/OzbdfaG8cdi6OdTkKooSnr9cnGw1bQQLykKcyMNkAxU8l9zmfB7FV4aB/2?=
- =?us-ascii?Q?OCGrb/FA/XlTsibR2BL/uk0CZaJuqg5JqzjrVw07y8dozjsKSyK463Wu9IvB?=
- =?us-ascii?Q?dfGxtv+F4aipxkHhHxgcYFQsyb62hFjOfMLjT7mbdcMcMr6kXLRiwPBGmctA?=
- =?us-ascii?Q?Cpj9yshGVfTM52m2aAbIU2v/SAbW6cae9Srg8CDLG72H4wxZ7sV65rZj1sZ3?=
- =?us-ascii?Q?43EkiOfgI5Wndk/QZeD+77BN9vEw80x0BdmM2H+uUt4v43tp0ZPjbo5UQtNe?=
- =?us-ascii?Q?fIy0WzZbD00DUKx156xnmBMKtTHaQOl4gVbfM8E7jvypqOEyAGMERDmJ0/Cz?=
- =?us-ascii?Q?e45nJKJYOZqqXGiNf701LYcSJdcAcaHuH19qC2T6w3HmwUxJjcIz4hR/fYcN?=
- =?us-ascii?Q?brzfU0Tm/JjQVDN249lXfv1vxvsODFMEC6jgW7ieP5/wBDYlDiSCIVF0kPtP?=
- =?us-ascii?Q?a/jO5USE6vMcdtsgaplfGFFOz6TTI3NodwEisLrzJIlyEckuxjRo2m1HlbyU?=
- =?us-ascii?Q?lLzPS5zwV5jkD0H3KSpAE19uZbe87sKSPTZKxJzdtkEzXnWcrmxmoV7CzSAg?=
- =?us-ascii?Q?rnQ/cD0RXuSaoJs+cYCHglUHWqzj+m0PHu5Fziu44Vz+cDepU8j10aIYbQ2w?=
- =?us-ascii?Q?s/k7VZfUmdQXRS3mlU2yee81ySnss60iBpVh4GpajeGz2DsMw4sEyJlpx6hk?=
- =?us-ascii?Q?ziEUUWUoAOModkPWRwVJGqTMPtuXzgdPPh+RyEHqVVekGiRq3yGTZNBSl3pA?=
- =?us-ascii?Q?7djrSHFsDZ8Ma52gFGV+xfMuI0gxB8DARzCKY+b2wnrKbC4zXLDTNLjCy/d0?=
- =?us-ascii?Q?0fSpnjtsH4Ng7x/dmseud1Fv40Or8j7NzsUGQs0524EzcMUGahb0HV3Az9pD?=
- =?us-ascii?Q?I9guj46WkhqGcUHnJ0RwlGfFBKmWxO9vQrbXLa5JycxcItb9obYWSGD3Xyxa?=
- =?us-ascii?Q?7f3ZhDY82v3o2N60ZFi3yNsfl4S48DpaZL53MRCpPyV0OmZmPWY0c0VtLtME?=
- =?us-ascii?Q?MfEfG9TzHpA3Ewii0XOhyU/GmleqG+7iXpZ8k8G5FX94obRbNqLWafGAwgmI?=
- =?us-ascii?Q?PT5yvZXm6l9slOfl6LWhXfh9EGNou+NWMtbkH/dv?=
-X-OriginatorOrg: nxp.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5d5afbee-08cd-4711-49a6-08dd68243eed
-X-MS-Exchange-CrossTenant-AuthSource: PAXPR04MB8510.eurprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Mar 2025 02:58:24.4561
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 686ea1d3-bc2b-4c6f-a92c-d99c5c301635
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: hbgasovNqtO2q08FzQJUfO5JfGQ9eI9VagHELo3kijHRAxzvGjCKBpH+rndbsEBwERpbmjiLMFmqle6eL+VTCA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB9233
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3Hxsw5dxnbYNpAw--.34788S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW3GF4fuFyrCr4fAw1ftw45Awb_yoW7GF1rpF
+	Z5AF15A3yrGF47trsIvF4qyr13XrZ2vFWxtFWxC3sYvr12ywn5KryI9345tF12yrs2gF13
+	trZrtFZ5Cr1ktaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR7fHUUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxUXo2fc32Nz2QACsB
 
-@@ -2487,7 +2487,14 @@ static struct pci_dev *pci_scan_device(struct pci_bus *bus, int devfn)
- 	struct pci_dev *dev;
- 	u32 l;
+Existing controller drivers (e.g., DWC, custom out-of-tree drivers)
+duplicate logic for scanning PCI capability lists. This creates
+maintenance burdens and risks inconsistencies.
+
+To resolve this:
+
+1. Add pci_generic_find_capability() and pci_generic_find_ext_capability()
+in drivers/pci/pci.c, accepting controller-specific read functions
+and device data as parameters.
+
+2. Refactor dwc_pcie_find_capability() and similar functions to utilize
+these new generic interfaces.
+
+3. Update out-of-tree drivers to leverage the common implementation,
+eliminating code duplication.
+
+This approach:
+- Centralizes critical PCI capability scanning logic
+- Allows flexible adaptation to varied hardware access methods
+- Reduces future maintenance overhead
+- Aligns with kernel code reuse best practices
+
+Tested with DWC PCIe controller and CDNS PCIe drivers.
+
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/pci.c   | 83 +++++++++++++++++++++++++++++++++++++++++++++
+ include/linux/pci.h | 13 ++++++-
+ 2 files changed, 95 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 869d204a70a3..d686d89d211e 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -612,6 +612,89 @@ u16 pci_find_ext_capability(struct pci_dev *dev, int cap)
+ }
+ EXPORT_SYMBOL_GPL(pci_find_ext_capability);
  
--	pci_pwrctrl_create_device(bus, devfn);
++/*
++ * These interfaces resemble the pci_find_*capability() interfaces, but these
++ * are for configuring host controllers, which are bridges *to* PCI devices but
++ * are not PCI devices themselves.
++ */
++static u8 __pci_generic_find_next_cap(void *priv, pci_generic_read_cfg read_cfg,
++				      u8 cap_ptr, u8 cap)
++{
++	u8 cap_id, next_cap_ptr;
++	u16 reg;
++
++	if (!cap_ptr)
++		return 0;
++
++	reg = read_cfg(priv, cap_ptr, 2);
++	cap_id = (reg & 0x00ff);
++
++	if (cap_id > PCI_CAP_ID_MAX)
++		return 0;
++
++	if (cap_id == cap)
++		return cap_ptr;
++
++	next_cap_ptr = (reg & 0xff00) >> 8;
++	return __pci_generic_find_next_cap(priv, read_cfg, next_cap_ptr, cap);
++}
++
++u8 pci_generic_find_capability(void *priv, pci_generic_read_cfg read_cfg,
++			       u8 cap)
++{
++	u8 next_cap_ptr;
++	u16 reg;
++
++	reg = read_cfg(priv, PCI_CAPABILITY_LIST, 2);
++	next_cap_ptr = (reg & 0x00ff);
++
++	return __pci_generic_find_next_cap(priv, read_cfg, next_cap_ptr, cap);
++}
++EXPORT_SYMBOL_GPL(pci_generic_find_capability);
++
++static u16 pci_generic_find_next_ext_capability(void *priv,
++						pci_generic_read_cfg read_cfg,
++						u16 start, u8 cap)
++{
++	u32 header;
++	int ttl;
++	int pos = PCI_CFG_SPACE_SIZE;
++
++	/* minimum 8 bytes per capability */
++	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
++
++	if (start)
++		pos = start;
++
++	header = read_cfg(priv, pos, 4);
 +	/*
-+	 * Create pwrctrl device (if required) for the PCI device to handle the
-+	 * power state. If the pwrctrl device is created, then skip scanning
-+	 * further as the pwrctrl core will rescan the bus after powering on
-+	 * the device.
++	 * If we have no capabilities, this is indicated by cap ID,
++	 * cap version and next pointer all being 0.
 +	 */
-+	if (pci_pwrctrl_create_device(bus, devfn))
-+		return NULL;
++	if (header == 0)
++		return 0;
++
++	while (ttl-- > 0) {
++		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
++			return pos;
++
++		pos = PCI_EXT_CAP_NEXT(header);
++		if (pos < PCI_CFG_SPACE_SIZE)
++			break;
++
++		header = read_cfg(priv, pos, 4);
++	}
++
++	return 0;
++}
++
++u16 pci_generic_find_ext_capability(void *priv, pci_generic_read_cfg read_cfg,
++				    int cap)
++{
++	return pci_generic_find_next_ext_capability(priv, read_cfg, 0, cap);
++}
++EXPORT_SYMBOL_GPL(pci_generic_find_ext_capability);
++
+ /**
+  * pci_get_dsn - Read and return the 8-byte Device Serial Number
+  * @dev: PCI device to query
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 47b31ad724fa..48c2b45a4d04 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1205,6 +1205,11 @@ u8 pci_find_ht_capability(struct pci_dev *dev, int ht_cap);
+ u8 pci_find_next_ht_capability(struct pci_dev *dev, u8 pos, int ht_cap);
+ u16 pci_find_ext_capability(struct pci_dev *dev, int cap);
+ u16 pci_find_next_ext_capability(struct pci_dev *dev, u16 pos, int cap);
++typedef u32 (*pci_generic_read_cfg)(void *priv, int where, int size);
++u8 pci_generic_find_capability(void *priv, pci_generic_read_cfg read_cfg,
++			       u8 cap);
++u16 pci_generic_find_ext_capability(void *priv, pci_generic_read_cfg read_cfg,
++				    u8 cap);
+ struct pci_bus *pci_find_next_bus(const struct pci_bus *from);
+ u16 pci_find_vsec_capability(struct pci_dev *dev, u16 vendor, int cap);
+ u16 pci_find_dvsec_capability(struct pci_dev *dev, u16 vendor, u16 dvsec);
+@@ -2012,7 +2017,13 @@ static inline u8 pci_find_next_capability(struct pci_dev *dev, u8 post, int cap)
+ { return 0; }
+ static inline u16 pci_find_ext_capability(struct pci_dev *dev, int cap)
+ { return 0; }
+-
++typedef u32 (*pci_generic_read_cfg)(void *priv, int where, int size);
++u8 pci_generic_find_capability(void *priv, pci_generic_read_cfg read_cfg,
++			       u8 cap)
++{ return 0; }
++u16 pci_generic_find_ext_capability(void *priv, pci_generic_read_cfg read_cfg,
++				    u8 cap)
++{ return 0; }
+ static inline u64 pci_get_dsn(struct pci_dev *dev)
+ { return 0; }
+ 
+-- 
+2.25.1
 
-Hi Manivannan,
-
-The current patch logic is that if the pcie device node is found to have
-the "xxx-supply" property, the scan will be skipped, and then the pwrctrl
-driver will rescan and enable the regulators. However, after merging this
-patch, there is a problem on our platform. The .probe() of our device
-driver will not be called. The reason is that CONFIG_PCI_PWRCTL_SLOT is
-not enabled at all in our configuration file, and the compatible string
-of the device is also not added to the pwrctrl driver. I think other
-platforms should also have similar problems, which undoubtedly make these
-platforms be unstable. This patch has been applied, and I am not familiar
-with this. Can you fix this problem? I mean that those platforms that do
-not use pwrctrl can avoid skipping the scan.
