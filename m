@@ -1,41 +1,63 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 995A11D5AD4;
-	Fri, 21 Mar 2025 20:51:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EEFB232384;
+	Fri, 21 Mar 2025 20:57:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742590276; cv=none; b=ZLP9xbRhHn6xLU9I4nV/P7FfjonzauK5BAf5FpQTP22jKE9uLMfN0olWh1mISIu9fMv9NT3RStfZ4iW7C/Fm5+RyGdCRe1ACRHONzhy6WRWEX1WCIogzUhdKfTUzmAx5/yfeIRXOvOjUfWm8gNpz2mJdi3avVTLvu5Q5IuOD/Ps=
+	t=1742590659; cv=none; b=SLT1wMpXeFD/VdmPgzPGmiJlmM93mkrTNt4uj9d4X+g3c8uRXjqGP2U0/J6tck6t2wdgSW1m75qKGnfruHwVrFRAm6k2tmOQ5RWlLNZHC7qAriFevkSi+PGKCOVSdOCtUWbKrPUAxTyw2dX1KnXgNnGGdQDgfKpMVQrJuswdIeo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742590276; c=relaxed/simple;
-	bh=9kXERGWJ4IUeqTQtzLrow766M6oxKrGWyKs4LWZ3fcg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=oR58YyTEA0y1reglu8Z8p9TpSEIIJAfjGE2y9NQTsB7Gs0S4t3T6LJP3yRdqe9P502nc68TLySvyoUji8ifacQun6I5i5J1SWtel1fcosMd+d4FKg8BXfs7Xjl89GkD8TS8q20lDvSjsKaeryAmFdW3lz8wJzc7U76HsYbS10t4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYDpoUPw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1742590659; c=relaxed/simple;
+	bh=ZXz1lCeNrvjVJLRs04XWZoMrQXMdrcjG9uS7WXXyp9k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=H97KFsgyqM6GV9P0zbes8cFz4k+a/4i0GDS3w1QwIDtwWhmhG1LpWrSYR/ILCJ1DmErPqNnY1EHrtF8Y5P1XYfh97OCgZtYUhB9RBLudEFfScDB2WtnwVtR59uAEJuY9F+fD/RP9+FsBySEMSN5yOpsgQHllbX5FiYMOmmkjSjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ym2bZEUT; arc=none smtp.client-ip=192.198.163.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYDpoUPw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E9E62C4CEE3;
-	Fri, 21 Mar 2025 20:51:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1742590276;
-	bh=9kXERGWJ4IUeqTQtzLrow766M6oxKrGWyKs4LWZ3fcg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=VYDpoUPwm57JKvJzx9SpOY9FXlFPRs+uvWK99/l0kOdhFgHFghQKSVvrrX+feECey
-	 ID4fRjF6uRWn1LRVHCuXiR1EqhmI7Ha4aR9qSBRz8s6KV6TA+KfqV+U9vJP3MOwKS7
-	 mINVok465d0tSZxSGZPhR0u5xRPWpLohmwjLQu73KnsVZ7wa4MqeabVAaBOYy69SWd
-	 b4k5Tl0g7xr4zegYTfko/GHFl2A4OB1E4vYiic3Ovl6POGFxQk1npTHhVi1B7H2TWT
-	 uWPvXqBqlm1FZyskVB+Qjvld4Cx4bC+0+ii+iV0ZVT732ceuVDCMplYYb25Q7O04+U
-	 0In4/6lhztAWA==
-Date: Fri, 21 Mar 2025 15:51:14 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	"Rafael J. Wysocki" <rafael.j.wysocki@intel.com>,
-	Mika Westerberg <mika.westerberg@linux.intel.com>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 1/1] PCI/hotplug: Don't enable HPIE in poll mode
-Message-ID: <20250321205114.GA1144421@bhelgaas>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ym2bZEUT"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1742590657; x=1774126657;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ZXz1lCeNrvjVJLRs04XWZoMrQXMdrcjG9uS7WXXyp9k=;
+  b=Ym2bZEUTWag0A2F3TzGt+bOdtOzt704uckulqFjHJWPOMN9+mpQaWmty
+   Ish8nLKBkyjxUkYJ3Toq1dEEY/6V13YJ3oX8FASrgrtfCE+e/AOBqRIsx
+   bZWye+/LLNwrvpDy6ENMVChryxyfBMetg+Lm42/Ilwm2R2NHW+HsCE8rz
+   +h+ADDCIX3Qfj3OaTrh4IJIocu7Jbkd3loMbgk+2Bzdr0eGxkXdc0D70D
+   HuEP/doZDIZFnhlBqhLD/K8yQgqQUE5FI7ZeZzr0RkPgQHWOAcUGuwJXU
+   9XRvPOpGdRlCuoGRiJVk1e+YYE5wJxF+nQJefg5FdcmfOtwzB5dHUPui0
+   A==;
+X-CSE-ConnectionGUID: 5PoZ45heSYyzLAz4jRJhyg==
+X-CSE-MsgGUID: aOxRfWwuSsKE0Dk07OWO6A==
+X-IronPort-AV: E=McAfee;i="6700,10204,11380"; a="44057303"
+X-IronPort-AV: E=Sophos;i="6.14,265,1736841600"; 
+   d="scan'208";a="44057303"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 Mar 2025 13:57:36 -0700
+X-CSE-ConnectionGUID: t1NdUEubT1Wto0n2pc9WMw==
+X-CSE-MsgGUID: N6WEr2ixShCQQD6FioBq5g==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.14,265,1736841600"; 
+   d="scan'208";a="128179654"
+Received: from lkp-server02.sh.intel.com (HELO e98e3655d6d2) ([10.239.97.151])
+  by fmviesa005.fm.intel.com with ESMTP; 21 Mar 2025 13:57:33 -0700
+Received: from kbuild by e98e3655d6d2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1tvjQo-0001gn-2m;
+	Fri, 21 Mar 2025 20:57:30 +0000
+Date: Sat, 22 Mar 2025 04:57:29 +0800
+From: kernel test robot <lkp@intel.com>
+To: Hans Zhang <18255117159@163.com>, lpieralisi@kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, kw@linux.com,
+	manivannan.sadhasivam@linaro.org, robh@kernel.org,
+	bhelgaas@google.com, jingoohan1@gmail.com,
+	thomas.richard@bootlin.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, Hans Zhang <18255117159@163.com>
+Subject: Re: [v5 1/4] PCI: Introduce generic capability search functions
+Message-ID: <202503220416.dfoSTxfs-lkp@intel.com>
+References: <20250321163803.391056-2-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,56 +66,81 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <Z92q84PdWVtftxI4@wunner.de>
+In-Reply-To: <20250321163803.391056-2-18255117159@163.com>
 
-On Fri, Mar 21, 2025 at 07:07:47PM +0100, Lukas Wunner wrote:
-> On Fri, Mar 21, 2025 at 12:09:19PM -0500, Bjorn Helgaas wrote:
-> ...
+Hi Hans,
 
-> >   - It's annoying that pcie_enable_interrupt() and
-> >     pcie_disable_interrupt() are global symbols, a consequence of
-> >     pciehp being split across five files instead of being one, which
-> >     is also a nuisance for code browsing.
-> 
-> Roughly,
-> pciehp_core.c contains the interface to the PCI hotplug core
->   (registering the hotplug_slot_ops etc),
-> pciehp_hpc.c contains the interaction with hardware registers,
-> pciehp_core.c contains the state machine,
-> pciehp_pci.c contains the interaction with the PCI core
->   (enumeration / de-enumeration of devices on slot bringup / bringdown).
-> 
-> The only reason I've refrained from making major adjustments to this
-> structure in the past was that it would make "git blame" a little more
-> difficult and applying fixes to stable kernels would also become somewhat
-> more painful as it would require backporting.
+kernel test robot noticed the following build errors:
 
-Yeah, that's the main reason I haven't tried to do anything either.
-On the other hand, the browsing nuisance is an everyday thing forever
-if we leave it as-is.  I did consolidate portdrv.c a couple years ago
-and don't regret it.  But moving things definitely makes "git blame" a
-bit of a hassle; my notes are full of things like this:
+[auto build test ERROR on a1cffe8cc8aef85f1b07c4464f0998b9785b795a]
 
-  a1ccd3d91138 ("PCI/portdrv: Squash into portdrv.c")
-    squash drivers/pci/pcie/portdrv_pci.c and portdrv_core.c into portdrv.c
-  950bf6388bc2 ("PCI: Move DesignWare IP support to new drivers/pci/dwc/ directory")
-    mv drivers/pci/host/pci-imx6.c drivers/pci/dwc/pci-imx6.c
-  6e0832fa432e ("PCI: Collect all native drivers under drivers/pci/controller/")
-    mv drivers/pci/dwc/pci-imx6.c drivers/pci/controller/dwc/pci-imx6.c
+url:    https://github.com/intel-lab-lkp/linux/commits/Hans-Zhang/PCI-Introduce-generic-capability-search-functions/20250322-004312
+base:   a1cffe8cc8aef85f1b07c4464f0998b9785b795a
+patch link:    https://lore.kernel.org/r/20250321163803.391056-2-18255117159%40163.com
+patch subject: [v5 1/4] PCI: Introduce generic capability search functions
+config: arm-randconfig-001-20250322 (https://download.01.org/0day-ci/archive/20250322/202503220416.dfoSTxfs-lkp@intel.com/config)
+compiler: arm-linux-gnueabi-gcc (GCC) 7.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250322/202503220416.dfoSTxfs-lkp@intel.com/reproduce)
 
-> >   - I forgot why we have both pcie_write_cmd() and
-> >     pcie_write_cmd_nowait() and how to decide which to use.
-> 
-> pcie_write_cmd_nowait() is the "fire and forget" variant,
-> whereas pcie_write_cmd() can be thought of as the "_sync" variant,
-> i.e. the control flow doesn't continue until the command has been
-> processed by the slot.
-> 
-> E.g. pciehp_power_on_slot() waits for the slot command to complete
-> before making sure the Link Disable bit is clear.  It wouldn't make
-> much sense to do the latter when the former hasn't been completed yet.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202503220416.dfoSTxfs-lkp@intel.com/
 
-Right, I know what the difference is; I guess I just don't know how to
-figure out when pcie_write_cmd_nowait() is safe.
+All errors (new ones prefixed by >>):
 
-Bjorn
+   In file included from arch/arm/mm/iomap.c:9:0:
+>> include/linux/pci.h:2025:1: error: expected identifier or '(' before '{' token
+    { return 0; }
+    ^
+   include/linux/pci.h:2029:1: error: expected identifier or '(' before '{' token
+    { return 0; }
+    ^
+   In file included from arch/arm/mm/iomap.c:9:0:
+   include/linux/pci.h:2023:1: warning: 'pci_host_bridge_find_capability' declared 'static' but never defined [-Wunused-function]
+    pci_host_bridge_find_capability(void *priv, pci_host_bridge_read_cfg read_cfg,
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   include/linux/pci.h:2027:1: warning: 'pci_host_bridge_find_ext_capability' declared 'static' but never defined [-Wunused-function]
+    pci_host_bridge_find_ext_capability(void *priv,
+    ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+vim +2025 include/linux/pci.h
+
+  2000	
+  2001	static inline void pci_set_master(struct pci_dev *dev) { }
+  2002	static inline void pci_clear_master(struct pci_dev *dev) { }
+  2003	static inline int pci_enable_device(struct pci_dev *dev) { return -EIO; }
+  2004	static inline void pci_disable_device(struct pci_dev *dev) { }
+  2005	static inline int pcim_enable_device(struct pci_dev *pdev) { return -EIO; }
+  2006	static inline int pci_assign_resource(struct pci_dev *dev, int i)
+  2007	{ return -EBUSY; }
+  2008	static inline int __must_check __pci_register_driver(struct pci_driver *drv,
+  2009							     struct module *owner,
+  2010							     const char *mod_name)
+  2011	{ return 0; }
+  2012	static inline int pci_register_driver(struct pci_driver *drv)
+  2013	{ return 0; }
+  2014	static inline void pci_unregister_driver(struct pci_driver *drv) { }
+  2015	static inline u8 pci_find_capability(struct pci_dev *dev, int cap)
+  2016	{ return 0; }
+  2017	static inline u8 pci_find_next_capability(struct pci_dev *dev, u8 post, int cap)
+  2018	{ return 0; }
+  2019	static inline u16 pci_find_ext_capability(struct pci_dev *dev, int cap)
+  2020	{ return 0; }
+  2021	typedef u32 (*pci_host_bridge_read_cfg)(void *priv, int where, int size);
+  2022	static inline u8
+  2023	pci_host_bridge_find_capability(void *priv, pci_host_bridge_read_cfg read_cfg,
+  2024					u8 cap);
+> 2025	{ return 0; }
+  2026	static inline u16
+  2027	pci_host_bridge_find_ext_capability(void *priv,
+  2028					    pci_host_bridge_read_cfg read_cfg, u8 cap);
+  2029	{ return 0; }
+  2030	static inline u64 pci_get_dsn(struct pci_dev *dev)
+  2031	{ return 0; }
+  2032	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
