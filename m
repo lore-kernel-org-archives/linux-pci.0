@@ -1,244 +1,260 @@
-Received: from AM0PR02CU008.outbound.protection.outlook.com (mail-westeuropeazon11023108.outbound.protection.outlook.com [52.101.72.108])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE2D6252914;
-	Tue, 25 Mar 2025 07:18:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.72.108
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742887133; cv=fail; b=cHEEm1phovfbGp3Gsnz1D/rSE6mrrXU80VH0z9c89jJZikpe/wNcaxu4VtqZP2KeQP8RnVn6og1fOMcdeDB5UhcVaAt8MV5zHVd1ngscPyzoKnrRu91n7f7INhF4mKNA7f+vEgEmEoCkYfgokRKm8W0e29lpTS+KN85C3ZrCJmQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742887133; c=relaxed/simple;
-	bh=2PTkXYsUZRchIzpzuFOUVs3cyj82NePeHpEGM7q5oSc=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IFgMVQd5pnJ3U1hH1iyBmxX+i/g5z7OK+/r+PzfhNvQvO9Yz7xfylZbzHaFsJ1IXrbGTBEKXYcFWdMo1uM0plVUm3L4SQdfELoaShOmnLyz7K59bET3S54kbR+bw6ERewi3BLFQgHNFiS1EbFlEURJlUrAVTRl9M1LXbCyIVq/I=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=topic.nl; spf=pass smtp.mailfrom=topic.nl; dkim=pass (2048-bit key) header.d=topic.nl header.i=@topic.nl header.b=Hdlxqw0R; arc=fail smtp.client-ip=52.101.72.108
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=topic.nl
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=topic.nl
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=topic.nl header.i=@topic.nl header.b="Hdlxqw0R"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=W0XgJ350JyA5tHkyqGELbKZC+lZZYmc9jGX1vDyYWxkUOsPUWbqw+o+f8qd5HvvnGt/PJ+uDqzv9VCcLn5haM420IwHOnNwir9RcufnjD7s0iobPS9z/TU6zCFqKUSjTAB9P1zN4ZWQLj0tyKqu9JU8TaZ99P9rAEIfO52OAmOc+XK11HH1gC7Tc8gml3Bzr5g12W1+NOUWU9Wp9o3zfSFCZe1w4w0d38gXx3I0Rifb8b8xv805IhH/Cxd3zubzVG4MXwuzpOgQfw/FaOS1h8mYpZ8bhD65x19gCLRB4e8aXZfMbU4+fDw5+bRLXXH5HW0i/jZ+v96cWXh0Iihp5pQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YhFcQ5xPTvcK2iemGk5D+7nAhQZDbMqMW1Nggha0pzc=;
- b=lWiPDww2Bguqi/AveiJXoV2NmZYyNpOMDRtivdDweFlPfErY0w0/c+X18ONjZERTZV6mbAoAM9Vq5DHBpHjnuA7x+fN2R7LN9/UOUCV4gUM1NGbdPhbQf3etfWSZmtlBWRkN9KhvoQ/qzGxF5cmogL99QXVPZ+bjJQhhEa1TD2ZxxnLoSZ9/Wz7UJlYHhvRf9Bl0ccQYJEMBeZ766eUdOLfmo8CjmjENlZ6efRJbrOhanDukQfSkuJijB41E64+PqaDxPg21EhP1Qrfyzp0nZtJompkOiyLTgX2K5/GST92e4G70rvslz+LsIq7pD4PoGiy1nBwVDX3BoOWjXrvKjg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 13.93.42.39) smtp.rcpttodomain=vger.kernel.org smtp.mailfrom=topic.nl;
- dmarc=pass (p=none sp=none pct=100) action=none header.from=topic.nl;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=topic.nl; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=YhFcQ5xPTvcK2iemGk5D+7nAhQZDbMqMW1Nggha0pzc=;
- b=Hdlxqw0RAugROFNsF/RArgCdFfyp6JvR9hHkPSOXSwdP11DBCb+ghYzjiXwcJ/AejfB40JtvCPKzeGZjETJ0r8OK/jmQOo8IiWvlv2STfVv0JMracjA9mnZl0rix5MGF3Xjzzy3OBuDysYsjSv/hZgM6dAKWkTYERdChymCPtsjGtCwigwCj3qTkaKKq5xJ4YmkWmQgHq91ooysPItvhB/WPKtwuBrNqxI2bdjG+QqkhnD5T7oa/YTzVHH3OEN5aZTP3YMQmx7RI9yQkiYVYpI5McwOmINdfQRQ5v7Q5WILRAmiHuV4HsztAx2OFQFkYriZZEXPh8rDf4+ETdboJlw==
-Received: from AM8P190CA0026.EURP190.PROD.OUTLOOK.COM (2603:10a6:20b:219::31)
- by VI0PR04MB11071.eurprd04.prod.outlook.com (2603:10a6:800:262::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.42; Tue, 25 Mar
- 2025 07:18:42 +0000
-Received: from AMS0EPF000001A1.eurprd05.prod.outlook.com
- (2603:10a6:20b:219:cafe::91) by AM8P190CA0026.outlook.office365.com
- (2603:10a6:20b:219::31) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.8534.42 via Frontend Transport; Tue,
- 25 Mar 2025 07:18:42 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 13.93.42.39)
- smtp.mailfrom=topic.nl; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=topic.nl;
-Received-SPF: Pass (protection.outlook.com: domain of topic.nl designates
- 13.93.42.39 as permitted sender) receiver=protection.outlook.com;
- client-ip=13.93.42.39; helo=westeu12-emailsignatures-cloud.codetwo.com; pr=C
-Received: from westeu12-emailsignatures-cloud.codetwo.com (13.93.42.39) by
- AMS0EPF000001A1.mail.protection.outlook.com (10.167.16.231) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8534.20 via Frontend Transport; Tue, 25 Mar 2025 07:18:42 +0000
-Received: from AS8PR03CU001.outbound.protection.outlook.com (40.93.65.54) by westeu12-emailsignatures-cloud.codetwo.com with CodeTwo SMTP Server (TLS12) via SMTP; Tue, 25 Mar 2025 07:18:41 +0000
-Authentication-Results-Original: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=topic.nl;
-Received: from AS8PR04MB8644.eurprd04.prod.outlook.com (2603:10a6:20b:42b::12)
- by DB9PR04MB9353.eurprd04.prod.outlook.com (2603:10a6:10:36d::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8534.42; Tue, 25 Mar
- 2025 07:18:39 +0000
-Received: from AS8PR04MB8644.eurprd04.prod.outlook.com
- ([fe80::e86d:f110:534e:480a]) by AS8PR04MB8644.eurprd04.prod.outlook.com
- ([fe80::e86d:f110:534e:480a%5]) with mapi id 15.20.8534.040; Tue, 25 Mar 2025
- 07:18:39 +0000
-From: Mike Looijmans <mike.looijmans@topic.nl>
-To: linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-CC: Mike Looijmans <mike.looijmans@topic.nl>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Rob Herring <robh@kernel.org>,
-	Thippeswamy Havalige <thippeswamy.havalige@amd.com>,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2 2/3] dt-bindings: PCI: xilinx-pcie: Add reset-gpios for PERST#
-Date: Tue, 25 Mar 2025 08:18:26 +0100
-Message-ID: <20250325071832.21229-2-mike.looijmans@topic.nl>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250325071832.21229-1-mike.looijmans@topic.nl>
-References: <20250325071832.21229-1-mike.looijmans@topic.nl>
- <1b153bce-a66a-45ee-a5c6-963ea6fb1c82.949ef384-8293-46b8-903f-40a477c056ae.7424060c-f116-40af-8bb3-d789f371b07a@emailsignatures365.codetwo.com>
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: AM0PR08CA0013.eurprd08.prod.outlook.com
- (2603:10a6:208:d2::26) To AS8PR04MB8644.eurprd04.prod.outlook.com
- (2603:10a6:20b:42b::12)
+Received: from pegase2.c-s.fr (pegase2.c-s.fr [93.17.235.10])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0F72A20E6F7;
+	Tue, 25 Mar 2025 07:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=93.17.235.10
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1742887218; cv=none; b=TCDt+GUDqUBxtXlejW5IVxw9IcgkICQKaEgaiDt/fzaOhPQyDodOWmlkmsQ4aWJISN9nkkNA1Pt5IgYktYs29RjJLjOJyAFfvMrCwMcfZi9aUUqsYH0VdYo7rqCuo1+mN6J51JG4hvLpsEtPkoHrz9byDnuqvy5J+aN46Mol1Uc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1742887218; c=relaxed/simple;
+	bh=7yAN5DWEseLPhSuJtJplgqzsW8Fn2NnOCRGJNmY+TWE=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=bJtNdqIm+UZrzoVtz/WLlfsOnT59+cPNPgkgOpG+OY1d0tz6PJscs274wNO6CJZZaOkD63wIwhVaspagEZUGjjOtT7dcLCpROIH3p8Wx2oiRaBT4AdT5qcmMI03ZxwbPQ7+I0/fd2WCRazI/nr3jagIBGer1fNgPQAqBB9YwyJE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=csgroup.eu; spf=pass smtp.mailfrom=csgroup.eu; arc=none smtp.client-ip=93.17.235.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=csgroup.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=csgroup.eu
+Received: from localhost (mailhub3.si.c-s.fr [172.26.127.67])
+	by localhost (Postfix) with ESMTP id 4ZMLXZ26Lwz9sSV;
+	Tue, 25 Mar 2025 08:05:18 +0100 (CET)
+X-Virus-Scanned: amavisd-new at c-s.fr
+Received: from pegase2.c-s.fr ([172.26.127.65])
+	by localhost (pegase2.c-s.fr [127.0.0.1]) (amavisd-new, port 10024)
+	with ESMTP id RFFIDcgfzoK7; Tue, 25 Mar 2025 08:05:18 +0100 (CET)
+Received: from messagerie.si.c-s.fr (messagerie.si.c-s.fr [192.168.25.192])
+	by pegase2.c-s.fr (Postfix) with ESMTP id 4ZMLXY2g73z9sSS;
+	Tue, 25 Mar 2025 08:05:17 +0100 (CET)
+Received: from localhost (localhost [127.0.0.1])
+	by messagerie.si.c-s.fr (Postfix) with ESMTP id DA00C8B766;
+	Tue, 25 Mar 2025 08:05:16 +0100 (CET)
+X-Virus-Scanned: amavisd-new at c-s.fr
+Received: from messagerie.si.c-s.fr ([127.0.0.1])
+	by localhost (messagerie.si.c-s.fr [127.0.0.1]) (amavisd-new, port 10023)
+	with ESMTP id FEOhRsdEs3K2; Tue, 25 Mar 2025 08:05:16 +0100 (CET)
+Received: from PO20335.IDSI0.si.c-s.fr (unknown [192.168.235.99])
+	by messagerie.si.c-s.fr (Postfix) with ESMTP id 285238B763;
+	Tue, 25 Mar 2025 08:05:15 +0100 (CET)
+Received: from PO20335.IDSI0.si.c-s.fr (localhost [127.0.0.1])
+	by PO20335.IDSI0.si.c-s.fr (8.18.1/8.17.1) with ESMTPS id 52P756MK009381
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Tue, 25 Mar 2025 08:05:07 +0100
+Received: (from chleroy@localhost)
+	by PO20335.IDSI0.si.c-s.fr (8.18.1/8.18.1/Submit) id 52P742SQ009337;
+	Tue, 25 Mar 2025 08:04:02 +0100
+X-Authentication-Warning: PO20335.IDSI0.si.c-s.fr: chleroy set sender to christophe.leroy@csgroup.eu using -f
+From: Christophe Leroy <christophe.leroy@csgroup.eu>
+To: tglx@linutronix.de, "Jiri Slaby (SUSE)" <jirislaby@kernel.org>
+Cc: Christophe Leroy <christophe.leroy@csgroup.eu>, maz@kernel.org,
+        linux-kernel@vger.kernel.org, Aaro Koskinen <aaro.koskinen@iki.fi>,
+        Abhinav Kumar <quic_abhinavk@quicinc.com>,
+        Albert Ou <aou@eecs.berkeley.edu>,
+        Alexandre Belloni <alexandre.belloni@bootlin.com>,
+        Alexandre Ghiti <alex@ghiti.fr>,
+        Alexandre Torgue <alexandre.torgue@foss.st.com>,
+        Alex Deucher <alexander.deucher@amd.com>, Alex Shi <alexs@kernel.org>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        =?UTF-8?q?Alvin=20=C5=A0ipraga?= <alsi@bang-olufsen.dk>,
+        Alyssa Rosenzweig <alyssa@rosenzweig.io>,
+        amd-gfx@lists.freedesktop.org, Amit Kucheria <amitk@kernel.org>,
+        Anatolij Gustschin <agust@denx.de>, Andi Shyti <andi.shyti@kernel.org>,
+        =?UTF-8?q?Andreas=20F=C3=A4rber?= <afaerber@suse.de>,
+        Andreas Kemnade <andreas@kemnade.info>,
+        Andrew Jeffery <andrew@codeconstruct.com.au>,
+        Andrew Lunn <andrew@lunn.ch>, Andy Shevchenko <andy@kernel.org>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Antoine Tenart <atenart@kernel.org>,
+        Anton Ivanov <anton.ivanov@cambridgegreys.com>,
+        Anup Patel <anup@brainfault.org>, Arnd Bergmann <arnd@arndb.de>,
+        asahi@lists.linux.dev, Bartosz Golaszewski <brgl@bgdev.pl>,
+        Baruch Siach <baruch@tkos.co.il>,
+        Benjamin Herrenschmidt <benh@kernel.crashing.org>,
+        Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>,
+        Bjorn Andersson <andersson@kernel.org>,
+        Bjorn Helgaas <bhelgaas@google.com>, Borislav Petkov <bp@alien8.de>,
+        Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+        Claudiu Beznea <claudiu.beznea@tuxon.dev>,
+        Corentin Chary <corentin.chary@gmail.com>,
+        Daire McNamara <daire.mcnamara@microchip.com>,
+        Daniel Golle <daniel@makrotopia.org>,
+        Daniel Lezcano <daniel.lezcano@linaro.org>,
+        Daniel Mack <daniel@zonque.org>, Daniel Palmer <daniel@thingy.jp>,
+        Dave Hansen <dave.hansen@linux.intel.com>,
+        David Airlie <airlied@gmail.com>,
+        "David S. Miller" <davem@davemloft.net>,
+        DENG Qingfang <dqfext@gmail.com>, Dinh Nguyen <dinguyen@kernel.org>,
+        Dmitry Baryshkov <dmitry.baryshkov@linaro.org>,
+        Dongliang Mu <dzm91@hust.edu.cn>, Doug Berger <opendmb@gmail.com>,
+        dri-devel@lists.freedesktop.org, Eddie James <eajames@linux.ibm.com>,
+        Eric Dumazet <edumazet@google.com>, Fabio Estevam <festevam@gmail.com>,
+        Florian Fainelli <florian.fainelli@broadcom.com>,
+        Geoff Levand <geoff@infradead.org>,
+        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+        Gregory Clement <gregory.clement@bootlin.com>,
+        Guo Ren <guoren@kernel.org>, Hans de Goede <hdegoede@redhat.com>,
+        Haojian Zhuang <haojian.zhuang@gmail.com>,
+        Haojian Zhuang <haojian.zhuang@linaro.org>,
+        Heiko Stuebner <heiko@sntech.de>,
+        Herve Codina <herve.codina@bootlin.com>,
+        Hou Zhiqiang <Zhiqiang.Hou@nxp.com>, "H. Peter Anvin" <hpa@zytor.com>,
+        Huacai Chen <chenhuacai@kernel.org>,
+        Changhuang Liang <changhuang.liang@starfivetech.com>,
+        Chen-Yu Tsai <wens@csie.org>,
+        "Chester A. Unal" <chester.a.unal@arinc9.com>,
+        =?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+        Chris Zankel <chris@zankel.net>,
+        =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Imre Kaloz <kaloz@openwrt.org>, Ingo Molnar <mingo@redhat.com>,
+        Jakub Kicinski <kuba@kernel.org>, James Morse <james.morse@arm.com>,
+        Janne Grunau <j@jannau.net>, Janusz Krzysztofik <jmkrzyszt@gmail.com>,
+        Jaroslav Kysela <perex@perex.cz>,
+        Jassi Brar <jassisinghbrar@gmail.com>,
+        Jernej Skrabec <jernej.skrabec@gmail.com>,
+        Jerome Brunet <jbrunet@baylibre.com>,
+        Jianjun Wang <jianjun.wang@mediatek.com>,
+        Jiawen Wu <jiawenwu@trustnetic.com>,
+        Jiaxun Yang <jiaxun.yang@flygoat.com>,
+        Jim Quinlan <jim2101024@gmail.com>, Jingoo Han <jingoohan1@gmail.com>,
+        Joel Stanley <joel@jms.id.au>,
+        Johannes Berg <johannes@sipsolutions.net>,
+        John Crispin <john@phrozen.org>,
+        John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>,
+        Jonas Bonn <jonas@southpole.se>, Jonathan Cameron <jic23@kernel.org>,
+        Jonathan Corbet <corbet@lwn.net>,
+        Jonathan Hunter <jonathanh@nvidia.com>,
+        =?UTF-8?q?Jonathan=20Neusch=C3=A4fer?= <j.neuschaefer@gmx.net>,
+        Joyce Ooi <joyce.ooi@intel.com>,
+        Karthikeyan Mitran <m.karthikeyan@mobiveil.co.in>,
+        Keerthy <j-keerthy@ti.com>, Kevin Hilman <khilman@baylibre.com>,
+        Konrad Dybcio <konradybcio@kernel.org>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        =?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+        Kunihiko Hayashi <hayashi.kunihiko@socionext.com>,
+        Lakshmi Sowjanya D <lakshmi.sowjanya.d@intel.com>,
+        Lars-Peter Clausen <lars@metafoo.de>, Lee Jones <lee@kernel.org>,
+        Liam Girdwood <lgirdwood@gmail.com>,
+        Linus Walleij <linus.walleij@linaro.org>,
+        Linus Walleij <linusw@kernel.org>, linux-amlogic@lists.infradead.org,
+        linux-arm-kernel@lists.infradead.org, linux-arm-msm@vger.kernel.org,
+        linux-doc@vger.kernel.org, linux-edac@vger.kernel.org,
+        linux-gpio@vger.kernel.org, linux-iio@vger.kernel.org,
+        linux-i2c@vger.kernel.org, linux-mediatek@lists.infradead.org,
+        linux-mips@vger.kernel.org, linux-omap@vger.kernel.org,
+        linux-pci@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+        linux-remoteproc@vger.kernel.org, linux-riscv@lists.infradead.org,
+        linux-rpi-kernel@lists.infradead.org, linux-sh@vger.kernel.org,
+        linux-snps-arc@lists.infradead.org, linux-sound@vger.kernel.org,
+        linux-stm32@st-md-mailman.stormreply.com, linux-um@lists.infradead.org,
+        linux-wireless@vger.kernel.org, loongarch@lists.linux.dev,
+        Lorenzo Pieralisi <lpieralisi@kernel.org>,
+        Ludovic Desroches <ludovic.desroches@microchip.com>,
+        Lukasz Luba <lukasz.luba@arm.com>, "Luke D. Jones" <luke@ljones.dev>,
+        Madhavan Srinivasan <maddy@linux.ibm.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        =?UTF-8?q?Marek=20Beh=C3=BAn?= <kabel@kernel.org>,
+        Marijn Suijten <marijn.suijten@somainline.org>,
+        Mark Brown <broonie@kernel.org>,
+        Mark-PK Tsai <mark-pk.tsai@mediatek.com>,
+        Martin Blumenstingl <martin.blumenstingl@googlemail.com>,
+        Masami Hiramatsu <mhiramat@kernel.org>,
+        Mathieu Poirier <mathieu.poirier@linaro.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        Mauro Carvalho Chehab <mchehab@kernel.org>,
+        Max Filippov <jcmvbkbc@gmail.com>,
+        Maxime Coquelin <mcoquelin.stm32@gmail.com>,
+        Mengyuan Lou <mengyuanlou@net-swift.com>, Michael Buesch <m@bues.ch>,
+        Michael Ellerman <mpe@ellerman.id.au>,
+        Michal Simek <michal.simek@amd.com>,
+        Miodrag Dinic <miodrag.dinic@mips.com>,
+        Naveen N Rao <naveen@kernel.org>,
+        Neil Armstrong <neil.armstrong@linaro.org>, netdev@vger.kernel.org,
+        Nicolas Ferre <nicolas.ferre@microchip.com>,
+        Nicolas Saenz Julienne <nsaenz@kernel.org>,
+        Nicholas Piggin <npiggin@gmail.com>,
+        Nikhil Agarwal <nikhil.agarwal@amd.com>,
+        Nipun Gupta <nipun.gupta@amd.com>, Nishanth Menon <nm@ti.com>,
+        =?UTF-8?q?Pali=20Roh=C3=A1r?= <pali@kernel.org>,
+        Palmer Dabbelt <palmer@dabbelt.com>, Paolo Abeni <pabeni@redhat.com>,
+        Paul Cercueil <paul@crapouillou.net>,
+        Paul Walmsley <paul.walmsley@sifive.com>,
+        Pengutronix Kernel Team <kernel@pengutronix.de>,
+        Peter Rosin <peda@axentia.se>, Philipp Zabel <p.zabel@pengutronix.de>,
+        Piotr Wojtaszczyk <piotr.wojtaszczyk@timesys.com>,
+        platform-driver-x86@vger.kernel.org,
+        Prasad Kumpatla <quic_pkumpatl@quicinc.com>,
+        Qiang Zhao <qiang.zhao@nxp.com>, Qin Jian <qinjian@cqplus1.com>,
+        "Rafael J. Wysocki" <rafael@kernel.org>,
+        Randy Dunlap <rdunlap@infradead.org>, Ray Jui <rjui@broadcom.com>,
+        Rengarajan Sundararajan <Rengarajan.S@microchip.com>,
+        Richard Cochran <richardcochran@gmail.com>,
+        Richard Weinberger <richard@nod.at>, Rich Felker <dalias@libc.org>,
+        Rob Clark <robdclark@gmail.com>,
+        Robert Jarzmik <robert.jarzmik@free.fr>,
+        Robert Richter <rric@kernel.org>, Rob Herring <robh@kernel.org>,
+        Roger Quadros <rogerq@kernel.org>,
+        Russell King <linux@armlinux.org.uk>,
+        Ryan Chen <ryan_chen@aspeedtech.com>,
+        Ryder Lee <ryder.lee@mediatek.com>,
+        Samuel Holland <samuel@sholland.org>,
+        Santosh Shilimkar <ssantosh@kernel.org>,
+        Sascha Hauer <s.hauer@pengutronix.de>,
+        Scott Branden <sbranden@broadcom.com>, Scott Wood <oss@buserror.net>,
+        Sean Paul <sean@poorly.run>, Sean Wang <sean.wang@kernel.org>,
+        Sean Wang <sean.wang@mediatek.com>,
+        Sebastian Hesselbarth <sebastian.hesselbarth@gmail.com>,
+        Sergio Paracuellos <sergio.paracuellos@gmail.com>,
+        Shawn Guo <shawnguo@kernel.org>, Shawn Lin <shawn.lin@rock-chips.com>,
+        Siddharth Vadapalli <s-vadapalli@ti.com>,
+        Simona Vetter <simona@ffwll.ch>, Stafford Horne <shorne@gmail.com>,
+        Stefan Kristiansson <stefan.kristiansson@saunalahti.fi>,
+        Stephen Boyd <sboyd@kernel.org>, Sven Peter <sven@svenpeter.dev>,
+        Takashi Iwai <tiwai@suse.com>, Talel Shenhar <talel@amazon.com>,
+        Tero Kristo <kristo@kernel.org>,
+        Thangaraj Samynathan <Thangaraj.S@microchip.com>,
+        Thara Gopinath <thara.gopinath@gmail.com>,
+        Thierry Reding <thierry.reding@gmail.com>,
+        Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+        Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+        Toan Le <toan@os.amperecomputing.com>,
+        Tony Lindgren <tony@atomide.com>, Tony Luck <tony.luck@intel.com>,
+        UNGLinuxDriver@microchip.com,
+        =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <ukleinek@kernel.org>,
+        Vignesh Raghavendra <vigneshr@ti.com>,
+        Vineet Gupta <vgupta@kernel.org>, Vladimir Oltean <olteanv@gmail.com>,
+        Vladimir Zapolskiy <vz@mleia.com>, WANG Xuerui <kernel@xen0n.name>,
+        Woojung Huh <woojung.huh@microchip.com>, x86@kernel.org,
+        Yanteng Si <si.yanteng@linux.dev>,
+        Yoshinori Sato <ysato@users.osdn.me>, Zhang Rui <rui.zhang@intel.com>
+Subject: Re: (subset) [PATCH v2 00/57] irqdomain: Cleanups and Documentation
+Date: Tue, 25 Mar 2025 08:03:28 +0100
+Message-ID: <174288553816.2234438.13558299160543301187.b4-ty@csgroup.eu>
+X-Mailer: git-send-email 2.47.0
+In-Reply-To: <20250319092951.37667-1-jirislaby@kernel.org>
+References: <20250319092951.37667-1-jirislaby@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-TrafficTypeDiagnostic:
-	AS8PR04MB8644:EE_|DB9PR04MB9353:EE_|AMS0EPF000001A1:EE_|VI0PR04MB11071:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6e701b04-7760-4ed6-fa6c-08dd6b6d4608
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam-Untrusted:
- BCL:0;ARA:13230040|366016|1800799024|376014|7416014|52116014|38350700014;
-X-Microsoft-Antispam-Message-Info-Original:
- =?us-ascii?Q?CnlR+IyMGz0xGBsgjGJyfZ1puYcK+5Ewc4+QmUaB5NSXiKfI9qec1GFiyt9d?=
- =?us-ascii?Q?4UCqRk1lbs/GdqKsbgJCubXR0Xps4vqlElfo3H6qJ9+G21vKMktjDMx3S1s4?=
- =?us-ascii?Q?eGb4f8ahx6CrKYaT4SPjp4ZTRMs+gZOEvJQUfQD5rv1DbAM+11du/BigwQkv?=
- =?us-ascii?Q?hj1TYJoy4OIvZTz9DxkxfzhkjX6wa00fcVp3qZT3dUsImpKw5Gh5eIgNPIl+?=
- =?us-ascii?Q?DwytWOglFqrYQr272+UT36xz62cr9ieg2kipsbAQpQjdCnoppvxcc29Hiv29?=
- =?us-ascii?Q?ULQxpRBNHfRY8zuIWAvtaljOXkKEVygAz+uO7YZX7byBmlYQ5Tmb6kZ0ocMT?=
- =?us-ascii?Q?PWCjl16AcZmM/b5RSnAirE//7oTkRezEhXSUBzLjg/vYu7HS5iKwtOBCf+BV?=
- =?us-ascii?Q?WDAq9ZlLvdFFxaDAQGj86Kj10hAYowz2GPxzg2j/xZ77gU4wqn7UZrWX4UnO?=
- =?us-ascii?Q?3FEMnXN6XFLWCUrebp/5k8juXOLQzTbGv9tIEzKqbVzNJIngqeqWe/URSATC?=
- =?us-ascii?Q?k9ABjWTLPy3ZORL5yslGv3iQyPWpqFykr210fDHsJH/FuCutOPDuc4cfJg4A?=
- =?us-ascii?Q?vl7HG96zALoBEfMFOrLGLTpJpLohgiApEIp4d62GzPxSqGyIPAxpuK6zhQWB?=
- =?us-ascii?Q?prx4/gdEyoCspq514rNDGGgp0lp6gSQIT44YqQ5DZpoGcaelykh4Ub/SxmDm?=
- =?us-ascii?Q?dEFnlYHtfRO6L3v6msqJMSef3QLXVbVWgbgM50QnrOn9WzlMiOyLmr5IS9fF?=
- =?us-ascii?Q?G4KoWgUvGX7Wl5qOcKZnbE483pbgkA6E7V8BptlAvnImrwbm9t6RD7QajGW2?=
- =?us-ascii?Q?Uqb5rDcu5Z3wgszmLII8r9vAXRaFXD/05h2cwXhCScXNpDqBTKt+d+hqR6t2?=
- =?us-ascii?Q?lfQFPBPbkCOcM3eNuz5F1jbZAkQobexfvuWY0n1eNfFtZyGZ8sFK2KycFnUg?=
- =?us-ascii?Q?3ISX4jZ5Ulqo39EhggubPYy0P54N8USkYRTMlADhGZ/jw/X3MluXB6+sSuAL?=
- =?us-ascii?Q?PXUtmUKQZqStYebHG0GbeUhfe+LC9OOnEU3aaRLCU8z0CAVf7Iqf+mWCjm2i?=
- =?us-ascii?Q?TDIfIjIkMGDQZVRwPfmDQrcpeSQmRkL867AS8BtitgJAwI3ucKp/PTNw1mNS?=
- =?us-ascii?Q?LT5jfi26VGQe2K2hGXQ8Z2TqtR+i1udzlhg85TD06ZVcsyhm+teYweH6yj1O?=
- =?us-ascii?Q?/C3WPkRjZc5zUPq8r7le0Vo0CgVYScqNlDtzxbttvCdHwDX4xNuev0PjwXJ+?=
- =?us-ascii?Q?z6M8ZeIenvV146iBX9rUy3ePR4+QDO2Fr8H3bOKUsMoo21YEx9C1tBBoW3oD?=
- =?us-ascii?Q?9zNECwnKx0soiSDNBu4YSpyoUU1FDpqay4guqC8Oh/HgnA7M8gXjf5UQIVoJ?=
- =?us-ascii?Q?PT+mWWK/MlUefQ5fJXYwkoHX8S+NNKKOZpflRXu+8Xyc9w6ImcbTb/3R8LbJ?=
- =?us-ascii?Q?1J5wmkUzqFWueLnPqt+C1QrXmJBXKzuQ?=
-X-Forefront-Antispam-Report-Untrusted:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS8PR04MB8644.eurprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(52116014)(38350700014);DIR:OUT;SFP:1102;
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DB9PR04MB9353
-X-CodeTwo-MessageID: 009c6fe2-c2bf-4351-900e-043b32a9c214.20250325071841@westeu12-emailsignatures-cloud.codetwo.com
-X-CodeTwoProcessed: true
-X-EOPAttributedMessage: 0
-X-MS-Exchange-Transport-CrossTenantHeadersStripped:
- AMS0EPF000001A1.eurprd05.prod.outlook.com
-X-MS-PublicTrafficType: Email
-X-MS-Office365-Filtering-Correlation-Id-Prvs:
-	4160111f-a6f6-4f50-6d67-08dd6b6d43dc
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|1800799024|35042699022|36860700013|7416014|376014|14060799003|13003099007;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?9LmJPUyGx6TwrfyYvkJbra4yMqW1KxMfH+Cpp/M2FcYSm6ftfZlYr0tQccD4?=
- =?us-ascii?Q?qGUZyIzyXp1a9edN+Pdd9haFLv3V26qN5alP7a/o8wjpq2wvi/RYJdIHoCxT?=
- =?us-ascii?Q?A2Lg3eoeLAn232UC/Tm4PAHqDhGew9WYa51Vw/sZAZeS4mPkzdqud3Msv5dE?=
- =?us-ascii?Q?VyBzmhyJ+AjRhFvxpU1UYaCEemQkXma42W6tHk7iRaHSVY077XnfeTWnmutk?=
- =?us-ascii?Q?6NrNN4Ukad0zgEwHdCA7SBgghgSp4fVlLNSMoDZ8siwOa1WtOXHyIYhqT1K0?=
- =?us-ascii?Q?dA19eoSOTNJOa+/4OYjH9YYapEpP2COTmnxDzHDO/VJFAYp7SH7P1rq6aNQq?=
- =?us-ascii?Q?aQNJI5O81T4yTz98tOoV71CT+IQPhLxrHPSpTx9xeCaGuKYALen2FFe4oHCK?=
- =?us-ascii?Q?lXxHk8Ar04/HVS+y69NrV6YVxsfQtAMNdrqUVRHiB3aLkQe3ylGN1mZUCIWX?=
- =?us-ascii?Q?2Hg5EK43G2HdvwEEKwFDniX/A3bPWa62iuB9qh1nvru17HqhiArtU0iUr1PH?=
- =?us-ascii?Q?zX6hQXweZSoearAbs/aRZ07Qf/GRxR9r6F3dcoHtkvvCLiGFbMjcwbGC71MQ?=
- =?us-ascii?Q?4k7zZuYuSxMml4GanOE0O1lPC5tXyd0qm8MAWioQYkXbQ0+HTcTMVfkqElQ4?=
- =?us-ascii?Q?JhT7j14NF1Dd3Gd2lqKKUIfv6TUnUpcQcfUH8fsyTJv2i/2+Rsnk9moGPcR4?=
- =?us-ascii?Q?5tjXr3XaVaYc8Undz7jnUANacu8wCzSmYXW0r4LfKzjOE4MB1qJLzfyxt3fu?=
- =?us-ascii?Q?u6C1OXKmzRFnHjVc+aVhkH8gr1UIGTf5GJwgJkg/NlLCNVMqWAY95AXKX/Rk?=
- =?us-ascii?Q?C99iWW9dgJNPxykS5vtSCm1VhjaV76+J1jXjk25SMm0AAALabDQQu9anGqvS?=
- =?us-ascii?Q?KDXXh/DlYjBKvWTpb+Zk3IEzyT9i3t5twynia58XjHw3OhwrLNONSTADZAsd?=
- =?us-ascii?Q?9VNPbRNx9QxRGScFrm8r6qOnvXkqQqaW8MORuIk1xv7nFoWJYULN34S5ZJ44?=
- =?us-ascii?Q?4lBFC3KazZiKDtfGx5m5GhAPyUXo9dJt+e7MkdstU0PUI9y1aKIBLBzeYBaQ?=
- =?us-ascii?Q?vc1Nztam3qJf2YMeJivaGSp4McVkNmJ/667xiQMFzMsqpZ/SdKKDSsIv79qs?=
- =?us-ascii?Q?feDN80HU3Mhxd7HaXWv8oyr31TCH7jaQM1QxysLKXWgd/6Xqvd9MEHevOTyW?=
- =?us-ascii?Q?t3wD5rWo/rhYATRdDuD903zHReeQGFzUMt1XaZJeNY9V8+iilu8LwR0pDU8G?=
- =?us-ascii?Q?RqjsyY9ZCB4fBGoU7bBYUgEow6T4d5sYNx+QvtLE2kZZH7pGEOWFM2hn1HuM?=
- =?us-ascii?Q?pNyPjJbJKXkeu5lppZ1EvTsK8OX2K/wykaoqLDTzlzOo+2f6WrLv2+chdqUN?=
- =?us-ascii?Q?twLIKOA34JlVvOvINd/cuBowCMUKqTnFjAoK1BkIrhDGU3Zv9/o9flZauazq?=
- =?us-ascii?Q?rkWURKwoyts=3D?=
-X-Forefront-Antispam-Report:
-	CIP:13.93.42.39;CTRY:NL;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:westeu12-emailsignatures-cloud.codetwo.com;PTR:westeu12-emailsignatures-cloud.codetwo.com;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(35042699022)(36860700013)(7416014)(376014)(14060799003)(13003099007);DIR:OUT;SFP:1102;
-X-OriginatorOrg: topic.nl
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Mar 2025 07:18:42.6766
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6e701b04-7760-4ed6-fa6c-08dd6b6d4608
-X-MS-Exchange-CrossTenant-Id: 449607a5-3517-482d-8d16-41dd868cbda3
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=449607a5-3517-482d-8d16-41dd868cbda3;Ip=[13.93.42.39];Helo=[westeu12-emailsignatures-cloud.codetwo.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	AMS0EPF000001A1.eurprd05.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: VI0PR04MB11071
-
-Introduce optional `reset-gpios` property to enable GPIO-based control
-of the PCIe root port PERST# signal, as described in pci.txt.
-
-Signed-off-by: Mike Looijmans <mike.looijmans@topic.nl>
----
-
-Changes in v2:
-Add binding for reset-gpios
-
- .../devicetree/bindings/pci/xlnx,axi-pcie-host.yaml          | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml =
-b/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-index fb87b960a250..2b0fabdd5e16 100644
---- a/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-+++ b/Documentation/devicetree/bindings/pci/xlnx,axi-pcie-host.yaml
-@@ -28,6 +28,9 @@ properties:
-           ranges for the PCI memory regions (I/O space region is not
-           supported by hardware)
-=20
-+  reset-gpios:
-+    maxItems: 1
-+
-   "#interrupt-cells":
-     const: 1
-=20
-@@ -63,6 +66,7 @@ unevaluatedProperties: false
-=20
- examples:
-   - |
-+    #include <dt-bindings/gpio/gpio.h>
-     #include <dt-bindings/interrupt-controller/arm-gic.h>
-     #include <dt-bindings/interrupt-controller/irq.h>
-=20
-@@ -80,6 +84,7 @@ examples:
-                         <0 0 0 3 &pcie_intc 3>,
-                         <0 0 0 4 &pcie_intc 4>;
-         ranges =3D <0x02000000 0 0x60000000 0x60000000 0 0x10000000>;
-+        reset-gpios =3D <&gpio0 9 GPIO_ACTIVE_LOW>;
-         pcie_intc: interrupt-controller {
-             interrupt-controller;
-             #address-cells =3D <0>;
---=20
-2.43.0
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1742886214; l=533; i=christophe.leroy@csgroup.eu; s=20211009; h=from:subject:message-id; bh=EKh0/GewaFERhfnFRfKBg2j5NzMhdBBECdrA+NV/qUk=; b=vA70hw72XKaj1SXthnl6PXh4i9Z2K3Egqlb0PIRXfpHV2vrVCLTo/AG4L7b0hc2x3UCZ6Qx3v FOB4ERwauOeBecqk7A7PBvaW/237URvW4CKvgDK24Wh/OVU59RY4zZO
+X-Developer-Key: i=christophe.leroy@csgroup.eu; a=ed25519; pk=HIzTzUj91asvincQGOFx6+ZF5AoUuP9GdOtQChs7Mm0=
+Content-Transfer-Encoding: 8bit
 
 
-Met vriendelijke groet / kind regards,=0A=
-=0A=
-Mike Looijmans=0A=
-System Expert=0A=
-=0A=
-=0A=
-TOPIC Embedded Products B.V.=0A=
-Materiaalweg 4, 5681 RJ Best=0A=
-The Netherlands=0A=
-=0A=
-T: +31 (0) 499 33 69 69=0A=
-E: mike.looijmans@topic.nl=0A=
-W: www.topic.nl=0A=
-=0A=
-Please consider the environment before printing this e-mail=0A=
+On Wed, 19 Mar 2025 10:28:53 +0100, Jiri Slaby (SUSE) wrote:
+> tl;dr if patches are agreed upon, I ask subsys maintainers to take the
+> respective ones via their trees (as they are split per subsys), so that
+> the IRQ tree can take only the rest. That would minimize churn/conflicts
+> during merges.
+> 
+> ===
+> 
+> [...]
+
+Applied, thanks!
+
+[48/57] irqdomain: soc: Switch to irq_find_mapping()
+        commit: a70a3a6322131632cc6cf71e9d2fa6409a029fd7
+
+Best regards,
+-- 
+Christophe Leroy <christophe.leroy@csgroup.eu>
