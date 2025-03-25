@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77460254857;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16F6254879;
 	Tue, 25 Mar 2025 10:26:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742898395; cv=none; b=izCH4nS8zyaKr29ipfpjU//rpz1n2wR3JY/6Hv4uptJaxcw93Hivmj8K5a3LeKqymK/mrhlRYi/zD7RFbIXVeqw1iDJiw1wIFTgeHKWC4r9GpOOlVr2mBmOsV2UZeF9amrqkMfZ5fxfCxeNg2eNa1Ce9JAOOyir6R4xgzzeDfvI=
+	t=1742898395; cv=none; b=q98B1GAlN8BIJsNKJPX3ssM54YTtlAxw+vZEefh4jI5QY+7D5sJxNkodxU0llJB2WQhiQsndSvJeVYCZ5tWLXLDwvegC51W/59s0Ulv7lsR1Yelt+MxLRJ2nIIaojVw5fUi1XgrW6xNRqZgOY77wQ7zgZlesh2Xi36yQ3vz5RZo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1742898395; c=relaxed/simple;
-	bh=khvmda81Vor6ELCVCuRt/OG1eU4tA4ZfEAJHXcgitdM=;
+	bh=VSfhlj5RX9Q0sFL8fHCdCaINpj+NsUZXrHHgkzj/h48=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=mu/XNQkv01il3ODShDagfjxcBeXM19qJ2a+wdBlAl0ZANlLzeKUAAdSnmd9n0kapkMiNensPGcd2XEvVrGGYcPyawPLCPi+OzSh1qI9nnjYMLLwrLZoEml5cFu+nX9WWfNLWPCZ8CW/xMeAe/fuANGLOuhlS4Raa187ZWWEktKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E/vhHGya; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=UbNG6Qp993KxNkMpcWctL0J+mQpU9e7gBE4RluOQB5RTw1YkDpO2Bdz1ZqXPL9X4DDjFrGDxArjCmj3KumwLy4YIuo75lPdSB7bf5Q9WWKwJe2Ck7VbsJ5GO3+SbmKGTVoaSldeRrTdg22EuZgoAhANJZ/uw3erjgiBWRx6w55I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DGKbOGoe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E/vhHGya"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E690DC4CEE8;
-	Tue, 25 Mar 2025 10:26:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DGKbOGoe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1DD9FC4CEEF;
+	Tue, 25 Mar 2025 10:26:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1742898395;
-	bh=khvmda81Vor6ELCVCuRt/OG1eU4tA4ZfEAJHXcgitdM=;
+	bh=VSfhlj5RX9Q0sFL8fHCdCaINpj+NsUZXrHHgkzj/h48=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=E/vhHGyaqwh1rnTLsKJxY99Gn6mvVieJtZJMPvBvbzGB5tcM2b3c614iEVhoyzIRo
-	 WlM3lrXldAiHAp1xIloJZ1ZRtwpSO3YTobH0W2lscNBjfAq/vvQibiEoa6E1pnvIeZ
-	 rJGIZR61JW7RR/USAyDJZ4aqzA9RKwt7w9d25sqQxPudlg2i39K4TKLryf0X/YZJNr
-	 yb9aedZCw11ax+G3UybagMzZLIpQqaWRA/kPr47grZQxmqVMQMs/qGBR8D/B05+yb4
-	 y3PwXAL55i2v5HCHF2qg9vcgW6rdXIY4Xb/+biAjnpuN7/eHhOPalEi6n5uvvcO/IL
-	 w5z9u+u8eMzZQ==
+	b=DGKbOGoeIMFSz4zITg4ScePrgJqXqHIWQs0ttHPfQ/1q96gwO/fQ0pTbdYLzxrNSG
+	 AREng6rzN5ApUkvlwATUwA0AG1tPAOBh8Pk2HeU29t2pnfNPYSSyASzkXTcG6m67KP
+	 LzdauePc5hAhkZZxVNZ/pdqfBZUVHE5xVdRJbt+tJOA1Z/qkkG0hpAp3pkfNQuzBDT
+	 HNg64fX0usc3k1AaNHM71S1Q0PNKG4w87KJWT/Qx7YhNHa2z1/+DiOGIOilQOaQBkz
+	 rTbaDHpyWz9DivAfYdObQOhvtCI+zmWTNsQ7+I7fr5STpt+gdOv2yaTkHd1R+MhNV5
+	 i+Dgo1WggT/Jg==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1tx1UO-00GsRS-Rw;
-	Tue, 25 Mar 2025 10:26:32 +0000
+	id 1tx1UP-00GsRS-AY;
+	Tue, 25 Mar 2025 10:26:33 +0000
 From: Marc Zyngier <maz@kernel.org>
 To: linux-arm-kernel@lists.infradead.org,
 	linux-pci@vger.kernel.org,
@@ -48,9 +48,9 @@ Cc: Alyssa Rosenzweig <alyssa@rosenzweig.io>,
 	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>
-Subject: [PATCH v2 03/13] PCI: ecam: Allow cfg->priv to be pre-populated from the root port device
-Date: Tue, 25 Mar 2025 10:26:00 +0000
-Message-Id: <20250325102610.2073863-4-maz@kernel.org>
+Subject: [PATCH v2 05/13] PCI: apple: Dynamically allocate RID-to_SID bitmap
+Date: Tue, 25 Mar 2025 10:26:02 +0000
+Message-Id: <20250325102610.2073863-6-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250325102610.2073863-1-maz@kernel.org>
 References: <20250325102610.2073863-1-maz@kernel.org>
@@ -66,34 +66,40 @@ X-SA-Exim-Rcpt-To: linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.o
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-In order to decouple ecam config space creation from probing via
-pci_host_common_probe(), allow the private pointer to be populated
-via the device drvdata pointer.
-
-Crucially, this is set before calling ops->init(), allowing that
-particular callback to have access to probe data.
-
-This should have no impact on existing code which ignores the
-current value of cfg->priv.
+As we move towards supporting SoCs with varying RID-to-SID mapping
+capabilities, turn the static SID tracking bitmap into a dynamically
+allocated one. The current allocation size is still the same, but
+that's about to change.
 
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/ecam.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/pci/controller/pcie-apple.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/ecam.c b/drivers/pci/ecam.c
-index 260b7de2dbd57..2c5e6446e00ee 100644
---- a/drivers/pci/ecam.c
-+++ b/drivers/pci/ecam.c
-@@ -84,6 +84,8 @@ struct pci_config_window *pci_ecam_create(struct device *dev,
- 			goto err_exit_iomap;
- 	}
+diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
+index 9c3103d0d1174..1f6c55e4b5d68 100644
+--- a/drivers/pci/controller/pcie-apple.c
++++ b/drivers/pci/controller/pcie-apple.c
+@@ -147,7 +147,7 @@ struct apple_pcie_port {
+ 	void __iomem		*base;
+ 	struct irq_domain	*domain;
+ 	struct list_head	entry;
+-	DECLARE_BITMAP(sid_map, MAX_RID2SID);
++	unsigned long		*sid_map;
+ 	int			sid_map_sz;
+ 	int			idx;
+ };
+@@ -524,6 +524,10 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
+ 	if (!port)
+ 		return -ENOMEM;
  
-+	cfg->priv = dev_get_drvdata(dev);
++	port->sid_map = devm_bitmap_zalloc(pcie->dev, MAX_RID2SID, GFP_KERNEL);
++	if (!port->sid_map)
++		return -ENOMEM;
 +
- 	if (ops->init) {
- 		err = ops->init(cfg);
- 		if (err)
+ 	ret = of_property_read_u32_index(np, "reg", 0, &idx);
+ 	if (ret)
+ 		return ret;
 -- 
 2.39.2
 
