@@ -1,143 +1,169 @@
-Received: from mail-qt1-f176.google.com (mail-qt1-f176.google.com [209.85.160.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCF0AA93D
-	for <linux-pci@vger.kernel.org>; Tue, 25 Mar 2025 06:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27B851FDE2B;
+	Tue, 25 Mar 2025 06:57:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1742884739; cv=none; b=M7kYY6yBsB2asyU22b61/ASaCTaP5Am8Q/AuVjyAOVYd7hLnzf5R+DQGHKJrSa0GAUrsVrak7Af6o1tMiUKqfTreS7y5Cs0R5lBcBAImOzUfmUxHZh5vG8o3+PjZclm51V+T4I7alBHdZbSgmFLKwe7+3cDtyD543U/muBYLszw=
+	t=1742885861; cv=none; b=RkENguuryeEVTHsCsESkpWJ+ZKgaLX0gKFJjMal+NoxZ9yvOtgSjr8hiCkW1pUoiciND4ZPkVV2atS04Trf87iXFrz63MeTAEZCdr4y28qyUCFbd5YT36himIvVt3twgBUTP3x6ncUh5RNTDYgm8poWLv4mqdR6AcLXiuaedeB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1742884739; c=relaxed/simple;
-	bh=T1Kj5XzFBrmk3jHH7k6f4Yi0UaHdUydFK1dPr4nCHCw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PPTLzftbQBh64eFyyvuZ0L9V3nWsDk54QE18mXzehfoZ1ezmEAZHz5wEIjuFd3PRSJWNOcsL1wZqS8u6CzixN0xW6rreWPyPD1mx7afEW6CXOo27VKdijB9ILwoBAr4TIxs1N2M9r7YVOWzOXOwmlqVAedXSYI1wglpdzm9zm6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=2HYKJxMC; arc=none smtp.client-ip=209.85.160.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1742885861; c=relaxed/simple;
+	bh=mrWlhzsP7VDMDRI5lyXvbZor6lg91zVdS93Hng4hwgU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=iZS8gu7A6cRsANDZdh0cC0+2pe0Mb1/Y//t0V5hhytytU1b1HeyeY27iISBVIcNzOq3pVrK9KBbbgPJ3/DNxEgohM0ux1RnF/3ki2Y85v75oCeFC5SOEUHr8qzTap96JSZgtQm3L+oCSMPtB38aoCIBMxKrDLNluYHc6UoB6aPU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L7EJYNqJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="2HYKJxMC"
-Received: by mail-qt1-f176.google.com with SMTP id d75a77b69052e-4766631a6a4so53036541cf.2
-        for <linux-pci@vger.kernel.org>; Mon, 24 Mar 2025 23:38:57 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1742884737; x=1743489537; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=71tdewEckJw/9nhboX3/e3aFJxffZh5g7UprIW8MqNw=;
-        b=2HYKJxMCYylCPq9x9N/uk1q77RLa9P0uS8uS7WjFtI4X7fdGdJMgACypahGtZzus8U
-         o7RTeVXr6B2tR+OTrc2akym54iZ/Hvg34tDKbXixa8ad36C7RpuDzDeNJ2nn9WWHSFbS
-         LWB1tH/L/lRqK3DlSbT+8vZsOEq9Kk5ny0FNVYD5w5Q5ASJTm/Jv5g9DmCULbNkon/Wv
-         r3JtTIm7Y76lEfwRF9J3SL4BJQIjhiD/ooR+fBE56vs0DHyMwsKHKWj8rHLkkcSVEezU
-         lZE4gtlFQsyGmRZ7GkLYZ9heO1AarIlwz6zz/2L4DR3YnlfLKEKSyHNUjOtbFMtGOqMz
-         +UsQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1742884737; x=1743489537;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=71tdewEckJw/9nhboX3/e3aFJxffZh5g7UprIW8MqNw=;
-        b=vbsrd7GvBjl4de6v1v8s7OjFvyx98ipn6SPLFBS5+7LgtL02SijFaSOak7xYoVgmOQ
-         M6Z+sfTClUPqhdZfyevLtsfF13jAzVeyTxvInwQs88yoRe5mYbSeNLYPAEvV2P3xmOs/
-         OYQP//RtgfDziw8XHpPv/gbNvcsOo15PPjLnglqnyTNyJr6AteFrolsplffvrWW7hDj7
-         ScuwFCdz40nzS9UA9TdBpycdvcp4ER8Z7wm1qYA+cDyIS9C5S/V0MMAx0dYXRyrRaTNP
-         syYEgbSj2B5Q338cvi/Nv0sR+N65VKzkyK8wUzDdw5mA53vcidt8j4JiBMAKUH5izqxd
-         g8Bw==
-X-Forwarded-Encrypted: i=1; AJvYcCUQAyvg7JLvPUqrkSiF8VzUBl6ybSQELALsGyIGijKUcXufD1rUL3xICfdm2AdIUwcqDmh1eLcexiA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzQvMFgAUMCq3Ef1siXkcuw888tWrCLhhs7kwDbK9tLpBTzqViR
-	PPwEE5Y3lcjp1bu6FYd2GQ4RYIBsJyX/qeHB4UVshKOrRwHbh4U1kXFMtsnzxQ+axgcfLqZK6kv
-	3a6h3A1GP1bJGOfuGwRhuVwBB4CQppXlL08zK
-X-Gm-Gg: ASbGncttNpM4OqX0dS4qLZyWTQ52Zax7cSpfofIviU2WVREN/jq/+syCyG1WRJbkkIM
-	fE4KJoyptcVcH813Q6Tgn657zG/Pasv8My00IFs7q0axZhK1dD4NHbG0v6ctXzk56/KpUgJsnuK
-	5ok5LiPC+F8aV4HaDwld1E5IyIeMjVqMIjAzn3YKeFXf1oSSz8tdylc3I=
-X-Google-Smtp-Source: AGHT+IEGKZi+1aLt9scm9sUb9YqAFLoiTtqxzsba9OKFz2SH4DHeaqUENbYD6sAd8IV/WNsbR6PqJ9B/RKqnO0xTd0g=
-X-Received: by 2002:a05:622a:250a:b0:477:4224:9607 with SMTP id
- d75a77b69052e-477422496a6mr99228691cf.12.1742884736415; Mon, 24 Mar 2025
- 23:38:56 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L7EJYNqJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B104CC4CEE8;
+	Tue, 25 Mar 2025 06:57:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1742885860;
+	bh=mrWlhzsP7VDMDRI5lyXvbZor6lg91zVdS93Hng4hwgU=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=L7EJYNqJKfdBFuhoZKL92j0J4Pdqtpzopv4La/f1KF3oauogtQ0ZxPD6liMHvoU24
+	 BKj7XLVaFdXaGetaIUzSrhWqOeNZBBMuKhvRp8dDO9gLVas6e4M+u/JWHEiq3SsFHC
+	 alqfJkiKJYAWSJjg75tZQ5Om93n6AmaFjir28kG19dTb4MGfx4rbmOe2KfHB2AARTL
+	 uqwCL9e/70pH3xjpMBq84o0R7mz7zzEocsEKQsMCKjD9LBQ/8bb1zWTEHIvPDJTnnO
+	 76mTPNCUQN80TMVswNUUeDImvldfTDybrRheMJBe2a63M4aT2iGlqN9j1rCw9v5Ffh
+	 G2VKv6YFONZ3A==
+Message-ID: <53eb9d35-2b7c-4742-af18-e7b0fb1cdcfe@kernel.org>
+Date: Tue, 25 Mar 2025 07:57:33 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250303070501.2740392-1-danielsftsai@google.com>
- <87a5a2cwer.ffs@tglx> <CAK7fddD4Y5CJ3hKQvppGB2Bof4ibYDX4mBK3N1y8qt-NVoBb7w@mail.gmail.com>
- <87eczd6scg.ffs@tglx> <CAK7fddAqDPw1CuvBDUsQApbs1ZSE_ruyTAdsp+c4116C0ZjvVw@mail.gmail.com>
- <878qpi61sk.ffs@tglx> <CAK7fddCG6-Q0s-jh5GE7LG+Kf6nON8u9BS4Ame9Xa7VF1=ujiw@mail.gmail.com>
- <878qpg4o4t.ffs@tglx> <CAK7fddBSJk61h2t73Ly9gxNX22cGAF46kAP+A2T5BU8VKENceQ@mail.gmail.com>
- <874izz1x42.ffs@tglx>
-In-Reply-To: <874izz1x42.ffs@tglx>
-From: Tsai Sung-Fu <danielsftsai@google.com>
-Date: Tue, 25 Mar 2025 14:38:44 +0800
-X-Gm-Features: AQ5f1Jp-jjTIxnmSKo3TNp7XO34_AyVvuL271vXLLP8rCOHFLde3CpN2V_7ltwY
-Message-ID: <CAK7fddBidt90Yjh=fjj=w8uovjEyes6Qe1U0m7k5XWGYZm+GHA@mail.gmail.com>
-Subject: Re: [PATCH] PCI: dwc: Chain the set IRQ affinity request back to the parent
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Jingoo Han <jingoohan1@gmail.com>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Andrew Chant <achant@google.com>, 
-	Brian Norris <briannorris@google.com>, Sajid Dalvi <sdalvi@google.com>, 
-	Mark Cheng <markcheng@google.com>, Ben Cheng <bccheng@google.com>, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Marc Zyngier <maz@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/6] dt-bindings: pci: cadence: Add property "hpa" for
+ PCIe controllers
+To: Manikandan Karunakaran Pillai <mpillai@cadence.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+ "bhelgaas@google.com" <bhelgaas@google.com>, "kw@linux.com" <kw@linux.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ Milind Parab <mparab@cadence.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+References: <20250324082335.2566055-1-mpillai@cadence.com>
+ <CH2PPF4D26F8E1CE4E18E9CC5B8DAF724DCA2A42@CH2PPF4D26F8E1C.namprd07.prod.outlook.com>
+ <60af2ed4-91a9-434b-b1f6-a87218aba381@kernel.org>
+ <DS0PR07MB10492F672DEACE769F97C609BA2A72@DS0PR07MB10492.namprd07.prod.outlook.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <DS0PR07MB10492F672DEACE769F97C609BA2A72@DS0PR07MB10492.namprd07.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, Mar 11, 2025 at 10:05=E2=80=AFPM Thomas Gleixner <tglx@linutronix.d=
-e> wrote:
->
-> On Tue, Mar 11 2025 at 17:52, Tsai Sung-Fu wrote:
->
-> Please do not top-post and trim your replies.
->
-> > Running some basic tests with this patch (
-> > https://tglx.de/~tglx/patches.tar ) applied on my device, at first
-> > glance, the affinity feature is working.
-> >
-> > I didn't run stress test to test the stability, and the Kernel version
-> > we used is a bit old, so I only applied change in this 2 patches
->
-> I don't care about old kernels and what you can apply or not. Kernel
-> development happens against upstream and not against randomly chosen
-> private kernel versions.
->
-> > And adding if check on irq_chip_redirect_set_affinity() and
-> > irq_set_redirect_target() to avoid cpumask_first() return nr_cpu_ids
->
-> I assume you know how diff works.
->
-> > May I ask, would this patch be officially added to the 6.14 kernel ?
->
-> You may ask. But you should know the answer already, no?
->
-> The merge window for 6.14 closed on February 2nd with the release of
-> 6.14-rc1. Anything which goes into Linus tree between rc1 and the final
-> release is fixes only.
->
-> This is new infrastructure, which has neither been posted nor reviewed
-> nor properly tested. There are also no numbers about the overhead and
-> no analysis whether that overhead causes regressions on existing setups.
->
-> These changes want to be:
->
->    1) Put into a series with proper change logs
->
->    2) Posted on the relevant mailing list
->
->    3) Tested and proper numbers provided
->
-> So they are not even close to be ready for the 6.15 merge window, simply
-> because the irq tree is going to freeze at 6.14-rc7, i.e. by the end of
-> this week.
->
-> I'm not planning to work on them. Feel free to take the PoC patches,
-> polish them up and post them according to the documented process.
->
-I really appreciate the patches from you, I am quite new to the
-upstream and IRQ framework. So would you help to share
-some experiences on how this kind of new infrastructure of IRQ
-framework should be tested if you don't mind ?
-> Thanks,
->
->         tglx
+On 25/03/2025 04:16, Manikandan Karunakaran Pillai wrote:
+> 
+> 
+>> -----Original Message-----
+>> From: Krzysztof Kozlowski <krzk@kernel.org>
+>> Sent: Monday, March 24, 2025 9:29 PM
+>> To: Manikandan Karunakaran Pillai <mpillai@cadence.com>;
+>> lpieralisi@kernel.org; manivannan.sadhasivam@linaro.org;
+>> bhelgaas@google.com; kw@linux.com; robh@kernel.org;
+>> devicetree@vger.kernel.org
+>> Cc: linux-kernel@vger.kernel.org; linux-pci@vger.kernel.org
+>> Subject: Re: [PATCH 1/6] dt-bindings: pci: cadence: Add property "hpa" for PCIe
+>> controllers
+>>
+>> EXTERNAL MAIL
+>>
+>>
+>> On 24/03/2025 10:08, Manikandan Karunakaran Pillai wrote:
+>>> Document the newly added property "hpa" for Cadence PCIe controllers
+>>> in Documentation/devicetree/bindings/pci/ for Root Port and Endpoint
+>>> configurations
+>>
+>> Drop the path, pointless.
+> Ok
+>>
+>>>
+>>
+>> Please run scripts/checkpatch.pl on the patches and fix reported warnings.
+>> After that, run also 'scripts/checkpatch.pl --strict' on the patches and
+>> (probably) fix more warnings. Some warnings can be ignored, especially from -
+>> -strict run, but the code here looks like it needs a fix. Feel free to get in touch if
+>> the warning is not clear.
+>>
+> 
+> The scripts/checkpatch.pl has been run  with and without --strict. With the --strict option
+> 4 checks are generated on 1 patch(patch 0002 of the series), which can be ignored. There are 
+> no code fixes required for these checks. The rest of the 'scripts/checkpatch.pl' 
+> is clean.
 
-Thanks
+No, it's not. The patch has obvious style violations.
+
+
+> 
+>> <form letter>
+>> Please use scripts/get_maintainers.pl to get a list of necessary people and lists
+>> to CC (and consider --no-git-fallback argument, so you will not CC people just
+>> because they made one commit years ago). It might happen, that command
+>> when run on an older kernel, gives you outdated entries. Therefore please be
+>> sure you base your patches on recent Linux kernel.
+> 
+> Ok
+> 
+>>
+>> Tools like b4 or scripts/get_maintainer.pl provide you proper list of people, so
+>> fix your workflow. Tools might also fail if you work on some ancient tree (don't,
+>> instead use mainline) or work on fork of kernel (don't, instead use mainline).
+>> Just use b4 and everything should be fine, although remember about `b4 prep
+>> --auto-to-cc` if you added new patches to the patchset.
+>> </form letter>
+>>
+> I used an earlier list generated. Will take care to generate the list on latest tree.
+
+That's not the correct process. Why would you Cc maintainers from 10
+years ago?
+
+
+Best regards,
+Krzysztof
