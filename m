@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67BA420AF77;
-	Tue,  1 Apr 2025 15:36:23 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83B1220B804;
+	Tue,  1 Apr 2025 15:36:25 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743521785; cv=none; b=LpjeDgR2jCHghPR4myM9iQLjGOLRiR+JQf4wD+FeQSvsyRgJSdG9VlHqWKPUOm5Sx7X1VXxbFmqH1dRuCiHlI7V02HEUq3ZXoBrwzBrL3GWP5TlwXJzlRM9H90sG7MLfUxvth0vshtX2G+3vrY1KV0DoU0aog5B+lojSqe9HoX8=
+	t=1743521787; cv=none; b=F74x6pdXZnNt3NZrBV5uS792aMCIcGAP1cNbH31g99+bHd1SGqueecCMff5FQr1cQPd6GYRjcU3+o1eUfmWVx2Ct6hseIRIviUKV41DLD98iVyCdsIAlzJF1ON8FHorFvfNEytZQ4la7hI685dc6FU/WaS+voLkTkeZHaxdF2zM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743521785; c=relaxed/simple;
-	bh=46JUgl+6vaQPaPwaARcd8Y1Jg6gjnPnlcycQ5y7QLZQ=;
+	s=arc-20240116; t=1743521787; c=relaxed/simple;
+	bh=uExaOP1a4DxFAx6bbZRlSj9xlp0IAcng9Zs+2ugYS/8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=REOYxrsaai+9KwGFWU4K/Oqe5xkjL8C8YWiwDE7b0H2ubE5hkzd6ie8j+gvLg910A0+/Dn9nnmafwruQ1iJdG+FTOnVp+Ar5t6m5tWWUyysx9T/d1YDHKDFEbp1UNdsE2DtQhKUQDlY6NTFdMG1Cw6fn2wp+T9SmV+4X65STYiM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mR2yX8iI; arc=none smtp.client-ip=198.175.65.9
+	 MIME-Version; b=ENY5jktHmCoSDUrqJBBGlRaPQQL5yWsTKj0OzjH0QcD44LHJ7f+JYvnzQtLLeFu0kCPb82ZxMRI8f9bGLrII5MH1OYqN4ZCq0OuJXNYV9jbK46UDx5hzgCICzKIvObyn1ju6p6qGtswmsMQSGXIyNmX+nqJg3BQnEZew1slKav4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UKM69a8r; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mR2yX8iI"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UKM69a8r"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1743521784; x=1775057784;
+  t=1743521786; x=1775057786;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=46JUgl+6vaQPaPwaARcd8Y1Jg6gjnPnlcycQ5y7QLZQ=;
-  b=mR2yX8iId9TxaBwGlG6bHXmxnCSC+4epFxfHLRCiKY5q6cdGZTnT/rG2
-   WYKOd/fPELFWfhGnliZuoYJbzcAyfY+dDiJ7FDVkW4CjD3roWiHD3fe9K
-   CV/uleclv+HI2UBZJXLSgVnwxQahR2HYMzN2m7R9Y68SIxaWMToJpuwRq
-   hpxRnNyrA6NFrP2ffV1h5Gdai61YDA6wQGD6nwii/WYvKO2R3DsLhsgfa
-   oc0K5e7WzAxOUv9XhWH5MVs3acNOF45j00e11uuv2ZJMhArDEFzE/yqzI
-   54bvfkDvIdVBsF9hdB1HFUo9VW3F+nqcMoFR77YKNZ5OvQALJXiFf0GKC
-   w==;
-X-CSE-ConnectionGUID: //cRqAfiTlm36NZl+kUmZA==
-X-CSE-MsgGUID: 4xgTNBR+StyVpvSDeniFMg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11391"; a="67324793"
+  bh=uExaOP1a4DxFAx6bbZRlSj9xlp0IAcng9Zs+2ugYS/8=;
+  b=UKM69a8rm6ZyGFrHp2h+QIz4kaqYkDcMTQhIyB+GbdtfGMqiAoiuNARb
+   3f/QkhioEF4ZCCMdh4EgtIF3yHi8TxEqBbHREeBCJdnKbZ90mw3ej+K8/
+   olcZOJEaYTRsU46MFpMn7hxFcEowWOgaeh8BAqy9JWKyH0YjLFXwUi9LO
+   Ke3JCsGoK+enB8dJ13+V6I840klz6JNEP4KxtrYEBfiboQ4q6B1D3oUPi
+   Ss2BYt7ltQMHg1H4Vr+1eW07WI+JiHCAKbs4/ua4LW2Aa97mU9F76OrXB
+   6iUIic1WwWFvBOHLO3tBehm/8ZaBjOTXh2Kyv5aQZ/hftiOPRMY42POlA
+   Q==;
+X-CSE-ConnectionGUID: vVCFmD3UR0WbLOINxuP+Kw==
+X-CSE-MsgGUID: WfzQEl6cRECtTuqgVb/DIw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11391"; a="67324835"
 X-IronPort-AV: E=Sophos;i="6.14,293,1736841600"; 
-   d="scan'208";a="67324793"
+   d="scan'208";a="67324835"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:11 -0700
-X-CSE-ConnectionGUID: etIrAIWtRnijZgdupovB6g==
-X-CSE-MsgGUID: jjcCTox1SyWZWOgMsdAKdA==
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:19 -0700
+X-CSE-ConnectionGUID: T8EbKZs1Sf+ecB+4SGcKCw==
+X-CSE-MsgGUID: +cRi9RJ4QjS/KrePtLIb3g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.14,293,1736841600"; 
-   d="scan'208";a="126410769"
+   d="scan'208";a="126410833"
 Received: from anshuma1-desk.iind.intel.com ([10.190.239.112])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:08 -0700
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:16 -0700
 From: Anshuman Gupta <anshuman.gupta@intel.com>
 To: intel-xe@lists.freedesktop.org,
 	linux-acpi@vger.kernel.org,
@@ -58,9 +58,9 @@ Cc: rafael@kernel.org,
 	varun.gupta@intel.com,
 	ville.syrjala@linux.intel.com,
 	uma.shankar@intel.com
-Subject: [PATCH 02/12] PCI/ACPI: Add PERST# Assertion Delay _DSM method
-Date: Tue,  1 Apr 2025 21:02:15 +0530
-Message-ID: <20250401153225.96379-3-anshuman.gupta@intel.com>
+Subject: [PATCH 04/12] drm/xe/vrsr: Introduce flag has_vrsr
+Date: Tue,  1 Apr 2025 21:02:17 +0530
+Message-ID: <20250401153225.96379-5-anshuman.gupta@intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250401153225.96379-1-anshuman.gupta@intel.com>
 References: <20250401153225.96379-1-anshuman.gupta@intel.com>
@@ -72,111 +72,58 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Implement _DSM Method 11 as per PCI firmware specs
-section 4.6.11 Rev 3.3.
+From: Badal Nilawar <badal.nilawar@intel.com>
 
-Signed-off-by: Anshuman Gupta <anshuman.gupta@intel.com>
+Introduce flag has_vrsr to determine if platform supports VRSR feature
+
+Cc: Rodrigo Vivi <rodrigo.vivi@intel.com>
+Signed-off-by: Badal Nilawar <badal.nilawar@intel.com>
 ---
- drivers/pci/pci-acpi.c   | 53 ++++++++++++++++++++++++++++++++++++++++
- include/linux/pci-acpi.h |  7 ++++++
- 2 files changed, 60 insertions(+)
+ drivers/gpu/drm/xe/xe_device_types.h | 2 ++
+ drivers/gpu/drm/xe/xe_pci.c          | 3 +++
+ 2 files changed, 5 insertions(+)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index ebd49e43457e..04149f037664 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1499,6 +1499,59 @@ int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_power)
- }
- EXPORT_SYMBOL(pci_acpi_request_d3cold_aux_power);
+diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
+index c54adebfe518..b8ccf729f7c0 100644
+--- a/drivers/gpu/drm/xe/xe_device_types.h
++++ b/drivers/gpu/drm/xe/xe_device_types.h
+@@ -334,6 +334,8 @@ struct xe_device {
+ 		u8 has_sriov:1;
+ 		/** @info.has_usm: Device has unified shared memory support */
+ 		u8 has_usm:1;
++		/** @info.has_vrsr: Has capability to enter into VRAM self refresh */
++		u8 has_vrsr:1;
+ 		/** @info.is_dgfx: is discrete device */
+ 		u8 is_dgfx:1;
+ 		/**
+diff --git a/drivers/gpu/drm/xe/xe_pci.c b/drivers/gpu/drm/xe/xe_pci.c
+index 772b6c81672c..70d4827f5821 100644
+--- a/drivers/gpu/drm/xe/xe_pci.c
++++ b/drivers/gpu/drm/xe/xe_pci.c
+@@ -68,6 +68,7 @@ struct xe_device_desc {
+ 	u8 has_llc:1;
+ 	u8 has_pxp:1;
+ 	u8 has_sriov:1;
++	u8 has_vrsr:1;
+ 	u8 skip_guc_pc:1;
+ 	u8 skip_mtcfg:1;
+ 	u8 skip_pcode:1;
+@@ -343,6 +344,7 @@ static const struct xe_device_desc bmg_desc = {
+ 	.dma_mask_size = 46,
+ 	.has_display = true,
+ 	.has_fan_control = true,
++	.has_vrsr = true,
+ 	.has_heci_cscfi = 1,
+ };
  
-+/**
-+ * pci_acpi_add_perst_assertion_delay - Request PERST# delay via ACPI DSM
-+ * @dev: PCI device instance
-+ * @delay_us: Requested delay_us
-+ *
-+ * This function sends a request to the host BIOS via ACPI _DSM to grant the
-+ * required PERST# delay for the specified PCI device. It evaluates the _DSM
-+ * to request the PERST# delay and handles the response accordingly.
-+ *
-+ * Return: returns 0 on success and errno on failure.
-+ */
-+int pci_acpi_add_perst_assertion_delay(struct pci_dev *dev, u32 delay_us)
-+{
-+	union acpi_object in_obj = {
-+		.integer.type = ACPI_TYPE_INTEGER,
-+		.integer.value = delay_us,
-+	};
-+
-+	union acpi_object *out_obj;
-+	acpi_handle handle;
-+	int result, ret = -EINVAL;
-+
-+	if (!dev || !ACPI_HANDLE(&dev->dev))
-+		return -EINVAL;
-+
-+	handle = ACPI_HANDLE(&dev->dev);
-+
-+	out_obj = acpi_evaluate_dsm_typed(handle, &pci_acpi_dsm_guid, 4,
-+					  DSM_PCI_PERST_ASSERTION_DELAY,
-+					  &in_obj, ACPI_TYPE_INTEGER);
-+	if (!out_obj)
-+		return -EINVAL;
-+
-+	result = out_obj->integer.value;
-+
-+	if (result == delay_us) {
-+		dev_info(&dev->dev, "PERST# Assertion Delay set to"
-+			 "%u microseconds\n", delay_us);
-+		ret = 0;
-+	} else if (result == 0) {
-+		dev_warn(&dev->dev, "PERST# Assertion Delay request failed,"
-+			 "no previous valid request\n");
-+	} else {
-+		dev_warn(&dev->dev,
-+			 "PERST# Assertion Delay request failed"
-+			 "Previous valid delay: %u microseconds\n", result);
-+	}
-+
-+	ACPI_FREE(out_obj);
-+	return ret;
-+}
-+EXPORT_SYMBOL(pci_acpi_add_perst_assertion_delay);
-+
- static void pci_acpi_set_external_facing(struct pci_dev *dev)
- {
- 	u8 val;
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index dbc4b0ed433c..4b7373f91a9a 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -122,6 +122,7 @@ extern const guid_t pci_acpi_dsm_guid;
- #define DSM_PCI_POWER_ON_RESET_DELAY		0x08
- #define DSM_PCI_DEVICE_READINESS_DURATIONS	0x09
- #define DSM_PCI_D3COLD_AUX_POWER_LIMIT		0x0A
-+#define DSM_PCI_PERST_ASSERTION_DELAY		0x0B
- 
- #ifdef CONFIG_PCIE_EDR
- void pci_acpi_add_edr_notifier(struct pci_dev *pdev);
-@@ -134,6 +135,7 @@ static inline void pci_acpi_remove_edr_notifier(struct pci_dev *pdev) { }
- int pci_acpi_set_companion_lookup_hook(struct acpi_device *(*func)(struct pci_dev *));
- void pci_acpi_clear_companion_lookup_hook(void);
- int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_power);
-+int pci_acpi_add_perst_assertion_delay(struct pci_dev *dev, u32 delay_us);
- 
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
-@@ -142,6 +144,11 @@ int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_power)
- {
- 	return -EOPNOTSUPP;
- }
-+
-+int pci_acpi_add_perst_assertion_delay(struct pci_dev *dev, u32 delay_us)
-+{
-+	return -EOPNOTSUPP;
-+}
- #endif	/* CONFIG_ACPI */
- 
- #endif	/* _PCI_ACPI_H_ */
+@@ -589,6 +591,7 @@ static int xe_info_init_early(struct xe_device *xe,
+ 	xe->info.has_llc = desc->has_llc;
+ 	xe->info.has_pxp = desc->has_pxp;
+ 	xe->info.has_sriov = desc->has_sriov;
++	xe->info.has_vrsr = desc->has_vrsr;
+ 	xe->info.skip_guc_pc = desc->skip_guc_pc;
+ 	xe->info.skip_mtcfg = desc->skip_mtcfg;
+ 	xe->info.skip_pcode = desc->skip_pcode;
 -- 
 2.43.0
 
