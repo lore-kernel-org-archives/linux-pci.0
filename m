@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7B461EF388;
-	Tue,  1 Apr 2025 09:17:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14B9A1EF39A;
+	Tue,  1 Apr 2025 09:17:39 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743499059; cv=none; b=VqBWRMCbOOywNixXS2zAbflq8pYeUtiQKWijfYCaeeA0+uqEAAElU1L6aJBPWnIx1Zo6rxyrFaUOqytuC8xn1nbwGJuLKIp7pW2b0PSWtdLCIg/0N+PmrmdS4HbG9+E9QTilIhv5Ml/wMKxgKS6rKPFuPUUqFwkUIzTvx2eHn98=
+	t=1743499059; cv=none; b=qISThWbX88ZIYHMBSYfeRAO2LTO/1QcHCv4SgNqETlLAB+m5MRU+gxy9O/YKXrSZVYqx1UMjOKpFXh8mIPDnIKNFkxpUr+bDjHYNe8LCkd7K6rChdLP1jxeh5oceS7vMOVs8GtnMfTe2IaHbC8L4MyUIvSpFpN6wNfI1eS4vNWg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1743499059; c=relaxed/simple;
-	bh=Z64Y0a83D7907bZmI8Ufapa7X360ffiucFi1o4nkTKE=;
+	bh=U0ysh0TLWp+CLpUidcyzO51hkifl4bGUq07snvSw+w4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dQP6TekSNpnQOz06OFBBLrhvAtmgeBarEwpjCgH5HjQBA4jgSeLfxuKGIoZCobg4M5+mhkYYE19ZwXemfM+GrmNQ9iWVMoTfQvLMnZrDoCW+2UavvLXi49N0Sd4c7MMLsX/DB/82+mtkl1irRwec4bsfcshtxypKe9b8PbQbUzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OSd5a0Fq; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=nm+g5c5LQqpHKhFkGQwsr9bxsYwLO/PENV1aiwA7khZC7drPgefbrJWwacCZgS+D7GxVegwH5c2a1wJGngdKAGhsquBhIShpdyVMzLKOSVbhAjhL81qgwuzq/o41z6nUFSeb5iPvpNlEMW6bGkZJTGLbxH1nUsYE83s32vUSJBY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cLuIph2j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OSd5a0Fq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 874B4C4AF0B;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cLuIph2j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8028C4AF12;
 	Tue,  1 Apr 2025 09:17:38 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1743499058;
-	bh=Z64Y0a83D7907bZmI8Ufapa7X360ffiucFi1o4nkTKE=;
+	s=k20201202; t=1743499059;
+	bh=U0ysh0TLWp+CLpUidcyzO51hkifl4bGUq07snvSw+w4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OSd5a0Fq5MgQYBOgxKyA2BP6lFZ3L3o2X8YUHqChWS1c0YVro5vuxoa6s1erFqCXj
-	 LtDj//iirnna2suu99++Fom5ybJ2NQVGuBG3jKErZaFW/5JUC7OG37+gdPzA9P1vOX
-	 Lg6MjclX69KvZ5xk1oQulCEyQeMUqn6pIPhsFsFf6N+kWwnWNvb2etpsveIxKSPKyz
-	 9yJt+YaYoiWGS3UZOZIXuXY3WeXgpV6SyPmZFZbSTM8Rh41aCPOY6TUJO9p8lAuFpd
-	 T8HtTP2cpK2+DyX6oj65Ul9Kv0/bnMcmfCq05A5tBnP3QcnZYwIOT9RjWptboLDGLx
-	 2imhrTsw1IMNQ==
+	b=cLuIph2jPhPcO3cYdVQtZQtkVXG+tgLp/4t4smob/abxmh2OmnA/+5ZU6hUuX8wxV
+	 KBkK5kWx9h9FJIG7bi6lirw5sVbHustH0pvTEVRV9SNFKdn8eNcbJqHblU4E+MRCO/
+	 nwnkA0JbxNQOYkQVdfO/q9dIfBEiyvQ8hK3WyrtgriNyefrmbk+clmDjrJHqAb77BK
+	 brNHVNMm9wl+hXoiSLJv/gthJUak6a2tLQloDPoz6cN6L90JjSX3EkdR3kVb0S5v1f
+	 Uw7iWOekWcOeztD1MfwY7HhE32vtavMCCm4RThkevAiGrtbub7fCxsWY2skM6E6x+r
+	 2fkkFisZQ5lWA==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1tzXkW-001GqU-Kq;
-	Tue, 01 Apr 2025 10:17:36 +0100
+	id 1tzXkX-001GqU-4E;
+	Tue, 01 Apr 2025 10:17:37 +0100
 From: Marc Zyngier <maz@kernel.org>
 To: linux-arm-kernel@lists.infradead.org,
 	linux-pci@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: Alyssa Rosenzweig <alyssa@rosenzweig.io>,
 	Rob Herring <robh@kernel.org>,
 	Krzysztof Kozlowski <krzk+dt@kernel.org>,
 	Mark Kettenis <mark.kettenis@xs4all.nl>
-Subject: [PATCH v3 08/13] PCI: apple: Fix missing OF node reference in apple_pcie_setup_port
-Date: Tue,  1 Apr 2025 10:17:08 +0100
-Message-Id: <20250401091713.2765724-9-maz@kernel.org>
+Subject: [PATCH v3 10/13] PCI: apple: Drop poll for CORE_RC_PHYIF_STAT_REFCLK
+Date: Tue,  1 Apr 2025 10:17:10 +0100
+Message-Id: <20250401091713.2765724-11-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250401091713.2765724-1-maz@kernel.org>
 References: <20250401091713.2765724-1-maz@kernel.org>
@@ -69,9 +69,10 @@ X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to 
 
 From: Hector Martin <marcan@marcan.st>
 
-In the success path, we hang onto a reference to the node, so make sure
-to grab one. The caller iterator puts our borrowed reference when we
-return.
+This is checking a core refclk in per-port setup which doesn't make a
+lot of sense, and the bootloader needs to have gone through this anyway.
+
+It doesn't work on T602x, so just drop it across the board.
 
 Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 Acked-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
@@ -80,22 +81,25 @@ Signed-off-by: Hector Martin <marcan@marcan.st>
 Signed-off-by: Alyssa Rosenzweig <alyssa@rosenzweig.io>
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/controller/pcie-apple.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/pci/controller/pcie-apple.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-apple.c b/drivers/pci/controller/pcie-apple.c
-index 6b04bf0b41dcc..23d9f62bd2ad4 100644
+index 94c49611b74df..c00ec0781fabc 100644
 --- a/drivers/pci/controller/pcie-apple.c
 +++ b/drivers/pci/controller/pcie-apple.c
-@@ -593,6 +593,9 @@ static int apple_pcie_setup_port(struct apple_pcie *pcie,
- 	list_add_tail(&port->entry, &pcie->ports);
- 	init_completion(&pcie->event);
+@@ -475,12 +475,6 @@ static int apple_pcie_setup_refclk(struct apple_pcie *pcie,
+ 	u32 stat;
+ 	int res;
  
-+	/* In the success path, we keep a reference to np around */
-+	of_node_get(np);
-+
- 	ret = apple_pcie_port_register_irqs(port);
- 	WARN_ON(ret);
+-	res = readl_relaxed_poll_timeout(pcie->base + CORE_RC_PHYIF_STAT, stat,
+-					 stat & CORE_RC_PHYIF_STAT_REFCLK,
+-					 100, 50000);
+-	if (res < 0)
+-		return res;
+-
+ 	rmw_set(PHY_LANE_CTL_CFGACC, port->phy + PHY_LANE_CTL);
+ 	rmw_set(PHY_LANE_CFG_REFCLK0REQ, port->phy + PHY_LANE_CFG);
  
 -- 
 2.39.2
