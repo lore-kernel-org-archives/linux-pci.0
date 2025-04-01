@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7861E20B7EA;
-	Tue,  1 Apr 2025 15:36:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FCC92046A8;
+	Tue,  1 Apr 2025 15:36:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743521787; cv=none; b=WZc7K2wRFrDnzSNDKPx8jXA5szlbN+nvhvkZtMSVhTo4pHtjc1hGBs5/WwdP51t97DPmKqc0kJrgPzlmWoHNdAIRlzR81Hx4ufrEE/cQeKzp3MVZA8yCxpNT8C3DKBoQfUj9GYKI1+bY2jEQYfrtmrhPJTUi1fiS/CEIfuIxT+U=
+	t=1743521791; cv=none; b=dkY/dahYaGO+CbXOqVoqfhlXiFdIQjeccX3bzYaVkvXZJ3ihdt/Umw2qtARlhbbJIjgvtvF5sOu9A6IbBP8OW/A3pMePju4lW7j71qFAaMT1Ht6yRPUGmEb4oB1EA6XwsNL3SWEmCMwKq8BHLvE6fnWZzf3lBOZ6d2V8vWV86Dw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743521787; c=relaxed/simple;
-	bh=AJWExx/lhsVKyDjZNNUh1i5V9rLOaQaDVOBlExnNiiI=;
+	s=arc-20240116; t=1743521791; c=relaxed/simple;
+	bh=1kVw63DFu0RhboG8D5eUTZLRgZ3R/5yhVNRksYbPPxg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HLD3gUiP77CEM2LfJD1d3m+MiJK1I5DRCmAPNF4wIiexhRGF5xwBEIKxYxYjwyswIExdBabB5iqt2A524TZq1A6fua2YziCAXSpCgNPmuM3yP0bCCGv5QCVFJUuaQzfB6CbapHi4n8uWWT2RQOQMQDqyL4oDj65hiW0+6pBZKGw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cSy7w69S; arc=none smtp.client-ip=198.175.65.9
+	 MIME-Version; b=FPstxwvJn9zQyn9OsSOK9EZlfUYrbnPg3e09zORWN7tTACESYH+lKYw9pgLPOL65CBCiF2DkOPJXvt64VzZh/o/mJNzDhfVF7av8fdhq1CXmyXPIwkVSXaS+mXODVKPP2rE44kq5xPdQuwi+U4bmEzBxDINkDj7FmEJreNDbtIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=GV9AnRcU; arc=none smtp.client-ip=198.175.65.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cSy7w69S"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="GV9AnRcU"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1743521786; x=1775057786;
+  t=1743521790; x=1775057790;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=AJWExx/lhsVKyDjZNNUh1i5V9rLOaQaDVOBlExnNiiI=;
-  b=cSy7w69S6dBFG3qhhaeaTXX9tLMBuV+8HepLFdhDeA8JG3y3pB4djDyZ
-   wg5cqWWji9SB2DWMNQJo+oZmHPymUsUFlRh47E7j+9ew6MBhBcMS4lNZj
-   u1a0rgJVq3y2RA2/nw2rFauI2h/uQ+Nl+fL1HbZpX/5qkgd+734CUtM+U
-   WYDFz+Oky/ePKnONKMy24RoEJUrot6Us9sdV8vQyZ2ZUzDjCEP+5FdkFr
-   Ho3X0iVjb4VYtTZw1sIk67zeAAPlYoooGtVoVfrox4Hqpo5to2Q6PG96r
-   I2ivVS3opmf4VYQtDDn2nv3lLWHCuZOe2BZBX8HRYrF1ydIExD0qNf/Xe
-   w==;
-X-CSE-ConnectionGUID: n6yKgbJPRyu/FO6Mk6EB0A==
-X-CSE-MsgGUID: rCGSk8bcQD60GnfT+YUH3Q==
-X-IronPort-AV: E=McAfee;i="6700,10204,11391"; a="67324811"
+  bh=1kVw63DFu0RhboG8D5eUTZLRgZ3R/5yhVNRksYbPPxg=;
+  b=GV9AnRcU9J/1RkM6C+T/DfQdlWyCeIJDZTNgXI5U6tbjcdkM+9gPfuff
+   dlgcy344Vp7W01clxyURpFjIsL4IYMEc0m+2USS5ui2ez29/TKwLRslkD
+   RFGtjtC3BPDDoCMlvUxc/XrFo62aohNIZf5uBeaoD8855jdcXOZwcMiwY
+   dlXDy1vkcbfkBncnmuVinhVn9qxCQxOHPHMJPB41sNsJ/PiBp2fHcBqmt
+   56lcTh5uXOOq1+tUMb5hMBYgPnZJKks6yzoWmT47U9fbfl3VSJzz2xWOU
+   3NKeJoi7AuzEHCifXEULmaWIt+y9a4QAbyeUjrmrQwyft0ws7t4cZ7O2G
+   A==;
+X-CSE-ConnectionGUID: k4xH9c3bQvyI2AQjmJGyJw==
+X-CSE-MsgGUID: iQoEdBD6QJGf43E3vJ6KSw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11391"; a="67324869"
 X-IronPort-AV: E=Sophos;i="6.14,293,1736841600"; 
-   d="scan'208";a="67324811"
+   d="scan'208";a="67324869"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:16 -0700
-X-CSE-ConnectionGUID: RSa7Q1WpQxm3car1WNtayw==
-X-CSE-MsgGUID: 0JLK/ni1TCyRpmHZEfJr6g==
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:23 -0700
+X-CSE-ConnectionGUID: I5er0o3tQjuqyBvLE3uBmg==
+X-CSE-MsgGUID: 8rRGq7leS3uONrhGYUCDkA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.14,293,1736841600"; 
-   d="scan'208";a="126410797"
+   d="scan'208";a="126410883"
 Received: from anshuma1-desk.iind.intel.com ([10.190.239.112])
-  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:12 -0700
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Apr 2025 08:36:19 -0700
 From: Anshuman Gupta <anshuman.gupta@intel.com>
 To: intel-xe@lists.freedesktop.org,
 	linux-acpi@vger.kernel.org,
@@ -58,9 +58,9 @@ Cc: rafael@kernel.org,
 	varun.gupta@intel.com,
 	ville.syrjala@linux.intel.com,
 	uma.shankar@intel.com
-Subject: [PATCH 03/12] PCI/ACPI: Add aux power grant notifier
-Date: Tue,  1 Apr 2025 21:02:16 +0530
-Message-ID: <20250401153225.96379-4-anshuman.gupta@intel.com>
+Subject: [PATCH 05/12] drm/xe/vrsr: Detect VRSR Capability
+Date: Tue,  1 Apr 2025 21:02:18 +0530
+Message-ID: <20250401153225.96379-6-anshuman.gupta@intel.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250401153225.96379-1-anshuman.gupta@intel.com>
 References: <20250401153225.96379-1-anshuman.gupta@intel.com>
@@ -72,120 +72,110 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Adding a notifier to notify all PCIe child devices about the
-block main power removal. It is needed because theoretically
-multiple PCIe Endpoint devices on same Root Port
-can request for AUX power and _DSM method can return with
-80000000h signifies that the hierarchy connected via
-the slot cannot support main power removal when in D3Cold.
-This may disrupt functionality of other child device.
+Detect VRAM Self Refresh(vrsr) Capability.
 
-Let's notify all PCIe devices requested Aux power resource
-and Let PCIe End Point driver handle it in its callback.
-
+Reviewed-by: Rodrigo Vivi <rodrigo.vivi@intel.com>
 Signed-off-by: Anshuman Gupta <anshuman.gupta@intel.com>
 ---
- drivers/pci/pci-acpi.c   | 34 +++++++++++++++++++++++++++++++---
- include/linux/pci-acpi.h | 13 +++++++++++++
- 2 files changed, 44 insertions(+), 3 deletions(-)
+ drivers/gpu/drm/xe/regs/xe_regs.h    |  3 +++
+ drivers/gpu/drm/xe/xe_device_types.h |  4 ++++
+ drivers/gpu/drm/xe/xe_pm.c           | 27 +++++++++++++++++++++++++++
+ 3 files changed, 34 insertions(+)
 
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index 04149f037664..d1ca1649e6e8 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1421,6 +1421,32 @@ static void pci_acpi_optimize_delay(struct pci_dev *pdev,
- 	ACPI_FREE(obj);
+diff --git a/drivers/gpu/drm/xe/regs/xe_regs.h b/drivers/gpu/drm/xe/regs/xe_regs.h
+index 3abb17d2ca33..4db486fb310a 100644
+--- a/drivers/gpu/drm/xe/regs/xe_regs.h
++++ b/drivers/gpu/drm/xe/regs/xe_regs.h
+@@ -53,6 +53,9 @@
+ #define MTL_MPE_FREQUENCY			XE_REG(0x13802c)
+ #define   MTL_RPE_MASK				REG_GENMASK(8, 0)
+ 
++#define VRAM_SR_CAPABILITY                         XE_REG(0x138144)
++#define   VRAM_SR_SUPPORTED                        REG_BIT(0)
++
+ #define VF_CAP_REG				XE_REG(0x1901f8, XE_REG_OPTION_VF)
+ #define   VF_CAP				REG_BIT(0)
+ 
+diff --git a/drivers/gpu/drm/xe/xe_device_types.h b/drivers/gpu/drm/xe/xe_device_types.h
+index b8ccf729f7c0..219800092b8d 100644
+--- a/drivers/gpu/drm/xe/xe_device_types.h
++++ b/drivers/gpu/drm/xe/xe_device_types.h
+@@ -498,6 +498,9 @@ struct xe_device {
+ 		/** @d3cold.allowed: Indicates if d3cold is a valid device state */
+ 		bool allowed;
+ 
++		/** @d3cold.vrsr_capable: Indicates if d3cold VRAM Self Refresh is supported */
++		bool vrsr_capable;
++
+ 		/**
+ 		 * @d3cold.vram_threshold:
+ 		 *
+@@ -508,6 +511,7 @@ struct xe_device {
+ 		 * Default threshold value is 300mb.
+ 		 */
+ 		u32 vram_threshold;
++
+ 		/** @d3cold.lock: protect vram_threshold */
+ 		struct mutex lock;
+ 	} d3cold;
+diff --git a/drivers/gpu/drm/xe/xe_pm.c b/drivers/gpu/drm/xe/xe_pm.c
+index a7ddf45db886..c96be409de49 100644
+--- a/drivers/gpu/drm/xe/xe_pm.c
++++ b/drivers/gpu/drm/xe/xe_pm.c
+@@ -17,12 +17,15 @@
+ #include "xe_bo_evict.h"
+ #include "xe_device.h"
+ #include "xe_device_sysfs.h"
++#include "xe_force_wake.h"
+ #include "xe_ggtt.h"
+ #include "xe_gt.h"
+ #include "xe_guc.h"
+ #include "xe_irq.h"
++#include "xe_mmio.h"
+ #include "xe_pcode.h"
+ #include "xe_pxp.h"
++#include "regs/xe_regs.h"
+ #include "xe_trace.h"
+ #include "xe_wa.h"
+ 
+@@ -236,6 +239,28 @@ static bool xe_pm_pci_d3cold_capable(struct xe_device *xe)
+ 	return true;
  }
  
-+static BLOCKING_NOTIFIER_HEAD(pci_acpi_aux_power_notify_list);
-+
-+/**
-+ * pci_acpi_register_aux_power_notifier - Register driver notifier
-+ * @nb: notifier block
-+ *
-+ * This function shall be called by PCIe End Point device requested the Aux
-+ * power resource in order to handle the any scenario gracefully when other
-+ * child PCIe devices Aux power request returns with No main power removal.
-+ * PCIe devices which register this notifier shall handle No main power
-+ * removal scenario accordingly.
-+ *
-+ * Return: Returns 0 on success and errno on failure.
-+ */
-+int pci_acpi_register_aux_power_notifier(struct notifier_block *nb)
++static bool xe_pm_vrsr_capable(struct xe_device *xe)
 +{
-+	return blocking_notifier_chain_register(&pci_acpi_aux_power_notify_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(pci_acpi_register_aux_power_notifier);
++	struct xe_mmio *mmio = xe_root_tile_mmio(xe);
++	unsigned int fw_ref;
++	struct xe_gt *gt;
++	u32 val;
 +
-+void pci_acpi_unregister_aux_power_notifier(struct notifier_block *nb)
-+{
-+	blocking_notifier_chain_unregister(&pci_acpi_aux_power_notify_list, nb);
-+}
-+EXPORT_SYMBOL_GPL(pci_acpi_unregister_aux_power_notifier);
++	gt = xe_root_mmio_gt(xe);
 +
- /**
-  * pci_acpi_request_d3cold_aux_power - Request D3cold aux power via ACPI DSM
-  * @dev: PCI device instance
-@@ -1466,17 +1492,19 @@ int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_power)
- 	result = out_obj->integer.value;
- 
- 	switch (result) {
--	case 0x0:
-+	case ACPI_AUX_PW_DENIED:
- 		dev_dbg(&dev->dev, "D3cold Aux Power %umW request denied\n",
- 			requested_power);
- 		break;
--	case 0x1:
-+	case ACPI_AUX_PW_GRANTED:
- 		dev_info(&dev->dev, "D3cold Aux Power request granted: %umW\n",
- 			 requested_power);
- 		ret = 0;
- 		break;
--	case 0x2:
-+	case ACPI_NO_MAIN_PW_REMOVAL:
- 		dev_info(&dev->dev, "D3cold Aux Power: Main power won't be removed\n");
-+		blocking_notifier_call_chain(&pci_acpi_aux_power_notify_list,
-+					     ACPI_NO_MAIN_PW_REMOVAL, dev);
- 		ret = -EBUSY;
- 		break;
- 	default:
-diff --git a/include/linux/pci-acpi.h b/include/linux/pci-acpi.h
-index 4b7373f91a9a..793b979af98b 100644
---- a/include/linux/pci-acpi.h
-+++ b/include/linux/pci-acpi.h
-@@ -124,6 +124,10 @@ extern const guid_t pci_acpi_dsm_guid;
- #define DSM_PCI_D3COLD_AUX_POWER_LIMIT		0x0A
- #define DSM_PCI_PERST_ASSERTION_DELAY		0x0B
- 
-+#define ACPI_AUX_PW_DENIED			0x0
-+#define ACPI_AUX_PW_GRANTED			0x1
-+#define ACPI_NO_MAIN_PW_REMOVAL			0x2
++	if (!xe->info.probe_display)
++		return false;
 +
- #ifdef CONFIG_PCIE_EDR
- void pci_acpi_add_edr_notifier(struct pci_dev *pdev);
- void pci_acpi_remove_edr_notifier(struct pci_dev *pdev);
-@@ -134,12 +138,21 @@ static inline void pci_acpi_remove_edr_notifier(struct pci_dev *pdev) { }
- 
- int pci_acpi_set_companion_lookup_hook(struct acpi_device *(*func)(struct pci_dev *));
- void pci_acpi_clear_companion_lookup_hook(void);
-+int pci_acpi_register_aux_power_notifier(struct notifier_block *nb);
-+void pci_acpi_unregister_aux_power_notifier(struct notifier_block *nb);
- int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_power);
- int pci_acpi_add_perst_assertion_delay(struct pci_dev *dev, u32 delay_us);
- 
- #else	/* CONFIG_ACPI */
- static inline void acpi_pci_add_bus(struct pci_bus *bus) { }
- static inline void acpi_pci_remove_bus(struct pci_bus *bus) { }
-+int pci_acpi_register_aux_power_notifier(struct notifier_block *nb)
-+{
-+	return -EOPNOTSUPP;
++	fw_ref = xe_force_wake_get(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++	if (!fw_ref)
++		return false;
++
++	val = xe_mmio_read32(mmio, VRAM_SR_CAPABILITY);
++	xe_force_wake_put(gt_to_fw(gt), XE_FORCEWAKE_ALL);
++
++	return val & VRAM_SR_SUPPORTED;
 +}
 +
-+void pci_acpi_unregister_aux_power_notifier(struct notifier_block *nb) { }
-+
- int pci_acpi_request_d3cold_aux_power(struct pci_dev *dev, u32 requested_power)
+ static void xe_pm_runtime_init(struct xe_device *xe)
  {
- 	return -EOPNOTSUPP;
+ 	struct device *dev = xe->drm.dev;
+@@ -310,6 +335,8 @@ int xe_pm_init(struct xe_device *xe)
+ 		err = xe_pm_set_vram_threshold(xe, vram_threshold);
+ 		if (err)
+ 			return err;
++
++		xe->d3cold.vrsr_capable = xe_pm_vrsr_capable(xe);
+ 	}
+ 
+ 	xe_pm_runtime_init(xe);
 -- 
 2.43.0
 
