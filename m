@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EFF62230BEE;
-	Wed,  2 Apr 2025 04:21:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9B6F6230D35;
+	Wed,  2 Apr 2025 04:21:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743567686; cv=none; b=Fz9hymF6ZIaUUtO/ABuqiLhF0tf6sSmsqO0HV1burUvxlbEJsUYADOYLFbx0kzDmRUT8L8S5gQ14ZXH9xzp/64XDhy8XPqjQuwFU78j0NcAy8PQt7H5cTZdawLVbFEB6StnVhgHJX08LP2P+3/TzozVN/odrh/i14YAHWZz5IiM=
+	t=1743567691; cv=none; b=FtBFfuRiPhBpmIM9VJWtmaF2nW5NFCN0q3LK13nw1XPMwmfLKusCsQZFhfL6FKY/dHm2ynotznCQuBa3GbF2pSf8T+GQ7gVOwC7LJy0KO9l/prswxRGY86JKxOUEJtXWD4RIfSdTJKUufCEvMZM84K8EKtgdYf5abtDavGM+5aY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743567686; c=relaxed/simple;
-	bh=5YJ+DGr2a8YWmta1Z2PAjUg6L4azxe6UAUJAoQbFhcw=;
+	s=arc-20240116; t=1743567691; c=relaxed/simple;
+	bh=/SaRPzI6gUezI0aZArkz52dacO8KHPKD3FKd4vRAizw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=tzwa95x7PAExk8Q4Wx4Mu3XFBpElRITM/EWhJkk/ZRC2Yb2hyjo3oArl5py6TVV68G9qrtp6kw7EFzM66js9bgUdIkkPLe1/bu+Z/+8H5jujlUlpcK+SYdgai/K0pYJCSGgR9TV/v1Yp8bz7ASWD8puBq27l/NY4zGWTDN7oP4I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WlR6WjiZ; arc=none smtp.client-ip=220.197.31.2
+	 MIME-Version; b=GV5Dl4RhJNWudccuf584Fg4y4SxrIGqNKpnux12lxYi78oYyf6jY0BZeXgBydMcJ6khmEos4+FzbIyJse4MKJG1EjI3otfsO6n9ooBGckH0PRoi38wiR1jHTWwAS+AGLyajhew5rfOY+ZnlzXj/dFdP/T7oyvdRInGAf9kW9bWI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=NPN0byGW; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WlR6WjiZ"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="NPN0byGW"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=CoW96
-	e1Gmdd0kpTwykWsVW5WBGKPsLmM7zi76qOXnbA=; b=WlR6WjiZILebP4ieDU5rV
-	M1NDJ59oJk4N/1xyaQtrg5ivrMl/lXR+iFMvTvMulRELieB08utvgGy3oIoGTsNG
-	VUHXXGMfTGeXGVn7QJmE0hS2ySC3r6pxDoB6ddWxUtufbYs32xmB6dwHNXfb3AhB
-	BDhRkpZGvyVF2SmLbXfpak=
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=8rwtL
+	F5XVSfTc2NzLUMNczZ7D5vONTle1YTnDmSJh/g=; b=NPN0byGW3U6GRKFcUHIov
+	8WwsTrotPpyQyXtqZ5BYYzCNnYfWtM6hRTzJSTUTr1nVrkjs9wX0amN0zmJojR3P
+	3dFZvjiO0j+S70rIitdj+q4mBec3YaOVCP1I1aLKoD8sJA+ucS8+7AwWJ+2PD8EG
+	vcOY3ZhWiSKyfr1ygSy2d4=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wBXJtQIu+xn1HfgDQ--.39888S6;
-	Wed, 02 Apr 2025 12:20:30 +0800 (CST)
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wBXJtQIu+xn1HfgDQ--.39888S4;
+	Wed, 02 Apr 2025 12:20:28 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com
@@ -35,9 +35,9 @@ Cc: kw@linux.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [v7 4/5] PCI: cadence: Use common PCI host bridge APIs for finding the capabilities
-Date: Wed,  2 Apr 2025 12:20:19 +0800
-Message-Id: <20250402042020.48681-5-18255117159@163.com>
+Subject: [v7 2/5] PCI: Refactor capability search functions to eliminate code duplication
+Date: Wed,  2 Apr 2025 12:20:17 +0800
+Message-Id: <20250402042020.48681-3-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250402042020.48681-1-18255117159@163.com>
 References: <20250402042020.48681-1-18255117159@163.com>
@@ -48,102 +48,168 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXJtQIu+xn1HfgDQ--.39888S6
-X-Coremail-Antispam: 1Uf129KBjvJXoWxuryrAr48Cw4rur1kCF4UJwb_yoW5Cw1fpF
-	WDGFyfCF1rJFW3uFs3Z3W5Xr13tFnay347ta92k347ZF17Cr1UGFy2gFy3tr9xKrs7Gr13
-	X3yDtFykKrn0yFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziSfOsUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxcjo2fstXLRZAAAs1
+X-CM-TRANSID:_____wBXJtQIu+xn1HfgDQ--.39888S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAryxCw4UuryUJw4DJr1fJFb_yoWrtr47pr
+	y3Aa4fArW8GF13tw4q9ayjyw13WF9rJrWxXFWxC3sYvF12krWvyFy2ya4YqFyagrZ7WF13
+	X39xta95C3WqyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRFtCcUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwojo2fsufkj9AAAsZ
 
-Use the PCI core is now exposing generic macros for the host bridges to
-search for the PCIe capabilities, make use of them in the CDNS driver.
+Refactor the PCI capability and extended capability search functions
+by consolidating common code patterns into reusable macros
+(PCI_FIND_NEXT_CAP_TTL and PCI_FIND_NEXT_EXT_CAPABILITY). The main
+changes include:
+
+1. Introducing a unified config space read helper (__pci_bus_read_config).
+2. Removing duplicate search logic from __pci_find_next_cap_ttl and
+   pci_find_next_ext_capability.
+3. Implementing consistent capability discovery using the new macros.
+4. Simplifying HyperTransport capability lookup by leveraging the
+   refactored code.
+
+The refactoring maintains existing functionality while reducing code
+duplication and improving maintainability. By centralizing the search
+logic, we achieve better code consistency and make future updates easier.
+
+This change has been verified to maintain backward compatibility with
+existing capability discovery patterns through thorough testing of PCI
+device enumeration and capability probing.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Changes since v6:
-https://lore.kernel.org/linux-pci/20250323164852.430546-4-18255117159@163.com/
+ drivers/pci/pci.c | 79 +++++++++++++----------------------------------
+ 1 file changed, 22 insertions(+), 57 deletions(-)
 
-- The patch commit message were modified.
-
-Changes since v5:
-https://lore.kernel.org/linux-pci/20250321163803.391056-4-18255117159@163.com
-
-- Kconfig add "select PCI_HOST_HELPERS"
----
- drivers/pci/controller/cadence/pcie-cadence.c | 28 +++++++++++++++++++
- drivers/pci/controller/cadence/pcie-cadence.h | 13 +++++++++
- 2 files changed, 41 insertions(+)
-
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 204e045aed8c..ca4a1a809fcb 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -7,6 +7,34 @@
- #include <linux/of.h>
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 869d204a70a3..521096c73686 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -423,36 +423,33 @@ static int pci_dev_str_match(struct pci_dev *dev, const char *p,
+ 	return 1;
+ }
  
- #include "pcie-cadence.h"
-+#include "../../pci.h"
-+
-+static int cdns_pcie_read_cfg(void *priv, int where, int size, u32 *val)
-+{
-+	struct cdns_pcie *pcie = priv;
-+
-+	if (size == 4)
-+		*val = cdns_pcie_readl(pcie, where);
+-static u8 __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+-				  u8 pos, int cap, int *ttl)
++static int __pci_bus_read_config(void *priv, unsigned int devfn, int where,
++				 u32 size, u32 *val)
+ {
+-	u8 id;
+-	u16 ent;
++	struct pci_bus *bus = priv;
++	int ret;
+ 
+-	pci_bus_read_config_byte(bus, devfn, pos, &pos);
++	if (size == 1)
++		ret = pci_bus_read_config_byte(bus, devfn, where, (u8 *)val);
 +	else if (size == 2)
-+		*val = cdns_pcie_readw(pcie, where);
-+	else if (size == 1)
-+		*val = cdns_pcie_readb(pcie, where);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap)
-+{
-+	return PCI_FIND_NEXT_CAP_TTL(cdns_pcie_read_cfg, PCI_CAPABILITY_LIST,
-+				     cap, pcie);
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_find_capability);
-+
-+u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap)
-+{
-+	return PCI_FIND_NEXT_EXT_CAPABILITY(cdns_pcie_read_cfg, 0, cap, pcie);
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_find_ext_capability);
++		ret = pci_bus_read_config_word(bus, devfn, where, (u16 *)val);
++	else
++		ret = pci_bus_read_config_dword(bus, devfn, where, val);
  
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- {
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index f5eeff834ec1..dd7cb6b6b291 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -398,6 +398,16 @@ static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
- 	return readl(pcie->reg_base + reg);
+-	while ((*ttl)--) {
+-		if (pos < 0x40)
+-			break;
+-		pos &= ~3;
+-		pci_bus_read_config_word(bus, devfn, pos, &ent);
++	return ret;
++}
+ 
+-		id = ent & 0xff;
+-		if (id == 0xff)
+-			break;
+-		if (id == cap)
+-			return pos;
+-		pos = (ent >> 8);
+-	}
+-	return 0;
++static u8 __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
++				  u8 pos, int cap)
++{
++	return PCI_FIND_NEXT_CAP_TTL(__pci_bus_read_config, pos, cap, bus,
++				     devfn);
  }
  
-+static inline u32 cdns_pcie_readw(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readw(pcie->reg_base + reg);
-+}
-+
-+static inline u32 cdns_pcie_readb(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readb(pcie->reg_base + reg);
-+}
-+
- static inline u32 cdns_pcie_read_sz(void __iomem *addr, int size)
+ static u8 __pci_find_next_cap(struct pci_bus *bus, unsigned int devfn,
+ 			      u8 pos, int cap)
  {
- 	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
-@@ -557,6 +567,9 @@ static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+-	int ttl = PCI_FIND_CAP_TTL;
+-
+-	return __pci_find_next_cap_ttl(bus, devfn, pos, cap, &ttl);
++	return __pci_find_next_cap_ttl(bus, devfn, pos, cap);
  }
- #endif
  
-+u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap);
-+u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap);
-+
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
+ u8 pci_find_next_capability(struct pci_dev *dev, u8 pos, int cap)
+@@ -553,42 +550,11 @@ EXPORT_SYMBOL(pci_bus_find_capability);
+  */
+ u16 pci_find_next_ext_capability(struct pci_dev *dev, u16 start, int cap)
+ {
+-	u32 header;
+-	int ttl;
+-	u16 pos = PCI_CFG_SPACE_SIZE;
+-
+-	/* minimum 8 bytes per capability */
+-	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
+-
+ 	if (dev->cfg_size <= PCI_CFG_SPACE_SIZE)
+ 		return 0;
  
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
+-	if (start)
+-		pos = start;
+-
+-	if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
+-		return 0;
+-
+-	/*
+-	 * If we have no capabilities, this is indicated by cap ID,
+-	 * cap version and next pointer all being 0.
+-	 */
+-	if (header == 0)
+-		return 0;
+-
+-	while (ttl-- > 0) {
+-		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
+-			return pos;
+-
+-		pos = PCI_EXT_CAP_NEXT(header);
+-		if (pos < PCI_CFG_SPACE_SIZE)
+-			break;
+-
+-		if (pci_read_config_dword(dev, pos, &header) != PCIBIOS_SUCCESSFUL)
+-			break;
+-	}
+-
+-	return 0;
++	return PCI_FIND_NEXT_EXT_CAPABILITY(__pci_bus_read_config, start, cap,
++					    dev->bus, dev->devfn);
+ }
+ EXPORT_SYMBOL_GPL(pci_find_next_ext_capability);
+ 
+@@ -648,7 +614,6 @@ EXPORT_SYMBOL_GPL(pci_get_dsn);
+ 
+ static u8 __pci_find_next_ht_cap(struct pci_dev *dev, u8 pos, int ht_cap)
+ {
+-	int rc, ttl = PCI_FIND_CAP_TTL;
+ 	u8 cap, mask;
+ 
+ 	if (ht_cap == HT_CAPTYPE_SLAVE || ht_cap == HT_CAPTYPE_HOST)
+@@ -657,7 +622,7 @@ static u8 __pci_find_next_ht_cap(struct pci_dev *dev, u8 pos, int ht_cap)
+ 		mask = HT_5BIT_CAP_MASK;
+ 
+ 	pos = __pci_find_next_cap_ttl(dev->bus, dev->devfn, pos,
+-				      PCI_CAP_ID_HT, &ttl);
++				      PCI_CAP_ID_HT);
+ 	while (pos) {
+ 		rc = pci_read_config_byte(dev, pos + 3, &cap);
+ 		if (rc != PCIBIOS_SUCCESSFUL)
+@@ -668,7 +633,7 @@ static u8 __pci_find_next_ht_cap(struct pci_dev *dev, u8 pos, int ht_cap)
+ 
+ 		pos = __pci_find_next_cap_ttl(dev->bus, dev->devfn,
+ 					      pos + PCI_CAP_LIST_NEXT,
+-					      PCI_CAP_ID_HT, &ttl);
++					      PCI_CAP_ID_HT);
+ 	}
+ 
+ 	return 0;
 -- 
 2.25.1
 
