@@ -1,105 +1,125 @@
-Received: from mx1.zhaoxin.com (MX1.ZHAOXIN.COM [210.0.225.12])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE392213E70
-	for <linux-pci@vger.kernel.org>; Mon,  7 Apr 2025 02:07:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.0.225.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66E12218ADC;
+	Mon,  7 Apr 2025 07:03:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1743991653; cv=none; b=SjX00KMrHngXKoVkp59erR661eOdlB2DSsyN9FSsx6X1H3xw4fvHUe/juN+5oed9jNW9CZkaTJ77+xYU8kh/hf9fonUKxgRBpx4ay0sZkInIoGRcNcwypHtzx6i/dG+5gxayfxOReD6bCCzuZzvZcZ++FP69X/OIR+V37mnJY2Q=
+	t=1744009418; cv=none; b=Vi64nMKqrixZP6e3/yaq57Bb5UrNXl0/t+0wPhTIh2DhKrgCAMNyGOUcyQ39vA3R0UBC7Fr2Xl0nY8pQSCm7ZSozZ2htWU+YvE0w5hvsVlpHQd2osBKZ15LMCNhQ1hW/+nbt+yPn40iApNUd6dvwFkxOU2/zZcq0jXVhGV76JNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1743991653; c=relaxed/simple;
-	bh=LI1xxYswTZGnREaBh49kFITjcqbPBpNgdy0MRsQJsEE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ZAxZv7RBuxlKweGoSRYanVtvy69WrrTkYf1yWYn1x8PY3DfmyaxvZ/bkrzlDEd1rysftfYHVUxpeUUjddoKNSLPmaQTPORQkqWmwNdaBiO+C22pw69Cvnq7Vit3zk/p4q7o5D+eWlEPrssySa+douBKJij5QlBdVWU3/ChppuAE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com; spf=pass smtp.mailfrom=zhaoxin.com; arc=none smtp.client-ip=210.0.225.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zhaoxin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zhaoxin.com
-X-ASG-Debug-ID: 1743991639-086e2365b83ef00001-0c9NHn
-Received: from ZXSHMBX2.zhaoxin.com (ZXSHMBX2.zhaoxin.com [10.28.252.164]) by mx1.zhaoxin.com with ESMTP id pCU9HxyFP6hAAIVa (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NO); Mon, 07 Apr 2025 10:07:19 +0800 (CST)
-X-Barracuda-Envelope-From: LeoLiu-oc@zhaoxin.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Received: from ZXSHMBX3.zhaoxin.com (10.28.252.165) by ZXSHMBX2.zhaoxin.com
- (10.28.252.164) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.44; Mon, 7 Apr
- 2025 10:07:19 +0800
-Received: from ZXSHMBX3.zhaoxin.com ([fe80::8cc5:5bc6:24ec:65f2]) by
- ZXSHMBX3.zhaoxin.com ([fe80::8cc5:5bc6:24ec:65f2%6]) with mapi id
- 15.01.2507.044; Mon, 7 Apr 2025 10:07:19 +0800
-X-Barracuda-RBL-Trusted-Forwarder: 10.28.252.164
-Received: from xin.lan (10.32.64.1) by ZXBJMBX03.zhaoxin.com (10.29.252.7)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.44; Mon, 7 Apr
- 2025 10:06:03 +0800
-From: LeoLiu-oc <LeoLiu-oc@zhaoxin.com>
-To: <rafael@kernel.org>, <lenb@kernel.org>, <james.morse@arm.com>,
-	<tony.luck@intel.com>, <bp@alien8.de>, <bhelgaas@google.com>,
-	<robert.moore@intel.com>, <yazen.ghannam@amd.com>, <avadhut.naik@amd.com>,
-	<linux-acpi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-pci@vger.kernel.org>, <acpica-devel@lists.linux.dev>
-CC: <CobeChen@zhaoxin.com>, <TonyWWang@zhaoxin.com>, <ErosZhang@zhaoxin.com>,
-	<leoliu@zhaoxin.com>, LeoLiuoc <LeoLiu-oc@zhaoxin.com>
-Subject: [PATCH v6 3/4] PCI: Add AER bits #defines for PCIe to PCI/PCI-X Bridge
-Date: Mon, 7 Apr 2025 10:05:56 +0800
-X-ASG-Orig-Subj: [PATCH v6 3/4] PCI: Add AER bits #defines for PCIe to PCI/PCI-X Bridge
-Message-ID: <20250407020557.1225166-4-LeoLiu-oc@zhaoxin.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250407020557.1225166-1-LeoLiu-oc@zhaoxin.com>
-References: <20250407020557.1225166-1-LeoLiu-oc@zhaoxin.com>
+	s=arc-20240116; t=1744009418; c=relaxed/simple;
+	bh=qW7X0O7a7+RV3ifNkS2U5b666avtSFWmEmJEcTSbnS0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gLSkTlMcaeoCmOtCuc7kM0CZFDDpcAqilkZKv5GibrPYiMtPr6iT0C98IU8ZE+iM9HLD5V2NG+4CG9efDC1ttUhmMrQGMEnGi37BM38ZWRxcN4taYHBI/sXjTiBI9gFNAyxCEnL5pfCVnv3nay7m55u41pnnlr2mgRqkfQHK54o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ez1E0dBp; arc=none smtp.client-ip=192.198.163.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ez1E0dBp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1744009416; x=1775545416;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=qW7X0O7a7+RV3ifNkS2U5b666avtSFWmEmJEcTSbnS0=;
+  b=Ez1E0dBpBlG6lvcbCr6N4W2pFkpdBLn4PjXGyn4briX/mX531aVbwIIA
+   5IDdoXWT7pOsf1TEMY1V+SBe8baadeBi+IiSec8VZqr8+o8C3ntGiVv39
+   0FyzlrZcV5R2B6SiUanbGPt9wv4MeQYc0nwggc2siSZrV3B/Sj38Nysjj
+   eGX+dKBQPwYpi/tdpWV+PVSIfZiuHwbv/j1cB7LnYY+9Ye/bdvHIGkyOQ
+   oqjvBtYpezaKevGJpPHdTkll/J48aFHdzcfL1FuNzSOGmnb4emLjAj+5T
+   rbUUJUryixNsoW3DWXxXAGOxaPsuxvPX1BYkeVZqJvomYvUkZ8Ez2fxst
+   A==;
+X-CSE-ConnectionGUID: 3Gn3CUh+QBi2SX127xZ5gg==
+X-CSE-MsgGUID: rNuoRTmQQWGGfJopggyyXA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11396"; a="56747195"
+X-IronPort-AV: E=Sophos;i="6.15,193,1739865600"; 
+   d="scan'208";a="56747195"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 Apr 2025 00:03:35 -0700
+X-CSE-ConnectionGUID: keA3zv7tRKemDMN0Z8a4Xw==
+X-CSE-MsgGUID: vhLbNFZ4SnqsNkiuBpWrzQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,193,1739865600"; 
+   d="scan'208";a="127616903"
+Received: from black.fi.intel.com ([10.237.72.28])
+  by orviesa009.jf.intel.com with ESMTP; 07 Apr 2025 00:03:32 -0700
+Received: by black.fi.intel.com (Postfix, from userid 1003)
+	id 328F5338; Mon, 07 Apr 2025 10:03:31 +0300 (EEST)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Andy Shevchenko <andy@kernel.org>
+Subject: [PATCH v1 1/1] x86/PCI: Drop 'pci' suffix from intel_mid_pci.c
+Date: Mon,  7 Apr 2025 10:03:21 +0300
+Message-ID: <20250407070321.3761063-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: zxbjmbx1.zhaoxin.com (10.29.252.163) To
- ZXBJMBX03.zhaoxin.com (10.29.252.7)
-X-Moderation-Data: 4/7/2025 10:07:18 AM
-X-Barracuda-Connect: ZXSHMBX2.zhaoxin.com[10.28.252.164]
-X-Barracuda-Start-Time: 1743991639
-X-Barracuda-Encrypted: ECDHE-RSA-AES128-GCM-SHA256
-X-Barracuda-URL: https://10.28.252.35:4443/cgi-mod/mark.cgi
-X-Virus-Scanned: by bsmtpd at zhaoxin.com
-X-Barracuda-Scan-Msg-Size: 1201
-X-Barracuda-BRTS-Status: 1
-X-Barracuda-Bayes: INNOCENT GLOBAL 0.0000 1.0000 -2.0210
-X-Barracuda-Spam-Score: -2.02
-X-Barracuda-Spam-Status: No, SCORE=-2.02 using global scores of TAG_LEVEL=1000.0 QUARANTINE_LEVEL=1000.0 KILL_LEVEL=9.0 tests=
-X-Barracuda-Spam-Report: Code version 3.2, rules version 3.2.3.139599
-	Rule breakdown below
-	 pts rule name              description
-	---- ---------------------- --------------------------------------------------
+Content-Transfer-Encoding: 8bit
 
-From: LeoLiuoc <LeoLiu-oc@zhaoxin.com>
+CE4100 PCI specific code has no 'pci' suffix in the filename,
+intel_mid_pci.c is the only one that duplicates the folder
+name in its filename, drop that redundancy.
 
-Define secondary uncorrectable error mask register, secondary
-uncorrectable error severity register and secondary error capabilities and
-control register bits in AER capability for PCIe to PCI/PCI-X Bridge.
-Please refer to PCIe to PCI/PCI-X Bridge Specification r1.0, sec 5.2.3.2,
-5.2.3.3 and 5.2.3.4.
+While at it, group the respective modules in the Makefile.
 
-Signed-off-by: LeoLiuoc <LeoLiu-oc@zhaoxin.com>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- include/uapi/linux/pci_regs.h | 3 +++
- 1 file changed, 3 insertions(+)
+ MAINTAINERS                                   | 2 +-
+ arch/x86/pci/Makefile                         | 6 +++---
+ arch/x86/pci/{intel_mid_pci.c => intel_mid.c} | 0
+ 3 files changed, 4 insertions(+), 4 deletions(-)
+ rename arch/x86/pci/{intel_mid_pci.c => intel_mid.c} (100%)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index ba326710f9c8..96dc910dc0eb 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -814,6 +814,9 @@
- #define  PCI_ERR_ROOT_AER_IRQ		0xf8000000 /* Advanced Error Interrupt Mess=
-age Number */
- #define PCI_ERR_ROOT_ERR_SRC	0x34	/* Error Source Identification */
- #define PCI_ERR_PREFIX_LOG	0x38	/* TLP Prefix LOG Register (up to 16 bytes=
-) */
-+#define PCI_ERR_UNCOR_MASK2	0x30	/* PCIe to PCI/PCI-X Bridge */
-+#define PCI_ERR_UNCOR_SEVER2	0x34	/* PCIe to PCI/PCI-X Bridge */
-+#define PCI_ERR_CAP2		0x38	/* PCIe to PCI/PCI-X Bridge */
-=20
- /* Virtual Channel */
- #define PCI_VC_PORT_CAP1	0x04
---=20
-2.34.1
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 96b827049501..1f6514d55b17 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -12120,7 +12120,7 @@ M:	Andy Shevchenko <andy@kernel.org>
+ L:	linux-kernel@vger.kernel.org
+ S:	Supported
+ F:	arch/x86/include/asm/intel-mid.h
+-F:	arch/x86/pci/intel_mid_pci.c
++F:	arch/x86/pci/intel_mid.c
+ F:	arch/x86/platform/intel-mid/
+ F:	drivers/dma/hsu/
+ F:	drivers/extcon/extcon-intel-mrfld.c
+diff --git a/arch/x86/pci/Makefile b/arch/x86/pci/Makefile
+index 4933fb337983..c1efd5b0d198 100644
+--- a/arch/x86/pci/Makefile
++++ b/arch/x86/pci/Makefile
+@@ -8,13 +8,13 @@ obj-$(CONFIG_PCI_OLPC)		+= olpc.o
+ obj-$(CONFIG_PCI_XEN)		+= xen.o
+ 
+ obj-y				+= fixup.o
+-obj-$(CONFIG_X86_INTEL_CE)      += ce4100.o
+ obj-$(CONFIG_ACPI)		+= acpi.o
+ obj-y				+= legacy.o irq.o
+ 
+-obj-$(CONFIG_X86_NUMACHIP)	+= numachip.o
++obj-$(CONFIG_X86_INTEL_CE)	+= ce4100.o
++obj-$(CONFIG_X86_INTEL_MID)	+= intel_mid.o
+ 
+-obj-$(CONFIG_X86_INTEL_MID)	+= intel_mid_pci.o
++obj-$(CONFIG_X86_NUMACHIP)	+= numachip.o
+ 
+ obj-y				+= common.o early.o
+ obj-y				+= bus_numa.o
+diff --git a/arch/x86/pci/intel_mid_pci.c b/arch/x86/pci/intel_mid.c
+similarity index 100%
+rename from arch/x86/pci/intel_mid_pci.c
+rename to arch/x86/pci/intel_mid.c
+-- 
+2.47.2
 
