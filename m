@@ -1,98 +1,168 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9575122ACE3
-	for <linux-pci@vger.kernel.org>; Tue,  8 Apr 2025 16:57:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29C53223714
+	for <linux-pci@vger.kernel.org>; Tue,  8 Apr 2025 19:10:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744131441; cv=none; b=ofiX1vm3jttoUmc8QlcLrbW5QMkFlJbXWxPdjCxUr/k7kgrswghUotjAnSyg92zvSRomSXPHpdVcHXNqx87fGLH9oaXrEdBtMGKHJP65Lot5q9wYkEgrDP2xitrf4aZukcE+UbPvEBZjU6j3Gm97tSGFJ9D4Z68qEc/n3mGMT5w=
+	t=1744139448; cv=none; b=h8DsTN+dI1EpkZQctuhw/sEbL5dXff7xDY1ZWQcd1t6PVS/dRskkgK13sLkfnDoO9ERcMwfTkn99/EWKBrmbCUSR9V8gW2zVpzzVuiRJiWmOmAIetIW745dGWjXgpzAZG0u59E7P3HtjfB1k/ypYBEDBls/F+m2wmCD21T5993g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744131441; c=relaxed/simple;
-	bh=O0+17WUfEaHXbmjRQLD+nSND55dYNbv+rYx911yjSMU=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=WhIAGO3IKws294vyTTZWQsQHNRJVebkqEWNu05cPLQnKUO4K+sK3QQOJDsUElK1gBRm22iW2iUQ2B3Jyzkdudp3yGstonoeo+vu1/sfDXsaukg5iWmwfQ5gzROOIueyPnI8OrLrUgVbwSxggw/1A7JLYkdIYHTHHKbZp2WDEJjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=dMq/p+0w; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
+	s=arc-20240116; t=1744139448; c=relaxed/simple;
+	bh=SPoTy4WlXa/+QTB61BIFV004CAujb/C8S2qTmrqOyME=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=ZXDzCz+HJ9AypiBDg8u6ECoqFsrJkJ/htrJSn+L7NYu63Gd5EWqYXSAktmgNysY70dhvXq0N3jhlN18z9+HKX5QSEsuuOD2WfBBrfYFxLWWUr47dK8oOwwNIO+mSA7K1b5Khzy0eQNJUyoKcJ33QRQlceOH1ZOmid1ZPh/aXkLs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=c87uIojP; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="dMq/p+0w"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=6J5HqLg7d0KAcqcPTq2XYRoxTDZiGcXuWLeV6rOZ7kg=; b=dMq/p+0wKouap7QG3kFDwk/SCs
-	M7Bq74xkoRlBlWUtYXbhWZA6R6iMPpEZDVX9NsUX3Ll5mO4RXHYQj+offK5ldEjYKVjeQBKCRBea8
-	ILagV0JVq/Frmep+UfJL3pI8qiaiTZEQEfofQ3vgtqX72bWhi4pYFz8acoOOUsIIWwM+2ReV89oNy
-	K5rM4PPv1Vo+05c5h/SPSf2d8EGYFN0WNlRJHvqXwD5LQwugIhL5EjzL9q8HdipW6ETblLy/FByiR
-	AZvHFc9UsVwCF79hFWeF0VDUhuMDNF48wiK2vQOOFKHXNU4TrRcKdTM2lgPn7ocuyWBnl92nXh5ab
-	RDVg3CoQ==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1u2Bl3-0004Ac-19;
-	Tue, 08 Apr 2025 10:25:06 -0600
-Message-ID: <6695d513-3c0d-427f-96e5-79ada046cedf@deltatee.com>
-Date: Tue, 8 Apr 2025 10:25:03 -0600
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="c87uIojP"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1744139446; x=1775675446;
+  h=date:from:to:cc:subject:message-id;
+  bh=SPoTy4WlXa/+QTB61BIFV004CAujb/C8S2qTmrqOyME=;
+  b=c87uIojP5rKXJv9vD7TTxI+SA5g1eacNgvIDJuUVfxOklapVGusmxT8q
+   bonOL8+LARsFCimp7bYVHIYk7vKwwp3nE3/sluv+Y4v+hWPQKnSK4pKR1
+   Qkm3aoAnPGzwMuROBnpaSLjM6f5TBN/O47sQF//qVC0rzHF7KycKkT2zj
+   zxts/fxwtadg/f/1h1Rmz4mrubDBS1tps25Nbh+kv0ocRjpKMSytUjT+o
+   MGLnabQ6dM4XoggLv+BHqpVf1DSjhPvxZWCiQH8/Qo2nhHTsDoakeh9xb
+   O6BmqiXGguG9gY25zwFCWy7J/D++Kw0saeQJzsLo6Aid2EtUsTw6mSino
+   A==;
+X-CSE-ConnectionGUID: BlEruPRLQha85+LxhTq1rQ==
+X-CSE-MsgGUID: SgVCbFYPSuG84WK2mLad8g==
+X-IronPort-AV: E=McAfee;i="6700,10204,11397"; a="45711279"
+X-IronPort-AV: E=Sophos;i="6.15,198,1739865600"; 
+   d="scan'208";a="45711279"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 08 Apr 2025 12:10:45 -0700
+X-CSE-ConnectionGUID: gasesh+dRgmyruUR6CvfQg==
+X-CSE-MsgGUID: xj8oijNyRI6bWIlQtHN93A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,198,1739865600"; 
+   d="scan'208";a="128697700"
+Received: from lkp-server01.sh.intel.com (HELO b207828170a5) ([10.239.97.150])
+  by fmviesa008.fm.intel.com with ESMTP; 08 Apr 2025 12:10:44 -0700
+Received: from kbuild by b207828170a5 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1u2ELK-0007uL-0s;
+	Tue, 08 Apr 2025 19:10:42 +0000
+Date: Wed, 09 Apr 2025 03:10:15 +0800
+From: kernel test robot <lkp@intel.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:irq] BUILD SUCCESS
+ fdc348121f2465897792f946715a5da7887e5f97
+Message-ID: <202504090300.c8o5Fv5T-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Lukas Wunner <lukas@wunner.de>, Damir Chanyshev <conflict342@gmail.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org,
- "Michael J. Ruhl" <michael.j.ruhl@intel.com>,
- =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-References: <CAAUwoOjXGzaTQ4Dbx3wcMOiy484Sjd4Vv1=ZDiVrYvCEaNiRcA@mail.gmail.com>
- <20250408150623.GA232275@bhelgaas>
- <CAAUwoOg-uUGRcyNx3npvJuA9ZQa=dH+7tzdtKnA1y69kBriyuw@mail.gmail.com>
- <Z_VAuOu7lvm5ykNX@wunner.de>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <Z_VAuOu7lvm5ykNX@wunner.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: lukas@wunner.de, conflict342@gmail.com, helgaas@kernel.org, linux-pci@vger.kernel.org, michael.j.ruhl@intel.com, ilpo.jarvinen@linux.intel.com
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: P2PDMA support status for the sappire rapids+
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
 
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git irq
+branch HEAD: fdc348121f2465897792f946715a5da7887e5f97  irqdomain: pci: Switch to of_fwnode_handle()
 
+elapsed time: 1487m
 
-On 2025-04-08 09:28, Lukas Wunner wrote:
-> On Tue, Apr 08, 2025 at 06:14:55PM +0300, Damir Chanyshev wrote:
->> On Tue, Apr 8, 2025 at 6:06???PM Bjorn Helgaas <helgaas@kernel.org> wrote:
->>> The pci_p2pdma_whitelist[] is only updated when somebody tests a
->>> platform and determines that its RC can route peer-to-peer
->>> transactions between separate Root Ports.  This routing is not
->>> required by the PCIe spec, so we can't assume that all platforms
->>> support it.
->>
->> For the testing, is simple rdma ping-pong sufficient? Or a more
->> specific testing tool?
->> Unfortunately I don't have a fancy pcie hardware analyzer.
-> 
-> You should test that performance is satisfactory for you needs.
+configs tested: 91
+configs skipped: 2
 
-I couldn't have said it better myself.
+The following configs have been built successfully.
+More configs may be tested in the coming days.
 
-If you have any application running on a machine that uses P2P then that
-is sufficient testing in and of itself to add the machine to the list.
+tested configs:
+alpha                            allyesconfig    gcc-14.2.0
+arc                              allmodconfig    gcc-14.2.0
+arc                              allyesconfig    gcc-14.2.0
+arc                   randconfig-001-20250408    gcc-14.2.0
+arc                   randconfig-002-20250408    gcc-14.2.0
+arm                              allmodconfig    gcc-14.2.0
+arm                              allyesconfig    gcc-14.2.0
+arm                          collie_defconfig    gcc-14.2.0
+arm                   randconfig-001-20250408    clang-21
+arm                   randconfig-002-20250408    gcc-10.5.0
+arm                   randconfig-003-20250408    clang-17
+arm                   randconfig-004-20250408    gcc-6.5.0
+arm64                            allmodconfig    clang-19
+arm64                 randconfig-001-20250408    clang-21
+arm64                 randconfig-002-20250408    gcc-9.5.0
+arm64                 randconfig-003-20250408    gcc-9.5.0
+arm64                 randconfig-004-20250408    clang-20
+csky                  randconfig-001-20250408    gcc-14.2.0
+csky                  randconfig-002-20250408    gcc-9.3.0
+hexagon                          allmodconfig    clang-17
+hexagon                          allyesconfig    clang-21
+hexagon               randconfig-001-20250408    clang-21
+hexagon               randconfig-002-20250408    clang-21
+i386                             allmodconfig    gcc-12
+i386                              allnoconfig    gcc-12
+i386                             allyesconfig    gcc-12
+i386        buildonly-randconfig-001-20250408    clang-20
+i386        buildonly-randconfig-002-20250408    clang-20
+i386        buildonly-randconfig-003-20250408    gcc-12
+i386        buildonly-randconfig-004-20250408    gcc-12
+i386        buildonly-randconfig-005-20250408    gcc-12
+i386        buildonly-randconfig-006-20250408    gcc-12
+i386                                defconfig    clang-20
+loongarch                        allmodconfig    gcc-14.2.0
+loongarch             randconfig-001-20250408    gcc-14.2.0
+loongarch             randconfig-002-20250408    gcc-13.3.0
+m68k                             allmodconfig    gcc-14.2.0
+m68k                              allnoconfig    gcc-14.2.0
+m68k                             allyesconfig    gcc-14.2.0
+microblaze                       allmodconfig    gcc-14.2.0
+microblaze                       allyesconfig    gcc-14.2.0
+nios2                 randconfig-001-20250408    gcc-13.3.0
+nios2                 randconfig-002-20250408    gcc-7.5.0
+openrisc                          allnoconfig    gcc-14.2.0
+openrisc                         allyesconfig    gcc-14.2.0
+parisc                           allmodconfig    gcc-14.2.0
+parisc                            allnoconfig    gcc-14.2.0
+parisc                           allyesconfig    gcc-14.2.0
+parisc                randconfig-001-20250408    gcc-6.5.0
+parisc                randconfig-002-20250408    gcc-8.5.0
+powerpc                          allmodconfig    gcc-14.2.0
+powerpc                           allnoconfig    gcc-14.2.0
+powerpc                          allyesconfig    clang-21
+powerpc               randconfig-001-20250408    gcc-5.5.0
+powerpc               randconfig-002-20250408    gcc-9.3.0
+powerpc               randconfig-003-20250408    gcc-5.5.0
+powerpc64             randconfig-001-20250408    clang-21
+powerpc64             randconfig-002-20250408    gcc-5.5.0
+powerpc64             randconfig-003-20250408    gcc-7.5.0
+riscv                             allnoconfig    gcc-14.2.0
+riscv                 randconfig-001-20250408    gcc-9.3.0
+riscv                 randconfig-002-20250408    clang-21
+s390                              allnoconfig    clang-15
+s390                             allyesconfig    gcc-14.2.0
+s390                  randconfig-001-20250408    gcc-8.5.0
+s390                  randconfig-002-20250408    clang-15
+sh                               allmodconfig    gcc-14.2.0
+sh                               allyesconfig    gcc-14.2.0
+sh                    randconfig-001-20250408    gcc-13.3.0
+sh                    randconfig-002-20250408    gcc-13.3.0
+sparc                            allmodconfig    gcc-14.2.0
+sparc                 randconfig-001-20250408    gcc-10.3.0
+sparc                 randconfig-002-20250408    gcc-6.5.0
+sparc64               randconfig-001-20250408    gcc-6.5.0
+sparc64               randconfig-002-20250408    gcc-14.2.0
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-21
+um                               allyesconfig    gcc-12
+um                    randconfig-001-20250408    clang-21
+um                    randconfig-002-20250408    gcc-12
+x86_64                            allnoconfig    clang-20
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20250408    clang-20
+x86_64      buildonly-randconfig-002-20250408    clang-20
+x86_64      buildonly-randconfig-003-20250408    clang-20
+x86_64      buildonly-randconfig-004-20250408    gcc-12
+x86_64      buildonly-randconfig-005-20250408    clang-20
+x86_64      buildonly-randconfig-006-20250408    clang-20
+x86_64                              defconfig    gcc-11
+xtensa                randconfig-001-20250408    gcc-6.5.0
+xtensa                randconfig-002-20250408    gcc-6.5.0
 
-My expectation is that any modern Intel root complex should work, but we
-don't have a concise rule that guarantees this so we are stuck in the
-unfortunate situation to add each family as they are tested by someone
-who cares about it.
-
-AMD confirmed for us that all modern devices will support P2P and
-provided a concise rule that works for all current and future devices.
-
-My limited experience with ARM devices suggest many root complexes do
-not support P2P, so they will likely always have to be added on a case
-by case basis.
-
-Logan
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
