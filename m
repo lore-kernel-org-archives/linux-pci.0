@@ -1,130 +1,88 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mail-m19731102.qiye.163.com (mail-m19731102.qiye.163.com [220.197.31.102])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE70022B597
-	for <linux-pci@vger.kernel.org>; Wed,  9 Apr 2025 07:06:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CAF82899
+	for <linux-pci@vger.kernel.org>; Wed,  9 Apr 2025 07:16:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744182381; cv=none; b=JnrLoMpKGfBPQqQw3dsIj5pTPbK+He698KKTgChVNRdjNkhVuBJjC+iPwWSyxRXQu0LtfS7ccMKvANTx7f4HBIG2lbjHDyBja5LTo5A+uUP3KK4FODqrg26TpTyaGX/E+tpDHUF4vgrI2vy9nqBy8zmlj6zile0y9DkgxEF/M0s=
+	t=1744182975; cv=none; b=Ofd1uvWsyXfiIdiGivg6cZdRFCfCI0OQ5ZtVk6nNDFkNX7h8PlKzcP4u4nAdRCjw3Efxu2H6YK9MfO7FZ3GMStY31nVmrTJ1BNlz/XMwveQXkboacF1SzU6sYJT0M2L+QEdopwRkyTjLtqMQwI396UBgC90/yHOAd8myuPcTZyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744182381; c=relaxed/simple;
-	bh=yS+f3fqEzIoMXoYigNyYL1iRCbrDvUkMQNrAccauF30=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nK7wqyRldNbdB+G7/4qnFV9E0q5bIMDNd8BI0UzcZ/iAUJpCcTqJ5hSTGDPaN4hwLYxIwRDFCQ7iqcyYw7+Ef9jyhWGqKKV/WNNqzq84m0iUHyFvBfdy6f9ecnporrnK85r8XKCbu2mXoQw0yaeaB8lz1mPQYNZnpoJiVIdgacI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=PrD1SWNd; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1744182975; c=relaxed/simple;
+	bh=TVqLF3+NBvCIsBeOpSXaTEYY0ntJSlzJjplo9Xe4JQ4=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=ujozHwynV3G/Rmh9oME+f2SCXu8HXIRdZsAIsJYFcxYdvPtR+87zShw5f7cCJKInalHHUMfAh8Bf4Lmz8VCnQ1gCJBtvCbN9v7k0efmQzoTYaKepUPwY6NSOgB4TRDWClHxGeaov90y6oAaEMhM8ahWQJdVLtYqOjKM0t/n4JHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=U+9QVT+v; arc=none smtp.client-ip=220.197.31.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="PrD1SWNd"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-22a976f3131so37513795ad.3
-        for <linux-pci@vger.kernel.org>; Wed, 09 Apr 2025 00:06:19 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1744182379; x=1744787179; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=Nm7nG2cOghl5We3pl16VQKS1/9Lv238uk1E4idOp5vQ=;
-        b=PrD1SWNdTtPZUgQjRNif2ls9MubJr9v7WpJMbQBGMplnDg/ESsiWZdjv3qFwkjXX84
-         lONLGQro2/xnruJpKObbR0aS2CwXuG+xYN7mEDe6swzRcwdKYHIsV0Tdsf7qulqmhtGs
-         Cc8rW41SvaR0djm60tukZRnm7/UJwVxZfwxkgxrg3Tr655x/wfxsO4clFVrmI7HuSYf/
-         de5vws9DkS4T4CONHe/9F/zIFWKLZezzppEir0ux2e3BT9qXb+QxEmfcGt7X0//8ObMG
-         o9xHdnnb1H9q0Krb0GTqrwVDZp/zBjXN+7WsSUD+qKjqcbBhQI5bcyCIkorcYa4Wfe0y
-         Ch+g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744182379; x=1744787179;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Nm7nG2cOghl5We3pl16VQKS1/9Lv238uk1E4idOp5vQ=;
-        b=SpkjiFCAd9X7emMypec3r0AvTKKF6EMWJ8Pr+VXqlSc41wLxg9Mf7gUNIIxEaX7G8p
-         VOde3UFM7zAWwrW6dpo6udhabqjIOcNB1nTte6sNcjVwgvfXpTEfFCADZBr8n1GJn1cj
-         +4RudYtho5Rs97gqhhl8TMOxjyqgNBWVHXQc1vr+UvGxpT7whWVXhP6WoxfufZJWiYdz
-         +kYHuxIMRlps29YvLf60RbN9X5tQqEtoo6jal7j9oju/CmCELpYnvwPgcq5r/MpkQsQP
-         8CtGsDLsdyjGF5XV17S6e1Ya2kzG/cEG9/fmDOLd6hvOevb5l7b4+ZySWffY7CQiT/z1
-         4WSA==
-X-Forwarded-Encrypted: i=1; AJvYcCXesPcX5+zUl/C9OGiIOiMGLP5sEwGkRatNEnygGNsvqrABgp3A7x+oXW6uKZSsLvVoz1qLOcKPxJ0=@vger.kernel.org
-X-Gm-Message-State: AOJu0YykEzr6QgV70vGsfgUudcZ5kaFPN8rZe4sLs/0ee0PIWemHAVCf
-	U/EBizAi1CAZzOgYtrHWHDkjQoU3VA8cjDfxPR7XgJrxIVUTc/ID4klF5Q/DEQ==
-X-Gm-Gg: ASbGncsKQcFBQeMiHubG43QxqaAhS0/WCOXHSM+sXVdpGrBlqtFAHCGb22yUO4It62F
-	lq3uxw6KdL3hmensiDCAIvnjFKdryDdrl/bfXvOstH6SDvkg377qewvcefZtRYIup4dDIPURJ/a
-	ueT0MYvARdSJHUqKmtFj1TEg+XzYZm9Z9SWuLWPd98PSo/H/eGoFiAJdOU5yFcm6u3SLQRMkfK4
-	IwOgPdlmK5N5I7bZotzeqB5M2ZU/y1kjaoWZiD85x9x9N8mVXz5yxNBnk64AAG+sx/RhOnkMcgl
-	NIh+CEYDS5RX2ctnYk9NxQ6RHWWDqs72QrJeLNfsVUYc+Cg4NJg=
-X-Google-Smtp-Source: AGHT+IG2IBbUsP4jpyoBsAQl7I0S2iGdcUbnYfvvANGYcDIZAtyYHJ27CyPFx40ttshkAUckDfLO7g==
-X-Received: by 2002:a17:903:3bc6:b0:224:10a2:cad9 with SMTP id d9443c01a7336-22ac2a2991bmr35596635ad.41.1744182379003;
-        Wed, 09 Apr 2025 00:06:19 -0700 (PDT)
-Received: from thinkpad ([120.56.198.53])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22ac7cb5047sm4544815ad.170.2025.04.09.00.06.11
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 09 Apr 2025 00:06:18 -0700 (PDT)
-Date: Wed, 9 Apr 2025 12:36:08 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>, 
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>, Jim Quinlan <jim2101024@gmail.com>, 
-	Nicolas Saenz Julienne <nsaenz@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>, Rob Herring <robh@kernel.org>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Srikanth Thokala <srikanth.thokala@intel.com>, 
-	Daire McNamara <daire.mcnamara@microchip.com>, Marek Vasut <marek.vasut+renesas@gmail.com>, 
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, Paul Walmsley <paul.walmsley@sifive.com>, 
-	Greentime Hu <greentime.hu@sifive.com>, Samuel Holland <samuel.holland@sifive.com>, 
-	Bharat Kumar Gogada <bharat.kumar.gogada@amd.com>, Michal Simek <michal.simek@amd.com>, 
-	Geert Uytterhoeven <geert+renesas@glider.be>, Magnus Damm <magnus.damm@gmail.com>, 
-	Tom Joseph <tjoseph@cadence.com>, Ahmad Zainie <wan.ahmad.zainie.wan.mohamad@intel.com>, 
-	Lad Prabhakar <prabhakar.mahadev-lad.rj@bp.renesas.com>, linux-rpi-kernel@lists.infradead.org, 
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-renesas-soc@vger.kernel.org, 
-	linux-riscv@lists.infradead.org
-Subject: Re: [PATCH 2/2] dt-bindings: PCI: sifive,fu740-pcie: Fix include
- placement in DTS example
-Message-ID: <3cfkeludmigojzadrgyxyidiydb3mx6yqjcvmgpbhdk75cflog@66i4zpvjcwzv>
-References: <20250324125202.81986-1-krzysztof.kozlowski@linaro.org>
- <20250324125202.81986-2-krzysztof.kozlowski@linaro.org>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="U+9QVT+v"
+Received: from localhost.localdomain (unknown [58.22.7.114])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 1131237df;
+	Wed, 9 Apr 2025 14:40:44 +0800 (GMT+08:00)
+From: Shawn Lin <shawn.lin@rock-chips.com>
+To: Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+Cc: linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org,
+	Shawn Lin <shawn.lin@rock-chips.com>
+Subject: [PATCH] PCI: dw-rockchip: Remove PCIE_L0S_ENTRY check from rockchip_pcie_link_up()
+Date: Wed,  9 Apr 2025 14:40:33 +0800
+Message-Id: <1744180833-68472-1-git-send-email-shawn.lin@rock-chips.com>
+X-Mailer: git-send-email 2.7.4
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFDSUNOT01LS0k3V1ktWUFJV1kPCRoVCBIfWUFZQk4aS1ZDTUkdQkxDTUNOGUpWFRQJFh
+	oXVRMBExYaEhckFA4PWVdZGBILWUFZTkNVSUlVTFVKSk9ZV1kWGg8SFR0UWUFZT0tIVUpLSU9PT0
+	hVSktLVUpCS0tZBg++
+X-HM-Tid: 0a961947984109cckunm1131237df
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6MAg6PCo5TTJPQz00AkoDARMN
+	Cx8wC1ZVSlVKTE9PSkNLQ09OT0hJVTMWGhIXVQgTGgwVVRcSFTsJFBgQVhgTEgsIVRgUFkVZV1kS
+	C1lBWU5DVUlJVUxVSkpPWVdZCAFZQUlLSko3Bg++
+DKIM-Signature:a=rsa-sha256;
+	b=U+9QVT+vPn0NNG1i8hZqBJxLkXebHlBBlFXiRCi3qd4iTifhai4dqLptWHQrnQP66LP0jEoZUXMtjOD/ke/skQf+gURqBHgIi+eFRE5gLmO1rywE0zWp+Nxm63P2S30wgUdt3O7+mtevh3Td8TJ9RgUC6NvH8kbKBTdLMNNbC24=; s=default; c=relaxed/relaxed; d=rock-chips.com; v=1;
+	bh=uL3yYBFNwU3CVG21BFbR1AKc8ubqHWPS1HF2coHLyYQ=;
+	h=date:mime-version:subject:message-id:from;
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250324125202.81986-2-krzysztof.kozlowski@linaro.org>
 
-On Mon, Mar 24, 2025 at 01:52:02PM +0100, Krzysztof Kozlowski wrote:
-> Coding style and common logic dictates that headers should not be
-> included in device nodes.  No functional impact.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Two mistakes here:
+1. 0x11 is L0 not L0S, so the naming is wrong from the very beginning.
+2. It's totally broken if enabling ASPM as rockchip_pcie_link_up() treat other
+states, for instance, L0S or L1 as link down which is obvioult wrong.
 
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Remove the check.
 
-- Mani
+Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+---
 
-> ---
->  Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml b/Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml
-> index 844fc7142302..d35ff807936b 100644
-> --- a/Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml
-> +++ b/Documentation/devicetree/bindings/pci/sifive,fu740-pcie.yaml
-> @@ -81,10 +81,10 @@ unevaluatedProperties: false
->  
->  examples:
->    - |
-> +    #include <dt-bindings/clock/sifive-fu740-prci.h>
->      bus {
->          #address-cells = <2>;
->          #size-cells = <2>;
-> -        #include <dt-bindings/clock/sifive-fu740-prci.h>
->  
->          pcie@e00000000 {
->              compatible = "sifive,fu740-pcie";
-> -- 
-> 2.43.0
-> 
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index c624b7e..21dc99c 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -44,7 +44,6 @@
+ #define PCIE_LINKUP			(PCIE_SMLH_LINKUP | PCIE_RDLH_LINKUP)
+ #define PCIE_RDLH_LINK_UP_CHGED		BIT(1)
+ #define PCIE_LINK_REQ_RST_NOT_INT	BIT(2)
+-#define PCIE_L0S_ENTRY			0x11
+ #define PCIE_CLIENT_GENERAL_CONTROL	0x0
+ #define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
+ #define PCIE_CLIENT_INTR_MASK_LEGACY	0x1c
+@@ -177,8 +176,7 @@ static int rockchip_pcie_link_up(struct dw_pcie *pci)
+ 	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
+ 	u32 val = rockchip_pcie_get_ltssm(rockchip);
+ 
+-	if ((val & PCIE_LINKUP) == PCIE_LINKUP &&
+-	    (val & PCIE_LTSSM_STATUS_MASK) == PCIE_L0S_ENTRY)
++	if ((val & PCIE_LINKUP) == PCIE_LINKUP)
+ 		return 1;
+ 
+ 	return 0;
 -- 
-மணிவண்ணன் சதாசிவம்
+2.7.4
+
