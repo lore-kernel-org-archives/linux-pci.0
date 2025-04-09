@@ -1,179 +1,161 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5EA47258A;
-	Wed,  9 Apr 2025 03:57:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from mail-pg1-f180.google.com (mail-pg1-f180.google.com [209.85.215.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97ED91DD9AD
+	for <linux-pci@vger.kernel.org>; Wed,  9 Apr 2025 06:29:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744171079; cv=none; b=PIyrbdRLv9DyGSJcvSLu/ZYdpoOze4Q/iSdRb22tfd1hxPXxODP+YqElklQeLOKe2lh19jRiH5GNC8BS5g6XxrwY2ekjSKotWl/Fq93k5x5ceD3Ok4aTz7rlJrxY92l5Ye2DZAsboXkPyTHWUvdw+CZdAz/I/SL5H+SxYjCnnpc=
+	t=1744180182; cv=none; b=nXYD02UG46ibtDJB/n+cZzcNkw5OGHp5XR62w9Yed3GwJ7lfW7ATFXbXTxR8g1LrjEuxVsr9WmVLJWjaFNJfs2KhZtZEEmcStSY0DEjm0lk8uSdloQplK2uR/iyHA1v1619h2jsQYo92yywQsPMfpileRAm8TI/++1NQpEgA2GQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744171079; c=relaxed/simple;
-	bh=C8VoMDP/9DwEUbnuWChyJAzFBxjjKZGOkfQ/fb1wU68=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=spb4V/XG3csNqsqUAmHThMwyOCu437iH2us+H2kNDnQuO3eZHIFyxBs9tl1XJf7AV1jkY8SB2BixADb1oxKs7u8CbPq6N/VEsHJs4qS1K5BGeYHp0dxhdWCiagCVGDiZv4/qxqgFlO/A8e9qZhE7xIo8OdQyrra121cjnQM7QG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=czI78n2P; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1744180182; c=relaxed/simple;
+	bh=GqY1tsZNSIrPzzrHoXynnaRNG6y6kEra0eAN9CxIYUg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GUOzP1wa3o5E/JrJWouyFc38vboaCokCg1m+cJPB9PXMFBZAahohpkC1/XlGfJGm20DGreV179EVvqs2IBd02nSBFX38yr+rmXOVPYfRlKFBYcH8ZnfpZFSwlLds9OFV1GGM9BhF/1Is7zS3bdTEoN9URmN5A6kFhm2YAUDueSE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=uWeAEPOL; arc=none smtp.client-ip=209.85.215.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="czI78n2P"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=KKEef
-	WvqrG4PzRUfHiysIFUryV3aK/Eeg4jpW8eL55c=; b=czI78n2P/yvESCIDnKo8I
-	FCgXJj2+3LlfT9p1VD/pT+z4i6MeXMTR8OyRV5ra286hV1YuOZtJmaTzKaQpRUJk
-	somfp2KLxKAGMGX9LK+8NiexIfh80jVVoFpiNsOir2aHetfBRTXHEAfaXXnroPuG
-	hXcYTSIihe+Rx39jgTKSFc=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDHD3GH7PVnbwQBFQ--.4446S6;
-	Wed, 09 Apr 2025 11:42:06 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	bhelgaas@google.com
-Cc: kw@linux.com,
-	manivannan.sadhasivam@linaro.org,
-	ilpo.jarvinen@linux.intel.com,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	thomas.richard@bootlin.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v9 4/6] PCI: dwc: Use common PCI host bridge APIs for finding the capabilities
-Date: Wed,  9 Apr 2025 11:41:54 +0800
-Message-Id: <20250409034156.92686-5-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250409034156.92686-1-18255117159@163.com>
-References: <20250409034156.92686-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uWeAEPOL"
+Received: by mail-pg1-f180.google.com with SMTP id 41be03b00d2f7-af9a7717163so6326181a12.2
+        for <linux-pci@vger.kernel.org>; Tue, 08 Apr 2025 23:29:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1744180180; x=1744784980; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=usHmxHbXCM+dAW0xD/QM+lICH9ZjXWjSDlg+5wMOzf8=;
+        b=uWeAEPOLzUS1qPqqijnEuIwxXe1YRLDoqQSMCdF6hxOkjNfLCHqEF5EdOqpeFne/nA
+         nanOypinBAEiPIQdWFuMUul9DP1eqiDoEH9rfpusWGq8/NDjSUgU4APQnTY/DUshohVT
+         ve/8jxUl2BnyMFxNiv26mfeWYg2on9hK4ockTAnbdzq9V9U3hN6nYfTOwUa/FMv32yEy
+         aW8AznqAKbJx08ildAdWOIsEifcHDSeVS1RllA7Sr7smmNUmVgL/L0oajpf7S233HjQ4
+         SzAyNeD89K0Os3W3961Pk2fIhRZ6LVTJkCA1x79nJiO0M1kk6tVwHAy5uGNUEbS5MK4O
+         E98g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1744180180; x=1744784980;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=usHmxHbXCM+dAW0xD/QM+lICH9ZjXWjSDlg+5wMOzf8=;
+        b=RFPOCZeWzytP/cAxTZ0ifjQhjZvn0DdNEFjs3qOawU4mBNsdSmDGCJOvy96E08Tv4C
+         NA3HqE5dIYA8CUr1/s/P7xHiGGRlEuPz8d4UWSSxMMUD9WDmd4ZAtFCOKicslyeijzj2
+         ow3ahqJ9sKgj07XmY6muhLx1QJrUolZH7IwAR8XAE3NK/Yk9a7rKwp1VrBKAAOgHSFJH
+         MYBsyGZH1xA9i7p5gyVUjL1MCmqLMWYI5Ve5g+4gotkPPDCwbYZQ7OSDqfo+i6o+zRQ4
+         XgVRcS/KuyNC5Ww/InYR8jlLEODIzntDI+8iC/Z/CH3XRYTMUE0zOqz3O2A7Jp+MVuDB
+         7/WQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWbXfV7f6HHf2cRgMdTQgkkXa0aBWfFg5CffXJyiNiBWle2Oq8u3f8iCBdblHz3E2OL9ilsAPVWnAA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyFxSuWYNMOqV412W1tJM3LA/G32M3Ch/jHo1TRqVVDBq9apW3c
+	qiS070TQn7d9dj3wE4F+f2vs5kLQO6LxphDAZcPAwCD56pJdJjM4B3bxOLxlcA==
+X-Gm-Gg: ASbGnctDzUimP3yuhxQrgvZvfAwcD2Uy4ZFFBh+FFoHh4cts1sfOI62sDtkbkxopAoZ
+	TmQryU+bOz/aCPJEbHAyxYVra+OcvaPbtkrM990GJIc53G7g+VAJwnILLs4pb2xLZ6Yc5fLhF3i
+	pqoCUJ3Bx3Wy2DXsMRxM8bMPM5xC6z7KZKQKQognQlBPblPhTz2jpG440H/+e2jlGVoV6Udukuq
+	62tDksqBLXKlZAu5h8poYMdFMVX2IwqnJOMIEUtPcD+W3La4KxnhkqHd28COumJC4XX2A8OGwr3
+	9g1Edbf4WH8fWbdJF+jqilOeaTAKgvbfxboBG8zEFkxL4ctdgtA=
+X-Google-Smtp-Source: AGHT+IFMg3stzRdVMVbjl7VIfmZ5+DK7eVP2nR526pWDqOTgCQzPmJ9NitfwkUXy92kR/MtVTv0MhA==
+X-Received: by 2002:a05:6a21:8dcb:b0:1f5:769a:a4b2 with SMTP id adf61e73a8af0-20159195613mr2687257637.17.1744180179850;
+        Tue, 08 Apr 2025 23:29:39 -0700 (PDT)
+Received: from thinkpad ([120.56.198.53])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-73bb1e51f48sm496746b3a.147.2025.04.08.23.29.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 08 Apr 2025 23:29:38 -0700 (PDT)
+Date: Wed, 9 Apr 2025 11:59:33 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: lpieralisi@kernel.org, kw@linux.com, robh@kernel.org, 
+	bhelgaas@google.com, vigneshr@ti.com, kishon@kernel.org, 18255117159@163.com, 
+	cassel@kernel.org, wojciech.jasko-EXT@continental-corporation.com, 
+	thomas.richard@bootlin.com, bwawrzyn@cisco.com, linux-pci@vger.kernel.org, 
+	linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, srk@ti.com
+Subject: Re: [PATCH v2 3/4] PCI: cadence-ep: Introduce cdns_pcie_ep_disable
+ helper for cleanup
+Message-ID: <vaqnrp46asxjiqjefajqfeqcp7kjhcelc2nabilrgjdqevwncj@i64fd7jt5gil>
+References: <20250330083914.529222-1-s-vadapalli@ti.com>
+ <20250330083914.529222-4-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHD3GH7PVnbwQBFQ--.4446S6
-X-Coremail-Antispam: 1Uf129KBjvJXoWxury5Cw17JryfCFy7ZrW8JFb_yoW5ZFWDpa
-	yrA3ZYkr4rtr4aqa1qvFnIyFy5AF9xAFWxZa97GwnavF12krWjg340kayaqF1IyrZFgF13
-	Kr48JF95Cw1ktFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zEbAwPUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhEqo2f16yc8WQAAsZ
+In-Reply-To: <20250330083914.529222-4-s-vadapalli@ti.com>
 
-Use the PCI core is now exposing generic macros for the host bridges to
-search for the PCIe capabilities, make use of them in the DWC driver.
+On Sun, Mar 30, 2025 at 02:09:13PM +0530, Siddharth Vadapalli wrote:
+> Introduce the helper function cdns_pcie_ep_disable() which will undo the
+> configuration performed by cdns_pcie_ep_setup(). Also, export it for use
+> by the existing callers of cdns_pcie_ep_setup(), thereby allowing them
+> to cleanup on their exit path.
+> 
+> Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
-Changes since v8:
-- None
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 
-Changes since v7:
-- Resolve compilation errors.
+- Mani
 
-Changes since v6:
-https://lore.kernel.org/linux-pci/20250323164852.430546-3-18255117159@163.com/
+> ---
+> 
+> v1:
+> https://lore.kernel.org/r/20250307103128.3287497-4-s-vadapalli@ti.com/
+> Changes since v1:
+> - Based on feedback from Mani at:
+>   https://lore.kernel.org/r/20250318080304.jsmrxqil6pn74nzh@thinkpad/
+>   pci_epc_deinit_notify() has been included in cdns_pcie_ep_disable().
+> 
+> Regards,
+> Siddharth.
+> 
+>  drivers/pci/controller/cadence/pcie-cadence-ep.c | 11 +++++++++++
+>  drivers/pci/controller/cadence/pcie-cadence.h    |  5 +++++
+>  2 files changed, 16 insertions(+)
+> 
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> index b4bcef2d020a..ffd19cb25eed 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> +++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
+> @@ -645,6 +645,17 @@ static const struct pci_epc_ops cdns_pcie_epc_ops = {
+>  	.get_features	= cdns_pcie_ep_get_features,
+>  };
+>  
+> +void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep)
+> +{
+> +	struct device *dev = ep->pcie.dev;
+> +	struct pci_epc *epc = to_pci_epc(dev);
+> +
+> +	pci_epc_deinit_notify(epc);
+> +	pci_epc_mem_free_addr(epc, ep->irq_phys_addr, ep->irq_cpu_addr,
+> +			      SZ_128K);
+> +	pci_epc_mem_exit(epc);
+> +}
+> +EXPORT_SYMBOL_GPL(cdns_pcie_ep_disable);
+>  
+>  int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+>  {
+> diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
+> index 0b6bed1ac146..387174d6e453 100644
+> --- a/drivers/pci/controller/cadence/pcie-cadence.h
+> +++ b/drivers/pci/controller/cadence/pcie-cadence.h
+> @@ -555,11 +555,16 @@ static inline void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int d
+>  
+>  #if IS_ENABLED(CONFIG_PCIE_CADENCE_EP)
+>  int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep);
+> +void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep);
+>  #else
+>  static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
+>  {
+>  	return 0;
+>  }
+> +
+> +static inline void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep)
+> +{
+> +}
+>  #endif
+>  
+>  void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
+> -- 
+> 2.34.1
+> 
 
-- The patch commit message were modified.
-
-Changes since v5:
-https://lore.kernel.org/linux-pci/20250321163803.391056-3-18255117159@163.com/
-
-- Kconfig add "select PCI_HOST_HELPERS"
----
- drivers/pci/controller/dwc/pcie-designware.c | 72 ++------------------
- 1 file changed, 7 insertions(+), 65 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 97d76d3dc066..274f1add95b0 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -205,83 +205,25 @@ void dw_pcie_version_detect(struct dw_pcie *pci)
- 		pci->type = ver;
- }
- 
--/*
-- * These interfaces resemble the pci_find_*capability() interfaces, but these
-- * are for configuring host controllers, which are bridges *to* PCI devices but
-- * are not PCI devices themselves.
-- */
--static u8 __dw_pcie_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
--				  u8 cap)
-+static int dw_pcie_read_cfg(void *priv, int where, int size, u32 *val)
- {
--	u8 cap_id, next_cap_ptr;
--	u16 reg;
--
--	if (!cap_ptr)
--		return 0;
--
--	reg = dw_pcie_readw_dbi(pci, cap_ptr);
--	cap_id = (reg & 0x00ff);
--
--	if (cap_id > PCI_CAP_ID_MAX)
--		return 0;
-+	struct dw_pcie *pci = priv;
- 
--	if (cap_id == cap)
--		return cap_ptr;
-+	*val = dw_pcie_read_dbi(pci, where, size);
- 
--	next_cap_ptr = (reg & 0xff00) >> 8;
--	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
-+	return PCIBIOS_SUCCESSFUL;
- }
- 
- u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
- {
--	u8 next_cap_ptr;
--	u16 reg;
--
--	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
--	next_cap_ptr = (reg & 0x00ff);
--
--	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
-+	return PCI_FIND_NEXT_CAP_TTL(dw_pcie_read_cfg, PCI_CAPABILITY_LIST, cap,
-+				     pci);
- }
- EXPORT_SYMBOL_GPL(dw_pcie_find_capability);
- 
--static u16 dw_pcie_find_next_ext_capability(struct dw_pcie *pci, u16 start,
--					    u8 cap)
--{
--	u32 header;
--	int ttl;
--	int pos = PCI_CFG_SPACE_SIZE;
--
--	/* minimum 8 bytes per capability */
--	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
--
--	if (start)
--		pos = start;
--
--	header = dw_pcie_readl_dbi(pci, pos);
--	/*
--	 * If we have no capabilities, this is indicated by cap ID,
--	 * cap version and next pointer all being 0.
--	 */
--	if (header == 0)
--		return 0;
--
--	while (ttl-- > 0) {
--		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
--			return pos;
--
--		pos = PCI_EXT_CAP_NEXT(header);
--		if (pos < PCI_CFG_SPACE_SIZE)
--			break;
--
--		header = dw_pcie_readl_dbi(pci, pos);
--	}
--
--	return 0;
--}
--
- u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap)
- {
--	return dw_pcie_find_next_ext_capability(pci, 0, cap);
-+	return PCI_FIND_NEXT_EXT_CAPABILITY(dw_pcie_read_cfg, 0, cap, pci);
- }
- EXPORT_SYMBOL_GPL(dw_pcie_find_ext_capability);
- 
 -- 
-2.25.1
-
+மணிவண்ணன் சதாசிவம்
