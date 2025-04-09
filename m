@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3384025D1F1
-	for <linux-pci@vger.kernel.org>; Wed,  9 Apr 2025 08:30:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA2625A62C
+	for <linux-pci@vger.kernel.org>; Wed,  9 Apr 2025 09:19:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744187451; cv=none; b=gPD8HT3CZDB61InpRvSk7G3VWxacMK4ZLIL/ikD1aFqkghG+IOx8EVYsQdc4oiJtGLuzImRdaJYLPGjGWa0J+EgmM5Xmes4WqqMCrMtoVt5MwoTp6D7LYr2o6NhpdMApdYQlu1c0lbWA6WZUqsEfWDdGgfMVWU++VWTPx3r+oU8=
+	t=1744190347; cv=none; b=m6pXvEQpgbyUfvkWIDc2J1G0+ALJafyIpeaCusz7EHBjStBWtzKSxYxV4kyhv4zojksTYVsFTb45TtfsonDwsePeRaGmPxBoi2Hx7mBYqzNmebprtX2nKGxlE4iJ+YrpVHfk6JuWf3KAdPtCTaTV/h2fn0pnVGPOCh+vUjOmOjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744187451; c=relaxed/simple;
-	bh=Nt8L99Z8ytx6X4EkS6apmyPr6cHk3uAN7Xqv53IQRqo=;
+	s=arc-20240116; t=1744190347; c=relaxed/simple;
+	bh=xIdfVkfEMheXajfoX8bSuDYovCWOHxRP/hPk7KxSxc8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DZ4zfejfhA1ecBG8euOFhRMVXFkwT3L0ubh2gd9e8qWSR50ae6ObePfRV3Vxgy3g7/Nb3j6ROF8RIzWh7kLPJpVIBLJsMviHVDD9AOJuHSTgCGDfYCWzBKOQl6hhbW+/dpwG/zoEC/HGVOY39UG9tHVTHY9JuxsLs5QXDrm5/qM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TyIxab97; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FS146sxSh9nU3l3W54T6vk2Xr7RQ8yuARwIsamZDAkernxehbLrQN3ip605C8UDSYU2QJp/MtXbK/x6/gfSsvJGOlhtrNEdH3CjcvVC/75C1crZc/QhKygNzbWymDz8gjd634EP02pS0BR8EU0uDcbugLSMqJ6wR0zHo99m4zbo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tk6RplNs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TyIxab97"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2ABC3C4CEE7;
-	Wed,  9 Apr 2025 08:30:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tk6RplNs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CED9EC4CEE3;
+	Wed,  9 Apr 2025 09:19:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744187450;
-	bh=Nt8L99Z8ytx6X4EkS6apmyPr6cHk3uAN7Xqv53IQRqo=;
+	s=k20201202; t=1744190347;
+	bh=xIdfVkfEMheXajfoX8bSuDYovCWOHxRP/hPk7KxSxc8=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TyIxab97LYhRoLtWKwPMnV5grink2bdfUqN1pIVGi6hX1BQ1LObQ2dHlZypmeWzJ5
-	 Qykjg/kJ3K+maK1wRX+NDDLz6BnX+Zpb+6qBrMrc9ypKCwu1DXQfTH0VODXsuTShcC
-	 cGKQDoFoHcskgv64ZzCwy1CYR7ivQGi+Dmsbe5EYxGY6zUnisSZy2gp6xWQkEupc6a
-	 a7U6SE9pNg3dMZM8A/XphF7yXFPcAjZdssF5KYvHCdXOinfTNGCcxyustuKpVZVXlo
-	 XRDUbobEgMDSroi1IajFdmwu1tU253/i/mLMa/Ml7YCMEDV5rQYrt0S36jh5SUtL/j
-	 sFgC6TkndhwKg==
-Date: Wed, 9 Apr 2025 10:30:46 +0200
+	b=Tk6RplNsnJU8ekqnpays0RwVhnuYxpWFheA7OGqyvI8/7UTKiz0bNKrOxizqt8Pyo
+	 MfzcoxgYgD0WTZPwRvkBN2zF3fOlGTMDM6uEpsn4yKY55GurxGC57MwsChiiQXOiRb
+	 V6lx+2OxYizluQTFvbQm5uU8BziuGeSHiCPBnLhnuesn7TjYA4tjyBQeEenxMo9NcH
+	 KLredw9GIVLR9EbJReyvWyJrk5Nh6m5dOBKvRXNbX8eJT7OFd0de1WUGT8uzdRGumx
+	 PV7NAl32N/Cb2WrrXyppNrSzgQl5ax0qOljGrOWuUvegij9DqwABNw1hzOBbszkOjp
+	 b9GR2GwewtS+Q==
+Date: Wed, 9 Apr 2025 11:19:03 +0200
 From: Niklas Cassel <cassel@kernel.org>
 To: Shawn Lin <shawn.lin@rock-chips.com>
 Cc: Bjorn Helgaas <bhelgaas@google.com>,
@@ -35,69 +35,81 @@ Cc: Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
 Subject: Re: [PATCH] PCI: dw-rockchip: Remove PCIE_L0S_ENTRY check from
  rockchip_pcie_link_up()
-Message-ID: <Z_YwNt6WUuijKTjt@ryzen>
+Message-ID: <Z_Y7h1vzVCCEiXK6@ryzen>
 References: <1744180833-68472-1-git-send-email-shawn.lin@rock-chips.com>
+ <Z_YwNt6WUuijKTjt@ryzen>
+ <38e69551-cc40-11a9-191f-de9a193c5e51@rock-chips.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <1744180833-68472-1-git-send-email-shawn.lin@rock-chips.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <38e69551-cc40-11a9-191f-de9a193c5e51@rock-chips.com>
 
-On Wed, Apr 09, 2025 at 02:40:33PM +0800, Shawn Lin wrote:
-> Two mistakes here:
-> 1. 0x11 is L0 not L0S, so the naming is wrong from the very beginning.
-> 2. It's totally broken if enabling ASPM as rockchip_pcie_link_up() treat other
-> states, for instance, L0S or L1 as link down which is obvioult wrong.
+Hello Shawn,
+
+On Wed, Apr 09, 2025 at 05:09:38PM +0800, Shawn Lin wrote:
+> 在 2025/04/09 星期三 16:30, Niklas Cassel 写道:
+> > On Wed, Apr 09, 2025 at 02:40:33PM +0800, Shawn Lin wrote:
+> > 
+> > Is there any advantage of using a rockchip specific way to read link up,
+> > rather than just reading link up via the DWC PCIE_PORT_DEBUG1 register?
 > 
-> Remove the check.
+> This is a very good question which we tried but made real products
+> suffer from it for a long time, and finally we found the reason and
+> discarded it.
 > 
-> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
-> ---
+> Quoted from DWC databook, section 8.2.3 AXI Bridge Initialization,
+> Clocking and Reset:
 > 
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
+> "In RC Mode, your AXI application must not generate any MEM or I/O
+> requests, until the host software has enabled the Memory Space Enable
+> (MSE), and IO Space Enable (ISE) bits respectively. Your RC application
+> should not generate CFG requests until it has confirmed that the link is
+> up by sampling the smlh_link_up and rdlh_link_up outputs."
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index c624b7e..21dc99c 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -44,7 +44,6 @@
->  #define PCIE_LINKUP			(PCIE_SMLH_LINKUP | PCIE_RDLH_LINKUP)
->  #define PCIE_RDLH_LINK_UP_CHGED		BIT(1)
->  #define PCIE_LINK_REQ_RST_NOT_INT	BIT(2)
-> -#define PCIE_L0S_ENTRY			0x11
->  #define PCIE_CLIENT_GENERAL_CONTROL	0x0
->  #define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
->  #define PCIE_CLIENT_INTR_MASK_LEGACY	0x1c
-> @@ -177,8 +176,7 @@ static int rockchip_pcie_link_up(struct dw_pcie *pci)
->  	struct rockchip_pcie *rockchip = to_rockchip_pcie(pci);
->  	u32 val = rockchip_pcie_get_ltssm(rockchip);
->  
-> -	if ((val & PCIE_LINKUP) == PCIE_LINKUP &&
-> -	    (val & PCIE_LTSSM_STATUS_MASK) == PCIE_L0S_ENTRY)
-> +	if ((val & PCIE_LINKUP) == PCIE_LINKUP)
->  		return 1;
->  
->  	return 0;
-> -- 
-> 2.7.4
+> Quoted from DWC databook, section 5.50 SII: Debug Signals
+> "[36]: smlh_link_up: LTSSM reports PHY link up or LTSSM is in
+> Loopback.Active for Loopback Master" which refers to
+> PCIE_PORT_DEBUG1_LINK_UP per code.
 > 
+> The timing in dwc core is drving smlh_link_up->L0->rdlh_link_up->FC
+> init(a fixed delay) from IC simulation when linking up.
+> 
+> The dw_pcie_link_up() wasn't reliably work as expected by massive test.
+> The problem is clear from our ASIC view, that cxpl_debug_info from DWC
+> core is missing rdlh_link_up. cxpl_debug_info[32:63] is indentical to
+> PCIE_PORT_DEBUG1, So reading PCIE_PORT_DEBUG1 and check
+> smlh_link_up isn't enough.
+> 
+> The problem was introduced by commit 1 and fixed by commit 2 but not to
+> the end. And finally commit 3 rename the register but not fix anything.
+> 
+> It was broken from the first time. Any dwc controllers should not be use
+> the buggy default method to check link up state from our view.
+> So this's the whole story for it, which may help you understand the
+> indeed problem and why we reinvent rockchip_pcie_link_up() here.
+> 
+> [1]. commit dac29e6c5460 ("PCI: designware: Add default link up check if
+>     sub-driver doesn't override")
+> 
+> [2]. commit 01c076732e82 ("PCI: designware: Check LTSSM training bit
+>     before deciding link is up")
+> 
+> [3]. commit 60ef4b072ba0 ("PCI: dwc: imx6: Share PHY debug register
+>     definitions")
 
-You should probably also add:
-Fixes: 0e898eb8df4e ("PCI: rockchip-dwc: Add Rockchip RK356X host controller driver")
+Thank you for the detailed answer.
 
+It seems like we should really add a warning and a comment in
+dw_pcie_link_up(), so that others don't get hit by this hard to debug issue!
 
-Considering that dw_pcie_link_up() looks like this:
-https://github.com/torvalds/linux/blob/v6.15-rc1/drivers/pci/controller/dwc/pcie-designware.c#L714-L725
-
-Why not simply remove the rockchip_pcie_link_up() callback completely?
-
-Is there any advantage of using a rockchip specific way to read link up,
-rather than just reading link up via the DWC PCIE_PORT_DEBUG1 register?
+(Especially since dw_pcie_link_up() was added by someone with a @synopsys.com
+email).
 
 
 Kind regards,
