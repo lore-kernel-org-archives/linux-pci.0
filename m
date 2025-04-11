@@ -1,862 +1,420 @@
-Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2116.outbound.protection.outlook.com [40.107.117.116])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20C6A221282;
-	Fri, 11 Apr 2025 10:37:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.117.116
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744367831; cv=fail; b=l3axsYf2mKjA2P0SmeMRgcJyh6+N+G8ZsA2g7u9/zNbL7SrdCXtyUm38u7Ls6Z7BxVg6ttGCKs+pz6YbJWqHUghOZNu5WNdwpzexVhSKMV7KfGap3g11GyCqWJoJbIEg1jlCEUcAONw9Qv6eUTUWhp4dEjqbuLGIlVtqvVsU0KE=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744367831; c=relaxed/simple;
-	bh=zFHjhej9B/mjQ2aTEmoHt4x1RzX9EmZeGqFMjBoBUlg=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=PqRC7Clr2wVOZGJ+qB/Mequayf3kW3j3j1WL0ZytkVpXE/eocyw+fgvC9iNmv19IE6FrTmHzmdFQoJDQO8zkP2SjCZw6hpVkrNqlIlgIUqEf6Icz6jFc6H9w05NPzn7QD7JO0IQf3ZB4nqty070oLs02hjhUbsNXfWcad805rDg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.117.116
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=oIXYU0kTdw8WHhijoSj73t2Kide/BC+yzX0KVk9M4908kjbcccfjDBeiHou6IF1J95zRMHgP++KUNxLfE6lhPBHsUFO0G/3efTiA5giY/Sg4mAHKZ1WPcdRP1TpKcQ7HXiW1IpcST1I9KSO5OxCMsCMgDkyjDNELgF8rciZCmH6Lv31LE8GEI/F3/huNDZko57bh0jtimTISUXd1ZjooD0QiZSNAtT/apxCpWZAkDiuSvboLZTmR6gXcbvl25Q421tnJz5l7rmiEc5Xj25gOAnfmdnFPEe4mfEIon8tyR/cHg0XVKo621PtgbYAEKYysruw87FDrMthgb8rH8tyMew==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vPzVup3QHJtUyBDpX84qqgk7DIMFX294sqsqVqWjh8Q=;
- b=lRBj6fm3WSSuk4Dh4bw3nQtA5zmfJotS6Zsuq+APVKhyyizBz/l5PNi62gkwbKQeBljTD9SQR3IvDieFHR9j2elbmVMwMGwlXPwJkdq3Cua/jOgsAvndYDG5pSAgkq/NvVRJxiD21ngwb6MtoOQvqOo1nyJ2IvppQ9PsHkBvc5AHtJ0tHb/oMXzb1kSMqB5IvpZTdSGsKQu0QvBOUfx+zS8c4RiQQyQNVB+h4iA06r2+NzibQyBzvXEJW24M6a7kVGxXz05+bpMgNznHY+qlaICx2ZftP1Szu8z+zbNWSkrZTaWmL55D6863hXY/Bf9YE+uaLTp235n21nkxwF3Svg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
- dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
- not signed); arc=none (0)
-Received: from TY2PR0101CA0030.apcprd01.prod.exchangelabs.com
- (2603:1096:404:8000::16) by KL1PR06MB6017.apcprd06.prod.outlook.com
- (2603:1096:820:d3::8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8606.35; Fri, 11 Apr
- 2025 10:37:05 +0000
-Received: from TY2PEPF0000AB83.apcprd03.prod.outlook.com
- (2603:1096:404:8000:cafe::fd) by TY2PR0101CA0030.outlook.office365.com
- (2603:1096:404:8000::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.8606.35 via Frontend Transport; Fri,
- 11 Apr 2025 10:37:04 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
- smtp.mailfrom=cixtech.com; dkim=none (message not signed)
- header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
-Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
- 222.71.101.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
-Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- TY2PEPF0000AB83.mail.protection.outlook.com (10.167.253.4) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8655.12 via Frontend Transport; Fri, 11 Apr 2025 10:37:03 +0000
-Received: from localhost.localdomain (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 818524160CA7;
-	Fri, 11 Apr 2025 18:36:58 +0800 (CST)
-From: hans.zhang@cixtech.com
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kw@linux.com,
-	manivannan.sadhasivam@linaro.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org
-Cc: linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Manikandan K Pillai <mpillai@cadence.com>,
-	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v3 5/6] PCI: cadence: Add callback functions for RP and EP controller
-Date: Fri, 11 Apr 2025 18:36:55 +0800
-Message-ID: <20250411103656.2740517-6-hans.zhang@cixtech.com>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20250411103656.2740517-1-hans.zhang@cixtech.com>
-References: <20250411103656.2740517-1-hans.zhang@cixtech.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1A9204581;
+	Fri, 11 Apr 2025 10:39:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1744367958; cv=none; b=FBhbc3f5NvvMTKpv9myx7SKw0/gnL5FKMgqrK2qjbwVA/lMaDxzWxhjUw6KRyNqqmXAPa2UddgF0b0Serl4E/6XHjPnC55dtZMVaUP+at1VHnOUuiPqWTPFuQvP2dfxFlBxwiyENeK4L+crDvc7IiPxECUZ0K5inXkAzVQ10Fs8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1744367958; c=relaxed/simple;
+	bh=0iz0lwaWRTkOYGZ8xEBMXlIieHCysyQ6qCPwstPuDBQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=P9iG8CCG9RVztiSjWKqu/TaaeAfqyj/Ydb5wMIoR2zMWC03IegZmuXTBoeWg4rVNInkHysP+dRWQ+cEckCh7dlBZPRe8e0rLNf5pNQZjiczPiD15dFzeiZIU7S8pfoAM3zyi1yHVLTJKsb64/7rzSBs0QgZ3XcYdAjcW7XBktuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KzphyBZF; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KzphyBZF"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D171C4CEEA;
+	Fri, 11 Apr 2025 10:39:17 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744367957;
+	bh=0iz0lwaWRTkOYGZ8xEBMXlIieHCysyQ6qCPwstPuDBQ=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=KzphyBZFx8pkWdgvrylTLX9Dw8LeOEfbb8Ipon5DqFPwhL9dfEEF+GPM8Y1MkWfZU
+	 zJvxri2QqqnenWqBxC4/sSUb507L3FM5zX1wg5Fs1M6dB5pFFToZZpKf2KcMsEZbCA
+	 wpF/8Pdo+dFHOuONX/ufsVEG2eUOZJMb9ZaSgeFQMFQSdTfjkJ1/6vPjSK92goOqMU
+	 Bp6Msxsl769O5/9lzXOpoCe50JEfN507G7YYYMk7jtBm8EefBt5jNWAGsZq/4w4Iy3
+	 ZhJ24jymnkc+uS29uWf5Bbj1vodMarZnR1/0PMUP4BjgjCsZyYKSpiVYHkpzE4wCJh
+	 7MjQh1QYcIQaw==
+Received: by mail-oa1-f53.google.com with SMTP id 586e51a60fabf-2cca475546fso837930fac.1;
+        Fri, 11 Apr 2025 03:39:17 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCWJ2l8alAkaHwfJd7jUJdYUt2KLXrs7p0DPIrJcZYj6RSLuBToTj4X4TtnSiI6KC53Hqzey6Ql8HXdR@vger.kernel.org, AJvYcCXYOOdAbtBR6g7W4j/70HldLlUwxHzYOxIg+9DMwFdkJgJyIXxfsq4VwMcc4OBebmn8I9p++Iiv5krP@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz8Au1Yd3mbxPW8rX9vDqTCl/oJ5G3k79uP0cvBeyLOWmwl1+fE
+	Q0GA0scveU2deZJPUxEhQzlLdBgPExMkQWQ5c3h8gKVMnc5HdkTaNhEYgBPsFlql3eya8QEkYIx
+	w6dF6VgYnKLvvvy1JJGbGKgPt41w=
+X-Google-Smtp-Source: AGHT+IEFPt7Emuu3+sb0wM+n0ZAIaj7xXjMAcrbQhS3FxySdpGs+HGhij/aq1pT7jUNSohzl/10NVGJrL6Df/a9XEBU=
+X-Received: by 2002:a05:6870:9c88:b0:2bc:76f2:44a8 with SMTP id
+ 586e51a60fabf-2d0d5ca8f60mr1109074fac.15.1744367956456; Fri, 11 Apr 2025
+ 03:39:16 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY2PEPF0000AB83:EE_|KL1PR06MB6017:EE_
-Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 0a01c1f7-47da-4cf7-ff5e-08dd78e4cc75
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|36860700013|82310400026|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?OdxgLZbijCux4iYC10BbjhIqKB3LtrfTCRr5rBYKVf6AnNW/YLieRJDj0G8L?=
- =?us-ascii?Q?vHCbkHNAjbtMK0xySt07vTUXZYn5CGsjAlpGkVo8tmAiDZ86Cg9qeNn+jwL6?=
- =?us-ascii?Q?/i/4z2INoLoJv54OhR9VRx4libOlxxvB4k7JJwggM5/UgzSDhG8PBBdPdmrs?=
- =?us-ascii?Q?P33fP/8fUvoHck+P748mr8aWPpVw8LAfQdDhZ8nw/Q8ZKTCoz258xnRykAyD?=
- =?us-ascii?Q?Mb8M14/U/zru2X5bdNeStRE99H9TyqlOpeXTxzRFYCxwi7uXARE3ehb8gkqy?=
- =?us-ascii?Q?F62N8enCzKpBDaoLZ9XER+YagJa3YR1uoRV56kp94Dq+sTNOuKb8IdhO22BR?=
- =?us-ascii?Q?lXg0OmmySjtu9JCbmtJtGiatlX014iSdSUwrXC3VgZWMJ1xHcnO0n/Vymy5V?=
- =?us-ascii?Q?wbkicnop5eX3YbYcZWoyRnEkR3SSitoRQ0rbCeLPtKrj8S9IDVBOIuPmnwmE?=
- =?us-ascii?Q?LEP0nDq5lkgCztQ4XAgEA27A0vOQk9qpyTRPkW13jmk6kwOC3l3umzWPu5/y?=
- =?us-ascii?Q?FT0rb1SclIiUsqYWKeuux3iCeteZDW3Zb4F640SzX1y9L2N+RkRc7ETSbNlJ?=
- =?us-ascii?Q?08yU8i9lDAYVwfWlbM9374lOM2bgepY39Myaipezfl/BFZVg8CmRJhjHcAzx?=
- =?us-ascii?Q?fhwM+SEK1EBJrVa4L5FB2wMHjf3oHJPxt7AWZRhcB0QbPSDL41UE65Rk6NR/?=
- =?us-ascii?Q?IgFQBD8um6hOvII1HusGhb/oiCdNJCsbswgH9dCXEjHaKcxHCQRW654Z5mYx?=
- =?us-ascii?Q?LDgN5wxpNTh8OmeIahadxVnc50JKY/ZzdK4YXoH0BN8YyGdwrGYV/SIwLesk?=
- =?us-ascii?Q?qq16D8qu2Gud9DdstHrwj/bWSyn1aGKK46uNV1/OyzorEfnAR4PugjFHtDDa?=
- =?us-ascii?Q?YwxwGLHcumCyvsbSzjDHgZKzpCznpHmj4+ZHy5DIc5Qiv0hIyw6Kxm5RVuH3?=
- =?us-ascii?Q?C46BdoYR0gorZBvUQCJNCe6h6sKRAdPOj2ZcAB9Xav86gSfWyYKjX5KDjmUF?=
- =?us-ascii?Q?OTWBZwEldXrKokNd+ToHzmqF4z6h0LVrLAC1jteqdfiavIrHH8rZ5IlzYC1p?=
- =?us-ascii?Q?B26tuVBus8MIXtOlezLfhGLA3Z//C8bvSYWSDU5JHQJD0gl7HQDfwMAwWG98?=
- =?us-ascii?Q?cyuPPCTxyK0cqlv0nRhj1FEmNZCzVjg+psLF1NdJJrFQx1sOi79uqhj7Wy5J?=
- =?us-ascii?Q?NGqV4EXDcGh0tNBSqb3VNj8uOCsBCsrgK7+xTH8x7jYGjrucIsuKzZRvY+K8?=
- =?us-ascii?Q?yAywG7ozH6iHTHhKCx7Sh6uDkwg1ATuieE9rUH+SLOwDqxzikbmdD09RjXbR?=
- =?us-ascii?Q?h7qpw/UVl2pITcpoirOwOQLb6+lhrTJMY3qjY8xekL3Df5OCinen++IeAWK8?=
- =?us-ascii?Q?JdLjUOOphJI6RxelTlz6bVwd0tL154/CzWJowXUpf+4yK6j2yFLbYC9OdkNC?=
- =?us-ascii?Q?MfQn/uPm84W83o+J5MZWrg7tGmQ+AtRCu8OrdIizzf+up6tsHL2UgLdyUY+8?=
- =?us-ascii?Q?qsuGdR3ru3aqfzOBZ0ne8ZuaCDWcWyG+uq0c?=
-X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(36860700013)(82310400026)(1800799024);DIR:OUT;SFP:1102;
-X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2025 10:37:03.1513
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0a01c1f7-47da-4cf7-ff5e-08dd78e4cc75
-X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
-X-MS-Exchange-CrossTenant-AuthSource: TY2PEPF0000AB83.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR06MB6017
+References: <20250224070036.65573-1-huweiwen@linux.alibaba.com>
+ <20250228171601.GA23123@bhelgaas> <Z_i3-z4dODvYjaPN@MacBook-Pro.local>
+In-Reply-To: <Z_i3-z4dODvYjaPN@MacBook-Pro.local>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 11 Apr 2025 12:39:04 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0hSNbdqWqdM-2Yd3bRYq86e6EK=sDxnK0VJBSfVZ+XoWw@mail.gmail.com>
+X-Gm-Features: ATxdqUE3Fp_m0hOYloEStQZsS42uIST3m8Tw052oj7inkWfQyMO0w5ustpRskDw
+Message-ID: <CAJZ5v0hSNbdqWqdM-2Yd3bRYq86e6EK=sDxnK0VJBSfVZ+XoWw@mail.gmail.com>
+Subject: Re: [PATCH] ACPI/PCI: deduplicate concurrent eject notify
+To: Weiwen Hu <huweiwen@linux.alibaba.com>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, "Rafael J. Wysocki" <rafael.j.wysocki@intel.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Manikandan K Pillai <mpillai@cadence.com>
+On Fri, Apr 11, 2025 at 11:12=E2=80=AFAM Weiwen Hu <huweiwen@linux.alibaba.=
+com> wrote:
+>
+> Hi Rafael, what's your opinion on this race condition in ACPI hotplug?
 
-Add support for the Cadence PCIe HPA controller by adding
-the required callback functions. Update the common functions for
-RP and EP configuration. Invoke the relevant callback functions
-for platform probe of PCIe controller using the callback function.
+In the first place, the platform firmware should wait for an _OST
+confirmation of an eject or failure.
 
-Signed-off-by: Manikandan K Pillai <mpillai@cadence.com>
-Co-developed-by: Hans Zhang <hans.zhang@cixtech.com>
-Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
----
- .../pci/controller/cadence/pcie-cadence-ep.c  |  29 +-
- .../controller/cadence/pcie-cadence-host.c    | 271 ++++++++++++++++--
- .../controller/cadence/pcie-cadence-plat.c    |  23 ++
- drivers/pci/controller/cadence/pcie-cadence.c | 196 ++++++++++++-
- drivers/pci/controller/cadence/pcie-cadence.h |  12 +
- 5 files changed, 488 insertions(+), 43 deletions(-)
+I cannot spend more time on this today, though, I'll get to it next week.
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index f3f956fa116b..f4961c760434 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -192,7 +192,7 @@ static int cdns_pcie_ep_map_addr(struct pci_epc *epc, u8 fn, u8 vfn,
- 	}
- 
- 	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
--	cdns_pcie_set_outbound_region(pcie, 0, fn, r, false, addr, pci_addr, size);
-+	pcie->ops->set_outbound_region(pcie, 0, fn, r, false, addr, pci_addr, size);
- 
- 	set_bit(r, &ep->ob_region_map);
- 	ep->ob_addr[r] = addr;
-@@ -214,7 +214,7 @@ static void cdns_pcie_ep_unmap_addr(struct pci_epc *epc, u8 fn, u8 vfn,
- 	if (r == ep->max_regions - 1)
- 		return;
- 
--	cdns_pcie_reset_outbound_region(pcie, r);
-+	pcie->ops->reset_outbound_region(pcie, r);
- 
- 	ep->ob_addr[r] = 0;
- 	clear_bit(r, &ep->ob_region_map);
-@@ -329,8 +329,7 @@ static void cdns_pcie_ep_assert_intx(struct cdns_pcie_ep *ep, u8 fn, u8 intx,
- 	if (unlikely(ep->irq_pci_addr != CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY ||
- 		     ep->irq_pci_fn != fn)) {
- 		/* First region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region_for_normal_msg(pcie, 0, fn, 0,
--							     ep->irq_phys_addr);
-+		pcie->ops->set_outbound_region_for_normal_msg(pcie, 0, fn, 0, ep->irq_phys_addr);
- 		ep->irq_pci_addr = CDNS_PCIE_EP_IRQ_PCI_ADDR_LEGACY;
- 		ep->irq_pci_fn = fn;
- 	}
-@@ -411,11 +410,11 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn, u8 vfn,
- 	if (unlikely(ep->irq_pci_addr != (pci_addr & ~pci_addr_mask) ||
- 		     ep->irq_pci_fn != fn)) {
- 		/* First region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region(pcie, 0, fn, 0,
--					      false,
--					      ep->irq_phys_addr,
--					      pci_addr & ~pci_addr_mask,
--					      pci_addr_mask + 1);
-+		pcie->ops->set_outbound_region(pcie, 0, fn, 0,
-+					       false,
-+					       ep->irq_phys_addr,
-+					       pci_addr & ~pci_addr_mask,
-+					       pci_addr_mask + 1);
- 		ep->irq_pci_addr = (pci_addr & ~pci_addr_mask);
- 		ep->irq_pci_fn = fn;
- 	}
-@@ -514,11 +513,11 @@ static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn, u8 vfn,
- 	if (ep->irq_pci_addr != (msg_addr & ~pci_addr_mask) ||
- 	    ep->irq_pci_fn != fn) {
- 		/* First region was reserved for IRQ writes. */
--		cdns_pcie_set_outbound_region(pcie, 0, fn, 0,
--					      false,
--					      ep->irq_phys_addr,
--					      msg_addr & ~pci_addr_mask,
--					      pci_addr_mask + 1);
-+		pcie->ops->set_outbound_region(pcie, 0, fn, 0,
-+					       false,
-+					       ep->irq_phys_addr,
-+					       msg_addr & ~pci_addr_mask,
-+					       pci_addr_mask + 1);
- 		ep->irq_pci_addr = (msg_addr & ~pci_addr_mask);
- 		ep->irq_pci_fn = fn;
- 	}
-@@ -869,7 +868,7 @@ int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- 	set_bit(0, &ep->ob_region_map);
- 
- 	if (ep->quirk_detect_quiet_flag)
--		cdns_pcie_detect_quiet_min_delay_set(&ep->pcie);
-+		pcie->ops->detect_quiet_min_delay_set(&ep->pcie);
- 
- 	spin_lock_init(&ep->lock);
- 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-host.c b/drivers/pci/controller/cadence/pcie-cadence-host.c
-index ce035eef0a5c..c7066ea3b9e8 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-host.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-host.c
-@@ -60,10 +60,7 @@ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 	/* Configuration Type 0 or Type 1 access. */
- 	desc0 = CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID |
- 		CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(0);
--	/*
--	 * The bus number was already set once for all in desc1 by
--	 * cdns_pcie_host_init_address_translation().
--	 */
-+
- 	if (busn == bridge->busnr + 1)
- 		desc0 |= CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0;
- 	else
-@@ -73,12 +70,81 @@ void __iomem *cdns_pci_map_bus(struct pci_bus *bus, unsigned int devfn,
- 	return rc->cfg_base + (where & 0xfff);
- }
- 
-+void __iomem *cdns_pci_hpa_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				   int where)
-+{
-+	struct pci_host_bridge *bridge = pci_find_host_bridge(bus);
-+	struct cdns_pcie_rc *rc = pci_host_bridge_priv(bridge);
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	unsigned int busn = bus->number;
-+	u32 addr0, desc0, desc1, ctrl0;
-+	u32 regval;
-+
-+	if (pci_is_root_bus(bus)) {
-+		/*
-+		 * Only the root port (devfn == 0) is connected to this bus.
-+		 * All other PCI devices are behind some bridge hence on another
-+		 * bus.
-+		 */
-+		if (devfn)
-+			return NULL;
-+
-+		return pcie->reg_base + (where & 0xfff);
-+	}
-+
-+	/*
-+	 * Clear AXI link-down status
-+	 */
-+	regval = cdns_pcie_hpa_readl(pcie, REG_BANK_AXI_SLAVE, CDNS_PCIE_HPA_AT_LINKDOWN);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE, CDNS_PCIE_HPA_AT_LINKDOWN,
-+			     (regval & GENMASK(0, 0)));
-+
-+	desc1 = 0;
-+	ctrl0 = 0;
-+
-+	/*
-+	 * Update Output registers for AXI region 0.
-+	 */
-+	addr0 = CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
-+		CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) |
-+		CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0_BUS(busn);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0(0), addr0);
-+
-+	desc1 = cdns_pcie_hpa_readl(pcie, REG_BANK_AXI_SLAVE,
-+				    CDNS_PCIE_HPA_AT_OB_REGION_DESC1(0));
-+	desc1 &= ~CDNS_PCIE_HPA_AT_OB_REGION_DESC1_DEVFN_MASK;
-+	desc1 |= CDNS_PCIE_HPA_AT_OB_REGION_DESC1_DEVFN(0);
-+	ctrl0 = CDNS_PCIE_HPA_AT_OB_REGION_CTRL0_SUPPLY_BUS |
-+		CDNS_PCIE_HPA_AT_OB_REGION_CTRL0_SUPPLY_DEV_FN;
-+
-+	if (busn == bridge->busnr + 1)
-+		desc0 |= CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0;
-+	else
-+		desc0 |= CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1;
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC0(0), desc0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC1(0), desc1);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CTRL0(0), ctrl0);
-+
-+	return rc->cfg_base + (where & 0xfff);
-+}
-+
- static struct pci_ops cdns_pcie_host_ops = {
- 	.map_bus	= cdns_pci_map_bus,
- 	.read		= pci_generic_config_read,
- 	.write		= pci_generic_config_write,
- };
- 
-+static struct pci_ops cdns_pcie_hpa_host_ops = {
-+	.map_bus	= cdns_pci_hpa_map_bus,
-+	.read           = pci_generic_config_read,
-+	.write		= pci_generic_config_write,
-+};
-+
- static int cdns_pcie_host_training_complete(struct cdns_pcie *pcie)
- {
- 	u32 pcie_cap_off = CDNS_PCIE_RP_CAP_OFFSET;
-@@ -154,8 +220,14 @@ static void cdns_pcie_host_enable_ptm_response(struct cdns_pcie *pcie)
- {
- 	u32 val;
- 
--	val = cdns_pcie_readl(pcie, CDNS_PCIE_LM_PTM_CTRL);
--	cdns_pcie_writel(pcie, CDNS_PCIE_LM_PTM_CTRL, val | CDNS_PCIE_LM_TPM_CTRL_PTMRSEN);
-+	if (!pcie->is_hpa) {
-+		val = cdns_pcie_readl(pcie, CDNS_PCIE_LM_PTM_CTRL);
-+		cdns_pcie_writel(pcie, CDNS_PCIE_LM_PTM_CTRL, val | CDNS_PCIE_LM_TPM_CTRL_PTMRSEN);
-+	} else {
-+		val = cdns_pcie_hpa_readl(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_LM_PTM_CTRL);
-+		cdns_pcie_hpa_writel(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_LM_PTM_CTRL,
-+				     val | CDNS_PCIE_HPA_LM_TPM_CTRL_PTMRSEN);
-+	}
- }
- 
- static int cdns_pcie_host_start_link(struct cdns_pcie_rc *rc)
-@@ -340,8 +412,8 @@ static int cdns_pcie_host_bar_config(struct cdns_pcie_rc *rc,
- 		 */
- 		bar = cdns_pcie_host_find_min_bar(rc, size);
- 		if (bar != RP_BAR_UNDEFINED) {
--			ret = cdns_pcie_host_bar_ib_config(rc, bar, cpu_addr,
--							   size, flags);
-+			ret = pcie->ops->host_bar_ib_config(rc, bar, cpu_addr,
-+							    size, flags);
- 			if (ret)
- 				dev_err(dev, "IB BAR: %d config failed\n", bar);
- 			return ret;
-@@ -366,8 +438,7 @@ static int cdns_pcie_host_bar_config(struct cdns_pcie_rc *rc,
- 		}
- 
- 		winsize = bar_max_size[bar];
--		ret = cdns_pcie_host_bar_ib_config(rc, bar, cpu_addr, winsize,
--						   flags);
-+		ret = pcie->ops->host_bar_ib_config(rc, bar, cpu_addr, winsize, flags);
- 		if (ret) {
- 			dev_err(dev, "IB BAR: %d config failed\n", bar);
- 			return ret;
-@@ -408,8 +479,8 @@ static int cdns_pcie_host_map_dma_ranges(struct cdns_pcie_rc *rc)
- 	if (list_empty(&bridge->dma_ranges)) {
- 		of_property_read_u32(np, "cdns,no-bar-match-nbits",
- 				     &no_bar_nbits);
--		err = cdns_pcie_host_bar_ib_config(rc, RP_NO_BAR, 0x0,
--						   (u64)1 << no_bar_nbits, 0);
-+		err = pcie->ops->host_bar_ib_config(rc, RP_NO_BAR, 0x0,
-+						    (u64)1 << no_bar_nbits, 0);
- 		if (err)
- 			dev_err(dev, "IB BAR: %d config failed\n", RP_NO_BAR);
- 		return err;
-@@ -467,17 +538,159 @@ int cdns_pcie_host_init_address_translation(struct cdns_pcie_rc *rc)
- 		u64 pci_addr = res->start - entry->offset;
- 
- 		if (resource_type(res) == IORESOURCE_IO)
--			cdns_pcie_set_outbound_region(pcie, busnr, 0, r,
--						      true,
--						      pci_pio_to_address(res->start),
--						      pci_addr,
--						      resource_size(res));
-+			pcie->ops->set_outbound_region(pcie, busnr, 0, r,
-+						       true,
-+						       pci_pio_to_address(res->start),
-+						       pci_addr,
-+						       resource_size(res));
-+		else
-+			pcie->ops->set_outbound_region(pcie, busnr, 0, r,
-+						       false,
-+						       res->start,
-+						       pci_addr,
-+						       resource_size(res));
-+
-+		r++;
-+	}
-+
-+	return cdns_pcie_host_map_dma_ranges(rc);
-+}
-+
-+int cdns_pcie_hpa_host_init_root_port(struct cdns_pcie_rc *rc)
-+{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	u32 value, ctrl;
-+
-+	/*
-+	 * Set the root complex BAR configuration register:
-+	 * - disable both BAR0 and BAR1.
-+	 * - enable Prefetchable Memory Base and Limit registers in type 1
-+	 *   config space (64 bits).
-+	 * - enable IO Base and Limit registers in type 1 config
-+	 *   space (32 bits).
-+	 */
-+
-+	ctrl = CDNS_PCIE_HPA_LM_BAR_CFG_CTRL_DISABLED;
-+	value = CDNS_PCIE_HPA_LM_RC_BAR_CFG_BAR0_CTRL(ctrl) |
-+		CDNS_PCIE_HPA_LM_RC_BAR_CFG_BAR1_CTRL(ctrl) |
-+		CDNS_PCIE_HPA_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE |
-+		CDNS_PCIE_HPA_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS |
-+		CDNS_PCIE_HPA_LM_RC_BAR_CFG_IO_ENABLE |
-+		CDNS_PCIE_HPA_LM_RC_BAR_CFG_IO_32BITS;
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_CFG_CTRL_REG,
-+			     CDNS_PCIE_HPA_LM_RC_BAR_CFG, value);
-+
-+	if (rc->vendor_id != 0xffff)
-+		cdns_pcie_rp_writew(pcie, PCI_VENDOR_ID, rc->vendor_id);
-+
-+	if (rc->device_id != 0xffff)
-+		cdns_pcie_rp_writew(pcie, PCI_DEVICE_ID, rc->device_id);
-+
-+	cdns_pcie_rp_writeb(pcie, PCI_CLASS_REVISION, 0);
-+	cdns_pcie_rp_writeb(pcie, PCI_CLASS_PROG, 0);
-+	cdns_pcie_rp_writew(pcie, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
-+
-+	return 0;
-+}
-+
-+int cdns_pcie_hpa_host_bar_ib_config(struct cdns_pcie_rc *rc,
-+				     enum cdns_pcie_rp_bar bar,
-+				     u64 cpu_addr, u64 size,
-+				     unsigned long flags)
-+{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	u32 addr0, addr1, aperture, value;
-+
-+	if (!rc->avail_ib_bar[bar])
-+		return -EBUSY;
-+
-+	rc->avail_ib_bar[bar] = false;
-+
-+	aperture = ilog2(size);
-+	addr0 = CDNS_PCIE_HPA_AT_IB_RP_BAR_ADDR0_NBITS(aperture) |
-+		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(cpu_addr);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_MASTER,
-+			     CDNS_PCIE_HPA_AT_IB_RP_BAR_ADDR0(bar), addr0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_MASTER,
-+			     CDNS_PCIE_HPA_AT_IB_RP_BAR_ADDR1(bar), addr1);
-+
-+	if (bar == RP_NO_BAR)
-+		return 0;
-+
-+	value = cdns_pcie_hpa_readl(pcie, REG_BANK_IP_CFG_CTRL_REG, CDNS_PCIE_HPA_LM_RC_BAR_CFG);
-+	value &= ~(HPA_LM_RC_BAR_CFG_CTRL_MEM_64BITS(bar) |
-+		   HPA_LM_RC_BAR_CFG_CTRL_PREF_MEM_64BITS(bar) |
-+		   HPA_LM_RC_BAR_CFG_CTRL_MEM_32BITS(bar) |
-+		   HPA_LM_RC_BAR_CFG_CTRL_PREF_MEM_32BITS(bar) |
-+		   HPA_LM_RC_BAR_CFG_APERTURE(bar, bar_aperture_mask[bar] + 2));
-+	if (size + cpu_addr >= SZ_4G) {
-+		if (!(flags & IORESOURCE_PREFETCH))
-+			value |= HPA_LM_RC_BAR_CFG_CTRL_MEM_64BITS(bar);
-+		value |= HPA_LM_RC_BAR_CFG_CTRL_PREF_MEM_64BITS(bar);
-+	} else {
-+		if (!(flags & IORESOURCE_PREFETCH))
-+			value |= HPA_LM_RC_BAR_CFG_CTRL_MEM_32BITS(bar);
-+		value |= HPA_LM_RC_BAR_CFG_CTRL_PREF_MEM_32BITS(bar);
-+	}
-+
-+	value |= HPA_LM_RC_BAR_CFG_APERTURE(bar, aperture);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_CFG_CTRL_REG, CDNS_PCIE_HPA_LM_RC_BAR_CFG, value);
-+
-+	return 0;
-+}
-+
-+int cdns_pcie_hpa_host_init_address_translation(struct cdns_pcie_rc *rc)
-+{
-+	struct cdns_pcie *pcie = &rc->pcie;
-+	struct pci_host_bridge *bridge = pci_host_bridge_from_priv(rc);
-+	struct resource *cfg_res = rc->cfg_res;
-+	struct resource_entry *entry;
-+	u64 cpu_addr = cfg_res->start;
-+	u32 addr0, addr1, desc1;
-+	int r, busnr = 0;
-+
-+	entry = resource_list_first_type(&bridge->windows, IORESOURCE_BUS);
-+	if (entry)
-+		busnr = entry->res->start;
-+
-+	/*
-+	 * Reserve region 0 for PCI configure space accesses:
-+	 * OB_REGION_PCI_ADDR0 and OB_REGION_DESC0 are updated dynamically by
-+	 * cdns_pci_map_bus(), other region registers are set here once for all.
-+	 */
-+	addr1 = 0;
-+	desc1 = CDNS_PCIE_HPA_AT_OB_REGION_DESC1_BUS(busnr);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR1(0), addr1);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC1(0), desc1);
-+
-+	addr0 = CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0_NBITS(12) |
-+		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(cpu_addr);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0(0), addr0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR1(0), addr1);
-+
-+	r = 1;
-+	resource_list_for_each_entry(entry, &bridge->windows) {
-+		struct resource *res = entry->res;
-+		u64 pci_addr = res->start - entry->offset;
-+
-+		if (resource_type(res) == IORESOURCE_IO)
-+			pcie->ops->set_outbound_region(pcie, busnr, 0, r,
-+						       true,
-+						       pci_pio_to_address(res->start),
-+						       pci_addr,
-+						       resource_size(res));
- 		else
--			cdns_pcie_set_outbound_region(pcie, busnr, 0, r,
--						      false,
--						      res->start,
--						      pci_addr,
--						      resource_size(res));
-+			pcie->ops->set_outbound_region(pcie, busnr, 0, r,
-+						       false,
-+						       res->start,
-+						       pci_addr,
-+						       resource_size(res));
- 
- 		r++;
- 	}
-@@ -489,11 +702,11 @@ int cdns_pcie_host_init(struct cdns_pcie_rc *rc)
- {
- 	int err;
- 
--	err = cdns_pcie_host_init_root_port(rc);
-+	err = rc->pcie.ops->host_init_root_port(rc);
- 	if (err)
- 		return err;
- 
--	return cdns_pcie_host_init_address_translation(rc);
-+	return rc->pcie.ops->host_init_address_translation(rc);
- }
- 
- int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
-@@ -503,7 +716,7 @@ int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
- 	int ret;
- 
- 	if (rc->quirk_detect_quiet_flag)
--		cdns_pcie_detect_quiet_min_delay_set(&rc->pcie);
-+		pcie->ops->detect_quiet_min_delay_set(&rc->pcie);
- 
- 	cdns_pcie_host_enable_ptm_response(pcie);
- 
-@@ -566,8 +779,12 @@ int cdns_pcie_host_setup(struct cdns_pcie_rc *rc)
- 	if (ret)
- 		return ret;
- 
--	if (!bridge->ops)
--		bridge->ops = &cdns_pcie_host_ops;
-+	if (!bridge->ops) {
-+		if (pcie->is_hpa)
-+			bridge->ops = &cdns_pcie_hpa_host_ops;
-+		else
-+			bridge->ops = &cdns_pcie_host_ops;
-+	}
- 
- 	ret = pci_host_probe(bridge);
- 	if (ret < 0)
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-plat.c b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-index b24176d4df1f..8d5fbaef0a3c 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-plat.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-plat.c
-@@ -43,7 +43,30 @@ static u64 cdns_plat_cpu_addr_fixup(struct cdns_pcie *pcie, u64 cpu_addr)
- }
- 
- static const struct cdns_pcie_ops cdns_plat_ops = {
-+	.link_up = cdns_pcie_linkup,
- 	.cpu_addr_fixup = cdns_plat_cpu_addr_fixup,
-+	.host_init_root_port = cdns_pcie_host_init_root_port,
-+	.host_bar_ib_config = cdns_pcie_host_bar_ib_config,
-+	.host_init_address_translation = cdns_pcie_host_init_address_translation,
-+	.detect_quiet_min_delay_set = cdns_pcie_detect_quiet_min_delay_set,
-+	.set_outbound_region = cdns_pcie_set_outbound_region,
-+	.set_outbound_region_for_normal_msg =
-+					    cdns_pcie_set_outbound_region_for_normal_msg,
-+	.reset_outbound_region = cdns_pcie_reset_outbound_region,
-+};
-+
-+static const struct cdns_pcie_ops cdns_hpa_plat_ops = {
-+	.start_link = cdns_pcie_hpa_startlink,
-+	.stop_link = cdns_pcie_hpa_stop_link,
-+	.link_up = cdns_pcie_hpa_linkup,
-+	.host_init_root_port = cdns_pcie_hpa_host_init_root_port,
-+	.host_bar_ib_config = cdns_pcie_hpa_host_bar_ib_config,
-+	.host_init_address_translation = cdns_pcie_hpa_host_init_address_translation,
-+	.detect_quiet_min_delay_set = cdns_pcie_hpa_detect_quiet_min_delay_set,
-+	.set_outbound_region = cdns_pcie_hpa_set_outbound_region,
-+	.set_outbound_region_for_normal_msg =
-+					    cdns_pcie_hpa_set_outbound_region_for_normal_msg,
-+	.reset_outbound_region = cdns_pcie_hpa_reset_outbound_region,
- };
- 
- static int cdns_plat_pcie_probe(struct platform_device *pdev)
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 204e045aed8c..c0d3ab3c363f 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -8,6 +8,45 @@
- 
- #include "pcie-cadence.h"
- 
-+bool cdns_pcie_linkup(struct cdns_pcie *pcie)
-+{
-+	u32 pl_reg_val;
-+
-+	pl_reg_val = cdns_pcie_readl(pcie, CDNS_PCIE_LM_BASE);
-+	if (pl_reg_val & GENMASK(0, 0))
-+		return true;
-+	return false;
-+}
-+
-+bool cdns_pcie_hpa_linkup(struct cdns_pcie *pcie)
-+{
-+	u32 pl_reg_val;
-+
-+	pl_reg_val = cdns_pcie_hpa_readl(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_PHY_DBG_STS_REG0);
-+	if (pl_reg_val & GENMASK(0, 0))
-+		return true;
-+	return false;
-+}
-+
-+int cdns_pcie_hpa_start_link(struct cdns_pcie *pcie)
-+{
-+	u32 pl_reg_val;
-+
-+	pl_reg_val = cdns_pcie_hpa_readl(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_PHY_LAYER_CFG0);
-+	pl_reg_val |= CDNS_PCIE_HPA_LINK_TRNG_EN_MASK;
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_PHY_LAYER_CFG0, pl_reg_val);
-+	return 0;
-+}
-+
-+void cdns_pcie_hpa_stop_link(struct cdns_pcie *pcie)
-+{
-+	u32 pl_reg_val;
-+
-+	pl_reg_val = cdns_pcie_hpa_readl(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_PHY_LAYER_CFG0);
-+	pl_reg_val &= ~CDNS_PCIE_HPA_LINK_TRNG_EN_MASK;
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_REG, CDNS_PCIE_HPA_PHY_LAYER_CFG0, pl_reg_val);
-+}
-+
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- {
- 	u32 delay = 0x3;
-@@ -55,7 +94,7 @@ void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
- 	desc1 = 0;
- 
- 	/*
--	 * Whatever Bit [23] is set or not inside DESC0 register of the outbound
-+	 * Whether Bit [23] is set or not inside DESC0 register of the outbound
- 	 * PCIe descriptor, the PCI function number must be set into
- 	 * Bits [26:24] of DESC0 anyway.
- 	 *
-@@ -147,6 +186,161 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- 	cdns_pcie_writel(pcie, CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r), 0);
- }
- 
-+void cdns_pcie_hpa_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
-+{
-+	u32 delay = 0x3;
-+	u32 ltssm_control_cap;
-+
-+	/* Set the LTSSM Detect Quiet state min. delay to 2ms. */
-+	ltssm_control_cap = cdns_pcie_hpa_readl(pcie, REG_BANK_IP_REG,
-+						CDNS_PCIE_HPA_PHY_LAYER_CFG0);
-+	ltssm_control_cap = ((ltssm_control_cap &
-+			    ~CDNS_PCIE_HPA_DETECT_QUIET_MIN_DELAY_MASK) |
-+			    CDNS_PCIE_HPA_DETECT_QUIET_MIN_DELAY(delay));
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_IP_REG,
-+			     CDNS_PCIE_HPA_PHY_LAYER_CFG0, ltssm_control_cap);
-+}
-+
-+void cdns_pcie_hpa_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
-+				       u32 r, bool is_io,
-+				       u64 cpu_addr, u64 pci_addr, size_t size)
-+{
-+	/*
-+	 * roundup_pow_of_two() returns an unsigned long, which is not suited
-+	 * for 64bit values.
-+	 */
-+	u64 sz = 1ULL << fls64(size - 1);
-+	int nbits = ilog2(sz);
-+	u32 addr0, addr1, desc0, desc1, ctrl0;
-+
-+	if (nbits < 8)
-+		nbits = 8;
-+
-+	/* Set the PCI address */
-+	addr0 = CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0_NBITS(nbits) |
-+		(lower_32_bits(pci_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(pci_addr);
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0(r), addr0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR1(r), addr1);
-+
-+	/* Set the PCIe header descriptor */
-+	if (is_io)
-+		desc0 = CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_IO;
-+	else
-+		desc0 = CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_MEM;
-+	desc1 = 0;
-+
-+	/*
-+	 * Whether Bit [26] is set or not inside DESC0 register of the outbound
-+	 * PCIe descriptor, the PCI function number must be set into
-+	 * Bits [31:24] of DESC1 anyway.
-+	 *
-+	 * In Root Complex mode, the function number is always 0 but in Endpoint
-+	 * mode, the PCIe controller may support more than one function. This
-+	 * function number needs to be set properly into the outbound PCIe
-+	 * descriptor.
-+	 *
-+	 * Besides, setting Bit [26] is mandatory when in Root Complex mode:
-+	 * then the driver must provide the bus, resp. device, number in
-+	 * Bits [31:24] of DESC1, resp. Bits[23:16] of DESC0. Like the function
-+	 * number, the device number is always 0 in Root Complex mode.
-+	 *
-+	 * However when in Endpoint mode, we can clear Bit [26] of DESC0, hence
-+	 * the PCIe controller will use the captured values for the bus and
-+	 * device numbers.
-+	 */
-+	if (pcie->is_rc) {
-+		/* The device and function numbers are always 0. */
-+		desc1 = CDNS_PCIE_HPA_AT_OB_REGION_DESC1_BUS(busnr) |
-+			CDNS_PCIE_HPA_AT_OB_REGION_DESC1_DEVFN(0);
-+		ctrl0 = CDNS_PCIE_HPA_AT_OB_REGION_CTRL0_SUPPLY_BUS |
-+			CDNS_PCIE_HPA_AT_OB_REGION_CTRL0_SUPPLY_DEV_FN;
-+	} else {
-+		/*
-+		 * Use captured values for bus and device numbers but still
-+		 * need to set the function number.
-+		 */
-+		desc1 |= CDNS_PCIE_HPA_AT_OB_REGION_DESC1_DEVFN(fn);
-+	}
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC0(r), desc0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC1(r), desc1);
-+
-+	addr0 = CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) |
-+		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(cpu_addr);
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0(r), addr0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR1(r), addr1);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CTRL0(r), ctrl0);
-+}
-+
-+void cdns_pcie_hpa_set_outbound_region_for_normal_msg(struct cdns_pcie *pcie,
-+						      u8 busnr, u8 fn,
-+						      u32 r, u64 cpu_addr)
-+{
-+	u32 addr0, addr1, desc0, desc1, ctrl0;
-+
-+	desc0 = CDNS_PCIE_HPA_AT_OB_REGION_DESC0_TYPE_NORMAL_MSG;
-+	desc1 = 0;
-+
-+	/* See cdns_pcie_set_outbound_region() comments above. */
-+	if (pcie->is_rc) {
-+		desc1 = CDNS_PCIE_HPA_AT_OB_REGION_DESC1_BUS(busnr) |
-+			CDNS_PCIE_HPA_AT_OB_REGION_DESC1_DEVFN(0);
-+		ctrl0 = CDNS_PCIE_HPA_AT_OB_REGION_CTRL0_SUPPLY_BUS |
-+			CDNS_PCIE_HPA_AT_OB_REGION_CTRL0_SUPPLY_DEV_FN;
-+	} else {
-+		desc1 |= CDNS_PCIE_HPA_AT_OB_REGION_DESC1_DEVFN(fn);
-+	}
-+
-+	addr0 = CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0_NBITS(17) |
-+		(lower_32_bits(cpu_addr) & GENMASK(31, 8));
-+	addr1 = upper_32_bits(cpu_addr);
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0(r), 0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR1(r), 0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC0(r), desc0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC1(r), desc1);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0(r), addr0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR1(r), addr1);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CTRL0(r), ctrl0);
-+}
-+
-+void cdns_pcie_hpa_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
-+{
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR0(r), 0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_PCI_ADDR1(r), 0);
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC0(r), 0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_DESC1(r), 0);
-+
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR0(r), 0);
-+	cdns_pcie_hpa_writel(pcie, REG_BANK_AXI_SLAVE,
-+			     CDNS_PCIE_HPA_AT_OB_REGION_CPU_ADDR1(r), 0);
-+}
-+
- void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
- {
- 	int i = pcie->phy_count;
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index a39077d64d1d..c317fc10f5d1 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -816,6 +816,14 @@ int cdns_pcie_host_bar_ib_config(struct cdns_pcie_rc *rc,
- 				 enum cdns_pcie_rp_bar bar,
- 				 u64 cpu_addr, u64 size,
- 				 unsigned long flags);
-+void __iomem *cdns_pci_hpa_map_bus(struct pci_bus *bus, unsigned int devfn,
-+				   int where);
-+int cdns_pcie_hpa_host_init_root_port(struct cdns_pcie_rc *rc);
-+int cdns_pcie_hpa_host_bar_ib_config(struct cdns_pcie_rc *rc,
-+				     enum cdns_pcie_rp_bar bar,
-+				     u64 cpu_addr, u64 size,
-+				     unsigned long flags);
-+int cdns_pcie_hpa_host_init_address_translation(struct cdns_pcie_rc *rc);
- #else
- static inline int cdns_pcie_host_link_setup(struct cdns_pcie_rc *rc)
- {
-@@ -865,6 +873,10 @@ static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- }
- #endif
- 
-+bool cdns_pcie_linkup(struct cdns_pcie *pcie);
-+bool cdns_pcie_hpa_linkup(struct cdns_pcie *pcie);
-+int cdns_pcie_hpa_start_link(struct cdns_pcie *pcie);
-+void cdns_pcie_hpa_stop_link(struct cdns_pcie *pcie);
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
- 
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
--- 
-2.47.1
-
+> On Fri, Feb 28, 2025 at 11:16:01AM -0600, Bjorn Helgaas wrote:
+> > On Mon, Feb 24, 2025 at 03:00:34PM +0800, Weiwen Hu wrote:
+> > > Ignore the eject notification when the previous ejection is still in
+> > > progress to prevent multiple _EJ0 invocations when the ejection compl=
+etes.
+> > >
+> > > The first _EJ0 informs the platform to actually eject the device and =
+frees
+> > > the slot for other devices. So the subsequent _EJ0 may accidentally e=
+ject
+> > > the new device that is just plugged into this slot. We need to avoid =
+this.
+> > >
+> > > For each acpi_device, this patch introduces a new field `ejecting`, w=
+hich
+> > > is set before enqueuing the `kacpi_hotplug_wq` and reset before invok=
+ing
+> > > _EJ0.  Every notifications we received before invoking _EJ0 is target=
+ed to
+> > > the old device. This ensures we don't miss any notifications for newl=
+y
+> > > plugged device.  And a new flag `should_dedup_eject` allows each driv=
+er to
+> > > implement this feature gradually. A driver should set this flag on
+> > > initialization if it will reset `ejecting`.
+> >
+> > Which drivers do you have in mind when you say "each driver can
+> > implement this feature gradually"?  You set should_dedup_eject in
+> > acpiphp, so I guess you mean other ACPI hotplug drivers?  I see
+> > acpi_hotplug_context mentioned in libata-acpi.c, surface3-wmi.c; maybe
+> > those are the only other current ones?
+>
+> Yes, I mean other ACPI hotplug drivers. I've searched for acpi_evaluate_e=
+j0(),
+> because `ejecting` should be reset just before this. I got dock.c and sca=
+n.c.
+> All of them are called from acpi_device_hotplug(). So may be I can change=
+ all
+> of them at once.  Should we also consider out-of-tree drivers?
+>
+> As for surface3-wmi.c, its s3_wmi_hp_notify function seems only probing l=
+id
+> state, and does not support hot unplug actually.
+>
+> But ata_acpi_detach_device() seems not calling acpi_evaluate_ej0(), From
+> f730ae183863 ("libata: remove functions now handed by ACPI dock driver"),=
+ It
+> seems that ata relies on dock to call ej0 for it.
+>
+> > > This fix is not perfect. If we receive an eject notification just aft=
+er
+> > > resetting `ejecting` but before _EJ0, we will still invoke _EJ0 twice=
+.
+> > > However this seems to be the best solution available, and it strictly
+> > > improves the current situation.
+> > >
+> > > Another potential fix is to add an `ejected` flag to each device and =
+not
+> > > invoke _EJ0 for already ejected devices. However, this approach risks
+> > > losing synchronization with the platform if something else goes wrong=
+,
+> > > potentially preventing the device from being ejected permanently.  An=
+d we
+> > > need to check with bus driver to make sure the device is really eject=
+ed
+> > > successfully. But this check is still racy. So we cannot ensure no ex=
+tra
+> > > _EJ0 invocations either.
+> >
+> > I see the problem.  Thanks for the detailed explanation and details
+> > about reproducing it and the trace.
+> >
+> > I'm not sure whether the platform should reissue the Bus Check
+> > notification based on the fact that the OS hasn't invoked _EJ0 in some
+> > arbitrary time.  That seems a little bit presumptuous because, for
+> > example, the platform can't know how long it will take to write out
+> > the dirty page cache.  The racyness of the workaround seems
+> > troublesome to me.
+> >
+> > But this is all really an ACPI issue, not a PCI issue, so I'd like to
+> > defer to the ACPI experts here.
+> >
+> > > Signed-off-by: Weiwen Hu <huweiwen@linux.alibaba.com>
+> > > ---
+> > >  drivers/acpi/osl.c                 |  6 ++++++
+> > >  drivers/pci/hotplug/acpiphp_glue.c | 15 +++++++++++----
+> > >  include/acpi/acpi_bus.h            |  4 +++-
+> > >  3 files changed, 20 insertions(+), 5 deletions(-)
+> > >
+> > > We observed that umount can take extremely long time if there is a lo=
+t of
+> > > dirty page cache.  umount will take the s_umount semaphore, which wil=
+l
+> > > block the ejecting process:
+> > >
+> > >     __schedule+0x1e0/0x630
+> > >     ? kernfs_put.part.0+0xd4/0x1a0
+> > >     schedule+0x46/0xb0
+> > >     rwsem_down_read_slowpath+0x16b/0x490
+> > >     __get_super.part.0+0xc1/0xe0
+> > >     fsync_bdev+0x11/0x60
+> > >     invalidate_partition+0x5c/0xa0
+> > >     del_gendisk+0x103/0x2e0
+> > >     virtblk_remove+0x27/0xa0
+> > >     virtio_dev_remove+0x36/0x90
+> > >     __device_release_driver+0x172/0x260
+> > >     device_release_driver+0x24/0x30
+> > >     bus_remove_device+0xf6/0x170
+> > >     device_del+0x19b/0x450
+> > >     device_unregister+0x16/0x60
+> > >     unregister_virtio_device+0x11/0x20
+> > >     virtio_pci_remove+0x31/0x60
+> > >     pci_device_remove+0x38/0xa0
+> > >     __device_release_driver+0x172/0x260
+> > >     device_release_driver+0x24/0x30
+> > >     pci_stop_bus_device+0x6c/0x90
+> > >     pci_stop_and_remove_bus_device+0xe/0x20
+> > >     disable_slot+0x49/0x90
+> > >     acpiphp_disable_and_eject_slot+0x15/0x90
+> > >
+> > > While OS is not invoking _EJ0 timely, the user (or hypervisor) may re=
+try by
+> > > issuing another notification, which will be queued in kacpi_hotplug_w=
+q.
+> > > After the umount is finally done, the _EJ0 will be invoked.  Then, if=
+ there
+> > > are devices pending attach, the hypervisor may choose to attach it
+> > > immediately to the same slot.  The new device can be ejected by the q=
+ueued
+> > > ejecting process unintentionally.
+> > >
+> > > On Alibaba Cloud, we re-issue the notification around every 10s if th=
+e OS
+> > > does not respond.  (BTW, do you think platform is allowed to re-issue
+> > > the notification on timeout?)
+> > > We can easily reproduce this issue on Alibaba Cloud ECS:
+> > >
+> > >     WRITE_SIZE=3D2300M  # tune this value so that the umount takes 20=
+s
+> > >     # replace these disk serial numbers
+> > >     DISK_DETACH=3Dbp142xxxxxxxxxxxxxxx  # pre-formatted
+> > >     DISK_ATTACH=3Dbp109xxxxxxxxxxxxxxx  # any
+> > >     # start from these two disks detached
+> > >
+> > >     INSTANCE_ID=3D$(curl -sS http://100.100.100.200/latest/meta-data/=
+instance-id)
+> > >     echo "instance id: $INSTANCE_ID"
+> > >     DISK_PATH=3D/dev/disk/by-id/nvme-Alibaba_Cloud_Elastic_Block_Stor=
+age_
+> > >
+> > >     echo "attaching disk d-$DISK_DETACH"
+> > >     aliyun ecs AttachDisk --DiskId "d-$DISK_DETACH" --InstanceId "$IN=
+STANCE_ID"
+> > >
+> > >     sleep 2
+> > >     mkdir -p /mnt/slow
+> > >     mount "$DISK_PATH$DISK_DETACH" /mnt/slow
+> > >     echo "mounted d-$DISK_DETACH to /mnt/slow"
+> > >
+> > >     rm -f /mnt/slow/zero
+> > >     echo "populating dirty cache"
+> > >     head -c $WRITE_SIZE /dev/zero > /mnt/slow/zero;
+> > >
+> > >     echo umounting
+> > >     (
+> > >             umount /mnt/slow
+> > >             echo umounted
+> > >     )&
+> > >
+> > >     sleep 2
+> > >     echo "detaching disk d-$DISK_DETACH"
+> > >     aliyun ecs DetachDisk --DiskId "d-$DISK_DETACH" --InstanceId "$IN=
+STANCE_ID"
+> > >
+> > >     sleep 10
+> > >     echo "attaching disk d-$DISK_ATTACH"
+> > >     aliyun ecs AttachDisk --DiskId "d-$DISK_ATTACH" --InstanceId "$IN=
+STANCE_ID"
+> > >
+> > >     sleep 7
+> > >     wait
+> > >     for _ in {1..10}; do
+> > >             sleep 1
+> > >             if [ -e "$DISK_PATH$DISK_ATTACH" ]; then
+> > >                     echo "disk d-$DISK_ATTACH attached, issue not rep=
+roduced"
+> > >                     exit 0
+> > >             fi
+> > >             echo "disk d-$DISK_ATTACH not found yet"
+> > >     done
+> > >
+> > >     echo "issue reproduced"
+> > >     exit 1
+> > >
+> > > And here is the trace we got from `perf trace` while running the abov=
+e script on an unpatched kernel:
+> > >
+> > >     [starting detach]
+> > >      48202.244 kworker/0:0-ev/5 probe:acpi_ev_queue_notify_request(__=
+probe_ip: -1452149680, notify_value: 3)
+> > >      48202.314 kworker/0:0-ev/5 probe:acpi_hotplug_schedule(__probe_i=
+p: -1452297040, src: 3)
+> > >      48203.690 kworker/u8:0-e/1946 probe:acpi_device_hotplug(__probe_=
+ip: -1452251424, src: 3)
+> > >     [blocked, retrying detach]
+> > >      58023.813 kworker/0:0-ev/5 probe:acpi_ev_queue_notify_request(__=
+probe_ip: -1452149680, notify_value: 3)
+> > >      58023.881 kworker/0:0-ev/5 probe:acpi_hotplug_schedule(__probe_i=
+p: -1452297040, src: 3)
+> > >     [detach done]
+> > >      62834.048 kworker/u8:0-e/1946 probe:acpi_evaluate_ej0(__probe_ip=
+: -1452291632)
+> > >     [another device attaching]
+> > >      62954.686 kworker/0:0-ev/5 probe:acpi_ev_queue_notify_request(__=
+probe_ip: -1452149680, notify_value: 1)
+> > >      62954.828 kworker/0:0-ev/5 probe:acpi_hotplug_schedule(__probe_i=
+p: -1452297040, src: 1)
+> > >      63042.506 kworker/u8:0-e/1946 probe:acpi_device_hotplug(__probe_=
+ip: -1452251424, src: 3)
+> > >     [the new device is ejected unintentionally]
+> > >      63042.520 kworker/u8:0-e/1946 probe:acpi_evaluate_ej0(__probe_ip=
+: -1452291632)
+> > >     [the actual attach task, scanned the bus but got nothing]
+> > >      63266.555 kworker/u8:0-e/1946 probe:acpi_device_hotplug(__probe_=
+ip: -1452251424, src: 1)
+> > >
+> > > With this patch, the acpi_hotplug_schedule at 58023.881 will be skipp=
+ed to
+> > > suppress the acpi_evaluate_ej0 at 63042.520.
+> > >
+> > > diff --git a/drivers/acpi/osl.c b/drivers/acpi/osl.c
+> > > index 5ff343096ece..f041c4db10f7 100644
+> > > --- a/drivers/acpi/osl.c
+> > > +++ b/drivers/acpi/osl.c
+> > > @@ -1193,6 +1193,12 @@ acpi_status acpi_hotplug_schedule(struct acpi_=
+device *adev, u32 src)
+> > >  {
+> > >     struct acpi_hp_work *hpw;
+> > >
+> > > +   if (src =3D=3D ACPI_NOTIFY_EJECT_REQUEST && adev->flags.should_de=
+dup_eject
+> > > +                   && atomic_xchg(&adev->hp->ejecting, 1)) {
+> > > +           put_device(&adev->dev);
+> > > +           return AE_OK;
+> > > +   }
+> > > +
+> > >     acpi_handle_debug(adev->handle,
+> > >                       "Scheduling hotplug event %u for deferred handl=
+ing\n",
+> > >                        src);
+> > > diff --git a/drivers/pci/hotplug/acpiphp_glue.c b/drivers/pci/hotplug=
+/acpiphp_glue.c
+> > > index 5b1f271c6034..3c50f2af1584 100644
+> > > --- a/drivers/pci/hotplug/acpiphp_glue.c
+> > > +++ b/drivers/pci/hotplug/acpiphp_glue.c
+> > > @@ -68,6 +68,7 @@ static struct acpiphp_context *acpiphp_init_context=
+(struct acpi_device *adev)
+> > >     context->hp.notify =3D acpiphp_hotplug_notify;
+> > >     context->hp.fixup =3D acpiphp_post_dock_fixup;
+> > >     acpi_set_hp_context(adev, &context->hp);
+> > > +   adev->flags.should_dedup_eject =3D true;
+> > >     return context;
+> > >  }
+> > >
+> > > @@ -778,7 +779,8 @@ void acpiphp_check_host_bridge(struct acpi_device=
+ *adev)
+> > >     }
+> > >  }
+> > >
+> > > -static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot)=
+;
+> > > +static int
+> > > +acpiphp_disable_and_eject_slot(struct acpi_hotplug_context *hp, stru=
+ct acpiphp_slot *slot);
+> > >
+> > >  static void hotplug_event(u32 type, struct acpiphp_context *context)
+> > >  {
+> > > @@ -825,7 +827,7 @@ static void hotplug_event(u32 type, struct acpiph=
+p_context *context)
+> > >     case ACPI_NOTIFY_EJECT_REQUEST:
+> > >             /* request device eject */
+> > >             acpi_handle_debug(handle, "Eject request in %s()\n", __fu=
+nc__);
+> > > -           acpiphp_disable_and_eject_slot(slot);
+> > > +           acpiphp_disable_and_eject_slot(&context->hp, slot);
+> > >             break;
+> > >     }
+> > >
+> > > @@ -999,9 +1001,11 @@ int acpiphp_enable_slot(struct acpiphp_slot *sl=
+ot)
+> > >
+> > >  /**
+> > >   * acpiphp_disable_and_eject_slot - power off and eject slot
+> > > + * @hp: the context that received eject notification, can be NULL
+> > >   * @slot: ACPI PHP slot
+> > >   */
+> > > -static int acpiphp_disable_and_eject_slot(struct acpiphp_slot *slot)
+> > > +static int
+> > > +acpiphp_disable_and_eject_slot(struct acpi_hotplug_context *hp, stru=
+ct acpiphp_slot *slot)
+> > >  {
+> > >     struct acpiphp_func *func;
+> > >
+> > > @@ -1011,6 +1015,9 @@ static int acpiphp_disable_and_eject_slot(struc=
+t acpiphp_slot *slot)
+> > >     /* unconfigure all functions */
+> > >     disable_slot(slot);
+> > >
+> > > +   if (hp)
+> > > +           atomic_set(&hp->ejecting, 0);
+> > > +
+> > >     list_for_each_entry(func, &slot->funcs, sibling)
+> > >             if (func->flags & FUNC_HAS_EJ0) {
+> > >                     acpi_handle handle =3D func_to_handle(func);
+> > > @@ -1034,7 +1041,7 @@ int acpiphp_disable_slot(struct acpiphp_slot *s=
+lot)
+> > >      */
+> > >     acpi_scan_lock_acquire();
+> > >     pci_lock_rescan_remove();
+> > > -   ret =3D acpiphp_disable_and_eject_slot(slot);
+> > > +   ret =3D acpiphp_disable_and_eject_slot(NULL, slot);
+> > >     pci_unlock_rescan_remove();
+> > >     acpi_scan_lock_release();
+> > >     return ret;
+> > > diff --git a/include/acpi/acpi_bus.h b/include/acpi/acpi_bus.h
+> > > index aad1a95e6863..870c1ffe47c9 100644
+> > > --- a/include/acpi/acpi_bus.h
+> > > +++ b/include/acpi/acpi_bus.h
+> > > @@ -151,6 +151,7 @@ typedef void (*acpi_hp_fixup) (struct acpi_device=
+ *);
+> > >
+> > >  struct acpi_hotplug_context {
+> > >     struct acpi_device *self;
+> > > +   atomic_t ejecting;
+> > >     acpi_hp_notify notify;
+> > >     acpi_hp_uevent uevent;
+> > >     acpi_hp_fixup fixup;
+> > > @@ -215,7 +216,8 @@ struct acpi_device_flags {
+> > >     u32 cca_seen:1;
+> > >     u32 enumeration_by_parent:1;
+> > >     u32 honor_deps:1;
+> > > -   u32 reserved:18;
+> > > +   u32 should_dedup_eject:1;
+> > > +   u32 reserved:17;
+> > >  };
+> > >
+> > >  /* File System */
+> > > --
+> > > 2.48.1
+> > >
+>
