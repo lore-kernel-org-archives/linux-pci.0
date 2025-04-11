@@ -1,40 +1,39 @@
-Received: from APC01-SG2-obe.outbound.protection.outlook.com (mail-sg2apc01on2138.outbound.protection.outlook.com [40.107.215.138])
+Received: from APC01-TYZ-obe.outbound.protection.outlook.com (mail-tyzapc01on2122.outbound.protection.outlook.com [40.107.117.122])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C7C204080;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A48EA278E67;
 	Fri, 11 Apr 2025 10:37:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.215.138
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.117.122
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744367829; cv=fail; b=E0BMfly79AisHhcW35MX2XNlbJptRSuZeUmcF33gxxyhgPEvIvPKQmiW5IkiXwmFGIqJa86q9Ax6WRrwKQi4T0QqEj85sn1nVAlDHU0OzM4EXN5D+q5a2HIxFuK2TOEGpjny2zDeH2DEuDpvKleGzKIMiwo3iF98cYd7jmORqaM=
+	t=1744367829; cv=fail; b=ar08ahQuqlzEXcI9mWKAxOmHF5Oo911KfaK/Wkv8EQJ9AtfjKSK49Gy7vryi9CQKnET4t4z52/RjtKyn1weF9WqkAjnjNRRuxbnncY1LOCNNv2jLhNC26Bgk4xBdJ+OgDKUFpJVyMn/7LXSHn6b1BfVKb3nfsMSkSmeKMQnQtpI=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1744367829; c=relaxed/simple;
-	bh=e35KqtqoEshogus6kmWu6U+0Y0WSlVK63BTczF6Mc74=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=owCxtbNrZdId2xn1WPsPIcM0iHer5SaGu0i0EaNTmm1w61ScWoHk30VHBIFEg4LGQySyrIC+9haq12qZxzu7doFfe/vT07BGNXcTv2FFi1vx+i65Fap5QnI0KK5y9lA4wS0XzI1YrSyLWMSLP2yunT7MoKtlTVavuldQpIgDVUQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.215.138
+	bh=BLpfo6b6oiDl55a7cUn6S9fzd+63ylpyH9UqhGGEA/o=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ryykV/ZauJ3P5W5KqPrHbvgCgc7uQsOsGBSyZCThdrsRRC6nrfBKtK2fq0CC2KFB4mvIGU4pTfT2BnQrGbXLCbCpn9xe89XR7KlAx9Xu7zsBoCTjxQSoWbdTvnSdvf2TZ6lnFfvmmgaszYyS6243EVAWDOsw79ZuSJor+S5JufQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.117.122
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=IshLkd923tihuwD8Q5SrBwinVyYFRkmTGychJHtNC6AZDT08hs7aFsrjyjhxdvo9j6KazgAcvTNDROjWgE+1WgQtDj6RprsDDM7R8qZQaVicZT/j88WVCNU5pH3ZJO8g3ldsAaNL3/I5uI0owaRqMNq4iwJITM5uhZi0eeGuYvFDak86KOXVhcrzFHroW9AeGcPEGgjm+/XCOSVWtBVwpEOnuO8RxxHzNio24hjGnYeIK/+HY387On4a/ox9jsw4valyYeeD8xLxTwhxBldUVS1IFPM5tXcd1Dv7BvSyqlow16zCcNgvLPcAIPS1S3Dad9O8T3CZA8sPRzwBgYh49w==
+ b=hHGqmwkXc/+QJhp2dcXXHyZFaAeSAi4A/rf0GNCXw8mkYMAMdZzJlebcm8bvy36kViDbs0dBSnD6+c8BssRbKpvz0Dyr1MtwSt27wZ6k2Fs8vKG4NKx/JhZTw0bjOyQMAgt4BrizWiH3y8I5s27kNesJeE6NxEDC+NTYJ7DLUMl7HOH+pAeoJCbO1dhTztGTrJnvhT2WwdbkKwr/pPi1gAHeQpFjKuZEFfwqw9e+WzPPEo0S2MRCGTOzug2P/6/k9gbY5xMK58F1Fr9WM/qMGHqUnvXnceIq7ZdJeVd0Gtds7+xm4/mdIVuPciZ0sd5wLH+kALkZOSZknGBjeiltOw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=zUT7um8HuoTNivGWUNX2deh3iQ4MOn4em83eIgIlzqI=;
- b=Gy4aB3r4HR1uukobX9LuMOSg+xDshEBo9H3nqpk614VH+OiYBBKwx9OR5rITYJPH/DiZhHNLfCCWERS5OBHN8yjbxY/g/fikLhAtgaSdXdRBKDBEPRdAO0CSw0XgPU1AmpNQMq3XujFhcgJQFAFcRKZgw0qD1NKPfu9zA7WiQJIdMPrBaojqfiKXA7ZVHEtIod6H/YQ8uUNRxd4sXVZ/0fGmsQksb7f4fgFvOH1x2GZAEFwj9a0tIHi76DVSdhi8JyKHgKJhRH0OqSE/E3GSnj3fr4Ou+7v6vJ2hxRk/B7ZIlCHHD5wtDQoui8XDcn7hP4+ICz3jbG/Bx49/dsa+jQ==
+ bh=j8Kvqvid3GyfKAyJXYJNuEgattACWvp9m+hCkOhoSWo=;
+ b=wM3TRYcja5A26fO8m20HXE89m4WwA83gfq7ipH1x3aOmQ5b388/+93836NtsdD2OxzYRsQQL5WJk5Ya6S4RNrvT/KlK3BY7PEqQFJTRBXRNpfZfxhRd6pRdQfXMfQosbJ1d8FAiREcoYBJXkCmynXE1jUju6jBqdtbNgneor0sUSPyyyF5xtd01VUfI60mF/fnAtf2s4P8Pc48dgLaXe90tyS2kjEEECwwK4DNgZZQj9mmENZEWg60qH+pmoXsy6DOGmhQC223HGAQBdyTK/CzRfi0uEOO2OERjEN6V0aQs5B/OhAgfaOHYwoN5DyiqKDnuJrmlRA/UraqTHq0kKAw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
+ 222.71.101.198) smtp.rcpttodomain=cixtech.com smtp.mailfrom=cixtech.com;
  dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
  not signed); arc=none (0)
-Received: from PS2PR01CA0005.apcprd01.prod.exchangelabs.com
- (2603:1096:300:2d::17) by KL1PR06MB5969.apcprd06.prod.outlook.com
- (2603:1096:820:ca::15) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8606.35; Fri, 11 Apr
- 2025 10:37:01 +0000
-Received: from HK2PEPF00006FB2.apcprd02.prod.outlook.com
- (2603:1096:300:2d:cafe::df) by PS2PR01CA0005.outlook.office365.com
- (2603:1096:300:2d::17) with Microsoft SMTP Server (version=TLS1_3,
+Received: from PS2PR02CA0029.apcprd02.prod.outlook.com (2603:1096:300:59::17)
+ by KL1PR06MB6111.apcprd06.prod.outlook.com (2603:1096:820:d9::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8632.27; Fri, 11 Apr
+ 2025 10:37:00 +0000
+Received: from HK2PEPF00006FB0.apcprd02.prod.outlook.com
+ (2603:1096:300:59:cafe::a8) by PS2PR02CA0029.outlook.office365.com
+ (2603:1096:300:59::17) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.8632.26 via Frontend Transport; Fri,
- 11 Apr 2025 10:37:01 +0000
+ 11 Apr 2025 10:37:00 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
  smtp.mailfrom=cixtech.com; dkim=none (message not signed)
  header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
@@ -42,11 +41,11 @@ Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
  222.71.101.198 as permitted sender) receiver=protection.outlook.com;
  client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
 Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- HK2PEPF00006FB2.mail.protection.outlook.com (10.167.8.8) with Microsoft SMTP
+ HK2PEPF00006FB0.mail.protection.outlook.com (10.167.8.6) with Microsoft SMTP
  Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
  15.20.8655.12 via Frontend Transport; Fri, 11 Apr 2025 10:36:59 +0000
 Received: from localhost.localdomain (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 4B2464160CA2;
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 2CBB54160CA0;
 	Fri, 11 Apr 2025 18:36:58 +0800 (CST)
 From: hans.zhang@cixtech.com
 To: bhelgaas@google.com,
@@ -59,14 +58,11 @@ To: bhelgaas@google.com,
 Cc: linux-pci@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Manikandan K Pillai <mpillai@cadence.com>,
 	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v3 2/6] dt-bindings: pci: cadence: Extend compatible for new EP configurations
-Date: Fri, 11 Apr 2025 18:36:52 +0800
-Message-ID: <20250411103656.2740517-3-hans.zhang@cixtech.com>
+Subject: [PATCH v3 0/6] Enhance the PCIe controller driver
+Date: Fri, 11 Apr 2025 18:36:50 +0800
+Message-ID: <20250411103656.2740517-1-hans.zhang@cixtech.com>
 X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20250411103656.2740517-1-hans.zhang@cixtech.com>
-References: <20250411103656.2740517-1-hans.zhang@cixtech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -76,86 +72,120 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: HK2PEPF00006FB2:EE_|KL1PR06MB5969:EE_
+X-MS-TrafficTypeDiagnostic: HK2PEPF00006FB0:EE_|KL1PR06MB6111:EE_
 Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 05c2b654-a4eb-4dde-53de-08dd78e4ca28
+X-MS-Office365-Filtering-Correlation-Id: 173d5106-2b6a-46aa-7d79-08dd78e4ca20
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700013|376014|82310400026;
+	BCL:0;ARA:13230040|82310400026|1800799024|36860700013|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?LPgPgIzT6G07JJUFlJ7GOmJ8q6LbYdy6nVVeVtiYFdlE6lDBe8WXgKJoR6mj?=
- =?us-ascii?Q?5gLj69ElU9phILjHb0w5F4132JH6gAtIZT5izIv/kk5V5I139r9RhCMsNglN?=
- =?us-ascii?Q?IzCAJ4ZIU/mQ4YXkZe+dDNBNMulEe+z+TfZck2c+pNI3mgVM9MDxuhTZ8BoV?=
- =?us-ascii?Q?nDHP+62+nMJlE9W3q7absKaXRoDXIE6A6LCaNnZI2HOKQoSjALcGVAxmZA3p?=
- =?us-ascii?Q?0usZn5JlMYjciI0nR7baWp/Xn4NLnV8BdeQYjwb+sVJfFN/5L11S44YerdHX?=
- =?us-ascii?Q?oz/6j1MIijI3I25mjqDaa1XxWj3EhVdcUY0uip8eN3kjORjJFxOr95GikpdZ?=
- =?us-ascii?Q?G3whYliXApC0kpQf9b9ZqTL7i1g7QljDqM9l+HKiE6W3QDazscEZQ6sy7pLv?=
- =?us-ascii?Q?G2AguNesPVlRG2o5/C6QrRyd4GgF7xhERSCbrh9L0lpsRgbHr9ScODSys6++?=
- =?us-ascii?Q?WZpxI3fv7kB91cYrou6AU/fTEYY7KOTCswmCdxFLgEnvaOULlNxOuKD8IIJs?=
- =?us-ascii?Q?8r1YSfgvI5p8A5Fc0pfe+TOYKl/SlSl7lAfpuEt8GteTY786elIgXy1Ipq35?=
- =?us-ascii?Q?f5j/n2Uno5ImLBLY6Bqck++f2vndStO3hp/1FKAuMGBpTl8jn/0IEIpy1bnI?=
- =?us-ascii?Q?+MATypuQPWLSFI1dEZ5Q56KOXioe2X2uFc0pvqL473bF4/GPsSH0FlyFhmsB?=
- =?us-ascii?Q?5paJBhgWwMtbb41/IWeyGa8FZGKY6imYGbV2TnuNugTqYIdkB+j9ZOb8N77i?=
- =?us-ascii?Q?opCZwMNWdm8QDJyGQ9YWZbl9WDBdkkgJ26Fkl/ZKbe+l690yLh4OeHhzXjOb?=
- =?us-ascii?Q?JrShAt6qenzYLjzXQgiVvsDvWE2gw21PTWJ42tVdPSmFjkIuIQGISqGPm/re?=
- =?us-ascii?Q?zEUBEYWYKsf9jOkPCcji/WjnPZfwSehM7yvHLnyv2e0CICXmrEBZjmPVZ/r0?=
- =?us-ascii?Q?jJSdYNRmOgkadMeSFMu8VwPLJoYpQb3aGWYDGDP8hyn+l+kVT2VmXHYWgEeS?=
- =?us-ascii?Q?Zp4tt97Khw1/1bLYzPTNzh7qxoMdf5MMFLrWcMs0njXmOh8NRgXqR2tA8Unn?=
- =?us-ascii?Q?AMfnn4lJn34G991EqNvmy+e6YU9gZSTVg7Zf8HqbAPaJ8Yk9FSXE3lTFUy4n?=
- =?us-ascii?Q?mCeU9UpNPNgyYD4ah9uVzn+FJprZcOl2NFTdKPpAXs/QEpkPrOlSs7UauPG/?=
- =?us-ascii?Q?u4DiSVUPXBGDWmW5P4H/zHaFlUrdPAkFHLkNYn3mdA425yZnHTxkRribH0BR?=
- =?us-ascii?Q?3TNeRcIcilOL1j/a9fd2kG9Duid92CHYL8Cpk5sva60cuGvpvYEu4QqVVFZA?=
- =?us-ascii?Q?bUjwbnT8atkzAzeKpW1G8dHQoGT1AznTenovkal5hvqdybFUkWsDvN6VYipc?=
- =?us-ascii?Q?f8JfPPHUmX5xHKwK1gV3UEzoi1Qcq4uKVn/ZuXBFLghWuFzlnfaN7bTpIGop?=
- =?us-ascii?Q?ivhZ8rV2Z4L5NpoULr6fI4f282j+vQbngrIlvrl0m/qajfDkOXpn1Q=3D=3D?=
+	=?us-ascii?Q?9nreKXmTiQPOiJUkKyGK6jyi36nmps45B6bNL3xWligMtvqkHeM7r7ls0leY?=
+ =?us-ascii?Q?bsy6YQjFAKv2nxZ0yK2Yib0JjHgVFzjV2THzbnp34v2NiT6Dyd7cku0IRBLr?=
+ =?us-ascii?Q?/9k2CwLvMYZbchxxYEtVXVZwluWhHLyWFZuxyR2sN53Bc5To1WJPp2Jsap93?=
+ =?us-ascii?Q?IOTBDMYyF0hQo8lqFG7D2HA5SFnT9P7SR+LsRLyn0j+Au20WF5nD8I0Nt7fx?=
+ =?us-ascii?Q?xDQHa2U9lmkTI2Qhk1MAHgj0gqtouUZNQtLrK8QRBVmOtZ7oIiqLZ4YFc1ns?=
+ =?us-ascii?Q?vmu8trxVM80O8aT3Mw+lqjTR9Cfu5HZg/BJPq0lBCFn8PDJu8Lc7zC5RO8BJ?=
+ =?us-ascii?Q?2KrFMYwbTakJkww8sYuve6c/VcSgJrPYRUY1MNpAME5i63X82d/wMK1KwPm0?=
+ =?us-ascii?Q?QUhwjdWyE9ZXV6vSzwn4Q1tj59QcLed/m81Krjr7u1tuj3zyNzt0cSWjoZCp?=
+ =?us-ascii?Q?6BqG41Pnxt52Ojm9t59NaCshL4wZY2DtPwStMmMlF6idtqrnbBnaX4EFnHhW?=
+ =?us-ascii?Q?x1D3D2dBTXAOG4G8fnIk8ih+iSqkHkJ3fdI/2I/3z91K6PyZJbeNgNYorKUR?=
+ =?us-ascii?Q?S26QX6ZDQHRjxJ2/iFjy+b1jU/MtXcD0uoeUdHsOq88456YMRsnv89mwiMeL?=
+ =?us-ascii?Q?Mc1BHC9Lg2Be1sSkTVcCEdQtjubtcIwvOPMVOCZb6GSPw48ppGq2mhsI/22m?=
+ =?us-ascii?Q?ssr9WpZVNd1OZQPiEX2n9IAPf+RKhrAMZmG1SH0xyABmiaMCmFtmWtWpLwgt?=
+ =?us-ascii?Q?rbt1dHkosNmfJs30cfp7w5wwYsQGESkAfSN3TbVvInCDUiFSbTlyxY7dlOr4?=
+ =?us-ascii?Q?m24uevd/RGoZnR001oMuMcv7sDvdnRE+rRBOBkqmRghQO3JsS+sZAPGKBYYi?=
+ =?us-ascii?Q?DBEqrLh247qqWybMianLQkKQP3efPZPuBu/Q75FrXFoIrK+15uSDfJaE/jcU?=
+ =?us-ascii?Q?VtcMR/9dKKsQju7a5OJn5lWwdHEQm+N6h9GtUNYiEK3OX5dD1KhaG5iEqpr2?=
+ =?us-ascii?Q?VDe8ayPmjhepOWvEWPlrkNpoFw/Ch4ICnXoZ+FUc7uxGrB3TX8cYw/4z+O5i?=
+ =?us-ascii?Q?rW2bWwvpXnih4MIRtg7irgfKu55cOWfgA4tl5YnTRMb3k6dmQi1XsUs1gsFX?=
+ =?us-ascii?Q?GY651EA+AQK8SvQLvjamkDX7z/bj3u8tM/5Th3VqEgjt3B0ezJB7GRiAeM62?=
+ =?us-ascii?Q?fqLfAlRlYUCU8Bf7+WEnrRzVLD+/Yocrsonwz21R/AWoXIcE6QL6ZX2EWP6M?=
+ =?us-ascii?Q?G1Nh9HPL1DG4WNmvy9q+vggMV3ByU3Ctda67MGV/f3i2K9InGJy3g1zaUznS?=
+ =?us-ascii?Q?p58Qg/uz+I+ifC29RVmgktcy9W51pMt5HSdX/rqynMTVbX9Ru+pXFFyB2n+Q?=
+ =?us-ascii?Q?kd48vVi6me6w7xUdCBZPzTNfH1ub6fyWTlzYTjQqBUBnqAdw/Ysxhuvs0JWc?=
+ =?us-ascii?Q?XWgqHxfDLy8MEclJ8ac4qow65i5TM9Xenqw/Zc62m3eVuTUqvNURpfQC6p/H?=
+ =?us-ascii?Q?wmLFpOfaEiarODlbt4xYrQ5GG7I411jcMSQHjlNA4uNQrDYuQWjui91kHA?=
+ =?us-ascii?Q?=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(36860700013)(376014)(82310400026);DIR:OUT;SFP:1102;
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(1800799024)(36860700013)(376014);DIR:OUT;SFP:1102;
 X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2025 10:36:59.3651
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Apr 2025 10:36:59.2981
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 05c2b654-a4eb-4dde-53de-08dd78e4ca28
+X-MS-Exchange-CrossTenant-Network-Message-Id: 173d5106-2b6a-46aa-7d79-08dd78e4ca20
 X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
-X-MS-Exchange-CrossTenant-AuthSource: HK2PEPF00006FB2.apcprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthSource: HK2PEPF00006FB0.apcprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR06MB5969
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: KL1PR06MB6111
 
-From: Manikandan K Pillai <mpillai@cadence.com>
+From: Hans Zhang <hans.zhang@cixtech.com>
 
-Document the compatible property for the new generation(architecture) PCIe
-EP configuration.
+Enhances the exiting Cadence PCIe controller drivers to support 
+HPA (High Performance Architecture) Cadence PCIe controllers.
 
-Signed-off-by: Manikandan K Pillai <mpillai@cadence.com>
-Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
----
- .../devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml          | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+The patch set enhances the Cadence PCIe driver for HPA support.
+The "compatible" property in DTS is added with  more enum to support
+the new platform architecture and the register maps that change with
+it. The driver read register and write register functions take the
+updated offset stored from the platform driver to access the registers.
+The driver now supports the legacy and HPA architecture, with the
+legacy code changes beingminimal.
 
-diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-index 98651ab22103..a7e404e4f690 100644
---- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-+++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
-@@ -7,14 +7,16 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
- title: Cadence PCIe EP Controller
+SoC related changes are not available in this patch set.
+
+The TI SoC continues to be supported with the changes incorporated.
+
+The changes are also in tune with how multiple platforms are supported
+in related drivers.
  
- maintainers:
--  - Tom Joseph <tjoseph@cadence.com>
-+  - Manikandan K Pillai <mpillai@cadence.com>
- 
- allOf:
-   - $ref: cdns-pcie-ep.yaml#
- 
- properties:
-   compatible:
--    const: cdns,cdns-pcie-ep
-+    enum:
-+      - cdns,cdns-pcie-ep
-+      - cdns,cdns-pcie-hpa-ep
- 
-   reg:
-     maxItems: 2
+The scripts/checkpatch.pl has been run on the patches with and without
+--strict. With the --strict option, 4 checks are generated on 1 patch
+(PATCH v3 3/6) of the series), which can be ignored. There are no code
+fixes required for these checks. The rest of the 'scripts/checkpatch.pl'
+is clean. 
+The ./scripts/kernel-doc --none have been run on the changed files.
+
+The changes are tested on TI platforms. The legacy controller changes are
+tested on an TI J7200 EVM and HPA changes are planned for on an FPGA
+platform available within Cadence.
+
+The patch set has been version v3, though the earlier two versions had
+issues with threading.
+The previous submitted patch links is at
+https://lore.kernel.org/lkml/fc1c6ded-2246-4d09-90b4-c0a264962ab3@kernel.org/
+
+Changes for v3:
+-	Patch version v3 added to the subject
+-	Use HPA tag for architecture descriptions
+-	Remove bug related changes to be submitted later as a separate patch
+-	Two patches merged from the last series to ensure readability to address
+  the review comments
+-	Fix several description related issues, coding style issues and some
+  misleading comments
+-	Remove cpu_addr_fixup() functions
+
+Manikandan K Pillai (6):
+  dt-bindings: pci: cadence: Extend compatible for new RP configuration
+  dt-bindings: pci: cadence: Extend compatible for new EP configurations
+  PCI: cadence: Add header support for PCIe HPA controller
+  PCI: cadence: Add support for PCIe Endpoint HPA controller
+  PCI: cadence: Add callback functions for RP and EP controller
+  PCI: cadence: Update support for TI J721e boards
+
+ .../bindings/pci/cdns,cdns-pcie-ep.yaml       |   6 +-
+ .../bindings/pci/cdns,cdns-pcie-host.yaml     |   6 +-
+ drivers/pci/controller/cadence/pci-j721e.c    |  12 +
+ .../pci/controller/cadence/pcie-cadence-ep.c  | 170 +++++++--
+ .../controller/cadence/pcie-cadence-host.c    | 284 +++++++++++++--
+ .../controller/cadence/pcie-cadence-plat.c    | 110 ++++++
+ drivers/pci/controller/cadence/pcie-cadence.c | 196 ++++++++++-
+ drivers/pci/controller/cadence/pcie-cadence.h | 332 +++++++++++++++++-
+ 8 files changed, 1054 insertions(+), 62 deletions(-)
+
+
+base-commit: a24588245776dafc227243a01bfbeb8a59bafba9
 -- 
 2.47.1
 
