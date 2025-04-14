@@ -1,86 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail-m15586.qiye.163.com (mail-m15586.qiye.163.com [101.71.155.86])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 917CB42A92
-	for <linux-pci@vger.kernel.org>; Mon, 14 Apr 2025 15:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7789A42A92;
+	Mon, 14 Apr 2025 15:26:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.86
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744643671; cv=none; b=dCS1ORkCQ8dmQ2T6YcUhLEmYlwWSGxQvSRDePMtCzX38ZUvskVXZ1D99eumSnCfs3T1b+ZAs75Vg/wBHIy6TXGoWP2r0fxIn97Et+uh8TwcAcOzgKweeuVWvamrD2O/hIJYnNPxs03AGu67eKrhNK4JG8IfoUTdWjxtRi94ViLU=
+	t=1744644412; cv=none; b=mf3GYP0cTTakZaw92yrYFUyHQUOmI9j45AX/Puohb5v2KebjJHxAaxL9GBZHgP1bIEazvCcKeZzXg6qjeyIqvuAzVpywhRMLTwZVyMEGUX9Sup6y+XM+0HnpLwQwTZIX9YPYekkWxN8yzlsawikbNY7dxuuxusFmaROf5+EEEL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744643671; c=relaxed/simple;
-	bh=ITfm8Yp2mpWG3vQeYCNTqTmfAHGo7zrVzPaA1KhEA64=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=kuQhbp4yckebOfRoiL5dPM65ek43oTTW5/8iea9OaEqcUsTwIixUVn9lZD3sWHUUUe9E/6IRKVmNATDVSm1Z7Xu4Y9I/GO49Ur4HCCvSd1Ebyw54pV52dfTMnejXBZqSryGTg0AlTlxfaTeeZCWbjtixGqi4CxmXgSkvRDrQF2U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TS5UHBQz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744644412; c=relaxed/simple;
+	bh=1iiEALXoYkJLnXjqez/9uboLZ8pTi6TNO0dFLtbhpQo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=LfKcJc9j857kfAY3xwrygtlK9zkiYsADVlM4mbaLu1K07bwqQ5mwEV9RnHcCizGhvR1LMktZ41easxUrpeMr6RKW3J1UeCSl6g9Li2XfSFN6t63kQuwffbPeY7RqmR29tzF+oPpxVyO5jljYRRxv+sqHeQzvW6ntBFCYkEq9dvY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=iZD/OC4K; arc=none smtp.client-ip=101.71.155.86
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TS5UHBQz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 52C0AC4CEE2;
-	Mon, 14 Apr 2025 15:14:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744643670;
-	bh=ITfm8Yp2mpWG3vQeYCNTqTmfAHGo7zrVzPaA1KhEA64=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=TS5UHBQz34s744vnCqRuKMNVKUErml7JBYKNtA9VpFZbKfX8ImY38eM7i3B7oi3y2
-	 mbxGb/7f6AJryntjwrP+VU/kyY5GOeTJjr8+md305/VcYokp36gSGPkUq7RQYNT2AE
-	 c7gkKIW6h5HqeJEpkJbea6EstonzNiJeXcJOh0ELMWT6pM5nQrxYeRfF5dYWUny0D/
-	 wzb2lQEjIJrB3sWEUvBaTlw/Z3qqJsbGDRxgOfkVcVUVn27arW9HUWw1Pm5YywL9iU
-	 TI7XQJhq8QWo75rv4dU2Cd/hqrWjEM85ot50eI4jMnLQqnTqoT4phGl+l5+s7bpXm0
-	 ozQI33D0DRZ4g==
-Date: Mon, 14 Apr 2025 17:14:26 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: bhelgaas@google.com, kw@linux.com, manivannan.sadhasivam@linaro.org
-Cc: Frank Li <Frank.Li@nxp.com>, linux-pci@vger.kernel.org,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Kunihiko Hayashi <hayashi.kunihiko@socionext.com>
-Subject: Re: [PATCH] misc: pci_endpoint_test: Defer IRQ allocation until
- ioctl(PCITEST_SET_IRQTYPE)
-Message-ID: <Z_0mUhHzGqNrMBGg@ryzen>
-References: <20250402085659.4033434-2-cassel@kernel.org>
+	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="iZD/OC4K"
+Received: from localhost.localdomain (unknown [124.72.37.3])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 11d4dc641;
+	Mon, 14 Apr 2025 22:51:12 +0800 (GMT+08:00)
+From: Kever Yang <kever.yang@rock-chips.com>
+To: heiko@sntech.de
+Cc: andersson@kernel.org,
+	Kever Yang <kever.yang@rock-chips.com>,
+	Simon Xue <xxm@rock-chips.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Detlev Casanova <detlev.casanova@collabora.com>,
+	Finley Xiao <finley.xiao@rock-chips.com>,
+	Frank Wang <frank.wang@rock-chips.com>,
+	Rob Herring <robh@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	linux-kernel@vger.kernel.org,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Nicolas Frattaroli <nicolas.frattaroli@collabora.com>,
+	linux-rockchip@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Andy Yan <andy.yan@rock-chips.com>,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH v9 0/2] rockchip: Add rk3576 pcie dts nodes
+Date: Mon, 14 Apr 2025 22:51:08 +0800
+Message-Id: <20250414145110.11275-1-kever.yang@rock-chips.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250402085659.4033434-2-cassel@kernel.org>
-
-On Wed, Apr 02, 2025 at 10:57:00AM +0200, Niklas Cassel wrote:
-> Commit a402006d48a9 ("misc: pci_endpoint_test: Remove global 'irq_type'
-> and 'no_msi'") changed so that the default IRQ vector requested by
-> pci_endpoint_test_probe() was no longer the module param 'irq_type',
-> but instead test->irq_type. test->irq_type is by default
-> IRQ_TYPE_UNDEFINED (until someone calls ioctl(PCITEST_SET_IRQTYPE)).
-> 
-> However, the commit also changed so that after initializing test->irq_type
-> to IRQ_TYPE_UNDEFINED, it also overrides it with driver_data->irq_type, if
-> the PCI device and vendor ID provides driver_data.
-> 
-> This causes a regression for PCI device and vendor IDs that do not provide
-> driver_data, and the driver now fails to probe on such platforms.
-> 
-> Considering that the pci endpoint selftests and the old pcitest always
-> call ioctl(PCITEST_SET_IRQTYPE) before performing any test that requires
-> IRQs, simply remove the allocation of IRQs in pci_endpoint_test_probe(),
-> and defer it until ioctl(PCITEST_SET_IRQTYPE) has been called.
-> 
-> A positive side effect of this is that even if the endpoint controller has
-> issues with IRQs, the user can do still do all the tests/ioctls() that do
-> not require working IRQs, e.g. PCITEST_BAR and PCITEST_BARS.
-> 
-> This also means that we can remove the now unused irq_type from
-> driver_data. The irq_type will always be the one configured by the user
-> using ioctl(PCITEST_SET_IRQTYPE). (A user that does not know, or care
-> which irq_type that is used, can use PCITEST_IRQ_TYPE_AUTO. This has
-> superseded the need for a default irq_type in driver_data.)
-> 
-> Fixes: a402006d48a9c ("misc: pci_endpoint_test: Remove global 'irq_type' and 'no_msi'")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-
-Considering that e.g. NXP platforms are currently broken without this,
-this should go into v6.15 IMHO.
+Content-Transfer-Encoding: 8bit
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkZSEoZVkpMGEhLGENCQ0JLGFYVFAkWGhdVEwETFh
+	oSFyQUDg9ZV1kYEgtZQVlKSU9VTElVSExVSFlXWRYaDxIVHRRZQVlPS0hVSktJSEJIQ1VKS0tVSk
+	JLS1kG
+X-HM-Tid: 0a9634c86d2a03afkunm11d4dc641
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6P1E6PAw*KjIBKCIRSgs#EkwX
+	FU8aCgNVSlVKTE9PTU9JSUxIQ0lMVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
+	EgtZQVlKSU9VTElVSExVSFlXWQgBWUFJTUhNNwY+
+DKIM-Signature:a=rsa-sha256;
+	b=iZD/OC4KppITphC8tbsX4PwJw6hHwNbJFgEM5bNyDTHCWkMwnb49j42ECGwPfTJxzV0sU7PDBpN+M9E8u2qZ6Spy1SLAQdizv6R3P15UPNkVUgw5OtuTQBgffFfuboRQvs2DNH/0wi+MUuR0C4oTH+slONI4ZTJ+wVFyDOsi2ko=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
+	bh=CXlbWKegeuuphuVD8v7XhITmdjJpr+DU67mdolnYNJ8=;
+	h=date:mime-version:subject:message-id:from;
 
 
-Kind regards,
-Niklas
+Hi Bjorn,
+
+This patch set adds support for rk3576 pcie by adding the dts node,
+and this series is a re-base on v6.15-rc1 and collect tags without code
+change.
+
+Please help take the dt-binding to PCI tree if there is no more change request.
+
+Thanks,
+Kever
+
+
+Changes in v9:
+- Collect review tag
+- rebase on 6.15-rc1
+- Add test tag
+
+Changes in v8:
+- Collect review tag and add Co-developed-by tag.
+
+Changes in v7:
+- Move the rk3576 device specific schema out of common.yaml
+- re-order the properties.
+
+Changes in v6:
+- Fix make dt_binding_check and make CHECK_DTBS=y
+
+Changes in v5:
+- Add constraints per device for interrupt-names due to the interrupt is
+different from rk3588.
+
+Changes in v4:
+- Fix wrong indentation in dt_binding_check report by Rob
+
+Changes in v3:
+- Fix dtb check broken on rk3588
+- Update commit message
+- Update the subject
+
+Changes in v2:
+- remove required 'msi-map'
+- add interrupt name 'msi'
+- Update clock and reset names and sequence to pass DTB check
+
+Kever Yang (2):
+  dt-bindings: PCI: dw: rockchip: Add rk3576 support
+  arm64: dts: rockchip: Add rk3576 pcie nodes
+
+ .../bindings/pci/rockchip-dw-pcie-common.yaml |  10 +-
+ .../bindings/pci/rockchip-dw-pcie.yaml        |  55 ++++++++-
+ arch/arm64/boot/dts/rockchip/rk3576.dtsi      | 108 ++++++++++++++++++
+ 3 files changed, 165 insertions(+), 8 deletions(-)
+
+-- 
+2.25.1
+
