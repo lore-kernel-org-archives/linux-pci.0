@@ -1,151 +1,218 @@
-Received: from mail-m49220.qiye.163.com (mail-m49220.qiye.163.com [45.254.49.220])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8AB419992D;
-	Tue, 15 Apr 2025 05:34:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.254.49.220
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90BB319992D;
+	Tue, 15 Apr 2025 05:34:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744695266; cv=none; b=LC/E00FEBlX/igYvz5l3YZF/PEh73fTrzBh9+4h6FQ5iFTwvLfUAx500N6Dhb3+5wYEpkdhRuuCShVz5jyHYiA4e6bUAV29EYXav+ZnsdYpD+je0FRBLxdaYx08HnCKjAOTNfRlgDTrGQay5j7fkdi59szur6FsBmYVvW6B4uw8=
+	t=1744695270; cv=none; b=Kw1MDudVqGay3i6HdU0KXz+wvA6hTZO7aBYqdB57qylfa482ObB0kEzOMtFigO3oau4fWP6X2pTPOcEMfUgLQyid+g0+3MQ3fYuv4UNm0h3oO6NzunP6h155VyyIyO0kJLyahn5fggFL4koMBEu+jFA83U8k5+msp/gI6iAZ63g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744695266; c=relaxed/simple;
-	bh=CREyEbOMBnE8kOzvCXQvLRpjV2iEM3D153H6Cn/ujEg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WAuUu/GyDdZoE8LN7m9BK/4PPV5MsUuyYckT8t7TehR/CQkrNxYhL+LGYk9ASq8w7u3qvbQT/FwnBBiSTCa9rPtNxLpNj3Equ+Pl3C7X/dANCZD24bJ8zSVnG5EqgR2tECeHP+V3cGzOXRNZwuDe5nAbwMkfqeYwBbkA345R7Ts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com; spf=pass smtp.mailfrom=rock-chips.com; dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b=aqgjzf0Y; arc=none smtp.client-ip=45.254.49.220
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rock-chips.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rock-chips.com
+	s=arc-20240116; t=1744695270; c=relaxed/simple;
+	bh=45o6nO1ZdabDZRp2mosO2ayRd8wFBJ7ZpP9Jr4qOmK0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WahbjdBTo+9U936yautCBrFWV1RLinzbA7hZurPQnR5aKT2/d7panB3MgtwOyXpl135/syu50O9DI/t0rCrRHVPcSqO3ErBpcU36kjTseGK7GeZmL1aZvhWmbUmfYUM9dnz6z5QBZppOFPHAz8KqQCHLk8CNsjn7PFPux0Moxws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KsdjjogM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=rock-chips.com header.i=@rock-chips.com header.b="aqgjzf0Y"
-Received: from localhost.localdomain (unknown [103.29.142.67])
-	by smtp.qiye.163.com (Hmail) with ESMTP id 11e6d9647;
-	Tue, 15 Apr 2025 13:18:58 +0800 (GMT+08:00)
-From: Kever Yang <kever.yang@rock-chips.com>
-To: heiko@sntech.de
-Cc: linux-rockchip@lists.infradead.org,
-	Kever Yang <kever.yang@rock-chips.com>,
-	Simon Xue <xxm@rock-chips.com>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Frank Wang <frank.wang@rock-chips.com>,
-	Jamie Iles <jamie@jamieiles.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-pci@vger.kernel.org,
-	Jonas Karlman <jonas@kwiboo.se>,
-	Johan Jonker <jbx6244@gmail.com>,
-	ulf.hansson@linaro.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Elaine Zhang <zhangqing@rock-chips.com>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Finley Xiao <finley.xiao@rock-chips.com>,
-	Jianfeng Liu <liujianfeng1994@gmail.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Yao Zi <ziyao@disroot.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Quentin Schulz <quentin.schulz@cherry.de>,
-	devicetree@vger.kernel.org,
-	Diederik de Haas <didi.debian@cknow.org>,
-	linux-watchdog@vger.kernel.org,
-	Rob Herring <robh@kernel.org>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Shresth Prasad <shresthprasad7@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	linux-arm-kernel@lists.infradead.org,
-	Cristian Ciocaltea <cristian.ciocaltea@collabora.com>,
-	Detlev Casanova <detlev.casanova@collabora.com>,
-	Dragan Simic <dsimic@manjaro.org>,
-	linux-kernel@vger.kernel.org,
-	Jimmy Hon <honyuenkwun@gmail.com>,
-	FUKAUMI Naoki <naoki@radxa.com>,
-	Andy Yan <andy.yan@rock-chips.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v4 0/7] rockchip: Add rk3562 SoC and evb support
-Date: Tue, 15 Apr 2025 13:18:48 +0800
-Message-Id: <20250415051855.59740-1-kever.yang@rock-chips.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KsdjjogM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 98203C4CEDD;
+	Tue, 15 Apr 2025 05:34:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744695270;
+	bh=45o6nO1ZdabDZRp2mosO2ayRd8wFBJ7ZpP9Jr4qOmK0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=KsdjjogMSU35get7rJpSvvMy+VkhJhyymfpDK8TmQz4J351HR9pBWxdxfB0c8SYRg
+	 yNKWwIwAqH96h642SSEh4QVPZ12p54L78O74Z+6CQGzWl7dRly9L/yyi9wWKUxReH/
+	 6d9uokbC/D95wk460z2A3wlNtGXvggrypCsyFqX2V8oqmeorWpx9rhnpdIPnXLAsG/
+	 iIwtTv6+bmv1aDGpfcwoa/oWLmE7p28W5smy97fLA9lsbix6nzPSrgsJWt27YzUqSH
+	 H6H1IjW7zosBrHbNoG62r7+QaloK/AQQ2vpvYCi49nW1fv3zjeBLfKOco488CmD/q7
+	 /jM6Hg676nIWg==
+Message-ID: <4b741da1-6540-4e5c-aa32-098420cab3c2@kernel.org>
+Date: Tue, 15 Apr 2025 07:34:22 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
-	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVlCHkseVk8dTEpJT00eQ0xLTlYVFAkWGhdVEwETFh
-	oSFyQUDg9ZV1kYEgtZQVlKS0hVSUJVSk9JVU1MWVdZFhoPEhUdFFlBWU9LSFVKS0hKT0hMVUpLS1
-	VKQktLWQY+
-X-HM-Tid: 0a9637e2e37803afkunm11e6d9647
-X-HM-MType: 1
-X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6Ogg6Fjo5CDJNLBopGgwjCjg3
-	CDMKCT1VSlVKTE9PTUJPSE9JT09KVTMWGhIXVRAeDR4JVQIaFRw7CRQYEFYYExILCFUYFBZFWVdZ
-	EgtZQVlKS0hVSUJVSk9JVU1MWVdZCAFZQU9JSEw3Bg++
-DKIM-Signature:a=rsa-sha256;
-	b=aqgjzf0YeZvYGty2CdsOQnp7mCSRn3ztKgzIpqn882Rkfvdv/XFgXiMTPO8h/TNVg0DJDZO+Xd5aJp7UieaQKqUZiD5gaAaEPOpbmP/J4xAgK0kxtGFaVaAdYbjnM69LaA4Qgln+GGUQSg+yxD20zafuuF/Xwow3Vag5PLsWcMA=; c=relaxed/relaxed; s=default; d=rock-chips.com; v=1;
-	bh=kVuF3/DNXF3QjN/z8vNYlHmSLMpNtBoaruzQNxSDhrk=;
-	h=date:mime-version:subject:message-id:from;
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RESEND PATCH v7 1/2] dt-bindings: PCI: xilinx-cpm: Add `cpm_crx`
+ and `cpm5nc_fw_attr` properties
+To: "Musham, Sai Krishna" <sai.krishna.musham@amd.com>
+Cc: "bhelgaas@google.com" <bhelgaas@google.com>,
+ "lpieralisi@kernel.org" <lpieralisi@kernel.org>, "kw@linux.com"
+ <kw@linux.com>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+ "robh@kernel.org" <robh@kernel.org>, "krzk+dt@kernel.org"
+ <krzk+dt@kernel.org>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ "cassel@kernel.org" <cassel@kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "Simek, Michal" <michal.simek@amd.com>,
+ "Gogada, Bharat Kumar" <bharat.kumar.gogada@amd.com>,
+ "Havalige, Thippeswamy" <thippeswamy.havalige@amd.com>
+References: <20250414032304.862779-1-sai.krishna.musham@amd.com>
+ <20250414032304.862779-2-sai.krishna.musham@amd.com>
+ <20250414-naughty-simple-rattlesnake-bb75bb@shite>
+ <IA1PR12MB6140D67181ED0003799228DACDB32@IA1PR12MB6140.namprd12.prod.outlook.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 fv0=
+In-Reply-To: <IA1PR12MB6140D67181ED0003799228DACDB32@IA1PR12MB6140.namprd12.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+On 14/04/2025 14:23, Musham, Sai Krishna wrote:
+> [AMD Official Use Only - AMD Internal Distribution Only]
+> 
+> Hi Krzysztof,
+> 
+> Thanks for the review.
+> 
+>> -----Original Message-----
+>> From: Krzysztof Kozlowski <krzk@kernel.org>
+>> Sent: Monday, April 14, 2025 12:32 PM
+>> To: Musham, Sai Krishna <sai.krishna.musham@amd.com>
+>> Cc: bhelgaas@google.com; lpieralisi@kernel.org; kw@linux.com;
+>> manivannan.sadhasivam@linaro.org; robh@kernel.org; krzk+dt@kernel.org;
+>> conor+dt@kernel.org; cassel@kernel.org; linux-pci@vger.kernel.org;
+>> devicetree@vger.kernel.org; linux-kernel@vger.kernel.org; Simek, Michal
+>> <michal.simek@amd.com>; Gogada, Bharat Kumar
+>> <bharat.kumar.gogada@amd.com>; Havalige, Thippeswamy
+>> <thippeswamy.havalige@amd.com>
+>> Subject: Re: [RESEND PATCH v7 1/2] dt-bindings: PCI: xilinx-cpm: Add `cpm_crx`
+>> and `cpm5nc_fw_attr` properties
+>>
+>> Caution: This message originated from an External Source. Use proper caution
+>> when opening attachments, clicking links, or responding.
+>>
+>>
+>> On Mon, Apr 14, 2025 at 08:53:03AM GMT, Sai Krishna Musham wrote:
+>>> Add the `cpm_crx` property to manage the PCIe IP reset, and
+>>> `cpm5nc_fw_attr` property to clear firewall after link reset, while
+>>> maintaining backward compatibility with existing device trees.
+>>>
+>>> Also, incorporate `reset-gpios` in example for GPIO-based handling of
+>>> the PCIe Root Port (RP) PERST# signal for enabling assert and deassert
+>>> control.
+>>>
+>>> The `reset-gpios` and `cpm_crx` properties must be provided for CPM,
+>>> CPM5 and CPM5_HOST1. For CPM5NC, all three properties - `reset-gpios`,
+>>> `cpm_crx` and `cpm5nc_fw_attr` must be explicitly defined to ensure
+>>
+>> This we see from the diff, but why they must be defined?
+>>
+>>> proper functionality.
+>>
+>> What functionality?
+>>
+> 
+> For our controller, if cpm_crx is not provided lane errors will be observed.
+> Specifically for CPM5NC, if cpm5nc_fw_attr property is not provided, the firewall
+> is not cleared after reset and further PCIe transactions will not be allowed.
+> Therefore, these properties must be defined.
+
+This must be in the commit msg.
+
+> 
+>>>
+>>> Include an example DTS node and complete the binding documentation for
+>>> CPM5NC. Also, fix the bridge register address size in the example for
+>>> CPM5.
+>>>
+>>> Signed-off-by: Sai Krishna Musham <sai.krishna.musham@amd.com>
+>>> ---
+>>> Changes for v7:
+>>> - Update CPM5NC device tree binding.
+>>> - Add CPM5NC device tree example node.
+>>> - Update commit message.
+>>>
+>>> Changes for v6:
+>>> - Resolve ABI break.
+>>> - Update commit message.
+>>>
+>>
+>> ...
+>>
+>>> +  - if:
+>>> +      properties:
+>>> +        compatible:
+>>> +          contains:
+>>> +            enum:
+>>> +              - xlnx,versal-cpm5nc-host
+>>> +    then:
+>>> +      properties:
+>>> +        reg:
+>>> +          items:
+>>> +            - description: CPM system level control and status registers.
+>>> +            - description: Configuration space region and bridge registers.
+>>> +            - description: CPM clock and reset control registers.
+>>> +            - description: CPM5NC Firewall attribute register.
+>>> +          minItems: 2
+>>> +        reg-names:
+>>> +          items:
+>>> +            - const: cpm_slcr
+>>> +            - const: cfg
+>>> +            - const: cpm_crx
+>>> +            - const: cpm5nc_fw_attr
+>>> +          minItems: 2
+>>
+>> Why interrupts are not required for this variant? Why isn't this an
+>> interrupt controller?
+>>
+> 
+> MSI and MSI-X interrupts are handled via GIC, so msi-map property is
+> required for interrupt handling.
+> Legacy interrupt support is not available, and Error interrupt support will be
+> added in future, once it is added corresponding DT changes will be added.
+
+I don't think commit msg explained this.
+
+> 
 
 
-Patch series V4 remove patches already landed, and remove dts nodes for
-modules still under review.
 
-This patch set adds rk3562 SoC and its evb support.
-
-I have split out patches need driver change for different subsystem.
-And all the modules with dt-binding document update in this patch set
-do not need any driver change. I put them together to make it clear we
-have a new SoC and board to use the new compatible. Please pick up the
-patch for your subsystem, or please let me know if the patch has to
-send separate.
-
-Test with USB, PCIe, EMMC, SD Card.
-
-This patch set is base on the patch set for rk3576 evb1 support.
-
-V3:
-https://lore.kernel.org/linux-rockchip/20250227111913.2344207-1-kever.yang@rock-chips.com/
-V2:
-https://lore.kernel.org/linux-rockchip/b4df8a73-58a2-4765-a9e4-3513cb2bc720@rock-chips.com/T/
-
-
-Changes in v4:
-- Collect ack tag
-- remove gmac and otp nodes
-- remove gmac nodes
-
-Changes in v3:
-- Rebase the change base on rk3576 pcie patches
-- Collect reveiw tag
-- Collect the Acked-by tag
-- remove i2c/serial/spi alias
-- add soc node
-
-Changes in v2:
-- Update in sort order
-- remove grf in cru
-- Update some properties order
-
-Finley Xiao (2):
-  arm64: dts: rockchip: add core dtsi for RK3562 Soc
-  arm64: dts: rockchip: Add RK3562 evb2 devicetree
-
-Kever Yang (5):
-  dt-bindings: PCI: dwc: rockchip: Add rk3562 support
-  dt-bindings: watchdog: Add rk3562 compatible
-  dt-bindings: rockchip: pmu: Add rk3562 compatible
-  dt-bindings: soc: rockchip: Add rk3562 syscon compatibles
-  dt-bindings: arm: rockchip: Add rk3562 evb2 board
-
- .../devicetree/bindings/arm/rockchip.yaml     |    5 +
- .../devicetree/bindings/arm/rockchip/pmu.yaml |    2 +
- .../bindings/pci/rockchip-dw-pcie.yaml        |    9 +-
- .../devicetree/bindings/soc/rockchip/grf.yaml |    7 +
- .../bindings/watchdog/snps,dw-wdt.yaml        |    1 +
- arch/arm64/boot/dts/rockchip/Makefile         |    1 +
- .../boot/dts/rockchip/rk3562-evb2-v10.dts     |  488 ++++
- .../boot/dts/rockchip/rk3562-pinctrl.dtsi     | 2352 +++++++++++++++++
- arch/arm64/boot/dts/rockchip/rk3562.dtsi      | 1263 +++++++++
- 9 files changed, 4126 insertions(+), 2 deletions(-)
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3562-evb2-v10.dts
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3562-pinctrl.dtsi
- create mode 100644 arch/arm64/boot/dts/rockchip/rk3562.dtsi
-
--- 
-2.25.1
-
+Best regards,
+Krzysztof
