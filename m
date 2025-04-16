@@ -1,106 +1,122 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 76220189BB5;
-	Wed, 16 Apr 2025 15:20:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7359C1F2BB8;
+	Wed, 16 Apr 2025 15:25:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744816833; cv=none; b=g64wOLGsfyp/POAr8m2BW36a0pjQdOqEd/cBABUSttwCZ/AICE/Ob5iEQjoQ447UfpJYJldsYCj0y1keV3rJqNE7sXJjwF4IkDLeRpyom6zK9tR5sy3zHiFe1uAMwBtjVfLFz02ceBmNHK9WcHRvzhCt/2Y6b/IXCDgbacJXWE0=
+	t=1744817143; cv=none; b=Df9ZA6jFjaZ4vSYgY6TvHbgZBzMDgsGUPuHrIR+O2aEN8RMFhK59cwWHh3ptArnvexFxgBt7L0KTgqBiDrPpM+F1Yv6G799PdQJ+47UQCd8/3cbriXmEE2l0tum/Q7D0QJme7QG9SinG3HcbVTjPwQ5v81ZhXKs6CkXr9NuLx0g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744816833; c=relaxed/simple;
-	bh=rmHHaaug2DDbVdoWrpVDh9XFDcdhs6q/pEUn8PkZvMU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=pZPnuvvhGXNRRQK7Pzf9zFifZLXyXQ3ZVWE9bEeHA/I6oLewoPdXy28DExs08cUG/GLECN/141nQBMpjdvs92GAOCXowG5KKriwq51llIOF9Le1EGjZciOG3Zkw2y/jPCMih8Zu4XGQtuLvK60FiY9WyZB+h7H9aFEcKCDnoIFM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VNOTY+dy; arc=none smtp.client-ip=117.135.210.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VNOTY+dy"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=n/CrH
-	Wu7/N0JbLzLhfGyYLZ28eCk9w7x/JfjK48Yd84=; b=VNOTY+dyHQg0QwO0e8psO
-	1EQh2MMGJQGnp3gE7RZOKgtSb5zfsTKfHHKKCNbUzvitXSSl3J0y5cC8cALMA47X
-	7rtM7Qw4JcH2MELzQEd1xPDKl+z/3X3mmD9+ZB+q/60izYZ7rlG28v4v628nHscN
-	aiAFBgX+VVteVApJxz5dW8=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDHrr6Ayv9nGGzuAQ--.32225S2;
-	Wed, 16 Apr 2025 23:19:29 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	kw@linux.com,
-	bhelgaas@google.com,
-	heiko@sntech.de
-Cc: manivannan.sadhasivam@linaro.org,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	thomas.richard@bootlin.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH] PCI: dw-rockchip: Configure max payload size on host init
-Date: Wed, 16 Apr 2025 23:19:26 +0800
-Message-Id: <20250416151926.140202-1-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1744817143; c=relaxed/simple;
+	bh=O5FMiRNmXONBj5vEoQeS1NbCje5WLfuFhlB24NHiGQQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Bs89LAM45oa6Agcx+ozkpEM85qjQMeRAPivdR0IJd0ToXVk0VH+dChrx1gKtz2Ipr6PQB2+9ID/1sfSHgDQcMw6d4MDgeiI8p5HH9jWOcrZYA658IrKrWccIbfh6zebIQsk/gImTN68F1kEQ4iUi93PaRI7Qjk3PzbQCZABPex8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org; spf=fail smtp.mailfrom=kernel.org; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=kernel.org
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=kernel.org
+X-CSE-ConnectionGUID: T8h3y34CQ0Kef6Te0F2NmA==
+X-CSE-MsgGUID: TBb9XAL/RV66VOZu/ahaKQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11405"; a="33991791"
+X-IronPort-AV: E=Sophos;i="6.15,216,1739865600"; 
+   d="scan'208";a="33991791"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2025 08:25:41 -0700
+X-CSE-ConnectionGUID: kyEB3oc4ScS6ug5XPSkAsQ==
+X-CSE-MsgGUID: D8o68JBeR0OJKKTKIBdG9w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,216,1739865600"; 
+   d="scan'208";a="161544205"
+Received: from smile.fi.intel.com ([10.237.72.58])
+  by fmviesa001.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Apr 2025 08:25:35 -0700
+Received: from andy by smile.fi.intel.com with local (Exim 4.98.2)
+	(envelope-from <andy@kernel.org>)
+	id 1u54do-0000000CtiF-3vqA;
+	Wed, 16 Apr 2025 18:25:32 +0300
+Date: Wed, 16 Apr 2025 18:25:32 +0300
+From: Andy Shevchenko <andy@kernel.org>
+To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
+	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
+	"H. Peter Anvin" <hpa@zytor.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org,
+	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
+Subject: Re: [PATCH 1/1] x86: Use resource_set_{range,size}() helpers
+Message-ID: <Z__L7DHHvMdmH4bk@smile.fi.intel.com>
+References: <20250416101318.7313-1-ilpo.jarvinen@linux.intel.com>
+ <Z_-E3W8i4EfxdBh3@smile.fi.intel.com>
+ <a046f6bb-0b6e-a431-eaa5-ecd279459f86@linux.intel.com>
+ <Z_-cgFJWZTjMl_ud@smile.fi.intel.com>
+ <7f0d376c-2d03-8e09-5d85-e53b0bce0cc5@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHrr6Ayv9nGGzuAQ--.32225S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WFWrZFWfWFy7CrWxtryDAwb_yoW8Cr4xpa
-	yDAFW5Ary5GF4agFnrC3Zxur4rt3Zayay7Jws3Kw1I9Fy2yryDtFy3urnxta1fJF40kFy5
-	Cr45ta40kr43Xr7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pELvKUUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhAxo2f-yS0qIAAAsO
+In-Reply-To: <7f0d376c-2d03-8e09-5d85-e53b0bce0cc5@linux.intel.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
 
-The RK3588's PCIe controller defaults to a 128-byte max payload size,
-but its hardware capability actually supports 256 bytes. This results
-in suboptimal performance with devices that support larger payloads.
+On Wed, Apr 16, 2025 at 03:18:56PM +0300, Ilpo Järvinen wrote:
+> On Wed, 16 Apr 2025, Andy Shevchenko wrote:
+> > On Wed, Apr 16, 2025 at 02:53:51PM +0300, Ilpo Järvinen wrote:
+> > > On Wed, 16 Apr 2025, Andy Shevchenko wrote:
+> > > > On Wed, Apr 16, 2025 at 01:13:18PM +0300, Ilpo Järvinen wrote:
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 18 ++++++++++++++++++
- 1 file changed, 18 insertions(+)
+...
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index c624b7ebd118..5bbb536a2576 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -477,6 +477,22 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
- 	return IRQ_HANDLED;
- }
- 
-+static void rockchip_pcie_set_max_payload(struct rockchip_pcie *rockchip)
-+{
-+	struct dw_pcie *pci = &rockchip->pci;
-+	u32 dev_cap, dev_ctrl;
-+	u16 offset;
-+
-+	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
-+	dev_cap = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCAP);
-+	dev_cap &= PCI_EXP_DEVCAP_PAYLOAD;
-+
-+	dev_ctrl = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
-+	dev_ctrl &= ~PCI_EXP_DEVCTL_PAYLOAD;
-+	dev_ctrl |= dev_cap << 5;
-+	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, dev_ctrl);
-+}
-+
- static int rockchip_pcie_configure_rc(struct platform_device *pdev,
- 				      struct rockchip_pcie *rockchip)
- {
-@@ -511,6 +527,8 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
- 	pp->ops = &rockchip_pcie_host_ops;
- 	pp->use_linkup_irq = true;
- 
-+	rockchip_pcie_set_max_payload(rockchip);
-+
- 	ret = dw_pcie_host_init(pp);
- 	if (ret) {
- 		dev_err(dev, "failed to initialize host\n");
+> > > > > +			resource_set_range(res, 0xC0000, SZ_128K);
+> > > > >  			res->flags = IORESOURCE_MEM | IORESOURCE_ROM_SHADOW |
+> > > > >  				     IORESOURCE_PCI_FIXED;
+> > > > 
+> > > > I'm wondering why not DEFINE_RES_MEM() in such cases?
+> > > 
+> > > I guess you meant DEFINE_RES() as that seems to allow giving custom flags.
+> > > However, DEFINE_RES*() will overwrite ->name which seems something that 
+> > > ought to not be done here.
+> > 
+> > Okay, I haven't checked the initial state of name field here, so then
+> > DEFINE_RES_MEM_NAMED()?  Or don't we have one?
+> 
+> There's pre-existing res->name on it and your suggestion would have 
+> resulted in overwriting it with NULL. res->name seems to be filled earlier 
+> by PCI probe code.
 
-base-commit: a24588245776dafc227243a01bfbeb8a59bafba9
+Okay, then the resource_*() may make more sense, indeed.
+
+> > In any case I would rather see a one assignment for these cases than something
+> > hidden behind proposed conversions.
+> 
+> TBH, these DEFINE_RES*() helpers are doing hidden things such as 
+> blantantly overwriting ->name which I only realized after I had already 
+> converted to it as per your suggestion.
+
+They are specifically named in  capital letters, so main use is in static
+assignments, but they are made compound literals, so it's possible to
+initialise the on-stack or on-heap at run-time with this be kept in mind.
+That's why there is nothing hidden, it implies that the struct is fully
+assigned (with the provided fields and some defaults).
+
+> And yes, it is possible to pass the pre-existing res->name to 
+> DEFINE_RES_NAMED() if that what you insist, though it seems doing it for 
+> the sake of DEFINE_RES*() interface rather than this code wanting to 
+> really define the resource from scratch.
+> 
+> Given the hidden overwriting, please be careful on suggesting 
+> DEFINE_RES*() conversions as it's not as trivial as it seems.
+
+Yeah, seems not everybody aware of the difference with
+foo_init_something() vs. FOO_INIT_SOMETHING() :-)
+
+> > > I found one other case from the same file though which is truly defines
+> > > a resource from scratch.
+
 -- 
-2.25.1
+With Best Regards,
+Andy Shevchenko
+
 
