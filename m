@@ -1,258 +1,120 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B1A821576A
-	for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2025 17:51:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13BE914B950;
+	Wed, 16 Apr 2025 17:54:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744825921; cv=none; b=IJyzhOao5Ga3XgO5AOTKdSJNI52xjVgMHZ7OalYzHdw0GlWsKy30/4rM1EfQB0C/BIi+5MGUcSiAHRBAAchs4/Y9W+rrbP2f/julOyw7ZlRLL2k6r3JjejdADHrWgdY9DlMkhWmSkpqo31zl0K0kUpVJ603QqCEqERJlohz5u3g=
+	t=1744826054; cv=none; b=YIkNNsOH45rklUE1xKTCiv9UNvj0BhQeBD+XMc5cuRxEZS9g7Rbg8bftEFDAWkykhJzd2zoGbFbsjQj79c4pr+XpnX7xN77iFbF8lqiE/1JxM1YZGD9H1CNTnOiYiMlI7x07xW0IbI5lhxIn4rZSMsaCsweq8EYrSUU+o2/+rO0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744825921; c=relaxed/simple;
-	bh=FHF80+TAaiF3iXQUxEhvh6JTEbHMB0yRy4mrUUlFBqI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a10LFMlEmmQyDihL5fuO5eZK8oA86oztYUwbWxjczI1pWoGpMz6ztTbYaMrSLLS7t3fiQVbjehsUeh8mHJRJrKHk3zBV6EfA0no8O7h5CXd34O7aSCFYYw41cCFt6Ak2qHGke+Q+SW+QYbFS2/RdByNifTBN+seXdmQ6oe50Ogk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cMofM81g; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1744826054; c=relaxed/simple;
+	bh=nKxl5bmdwZ5tuRiu8ZS60/CQ5k3vguUWcj6RiGe38WQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=goXdGVekb07KLtOE70y9hQz/nza48hoJ45rK9Ac7B5fvbZea8oiM+L6DZ59mtpMNWyTaAhMrGfg+s+CMJTd9gIPGNg4ow3bEhSkbKLvvWLvDwJFayAuBfPFgoPcqZIfCvjZnGUjKOW8IymRVixEnRQLBGx3cyPQsfmrx8QMcHKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G3ZwGJfJ; arc=none smtp.client-ip=209.85.208.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cMofM81g"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53G9mM03020919
-	for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2025 17:51:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	V5pmctK1Tr+I/l712rxqAECJA15ahdHQ8zwALeKKjYY=; b=cMofM81gdD+S3Y9Z
-	SfmcXozq7mfib5IEJxf9+KeW+HA2EVsPubKzLJ8LjysfDwjUhnKHFnTQni1ff5m1
-	YgrBFmYX7YkWHXgq7BdYz3G7dGUM952jjf32Rf6MgJ621C1cpa3GRQ9FskHsvYK9
-	oevWWjA7nFWYpDPwx/b2WlZlv7Jb0aUcVbv012qvEj50cEodJ7F1JbyhcoyHElOH
-	ZkDFTyIV0eE5uergsHmE5xGCSyyNSQ/gRWLy7c+ziIYgPvk0rr4bNyODfZxRz3fm
-	BghhPqdwm29VlaXk+kkWA3hFvQiampjHNZdxRoDmFsER6GKGXBa+MVl6unsG3OyS
-	jPM7bw==
-Received: from mail-pl1-f198.google.com (mail-pl1-f198.google.com [209.85.214.198])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 45yhbpv63s-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2025 17:51:58 +0000 (GMT)
-Received: by mail-pl1-f198.google.com with SMTP id d9443c01a7336-2254e500a73so50856755ad.0
-        for <linux-pci@vger.kernel.org>; Wed, 16 Apr 2025 10:51:57 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G3ZwGJfJ"
+Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-30bfc79ad97so11470271fa.1;
+        Wed, 16 Apr 2025 10:54:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1744826051; x=1745430851; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=hlh2fjr1p5zOr1jLNmoVy5ueVHw8TQ5D92sVTob9JxA=;
+        b=G3ZwGJfJdHZP1rGv9HDcz85mphqppAXvUAvQBv4QlUjvReSqj9KLrQK1LwpN5DPRND
+         KndTVGjbw4TYB+068T4tADHpv6MFLwzoNNebDSqfVxHTYw7+m3TmzWezrV+/PM2qNdey
+         72zAV1hM6XJVFq4S02J5O+TXHtMFnMb52y4OyRypme1dGMaUx8CCawABgdmu4YoTNBTm
+         pnCDGQbierQaxObtHTdX982F5nlhIdqjGAixds9aXB7JQZ7/8+xhzHSpe2NhIJmLmp2N
+         kLCvich0xVrafmBnR0OnC/P6yEC8EPaRZaVi4dZ1Uc2TiIVSCjbz4g515LQEVa6dwr65
+         plSg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1744825917; x=1745430717;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=V5pmctK1Tr+I/l712rxqAECJA15ahdHQ8zwALeKKjYY=;
-        b=r1s9DknUVLDUllV7IxJDc1TEHeRHAwEb0JqUn45wrpXMWzdMvJdTZIjomVV+GZiMaG
-         1M906Pxe1ZBqJkTH3xZknKqRBTp6xMFVCzG/Kxe1f9pQbN25mW5G4AlxON8oIPera5jn
-         0PJu8eElZv3994IxMmrc56Pj4KaGw+E1umuX1z6TKDCMmxqxCgH6seB8Jve4NvGIN5qR
-         Sl7leSvp+MqoI1jmCF/FZ1jmxBz/WKTV9V9qWJ9+qpYQ5gqEmtSm69BiylbbxK0b/7jO
-         loe7BVG9iHEqfPRreX9zD24L3hs0kJRfhEAikIQ5b7grWxZIQzCmHEMGTCTnTKvY15ae
-         UTWQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVjXWC0KtzcxdWfStzzH3mQ0ZaOM1I9jkWd6e5EI4l2SpcMNYLDan1JyqLDl2bbuS8WSh8US/iKlIA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwzaBntZeDP1f63Km59Od9dT49ebm4G6e1EfeUQ61EJiNPAYvYs
-	gmYTBn0exVAL8lWhEVInYWQNCykLgyqyMW3Ifx2VJj+7E4X123R8Pg9g1RgZs9VZi+ExGXFKr5C
-	Lh4Ft5rWNbi0Gig4i+CzhE3i5QAPON/ttbvxWCJgGYnVioSGw9DIOwA+pVio=
-X-Gm-Gg: ASbGncutDFi3tQ5WYS22kESK+O8bTdzqPZqMRqpHqKNHX6dRaOZ92nUpaTc1SGSsglI
-	T1o2jdvPeWJGII9r39Ggavm7hZSZoWNf5UFFIyLFXmHkhteBip/epbXCMPSBdwJ+QKQJyJqmwgK
-	1BEPH8uC2b+IrMNnpN6ebKPqYdItNNn4dzTQbvHwikXSbd/6rzSpbAHZ4C1DcFeu0U6KYTvP2KY
-	kB3ZE3PaI/mlKbA4yLvDKy1F+UGAGbau88cviYEiRLnVBLXM9CzXXLeGqvgUKnNaesauE8xBJWa
-	dVUhD9NYNJMN3Fpgm1Im/3lYT7gvijSM1uaHdW09foc=
-X-Received: by 2002:a17:902:e806:b0:223:5e6a:57ab with SMTP id d9443c01a7336-22c3597ee39mr40894885ad.39.1744825917055;
-        Wed, 16 Apr 2025 10:51:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEBBh895n5PHGGk4xFwNiJSEFm0TRS2bV+6pyeHxlVKUwuhtV4iIkGq6YnLmD4RRZx0r4AhgA==
-X-Received: by 2002:a17:902:e806:b0:223:5e6a:57ab with SMTP id d9443c01a7336-22c3597ee39mr40894435ad.39.1744825916570;
-        Wed, 16 Apr 2025 10:51:56 -0700 (PDT)
-Received: from [192.168.29.92] ([49.43.231.216])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22c33fcc816sm17235435ad.206.2025.04.16.10.51.51
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 16 Apr 2025 10:51:56 -0700 (PDT)
-Message-ID: <26b70e1b-861f-4c94-47a7-a267c41cadbb@oss.qualcomm.com>
-Date: Wed, 16 Apr 2025 23:21:49 +0530
+        d=1e100.net; s=20230601; t=1744826051; x=1745430851;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=hlh2fjr1p5zOr1jLNmoVy5ueVHw8TQ5D92sVTob9JxA=;
+        b=DZPrJN0tFIeJf0SjqkRg0Jk85Di9cQOwoyr4G9lXVZO8f8MyVoquCxJAZlBSjmiB85
+         dXCiRIgTniSMxkD5joS8f858cqfLZjxM0D6jua4l4c72UNj+8p1hpS92aKX4enzxglQ4
+         TrlgvgmmOLAxDPA1SnL8MgGmUVJy49LO22QCHsbzNRPfJzpEvE65PSsX9mbiB79bhDNJ
+         eefDsU4+QTre/OqKanpFob1Dk9sx35BL3Gz+hIm3S8/FaGlPf0imJdmpR5KtgpA5QCHI
+         N50T1HM6bngL7FJ7PA1hKj8kEkO13DpVJwyGfjoojXoDTB83oi6SIaEKBZwNL6VDYbsz
+         NjSQ==
+X-Forwarded-Encrypted: i=1; AJvYcCU+sLSi3TDrUxYQvykAxPJ03lwlwtnac60PNFT7hV+XDD0e9dy67A+RVa3iR5wdqgkmvIHPpMkfcqE/@vger.kernel.org, AJvYcCUZG3PXbDU/a14y7hsTaQqfljAAzCCTMACU//i/PEv4FAMjBkVNfFBTA90tfEjXObFPMgGiKOr1aYLsSvLmpuY=@vger.kernel.org, AJvYcCUeMT/7mV2PDOQOCqSErdQ3DWC6OQWeIdQ7Nqgf92GihA6Daq/O3l3geoVsuq6XefrwfTitssY+80lS@vger.kernel.org, AJvYcCUoHWvP4c7aA9MlZTJ9vTUgnmuJ53BS/AgBxWX81satJNMhBCjP4qNiXphlIX5jZdEfdKQAM3IyMC1lwqlN@vger.kernel.org, AJvYcCVf8NS/ceimTBrYsUuitnVNbKCXslvUuKuAdrl2zsePMnSJySKuo6mTmsfkX0648CmVcx4zGQAMT2JXt8hM@vger.kernel.org, AJvYcCW5MjgD6dmLRHw6D2Z1MeW/tvc5nuZfpdLXthGctMr+fbGEknfRF3//ToR5pctEskl4Jjoa5Sz0@vger.kernel.org, AJvYcCWZ5NSqNZHj2gxFmGUcUXJveYA7F2LMpfIGAkhuzE4FYJReWplgn7NwuAfcgHL2EjDhClUabZhya+WqdXw=@vger.kernel.org, AJvYcCXeWdTwwOGB6ImdvDUAyoU90YQ1yxCa7sFtGIIBAIqA/3/MfQ4g4q6+HQiQSLGqA4Cr0JTaDFpvlkjW0S5tKIqL@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywd3DaiHOv2kamiqFV9p9F6OH0n2rwD2iqSjmzzqL0uPlxo9Gkt
+	CXp8Cu+HFhycz/JhqMRIThM4Ixsg+VHtUg+jjKMUkdFyVExQKDLohDMwgBOLNkzsslj1Zie7bwM
+	z10FE3WZ5Vo82d8KAzHCuv4xVQP4=
+X-Gm-Gg: ASbGncvwwMO2h89HnZZvYxPlZ008+L6+GaDLlHDw621BG7OTqejXFWbEu1G1YqsMpxq
+	GBHLw8up0ay6Q/CiQ72HjQsbdqcxyFwzBP0JWNrwTXyA23iMfxPeiCEFZltBk/79gMj3dYjuiPw
+	Ui6CvQ407Y04gScJ0jTvowV9JAht0rDUcWIGHX5w==
+X-Google-Smtp-Source: AGHT+IHdVZCfT1hHQSRWgqhTI/bFks+re46BrEdji8oUTIIg3UUsqBCnhQautOPIEbcY+jJYHZHUq4U0ygS+69zWTu0=
+X-Received: by 2002:a2e:9247:0:b0:30b:eb0a:ed63 with SMTP id
+ 38308e7fff4ca-3108574e780mr829931fa.18.1744826050903; Wed, 16 Apr 2025
+ 10:54:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH v2 3/4] PCI: Add link down handling for host bridges
-Content-Language: en-US
-To: manivannan.sadhasivam@linaro.org,
-        Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-        Oliver O'Halloran <oohall@gmail.com>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>
-Cc: dingwei@marvell.com, cassel@kernel.org, Lukas Wunner <lukas@wunner.de>,
-        linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-References: <20250416-pcie-reset-slot-v2-0-efe76b278c10@linaro.org>
- <20250416-pcie-reset-slot-v2-3-efe76b278c10@linaro.org>
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <20250416-pcie-reset-slot-v2-3-efe76b278c10@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: _B9bWFQJ6okotoQet3uG-QAqCODpsNGL
-X-Proofpoint-GUID: _B9bWFQJ6okotoQet3uG-QAqCODpsNGL
-X-Authority-Analysis: v=2.4 cv=I+plRMgg c=1 sm=1 tr=0 ts=67ffee3e cx=c_pps a=MTSHoo12Qbhz2p7MsH1ifg==:117 a=ozAjUsZc/ya1UnB0O6+iCQ==:17 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=KKAkSRfTAAAA:8 a=WP6hIalcOMfy4p2eL3AA:9 a=QEXdDO2ut3YA:10
- a=GvdueXVYPmCkWapjIL-Q:22 a=cvBusfyB2V15izCimMoJ:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-16_06,2025-04-15_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 suspectscore=0 spamscore=0
- phishscore=0 adultscore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
- bulkscore=0 mlxlogscore=999 clxscore=1015 impostorscore=0 malwarescore=0
- classifier=spam authscore=0 authtc=n/a authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504160146
+References: <20250416-ptr-as-ptr-v9-0-18ec29b1b1f3@gmail.com>
+ <20250416-ptr-as-ptr-v9-6-18ec29b1b1f3@gmail.com> <67ffee16.c80a0220.1dbd15.c3ad@mx.google.com>
+In-Reply-To: <67ffee16.c80a0220.1dbd15.c3ad@mx.google.com>
+From: Tamir Duberstein <tamird@gmail.com>
+Date: Wed, 16 Apr 2025 13:53:34 -0400
+X-Gm-Features: ATxdqUHSRnIpPPQBV0jkAOVSIHT_IhSMCpuq3at5fw7oWfF51dZkACZO8GK6lVs
+Message-ID: <CAJ-ks9n-5Gkp61ODfBbf3==fYp1AbexANLZaQpsGj_mj1WRfkA@mail.gmail.com>
+Subject: Re: [PATCH v9 6/6] rust: enable `clippy::ref_as_ptr` lint
+To: Boqun Feng <boqun.feng@gmail.com>
+Cc: Masahiro Yamada <masahiroy@kernel.org>, Nathan Chancellor <nathan@kernel.org>, 
+	Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, Gary Guo <gary@garyguo.net>, 
+	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Benno Lossin <benno.lossin@proton.me>, Andreas Hindborg <a.hindborg@kernel.org>, 
+	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>, 
+	Danilo Krummrich <dakr@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Brendan Higgins <brendan.higgins@linux.dev>, 
+	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Luis Chamberlain <mcgrof@kernel.org>, 
+	Russ Weight <russ.weight@linux.dev>, Rob Herring <robh@kernel.org>, 
+	Saravana Kannan <saravanak@google.com>, Abdiel Janulgue <abdiel.janulgue@gmail.com>, 
+	Daniel Almeida <daniel.almeida@collabora.com>, Robin Murphy <robin.murphy@arm.com>, 
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
+	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+	FUJITA Tomonori <fujita.tomonori@gmail.com>, Nicolas Schier <nicolas.schier@linux.dev>, 
+	Frederic Weisbecker <frederic@kernel.org>, Lyude Paul <lyude@redhat.com>, 
+	Thomas Gleixner <tglx@linutronix.de>, Anna-Maria Behnsen <anna-maria@linutronix.de>, 
+	linux-kbuild@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	rust-for-linux@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	kunit-dev@googlegroups.com, linux-pci@vger.kernel.org, 
+	linux-block@vger.kernel.org, devicetree@vger.kernel.org, 
+	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
+On Wed, Apr 16, 2025 at 1:51=E2=80=AFPM Boqun Feng <boqun.feng@gmail.com> w=
+rote:
+>
+> On Wed, Apr 16, 2025 at 01:36:10PM -0400, Tamir Duberstein wrote:
+> > In Rust 1.78.0, Clippy introduced the `ref_as_ptr` lint [1]:
+> >
+> > > Using `as` casts may result in silently changing mutability or type.
+> >
+> > While this doesn't eliminate unchecked `as` conversions, it makes such
+> > conversions easier to scrutinize.  It also has the slight benefit of
+> > removing a degree of freedom on which to bikeshed. Thus apply the
+> > changes and enable the lint -- no functional change intended.
+> >
+> > Link: https://rust-lang.github.io/rust-clippy/master/index.html#ref_as_=
+ptr [1]
+> > Suggested-by: Benno Lossin <benno.lossin@proton.me>
+> > Link: https://lore.kernel.org/all/D8PGG7NTWB6U.3SS3A5LN4XWMN@proton.me/
+> > Reviewed-by: Benno Lossin <benno.lossin@proton.me>
+> > Signed-off-by: Tamir Duberstein <tamird@gmail.com>
+>
+> Reviewed-by: Boqun Feng <boqun.feng@gmail.com>
+>
+> Thanks!
 
-
-On 4/16/2025 9:59 PM, Manivannan Sadhasivam via B4 Relay wrote:
-> From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> 
-> The PCI link, when down, needs to be recovered to bring it back. But that
-> cannot be done in a generic way as link recovery procedure is specific to
-> host bridges. So add a new API pci_host_handle_link_down() that could be
-> called by the host bridge drivers when the link goes down.
-> 
-> The API will iterate through all the slots and calls the pcie_do_recovery()
-> function with 'pci_channel_io_frozen' as the state. This will result in the
-> execution of the AER Fatal error handling code. Since the link down
-> recovery is pretty much the same as AER Fatal error handling,
-> pcie_do_recovery() helper is reused here. First the AER error_detected
-> callback will be triggered for the bridge and the downstream devices. Then,
-> pcie_do_slot_reset() will be called for each slots, which will reset the
-> slots using 'reset_slot' callback to recover the link. Once that's done,
-> resume message will be broadcasted to the bridge and the downstream devices
-> indicating successful link recovery.
-> 
-> In case if the AER support is not enabled in the kernel, only
-> pci_bus_error_reset() will be called for each slots as there is no way we
-> could inform the drivers about link recovery.
-> 
-The PCIe endpoint drivers are registering with err_handlers and they
-will be invoked only from pcie_do_recovery, but there are getting built
-by default irrespective of AER is enabled or not.
-
-Does it make sense to built err.c irrespective of AER is enabled or not
-to use common logic without the need of having dependency on AER.
-
-Also since err.c is tied with AER, DPC also had a hard requirement
-to enable AER which is not needed technically.
-
-- Krishna Chaitanya.
-> Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> ---
->   drivers/pci/pci.h      | 21 +++++++++++++++++++++
->   drivers/pci/pcie/err.c | 27 +++++++++++++++++++++++++++
->   drivers/pci/probe.c    |  7 +++++++
->   include/linux/pci.h    |  1 +
->   4 files changed, 56 insertions(+)
-> 
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index b81e99cd4b62a3022c8b07a09f212f6888674487..6c1d4c5a82d68e5842636ff296a8d3a06487cb11 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -966,6 +966,7 @@ int pci_aer_clear_status(struct pci_dev *dev);
->   int pci_aer_raw_clear_status(struct pci_dev *dev);
->   void pci_save_aer_state(struct pci_dev *dev);
->   void pci_restore_aer_state(struct pci_dev *dev);
-> +void pcie_do_recover_slots(struct pci_host_bridge *host);
->   #else
->   static inline void pci_no_aer(void) { }
->   static inline void pci_aer_init(struct pci_dev *d) { }
-> @@ -975,6 +976,26 @@ static inline int pci_aer_clear_status(struct pci_dev *dev) { return -EINVAL; }
->   static inline int pci_aer_raw_clear_status(struct pci_dev *dev) { return -EINVAL; }
->   static inline void pci_save_aer_state(struct pci_dev *dev) { }
->   static inline void pci_restore_aer_state(struct pci_dev *dev) { }
-> +static inline void pcie_do_recover_slots(struct pci_host_bridge *host)
-> +{
-> +	struct pci_bus *bus = host->bus;
-> +	struct pci_dev *dev;
-> +	int ret;
-> +
-> +	if (!host->reset_slot)
-> +		dev_warn(&host->dev, "Missing reset_slot() callback\n");
-> +
-> +	for_each_pci_bridge(dev, bus) {
-> +		if (!pci_is_root_bus(bus))
-> +			continue;
-> +
-> +		ret = pci_bus_error_reset(dev);
-> +		if (ret)
-> +			pci_err(dev, "Failed to reset slot: %d\n", ret);
-> +		else
-> +			pci_info(dev, "Slot has been reset\n");
-> +	}
-> +}
->   #endif
->   
->   #ifdef CONFIG_ACPI
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index b834fc0d705938540d3d7d3d8739770c09fe7cf1..70d8cd37255c5638fddf38e13ea87cb8ebe8553f 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -270,3 +270,30 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
->   
->   	return status;
->   }
-> +
-> +static pci_ers_result_t pcie_do_slot_reset(struct pci_dev *dev)
-> +{
-> +	int ret;
-> +
-> +	ret = pci_bus_error_reset(dev);
-> +	if (ret) {
-> +		pci_err(dev, "Failed to reset slot: %d\n", ret);
-> +		return PCI_ERS_RESULT_DISCONNECT;
-> +	}
-> +
-> +	pci_info(dev, "Slot has been reset\n");
-> +
-> +	return PCI_ERS_RESULT_RECOVERED;
-> +}
-> +
-> +void pcie_do_recover_slots(struct pci_host_bridge *host)
-> +{
-> +	struct pci_bus *bus = host->bus;
-> +	struct pci_dev *dev;
-> +
-> +	for_each_pci_bridge(dev, bus) {
-> +		if (pci_is_root_bus(bus))
-> +			pcie_do_recovery(dev, pci_channel_io_frozen,
-> +					 pcie_do_slot_reset);
-> +	}
-> +}
-> diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-> index 364fa2a514f8a68fb18bded3259c6847d3932f8b..60ad20eea0259797e68afa7979bb1fc24b6f213b 100644
-> --- a/drivers/pci/probe.c
-> +++ b/drivers/pci/probe.c
-> @@ -3249,6 +3249,13 @@ int pci_host_probe(struct pci_host_bridge *bridge)
->   }
->   EXPORT_SYMBOL_GPL(pci_host_probe);
->   
-> +void pci_host_handle_link_down(struct pci_host_bridge *bridge)
-> +{
-> +	dev_info(&bridge->dev, "Recovering slots due to Link Down\n");
-> +	pcie_do_recover_slots(bridge);
-> +}
-> +EXPORT_SYMBOL_GPL(pci_host_handle_link_down);
-> +
->   int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int bus_max)
->   {
->   	struct resource *res = &b->busn_res;
-> diff --git a/include/linux/pci.h b/include/linux/pci.h
-> index 8d7d2a49b76cf64b4218b179cec495e0d69ddf6f..76e977af2d524200b67f39a6d0417ee565cf5116 100644
-> --- a/include/linux/pci.h
-> +++ b/include/linux/pci.h
-> @@ -1157,6 +1157,7 @@ struct pci_bus *pci_create_root_bus(struct device *parent, int bus,
->   				    struct pci_ops *ops, void *sysdata,
->   				    struct list_head *resources);
->   int pci_host_probe(struct pci_host_bridge *bridge);
-> +void pci_host_handle_link_down(struct pci_host_bridge *bridge);
->   int pci_bus_insert_busn_res(struct pci_bus *b, int bus, int busmax);
->   int pci_bus_update_busn_res_end(struct pci_bus *b, int busmax);
->   void pci_bus_release_busn_res(struct pci_bus *b);
-> 
+Thank you! I updated the earlier patches as well.
