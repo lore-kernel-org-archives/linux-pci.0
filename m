@@ -1,267 +1,528 @@
-Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
+Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D00E188734;
-	Thu, 17 Apr 2025 13:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EE2723E22B;
+	Thu, 17 Apr 2025 13:22:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744895674; cv=none; b=CLbiPe5DKF/IhqtErvfNny8XQT9OYg/F6w/oltMXjowjmkjkrRrE0kLPeNYc68xna3r8RaxP1SF04baX6iVvrQ0BAN6nk4G33wkndMhZirijMv9HStCt15xeAzSWO0BH7WY6mymS9+x5miOmyxUk9fo7hN9P7eWP007t+4DocBo=
+	t=1744896124; cv=none; b=F1p1Do5kyyjyrRZ9sz2skh1dGjyKOA4B35YHeB7xgKSFLRIAP0Uknxu8H7CM/gWpBz/daU/IIlDR4z40j2McWlgbbCWm3OTpFl1TZu897ZMJd/ZNKVVPDmYkawZefxdClhqk46GL6pe9GZ2ARkskNJVtN/ginLCAfQKTphlFWE0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744895674; c=relaxed/simple;
-	bh=40x2eLV3jcTqwrlXe8q5hHEYbXBwp+1NqmVFil0J82o=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=uDwyWhQhPhNn6+cp/p6fOes2eHS2PAVNlIi4ckBtGqcyVH15tHw8n86nh+AYfvPo//uE+SvKa9K+RnYS6Woh9hakamYPUBAxJor5NxKZHx7chp/WZyc74uA+iRPxDXeOzYwBD7CCqjF1e373BZxV7jLXnE+sFlorz4vW6A9tCG0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cXek8yqo; arc=none smtp.client-ip=148.163.156.1
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1744896124; c=relaxed/simple;
+	bh=ZR8c93lYMZ35uBkjZaBiqh5/4O6qmJYw5vL/ffCV9e0=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=jHh231iSKLCP14xG3Q5jnDHqaDH3x6ESiqZkgCExeUGju763gJmWxi4WYsL0OqPKcJyb9TkEt7JYMrC75YVfjsz2BHJ7OJMlqgAPTetvS/7Lu9jo6aCDkvoW6XBNBxu1mMitzENznwTj0HcjhgTMYFfrGqPM6237/VLiCkk+fbY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=wBRmo+oo; arc=none smtp.client-ip=91.207.212.93
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cXek8yqo"
-Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53H81oCs017994;
-	Thu, 17 Apr 2025 13:14:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=pp1; bh=H98eQpSOUYOYPXQrUldz2OVSdRKl
-	NJX6iqkBh889lV0=; b=cXek8yqoMJbVPJ99a0GNtDf1QuhhIWUykbn87POu6M2b
-	Nd0AjoEyumijxCMphA41NmUjmcdLDxAB2T/Wuo+i+7ykFIS9+ntqzF8TGtHaCUtz
-	SiuSbbVhz3dnl1JDD+BtEmD0YvuFQjJf2uv7XftUWg1bmPbuDCpAYvVIhnstlMoI
-	XQQ7hYYGrmOHDuD6rpkoQyHhc+uJFs01etB16pk9DkG1OajAeeIHkgJorxjfAtdO
-	kwI6vdDNorRYAy0N0qwgiDxgUtAN+CIRb530wCmhAwbS2/tismMsw79q88MNO4pf
-	KV+wNE7DjILbdd/ozhuhS6AMB6XcY8f7m04vn35/3g==
-Received: from pps.reinject (localhost [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 462mhu3qv2-1
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="wBRmo+oo"
+Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53HC0mJ4019578;
+	Thu, 17 Apr 2025 15:21:29 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	EsiTrVqcU6FvkDS2nQpl+nifSpcRYa8kTFkQ/UO9ftc=; b=wBRmo+ooKG9b8DRX
+	kVN8CJzRQ3PbpahaTdMw+SX882vJlTI2Qm+rfnsk9xnULYp+AGVlw8/WB9M+UMUN
+	I4sstPEl3U3jhxngVqYwZMfUTSDJTlvvUDDJKHbv234OhtsSEbUy+mkHso95GUOC
+	Bq4ujjH9yi4a9mhBwstXbtIBA+i3jiZwJyXDeA87Gj07BslF36PZtLpRgJ0nohGF
+	IcgmpmmuKgphXt8fyRpaTBM4JI6QlkAt7h/Kgu5Bzo2cuZoC+Lxr6U9T9ie97syL
+	QNTsVfh+TStw8BEkiAmHT+P7kV0hyQ1tR7jYDFol7+FFZFWs5X5retMEBlDOQuSW
+	qJqXOw==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 45yda9gb32-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 17 Apr 2025 13:14:31 +0000 (GMT)
-Received: from m0353729.ppops.net (m0353729.ppops.net [127.0.0.1])
-	by pps.reinject (8.18.0.8/8.18.0.8) with ESMTP id 53HDAPpO022405;
-	Thu, 17 Apr 2025 13:14:30 GMT
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 462mhu3qv0-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 17 Apr 2025 13:14:30 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 53HCqNPm024914;
-	Thu, 17 Apr 2025 13:14:29 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 4602gtp3eu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 17 Apr 2025 13:14:29 +0000
-Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
-	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 53HDESFd26477120
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 17 Apr 2025 13:14:29 GMT
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id D2CE15805C;
-	Thu, 17 Apr 2025 13:14:28 +0000 (GMT)
-Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 07AE358051;
-	Thu, 17 Apr 2025 13:14:27 +0000 (GMT)
-Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
-	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
-	Thu, 17 Apr 2025 13:14:26 +0000 (GMT)
-From: Niklas Schnelle <schnelle@linux.ibm.com>
-Date: Thu, 17 Apr 2025 15:14:17 +0200
-Subject: [PATCH v3] PCI: s390: Handle ARI on bus without associated struct
- pci_dev
+	Thu, 17 Apr 2025 15:21:29 +0200 (MEST)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 724C340056;
+	Thu, 17 Apr 2025 15:20:07 +0200 (CEST)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 4E8579968D5;
+	Thu, 17 Apr 2025 15:18:50 +0200 (CEST)
+Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Thu, 17 Apr
+ 2025 15:18:49 +0200
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <cassel@kernel.org>, <johan+linaro@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v6 2/9] PCI: stm32: Add PCIe host support for STM32MP25
+Date: Thu, 17 Apr 2025 15:18:26 +0200
+Message-ID: <20250417131833.3427126-3-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250417131833.3427126-1-christian.bruel@foss.st.com>
+References: <20250417131833.3427126-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250417-ari_no_bus_dev-v3-1-ba48f349aa47@linux.ibm.com>
-X-B4-Tracking: v=1; b=H4sIAKj+AGgC/2XMXQuCMBTG8a8Su26yHc25rvoeEeLLWR7IGVsOQ
- /zuTQkCu/w/8Pxm5tERenY+zMxhIE+DjZEeD6zpKntHTm1sBgIyoSDjlaPSDmU9+rLFwE9QQwX
- KpFmes3h6OjQ0beD1Frsj/xrce/ODXNcvlYo9FSSXXLUoVa5yow1eHmTHKaG6T5qhZysX4EdoW
- fwREIkibUyltRQFmD2xLMsHhOHjKfMAAAA=
-X-Change-ID: 20240724-ari_no_bus_dev-52b2a27f3466
-To: Bjorn Helgaas <bhelgaas@google.com>,
-        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Gerd Bayer <gbayer@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Niklas Schnelle <schnelle@linux.ibm.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6135;
- i=schnelle@linux.ibm.com; h=from:subject:message-id;
- bh=40x2eLV3jcTqwrlXe8q5hHEYbXBwp+1NqmVFil0J82o=;
- b=owGbwMvMwCX2Wz534YHOJ2GMp9WSGDIY/q3mYVj3+bEzv0zwwRv5z70ZxO2C7zF1T7f5eOZMb
- W0Sh/vSjlIWBjEuBlkxRZZFXc5+6wqmmO4J6u+AmcPKBDKEgYtTACayUo6R4ardOc4pu4QVZrTo
- 3YioF16yQHKTbpTG3LsyKQ+CX3GF2DD8M6r9d9T9w4nIXRO9/vNFfpX8xOLRWuBWnsJz40X3Tua
- rvAA=
-X-Developer-Key: i=schnelle@linux.ibm.com; a=openpgp;
- fpr=9DB000B2D2752030A5F72DDCAFE43F15E8C26090
-X-TM-AS-GCONF: 00
-X-Authority-Analysis: v=2.4 cv=Hvd2G1TS c=1 sm=1 tr=0 ts=6800feb7 cx=c_pps a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17 a=IkcTkHD0fZMA:10 a=XR8D0OoHHMoA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8 a=7lIdvI3MJxSJr0kkSecA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: XJhM3cgg2deettD8Jd7r6Ku03ja8O2o2
-X-Proofpoint-GUID: kSsc2fac62z1fCFX02jkkdMK9DjSVu5f
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SHFCAS1NODE1.st.com (10.75.129.72) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-17_03,2025-04-17_01,2024-11-22_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 adultscore=0
- lowpriorityscore=0 spamscore=0 mlxlogscore=999 suspectscore=0
- malwarescore=0 bulkscore=0 clxscore=1015 impostorscore=0 mlxscore=0
- phishscore=0 priorityscore=1501 classifier=spam authscore=0 adjust=0
- reason=mlx scancount=1 engine=8.19.0-2502280000
- definitions=main-2504170097
 
-On s390 PCI busses are virtualized and the downstream ports are
-invisible to the OS and struct pci_bus::self is NULL. This associated
-struct pci_dev is however relied upon in pci_ari_enabled() to check
-whether ARI is enabled for the bus. ARI is therefor always detected as
-disabled.
+Add driver for the STM32MP25 SoC PCIe Gen1 2.5 GT/s and Gen2 5GT/s
+controller based on the DesignWare PCIe core.
 
-At the same time firmware on s390 always enables and relies upon ARI
-thus causing a mismatch. Moreover with per-PCI function pass-through
-there may exist busses with no function with devfn 0. For example
-a SR-IOV capable device with two PFs may have separate function
-dependency link chains for each of the PFs and their child VFs. In this
-case the OS may only see the second PF and its child VFs on a bus
-without a devfn 0 function. A situation which is also not supported by
-the common pci_configure_ari() code.
+Supports MSI via GICv2m, Single Virtual Channel, Single Function
 
-Dispite simply being a mismatch this causes problems as some PCI devices
-present a different SR-IOV topology depending on PCI_SRIOV_CTRL_ARI.
+Supports WAKE# GPIO.
 
-A similar mismatch may occur with SR-IOV when virtfn_add_bus() creates new
-busses with no associated struct pci_dev. Here too pci_ari_enabled()
-on these busses would return false even if ARI is actually used.
-
-Prevent both mismatches by moving the ari_enabled flag from struct
-pci_dev to struct pci_bus making it independent from struct pci_bus::
-self. Let the bus inherit the ari_enabled state from its parent bus when
-there is no bridge device such that busses added by virtfn_add_bus()
-match their parent. For s390 set ari_enabled when the device supports
-ARI in the awareness that all PCIe ports on s390 systems are ARI
-capable.
-
-Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
 ---
-Changes in v3:
-- Move setting of ari_enabled on s390 to bus creation and clear it in
-  pcibios_add_device() if the capability is not available.
-- Rebase on v6.15-rc2
-- Link to v2: https://lore.kernel.org/r/20240918-ari_no_bus_dev-v2-1-83cfa991082f@linux.ibm.com
+ drivers/pci/controller/dwc/Kconfig      |  12 +
+ drivers/pci/controller/dwc/Makefile     |   1 +
+ drivers/pci/controller/dwc/pcie-stm32.c | 370 ++++++++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-stm32.h |  15 +
+ 4 files changed, 398 insertions(+)
+ create mode 100644 drivers/pci/controller/dwc/pcie-stm32.c
+ create mode 100644 drivers/pci/controller/dwc/pcie-stm32.h
 
-Changes in v2:
-- Rebased on v6.11
-- Link to v1: https://lore.kernel.org/r/20240730-ari_no_bus_dev-v1-1-7de17676f9fe@linux.ibm.com
----
- arch/s390/pci/pci.c     |  7 +++++++
- arch/s390/pci/pci_bus.c | 10 ++++++++++
- drivers/pci/pci.c       |  4 ++--
- drivers/pci/probe.c     |  1 +
- include/linux/pci.h     |  4 ++--
- 5 files changed, 22 insertions(+), 4 deletions(-)
-
-diff --git a/arch/s390/pci/pci.c b/arch/s390/pci/pci.c
-index 5bbdc4190b8b8277c6aaea34274238c54988dbd5..959a021797c5944e1ff7b9ff761b285507935901 100644
---- a/arch/s390/pci/pci.c
-+++ b/arch/s390/pci/pci.c
-@@ -599,6 +599,13 @@ int pcibios_device_add(struct pci_dev *pdev)
- 			continue;
- 		pci_claim_resource(pdev, i);
- 	}
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index d9f0386396ed..2aec5d2f9a46 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -410,6 +410,18 @@ config PCIE_SPEAR13XX
+ 	help
+ 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+ 
++config PCIE_STM32_HOST
++	tristate "STMicroelectronics STM32MP25 PCIe Controller (host mode)"
++	depends on ARCH_STM32 || COMPILE_TEST
++	depends on PCI_MSI
++	select PCIE_DW_HOST
++	help
++	  Enables support for the DesignWare core based PCIe host controller
++	  found in STM32MP25 SoC.
++
++	  This driver can also be built as a module. If so, the module
++	  will be called pcie-stm32.
++
+ config PCI_DRA7XX
+ 	tristate
+ 
+diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+index 908cb7f345db..9d3b43504725 100644
+--- a/drivers/pci/controller/dwc/Makefile
++++ b/drivers/pci/controller/dwc/Makefile
+@@ -30,6 +30,7 @@ obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
+ obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
+ obj-$(CONFIG_PCIE_VISCONTI_HOST) += pcie-visconti.o
+ obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4.o
++obj-$(CONFIG_PCIE_STM32_HOST) += pcie-stm32.o
+ 
+ # The following drivers are for devices that use the generic ACPI
+ # pci_root.c driver but don't support standard ECAM config access.
+diff --git a/drivers/pci/controller/dwc/pcie-stm32.c b/drivers/pci/controller/dwc/pcie-stm32.c
+new file mode 100644
+index 000000000000..66ace64d4e43
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-stm32.c
+@@ -0,0 +1,370 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * STMicroelectronics STM32MP25 PCIe root complex driver.
++ *
++ * Copyright (C) 2025 STMicroelectronics
++ * Author: Christian Bruel <christian.bruel@foss.st.com>
++ */
++
++#include <linux/clk.h>
++#include <linux/mfd/syscon.h>
++#include <linux/of_platform.h>
++#include <linux/phy/phy.h>
++#include <linux/pinctrl/devinfo.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/pm_wakeirq.h>
++#include <linux/regmap.h>
++#include <linux/reset.h>
++#include "pcie-designware.h"
++#include "pcie-stm32.h"
++#include "../../pci.h"
++
++struct stm32_pcie {
++	struct dw_pcie pci;
++	struct regmap *regmap;
++	struct reset_control *rst;
++	struct phy *phy;
++	struct clk *clk;
++	struct gpio_desc *perst_gpio;
++	struct gpio_desc *wake_gpio;
++};
++
++static void stm32_pcie_deassert_perst(struct stm32_pcie *stm32_pcie)
++{
++	/* Delay PERST# de-assertion t least 100ms he power to become stable */
++	msleep(PCIE_T_PVPERL_MS);
++
++	gpiod_set_value(stm32_pcie->perst_gpio, 0);
++
++	/* Wait 100ms for the REFCLK to becode stable  */
++	if (stm32_pcie->perst_gpio)
++		msleep(PCIE_T_RRS_READY_MS);
++}
++
++static void stm32_pcie_assert_perst(struct stm32_pcie *stm32_pcie)
++{
++	gpiod_set_value(stm32_pcie->perst_gpio, 1);
++}
++
++static int stm32_pcie_start_link(struct dw_pcie *pci)
++{
++	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
++
++	return regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
++				  STM32MP25_PCIECR_LTSSM_EN,
++				  STM32MP25_PCIECR_LTSSM_EN);
++}
++
++static void stm32_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
++
++	regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
++			   STM32MP25_PCIECR_LTSSM_EN, 0);
++}
++
++static int stm32_pcie_suspend_noirq(struct device *dev)
++{
++	struct stm32_pcie *stm32_pcie = dev_get_drvdata(dev);
++	int ret;
++
++	ret = dw_pcie_suspend_noirq(&stm32_pcie->pci);
++	if (ret)
++		return ret;
++
++	stm32_pcie_assert_perst(stm32_pcie);
++
++	clk_disable_unprepare(stm32_pcie->clk);
++
++	if (!device_wakeup_path(dev))
++		phy_exit(stm32_pcie->phy);
++
++	return pinctrl_pm_select_sleep_state(dev);
++}
++
++static int stm32_pcie_resume_noirq(struct device *dev)
++{
++	struct stm32_pcie *stm32_pcie = dev_get_drvdata(dev);
++	int ret;
++
 +	/*
-+	 * The below is the s390 equivalent of pci_configure_ari()
-+	 * which we can't use directly because the bridge devices
-+	 * are hidden in firmware.
++	 * The core clock is gated with CLKREQ# from the COMBOPHY REFCLK,
++	 * thus if no device is present, must force it low with an init pinmux
++	 * to be able to access the DBI registers.
 +	 */
-+	if (!pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_ARI))
-+		zdev->zbus->bus->ari_enabled = 0;
- 
- 	return 0;
- }
-diff --git a/arch/s390/pci/pci_bus.c b/arch/s390/pci/pci_bus.c
-index 81bdb54ad5e380eb65096066e5d7f87f5953d69c..33e78335c24c30e2ecc35b9df212fd139de1d048 100644
---- a/arch/s390/pci/pci_bus.c
-+++ b/arch/s390/pci/pci_bus.c
-@@ -208,6 +208,16 @@ static int zpci_bus_create_pci_bus(struct zpci_bus *zbus, struct zpci_dev *fr, s
- 		return -EFAULT;
- 	}
- 
-+	/*
-+	 * On s390 PCI busses are virtualized and the bridge
-+	 * devices are invisible to the OS. Furthermore busses
-+	 * may exist without a devfn 0 function. Thus the normal
-+	 * ARI detection does not work. At the same time fw/hw
-+	 * has always enabled ARI when possible. Reflect the actual
-+	 * state by setting ari_enabled whenever a device on the bus
-+	 * supports it.
-+	 */
-+	bus->ari_enabled = 1;
- 	zbus->bus = bus;
- 
- 	return 0;
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 4d7c9f64ea24ec754a135a2585c99489cfa641a9..179017423cfa23a7799cb02a46a42dd30684b8ef 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -3571,11 +3571,11 @@ void pci_configure_ari(struct pci_dev *dev)
- 	if (pci_find_ext_capability(dev, PCI_EXT_CAP_ID_ARI)) {
- 		pcie_capability_set_word(bridge, PCI_EXP_DEVCTL2,
- 					 PCI_EXP_DEVCTL2_ARI);
--		bridge->ari_enabled = 1;
-+		dev->bus->ari_enabled = 1;
- 	} else {
- 		pcie_capability_clear_word(bridge, PCI_EXP_DEVCTL2,
- 					   PCI_EXP_DEVCTL2_ARI);
--		bridge->ari_enabled = 0;
-+		dev->bus->ari_enabled = 0;
- 	}
- }
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 364fa2a514f8a68fb18bded3259c6847d3932f8b..58d0e420e2878153e50006321678f48b8ed23d4c 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -1198,6 +1198,7 @@ static struct pci_bus *pci_alloc_child_bus(struct pci_bus *parent,
- 
- 	if (!bridge) {
- 		child->dev.parent = parent->bridge;
-+		child->ari_enabled = parent->ari_enabled;
- 		goto add_dev;
- 	}
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 0e8e3fd77e96713054388bdc82f439e51023c1bf..6c1ac1715253fccc67ee2fcb1159ecf688e45ac7 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -439,7 +439,6 @@ struct pci_dev {
- 	unsigned int	irq_reroute_variant:2;	/* Needs IRQ rerouting variant */
- 	unsigned int	msi_enabled:1;
- 	unsigned int	msix_enabled:1;
--	unsigned int	ari_enabled:1;		/* ARI forwarding */
- 	unsigned int	ats_enabled:1;		/* Address Translation Svc */
- 	unsigned int	pasid_enabled:1;	/* Process Address Space ID */
- 	unsigned int	pri_enabled:1;		/* Page Request Interface */
-@@ -684,6 +683,7 @@ struct pci_bus {
- 	unsigned int		is_added:1;
- 	unsigned int		unsafe_warn:1;	/* warned about RW1C config write */
- 	unsigned int		flit_mode:1;	/* Link in Flit mode */
-+	unsigned int		ari_enabled:1;	/* ARI forwarding enabled */
- };
- 
- #define to_pci_bus(n)	container_of(n, struct pci_bus, dev)
-@@ -2663,7 +2663,7 @@ static inline bool pci_is_dev_assigned(struct pci_dev *pdev)
-  */
- static inline bool pci_ari_enabled(struct pci_bus *bus)
- {
--	return bus->self && bus->self->ari_enabled;
-+	return bus->ari_enabled;
- }
- 
- /**
-
----
-base-commit: 8ffd015db85fea3e15a77027fda6c02ced4d2444
-change-id: 20240724-ari_no_bus_dev-52b2a27f3466
-
-Best regards,
++	if (!IS_ERR(dev->pins->init_state))
++		ret = pinctrl_select_state(dev->pins->p, dev->pins->init_state);
++	else
++		ret = pinctrl_pm_select_default_state(dev);
++
++	if (ret) {
++		dev_err(dev, "Failed to activate pinctrl pm state: %d\n", ret);
++		return ret;
++	}
++
++	if (!device_wakeup_path(dev)) {
++		ret = phy_init(stm32_pcie->phy);
++		if (ret) {
++			pinctrl_pm_select_default_state(dev);
++			return ret;
++		}
++	}
++
++	ret = clk_prepare_enable(stm32_pcie->clk);
++	if (ret)
++		goto err_phy_exit;
++
++	stm32_pcie_deassert_perst(stm32_pcie);
++
++	ret = dw_pcie_resume_noirq(&stm32_pcie->pci);
++	if (ret)
++		goto err_disable_clk;
++
++	pinctrl_pm_select_default_state(dev);
++
++	return 0;
++
++err_disable_clk:
++	stm32_pcie_assert_perst(stm32_pcie);
++	clk_disable_unprepare(stm32_pcie->clk);
++
++err_phy_exit:
++	phy_exit(stm32_pcie->phy);
++	pinctrl_pm_select_default_state(dev);
++
++	return ret;
++}
++
++static const struct dev_pm_ops stm32_pcie_pm_ops = {
++	NOIRQ_SYSTEM_SLEEP_PM_OPS(stm32_pcie_suspend_noirq,
++				  stm32_pcie_resume_noirq)
++};
++
++static const struct dw_pcie_host_ops stm32_pcie_host_ops = {
++};
++
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.start_link = stm32_pcie_start_link,
++	.stop_link = stm32_pcie_stop_link
++};
++
++static int stm32_add_pcie_port(struct stm32_pcie *stm32_pcie,
++			       struct platform_device *pdev)
++{
++	struct device *dev = stm32_pcie->pci.dev;
++	unsigned int wake_irq;
++	int ret;
++
++	/* Start to enable resources with PERST# asserted */
++
++	ret = phy_set_mode(stm32_pcie->phy, PHY_MODE_PCIE);
++	if (ret)
++		return ret;
++
++	ret = phy_init(stm32_pcie->phy);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
++				 STM32MP25_PCIECR_TYPE_MASK,
++				 STM32MP25_PCIECR_RC);
++	if (ret)
++		goto err_phy_exit;
++
++	stm32_pcie_deassert_perst(stm32_pcie);
++
++	if (stm32_pcie->wake_gpio) {
++		wake_irq = gpiod_to_irq(stm32_pcie->wake_gpio);
++		ret = dev_pm_set_dedicated_wake_irq(dev, wake_irq);
++		if (ret) {
++			dev_info(dev, "Failed to enable wake# %d\n", ret);
++			goto err_assert_perst;
++		}
++		irq_set_irq_type(wake_irq, IRQ_TYPE_EDGE_FALLING);
++	}
++
++	return 0;
++
++err_assert_perst:
++	stm32_pcie_assert_perst(stm32_pcie);
++
++err_phy_exit:
++	phy_exit(stm32_pcie->phy);
++
++	return ret;
++}
++
++static void stm32_remove_pcie_port(struct stm32_pcie *stm32_pcie)
++{
++	stm32_pcie_assert_perst(stm32_pcie);
++
++	phy_exit(stm32_pcie->phy);
++}
++
++static int stm32_pcie_parse_port(struct stm32_pcie *stm32_pcie)
++{
++	struct device *dev = stm32_pcie->pci.dev;
++	struct device_node *root_port;
++
++	root_port = of_get_next_available_child(dev->of_node, NULL);
++
++	stm32_pcie->phy = devm_of_phy_get(dev, root_port, NULL);
++	if (IS_ERR(stm32_pcie->phy)) {
++		of_node_put(root_port);
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->phy),
++				     "Failed to get pcie-phy\n");
++	}
++
++	stm32_pcie->perst_gpio = devm_fwnode_gpiod_get(dev, of_fwnode_handle(root_port),
++						       "reset", GPIOD_OUT_HIGH, NULL);
++	if (IS_ERR(stm32_pcie->perst_gpio)) {
++		if (PTR_ERR(stm32_pcie->perst_gpio) != -ENOENT) {
++			of_node_put(root_port);
++			return dev_err_probe(dev, PTR_ERR(stm32_pcie->perst_gpio),
++					     "Failed to get reset GPIO\n");
++		}
++		stm32_pcie->perst_gpio = NULL;
++	}
++
++	stm32_pcie->wake_gpio = devm_fwnode_gpiod_get(dev, of_fwnode_handle(root_port),
++						      "wake", GPIOD_IN, NULL);
++
++	if (IS_ERR(stm32_pcie->wake_gpio)) {
++		if (PTR_ERR(stm32_pcie->wake_gpio) != -ENOENT) {
++			of_node_put(root_port);
++			return dev_err_probe(dev, PTR_ERR(stm32_pcie->wake_gpio),
++					     "Failed to get wake GPIO\n");
++		}
++		stm32_pcie->wake_gpio = NULL;
++	}
++
++	of_node_put(root_port);
++
++	return 0;
++}
++
++static int stm32_pcie_probe(struct platform_device *pdev)
++{
++	struct stm32_pcie *stm32_pcie;
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	stm32_pcie = devm_kzalloc(dev, sizeof(*stm32_pcie), GFP_KERNEL);
++	if (!stm32_pcie)
++		return -ENOMEM;
++
++	stm32_pcie->pci.dev = dev;
++	stm32_pcie->pci.ops = &dw_pcie_ops;
++	stm32_pcie->pci.pp.ops = &stm32_pcie_host_ops;
++
++	stm32_pcie->regmap = syscon_regmap_lookup_by_compatible("st,stm32mp25-syscfg");
++	if (IS_ERR(stm32_pcie->regmap))
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->regmap),
++				     "No syscfg specified\n");
++
++	stm32_pcie->clk = devm_clk_get(dev, NULL);
++	if (IS_ERR(stm32_pcie->clk))
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->clk),
++				     "Failed to get PCIe clock source\n");
++
++	stm32_pcie->rst = devm_reset_control_get_exclusive(dev, NULL);
++	if (IS_ERR(stm32_pcie->rst))
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->rst),
++				     "Failed to get PCIe reset\n");
++
++	ret = stm32_pcie_parse_port(stm32_pcie);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, stm32_pcie);
++
++	ret = pm_runtime_set_active(dev);
++	if (ret < 0) {
++		dev_err(dev, "Failed to activate runtime PM %d\n", ret);
++		return ret;
++	}
++
++	ret = devm_pm_runtime_enable(dev);
++	if (ret < 0) {
++		dev_err(dev, "Failed to enable runtime PM %d\n", ret);
++		return ret;
++	}
++
++	pm_runtime_get_noresume(dev);
++
++	ret = stm32_add_pcie_port(stm32_pcie, pdev);
++	if (ret) {
++		pm_runtime_put_noidle(&pdev->dev);
++		return ret;
++	}
++
++	reset_control_assert(stm32_pcie->rst);
++	reset_control_deassert(stm32_pcie->rst);
++
++	ret = clk_prepare_enable(stm32_pcie->clk);
++	if (ret) {
++		dev_err(dev, "Core clock enable failed %d\n", ret);
++		goto err_remove_port;
++	}
++
++	ret = dw_pcie_host_init(&stm32_pcie->pci.pp);
++	if (ret)
++		goto err_disable_clk;
++
++	if (stm32_pcie->wake_gpio) {
++		device_set_wakeup_capable(dev, true);
++		device_wakeup_enable(dev);
++	}
++
++	return 0;
++
++err_disable_clk:
++	clk_disable_unprepare(stm32_pcie->clk);
++
++err_remove_port:
++	stm32_remove_pcie_port(stm32_pcie);
++	pm_runtime_put_noidle(&pdev->dev);
++
++	return ret;
++}
++
++static void stm32_pcie_remove(struct platform_device *pdev)
++{
++	struct stm32_pcie *stm32_pcie = platform_get_drvdata(pdev);
++	struct dw_pcie_rp *pp = &stm32_pcie->pci.pp;
++
++	if (stm32_pcie->wake_gpio)
++		device_init_wakeup(&pdev->dev, false);
++
++	dw_pcie_host_deinit(pp);
++
++	clk_disable_unprepare(stm32_pcie->clk);
++
++	stm32_remove_pcie_port(stm32_pcie);
++
++	pm_runtime_put_noidle(&pdev->dev);
++}
++
++static const struct of_device_id stm32_pcie_of_match[] = {
++	{ .compatible = "st,stm32mp25-pcie-rc" },
++	{},
++};
++
++static struct platform_driver stm32_pcie_driver = {
++	.probe = stm32_pcie_probe,
++	.remove = stm32_pcie_remove,
++	.driver = {
++		.name = "stm32-pcie",
++		.of_match_table = stm32_pcie_of_match,
++		.pm = &stm32_pcie_pm_ops,
++		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
++	},
++};
++
++module_platform_driver(stm32_pcie_driver);
++
++MODULE_AUTHOR("Christian Bruel <christian.bruel@foss.st.com>");
++MODULE_DESCRIPTION("STM32MP25 PCIe Controller driver");
++MODULE_LICENSE("GPL");
++MODULE_DEVICE_TABLE(of, stm32_pcie_of_match);
+diff --git a/drivers/pci/controller/dwc/pcie-stm32.h b/drivers/pci/controller/dwc/pcie-stm32.h
+new file mode 100644
+index 000000000000..387112c4e42c
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-stm32.h
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * ST PCIe driver definitions for STM32-MP25 SoC
++ *
++ * Copyright (C) 2025 STMicroelectronics - All Rights Reserved
++ * Author: Christian Bruel <christian.bruel@foss.st.com>
++ */
++
++#define to_stm32_pcie(x)	dev_get_drvdata((x)->dev)
++
++#define STM32MP25_PCIECR_TYPE_MASK	GENMASK(11, 8)
++#define STM32MP25_PCIECR_LTSSM_EN	BIT(2)
++#define STM32MP25_PCIECR_RC		BIT(10)
++
++#define SYSCFG_PCIECR			0x6000
 -- 
-Niklas Schnelle
+2.34.1
 
