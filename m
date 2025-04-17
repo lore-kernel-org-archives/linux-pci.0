@@ -1,95 +1,90 @@
-Received: from sender3-op-o12.zoho.com (sender3-op-o12.zoho.com [136.143.184.12])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D40245029
-	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2025 13:25:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.184.12
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744896335; cv=pass; b=CgfRJ3l/KdKKXLeh5cfUIRBp3whzlbTs0qIiP36asNb8H4Qr4ICUFOaItQVHp3WY+zRIFinU2x7TOt4CXWuymIPGteMK6T17UZKMV4ibVAGhKGCR+TzGWYcrcZug4wCep2UkoBY2BoglRWAyLuoyJFmyJkhRVskPy9ygroglzKg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744896335; c=relaxed/simple;
-	bh=fQHVI4FXMoRZwKY2jcFdWDi98I+vbDUpgl3+On9x46U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Xs2ZI6vxjUb27SgL7JJV/EW/dqGB1ex4jMpXIJepS2tqMxLNYZczaMZx1akbjzcfn72mGCyIfCtxEuGVMOWJEPLVWfTnWTiSdBxAQ6aYUIxdKUdPgy77uhSqa9xOQdOb7Q3Dtpdxut0aOxN+ES13XCdSMJY+YzEFTtwKpIytAV4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=GMO0DfTG; arc=pass smtp.client-ip=136.143.184.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="GMO0DfTG"
-ARC-Seal: i=1; a=rsa-sha256; t=1744896281; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=YAmwjfcVx6oWeXIlV6PGnxiPWIz9cGSHql1PaH1BddCIt+Rdv/M5nMIsXhz46mehEWVse6RUGTsHkCTdUVTqr/o3TxDWpo2EOvYL/EmezmWtKbt97pWtajhBU7OFQB6+huGRexlOjpA8OrFJumN9Xjp02JSzeqf451KAXWS4d+0=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1744896281; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=Ayh36aU37peKqpZXlZgTNqposmDRisWCEwR5u33oTrQ=; 
-	b=JQ+tv3lgH37E6MqdKPKGEy3GDUB+RzMddP+uSptWMfjAaIahva/z9gyVdM20LJoLQt4A36gXt1RwiTcr007V1ptJxfsHywteRDLdEcD8c4TRv6J5kmD0F3aPDcC1yRhwO+I0lAuxKufA+gRv5kEx0FjwnA2F/GjpvQGu9PYx2Q0=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1744896281;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=Ayh36aU37peKqpZXlZgTNqposmDRisWCEwR5u33oTrQ=;
-	b=GMO0DfTGL/gkCxhxrrrVE95dpQvS5S+K+uscs/WH9tnvcj6/FJK6+H0hPJSJ+Akt
-	aHG3KmRqRfMz21Z18WqC82wAWaWs6x19eOkBMhrFQ7OIdeEs+7qv2DyeNX0L8JsXhEi
-	C6Vpc46OWPHE0XmdthDDPowEIFulBx+f17G0CvHc=
-Received: by mx.zohomail.com with SMTPS id 17448962784846.708394728524695;
-	Thu, 17 Apr 2025 06:24:38 -0700 (PDT)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-To: linux-rockchip@lists.infradead.org, Niklas Cassel <cassel@kernel.org>
-Cc: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
- linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v2] PCI: dw-rockchip: Add system PM support
-Date: Thu, 17 Apr 2025 15:24:34 +0200
-Message-ID: <8815983.T7Z3S40VBb@workhorse>
-In-Reply-To: <Z_5aib0WGKfIANj_@ryzen>
-References:
- <1744352048-178994-1-git-send-email-shawn.lin@rock-chips.com>
- <Z_5aib0WGKfIANj_@ryzen>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEF592512D7;
+	Thu, 17 Apr 2025 14:08:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1744898924; cv=none; b=i0v7JQzg/ngRULqX4k4k2fDoUpO0wwN8UHHNnw175CbJyPaGUf1SyDWye9C8dHnmg/mqINblv2v+FxoEM0hQQZbTY5wfSdARZdX6kJSnPkBN3ZRx/l8pbCz6LGW8OTY8LvCL+IedZRLn1B46T9Y1ng81M4a/LWQhxt0IrfYSkfs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1744898924; c=relaxed/simple;
+	bh=NpvKRT8qb3gzwy4mW7KuevNscS4HRyz37dPBTIaWGO4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mdY9F1+CgE+Z+WoBnJTg6srs9hnx41EqHjRiomnhdxyUW/lurxcoKEkqWw5gqbyNxi66Bscmdl3j7Unh3uwHHfoT9cI+PB2VFC6gmlCFqjSSY2k2S0Bh04087nthjBZnbM7gqKLDIbpKKfO77DYFGNWWMNhAciZB3VJKX4JcpdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id 62BC72C07110;
+	Thu, 17 Apr 2025 16:08:36 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id D08915D318; Thu, 17 Apr 2025 16:08:37 +0200 (CEST)
+Date: Thu, 17 Apr 2025 16:08:37 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 1/1] PCI/bwctrl: Replace lbms_count with
+ PCIE_LINK_LBMS_SEEN flag
+Message-ID: <aAELZfjCCZUE4aos@wunner.de>
+References: <20250417124633.11470-1-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250417124633.11470-1-ilpo.jarvinen@linux.intel.com>
 
-On Tuesday, 15 April 2025 15:09:29 Central European Summer Time Niklas Cassel wrote:
-> On Fri, Apr 11, 2025 at 02:14:08PM +0800, Shawn Lin wrote:
-> > [...]
-> > +      rockchip_pcie_ltssm_enable_control_mode(rockchip, PCIE_CLIENT_RC_MODE);
+On Thu, Apr 17, 2025 at 03:46:32PM +0300, Ilpo Järvinen wrote:
+> PCIe BW controller counts LBMS assertions for the purposes of the
+> Target Speed quirk. It was also a plan to expose the LBMS count through
+> sysfs to allow better diagnosing link related issues. Lukas Wunner
+> suggested, however, that adding a trace event would be better for
+> diagnostics purposes. Leaving only Target Speed quirk as an user of the
+> lbms_count.
 > 
-> Here you are setting PCIE_CLIENT_RC_MODE unconditionally.
-> 
-> I really don't think that you have tested these callbacks with EP mode.
+> The logic in the Target Speed quirk does not require keeping count of
+> LBMS assertions but a simple flag is enough which can be placed into
+> pci_dev's priv_flags. The reduced complexity allows removing
+> pcie_bwctrl_lbms_rwsem.
+[...]
+> This will conflict with the new flags Lukas added due to the hp fixes
+> but it should be simple to deal with that conflict while merging the
+> topic branches.
 
-Hi Niklas,
+Hm, perhaps it would be easier to merge this if it would use bit 6
+instead of bit 4.  Then it would just be a trivial merge conflict
+between two topic branches (pci/hotplug and pci/bwctrl, I presume).
+The way it is now, it will require manually tweaking the bit after
+applying the patch.
 
-I may be reading too much into your tone here, but I think it'd be good if
-you didn't formulate this in such a passive-aggressive accusatory way. You
-can just express your concern as a question about whether this was tested
-with EP mode.
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -557,6 +557,7 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
+>  #define PCI_DPC_RECOVERED 1
+>  #define PCI_DPC_RECOVERING 2
+>  #define PCI_DEV_REMOVED 3
+> +#define PCIE_LINK_LBMS_SEEN	4
 
-After all, I'm giving you specifically the same benefit of the doubt with
-RC mode that has broken BAR resource mapping on RK3588 in timing-related
-ways in v6.15-rc that has already taken me about a day of unreliable
-bisects to try and track down, and may in fact end up bisecting to one of
-your recent commits touching that part.
+The two newly added bits on the pci/hotplug branch use the prefix
+"PCI_LINK_".  It would be slightly neater if this used the same prefix.
 
-> 
-> If we look at pcie-qcom.c and pcie-qcom-ep.c, dev_pm_ops is defined in
-> pcie-qcom.c, but not in pcie-qcom-ep.c.
-> 
-> Perhaps it is starting to be time to have two separate drivers also for
-> rockchip?
-> 
-> [...]
+>  drivers/pci/hotplug/pciehp_ctrl.c |  2 +-
+>  drivers/pci/pci.c                 |  2 +-
+>  drivers/pci/pci.h                 | 10 ++---
+>  drivers/pci/pcie/bwctrl.c         | 63 +++++++++----------------------
+>  drivers/pci/quirks.c              | 10 ++---
+>  5 files changed, 25 insertions(+), 62 deletions(-)
 
-Regards,
-Nicolas Frattaroli
+Obviously a nice, welcome simplification, shaving off 37 LoC.
+Thanks for doing this!
 
-
+Lukas
