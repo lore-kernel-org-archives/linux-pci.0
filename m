@@ -1,104 +1,95 @@
-Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
+Received: from sender3-op-o12.zoho.com (sender3-op-o12.zoho.com [136.143.184.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76B3C24C06D;
-	Thu, 17 Apr 2025 13:23:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744896212; cv=none; b=AOdck9fQEBrnXhzUJ0bNSMG2YFn5LmBiH7E1U+ZuYjxujxwPNpbOw0apQy6+fcYnjN0bdNlfd0pgwxpap0/q0uXKtfJMdTGyiNlvQ2H5S2yycNYmuRdoYCitLymOYLowckuIcxCePzL5tNydSN5lZy0kCrYixBmVF5v4+b6exPc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744896212; c=relaxed/simple;
-	bh=HY4+I2+3sg49hYg59cA7+Tq+pHpR5PQ857K/cvDQ+Jg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EyiRIUWKbacE/E/CMmmrZotN7/wgCj19NDZMJRFl/LA+fbbHx8yuyQeB7BlrhJ0HG0EgTQAPOkW8tWzb5WopE4KPuBUl0ECSMdF5sWq5Pc0gIzhnr02L8mra7eCbAH0lKhw9CNy72BxX6t13OphYE0bIU3FN7xGDq5bJqJHLua0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=gxscFT34; arc=none smtp.client-ip=185.132.182.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9D40245029
+	for <linux-pci@vger.kernel.org>; Thu, 17 Apr 2025 13:25:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.184.12
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1744896335; cv=pass; b=CgfRJ3l/KdKKXLeh5cfUIRBp3whzlbTs0qIiP36asNb8H4Qr4ICUFOaItQVHp3WY+zRIFinU2x7TOt4CXWuymIPGteMK6T17UZKMV4ibVAGhKGCR+TzGWYcrcZug4wCep2UkoBY2BoglRWAyLuoyJFmyJkhRVskPy9ygroglzKg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1744896335; c=relaxed/simple;
+	bh=fQHVI4FXMoRZwKY2jcFdWDi98I+vbDUpgl3+On9x46U=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Xs2ZI6vxjUb27SgL7JJV/EW/dqGB1ex4jMpXIJepS2tqMxLNYZczaMZx1akbjzcfn72mGCyIfCtxEuGVMOWJEPLVWfTnWTiSdBxAQ6aYUIxdKUdPgy77uhSqa9xOQdOb7Q3Dtpdxut0aOxN+ES13XCdSMJY+YzEFTtwKpIytAV4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=GMO0DfTG; arc=pass smtp.client-ip=136.143.184.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="gxscFT34"
-Received: from pps.filterd (m0369458.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53HB3H6n007078;
-	Thu, 17 Apr 2025 15:22:45 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	KHXp1fhPr51e4rt9sZyiCuRe2+Qj/H0RWuiXEzToeNI=; b=gxscFT34JrPu4oVw
-	5lDdCeBlLh+R0pyI6EAAtE+RZ4lxqhvxa9O3Am7VpkqtW3wX/7FolKwRbNGonnq2
-	GQsrKAWcdES8TDpweyqFVt2guBGJVZM/o+RWfin06XxKR4JxkBvzdgRBv9C9ly0f
-	FnkZMX+RKQh+LNcqKUJGgdB9br2oC50JXAoHSDbcYkStwIWLz1rH9XZ1sNaPNvlS
-	KTueZm41GGgVlZYgERzdpZaeeJAvFhaEI2K2JA7Dvr0CdhWCFnR7hlZpaFobQ0yO
-	ZhDdJiebH78lvuC2kHiI4nX6uYS6KO4gT7DU0m9IdrgvLaZZxxyyJQak9zHyreSs
-	d/U5hw==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 4601r4pc00-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 17 Apr 2025 15:22:45 +0200 (MEST)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id CE7F440048;
-	Thu, 17 Apr 2025 15:21:20 +0200 (CEST)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id C1ABD999247;
-	Thu, 17 Apr 2025 15:20:02 +0200 (CEST)
-Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Thu, 17 Apr
- 2025 15:20:02 +0200
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
-        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
-        <cassel@kernel.org>, <johan+linaro@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v6 5/9] MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-Date: Thu, 17 Apr 2025 15:18:29 +0200
-Message-ID: <20250417131833.3427126-6-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250417131833.3427126-1-christian.bruel@foss.st.com>
-References: <20250417131833.3427126-1-christian.bruel@foss.st.com>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="GMO0DfTG"
+ARC-Seal: i=1; a=rsa-sha256; t=1744896281; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=YAmwjfcVx6oWeXIlV6PGnxiPWIz9cGSHql1PaH1BddCIt+Rdv/M5nMIsXhz46mehEWVse6RUGTsHkCTdUVTqr/o3TxDWpo2EOvYL/EmezmWtKbt97pWtajhBU7OFQB6+huGRexlOjpA8OrFJumN9Xjp02JSzeqf451KAXWS4d+0=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1744896281; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=Ayh36aU37peKqpZXlZgTNqposmDRisWCEwR5u33oTrQ=; 
+	b=JQ+tv3lgH37E6MqdKPKGEy3GDUB+RzMddP+uSptWMfjAaIahva/z9gyVdM20LJoLQt4A36gXt1RwiTcr007V1ptJxfsHywteRDLdEcD8c4TRv6J5kmD0F3aPDcC1yRhwO+I0lAuxKufA+gRv5kEx0FjwnA2F/GjpvQGu9PYx2Q0=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1744896281;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
+	bh=Ayh36aU37peKqpZXlZgTNqposmDRisWCEwR5u33oTrQ=;
+	b=GMO0DfTGL/gkCxhxrrrVE95dpQvS5S+K+uscs/WH9tnvcj6/FJK6+H0hPJSJ+Akt
+	aHG3KmRqRfMz21Z18WqC82wAWaWs6x19eOkBMhrFQ7OIdeEs+7qv2DyeNX0L8JsXhEi
+	C6Vpc46OWPHE0XmdthDDPowEIFulBx+f17G0CvHc=
+Received: by mx.zohomail.com with SMTPS id 17448962784846.708394728524695;
+	Thu, 17 Apr 2025 06:24:38 -0700 (PDT)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+To: linux-rockchip@lists.infradead.org, Niklas Cassel <cassel@kernel.org>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+ linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: dw-rockchip: Add system PM support
+Date: Thu, 17 Apr 2025 15:24:34 +0200
+Message-ID: <8815983.T7Z3S40VBb@workhorse>
+In-Reply-To: <Z_5aib0WGKfIANj_@ryzen>
+References:
+ <1744352048-178994-1-git-send-email-shawn.lin@rock-chips.com>
+ <Z_5aib0WGKfIANj_@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: SHFCAS1NODE1.st.com (10.75.129.72) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1095,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-17_03,2025-04-17_01,2024-11-22_01
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
 
-Add myself as maintainer of STM32MP25 PCIe host and PCIe endpoint drivers
+On Tuesday, 15 April 2025 15:09:29 Central European Summer Time Niklas Cassel wrote:
+> On Fri, Apr 11, 2025 at 02:14:08PM +0800, Shawn Lin wrote:
+> > [...]
+> > +      rockchip_pcie_ltssm_enable_control_mode(rockchip, PCIE_CLIENT_RC_MODE);
+> 
+> Here you are setting PCIE_CLIENT_RC_MODE unconditionally.
+> 
+> I really don't think that you have tested these callbacks with EP mode.
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+Hi Niklas,
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b5acf50fc6af..a37b9422998c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -18610,6 +18610,13 @@ L:	linux-samsung-soc@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/controller/dwc/pci-exynos.c
- 
-+PCI DRIVER FOR STM32MP25
-+M:	Christian Bruel <christian.bruel@foss.st.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/st,stm32-pcie-*.yaml
-+F:	drivers/pci/controller/dwc/*stm32*
-+
- PCI DRIVER FOR SYNOPSYS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
- M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
--- 
-2.34.1
+I may be reading too much into your tone here, but I think it'd be good if
+you didn't formulate this in such a passive-aggressive accusatory way. You
+can just express your concern as a question about whether this was tested
+with EP mode.
+
+After all, I'm giving you specifically the same benefit of the doubt with
+RC mode that has broken BAR resource mapping on RK3588 in timing-related
+ways in v6.15-rc that has already taken me about a day of unreliable
+bisects to try and track down, and may in fact end up bisecting to one of
+your recent commits touching that part.
+
+> 
+> If we look at pcie-qcom.c and pcie-qcom-ep.c, dev_pm_ops is defined in
+> pcie-qcom.c, but not in pcie-qcom-ep.c.
+> 
+> Perhaps it is starting to be time to have two separate drivers also for
+> rockchip?
+> 
+> [...]
+
+Regards,
+Nicolas Frattaroli
+
 
