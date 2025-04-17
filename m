@@ -1,111 +1,111 @@
-Received: from mail.manjaro.org (mail.manjaro.org [116.203.91.91])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E60522371B;
-	Thu, 17 Apr 2025 16:26:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=116.203.91.91
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36A3D3C0C;
+	Thu, 17 Apr 2025 16:39:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744907194; cv=none; b=B/0Cb4rQeaISUGiUKESVafzUbQdmLYZfPO3B8By9MHDfYY6fjMZR/lniEH4b0Jv/IoW+qhS058/uSigNSvZVRvRENcUjXmm79AKOsnegwt30zNpLzAvUU06tLFjxywJEsJMZ1zArpWl9NJIjkGhHWCayfjWSJ0mRGKHdpI42WRU=
+	t=1744907946; cv=none; b=koBZ/m+3gm7ctV7kY2hWT4oEDY4JpQwUlBgEGOi0eA0WHyYUCfAFIyPYFcRhhpVmgzTn11wOHCWGwsys1Ribp+KYfZLIENQ2rWi25fTjO0DNUfXTaNrQHULGTM9M5sdigajD68+ajhdxjB8I6qvKYyLWBzmhk+mvMrl0uPcw51A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744907194; c=relaxed/simple;
-	bh=P9TfWspJnGRbKrqwgptzUFFwYuCKwBJHpoIuQk7N6ZE=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=AXfbqHW2cb0drf0Lvp4XtUfbXnBVBfN49FmEPXiGLQ6k479kvceCM0Nt59t5QiREqOUR15y5UDRCfJrcmmV5xpqbYucD63f8isJTVjJ0BLxJWMYeaBVmN0sXH9wp9UiCn7fSB02p3GDXQ/7FRwEAlwjO7UynmbeVq8RibODzsqA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org; spf=pass smtp.mailfrom=manjaro.org; dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b=kucmAJQr; arc=none smtp.client-ip=116.203.91.91
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=manjaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=manjaro.org
+	s=arc-20240116; t=1744907946; c=relaxed/simple;
+	bh=3bVynOwOhRnPTp6Qdaz4+H3O1NgzpHkzWFZ3znhf9uo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=VVRvya14RPu9Ky6+EjenE63McBk5s6uIavWrCLaHkNi1HHTbd1AIbXuTNuLf+0jNn7I7EvogL1oAw5pwxmLUO5s+mHQJVzZVcbbNF3PWdUWF/gzpnlfArN4EypidgXPliIDkkPbrnjN3YxIA7BuKgDCMkc6pryNKybYs+2GeABI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SvZnOc/I; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=manjaro.org header.i=@manjaro.org header.b="kucmAJQr"
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SvZnOc/I"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88995C4CEE4;
+	Thu, 17 Apr 2025 16:39:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1744907945;
+	bh=3bVynOwOhRnPTp6Qdaz4+H3O1NgzpHkzWFZ3znhf9uo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=SvZnOc/I85gqJZkwDZjnKynKc9xfXK2fv/cyICHQQbwvMBE0KFtY6wuKGmzL9mPwG
+	 Xtz400JLslF3YFx3+bs5sZQc1SKCHJVJBw3CzP0bJh55VYeyzK4+87+Nvqe2e0llg/
+	 4N9LTR8XSWegH/g65+lWJ6yKxy7h621LGdjpvpsXvmwtnJLUIy4RRJkEjm8HuJiK9d
+	 pRW8ZuMarCZvE8P9Fcwypgco114DDX7HooRZzkplniyzF5hZM5AglsFLfBc+UNn03T
+	 JBrx8m8PHmiPm18GhmJ4bodD6XpW4r9r88xsb1SFChG1/dcsHYvuYSPWLJVMrhs391
+	 CycdmYU0iEq/A==
+Date: Thu, 17 Apr 2025 11:39:04 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Guenter Roeck <linux@roeck-us.net>, Bjorn Helgaas <bhelgaas@google.com>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Igor Mammedov <imammedo@redhat.com>,
+	Mika Westerberg <mika.westerberg@linux.intel.com>,
+	=?utf-8?Q?Micha=C5=82?= Winiarski <michal.winiarski@intel.com>
+Subject: Re: [PATCH 1/1] PCI: Restore assigned resources fully after release
+Message-ID: <20250417163904.GA114476@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=manjaro.org; s=2021;
-	t=1744906855;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Jy2VD4whmMy3I5b19h40sBNvZxMXt8NVw/R9fRE1Af8=;
-	b=kucmAJQrSj8aUR00+fmsRWYFWXrdis+l+pkpy7eT+bl5PW6okRBsgCADav+upAPx4S45Y1
-	tYW7KOY+/bYi5K/Zum3EHUBzuo+UUY5OfhFzZYHPWbreCDulpkssrW2F97Ntm4wEtZR5TF
-	TXZkPLvb5jCQpShxvhmYug0jRjCBF9uMhzRBZnX46krzzo+tV1ICtyvpzF5oWG0Zjvoi40
-	kb+a4AH2paAwi9GFeL9VhedE46AbQOYl8EJLXZL6LldB154YqoCZmbfQIEWn1ci6th90EU
-	JxzIVwGlVolMa57URgVAmnnXd1OKhHPXI8NVuCkalXnOScMy1wr2FM3m5LTZKg==
-Date: Thu, 17 Apr 2025 18:20:54 +0200
-From: Dragan Simic <dsimic@manjaro.org>
-To: Diederik de Haas <didi.debian@cknow.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy?=
- =?UTF-8?Q?=C5=84ski?= <kw@linux.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Heiko Stuebner <heiko@sntech.de>, Manivannan Sadhasivam
- <manivannan.sadhasivam@linaro.org>, Rob Herring <robh@kernel.org>, Shawn Lin
- <shawn.lin@rock-chips.com>, Niklas Cassel <cassel@kernel.org>,
- linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-Subject: Re: [PATCH] PCI: dw-rockchip: Fix function call sequence in
- rockchip_pcie_phy_deinit
-In-Reply-To: <20250417142138.1377451-1-didi.debian@cknow.org>
-References: <20250417142138.1377451-1-didi.debian@cknow.org>
-Message-ID: <3e000468679b4371a7942a3e07d99894@manjaro.org>
-X-Sender: dsimic@manjaro.org
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Authentication-Results: ORIGINATING;
-	auth=pass smtp.auth=dsimic@manjaro.org smtp.mailfrom=dsimic@manjaro.org
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250403093137.1481-1-ilpo.jarvinen@linux.intel.com>
 
-Hello Diederik,
+On Thu, Apr 03, 2025 at 12:31:37PM +0300, Ilpo Järvinen wrote:
+> PCI resource fitting code in __assign_resources_sorted() runs in
+> multiple steps. A resource that was successfully assigned may have to
+> be released before the next step attempts assignment again. The
+> assign+release cycle is destructive to a start-aligned struct resource
+> (bridge window or IOV resource) because the start field is overwritten
+> with the real address when the resource got assigned.
+> 
+> Properly restore the resource after releasing it. The start, end, and
+> flags fields must be stored into the related struct pci_dev_resource in
+> order to be able to restore the resource to its original state.
+> 
+> Reported-by: Guenter Roeck <linux@roeck-us.net>
+> Fixes: 96336ec70264 ("PCI: Perform reset_resource() and build fail list in sync")
+> Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-On 2025-04-17 16:21, Diederik de Haas wrote:
-> The documentation for the phy_power_off() function explicitly says
-> 
->   Must be called before phy_exit().
-> 
-> So let's follow that instruction.
-> 
-> Fixes: 0e898eb8df4e ("PCI: rockchip-dwc: Add Rockchip RK356X host
-> controller driver")
-> Cc: stable@vger.kernel.org	# v5.15+
-> Signed-off-by: Diederik de Haas <didi.debian@cknow.org>
+Applied to pci/for-linus for v6.15, thanks!
+
+I'd like to add the following to the commit log if it's accurate:
+
+  + One symptom:
+
+  +   pci 0002:00:00.0: bridge window [mem size 0x00100000]: can't assign; bogus alignment
+
+    Reported-by: Guenter Roeck <linux@roeck-us.net>
+  + Closes: https://lore.kernel.org/r/01eb7d40-f5b5-4ec5-b390-a5c042c30aff@roeck-us.net/
+  + Reported-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+  + Closes: https://lore.kernel.org/r/3578030.5fSG56mABF@workhorse
+
+Let me know if that's wrong or there are additional reports.
+
 > ---
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/pci/setup-bus.c | 4 ++++
+>  1 file changed, 4 insertions(+)
 > 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index c624b7ebd118..4f92639650e3 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -410,8 +410,8 @@ static int rockchip_pcie_phy_init(struct
-> rockchip_pcie *rockchip)
+> diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+> index 54d6f4fa3ce1..e994c546422c 100644
+> --- a/drivers/pci/setup-bus.c
+> +++ b/drivers/pci/setup-bus.c
+> @@ -187,6 +187,9 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
+>  			panic("%s: kzalloc() failed!\n", __func__);
+>  		tmp->res = r;
+>  		tmp->dev = dev;
+> +		tmp->start = r->start;
+> +		tmp->end = r->end;
+> +		tmp->flags = r->flags;
+>  
+>  		/* Fallback is smallest one or list is empty */
+>  		n = head;
+> @@ -545,6 +548,7 @@ static void __assign_resources_sorted(struct list_head *head,
+>  		pci_dbg(dev, "%s %pR: releasing\n", res_name, res);
+>  
+>  		release_resource(res);
+> +		restore_dev_resource(dev_res);
+>  	}
+>  	/* Restore start/end/flags from saved list */
+>  	list_for_each_entry(save_res, &save_head, list)
 > 
->  static void rockchip_pcie_phy_deinit(struct rockchip_pcie *rockchip)
->  {
-> -	phy_exit(rockchip->phy);
->  	phy_power_off(rockchip->phy);
-> +	phy_exit(rockchip->phy);
->  }
+> base-commit: 7d06015d936c861160803e020f68f413b5c3cd9d
+> -- 
+> 2.39.5
 > 
->  static const struct dw_pcie_ops dw_pcie_ops = {
-
-Thanks for the patch, it's looking good to me.  The current state
-of the rockchip_pcie_phy_deinit() function might actually not cause
-issues because the rockchip_pcie_phy_deinit() function is used only
-in the error-handling path in the rockchip_pcie_probe() function,
-so having no runtime errors leads to no possible issues.
-
-However, it doesn't mean it shouldn't be fixed, and it would actually
-be good to dissolve the rockchip_pcie_phy_deinit() function into the
-above-mentioned error-handling path.  It's a short, two-line function
-local to the compile unit, used in a single place only, so dissolving
-it is safe and would actually improve the readability of the code.
-
-Thus, please feel free to include
-
-Reviewed-by: Dragan Simic <dsimic@manjaro.org>
-
-and please consider dissolving the rockchip_pcie_phy_deinit() function
-in the possible v2 of this patch, as suggested above.
