@@ -1,92 +1,174 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mta-64-227.siemens.flowmailer.net (mta-64-227.siemens.flowmailer.net [185.136.64.227])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFFE524EA8F;
-	Fri, 18 Apr 2025 07:40:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D3C5269CE4
+	for <linux-pci@vger.kernel.org>; Fri, 18 Apr 2025 07:40:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.136.64.227
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1744962033; cv=none; b=WrOWbeP3HCaPk19fwulGxynlDNXyhqXatapi+gLPwAKKO9mR4VkVQvvkGN/mS9lXG8HC1n6gzdiVgPTtMDPEoTJ/Ztee2cQLvNqvnuwarwLgGAyr0T7Pg22k7o1GO9XvhGZuW95T04dMCxOfR0FN/LkXXXxW4bnHjfvJBdZ5pH4=
+	t=1744962059; cv=none; b=rO1HlYbkkJdeqtOl5oBYq2c1QT+HvPaNLqRgdT2pgl7f0fpO00YUu7RzVNd7+wbF4lMKrCC085DwayTgd0Mxo33Ly0c0nl1rY+ecnKUrPjsw6aAEriFcPBPoDoK3WaUC4zVo4E549Banhjl27tYt7xrWyb8ma+ThO93hwv320T0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1744962033; c=relaxed/simple;
-	bh=HTu5azwnJcNp5fW88jU95M322z25Yas8NYb0ahvHXmA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DOLPyo4GVAi8xl0YRcNX9OqAZV01D9/0WFAFcmWldHAAwGynERWIx819oTK7W7RmaK0/YA3BMrc2U7ld/JWr5/eWpZL3cWmeOtrHj4aZxRHxdoHqSxBVY/YlTD8YCii5VpeAUdkJv4q1PPuUtNzCFq5lepvQhQDpoWl3Yuhscqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uy26hlvH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1744962059; c=relaxed/simple;
+	bh=sDuL54bxRzWLzgXxGkEyqYadhdvtvR5+FkceDXRk6+c=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=bP9nG3JwZ0HGiate6ibgB3CNkK5x2MfVpyctoImndXiq+8TpDFxwMuz7sd3eoH9oi5Nj58woMnq6tYaVWWiR48SRvMz+J11g5pX2Ot/pKJrRhlaxmuVzPDSjxWV6Xx1ynotWUmoogmoxjAJbrVmq+eqgA7JC61XNsOpHaamjgtY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com; dkim=pass (2048-bit key) header.d=siemens.com header.i=huaqian.li@siemens.com header.b=eLkDR0Mk; arc=none smtp.client-ip=185.136.64.227
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=siemens.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rts-flowmailer.siemens.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uy26hlvH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B1658C4CEE2;
-	Fri, 18 Apr 2025 07:40:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1744962033;
-	bh=HTu5azwnJcNp5fW88jU95M322z25Yas8NYb0ahvHXmA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=uy26hlvHBK0d37FkJ++86AA+UhbvcEqgsDPhvOdXjPOeDGDLGxStqoJSlwmWDgiCh
-	 sAxA8OTaNZtSLY3TL2QNcd2iZlQRrJle6oNC9Zf5lnhh9b6/3iTxGp6oGpduPiF9GD
-	 ymFBYm8vbFrrKs5puTia+Pupxmp06KCUsJbSM6zkIiprqyDUObeJn/eNT+/X25hi3A
-	 xg/UvBpvPLZfTxbhZoGbqgu/a49CMKE5ZhRXIsYHLbxklhd+x8UIKa/qonuAwP/Ava
-	 ndKDAjt1DtNWvBczeXZVfdZB5bneo18d9yw/tJUnvfOHWwv1v6XlNbMYmqPb6ShfwG
-	 6M37zL1Q9XGow==
-Date: Fri, 18 Apr 2025 09:40:28 +0200
-From: Ingo Molnar <mingo@kernel.org>
-To: Ilpo =?iso-8859-1?Q?J=E4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: Andy Shevchenko <andy@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Len Brown <lenb@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
-	Ingo Molnar <mingo@redhat.com>, Borislav Petkov <bp@alien8.de>,
-	Dave Hansen <dave.hansen@linux.intel.com>, x86@kernel.org,
-	"H. Peter Anvin" <hpa@zytor.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, linux-acpi@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/1] x86: Use resource_set_{range,size}() helpers
-Message-ID: <aAIB7Om9n_tXDnvk@gmail.com>
-References: <20250416101318.7313-1-ilpo.jarvinen@linux.intel.com>
- <Z_-E3W8i4EfxdBh3@smile.fi.intel.com>
- <a046f6bb-0b6e-a431-eaa5-ecd279459f86@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=siemens.com header.i=huaqian.li@siemens.com header.b="eLkDR0Mk"
+Received: by mta-64-227.siemens.flowmailer.net with ESMTPSA id 20250418073045c25e0db4d368c83ef1
+        for <linux-pci@vger.kernel.org>;
+        Fri, 18 Apr 2025 09:30:45 +0200
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; s=fm2;
+ d=siemens.com; i=huaqian.li@siemens.com;
+ h=Date:From:Subject:To:Message-ID:MIME-Version:Content-Type:Content-Transfer-Encoding:Cc:References:In-Reply-To;
+ bh=7Bm7s0x8m0xotm+8whhHLpDbeWch2/Mvszm5ppknXlk=;
+ b=eLkDR0MkESiN1rZ99/QJB8Fet6JhgMZHVTes3IMqMLf4cLxYAiG838DZ3h91WyUIKuf/Do
+ UhLvTgh8UvbzL01eIqh2j5ejB01+jjdetmhyVzhZkvZX8aMPqWNUBTMZpSGYhLIv8VIS4Ygi
+ b0Itn9GAegOodXYlaBm+PbghGP5NccKktmtVbD7g70UAMFYj2T/Qspd35VxU0lpFTfi6kaBe
+ qjeLmQ3Af17LpkK8CSz9YJbSocAzHHDEaBMJlKvIXk5e59n2tP3GgbFOFaOkaan7vr3/6Zt+
+ 0/nMqHLnneFqJHHS5HNHiW0/7JhDpxRg5zbuV/RY70KgCVpOOPY1kJZg==;
+From: huaqian.li@siemens.com
+To: helgaas@kernel.org,
+	m.szyprowski@samsung.com,
+	robin.murphy@arm.com
+Cc: baocheng.su@siemens.com,
+	bhelgaas@google.com,
+	conor+dt@kernel.org,
+	devicetree@vger.kernel.org,
+	diogo.ivo@siemens.com,
+	huaqian.li@siemens.com,
+	jan.kiszka@siemens.com,
+	kristo@kernel.org,
+	krzk+dt@kernel.org,
+	kw@linux.com,
+	linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	lpieralisi@kernel.org,
+	nm@ti.com,
+	robh@kernel.org,
+	s-vadapalli@ti.com,
+	ssantosh@kernel.org,
+	vigneshr@ti.com,
+	iommu@lists.linux.dev
+Subject: [PATCH v7 0/8] soc: ti: Add and use PVU on K3-AM65 for DMA isolation
+Date: Fri, 18 Apr 2025 15:30:18 +0800
+Message-Id: <20250418073026.2418728-1-huaqian.li@siemens.com>
+In-Reply-To: <20241030205703.GA1219329@bhelgaas>
+References: <20241030205703.GA1219329@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <a046f6bb-0b6e-a431-eaa5-ecd279459f86@linux.intel.com>
+X-Flowmailer-Platform: Siemens
+Feedback-ID: 519:519-959203:519-21489:flowmailer
+
+From: Li Hua Qian <huaqian.li@siemens.com>
+
+Changes in v7:
+ - add schema expressing dependency as suggested on pci-host bindings
+ - resolve review comments on pci-keystone driver
+ - add a new patch to make IO_TLB_SEGSIZE configurable
+ - improve patches based on checkpath.pl
+
+Changes in v6:
+ - make restricted DMA memory-region available to all pci-keystone
+   devices, moving property to unconditional section (patch 2)
+
+Changes in v5:
+ - resolve review comments on pci-host bindings
+ - reduce DMA memory regions to 1 - swiotlb does not support more
+ - move activation into overlay (controlled via firmware)
+ - use ks_init_vmap helper instead of loop in
+   rework ks_init_restricted_dma
+ - add more comments to pci-keystone
+ - use 2 chained TLBs of PVU to support maximum of swiotlb (320 MB)
+
+Changes in v4:
+ - reorder patch queue, moving all DTS changes to the back
+ - limit activation to IOT2050 Advanced variants
+ - move DMA pool to allow firmware-based expansion it up to 512M
+
+Changes in v3:
+ - fix ti,am654-pvu.yaml according to review comments
+ - address review comments on ti,am65-pci-host.yaml
+ - differentiate between different compatibles in ti,am65-pci-host.yaml
+ - move pvu nodes to k3-am65-main.dtsi
+ - reorder patch series, pulling bindings and generic DT bits to the front
+
+Changes in v2:
+ - fix dt_bindings_check issues (patch 1)
+ - address first review comments (patch 2)
+ - extend ti,am65-pci-host bindings for PVU (new patch 3)
+
+Only few of the K3 SoCs have an IOMMU and, thus, can isolate the system
+against DMA-based attacks of external PCI devices. The AM65 is without
+an IOMMU, but it comes with something close to it: the Peripheral
+Virtualization Unit (PVU).
+
+The PVU was originally designed to establish static compartments via a
+hypervisor, isolate those DMA-wise against each other and the host and
+even allow remapping of guest-physical addresses. But it only provides
+a static translation region, not page-granular mappings. Thus, it cannot
+be handled transparently like an IOMMU.
+
+Now, to use the PVU for the purpose of isolated PCI devices from the
+Linux host, this series takes a different approach. It defines a
+restricted-dma-pool for the PCI host, using swiotlb to map all DMA
+buffers from a static memory carve-out. And to enforce that the devices
+actually follow this, a special PVU soc driver is introduced. The driver
+permits access to the GIC ITS and otherwise waits for other drivers that
+detect devices with constrained DMA to register pools with the PVU.
+
+For the AM65, the first (and possibly only) driver where this is
+introduced is the pci-keystone host controller. Finally, this series
+provides a DT overlay for the IOT2050 Advanced devices (all have
+MiniPCIe or M.2 extension slots) to make use of this protection scheme.
+Application of this overlay will be handled by firmware.
+
+Due to the cross-cutting nature of these changes, multiple subsystems
+are affected. However, I wanted to present the whole thing in one series
+to allow everyone to review with the complete picture in hands. If
+preferred, I can also split the series up, of course.
+
+Jan
 
 
-* Ilpo Järvinen <ilpo.jarvinen@linux.intel.com> wrote:
+Jan Kiszka (7):
+  dt-bindings: soc: ti: Add AM65 peripheral virtualization unit
+  dt-bindings: PCI: ti,am65: Extend for use with PVU
+  soc: ti: Add IOMMU-like PVU driver
+  PCI: keystone: Add support for PVU-based DMA isolation on AM654
+  arm64: dts: ti: k3-am65-main: Add PVU nodes
+  arm64: dts: ti: k3-am65-main: Add VMAP registers to PCI root complexes
+  arm64: dts: ti: iot2050: Add overlay for DMA isolation for devices
+    behind PCI RC
 
-> On Wed, 16 Apr 2025, Andy Shevchenko wrote:
-> 
-> > On Wed, Apr 16, 2025 at 01:13:18PM +0300, Ilpo Järvinen wrote:
-> > > Convert open coded resource size calculations to use
-> > > resource_set_{range,size}() helpers.
-> > > 
-> > > While at it, use SZ_* for size parameter which makes the intent of code
-> > > more obvious.
-> > 
-> > ...
-> > 
-> > > +	resource_set_range(res, base, 1ULL << (segn_busn_bits + 20));
-> > 
-> > Then probably
-> > 
-> > 	resource_set_range(res, base, BIT_ULL(segn_busn_bits) * SZ_1M);
-> > 
-> > to follow the same "While at it"?
-> 
-> I'll change that now since you brought it up. It did cross my mind to 
-> convert that to * SZ_1M but it seemed to go farther than I wanted with a 
-> simple conversion patch.
-> 
-> I've never liked the abuse of BIT*() for size related shifts though, 
-> I recall I saw somewhere a helper that was better named for size 
-> related operations but I just cannot recall its name and seem to not 
-> find that anymore :-(. But until I come across it once again, I guess 
-> I'll have to settle to BIT*().
+Li Hua Qian (1):
+  swiotlb: Make IO_TLB_SEGSIZE configurable
 
-BITS_TO_LONGS()?
+ .../bindings/pci/ti,am65-pci-host.yaml        |  34 +-
+ .../bindings/soc/ti/ti,am654-pvu.yaml         |  51 ++
+ arch/arm64/boot/dts/ti/Makefile               |   5 +
+ arch/arm64/boot/dts/ti/k3-am65-main.dtsi      |  38 +-
+ ...am6548-iot2050-advanced-dma-isolation.dtso |  33 ++
+ drivers/pci/controller/dwc/pci-keystone.c     | 106 ++++
+ drivers/soc/ti/Kconfig                        |   4 +
+ drivers/soc/ti/Makefile                       |   1 +
+ drivers/soc/ti/ti-pvu.c                       | 500 ++++++++++++++++++
+ include/linux/swiotlb.h                       |   2 +-
+ include/linux/ti-pvu.h                        |  28 +
+ kernel/dma/Kconfig                            |   7 +
+ 12 files changed, 801 insertions(+), 8 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/soc/ti/ti,am654-pvu.yaml
+ create mode 100644 arch/arm64/boot/dts/ti/k3-am6548-iot2050-advanced-dma-isolation.dtso
+ create mode 100644 drivers/soc/ti/ti-pvu.c
+ create mode 100644 include/linux/ti-pvu.h
 
-Thanks,
+-- 
+2.34.1
 
-	Ingo
