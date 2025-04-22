@@ -1,39 +1,64 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01D45230BF2;
-	Tue, 22 Apr 2025 06:27:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE0C222A814;
+	Tue, 22 Apr 2025 06:36:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745303284; cv=none; b=OCIfZ4eR2PotiERZFlfQOAH8BkXaua4eqfMW5cSQS8KGgqdJkxrXwUYCFIREfM3qR6LMCkO0V5fEJCggJY+g7o6+iPelGuievYPbKkTjFdhxip6u0sia2Su9ZvEOGaNpT4GAw9Q0ZLK4LOhbB21hhvobp9TZVThH5m+W3IE2Pss=
+	t=1745303802; cv=none; b=cPVoqyKbYRtwQvEvboLbQ1KSS5lllaLoLqymQFzzAE+T9PrAxriogpPhLs9zkQE9Zif62QVylEoo17JpCswSEJy+Ll1UbjeOqN1dTk0gfjSpUu46jqBivOGDXod/pn3AmcGr08mURX02NAerrhzzgo4XbxzfBIXFY5724JFRbzc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745303284; c=relaxed/simple;
-	bh=b/vwyo75mxMndN1Nz5HnL9ekjjoTmFO3t1a2DFAyEms=;
+	s=arc-20240116; t=1745303802; c=relaxed/simple;
+	bh=HfetzUxRXy4rCDFO2Jid01crVoBGhZcgFFPhx3Tl4zQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TML2sTu4tmiAT6ieLIc+7gR+qkQT3Elm0jlBaR+geBYz1fxqzaq22PrNERD5OMYUJ2hUi6X3OTSfy0VNTXwthUDThKXT2AMV5uH1RYX7Aq7jWSmZWK7cyxfU+eF8CBBrR9yv1cPH+FGIXq2gP7O+wSRaHZx0/LhZkWoXZrXL2sE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 161B4200A2A3;
-	Tue, 22 Apr 2025 08:27:32 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 620411AAC79; Tue, 22 Apr 2025 08:27:52 +0200 (CEST)
-Date: Tue, 22 Apr 2025 08:27:52 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	linux-acpi@vger.kernel.org
-Subject: Re: Potential issue with pci_prepare_to_sleep if there's no platform
- support for D3cold transition
-Message-ID: <aAc26NTVcXy1BCxU@wunner.de>
-References: <62de9027-e4cd-4192-90e8-64f4c4a8fe4b@gmail.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=gbe5RIKE/cYY8WM46Nw5VvXyeCQQTKP/M61vKHva5cyuCwUrkK+nb1+709BOsOdDI1eoyQvFFiGVGVoJnp5DQoz8CogUPsWWe5xmd1t1093FeXMbOjkG2LPOWCGuSZ8a7ytm0YErPEck/tmNVoK3Mi5Le8nETRdnMeGGAIVgSmg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qAJ9ve3O; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qAJ9ve3O"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C66D0C4CEEA;
+	Tue, 22 Apr 2025 06:36:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745303801;
+	bh=HfetzUxRXy4rCDFO2Jid01crVoBGhZcgFFPhx3Tl4zQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qAJ9ve3OT0ZJnEWm3PYqcpUZBluuU64tZMSjgqeGPlLsklDQcSPGF19PJHu4OVyak
+	 +mfowzS/d2IZFkhAaKZSZmz3bFxaaljwCLKAbX4CkMGSTFnCxZYKExIhX8brBVrDIn
+	 EnlOR/RtUrvb5TEsQ3vHZY8rvQVuJb4STE7Le7iVPo+vTGVmuK4GjktT2YA8InWPCx
+	 uofgjFe0OVXsEodcivnhb8/7guwb3Azqlc/8/cOSiqu4hlvpFTrOi2w+4KOno8BYEF
+	 ZAUjL+s5coWHLBK4MTAwZgXnOjZruNtZfPNGBTDgLtup3GvGYhpyREXyrFYAhySxzj
+	 pUOOurdEnqncw==
+Date: Tue, 22 Apr 2025 09:36:38 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
+	Jake Edge <jake@lwn.net>, Jonathan Corbet <corbet@lwn.net>,
+	Jason Gunthorpe <jgg@ziepe.ca>, Zhu Yanjun <zyjzyj2000@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+	iommu@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>
+Subject: Re: [PATCH v8 20/24] blk-mq: add scatterlist-less DMA mapping helpers
+Message-ID: <20250422063638.GB48485@unreal>
+References: <cover.1744825142.git.leon@kernel.org>
+ <87b151a3791d71e58ec6f1b42bcf5fe06304cf80.1744825142.git.leon@kernel.org>
+ <20250422042727.GC27723@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,38 +67,14 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <62de9027-e4cd-4192-90e8-64f4c4a8fe4b@gmail.com>
+In-Reply-To: <20250422042727.GC27723@lst.de>
 
-[cc += Rafael, linux-acpi]
-
-On Mon, Apr 21, 2025 at 10:05:59PM +0200, Heiner Kallweit wrote:
-> If there's no platform support for transition to D3cold, then
-> pci_set_power_state(dev, D3cold) still returns 0, even though
-> power state is transitioned to D3hot only. We called
-> pci_enable_wake(dev, D3cold, wakeup) before, therefore PME for
-> D3hot may not be enabled. Is this a bug?
+On Tue, Apr 22, 2025 at 06:27:27AM +0200, Christoph Hellwig wrote:
+> On Fri, Apr 18, 2025 at 09:47:50AM +0300, Leon Romanovsky wrote:
+> > +#define blk_phys_to_page(_paddr) \
+> > + 	(pfn_to_page(__phys_to_pfn(_paddr)))
 > 
-> Background:
-> In __pci_set_power_state we have the following:
-> 
-> error = pci_set_low_power_state(dev, PCI_D3hot, locked);
-> if (pci_platform_power_transition(dev, PCI_D3cold))
-> 	return error;
-> 
-> The acpi_pci_set_power_state() stub returns -ENODEV.
-> Therefore, if error=0,  __pci_set_power_state() will
-> return 0 if pci_platform_power_transition() fails.
+> The code can use phys_to_page now that that is provided kernel-wide
+> instead this temporary helper.
 
-pci_prepare_to_sleep() calls pci_target_state() right at the top.
-
-If wakeup is supported and enabled, pci_target_state() is supposed
-to find the deepest power state supporting wakeup.  If D3cold doesn't
-support wakeup, D3hot or a shallower state is returned.
-
-Hence I don't quite understand how the scenario you're describing
-could occur in practice.  Are you seeing actual issues and have tracked
-them down to incorrect handling in pci_prepare_to_sleep()?
-
-Thanks,
-
-Lukas
+Thanks, will change.
