@@ -1,107 +1,122 @@
-Received: from lelvem-ot02.ext.ti.com (lelvem-ot02.ext.ti.com [198.47.23.235])
+Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FD281F4CB6;
-	Wed, 23 Apr 2025 05:04:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C34B3267395;
+	Wed, 23 Apr 2025 07:53:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745384663; cv=none; b=TcEy4+w5FZN80CJ27TG2H+u0kTk9ScaChPQbWL3sdlp9q6LP93uhzIWb9yDUjPAL61z1AttUooBHlJCknMn+6fyAhkqNw9lHrV9F9LbWcyQggd2qJIcZVig70v3sPvLokmei6EahxDsyNeB3se3trC01cj8JpFvAIlSRFmlPwzY=
+	t=1745394839; cv=none; b=i8sQ8KswfNHoUtbzzI2lVgg2/8c2tGCQnVhZ4Aodk6NfRCMwvncmlOfl7GNYZKp3WLrVgN0trEzbJm923saZaAvSUJjwhuvcwXbTGDt8NulFJ/xnLiTgVeBY8x+sH2fc9aTlx1VGMS7zknFfni7aYPiYjfMj05x3EqEf2VOMAZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745384663; c=relaxed/simple;
-	bh=LCa5nSU+RimloJrjqyLxUqNkPx8DVPcIknbTh9dronI=;
-	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bl9HfH1rbJwy/PqeeoVoXClHSl3vTlLzDmAbbXSPSF2Wozvq/wrTghgapnjKTi6tBd9S0FFhisYLlt7lCbT9tRA0uudgltN/7V+0lbe56VOTiv6cSA37UVJkbMdxTImMyPraBSSQ/QSd7/tOb9IXVEcoKOzZ1ymv56oALpu/fP4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=mvL4O6fg; arc=none smtp.client-ip=198.47.23.235
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1745394839; c=relaxed/simple;
+	bh=Afr2XNZYO2y/DV4KL3zXWFGDJkE6nBzrVvYEeUZ6r5w=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=GDyjR7V/Cq4RvC43k5MkHPHaQzODOsovWLSTz/Oc2fAQRZCbPdr6YIIdoScqaIhxOIRQPRsQBycmOb4zw2aYoogv4bp23tIyPq6Nh82HRmr0Fho/MCB7/gUqXsbOJrezUy5AVcbTm6AJ+kfcBtkoHOhwSyJ/1SB/K7+mlE+ccus=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=oiDnv4b5; arc=none smtp.client-ip=91.207.212.93
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="mvL4O6fg"
-Received: from fllv0035.itg.ti.com ([10.64.41.0])
-	by lelvem-ot02.ext.ti.com (8.15.2/8.15.2) with ESMTPS id 53N53tB42199968
-	(version=TLSv1.2 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 23 Apr 2025 00:03:55 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1745384635;
-	bh=Kne9B5HdCuOKeWEfCSxnIK/Om9pYT1tA2Pc21Izdsiw=;
-	h=Date:From:To:CC:Subject:References:In-Reply-To;
-	b=mvL4O6fgv/vy8vu+JMpi+BywPYZeqxNja0WbcKaRNcZOKYWeY5c+epfkzyLSQ8XYb
-	 Pz0Y6g58h8N5RByhEzaXX+EgwQ8bkPTjA8dDYSMn5GuxWlWNu11LQrLincMdJD9paC
-	 cIgorh3DsLgzMUdEstxHd//toEhVLAbC4bz91QuA=
-Received: from DFLE102.ent.ti.com (dfle102.ent.ti.com [10.64.6.23])
-	by fllv0035.itg.ti.com (8.15.2/8.15.2) with ESMTPS id 53N53tAE016440
-	(version=TLSv1.2 cipher=AES256-GCM-SHA384 bits=256 verify=FAIL);
-	Wed, 23 Apr 2025 00:03:55 -0500
-Received: from DFLE105.ent.ti.com (10.64.6.26) by DFLE102.ent.ti.com
- (10.64.6.23) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23; Wed, 23
- Apr 2025 00:03:54 -0500
-Received: from lelvsmtp5.itg.ti.com (10.180.75.250) by DFLE105.ent.ti.com
- (10.64.6.26) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.23 via
- Frontend Transport; Wed, 23 Apr 2025 00:03:54 -0500
-Received: from localhost (uda0492258.dhcp.ti.com [10.24.72.113])
-	by lelvsmtp5.itg.ti.com (8.15.2/8.15.2) with ESMTP id 53N53rgV084408;
-	Wed, 23 Apr 2025 00:03:54 -0500
-Date: Wed, 23 Apr 2025 10:33:53 +0530
-From: Siddharth Vadapalli <s-vadapalli@ti.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Siddharth Vadapalli <s-vadapalli@ti.com>, <lpieralisi@kernel.org>,
-        <kw@linux.com>, <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <vigneshr@ti.com>, <kishon@kernel.org>,
-        <18255117159@163.com>, <cassel@kernel.org>,
-        <wojciech.jasko-EXT@continental-corporation.com>,
-        <thomas.richard@bootlin.com>, <bwawrzyn@cisco.com>,
-        <linux-pci@vger.kernel.org>, <linux-omap@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <srk@ti.com>
-Subject: Re: [PATCH v4 2/4] PCI: cadence-host: Introduce
- cdns_pcie_host_disable helper for cleanup
-Message-ID: <35d14093-85b1-4273-810c-2dbeaa3acc4e@ti.com>
-References: <20250417124408.2752248-3-s-vadapalli@ti.com>
- <20250422164934.GA333709@bhelgaas>
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="oiDnv4b5"
+Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6bxw3001570;
+	Wed, 23 Apr 2025 09:53:27 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	Oxqz3gPKLjUeq3RC+gzdPgb15H4SWpt1bnaDWPNbrFk=; b=oiDnv4b5nGBPOmL5
+	vZzNHGCFHhdfxDduNpZVnSmKCPEpl0bZ8Krim7liuyYhwOY6ahaTI5cWcpG5xUf5
+	Zso1UfQH7NqgciTEk+uwDMJ/1BY4d7r1gRAWOXblTTFSElUwnw7L0YcKFZp2cN59
+	HfsJuU6NkBDWFAkBhp1BtTm17nBWI8TVJyKz42g4XfAWLJApb4Qkvt7dAw0o9hjS
+	EMCGh0tuu6BmKkRfOCkoaVkuRKP4sCDorBybkvrdHIAM5hpB7Xah9XbNTtWxvWre
+	KBzVRcskkW9OFAZwKi9vrAAQxNML39AJq166WBB5PYk6Sk22v31PAxchrTfWCptv
+	Auw1Jg==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjv1wdd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 23 Apr 2025 09:53:27 +0200 (MEST)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id C948D40052;
+	Wed, 23 Apr 2025 09:51:51 +0200 (CEST)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 2121A9F9972;
+	Wed, 23 Apr 2025 09:51:09 +0200 (CEST)
+Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
+ 2025 09:51:08 +0200
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <cassel@kernel.org>, <johan+linaro@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 6/9] arm64: dts: st: add PCIe pinctrl entries in stm32mp25-pinctrl.dtsi
+Date: Wed, 23 Apr 2025 09:49:37 +0200
+Message-ID: <20250423074940.3849091-7-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250423074940.3849091-1-christian.bruel@foss.st.com>
+References: <20250423074940.3849091-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Disposition: inline
-In-Reply-To: <20250422164934.GA333709@bhelgaas>
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-23_05,2025-04-22_01,2024-11-22_01
 
-On Tue, Apr 22, 2025 at 11:49:34AM -0500, Bjorn Helgaas wrote:
+Add PCIe pinctrl entries in stm32mp25-pinctrl.dtsi
+init: forces GPIO to low while probing so CLKREQ is low for
+phy_init
+default: restore the AFMUX after controller probe
 
-Hello Bjorn,
+Add Analog pins of PCIe to perform power cycle
 
-> On Thu, Apr 17, 2025 at 06:14:06PM +0530, Siddharth Vadapalli wrote:
-> > Introduce the helper function cdns_pcie_host_disable() which will undo
-> > the configuration performed by cdns_pcie_host_setup(). Also, export it
-> > for use by existing callers of cdns_pcie_host_setup(), thereby allowing
-> > them to cleanup on their exit path.
-> 
-> For the merge commit log and eventual pull request, can you give me a
-> hint about the motivation for this?  Based on the other patches in
-> this series, my guess is that this is required for making the j721e
-> driver buildable as a module and removable?
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+---
+ arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi | 20 +++++++++++++++++++
+ 1 file changed, 20 insertions(+)
 
-I have described the motivation in the cover-letter of this series in
-detail. I am sharing the same below for your reference:
+diff --git a/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi b/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi
+index 8fdd5f020425..f0d814bc7c60 100644
+--- a/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi
++++ b/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi
+@@ -82,6 +82,26 @@ pins {
+ 		};
+ 	};
+ 
++	pcie_pins_a: pcie-0 {
++		pins {
++			pinmux = <STM32_PINMUX('J', 0, AF4)>;
++			bias-disable;
++		};
++	};
++
++	pcie_init_pins_a: pcie-init-0 {
++		pins {
++			pinmux = <STM32_PINMUX('J', 0, GPIO)>;
++			output-low;
++		};
++	};
++
++	pcie_sleep_pins_a: pcie-sleep-0 {
++		pins {
++			pinmux = <STM32_PINMUX('J', 0, ANALOG)>;
++		};
++	};
++
+ 	sdmmc1_b4_pins_a: sdmmc1-b4-0 {
+ 		pins1 {
+ 			pinmux = <STM32_PINMUX('E', 4, AF10)>, /* SDMMC1_D0 */
+-- 
+2.34.1
 
-"The motivation for this series is that PCIe is not a necessity
-for booting the SoC, due to which it doesn't have to be a built-in
-module. Additionally, the defconfig doesn't enable the PCIe Cadence
-Controller drivers and the PCI J721E driver, due to which PCIe is not
-supported by default. Enabling the configs as of now (i.e. without this
-series) will result in built-in drivers i.e. a bloated Linux Image for
-everyone who doesn't have the PCIe Controller. Therefore, with this
-series, after enabling support for building the drivers as loadable
-modules, the driver configs can be enabled in the defconfig to build
-the drivers as loadable modules, thereby enabling PCIe."
-
-In brief, in order to enable the driver configs, the driver needs to be
-a loadable module. Else, the patch for the configs will be rejected:
-https://lore.kernel.org/linux-arm-kernel/20250122145822.4ewsmkk6ztbeejzf@slashing/
-
-Regards,
-Siddharth.
