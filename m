@@ -1,61 +1,75 @@
-Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1025D27C15B;
-	Wed, 23 Apr 2025 08:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 610AB27CB36;
+	Wed, 23 Apr 2025 08:14:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396075; cv=none; b=Y45H2ULVXVwzn2TbfrhnbiLurtnIcFw5Cy2rAEFlYoQhUAyeiDgamc6frZ2se6FzpVCaHTofwDsBNk7CM/IUZvoAOfGHPdGWZMLn/lBnS4y6LL6jiGWJJuxzO/RYsh0vR+2Bt87Pipm0MkVDmtrqz1uXbhUP+lRcnzxE9wtn8oM=
+	t=1745396076; cv=none; b=UVw4+Uawx2yiq5O+Px6svS0iCEHPv5iMDSQUny7noiy2DWsdJWfaOmVz3EPJsXo3TmYsGDjypPh05+M0stYOAnYXWF40/TQDa/xwTaNJhchLcTTzoNcMl3Uw73AKtTGQw5/nKS8QfFr98hHp71J9z+md7oHfIuWkmx5t6LBbCPc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745396075; c=relaxed/simple;
-	bh=u5+GAHAtElv97qBlSvORRvjZ6rQ3Ednmjnp1aN+0J1A=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ND/eSDd+WgM3MxaR5bRFVs12Zkx73dWFqAFjJs+ZnzOS/0GNGph+LxNbyWTcm/0ZFFapHq3fXWVLMcKNanR6B+Alp0LdNDOXnjADwZXK13pyhs4bPwr4tevk2QeZUSkjNmle4Jd+7pjBJ0R22LjieCSgBLPeMqaH3uG/xLVQqGo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=eOmOA4kJ; arc=none smtp.client-ip=185.132.182.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	s=arc-20240116; t=1745396076; c=relaxed/simple;
+	bh=d1+z79zg+kihe5QDvuiZPuBTqwMqD9eJrziwPARATZw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=K2JcvhPi/6woJCsVXdy50zEKYRVn1nk3rH1u87k6fvs6WQJHgPobE+Cav6ApLRlCNJfK4lmrckgR1XNV0qt967wbaPrFUxcp1HeEwYOea5NLNHDNH7whL3PjoDQV9eYKwK81uSfmqVPADSLw0GKlVno5E+R+0/xdBjM72A9jNAw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pxwe7iTc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="eOmOA4kJ"
-Received: from pps.filterd (m0241204.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6XXAH010685;
-	Wed, 23 Apr 2025 10:14:03 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=selector1; bh=0g5P1vpX91HDoX+XwfRcnh
-	/gCOZfuoeA3kwE8ZY9iBw=; b=eOmOA4kJIqmnzHAVThgXoRWwzGDZpgGSA+wbCh
-	AF0Ua4odlTYSyMzlR1ZCU+W52Aq49XDOaUXaISStsxNlq6hGTSNCPIBN+2G2Omg2
-	8NxwXHo5JbxiMvJ5Uf8ucPsiV6ZS9ISXD1GtesTZeny/GLQEOmFCQcVGYVyWTJWr
-	xmUCt9d3D+Z9Gk6BiXKNJq+OsTvLXF6CUBdz6jLYQ9+M1AOXIWM8wj2q5H0jSCtW
-	Qtc6duyjpoPiwv/OhyiDJfUtQ0uTTLZo5qrETyYDBCNL0dhGAoa9avahR3eH2jcv
-	IrhPJ3YqmUyjGp0cj90wFEWDmUv/P2ywc0vVCIBmOxLokJwg==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jk3a25r-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Apr 2025 10:14:03 +0200 (MEST)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id BEA2540068;
-	Wed, 23 Apr 2025 10:12:23 +0200 (CEST)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 560C17ED12A;
-	Wed, 23 Apr 2025 10:10:56 +0200 (CEST)
-Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
- 2025 10:10:56 +0200
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
-        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
-        <cassel@kernel.org>, <johan+linaro@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 0/9] Add STM32MP25 PCIe drivers
-Date: Wed, 23 Apr 2025 10:10:42 +0200
-Message-ID: <20250423081051.3907930-1-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pxwe7iTc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7F16CC4CEE2;
+	Wed, 23 Apr 2025 08:14:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745396076;
+	bh=d1+z79zg+kihe5QDvuiZPuBTqwMqD9eJrziwPARATZw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=pxwe7iTcgrDrrJrmcOzX972ifQ9D6JVEhDyjPcwwbwuVl5WBAXYDa/8l4DwaLlO1Y
+	 vWsvyN8+xhjntksq9HHQv/U5yDIQ7bXtbs603iaK9U11b3NwRT8KTo7Y16zEYpBwAb
+	 tekXO0ynYv4MEb0+spPpvw7nl4VYxfxNCatQQ4wLsfvGxwO1M7Nx+Fq7d37PGV8eWi
+	 FEqyUa6I1tPF5wbesUJJBhjietyGAKhO/Ixdu0i9NC9A91a0SuSF5RdIyowf8I/PLc
+	 cdrRTsuDCiC9V64kjPfH592VX/vNZGPVXZWQfZlhD2D+uTZMCYmKBCur2EngxrpVBY
+	 rnT3jQf4b8oTQ==
+From: Leon Romanovsky <leon@kernel.org>
+To: Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Keith Busch <kbusch@kernel.org>
+Cc: Jake Edge <jake@lwn.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Zhu Yanjun <zyjzyj2000@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org,
+	linux-mm@kvack.org,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Leon Romanovsky <leonro@nvidia.com>
+Subject: [PATCH v9 09/24] docs: core-api: document the IOVA-based API
+Date: Wed, 23 Apr 2025 11:13:00 +0300
+Message-ID: <7d5cf410e923a22c519ea60f4f35e3c9f8f845e3.1745394536.git.leon@kernel.org>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <cover.1745394536.git.leon@kernel.org>
+References: <cover.1745394536.git.leon@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,104 +77,100 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
 
-this patch depends on patch 
-https://patchwork.kernel.org/project/linux-arm-kernel/list/?series=953545
+From: Christoph Hellwig <hch@lst.de>
 
-Changes in v8:
-   - Whitespace in comment
-   
-Changes in v7:
-   - Use device_init_wakeup to enable wakeup
-   - Fix comments (Bjorn)
+Add an explanation of the newly added IOVA-based mapping API.
 
-Changes in v6:
-   - Call device_wakeup_enable() to fix WAKE# wakeup.
-   Address comments from Manivanna:
-   - Fix/Add Comments
-   - Fix DT indents
-   - Remove dw_pcie_ep_linkup() in EP start link
-   - Add PCIE_T_PVPERL_MS delay in RC PERST# deassert
-   
-Changes in v5:
-   Address driver comments from Manivanna:
-   - Use dw_pcie_{suspend/resume}_noirq instead of private ones.
-   - Move dw_pcie_host_init() to probe
-   - Add stm32_remove_pcie_port cleanup function
-   - Use of_node_put in stm32_pcie_parse_port
-   - Remove wakeup-source property
-   - Use generic dev_pm_set_dedicated_wake_irq to support wake# irq
-   
-Changes in v4:
-   Address bindings comments Rob Herring
-   - Remove phy property form common yaml
-   - Remove phy-name property
-   - Move wake_gpio and reset_gpio to the host root port
-   
-Changes in v3:
-   Address comments from Manivanna, Rob and Bjorn:
-   - Move host wakeup helper to dwc core (Mani)
-   - Drop num-lanes=<1> from bindings (Rob)
-   - Fix PCI address of I/O region (Mani)
-   - Moved PHY to a RC rootport subsection (Bjorn, Mani)
-   - Replaced dma-limit quirk by dma-ranges property (Bjorn)
-   - Moved out perst assert/deassert from start/stop link (Mani)
-   - Drop link_up test optim (Mani)
-   - DT and comments rephrasing (Bjorn)
-   - Add dts entries now that the combophy entries has landed
-   - Drop delaying Configuration Requests
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+---
+ Documentation/core-api/dma-api.rst | 71 ++++++++++++++++++++++++++++++
+ 1 file changed, 71 insertions(+)
 
-Changes in v2:
-   - Fix st,stm32-pcie-common.yaml dt_binding_check	
-
-Changes in v1:
-   Address comments from Rob Herring and Bjorn Helgaas:
-   - Drop st,limit-mrrs and st,max-payload-size from this patchset
-   - Remove single reset and clocks binding names and misc yaml cleanups
-   - Split RC/EP common bindings to a separate schema file
-   - Use correct PCIE_T_PERST_CLK_US and PCIE_T_RRS_READY_MS defines
-   - Use .remove instead of .remove_new
-   - Fix bar reset sequence in EP driver
-   - Use cleanup blocks for error handling
-   - Cosmetic fixes
-
-Christian Bruel (9):
-  dt-bindings: PCI: Add STM32MP25 PCIe Root Complex bindings
-  PCI: stm32: Add PCIe host support for STM32MP25
-  dt-bindings: PCI: Add STM32MP25 PCIe Endpoint bindings
-  PCI: stm32: Add PCIe Endpoint support for STM32MP25
-  MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-  arm64: dts: st: add PCIe pinctrl entries in stm32mp25-pinctrl.dtsi
-  arm64: dts: st: Add PCIe Rootcomplex mode on stm32mp251
-  arm64: dts: st: Add PCIe Endpoint mode on stm32mp251
-  arm64: dts: st: Enable PCIe on the stm32mp257f-ev1 board
-
- .../bindings/pci/st,stm32-pcie-common.yaml    |  33 ++
- .../bindings/pci/st,stm32-pcie-ep.yaml        |  67 +++
- .../bindings/pci/st,stm32-pcie-host.yaml      | 112 +++++
- MAINTAINERS                                   |   7 +
- arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi |  20 +
- arch/arm64/boot/dts/st/stm32mp251.dtsi        |  57 +++
- arch/arm64/boot/dts/st/stm32mp257f-ev1.dts    |  21 +
- drivers/pci/controller/dwc/Kconfig            |  24 +
- drivers/pci/controller/dwc/Makefile           |   2 +
- drivers/pci/controller/dwc/pcie-stm32-ep.c    | 417 ++++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.c       | 370 ++++++++++++++++
- drivers/pci/controller/dwc/pcie-stm32.h       |  16 +
- 12 files changed, 1146 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32-ep.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.c
- create mode 100644 drivers/pci/controller/dwc/pcie-stm32.h
-
+diff --git a/Documentation/core-api/dma-api.rst b/Documentation/core-api/dma-api.rst
+index 8e3cce3d0a23..2ad08517e626 100644
+--- a/Documentation/core-api/dma-api.rst
++++ b/Documentation/core-api/dma-api.rst
+@@ -530,6 +530,77 @@ routines, e.g.:::
+ 		....
+ 	}
+ 
++Part Ie - IOVA-based DMA mappings
++---------------------------------
++
++These APIs allow a very efficient mapping when using an IOMMU.  They are an
++optional path that requires extra code and are only recommended for drivers
++where DMA mapping performance, or the space usage for storing the DMA addresses
++matter.  All the considerations from the previous section apply here as well.
++
++::
++
++    bool dma_iova_try_alloc(struct device *dev, struct dma_iova_state *state,
++		phys_addr_t phys, size_t size);
++
++Is used to try to allocate IOVA space for mapping operation.  If it returns
++false this API can't be used for the given device and the normal streaming
++DMA mapping API should be used.  The ``struct dma_iova_state`` is allocated
++by the driver and must be kept around until unmap time.
++
++::
++
++    static inline bool dma_use_iova(struct dma_iova_state *state)
++
++Can be used by the driver to check if the IOVA-based API is used after a
++call to dma_iova_try_alloc.  This can be useful in the unmap path.
++
++::
++
++    int dma_iova_link(struct device *dev, struct dma_iova_state *state,
++		phys_addr_t phys, size_t offset, size_t size,
++		enum dma_data_direction dir, unsigned long attrs);
++
++Is used to link ranges to the IOVA previously allocated.  The start of all
++but the first call to dma_iova_link for a given state must be aligned
++to the DMA merge boundary returned by ``dma_get_merge_boundary())``, and
++the size of all but the last range must be aligned to the DMA merge boundary
++as well.
++
++::
++
++    int dma_iova_sync(struct device *dev, struct dma_iova_state *state,
++		size_t offset, size_t size);
++
++Must be called to sync the IOMMU page tables for IOVA-range mapped by one or
++more calls to ``dma_iova_link()``.
++
++For drivers that use a one-shot mapping, all ranges can be unmapped and the
++IOVA freed by calling:
++
++::
++
++   void dma_iova_destroy(struct device *dev, struct dma_iova_state *state,
++		size_t mapped_len, enum dma_data_direction dir,
++                unsigned long attrs);
++
++Alternatively drivers can dynamically manage the IOVA space by unmapping
++and mapping individual regions.  In that case
++
++::
++
++    void dma_iova_unlink(struct device *dev, struct dma_iova_state *state,
++		size_t offset, size_t size, enum dma_data_direction dir,
++		unsigned long attrs);
++
++is used to unmap a range previously mapped, and
++
++::
++
++   void dma_iova_free(struct device *dev, struct dma_iova_state *state);
++
++is used to free the IOVA space.  All regions must have been unmapped using
++``dma_iova_unlink()`` before calling ``dma_iova_free()``.
+ 
+ Part II - Non-coherent DMA allocations
+ --------------------------------------
 -- 
-2.34.1
+2.49.0
 
