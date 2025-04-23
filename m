@@ -1,75 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D03A228D833;
-	Wed, 23 Apr 2025 08:15:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E286274662;
+	Wed, 23 Apr 2025 08:15:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396123; cv=none; b=ILThK8izSiTkcn1R498RVShlhCRI9KN32YnwWBj5UDL2HXc7LBJbW723/ocTUhKFmExHaorlspazvlG4UWqedKNIUR/ogszPF4ZaUIVfT5ng0kdLUIVsXyTOHw/2QE2efUoNG+TwTtM53xW0bgwoIL2zo2+hnBf77mpPQw7iJPQ=
+	t=1745396123; cv=none; b=nIv/e3lzKG1mr136RdVtgw5Ikz2Xh4adVXMeKyWJiOY7kws9R3lyCL3dmTVzggVTGDgiopCpetD48Ti7Nci0uXTvJGGKJQkqCN+RUFq3sx9yc18JPggGuTCJ16ykBWBYhbcpan4s2Swrkf2uvHtgOXENTBKya6naA27qaKt04Vo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1745396123; c=relaxed/simple;
-	bh=cn4ZAo5vXix5AGqKt4IWuh2vUXjY6lms9OP/AMjOBBE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=X71FUXCx7FBxmMNMgd8cJU+fWVJ5KEBrWRF20D8fGEfRQXKjtEvPiqOKWyMKD4qwKvcfKk88fXfUtuEcSB+zUlvPmtWgnbSoR9Hjl73npgooQiM1lxmjfL+VliUROBlluW/SZ5if0eMMrE7zQ2m2PJ8UDOE9og3holnQXra+lKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZwAGDANF; arc=none smtp.client-ip=10.30.226.201
+	bh=HY4+I2+3sg49hYg59cA7+Tq+pHpR5PQ857K/cvDQ+Jg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ad04SSTQUVuPcA/OOL3eofca2p/r8yI4FgOTp6nGpGyYoc0kyhFLAanmG/smFkh0yHapZ4SHIEf/m72HCCIaRVEVRfJfam0v4QWpLlSLH0WEF8P3Xhiw+OUF9eRKHWT9LGol1QmmxxdIFvYtsberykrzssk9SXRayZOGf/AV/Zo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=s7rSAyuo; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZwAGDANF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7D29EC4CEE2;
-	Wed, 23 Apr 2025 08:15:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745396122;
-	bh=cn4ZAo5vXix5AGqKt4IWuh2vUXjY6lms9OP/AMjOBBE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ZwAGDANFggif/hHltTNo8DS7CSr4dJ00Q3R5ZRUxc8p6YRcxW2Lj6kWmBx7/8c9H5
-	 wmgLi7E2a+XY5LiJhP/LXoYgUKAVzP/ZwN9ZbtltMq0H2j+AaS9vTpeLltvOHxxZd9
-	 LAYummtSsqYqrS/KPLAK9W81c7AHdR5yPznv1Dj/FWGoRDi5PXKtpEGeP32BPmjmr+
-	 0DUEf0vS1i4dlH62ffr2h5zPpj4Wk3O87mudPGw+9SKBWNHKijyJW/JJP49Ottbcx8
-	 negOOECUXtCMloS2LE0IiNlcf09HlES8p5G+10r0swXnI90B/uaeAfr8qqFaRD+LQD
-	 Hxx5CHvagu3pQ==
-From: Leon Romanovsky <leon@kernel.org>
-To: Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>,
-	Keith Busch <kbusch@kernel.org>
-Cc: Jake Edge <jake@lwn.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Zhu Yanjun <zyjzyj2000@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-rdma@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org,
-	linux-mm@kvack.org,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Leon Romanovsky <leonro@nvidia.com>
-Subject: [PATCH v9 19/24] block: don't merge different kinds of P2P transfers in a single bio
-Date: Wed, 23 Apr 2025 11:13:10 +0300
-Message-ID: <cef56f0527beaf7022c1a743f332d46035ca612c.1745394536.git.leon@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <cover.1745394536.git.leon@kernel.org>
-References: <cover.1745394536.git.leon@kernel.org>
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="s7rSAyuo"
+Received: from pps.filterd (m0369458.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6wShX032598;
+	Wed, 23 Apr 2025 10:14:48 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	KHXp1fhPr51e4rt9sZyiCuRe2+Qj/H0RWuiXEzToeNI=; b=s7rSAyuoEKdyRxGr
+	De5+kNgOQX9LQLBsRAMK1+v+mY8RijxVciiy3Jo6Yq5Cc7KrxB9E4JuWn0OSgFLr
+	lA7pZWmAinRvM2bH5B5WVvaCd6BytOD04LSzcxValPaMhwMDuFPl2KUS54hlX/WB
+	dTgh81nmbDk+7nR321NtCTAaBuf0CZbOMMlzW4S52JEsp0Q9Acz9Sg0YhUGC5QPh
+	JIdTGcdHgmaCz7jXtbwVIZypq231cMowj/9XBEN0410dMU+rIySFBHAHAjjncxVD
+	V4NMeMpbxS+uQhF0389IWwlRIrUYVjn+8MEhGhZdRfhTdukMFC1RylHVltz1iY0T
+	wVEotA==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjya2ac-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 23 Apr 2025 10:14:48 +0200 (MEST)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 322A140053;
+	Wed, 23 Apr 2025 10:13:16 +0200 (CEST)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 71553A1A14A;
+	Wed, 23 Apr 2025 10:11:59 +0200 (CEST)
+Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
+ 2025 10:11:59 +0200
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <cassel@kernel.org>, <johan+linaro@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 5/9] MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
+Date: Wed, 23 Apr 2025 10:10:47 +0200
+Message-ID: <20250423081051.3907930-6-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250423081051.3907930-1-christian.bruel@foss.st.com>
+References: <20250423081051.3907930-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,111 +67,38 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
 
-From: Christoph Hellwig <hch@lst.de>
+Add myself as maintainer of STM32MP25 PCIe host and PCIe endpoint drivers
 
-To get out of the dma mapping helpers having to check every segment for
-it's P2P status, ensure that bios either contain P2P transfers or non-P2P
-transfers, and that a P2P bio only contains ranges from a single device.
-
-This means we do the page zone access in the bio add path where it should
-be still page hot, and will only have do the fairly expensive P2P topology
-lookup once per bio down in the dma mapping path, and only for already
-marked bios.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
-Tested-by: Jens Axboe <axboe@kernel.dk>
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
 ---
- block/bio.c               | 17 ++++++++++-------
- block/blk-merge.c         | 17 +++++++++++------
- include/linux/blk_types.h |  2 ++
- 3 files changed, 23 insertions(+), 13 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/block/bio.c b/block/bio.c
-index 3047fa3f4b32..279eac2396bf 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -928,8 +928,6 @@ static bool bvec_try_merge_page(struct bio_vec *bv, struct page *page,
- 		return false;
- 	if (xen_domain() && !xen_biovec_phys_mergeable(bv, page))
- 		return false;
--	if (!zone_device_pages_have_same_pgmap(bv->bv_page, page))
--		return false;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b5acf50fc6af..a37b9422998c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -18610,6 +18610,13 @@ L:	linux-samsung-soc@vger.kernel.org
+ S:	Maintained
+ F:	drivers/pci/controller/dwc/pci-exynos.c
  
- 	*same_page = ((vec_end_addr & PAGE_MASK) == ((page_addr + off) &
- 		     PAGE_MASK));
-@@ -998,11 +996,16 @@ static int bio_add_page_int(struct bio *bio, struct page *page,
- 	if (bio->bi_iter.bi_size > UINT_MAX - len)
- 		return 0;
- 
--	if (bio->bi_vcnt > 0 &&
--	    bvec_try_merge_page(&bio->bi_io_vec[bio->bi_vcnt - 1],
--				page, len, offset, same_page)) {
--		bio->bi_iter.bi_size += len;
--		return len;
-+	if (bio->bi_vcnt > 0) {
-+		struct bio_vec *bv = &bio->bi_io_vec[bio->bi_vcnt - 1];
++PCI DRIVER FOR STM32MP25
++M:	Christian Bruel <christian.bruel@foss.st.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/st,stm32-pcie-*.yaml
++F:	drivers/pci/controller/dwc/*stm32*
 +
-+		if (bvec_try_merge_page(bv, page, len, offset, same_page)) {
-+			bio->bi_iter.bi_size += len;
-+			return len;
-+		}
-+	} else {
-+		if (is_pci_p2pdma_page(page))
-+			bio->bi_opf |= REQ_P2PDMA | REQ_NOMERGE;
- 	}
- 
- 	if (bio->bi_vcnt >= bio->bi_max_vecs)
-diff --git a/block/blk-merge.c b/block/blk-merge.c
-index fdd4efb54c6c..d9691e900cc6 100644
---- a/block/blk-merge.c
-+++ b/block/blk-merge.c
-@@ -320,12 +320,17 @@ int bio_split_rw_at(struct bio *bio, const struct queue_limits *lim,
- 	unsigned nsegs = 0, bytes = 0;
- 
- 	bio_for_each_bvec(bv, bio, iter) {
--		/*
--		 * If the queue doesn't support SG gaps and adding this
--		 * offset would create a gap, disallow it.
--		 */
--		if (bvprvp && bvec_gap_to_prev(lim, bvprvp, bv.bv_offset))
--			goto split;
-+		if (bvprvp) {
-+			/*
-+			 * If the queue doesn't support SG gaps and adding this
-+			 * offset would create a gap, disallow it.
-+			 */
-+			if (bvec_gap_to_prev(lim, bvprvp, bv.bv_offset))
-+				goto split;
-+		} else {
-+			if (is_pci_p2pdma_page(bv.bv_page))
-+				bio->bi_opf |= REQ_P2PDMA | REQ_NOMERGE;
-+		}
- 
- 		if (nsegs < lim->max_segments &&
- 		    bytes + bv.bv_len <= max_bytes &&
-diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
-index dce7615c35e7..94cf146e8ce6 100644
---- a/include/linux/blk_types.h
-+++ b/include/linux/blk_types.h
-@@ -378,6 +378,7 @@ enum req_flag_bits {
- 	__REQ_DRV,		/* for driver use */
- 	__REQ_FS_PRIVATE,	/* for file system (submitter) use */
- 	__REQ_ATOMIC,		/* for atomic write operations */
-+	__REQ_P2PDMA,		/* contains P2P DMA pages */
- 	/*
- 	 * Command specific flags, keep last:
- 	 */
-@@ -410,6 +411,7 @@ enum req_flag_bits {
- #define REQ_DRV		(__force blk_opf_t)(1ULL << __REQ_DRV)
- #define REQ_FS_PRIVATE	(__force blk_opf_t)(1ULL << __REQ_FS_PRIVATE)
- #define REQ_ATOMIC	(__force blk_opf_t)(1ULL << __REQ_ATOMIC)
-+#define REQ_P2PDMA	(__force blk_opf_t)(1ULL << __REQ_P2PDMA)
- 
- #define REQ_NOUNMAP	(__force blk_opf_t)(1ULL << __REQ_NOUNMAP)
- 
+ PCI DRIVER FOR SYNOPSYS DESIGNWARE
+ M:	Jingoo Han <jingoohan1@gmail.com>
+ M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 -- 
-2.49.0
+2.34.1
 
