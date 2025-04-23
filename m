@@ -1,75 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B06D127A93E;
-	Wed, 23 Apr 2025 08:14:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396071; cv=none; b=t0yF47gETFEWTquHJ0rqUgOqUn5fSjsOX3AveSV1Nop9CTQbXPmg7XH7LZq2IqKdLN/EIqS1g82LiOWuAkgJ3mrgsNAKBvzDOc9lmGAbq0IOFPR2wY/eJWFLmswsZkxqosMmHRUu+7kdaXgidoADtcG0N+yuHd8sVc8jznEWfS8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745396071; c=relaxed/simple;
-	bh=0raeeIaEEG7UpcFhR7JlmhTYGBcA/7C7VnveMo0d5H4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tYzQLElSHBOstCk1ps93QWT+aqQOpx5BlLgfnptvXZcvhucl667pPH2G0342hPs04iXzjbJMCCaYx1aPePcAdaAuZq0Y2zKXDbCsi/ODB9DLDoZK3J5HlTznEEQfhjL106TfPG9TG+Lss9JAmrRXgwQjVtlFG+n2Ycv6780EOEE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=agpaY+P4; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="agpaY+P4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0697C4CEEA;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB88A26FA5E;
 	Wed, 23 Apr 2025 08:14:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745396071;
-	bh=0raeeIaEEG7UpcFhR7JlmhTYGBcA/7C7VnveMo0d5H4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=agpaY+P4KUx0qtOscY2YniRIGhK0x3eG6O1+40xZrESDmvU9/idS72HZed5UU+sio
-	 Fjj/F7TdBvlf0PMqxd+I7si4BdeLejW4RuWS1QQu2QfAwMsHC/rfPbDPZhh9Qmy2NX
-	 TGK4sj21RlveIPlViwTelpCD08QlRTsgeANZXKuTBqiWh8KhM90x/VwQm6S01XExQk
-	 7K7uAqb2eED7CltQbaNfwltueatsrB27Vj7EPvnHZscLEOX6RsUB3R1JN0vj44d6H+
-	 fRMZKNF5VEFfuRi4dNAVCxl+uOYDprvZnm9O5ajdCYgS6U7WGjjQala632RUG3idHD
-	 bRl2OIIk4Z/cw==
-From: Leon Romanovsky <leon@kernel.org>
-To: Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@lst.de>,
-	Keith Busch <kbusch@kernel.org>
-Cc: Leon Romanovsky <leonro@nvidia.com>,
-	Jake Edge <jake@lwn.net>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Jason Gunthorpe <jgg@ziepe.ca>,
-	Zhu Yanjun <zyjzyj2000@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	linux-rdma@vger.kernel.org,
-	iommu@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org,
-	kvm@vger.kernel.org,
-	linux-mm@kvack.org,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>
-Subject: [PATCH v9 10/24] mm/hmm: let users to tag specific PFN with DMA mapped bit
-Date: Wed, 23 Apr 2025 11:13:01 +0300
-Message-ID: <0a7c1e06269eee12ff8912fe0da4b7692081fcde.1745394536.git.leon@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <cover.1745394536.git.leon@kernel.org>
-References: <cover.1745394536.git.leon@kernel.org>
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1745396072; cv=none; b=Ia5c4SVG4CYz0WEZZH6RrlE2OTyn1g02clF0toaAbr04zC+Y5SrDb+ex4Fz6dQRSt/n+4EHT3QRDen/5+InAFTcF0YG/+VPrsgKOTN5ycfNekypCi5PPj4OugbaVkM4q4OJoP9aQKyFY7GqGq5qElRVyQODt72SxfCxQV91os+M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1745396072; c=relaxed/simple;
+	bh=q+lQXjaZ1l+yG5MxLHXHU02zoVRchMlGeudXCp14EAg=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=p7gnlzvgmPux/uVoM8w50GYM4/qGv8Q4c8Ne/8SaL7TobgAmRTRD4fSZsAogsU3oZ1qWQ8RuEHmGqIJhYsW6D7OXc3mo7XnRTn7MDR8L4GrPasqQxk7VQuYo8LBdVzdWMlJI7BnYiiyUFDHhJBx61NDtQlQ3SbxhXa/UULQrG8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=wmzOXzxE; arc=none smtp.client-ip=185.132.182.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="wmzOXzxE"
+Received: from pps.filterd (m0369458.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6sX2N029800;
+	Wed, 23 Apr 2025 10:13:50 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	IzV24CKy9+GByv4nV3URGiNxMvyLfi5b2XJFt9IvXeI=; b=wmzOXzxEzgVp4AUM
+	s4f9EO4byel8MJG1jZubj8MDpFiiQcrVKEs4cYXvmWPb8wX3hVYaU8yatm1zos0q
+	kmGjUxf7LfwY4/43XPsc091WFuK3PJK0+puCo1q9SJxatE/E4TM8PuIKKzKMbkCz
+	PLz50RmOTBkX1X3uvPeQF5XRCgKi4XyLPLcIgEXlLfiB55dTAvcy0mm2ltr4qE1r
+	C0ta7hGrnICiFDTgMf5ldj/exfcFzy0NnvaMGKeyRSsInBFQdLRisNK+vjAecYNG
+	mVcR10Xt1q0vFXKQDa/hkMZHLE9j9tFrafL75tmgVTGSibjqXFgsi0YuBT7m9dP9
+	OrIRpQ==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjya25x-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 23 Apr 2025 10:13:49 +0200 (MEST)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id BE80C40066;
+	Wed, 23 Apr 2025 10:12:23 +0200 (CEST)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id E0103A0F77C;
+	Wed, 23 Apr 2025 10:10:56 +0200 (CEST)
+Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
+ 2025 10:10:56 +0200
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <cassel@kernel.org>, <johan+linaro@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v7 1/9] dt-bindings: PCI: Add STM32MP25 PCIe Root Complex bindings
+Date: Wed, 23 Apr 2025 10:10:43 +0200
+Message-ID: <20250423081051.3907930-2-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250423081051.3907930-1-christian.bruel@foss.st.com>
+References: <20250423081051.3907930-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -77,184 +67,190 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
 
-From: Leon Romanovsky <leonro@nvidia.com>
+Document the bindings for STM32MP25 PCIe Controller configured in
+root complex mode with one root port.
 
-Introduce new sticky flag (HMM_PFN_DMA_MAPPED), which isn't overwritten
-by HMM range fault. Such flag allows users to tag specific PFNs with
-information if this specific PFN was already DMA mapped.
+Supports 4 INTx and MSI interrupts from the ARM GICv2m controller.
 
-Tested-by: Jens Axboe <axboe@kernel.dk>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+STM32 PCIe may be in a power domain which is the case for the STM32MP25
+based boards.
+
+Supports WAKE# from wake-gpios
+
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- include/linux/hmm.h | 17 +++++++++++++++
- mm/hmm.c            | 51 ++++++++++++++++++++++++++++-----------------
- 2 files changed, 49 insertions(+), 19 deletions(-)
+ .../bindings/pci/st,stm32-pcie-common.yaml    |  33 ++++++
+ .../bindings/pci/st,stm32-pcie-host.yaml      | 112 ++++++++++++++++++
+ 2 files changed, 145 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
+ create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
 
-diff --git a/include/linux/hmm.h b/include/linux/hmm.h
-index 126a36571667..a1ddbedc19c0 100644
---- a/include/linux/hmm.h
-+++ b/include/linux/hmm.h
-@@ -23,6 +23,8 @@ struct mmu_interval_notifier;
-  * HMM_PFN_WRITE - if the page memory can be written to (requires HMM_PFN_VALID)
-  * HMM_PFN_ERROR - accessing the pfn is impossible and the device should
-  *                 fail. ie poisoned memory, special pages, no vma, etc
-+ * HMM_PFN_DMA_MAPPED - Flag preserved on input-to-output transformation
-+ *                      to mark that page is already DMA mapped
-  *
-  * On input:
-  * 0                 - Return the current state of the page, do not fault it.
-@@ -36,6 +38,13 @@ enum hmm_pfn_flags {
- 	HMM_PFN_VALID = 1UL << (BITS_PER_LONG - 1),
- 	HMM_PFN_WRITE = 1UL << (BITS_PER_LONG - 2),
- 	HMM_PFN_ERROR = 1UL << (BITS_PER_LONG - 3),
+diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
+new file mode 100644
+index 000000000000..5adbff259204
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-common.yaml
+@@ -0,0 +1,33 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/st,stm32-pcie-common.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+	/*
-+	 * Sticky flags, carried from input to output,
-+	 * don't forget to update HMM_PFN_INOUT_FLAGS
-+	 */
-+	HMM_PFN_DMA_MAPPED = 1UL << (BITS_PER_LONG - 7),
++title: STM32MP25 PCIe RC/EP controller
 +
- 	HMM_PFN_ORDER_SHIFT = (BITS_PER_LONG - 8),
- 
- 	/* Input flags */
-@@ -57,6 +66,14 @@ static inline struct page *hmm_pfn_to_page(unsigned long hmm_pfn)
- 	return pfn_to_page(hmm_pfn & ~HMM_PFN_FLAGS);
- }
- 
-+/*
-+ * hmm_pfn_to_phys() - return physical address pointed to by a device entry
-+ */
-+static inline phys_addr_t hmm_pfn_to_phys(unsigned long hmm_pfn)
-+{
-+	return __pfn_to_phys(hmm_pfn & ~HMM_PFN_FLAGS);
-+}
++maintainers:
++  - Christian Bruel <christian.bruel@foss.st.com>
 +
- /*
-  * hmm_pfn_to_map_order() - return the CPU mapping size order
-  *
-diff --git a/mm/hmm.c b/mm/hmm.c
-index 082f7b7c0b9e..51fe8b011cc7 100644
---- a/mm/hmm.c
-+++ b/mm/hmm.c
-@@ -39,13 +39,20 @@ enum {
- 	HMM_NEED_ALL_BITS = HMM_NEED_FAULT | HMM_NEED_WRITE_FAULT,
- };
- 
-+enum {
-+	/* These flags are carried from input-to-output */
-+	HMM_PFN_INOUT_FLAGS = HMM_PFN_DMA_MAPPED,
-+};
++description:
++  STM32MP25 PCIe RC/EP common properties
 +
- static int hmm_pfns_fill(unsigned long addr, unsigned long end,
- 			 struct hmm_range *range, unsigned long cpu_flags)
- {
- 	unsigned long i = (addr - range->start) >> PAGE_SHIFT;
- 
--	for (; addr < end; addr += PAGE_SIZE, i++)
--		range->hmm_pfns[i] = cpu_flags;
-+	for (; addr < end; addr += PAGE_SIZE, i++) {
-+		range->hmm_pfns[i] &= HMM_PFN_INOUT_FLAGS;
-+		range->hmm_pfns[i] |= cpu_flags;
-+	}
- 	return 0;
- }
- 
-@@ -202,8 +209,10 @@ static int hmm_vma_handle_pmd(struct mm_walk *walk, unsigned long addr,
- 		return hmm_vma_fault(addr, end, required_fault, walk);
- 
- 	pfn = pmd_pfn(pmd) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
--	for (i = 0; addr < end; addr += PAGE_SIZE, i++, pfn++)
--		hmm_pfns[i] = pfn | cpu_flags;
-+	for (i = 0; addr < end; addr += PAGE_SIZE, i++, pfn++) {
-+		hmm_pfns[i] &= HMM_PFN_INOUT_FLAGS;
-+		hmm_pfns[i] |= pfn | cpu_flags;
-+	}
- 	return 0;
- }
- #else /* CONFIG_TRANSPARENT_HUGEPAGE */
-@@ -230,14 +239,14 @@ static int hmm_vma_handle_pte(struct mm_walk *walk, unsigned long addr,
- 	unsigned long cpu_flags;
- 	pte_t pte = ptep_get(ptep);
- 	uint64_t pfn_req_flags = *hmm_pfn;
-+	uint64_t new_pfn_flags = 0;
- 
- 	if (pte_none_mostly(pte)) {
- 		required_fault =
- 			hmm_pte_need_fault(hmm_vma_walk, pfn_req_flags, 0);
- 		if (required_fault)
- 			goto fault;
--		*hmm_pfn = 0;
--		return 0;
-+		goto out;
- 	}
- 
- 	if (!pte_present(pte)) {
-@@ -253,16 +262,14 @@ static int hmm_vma_handle_pte(struct mm_walk *walk, unsigned long addr,
- 			cpu_flags = HMM_PFN_VALID;
- 			if (is_writable_device_private_entry(entry))
- 				cpu_flags |= HMM_PFN_WRITE;
--			*hmm_pfn = swp_offset_pfn(entry) | cpu_flags;
--			return 0;
-+			new_pfn_flags = swp_offset_pfn(entry) | cpu_flags;
-+			goto out;
- 		}
- 
- 		required_fault =
- 			hmm_pte_need_fault(hmm_vma_walk, pfn_req_flags, 0);
--		if (!required_fault) {
--			*hmm_pfn = 0;
--			return 0;
--		}
-+		if (!required_fault)
-+			goto out;
- 
- 		if (!non_swap_entry(entry))
- 			goto fault;
-@@ -304,11 +311,13 @@ static int hmm_vma_handle_pte(struct mm_walk *walk, unsigned long addr,
- 			pte_unmap(ptep);
- 			return -EFAULT;
- 		}
--		*hmm_pfn = HMM_PFN_ERROR;
--		return 0;
-+		new_pfn_flags = HMM_PFN_ERROR;
-+		goto out;
- 	}
- 
--	*hmm_pfn = pte_pfn(pte) | cpu_flags;
-+	new_pfn_flags = pte_pfn(pte) | cpu_flags;
-+out:
-+	*hmm_pfn = (*hmm_pfn & HMM_PFN_INOUT_FLAGS) | new_pfn_flags;
- 	return 0;
- 
- fault:
-@@ -448,8 +457,10 @@ static int hmm_vma_walk_pud(pud_t *pudp, unsigned long start, unsigned long end,
- 		}
- 
- 		pfn = pud_pfn(pud) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
--		for (i = 0; i < npages; ++i, ++pfn)
--			hmm_pfns[i] = pfn | cpu_flags;
-+		for (i = 0; i < npages; ++i, ++pfn) {
-+			hmm_pfns[i] &= HMM_PFN_INOUT_FLAGS;
-+			hmm_pfns[i] |= pfn | cpu_flags;
-+		}
- 		goto out_unlock;
- 	}
- 
-@@ -507,8 +518,10 @@ static int hmm_vma_walk_hugetlb_entry(pte_t *pte, unsigned long hmask,
- 	}
- 
- 	pfn = pte_pfn(entry) + ((start & ~hmask) >> PAGE_SHIFT);
--	for (; addr < end; addr += PAGE_SIZE, i++, pfn++)
--		range->hmm_pfns[i] = pfn | cpu_flags;
-+	for (; addr < end; addr += PAGE_SIZE, i++, pfn++) {
-+		range->hmm_pfns[i] &= HMM_PFN_INOUT_FLAGS;
-+		range->hmm_pfns[i] |= pfn | cpu_flags;
-+	}
- 
- 	spin_unlock(ptl);
- 	return 0;
++properties:
++  clocks:
++    maxItems: 1
++    description: PCIe system clock
++
++  resets:
++    maxItems: 1
++
++  power-domains:
++    maxItems: 1
++
++  access-controllers:
++    maxItems: 1
++
++required:
++  - clocks
++  - resets
++
++additionalProperties: true
+diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+new file mode 100644
+index 000000000000..443bfe2cdc98
+--- /dev/null
++++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-host.yaml
+@@ -0,0 +1,112 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/st,stm32-pcie-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: STMicroelectronics STM32MP25 PCIe Root Complex
++
++maintainers:
++  - Christian Bruel <christian.bruel@foss.st.com>
++
++description:
++  PCIe root complex controller based on the Synopsys DesignWare PCIe core.
++
++allOf:
++  - $ref: /schemas/pci/snps,dw-pcie.yaml#
++  - $ref: /schemas/pci/st,stm32-pcie-common.yaml#
++
++properties:
++  compatible:
++    const: st,stm32mp25-pcie-rc
++
++  reg:
++    items:
++      - description: Data Bus Interface (DBI) registers.
++      - description: PCIe configuration registers.
++
++  reg-names:
++    items:
++      - const: dbi
++      - const: config
++
++  msi-parent:
++    maxItems: 1
++
++patternProperties:
++  '^pcie@[0-2],0$':
++    type: object
++    $ref: /schemas/pci/pci-pci-bridge.yaml#
++
++    properties:
++      reg:
++        maxItems: 1
++
++      phys:
++        maxItems: 1
++
++      reset-gpios:
++        description: GPIO controlled connection to PERST# signal
++        maxItems: 1
++
++      wake-gpios:
++        description: GPIO used as WAKE# input signal
++        maxItems: 1
++
++    required:
++      - phys
++      - ranges
++
++    unevaluatedProperties: false
++
++required:
++  - interrupt-map
++  - interrupt-map-mask
++  - ranges
++  - dma-ranges
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
++    #include <dt-bindings/gpio/gpio.h>
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    #include <dt-bindings/phy/phy.h>
++    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
++
++    pcie@48400000 {
++        compatible = "st,stm32mp25-pcie-rc";
++        device_type = "pci";
++        reg = <0x48400000 0x400000>,
++              <0x10000000 0x10000>;
++        reg-names = "dbi", "config";
++        #interrupt-cells = <1>;
++        interrupt-map-mask = <0 0 0 7>;
++        interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
++                        <0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        ranges = <0x01000000 0x0 0x00000000 0x10010000 0x0 0x10000>,
++                 <0x02000000 0x0 0x10020000 0x10020000 0x0 0x7fe0000>,
++                 <0x42000000 0x0 0x18000000 0x18000000 0x0 0x8000000>;
++        dma-ranges = <0x42000000 0x0 0x80000000 0x80000000 0x0 0x80000000>;
++        clocks = <&rcc CK_BUS_PCIE>;
++        resets = <&rcc PCIE_R>;
++        msi-parent = <&v2m0>;
++        access-controllers = <&rifsc 68>;
++        power-domains = <&CLUSTER_PD>;
++
++        pcie@0,0 {
++            device_type = "pci";
++            reg = <0x0 0x0 0x0 0x0 0x0>;
++            phys = <&combophy PHY_TYPE_PCIE>;
++            wake-gpios = <&gpioh 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
++            reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
++            #address-cells = <3>;
++            #size-cells = <2>;
++            ranges;
++        };
++    };
 -- 
-2.49.0
+2.34.1
 
