@@ -1,65 +1,75 @@
-Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E60C275840;
-	Wed, 23 Apr 2025 08:14:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1D2727932D;
+	Wed, 23 Apr 2025 08:14:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396060; cv=none; b=HJtpKfWZHAPaBPPvbjYBPmn/MRDNcrhlP5HAyZJluTdjlsr8AbMWWTyK19BtFCMPwbWW/eGyZGsY5wxvS6dqghQcxr0JMdPSHKdJFBJFRdpdJpLfU9MyxPSexsSlDolAqHVX1KiZFimwiVUjF4NjVsXUoih3EZJ8U56SQZsa/V8=
+	t=1745396063; cv=none; b=V5tMx0OiD/s3DSqMiWJ/bF/gOWeXKEj5jcS8tHGw7ycjWTJcPUYWH0TkIafRqH7JcfN9xl34UL6b5ApX7kh/Fhw660gDrCmCXcSwHAhse0cIYYFbh5DV/p7HS+5uYeMS8jpKrwTQajoXKQd9OxzwPG4ubQh4ER7+4PY8fWXKchs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745396060; c=relaxed/simple;
-	bh=b1/kNqRIuvR1m8OSVu3YgE6eyHtE9gkn1sTrKQ/ghak=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Iakt3bC5r4SBmMadAOHHwpU6ZCqigZtlc8yXV+Sjw/smtIXNX5F/sD6NTaiJORIohk8y8MOD7lqiF/4uZH44dYuhEYnuHm599OuudahXE0cvlIpoMgcLEagKwwwBbL0DOH5x5DRP6thLGkpq5qynlBKj6/RZbOnkmxq/WWAyHUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=cFnjFUEK; arc=none smtp.client-ip=91.207.212.93
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	s=arc-20240116; t=1745396063; c=relaxed/simple;
+	bh=uAyqUew9YbHt6BqNCxqg/xSEI2KBPG3SEWmdj1qq/2k=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=GfDPaln8Dlx9Nud2Zfm0c2uDuFFBRWTwmb6qkmbosmmd9slLDUK69pZugSHkHvaXsHdrFRRiHrFx8U7cSxyFGjb9pWaZV7uQOmQEROymNDgUj39od0nBoVixKtyII3WN6kZrxlTlXmZIyNKJBcalRiQ5RGogBjgioTEL9EUlBsY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ab3QxyUR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="cFnjFUEK"
-Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6r8su016950;
-	Wed, 23 Apr 2025 10:13:50 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	BhzZoqwrvR64ETOj53JDdB4rMHRwaAeRpBGYOhjW/hk=; b=cFnjFUEKCx+BpFOK
-	GDs0IS5zVkMlhZ8uhjAurChjw5y36jPyZrFPIKqaQr3u0a11nMBypUhzUvu8FbvS
-	XsEp9Tv3Cy/ffU+Xpy+HjI/ZdKIGFmJKBhumk3OAeHxw5bm/Mkj7HI7KU2DTqtdn
-	pPsUB80I+qCW8gLVU9zqeC2I8Wcshzi6Nl7O19NywCyNkX8nrKItuL2wyNcXijMT
-	wt4JbLdIrr++w4QrSG8sowKGyVEUGTDTCPMVk9ACtjVJDtpU+MHeWhF58mKgfEbv
-	JYzWtJgYXHnkxHAQxhJ3k2Qme2AwSKgTTsKS0lM6v11rsbfVDBv0ePG2praHrSuG
-	KNWPMA==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjxa0vk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Apr 2025 10:13:50 +0200 (MEST)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 5591140060;
-	Wed, 23 Apr 2025 10:12:16 +0200 (CEST)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id B2B81A1A152;
-	Wed, 23 Apr 2025 10:12:00 +0200 (CEST)
-Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
- 2025 10:12:00 +0200
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
-        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
-        <cassel@kernel.org>, <johan+linaro@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 7/9] arm64: dts: st: Add PCIe Root Complex mode on stm32mp251
-Date: Wed, 23 Apr 2025 10:10:49 +0200
-Message-ID: <20250423081051.3907930-8-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250423081051.3907930-1-christian.bruel@foss.st.com>
-References: <20250423081051.3907930-1-christian.bruel@foss.st.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ab3QxyUR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B5478C4CEEA;
+	Wed, 23 Apr 2025 08:14:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745396063;
+	bh=uAyqUew9YbHt6BqNCxqg/xSEI2KBPG3SEWmdj1qq/2k=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Ab3QxyUR3AxcfYmJpPAjvqg3xVX9ODRdOtP4JjD+gjlPYMs4aWD0v0tpV2XnmQsxA
+	 0KPdYd02efI42gcXRsCWx2Kb+9opFXjZbR1HUjikV3RjBmXKsyXdtf26St3GlCyMQn
+	 RmKtt/ojtBWdmNBJhgfOTqas5pc7ykEsC9TyqD6y0FRFzYkspoz7H9ae32vwWiNMuc
+	 QpvU00rqe1EOIbCMApFKFU0rNMpJ+97Z50JxAWaJj8Wiq1a4ef6edn2PCfl4Lzy46m
+	 RahxcFpKB5UGFzsNjUTKHQJ+S4Tfs0dgHIK0Sm96MOEKDhw2afVZOUZkuuu7gIWge0
+	 aW83SgnSvz2Dw==
+From: Leon Romanovsky <leon@kernel.org>
+To: Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@lst.de>,
+	Keith Busch <kbusch@kernel.org>
+Cc: Jake Edge <jake@lwn.net>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Zhu Yanjun <zyjzyj2000@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	=?UTF-8?q?J=C3=A9r=C3=B4me=20Glisse?= <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	linux-rdma@vger.kernel.org,
+	iommu@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org,
+	kvm@vger.kernel.org,
+	linux-mm@kvack.org,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Leon Romanovsky <leonro@nvidia.com>
+Subject: [PATCH v9 08/24] dma-mapping: add a dma_need_unmap helper
+Date: Wed, 23 Apr 2025 11:12:59 +0300
+Message-ID: <e55ceb86c6529a276484e13b0e6ea58764daf854.1745394536.git.leon@kernel.org>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <cover.1745394536.git.leon@kernel.org>
+References: <cover.1745394536.git.leon@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -67,85 +77,72 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
 
-Add pcie_rc node to support STM32 MP25 PCIe driver based on the
-DesignWare PCIe core configured as Root Complex mode
+From: Christoph Hellwig <hch@lst.de>
 
-Supports Gen1/Gen2, single lane, MSI interrupts using the ARM GICv2m
+Add helper that allows a driver to skip calling dma_unmap_*
+if the DMA layer can guarantee that they are no-nops.
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
 ---
- arch/arm64/boot/dts/st/stm32mp251.dtsi | 44 ++++++++++++++++++++++++++
- 1 file changed, 44 insertions(+)
+ include/linux/dma-mapping.h |  5 +++++
+ kernel/dma/mapping.c        | 18 ++++++++++++++++++
+ 2 files changed, 23 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/st/stm32mp251.dtsi b/arch/arm64/boot/dts/st/stm32mp251.dtsi
-index 87110f91e489..5a5c177036cb 100644
---- a/arch/arm64/boot/dts/st/stm32mp251.dtsi
-+++ b/arch/arm64/boot/dts/st/stm32mp251.dtsi
-@@ -122,6 +122,15 @@ intc: interrupt-controller@4ac00000 {
- 		      <0x0 0x4ac20000 0x0 0x20000>,
- 		      <0x0 0x4ac40000 0x0 0x20000>,
- 		      <0x0 0x4ac60000 0x0 0x20000>;
-+		#address-cells = <2>;
-+		#size-cells = <2>;
-+		ranges;
-+
-+		v2m0: v2m@48090000 {
-+			compatible = "arm,gic-v2m-frame";
-+			reg = <0x0 0x48090000 0x0 0x1000>;
-+			msi-controller;
-+		};
- 	};
+diff --git a/include/linux/dma-mapping.h b/include/linux/dma-mapping.h
+index a71e110f1e9d..d2f358c5a25d 100644
+--- a/include/linux/dma-mapping.h
++++ b/include/linux/dma-mapping.h
+@@ -406,6 +406,7 @@ static inline bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ {
+ 	return dma_dev_need_sync(dev) ? __dma_need_sync(dev, dma_addr) : false;
+ }
++bool dma_need_unmap(struct device *dev);
+ #else /* !CONFIG_HAS_DMA || !CONFIG_DMA_NEED_SYNC */
+ static inline bool dma_dev_need_sync(const struct device *dev)
+ {
+@@ -431,6 +432,10 @@ static inline bool dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ {
+ 	return false;
+ }
++static inline bool dma_need_unmap(struct device *dev)
++{
++	return false;
++}
+ #endif /* !CONFIG_HAS_DMA || !CONFIG_DMA_NEED_SYNC */
  
- 	psci {
-@@ -899,6 +908,41 @@ stmmac_axi_config_1: stmmac-axi-config {
- 					snps,wr_osr_lmt = <0x7>;
- 				};
- 			};
-+
-+			pcie_rc: pcie@48400000 {
-+				compatible = "st,stm32mp25-pcie-rc";
-+				device_type = "pci";
-+				reg = <0x48400000 0x400000>,
-+				      <0x10000000 0x10000>;
-+				reg-names = "dbi", "config";
-+				#interrupt-cells = <1>;
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
-+						<0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
-+						<0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
-+						<0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				ranges = <0x01000000 0x0 0x00000000 0x10010000 0x0 0x10000>,
-+					 <0x02000000 0x0 0x10020000 0x10020000 0x0 0x7fe0000>,
-+					 <0x42000000 0x0 0x18000000 0x18000000 0x0 0x8000000>;
-+				dma-ranges = <0x42000000 0x0 0x80000000 0x80000000 0x0 0x80000000>;
-+				clocks = <&rcc CK_BUS_PCIE>;
-+				resets = <&rcc PCIE_R>;
-+				msi-parent = <&v2m0>;
-+				access-controllers = <&rifsc 68>;
-+				power-domains = <&CLUSTER_PD>;
-+				status = "disabled";
-+
-+				pcie@0,0 {
-+					device_type = "pci";
-+					reg = <0x0 0x0 0x0 0x0 0x0>;
-+					phys = <&combophy PHY_TYPE_PCIE>;
-+					#address-cells = <3>;
-+					#size-cells = <2>;
-+					ranges;
-+				};
-+			};
- 		};
+ struct page *dma_alloc_pages(struct device *dev, size_t size,
+diff --git a/kernel/dma/mapping.c b/kernel/dma/mapping.c
+index cda127027e48..3c3204ad2839 100644
+--- a/kernel/dma/mapping.c
++++ b/kernel/dma/mapping.c
+@@ -443,6 +443,24 @@ bool __dma_need_sync(struct device *dev, dma_addr_t dma_addr)
+ }
+ EXPORT_SYMBOL_GPL(__dma_need_sync);
  
- 		bsec: efuse@44000000 {
++/**
++ * dma_need_unmap - does this device need dma_unmap_* operations
++ * @dev: device to check
++ *
++ * If this function returns %false, drivers can skip calling dma_unmap_* after
++ * finishing an I/O.  This function must be called after all mappings that might
++ * need to be unmapped have been performed.
++ */
++bool dma_need_unmap(struct device *dev)
++{
++	if (!dma_map_direct(dev, get_dma_ops(dev)))
++		return true;
++	if (!dev->dma_skip_sync)
++		return true;
++	return IS_ENABLED(CONFIG_DMA_API_DEBUG);
++}
++EXPORT_SYMBOL_GPL(dma_need_unmap);
++
+ static void dma_setup_need_sync(struct device *dev)
+ {
+ 	const struct dma_map_ops *ops = get_dma_ops(dev);
 -- 
-2.34.1
+2.49.0
 
