@@ -1,76 +1,137 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B4F296D05;
-	Wed, 23 Apr 2025 15:47:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5763F27C87C;
+	Wed, 23 Apr 2025 16:25:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745423240; cv=none; b=DfVx9em+BQayu6b50vimGdhj2TQJ1ahPDRW4GMRrahnaAOCSZ4yNg6m0QIdKcC3fkfFL3TD50PRL1035cNKmli4q2S5YRDrNfod0w5lIhe7fPeEmjCZmZN5LU5HfHCfbwrF6mZVINusEXsV67p/z6OmeQ+7hopalwX2piOmh/xI=
+	t=1745425529; cv=none; b=MbDJVMRMW+fc39T9LTOoP3JDqMhL4atdYKP+2RkZpHL8oZ7wVU/R10AiJiCGBZj+kwP3yy0BG5V1ZgLJPN3/5AhCPhvxpCCLpRtKpjmmOF+ZJAGjzrKSJFN3RLZa3mXKhtBBWwbJmTFndBe4Tq58/bBXHkb1jPndX7J5N3FwA50=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745423240; c=relaxed/simple;
-	bh=d0E+HtNmdn/LhlxxF/h1C5SJbuFpS6D0hMGAOAoU4xM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rrkh6bFRR5ynbbwrsgCDcgOccElvNR8M494sc0lAf50mG07s1SBBKdBzPdNA3agjI5YSvJsplYRxi8XG/de6A9LeX7Tbx2LfkgNQejx1LwnSKI1BjlNDW6yeMns++hORZ0Vy/gCq+2vf05xB9esRKM4FpKDhkB5FqU6N0CBij8Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 8A79D68C4E; Wed, 23 Apr 2025 17:47:12 +0200 (CEST)
-Date: Wed, 23 Apr 2025 17:47:12 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Leon Romanovsky <leon@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Jens Axboe <axboe@kernel.dk>, Jake Edge <jake@lwn.net>,
-	Jonathan Corbet <corbet@lwn.net>, Jason Gunthorpe <jgg@ziepe.ca>,
-	Zhu Yanjun <zyjzyj2000@gmail.com>,
-	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
-	Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	s=arc-20240116; t=1745425529; c=relaxed/simple;
+	bh=03WXX9bI80F4RuR2COjFJcSHqoLClrUtwLqycde4R5o=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cpmhl3UDGfh1Fa8l9S0BqthlChN03smq2CAfZ7z1UiAFA+PvjfKUO6tk2Mxpdnh0E2Egy27SuZ1XBO3dmW2CeHMjzwCMwCaAc5ceJ4bzBGBUW/crMPL/5gqAkyyrNWkLq+mOSXiQ/jpU0kjGTBobe2vaev3WJ3M/ExNVKjMZoZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KdtHlFVG; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KdtHlFVG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CA4D2C4CEE2;
+	Wed, 23 Apr 2025 16:25:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745425528;
+	bh=03WXX9bI80F4RuR2COjFJcSHqoLClrUtwLqycde4R5o=;
+	h=From:To:Cc:Subject:Date:From;
+	b=KdtHlFVG+C2C3wnnQCGlOHOAd1wKtHZPuDrQpRmQqsuVUHE72k4FzU5qWE1J5rgR/
+	 /ZsIDe6BB+Yiufu3qFAbjC6/+P6tEHWQWsgwekIt5GO4tVg9gLMElRV8Xc4N1NV8BJ
+	 PTCC2Sq9JC+byFkU3fcrcOgH6m+0ahty6Ty/OfhIBWSUGTHu1Fx0TDWzk1zA4JfU+G
+	 F3QMd7ijPr1RMiQ2XZoqhHkEGsF3cNdjR4lQEDhevqQL1e+7dRHrNYzUWWgV/BLJ9D
+	 2fRRm/Sp9fBSmYrKrModt5KlcNdqrhkfiIoKCqgxu0ssRpjpOAwtffqvY0tDdrBhII
+	 XCdfSjKgyS1Pw==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Yishai Hadas <yishaih@nvidia.com>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Kevin Tian <kevin.tian@intel.com>,
-	Alex Williamson <alex.williamson@redhat.com>,
-	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
-	iommu@lists.linux.dev, linux-nvme@lists.infradead.org,
-	linux-pci@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org,
-	Niklas Schnelle <schnelle@linux.ibm.com>,
-	Chuck Lever <chuck.lever@oracle.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Matthew Wilcox <willy@infradead.org>,
-	Dan Williams <dan.j.williams@intel.com>,
-	Kanchan Joshi <joshi.k@samsung.com>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Nitesh Shetty <nj.shetty@samsung.com>
-Subject: Re: [PATCH v9 23/24] nvme-pci: convert to blk_rq_dma_map
-Message-ID: <20250423154712.GA32009@lst.de>
-References: <cover.1745394536.git.leon@kernel.org> <7c5c5267cba2c03f6650444d4879ba0d13004584.1745394536.git.leon@kernel.org> <20250423092437.GA1895@lst.de> <20250423100314.GH48485@unreal>
+	Vignesh Raghavendra <vigneshr@ti.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Rob Herring <robh@kernel.org>,
+	Siddharth Vadapalli <s-vadapalli@ti.com>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Thomas Richard <thomas.richard@bootlin.com>,
+	=?UTF-8?q?Th=C3=A9o=20Lebrun?= <theo.lebrun@bootlin.com>,
+	Sergio Paracuellos <sergio.paracuellos@gmail.com>,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-omap@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH] pci: j721e: fix host/endpoint dependencies
+Date: Wed, 23 Apr 2025 18:25:16 +0200
+Message-Id: <20250423162523.2060405-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250423100314.GH48485@unreal>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+Content-Transfer-Encoding: 8bit
 
-On Wed, Apr 23, 2025 at 01:03:14PM +0300, Leon Romanovsky wrote:
-> On Wed, Apr 23, 2025 at 11:24:37AM +0200, Christoph Hellwig wrote:
-> > I don't think the meta SGL handling is quite right yet, and the
-> > single segment data handling also regressed.  Totally untested
-> > patch below, I'll try to allocate some testing time later today.
-> 
-> Christoph,
-> 
-> Can we please progress with the DMA patches and leave NVMe for later?
-> NVMe is one the users for new DMA API, let's merge API first.
+From: Arnd Bergmann <arnd@arndb.de>
 
-We'll need to merge the block/nvme patches through the block tree
-anyway to avoid merges from hell, so yes.
+The j721e driver has a single platform driver that can be built-in or
+a loadable module, but it calls two separate backend drivers depending
+on whether it is a host or endpoint.
+
+If the two modes are not the same, we can end up with a situation where
+the built-in pci-j721e driver tries to call the modular host or endpoint
+driver, which causes a link failure:
+
+ld.lld-21: error: undefined symbol: cdns_pcie_ep_setup
+>>> referenced by pci-j721e.c
+>>>               drivers/pci/controller/cadence/pci-j721e.o:(j721e_pcie_probe) in archive vmlinux.a
+
+ld.lld-21: error: undefined symbol: cdns_pcie_host_setup
+>>> referenced by pci-j721e.c
+>>>               drivers/pci/controller/cadence/pci-j721e.o:(j721e_pcie_probe) in archive vmlinux.a
+
+Rework the dependencies so that the 'select' is done by the common
+Kconfig symbol, based on which of the two are enabled. Effectively
+this means that having one built-in makes the other either built-in
+or disabled, but all configurations will now build.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/pci/controller/cadence/Kconfig     | 4 ++--
+ drivers/pci/controller/cadence/pci-j721e.c | 4 ++--
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
+index 72d7d264d6c3..666e16b6367f 100644
+--- a/drivers/pci/controller/cadence/Kconfig
++++ b/drivers/pci/controller/cadence/Kconfig
+@@ -44,12 +44,13 @@ config PCIE_CADENCE_PLAT_EP
+ 
+ config PCI_J721E
+ 	tristate
++	select PCIE_CADENCE_HOST if PCI_J721E_HOST != n
++	select PCIE_CADENCE_EP if PCI_J721E_EP != n
+ 
+ config PCI_J721E_HOST
+ 	tristate "TI J721E PCIe controller (host mode)"
+ 	depends on ARCH_K3 || COMPILE_TEST
+ 	depends on OF
+-	select PCIE_CADENCE_HOST
+ 	select PCI_J721E
+ 	help
+ 	  Say Y here if you want to support the TI J721E PCIe platform
+@@ -61,7 +62,6 @@ config PCI_J721E_EP
+ 	depends on ARCH_K3 || COMPILE_TEST
+ 	depends on OF
+ 	depends on PCI_ENDPOINT
+-	select PCIE_CADENCE_EP
+ 	select PCI_J721E
+ 	help
+ 	  Say Y here if you want to support the TI J721E PCIe platform
+diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+index b87bc26bbf06..f0051805f9e9 100644
+--- a/drivers/pci/controller/cadence/pci-j721e.c
++++ b/drivers/pci/controller/cadence/pci-j721e.c
+@@ -475,7 +475,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 
+ 	switch (mode) {
+ 	case PCI_MODE_RC:
+-		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_HOST))
++		if (!IS_ENABLED(CONFIG_PCI_J721E_HOST))
+ 			return -ENODEV;
+ 
+ 		bridge = devm_pci_alloc_host_bridge(dev, sizeof(*rc));
+@@ -494,7 +494,7 @@ static int j721e_pcie_probe(struct platform_device *pdev)
+ 		pcie->cdns_pcie = cdns_pcie;
+ 		break;
+ 	case PCI_MODE_EP:
+-		if (!IS_ENABLED(CONFIG_PCIE_CADENCE_EP))
++		if (!IS_ENABLED(CONFIG_PCI_J721E_EP))
+ 			return -ENODEV;
+ 
+ 		ep = devm_kzalloc(dev, sizeof(*ep), GFP_KERNEL);
+-- 
+2.39.5
 
