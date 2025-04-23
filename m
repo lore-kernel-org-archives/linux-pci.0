@@ -1,104 +1,116 @@
-Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39EED2741A5;
-	Wed, 23 Apr 2025 09:05:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E4E6C269AFB;
+	Wed, 23 Apr 2025 09:05:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745399151; cv=none; b=SwR+QBc5/DYdU2wb9q8+9tF/guPg4RRMUN94i7sv8tSHxbqnJX+0fACwHZ2LN3EdR3bCybAqy0XVF5HEGUJmEvuFlEsObH7oXqJltdZ3cjPiZPnouie70iW+UIOtSDdXFWN7Evjew1wOt6el3CYJPGNoBrmZvBOr1O2akPOHMEM=
+	t=1745399161; cv=none; b=dHhAZ4T/pkrlxHz+IyIzp5SZFoab4/NKu3YzgyX7xQWb8uYQu5NSdlwxPVW7+OyD9LQpf/NjHzxVxZSelV4WPHEXI9qBJ8CbcPNLnnSV7o1HuYoIa3CvXpQYiIp0d6QuOhyvho/W35598RorK30aS8H1gV/GVFWprKnlhbpKQqQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745399151; c=relaxed/simple;
-	bh=HY4+I2+3sg49hYg59cA7+Tq+pHpR5PQ857K/cvDQ+Jg=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=YfO4GflfOVYdtdNsaeCmFpRnfuwFOdJbW10oBlxH1Nv+0Yo80V7hmWae+YXBKuiKaHS7ICIhJhFTErAs6+S4B9xjBmIByoCPUCpFfIhIqH0nvqe+YCnTlf7nv0GCfvVXfyDvQT17PwcPyzK0axjj+SzVRg52RLtv0aSA7FMoSVM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=ZeudN7NN; arc=none smtp.client-ip=185.132.182.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="ZeudN7NN"
-Received: from pps.filterd (m0241204.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6OIPG010478;
-	Wed, 23 Apr 2025 11:05:16 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	KHXp1fhPr51e4rt9sZyiCuRe2+Qj/H0RWuiXEzToeNI=; b=ZeudN7NNWve3JyCq
-	t/yeRXbMYMsJw3HTzTnXxPTmDmayDkRc2fwB4sUgFTch0DK4+fwgTxs3+meyJLqv
-	/RF70fLYQhaXC+vVfvXmGvZkCXs54lDs2mjCwwFyw8P1MZGpl5PTKNYszRmlMvk9
-	QToeaxZzUbppfvlYIysBnCKTp6qGFpqBv4ZHHP3v69+n8/VHRGx4AgQY/gTq4lvz
-	0d7yuMBhfV3av/7hfKPzxFvY7d4MAoIOiXrKm2P/A84m27g/juwFKnKxyDkXtyMJ
-	jr1Tw+5tD9pFkulf3CT4RP467smsGzK/J4ufVdVzq/KiXapYmtlUN36K9JdaCk6q
-	zHAGBQ==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jk3aa7x-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Apr 2025 11:05:16 +0200 (MEST)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id EF78A40045;
-	Wed, 23 Apr 2025 11:03:45 +0200 (CEST)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 3CEC19208D0;
-	Wed, 23 Apr 2025 11:02:28 +0200 (CEST)
-Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
- 2025 11:02:27 +0200
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
-        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
-        <cassel@kernel.org>, <johan+linaro@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v8 5/9] MAINTAINERS: add entry for ST STM32MP25 PCIe drivers
-Date: Wed, 23 Apr 2025 11:01:15 +0200
-Message-ID: <20250423090119.4003700-6-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250423090119.4003700-1-christian.bruel@foss.st.com>
-References: <20250423090119.4003700-1-christian.bruel@foss.st.com>
+	s=arc-20240116; t=1745399161; c=relaxed/simple;
+	bh=yZ14u45nosFnORYpl+CjzdK4IPUWLeh5MUca7Ao0xuw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=toAk8Qwy0Yc8J2hdl2I0X9vZWSXI+892xu3PsxCJxjvuerbc0zMfHKCmDp6ju0mBzjZGy5u3tkFrgfG555Xp/GDV8Cy+gaVneYMltWejNtonnhd9hcVUCsb98RF+2hGDnL3p+t7x01yQhDb4za332cJ7UD1b1CtCpxm2o52GyBQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id E400768AFE; Wed, 23 Apr 2025 11:05:52 +0200 (CEST)
+Date: Wed, 23 Apr 2025 11:05:52 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>,
+	Keith Busch <kbusch@kernel.org>, Jake Edge <jake@lwn.net>,
+	Jonathan Corbet <corbet@lwn.net>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Zhu Yanjun <zyjzyj2000@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+	iommu@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Leon Romanovsky <leonro@nvidia.com>
+Subject: Re: [PATCH v9 22/24] nvme-pci: use a better encoding for small prp
+ pool allocations
+Message-ID: <20250423090552.GA381@lst.de>
+References: <cover.1745394536.git.leon@kernel.org> <973ed41249e12766383b3cedac799692f9bda3b8.1745394536.git.leon@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
- definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <973ed41249e12766383b3cedac799692f9bda3b8.1745394536.git.leon@kernel.org>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-Add myself as maintainer of STM32MP25 PCIe host and PCIe endpoint drivers
+On Wed, Apr 23, 2025 at 11:13:13AM +0300, Leon Romanovsky wrote:
+> From: Christoph Hellwig <hch@lst.de>
+> 
+> There is plenty of unused space in the iod next to nr_descriptors.
+> Add a separate flag to encode that the transfer is using the full
+> page sized pool, and use a normal 0..n count for the number of
+> descriptors.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Tested-by: Jens Axboe <axboe@kernel.dk>
+> [ Leon: changed original bool variable to be flag as was proposed by Kanchan ]
+> Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
+> Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
+> ---
+>  drivers/nvme/host/pci.c | 93 ++++++++++++++++++++---------------------
+>  1 file changed, 46 insertions(+), 47 deletions(-)
+> 
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index 638e759b29ad..7e93536d01cb 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -44,6 +44,7 @@
+>  #define NVME_MAX_SEGS	128
+>  #define NVME_MAX_META_SEGS 15
+>  #define NVME_MAX_NR_DESCRIPTORS	5
+> +#define NVME_SMALL_DESCRIPTOR_SIZE 256
+>  
+>  static int use_threaded_interrupts;
+>  module_param(use_threaded_interrupts, int, 0444);
+> @@ -219,6 +220,10 @@ struct nvme_queue {
+>  	struct completion delete_done;
+>  };
+>  
+> +enum {
+> +	IOD_LARGE_DESCRIPTORS = 1, /* uses the full page sized descriptor pool */
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+This is used as a ORable flag, I'd make that explicit:
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b5acf50fc6af..a37b9422998c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -18610,6 +18610,13 @@ L:	linux-samsung-soc@vger.kernel.org
- S:	Maintained
- F:	drivers/pci/controller/dwc/pci-exynos.c
- 
-+PCI DRIVER FOR STM32MP25
-+M:	Christian Bruel <christian.bruel@foss.st.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/st,stm32-pcie-*.yaml
-+F:	drivers/pci/controller/dwc/*stm32*
-+
- PCI DRIVER FOR SYNOPSYS DESIGNWARE
- M:	Jingoo Han <jingoohan1@gmail.com>
- M:	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
--- 
-2.34.1
+	/* uses the full page sized descriptor pool */
+	IOD_LARGE_DESCRIPTORS		= 1U << 0,
+
+and similar for the next flag added in the next patch.
+
+>  	struct nvme_request req;
+>  	struct nvme_command cmd;
+>  	bool aborted;
+> -	/* # of PRP/SGL descriptors: (0 for small pool) */
+> -	s8 nr_descriptors;
+> +	u8 nr_descriptors;	/* # of PRP/SGL descriptors */
+> +	unsigned int flags;
+
+And this should be limited to a u16 to not bloat the structure.
 
