@@ -1,48 +1,48 @@
 Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E5A327511E;
-	Wed, 23 Apr 2025 08:14:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E60C275840;
+	Wed, 23 Apr 2025 08:14:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745396060; cv=none; b=IVu3b1piHJqDgdWL20PvPo/aXmyfqXJ+/QlHpnvYXBx+qR4fbipLWuAWhoeXXb8TUxULA2FbQ50romg5bez13hCykEfvWRcNSDE0R/OSmrLRoAPqbePwifvAa7GtIiIPofoVYS3ohd6dbpNvt7VzhAX5zSgPn4QR2j1x86tDgDQ=
+	t=1745396060; cv=none; b=HJtpKfWZHAPaBPPvbjYBPmn/MRDNcrhlP5HAyZJluTdjlsr8AbMWWTyK19BtFCMPwbWW/eGyZGsY5wxvS6dqghQcxr0JMdPSHKdJFBJFRdpdJpLfU9MyxPSexsSlDolAqHVX1KiZFimwiVUjF4NjVsXUoih3EZJ8U56SQZsa/V8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1745396060; c=relaxed/simple;
-	bh=J8zSjG1YWRpP2BiZ7FfzE1KFXnUG0V8xG6UkQqapBhg=;
+	bh=b1/kNqRIuvR1m8OSVu3YgE6eyHtE9gkn1sTrKQ/ghak=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NaXCyXkxNtjq3Yq2EphF0lFfCLXr6nBigy4G8i47vgm5dXxr7/FWtS8R7I22Xmiz/NRxa/XsQDrTS7HvWUrr7ClwdYN8tIftb/F8XWnV/ENkzwHk4hGEdVJsjaswNKh0yo/mwQm6cEd7yTF4yekcYR6Y57rj+8BdBL+au9f/oLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=4LIL+Oib; arc=none smtp.client-ip=91.207.212.93
+	 MIME-Version:Content-Type; b=Iakt3bC5r4SBmMadAOHHwpU6ZCqigZtlc8yXV+Sjw/smtIXNX5F/sD6NTaiJORIohk8y8MOD7lqiF/4uZH44dYuhEYnuHm599OuudahXE0cvlIpoMgcLEagKwwwBbL0DOH5x5DRP6thLGkpq5qynlBKj6/RZbOnkmxq/WWAyHUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=cFnjFUEK; arc=none smtp.client-ip=91.207.212.93
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="4LIL+Oib"
-Received: from pps.filterd (m0046661.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6bx2q001570;
-	Wed, 23 Apr 2025 10:13:51 +0200
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="cFnjFUEK"
+Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6r8su016950;
+	Wed, 23 Apr 2025 10:13:50 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	NrWZEBaWAkproY8CI+qS1Q6z3QO/fCAcsTOlY185XKo=; b=4LIL+OibdwQ4vb7g
-	V3w74mmmNOuOCr41xrWwe4e6HyNH6fh8KoPPYTaXx1h38OlxiMdNImSmqAJA+Enc
-	HL1oVnykccElf5hZhmDKdlk78QGyXa9RF7i4eQpT6EBo2PlhDtIpii+NvbDwvp2V
-	MN7TAeL5hwf9LsAbIveKOrQpZl+OgqPHwg2G/4Zg3BdjFh2L0/1I5ZlKbY1mCMvx
-	+Uzmh+j7Vavlt/FkV2cNuo1kgJ/zpQjzID+jbDfaBbnHP8tlFHcN7YQhXEPsiuKe
-	R+4RKGfsXsvdzA3KJsnyYTPl+DgXVrU+qT2Qa8STZOoIDD0mr4RZL1NxTvGs7LP9
-	Jywkjg==
+	BhzZoqwrvR64ETOj53JDdB4rMHRwaAeRpBGYOhjW/hk=; b=cFnjFUEKCx+BpFOK
+	GDs0IS5zVkMlhZ8uhjAurChjw5y36jPyZrFPIKqaQr3u0a11nMBypUhzUvu8FbvS
+	XsEp9Tv3Cy/ffU+Xpy+HjI/ZdKIGFmJKBhumk3OAeHxw5bm/Mkj7HI7KU2DTqtdn
+	pPsUB80I+qCW8gLVU9zqeC2I8Wcshzi6Nl7O19NywCyNkX8nrKItuL2wyNcXijMT
+	wt4JbLdIrr++w4QrSG8sowKGyVEUGTDTCPMVk9ACtjVJDtpU+MHeWhF58mKgfEbv
+	JYzWtJgYXHnkxHAQxhJ3k2Qme2AwSKgTTsKS0lM6v11rsbfVDBv0ePG2praHrSuG
+	KNWPMA==
 Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjv20wh-1
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjxa0vk-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Wed, 23 Apr 2025 10:13:50 +0200 (MEST)
 Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id BF59D4005E;
-	Wed, 23 Apr 2025 10:12:15 +0200 (CEST)
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 5591140060;
+	Wed, 23 Apr 2025 10:12:16 +0200 (CEST)
 Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 30D10A0F76A;
-	Wed, 23 Apr 2025 10:10:58 +0200 (CEST)
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id B2B81A1A152;
+	Wed, 23 Apr 2025 10:12:00 +0200 (CEST)
 Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
- 2025 10:10:57 +0200
+ 2025 10:12:00 +0200
 From: Christian Bruel <christian.bruel@foss.st.com>
 To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
@@ -54,9 +54,9 @@ To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-stm32@st-md-mailman.stormreply.com>,
         <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 3/9] dt-bindings: PCI: Add STM32MP25 PCIe Endpoint bindings
-Date: Wed, 23 Apr 2025 10:10:45 +0200
-Message-ID: <20250423081051.3907930-4-christian.bruel@foss.st.com>
+Subject: [PATCH v7 7/9] arm64: dts: st: Add PCIe Root Complex mode on stm32mp251
+Date: Wed, 23 Apr 2025 10:10:49 +0200
+Message-ID: <20250423081051.3907930-8-christian.bruel@foss.st.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250423081051.3907930-1-christian.bruel@foss.st.com>
 References: <20250423081051.3907930-1-christian.bruel@foss.st.com>
@@ -74,90 +74,78 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
 
-STM32MP25 PCIe Controller is based on the DesignWare core configured as
-end point mode from the SYSCFG register.
+Add pcie_rc node to support STM32 MP25 PCIe driver based on the
+DesignWare PCIe core configured as Root Complex mode
+
+Supports Gen1/Gen2, single lane, MSI interrupts using the ARM GICv2m
 
 Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
-Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
-Acked-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
- .../bindings/pci/st,stm32-pcie-ep.yaml        | 67 +++++++++++++++++++
- 1 file changed, 67 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
+ arch/arm64/boot/dts/st/stm32mp251.dtsi | 44 ++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-diff --git a/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml b/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
-new file mode 100644
-index 000000000000..fc1bbe19e616
---- /dev/null
-+++ b/Documentation/devicetree/bindings/pci/st,stm32-pcie-ep.yaml
-@@ -0,0 +1,67 @@
-+# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/pci/st,stm32-pcie-ep.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
+diff --git a/arch/arm64/boot/dts/st/stm32mp251.dtsi b/arch/arm64/boot/dts/st/stm32mp251.dtsi
+index 87110f91e489..5a5c177036cb 100644
+--- a/arch/arm64/boot/dts/st/stm32mp251.dtsi
++++ b/arch/arm64/boot/dts/st/stm32mp251.dtsi
+@@ -122,6 +122,15 @@ intc: interrupt-controller@4ac00000 {
+ 		      <0x0 0x4ac20000 0x0 0x20000>,
+ 		      <0x0 0x4ac40000 0x0 0x20000>,
+ 		      <0x0 0x4ac60000 0x0 0x20000>;
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
 +
-+title: STMicroelectronics STM32MP25 PCIe Endpoint
++		v2m0: v2m@48090000 {
++			compatible = "arm,gic-v2m-frame";
++			reg = <0x0 0x48090000 0x0 0x1000>;
++			msi-controller;
++		};
+ 	};
+ 
+ 	psci {
+@@ -899,6 +908,41 @@ stmmac_axi_config_1: stmmac-axi-config {
+ 					snps,wr_osr_lmt = <0x7>;
+ 				};
+ 			};
 +
-+maintainers:
-+  - Christian Bruel <christian.bruel@foss.st.com>
++			pcie_rc: pcie@48400000 {
++				compatible = "st,stm32mp25-pcie-rc";
++				device_type = "pci";
++				reg = <0x48400000 0x400000>,
++				      <0x10000000 0x10000>;
++				reg-names = "dbi", "config";
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 7>;
++				interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
++						<0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
++						<0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
++						<0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges = <0x01000000 0x0 0x00000000 0x10010000 0x0 0x10000>,
++					 <0x02000000 0x0 0x10020000 0x10020000 0x0 0x7fe0000>,
++					 <0x42000000 0x0 0x18000000 0x18000000 0x0 0x8000000>;
++				dma-ranges = <0x42000000 0x0 0x80000000 0x80000000 0x0 0x80000000>;
++				clocks = <&rcc CK_BUS_PCIE>;
++				resets = <&rcc PCIE_R>;
++				msi-parent = <&v2m0>;
++				access-controllers = <&rifsc 68>;
++				power-domains = <&CLUSTER_PD>;
++				status = "disabled";
 +
-+description:
-+  PCIe endpoint controller based on the Synopsys DesignWare PCIe core.
-+
-+allOf:
-+  - $ref: /schemas/pci/snps,dw-pcie-ep.yaml#
-+  - $ref: /schemas/pci/st,stm32-pcie-common.yaml#
-+
-+properties:
-+  compatible:
-+    const: st,stm32mp25-pcie-ep
-+
-+  reg:
-+    items:
-+      - description: Data Bus Interface (DBI) registers.
-+      - description: PCIe configuration registers.
-+
-+  reg-names:
-+    items:
-+      - const: dbi
-+      - const: addr_space
-+
-+  reset-gpios:
-+    description: GPIO controlled connection to PERST# signal
-+    maxItems: 1
-+
-+  phys:
-+    maxItems: 1
-+
-+required:
-+  - phys
-+  - reset-gpios
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/st,stm32mp25-rcc.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/phy/phy.h>
-+    #include <dt-bindings/reset/st,stm32mp25-rcc.h>
-+
-+    pcie-ep@48400000 {
-+        compatible = "st,stm32mp25-pcie-ep";
-+        reg = <0x48400000 0x400000>,
-+              <0x10000000 0x8000000>;
-+        reg-names = "dbi", "addr_space";
-+        clocks = <&rcc CK_BUS_PCIE>;
-+        phys = <&combophy PHY_TYPE_PCIE>;
-+        resets = <&rcc PCIE_R>;
-+        pinctrl-names = "default", "init";
-+        pinctrl-0 = <&pcie_pins_a>;
-+        pinctrl-1 = <&pcie_init_pins_a>;
-+        reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
-+        access-controllers = <&rifsc 68>;
-+        power-domains = <&CLUSTER_PD>;
-+    };
++				pcie@0,0 {
++					device_type = "pci";
++					reg = <0x0 0x0 0x0 0x0 0x0>;
++					phys = <&combophy PHY_TYPE_PCIE>;
++					#address-cells = <3>;
++					#size-cells = <2>;
++					ranges;
++				};
++			};
+ 		};
+ 
+ 		bsec: efuse@44000000 {
 -- 
 2.34.1
 
