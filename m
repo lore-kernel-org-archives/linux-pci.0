@@ -1,48 +1,48 @@
 Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CEF527C156;
-	Wed, 23 Apr 2025 07:54:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEBE726F442;
+	Wed, 23 Apr 2025 07:54:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745394867; cv=none; b=K7DM74dwPAb6+XQDo5qVGwI/r8QdyK8LAeW00MovZUO358geTrwqqgPk9QQ4kUDvX1SSfBhxnDExGfeI4nPBiUz3/IevHfkHompl2T/Dgb7kt/g7dCvqokDYdysYNKzBIjfC43RdV+tGFp9K2SCPsrgAGd3n/FQGKO2Pj7RUEog=
+	t=1745394883; cv=none; b=tObzsw0kEnh0iRNIoxDHu6i0vwrp68XNMn8YPtxwla3rhX4b/p9jBGHEzpwPfXoka0FrfmV6kENbbUUNA+T+cdN7xzZxW8q0MYG9GDidxUG9rdu+54b1o1iEWjlIBfYwlgzSG19GA1BPqMZ6Pg0UWGSDqZWKwBlHKTyWj1aBQEk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745394867; c=relaxed/simple;
-	bh=SAogXjErmnUKWUV3LPeC/KcgOjnw/QZRkCVS8VQvp7g=;
+	s=arc-20240116; t=1745394883; c=relaxed/simple;
+	bh=b1/kNqRIuvR1m8OSVu3YgE6eyHtE9gkn1sTrKQ/ghak=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Mxrwon5wOQHFVDhTY66PhAzO1QWyqUveKFRXkvH2G9+tphqQ9M7NQyrwzbAvteLGuYIgkFWop8MRMSKqj/UM5RUQh8hwDI80KIooco78lTvICjwnhh9bTgNXZpkaK3oxUJE6mpCcd2i9T3HvHwmuaK/O4CtfrAEenbttygldvw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=DgKK1wem; arc=none smtp.client-ip=185.132.182.106
+	 MIME-Version:Content-Type; b=u+AHNKbCY/ZCOVDK5ERqsl49BDXrvMb8nabjsZHTCY9fapHbDcPQANNRAym+dAF+NKvY+gha9qHHQImFz69B6qmcz9lVZjmme9UBM8+JHJHNYJ3P39D0t9CmU/zmX5x71xPG3s3IpGGho1/psfKI+T3b+XAvAPDSAvhad2Lhmws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=xuC5r1lB; arc=none smtp.client-ip=185.132.182.106
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="DgKK1wem"
-Received: from pps.filterd (m0288072.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6K2bZ017716;
-	Wed, 23 Apr 2025 09:53:57 +0200
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="xuC5r1lB"
+Received: from pps.filterd (m0241204.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6OI9V010478;
+	Wed, 23 Apr 2025 09:54:07 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	D1vrqcKSTo7wXwCZBje6dgQBk+XJl1AKFrrz1y87N6A=; b=DgKK1wemVM/7tfNV
-	t2eP+SXYN4Be0ioJ2K0nwoR/R8htvejSn8I/EekCj+5r79yh3Cw1jKxFWkZyGV/c
-	1y7J2mtTiCZi294Xujb66Af7youacmqEn5AZeQjLApPgq7x+rBFHMskHYEVgT80X
-	E/OmwHO2tSq+pFT5FmuzXxCZFfWvXDmY9fnIU3PwwkduvU9Ib4v1gCUzavgZVWDg
-	GZ9szizctmJ+39ap4XbcE2qzBZ/DpeiAOLqp4Z3DrdKbn3bzqi1GebRGfa15Hq9D
-	6mqdwDSWgWucZk3CA4egrozQf0lWOkMDnMYMo0sE39ccdCO9hM4vVxSQNC++t9/v
-	XCkIyQ==
+	BhzZoqwrvR64ETOj53JDdB4rMHRwaAeRpBGYOhjW/hk=; b=xuC5r1lB5miyV23p
+	jnLHqYYaQ3IFsvQVrTulSV5e35eGcgq/PhQ9bTJv5uVt5cYX/uLKG12bo3/1WwYf
+	A9ZH+bUlka17GI/wHxexczd37ywtb4wZloiDltg/PCyJ8Lf6s6ujKhNL5YpWPIRa
+	rUoGvu9rnW0+56vTd29HeqZHrL+hYaIWyIEE2FbGVj4Dik3bAgJkePZ1VpPH5kE+
+	6MOxc28m7T/QmucfeHzdVoWb6a4NFHoqGn1DKh3bsBvJMZHiGj0o0TY0IcUogZqy
+	1rF78NKWJEzSplvJy2tMMu38y2SPnwYrYVWOunSG55m9Hvjt7q2wZ1xPT19vm8ZN
+	bqQ60Q==
 Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jk29xwm-1
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jk39xjq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 23 Apr 2025 09:53:57 +0200 (MEST)
+	Wed, 23 Apr 2025 09:54:07 +0200 (MEST)
 Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id AE13740061;
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 2C5804002D;
 	Wed, 23 Apr 2025 09:52:27 +0200 (CEST)
 Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id ED3D6A0B194;
-	Wed, 23 Apr 2025 09:51:10 +0200 (CEST)
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id B6943A01C85;
+	Wed, 23 Apr 2025 09:51:09 +0200 (CEST)
 Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
- 2025 09:51:10 +0200
+ 2025 09:51:09 +0200
 From: Christian Bruel <christian.bruel@foss.st.com>
 To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
         <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
@@ -54,9 +54,9 @@ To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
 CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-stm32@st-md-mailman.stormreply.com>,
         <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v7 9/9] arm64: dts: st: Enable PCIe on the stm32mp257f-ev1 board
-Date: Wed, 23 Apr 2025 09:49:40 +0200
-Message-ID: <20250423074940.3849091-10-christian.bruel@foss.st.com>
+Subject: [PATCH v7 7/9] arm64: dts: st: Add PCIe Root Complex mode on stm32mp251
+Date: Wed, 23 Apr 2025 09:49:38 +0200
+Message-ID: <20250423074940.3849091-8-christian.bruel@foss.st.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250423074940.3849091-1-christian.bruel@foss.st.com>
 References: <20250423074940.3849091-1-christian.bruel@foss.st.com>
@@ -74,46 +74,78 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
  definitions=2025-04-23_05,2025-04-22_01,2024-11-22_01
 
-Add PCIe RC and EP support on stm32mp257f-ev1 board.
-Default to RC mode.
+Add pcie_rc node to support STM32 MP25 PCIe driver based on the
+DesignWare PCIe core configured as Root Complex mode
+
+Supports Gen1/Gen2, single lane, MSI interrupts using the ARM GICv2m
 
 Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
 ---
- arch/arm64/boot/dts/st/stm32mp257f-ev1.dts | 21 +++++++++++++++++++++
- 1 file changed, 21 insertions(+)
+ arch/arm64/boot/dts/st/stm32mp251.dtsi | 44 ++++++++++++++++++++++++++
+ 1 file changed, 44 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/st/stm32mp257f-ev1.dts b/arch/arm64/boot/dts/st/stm32mp257f-ev1.dts
-index 1b88485a62a1..a7646503d6b2 100644
---- a/arch/arm64/boot/dts/st/stm32mp257f-ev1.dts
-+++ b/arch/arm64/boot/dts/st/stm32mp257f-ev1.dts
-@@ -225,6 +225,27 @@ scmi_vdd_sdcard: regulator@23 {
+diff --git a/arch/arm64/boot/dts/st/stm32mp251.dtsi b/arch/arm64/boot/dts/st/stm32mp251.dtsi
+index 87110f91e489..5a5c177036cb 100644
+--- a/arch/arm64/boot/dts/st/stm32mp251.dtsi
++++ b/arch/arm64/boot/dts/st/stm32mp251.dtsi
+@@ -122,6 +122,15 @@ intc: interrupt-controller@4ac00000 {
+ 		      <0x0 0x4ac20000 0x0 0x20000>,
+ 		      <0x0 0x4ac40000 0x0 0x20000>,
+ 		      <0x0 0x4ac60000 0x0 0x20000>;
++		#address-cells = <2>;
++		#size-cells = <2>;
++		ranges;
++
++		v2m0: v2m@48090000 {
++			compatible = "arm,gic-v2m-frame";
++			reg = <0x0 0x48090000 0x0 0x1000>;
++			msi-controller;
++		};
  	};
- };
  
-+&pcie_ep {
-+	pinctrl-names = "default", "init";
-+	pinctrl-0 = <&pcie_pins_a>;
-+	pinctrl-1 = <&pcie_init_pins_a>;
-+	reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
-+	status = "disabled";
-+};
+ 	psci {
+@@ -899,6 +908,41 @@ stmmac_axi_config_1: stmmac-axi-config {
+ 					snps,wr_osr_lmt = <0x7>;
+ 				};
+ 			};
 +
-+&pcie_rc {
-+	pinctrl-names = "default", "init", "sleep";
-+	pinctrl-0 = <&pcie_pins_a>;
-+	pinctrl-1 = <&pcie_init_pins_a>;
-+	pinctrl-2 = <&pcie_sleep_pins_a>;
-+	status = "okay";
++			pcie_rc: pcie@48400000 {
++				compatible = "st,stm32mp25-pcie-rc";
++				device_type = "pci";
++				reg = <0x48400000 0x400000>,
++				      <0x10000000 0x10000>;
++				reg-names = "dbi", "config";
++				#interrupt-cells = <1>;
++				interrupt-map-mask = <0 0 0 7>;
++				interrupt-map = <0 0 0 1 &intc 0 0 GIC_SPI 264 IRQ_TYPE_LEVEL_HIGH>,
++						<0 0 0 2 &intc 0 0 GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>,
++						<0 0 0 3 &intc 0 0 GIC_SPI 266 IRQ_TYPE_LEVEL_HIGH>,
++						<0 0 0 4 &intc 0 0 GIC_SPI 267 IRQ_TYPE_LEVEL_HIGH>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges = <0x01000000 0x0 0x00000000 0x10010000 0x0 0x10000>,
++					 <0x02000000 0x0 0x10020000 0x10020000 0x0 0x7fe0000>,
++					 <0x42000000 0x0 0x18000000 0x18000000 0x0 0x8000000>;
++				dma-ranges = <0x42000000 0x0 0x80000000 0x80000000 0x0 0x80000000>;
++				clocks = <&rcc CK_BUS_PCIE>;
++				resets = <&rcc PCIE_R>;
++				msi-parent = <&v2m0>;
++				access-controllers = <&rifsc 68>;
++				power-domains = <&CLUSTER_PD>;
++				status = "disabled";
 +
-+	pcie@0,0 {
-+		 reset-gpios = <&gpioj 8 GPIO_ACTIVE_LOW>;
-+		 wake-gpios = <&gpioh 5 (GPIO_ACTIVE_LOW | GPIO_PULL_UP)>;
-+	};
-+};
-+
- &sdmmc1 {
- 	pinctrl-names = "default", "opendrain", "sleep";
- 	pinctrl-0 = <&sdmmc1_b4_pins_a>;
++				pcie@0,0 {
++					device_type = "pci";
++					reg = <0x0 0x0 0x0 0x0 0x0>;
++					phys = <&combophy PHY_TYPE_PCIE>;
++					#address-cells = <3>;
++					#size-cells = <2>;
++					ranges;
++				};
++			};
+ 		};
+ 
+ 		bsec: efuse@44000000 {
 -- 
 2.34.1
 
