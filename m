@@ -1,51 +1,54 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73FAD28A1DB;
-	Wed, 23 Apr 2025 15:38:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B4F296D05;
+	Wed, 23 Apr 2025 15:47:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745422695; cv=none; b=OJednE2wUBZx9a/27uDu1vs4C63y2swrKQSXfWrW4mfRUsL9PQxSEaQv3qctIT/eHEtqrPM8bQ1eAH+CSB37x+PWqhE4LU2dL2rkC+AS4YClQJbxAlAulkP3oGUHb3bSQ4ojDREDClfwtQDvdMxOiMlf1rfYRGM/RYOOv50qu2k=
+	t=1745423240; cv=none; b=DfVx9em+BQayu6b50vimGdhj2TQJ1ahPDRW4GMRrahnaAOCSZ4yNg6m0QIdKcC3fkfFL3TD50PRL1035cNKmli4q2S5YRDrNfod0w5lIhe7fPeEmjCZmZN5LU5HfHCfbwrF6mZVINusEXsV67p/z6OmeQ+7hopalwX2piOmh/xI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745422695; c=relaxed/simple;
-	bh=IaaWKmBkn5xlCdfV5Tc/lHW54iBmhXUi5MviWMueOo0=;
+	s=arc-20240116; t=1745423240; c=relaxed/simple;
+	bh=d0E+HtNmdn/LhlxxF/h1C5SJbuFpS6D0hMGAOAoU4xM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Ipm5vX45SDktW1ZtLrgNZqfb5bQkwrpSgjb1qiv8ZOqa0L/EzUKVsAsDZ3J6rDsuUw5DpMAcy/fXnTjeO5uSuUF77NXWbLkN61mG5PE7RL3Lc4ZBwDec7dZe7LRWyCAbZdqJKs09DqZKZ3+EJLRNOXSfQ3vx+bDXecRyUDWTRb8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T01Ahhfn; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T01Ahhfn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1E47EC4CEE2;
-	Wed, 23 Apr 2025 15:38:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745422695;
-	bh=IaaWKmBkn5xlCdfV5Tc/lHW54iBmhXUi5MviWMueOo0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=T01Ahhfn32j66N81kHE9Doy0oHXEWbktmsfLpFjf0g8br7wl8u/uOvsaF0mRueV1X
-	 I/UXtyC/A3ZUqAkMCJhRbFpqRaGXvQEPfXdZwUGqA1sWn/+AMlh2+fJwDAw2V0MPeG
-	 MbarfDODtoomYQ/bgLi2wFxZfeaoQL/dpzSlZtwNAcJAWkcXtdJfDshpDhesq8bXqj
-	 0maEsfIIaPbJrttTYSEMbiKFJ7NEnYOeDbL8mosiviPh8oN+FKnuEtdaXfYtT5IU84
-	 8SVKlJ7CHBnoO9TZHa6e9Jidvv9FRj62pnFB0h1sRbLthBTF5+BBc0t3omXq0ktcDd
-	 OEX+ZTYJnzFkw==
-Date: Wed, 23 Apr 2025 10:38:13 -0500
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-Cc: quic_vbadigan@quicinc.com, Bjorn Helgaas <bhelgaas@google.com>,
-	cros-qcom-dts-watchers@chromium.org,
-	Bjorn Andersson <andersson@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	devicetree@vger.kernel.org, quic_mrana@quicinc.com,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	linux-arm-msm@vger.kernel.org
-Subject: Re: [PATCH v3 1/3] dt-bindings: PCI: qcom: Move phy, wake & reset
- gpio's to root port
-Message-ID: <174542269294.567149.8123466089628259520.robh@kernel.org>
-References: <20250419-perst-v3-0-1afec3c4ea62@oss.qualcomm.com>
- <20250419-perst-v3-1-1afec3c4ea62@oss.qualcomm.com>
+	 Content-Type:Content-Disposition:In-Reply-To; b=rrkh6bFRR5ynbbwrsgCDcgOccElvNR8M494sc0lAf50mG07s1SBBKdBzPdNA3agjI5YSvJsplYRxi8XG/de6A9LeX7Tbx2LfkgNQejx1LwnSKI1BjlNDW6yeMns++hORZ0Vy/gCq+2vf05xB9esRKM4FpKDhkB5FqU6N0CBij8Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 8A79D68C4E; Wed, 23 Apr 2025 17:47:12 +0200 (CEST)
+Date: Wed, 23 Apr 2025 17:47:12 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Leon Romanovsky <leon@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Jens Axboe <axboe@kernel.dk>, Jake Edge <jake@lwn.net>,
+	Jonathan Corbet <corbet@lwn.net>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Zhu Yanjun <zyjzyj2000@gmail.com>,
+	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Yishai Hadas <yishaih@nvidia.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-block@vger.kernel.org, linux-rdma@vger.kernel.org,
+	iommu@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-pci@vger.kernel.org, kvm@vger.kernel.org, linux-mm@kvack.org,
+	Niklas Schnelle <schnelle@linux.ibm.com>,
+	Chuck Lever <chuck.lever@oracle.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Matthew Wilcox <willy@infradead.org>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Kanchan Joshi <joshi.k@samsung.com>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Nitesh Shetty <nj.shetty@samsung.com>
+Subject: Re: [PATCH v9 23/24] nvme-pci: convert to blk_rq_dma_map
+Message-ID: <20250423154712.GA32009@lst.de>
+References: <cover.1745394536.git.leon@kernel.org> <7c5c5267cba2c03f6650444d4879ba0d13004584.1745394536.git.leon@kernel.org> <20250423092437.GA1895@lst.de> <20250423100314.GH48485@unreal>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -54,29 +57,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250419-perst-v3-1-1afec3c4ea62@oss.qualcomm.com>
+In-Reply-To: <20250423100314.GH48485@unreal>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
+On Wed, Apr 23, 2025 at 01:03:14PM +0300, Leon Romanovsky wrote:
+> On Wed, Apr 23, 2025 at 11:24:37AM +0200, Christoph Hellwig wrote:
+> > I don't think the meta SGL handling is quite right yet, and the
+> > single segment data handling also regressed.  Totally untested
+> > patch below, I'll try to allocate some testing time later today.
+> 
+> Christoph,
+> 
+> Can we please progress with the DMA patches and leave NVMe for later?
+> NVMe is one the users for new DMA API, let's merge API first.
 
-On Sat, 19 Apr 2025 10:49:24 +0530, Krishna Chaitanya Chundru wrote:
-> Move the phy, phy-names, wake-gpio's to the pcie root port node instead of
-> the bridge node, as agreed upon in multiple places one instance is[1].
-> 
-> Update the qcom,pcie-common.yaml to include the phy, phy-names, and
-> wake-gpios properties in the root port node. There is already reset-gpios
-> defined for PERST# in pci-bus-common.yaml, start using that property
-> instead of perst-gpio.
-> 
-> For backward compatibility, do not remove any existing properties in the
-> bridge node.
-> 
-> [1] https://lore.kernel.org/linux-pci/20241211192014.GA3302752@bhelgaas/
-> 
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->  .../devicetree/bindings/pci/qcom,pcie-common.yaml  | 36 ++++++++++++++++++++--
->  .../devicetree/bindings/pci/qcom,pcie-sc7280.yaml  | 16 +++++++---
->  2 files changed, 46 insertions(+), 6 deletions(-)
-> 
-
-Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+We'll need to merge the block/nvme patches through the block tree
+anyway to avoid merges from hell, so yes.
 
