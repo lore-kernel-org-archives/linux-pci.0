@@ -1,262 +1,526 @@
-Received: from HK3PR03CU002.outbound.protection.outlook.com (mail-eastasiaazon11021139.outbound.protection.outlook.com [52.101.129.139])
+Received: from mx08-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C3A1535D8;
-	Wed, 23 Apr 2025 08:50:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.129.139
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745398217; cv=fail; b=A8ND/BNJQTwZio4YwDzmqsYWF9F2g4xWFZg3uPIHG1Yh1N3WSda5ig/bLCRgCeIkfMQy/+a42Cz/g7K8ENfLgZmigZ8GEmYe0kKl2zLgkznqk5lh74YypvFFoc/VbKqp8BjF8xRNYw6F8akxnnBRJVbvq/550CfKELvThYQii4A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745398217; c=relaxed/simple;
-	bh=ogsZZp/qoYJdV1aFczbB71wxwETevm473HHp9eBf3Bs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=kqVtj7JZOeFwxLGG08ESLnfAOtijtAHrsNl8EO5rLg/fwZRLnZpmgBzP8Xm5Exie4kehPfhhBqDi2D1LB6QUFGHD1xIuQhrHTBdcIMpNF9+DET50M0cNWfJWQuJnevXnaEjeCISyhlvodVQC59IUsQg7dNW+tc7vAPRFQ0L0rIM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.129.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Pz/rid/wtMLgr4KOLnj/K7g5vxn6/qJzsj5EvEqpoe4jWq89FG3pxyVcYxDgy8z3gE961ZtvxN500saTFSsx0DZG/5y3WlkLcMrtXXA+Ss3P7A5vm9jfIt0bGuwKepl/8zo6il03kch3usaLuzEb5hqF2/6Qr7lKVbsMUpRDtDcj0rhJ3YzRe8cRqb5hO+289j4npN1caxp/EaKMnTeRk+840avEdH4Ui+GfHoZg8aSlxv1LJFJ4YmQA1S2xC+kwyIpVufbuaXvdn5yjX0NEHlFjO/Bimvoz20XDoZHZorshPeoZpL0qwMaJCQkwdk6ZdyECiOnFacl+oyyzQ6OKUg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=ogsZZp/qoYJdV1aFczbB71wxwETevm473HHp9eBf3Bs=;
- b=rqzTj6S+8Z6iHm09o5b6A01WHuQ4NzdS5dYY5pnXKKTDNdClQzeMqNq6rp63OmSgYuPvytIA0484Yt1wZqviTJdal1wzgr6UEOxffjM9ogbE3ngrZjzXle05AWvfA4B8nKTKqzSFmgGs/6P4zMExcgOB4tHTGLypGJ4GtKItYzz+4KvNbMxfPuL749Af2ENvsi1zVfbp1CRdcN7SAIeSKNghF9C1aHwieU5NDUblm5+KnmO+coMmOtPliaam+IiKiT3FH2KKpXeS+zprzL3BKwpScFZCbV1oBo0w2O49pXk9XMgESHSTw8iuYSgze3Y1D6sYkzR/2zWmc9vsngLVtQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cixtech.com; dmarc=pass action=none header.from=cixtech.com;
- dkim=pass header.d=cixtech.com; arc=none
-Received: from PUZPR06MB4715.apcprd06.prod.outlook.com (2603:1096:301:b6::9)
- by PS1PPF5540628D6.apcprd06.prod.outlook.com (2603:1096:308::24e) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8606.31; Wed, 23 Apr
- 2025 08:50:10 +0000
-Received: from PUZPR06MB4715.apcprd06.prod.outlook.com
- ([fe80::e2a0:7ecd:8694:bf1a]) by PUZPR06MB4715.apcprd06.prod.outlook.com
- ([fe80::e2a0:7ecd:8694:bf1a%6]) with mapi id 15.20.8678.021; Wed, 23 Apr 2025
- 08:50:09 +0000
-From: Hans Zhang <Hans.Zhang@cixtech.com>
-To: Christian Bruel <christian.bruel@foss.st.com>, "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>, "kw@linux.com" <kw@linux.com>,
-	"manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
-	"robh@kernel.org" <robh@kernel.org>, "bhelgaas@google.com"
-	<bhelgaas@google.com>, "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-	"conor+dt@kernel.org" <conor+dt@kernel.org>, "mcoquelin.stm32@gmail.com"
-	<mcoquelin.stm32@gmail.com>, "alexandre.torgue@foss.st.com"
-	<alexandre.torgue@foss.st.com>, "p.zabel@pengutronix.de"
-	<p.zabel@pengutronix.de>, "thippeswamy.havalige@amd.com"
-	<thippeswamy.havalige@amd.com>, "shradha.t@samsung.com"
-	<shradha.t@samsung.com>, "quic_schintav@quicinc.com"
-	<quic_schintav@quicinc.com>, "cassel@kernel.org" <cassel@kernel.org>,
-	"johan+linaro@kernel.org" <johan+linaro@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"linux-stm32@st-md-mailman.stormreply.com"
-	<linux-stm32@st-md-mailman.stormreply.com>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject:
- =?gb2312?B?u9i4tDogW1BBVENIIHY4IDAvOV0gQWRkIFNUTTMyTVAyNSBQQ0llIGRyaXZl?=
- =?gb2312?Q?rs?=
-Thread-Topic: [PATCH v8 0/9] Add STM32MP25 PCIe drivers
-Thread-Index: AQHbtChhrch5nTp+iU+X7sglcKEOxrOw8FVw
-Date: Wed, 23 Apr 2025 08:50:09 +0000
-Message-ID:
- <PUZPR06MB4715A6E6E2452BEA648B99D29DBA2@PUZPR06MB4715.apcprd06.prod.outlook.com>
-References: <20250423081051.3907930-1-christian.bruel@foss.st.com>
-In-Reply-To: <20250423081051.3907930-1-christian.bruel@foss.st.com>
-Accept-Language: zh-CN, en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=cixtech.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PUZPR06MB4715:EE_|PS1PPF5540628D6:EE_
-x-ms-office365-filtering-correlation-id: 0c8ca781-af0f-4731-d207-08dd8243da7b
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|376014|1800799024|366016|7416014|7053199007|921020|38070700018;
-x-microsoft-antispam-message-info:
- =?gb2312?B?MGZqUkpaT0FjNDl5dWwwWWdHclA1Uk1YdUNjWThCbVhLR1NJN0dYNUVCZnQ0?=
- =?gb2312?B?YXJJRWFBb0dqdE4rVUNDNmNEWkU5MUFibGVMeUxrWkw0Y2E1WmdnU3JKTTFG?=
- =?gb2312?B?SGRwRW91b1Y0SHZTRFd3WU05d0hONXg3dVVraXJ6RHNFVDVXc1RvdkRiekx2?=
- =?gb2312?B?U2loSDMwTnhHYk04SUliSXUrQWJabTFFT1BiOTZsT1FYZEh2R2g3OVhGb1NB?=
- =?gb2312?B?Rm9JVm5BNFh3SjJoVzZrRElhT0c5SUt1VGN1Q2dnaHhLQTVjSm1FanBFZ2Vv?=
- =?gb2312?B?Vkh0bkRUcFY3Vm12OGREOWV0VW02cFY1QmorVjdNVTUvejFXc1BSUG5yTnNY?=
- =?gb2312?B?NWdVQ3J1K05tMGhjdGtMSkl2VlpMOVRkeUhxS3l0ZHNLaSsySHBmdm1XS29Y?=
- =?gb2312?B?dXhiOStOaWlOVzRKRzRPaTRUeTZXZEtsTEE0eCtuSTJVbFNZV3hCcFB2NXBQ?=
- =?gb2312?B?NUdPR3E4cmZzWE9JYXRucDdVUlY3RmRDdjJlY0J3NTJnTmZTMm9JSXl5TVdX?=
- =?gb2312?B?Z0ZhNEpYeTBOOHhITXRLTVFTUXBBTjFHSHkrbVF2NGFPZUxTbVg5T0UrQ2FU?=
- =?gb2312?B?bEwzL3hnZmszaURUbFJoSFd4cUo4bk5ienB4UzNSZk5qZGRpWGdaTlA4ZnhW?=
- =?gb2312?B?bURzRlJXY1c1UUViMklBcU5xRlBYUElVUXRSa0VtSWZIa3dQTHlUSEJrTXk0?=
- =?gb2312?B?ZWhHcis0TERkc3UrSUdrOGw2YlhIamdoRWxSOSs0YnBmVG8ycjJTR1dyTjVY?=
- =?gb2312?B?b250TFhlQlpoTGRzN2EvUjVMZ0x2OTRzM0RLcGhvWW1tRnFmT3N6VXZqYnN4?=
- =?gb2312?B?VFlmMXg4VTMvc001dFZNL0dQcG1vck9hSDQyL2N1RGQ2SEhZK1BsZDZqWjBj?=
- =?gb2312?B?VVJ1dkxCVlJYU3VHb1VZQVpkWkpPakJidEhRbm02eFFjM29VVVpSbWsyU1JQ?=
- =?gb2312?B?N3ppcG9YM2MwVk1QY2FJRFhCQ0pEcUhSa1ZYTDRLbEtUNDdINmdDbEhFanNj?=
- =?gb2312?B?Z3pzekEydXNGNW1sVUl2eTI4RXgwUHl1Vk5JaGRIQlZhU1NNSjU3SXlaSzNy?=
- =?gb2312?B?aytuMGk3UERvSGRWTnZPTUZNcEtkdDR0eG4vSVAwQWUwSWdTYk9BTXR6OElu?=
- =?gb2312?B?eXpaZ2M3V0V4VkdZVVNzVkhsNU9RbEg4My83R09lNmtrWUY4c1c0NTRZRE1D?=
- =?gb2312?B?bWR0dFFZbjhTNm42QVdVbU5TSHVPMFp2UUtUVFZ5K3o1ZnArdzdsUUNMVFpi?=
- =?gb2312?B?Szc0R1VRMjYrUms5NUhDSlJ2SE0yMjE1OHlMT2J1RzE1Yjd2cW9HZXlTYVcv?=
- =?gb2312?B?U1h4OUJmK1dvM3B3VlZ6bkdIdDZVRjhOQXVKL0NTZEVYZlhHemJkVDFtTXZl?=
- =?gb2312?B?bTVqTkp3QmR2MzI5K0d6bFd4eXlXUXhGdDlwQk1MSEJUNS9Fam5DamkrSUVH?=
- =?gb2312?B?NTBaOHJVbWdCdnBNNUVDSFlKWjV5OTF4MVJHZnA1WU5HcDlPYUJ4UmtIdzNs?=
- =?gb2312?B?dDR5aVVDVTFUVWNzQWc3clk1bGQwNjU3b1RUYWNyc2J1ZGFQdktDUEw0OXox?=
- =?gb2312?B?WUhReG5LSi9QTFlOT21KR3FjZ3VjOTZHNklJNldJTTVEL0pCanVBcUJYQXdm?=
- =?gb2312?B?VmpXNU91eFBYWU1kTkR2L2pSUDJvZklSQ2M3dTJ3d0JiZzRRNWVrK2d4cUhM?=
- =?gb2312?B?TGZFOUN1L1ZMdWZwZG5DZVJvYVArN2NOdzJ1SjFIaHphUUxRenZFR1JsZXl6?=
- =?gb2312?B?cjVURlVycWdvd3ZRZlVuMWRZU3MwaS85WFp0Y0VZUUJSRWw0bDQ3YmJuTjVz?=
- =?gb2312?B?TXFJU04rcG5XbG5rejJNU1hGVUJJcEZ6dFN2QjB2KzErR3hrSk52cU10MkFz?=
- =?gb2312?B?UXRYWW56RTUvTHpQOUlJQ08ycVBOYzUyOXRpQXF2TFdOcGFRTmlVcGN2ME1O?=
- =?gb2312?B?bkkzS294Zm9KNElzOHMzRGlDank4aVZ1dGt0aGJIcWZVcnJiR1VLaWtrUzBE?=
- =?gb2312?B?Z1Vmb1VUdmtYbURMZ2ZRZmxqQmw2cmxCS04xdFlicGlTcVltRFBnZzROQlVs?=
- =?gb2312?Q?J1F7m+?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:zh-cn;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PUZPR06MB4715.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016)(7416014)(7053199007)(921020)(38070700018);DIR:OUT;SFP:1102;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?gb2312?B?NmY2QzdMZWRUNWtWYlMxbjcrVnl0UmRTa2NZdGQrVi92YnU5bjF2TVVCTCs0?=
- =?gb2312?B?MnZFVGZKb2grTGhsNnlDTHpLSGZVVEJUajVBYklIcS9nSGh1YW1Ic0V4QnBS?=
- =?gb2312?B?QnJVWDNVNFVTMXFYcTVKVGtqbW1RUjJNQm9WaUxxczZRNWVxdXVYQlRYSkpl?=
- =?gb2312?B?aTFRZm03U08xOTJ5M0RkTEROSVM0MXloWWIwS0VhSjZvOE1sdjhOSytmc3lu?=
- =?gb2312?B?RnQ2Nm1ZbXNNekVyV0FsSGlIbk51THh5SDNpOGpZMWZFZWtmZ2NHR3Fsa2tJ?=
- =?gb2312?B?UkplSnFuUDZGc3EvS2g0Ri9lWTVrYkZUL1h3bTQxTzlneTN6QkE3M1VxSjQ2?=
- =?gb2312?B?MWtDTEFRTVk1bGNBSDVac2Z4NmxjWE5oN1puekRpQkkxbXN1OXZyQi92YUli?=
- =?gb2312?B?YlJpbzRRMWpnTDdKaHBrdEYwbGpVVEpkV2FKb1FSWjRsRFdERjFCL2RsOEpX?=
- =?gb2312?B?dU1HVGVPR3Zva0JpMVJIbjFGcTdiWEVCMVcraEEvV0I5NmdVY2pia2hweStp?=
- =?gb2312?B?b2tPWWhneG1SaGJDczVkbWZWVUEyclZIbHZabkdEcFo0VVhRR3dROThnRDNn?=
- =?gb2312?B?NGFieXdQU3B6YURFUWpDTWRHYU1mWHUzUU1rRTFjYjVSTDAydGhnQ2YvVEx4?=
- =?gb2312?B?MzlZR1JPY3JFeUEvY25NSDhCaHZ6OXZnbTNhWTczbTZQVHBtSi9MQzVodmlK?=
- =?gb2312?B?QWpoTUU3M0RWRkZNR2JzT3hleUdJM2d4dkRaQXVwczBPTHczN2NpVTFNc0ph?=
- =?gb2312?B?Y2VMVVdoOEpzYkpudUdZMEJ3UFVUd1l3VCtheFROQ1EvNmprWmRlSktSakVh?=
- =?gb2312?B?Z2NKTzRhaXdSUGgzbGtSMGtEQ3ZrRHBVQUduOWxGdFFhZlpLRVdRNXlKOHRa?=
- =?gb2312?B?b0VhS2V1SFllKy9Jcjh2VWozQzJNcXZDQmVrL243SG52TWZ3RVl1REVCWFhu?=
- =?gb2312?B?N0hUdlBNc0RQZjZ5RnpBaDluS0tyMmhEY0NIL0E4SjYxUmpDQUhtQ09rY2Vi?=
- =?gb2312?B?TGJsSHh1WFpXY1VoR1JnekVGRWhhbHFIcFFPL1VoOGlzR0luQmw0TFpGTUMx?=
- =?gb2312?B?VGVidUtlRXB2LzFIYkZCcFZiU1F3UVRtRE9UeEYreGtEenBLeHUvb05wMDR1?=
- =?gb2312?B?SVZldUJPNm1LMVFQMzM2UlI5bm5aTzZULzdWL1NQWm5VYjlMdkYvZDZQeGFO?=
- =?gb2312?B?ZDEwQjk2SGpJdmlFQUdrUHliQW9OdURJWXhRM1BzdUNBTHNqSW93QWphcGtQ?=
- =?gb2312?B?bXRZN243THVqdXg4TkwzY0toV0hxbG1ZOXB1cXdpRDhVaEhZSi85b2pjSG5E?=
- =?gb2312?B?emVSV2VkQVZKTjB2djBUSW9XTWlRclJnY2J0ekhXMzdrRHJTWGtPekVITVJG?=
- =?gb2312?B?Zit5aDVhZmNBak1BSHkvVjFmUU1NUWdzeW5DUUQvbzJNUXl1d2J4T0JOZDVI?=
- =?gb2312?B?aDM5YzFkRUhqaTFBcGJwdFUyUTFFV0gvSFRTSlRjb3IrTWdhamtmcGpNaVV1?=
- =?gb2312?B?aUpsZllZSnplTEc3L0R2aW4vK1NYbTUrK0Voai8rYVVYVFRpazFDVHdGeTZE?=
- =?gb2312?B?Ti8yZGo2dnlHZ0owSUc2RFg2TTVSRm14K2NQaXBydXo1aTBJK3IvMGF4akNm?=
- =?gb2312?B?NWJmSGZxeHowY1BUV0FHdGRaVC96cE9CSVFCSmludFgwRVA1VmduczZTNktk?=
- =?gb2312?B?aTZ4TTZtOTdWRzZBQ2FSM3VCSTJ1OUx4UlUzeVNxai9HR24wK1RiK3U5Zzgv?=
- =?gb2312?B?WUJWemFiYjJvQ3hMbjdaTkt6TjZReVNGMjQxQXZPaWRBWmxoTkJVWUxFNzRW?=
- =?gb2312?B?WHdmQVV2UEF3YlkxK1JSWG5MNGNwUTM3ZzVYK2ZwdE5KNzhXaUNPVDV2ekdW?=
- =?gb2312?B?ZDN5WkM3ZmhKSGFveXFqZ0svNUM4TG92cHk0WWVDRGg1Tnd6ZXJaYXV3SkJT?=
- =?gb2312?B?VXBJOE4wYVg3cVoyTDRvME9sU3RRQ2luOHBWaDFadmZHdXNUL0xabmFCRTI3?=
- =?gb2312?B?cUYwYXQvdkJHWURJejEwVDJQYURYci9PUTJCcFpzT29CWVNDcHpnbURxK3ZT?=
- =?gb2312?B?U2crT3Vld3BhaUp5S3dpMklDc3ZYOEtWNjA5c29ZalNlM3dOYjF0UmpjNFFE?=
- =?gb2312?Q?b0zq2rbfCw0I6eCiRv0jArVuq?=
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E146325EFBB;
+	Wed, 23 Apr 2025 09:04:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1745399084; cv=none; b=Va35Eiv27JL6ycicVaOlM/IAMekHkvhMhlup5f7P8AkgDfRUmXNY3mFjuut1tDvehhp6taz7wdJLciGaGtmqz5ps32DzttqBn8khRoQjtd1D2QHotMjyAo5TNnNAbZw0pcqi6L3BfcKGiQY+bdTJuVxUIWDvm4XsCjaUf4Kt9oE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1745399084; c=relaxed/simple;
+	bh=S9hN/pmyN8Qz+n6W1uu5WsP67oLsvvm6oa81NMVA+NE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=No8PlP0qbhBthTUzwVyes3cu9fKsYQe84pmK9lXq/zAqPZNIyjvnXF+/hZ7J6VKmJHFXKYtra4232GaCEosygqEYDpET4FnNrqhbDm9yVGVX5Sa6Ef6AwWOjYkbtenjiqBuCnqGlvpIXqIg6TVMxB/gDPt2eTEAW0vc954zqZ44=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=dna3v3xJ; arc=none smtp.client-ip=91.207.212.93
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="dna3v3xJ"
+Received: from pps.filterd (m0369457.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 53N6Dwq7028341;
+	Wed, 23 Apr 2025 11:04:13 +0200
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=selector1; bh=
+	rvMYNbaGLtIE0FfsKR2Th55N0M9THqiUG0jBoOkWeBw=; b=dna3v3xJ/qPUP1rx
+	TUQQRDkrAVxy0mDlgN9koSoVf6NV9nVyp8SM7bFFXfppjn1V9URQmeoUJOE1j8v4
+	O8Cxm86fYWojtPhcSeVHugVlg0ZJd2C6K1tLfWcXM0CuQvSfP9Qs4OfmAA002rl7
+	a7ZSvQ9/pBMuD6DVFhhECk/9g7pmwFh+CDiMUNwLrkONGsjH/qCuAhSqHAfmVZb/
+	zlOPeIvD+HNOrkq9QUPCo3PkVrOpD6PJkZQoYERM8n2mZTwj2BZfpdvIelAmG4GK
+	yVMjxluX6ctSzaxd0MdCSBEgdr+2HQlxEWjrjYOqwsCWH/lJAnVqEwIQYtm6T35k
+	D5PG7w==
+Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 466jjva8vb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 23 Apr 2025 11:04:13 +0200 (MEST)
+Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 018C340062;
+	Wed, 23 Apr 2025 11:02:43 +0200 (CEST)
+Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 6A4D891F73D;
+	Wed, 23 Apr 2025 11:01:26 +0200 (CEST)
+Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
+ with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 23 Apr
+ 2025 11:01:26 +0200
+From: Christian Bruel <christian.bruel@foss.st.com>
+To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
+        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
+        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
+        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <cassel@kernel.org>, <johan+linaro@kernel.org>
+CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-stm32@st-md-mailman.stormreply.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH v8 2/9] PCI: stm32: Add PCIe host support for STM32MP25
+Date: Wed, 23 Apr 2025 11:01:12 +0200
+Message-ID: <20250423090119.4003700-3-christian.bruel@foss.st.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250423090119.4003700-1-christian.bruel@foss.st.com>
+References: <20250423090119.4003700-1-christian.bruel@foss.st.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PUZPR06MB4715.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0c8ca781-af0f-4731-d207-08dd8243da7b
-X-MS-Exchange-CrossTenant-originalarrivaltime: 23 Apr 2025 08:50:09.6206
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 0409f77a-e53d-4d23-943e-ccade7cb4811
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: GGiamYnNBKZyp5pLAunNdMWbofrOqS3oGzhyV+UKpfD1nFimkzrq72r2CBJkrcpYzSqf0iI7OtnGpLpEwM873Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: PS1PPF5540628D6
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
+ (10.75.129.71)
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.680,FMLib:17.12.68.34
+ definitions=2025-04-23_06,2025-04-22_01,2024-11-22_01
 
-DQoNCi0tLS0t08q8/tStvP4tLS0tLQ0Kt6K8/sjLOiBDaHJpc3RpYW4gQnJ1ZWwgPGNocmlzdGlh
-bi5icnVlbEBmb3NzLnN0LmNvbT4gDQq3osvNyrG85DogMjAyNcTqNNTCMjPI1SAxNjoxMQ0KytW8
-/sjLOiBjaHJpc3RpYW4uYnJ1ZWxAZm9zcy5zdC5jb207IGxwaWVyYWxpc2lAa2VybmVsLm9yZzsg
-a3dAbGludXguY29tOyBtYW5pdmFubmFuLnNhZGhhc2l2YW1AbGluYXJvLm9yZzsgcm9iaEBrZXJu
-ZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBrcnprK2R0QGtlcm5lbC5vcmc7IGNvbm9yK2R0
-QGtlcm5lbC5vcmc7IG1jb3F1ZWxpbi5zdG0zMkBnbWFpbC5jb207IGFsZXhhbmRyZS50b3JndWVA
-Zm9zcy5zdC5jb207IHAuemFiZWxAcGVuZ3V0cm9uaXguZGU7IHRoaXBwZXN3YW15LmhhdmFsaWdl
-QGFtZC5jb207IHNocmFkaGEudEBzYW1zdW5nLmNvbTsgcXVpY19zY2hpbnRhdkBxdWljaW5jLmNv
-bTsgY2Fzc2VsQGtlcm5lbC5vcmc7IGpvaGFuK2xpbmFyb0BrZXJuZWwub3JnDQqzrcvNOiBsaW51
-eC1wY2lAdmdlci5rZXJuZWwub3JnOyBkZXZpY2V0cmVlQHZnZXIua2VybmVsLm9yZzsgbGludXgt
-c3RtMzJAc3QtbWQtbWFpbG1hbi5zdG9ybXJlcGx5LmNvbTsgbGludXgtYXJtLWtlcm5lbEBsaXN0
-cy5pbmZyYWRlYWQub3JnOyBsaW51eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnDQrW98ziOiBbUEFU
-Q0ggdjggMC85XSBBZGQgU1RNMzJNUDI1IFBDSWUgZHJpdmVycw0KDQpFWFRFUk5BTCBFTUFJTA0K
-DQp0aGlzIHBhdGNoIGRlcGVuZHMgb24gcGF0Y2gNCmh0dHBzOi8vcGF0Y2h3b3JrLmtlcm5lbC5v
-cmcvcHJvamVjdC9saW51eC1hcm0ta2VybmVsL2xpc3QvP3Nlcmllcz05NTM1NDUNCg0KQ2hhbmdl
-cyBpbiB2ODoNCiAgIC0gV2hpdGVzcGFjZSBpbiBjb21tZW50DQoNCkhpIENocmlzdGlhbqOsDQoN
-ClRoZSBzdWJqZWN0IG9mIGVhY2ggb2YgeW91ciBwYXRjaGVzIGlzIHN0aWxsIHY3Lg0KDQplLmcu
-LA0KaHR0cHM6Ly9wYXRjaHdvcmsua2VybmVsLm9yZy9wcm9qZWN0L2xpbnV4LXBjaS9wYXRjaC8y
-MDI1MDQyMzA4MTA1MS4zOTA3OTMwLTItY2hyaXN0aWFuLmJydWVsQGZvc3Muc3QuY29tLw0KDQpC
-ZXN0IHJlZ2FyZHMsDQpIYW5zDQoNCkNoYW5nZXMgaW4gdjc6DQogICAtIFVzZSBkZXZpY2VfaW5p
-dF93YWtldXAgdG8gZW5hYmxlIHdha2V1cA0KICAgLSBGaXggY29tbWVudHMgKEJqb3JuKQ0KDQpD
-aGFuZ2VzIGluIHY2Og0KICAgLSBDYWxsIGRldmljZV93YWtldXBfZW5hYmxlKCkgdG8gZml4IFdB
-S0UjIHdha2V1cC4NCiAgIEFkZHJlc3MgY29tbWVudHMgZnJvbSBNYW5pdmFubmE6DQogICAtIEZp
-eC9BZGQgQ29tbWVudHMNCiAgIC0gRml4IERUIGluZGVudHMNCiAgIC0gUmVtb3ZlIGR3X3BjaWVf
-ZXBfbGlua3VwKCkgaW4gRVAgc3RhcnQgbGluaw0KICAgLSBBZGQgUENJRV9UX1BWUEVSTF9NUyBk
-ZWxheSBpbiBSQyBQRVJTVCMgZGVhc3NlcnQNCg0KQ2hhbmdlcyBpbiB2NToNCiAgIEFkZHJlc3Mg
-ZHJpdmVyIGNvbW1lbnRzIGZyb20gTWFuaXZhbm5hOg0KICAgLSBVc2UgZHdfcGNpZV97c3VzcGVu
-ZC9yZXN1bWV9X25vaXJxIGluc3RlYWQgb2YgcHJpdmF0ZSBvbmVzLg0KICAgLSBNb3ZlIGR3X3Bj
-aWVfaG9zdF9pbml0KCkgdG8gcHJvYmUNCiAgIC0gQWRkIHN0bTMyX3JlbW92ZV9wY2llX3BvcnQg
-Y2xlYW51cCBmdW5jdGlvbg0KICAgLSBVc2Ugb2Zfbm9kZV9wdXQgaW4gc3RtMzJfcGNpZV9wYXJz
-ZV9wb3J0DQogICAtIFJlbW92ZSB3YWtldXAtc291cmNlIHByb3BlcnR5DQogICAtIFVzZSBnZW5l
-cmljIGRldl9wbV9zZXRfZGVkaWNhdGVkX3dha2VfaXJxIHRvIHN1cHBvcnQgd2FrZSMgaXJxDQoN
-CkNoYW5nZXMgaW4gdjQ6DQogICBBZGRyZXNzIGJpbmRpbmdzIGNvbW1lbnRzIFJvYiBIZXJyaW5n
-DQogICAtIFJlbW92ZSBwaHkgcHJvcGVydHkgZm9ybSBjb21tb24geWFtbA0KICAgLSBSZW1vdmUg
-cGh5LW5hbWUgcHJvcGVydHkNCiAgIC0gTW92ZSB3YWtlX2dwaW8gYW5kIHJlc2V0X2dwaW8gdG8g
-dGhlIGhvc3Qgcm9vdCBwb3J0DQoNCkNoYW5nZXMgaW4gdjM6DQogICBBZGRyZXNzIGNvbW1lbnRz
-IGZyb20gTWFuaXZhbm5hLCBSb2IgYW5kIEJqb3JuOg0KICAgLSBNb3ZlIGhvc3Qgd2FrZXVwIGhl
-bHBlciB0byBkd2MgY29yZSAoTWFuaSkNCiAgIC0gRHJvcCBudW0tbGFuZXM9PDE+IGZyb20gYmlu
-ZGluZ3MgKFJvYikNCiAgIC0gRml4IFBDSSBhZGRyZXNzIG9mIEkvTyByZWdpb24gKE1hbmkpDQog
-ICAtIE1vdmVkIFBIWSB0byBhIFJDIHJvb3Rwb3J0IHN1YnNlY3Rpb24gKEJqb3JuLCBNYW5pKQ0K
-ICAgLSBSZXBsYWNlZCBkbWEtbGltaXQgcXVpcmsgYnkgZG1hLXJhbmdlcyBwcm9wZXJ0eSAoQmpv
-cm4pDQogICAtIE1vdmVkIG91dCBwZXJzdCBhc3NlcnQvZGVhc3NlcnQgZnJvbSBzdGFydC9zdG9w
-IGxpbmsgKE1hbmkpDQogICAtIERyb3AgbGlua191cCB0ZXN0IG9wdGltIChNYW5pKQ0KICAgLSBE
-VCBhbmQgY29tbWVudHMgcmVwaHJhc2luZyAoQmpvcm4pDQogICAtIEFkZCBkdHMgZW50cmllcyBu
-b3cgdGhhdCB0aGUgY29tYm9waHkgZW50cmllcyBoYXMgbGFuZGVkDQogICAtIERyb3AgZGVsYXlp
-bmcgQ29uZmlndXJhdGlvbiBSZXF1ZXN0cw0KDQpDaGFuZ2VzIGluIHYyOg0KICAgLSBGaXggc3Qs
-c3RtMzItcGNpZS1jb21tb24ueWFtbCBkdF9iaW5kaW5nX2NoZWNrDQoNCkNoYW5nZXMgaW4gdjE6
-DQogICBBZGRyZXNzIGNvbW1lbnRzIGZyb20gUm9iIEhlcnJpbmcgYW5kIEJqb3JuIEhlbGdhYXM6
-DQogICAtIERyb3Agc3QsbGltaXQtbXJycyBhbmQgc3QsbWF4LXBheWxvYWQtc2l6ZSBmcm9tIHRo
-aXMgcGF0Y2hzZXQNCiAgIC0gUmVtb3ZlIHNpbmdsZSByZXNldCBhbmQgY2xvY2tzIGJpbmRpbmcg
-bmFtZXMgYW5kIG1pc2MgeWFtbCBjbGVhbnVwcw0KICAgLSBTcGxpdCBSQy9FUCBjb21tb24gYmlu
-ZGluZ3MgdG8gYSBzZXBhcmF0ZSBzY2hlbWEgZmlsZQ0KICAgLSBVc2UgY29ycmVjdCBQQ0lFX1Rf
-UEVSU1RfQ0xLX1VTIGFuZCBQQ0lFX1RfUlJTX1JFQURZX01TIGRlZmluZXMNCiAgIC0gVXNlIC5y
-ZW1vdmUgaW5zdGVhZCBvZiAucmVtb3ZlX25ldw0KICAgLSBGaXggYmFyIHJlc2V0IHNlcXVlbmNl
-IGluIEVQIGRyaXZlcg0KICAgLSBVc2UgY2xlYW51cCBibG9ja3MgZm9yIGVycm9yIGhhbmRsaW5n
-DQogICAtIENvc21ldGljIGZpeGVzDQoNCkNocmlzdGlhbiBCcnVlbCAoOSk6DQogIGR0LWJpbmRp
-bmdzOiBQQ0k6IEFkZCBTVE0zMk1QMjUgUENJZSBSb290IENvbXBsZXggYmluZGluZ3MNCiAgUENJ
-OiBzdG0zMjogQWRkIFBDSWUgaG9zdCBzdXBwb3J0IGZvciBTVE0zMk1QMjUNCiAgZHQtYmluZGlu
-Z3M6IFBDSTogQWRkIFNUTTMyTVAyNSBQQ0llIEVuZHBvaW50IGJpbmRpbmdzDQogIFBDSTogc3Rt
-MzI6IEFkZCBQQ0llIEVuZHBvaW50IHN1cHBvcnQgZm9yIFNUTTMyTVAyNQ0KICBNQUlOVEFJTkVS
-UzogYWRkIGVudHJ5IGZvciBTVCBTVE0zMk1QMjUgUENJZSBkcml2ZXJzDQogIGFybTY0OiBkdHM6
-IHN0OiBhZGQgUENJZSBwaW5jdHJsIGVudHJpZXMgaW4gc3RtMzJtcDI1LXBpbmN0cmwuZHRzaQ0K
-ICBhcm02NDogZHRzOiBzdDogQWRkIFBDSWUgUm9vdGNvbXBsZXggbW9kZSBvbiBzdG0zMm1wMjUx
-DQogIGFybTY0OiBkdHM6IHN0OiBBZGQgUENJZSBFbmRwb2ludCBtb2RlIG9uIHN0bTMybXAyNTEN
-CiAgYXJtNjQ6IGR0czogc3Q6IEVuYWJsZSBQQ0llIG9uIHRoZSBzdG0zMm1wMjU3Zi1ldjEgYm9h
-cmQNCg0KIC4uLi9iaW5kaW5ncy9wY2kvc3Qsc3RtMzItcGNpZS1jb21tb24ueWFtbCAgICB8ICAz
-MyArKw0KIC4uLi9iaW5kaW5ncy9wY2kvc3Qsc3RtMzItcGNpZS1lcC55YW1sICAgICAgICB8ICA2
-NyArKysNCiAuLi4vYmluZGluZ3MvcGNpL3N0LHN0bTMyLXBjaWUtaG9zdC55YW1sICAgICAgfCAx
-MTIgKysrKysNCiBNQUlOVEFJTkVSUyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-fCAgIDcgKw0KIGFyY2gvYXJtNjQvYm9vdC9kdHMvc3Qvc3RtMzJtcDI1LXBpbmN0cmwuZHRzaSB8
-ICAyMCArDQogYXJjaC9hcm02NC9ib290L2R0cy9zdC9zdG0zMm1wMjUxLmR0c2kgICAgICAgIHwg
-IDU3ICsrKw0KIGFyY2gvYXJtNjQvYm9vdC9kdHMvc3Qvc3RtMzJtcDI1N2YtZXYxLmR0cyAgICB8
-ICAyMSArDQogZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvS2NvbmZpZyAgICAgICAgICAgIHwg
-IDI0ICsNCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9NYWtlZmlsZSAgICAgICAgICAgfCAg
-IDIgKw0KIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtc3RtMzItZXAuYyAgICB8IDQx
-NyArKysrKysrKysrKysrKysrKysNCiBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLXN0
-bTMyLmMgICAgICAgfCAzNzAgKysrKysrKysrKysrKysrKw0KIGRyaXZlcnMvcGNpL2NvbnRyb2xs
-ZXIvZHdjL3BjaWUtc3RtMzIuaCAgICAgICB8ICAxNiArDQogMTIgZmlsZXMgY2hhbmdlZCwgMTE0
-NiBpbnNlcnRpb25zKCspDQogY3JlYXRlIG1vZGUgMTAwNjQ0IERvY3VtZW50YXRpb24vZGV2aWNl
-dHJlZS9iaW5kaW5ncy9wY2kvc3Qsc3RtMzItcGNpZS1jb21tb24ueWFtbA0KIGNyZWF0ZSBtb2Rl
-IDEwMDY0NCBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUvYmluZGluZ3MvcGNpL3N0LHN0bTMyLXBj
-aWUtZXAueWFtbA0KIGNyZWF0ZSBtb2RlIDEwMDY0NCBEb2N1bWVudGF0aW9uL2RldmljZXRyZWUv
-YmluZGluZ3MvcGNpL3N0LHN0bTMyLXBjaWUtaG9zdC55YW1sDQogY3JlYXRlIG1vZGUgMTAwNjQ0
-IGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL3BjaWUtc3RtMzItZXAuYw0KIGNyZWF0ZSBtb2Rl
-IDEwMDY0NCBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2llLXN0bTMyLmMNCiBjcmVhdGUg
-bW9kZSAxMDA2NDQgZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2MvcGNpZS1zdG0zMi5oDQoNCi0t
-DQoyLjM0LjENCg0KDQo=
+Add driver for the STM32MP25 SoC PCIe Gen1 2.5 GT/s and Gen2 5GT/s
+controller based on the DesignWare PCIe core.
+
+Supports MSI via GICv2m, Single Virtual Channel, Single Function
+
+Supports WAKE# GPIO.
+
+Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
+---
+ drivers/pci/controller/dwc/Kconfig      |  12 +
+ drivers/pci/controller/dwc/Makefile     |   1 +
+ drivers/pci/controller/dwc/pcie-stm32.c | 368 ++++++++++++++++++++++++
+ drivers/pci/controller/dwc/pcie-stm32.h |  15 +
+ 4 files changed, 396 insertions(+)
+ create mode 100644 drivers/pci/controller/dwc/pcie-stm32.c
+ create mode 100644 drivers/pci/controller/dwc/pcie-stm32.h
+
+diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
+index d9f0386396ed..2aec5d2f9a46 100644
+--- a/drivers/pci/controller/dwc/Kconfig
++++ b/drivers/pci/controller/dwc/Kconfig
+@@ -410,6 +410,18 @@ config PCIE_SPEAR13XX
+ 	help
+ 	  Say Y here if you want PCIe support on SPEAr13XX SoCs.
+ 
++config PCIE_STM32_HOST
++	tristate "STMicroelectronics STM32MP25 PCIe Controller (host mode)"
++	depends on ARCH_STM32 || COMPILE_TEST
++	depends on PCI_MSI
++	select PCIE_DW_HOST
++	help
++	  Enables support for the DesignWare core based PCIe host controller
++	  found in STM32MP25 SoC.
++
++	  This driver can also be built as a module. If so, the module
++	  will be called pcie-stm32.
++
+ config PCI_DRA7XX
+ 	tristate
+ 
+diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
+index 908cb7f345db..9d3b43504725 100644
+--- a/drivers/pci/controller/dwc/Makefile
++++ b/drivers/pci/controller/dwc/Makefile
+@@ -30,6 +30,7 @@ obj-$(CONFIG_PCIE_UNIPHIER) += pcie-uniphier.o
+ obj-$(CONFIG_PCIE_UNIPHIER_EP) += pcie-uniphier-ep.o
+ obj-$(CONFIG_PCIE_VISCONTI_HOST) += pcie-visconti.o
+ obj-$(CONFIG_PCIE_RCAR_GEN4) += pcie-rcar-gen4.o
++obj-$(CONFIG_PCIE_STM32_HOST) += pcie-stm32.o
+ 
+ # The following drivers are for devices that use the generic ACPI
+ # pci_root.c driver but don't support standard ECAM config access.
+diff --git a/drivers/pci/controller/dwc/pcie-stm32.c b/drivers/pci/controller/dwc/pcie-stm32.c
+new file mode 100644
+index 000000000000..700c9bc1a54c
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-stm32.c
+@@ -0,0 +1,368 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * STMicroelectronics STM32MP25 PCIe root complex driver.
++ *
++ * Copyright (C) 2025 STMicroelectronics
++ * Author: Christian Bruel <christian.bruel@foss.st.com>
++ */
++
++#include <linux/clk.h>
++#include <linux/mfd/syscon.h>
++#include <linux/of_platform.h>
++#include <linux/phy/phy.h>
++#include <linux/pinctrl/devinfo.h>
++#include <linux/platform_device.h>
++#include <linux/pm_runtime.h>
++#include <linux/pm_wakeirq.h>
++#include <linux/regmap.h>
++#include <linux/reset.h>
++#include "pcie-designware.h"
++#include "pcie-stm32.h"
++#include "../../pci.h"
++
++struct stm32_pcie {
++	struct dw_pcie pci;
++	struct regmap *regmap;
++	struct reset_control *rst;
++	struct phy *phy;
++	struct clk *clk;
++	struct gpio_desc *perst_gpio;
++	struct gpio_desc *wake_gpio;
++};
++
++static void stm32_pcie_deassert_perst(struct stm32_pcie *stm32_pcie)
++{
++	/* Delay PERST# de-assertion until the power stabilizes */
++	msleep(PCIE_T_PVPERL_MS);
++
++	gpiod_set_value(stm32_pcie->perst_gpio, 0);
++
++	/* Wait for the REFCLK to stabilize */
++	if (stm32_pcie->perst_gpio)
++		msleep(PCIE_T_RRS_READY_MS);
++}
++
++static void stm32_pcie_assert_perst(struct stm32_pcie *stm32_pcie)
++{
++	gpiod_set_value(stm32_pcie->perst_gpio, 1);
++}
++
++static int stm32_pcie_start_link(struct dw_pcie *pci)
++{
++	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
++
++	return regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
++				  STM32MP25_PCIECR_LTSSM_EN,
++				  STM32MP25_PCIECR_LTSSM_EN);
++}
++
++static void stm32_pcie_stop_link(struct dw_pcie *pci)
++{
++	struct stm32_pcie *stm32_pcie = to_stm32_pcie(pci);
++
++	regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
++			   STM32MP25_PCIECR_LTSSM_EN, 0);
++}
++
++static int stm32_pcie_suspend_noirq(struct device *dev)
++{
++	struct stm32_pcie *stm32_pcie = dev_get_drvdata(dev);
++	int ret;
++
++	ret = dw_pcie_suspend_noirq(&stm32_pcie->pci);
++	if (ret)
++		return ret;
++
++	stm32_pcie_assert_perst(stm32_pcie);
++
++	clk_disable_unprepare(stm32_pcie->clk);
++
++	if (!device_wakeup_path(dev))
++		phy_exit(stm32_pcie->phy);
++
++	return pinctrl_pm_select_sleep_state(dev);
++}
++
++static int stm32_pcie_resume_noirq(struct device *dev)
++{
++	struct stm32_pcie *stm32_pcie = dev_get_drvdata(dev);
++	int ret;
++
++	/*
++	 * The core clock is gated with CLKREQ# from the COMBOPHY REFCLK,
++	 * thus if no device is present, must force it low with an init pinmux
++	 * to be able to access the DBI registers.
++	 */
++	if (!IS_ERR(dev->pins->init_state))
++		ret = pinctrl_select_state(dev->pins->p, dev->pins->init_state);
++	else
++		ret = pinctrl_pm_select_default_state(dev);
++
++	if (ret) {
++		dev_err(dev, "Failed to activate pinctrl pm state: %d\n", ret);
++		return ret;
++	}
++
++	if (!device_wakeup_path(dev)) {
++		ret = phy_init(stm32_pcie->phy);
++		if (ret) {
++			pinctrl_pm_select_default_state(dev);
++			return ret;
++		}
++	}
++
++	ret = clk_prepare_enable(stm32_pcie->clk);
++	if (ret)
++		goto err_phy_exit;
++
++	stm32_pcie_deassert_perst(stm32_pcie);
++
++	ret = dw_pcie_resume_noirq(&stm32_pcie->pci);
++	if (ret)
++		goto err_disable_clk;
++
++	pinctrl_pm_select_default_state(dev);
++
++	return 0;
++
++err_disable_clk:
++	stm32_pcie_assert_perst(stm32_pcie);
++	clk_disable_unprepare(stm32_pcie->clk);
++
++err_phy_exit:
++	phy_exit(stm32_pcie->phy);
++	pinctrl_pm_select_default_state(dev);
++
++	return ret;
++}
++
++static const struct dev_pm_ops stm32_pcie_pm_ops = {
++	NOIRQ_SYSTEM_SLEEP_PM_OPS(stm32_pcie_suspend_noirq,
++				  stm32_pcie_resume_noirq)
++};
++
++static const struct dw_pcie_host_ops stm32_pcie_host_ops = {
++};
++
++static const struct dw_pcie_ops dw_pcie_ops = {
++	.start_link = stm32_pcie_start_link,
++	.stop_link = stm32_pcie_stop_link
++};
++
++static int stm32_add_pcie_port(struct stm32_pcie *stm32_pcie,
++			       struct platform_device *pdev)
++{
++	struct device *dev = stm32_pcie->pci.dev;
++	unsigned int wake_irq;
++	int ret;
++
++	/* Start to enable resources with PERST# asserted */
++
++	ret = phy_set_mode(stm32_pcie->phy, PHY_MODE_PCIE);
++	if (ret)
++		return ret;
++
++	ret = phy_init(stm32_pcie->phy);
++	if (ret)
++		return ret;
++
++	ret = regmap_update_bits(stm32_pcie->regmap, SYSCFG_PCIECR,
++				 STM32MP25_PCIECR_TYPE_MASK,
++				 STM32MP25_PCIECR_RC);
++	if (ret)
++		goto err_phy_exit;
++
++	stm32_pcie_deassert_perst(stm32_pcie);
++
++	if (stm32_pcie->wake_gpio) {
++		wake_irq = gpiod_to_irq(stm32_pcie->wake_gpio);
++		ret = dev_pm_set_dedicated_wake_irq(dev, wake_irq);
++		if (ret) {
++			dev_err(dev, "Failed to enable wakeup irq %d\n", ret);
++			goto err_assert_perst;
++		}
++		irq_set_irq_type(wake_irq, IRQ_TYPE_EDGE_FALLING);
++	}
++
++	return 0;
++
++err_assert_perst:
++	stm32_pcie_assert_perst(stm32_pcie);
++
++err_phy_exit:
++	phy_exit(stm32_pcie->phy);
++
++	return ret;
++}
++
++static void stm32_remove_pcie_port(struct stm32_pcie *stm32_pcie)
++{
++	stm32_pcie_assert_perst(stm32_pcie);
++
++	phy_exit(stm32_pcie->phy);
++}
++
++static int stm32_pcie_parse_port(struct stm32_pcie *stm32_pcie)
++{
++	struct device *dev = stm32_pcie->pci.dev;
++	struct device_node *root_port;
++
++	root_port = of_get_next_available_child(dev->of_node, NULL);
++
++	stm32_pcie->phy = devm_of_phy_get(dev, root_port, NULL);
++	if (IS_ERR(stm32_pcie->phy)) {
++		of_node_put(root_port);
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->phy),
++				     "Failed to get pcie-phy\n");
++	}
++
++	stm32_pcie->perst_gpio = devm_fwnode_gpiod_get(dev, of_fwnode_handle(root_port),
++						       "reset", GPIOD_OUT_HIGH, NULL);
++	if (IS_ERR(stm32_pcie->perst_gpio)) {
++		if (PTR_ERR(stm32_pcie->perst_gpio) != -ENOENT) {
++			of_node_put(root_port);
++			return dev_err_probe(dev, PTR_ERR(stm32_pcie->perst_gpio),
++					     "Failed to get reset GPIO\n");
++		}
++		stm32_pcie->perst_gpio = NULL;
++	}
++
++	stm32_pcie->wake_gpio = devm_fwnode_gpiod_get(dev, of_fwnode_handle(root_port),
++						      "wake", GPIOD_IN, NULL);
++
++	if (IS_ERR(stm32_pcie->wake_gpio)) {
++		if (PTR_ERR(stm32_pcie->wake_gpio) != -ENOENT) {
++			of_node_put(root_port);
++			return dev_err_probe(dev, PTR_ERR(stm32_pcie->wake_gpio),
++					     "Failed to get wake GPIO\n");
++		}
++		stm32_pcie->wake_gpio = NULL;
++	}
++
++	of_node_put(root_port);
++
++	return 0;
++}
++
++static int stm32_pcie_probe(struct platform_device *pdev)
++{
++	struct stm32_pcie *stm32_pcie;
++	struct device *dev = &pdev->dev;
++	int ret;
++
++	stm32_pcie = devm_kzalloc(dev, sizeof(*stm32_pcie), GFP_KERNEL);
++	if (!stm32_pcie)
++		return -ENOMEM;
++
++	stm32_pcie->pci.dev = dev;
++	stm32_pcie->pci.ops = &dw_pcie_ops;
++	stm32_pcie->pci.pp.ops = &stm32_pcie_host_ops;
++
++	stm32_pcie->regmap = syscon_regmap_lookup_by_compatible("st,stm32mp25-syscfg");
++	if (IS_ERR(stm32_pcie->regmap))
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->regmap),
++				     "No syscfg specified\n");
++
++	stm32_pcie->clk = devm_clk_get(dev, NULL);
++	if (IS_ERR(stm32_pcie->clk))
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->clk),
++				     "Failed to get PCIe clock source\n");
++
++	stm32_pcie->rst = devm_reset_control_get_exclusive(dev, NULL);
++	if (IS_ERR(stm32_pcie->rst))
++		return dev_err_probe(dev, PTR_ERR(stm32_pcie->rst),
++				     "Failed to get PCIe reset\n");
++
++	ret = stm32_pcie_parse_port(stm32_pcie);
++	if (ret)
++		return ret;
++
++	platform_set_drvdata(pdev, stm32_pcie);
++
++	ret = pm_runtime_set_active(dev);
++	if (ret < 0) {
++		dev_err(dev, "Failed to activate runtime PM %d\n", ret);
++		return ret;
++	}
++
++	ret = devm_pm_runtime_enable(dev);
++	if (ret < 0) {
++		dev_err(dev, "Failed to enable runtime PM %d\n", ret);
++		return ret;
++	}
++
++	pm_runtime_get_noresume(dev);
++
++	ret = stm32_add_pcie_port(stm32_pcie, pdev);
++	if (ret) {
++		pm_runtime_put_noidle(&pdev->dev);
++		return ret;
++	}
++
++	reset_control_assert(stm32_pcie->rst);
++	reset_control_deassert(stm32_pcie->rst);
++
++	ret = clk_prepare_enable(stm32_pcie->clk);
++	if (ret) {
++		dev_err(dev, "Core clock enable failed %d\n", ret);
++		goto err_remove_port;
++	}
++
++	ret = dw_pcie_host_init(&stm32_pcie->pci.pp);
++	if (ret)
++		goto err_disable_clk;
++
++	if (stm32_pcie->wake_gpio)
++		device_init_wakeup(dev, true);
++
++	return 0;
++
++err_disable_clk:
++	clk_disable_unprepare(stm32_pcie->clk);
++
++err_remove_port:
++	stm32_remove_pcie_port(stm32_pcie);
++	pm_runtime_put_noidle(&pdev->dev);
++
++	return ret;
++}
++
++static void stm32_pcie_remove(struct platform_device *pdev)
++{
++	struct stm32_pcie *stm32_pcie = platform_get_drvdata(pdev);
++	struct dw_pcie_rp *pp = &stm32_pcie->pci.pp;
++
++	if (stm32_pcie->wake_gpio)
++		device_init_wakeup(&pdev->dev, false);
++
++	dw_pcie_host_deinit(pp);
++
++	clk_disable_unprepare(stm32_pcie->clk);
++
++	stm32_remove_pcie_port(stm32_pcie);
++
++	pm_runtime_put_noidle(&pdev->dev);
++}
++
++static const struct of_device_id stm32_pcie_of_match[] = {
++	{ .compatible = "st,stm32mp25-pcie-rc" },
++	{},
++};
++
++static struct platform_driver stm32_pcie_driver = {
++	.probe = stm32_pcie_probe,
++	.remove = stm32_pcie_remove,
++	.driver = {
++		.name = "stm32-pcie",
++		.of_match_table = stm32_pcie_of_match,
++		.pm = &stm32_pcie_pm_ops,
++		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
++	},
++};
++
++module_platform_driver(stm32_pcie_driver);
++
++MODULE_AUTHOR("Christian Bruel <christian.bruel@foss.st.com>");
++MODULE_DESCRIPTION("STM32MP25 PCIe Controller driver");
++MODULE_LICENSE("GPL");
++MODULE_DEVICE_TABLE(of, stm32_pcie_of_match);
+diff --git a/drivers/pci/controller/dwc/pcie-stm32.h b/drivers/pci/controller/dwc/pcie-stm32.h
+new file mode 100644
+index 000000000000..387112c4e42c
+--- /dev/null
++++ b/drivers/pci/controller/dwc/pcie-stm32.h
+@@ -0,0 +1,15 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++/*
++ * ST PCIe driver definitions for STM32-MP25 SoC
++ *
++ * Copyright (C) 2025 STMicroelectronics - All Rights Reserved
++ * Author: Christian Bruel <christian.bruel@foss.st.com>
++ */
++
++#define to_stm32_pcie(x)	dev_get_drvdata((x)->dev)
++
++#define STM32MP25_PCIECR_TYPE_MASK	GENMASK(11, 8)
++#define STM32MP25_PCIECR_LTSSM_EN	BIT(2)
++#define STM32MP25_PCIECR_RC		BIT(10)
++
++#define SYSCFG_PCIECR			0x6000
+-- 
+2.34.1
+
