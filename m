@@ -1,124 +1,120 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4A5161A2C25;
-	Thu, 24 Apr 2025 15:08:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EAEBC21858E;
+	Thu, 24 Apr 2025 15:29:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745507302; cv=none; b=nPFkIPdFmp66V4iq3q/KedR2sp4yPTBDdM8t4oV/ysunkMQxP/X6gnpSvhV+Gc738tT6OcE3X6kyt32gf1euZOT9ovbE6ZEHR2CtfbuuieTgOshhyDOs4rFXBKU/I+SnQKdaFnGsQsH4BIvS3GXmyqt8m9/szOcbySYCftt2Zhc=
+	t=1745508581; cv=none; b=Z6NYj45IARxEDY0tfNvUUU5CmIgtUs3BxqWdR/FCn5mkNDHWtm6PGEl+WUo4jOTABxUgnrQwCoy/zYQLyZ5OPodZvQYWXOn5LtKnR06ge47u/+U6Vs8KrkDU1J5vY8cY7cauD7jP8FkGwzqtoXPtUilknHZda9RmgWvGVBNPd/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745507302; c=relaxed/simple;
-	bh=o0Ai0SZtFa2RI/ToDkaO+WyZAtbDmUgbncrOBGd7aoc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=vGYOFPCA1Q4pRuX+l9ur2Dj13++eTx2zb5T1pkyMq7JHwVn7jLgLtcutft0sBbL/zqd6Y7xiV68IeXbITttc/REUQdjGOHHU5mS09mDOfdbhx7mFPmCjEaB6sQE839Ggzi/1/QlQAPKQDCrgHS8cos/JmSym/u5WmTMz+VVZFBE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gze8Qcx0; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1745508581; c=relaxed/simple;
+	bh=gJMXb5Q43o3Fb4QJuirndJOOwFsWCUxS3ZYHfpMPb2I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XVxtgKuJZDNgl7jaStn53Lz73cGpOkUUkAZIOOonWGA5UA8SAZWYRf5L6vnLgj8L+UaoFyNcx5t1L6dblsegwcnGyhbMHgBPRHs3lgc5/cbclzljd/OdiovmwD2hyb0UuRALqctQpoqSSmv1J1al5SFTRWh7CU0BDPEi1rmbgak=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VuGbuwfg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gze8Qcx0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:
-	Content-Type; bh=dxkLHxxes5L86/5YQKS8XzPz7S8vMgBcRlB7XXBOdd8=;
-	b=gze8Qcx0fL+kkSwV1lswzgml7JSlY6wzsY78QTxcRvsjVFQge7f4crLl52Tdcw
-	6Nfkk4XPs+Q4UdJTVruj1bY6nsi+RqsRjmXO1e6DEOMyYsJxw8WlEMj7sC8+sdls
-	eAI+HWAn5QbNQGbPg6KsM7Lg2kIsDX83MlbU/4YAVx8js=
-Received: from [192.168.71.89] (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wBnQmWwUwpo+yqACQ--.5746S2;
-	Thu, 24 Apr 2025 23:07:29 +0800 (CST)
-Message-ID: <f8818830-d23f-468e-886e-a14a2f96ebb8@163.com>
-Date: Thu, 24 Apr 2025 23:07:28 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VuGbuwfg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CE5BCC4CEE3;
+	Thu, 24 Apr 2025 15:29:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745508580;
+	bh=gJMXb5Q43o3Fb4QJuirndJOOwFsWCUxS3ZYHfpMPb2I=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=VuGbuwfgyk4N/REz0W07BpsASNmI2i1yitcccHX/AsB4D0K7o4eI9AMqxXILkcFEb
+	 7ya0E48cGdvoxfW5deXxwV3FEiPrMZ5b58Y0tI52zAtXquXz/QzzrSpJJNfDAMcFPl
+	 1Wn3vaX3u4fUKPUCVivTii1TVMKM5CpTPeLPqZDNHOKQtBUXayyKyWZieXNtss0g+s
+	 fP9N+Yk12R1/p77gzvn0+TQZvd78qTa7vF5BaOXJzajcUOyUrBfMqJCTGgVfmtdYMX
+	 kOIIoBn9p7q+7bqQZ4K3TbKZwgGDMtDtlLQM4oHoBuKdFKoJfMRoeELC53RSJWbAO0
+	 OHOgB2DljArhQ==
+Date: Thu, 24 Apr 2025 16:29:35 +0100
+From: Conor Dooley <conor@kernel.org>
+To: hans.zhang@cixtech.com
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
+	manivannan.sadhasivam@linaro.org, robh@kernel.org,
+	krzk+dt@kernel.org, conor+dt@kernel.org, peter.chen@cixtech.com,
+	linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Manikandan K Pillai <mpillai@cadence.com>
+Subject: Re: [PATCH v4 2/5] dt-bindings: pci: cadence: Extend compatible for
+ new EP configurations
+Message-ID: <20250424-elm-magma-b791798477ab@spud>
+References: <20250424010445.2260090-1-hans.zhang@cixtech.com>
+ <20250424010445.2260090-3-hans.zhang@cixtech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 0/6] Refactor capability search into common macros
-To: lpieralisi@kernel.org, bhelgaas@google.com
-Cc: kw@linux.com, manivannan.sadhasivam@linaro.org,
- ilpo.jarvinen@linux.intel.com, robh@kernel.org, jingoohan1@gmail.com,
- thomas.richard@bootlin.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250409034156.92686-1-18255117159@163.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20250409034156.92686-1-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wBnQmWwUwpo+yqACQ--.5746S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7ZFWkWw1rCryDCFy5JFW3GFg_yoW8Kry5pF
-	yrXwn3CrWrJa9a9an2yw4IkF43Aan7Ja47J3ySkwn3ZF17ZFy5Krn3Kw1rAFy2v397Xwnx
-	ZF4UJr9YkFn0ya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UVMKtUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwM5o2gKTGYWkgABsb
+Content-Type: multipart/signed; micalg=pgp-sha256;
+	protocol="application/pgp-signature"; boundary="454NY30T6bQMXXoG"
+Content-Disposition: inline
+In-Reply-To: <20250424010445.2260090-3-hans.zhang@cixtech.com>
 
 
-On 2025/4/9 11:41, Hans Zhang wrote:
-> 1. Introduce generic bus config read helper function.
-> 2. Clean up __pci_find_next_cap_ttl() readability.
-> 3. Refactor capability search into common macros.
-> 4. DWC/CDNS use common PCI host bridge macros for finding the
->     capabilities.
-> 5. Use cdns_pcie_find_*capability to avoid hardcode.
-> 
-> Changes since v8:
-> - Split patch.
-> - The patch commit message were modified.
-> - Other patches(4/6, 5/6, 6/6) are unchanged.
-> 
-> Changes since v7:
-> - Patch 2/5 and 3/5 compilation error resolved.
-> - Other patches are unchanged.
-> 
-> Changes since v6:
-> - Refactor capability search into common macros.
-> - Delete pci-host-helpers.c and MAINTAINERS.
-> 
-> Changes since v5:
-> - If you put the helpers in drivers/pci/pci.c, they unnecessarily enlarge
->    the kernel's .text section even if it's known already at compile time
->    that they're never going to be used (e.g. on x86).
-> - Move the API for find capabilitys to a new file called
->    pci-host-helpers.c.
-> - Add new patch for MAINTAINERS.
-> 
-> Changes since v4:
-> - Resolved [v4 1/4] compilation warning.
-> - The patch subject and commit message were modified.
-> 
-> Changes since v3:
-> - Resolved [v3 1/4] compilation error.
-> - Other patches are not modified.
-> 
-> Changes since v2:
-> - Add and split into a series of patches.
-> 
-> Hans Zhang (6):
->    PCI: Introduce generic bus config read helper function
->    PCI: Clean up __pci_find_next_cap_ttl() readability
->    PCI: Refactor capability search into common macros
->    PCI: dwc: Use common PCI host bridge APIs for finding the capabilities
->    PCI: cadence: Use common PCI host bridge APIs for finding the
->      capabilities
->    PCI: cadence: Use cdns_pcie_find_*capability to avoid hardcode.
-> 
->   drivers/pci/access.c                          | 17 ++++
->   .../pci/controller/cadence/pcie-cadence-ep.c  | 40 +++++----
->   drivers/pci/controller/cadence/pcie-cadence.c | 28 ++++++
->   drivers/pci/controller/cadence/pcie-cadence.h | 18 ++--
->   drivers/pci/controller/dwc/pcie-designware.c  | 72 ++-------------
->   drivers/pci/pci.c                             | 68 ++------------
->   drivers/pci/pci.h                             | 88 +++++++++++++++++++
->   include/uapi/linux/pci_regs.h                 |  2 +
->   8 files changed, 187 insertions(+), 146 deletions(-)
-> 
-> 
-> base-commit: a24588245776dafc227243a01bfbeb8a59bafba9
+--454NY30T6bQMXXoG
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
+On Thu, Apr 24, 2025 at 09:04:41AM +0800, hans.zhang@cixtech.com wrote:
+> From: Manikandan K Pillai <mpillai@cadence.com>
+>=20
+> Document the compatible property for HPA (High Performance Architecture)
+> PCIe controller EP configuration.
 
-Dear all,
+Please explain what makes the new architecture sufficiently different
+=66rom the existing one such that a fallback compatible does not work.
 
-Gentle ping.
+Same applies to the other binding patch.
 
-Best regards,
-Hans
+Thanks,
+Conor.
 
+>=20
+> Signed-off-by: Manikandan K Pillai <mpillai@cadence.com>
+> Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
+> ---
+>  .../devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml          | 6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml=
+ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> index 98651ab22103..a7e404e4f690 100644
+> --- a/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> +++ b/Documentation/devicetree/bindings/pci/cdns,cdns-pcie-ep.yaml
+> @@ -7,14 +7,16 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
+>  title: Cadence PCIe EP Controller
+> =20
+>  maintainers:
+> -  - Tom Joseph <tjoseph@cadence.com>
+> +  - Manikandan K Pillai <mpillai@cadence.com>
+> =20
+>  allOf:
+>    - $ref: cdns-pcie-ep.yaml#
+> =20
+>  properties:
+>    compatible:
+> -    const: cdns,cdns-pcie-ep
+> +    enum:
+> +      - cdns,cdns-pcie-ep
+> +      - cdns,cdns-pcie-hpa-ep
+> =20
+>    reg:
+>      maxItems: 2
+> --=20
+> 2.47.1
+>=20
+
+--454NY30T6bQMXXoG
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYIAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaApY3wAKCRB4tDGHoIJi
+0rK/AP4nrPcNsP38PNXcx54GaBf5sG4UalO/FuQz5Dz7yOZGFAD/amuYZ5gKuxRP
+KtjJk3wqU0L4S+0rakEht7b0TzpiBAs=
+=xccu
+-----END PGP SIGNATURE-----
+
+--454NY30T6bQMXXoG--
