@@ -1,143 +1,136 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4765E4C6E
-	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2025 09:29:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 022CB2367A7;
+	Fri, 25 Apr 2025 09:58:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745573346; cv=none; b=KytxrBZbCEZ9S60xv+9J8nhXFruPDrXRuzzgnCe7iXO68Azh+H/hCT+2hnbjss+RVRAaO9TyUE/NL5V8YYdRjx5rGcCaKDBwqheyqQLcUyHMs5H0x2Hhc1s7RNcc/rbzjs35Jgp5ulPGiKkqAVGWvxOmosYm1XzZr6JpVF246f4=
+	t=1745575098; cv=none; b=XP72e/H7INma8P6YR+KVwbV+lhr6HkHvh1HMCFpDRMkU3Ejr1tT+C/LO8dtiDMI7I+V6K3iH5/rAxck2NYeu34E4/Elz3jAGHAevbl81PO8b3S/KSvW79c9uU71Q8zPMOWX4TBZSAcAy4P7NIZh4LUphd+es5qkGCw8k1Uw02BY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745573346; c=relaxed/simple;
-	bh=qZh7R73OEiTz7nMIBMHtFXhxKzMqGt7qKeWOwin131k=;
-	h=Message-Id:In-Reply-To:References:From:Date:Subject:To:Cc; b=k4+v8PNZ6cnFHwoL0KyIV8AB7v30rt35B7F976fLZdGrCvyZ6OyLiF/qXZA99po8RH0yDDTRDBPI8ezhp/plbyrU0+m0jTuFZ0L8AWb9/1nHPxeZLoodmM8dvoPsyPX8cLewBPXRjWwUwrcj63i3hHyUU0ZNFGSnX1Lmh3mXarc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id EAF252C4C3F1;
-	Fri, 25 Apr 2025 11:28:36 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 87AE0ECCCB; Fri, 25 Apr 2025 11:29:03 +0200 (CEST)
-Message-Id: <d22a9e5b81d6bd8dd1837607d6156679b3b1199c.1745572340.git.lukas@wunner.de>
-In-Reply-To: <cover.1745572340.git.lukas@wunner.de>
-References: <cover.1745572340.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 25 Apr 2025 11:24:22 +0200
-Subject: [PATCH 2/2] PCI: Limit visibility of match_driver flag to PCI core
-To: Bjorn Helgaas <helgaas@kernel.org>, Joerg Roedel <joro@8bytes.org>, Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>
-Cc: linux-pci@vger.kernel.org, iommu@lists.linux.dev, Borislav Petkov <bp@alien8.de>
+	s=arc-20240116; t=1745575098; c=relaxed/simple;
+	bh=OhLGSBuQVLXaIk4wy2LU6O6nHuMtPkRCcZXq8EDJPHc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=tOvho+z4/p4DZbnDXUCbVy8YCJZhoqtmyJCSdLnOmqFDMErGXWrpkFKGPziDcGIexEkF6RHbkG+4+lqSv8qeKOZAShphW9vkmNa5Rr2U2lAKrRBY3R1x407QQYxn/ilJ+0P5Vrhomw58iXnKAgGmiBKxf0AjDhK0hPZRhZGXYBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=BQHi4oT8; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="BQHi4oT8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=9P6dx
+	24LcPTLqnmztGQ81vANm+nUct9U80WqazHI54k=; b=BQHi4oT8vGRbvvroE56N0
+	AyIgktZ1DIttAFQxJtXGIVB8Trkxgsa6kh6Wa8DIwPPKu0xxZt1HE5lCJrL0hYMv
+	IngkQlKeaVuS67pE9u3zJJKIKQCD48Ne1OIhtZfTkTBscBgKlUcvVy8ejuSQ0U0f
+	VZI0sp+ruS5VmlAlC+r/rw=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgAnfJt2XAtowU4iAw--.17018S4;
+	Fri, 25 Apr 2025 17:57:16 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	kw@linux.com,
+	bhelgaas@google.com,
+	heiko@sntech.de,
+	thomas.petazzoni@bootlin.com,
+	manivannan.sadhasivam@linaro.org,
+	yue.wang@Amlogic.com
+Cc: pali@kernel.org,
+	neil.armstrong@linaro.org,
+	robh@kernel.org,
+	jingoohan1@gmail.com,
+	khilman@baylibre.com,
+	jbrunet@baylibre.com,
+	martin.blumenstingl@googlemail.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v2 2/2] PCI: Remove redundant MPS configuration
+Date: Fri, 25 Apr 2025 17:57:08 +0800
+Message-Id: <20250425095708.32662-3-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250425095708.32662-1-18255117159@163.com>
+References: <20250425095708.32662-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:PigvCgAnfJt2XAtowU4iAw--.17018S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJFWUWr43Zry8Gr13Kr1DGFg_yoW5Ww17pF
+	W3XrsayF4rtr45ua1DAa1rCFW3JasIkry7J39xW34fZF9IyFW7JFyayFWSka4fJr40gF10
+	yF15t3y8A3W5trUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0z_EfYiUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDw06o2gLWGyMnQAAsd
 
-Since commit 58d9a38f6fac ("PCI: Skip attaching driver in device_add()"),
-PCI enumeration is split into two steps:  In the first step, all devices
-are published in sysfs with device_add().  In the second step, drivers are
-bound to the devices with device_attach().  To delay driver binding until
-the second step, a "bool match_driver" in struct pci_dev is used.
+With the PCI core now centrally configuring root port MPS to
+hardware-supported maximums (via 128 << pcie_mpss) during host probing,
+platform-specific MPS adjustments are redundant. This patch removes the
+custom the configuration of the max payload logic to align with the
+standardized initialization flow.
 
-Instead of a bool, use a bit in the "unsigned long priv_flags" to shrink
-struct pci_dev a little and prevent use of the bool outside the PCI core
-(as has happened with commit cbbc00be2ce3 ("iommu/amd: Prevent binding
-other PCI drivers to IOMMU PCI devices")).
+By eliminating redundant code, this change prevents conflicts with global
+PCIe hierarchy tuning policies and reduces maintenance overhead. The Meson
+driver now fully relies on the core PCI framework for MPS configuration,
+ensuring consistency across the PCIe topology while preserving
+hardware-specific MRRS handling.
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/bus.c        |  4 +++-
- drivers/pci/pci-driver.c |  2 +-
- drivers/pci/pci.h        | 11 +++++++++++
- drivers/pci/probe.c      |  1 -
- include/linux/pci.h      |  2 --
- 5 files changed, 15 insertions(+), 5 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c | 17 -----------------
+ drivers/pci/controller/pci-aardvark.c  |  2 --
+ 2 files changed, 19 deletions(-)
 
-diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
-index b685110..6904886 100644
---- a/drivers/pci/bus.c
-+++ b/drivers/pci/bus.c
-@@ -369,7 +369,9 @@ void pci_bus_add_device(struct pci_dev *dev)
- 				pdev->name);
- 	}
- 
--	dev->match_driver = !dn || of_device_is_available(dn);
-+	if (!dn || of_device_is_available(dn))
-+		pci_dev_allow_binding(dev);
-+
- 	retval = device_attach(&dev->dev);
- 	if (retval < 0 && retval != -EPROBE_DEFER)
- 		pci_warn(dev, "device attach failed (%d)\n", retval);
-diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-index c8bd71a..0c5bdb8 100644
---- a/drivers/pci/pci-driver.c
-+++ b/drivers/pci/pci-driver.c
-@@ -1507,7 +1507,7 @@ static int pci_bus_match(struct device *dev, const struct device_driver *drv)
- 	struct pci_driver *pci_drv;
- 	const struct pci_device_id *found_id;
- 
--	if (!pci_dev->match_driver)
-+	if (pci_dev_binding_disallowed(pci_dev))
- 		return 0;
- 
- 	pci_drv = (struct pci_driver *)to_pci_driver(drv);
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index b81e99c..de5d4ef 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -557,6 +557,7 @@ static inline int pci_dev_set_disconnected(struct pci_dev *dev, void *unused)
- #define PCI_DPC_RECOVERED 1
- #define PCI_DPC_RECOVERING 2
- #define PCI_DEV_REMOVED 3
-+#define PCI_DEV_ALLOW_BINDING 7
- 
- static inline void pci_dev_assign_added(struct pci_dev *dev)
- {
-@@ -580,6 +581,16 @@ static inline bool pci_dev_test_and_set_removed(struct pci_dev *dev)
- 	return test_and_set_bit(PCI_DEV_REMOVED, &dev->priv_flags);
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index db9482a113e9..126f38ed453d 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -261,22 +261,6 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+ 	return fls(size) - 8;
  }
  
-+static inline void pci_dev_allow_binding(struct pci_dev *dev)
-+{
-+	set_bit(PCI_DEV_ALLOW_BINDING, &dev->priv_flags);
-+}
-+
-+static inline bool pci_dev_binding_disallowed(struct pci_dev *dev)
-+{
-+	return !test_bit(PCI_DEV_ALLOW_BINDING, &dev->priv_flags);
-+}
-+
- #ifdef CONFIG_PCIEAER
- #include <linux/aer.h>
- 
-diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
-index 364fa2a..126ae1e 100644
---- a/drivers/pci/probe.c
-+++ b/drivers/pci/probe.c
-@@ -2711,7 +2711,6 @@ void pci_device_add(struct pci_dev *dev, struct pci_bus *bus)
- 	pci_set_msi_domain(dev);
- 
- 	/* Notifier could use PCI capabilities */
--	dev->match_driver = false;
- 	ret = device_add(&dev->dev);
- 	WARN_ON(ret < 0);
- 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 51e2bd6..e29d7d4 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -425,8 +425,6 @@ struct pci_dev {
- 	struct resource resource[DEVICE_COUNT_RESOURCE]; /* I/O and memory regions + expansion ROMs */
- 	struct resource driver_exclusive_resource;	 /* driver exclusive resource ranges */
- 
--	bool		match_driver;		/* Skip attaching driver */
+-static void meson_set_max_payload(struct meson_pcie *mp, int size)
+-{
+-	struct dw_pcie *pci = &mp->pci;
+-	u32 val;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	int max_payload_size = meson_size_to_payload(mp, size);
 -
- 	unsigned int	transparent:1;		/* Subtractive decode bridge */
- 	unsigned int	io_window:1;		/* Bridge has I/O window */
- 	unsigned int	pref_window:1;		/* Bridge has pref mem window */
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+-
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+-}
+-
+ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+ {
+ 	struct dw_pcie *pci = &mp->pci;
+@@ -381,7 +365,6 @@ static int meson_pcie_host_init(struct dw_pcie_rp *pp)
+ 
+ 	pp->bridge->ops = &meson_pci_ops;
+ 
+-	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
+ 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+ 
+ 	return 0;
+diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+index a29796cce420..d8852892994a 100644
+--- a/drivers/pci/controller/pci-aardvark.c
++++ b/drivers/pci/controller/pci-aardvark.c
+@@ -549,9 +549,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+ 	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
+ 	reg &= ~PCI_EXP_DEVCTL_RELAX_EN;
+ 	reg &= ~PCI_EXP_DEVCTL_NOSNOOP_EN;
+-	reg &= ~PCI_EXP_DEVCTL_PAYLOAD;
+ 	reg &= ~PCI_EXP_DEVCTL_READRQ;
+-	reg |= PCI_EXP_DEVCTL_PAYLOAD_512B;
+ 	reg |= PCI_EXP_DEVCTL_READRQ_512B;
+ 	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
+ 
 -- 
-2.47.2
+2.25.1
 
