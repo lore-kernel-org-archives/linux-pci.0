@@ -1,153 +1,73 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5255119F115
-	for <linux-pci@vger.kernel.org>; Fri, 25 Apr 2025 16:34:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D2D41A9B53;
+	Fri, 25 Apr 2025 16:35:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745598841; cv=none; b=BaFYdZvhkoBeyHQQiQHPa0TyZzyh3i3BSIJYbUbmCsp6zdor8C+POlf05ixWGC4MZ5N2yREIalwZatxEGMN5P0+kvIkoJebrUJ1R/3XHA98W1/CctXvXKCk1UfesU/vhHWGl71EGCrwl/UsG7iEcgO5c1H7Q6D22cLQg0JjVAUs=
+	t=1745598958; cv=none; b=g93fkORlKr4MQIVghWJFbC2CV+PTPLW15h5/J9ScNMEVFKlTh3NDuq7E9mjldm2LujrJPWWFmWls0NUNSMA6cbz8iYJtR28C4mTp9OUSwFa19PgwzY2lWF7gqlIimnbSCUKjbSOkIAJ/u1RvCTwsooFCNudv4KYL4VPF4aLRQBU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745598841; c=relaxed/simple;
-	bh=u1V74D4vVu2FoZASwEnzWG7Nqf24mqXLJWj3A4SEvw4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=a29aa27On/2vgxOhpOyEnaUl6++6yl6FFsFjTVIFaUk9v2iUuQfJ+dw/OMMzAWgtRdOIm7eAQk3GPA4YIoFbdkngFQlN6yVSDmqLSoNqzDAnHA3jLNdpIIQ7oKMKBrd+T7GIyin0iA6GscqZH6zc9jF4FllFWZ6tKGCFbBbITMM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=dygSeYVb; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1745598958; c=relaxed/simple;
+	bh=FsR4f8RipLNPNkpkDoIHdHQnHxmjYdk4APWukvEffD4=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qQNf5yveGqTYwVry1havz4+TP9W1yj/T+guuf7IAW5u0r2beBMbN95vdBtHUZmHZxqp85TWWTbj82QmXHSsLjGS8yIsDxucoz9KXV5R2Bji2OvF+GZPI9g/48crOav1gfPRfshS2RToC1dO8lFnz1lgg7OPlpKP0LmS8OaEyFOg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RfMLaA9S; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="dygSeYVb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1745598841; x=1777134841;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=u1V74D4vVu2FoZASwEnzWG7Nqf24mqXLJWj3A4SEvw4=;
-  b=dygSeYVbkPmCukY5WIRVBO+KNyNOVdiHLISchZGiY7dNTv/xuA7cMqrT
-   GO5BBRgCTCkgF4mheyx6ye9ebIL+u/3wOUUDC/SqtEBlOFn6+x/lUZ7FJ
-   JLCgVWjBtMybZPvobk5ivCzyHbH6ZWkC58GnYcDovCAAh0qrsVDVLzOsq
-   bu7nnKBZp2EoG3GWGnCNYPlnG+JJd7twT527dUb1LHAKnTAXJ4S8N9ykT
-   Dw6QjdLpw1O0IWhbqv894vmV4XXeKv7dVN2OfOBqTghS+lF/fLoeRQJy1
-   N/xYqVErAqIVaMvco1lBrY0Ioam0nATz8kcelZhTynMew/YVExb+JJEF2
-   A==;
-X-CSE-ConnectionGUID: pByvUzCxT0aG/VWq3vxZ+Q==
-X-CSE-MsgGUID: 4nQA2iyRQVOV0azqXH5XwA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11414"; a="47280790"
-X-IronPort-AV: E=Sophos;i="6.15,238,1739865600"; 
-   d="scan'208";a="47280790"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Apr 2025 09:34:00 -0700
-X-CSE-ConnectionGUID: PGn7jOLuSSW2LxL5u14jeQ==
-X-CSE-MsgGUID: RJnnuV3bTsOQcX+WI45Vrg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,238,1739865600"; 
-   d="scan'208";a="132820919"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa010.jf.intel.com with ESMTP; 25 Apr 2025 09:33:56 -0700
-Date: Sat, 26 Apr 2025 00:29:17 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
-	Samuel Ortiz <sameo@rivosinc.com>,
-	Alexey Kardashevskiy <aik@amd.com>, gregkh@linuxfoundation.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 08/11] PCI/IDE: Add IDE establishment helpers
-Message-ID: <aAu4XanJRnSuFXr/@yilunxu-OptiPlex-7050>
-References: <174107245357.1288555.10863541957822891561.stgit@dwillia2-xfh.jf.intel.com>
- <174107250147.1288555.16948528371146013276.stgit@dwillia2-xfh.jf.intel.com>
- <yq5a7c3edot5.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RfMLaA9S"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id F0D0BC4CEE4;
+	Fri, 25 Apr 2025 16:35:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1745598958;
+	bh=FsR4f8RipLNPNkpkDoIHdHQnHxmjYdk4APWukvEffD4=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=RfMLaA9SCMn4O8Dq+CtX3lf7Nc63kO8LsATyxdnS8mFHA1v3NsH01veC5keY6dSlY
+	 OXb8/P3EgnNVNJyHzdUm32fZMqhPSPFGNiAzBLNkIxl95k1pXuot+Xg43iV6AuPcV1
+	 /5pEsEs9agtKxVq+jTtx01tfc+zjCkYA6cnu0KXhr6tntRZUEwvDZdve5sqKFO8Cq5
+	 X9fL7UBMFLaHJoZ3kdY5dprxAfAQInGL4S9fB17varuwuwSyYuqknykqYdrtOd3nmI
+	 x3B9V02oOypHvO49Nt3Tmwev0BWSndmvEKtaXa+fm+nwlVScJ85vzcwCFD+M5KZEWB
+	 rOeXBX7TXxvyw==
+Date: Fri, 25 Apr 2025 09:35:56 -0700
+From: Jakub Kicinski <kuba@kernel.org>
+To: Shradha Gupta <shradhagupta@linux.microsoft.com>
+Cc: linux-hyperv@vger.kernel.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Nipun Gupta <nipun.gupta@amd.com>, Yury Norov
+ <yury.norov@gmail.com>, Jason Gunthorpe <jgg@ziepe.ca>, Jonathan Cameron
+ <Jonathan.Cameron@huwei.com>, Anna-Maria Behnsen
+ <anna-maria@linutronix.de>, Kevin Tian <kevin.tian@intel.com>, Long Li
+ <longli@microsoft.com>, Thomas Gleixner <tglx@linutronix.de>, Bjorn Helgaas
+ <bhelgaas@google.com>, Rob Herring <robh@kernel.org>, Manivannan Sadhasivam
+ <manivannan.sadhasivam@linaro.org>, Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?=
+ <kw@linux.com>, Lorenzo Pieralisi <lpieralisi@kernel.org>, Dexuan Cui
+ <decui@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Haiyang Zhang
+ <haiyangz@microsoft.com>, "K. Y. Srinivasan" <kys@microsoft.com>, Andrew
+ Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric
+ Dumazet <edumazet@google.com>, Paolo Abeni <pabeni@redhat.com>, Konstantin
+ Taranov <kotaranov@microsoft.com>, Simon Horman <horms@kernel.org>, Leon
+ Romanovsky <leon@kernel.org>, Maxim Levitsky <mlevitsk@redhat.com>, Erni
+ Sri Satya Vennela <ernis@linux.microsoft.com>, Peter Zijlstra
+ <peterz@infradead.org>, netdev@vger.kernel.org, linux-rdma@vger.kernel.org,
+ Paul Rosswurm <paulros@microsoft.com>, Shradha Gupta
+ <shradhagupta@microsoft.com>
+Subject: Re: [PATCH v2 3/3] net: mana: Allocate MSI-X vectors dynamically as
+ required
+Message-ID: <20250425093556.30104eda@kernel.org>
+In-Reply-To: <1745578478-15195-1-git-send-email-shradhagupta@linux.microsoft.com>
+References: <1745578407-14689-1-git-send-email-shradhagupta@linux.microsoft.com>
+	<1745578478-15195-1-git-send-email-shradhagupta@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5a7c3edot5.fsf@kernel.org>
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-On Mon, Apr 21, 2025 at 11:43:58AM +0530, Aneesh Kumar K.V wrote:
-> Dan Williams <dan.j.williams@intel.com> writes:
-> 
-> > There are two components to establishing an encrypted link, provisioning
-> > the stream in Partner Port config-space, and programming the keys into
-> > the link layer via IDE_KM (IDE Key Management). This new library,
-> > drivers/pci/ide.c, enables the former. IDE_KM, via a TSM low-level
-> > driver, is saved for later.
-> >
-> ....
-> 
-> > +/**
-> > + * pci_ide_stream_setup() - program settings to Selective IDE Stream registers
-> > + * @pdev: PCIe device object for either a Root Port or Endpoint Partner Port
-> > + * @ide: registered IDE settings descriptor
-> > + *
-> > + * When @pdev is a PCI_EXP_TYPE_ENDPOINT then the PCI_IDE_EP partner
-> > + * settings are written to @pdev's Selective IDE Stream register block,
-> > + * and when @pdev is a PCI_EXP_TYPE_ROOT_PORT, the PCI_IDE_RP settings
-> > + * are selected.
-> > + */
-> > +void pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide)
-> > +{
-> > +	struct pci_ide_partner *settings = to_settings(pdev, ide);
-> > +	int pos;
-> > +	u32 val;
-> > +
-> > +	if (!settings)
-> > +		return;
-> > +
-> > +	pos = sel_ide_offset(pdev->nr_link_ide, settings->stream_index,
-> > +			     pdev->nr_ide_mem);
-> >
-> 
-> This and the similar offset caclulation below needs the EXT_CAP_ID_IDE offset 
-> 
-> modified   drivers/pci/ide.c
-> @@ -10,11 +10,13 @@
->  #include <linux/bitfield.h>
->  #include "pci.h"
->  
-> -static int sel_ide_offset(int nr_link_ide, int stream_index, int nr_ide_mem)
-> +static int sel_ide_offset(struct pci_dev *pdev, int nr_link_ide,
-> +			  int stream_index, int nr_ide_mem)
->  {
->  	int offset;
->  
-> -	offset = PCI_IDE_LINK_STREAM_0 + nr_link_ide * PCI_IDE_LINK_BLOCK_SIZE;
-> +	offset = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_IDE);
-> +	offset += PCI_IDE_LINK_STREAM_0 + nr_link_ide * PCI_IDE_LINK_BLOCK_SIZE;
+On Fri, 25 Apr 2025 03:54:38 -0700 Shradha Gupta wrote:
+> +	spin_lock_irqsave(&gc->irq_ctxs_lock, flags);
+> +	irqs = kmalloc_array(nvec, sizeof(int), GFP_KERNEL);
 
-ide_cap, nr_link_ide, nr_ide_mem are all cached in pci_dev structure at
-the end of pci_ide_init().
-
-So either use all cached value in pdev (not for pci_ide_init()):
-
-  static int sel_ide_offset(struct pci_dev *pdev, int stream_index)
-
-or don't use any cached value:
-
-  static int sel_ide_offset(u16 dev_cap, int nr_link_ide, int stream_index, int nr_ide_mem)
-
-or keep sel_ide_offset() unchanged, alway do:
-
-  ide_cap + sel_ide_offset()
-
->  
->  	/*
->  	 * Assume a constant number of address association resources per
-> @@ -66,7 +68,7 @@ void pci_ide_init(struct pci_dev *pdev)
->  	nr_streams = min(1 + FIELD_GET(PCI_IDE_CAP_SEL_NUM_MASK, val),
->  			 CONFIG_PCI_IDE_STREAM_MAX);
->  	for (int i = 0; i < nr_streams; i++) {
-> -		int offset = sel_ide_offset(nr_link_ide, i, nr_ide_mem);
-> +		int offset = sel_ide_offset(pdev, nr_link_ide, i, nr_ide_mem);
->  		int nr_assoc;
->  		u32 val;
-
-With your change, the next line will be broken:
-
--		pci_read_config_dword(pdev, ide_cap + offset, &val);
-+		pci_read_config_dword(pdev, offset, &val);
-
-Thanks,
-Yilun
+Could you please test your submissions on a kernel with debug options
+enabled? Thank you!
+-- 
+pw-bot: cr
