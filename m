@@ -1,124 +1,168 @@
-Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5A5C2522B3
-	for <linux-pci@vger.kernel.org>; Sun, 27 Apr 2025 11:57:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7CF1C610C;
+	Sun, 27 Apr 2025 12:54:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745755060; cv=none; b=pTaGpvVoVbnJzkf/NYum0df0gDutfCbAISTn7TJuGriWgnRrxmJLXaMVzMW7eGUWf7oFk6zxeewCaHI48NU/mn7G/Fw47wPsw0fCybrSb+/gXVGNKRROMp6JsXmcYCUCeeqAgdxy5AsbUhbnjyzD35RSNlxU99Ga2xwHNosJiiQ=
+	t=1745758446; cv=none; b=r6xvmQcZWgTo5rHkWl0tRv97DXw4jXmnOV+XkFqEpRfbjeb6fA3QBlj2c3rejTxdb4HEpyJqMJQO4kiAK5614cXAyD1LX/vodfvobIZcnx+Ibkfi2ViXWOzqVbz5dyKXr8C35BfV9ig8Jt/OuVMvqa7xfxibjIm88+JwegBG5GY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745755060; c=relaxed/simple;
-	bh=PBjPcyuMpEZLQB0/vy9bfQ0v8f/kjSCCYbtmIsssx3U=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=P/+n6TbDyjckNm6Yq6Ro8wTpjps0ENfJ6lj5Zw7PLl5hCIWvhJB8kaJszLqkeiORIYRqWAhaqE5B6/rVLVdcTP4caVt/3I9ILhiBz8R45/rzepR6NmSSCtm3oKwtsnSmaScApgkFSchMJ0VDRQzlaOE+/4cl9/oxK9MSs+cgHJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=jd4oxdYl; arc=none smtp.client-ip=209.85.214.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1745758446; c=relaxed/simple;
+	bh=FdTjp+dk1xGjoVbBoFe//xPsEZun+tS/AecF7pRBh4c=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Ypw4/vsjYSgniaQf/Yovptq4DRMXQs2viFSfxynKtaAWuMD/54ZDENF+cRT8ainLHS/6vlBrNatynmaqNX0pWIHybOHaOPnLQevNxdAG+l4HMJhWSurf8NTTH0muDSygrfCJNA0qTAymnzcZaref0CB9cKPiXlfLGbItwcJy1bA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=E93R1CwM; arc=none smtp.client-ip=117.135.210.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="jd4oxdYl"
-Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-22435603572so43310635ad.1
-        for <linux-pci@vger.kernel.org>; Sun, 27 Apr 2025 04:57:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1745755058; x=1746359858; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8RUGcbbLGFA1723YUU8ZP07EgO2qAswkxsFY9VKy3CQ=;
-        b=jd4oxdYl7a3NsbJR/n601htvltqlVFMHsf1khc22SANgvMJh8j2exWQ8ae0qOAFFIl
-         1U9BRsmRjkyVdi6upAgIROnSo6uQ42/Ji5OW4F23kRmwl2iCzGfqgXAF1Jlm9RjgKsbk
-         y0HxAI/cR7AeNNL14bSyDbnxEZrsyHW2/BLGXPxACsDmRb9RBX4/xWJWgG1zWMSoREQf
-         t25BBI8L4RuEi3mBX8TzrdPLSqo2AZOi/jHNtZGXdVnmrwEjUfo3s9CkTpQoor1bdx1p
-         oP1BaA5VOGId6zPlwFhfE/xBpZWVZM8o5f5mvNsAWoO4uc93jD9i+CbwjAS7zKoq9BZV
-         b0QQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745755058; x=1746359858;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=8RUGcbbLGFA1723YUU8ZP07EgO2qAswkxsFY9VKy3CQ=;
-        b=G/OMurpAbdihr8N676d5ofQliYg2/Ud4EzwT4c5gQQA4SGEZ+kxNXL3ZjVGxI96KiM
-         qrQNAJ5H/yM6rf72As81G3282neuOol3iPWfxKkNnJ74N0uM6/vUqb72JfQTa8J0XBdJ
-         3LXEGChBHigHaf826iDIq5Fk1RdmPjJZolSAt2Zk90h4UzHlE0knpPAXIKlXcrm123Sj
-         F0E+4egxfk9FedjBzlI2iPMM/wF23u4qJtxaPLaV0JPUqo9ppu+DWgjmGvPKRTIpOG7B
-         6C82irNqceiFl4IPvN+XtNgxMC+buBLL6OXZmGFRZTd78+j8dvTs9XtFhFI6BLjX9ay5
-         BziQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXUsf3mYQWKUrcXmkovI9MjCiACt7+SEeWNIkz2zwCR3cLvUxNaFVbPxC9ekicB82f67R1FcNKo1Ug=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyudUTtbeT2XSqRqLha4yc3WF4bYP1WsK9C9YA6mTic1dKftAb8
-	sArwWtLougoolhLnjOx3lQ2dPKNphZUJjm6qR55X/nTt7KH7KTpatfowg3KKfA==
-X-Gm-Gg: ASbGncuCyckMH3VC6Bp91YRLA+3jcpe2BXckL93vGSuKWdmDIkbBXzpRJy/ZVw6pmsD
-	90+7V9aK2la4tDAEgV23JjTQRyg2IBrmr7JLaWm2dFQLXosQLmQOm6HaC26/9tjnZjCO34gL1rl
-	4U8leVuQfXTMB92++YibSueg+3DHE/lSIClfsStKMtpO0vjjjNMUf6Eaowkj/ggvhy7KwvFYa19
-	LO2GUdKz1FDTwnKL4JewWLjsPdfcmQ/0RTfafolv9bbsvbMmijOYYp7Nt2+T7OLhUFs66dGYxFX
-	mI+YFicCzr1a/+xKo1bnsk85hQ3xrga7h97uNaKa1+VQGKrndaCgwu8=
-X-Google-Smtp-Source: AGHT+IF5v/6Ko/fvCwFf4ZE0KXGbwqh1gFSaF2rE1KE1z2Bwiq95JPxzfmr1/BPwNIqto7+dgvX58A==
-X-Received: by 2002:a17:902:da8e:b0:225:b718:4dff with SMTP id d9443c01a7336-22dbf7487ffmr128283355ad.53.1745755057990;
-        Sun, 27 Apr 2025 04:57:37 -0700 (PDT)
-Received: from thinkpad.. ([120.60.143.241])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22db5103259sm62956035ad.185.2025.04.27.04.57.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 27 Apr 2025 04:57:37 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: frank.li@nxp.com,
-	l.stach@pengutronix.de,
-	lpieralisi@kernel.org,
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="E93R1CwM"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=97YC0
+	bzVCpna+dBptpsih7bsJjCrsnz2SlPWFzXL9qY=; b=E93R1CwM6aYHsBlhNWRy4
+	oUbPkInEGGdbzRBsbmfPwroTnew/QJNyptGQlkyZKnWR0ISAeM+AwxuepBQ4NtQ4
+	WENWpE36mwMSmYXte5fi5WzvlC4IYgkkEm54ww0oCSJDMAA4DYHXrJVfRzGCdkcw
+	7dt5VJq2KODqbVJzSSmZjY=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wD3LwC9KA5oNqx8Cw--.63816S4;
+	Sun, 27 Apr 2025 20:53:24 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
 	kw@linux.com,
-	robh@kernel.org,
 	bhelgaas@google.com,
-	shawnguo@kernel.org,
-	s.hauer@pengutronix.de,
-	kernel@pengutronix.de,
-	festevam@gmail.com,
-	Richard Zhu <hongxing.zhu@nxp.com>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	heiko@sntech.de
+Cc: manivannan.sadhasivam@linaro.org,
+	robh@kernel.org,
+	jingoohan1@gmail.com,
+	shawn.lin@rock-chips.com,
 	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
-	imx@lists.linux.dev,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH RESEND v6 0/7] Add some enhancements for i.MX95 PCIe
-Date: Sun, 27 Apr 2025 17:27:28 +0530
-Message-ID: <174575498081.15979.12453799870165824890.b4-ty@linaro.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250416081314.3929794-1-hongxing.zhu@nxp.com>
-References: <20250416081314.3929794-1-hongxing.zhu@nxp.com>
+	linux-rockchip@lists.infradead.org,
+	Hans Zhang <18255117159@163.com>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v4 2/3] PCI: dw-rockchip: Reorganize register and bitfield definitions
+Date: Sun, 27 Apr 2025 20:53:15 +0800
+Message-Id: <20250427125316.99627-3-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250427125316.99627-1-18255117159@163.com>
+References: <20250427125316.99627-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3LwC9KA5oNqx8Cw--.63816S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWFWxWryktw1DKrWxuw4fuFg_yoWrur48pa
+	4DAFyIkr45Ka1av3s3CF98ZFWIqrnIkFW7Jrsag3yUu3Z3Zw18Gw1UWF95Wry7Jr4kCFy3
+	uwn8C34xWF4akrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRoE__UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgQ8o2gOIuqhhwABso
 
+Register definitions were scattered with ambiguous names (e.g.,
+PCIE_RDLH_LINK_UP_CHGED in PCIE_CLIENT_INTR_STATUS_MISC) and lacked
+hierarchical grouping. Magic values for bit operations reduced code
+clarity.
 
-On Wed, 16 Apr 2025 16:13:07 +0800, Richard Zhu wrote:
-> Add some enhancements for i.MX95 PCIe.
-> - Refine the link procedure to speed up link training.
-> - Add two ERRATA SW workarounds.
-> - To align PHY's power on sequency, add COLD reset.
-> - Add PLL clock lock check.
-> - Save/retore the LUT table in supend/resume callbacks.
-> - 3/7 relies on "arm64: dts: imx95: Correct the range of PCIe app-reg region"
->   https://lore.kernel.org/imx/20250314060104.390065-1-hongxing.zhu@nxp.com/
-> 
-> [...]
+Group registers and their associated bitfields logically. This improves
+maintainability and aligns the code with hardware documentation.
 
-Applied, thanks!
+Signed-off-by: Hans Zhang <18255117159@163.com>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+---
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 49 ++++++++++++-------
+ 1 file changed, 31 insertions(+), 18 deletions(-)
 
-[1/7] PCI: imx6: Start link directly when workaround is not required
-      commit: 9c03e30e3ade32136fed5a4ab7872dcb205687d3
-[2/7] PCI: imx6: Skip one dw_pcie_wait_for_link() in workaround link training
-      commit: 4a4be0c088e3029a482ef8ac98bb2acb94af960e
-[3/7] PCI: imx6: Toggle the cold reset for i.MX95 PCIe
-      commit: 47f54a902dcd3b756e8e761f2c4c742af57dfff0
-[4/7] PCI: imx6: Workaround i.MX95 PCIe may not exit L23 ready
-      commit: ce0c43e855c7f652b6351110aaaabf9b521debd7
-[5/7] PCI: imx6: Let i.MX95 PCIe compliance with 8GT/s Receiver Impedance ECN
-      commit: 744a1c20ce933dcaca0f161fe7da115902a2f343
-[6/7] PCI: imx6: Add PLL clock lock check for i.MX95 PCIe
-      commit: 047e8b6b3bc3e6b25bfa12896a39d9fb82b591be
-[7/7] PCI: imx6: Save and restore the LUT setting for i.MX95 PCIe
-      commit: e4d66131caaf18d7c3c69914513f4be0519ddaaf
-
-Best regards,
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index e7d33d545d5b..a778f4f61595 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -33,24 +33,37 @@
+ 
+ #define to_rockchip_pcie(x) dev_get_drvdata((x)->dev)
+ 
+-#define PCIE_CLIENT_RC_MODE		HIWORD_UPDATE_BIT(0x40)
+-#define PCIE_CLIENT_EP_MODE		HIWORD_UPDATE(0xf0, 0x0)
+-#define PCIE_CLIENT_ENABLE_LTSSM	HIWORD_UPDATE_BIT(0xc)
+-#define PCIE_CLIENT_DISABLE_LTSSM	HIWORD_UPDATE(0x0c, 0x8)
+-#define PCIE_CLIENT_INTR_STATUS_MISC	0x10
+-#define PCIE_CLIENT_INTR_MASK_MISC	0x24
+-#define PCIE_SMLH_LINKUP		BIT(16)
+-#define PCIE_RDLH_LINKUP		BIT(17)
+-#define PCIE_LINKUP			(PCIE_SMLH_LINKUP | PCIE_RDLH_LINKUP)
+-#define PCIE_RDLH_LINK_UP_CHGED		BIT(1)
+-#define PCIE_LINK_REQ_RST_NOT_INT	BIT(2)
+-#define PCIE_CLIENT_GENERAL_CONTROL	0x0
++/* General Control Register */
++#define PCIE_CLIENT_GENERAL_CON		0x0
++#define  PCIE_CLIENT_RC_MODE		HIWORD_UPDATE_BIT(0x40)
++#define  PCIE_CLIENT_EP_MODE		HIWORD_UPDATE(0xf0, 0x0)
++#define  PCIE_CLIENT_ENABLE_LTSSM	HIWORD_UPDATE_BIT(0xc)
++#define  PCIE_CLIENT_DISABLE_LTSSM	HIWORD_UPDATE(0x0c, 0x8)
++
++/* Interrupt Status Register Related to Legacy Interrupt */
+ #define PCIE_CLIENT_INTR_STATUS_LEGACY	0x8
++
++/* Interrupt Status Register Related to Miscellaneous Operation */
++#define PCIE_CLIENT_INTR_STATUS_MISC	0x10
++#define  PCIE_RDLH_LINK_UP_CHGED	BIT(1)
++#define  PCIE_LINK_REQ_RST_NOT_INT	BIT(2)
++
++/* Interrupt Mask Register Related to Legacy Interrupt */
+ #define PCIE_CLIENT_INTR_MASK_LEGACY	0x1c
++
++/* Interrupt Mask Register Related to Miscellaneous Operation */
++#define PCIE_CLIENT_INTR_MASK_MISC	0x24
++
++/* Hot Reset Control Register */
+ #define PCIE_CLIENT_HOT_RESET_CTRL	0x180
++#define  PCIE_LTSSM_ENABLE_ENHANCE	BIT(4)
++
++/* LTSSM Status Register */
+ #define PCIE_CLIENT_LTSSM_STATUS	0x300
+-#define PCIE_LTSSM_ENABLE_ENHANCE	BIT(4)
+-#define PCIE_LTSSM_STATUS_MASK		GENMASK(5, 0)
++#define  PCIE_SMLH_LINKUP		BIT(16)
++#define  PCIE_RDLH_LINKUP		BIT(17)
++#define  PCIE_LINKUP			(PCIE_SMLH_LINKUP | PCIE_RDLH_LINKUP)
++#define  PCIE_LTSSM_STATUS_MASK		GENMASK(5, 0)
+ 
+ struct rockchip_pcie {
+ 	struct dw_pcie pci;
+@@ -161,13 +174,13 @@ static u32 rockchip_pcie_get_ltssm(struct rockchip_pcie *rockchip)
+ static void rockchip_pcie_enable_ltssm(struct rockchip_pcie *rockchip)
+ {
+ 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_ENABLE_LTSSM,
+-				 PCIE_CLIENT_GENERAL_CONTROL);
++				 PCIE_CLIENT_GENERAL_CON);
+ }
+ 
+ static void rockchip_pcie_disable_ltssm(struct rockchip_pcie *rockchip)
+ {
+ 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_DISABLE_LTSSM,
+-				 PCIE_CLIENT_GENERAL_CONTROL);
++				 PCIE_CLIENT_GENERAL_CON);
+ }
+ 
+ static int rockchip_pcie_link_up(struct dw_pcie *pci)
+@@ -516,7 +529,7 @@ static int rockchip_pcie_configure_rc(struct platform_device *pdev,
+ 	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
+ 
+ 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_RC_MODE,
+-				 PCIE_CLIENT_GENERAL_CONTROL);
++				 PCIE_CLIENT_GENERAL_CON);
+ 
+ 	pp = &rockchip->pci.pp;
+ 	pp->ops = &rockchip_pcie_host_ops;
+@@ -562,7 +575,7 @@ static int rockchip_pcie_configure_ep(struct platform_device *pdev,
+ 	rockchip_pcie_writel_apb(rockchip, val, PCIE_CLIENT_HOT_RESET_CTRL);
+ 
+ 	rockchip_pcie_writel_apb(rockchip, PCIE_CLIENT_EP_MODE,
+-				 PCIE_CLIENT_GENERAL_CONTROL);
++				 PCIE_CLIENT_GENERAL_CON);
+ 
+ 	rockchip->pci.ep.ops = &rockchip_pcie_ep_ops;
+ 	rockchip->pci.ep.page_size = SZ_64K;
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+2.25.1
+
