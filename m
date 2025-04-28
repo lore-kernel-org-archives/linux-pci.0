@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8021A28BA85;
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 801A828B4F3;
 	Mon, 28 Apr 2025 17:11:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745860316; cv=none; b=lI1nxZhlMvBs4jJkskWXvMq4xnFb4DzzgKOXYzSYN3aQ/IUIDvnUwbo6LeSai6GouY6VNm5FriKWWcVPYlilrLKVWrfnPJRVjVOT8GI0KRjmqsu6ydfgpAaQJcq7sESapsdY+B+PzjfeovRaUWFzI/SSmi6y0dzXTTkkza/FdlQ=
+	t=1745860316; cv=none; b=HWNvvIUua+sW5C8EmQikqeWv+njbE/9gx5CxCke0v/qnghsVDy3ElLG3IEHQEqPcaeH9zWFzTmd6E46YV2o+hXqzpCBIWNC5/wSALzLKRS48fBXeA3S5OaZdtAk1rbFt7c+RHrnV3/1n0EedGIUX7XcP9P9NpbSlhksrTWsuGuE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1745860316; c=relaxed/simple;
-	bh=fCsS8SVUonQ+8IdW0IZhO5lmrpWAhj+OAjCTb6i/g/4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=TXpnv0NEvUYMR92pCHoGrC0UJ7PJOC+Fgh4pHU/o1s90JzAYw6D0vspAhoIIe2wDraU1ddYbJlkMJAvNPWbvaI0Gy01hKBMyIOBKKOi4bj3Fj6u+IT9MFX5dfpJaEt2W6z4OubBZeMcTUImgYTKCfvdkgqm2liNwjpHMpKCiFbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Nhtfs8GY; arc=none smtp.client-ip=220.197.31.3
+	bh=B8lWk3gb7w31KdYHngZOLT5WFfzL8kSbVmi+aQzLG8U=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=OeTnAXYnXrDhfHl/iCpjlB/GZ4AIokzF/yNnP6Hy/9DZjHVt5eUbDfgwToi/gYrfyK8Jrex/jj3eqQCmZ0gx/sPM1DFDAoVWw7CPZlehYuLhf4PjGzHnf7XGYI2RCDlP2PgsHWgqsIqnm7DhDYep5+B+ze80u8ak/p6qlbeHUVM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Lf1YUnb3; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Nhtfs8GY"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Lf1YUnb3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=MJ1Uv
-	YoXWhfZap7nd66XJTEzKwW73kWiiLL1y6iU2RM=; b=Nhtfs8GYLVIsgRYxsv26V
-	P3TBORYWw1lKtETEDGAHlvzbONVm0X5UiNpfqvTDV55VUIMxEiNN8QMKSoACbjvb
-	9XW6MZHn5IN5rR2tFioBMyBH6d42VBkmMo7dbdzCVLmPkCPwOids9bRfX7esuZ4L
-	gUPGCSfNmUGcyOqgrIGiRI=
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=Tum4K
+	/CbqYUhGYnJ8GFo7ngbhq4ZDFew8CuChjud+OA=; b=Lf1YUnb3fH75uWDrI/c03
+	kBc718ArKIBT0IA5Fv5njb3fyBY/Xn2wLZD5yGw0tjuH5KAqrdiYJPxf57BBZS2x
+	/pw2ZEC0o5Fk71MpEVvUFC9d/CBqXvAtcdPobGMeaFXuR3jNl6nhikc1O55ELv7z
+	i9Ag7W0DDglUZR9nbBCi2Y=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wCH4haitg9otPCfDA--.1694S2;
-	Tue, 29 Apr 2025 01:10:59 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wCH4haitg9otPCfDA--.1694S4;
+	Tue, 29 Apr 2025 01:11:00 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	kw@linux.com,
@@ -33,10 +34,12 @@ Cc: cassel@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 0/3] Standardize link status check to return bool
-Date: Tue, 29 Apr 2025 01:10:24 +0800
-Message-Id: <20250428171027.13237-1-18255117159@163.com>
+Subject: [PATCH 2/3] PCI: mobiveil: Refactor link status check
+Date: Tue, 29 Apr 2025 01:10:26 +0800
+Message-Id: <20250428171027.13237-3-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250428171027.13237-1-18255117159@163.com>
+References: <20250428171027.13237-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,47 +47,61 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCH4haitg9otPCfDA--.1694S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFWDAFWfZw1xur4rJw4xZwb_yoW8Ww1Dpa
-	45tayxAF1rtF4YvF1Yy3WDC34Yq3ZrZF9rK393Wa4fWFyfCFWUXry5GFySqasxtrW0qw17
-	KF15t3W7JFs3JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zieOJUUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxw9o2gPr6StEQAAsJ
+X-CM-TRANSID:_____wCH4haitg9otPCfDA--.1694S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF15Zw4kKrW8Aryftr4kCrg_yoW8Zr1fpa
+	yqyw17C3W3Ja1FgF15ZayUZFy5t3Z3ur9rJ3y7uwn3Xa47CrWjy3Z8JFyftwn3Gws5Xry7
+	J3Waqa17GF45XFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRgeOXUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgk9o2gPrNjzoQAAss
 
-1. PCI: dwc: Standardize link status check to return bool.
-2. PCI: mobiveil: Refactor link status check.
-3. PCI: cadence: Simplify j721e link status check.
+Update ls_g4_pcie_link_up() to return bool and simplify the LTSSM state
+check. Align function signature in pcie-mobiveil.h to match the change,
+ensuring consistency across the Mobiveil PCIe driver.
 
-Hans Zhang (3):
-  PCI: dwc: Standardize link status check to return bool.
-  PCI: mobiveil: Refactor link status check.
-  PCI: cadence: Simplify j721e link status check.
-
- drivers/pci/controller/cadence/pci-j721e.c             | 6 +-----
- drivers/pci/controller/dwc/pci-dra7xx.c                | 2 +-
- drivers/pci/controller/dwc/pci-exynos.c                | 4 ++--
- drivers/pci/controller/dwc/pci-keystone.c              | 5 ++---
- drivers/pci/controller/dwc/pci-meson.c                 | 6 +++---
- drivers/pci/controller/dwc/pcie-armada8k.c             | 6 +++---
- drivers/pci/controller/dwc/pcie-designware.c           | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h           | 4 ++--
- drivers/pci/controller/dwc/pcie-dw-rockchip.c          | 2 +-
- drivers/pci/controller/dwc/pcie-histb.c                | 9 +++------
- drivers/pci/controller/dwc/pcie-keembay.c              | 2 +-
- drivers/pci/controller/dwc/pcie-kirin.c                | 7 ++-----
- drivers/pci/controller/dwc/pcie-qcom-ep.c              | 4 ++--
- drivers/pci/controller/dwc/pcie-qcom.c                 | 2 +-
- drivers/pci/controller/dwc/pcie-rcar-gen4.c            | 2 +-
- drivers/pci/controller/dwc/pcie-spear13xx.c            | 7 ++-----
- drivers/pci/controller/dwc/pcie-tegra194.c             | 2 +-
- drivers/pci/controller/dwc/pcie-uniphier.c             | 2 +-
- drivers/pci/controller/dwc/pcie-visconti.c             | 2 +-
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
  drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c | 9 ++-------
  drivers/pci/controller/mobiveil/pcie-mobiveil.h        | 2 +-
- 21 files changed, 34 insertions(+), 53 deletions(-)
+ 2 files changed, 3 insertions(+), 8 deletions(-)
 
-
-base-commit: 286ed198b899739862456f451eda884558526a9d
+diff --git a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+index 5af22bee913b..1cf014051296 100644
+--- a/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
++++ b/drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c
+@@ -53,18 +53,13 @@ static inline void ls_g4_pcie_pf_writel(struct ls_g4_pcie *pcie,
+ 	iowrite32(val, pcie->pci.csr_axi_slave_base + PCIE_PF_OFF + off);
+ }
+ 
+-static int ls_g4_pcie_link_up(struct mobiveil_pcie *pci)
++static bool ls_g4_pcie_link_up(struct mobiveil_pcie *pci)
+ {
+ 	struct ls_g4_pcie *pcie = to_ls_g4_pcie(pci);
+ 	u32 state;
+ 
+ 	state = ls_g4_pcie_pf_readl(pcie, PCIE_PF_DBG);
+-	state =	state & PF_DBG_LTSSM_MASK;
+-
+-	if (state == PF_DBG_LTSSM_L0)
+-		return 1;
+-
+-	return 0;
++	return (state & PF_DBG_LTSSM_MASK) == PF_DBG_LTSSM_L0;
+ }
+ 
+ static void ls_g4_pcie_disable_interrupt(struct ls_g4_pcie *pcie)
+diff --git a/drivers/pci/controller/mobiveil/pcie-mobiveil.h b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+index e63abb887ee3..662f17f9bf65 100644
+--- a/drivers/pci/controller/mobiveil/pcie-mobiveil.h
++++ b/drivers/pci/controller/mobiveil/pcie-mobiveil.h
+@@ -160,7 +160,7 @@ struct mobiveil_root_port {
+ };
+ 
+ struct mobiveil_pab_ops {
+-	int (*link_up)(struct mobiveil_pcie *pcie);
++	bool (*link_up)(struct mobiveil_pcie *pcie);
+ };
+ 
+ struct mobiveil_pcie {
 -- 
 2.25.1
 
