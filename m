@@ -1,156 +1,115 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9A0E32C1E3C;
-	Tue, 29 Apr 2025 12:51:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 969462BE7C0;
+	Tue, 29 Apr 2025 13:20:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745931096; cv=none; b=N1NGbSqmMxIDiEighMs2Ozqh+7pIJvoyTEDZdYuU3PUnXpXM0BQxSiNQKM+oqQHJaAFPVZTehNQRDwO+L0jY6pM1/XfGyJpUn6ZZhRBwvOCA4GMwWByAmTv7xcu3qc9h6nH4x7zna46MhySvfC31pSpe4lR8I7Ptmvcy3ly6VQE=
+	t=1745932830; cv=none; b=eHudDpfwlTgGCqAh7zHUIJw6KKcSeZiUYDIDJlo4rP43IlbnKYaqj3vHYR3VwFlZ5vwXspoIGextJp+lGeG98v/qyn7zoAeEn3Zo8iou9w7JzOtKo1hHnP2ORvZPwLcZVj57TcgwDp7bvYwAg1WV6hILqPNbdHfja/joBAnHeMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745931096; c=relaxed/simple;
-	bh=k/VOt13OojSw7K+V+NfpXrHAjT5wm6azQdPmLAshz9E=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=jLKuTu//+Z2+ZswGGxS6lKwdtiwLRQKcg+hISHpSDcFKv53Q1FQCLT9ntYZ/ZWXYIO8p2A6H12DgXfecqn6r0wm2RHvJHRrbAlCdmPLV8HUT0wyMeGKsun1WDUBhEJAg9xJC02vHmDxGnDlWLWuHJfzuBrbGh95Vu/EzJUpF4MA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ZWlCCbgd; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ZWlCCbgd"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=R4ets
-	zlrRlRhr2cxA4vrJXY7WeE7DJgWLl5ztKXUTvQ=; b=ZWlCCbgdVkuYPFNYdDxud
-	ZWjMuyHOkfW0kGCuKWjwcbLv8+2qarrYfM7PzgfBc1RUOKPFBR3qw+RyX1eamAP/
-	MHWWPsjmR8AfJdmfg6lAz5635JGIcD/MXxmMMdo6lty+IC8R93u4wl5XxaqdWbKl
-	feqPwFeknVWq0h7jFBGpiY=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wC3DRQeyxBoOlBzDQ--.23007S7;
-	Tue, 29 Apr 2025 20:50:43 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	bhelgaas@google.com,
-	manivannan.sadhasivam@linaro.org,
-	ilpo.jarvinen@linux.intel.com,
-	kw@linux.com
-Cc: cassel@kernel.org,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	thomas.richard@bootlin.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v10 5/6] PCI: cadence: Use common PCI host bridge APIs for finding the capabilities
-Date: Tue, 29 Apr 2025 20:50:35 +0800
-Message-Id: <20250429125036.88060-6-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250429125036.88060-1-18255117159@163.com>
-References: <20250429125036.88060-1-18255117159@163.com>
+	s=arc-20240116; t=1745932830; c=relaxed/simple;
+	bh=+ddzy9jCYjhQes9mHraU7a+/SWmYuS3TBFPtlx+VGto=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=u6qbVHnVjZArP3WjS2a1FSHML8qby1UjkahEBF9eFQALaZZ5iQ6F2VtmWh+IeO8tbjr7MxGIN2UisQsQerLNkR5VIc8uPaCA5du0XStZPBX7GyxIe6i0dmo1R79K8kmLvte2S+uutgBzG6APLqpMSvtJE7V3U/s2uQo6Xcux0hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.216])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4Zn18s5K5Jz6L5Wb;
+	Tue, 29 Apr 2025 21:18:21 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id D9D9114064C;
+	Tue, 29 Apr 2025 21:20:23 +0800 (CST)
+Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Tue, 29 Apr
+ 2025 15:20:23 +0200
+Date: Tue, 29 Apr 2025 14:20:22 +0100
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Zhe Qiao <qiaozhe@iscas.ac.cn>
+CC: <rafael@kernel.org>, <lenb@kernel.org>, <bhelgaas@google.com>,
+	<will@kernel.org>, <sunilvl@ventanamicro.com>, <linux-acpi@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH v2] ACPI: PCI: Release excess memory usage.
+Message-ID: <20250429142022.00003460@huawei.com>
+In-Reply-To: <20250429091051.249911-1-qiaozhe@iscas.ac.cn>
+References: <20250429091051.249911-1-qiaozhe@iscas.ac.cn>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wC3DRQeyxBoOlBzDQ--.23007S7
-X-Coremail-Antispam: 1Uf129KBjvJXoWxuryrAr48Cw4rur1kCF4UJwb_yoW5ZF48pF
-	WDGFyfCa1rJFW3uFs3A3W5Xr15tFnak347ta92kw12vF17Cr1UGF12gFy3Kr9xKrs7Wr13
-	X3yDtFykKrn0yFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0ziID7hUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwY+o2gQySUy1wAAsx
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml100002.china.huawei.com (7.191.160.241) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-Use the PCI core is now exposing generic macros for the host bridges to
-search for the PCIe capabilities, make use of them in the CDNS driver.
+On Tue, 29 Apr 2025 17:10:51 +0800
+Zhe Qiao <qiaozhe@iscas.ac.cn> wrote:
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
-Changes since v8 ~ v9:
-- None
+> In the pci_acpi_scan_root() function, if the PCI bus creation failed,
+> the allocated memory should be released to avoid memory occupation.
+> 
+> Fixes: 789befdfa389 ("arm64: PCI: Migrate ACPI related functions to pci-acpi.c")
+> Signed-off-by: Zhe Qiao <qiaozhe@iscas.ac.cn>
+> 
+> ---
+> V1 -> V2:
+> Modified labels for better readability.
+> 
+> ---
+>  drivers/pci/pci-acpi.c | 15 +++++++++------
+>  1 file changed, 9 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
+> index af370628e583..bde104ecac80 100644
+> --- a/drivers/pci/pci-acpi.c
+> +++ b/drivers/pci/pci-acpi.c
+> @@ -1677,15 +1677,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  
+>  	root_ops = kzalloc(sizeof(*root_ops), GFP_KERNEL);
+>  	if (!root_ops) {
+> -		kfree(ri);
+> -		return NULL;
+> +		goto free_ri;
+>  	}
+>  
+>  	ri->cfg = pci_acpi_setup_ecam_mapping(root);
+>  	if (!ri->cfg) {
+> -		kfree(ri);
+> -		kfree(root_ops);
+> -		return NULL;
+> +		goto free_root_ops;
+>  	}
+>  
+>  	root_ops->release_info = pci_acpi_generic_release_info;
+> @@ -1693,7 +1690,7 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  	root_ops->pci_ops = (struct pci_ops *)&ri->cfg->ops->pci_ops;
+>  	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
+>  	if (!bus)
+> -		return NULL;
 
-Changes since v7:
-- Resolve compilation errors.
+Do we also need to tear down the ecam mapping done in pci_acpi_setup_ecam_mapping()?
+Might just be pci_ecam_free(ri->cfg);
 
-Changes since v6:
-https://lore.kernel.org/linux-pci/20250323164852.430546-4-18255117159@163.com/
 
-- The patch commit message were modified.
-
-Changes since v5:
-https://lore.kernel.org/linux-pci/20250321163803.391056-4-18255117159@163.com
-
-- Kconfig add "select PCI_HOST_HELPERS"
----
- drivers/pci/controller/cadence/pcie-cadence.c | 28 +++++++++++++++++++
- drivers/pci/controller/cadence/pcie-cadence.h | 13 +++++++++
- 2 files changed, 41 insertions(+)
-
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 204e045aed8c..ca4a1a809fcb 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -7,6 +7,34 @@
- #include <linux/of.h>
- 
- #include "pcie-cadence.h"
-+#include "../../pci.h"
-+
-+static int cdns_pcie_read_cfg(void *priv, int where, int size, u32 *val)
-+{
-+	struct cdns_pcie *pcie = priv;
-+
-+	if (size == 4)
-+		*val = cdns_pcie_readl(pcie, where);
-+	else if (size == 2)
-+		*val = cdns_pcie_readw(pcie, where);
-+	else if (size == 1)
-+		*val = cdns_pcie_readb(pcie, where);
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap)
-+{
-+	return PCI_FIND_NEXT_CAP_TTL(cdns_pcie_read_cfg, PCI_CAPABILITY_LIST,
-+				     cap, pcie);
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_find_capability);
-+
-+u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap)
-+{
-+	return PCI_FIND_NEXT_EXT_CAPABILITY(cdns_pcie_read_cfg, 0, cap, pcie);
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_find_ext_capability);
- 
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- {
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 39ee9945c903..56d6a0e73eb7 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -398,6 +398,16 @@ static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
- 	return readl(pcie->reg_base + reg);
- }
- 
-+static inline u32 cdns_pcie_readw(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readw(pcie->reg_base + reg);
-+}
-+
-+static inline u32 cdns_pcie_readb(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readb(pcie->reg_base + reg);
-+}
-+
- static inline u32 cdns_pcie_read_sz(void __iomem *addr, int size)
- {
- 	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
-@@ -557,6 +567,9 @@ static inline int cdns_pcie_ep_setup(struct cdns_pcie_ep *ep)
- }
- #endif
- 
-+u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap);
-+u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap);
-+
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
- 
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
--- 
-2.25.1
+> +		goto free_root_ops;
+>  
+>  	/* If we must preserve the resource configuration, claim now */
+>  	host = pci_find_host_bridge(bus);
+> @@ -1710,6 +1707,12 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
+>  		pcie_bus_configure_settings(child);
+>  
+>  	return bus;
+> +
+> +free_root_ops:
+> +	kfree(root_ops);
+> +free_ri:
+> +	kfree(ri);
+> +	return NULL;
+>  }
+>  
+>  void pcibios_add_bus(struct pci_bus *bus)
 
