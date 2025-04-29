@@ -1,99 +1,101 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5B3AA2D0277;
-	Tue, 29 Apr 2025 12:11:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B3202C17AB
+	for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2025 12:29:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745928719; cv=none; b=Kyek558235G/aLOxmbs1IOmHKqvkrUPmnwQwYmL0qCt75OZUrf7IliZpYUgA5QpvCzmP4QDdEeck6kZ9p18NxpXwaM67t4PLACui6PSun4YZGvjDUe1gdwbPnJ5nP7g1SPWTB33jM+0el2nG5+spiz3fg2KQNa8VUB4vmFVyWnw=
+	t=1745929800; cv=none; b=d93guF/KBIRn0eq9QckhmQzMuUnZXWuoPyHhTthvWV9iBBznhcSbqy4ps8KBg0IsSl+IWg0a3Pm4wa7Yn8A8IoJHOCzGTBSsANc6A7kj0TyyaTSooaJ5wp0Q2Gl6kcWYNEw/AHrceZe7KPs8PdMoBzyKcAB4bmlG+E5yt+fqfZM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745928719; c=relaxed/simple;
-	bh=V/Ie+ZwTST3Gao5+19A/LCA6skSpyushVizMP3n59hg=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=lP5POrziLtUHxb0JhrsUxJlClg/7oIGWdQehNRbUAXeZbRb12ozBtD0pGINREyljoDOSvtJwFogexOeMIRcktRJ5fTiTW9j2XWH86bknP8HLJtWbpF+1DOS6zDlnSxevmFq/w2rehK3r30rPb+uHVdPORo0BAtjZDSaKxF/SCV0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VtxfA8w1; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1745929800; c=relaxed/simple;
+	bh=fspc3DFcSox1gyyee1r9hEoJNZDYkCPhN2qCzyuWCLE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JnT9U9qUvdj/4YjoXIcoYke0AdsHnTtt+7CRXeuo2q4M2uq/1b7OpCCGClTQmQdwJWRY+xNWKm24mj26itgiYMjdim93gmcCL1lR5VpCbDQbt581qdCuxMzSTwy4zBk9YsSecPQvHocUd+h4zhtOWtX2bqBL9dP5g69Uapa/p3w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=GvXzxD8o; arc=none smtp.client-ip=209.85.219.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VtxfA8w1"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=FCDaB
-	JfvI36gqhZRVHJX8XImVX7IwQoIXehlt+PgFmI=; b=VtxfA8w1/u9AKunanELhV
-	ShH81ap/U24Cd9ILWNbisnH29NaW9Sma6gYHa9iM3QBCRkpW8viANp0PhGUDCGqX
-	0KLWvQEv4UAxg9M8bHB2xPpYz20o7MbGl0q8NSNjw0xEFfhT0fHkzU8yEXW0vnR3
-	by973SQuXaWX4jFp2gtK9Q=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wCHUkXjwRBoU_m0DA--.22532S2;
-	Tue, 29 Apr 2025 20:11:17 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	kw@linux.com,
-	bhelgaas@google.com,
-	jingoohan1@gmail.com,
-	manivannan.sadhasivam@linaro.org
-Cc: cassel@kernel.org,
-	robh@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 0/3] Standardize link status check to return bool
-Date: Tue, 29 Apr 2025 20:11:06 +0800
-Message-Id: <20250429121109.16864-1-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="GvXzxD8o"
+Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-6e8f43c1fa0so82356006d6.3
+        for <linux-pci@vger.kernel.org>; Tue, 29 Apr 2025 05:29:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1745929797; x=1746534597; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=fspc3DFcSox1gyyee1r9hEoJNZDYkCPhN2qCzyuWCLE=;
+        b=GvXzxD8oRwhhVzjNbV2jdHw0mz5JxM4ox2OE7i20JCyA2Y7XIoL7gYEEaqUmPEJKqg
+         saoJXZI/Zcju6zbadTmNxI0neJ6pk9r8w6WYYmK1BTH4cfV0ExZFFBou0AP43PPZHmcC
+         UFyALwg3A/XpUVS70ArqD3y/VAaOvYhYv8yJ47X6Vs4RanvbpdOYJt+RJcl9fhOvemjn
+         AVqGfwM8C3RR7Q4GkSugy/vZ3CsqoHC/vaIyAdecNDl38PKY7b8lSlcicxyYjJhoH4dg
+         +bu54vsxwVl+8KxE8KXDA6EnZSzd54Yn6U96gZFjg3WoXzT8S0qqTThFRnC2SJ5Bs5qI
+         /tOA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745929797; x=1746534597;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=fspc3DFcSox1gyyee1r9hEoJNZDYkCPhN2qCzyuWCLE=;
+        b=hiGqLFtpkCUCcPdvevPyeMyhUjudnz1gQdZ1hlnPzDndxOFj6iBgn+ZNMaQpPPKptv
+         mV6Cr8YijlgyA0ViqhvylR49oi/WS5dCc9ao7T2cDK8CeAa1+XAEFHSz9f6DgWRXOzdr
+         dkYBlQMEsslowb76RYxUXqboPlRMxiYcvd7hhKf8pHbg7Yx4AT/2Xi0edt0XZX09tU5t
+         fwNyasWRTlmGZksAWX9uAZXMA4oQY5MqhLjje5iT1W+sdckNzurGamBaN9uJRn1Y2lwb
+         hSOl/uzK2DGH30Q2702/J0g10CIQ/11ZayyVgxU0xObftJ8yu5IMPTTI+jy65dR5NXgn
+         MMRw==
+X-Forwarded-Encrypted: i=1; AJvYcCVMkd6df/UuLX1eh4KF3Sgv/mAU7tKNKePQjPSQMWZwD3cJcFLomXpaak4LX1T9M1F9QmG1fXLCxXI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxufZ15GotH134a5tI7dyWZxwpFFyUR5yBpUrJWsJfhDyRiZF9u
+	XVOF/A5DShUbU5ajurbubNulax0YPXD0w9LlZiCL9wEtoknjTzGFsJXBGjzETgM=
+X-Gm-Gg: ASbGncsyZe2nXYYUNMxVtJFlxcGBieWsiO6kncUvong3gzdQdJQuGXEaW0yivepTugM
+	Ce6IqnWLOSnlD2h4dCWma/nhpT1HSZ77lm/ExkNMKkyv26Z1HwE8uklozfyIYYu0foOer/+ss9f
+	mb/NyzVUdxsR52akv2Jd7TAgjamLj9MDoS/+2KKCobVSg7LfzU4pwLMoT1vyNYh3VYg+mWpO/dk
+	O2Ta5zyuQtKrmLIP7jmEirA6lHf6ejs008HjOeIcTqq/6YBHQJKV9j3doTxX+e1KINUHL0T3qxP
+	RzAV7eBDfMTEl3EsYqa2E93PUkPlR7lvLA1DwjcxsHgZhHjWdvfwcdWGqvlaxls/wpx2G8ZMqxS
+	fqqEmt3ckM78ZVuclP2Q=
+X-Google-Smtp-Source: AGHT+IEgx9EB53XUdGV7vC29k/JxBvqJ89luumOzPRGbpdqAFnmUSowtG6tg8X/s0U1VWu7lyHl1sQ==
+X-Received: by 2002:a05:6214:d6d:b0:6f2:d45c:4a1d with SMTP id 6a1803df08f44-6f4d1f9d772mr228245476d6.38.1745929797482;
+        Tue, 29 Apr 2025 05:29:57 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-142-167-219-86.dhcp-dynamic.fibreop.ns.bellaliant.net. [142.167.219.86])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6f4c0aae68csm71890226d6.97.2025.04.29.05.29.56
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 29 Apr 2025 05:29:56 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1u9k60-0000000A4cD-1RSJ;
+	Tue, 29 Apr 2025 09:29:56 -0300
+Date: Tue, 29 Apr 2025 09:29:56 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: jane.chu@oracle.com
+Cc: logane@deltatee.com, hch@lst.de, gregkh@linuxfoundation.org,
+	willy@infradead.org, kch@nvidia.com, axboe@kernel.dk,
+	linux-kernel@vger.kernel.org, linux-mm@kvack.org,
+	linux-pci@vger.kernel.org, linux-nvme@lists.infradead.org,
+	linux-block@vger.kernel.org
+Subject: Re: Report: Performance regression from ib_umem_get on zone device
+ pages
+Message-ID: <20250429122956.GB2260621@ziepe.ca>
+References: <fe761ea8-650a-4118-bd53-e1e4408fea9c@oracle.com>
+ <20250423232828.GV1213339@ziepe.ca>
+ <84867704-1b25-422a-8c56-6422a2ef50a9@oracle.com>
+ <20250424120143.GX1213339@ziepe.ca>
+ <bab1c156-ed5a-4c1d-8f0a-dd1e39e17c99@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCHUkXjwRBoU_m0DA--.22532S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFWDAw1UZFW8Jr43Aw43ZFb_yoW8Zr15pa
-	45tayxAF1rtF4Y9F1Yq3WDCa4Yq3ZrAasrK393Wa4fXFy3uFWUXr15GFySqasrJrW0qr17
-	KF15t3W7GFs3JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zEna9cUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwQ+o2gQwOccoAAAs1
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <bab1c156-ed5a-4c1d-8f0a-dd1e39e17c99@oracle.com>
 
-1. PCI: dwc: Standardize link status check to return bool.
-2. PCI: mobiveil: Refactor link status check.
-3. PCI: cadence: Simplify j721e link status check.
+On Mon, Apr 28, 2025 at 12:11:40PM -0700, jane.chu@oracle.com wrote:
 
----
-Changes for v2:
-- Remove the return of some functions (!!) .
-- Patches 2/3 and 3/3 have not been modified.
+> 6.15-rc3 is orders of magnitude better.
+> Agreed that device-dax's using folio are likely the heros. I've yet to check
+> the code and bisect, maybe pin_user_page_fast() adds folios to page_list[]
+> instead of 4K pages?
 
-Based on the following branch:
-https://web.git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=controller/dw-rockchip
----
+It does not.
 
-Hans Zhang (3):
-  PCI: dwc: Standardize link status check to return bool
-  PCI: mobiveil: Refactor link status check
-  PCI: cadence: Simplify j721e link status check
+I think a bisection would be interesting information
 
- drivers/pci/controller/cadence/pci-j721e.c             | 6 +-----
- drivers/pci/controller/dwc/pci-dra7xx.c                | 4 ++--
- drivers/pci/controller/dwc/pci-exynos.c                | 4 ++--
- drivers/pci/controller/dwc/pci-keystone.c              | 5 ++---
- drivers/pci/controller/dwc/pci-meson.c                 | 6 +++---
- drivers/pci/controller/dwc/pcie-armada8k.c             | 6 +++---
- drivers/pci/controller/dwc/pcie-designware.c           | 2 +-
- drivers/pci/controller/dwc/pcie-designware.h           | 4 ++--
- drivers/pci/controller/dwc/pcie-dw-rockchip.c          | 2 +-
- drivers/pci/controller/dwc/pcie-histb.c                | 9 +++------
- drivers/pci/controller/dwc/pcie-keembay.c              | 2 +-
- drivers/pci/controller/dwc/pcie-kirin.c                | 7 ++-----
- drivers/pci/controller/dwc/pcie-qcom-ep.c              | 2 +-
- drivers/pci/controller/dwc/pcie-qcom.c                 | 4 ++--
- drivers/pci/controller/dwc/pcie-rcar-gen4.c            | 2 +-
- drivers/pci/controller/dwc/pcie-spear13xx.c            | 7 ++-----
- drivers/pci/controller/dwc/pcie-tegra194.c             | 4 ++--
- drivers/pci/controller/dwc/pcie-uniphier.c             | 2 +-
- drivers/pci/controller/dwc/pcie-visconti.c             | 4 ++--
- drivers/pci/controller/mobiveil/pcie-layerscape-gen4.c | 9 ++-------
- drivers/pci/controller/mobiveil/pcie-mobiveil.h        | 2 +-
- 21 files changed, 37 insertions(+), 56 deletions(-)
-
-
-base-commit: 286ed198b899739862456f451eda884558526a9d
--- 
-2.25.1
-
+Jason
