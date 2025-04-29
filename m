@@ -1,98 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9DF132AEFB;
-	Tue, 29 Apr 2025 01:05:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA1D9253B55;
+	Tue, 29 Apr 2025 02:12:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745888750; cv=none; b=fZzntOWWtq9YPtlYDNYEREvyyTWqfI8O/GeZQ8OksSnkx/8h+pXlP7w86eK/7zD+VM7JN+N8cxizzJLFfB4pruIILPMq37azECKGKu+N9+H1/HoK5bRW1P6OS/++ipG9T93r+qVwKpWveXX08ZQdINffrogOsRQ4r82YviQRKJU=
+	t=1745892780; cv=none; b=WaW0c/33T3dvAD7Qc5POaa1Ysnm8wdxxJXqixBBHF/xDEtDjNlPgxOpwb0tF8LPMnGEI37gvIXrumMDGf5DUTHjy2dI6Foaq4y5oOq4MgjWZz7sKlfC/tigT2Bdpdcl9FP03p87N73SCd/EsmuFrGYBR8+6/jrVfX721NmABaNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745888750; c=relaxed/simple;
-	bh=EM6ElMfbJozbwi36h7rM3Qknfs+VrjA5AmrU9DsF36s=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=cZnxP9P+SU472jvsI8T/1Ih+8dB7fP+Wy0aeifF9SVR4br3NNCP15R0pR0pv7+PMDhbfhsC+WScAi96bUQv9z6IB8ZYohRz2IeUXwMQCgkH4sn5k83cSIkgosvzLRkkcxrnrJ7fLepjCZy66RUFEllpedDQ6V+4sDTh414xwLc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JklXKfpo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745892780; c=relaxed/simple;
+	bh=zIBZEkzEz0qHWJg5nnrZmToWJe3AlL91ty8mA9UxuEk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GUCwl+r908L/6duPZ08XuhS0Ah7FNCX31rv3Zw4UFygMmF7zMz4B6ODAUSRFnY2EiONegxsh+oac9XXKwjaJigyPqfpRAbqULDvzxgIY/k0wev9SSHZ7/rd/odtHWZeMdEaJnuajrREHAu/f78ghDMpS1aUBsYmAXLzQrcqiWY4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NMPPqWUL; arc=none smtp.client-ip=192.198.163.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JklXKfpo"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2AE96C4CEEE;
-	Tue, 29 Apr 2025 01:05:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745888750;
-	bh=EM6ElMfbJozbwi36h7rM3Qknfs+VrjA5AmrU9DsF36s=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=JklXKfpoM6eam6ewpkiiJrk+oLEyBOFDks2ysMzVEglltyYGv+PMcXRClDJtXRLhl
-	 MIcNRdfkLIDiD4ZDUjlxFe7VaJya00ZtFRxOFUIfGpH54jsAouhgA7kVpDR1AmIz/D
-	 DkfYbgndHVPHg3KgzvozsJRvAldT4p6ljg8z7wlz3qn9O2TAzS9PD7pRWmZZrH+pAc
-	 LcJPODpg2LsRop1IUcxfwovVBvaofYFmbwNLeHAOpL3f2tZUfTf8I2O+mjCTnG+bIi
-	 QedYFK8HSWHU2mVpCiGtlZICTRDKRYPZQ+CbnFnTUQBXdvxCWcTbKlelvSS7whD7H0
-	 YpMPvVf3wD6Mw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1C184C3ABA5;
-	Tue, 29 Apr 2025 01:05:50 +0000 (UTC)
-From: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>
-Date: Mon, 28 Apr 2025 20:05:47 -0500
-Subject: [PATCH v2 2/3] cpuidle: tegra: Export
- tegra_cpuidle_pcie_irqs_in_use
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NMPPqWUL"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1745892779; x=1777428779;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=zIBZEkzEz0qHWJg5nnrZmToWJe3AlL91ty8mA9UxuEk=;
+  b=NMPPqWULTuiZj5r+11XyLIcFclry8JZ8qz1qfNyFz0fF2MSe/5wfYFvG
+   Zkfhda/f38AT3e3F5OcuptLqGsDTGTmAjzpsV7vg00lKwWiyyivu8SQBm
+   Ttp5vSkMekVXUrbC1VLaSaYaiIEARKOqXHZ6CrKz5E+ttHkfz8o2CeVIP
+   2CcFHDjwEFHqrn4p+C1EQW7T/THSgeddRZ57NV5l01mE7OYrKEPDxvv2F
+   ckoXuWV9qkdEhSXSkpB/92XYl/PYmnzBWRbrRvGasdWpSnrlXATn67nHV
+   tFTgkAl5HW1PKXPpD0yMu9KR5gB22h/TN3+N+1ux+DsuSe4fS4pZnOkVp
+   w==;
+X-CSE-ConnectionGUID: oTI2g/51Soe2Glddd+HPAg==
+X-CSE-MsgGUID: HZN1SV/EScGO/cdKaCd/wg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11417"; a="47641264"
+X-IronPort-AV: E=Sophos;i="6.15,247,1739865600"; 
+   d="scan'208";a="47641264"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2025 19:12:58 -0700
+X-CSE-ConnectionGUID: PgtT/sVnTcyJIj7GTIKVrA==
+X-CSE-MsgGUID: VBjHGcPQSj2zSMxum7MGbA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,247,1739865600"; 
+   d="scan'208";a="137721801"
+Received: from allen-sbox.sh.intel.com (HELO [10.239.159.30]) ([10.239.159.30])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 28 Apr 2025 19:12:50 -0700
+Message-ID: <c0d729e4-1082-486c-9aac-39ae1a2bbd41@linux.intel.com>
+Date: Tue, 29 Apr 2025 10:08:36 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v10 01/24] PCI/P2PDMA: Refactor the p2pdma mapping helpers
+To: Leon Romanovsky <leon@kernel.org>,
+ Marek Szyprowski <m.szyprowski@samsung.com>, Jens Axboe <axboe@kernel.dk>,
+ Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>
+Cc: Jake Edge <jake@lwn.net>, Jonathan Corbet <corbet@lwn.net>,
+ Jason Gunthorpe <jgg@ziepe.ca>, Zhu Yanjun <zyjzyj2000@gmail.com>,
+ Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+ Bjorn Helgaas <bhelgaas@google.com>, Logan Gunthorpe <logang@deltatee.com>,
+ Yishai Hadas <yishaih@nvidia.com>,
+ Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+ Kevin Tian <kevin.tian@intel.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ =?UTF-8?B?SsOpcsO0bWUgR2xpc3Nl?= <jglisse@redhat.com>,
+ Andrew Morton <akpm@linux-foundation.org>, linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-rdma@vger.kernel.org, iommu@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+ kvm@vger.kernel.org, linux-mm@kvack.org,
+ Niklas Schnelle <schnelle@linux.ibm.com>,
+ Chuck Lever <chuck.lever@oracle.com>, Luis Chamberlain <mcgrof@kernel.org>,
+ Matthew Wilcox <willy@infradead.org>, Dan Williams
+ <dan.j.williams@intel.com>, Kanchan Joshi <joshi.k@samsung.com>,
+ Chaitanya Kulkarni <kch@nvidia.com>, Leon Romanovsky <leonro@nvidia.com>
+References: <cover.1745831017.git.leon@kernel.org>
+ <3ad16e0fc3b8f66593a837c9cdcd34bda1e1ab22.1745831017.git.leon@kernel.org>
+Content-Language: en-US
+From: Baolu Lu <baolu.lu@linux.intel.com>
+In-Reply-To: <3ad16e0fc3b8f66593a837c9cdcd34bda1e1ab22.1745831017.git.leon@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250428-pci-tegra-module-v2-2-c11a4b912446@gmail.com>
-References: <20250428-pci-tegra-module-v2-0-c11a4b912446@gmail.com>
-In-Reply-To: <20250428-pci-tegra-module-v2-0-c11a4b912446@gmail.com>
-To: Thomas Gleixner <tglx@linutronix.de>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, 
- Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, 
- Aaron Kling <webgeek1234@gmail.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1745888749; l=830;
- i=webgeek1234@gmail.com; s=20250217; h=from:subject:message-id;
- bh=xVyHjzSr7wHYXMLNGdp54ReYaOCWfcLl7SzVd0MbeFs=;
- b=gIud+Pwnuh30AZATYddoB8kGlcEmY/P9Nw0DW7/uOyryc78z11uWGMo9bZX3IGoqdTjnxY2mH
- yeby/7GMn7+CowD+fN5sc9KPPJ89qdEWjbHPF6D/bEfFopMgG7F56jJ
-X-Developer-Key: i=webgeek1234@gmail.com; a=ed25519;
- pk=TQwd6q26txw7bkK7B8qtI/kcAohZc7bHHGSD7domdrU=
-X-Endpoint-Received: by B4 Relay for webgeek1234@gmail.com/20250217 with
- auth_id=342
-X-Original-From: Aaron Kling <webgeek1234@gmail.com>
-Reply-To: webgeek1234@gmail.com
 
-From: Aaron Kling <webgeek1234@gmail.com>
+On 4/28/25 17:22, Leon Romanovsky wrote:
+> From: Christoph Hellwig<hch@lst.de>
+> 
+> The current scheme with a single helper to determine the P2P status
+> and map a scatterlist segment force users to always use the map_sg
+> helper to DMA map, which we're trying to get away from because they
+> are very cache inefficient.
+> 
+> Refactor the code so that there is a single helper that checks the P2P
+> state for a page, including the result that it is not a P2P page to
+> simplify the callers, and a second one to perform the address translation
+> for a bus mapped P2P transfer that does not depend on the scatterlist
+> structure.
+> 
+> Signed-off-by: Christoph Hellwig<hch@lst.de>
+> Reviewed-by: Logan Gunthorpe<logang@deltatee.com>
+> Acked-by: Bjorn Helgaas<bhelgaas@google.com>
+> Tested-by: Jens Axboe<axboe@kernel.dk>
+> Reviewed-by: Luis Chamberlain<mcgrof@kernel.org>
+> Signed-off-by: Leon Romanovsky<leonro@nvidia.com>
 
-Add export for tegra_cpuidle_pcie_irqs_in_use() so that we can allow
-drivers like the pci-tegra driver to be loadable as a module.
-
-Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
----
- drivers/cpuidle/cpuidle-tegra.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/cpuidle/cpuidle-tegra.c b/drivers/cpuidle/cpuidle-tegra.c
-index b203a93deac5f378572be90e22c73e7417adb99e..aca907a62bb5de4ee4c71c1900eacedd4b90bc0a 100644
---- a/drivers/cpuidle/cpuidle-tegra.c
-+++ b/drivers/cpuidle/cpuidle-tegra.c
-@@ -336,6 +336,7 @@ void tegra_cpuidle_pcie_irqs_in_use(void)
- 	pr_info("disabling CC6 state, since PCIe IRQs are in use\n");
- 	tegra_cpuidle_disable_state(TEGRA_CC6);
- }
-+EXPORT_SYMBOL_GPL(tegra_cpuidle_pcie_irqs_in_use);
- 
- static void tegra_cpuidle_setup_tegra114_c7_state(void)
- {
-
--- 
-2.48.1
-
-
+Reviewed-by: Lu Baolu <baolu.lu@linux.intel.com>
