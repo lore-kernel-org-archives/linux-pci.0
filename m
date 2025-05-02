@@ -1,98 +1,96 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f169.google.com (mail-lj1-f169.google.com [209.85.208.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 189401B393C;
-	Fri,  2 May 2025 19:00:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B04C1F8AD3
+	for <linux-pci@vger.kernel.org>; Fri,  2 May 2025 20:29:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746212445; cv=none; b=RuhXZW21bm3mNGlA68HBpHviSIh2B11j2Yw1AfS0LUXxDYiWb2wY0QbvH3VlecIO/3fb+ZU43QlF5vLXQILHFwZo4mt8kJIkgyytqzF8pzx9WnGhS3VVR8bgtEfg7wCzGxxfDJWUMYLg483ekFXglEKjAwW2Ld0icieryPgHXko=
+	t=1746217778; cv=none; b=uYxNf8ScO0ycelAMmw3XUjrXG0ZkXQEprCzm4PNZzSzKQ7FR8F5kR6WcDgfvkCQ/nE0JMjRxvJDT+6Uw4jDnn8yhTtEuDig4s9tBHLauk7+8zZpKKKQGTaj6IiDwA9x+cyL1hd/PRfLeMnRv08fPagtlm7HudAlShKqa83hsFTM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746212445; c=relaxed/simple;
-	bh=EM6ElMfbJozbwi36h7rM3Qknfs+VrjA5AmrU9DsF36s=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=nWwgvHWbJQUuUr45EoeRhzMfDwloSxbbUY4PeBD6AbxfPreEdEdKjkwpEQ+B704+pEgZUisujfH9jLVuPF3ttbWj8QqK0h/Nl5kF5cnoibGjmDvF4GfImUNlbSJj0M4VMHMoAPwZ2VkSwZO2XuPpPgaIrXj94p9M70IPVSu4Ycc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VYk9O1ao; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746217778; c=relaxed/simple;
+	bh=Dyc4VucIA18bMQ/LaDxwZ0u3No29RUGoJCBcBQD1gr4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=guqrEOK7hu2zYd6bEx8Mlk4VfdQhkGKwXQU5CrESeenLSNlNwIXkFRdKpz3dvzcx6tp11pTii0CGibsT3NtqwkRyQw6XbURNmGKT7rPjMw0lT2CTUk40VFe2GxXe9fh0/aRUFxOg3PEOJA3rasCi0rltdX/V3S6yXDklLnjW/9A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=gkX8ctaY; arc=none smtp.client-ip=209.85.208.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VYk9O1ao"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id A607DC4CEE9;
-	Fri,  2 May 2025 19:00:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746212444;
-	bh=EM6ElMfbJozbwi36h7rM3Qknfs+VrjA5AmrU9DsF36s=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=VYk9O1aoPmu0AGsHsWYGcOvFTNkG5k5HBdSxIUgQ23nsQNxBzq3joz4pEGPw6mKxO
-	 JDybJA8k62Lol1jHhn881y1JWwbMpAX/6GBmbqy0fOhH01Saj9u62opFFwhyop8aUf
-	 VG6zeavbM4q44h2RqPRZFWEF7bAdR2FD7rBK98GboC0oH3FBgnEIw4v3S0VtazC/j1
-	 4GWK74R9qB71A4Doq+S9/UKRWCFzxoLQAmH/0ssO5I/szHmqpdOIf9Kx60muo5Bj8h
-	 Bo4ZoVJXVXphVo89bafFJCONslJZl/MLaS5qMgwNp/A4kt/tnsFaauDaaKAfHFPxoe
-	 2heui5+ACIEkg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 9791FC3ABAA;
-	Fri,  2 May 2025 19:00:44 +0000 (UTC)
-From: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>
-Date: Fri, 02 May 2025 14:00:30 -0500
-Subject: [PATCH v3 2/4] cpuidle: tegra: Export
- tegra_cpuidle_pcie_irqs_in_use
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="gkX8ctaY"
+Received: by mail-lj1-f169.google.com with SMTP id 38308e7fff4ca-30bfc8faef9so19027471fa.1
+        for <linux-pci@vger.kernel.org>; Fri, 02 May 2025 13:29:36 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1746217774; x=1746822574; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Dyc4VucIA18bMQ/LaDxwZ0u3No29RUGoJCBcBQD1gr4=;
+        b=gkX8ctaYC44kdZJvcD/i6x2qKypvYMoxuk8qxyQpVeA+/OfvmnsuR4sWf3fCaUprXZ
+         oDGuKJrpVrP+IoSwksFkWX8EgGMdfzq2lzcnKfR2B4WvehRCOJoSFtwNFeNbGgoihTBH
+         b5N2d6B4qIkSvIMwz0OaHkfrF77FIN7uYMN0bRRu1kBU6RCpNriRJPIFhnxBtLkrWqKY
+         /6xci12lIsj59h875vqMaqhiAdclf7Ayi7Me+XJotC3Dct4CYtkJ828+35h7UrwHhC8R
+         XMpJpvoKV0QZ5taC1zg0IooAzqCvc1F30QsoopYMHfPiWYa36ZceFCXa3lSvMAj+4M6D
+         mm+A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746217774; x=1746822574;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Dyc4VucIA18bMQ/LaDxwZ0u3No29RUGoJCBcBQD1gr4=;
+        b=KJ3fPGLYT1j28Rde6RVlgJ8YuAXWBBN4EpMrc65M9DbaBrpBAixj7MpuGbuwyfsUGF
+         jm0yGTQDqVa+Qe7EvaDYpgNouiIt7fwvsHTI8qsZ87R038DZOPHQOhrsjAI3Zev/gN5S
+         GrB+BobLmrcnJeBhIc35AZGbjExcMjIIP6iv2P84DKmQ9kNvfG62jYSohorYd906ZKKt
+         /tIis160qsWroqTIpeZfL/ssluOlsSenfdTi0xt3dbyXVD4ZQEWAITEbWBiz8lyBuC2t
+         8fAv7AGFuLrjB7ButA3zzBnGY68mBrJcHMAq5Hhd0rSGhdWEpUwgEskDoS1CJvfnq1Qo
+         T8Vw==
+X-Forwarded-Encrypted: i=1; AJvYcCWG7rWvoRbqxnxt+YinEkFRYmi9WcKrTaTWSLU3KD3hVMMr+JXp8iuD2UEqrW4HCQcEEL1jrqnIpB0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx4yXTkfMiXlHvBllKYoOXDHdhNe03f+ownQETWeXMoRRhSVwjx
+	s33NqctpNKrmsynkxBpKFJZZ8CXOJA9ITcXKHJpiyI5hq8f0RtRs1UTx6AzVJx6s3yOmsMQzQ6W
+	RmY0khHHkzxeuMHoT/Dcrk+2qvmPrzoZki/VTKQ==
+X-Gm-Gg: ASbGncsgW8LfAVrG7Sbkw2xHG94SNQB4FDAcl4saAQvku4XDCO7PMkdqagQa++yLWK8
+	y8zvjzwVs7RDKlCQQZPq7a2kCvrGsFh3Kry6hN8cEizOfwjQ7kkOyij6kHtqCzS6OwwUXJ4bjlu
+	8mVZ2tyU5/I4vVJqojHDZIpQ==
+X-Google-Smtp-Source: AGHT+IE6YTt/niqKQC/QybVWYRM9e6shd/VbSY8KRysq6VEEG74icJfMuCm0qJps54EJDOCFiUhMQ2MFyXvrkj5LwG8=
+X-Received: by 2002:a05:651c:24b:b0:30b:fdc0:5e5d with SMTP id
+ 38308e7fff4ca-320c3b0277fmr12099371fa.4.1746217774478; Fri, 02 May 2025
+ 13:29:34 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250502-pci-tegra-module-v3-2-556a49732d70@gmail.com>
-References: <20250502-pci-tegra-module-v3-0-556a49732d70@gmail.com>
-In-Reply-To: <20250502-pci-tegra-module-v3-0-556a49732d70@gmail.com>
-To: Thomas Gleixner <tglx@linutronix.de>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, 
- Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, 
- Aaron Kling <webgeek1234@gmail.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1746212443; l=830;
- i=webgeek1234@gmail.com; s=20250217; h=from:subject:message-id;
- bh=xVyHjzSr7wHYXMLNGdp54ReYaOCWfcLl7SzVd0MbeFs=;
- b=SqXjWEAxLjXZ8IA642yInZJFT5zVd1nLIm+wRIuqLxf1ecpSS54HDkd1vt24WdaR5cLTNfshs
- VuuD0ygtyLJB4jBitbzfc2U5jSgSfnU+RV8dUr8yaJ//yilQWNe53IS
-X-Developer-Key: i=webgeek1234@gmail.com; a=ed25519;
- pk=TQwd6q26txw7bkK7B8qtI/kcAohZc7bHHGSD7domdrU=
-X-Endpoint-Received: by B4 Relay for webgeek1234@gmail.com/20250217 with
- auth_id=342
-X-Original-From: Aaron Kling <webgeek1234@gmail.com>
-Reply-To: webgeek1234@gmail.com
+References: <20250502013447.3416581-1-robh@kernel.org>
+In-Reply-To: <20250502013447.3416581-1-robh@kernel.org>
+From: Linus Walleij <linus.walleij@linaro.org>
+Date: Fri, 2 May 2025 22:29:23 +0200
+X-Gm-Features: ATxdqUHkisrPrxN0V8LxOcj69_oQIgjXM5hj0MkSydduFZ6VmGupMstVtA3t7To
+Message-ID: <CACRpkdZ6ZsSTXGDFCLe_bFanKLeEm8+vY4_SvKrF5BrH068UCQ@mail.gmail.com>
+Subject: Re: [PATCH] dt-bindings: PCI: Convert v3,v360epc-pci to DT schema
+To: "Rob Herring (Arm)" <robh@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, linux-pci@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Aaron Kling <webgeek1234@gmail.com>
+On Fri, May 2, 2025 at 3:35=E2=80=AFAM Rob Herring (Arm) <robh@kernel.org> =
+wrote:
 
-Add export for tegra_cpuidle_pcie_irqs_in_use() so that we can allow
-drivers like the pci-tegra driver to be loadable as a module.
+> Convert the v3,v360epc-pci binding to DT schema format.
+>
+> Add "clocks" which was not documented and is required. Drop "syscon"
+> which was documented, but is not used.
+>
+> Drop the "v3,v360epc-pci" compatible by itself as this device is only
+> used on the Arm Integrator/AP and not likely going to be used anywhere
+> else at this point.
+>
+> Signed-off-by: Rob Herring (Arm) <robh@kernel.org>
 
-Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
----
- drivers/cpuidle/cpuidle-tegra.c | 1 +
- 1 file changed, 1 insertion(+)
+Thanks Rob, I see the robot is complaining about a oneliner to
+MAINTAINERS but I'm confident you will fix that.
+Reviewed-by: Linus Walleij <linus.walleij@linaro.org>
 
-diff --git a/drivers/cpuidle/cpuidle-tegra.c b/drivers/cpuidle/cpuidle-tegra.c
-index b203a93deac5f378572be90e22c73e7417adb99e..aca907a62bb5de4ee4c71c1900eacedd4b90bc0a 100644
---- a/drivers/cpuidle/cpuidle-tegra.c
-+++ b/drivers/cpuidle/cpuidle-tegra.c
-@@ -336,6 +336,7 @@ void tegra_cpuidle_pcie_irqs_in_use(void)
- 	pr_info("disabling CC6 state, since PCIe IRQs are in use\n");
- 	tegra_cpuidle_disable_state(TEGRA_CC6);
- }
-+EXPORT_SYMBOL_GPL(tegra_cpuidle_pcie_irqs_in_use);
- 
- static void tegra_cpuidle_setup_tegra114_c7_state(void)
- {
-
--- 
-2.48.1
-
-
+Yours,
+Linus Walleij
