@@ -1,196 +1,127 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2F3742A87
-	for <linux-pci@vger.kernel.org>; Fri,  2 May 2025 18:05:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188182F2E;
+	Fri,  2 May 2025 19:00:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746209137; cv=none; b=IyrWPqMZ3X/KQ/y3zxWO4zQ9ILnTEO/fHdnVNxK5okdc6AlllyOx7IS+LTmDyUm9Vrj+WwilsqIaep4tipX6AG27niBHcxQT39pFbiRQFklbaasSDhQUhNLIwx2FG72YS7SEyvygxiS3q9RTi6XdHWIMGqjoiySvPCyLBDapVIA=
+	t=1746212445; cv=none; b=fgxG3H3ktHYjAd0FkPuzlxEJOJZLwNrNpx/lwXSbWZw+Cgs/uO0VqGGlQXGgns6zLocC5KP5FPaVKQwi0Tk1P74PLzDY5itTtUarg33k9XRwv1VBf0GuACf0D0kdDB0aCFSUkBfrRQ8kJfA/x94yrRbPtbpThN8hdxLn8isb0pQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746209137; c=relaxed/simple;
-	bh=Pvjqugsj9+0gGq21AJX0rzcX8GqamVjbuB2k+vTiFrs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PJSYpcqJ920avyZ481C0QQBGgqra2/3GnyA1pNktJcupmDFOGgZLOfvYAgSxCXKx5mAz1E0bU2gUbhRy90ABQkr5ty8+WOgOI0w/Ab4/qy2ExVnKvR3DglBIut3f2TCesVQt5z1lv/Y8dPrwSJ9BZ1kOqI7s3KwfdCYs4sa0gVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=hDjRvKpH; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1746212445; c=relaxed/simple;
+	bh=LRTzkroHpUqBBS66F+/5iJ/bP7dLfCm5QyQ+g9hrpLk=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=jYP+IdN6Q26kLppO/T7rNO3fOTLbw7jqXpSXFG0SpGCqI3pWyIGR2+F5xW1q1GXrJAH6lCoMmcfmbHPJ7+3ePZyfgg+BGlhfx+RT49+W+OIdIfi5wA7GbCcwlWARbBnIKTy4SDVVypqaS+ssHgbzXD6lhhL1dXgABO678qWUR/g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RVCxA7Fi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="hDjRvKpH"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-2241053582dso38398205ad.1
-        for <linux-pci@vger.kernel.org>; Fri, 02 May 2025 11:05:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1746209134; x=1746813934; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=zcSLiUz4ebnW8auKGRYJu0KQ8ZdZMC2lQaQD2lbQrvw=;
-        b=hDjRvKpHWQjxoVbYiuTGZxde1P+F4PGXIfJ1N2dnsgVh6870+RmsfrNfqfFObNp2v6
-         rKdPZE+WNzEobzYxQBseBl7J3ck9uFS5+U59VH06ueYwUyvGPyWqDJliNhcKh7TL1/pV
-         bk1zkW3tNv68G43Ceiw3BV5xgwoEcKgDe5rOtDEtu0Owey2DTo+1JwLuoLJsvs7KV0KM
-         pf7KTizdYQY3cLXi/UbjfVQ0gvCce091J4xFmWUYzU7qiiylNL30cpEciD7MWcSljbJk
-         m1R/3JsfpNfU5Q4ZyIFBQfaE4DG+iRKHxARTrfxgOtuVul0hyo3aBDssOn27Rno6Q428
-         Rpqg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746209134; x=1746813934;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zcSLiUz4ebnW8auKGRYJu0KQ8ZdZMC2lQaQD2lbQrvw=;
-        b=VWCc+FtI/KQWDjFJ2qWdZwcElwPqHujT93F7ELa6OEXAW/9hHooCib30feJ3Z+QLjt
-         RFAZbH3pEQN9QQnbGHm0c/JiWSt9gmrGs0JJtlUNfd1rwL7tqwDrh1E8hTAu2DT9h2o3
-         tlSAGO2jlLkKMD4C+yXYdt8AfybleeuS/uPRxNE5TSmR3rW9kPFLYe0aYdw2rAiKdC+G
-         4nBxqwNpos9H0LwA3ADt6XNT6UngupfRfQkS7SvSKxWw1/mo1MDDxNpp8dkMwN7hdrbZ
-         XC2EKinA6JDZjYHaR2aAAX/wTVVhvacgBlcw3WIhI5PaQU8aPUMr8JrP245ZR8sHhU56
-         RAog==
-X-Forwarded-Encrypted: i=1; AJvYcCUDIVWDubUDlNXWOJTLYTb/8u5ji7Cc+HPAiOS309WLfTek9vSnFn/c568c9T5kmV/pDFI4S/rzQnA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YziTAoW2+WVOqLTTCS4ajthcuZV2QFg0L8igDFrGisWN5xgPEDp
-	mV9QEy6RGRD37a99tb8aA6tpUBryLekaTbEFnmXa0nNRRwnx6TdLzJXguCDKfQ==
-X-Gm-Gg: ASbGnctfSDS2RTXyvb3D5B37g8vzTdOnhjOPndtXg69uAnIG8kso/4nrZL0sGhcJ3FY
-	8r0acxBefdUz1MVI8g+6ZES+yGz1ewXUoHUnpkc83oQrszVWVA4t9AZxZjIYwTe8JrnvVZFfzqo
-	gbXyGhN2h2PhpwSz3ha1lMChPHFazggFMbMBwx8B3femptFs0q55GFbBhUtHwlg+ekpherTnGFA
-	hUreKwWwRK/g1SyU9bAWj+Xwlgvf9m3OXLQRCYAc2/s/0JiGp1c+jj4vu/CK9V8qkODGbLj8g6J
-	KuEOeFjH3hirWA2DvtTYvSHAtoJgajyonNE7pqUhPEgqgF+BckTtJw==
-X-Google-Smtp-Source: AGHT+IEYeLUys5tfLkjUspsmDDI1Cb1YA+edBh30Ni418v1MT8XNeWwFc7kK/LBz4rDgcz2jBf4ikw==
-X-Received: by 2002:a17:903:2c9:b0:21f:7e12:5642 with SMTP id d9443c01a7336-22e102c79d0mr54635905ad.18.1746209133893;
-        Fri, 02 May 2025 11:05:33 -0700 (PDT)
-Received: from thinkpad ([220.158.156.122])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22e150eae63sm10793605ad.18.2025.05.02.11.05.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 May 2025 11:05:33 -0700 (PDT)
-Date: Fri, 2 May 2025 23:35:29 +0530
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: Hans Zhang <hans.zhang@cixtech.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, kbusch@kernel.org, axboe@kernel.dk, 
-	hch@lst.de, sagi@grimberg.me, linux-nvme@lists.infradead.org, 
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH] nvme-pci: Fix system hang when ASPM L1 is enabled during
- suspend
-Message-ID: <onw47gzc6mda2unsew36b2cmp2et3ijrjqlmgpueeko5vucgph@wrkaiqlbo2fp>
-References: <20250502150027.GA818097@bhelgaas>
- <be8321e5-d048-4434-9b2a-8159e9bdba43@cixtech.com>
- <z4bq25pr35cklwoodz34pnfaopfrtbjwhc6gvbhbsvnwblhxia@frmtb3t3m4nk>
- <433f2678-86c1-4ff6-88d1-7ed485cf44b7@cixtech.com>
- <58e343d9-adf3-4853-9dec-df7c1892d6b2@cixtech.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RVCxA7Fi"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BE755C4AF0D;
+	Fri,  2 May 2025 19:00:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746212444;
+	bh=LRTzkroHpUqBBS66F+/5iJ/bP7dLfCm5QyQ+g9hrpLk=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=RVCxA7Fi2kC70zTldFhPrK12iBLCevvXON41AsQDhiT1fNWYAKJzGGtG2vHmHgeQz
+	 kjELgmD5yS/RwhIz6ZsP4qOmmrnBCBAI42KTEdcI36beuHzh6rrohOww0jH7VCepXq
+	 niPchHhpAF6xaYAvHHj71qbjmogoNEPbk5PS/ZTMFIQPFLJc1/b/7cjvbZq5TS1z3B
+	 raweVQ0sMEm2uUVth8Puo6kpl5vNGooYCbCs5hfBrUX4Am9pMc3eK51s2xuQPhU2Df
+	 W7P1tgBzpvX8TxFZ3rsLRfHw6ga1iEdjKpHK53zdXnOwsfm3v+nNaelfk5T9Es7/1Z
+	 iyvrzzxvfnmKA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B00CDC3ABAC;
+	Fri,  2 May 2025 19:00:44 +0000 (UTC)
+From: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>
+Date: Fri, 02 May 2025 14:00:32 -0500
+Subject: [PATCH v3 4/4] PCI: tegra: Drop unused remove callback
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <58e343d9-adf3-4853-9dec-df7c1892d6b2@cixtech.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250502-pci-tegra-module-v3-4-556a49732d70@gmail.com>
+References: <20250502-pci-tegra-module-v3-0-556a49732d70@gmail.com>
+In-Reply-To: <20250502-pci-tegra-module-v3-0-556a49732d70@gmail.com>
+To: Thomas Gleixner <tglx@linutronix.de>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Daniel Lezcano <daniel.lezcano@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, 
+ Aaron Kling <webgeek1234@gmail.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1746212443; l=1781;
+ i=webgeek1234@gmail.com; s=20250217; h=from:subject:message-id;
+ bh=miAFNHWEF9RJxGC8gWXehC/2+WRlc/Ou80W+mmEfiFc=;
+ b=Waqua4Tb7qWUjc1jh0Wel81cwJ28ZdHn3RtzwEJsCdSru2Wde97OIA4t1VBCcM2Gt/PaW64r4
+ m3PfBEnaE9fCLOlIe+Ks563X1TV6HHbYThvPTaXeCeMIL7ObcY64WHr
+X-Developer-Key: i=webgeek1234@gmail.com; a=ed25519;
+ pk=TQwd6q26txw7bkK7B8qtI/kcAohZc7bHHGSD7domdrU=
+X-Endpoint-Received: by B4 Relay for webgeek1234@gmail.com/20250217 with
+ auth_id=342
+X-Original-From: Aaron Kling <webgeek1234@gmail.com>
+Reply-To: webgeek1234@gmail.com
 
-On Sat, May 03, 2025 at 12:20:52AM +0800, Hans Zhang wrote:
-> 
-> 
-> On 2025/5/3 00:07, Hans Zhang wrote:
-> > 
-> > 
-> > On 2025/5/2 23:58, Manivannan Sadhasivam wrote:
-> > > EXTERNAL EMAIL
-> > > 
-> > > On Fri, May 02, 2025 at 11:49:07PM +0800, Hans Zhang wrote:
-> > > > 
-> > > > 
-> > > > On 2025/5/2 23:00, Bjorn Helgaas wrote:
-> > > > > EXTERNAL EMAIL
-> > > > > 
-> > > > > On Fri, May 02, 2025 at 11:20:51AM +0800, hans.zhang@cixtech.com wrote:
-> > > > > > From: Hans Zhang <hans.zhang@cixtech.com>
-> > > > > > 
-> > > > > > When PCIe ASPM L1 is enabled (CONFIG_PCIEASPM_POWERSAVE=y), certain
-> > > > > 
-> > > > > CONFIG_PCIEASPM_POWERSAVE=y only sets the default.  L1 can be enabled
-> > > > > dynamically regardless of the config.
-> > > > > 
-> > > > 
-> > > > Dear Bjorn,
-> > > > 
-> > > > Thank you very much for your reply.
-> > > > 
-> > > > Yes. To reduce the power consumption of the SOC system, we have
-> > > > enabled ASPM
-> > > > L1 by default.
-> > > > 
-> > > > > > NVMe controllers fail to release LPI MSI-X interrupts during system
-> > > > > > suspend, leading to a system hang. This occurs because the driver's
-> > > > > > existing power management path does not fully disable the device
-> > > > > > when ASPM is active.
-> > > > > 
-> > > > > I have no idea what this has to do with ASPM L1.  I do see that
-> > > > > nvme_suspend() tests pcie_aspm_enabled(pdev) (which seems kind of
-> > > > > janky and racy).  But this doesn't explain anything about what would
-> > > > > cause a system hang.
-> > > > 
-> > > > [   92.411265] [pid:322,cpu11,kworker/u24:6]nvme 0000:91:00.0:
-> > > > PM: calling
-> > > > pci_pm_suspend_noirq+0x0/0x2c0 @ 322, parent: 0000:90:00.0
-> > > > [   92.423028] [pid:322,cpu11,kworker/u24:6]nvme 0000:91:00.0: PM:
-> > > > pci_pm_suspend_noirq+0x0/0x2c0 returned 0 after 1 usecs
-> > > > [   92.433894] [pid:324,cpu10,kworker/u24:7]pcieport 0000:90:00.0: PM:
-> > > > calling pci_pm_suspend_noirq+0x0/0x2c0 @ 324, parent: pci0000:90
-> > > > [   92.445880] [pid:324,cpu10,kworker/u24:7]pcieport 0000:90:00.0: PM:
-> > > > pci_pm_suspend_noirq+0x0/0x2c0 returned 0 after 39 usecs
-> > > > [   92.457227] [pid:916,cpu7,bash]sky1-pcie a070000.pcie: PM: calling
-> > > > sky1_pcie_suspend_noirq+0x0/0x174 @ 916, parent: soc@0
-> > > > [   92.479315] [pid:916,cpu7,bash]cix-pcie-phy a080000.pcie_phy:
-> > > > pcie_phy_common_exit end
-> > > > [   92.487389] [pid:916,cpu7,bash]sky1-pcie a070000.pcie:
-> > > > sky1_pcie_suspend_noirq
-> > > > [   92.494604] [pid:916,cpu7,bash]sky1-pcie a070000.pcie: PM:
-> > > > sky1_pcie_suspend_noirq+0x0/0x174 returned 0 after 26379 usecs
-> > > > [   92.505619] [pid:916,cpu7,bash]sky1-audss-clk
-> > > > 7110000.system-controller:clock-controller: PM: calling
-> > > > genpd_suspend_noirq+0x0/0x80 @ 916, parent: 7110000.system-controller
-> > > > [   92.520919] [pid:916,cpu7,bash]sky1-audss-clk
-> > > > 7110000.system-controller:clock-controller: PM:
-> > > > genpd_suspend_noirq+0x0/0x80
-> > > > returned 0 after 1 usecs
-> > > > [   92.534214] [pid:916,cpu7,bash]Disabling non-boot CPUs ...
-> > > > 
-> > > > 
-> > > > Hans: Before I added the printk for debugging, it hung here.
-> > > > 
-> > > > 
-> > > > I added the log output after debugging printk.
-> > > > 
-> > > > Sky1 SOC Root Port driver's suspend function: sky1_pcie_suspend_noirq
-> > > > Our hardware is in STR(suspend to ram), and the controller and
-> > > > PHY will lose
-> > > > power.
-> > > > 
-> > > > So in sky1_pcie_suspend_noirq, the AXI,APB clock, etc. of the PCIe
-> > > > controller will be turned off. In sky1_pcie_resume_noirq, the PCIe
-> > > > controller and PHY will be reinitialized. If suspend does not
-> > > > close the AXI
-> > > > and APB clock, and the AXI is reopened during the resume
-> > > > process, the APB
-> > > > clock will cause the reference count of the kernel API to accumulate
-> > > > continuously.
-> > > > 
-> > > 
-> > > So this is the actual issue (controller loosing power during system
-> > > suspend) and
-> > > everything else (ASPM, MSIX write) are all side effects of it.
-> > > 
-> 
-> Dear Mani,
-> 
-> There are some things I don't understand here. Why doesn't the NVMe SSD
-> driver release the MSI/MSIx interrupt when ASPM is enabled? However, if ASPM
-> is not enabled, the MSI/MSIx interrupt will be released instead.
-> 
+From: Aaron Kling <webgeek1234@gmail.com>
 
-You mean by calling pci_free_irq_vectors()? If so, the reason is that if ASPM is
-unavailable, then the NVMe cannot be put into low power APST state during
-suspend. So shutting down it is the only sane option to save power, with the
-cost of increased resume latency. But if ASPM is available, then the driver
-doesn't shut the NVMe as it relies on APST to keep the NVMe controller/memory in
-low power mode.
+Debugfs cleanup is moved to a new shutdown callback to ensure the
+debugfs nodes are properly cleaned up on shutdown and reboot.
 
-- Mani
+Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
+---
+ drivers/pci/controller/pci-tegra.c | 19 ++-----------------
+ 1 file changed, 2 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/pci/controller/pci-tegra.c b/drivers/pci/controller/pci-tegra.c
+index 1539d172d708c11c3d085721ab9416be3dea6b12..cc9ca4305ea2072b7395ee1f1e979c24fdea3433 100644
+--- a/drivers/pci/controller/pci-tegra.c
++++ b/drivers/pci/controller/pci-tegra.c
+@@ -2674,27 +2674,12 @@ static int tegra_pcie_probe(struct platform_device *pdev)
+ 	return err;
+ }
+ 
+-static void tegra_pcie_remove(struct platform_device *pdev)
++static void tegra_pcie_shutdown(struct platform_device *pdev)
+ {
+ 	struct tegra_pcie *pcie = platform_get_drvdata(pdev);
+-	struct pci_host_bridge *host = pci_host_bridge_from_priv(pcie);
+-	struct tegra_pcie_port *port, *tmp;
+ 
+ 	if (IS_ENABLED(CONFIG_DEBUG_FS))
+ 		tegra_pcie_debugfs_exit(pcie);
+-
+-	pci_stop_root_bus(host->bus);
+-	pci_remove_root_bus(host->bus);
+-	pm_runtime_put_sync(pcie->dev);
+-	pm_runtime_disable(pcie->dev);
+-
+-	if (IS_ENABLED(CONFIG_PCI_MSI))
+-		tegra_pcie_msi_teardown(pcie);
+-
+-	tegra_pcie_put_resources(pcie);
+-
+-	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+-		tegra_pcie_port_free(port);
+ }
+ 
+ static int tegra_pcie_pm_suspend(struct device *dev)
+@@ -2800,7 +2785,7 @@ static struct platform_driver tegra_pcie_driver = {
+ 		.pm = &tegra_pcie_pm_ops,
+ 	},
+ 	.probe = tegra_pcie_probe,
+-	.remove = tegra_pcie_remove,
++	.shutdown = tegra_pcie_shutdown,
+ };
+ builtin_platform_driver(tegra_pcie_driver);
+ MODULE_AUTHOR("Thierry Reding <treding@nvidia.com>");
 
 -- 
-மணிவண்ணன் சதாசிவம்
+2.48.1
+
+
