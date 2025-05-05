@@ -1,94 +1,148 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3926D286419;
-	Mon,  5 May 2025 23:03:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9766F396ED6
+	for <linux-pci@vger.kernel.org>; Mon,  5 May 2025 23:06:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486185; cv=none; b=jbZ6UVbM9mm+8gNoe33JvisZL6VrBfFuxjHm7DHOHkF5bDt8e36FISnH7bDU/U0PcFyT9wQtIN0utkDHKF5pJ+HsSzxNHed7hy7a7us41Oncpr+cN6Jhdp77D6rv92jfLkhL2ZCXCMiBygWDSziNHbROlUCvTPwX3xUDM9ygUVE=
+	t=1746486395; cv=none; b=dESOXoYatd5wF51LZSBo+VHDoUFyDpbECM0QmOZsO4/355jPaaDFLX8IUGyTCPF39TbQpkC0xyxJ+e6NGIhcAT1PXiNs+HfpmO4hl0PPLq2agMcsuoydrqwamdSqvRdsxL0d0qC4hmOTE5/03hbXHoSxNjQ1wSsdir/vUGkiGf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486185; c=relaxed/simple;
-	bh=7xVHlKYcGGt9MwEn59ezzkiBU8yGeyaBGkRbkbBHMZM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sVy8xF5QvTiW1UEkPytGvniflSSjx8QPHoX0xuyAGPty1pOazsg0XPglG2R65zP4jRfG3LYy7IyqjIZSSrZGJaFXEQgpje5CTT7dTjx79WAh6rLuhG7L19yLuubRsRZWhufG15rMg0gFVpuiu6xUO2u+nTfrHC1Lrb1FrgLd1R0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=t/NjKlhe; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746486395; c=relaxed/simple;
+	bh=+ng9IX5PYlTkr54csTUOeVzsQtO8Dt8p+/RHtisF7xk=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=G+wz6znQ6Bo6fldygWAyMmhfR1dUpTiv081HaWu5YPVwvSrGRbdq6XKDoOp3kkZoRa0EGZbabfHH2h4rI+nKvd47Z8rBNWIFHlfoo4esbHp4ey1klVxBl6sBRG8XwhOU7zBddxXmgKLcZLDioKogxNew2fNb7MMgsS9jaivNUWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rLb11n0X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="t/NjKlhe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4CB22C4CEEF;
-	Mon,  5 May 2025 23:03:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rLb11n0X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61094C4CEED;
+	Mon,  5 May 2025 23:06:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486185;
-	bh=7xVHlKYcGGt9MwEn59ezzkiBU8yGeyaBGkRbkbBHMZM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=t/NjKlheVYLgZSRqZA4nA8k/lgOIqc3NohgaceQBWkRFRu2opkMKKSv78HHQQa1bi
-	 T+ip+VTvLYVCHSF01/QPmYgdLM6jdnRYoswrGvlaE2UFqID5N1XWT9LGri0OTAow75
-	 hnYH2FECx1wSU9yBzWLZmVbJl32jMQgDXlK4JFPjrqqHraOtv0nvo+di4ft3wayIdY
-	 6SvKPVQ/9z9dnOf5w8O3E3cuviNY7dnBY/UvCxn5AFlOoxSTFde3T8ibmAs+g/5GvG
-	 KEf0U7haLOnRjEkLTZtX/DE6vKoUf4avUV944rKPkvDTPvqrwxaSqa9NyZ4vsZfYG0
-	 OAY9hdCE20pgg==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Xiaochun Lee <lixc17@lenovo.com>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 192/294] PCI: Fix old_size lower bound in calculate_iosize() too
-Date: Mon,  5 May 2025 18:54:52 -0400
-Message-Id: <20250505225634.2688578-192-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250505225634.2688578-1-sashal@kernel.org>
-References: <20250505225634.2688578-1-sashal@kernel.org>
+	s=k20201202; t=1746486394;
+	bh=+ng9IX5PYlTkr54csTUOeVzsQtO8Dt8p+/RHtisF7xk=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=rLb11n0XTrGYcIEfiRAkY6OFLnTohFdA3yK73ccWKsIdcSd/dUb1O50XPVHckd64d
+	 cEiX/hHeI0P+FXBVK/KIMmMoUNR+59iruHvBfN4jnV9JakrvaKD7berContfufhSuz
+	 YvYe4G7R8eeztOZMFpZtqPqwbAL47D28HdgmvQFwdTzo94S5SVfXIhwErd3FVl9V9d
+	 ZbK6TpoGy/987zwCC31tXR6K9dlGUMlPdxPIf8mafzsccUM+91MprGwL7uqwJOVIqE
+	 h/Xrzyu0pKrDucNnQl9IES+11q2HWeQHXbMzQdTV5D2Lo5bAQvjVb4UlkcCiOhnkci
+	 4Dc1ZLvO6g29w==
+Date: Mon, 5 May 2025 18:06:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Mario Limonciello <superm1@kernel.org>
+Cc: mario.limonciello@amd.com, bhelgaas@google.com,
+	rafael.j.wysocki@intel.com, huang.ying.caritas@gmail.com,
+	stern@rowland.harvard.edu, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v2] PCI: Explicitly put devices into D0 when initializing
+Message-ID: <20250505230632.GA1007257@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.89
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250424043232.1848107-1-superm1@kernel.org>
 
-From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+On Wed, Apr 23, 2025 at 11:31:32PM -0500, Mario Limonciello wrote:
+> From: Mario Limonciello <mario.limonciello@amd.com>
+> 
+> AMD BIOS team has root caused an issue that NVME storage failed to come
+> back from suspend to a lack of a call to _REG when NVME device was probed.
+> 
+> commit 112a7f9c8edbf ("PCI/ACPI: Call _REG when transitioning D-states")
+> added support for calling _REG when transitioning D-states, but this only
+> works if the device actually "transitions" D-states.
+> 
+> commit 967577b062417 ("PCI/PM: Keep runtime PM enabled for unbound PCI
+> devices") added support for runtime PM on PCI devices, but never actually
+> 'explicitly' sets the device to D0.
+> 
+> To make sure that devices are in D0 and that platform methods such as
+> _REG are called, explicitly set all devices into D0 during initialization.
+> 
+> Fixes: 967577b062417 ("PCI/PM: Keep runtime PM enabled for unbound PCI devices")
+> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 
-[ Upstream commit ff61f380de5652e723168341480cc7adf1dd6213 ]
+Applied to pci/pm for v6.16, thanks!
 
-Commit 903534fa7d30 ("PCI: Fix resource double counting on remove &
-rescan") fixed double counting of mem resources because of old_size being
-applied too early.
-
-Fix a similar counting bug on the io resource side.
-
-Link: https://lore.kernel.org/r/20241216175632.4175-6-ilpo.jarvinen@linux.intel.com
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Xiaochun Lee <lixc17@lenovo.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
- drivers/pci/setup-bus.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index fba402f4f6330..3f40be417856e 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -802,11 +802,9 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 	size = (size & 0xff) + ((size & ~0xffUL) << 2);
- #endif
- 	size = size + size1;
--	if (size < old_size)
--		size = old_size;
- 
--	size = ALIGN(max(size, add_size) + children_add_size, align);
--	return size;
-+	size = max(size, add_size) + children_add_size;
-+	return ALIGN(max(size, old_size), align);
- }
- 
- static resource_size_t calculate_memsize(resource_size_t size,
--- 
-2.39.5
-
+> ---
+> v2:
+>  * Move runtime PM calls after setting to D0
+>  * Use pci_pm_power_up_and_verify_state()
+> ---
+>  drivers/pci/pci-driver.c |  6 ------
+>  drivers/pci/pci.c        | 13 ++++++++++---
+>  drivers/pci/pci.h        |  1 +
+>  3 files changed, 11 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+> index c8bd71a739f72..082918ce03d8a 100644
+> --- a/drivers/pci/pci-driver.c
+> +++ b/drivers/pci/pci-driver.c
+> @@ -555,12 +555,6 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
+>  	pci_enable_wake(pci_dev, PCI_D0, false);
+>  }
+>  
+> -static void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev)
+> -{
+> -	pci_power_up(pci_dev);
+> -	pci_update_current_state(pci_dev, PCI_D0);
+> -}
+> -
+>  static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
+>  {
+>  	pci_pm_power_up_and_verify_state(pci_dev);
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index e77d5b53c0cec..8d125998b30b7 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -3192,6 +3192,12 @@ void pci_d3cold_disable(struct pci_dev *dev)
+>  }
+>  EXPORT_SYMBOL_GPL(pci_d3cold_disable);
+>  
+> +void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev)
+> +{
+> +	pci_power_up(pci_dev);
+> +	pci_update_current_state(pci_dev, PCI_D0);
+> +}
+> +
+>  /**
+>   * pci_pm_init - Initialize PM functions of given PCI device
+>   * @dev: PCI device to handle.
+> @@ -3202,9 +3208,6 @@ void pci_pm_init(struct pci_dev *dev)
+>  	u16 status;
+>  	u16 pmc;
+>  
+> -	pm_runtime_forbid(&dev->dev);
+> -	pm_runtime_set_active(&dev->dev);
+> -	pm_runtime_enable(&dev->dev);
+>  	device_enable_async_suspend(&dev->dev);
+>  	dev->wakeup_prepared = false;
+>  
+> @@ -3266,6 +3269,10 @@ void pci_pm_init(struct pci_dev *dev)
+>  	pci_read_config_word(dev, PCI_STATUS, &status);
+>  	if (status & PCI_STATUS_IMM_READY)
+>  		dev->imm_ready = 1;
+> +	pci_pm_power_up_and_verify_state(dev);
+> +	pm_runtime_forbid(&dev->dev);
+> +	pm_runtime_set_active(&dev->dev);
+> +	pm_runtime_enable(&dev->dev);
+>  }
+>  
+>  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
+> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+> index b81e99cd4b62a..49165b739138b 100644
+> --- a/drivers/pci/pci.h
+> +++ b/drivers/pci/pci.h
+> @@ -148,6 +148,7 @@ void pci_dev_adjust_pme(struct pci_dev *dev);
+>  void pci_dev_complete_resume(struct pci_dev *pci_dev);
+>  void pci_config_pm_runtime_get(struct pci_dev *dev);
+>  void pci_config_pm_runtime_put(struct pci_dev *dev);
+> +void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev);
+>  void pci_pm_init(struct pci_dev *dev);
+>  void pci_ea_init(struct pci_dev *dev);
+>  void pci_msi_init(struct pci_dev *dev);
+> -- 
+> 2.43.0
+> 
