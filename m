@@ -1,52 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDF5435F7CC;
-	Mon,  5 May 2025 22:47:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16AA28314D;
+	Mon,  5 May 2025 22:50:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485246; cv=none; b=uLH9qetLzLKlVHzMCrW035xTUDT04fXERb20VelrxcLxHIaw1ab+uw2jPsvrAaIJ9EcZ9iueRnVLb7IHt5TicRaHABT+f27VZva8tApeO+afoBdPnKY/SvKJhWg6rgjee9Io98jYGpt753cKWhKbzxdSwc2cZyD/14uJFWe5oXU=
+	t=1746485442; cv=none; b=oueKFqiHg1GkuR6EAfmKYZoDjmCOWmbfyeRqhDJHAqZ0tXmtaqI/rWjIfpCpQ4Qk+S7V9eGgaY2v3/XkKyQOQqfA7hTOFAvi1TruLnH7MTfNmgMmU8EmKNWkdT6LtYkmZV8ZO6YMOZiYYnplZnCXv9YFC91mIf4/NLFj2p20h/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485246; c=relaxed/simple;
-	bh=enAfUT/STELazeBDnsbKZdAHSgGQsc35imKgdRurVlg=;
+	s=arc-20240116; t=1746485442; c=relaxed/simple;
+	bh=fR7n2uUh6ns2A+Oabi0RDGnhrzZrWOGnblAvmSj/Cpo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=WNreq1CGktQpR4fwCA29vCyZpUIaMZGtOBg88Qpol0r1T9iOA4NrOdpOjeKhzxgo0MWobQUrIUSBB6pmFrwwpAPndbUPIorwPEyN5y0t/Vh+R/qV/Yh/FlcBsUQEZwAVDT5VRNnZ8UOK3RSzSGSS99JL0WRycHuiQ4OKfUL/3Ig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K9g/t7JB; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Xn2uLcGEaMjrLA5oadZ4uQWj2IdvItoM/z1ze/PguF9aakLD1mWCx6Fo9pzg1rvTMNWBE3iC84pHl+jIx1U5Vs9rceuM8M6g1I7t1mkXmNEte2xyo9MVExw1obOpaqdsAj0C4jUo39zghp67TTMUBRgZfqQwq+f2SHe6wWV3emA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K3GU4Ztg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K9g/t7JB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2274CC4CEEF;
-	Mon,  5 May 2025 22:47:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K3GU4Ztg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD0BC4CEEE;
+	Mon,  5 May 2025 22:50:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485244;
-	bh=enAfUT/STELazeBDnsbKZdAHSgGQsc35imKgdRurVlg=;
+	s=k20201202; t=1746485441;
+	bh=fR7n2uUh6ns2A+Oabi0RDGnhrzZrWOGnblAvmSj/Cpo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=K9g/t7JBXv7foVm48xbOE1Jf76s4sjqXZXfWlk0+ZrtMTP1GSgZ7+qn/XpqD1NfZk
-	 LJ71MC69jjLGqHqrt7w9D0tjyNFrTGVe+AjPwFXKt7kE+xNIjQY6grFTOfQC8+llxl
-	 2xeMqyT42yQ7oHP0hx2WCRM5tqw1jwXv6q4wQBu1RpcR49eA/iBHKJCeG1KbZIFG1i
-	 ZkIpRh+U3wSygkIjZsB+c0/1wsEqey8GLvGuECkvOLnw8DV42r3pRMrS8Dt1kC4i5g
-	 FUW4dlh9IjKAMZd+dIEawfYySlh/hlcrlvJPwwuePhZ2LvNeNQ2ykn+UM5yiYsZQ7h
-	 6t2aNyTyCbkAg==
+	b=K3GU4ZtglBoR9UvYUDQqoJsN1xJMR+haSfZXsvPRs3jBObbmPjuuTPuYWVg5PFJqP
+	 HtRfewqOZFug5/oLQZYAeLtqt1rruwX/CPFY5jJSLaHyLwzAXUC1vE+jVz/CaN7UDr
+	 n8fKvkdDzCpioDDLoxpL3KNxnZkr1eEV0FDnFdaeQ+3UaLI+sxvf/cjAl5jPoB4kS/
+	 X3sQXGJjEb1Kqf7fJ86YpCQyJij6ACIyb+A+lXG/sOYjaI5msYDA4zWBgcu/8rhf5O
+	 V1bd3pUCTRpDCvQCVwHjP7uK6SBr1oWok6l9UUj8WzMSLMn39RvzSagRLdO/Clobav
+	 WWA0cxcOanYoA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Stanimir Varbanov <svarbanov@suse.de>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Jim Quinlan <james.quinlan@broadcom.com>,
-	"Ivan T . Ivanov" <iivanov@suse.de>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Xiaochun Lee <lixc17@lenovo.com>,
 	Sasha Levin <sashal@kernel.org>,
-	jim2101024@gmail.com,
-	nsaenz@kernel.org,
-	lpieralisi@kernel.org,
-	kw@linux.com,
-	manivannan.sadhasivam@linaro.org,
-	bhelgaas@google.com,
-	linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 232/486] PCI: brcmstb: Expand inbound window size up to 64GB
-Date: Mon,  5 May 2025 18:35:08 -0400
-Message-Id: <20250505223922.2682012-232-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 313/486] PCI: Fix old_size lower bound in calculate_iosize() too
+Date: Mon,  5 May 2025 18:36:29 -0400
+Message-Id: <20250505223922.2682012-313-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -62,43 +52,43 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Stanimir Varbanov <svarbanov@suse.de>
+From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 
-[ Upstream commit 25a98c727015638baffcfa236e3f37b70cedcf87 ]
+[ Upstream commit ff61f380de5652e723168341480cc7adf1dd6213 ]
 
-The BCM2712 memory map can support up to 64GB of system memory, thus
-expand the inbound window size in calculation helper function.
+Commit 903534fa7d30 ("PCI: Fix resource double counting on remove &
+rescan") fixed double counting of mem resources because of old_size being
+applied too early.
 
-The change is safe for the currently supported SoCs that have smaller
-inbound window sizes.
+Fix a similar counting bug on the io resource side.
 
-Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
-Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
-Reviewed-by: Jim Quinlan <james.quinlan@broadcom.com>
-Tested-by: Ivan T. Ivanov <iivanov@suse.de>
-Link: https://lore.kernel.org/r/20250224083559.47645-7-svarbanov@suse.de
-[kwilczynski: commit log]
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Link: https://lore.kernel.org/r/20241216175632.4175-6-ilpo.jarvinen@linux.intel.com
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
+Tested-by: Xiaochun Lee <lixc17@lenovo.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/pci/setup-bus.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 792d24cea5747..32ffb0c14c3ca 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -309,8 +309,8 @@ static int brcm_pcie_encode_ibar_size(u64 size)
- 	if (log2_in >= 12 && log2_in <= 15)
- 		/* Covers 4KB to 32KB (inclusive) */
- 		return (log2_in - 12) + 0x1c;
--	else if (log2_in >= 16 && log2_in <= 35)
--		/* Covers 64KB to 32GB, (inclusive) */
-+	else if (log2_in >= 16 && log2_in <= 36)
-+		/* Covers 64KB to 64GB, (inclusive) */
- 		return log2_in - 15;
- 	/* Something is awry so disable */
- 	return 0;
+diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
+index f16c7ce3bf3fc..1eceabef9e84d 100644
+--- a/drivers/pci/setup-bus.c
++++ b/drivers/pci/setup-bus.c
+@@ -814,11 +814,9 @@ static resource_size_t calculate_iosize(resource_size_t size,
+ 	size = (size & 0xff) + ((size & ~0xffUL) << 2);
+ #endif
+ 	size = size + size1;
+-	if (size < old_size)
+-		size = old_size;
+ 
+-	size = ALIGN(max(size, add_size) + children_add_size, align);
+-	return size;
++	size = max(size, add_size) + children_add_size;
++	return ALIGN(max(size, old_size), align);
+ }
+ 
+ static resource_size_t calculate_memsize(resource_size_t size,
 -- 
 2.39.5
 
