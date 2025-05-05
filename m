@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A16AA28314D;
-	Mon,  5 May 2025 22:50:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC23F2D60F9;
+	Mon,  5 May 2025 22:49:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485442; cv=none; b=oueKFqiHg1GkuR6EAfmKYZoDjmCOWmbfyeRqhDJHAqZ0tXmtaqI/rWjIfpCpQ4Qk+S7V9eGgaY2v3/XkKyQOQqfA7hTOFAvi1TruLnH7MTfNmgMmU8EmKNWkdT6LtYkmZV8ZO6YMOZiYYnplZnCXv9YFC91mIf4/NLFj2p20h/k=
+	t=1746485354; cv=none; b=LHoUsNQI6QF7B/XFu7JOhHF0xMY06NQbWgcBZ/xkXheagdLFAXcVQuVDNFzV+guS+NzQBlZGG7t1UDFzBIN9RiMD7huJbFhCxxPXtJtuAPcWby359bH4kYc7VRbzMLuSrNciSfyTTUgHQo58m1EWRm7OFYWq8+KSu2JkP/L5d7w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485442; c=relaxed/simple;
-	bh=fR7n2uUh6ns2A+Oabi0RDGnhrzZrWOGnblAvmSj/Cpo=;
+	s=arc-20240116; t=1746485354; c=relaxed/simple;
+	bh=LJNC1WGx3PsFqhoiIj4US5ok4Nl0wwbQHNr9rljz7+s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Xn2uLcGEaMjrLA5oadZ4uQWj2IdvItoM/z1ze/PguF9aakLD1mWCx6Fo9pzg1rvTMNWBE3iC84pHl+jIx1U5Vs9rceuM8M6g1I7t1mkXmNEte2xyo9MVExw1obOpaqdsAj0C4jUo39zghp67TTMUBRgZfqQwq+f2SHe6wWV3emA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=K3GU4Ztg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=goSNcYCuSHLwLg8Jad4hCAyH0UGh46JH8utR4Q6iZiPB7KR909WfMEKpNpGujjR9QDAULrsgtEZH8lr4OtD/zT+UvTa0kFdFduDWcHT7zoqKJ88rFQ33Tr/qSBLrBNh31yeuY0rw2TH9ECChWbT2SJy4OpWyv6j+lgH8Fc13gBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZY90ImYk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="K3GU4Ztg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3FD0BC4CEEE;
-	Mon,  5 May 2025 22:50:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZY90ImYk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 822D9C4CEEE;
+	Mon,  5 May 2025 22:49:12 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485441;
-	bh=fR7n2uUh6ns2A+Oabi0RDGnhrzZrWOGnblAvmSj/Cpo=;
+	s=k20201202; t=1746485353;
+	bh=LJNC1WGx3PsFqhoiIj4US5ok4Nl0wwbQHNr9rljz7+s=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=K3GU4ZtglBoR9UvYUDQqoJsN1xJMR+haSfZXsvPRs3jBObbmPjuuTPuYWVg5PFJqP
-	 HtRfewqOZFug5/oLQZYAeLtqt1rruwX/CPFY5jJSLaHyLwzAXUC1vE+jVz/CaN7UDr
-	 n8fKvkdDzCpioDDLoxpL3KNxnZkr1eEV0FDnFdaeQ+3UaLI+sxvf/cjAl5jPoB4kS/
-	 X3sQXGJjEb1Kqf7fJ86YpCQyJij6ACIyb+A+lXG/sOYjaI5msYDA4zWBgcu/8rhf5O
-	 V1bd3pUCTRpDCvQCVwHjP7uK6SBr1oWok6l9UUj8WzMSLMn39RvzSagRLdO/Clobav
-	 WWA0cxcOanYoA==
+	b=ZY90ImYk6nTsMSNl3osw9xWnuWTuprcNBCIcAeriYif2UkV+KJDx2FrB7Z40NHqXO
+	 qtDcZlJCpItuzNQ9Vpf+69NREjwlPZN2pyR8x0kW5i7YcKjyz8A/vNw+3zfr2/kONt
+	 +zwY7QBfsIFOlVW2G6607UxxeaehUt5zrH4Dj1r4n1FeBa+6C87Axsm6yUivYWbJF2
+	 qOUOoKO7yL2zfp6mLuqf2cOWl3/ndvMxHnYEiRv7qz81v82F3P9ZxFrf99YKJX3cpa
+	 8QqZePWUOt4j4tlhjKdNh9u2TVNavwP+tqMZpmjh7+gO40f5jLpLdR0x4W078quAcp
+	 nyJqm4Rlc2v+g==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Xiaochun Lee <lixc17@lenovo.com>,
+Cc: Mrinmay Sarkar <quic_msarkar@quicinc.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
+	manivannan.sadhasivam@linaro.org,
+	kw@linux.com,
+	bhelgaas@google.com,
+	mhi@lists.linux.dev,
+	linux-arm-msm@vger.kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 313/486] PCI: Fix old_size lower bound in calculate_iosize() too
-Date: Mon,  5 May 2025 18:36:29 -0400
-Message-Id: <20250505223922.2682012-313-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 282/486] PCI: epf-mhi: Update device ID for SA8775P
+Date: Mon,  5 May 2025 18:35:58 -0400
+Message-Id: <20250505223922.2682012-282-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -52,43 +56,34 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+From: Mrinmay Sarkar <quic_msarkar@quicinc.com>
 
-[ Upstream commit ff61f380de5652e723168341480cc7adf1dd6213 ]
+[ Upstream commit 4f13dd9e2b1d2b317bb36704f8a7bd1d3017f7a2 ]
 
-Commit 903534fa7d30 ("PCI: Fix resource double counting on remove &
-rescan") fixed double counting of mem resources because of old_size being
-applied too early.
+Update device ID for the Qcom SA8775P SoC.
 
-Fix a similar counting bug on the io resource side.
-
-Link: https://lore.kernel.org/r/20241216175632.4175-6-ilpo.jarvinen@linux.intel.com
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Xiaochun Lee <lixc17@lenovo.com>
+Signed-off-by: Mrinmay Sarkar <quic_msarkar@quicinc.com>
+Link: https://lore.kernel.org/r/20241205065422.2515086-3-quic_msarkar@quicinc.com
+[kwilczynski: commit log]
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/setup-bus.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/pci/endpoint/functions/pci-epf-mhi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index f16c7ce3bf3fc..1eceabef9e84d 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -814,11 +814,9 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 	size = (size & 0xff) + ((size & ~0xffUL) << 2);
- #endif
- 	size = size + size1;
--	if (size < old_size)
--		size = old_size;
+diff --git a/drivers/pci/endpoint/functions/pci-epf-mhi.c b/drivers/pci/endpoint/functions/pci-epf-mhi.c
+index 54286a40bdfbf..6643a88c7a0ce 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-mhi.c
++++ b/drivers/pci/endpoint/functions/pci-epf-mhi.c
+@@ -125,7 +125,7 @@ static const struct pci_epf_mhi_ep_info sm8450_info = {
  
--	size = ALIGN(max(size, add_size) + children_add_size, align);
--	return size;
-+	size = max(size, add_size) + children_add_size;
-+	return ALIGN(max(size, old_size), align);
- }
- 
- static resource_size_t calculate_memsize(resource_size_t size,
+ static struct pci_epf_header sa8775p_header = {
+ 	.vendorid = PCI_VENDOR_ID_QCOM,
+-	.deviceid = 0x0306,               /* FIXME: Update deviceid for sa8775p EP */
++	.deviceid = 0x0116,
+ 	.baseclass_code = PCI_CLASS_OTHERS,
+ 	.interrupt_pin = PCI_INTERRUPT_INTA,
+ };
 -- 
 2.39.5
 
