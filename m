@@ -1,44 +1,51 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9BA72C2FB5;
-	Mon,  5 May 2025 22:45:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56C4435F7DB;
+	Mon,  5 May 2025 22:47:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485117; cv=none; b=Der2wrlexbgEP6wLfRgNXCpuW/hqDSE8h3VzbkZ+Uhdp5slDjlQIIufPx1knkE2nbuM7JXcCSRQECubKjf8vl0PKfBO7ZEVevIEinPVlZ2Cko2L3YXrfhQo7HazQ13qbHyY/osyx52YikR+mV5JUiXfIG53ea/sa82JM3XjbeJU=
+	t=1746485247; cv=none; b=gXL3J/JiWVKtI1WIoJBHLGQwjGx/lp8AuTx+oumr1581S8oFoMnJEso5W9yzJSadT+3CJdGxu4B1jKqa9OGw3kWv8FgPsit7NJsP/+WQY0sui8CEUn/Hqtmdm8EprjdMRwreDgVOp5LnDK8fpngblSEa3mCHAcRDjZH36LRymIA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485117; c=relaxed/simple;
-	bh=DOMQdMoulpJm9HfsDdMRhCyd63nj7nNC6JWstqRzidA=;
+	s=arc-20240116; t=1746485247; c=relaxed/simple;
+	bh=aSd5hagqSaRt+Za6bQY+Lb0/Aw8Qrfh70/kF32BdePM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BJJV6qGGFTbpLB0OA9ObyOfHsna7zfp6KT5vjZfLWvnDP/39CrpkDU7sHBNVz26UWc9NvPUFQFzg7lfiS1iPZuxqQtYsCrJ8xCWJ5dYhE/+fx8h5mvhSL36Hw/8cA3eTkoK9XpiT2Oco1S8NiUyhDSXce2XWQxDkpoXs2PR/mMQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aK2Ic1vN; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=av43rCSZu9LXZtLRY2/uutf7DsOb+/NgkgchdQSuM7vhMWQ8VpD1DwLEi950BPhlFJdj6zaMC3iwceiGHPUt6RVe1BUgo1h0093z7cCIoxyry2kjHuGhVntjlkN3gILtQoHdzMsaT5y3fiRZcydr/2iBZrTerYuwFl6ZHXGZkHY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YYDHKV1+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aK2Ic1vN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7FCF1C4CEED;
-	Mon,  5 May 2025 22:45:15 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YYDHKV1+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B1D3C4CEF4;
+	Mon,  5 May 2025 22:47:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485116;
-	bh=DOMQdMoulpJm9HfsDdMRhCyd63nj7nNC6JWstqRzidA=;
+	s=k20201202; t=1746485246;
+	bh=aSd5hagqSaRt+Za6bQY+Lb0/Aw8Qrfh70/kF32BdePM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aK2Ic1vNNjWtvcjtmzBgPbSJquof7aqREgw22q1bMsAFcI8nQSVvIqcuxixPFDrLI
-	 p+dGlB+7j3T9hcYYaAeE1vNnsWqj1y971IIZQUlWktTnsO3df2hUtPUrcWTCpN2X2o
-	 egm5u0j2m5R1lTD5WiQ+da3PBOMua9hTLQP7kHFbvBhNwZ9ghJJfdQnOWfDspE2je4
-	 0mOZ9y1+vHAtT7me39A9rV2DHJ4840IVr2KQaMCVK8/lDaxbOyYPtRC9WTWcODRTZh
-	 DzmgzTa/nHRIpolv18SgbnOL1s0Px+SavT0+S5Fb1nDhbDEGUFIelzHSEZeGTrAMaX
-	 Bc6ooZsy3LR4A==
+	b=YYDHKV1+iyeW7h5bmUSbBe2x0o7rnFYH45MbfUjocYhOFjYsAOUxEa1Jn6WxnlW3b
+	 75PCcJ1B17ijpbZHQD/ZZ5J6IAaVCJP8T/1MitY6n12Hh1TUklnQjlRp3QGASA6Qq1
+	 i9LcAiuv4DWbZv25EqyP7/Qakt1UMORNyO/TunHFu5xqTffwGTxBI6Y2yJmlpciHRo
+	 gU0wUIpWPLvWufxAJQ9ZCon5NuPFpahkwQ0F2Wx24rAdjlzdlK61fJ1STgYNVxEecQ
+	 M2ZuZP6YAo8jczI2ZPMBhrg6VXVqDP6SpeHwWn0pKOX0of/bwDFXuqwZ/g9B4XH5+h
+	 uCJ8DWd99g2Nw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Niklas Cassel <cassel@kernel.org>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+Cc: Stanimir Varbanov <svarbanov@suse.de>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	"Ivan T . Ivanov" <iivanov@suse.de>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
+	jim2101024@gmail.com,
+	nsaenz@kernel.org,
+	lpieralisi@kernel.org,
 	kw@linux.com,
-	gregkh@linuxfoundation.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 170/486] misc: pci_endpoint_test: Give disabled BARs a distinct error code
-Date: Mon,  5 May 2025 18:34:06 -0400
-Message-Id: <20250505223922.2682012-170-sashal@kernel.org>
+	manivannan.sadhasivam@linaro.org,
+	bhelgaas@google.com,
+	linux-pci@vger.kernel.org,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.12 233/486] PCI: brcmstb: Add a softdep to MIP MSI-X driver
+Date: Mon,  5 May 2025 18:35:09 -0400
+Message-Id: <20250505223922.2682012-233-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -54,61 +61,36 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Niklas Cassel <cassel@kernel.org>
+From: Stanimir Varbanov <svarbanov@suse.de>
 
-[ Upstream commit 7e80bbef1d697dbce7a39cfad0df770880fe3f29 ]
+[ Upstream commit 2294059118c550464dd8906286324d90c33b152b ]
 
-The current code returns -ENOMEM if test->bar[barno] is NULL.
+Then the brcmstb PCIe driver and MIP MSI-X interrupt controller
+drivers are built as modules there could be a race in probing.
 
-There can be two reasons why test->bar[barno] is NULL:
+To avoid this, add a softdep to MIP driver to guarantee that
+MIP driver will be load first.
 
-  1) The pci_ioremap_bar() call in pci_endpoint_test_probe() failed.
-  2) The BAR was skipped, because it is disabled by the endpoint.
-
-Many PCI endpoint controller drivers will disable all BARs in their
-init function. A disabled BAR will have a size of 0.
-
-A PCI endpoint function driver will be able to enable any BAR that
-is not marked as BAR_RESERVED (which means that the BAR should not
-be touched by the EPF driver).
-
-Thus, perform check if the size is 0, before checking if
-test->bar[barno] is NULL, such that we can return different errors.
-
-This will allow the selftests to return SKIP instead of FAIL for
-disabled BARs.
-
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Link: https://lore.kernel.org/r/20250123120147.3603409-3-cassel@kernel.org
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
+Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Tested-by: Ivan T. Ivanov <iivanov@suse.de>
+Link: https://lore.kernel.org/r/20250224083559.47645-5-svarbanov@suse.de
 [kwilczynski: commit log]
 Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/misc/pci_endpoint_test.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+ drivers/pci/controller/pcie-brcmstb.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/misc/pci_endpoint_test.c b/drivers/misc/pci_endpoint_test.c
-index e22afb420d099..f05256b7c2084 100644
---- a/drivers/misc/pci_endpoint_test.c
-+++ b/drivers/misc/pci_endpoint_test.c
-@@ -287,11 +287,13 @@ static bool pci_endpoint_test_bar(struct pci_endpoint_test *test,
- 	void *read_buf __free(kfree) = NULL;
- 	struct pci_dev *pdev = test->pdev;
- 
-+	bar_size = pci_resource_len(pdev, barno);
-+	if (!bar_size)
-+		return -ENODATA;
-+
- 	if (!test->bar[barno])
- 		return false;
- 
--	bar_size = pci_resource_len(pdev, barno);
--
- 	if (barno == test->test_reg_bar)
- 		bar_size = 0x4;
- 
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index 32ffb0c14c3ca..81f085cebf627 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -1947,3 +1947,4 @@ module_platform_driver(brcm_pcie_driver);
+ MODULE_LICENSE("GPL");
+ MODULE_DESCRIPTION("Broadcom STB PCIe RC driver");
+ MODULE_AUTHOR("Broadcom");
++MODULE_SOFTDEP("pre: irq_bcm2712_mip");
 -- 
 2.39.5
 
