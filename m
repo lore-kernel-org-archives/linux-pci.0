@@ -1,96 +1,98 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C41542F4F52;
-	Mon,  5 May 2025 23:16:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 953493A80FF;
+	Mon,  5 May 2025 23:17:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486961; cv=none; b=hP4YNjzpISPtyOA7hhtDJmMW/rHCtYqIPYXhgjD8Rfo+iA47kpETRdu/93wPPEgvy0IZET0hAGXCqJax+dLm4MFMczHtkogXdxKJKUoU/Clr4qee9Td75LMBJN7PiHGah10+cIBoATIK5eYm2PXNqvWWi4LMdaf/mILoFlWYzO8=
+	t=1746487042; cv=none; b=t/XpIFQxF7azmnpAA5IihSYJz/PNlrlh4V22h8uiGlhd0SBu9b0E4ivbf2lzXta34E3BrAiCqiGjr4VLj0rFPfCag9M/4zbT+QhObNNbG94rSGzoowdHHmzfwrDtFq33du72Hx4jbFPdkhPe2C4pjpKNAvR2zMihq8YpCkmCtBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486961; c=relaxed/simple;
-	bh=4CF8p/SGNJQs7tFPYOJpkOsU0jTsZmmINaE1h/xGbNI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nW38u9C+2H9xta7/5z/p/VK2zhZ4u0e17icKFLDseI2DY6LLUBWgxlruw7gyKpNGOYTFtI8a2VahhW0Nfukr+I5WH1RpZlPw0OEndOs2YCk6lw6dRLhFZL4fj+5ObjHm1DPoXASKo4TTmrm4FvP6XQs/qZRb2fXng8v5RXfcWaM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g8Z+ssIn; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746487042; c=relaxed/simple;
+	bh=9FN4e+9q1iQnxjAeLllxG2YEgg/RjuG3V6jT5Cc3/I8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=dGfHopJNiK7y8vtbuZYugt/+c2GyiJxyl/+GwEEBnqvXlPR4+uosVSlh7HKgELRK8qudqbSsmFIR2PabhXjeyrz/KZqtln4Nd+fR2boP+/+ZYvvrSHFM6m7EQTlf1F9VpLI+VzUEFIORzhQjOOseCijBDsnENcMF0HAkrqTUfOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oHQSb+UR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g8Z+ssIn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04CDDC4CEEF;
-	Mon,  5 May 2025 23:15:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oHQSb+UR"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 5F69CC4CEF2;
+	Mon,  5 May 2025 23:17:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486960;
-	bh=4CF8p/SGNJQs7tFPYOJpkOsU0jTsZmmINaE1h/xGbNI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=g8Z+ssInw1SAV8sN1wCk2eN38pBfzz91IXSDcvRcHAq76fxnRtb36xxbm1wciQJ02
-	 WhpmvnaCcpBylpIKmHZaq4bvDCQM0X9N2ggJ+mTVcawA5BY083a1AMGdvU8TlGvKfL
-	 S/4bbf4NX4DBLAZCOVQEnzPrfAUkeoGU3VflcbeQhO3jgjHKy/ZkzprFyuRApZWdvX
-	 37mH2twf+KveTk5vKRJ+QP4hqWV8ni7TOJnqPy0iL++gxOPpSMpg8v97wjEPFjprIy
-	 mWyR0tKsouAde6/kvI60MEGe+cPfRJwhcfvPFW7S6HXWzrlMskhaocUVNrtMPyVS8d
-	 0dpSvOVFs/F8A==
-From: Sasha Levin <sashal@kernel.org>
-To: linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Cc: Stanimir Varbanov <svarbanov@suse.de>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	"Ivan T . Ivanov" <iivanov@suse.de>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Sasha Levin <sashal@kernel.org>,
-	jim2101024@gmail.com,
-	nsaenz@kernel.org,
-	lpieralisi@kernel.org,
-	kw@linux.com,
-	manivannan.sadhasivam@linaro.org,
-	bhelgaas@google.com,
-	linux-rpi-kernel@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 080/153] PCI: brcmstb: Add a softdep to MIP MSI-X driver
-Date: Mon,  5 May 2025 19:12:07 -0400
-Message-Id: <20250505231320.2695319-80-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250505231320.2695319-1-sashal@kernel.org>
-References: <20250505231320.2695319-1-sashal@kernel.org>
+	s=k20201202; t=1746487041;
+	bh=9FN4e+9q1iQnxjAeLllxG2YEgg/RjuG3V6jT5Cc3/I8=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=oHQSb+UR+on+kuZusS9Yu74PTg3VBf6O9EhkFSwAscwWh/7IvbA4ztA4SH+cmg15t
+	 g8ZLwtjHsHzAuMWSc+jMIjyYKIYyXx95ktNZ0IwM15htJ9gUmIpY8xIdeTqtWbQ+i0
+	 1Rc/GewX1n1w6AAu6zCoWSrjjUhHu4qa3AEWChngqWzhwNrkeB+HLXnY+noq0CrOdG
+	 YIDEVys9BKVuFfWHeUe1MFPUcFmaXf3d/CsgfP3pysh86V0m+WFj7TiwpYMyEwGmeU
+	 dMBbGVNVfOS6siIpmAn3GnQU1aof0MlLCUErNNPNs5bOpyOpreDoVr26Ac8rZVD8/3
+	 MGI5QnhlPnPUg==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 513CBC3ABBF;
+	Mon,  5 May 2025 23:17:21 +0000 (UTC)
+From: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>
+Date: Mon, 05 May 2025 18:17:20 -0500
+Subject: [PATCH v5 1/3] irqdomain: Export irq_domain_free_irqs
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.181
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250505-pci-tegra-module-v5-1-827aaac998ba@gmail.com>
+References: <20250505-pci-tegra-module-v5-0-827aaac998ba@gmail.com>
+In-Reply-To: <20250505-pci-tegra-module-v5-0-827aaac998ba@gmail.com>
+To: Thomas Gleixner <tglx@linutronix.de>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Thierry Reding <thierry.reding@gmail.com>, 
+ Jonathan Hunter <jonathanh@nvidia.com>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Daniel Lezcano <daniel.lezcano@linaro.org>
+Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+ linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, 
+ Aaron Kling <webgeek1234@gmail.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1746487040; l=813;
+ i=webgeek1234@gmail.com; s=20250217; h=from:subject:message-id;
+ bh=HMpL5ZC0u0zHUx7X6iaMy1A5L01kC5VZDDTCKB3qS7U=;
+ b=LaAbT5EvNzNwAB4BC0Ck5T23zGZj4q9krSlQ7WSRYBQo5Edwt9whPV4JQW2SGuncIi8euA16N
+ qsRIrfwehp3AWws1U7UZfrIqd+wtNHfvXlBn2AC/Ug9FpOzwewuTj6U
+X-Developer-Key: i=webgeek1234@gmail.com; a=ed25519;
+ pk=TQwd6q26txw7bkK7B8qtI/kcAohZc7bHHGSD7domdrU=
+X-Endpoint-Received: by B4 Relay for webgeek1234@gmail.com/20250217 with
+ auth_id=342
+X-Original-From: Aaron Kling <webgeek1234@gmail.com>
+Reply-To: webgeek1234@gmail.com
 
-From: Stanimir Varbanov <svarbanov@suse.de>
+From: Aaron Kling <webgeek1234@gmail.com>
 
-[ Upstream commit 2294059118c550464dd8906286324d90c33b152b ]
+Export irq_domain_free_irqs() to allow PCI/MSI drivers like pci-tegra to
+be built as a module.
 
-Then the brcmstb PCIe driver and MIP MSI-X interrupt controller
-drivers are built as modules there could be a race in probing.
-
-To avoid this, add a softdep to MIP driver to guarantee that
-MIP driver will be load first.
-
-Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
-Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
-Tested-by: Ivan T. Ivanov <iivanov@suse.de>
-Link: https://lore.kernel.org/r/20250224083559.47645-5-svarbanov@suse.de
-[kwilczynski: commit log]
-Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Reviewed-by: Thomas Gleixner <tglx@linutronix.de>
+Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
 ---
- drivers/pci/controller/pcie-brcmstb.c | 1 +
+ kernel/irq/irqdomain.c | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
-index 7121270787899..e984b57dd0d89 100644
---- a/drivers/pci/controller/pcie-brcmstb.c
-+++ b/drivers/pci/controller/pcie-brcmstb.c
-@@ -1352,3 +1352,4 @@ module_platform_driver(brcm_pcie_driver);
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Broadcom STB PCIe RC driver");
- MODULE_AUTHOR("Broadcom");
-+MODULE_SOFTDEP("pre: irq_bcm2712_mip");
+diff --git a/kernel/irq/irqdomain.c b/kernel/irq/irqdomain.c
+index ec6d8e72d980f604ded2bfa2143420e0e0095920..36cd79a8a2ce960b07b03c40067343ec8f632452 100644
+--- a/kernel/irq/irqdomain.c
++++ b/kernel/irq/irqdomain.c
+@@ -1890,6 +1890,7 @@ void irq_domain_free_irqs(unsigned int virq, unsigned int nr_irqs)
+ 	irq_domain_free_irq_data(virq, nr_irqs);
+ 	irq_free_descs(virq, nr_irqs);
+ }
++EXPORT_SYMBOL_GPL(irq_domain_free_irqs);
+ 
+ static void irq_domain_free_one_irq(struct irq_domain *domain, unsigned int virq)
+ {
+
 -- 
-2.39.5
+2.48.1
+
 
