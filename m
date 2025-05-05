@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 446ED26B2C5;
-	Mon,  5 May 2025 16:34:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E7FF326C385;
+	Mon,  5 May 2025 16:35:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746462899; cv=none; b=YJmmcsJZ6sqxPKy3Da+5tfcW7V7mrRamWCvXU18ZXMK+nbiH3O1Dlkhj86h2NO18TufBhR+BXhtK4TPjzL+vDVZDaVtUh4v5PsVN3M2fiALqC4hiM742LNTsO3v6c4iHpQKWjyKSOsDsrzFiobNr+PHj9sYkICxwKvQiwSYmA2g=
+	t=1746462903; cv=none; b=sL3AYwed+8RjBCrUJB6J3L3hohCr4Q9AfXc/GrN7ycNwv7V/rtmPFvSdfblDkKSNemZb/32RaSziy/xXTJKxww28JohPNYW748W15lvE07kuNSDKhoZIl0Fg/6hYZm+2XLmUW3jnq6CcVLmVqfRG6lkC7i0xMdDQIXznZ3+Zo6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746462899; c=relaxed/simple;
-	bh=tfZ9HbpLi4eVtL61sCRmj46Ofv8ja4hjrhPbfO+bYKw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=oIxmCrACbTexoOoVtix2cdRvGdYRy8QGT/WLTVK1UEChQKlWHfSCQ+SzJwcpejPFWkFopMbpqsUjLC07hWZte7qxWVVM0a7qOORow3NzQvZSMSLRGJ/xwy2504Hry6fiv0FR3rA94IJ+Pw1xHqaXKvt3xTodmiJvoYigwPsecbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=WRt98VaG; arc=none smtp.client-ip=117.135.210.2
+	s=arc-20240116; t=1746462903; c=relaxed/simple;
+	bh=cymKMOApGTu5PDUrMZAzXFZuzFCy3SmhYGUNpbkk8kg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=DZZBygc/bIrLxKqGthnRXGicJeqdqeW8H8jVJ/hImy5OygbzJItwc/ajbdwtLpUsRpbBuyY1iIc4O+9lfScEnv3BC3l/gZqhxITB0mIRq9AXYb/pDdofFhQaAZqfiGG8+Z2wZRk6Ox2qbB0XwLHFbYcxLb8y7mO3CvZUj//LTWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jZvq8gsq; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="WRt98VaG"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jZvq8gsq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=/4e1v
-	m9yaiKz8b0+WzRhsKDbk4kXw2ujR+QVpAZ2tgc=; b=WRt98VaGdRJlbpPi9S/OG
-	+ZTHyOLetLm1HSLCx322PrVZmfSc6G8D9qM/PwF5nmytAQqQ8Yi10rGAN8SbxJ1T
-	EQ36xVTwX6fvXH+4YFppbeNJf4C7VN3x9+j/ij4GcBeHY9kXgL6N6LXPo+IsR69I
-	D0RJWB7jAz9iJu1MlEuTUE=
+	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=cuojN
+	N+R6FEvIonYgyBei3S7SQemKXjkxk/GW4MKGPs=; b=jZvq8gsqEzn9JrtKGizvU
+	/GIWlJ73FsxhIUo8v3j8lXyhyseRBS9fvzXgExmUSGLWYHskY75V/HxYNAkzsU1l
+	MdXLgBpmjJUXD5hpLeP2r23VWiagY8NTlgqk4BbHFoUlYnNpEPWO7iH48c78g2im
+	QSjJqz6eR4U+Ew6DRi6Mk8=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDn+lmO6BhoumvGBw--.3540S2;
-	Tue, 06 May 2025 00:34:23 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDn+lmO6BhoumvGBw--.3540S6;
+	Tue, 06 May 2025 00:34:25 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -34,10 +35,12 @@ Cc: cassel@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v11 0/6] Refactor capability search into common macros
-Date: Tue,  6 May 2025 00:34:14 +0800
-Message-Id: <20250505163420.198012-1-18255117159@163.com>
+Subject: [PATCH v11 4/6] PCI: dwc: Use common PCI host bridge APIs for finding the capabilities
+Date: Tue,  6 May 2025 00:34:18 +0800
+Message-Id: <20250505163420.198012-5-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250505163420.198012-1-18255117159@163.com>
+References: <20250505163420.198012-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,87 +48,151 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgDn+lmO6BhoumvGBw--.3540S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGF1UJry5CF17uryUuF15Arb_yoW5Xw4fpF
-	15J3Z3Crs5AFZ2kan3A3Wa9a43Za97Ja4xJ3yfKwn3XF17uFWftrs2k3WrAF9rX397X3Zx
-	ZFW5Jr95KF1qya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEdWFUUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxVEo2gY4bmFPwABsu
+X-CM-TRANSID:PigvCgDn+lmO6BhoumvGBw--.3540S6
+X-Coremail-Antispam: 1Uf129KBjvJXoWxuryrCr4UAFWrKw1DCrW8Xrb_yoWrXF4kpa
+	yrAwn0yrW8Ar4aqa1DZFnIvF13AF9xAFyxZa97G3ZavFy2krWjg340krWaqF1SkrZFgFy3
+	GrWUJFyrCwn7tFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pKg4T5UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgZEo2gY51gY4QABss
 
-1. PCI: Introduce generic bus config read helper function.
-2. PCI: Clean up __pci_find_next_cap_ttl() readability.
-3. PCI: Refactor capability search into common macros.
-4. PCI: dwc: Use common PCI host bridge APIs for finding the capabilities.
-5. PCI: cadence: Use common PCI host bridge APIs for finding the
-   capabilities.
-6. PCI: cadence: Use cdns_pcie_find_*capability to avoid hardcode.
+Use the PCI core is now exposing generic macros for the host bridges to
+search for the PCIe capabilities, make use of them in the DWC driver.
 
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
 Changes since v10:
-- The patch [v10 2/6] remove #include <uapi/linux/pci_regs.h> and add macro definition comments.
-- The patch [v10 3/6] remove #include <uapi/linux/pci_regs.h> and commit message were modified.
-- The other patches have not been modified.
+- None
 
 Changes since v9:
 - Resolved [v9 4/6] compilation error.
   The latest 6.15 rc1 merge __dw_pcie_find_vsec_capability, which uses 
   dw_pcie_find_next_ext_capability.
-- The other patches have not been modified.
 
 Changes since v8:
-- Split patch.
-- The patch commit message were modified.
-- Other patches(4/6, 5/6, 6/6) are unchanged.
+- None
 
 Changes since v7:
-- Patch 2/5 and 3/5 compilation error resolved.
-- Other patches are unchanged.
+- Resolve compilation errors.
 
 Changes since v6:
-- Refactor capability search into common macros.
-- Delete pci-host-helpers.c and MAINTAINERS.
+https://lore.kernel.org/linux-pci/20250323164852.430546-3-18255117159@163.com/
+
+- The patch commit message were modified.
 
 Changes since v5:
-- If you put the helpers in drivers/pci/pci.c, they unnecessarily enlarge
-  the kernel's .text section even if it's known already at compile time
-  that they're never going to be used (e.g. on x86).
-- Move the API for find capabilitys to a new file called
-  pci-host-helpers.c.
-- Add new patch for MAINTAINERS.
+https://lore.kernel.org/linux-pci/20250321163803.391056-3-18255117159@163.com/
 
-Changes since v4:
-- Resolved [v4 1/4] compilation warning.
-- The patch subject and commit message were modified.
-
-Changes since v3:
-- Resolved [v3 1/4] compilation error.
-- Other patches are not modified.
-
-Changes since v2:
-- Add and split into a series of patches.
+- Kconfig add "select PCI_HOST_HELPERS"
 ---
+ drivers/pci/controller/dwc/pcie-designware.c | 76 +++-----------------
+ 1 file changed, 9 insertions(+), 67 deletions(-)
 
-Hans Zhang (6):
-  PCI: Introduce generic bus config read helper function
-  PCI: Clean up __pci_find_next_cap_ttl() readability
-  PCI: Refactor capability search into common macros
-  PCI: dwc: Use common PCI host bridge APIs for finding the capabilities
-  PCI: cadence: Use common PCI host bridge APIs for finding the
-    capabilities
-  PCI: cadence: Use cdns_pcie_find_*capability to avoid hardcode.
-
- drivers/pci/access.c                          | 17 ++++
- .../pci/controller/cadence/pcie-cadence-ep.c  | 40 +++++----
- drivers/pci/controller/cadence/pcie-cadence.c | 28 ++++++
- drivers/pci/controller/cadence/pcie-cadence.h | 18 ++--
- drivers/pci/controller/dwc/pcie-designware.c  | 76 ++--------------
- drivers/pci/pci.c                             | 68 ++-------------
- drivers/pci/pci.h                             | 87 +++++++++++++++++++
- include/uapi/linux/pci_regs.h                 |  2 +
- 8 files changed, 188 insertions(+), 148 deletions(-)
-
-
-base-commit: ca91b9500108d4cf083a635c2e11c884d5dd20ea
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 97d76d3dc066..837188f579a2 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -205,83 +205,25 @@ void dw_pcie_version_detect(struct dw_pcie *pci)
+ 		pci->type = ver;
+ }
+ 
+-/*
+- * These interfaces resemble the pci_find_*capability() interfaces, but these
+- * are for configuring host controllers, which are bridges *to* PCI devices but
+- * are not PCI devices themselves.
+- */
+-static u8 __dw_pcie_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+-				  u8 cap)
++static int dw_pcie_read_cfg(void *priv, int where, int size, u32 *val)
+ {
+-	u8 cap_id, next_cap_ptr;
+-	u16 reg;
+-
+-	if (!cap_ptr)
+-		return 0;
+-
+-	reg = dw_pcie_readw_dbi(pci, cap_ptr);
+-	cap_id = (reg & 0x00ff);
+-
+-	if (cap_id > PCI_CAP_ID_MAX)
+-		return 0;
++	struct dw_pcie *pci = priv;
+ 
+-	if (cap_id == cap)
+-		return cap_ptr;
++	*val = dw_pcie_read_dbi(pci, where, size);
+ 
+-	next_cap_ptr = (reg & 0xff00) >> 8;
+-	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
++	return PCIBIOS_SUCCESSFUL;
+ }
+ 
+ u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
+ {
+-	u8 next_cap_ptr;
+-	u16 reg;
+-
+-	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+-	next_cap_ptr = (reg & 0x00ff);
+-
+-	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
++	return PCI_FIND_NEXT_CAP_TTL(dw_pcie_read_cfg, PCI_CAPABILITY_LIST, cap,
++				     pci);
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_find_capability);
+ 
+-static u16 dw_pcie_find_next_ext_capability(struct dw_pcie *pci, u16 start,
+-					    u8 cap)
+-{
+-	u32 header;
+-	int ttl;
+-	int pos = PCI_CFG_SPACE_SIZE;
+-
+-	/* minimum 8 bytes per capability */
+-	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
+-
+-	if (start)
+-		pos = start;
+-
+-	header = dw_pcie_readl_dbi(pci, pos);
+-	/*
+-	 * If we have no capabilities, this is indicated by cap ID,
+-	 * cap version and next pointer all being 0.
+-	 */
+-	if (header == 0)
+-		return 0;
+-
+-	while (ttl-- > 0) {
+-		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
+-			return pos;
+-
+-		pos = PCI_EXT_CAP_NEXT(header);
+-		if (pos < PCI_CFG_SPACE_SIZE)
+-			break;
+-
+-		header = dw_pcie_readl_dbi(pci, pos);
+-	}
+-
+-	return 0;
+-}
+-
+ u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap)
+ {
+-	return dw_pcie_find_next_ext_capability(pci, 0, cap);
++	return PCI_FIND_NEXT_EXT_CAPABILITY(dw_pcie_read_cfg, 0, cap, pci);
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_find_ext_capability);
+ 
+@@ -294,8 +236,8 @@ static u16 __dw_pcie_find_vsec_capability(struct dw_pcie *pci, u16 vendor_id,
+ 	if (vendor_id != dw_pcie_readw_dbi(pci, PCI_VENDOR_ID))
+ 		return 0;
+ 
+-	while ((vsec = dw_pcie_find_next_ext_capability(pci, vsec,
+-						       PCI_EXT_CAP_ID_VNDR))) {
++	while ((vsec = PCI_FIND_NEXT_EXT_CAPABILITY(
++			dw_pcie_read_cfg, vsec, PCI_EXT_CAP_ID_VNDR, pci))) {
+ 		header = dw_pcie_readl_dbi(pci, vsec + PCI_VNDR_HEADER);
+ 		if (PCI_VNDR_HEADER_ID(header) == vsec_id)
+ 			return vsec;
 -- 
 2.25.1
 
