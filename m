@@ -1,94 +1,145 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C64763B2F74;
-	Mon,  5 May 2025 23:20:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A39BC376449;
+	Mon,  5 May 2025 22:48:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746487252; cv=none; b=PgRKK22XDl5mBM4WEpmbf+AhW02JivUeRBPsJIPii1h/m+pFw0mTvYbdrvVaA/y7+X7YlRruXNWiE/mOK3f1o0tEdWsfg7sxyoogU9uVhm6tJaM0Ryt17t3nz5U+/8AgUos8/lgbpuXZU1sHpaGJ5DxJBgMH4jULvxi+4gEjKoM=
+	t=1746485333; cv=none; b=ZKiOzf0acziBxiiZKQmvmdIl0sMJZm+AGDqVr22F0VhcyBjJVZuTjUHtPvdveZvSWTpZvP28ecx0L1j38Ptvv3pcZu0bjtD6oc6UPlkjrZhzVzNcCdW1KsH/g22CROQxzU3jXf8UsR+7EikbZ837XJzdKwxKZRuRyWTA/YTkQ/I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746487252; c=relaxed/simple;
-	bh=TBiToOS22xXZR/yDLGAa0T27o9hnSJUf3WOeI4oWn+I=;
+	s=arc-20240116; t=1746485333; c=relaxed/simple;
+	bh=c1/2qQCsV/F3YVMiDB6OB5XkR6nW22zqR29RCrTEh2U=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CuuW5RPG8lMRter5urHDV/+LJB9qWvZxnioXHIkkacuiclhe02fgr9dX6nMiosb9b/sUkmmZ1HtNieCLRD0xMxjZT1rFqXDS7S6b153OFtQK+BfcmsXx7VKtJ4u9QllmZ112DgeXFojz6PUfy/uxuddG7FTnuE1pKjXUv8Y8VGM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e4/cGwbW; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=hYIqO6VrVNeqkmvwASO0Sp0kFv/t2CYa2QJI9qqTV9wbJJEHdbwk7mkLgU+6rtriOgdXTTu6rTXgaaLuKHW0hscYIlMjF0iZR2EAZkCKHfI/lhgOEz5c6B9G7KQEEFResndSK+YPed8QDj9ixdFuk9hxjfzfWLnBV/MZx9Wr63U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lR+KUTHn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e4/cGwbW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 04D92C4CEE4;
-	Mon,  5 May 2025 23:20:49 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lR+KUTHn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E58A2C4CEEF;
+	Mon,  5 May 2025 22:48:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746487251;
-	bh=TBiToOS22xXZR/yDLGAa0T27o9hnSJUf3WOeI4oWn+I=;
+	s=k20201202; t=1746485332;
+	bh=c1/2qQCsV/F3YVMiDB6OB5XkR6nW22zqR29RCrTEh2U=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=e4/cGwbWwPmrVSfFh+VU+OfPNSV7/5pRE4ROkuQ7p7QNNZg7IMhY+3AbbL+dYbT0Y
-	 gNdeAMcEqE86ENW3GMDvMNjRTT72U1QFylsjDOxjTLTMiAQMA0pLIN/4tJWdfDCjdt
-	 /qdELomT0WhmDxeW0JkSywqD83g/1XHpNCHlNQg6/Unx/kfagiFxh0U8pJ5nXYo4vM
-	 ZuDcqsWrrXTHFGYZjxhggj+lIR+ldFQol5/L+V7bOHcTsb60M5aM9KzWdILfHnsOA2
-	 IGLgWhtL4agFqil4x7RcDVEOiiBeVeCp6CZZae1KeeSHhgpakrcrzgYX+Pg9YdVbB4
-	 xIknX9uSR40EA==
+	b=lR+KUTHnJ4hhv/1VgOxZWWUnGHvofNKokHSx6edSQAbzBAVFwy/NdfjKIe5uezOvU
+	 PdOFdj50Ocs2yxa87LhMzv2jygdE4k7tQiASb9wL9a3FuwmKCaZBck5yzVs8yLHdvg
+	 BzQUo354UDGOapdbmZNdt5IO4otlaB93VXq4xqBOqveTI/QCky4Df4GiesCJgakBw4
+	 +7qJrE5a+qIIJHtSt/o3FD6me1F4J0yA9S/fbCHSDNN7hq0ZWKnAz+lLBrtxmshh3d
+	 mlsLd9ygIJH/r9ODS2pPPM53mfRjguAp5739k4eG6mxgA+WrEfx7dOs1XcjxlAbiZR
+	 MHXNLlt9wZkEg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+Cc: Balbir Singh <balbirs@nvidia.com>,
+	Ingo Molnar <mingo@kernel.org>,
+	Kees Cook <kees@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
-	Xiaochun Lee <lixc17@lenovo.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Andy Lutomirski <luto@kernel.org>,
 	Sasha Levin <sashal@kernel.org>,
+	dave.hansen@linux.intel.com,
+	tglx@linutronix.de,
+	mingo@redhat.com,
+	bp@alien8.de,
+	x86@kernel.org,
 	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 080/114] PCI: Fix old_size lower bound in calculate_iosize() too
-Date: Mon,  5 May 2025 19:17:43 -0400
-Message-Id: <20250505231817.2697367-80-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 271/486] x86/kaslr: Reduce KASLR entropy on most x86 systems
+Date: Mon,  5 May 2025 18:35:47 -0400
+Message-Id: <20250505223922.2682012-271-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250505231817.2697367-1-sashal@kernel.org>
-References: <20250505231817.2697367-1-sashal@kernel.org>
+In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
+References: <20250505223922.2682012-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.237
+X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+From: Balbir Singh <balbirs@nvidia.com>
 
-[ Upstream commit ff61f380de5652e723168341480cc7adf1dd6213 ]
+[ Upstream commit 7ffb791423c7c518269a9aad35039ef824a40adb ]
 
-Commit 903534fa7d30 ("PCI: Fix resource double counting on remove &
-rescan") fixed double counting of mem resources because of old_size being
-applied too early.
+When CONFIG_PCI_P2PDMA=y (which is basically enabled on all
+large x86 distros), it maps the PFN's via a ZONE_DEVICE
+mapping using devm_memremap_pages(). The mapped virtual
+address range corresponds to the pci_resource_start()
+of the BAR address and size corresponding to the BAR length.
 
-Fix a similar counting bug on the io resource side.
+When KASLR is enabled, the direct map range of the kernel is
+reduced to the size of physical memory plus additional padding.
+If the BAR address is beyond this limit, PCI peer to peer DMA
+mappings fail.
 
-Link: https://lore.kernel.org/r/20241216175632.4175-6-ilpo.jarvinen@linux.intel.com
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
-Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-Tested-by: Xiaochun Lee <lixc17@lenovo.com>
+Fix this by not shrinking the size of the direct map when
+CONFIG_PCI_P2PDMA=y.
+
+This reduces the total available entropy, but it's better than
+the current work around of having to disable KASLR completely.
+
+[ mingo: Clarified the changelog to point out the broad impact ... ]
+
+Signed-off-by: Balbir Singh <balbirs@nvidia.com>
+Signed-off-by: Ingo Molnar <mingo@kernel.org>
+Reviewed-by: Kees Cook <kees@kernel.org>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com> # drivers/pci/Kconfig
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Peter Zijlstra <peterz@infradead.org>
+Cc: Andy Lutomirski <luto@kernel.org>
+Link: https://lore.kernel.org/lkml/20250206023201.1481957-1-balbirs@nvidia.com/
+Link: https://lore.kernel.org/r/20250206234234.1912585-1-balbirs@nvidia.com
+--
+ arch/x86/mm/kaslr.c | 10 ++++++++--
+ drivers/pci/Kconfig |  6 ++++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/pci/setup-bus.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ arch/x86/mm/kaslr.c | 10 ++++++++--
+ drivers/pci/Kconfig |  6 ++++++
+ 2 files changed, 14 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/pci/setup-bus.c b/drivers/pci/setup-bus.c
-index a159bfdfa2512..04c3ae8efc0f8 100644
---- a/drivers/pci/setup-bus.c
-+++ b/drivers/pci/setup-bus.c
-@@ -806,11 +806,9 @@ static resource_size_t calculate_iosize(resource_size_t size,
- 	size = (size & 0xff) + ((size & ~0xffUL) << 2);
- #endif
- 	size = size + size1;
--	if (size < old_size)
--		size = old_size;
+diff --git a/arch/x86/mm/kaslr.c b/arch/x86/mm/kaslr.c
+index 230f1dee4f095..e0b0ec0f82457 100644
+--- a/arch/x86/mm/kaslr.c
++++ b/arch/x86/mm/kaslr.c
+@@ -109,8 +109,14 @@ void __init kernel_randomize_memory(void)
+ 	memory_tb = DIV_ROUND_UP(max_pfn << PAGE_SHIFT, 1UL << TB_SHIFT) +
+ 		CONFIG_RANDOMIZE_MEMORY_PHYSICAL_PADDING;
  
--	size = ALIGN(max(size, add_size) + children_add_size, align);
--	return size;
-+	size = max(size, add_size) + children_add_size;
-+	return ALIGN(max(size, old_size), align);
- }
+-	/* Adapt physical memory region size based on available memory */
+-	if (memory_tb < kaslr_regions[0].size_tb)
++	/*
++	 * Adapt physical memory region size based on available memory,
++	 * except when CONFIG_PCI_P2PDMA is enabled. P2PDMA exposes the
++	 * device BAR space assuming the direct map space is large enough
++	 * for creating a ZONE_DEVICE mapping in the direct map corresponding
++	 * to the physical BAR address.
++	 */
++	if (!IS_ENABLED(CONFIG_PCI_P2PDMA) && (memory_tb < kaslr_regions[0].size_tb))
+ 		kaslr_regions[0].size_tb = memory_tb;
  
- static resource_size_t calculate_memsize(resource_size_t size,
+ 	/*
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 0d94e4a967d81..7cef00d9d7ab6 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -194,6 +194,12 @@ config PCI_P2PDMA
+ 	  P2P DMA transactions must be between devices behind the same root
+ 	  port.
+ 
++	  Enabling this option will reduce the entropy of x86 KASLR memory
++	  regions. For example - on a 46 bit system, the entropy goes down
++	  from 16 bits to 15 bits. The actual reduction in entropy depends
++	  on the physical address bits, on processor features, kernel config
++	  (5 level page table) and physical memory present on the system.
++
+ 	  If unsure, say N.
+ 
+ config PCI_LABEL
 -- 
 2.39.5
 
