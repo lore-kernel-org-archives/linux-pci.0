@@ -1,148 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9766F396ED6
-	for <linux-pci@vger.kernel.org>; Mon,  5 May 2025 23:06:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B95A32836A2;
+	Mon,  5 May 2025 23:09:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486395; cv=none; b=dESOXoYatd5wF51LZSBo+VHDoUFyDpbECM0QmOZsO4/355jPaaDFLX8IUGyTCPF39TbQpkC0xyxJ+e6NGIhcAT1PXiNs+HfpmO4hl0PPLq2agMcsuoydrqwamdSqvRdsxL0d0qC4hmOTE5/03hbXHoSxNjQ1wSsdir/vUGkiGf8=
+	t=1746486599; cv=none; b=RP6gprwnaVKV3zWfW618QoBIrYun9IQy7xq3Hayw6arKP+DvzyxsqLfAdj58m8XxmKk1Tno3KoLZNINainCuLyQTTK2Plm0Zugq1lzF0ui6KpYwBflb+AOtk2Yp1BKXpQxEkMytk5YoLnF2RccK5qzsOPg0U9uq20FLPaT0uzSE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486395; c=relaxed/simple;
-	bh=+ng9IX5PYlTkr54csTUOeVzsQtO8Dt8p+/RHtisF7xk=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=G+wz6znQ6Bo6fldygWAyMmhfR1dUpTiv081HaWu5YPVwvSrGRbdq6XKDoOp3kkZoRa0EGZbabfHH2h4rI+nKvd47Z8rBNWIFHlfoo4esbHp4ey1klVxBl6sBRG8XwhOU7zBddxXmgKLcZLDioKogxNew2fNb7MMgsS9jaivNUWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rLb11n0X; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746486599; c=relaxed/simple;
+	bh=U/kOHmzvB1lzBJaKYAzAlXmLijrDTnh5CcoN3Fexe8I=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Mpa0/oOLymnpKXOnn3WsCDin0UX3dTLHZ/sExBz5G2MUu1lgoVm2AIHNDu3JvOuqbgnOI+HzIJDqdidjhMzRDzMEpWqFHq3KHHBgGcdR0i8eUtACM6/jyXnAH7wBVKj4DzE1vtjE/GrHwLLQXkuxztw1E0YONZdTQLkZFJZoEoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N35ARArW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rLb11n0X"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 61094C4CEED;
-	Mon,  5 May 2025 23:06:34 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N35ARArW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8992C4CEEE;
+	Mon,  5 May 2025 23:09:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486394;
-	bh=+ng9IX5PYlTkr54csTUOeVzsQtO8Dt8p+/RHtisF7xk=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=rLb11n0XTrGYcIEfiRAkY6OFLnTohFdA3yK73ccWKsIdcSd/dUb1O50XPVHckd64d
-	 cEiX/hHeI0P+FXBVK/KIMmMoUNR+59iruHvBfN4jnV9JakrvaKD7berContfufhSuz
-	 YvYe4G7R8eeztOZMFpZtqPqwbAL47D28HdgmvQFwdTzo94S5SVfXIhwErd3FVl9V9d
-	 ZbK6TpoGy/987zwCC31tXR6K9dlGUMlPdxPIf8mafzsccUM+91MprGwL7uqwJOVIqE
-	 h/Xrzyu0pKrDucNnQl9IES+11q2HWeQHXbMzQdTV5D2Lo5bAQvjVb4UlkcCiOhnkci
-	 4Dc1ZLvO6g29w==
-Date: Mon, 5 May 2025 18:06:32 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Mario Limonciello <superm1@kernel.org>
-Cc: mario.limonciello@amd.com, bhelgaas@google.com,
-	rafael.j.wysocki@intel.com, huang.ying.caritas@gmail.com,
-	stern@rowland.harvard.edu, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2] PCI: Explicitly put devices into D0 when initializing
-Message-ID: <20250505230632.GA1007257@bhelgaas>
+	s=k20201202; t=1746486598;
+	bh=U/kOHmzvB1lzBJaKYAzAlXmLijrDTnh5CcoN3Fexe8I=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=N35ARArWXN+yKccfi47qZobfsgQnG35azhNNeeTo9i+Mf7M1CwHrtPZy0xmGohRWG
+	 ZFSlQ/MIPcnwPGTgQ27M8ly5sGZXOg1x0suSKjaFOKbCHkMODGnH4ancxrqXsRyU4S
+	 TAoUW66obO71spbH1SEKUtG84TKeFI1EFD3YOhReD2CscFezxgoPoJk18FBxVAnkFF
+	 2GcvWJIe3vfVY021hED/XglBAn7o2nOhHIOiB9BWuvseuV4ufrjumJkHTnxwDoEZik
+	 nTbbzMowZLzlHiIPTUp9zuoVVO2RTO/SdxuauUdUZ5j7CHvpcNBGMTb4j6oCJnfDNT
+	 WLJb27mEigTSg==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Stanimir Varbanov <svarbanov@suse.de>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Jim Quinlan <james.quinlan@broadcom.com>,
+	"Ivan T . Ivanov" <iivanov@suse.de>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Sasha Levin <sashal@kernel.org>,
+	jim2101024@gmail.com,
+	nsaenz@kernel.org,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	manivannan.sadhasivam@linaro.org,
+	bhelgaas@google.com,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.1 110/212] PCI: brcmstb: Expand inbound window size up to 64GB
+Date: Mon,  5 May 2025 19:04:42 -0400
+Message-Id: <20250505230624.2692522-110-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250505230624.2692522-1-sashal@kernel.org>
+References: <20250505230624.2692522-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250424043232.1848107-1-superm1@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.1.136
+Content-Transfer-Encoding: 8bit
 
-On Wed, Apr 23, 2025 at 11:31:32PM -0500, Mario Limonciello wrote:
-> From: Mario Limonciello <mario.limonciello@amd.com>
-> 
-> AMD BIOS team has root caused an issue that NVME storage failed to come
-> back from suspend to a lack of a call to _REG when NVME device was probed.
-> 
-> commit 112a7f9c8edbf ("PCI/ACPI: Call _REG when transitioning D-states")
-> added support for calling _REG when transitioning D-states, but this only
-> works if the device actually "transitions" D-states.
-> 
-> commit 967577b062417 ("PCI/PM: Keep runtime PM enabled for unbound PCI
-> devices") added support for runtime PM on PCI devices, but never actually
-> 'explicitly' sets the device to D0.
-> 
-> To make sure that devices are in D0 and that platform methods such as
-> _REG are called, explicitly set all devices into D0 during initialization.
-> 
-> Fixes: 967577b062417 ("PCI/PM: Keep runtime PM enabled for unbound PCI devices")
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+From: Stanimir Varbanov <svarbanov@suse.de>
 
-Applied to pci/pm for v6.16, thanks!
+[ Upstream commit 25a98c727015638baffcfa236e3f37b70cedcf87 ]
 
-> ---
-> v2:
->  * Move runtime PM calls after setting to D0
->  * Use pci_pm_power_up_and_verify_state()
-> ---
->  drivers/pci/pci-driver.c |  6 ------
->  drivers/pci/pci.c        | 13 ++++++++++---
->  drivers/pci/pci.h        |  1 +
->  3 files changed, 11 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index c8bd71a739f72..082918ce03d8a 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -555,12 +555,6 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
->  	pci_enable_wake(pci_dev, PCI_D0, false);
->  }
->  
-> -static void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev)
-> -{
-> -	pci_power_up(pci_dev);
-> -	pci_update_current_state(pci_dev, PCI_D0);
-> -}
-> -
->  static void pci_pm_default_resume_early(struct pci_dev *pci_dev)
->  {
->  	pci_pm_power_up_and_verify_state(pci_dev);
-> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-> index e77d5b53c0cec..8d125998b30b7 100644
-> --- a/drivers/pci/pci.c
-> +++ b/drivers/pci/pci.c
-> @@ -3192,6 +3192,12 @@ void pci_d3cold_disable(struct pci_dev *dev)
->  }
->  EXPORT_SYMBOL_GPL(pci_d3cold_disable);
->  
-> +void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev)
-> +{
-> +	pci_power_up(pci_dev);
-> +	pci_update_current_state(pci_dev, PCI_D0);
-> +}
-> +
->  /**
->   * pci_pm_init - Initialize PM functions of given PCI device
->   * @dev: PCI device to handle.
-> @@ -3202,9 +3208,6 @@ void pci_pm_init(struct pci_dev *dev)
->  	u16 status;
->  	u16 pmc;
->  
-> -	pm_runtime_forbid(&dev->dev);
-> -	pm_runtime_set_active(&dev->dev);
-> -	pm_runtime_enable(&dev->dev);
->  	device_enable_async_suspend(&dev->dev);
->  	dev->wakeup_prepared = false;
->  
-> @@ -3266,6 +3269,10 @@ void pci_pm_init(struct pci_dev *dev)
->  	pci_read_config_word(dev, PCI_STATUS, &status);
->  	if (status & PCI_STATUS_IMM_READY)
->  		dev->imm_ready = 1;
-> +	pci_pm_power_up_and_verify_state(dev);
-> +	pm_runtime_forbid(&dev->dev);
-> +	pm_runtime_set_active(&dev->dev);
-> +	pm_runtime_enable(&dev->dev);
->  }
->  
->  static unsigned long pci_ea_flags(struct pci_dev *dev, u8 prop)
-> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-> index b81e99cd4b62a..49165b739138b 100644
-> --- a/drivers/pci/pci.h
-> +++ b/drivers/pci/pci.h
-> @@ -148,6 +148,7 @@ void pci_dev_adjust_pme(struct pci_dev *dev);
->  void pci_dev_complete_resume(struct pci_dev *pci_dev);
->  void pci_config_pm_runtime_get(struct pci_dev *dev);
->  void pci_config_pm_runtime_put(struct pci_dev *dev);
-> +void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev);
->  void pci_pm_init(struct pci_dev *dev);
->  void pci_ea_init(struct pci_dev *dev);
->  void pci_msi_init(struct pci_dev *dev);
-> -- 
-> 2.43.0
-> 
+The BCM2712 memory map can support up to 64GB of system memory, thus
+expand the inbound window size in calculation helper function.
+
+The change is safe for the currently supported SoCs that have smaller
+inbound window sizes.
+
+Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
+Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Reviewed-by: Jim Quinlan <james.quinlan@broadcom.com>
+Tested-by: Ivan T. Ivanov <iivanov@suse.de>
+Link: https://lore.kernel.org/r/20250224083559.47645-7-svarbanov@suse.de
+[kwilczynski: commit log]
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
+ drivers/pci/controller/pcie-brcmstb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index 425db793080d4..fe37bd28761a8 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -281,8 +281,8 @@ static int brcm_pcie_encode_ibar_size(u64 size)
+ 	if (log2_in >= 12 && log2_in <= 15)
+ 		/* Covers 4KB to 32KB (inclusive) */
+ 		return (log2_in - 12) + 0x1c;
+-	else if (log2_in >= 16 && log2_in <= 35)
+-		/* Covers 64KB to 32GB, (inclusive) */
++	else if (log2_in >= 16 && log2_in <= 36)
++		/* Covers 64KB to 64GB, (inclusive) */
+ 		return log2_in - 15;
+ 	/* Something is awry so disable */
+ 	return 0;
+-- 
+2.39.5
+
