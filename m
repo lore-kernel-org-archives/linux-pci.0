@@ -1,98 +1,104 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A9772DA0EA;
-	Mon,  5 May 2025 23:17:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FC6939529B;
+	Mon,  5 May 2025 23:20:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746487042; cv=none; b=j+LMLDmCTY5nU95MdBbo5oKfGtbmK3yqPghx9NE7qdngzW30WNLOdjPHk+3jNt7X5/2MV2Q22aZv3gVWGmAMcR98TMoT02NdJdcrDg615MpdVDnK5GXSCWmghnkOkPe9jRxnMYJMi9//wJ+r5JeJmHrYHjgWVcHF3u9xhVU3LP4=
+	t=1746487208; cv=none; b=Yd7flgUCGJ8SoaJLXbzDASLANvR3ZAUVbVsEYEZMmbMCQWOzV0k4eit2iZH5sJ9UGTqnNXy/xXA1dAEZLL8r3QS68cEN/NLqKPQXfDbR5lh0f/Rac67OXE9itDZzB1gA95uvVIgOlxrjXfC80gUCo4Qs2yjWV1LjKgdJwZLjCWI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746487042; c=relaxed/simple;
-	bh=BTogwoPQhqDb5Lb0ED+JhY3WyEMYPQZBPF+4Xj5VUFY=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=I8hjj6J+taOKrlCPYkR5845rC82QBArdIimfYUJf0uoNw6xhNBqvrtzc7/GXf9XrL7xfW7u+wRPLpGexcn7i6yMXfQMQf6tG5myQFVrNA+M7kS5UWmTwkMDvd9X+4c3G1WXA2+MMGaHdL1T1ni23iciy2N7DIj4CMB3ESOSj6fw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YFpUdF6u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746487208; c=relaxed/simple;
+	bh=1NJuURk20N19YanJ3ys0grsx/9HvfDf3mkE0IAqV9jQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qOr1RPOBML5nJpJ0dF0riSEtC4dWTuZy5+tJIZ9bMOpY2nYYFUMkzj4kpEx1zOjcjaq4d4ryCVyspeMt89qX9Z7ooprA8kXYpykTyY2SGLnwSWJ/oFIyipY3QxxhfOV0JO4WwhI1xfotzoXHFA/zMfivvZHgRXCb3Pzcma12HTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ltlZyuFa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YFpUdF6u"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 71740C4CEE4;
-	Mon,  5 May 2025 23:17:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ltlZyuFa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F273C4CEE4;
+	Mon,  5 May 2025 23:20:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746487041;
-	bh=BTogwoPQhqDb5Lb0ED+JhY3WyEMYPQZBPF+4Xj5VUFY=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=YFpUdF6uvuXHBNQroEBQGOXU42T9Ojja5dNWud17KGZGd70Hnp2+Kl+5j+jWzDkPP
-	 4G0wULQ2KcZ1DVzdk0oIYoihMgoQ/NUQC7OfqSBfVRZMm8eN7rm94aOY+jt74hGQH2
-	 3k4nt07VvGdfdNEIruU0y6hQQRu1HrSCdksbgbWzDcZ5F6G2MsGGZ+yYeXPbJmLeD0
-	 iSQbHYXJs3bqzH3pmcQfMC/+4uZUOCHiOadxEM8sOZ8if6JKYpDo0ES8Y8SzAoCwoZ
-	 L2ftLo8jxpmCDXHH5AL3Fhv2oAYdr6Kkzd2zV17r1uuvbHWTL6s9gjDhHEjQN7ZHXj
-	 qdj9V+OfND9xg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5F86DC3ABC2;
-	Mon,  5 May 2025 23:17:21 +0000 (UTC)
-From: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>
-Date: Mon, 05 May 2025 18:17:21 -0500
-Subject: [PATCH v5 2/3] cpuidle: tegra: Export
- tegra_cpuidle_pcie_irqs_in_use
+	s=k20201202; t=1746487207;
+	bh=1NJuURk20N19YanJ3ys0grsx/9HvfDf3mkE0IAqV9jQ=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=ltlZyuFac6FVMIp9jCRfXQJfyn11G7iTdjJYKrJq5CcZwZtJX/3nn+S/pMBO5qp9C
+	 eQHyRlpkQBlZk6/UPbLm3mSV5abDJpKF0zy5giUrVJhCqR5bqmAcWviEYiJEjJSODv
+	 Fl4UybRR8gZzhQNfczT4ZWbv4GSggl5S9uY3IicV6FaSDWIHNZYzR7/XRc1uYcKXh7
+	 2BT/NwcyouOIfwVnM2rQMteVhaE8/LzNMZwo0sJ0Yl4I+OINkbI/BZqMLGvPhhEMAq
+	 E5wQ0ELh64vBOLx9F2AXuC/nBFeciYzXCiwIajuvcX5URdRJmGyZQiN4fWs2YL1p0c
+	 fRD24snkYSfgA==
+From: Sasha Levin <sashal@kernel.org>
+To: linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Cc: Stanimir Varbanov <svarbanov@suse.de>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Jim Quinlan <james.quinlan@broadcom.com>,
+	"Ivan T . Ivanov" <iivanov@suse.de>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Sasha Levin <sashal@kernel.org>,
+	jim2101024@gmail.com,
+	nsaenz@kernel.org,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	manivannan.sadhasivam@linaro.org,
+	bhelgaas@google.com,
+	linux-rpi-kernel@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH AUTOSEL 5.10 057/114] PCI: brcmstb: Expand inbound window size up to 64GB
+Date: Mon,  5 May 2025 19:17:20 -0400
+Message-Id: <20250505231817.2697367-57-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250505231817.2697367-1-sashal@kernel.org>
+References: <20250505231817.2697367-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250505-pci-tegra-module-v5-2-827aaac998ba@gmail.com>
-References: <20250505-pci-tegra-module-v5-0-827aaac998ba@gmail.com>
-In-Reply-To: <20250505-pci-tegra-module-v5-0-827aaac998ba@gmail.com>
-To: Thomas Gleixner <tglx@linutronix.de>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kw@linux.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
- Thierry Reding <thierry.reding@gmail.com>, 
- Jonathan Hunter <jonathanh@nvidia.com>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, 
- Daniel Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, 
- Aaron Kling <webgeek1234@gmail.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1746487040; l=805;
- i=webgeek1234@gmail.com; s=20250217; h=from:subject:message-id;
- bh=VxJ9HgkNV4IxH20jYpaAA9e5Ei6kk4ytu1PVu0wpNxM=;
- b=z0W8d1Q64bfmqnl3a4wP5TKAH7EjzkwLbmJxq1UHI5FFF3Kx7RAK2oAK5+8b1qLQQ4rTygQlv
- XNqsbCcZzfqDKnx2o3KR3tU5gQmKhc8Zoqq3x8faYHwniL8tcdYJ7O4
-X-Developer-Key: i=webgeek1234@gmail.com; a=ed25519;
- pk=TQwd6q26txw7bkK7B8qtI/kcAohZc7bHHGSD7domdrU=
-X-Endpoint-Received: by B4 Relay for webgeek1234@gmail.com/20250217 with
- auth_id=342
-X-Original-From: Aaron Kling <webgeek1234@gmail.com>
-Reply-To: webgeek1234@gmail.com
+Content-Type: text/plain; charset=UTF-8
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 5.10.237
+Content-Transfer-Encoding: 8bit
 
-From: Aaron Kling <webgeek1234@gmail.com>
+From: Stanimir Varbanov <svarbanov@suse.de>
 
-Add export for tegra_cpuidle_pcie_irqs_in_use() so that drivers like
-pci-tegra can be loaded as a module.
+[ Upstream commit 25a98c727015638baffcfa236e3f37b70cedcf87 ]
 
-Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
+The BCM2712 memory map can support up to 64GB of system memory, thus
+expand the inbound window size in calculation helper function.
+
+The change is safe for the currently supported SoCs that have smaller
+inbound window sizes.
+
+Signed-off-by: Stanimir Varbanov <svarbanov@suse.de>
+Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+Reviewed-by: Jim Quinlan <james.quinlan@broadcom.com>
+Tested-by: Ivan T. Ivanov <iivanov@suse.de>
+Link: https://lore.kernel.org/r/20250224083559.47645-7-svarbanov@suse.de
+[kwilczynski: commit log]
+Signed-off-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/cpuidle/cpuidle-tegra.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/pci/controller/pcie-brcmstb.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/cpuidle/cpuidle-tegra.c b/drivers/cpuidle/cpuidle-tegra.c
-index b203a93deac5f378572be90e22c73e7417adb99e..aca907a62bb5de4ee4c71c1900eacedd4b90bc0a 100644
---- a/drivers/cpuidle/cpuidle-tegra.c
-+++ b/drivers/cpuidle/cpuidle-tegra.c
-@@ -336,6 +336,7 @@ void tegra_cpuidle_pcie_irqs_in_use(void)
- 	pr_info("disabling CC6 state, since PCIe IRQs are in use\n");
- 	tegra_cpuidle_disable_state(TEGRA_CC6);
- }
-+EXPORT_SYMBOL_GPL(tegra_cpuidle_pcie_irqs_in_use);
- 
- static void tegra_cpuidle_setup_tegra114_c7_state(void)
- {
-
+diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+index bbc9786bc36cf..2fc4fe23e6bbf 100644
+--- a/drivers/pci/controller/pcie-brcmstb.c
++++ b/drivers/pci/controller/pcie-brcmstb.c
+@@ -300,8 +300,8 @@ static int brcm_pcie_encode_ibar_size(u64 size)
+ 	if (log2_in >= 12 && log2_in <= 15)
+ 		/* Covers 4KB to 32KB (inclusive) */
+ 		return (log2_in - 12) + 0x1c;
+-	else if (log2_in >= 16 && log2_in <= 35)
+-		/* Covers 64KB to 32GB, (inclusive) */
++	else if (log2_in >= 16 && log2_in <= 36)
++		/* Covers 64KB to 64GB, (inclusive) */
+ 		return log2_in - 15;
+ 	/* Something is awry so disable */
+ 	return 0;
 -- 
-2.48.1
-
+2.39.5
 
