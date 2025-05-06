@@ -1,68 +1,74 @@
-Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+Received: from bmailout3.hostsharing.net (bmailout3.hostsharing.net [176.9.242.62])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEEC61FCCF8;
-	Tue,  6 May 2025 07:42:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B378422A1D4;
+	Tue,  6 May 2025 08:07:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.62
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746517355; cv=none; b=UQAgWuo4F+ocC0DPen67AX62Sd6srqfo8tqrZDrZa1W7EYDPCv7gQzFsMz2cgNmW8ZOxgUITniX/FVGo754hLigd3rTrnChtqzPN90g9UEQPJOQbuFMSQIH69vuSSRXsSBzeUY74Ri/WX29THssbxYE4gfCGWN/aPwfGUm7FZf0=
+	t=1746518826; cv=none; b=YFyW0jtTylYKXxqLbsgFiTXDrmcHRjDo3MINyeCVlLXj3XDCgcvGlqW4ikSIXFV1KQLDowdaPoBYhB5t2LCes3gMjEe13i1KgImsf5zq8PxRvDNNiYtFmEmjGNibx1L6cD6ycZXdcsuhaoRmZ2Xro/c5OdywggijeslTk2/0JEE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746517355; c=relaxed/simple;
-	bh=mO+m+JaxLYq+BevXI0NK5P8AwDclsuWZdZ7YIumHxgU=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=logtTikKZZv8ilEZOCygYuzVE7UB1w4GJNOzFLPWhYMwJqzAQBSp8va1PnF+Nj3ccreR1/UFfxAi3DyPjBJI0PVKETCUd9BVRauEZIabPM7lGMwlKOYdUU4/spyTSDzVpt/P+AB1UA1C1w4Aak7YMNBbTjDUhlBDf1tpcIxfT2I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=WR8OVbB9; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=unk+dOg+; arc=none smtp.client-ip=193.142.43.55
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="WR8OVbB9";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="unk+dOg+"
-From: Thomas Gleixner <tglx@linutronix.de>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1746517352;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mO+m+JaxLYq+BevXI0NK5P8AwDclsuWZdZ7YIumHxgU=;
-	b=WR8OVbB98rI62CJm0F0v0JgI2akbIkGT2OsobsosytZFD3JYGrWAL1v554FJkEAq7n+kSu
-	3tyMaHgcVBgQzzoHiHMaEI/DBmoXo8hulJavFf/XuDFVa/lsHVbdFyprVFa6d8NOCyBAyr
-	whlLIMrHobOJTJMHQYei0bjI3ATdosFgCFey4FlRLTm6xkGHFi5ahlkB9OK8Nz1qc3Icwd
-	b12mrbiB1NC80481lq5IxCqEUrU34cneTKG9iUJlqLhjGfhEWWToAf9f2BXKrSATa7pbF+
-	/lOQRvzVou/GAcx5mGGEcaMLbBbq9YWrfbPE3Bn1dqhdFXpYdVoxMcu8pfsAwg==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1746517352;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=mO+m+JaxLYq+BevXI0NK5P8AwDclsuWZdZ7YIumHxgU=;
-	b=unk+dOg+tXXJAMCzqGPhFJ3n4qZK94I3OgBtOvSILG+8LyTBnlfv1XldvMUpEb/ePs4PLM
-	B3TukPbHTzBzbsAw==
-To: Aaron Kling via B4 Relay <devnull+webgeek1234.gmail.com@kernel.org>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy?=
- =?utf-8?Q?=C5=84ski?=
- <kw@linux.com>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Thierry Reding <thierry.reding@gmail.com>, Jonathan Hunter
- <jonathanh@nvidia.com>, "Rafael J. Wysocki" <rafael@kernel.org>, Daniel
- Lezcano <daniel.lezcano@linaro.org>
-Cc: linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org, Aaron Kling
- <webgeek1234@gmail.com>
-Subject: Re: [PATCH v5 0/3] PCI: tegra: Allow building as a module
-In-Reply-To: <20250505-pci-tegra-module-v5-0-827aaac998ba@gmail.com>
-References: <20250505-pci-tegra-module-v5-0-827aaac998ba@gmail.com>
-Date: Tue, 06 May 2025 09:42:31 +0200
-Message-ID: <87ikmenq1k.ffs@tglx>
+	s=arc-20240116; t=1746518826; c=relaxed/simple;
+	bh=ctqEI29Ajb0YxefQ/2ghw4IH1R7Rowb1zE0UcrgYyP4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=AXiBJ8o88GuF7KK9/o2b4rjz9a462SnXPAElorOtl8j7JNRfY+QMMSyTJvI4YlW2OWHeggDGHyv0Sz5jVHMPYPV0M3LoPXJlseE1LtJJn1YD/GXc1rMU6MQOCjvjkrQrC5+aUyISC6dK0HWuGtan2yZ5UFIhffD5j6XChdU+N2w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=176.9.242.62
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by bmailout3.hostsharing.net (Postfix) with ESMTPS id A004B2C000AD;
+	Tue,  6 May 2025 10:06:42 +0200 (CEST)
+Received: by h08.hostsharing.net (Postfix, from userid 100393)
+	id 620E44183C; Tue,  6 May 2025 10:06:59 +0200 (CEST)
+Date: Tue, 6 May 2025 10:06:59 +0200
+From: Lukas Wunner <lukas@wunner.de>
+To: Sasha Levin <sashal@kernel.org>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+	Krzysztof Wilczy??ski <kwilczynski@kernel.org>, bhelgaas@google.com,
+	linux-pci@vger.kernel.org
+Subject: Re: [PATCH AUTOSEL 6.14 382/642] PCI/pwrctrl: Move
+ pci_pwrctrl_unregister() to pci_destroy_dev()
+Message-ID: <aBnDI_40fX7SM4tp@wunner.de>
+References: <20250505221419.2672473-1-sashal@kernel.org>
+ <20250505221419.2672473-382-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250505221419.2672473-382-sashal@kernel.org>
 
-On Mon, May 05 2025 at 18:17, Aaron Kling via wrote:
-> - Copy commit message exactly word for word on patch 1, as required by reviewer
+On Mon, May 05, 2025 at 06:09:58PM -0400, Sasha Levin wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> 
+> [ Upstream commit 2d923930f2e3fe1ecf060169f57980da819a191f ]
+> 
+> The PCI core will try to access the devices even after pci_stop_dev()
+> for things like Data Object Exchange (DOE), ASPM, etc.
+> 
+> So, move pci_pwrctrl_unregister() to the near end of pci_destroy_dev()
+> to make sure that the devices are powered down only after the PCI core
+> is done with them.
 
-That's not what I asked for at all. I asked you to read _ALL_ feedback I
-gave you. I give up now.
+The above was patch [2/5] in this series:
+
+https://lore.kernel.org/r/20250116-pci-pwrctrl-slot-v3-0-827473c8fbf4@linaro.org/
+
+... so I think the preceding patch [1/5] is a prerequisite and would
+need to be cherry-picked as well.  Upstream commit id is:
+957f40d039a98d630146f74f94b3f60a40a449e4
+
+That said, I'm not sure this is really a fix that merits backporting
+to stable.  Mani may have more comments whether it makes sense.
+
+Thanks,
+
+Lukas
