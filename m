@@ -1,116 +1,100 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 319D1207E03;
-	Tue,  6 May 2025 17:35:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DA081FF5E3;
+	Tue,  6 May 2025 17:41:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746552955; cv=none; b=c+Np8V3vcboA06QfP4WsQMpqbwGiY4yYphyqd/NH6/pCVTlWOa3FGm8A3cv4Z32iXuzWA8WPdUHKS9zigtdUSmb/NAZiVAoPyCIX7AguaX/Ryk4p8cCrP28LkHqiS23A219ddgZVlrYNZBUgnGGFfShlWE5tqRyTFyyEkvcGBDw=
+	t=1746553274; cv=none; b=unYh3VgCy9bGy3SW0ZU2VcRKu3OblMZWGS/dSznQdU5mHjN/kyBoDncsoFAtmPMeAxUx2td/o5tVpbFteFQXLXQGCKPTWCku8He2+8U4GKICR5P3paM8glIuzw4XFXlwMXvJCKrwRBqf8RUVS2J+sG+sUWXeK9HmG277jlUyEMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746552955; c=relaxed/simple;
-	bh=YbY4BzhwwS0Bs97W2qpZD/tuPkcUHS6xrK4/be/t7fU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=gJy7tIt7xkDcEQizQTOGmGw6NJIwkTR23TWup36/aW1ykTx/KqUwGlChNz4KEXI7eZu4utQvCJdVHUhG3cPzL36fEJa8aMO9UzuWTt7auUlElEFRPH6EDkbR5zal2Pudw1AEvGhqpTCuIRIKhTjiZ+MfBZsk98WfpH0B51JdOLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Ku9j4yB8; arc=none smtp.client-ip=117.135.210.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1746553274; c=relaxed/simple;
+	bh=addtd2tD+DOVZOCpE3AbYsDQUYIQPT10US31SZtt2d8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=pWlGh8a6gLLempF5cgSpIFd8yj/BiRINxbIlkj3dzPj//rEztWDQQnfKxeFv8q4l9pnpW6EUodfhEyikXZegL/N9uslpWNMGhCr1SIxsmf0bN10Hq8OZ6eOaHoZ9sOMK61UhizoK+P86Sy0rw0Ku3y3vukONvHKAfP6Dz/suMWg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qQ13y8A2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Ku9j4yB8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:Subject:Date:Message-Id:MIME-Version; bh=E2ofU
-	gHGCmm1xPAFMa2TsfZAr9ZO/RTFbitpv1wF7q0=; b=Ku9j4yB8bqcIRuacRvWR2
-	JmqYyIcdjVdeDw7VRI/f0VgCY0YZPTpP9YQozV+v2lbGUxY2nWzm2qVQnm3ho2KB
-	qrt7Yh80LPSDE0W/9+clgmoKqToBOBc1F4xRGPla4e7usfiCGeuccj6O4tLsV4KU
-	1ONqvuJ38aJWQwWfzPt1Ik=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wAX_U4ySBpoVmZeEw--.15363S4;
-	Wed, 07 May 2025 01:34:45 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	kw@linux.com,
-	bhelgaas@google.com,
-	heiko@sntech.de,
-	manivannan.sadhasivam@linaro.org,
-	yue.wang@Amlogic.com
-Cc: pali@kernel.org,
-	neil.armstrong@linaro.org,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	khilman@baylibre.com,
-	jbrunet@baylibre.com,
-	martin.blumenstingl@googlemail.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qQ13y8A2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D5E3C4CEEB;
+	Tue,  6 May 2025 17:41:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746553273;
+	bh=addtd2tD+DOVZOCpE3AbYsDQUYIQPT10US31SZtt2d8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=qQ13y8A2z2q3OM1MObsbWCM3zla4VJlDmuJTvyfkO9aLQ99ypDNhNEN5oIxX8/CF2
+	 L7PE7DWzOZPp8ZoJDpDZlpxNWTk5Ih4sWfsD84tNapMnA3Y2KOw5B9Y4QZvvndl1mh
+	 OaqinBL3jRrAXKDx1+2yyGAihpf5tY7CMaH3ajYjdYUoCrccekKFDzi+RY471N+O6g
+	 DLNKlwl5z4KVODs9zh9AM0Y9QIoVY2JiKb7Wvkg8siHRf9KFynN7ZtDScFTVNASztZ
+	 HHcK779OBDwABXOTxQ233HRRs0qXWSGtkHiFvT9ZytMwZVGnlGYVjBiQXW/Wq4izM5
+	 uuVjbbjUkI0dw==
+Received: by pali.im (Postfix)
+	id B53EE67E; Tue,  6 May 2025 19:41:10 +0200 (CEST)
+Date: Tue, 6 May 2025 19:41:10 +0200
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali@kernel.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com,
+	heiko@sntech.de, manivannan.sadhasivam@linaro.org,
+	yue.wang@Amlogic.com, neil.armstrong@linaro.org, robh@kernel.org,
+	jingoohan1@gmail.com, khilman@baylibre.com, jbrunet@baylibre.com,
+	martin.blumenstingl@googlemail.com, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
 	linux-amlogic@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 2/3] PCI: dwc: Remove redundant MPS configuration
-Date: Wed,  7 May 2025 01:34:38 +0800
-Message-Id: <20250506173439.292460-3-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250506173439.292460-1-18255117159@163.com>
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v3 3/3] PCI: aardvark: Remove redundant MPS configuration
+Message-ID: <20250506174110.63ayeqc4scmwjj6e@pali>
 References: <20250506173439.292460-1-18255117159@163.com>
+ <20250506173439.292460-4-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAX_U4ySBpoVmZeEw--.15363S4
-X-Coremail-Antispam: 1Uf129KBjvJXoW7KF4xuw4xXFWDJw43WF4xtFb_yoW8Cr1fpF
-	y3Xrsa9F18Jr45WF4qkan5Cay3tasxCry7JF9Ig3yfuFyayFsrXa4ayFWSkFyxXrW293WS
-	kr98K3y8C3W5trUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRn2-nUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOghFo2gaREltegABs9
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250506173439.292460-4-18255117159@163.com>
+User-Agent: NeoMutt/20180716
 
-The Meson PCIe controller driver manually configures maximum payload
-size (MPS) through meson_set_max_payload, duplicating functionality now
-centralized in the PCI core.  Deprecating redundant code simplifies the
-driver and aligns it with the consolidated MPS management strategy,
-improving long-term maintainability.
+On Wednesday 07 May 2025 01:34:39 Hans Zhang wrote:
+> The Aardvark PCIe controller enforces a fixed 512B payload size via
+> PCI_EXP_DEVCTL_PAYLOAD_512B, overriding hardware capabilities and PCIe
+> core negotiations.
+> 
+> Remove explicit MPS overrides (PCI_EXP_DEVCTL_PAYLOAD and
+> PCI_EXP_DEVCTL_PAYLOAD_512B). MPS is now determined by the PCI core
+> during device initialization, leveraging root port configurations and
+> device-specific capabilities.
+> 
+> Aligning Aardvark with the unified MPS framework ensures consistency,
+> avoids artificial constraints, and allows the hardware to operate at
+> its maximum supported payload size while adhering to PCIe specifications.
+> 
+> Signed-off-by: Hans Zhang <18255117159@163.com>
+> ---
+>  drivers/pci/controller/pci-aardvark.c | 2 --
+>  1 file changed, 2 deletions(-)
+> 
+> diff --git a/drivers/pci/controller/pci-aardvark.c b/drivers/pci/controller/pci-aardvark.c
+> index a29796cce420..d8852892994a 100644
+> --- a/drivers/pci/controller/pci-aardvark.c
+> +++ b/drivers/pci/controller/pci-aardvark.c
+> @@ -549,9 +549,7 @@ static void advk_pcie_setup_hw(struct advk_pcie *pcie)
+>  	reg = advk_readl(pcie, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
+>  	reg &= ~PCI_EXP_DEVCTL_RELAX_EN;
+>  	reg &= ~PCI_EXP_DEVCTL_NOSNOOP_EN;
+> -	reg &= ~PCI_EXP_DEVCTL_PAYLOAD;
+>  	reg &= ~PCI_EXP_DEVCTL_READRQ;
+> -	reg |= PCI_EXP_DEVCTL_PAYLOAD_512B;
+>  	reg |= PCI_EXP_DEVCTL_READRQ_512B;
+>  	advk_writel(pcie, reg, PCIE_CORE_PCIEXP_CAP + PCI_EXP_DEVCTL);
+>  
+> -- 
+> 2.25.1
+> 
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/dwc/pci-meson.c | 17 -----------------
- 1 file changed, 17 deletions(-)
+Please do not remove this code. It is required part of the
+initialization of the aardvark PCI controller at the specific phase,
+as defined in the Armada 3700 Functional Specification.
 
-diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
-index db9482a113e9..126f38ed453d 100644
---- a/drivers/pci/controller/dwc/pci-meson.c
-+++ b/drivers/pci/controller/dwc/pci-meson.c
-@@ -261,22 +261,6 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
- 	return fls(size) - 8;
- }
- 
--static void meson_set_max_payload(struct meson_pcie *mp, int size)
--{
--	struct dw_pcie *pci = &mp->pci;
--	u32 val;
--	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
--	int max_payload_size = meson_size_to_payload(mp, size);
--
--	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
--	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
--	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
--
--	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
--	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
--	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
--}
--
- static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
- {
- 	struct dw_pcie *pci = &mp->pci;
-@@ -381,7 +365,6 @@ static int meson_pcie_host_init(struct dw_pcie_rp *pp)
- 
- 	pp->bridge->ops = &meson_pci_ops;
- 
--	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
- 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
- 
- 	return 0;
--- 
-2.25.1
-
+There were reported more issues with those Armada PCIe controllers for
+which were already sent patches to mailing list in last 5 years. But
+unfortunately not all fixes were taken / applied yet.
