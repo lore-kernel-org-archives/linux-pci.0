@@ -1,238 +1,165 @@
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2060.outbound.protection.outlook.com [40.107.92.60])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FBA73D3B8;
-	Tue,  6 May 2025 20:02:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.92.60
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746561774; cv=fail; b=ZCIYptCprAhheZ6Mz5xasPcN25fsBpdftqjdNHLdYMghbEvvrCCf0mjRPi2+HrHx1RUqbc6F95xSHNhbY+PGB4yrsftsq9O2YYZHJOLrhCLipjtkKY5HYlc+4fOMic25HJ9JM0SyWAPLuHiSv+xPbNQ/EBxfYExfKbcBqzabNE8=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746561774; c=relaxed/simple;
-	bh=MjLWPfSvUCMobGj0Tcuyas9RmbQpbqe1IiDBpgtJIUQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=FKNpS3Ryz9caG+fLcRV3phvISHt9sSnBqY7pMO7FAwL4NPJwKQ/Xy573EfXbmFNv0DlQhV3gtGIQRr1kWYLwsi2OXf/PmrANRBOyXbwoVPfRxyKo8tMpY+kgS/NPCS3PmYVb17nMwRVdhmcTJSRPgRnfNjnTA+73tCCrGtQKyHM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=TyF75l/5; arc=fail smtp.client-ip=40.107.92.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11ED1198823
+	for <linux-pci@vger.kernel.org>; Tue,  6 May 2025 20:47:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1746564465; cv=none; b=Q+rcbo1l8A9BRKjb1v7uk2Nvy6oaLW7xKDqZVays3pn7ld9a0i5MW4Ily46J2cM4DzkYEvn1nroK1IskHlxz7IP2UeQ3l7uSodIbsdJBKoOre0uxXJKgjxYxLOppkeAmy2pGgE4p87RpX/KokaKHDaRDaITsyG/FIrethsWVlWM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1746564465; c=relaxed/simple;
+	bh=HoSPNJpzAj/UHgTcCm+14l6OqVn0UOHxo2Yn1NKbwwc=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=RkdbSQNeyCqNHyPbd+g4Y3tCbc/E7FafQgqWU0DhpcDejNuiYfG1whH1GXy7Pk24qAVLqTRFzr0iCENkfTvpfTFzLPPkua9Pr5lvBtS2GFE95T2QNDu3i3e1O2cOa0UGlBgWKPH7RI3XrX6yU52uualW/fPUJSColWWqiMUhpAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gBDh+uwv; arc=none smtp.client-ip=209.85.208.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="TyF75l/5"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=q8dkoop895gUVXsU2IM7ekZy7xPFG/HyQsRmzzfqmGIemzVkLTPJ1lMGZ5paqc5oP5oKX3sy+STHxfcSoTgapxf8T/AqEPpY0cjscttVrKm3O/htSZzA8OOtKjCeSTIl61RlerWoSlqN+l8QJ5d3LzS/BrDqQ9daAlbiIOs+vZeGlArxeRvZ6AjnTgv+En8BYo+4ga5Obc9PFNscxJqtxl/6ojrYCh4Lb9r2QibW3rLQ2lIhkZyQrCKng3o+MExxfrUitaoOlehc7SEq9zAGcsGqTIVlVytwzUg1nnr1SRO2drDCmVUlEsYgW1VgbiFl+KHtkzBV6QM07H4c6POZNg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bkng1EAz8eloMmcSFwqVmXe1aWl3q0aVEJtjoWu4Eeo=;
- b=MR4/kyOAZat9oZVFHhbuzTxyc3gwR87oGp2q/0XdK8I28OfsppMwwaGBv+FWi6KhgMTq62ukr1ljB6y8M1F2HCIrXJ9JLCuIjyFxO6i3T6h/BmP+BWa3XxLXRA6JHRpy95+Xll4r3+7nQWkugR10q18mAM/Yv97IAzIG33Dsve12AoW3kcXfrCuxFEbDlajzhU/XNA0eHfm2k6tOPxEbmuQVAXzexec0SmBV6Nt6V7t3yXCfLKrIrT3DH3yjVAuxqsVQWfyofl4bjCn/DdOEw8a9zbNpFYUiPq0NDtijG9zC5880fc4VKOlsz4rgNvj3r+0Mu/ZQyxbpL39n7pPgFA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 216.228.117.160) smtp.rcpttodomain=wunner.de smtp.mailfrom=nvidia.com;
- dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bkng1EAz8eloMmcSFwqVmXe1aWl3q0aVEJtjoWu4Eeo=;
- b=TyF75l/5XSJoq8L7TM7dE62dGXYgW23EvurBUXJ3htMw03sAObyuleJLYiYAmyXdGbvsF2LfcwD/OGKm5RM9lDRScpYul9IUFA8afWeJNdCkj5ZEdkr/cISyjbyntRVxNdhecFHkr8Bp7J/YyHYcL11Y40P+aOiSmqA2LP6MyNLT1nQLthPuFuQISrI71CVaBnJ5wAe9F7SKKwRAeUYTrywFpueE6hdp/6sfVWv7OOi8YXkxGyGI2QfNRirBftPFbI+Xj87h9R74TqmyMrRKeHrtjTpKKHjUByK69eKer+DZt1s0EFCzXZ95eXtJElumOQpTQNEnjRSltcv+FuHa+g==
-Received: from SN7P220CA0002.NAMP220.PROD.OUTLOOK.COM (2603:10b6:806:123::7)
- by DS0PR12MB8294.namprd12.prod.outlook.com (2603:10b6:8:f4::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8699.24; Tue, 6 May
- 2025 20:02:45 +0000
-Received: from SA2PEPF00003AE4.namprd02.prod.outlook.com
- (2603:10b6:806:123:cafe::e7) by SN7P220CA0002.outlook.office365.com
- (2603:10b6:806:123::7) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.8722.20 via Frontend Transport; Tue,
- 6 May 2025 20:02:44 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.160)
- smtp.mailfrom=nvidia.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=nvidia.com;
-Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
- 216.228.117.160 as permitted sender) receiver=protection.outlook.com;
- client-ip=216.228.117.160; helo=mail.nvidia.com; pr=C
-Received: from mail.nvidia.com (216.228.117.160) by
- SA2PEPF00003AE4.mail.protection.outlook.com (10.167.248.4) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8722.18 via Frontend Transport; Tue, 6 May 2025 20:02:43 +0000
-Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
- (10.129.200.66) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Tue, 6 May 2025
- 13:02:31 -0700
-Received: from [172.27.33.235] (10.126.230.35) by rnnvmail201.nvidia.com
- (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Tue, 6 May
- 2025 13:02:20 -0700
-Message-ID: <6687db3a-33b2-4982-b65a-c6ecea130cc3@nvidia.com>
-Date: Tue, 6 May 2025 23:02:18 +0300
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gBDh+uwv"
+Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-5e5deb6482cso541161a12.1
+        for <linux-pci@vger.kernel.org>; Tue, 06 May 2025 13:47:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1746564459; x=1747169259; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=Pi47gK8MYhyGIqIdKO9+ShtObSRr4S3t2PvkIQxuaXA=;
+        b=gBDh+uwvqOEb3fLM4eNviuqwt3dZpUuSnrvnEac6apQCsRqOMi0E89SJlebAeuGJlu
+         29jc5MflQOtiZdAlaW7UueewAZmgrE7KnNq3XfTDdFzT3YWTZmNXIUKCYiuWnULLyGal
+         HOPF+AUrGqI0fCB5N+IkmdMarL8VDvUzvvvTcTaRcoK//+MtWrgjrxAI7Qv4u3atBkOf
+         L5SYGvvF2J1mNeaNHcivYH2+j+AS2Gk2KTJEUPV/l7xQuQcQmwyQ87PtJPmRQHNOfv8t
+         H8FGhg7pxvHH1k/TkfPJAiv/OHRQqJTTOqVhL9XwbUWPx+dTUKJYNLazYYmAXYEp3B4Y
+         GCoQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746564459; x=1747169259;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Pi47gK8MYhyGIqIdKO9+ShtObSRr4S3t2PvkIQxuaXA=;
+        b=s8ew15myBIZ2a9C//f+YREMDHj6Wiaw63G47G69vi2Gn/NHXpIWnXVOidUVip8nGZY
+         2zE0XfPbCsfwJOQoZzLZztNZ8CZdF0+baepxY7osXEHLgOAqONIry5fmtTS6r8eqFRzK
+         7k06t+gR8cItNvNyh2jeX9I6B5T5hpPYdM+MW00ofFe4E/D4pbK8ucoDiNtNWsFOybmB
+         dqb0WnJdosUbBOthpLnE2+7Jl1VP13X8W0Pjbequ5rSaxlXOk2fekhm0nsKq6ms0q2UB
+         jO+21ERGPrS2TozKjUxOQfd86erhs5OBadGYO4KrL6zgvi8YwBrdB6CikeA7cyMP62kh
+         ffzA==
+X-Forwarded-Encrypted: i=1; AJvYcCX/CDUDmjMOAJ8t1LZ+vPSsQTNPGIKwQill1TYcXYxY73yQ+kOJp88OeDnvlj/8SpdZ0J7FnQV9ERA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxXq7+1ztnwd06J2ys/Z/433Nyd9aTPva/zh4pmfyXsrCvkcGVs
+	5vV80LXB6hy3UoR8PdLjS1KO+ccg8sdgo2gcjGBB6VJl2yorkd7bEcE2tE6enNE=
+X-Gm-Gg: ASbGncuknHOdwqHZMRKbrFa+I1GG7ME1XMr48l4AOm0ev9cFsnUs70geUcnpBdvYU1c
+	HdMGy+0sd6tHWV/gvd3V2oDL6frknKX5AietOaqnPK2/nGYVT6OVBkhHPiFkGos/FK80U6rDO2G
+	ZTt63KXjRxD+2/38b21xhjHRJoZTQZ44sjk3ojHH50pJI2nQGdv1g1DddomnIKRK60V0eD+wpgH
+	+cXBTrmLK6RdkzLBv13mFnmduU/KTjKDem4eifxkXb1Mk5VSdcisYSnQycbpmEWyD7r7vT6SOq/
+	M4e+vVe4YWUc+QqXyM+XQ7eaRDAdSkT2ObB5xluFXRddpgJxby09bhtPx7v3oRWdczAW8N4=
+X-Google-Smtp-Source: AGHT+IGdejKWhHgobANcBR0HkA6BZ7303l9tnuRyiuAvIspM7E6yB+9PaEvl5m9+eOZo13IwvIZIoA==
+X-Received: by 2002:a17:907:6d23:b0:ac7:3929:25fa with SMTP id a640c23a62f3a-ad1e79a28bamr109364566b.30.1746564459254;
+        Tue, 06 May 2025 13:47:39 -0700 (PDT)
+Received: from localhost (93-44-188-26.ip98.fastwebnet.it. [93.44.188.26])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad189540d5bsm770703266b.176.2025.05.06.13.47.38
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 May 2025 13:47:38 -0700 (PDT)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Tue, 6 May 2025 22:49:07 +0200
+To: Andrea della Porta <andrea.porta@suse.com>
+Cc: Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Wilczynski <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
+	Derek Kiernan <derek.kiernan@amd.com>,
+	Dragan Cvetic <dragan.cvetic@amd.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Saravana Kannan <saravanak@google.com>, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-gpio@vger.kernel.org, Masahiro Yamada <masahiroy@kernel.org>,
+	Stefan Wahren <wahrenst@gmx.net>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Andrew Lunn <andrew@lunn.ch>, Phil Elwell <phil@raspberrypi.com>,
+	Dave Stevenson <dave.stevenson@raspberrypi.com>,
+	kernel-list@raspberrypi.com, Matthias Brugger <mbrugger@suse.com>
+Subject: Re: [PATCH v9 -next 08/12] arm64: dts: bcm2712: Add external clock
+ for RP1 chipset on Rpi5
+Message-ID: <aBp1wye0L7swfe1H@apocalypse>
+References: <cover.1745347417.git.andrea.porta@suse.com>
+ <38514415df9c174be49e72b88410d56c8de586c5.1745347417.git.andrea.porta@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH net-next v2 09/16] net/mlx5: Handle sync reset now event
-To: Lukas Wunner <lukas@wunner.de>, Moshe Shemesh <moshe@mellanox.com>, "Saeed
- Mahameed" <saeedm@nvidia.com>, Leon Romanovsky <leon@kernel.org>, Tariq
- Toukan <tariqt@nvidia.com>, <linux-rdma@vger.kernel.org>
-CC: "David S. Miller" <davem@davemloft.net>, Jakub Kicinski <kuba@kernel.org>,
-	Jiri Pirko <jiri@nvidia.com>, <netdev@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-References: <1602050457-21700-1-git-send-email-moshe@mellanox.com>
- <1602050457-21700-10-git-send-email-moshe@mellanox.com>
- <Z-g6pzpZu_TU0-nA@wunner.de>
-Content-Language: en-US
-From: Moshe Shemesh <moshe@nvidia.com>
-In-Reply-To: <Z-g6pzpZu_TU0-nA@wunner.de>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: rnnvmail201.nvidia.com (10.129.68.8) To
- rnnvmail201.nvidia.com (10.129.68.8)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SA2PEPF00003AE4:EE_|DS0PR12MB8294:EE_
-X-MS-Office365-Filtering-Correlation-Id: 499ea63c-49ee-43ef-d17c-08dd8cd8f696
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700013|82310400026|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?ODdxRDEreFZSTEZ4NVdTdWd2Rnp1d29aZVBlN3QrMEJ0SnVVM3BzNUpJb3ZI?=
- =?utf-8?B?WVdneldYM1BkWmJPLytncGE0YXcwMWZkdHZoMmxOQnJDcHA0UnBhZ0hOYnBF?=
- =?utf-8?B?TGliQUo5ZFZESlF5MlFTY2M1bzRGd1F2dTZLdVB6K09VOG9WOFVobytmVFJw?=
- =?utf-8?B?cGRrUzdIMEFlTkVSMk9KMjlxV1l4YmdXdXNHOHhiOG15ZFltZTBZUmZ3SjlU?=
- =?utf-8?B?dkkwMFNwSzlrWG5hNXNpTldqMDFwVjh1TzJrZkRWL2JIY2xwUWErSHlvblow?=
- =?utf-8?B?cy9jMGkwTWJta3QvekYxQzVJTFU3K09pRWZRcUdjR2ppZklCZFdQdklwN3Ix?=
- =?utf-8?B?dEFiT1FGLzUwZjlwckdudllrbVU0a2poVHVqQ3VoVkZ3d2tab3RnVDlEMjN4?=
- =?utf-8?B?Q3B3aEh1VFdIV0hqNXJ5dTh6a1VCVHArL3Q4TWptdUg2Z1pFZFFXcjBuTEk2?=
- =?utf-8?B?Qk5WSkxBaUV3cHkzb2FhTWF6Z2dqbkNWNWZsU2hWZ3JTQXkyWkhSc2JUWTFt?=
- =?utf-8?B?MDlMRkRuOU5uQUdtN2Y3c3JtRG5vRTc4ODJtVlhOMzN3U294eVdRdG9mNml2?=
- =?utf-8?B?cFpGNmo5MHJPeE9SZUJoM21yRkVES0U3K1FuOVRxbUJldEtZdjErZ0hRbGoy?=
- =?utf-8?B?QklYSXZnSUJxVHhhS1FtQ1phdDZEKzB5VWowZlFLYUlLbmExQ21kbDluM2NQ?=
- =?utf-8?B?bjNwSEpsbGJpN0pFbTJYTEtvK2xqdndNT0tkUm9SQk1HN215Y2M4UXdwblJF?=
- =?utf-8?B?TStxRGc2c3NNcVlPMnRCVld5T1JPblNqQUJoU0NmMUpMcDNsbmFKSERHQ2Vw?=
- =?utf-8?B?bHp5UWdic0pzNXRONndoSUJibTMrVFFURmNaVlV0LzBFZjRxeFlEWXl1K0ww?=
- =?utf-8?B?NnBsVDNmMDZQUnNJTVgzTjZpazlPTFB3aGJBc3RZM29WdmxwU0ZYOXVVWnNx?=
- =?utf-8?B?c1l0Ti96azZPQ1p2aHRIUUU2SEJTMmFFcGY1U3dkdXd4UTFlRFFjQXFGd1FI?=
- =?utf-8?B?NDFVdXJ5M0E5SXhmQzlzSFdWanhzb3hXWjNYelVKOS9SWlZYRE5FQWhxdWw2?=
- =?utf-8?B?aDNwQWI2UlJtSFdYWnVUUHcvMWdkdkNBTE9NMG5aZk1xdVJQVTFWNzl5TW9u?=
- =?utf-8?B?cjFRY3FtdVlZeWRxODFBc1BOYzBwVXN6N2JyKzQzQWJiaGlOTW01aEdmN2Zj?=
- =?utf-8?B?LzdtSUtlWnJjSUxXS3I3dnNPTEhtTDJ4cEZDY2Y4L1phZFZCa1IwT1BJOWVs?=
- =?utf-8?B?M3NFYTk5ZVlCVTJZdm5EcVk3STdXMDFqSzJCazRUYW9hRmw5djZOdVplNnNy?=
- =?utf-8?B?eC9Xb0dINWZPQTRjYjE5OVYwMkxlb2JzQXJqdXVwbmdGN1NzaGNabTJKYWJP?=
- =?utf-8?B?OUpMTnBiZXBvMVBHUE5kbFphcGUzNENvdTBlZVh2UVQxZkhlNXI2M3Jta0hQ?=
- =?utf-8?B?UVJJcWxWMWRZTEpPeTBDRVZJL3ZMN2doczIrSFVkR3RPQVpGcHNJRVhGMTd3?=
- =?utf-8?B?dDdiYXFEZDc2UGlxQ3RjZEVjTTlNV0tPZjFLSXdtdUtyVStPWXVOd0gvYkFX?=
- =?utf-8?B?Z1QxQldYUmpYaHhaMXd4eXEyeUNmNURyNmxaaHA4cXVGaU5IV1BUNzhtT2Rt?=
- =?utf-8?B?MXdJVFJiTWtqaGFRWTlpK3NrNGRtZEtieGFUbmt0cXp3MzV2Z3ZHOXlsUk1D?=
- =?utf-8?B?MHhoMmduNHlZbTQ3TlRab3hFUW84NGMyeVRYcXpKN1lwam0wdzZxTmYxaFc4?=
- =?utf-8?B?Z2E3eHYwLytBNk51ZGZkRXlqYjZxcDc4S0NDcjZzcW94WEZmZ2ZEeXBJWWtW?=
- =?utf-8?B?VW1LVEY3enN2Qldxcm5JQkN2T3BHQlp6MnhhSVR2bmEwOGhMV3NIaHFMQjFa?=
- =?utf-8?B?cEUvV0VIa0RnY2U5U3J1UFFRbFVFQXdpSnZ0NFBiamwvaXZRSEVsQVRPR0hv?=
- =?utf-8?B?RFAwK3FvYW5SS2dURmozVWZBM2tGWVR6c3BFbVljamdrUk90OFRRN1kxc3NK?=
- =?utf-8?B?bFBuYXUrT0xMYkVwN2hnZVhqOFNhU1Q2Sk1KWDFNZ1NWWHAvaGVlOTJNY1Rv?=
- =?utf-8?Q?xC2HSu?=
-X-Forefront-Antispam-Report:
-	CIP:216.228.117.160;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(36860700013)(82310400026)(376014);DIR:OUT;SFP:1101;
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 May 2025 20:02:43.3040
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 499ea63c-49ee-43ef-d17c-08dd8cd8f696
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.160];Helo=[mail.nvidia.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	SA2PEPF00003AE4.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR12MB8294
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <38514415df9c174be49e72b88410d56c8de586c5.1745347417.git.andrea.porta@suse.com>
+
+Hi Florian,
+
+On 20:53 Tue 22 Apr     , Andrea della Porta wrote:
+> The RP1 found on Raspberry Pi 5 board needs an external crystal at 50MHz.
+> Add clk_rp1_xosc node to provide that.
+> 
+> Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
+> Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+
+A gentle reminder for patches 8 through 12 of this series, which I guess
+would ideally be taken by you. Since the merge window is approaching, do
+you think it's feasible to iterate a second pull request to Arnd with my
+patches too?
+
+With respect to your devicetree/next branch, my patches have the following
+conflicts:
+
+PATCH 9:
+- arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts: &pcie1 and &pcie2
+  reference at the end, my patch was rebased on linux-next which has them
+  while your devicetree branch has not. This is trivial to fix too.
+
+PATCH 9 and 10:
+- arch/arm64/boot/dts/broadcom/Makefile on your branch has a line recently
+  added by Stefan's latest patch for RPi2. The fix is trivial.
+
+PATCH 11 and 12:
+- arch/arm64/configs/defconfig: just a couple of fuzz lines.
+
+Please let me know if I should resend those patches adjusted for your tree.
+
+Many thanks,
+Andrea
 
 
-
-On 3/29/2025 9:23 PM, Lukas Wunner wrote:
+> ---
+>  arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts | 7 +++++++
+>  1 file changed, 7 insertions(+)
 > 
-> The following was applied as commit eabe8e5e88f5 ("net/mlx5: Handle
-> sync reset now event").
+> diff --git a/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts b/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts
+> index 34470e3d7171..6ea3c102e0d6 100644
+> --- a/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts
+> +++ b/arch/arm64/boot/dts/broadcom/bcm2712-rpi-5-b.dts
+> @@ -16,6 +16,13 @@ chosen: chosen {
+>  		stdout-path = "serial10:115200n8";
+>  	};
+>  
+> +	clk_rp1_xosc: clock-50000000 {
+> +		compatible = "fixed-clock";
+> +		#clock-cells = <0>;
+> +		clock-output-names = "rp1-xosc";
+> +		clock-frequency = <50000000>;
+> +	};
+> +
+>  	/* Will be filled by the bootloader */
+>  	memory@0 {
+>  		device_type = "memory";
+> -- 
+> 2.35.3
 > 
-> It does some questionable things (from a PCI perspective), so allow
-> me to ask for details:
-> 
-> On Wed, Oct 07, 2020 at 09:00:50AM +0300, Moshe Shemesh wrote:
->> On sync_reset_now event the driver does reload and PCI link toggle to
->> activate firmware upgrade reset. When the firmware sends this event it
->> syncs the event on all PFs, so all PFs will do PCI link toggle at once.
->> To do PCI link toggle, the driver ensures that no other device ID under
->> the same bridge by checking that all the PF functions under the same PCI
->> bridge have same device ID. If no other device it uses PCI bridge link
->> control to turn link down and up.
-> [...]
->> --- a/drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c
->> +++ b/drivers/net/ethernet/mellanox/mlx5/core/fw_reset.c
->> @@ -156,6 +157,120 @@ static void mlx5_sync_reset_request_event(struct work_struct *work)
->>                mlx5_core_warn(dev, "PCI Sync FW Update Reset Ack. Device reset is expected.\n");
->>   }
->>
->> +#define MLX5_PCI_LINK_UP_TIMEOUT 2000
->> +
->> +static int mlx5_pci_link_toggle(struct mlx5_core_dev *dev)
->> +{
->> +     struct pci_bus *bridge_bus = dev->pdev->bus;
->> +     struct pci_dev *bridge = bridge_bus->self;
->> +     u16 reg16, dev_id, sdev_id;
->> +     unsigned long timeout;
->> +     struct pci_dev *sdev;
->> +     int cap, err;
->> +     u32 reg32;
->> +
->> +     /* Check that all functions under the pci bridge are PFs of
->> +      * this device otherwise fail this function.
->> +      */
->> +     err = pci_read_config_word(dev->pdev, PCI_DEVICE_ID, &dev_id);
->> +     if (err)
->> +             return err;
->> +     list_for_each_entry(sdev, &bridge_bus->devices, bus_list) {
->> +             err = pci_read_config_word(sdev, PCI_DEVICE_ID, &sdev_id);
->> +             if (err)
->> +                     return err;
->> +             if (sdev_id != dev_id)
->> +                     return -EPERM;
->> +     }
->> +
->> +     cap = pci_find_capability(bridge, PCI_CAP_ID_EXP);
->> +     if (!cap)
->> +             return -EOPNOTSUPP;
->> +
->> +     list_for_each_entry(sdev, &bridge_bus->devices, bus_list) {
->> +             pci_save_state(sdev);
->> +             pci_cfg_access_lock(sdev);
->> +     }
->> +     /* PCI link toggle */
->> +     err = pci_read_config_word(bridge, cap + PCI_EXP_LNKCTL, &reg16);
->> +     if (err)
->> +             return err;
->> +     reg16 |= PCI_EXP_LNKCTL_LD;
->> +     err = pci_write_config_word(bridge, cap + PCI_EXP_LNKCTL, reg16);
->> +     if (err)
->> +             return err;
->> +     msleep(500);
->> +     reg16 &= ~PCI_EXP_LNKCTL_LD;
->> +     err = pci_write_config_word(bridge, cap + PCI_EXP_LNKCTL, reg16);
->> +     if (err)
->> +             return err;
-> 
-Sorry for late response.
-> The commit message doesn't state the reason why you're toggling
-> the Link Disable bit.
-> 
-> It propagates a Hot Reset down the hierarchy, so perhaps that's
-> the reason you're doing this?
-> 
-> If it is, why didn't you just use one of the existing library calls
-> such as pci_reset_bus(bridge)?
-
-We need PCI link down on all the device functions (can be 2 or even 4) 
-for full chip reset, to activate new FW. The hot reset by 
-pci_reset_bus() has the link down only for 2 ms, not enough for sync 
-reset on all functions with pci link down for new FW load and boot.
-> 
-> Thanks,
-> 
-> Lukas
-
