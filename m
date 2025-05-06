@@ -1,49 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A472205E2F
-	for <linux-pci@vger.kernel.org>; Tue,  6 May 2025 07:39:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5C1272637;
+	Tue,  6 May 2025 07:40:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746517198; cv=none; b=LG8+oJ3SA8tymty8MCIFVhrK5jL+QSJ5NCiuSKPTxKYOGr44Y+yjPGow367DjmF+3Fhc99rWMbi8dbjL9OuXNfawijxFqNnsjS1GaOw5Sert5P8pWJCHDJv7DKsS1BZV5lrwzXSoJHXopycmKvXYne5cmKNLL99BD5FRMbk5pUs=
+	t=1746517200; cv=none; b=EK9d48H+f98uXwuK2znl7q8qzL7bD6FR/PJioi4Qqf9BGh7fBX+QItawOXfEM5ym/EQFgE+atpR5fVRLLxQRxY2EYXe9hty5k2AZ9GhPi/5FkXRT76S6yXKmZwYIIM+A6npctG1IDZR3PgrQMh5OYDqp4yxJi8ri5UrWwDkRBwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746517198; c=relaxed/simple;
-	bh=AER962ZuZOG4wg10/L/A+V16dE9LvDSa7EDpShemSR0=;
+	s=arc-20240116; t=1746517200; c=relaxed/simple;
+	bh=aDBAcDbQGOt5Xv5cthyXK3A/bSsdny7PtcfYNAzg71I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IWUWyQY9znxlwmSHBmzExMRnDHl61g58SbBF7kT68SWuUW+gxxnGreg0/xon+2+BNJRGWENOSkNgBpV7P1yYgQXdFLt0FCu1hSdoiY5KsXLb9a4/tcJNMcrThvRL4UoSqJr72fznf5cdAHjek4suMOE9dJ08bnjDu9ZcJNlrbOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HP0Lfkva; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=oXBDhwdOpk8pJZZUOJKWbfO8jtSFl8kHuInWmrQbid7rmiiwofJmAgsWWHQL60TrxZo9PvqguNIkPvQtlLWEp5IDCRAYT7+Cjkapdt+21cv5KuUCRLCF1xHEPzfZP2godqwFXf4tf5Z+h6LEMmoy8SuBlIIPmpbdoK8+L9vzhL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ORtYcfgG; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HP0Lfkva"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D14F2C4CEE4;
-	Tue,  6 May 2025 07:39:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ORtYcfgG"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39EB4C4CEE4;
+	Tue,  6 May 2025 07:39:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746517197;
-	bh=AER962ZuZOG4wg10/L/A+V16dE9LvDSa7EDpShemSR0=;
+	s=k20201202; t=1746517200;
+	bh=aDBAcDbQGOt5Xv5cthyXK3A/bSsdny7PtcfYNAzg71I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=HP0LfkvaCaUaq/ASe75mL4MzHbEBt0Siq4iUkOIixnsNFQUbcpi6mBrxSTCQ/FURw
-	 rIC+BZohwUELQQgvtnW4rXOePJLkSKTn+0wbCnH3AVsXAUsVNnZdt8GadaFXb+nFB1
-	 F9q7Hr/MvqlqfsDY4Ehy/fvB8eOJr0J95PcOV8ypo8Lx1b4hayjQFepDthrrtGLc2j
-	 LmC6iKR9scGGgTWZJqKXMa6iHbRHVhf2Yfr4EFDJxA2rJH22iH0/OcaFH4/GZujFmx
-	 VdZSnCSXBThLidB1jQMtk2LBMqfvZJUjoZ2PRLIMrgvMsBjpgNVsJPnSrRgZ1Q2Xfw
-	 uZJG3PwfiZzuQ==
+	b=ORtYcfgGYTZGn6p83DHwBgXNrpNQk4f8CgPSNJYfF2fAkWhD4MSzEVlRSyPEoxO8y
+	 evdaYl1MvivN+dcfLkrvDe5iD8elHpUaRYWa0eOP+Psu0aFXOXfSxCnU6DODhxlMQd
+	 4laVsr4+WfY2PnytmfjsCrSq236Kg4ByWNLHPx9KLmC7eARuavfaQ6icStkuI2N/w4
+	 eU1f4XQvBOZ7omzpPZchAnTNP6iKGo1FEQBaEahAZDnpI31bazRfc/ws41nNPP8okw
+	 nZXBJjCpK87+3PxSbPOwSifp4mOABYv36tanhmHQlWW3cPeOoMkBocKcDNtrw+vYCT
+	 rpY4H7JJfWEnw==
 From: Niklas Cassel <cassel@kernel.org>
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
 	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>
+	Bjorn Helgaas <bhelgaas@google.com>
 Cc: Wilfred Mallawa <wilfred.mallawa@wdc.com>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Hans Zhang <18255117159@163.com>,
 	Laszlo Fiat <laszlo.fiat@proton.me>,
 	Niklas Cassel <cassel@kernel.org>,
 	linux-pci@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org
-Subject: [PATCH v2 3/4] PCI: dw-rockchip: Replace PERST sleep time with proper macro
-Date: Tue,  6 May 2025 09:39:38 +0200
-Message-ID: <20250506073934.433176-9-cassel@kernel.org>
+	linux-arm-msm@vger.kernel.org
+Subject: [PATCH v2 4/4] PCI: qcom: Replace PERST sleep time with proper macro
+Date: Tue,  6 May 2025 09:39:39 +0200
+Message-ID: <20250506073934.433176-10-cassel@kernel.org>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250506073934.433176-6-cassel@kernel.org>
 References: <20250506073934.433176-6-cassel@kernel.org>
@@ -53,7 +51,7 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=860; i=cassel@kernel.org; h=from:subject; bh=AER962ZuZOG4wg10/L/A+V16dE9LvDSa7EDpShemSR0=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDIk9+zun3Xrp2Prl8+vjr79rMs+zTtpwfFV9tI3OiavO CJnn/VyYkcpC4MYF4OsmCKL7w+X/cXd7lOOK96xgZnDygQyhIGLUwAm8jyA4b+P7ffq8F0ucu9j rtcWTr0r1b/h5srN0xklQi4uzN9dv9eV4X9QFA+zyLsbFTO+OM7kKLz3km3Z/rln3+3hC13r6SW 2wZ8NAA==
+X-Developer-Signature: v=1; a=openpgp-sha256; l=847; i=cassel@kernel.org; h=from:subject; bh=aDBAcDbQGOt5Xv5cthyXK3A/bSsdny7PtcfYNAzg71I=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDIk9+wxX3jdfJpAn9gxhSVlt8/ccHoWfWrDObkss9ssW 9fqtGnN6ihlYRDjYpAVU2Tx/eGyv7jbfcpxxTs2MHNYmUCGMHBxCsBE2v4zMnyyXhm4cFGixL1f ZdbW006ErG+7uc9vVfq7TQrfqhcp/9vMyDD309udgjKftA9JP5Q1bF6sc5UpozPxdcwSRcHXy70 97vABAA==
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
@@ -62,22 +60,22 @@ No functional change.
 
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/pci/controller/dwc/pcie-dw-rockchip.c | 2 +-
+ drivers/pci/controller/dwc/pcie-qcom.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 6a7ec3545a7f..0baf9da3ac1c 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -225,7 +225,7 @@ static int rockchip_pcie_start_link(struct dw_pcie *pci)
- 	 * We need more extra time as before, rather than setting just
- 	 * 100us as we don't know how long should the device need to reset.
- 	 */
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 01a60d1f372a..fa689e29145f 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -289,7 +289,7 @@ static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
+ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ {
+ 	/* Ensure that PERST has been asserted for at least 100 ms */
 -	msleep(100);
 +	msleep(PCIE_T_PVPERL_MS);
- 	gpiod_set_value_cansleep(rockchip->rst_gpio, 1);
- 
- 	return 0;
+ 	gpiod_set_value_cansleep(pcie->reset, 0);
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
 -- 
 2.49.0
 
