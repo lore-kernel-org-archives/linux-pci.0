@@ -1,52 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E01C149C64;
-	Wed,  7 May 2025 03:10:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00619198A2F;
+	Wed,  7 May 2025 03:10:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746587440; cv=none; b=uAdg1vs1lU47N4WtSP8xBVM8LjvtxNt6VWwX99HKMqKcjFoG7zsjqfodJq2VdzA/tBpTlA0u6csT+YfHMAqsBXRBkeWA/8oEMZJjUqxGu8Eem6n9JqTK11bGoLsg7uGf5nREKuLrfB7is0UKWEqnXA6zxFYngU/zupTC+BYdknM=
+	t=1746587441; cv=none; b=QJQyxTtcjyrYo41rHzRuRTUUZ8zwTA3p0LqlMfUPRPaN7rob1ORZqFHJ4p1Rx8LfZ7mEPFTbuEpgJX933fhNtsW4Y90qOrEeneACX9TLLOSdS9f/TyfFPZgTrukQEsP4vlPfkNLFpmb+X3StUCAOeEeXJUB5XqK+L0JnpFcET5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746587440; c=relaxed/simple;
-	bh=DWEmIOytz3yC00TLxNrVLLYTKH/K0CAb+J1GNPxT0fI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AMmtNc5BLWbBYg43YtihyxoG849ISjk4rJQrAPoWRv0tdQ4ALN5Kg3zhi60VuFGQN+m4H1qVaSeP4dXhrDjRoiEVc5YtUytWcS+5QaQu+596xy9TXqZ/KwEP8CQoB0Ro1IF0Lk6oFKx/6XIJiNMGAqxpA+W6MbXuos3y6Gy4g9w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=bNSqcUdw; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1746587441; c=relaxed/simple;
+	bh=FJ2KByaAYjEkQMGujq0K6Dmh3OWcZtTDYtzMgBr2Tu0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=WJTVu7PqHScD2GibDleVNwqJTGX7t6udcQZ1Vx5UGg68JuoPM+0+HVwpi3K6PeDkXdGUGlmiAKLhbdIitylKcUJJydvo5wiZvbMtT03/RSPe31Y9uK4LwGiShXDNTtBucFErtafHi4aCY9lTSv/02UvLdnOQn/GT782KhYp62vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Gaa0Obuu; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="bNSqcUdw"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5471GsHT021933;
-	Wed, 7 May 2025 03:10:26 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Gaa0Obuu"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5471H2LA021158;
+	Wed, 7 May 2025 03:10:29 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=vCgZmuG7SF+Td0O33w0zlWSZ0RlRkj6sKgR
-	rerRaWIQ=; b=bNSqcUdwreFY2FUiauMB2OJGw3cml/FvD92LrBKyVP2Cc2Eow56
-	9q9w2V95ZVJBr5AyNV08urvRslBEmSNFDEzfsPPVHBus7s4VLZJCKrvuZBQpNWsF
-	APzzZuAo5puAI5iZk8apiAl1gULo91jDgC1L49oZokDWQNh0qDAQOF0HU8Q2uQeY
-	mZ3SutIZp64hE3Lex902R6SyMm181JFW+Oue5iz0pFIGtFPIlSoRok0EAjgsyva8
-	GxTOabpkRipXkaCw4ncIVF0ZVAJWhpDj/1VWHwE3Pw8ZvC8Qb0RK3ea4m+3UBc+8
-	TfixBdXTnSvRyXXyt4ke+CrkcsX9+XZPrqQ==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46f5uuv9w3-1
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=JqvccdkFw6z
+	Ly9lukoo8fOSGsoy9YBHomf6f2cM0rlU=; b=Gaa0ObuuHTr2VZVTTRb2P8Hn9pd
+	r1v8MnSRUfCy1qHgQPH6Nht2LR/6wf+CXqmr9GxXcqi73vQwsnnvqtgOyJO+NDOC
+	Tg8H4QJYFwONKh3hXPNs2kT0v1HbDs5Slr8ro2mTeYWz+hjDf52l4p1NIzQ1zHpw
+	CZq5MqE4Zyu4LW4lizmIB0H4NH1DQ6aNG2j+xnEAhRdtPc++nIeYEV1a23ePoHtX
+	nPlrjarwZ36sqsKUG4wQ8sEh7SML356RB488WeNOliavX7BOn/Wu3wikHsyW3RE+
+	zjDYJ83lf9vlvMoD6nQh/QHpFA+/AeWsgiu9UjTyKz8NRrgXH74/7IO/80Q==
+Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46d9ep9qsm-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 07 May 2025 03:10:25 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5473ANlT005958;
-	Wed, 7 May 2025 03:10:23 GMT
+	Wed, 07 May 2025 03:10:28 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5473AQjN014725;
+	Wed, 7 May 2025 03:10:26 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 46dc7m5ysb-1
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 46dc7mdwp4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 07 May 2025 03:10:23 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5473ANYP005884;
-	Wed, 7 May 2025 03:10:23 GMT
+	Wed, 07 May 2025 03:10:26 +0000
+Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5473AQEQ014705;
+	Wed, 7 May 2025 03:10:26 GMT
 Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5473AMGX005700
+	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 5473APRD014694
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 07 May 2025 03:10:23 +0000
+	Wed, 07 May 2025 03:10:26 +0000
 Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 614212F3B; Wed,  7 May 2025 11:10:21 +0800 (CST)
+	id 7F6472F3D; Wed,  7 May 2025 11:10:24 +0800 (CST)
 From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 To: vkoul@kernel.org, kishon@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
         conor+dt@kernel.org, dmitry.baryshkov@linaro.org,
@@ -57,11 +58,14 @@ Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
         linux-pci@vger.kernel.org, quic_qianyu@quicinc.com,
         quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-Subject: [PATCH v5 0/6] pci: qcom: Add QCS8300 PCIe support
-Date: Wed,  7 May 2025 11:10:13 +0800
-Message-Id: <20250507031019.4080541-1-quic_ziyuzhan@quicinc.com>
+        Ziyue Zhang <quic_ziyuzhan@quicinc.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: [PATCH v5 4/6] arm64: dts: qcom: qcs8300-ride: enable pcie0 interface
+Date: Wed,  7 May 2025 11:10:17 +0800
+Message-Id: <20250507031019.4080541-5-quic_ziyuzhan@quicinc.com>
 X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250507031019.4080541-1-quic_ziyuzhan@quicinc.com>
+References: <20250507031019.4080541-1-quic_ziyuzhan@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -73,89 +77,97 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=L9cdQ/T8 c=1 sm=1 tr=0 ts=681acf22 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=EOUG00ZC c=1 sm=1 tr=0 ts=681acf24 cx=c_pps
  a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=dt9VzEwgFbYA:10 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8
- a=QyXUC8HyAAAA:8 a=NVt-qORIiALRBcsd3-8A:9 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: GLqQMwSefUQvGc1dYT0vr3IILhZmMYaJ
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA3MDAyNyBTYWx0ZWRfX/ztqb3d67J/I
- oeCPFdwfxgJrLdXanmMWby+nUDpzbbE2yFEOD8/I4iCl3R9iFRSsV9J+ojtxZsdSG6cZh8l8m1w
- K4Lh2IhMqO/m8avANnYsH12q5A9Qsw8ppMsOaKDklMHjKW2NzefowAzyYhMIy/+L6/nMqUFokJV
- NAQ60RrYNbuDpLaTO9pjqikwpMAVO2/Xj4fSIPXuUg+1ECF/1hxnnOgRrmcOteEJFPMa01UyRbM
- v3Evgvdyxwk0Pl+tyyjAxGDiZhrDONNg95F12Upz8du17cwM8Hc6A8l4825h1d9ndnXRJuwK4Qo
- k7y60D/RRueZAzcC+6eRKjOhAsE/a0JqWmOKGLSjrT/9E8VrQD8SPjLx0bXFv8r+FxmedbIUCPb
- cQKL9xMdTNhzbKLk/fX3vXzufPTud3zsY77NNBxVSl1iyoYSeA4fWz2U7xT64J/sywps8jl6
-X-Proofpoint-ORIG-GUID: GLqQMwSefUQvGc1dYT0vr3IILhZmMYaJ
+ a=dt9VzEwgFbYA:10 a=KKAkSRfTAAAA:8 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8
+ a=Ukq1jWRXX9In9DvyudYA:9 a=cvBusfyB2V15izCimMoJ:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: hw6_1St1vxreUZ1TD36bWQEMbvtWiB2Y
+X-Proofpoint-GUID: hw6_1St1vxreUZ1TD36bWQEMbvtWiB2Y
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA3MDAyNyBTYWx0ZWRfX6QQto7oyq+Z0
+ GbZ3P3w+p0lgdE640OIJWY09/1Sbj8uK78NDTHrWzUym8t8B5GbZbw4p+GR1XpMvGfpsdK6+tJd
+ 3s1AWRvazRN1MsOeO/7R+kFWvSDu96kL+73SL3TVBenOrrGUf8s/3nzoMHnh1fRZ795aYoGrhBW
+ dJvY31D4z1VySK7mzKxnkbT+hvt/JzEhS+Gr0IUyzs8Hc6x9cp3+OBWE3gbkuluPI1WUjxm0/rI
+ BNAxOo0z6/BXYJI7tnVTTEgs1Jqt6QOry+8xHEsTC+EZv4BuFex6DLE7gmt0w6DX435zIuGBbUs
+ dNnSl21OkEVsMH78BVEUs09lColYxh/jedmN1a1VxCJXrv9caM/HicJxaAxHemi3uqL3nVlAIng
+ p84Ibr9J0YdO/b9Q4/DOzXOjcJQVyMXUF2++tKoc9MtC4QUITGCvdc7WjcGmBdHVx8y2P3Y4
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-05-07_01,2025-05-06_01,2025-02-21_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 mlxlogscore=800 spamscore=0 suspectscore=0 impostorscore=0
- mlxscore=0 priorityscore=1501 clxscore=1011 bulkscore=0 lowpriorityscore=0
- adultscore=0 malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
- definitions=main-2505070027
+ adultscore=0 clxscore=1011 impostorscore=0 spamscore=0 lowpriorityscore=0
+ bulkscore=0 phishscore=0 suspectscore=0 mlxlogscore=960 mlxscore=0
+ priorityscore=1501 malwarescore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505070027
 
-This series adds document, phy, configs support for PCIe in QCS8300.
-The series depend on the following devicetree.
+Add configurations in devicetree for PCIe0, board related gpios,
+PMIC regulators, etc for qcs8300-ride board.
 
-This series depends on PCIe SMMU for QCS8300:
-https://lore.kernel.org/all/dc535643-235d-46e9-b241-7d7b0e75e6ac@oss.qualcomm.com/
-
-Have follwing changes:
-	- Add dedicated schema for the PCIe controllers found on QCS8300.
-	- Add compatible for qcs8300 platform.
-	- Add configurations in devicetree for PCIe0, including registers, clocks, interrupts and phy setting sequence.
-	- Add configurations in devicetree for PCIe1, including registers, clocks, interrupts and phy setting sequence.
-
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 ---
-Changes in v5:
-- Add QCOM PCIe controller version in commit msg (Mani)
-- Modify platform dts change subject (Dmitry)
-- Update bindings to fix the dtb check errors.
-- Remove qcs8300 compatible in driver, do not need it (Dmitry)
-- Fixed compile error found by kernel test robot
-- Link to v4: https://lore.kernel.org/linux-phy/20241220055239.2744024-1-quic_ziyuzhan@quicinc.com/
+ arch/arm64/boot/dts/qcom/qcs8300-ride.dts | 40 +++++++++++++++++++++++
+ 1 file changed, 40 insertions(+)
 
-Changes in v4:
-- Add received tag
-- Fixed compile error found by kernel test robot
-- Link to v3: https://lore.kernel.org/lkml/202412211301.bQO6vXpo-lkp@intel.com/T/#mdd63e5be39acbf879218aef91c87b12d4540e0f7
-
-Changes in v3:
-- Add received tag(Rob & Dmitry)
-- Update pcie_phy in gcc node to soc dtsi(Dmitry & Konrad)
-- remove pcieprot0 node(Konrad & Mani)
-- Fix format comments(Konrad)
-- Update base-commit to tag: next-20241213(Bjorn)
-- Corrected of_device_id.data from 1.9.0 to 1.34.0.
-- Link to v2: https://lore.kernel.org/all/20241128081056.1361739-1-quic_ziyuzhan@quicinc.com/
-
-Changes in v2:
-- Fix some format comments and match the style in x1e80100(Konrad)
-- Add global interrupt for PCIe0 and PCIe1(Konrad)
-- split the soc dtsi and the platform dts into two changes(Konrad)
-- Link to v1: https://lore.kernel.org/all/20241114095409.2682558-1-quic_ziyuzhan@quicinc.com/
-
-Ziyue Zhang (6):
-  dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Update pcie phy bindings
-    for sa8775p
-  dt-bindings: PCI: qcom,pcie-sa8775p: document qcs8300
-  arm64: dts: qcom: qcs8300: enable pcie0
-  arm64: dts: qcom: qcs8300-ride: enable pcie0 interface
-  arm64: dts: qcom: qcs8300: enable pcie1
-  arm64: dts: qcom: qcs8300-ride: enable pcie1 interface
-
- .../bindings/pci/qcom,pcie-sa8775p.yaml       |  26 +-
- .../phy/qcom,sc8280xp-qmp-pcie-phy.yaml       |   4 +-
- arch/arm64/boot/dts/qcom/qcs8300-ride.dts     |  80 +++++
- arch/arm64/boot/dts/qcom/qcs8300.dtsi         | 297 +++++++++++++++++-
- 4 files changed, 396 insertions(+), 11 deletions(-)
-
-
-base-commit: a269b93a67d815c8215fbfadeb857ae5d5f519d3
+diff --git a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
+index b5c9f89b3435..c3fe3b98b1b6 100644
+--- a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
++++ b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
+@@ -285,6 +285,23 @@ queue3 {
+ 	};
+ };
+ 
++&pcie0 {
++	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
++	wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
++
++	pinctrl-0 = <&pcie0_default_state>;
++	pinctrl-names = "default";
++
++	status = "okay";
++};
++
++&pcie0_phy {
++	vdda-phy-supply = <&vreg_l6a>;
++	vdda-pll-supply = <&vreg_l5a>;
++
++	status = "okay";
++};
++
+ &qupv3_id_0 {
+ 	status = "okay";
+ };
+@@ -310,6 +327,29 @@ &serdes0 {
+ };
+ 
+ &tlmm {
++	pcie0_default_state: pcie0-default-state {
++		wake-pins {
++			pins = "gpio0";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		clkreq-pins {
++			pins = "gpio1";
++			function = "pcie0_clkreq";
++			drive-strength = <2>;
++			bias-pull-up;
++		};
++
++		perst-pins {
++			pins = "gpio2";
++			function = "gpio";
++			drive-strength = <2>;
++			bias-pull-down;
++		};
++	};
++
+ 	ethernet0_default: ethernet0-default-state {
+ 		ethernet0_mdc: ethernet0-mdc-pins {
+ 			pins = "gpio5";
 -- 
 2.34.1
 
