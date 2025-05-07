@@ -1,53 +1,70 @@
-Received: from out199-4.us.a.mail.aliyun.com (out199-4.us.a.mail.aliyun.com [47.90.199.4])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23A0CF4E2;
-	Wed,  7 May 2025 01:16:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=47.90.199.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DFD0EAD0;
+	Wed,  7 May 2025 03:10:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746580577; cv=none; b=GoEt/44dVKoEVSCSJ0ELjiRF6i9FWVt6Uzse4gDJL8AgvZ7vgQGqlR0tagwc7CIEjh/6x5Jfnvo1vdogWuIoU7PJO7C4XnNJgQ/eu/6VwttW2gt44OjkGXhW5U825gvFXg89B5HLRIktKF/Ijaxm2+yrJMRNjrrT3BSO2lTpEyU=
+	t=1746587439; cv=none; b=IaqaZzgEoSoQ++uGUaRn8aPV5dj4+nwytkya2SQ4k3Hkwki/FD+OBdK7p0U9VGmBO29UKdP6mPR2U7lgLl7g9bAcMv/7F0EGYy2DfDcxj0RfZJAWdtlw96sRl9ivwe/rYxDnN33ynkyQrsz6J9zP0GxIDKf4dERKpqSzfUVpjmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746580577; c=relaxed/simple;
-	bh=4Y/wfHCD/JmJfE1SBEtkQtHX5ZUN0fh0CH1uktm6L4k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o5Gu46vtGRB7AUZ0ag2jd5MI8mci85cXrJE5uW59a77zbAWYFkOdnEjCWLh3Xmf2uJuDDOc4tl7+FxXoH48269/Wg0N0BkyXvpB7nR9Upd/JmhGTr3s3I89wXKHMnEOzbCDRtKKSVgVfz+la7ifXp74NmaRwnPt5EZr6ZkiwmKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=UjPwzL2e; arc=none smtp.client-ip=47.90.199.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1746587439; c=relaxed/simple;
+	bh=mfLb12vO/eWh4WaqLTB2s7VVkSlR3AZOyfNOC0OayVc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=pyrU4xpmFlpINjNqhRCUUSJ4ByP88TjDfFMLHc2KT2+Rw5C+R/y1uJLLRRhJDkVVfQHUmBmcJoFNcnupA8K5LVj/VBLxYbliZmYOu9wOyhKfZZ4CEmpXKuyTN29kgK3Zbzga5EIcw8uUJ91YxVGnRf/XeftdS/eX7Mc+L+e9vyY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EPUjd3lx; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="UjPwzL2e"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1746580551; h=From:To:Subject:Date:Message-ID:MIME-Version;
-	bh=BhkBg8BHNtFzJ9+ijMhzKHUaq64bGU+JAPv//d4vJvM=;
-	b=UjPwzL2exoui+xntVmaD82fl9MKZRNmHOtzVksh1TLNxVdxY4N84oZHz2hT8Rcez93C/JymMNeKTIPnURCMQu6cqg9V+40KUnFtUR+O+ULUnuexQlxq3ElaLqPb/fVPnRMOtrk9nQRSiF9EOzsZkSfMx20zkrFc7Usfp5opzjII=
-Received: from localhost.localdomain(mailfrom:xueshuai@linux.alibaba.com fp:SMTPD_---0WZh9L8X_1746580536 cluster:ay36)
-          by smtp.aliyun-inc.com;
-          Wed, 07 May 2025 09:15:49 +0800
-From: Shuai Xue <xueshuai@linux.alibaba.com>
-To: rostedt@goodmis.org,
-	lukas@wunner.de,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-edac@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,
-	helgaas@kernel.org
-Cc: bhelgaas@google.com,
-	tony.luck@intel.com,
-	bp@alien8.de,
-	xueshuai@linux.alibaba.com,
-	mhiramat@kernel.org,
-	mathieu.desnoyers@efficios.com,
-	oleg@redhat.com,
-	naveen@kernel.org,
-	davem@davemloft.net,
-	anil.s.keshavamurthy@intel.com,
-	mark.rutland@arm.com,
-	peterz@infradead.org,
-	tianruidong@linux.alibaba.com
-Subject: [PATCH v7] PCI: hotplug: Add a generic RAS tracepoint for hotplug event
-Date: Wed,  7 May 2025 09:15:35 +0800
-Message-ID: <20250507011535.43800-1-xueshuai@linux.alibaba.com>
-X-Mailer: git-send-email 2.44.0
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EPUjd3lx"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5471GsOB019006;
+	Wed, 7 May 2025 03:10:27 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=1HbdsOJNgI6
+	7H10Eq7jnbZdoIIeJf+3X1GGfehTd3Kc=; b=EPUjd3lxs0uDemNz82kLFq1Zf/1
+	9d9CFc/EUpV+jBayJzEJLL0QhiFBijHl8PxDh3curDbxYqAr6vIi/mEfaoj4flKp
+	haZaYXlwlfrXcqMtRuE/X/pt5JU/QN27GlTeO+3FyNgxBBLhzxlHU3ghu85fjFeX
+	IWVqg8y8UE5frP7OXHNyIwBLENsqiEEI9qtRks6zQdYqx3O10kgC3Vrf38OLGaiJ
+	QURXYrgCB49ecPYjQVV0LHksjpxFv9soexlBrBgY4vSBOfNc8DVhSnVJBLNOne8J
+	88q3GytqhrWybdlsqb5cj4I05IxLbrH/kueknfxl0h964W2LOUj/j0px0iw==
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46f5wg45tc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 May 2025 03:10:27 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5473AObu006141;
+	Wed, 7 May 2025 03:10:24 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 46dc7m5ysr-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 May 2025 03:10:24 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5473AO2r006135;
+	Wed, 7 May 2025 03:10:24 GMT
+Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5473AOBR006125
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 May 2025 03:10:24 +0000
+Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
+	id 267EE2F3F; Wed,  7 May 2025 11:10:23 +0800 (CST)
+From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+To: vkoul@kernel.org, kishon@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+        conor+dt@kernel.org, dmitry.baryshkov@linaro.org,
+        neil.armstrong@linaro.org, abel.vesa@linaro.org,
+        manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, kw@linux.com,
+        bhelgaas@google.com, andersson@kernel.org, konradybcio@kernel.org
+Cc: linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+        linux-pci@vger.kernel.org, quic_qianyu@quicinc.com,
+        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
+        Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Subject: [PATCH v5 2/6] dt-bindings: PCI: qcom,pcie-sa8775p: document qcs8300
+Date: Wed,  7 May 2025 11:10:15 +0800
+Message-Id: <20250507031019.4080541-3-quic_ziyuzhan@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250507031019.4080541-1-quic_ziyuzhan@quicinc.com>
+References: <20250507031019.4080541-1-quic_ziyuzhan@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -55,212 +72,118 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: naYzJ3r7232AqcpGp74D6qRF_KxnJ4El
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA3MDAyNyBTYWx0ZWRfX6UoJwPf6sWWn
+ URY/PXYrqLJvbvtkqMmpfb7kWioNoieH/nIQEqNW3fgKsTtEELqqUudIr9/4cXzr+x2DgRtCgGl
+ e0k4cSO2ZTrOldSybM2p4lM7eAuLrM2cy97Q0t7VEaN9iuxFFcZVC/Q6iU4FVSPrrpVU7KbtNJP
+ g3vHjCZsr7BglL4l2pLjnuKJe3b+pUDz5+sh4WePKDaP+K2lxpixb6skSPxUF5f7hf4LCjzN6ly
+ /+LnmBO8vTigJrQLcotL/wpOf7X5U6gKyfSBTpfOGGBEItw6MdHZLLVPwf5f60uj2xod/SbVZ8O
+ rac3bOCpqk1DjeMtN2m17RtLhEbRBSjK51BDYNJ6BPlUqaBXNJ1t3ftc6u14bnGk18NJyXc7eGk
+ Rnxd3hj2QE1rIUOGUlbG07HNWUF4yUMbMROPrcPxYQMEbLQ6UOGrYw7RB8Rjz6SNWjsjuxuG
+X-Authority-Analysis: v=2.4 cv=dPemmPZb c=1 sm=1 tr=0 ts=681acf23 cx=c_pps
+ a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=5s6rildDmCdGve1q1wIA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: naYzJ3r7232AqcpGp74D6qRF_KxnJ4El
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-07_01,2025-05-06_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 adultscore=0 mlxlogscore=999 priorityscore=1501 impostorscore=0
+ suspectscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 clxscore=1011 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
+ definitions=main-2505070027
 
-Hotplug events are critical indicators for analyzing hardware health,
-particularly in AI supercomputers where surprise link downs can
-significantly impact system performance and reliability.
+Add compatible for qcs8300 platform, with sa8775p as the fallback.
 
-To this end, define a new TRACING_SYSTEM named pci, add a generic RAS
-tracepoint for hotplug event to help healthy check, and generate
-tracepoints for pcie hotplug event. Add enum pci_hotplug_event in
-include/uapi/linux/pci.h so applications like rasdaemon can register
-tracepoint event handlers for it.
-
-The output like below:
-
-$ echo 1 > /sys/kernel/debug/tracing/events/pci/pci_hp_event/enable
-$ cat /sys/kernel/debug/tracing/trace_pipe
-    <...>-206     [001] .....    40.373870: pci_hp_event: 0000:00:02.0 slot:10, event:Link Down
-
-    <...>-206     [001] .....    40.374871: pci_hp_event: 0000:00:02.0 slot:10, event:Card not present
-
-Suggested-by: Lukas Wunner <lukas@wunner.de>
-Suggested-by: Steven Rostedt <rostedt@goodmis.org>
-Reviewed-by: Lukas Wunner <lukas@wunner.de>
-Signed-off-by: Shuai Xue <xueshuai@linux.alibaba.com>
+Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 ---
-changes since v6:
-- move defination of tracepoint enum back to trace.h. Otherwise, it will
-  cause a build error when CONFIG_UAPI_HEADER_TEST=y. The problem is that
-  the PCI_HOTPLUG_EVENT macro needs to include "linux/tracepoint.h" but it
-  is not allowed in userspace.
-- No code changes compared to v5.
+ .../bindings/pci/qcom,pcie-sa8775p.yaml       | 26 ++++++++++++++-----
+ 1 file changed, 19 insertions(+), 7 deletions(-)
 
-change since v5: 
-- move define of enum to include/uapi/linux/pci.h
-- link: https://lore.kernel.org/lkml/202501190108.tRReJA1Z-lkp@intel.com/
-
-v5:
-- link: https://patchwork.kernel.org/project/linux-pci/patch/20250109025543.56830-1-xueshuai@linux.alibaba.com/
-
----
- drivers/pci/hotplug/pciehp_ctrl.c | 33 ++++++++++++---
- drivers/pci/hotplug/trace.h       | 68 +++++++++++++++++++++++++++++++
- include/uapi/linux/pci.h          |  7 ++++
- 3 files changed, 102 insertions(+), 6 deletions(-)
- create mode 100644 drivers/pci/hotplug/trace.h
-
-diff --git a/drivers/pci/hotplug/pciehp_ctrl.c b/drivers/pci/hotplug/pciehp_ctrl.c
-index d603a7aa7483..f9beb4d3a9b8 100644
---- a/drivers/pci/hotplug/pciehp_ctrl.c
-+++ b/drivers/pci/hotplug/pciehp_ctrl.c
-@@ -23,6 +23,9 @@
- #include "../pci.h"
- #include "pciehp.h"
+diff --git a/Documentation/devicetree/bindings/pci/qcom,pcie-sa8775p.yaml b/Documentation/devicetree/bindings/pci/qcom,pcie-sa8775p.yaml
+index efde49d1bef8..154bb60be402 100644
+--- a/Documentation/devicetree/bindings/pci/qcom,pcie-sa8775p.yaml
++++ b/Documentation/devicetree/bindings/pci/qcom,pcie-sa8775p.yaml
+@@ -16,7 +16,12 @@ description:
  
-+#define CREATE_TRACE_POINTS
-+#include "trace.h"
-+
- /* The following routines constitute the bulk of the
-    hotplug controller logic
-  */
-@@ -244,12 +247,20 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
- 	case ON_STATE:
- 		ctrl->state = POWEROFF_STATE;
- 		mutex_unlock(&ctrl->state_lock);
--		if (events & PCI_EXP_SLTSTA_DLLSC)
-+		if (events & PCI_EXP_SLTSTA_DLLSC) {
- 			ctrl_info(ctrl, "Slot(%s): Link Down\n",
- 				  slot_name(ctrl));
--		if (events & PCI_EXP_SLTSTA_PDC)
-+			trace_pci_hp_event(pci_name(ctrl->pcie->port),
-+					   slot_name(ctrl),
-+					   PCI_HOTPLUG_LINK_DOWN);
-+		}
-+		if (events & PCI_EXP_SLTSTA_PDC) {
- 			ctrl_info(ctrl, "Slot(%s): Card not present\n",
- 				  slot_name(ctrl));
-+			trace_pci_hp_event(pci_name(ctrl->pcie->port),
-+					   slot_name(ctrl),
-+					   PCI_HOTPLUG_CARD_NOT_PRESENT);
-+		}
- 		pciehp_disable_slot(ctrl, SURPRISE_REMOVAL);
- 		break;
- 	default:
-@@ -269,6 +280,9 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
- 					      INDICATOR_NOOP);
- 			ctrl_info(ctrl, "Slot(%s): Card not present\n",
- 				  slot_name(ctrl));
-+			trace_pci_hp_event(pci_name(ctrl->pcie->port),
-+					   slot_name(ctrl),
-+					   PCI_HOTPLUG_CARD_NOT_PRESENT);
- 		}
- 		mutex_unlock(&ctrl->state_lock);
- 		return;
-@@ -281,12 +295,19 @@ void pciehp_handle_presence_or_link_change(struct controller *ctrl, u32 events)
- 	case OFF_STATE:
- 		ctrl->state = POWERON_STATE;
- 		mutex_unlock(&ctrl->state_lock);
--		if (present)
-+		if (present) {
- 			ctrl_info(ctrl, "Slot(%s): Card present\n",
- 				  slot_name(ctrl));
--		if (link_active)
--			ctrl_info(ctrl, "Slot(%s): Link Up\n",
--				  slot_name(ctrl));
-+			trace_pci_hp_event(pci_name(ctrl->pcie->port),
-+					   slot_name(ctrl),
-+					   PCI_HOTPLUG_CARD_PRESENT);
-+		}
-+		if (link_active) {
-+			ctrl_info(ctrl, "Slot(%s): Link Up\n", slot_name(ctrl));
-+			trace_pci_hp_event(pci_name(ctrl->pcie->port),
-+					   slot_name(ctrl),
-+					   PCI_HOTPLUG_LINK_UP);
-+		}
- 		ctrl->request_result = pciehp_enable_slot(ctrl);
- 		break;
- 	default:
-diff --git a/drivers/pci/hotplug/trace.h b/drivers/pci/hotplug/trace.h
-new file mode 100644
-index 000000000000..5b60cd7bcffb
---- /dev/null
-+++ b/drivers/pci/hotplug/trace.h
-@@ -0,0 +1,68 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+#if !defined(_TRACE_HW_EVENT_PCI_HP_H) || defined(TRACE_HEADER_MULTI_READ)
-+#define _TRACE_HW_EVENT_PCI_HP_H
-+
-+#include <linux/tracepoint.h>
-+
-+#undef TRACE_SYSTEM
-+#define TRACE_SYSTEM pci
-+
-+#define PCI_HOTPLUG_EVENT					\
-+	EM(PCI_HOTPLUG_LINK_UP,			"Link Up")	\
-+	EM(PCI_HOTPLUG_LINK_DOWN,		"Link Down")	\
-+	EM(PCI_HOTPLUG_CARD_PRESENT,		"Card present")	\
-+	EMe(PCI_HOTPLUG_CARD_NOT_PRESENT,	"Card not present")
-+
-+/* Enums require being exported to userspace, for user tool parsing */
-+#undef EM
-+#undef EMe
-+#define EM(a, b)	TRACE_DEFINE_ENUM(a);
-+#define EMe(a, b)	TRACE_DEFINE_ENUM(a);
-+
-+PCI_HOTPLUG_EVENT
-+
-+/*
-+ * Now redefine the EM() and EMe() macros to map the enums to the strings
-+ * that will be printed in the output.
-+ */
-+#undef EM
-+#undef EMe
-+#define EM(a, b)	{a, b},
-+#define EMe(a, b)	{a, b}
-+
-+TRACE_EVENT(pci_hp_event,
-+
-+	TP_PROTO(const char *port_name,
-+		 const char *slot,
-+		 const int event),
-+
-+	TP_ARGS(port_name, slot, event),
-+
-+	TP_STRUCT__entry(
-+		__string(	port_name,	port_name	)
-+		__string(	slot,		slot		)
-+		__field(	int,		event	)
-+	),
-+
-+	TP_fast_assign(
-+		__assign_str(port_name);
-+		__assign_str(slot);
-+		__entry->event = event;
-+	),
-+
-+	TP_printk("%s slot:%s, event:%s\n",
-+		__get_str(port_name),
-+		__get_str(slot),
-+		__print_symbolic(__entry->event, PCI_HOTPLUG_EVENT)
-+	)
-+);
-+
-+#endif /* _TRACE_HW_EVENT_PCI_HP_H */
-+
-+#undef TRACE_INCLUDE_PATH
-+#define TRACE_INCLUDE_PATH  ../../drivers/pci/hotplug
-+#undef TRACE_INCLUDE_FILE
-+#define TRACE_INCLUDE_FILE trace
-+
-+/* This part must be outside protection */
-+#include <trace/define_trace.h>
-diff --git a/include/uapi/linux/pci.h b/include/uapi/linux/pci.h
-index a769eefc5139..4f150028965d 100644
---- a/include/uapi/linux/pci.h
-+++ b/include/uapi/linux/pci.h
-@@ -39,4 +39,11 @@
- #define PCIIOC_MMAP_IS_MEM	(PCIIOC_BASE | 0x02)	/* Set mmap state to MEM space. */
- #define PCIIOC_WRITE_COMBINE	(PCIIOC_BASE | 0x03)	/* Enable/disable write-combining. */
+ properties:
+   compatible:
+-    const: qcom,pcie-sa8775p
++    oneOf:
++      - const: qcom,pcie-sa8775p
++      - items:
++          - enum:
++              - qcom,pcie-qcs8300
++          - const: qcom,pcie-sa8775p
  
-+enum pci_hotplug_event {
-+	PCI_HOTPLUG_LINK_UP,
-+	PCI_HOTPLUG_LINK_DOWN,
-+	PCI_HOTPLUG_CARD_PRESENT,
-+	PCI_HOTPLUG_CARD_NOT_PRESENT,
-+};
-+
- #endif /* _UAPILINUX_PCI_H */
+   reg:
+     minItems: 6
+@@ -45,7 +50,7 @@ properties:
+ 
+   interrupts:
+     minItems: 8
+-    maxItems: 8
++    maxItems: 9
+ 
+   interrupt-names:
+     items:
+@@ -57,13 +62,16 @@ properties:
+       - const: msi5
+       - const: msi6
+       - const: msi7
++      - const: global
+ 
+   resets:
+-    maxItems: 1
++    minItems: 1
++    maxItems: 2
+ 
+   reset-names:
+     items:
+       - const: pci
++      - const: link_down
+ 
+ required:
+   - interconnects
+@@ -129,7 +137,8 @@ examples:
+                          <GIC_SPI 313 IRQ_TYPE_LEVEL_HIGH>,
+                          <GIC_SPI 314 IRQ_TYPE_LEVEL_HIGH>,
+                          <GIC_SPI 374 IRQ_TYPE_LEVEL_HIGH>,
+-                         <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>;
++                         <GIC_SPI 375 IRQ_TYPE_LEVEL_HIGH>,
++                         <GIC_SPI 518 IRQ_TYPE_LEVEL_HIGH>;
+             interrupt-names = "msi0",
+                               "msi1",
+                               "msi2",
+@@ -137,7 +146,8 @@ examples:
+                               "msi4",
+                               "msi5",
+                               "msi6",
+-                              "msi7";
++                              "msi7",
++                              "global";
+             #interrupt-cells = <1>;
+             interrupt-map-mask = <0 0 0 0x7>;
+             interrupt-map = <0 0 0 1 &intc GIC_SPI 434 IRQ_TYPE_LEVEL_HIGH>,
+@@ -157,8 +167,10 @@ examples:
+ 
+             power-domains = <&gcc PCIE_0_GDSC>;
+ 
+-            resets = <&gcc GCC_PCIE_0_BCR>;
+-            reset-names = "pci";
++            resets = <&gcc GCC_PCIE_1_BCR>,
++                     <&gcc GCC_PCIE_1_LINK_DOWN_BCR>;
++            reset-names = "pci",
++                          "link_down";
+ 
+             perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
+             wake-gpios = <&tlmm 0 GPIO_ACTIVE_HIGH>;
 -- 
-2.39.3
+2.34.1
 
