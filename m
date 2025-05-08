@@ -1,66 +1,67 @@
-Received: from mail-wm1-f45.google.com (mail-wm1-f45.google.com [209.85.128.45])
+Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D7B621CFFD
-	for <linux-pci@vger.kernel.org>; Thu,  8 May 2025 07:10:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 078C621CC49
+	for <linux-pci@vger.kernel.org>; Thu,  8 May 2025 07:10:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746688241; cv=none; b=OEWdll4kmUtDrFiMwsni7DPOE2Om0hOPtg5EyFuS41pUDJNH7RWH32MJvkfqabI2oXcWzveipBLTxX5mkIOqZC/IxpSuuZ3iw5EG5kUFHfbT2sLPlqKCAyYEySkUgNbpnXZ/l7OMU/mBLvc9B1fd41yWY7+vuQlSJTBJdWeXwbs=
+	t=1746688241; cv=none; b=DRqIUPxzIv/1QO5enlj2/WIcLcbTg8aG9SVI9Vo3FkOG3iBSmXjpixE0mF9oPRfBcXcHzzEp7cInecaAwsBMFuc4UgpZvcGsQYxRAsfHXuoF88bEz0W0T/pkEYkTIF/aGdQg9yqu2B8tLIbAzQjNDxsGmbEuTfmcn/egdlHr/1o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1746688241; c=relaxed/simple;
-	bh=LPKZpjoorPcJ0i3sy5Fe9gxmCowL7rHoa3+8Kx1k5I8=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=n583gVpWfE4pv0/CZMwRVOVzROPRiQRKaS3QTBPqf4J5TzMo0wuAvpY07X868t3my214KL12gO+ZMiwXpTx0dT7tnoRI3ZONZsIHkuMvwpKSJpqwrBaW2kwH9X5JDX1239HSJW0VcBoURt47ABH1uFwlzJV6aK2+hv5B7iKrN3M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=kkJgEV0p; arc=none smtp.client-ip=209.85.128.45
+	bh=DxjgbttCz+WbWbTBQh3uh5PZxc6tk82mAeHt4QTMKaE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=gbWw7ImrELs2WxNwxfDSc4kXFxTq+pD+I3y3DgB60cL+o/6rdATYsKKXpIVFYfoQGLjR8L+KHhrSpXTTusP3sKwIYtVq0Dhp5cUYYzhrYyEBOyFY8b6RbEx7Jiz8Op7YzDwq/Z0EshQzJ+bhJzpwhTa0ShIaz2cgfg5u30/9fEw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=TZugPGOn; arc=none smtp.client-ip=209.85.128.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="kkJgEV0p"
-Received: by mail-wm1-f45.google.com with SMTP id 5b1f17b1804b1-441d1ed82dbso5776805e9.0
-        for <linux-pci@vger.kernel.org>; Thu, 08 May 2025 00:10:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="TZugPGOn"
+Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-43ce70f9afbso7076835e9.0
+        for <linux-pci@vger.kernel.org>; Thu, 08 May 2025 00:10:38 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1746688235; x=1747293035; darn=vger.kernel.org;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=w00OFq+nWohxSjTOLQvg8WLpoA5EQgRX6xuwn6BkYyQ=;
-        b=kkJgEV0pR0ihy4xUsTYDA9ZXyy6Cp9DC0LfGODNFESVfmCcQueo37RGWYZdnk/uYuD
-         zL1W/bNtw/bjFBhMl/EvUjBCd6IR7Wri4tWKAoS7ZGi2R4iuAXRTSqWEe9U99Etg2Gi3
-         9T7NjO8i2TduGM/NsreOpPPzyMc5bMuV5qqO0xQpCi8+dU4qHQ5LC/CuMTFZhFx2Pj9U
-         JWcuV1H/6x7XGHJgbRuEDVejPEXFh/WmKdWQX2ycNuizwol9qpA26/1Pe3Gj1gr089sX
-         hY+BuvCPJ+VaHsJP5VpWVh2PZZfsi8p6SOf0E2bnq0UOE9kRRQa5NmXOPaGxvn6FD/4a
-         OQ4w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746688235; x=1747293035;
-        h=cc:to:content-transfer-encoding:mime-version:message-id:date
-         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=linaro.org; s=google; t=1746688237; x=1747293037; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=w00OFq+nWohxSjTOLQvg8WLpoA5EQgRX6xuwn6BkYyQ=;
-        b=lfLS1Zpgamw7gZ78G+wzHkHb1py/SvVPXVxBbdY1NNl0UO2nurYFvfBm4IzfTrO2xT
-         2RHny7GtxBZdZ3Y27SdCGwk68QgbfVgcagXr8HYeo5JPKf0hO8cSkqTEAhh505v1sA+Z
-         NL/AwCHlcVj1zTA1R2b7vouSLEf3u7jptx2ZMXIQ9zBrLrdwToIQjZl2dgFWHnAIGc2k
-         YiH4yfQ1CFhZfhBgs+k3jdBOUJxglWXtmwK4t51fin/MX/wCzjlfftwWJODTwPVlPiyJ
-         I3UaJYM8TczVMessacYLKQjvJZ/OCxUGl0s6k8b34McpalAxi9kNlKpEv+PeBdjqcaK9
-         ZprA==
-X-Forwarded-Encrypted: i=1; AJvYcCV7wFrhqLKaRrRInqKozwVSFNX+4+tKyln1m7M4ZMDKoJ1zcsc6xvBQicDB82edf8CtEhJXSbujplc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzb2+w40ZQ4Ucre+FrJXx2iDmlu9WNtHT6aWgtYTBSiqLgtZOpM
-	RspYq4Q/OmrXwzeWnZZOjX5OY9HqQay/4oF6vE7/A0i2cOy2KSC7XASJgiYYJw==
-X-Gm-Gg: ASbGncs5fsctud6EPmKChbCaa2C5UYGsQbqTsHo8IN8z8c9E8nonsfX6uWUedJxGcE+
-	w5WL3+9ghksaWkuu8EnOhp8y99psBC+d8eR7Re6chj56pK3REiXgNNZCQfl15aAlmR7fj651v/v
-	Tf6nPUwKeAvWaNDOFgB84pi/IU5MCfNtyK7/kpYHvLRIakYwysEzQainyO8qZaQ1YiQUjqxRV7H
-	wXn4Zf0ESVJJG1RRRRMH2FKCu+KTbzaISkj8zjbKLI7ADuXjJF/waULJU72pO532/5OVNoOr2ei
-	hO1fekRi95HNPXbjEZD+sq3pJg3a+GATv+G77QBTj0BtHOlslrWCGkLTkRCs6w8bkfjVEydm1ti
-	iA/jjBeRZUEqBf1/ZJPrM4wLrvY4=
-X-Google-Smtp-Source: AGHT+IGyLqEV7FV8nWWqYY5qCj+3cSwPattjz/CT/mpsRNB9xus7yRn9kwCjspweE93CFzg64EvzTw==
-X-Received: by 2002:a05:600c:8205:b0:43c:ed61:2c26 with SMTP id 5b1f17b1804b1-441d44c7c7bmr63780445e9.17.1746688235432;
-        Thu, 08 May 2025 00:10:35 -0700 (PDT)
+        bh=z2xdDt4RdWfJikzYadK7Wm2Dj/LeNHY+o4TedGbXhPE=;
+        b=TZugPGOnAnizTz7qkXkQGx3EpoBd+ZlQRTwhHexL/wf/YDJkBZi30eD7DJP353jows
+         +unNSGkhyxsntZ2vAbJuF3Y89HZgyjrmkMPTY7GH6Vkbsbnoggh0aCK+jYBj+0zojwB3
+         +S3tnp4VoJvh7VEn7+0zoFC4U8oH3feZVbWI4tsSYHo/C8uki3XFvoX/ZJlSk0hykgXK
+         afn70pzSJZcE7FS0cPl95q79TuX6JvpbydvWG2yKGhNrAarV2Js1tRzORyOtolPzpvhO
+         YNQg4AhuDAdw13FWfuRbC6JfIkJIMs0ng24eeDC287Q99tOY9mEwkOHL3fmeCh7uYTKR
+         /ptQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746688237; x=1747293037;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=z2xdDt4RdWfJikzYadK7Wm2Dj/LeNHY+o4TedGbXhPE=;
+        b=I4798tJa8UQnqd4CnMDuDzRv1lKB/Bj+hNoXop7KHbf2iMEA04R8HE3l7xGKW/JrCD
+         /smBM1FnwARfPM3aPZS83tMFPZJywunm8n6G0J/+jZfD8QvkBI4WAB9Nl4tSxclrW0Lx
+         KkEzNry9GtQubDnUMSF9jLCI+ZUN3fGRJG2WR5bG5VXVEVm0KORNG073q4YrRHjS2rkB
+         Qusbbn3O9btq/kqx6ojU+LB1iK3pjfrpI9rVZ7VtRn7nkXBCXubuG2/u7nC4Cv6KqnFf
+         ImiXI0M+AcYAcLACblMx66d33+xfUF2a/TZAScrHGOmwuxmIXqc1bFQBg6rGlTVF62xr
+         1R5A==
+X-Forwarded-Encrypted: i=1; AJvYcCVYSBcZIqqjlic3QaVkxQPLPmwE+YGxscGrwtjDbwWs6rX5mRWkOHWF8lvz42nNXiUIlzWPnG8YEls=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyQcCMcyCMHGe33fyYqiwxyhoGW4TbAMmARkQsWQSWvKdyllGK6
+	SX/FJxXspk0pZipxZMt8rlDvyx9FD0EjQLm/B8fllJYkOKyYLMLXxLv2I8Xbkw==
+X-Gm-Gg: ASbGncugOBJhajueeTvD276a6qMOrDyLMFZs/feZ9ZRuN77ODygrJWWH4o4S2Qt8JRQ
+	klJhRnGQ7lL6oTJuBgjug1asCB7f9lXv6a+bj4nUnTXDQ/jZlucLlXNpARmoGUM7dtMm3G9WuK9
+	88/fk6RCQbBdxcxhT/jK087t0mKL0YQl+egolUEiRFy3NSp9GXgU8Ht49CBFeaRtfvQ7pkIoYPG
+	hPypPweywwk09fIV3iLV8LmcxUfNrfcCaGOxdN4vnec0GCREMHZsVqicB/BaiIS0L+OkfAgHzW5
+	sros7ciiprP5SqLPPVGu4QWCZHiUAhw1XKv6SNY+x9v+EnFsJ6ZIbK386lElqwVqhs2jxcxWAsk
+	6cMPLT+4bZygQmcCoV3o92gfliUGQihFV+Ms+bA==
+X-Google-Smtp-Source: AGHT+IFU6Tfiix8kiA6qL1KyPENFK6H5A0dQpfBujyLXJD3m07n9Que2XUBEh0Jtu1ubwVrnoTFrSw==
+X-Received: by 2002:a05:600c:3d9b:b0:43c:f629:66f3 with SMTP id 5b1f17b1804b1-442d02f421emr16664105e9.18.1746688237328;
+        Thu, 08 May 2025 00:10:37 -0700 (PDT)
 Received: from [127.0.1.1] (cust-east-par-46-193-69-61.cust.wifirst.net. [46.193.69.61])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a099b178absm19500236f8f.97.2025.05.08.00.10.34
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a099b178absm19500236f8f.97.2025.05.08.00.10.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 08 May 2025 00:10:34 -0700 (PDT)
+        Thu, 08 May 2025 00:10:36 -0700 (PDT)
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Subject: [PATCH v4 0/5] PCI: Add support for resetting the slots in a
+Date: Thu, 08 May 2025 12:40:31 +0530
+Subject: [PATCH v4 2/5] PCI/ERR: Add support for resetting the slots in a
  platform specific way
-Date: Thu, 08 May 2025 12:40:29 +0530
-Message-Id: <20250508-pcie-reset-slot-v4-0-7050093e2b50@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -69,11 +70,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAOZYHGgC/3XNSw6DIBCA4asY1qVh8AF01Xs0XSAdlMSIAUPaG
- O9edGVjuvwnM98sJGJwGMmtWEjA5KLzY47qUhDT67FD6l65CWe8ZhWr6GQc0oARZxoHP1NRstZ
- qATpvkHw1BbTuvYuPZ+7exdmHz/4gwTb9byWgjCqpaq5Atlax++BGHfzVh45sWOIHAJozwDOAF
- kXTciENnIHyCIgzUGagVhqYBDCq4T/Auq5fm/p35DEBAAA=
-X-Change-ID: 20250404-pcie-reset-slot-730bfa71a202
+Message-Id: <20250508-pcie-reset-slot-v4-2-7050093e2b50@linaro.org>
+References: <20250508-pcie-reset-slot-v4-0-7050093e2b50@linaro.org>
+In-Reply-To: <20250508-pcie-reset-slot-v4-0-7050093e2b50@linaro.org>
 To: Mahesh J Salgaonkar <mahesh@linux.ibm.com>, 
  Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -90,111 +89,89 @@ Cc: dingwei@marvell.com, cassel@kernel.org, Lukas Wunner <lukas@wunner.de>,
  linux-arm-kernel@lists.infradead.org, linux-riscv@lists.infradead.org, 
  Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4736;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2766;
  i=manivannan.sadhasivam@linaro.org; h=from:subject:message-id;
- bh=LPKZpjoorPcJ0i3sy5Fe9gxmCowL7rHoa3+8Kx1k5I8=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBoHFjoZn2Vau5rBgSkqFonGWIjBD9vXqMQSpvxQ
- iz76V7WG0mJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaBxY6AAKCRBVnxHm/pHO
- 9baVCACcMZ+oGHyyvjtszQkQwoCc4LQEhNyBVCLMAukrkzlHUKuJuUgMLxOaizVKaBzVqZ+ImAm
- KFJDCmiXyQNskAOrCdFyEWeHP2rLBoNzxWKTODzgJ8uppEcksqBFWh1rEl5psqx7nS58ivJfwBF
- 0IR7EBandYxRPofAprBmAyD/3pvvYcpIxlTilooBHNn2VzXduU0KYkSDDK5b4wJXryWat2+Mt8n
- BCAblJUCeBFK49eRl8FOHziOW4nIj4aSgX4clBB2igJ2YPjOa8wv2Ubvw1u6kDAMRQ1cSqP3A4B
- ktlGEOIB0nYlE+VSnH51tHJvblCq9bTJqJpTyBKZObEDWDGZ
+ bh=DxjgbttCz+WbWbTBQh3uh5PZxc6tk82mAeHt4QTMKaE=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBoHFjpfv/vQkWgyV/Hq0GucliJi+U/7FE1Skrvp
+ pJ+nrHeneGJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaBxY6QAKCRBVnxHm/pHO
+ 9UI+CACk0xFNBFRLakdLLAf9Ya1C7nW/+a/VQ4SxfviZzgiZSwQ3wAKQ1nn3pFJTctodOrYHrYt
+ L3jspau7qSV/E69KaX8cHFBStVMmk8Ey9z4rzTqwgNJTiZu1osrkc0SiKydSeqMot1pRreGsKhv
+ w6jmJPaJL6AL5/Wc44rKPtCqMktlSapMC4oZdAwUzr+ZolkNNdqp3Ptf12CclgABbIy0YDvrotC
+ GnquyUFgI1V0jIOUvvcsv/n1eLtFUktxnxLDS83usEfAJ1WpRavyboLRCrmQ1K00Gvk58fZaWkN
+ /w9ORtH6GykTqjVpzegZfHZz6+OjWKawa8B4PrmHhI29wJoR
 X-Developer-Key: i=manivannan.sadhasivam@linaro.org; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 
-Hi,
+Some host bridge devices require resetting the slots in a platform specific
+way to recover them from error conditions such as Fatal AER errors, Link
+Down etc... So introduce pci_host_bridge::reset_slot callback and call it
+from pcibios_reset_secondary_bus() if available.
 
-Currently, in the event of AER/DPC, PCI core will try to reset the slot and its
-subordinate devices by invoking bridge control reset and FLR. But in some
-cases like AER Fatal error, it might be necessary to reset the slots using the
-PCI host bridge drivers in a platform specific way (as indicated by the TODO in
-the pcie_do_recovery() function in drivers/pci/pcie/err.c). Otherwise, the PCI
-link won't be recovered successfully.
-
-So this series adds a new callback 'pci_host_bridge::reset_slot' for the host
-bridge drivers to reset the slot when a fatal error happens.
-
-Also, this series allows the host bridge drivers to handle PCI link down event
-by resetting the slots and recovering the bus. This is accomplished by the
-help of a new API 'pci_host_handle_link_down()'. Host bridge drivers are
-expected to call this API (preferrably from a threaded IRQ handler) when a link
-down event is detected. The API will reuse the pcie_do_recovery() function to
-recover the link if AER support is enabled, otherwise it will directly call the
-reset_slot() callback of the host bridge driver (if exists).
-
-For reference, I've modified the pcie-qcom driver to call
-pci_host_handle_link_down() after receiving LINK_DOWN global_irq event and
-populated the 'pci_host_bridge::reset_slot()' callback to reset the controller
-(there by slots). Since the Qcom PCIe controllers support only a single root
-port (slot) per controller instance, reset_slot() callback is going to be
-invoked only once. For multi root port controllers, this callback is supposed to
-identify the slots using the supplied 'pci_dev' pointer and reset them.
-
-NOTE
-====
-
-This series is a reworked version of the earlier series [1] that I submitted for
-handling PCI link down event. In this series, I've made use of the AER helpers
-to recover the link as it allows notifying the device drivers and also
-allows saving/restoring the config space.
-
-Testing
-=======
-
-This series is tested on Qcom RB5 and SA8775p Ride boards by triggering the link
-down event manually by writing to LTSSM register. For the error recovery to
-succeed (if AER is enabled), all the drivers in the bridge hierarchy should have
-the 'err_handlers' populated. Otherwise, the link recovery will fail.
-
-[1] https://lore.kernel.org/linux-pci/20250221172309.120009-1-manivannan.sadhasivam@linaro.org
+The 'reset_slot' callback is responsible for resetting the given slot
+referenced by the 'pci_dev' pointer in a platform specific way and bring it
+back to the working state if possible. If any error occurs during the slot
+reset operation, relevant errno should be returned.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 ---
-Changes in v4:
-- Handled link down first in the irq handler
-- Updated ICC & OPP bandwidth after link up in reset_slot() callback
-- Link to v3: https://lore.kernel.org/r/20250417-pcie-reset-slot-v3-0-59a10811c962@linaro.org
+ drivers/pci/pci.c      | 12 ++++++++++++
+ drivers/pci/pcie/err.c |  5 -----
+ include/linux/pci.h    |  1 +
+ 3 files changed, 13 insertions(+), 5 deletions(-)
 
-Changes in v3:
-- Made the pci-host-common driver as a common library for host controller
-  drivers
-- Moved the reset slot code to pci-host-common library
-- Link to v2: https://lore.kernel.org/r/20250416-pcie-reset-slot-v2-0-efe76b278c10@linaro.org
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 4d7c9f64ea24ec754a135a2585c99489cfa641a9..13709bb898a967968540826a2b7ee8ade6b7e082 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -4982,7 +4982,19 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
+ 
+ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
+ {
++	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
++	int ret;
++
++	if (host->reset_slot) {
++		ret = host->reset_slot(host, dev);
++		if (ret)
++			pci_err(dev, "failed to reset slot: %d\n", ret);
++
++		return;
++	}
++
+ 	pci_reset_secondary_bus(dev);
++
+ }
+ 
+ /**
+diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
+index de6381c690f5c21f00021cdc7bde8d93a5c7db52..b834fc0d705938540d3d7d3d8739770c09fe7cf1 100644
+--- a/drivers/pci/pcie/err.c
++++ b/drivers/pci/pcie/err.c
+@@ -234,11 +234,6 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
+ 	}
+ 
+ 	if (status == PCI_ERS_RESULT_NEED_RESET) {
+-		/*
+-		 * TODO: Should call platform-specific
+-		 * functions to reset slot before calling
+-		 * drivers' slot_reset callbacks?
+-		 */
+ 		status = PCI_ERS_RESULT_RECOVERED;
+ 		pci_dbg(bridge, "broadcast slot_reset message\n");
+ 		pci_walk_bridge(bridge, report_slot_reset, &status);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 0e8e3fd77e96713054388bdc82f439e51023c1bf..8d7d2a49b76cf64b4218b179cec495e0d69ddf6f 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -599,6 +599,7 @@ struct pci_host_bridge {
+ 	void (*release_fn)(struct pci_host_bridge *);
+ 	int (*enable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
+ 	void (*disable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
++	int (*reset_slot)(struct pci_host_bridge *bridge, struct pci_dev *dev);
+ 	void		*release_data;
+ 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
+ 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
 
-Changes in v2:
-- Moved calling reset_slot() callback from pcie_do_recovery() to pcibios_reset_secondary_bus()
-- Link to v1: https://lore.kernel.org/r/20250404-pcie-reset-slot-v1-0-98952918bf90@linaro.org
-
----
-Manivannan Sadhasivam (5):
-      PCI/ERR: Remove misleading TODO regarding kernel panic
-      PCI/ERR: Add support for resetting the slots in a platform specific way
-      PCI: host-common: Make the driver as a common library for host controller drivers
-      PCI: host-common: Add link down handling for host bridges
-      PCI: qcom: Add support for resetting the slot due to link down event
-
- drivers/pci/controller/Kconfig                    |   8 +-
- drivers/pci/controller/dwc/Kconfig                |   1 +
- drivers/pci/controller/dwc/pcie-hisi.c            |   1 +
- drivers/pci/controller/dwc/pcie-qcom.c            | 112 ++++++++++++++++++++--
- drivers/pci/controller/pci-host-common.c          |  64 ++++++++++++-
- drivers/pci/controller/pci-host-common.h          |  17 ++++
- drivers/pci/controller/pci-host-generic.c         |   2 +
- drivers/pci/controller/pci-thunder-ecam.c         |   2 +
- drivers/pci/controller/pci-thunder-pem.c          |   1 +
- drivers/pci/controller/pcie-apple.c               |   2 +
- drivers/pci/controller/plda/pcie-microchip-host.c |   1 +
- drivers/pci/pci.c                                 |  13 +++
- drivers/pci/pcie/err.c                            |   7 +-
- include/linux/pci-ecam.h                          |   6 --
- include/linux/pci.h                               |   1 +
- 15 files changed, 212 insertions(+), 26 deletions(-)
----
-base-commit: 08733088b566b58283f0f12fb73f5db6a9a9de30
-change-id: 20250404-pcie-reset-slot-730bfa71a202
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+2.43.0
 
