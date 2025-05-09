@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id BD25323505D;
-	Fri,  9 May 2025 15:55:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 819782376EC;
+	Fri,  9 May 2025 15:56:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746806138; cv=none; b=kgWlmddsyZoODjmodCegpdvuCZ8YY6dnRdWN4lpFaAWZsesHkC2T1TSAt1SAZL3cVs29ICZxxLECSQhIfAKR4QvOV+yO9HCuU/PNQ5PuQgcZjdM5eo6v4Yg4Fn1ObUvGl4WNHUdAeaBRJP3o/Zkn+003LJ0KvdsmQGu1nWMRtys=
+	t=1746806190; cv=none; b=C3ftPMjEi/d+Ae4y1JgnF+CXaxz0Cll8eJt4fLM3TUs1RNYL4e95xyJ8aMjPbZZ7KDrlvrY+wzOWCJ/74PoqVqermGPyL8cfg/NS9ZLDPtfLV6qwW9sfABz2PVIQLjYjm83HNgrvafw3VouyH2GgkiX14sOcoE2rNZNiXcVO9vg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746806138; c=relaxed/simple;
-	bh=fj+CsMRTdhR1fX9gY8RgTc+l5nN9Ow3NT2nQ+WxKZ50=;
+	s=arc-20240116; t=1746806190; c=relaxed/simple;
+	bh=xDL4SR8iE4eZctXxjrMatTXbEPFSbQwDhG+e/Jrir5I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cjpCeB1fDE6rI9OJTd8uk1Fv+Y1sb/3aMObMvy20vyrexoJ5SoNN3usA3nNtX8PbclSjEB8Tv2OED3kh7m2Mzp+22c0Lsrd/UPjb2UmVpaxFtWx8AOYt+g4yLWUEoMpny/e/9dloVGNV37j5Z8x3XA4ZxT1QpZkLVio0hKby6yU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=K4TmGG/G; arc=none smtp.client-ip=220.197.31.3
+	 MIME-Version; b=o0lsHdPyyPpqzi2Xw+uYNXZf2mINNHgCiV1fK5FFrL0wTd6ooUObwd82OAwB2T7UZBPt8M/UcPo7k92qYG4xt75Dgl+3h0RL2GYT36k05MV1ghzH2rx6Q+JAC5EDNZ/xU/fCq6wX5dMRkeovQldxRD860uEg38mpEz5CZw6l2CM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ER59UXA3; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="K4TmGG/G"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ER59UXA3"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=OK
-	C2LPdw3n8i6eOmbAF8IdjSTk4530z62vZdkc/GbAE=; b=K4TmGG/Gh050AD01ci
-	CGYzNi+IKjeMx3Ur2n6Sex5JqqZ62XFfjPjUkxYn762sl2+ZPxI424t0VffM5boi
-	Blu1K+FDdxI3OcZ8Lkf0r1QUnQagracG39qcLK6fHpLn4cylGci/6DaotPrReWMV
-	j7NOGV7GlfYR/U89vvwV+MVdU=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ht
+	oycmPbpqBasA/drBUodysvfnREG7Bsxmru8dbrqNw=; b=ER59UXA31khSY9WbeL
+	MDhFLDWNjr3qr0JvmCSTZWQ4aqQk+QFeHeEHlgP56JaN8q4p0orern3cx25Od9Qo
+	FtX+f923x9siPOlQyZzxBm5i01bl1fKzTIlI4RCnrxSc57E6D1KCc0jQzMn4ekxR
+	cmoTNvAYZ/3VcLKMr6PTR8L+g=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wCH+a9CJR5oqYT+AA--.23731S3;
-	Fri, 09 May 2025 23:54:44 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wCH+a9CJR5oqYT+AA--.23731S6;
+	Fri, 09 May 2025 23:54:45 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: shawn.lin@rock-chips.com,
 	lpieralisi@kernel.org,
@@ -36,9 +36,9 @@ Cc: robh@kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-rockchip@lists.infradead.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 1/4] PCI: rockchip-host: Fix "Unexpected Completion" log message
-Date: Fri,  9 May 2025 23:53:59 +0800
-Message-Id: <20250509155402.377923-2-18255117159@163.com>
+Subject: [PATCH 4/4] PCI: rockchip-host: Remove unused header includes
+Date: Fri,  9 May 2025 23:54:02 +0800
+Message-Id: <20250509155402.377923-5-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250509155402.377923-1-18255117159@163.com>
 References: <20250509155402.377923-1-18255117159@163.com>
@@ -49,35 +49,53 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCH+a9CJR5oqYT+AA--.23731S3
-X-Coremail-Antispam: 1Uf129KBjvdXoW7XrWrWF4xXF4kArW3Cw1fCrg_yoWkGrcE9r
-	n8u3W7Aw45KrW3A3Wqy3yxtryrAas09a1IkayrtF1ayas2vr10q34kZ3y8JF15ur1DXF9r
-	Kw1qyr47WwnrZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRN73v5UUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwdIo2geJBoynAABsQ
+X-CM-TRANSID:_____wCH+a9CJR5oqYT+AA--.23731S6
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF1fWw17JryxuryDCrW5Awb_yoW8GF1UpF
+	WqkFWxJrZ5AF1UCFnruF1qkr1Yqw4DZw17J342ga47Z342yr1vq395Crnxtr1kAFW2gF15
+	Cay3trs5CrW5XrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pKiiT5UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxxIo2geIgCSFQAAsr
 
-Fix the debug message for the PCIE_CORE_INT_UCR interrupt to clearly
-indicate "Unexpected Completion" instead of a duplicate "malformed TLP"
-message. This improves error log accuracy.
+Clean up the driver by removing unnecessary header includes
+(e.g., <linux/clk.h>, <linux/reset.h>) that are no longer referenced
+after refactoring. This improves code readability and build efficiency.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pcie-rockchip-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/controller/pcie-rockchip-host.c | 9 ---------
+ 1 file changed, 9 deletions(-)
 
 diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
-index 6a46be17aa91..2804980bab86 100644
+index ba1f7832bda5..e2c603634bda 100644
 --- a/drivers/pci/controller/pcie-rockchip-host.c
 +++ b/drivers/pci/controller/pcie-rockchip-host.c
-@@ -439,7 +439,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
- 			dev_dbg(dev, "malformed TLP received from the link\n");
+@@ -12,26 +12,17 @@
+  */
  
- 		if (sub_reg & PCIE_CORE_INT_UCR)
--			dev_dbg(dev, "malformed TLP received from the link\n");
-+			dev_dbg(dev, "Unexpected Completion received from the link\n");
+ #include <linux/bitrev.h>
+-#include <linux/clk.h>
+-#include <linux/delay.h>
+ #include <linux/gpio/consumer.h>
+-#include <linux/init.h>
+ #include <linux/interrupt.h>
+ #include <linux/iopoll.h>
+ #include <linux/irq.h>
+ #include <linux/irqchip/chained_irq.h>
+ #include <linux/irqdomain.h>
+-#include <linux/kernel.h>
+-#include <linux/mfd/syscon.h>
+ #include <linux/module.h>
+ #include <linux/of.h>
+ #include <linux/of_pci.h>
+-#include <linux/pci.h>
+-#include <linux/pci_ids.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
+-#include <linux/reset.h>
+-#include <linux/regmap.h>
  
- 		if (sub_reg & PCIE_CORE_INT_FCE)
- 			dev_dbg(dev, "an error was observed in the flow control advertisements from the other side\n");
+ #include "../pci.h"
+ #include "pcie-rockchip.h"
 -- 
 2.25.1
 
