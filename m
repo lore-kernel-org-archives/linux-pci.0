@@ -1,27 +1,28 @@
 Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A301D232392;
-	Fri,  9 May 2025 15:55:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D60FF22F3B0;
+	Fri,  9 May 2025 15:55:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746806128; cv=none; b=NrUxUv9g66taHdUvFXG4AacaEpbkiovFXY+I6k80RCxdeO2fDeMWbkL+oVzJeBrcSttwCM7U25dQuGqZy/8X32Hf8897BvkjIG3m+UiJJaAG9SFg71ijnyMRvqPf6fQ3MNB2Xn3YkZeeQkhybqbimHYu5gSE+mWon3QQvzhm/3w=
+	t=1746806130; cv=none; b=TkLvVwXY1KsFuUfQInCJq0ZWUK7MmM9578vbh+7zXZMhPg3lvJAdvETlp3z67TbG2hzQK5qrEz4QLHeEMdpAzcTMZKKCOl7B5Xdw+fhBIQtET2sJ4y5/5AptLDWVxapiZKtj5Ph0FTCQSVEK/CYHaxthHgxjd4cvrw1/MyJejow=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746806128; c=relaxed/simple;
-	bh=vhN+ImOy8KRaI78dZocl4WHS52lE85WkEwXdjDJrqhU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=W9jVXbdidU46uxOBnvI2edclLlohhOfeGuiIu1bjroZ3gLQy5PBwfNe7pddaC1S96rTuDr6yb17tKYTlwmXsOK2mPRwufIVqvotKS5fY2TC/+3AG0opffZthX7rm+7Ua/H50MP+mTtQr1ZC0yXlI2LB3IS58vVUL/Aw+eNYQrDA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gOwPULun; arc=none smtp.client-ip=117.135.210.5
+	s=arc-20240116; t=1746806130; c=relaxed/simple;
+	bh=RWQ4XGYVHDZycGxd62P1KIGqj+01EfPS/QKkS6xcxKQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=nhxovWMRVJ+/T7j/NXMkdkF+Ufgy5lEMWnMpIXkkwoNeGZoDI1ClCn4aJU1LT0rgJt2g0ukm+79RTK8q9AkhgtuUXaOJro9MXE0bWDOyf/S7EZThlIk+9jE/2NUkHUzbrTwhod0XPf3pMXWA7E/VB5PJqmg9Z/e/orlBvxnCLDw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XOezCR2K; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gOwPULun"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XOezCR2K"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=NV
-	bpERAjIqWtGSniTRHflTs2M1hcr5AP4OxgREVbezc=; b=gOwPULunz7dFgKVusc
-	NTBToAeQjm2TLdz9xQkUfL3q+1wORCm5YCQB96DO9lK5Vnuhu0W11zkBj4zI27rG
-	rYUVn9IvTqYAJGs6ycZ/3Bl/bQFSmb+kdG1o2lGr/9HI3iadmKCpFoi55ooko9uc
-	Mp83/02z03D202AEfAXhH9vLU=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7x
+	riZp5G3YdXkIK9LD+KY/Qb8BNn8y/0CGxYnt75nvI=; b=XOezCR2KtqaqZL0aNI
+	VjUl4PDOUfndplYFo2dTpD8zhFOqP3m9QLE+VuE2iqhrkE9sDvpyQjfn7JxoAnmz
+	el/BVm3A4xP1tkPgtFxjVqvwCiwzt+ESgzUxYG/yCizYoiirttllG+9Qda3Cdtne
+	cLNAIPHjuRkuHvqS6cUoZq9+Y=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wCH+a9CJR5oqYT+AA--.23731S2;
-	Fri, 09 May 2025 23:54:43 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wCH+a9CJR5oqYT+AA--.23731S4;
+	Fri, 09 May 2025 23:54:44 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: shawn.lin@rock-chips.com,
 	lpieralisi@kernel.org,
@@ -35,10 +36,12 @@ Cc: robh@kernel.org,
 	linux-arm-kernel@lists.infradead.org,
 	linux-rockchip@lists.infradead.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 0/4] Fix interrupt log message
-Date: Fri,  9 May 2025 23:53:58 +0800
-Message-Id: <20250509155402.377923-1-18255117159@163.com>
+Subject: [PATCH 2/4] PCI: rockchip-host: Correct non-fatal error log message
+Date: Fri,  9 May 2025 23:54:00 +0800
+Message-Id: <20250509155402.377923-3-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250509155402.377923-1-18255117159@163.com>
+References: <20250509155402.377923-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,36 +49,35 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCH+a9CJR5oqYT+AA--.23731S2
-X-Coremail-Antispam: 1Uf129KBjvdXoWrZFW3Kw48KF1DGw1fAFW3Awb_yoWfXFX_Xa
-	4fX3W7Gw48CasIy3y5X39rKr9xCwnFkr1UAFs0yF1DtFnrZrs5X3s5Z3y8uFyvqws0yF9a
-	grnFqry0grn8GjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRZiSl7UUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDx5Io2geIgCRigAAs1
+X-CM-TRANSID:_____wCH+a9CJR5oqYT+AA--.23731S4
+X-Coremail-Antispam: 1Uf129KBjvdXoWrZr4ruF1fCr4DAry5tFyrWFg_yoWDKrcE9r
+	1jva47Zw4UKr9ag3Zay3ySqr9xAasI9r4Iya1rKF1aya47Xr1Fq348Zwn8JFn5Cr15tF9F
+	g3sFyFWUuF43ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRurWrJUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwxIo2geJBoy0wAAsV
 
-1. PCI: rockchip-host: Fix "Unexpected Completion" log message
-2. PCI: rockchip-host: Correct non-fatal error log message
-3. PCI: rockchip-host: Refactor IRQ handling with info arrays
-4. PCI: rockchip-host: Remove unused header includes
+Correct the debug message for PCIE_CLIENT_INT_NFATAL_ERR from
+"no fatal error" to "non fatal error interrupt received" to match the
+actual interrupt semantics. This avoids confusion in log interpretation.
 
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Dear Maintainers,
+ drivers/pci/controller/pcie-rockchip-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Detailed descriptions of interrupts can be seen from RK3399 TRM doc.
-I found two errors, optimized the code and cleaned up the driver by the way.
----
-
-Hans Zhang (4):
-  PCI: rockchip-host: Fix "Unexpected Completion" log message
-  PCI: rockchip-host: Correct non-fatal error log message
-  PCI: rockchip-host: Refactor IRQ handling with info arrays
-  PCI: rockchip-host: Remove unused header includes
-
- drivers/pci/controller/pcie-rockchip-host.c | 119 ++++++++------------
- 1 file changed, 48 insertions(+), 71 deletions(-)
-
-
-base-commit: 01f95500a162fca88cefab9ed64ceded5afabc12
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 2804980bab86..209eb94ece1b 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -489,7 +489,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
+ 		dev_dbg(dev, "fatal error interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_NFATAL_ERR)
+-		dev_dbg(dev, "no fatal error interrupt received\n");
++		dev_dbg(dev, "non fatal error interrupt received\n");
+ 
+ 	if (reg & PCIE_CLIENT_INT_CORR_ERR)
+ 		dev_dbg(dev, "correctable error interrupt received\n");
 -- 
 2.25.1
 
