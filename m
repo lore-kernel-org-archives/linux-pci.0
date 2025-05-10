@@ -1,165 +1,114 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F157154BE2
-	for <linux-pci@vger.kernel.org>; Sat, 10 May 2025 11:43:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6B7C71F0982;
+	Sat, 10 May 2025 15:57:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746877425; cv=none; b=YYZZ6GsAttXhGeCpZGwrMGTowSNBlLT+3OTCBY4sKmc0hNag1+bkDhXVKFqMsJ5LTdyEWGgZV2H2jD1O4de+SP7qq8cBK4W581YHyJiz7xj/Zh4Z32zJTeiMGkq7k9+a5CfisrGj6ZRWgUjaLmDKvvGmU0vLAmOWBDxNe5WXZBo=
+	t=1746892635; cv=none; b=E3SpXh+bUMbotVUCfIt/9hRVnYDlLs7IJXXcW1802Qa1lDy59INkt/80idvXWSF2E7CoWn3qSTTKkZAzbyq+yTpPZ8uDHBkJrwIFhDlNErjqNmZqs+QJsaWlKzXY+ZMVUgGflyJRyW+EPvDC33a7U46YN6mSwX3PoarFGn6+D7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746877425; c=relaxed/simple;
-	bh=we1V9c8stSslgF8UCLTv30KHJbMzrgZSYGajfNKd+As=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jsqMJ2Pw16pV+lGilNK3rTCH+K5umj+tOoiD+KRSMnPftgXN9p0nqvGrq5ioK7tQXFSBJnBJXnoPu7aAAm1GsHQBaYSzkBizM5HSOjVvaicmK6nFBea82ZZVMWzO3mbo3PdqPDtGLzV5erGgkog7dlw5JWY69CMm9WE+yX+A8Qc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jJVWhm/B; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746892635; c=relaxed/simple;
+	bh=YbY4BzhwwS0Bs97W2qpZD/tuPkcUHS6xrK4/be/t7fU=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=KIR3aiVSXGfEI2IUr5KbeJpr6G0rPGIU7bBDyrUK41YvTU+qB5Poy5T/Gv3r7oR9d81sngdOcuQzd+YS5r8bHDVdSqp+5iXj/LyAndPyO64yXxW1krjNwNDvRIINs+ooSXOOr9rs4cyhP3+gWRAQPGewF3DtSCR5q31SO23PPoo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GEqct7cD; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jJVWhm/B"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8B25FC4CEE2;
-	Sat, 10 May 2025 11:43:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746877424;
-	bh=we1V9c8stSslgF8UCLTv30KHJbMzrgZSYGajfNKd+As=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=jJVWhm/BIbf2U9m52mELMJ4OhhTtHl9A/4LfrRJW4PpnGQ3Qmwmhncz8gtX8AYiJB
-	 ChI443p2PFvAxn1mvV0F8xjMKNUdWS22AMNwoaBsM8fK+nCV/Lpw01+L8Ra+4pd5Af
-	 yxWuRaWHO5LFXKvykPp3YlyqmWSglobAW1mrAIDQBWsU+QVJKTa1AEDniX1RR2j/vG
-	 kvgAotlkhyUDtKTi1Sz0DfFTnmpxyAxNL8Df75U15uXlyUD4jeRLH1XvhIBIt4i9Ki
-	 SsSapWvYOsaif5WjW94tl+d6reqWE82rWOmfnE6hBrkXAuqtALq15cDIgVrObKf390
-	 u/+rZHJE/ktgw==
-Date: Sat, 10 May 2025 13:43:39 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Jingoo Han <jingoohan1@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Kishon Vijay Abraham I <kishon@kernel.org>, dlemoal@kernel.org,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/2] PCI: dwc: ep: Fix broken set_msix() callback
-Message-ID: <aB8762GD_iI5G5LY@ryzen>
-References: <20250430123158.40535-3-cassel@kernel.org>
- <tmtm4od4paptgbiodq5cezltsy6njoyeet7mcsq7rq3m7zcz5z@thpqdtzpskgx>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GEqct7cD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=E2
+	ofUgHGCmm1xPAFMa2TsfZAr9ZO/RTFbitpv1wF7q0=; b=GEqct7cD2x6TeWs/1+
+	CvwrTM6aZ8kOl3lZkymWL5+X6StJ8S0xqQh9WK87mgeWKH8YpkaXSmti1EuPmo+z
+	+uNcZW3XP4YXMi40xmCQP4EfRwI9DOfMzN92NFxcwa+PpzF2N3uUXaaYqRQcmhjm
+	LWAmx7cihinHZg9/S++j1u+wk=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDXjxsYdx9ormDlAQ--.43845S4;
+	Sat, 10 May 2025 23:56:11 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	kw@linux.com,
+	bhelgaas@google.com,
+	heiko@sntech.de,
+	manivannan.sadhasivam@linaro.org,
+	yue.wang@Amlogic.com
+Cc: pali@kernel.org,
+	neil.armstrong@linaro.org,
+	robh@kernel.org,
+	jingoohan1@gmail.com,
+	khilman@baylibre.com,
+	jbrunet@baylibre.com,
+	martin.blumenstingl@googlemail.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-amlogic@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v4 2/2] PCI: dwc: Remove redundant MPS configuration
+Date: Sat, 10 May 2025 23:56:07 +0800
+Message-Id: <20250510155607.390687-3-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250510155607.390687-1-18255117159@163.com>
+References: <20250510155607.390687-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <tmtm4od4paptgbiodq5cezltsy6njoyeet7mcsq7rq3m7zcz5z@thpqdtzpskgx>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDXjxsYdx9ormDlAQ--.43845S4
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KF4xuw4xXFWDJw43WF4xtFb_yoW8Cr1fpF
+	y3Xrsa9F18Jr45WF4qkan5Cay3tasxCry7JF9Ig3yfuFyayFsrXa4ayFWSkFyxXrW293WS
+	kr98K3y8C3W5trUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0z_rWrfUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhNJo2gfbZ-YXQADsA
 
-On Sat, May 10, 2025 at 11:27:55AM +0530, Manivannan Sadhasivam wrote:
-> On Wed, Apr 30, 2025 at 02:31:59PM +0200, Niklas Cassel wrote:
-> > While the parameter 'interrupts' to the functions pci_epc_set_msi() and
-> > pci_epc_set_msix() represent the actual number of interrupts, and
-> > pci_epc_get_msi() and pci_epc_get_msix() return the actual number of
-> > interrupts.
-> > 
-> > These endpoint library functions just mentioned will however supply
-> > "interrupts - 1" to the EPC callback functions pci_epc_ops->set_msi() and
-> > pci_epc_ops->set_msix(), and likewise add 1 to return value from
-> > pci_epc_ops->get_msi() and pci_epc_ops->get_msix(),
-> 
-> Only {get/set}_msix() callbacks were having this behavior, right?
+The Meson PCIe controller driver manually configures maximum payload
+size (MPS) through meson_set_max_payload, duplicating functionality now
+centralized in the PCI core.  Deprecating redundant code simplifies the
+driver and aligns it with the consolidated MPS management strategy,
+improving long-term maintainability.
 
-pci_epc_get_msix() adds 1 to the return of epc->ops->get_msix().
-pci_epc_set_msix() subtracts 1 to the parameter sent to epc->ops->set_msix().
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/dwc/pci-meson.c | 17 -----------------
+ 1 file changed, 17 deletions(-)
 
-pci_epc_get_msi() does 1 << interrupt from the return of epc->ops->get_msi().
-So a return of 0 from epc->ops->get_msi() will result in pci_epc_get_msi()
-returning 1. A return of 1 from epc->ops->get_msi() will result in
-pci_epc_get_msi() returning 2.
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index db9482a113e9..126f38ed453d 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -261,22 +261,6 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+ 	return fls(size) - 8;
+ }
+ 
+-static void meson_set_max_payload(struct meson_pcie *mp, int size)
+-{
+-	struct dw_pcie *pci = &mp->pci;
+-	u32 val;
+-	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	int max_payload_size = meson_size_to_payload(mp, size);
+-
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+-
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
+-}
+-
+ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+ {
+ 	struct dw_pcie *pci = &mp->pci;
+@@ -381,7 +365,6 @@ static int meson_pcie_host_init(struct dw_pcie_rp *pp)
+ 
+ 	pp->bridge->ops = &meson_pci_ops;
+ 
+-	meson_set_max_payload(mp, MAX_PAYLOAD_SIZE);
+ 	meson_set_max_rd_req_size(mp, MAX_READ_REQ_SIZE);
+ 
+ 	return 0;
+-- 
+2.25.1
 
-Similar for pci_epc_set_msi(). It will call order_base_2() on the parameter
-before sending it to epc->ops->set_msi().
-
-So pci_epc_get_msi() / pci_epc_set_msi() takes a interrupts parameter
-that actually represents the number of interrupts.
-
-epc->ops->set_msi() / epc->ops->get_msi() takes an interrupts parameter,
-but that value does NOT represent the actual number of interrupts.
-It is instead the value encoded per the Multiple Message Enable (MME)
-field in the "7.7.1.2 Message Control Register for MSI". So it is quite
-confusing that these the parameter for epc->ops->set_msi() /
-epc->ops->get_msi() is also called interrupts. A better parameter name
-would have been "mme".
-
-It is however called 'interrupts' in the pci-epc.h header:
-https://github.com/torvalds/linux/blob/v6.15-rc5/include/linux/pci-epc.h#L102-L103
-
-and in the DWC driver and RCar driver:
-static int dw_pcie_ep_set_msi(struct pci_epc *epc, u8 func_no, u8 vfunc_no, u8 interrupts)
-static int rcar_pcie_ep_set_msi(struct pci_epc *epc, u8 fn, u8 vfn, u8 interrupts)
-
-However, some drivers have seen this weirdness and actually named the parameter
-differently:
-static int cdns_pcie_ep_set_msi(struct pci_epc *epc, u8 fn, u8 vfn, u8 mmc)
-static int rockchip_pcie_ep_set_msi(struct pci_epc *epc, u8 fn, u8 vfn, u8 multi_msg_cap)
-
-TL;DR: all of these callbacks are a mess IMO, not only {get/set}_msix().
-
-I did the smallest fix possible, because doing a cleanup of this will
-require changing all drivers that implement these callbacks, which seems
-different from a fix.
-
-
-> 
-> > even though the
-> > parameter name for the callback function is also named 'interrupts'.
-> > 
-> > While the set_msix() callback function in pcie-designware-ep writes the
-> > Table Size field correctly (N-1), the calculation of the PBA offset
-> > is wrong because it calculates space for (N-1) entries instead of N.
-> > 
-> > This results in e.g. the following error when using QEMU with PCI
-> > passthrough on a device which relies on the PCI endpoint subsystem:
-> > failed to add PCI capability 0x11[0x50]@0xb0: table & pba overlap, or they don't fit in BARs, or don't align
-> > 
-> > Fix the calculation of PBA offset in the MSI-X capability.
-> > 
-> 
-> Thanks for the fix! We should also fix the API discrepancy w.r.t interrupts as
-> it is causing much of a headache. One more example is the interrupt vector. API
-> expects the vectors to be 1-based, but in reality, vectors start from 0. So the
-> callers of raise_irq() has to increment the vector and the implementation has to
-> decrement it.
-> 
-> If you want to fix it up too, let me know. Otherwise, I may do it at some point.
-
-As you know, I'm working on adding SRNS/SRIS support for dw-rockchip,
-I might send a cleanup for the Tegra driver too.
-
-I do not intend to clean up all the drivers.
-I am a bit worried about patches after the cleanup getting backported, which
-will need to be different before and after this cleanup. Perhaps renaming the
-callbacks at the same as the cleanup might be a good idea?
-
-It should be a simple cleanup though, just do the order_base_2() etc in the
-driver callbacks themselves.
-
-We really should rename the parameter of .set_msi() though, as it is totally
-misleading as of now.
-
-
-> 
-> > Fixes: 83153d9f36e2 ("PCI: endpoint: Fix ->set_msix() to take BIR and offset as arguments")
-> 
-> This doesn't seem like the correct fixes commit.
-
-It is correct.
-
-Commit 83153d9f36e2 ("PCI: endpoint: Fix ->set_msix() to take BIR and offset as arguments")
-added the PBA offset to dw_pcie_ep_set_msix().
-
-dw_pcie_ep_set_msix() already wrote the interrupts value (zeroes based) to the
-QSIZE register. Commit 83153d9f36e2 added this code:
-+       val = (offset + (interrupts * PCI_MSIX_ENTRY_SIZE)) | bir;
-
-So it used a zeroes based value to calculate the size,
-which is obviously wrong.
-
-
-Kind regards,
-Niklas
