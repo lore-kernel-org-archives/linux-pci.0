@@ -1,138 +1,62 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-180.mta0.migadu.com (out-180.mta0.migadu.com [91.218.175.180])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109041DE4E6;
-	Mon, 12 May 2025 13:59:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C84711ACEDD
+	for <linux-pci@vger.kernel.org>; Mon, 12 May 2025 14:00:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747058352; cv=none; b=eESiIovnKxXDdpVEPceGoQgryj4XdSXTTYvHKIfH3ByiqcL000ZWcr6ZQwngKdXJMdIyGQd2dvAcFqRh3H8AemiB8dnw9eZ8dddaaQfPXEfcFYR8j0k1TjqFSjKZxmVe5V3nztnPfDm9DbfYAJZcSu09XznNw6pGe9aTgdCBoFQ=
+	t=1747058453; cv=none; b=JJusBpP6oYh/UcfbCVZe1tIbrudaSXwLVd2aqe4brWzCV/ze5+knLV96ccMwqVSrZ33GSRfiy1cYia5PTp5uEeicdjUEjiDyAFxIDa4k1ds9xyZYWAX8KHOciKdHyhIRcgrPLaKobGKoScvLs1JmVDzFKVyriTq7mA+60vUIV/E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747058352; c=relaxed/simple;
-	bh=3qQEJIUiN5/1spp7/oWnT/Aquzhhj4IjrdDSjaDXCdk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hHWiLBFStS7y9qRgf70aY+KvenGkwqwf1+kjzM/JnsvoeYyUHljQVda8aKCy/TMSQ/jvfpg+fb+pH+5jKauK6CFldXaToO2FaJKYNkzRlFscPKRb0jqZLgAm1IBZL63mQ2ZLsPo45RyJI+fXH6ZSm/PslPT5o/hGnaFtA+HKnck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rF1Ro00w; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747058453; c=relaxed/simple;
+	bh=JkdKaL2iFKo4vgbPLrWo2J9XuIX7Fdk8UQcBDH+Xj70=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ipYUTFWwf5u5C7mkj9xK3dFNoFYEZaxff3iZ4S915CzrA41vDUqYWOfU0GljmGmCLQFQUkCohpCo1U/a4Y6OMZ6bmtLDR5InjiR7H/PkHAHn+0uiFNRQhwMgLCfr4ofrIYk7F3m35uTvlW6qinMFRLN0lvirK+OfExWox3yV0dU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=QvDgyhgf; arc=none smtp.client-ip=91.218.175.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rF1Ro00w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3B8F1C4AF0C;
-	Mon, 12 May 2025 13:59:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747058351;
-	bh=3qQEJIUiN5/1spp7/oWnT/Aquzhhj4IjrdDSjaDXCdk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rF1Ro00wlJqFU7hZnRcuMUaDXVzMollDmF9eHqm5TBwoYtCrRCvpV4h9Q9vdr60X7
-	 rbhTlg0cmvy14/sCJ2gnufdUsKrDTkV9F9fEDDlp+fl02Uj2nM85IIC3zJWWIpcuJK
-	 iZaFdRBmbD4sQeZ0mtIiEmUasrLBtD4M1t7NLWEUFJCJCecQZAuhi8KiwahMq8mdo/
-	 0cWRQl8kSIN2yFn3Bl9X78IXLbkaGJfA/06c6Q1cfDU2mMJt3sdzGnyMNrFBnywNQH
-	 Nu6kyZIGAkv6BH2LfN1w8eBHqrM7iVyeNf8Vk1AoMjDfpWpNpfTFmugZjs/vd8ridU
-	 TqTeGGR0qS1dw==
-Date: Mon, 12 May 2025 08:59:09 -0500
-From: Rob Herring <robh@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>, Abraham I <kishon@kernel.org>,
-	dlemoal@kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org
-Subject: Re: [PATCH] dt-bindings: PCI: pci-ep: Add ref-clk-mode
-Message-ID: <20250512135909.GA3177343-robh@kernel.org>
-References: <20250425092012.95418-2-cassel@kernel.org>
- <7xtp5i3jhntfev35uotcunur3qvcgq4vmcnkjde5eivajdbiqt@n2wsivrsr2dk>
- <aBHOaJFgZiOfTrrT@ryzen>
- <dxgs3wuekwjh6f22ftkmi7dcw7xpw3fa7lm74fwm5thvol42z3@wuovkynp3jey>
- <20250509181827.GA3879057-robh@kernel.org>
- <a7rfa6rlygbe7u3nbxrdc3doln7rk37ataxjrutb2lunctbpuo@72jnf6odl5xp>
- <aB8ysBuQysAR-Zcp@ryzen>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="QvDgyhgf"
+Message-ID: <0b01a3ae-4766-490e-939d-1d16c2748644@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1747058448;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GJt0rAK9N64ywS+8cjcx1q6dtT4JHAquqNHQUOsx420=;
+	b=QvDgyhgfH+F49xOXo1L5Ci9KfvFz/EESz1u68D9NsGzDoho3327H878UxaSIIGCBihxQ6g
+	46TLkmYAR9NzF9k9nift8belENT7cwvAi8SMeuU/3tpk2O4MHZimao8Mbwo1CYJSNRXfVT
+	uGbgL7dRayK2pZX5eFjvzE3frNNkdfw=
+Date: Mon, 12 May 2025 14:59:44 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aB8ysBuQysAR-Zcp@ryzen>
+Subject: Re: [PATCH 0/5] ASoC/SOF/PCI/Intel: add Wildcat Lake support
+To: Peter Ujfalusi <peter.ujfalusi@linux.intel.com>, lgirdwood@gmail.com,
+ broonie@kernel.org
+Cc: linux-sound@vger.kernel.org, kai.vehmanen@linux.intel.com,
+ ranjani.sridharan@linux.intel.com, yung-chuan.liao@linux.intel.com,
+ guennadi.liakhovetski@linux.intel.com, bhelgaas@google.com,
+ linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250508180240.11282-1-peter.ujfalusi@linux.intel.com>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>
+In-Reply-To: <20250508180240.11282-1-peter.ujfalusi@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-On Sat, May 10, 2025 at 01:04:16PM +0200, Niklas Cassel wrote:
-> On Sat, May 10, 2025 at 01:01:51AM +0530, Manivannan Sadhasivam wrote:
-> > On Fri, May 09, 2025 at 01:18:27PM -0500, Rob Herring wrote:
-> > > > > > 
-> > > > > > > +    description: Reference clocking architechture
-> > > > > > > +    enum:
-> > > > > > > +      - common-clk        # Common Reference Clock (provided by RC side)
-> > > > > > 
-> > > > > > Can we use 'common-clk-host' so that it is explicit that the clock is coming
-> > > > > > from the host side?
-> > > > > 
-> > > > > Sure.
-> > > > > 
-> > > > > I take it that you prefer 'common-clk-host' over 'common-clk-rc' ?
-> > > > > 
-> > > > 
-> > > > That's what I intended previously, but thinking more, I feel that we should
-> > > > stick to '-rc'i, as that's what the PCIe spec uses.
-> > > 
-> > > Couldn't this apply to any link, not just a RC? Is there PCIe 
-> > > terminology for upstream and downstream ends of a link?
-> > > 
-> > 
-> > Usually, the refclk comes from the host machine to the endpoint, but doesn't
-> > necessarily from the root complex. Since the refclk source could very well be
-> > from the motherboard or the host system PCB, controlled by the host software.
-> > 
-> > > The 'common-clk' part seems redundant to me with '-rc' or whatever we 
-> > > end up with added.
-> > > 
-> > 
-> > No. It could be the other way around. We can drop the '-rc' suffix if it seem
-> > redundant. Maybe that is a valid argument also since root complex doesn't
-> > necessarily provide refclk and the common refclk usually comes from the host.
-> 
-> When the RC and EP uses a common clock (rather than separate clocks),
-> the clock can either be provided by the host side or the EP side.
-> 
-> The most common by far (if using a common clock) is that it the common
-> clock is provided by the host side. That is why my patch just named it
-> 'common-clk' instead of 'common-clk-host' or 'common-clk-rc'.
-> 
-> I can use whatever name we agree on. I indend to send out V2 of this
-> patch as part of a series that adds SRIS support to the dw-rockchip
-> driver, in order to address Krzysztof's comment.
-> 
-> 
-> > 
-> > > Finally, this[1] seems related. Figure out a common solution.
-> 
-> I don't see the connection.
-> 
-> https://lore.kernel.org/all/20250406144822.21784-2-marek.vasut+renesas@mailbox.org/
-> 
-> does specify a reference clock, but that is in a host side DT binding.
-> 
-> 
-> This patch adds a refclk-mode property to an endpoint side DT binding.
 
-If we are dealing with the same property of the link, it doesn't matter 
-which side. What we don't need is 2 different solutions.
-
-> This property is needed such that the endpoint can configure the bits
-> in its own PCIe Link Control Register before starting the link.
+> The audio IP in Wildcat Lake (WCL) is largely identical to the one in
+> Panther Lake, the main difference is the number of DSP cores, memory
+> and clocking.
+> It is based on the same ACE3 architecture.
 > 
-> Perhaps the host side could also make use of a similar property, but I'm not
-> sure, you don't know from the host side which endpoint will be plugged in.
-> 
-> >From the EP side, you do know if your SoC only supports common-clock or
-> SRNS/SRIS, since that depends on if the board can source the clock from
-> the PCIe slot or not (of all the DWC based drivers, only Qcom and Tegra
-> can do so, rest uses SRNS/SRIS), so this property definitely makes sense
-> in an EP side DT binding.
+> In SOF the PTL topologies can be re-used for WCL to reduce duplication
+> of code and topology files. 
 
-I don't understand why we need this in DT in the first place. Seems like 
-needing to specify this breaks discoverability? Perhaps this information 
-is only relevant after initial link is up and the host can read the EP 
-registers?
-
-Rob
+Is this really true? I thought topology files are precisely the place where a specific pipeline is assigned to a specific core. If the number of cores is lower, then a PTL topology could fail when used on a WCL DSP, no?
