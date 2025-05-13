@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE53C2BE7CA;
-	Tue, 13 May 2025 17:28:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C2FC2BF971;
+	Tue, 13 May 2025 17:28:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747157310; cv=none; b=VFugc8Q0ANdOsi6jLW+YW8f5OseNzCJ973sNPxi3TzXZy6f8XT2h4yr8i4H7CmStbPFtsOFwJSDCFdlcF6lMmqk7MSzLSy6+J7v29ndeP2t7j10IhsW5UT8wBLWMXoF2SiTiRV3/OIUT6nfi1Y05APSJnxC5ri8dLF7bPzEU6xU=
+	t=1747157311; cv=none; b=nXU4Sdip5rAPArU4SOvoNTFSkpEpk/uLuKndS+HxKSa5Xjzrkrz25k3dbu1FNzeT6bnDAo5BUobMScyclCtaLvkuzN6ePj9CRMdN3Xnd0X2Z5OtrgOQLmOgDQRR/HRZbpw5v/eK8LJkYFsa9Ps5zDtym+UEUT9ANksNApELx0NA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747157310; c=relaxed/simple;
-	bh=S6Ff81MD23ujzW5xAirjeHQsiPS7s/q55XaQYWojlYc=;
+	s=arc-20240116; t=1747157311; c=relaxed/simple;
+	bh=SMrWTvCzP5hX69d4ob83aacON5i1XY6uV9HAynVUA+k=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ctTLmzqE0SigYC0qdowpNrj9fV1ZjpPhjV0yereubNGXGr9VJToaxPtPZkxu+leyTxNS1/VUftMZXgNZkQ/yvQUzgZMTEU+ZAUYzpuRg3FonbRH9f8sk8CSLB6wlrkrp/8CfUcRIo9sl9SM0o6+okqrGbDtJmxC2nJPU6jMDruI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jyq8BCiX; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=B/0jx4ImdGKDPbU8vbd2mHl129mhsaNpx8aHZBrkgkgz4DgljkUbLSBDPBTlrveGDkJhso4b1ApVBif+//Q7Pq8N/8jCcwN83vAGZ19zFcj79bXE7/gGZ2y2eW4Q6/Q9O6Q52bFQZwD9jr9G9ONpr/KkeIJOwlZYGDUSCtBIy6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FIl9DgWx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jyq8BCiX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5C17CC4CEF0;
-	Tue, 13 May 2025 17:28:30 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FIl9DgWx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0C839C4CEEF;
+	Tue, 13 May 2025 17:28:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747157310;
-	bh=S6Ff81MD23ujzW5xAirjeHQsiPS7s/q55XaQYWojlYc=;
+	s=k20201202; t=1747157311;
+	bh=SMrWTvCzP5hX69d4ob83aacON5i1XY6uV9HAynVUA+k=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=jyq8BCiX/3xyRfa3lsPePerZ4XYr2gQBFZqvmeb7/qKSW75wAxFL6fUXhfVSUEUc6
-	 b/GKae5N+5Ixi29qAZpnKUICt1ts6fYpNH8l+KOb9Y0l56+4Zu8Vm/W8kk429CRNVb
-	 bBRUlQEguuK0QbspT19D7PjzXmmgNc3YdTVLYCbFax9QqHuEi7WOl9pqq3iGdY2WSs
-	 Sc1etVrBqzkn+UHZQR/yjkRhhhv4NYUcDn9FngvI1M94j/iXNbKYqkvJkXJ3DGUMQA
-	 4WEDgsbwaho1o4A0O3n8IpGC7iQIbgSKHn+DXy3W/4DNMlbIOKkLH68Gnwh0G5RYeT
-	 MG7B7f0Sj1zoA==
+	b=FIl9DgWxhqoyx4zy22bwHIu+fyKkwXUPcoD3/ueDPpW02GjXLl+CEnTv+1+Z//W/H
+	 Bz/AzN9C5vRsoJtuxLjB7l1j7WLh/FnAH6yW1fUHEtgWVPIfUY2zL4gDRGe+Un28nR
+	 fSf+ZNzW7nmvoKQMQctJQdkU2RdA9XYWPkhs4WoRHqB2Teyi8onOCkF60q8w06Dnp+
+	 ndXxrlCO8U9TnEVRkJ3EbCQgcKMZY0/iFhC14BNPtBAFrgNW87LMyLN/cEhqW1Qw/c
+	 0LExMNeKr5ku0VsjD01SvNyBIqqOBxZ3F8btDakxJzx6GuHXKjptYYU3KyIghgtCih
+	 7jN0kQEsu+avg==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1uEtQa-00EbRz-AA;
-	Tue, 13 May 2025 18:28:28 +0100
+	id 1uEtQa-00EbRz-Vn;
+	Tue, 13 May 2025 18:28:29 +0100
 From: Marc Zyngier <maz@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
@@ -48,9 +48,9 @@ Cc: Thomas Gleixner <tglx@linutronix.de>,
 	Alyssa Rosenzweig <alyssa@rosenzweig.io>,
 	Thierry Reding <thierry.reding@gmail.com>,
 	Jonathan Hunter <jonathanh@nvidia.com>
-Subject: [PATCH v2 2/9] genirq/msi: Add helper for creating MSI-parent irq domains
-Date: Tue, 13 May 2025 18:28:12 +0100
-Message-Id: <20250513172819.2216709-3-maz@kernel.org>
+Subject: [PATCH v2 5/9] irqchip: Drop MSI_CHIP_FLAG_SET_ACK from unsuspecting MSI drivers
+Date: Tue, 13 May 2025 18:28:15 +0100
+Message-Id: <20250513172819.2216709-6-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250513172819.2216709-1-maz@kernel.org>
 References: <20250513172819.2216709-1-maz@kernel.org>
@@ -66,72 +66,87 @@ X-SA-Exim-Rcpt-To: linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradea
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-Creating an irq domain that serves as an MSI parent requires
-a substantial amount of esoteric boiler-plate code, some of
-which is often provided twice (such as the bus token).
+Commit 1c000dcaad2be ("irqchip/irq-msi-lib: Optionally set default
+irq_eoi()/irq_ack()") added blancket MSI_CHIP_FLAG_SET_ACK flags,
+irrespective of whether the underlying irqchip required it or not.
 
-To make things a bit simpler for the unsuspecting MSI tinkerer,
-provide a helper that does it for them, and serves as documentation
-of what needs to be provided.
+Drop it from a number of drivers that do not require it.
 
+Fixes: 1c000dcaad2be ("irqchip/irq-msi-lib: Optionally set default irq_eoi()/irq_ack()")
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- include/linux/msi.h |  4 ++++
- kernel/irq/msi.c    | 26 ++++++++++++++++++++++++++
- 2 files changed, 30 insertions(+)
+ drivers/irqchip/irq-gic-v2m.c               | 2 +-
+ drivers/irqchip/irq-gic-v3-its-msi-parent.c | 2 +-
+ drivers/irqchip/irq-gic-v3-mbi.c            | 2 +-
+ drivers/irqchip/irq-mvebu-gicp.c            | 2 +-
+ drivers/irqchip/irq-mvebu-odmi.c            | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/include/linux/msi.h b/include/linux/msi.h
-index 8c0ec9fc05a39..56c69d14ef4a2 100644
---- a/include/linux/msi.h
-+++ b/include/linux/msi.h
-@@ -628,6 +628,10 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
- 					 struct msi_domain_info *info,
- 					 struct irq_domain *parent);
- 
-+struct irq_domain_info;
-+struct irq_domain *msi_create_parent_irq_domain(struct irq_domain_info *info,
-+						const struct msi_parent_ops *msi_parent_ops);
-+
- bool msi_create_device_irq_domain(struct device *dev, unsigned int domid,
- 				  const struct msi_domain_template *template,
- 				  unsigned int hwsize, void *domain_data,
-diff --git a/kernel/irq/msi.c b/kernel/irq/msi.c
-index a8f7701c2929f..e702e536c8034 100644
---- a/kernel/irq/msi.c
-+++ b/kernel/irq/msi.c
-@@ -903,6 +903,32 @@ struct irq_domain *msi_create_irq_domain(struct fwnode_handle *fwnode,
- 	return __msi_create_irq_domain(fwnode, info, 0, parent);
- }
- 
-+/**
-+ * msi_create_parent_irq_domain - Create an MSI-parent interrupt domain
-+ * @info:		MSI irqdomain creation info
-+ * @msi_parent_ops:	MSI parent callbacks and configuration
-+ *
-+ * Return: pointer to the created &struct irq_domain or %NULL on failure
-+ */
-+struct irq_domain *msi_create_parent_irq_domain(struct irq_domain_info *info,
-+						const struct msi_parent_ops *msi_parent_ops)
-+{
-+	struct irq_domain *d;
-+
-+	info->hwirq_max		= max(info->hwirq_max, info->size);
-+	info->size		= info->hwirq_max;
-+	info->domain_flags	|= IRQ_DOMAIN_FLAG_MSI_PARENT;
-+	info->bus_token		= msi_parent_ops->bus_select_token;
-+
-+	d = irq_domain_instantiate(info);
-+	if (IS_ERR(d))
-+		return NULL;
-+
-+	d->msi_parent_ops = msi_parent_ops;
-+	return d;
-+}
-+EXPORT_SYMBOL_GPL(msi_create_parent_irq_domain);
-+
- /**
-  * msi_parent_init_dev_msi_info - Delegate initialization of device MSI info down
-  *				  in the domain hierarchy
+diff --git a/drivers/irqchip/irq-gic-v2m.c b/drivers/irqchip/irq-gic-v2m.c
+index 9050792e3242f..e30463a7bf1ea 100644
+--- a/drivers/irqchip/irq-gic-v2m.c
++++ b/drivers/irqchip/irq-gic-v2m.c
+@@ -252,7 +252,7 @@ static void __init gicv2m_teardown(void)
+ static struct msi_parent_ops gicv2m_msi_parent_ops = {
+ 	.supported_flags	= GICV2M_MSI_FLAGS_SUPPORTED,
+ 	.required_flags		= GICV2M_MSI_FLAGS_REQUIRED,
+-	.chip_flags		= MSI_CHIP_FLAG_SET_EOI | MSI_CHIP_FLAG_SET_ACK,
++	.chip_flags		= MSI_CHIP_FLAG_SET_EOI,
+ 	.bus_select_token	= DOMAIN_BUS_NEXUS,
+ 	.bus_select_mask	= MATCH_PCI_MSI | MATCH_PLATFORM_MSI,
+ 	.prefix			= "GICv2m-",
+diff --git a/drivers/irqchip/irq-gic-v3-its-msi-parent.c b/drivers/irqchip/irq-gic-v3-its-msi-parent.c
+index 51cc961bc3181..443e8fcf2fc16 100644
+--- a/drivers/irqchip/irq-gic-v3-its-msi-parent.c
++++ b/drivers/irqchip/irq-gic-v3-its-msi-parent.c
+@@ -211,7 +211,7 @@ static bool its_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
+ const struct msi_parent_ops gic_v3_its_msi_parent_ops = {
+ 	.supported_flags	= ITS_MSI_FLAGS_SUPPORTED,
+ 	.required_flags		= ITS_MSI_FLAGS_REQUIRED,
+-	.chip_flags		= MSI_CHIP_FLAG_SET_EOI | MSI_CHIP_FLAG_SET_ACK,
++	.chip_flags		= MSI_CHIP_FLAG_SET_EOI,
+ 	.bus_select_token	= DOMAIN_BUS_NEXUS,
+ 	.bus_select_mask	= MATCH_PCI_MSI | MATCH_PLATFORM_MSI,
+ 	.prefix			= "ITS-",
+diff --git a/drivers/irqchip/irq-gic-v3-mbi.c b/drivers/irqchip/irq-gic-v3-mbi.c
+index 11fa5df9da8c7..a9142677c810c 100644
+--- a/drivers/irqchip/irq-gic-v3-mbi.c
++++ b/drivers/irqchip/irq-gic-v3-mbi.c
+@@ -197,7 +197,7 @@ static bool mbi_init_dev_msi_info(struct device *dev, struct irq_domain *domain,
+ static const struct msi_parent_ops gic_v3_mbi_msi_parent_ops = {
+ 	.supported_flags	= MBI_MSI_FLAGS_SUPPORTED,
+ 	.required_flags		= MBI_MSI_FLAGS_REQUIRED,
+-	.chip_flags		= MSI_CHIP_FLAG_SET_EOI | MSI_CHIP_FLAG_SET_ACK,
++	.chip_flags		= MSI_CHIP_FLAG_SET_EOI,
+ 	.bus_select_token	= DOMAIN_BUS_NEXUS,
+ 	.bus_select_mask	= MATCH_PCI_MSI | MATCH_PLATFORM_MSI,
+ 	.prefix			= "MBI-",
+diff --git a/drivers/irqchip/irq-mvebu-gicp.c b/drivers/irqchip/irq-mvebu-gicp.c
+index c7c83f8923fcd..68764e7754ba6 100644
+--- a/drivers/irqchip/irq-mvebu-gicp.c
++++ b/drivers/irqchip/irq-mvebu-gicp.c
+@@ -161,7 +161,7 @@ static const struct irq_domain_ops gicp_domain_ops = {
+ static const struct msi_parent_ops gicp_msi_parent_ops = {
+ 	.supported_flags	= GICP_MSI_FLAGS_SUPPORTED,
+ 	.required_flags		= GICP_MSI_FLAGS_REQUIRED,
+-	.chip_flags		= MSI_CHIP_FLAG_SET_EOI | MSI_CHIP_FLAG_SET_ACK,
++	.chip_flags		= MSI_CHIP_FLAG_SET_EOI,
+ 	.bus_select_token       = DOMAIN_BUS_GENERIC_MSI,
+ 	.bus_select_mask	= MATCH_PLATFORM_MSI,
+ 	.prefix			= "GICP-",
+diff --git a/drivers/irqchip/irq-mvebu-odmi.c b/drivers/irqchip/irq-mvebu-odmi.c
+index e6049f647a017..fe99888b8134d 100644
+--- a/drivers/irqchip/irq-mvebu-odmi.c
++++ b/drivers/irqchip/irq-mvebu-odmi.c
+@@ -157,7 +157,7 @@ static const struct irq_domain_ops odmi_domain_ops = {
+ static const struct msi_parent_ops odmi_msi_parent_ops = {
+ 	.supported_flags	= ODMI_MSI_FLAGS_SUPPORTED,
+ 	.required_flags		= ODMI_MSI_FLAGS_REQUIRED,
+-	.chip_flags		= MSI_CHIP_FLAG_SET_EOI | MSI_CHIP_FLAG_SET_ACK,
++	.chip_flags		= MSI_CHIP_FLAG_SET_EOI,
+ 	.bus_select_token	= DOMAIN_BUS_GENERIC_MSI,
+ 	.bus_select_mask	= MATCH_PLATFORM_MSI,
+ 	.prefix			= "ODMI-",
 -- 
 2.39.2
 
