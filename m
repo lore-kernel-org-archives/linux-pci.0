@@ -1,113 +1,165 @@
-Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CD431C1F21;
-	Wed, 14 May 2025 14:48:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D34111E9B1A
+	for <linux-pci@vger.kernel.org>; Wed, 14 May 2025 16:11:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747234132; cv=none; b=TcCjjO/bl2aiZuMo+hPh6ntkqlCjMONcjkoEjH5WnprSNPTcosgaRzBDvoy2OjDM3BLPzZgMfiZ0JjUQ0/zBvKpfOKUFCiVDDUofcLO8ZbS8Lz7xLGz7+LJNilw2uFoX6fYFUrrO+UQbWST50LkGH8sYZJumnleK5sqO8Z2zgZk=
+	t=1747239079; cv=none; b=kmLIPvQhcD4Su5RB0GCkuSc8tzkbeJ7kuUL//zeU4096N91xeyHS0qzem23bfGRymZNotRh1BKe4bxHL8M22jnG2u/Lvb+zBb1UJ+U1XtjCuXK6phWFq+MjnN6XF+qcPk6HvRdDzn2syKJlgshrSHoS6nr/b+Y71ZiQBD8Go4UM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747234132; c=relaxed/simple;
-	bh=TFA5UCqoZOBLyWXrKjTKMdhmwyWraitvZuXZ5XtiJFM=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nSvg47n0azkUv7NuU98OzPRoTexGoI3RwYB/23R10l7JkpkiwNtcPUti8qeT93wX5vE2Q14TK+C1JSPZtXtyvYSBQ88AjwzfQBGKLVxwyc9UTfESQybjxXEpiMNzyPWAAkacaxDbM0mu3zSsoqGAN0Scra3WmcB5hrrRjnZO2D8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=zlTA6WZy; arc=none smtp.client-ip=185.132.182.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
+	s=arc-20240116; t=1747239079; c=relaxed/simple;
+	bh=Y2/V4Vh+d+a0nZcON/MiVuUcn+BjyzHoYwdbSHuLjiw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mr5YxoAXZ7GQfdJvXHpbYUVBuCPH++pAn1V840TOgjv5RPByUoJpz7CXFN6WIF0vBLsaFpfAq6opZqN8YwlIuVOfW9PzsJ2/LhyLldic5skpJVuxxIKM9CpGvSua57Gtjzrc/98BHiNH9zZpZffEWvPLYSPskL7VgMB3/OBCHsg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IiwLuLGB; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="zlTA6WZy"
-Received: from pps.filterd (m0369458.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54EEKcdi003633;
-	Wed, 14 May 2025 16:48:17 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	CSDRpy0g7FYUyuE/pI0gvgKtAjh6WX9J/qcJX4BpsAA=; b=zlTA6WZyyZzrndNE
-	BVzIgZti0WhkUh3nUKYwZK1ONnGBweQas7jOWTszh08oPT1nUsTTLoceSecpOyx1
-	GvZys46leUnNZd0xqie8uXsYsD5LcSBPXE2D6GY6tKwOSf3ekdqPdZDh5/tOBtyF
-	E76pdXeSyCF0J5M5CpxOWpqgmGv4qPrsEEkG1Kh3c673oZsvC1jgvrhcihRYVoVC
-	OpL91KS8Ga6f9OSdjF56zNzD4JK7ofXE5UboIMTDSpB9TUykKp9HRKxABillRpLL
-	L9RmIlRa/JfJvB075b3N+Do7EW6wwJvlcayLg4t806xU/QB5PQc/3EBgI87idTr7
-	xpnDfQ==
-Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 46mbdrce7g-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 14 May 2025 16:48:17 +0200 (MEST)
-Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 3638E4004A;
-	Wed, 14 May 2025 16:46:48 +0200 (CEST)
-Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 7D86CB0E344;
-	Wed, 14 May 2025 16:45:37 +0200 (CEST)
-Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
- with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 14 May
- 2025 16:45:37 +0200
-From: Christian Bruel <christian.bruel@foss.st.com>
-To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>, <kw@linux.com>,
-        <manivannan.sadhasivam@linaro.org>, <robh@kernel.org>,
-        <bhelgaas@google.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <mcoquelin.stm32@gmail.com>, <alexandre.torgue@foss.st.com>,
-        <p.zabel@pengutronix.de>, <thippeswamy.havalige@amd.com>,
-        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
-        <cassel@kernel.org>, <johan+linaro@kernel.org>
-CC: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-stm32@st-md-mailman.stormreply.com>,
-        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH v10 8/9] arm64: dts: st: Add PCIe Endpoint mode on stm32mp251
-Date: Wed, 14 May 2025 16:44:27 +0200
-Message-ID: <20250514144428.3340709-9-christian.bruel@foss.st.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250514144428.3340709-1-christian.bruel@foss.st.com>
-References: <20250514144428.3340709-1-christian.bruel@foss.st.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IiwLuLGB"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-43cfebc343dso47068635e9.2
+        for <linux-pci@vger.kernel.org>; Wed, 14 May 2025 09:11:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1747239076; x=1747843876; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Y2/V4Vh+d+a0nZcON/MiVuUcn+BjyzHoYwdbSHuLjiw=;
+        b=IiwLuLGBSANOVfPVpVxvuwXF8Sr9gGVpkKtEAl5Rg4cZ+O2sLb5faZi5MlHvSWsDfD
+         b9tCRpFTotaYP7XOtfPn/y0UxBNiCl3EBYIRMaeOPC40Hf1rZq6WN3Fzo+Q7Z3JGbHix
+         69CojXO2oJVzNODpC6u4qG43i2wm/C+ilv0O5SwueB7o3yYND0+X3tqs7L3wwGpB5gf2
+         5waXeuGQ4EE97J1xWEHUfXhuIWn8PGrzFoJ5Un5ZjdRztuMsSeCzhtVvCMlSEJDvUXx/
+         +QtEha0vqRi/oFA9nTFBfIWX4fXNLlNa8vtU9fgEBWTy1Rh0/y855rRt5e53iDm+NzTu
+         D0eQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747239076; x=1747843876;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Y2/V4Vh+d+a0nZcON/MiVuUcn+BjyzHoYwdbSHuLjiw=;
+        b=QxeV6LqWAviu3MPDt4CosVg6EJLoKVo+rvxAUOtU5BD8JTqi9VK6NYBOJxGsWOD04y
+         eHYn3gKZqgD0d+coUFuXAl9WzrWsVbSvxXx/vlldEOguOvMUPejq/pZsGTTIFbKL5M3E
+         JZFP59zBQWMdRNjEqoeZwZKqSIadZjCVhK9R6PGvyAB44r7sGhR1oW/niRSFmJ8cF2Tu
+         Zo74JoV+PGGtqqlX44PEqBZTdGx6u4741EaKs81NJYwfVQhlcwtBaF+SzcKg67fN5hty
+         y/BLjnS/TMvNHZtCbY0w8Yb/ZWIe8ZrwANX3DAGVSpVQYNmchdVJQCHMwhJ7YQOEvJR5
+         i8Uw==
+X-Forwarded-Encrypted: i=1; AJvYcCWPexNI88SA3n8tMk+O8zFGtOiI4RF+/3XopLePHXWR9YBtJ79dy/ImqJp4rU6zq/LnaiSTaQ6PV6E=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxu/x75JZkSno+5J/dWP0HfUfz4rGJc5mtHlUh7W89A/ElJ0R9J
+	HN50yXYBPzmIwjkHDMuafBLdotyq4vsxRe3dyuvKefFFDMchAb7x
+X-Gm-Gg: ASbGnctPvrOQ/IIkRnLKozl4E1UnvK63BNJmxzO9lciIDpz8LNa6LnrCijq/iyyzonP
+	eSCBdJBw1UrpVtyT0utN/okZJf1E40srqOHyQUJllks2UOiQpdtYStKv94LFBDtd70O495Kgy2o
+	CL6aJ1aeo+jaRt9omMSqAMkac99t0aZzpnXjWF40rhRg2CUxQeKXBh/DfZ6d5szvIP58oQ0g0/y
+	LnaLzhshXktn/amVnVpS+8QWPRkbAt5I4UozF1pOh9Yvi4/Z5QeGw8mpsBeo4XvgFkqhHSsmE0d
+	ACR2mNRj+XlBfv/3QoLn5SJgoWB8BUEOkQMpsIbHQ5zqgS7lIO0bA16qMm0QTJo=
+X-Google-Smtp-Source: AGHT+IFGHec//hF81vQxUlFa4erK/ez1voAa+p6UTDP3HcrYgaIZTtF6BiQEOAEJgs3Vbq8qTw4hYQ==
+X-Received: by 2002:a05:600c:348a:b0:43c:fa0e:4713 with SMTP id 5b1f17b1804b1-442f20bb25dmr40829335e9.2.1747239074979;
+        Wed, 14 May 2025 09:11:14 -0700 (PDT)
+Received: from [192.168.1.121] ([176.206.99.211])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-442f337dbb7sm35500765e9.14.2025.05.14.09.11.13
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 14 May 2025 09:11:14 -0700 (PDT)
+Message-ID: <965c9753-f14b-4a87-9f6d-8798e09ad6f5@gmail.com>
+Date: Wed, 14 May 2025 18:11:13 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [Bug 220110] probably thunderbolt or pci leads to pci usage
+ counter underflow
+To: Mario Limonciello <mario.limonciello@amd.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, linux-pci@vger.kernel.org
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Yijun Shen
+ <Yijun_Shen@dell.com>, David Perry <david.perry@amd.com>,
+ Kai-Heng Feng <kaihengf@nvidia.com>, AceLan Kao <acelan.kao@canonical.com>,
+ Mark Pearson <mpearson-lenovo@squebb.ca>,
+ =?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ amd-gfx@lists.freedesktop.org
+References: <20250513194506.GA1155899@bhelgaas>
+ <b2f9c88d-59b5-416f-b8d5-2e0fb1fc74fd@amd.com>
+Content-Language: en-US, it-IT, en-US-large
+From: Denis Benato <benato.denis96@gmail.com>
+In-Reply-To: <b2f9c88d-59b5-416f-b8d5-2e0fb1fc74fd@amd.com>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EQNCAS1NODE4.st.com (10.75.129.82) To SHFDAG1NODE3.st.com
- (10.75.129.71)
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-14_04,2025-05-14_03,2025-02-21_01
 
-Add pcie_ep node to support STM32 MP25 PCIe driver based on the
-DesignWare PCIe core configured as Endpoint mode
 
-Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
----
- arch/arm64/boot/dts/st/stm32mp251.dtsi | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+On 5/13/25 21:51, Mario Limonciello wrote:
+> On 5/13/2025 2:45 PM, Bjorn Helgaas wrote:
+>>  From Denis's report at https://bugzilla.kernel.org/show_bug.cgi?id=220110:
+>>
+>>> I am having problems with my laptop that has a thunderbolt
+>>> controller to which I connected an AMD 6750XT.
+>>>
+>>> The topology of my system is described in this bug:
+>>> https://gitlab.freedesktop.org/drm/amd/-/issues/4014 yet I don't
+>>> know if this is related or not.
+>>>
+>>> I experienced PC attempting to enter s2idle while playing a YT
+>>> video; PC has become totally unresponsive to input in any
+>>> keyboard/mouse and power button after turning off screens attached
+>>> to the AMD card (the built-in screen was off already).
+>>>
+>>>  From a look at the logs it appears one uncorrectible AER pci error
+>>> triggered a pci root reset, and that comes with a bug where the
+>>> usage counter assumes a wrong value; this in turn seems to cause all
+>>> sorts of weird bugs.
+>>>
+>>> That however is my interpretation of the attached log, that might be
+>>> very wrong.
+>>>
+>>> This is the first time I experience this bug in a year with this
+>>> laptop and I don't know how easy it is to reproduce.
+>>>
+>>> The kernel has been compiled from sources and it has
+>>>
+>>>    [PATCH v2] PCI: Explicitly put devices into D0 when initializing
+>>>    [PATCH v4] PCI/PM: Put devices to low power state on shutdown
+>>>
+>>> as I am helping testing things. I find unlikely any of those might
+>>> cause these issues especially "PCI: Explicitly put devices into D0
+>>> when initializing" that has been there for a few weeks now.
+>>>
+>>> Thanks in advice to whoever will help me.
+>
+> From the logs the system didn't actually enter s2idle, but because of the failure to recover after AER he lost the external GPU.
+>
+> I don't expect that "PCI/PM: Put devices to low power state on shutdown" has anything to do with this issue.  This should only affect system shutdown.  (Tangentially related comment; we have another version of this on the linux-pm list now that is more generic [1]).
+>
+> How readily can this be reproduced?  Can you try to reproduce once more?
+> Can this reproduce on an unpatched kernel?
+>
+I have tried many different of unpatched and patched 6.14.6 for a few hours and I could not get this same bug again.
 
-diff --git a/arch/arm64/boot/dts/st/stm32mp251.dtsi b/arch/arm64/boot/dts/st/stm32mp251.dtsi
-index 7978fd640e1e..6d54ed9a1052 100644
---- a/arch/arm64/boot/dts/st/stm32mp251.dtsi
-+++ b/arch/arm64/boot/dts/st/stm32mp251.dtsi
-@@ -963,6 +963,21 @@ stmmac_axi_config_1: stmmac-axi-config {
- 				};
- 			};
- 
-+			pcie_ep: pcie-ep@48400000 {
-+				compatible = "st,stm32mp25-pcie-ep";
-+				reg = <0x48400000 0x100000>,
-+				      <0x48500000 0x100000>,
-+				      <0x48700000 0x80000>,
-+				      <0x10000000 0x8000000>;
-+				reg-names = "dbi", "dbi2", "atu", "addr_space";
-+				clocks = <&rcc CK_BUS_PCIE>;
-+				resets = <&rcc PCIE_R>;
-+				phys = <&combophy PHY_TYPE_PCIE>;
-+				access-controllers = <&rifsc 68>;
-+				power-domains = <&CLUSTER_PD>;
-+				status = "disabled";
-+			};
-+
- 			pcie_rc: pcie@48400000 {
- 				compatible = "st,stm32mp25-pcie-rc";
- 				device_type = "pci";
--- 
-2.34.1
+After unsuccessfully attempting to reproduce with the kernel I have been running I decided to test the newest "PM_ Use hibernate flows for system power off" patch [1].
 
+and that patch seems to help quickly poweroff my laptop when combined with the other mentioned patch.
+
+> To confirm if "PCI: Explicitly put devices into D0 when initializing" is the cause can you compare the PCI state of all devices from sysfs with and without the patch in place after bootup?  Basically run this in patched kernel and unpatched kernel and let's compare.
+>
+> $ grep -v foo /sys/bus/pci/devices/*/power_state
+>
+>
+unpatched: https://pastebin.com/Ym31Vjh6
+patched with just "PCI: Explicitly put devices into D0 when initializing": https://pastebin.com/SSSWLgcs
+
+diff for easy view: https://www.diffchecker.com/y5GVyEG1/
+
+
+two devices were D3hot and two were unknown, while now are recognized as D0.
+
+
+Having those two patches together does not seem to cause any harm and I could not reproduce the issue.
+
+I do not believe any of those patches are the cause for the particular crash I experienced, however I do believe there is something wrong going on because on power on the amdgpu on the thunderbolt card sometimes is there sometimes is not and I have to unplug and replug it for it to work.
+
+The only patch that alleviates this particular problem is [2] "[PATCH v3] PCI: Prevent power state transition of erroneous device" but it comes with a regression where I can no longer wake up the laptop properly.
+
+I will write this in detail as a response to that patch given that was not part of the subject here.
+
+[2] https://lore.kernel.org/linux-pci/aCLNe2wHTiKdE5ZO@wunner.de/T/#m90fb151a4ab4af5ec8c667a27eb98bf43a9942dc
+
+> [1] https://lore.kernel.org/linux-pm/20250512212628.2539193-1-superm1@kernel.org/T/#u
