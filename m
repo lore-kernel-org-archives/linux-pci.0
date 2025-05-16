@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F26622417C3;
-	Fri, 16 May 2025 16:56:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 858C71DE4CE;
+	Fri, 16 May 2025 16:56:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747414582; cv=none; b=NnH8ZlAnnXPnWkUeMI4LVefLWUtQdoOh24Y2pJr9HxH2qzsBefwDRObpPL6vuqsUX4IVxMDFp5ekA6i9DeTQ4nA5bLTdOIUNgjuJa2VcM6wAYta6QRQLwxkf0trSfnt39/rrP9Gx6biksRv5KVJKSvApq5OBTeNSF965OLnY4mA=
+	t=1747414598; cv=none; b=QSVaYlmRJld37C44/QT9RjQJc4Y8N1+srXuQUJjv3fo5zpbXAnKKEQ9Z0yUzQWOAbQSFq6b5Kb8JknIm4k5vzWC/YXEi++eD01Wfs9ykcGEQMttEDz/LrkhSCcI1UwzYrm2EcktXD2yU/9CplyK0RkSmz+15fIF2RR3dLuH9Y3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747414582; c=relaxed/simple;
-	bh=khofMY+tQKRgt4Zd2hx1ukVRxjpmBs++tuBbX8jH09I=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=MtDoeURKU4iO7FY+T5dgvb6JipTnTDo3BLsUHK3xAU+S7z77TWo0CT8JKb1wcv6mSJSbPnM3ysMU1K2UXUr23mbDLQqyxKEuFhqwPtAvXxb/64q5sSjbsbFWLiDNobMMXVWA23W5pcGL4GHtw0WXnaJGXfj9iuFYBpadQMh8ENw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=a/G4I8ha; arc=none smtp.client-ip=117.135.210.4
+	s=arc-20240116; t=1747414598; c=relaxed/simple;
+	bh=sxk47qLZQGS5eU2o2fnvdm0YGf8LXnaJBJAQVWreRlg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=sK/Ee1n3JGhPe9vLlHkUdJBszZ/pEI1vc6aES29HAtP7N1Q45uG8mCAAKADY9xpNwlvHo/kwfsy+K6chPMls1B7iuPi3m2MRL5CvdrpewyGMCoFQoTtj9vox3JKwX6SSisEoUVN63eqO0VNqO5WwGs3JeycLCPjSt9pMcJCXi1A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=paU10sG4; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="a/G4I8ha"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="paU10sG4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=vQ
-	p5KgHSKW4HOO20NVV22SdGkoXvOWWW2pqTNEBzMz4=; b=a/G4I8haOIBbu5bErr
-	ytWKeslCzg1XBtmlCDeCdQApTp8/o1owb5PyXTB22syPUtD590ZCq6xX+BS+YauY
-	5rWnBKx7FMsVqr7L1rZj/hacpmg3kvLb0BhzIuCoX6rAaTnO+R7ieCt+Xnwjz4vl
-	FavdEP3hHECs5wRHEfcPTc7KY=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ct
+	nFyydU4fr89wS3U8rjM2P3apj75aODrTPV9Nlg/9Q=; b=paU10sG4czve6u6TW9
+	Www1Izjma48yhpYZWV9CNfchPXUSpiDjZvbkroqrtE8hhV9OorB95yW+2PenX1aW
+	LG764BB3rg5xTqRPIetuVVl4qmusY0yWP1lhlzlsfnjLw7eXT5mxblqCnLLoFaK9
+	lfr/pvUHZ1fjlqEBPLoeLkuds=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wB3lOX6bSdoVElgBw--.64634S2;
-	Sat, 17 May 2025 00:55:22 +0800 (CST)
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wB3lOX6bSdoVElgBw--.64634S5;
+	Sat, 17 May 2025 00:55:24 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	tglx@linutronix.de,
@@ -32,11 +33,13 @@ Cc: oohall@gmail.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 0/4] pci: implement "pci=aer_panic"
-Date: Sat, 17 May 2025 00:55:14 +0800
-Message-Id: <20250516165518.125495-1-18255117159@163.com>
+	Hans Zhang <hans.zhang@cixtech.com>
+Subject: [PATCH 3/4] PCI/AER: Expose AER panic state via pci_aer_panic_enabled()
+Date: Sat, 17 May 2025 00:55:17 +0800
+Message-Id: <20250516165518.125495-4-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250516165518.125495-1-18255117159@163.com>
+References: <20250516165518.125495-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,93 +47,67 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wB3lOX6bSdoVElgBw--.64634S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxXFWUuF4kGF1xuF48ur1UAwb_yoW5ZF1DpF
-	WrKws0krn5GFySyFn3CayxWryYy3Z3J345GFykWw18X3ZxKFyUJ34SyFW5tFZIgrW09w45
-	Xr4vqrWUWw4DGFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRvoGdUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWx1Po2gnaWRvYwAAsk
+X-CM-TRANSID:_____wB3lOX6bSdoVElgBw--.64634S5
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Cr1xCw1UCr4fAr1UZr48tFb_yoW8ZF43pF
+	Z5J34rAr4rGF9YgFWkZ3W8Za4rZ3s7t34rJFWkG395uFnxAa45J3s3AFyUXFn7XrWDuF1a
+	yFy5tr13WF4rAaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jmc_fUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwlPo2gnaDaNVQAAsj
 
-The following series introduces a new kernel command-line option aer_panic
-to enhance error handling for PCIe Advanced Error Reporting (AER) in
-mission-critical environments. This feature ensures deterministic recover
-from fatal PCIe errors by triggering a controlled kernel panic when device
-recovery fails, avoiding indefinite system hangs.
+From: Hans Zhang <hans.zhang@cixtech.com>
 
-Problem Statement
-In systems where unresolved PCIe errors (e.g., bus hangs) occur,
-traditional error recovery mechanisms may leave the system unresponsive
-indefinitely. This is unacceptable for high-availability environment
-requiring prompt recovery via reboot.
+Add pci_aer_panic_enabled() to check if aer_panic is enabled system-wide.
+Export the function for use in error recovery logic.
 
-Solution
-The aer_panic option forces a kernel panic on unrecoverable AER errors.
-This bypasses prolonged recovery attempts and ensures immediate reboot.
-
-Patch Summary:
-Documentation Update: Adds aer_panic to kernel-parameters.txt, explaining
-its purpose and usage.
-
-Command-Line Handling: Implements pci=aer_panic parsing and state
-management in PCI core.
-
-State Exposure: Introduces pci_aer_panic_enabled() to check if the panic
-mode is active.
-
-Panic Trigger: Modifies recovery logic to panic the system when recovery
-fails and aer_panic is enabled.
-
-Impact
-Controlled Recovery: Reduces downtime by replacing hangs with immediate
-reboots.
-
-Optional: Enabled via pci=aer_panic; no default behavior change.
-
-Dependency: Requires CONFIG_PCIEAER.
-
-For example, in mobile phones and tablets, when there is a problem with
-the PCIe link and it cannot be restored, it is expected to provide an
-alternative method to make the system panic without waiting for the
-battery power to be completely exhausted before restarting the system.
-
+Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
 ---
-For example, the sm8250 and sm8350 of qcom will panic and restart the
-system when they are linked down.
+ drivers/pci/pci.h      |  2 ++
+ drivers/pci/pcie/aer.c | 12 ++++++++++++
+ 2 files changed, 14 insertions(+)
 
-https://github.com/DOITfit/xiaomi_kernel_sm8250/blob/d42aa408e8cef14f4ec006554fac67ef80b86d0d/drivers/pci/controller/pci-msm.c#L5440
-
-https://github.com/OnePlusOSS/android_kernel_oneplus_sm8350/blob/13ca08fdf0979fdd61d5e8991661874bb2d19150/drivers/net/wireless/cnss2/pci.c#L950
-
-
-Since the design schemes of each SOC manufacturer are different, the AXI
-and other buses connected by PCIe do not have a design to prevent hanging.
-Once a FATAL error occurs in the PCIe link and cannot be restored, the
-system needs to be restarted.
-
-
-Dear Mani,
-
-I wonder if you know how other SoCs of qcom handle FATAL errors that occur
-in PCIe link.
----
-
-Hans Zhang (4):
-  pci: implement "pci=aer_panic"
-  PCI/AER: Introduce aer_panic kernel command-line option
-  PCI/AER: Expose AER panic state via pci_aer_panic_enabled()
-  PCI/AER: Trigger kernel panic on recovery failure if aer_panic is set
-
- .../admin-guide/kernel-parameters.txt          |  7 +++++++
- drivers/pci/pci.c                              |  2 ++
- drivers/pci/pci.h                              |  4 ++++
- drivers/pci/pcie/aer.c                         | 18 ++++++++++++++++++
- drivers/pci/pcie/err.c                         |  8 ++++++--
- 5 files changed, 37 insertions(+), 2 deletions(-)
-
-
-base-commit: fee3e843b309444f48157e2188efa6818bae85cf
-prerequisite-patch-id: 299f33d3618e246cd7c04de10e591ace2d0116e6
-prerequisite-patch-id: 482ad0609459a7654a4100cdc9f9aa4b671be50b
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 8ddfc1677eeb..f92928dadc6a 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -959,6 +959,7 @@ static inline void of_pci_remove_host_bridge_node(struct pci_host_bridge *bridge
+ #ifdef CONFIG_PCIEAER
+ void pci_no_aer(void);
+ void pci_aer_panic(void);
++bool pci_aer_panic_enabled(void);
+ void pci_aer_init(struct pci_dev *dev);
+ void pci_aer_exit(struct pci_dev *dev);
+ extern const struct attribute_group aer_stats_attr_group;
+@@ -970,6 +971,7 @@ void pci_restore_aer_state(struct pci_dev *dev);
+ #else
+ static inline void pci_no_aer(void) { }
+ static inline void pci_aer_panic(void) { }
++static inline bool pci_aer_panic_enabled(void) { return false; }
+ static inline void pci_aer_init(struct pci_dev *d) { }
+ static inline void pci_aer_exit(struct pci_dev *d) { }
+ static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index fa51fb8a5fe7..4fd7db90b77c 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -125,6 +125,18 @@ void pci_aer_panic(void)
+ 	pcie_aer_panic = true;
+ }
+ 
++/**
++ * pci_aer_panic_enabled() - Are AER panic enabled system-wide?
++ *
++ * Return: true if AER panic has not been globally disabled through ACPI FADT,
++ * PCI bridge quirks, or the "pci=aer_panic" kernel command-line option.
++ */
++bool pci_aer_panic_enabled(void)
++{
++	return pcie_aer_panic;
++}
++EXPORT_SYMBOL(pci_aer_panic_enabled);
++
+ bool pci_aer_available(void)
+ {
+ 	return !pcie_aer_disable && pci_msi_enabled();
 -- 
 2.25.1
 
