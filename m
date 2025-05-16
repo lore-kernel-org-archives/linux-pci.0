@@ -1,91 +1,80 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.17])
+Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CA9C1361
-	for <linux-pci@vger.kernel.org>; Fri, 16 May 2025 06:57:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CE6229B17;
+	Fri, 16 May 2025 07:49:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747378669; cv=none; b=tMG+k5oVjIpyFXIs/jHhqQXjc3t5twXTEzHFfkbKt5+ShMnfo801+157haHzue1A/ZQm+LDZw7aUrLUlqw6IPqBg+cWVXWpEr9vuiW749msl6y2n3Gx6O8x1I4NFuCUEzDA6Y+gn6IwAIFTNEGVNFjnKmyQVQfXqdkIRiu8l5a4=
+	t=1747381763; cv=none; b=dk6tcrKZOrE269HetXp2H80sbS8FPA/HKWO3z7DYsBTaJ0Whz4n0gL58uF3fD3JQ9MmBua3P48sZ9f5LlKcRe+JgBqMaJPiZryK8fdArcEgg4H4Fj5QtjlTqzecBFcJBYgp2mHfpEWPtX4w73PWKntbcyjkseyOSfxR8ltUAVpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747378669; c=relaxed/simple;
-	bh=XnZoPswJ3bA6jxPLmT+F4YbPnOb8BlY1QlQMFMbPtUE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Wd/YCs7+HWUcSOMZPnd1wVRhUnjYdqM1CVSnXwYdkVYfn2+Sj7FDjv8VTnyUN7nGJGquGOU1qthMe1FCfIKBAHxYguMr6qoLdYKplnbTaFhyo75IJZGVpeWQ3wGxjXR/kzu3rksXLw9+zXsslQaaK0wlXLyQJkKeatpd2EwzU5U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LfNZh7S/; arc=none smtp.client-ip=198.175.65.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1747381763; c=relaxed/simple;
+	bh=MqdaDGZxcvLlum+3L1xyXGwPkyyMshMqKiPVFcYpwIQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=AfmHXyx+wQg0tpeJ03tBFUtZi/trS/zSK+jkQdt3SpYGRkF+rIN1QOgtMt3Yv3PoGGx8pGodmHK2T10EPrTVhcaUlIpsYZZYBZgl/3xmZcDwd8W28YdiLNF1s/BCg2eP4sBb1st6GUFhULVsIwP3iBWVsPxZhSgWA68uAbsy+oc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=ZPXCOq5Z; arc=none smtp.client-ip=80.241.56.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LfNZh7S/"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1747378668; x=1778914668;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=XnZoPswJ3bA6jxPLmT+F4YbPnOb8BlY1QlQMFMbPtUE=;
-  b=LfNZh7S/8WBGxGGBCFtDNRjvO/FRbQREMtdamYhij8YCthX1i6PQZ4xM
-   +qHy5PeQJXTDnjQN5ChiucOI7TyzzftVYO64FJK+zWCsc7CGKOBpPwMsl
-   qRXUfqIMcYBeOVdPkJkUSMEnZ+1kNTwqso/guf7EJTkjAQWQBHXD7gG4c
-   a1VruYWIRtZKq5omzlsuAoPqNK0cYrEO/WeJm7q0NljxKlRpjnoDvvmBN
-   ghmSu3sJHehIfZei3QZQgIujMle3sRYAhvm1VdOlUPR8IW/uHQlE+Uuq0
-   l9PEartM34UCeq7z+T547pLlAWkT8im6sTvYdx5ks000+zR86G7KQPSaE
-   A==;
-X-CSE-ConnectionGUID: rSGLGLjuSAKCtGSkSAByYA==
-X-CSE-MsgGUID: 5It+M5QIRUSBGftWBwCjsQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11434"; a="49324716"
-X-IronPort-AV: E=Sophos;i="6.15,293,1739865600"; 
-   d="scan'208";a="49324716"
-Received: from fmviesa008.fm.intel.com ([10.60.135.148])
-  by orvoesa109.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 May 2025 23:57:48 -0700
-X-CSE-ConnectionGUID: Jx2SeMZOSiaiwQwTOC60xg==
-X-CSE-MsgGUID: ejI5XwvHQCugMZNmKNCMtA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,293,1739865600"; 
-   d="scan'208";a="138993620"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa008.fm.intel.com with ESMTP; 15 May 2025 23:57:45 -0700
-Date: Fri, 16 May 2025 14:52:06 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	gregkh@linuxfoundation.org, lukas@wunner.de,
-	aneesh.kumar@kernel.org, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	aik@amd.com, jgg@nvidia.com, zhiw@nvidia.com
-Subject: Re: [PATCH v3 12/13] PCI/TSM: support TDI related operations for
- host TSM driver
-Message-ID: <aCbglieuHI1BJDkz@yilunxu-OptiPlex-7050>
-References: <20250516054732.2055093-1-dan.j.williams@intel.com>
- <20250516054732.2055093-13-dan.j.williams@intel.com>
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="ZPXCOq5Z"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [10.196.197.2])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4ZzK3D6LPMz9t6Z;
+	Fri, 16 May 2025 09:49:12 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1747381752; h=from:from:reply-to:reply-to:subject:subject:date:date:
+	 message-id:message-id:to:to:cc:cc:mime-version:mime-version:
+	 content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=MqdaDGZxcvLlum+3L1xyXGwPkyyMshMqKiPVFcYpwIQ=;
+	b=ZPXCOq5ZliHAIyDm5VtJ5XChTH1G2FaZKR95uFb6baCezY9Js61ouGpslPH0W3PqQJxfsd
+	lFAMNIkT/lUBTedma0sDzqGENRMwBcRZnVfwccYAVz9wRc1BmcNVk2N99cBltvm0zGJQaw
+	CLNNFrNyAXVdZ3KQuGr8UvP4Pzd6HIEIoKalSkG+8Vb1r3WjwyTO/1b4jtxLbb983WmZDM
+	C2wkSetYb7rJdFBRkJ8BHgxjtw3ellW9WE9MB9vCp/nvlnKy9v9F9bbwrDiZJwhlK7V+7i
+	ZKtG3B4kN3PeAZd3ZlFR8pPgyghPOuEjbMODmxYteNtcWan8UdM1npMxkQG/yQ==
+Message-ID: <e44d880e842440d51c14f38df1d20176694e0d57.camel@mailbox.org>
+Subject: Re: [PATCH 2/7] Docu: PCI: Update pcim_enable_device()
+From: Philipp Stanner <phasta@mailbox.org>
+Reply-To: phasta@kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Philipp Stanner
+	 <phasta@kernel.org>
+Cc: Jonathan Corbet <corbet@lwn.net>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Mark Brown <broonie@kernel.org>, David Lechner <dlechner@baylibre.com>,
+ Zijun Hu <quic_zijuhu@quicinc.com>,  Yang Yingliang
+ <yangyingliang@huawei.com>, Greg Kroah-Hartman
+ <gregkh@linuxfoundation.org>,  linux-doc@vger.kernel.org,
+ linux-kernel@vger.kernel.org,  linux-pci@vger.kernel.org
+Date: Fri, 16 May 2025 09:49:10 +0200
+In-Reply-To: <aCXk2eDUJF2UbQ47@smile.fi.intel.com>
+References: <20250515124604.184313-2-phasta@kernel.org>
+	 <20250515124604.184313-4-phasta@kernel.org>
+	 <aCXk2eDUJF2UbQ47@smile.fi.intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250516054732.2055093-13-dan.j.williams@intel.com>
+X-MBO-RS-META: 4p3oakt9z4ahr9mzbcc6q9t5ctqsyqds
+X-MBO-RS-ID: ab476883432287d305d
 
-On Thu, May 15, 2025 at 10:47:31PM -0700, Dan Williams wrote:
-> From: Xu Yilun <yilun.xu@linux.intel.com>
-> 
-> Add kAPIs pci_tsm_{bind,unbind,guest_req}() for PCI devices.
-> 
-> pci_tsm_bind/unbind() are supposed to be called by kernel components
-> which manages the virtual device. The verb 'bind' means VMM does extra
-> configurations to make the assigned device ready to be validated by
-> CoCo VM as TDI (TEE Device Interface). Usually these configurations
-> include assigning device ownership and MMIO ownership to CoCo VM, and
-> move the TDI to CONFIG_LOCKED TDISP state by LOCK_INTERFACE_REQUEST
-> TDISP message. The detailed operations are specific to platform TSM
-> firmware so need to be supported by vendor TSM drivers.
-> 
-> pci_tsm_guest_req() supports a channel for CoCo VM to directly talk
-> to TSM firmware about further TDI operations after TDI is bound, e.g.
-> get device interface report, certifications & measurements. So this kAPI
-> is supposed to be called from KVM vmexit handler.
+On Thu, 2025-05-15 at 15:58 +0300, Andy Shevchenko wrote:
+> On Thu, May 15, 2025 at 02:46:00PM +0200, Philipp Stanner wrote:
+> > pcim_enable_device() is not related anymore to switching the mode
+> > of
+> > operation of any functions. It merely sets up a devres callback for
+> > automatically disabling the PCI device on driver detach.
+> >=20
+> > Adjust the function's documentation.
+>=20
+> Is the "Docu" prefix in thew Subject aligned with the git history of
+> this file?
+>=20
 
-To clarify, this commit message is staled. We are proposing existing to
-QEMU, then pass to TSM through IOMMUFD VDEVICE.
+Seems its "Documentation: ". Can fix.
 
-Thanks,
-Yilun 
+P.
