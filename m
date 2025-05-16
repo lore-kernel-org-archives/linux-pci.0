@@ -1,45 +1,48 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 858C71DE4CE;
-	Fri, 16 May 2025 16:56:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AF4D25CC77;
+	Fri, 16 May 2025 17:41:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747414598; cv=none; b=QSVaYlmRJld37C44/QT9RjQJc4Y8N1+srXuQUJjv3fo5zpbXAnKKEQ9Z0yUzQWOAbQSFq6b5Kb8JknIm4k5vzWC/YXEi++eD01Wfs9ykcGEQMttEDz/LrkhSCcI1UwzYrm2EcktXD2yU/9CplyK0RkSmz+15fIF2RR3dLuH9Y3A=
+	t=1747417310; cv=none; b=DShxqFMAddL91DJSJ6wQHugKETF1HM8hy0+Dbs3xT+/r748nD43BjIMSgbgAvjyBTDApsM9ATFYF7JXvGqmweusbGbErxxeJgS4RqW1B6yrvw5WCtXEJYahSTaYl95VZfNKOeWB/L6JwcnwhQErowNEgti8FVB7HGee3qmM9a5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747414598; c=relaxed/simple;
-	bh=sxk47qLZQGS5eU2o2fnvdm0YGf8LXnaJBJAQVWreRlg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=sK/Ee1n3JGhPe9vLlHkUdJBszZ/pEI1vc6aES29HAtP7N1Q45uG8mCAAKADY9xpNwlvHo/kwfsy+K6chPMls1B7iuPi3m2MRL5CvdrpewyGMCoFQoTtj9vox3JKwX6SSisEoUVN63eqO0VNqO5WwGs3JeycLCPjSt9pMcJCXi1A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=paU10sG4; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1747417310; c=relaxed/simple;
+	bh=FqfDVZ8sK98Vx3ih8ZP0NXhSIP8giKOMw4w7k8L3Dug=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=M0shHuw9X1lI0jg6onqPDJHL5sVxXXtImtEu3gORnHElwKHXQHEdnPTUxB2Z3RmdRuN6FvYejq/j8jatoHzVHQ/CzF2io/I+rtMv1N1yST0oTZMl8ZUsP4itFvLsC0OQrgXJj3tvKXJsS4q7Z3HQIZTd/taSACAYnXsEYSwI0+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=JkzQErQb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="paU10sG4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ct
-	nFyydU4fr89wS3U8rjM2P3apj75aODrTPV9Nlg/9Q=; b=paU10sG4czve6u6TW9
-	Www1Izjma48yhpYZWV9CNfchPXUSpiDjZvbkroqrtE8hhV9OorB95yW+2PenX1aW
-	LG764BB3rg5xTqRPIetuVVl4qmusY0yWP1lhlzlsfnjLw7eXT5mxblqCnLLoFaK9
-	lfr/pvUHZ1fjlqEBPLoeLkuds=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wB3lOX6bSdoVElgBw--.64634S5;
-	Sat, 17 May 2025 00:55:24 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: bhelgaas@google.com,
-	tglx@linutronix.de,
-	kw@linux.com,
-	manivannan.sadhasivam@linaro.org,
-	mahesh@linux.ibm.com
-Cc: oohall@gmail.com,
-	linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="JkzQErQb"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5CE4C4CEE4;
+	Fri, 16 May 2025 17:41:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747417310;
+	bh=FqfDVZ8sK98Vx3ih8ZP0NXhSIP8giKOMw4w7k8L3Dug=;
+	h=From:To:Cc:Subject:Date:From;
+	b=JkzQErQbKVJyIeMPEtPEPhj/JO9Oo5nffZxbFSfVWYNu0WQ+pK+k1pN93CdkH4T1h
+	 LlrjOcrfH65Wz/e2VSywpqSw5uL0zin9tZGuuQ1FEO/XIC6P5lRnHMgG3lYLmwv5TM
+	 frzOh+AJe7tzCPWXjxSnl4lEMMna6BustnDNLacpRYcV2AfvnefordFIxI61LKksLa
+	 ivhwU6U0y+8Nd1t+xlxMGYHXNEw11R5tAQszibBYA4o8frtZ3stYivVi1e1II7Xyty
+	 qOpicbCCF5wyrKLBsVOhvRfESnRQWja2oAK3MycyXmsvz2eFgxGAgQLMVnEDNsv7Di
+	 yFcWJsSrVu1VA==
+From: Philipp Stanner <phasta@kernel.org>
+To: Jonathan Corbet <corbet@lwn.net>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Philipp Stanner <phasta@kernel.org>,
+	Mark Brown <broonie@kernel.org>,
+	David Lechner <dlechner@baylibre.com>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Zijun Hu <quic_zijuhu@quicinc.com>,
+	Yang Yingliang <yangyingliang@huawei.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>
+Cc: linux-doc@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org,
-	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH 3/4] PCI/AER: Expose AER panic state via pci_aer_panic_enabled()
-Date: Sat, 17 May 2025 00:55:17 +0800
-Message-Id: <20250516165518.125495-4-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250516165518.125495-1-18255117159@163.com>
-References: <20250516165518.125495-1-18255117159@163.com>
+	linux-pci@vger.kernel.org
+Subject: [PATCH v2 0/6] PCI: Remove hybrid-devres region requests
+Date: Fri, 16 May 2025 19:41:35 +0200
+Message-ID: <20250516174141.42527-1-phasta@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,67 +50,91 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wB3lOX6bSdoVElgBw--.64634S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Cr1xCw1UCr4fAr1UZr48tFb_yoW8ZF43pF
-	Z5J34rAr4rGF9YgFWkZ3W8Za4rZ3s7t34rJFWkG395uFnxAa45J3s3AFyUXFn7XrWDuF1a
-	yFy5tr13WF4rAaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jmc_fUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwlPo2gnaDaNVQAAsj
 
-From: Hans Zhang <hans.zhang@cixtech.com>
+Changes in v2:
+  - Drop patch for removing forgotten header. Patch is unrelated. Will
+    resend seperately. (Andy)
+  - Make docu patch headline "Documentation/driver-api:". There seems to
+    be no canonical way, but this style is quite frequent. (Andy)
+  - Apply Andy's RBs where applicable.
 
-Add pci_aer_panic_enabled() to check if aer_panic is enabled system-wide.
-Export the function for use in error recovery logic.
+Howdy,
 
-Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
----
- drivers/pci/pci.h      |  2 ++
- drivers/pci/pcie/aer.c | 12 ++++++++++++
- 2 files changed, 14 insertions(+)
+the great day has finally arrived, I managed to get rid of one of the
+big three remaining problems in the PCI devres API (the other two being
+MSI having hybrid-devres, too, and the good old pcim_iomap_tablle)!
 
-diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
-index 8ddfc1677eeb..f92928dadc6a 100644
---- a/drivers/pci/pci.h
-+++ b/drivers/pci/pci.h
-@@ -959,6 +959,7 @@ static inline void of_pci_remove_host_bridge_node(struct pci_host_bridge *bridge
- #ifdef CONFIG_PCIEAER
- void pci_no_aer(void);
- void pci_aer_panic(void);
-+bool pci_aer_panic_enabled(void);
- void pci_aer_init(struct pci_dev *dev);
- void pci_aer_exit(struct pci_dev *dev);
- extern const struct attribute_group aer_stats_attr_group;
-@@ -970,6 +971,7 @@ void pci_restore_aer_state(struct pci_dev *dev);
- #else
- static inline void pci_no_aer(void) { }
- static inline void pci_aer_panic(void) { }
-+static inline bool pci_aer_panic_enabled(void) { return false; }
- static inline void pci_aer_init(struct pci_dev *d) { }
- static inline void pci_aer_exit(struct pci_dev *d) { }
- static inline void pci_aer_clear_fatal_status(struct pci_dev *dev) { }
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index fa51fb8a5fe7..4fd7db90b77c 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -125,6 +125,18 @@ void pci_aer_panic(void)
- 	pcie_aer_panic = true;
- }
- 
-+/**
-+ * pci_aer_panic_enabled() - Are AER panic enabled system-wide?
-+ *
-+ * Return: true if AER panic has not been globally disabled through ACPI FADT,
-+ * PCI bridge quirks, or the "pci=aer_panic" kernel command-line option.
-+ */
-+bool pci_aer_panic_enabled(void)
-+{
-+	return pcie_aer_panic;
-+}
-+EXPORT_SYMBOL(pci_aer_panic_enabled);
-+
- bool pci_aer_available(void)
- {
- 	return !pcie_aer_disable && pci_msi_enabled();
+It turned out that there aren't even that many users of the hybrid API,
+where pcim_enable_device() switches certain functions in pci.c into
+managed devres mode, which we want to remove.
+
+The affected drivers can be found with:
+
+grep -rlZ "pcim_enable_device" | xargs -0 grep -l "pci_request"
+
+These were:
+
+	ASoC [1]
+	alsa [2] 
+	cardreader [3]
+	cirrus [4]
+	i2c [5]
+	mmc [6]
+	mtd [7]
+	mxser [8]
+	net [9]
+	spi [10]
+	vdpa [11]
+	vmwgfx [12]
+
+All of those have been merged and are queued up for the merge window.
+The only possible exception is vdpa, but it seems to be ramped up right
+now; vdpa, however, doesn't even use the hybrid behavior, so that patch
+is just for generic cleanup anyways.
+
+With the users of the hybrid feature gone, the feature itself can
+finally be burned.
+
+So I'm sending out this series now to probe whether it's judged to be
+good enough for the upcoming merge window. If we could take it, we would
+make it impossible that anyone adds new users of the hybrid thing.
+
+If it's too late for the merge window, then that's what it is, of
+course.
+
+In any case I'm glad we can get rid of most of that legacy stuff now.
+
+Regards,
+Philipp
+
+[1] https://lore.kernel.org/all/174657893832.4155013.12131767110464880040.b4-ty@kernel.org/
+[2] https://lore.kernel.org/all/8734dy3tvz.wl-tiwai@suse.de/
+[3] https://lore.kernel.org/all/20250417091532.26520-2-phasta@kernel.org/ (private confirmation mail from Greg KH)
+[4] https://lore.kernel.org/dri-devel/e7c45c099f8981257866396e01a91df1afcfbf97.camel@mailbox.org/
+[5] https://lore.kernel.org/all/l26azmnpceka2obq4gtwozziq6lbilb2owx57aajtp3t6jhd3w@llmeikgjvqyh/
+[6] https://lore.kernel.org/all/CAPDyKFqqV2VEqi17UHmFE0b9Y+h5q2YaNfHTux8U=7DgF+svEw@mail.gmail.com/
+[7] https://lore.kernel.org/all/174591865790.993381.15992314896975862083.b4-ty@bootlin.com/
+[8] https://lore.kernel.org/all/20250417081333.20917-2-phasta@kernel.org/ (private confirmation mail from Greg KH)
+[9] https://lore.kernel.org/all/174588423950.1081621.6688170836136857875.git-patchwork-notify@kernel.org/
+[10] https://lore.kernel.org/all/174492457740.248895.3318833401427095151.b4-ty@kernel.org/
+[11] https://lore.kernel.org/all/20250515072724-mutt-send-email-mst@kernel.org/
+[12] https://lore.kernel.org/dri-devel/CABQX2QNQbO4dMq-Hi6tvpi7OTwcVfjM62eCr1OGkzF8Phy-Shw@mail.gmail.com/
+
+Philipp Stanner (6):
+  PCI: Remove hybrid devres nature from request functions
+  Documentation/driver-api: Update pcim_enable_device()
+  PCI: Remove pcim_request_region_exclusive()
+  PCI: Remove request_flags relict from devres
+  PCI: Remove redundant set of request funcs
+  PCI: Remove hybrid-devres hazzard warnings from doc
+
+ .../driver-api/driver-model/devres.rst        |   2 +-
+ drivers/pci/devres.c                          | 201 +++---------------
+ drivers/pci/iomap.c                           |  16 --
+ drivers/pci/pci.c                             |  42 ----
+ drivers/pci/pci.h                             |   3 -
+ 5 files changed, 32 insertions(+), 232 deletions(-)
+
 -- 
-2.25.1
+2.49.0
 
