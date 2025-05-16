@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C0ACE222577;
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id BF2D2222575;
 	Fri, 16 May 2025 16:56:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747414572; cv=none; b=bOnjdWYAtSCLWwKEeU2Qr6+JhNsEsT3S04w3Xbr0ZQ5PLTx9d2yRX3c64u+Ds7p/n9Ft7Xbqgs0m9ddSDh/7iMwd+0q/BlrUVE+LfkB8ox84vHRrdDI+C/X5eOlyXOOcjs8kKU8dzPQdEOrw9PsIRb5m/i0eJsAGAMzJ7j/DPeA=
+	t=1747414573; cv=none; b=oqTeNw4vRv8120INf459vGW2N1KOM1VdyBeQlV2klm/5cd1JcKWGogBzLC3ZLnDM6tt1Kn6s4Hd+GzCuF+O2joUWonNggBjOIYNsKs8lpL8lAw/TrIg2h5geo1XasSU9fXnIawZBe+M+ybteTmfHKC+rOgXvO8DR73k7tf6/rlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747414572; c=relaxed/simple;
-	bh=XuXxFMrT5gtouRubhK14krzd4IQ2zNIzGBP4HObi6n4=;
+	s=arc-20240116; t=1747414573; c=relaxed/simple;
+	bh=O3ayu8ZONqiJqL6w00/UKDCzUfhRK5ZW38N2QgYe358=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RKubDr6zB/oI1EhH0079wl+uFJOcBVAZOMnV84yJOYBJ+XDfmL3JajQsxjpIxojZt4TgToHaGkr2rI4/sdIeOjwMXr5hAAj1fcjVuxkZF7swDD2LkiY/QV8p/iAnAMVtZO3VMmbxV+qNXsJDzQF9wdQBAOZ95Hh4owodv7/L0nA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=mUGyHCPE; arc=none smtp.client-ip=220.197.31.2
+	 MIME-Version; b=SZrVhuPi66pAWk1Gy+djPsQmrxKUra+2JteNWxGetl11su8ZWUwD48iOqMJvq0AnIoYKEqxr7vxIBOZilTjpz9oQkx/Cp+rwRdhnAYeC0YMFA7iE4VfhrRPN5Cju+FQFHmrpAudJfaORqwDZJMG13M/UQ7S74KoYwSsTUu9ox6s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=HwewPV4V; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="mUGyHCPE"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="HwewPV4V"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=74
-	e2ez+NMjSxbCJcFI3DWZZ4H948dIsFZZ+N5kavxho=; b=mUGyHCPEgDfrXMi0jq
-	P2CB3/AWyH8hJCzTLolqMhI0e4V4IGviCBt0At2utWdBLd65FOARJWRL4mrtOOY/
-	CrakLOCLKCbBxFEtyBNBgi8NAGpwjMfyLR2HY01PNkx664iLsdRP/tI6JAQbqiaT
-	kU54I8xefzQvnVO28rXejKLAo=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=8Q
+	nkpC7DXTTaoBj8cG/gGZoH/93W5gjIXcCK742TD6s=; b=HwewPV4VfITRmslAMM
+	3rjbozB+mhgs+Jcyz+QrF3aXobswi55iDa2sQX9YFmqBPfXa5gXrBgImjwC28McD
+	Q62RCrs9Le2YFwa3Ta8AzBkum8/jVL7Z74ZAzJcSoV95SBMp+pbinzh5xzbaEhNv
+	Xl5ork5AIz7XUMaNMSQ2v/vhQ=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wB3lOX6bSdoVElgBw--.64634S6;
-	Sat, 17 May 2025 00:55:25 +0800 (CST)
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wB3lOX6bSdoVElgBw--.64634S3;
+	Sat, 17 May 2025 00:55:23 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	tglx@linutronix.de,
@@ -33,10 +33,10 @@ Cc: oohall@gmail.com,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	linuxppc-dev@lists.ozlabs.org,
-	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH 4/4] PCI/AER: Trigger kernel panic on recovery failure if aer_panic is set
-Date: Sat, 17 May 2025 00:55:18 +0800
-Message-Id: <20250516165518.125495-5-18255117159@163.com>
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH 1/4] pci: implement "pci=aer_panic"
+Date: Sat, 17 May 2025 00:55:15 +0800
+Message-Id: <20250516165518.125495-2-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250516165518.125495-1-18255117159@163.com>
 References: <20250516165518.125495-1-18255117159@163.com>
@@ -47,43 +47,45 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wB3lOX6bSdoVElgBw--.64634S6
-X-Coremail-Antispam: 1Uf129KBjvdXoWrZFy8JF47WrW3ZF48Ww17Wrg_yoWDurb_Za
-	y0vr97JrW0vF95Aa1Yvr15Zryjk3Z2g3y8uw10qFyrJFWayrnFga4DXFyayr98CrsYyFyD
-	Awn8Zr1rAr18CjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IU8_cTJUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwlPo2gnaDaNVQABsi
+X-CM-TRANSID:_____wB3lOX6bSdoVElgBw--.64634S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tw18uw48XFW7Aw18XF1kXwb_yoW8Wr48pr
+	4DK39Iga93Jw1Yk3WDAFWIga4jva93C34rG3ykJw1Fq3s0kFyjqw4aqr43uFWkW3409F45
+	AFZIqa4jkw1xAFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pixuc_UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwpPo2gnaDaNOAAAsN
 
-From: Hans Zhang <hans.zhang@cixtech.com>
+Add a new "aer_panic" parameter to force kernel panic on unrecoverable
+PCIe Advanced Error Reporting (AER) errors. This is designed for systems
+where unresolved PCIe bus hangs require immediate reboot to maintain
+service availability.
 
-Modify pcie_do_recovery() to panic the system when device recovery fails
-and aer_panic is enabled via kernel command-line. This addresses scenarios
-where PCIe link errors cause bus hangs requiring forced reboots.
+The option can be enabled via "pci=aer_panic" on the kernel command line.
+It prepares for safer error handling in mission-critical environments
+by bypassing indefinite hangs and triggering controlled panic.
 
-Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/pcie/err.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ Documentation/admin-guide/kernel-parameters.txt | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 31090770fffc..f0994f66d462 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -271,8 +271,12 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
- 
- 	pci_uevent_ers(bridge, PCI_ERS_RESULT_DISCONNECT);
- 
--	/* TODO: Should kernel panic here? */
--	pci_info(bridge, "device recovery failed\n");
-+	if (!pci_aer_panic_enabled())
-+		pci_info(bridge, "%s: device recovery failed\n",
-+			 pci_name(bridge));
-+	else
-+		panic("Kernel panic: %s: device recovery failed\n",
-+		      pci_name(bridge));
- 
- 	return status;
- }
+diff --git a/Documentation/admin-guide/kernel-parameters.txt b/Documentation/admin-guide/kernel-parameters.txt
+index 8f75ec177399..a4a221bb1636 100644
+--- a/Documentation/admin-guide/kernel-parameters.txt
++++ b/Documentation/admin-guide/kernel-parameters.txt
+@@ -4679,6 +4679,13 @@
+ 		noaer		[PCIE] If the PCIEAER kernel config parameter is
+ 				enabled, this kernel boot option can be used to
+ 				disable the use of PCIE advanced error reporting.
++		aer_panic	[PCIE] Force kernel panic on unrecoverable
++				PCIe Advanced Error Reporting (AER) errors when
++				device recovery fails. This is recommended for
++				systems where bus hangs from unresolved errors
++				require immediate reboot. Use with caution as
++				this bypasses normal error recovery procedures.
++				Requires CONFIG_PCIEAER.
+ 		nodomains	[PCI] Disable support for multiple PCI
+ 				root domains (aka PCI segments, in ACPI-speak).
+ 		nommconf	[X86] Disable use of MMCONFIG for PCI
 -- 
 2.25.1
 
