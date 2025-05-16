@@ -1,83 +1,111 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5ABC11BC099;
-	Fri, 16 May 2025 14:56:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 212D215747D;
+	Fri, 16 May 2025 14:57:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747407393; cv=none; b=mnsawtyquFavNtCccPZk8DVzwgTkYRVPUteHazZQ7exwThles01BmWpH+83cfBdjkJc1CwhR5iOkbe7QeHrV/v+TZaPWIMqRZpcb4KG4qmxLptjuddqhKgbDRnrOKs475chkf/nA+3x2A8jPgv9WBf4lT4fajDW16S1DFVxYW7M=
+	t=1747407460; cv=none; b=m09uy5tYvVEjW/IWA24Mxyz01YLWcpjMlfhNz4FFcWVPHsf5qaKWKMQMD/5XUAIyaZrDoxLAzAYRVKesEvmuMcNrnzPdObHUcbvFkn89Jj5iDpf3Xp4L0KKG3vdlad52HRYCcarSiRBIYNmrCLrkT0z6s3qPvrPH6e3z3LfYAZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747407393; c=relaxed/simple;
-	bh=RWQ4XGYVHDZycGxd62P1KIGqj+01EfPS/QKkS6xcxKQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NavEe88eR4BIdZd+OGwCpak/KT9+vLDHujrGClUzWZ3yty4ugQ15+A7WhKwTasNy00y6mm+f9ZPVRBPbGZhg0Z12sFWZwcaCIL+O6wgPTTcZK7bTYrqLIebBes78H7tyWbJcAKJaO+toBPeTNX7EjR4aJX3Nqd06cQjvEJsDMrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Yhzr7Ebe; arc=none smtp.client-ip=220.197.31.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1747407460; c=relaxed/simple;
+	bh=eomaWBTgutHIQD5q6uqB48v7pntyLBxZ13+KCALYF9g=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IBdqf9AgubUTL3cPR/yNNljQIh5XHsnJbtfq27lzmGcb3YcA/RbmezLa5IQGcIx6Iadcwmv05hRCIUdQQHtXF6uxfvvJdurVn6FGlCwfYuXAS1HOQPsTHouE+gIvzJvwCCKkfxmMmCwK6EnGqK6wTlUjAFCEOF0OsbZAhJsT0HA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FsLIR5Lc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Yhzr7Ebe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7x
-	riZp5G3YdXkIK9LD+KY/Qb8BNn8y/0CGxYnt75nvI=; b=Yhzr7EbetfKf3PAnMl
-	Yeh+UlCmnuJeSxKfNk2GeRLJryYUUN2bLD/sk0DoOWwpx1uHTn3NQlRTWDjwQc+C
-	5uFk7/rYw5toOCP1jybMaaFGNB1gVnbvVrMXT7sRQaepLzz/kNYBA2lsaba9MAdr
-	xw8B74HHCsLlEzziFJsU87sV4=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wCXtfDyUSdoaTNOBw--.62835S4;
-	Fri, 16 May 2025 22:55:49 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: shawn.lin@rock-chips.com,
-	lpieralisi@kernel.org,
-	kw@linux.com,
-	bhelgaas@google.com,
-	heiko@sntech.de,
-	manivannan.sadhasivam@linaro.org
-Cc: robh@kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 2/3] PCI: rockchip-host: Correct non-fatal error log message
-Date: Fri, 16 May 2025 22:55:43 +0800
-Message-Id: <20250516145544.110516-3-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250516145544.110516-1-18255117159@163.com>
-References: <20250516145544.110516-1-18255117159@163.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FsLIR5Lc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 680E0C4CEE4;
+	Fri, 16 May 2025 14:57:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747407459;
+	bh=eomaWBTgutHIQD5q6uqB48v7pntyLBxZ13+KCALYF9g=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=FsLIR5Lc4ZzhzBNsZevQwVvKKiPGTK+eEu8vvPJxaSYqLZrTsh3muWBs/7EqNcHPf
+	 zKyteGmOTx4BuHGuu9XhXtG9+FyfJe0GlhsT8QotHKktniz4rCvD8Q+fojOlDJq5pB
+	 Tq2hbSqwDumXfR0N0pC1KBt/n2BZYtD5nLsbq7bUO/Z8PSc9gDMJfdwA2PxGq2fidj
+	 7161b438tQoU4C50b17uYsNdcAbDZjPsLcfiF7TYLejnfnsarMh08R/6EE6extz1IB
+	 dp0RpHek87KPghbsALLapVqJ7/hW8in1f+qLiuidN05jf/vi7sKOL9o1fEoDZNuEGR
+	 Znzk7Op6JYEcw==
+Date: Fri, 16 May 2025 15:57:34 +0100
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+	lpieralisi@kernel.org, kw@linux.com, bhelgaas@google.com, jingoohan1@gmail.com, 
+	Hans Zhang <18255117159@163.com>, robh@kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [RESEND PATCH v2 0/3] Standardize link status check to return
+ bool
+Message-ID: <wwhxwxibc4ogr62pxpjjrhnofltaqptuearba6lxylfdr2ng35@fkexvg2ydlpp>
+References: <20250510160710.392122-1-18255117159@163.com>
+ <174712882946.9059.1080501209546808704.b4-ty@linaro.org>
+ <aCb8wauW4h85F8YS@ryzen>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCXtfDyUSdoaTNOBw--.62835S4
-X-Coremail-Antispam: 1Uf129KBjvdXoWrZr4ruF1fCr4DAry5tFyrWFg_yoWDKrcE9r
-	1jva47Zw4UKr9ag3Zay3ySqr9xAasI9r4Iya1rKF1aya47Xr1Fq348Zwn8JFn5Cr15tF9F
-	g3sFyFWUuF43ujkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRMpnQUUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWw5Po2gnTwJd2AACs8
+In-Reply-To: <aCb8wauW4h85F8YS@ryzen>
 
-Correct the debug message for PCIE_CLIENT_INT_NFATAL_ERR from
-"no fatal error" to "non fatal error interrupt received" to match the
-actual interrupt semantics. This avoids confusion in log interpretation.
+On Fri, May 16, 2025 at 10:52:17AM +0200, Niklas Cassel wrote:
+> Hello Mani,
+> 
+> On Tue, May 13, 2025 at 10:33:59AM +0100, Manivannan Sadhasivam wrote:
+> > 
+> > On Sun, 11 May 2025 00:07:07 +0800, Hans Zhang wrote:
+> > > 1. PCI: dwc: Standardize link status check to return bool.
+> > > 2. PCI: mobiveil: Refactor link status check.
+> > > 3. PCI: cadence: Simplify j721e link status check.
+> > > 
+> > 
+> > Applied, thanks!
+> > 
+> > [1/3] PCI: dwc: Standardize link status check to return bool
+> >       commit: f46bfb1d3c6a601caad90eb3c11a1e1e17cccb1a
+> > [2/3] PCI: mobiveil: Refactor link status check
+> >       commit: 0a9d6a3d0fd1650b9ee00bc8150828e19cadaf23
+> > [3/3] PCI: cadence: Simplify j721e link status check
+> >       commit: 1a176b25f5d6f00c6c44729c006379b9a6dbc703
+> > 
+> 
+> This was all applied to the dw-rockchip branch.
+> 
+> Was that intentional?
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/pcie-rockchip-host.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes it was.
 
-diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
-index 2804980bab86..209eb94ece1b 100644
---- a/drivers/pci/controller/pcie-rockchip-host.c
-+++ b/drivers/pci/controller/pcie-rockchip-host.c
-@@ -489,7 +489,7 @@ static irqreturn_t rockchip_pcie_client_irq_handler(int irq, void *arg)
- 		dev_dbg(dev, "fatal error interrupt received\n");
- 
- 	if (reg & PCIE_CLIENT_INT_NFATAL_ERR)
--		dev_dbg(dev, "no fatal error interrupt received\n");
-+		dev_dbg(dev, "non fatal error interrupt received\n");
- 
- 	if (reg & PCIE_CLIENT_INT_CORR_ERR)
- 		dev_dbg(dev, "correctable error interrupt received\n");
+> 
+> My guess is that perhaps you thought that
+> "PCI: dwc: Standardize link status check to return bool"
+> was going to conflict with Hans's other commit:
+> 5e5a3bf48eed ("PCI: dw-rockchip: Use rockchip_pcie_link_up() to check link
+> up instead of open coding")
+> 
+> but at least from looking at the diff, they don't seem to touch the same
+> lines, but perhaps you got a conflict anyway?
+> 
+
+I think I got a conflict and I saw that the cover letter mentioned dw-rockchip
+as a dependency, so I applied to that branch.
+
+> 
+> 
+> mobiveil and cadence patches seem unrelated to dw-rockchip
+> (unrelated to DWC even).
+> 
+> If it was intentional, all is good, but perhaps the branch
+> should have a more generic name, rather than dw-rockchip,
+> especially now when the reset-slot and qcom-reset slot patches
+> are also on the same branch.
+> 
+
+Yeah, I agree. Since there are 3 series on this branch, we need to pick a smart
+name ;) I will do so. Thanks!
+
+- Mani
+
 -- 
-2.25.1
-
+மணிவண்ணன் சதாசிவம்
