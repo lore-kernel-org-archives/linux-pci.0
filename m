@@ -1,55 +1,55 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7279526FDB6
-	for <linux-pci@vger.kernel.org>; Mon, 19 May 2025 09:29:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DABDD270547
+	for <linux-pci@vger.kernel.org>; Mon, 19 May 2025 09:29:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747646961; cv=none; b=gAPGIbYYlFD2m5Wh/eoX9kDNLZMbeAdL1tlNhWTWj2tYUAUOK/xptBB3cqSPOj+ogbNB+EwAYCtSX3OY5LoKx0h3Od7WJsJpAh6X6/YJGF6WwmVCbFHL8dmNK/qWMDC7Jgs8f4F8VQ10ViejZuEabSucRfPGVFtiUugmhelXejA=
+	t=1747646971; cv=none; b=uGlMlrR/5AKYMpbUpl7Tn7R/H+Eh+5aztEfIIY8H+CStoGU7lLI7oxrSV9qBYWJg8brJILD7nXTJ6xPRgXmmELIuXJgrx2HXlPyEcmNwHdGnv29Jg8dFkKJcXoY/Rs+88aeTX51wuDLxQa9UfDYL27Aq6EpP4PeUB3Hwz5axkG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747646961; c=relaxed/simple;
-	bh=DjgRCEdJ83elEzSvGykMTo6aeQJl5+Vqze7Lag7Gvho=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=CXg+2SYwxC/ZLv1otGlfaxg+IZ1X1XxC6q/Yj9QbjXsalOB0Z72+CewR7LXwyU7DCYn+H4xDd7+FbVS4twQ3SbX3WXls1qfK3Q8ueSUOWe+5pbAljPHsLU4iWZQatxYCYCMQqllfk5+TzQND9b9cpkqNsfcXwN5tOwRjWMXtlso=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=L/RVJ+Wm; arc=none smtp.client-ip=203.254.224.25
+	s=arc-20240116; t=1747646971; c=relaxed/simple;
+	bh=VqfsgDaCFdvADgmhIAYYskRSEPPVkwQynU4VvO/XymA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 References; b=uMVS9SA+LX7IGJ7wX7lFxiV2tFcMOMpA6bS0mI/prm+kvxVhoNKJNZNkDrgAmryxOWedU26TRHPx6LJHULIUsfnCw1gO7heFeHJJfeUwRT7Gk4UxBnXm5wJshxpzotS94YbhBtjjh4nwCJ6vsJC8jOYVaCQwoOloaKqa4/AgXWo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=UqqKHd4p; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="L/RVJ+Wm"
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UqqKHd4p"
 Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250519092917epoutp020424e65a062ccc26db3dc3ba9385bed8~A46YACWNg0670506705epoutp02g
-	for <linux-pci@vger.kernel.org>; Mon, 19 May 2025 09:29:17 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250519092917epoutp020424e65a062ccc26db3dc3ba9385bed8~A46YACWNg0670506705epoutp02g
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250519092928epoutp03a4ecda3da5fd241321b709e3f0ff4855~A46h1jd3c2924429244epoutp03T
+	for <linux-pci@vger.kernel.org>; Mon, 19 May 2025 09:29:28 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250519092928epoutp03a4ecda3da5fd241321b709e3f0ff4855~A46h1jd3c2924429244epoutp03T
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1747646957;
-	bh=hyCYV5tKTc12SwshmyJzcHUJ5CSInB31JwFZiJ35RyE=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=L/RVJ+WmnF96JHVNFe0+ng4FE/5lFVX1zpPcfpmzNf6Z/GkFcrcyAVS3WhTpWt2Fe
-	 hSHqQHohli5Crd13u3La/XW1wX8F3DH4STiUQKJXdbg9hyzBrLHSPTj0gWcwiC024t
-	 lX/7K9u7WpNMdswguMCxZazFOiO92oJspsqb0hto=
+	s=mail20170921; t=1747646968;
+	bh=8/g6vyHilQjjcSTnrPbpb3Jk/BH6c4Lj3y4koJE69UY=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=UqqKHd4puhiodSUV0+dPUdgSuRwewaKcAn0ru7d1nIcRJFY7jq5q10Q3XZ+ELDRo1
+	 JEFG5+zMHTbFCyaznzS8gUN7oxIGivr7nWW17jDrr1ZvA4dl/zCYF+0FpAW3p4VMTZ
+	 ifNpdDGDGObiy1amtHszeQb60MlgcGblC8nJPknU=
 Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250519092916epcas5p1f944d982a0b8d7b7f94b8e9145e1268b~A46XDOp1s1962019620epcas5p15;
-	Mon, 19 May 2025 09:29:16 +0000 (GMT)
-Received: from epcas5p3.samsung.com (unknown [182.195.38.183]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4b1C7G1Yrdz6B9mJ; Mon, 19 May
-	2025 09:29:14 +0000 (GMT)
-Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
-	20250518193230epcas5p3dfb178a6528556c55e9b694ca8f8ad6c~Atfwy15Xp1682016820epcas5p36;
-	Sun, 18 May 2025 19:32:30 +0000 (GMT)
-Received: from epsmgmcp1.samsung.com (unknown [182.195.42.82]) by
-	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
-	20250518193230epsmtrp184b5daf49957acd8fd047704d2f70457~AtfwyAvh82445124451epsmtrp1b;
-	Sun, 18 May 2025 19:32:30 +0000 (GMT)
-X-AuditID: b6c32a52-40bff70000004c16-61-682a35ce3ed9
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
+	20250519092927epcas5p29cc7c78741885d807b4862e37da451c1~A46hKQYX51126411264epcas5p2q;
+	Mon, 19 May 2025 09:29:27 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.177]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4b1C7V1cHCz6B9mH; Mon, 19 May
+	2025 09:29:26 +0000 (GMT)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250518193219epcas5p24b442233b3e2bc2a92f43b71a126062f~AtfmzdgcQ1923619236epcas5p2D;
+	Sun, 18 May 2025 19:32:19 +0000 (GMT)
+Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20250518193217epsmtrp2417411fcc9c4c964f7a98b47e7b54e7c~AtfkhlhkH0348003480epsmtrp2Z;
+	Sun, 18 May 2025 19:32:17 +0000 (GMT)
+X-AuditID: b6c32a29-566fe7000000223e-0e-682a35c036f9
 Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgmcp1.samsung.com (Symantec Messaging Gateway) with SMTP id
-	FD.39.19478.EC53A286; Mon, 19 May 2025 04:32:30 +0900 (KST)
+	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	80.C1.08766.0C53A286; Mon, 19 May 2025 04:32:16 +0900 (KST)
 Received: from cheetah.samsungds.net (unknown [107.109.115.53]) by
 	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250518193227epsmtip1824ce2e47b768b1b9d1560fcc5809d57~Atft8GoVD0974409744epsmtip1f;
-	Sun, 18 May 2025 19:32:27 +0000 (GMT)
+	20250518193214epsmtip19e58f6b1d64d38c1d3222269b76999bd~Atfhxhd2e0974409744epsmtip1d;
+	Sun, 18 May 2025 19:32:13 +0000 (GMT)
 From: Shradha Todi <shradha.t@samsung.com>
 To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.or,
@@ -59,12 +59,11 @@ Cc: manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, kw@linux.com,
 	krzk+dt@kernel.org, conor+dt@kernel.org, alim.akhtar@samsung.com,
 	vkoul@kernel.org, kishon@kernel.org, arnd@arndb.de,
 	m.szyprowski@samsung.com, jh80.chung@samsung.com, Shradha Todi
-	<shradha.t@samsung.com>, Hrishikesh Dileep <hrishikesh.d@samsung.com>
-Subject: [PATCH 02/10] PCI: exynos: Remove unused MACROs in exynos PCI file
-Date: Mon, 19 May 2025 01:01:44 +0530
-Message-ID: <20250518193152.63476-3-shradha.t@samsung.com>
+	<shradha.t@samsung.com>
+Subject: [PATCH 00/10] Add PCIe support for Tesla FSD SoC
+Date: Mon, 19 May 2025 01:01:42 +0530
+Message-ID: <20250518193152.63476-1-shradha.t@samsung.com>
 X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250518193152.63476-1-shradha.t@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -72,55 +71,80 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrEIsWRmVeSWpSXmKPExsWy7bCSnO45U60Mgxc3WSwezNvGZvF30jF2
-	iyVNGRZr9p5jsph/5Byrxc2zu9ktbvxqY7VY8WUmu8XR1v/MFi9n3WOzaOj5zWqx6fE1VovL
-	u+awWZydd5zNYsKqbywWZ78vYLJo+dPCYrH2yF12i7stnawW//fsYLfoPVxrsfPOCWYHMY/f
-	vyYxeuycdZfdY8GmUo9NqzrZPO5c28Pm8eTKdCaPzUvqPfq2rGL0OPJ1OovH501yAVxRXDYp
-	qTmZZalF+nYJXBlXtq9kKpjDXvG/o5WlgXEWWxcjJ4eEgInEtctnmLsYuTiEBLYzSjz/8IQJ
-	IiEp8fniOihbWGLlv+fsILaQwCdGiaa5FiA2m4CWROPXLmYQW0TgBKNE3y1LkEHMAvOZJRqa
-	v4E1Cwt4S6x495wVxGYRUJWYs70FLM4rYCVx7OlboKEcQAvkJfo7JEDCnALWEtvWT2WC2GUl
-	sfDJTkaIckGJkzOfsIDYzEDlzVtnM09gFJiFJDULSWoBI9MqRtHUguLc9NzkAkO94sTc4tK8
-	dL3k/NxNjOBo1Arawbhs/V+9Q4xMHIyHGCU4mJVEeFdt1sgQ4k1JrKxKLcqPLyrNSS0+xCjN
-	waIkzquc05kiJJCeWJKanZpakFoEk2Xi4JRqYCpYl/vJ5syNgIY7jZns8a0JIatnvN93/lhE
-	0LU8Uf1NQdwX7lj+U598WTXZcMWFvD9z1l+KDoo3sHj9w5GVTW3Hvz/6MwSrfTNZ2b/ozfx9
-	kn/WhdZaoYY/eyJv8B1Qtpqr8fzMqfoZPcIFns3Wp7RsTHa2heilqJb7L2E6Nzf1n2/sCfmP
-	HkZiAeo23o8ybn9v8Xr3dqJ9/s3f0ws43bSrth9KWDYj61iRTIZXSqm4i4BDpOWWlseuO5Nm
-	bT8hG3tjWd22iBn28cVff9w4duMbWx1TZ8kLH7G6XVk7u24zSLUt58qYt9L53P43YXdO1ZUk
-	6ybNbFTa7DJd12/9zRV1BznUJk22/HTE1uqflxJLcUaioRZzUXEiAOa88Dk1AwAA
-X-CMS-MailID: 20250518193230epcas5p3dfb178a6528556c55e9b694ca8f8ad6c
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFupikeLIzCtJLcpLzFFi42LZdlhJTveAqVaGwaN/5hYP5m1js/g76Ri7
+	xZKmDIs1e88xWcw/co7V4savNlaLFV9mslscbf3PbPFy1j02i4ae36wWmx5fY7W4vGsOm8XZ
+	ecfZLCas+sZicfb7AiaLlj8tLBZrj9xlt7jb0slq8X/PDnaL3sO1FjvvnGB2EPX4/WsSo8fO
+	WXfZPRZsKvXYtKqTzePOtT1sHk+uTGfy2Lyk3qNvyypGjyNfp7N4fN4kF8AVxWWTkpqTWZZa
+	pG+XwJXR8O8KS8ExoYqOOUdYGxj/8XUxcnJICJhIbP1yhb2LkYtDSGA3o8S0x7uZIRKSEp8v
+	rmOCsIUlVv57DlX0iVHi+cs5YEVsAloSjV+7wGwRgROMEn23LEGKmAXeM0nMXPALrFtYwFLi
+	zIopYDaLgKrEic3bwRp4Bawk5px5CRTnANogL9HfIQERFpQ4OfMJC4jNDBRu3jqbeQIj3ywk
+	qVlIUgsYmVYxSqYWFOem5xYbFhjmpZbrFSfmFpfmpesl5+duYgRHl5bmDsbtqz7oHWJk4mA8
+	xCjBwawkwrtqs0aGEG9KYmVValF+fFFpTmrxIUZpDhYlcV7xF70pQgLpiSWp2ampBalFMFkm
+	Dk6pBqbW+rQ4rZcz5rWuOVp96ctH83kTJG8s8lpqzMQZwe1yb+3n6CL7tx+q1e5qNFydyVve
+	mvGxJUTdnrXJIbDe+O7Jo5qNyk6velwZ1vS1Z8udYDuVLVu33yCyv+hpLdtlmSmZ/xUrnx6e
+	8Fztg+T+qYb1K6ZcTbWY8slWocq//pbS6p91rmsMP3ldXWb5octw2wER5bfvUnZEv9pq42cZ
+	uJ358rxHzLOM7cWZay7PvblsdmTX6x9HHsvxrWX/17ly8aeVnp5mATfETS/FvRRP9XttttTS
+	5tEjdu1fi2zUv1uav08umCh6pTdRf9FT/jUV9dMjQzzbPC3aOLqzbsYoHvva3Wx7KcyXs9Tw
+	Bx9DnhJLcUaioRZzUXEiAOrOrZodAwAA
+X-CMS-MailID: 20250518193219epcas5p24b442233b3e2bc2a92f43b71a126062f
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-541,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250518193230epcas5p3dfb178a6528556c55e9b694ca8f8ad6c
-References: <20250518193152.63476-1-shradha.t@samsung.com>
-	<CGME20250518193230epcas5p3dfb178a6528556c55e9b694ca8f8ad6c@epcas5p3.samsung.com>
+X-CMS-RootMailID: 20250518193219epcas5p24b442233b3e2bc2a92f43b71a126062f
+References: <CGME20250518193219epcas5p24b442233b3e2bc2a92f43b71a126062f@epcas5p2.samsung.com>
 
-Some MACROs are defined in the exynos PCI file but are
-not used anywhere within the file. Remove such unused
-MACROs.
+FSD platform has three instances of DesignWare based PCIe IP,
+one is in FSYS0 block and other two in FSYS1 block.
+This patch series add required DT binding, DT file modifications,
+Controller driver support and PHY driver support for the same.
 
-Suggested-by: Hrishikesh Dileep <hrishikesh.d@samsung.com>
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
- drivers/pci/controller/dwc/pci-exynos.c | 2 --
- 1 file changed, 2 deletions(-)
+To keep single PCIe controller driver for all Samsung
+manufactured SoC, we have made changes to Exynos file to extend
+support for FSD platform and other Samsung manufactured SoCs which
+shall be upstreamed soon.
 
-diff --git a/drivers/pci/controller/dwc/pci-exynos.c b/drivers/pci/controller/dwc/pci-exynos.c
-index 1c70b036376d..990aaa16b132 100644
---- a/drivers/pci/controller/dwc/pci-exynos.c
-+++ b/drivers/pci/controller/dwc/pci-exynos.c
-@@ -31,8 +31,6 @@
- #define EXYNOS_IRQ_INTB_ASSERT			BIT(2)
- #define EXYNOS_IRQ_INTC_ASSERT			BIT(4)
- #define EXYNOS_IRQ_INTD_ASSERT			BIT(6)
--#define EXYNOS_PCIE_IRQ_LEVEL			0x004
--#define EXYNOS_PCIE_IRQ_SPECIAL		0x008
- #define EXYNOS_PCIE_IRQ_EN_PULSE		0x00c
- #define EXYNOS_PCIE_IRQ_EN_LEVEL		0x010
- #define EXYNOS_PCIE_IRQ_EN_SPECIAL		0x014
+First a v1 version was posted as a separate driver file:
+https://lore.kernel.org/lkml/20221121105210.68596-1-shradha.t@samsung.com/
+This was rejected and request was made to add the support in exynos file
+itself.
+
+Then another patchset was posted to refactor existing exynos file:
+https://lore.kernel.org/lkml/649a8d88-0504-5aa9-d167-d25d394f3f26@linaro.org/T/
+This requested some major changes
+
+Taking both these reviews into consideration, I have posted a fresh
+patchset where both changes to exynos framework and addition of new FSD
+support is present. This is why not considering it to be v2 of either
+patchset.
+
+Currently the DT node is not added in this patchset and will send it
+in the devicetree mailing list post this.
+
+Shradha Todi (10):
+  PCI: exynos: Change macro names to exynos specific
+  PCI: exynos: Remove unused MACROs in exynos PCI file
+  PCI: exynos: Reorder MACROs to maintain consistency
+  PCI: exynos: Add platform device private data
+  PCI: exynos: Add structure to hold resource operations
+  dt-bindings: PCI: Add bindings support for Tesla FSD SoC
+  dt-bindings: phy: Add PHY bindings support for FSD SoC
+  phy: exynos: Add PCIe PHY support for FSD SoC
+  PCI: exynos: Add support for Tesla FSD SoC
+  misc: pci_endpoint_test: Add driver data for FSD PCIe controllers
+
+ .../bindings/pci/samsung,exynos-pcie-ep.yaml  |  66 ++
+ .../bindings/pci/samsung,exynos-pcie.yaml     | 199 +++---
+ .../bindings/phy/samsung,exynos-pcie-phy.yaml |   8 +-
+ drivers/misc/pci_endpoint_test.c              |   3 +
+ drivers/pci/controller/dwc/pci-exynos.c       | 569 +++++++++++++++---
+ drivers/phy/samsung/phy-exynos-pcie.c         | 357 ++++++++++-
+ include/linux/pci_ids.h                       |   2 +
+ 7 files changed, 1043 insertions(+), 161 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/samsung,exynos-pcie-ep.yaml
+
 -- 
 2.49.0
 
