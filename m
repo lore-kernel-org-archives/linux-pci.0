@@ -1,30 +1,30 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1664C284676;
-	Mon, 19 May 2025 14:40:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1F377283C8D;
+	Mon, 19 May 2025 14:42:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747665636; cv=none; b=EQlz3fFAajkP9MGaKhcpQlOXpr/R+emwnanWhm+EuCzKNy6WN63Ialh5CWUE5Fn8vxggYeHR5RuuWDjM9EpyJfBWIItorsPbFyeMauwnfQ09w/JyuH1ratTyPuxlmus3eUtAaG9bqYlXeraumfRkJ5WHhoUS9+aCHUw6vmjtsc0=
+	t=1747665731; cv=none; b=hSKMDE3stKKW8/Uj1Z+ebaGe0dIZZiAHoyBquBS1sPhfVhUvV7XMGIwp3pPwhPHtFrNVBdx00pGkP9QOTajVLkoExlSvNIL1rweQOVLm3pvNlYabrzU5s5P+bOGIIko6iUj620yLCXY8h5ti4AAYOJ2lrXtt36ixpSpKP6tCPhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747665636; c=relaxed/simple;
-	bh=k6eA1jkXcThyePw6CZwg5Q3R+W1tppfokRGe0lT2dsU=;
+	s=arc-20240116; t=1747665731; c=relaxed/simple;
+	bh=DaOCYWXng+bb+aRYRVQm2JJU3PH7hKp12qAzn1qQlzg=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=TTIyufBoh1PUisym3N+ngJqpfvuW8GzkuONU57JiKVpOCSX0ZlCQIkHRg3hs0TgIi51h1wNtIXG8wOx4QZ1mlctjCcGBZg+Tr6vD2bmG83FjgI1Oarhp4eIjTaVoFrbbQ3Ejm12ev07CM78+fZ3KsGx1/TlhwyjryowwSdnZmm8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ftzeb1H+; arc=none smtp.client-ip=117.135.210.2
+	 In-Reply-To:Content-Type; b=buGjKjaQQdAI1YHgYzWS/nNySfie0jkgF0cq5rQZipnEC1YJTwJNx3XjISoCVnH5Z0c3slLWnGNbQcurhxKniLnsMcAuJhiekSxd4b37GWRKDUXrJi5UamVpmJ+iClPP2bWG48lsDdVTxW3IJLuQ+Hu97FsZZAR0AChlnhW5tyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Fl3xvs8S; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ftzeb1H+"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Fl3xvs8S"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
 	s=s110527; h=Message-ID:Date:MIME-Version:Subject:From:To:
-	Content-Type; bh=AntKYH1ZwZOest/SN1xkVuvvLJOxFubIGIo8RltCreo=;
-	b=ftzeb1H+0uTdhT6UuNoZVvK9VHRpz8MvCA9PXsLsdZQQcNLR5LOcw0GuXR73qN
-	Uth9YEhGeszNDlYKH3RYLPCyQoAS+0Hyq9P4UXQJ0ptT3/tOKIubywj4ZwTF4KIl
-	4z0H6dzA/mpBrD75lk/FzZbzyeLcUPyZEs9DwSj9yXnI8=
+	Content-Type; bh=+bDEs4YvFGFvsVERzFVHp93VMAxXcdRq+jn9IvMHqRw=;
+	b=Fl3xvs8SvCi4Zhs3rMFvVXx3NsYnUHeww1T5Sd97BYxRIlwVUhBWe8IKWrHOxd
+	4yvmZZVKUJD8MQ2WoeD3aiCt99fhrpUkpPRUfodCoN9xHplfOC5t9wu46gYWUarP
+	bLH6qbTSZaF+QBXqNBwwSYzPJ2hlkbCgnrk/niP8TcX48=
 Received: from [192.168.71.93] (unknown [])
-	by gzga-smtp-mtada-g1-4 (Coremail) with SMTP id _____wD3526nQitoFe1UCg--.45396S2;
-	Mon, 19 May 2025 22:39:36 +0800 (CST)
-Message-ID: <ca5a4b17-d784-408d-a894-09e282751f99@163.com>
-Date: Mon, 19 May 2025 22:39:35 +0800
+	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wD31xYTQytocPGwCg--.349S2;
+	Mon, 19 May 2025 22:41:24 +0800 (CST)
+Message-ID: <e6ad7ef5-de9c-49bc-9882-5e97bd549168@163.com>
+Date: Mon, 19 May 2025 22:41:23 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -46,12 +46,12 @@ Content-Language: en-US
 In-Reply-To: <8434dc81-5d2d-4ce1-ab73-ca1cf16cb550@163.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3526nQitoFe1UCg--.45396S2
+X-CM-TRANSID:_____wD31xYTQytocPGwCg--.349S2
 X-Coremail-Antispam: 1Uf129KBjvJXoW3Ww4UJr4kAw13XFy5try7KFg_yoW7tF4kpa
 	yrGa1YkrWkGF92van2k3WIqFyYyas3t345WrykGw13XFnIvFyjqrWSvFWYkFZIgrZYgw45
 	ZrW0v347Wrn8AF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07U15l8UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDw1So2grQqIAxAAAsU
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UjiihUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwZSo2grPXGRfAAAsO
 
 
 
@@ -100,6 +100,7 @@ On 2025/5/19 22:21, Hans Zhang wrote:
 > For the specific code of Qualcomm, please refer to the email I sent.
 > 
 
+
 Dear Sathyanarayanan,
 
 Supplementary reasons:
@@ -127,6 +128,7 @@ http://radxa.com/products/orion/o6/
 
 Best regards,
 Hans
+
 > 
 >>>
 >>> Problem Statement
