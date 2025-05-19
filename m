@@ -1,46 +1,46 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C63F528C5CA;
-	Mon, 19 May 2025 16:05:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 7623A287501;
+	Mon, 19 May 2025 16:32:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747670736; cv=none; b=ZueXbzwGtHbrxycSGhCja5EUFqnwvwK485KEFJUL/y7emJvtGF+XsMSj/TjeZGoTaX8bedRkHFGm/RwgDsaD6sOX8l+liy7glF1lGqvJG5HXOJV0otscuKbToWXXvhah21mLmOFcL8sb0XlSyproUePvOoSnX6FUcfMqkTk+iyY=
+	t=1747672354; cv=none; b=bgZHsIe4KClXd9kHOr6kq0qtPiEO4lOJX5Z1WKXTEAO7v3J6R5Q3xPLQS++KmXoW8ajMfTvtHuoVS6DMuEsugvK8OMxV8BSh2Xd+o+K0ZxSQExb8nBvYmJQoWF8fB8V48MMAcR537AC920btp0wkW4SIVYrV9XTfq5En4lTTxzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747670736; c=relaxed/simple;
-	bh=UamZjfyN6na3p67Dkavvu/KY840DiztSpAhsgs34BpE=;
+	s=arc-20240116; t=1747672354; c=relaxed/simple;
+	bh=VWQTTDD8HisB9NEM4ezmf9iZh/lAnzuvVionokqAlV4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=p/in6YiAkIZk+c2pP6yOhzgjbKpOPn88CotD6uCAZZbxozknTqJC7uVF7DpPrLXD4C2XGXYReiIrxLdM/rxdPxZ1Q0bWurnKkE8OX+fW3yGpMmcU+307udqJ0zw2CCOrTcUJCcuUMhBs7fgcupr7xP010LZFsaThSwmPwchi4tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XH/baRnp; arc=none smtp.client-ip=117.135.210.3
+	 MIME-Version; b=TX89lzMa/fGXgc8jCubJgh1OYKNJtvdlJBKn/F6awqV3MBPwZurOsaZg/twcQIAg06UFeIe3wW/yPMAWKx9uZCKrD/heAYNl5D8ILiPCZblzCSPp8EEe53wzZI6eW+pS3QlGlYu8wClpvECLaAq+enXqsnWib8rhAsBDpSfEkGM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=EQhefIq4; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XH/baRnp"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="EQhefIq4"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ij
-	u8xELG4+fnR3215qcICf+KmnT2kIbCVpbjooreXLw=; b=XH/baRnpZkoCFnUWlI
-	8PdkaQFL2V/4NL010Kv9mP+kS7L9tWiD9zon/IGFbi2vFhromKdjzouFPXBemLel
-	6fbPRXYIQjeqk79VmduLST9cOJzdtEaO2yDwYTX7iFD+Ay+S2STALDoC1QQLSOw6
-	4c02GN5P1jtwdXWGlpED4V3ms=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=oZ
+	cJF2JpoopsTyYlHBsjPAyggH5QqX4Y36kxOfVBgqg=; b=EQhefIq4ZftanfhflZ
+	t00SkqTM5RkNKw4/9x9htauGITwaeOE0kjWkz7O/sykdOBUH7/gJZqGLD1V26aUi
+	Ks8ik7385pO+Sg12dVbaYNe9BqgUpSSyquw61oEeMjmBnvRE3u0zSK1ZQXUezH8Y
+	gmnzUt7Pu5xC2eE0KfqceKXyU=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDHWSeiVitokozvCQ--.46206S5;
-	Tue, 20 May 2025 00:04:53 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wC3vJ4CXStoPbk5Cg--.56045S3;
+	Tue, 20 May 2025 00:32:03 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
 	kw@linux.com,
 	krzk+dt@kernel.org,
 	manivannan.sadhasivam@linaro.org,
-	conor+dt@kernel.org
+	ilpo.jarvinen@linux.intel.com,
+	jingoohan1@gmail.com
 Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 3/3] PCI: of: Relax max-link-speed check to support PCIe Gen5/Gen6
-Date: Tue, 20 May 2025 00:04:48 +0800
-Message-Id: <20250519160448.209461-4-18255117159@163.com>
+Subject: [PATCH 1/3] PCI: Add PCIE_SPEED2LNKCTL2_TLS_ENC conversion macro
+Date: Tue, 20 May 2025 00:31:54 +0800
+Message-Id: <20250519163156.217567-2-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250519160448.209461-1-18255117159@163.com>
-References: <20250519160448.209461-1-18255117159@163.com>
+In-Reply-To: <20250519163156.217567-1-18255117159@163.com>
+References: <20250519163156.217567-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,36 +48,43 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHWSeiVitokozvCQ--.46206S5
-X-Coremail-Antispam: 1Uf129KBjvdXoWrtw43uFWDZw4fKFyUGrWDXFb_yoWfAwbE9F
-	17XrWfGr4Fkry5Gw1YyrWavrn0v34rW3WUXFyFy3WfAa4UuFyDZFnxuF45Za93A3W3JF1U
-	GFyDGr1UKr1DKjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRifOzJUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhhSo2grT8qeFwAAsc
+X-CM-TRANSID:_____wC3vJ4CXStoPbk5Cg--.56045S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF4UuryrZrW7AFWDZrWUArb_yoW8Jw18p3
+	W7AFyUArWrW3W3C3s8Was2qa4rXFZ3GF4Uur47W39xXFyft34kAr12yFW7tr9xZr4jkry8
+	ZanrKrWUCFyI9F7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pio7KsUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxdSo2grV+Vn5gAAsZ
 
-The existing code restricted `max-link-speed` to values 1~4 (Gen1~Gen4),
-but current SOCs using Synopsys/Cadence IP may require Gen5/Gen6 support.
-This patch updates the validation in `of_pci_get_max_link_speed` to allow
-values up to 6, ensuring compatibility with newer PCIe generations.
+Introduce PCIE_SPEED2LNKCTL2_TLS_ENC macro to standardize the conversion
+between PCIe speed enumerations and LNKCTL2_TLS register values. This
+centralizes speed-to-register mapping logic, eliminating duplicated
+conversion code across multiple drivers.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/of.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/pci/pci.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-index ab7a8252bf41..379d90913937 100644
---- a/drivers/pci/of.c
-+++ b/drivers/pci/of.c
-@@ -890,7 +890,7 @@ int of_pci_get_max_link_speed(struct device_node *node)
- 	u32 max_link_speed;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index f92928dadc6a..b7e2d08825c6 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -415,6 +415,15 @@ void pci_bus_put(struct pci_bus *bus);
+ 	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_2_5GT ? PCIE_SPEED_2_5GT : \
+ 	 PCI_SPEED_UNKNOWN)
  
- 	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
--	    max_link_speed == 0 || max_link_speed > 4)
-+	    max_link_speed == 0 || max_link_speed > 6)
- 		return -EINVAL;
- 
- 	return max_link_speed;
++#define PCIE_SPEED2LNKCTL2_TLS_ENC(speed) \
++	((speed) == PCIE_SPEED_2_5GT ? PCI_EXP_LNKCTL2_TLS_2_5GT : \
++	 (speed) == PCIE_SPEED_5_0GT ? PCI_EXP_LNKCTL2_TLS_5_0GT : \
++	 (speed) == PCIE_SPEED_8_0GT ? PCI_EXP_LNKCTL2_TLS_8_0GT : \
++	 (speed) == PCIE_SPEED_16_0GT ? PCI_EXP_LNKCTL2_TLS_16_0GT : \
++	 (speed) == PCIE_SPEED_32_0GT ? PCI_EXP_LNKCTL2_TLS_32_0GT : \
++	 (speed) == PCIE_SPEED_64_0GT ? PCI_EXP_LNKCTL2_TLS_64_0GT : \
++	 0)
++
+ /* PCIe speed to Mb/s reduced by encoding overhead */
+ #define PCIE_SPEED2MBS_ENC(speed) \
+ 	((speed) == PCIE_SPEED_64_0GT ? 64000*1/1 : \
 -- 
 2.25.1
 
