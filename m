@@ -1,138 +1,85 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.12])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91D912820C6;
-	Mon, 19 May 2025 15:44:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.12
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4002728C5A6;
+	Mon, 19 May 2025 16:05:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747669470; cv=none; b=fTSnr74qZOvgdGVe149C7Bk08UIXwQW5PQ6OSsxoThj2HBSP3+TQPOwMjxNef46k0rTmZnjxfhD+4pZD4A5HGIzncViSltESc3uxefIgd2bxjh7cngYurzZlEC8DcS7CMokrtf8CvHwePvi48tTM8Vxv8F4tgm2XTUeFW1Xo4K4=
+	t=1747670733; cv=none; b=kiThrlYkN0Drm9INR509tGnV/solXDbTO5NulFeKD2elBcJb88nah25sVR0ZR7Ivr8VkYLFTZOuQ2m42nkyuvF3GM1YxQwZrSSujmDu0k0yh9xYA6W9r8ST230bR1XJgnhXArZSdZp9raimRb26Yw37zmSENary5ag4qRnDCfA4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747669470; c=relaxed/simple;
-	bh=ucbRC+By9t6hiwEjSnTGEwM8Sp7zd3PXSGJLq749aGA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=qm92AmcR87mf6YgWqphb2IWpliXJ34Epejc8119Sq6cqpJcbaXX0pagIl+7WLlYnLx/dH9buWEVbWl5znbOm6Kop1FfR+RTfZF5oguHp6w8gR14h4i1R/IDYKraJq5GIicufo0QjBXbdCjNJuvYit0cepe/m5V+dYVzOtSwK0Xw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=gOMWIman; arc=none smtp.client-ip=198.175.65.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1747670733; c=relaxed/simple;
+	bh=noxDf8ZxNrVndhCt9us9NgISd7alcUElHnhr7+XT1yw=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Bxp+kPy9RCuZ7yTdsfBOyG8/2pCi/F5H4IRKnRelbtlstU0OnNuAU3ikmUvKMSxCnnyQfnnCNwVdQXFwKWn13RKtj4oiPPp5PzhVb5Y8+BQswE4jbnpCQNNVumILUPjwpWnudUDBfDAiugYiR940s0Zw+5u47ISE9kN1KB0qHeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=IuNvrJY+; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="gOMWIman"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1747669469; x=1779205469;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ucbRC+By9t6hiwEjSnTGEwM8Sp7zd3PXSGJLq749aGA=;
-  b=gOMWImanockod7A/QxMhBip60hxhwDqRMjfZuqjMPulix1cJgkOeSY9G
-   uVp4Yfeopxznj7KPDWdx8aDdTANeeh0rx/ejfIZCzjkxiti+WqL+PmzFf
-   o1nKoJkAzHClGxWTcgXkZnlKwp4AhiTlkj+901XhieoRlr1OeDhQ1GuCe
-   ztEM0zzEnZyGd/e813Xl1dy35NKQ6y1kG+fb5ugBZeRgcOZQ0s42OGZaB
-   h6DRoK8EOBiuZzWHD4AbfQO1MQw0rWE+a5DeGvFSD1A2mdz0gEuP4HjH3
-   3stFLGelmUzcOHA/rhR55DG/iKyxCkWH6ilFRwL5H5rubH2wuP/0bcbzZ
-   w==;
-X-CSE-ConnectionGUID: WKLKd6ubTY+f8O88tW3VcA==
-X-CSE-MsgGUID: /UA6LEhJRMWQmdgoLNy3YA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11438"; a="60966638"
-X-IronPort-AV: E=Sophos;i="6.15,301,1739865600"; 
-   d="scan'208";a="60966638"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa104.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2025 08:44:28 -0700
-X-CSE-ConnectionGUID: D9nnBx4yRm2U9Gb6be0UuQ==
-X-CSE-MsgGUID: O7jOjWPERG2e6Txxz393/g==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,301,1739865600"; 
-   d="scan'208";a="176513494"
-Received: from smile.fi.intel.com ([10.237.72.52])
-  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 May 2025 08:44:18 -0700
-Received: from andy by smile.fi.intel.com with local (Exim 4.98.2)
-	(envelope-from <andriy.shevchenko@linux.intel.com>)
-	id 1uH2f0-000000034rN-2cA2;
-	Mon, 19 May 2025 18:44:14 +0300
-Date: Mon, 19 May 2025 18:44:14 +0300
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Herve Codina <herve.codina@bootlin.com>
-Cc: Andrew Lunn <andrew@lunn.ch>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Danilo Krummrich <dakr@kernel.org>, Shawn Guo <shawnguo@kernel.org>,
-	Sascha Hauer <s.hauer@pengutronix.de>,
-	Pengutronix Kernel Team <kernel@pengutronix.de>,
-	Fabio Estevam <festevam@gmail.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, Andi Shyti <andi.shyti@kernel.org>,
-	Wolfram Sang <wsa+renesas@sang-engineering.com>,
-	Peter Rosin <peda@axentia.se>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>, Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@google.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Mark Brown <broonie@kernel.org>, Len Brown <lenb@kernel.org>,
-	Daniel Scally <djrscally@gmail.com>,
-	Heikki Krogerus <heikki.krogerus@linux.intel.com>,
-	Sakari Ailus <sakari.ailus@linux.intel.com>,
-	Wolfram Sang <wsa@kernel.org>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	linux-kernel@vger.kernel.org, imx@lists.linux.dev,
-	linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
-	linux-i2c@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-pci@vger.kernel.org, linux-spi@vger.kernel.org,
-	linux-acpi@vger.kernel.org,
-	Allan Nielsen <allan.nielsen@microchip.com>,
-	Horatiu Vultur <horatiu.vultur@microchip.com>,
-	Steen Hegelund <steen.hegelund@microchip.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v2 23/26] misc: lan966x_pci: Introduce board specific data
-Message-ID: <aCtRzm6nPk61WtRj@smile.fi.intel.com>
-References: <20250507071315.394857-1-herve.codina@bootlin.com>
- <20250507071315.394857-24-herve.codina@bootlin.com>
- <aB0ERYKdRreDe7Wt@smile.fi.intel.com>
- <20250519170004.631d99af@bootlin.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="IuNvrJY+"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ay
+	UWXvS06kXSWZnFDAYmWnkUal2jYaVwirTfcPuo9Lk=; b=IuNvrJY+ylitbtsoPL
+	8BJIrKyfm0zzCfVmp0yke1AewPrb+wmXxrp6w8aLGmwkfw5lbYrz1OL4wLiOak+T
+	9PxEkq6HNTQorRD6bWeA5KfQaJ6QvdWNJsbKflgj0qgRQUYEdhlTfs7+4/uOzS/A
+	GPJzdywXcnGNRlcV1Op6B4Bsc=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDHWSeiVitokozvCQ--.46206S4;
+	Tue, 20 May 2025 00:04:52 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	krzk+dt@kernel.org,
+	manivannan.sadhasivam@linaro.org,
+	conor+dt@kernel.org
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH 2/3] dt-bindings: PCI: pci-ep: Extend max-link-speed to PCIe Gen5/Gen6
+Date: Tue, 20 May 2025 00:04:47 +0800
+Message-Id: <20250519160448.209461-3-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250519160448.209461-1-18255117159@163.com>
+References: <20250519160448.209461-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250519170004.631d99af@bootlin.com>
-Organization: Intel Finland Oy - BIC 0357606-4 - Westendinkatu 7, 02160 Espoo
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDHWSeiVitokozvCQ--.46206S4
+X-Coremail-Antispam: 1Uf129KBjvdXoWruFWUCrWkCw13Jw18CryxuFg_yoWDKFc_uF
+	1xXa1qvr48JFyYgw4YyF4xt3W5Za12krs7Cw1kJF1qya40yrWq9F98t3s8Ar1fCay3ZF1a
+	9F93JrWDXrsrGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRKa9aPUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwRSo2grUi5pvQABsE
 
-On Mon, May 19, 2025 at 05:00:04PM +0200, Herve Codina wrote:
-> On Thu, 8 May 2025 22:21:41 +0300
-> Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
-> > On Wed, May 07, 2025 at 09:13:05AM +0200, Herve Codina wrote:
+Update the PCI Endpoint (EP) device tree binding documentation to
+include PCIe Gen5 and Gen6 support for the `max-link-speed` property.
+Similar to the Host Controller binding, the original EP binding
+limited this value to 1~4 (Gen1~Gen4). With current SOCs requiring
+Gen5/Gen6 support (e.g., Synopsys/Cadence IP), this change aligns
+the EP binding with the kernel's PCIe 6.0 capabilities.
 
-...
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ Documentation/devicetree/bindings/pci/pci-ep.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-> > >  static struct pci_device_id lan966x_pci_ids[] = {
-> > > -	{ PCI_DEVICE(PCI_VENDOR_ID_EFAR, 0x9660) },
-> > > +	{ PCI_VDEVICE(EFAR, 0x9660), (kernel_ulong_t)&evb_lan9662_nic_info },  
-> > 
-> > PCI_DEVICE_DATA() ?
-> 
-> PCI_DEVICE_DATA() need the device ID defined using a #define in the form
-> PCI_DEVICE_ID_##vend##_##dev
-> 
-> PCI_VDEVICE() allows the device ID value passed as an integer in the same
-> way as for PCI_DEVICE().
-> 
-> Also, according to its kdoc, it allows the next field to follow as the
-> device private data.
-> 
-> IMHO, I think PCI_VDEVICE() use is correct here and I will keep it.
-
-It's correct, no doubts, but using PCI_DEVICE_DATA() makes sense when you need
-to supply driver_data. In particular it will take care of needed castings and
-also as you noticed asks users to apply the regular pattern for PCI ID
-definitions.
-
-Moreover, the 0x9660 is used in two drivers and it's a good candidate to be in
-pci_ids.h. (Note drivers/pci/quirks.c:6286)
-
+diff --git a/Documentation/devicetree/bindings/pci/pci-ep.yaml b/Documentation/devicetree/bindings/pci/pci-ep.yaml
+index f75000e3093d..68aaad70b112 100644
+--- a/Documentation/devicetree/bindings/pci/pci-ep.yaml
++++ b/Documentation/devicetree/bindings/pci/pci-ep.yaml
+@@ -33,7 +33,7 @@ properties:
+ 
+   max-link-speed:
+     $ref: /schemas/types.yaml#/definitions/uint32
+-    enum: [ 1, 2, 3, 4 ]
++    enum: [ 1, 2, 3, 4, 5, 6]
+ 
+   num-lanes:
+     description: maximum number of lanes
 -- 
-With Best Regards,
-Andy Shevchenko
-
+2.25.1
 
