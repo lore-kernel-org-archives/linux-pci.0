@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 112AE28C5D6;
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C63F528C5CA;
 	Mon, 19 May 2025 16:05:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747670736; cv=none; b=dT+MYvNPnxG+JJtW8DEBUJSXqPBiGYkEGDIGwRZoC6+yTKejmMuP77yJlbWbFbrGQzBHl3MjFj5tzoSibuCc+bchuiAg0rw3mVU1EWwC7WVWx0/CCmowKfwDAbRs9UxFDvrZ5UFn7qLQTHO0fL7tpwBg5fj/oqucqYdy7npQBRA=
+	t=1747670736; cv=none; b=ZueXbzwGtHbrxycSGhCja5EUFqnwvwK485KEFJUL/y7emJvtGF+XsMSj/TjeZGoTaX8bedRkHFGm/RwgDsaD6sOX8l+liy7glF1lGqvJG5HXOJV0otscuKbToWXXvhah21mLmOFcL8sb0XlSyproUePvOoSnX6FUcfMqkTk+iyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1747670736; c=relaxed/simple;
-	bh=4rkOMpvboA4bqkGU/KoxpZYtamjteNUs9xHAUuSSMiw=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kNU8KTJz90vps+s+U3YKBllF6EIxHkFuwbJgcTA3aP6T/ocjDkz8CB8aWhQyyf3wuIJihm/4N8ihcGCcg1tHIZY9zKNyVcAXalP7VCwIRHlR/yREDxu2rtg+tjh07VW+S0FjzAIQ28sgqEtwyWyZVa4CMVTjalxsrskMEvkwnuQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fOzwOBIs; arc=none smtp.client-ip=220.197.31.3
+	bh=UamZjfyN6na3p67Dkavvu/KY840DiztSpAhsgs34BpE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=p/in6YiAkIZk+c2pP6yOhzgjbKpOPn88CotD6uCAZZbxozknTqJC7uVF7DpPrLXD4C2XGXYReiIrxLdM/rxdPxZ1Q0bWurnKkE8OX+fW3yGpMmcU+307udqJ0zw2CCOrTcUJCcuUMhBs7fgcupr7xP010LZFsaThSwmPwchi4tk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XH/baRnp; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fOzwOBIs"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XH/baRnp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=jH
-	vaX9YB/20lBOtBtYQ8vti6dWBiuMXx3X707zJ7qMg=; b=fOzwOBIsa9hlNlVN6P
-	5COqnGG6+i7nxKWkiEA/K7hg3dNT4e3Fc9KVeKCyjvjCerXxAmMCamoCIuSgwzur
-	Sf/3XMhXTqXXrg7hbXltFG48uRbzPEvv/OsYmgSvJmDfVWvUM4EQBAhqd56MJ68P
-	4V7Ic6jjCk4jQIaYSBLjIOxic=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ij
+	u8xELG4+fnR3215qcICf+KmnT2kIbCVpbjooreXLw=; b=XH/baRnpZkoCFnUWlI
+	8PdkaQFL2V/4NL010Kv9mP+kS7L9tWiD9zon/IGFbi2vFhromKdjzouFPXBemLel
+	6fbPRXYIQjeqk79VmduLST9cOJzdtEaO2yDwYTX7iFD+Ay+S2STALDoC1QQLSOw6
+	4c02GN5P1jtwdXWGlpED4V3ms=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDHWSeiVitokozvCQ--.46206S2;
-	Tue, 20 May 2025 00:04:51 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wDHWSeiVitokozvCQ--.46206S5;
+	Tue, 20 May 2025 00:04:53 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -34,10 +35,12 @@ Cc: robh@kernel.org,
 	linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 0/3] Relax max-link-speed check to support PCIe Gen5/Gen6
-Date: Tue, 20 May 2025 00:04:45 +0800
-Message-Id: <20250519160448.209461-1-18255117159@163.com>
+Subject: [PATCH 3/3] PCI: of: Relax max-link-speed check to support PCIe Gen5/Gen6
+Date: Tue, 20 May 2025 00:04:48 +0800
+Message-Id: <20250519160448.209461-4-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250519160448.209461-1-18255117159@163.com>
+References: <20250519160448.209461-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,61 +48,36 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHWSeiVitokozvCQ--.46206S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tF4UJF18JrWxtr1rCF4DArb_yoW8CrWDpF
-	ZxCry8tF1xuw15Xw4xZ3ZY9Fy7WFn5Xa13trs8W3srJFnxGa4ftFWI9F1fXF9rWF4fur1x
-	Xa1avws5Ga48Aw7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEdWFUUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDxNSo2grTN7iCAAAsW
+X-CM-TRANSID:_____wDHWSeiVitokozvCQ--.46206S5
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtw43uFWDZw4fKFyUGrWDXFb_yoWfAwbE9F
+	17XrWfGr4Fkry5Gw1YyrWavrn0v34rW3WUXFyFy3WfAa4UuFyDZFnxuF45Za93A3W3JF1U
+	GFyDGr1UKr1DKjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7xRifOzJUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhhSo2grT8qeFwAAsc
 
-This patch series extends PCIe Gen5/Gen6 support for the max-link-speed
-property across device tree bindings and kernel validation logic.
+The existing code restricted `max-link-speed` to values 1~4 (Gen1~Gen4),
+but current SOCs using Synopsys/Cadence IP may require Gen5/Gen6 support.
+This patch updates the validation in `of_pci_get_max_link_speed` to allow
+values up to 6, ensuring compatibility with newer PCIe generations.
 
-With PCIe 6.0 now supported in the Linux kernel and industry IP providers
-like Synopsys/Cadence offering PCIe 6.0-compatible IPs, existing device
-tree bindings and checks for max-link-speed (limited to Gen1~Gen4) no
-longer align with hardware capabilities.
-
-Documentation updates:
-
-Patch 1/3 extends the PCI host controller binding (pci.txt) to explicitly
-include Gen5/Gen6.
-
-Patch 2/3 updates the PCI endpoint binding (pci-ep.yaml) with the same
-extension.
-
-Kernel validation fix:
-
-Patch 3/3 relaxes the max-link-speed check in of_pci_get_max_link_speed()
-to accept values up to 6, ensuring compatibility with newer generations.
-
-These changes ensure that device tree configurations for modern PCIe
-controllers (e.g., Synopsys/Cadence IP-based designs) can fully utilize
-Gen5/Gen6 speeds without DT validation errors.
-
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-In my impression, they have already obtained the relevant certifications.
+ drivers/pci/of.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-e.g.:
-Synopsys:
-https://www.synopsys.com/dw/ipdir.php?ds=dwc_pcie6_controller
-
-Cadence:
-https://www.cadence.com/en_US/home/tools/silicon-solutions/protocol-ip/pcie-and-compute-express-link/controller-for-pcie-and-cxl/controller-for-pcie.html
----
-
-Hans Zhang (3):
-  dt-bindings: PCI: Extend max-link-speed to support PCIe Gen5/Gen6
-  dt-bindings: PCI: pci-ep: Extend max-link-speed to PCIe Gen5/Gen6
-  PCI: of: Relax max-link-speed check to support PCIe Gen5/Gen6
-
- Documentation/devicetree/bindings/pci/pci-ep.yaml | 2 +-
- Documentation/devicetree/bindings/pci/pci.txt     | 5 +++--
- drivers/pci/of.c                                  | 2 +-
- 3 files changed, 5 insertions(+), 4 deletions(-)
-
-
-base-commit: fee3e843b309444f48157e2188efa6818bae85cf
+diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+index ab7a8252bf41..379d90913937 100644
+--- a/drivers/pci/of.c
++++ b/drivers/pci/of.c
+@@ -890,7 +890,7 @@ int of_pci_get_max_link_speed(struct device_node *node)
+ 	u32 max_link_speed;
+ 
+ 	if (of_property_read_u32(node, "max-link-speed", &max_link_speed) ||
+-	    max_link_speed == 0 || max_link_speed > 4)
++	    max_link_speed == 0 || max_link_speed > 6)
+ 		return -EINVAL;
+ 
+ 	return max_link_speed;
 -- 
 2.25.1
 
