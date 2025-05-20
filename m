@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661D925D1E7;
-	Tue, 20 May 2025 21:50:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 260E325FA3F;
+	Tue, 20 May 2025 21:51:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747777859; cv=none; b=mOcreYSjw4HBXNZ1EWiGVU7BfnSw0w2DPt5vrDtb+QUbvjN0lGLwWLgnGfpqBVZaEYnskDbcLO4/niqKcqgrw41ZU6p/0b8X51TITTTei/Nn2HCMbdkWvgpu6JxuQjE7jA6LmdYN20663ghtvK0LE61YJhBZyjhSFSjARuaKAts=
+	t=1747777861; cv=none; b=KK259Jhl3dKpyQ7Tqp8pQiPM8ZkRbNNVh05UHc8iOlbZWRKGabZh5Hi7jYBgfRqlewykfuLCt/s5hlCeOqxIqG1jdsz/ehzPrZygwUwAdo/82DHWZjpCpSUz3okUS/3zLIUfwSbLGyo/iSja00CD9cUbRwbo3DdtEjMy5WQQ5Og=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747777859; c=relaxed/simple;
-	bh=DfCE1z+DZHtbk6T5lqYp3+U9vJDn8yI4U9HPklSWhmA=;
+	s=arc-20240116; t=1747777861; c=relaxed/simple;
+	bh=BWAUnCgTWnneKjfd1/r1cYKXjXgMZ6b37PyuTZ5lIYo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=uNk+rCv11nqMTVTZjKMAkcs2R1BwIKhhe8zL0/M6NRV02ed7+Es2NM4cU7YYjnm5QAxpsfYplgqbVBn3zmN53CHwMpp5Ffek2HHFCBQVwluQahTd9e1Gj/xS6sO7T4OEsZ2fHyuNF6A7ADaRm6VdTP90Ey1bd/sPS+0nJHhuFJQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xw5/D6ub; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=B0IfjplaiqS8+DcXGfDHiXBt58Ke6lUDisEQ4wHDBsqyMwl05jrkz/T9F1afjUa35mF72A9GWq2n2J09ybD81Bv1uep6UXYXVmX5WfVV0ZU3UXtX4SbiDpSxVJWk3vVarH3BKtSzHv42p5xrZh9iTqnJo7WxxeUR023zMXBSDNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tAgC9mfA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xw5/D6ub"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AE572C4CEF2;
-	Tue, 20 May 2025 21:50:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tAgC9mfA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48675C4CEEF;
+	Tue, 20 May 2025 21:51:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747777858;
-	bh=DfCE1z+DZHtbk6T5lqYp3+U9vJDn8yI4U9HPklSWhmA=;
+	s=k20201202; t=1747777860;
+	bh=BWAUnCgTWnneKjfd1/r1cYKXjXgMZ6b37PyuTZ5lIYo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Xw5/D6ubNIrqLaHAs3MzfRNJY/HxA+EwVKOI8pbDQesm4RQ8k6c17u4gvZ4rYCpQv
-	 vIRLpB9gMZFdKQ2+WaB6MR/xqcM3TQBHhFWurdmhHInLLr3g1R7C1SV6A7PsfZSc/h
-	 TzufTNioQ06Nc09IzkKNYsLVeyvYsFpXl+KYeU494IMes4Uzd3xvfitPmDIrWDUjvx
-	 hbieTgPM16HHrMwpnB7rVVfn7rIFfJ2r7SxsH6Rl/G4j/qzKyvS0Nxm/91DaMv1OQ+
-	 apALITivu1K9218E+y67GsDszYZz/IRijjjPHO3hP4qEijAWcWHvrc9jHTcgN4fHpi
-	 XMrV3DVjx58SQ==
+	b=tAgC9mfAxpktIzcXhdxJvW/QwRet7aKuX903/9PFw93O51KaxMlf+SbOHfjyXmxNB
+	 4WFHVTCuDcO89wolGrL0mPJSrF3elaqGzCExeeUnCTvK+RHfZhvUOT/V0q91hD33Qx
+	 QDEZl6wAjzz76ZRXRuVyneUK5IY2DNnPAx1kXulPFvvmUMKicpzPo6LUBtvIMf8V7i
+	 2psUATWIltbaepe0RVdQ2NdtnoGzhKUlW5Lp1Tef2dSwVnBJ8rACyWf0b6a6WWYfdR
+	 vdmIt00TLSz+wIM+pSTpPhGJXdxN5bCtGg1BLfNynFm4w7PYY2mO+YTfr9KEgHsGZX
+	 zomuH3otIc6ow==
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: linux-pci@vger.kernel.org
 Cc: Jon Pan-Doh <pandoh@google.com>,
@@ -54,9 +54,9 @@ Cc: Jon Pan-Doh <pandoh@google.com>,
 	linuxppc-dev@lists.ozlabs.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Subject: [PATCH v7 05/17] PCI/AER: Extract bus/dev/fn in aer_print_port_info() with PCI_BUS_NUM(), etc
-Date: Tue, 20 May 2025 16:50:22 -0500
-Message-ID: <20250520215047.1350603-6-helgaas@kernel.org>
+Subject: [PATCH v7 06/17] PCI/AER: Rename aer_print_port_info() to aer_print_source()
+Date: Tue, 20 May 2025 16:50:23 -0500
+Message-ID: <20250520215047.1350603-7-helgaas@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250520215047.1350603-1-helgaas@kernel.org>
 References: <20250520215047.1350603-1-helgaas@kernel.org>
@@ -69,42 +69,46 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Bjorn Helgaas <bhelgaas@google.com>
+From: Jon Pan-Doh <pandoh@google.com>
 
-Use PCI_BUS_NUM(), PCI_SLOT(), PCI_FUNC() to extract the bus number,
-device, and function number directly from the Error Source ID.  There's no
-need to shift and mask it explicitly.
+Rename aer_print_port_info() to aer_print_source() to be more descriptive.
+This logs the Error Source ID logged by a Root Port or Root Complex Event
+Collector when it receives an ERR_COR, ERR_NONFATAL, or ERR_FATAL Message.
 
+[bhelgaas: aer_print_rp_info() -> aer_print_source()]
+Signed-off-by: Jon Pan-Doh <pandoh@google.com>
 Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
 Tested-by: Krzysztof Wilczyński <kwilczynski@kernel.org>
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 ---
- drivers/pci/pcie/aer.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/pci/pcie/aer.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 488a6408c7a8..65f9277c822c 100644
+index 65f9277c822c..4f2527d9a365 100644
 --- a/drivers/pci/pcie/aer.c
 +++ b/drivers/pci/pcie/aer.c
-@@ -736,14 +736,13 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
- static void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info,
- 				const char *details)
- {
--	u8 bus = info->id >> 8;
--	u8 devfn = info->id & 0xff;
-+	u16 source = info->id;
- 
- 	pci_info(dev, "%s%s error message received from %04x:%02x:%02x.%d%s\n",
- 		 info->multi_error_valid ? "Multiple " : "",
- 		 aer_error_severity_string[info->severity],
--		 pci_domain_nr(dev->bus), bus, PCI_SLOT(devfn),
--		 PCI_FUNC(devfn), details);
-+		 pci_domain_nr(dev->bus), PCI_BUS_NUM(source),
-+		 PCI_SLOT(source), PCI_FUNC(source), details);
+@@ -733,8 +733,8 @@ void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+ 			info->severity, info->tlp_header_valid, &info->tlp);
  }
  
- #ifdef CONFIG_ACPI_APEI_PCIEAER
+-static void aer_print_port_info(struct pci_dev *dev, struct aer_err_info *info,
+-				const char *details)
++static void aer_print_source(struct pci_dev *dev, struct aer_err_info *info,
++			     const char *details)
+ {
+ 	u16 source = info->id;
+ 
+@@ -1277,7 +1277,7 @@ static void aer_isr_one_error_type(struct pci_dev *root,
+ 	bool found;
+ 
+ 	found = find_source_device(root, info);
+-	aer_print_port_info(root, info, found ? "" : " (no details found");
++	aer_print_source(root, info, found ? "" : " (no details found");
+ 	if (found)
+ 		aer_process_err_devices(info);
+ }
 -- 
 2.43.0
 
