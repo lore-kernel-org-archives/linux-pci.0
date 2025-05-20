@@ -1,210 +1,694 @@
-Received: from mx0e-00379502.gpphosted.com (mx0e-00379502.gpphosted.com [67.231.147.129])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C860E1A238F;
-	Tue, 20 May 2025 21:35:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=67.231.147.129
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747776928; cv=fail; b=rsNUcJY6qG59OxbSz9lgENJtFO1oRr56eMWEoEVpf/AkrD26B+i1vK/JqEfAGWIg6tD05OHu6IH75xEl2mV7BLpF6t2G2ZceWJanyg8VOXU9WO4aQnePAvx5b2JaVCMyBpUV20WL1S0LRbUU0rH0qlbwhj6sIqRg80xQGk9VE9A=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747776928; c=relaxed/simple;
-	bh=PGn6+6VqbUGP/n3ciGCVzLiBrmKSF/OBUNAQEMZ6nfw=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=Y4a/lsKVEMyN868ThOQ2+G5IoWBM0emDUcH/InVH7P+XMsJ9EIlumQxrvoRAja+489ezV/4PZzFJosde4dNKQCIpk47itizSWsyLlNxHK64RJX2LlUs6E4h1ml2awPcro//okx232bXt9jf7ZouUn9vVlXjT9+RpU4WFktowOBs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=llnl.gov; spf=pass smtp.mailfrom=llnl.gov; dkim=pass (2048-bit key) header.d=llnl.gov header.i=@llnl.gov header.b=Ii5LPulM; dkim=pass (1024-bit key) header.d=doellnl.onmicrosoft.com header.i=@doellnl.onmicrosoft.com header.b=YcvHZZgo; arc=fail smtp.client-ip=67.231.147.129
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=llnl.gov
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=llnl.gov
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 890D325B672;
+	Tue, 20 May 2025 21:50:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1747777851; cv=none; b=guqSKHaqHg9uaeMh7Y+frx0GU3vGk8WYj3yUUDE/cM/rJ3+pXVJMjTmfdFyWmXyhOOpQmTrv5sgmNOQci/hQ48HtmWy9lSr8SKDPEY0e+RpTKSSmD4cHFJEsdcjoQjEAoLu1bvWXLKJoWXpNZbkZDUKQUgk1yrdkauTLoq/CQZw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1747777851; c=relaxed/simple;
+	bh=6nhqSCesHEdYOIg39c2CprFwbx/2JpKfxOB4+iEgwkI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BIIi1htJQ0nXlgAAqg0h8Nf84muH/ATLqJoXZlIqQs/RoKT4Vro5qkO1RSDBa1QRGs3y9Enf/steqbrQYuWpPJCrdSY6fcaQxEUXHHBYjCkTkK61eaBEakn+fVzzfOoL5c04iaSwTPV+QH3oC2tXY5A9hAD6GZAzME3ds+bv79s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N+xczVcO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=llnl.gov header.i=@llnl.gov header.b="Ii5LPulM";
-	dkim=pass (1024-bit key) header.d=doellnl.onmicrosoft.com header.i=@doellnl.onmicrosoft.com header.b="YcvHZZgo"
-Received: from pps.filterd (m0218361.ppops.net [127.0.0.1])
-	by mx0f-00379502.gpphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54KJ3vN6020254;
-	Tue, 20 May 2025 14:26:49 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=llnl.gov; h=message-id : date :
- subject : to : cc : references : from : in-reply-to : content-type :
- content-transfer-encoding : mime-version; s=02022021-podllnl;
- bh=Q5aX5QiRYYCELFWWce4tDXjDVRFJmWunlR/j4Loovpg=;
- b=Ii5LPulMhCbf5XitSI60exq1NINqdnhBZDoY2uzhNwQRTDN42cppWYEi4XN47hD5Q44z
- AmgRgYIE/sLQMJ+/LIapNUqqLDLIaqcD4tDZNceX1ZRr9+gbQipm2CZlsV0dgGqqRLoz
- aUrQ4gzNs68s/dKEZnZgvqa+NWvx7l2rvjHoCwbTMueyexKpswzSB8NneJa+ffsyENAj
- 0BDwrWlzVgtQYNKQhUySjH6OgC73C9ZoFGjfysEWF7rlVJAX4heu75tNaGltKH9jvTZR
- sMsoG6PFbqttEPc0//PdQXW+G2WQaGWighTK1WBliBzLr0ukdjHHdAgehbcpHyeY0a5f hw== 
-Received: from ch1pr09cu001.outbound.protection.outlook.com (mail-northcentralusazlp17011026.outbound.protection.outlook.com [40.93.20.26])
-	by mx0f-00379502.gpphosted.com (PPS) with ESMTPS id 46ryjdr9r2-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 20 May 2025 14:26:49 -0700
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jGjQhO4PmwAFXnqNPD7iP/eybqpjTKZ3t2Z71k9EiGmDTgFQFdkjsXyL08ghDBSIxvN+nLprxdH5PAVDtTPMTzkUAOpCFWr0hw46EeCtYMNgzPDEpvA9bxPNaOIcmkXUBRoKKIP23+JSHJ43+iIY0MDWNzz4KVfpKYWS3osm6SnhWXuNqew/0Zl35qjy3fdKz/lL0IUv7I39k1zLIzAOkdoETY7DETqS+ckyjNKjFNWLpacpLpHASx2lVKRf2eLZHebaLnWf02HqwqID7bk96jYSSK+gaWFxCHgD5njLm65ZMYKv/4YuG8A7W+XJmaxcUd0FAwsdF0DbGTuHsnA7nw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Q5aX5QiRYYCELFWWce4tDXjDVRFJmWunlR/j4Loovpg=;
- b=arMMOveG3ss7AhAcBu2EuaX1KBAqFH+4jCvJzpz8KcTSU0yUYD57/HtmE96EYlzFShVKYJoSQwl615CEjihrf5V9YUBAibbaKm3frfJPerNq+9jkI1dBxNonKpjg11+GnJudwRo9Moe5owd+WdSibh6j7SKdI51+/a0HS2M0syB6vPVBoFDSi09Ic5/0HtJuMSCaxnJ3QDNM/hdrWdnx/3YI0Z+lnzO6r28BaN47jvDVmClr1NeSnVQhMQClUEEwGfY45+5EIRHFecJ2cvAyBZjNBZ4PEBE7HysCWOdDfrAy7OVvACrB1SUP42l60gbFd9tpkK02Nuz7DEh/Y/gCRg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=llnl.gov; dmarc=pass action=none header.from=llnl.gov;
- dkim=pass header.d=llnl.gov; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=doellnl.onmicrosoft.com; s=selector1-doellnl-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Q5aX5QiRYYCELFWWce4tDXjDVRFJmWunlR/j4Loovpg=;
- b=YcvHZZgo4UQlv8No96nPx0P7Vgm7c2xyptgjamUbycunA7FhDQsshHuhnh9Ku+t+FfeEHEUyvOWPZ1cBQY5iatOYXra/AyHABD31kq3tI9hwRNclp2n+EYi6UJRCK1DqyuwBaDx4EN6OJ7fscC/nQFeUWO2fsEnYC103DqxG4Jc=
-Received: from BY3PR09MB8834.namprd09.prod.outlook.com (2603:10b6:a03:346::22)
- by SJ0PR09MB10881.namprd09.prod.outlook.com (2603:10b6:a03:519::18) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8746.32; Tue, 20 May
- 2025 21:26:47 +0000
-Received: from BY3PR09MB8834.namprd09.prod.outlook.com
- ([fe80::9fcf:fc76:1d:f39]) by BY3PR09MB8834.namprd09.prod.outlook.com
- ([fe80::9fcf:fc76:1d:f39%7]) with mapi id 15.20.8746.031; Tue, 20 May 2025
- 21:26:47 +0000
-Message-ID: <d60fc671-b027-4cc5-8688-ca5438a3397d@llnl.gov>
-Date: Tue, 20 May 2025 14:26:42 -0700
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 RESEND] PCI: Introduce Cray ClusterStor E1000 NVMe slot
- LED driver
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-leds@vger.kernel.org, Bjorn Helgaas <helgaas@kernel.org>,
-        Lukas Wunner <lukas@wunner.de>, mariusz.tkaczyk@linux.intel.com,
-        minyard@acm.org, linux-pci@vger.kernel.org,
-        openipmi-developer@lists.sourceforge.net,
-        Linux Kernel Mailing List <linux-kernel@vger.kernel.org>
-References: <553813b6-1d44-488c-b41b-4be08e1c1733@llnl.gov>
- <aCsNMvfSWptltx5k@duo.ucw.cz>
-Content-Language: en-US
-From: Tony Hutter <hutter2@llnl.gov>
-In-Reply-To: <aCsNMvfSWptltx5k@duo.ucw.cz>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BY3PR05CA0045.namprd05.prod.outlook.com
- (2603:10b6:a03:39b::20) To BY3PR09MB8834.namprd09.prod.outlook.com
- (2603:10b6:a03:346::22)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N+xczVcO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C22C2C4CEE9;
+	Tue, 20 May 2025 21:50:50 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747777851;
+	bh=6nhqSCesHEdYOIg39c2CprFwbx/2JpKfxOB4+iEgwkI=;
+	h=From:To:Cc:Subject:Date:From;
+	b=N+xczVcOpaXmeWMle8knXOZ/RUK2yL7oMon8kblqxoTxeDVNrbZcM4AxAobX6pcfz
+	 iq3Mgg7pfwbOCtAgxXHRvRpM7Ut0bCVGsKKFYSh9ZO3bWtdWWiyq7E5uCTUj3LsGpp
+	 1NBsKBtLg4LFrA+ErKAckxQoRJvoEJyWSn1ofNgwNrmvB+tI8d7elh66N3b+y1QC8d
+	 DQqG9MAJpslnmm/PZoCrrLaGgVZgaDBZ7yI31Qt1nBSXm3THolwIGj5Zf5Nq9O9HEv
+	 IkTyoJDhm5tWKvnLyO3DlIKlO4ltMwBWuMrK9E8JwbpOs/4Rar2C/qrxnHRO5HcgO9
+	 xWvu2vfAEbAcg==
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: linux-pci@vger.kernel.org
+Cc: Jon Pan-Doh <pandoh@google.com>,
+	Karolina Stolarek <karolina.stolarek@oracle.com>,
+	Weinan Liu <wnliu@google.com>,
+	Martin Petersen <martin.petersen@oracle.com>,
+	Ben Fuller <ben.fuller@oracle.com>,
+	Drew Walton <drewwalton@microsoft.com>,
+	Anil Agrawal <anilagrawal@meta.com>,
+	Tony Luck <tony.luck@intel.com>,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Lukas Wunner <lukas@wunner.de>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Sargun Dhillon <sargun@meta.com>,
+	"Paul E . McKenney" <paulmck@kernel.org>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Keith Busch <kbusch@kernel.org>,
+	Robert Richter <rrichter@amd.com>,
+	Terry Bowman <terry.bowman@amd.com>,
+	Shiju Jose <shiju.jose@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	linux-kernel@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: [PATCH v7 00/17] Rate limit AER logs
+Date: Tue, 20 May 2025 16:50:17 -0500
+Message-ID: <20250520215047.1350603-1-helgaas@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: BY3PR09MB8834:EE_|SJ0PR09MB10881:EE_
-X-MS-Office365-Filtering-Correlation-Id: 49b20cb4-6c36-486c-4f09-08dd97e50694
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?cmtFQmNtaXdOL2orbUFYTVFuUUYzTGFZMXZWUElraFJEREsxT3NOMTlDQ2lm?=
- =?utf-8?B?Si9mZ3dQNEpGT092N2hVLzZkazBRb1Jrdnl0V3BXRjlqekV2WDVoNnJ3Z2po?=
- =?utf-8?B?WHJ5NWcvYTlvdktteE5iTzFueGVKcFNpdEU0V2FwTFFTTTBoQ2o1TmNNMlpy?=
- =?utf-8?B?VlgrejJqSzZpN1dxejhpaEdLc0s4dlNTaDBHNWZFTElMMnA4TlhUSFI1QTBL?=
- =?utf-8?B?Q3UxUjhXOEhzV0hQUlVlaStQdlAyZC9YaUtKSTk3WVlULzhLRVJVOThpQ1lE?=
- =?utf-8?B?aUJFNUlvSXRkZWsyaTlXMDRKRFJ2bnMzTy9Ed0ltQllxSFRRVi9zL3NpemMz?=
- =?utf-8?B?amVhTkk0RGpwcWhscFVEU1daL3dib2tPcjhzNXVyTGtIQ3ZPWml5KzVjVWd2?=
- =?utf-8?B?T3A3T21PbVlyZXNSYS9PelhSSG8vSmNOUlM3YWxjYVc4TmxrQ0E4b25KY0kr?=
- =?utf-8?B?MTNZeXBkbnZPVitPUCs4Z01TNTBGNEFTa3VqYmVrTThFU0ZicXlDcG1RWGtY?=
- =?utf-8?B?U0R3QTVkekU5aVhnYUQ4eUk0cGI3NWVkQS9PSnRFb2hBQXlZRVlUZG82MWlt?=
- =?utf-8?B?M0pYYW1OMDRzd1Y4Ukx1OFRKWEpJbGNKN1YvaU9LRm1xNW9pWGtuUERJU21Y?=
- =?utf-8?B?M1JGclJJT0lhbjJJU0RndEQ0NlJMQlU3VGN3d2FXRXVpK3lhNXg4czI5bFNQ?=
- =?utf-8?B?ZUtzekViQ3BCVnNsUDJYWW84Z3grcEN0UEUvNUhISHN0ME9OYkE1QXQ2aStq?=
- =?utf-8?B?dlgralYzaUhvQ2RhZUNnRlYzUy90aS8zV1MwM2loeEJlY3NacE9KR29ZYitE?=
- =?utf-8?B?QTdqeW5qMlJWNnIra0QyZTd5MUZGbnRsdE0wY0lVdG5VVUJVODRYclUzTThj?=
- =?utf-8?B?RnZCNVJ1WCtJL0tlRXdVcXZ4MzNMVTZuOU91cDhzdGFuK29zSWpvQnduVzhR?=
- =?utf-8?B?Y2UwVXd3dG53SVNRRENveHhZcVdIMHA2U1FiSDBMc0MyWWdFOGRHUm1IK3l1?=
- =?utf-8?B?V0NHZFJhNGFQbGVLRUJIMkpDd3F5R1Q0RUJXQitMenZDNEZNMTFEZVhnVHB3?=
- =?utf-8?B?dnFibk9jU1FZZzJ0OE9MNVdhVHFtTGRjdEZ0aThneHVRcENvYy9yZ3JVQStX?=
- =?utf-8?B?ZjY0czZFUlhEMkhyU3RjbUpsY2hhbHpJUTJQZHAxcW9YV0toaFZDTEplY1dj?=
- =?utf-8?B?Z0t0S0RQWWxkMnFCTk9JV01QZWVBYjlvYkFCcVNKcUpyamZudVJuc3FTOGhH?=
- =?utf-8?B?ZVJlV1BPbllIR2t1b0lTVjg1K0Vvc25pdG50T2dXZXRnZlJrdmljOTBFTDNT?=
- =?utf-8?B?bzJWQnZENGxyMTAvci9jVmxIbWt1WTEzMnJvK1dKNURybzEwaVNYK09WS0Zp?=
- =?utf-8?B?THJWZzRpTStHdDFHb01aci82WUZGR1grdkQ5ZmZiKzJGSzFLelowcHNDSnd1?=
- =?utf-8?B?WHRZOEJFbXp4anlFSGE3TlJoZ1poMkxZclExTnp4anhIU3gyVU4xUDZ3OStu?=
- =?utf-8?B?SVl1QWlUTDEvUGhESUtvRGwrNXZwOGJIakk1c2JwMVdrMHVrZ0E0dElEbTlS?=
- =?utf-8?B?aXNvcVBlcDgvemh1azVOdlhyd2R5UW5oaHk5NWtWWDJ5OGUvbHYvYm9mWnR5?=
- =?utf-8?B?RmxnTU04NFA0bDVLWVhxVnBFMW9KWUpPaWhic0xJYXc1VHBOT2hZa083N3Fo?=
- =?utf-8?B?d0ZDNXZwWVNHZEd0OFpiMExBS1BoTER4Z2VzK2RWTksxQ0dWNWs5MkQ0SDdL?=
- =?utf-8?B?RHBpSHRCQVNaMUk2N2Y5WFpRK1U3Qi9TWFhZdk9uSDVTVmIrWkdoNUJSLzRX?=
- =?utf-8?B?L3BmcVJGOG5nWHIxYWxqQmxFZ3ZJOUMvd0U4aCtlVE1heWwrNTBlOTBWV3U4?=
- =?utf-8?B?TU9iWWtsTFpQVUZvTU15RXhUeHNpYWhpRWpLbEZkNm54RGVBME95ejNJbjBr?=
- =?utf-8?Q?ICOrbz/hw0g=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:BY3PR09MB8834.namprd09.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?bnJVMkpZT00rWld3SGFqYUc1V25RMnR0bEcxTFVOc2sreDdGd2Fqd24zczEw?=
- =?utf-8?B?OUt6NGNuRTZuc28waGJtZGNFT2JMa2Yzc0dMdjI2aHZGaGN6MDFhZHRVUFVF?=
- =?utf-8?B?UGdONEtqQlBoZVBobHY5S0FjZjFBRW1oeXlvUUx5ZHhlcmx1aFhBYzFLUUZy?=
- =?utf-8?B?VlJsTDFiYU5MckRZNTVXUnJIdzIyM3pjdVc0S0lLZFB3RmNyK2FoYm5sNHF1?=
- =?utf-8?B?Q3NCbTFDNlV1TFZBZzlSamt1aDJrQ2xsUUVGNnk4bVlsYW5LbEJ4RVF5a1Zp?=
- =?utf-8?B?Yk9LZ25GOFlwOWYzVUhUeUN3MUFYRllmZ2FkZDF4WWo0L1A5ZWhzSkJSWWtV?=
- =?utf-8?B?YlI5Tk9YcWFtR1FGcmpuM3dyNEh5MEwvNTE2bjJZWjhrSlkxNGFXcXVjejRE?=
- =?utf-8?B?V1BNTCtRTGsrbkJHemZOWEYxQkJ3RWNRK1BXZlRTWlRWZUVoZE1KSURMd2J5?=
- =?utf-8?B?UnpVZTNPUEcxNVEramcrclNzTHhJdm9nb0JFZVpra0lrTEFqL0hKSVJ0T1RW?=
- =?utf-8?B?akszMTZ2ZHBBVzMwd0sySHBIOWU3a3ZScnNYa3RWU2pyUmZTWE5iZmhiNlRu?=
- =?utf-8?B?ZFptYitrTVU3eHF5SmNkakl1TkhwVWdlbnA3TXQ5b1F4N0h1ZlpRV1ZkRElB?=
- =?utf-8?B?S1pWVFZLLzFHajJuQmVIUG1QL3g1TXlOencreGh5d0xkem04Q1hZRlA1Sjho?=
- =?utf-8?B?SzlDd2dYYks1Lzh5UlpnbGt1TEV6R2RiUHVoUUVrdlc4c3dGN0ZJV0I5NkxD?=
- =?utf-8?B?bHFyRHE0c0dsc3JicUwySlR1VjEzaGs2R25aaVV4MWl0YUJUS1hWSnpJdkE3?=
- =?utf-8?B?aVArT3k3S1BlQlhCd2ZDRGtkUGFjUjVPVlh1UmgvQUR5WHJKOWhMTTRKa2FN?=
- =?utf-8?B?TVNkTmFPSlBidXBUblRGV3YzNVRMeXZUUWIwLzRxTENyaThyOE9kVER3aDM4?=
- =?utf-8?B?TG0vU1oxWC9nWmdUVEc5OVY0aVpGQS9xT0tyc1JRcG83MWUyYklabXVOSEs2?=
- =?utf-8?B?WTJab0JWNGdkZVhwWjRrL1QvUUg2ZytXSnRDU1Q1cENOVzkzVVJZOFgzSk9O?=
- =?utf-8?B?dDJKcXNqRSsycjB6ZXdwaTVsSDJvQU11aFR2WkVPY0srdS9CZXVKWXNjcjMr?=
- =?utf-8?B?SFJBdyt0aDhqdDZCcmNmZ081dU1JU1cxaWV1d0ErOTZVZUFhUklzc0swQU5m?=
- =?utf-8?B?T3MyOENteG5lUjVEKzBDbUJ1T3JjQm9QZGtTWVpORGVLYzBXMkloeWtaNHRC?=
- =?utf-8?B?dHh5WjRMYjAyb1FhZ1dBUjFvWmdDdWVGd1JWNGx0MGpDK2pIY0xZMWNFaW1U?=
- =?utf-8?B?OUZjbDlCaFZpNjZDb1ZJbnYvWkI2L1lEN2U3Y0dTZ3R2ZXJSdWVDVTFvd2da?=
- =?utf-8?B?U29mZ2JodnV3NlBZYXREMWJvZU5xOUFuZ2xTU1VUK3JBZWFYWHlxSnB4NmFD?=
- =?utf-8?B?T0JpSzFYeFozYjZvQWQ2dS91WnFTa1pma0dWSDJpbTZkTERmdDNJN0s2S202?=
- =?utf-8?B?bUFPeVRmUS9PU1dQK0Z5MTUwWnlmWjZRYytVVERadTdpUTVtaC9NbmlXOVZX?=
- =?utf-8?B?SG92UkJtajN1Q0R3V0psN2xiK0tKek0yZWlWT000Ym96clYxQTRtdVo5L0xq?=
- =?utf-8?B?eFgwa0krdDVzQzUvZGFQSUtETDRlRjZHcy9JNEovTXVBYXpTQWg1M0lvdG5j?=
- =?utf-8?B?eDNZK3pFdHc2SmNsVWJZT0FzRENGNzByN2w5RFZITDRrVkZKQk9SczNhYVpJ?=
- =?utf-8?B?Vnk5SkFxOWlqSjhwMUJ2eVZveGxzR2ltekJZVEtVSzgvaG1MdW93Ymo2VkdD?=
- =?utf-8?B?OWQvazRVZjZuRXl4andOVlZlcEkvNjFsOWVLZERuQWRCT21oWEJERE1CNGdE?=
- =?utf-8?B?TlFkMWFKcTlKaXU2OERSZWVHemo4WWcwYy9hdnZzekFiMFhBNmh1cE04M1pB?=
- =?utf-8?B?NzcvQURQeFdNSUVFYUpJNTQrRE11LzFKQUZucmhEZXpHRWNnbWx5Q3hKWDFn?=
- =?utf-8?B?dko0Y21vZmJQcktrb1M0U0trZVh6QVVicHgvUlVDdWRuS1NydHptdDUxdllH?=
- =?utf-8?B?T0xKUlVuMlRidWx6WHVHL0dyZVN4SFhyenZkWmtCOHZHeVY1dkYwdzNhVTVO?=
- =?utf-8?Q?xR5/QcEDmbNTT/ND1793nCAsW?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	/wSnomQ5kCkO45D7WYaoIHKM74cp4OEQ3uB4/q3kP1NRlr+zH9Os4wNqikviQ6PDDYUlrsvXtrJTuLWDOL9/ZFcAy3kL9GV0cbTRJc8yRHJVZBUrJVHCksUnDqLU1G2Bt6lcuQr6iEhLqsfcTf7Xc86YCWD+VyglbZ9AORdYwoWeCXoKLIGrs+y4TkR2LhNtjTbowShIolHRZ9cyuQT2efXlonhlw8Ct9yCwwPVW2vokgnELaQqF4mlZhTOwWzOD4aYZDJ69JpqJ3PII9c+UMwijeV6QB74K5RD0NYTfFEj8yAAIs6TBr4FsIR5JuOlpmfxlJP+yM1TfP3h6BTLF+Ep/BiVpxix5zPNTDcgavLIf9lW8UBD5wmhp0B+XdCuUOPZGdAlDI0FD3ZdGjHL+fpMaMI9Ftzzu8T7vY7fjaGPdgcwzbdvZRpLR8rUke4HLvgb7/Jq9TGlt2trth+kMOcVqlX0Jm01aPCE5TQO1hzxWRMu+Ws1rB9Nkq49MNb2CyHFG4WnFOdoFY1KFBSgydzW22im+RA3vnHFgiAx7iZTDZe2cxGn9AllGvOOYGGNAyYm34AWdrAvdTOJf8ywb7XHd0/32DmsWx0U3yhjrMqFQHOiD+axJWesAzlW/AqSFkJAOjDbIUH7tNMfNCi67+A==
-X-OriginatorOrg: llnl.gov
-X-MS-Exchange-CrossTenant-Network-Message-Id: 49b20cb4-6c36-486c-4f09-08dd97e50694
-X-MS-Exchange-CrossTenant-AuthSource: BY3PR09MB8834.namprd09.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 May 2025 21:26:47.1545
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: a722dec9-ae4e-4ae3-9d75-fd66e2680a63
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR09MB10881
-X-Proofpoint-ORIG-GUID: 33RvXsXSgBS6JsMAQf6CTicGo4Wsyik2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIwMDE3MyBTYWx0ZWRfX4wt6NATUwIte bFij+nBw+uhkN7osZ9SHR6AvihvjnHNFNb+WGhfqeBo90rJ3iziv72ghOjd8nndt+3xgZkgeeeU 8+FfeJ3wQaUh22CluhNOHirlY9ysVPp8NxvTq3J4lGbOwd9J4Pc6Ks30n9w7CFtMAYda2IqZTSF
- 57qqfNjqxhW/qr1lM++p/jtvjc2Lp1XJnGD2dLs2+p2vRoEiAJSVxX/pK3RZOXEx2BzZc62wcTv FYxgbKsSe2h7c7+mWJBCqq1VttpKV1drs3Bk7MCP0CLEl1mS9TY3BP/6huziI+rF/eiwUiPIHjd ReK5TOnUO31hhozmyaSr7YJb/kVSpTpF37jlIFNNITyBDv19hY7zKBTDA2WV4PwD2VyPH6aHlak yVMRYMjG
-X-Proofpoint-GUID: 33RvXsXSgBS6JsMAQf6CTicGo4Wsyik2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-20_09,2025-05-20_03,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0 phishscore=0 malwarescore=0
- suspectscore=0 spamscore=0 bulkscore=0 mlxlogscore=650 adultscore=0
- impostorscore=0 priorityscore=1501 mlxscore=0 lowpriorityscore=0
- clxscore=1011 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2504070000 definitions=main-2505200173
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-Hi Pavel
+From: Bjorn Helgaas <bhelgaas@google.com>
 
-> We have LED subsystem.
->
-> And this should use it.
+This work is mostly due to Jon Pan-Doh and Karolina Stolarek.  I rebased
+this to v6.15-rc1, factored out some of the trace and statistics updates,
+and added some minor cleanups.
 
-This came up in an earlier discussion, and I touched on it in my changelog:
+I'm sorry to post a v7 so soon after v6, but I really want to get this in
+v6.16 so it needs to get into pci/next soonish.  I pushed this to pci/aer
+at https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git/log/?h=aer
+(head cbde036e5615 ("PCI/AER: Add sysfs attributes for log ratelimits"))
+and appended the interdiff from v6 to v7 below.
 
- - Kept the /sys/bus/pci/slots/<slot>/attention interface rather
-   than using NPEM/_DSM or led_classdev as suggested.  The "attention"
-   interface is more beneficial for our site, since it allows us to
-   control the NVMe slot LEDs agnostically across different enclosure
-   vendors and kernel versions using the same scripts.
+Proposal
+========
 
-Basically, /sys/bus/pci/slots/<slot>/attention is already the standard way to control PCI slot LEDs.  Our management scripts have used it for years to mark faulted drives for replacement.
+When using native AER, spammy devices can flood kernel logs with AER errors
+and slow/stall execution. Add per-device per-error-severity ratelimits for
+more robust error logging. Allow userspace to configure ratelimits via
+sysfs knobs.
 
-I think you can make the case that the PCI hotplug subsystem itself should be updated to export their "attention" values via the LED subsystem.  Then all PCI hotplug slots (including Cray E1000) would be exported via the LED subsystem.  That work goes beyond the scope of this driver though.
+Motivation
+==========
 
--Tony
+Inconsistent PCIe error handling, exacerbated at datacenter scale (myriad
+of devices), affects repairabilitiy flows for fleet operators.
+
+Exposing PCIe errors/debug info in-band for a userspace daemon (e.g.
+rasdaemon) to collect/pass on to repairability services will allow for more
+predictable repair flows and decrease machine downtime.
+
+Background
+==========
+
+AER error spam has been observed many times, both publicly (e.g. [1], [2],
+[3]) and privately. While it usually occurs with correctable errors, it can
+happen with uncorrectable errors (e.g. during new HW bringup).
+
+There have been previous attempts to add ratelimits to AER logs ([4], [5]).
+The most recent attempt[5] has many similarities with the proposed
+approach.
+
+
+v7:
+- Update sysfs doc target kernel version & date (Ilpo)
+- Fix sysfs doc "AER ratelimiting" typo (Ilpo)
+- Ratelimit Correctable and Non-Fatal but not Fatal errors (Sathy)
+- Rename "struct aer_report" to "aer_info" (Sathy)
+- Expand comments about combining ratelimit for multiple devices (Ilpo)
+- Rework Error Source logging ratelimiting (Sathy)
+- Factor out aer_isr_one_error_type() to reduce code duplication
+- Log DPC errors, which are all Fatal, at KERN_ERR (Sathy)
+- Improve dpc_process_error() structure (Ilpo)
+v6: https://lore.kernel.org/r/20250519213603.1257897-1-helgaas@kernel.org
+- Rebase to v6.15-rc1
+- Initialize struct aer_err_info completely before using it
+- Log DPC Error Source ID only when it's valid
+- Consolidate AER Error Source ID logging to one place
+- Tidy Error Source ID bus/dev/fn decoding using macros
+- Rename aer_print_port_info() to aer_print_source()
+- Consolidate trace events and statistic updates to one non-ratelimited place
+- Save log level in struct aer_err_info instead of passing as parameter
+v5: https://lore.kernel.org/r/20250321015806.954866-1-pandoh@google.com
+- Handle multi-error AER by evaluating ratelimits once and storing result
+- Reword/rename commit messages/functions/variable
+v4: https://lore.kernel.org/r/20250320082057.622983-1-pandoh@google.com
+- Fix bug where trace not emitted with malformed aer_err_info
+- Extend ratelimit to malformed aer_err_info
+- Update commit messages with patch motivation
+- Squash AER sysfs filename change (Patch 8)
+v3: https://lore.kernel.org/r/20250319084050.366718-1-pandoh@google.com
+- Ratelimit aer_print_port_info() (drop Patch 1)
+- Add ratelimit enable toggle
+- Move trace outside of ratelimit
+- Split log level (Patch 2) into two
+- More descriptive documentation/sysfs naming
+v2: https://lore.kernel.org/r/20250214023543.992372-1-pandoh@google.com
+- Rebased on top of pci/aer (6.14.rc-1)
+- Split series into log and IRQ ratelimits (defer patch 5)
+- Dropped patch 8 (Move AER sysfs)
+- Added log level cleanup patch[7] from Karolina's series
+- Fixed bug where dpc errors didn't increment counters
+- "X callbacks suppressed" message on ratelimit release -> immediately
+- Separate documentation into own patch
+v1: https://lore.kernel.org/r/20250115074301.3514927-1-pandoh@google.com
+
+[1] https://bugzilla.kernel.org/show_bug.cgi?id=215027
+[2] https://bugzilla.kernel.org/show_bug.cgi?id=201517
+[3] https://bugzilla.kernel.org/show_bug.cgi?id=196183
+[4] https://lore.kernel.org/linux-pci/20230606035442.2886343-2-grundler@chromium.org/
+[5] https://lore.kernel.org/linux-pci/cover.1736341506.git.karolina.stolarek@oracle.com/
+[6]
+https://lore.kernel.org/linux-pci/8bcb8c9a7b38ce3bdaca5a64fe76f08b0b337511.1742202797.git.k
+arolina.stolarek@oracle.com/
+[7]
+https://lore.kernel.org/linux-pci/edd77011aafad4c0654358a26b4e538d0c5a321d.1736341506.git.k
+arolina.stolarek@oracle.com/
+
+
+
+Bjorn Helgaas (10):
+  PCI/DPC: Initialize aer_err_info before using it
+  PCI/DPC: Log Error Source ID only when valid
+  PCI/AER: Factor COR/UNCOR error handling out from aer_isr_one_error()
+  PCI/AER: Consolidate Error Source ID logging in
+    aer_isr_one_error_type()
+  PCI/AER: Extract bus/dev/fn in aer_print_port_info() with
+    PCI_BUS_NUM(), etc
+  PCI/AER: Move aer_print_source() earlier in file
+  PCI/AER: Initialize aer_err_info before using it
+  PCI/AER: Simplify pci_print_aer()
+  PCI/AER: Update statistics early in logging
+  PCI/AER: Combine trace_aer_event() with statistics updates
+
+Jon Pan-Doh (4):
+  PCI/AER: Rename aer_print_port_info() to aer_print_source()
+  PCI/AER: Ratelimit correctable and non-fatal error logging
+  PCI/AER: Add ratelimits to PCI AER Documentation
+  PCI/AER: Add sysfs attributes for log ratelimits
+
+Karolina Stolarek (3):
+  PCI/AER: Check log level once and remember it
+  PCI/AER: Make all pci_print_aer() log levels depend on error type
+  PCI/AER: Rename struct aer_stats to aer_info
+
+ ...es-aer_stats => sysfs-bus-pci-devices-aer} |  34 ++
+ Documentation/PCI/pcieaer-howto.rst           |  17 +-
+ drivers/pci/pci-sysfs.c                       |   1 +
+ drivers/pci/pci.h                             |   5 +-
+ drivers/pci/pcie/aer.c                        | 387 +++++++++++++-----
+ drivers/pci/pcie/dpc.c                        |  68 +--
+ include/linux/pci.h                           |   2 +-
+ 7 files changed, 370 insertions(+), 144 deletions(-)
+ rename Documentation/ABI/testing/{sysfs-bus-pci-devices-aer_stats => sysfs-bus-pci-devices-aer} (77%)
+
+-- 
+2.43.0
+
+
+diff --git a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
+index 771204197b71..01bb577bfee8 100644
+--- a/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
++++ b/Documentation/ABI/testing/sysfs-bus-pci-devices-aer
+@@ -127,16 +127,16 @@ They represent configurable ratelimits of logs per error type.
+ See Documentation/PCI/pcieaer-howto.rst for more info on ratelimits.
+ 
+ What:		/sys/bus/pci/devices/<dev>/aer/ratelimit_log_enable
+-Date:		March 2025
+-KernelVersion:	6.15.0
++Date:		May 2025
++KernelVersion:	6.16.0
+ Contact:	linux-pci@vger.kernel.org, pandoh@google.com
+ Description:	Writing 1/0 enables/disables AER log ratelimiting. Reading
+-		gets whether or not AER is currently enabled. Enabled by
+-		default.
++		gets whether or not AER ratelimiting is currently enabled.
++		Enabled by default.
+ 
+ What:		/sys/bus/pci/devices/<dev>/aer/ratelimit_burst_cor_log
+-Date:		March 2025
+-KernelVersion:	6.15.0
++Date:		May 2025
++KernelVersion:	6.16.0
+ Contact:	linux-pci@vger.kernel.org, pandoh@google.com
+ Description:	Ratelimit burst for correctable error logs. Writing a value
+ 		changes the number of errors (burst) allowed per interval
+@@ -144,10 +144,10 @@ Description:	Ratelimit burst for correctable error logs. Writing a value
+ 		current ratelimit burst.
+ 
+ What:		/sys/bus/pci/devices/<dev>/aer/ratelimit_burst_uncor_log
+-Date:		March 2025
+-KernelVersion:	6.15.0
++Date:		May 2025
++KernelVersion:	6.16.0
+ Contact:	linux-pci@vger.kernel.org, pandoh@google.com
+-Description:	Ratelimit burst for uncorrectable error logs. Writing a
+-		value changes the number of errors (burst) allowed per
+-		interval (5 second window) before ratelimiting. Reading
+-		gets the current ratelimit burst.
++Description:	Ratelimit burst for non-fatal uncorrectable error logs.
++		Writing a value changes the number of errors (burst)
++		allowed per interval (5 second window) before ratelimiting.
++		Reading gets the current ratelimit burst.
+diff --git a/Documentation/PCI/pcieaer-howto.rst b/Documentation/PCI/pcieaer-howto.rst
+index 043cdb3194be..4b71e2f43ca7 100644
+--- a/Documentation/PCI/pcieaer-howto.rst
++++ b/Documentation/PCI/pcieaer-howto.rst
+@@ -91,7 +91,8 @@ AER Ratelimits
+ Since error messages can be generated for each transaction, we may see
+ large volumes of errors reported. To prevent spammy devices from flooding
+ the console/stalling execution, messages are throttled by device and error
+-type (correctable vs. uncorrectable).
++type (correctable vs. non-fatal uncorrectable).  Fatal errors, including
++DPC errors, are not ratelimited.
+ 
+ AER uses the default ratelimit of DEFAULT_RATELIMIT_BURST (10 events) over
+ DEFAULT_RATELIMIT_INTERVAL (5 seconds).
+diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+index 42df5cb963b3..9b8dea317a79 100644
+--- a/drivers/pci/pcie/aer.c
++++ b/drivers/pci/pcie/aer.c
+@@ -55,11 +55,11 @@ struct aer_rpc {
+ 	DECLARE_KFIFO(aer_fifo, struct aer_err_source, AER_ERROR_SOURCES_MAX);
+ };
+ 
+-/* AER report for the device */
+-struct aer_report {
++/* AER info for the device */
++struct aer_info {
+ 
+ 	/*
+-	 * Stats for all AER capable devices. They indicate the errors
++	 * Fields for all AER capable devices. They indicate the errors
+ 	 * "as seen by this device". Note that this may mean that if an
+ 	 * Endpoint is causing problems, the AER counters may increment
+ 	 * at its link partner (e.g. Root Port) because the errors will be
+@@ -81,7 +81,7 @@ struct aer_report {
+ 	u64 dev_total_nonfatal_errs;
+ 
+ 	/*
+-	 * Stats for Root Ports & Root Complex Event Collectors only; these
++	 * Fields for Root Ports & Root Complex Event Collectors only; these
+ 	 * indicate the total number of ERR_COR, ERR_FATAL, and ERR_NONFATAL
+ 	 * messages received by the Root Port / Event Collector, INCLUDING the
+ 	 * ones that are generated internally (by the Root Port itself)
+@@ -382,11 +382,11 @@ void pci_aer_init(struct pci_dev *dev)
+ 	if (!dev->aer_cap)
+ 		return;
+ 
+-	dev->aer_report = kzalloc(sizeof(*dev->aer_report), GFP_KERNEL);
++	dev->aer_info = kzalloc(sizeof(*dev->aer_info), GFP_KERNEL);
+ 
+-	ratelimit_state_init(&dev->aer_report->cor_log_ratelimit,
++	ratelimit_state_init(&dev->aer_info->cor_log_ratelimit,
+ 			     DEFAULT_RATELIMIT_INTERVAL, DEFAULT_RATELIMIT_BURST);
+-	ratelimit_state_init(&dev->aer_report->uncor_log_ratelimit,
++	ratelimit_state_init(&dev->aer_info->uncor_log_ratelimit,
+ 			     DEFAULT_RATELIMIT_INTERVAL, DEFAULT_RATELIMIT_BURST);
+ 
+ 	/*
+@@ -408,8 +408,8 @@ void pci_aer_init(struct pci_dev *dev)
+ 
+ void pci_aer_exit(struct pci_dev *dev)
+ {
+-	kfree(dev->aer_report);
+-	dev->aer_report = NULL;
++	kfree(dev->aer_info);
++	dev->aer_info = NULL;
+ }
+ 
+ #define AER_AGENT_RECEIVER		0
+@@ -547,10 +547,10 @@ static const char *aer_agent_string[] = {
+ {									\
+ 	unsigned int i;							\
+ 	struct pci_dev *pdev = to_pci_dev(dev);				\
+-	u64 *stats = pdev->aer_report->stats_array;			\
++	u64 *stats = pdev->aer_info->stats_array;			\
+ 	size_t len = 0;							\
+ 									\
+-	for (i = 0; i < ARRAY_SIZE(pdev->aer_report->stats_array); i++) {\
++	for (i = 0; i < ARRAY_SIZE(pdev->aer_info->stats_array); i++) {	\
+ 		if (strings_array[i])					\
+ 			len += sysfs_emit_at(buf, len, "%s %llu\n",	\
+ 					     strings_array[i],		\
+@@ -561,7 +561,7 @@ static const char *aer_agent_string[] = {
+ 					     i, stats[i]);		\
+ 	}								\
+ 	len += sysfs_emit_at(buf, len, "TOTAL_%s %llu\n", total_string,	\
+-			     pdev->aer_report->total_field);		\
++			     pdev->aer_info->total_field);		\
+ 	return len;							\
+ }									\
+ static DEVICE_ATTR_RO(name)
+@@ -582,7 +582,7 @@ aer_stats_dev_attr(aer_dev_nonfatal, dev_nonfatal_errs,
+ 		     char *buf)						\
+ {									\
+ 	struct pci_dev *pdev = to_pci_dev(dev);				\
+-	return sysfs_emit(buf, "%llu\n", pdev->aer_report->field);	\
++	return sysfs_emit(buf, "%llu\n", pdev->aer_info->field);	\
+ }									\
+ static DEVICE_ATTR_RO(name)
+ 
+@@ -609,7 +609,7 @@ static umode_t aer_stats_attrs_are_visible(struct kobject *kobj,
+ 	struct device *dev = kobj_to_dev(kobj);
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (!pdev->aer_report)
++	if (!pdev->aer_info)
+ 		return 0;
+ 
+ 	if ((a == &dev_attr_aer_rootport_total_err_cor.attr ||
+@@ -637,7 +637,7 @@ static ssize_t ratelimit_log_enable_show(struct device *dev,
+ 					 char *buf)
+ {
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+-	bool enabled = pdev->aer_report->cor_log_ratelimit.interval != 0;
++	bool enabled = pdev->aer_info->cor_log_ratelimit.interval != 0;
+ 
+ 	return sysfs_emit(buf, "%d\n", enabled);
+ }
+@@ -661,8 +661,8 @@ static ssize_t ratelimit_log_enable_store(struct device *dev,
+ 	else
+ 		interval = 0;
+ 
+-	pdev->aer_report->cor_log_ratelimit.interval = interval;
+-	pdev->aer_report->uncor_log_ratelimit.interval = interval;
++	pdev->aer_info->cor_log_ratelimit.interval = interval;
++	pdev->aer_info->uncor_log_ratelimit.interval = interval;
+ 
+ 	return count;
+ }
+@@ -676,7 +676,7 @@ static DEVICE_ATTR_RW(ratelimit_log_enable);
+ 	struct pci_dev *pdev = to_pci_dev(dev);				\
+ 									\
+ 	return sysfs_emit(buf, "%d\n",					\
+-			  pdev->aer_report->ratelimit.burst);		\
++			  pdev->aer_info->ratelimit.burst);		\
+ }									\
+ 									\
+ 	static ssize_t							\
+@@ -692,7 +692,7 @@ static DEVICE_ATTR_RW(ratelimit_log_enable);
+ 	if (kstrtoint(buf, 0, &burst) < 0)				\
+ 		return -EINVAL;						\
+ 									\
+-	pdev->aer_report->ratelimit.burst = burst;			\
++	pdev->aer_info->ratelimit.burst = burst;			\
+ 									\
+ 	return count;							\
+ }									\
+@@ -714,7 +714,7 @@ static umode_t aer_attrs_are_visible(struct kobject *kobj,
+ 	struct device *dev = kobj_to_dev(kobj);
+ 	struct pci_dev *pdev = to_pci_dev(dev);
+ 
+-	if (!pdev->aer_report)
++	if (!pdev->aer_info)
+ 		return 0;
+ 
+ 	return a->mode;
+@@ -732,28 +732,28 @@ static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
+ 	unsigned long status = info->status & ~info->mask;
+ 	int i, max = -1;
+ 	u64 *counter = NULL;
+-	struct aer_report *aer_report = pdev->aer_report;
++	struct aer_info *aer_info = pdev->aer_info;
+ 
+ 	trace_aer_event(pci_name(pdev), (info->status & ~info->mask),
+ 			info->severity, info->tlp_header_valid, &info->tlp);
+ 
+-	if (!aer_report)
++	if (!aer_info)
+ 		return;
+ 
+ 	switch (info->severity) {
+ 	case AER_CORRECTABLE:
+-		aer_report->dev_total_cor_errs++;
+-		counter = &aer_report->dev_cor_errs[0];
++		aer_info->dev_total_cor_errs++;
++		counter = &aer_info->dev_cor_errs[0];
+ 		max = AER_MAX_TYPEOF_COR_ERRS;
+ 		break;
+ 	case AER_NONFATAL:
+-		aer_report->dev_total_nonfatal_errs++;
+-		counter = &aer_report->dev_nonfatal_errs[0];
++		aer_info->dev_total_nonfatal_errs++;
++		counter = &aer_info->dev_nonfatal_errs[0];
+ 		max = AER_MAX_TYPEOF_UNCOR_ERRS;
+ 		break;
+ 	case AER_FATAL:
+-		aer_report->dev_total_fatal_errs++;
+-		counter = &aer_report->dev_fatal_errs[0];
++		aer_info->dev_total_fatal_errs++;
++		counter = &aer_info->dev_fatal_errs[0];
+ 		max = AER_MAX_TYPEOF_UNCOR_ERRS;
+ 		break;
+ 	}
+@@ -765,19 +765,19 @@ static void pci_dev_aer_stats_incr(struct pci_dev *pdev,
+ static void pci_rootport_aer_stats_incr(struct pci_dev *pdev,
+ 				 struct aer_err_source *e_src)
+ {
+-	struct aer_report *aer_report = pdev->aer_report;
++	struct aer_info *aer_info = pdev->aer_info;
+ 
+-	if (!aer_report)
++	if (!aer_info)
+ 		return;
+ 
+ 	if (e_src->status & PCI_ERR_ROOT_COR_RCV)
+-		aer_report->rootport_total_cor_errs++;
++		aer_info->rootport_total_cor_errs++;
+ 
+ 	if (e_src->status & PCI_ERR_ROOT_UNCOR_RCV) {
+ 		if (e_src->status & PCI_ERR_ROOT_FATAL_RCV)
+-			aer_report->rootport_total_fatal_errs++;
++			aer_info->rootport_total_fatal_errs++;
+ 		else
+-			aer_report->rootport_total_nonfatal_errs++;
++			aer_info->rootport_total_nonfatal_errs++;
+ 	}
+ }
+ 
+@@ -786,9 +786,9 @@ static int aer_ratelimit(struct pci_dev *dev, unsigned int severity)
+ 	struct ratelimit_state *ratelimit;
+ 
+ 	if (severity == AER_CORRECTABLE)
+-		ratelimit = &dev->aer_report->cor_log_ratelimit;
++		ratelimit = &dev->aer_info->cor_log_ratelimit;
+ 	else
+-		ratelimit = &dev->aer_report->uncor_log_ratelimit;
++		ratelimit = &dev->aer_info->uncor_log_ratelimit;
+ 
+ 	return __ratelimit(ratelimit);
+ }
+@@ -943,9 +943,14 @@ EXPORT_SYMBOL_NS_GPL(pci_print_aer, "CXL");
+ static int add_error_device(struct aer_err_info *e_info, struct pci_dev *dev)
+ {
+ 	/*
+-	 * Ratelimit AER log messages.  Generally we add the Error Source
+-	 * device, but there are is_error_source() cases that can result in
+-	 * multiple devices being added here, so we OR them all together.
++	 * Ratelimit AER log messages.  "dev" is either the source
++	 * identified by the root's Error Source ID or it has an unmasked
++	 * error logged in its own AER Capability.  If any of these devices
++	 * has not reached its ratelimit, log messages for all of them.
++	 * Messages are emitted when "e_info->ratelimit" is non-zero.
++	 *
++	 * Note that "e_info->ratelimit" was already initialized to 1 for the
++	 * ERR_FATAL case.
+ 	 */
+ 	if (e_info->error_dev_num < AER_MAX_MULTI_ERR_DEVICES) {
+ 		e_info->dev[e_info->error_dev_num] = pci_dev_get(dev);
+@@ -1065,17 +1070,8 @@ static bool find_source_device(struct pci_dev *parent,
+ 	else
+ 		pci_walk_bus(parent->subordinate, find_device_iter, e_info);
+ 
+-	/*
+-	 * If we didn't find any devices with errors logged in the AER
+-	 * Capability, just print the Error Source ID from the Root Port or
+-	 * RCEC that received an ERR_* Message, ratelimited by the RP or
+-	 * RCEC.
+-	 */
+-	if (!e_info->error_dev_num) {
+-		if (aer_ratelimit(parent, e_info->severity))
+-			aer_print_source(parent, e_info, " (no details found)");
++	if (!e_info->error_dev_num)
+ 		return false;
+-	}
+ 	return true;
+ }
+ 
+@@ -1415,17 +1411,48 @@ static inline void aer_process_err_devices(struct aer_err_info *e_info)
+ }
+ 
+ /**
+- * aer_isr_one_error - consume an error detected by Root Port
+- * @rpc: pointer to the Root Port which holds an error
++ * aer_isr_one_error_type - consume a Correctable or Uncorrectable Error
++ *			    detected by Root Port or RCEC
++ * @root: pointer to Root Port or RCEC that signaled AER interrupt
++ * @info: pointer to AER error info
++ */
++static void aer_isr_one_error_type(struct pci_dev *root,
++				   struct aer_err_info *info)
++{
++	bool found;
++
++	found = find_source_device(root, info);
++
++	/*
++	 * If we're going to log error messages, we've already set
++	 * "info->ratelimit" to non-zero (which enables printing) because
++	 * this is either an ERR_FATAL or we found a device with an error
++	 * logged in its AER Capability.
++	 *
++	 * If we didn't find the Error Source device, at least log the
++	 * Requester ID from the ERR_* Message received by the Root Port or
++	 * RCEC, ratelimited by the RP or RCEC.
++	 */
++	if (info->ratelimit ||
++	    (!found && aer_ratelimit(root, info->severity)))
++		aer_print_source(root, info, found ? "" : " (no details found");
++
++	if (found)
++		aer_process_err_devices(info);
++}
++
++/**
++ * aer_isr_one_error - consume error(s) signaled by an AER interrupt from
++ *		       Root Port or RCEC
++ * @root: pointer to Root Port or RCEC that signaled AER interrupt
+  * @e_src: pointer to an error source
+  */
+-static void aer_isr_one_error(struct aer_rpc *rpc,
+-		struct aer_err_source *e_src)
++static void aer_isr_one_error(struct pci_dev *root,
++			      struct aer_err_source *e_src)
+ {
+-	struct pci_dev *pdev = rpc->rpd;
+ 	u32 status = e_src->status;
+ 
+-	pci_rootport_aer_stats_incr(pdev, e_src);
++	pci_rootport_aer_stats_incr(root, e_src);
+ 
+ 	/*
+ 	 * There is a possibility that both correctable error and
+@@ -1440,26 +1467,22 @@ static void aer_isr_one_error(struct aer_rpc *rpc,
+ 			.multi_error_valid = multi ? 1 : 0,
+ 		};
+ 
+-		if (find_source_device(pdev, &e_info)) {
+-			aer_print_source(pdev, &e_info, "");
+-			aer_process_err_devices(&e_info);
+-		}
++		aer_isr_one_error_type(root, &e_info);
+ 	}
+ 
++	/* Note that messages for ERR_FATAL are never ratelimited */
+ 	if (status & PCI_ERR_ROOT_UNCOR_RCV) {
+ 		int fatal = status & PCI_ERR_ROOT_FATAL_RCV;
+ 		int multi = status & PCI_ERR_ROOT_MULTI_UNCOR_RCV;
+ 		struct aer_err_info e_info = {
+ 			.id = ERR_UNCOR_ID(e_src->id),
+ 			.severity = fatal ? AER_FATAL : AER_NONFATAL,
++			.ratelimit = fatal ? 1 : 0,
+ 			.level = KERN_ERR,
+ 			.multi_error_valid = multi ? 1 : 0,
+ 		};
+ 
+-		if (find_source_device(pdev, &e_info)) {
+-			aer_print_source(pdev, &e_info, "");
+-			aer_process_err_devices(&e_info);
+-		}
++		aer_isr_one_error_type(root, &e_info);
+ 	}
+ }
+ 
+@@ -1480,7 +1503,7 @@ static irqreturn_t aer_isr(int irq, void *context)
+ 		return IRQ_NONE;
+ 
+ 	while (kfifo_get(&rpc->aer_fifo, &e_src))
+-		aer_isr_one_error(rpc, &e_src);
++		aer_isr_one_error(rpc->rpd, &e_src);
+ 	return IRQ_HANDLED;
+ }
+ 
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index 597df7790f36..530c5e2cf7e8 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -252,14 +252,14 @@ static int dpc_get_aer_uncorrect_severity(struct pci_dev *dev,
+ 	else
+ 		info->severity = AER_NONFATAL;
+ 
+-	info->level = KERN_WARNING;
++	info->level = KERN_ERR;
+ 	return 1;
+ }
+ 
+ void dpc_process_error(struct pci_dev *pdev)
+ {
+ 	u16 cap = pdev->dpc_cap, status, source, reason, ext_reason;
+-	struct aer_err_info info = { 0 };
++	struct aer_err_info info = {};
+ 
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 
+@@ -269,6 +269,13 @@ void dpc_process_error(struct pci_dev *pdev)
+ 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_UNCOR:
+ 		pci_warn(pdev, "containment event, status:%#06x: unmasked uncorrectable error detected\n",
+ 			 status);
++		if (dpc_get_aer_uncorrect_severity(pdev, &info) &&
++		    aer_get_device_error_info(pdev, &info)) {
++			info.ratelimit = 1;	/* ERR_FATAL; no ratelimit */
++			aer_print_error(pdev, &info);
++			pci_aer_clear_nonfatal_status(pdev);
++			pci_aer_clear_fatal_status(pdev);
++		}
+ 		break;
+ 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_NFE:
+ 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_FE:
+@@ -280,7 +287,7 @@ void dpc_process_error(struct pci_dev *pdev)
+ 				"ERR_FATAL" : "ERR_NONFATAL",
+ 			 pci_domain_nr(pdev->bus), PCI_BUS_NUM(source),
+ 			 PCI_SLOT(source), PCI_FUNC(source));
+-		return;
++		break;
+ 	case PCI_EXP_DPC_STATUS_TRIGGER_RSN_IN_EXT:
+ 		ext_reason = status & PCI_EXP_DPC_STATUS_TRIGGER_RSN_EXT;
+ 		pci_warn(pdev, "containment event, status:%#06x: %s detected\n",
+@@ -290,22 +297,12 @@ void dpc_process_error(struct pci_dev *pdev)
+ 			 (ext_reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_SW_TRIGGER) ?
+ 			 "software trigger" :
+ 			 "reserved error");
++		/* show RP PIO error detail information */
++		if (ext_reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_RP_PIO &&
++		    pdev->dpc_rp_extensions)
++			dpc_process_rp_pio_error(pdev);
+ 		break;
+ 	}
+-
+-	/* show RP PIO error detail information */
+-	if (pdev->dpc_rp_extensions &&
+-	    reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_IN_EXT &&
+-	    ext_reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_RP_PIO)
+-		dpc_process_rp_pio_error(pdev);
+-	else if (reason == PCI_EXP_DPC_STATUS_TRIGGER_RSN_UNCOR &&
+-		 dpc_get_aer_uncorrect_severity(pdev, &info) &&
+-		 aer_get_device_error_info(pdev, &info)) {
+-		info.ratelimit = 1;	/* no ratelimiting */
+-		aer_print_error(pdev, &info);
+-		pci_aer_clear_nonfatal_status(pdev);
+-		pci_aer_clear_fatal_status(pdev);
+-	}
+ }
+ 
+ static void pci_clear_surpdn_errors(struct pci_dev *pdev)
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 4b11a90107cb..81a81dbfc873 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -346,7 +346,7 @@ struct pci_dev {
+ 	u8		hdr_type;	/* PCI header type (`multi' flag masked out) */
+ #ifdef CONFIG_PCIEAER
+ 	u16		aer_cap;	/* AER capability offset */
+-	struct aer_report *aer_report;	/* AER report for this device */
++	struct aer_info	*aer_info;	/* AER info for this device */
+ #endif
+ #ifdef CONFIG_PCIEPORTBUS
+ 	struct rcec_ea	*rcec_ea;	/* RCEC cached endpoint association */
