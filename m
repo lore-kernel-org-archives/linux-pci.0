@@ -1,75 +1,89 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 716C023C51A;
-	Wed, 21 May 2025 09:27:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4104F24167F;
+	Wed, 21 May 2025 09:33:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747819632; cv=none; b=hPj1FfiICZsY6Kh00DZ6h0uACq25TIhssEXSvLu/sdXdyEa1rKJwgbynnY5a2ONXRkRPctpUXgVy5fsqrPXx2evxnsItNejN8cKG+mGUEA+OHsU95iuLpiZ+QFQsVy52BWRHnyB5eEregRmBifXtV3GAqp+LmFTZ1y/t9zOtRDQ=
+	t=1747820007; cv=none; b=EkpF2TZaEKIyNkGeTUJaSzXY2q1Mxga1DONBRQRmdvoMu1uNbVwpqqLHnZTGAOeT0E4AbpnXcO95FuUpGETvO9of3GCk3ZnRJCsNDHxT4ruNrM/SZ1Sq6jcj3UXOEBFLTn6gxADM1ScHU78tQYz2AJh+UxUHJSZhncaXQ6HUkOA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747819632; c=relaxed/simple;
-	bh=+lR4EOoNJ4nGzX8DuzXU2f7FDxq7F4tGHeg5UFgI61c=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=obbvZT3ZGcOjHHLt9Cn10Eir4IQ0b85EAeMuK9XTcd2DaPcx4MaR1gBaoBQmSBbFCuQfKjYLCvdmRV3LkET/RfVFQyKr7lGTEdBO5zh2efkySIK2H9O2mofOQwyIFe7Ga1SGNcbCW2FpI6Il11a0ag2fCfumg3hCfEVc1xNxFy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.216])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4b2Qyv0bLgz6L52y;
-	Wed, 21 May 2025 17:26:15 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id A2F8F1404FC;
-	Wed, 21 May 2025 17:27:07 +0800 (CST)
-Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 21 May
- 2025 11:27:06 +0200
-Date: Wed, 21 May 2025 10:27:04 +0100
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: <linux-pci@vger.kernel.org>, Jon Pan-Doh <pandoh@google.com>, "Karolina
- Stolarek" <karolina.stolarek@oracle.com>, Weinan Liu <wnliu@google.com>,
-	Martin Petersen <martin.petersen@oracle.com>, Ben Fuller
-	<ben.fuller@oracle.com>, Drew Walton <drewwalton@microsoft.com>, "Anil
- Agrawal" <anilagrawal@meta.com>, Tony Luck <tony.luck@intel.com>, Ilpo
- =?UTF-8?Q?J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, "Sathyanarayanan
- Kuppuswamy" <sathyanarayanan.kuppuswamy@linux.intel.com>, Lukas Wunner
-	<lukas@wunner.de>, Sargun Dhillon <sargun@meta.com>, "Paul E . McKenney"
-	<paulmck@kernel.org>, Mahesh J Salgaonkar <mahesh@linux.ibm.com>, "Oliver
- O'Halloran" <oohall@gmail.com>, Kai-Heng Feng <kaihengf@nvidia.com>, "Keith
- Busch" <kbusch@kernel.org>, Robert Richter <rrichter@amd.com>, Terry Bowman
-	<terry.bowman@amd.com>, Shiju Jose <shiju.jose@huawei.com>, Dave Jiang
-	<dave.jiang@intel.com>, <linux-kernel@vger.kernel.org>,
-	<linuxppc-dev@lists.ozlabs.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>
-Subject: Re: [PATCH v7 09/17] PCI/AER: Simplify pci_print_aer()
-Message-ID: <20250521102704.00002f74@huawei.com>
-In-Reply-To: <20250520215047.1350603-10-helgaas@kernel.org>
-References: <20250520215047.1350603-1-helgaas@kernel.org>
-	<20250520215047.1350603-10-helgaas@kernel.org>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1747820007; c=relaxed/simple;
+	bh=LO1Ga9BqywoKA5/tkG4lU/4FfpBVnRF8ud6CdXRAeEU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VW7trVLW7aKYfQ7ovNOskcxd40DC8KtCmcGdcpeC/LZh2qAGDlyTPzY69aCIl+XT1vu3FtChyxvbQmWWbwDMJLvSMOZ+/kVHViVerhbBwSs49uyt2wG7e3C1u4SLqnIDq+RaK0z25Jz+7Z+3mGjJfM79ulI7+AexZUj/uJuKsSo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=limWBBwd; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="limWBBwd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16532C4CEE4;
+	Wed, 21 May 2025 09:33:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747820006;
+	bh=LO1Ga9BqywoKA5/tkG4lU/4FfpBVnRF8ud6CdXRAeEU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=limWBBwdIVKd11QilI9brElBRTvN1t8GNaQ/k6R8ky+uF0CoAvdxsuzcB3K1+yTVE
+	 ZPZMhNiJ5QtsNy9lKxOQG3PsD26LeEFNG1KIDtFASu9YVtEcvjmy37Armt85fk+gBR
+	 TOjBfvjURC0z9iZytH1o7eBmzEZpJ9CD+JKwfXmRjvRk5NK/+QH0Y9UHH0107SKQZR
+	 bczqbsEAM95KOPNVf9iWMQbGp29Gyu3Pxhky9or877ayyRY4S3Yb45xoynnGP+BqMN
+	 EcA28eLeGe0cB4fbCmJPNkV6lxOwCq/hYZss64SKRHeYD2HrY70hpBueE+OlTU30lp
+	 KeLTNdYHSfqJQ==
+Date: Wed, 21 May 2025 11:33:24 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Shradha Todi <shradha.t@samsung.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.or, linux-kernel@vger.kernel.org, 
+	linux-phy@lists.infradead.org, manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, 
+	kw@linux.com, robh@kernel.org, bhelgaas@google.com, jingoohan1@gmail.com, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, alim.akhtar@samsung.com, vkoul@kernel.org, 
+	kishon@kernel.org, arnd@arndb.de, m.szyprowski@samsung.com, jh80.chung@samsung.com
+Subject: Re: [PATCH 07/10] dt-bindings: phy: Add PHY bindings support for FSD
+ SoC
+Message-ID: <20250521-quirky-tanuki-of-tact-a79b86@kuoka>
+References: <20250518193152.63476-1-shradha.t@samsung.com>
+ <CGME20250518193252epcas5p3e4d1d329f1e5616e842801ceb26728b6@epcas5p3.samsung.com>
+ <20250518193152.63476-8-shradha.t@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: lhrpeml500006.china.huawei.com (7.191.161.198) To
- frapeml500008.china.huawei.com (7.182.85.71)
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20250518193152.63476-8-shradha.t@samsung.com>
 
-On Tue, 20 May 2025 16:50:26 -0500
-Bjorn Helgaas <helgaas@kernel.org> wrote:
+On Mon, May 19, 2025 at 01:01:49AM GMT, Shradha Todi wrote:
+> Document PHY device tree bindings for Tesla FSD SoCs.
+> 
+> Signed-off-by: Shradha Todi <shradha.t@samsung.com>
+> ---
+>  .../devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml  | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
+> index 41df8bb08ff7..3a5bff0fb82d 100644
+> --- a/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
+> +++ b/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
+> @@ -15,10 +15,14 @@ properties:
+>      const: 0
+>  
+>    compatible:
+> -    const: samsung,exynos5433-pcie-phy
+> +    oneOf:
 
-> From: Bjorn Helgaas <bhelgaas@google.com>
->=20
-> Simplify pci_print_aer() by initializing the struct aer_err_info "info"
-> with a designated initializer list (it was previously initialized with
-> memset()) and using pci_name().
->=20
-> Signed-off-by: Bjorn Helgaas <bhelgaas@google.com>
-> Tested-by: Krzysztof Wilczy=C5=84ski <kwilczynski@kernel.org>
-> Reviewed-by: Ilpo J=C3=A4rvinen <ilpo.jarvinen@linux.intel.com>
-Another nice cleanup.
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Drop, that's just enumm unless you already add here more?
+
+> +      - enum:
+> +          - samsung,exynos5433-pcie-phy
+> +          - tesla,fsd-pcie-phy
+>  
+>    reg:
+> -    maxItems: 1
+> +    minItems: 1
+> +    maxItems: 2
+
+You need to list the items and constrain existing variants. I do not get
+why exynos5433 gets now two MMIO ranges.
+
+Best regards,
+Krzysztof
+
