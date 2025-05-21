@@ -1,309 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F14E423D2A3;
-	Wed, 21 May 2025 09:40:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 760FD25393D
+	for <linux-pci@vger.kernel.org>; Wed, 21 May 2025 09:41:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747820447; cv=none; b=O09L1GGlMQK3PypaIaRr7imIWBvheoRsAWd+vMpchj3NadbbLhG9FYLMvQ96BL2Bfx2G8RjIkEWnc5b1YSxGQ3PIrFQMU2vYIKdtaMhLtatcNUPcFGYeZyoFFU8wOkptmBigDCUS1UU/CnyiCogsGRRhbEybRfQMiFjo7unf0tU=
+	t=1747820468; cv=none; b=CXXvWR06RoiwSR2kF4UCXgK25qDekvYJN2/nTAahD+E7bwpAEPwSlB4zxEJvxCjwGWus+SAx5L050GYU77GlVz3xzL7/wijIqKEr081JKehMsuSGH3Io7LfPw0OKDZeaYw8KwoxJulDa3FVrPscnM4pjA4fziyeFcz6uDW7ouDU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747820447; c=relaxed/simple;
-	bh=yhP6RYW9dqB8JMXo88zjJmunfH6pOCZWTpDZQbfq8nU=;
+	s=arc-20240116; t=1747820468; c=relaxed/simple;
+	bh=7cg2kugEmmL2lERRLDHGTr0rt4634yf3DzKja4v3AX8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y/Obb3UBuSlQ1A3q1R2ljVWQ0z+Qp/RAAmMpfxn8q+MAnOFBGgVbqXTUzyDlVl5KGLEefk6HZhvdT9FdHlT1GnZ/zk6qOoEPr0zwLblVZ959sEIwmN1mvNq1A0UEC3mdRDTHDvfvRyK/8cT19s5DCVPSktnUCcVVTh9mcCnsmuA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OzZiJuhe; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=FWMl5PXCrfD5Zpv9GT2NpvXBBZv9EXOa/pmxKFMHXTEYlKA4Dioswe1RDdrrj720dXjfUmjv5t4N50dHNVGxJyUHe9bGd3CXHyEEoAskLrwJ2W2HGO5VbGT2jsOGUaQDZLQBEZK6RzIXY9ZeHiTxZ/vV08kQBSJOfTEM20s9Ypo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Vz3JOf6G; arc=none smtp.client-ip=192.198.163.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OzZiJuhe"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F64AC4CEE4;
-	Wed, 21 May 2025 09:40:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747820446;
-	bh=yhP6RYW9dqB8JMXo88zjJmunfH6pOCZWTpDZQbfq8nU=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=OzZiJuhedKMD6D/oNExLGoyRWAc0fD1zTIF7Ogb5etlZmYfnpEM3EoGpygsTuCDWe
-	 UhXKwssazdkQ+nX8RYpNE2xQuu56iYGEpqIi74apeZvkZhw8z84Y1IajCq7+QdvD5D
-	 ka/IKOfwwdW2bldAIODOUciwgk4jemCongSEdL8ocE4pICu9pM+9jDOZ4Wotp5F2G+
-	 OrTdAVw4CJAGTN0IpDnLYmqSs4zQ4M+RucMOtEPsCIz8Zh8Ivc/ALf7+BAkXBX1Os6
-	 5gHrC4sSU55AZQNS3VUPhT9zBmUzMMk4E+GevJz5ky/AntM+46ualdzrCiubtKZIOf
-	 lG81rsCJrUeWA==
-Date: Wed, 21 May 2025 11:40:43 +0200
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Shradha Todi <shradha.t@samsung.com>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.or, linux-kernel@vger.kernel.org, 
-	linux-phy@lists.infradead.org, manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org, 
-	kw@linux.com, robh@kernel.org, bhelgaas@google.com, jingoohan1@gmail.com, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, alim.akhtar@samsung.com, vkoul@kernel.org, 
-	kishon@kernel.org, arnd@arndb.de, m.szyprowski@samsung.com, jh80.chung@samsung.com
-Subject: Re: [PATCH 08/10] phy: exynos: Add PCIe PHY support for FSD SoC
-Message-ID: <20250521-certain-quoll-from-vega-11885b@kuoka>
-References: <20250518193152.63476-1-shradha.t@samsung.com>
- <CGME20250518193256epcas5p442e9549fd8fd810522f960df74c22e34@epcas5p4.samsung.com>
- <20250518193152.63476-9-shradha.t@samsung.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Vz3JOf6G"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1747820466; x=1779356466;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=7cg2kugEmmL2lERRLDHGTr0rt4634yf3DzKja4v3AX8=;
+  b=Vz3JOf6GIZhkOcGXSaQ6OAg45Wamtbawdt0UzYDikHW75SvjzeVCRbU0
+   p6IhUiK9oia3XgduNGEnOOLVWdz/Qj+8C8T3QCo3F0VVDpxJNskfcoIDn
+   LxOCCbWpK+VkTh+HXJJAC+FW709/ohnOFLpQxL8GrHrYuFD+mnQ8bWojv
+   j9Z6zXzdtgwBpeUJlMmnie4il83J0HnKtGuj1b2He8rAdBRtwOvZJbQ9G
+   3NsjvkqO3C43LvM2tlZA3FfaeQMAMNsi5rzd5uLl3xl5i1s3s3SJV0VK5
+   MPZyFevKyFG0iADoFP+FFbYq4SK2Ilm1FZw0MCXRSNMJdZLaD7UV+nj9L
+   A==;
+X-CSE-ConnectionGUID: W7o/c919SYu9T68OOTMkEg==
+X-CSE-MsgGUID: IPGdFSnzTKy9kAVDxXnsGQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11439"; a="37410884"
+X-IronPort-AV: E=Sophos;i="6.15,303,1739865600"; 
+   d="scan'208";a="37410884"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 21 May 2025 02:41:05 -0700
+X-CSE-ConnectionGUID: 5pF0oTwTSHWogEZ5f835YA==
+X-CSE-MsgGUID: t6GWQvmLQ/yYQN4CeS4uYA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.15,303,1739865600"; 
+   d="scan'208";a="145121111"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa005.jf.intel.com with ESMTP; 21 May 2025 02:41:03 -0700
+Date: Wed, 21 May 2025 17:35:08 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
+Cc: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
+	aik@amd.com, jgg@nvidia.com, zhiw@nvidia.com
+Subject: Re: [PATCH v3 12/13] PCI/TSM: support TDI related operations for
+ host TSM driver
+Message-ID: <aC2eTGpODgYh7ND7@yilunxu-OptiPlex-7050>
+References: <20250516054732.2055093-1-dan.j.williams@intel.com>
+ <20250516054732.2055093-13-dan.j.williams@intel.com>
+ <aCbglieuHI1BJDkz@yilunxu-OptiPlex-7050>
+ <yq5awmab4uq6.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250518193152.63476-9-shradha.t@samsung.com>
+In-Reply-To: <yq5awmab4uq6.fsf@kernel.org>
 
-On Mon, May 19, 2025 at 01:01:50AM GMT, Shradha Todi wrote:
-> Add PCIe PHY support for Tesla FSD SoC.
+On Tue, May 20, 2025 at 12:47:05PM +0530, Aneesh Kumar K.V wrote:
+> Xu Yilun <yilun.xu@linux.intel.com> writes:
 > 
-> Signed-off-by: Shradha Todi <shradha.t@samsung.com>
-> ---
->  drivers/phy/samsung/phy-exynos-pcie.c | 357 +++++++++++++++++++++++++-
->  1 file changed, 356 insertions(+), 1 deletion(-)
+> > On Thu, May 15, 2025 at 10:47:31PM -0700, Dan Williams wrote:
+> >> From: Xu Yilun <yilun.xu@linux.intel.com>
+> >> 
+> >> Add kAPIs pci_tsm_{bind,unbind,guest_req}() for PCI devices.
+> >> 
+> >> pci_tsm_bind/unbind() are supposed to be called by kernel components
+> >> which manages the virtual device. The verb 'bind' means VMM does extra
+> >> configurations to make the assigned device ready to be validated by
+> >> CoCo VM as TDI (TEE Device Interface). Usually these configurations
+> >> include assigning device ownership and MMIO ownership to CoCo VM, and
+> >> move the TDI to CONFIG_LOCKED TDISP state by LOCK_INTERFACE_REQUEST
+> >> TDISP message. The detailed operations are specific to platform TSM
+> >> firmware so need to be supported by vendor TSM drivers.
+> >> 
+> >> pci_tsm_guest_req() supports a channel for CoCo VM to directly talk
+> >> to TSM firmware about further TDI operations after TDI is bound, e.g.
+> >> get device interface report, certifications & measurements. So this kAPI
+> >> is supposed to be called from KVM vmexit handler.
+> >
+> > To clarify, this commit message is staled. We are proposing existing to
+> > QEMU, then pass to TSM through IOMMUFD VDEVICE.
+> >
 > 
-> diff --git a/drivers/phy/samsung/phy-exynos-pcie.c b/drivers/phy/samsung/phy-exynos-pcie.c
-> index 53c9230c2907..0e4c00c1121e 100644
-> --- a/drivers/phy/samsung/phy-exynos-pcie.c
-> +++ b/drivers/phy/samsung/phy-exynos-pcie.c
-> @@ -34,11 +34,121 @@
->  /* PMU PCIE PHY isolation control */
->  #define EXYNOS5433_PMU_PCIE_PHY_OFFSET		0x730
->  
-> +/* FSD: PCIe PHY common registers */
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG03	0x000c
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG01E	0x0078
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG02D	0x00b4
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG031	0x00c4
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG036	0x00d8
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG05F	0x017c
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG060	0x0180
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG062	0x0188
-> +#define FSD_PCIE_PHY_TRSV_CMN_REG061	0x0184
-> +#define FSD_PCIE_PHY_AGG_BIF_RESET	0x0200
-> +#define FSD_PCIE_PHY_AGG_BIF_CLOCK	0x0208
-> +#define FSD_PCIE_PHY_CMN_RESET		0x0228
-> +
-> +/* FSD: PCIe PHY lane registers */
-> +#define FSD_PCIE_PHY_LANE_OFFSET	0x400
-> +#define FSD_PCIE_PHY_TRSV_REG001_LN_N	0x404
-> +#define FSD_PCIE_PHY_TRSV_REG002_LN_N	0x408
-> +#define FSD_PCIE_PHY_TRSV_REG005_LN_N	0x414
-> +#define FSD_PCIE_PHY_TRSV_REG006_LN_N	0x418
-> +#define FSD_PCIE_PHY_TRSV_REG007_LN_N	0x41c
-> +#define FSD_PCIE_PHY_TRSV_REG009_LN_N	0x424
-> +#define FSD_PCIE_PHY_TRSV_REG00A_LN_N	0x428
-> +#define FSD_PCIE_PHY_TRSV_REG00C_LN_N	0x430
-> +#define FSD_PCIE_PHY_TRSV_REG012_LN_N	0x448
-> +#define FSD_PCIE_PHY_TRSV_REG013_LN_N	0x44c
-> +#define FSD_PCIE_PHY_TRSV_REG014_LN_N	0x450
-> +#define FSD_PCIE_PHY_TRSV_REG015_LN_N	0x454
-> +#define FSD_PCIE_PHY_TRSV_REG016_LN_N	0x458
-> +#define FSD_PCIE_PHY_TRSV_REG018_LN_N	0x460
-> +#define FSD_PCIE_PHY_TRSV_REG020_LN_N	0x480
-> +#define FSD_PCIE_PHY_TRSV_REG026_LN_N	0x498
-> +#define FSD_PCIE_PHY_TRSV_REG029_LN_N	0x4a4
-> +#define FSD_PCIE_PHY_TRSV_REG031_LN_N	0x4c4
-> +#define FSD_PCIE_PHY_TRSV_REG036_LN_N	0x4d8
-> +#define FSD_PCIE_PHY_TRSV_REG039_LN_N	0x4e4
-> +#define FSD_PCIE_PHY_TRSV_REG03B_LN_N	0x4ec
-> +#define FSD_PCIE_PHY_TRSV_REG03C_LN_N	0x4f0
-> +#define FSD_PCIE_PHY_TRSV_REG03E_LN_N	0x4f8
-> +#define FSD_PCIE_PHY_TRSV_REG03F_LN_N	0x4fc
-> +#define FSD_PCIE_PHY_TRSV_REG043_LN_N	0x50c
-> +#define FSD_PCIE_PHY_TRSV_REG044_LN_N	0x510
-> +#define FSD_PCIE_PHY_TRSV_REG046_LN_N	0x518
-> +#define FSD_PCIE_PHY_TRSV_REG048_LN_N	0x520
-> +#define FSD_PCIE_PHY_TRSV_REG049_LN_N	0x524
-> +#define FSD_PCIE_PHY_TRSV_REG04E_LN_N	0x538
-> +#define FSD_PCIE_PHY_TRSV_REG052_LN_N	0x548
-> +#define FSD_PCIE_PHY_TRSV_REG068_LN_N	0x5a0
-> +#define FSD_PCIE_PHY_TRSV_REG069_LN_N	0x5a4
-> +#define FSD_PCIE_PHY_TRSV_REG06A_LN_N	0x5a8
-> +#define FSD_PCIE_PHY_TRSV_REG06B_LN_N	0x5ac
-> +#define FSD_PCIE_PHY_TRSV_REG07B_LN_N	0x5ec
-> +#define FSD_PCIE_PHY_TRSV_REG083_LN_N	0x60c
-> +#define FSD_PCIE_PHY_TRSV_REG084_LN_N	0x610
-> +#define FSD_PCIE_PHY_TRSV_REG086_LN_N	0x618
-> +#define FSD_PCIE_PHY_TRSV_REG087_LN_N	0x61c
-> +#define FSD_PCIE_PHY_TRSV_REG08B_LN_N	0x62c
-> +#define FSD_PCIE_PHY_TRSV_REG09C_LN_N	0x670
-> +#define FSD_PCIE_PHY_TRSV_REG09D_LN_N	0x674
-> +#define FSD_PCIE_PHY_TRSV_REG09E_LN_N	0x678
-> +#define FSD_PCIE_PHY_TRSV_REG09F_LN_N	0x67c
-> +#define FSD_PCIE_PHY_TRSV_REG0A2_LN_N	0x688
-> +#define FSD_PCIE_PHY_TRSV_REG0A4_LN_N	0x690
-> +#define FSD_PCIE_PHY_TRSV_REG0CE_LN_N	0x738
-> +#define FSD_PCIE_PHY_TRSV_REG0FC_LN_N	0x7f0
-> +#define FSD_PCIE_PHY_TRSV_REG0FD_LN_N	0x7f4
-> +#define FSD_PCIE_PHY_TRSV_REG0FE_LN_N	0x7f8
-> +#define FSD_PCIE_PHY_TRSV_REG0CE_LN_1	0xb38
-> +#define FSD_PCIE_PHY_TRSV_REG0CE_LN_2	0xf38
-> +#define FSD_PCIE_PHY_TRSV_REG0CE_LN_3	0x1338
-> +
-> +/* FSD: PCIe PCS registers */
-> +#define FSD_PCIE_PCS_BRF_0		0x0004
-> +#define FSD_PCIE_PCS_BRF_1		0x0804
-> +#define FSD_PCIE_PCS_CLK		0x0180
-> +
-> +/* FSD: PCIe SYSREG registers */
-> +#define FSD_PCIE_SYSREG_PHY_0_CON_MASK			0x3ff
-> +#define FSD_PCIE_SYSREG_PHY_0_CON			0x042C
-> +#define FSD_PCIE_SYSREG_PHY_0_REF_SEL_MASK		0x3
-> +#define FSD_PCIE_SYSREG_PHY_0_REF_SEL			(0x2 << 0)
-> +#define FSD_PCIE_SYSREG_PHY_0_SSC_EN_MASK		0x8
-> +#define FSD_PCIE_SYSREG_PHY_0_SSC_EN			BIT(3)
-> +#define FSD_PCIE_SYSREG_PHY_0_AUX_EN_MASK		0x10
-> +#define FSD_PCIE_SYSREG_PHY_0_AUX_EN			BIT(4)
-> +#define FSD_PCIE_SYSREG_PHY_0_CMN_RSTN_MASK		0x100
-> +#define FSD_PCIE_SYSREG_PHY_0_CMN_RSTN			BIT(8)
-> +#define FSD_PCIE_SYSREG_PHY_0_INIT_RSTN_MASK		0x200
-> +#define FSD_PCIE_SYSREG_PHY_0_INIT_RSTN			BIT(9)
-> +
-> +#define FSD_PCIE_SYSREG_PHY_1_CON_MASK			0x1ff
-> +#define FSD_PCIE_SYSREG_PHY_1_CON			0x0500
-> +#define FSD_PCIE_SYSREG_PHY_1_REF_SEL_MASK		0x30
-> +#define FSD_PCIE_SYSREG_PHY_1_REF_SEL			(0x2 << 4)
-> +#define FSD_PCIE_SYSREG_PHY_1_SSC_EN_MASK		0x80
-> +#define FSD_PCIE_SYSREG_PHY_1_SSC_EN			BIT(7)
-> +#define FSD_PCIE_SYSREG_PHY_1_AUX_EN_MASK		0x1
-> +#define FSD_PCIE_SYSREG_PHY_1_AUX_EN			BIT(0)
-> +#define FSD_PCIE_SYSREG_PHY_1_CMN_RSTN_MASK		0x2
-> +#define FSD_PCIE_SYSREG_PHY_1_CMN_RSTN			BIT(1)
-> +#define FSD_PCIE_SYSREG_PHY_1_INIT_RSTN_MASK		0x8
-> +#define FSD_PCIE_SYSREG_PHY_1_INIT_RSTN			BIT(3)
-> +
->  /* For Exynos pcie phy */
->  struct exynos_pcie_phy {
->  	void __iomem *base;
-> +	void __iomem *pcs_base;
->  	struct regmap *pmureg;
->  	struct regmap *fsysreg;
-> +	int phy_id;
-> +	const struct samsung_drv_data *drv_data;
-> +};
-> +
-> +struct samsung_drv_data {
-> +	const struct phy_ops *phy_ops;
->  };
->  
->  static void exynos_pcie_phy_writel(void __iomem *base, u32 val, u32 offset)
-> @@ -133,9 +243,244 @@ static const struct phy_ops exynos5433_phy_ops = {
->  	.owner		= THIS_MODULE,
->  };
->  
-> +struct fsd_pcie_phy_pdata {
-> +	u32 phy_con_mask;
-> +	u32 phy_con;
-> +	u32 phy_ref_sel_mask;
-> +	u32 phy_ref_sel;
-> +	u32 phy_ssc_en_mask;
-> +	u32 phy_ssc_en;
-> +	u32 phy_aux_en_mask;
-> +	u32 phy_aux_en;
-> +	u32 phy_cmn_rstn_mask;
-> +	u32 phy_cmn_rstn;
-> +	u32 phy_init_rstn_mask;
-> +	u32 phy_init_rstn;
-> +	u32 num_lanes;
-> +	u32 lane_offset;
-> +};
-> +
-> +struct fsd_pcie_phy_pdata fsd_phy_con[] = {
-> +	{
+> Can you share the POC code/git repo implementing that? I am looking for
+> pci_tsm_bind()/pci_tsm_unbind() example usage.
 
-Why this is global and RW?
+The usage of these kAPIs should be in IOMMUFD, that's what I'm doing for
+Stage 2 patchset. I need to rebase this series, adopt suggestions from
+Jason, and make TDX Connect work to verify, so need more time...
 
-> +	.phy_con		= FSD_PCIE_SYSREG_PHY_0_CON,
-> +	.phy_con_mask		= FSD_PCIE_SYSREG_PHY_0_CON_MASK,
-> +	.phy_ref_sel_mask	= FSD_PCIE_SYSREG_PHY_0_REF_SEL_MASK,
-> +	.phy_ref_sel		= FSD_PCIE_SYSREG_PHY_0_REF_SEL,
-> +	.phy_ssc_en_mask	= FSD_PCIE_SYSREG_PHY_0_SSC_EN_MASK,
-> +	.phy_ssc_en		= FSD_PCIE_SYSREG_PHY_0_SSC_EN,
-> +	.phy_aux_en_mask	= FSD_PCIE_SYSREG_PHY_0_AUX_EN_MASK,
-> +	.phy_aux_en		= FSD_PCIE_SYSREG_PHY_0_AUX_EN,
-> +	.phy_cmn_rstn_mask	= FSD_PCIE_SYSREG_PHY_0_CMN_RSTN_MASK,
-> +	.phy_cmn_rstn		= FSD_PCIE_SYSREG_PHY_0_CMN_RSTN,
-> +	.phy_init_rstn_mask	= FSD_PCIE_SYSREG_PHY_0_INIT_RSTN_MASK,
-> +	.phy_init_rstn		= FSD_PCIE_SYSREG_PHY_0_INIT_RSTN,
-> +	.num_lanes		= 0x4,
-> +	.lane_offset		= FSD_PCIE_PHY_LANE_OFFSET,
-> +	},
-> +	{
-> +	.phy_con		= FSD_PCIE_SYSREG_PHY_1_CON,
-> +	.phy_con_mask		= FSD_PCIE_SYSREG_PHY_1_CON_MASK,
-> +	.phy_ref_sel_mask	= FSD_PCIE_SYSREG_PHY_1_REF_SEL_MASK,
-> +	.phy_ref_sel		= FSD_PCIE_SYSREG_PHY_1_REF_SEL,
-> +	.phy_ssc_en_mask	= FSD_PCIE_SYSREG_PHY_1_SSC_EN_MASK,
-> +	.phy_ssc_en		= FSD_PCIE_SYSREG_PHY_1_SSC_EN,
-> +	.phy_aux_en_mask	= FSD_PCIE_SYSREG_PHY_1_AUX_EN_MASK,
-> +	.phy_aux_en		= FSD_PCIE_SYSREG_PHY_1_AUX_EN,
-> +	.phy_cmn_rstn_mask	= FSD_PCIE_SYSREG_PHY_1_CMN_RSTN_MASK,
-> +	.phy_cmn_rstn		= FSD_PCIE_SYSREG_PHY_1_CMN_RSTN,
-> +	.phy_init_rstn_mask	= FSD_PCIE_SYSREG_PHY_1_INIT_RSTN_MASK,
-> +	.phy_init_rstn		= FSD_PCIE_SYSREG_PHY_1_INIT_RSTN,
-> +	.num_lanes		= 0x4,
-> +	.lane_offset		= FSD_PCIE_PHY_LANE_OFFSET,
-> +	},
-> +	{ },
-> +};
-> +
-> +struct fsd_pcie_phy_setting {
-> +	u32 addr;
-> +	u32 val;
-> +	bool is_cmn_reg;
-> +};
-> +
-> +struct fsd_pcie_phy_setting fsd_pcie_phy0_setting[] = {
+Thanks,
+Yilun
 
-No. This is poor coding, please do first extensive internal reviews.
-
-Please run standard kernel tools for static analysis, like coccinelle,
-smatch and sparse, and fix reported warnings. Also please check for
-warnings when building with W=1 for gcc and clang. Most of these
-commands (checks or W=1 build) can build specific targets, like some
-directory, to narrow the scope to only your code. The code here looks
-like it needs a fix. Feel free to get in touch if the warning is not
-clear.
-
-...
-
-> @@ -146,11 +491,18 @@ static int exynos_pcie_phy_probe(struct platform_device *pdev)
->  	struct exynos_pcie_phy *exynos_phy;
->  	struct phy *generic_phy;
->  	struct phy_provider *phy_provider;
-> +	const struct samsung_drv_data *drv_data;
-> +
-> +	drv_data = of_device_get_match_data(dev);
-> +	if (!drv_data)
-> +		return -ENODEV;
->  
->  	exynos_phy = devm_kzalloc(dev, sizeof(*exynos_phy), GFP_KERNEL);
->  	if (!exynos_phy)
->  		return -ENOMEM;
->  
-> +	exynos_phy->drv_data = drv_data;
-> +
->  	exynos_phy->base = devm_platform_ioremap_resource(pdev, 0);
->  	if (IS_ERR(exynos_phy->base))
->  		return PTR_ERR(exynos_phy->base);
-> @@ -169,12 +521,15 @@ static int exynos_pcie_phy_probe(struct platform_device *pdev)
->  		return PTR_ERR(exynos_phy->fsysreg);
->  	}
->  
-> -	generic_phy = devm_phy_create(dev, dev->of_node, &exynos5433_phy_ops);
-> +	generic_phy = devm_phy_create(dev, dev->of_node, drv_data->phy_ops);
->  	if (IS_ERR(generic_phy)) {
->  		dev_err(dev, "failed to create PHY\n");
->  		return PTR_ERR(generic_phy);
->  	}
->  
-> +	exynos_phy->pcs_base = devm_platform_ioremap_resource(pdev, 1);
-> +	exynos_phy->phy_id = of_alias_get_id(dev->of_node, "pciephy");
-
-Where did you document aliases?
-
-Anyway, all this looks because you have completely buggy way of handling
-MMIO via syscon. That's a no-go. Use proper address ranges assigned to
-ddevices. If you ever need to use syscon, you should pass the offset as
-argument - just like other devices are doing.
-
-Best regards,
-Krzysztof
-
+> 
+> -aneesh
