@@ -1,34 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3F5A2DCC07;
-	Fri, 23 May 2025 16:07:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F00FF1A0BF3;
+	Fri, 23 May 2025 16:12:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748016421; cv=none; b=CdcxjopGP9gD3QhY8Kbz5M7fcUaBk7YEIPjVgvuwH+N/Bm0YbmqmJ9L9kYib2+HIdsp+g/l7nC7QdOWH80isbmItWzPSddTKM2iZUb51tYjLMHoIWe6faLGWjkTI6xWyqArUVx7VpjuROcu9e13DbFcJZ9eubm7XX7htbNMKI7M=
+	t=1748016767; cv=none; b=tgqB25/Ll+9FRlKMxmBIGYAsp9P6nQnf3XJ+CfZUABnB+E3mIJn5B/gz/ypxJySo2/LJmAF/r9gyPpzSEwkMwWJu4jyUkznRXKTsPLHjUapY5O2DuACp2dNHcyqz2uU3yR+qIWtzC6Klkyu+rMRZUaxt3iJutNWOXgC3kk8NQ3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748016421; c=relaxed/simple;
-	bh=U5OXlf+RyqrwgHycF2mts31Fb7vitn7wTynxz3ykuCU=;
+	s=arc-20240116; t=1748016767; c=relaxed/simple;
+	bh=stvsu4xByc6n2n97XoQi+HIP09rpdP6ynB7YbbNj4KI=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=Y1BWurFjD4qHmghYkQH8E63eZ6TE8xx2Xfrd+aXFOSf7IS9uiu57Zjc36F/vMrsil1oULaVkrAgLq+MqZdmQJ5M25NAPYYIyAMiA836AI1x917a2dxvF7UgUyQKzXM2B6FPnId9DoCMQhc6YpdqLykvfDpPVZspkbsgRXu/tf+8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HJ4BTRSD; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=NMJM7CwH2DJIgbGIyGbEj5Niq7BT/0EC7ueUHpv+mHfsXp/hNZMZ6pDx9iWemYt3B9nLEWnBoLSK3mFC68HLXh6KcNLf97AZOf1QYFXlpcEqS7PVA3ChWKGxMIGq7xXhSUEhc3JH3K9lL9Ufo8AGuHjWWqRmHUFlnbVmVOKVZ8I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gLMKIQgl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HJ4BTRSD"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDD81C4CEEB;
-	Fri, 23 May 2025 16:06:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gLMKIQgl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2EA36C4CEE9;
+	Fri, 23 May 2025 16:12:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748016420;
-	bh=U5OXlf+RyqrwgHycF2mts31Fb7vitn7wTynxz3ykuCU=;
+	s=k20201202; t=1748016765;
+	bh=stvsu4xByc6n2n97XoQi+HIP09rpdP6ynB7YbbNj4KI=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=HJ4BTRSD/0E+TS5UteGvWOxf6R8OzJOt1+4nzoXPvNCXRD/8S/RNGcPwi58jotavi
-	 +4tTV8FqgSGUtL4GoCwxkaJlgejTdf4aMBX+IvZvWOvMGbFhSXdQDkVOjBmkXvR+S0
-	 A9qINpvL88R5Q+bWhPSmHHFrdVJ+9gSC/jPZH+EcX4uP/DMIfwsHCfFm9iq1abQET6
-	 gC/+8VnoGgTxoCZucgiciaTMBy20nqlu9TLHLQhvg72dAthv2ZWiMbew4qxHxAyn8+
-	 SzSxhptlarY55XjN3O70l0VVUIkvlIvZApk9gVoyDSbZldmkqtr6C0gwS5Jw4QzCt1
-	 chp6pa8W4pWGQ==
-Date: Fri, 23 May 2025 11:06:58 -0500
+	b=gLMKIQglZVHVJrIBT9fuUVoEk86gspRrdu0MSmpWv4I37u4mbh7bM8U2FW2ASJWm0
+	 HlIOeJvO4pZYGWJuJTnHz2PDV8OA/gJTLwYNKILEdQlX+bk5xR1FEJyNmY0EA6VKH4
+	 HCQNhmtcMFAyGAN5/ymkOF+c94t0ZjngYAfYSCF6GmhvElNxa5t5IH8hmvHXlIlJ4m
+	 TPsZdJYlCtR2X3tZL3w8BkiBiwBaeNbrUZSwFNNTtyHlYQ/7iZieQLMwdw6+IOg2CL
+	 xSA8Jnjrim//zklWRD/FijrAmNqWRBlJbsq9QFcfyZ9qpt5aYozEULjAbgbSxzXBx7
+	 WPrGOeLcX/jfw==
+Date: Fri, 23 May 2025 11:12:43 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
-To: Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
 Cc: linux-pci@vger.kernel.org, Jon Pan-Doh <pandoh@google.com>,
 	Karolina Stolarek <karolina.stolarek@oracle.com>,
 	Weinan Liu <wnliu@google.com>,
@@ -37,7 +37,7 @@ Cc: linux-pci@vger.kernel.org, Jon Pan-Doh <pandoh@google.com>,
 	Drew Walton <drewwalton@microsoft.com>,
 	Anil Agrawal <anilagrawal@meta.com>,
 	Tony Luck <tony.luck@intel.com>,
-	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
 	Lukas Wunner <lukas@wunner.de>,
 	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
 	Sargun Dhillon <sargun@meta.com>,
@@ -48,11 +48,12 @@ Cc: linux-pci@vger.kernel.org, Jon Pan-Doh <pandoh@google.com>,
 	Keith Busch <kbusch@kernel.org>, Robert Richter <rrichter@amd.com>,
 	Terry Bowman <terry.bowman@amd.com>,
 	Shiju Jose <shiju.jose@huawei.com>,
-	Dave Jiang <dave.jiang@intel.com>, linux-kernel@vger.kernel.org,
-	linuxppc-dev@lists.ozlabs.org, Bjorn Helgaas <bhelgaas@google.com>
-Subject: Re: [PATCH v8 18/20] PCI/AER: Ratelimit correctable and non-fatal
- error logging
-Message-ID: <20250523160658.GA1559366@bhelgaas>
+	Dave Jiang <dave.jiang@intel.com>,
+	LKML <linux-kernel@vger.kernel.org>, linuxppc-dev@lists.ozlabs.org,
+	Bjorn Helgaas <bhelgaas@google.com>
+Subject: Re: [PATCH v8 16/20] PCI/AER: Convert aer_get_device_error_info(),
+ aer_print_error() to index
+Message-ID: <20250523161243.GA1559290@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,42 +63,34 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <eb9bca3e-cb0a-41e9-bf7f-0889eb3f3c47@linux.intel.com>
+In-Reply-To: <b7e7a308-713f-d89b-cccd-8f397e097bae@linux.intel.com>
 
-On Thu, May 22, 2025 at 04:56:56PM -0700, Sathyanarayanan Kuppuswamy wrote:
-> On 5/22/25 4:21 PM, Bjorn Helgaas wrote:
-> > From: Jon Pan-Doh <pandoh@google.com>
+On Fri, May 23, 2025 at 02:13:52PM +0300, Ilpo Järvinen wrote:
+> On Thu, 22 May 2025, Bjorn Helgaas wrote:
+> 
+> > From: Bjorn Helgaas <bhelgaas@google.com>
 > > 
-> > Spammy devices can flood kernel logs with AER errors and slow/stall
-> > execution. Add per-device ratelimits for AER correctable and non-fatal
-> > uncorrectable errors that use the kernel defaults (10 per 5s).  Logging of
-> > fatal errors is not ratelimited.
+> > Previously aer_get_device_error_info() and aer_print_error() took a pointer
+> > to struct aer_err_info and a pointer to a pci_dev.  Typically the pci_dev
+> > was one of the elements of the aer_err_info.dev[] array (DPC was an
+> > exception, where the dev[] array was unused).
 
-> > +static int aer_ratelimit(struct pci_dev *dev, unsigned int severity)
-> > +{
-> > +	struct ratelimit_state *ratelimit;
-> > +
-> > +	if (severity == AER_FATAL)
-> > +		return 1;	/* AER_FATAL not ratelimited */
-> > +
-> > +	if (severity == AER_CORRECTABLE)
-> > +		ratelimit = &dev->aer_info->correctable_ratelimit;
-> > +	else
-> > +		ratelimit = &dev->aer_info->nonfatal_ratelimit;
-> > +
-> > +	return __ratelimit(ratelimit);
-> > +}
-> > +
+> > -void aer_print_error(struct pci_dev *dev, struct aer_err_info *info)
+> > +void aer_print_error(struct aer_err_info *info, int i)
+> >  {
+> > -	int layer, agent;
+> > -	int id = pci_dev_id(dev);
+> > +	struct pci_dev *dev;
+> > +	int layer, agent, id;
+> >  	const char *level = info->level;
+> >  
+> > +	if (i >= AER_MAX_MULTI_ERR_DEVICES)
+> > +		return;
 > 
-> Why not combine severity checks? May be something like below:
-> 
->     switch (severity) {
->     case AER_NONFATAL:
->         return __ratelimit(&dev->aer_info->nonfatal_ratelimit);
->     case AER_CORRECTABLE:
->         return __ratelimit(&dev->aer_info->correctable_ratelimit);
->     default:
->         return 1; /* Don't rate-limit fatal errors */
->     }
+> Are these OoB checks actually indication of a logic error in the caller 
+> side which would perhaps warrant using
+> 	if (WARN_ON_ONCE(i >= AER_MAX_MULTI_ERR_DEVICES))
+> ?
 
-Beautiful, adopted, thank you!
+Good idea, thanks!  I hope we can someday get rid of this info->dev[]
+array and the headaches associated with it.
