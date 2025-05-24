@@ -1,284 +1,139 @@
-Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC3851F1513
-	for <linux-pci@vger.kernel.org>; Sat, 24 May 2025 18:53:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88ACC131E49;
+	Sat, 24 May 2025 20:33:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748112805; cv=none; b=Q0B851P6GdKpGJ0zkK3ow1ln3Po/ROtzD6M4TdD6aolq6iQYTJDIxxQSwFwoYkN9hCDeB2w9MfUxjbVRm1ie5rw/0RAZVmOU+tsXGwC8L/zXw5afVrc/a7+f5IpDrv83/b8IPe6XAVKJeaU2ay+UGUzs+xKi6r1FY1lDLLkRlJI=
+	t=1748118805; cv=none; b=t1OXEwWHZMMgFn09F6Mx3JnV9d9xs07FldWlO2iwPZYhQblPzdE9uPYpVkVpGWrcvIX5IeoGUs0DHxB3r6QzCZoEYAn7dtsOnh9ZP1cN7LWSIWmUBfjm9qGWqb4inm8llRa1Y/ZTEAehKEs+joAnuR5hxWV7OCBD5oR1DgZUlFE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748112805; c=relaxed/simple;
-	bh=zCMczU4v06ghUQ9pw1P+u0746zqUXj2cY86m3N4kgoM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hX0NYIB3Bcc2XvNS9sX2t3JqdHJIBe1spw7ClmuWjI8sH22HB6jooG9kSmYWIg5ywrnovAqKXZcl7vQo2oZ09kPOF1FIh2qmh2lKKZiTbdyu2/8rGrlit3mC2acIG46eMuQRWkUNj1mF5sRkX5WyP2Ky+8KI/gUZs8JLhK9qGY0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WLyDJWaw; arc=none smtp.client-ip=209.85.210.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1748118805; c=relaxed/simple;
+	bh=hrug913Vp1NiKCmHn+m4wiqCG8z8FSEDUX4Thc02O9g=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=rlbc1s+jnQyUxOGYaOwpf4MeK8G9du3s4fA2oYbcQoc26fqPtG0Mwr/duRYBu3IveWI6/LjDJeqMby6YKNHUQ8emJzQVczVDqvuYOMTgAJpK32MUKOMsrD8K1C2/md0VTQ905rbKApWSXH99kUFbqE2YcPsBF4OFkkhcAGqtA6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dG8jlmJl; arc=none smtp.client-ip=209.85.222.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WLyDJWaw"
-Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-742c5eb7d1cso1133520b3a.3
-        for <linux-pci@vger.kernel.org>; Sat, 24 May 2025 11:53:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dG8jlmJl"
+Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-7c58974ed57so88916785a.2;
+        Sat, 24 May 2025 13:33:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1748112802; x=1748717602; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PDL6QRovWt7sBQP7alBAWgPBh+2vhpbIyHwbqahrS2s=;
-        b=WLyDJWawRD1FNVUO53IcDqiIk+1S8tTG07NErfEEomLbdnKYT+NDprIEJk4GbdabR7
-         t0zLzHXhgHuDQep/TSjSf8jngJySlhSK+9JXOpTI+RBJ+yUQACwke93CsyQIvc4kHkkh
-         qVYvdRTkJNwXKy0P826BxgCk7Yx8Y0vsh1IrhkPyczACJlItM9aYmZVUtoikSj+s2lJ9
-         acOWchrLvxZ8aWAm0gkB/9UV+Y9tXtWxN3852prXeypOhl+YV0yFiIz57d3mopz5R1/j
-         xO3CFaIiLnKrQn3YUpltvTaW/bRHwSLO2j0IAoUt+6yVJYrY3rp0NXfDJmSLz8deqRp2
-         tm5A==
+        d=gmail.com; s=20230601; t=1748118802; x=1748723602; darn=vger.kernel.org;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mvfJkqxXdrTl2ACAyEytt+D5VYLPEzTHxEFeE81vrvE=;
+        b=dG8jlmJla3zc2ddUvzo1xIkXVdrOk6ql1swxZFLTgGQKqfpK472JQrYDZGjVhguXk+
+         rTeO3qyZ1ie8UqNiD1KUPe/2b9U9NadbnkWfunusRgiL2yukrFBhTpLrfuIL9fLFjX99
+         uiljK+yqr3gVkYsDhe5llOVjTBZr8mZjHTr+7UMxP4yRrXfgL32XXAmKv2allvYZdMt3
+         AACrWSDcfckGpOsXu7/DbVVBQX3w9tPqDhHL/7uE2W+ivYwKJi5HVa+S5FVmK2+f7jQM
+         7mfwEqXCRwofL4jH6uSIptCpJgqJC9TkAofPlGHy/AJ4xMyBSav5klkGxte38xXybw/m
+         oDyg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748112802; x=1748717602;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+        d=1e100.net; s=20230601; t=1748118802; x=1748723602;
+        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
+         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=PDL6QRovWt7sBQP7alBAWgPBh+2vhpbIyHwbqahrS2s=;
-        b=Ht80pzlbel4qdZGcGMEs56Fn2pWI4OZMchDkxf5Q9iImPrVDXQ9vasSr4Nkz6qU0mV
-         t6n899T6FCregT3nmLf1C8/G0S7gj512tsP+d2r437bZbG42AjBH0M3mD4ueF/nPhv1J
-         TXiWVELiRpYjtaYNmFXhmYKGcOgA3D8WSaJD2oX9QAw988pZkhEAaqD3VTeUjVbrid3m
-         hVIef2lfAUcCz/qnp/NhTT4mnrCDfwrnGZ96zkTfxzrnFj0zeRCOnZoDp6IG5RYGsCIb
-         CNoN8hdbpVnlmGSOKEhQvw6OfyCdcrG1RKThCGHgY+e+LBDE8ZoZyjQTcPZOVMIpt0tf
-         nMTg==
-X-Gm-Message-State: AOJu0Yx5gWTjPKT3zylPOjU21de9BkwQQTuNyGOYMq33uAkwNbNTzt/t
-	ioKfKlo4YHSeYJYKTccKZHZ5GfF1TGiXRXDocnplttJ9neK83GJZ2mH6BALTB5kIaQ==
-X-Gm-Gg: ASbGnctBYoHu47TOS8f896ebdk2wPQJTOs1AGXR6llqfpxiPZuggSsz4YgjUvh4Yltp
-	jaaOWR3ZoL12thfllJbV/GrOLY2NKxKW+KbbPOet0bXn4oUN/lMVZwTaqIWvEJvALEp7TpImoRr
-	TROlNvPvwCluXOsopQfBapNDuKOpZFxQYvABWYJDHVih1m1SH2Pp2BeiQ+rBYK68pYjWf0vwFBk
-	NeA2sBAV7tBVtx1F5C0bjW4XbKmzgULiYg8wm7BQBAx3suqBuVoIu3TP3ilXV0yNhy0hnPUHYSf
-	cBQnEcT+D0XjOlqt7/nyGoR/IcMWbLFSUbx/tbYg6Nc9FHVZ5ehJ/XK9GJm06lES
-X-Google-Smtp-Source: AGHT+IH+7qg3wNDv5nyRf+S4VLDCGgKjl9E0QRjKmpL5PiZmmYwJKZ+o/DGKeM99GhkflOY9BkiCbg==
-X-Received: by 2002:a05:6a20:a11c:b0:215:e60b:3bd3 with SMTP id adf61e73a8af0-2188c353194mr6571996637.29.1748112802033;
-        Sat, 24 May 2025 11:53:22 -0700 (PDT)
-Received: from thinkpad.. ([120.56.192.43])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b26eb0a906bsm14532931a12.71.2025.05.24.11.53.18
+        bh=mvfJkqxXdrTl2ACAyEytt+D5VYLPEzTHxEFeE81vrvE=;
+        b=VGqG7A/CU04bxsQV41KB4jYzk1ckRNpI+Jye6ymFbdBt3mzhJVf1WiA6sMkRvdFWz/
+         8Eeba1qFUgnuBjEnPFf2erGRAwMLIPltB85GFULnSqIg7prssC+gO/Cw5ioR/I+RO94e
+         hc8rsubE9ciQLpYh87cZ+T0t8r9kl9p1o2+idHN/KwYigiE+1bBIeiShYuiOf0zAc6oy
+         UlWghP5rcvDATyNlw4yjaT5xHNhQR2lbGir+oAaS1i2DIgo1O0LkY1g1pAXT75TAYGy3
+         gC+6XBvUsLP4z/i20MBBD+m6lM1bsMzk0a089SG1sNvVi6k15n7RcS/lONB0UxNa88hT
+         K0HA==
+X-Forwarded-Encrypted: i=1; AJvYcCUHUMxgGJ7e7EkY/5Hlu9IbzB0Mf/yUbLFIWQICABtHEPHcvwIs1nFC23VSRIHHIxeIww2wgh1W7Eu8X/g6@vger.kernel.org, AJvYcCVOzYqJTXzPhb3lrGJf6BB7DGktwDYZgBtWwsOmwMIYnI8h3f/7b7UOPz7407LHsMxrGkREiFkn@vger.kernel.org, AJvYcCW+oPQgfCROSnLjszMzV6c8Zqxqmf7ZKm28hpZTd0EW5DhkSwUCKLSUM2lIbV4EL3ll0JzlTlkvLJ25@vger.kernel.org, AJvYcCX8kOhncy/uAohzarCRCm6yHA2vGJPIldbKhhxY7N9mzwiIkN1DNnBpNtAgD/CUQdbs0xV60N04hGi+@vger.kernel.org, AJvYcCXJ0H6hbcySEaDjxV6BXWFObSLBxcGUgypONyBtlV7NCjs9eALZFOXl8LYyeXSBFqcmXVzw68RHn/a64jI=@vger.kernel.org, AJvYcCXvgOTbjU/NurvdBn5AjOz57FeSdzltWEoGsPfxjWU3kDJjCcn/OUuSxd0LMvGcoMtcwJhCK8SRg7+3awhz5I8e@vger.kernel.org
+X-Gm-Message-State: AOJu0YysgelZss5dG9yiIMxbUYP3GEitZL2Dtjrixr0rCtrzsuu3dzFl
+	g35rThbAXrPXmGk2Czr2nqfW9Pf7MoHSzjz271aV8hKqkaTLtuIGREts
+X-Gm-Gg: ASbGncvghfBJqknLZ3v06DoaabbmIXgCiP9QdX1vf04BgmVVcuhYvsoTchZZildl1kX
+	dQlmNEhU05Fc52tzqHvdzn3dDrgaRt/3fkhXC2Mj4fuD8CTHDjMGA3uTC4dGOlkQ+a7v215ewPo
+	AYydxb8SzOz5EpW7O1YWMSAJLkBjeAngP2mAb8RZyT9oDRYcWCKoHZo/c3mkBPiei2fRHnFj4VY
+	fLlxkUgR1OYdJUKi9eFWwB205Y6Cm4vi4q47Zbk0IQ8PK7WDxGE5YlYsWQg15tRt0WtBPRZ/9iK
+	YYlDsolnc0MmIF1Va9Dwntk+jwe93YCvmEvhCMZEWSxab05LpD4xOknIAvhg4wGg1k+30Hc0vhG
+	yBnHLvxgCbCzKN9XqkIm17LoTGYBKNdXXBRBZ4W7cBu9K/UsWp6jh9BGuSmifO1BGuHIQ7o0vLv
+	Xjf1Y=
+X-Google-Smtp-Source: AGHT+IFboxRLluplUf3LaplIw8SJcbgWkLbYbE/qq4hS3to1whGiWg64X2sqtasOImnMch7vEUC1oA==
+X-Received: by 2002:a05:620a:608e:b0:7ca:eb5b:6b99 with SMTP id af79cd13be357-7ceecba77cdmr512632385a.15.1748118802225;
+        Sat, 24 May 2025 13:33:22 -0700 (PDT)
+Received: from 1.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.0.ip6.arpa ([2600:4041:5be7:7c00:8563:e370:791f:7436])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7cd467d7fd1sm1379590085a.29.2025.05.24.13.33.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 24 May 2025 11:53:21 -0700 (PDT)
-From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kw@linux.com
-Cc: linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	cassel@kernel.org,
-	wilfred.mallawa@wdc.com,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Lukas Wunner <lukas@wunner.de>
-Subject: [PATCH 2/2] PCI: Rename host_bridge::reset_slot() to host_bridge::reset_root_port()
-Date: Sun, 25 May 2025 00:23:04 +0530
-Message-ID: <20250524185304.26698-3-manivannan.sadhasivam@linaro.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250524185304.26698-1-manivannan.sadhasivam@linaro.org>
-References: <20250524185304.26698-1-manivannan.sadhasivam@linaro.org>
+        Sat, 24 May 2025 13:33:21 -0700 (PDT)
+From: Tamir Duberstein <tamird@gmail.com>
+Date: Sat, 24 May 2025 16:33:01 -0400
+Subject: [PATCH v10 1/5] rust: retitle "Example" section as "Examples"
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250524-cstr-core-v10-1-6412a94d9d75@gmail.com>
+References: <20250524-cstr-core-v10-0-6412a94d9d75@gmail.com>
+In-Reply-To: <20250524-cstr-core-v10-0-6412a94d9d75@gmail.com>
+To: Michal Rostecki <vadorovsky@protonmail.com>, 
+ Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
+ Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>, 
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+ Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+ Trevor Gross <tmgross@umich.edu>, 
+ Brendan Higgins <brendan.higgins@linux.dev>, 
+ David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>, 
+ Danilo Krummrich <dakr@kernel.org>, 
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+ Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, 
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Luis Chamberlain <mcgrof@kernel.org>, Russ Weight <russ.weight@linux.dev>, 
+ FUJITA Tomonori <fujita.tomonori@gmail.com>, Rob Herring <robh@kernel.org>, 
+ Saravana Kannan <saravanak@google.com>, 
+ Peter Zijlstra <peterz@infradead.org>, Ingo Molnar <mingo@redhat.com>, 
+ Will Deacon <will@kernel.org>, Waiman Long <longman@redhat.com>, 
+ Nathan Chancellor <nathan@kernel.org>, 
+ Nick Desaulniers <nick.desaulniers+lkml@gmail.com>, 
+ Bill Wendling <morbo@google.com>, Justin Stitt <justinstitt@google.com>, 
+ Andrew Lunn <andrew@lunn.ch>, Heiner Kallweit <hkallweit1@gmail.com>, 
+ Russell King <linux@armlinux.org.uk>, 
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, 
+ Jens Axboe <axboe@kernel.dk>, Benno Lossin <lossin@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Benno Lossin <lossin@kernel.org>
+Cc: rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
+ dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, 
+ devicetree@vger.kernel.org, llvm@lists.linux.dev, linux-pci@vger.kernel.org, 
+ nouveau@lists.freedesktop.org, linux-block@vger.kernel.org, 
+ Tamir Duberstein <tamird@gmail.com>
+X-Mailer: b4 0.15-dev
 
-The callback is supposed to reset the root port, hence it should be named
-as 'reset_root_port'. This also warrants renaming the rest of the instances
-of 'reset slot' as 'reset root port' in the drivers.
+This title is consistent with all other macros' documentation,
+regardless of the number of examples contained in their "Examples"
+sections.
 
-Suggested-by: Lukas Wunner <lukas@wunner.de>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Tamir Duberstein <tamird@gmail.com>
 ---
- drivers/pci/controller/dwc/pcie-dw-rockchip.c |  8 ++++----
- drivers/pci/controller/dwc/pcie-qcom.c        |  8 ++++----
- drivers/pci/controller/pci-host-common.c      | 20 +++++++++----------
- drivers/pci/pci.c                             |  6 +++---
- include/linux/pci.h                           |  2 +-
- 5 files changed, 22 insertions(+), 22 deletions(-)
+ rust/macros/lib.rs | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-index 193e97adf228..0cc7186758ce 100644
---- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-+++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-@@ -85,7 +85,7 @@ struct rockchip_pcie_of_data {
- 	const struct pci_epc_features *epc_features;
- };
- 
--static int rockchip_pcie_rc_reset_slot(struct pci_host_bridge *bridge,
-+static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
- 				       struct pci_dev *pdev);
- 
- static int rockchip_pcie_readl_apb(struct rockchip_pcie *rockchip, u32 reg)
-@@ -261,7 +261,7 @@ static int rockchip_pcie_host_init(struct dw_pcie_rp *pp)
- 					 rockchip);
- 
- 	rockchip_pcie_enable_l0s(pci);
--	pp->bridge->reset_slot = rockchip_pcie_rc_reset_slot;
-+	pp->bridge->reset_root_port = rockchip_pcie_rc_reset_slot;
- 
- 	return 0;
- }
-@@ -700,7 +700,7 @@ static int rockchip_pcie_probe(struct platform_device *pdev)
- 	return ret;
- }
- 
--static int rockchip_pcie_rc_reset_slot(struct pci_host_bridge *bridge,
-+static int rockchip_pcie_rc_reset_root_port(struct pci_host_bridge *bridge,
- 				       struct pci_dev *pdev)
- {
- 	struct pci_bus *bus = bridge->bus;
-@@ -759,7 +759,7 @@ static int rockchip_pcie_rc_reset_slot(struct pci_host_bridge *bridge,
- 
- 	/* Ignore errors, the link may come up later. */
- 	dw_pcie_wait_for_link(pci);
--	dev_dbg(dev, "slot reset completed\n");
-+	dev_dbg(dev, "Root port reset completed\n");
- 	return ret;
- 
- deinit_clk:
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 0c59030a2d55..840263c1efe0 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -291,7 +291,7 @@ struct qcom_pcie {
- };
- 
- #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
--static int qcom_pcie_reset_slot(struct pci_host_bridge *bridge,
-+static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
- 				  struct pci_dev *pdev);
- 
- static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
-@@ -1277,7 +1277,7 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
- 			goto err_assert_reset;
- 	}
- 
--	pp->bridge->reset_slot = qcom_pcie_reset_slot;
-+	pp->bridge->reset_root_port = qcom_pcie_reset_root_port;
- 
- 	return 0;
- 
-@@ -1533,7 +1533,7 @@ static void qcom_pcie_icc_opp_update(struct qcom_pcie *pcie)
- 	}
- }
- 
--static int qcom_pcie_reset_slot(struct pci_host_bridge *bridge,
-+static int qcom_pcie_reset_root_port(struct pci_host_bridge *bridge,
- 				  struct pci_dev *pdev)
- {
- 	struct pci_bus *bus = bridge->bus;
-@@ -1589,7 +1589,7 @@ static int qcom_pcie_reset_slot(struct pci_host_bridge *bridge,
- 
- 	qcom_pcie_start_link(pci);
- 
--	dev_dbg(dev, "Slot reset completed\n");
-+	dev_dbg(dev, "Root port reset completed\n");
- 
- 	return 0;
- 
-diff --git a/drivers/pci/controller/pci-host-common.c b/drivers/pci/controller/pci-host-common.c
-index afa7b140a04a..24e357e85adb 100644
---- a/drivers/pci/controller/pci-host-common.c
-+++ b/drivers/pci/controller/pci-host-common.c
-@@ -99,22 +99,22 @@ void pci_host_common_remove(struct platform_device *pdev)
- EXPORT_SYMBOL_GPL(pci_host_common_remove);
- 
- #if IS_ENABLED(CONFIG_PCIEAER)
--static pci_ers_result_t pci_host_reset_slot(struct pci_dev *dev)
-+static pci_ers_result_t pci_host_reset_root_port(struct pci_dev *dev)
- {
- 	int ret;
- 
- 	ret = pci_bus_error_reset(dev);
- 	if (ret) {
--		pci_err(dev, "Failed to reset slot: %d\n", ret);
-+		pci_err(dev, "Failed to reset root port: %d\n", ret);
- 		return PCI_ERS_RESULT_DISCONNECT;
- 	}
- 
--	pci_info(dev, "Slot has been reset\n");
-+	pci_info(dev, "Root port has been reset\n");
- 
- 	return PCI_ERS_RESULT_RECOVERED;
- }
- 
--static void pci_host_recover_slots(struct pci_host_bridge *host)
-+static void pci_host_reset_root_ports(struct pci_host_bridge *host)
- {
- 	struct pci_bus *bus = host->bus;
- 	struct pci_dev *dev;
-@@ -124,11 +124,11 @@ static void pci_host_recover_slots(struct pci_host_bridge *host)
- 			continue;
- 
- 		pcie_do_recovery(dev, pci_channel_io_frozen,
--				 pci_host_reset_slot);
-+				 pci_host_reset_root_port);
- 	}
- }
- #else
--static void pci_host_recover_slots(struct pci_host_bridge *host)
-+static void pci_host_reset_root_ports(struct pci_host_bridge *host)
- {
- 	struct pci_bus *bus = host->bus;
- 	struct pci_dev *dev;
-@@ -140,17 +140,17 @@ static void pci_host_recover_slots(struct pci_host_bridge *host)
- 
- 		ret = pci_bus_error_reset(dev);
- 		if (ret)
--			pci_err(dev, "Failed to reset slot: %d\n", ret);
-+			pci_err(dev, "Failed to reset root port: %d\n", ret);
- 		else
--			pci_info(dev, "Slot has been reset\n");
-+			pci_info(dev, "Root port has been reset\n");
- 	}
- }
- #endif
- 
- void pci_host_handle_link_down(struct pci_host_bridge *bridge)
- {
--	dev_info(&bridge->dev, "Recovering slots due to Link Down\n");
--	pci_host_recover_slots(bridge);
-+	dev_info(&bridge->dev, "Recovering root ports due to Link Down\n");
-+	pci_host_reset_root_ports(bridge);
- }
- EXPORT_SYMBOL_GPL(pci_host_handle_link_down);
- 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 6d6e9ce2bbcc..154d33e1af84 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -4985,16 +4985,16 @@ void __weak pcibios_reset_secondary_bus(struct pci_dev *dev)
- 	struct pci_host_bridge *host = pci_find_host_bridge(dev->bus);
- 	int ret;
- 
--	if (pci_is_root_bus(dev->bus) && host->reset_slot) {
-+	if (pci_is_root_bus(dev->bus) && host->reset_root_port) {
- 		/*
- 		 * Save the config space of the root port before doing the
- 		 * reset, since the state could be lost. The device state
- 		 * should've been saved by the caller.
- 		 */
- 		pci_save_state(dev);
--		ret = host->reset_slot(host, dev);
-+		ret = host->reset_root_port(host, dev);
- 		if (ret)
--			pci_err(dev, "failed to reset slot: %d\n", ret);
-+			pci_err(dev, "failed to reset root port: %d\n", ret);
- 		else
- 			/* Now restore it on success */
- 			pci_restore_state(dev);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 8d7d2a49b76c..ab4f4a668f6d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -599,7 +599,7 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	int (*enable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
- 	void (*disable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
--	int (*reset_slot)(struct pci_host_bridge *bridge, struct pci_dev *dev);
-+	int (*reset_root_port)(struct pci_host_bridge *bridge, struct pci_dev *dev);
- 	void		*release_data;
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
- 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+diff --git a/rust/macros/lib.rs b/rust/macros/lib.rs
+index 9acaa68c974e..d31e50c446b0 100644
+--- a/rust/macros/lib.rs
++++ b/rust/macros/lib.rs
+@@ -263,7 +263,7 @@ pub fn concat_idents(ts: TokenStream) -> TokenStream {
+ /// literals (lifetimes and documentation strings are not supported). There is a difference in
+ /// supported modifiers as well.
+ ///
+-/// # Example
++/// # Examples
+ ///
+ /// ```
+ /// # const binder_driver_return_protocol_BR_OK: u32 = 0;
+
 -- 
-2.43.0
+2.49.0
 
