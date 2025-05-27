@@ -1,145 +1,150 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D507A1C8604
-	for <linux-pci@vger.kernel.org>; Wed, 28 May 2025 04:50:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D2F01F1537
+	for <linux-pci@vger.kernel.org>; Wed, 28 May 2025 04:52:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748407834; cv=none; b=Mlb2kWl+HTLX2EBgU51H1IGALjR0jfLf+I6kAqS6LR59UPbZaX5+KUSC+ZzgTs6FcF84R1qGRPovrGp3TYzOTJVhw0+8pi8hmG8nFN5pZmNe4Se4t9Xxc0jwWyo1alBECPMFMhHbfsbeRvxynD4XV8ZLaSyETSd71XTeqJTqvnM=
+	t=1748407963; cv=none; b=kck7aAjuYSNeU7gL9HfeZZqKYQJq7z1rZKqyObsTaheUqlZsyfT2Qp0JG5vWOGyTYZfIIvNQf3hMmGU2z3HC32FrINRTlAVTPyilbgbysIfF1BeQ619O26Ll3MrYa6IWopaE8gkk/KSmaiQoL5GBL6xzVULl3V+460nS9FrOfHY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748407834; c=relaxed/simple;
-	bh=SZWThzxP/87c9R8Huv4SM4sfI7oqi1K0BFXylxM1JU4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FB9ZkKE/XXJ4NQn4FRiqrMsEWH7nxcs/VFhWKfsPNFyOYMpIeQfVxHggh0FkA/w5U+bRFNKK9ClTIZtJ8ASNkgKc63vkeZ70NOmsR9J7O9Ds6/SsZTJ4daqKCtsr7X8xv0a1IjGeGriB17Ttz4KEc9caEodX4A0054Xwmlzj27Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=hKj+9jHe; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1748407963; c=relaxed/simple;
+	bh=1he+ECXkMifDmz+0SeATcBB9PNeHm0QazgQ8Uqsca/c=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=fTHb8z2OWoHVB2FdcdQUkapaFi5ECH6pzDbG2k2xJhsbduWpsp4fXfT5ijOTyFI1y7SjQNzOKb567iBDHkYxcQ0doxjGd7Btg725Vr92k0tIbF74oW4HFKImv/CO0rJMzIaQX3J+uUBtTRvrVqlTK9XFoozHArWndE9WdWYdizo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=kh9vimOH; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="hKj+9jHe"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54RGebRM028066
-	for <linux-pci@vger.kernel.org>; Wed, 28 May 2025 04:50:32 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	C371pGRBLlC9/Ts/1/jUakLqagSQGyt7TnsvkA6tdNk=; b=hKj+9jHeGOhW/Gks
-	yXFQh9JQ/nI3lxr41HFcgwujHhEbY4VHaT5BN50hK4Paak/TjehifWN25MryCa5X
-	EDWNK6aA5kIdiAAVQWoy+BgHq4m0LlGnUbLUfG7ypazFT19F0gdqeesUoFgQa3A1
-	qmBCOqZIRPmIVBaTly8I/j0bS8T+S9IRLSeYNEq8H94llSluD0Xy9f/EO2uSQgMs
-	+shH65aJyhTgowiW6MTPzOQ+QWzO8QlcHoq6Z0MDSCQi9TMcqVHw2VxvSqzjXJpC
-	JCaJcXAZap1X3E0zDr4OfmziJfCOBOSCFC/HZpewM4EbU5IrgH58Uol2R3IqFZh2
-	+KmVMw==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46w992k2vd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Wed, 28 May 2025 04:50:31 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-233e462f57fso46889625ad.1
-        for <linux-pci@vger.kernel.org>; Tue, 27 May 2025 21:50:31 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748407831; x=1749012631;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=C371pGRBLlC9/Ts/1/jUakLqagSQGyt7TnsvkA6tdNk=;
-        b=Y4V9MDw8iV8UKnOgJmrdoAcJB8yqCNEhSeO8JKSZTaTmL055k4quo+RCUzQtfewl8V
-         wNbxJpjng9E92e6Tzm4JR4tEQIasUs4+4lJulUmcVCwN+RoBqVxJRCXal2DmbsDZmd5M
-         HD740EslSMDbryiT9dFJEbItW6kiMZbKeZCLFBcMub4tlUWLpV4pgyXhZy9mZOeKzYbe
-         FZciw6yKst9qpoUVQhWSI2tO6RVNpsedYOZmd38Bd9GTGQZAGVfl3gtDxaMxquTtr6QX
-         EPmBjLMMQkskFaGWCDM9wycyxkOqL7bgHJ/dH+bQyx6mGGyDIokAduvxYEB5pbyvtdJ1
-         QFfQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUtSvs7G6k6qNKXMvKEy4eZm9PeCQiah6N2mKlY8UWGz3BI4X3gD1r0Bb0sxA8I3wQVhBcP5QqbyZc=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy67TX38esXATwOJvEFxVDnEcI+3Lasws3uj8CoRZj+oGdhuPHt
-	TEoqL7FeM3LumT/jhzL1wtJhZ0pgvSGyM0gwYTeTXvqwmgRM7lQAsRU6VEJrw1Ra+9XYMUnURXE
-	LEfZImuKEnydqMYyKKn4p0GBHVkmbU99OP70gvPd5/PRwJFlzyYD6kHV64Fb/wWM=
-X-Gm-Gg: ASbGnctBaIU0UBOhWOxxlZG4BA9g6/7LwrFX8WJ4ydJ+1LeXG277KHmHZaOkfmB0Nyk
-	h/UaIYEVsnaqVOHrVX3glYKBHExTnNfK/Rz0I+mhBeanh9UVym/L44Hs4JA2CWdVkQR1G9u6Raa
-	vXYLfEPiASsts51pBgJkFSM5h7BR44dAoQ4lvqdp/rQCWAZRMcmrKGa/xlvc6b5VtGsWmJzMCqj
-	xZbzT/EsvhkdhRfomzHuAxlxm5LDe70glOnUJPAglR9aisOMPksT9YvXSPQWyovbqXqCNjRwiFk
-	mTp6nUHdP1bRulqSNkQCq2BsVkqVkV8UHvwNs8otHg==
-X-Received: by 2002:a17:902:f54e:b0:234:8ac5:3f31 with SMTP id d9443c01a7336-2348ac53fd2mr99050895ad.23.1748407831008;
-        Tue, 27 May 2025 21:50:31 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHN9b4dZ+vQIgVSTiIeC0tbTS9PKLkg/kjNaPF3ZRn8W94d6lAt9Br08fffh0W92jG9c6SL4A==
-X-Received: by 2002:a17:902:f54e:b0:234:8ac5:3f31 with SMTP id d9443c01a7336-2348ac53fd2mr99050685ad.23.1748407830642;
-        Tue, 27 May 2025 21:50:30 -0700 (PDT)
-Received: from [10.92.214.105] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-234d2fd229dsm3131465ad.34.2025.05.27.21.50.25
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 27 May 2025 21:50:30 -0700 (PDT)
-Message-ID: <e840e6b6-f2c1-9e85-bfb3-fba1471dad32@oss.qualcomm.com>
-Date: Wed, 28 May 2025 10:20:24 +0530
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="kh9vimOH"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250528045234epoutp01ea93dfde5bef9a0a9319ca6e594ae706~Dl8VYal_F3110731107epoutp01a
+	for <linux-pci@vger.kernel.org>; Wed, 28 May 2025 04:52:34 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250528045234epoutp01ea93dfde5bef9a0a9319ca6e594ae706~Dl8VYal_F3110731107epoutp01a
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1748407954;
+	bh=Yt1i5zz1+H1yH/+R8rQhFBytNoiQxwZ3UA1Upazmv3M=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=kh9vimOH6e8qXlvc+XcBupKByKInN6Btpxd6vLjEm+bGG1SHpYrXqbbSsjr2+Fp7u
+	 liIMMbR75bRZPLG7A1ecOCQAT4+kPTibK6lkBXbr1opNHoVGkUihDw9u5hc8DjPSs8
+	 UIhCdbib9KuMIYHaHfT8gzc9DmV72sRR77385vHQ=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250528045233epcas5p428e45730e03f22506dfecb146be0ded5~Dl8U1b_0y2587125871epcas5p4o;
+	Wed, 28 May 2025 04:52:33 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.177]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4b6cYr1BdCz6B9mF; Wed, 28 May
+	2025 04:52:32 +0000 (GMT)
+Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250527104241epcas5p2428e5f78dc4e19a2d753785c79fe5062~DXEvXsNnk2402124021epcas5p2M;
+	Tue, 27 May 2025 10:42:41 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
+	20250527104241epsmtrp2c6f0950056d42e94b76450b81048663a~DXEvWsWx42958229582epsmtrp2H;
+	Tue, 27 May 2025 10:42:41 +0000 (GMT)
+X-AuditID: b6c32a28-460ee70000001e8a-7d-68359720b70b
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	D7.56.07818.02795386; Tue, 27 May 2025 19:42:40 +0900 (KST)
+Received: from FDSFTE462 (unknown [107.122.81.248]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250527104237epsmtip12aa6194a2d7b488cdc0bf41890ae0ad2~DXEsaJYJK0228602286epsmtip1h;
+	Tue, 27 May 2025 10:42:37 +0000 (GMT)
+From: "Shradha Todi" <shradha.t@samsung.com>
+To: "'Krzysztof Kozlowski'" <krzk@kernel.org>
+Cc: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-samsung-soc@vger.kernel.or>,
+	<linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+	<manivannan.sadhasivam@linaro.org>, <lpieralisi@kernel.org>, <kw@linux.com>,
+	<robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+	<krzk+dt@kernel.org>, <conor+dt@kernel.org>, <alim.akhtar@samsung.com>,
+	<vkoul@kernel.org>, <kishon@kernel.org>, <arnd@arndb.de>,
+	<m.szyprowski@samsung.com>, <jh80.chung@samsung.com>, "'Hrishikesh Dileep'"
+	<hrishikesh.d@samsung.com>
+In-Reply-To: <20250521-succinct-roadrunner-from-avalon-f1fa4c@kuoka>
+Subject: RE: [PATCH 02/10] PCI: exynos: Remove unused MACROs in exynos PCI
+ file
+Date: Tue, 27 May 2025 16:12:31 +0530
+Message-ID: <0e2101dbcef4$1235cf20$36a16d60$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH] schemas: PCI: Add standard PCIe WAKE# signal
-To: robh@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, helgaas@kernel.org, krzk@kernel.org,
-        manivannan.sadhasivam@linaro.org, devicetree@vger.kernel.org,
-        dmitry.baryshkov@linaro.org, lpieralisi@kernel.org, kw@linux.com,
-        conor+dt@kernel.org, linux-pci@vger.kernel.org,
-        linux-kernel@vger.kernel.org, devicetree-spec@vger.kernel.org,
-        quic_vbadigan@quicinc.com, andersson@kernel.org, sherry.sun@nxp.com
-References: <20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com>
-Content-Language: en-US
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <20250515090517.3506772-1-krishna.chundru@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTI4MDA0MCBTYWx0ZWRfX4B4vE/cn874K
- Ic22S8jY9jewnRGXO6zXefJdy3VHUxsViuj47Dz6TpJpPjlyqdJ4JJaPbXgb3tC5FLYA8TI0Hic
- i0F3FPXdCVslRHohkQNuwBrw5+QVQoPGwFlNeG40JBG1oC2Ru2RdisJyhsbXcpGGctgHGRYY4pZ
- EkwKDl2npBW27Br4VdLxivLh/NTRdmz/AdfFS7UOM4eGQO39QDQZUEP60euQRVzwzys26JzhTMB
- 5OBSNTfNb9dTQjXwMhe7ilaWX9BHjLwZhI2bQ3bTA3NQend8FsRqytN3ZTUD+4d7Mnu66cwt/5R
- 0BgqoZ/gT16mzw5mAv5ruUXO3jy0c+xYn9XoYavmzP9Dqr2JF56Dt8LbNowIqDXQ9bJXisjX/Tc
- iJBuRKxuFeKBnllZI4JRkIrqoEOQSkSo1NaVce3rt8kQu35F+qIvbiehKbzxE8YQ3D/EUSPa
-X-Authority-Analysis: v=2.4 cv=Fes3xI+6 c=1 sm=1 tr=0 ts=68369617 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=EUspDBNiAAAA:8 a=8Attb8s4RaY3mnNPeTUA:9
- a=QEXdDO2ut3YA:10 a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: Op9LbfnXsbpCwzq3LzcOrLFyCwNsTEjb
-X-Proofpoint-ORIG-GUID: Op9LbfnXsbpCwzq3LzcOrLFyCwNsTEjb
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-28_02,2025-05-27_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- mlxscore=0 malwarescore=0 impostorscore=0 phishscore=0 clxscore=1015
- lowpriorityscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=820 spamscore=0
- adultscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505160000
- definitions=main-2505280040
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQKa2HaEso6x90WQFKmaYw3pYxuT6gLfine5ANOZyXwCswaLjrI0l9ug
+Content-Language: en-in
+X-Brightmail-Tracker: H4sIAAAAAAAAA02Se0hTYRjG+87dkXFyUp8WSxaBmc0Wqz7LSiPskER2vxDo0NNW6bJNuxFl
+	YVGySqVQx7AVkrlKZIvpyUXlnF3I7GJml62bszJKc14qdcZcgf/94HmeH+8fL4OHdBDhzA5N
+	Nq/VKDOklIiwOaSS2RHF89Rzepxx6H2ZjULDRY00Kj+mRtduPcbQhYbHJHrVVEejtj8nSHSl
+	t5RGzuMjOPpqcFOoubmaRrn6QRJZPrWS6PlNI4Wayu5RqMDcT6CmAROG8obyCHS9wUUjV94p
+	Eo3Ya2kkvL2Px0/iBv8UAU4wuGjOZMnhLOZTFPe21U5x7S3FGGctP8KduWEGXENfMcF5LZJk
+	0VZRXDqfsWMvr41ZkipSP/C1YlnGCftrh9qwXFA4Ph8EMZBVwMHvTjwfiJgQtg7Ac/VePBCE
+	Qe/TKizAYljp+0wHSh0A3u0SKH9AsdGwvWVodBDKzobWtorREs5+I2DHo3f/tF4AC4w/R1tB
+	7HJo6/1C+1nMrobPBoaBnwl2Bqy1NpJ+DmZjYXfnbSrAE+GD0nbCzzg7C57+cBwEeBqs+W78
+	d2oE/O25TAauSIR230c60JkMnb/1eAEQG8aoDGNUhjEqw5iJCRBmEMZn6TJVmWnyLLmG3yfT
+	KTN1ORqVLG13pgWMvkJUZC340X8sph5gDKgHkMGlocG2AoU6JDhdeeAgr92dos3J4HX1YApD
+	SCcHV8o3q0JYlTKb38XzWbz2f4oxQeG5mOzryElfdjW3stQiudaTukoVGp06vMGR/Llq1cbX
+	w4xsEjKFKQyS94OLN5wobHuxqJu0Oba/BpeqKlNUwtxog/WXPP0FpBQDrrlXez/YEw+5vnU5
+	Uj7VFRk3NScLkefPRnTNTFzj4QVnvCmUVS2fX0XvdMsWeqKStulT9eM0FfTFBW8SGt95XC3C
+	Om2p0u2Jf35n7dE+97zthb354le5ZjbMYlw6R1wXfR/erpFGbllSMzSividAFBMbXrNwj68s
+	Kei0PUVh9W15Ut0zHdydelJPekuMrQ8721c4Eq5ISpS38hv2pxElfWWPDi86en1ZjvBy68sE
+	t76pe71rvZTQqZXyKFyrU/4Fa6hrWHkDAAA=
+X-CMS-MailID: 20250527104241epcas5p2428e5f78dc4e19a2d753785c79fe5062
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-541,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250518193230epcas5p3dfb178a6528556c55e9b694ca8f8ad6c
+References: <20250518193152.63476-1-shradha.t@samsung.com>
+	<CGME20250518193230epcas5p3dfb178a6528556c55e9b694ca8f8ad6c@epcas5p3.samsung.com>
+	<20250518193152.63476-3-shradha.t@samsung.com>
+	<20250521-succinct-roadrunner-from-avalon-f1fa4c@kuoka>
 
 
-On 5/15/2025 2:35 PM, Krishna Chaitanya Chundru wrote:
-> As per PCIe spec 6, sec 5.3.3.2 document PCI standard WAKE# signal,
-> which is used to re-establish power and reference clocks to the
-> components within its domain.
+
+> -----Original Message-----
+> From: Krzysztof Kozlowski <krzk@kernel.org>
+> Sent: 21 May 2025 15:11
+> To: Shradha Todi <shradha.t@samsung.com>
+> Cc: linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-arm-kernel@lists.infradead.org; linux-samsung-soc@vger.kernel.or;
+> linux-kernel@vger.kernel.org; linux-phy@lists.infradead.org; manivannan.sadhasivam@linaro.org; lpieralisi@kernel.org;
+> kw@linux.com; robh@kernel.org; bhelgaas@google.com; jingoohan1@gmail.com; krzk+dt@kernel.org; conor+dt@kernel.org;
+> alim.akhtar@samsung.com; vkoul@kernel.org; kishon@kernel.org; arnd@arndb.de; m.szyprowski@samsung.com;
+> jh80.chung@samsung.com; Hrishikesh Dileep <hrishikesh.d@samsung.com>
+> Subject: Re: [PATCH 02/10] PCI: exynos: Remove unused MACROs in exynos PCI file
 > 
-Hi Rob,
-
-can you check this patch once.
-
-- Krishna Chaitanya.
-> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-> ---
->   dtschema/schemas/pci/pci-bus-common.yaml | 4 ++++
->   1 file changed, 4 insertions(+)
+> On Mon, May 19, 2025 at 01:01:44AM GMT, Shradha Todi wrote:
+> > Some MACROs are defined in the exynos PCI file but are not used
+> > anywhere within the file. Remove such unused MACROs.
+> >
+> > Suggested-by: Hrishikesh Dileep <hrishikesh.d@samsung.com>
+> > Signed-off-by: Shradha Todi <shradha.t@samsung.com>
+> > ---
+> >  drivers/pci/controller/dwc/pci-exynos.c | 2 --
+> >  1 file changed, 2 deletions(-)
+> >
+> > diff --git a/drivers/pci/controller/dwc/pci-exynos.c
+> > b/drivers/pci/controller/dwc/pci-exynos.c
+> > index 1c70b036376d..990aaa16b132 100644
+> > --- a/drivers/pci/controller/dwc/pci-exynos.c
+> > +++ b/drivers/pci/controller/dwc/pci-exynos.c
+> > @@ -31,8 +31,6 @@
+> >  #define EXYNOS_IRQ_INTB_ASSERT			BIT(2)
+> >  #define EXYNOS_IRQ_INTC_ASSERT			BIT(4)
+> >  #define EXYNOS_IRQ_INTD_ASSERT			BIT(6)
+> > -#define EXYNOS_PCIE_IRQ_LEVEL			0x004
 > 
-> diff --git a/dtschema/schemas/pci/pci-bus-common.yaml b/dtschema/schemas/pci/pci-bus-common.yaml
-> index ca97a00..a39fafc 100644
-> --- a/dtschema/schemas/pci/pci-bus-common.yaml
-> +++ b/dtschema/schemas/pci/pci-bus-common.yaml
-> @@ -142,6 +142,10 @@ properties:
->       description: GPIO controlled connection to PERST# signal
->       maxItems: 1
->   
-> +  wake-gpios:
-> +    description: GPIO controlled connection to WAKE# signal
-> +    maxItems: 1
-> +
->     slot-power-limit-milliwatt:
->       description:
->         If present, specifies slot power limit in milliwatts.
+> Fix order of patches. Why renaming something just to remove it? No point.
+> 
+
+This makes sense. Will change it
+
+> Best regards,
+> Krzysztof
+
+
