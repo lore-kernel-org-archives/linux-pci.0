@@ -1,123 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5798B22259D;
-	Thu, 29 May 2025 13:50:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AC522687B
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 13:56:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748526660; cv=none; b=F5e6+i14LfDtrgplae4k/owIGZmSb0ydRCgCgjcH22jjaz3lCx/BbXL3xm+tBZGigKJ8YT/poJsJNT90fvje3S+Bs/Zr3QjsRaN7rsoaqYf+np4rVlK/IfsJL6nf4vYt59g/DfmCnA4of/661sZ/ctc5GyMPPC3WtqJsZ1ruBSc=
+	t=1748526975; cv=none; b=fWqvM0VkOEL76EBj6NDJR2L2yNgdKr02oO/QVeCd0lgldPnK2PiePw377UjNp/fvwiP8Y7V6yNFNayLZb11pk0p37hA64sFqIzAJXZjTslieCoGJ54fN7ks7Pam1uJBIK6ivI0zazz2XK7Ym5wL4SArj9dKzPvEtXBx4gyVBRdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748526660; c=relaxed/simple;
-	bh=kzf/UzJppF02BDPHcBEXyI9SyhH9nDmHIYKq7DLZQ7U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=nP5oXpNKMNe8VsOr1Dgpq1hRhKNMZe6jBgPcsa4anyG/V278zofi1rilZIv0QK/ZZnVTR3DGt2dbY1hLnw4evOGofoJ9NjwjvfzC0+OVNHBHu4WoW/61PQtE2zrYfhOmJsdwwsutRkerKKZJFhvTJJ3HrFy0cpG6ZuC3ZYnGgIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XlL+eJaE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748526975; c=relaxed/simple;
+	bh=j5Q3sX/YIUtqn5PpjjmEJ4Hp4cwg9WJvwuLWZ/prHJU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=LDqeSbR4GYdd4b4KVtYImrzXRxGLH/bv2cYJGMHMOnV55fy6PbxAELnDlSjgblqpLMOYNAtbr5FAKF2gw9kAlR/KLUfCPNpEEQzrvr2dCNw5KYw7wNiuWYiCDEqyd2nnQhcBVZBxSfDGwpMvwit7tnDYBasUc3rd2uFW+Qndbm4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JwsR4iLN; arc=none smtp.client-ip=198.175.65.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XlL+eJaE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6715C4CEE7;
-	Thu, 29 May 2025 13:50:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748526659;
-	bh=kzf/UzJppF02BDPHcBEXyI9SyhH9nDmHIYKq7DLZQ7U=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=XlL+eJaEIRxZEqrxw5aFNcAKtM1Xy3E0GNS7hcTE8jjSSYhdZFKa0SJajNlLg2J7D
-	 lLP69grLq93abfvg5ZIFNOkKhNwXdkuD0Ol+wHjquE/7scOh9ISn1KeJ3PPGHBLAWy
-	 iNTuSt/nNpsXJW6CNULhRFQ16uVGriDWm0QzmuqLC1FPk/XNkjI4+miIVLnt8RGwB6
-	 Y6opHooR3ylwjguo8PaOQkAKU0VwCYd8GyAYfCD7/Du6C4PthKwnhpnFea7/z3iQ/6
-	 3al0wYES+1CRJWE2w2tKYSV2bh5ZXgUTBkrB07JCqCuQD0ldtTK4gLzF7d4QrWw6tB
-	 EYu9chbFhqqYw==
-Message-ID: <0580b026-5139-4079-b1a7-464224a7d239@kernel.org>
-Date: Thu, 29 May 2025 15:50:50 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JwsR4iLN"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1748526973; x=1780062973;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=j5Q3sX/YIUtqn5PpjjmEJ4Hp4cwg9WJvwuLWZ/prHJU=;
+  b=JwsR4iLNRDOWbHwKbN8hqTPX2IN/eSoqwOr0QZApk10JcM9nCoP5UtKk
+   ObqE+WDf+vSW7sNHz0M9IgPo9SkJlhaq+WnPFrA+VOhknbl/DxO9FijjH
+   3ukDi3AdbiTL4GuTZR5bn1zLdv2zztz71BGFrDUPwpredWQp779chxHtP
+   Osb8KXMtXs6YzFE0NKP3vkqxF0yhj3zDbp+5sbng+yLAmloWso0Z6FYtm
+   pvyM0VAxve5hgGvA41ccoljCLkXSoYuIz5rCH8d+je/A/VISiU+JDAPr3
+   GPcCh/tmSPBFy1gUVYiA+N5Zj7F3YS8pMnKpHWvqnAxX7p9il+jt9AIEg
+   w==;
+X-CSE-ConnectionGUID: jBjudhLCT+qTrUbMDtIMyA==
+X-CSE-MsgGUID: E2aEh7BSSXWtb5fJ9sdRXw==
+X-IronPort-AV: E=McAfee;i="6700,10204,11448"; a="50288807"
+X-IronPort-AV: E=Sophos;i="6.16,193,1744095600"; 
+   d="scan'208";a="50288807"
+Received: from orviesa005.jf.intel.com ([10.64.159.145])
+  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2025 06:56:12 -0700
+X-CSE-ConnectionGUID: WfM2R1bkRsiM46zXzFf9rQ==
+X-CSE-MsgGUID: o7pY8hpvTJWORXYYkEUdoQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,193,1744095600"; 
+   d="scan'208";a="148854885"
+Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
+  by orviesa005.jf.intel.com with ESMTP; 29 May 2025 06:56:10 -0700
+Date: Thu, 29 May 2025 21:49:51 +0800
+From: Xu Yilun <yilun.xu@linux.intel.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Alexey Kardashevskiy <aik@amd.com>,
+	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
+	zhiw@nvidia.com
+Subject: Re: [PATCH v3 12/13] PCI/TSM: support TDI related operations for
+ host TSM driver
+Message-ID: <aDhl//XH8HNwJPJ2@yilunxu-OptiPlex-7050>
+References: <yq5aa570dks9.fsf@kernel.org>
+ <1bcf37cd-0fc4-40fa-bcd1-e499619943bd@amd.com>
+ <yq5ah617s7fs.fsf@kernel.org>
+ <cfdfd053-9e9d-43c0-8301-5411a02ffdf9@amd.com>
+ <yq5abjres2a6.fsf@kernel.org>
+ <20250527130610.GN61950@nvidia.com>
+ <yq5a8qmiruym.fsf@kernel.org>
+ <20250527144516.GO61950@nvidia.com>
+ <yq5a8qmh53qo.fsf@kernel.org>
+ <20250528164225.GS61950@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 0/13] Add support for RaspberryPi RP1 PCI device using
- a DT overlay
-To: Andrea della Porta <andrea.porta@suse.com>,
- Michael Turquette <mturquette@baylibre.com>, Stephen Boyd
- <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Florian Fainelli <florian.fainelli@broadcom.com>,
- Broadcom internal kernel review list
- <bcm-kernel-feedback-list@broadcom.com>,
- Lorenzo Pieralisi <lpieralisi@kernel.org>,
- Krzysztof Wilczynski <kw@linux.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- Bjorn Helgaas <bhelgaas@google.com>, Linus Walleij
- <linus.walleij@linaro.org>, Catalin Marinas <catalin.marinas@arm.com>,
- Will Deacon <will@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
- Derek Kiernan <derek.kiernan@amd.com>, Dragan Cvetic
- <dragan.cvetic@amd.com>, Arnd Bergmann <arnd@arndb.de>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Saravana Kannan <saravanak@google.com>, linux-clk@vger.kernel.org,
- devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-gpio@vger.kernel.org, Masahiro Yamada <masahiroy@kernel.org>,
- Stefan Wahren <wahrenst@gmx.net>, Herve Codina <herve.codina@bootlin.com>,
- Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>, Andrew Lunn
- <andrew@lunn.ch>, Phil Elwell <phil@raspberrypi.com>,
- Dave Stevenson <dave.stevenson@raspberrypi.com>,
- kernel-list@raspberrypi.com, Matthias Brugger <mbrugger@suse.com>
-References: <cover.1748526284.git.andrea.porta@suse.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <cover.1748526284.git.andrea.porta@suse.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250528164225.GS61950@nvidia.com>
 
-On 29/05/2025 15:50, Andrea della Porta wrote:
-> *** RESENDING PATCHSET AS V12 SINCE LAST ONE HAS CLOBBERED EMAIL Message-Id ***
+On Wed, May 28, 2025 at 01:42:25PM -0300, Jason Gunthorpe wrote:
+> On Wed, May 28, 2025 at 05:47:19PM +0530, Aneesh Kumar K.V wrote:
 > 
-Can you slow down please? It's merge window and you keep sending the
-same big patchset third time today.
+> > +#if IS_ENABLED(CONFIG_KVM)
+> > +#include <linux/kvm_host.h>
+> > +
+> > +static void viommu_get_kvm_safe(struct iommufd_viommu *viommu, struct kvm *kvm)
+> > +{
+> > +	void (*put_fn)(struct kvm *kvm);
+> > +	bool (*get_fn)(struct kvm *kvm);
+> > +	bool ret;
+> > +
+> > +	if (!kvm)
+> > +		return;
+> > +
+> > +	put_fn = symbol_get(kvm_put_kvm);
+> > +	if (WARN_ON(!put_fn))
+> > +		return;
+> > +
+> > +	get_fn = symbol_get(kvm_get_kvm_safe);
+> > +	if (WARN_ON(!get_fn)) {
+> > +		symbol_put(kvm_put_kvm);
+> > +		return;
+> > +	}
+> > +
+> > +	ret = get_fn(kvm);
+> > +	symbol_put(kvm_get_kvm_safe);
+> > +	if (!ret) {
+> > +		symbol_put(kvm_put_kvm);
+> > +		return;
+> > +	}
+> > +
+> > +	viommu->put_kvm = put_fn;
+> > +	viommu->kvm = kvm;
+> > +}
+> 
+> Shameer was working on something like this too
+> 
+> I would probably split just the viommu kvm stuff into one patch so you
+> two can share it.
+> 
+> > @@ -68,10 +121,32 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
+> >  	 */
+> >  	viommu->iommu_dev = __iommu_get_iommu_dev(idev->dev);
+> >  
+> > +	/* get the kvm details if specified. */
+> > +	if (cmd->kvm_vm_fd) {
+> 
+> Pedantically a 0 fd is still valid, you should add a flag to indicate
+> if the KVM is being supplied.
 
-Best regards,
-Krzysztof
+Did I miss something? Shameer's patch passed in struct kvm* through
+iommufd_device_bind() then to viommu, and has your Reviewed-by. I'm a
+little confused...
+
+https://lore.kernel.org/all/20250319232848.GD126678@ziepe.ca/
+
+Thanks,
+Yilun
