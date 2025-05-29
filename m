@@ -1,63 +1,63 @@
-Received: from mail-ed1-f65.google.com (mail-ed1-f65.google.com [209.85.208.65])
+Received: from mail-ed1-f68.google.com (mail-ed1-f68.google.com [209.85.208.68])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D365928DB73
-	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 10:48:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D04228DEE0
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 10:48:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.68
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748515684; cv=none; b=sY0J75Y4EHsEoZ9yTB1f9jCQUaKWiUmGQeCqBHzgut2dMopT0rZ9+VjDTPClTpNURF+cqrh1G/r2gPEj1eyQBrfmJdQ/DW5Jko4BlT+mrprvE+BAbkYm/V0PF2PlipbOf1w0xKKVJ2ubZ/E7S6YseLp1pjpY48OMGAW3bOCojLM=
+	t=1748515686; cv=none; b=RYGVnVTkPK2YMe9oWbWPO7wvcW69KZkrzvO2myxfZ+SsBgIoK4dt2AbyHgxRdw6ZtE03mH1irZ6X5oGU1rajyef7vpLm8LJZSUOQ9jHwOm7uGyARtkY3lfup6cU/4bI0iyeEPxGmG4Ugk5b5TV7Vi0JM4KQIbTIsPF3NU0c3bCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748515684; c=relaxed/simple;
-	bh=J4if3MPmbylWo1ZVh61aotFj5BEvXmzuoQeC/6MOGrw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iAlmCrJC32aDdZd10ItOD/eBDuPpfihnPhC0HHKI4SWA6m4sWDGLhk/PBpet/bt/EjBUHsB8fV2cxoi39HjuPW6rONGk8sJ7hhAlVD5EIsy+LYzEKfYdO8FYZPowmdoilHAEgIZaG1GSlNNgjIfdWc2Zr+MYCbsEQM0ccuHbojI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=dgYlapML; arc=none smtp.client-ip=209.85.208.65
+	s=arc-20240116; t=1748515686; c=relaxed/simple;
+	bh=1k00ZPSbe+u73O93XUJQSZ9BJLlOaPaki/m1ZdOztYg=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Y5nb3oOHN6cg6vNCuNqc+qLr9ptoeSd4DYgDYkzT9+ZW9kll9MJO7azEhz9/NtkeqGEAlEI1WJUY5Cgm8Z1+m4RMOxqHQaunA1C6pZjvtoOosNja+WeLcFMZmTXfYOl+kbbZeTvExhgQuUbL7nLx8l9gc56yVLX/U8x/hFiL+Lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=P2vediOX; arc=none smtp.client-ip=209.85.208.68
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="dgYlapML"
-Received: by mail-ed1-f65.google.com with SMTP id 4fb4d7f45d1cf-6046ecc3e43so1169255a12.3
-        for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 03:48:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="P2vediOX"
+Received: by mail-ed1-f68.google.com with SMTP id 4fb4d7f45d1cf-604b9c53f6fso1427163a12.2
+        for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 03:48:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1748515680; x=1749120480; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1748515682; x=1749120482; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Qcu3jY9KMaHOfphKfi7ZmlunMsnQwTpMnv18LDk4Xi8=;
-        b=dgYlapMLFNpoeY5VcaseyQl+qgDyuZcyGbjYTQ5dB2/nkaXYm+qsvovlgDedEobfgm
-         6UWGBvNiJlDRonHcgXqSCH8fit24ADmm/9EDFz8omolO6xvQu/mLCCUuQDNsZRJkFcLr
-         BCteKWRVRM5GaCn8hAURws7JY52LXCShsRwPgxeFkyDusWSDEDGAD2QzaSB5eNNbCJCy
-         j8DAGt4A2YMm9aps1wgwDxOuoh+aQIlFpCltjJaimNnTNhlvcj78Rdks60HQynV61jMi
-         GJYApQKl3qnZS+sF6n1T+Zz11Tv+KMdB1sCUT8+i/rdj6MtEFhgxjV8P78UCH38p8Xfr
-         hF8g==
+         :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=VGboxmMcozIYFpgNSd3yUXiFLJRnkvYuern9jhJu7Ss=;
+        b=P2vediOXNGsQ6mCAXlXow2TKG85KZJdaTstavtGgxK+3gIrECO2hYqSEgBXQFvobxV
+         TPKcrJFfiaQ68bs/iLCyLyp6YJ1v7MG0G6Lalm1f+2vxzIkCugmgyX10fLZebA6xnQWm
+         DeCAHvs+i8zo1nkOB5Q3eOwewMhPUWrH7pqcQ8PFUI7BadkQm2eTlaxzew3gKP7bfL3R
+         sltce2WtEgvVMLNHC08HitMpp0ahUCZTJ6uNz1H6XaTtBi3uUdzz5LVgGv5DL3qRw8iz
+         HNORhxGRp4cLG8UQ3cPAYrIf19qomG4+YgvXIC26b+pYi+sElJbGTISX2PFSyc5MmUdz
+         ycEw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748515680; x=1749120480;
+        d=1e100.net; s=20230601; t=1748515682; x=1749120482;
         h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=Qcu3jY9KMaHOfphKfi7ZmlunMsnQwTpMnv18LDk4Xi8=;
-        b=Q06vtRx6W2sP1fNi5fGNT6gqtjDnWBX8M2K61yYUZhi1yo3p57JHLd3Rxg7VrFScz5
-         QvdokTc0kgIX3d6s+HQDnkTV0iYQA6ddWc+VZpkvfkaq5UoJLWR5rT8xxhCqsJUnyldj
-         gQ1F6JQa5gJZEgAm3iuJnrDQeSYumXPW1+rPTXbERzNmHqMMsj0vgWolwaVYJwrtKArA
-         DVoz0S7Y2vkQqqnXY35xnxy1ZNtM5d3onroQ7TtxvZviHNTH8HyzKVn1K3XNnJGp1xxA
-         B/h6SB4Nt+5aHGTypqqXxuAxpN4nx7uwo2bbc9Ckq9m02LLhKeRDlYf+TPEG7bjLTbB4
-         ptjw==
-X-Forwarded-Encrypted: i=1; AJvYcCUYgHY0I9rZoGzJYfL4eock10wxbmkbJr54C591Tg5wUbhxvB7G5h4QmW8ZXbLOad+uhvpnQLeU7M4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwS03TTTi9pTPVNZAzP0hd8UMNarcSb0DZCRsJGYwaM1d3m66c7
-	MnEZrraISmkVnpGe6olKBlKtdv/VcYwDnAsrnpnyzaW13PbIg22g1zECIHfs3VATGfs=
-X-Gm-Gg: ASbGncseDsINt9jnDPElTYZuzcNr0SJ/vy4/sN0w9tSSGJ7g2mgGiP6xlfi2kI5YiLZ
-	jHYPwYQEDr9Idjccgb16HvZCguvto1Kni1700KK1/dF+G+3KNkYgrJHZE7cgcRG7Z4m0IDegkQX
-	jbkGQ5b0EPU86l2If4j4B+pZFF6UNdvTr80MEvdblas6Y3jAl6Bd9i4EOWjBpQfvb1kIUcw0nEM
-	QOH4YJTNPjHI73V0iJ+lyEEwLs2M6Sl/DGhdDNcCe/xApylsIVCcBPDbcDmFjWMCZ3D/5oJMovb
-	q6OykNGOxBGbhQ9MqT76i6u5WjUxhwP5ZRoGW/le6MlmG0GsYsrZI9mIP+iWHO7B4CKtigOHXmV
-	bhA5mN3afCdp+mWhq4uA4Aw==
-X-Google-Smtp-Source: AGHT+IHoJG6y4kIa/BLG4szHEzRF/n7QxKy2yevXi4k3SE4E1C3kuPwvCJ3lWbVcL3TdrX7M+llsyQ==
-X-Received: by 2002:a05:6402:26c4:b0:5f3:f04b:5663 with SMTP id 4fb4d7f45d1cf-6051c4ef709mr4960205a12.24.1748515680092;
-        Thu, 29 May 2025 03:48:00 -0700 (PDT)
+        bh=VGboxmMcozIYFpgNSd3yUXiFLJRnkvYuern9jhJu7Ss=;
+        b=iF3VYvqYA1DXGbATE27Rt31IZlIQO/qXNKaZL02bT62sMYS8GSduKlJGWpBy7mqiUD
+         4+91ybDqCbaVfSmK5u6FWJSahVX7Mdpm8ngeKJfww+TRmX5ehjG6R80uEZe8FtGsSrG9
+         Z3v7FBGP0zMtPUTrqkz02ckIjFi8hg3EOlxP7iqjLgTkee/N4wSi5z/SvI2qeerjGcoL
+         80zXWkLIntEDCoDq6Ac8IMUsK8prlD5KKd/6sO4PX/Nu0OmsUHuKlbK44InkDVvc6vRW
+         drD/4ydpPWp6oPQoyR645uZTvAcwxFux4GYh0e1ispObAiIUlBW2izKUutq3p/XvXA31
+         RINQ==
+X-Forwarded-Encrypted: i=1; AJvYcCX6CPou0CvWy/Hd0Cz3jhn4AWwL+ahexmiG/qJTwSZK+0Ggmv6yNDHDfqnWzpBRLC5s6BYz2wkPPQA=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzZSwKABVlMa5+tWJTaEnMY/wNfefWvAAtAmVDrygsmCiqgxSWo
+	R/IqA1z7BqKKDVSw3F3V5iqvez3TIcA+a06Cmnq7wiDTGafG3uDuGgu3d3mhAoJsNS0=
+X-Gm-Gg: ASbGncsIZdoMG/2MCA3fuiMMtVwiRg4gm3dStY5p+Y5AE0wWWhao3s1yqpgprMy82tO
+	7Ih0fa5gVgAvFxXAri5IofBhOmJWFDR5Ra7PribfC4VcUmH6eQZZj5urW4078s0LaUAL9Y26H8Z
+	jF/lzIzjnd5HaloCfxr0ADiL02bDTA8stl/DAPUe7mKtCcYNfwwihcnzvlfg6uRoHOyod4MzTna
+	DCoEVvlYFa0tAxMtrW2cvv9YxCFbITAUAeuA3UGktwyYYo8oeYruCf/KGZuylOYG4+qCUg1smP5
+	07WANzUKD8eIm7cyKxJysVEa+UN+IfWb74TzFSG31qwj9RWkx+mx1WPpFndCvcAnnpUvQ9SHsb0
+	kV8/Koe/HpT6b414L7goRHA==
+X-Google-Smtp-Source: AGHT+IE3SrBjaCCjnxQnBU1Yi6AIusD4ERoFbKQfXPvufzlDmmC5yuaEUmSN0dB9KzizrZ6ZQVyq5Q==
+X-Received: by 2002:a17:907:7ea0:b0:ad5:b2aa:847c with SMTP id a640c23a62f3a-adadf2a13e1mr163848466b.54.1748515682461;
+        Thu, 29 May 2025 03:48:02 -0700 (PDT)
 Received: from localhost (host-87-21-228-106.retail.telecomitalia.it. [87.21.228.106])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6051d79e76fsm2231768a12.66.2025.05.29.03.47.59
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ada5dd045e2sm119258566b.90.2025.05.29.03.48.01
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 May 2025 03:47:59 -0700 (PDT)
+        Thu, 29 May 2025 03:48:02 -0700 (PDT)
 From: Andrea della Porta <andrea.porta@suse.com>
 To: Andrea della Porta <andrea.porta@suse.com>,
 	Michael Turquette <mturquette@baylibre.com>,
@@ -96,10 +96,9 @@ To: Andrea della Porta <andrea.porta@suse.com>,
 	Dave Stevenson <dave.stevenson@raspberrypi.com>,
 	kernel-list@raspberrypi.com,
 	Matthias Brugger <mbrugger@suse.com>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH v10 1/5] dt-bindings: clock: Add RaspberryPi RP1 clock bindings
-Date: Thu, 29 May 2025 12:49:18 +0200
-Message-ID: <2fef6763499e2014f7df952162098357826e1f4a.1748514765.git.andrea.porta@suse.com>
+Subject: [PATCH v10 3/5] dt-bindings: misc: Add device specific bindings for RaspberryPi RP1
+Date: Thu, 29 May 2025 12:49:20 +0200
+Message-ID: <7564a3bb528f3ca965e6e88b435aa8815fe0c2ea.1748514765.git.andrea.porta@suse.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <cover.1748514765.git.andrea.porta@suse.com>
 References: <cover.1748514765.git.andrea.porta@suse.com>
@@ -111,150 +110,161 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add device tree bindings for the clock generator found in RP1 multi
-function device, and relative entries in MAINTAINERS file.
+The RP1 is a MFD that exposes its peripherals through PCI BARs. This
+schema is intended as minimal support for the clock generator and
+gpio controller peripherals which are accessible through BAR1.
 
 Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
-Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
 ---
- .../clock/raspberrypi,rp1-clocks.yaml         | 58 ++++++++++++++++++
- .../clock/raspberrypi,rp1-clocks.h            | 61 +++++++++++++++++++
- 2 files changed, 119 insertions(+)
- create mode 100644 Documentation/devicetree/bindings/clock/raspberrypi,rp1-clocks.yaml
- create mode 100644 include/dt-bindings/clock/raspberrypi,rp1-clocks.h
+ .../devicetree/bindings/misc/pci1de4,1.yaml   | 137 ++++++++++++++++++
+ 1 file changed, 137 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/misc/pci1de4,1.yaml
 
-diff --git a/Documentation/devicetree/bindings/clock/raspberrypi,rp1-clocks.yaml b/Documentation/devicetree/bindings/clock/raspberrypi,rp1-clocks.yaml
+diff --git a/Documentation/devicetree/bindings/misc/pci1de4,1.yaml b/Documentation/devicetree/bindings/misc/pci1de4,1.yaml
 new file mode 100644
-index 000000000000..cc4491f7ee5f
+index 000000000000..2f9a7a554ed8
 --- /dev/null
-+++ b/Documentation/devicetree/bindings/clock/raspberrypi,rp1-clocks.yaml
-@@ -0,0 +1,58 @@
++++ b/Documentation/devicetree/bindings/misc/pci1de4,1.yaml
+@@ -0,0 +1,137 @@
 +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
 +%YAML 1.2
 +---
-+$id: http://devicetree.org/schemas/clock/raspberrypi,rp1-clocks.yaml#
++$id: http://devicetree.org/schemas/misc/pci1de4,1.yaml#
 +$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+title: RaspberryPi RP1 clock generator
++title: RaspberryPi RP1 MFD PCI device
 +
 +maintainers:
 +  - A. della Porta <andrea.porta@suse.com>
 +
-+description: |
-+  The RP1 contains a clock generator designed as three PLLs (CORE, AUDIO,
-+  VIDEO), and each PLL output can be programmed through dividers to generate
-+  the clocks to drive the sub-peripherals embedded inside the chipset.
++description:
++  The RaspberryPi RP1 is a PCI multi function device containing
++  peripherals ranging from Ethernet to USB controller, I2C, SPI
++  and others.
++  The peripherals are accessed by addressing the PCI BAR1 region.
 +
-+  Link to datasheet:
-+  https://datasheets.raspberrypi.com/rp1/rp1-peripherals.pdf
++allOf:
++  - $ref: /schemas/pci/pci-ep-bus.yaml
 +
 +properties:
 +  compatible:
-+    const: raspberrypi,rp1-clocks
++    additionalItems: true
++    maxItems: 3
++    items:
++      - const: pci1de4,1
 +
-+  reg:
-+    maxItems: 1
++  '#interrupt-cells':
++    const: 2
++    description: |
++      Specifies respectively the interrupt number and flags as defined
++      in include/dt-bindings/interrupt-controller/irq.h.
++      Since all interrupts are active high, only IRQ_TYPE_LEVEL_HIGH
++      and IRQ_TYPE_EDGE_RISING can be specified as type flags.
++      The supported values for the interrupt number are:
++        - IO BANK0: 0
++        - IO BANK1: 1
++        - IO BANK2: 2
++        - AUDIO IN: 3
++        - AUDIO OUT: 4
++        - PWM0: 5
++        - ETH: 6
++        - I2C0: 7
++        - I2C1: 8
++        - I2C2: 9
++        - I2C3: 10
++        - I2C4: 11
++        - I2C5: 12
++        - I2C6: 13
++        - I2S0: 14
++        - I2S1: 15
++        - I2S2: 16
++        - SDIO0: 17
++        - SDIO1: 18
++        - SPI0: 19
++        - SPI1: 20
++        - SPI2: 21
++        - SPI3: 22
++        - SPI4: 23
++        - SPI5: 24
++        - UART0: 25
++        - TIMER0: 26
++        - TIMER1: 27
++        - TIMER2: 28
++        - TIMER3: 29
++        - USB HOST0: 30
++        - USB HOST0-0: 31
++        - USB HOST0-1: 32
++        - USB HOST0-2: 33
++        - USB HOST0-3: 34
++        - USB HOST1: 35
++        - USB HOST1-0: 36
++        - USB HOST1-1: 37
++        - USB HOST1-2: 38
++        - USB HOST1-3: 39
++        - DMA: 40
++        - PWM1: 41
++        - UART1: 42
++        - UART2: 43
++        - UART3: 44
++        - UART4: 45
++        - UART5: 46
++        - MIPI0: 47
++        - MIPI1: 48
++        - VIDEO OUT: 49
++        - PIO0: 50
++        - PIO1: 51
++        - ADC FIFO: 52
++        - PCIE OUT: 53
++        - SPI6: 54
++        - SPI7: 55
++        - SPI8: 56
++        - PROC MISC: 57
++        - SYSCFG: 58
++        - CLOCKS DEFAULT: 59
++        - VBUSCTRL: 60
 +
-+  '#clock-cells':
-+    const: 1
-+    description:
-+      The available clocks are defined in
-+      include/dt-bindings/clock/raspberrypi,rp1-clocks.h.
++  interrupt-controller: true
 +
-+  clocks:
-+    maxItems: 1
++unevaluatedProperties: false
 +
 +required:
 +  - compatible
-+  - reg
-+  - '#clock-cells'
-+  - clocks
-+
-+additionalProperties: false
++  - '#interrupt-cells'
++  - interrupt-controller
++  - pci-ep-bus@1
 +
 +examples:
 +  - |
-+    #include <dt-bindings/clock/raspberrypi,rp1-clocks.h>
-+
-+    rp1 {
-+        #address-cells = <2>;
++    pci {
++        #address-cells = <3>;
 +        #size-cells = <2>;
 +
-+        clocks@c040018000 {
-+            compatible = "raspberrypi,rp1-clocks";
-+            reg = <0xc0 0x40018000 0x0 0x10038>;
-+            #clock-cells = <1>;
-+            clocks = <&clk_rp1_xosc>;
++        rp1@0,0 {
++            compatible = "pci1de4,1";
++            ranges = <0x01 0x00 0x00000000  0x82010000 0x00 0x00  0x00 0x400000>;
++            #address-cells = <3>;
++            #size-cells = <2>;
++            interrupt-controller;
++            #interrupt-cells = <2>;
++
++            pci_ep_bus: pci-ep-bus@1 {
++                compatible = "simple-bus";
++                ranges = <0x00 0x40000000  0x01 0x00 0x00000000  0x00 0x00400000>;
++                dma-ranges = <0x10 0x00000000  0x43000000 0x10 0x00000000  0x10 0x00000000>;
++                #address-cells = <2>;
++                #size-cells = <2>;
++
++                rp1_clocks: clocks@40018000 {
++                    compatible = "raspberrypi,rp1-clocks";
++                    reg = <0x00 0x40018000 0x0 0x10038>;
++                    #clock-cells = <1>;
++                    clocks = <&clk_rp1_xosc>;
++                };
++            };
 +        };
 +    };
-diff --git a/include/dt-bindings/clock/raspberrypi,rp1-clocks.h b/include/dt-bindings/clock/raspberrypi,rp1-clocks.h
-new file mode 100644
-index 000000000000..248efb895f35
---- /dev/null
-+++ b/include/dt-bindings/clock/raspberrypi,rp1-clocks.h
-@@ -0,0 +1,61 @@
-+/* SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause) */
-+/*
-+ * Copyright (C) 2021 Raspberry Pi Ltd.
-+ */
-+
-+#ifndef __DT_BINDINGS_CLOCK_RASPBERRYPI_RP1
-+#define __DT_BINDINGS_CLOCK_RASPBERRYPI_RP1
-+
-+#define RP1_PLL_SYS_CORE		0
-+#define RP1_PLL_AUDIO_CORE		1
-+#define RP1_PLL_VIDEO_CORE		2
-+
-+#define RP1_PLL_SYS			3
-+#define RP1_PLL_AUDIO			4
-+#define RP1_PLL_VIDEO			5
-+
-+#define RP1_PLL_SYS_PRI_PH		6
-+#define RP1_PLL_SYS_SEC_PH		7
-+#define RP1_PLL_AUDIO_PRI_PH		8
-+
-+#define RP1_PLL_SYS_SEC			9
-+#define RP1_PLL_AUDIO_SEC		10
-+#define RP1_PLL_VIDEO_SEC		11
-+
-+#define RP1_CLK_SYS			12
-+#define RP1_CLK_SLOW_SYS		13
-+#define RP1_CLK_DMA			14
-+#define RP1_CLK_UART			15
-+#define RP1_CLK_ETH			16
-+#define RP1_CLK_PWM0			17
-+#define RP1_CLK_PWM1			18
-+#define RP1_CLK_AUDIO_IN		19
-+#define RP1_CLK_AUDIO_OUT		20
-+#define RP1_CLK_I2S			21
-+#define RP1_CLK_MIPI0_CFG		22
-+#define RP1_CLK_MIPI1_CFG		23
-+#define RP1_CLK_PCIE_AUX		24
-+#define RP1_CLK_USBH0_MICROFRAME	25
-+#define RP1_CLK_USBH1_MICROFRAME	26
-+#define RP1_CLK_USBH0_SUSPEND		27
-+#define RP1_CLK_USBH1_SUSPEND		28
-+#define RP1_CLK_ETH_TSU			29
-+#define RP1_CLK_ADC			30
-+#define RP1_CLK_SDIO_TIMER		31
-+#define RP1_CLK_SDIO_ALT_SRC		32
-+#define RP1_CLK_GP0			33
-+#define RP1_CLK_GP1			34
-+#define RP1_CLK_GP2			35
-+#define RP1_CLK_GP3			36
-+#define RP1_CLK_GP4			37
-+#define RP1_CLK_GP5			38
-+#define RP1_CLK_VEC			39
-+#define RP1_CLK_DPI			40
-+#define RP1_CLK_MIPI0_DPI		41
-+#define RP1_CLK_MIPI1_DPI		42
-+
-+/* Extra PLL output channels - RP1B0 only */
-+#define RP1_PLL_VIDEO_PRI_PH		43
-+#define RP1_PLL_AUDIO_TERN		44
-+
-+#endif
 -- 
 2.35.3
 
