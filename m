@@ -1,63 +1,63 @@
-Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+Received: from mail-ej1-f46.google.com (mail-ej1-f46.google.com [209.85.218.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED01322F17B
-	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 13:49:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FB1D22B8B8
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 13:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748526574; cv=none; b=rB24l617UlVtk4RLrmSwzvAcfyQnzDN/J0sUe/SWQRCjLe7pXeh00udYysQ4U8nRilW/vjfKsBbKV7UhP2HnweRtB+nstAdby6yI1k34rOyGp/Df38SkDfYS9aU62NNoEKtyYFEu6IfUl926f2yMrx4E903w4jBRddS/8tihJ9g=
+	t=1748526575; cv=none; b=ZzKSJJQxhouHNqk2a8IYA43b4I+XB1f5YoVHvXgvI0QuvJ6OSPqwr9ME3u+6B57D94rjS456Ru2+b9+p7cZdjOpkbTqmv60+9y0VsuiwKqxe4tv0Ue5NL3iHNlSbz9KsZJfHyCTryHJasVzoSPDHwbZJBX2TJtWAq+hibY2QNng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748526574; c=relaxed/simple;
-	bh=RRM404hdZVflbCbuZ7OBxFTgWWaneCmtEfkgg/Xp1Lk=;
+	s=arc-20240116; t=1748526575; c=relaxed/simple;
+	bh=Cxv3DdNSTbG6mkWW+XlQDzM5M3k//FCq7uG/9MGjWvM=;
 	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PM8TrWFYo1eggiShfPfd8D+5tvNYXIvSzyUiU5Vw78tWiCcQ6ho5vLUtdHPH0pSUVZ/3ud79LVdRxCT3Xs7cmMXjjCSuibZNEhYfbl99v2P0XU3eJozRzeqRIku4aiQ+4hfr5/6AhtUJ2L68ukANllDPYasPv6o2n/6Y+ZekJwE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=DSlmVOqC; arc=none smtp.client-ip=209.85.218.52
+	 MIME-Version; b=EnaqLTs6sKPLQ6WXA2A/yHPi4PmD3BH9jMlJjOMhszNUYvHMyP+qoxNvdPavv2ubiMD8qrl4JVWHsL4ieYd4FzMgzLn97I/yUyahZRz2J/Ap1cYwFw8WWnqc8cCWfU40QeGerKGnjR35FprKk/o3CJsh6/DD4MfOECG4y7jelZ8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eGS1Igyc; arc=none smtp.client-ip=209.85.218.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="DSlmVOqC"
-Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-adb2bb25105so65760066b.0
-        for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 06:49:31 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eGS1Igyc"
+Received: by mail-ej1-f46.google.com with SMTP id a640c23a62f3a-adb2e9fd208so24738266b.3
+        for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 06:49:32 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1748526570; x=1749131370; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1748526571; x=1749131371; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=hTCgL7Vlc0a5ielumzwkk7bjVhaA3TYeVWaUN3CkeyQ=;
-        b=DSlmVOqC8tFVQh9PifCTO3dTVQm7c6Ym5Gi16t2dMktNE9kuYyieUwCXmlr6S4rx/9
-         8A8EUa8sl0ij+fUKAuKFufNPS/wr463IKXnhy2oqeIFaJYyIcpcaiErYPrTndmH3Qcja
-         ayW9TsUaamZ+5IQpG1qiqwdShEsSCEIRSuZ9bvzH4ne2yAgM/IJcoSdg5rWCODAM0/l0
-         klUoJDyEBkqn1pSSeyPjZvMVK2YrOO31IogRzLp0Z1yMq8uuLHnTw4HhJaLWHtnVnBSD
-         bjFF0za6Pd9a+h92ezd9CkSjE+S4GJunZdCDpMFalAbsn/X6Ddhlt9gfQhN4e4xoWbPj
-         XypA==
+        bh=i8LMEHYmovrRN8zYWQwYy5+2ddqvSDMDQcnZraZcEHI=;
+        b=eGS1IgyclvGSIy6260QVKug6Q0q5318WFzJYqZpFW2iiEJRks596dnO0gEv7Mts1jQ
+         vP6w5iMVryhjTcPJAG9Zuk/MYXUL76oKXan9or++cRwzkImkistF80MieiI1oz3Oo+ek
+         X6K7Nwa65BCxfawoNNE57SiLEDs+6RAcESlAGpsCvZPSTOQZJyIeeIpzziWUPPHJN4xt
+         6ZlR8K9uoaNJecLTZf4knKI6qI1xy12bhrerEqe3Bv832ypvT50gvmGPwKxFoAQmEcjg
+         DWJyKRR8XLkx0zgi6ycwn9AYrOXB96R+bNjPVNss03usyD6XQyfv1uvP8emZpkg8nMqZ
+         nEcA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748526570; x=1749131370;
+        d=1e100.net; s=20230601; t=1748526571; x=1749131371;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=hTCgL7Vlc0a5ielumzwkk7bjVhaA3TYeVWaUN3CkeyQ=;
-        b=aBmgsTVrW5AXhrh0Cawc9osPp/6IubXWXEsZZQTZPBH9A2saAS6XiarnFmaufHOuDP
-         xHLTbaOCrN2OwPTdP+5WRBAcOWDzqXvtDAPOBdQrnjlHNjZCVX7WYW6IXHbhYWXF6rQG
-         BUhm39Fh7Lynd0z7YW/bDV7/CBInusadoBQaN0ICpePZ7+tV2FOGfx0mimLXp88a+cbW
-         nkLaYNx0FUKq4NAUV5o3AWxP51bwArcNu7bVhE6ejaSpQ5XmLCGNiDTEGGhaCPqaaBij
-         7t4RzPdqWZLq6zXMEdDdVqPjyBc38yYR1g689mTgHG1JCFtIkWbQByvoytCHcW5f96ZI
-         QEHA==
-X-Forwarded-Encrypted: i=1; AJvYcCXmN9FZDMpIYICqe9vcnfef3KsoWM+e+w6fNSDFM+YOKI7IpuYGQvQsYPuwzVaz8wJ7aidYuPp/2yk=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyevjKrun32n6bGtZBhCHGyl/tnKt4lc+9cM73my84RLg+pWSun
-	82q8JQTgOeOddH6+FAw+Y/j1HRxtZrS/REENuiA9vbDREIb4cmMKLZUV7v6wSlEnYqc=
-X-Gm-Gg: ASbGncvhWhgXLpkx/PPqSUjUiFBU7Gl/8rK4169nFROlQcRe2gJleWa6olNpsZ4uD8a
-	qGbHBbdhEOeLK38LtPD5FQNEwz/6C301oDaMGub68arTzaLrsVOITE6qWeH/p0H60IUrAli7bzM
-	fciKGkHwmvytjEpcn37MSwK4+6epqARD0A/P+1LxX9rQ5MPUcEyka3ridzS/7jKNhlUctip11IU
-	5Xi5hpuPpZzNzTfizZQEgj9yuEm21X84vglLIe4D4oyc36Z8f7e9AvIL3iceIDpkYlVz7+4mWuU
-	E9+XZcTv8XAO4McApQO2/gJz1JdfeuQGq8S/d+yZ8WGAvmfR+IMtmIA+d7em3jAhIOzm1tHUSdZ
-	1c/tvcjlkuaQG+2MDVjljsg==
-X-Google-Smtp-Source: AGHT+IG4MzMu82x8TfpgUN9WiYCMM5FeHzKNEVK3ejORnoVUR1rTDmcODCtdcmtp8bgBgoEd5vCLFA==
-X-Received: by 2002:a17:907:9410:b0:ad8:a935:b90f with SMTP id a640c23a62f3a-ad8a935c99bmr503129766b.7.1748526569836;
-        Thu, 29 May 2025 06:49:29 -0700 (PDT)
+        bh=i8LMEHYmovrRN8zYWQwYy5+2ddqvSDMDQcnZraZcEHI=;
+        b=hkqdutXxZCg9gdbs4q2HZryqG+QCiMtTmxarFH8Y2L/9+FP+/JEaVx61KW2VpQUd8+
+         waejLMz+NZGt7m2Uv1K4AD1jnrjKTc/0IJRRh3jFTT1JfL0Fy4u2Iu5oxuIHu84+0NK8
+         6Ny/q7BJiHsujPPm5himcjfTo6DERoQUPEKRSRyeUvM88efrNPCPHLR4PtjFtKbEjO51
+         b33jrAIt7zMjYJgDWrk0ojPtedQj20dPEkZSu8RxRd5iQS8JvXKcO5fjYRdBSr+lFaJ+
+         BQajgDsi3YkukDDjYw8UaUrR60BVroPSgg7AiQzFFE6t3ot+aID6gBojjjps2fldhIEh
+         OdhA==
+X-Forwarded-Encrypted: i=1; AJvYcCV3qkClC9Oos5W/LQrj3bG42VdhJirFMtpHaNN6n6nb7q2lo2k62W7L3wjcr4abP5SlgcKd39OoQmI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyU1uKpLYkCFdJ1dLTHg3lvUI2qwv6JN4jBq9eAo3OeY0HCe6XZ
+	emDK4z/AGnJvNKWqncqY630KgaPIbcHTEnajfq+SPDECick8USuvwBoJ62HgXlLyhKc=
+X-Gm-Gg: ASbGnctaekFzPNiEtQ1vd0TAQsU9IyP5/sQd09TLs31y04GUVqJ0AgUjvIqx5q0aWCP
+	NKK8Uivnegj3KWOz0zKIX1ACUgi02XsQtBUMdQyEc8C2vrbm3NWgsTnG1VFsF4ibWKQTzeAJksO
+	9NIi80PK7Jbnr1ovrdpIPCqMC6VJ3k4yhFLm+DTLBMVjccGWGs1NmYDWaYXsXX5JiDQdteLiK7p
+	jKHTUoqyAuu5u85AsXYeHojTRNzgbZL/Pvx+CcBaJBcR64SaIFYwGHQwzDAUme62zz1CBF4BGNz
+	+0z1yt9iuDW9AoayOtwNkAJPpp3/+2I9h949fAfRrScbqZ9j6ttGfUCTP6WzwDzCgyaqkCIRMRg
+	q3tfH9AoAMvQYZ7iuOR5FMA==
+X-Google-Smtp-Source: AGHT+IGTIeG3mVlDM/pGEiWdSac6XNjdCnFnJho9+z4FTO/GHQp7LGbIzdlwn2yCN4YylKzaO3lweg==
+X-Received: by 2002:a17:907:72cb:b0:ad5:6928:1492 with SMTP id a640c23a62f3a-ad8a1fcd804mr607783366b.45.1748526570900;
+        Thu, 29 May 2025 06:49:30 -0700 (PDT)
 Received: from localhost (host-87-21-228-106.retail.telecomitalia.it. [87.21.228.106])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ada5d82becbsm147641366b.39.2025.05.29.06.49.29
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ada6ad6aaf5sm144764266b.183.2025.05.29.06.49.30
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 29 May 2025 06:49:29 -0700 (PDT)
+        Thu, 29 May 2025 06:49:30 -0700 (PDT)
 From: Andrea della Porta <andrea.porta@suse.com>
 To: Andrea della Porta <andrea.porta@suse.com>,
 	Michael Turquette <mturquette@baylibre.com>,
@@ -96,9 +96,9 @@ To: Andrea della Porta <andrea.porta@suse.com>,
 	Dave Stevenson <dave.stevenson@raspberrypi.com>,
 	kernel-list@raspberrypi.com,
 	Matthias Brugger <mbrugger@suse.com>
-Subject: [PATCH v12 12/13] arm64: defconfig: Enable OF_OVERLAY option
-Date: Thu, 29 May 2025 15:50:49 +0200
-Message-ID: <20250529135052.28398-12-andrea.porta@suse.com>
+Subject: [PATCH v12 13/13] MAINTAINERS: add Raspberry Pi RP1 section
+Date: Thu, 29 May 2025 15:50:50 +0200
+Message-ID: <20250529135052.28398-13-andrea.porta@suse.com>
 X-Mailer: git-send-email 2.44.0
 In-Reply-To: <cover.1748526284.git.andrea.porta@suse.com>
 References: <cover.1748526284.git.andrea.porta@suse.com>
@@ -110,29 +110,35 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The RP1 driver uses the infrastructure enabled by OF_OVERLAY config
-option. Enable that option in defconfig in order to produce a kernel
-usable on RaspberryPi5 avoiding to enable it separately.
+Raspberry Pi RP1 is a southbridge PCIe device which embeds several
+peripherals.
+Add a new section to cover the main RP1 driver, DTS and specific
+subperipherals (such as clock and pinconf/pinmux/gpio controller).
 
 Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
-Reviewed-by: Stefan Wahren <wahrenst@gmx.net>
-Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
 ---
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
+ MAINTAINERS | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index f6e9bb2a3578..ccf2f50673a3 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -1659,6 +1659,7 @@ CONFIG_FPGA_BRIDGE=m
- CONFIG_ALTERA_FREEZE_BRIDGE=m
- CONFIG_FPGA_REGION=m
- CONFIG_OF_FPGA_REGION=m
-+CONFIG_OF_OVERLAY=y
- CONFIG_TEE=y
- CONFIG_OPTEE=y
- CONFIG_MUX_GPIO=m
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 2b16ba4eb1ce..2add073f5bdf 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -20197,6 +20197,14 @@ S:	Maintained
+ F:	Documentation/devicetree/bindings/media/raspberrypi,rp1-cfe.yaml
+ F:	drivers/media/platform/raspberrypi/rp1-cfe/
+ 
++RASPBERRY PI RP1 PCI DRIVER
++M:	Andrea della Porta <andrea.porta@suse.com>
++S:	Maintained
++F:	arch/arm64/boot/dts/broadcom/rp1*.dts*
++F:	drivers/clk/clk-rp1.c
++F:	drivers/misc/rp1/
++F:	drivers/pinctrl/pinctrl-rp1.c
++
+ RC-CORE / LIRC FRAMEWORK
+ M:	Sean Young <sean@mess.org>
+ L:	linux-media@vger.kernel.org
 -- 
 2.35.3
 
