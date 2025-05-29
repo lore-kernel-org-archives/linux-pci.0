@@ -1,128 +1,84 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C43238634A
-	for <linux-pci@vger.kernel.org>; Wed, 28 May 2025 22:42:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4362020E00A;
+	Thu, 29 May 2025 02:11:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748472173; cv=none; b=QfA2bvuFobmt/wTZEf1WGQ8+4hpP/t9aO/nESjWySgUg9MFjIG0kJuA5JFs2aR31jDPb/2NjmGvCjqIg+sWYfUON7aK5oYepx+RSzMD4GYgboBOd1kR2IGkhIOaJ+VIO6qlhTWhSKtuDF6kkqRKoN8gACGPc1xcKjtfb+Akg3S0=
+	t=1748484674; cv=none; b=CaojPRYK6LWUnMZPrCWcb45X9yUSBcbGBhMB3o7lKDr0GK7VJj/LnmC2OfUYRdI2H8zTag1TzQR+XLszmXm4DgX4Y/i0XEHm38nWY25KW3velXInoUCy//JHhkCTHxA2oVrb1kJgmX6tFG9AEgoSo21PYadrAt4R127E/zouia0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748472173; c=relaxed/simple;
-	bh=BgtgZ94JV4lty9f7aKpjE/K76PxuE3tb9eltRydrPzQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=DramcL1A5QGBbAl30O9b5SRxd0OnYTmaCcDIucEEf1kPJm8X/LCuOyw/L03LZyvjiCxMqDWp5Y4xdpPN7S7HSW3QkBN9fIkuWgSwHsYIRrgsulcdLdtH19xWxJ+WJ4zfcMh70HQiXaa70kXCkBr0QanBzBBIqc4xAtVxni8FYj0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F9b51zZJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748484674; c=relaxed/simple;
+	bh=B3zeO8g4fFN8F19L04LcwNQHZiE3uxCJY/TJ/CN6c8M=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=p2QG6FPqM6jHdklA6jehKQaWLIT6CUz5RO75ae3EUFh3SlidQ1V9sOsV5cuhhElr6dQ6l+SZUucwX65hTIUqin5aFxSD2d/Z+iLv/PMO5GfyWt9G0u76TYsGFVCOgQJH4ofyfcouJhkt9YmJVl1DPEBWEow9UMA/TfBQyPF3Se8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=aBdLgbhj; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F9b51zZJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2025EC4CEE3;
-	Wed, 28 May 2025 22:42:53 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748472173;
-	bh=BgtgZ94JV4lty9f7aKpjE/K76PxuE3tb9eltRydrPzQ=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=F9b51zZJVSXTny6ilejAjYKo46E47eW7SnLAWMckqe5uEYoa2mF7gWDVsfBDqMcfh
-	 5g2tP+c+9uNyElC+EKifehRog4JsBXOK0Tjv28wpC++aNp8ysTRfuNuXMbORUHy2dJ
-	 4+P85wzqo4Sts4xHJxsmUGli/Pf+kHQzjT70XWVMp55RfKejRQFtbI/ZppJltUsE+r
-	 QoKIozXi1dmYs9lW/gMjlnfj3wzWczOY4ub3VJFI2Rj5RN21okGs0gYbbSpZdgo/iW
-	 6Trt+TYWzyteYUDuOTToFJOnv7n6Kl6QbjSYMapxn8CFBKuvfb9s8yzmdQBj5iBnoq
-	 eTHGuRTL5hjDQ==
-Date: Wed, 28 May 2025 17:42:51 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Hans Zhang <18255117159@163.com>,
-	Laszlo Fiat <laszlo.fiat@proton.me>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org
-Subject: Re: [PATCH v2 1/4] PCI: dw-rockchip: Do not enumerate bus before
- endpoint devices are ready
-Message-ID: <20250528224251.GA58400@bhelgaas>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="aBdLgbhj"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=6F
+	GpfdKChf67+YNJyhUDIvvblsh59zW18p9yEzKXv14=; b=aBdLgbhjcuEXQBu/dc
+	D9/YCmVfW+xrEGT3r+JOru7/yoHfE939AIbPcOdDx42N+rtExbM4Cy1YenyIJo3z
+	VOh0IDZaxL58RfejY1XABwZdAsjzR0pHBizlj6gu/0xhfsQg8qcE05yjX8zLBp9+
+	kMFz6wUvxPvqMNscNgPRyn+0A=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wC3we4Uwjdot_dqEg--.40331S3;
+	Thu, 29 May 2025 10:10:34 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	krzk+dt@kernel.org,
+	manivannan.sadhasivam@linaro.org,
+	conor+dt@kernel.org
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v2 1/3] dt-bindings: PCI: Extend max-link-speed to support PCIe Gen5/Gen6
+Date: Thu, 29 May 2025 10:10:24 +0800
+Message-Id: <20250529021026.475861-2-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250529021026.475861-1-18255117159@163.com>
+References: <20250529021026.475861-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250506073934.433176-7-cassel@kernel.org>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wC3we4Uwjdot_dqEg--.40331S3
+X-Coremail-Antispam: 1Uf129KBjvdXoWrtrWUZF48XF18tw1rJw45Awb_yoWDZrgE9F
+	y8Jws2q3yIvFZ8Kw4rJFWrGFya9a1jgrsrJrykXF1jya45ZFWkuFyvyay5Jrs8W3y7ZF43
+	Ar9IyFy0kr17CjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRZL05UUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwtco2g3vlq+SQAAs3
 
-On Tue, May 06, 2025 at 09:39:36AM +0200, Niklas Cassel wrote:
-> Commit ec9fd499b9c6 ("PCI: dw-rockchip: Don't wait for link since we can
-> detect Link Up") changed so that we no longer call dw_pcie_wait_for_link(),
-> and instead enumerate the bus when receiving a Link Up IRQ.
-> 
-> Laszlo Fiat reported (off-list) that his PLEXTOR PX-256M8PeGN NVMe SSD is
-> no longer functional, and simply reverting commit ec9fd499b9c6 ("PCI:
-> dw-rockchip: Don't wait for link since we can detect Link Up") makes his
-> SSD functional again.
-> 
-> It seems that we are enumerating the bus before the endpoint is ready.
-> Adding a msleep(PCIE_T_RRS_READY_MS) before enumerating the bus in the
-> threaded IRQ handler makes the SSD functional once again.
+Update the device tree binding documentation for PCI to include
+PCIe Gen5 and Gen6 support in the `max-link-speed` property.
+The original documentation limited the value to 1~4 (Gen1~Gen4),
+but the kernel now supports up to Gen6. This change ensures the
+documentation aligns with the actual code implementation.
 
-This sounds like a problem that could happen with any controller, not
-just dw-rockchip?  Are we missing some required delay that should be
-in generic code?  Or is this a PLEXTOR defect that everybody has to
-pay the price for?
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ dtschema/schemas/pci/pci-bus-common.yaml | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Delays like this are really hard to get rid of once we add them, so
-I'm a little bit cautious.
+diff --git a/dtschema/schemas/pci/pci-bus-common.yaml b/dtschema/schemas/pci/pci-bus-common.yaml
+index ca97a00..413ef05 100644
+--- a/dtschema/schemas/pci/pci-bus-common.yaml
++++ b/dtschema/schemas/pci/pci-bus-common.yaml
+@@ -121,7 +121,7 @@ properties:
+       unnecessary operation for unsupported link speed, for instance, trying to
+       do training for unsupported link speed, etc.
+     $ref: /schemas/types.yaml#/definitions/uint32
+-    enum: [ 1, 2, 3, 4 ]
++    enum: [ 1, 2, 3, 4, 5, 6 ]
+ 
+   num-lanes:
+     description: The number of PCIe lanes
+-- 
+2.25.1
 
-> What appears to happen is that before ec9fd499b9c6, we called
-> dw_pcie_wait_for_link(), and in the first iteration of the loop, the link
-> will never be up (because the link was just started),
-> dw_pcie_wait_for_link() will then sleep for LINK_WAIT_SLEEP_MS (90 ms),
-> before trying again.
-> 
-> This means that even if a driver was missing a msleep(PCIE_T_RRS_READY_MS)
-> (100 ms), because of the call to dw_pcie_wait_for_link(), enumerating the
-> bus would essentially be delayed by that time anyway (because of the sleep
-> LINK_WAIT_SLEEP_MS (90 ms)).
-> 
-> While we could add the msleep(PCIE_T_RRS_READY_MS) after deasserting PERST,
-> that would essentially bring back an unconditional delay during synchronous
-> probe (the whole reason to use a Link Up IRQ was to avoid an unconditional
-> delay during probe).
-> 
-> Thus, add the msleep(PCIE_T_RRS_READY_MS) before enumerating the bus in the
-> IRQ handler. This way, we will not have an unconditional delay during boot
-> for unpopulated PCIe slots.
-> 
-> Cc: Laszlo Fiat <laszlo.fiat@proton.me>
-> Fixes: ec9fd499b9c6 ("PCI: dw-rockchip: Don't wait for link since we can detect Link Up")
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
-> ---
->  drivers/pci/controller/dwc/pcie-dw-rockchip.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> index 3c6ab71c996e..6a7ec3545a7f 100644
-> --- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> +++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
-> @@ -23,6 +23,7 @@
->  #include <linux/reset.h>
->  
->  #include "pcie-designware.h"
-> +#include "../../pci.h"
->  
->  /*
->   * The upper 16 bits of PCIE_CLIENT_CONFIG are a write
-> @@ -458,6 +459,7 @@ static irqreturn_t rockchip_pcie_rc_sys_irq_thread(int irq, void *arg)
->  	if (reg & PCIE_RDLH_LINK_UP_CHGED) {
->  		if (rockchip_pcie_link_up(pci)) {
->  			dev_dbg(dev, "Received Link up event. Starting enumeration!\n");
-> +			msleep(PCIE_T_RRS_READY_MS);
->  			/* Rescan the bus to enumerate endpoint devices */
->  			pci_lock_rescan_remove();
->  			pci_rescan_bus(pp->bridge->bus);
-> -- 
-> 2.49.0
-> 
