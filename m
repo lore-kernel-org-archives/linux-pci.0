@@ -1,71 +1,100 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20AC522687B
-	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 13:56:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A726227E93
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 13:59:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748526975; cv=none; b=fWqvM0VkOEL76EBj6NDJR2L2yNgdKr02oO/QVeCd0lgldPnK2PiePw377UjNp/fvwiP8Y7V6yNFNayLZb11pk0p37hA64sFqIzAJXZjTslieCoGJ54fN7ks7Pam1uJBIK6ivI0zazz2XK7Ym5wL4SArj9dKzPvEtXBx4gyVBRdk=
+	t=1748527161; cv=none; b=AYPCKL3vokMcwKXImUWXhFajbE+sOwNuDT1lfAI5PT+G5BrOymrh1mJSzau0I7HtIu8I8M2/vSwG73RVrpjNIC/YInxGxGf5QnUwvgIznO0YGo0zD98voQiOfEHUjNICx4KUOHuYW1PD/iIYglKPP+JoF5oV3Me9R5bIcAajr/g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748526975; c=relaxed/simple;
-	bh=j5Q3sX/YIUtqn5PpjjmEJ4Hp4cwg9WJvwuLWZ/prHJU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LDqeSbR4GYdd4b4KVtYImrzXRxGLH/bv2cYJGMHMOnV55fy6PbxAELnDlSjgblqpLMOYNAtbr5FAKF2gw9kAlR/KLUfCPNpEEQzrvr2dCNw5KYw7wNiuWYiCDEqyd2nnQhcBVZBxSfDGwpMvwit7tnDYBasUc3rd2uFW+Qndbm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=JwsR4iLN; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1748527161; c=relaxed/simple;
+	bh=7LbxeiQ9CUarb7MM6uFQy9Q+5QfMHyPo1PcpNWESj6g=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cwmPOOtQydqPNT5Ed2H6AbP2rgKt41iHn2O3M51DGHQroqKHuLwwCn7sZbaczrRbHIFSGh37TEMK2uG57QBd+sY1lwx+Uq0zyYZPwdAIQqGJK2vdo4tjG8FT+KVNTGYHbkjm5/WNj0sA4ZjBH5TxC4Qb9y+aqJv09FY+LigW7n0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=cg2PB2Ns; arc=none smtp.client-ip=209.85.218.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="JwsR4iLN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1748526973; x=1780062973;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=j5Q3sX/YIUtqn5PpjjmEJ4Hp4cwg9WJvwuLWZ/prHJU=;
-  b=JwsR4iLNRDOWbHwKbN8hqTPX2IN/eSoqwOr0QZApk10JcM9nCoP5UtKk
-   ObqE+WDf+vSW7sNHz0M9IgPo9SkJlhaq+WnPFrA+VOhknbl/DxO9FijjH
-   3ukDi3AdbiTL4GuTZR5bn1zLdv2zztz71BGFrDUPwpredWQp779chxHtP
-   Osb8KXMtXs6YzFE0NKP3vkqxF0yhj3zDbp+5sbng+yLAmloWso0Z6FYtm
-   pvyM0VAxve5hgGvA41ccoljCLkXSoYuIz5rCH8d+je/A/VISiU+JDAPr3
-   GPcCh/tmSPBFy1gUVYiA+N5Zj7F3YS8pMnKpHWvqnAxX7p9il+jt9AIEg
-   w==;
-X-CSE-ConnectionGUID: jBjudhLCT+qTrUbMDtIMyA==
-X-CSE-MsgGUID: E2aEh7BSSXWtb5fJ9sdRXw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11448"; a="50288807"
-X-IronPort-AV: E=Sophos;i="6.16,193,1744095600"; 
-   d="scan'208";a="50288807"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 May 2025 06:56:12 -0700
-X-CSE-ConnectionGUID: WfM2R1bkRsiM46zXzFf9rQ==
-X-CSE-MsgGUID: o7pY8hpvTJWORXYYkEUdoQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,193,1744095600"; 
-   d="scan'208";a="148854885"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa005.jf.intel.com with ESMTP; 29 May 2025 06:56:10 -0700
-Date: Thu, 29 May 2025 21:49:51 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	zhiw@nvidia.com
-Subject: Re: [PATCH v3 12/13] PCI/TSM: support TDI related operations for
- host TSM driver
-Message-ID: <aDhl//XH8HNwJPJ2@yilunxu-OptiPlex-7050>
-References: <yq5aa570dks9.fsf@kernel.org>
- <1bcf37cd-0fc4-40fa-bcd1-e499619943bd@amd.com>
- <yq5ah617s7fs.fsf@kernel.org>
- <cfdfd053-9e9d-43c0-8301-5411a02ffdf9@amd.com>
- <yq5abjres2a6.fsf@kernel.org>
- <20250527130610.GN61950@nvidia.com>
- <yq5a8qmiruym.fsf@kernel.org>
- <20250527144516.GO61950@nvidia.com>
- <yq5a8qmh53qo.fsf@kernel.org>
- <20250528164225.GS61950@nvidia.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="cg2PB2Ns"
+Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-ad88105874aso137469166b.1
+        for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 06:59:18 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1748527157; x=1749131957; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bd/re0W0O3SfKxkSQq5B/C3J4e51HN+gv/k4x6dlG2s=;
+        b=cg2PB2NspTTW82Qn12xK+O8KVnbJs5xRi261SUqSFQDkvz2oP13dKXJAprPXik5gKT
+         xsqODPzQ+hRtKPLed0FyKS5UXSBVKXoph1hfNVJgwI259/TW6yJVZy++FprAh+lkr0FH
+         zrAoJqW2XDsDaxazpMJVEEuQ45y2WZxeXBe5hYO3IG1oL5+9CoIdDVFvOnc3CW3+Jicg
+         ovYKx5wt95SXDO2zD98anfDAnCHMRGevdMe38Xyg7sfFIpGD1AkdkLNmICtX7KLTynjz
+         Q+4j4biALOBjSABx5Gf0UCivsGJexFRJQzF60I7i2bY5XeCAoriPrrqT6B6WQNQ+W84+
+         nEGA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748527157; x=1749131957;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=bd/re0W0O3SfKxkSQq5B/C3J4e51HN+gv/k4x6dlG2s=;
+        b=q++fJ8ewvFve3jnqszcGMdwMV2X8UpoN5saramuZn2neV7+9qiKda79tO31saM3i1g
+         OLcy21Zn7bBind+uxbeoGhbcq6q03kF8FZeSNIH+qp2Sp6eREy3MEqo/vLcnS6UcwNZW
+         5HA3k2Wahskhg37yUhutVHruap2OVYR2QAvtB7LMBaqx2jwfBmHXp1yAOE5skxgxnzdi
+         A9IZR79PtY+jUkQk7sWJaP3+Orindgknp5QIqjwmLlaLHgcGjrMQdE8EHmn0V+LBqB75
+         HqAKG4SfntQUtbS48I1TnUmEvdtNj8tksyFc9Ww5mPdxplC1xOYjIuy3WtmljLmsITod
+         oKpg==
+X-Forwarded-Encrypted: i=1; AJvYcCX31HdwyRo2GxcLK5oBW0u5krgz3jQF1vllhrw8hZ4UsdkTOXoXUtgUu2k/dAMtikRYQjl00VtgMEw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9OBi/3INlqsUQk96W8OCXdyRgFpmfqvqFcNgiwDqX2MrXAH00
+	auBYZ1/HI4nGkQLz5vPcHshZfq+Ka7oMKsfRcWaM2qjJz4J5aufBnzLJvSiw5VbHDms=
+X-Gm-Gg: ASbGncsMw0axJRk3Xepg40yDiau3SJU/kuuGkis+jObKi8CFRQA22VYsEkck+cgv1gj
+	Cdt2Wv2z4sOIqe8GAvgD6usAav2t0lF/D7cYA5kN96yflv4BP6pd4HeGyQcjlKwbovxl3oA9FHu
+	xaKCNx1MAmsLpBywBSMxnG8xEINMBJxX1ICM1QZurCEMVIomD95l2ZSIwoJZIZvUpQTXEWF6Ioz
+	IuUj2CViym7orJRuoGKzwNYszI1RuhpdFjy3K+PaAE3hqQVq26hxCV+GpXZIJW73fj9IxDi/so3
+	nb8nSm1GyQoEpupi4Yo3HwPUHvslWFkSzdBNxhgwPZ5HNVkPnknhiLZQxXI7+EVY62Qfj1m6oL9
+	tiLWXqCjfpu4qNpMzN4urAA==
+X-Google-Smtp-Source: AGHT+IFe10hNzzDGzxOKftk1BYzLU57XNvgcDOZ24VhiK0GAx5icGmaI6U2aVUUNIweLENXOhsxpSA==
+X-Received: by 2002:a17:906:4fca:b0:ad8:9878:b898 with SMTP id a640c23a62f3a-adacda56014mr193178466b.9.1748527157319;
+        Thu, 29 May 2025 06:59:17 -0700 (PDT)
+Received: from localhost (host-87-21-228-106.retail.telecomitalia.it. [87.21.228.106])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ada5dd045e2sm148109966b.90.2025.05.29.06.59.16
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 May 2025 06:59:17 -0700 (PDT)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Thu, 29 May 2025 16:00:52 +0200
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Andrea della Porta <andrea.porta@suse.com>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Wilczynski <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
+	Derek Kiernan <derek.kiernan@amd.com>,
+	Dragan Cvetic <dragan.cvetic@amd.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Saravana Kannan <saravanak@google.com>, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-gpio@vger.kernel.org, Masahiro Yamada <masahiroy@kernel.org>,
+	Stefan Wahren <wahrenst@gmx.net>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Andrew Lunn <andrew@lunn.ch>, Phil Elwell <phil@raspberrypi.com>,
+	Dave Stevenson <dave.stevenson@raspberrypi.com>,
+	kernel-list@raspberrypi.com, Matthias Brugger <mbrugger@suse.com>
+Subject: Re: [PATCH v12 0/13] Add support for RaspberryPi RP1 PCI device
+ using a DT overlay
+Message-ID: <aDholLnKwql-jHm1@apocalypse>
+References: <cover.1748526284.git.andrea.porta@suse.com>
+ <0580b026-5139-4079-b1a7-464224a7d239@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -74,64 +103,24 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250528164225.GS61950@nvidia.com>
+In-Reply-To: <0580b026-5139-4079-b1a7-464224a7d239@kernel.org>
 
-On Wed, May 28, 2025 at 01:42:25PM -0300, Jason Gunthorpe wrote:
-> On Wed, May 28, 2025 at 05:47:19PM +0530, Aneesh Kumar K.V wrote:
-> 
-> > +#if IS_ENABLED(CONFIG_KVM)
-> > +#include <linux/kvm_host.h>
-> > +
-> > +static void viommu_get_kvm_safe(struct iommufd_viommu *viommu, struct kvm *kvm)
-> > +{
-> > +	void (*put_fn)(struct kvm *kvm);
-> > +	bool (*get_fn)(struct kvm *kvm);
-> > +	bool ret;
-> > +
-> > +	if (!kvm)
-> > +		return;
-> > +
-> > +	put_fn = symbol_get(kvm_put_kvm);
-> > +	if (WARN_ON(!put_fn))
-> > +		return;
-> > +
-> > +	get_fn = symbol_get(kvm_get_kvm_safe);
-> > +	if (WARN_ON(!get_fn)) {
-> > +		symbol_put(kvm_put_kvm);
-> > +		return;
-> > +	}
-> > +
-> > +	ret = get_fn(kvm);
-> > +	symbol_put(kvm_get_kvm_safe);
-> > +	if (!ret) {
-> > +		symbol_put(kvm_put_kvm);
-> > +		return;
-> > +	}
-> > +
-> > +	viommu->put_kvm = put_fn;
-> > +	viommu->kvm = kvm;
-> > +}
-> 
-> Shameer was working on something like this too
-> 
-> I would probably split just the viommu kvm stuff into one patch so you
-> two can share it.
-> 
-> > @@ -68,10 +121,32 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd)
-> >  	 */
-> >  	viommu->iommu_dev = __iommu_get_iommu_dev(idev->dev);
-> >  
-> > +	/* get the kvm details if specified. */
-> > +	if (cmd->kvm_vm_fd) {
-> 
-> Pedantically a 0 fd is still valid, you should add a flag to indicate
-> if the KVM is being supplied.
+Hi Krzysztof,
 
-Did I miss something? Shameer's patch passed in struct kvm* through
-iommufd_device_bind() then to viommu, and has your Reviewed-by. I'm a
-little confused...
+On 15:50 Thu 29 May     , Krzysztof Kozlowski wrote:
+> On 29/05/2025 15:50, Andrea della Porta wrote:
+> > *** RESENDING PATCHSET AS V12 SINCE LAST ONE HAS CLOBBERED EMAIL Message-Id ***
+> > 
+> Can you slow down please? It's merge window and you keep sending the
+> same big patchset third time today.
 
-https://lore.kernel.org/all/20250319232848.GD126678@ziepe.ca/
+Sorry for that, I was sending it so Florian can pick it up for this
+merge window, and I had some trouble with formatting. Hopefully
+this was the last one.
 
-Thanks,
-Yilun
+Regards,
+Andrea
+
+> 
+> Best regards,
+> Krzysztof
