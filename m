@@ -1,136 +1,248 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f68.google.com (mail-ej1-f68.google.com [209.85.218.68])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA0682110;
-	Thu, 29 May 2025 13:34:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F874227EAB
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 13:37:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.68
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748525659; cv=none; b=R4fN0pN53EesjyrEguof+sr/p6djkfzZVafXZKgTH/nA0rePZ/cGuhjykBlHTBATs6qq24lVpWZU1oKtHFk4miVnuRxtgvLgSdUpK43dSL/C94I0qbQuXVqT3ECY3w8r8Yxhe+YevHv7WigVJRRz7K2pDwF6iZ0jA0/Vai9NA5c=
+	t=1748525855; cv=none; b=XCYhavUqgV8RT/Y1MhklWCJG6rfczOuS/v5y2yPzhgV+HmyVTGiKJQH20638P33FPkWthYBtGsumBJ/xIr9YY2qYG98CDcznxjddpqU15jsxMyoQz0EgXF7HQWDNOzX2JLdgdg/HzszYo41tCvT9PeRqcFl+70gpdDmjDzr5XSk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748525659; c=relaxed/simple;
-	bh=gGrPcUbjKM6TOgRqHUDQ5O4yAB1Xa1r59brAeraY4Qw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=IQDNrmag2cZ7te5ask/ay4AXx/gQWjx1qk78rHg04kXzWH6Y7oJW73kcTJoMSROtDpPLLsi5L85HnlbsLMw0drDbvktQEBnHu810P3P4t/95UQi3Y2U8IRHGFH3+37b6wFTQRotAgmbVc5fyxWK+N67culmOJHAlT/D4wQg+N28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V0Qan5EH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748525855; c=relaxed/simple;
+	bh=7qvdrjpOdlBvDAh2/Y7+8Ba7USpRO6EVtdx5gt1PBLc=;
+	h=From:Date:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hWxJaqf08+Vmpt6BOplfIMjjRJMRVvnTQIrs/4Pr3W/2KDHFu0GsnzUZqLWDHPUNhAmL1QGnZ3Amc7IBjhzbiqbw5zqRQ+pQs/BKhEjFsxibMfBFNGGMKPM0mkXyFwTTTpA9QwvecM8a9XblsBOYpp0HY+M2mMtYAASFHoH8DlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=UGyMqcad; arc=none smtp.client-ip=209.85.218.68
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V0Qan5EH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7988CC4CEE7;
-	Thu, 29 May 2025 13:34:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748525659;
-	bh=gGrPcUbjKM6TOgRqHUDQ5O4yAB1Xa1r59brAeraY4Qw=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=V0Qan5EHlAvol6V/NKAopzFvGEhSt7zbvOqq3ktGIGQvCU2Gy1fD/l3XsfyJhf4hZ
-	 BUUmCrux3Euu9ytpV+Y/hBxpeSkk7xjKvdbhtvbxmb61kBrbNveb2n4g2y/mpvyWDd
-	 8elN/Hz3X2jg+d/arQ+0WKQBKUTtciGsMqn+yDbMEenuN7nQvcoTEEA2sQkK2ECdqX
-	 F5zuXrjXf53V9U01hbRBHfqmot9w83HaiqX8lgL/QhQvOCBOMyoo2SOFw1mic3jw8D
-	 Y1W09otXsltMpCNuOBRnR8uz5cgr2otN6ROCvrwRSXKXUzDMNB0B9ylbENPEbmweF9
-	 O0dWQYgrkTYWA==
-X-Mailer: emacs 30.1 (via feedmail 11-beta-1 I)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Alexey Kardashevskiy <aik@amd.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	jgg@nvidia.com, zhiw@nvidia.com
-Subject: Re: [PATCH v3 12/13] PCI/TSM: support TDI related operations for
- host TSM driver
-In-Reply-To: <b96cb784-6097-49af-ae3c-bf469cd609de@amd.com>
-References: <20250516054732.2055093-1-dan.j.williams@intel.com>
- <20250516054732.2055093-13-dan.j.williams@intel.com>
- <aCbglieuHI1BJDkz@yilunxu-OptiPlex-7050> <yq5awmab4uq6.fsf@kernel.org>
- <aC2eTGpODgYh7ND7@yilunxu-OptiPlex-7050> <yq5aa570dks9.fsf@kernel.org>
- <1bcf37cd-0fc4-40fa-bcd1-e499619943bd@amd.com>
- <yq5ah617s7fs.fsf@kernel.org>
- <cfdfd053-9e9d-43c0-8301-5411a02ffdf9@amd.com>
- <yq5abjres2a6.fsf@kernel.org>
- <b96cb784-6097-49af-ae3c-bf469cd609de@amd.com>
-Date: Thu, 29 May 2025 19:04:11 +0530
-Message-ID: <yq5a5xhj5yng.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="UGyMqcad"
+Received: by mail-ej1-f68.google.com with SMTP id a640c23a62f3a-ad5740dd20eso130280866b.0
+        for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 06:37:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1748525851; x=1749130651; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=XGJgxS1k4sjFLENCJ0R74UHOiVaE0JfhO0ApUNQ8FHM=;
+        b=UGyMqcadATKeuV2VBLDOsEAhMCNaemxh28mnsKQ03bUx48e+f7L5NV6DQs9haqOIzq
+         tqJWegjNbg2laXGZ37XDuNfg2Ozhmo7dfpTXMROY+p9CSPqkLxinxvQdSqmgLgf4nyiq
+         GXJjWzhWG1eY/UhJwxormCrnbTEBeGvpKeAe9HgwTNJTnOxSsK7QJfzdCQYh/KOHyJFE
+         g6lfSZYAtls+KA3IeZ9GGx5kiZUdCS7C7JQTc9Mqb0p1FLk13SiZWbyWY2HU3MRzLmg6
+         Q9dutbpY2/sWZM3uMxorrImnEbh4YTkevzao2AGsnMgDEUHq5RrwcnJ7+oAWNy3rO92K
+         wvTg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748525851; x=1749130651;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:date:from:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=XGJgxS1k4sjFLENCJ0R74UHOiVaE0JfhO0ApUNQ8FHM=;
+        b=fhmaIyChE8CWgfJCKDery3oDCdPctFOVbVWzgfdJqm7PW5+o2LxJvz4Qj49jGkkPki
+         tiNZZDB/KR+L8xT2IxN3Ky7DOAM2d6O4aU5bUo7oEKq3c4VspzK6JC+dhD2uTU64Vc2n
+         jgIn+ezIAZwTOL3TzhyCIABMyBzrryMg/fD5m3t9IjrZAgFfWQqxMrkrEhyv1pq3BAXy
+         QzuxkeL9nQjAGGNvI1U6Faa8M0KiZk9YqUV3zOaI/kDhJVoB/P/ikGNCBa+LlNj0GQCm
+         ulHWLSCjE8K8ixtz1qBTNWtWAoazh8OWqs79OxHIAolpFNLadd/ThRbbyOsvCQG7q8WW
+         5v+Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXvuEnBzoMMqgEfQYaNaBOFZ6bL5BQpgQvWZ7WxPkc+xLxEDvgPW2sr1Ka/9C3qkYB3hKQR9CHtk40=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw5s4PgpXfMXf4jEbIVXORbdjDE1bPUbQcUXbl9c7gYHktdOFv1
+	XNKjFBdsKCUw7SdFgAHxsDJazlO4tDWB0TTrRGv6UTPIlJXVhE97Drky2HHH0j6q19E=
+X-Gm-Gg: ASbGncsdenHLXtN8rap+Cvo9oQAAG83LWpKbCfkKZ+H91icgCQlE8QiKO9pXR4dydNT
+	tW0mnAVZCiyfvT/FVRA3jhLaMMWD8DLV5IYj/JQqJp7FXDZghiNhazRSv5+E6008rO/SJCaRdPN
+	bn3gEdrJ6xi5yJy9vD/dk3LZ605ghitvtQkXChp3Tfkli4m95W+i2a9CiCnEIkFcWP7vL7dAD2T
+	RTvQEwtw66KAms3aduNp7i8gjl3kMYaUyGHgyKISw8jp8rlk9lVGOS8iwQ9mr73ZkAZ/YHJC29p
+	cbeGHo1nSHWlwW361nWzrO12CaicgBaBDY1rQYEquscRGiTiSsFhqkwvdThrjVtBeUbiFCFvGI4
+	89CblCAYbIzUjnb6gi8lapA==
+X-Google-Smtp-Source: AGHT+IE89jORsxIfrZ11Z2zrlUgtzpwgSWYSGzkctmVru6WV+L9ZxyVvE4uRFiUjC5dkQM82OICRVg==
+X-Received: by 2002:a17:906:6a10:b0:ad8:a935:b8ff with SMTP id a640c23a62f3a-ad8a935c9b6mr508211266b.31.1748525851272;
+        Thu, 29 May 2025 06:37:31 -0700 (PDT)
+Received: from localhost (host-87-21-228-106.retail.telecomitalia.it. [87.21.228.106])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ada5d7ff047sm146955766b.18.2025.05.29.06.37.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 29 May 2025 06:37:30 -0700 (PDT)
+From: Andrea della Porta <andrea.porta@suse.com>
+X-Google-Original-From: Andrea della Porta <aporta@suse.de>
+Date: Thu, 29 May 2025 15:39:06 +0200
+To: Andrea della Porta <andrea.porta@suse.com>
+Cc: Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof Wilczynski <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Will Deacon <will@kernel.org>, Bartosz Golaszewski <brgl@bgdev.pl>,
+	Derek Kiernan <derek.kiernan@amd.com>,
+	Dragan Cvetic <dragan.cvetic@amd.com>,
+	Arnd Bergmann <arnd@arndb.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Saravana Kannan <saravanak@google.com>, linux-clk@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-gpio@vger.kernel.org, Masahiro Yamada <masahiroy@kernel.org>,
+	Stefan Wahren <wahrenst@gmx.net>,
+	Herve Codina <herve.codina@bootlin.com>,
+	Luca Ceresoli <luca.ceresoli@bootlin.com>,
+	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
+	Andrew Lunn <andrew@lunn.ch>, Phil Elwell <phil@raspberrypi.com>,
+	Dave Stevenson <dave.stevenson@raspberrypi.com>,
+	kernel-list@raspberrypi.com, Matthias Brugger <mbrugger@suse.com>
+Subject: Re: [PATCH v11 0/13] Add support for RaspberryPi RP1 PCI device
+ using a DT overlay
+Message-ID: <aDhjehJxIxfNPwTr@apocalypse>
+References: <cover.1748522349.git.andrea.porta@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <cover.1748522349.git.andrea.porta@suse.com>
 
-Alexey Kardashevskiy <aik@amd.com> writes:
+Again, this patchset for some reason has duplicated Message-Id for 
+patches 1 to 5, so they will result as clobbered up. Please ignore 
+V10 and V11, I'll send V12 which should be, hopefully, the correct one.
+Sorry for that.
 
-> On 27/5/25 21:48, Aneesh Kumar K.V wrote:
->> Alexey Kardashevskiy <aik@amd.com> writes:
->> 
->>> On 27/5/25 01:44, Aneesh Kumar K.V wrote:
->>>> Alexey Kardashevskiy <aik@amd.com> writes:
->>>>
->>>>> On 26/5/25 15:05, Aneesh Kumar K.V wrote:
->>>>>> Xu Yilun <yilun.xu@linux.intel.com> writes:
->>>>>>
->>>>>>> On Tue, May 20, 2025 at 12:47:05PM +0530, Aneesh Kumar K.V wrote:
->>>>>>>> Xu Yilun <yilun.xu@linux.intel.com> writes:
->>>>>>>>
->>>>>>>>> On Thu, May 15, 2025 at 10:47:31PM -0700, Dan Williams wrote:
->>>>>>>>>> From: Xu Yilun <yilun.xu@linux.intel.com>
->>>>>>>>>>
->>>>>>>>>> Add kAPIs pci_tsm_{bind,unbind,guest_req}() for PCI devices.
->>>>>>>>>>
->>>>>>>>>> pci_tsm_bind/unbind() are supposed to be called by kernel components
->>>>>>>>>> which manages the virtual device. The verb 'bind' means VMM does extra
->>>>>>>>>> configurations to make the assigned device ready to be validated by
->>>>>>>>>> CoCo VM as TDI (TEE Device Interface). Usually these configurations
->>>>>>>>>> include assigning device ownership and MMIO ownership to CoCo VM, and
->>>>>>>>>> move the TDI to CONFIG_LOCKED TDISP state by LOCK_INTERFACE_REQUEST
->>>>>>>>>> TDISP message. The detailed operations are specific to platform TSM
->>>>>>>>>> firmware so need to be supported by vendor TSM drivers.
->>>>>>>>>>
->>>>>>>>>> pci_tsm_guest_req() supports a channel for CoCo VM to directly talk
->>>>>>>>>> to TSM firmware about further TDI operations after TDI is bound, e.g.
->>>>>>>>>> get device interface report, certifications & measurements. So this kAPI
->>>>>>>>>> is supposed to be called from KVM vmexit handler.
->>>>>>>>>
->>>>>>>>> To clarify, this commit message is staled. We are proposing existing to
->>>>>>>>> QEMU, then pass to TSM through IOMMUFD VDEVICE.
->>>>>>>>>
->>>>>>>>
->>>>>>>> Can you share the POC code/git repo implementing that? I am looking for
->>>>>>>> pci_tsm_bind()/pci_tsm_unbind() example usage.
->>>>>>>
->>>>>>> The usage of these kAPIs should be in IOMMUFD, that's what I'm doing for
->>>>>>> Stage 2 patchset. I need to rebase this series, adopt suggestions from
->>>>>>> Jason, and make TDX Connect work to verify, so need more time...
->>>>>>>
->>>>>>
->>>>>> Since the bind/unbind operations are PCI-specific callbacks, and iommufd
->>>>>
->>>>> Not really, it is PCI-specific in TSM (for DOE) but since IOMMUFD is not doing any of that, it can work with struct device (not pci_dev). Thanks,
->>>>>
->>>>
->>>> Ok, something like this? and iommufd will call tsm_bind()?
->>>
->>> yeah, I guess, there is a couple of places like this
->>>
->>> git grep pci_dev drivers/iommu/iommufd/
->>>
->>> drivers/iommu/iommufd/device.c:                 struct pci_dev *pdev = to_pci_dev(idev->dev);
->>> drivers/iommu/iommufd/eventq.c:         struct pci_dev *pdev = to_pci_dev(dev);
->>>
->>> Although I do not see any compelling reason to have pci_dev in the TSM API, struct device should just work and not spill any PCI details to IOMMUFD but whatever... Thanks,
->> 
->> Getting the kvm reference is tricky here. Also the locking while
->> updating vdevice->tsm_bound needs some solution. Here is what I am
->> improving. Are you also planning something similar?
->
->
-> At the moment I am planning getting/holding the KVM reference in the TSM:
->
-> https://lore.kernel.org/r/20250218111017.491719-15-aik@amd.com
->
-> but may push it even further to the AMD TSM (CCP, the firmware driver) as this where I actually need the kvm struct to get GCTX+ASID from kvm_svm; Intel folks have a similar intimate knowledge sharing between kvm_intel and TDX-connect. Thanks,
+Andrea
 
-So you won't be able to work with already available kvm reference in
-viommu alloc? I will send the tsm_bind changes i have done so that we
-can share the diff against that with explanation of why things can't
-work that way?
-
--aneesh
+On 14:43 Thu 29 May     , Andrea della Porta wrote:
+> *** RESENDING PATCHSET AS V11 SINCE LAST ONE HAS CLOBBERED SEQUENCE NUMBER ***
+> 
+> RP1 is an MFD chipset that acts as a south-bridge PCIe endpoint sporting
+> a pletora of subdevices (i.e.  Ethernet, USB host controller, I2C, PWM,
+> etc.) whose registers are all reachable starting from an offset from the
+> BAR address.  The main point here is that while the RP1 as an endpoint
+> itself is discoverable via usual PCI enumeraiton, the devices it contains
+> are not discoverable and must be declared e.g. via the devicetree.
+> 
+> This patchset is an attempt to provide a minimum infrastructure to allow
+> the RP1 chipset to be discovered and perpherals it contains to be added
+> from a devictree overlay loaded during RP1 PCI endpoint enumeration. To
+> ensure compatibility with downstream, a devicetree already comprising the
+> RP1 node is also provided, so it's not strictly necessary to use the
+> dynamically loaded overlay if the devicetree is already fully defined at
+> the origin.
+> To achieve this modularity, the RP1 node DT definitions are arranged by
+> file inclusion as per following schema (the arrow points to the includer,
+> see also [9]):
+>  
+>  rp1-pci.dtso         rp1.dtso
+>      ^                    ^
+>      |                    |
+> rp1-common.dtsi ----> rp1-nexus.dtsi ----> bcm2712-rpi-5-b.dts
+>                                                ^
+>                                                |
+>                                            bcm2712-rpi-5-b-ovl-rp1.dts
+> 
+> Followup patches should add support for the several peripherals contained
+> in RP1.
+> 
+> This work is based upon dowstream drivers code and the proposal from RH
+> et al. (see [1] and [2]). A similar approach is also pursued in [3].
+> 
+> The patches are ordered as follows:
+> 
+> -PATCHES 1 to 3: add binding schemas for clock, gpio and RP1 peripherals.
+>  They are needed to support the other peripherals, e.g. the ethernet mac
+>  depends on a clock generated by RP1 and the phy is reset through the
+>  on-board gpio controller.
+> 
+> -PATCH 4 and 5: add clock and gpio device drivers.
+> 
+> -PATCH 6: the devicetree node describing the RP1 chipset. 
+> 
+> -PATCH 7: this is the main patch to support RP1 chipset. It can work
+>  either with a fully defined devicetree (i.e. one that already included
+>  the rp1 node since boot time) or with a runtime loaded dtb overlay
+>  which is linked as binary blob in the driver obj. This duality is
+>  useful to comply with both downstream and upstream needs (see [9]).
+>  The real dtso is in devicetree folder while the dtso in driver folder is
+>  just a placeholder to include the real dtso.
+>  In this way it is possible to check the dtso against dt-bindings.
+>  The reason why drivers/misc has been selected as containing folder
+>  for this driver can be seen in [6], [7] and [8].
+> 
+> -PATCH 8: add the external clock node (used by RP1) to the main dts.
+> 
+> -PATCH 9: the fully fledged devictree containing also the rp1 node.
+>  This devicetree is functionally similar to the one downstream is using.
+> 
+> -PATCH 10 (OPTIONAL): this patch introduces a new scenario about how
+>  the rp1 node is specified and loaded in DT. On top of the base DT
+>  (without rp1 node), the fw loads this overlay and the end result is
+>  the same devicetree as in patch 9, which is then passed to the next
+>  stage (either the kernel or u-boot/bootloader).
+>  While this patch is not strictly necessary and can therefore be dropped
+>  (see [10]), it's not introducing much extra work and maybe can come
+>  in handy while debugging.
+> 
+> -PATCH 11: add the relevant kernel CONFIG_ options to defconfig.
+> 
+> -PATCH 12: enable CONFIG_OF_OVERLAY in order for 'make defconfig'
+>  to produce a configuration valid for the RP1 driver. Without this
+>  patch, the user has to explicitly enable it since the misc driver
+>  depends on OF_OVERLAY.
+> 
+> -PATCH 13: collect all changes for MAINTAINERS file.
+> 
+> This patchset is also a first attempt to be more agnostic wrt hardware
+> description standards such as OF devicetree and ACPI, where 'agnostic'
+> means "using DT in coexistence with ACPI", as been already promoted
+> by e.g. AL (see [4]). Although there's currently no evidence it will also
+> run out of the box on purely ACPI system, it is a first step towards
+> that direction.
+> 
+> Many thanks,
+> Andrea della Porta
+> 
+> Links:
+> - [1]: https://lpc.events/event/17/contributions/1421/attachments/1337/2680/LPC2023%20Non-discoverable%20devices%20in%20PCI.pdf
+> - [2]: https://lore.kernel.org/lkml/20230419231155.GA899497-robh@kernel.org/t/
+> - [3]: https://lore.kernel.org/all/20240808154658.247873-1-herve.codina@bootlin.com/#t
+> - [4]: https://lore.kernel.org/all/73e05c77-6d53-4aae-95ac-415456ff0ae4@lunn.ch/
+> - [5]: https://lore.kernel.org/all/20240626104544.14233-1-svarbanov@suse.de/
+> - [6]: https://lore.kernel.org/all/20240612140208.GC1504919@google.com/
+> - [7]: https://lore.kernel.org/all/83f7fa09-d0e6-4f36-a27d-cee08979be2a@app.fastmail.com/
+> - [8]: https://lore.kernel.org/all/2024081356-mutable-everyday-6f9d@gregkh/
+> - [9]: https://lore.kernel.org/all/Z87wTfChRC5Ruwc0@apocalypse/
+> - [10]: https://lore.kernel.org/all/CAMEGJJ0f4YUgdWBhxvQ_dquZHztve9KO7pvQjoDWJ3=zd3cgcg@mail.gmail.com/#t
+> 
+> CHANGES IN V11
+> 
+> 
+> PATCH RELATED -------------------------------------------------
+> 
+> - Patch 10,11,12: Added: Reviewed-by: Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
+> 
+> - Patches reworked to apply cleanly on broadcom/stblinux branches:
+>   patch 1,2,3,6,8,9,10 -> devicetree/next
+>   patch 11,12 -> defconfig/next
+>   patch 4,5,7 -> drivers/next
+>   patch 13 -> maintainers/next
+> 
+> - Patch 13: new patch gathering all changes for MAINTAINERS
+> 
+> 
+> RP1 CLOCK DRIVER ------------------------------------
+> 
+> - Dropped some WARN_ONCE() lines that are basically useless
+> 
+> - rp1_clock_set_parent() now returns EINVAL in case the parent check
+>   is failing. As a result, rp1_clock_set_rate_and_parent() has also
+>   been adapted to return rp1_clock_set_parent() retcode.
+> 
+> - Return an ERR_PTR from rp1_register_clock() instead of just NULL
+> 
+> - Dropped some unaesthetic blank lines
+> 
+> - Disabled the builtin locking in regmap since we're already dealing
+>   with concurrency in the code
+> 
+> - rp1_clk_probe(): dropped dev_err_probe() as redundant due to commit
+>   12a0fd23e870 ("clk: Print an error when clk registration fails")
+> 
