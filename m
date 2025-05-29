@@ -1,213 +1,187 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2089.outbound.protection.outlook.com [40.107.102.89])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DDC81DFE22
-	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 14:50:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748530203; cv=none; b=SGpg9DU6R7VzY5tiFFzQhmUYHPYpl8ems3Pexh2sTgk5PxbYFzyhcHOcAdFAtcmNWPXAx/cbeE7OF1Tu4+gkdDuPWO5EMKsapsk0EUPWx+kQTzqzskIUQRBYOPA8i3MlXBprKVp5ldP66mqPq0sLycUTXeIDiYPN1/ArKOmQsoY=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748530203; c=relaxed/simple;
-	bh=mBxBS+F3w/cyhjrDcqffZ7kyoE4diOtuM+0VdOkSmnI=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=FpHY/8R96/DIG4kbnEq4m1JCJSLdWGwJxtlI8VU442sHqwpKe4/iBcTL6HZr5Io44wwoDvJpSMhpDU6+Qmh0oa/CiXEJptucFn+C1EEwrESQvv0/iOKtOa0kELp8C2IUu+Gki7W8y4ucotmwOHibEzziMJOhQR6TYssKlZoLdyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=lsIxr1nT; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8FC41CCEE0
+	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 15:00:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.102.89
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1748530842; cv=fail; b=sF4dPigMqQGO5sQ5uzLaZyZ8wGFVw2UJlESEB+oTIJnxLdUxlKb8yviU9VV03CfHxdsp54MF1EGH7KUCB8t/PFCjCpTVgzFzW53jr9zSLxj87FwEh8vTN37YaEssOlw+XqtWJj7535hsH0rxbPjxL7HtwzzPxeRy02GDEOp95Ew=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1748530842; c=relaxed/simple;
+	bh=wXVgMavoW8oqhw0N0n2r0vXva22IdoGmFWxG8FuiTD0=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dgj8ygSIdiTyFUfW6SlVDM+R6WGdTxcoN5Db6jhDVbFiRPpmZ7gYFloUhpJUfpifoLLufMiqJzWWV0VvdvTuEzWzYox8FWSrUdRrXCzPtRl8dsZKUvNUCJ2y8dZRJKOa4SFg57CtX5hLOQxhcycETdUntrq/cuHag+Tcvd6RqI8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=W0DJnHvB; arc=fail smtp.client-ip=40.107.102.89
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="lsIxr1nT"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250529144958epoutp0474b03475639085f5067a04b57c9bda51~EBvOMT3NS2549525495epoutp04q
-	for <linux-pci@vger.kernel.org>; Thu, 29 May 2025 14:49:58 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250529144958epoutp0474b03475639085f5067a04b57c9bda51~EBvOMT3NS2549525495epoutp04q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1748530198;
-	bh=JoVIT/YoibxB9MFqaRb9BAFdhMoHeYYoqYbA3YWaDwU=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=lsIxr1nT8d5gNFvvbFGbztnByv7dD3G0rMX/e5CCROqdCLNOYj97ql/jSZ/zMuM8N
-	 vYzJ9/UHxwl4qOQN1q9djKaM9KMZPId/oy3NkURzKFHumIu/jUFYUaVd+0jEpYJq1A
-	 oqW62/XHL8f14ceLQhrV+wvGGIdkQCMll60WGd3A=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250529144957epcas5p121ac1b2643ce23abb26c0448e1a0d2f6~EBvNmI7t03174131741epcas5p1v;
-	Thu, 29 May 2025 14:49:57 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.182]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4b7Tmh2V00z2SSKX; Thu, 29 May
-	2025 14:49:56 +0000 (GMT)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250529102448epcas5p1a8209b6700e2206c3bbb6669f473b28b~D_Hs54RNZ1678116781epcas5p1m;
-	Thu, 29 May 2025 10:24:48 +0000 (GMT)
-Received: from epsmgms1p1new.samsung.com (unknown [182.195.42.41]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250529102448epsmtrp2ae0261061f58b804d19887addb119fa9~D_Hs4qBBk2330423304epsmtrp2h;
-	Thu, 29 May 2025 10:24:48 +0000 (GMT)
-X-AuditID: b6c32a29-55afd7000000223e-c2-683835f012c1
-Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
-	epsmgms1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	9D.C8.08766.0F538386; Thu, 29 May 2025 19:24:48 +0900 (KST)
-Received: from FDSFTE462 (unknown [107.122.81.248]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250529102445epsmtip1d9de3beca2d4560f1d5e428ba1253ead~D_Hp7hmwq1925019250epsmtip1K;
-	Thu, 29 May 2025 10:24:45 +0000 (GMT)
-From: "Shradha Todi" <shradha.t@samsung.com>
-To: "'Krzysztof Kozlowski'" <krzk@kernel.org>
-Cc: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<linux-phy@lists.infradead.org>, <manivannan.sadhasivam@linaro.org>,
-	<lpieralisi@kernel.org>, <kw@linux.com>, <robh@kernel.org>,
-	<bhelgaas@google.com>, <jingoohan1@gmail.com>, <krzk+dt@kernel.org>,
-	<conor+dt@kernel.org>, <alim.akhtar@samsung.com>, <vkoul@kernel.org>,
-	<kishon@kernel.org>, <arnd@arndb.de>, <m.szyprowski@samsung.com>,
-	<jh80.chung@samsung.com>, "'Pankaj Dubey'" <pankaj.dubey@samsung.com>,
-	<linux-samsung-soc@vger.kernel.org>
-In-Reply-To: <441dd5c3-fd51-4471-86ad-337c646b1571@kernel.org>
-Subject: RE: [PATCH 09/10] PCI: exynos: Add support for Tesla FSD SoC
-Date: Thu, 29 May 2025 15:54:43 +0530
-Message-ID: <0eec01dbd083$e78c8200$b6a58600$@samsung.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="W0DJnHvB"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=CR3CHtMeuhN1m4yg4ruLpTwJtJxgq5eclMQFOF3l/VstEagAlAabAeMzMLr61VflYGLU9TcnFCEhPPT8LnSTXQ2+WX27QKi6dBE19rSPnz511+cIKY6sINJ37Iz17nROYr0YnvY6+W/DPHvDBXhvYjtw/D4ns+z47gaaVJbDcrWosEsiyMICnae3XWo2VildiTSbLLA5yuAu4f5eMOaFSR0OKronu9ftG9Pp9H5zHLLdotdTJFkIa4Vvolx4xS9VtgGADdTDjSBDQTnxnWoYvDPXl3cTPKw6L5pIUKzeAPOXCRJwUN5BYu6D1h/Az4C7z/i7pllGOanEdNJ6g3RqYw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DAvfSmjGidT97230lssYqG+1EmYsfRLUskC7OTx/zBs=;
+ b=jwDw4QAZLAy/5T/Kc9Q8Jidfgyt+dwcXTAw+/wp3YNhA05iKU2hC2Gp1NrkoNM6wlLdf2MTp51mdxHXVoxoppJMkg3BZix1SYFX+4/XzTsxl3aba8GxaaCbhEOHErAYUGr/GBAUV2qtszDkGFkq9barBTOPMdJye6kiyDhols34wxOPffllYMN4nsHYGivcsit0bRfnXY+sLYV6jnp9+FszNnneV291V7KE66e4M3HSrShROEyZ/BGGLIZoF+LwKTXnQoyqyXCmY5TsZVQy8t6ny2a3p7x/2PQaiNOK9jG55rOOVJKUtdMMcllGKNNa4Ls05u5u2DBkQiqUWmE9kFQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.232) smtp.rcpttodomain=google.com smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DAvfSmjGidT97230lssYqG+1EmYsfRLUskC7OTx/zBs=;
+ b=W0DJnHvBx+KoWLuZemv54p6GohyGg/aPyKPgxqPVbmSnqRfhVcsEfaU9IqG9FnHo5kLGDTB8EHpUT3+OkjquNJgvkbOXNzURePw3hU4svvOJJkLB4WVH6u55XDY1VRZTz/fLhP5TIK/4Nkm5JprhPuCeETcHYkQalg9Rli4KJOHe7FKUM4zA2uELcmJ45GAIpj+U5YauBNzxclyhRJZFr3nBwq9xv1sU1bEuuEafE4v5TqwJhQYvPwGFqEvAPUbF81EBJ+tyVN/RLeq2S/4cPkK7QLV8C+QpSPruyOjnfj+xl0pnionn+FR0EWCFnqUY9uGgoz73tmG59ZBWzb7zGA==
+Received: from BN0PR04CA0203.namprd04.prod.outlook.com (2603:10b6:408:e9::28)
+ by MW6PR12MB8959.namprd12.prod.outlook.com (2603:10b6:303:23c::18) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8769.26; Thu, 29 May
+ 2025 15:00:37 +0000
+Received: from BN3PEPF0000B076.namprd04.prod.outlook.com
+ (2603:10b6:408:e9:cafe::85) by BN0PR04CA0203.outlook.office365.com
+ (2603:10b6:408:e9::28) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.8746.31 via Frontend Transport; Thu,
+ 29 May 2025 15:00:37 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.232)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.232 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.232; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.232) by
+ BN3PEPF0000B076.mail.protection.outlook.com (10.167.243.121) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.8769.18 via Frontend Transport; Thu, 29 May 2025 15:00:37 +0000
+Received: from drhqmail202.nvidia.com (10.126.190.181) by mail.nvidia.com
+ (10.127.129.5) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Thu, 29 May
+ 2025 08:00:11 -0700
+Received: from drhqmail202.nvidia.com (10.126.190.181) by
+ drhqmail202.nvidia.com (10.126.190.181) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14; Thu, 29 May 2025 08:00:10 -0700
+Received: from vdi.nvidia.com (10.127.8.12) by mail.nvidia.com
+ (10.126.190.181) with Microsoft SMTP Server id 15.2.1544.14 via Frontend
+ Transport; Thu, 29 May 2025 08:00:09 -0700
+From: Moshe Shemesh <moshe@nvidia.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Dan Williams
+	<dan.j.williams@intel.com>, Dave Jiang <dave.jiang@intel.com>, Keith Busch
+	<kbusch@kernel.org>, <linux-pci@vger.kernel.org>
+CC: Moshe Shemesh <moshe@nvidia.com>
+Subject: [PATCH] PCI: Add missing bridge lock in pci_slot_lock()
+Date: Thu, 29 May 2025 17:59:42 +0300
+Message-ID: <1748530782-3332079-1-git-send-email-moshe@nvidia.com>
+X-Mailer: git-send-email 1.8.4.3
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQKa2HaEso6x90WQFKmaYw3pYxuT6gLGtKN5Ag2CUBUBvBCtGwIQCop6Ao3fESGyEeNtsA==
-Content-Language: en-in
-X-Brightmail-Tracker: H4sIAAAAAAAAA02Sa0hTYRzGec85O+dstDrOcO9KLBZJWlpCyRsM7aJw0ko/REUSOd3BlU7H
-	zjSNJDWtlOxihjlETeziulBTl9YaOdMuVnZZSzA1aaUh1VJLNM3YVuC3HzzP7+H/4U/jkgFi
-	Eb0/Xc/p0pVpclJEmNvlASGudUi95va4H/pQbSbRTFknheoL1Oj6/RcYqnn4QoB6po4J0NXx
-	Sgp1FM3i6Iuhn0Td3bcolHfytwCZPjoE6M3dKhI9r35EojPGXwS60G3FUOF0IYFuPOyjUF9h
-	sQDVNY9TaNbSQqHW94/xDX7s76kywLYa+ii21pTJmozFJPveYSFZp70CYxvrj7CnmoyAHTMF
-	xAv3iBQqLm1/FqdbHZEoUjtOx2knArJLnSNkHrgrKwFCGjJr4bu6m1gJENES5h6Az4oGSG8g
-	g2Ov3IGbfWHDnyHKW/oMYFd7v6dEMqug0z6Nu3khEwIbe654SjgzREDrmAt4jW4MdhbbBSWA
-	poVMBHzyYJlb8GWiYUvXd49MMMuhreaiZ1TMrIdteRW4l33gk0on4WacWQlLB4vAf758cQT3
-	XrcUTn66LPAesRPmN1b860thx+RJ/AzwNcyZMsyZMsyZMsxRagFhBDJOy2tSNHyYNiydOxjK
-	KzV8ZnpKaHKGxgQ8PxAc1ALuGF2hNoDRwAYgjcsXigsiw9USsUqZc4jTZezTZaZxvA0spgm5
-	VCwdLlVJmBSlnkvlOC2n+59itHBRHlZYbtG3S3+Ex1wZ6Ih++e2lYtYa/NwvNilAseNeSw4n
-	O26tTOKzirD7GzcnB36Nm/dz9KMttcpfYg1ZGjhfZWZiLRPnQ8RxSV8cq/tikl25raiVmSi2
-	97ADdr+uyAZqWwE++cbYuQsGrdk5tLXu4Hjidr1w+NKFTYNNk8j/m2M368JywIKnETGfm5xV
-	CTWVfG/sgw5aH2pcIYoa9RnZ/srnz0RYUJklunzLXtyyuFfaXp+x/rEqkkvonVl3wphimcqt
-	YdncEplqZNe5a6m2w5Hx2QVtoqizanPQYNSnLp867YFmujY83/xayYwqkKytvFxxNLt3eMlb
-	TqDZLCd4tTIsGNfxyr95fT+4cgMAAA==
-X-CMS-MailID: 20250529102448epcas5p1a8209b6700e2206c3bbb6669f473b28b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-541,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250518193300epcas5p17e954bb18de9169d65e00501b1dcd046
-References: <20250518193152.63476-1-shradha.t@samsung.com>
-	<CGME20250518193300epcas5p17e954bb18de9169d65e00501b1dcd046@epcas5p1.samsung.com>
-	<20250518193152.63476-10-shradha.t@samsung.com>
-	<20250521-competent-honeybee-of-will-3f3ae1@kuoka>
-	<0e2801dbcef4$78fe5ec0$6afb1c40$@samsung.com>
-	<441dd5c3-fd51-4471-86ad-337c646b1571@kernel.org>
+Content-Type: text/plain
+X-NV-OnPremToCloud: AnonymousSubmission
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: BN3PEPF0000B076:EE_|MW6PR12MB8959:EE_
+X-MS-Office365-Filtering-Correlation-Id: ea712c50-74ee-42f7-814d-08dd9ec19205
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?fOYqJWnFn2RzmMhYTHMFVxZWkb3PSp15B4HjxWQ7ZzNpD2bIdUkaF+GxxjuU?=
+ =?us-ascii?Q?TWi2HVce7qGcHPcdoJdRwBXijVgis+TRkX5300SmW2qz4BRU6gFl9WVzoVuv?=
+ =?us-ascii?Q?3x7ZUObHfQRtHv1iCg5AFlAqNPqqVPJgUQichC+vdN+ZiNMWpyy18XxU5m5l?=
+ =?us-ascii?Q?5Ak43FSveQjyfkN0clhhMfASHyTzOdljYyKE9Td+s4u1CqAvV61TWvTSsn28?=
+ =?us-ascii?Q?3tzBm6s0kCy0tUoJFtBZVA4yRPmQirHa7K68NcHip+mvjte+c57xIgUQRRvn?=
+ =?us-ascii?Q?Cwpv1NFRxFIwzA1kWWn3446l0eY0Qn8KT1SjfF0FbQUEft787/PQERUje+HY?=
+ =?us-ascii?Q?Ktw3H7Zh/slafUhIq/lPEDuBShcDnH54rgr8vBlT8s1TZ3ZP6JwIUnCSJIbq?=
+ =?us-ascii?Q?AhoWl8qGnA74BMxTtl1G2h1IsBoo1diln+R50Suqg2BPGW25Jt1ugB+4s05i?=
+ =?us-ascii?Q?p85S25FVw1Y43FElw4BUrKgcumzgOWZ5yImHUIhssXXuUBKFRJYWfx5bVn7O?=
+ =?us-ascii?Q?RPrFHavXR6Si/Is8itJWKmwnhY/BZMlCFcWpFn+986ngIRxOISnITeA0RCqr?=
+ =?us-ascii?Q?E0JYhimLSCkLRjPMECFreN5MLDMweHvKuunueJlEdJ6rOxLtDC1F85SUddU3?=
+ =?us-ascii?Q?exupVkIWaOcnPRkWdQkT9brMWNH9tSQ/BcohgZYu2mj6FFZ5F5Q4KLCmzDnY?=
+ =?us-ascii?Q?V0eOUxHcECWARCNeCYfrcOVAid60t8U7kBphYqd8W2PlonXhWRo7l8BwV0qi?=
+ =?us-ascii?Q?45vcPg5kHpJxJ0LvVm4HQ3q2E6XyreeCb8TgSXPRoWEBzeFhvKE8J/7k2a6G?=
+ =?us-ascii?Q?Ivc+m40QBJ3amsEJtsyrMSnyPY8oD6vb+lCWY5VYuS5/QHPpxZjuRozwijM1?=
+ =?us-ascii?Q?pzknppxWM7Ddyt9mWKrsd9TTgtnCmMXqhJXc1D4cPa7L72nBAF46cf9+Y5n1?=
+ =?us-ascii?Q?sSUVwQiNCc41rQmr1AatFAWPR7d1QSO9V86sfu1/7MhmvSwlgH6Il5hU/bQl?=
+ =?us-ascii?Q?jkbD2uMxrzAB3czSOORHONQCc6ULR8IjZVliWEICZ9UB9a3EiHH+unqT7p4K?=
+ =?us-ascii?Q?lQAhldXCpBt5kF8nMdy4BZknbgn3azUluQPwoKlcMY5f7BLnFi2tiU04jMdp?=
+ =?us-ascii?Q?GS+wWhorGgY+xtA990ejvuhV1tCvaWuV9wqHtkYhF4ynRhKfgm/zFOW4AzFa?=
+ =?us-ascii?Q?u4SPlITEVknDmJU1p7K1irOWJkUXukD5LsR0k/2aOLjL7Qh/utqMkW+T0QEY?=
+ =?us-ascii?Q?M8k1GA+7ulSxc0xw0Gab2rzLWWfgtXnXGybrtCsIId9ZrfFlf0+hcB0ZG1iN?=
+ =?us-ascii?Q?CQ74rPAVigeVQ2P9/4PZJRny8ITE3GjUSfuZTykBAhst3wq8zNAG5DrRlJTX?=
+ =?us-ascii?Q?RF5m6W974rBvHpdBoR1CvmECxktAgL1C2sQen5u4SRFyohWn7Oo3ESyyOgbc?=
+ =?us-ascii?Q?oYkrZ9cdBhxNV/NFjc464LMG+B1SU3ZNRUW8YIKQgwcZPq0qoMcq/SdivKc/?=
+ =?us-ascii?Q?LYzgvMU7omeNUqavPXVfjAmzEgsMgyWaTKm8?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.232;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge1.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(376014);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 May 2025 15:00:37.0201
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: ea712c50-74ee-42f7-814d-08dd9ec19205
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.232];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	BN3PEPF0000B076.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MW6PR12MB8959
 
+Unlike pci_bus_lock(), which acquires the lock on the bus bridge before
+locking devices and subordinate buses, pci_slot_lock() currently miss
+locking the bridge. This may result in triggering warning on
+pci_bridge_secondary_bus_reset() [1].
 
+Fix it by adding bridge lock on pci_slot_lock() and pci_slot_trylock().
 
-> -----Original Message-----
-> From: Krzysztof Kozlowski <krzk=40kernel.org>
-> Sent: 28 May 2025 12:56
-> To: Shradha Todi <shradha.t=40samsung.com>
-> Cc: linux-pci=40vger.kernel.org; devicetree=40vger.kernel.org; linux-arm-=
-kernel=40lists.infradead.org;
-> linux-samsung-soc=40vger.kernel.or; linux-kernel=40vger.kernel.org; linux=
--phy=40lists.infradead.org;
-> manivannan.sadhasivam=40linaro.org; lpieralisi=40kernel.org; kw=40linux.c=
-om; robh=40kernel.org;
-> bhelgaas=40google.com; jingoohan1=40gmail.com; krzk+dt=40kernel.org; cono=
-r+dt=40kernel.org;
-> alim.akhtar=40samsung.com; vkoul=40kernel.org; kishon=40kernel.org; arnd=
-=40arndb.de;
-> m.szyprowski=40samsung.com; jh80.chung=40samsung.com
-> Subject: Re: =5BPATCH 09/10=5D PCI: exynos: Add support for Tesla FSD SoC
->=20
-> On 27/05/2025 12:45, Shradha Todi wrote:
-> >
-> >
-> >> -----Original Message-----
-> >> From: Krzysztof Kozlowski <krzk=40kernel.org>
-> >> Sent: 21 May 2025 15:18
-> >> To: Shradha Todi <shradha.t=40samsung.com>
-> >> Cc: linux-pci=40vger.kernel.org; devicetree=40vger.kernel.org; linux-a=
-rm-kernel=40lists.infradead.org;
-> linux-samsung-soc=40vger.kernel.or;
-> >> linux-kernel=40vger.kernel.org; linux-phy=40lists.infradead.org; maniv=
-annan.sadhasivam=40linaro.org;
-> lpieralisi=40kernel.org;
-> >> kw=40linux.com; robh=40kernel.org; bhelgaas=40google.com; jingoohan1=
-=40gmail.com;
-> krzk+dt=40kernel.org; conor+dt=40kernel.org;
-> >> alim.akhtar=40samsung.com; vkoul=40kernel.org; kishon=40kernel.org; ar=
-nd=40arndb.de;
-> m.szyprowski=40samsung.com;
-> >> jh80.chung=40samsung.com
-> >> Subject: Re: =5BPATCH 09/10=5D PCI: exynos: Add support for Tesla FSD =
-SoC
-> >>
-> >> On Mon, May 19, 2025 at 01:01:51AM GMT, Shradha Todi wrote:
-> >>>  static int exynos_pcie_probe(struct platform_device *pdev)  =7B
-> >>>  	struct device *dev =3D &pdev->dev;
-> >>> =40=40 -355,6 +578,26 =40=40 static int exynos_pcie_probe(struct plat=
-form_device *pdev)
-> >>>  	if (IS_ERR(ep->phy))
-> >>>  		return PTR_ERR(ep->phy);
-> >>>
-> >>> +	if (ep->pdata->soc_variant =3D=3D FSD) =7B
-> >>> +		ret =3D dma_set_mask_and_coherent(dev, DMA_BIT_MASK(36));
-> >>> +		if (ret)
-> >>> +			return ret;
-> >>> +
-> >>> +		ep->sysreg =3D syscon_regmap_lookup_by_phandle(dev->of_node,
-> >>> +				=22samsung,syscon-pcie=22);
-> >>> +		if (IS_ERR(ep->sysreg)) =7B
-> >>> +			dev_err(dev, =22sysreg regmap lookup failed.=5Cn=22);
-> >>> +			return PTR_ERR(ep->sysreg);
-> >>> +		=7D
-> >>> +
-> >>> +		ret =3D of_property_read_u32_index(dev->of_node, =22samsung,syscon=
--pcie=22, 1,
-> >>> +						 &ep->sysreg_offset);
-> >>> +		if (ret) =7B
-> >>> +			dev_err(dev, =22couldn't get the register offset for syscon=21=5C=
-n=22);
-> >>
-> >> So all MMIO will go via syscon? I am pretty close to NAKing all this, =
-but let's be sure that I got it right
-> - please post your complete DTS
-> >> for upstream. That's a requirement from me for any samsung drivers - I=
- don't want to support fake,
-> broken downstream solutions
-> >> (based on multiple past submissions).
-> >>
-> >
-> > By all MMIO do you mean DBI read/write? The FSD hardware architecture i=
-s such that the
-> > DBI/ATU/DMA address is at the same offset.
-> > The syscon register holds the upper bits of the actual address differen=
-tiating between these 3
-> > spaces. This kind of implementation was done
-> > to reduce address space for PCI DWC controller. So yes, each DBI/ATU re=
-gister read/write will have
-> > syscon write before it to switch address space.
->=20
-> Wrap your replies correctly to fit mailing list.
->=20
-> No, I meant your binding does not define any MMIO at all. I see you use
-> for example elbi_base which is mapped from =22elbi=22 reg entry, but you =
-do
-> not have it in your binding.
->=20
-> Maybe just binding is heavily incomplete and that confused me.
->=20
+[1]
+pcieport 0000:c1:05.0: unlocked secondary bus reset via: pciehp_reset_slot+0xa4/0x150
 
-Got it. I think the confusion is due to the incomplete dt-bindings.
-I will fix these issues in the next version. Will post again once I get
-clarity about how to avoid redirection in patch 4/10
+Fixes: a4e772898f8b ("PCI: Add missing bridge lock to pci_bus_lock()")
+Signed-off-by: Moshe Shemesh <moshe@nvidia.com>
+---
+ drivers/pci/pci.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> Best regards,
-> Krzysztof
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index e77d5b53c0ce..c31929482122 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -5518,6 +5518,7 @@ static void pci_slot_lock(struct pci_slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 
++	pci_dev_lock(slot->bus->self);
+ 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+ 		if (!dev->slot || dev->slot != slot)
+ 			continue;
+@@ -5540,6 +5541,7 @@ static void pci_slot_unlock(struct pci_slot *slot)
+ 			pci_bus_unlock(dev->subordinate);
+ 		pci_dev_unlock(dev);
+ 	}
++	pci_dev_unlock(slot->bus->self);
+ }
+ 
+ /* Return 1 on successful lock, 0 on contention */
+@@ -5547,6 +5549,9 @@ static int pci_slot_trylock(struct pci_slot *slot)
+ {
+ 	struct pci_dev *dev;
+ 
++	if (!pci_dev_trylock(slot->bus->self))
++		return 0;
++
+ 	list_for_each_entry(dev, &slot->bus->devices, bus_list) {
+ 		if (!dev->slot || dev->slot != slot)
+ 			continue;
+@@ -5570,6 +5575,7 @@ static int pci_slot_trylock(struct pci_slot *slot)
+ 		else
+ 			pci_dev_unlock(dev);
+ 	}
++	pci_dev_unlock(slot->bus->self);
+ 	return 0;
+ }
+ 
+-- 
+2.34.1
 
