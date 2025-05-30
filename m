@@ -1,38 +1,38 @@
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.166.228])
+Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.205])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2386728D85F;
-	Fri, 30 May 2025 23:40:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.166.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F8C321772B;
+	Fri, 30 May 2025 23:40:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.205
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748648430; cv=none; b=Xk9npGlejzvuOfOF7ZUFs5BD2CXvZ01sGY4GQwRXxTvakYAJuswRWCW3VxKmatBBYJKGwbeWLRhRih9Xa1y8XfmnfGxjbsET/TPw+p+PFxJP18f+YgDt9idLA5rgpdjiwNKAJ2ljDUBTDx3K2I7zyfbbQ+q//rL0BqW8PKGEyTc=
+	t=1748648461; cv=none; b=tPh5zRwCX3cu9K90oINFdeyArb5Bqs0GbptZk1Uw5PGQkcgzVLOyfyFuvU4wCBSpI0g8SghHeTH/gm/XEssDZ1ZHUHP4uLbU+scs035JaX830JSaZhdGjEeqv75POvk0FcJwHsz2GHGwEp8d7kH14Pd+Tj19aW2wBW52u881T8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748648430; c=relaxed/simple;
-	bh=T1ohdffHOsv4b9JTLNJUeOA9slqM1AlruRXgmQZnb98=;
+	s=arc-20240116; t=1748648461; c=relaxed/simple;
+	bh=D4QcDPea5XYtBJWDOg5IiEHbc6+seukZ74zzCSld5Hg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Cx/xPvRtmilYrvFKnOYihDVOuQNhE6lRtY5n305Um5mcTUUzgy56aFuJWY80/UYIk8jDCcyooTD0bySuOcmNfzdT5akTDGizjKyknCISShKX4eUCD1QxP3fRrsICQ3Ij7PKvXC6Iia1okEl4EVMfprIzeKi73kMbtLN9kVCjltw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=F+nhaIP2; arc=none smtp.client-ip=192.19.166.228
+	 MIME-Version; b=keopQ9R+bcX7xPrhEMsqkVRbVd7ru+VpSQ1l843m3+KiAWOLDCdz5+yZSwpd++tX1x1xT7Ht5OCKipbJ13EAJtsSRUOx8zXJYyuCEQTnKorpI2fR17GE1fsYVQM9nNm6BNOlYrZrSAD9edSzkMcWVdR14blwejMHQjYT7bZ+qlM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=JJA2jZUC; arc=none smtp.client-ip=192.19.144.205
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="F+nhaIP2"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JJA2jZUC"
 Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 5FF82C00054D;
-	Fri, 30 May 2025 16:40:28 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 5FF82C00054D
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 25C59C003DE0;
+	Fri, 30 May 2025 16:40:52 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 25C59C003DE0
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1748648428;
-	bh=T1ohdffHOsv4b9JTLNJUeOA9slqM1AlruRXgmQZnb98=;
+	s=dkimrelay; t=1748648452;
+	bh=D4QcDPea5XYtBJWDOg5IiEHbc6+seukZ74zzCSld5Hg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=F+nhaIP21q5osUynz/UqGqFQQu5bO7cZ3iM0jDibkxLZeuLtS4fLZF3LlPoZnCSFI
-	 pY9Y8bKJZCqnzulkV9x2Lqs1v5Z0ImgDHjDr1kFsnai1NF5Ey4UagDHv8RCT0k3PkF
-	 uXjG9lIzx3Tu+LHUEjeRdXaskkrtWoq4fpanZ13M=
+	b=JJA2jZUCWp5m/OhAeLrqJjrDv19ZmyF+sz+3y7xuWzjVlG9yl2oTRsf03co/K8Uw+
+	 p7A/vNcUc6zK5mHLza5lvG3mefiihuuC/PgCE7LndLfUwClrD6yAe08RebUFLWu6wZ
+	 gZEXpoK+8MDfKjSaSzCQDQtPAI5ySYm0CHqDYPiI=
 Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 03FC918000530;
-	Fri, 30 May 2025 16:40:28 -0700 (PDT)
+	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 82BC6180008FB;
+	Fri, 30 May 2025 16:40:51 -0700 (PDT)
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 To: bcm-kernel-feedback-list@broadcom.com,
 	Andrea della Porta <andrea.porta@suse.com>,
@@ -72,12 +72,12 @@ To: bcm-kernel-feedback-list@broadcom.com,
 	kernel-list@raspberrypi.com,
 	Matthias Brugger <mbrugger@suse.com>
 Cc: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH v12 09/13] arm64: dts: broadcom: Add board DTS for Rpi5 which includes RP1 node
-Date: Fri, 30 May 2025 16:40:27 -0700
-Message-ID: <20250530234027.465367-1-florian.fainelli@broadcom.com>
+Subject: Re: [PATCH v12 04/13] clk: rp1: Add support for clocks provided by RP1
+Date: Fri, 30 May 2025 16:40:51 -0700
+Message-ID: <20250530234051.465593-1-florian.fainelli@broadcom.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250529135052.28398-9-andrea.porta@suse.com>
-References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-9-andrea.porta@suse.com>
+In-Reply-To: <20250529135052.28398-4-andrea.porta@suse.com>
+References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-4-andrea.porta@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -88,28 +88,14 @@ Content-Transfer-Encoding: 8bit
 
 From: Florian Fainelli <f.fainelli@gmail.com>
 
-On Thu, 29 May 2025 15:50:46 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
-> Add the fully populated DTS for RaspberryPi 5 which includes
-> the RP1 node definition. The inclusion tree is as follow (the
-> arrow points to the includer):
-> 
-> rp1-common.dtsi ----> rp1-nexus.dtsi ----> bcm2712-rpi-5-b.dts
->                                                ^
->                                                |
->                                            bcm2712-rpi-5-b-ovl-rp1.dts
-> 
-> This is designed to maximize the compatibility with downstream DT
-> while ensuring that a fully defined DT (one which includes the RP1
-> node as opposed to load it from overlay at runtime) is present
-> since early boot stage.
-> 
-> Since the preferred board DT is the fully populated one, name it
-> bcm2712-rpi-5-b.dts and move the previous one into
-> bcm2712-rpi-5-b-ovl-rp1.dts.
+On Thu, 29 May 2025 15:50:41 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
+> RaspberryPi RP1 is an MFD providing, among other peripherals, several
+> clock generators and PLLs that drives the sub-peripherals.
+> Add the driver to support the clock providers.
 > 
 > Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
 > ---
 
-Applied to https://github.com/Broadcom/stblinux/commits/devicetree/next, thanks!
+Applied to https://github.com/Broadcom/stblinux/commits/drivers/next, thanks!
 --
 Florian
