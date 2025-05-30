@@ -1,38 +1,38 @@
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.166.228])
+Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.207])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04A361C84A5;
-	Fri, 30 May 2025 23:49:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.166.228
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3650F2192EF;
+	Fri, 30 May 2025 23:49:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.207
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748648943; cv=none; b=EJ6QOyRk4/6RAtDFmqKp4xjzdLAeMr0a1O/W8+KGMp7dRh2FUkaTU3FDyP4RhhtXPEDDrvjx+ZNnkMijOFVmlaqMNtmrmU47bhZnGD/kmpw09E4lKfUlnFI35OzKeMeiG1pkM6OMrRiYjYMqP8xxUKKw8dnQFjvnHb8Ivrj7seo=
+	t=1748648974; cv=none; b=A8tIgZ00gz3gpC6vH8gjDjhm9cxfxVE9uki89kfh97uaijpJtbURdk6r+Gt9mLwFFJTmHB2C9XBx1p+CepsTzkIcyhVOovm+DpPXCqmHft2Vc97j8u283FbWIKJjSzs+BOQT9mZNN7Y0MTQKDhwVdFRYsiuwoWHa9Cvx/Hd+fxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748648943; c=relaxed/simple;
-	bh=qiSi2RMw4OCprktJ66ksyftuz6LIjongIXBr0hh9PtA=;
+	s=arc-20240116; t=1748648974; c=relaxed/simple;
+	bh=uXtMeHYnc/oPonqfKUQW9+2wh0nmnb+RChVQF07BalY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=uRJR0Q7ubwE8IetRMCkZjaGAnKPgmnA1qBLrGUmXt5IeVg+2T81lAdRRG3iB1JoB1WpobSOvzyh6GPVUqa47u345DstOdZSHAeuTWhSgBNFImYxcqkSSbtfHblh5HmBSL3b53Pi2cgGjms5LSNIOHH4ITrccs9nunk/pUxDdhcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=lOvtW1Lz; arc=none smtp.client-ip=192.19.166.228
+	 MIME-Version; b=adsb3ROQXGDm0N5h0oz7OpLCdwheIwt6uV+y/qzOYRklCut92MiWE5tHvp1fQ7cnT1jcNOavtKlT5SZptW3VTRmhdn81UTM3HPl5Ic3YQvRDc3WAJqoL5+F4+GpBMzl63iJPtg7sklDFU6YvvDNM8NcnQUoj1bR6FZISGrzQ1uw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=lcc7J+bt; arc=none smtp.client-ip=192.19.144.207
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="lOvtW1Lz"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="lcc7J+bt"
 Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 81EF5C000957;
-	Fri, 30 May 2025 16:39:20 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 81EF5C000957
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 7269AC003AB1;
+	Fri, 30 May 2025 16:39:42 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 7269AC003AB1
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1748648360;
-	bh=qiSi2RMw4OCprktJ66ksyftuz6LIjongIXBr0hh9PtA=;
+	s=dkimrelay; t=1748648382;
+	bh=uXtMeHYnc/oPonqfKUQW9+2wh0nmnb+RChVQF07BalY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lOvtW1LzpnNuJqngJe9FrZ3ZYg08+HYibZrfRYOcHamFTiE6qpnCcc2mtJ/RTyC8s
-	 RqEUSr22l93aWfIXke41YgIGRSGThtn9l22o55FNoha4nA4C/Bu9lehloawgfqx5Wy
-	 3phfPGOUR3gfMDNXlD11eiiePKK45zNi/DDVL1RE=
+	b=lcc7J+btWA+TNsSIebmaHweiiSIcMQqyaP4nJIpTvijYkglWUv7hFziqEqDfMMYgk
+	 yW5xb6JRlPt0CD9lNv17MaaQrkB9hpH7qJEndW+YcJchXgVCBc+jX4x9Z7amLR5gNV
+	 CbnK2/ROmpGlpjVq5TQ38uCT3u8hRnQP8tg1yizM=
 Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 12F7718000530;
-	Fri, 30 May 2025 16:39:20 -0700 (PDT)
+	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id D84D618000530;
+	Fri, 30 May 2025 16:39:41 -0700 (PDT)
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 To: bcm-kernel-feedback-list@broadcom.com,
 	Andrea della Porta <andrea.porta@suse.com>,
@@ -71,14 +71,13 @@ To: bcm-kernel-feedback-list@broadcom.com,
 	Dave Stevenson <dave.stevenson@raspberrypi.com>,
 	kernel-list@raspberrypi.com,
 	Matthias Brugger <mbrugger@suse.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: Re: [PATCH v12 01/13] dt-bindings: clock: Add RaspberryPi RP1 clock bindings
-Date: Fri, 30 May 2025 16:39:19 -0700
-Message-ID: <20250530233919.464832-1-florian.fainelli@broadcom.com>
+Cc: Florian Fainelli <f.fainelli@gmail.com>
+Subject: Re: [PATCH v12 03/13] dt-bindings: misc: Add device specific bindings for RaspberryPi RP1
+Date: Fri, 30 May 2025 16:39:41 -0700
+Message-ID: <20250530233941.465046-1-florian.fainelli@broadcom.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250529135052.28398-1-andrea.porta@suse.com>
-References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-1-andrea.porta@suse.com>
+In-Reply-To: <20250529135052.28398-3-andrea.porta@suse.com>
+References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-3-andrea.porta@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -89,12 +88,13 @@ Content-Transfer-Encoding: 8bit
 
 From: Florian Fainelli <f.fainelli@gmail.com>
 
-On Thu, 29 May 2025 15:50:38 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
-> Add device tree bindings for the clock generator found in RP1 multi
-> function device, and relative entries in MAINTAINERS file.
+On Thu, 29 May 2025 15:50:40 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
+> The RP1 is a MFD that exposes its peripherals through PCI BARs. This
+> schema is intended as minimal support for the clock generator and
+> gpio controller peripherals which are accessible through BAR1.
 > 
 > Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
-> Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
 > Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
 > ---
 
