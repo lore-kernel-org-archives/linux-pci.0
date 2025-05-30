@@ -1,38 +1,38 @@
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.166.231])
+Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.207])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A81C3224B09;
-	Fri, 30 May 2025 23:40:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.166.231
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85AC428D836;
+	Fri, 30 May 2025 23:40:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.207
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748648424; cv=none; b=QL3ZIO0mXPATAZi38GssErmRtoYsk5SFdaAWZ1gz6khVORT7+6gXw/AduZl6rosAyv47XVfIfe6OKr1APcinMfz6/f0lsjnF7hxDqmVII1GQQGktR+3RXQyMHKRqTDAfsY0w6y4LUWTyaXX6YZPvlkwGyJhtnTvBQ3bR3AyJjNc=
+	t=1748648429; cv=none; b=cwskxcwHjRIguyLSrO5I52gNrw8N7EAMAptWQ2HfLUBKKvmqucV6SE+xPtaVi7sqJiHXPWH+bYnt7FszDuIC7pV+IRVJeQOVUQInUXc0ej7to5uynWcxC3Ccf0nviLHNpOspPwEgpy9MKdW3e2aXHfkz1/yy/gzwd8b3Y4Mpn5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748648424; c=relaxed/simple;
-	bh=vQKsqQ6Q+lfdQm7YTyimHy4MhbKrW6qgRHt9COmtjrI=;
+	s=arc-20240116; t=1748648429; c=relaxed/simple;
+	bh=HFiVtogORiAI/oF4a+jzZLzZYQ+/3mOas55PYUhzW9I=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=D8MNVZkjTlAv2rihXMkY1h+OpXOsBiFkP7lhESef3VnIyMh5UIH7U1I0eGoJzsFXsGnRYNhylIyjpNdBVs/T8eE3FZ2tyKnlCJ1xLmvj3a+1+a52I8zEoOIRBEvCdPDyF7SBqLifiAjVDDsZ9l4MzAVmMs2XwYOG+JWeGLwgcXs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=H6//+QT3; arc=none smtp.client-ip=192.19.166.231
+	 MIME-Version; b=UhvVIagJEKio+idbKBMXkwpZexuPmEc6A/qZqVEQXcNaMkDbS/b01p8zV27o4cj3wYJVsSMifVfH4DSTaTZPctVX5sjtK7EX+0yBBBqSiuMFIF+yld9K7nCBBVgyijGObIU+180bd+vz70m3vwQOLxVllcR2Vj7qpBlb3fWjhws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Xau7hgHN; arc=none smtp.client-ip=192.19.144.207
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="H6//+QT3"
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Xau7hgHN"
 Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 1F5D0C000357;
-	Fri, 30 May 2025 16:40:20 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 1F5D0C000357
+	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id B1AA2C003AB8;
+	Fri, 30 May 2025 16:40:26 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com B1AA2C003AB8
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1748648420;
-	bh=vQKsqQ6Q+lfdQm7YTyimHy4MhbKrW6qgRHt9COmtjrI=;
+	s=dkimrelay; t=1748648426;
+	bh=HFiVtogORiAI/oF4a+jzZLzZYQ+/3mOas55PYUhzW9I=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=H6//+QT3Jq/4d9BnXS6OJ5HHcUdXqN0c7DlifiQNik2+Ky2HB+qU4btQxS7C/Q3wZ
-	 fsj9/qhboZUgDneyGnk1XmJVctso1+xpujHQLB8vesLm1i5rl4oIaTD+zV1ZdFUvgc
-	 HbRdtwNP35ksslQeystNvzLWHbFTC80JdidHMPCs=
+	b=Xau7hgHNWZ/bUsjnADjxg13st9ZnP1ECq6XKHIdiZ6Uj/0aS/POb5yDLG55eUKwjh
+	 5dYiccTqa6Sl3s+K7owrmJSZT6FAxkijkif2Lg/DMK1nUxpRK7MQ++iYniFbfDMUnn
+	 qDsBKxxPXOwOrpjwT0skAxSmiqzm6PQ/S9yHxdg8=
 Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id B406F180008FB;
-	Fri, 30 May 2025 16:40:19 -0700 (PDT)
+	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 2749B18000530;
+	Fri, 30 May 2025 16:39:56 -0700 (PDT)
 From: Florian Fainelli <florian.fainelli@broadcom.com>
 To: bcm-kernel-feedback-list@broadcom.com,
 	Andrea della Porta <andrea.porta@suse.com>,
@@ -72,12 +72,12 @@ To: bcm-kernel-feedback-list@broadcom.com,
 	kernel-list@raspberrypi.com,
 	Matthias Brugger <mbrugger@suse.com>
 Cc: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH v12 08/13] arm64: dts: bcm2712: Add external clock for RP1 chipset on Rpi5
-Date: Fri, 30 May 2025 16:40:19 -0700
-Message-ID: <20250530234019.465274-1-florian.fainelli@broadcom.com>
+Subject: Re: [PATCH v12 06/13] arm64: dts: rp1: Add support for RaspberryPi's RP1 device
+Date: Fri, 30 May 2025 16:39:55 -0700
+Message-ID: <20250530233955.465160-1-florian.fainelli@broadcom.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250529135052.28398-8-andrea.porta@suse.com>
-References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-8-andrea.porta@suse.com>
+In-Reply-To: <20250529135052.28398-6-andrea.porta@suse.com>
+References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-6-andrea.porta@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -88,9 +88,16 @@ Content-Transfer-Encoding: 8bit
 
 From: Florian Fainelli <f.fainelli@gmail.com>
 
-On Thu, 29 May 2025 15:50:45 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
-> The RP1 found on Raspberry Pi 5 board needs an external crystal at 50MHz.
-> Add clk_rp1_xosc node to provide that.
+On Thu, 29 May 2025 15:50:43 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
+> RaspberryPi RP1 is a multi function PCI endpoint device that
+> exposes several subperipherals via PCI BAR.
+> 
+> Add a dtb overlay that will be compiled into a binary blob
+> and linked in the RP1 driver.
+> 
+> This overlay offers just minimal support to represent the
+> RP1 device itself, the sub-peripherals will be added by
+> future patches.
 > 
 > Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
 > Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
