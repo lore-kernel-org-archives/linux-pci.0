@@ -1,103 +1,134 @@
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.207])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3650F2192EF;
-	Fri, 30 May 2025 23:49:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.207
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D56DD1A257D
+	for <linux-pci@vger.kernel.org>; Sat, 31 May 2025 06:12:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748648974; cv=none; b=A8tIgZ00gz3gpC6vH8gjDjhm9cxfxVE9uki89kfh97uaijpJtbURdk6r+Gt9mLwFFJTmHB2C9XBx1p+CepsTzkIcyhVOovm+DpPXCqmHft2Vc97j8u283FbWIKJjSzs+BOQT9mZNN7Y0MTQKDhwVdFRYsiuwoWHa9Cvx/Hd+fxc=
+	t=1748671967; cv=none; b=F6luGpObTDdV0ThXRndDOzDxgrRcB8ztUUokgDfa/JjiFe3hjrLOxLeDieKSEgWksyI5JWS5ftw4zcHvdIuxxgK57LzMb76UZVE/DxIWQtSnaPWdB2DWPPhrJjpHTk6GjO5G+0LXNTF6iNBwgM03YY/6uFAUtdwSjSkewfUoifg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748648974; c=relaxed/simple;
-	bh=uXtMeHYnc/oPonqfKUQW9+2wh0nmnb+RChVQF07BalY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=adsb3ROQXGDm0N5h0oz7OpLCdwheIwt6uV+y/qzOYRklCut92MiWE5tHvp1fQ7cnT1jcNOavtKlT5SZptW3VTRmhdn81UTM3HPl5Ic3YQvRDc3WAJqoL5+F4+GpBMzl63iJPtg7sklDFU6YvvDNM8NcnQUoj1bR6FZISGrzQ1uw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=lcc7J+bt; arc=none smtp.client-ip=192.19.144.207
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1748671967; c=relaxed/simple;
+	bh=MEGvhQbfx24jqEUxzb4zffirI9T8WQoQbGUFkkAFR7o=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=uQuVVEpBsSnW3NT4OcRQdUx1JkR0SV72dZOhKvfKmMnHwB/FCuy6liyJXmWQtQPP8eus32Dn0VbQ++845r7eu6gDJzmGgLSfkzWllxEaMcEfo48XM6rUHYfT1OnNIxA+HFVbZFLBzxUJcB1/hNkh3iJl/MDLnnC9HZolD9PU6HA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=rde4H29J; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="lcc7J+bt"
-Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 7269AC003AB1;
-	Fri, 30 May 2025 16:39:42 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 7269AC003AB1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1748648382;
-	bh=uXtMeHYnc/oPonqfKUQW9+2wh0nmnb+RChVQF07BalY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=lcc7J+btWA+TNsSIebmaHweiiSIcMQqyaP4nJIpTvijYkglWUv7hFziqEqDfMMYgk
-	 yW5xb6JRlPt0CD9lNv17MaaQrkB9hpH7qJEndW+YcJchXgVCBc+jX4x9Z7amLR5gNV
-	 CbnK2/ROmpGlpjVq5TQ38uCT3u8hRnQP8tg1yizM=
-Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id D84D618000530;
-	Fri, 30 May 2025 16:39:41 -0700 (PDT)
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-To: bcm-kernel-feedback-list@broadcom.com,
-	Andrea della Porta <andrea.porta@suse.com>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof Wilczynski <kw@linux.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
-	Will Deacon <will@kernel.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Derek Kiernan <derek.kiernan@amd.com>,
-	Dragan Cvetic <dragan.cvetic@amd.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Saravana Kannan <saravanak@google.com>,
-	linux-clk@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-gpio@vger.kernel.org,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Stefan Wahren <wahrenst@gmx.net>,
-	Herve Codina <herve.codina@bootlin.com>,
-	Luca Ceresoli <luca.ceresoli@bootlin.com>,
-	Thomas Petazzoni <thomas.petazzoni@bootlin.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	Phil Elwell <phil@raspberrypi.com>,
-	Dave Stevenson <dave.stevenson@raspberrypi.com>,
-	kernel-list@raspberrypi.com,
-	Matthias Brugger <mbrugger@suse.com>
-Cc: Florian Fainelli <f.fainelli@gmail.com>
-Subject: Re: [PATCH v12 03/13] dt-bindings: misc: Add device specific bindings for RaspberryPi RP1
-Date: Fri, 30 May 2025 16:39:41 -0700
-Message-ID: <20250530233941.465046-1-florian.fainelli@broadcom.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250529135052.28398-3-andrea.porta@suse.com>
-References: <cover.1748526284.git.andrea.porta@suse.com> <20250529135052.28398-3-andrea.porta@suse.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rde4H29J"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-7398d65476eso1981273b3a.1
+        for <linux-pci@vger.kernel.org>; Fri, 30 May 2025 23:12:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1748671965; x=1749276765; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=0xC9CFEE+YUx312k0/EiyveI/Q/YMtl8Jwd16dQuFXI=;
+        b=rde4H29JXUZYkCwRkFh5YqmlKNfFikJlrTG0pImauIaN28Q/wO4BpvfqecpxTl7dsV
+         gVtq+WsB4PLRbyk/5hVxBl7h00LnGZjJN+3RW9+Jb3HG8fbFF5PNi0fKP/FNjEqWHA4R
+         0TxU5oNqF/m+IKkZJlH4v/TUpTKuEwlGnkG/WtAAbEedt3bChxh9TKKnnO3f4HSUs3Fw
+         wCV/9RlkoIX0sj3kNzLaT52zGDxCGnDWXiDBGmSC4ehl2HO+jJ/oovYALztMWRyOvafz
+         ZZEYCphEZDMwcSlIQnpbKV3SRP8nnYvnqzmg8Q/1qj8/lih8W1WI9evIPBTW9f8WryNf
+         R6Ew==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748671965; x=1749276765;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0xC9CFEE+YUx312k0/EiyveI/Q/YMtl8Jwd16dQuFXI=;
+        b=nucP8hxhtwhdtmf3nMLg1KtTkpVIAnvPTtdORHk/yJT51GbtKWymZCghs33N1FkkkA
+         B5jGwTSz/IvrxucHC38jrFp+Q4UXHBpOV7YW4RGXuKGs6uWxJxIwTDBjWJUmFkGNG3dK
+         W5nJD7v+Tl6iZSG+BZiWKBPokTAGaQu5hMQx6gLnz54cawnN92B/EBW03WVg7LjFD23D
+         oZOEVERQq+1ZLJWeyemvlYBgWJ+s9ZnwsT5EZozVas6mtBlckgTtYb+SFKRdL7iOn0Nv
+         VtLYZ+dP4DpmsLWjYUrdOPta0LtYunU3s4U5JOMHN5dSSlf71YG1G3PbBowMeCBMeUzR
+         +zvA==
+X-Forwarded-Encrypted: i=1; AJvYcCWeMpJZTLAgu/B3KWr67V3lg5637yVfuissBg/kQrfRUPMT9BCrlA/20hM/1lGARSXc6vGSB08DGYI=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx59igrx4rDbq0UCphDTQUp7OfKiCaOfGhhs3uBjg4ELRcOKWbL
+	SAE0M3PyArmNWWiwVaI/UQ95tBNFpYSEfcrzCZRtNYdDmmJ2pyUpFenuk2GLfdmPew==
+X-Gm-Gg: ASbGnct/JQ4OqGoOmfi7CAqkHUMFYd8pHGm8e/hBTcR8FAXWF5If5Adyie3F4Zx0PwQ
+	rf2A5FNLtPaNn8eT81NfUbw2JebUbhDDNucYk3jRtGCMsh3zZ60HBdw3SHqDFwiBwnIsn4LkQ1y
+	xmaXTuITVLNFfi/g55fLc4OhJQPTu/HTvZG/y1YiUkPMoj14ANI9xrZPBSCkzJOoB/c/Zm6D1vM
+	QGprPUwWHDi1W49tYd8Dea4iRI8QkA71IGL5okxumBjiF6p0enyHWALIboXFP8W8/U9tvY9EaDC
+	dc8KBIPjbiJ4WBeAXfh97t/XCk2icVxlk4jb3vpxqWIHD2MRQ5Anqa1UDY7cB6U8kjn2KBUN
+X-Google-Smtp-Source: AGHT+IE96H8U8bWE8z0seGlz+ce1VhCU9n8V1B9SIIp0uy/rKpHh593gOPlHdV8KFu0tdA5IB8EsVg==
+X-Received: by 2002:a05:6a00:8b09:b0:736:4c3d:2cba with SMTP id d2e1a72fcca58-747ad757dc4mr9023047b3a.9.1748671965098;
+        Fri, 30 May 2025 23:12:45 -0700 (PDT)
+Received: from thinkpad ([120.56.204.95])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-747affcf4c5sm3950187b3a.124.2025.05.30.23.12.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 30 May 2025 23:12:44 -0700 (PDT)
+Date: Sat, 31 May 2025 11:42:40 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Hans Zhang <18255117159@163.com>
+Cc: shawn.lin@rock-chips.com, lpieralisi@kernel.org, kw@linux.com, 
+	bhelgaas@google.com, heiko@sntech.de, robh@kernel.org, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2 0/3] Fix interrupt log message
+Message-ID: <hjckb2qsdz5atx5occqv7m6syg4fnilxhmn4zeq4y5yoqkmdjf@66gudl2chlgk>
+References: <20250516145544.110516-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250516145544.110516-1-18255117159@163.com>
 
-From: Florian Fainelli <f.fainelli@gmail.com>
-
-On Thu, 29 May 2025 15:50:40 +0200, Andrea della Porta <andrea.porta@suse.com> wrote:
-> The RP1 is a MFD that exposes its peripherals through PCI BARs. This
-> schema is intended as minimal support for the clock generator and
-> gpio controller peripherals which are accessible through BAR1.
+On Fri, May 16, 2025 at 10:55:41PM +0800, Hans Zhang wrote:
+> Dear Maintainers,
 > 
-> Signed-off-by: Andrea della Porta <andrea.porta@suse.com>
-> Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
-> Reviewed-by: Florian Fainelli <florian.fainelli@broadcom.com>
-> ---
+> Detailed descriptions of interrupts can be seen from RK3399 TRM doc.
+> I found two errors and cleaned up the driver by the way.
+> 
+> This patch series improves the logging accuracy and code cleanliness of
+> the Rockchip PCIe host controller driver:
+> 
+> Log Message Clarifications
+> 
+> Patch 1 fixes a misleading debug message for the PCIE_CORE_INT_UCR
+> interrupt, replacing a duplicated "malformed TLP" message with "Unexpected
+> Completion" to reflect the actual error condition.
+> 
+> Patch 2 corrects the terminology for non-fatal errors, renaming "no fatal
+> error" to "non fatal error interrupt received" to align with PCIe interrupt
+> semantics.
+> 
+> Code Cleanup
+> 
+> Patch 3 removes redundant header includes (e.g., unused clock/reset
+> headers) to streamline the driver and reduce build dependencies.
+> 
+> These changes enhance debug log reliability, eliminate ambiguity for
+> developers.
+> 
 
-Applied to https://github.com/Broadcom/stblinux/commits/devicetree/next, thanks!
---
-Florian
+Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+
+- Mani
+
+> ---
+> Changes for v2:
+> - Drop patch [v1 3/4].
+> - The other patches have not been modified.
+> ---
+> 
+> Hans Zhang (3):
+>   PCI: rockchip-host: Fix "Unexpected Completion" log message
+>   PCI: rockchip-host: Correct non-fatal error log message
+>   PCI: rockchip-host: Remove unused header includes
+> 
+>  drivers/pci/controller/pcie-rockchip-host.c | 13 ++-----------
+>  1 file changed, 2 insertions(+), 11 deletions(-)
+> 
+> 
+> base-commit: 82f2b0b97b36ee3fcddf0f0780a9a0825d52fec3
+> -- 
+> 2.25.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
