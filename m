@@ -1,107 +1,201 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DD12221FD0
-	for <linux-pci@vger.kernel.org>; Mon,  2 Jun 2025 17:23:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E166EAF9;
+	Mon,  2 Jun 2025 18:11:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748885022; cv=none; b=bP38+NWToxUFo1HJyJA1LJTolXd14cNQTWBUsVDADK+vM/h5L53ltNBn7aAlGOg1ovv/4+df84PLvdsymddsfhK4JRW84h0Ai0gIVBE1DQiyGTh4N2JSUyaej5/D+3+2VDLaieecvQfUBT0pgiizZ/2svBKLsRxR1sVtjWUtqkA=
+	t=1748887872; cv=none; b=Iw1PfzlIpbWW2nq5xiVxGssu64okMRlooilb/nE7/vGv8CS1a13VMVVdwP2cKQyB27G4Y5/08p/DxJ6gjnVvu6wW9dySlaLjemU5rkZKCVJctHYelYv6Lz7hZn+lWqPSF1F2tN+yzUgchAVXDIqnx+E1oNy/eHMIqD41bmOcpqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748885022; c=relaxed/simple;
-	bh=tKtj8c+Xr13Z1eRDH4LWyZEPx1ZPPsV6VpEfJ4Azgdg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=T31H1plLrXBp5GERwtw5jhP3SwZtDdHtAnqtx1N2EFwRraevRbyH7bae8zqS1WvFVwQS0RSY9u4kAp8Fyn6fdInjWYkpyvZ+7iFAuN/+PXYBTuwF/o7V0Q79Alav3AezUrOmddKYA/k/E6gDUSTTxRHUmw89hxz9qUzzC/j+oXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Kz4DQavJ; arc=none smtp.client-ip=198.175.65.11
+	s=arc-20240116; t=1748887872; c=relaxed/simple;
+	bh=30U5FrzZe477PkMourbldSSCDpz4fRDaC700uOnf3C0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=FV1qs+I8v7408En5xYve6KejJtMYw+9+POj8dNFMRQW4y6WF9pyoo1N5DCYVvjOMcA0ny2OjXaJNUPhWubN/QcCiDXj3ECj34ZrtUSKChyUfRZkkABwPd/I2xJ7WE12BT22832FNpYWPY0Xv4XA+dx60MEmMf/6GvCUYdvI1o0M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=fmSQW/5Z; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Kz4DQavJ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="fmSQW/5Z"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1748885021; x=1780421021;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=tKtj8c+Xr13Z1eRDH4LWyZEPx1ZPPsV6VpEfJ4Azgdg=;
-  b=Kz4DQavJ3iCb9eSiHiYlmyYwE9l8iuGenslOHOYlxXE7CVtm4Qmn0hiV
-   GCuzNKjDGXWWtMsKj2jFJ8/0DkzEFczNs7oW0oykdlvfF8X2dLHdUfFbF
-   E04kMesInY0eF/JZy15L7WB47SdzTBT+Q+IsluKZBToav+uprNjc87hyu
-   aUetlPxYKHMh1EQ652ux0CXRTUPt52vOYfvkrz7SvIviICM/aJCuSndHB
-   zSEUHhWKW8gJdCUjVnocCGfSPH5EnkdzZ7IpAPfKcsDIOIkK29SmtKMA9
-   4VW0nDPaVS26SjoqcpaCayWA9R346n0bh0s6L5nITyx8SmlnAirdc0bzQ
-   A==;
-X-CSE-ConnectionGUID: WHbEaIWCQbC/59qR9NIuSw==
-X-CSE-MsgGUID: x9yeyR+dRNWbXIfzJsEEgg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11451"; a="61159331"
-X-IronPort-AV: E=Sophos;i="6.16,203,1744095600"; 
-   d="scan'208";a="61159331"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2025 10:23:40 -0700
-X-CSE-ConnectionGUID: XLiBA8M7RUabxRhhRC1sSA==
-X-CSE-MsgGUID: 6Ddq33vzTi+AZlIFbXgeYg==
+  t=1748887871; x=1780423871;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=30U5FrzZe477PkMourbldSSCDpz4fRDaC700uOnf3C0=;
+  b=fmSQW/5ZVmnMp5slep4QinOaqcZjzpm4c4TKX1SinJezIVG/Z/aOJJZW
+   C3k0xzSKuvArrDK70JCWs4AXwUdRd7GGqCULxHnjs0xzX5+a+DvbegBuC
+   JpK1tTojevQjKbi070x6IXBqxLcD7ZMmWqWQ+53Nn/BVjj/+CrRo4KRp9
+   lZGHi0Bbn5z8viq+1BsxZQhNXck99FQ8heEvzyL6CAV9itYegZ74l1JR3
+   zDZfHc7rqhBdmu2DUEXd7jxZQ7W0cG75UWk/baTbLBHhNegXoIeW757mx
+   O/MH/BCtyYsSnAO7m+XOanmOt2M9XkWSxvqe9HDWLjgnZKUzHNji3zH8j
+   g==;
+X-CSE-ConnectionGUID: DFLFctPOQiSFkgCBQxHYnA==
+X-CSE-MsgGUID: X6wdajwUS/yz3qxThmtmtQ==
+X-IronPort-AV: E=McAfee;i="6700,10204,11451"; a="50770704"
+X-IronPort-AV: E=Sophos;i="6.16,204,1744095600"; 
+   d="scan'208";a="50770704"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2025 11:11:10 -0700
+X-CSE-ConnectionGUID: rmcKHSDgT8WBm+xG+YxC8w==
+X-CSE-MsgGUID: OZrs+IS/S4yOMpwDesH9+Q==
 X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,203,1744095600"; 
-   d="scan'208";a="149433990"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa005.fm.intel.com with ESMTP; 02 Jun 2025 10:23:38 -0700
-Date: Tue, 3 Jun 2025 01:17:08 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Alexey Kardashevskiy <aik@amd.com>
-Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
-	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	jgg@nvidia.com, zhiw@nvidia.com
-Subject: Re: [RFC PATCH 3/3] iommufd/tsm: Add tsm_bind/unbind iommufd ioctls
-Message-ID: <aD3clPC8QfL1/XYF@yilunxu-OptiPlex-7050>
-References: <yq5a5xhj5yng.fsf@kernel.org>
- <20250529133757.462088-1-aneesh.kumar@kernel.org>
- <20250529133757.462088-3-aneesh.kumar@kernel.org>
- <aDsta4UX76GaExrO@yilunxu-OptiPlex-7050>
- <668b023e-d299-42e1-87fc-ec83c514374e@amd.com>
+X-IronPort-AV: E=Sophos;i="6.16,204,1744095600"; 
+   d="scan'208";a="148467703"
+Received: from fdefranc-mobl3.ger.corp.intel.com (HELO fdefranc-mobl3.localnet) ([10.245.246.244])
+  by fmviesa003-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2025 11:11:04 -0700
+From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
+To: Yazen Ghannam <yazen.ghannam@amd.com>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
+ Davidlohr Bueso <dave@stgolabs.net>,
+ Jonathan Cameron <jonathan.cameron@huawei.com>,
+ Dave Jiang <dave.jiang@intel.com>,
+ Alison Schofield <alison.schofield@intel.com>,
+ Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
+ Dan Williams <dan.j.williams@intel.com>,
+ Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+ Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
+ linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-cxl@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+ linux-pci@vger.kernel.org, linux-edac@vger.kernel.org
+Subject: Re: [PATCH 4/4 v2] ACPI: extlog: Trace CPER CXL Protocol Errors
+Date: Mon, 02 Jun 2025 20:06:28 +0200
+Message-ID: <2947754.vYhyI6sBWr@fdefranc-mobl3>
+In-Reply-To: <20250429182055.GB76257@yaz-khff2.amd.com>
+References:
+ <20250429172109.3199192-1-fabio.m.de.francesco@linux.intel.com>
+ <20250429172109.3199192-5-fabio.m.de.francesco@linux.intel.com>
+ <20250429182055.GB76257@yaz-khff2.amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <668b023e-d299-42e1-87fc-ec83c514374e@amd.com>
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-On Mon, Jun 02, 2025 at 02:52:52PM +1000, Alexey Kardashevskiy wrote:
-> 
-> 
-> On 1/6/25 02:25, Xu Yilun wrote:
-> > > + * struct iommu_vdevice_id - ioctl(IOMMU_VDEVICE_TSM_BIND/UNBIND)
-> > > + * @size: sizeof(struct iommu_vdevice_id)
-> > > + * @vdevice_id: Object handle for the vDevice. Returned from IOMMU_VDEVICE_ALLOC
-> > > + */
-> > > +struct iommu_vdevice_id {
-> > > +	__u32 size;
-> > > +	__u32 vdevice_id;
-> > > +} __packed;
-> > > +#define IOMMU_VDEVICE_TSM_BIND _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVICE_TSM_BIND)
-> > > +#define IOMMU_VDEVICE_TSM_UNBIND _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVICE_TSM_UNBIND)
-> > 
-> > Hello, I see you are talking about the detailed implementation. But
-> > could we firstly address the confusing whether this TSM Bind/Unbind
-> > should be a VFIO uAPI or IOMMUFD uAPI?
-> > 
-> > In this thread [1], I was talking about TSM Bind/Unbind affects VFIO
-> > behavior so they cannot be iommufd uAPIs which VFIO is not aware of.
-> 
-> 
-> What will the host VFIO-PCI driver do differently? I only remember "stop mmaping to the userspace", is that all?
-
-And do unbind before zapping MMIO.
-
-> Or, more to the point, what is that exact thing which cannot be done from QEMU? Thanks,
-
-But kernel don't want incorrect userspace calls crash kernel, e.g. VFIO
-zaps MMIO on TDI bound then KVM just crashes. So you need to check if
-zapping MMIOs are allowed in VFIO, that means VFIO still needs to know
-if device is bound.  Scatter BIND/UNBIND & other device controls in both
-IOMMUFD & VFIO makes life harder.
-
+On Tuesday, April 29, 2025 8:20:55=E2=80=AFPM Central European Summer Time =
+Yazen Ghannam wrote:
+> On Tue, Apr 29, 2025 at 07:21:09PM +0200, Fabio M. De Francesco wrote:
+> > When Firmware First is enabled, BIOS handles errors first and then it
+> > makes them available to the kernel via the Common Platform Error Record
+> > (CPER) sections (UEFI 2.10 Appendix N). Linux parses the CPER sections
+> > via one of two similar paths, either ELOG or GHES.
+> >=20
+> > Currently, ELOG and GHES show some inconsistencies in how they report to
+> > userspace via trace events.
+> >=20
+> > Therfore make the two mentioned paths act similarly by tracing the CPER
+> > CXL Protocol Error Section (UEFI v2.10, Appendix N.2.13) signaled by the
+> > I/O Machine Check Architecture and reported by BIOS in FW-First.
+> >=20
+> > Cc: Dan Williams <dan.j.williams@intel.com>
+> > Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.=
+com>
+> > ---
+> >  drivers/acpi/acpi_extlog.c | 60 ++++++++++++++++++++++++++++++++++++++
+> >  drivers/cxl/core/ras.c     |  6 ++++
+> >  include/cxl/event.h        |  2 ++
+> >  3 files changed, 68 insertions(+)
+> >=20
+> > diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+> > index 7d7a813169f1..8f2ff3505d47 100644
+> > --- a/drivers/acpi/acpi_extlog.c
+> > +++ b/drivers/acpi/acpi_extlog.c
+> > @@ -12,6 +12,7 @@
+> >  #include <linux/ratelimit.h>
+> >  #include <linux/edac.h>
+> >  #include <linux/ras.h>
+> > +#include <cxl/event.h>
+> >  #include <acpi/ghes.h>
+> >  #include <asm/cpu.h>
+> >  #include <asm/mce.h>
+> > @@ -157,6 +158,60 @@ static void extlog_print_pcie(struct cper_sec_pcie=
+ *pcie_err,
+> >  	}
+> >  }
+> > =20
+> > +static void
+> > +extlog_cxl_cper_handle_prot_err(struct cxl_cper_sec_prot_err *prot_err,
+> > +				int severity)
+> > +{
+> > +#ifdef CONFIG_ACPI_APEI_PCIEAER
+>=20
+> Why not apply this check on the function prototype?
+>=20
+This function is static.
+>
+> Reference: Documentation/process/coding-style.rst
+> 	   Section 21) Conditional Compilation
+>=20
+> > +	struct cxl_cper_prot_err_work_data wd;
+> > +	u8 *dvsec_start, *cap_start;
+> > +
+> > +	if (!(prot_err->valid_bits & PROT_ERR_VALID_AGENT_ADDRESS)) {
+> > +		pr_err_ratelimited("CXL CPER invalid agent type\n");
+> > +		return;
+> > +	}
+> > +
+> > +	if (!(prot_err->valid_bits & PROT_ERR_VALID_ERROR_LOG)) {
+> > +		pr_err_ratelimited("CXL CPER invalid protocol error log\n");
+> > +		return;
+> > +	}
+> > +
+> > +	if (prot_err->err_len !=3D sizeof(struct cxl_ras_capability_regs)) {
+> > +		pr_err_ratelimited("CXL CPER invalid RAS Cap size (%u)\n",
+> > +				   prot_err->err_len);
+> > +		return;
+> > +	}
+> > +
+> > +	if (!(prot_err->valid_bits & PROT_ERR_VALID_SERIAL_NUMBER))
+> > +		pr_warn(FW_WARN "CXL CPER no device serial number\n");
+>=20
+> Is this a requirement (in the spec) that we should warn users about?
+>=20
+> The UEFI spec says that serial number is only used if "CXL agent" is a
+> "CXL device".
+>=20
+> "CXL ports" won't have serial numbers. So this will be a false warning
+> for port errors.
+>=20
+I'll add a test and print that warning only if agent is a device (RCD,
+DEVICE, LD, FMLD).
+>
+> > +
+> > +	switch (prot_err->agent_type) {
+> > +	case RCD:
+> > +	case DEVICE:
+> > +	case LD:
+> > +	case FMLD:
+> > +	case RP:
+> > +	case DSP:
+> > +	case USP:
+> > +		memcpy(&wd.prot_err, prot_err, sizeof(wd.prot_err));
+> > +
+> > +		dvsec_start =3D (u8 *)(prot_err + 1);
+> > +		cap_start =3D dvsec_start + prot_err->dvsec_len;
+> > +
+> > +		memcpy(&wd.ras_cap, cap_start, sizeof(wd.ras_cap));
+> > +		wd.severity =3D cper_severity_to_aer(severity);
+> > +		break;
+> > +	default:
+> > +		pr_err_ratelimited("CXL CPER invalid agent type: %d\n",
+>=20
+> "invalid" is too harsh given that the specs may be updated. Maybe say
+> "reserved" or "unknown" or "unrecognized" instead.
+>=20
+> Hopefully things will settle down to where a user will be able to have a
+> system with newer CXL "agents" without *requiring* a kernel update. :)
+>
+I'll replace "invalid" with "unknown".
+>=20
+> Thanks,
+> Yazen
+>=20
 Thanks,
-Yilun
+
+=46abio
+
+
+
