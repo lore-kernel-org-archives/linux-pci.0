@@ -1,246 +1,139 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C94EA2253AE;
-	Mon,  2 Jun 2025 18:11:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 23DEA218EA2
+	for <linux-pci@vger.kernel.org>; Mon,  2 Jun 2025 18:43:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748887883; cv=none; b=aFx/S2JhePihXjCEpjI+WDv4w2TUX4QberlRvTxlPih1uJ5WhzbmyzG3MhKUr9pcBdVIyaC/5Hh0AJzGnAopHCwnS6LzOVCFxR/MoDEGe8dQhEQFT1PpG1utlP5sN3Fx+THXvBRRR5hM6ZC1s+jDbnwgyYQM2MMkv4aZ1X0LwxE=
+	t=1748889784; cv=none; b=nRLM9zCTLVO7n0KSCrQULHGWeiU0PtjnAV44LXKhb0b9FQ+wpLLSim/oXwK/BFanlKMPt0RZ2yH4zthnWkz3eCi98XMVSpdSzr+DdKRVjHdJ7qZM5aoZMa4IyWyMynBzFcB+Je/VCENTN6U9EhNm75tR7puEqeS0As5CkOf0Ac8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748887883; c=relaxed/simple;
-	bh=2UUlMrZ8pq2KZwO7Te3yGwm+qcaW3/azDJtyt1C5sXU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=U/c5c5wrxlYjXjzdsCoxj/2ATSntVN0QI6ueZ63Qh1Eht32Xo9/kqSbvHYiBVtxsNjfOqoSsD7JWrk0756i7NiysK24vw9kam+4dVLtJhoCqjktcLA8+lG8ZHos/4aePudBdbK5zjoQuEb+LiRxEFYtGy9G7RUWHnoTQ74UlPPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SaYXJVUx; arc=none smtp.client-ip=192.198.163.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1748889784; c=relaxed/simple;
+	bh=p+wD3zMTOWI0HISbGROLTVC+KJOh+kfgMSn79zqvOmY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LgzFIQRtr6/u3AuwW7LVBhXTnV8dp1jpPff+Zu1SqZll5yog+X0lNVTmcnpxnWzt5LKuUnPFnA/GrqB1D/cLYZqYVEJ3jr8napjvqRj/jY8KqBGMkFcxqtkq3bW2BIWEiqR0yEmq6PX6lR9VSIxLMA1vql7xOJlUZgD5ZeaYnOs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=uYHS+K1o; arc=none smtp.client-ip=209.85.208.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SaYXJVUx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1748887882; x=1780423882;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=2UUlMrZ8pq2KZwO7Te3yGwm+qcaW3/azDJtyt1C5sXU=;
-  b=SaYXJVUxQkbfG9Bg97nwo3S/J5nGhKefTHJEzETmMogVCrbHZbdTZwGP
-   WrI4Y44ORqiz/4cCMJgYVQzkYFnDmbLj20vR+VnT6nrgg6UbOCD4gl78I
-   Ic4Qp29ofUhgmtHkQpxWrSZNIcqCP1L7hfU7iP8oStHv0NkQAxYm9E9ju
-   tGP7FnMK7qnbcNfnXhcGsFlpNmGsgVl+cFVtJFesan/2gOM0jd38/e4/X
-   GsUf57x7h5yULcewPSjMzBhdu2DUykKxsgh3b08erOEq0+KOqXswS55kz
-   yQiCRdd4AoBqWxX30+dKHGTbz5oJ4tdlLvfvayfKSHbhrSZH2FzPElAO6
-   w==;
-X-CSE-ConnectionGUID: PFBIE7guRpqbKS/ubFn6fQ==
-X-CSE-MsgGUID: n6AJl14QRW2ZwGh+PJU9tw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11451"; a="51004921"
-X-IronPort-AV: E=Sophos;i="6.16,204,1744095600"; 
-   d="scan'208";a="51004921"
-Received: from orviesa008.jf.intel.com ([10.64.159.148])
-  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2025 11:11:20 -0700
-X-CSE-ConnectionGUID: 9Hr2MReVSlembJqHcEmVpg==
-X-CSE-MsgGUID: iehnMzY1TL2kjPR7bm1I/Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,204,1744095600"; 
-   d="scan'208";a="145561290"
-Received: from fdefranc-mobl3.ger.corp.intel.com (HELO fdefranc-mobl3.localnet) ([10.245.246.244])
-  by orviesa008-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2025 11:11:13 -0700
-From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
-To: Yazen Ghannam <yazen.ghannam@amd.com>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Len Brown <lenb@kernel.org>,
- Davidlohr Bueso <dave@stgolabs.net>,
- Jonathan Cameron <jonathan.cameron@huawei.com>,
- Dave Jiang <dave.jiang@intel.com>,
- Alison Schofield <alison.schofield@intel.com>,
- Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>,
- Dan Williams <dan.j.williams@intel.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
- Tony Luck <tony.luck@intel.com>, Borislav Petkov <bp@alien8.de>,
- linux-kernel@vger.kernel.org, linux-acpi@vger.kernel.org,
- linux-cxl@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
- linux-pci@vger.kernel.org, linux-edac@vger.kernel.org
-Subject: Re: [PATCH 3/4 v2] ACPI: extlog: Trace CPER PCI Express Error Section
-Date: Mon, 02 Jun 2025 18:59:05 +0200
-Message-ID: <3791386.LZWGnKmheA@fdefranc-mobl3>
-In-Reply-To: <20250429180242.GA76257@yaz-khff2.amd.com>
-References:
- <20250429172109.3199192-1-fabio.m.de.francesco@linux.intel.com>
- <20250429172109.3199192-4-fabio.m.de.francesco@linux.intel.com>
- <20250429180242.GA76257@yaz-khff2.amd.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="uYHS+K1o"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-604e2a2f200so9167410a12.1
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2025 11:43:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1748889780; x=1749494580; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=vnvUjNE/+RVrDDbHkhezYePJuDWmPp+oybHgIE8H+Rg=;
+        b=uYHS+K1oj0WgCIk3e8h0ncTbqM/HGd7x87OL/eqkSN4YZxLu5FFKF5qhbv4F12f7VN
+         oozntXURwdyt56jNvro+rTuLDlYnqQ1Cl3tSwvvsZEcsqcaQDX9pD9KsEDv4V1zfid2r
+         SrQakZkxhUczy3nKekQwv96mFQ1lm2iXOtXF7+KJZRm3D47+GLyW1RLtlGsGOmdQuxig
+         G60I4VxRmNEMiGtg9p7zTSw52jsAMGwShefVjDgSYrV/vVkcyXwQ2VTiXivJC4iDNhvQ
+         LyAjTiIXWuk/jn2wPAf5ePTlXSZVIf6zb8wlrtgt++ayO2Yle4Q0GDnGIYlOLrzsuzXB
+         3dAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748889780; x=1749494580;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=vnvUjNE/+RVrDDbHkhezYePJuDWmPp+oybHgIE8H+Rg=;
+        b=Ix2FVjEsTII38E8iWGGqkbZNwgcpNNLm0NkLs8yXL1D0Pq4qt5zntAq0+088o8BlUT
+         o+SWFfc7NmFFTbfy2DSAyNu6HmL9cSjnyALbAygg8aKh11cfRuYZ370tuK9E2Ck6pxm/
+         GtJYZ5wyLQYE4Pm8Qgo9xGc7A9zPl0SKkjsLTbZI6OGXnjfAPilAsUDbAZSRo0T5+zK8
+         vMMXMmOJ08BpTvEkeyGMEDA2oTn5uXovmHWlKFs+ZdMsB8EVhZ3z3kvmkmBahX85nN2c
+         wAuw1u6VOtYYeX7w+Dgr0eRr62ApyMfNHC+Z+8ME00dWgkc8PA5bbFetiVQ0mErad9Wn
+         Rb+Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUzPfv7FwjtAY4Ss2XxHr7lf8gJob34CtmIRItAzZfGB+esdu0EZZAu8WvWsu9U/pjYxM80ZdBeyrw=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw3CF/iSaK73N0UP44Bex4JJDmtzDQR1FbgMFtWEmzXV/vxzbm/
+	rKLsTO9DszaxmOS2X4u1LcixwD4CYDneF5JqeesirCCGWy585DCcPbo/3FKJyIthNXA=
+X-Gm-Gg: ASbGncvJ2+4dHbNWZPfcK85Buzbl9p8wPmC6yNmJBty9iphbFSq/gTUllH6sNL+TIYp
+	F477Vbq8yam7tt94ZgBtCR8987zOqo2FsOjTEob1wmkrPqYAqbX7zF9uVs1cFtWr62usz7QTwu+
+	2UHLfI/1ElDtogQoeRgtu2193WEngwC5LDeUSHAh5nwi1QBhvP7HRqESCR7/NX57rEfaPrSyQT1
+	uLHw2cxwdS9MDnOsMujQ4kYkVWHrAT5VJRlgemx1GNTFhrJVn2C2L3+vgiW2NWBBaC/IV5VQ7R4
+	s2ArP9aeHBXa64WQzkWFiZ9+QZq8DHZkPXKrGVQmCIv4NDw9zQ6pLFsfwlfuwWH7f4kDlSxQZk/
+	huQWj
+X-Google-Smtp-Source: AGHT+IFJ/fmPqlLI1xs1kQIdWrguQXYZLNV4oahPunuD+7Yh+pew/6do8m1nbzlvPSYYP3h1lQd2KQ==
+X-Received: by 2002:a05:6402:26c9:b0:602:3e4:54de with SMTP id 4fb4d7f45d1cf-605b751ac19mr9468088a12.10.1748889780341;
+        Mon, 02 Jun 2025 11:43:00 -0700 (PDT)
+Received: from [192.168.0.14] ([79.115.63.75])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ada5d84e76csm828077866b.86.2025.06.02.11.42.59
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Jun 2025 11:42:59 -0700 (PDT)
+Message-ID: <f2d149c6-41a4-4a9a-9739-1ea1c4b06f4b@linaro.org>
+Date: Mon, 2 Jun 2025 19:42:58 +0100
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset="utf-8"
-
-On Tuesday, April 29, 2025 8:02:42=E2=80=AFPM Central European Summer Time =
-Yazen Ghannam wrote:
-> On Tue, Apr 29, 2025 at 07:21:08PM +0200, Fabio M. De Francesco wrote:
-> > I/O Machine Check Arcitecture events may signal failing PCIe components
-> > or links. The AER event contains details on what was happening on the w=
-ire
-> > when the error was signaled.
-> >=20
-> > Trace the CPER PCIe Error section (UEFI v2.10, Appendix N.2.7) reported
-> > by the I/O MCA.
-> >=20
-> > Cc: Dan Williams <dan.j.williams@intel.com>
-> > Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.=
-com>
-> > ---
-> >  drivers/acpi/acpi_extlog.c | 30 ++++++++++++++++++++++++++++++
-> >  drivers/pci/pcie/aer.c     |  2 +-
-> >  include/linux/aer.h        | 13 +++++++++++--
-> >  3 files changed, 42 insertions(+), 3 deletions(-)
-> >=20
-> > diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
-> > index caca6ccd6e99..7d7a813169f1 100644
-> > --- a/drivers/acpi/acpi_extlog.c
-> > +++ b/drivers/acpi/acpi_extlog.c
-> > @@ -131,6 +131,32 @@ static int print_extlog_rcd(const char *pfx,
-> >  	return 1;
-> >  }
-> > =20
-> > +static void extlog_print_pcie(struct cper_sec_pcie *pcie_err,
-> > +			      int severity)
-> > +{
-> > +	struct aer_capability_regs *aer;
-> > +	struct pci_dev *pdev;
-> > +	unsigned int devfn;
-> > +	unsigned int bus;
-> > +	int aer_severity;
-> > +	int domain;
-> > +
-> > +	if (pcie_err->validation_bits & CPER_PCIE_VALID_DEVICE_ID &&
-> > +	    pcie_err->validation_bits & CPER_PCIE_VALID_AER_INFO) {
->=20
-> You can save an indentation level by inverting this check and returning
-> early.
->=20
-Nice idea, I'll do it.
->
-> > +		aer_severity =3D cper_severity_to_aer(severity);
->=20
-> I think it would help with clarity if all these lines were aligned on
-> the "=3D".
->=20
-> > +		aer =3D (struct aer_capability_regs *)pcie_err->aer_info;
-> > +		domain =3D pcie_err->device_id.segment;
-> > +		bus =3D pcie_err->device_id.bus;
->=20
-> Many of these variables are passed unchanged to a single function below.
->=20
-> Why not pass them directly to the function?
->=20
-> Even if you split the function parameters across multiple lines, you
-> will still have fewer lines. Plus you will not need to allocate the
-> variables.
->=20
-I think that the cost is minimal and readability is improved.
->
-> > +		devfn =3D PCI_DEVFN(pcie_err->device_id.device,
-> > +				  pcie_err->device_id.function);
-> > +		pdev =3D pci_get_domain_bus_and_slot(domain, bus, devfn);
-> > +		if (!pdev)
-> > +			return;
->=20
-> Newline here, please.
->=20
-Sure.
->
-> > +		pci_print_aer(KERN_DEBUG, pdev, aer_severity, aer);
->=20
-> Why use a debug log level?
->
-Dan Williams suggested the debug log level commenting v1.
->
-> > +		pci_dev_put(pdev);
-> > +	}
-> > +}
-> > +
-> >  static int extlog_print(struct notifier_block *nb, unsigned long val,
-> >  			void *data)
-> >  {
-> > @@ -182,6 +208,10 @@ static int extlog_print(struct notifier_block *nb,=
- unsigned long val,
-> >  			if (gdata->error_data_length >=3D sizeof(*mem))
-> >  				trace_extlog_mem_event(mem, err_seq, fru_id, fru_text,
-> >  						       (u8)gdata->error_severity);
-> > +		} else if (guid_equal(sec_type, &CPER_SEC_PCIE)) {
-> > +			struct cper_sec_pcie *pcie_err =3D acpi_hest_get_payload(gdata);
-> > +
-> > +			extlog_print_pcie(pcie_err, gdata->error_severity);
-> >  		} else {
-> >  			void *err =3D acpi_hest_get_payload(gdata);
-> > =20
-> > diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> > index d0ebf7c15afa..627fcf434698 100644
-> > --- a/drivers/pci/pcie/aer.c
-> > +++ b/drivers/pci/pcie/aer.c
-> > @@ -801,7 +801,7 @@ void pci_print_aer(char *level, struct pci_dev *dev=
-, int aer_severity,
-> >  	trace_aer_event(dev_name(&dev->dev), (status & ~mask),
-> >  			aer_severity, tlp_header_valid, &aer->header_log);
-> >  }
-> > -EXPORT_SYMBOL_NS_GPL(pci_print_aer, "CXL");
-> > +EXPORT_SYMBOL_GPL(pci_print_aer);
-> > =20
-> >  /**
-> >   * add_error_device - list device to be handled
-> > diff --git a/include/linux/aer.h b/include/linux/aer.h
-> > index 45d0fb2e2e75..737db92e6570 100644
-> > --- a/include/linux/aer.h
-> > +++ b/include/linux/aer.h
-> > @@ -56,17 +56,26 @@ struct aer_capability_regs {
-> >  #if defined(CONFIG_PCIEAER)
-> >  int pci_aer_clear_nonfatal_status(struct pci_dev *dev);
-> >  int pcie_aer_is_native(struct pci_dev *dev);
-> > +void pci_print_aer(char *level, struct pci_dev *dev, int aer_severity,
-> > +		   struct aer_capability_regs *aer);
-> >  #else
-> >  static inline int pci_aer_clear_nonfatal_status(struct pci_dev *dev)
-> >  {
-> >  	return -EINVAL;
-> >  }
-> >  static inline int pcie_aer_is_native(struct pci_dev *dev) { return 0; }
-> > +static inline void pci_print_aer(char *level, struct pci_dev *dev,
-> > +				 int aer_severity,
-> > +				 struct aer_capability_regs *aer)
-> > +{ }
->=20
-> I think the "{ }" can just go at the end of the parameters.
->=20
-> >  #endif
-> > =20
-> > -void pci_print_aer(char *level, struct pci_dev *dev, int aer_severity,
-> > -		   struct aer_capability_regs *aer);
-> > +#if defined(CONFIG_ACPI_APEI_PCIEAER)
-> >  int cper_severity_to_aer(int cper_severity);
-> > +#else
-> > +static inline int cper_severity_to_aer(int cper_severity) { return 0; }
->=20
-> This may have an unintentional side effect.
->=20
-> '0' means AER_NONFATAL.
->=20
-> So the function will return that the error is an uncorrectable AER error
-> that is potentially recoverable. At a minimum, this will incorrectly
-> classify the error for data collection, and it could cause incorrect
-> handling.
->=20
-> I guess the risk is minimal, since CONFIG_ACPI_APEI_PCIEAER will likely
-> be enabled on systems that would use this.
->
-Noted. Kconfig will select CONFIG_ACPI_APEI_PCIEAER.
->
-> Thanks,
-> Yazen
->
-
-Thanks,
-
-=46abio
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 24/25] PCI: Perform reset_resource() and build fail list
+ in sync
+To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org,
+ =?UTF-8?Q?Micha=C5=82_Winiarski?= <michal.winiarski@intel.com>,
+ Igor Mammedov <imammedo@redhat.com>, LKML <linux-kernel@vger.kernel.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ William McVicker <willmcvicker@google.com>
+References: <20241216175632.4175-1-ilpo.jarvinen@linux.intel.com>
+ <20241216175632.4175-25-ilpo.jarvinen@linux.intel.com>
+ <5f103643-5e1c-43c6-b8fe-9617d3b5447c@linaro.org>
+ <8f281667-b4ef-9385-868f-93893b9d6611@linux.intel.com>
+ <3a47fc82-dc21-46c3-873d-68e713304af3@linaro.org>
+ <f6ee05f7-174b-76d4-3dbe-12473f676e4d@linux.intel.com>
+ <867e47dc-9454-c00f-6d80-9718e5705480@linux.intel.com>
+ <a56284a4-755d-4eb4-ba77-9ea30e18d08f@linaro.org>
+ <7e882cfb-a35a-bab0-c333-76a4e79243b6@linux.intel.com>
+Content-Language: en-US
+From: Tudor Ambarus <tudor.ambarus@linaro.org>
+In-Reply-To: <7e882cfb-a35a-bab0-c333-76a4e79243b6@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
 
+
+On 6/2/25 4:08 PM, Ilpo Järvinen wrote:
+>>> I think I figured out more about the reason. It's not related to that 
+>>> bridge window resource.
+>>>
+>>> pbus_size_mem() will add also that ROM resource into realloc_head 
+>>> as it is considered (intentionally) optional after the optional change
+>>> (as per "tudor: 2:" line). And that resource is never assigned because 
+
+cut
+
+>>> pdev_sort_resources() didn't pick it up into the head list. The next 
+>>> question is why the ROM resource isn't in the head list.
+>>>
+>> It seems the ROM resource is skipped at:
+>> https://web.git.kernel.org/pub/scm/linux/kernel/git/next/linux-
+>> next.git/tree/drivers/pci/setup-bus.c#n175
+>>
+>> tudor: pdev_sort_resources: ROM [??? 0x00000000 flags 0x0] resource
+>> skipped due to !(r->flags) || r->parent
+> I don't see the device in this print, hope it is for the same device.
+> 
+> In any case, I don't understand what reset resource's flags in between 
+> pbus_size_mem() and pdev_sort_resources(), or alternative, why type 
+> checking in pbus_size_mem() matches if flags == 0 at that point.
+> 
+> Those two functions should work on the same resources, if one skips 
+> something, the other should too. Disparity between them can cause issues, 
+> but despite reading the code multiple times, I couldn't figure out how 
+> that disparity occurs (except for the !pdev_resources_assignable() case).
+
+cut
+
+> It is of interest to know why the same resource is treated differently.
+> So what were the resource flags, type* args when it's processed by
+> pbus_size_mem()? If resource's flags are zero at that point but it matches 
+
+This is the full output: https://termbin.com/mn1x
+for the following prints: https://termbin.com/q57h
+
+It seems ROM resource is of type 2 at pbus_size_mem() time.
+
+> one of the types, that would be a bug.
+
+I'll give another try tomorrow. Thanks,
+ta
