@@ -1,189 +1,275 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21FC4AD23;
-	Tue,  3 Jun 2025 05:59:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43D1425D524
+	for <linux-pci@vger.kernel.org>; Tue,  3 Jun 2025 06:27:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748930348; cv=none; b=h+UQFNJcV+EF/5Ot/rc0rMXUT62si+gWuq+9NASrOI0XOOs+8+lJM8y0Wf1K4FqmU/dq5AH0nliijnA/GhGp9HfXH4e218CMKgQjpNyK7RM7do+FvS36XU74JYcAxXnwemv9ewO0r8RwIBYs1zHARq2EH45I3v4ovVQBdM88uiY=
+	t=1748932028; cv=none; b=BMRbreOuUZaPuogdnAUcwaVewB2Kf36umV47cVEMKG03gZn19nq/Xzb745ZNYjLxe98nv88fbb8NvK0C92oxMSUcDMPyVFGiXWO5aozf9VEtx+lJSi0NEV9iwM6ab8dwx8GtF62O5zc0Zvj+WT6bzvV++qSXfVzKH2wJpy7yM94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748930348; c=relaxed/simple;
-	bh=0SZMc9RMAD3OL6AmtIwhsT0nSCxX2GAwLNNSSQsvmVE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OihkIAVqqIQAyL8+T2B9Urj3ZXxdHyjEGPuoowRqm3fFIaTe6U6NAYvdGSWbWIssZHNipTU9ASqnNlfngAAhXVhM8o6O8fYVkx99nJGy0kUykF3rqAkM0DY1t6jwZpg7wjfctU52yVdDZckPBJWIff780EzFA4DQR9wQCjp5gbA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=QJZp+y+T; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1748932028; c=relaxed/simple;
+	bh=pgbmzyXkjANX9nV6rfBHZhYfTLLC84FPsJOdW1kLwLo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Hy4BOlswCdw6FoKHQsQ93wR49IsxPpuuNWRmY8rjqjO4ctGnzkpXZzOyGxKcXlBkmMk/MM2IPe/IpI6yqpqG8cGBO8n6VBEqerPJw3xJ2jZTherLH1QcJ2c1oHhaanhx0Xi+LfwJD2cm3c7d5UkmPRLZIq0KWcFdnEkgtaF4ttM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kDJEf4fh; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="QJZp+y+T"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1748930346; x=1780466346;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=0SZMc9RMAD3OL6AmtIwhsT0nSCxX2GAwLNNSSQsvmVE=;
-  b=QJZp+y+TuD6DioW1ZnNJN+Vv5LTYFg30TbcYOLPkw4SVaKvavKo3wuMN
-   vDTeu72cK+lb2igvCsmaAmoBbohx8STE58XW+FXJimD8MfhIxf+nQYru5
-   xVAQmfcVOjx9gFuYFINdU335rJcR5PQ/uPwEvE1ArWB9dOiGnFYt8766J
-   g2YEtDKMXkoASqJcZJkK4q9WE7/amQaak9u74+GbkAfs2b6JSCfnZ0cQS
-   TJbEqL3t12h9KVXEQrJ/h3SytEWsPMnA/VFKoa5+vbTR1nXCUOYZ3JgCA
-   LA1loEizQJmBtJXB4TpLP3HWgViDasokrziWhSH7fEjZYcDzfR4gdXM+z
-   w==;
-X-CSE-ConnectionGUID: X8aoT0lzRAGRUHs6oRWDRQ==
-X-CSE-MsgGUID: 1rAQj+B6Qf64D/uuccvPeg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11451"; a="73485490"
-X-IronPort-AV: E=Sophos;i="6.16,205,1744095600"; 
-   d="scan'208";a="73485490"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Jun 2025 22:59:05 -0700
-X-CSE-ConnectionGUID: YBlVT30SRWmnzwryX2WviQ==
-X-CSE-MsgGUID: Ve/oAFGISO6sRzGF6gBGcA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,205,1744095600"; 
-   d="scan'208";a="149801571"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa004.jf.intel.com with ESMTP; 02 Jun 2025 22:58:59 -0700
-Date: Tue, 3 Jun 2025 13:52:27 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>
-Cc: kvm@vger.kernel.org, sumit.semwal@linaro.org, christian.koenig@amd.com,
-	pbonzini@redhat.com, seanjc@google.com, alex.williamson@redhat.com,
-	jgg@nvidia.com, dan.j.williams@intel.com, aik@amd.com,
-	linux-coco@lists.linux.dev, dri-devel@lists.freedesktop.org,
-	linux-media@vger.kernel.org, linaro-mm-sig@lists.linaro.org,
-	vivek.kasireddy@intel.com, yilun.xu@intel.com,
-	linux-kernel@vger.kernel.org, lukas@wunner.de, yan.y.zhao@intel.com,
-	daniel.vetter@ffwll.ch, leon@kernel.org, baolu.lu@linux.intel.com,
-	zhenzhong.duan@intel.com, tao1.su@intel.com,
-	linux-pci@vger.kernel.org, zhiw@nvidia.com, simona.vetter@ffwll.ch,
-	shameerali.kolothum.thodi@huawei.com, iommu@lists.linux.dev,
-	kevin.tian@intel.com
-Subject: Re: [RFC PATCH 27/30] PCI/TSM: Add PCI driver callbacks to handle
- TSM requirements
-Message-ID: <aD6Nm7bBGddTc+pr@yilunxu-OptiPlex-7050>
-References: <20250529053513.1592088-1-yilun.xu@linux.intel.com>
- <20250529053513.1592088-28-yilun.xu@linux.intel.com>
- <yq5att4yjns2.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kDJEf4fh"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 552HJe12011756
+	for <linux-pci@vger.kernel.org>; Tue, 3 Jun 2025 06:27:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	8CFq5uuLaQJqYVVZzTgnCqorXoI6WhlI7n6d+Xq9WcI=; b=kDJEf4fhE16Pofz1
+	yelXVHlZOA/tk0iWqZRBerqE5HH8D4fd7iXmvHLAZLy/xPf3nl1PZl2Q8w4i4+1v
+	/drAHNxwf13Bk+NfylsgW2VPNX+tarC4gBhDwGTv38OrCl3qedzK35M1pcN9h/Jl
+	L7qnZyD0//g9wK0GRC16vRDO/B3FSYVlXKMzjAndKwPJNKfp4vdiNwQO/6g6QPX4
+	Ao855wnriaJhfwWbSqACNCsIKVCp4QjX4wwP77JiXoox1EE86W5geoD9TAXtB7+z
+	y02WO5p+3+kiZc0SQKKYeH9ojL4MLdAY2jwPxfqtXiULAiWj7bSVmZR47Ao1vpQ6
+	d9JvMg==
+Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 471g8t1jma-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-pci@vger.kernel.org>; Tue, 03 Jun 2025 06:27:06 +0000 (GMT)
+Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-23536f7c2d7so52360275ad.2
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2025 23:27:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748932025; x=1749536825;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8CFq5uuLaQJqYVVZzTgnCqorXoI6WhlI7n6d+Xq9WcI=;
+        b=nCBlfegXKKGwciMDlZJbyDMMnK4kMc4spIev1bRRDKX7J+d3TBq7bDgsKO0DUPJ3tE
+         BJKe9ptRBNIvAksdDHuqlcSMaIUGbYe3U4BuHX+usu+AhBKFqv+K58sc923kq2IFoSu8
+         00DwrxlhB97sEgFhyiMFEgt6gKwG9OFTo833qPieSr41MJu9XxHjsNO6KSIEnXkRwk++
+         PkUFRc8cJOSXrW6dF+TVEfywib/XDvCBmwyORH/SrB/jbsZmOjK7rd36K76GUz5ZE5Nd
+         GDXK+tyho6m1Mu+1sjsSUaZ7segPGI7IrpjrrM+bZPkXNH9Fl5lOryJdXrh/qCS1Li/a
+         e2AA==
+X-Forwarded-Encrypted: i=1; AJvYcCWHKEE033Vt2lkFlhdAcxZOB+qfy3kwOOmrzT9JrZtrlBYBOI4lnB+RaaRBFpcnw6wQF3QVjjPaavg=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzYa6p1H6ZKp5IxlRVd7JSGx3o2d75R79uXJGJky5rMyCTeTR+n
+	LjLm7qzejydSb7FLNwiYYESEGUmuDKlXnKDK/nY31WvvJdXyACbA0VjJ9wQDRjb3AMpFE+GKRfx
+	6hIe7oGgYzRD1k2143ME27aRZNiOuWNPYKVP2xQeaNaqGTyEsjjVkLk8uUWcbYzY=
+X-Gm-Gg: ASbGncu7CbZusuHw7tTrhrr6H+xivqAWTLgrJRVYWUCIIhuYYgz7fwW/yy74JWjcYc7
+	ReYQLxP+KH41hWuQmdGQNnaS/0J94YCkJhh1INOs73A887bfADMU2sHBowR7KhXgysaU/Spg68a
+	0xeI+V8MHvsGO0KPeHBMEN/bdHZIOP42YamO2+RHr5t/o2+Ckyb09u4xSMBWMe49d5hkhQsj1Z5
+	KI5xnvcR1U1HG35md//yOb7UBaDIwUscUNs6iHCzC4yZ47EfUA5xDVyN+vu6T/OaHAy/lsHZc8Q
+	tWd7RANoew1LSWTKWknzQb5r7Gf7uwzd8JpvPD52qQ==
+X-Received: by 2002:a17:903:230d:b0:235:6e1:3ee8 with SMTP id d9443c01a7336-2355f763a30mr159297845ad.11.1748932025519;
+        Mon, 02 Jun 2025 23:27:05 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG8aRNsYbc9V+jEebHStqQA2ho4YdUmDecvWv7gxGhSOXn3RlY0aVsETQbYAG9hg+lUAs3nAg==
+X-Received: by 2002:a17:903:230d:b0:235:6e1:3ee8 with SMTP id d9443c01a7336-2355f763a30mr159297495ad.11.1748932025106;
+        Mon, 02 Jun 2025 23:27:05 -0700 (PDT)
+Received: from [10.92.214.105] ([202.46.23.19])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23506cf952bsm80687235ad.191.2025.06.02.23.27.00
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 02 Jun 2025 23:27:04 -0700 (PDT)
+Message-ID: <c1de3745-d627-0d2f-6d51-679765603f11@oss.qualcomm.com>
+Date: Tue, 3 Jun 2025 11:56:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <yq5att4yjns2.fsf@kernel.org>
+User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
+ Thunderbird/102.15.1
+Subject: Re: [PATCH v2 2/2] PCI: Add support for PCIe wake interrupt
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Bjorn Andersson <andersson@kernel.org>,
+        Konrad Dybcio <konradybcio@kernel.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        cros-qcom-dts-watchers@chromium.org,
+        Bjorn Helgaas <bhelgaas@google.com>, linux-arm-msm@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-pci@vger.kernel.org, quic_vbadigan@quicinc.com,
+        quic_mrana@quicinc.com
+References: <20250419-wake_irq_support-v2-0-06baed9a87a1@oss.qualcomm.com>
+ <20250419-wake_irq_support-v2-2-06baed9a87a1@oss.qualcomm.com>
+ <543ocn4vecyjej26ynjggm6zwj7bmn27rd6c4foo36gvxeltma@6d5dfdoscxwm>
+Content-Language: en-US
+From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+In-Reply-To: <543ocn4vecyjej26ynjggm6zwj7bmn27rd6c4foo36gvxeltma@6d5dfdoscxwm>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=eJQTjGp1 c=1 sm=1 tr=0 ts=683e95ba cx=c_pps
+ a=IZJwPbhc+fLeJZngyXXI0A==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
+ a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=EUspDBNiAAAA:8 a=Y6MG0PhRDbTeA8aGlRgA:9
+ a=QEXdDO2ut3YA:10 a=uG9DUKGECoFWVXl0Dc02:22
+X-Proofpoint-ORIG-GUID: a4ukZbmwAUY9XONkwNxYXI4L_vYLi7jD
+X-Proofpoint-GUID: a4ukZbmwAUY9XONkwNxYXI4L_vYLi7jD
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjAzMDA1NCBTYWx0ZWRfX368puCTRhBa7
+ fJiCyDN+mab/LfAiVEGETUkPMHPM2ghJfFKsJBee/DzBGgCsLi9y3nrcA3+eL2ucpB9NniEfTag
+ 2sw/8kq3gbHG3WXy9BfQkLfazewacMqORwNxYRP+N410RN3cZU5DPsr6PJysZYJYLch6nN/wPtP
+ 0ErGRnjsj4zoJQSyPJXV90BmkSnk9l2nkdOfKwJPbQMG/v5g2xpKQEWkyaC1R+miko3RR29oM1I
+ +7zU7p0/GHQSmKgFzkXhhc90oTPJ5amARyOa4c/hKa9d86ZDiWuTKj7txpIzzVKBIC4B7n/zlsi
+ Gk75NhHvsU26F5yKkhwNrMgYJkX1cwkTM2ZD0LqM1EY9xXDPytknf5frx0IkLF92t/oIP2lPgVY
+ Hkh5h4R/aXOrSPPJtomox0SnB3d2gRvOdfWbM/WOeyA0SxTVDnjw/gS1bQCB4amA8HaR0nz7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-03_01,2025-06-02_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 adultscore=0 lowpriorityscore=0 clxscore=1015
+ priorityscore=1501 bulkscore=0 mlxlogscore=999 impostorscore=0 spamscore=0
+ phishscore=0 mlxscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2506030054
 
-On Mon, Jun 02, 2025 at 06:36:37PM +0530, Aneesh Kumar K.V wrote:
-> Xu Yilun <yilun.xu@linux.intel.com> writes:
-> 
-> > Add optional PCI driver callbacks to notify TSM events. For now, these
-> > handlers may be called during pci_tsm_unbind(). By calling these
-> > handlers, TSM driver askes for external collaboration to finish entire
-> > TSM unbind flow.
-> >
-> > If platform TSM driver could finish TSM bind/unbind all by itself, don't
-> > call these handlers.
-> >
-> > Host may need to configure various system components according to
-> > platform trusted firmware's requirements. E.g. for Intel TDX Connect,
-> > host should do private MMIO mapping in S-EPT, trusted DMA setup, device
-> > ownership claiming and device TDISP state transition. Some operations are
-> > out of control of PCI TSM, so need collaboration by external components
-> > like IOMMU driver, KVM.
-> >
-> > Further more, trusted firmware may enforce executing these operations
-> > in a fixed sequence. E.g. Intel TDX Connect enforces the following
-> > sequences for TSM unbind:
-> >
-> >   1. STOP TDI via TDISP message STOP_INTERFACE
-> >   2. Private MMIO unmap from Secure EPT
-> >   3. Trusted Device Context Table cleanup for the TDI
-> >   4. TDI ownership reclaim and metadata free
-> >
-> > PCI TSM could do Step 1 and 4, but need KVM for Step 2 and IOMMU driver
-> > for Step 3. While it is possible TSM provides finer grained APIs like
-> > tdi_stop() & tdi_free(), and the caller ensures the sequence, it is
-> > better these specific enforcement could be managed in platform TSM
-> > driver. By introducing TSM handlers, platform TSM driver controls the
-> > operation sequence and notify other components to do the real work.
-> >
-> > Currently add 3 callbacks for TDX Connect. disable_mmio() is for
-> > VFIO to invalidate MMIO so that KVM could unmap them from S-EPT.
-> > recover_mmio() is to re-validate MMIO so that KVM could map them
-> > again for shared assigned device. disable_trusted_dma() is to cleanup
-> > trusted IOMMU setup.
-> >
-> > Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
-> > ---
-> >  include/linux/pci-tsm.h | 7 +++++++
-> >  include/linux/pci.h     | 3 +++
-> >  2 files changed, 10 insertions(+)
-> >
-> > diff --git a/include/linux/pci-tsm.h b/include/linux/pci-tsm.h
-> > index 737767f8a9c5..ed549724eb5b 100644
-> > --- a/include/linux/pci-tsm.h
-> > +++ b/include/linux/pci-tsm.h
-> > @@ -157,6 +157,13 @@ struct pci_tsm_ops {
-> >  	int (*accept)(struct pci_dev *pdev);
-> >  };
-> >  
-> > +/* pci drivers callbacks for TSM */
-> > +struct pci_tsm_handlers {
-> > +	void (*disable_mmio)(struct pci_dev *dev);
-> > +	void (*recover_mmio)(struct pci_dev *dev);
-> > +	void (*disable_trusted_dma)(struct pci_dev *dev);
-> > +};
-> > +
-> >  enum pci_doe_proto {
-> >  	PCI_DOE_PROTO_CMA = 1,
-> >  	PCI_DOE_PROTO_SSESSION = 2,
-> > diff --git a/include/linux/pci.h b/include/linux/pci.h
-> > index 5f37957da18f..4f768b4658e8 100644
-> > --- a/include/linux/pci.h
-> > +++ b/include/linux/pci.h
-> > @@ -545,6 +545,7 @@ struct pci_dev {
-> >  #endif
-> >  #ifdef CONFIG_PCI_TSM
-> >  	struct pci_tsm *tsm;		/* TSM operation state */
-> > +	void *trusted_dma_owner;
-> >  #endif
-> >  	u16		acs_cap;	/* ACS Capability offset */
-> >  	u8		supported_speeds; /* Supported Link Speeds Vector */
-> > @@ -957,6 +958,7 @@ struct module;
-> >   * @sriov_get_vf_total_msix: PF driver callback to get the total number of
-> >   *              MSI-X vectors available for distribution to the VFs.
-> >   * @err_handler: See Documentation/PCI/pci-error-recovery.rst
-> > + * @tsm_handler: Optional driver callbacks to handle TSM requirements.
-> >   * @groups:	Sysfs attribute groups.
-> >   * @dev_groups: Attributes attached to the device that will be
-> >   *              created once it is bound to the driver.
-> > @@ -982,6 +984,7 @@ struct pci_driver {
-> >  	int  (*sriov_set_msix_vec_count)(struct pci_dev *vf, int msix_vec_count); /* On PF */
-> >  	u32  (*sriov_get_vf_total_msix)(struct pci_dev *pf);
-> >  	const struct pci_error_handlers *err_handler;
-> > +	struct pci_tsm_handlers *tsm_handler;
-> >  	const struct attribute_group **groups;
-> >  	const struct attribute_group **dev_groups;
-> >  	struct device_driver	driver;
-> > -- 
-> > 2.25.1
-> 
-> It looks like the TSM feature is currently interacting with several
-> components: struct pci_driver, VFIO, iommufd, and pci_tsm_ops.
-> 
-> Should we consider limiting this scattering? Would it make sense to
-> encapsulate this logic within pci_tsm_ops?
 
-I'm keeping on trying which is a better solution. Encapsulating all in
-pci_tsm_ops is the most attactive one from SW POV, but only if the TSM
-operations has no impact/dependency to other components. Unfortunately
-it is not true, e.g. the private MMIO mapping/unmapping is actually
-a writting to leaf S-EPT entry, but it requires non-leaf page-table-page
-management in KVM.
 
-Thanks,
-Yilun
-
+On 6/1/2025 8:51 PM, Manivannan Sadhasivam wrote:
+> On Sat, Apr 19, 2025 at 11:13:04AM +0530, Krishna Chaitanya Chundru wrote:
 > 
-> -aneesh
+> Subject prefix should be 'PCI/portdrv'
+> 
+>> PCIe wake interrupt is needed for bringing back PCIe device state
+>> from D3cold to D0.
+>>
+>> Implement new functions, of_pci_setup_wake_irq() and
+>> of_pci_teardown_wake_irq(), to manage wake interrupts for PCI devices
+>> using the Device Tree.
+>>
+>>  From the port bus driver call these functions to enable wake support
+>> for bridges.
+>>
+>> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+>> ---
+>>   drivers/pci/of.c           | 60 ++++++++++++++++++++++++++++++++++++++++++++++
+>>   drivers/pci/pci.h          |  6 +++++
+>>   drivers/pci/pcie/portdrv.c | 12 +++++++++-
+>>   3 files changed, 77 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/pci/of.c b/drivers/pci/of.c
+>> index ab7a8252bf4137a17971c3eb8ab70ce78ca70969..13623797c88a03dfb9d9079518d87a5e1e68df38 100644
+>> --- a/drivers/pci/of.c
+>> +++ b/drivers/pci/of.c
+>> @@ -7,6 +7,7 @@
+>>   #define pr_fmt(fmt)	"PCI: OF: " fmt
+>>   
+>>   #include <linux/cleanup.h>
+>> +#include <linux/gpio/consumer.h>
+>>   #include <linux/irqdomain.h>
+>>   #include <linux/kernel.h>
+>>   #include <linux/pci.h>
+>> @@ -15,6 +16,7 @@
+>>   #include <linux/of_address.h>
+>>   #include <linux/of_pci.h>
+>>   #include <linux/platform_device.h>
+>> +#include <linux/pm_wakeirq.h>
+>>   #include "pci.h"
+>>   
+>>   #ifdef CONFIG_PCI
+>> @@ -966,3 +968,61 @@ u32 of_pci_get_slot_power_limit(struct device_node *node,
+>>   	return slot_power_limit_mw;
+>>   }
+>>   EXPORT_SYMBOL_GPL(of_pci_get_slot_power_limit);
+>> +
+>> +/**
+>> + * of_pci_setup_wake_irq - Set up wake interrupt for PCI device
+> 
+> This function is for setting up the wake interrupt for slot, not for endpoint
+> devices, isn't it? Then it should be named as such:
+> 
+> 	of_pci_slot_setup_wake_irq()
+> 
+>> + * @pdev: The PCI device structure
+>> + *
+>> + * This function sets up the wake interrupt for a PCI device by getting the
+>> + * corresponding GPIO pin from the device tree, and configuring it as a
+> 
+> s/GPIO pin/WAKE# GPIO
+> 
+>> + * dedicated wake interrupt.
+>> + *
+>> + * Return: 0 if the wake gpio is not available or successfully parsed else
+> 
+> s/wake gpio/WAKE# GPIO
+> 
+>> + * errno otherwise.
+>> + */
+>> +int of_pci_setup_wake_irq(struct pci_dev *pdev)
+>> +{
+>> +	struct gpio_desc *wake;
+>> +	struct device_node *dn;
+>> +	int ret, wake_irq;
+>> +
+>> +	dn = pci_device_to_OF_node(pdev);
+>> +	if (!dn)
+>> +		return 0;
+>> +
+>> +	wake = devm_fwnode_gpiod_get(&pdev->dev, of_fwnode_handle(dn),
+>> +				     "wake", GPIOD_IN, NULL);
+>> +	if (IS_ERR(wake)) {
+>> +		dev_warn(&pdev->dev, "Cannot get wake GPIO\n");
+> 
+> WAKE# is an optional GPIO. So the driver should not warn users if it is not
+> defined in the root port node. It should however print the error log and return
+> errno, if the API returns other than -ENOENT.
+> 
+>> +		return 0;
+>> +	}
+>> +
+>> +	wake_irq = gpiod_to_irq(wake);
+>> +	device_init_wakeup(&pdev->dev, true);
+>> +
+>> +	ret = dev_pm_set_dedicated_wake_irq(&pdev->dev, wake_irq);
+>> +	if (ret < 0) {
+>> +		dev_err(&pdev->dev, "Failed to set wake IRQ: %d\n", ret);
+>> +		device_init_wakeup(&pdev->dev, false);
+>> +		return ret;
+>> +	}
+>> +	irq_set_irq_type(wake_irq, IRQ_TYPE_EDGE_FALLING);
+>> +
+>> +	return 0;
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_pci_setup_wake_irq);
+>> +
+>> +/**
+>> + * of_pci_teardown_wake_irq - Teardown wake interrupt setup for PCI device
+> 
+> Same comment as above.
+> 
+>> + *
+>> + * @pdev: The PCI device structure
+>> + *
+>> + * This function tears down the wake interrupt setup for a PCI device,
+>> + * clearing the dedicated wake interrupt and disabling device wake-up.
+>> + */
+>> +void of_pci_teardown_wake_irq(struct pci_dev *pdev)
+>> +{
+>> +	dev_pm_clear_wake_irq(&pdev->dev);
+>> +	device_init_wakeup(&pdev->dev, false);
+>> +}
+>> +EXPORT_SYMBOL_GPL(of_pci_teardown_wake_irq);
+>> diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+>> index b81e99cd4b62a3022c8b07a09f212f6888674487..b2f65289f4156fa1851c2d2f20c4ca948f36258f 100644
+>> --- a/drivers/pci/pci.h
+>> +++ b/drivers/pci/pci.h
+>> @@ -888,6 +888,9 @@ void pci_release_of_node(struct pci_dev *dev);
+>>   void pci_set_bus_of_node(struct pci_bus *bus);
+>>   void pci_release_bus_of_node(struct pci_bus *bus);
+>>   
+>> +int of_pci_setup_wake_irq(struct pci_dev *pdev);
+>> +void of_pci_teardown_wake_irq(struct pci_dev *pdev);
+>> +
+>>   int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge);
+>>   bool of_pci_supply_present(struct device_node *np);
+>>   
+>> @@ -931,6 +934,9 @@ static inline int devm_of_pci_bridge_init(struct device *dev, struct pci_host_br
+>>   	return 0;
+>>   }
+>>   
+>> +static int of_pci_setup_wake_irq(struct pci_dev *pdev) { return 0; }
+>> +static void of_pci_teardown_wake_irq(struct pci_dev *pdev) { }
+>> +
+> 
+> Provide stub for these APIs if CONFIG_OF is not enabled.
+> 
+These are the stub functions when CONFIG_OF is not enabled.
+
+- Krishna Chaitanya.
+> - Mani
+> 
