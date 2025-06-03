@@ -1,160 +1,131 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8D89B140E34;
-	Tue,  3 Jun 2025 15:42:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C8B23BCFA;
+	Tue,  3 Jun 2025 15:55:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748965371; cv=none; b=N+bAztdhWfwrheQaC6ifwOB4zMP5TcFSIbpWEVFR4GfP4WukuLXEed1R/joA9Rokn8Ffc1w3TQPcvPOXQrC0Rw2peO6AaCwNg6k/p2giuS7CJR5GNZkPRRyOKXZSkZso/xKiy5TlurYdSyDyoAxObDIuiZ7nJ3Qvr3Jqkpj0NPo=
+	t=1748966157; cv=none; b=LfbXzhYoBvnaO+TsfG9S4nsJWZLxyLESKknJMKX/Sif14ADPA5UhERx/e/4k1Lgt8jnaF9bDT5rGWvDoMUv1VTs4ly9JYh4zlIVWe/t5oLOVjZ+sIO0wib41dS8Ngx2BAtVshnGLe7paNxVliZi2lITpWwLFFaiMP0zx82dLVaY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748965371; c=relaxed/simple;
-	bh=hB2MxKwPMC076JO0hAISW1ZoTMbJR5Sgkfl2WQ0MtT8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hxeaabTJC7xCtk+ekhV6HxEQK6p1k8pF4SNa8spq/JxPHet1AvlE4SYWtZsznh1dxe4gcEX/sTRi9lSiEnVGAQRpB67Ri0Wa0dlYSKdFABsTfrA3MxlLnL55MLi1bUSyElGmG0xQzZ1hTt4NKAuWOuT0vvqhsMDacKdC8ahJDgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=OYL3r/5n; arc=none smtp.client-ip=220.197.31.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1748966157; c=relaxed/simple;
+	bh=NYKZkS68/255/Qa6jdHtwiii8rQH5UhEATWNB/Ewplk=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=E8WqHRbSJfwLDs+OXI9dieWtbm8/BtNRrSNZW0JOp9jIMbgD3JbV9MPv9AbTEVc7LP/ydirzxbYJyNHSBD6pX4St9YDelyqoXgKj6rTQLCMrRQe7YY/J3IrUewranY3mUa+LpkrUFLa/bgycFKkadQSuZXe5GAIfSS8rffKO9Ow=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NseYRNT2; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="OYL3r/5n"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=zQkvIuzbpkgJBUTC9lp/MUGV2IMSjKUSaK9yLyoEtoY=;
-	b=OYL3r/5n2J3JAxmZgSRSmPeYfISQF2dh7KkHVmlx+z0z7hr5sQwKBunocLxVFp
-	I8Dm1OkKnkBedcDSWR1MFLDeItyzFGhGNg2bTnbib12y6x4Y/Wi9NBynJwPf9HP2
-	0PQweRZpd3TUOEXbFhQl8OGWSvKGw8VnPgX2QELop2tSE=
-Received: from [192.168.71.94] (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wBH59fYFz9oh8TjFg--.7625S2;
-	Tue, 03 Jun 2025 23:42:17 +0800 (CST)
-Message-ID: <5ce7f320-7a50-475a-9406-ace4af47192b@163.com>
-Date: Tue, 3 Jun 2025 23:42:16 +0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NseYRNT2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1748966156; x=1780502156;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=NYKZkS68/255/Qa6jdHtwiii8rQH5UhEATWNB/Ewplk=;
+  b=NseYRNT2KUJo1lHgnXxrMt1KCSCFMKkM6G5Yg87kj96H+nv4Wn+fUhJj
+   ak2YxiS1rGD0YcGH5LVTjvNL3GNlHB9xoFSdYGczazjLKRF6dBokA59rl
+   s0dgunsjlQsHivSlmhgHqYVl9stpA2N76AOjHyIlwXpnJUT/6RCCNOGy2
+   4K7ZKmu3FkPmzlmxQ/rLNjC+mXVTtDIGMBVdAQp82z0A8GJ2o6GFCyfFY
+   5arOtNaLect3aA9penmM46+mdoJd2CmvTomIU6d4DK3Vq07vOCyWm9p1o
+   Bn13i7h+hfb11UKhWqPtQ8cKpXWmE8kh4Hq5/W4TW2Y9DI+N5PcQ++KZe
+   w==;
+X-CSE-ConnectionGUID: LBZxZXFNSwaaP5ffbwUp4g==
+X-CSE-MsgGUID: tsbpfGXiTMeEt3I5f77mDg==
+X-IronPort-AV: E=McAfee;i="6700,10204,11453"; a="62066974"
+X-IronPort-AV: E=Sophos;i="6.16,206,1744095600"; 
+   d="scan'208";a="62066974"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 08:55:55 -0700
+X-CSE-ConnectionGUID: V5GGI+JjTjWmKM6FV+wLKw==
+X-CSE-MsgGUID: veCWw0FuT7Kiy1bRI8pvow==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,206,1744095600"; 
+   d="scan'208";a="175766102"
+Received: from fdefranc-mobl3.ger.corp.intel.com (HELO fdefranc-mobl3.intel.com) ([10.245.246.29])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 08:55:48 -0700
+From: "Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>
+To: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Davidlohr Bueso <dave@stgolabs.net>,
+	Jonathan Cameron <jonathan.cameron@huawei.com>,
+	Dave Jiang <dave.jiang@intel.com>,
+	Alison Schofield <alison.schofield@intel.com>,
+	Vishal Verma <vishal.l.verma@intel.com>,
+	Ira Weiny <ira.weiny@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>,
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+	Oliver O'Halloran <oohall@gmail.com>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Tony Luck <tony.luck@intel.com>,
+	Borislav Petkov <bp@alien8.de>,
+	linux-kernel@vger.kernel.org,
+	linux-acpi@vger.kernel.org,
+	linux-cxl@vger.kernel.org,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org,
+	linux-edac@vger.kernel.org
+Cc: Yazen Ghannam <yazen.ghannam@amd.com>,
+	"Fabio M. De Francesco" <fabio.m.de.francesco@linux.intel.com>,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Subject: [PATCH 1/4 v3] ACPI: extlog: Trace CPER Non-standard Section Body
+Date: Tue,  3 Jun 2025 17:54:36 +0200
+Message-ID: <20250603155536.577493-2-fabio.m.de.francesco@linux.intel.com>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250603155536.577493-1-fabio.m.de.francesco@linux.intel.com>
+References: <20250603155536.577493-1-fabio.m.de.francesco@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v12 2/6] PCI: Clean up __pci_find_next_cap_ttl()
- readability
-To: =?UTF-8?Q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Cc: lpieralisi@kernel.org, bhelgaas@google.com,
- manivannan.sadhasivam@linaro.org, kw@linux.com, cassel@kernel.org,
- robh@kernel.org, jingoohan1@gmail.com, linux-pci@vger.kernel.org,
- LKML <linux-kernel@vger.kernel.org>
-References: <20250514161258.93844-1-18255117159@163.com>
- <20250514161258.93844-3-18255117159@163.com>
- <987609ec-7a1b-057c-1e3b-8bf564965036@linux.intel.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <987609ec-7a1b-057c-1e3b-8bf564965036@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBH59fYFz9oh8TjFg--.7625S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZFWrKw18tw1xCw4fXrWfuFg_yoW5XF1fpr
-	98C3ZFyF48JFWjka1v93ZxJF12q3WDtrW8GryYg3s8XFy2yF18KFs2kryYvFnrZrZ7uF1F
-	qFWqv3s5uF90yaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRgtxDUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhBho2g-EXSmOAABsF
 
+ghes_do_proc() has a catch-all for unknown or unhandled CPER formats
+(UEFI v2.10 Appendix N 2.3), extlog_print() does not. This gap was
+noticed by a RAS test that injected CXL protocol errors which were
+notified to extlog_print() via the IOMCA (I/O Machine Check
+Architecture) mechanism. Bring parity to the extlog_print() path by
+including a similar log_non_standard_event().
 
+Cc: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Dan Williams <dan.j.williams@intel.com>
+Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Signed-off-by: Fabio M. De Francesco <fabio.m.de.francesco@linux.intel.com>
+---
+ drivers/acpi/acpi_extlog.c | 6 ++++++
+ drivers/ras/ras.c          | 1 +
+ 2 files changed, 7 insertions(+)
 
-On 2025/6/3 17:30, Ilpo Järvinen wrote:
-> On Thu, 15 May 2025, Hans Zhang wrote:
-> 
->> Refactor the __pci_find_next_cap_ttl() to improve code clarity:
->> - Replace magic number 0x40 with PCI_STD_HEADER_SIZEOF.
->> - Use ALIGN_DOWN() for position alignment instead of manual bitmask.
->> - Extract PCI capability fields via FIELD_GET() with standardized masks.
->> - Add necessary headers (linux/align.h).
->>
->> The changes are purely non-functional cleanups, ensuring behavior remains
->> identical to the original implementation.
-> 
-> If you want a simpler wording for this, this is often used:
-> 
-> No functional changes intended.
-
-Dear Ilpo,
-
-Will change.
-
-> 
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
->> ---
->> Changes since v11:
->> - None
->>
->> Changes since v10:
->> - Remove #include <uapi/linux/pci_regs.h> and add macro definition comments.
->>
->> Changes since v9:
->> - None
->>
->> Changes since v8:
->> - Split into patch 1/6, patch 2/6.
->> - The
->> ---
->>   drivers/pci/pci.c             | 9 +++++----
->>   include/uapi/linux/pci_regs.h | 2 ++
->>   2 files changed, 7 insertions(+), 4 deletions(-)
->>
->> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
->> index e77d5b53c0ce..27d2adb18a30 100644
->> --- a/drivers/pci/pci.c
->> +++ b/drivers/pci/pci.c
->> @@ -9,6 +9,7 @@
->>    */
->>   
->>   #include <linux/acpi.h>
->> +#include <linux/align.h>
->>   #include <linux/kernel.h>
->>   #include <linux/delay.h>
->>   #include <linux/dmi.h>
->> @@ -432,17 +433,17 @@ static u8 __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
->>   	pci_bus_read_config_byte(bus, devfn, pos, &pos);
->>   
->>   	while ((*ttl)--) {
->> -		if (pos < 0x40)
->> +		if (pos < PCI_STD_HEADER_SIZEOF)
->>   			break;
->> -		pos &= ~3;
->> +		pos = ALIGN_DOWN(pos, 4);
->>   		pci_bus_read_config_word(bus, devfn, pos, &ent);
->>   
->> -		id = ent & 0xff;
->> +		id = FIELD_GET(PCI_CAP_ID_MASK, ent);
->>   		if (id == 0xff)
->>   			break;
->>   		if (id == cap)
->>   			return pos;
->> -		pos = (ent >> 8);
->> +		pos = FIELD_GET(PCI_CAP_LIST_NEXT_MASK, ent);
->>   	}
->>   	return 0;
->>   }
->> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
->> index ba326710f9c8..35051f9ac16a 100644
->> --- a/include/uapi/linux/pci_regs.h
->> +++ b/include/uapi/linux/pci_regs.h
->> @@ -206,6 +206,8 @@
->>   /* 0x48-0x7f reserved */
->>   
->>   /* Capability lists */
->> +#define PCI_CAP_ID_MASK		0x00ff	/* Capability ID mask */
->> +#define PCI_CAP_LIST_NEXT_MASK	0xff00	/* Next Capability Pointer mask */
->>   
->>   #define PCI_CAP_LIST_ID		0	/* Capability ID */
-> 
-> I'd add those here with the extra space before name and add empty line in
-> between them and the capability id list.
-> 
-
-Will change.
-
-
-Best regards,
-Hans
-
->>   #define  PCI_CAP_ID_PM		0x01	/* Power Management */
->>
-> 
+diff --git a/drivers/acpi/acpi_extlog.c b/drivers/acpi/acpi_extlog.c
+index f6b9562779de0..47d11cb5c9120 100644
+--- a/drivers/acpi/acpi_extlog.c
++++ b/drivers/acpi/acpi_extlog.c
+@@ -183,6 +183,12 @@ static int extlog_print(struct notifier_block *nb, unsigned long val,
+ 			if (gdata->error_data_length >= sizeof(*mem))
+ 				trace_extlog_mem_event(mem, err_seq, fru_id, fru_text,
+ 						       (u8)gdata->error_severity);
++		} else {
++			void *err = acpi_hest_get_payload(gdata);
++
++			log_non_standard_event(sec_type, fru_id, fru_text,
++					       gdata->error_severity, err,
++					       gdata->error_data_length);
+ 		}
+ 	}
+ 
+diff --git a/drivers/ras/ras.c b/drivers/ras/ras.c
+index a6e4792a1b2e9..ac0e132ccc3eb 100644
+--- a/drivers/ras/ras.c
++++ b/drivers/ras/ras.c
+@@ -51,6 +51,7 @@ void log_non_standard_event(const guid_t *sec_type, const guid_t *fru_id,
+ {
+ 	trace_non_standard_event(sec_type, fru_id, fru_text, sev, err, len);
+ }
++EXPORT_SYMBOL_GPL(log_non_standard_event);
+ 
+ void log_arm_hw_error(struct cper_sec_proc_arm *err)
+ {
+-- 
+2.49.0
 
