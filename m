@@ -1,48 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E5841F948;
-	Tue,  3 Jun 2025 06:34:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5D48267F64
+	for <linux-pci@vger.kernel.org>; Tue,  3 Jun 2025 06:52:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748932468; cv=none; b=M5IJwTqSMmVjo94ZFWDGujWpFCgmRl990aToM3QHXNI5JsAbUQrRqVWmnlrlyYr3yVW+s2WAFb4Szi2DpnL2ozYnil+KI7ZiiPfbJCt4gNWoGY+oIazUbCBoMroDq5uF4tuc85+6rFsqdPepKDSdJmuUU80aTW51Z0P84F1S6Ys=
+	t=1748933571; cv=none; b=mvErAbbwpVnUNb+7JO2FvQk6AQF4dxIZrlC30hSGsNaqbO4waS0yzdEVargLYOgMFHwdyP/B5YrFRtNNqPY4kopgfEp1aew5EFEbaWlJbIla38ZOTM7iF2SPcOikEqscw1eiwaEDBoOA5PcIi8AW9uJTqstR0fTfyzU0eP1elb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748932468; c=relaxed/simple;
-	bh=9MqeMHm6uVNpV12j4bBrWMR3B7MZ9HzuTUZPD+xW7OA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=S0QqpHFAwmnRC2kHsyulSmeBvGbhkxyGvog5NVGka+TNSba0dICJmX+RzSGbDd0F0Waghu76KlQxA7J+az2fkFZfuIsUZnSF9TRCQ9gIsYaUksL3Oa7qD2ex0apI6FEg4Wtl1hmU0zEhWbX98RHIBt7TJzYsEKDKKr0A4RZ3Kko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SdTO2Z3z; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748933571; c=relaxed/simple;
+	bh=a2Xhzzi3QY9KeC6g0mvy+JMY/3ewUcjrru9xzEIQsXM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PLIVTkoS2UUBdxPAbs7+9D2x4a/4HfJBGrgvMCvENOy9kU1brPsZHG58NJdY+1I4/CdxPJFd5GlBlSCkr8NwDQWEukJfV6vzMnmJMJP1WU6Rxx/V2TnwUem7KqZrCL5r8svGs3CGsbdREFsBoz/hCT4y6yUlsGcNIJM9ZMJZ/ro=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=JulYCSmX; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SdTO2Z3z"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BA03C4CEEF;
-	Tue,  3 Jun 2025 06:33:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748932468;
-	bh=9MqeMHm6uVNpV12j4bBrWMR3B7MZ9HzuTUZPD+xW7OA=;
-	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
-	b=SdTO2Z3zlf4UgR6DKp0eB+pBme9bxC3X2Q9H/Hkk3h/RDIQKrWiKPdzFO6JdLE0C6
-	 OVTCID8QmWPVUccMVrs74qj0rCVS/mqMr+UaFIUa34VEWFfqXxuxsYdBJu4oHgpyku
-	 BeTk69Ek/HQodm2jOeSDmuCzZv54jb+DLWObZJf7c/PwOPZbDi4PzQwYyhbZMw4h2d
-	 p+ztFxZ+j/Um1ZYC6N7myThDmtQnrbfmWPG/if+I4GMXS9bC6mthENHJP1Q2pB8G5w
-	 3Jy4tiM/uFmjm2hUoWMPxF0E6t21WWvJvOvNz3eJO9/f/CMpo0kL58i7qguJCBRwMR
-	 LNkz0B/atY/Dg==
-X-Mailer: emacs 30.1 (via feedmail 11-beta-1 Q)
-From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-To: Xu Yilun <yilun.xu@linux.intel.com>
-Cc: Alexey Kardashevskiy <aik@amd.com>,
-	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	jgg@nvidia.com, zhiw@nvidia.com
-Subject: Re: [RFC PATCH 3/3] iommufd/tsm: Add tsm_bind/unbind iommufd ioctls
-In-Reply-To: <aD3QcQxtjoYXrglM@yilunxu-OptiPlex-7050>
-References: <yq5a5xhj5yng.fsf@kernel.org>
- <20250529133757.462088-1-aneesh.kumar@kernel.org>
- <20250529133757.462088-3-aneesh.kumar@kernel.org>
- <aDsta4UX76GaExrO@yilunxu-OptiPlex-7050> <yq5azfeqjt9i.fsf@kernel.org>
- <aD3QcQxtjoYXrglM@yilunxu-OptiPlex-7050>
-Date: Tue, 03 Jun 2025 10:30:30 +0530
-Message-ID: <yq5ao6v5ju6p.fsf@kernel.org>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="JulYCSmX"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b2d46760950so5044881a12.3
+        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2025 23:52:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1748933569; x=1749538369; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=wxJyD1Wr6giGGGMhwdcwxe8wm378R6kiZUi+LdBaw9U=;
+        b=JulYCSmXmnzIfSHXAWo8n6FCZuy+TYeBCvu5wclg24pD7lmI5rGOCqifUTR3mN2UMJ
+         7d4qLPY+wMnhZnhTRmHQgWJUshuPEt0ggjxFDzMjtjjusJYzA3qcWX42PTFD0oPhW4LX
+         EAeZX8YZt40tip6eo4RAbmNM4mzRPlxo10uN6XqpL7Fjmg5ee3Skkvp1d/p73n8/9rNh
+         7PM+3bVu4ay4eK3pXw2btIqkKLV+M1B9g8JYWTVm3iD8a9MoMdeMu2IZYKJ8VOnrwfv/
+         vWbEIFTqiKjHefFZkW6qgq+Tb5y2flIkxKfZiHBgdmANicfAGDt5goPPDUXQQnEn41Ke
+         ndHQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748933569; x=1749538369;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=wxJyD1Wr6giGGGMhwdcwxe8wm378R6kiZUi+LdBaw9U=;
+        b=EDpe+B6xia2DyI92QFPuVCS2bBpCQ1lq6C1Ebf36H1/ZWuo0RSWr2B0POyLnp7SEtT
+         AVA6kw/19pvmLxvetDkYIJENU1fkiX1LSb7KtR/hWYVowd1cVB5TD047xNKWImK+m4Np
+         qy8ZsTXMzHZoOFhq2sy6bAuvI5bfzuiDXH6FkSxK2+giWud2FpwghLIME7TTxW4iEaK8
+         undL/VpAUOvKF5jXQ7G8Uj3GHs+RRSTZH7BM7axgPsDt1gyyzLKLkdOWmv8vozQz1+rA
+         TCYuFyE3pxUHNaeaTZwBnUpYAEmFfPHKapzMx+1o5V0Gz54r0a5KXKJVzNP7VeCyk4td
+         12vw==
+X-Forwarded-Encrypted: i=1; AJvYcCWsI9TNMCyr3no/r6GZ3DDY5J38nc9sG2/WiAI5aMxQ1Xu+vjTw0FqGAm/nu17/xxaNqewVomiRT5o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzonQEP/qR6J28/L/jOPRLQeU+zYVv2ePsLxhinPo06TwOQRuIM
+	ww+ZFFpwxfLJqVRHEJtxv5+4yndh9dffTDq3xZRmK6zUvO+vyguBSWJPguij8ouLOQ==
+X-Gm-Gg: ASbGncsBukNjhJVklJIiRlvh0pV8H1qu27UQyxUDzeSb4Z21oHBsvLpu5qlFcBJ/MSU
+	C0LHbu8RGR5nHeAuEwo1eeKKbAwXXLDESqhXUKvkqBP3xuC7UNGv2mSTmsb3PBUxw+P8TH3LAGE
+	YMhIieaBAM8l75PhGTicUEVbgzcPgImJ2/iQDEbE12dKAwPdU3aSEqq23pQS9ROTkZieCZGLFcz
+	qrbSdW545JiWfs2albU5fDN/wR7QJD70AUiuaVQ73KAbVK7Nb/jeoZmfXNvct+d0AKguZXsBBiG
+	wRb+0RjqSQBcWw8rg77HK9QzUDlUBvs64Pn9H8IaHmMQ59Sui4LhXJ+oMh/y1gJG
+X-Google-Smtp-Source: AGHT+IHYXjOCnfjKFDJMsvXQhP7ZQM81wMsQjlNn1UPAKq3ILM9rjBY85bZGaOI3BGHiLdo5YQgppg==
+X-Received: by 2002:a17:90b:5790:b0:311:c1ec:7d11 with SMTP id 98e67ed59e1d1-3127c73d3c9mr19065135a91.18.1748933568932;
+        Mon, 02 Jun 2025 23:52:48 -0700 (PDT)
+Received: from thinkpad ([220.158.156.133])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3124e30cb3bsm6616776a91.38.2025.06.02.23.52.44
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 02 Jun 2025 23:52:48 -0700 (PDT)
+Date: Tue, 3 Jun 2025 12:22:41 +0530
+From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, cros-qcom-dts-watchers@chromium.org, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, quic_vbadigan@quicinc.com, quic_mrana@quicinc.com
+Subject: Re: [PATCH v3 3/3] arm64: qcom: sc7280: Move phy, perst to root port
+ node
+Message-ID: <pb7rsvlslvyqlheyhwwjgje6iiolgkj6cqfsi6jmvetritc7lr@jxndd5rfzbfy>
+References: <20250419-perst-v3-0-1afec3c4ea62@oss.qualcomm.com>
+ <20250419-perst-v3-3-1afec3c4ea62@oss.qualcomm.com>
+ <r4mtndc6tww6eqfumensnsrnk6j6dw5nljgmiz2azzg2evuoy6@hog3twb22euq>
+ <0e1d8b8e-9dd3-a377-d7e0-93ec77cf397f@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,216 +81,67 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <0e1d8b8e-9dd3-a377-d7e0-93ec77cf397f@oss.qualcomm.com>
 
-Xu Yilun <yilun.xu@linux.intel.com> writes:
+On Tue, Jun 03, 2025 at 12:03:01PM +0530, Krishna Chaitanya Chundru wrote:
+> 
+> 
+> On 6/1/2025 12:35 PM, Manivannan Sadhasivam wrote:
+> > On Sat, Apr 19, 2025 at 10:49:26AM +0530, Krishna Chaitanya Chundru wrote:
+> > > There are many places we agreed to move the wake and perst gpio's
+> > > and phy etc to the pcie root port node instead of bridge node[1].
+> > 
+> > Same comment as binding patch applies here.
+> > 
+> > > 
+> > > So move the phy, phy-names, wake-gpio's in the root port.
+> > 
+> > You are not moving any 'wake-gpios' property.
+> > 
+> ack I will remove it.
+> > > There is already reset-gpio defined for PERST# in pci-bus-common.yaml,
+> > > start using that property instead of perst-gpio.
+> > > 
+> > > [1] https://lore.kernel.org/linux-pci/20241211192014.GA3302752@bhelgaas/
+> > > 
+> > > Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+> > > ---
+> > >   arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts   | 5 ++++-
+> > >   arch/arm64/boot/dts/qcom/sc7280-herobrine.dtsi | 5 ++++-
+> > >   arch/arm64/boot/dts/qcom/sc7280-idp.dtsi       | 5 ++++-
+> > >   arch/arm64/boot/dts/qcom/sc7280.dtsi           | 6 ++----
+> > >   4 files changed, 14 insertions(+), 7 deletions(-)
+> > > 
+> > > diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> > > index 7a36c90ad4ec8b52f30b22b1621404857d6ef336..3dd58986ad5da0f898537a51715bb5d0fecbe100 100644
+> > > --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> > > +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
+> > > @@ -709,8 +709,11 @@ &mdss_edp_phy {
+> > >   	status = "okay";
+> > >   };
+> > > +&pcie1_port0 {
+> > > +	reset-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
+> > > +};
+> > > +
+> > >   &pcie1 {
+> > > -	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
+> > >   	pinctrl-0 = <&pcie1_reset_n>, <&pcie1_wake_n>;
+> > >   	pinctrl-names = "default";
+> > 
+> > What about the pinctrl properties? They should also be moved.
+> > 
+> pinctrl can still reside in the host bridge node, which has
+> all the gpio's for all the root ports. If we move them to the
+> root ports we need to explicitly apply pinctrl settings as these
+> not tied with the driver yet.
+> 
 
-> On Mon, Jun 02, 2025 at 04:38:09PM +0530, Aneesh Kumar K.V wrote:
->> Xu Yilun <yilun.xu@linux.intel.com> writes:
->>=20
->> >> + * struct iommu_vdevice_id - ioctl(IOMMU_VDEVICE_TSM_BIND/UNBIND)
->> >> + * @size: sizeof(struct iommu_vdevice_id)
->> >> + * @vdevice_id: Object handle for the vDevice. Returned from IOMMU_V=
-DEVICE_ALLOC
->> >> + */
->> >> +struct iommu_vdevice_id {
->> >> +	__u32 size;
->> >> +	__u32 vdevice_id;
->> >> +} __packed;
->> >> +#define IOMMU_VDEVICE_TSM_BIND _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVICE=
-_TSM_BIND)
->> >> +#define IOMMU_VDEVICE_TSM_UNBIND _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVI=
-CE_TSM_UNBIND)
->> >
->> > Hello, I see you are talking about the detailed implementation. But
->> > could we firstly address the confusing whether this TSM Bind/Unbind
->> > should be a VFIO uAPI or IOMMUFD uAPI?
->> >
->> > In this thread [1], I was talking about TSM Bind/Unbind affects VFIO
->> > behavior so they cannot be iommufd uAPIs which VFIO is not aware of.
->> > At least TDX Connect cares about this problem now. And the conclusion
->> > seems to be "have a VFIO_DEVICE_BIND(iommufd vdevice id), then have
->> > VFIO reach into iommufd".
->> >
->> > And some further findings [2] indicate this problem may also exist on
->> > AMD when p2p is involved.
->> >
->> > [1]: https://lore.kernel.org/all/20250515175658.GR382960@nvidia.com/
->> > [2]: https://lore.kernel.org/all/aDnXxk46kwrOcl0i@yilunxu-OptiPlex-705=
-0/
->> >
->>=20
->> Looking at your patch series, I understand the reason you need a vfio
->> ioctl is to call pci_request_regions_exclusive=E2=80=94is that correct?
->
-> The immediate reason is to unbind the TDI before unmapping the BAR.
->
->>=20
->> In another thread, I asked whether this might be better handled by
->> pci_tsm instead of vfio. I'd be interested in your thoughts on that.
->>=20
->> I also noticed you want to unbind the TDI before unmapping the BAR in
->> vfio. From what I understand, this should still be possible if we use an
->> iommufd ioctl.
->
-> I'm not sure how is that possible.
->
+If the DT node is associated with a device, then the driver core should bind the
+pinctrl pins and configure them. Is that not happening here?
 
-IIUC, what you need is the below interface
-int iommufd_device_tsm_unbind(struct iommufd_device *idev) so that vfio
-can use vfio_iommufd_tsm_unbind() -> 	iommufd_device_tsm_unbind(vdev->iommu=
-fd_device);
+- Mani
 
-The below iommufd changes can get that
-
-static struct mutex *vdev_lock(struct iommufd_vdevice *vdev)
-{
-	if (mutex_lock_interruptible(&vdev->mutex) !=3D 0)
-		return NULL;
-	return &vdev->mutex;
-}
-DEFINE_FREE(vdev_unlock, struct mutex *, if (_T) mutex_unlock(_T))
-
-static struct mutex *idev_lock(struct iommufd_device *idev)
-{
-	if (mutex_lock_interruptible(&idev->igroup->lock) !=3D 0)
-		return NULL;
-	return &idev->igroup->lock;
-}
-DEFINE_FREE(idev_unlock, struct mutex *, if (_T) mutex_unlock(_T))
-
-int iommufd_vdevice_tsm_bind_ioctl(struct iommufd_ucmd *ucmd)
-{
-	struct iommu_vdevice_tsm_bind *cmd =3D ucmd->cmd;
-	struct iommufd_vdevice *vdev;
-	struct iommufd_device *idev;
-	struct mutex *ilock __free(idev_unlock) =3D NULL;
-	struct mutex *vlock __free(vdev_unlock) =3D NULL;
-	struct kvm *kvm;
-	int rc =3D 0;
-
-	if (cmd->flags)
-		return -EOPNOTSUPP;
-
-	idev =3D iommufd_get_device(ucmd, cmd->dev_id);
-	if (IS_ERR(idev))
-		return PTR_ERR(idev);
-
-	vdev =3D container_of(iommufd_get_object(ucmd->ictx, cmd->vdevice_id,
-					       IOMMUFD_OBJ_VDEVICE),
-			    struct iommufd_vdevice, obj);
-	if (IS_ERR(vdev)) {
-		rc =3D PTR_ERR(vdev);
-		goto out_put_idev;
-	}
-
-	ilock =3D idev_lock(idev);
-	if (!ilock) {
-		rc =3D -EINTR;
-		goto out_put_vdev;
-	}
-
-	if (idev->vdev) {
-		/* if it is already bound */
-		rc =3D -EINVAL;
-		goto out_put_vdev;
-	}
-
-	vlock =3D vdev_lock(vdev);
-	if (!vlock) {
-		rc =3D -EINTR;
-		goto out_put_vdev;
-	}
-
-	if (WARN_ON(vdev->idev)) {
-		rc =3D -EINVAL;
-		goto out_put_vdev;
-	}
-
-	kvm =3D vdev->viommu->kvm_filp->private_data;
-	if (kvm) {
-		/*
-		 * tsm layer will make take care of parallel calls to tsm_bind/unbind
-		 */
-		rc =3D tsm_bind(vdev->dev, kvm, vdev->id);
-		if (rc) {
-			rc =3D -ENODEV;
-			goto out_put_vdev;
-		}
-	} else {
-		rc =3D -ENODEV;
-		goto out_put_vdev;
-	}
-	idev->vdev =3D vdev;
-	vdev->idev =3D idev;
-	rc =3D iommufd_ucmd_respond(ucmd, sizeof(*cmd));
-
-out_put_idev:
-	iommufd_put_object(ucmd->ictx, &idev->obj);
-out_put_vdev:
-	iommufd_put_object(ucmd->ictx, &vdev->obj);
-	return rc;
-}
-
-static int iommufd_vdevice_tsm_unbind(struct iommufd_vdevice *vdev)
-{
-	int rc =3D -EINVAL;
-	struct mutex *lock __free(vdev_unlock) =3D vdev_lock(vdev);
-	if (!lock)
-		return -EINTR;
-
-	if (!vdev->idev) {
-		tsm_unbind(vdev->dev);
-		vdev->idev =3D NULL;
-		rc =3D 0;
-	}
-	return rc;
-}
-
-/**
- * iommufd_device_tsm_unbind - Move a device out of TSM bind state
- * @idev: device to detach
- *
- * Undo iommufd_device_tsm_bind(). This removes all Confidential Computing
- * configurations, Once this completes the device is unlocked (TDISP
- * CONFIG_UNLOCKED).
- */
-int iommufd_device_tsm_unbind(struct iommufd_device *idev)
-{
-	struct mutex *lock __free(idev_unlock) =3D idev_lock(idev);
-	if (!lock)
-		return -EINTR;
-
-	if (!idev->vdev)
-		return -EINVAL;
-
-	iommufd_vdevice_tsm_unbind(idev->vdev);
-	idev->vdev =3D NULL;
-	return 0;
-}
-EXPORT_SYMBOL_NS_GPL(iommufd_device_tsm_unbind, "IOMMUFD");
-
-int iommufd_vdevice_tsm_unbind_ioctl(struct iommufd_ucmd *ucmd)
-{
-	struct iommu_vdevice_tsm_unbind *cmd =3D ucmd->cmd;
-	struct iommufd_vdevice *vdev;
-	int rc =3D 0;
-
-	vdev =3D container_of(iommufd_get_object(ucmd->ictx, cmd->vdevice_id,
-					       IOMMUFD_OBJ_VDEVICE),
-			    struct iommufd_vdevice, obj);
-	if (IS_ERR(vdev))
-		return PTR_ERR(vdev);
-
-	rc =3D iommufd_device_tsm_unbind(vdev->idev);
-	if (rc) {
-		rc =3D -ENODEV;
-		goto out_put_vdev;
-	}
-	rc =3D iommufd_ucmd_respond(ucmd, sizeof(*cmd));
-
-out_put_vdev:
-	iommufd_put_object(ucmd->ictx, &vdev->obj);
-	return rc;
-}
-
+-- 
+மணிவண்ணன் சதாசிவம்
