@@ -1,179 +1,265 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2B5913AD05
-	for <linux-pci@vger.kernel.org>; Tue,  3 Jun 2025 06:33:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E5841F948;
+	Tue,  3 Jun 2025 06:34:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748932393; cv=none; b=TAuc1GvDmucuydpfetbWcJ6sMe4UnS+E80bciQOBTYFGvnBmkCK8HYeb4IrVOHOrCUixbZvgrnU4lfrSY5wT8awxTwGRYVwU0ZVvxWe+RVJllNky18x533gPl9wNmdNz9wE/WZTztM94o2VX4kMlp/JsnGQL2CWUBYq9DZHaFR0=
+	t=1748932468; cv=none; b=M5IJwTqSMmVjo94ZFWDGujWpFCgmRl990aToM3QHXNI5JsAbUQrRqVWmnlrlyYr3yVW+s2WAFb4Szi2DpnL2ozYnil+KI7ZiiPfbJCt4gNWoGY+oIazUbCBoMroDq5uF4tuc85+6rFsqdPepKDSdJmuUU80aTW51Z0P84F1S6Ys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748932393; c=relaxed/simple;
-	bh=RsGYtgtdANl/zO/ogZLbFhtRUx9OmRHuZoXn6BxbNqE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=X4WhC0QyUvdwmBhbCQ19uFwakGWKIQN2fghcU6t2s3zjU7f4Om+7hqO1b+sQaWTrys+t9jvGH6lIkS401nu2j3z2dRSi9wXng9c+ICgyywcnGR5lj1TFRpsC1vj8ztK2fMIWw1JAwmmgZgbPtmrdiNQew0AX1D+3EnEc29J0PJ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cwCnRELw; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1748932468; c=relaxed/simple;
+	bh=9MqeMHm6uVNpV12j4bBrWMR3B7MZ9HzuTUZPD+xW7OA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=S0QqpHFAwmnRC2kHsyulSmeBvGbhkxyGvog5NVGka+TNSba0dICJmX+RzSGbDd0F0Waghu76KlQxA7J+az2fkFZfuIsUZnSF9TRCQ9gIsYaUksL3Oa7qD2ex0apI6FEg4Wtl1hmU0zEhWbX98RHIBt7TJzYsEKDKKr0A4RZ3Kko=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SdTO2Z3z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cwCnRELw"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 552HJkLY030582
-	for <linux-pci@vger.kernel.org>; Tue, 3 Jun 2025 06:33:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	9pc6PHB6crm3zwpJbt4GLLT2Ce8F7PkqjaaH7vHbgPE=; b=cwCnRELwNaVxYI9M
-	oAPlIZxDlM2BMVIyXkDlK9iqnPBgw5INiD+AWntbERFLygOOPqW3akmCQIgx4Cw+
-	VxNPrJ/sWpruPI1wwdJ9aNHapyWx10lyun/QWBp24Gg/uF1iHtUgdTK+n/IlLv3K
-	TdIxcK6eSFl50o+ws9cjHcaueCfeJkpLJElxBTZKozc+cf8Rg0J6Q1ecGpho+M8i
-	6IA9JgU5/H2rYxqiifbwhNt4pm917bmrH37AxYlv5onlWBqpMXbbShtvbCnWiauw
-	wi+L0TOOAHiDR33qj3JuRgeEwqlZRbnEzE41Pe6BVxRFy8JCdOL1wV6M0YLi9BP9
-	8q9l/w==
-Received: from mail-pj1-f71.google.com (mail-pj1-f71.google.com [209.85.216.71])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 471g8tsjvv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Tue, 03 Jun 2025 06:33:09 +0000 (GMT)
-Received: by mail-pj1-f71.google.com with SMTP id 98e67ed59e1d1-310e7c24158so5146220a91.3
-        for <linux-pci@vger.kernel.org>; Mon, 02 Jun 2025 23:33:09 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748932388; x=1749537188;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=9pc6PHB6crm3zwpJbt4GLLT2Ce8F7PkqjaaH7vHbgPE=;
-        b=GotrsQq4cvNffkmiBStccX0+Fpxvx4HzUfB1n4MHJLn7OVP+2Ua4S8Hg11XqRXv2F1
-         W5lOOvErZzHURDOTluzB44YKnYxnQa/lFtXSqrBtnKT0fG30tg7dCaacI7tw4jgtlnbG
-         35VLQHBLnvUXN4ge6shhybv5SLlFVHAWocMMKdvosUVznvTtP4LbKMjjXyEw2lg9lR71
-         Jji/4bvzdHKHODiMegaiJSrCXNmkZEuJ9q6EkcAs3k9yfEYbx4ACHRjbQK4/DrQkkxDt
-         B0nmTgY3vrCIdHtl5IBm/kVL3/yTiqmI6DKqHLZv4UOyLcbshsteBnPmXTiYAjrL9fV9
-         A3og==
-X-Forwarded-Encrypted: i=1; AJvYcCWuN5wVYeJIdHdZx6Xy3hlPxsTvIltL0uU0PfxhSeViCm1Ks2ZT6kScpDZk+x/JNA8QIl6PrkE2ISA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyqV4GcGYcMlyx4/HONfYwcklkXRBVp3dlJnonXGfktriypc9z5
-	FbbHr5StRKaEK3HLUtbGT85J3aUP+9c0vU7XvM9nyNbCwA3Ljy3cYLiELbav3rS7q/Xw9AVnP7Z
-	z6fETveDMg56zizf3GBro0mmFIU6uur0h7tNT3uhYLS0O8MQJpYIOW/5h++jwfLQ=
-X-Gm-Gg: ASbGncs4uLfeb6Ly/Hu2x8xPiEggU8wlUV+d98DTGmg8onNwRUlVsOB0rdzyKmuy+UG
-	TX9WG80HdAYiercS+n7x6wb5/zElFdi4K+UTwcOGUjki6/mNhdTmlj2sQmjZI+Z5MKnZOAIeVAa
-	LfGrqI0or+svtGE1gdJUd1h+EcPg9XTxtdo71E0SI/QXBvvzQZMNzugRtxBCJJ3YSYMJ8MsEubn
-	JePR8c3DPDw0Y0UsbYF4zRNQ8Adcu8Wuw3sl8lnTqiFeYnbA008zOeNWc8EmuuQWCR2NKvT+9/F
-	Njd8BHjQVvmm6WL5spWtFvng8Ftq9v4AxHF+c/V6Rw==
-X-Received: by 2002:a17:90b:2249:b0:312:1e41:3a5b with SMTP id 98e67ed59e1d1-3125035317fmr20383229a91.4.1748932388107;
-        Mon, 02 Jun 2025 23:33:08 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG14BrL2PlcTbB07wK/qZ6PgKdgYBcfapOLCfQTa+Dc+QD3aVcsU8s27xf8IUVdxud5j5tkbw==
-X-Received: by 2002:a17:90b:2249:b0:312:1e41:3a5b with SMTP id 98e67ed59e1d1-3125035317fmr20383183a91.4.1748932387543;
-        Mon, 02 Jun 2025 23:33:07 -0700 (PDT)
-Received: from [10.92.214.105] ([202.46.23.19])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3124e399b3bsm6562535a91.31.2025.06.02.23.33.03
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 02 Jun 2025 23:33:07 -0700 (PDT)
-Message-ID: <0e1d8b8e-9dd3-a377-d7e0-93ec77cf397f@oss.qualcomm.com>
-Date: Tue, 3 Jun 2025 12:03:01 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SdTO2Z3z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BA03C4CEEF;
+	Tue,  3 Jun 2025 06:33:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1748932468;
+	bh=9MqeMHm6uVNpV12j4bBrWMR3B7MZ9HzuTUZPD+xW7OA=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=SdTO2Z3zlf4UgR6DKp0eB+pBme9bxC3X2Q9H/Hkk3h/RDIQKrWiKPdzFO6JdLE0C6
+	 OVTCID8QmWPVUccMVrs74qj0rCVS/mqMr+UaFIUa34VEWFfqXxuxsYdBJu4oHgpyku
+	 BeTk69Ek/HQodm2jOeSDmuCzZv54jb+DLWObZJf7c/PwOPZbDi4PzQwYyhbZMw4h2d
+	 p+ztFxZ+j/Um1ZYC6N7myThDmtQnrbfmWPG/if+I4GMXS9bC6mthENHJP1Q2pB8G5w
+	 3Jy4tiM/uFmjm2hUoWMPxF0E6t21WWvJvOvNz3eJO9/f/CMpo0kL58i7qguJCBRwMR
+	 LNkz0B/atY/Dg==
+X-Mailer: emacs 30.1 (via feedmail 11-beta-1 Q)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Xu Yilun <yilun.xu@linux.intel.com>
+Cc: Alexey Kardashevskiy <aik@amd.com>,
+	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
+	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
+	jgg@nvidia.com, zhiw@nvidia.com
+Subject: Re: [RFC PATCH 3/3] iommufd/tsm: Add tsm_bind/unbind iommufd ioctls
+In-Reply-To: <aD3QcQxtjoYXrglM@yilunxu-OptiPlex-7050>
+References: <yq5a5xhj5yng.fsf@kernel.org>
+ <20250529133757.462088-1-aneesh.kumar@kernel.org>
+ <20250529133757.462088-3-aneesh.kumar@kernel.org>
+ <aDsta4UX76GaExrO@yilunxu-OptiPlex-7050> <yq5azfeqjt9i.fsf@kernel.org>
+ <aD3QcQxtjoYXrglM@yilunxu-OptiPlex-7050>
+Date: Tue, 03 Jun 2025 10:30:30 +0530
+Message-ID: <yq5ao6v5ju6p.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:102.0) Gecko/20100101
- Thunderbird/102.15.1
-Subject: Re: [PATCH v3 3/3] arm64: qcom: sc7280: Move phy, perst to root port
- node
-Content-Language: en-US
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?UTF-8?Q?Krzysztof_Wilczy=c5=84ski?= <kw@linux.com>,
-        Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        cros-qcom-dts-watchers@chromium.org, linux-arm-msm@vger.kernel.org,
-        linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, quic_vbadigan@quicinc.com,
-        quic_mrana@quicinc.com
-References: <20250419-perst-v3-0-1afec3c4ea62@oss.qualcomm.com>
- <20250419-perst-v3-3-1afec3c4ea62@oss.qualcomm.com>
- <r4mtndc6tww6eqfumensnsrnk6j6dw5nljgmiz2azzg2evuoy6@hog3twb22euq>
-From: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
-In-Reply-To: <r4mtndc6tww6eqfumensnsrnk6j6dw5nljgmiz2azzg2evuoy6@hog3twb22euq>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-GUID: raw23kMZRQx1w422wIr0iQk5UW-l1lst
-X-Authority-Analysis: v=2.4 cv=Qspe3Uyd c=1 sm=1 tr=0 ts=683e9725 cx=c_pps
- a=UNFcQwm+pnOIJct1K4W+Mw==:117 a=j4ogTh8yFefVWWEFDRgCtg==:17
- a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=kQES2RtodgDv6MKcoUgA:9 a=QEXdDO2ut3YA:10 a=uKXjsCUrEbL0IQVhDsJ9:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjAzMDA1NSBTYWx0ZWRfX3SFc3zTefYi7
- q0RUpFiq/VMwjGRN33LZCuLxOEkJw0O7zO1/A2lLQ3o+0v1/EOmXaeVrfi53uJAXz7S7gWdPvp7
- GObe7VVq5HllnRu9bseqYrgR+Z7wC+wXdIDOxxCHpGmu1QRk27jEgjSsAjWhEGcfowSohsYXddt
- ZbUcXbXSIREibbrbnsy5XMrZGhK9Ys0OExKT+wFLtBkvTboThI866aMjjfev/Q8Ach2iOfZHVC8
- duv9sZRxjXifq4rdGnN31lxqo81mg1CdcrOimbHGrbANhV79lbbj92M9a9EzjAbAkVLPaXdPXVC
- Dt2BKxS15JrAU72M1oO3IQAZaCv9LJM1B/Ik2xJVQIBUm56DOzmu9F75iZ2OD5FgrWX+5+D3v7W
- mPIl0ggOW0xnygGTRxHLqQ0h3E5R+cOwySX8EEMr7Axi5jr6tlWWovA7MTPPHr1ceVl7mTPM
-X-Proofpoint-ORIG-GUID: raw23kMZRQx1w422wIr0iQk5UW-l1lst
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-03_01,2025-06-02_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 mlxscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 suspectscore=0 impostorscore=0 malwarescore=0
- clxscore=1015 adultscore=0 phishscore=0 classifier=spam authscore=0
- authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2506030055
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: quoted-printable
 
+Xu Yilun <yilun.xu@linux.intel.com> writes:
 
+> On Mon, Jun 02, 2025 at 04:38:09PM +0530, Aneesh Kumar K.V wrote:
+>> Xu Yilun <yilun.xu@linux.intel.com> writes:
+>>=20
+>> >> + * struct iommu_vdevice_id - ioctl(IOMMU_VDEVICE_TSM_BIND/UNBIND)
+>> >> + * @size: sizeof(struct iommu_vdevice_id)
+>> >> + * @vdevice_id: Object handle for the vDevice. Returned from IOMMU_V=
+DEVICE_ALLOC
+>> >> + */
+>> >> +struct iommu_vdevice_id {
+>> >> +	__u32 size;
+>> >> +	__u32 vdevice_id;
+>> >> +} __packed;
+>> >> +#define IOMMU_VDEVICE_TSM_BIND _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVICE=
+_TSM_BIND)
+>> >> +#define IOMMU_VDEVICE_TSM_UNBIND _IO(IOMMUFD_TYPE, IOMMUFD_CMD_VDEVI=
+CE_TSM_UNBIND)
+>> >
+>> > Hello, I see you are talking about the detailed implementation. But
+>> > could we firstly address the confusing whether this TSM Bind/Unbind
+>> > should be a VFIO uAPI or IOMMUFD uAPI?
+>> >
+>> > In this thread [1], I was talking about TSM Bind/Unbind affects VFIO
+>> > behavior so they cannot be iommufd uAPIs which VFIO is not aware of.
+>> > At least TDX Connect cares about this problem now. And the conclusion
+>> > seems to be "have a VFIO_DEVICE_BIND(iommufd vdevice id), then have
+>> > VFIO reach into iommufd".
+>> >
+>> > And some further findings [2] indicate this problem may also exist on
+>> > AMD when p2p is involved.
+>> >
+>> > [1]: https://lore.kernel.org/all/20250515175658.GR382960@nvidia.com/
+>> > [2]: https://lore.kernel.org/all/aDnXxk46kwrOcl0i@yilunxu-OptiPlex-705=
+0/
+>> >
+>>=20
+>> Looking at your patch series, I understand the reason you need a vfio
+>> ioctl is to call pci_request_regions_exclusive=E2=80=94is that correct?
+>
+> The immediate reason is to unbind the TDI before unmapping the BAR.
+>
+>>=20
+>> In another thread, I asked whether this might be better handled by
+>> pci_tsm instead of vfio. I'd be interested in your thoughts on that.
+>>=20
+>> I also noticed you want to unbind the TDI before unmapping the BAR in
+>> vfio. From what I understand, this should still be possible if we use an
+>> iommufd ioctl.
+>
+> I'm not sure how is that possible.
+>
 
-On 6/1/2025 12:35 PM, Manivannan Sadhasivam wrote:
-> On Sat, Apr 19, 2025 at 10:49:26AM +0530, Krishna Chaitanya Chundru wrote:
->> There are many places we agreed to move the wake and perst gpio's
->> and phy etc to the pcie root port node instead of bridge node[1].
-> 
-> Same comment as binding patch applies here.
-> 
->>
->> So move the phy, phy-names, wake-gpio's in the root port.
-> 
-> You are not moving any 'wake-gpios' property.
-> 
-ack I will remove it.
->> There is already reset-gpio defined for PERST# in pci-bus-common.yaml,
->> start using that property instead of perst-gpio.
->>
->> [1] https://lore.kernel.org/linux-pci/20241211192014.GA3302752@bhelgaas/
->>
->> Signed-off-by: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
->> ---
->>   arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts   | 5 ++++-
->>   arch/arm64/boot/dts/qcom/sc7280-herobrine.dtsi | 5 ++++-
->>   arch/arm64/boot/dts/qcom/sc7280-idp.dtsi       | 5 ++++-
->>   arch/arm64/boot/dts/qcom/sc7280.dtsi           | 6 ++----
->>   4 files changed, 14 insertions(+), 7 deletions(-)
->>
->> diff --git a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> index 7a36c90ad4ec8b52f30b22b1621404857d6ef336..3dd58986ad5da0f898537a51715bb5d0fecbe100 100644
->> --- a/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> +++ b/arch/arm64/boot/dts/qcom/qcs6490-rb3gen2.dts
->> @@ -709,8 +709,11 @@ &mdss_edp_phy {
->>   	status = "okay";
->>   };
->>   
->> +&pcie1_port0 {
->> +	reset-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
->> +};
->> +
->>   &pcie1 {
->> -	perst-gpios = <&tlmm 2 GPIO_ACTIVE_LOW>;
->>   
->>   	pinctrl-0 = <&pcie1_reset_n>, <&pcie1_wake_n>;
->>   	pinctrl-names = "default";
-> 
-> What about the pinctrl properties? They should also be moved.
-> 
-pinctrl can still reside in the host bridge node, which has
-all the gpio's for all the root ports. If we move them to the
-root ports we need to explicitly apply pinctrl settings as these
-not tied with the driver yet.
+IIUC, what you need is the below interface
+int iommufd_device_tsm_unbind(struct iommufd_device *idev) so that vfio
+can use vfio_iommufd_tsm_unbind() -> 	iommufd_device_tsm_unbind(vdev->iommu=
+fd_device);
 
-- Krishna Chaitanya.
-> - Mani
-> 
+The below iommufd changes can get that
+
+static struct mutex *vdev_lock(struct iommufd_vdevice *vdev)
+{
+	if (mutex_lock_interruptible(&vdev->mutex) !=3D 0)
+		return NULL;
+	return &vdev->mutex;
+}
+DEFINE_FREE(vdev_unlock, struct mutex *, if (_T) mutex_unlock(_T))
+
+static struct mutex *idev_lock(struct iommufd_device *idev)
+{
+	if (mutex_lock_interruptible(&idev->igroup->lock) !=3D 0)
+		return NULL;
+	return &idev->igroup->lock;
+}
+DEFINE_FREE(idev_unlock, struct mutex *, if (_T) mutex_unlock(_T))
+
+int iommufd_vdevice_tsm_bind_ioctl(struct iommufd_ucmd *ucmd)
+{
+	struct iommu_vdevice_tsm_bind *cmd =3D ucmd->cmd;
+	struct iommufd_vdevice *vdev;
+	struct iommufd_device *idev;
+	struct mutex *ilock __free(idev_unlock) =3D NULL;
+	struct mutex *vlock __free(vdev_unlock) =3D NULL;
+	struct kvm *kvm;
+	int rc =3D 0;
+
+	if (cmd->flags)
+		return -EOPNOTSUPP;
+
+	idev =3D iommufd_get_device(ucmd, cmd->dev_id);
+	if (IS_ERR(idev))
+		return PTR_ERR(idev);
+
+	vdev =3D container_of(iommufd_get_object(ucmd->ictx, cmd->vdevice_id,
+					       IOMMUFD_OBJ_VDEVICE),
+			    struct iommufd_vdevice, obj);
+	if (IS_ERR(vdev)) {
+		rc =3D PTR_ERR(vdev);
+		goto out_put_idev;
+	}
+
+	ilock =3D idev_lock(idev);
+	if (!ilock) {
+		rc =3D -EINTR;
+		goto out_put_vdev;
+	}
+
+	if (idev->vdev) {
+		/* if it is already bound */
+		rc =3D -EINVAL;
+		goto out_put_vdev;
+	}
+
+	vlock =3D vdev_lock(vdev);
+	if (!vlock) {
+		rc =3D -EINTR;
+		goto out_put_vdev;
+	}
+
+	if (WARN_ON(vdev->idev)) {
+		rc =3D -EINVAL;
+		goto out_put_vdev;
+	}
+
+	kvm =3D vdev->viommu->kvm_filp->private_data;
+	if (kvm) {
+		/*
+		 * tsm layer will make take care of parallel calls to tsm_bind/unbind
+		 */
+		rc =3D tsm_bind(vdev->dev, kvm, vdev->id);
+		if (rc) {
+			rc =3D -ENODEV;
+			goto out_put_vdev;
+		}
+	} else {
+		rc =3D -ENODEV;
+		goto out_put_vdev;
+	}
+	idev->vdev =3D vdev;
+	vdev->idev =3D idev;
+	rc =3D iommufd_ucmd_respond(ucmd, sizeof(*cmd));
+
+out_put_idev:
+	iommufd_put_object(ucmd->ictx, &idev->obj);
+out_put_vdev:
+	iommufd_put_object(ucmd->ictx, &vdev->obj);
+	return rc;
+}
+
+static int iommufd_vdevice_tsm_unbind(struct iommufd_vdevice *vdev)
+{
+	int rc =3D -EINVAL;
+	struct mutex *lock __free(vdev_unlock) =3D vdev_lock(vdev);
+	if (!lock)
+		return -EINTR;
+
+	if (!vdev->idev) {
+		tsm_unbind(vdev->dev);
+		vdev->idev =3D NULL;
+		rc =3D 0;
+	}
+	return rc;
+}
+
+/**
+ * iommufd_device_tsm_unbind - Move a device out of TSM bind state
+ * @idev: device to detach
+ *
+ * Undo iommufd_device_tsm_bind(). This removes all Confidential Computing
+ * configurations, Once this completes the device is unlocked (TDISP
+ * CONFIG_UNLOCKED).
+ */
+int iommufd_device_tsm_unbind(struct iommufd_device *idev)
+{
+	struct mutex *lock __free(idev_unlock) =3D idev_lock(idev);
+	if (!lock)
+		return -EINTR;
+
+	if (!idev->vdev)
+		return -EINVAL;
+
+	iommufd_vdevice_tsm_unbind(idev->vdev);
+	idev->vdev =3D NULL;
+	return 0;
+}
+EXPORT_SYMBOL_NS_GPL(iommufd_device_tsm_unbind, "IOMMUFD");
+
+int iommufd_vdevice_tsm_unbind_ioctl(struct iommufd_ucmd *ucmd)
+{
+	struct iommu_vdevice_tsm_unbind *cmd =3D ucmd->cmd;
+	struct iommufd_vdevice *vdev;
+	int rc =3D 0;
+
+	vdev =3D container_of(iommufd_get_object(ucmd->ictx, cmd->vdevice_id,
+					       IOMMUFD_OBJ_VDEVICE),
+			    struct iommufd_vdevice, obj);
+	if (IS_ERR(vdev))
+		return PTR_ERR(vdev);
+
+	rc =3D iommufd_device_tsm_unbind(vdev->idev);
+	if (rc) {
+		rc =3D -ENODEV;
+		goto out_put_vdev;
+	}
+	rc =3D iommufd_ucmd_respond(ucmd, sizeof(*cmd));
+
+out_put_vdev:
+	iommufd_put_object(ucmd->ictx, &vdev->obj);
+	return rc;
+}
+
