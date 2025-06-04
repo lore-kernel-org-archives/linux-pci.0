@@ -1,131 +1,145 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.10])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DBE21C700C
-	for <linux-pci@vger.kernel.org>; Wed,  4 Jun 2025 06:05:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.10
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D58BE237173
+	for <linux-pci@vger.kernel.org>; Wed,  4 Jun 2025 06:05:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749017134; cv=none; b=eWe79d0/hTWFBL/sGO3O4UMk6mnoEth7rqPMuq7ltA0gykqX3VQ1t+aNAJqwRmMaVnjZyp8n43ySL5ClBnP+Tyt2Q+yTatpLpRMYZccH118qWX5GL7baPaUHuz9I4w9/MRM4UU1q1aVx5/28/kgzl534GcWLsa8cXW5/KVDKj5M=
+	t=1749017153; cv=none; b=fa1DGG0tj6SA8JAPEWTc3axzrhLrpfHJrfpCKooI2pYGPot8z7k42Anp1AmBbF5BsXHyfjSF0UzbEaMLiKNJ/eKy9SQJBpEXh3fnGFaLdsvaXEIyCJRO0MHmhqur3014s0tnrRoktzU0tVaNdNtAPAjS5kjdeq+FxmowEOcbsMQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749017134; c=relaxed/simple;
-	bh=pf+NdBz417t8L4KW9Dwe4kD3rvaFL8QbqIA+on0Ydl4=;
+	s=arc-20240116; t=1749017153; c=relaxed/simple;
+	bh=BqfaYQx97o+JOP+K1NGE6tuY6VxM7+aD/6TxPpXbrak=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=IdgIAO21SSM1in5G4En34ybk7ZwJ9IMhsuJ9n4BRCcJ2RI5pXtaD19pLaZ5IqyqMlIr1dX6ihPPe/CkEMk46PqcrdK3vhAaSQHCh5zy0Q35UTSLLMTjRF8NEaLuDwo3qdNcIWudxJenjLUDQwUnFU19q/7LqiCLDDrmpEg5yrGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Jqer1241; arc=none smtp.client-ip=192.198.163.10
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=B1kTzOKqHNdgNi1Xv2S10Wn6bNGRYZdyMUDjSY6sSBddRz9/l0j7CmewyivvQAi8vPoRdrtl4b6Pqp6t8MA/tRZ/Q3imT1dtQNWd3UQlqXzq3xFekufxgAp1nhLKkvzxX1XmNAzk80fPRgIRLs0hr9dfxhv7k/medDdtvf/qNUY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=rr1sCKih; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Jqer1241"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1749017133; x=1780553133;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:content-transfer-encoding:in-reply-to;
-  bh=pf+NdBz417t8L4KW9Dwe4kD3rvaFL8QbqIA+on0Ydl4=;
-  b=Jqer1241TvXrFy3yxroWfHvQrfl7jN7+w8VtbRvwcHDOVg18hKlmj9rV
-   N75VuqzoaoyFGshMOilwKI8LHZhYir9/HMDa2WpDV/NDZLgKo9c2OINPL
-   KRuNr2CYMzFOWGXljblQUPPjn7QqqcV1Kbcaw2qwKaG3lgc8F0FfAbKRm
-   x3/CtJJytvp8y3s2I5HpmKWnIgPIiy23uHBmJj+WY0m9WSgKcj7cgzWPF
-   /tO0T2VPSJF7jfbR7axcbayaj4Hepo0cFjQthYLPxiBlILn/icvkbs6z3
-   RmbgGG00PLuyzTVxQ7Z0ZggGScejTTycV3RVxFmhzbX4tyT+iw8Fx23p8
-   A==;
-X-CSE-ConnectionGUID: ITv6wjYpRTyIvENB++rWpA==
-X-CSE-MsgGUID: p8RoORItRL2YFUE3hRK3YQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11453"; a="62436777"
-X-IronPort-AV: E=Sophos;i="6.16,208,1744095600"; 
-   d="scan'208";a="62436777"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa104.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 23:05:33 -0700
-X-CSE-ConnectionGUID: S7BumPzASWya1TlABzSyHQ==
-X-CSE-MsgGUID: PDZe6sgtR7GkmhWeEdQWtQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,208,1744095600"; 
-   d="scan'208";a="182260555"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa001.jf.intel.com with ESMTP; 03 Jun 2025 23:05:30 -0700
-Date: Wed, 4 Jun 2025 13:58:55 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Jason Gunthorpe <jgg@nvidia.com>
-Cc: "Aneesh Kumar K.V" <aneesh.kumar@kernel.org>,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	zhiw@nvidia.com
-Subject: Re: [RFC PATCH 3/3] iommufd/tsm: Add tsm_bind/unbind iommufd ioctls
-Message-ID: <aD/gn2tb+HfZU29D@yilunxu-OptiPlex-7050>
-References: <yq5a5xhj5yng.fsf@kernel.org>
- <20250529133757.462088-1-aneesh.kumar@kernel.org>
- <20250529133757.462088-3-aneesh.kumar@kernel.org>
- <aDsta4UX76GaExrO@yilunxu-OptiPlex-7050>
- <yq5azfeqjt9i.fsf@kernel.org>
- <aD3QcQxtjoYXrglM@yilunxu-OptiPlex-7050>
- <20250602164857.GE233377@nvidia.com>
- <aD50lpgJ+9XMJE/4@yilunxu-OptiPlex-7050>
- <20250603121142.GE376789@nvidia.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="rr1sCKih"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-450ce3a2dd5so56413865e9.3
+        for <linux-pci@vger.kernel.org>; Tue, 03 Jun 2025 23:05:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1749017150; x=1749621950; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=ZH44UMshivXu/WwJMMc2cUDTZKuUc71AWCQOvue4lTc=;
+        b=rr1sCKihUY4jHPDdrL1/xCij+xDy6yz+Z7D5UlcAzC4S0lP1vAtZh1RJCfsOnoJaDg
+         ryp0oV8GwB3zhUGinz4By7KuRB4E20UXcxZz/OPDMoj9fhzoFugnCs4ZzW06pdAT+n9I
+         f1/fTmRMTF+yGRRNEzQi5nVsUxt4YNzHvbMAyP4HkGTwZwANupUzQFTGV5DAkTDbaeUE
+         DE0d2gP80ALQgZXdKbuc3D2/9AesNCfYaMV6uXXGOYw7f5xEIkwazopnH/56gMaIFta/
+         RibV4xUvZzZD6drL2XZ5XjhI3e5uOneGW8UzAxNEvqOUPDivAAjQwfwdTH8m13kWIJAX
+         SCxQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749017150; x=1749621950;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ZH44UMshivXu/WwJMMc2cUDTZKuUc71AWCQOvue4lTc=;
+        b=M6l+AR4I5EADSFSTOZ368BrPGk9LOdP6s66p+Y76a25dHRZSSsOrOSeUsxIx5HV0rU
+         NaP2xqEjUQc26GpNT26UFWNYuaCRlKWU9IoiLfAA+S1fwBn4SEQMkS2gTh/a1jHO4Xo6
+         xz+GvUYNiTkPKNzRuNRtVly0vqkn/9rwsWQyjFQJXi018gF9kjIBCQVbhQgoP8iB28+r
+         F8tpuzNKufcz3i9x+6CcIwk+pAsdZ6INyy0k8jtVldRb7tbBv0wPQxyI52v8NUL6phVw
+         XrCoz9Mvl0XnohEaNQ8qRXzfqorHNeF2vSCrLavbqIy5lfpcjTCfrInZT1hp3qHHjmXm
+         rm5w==
+X-Forwarded-Encrypted: i=1; AJvYcCU+Q2Z0GMtFDpBWhLT61BLg7JlN80hoFsJ7DawVVQi0kOdjHnsz268aBf4O0Q3p9iidggH4OeMSKG0=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz21vZYYn0P1/QwlsxkGauygzugp4oapT5YwDsB5mDwqA50ZPuH
+	wDFwbC7iYfmtufXcgFDRQVZmNRC2vtIMwWds9o57n4z5xvlh+nqEXxT1jajH+A4hYhg=
+X-Gm-Gg: ASbGnctOZOLtqLnQIvvY1G5qzFCgt7FMcZWtuDzOpp/m9Sbfn2J6dyzcX94ul5N2Tnc
+	DrJpyOCTMwet/NN8O0eQirBqMYIfoz8mE7MJIShgtNk7zqmKTTNvdbYussAwjxeu0VENscDAxcI
+	DrEreRAZHSJvKnBsjLEGgdYKgR504JuazUSfuye9eDVrS3tTiBTnoEAlGM6EMb0jh0rbIZ3fJbR
+	dTxM9Ja95SaeOHR/OfwU+8JBcIq6iYN9cd/eCZPNOMOzcpfmeqfbT/cbGvz0/B59A1E/R7Q0IG9
+	iV9qQxlVDstAB7V6T5to/sArhw/mzx7cAwwmOmllyqy3k3WnxuMQ1r+f
+X-Google-Smtp-Source: AGHT+IGm1afoxcy8lx6vgqoRP0d9Plaozw5hLF59bcfnlN4ynAXn5BG3bAPTyvKW+OZbq0W2nOxEZw==
+X-Received: by 2002:a05:600c:530d:b0:450:d3b9:4ba2 with SMTP id 5b1f17b1804b1-451f0b3ce5bmr9739335e9.24.1749017150125;
+        Tue, 03 Jun 2025 23:05:50 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3a4f0097205sm20706878f8f.79.2025.06.03.23.05.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 03 Jun 2025 23:05:49 -0700 (PDT)
+Date: Wed, 4 Jun 2025 09:05:46 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Terry Bowman <terry.bowman@amd.com>
+Cc: PradeepVineshReddy.Kodamati@amd.com, dave@stgolabs.net,
+	jonathan.cameron@huawei.com, dave.jiang@intel.com,
+	alison.schofield@intel.com, vishal.l.verma@intel.com,
+	ira.weiny@intel.com, dan.j.williams@intel.com, bhelgaas@google.com,
+	bp@alien8.de, ming.li@zohomail.com, shiju.jose@huawei.com,
+	Smita.KoralahalliChannabasappa@amd.com, kobayashi.da-06@fujitsu.com,
+	yanfei.xu@intel.com, rrichter@amd.com, peterz@infradead.org,
+	colyli@suse.de, uaisheng.ye@intel.com,
+	fabio.m.de.francesco@linux.intel.com, ilpo.jarvinen@linux.intel.com,
+	yazen.ghannam@amd.com, linux-cxl@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Subject: Re: [PATCH v9 04/16] PCI/AER: Dequeue forwarded CXL error
+Message-ID: <aD_iOk0vxDp88z8U@stanley.mountain>
+References: <20250603172239.159260-1-terry.bowman@amd.com>
+ <20250603172239.159260-5-terry.bowman@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250603121142.GE376789@nvidia.com>
+In-Reply-To: <20250603172239.159260-5-terry.bowman@amd.com>
 
-On Tue, Jun 03, 2025 at 09:11:42AM -0300, Jason Gunthorpe wrote:
-> On Tue, Jun 03, 2025 at 12:05:42PM +0800, Xu Yilun wrote:
-> > On Mon, Jun 02, 2025 at 01:48:57PM -0300, Jason Gunthorpe wrote:
-> > > On Tue, Jun 03, 2025 at 12:25:21AM +0800, Xu Yilun wrote:
-> > > 
-> > > > > Looking at your patch series, I understand the reason you need a vfio
-> > > > > ioctl is to call pci_request_regions_exclusive—is that correct?
-> > > > 
-> > > > The immediate reason is to unbind the TDI before unmapping the BAR.
-> > > 
-> > > Maybe you should just do this directly, require the TSM layer to issue
-> > > an unbind if it gets any requests to change the secure EPT?
-> > 
-> > The TSM layer won't touch S-EPT, KVM manages S-EPT. 
-> 
-> Why not? This cross layering mess has to live someplace.
-> 
-> If the actual issue is the KVM S-EPT interacting with TSM bind/unbind
-> only on Intel platforms then it would be better to address it there
-> and stop trying to dance around the problem in higher levels.
-> 
-> > Similarly IOMMUFD/IOMMU driver manages IOMMUPT. When p2p is
-> > involved, still need to unbind the TDI first then unmap the BAR for
-> > IOMMUPT.
-> 
-> Huh? I thought if the device is in T=1 mode then it's MMIO should not
-> be in the non-secure IOMMU page table at all for Intel? Only T=1 P2P
-> DMA should reach its MMIO and that goes through the TSM controlled
-> IOMMU which uses the S-EPT ???
+On Tue, Jun 03, 2025 at 12:22:27PM -0500, Terry Bowman wrote:
+> +static struct pci_dev *sbdf_to_pci(struct cxl_prot_error_info *err_info)
+> +{
+> +	unsigned int devfn = PCI_DEVFN(err_info->device,
+> +				       err_info->function);
+> +	struct pci_dev *pdev __free(pci_dev_put) =
 
-Correct.
+What?  Why is it freeing the returned pointer?  That should happen in
+the caller, surely?
 
-But the p2p case may impact AMD, AMD have legacy IOMMUPT on its secure
-DMA path. And if you invalidate MMIO (in turn unmaps IOMMUPT) when
-bound, may trigger HW protection mechanism against DMA silent drop.
+> +		pci_get_domain_bus_and_slot(err_info->segment,
+> +					    err_info->bus,
+> +					    devfn);
+> +	return pdev;
+> +}
+> +
+> +static void cxl_handle_prot_error(struct cxl_prot_error_info *err_info)
+> +{
+> +	struct pci_dev *pdev __free(pci_dev_put) = pci_dev_get(sbdf_to_pci(err_info));
 
-SEV-TIO Firmware Interface SPEC, Section 2.11
+Ok, it does happen in the caller, but dropping and then incrementing
+the reference count  like this is racy.
 
-"If a bound TDI sends a request to the root complex, and the IOMMU detects a fault caused by host
-configuration, the root complex fences the ASID from all further I/O to or from that guest. A host
-fault is either a host page table fault or an RMP check violation. ASID fencing means that the
-IOMMU blocks all further I/O from the root complex to the guest that the TDI was bound, and the
-root complex blocks all MMIO accesses by the guest. When a guest writes to MMIO, the write is
-silently dropped. When a guest reads from MMIO, the guest reads 1s."
+regards,
+dan carpenter
 
+> +
+> +	if (!pdev) {
+> +		pr_err("Failed to find the CXL device\n");
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * Internal errors of an RCEC indicate an AER error in an
+> +	 * RCH's downstream port. Check and handle them in the CXL.mem
+> +	 * device driver.
+> +	 */
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_RC_EC)
+> +		return pcie_walk_rcec(pdev, cxl_rch_handle_error_iter, err_info);
+> +
+> +	if (err_info->severity == AER_CORRECTABLE) {
+> +		int aer = pdev->aer_cap;
+> +		struct cxl_dev_state *cxlds = pci_get_drvdata(pdev);
+> +		struct device *dev __free(put_device) = get_device(&cxlds->cxlmd->dev);
+> +
+> +		if (aer)
+> +			pci_clear_and_set_config_dword(pdev,
+> +						       aer + PCI_ERR_COR_STATUS,
+> +						       0, PCI_ERR_COR_INTERNAL);
+> +
+> +		cxl_cor_error_detected(pdev);
+> +
+> +		pcie_clear_device_status(pdev);
+> +	} else {
+> +		cxl_do_recovery(pdev);
+> +	}
+> +}
+> +
 
-BTW: What is ARM's secure DMA path, does it goes through independent
-Secure IOPT? So for p2p when VFIO invalidates MMIO, how the Secure IOPT
-react? How to avoid DMA slient drop?
-
-Thanks,
-Yilun
-
-> 
-> Jason
