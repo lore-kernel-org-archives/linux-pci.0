@@ -1,177 +1,98 @@
-Received: from mail-vs1-f51.google.com (mail-vs1-f51.google.com [209.85.217.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43499248878;
-	Wed,  4 Jun 2025 08:40:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 607F01DED6D;
+	Wed,  4 Jun 2025 08:59:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749026443; cv=none; b=tZTjaEq2vDQGlQwJ7Z9/6fmhGnXtQqD95jYwtX6XqAji66DAOpMMBBmuiumGOFSF2TvQ5i7hwYURnaZFOf78HRhYebtlCJFZYPVY/kzg0xk+yfzhGLOP5PReWjSj7jvn+BlP6bYcmbzi771TVqWZNvQ00sotrnyU9PfqbkkXfrI=
+	t=1749027586; cv=none; b=rky1JNdW4LfBgwo1n/TXoPo3xFqoTbRrHDdAZjHd2GVr6gWn6PAlPnzy0YiWOX86vEy0iZBHBtX1yn1mvr3ABVlYm7wBly9Nl3t1XUTqllQko61BKzJAlDL+W28fm6v7K91CLVGaYoUcTmwHGCt1/4Q+7o7zt7KVtVMxpqyabMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749026443; c=relaxed/simple;
-	bh=yqaLRaFfT6O9njZap+NVHAgsBEggTlcJqgOFYRpiOGY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=luHKnIiZp+LKu7VhaAELhnsdCsoA72ImG+qaHE8C9TqBrp1TZZNTOUngBo1QM4Binay5Z/rZSzCQtLaDzEMwNnAWKd7VilqmTDY6t98jiVvHpoCJWN0LTKHDNjuIzkeoAcKI3H+0fSTmjIxrfE9cMRlFnzbWKURMPqU7l9Y41Gk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.217.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-vs1-f51.google.com with SMTP id ada2fe7eead31-4e58a9bb8fcso2115503137.2;
-        Wed, 04 Jun 2025 01:40:40 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749026438; x=1749631238;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=qhxUNZMk782m8rVDbncnLrWZuVZ5QZ3Bs0hyS8RTdoM=;
-        b=D3zwPGC2mE+FcGohESlLy0ziK08wVJPGnMx4kppk0UGhGa6ARbfcMCcDaQizbaRsOP
-         h1c9h15N6VQjfmwWSEXzMcowpsyOR1TKZWArokCZ4FyBlme2vV6105MEyh362f/2NgBM
-         jhtpkxL2Utl7yidrbzBkWPeaXH5nsPNgGyBndYRn5LBnrSpcoDMDnJh3TSi1yCYxXgjp
-         hF4ulaZFKd1UWsuHL7TrGcNNSlLGMRtl7TTGCFYKOly9gR+gjFOeID51Au2kZEqRQZwm
-         uJbBox8KCQNUCerYsi2XPFFk3/zVmzaN6fo+07bpGl+89LS1RVKUUoCZ3mScDB6l2JEz
-         VruQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUTalFYOGWbXtEgxiXIdvQp6PNDjgEV9PPK8WelmYSfKEKXSSFn4GFfwR16ZR0uJ54Ojl2vfaawY7i0@vger.kernel.org, AJvYcCVk00CmKbeYSLT57jeqF9nJqZi0G6SkmPKO8QBxl5FWREnclsLGgKMrEEqp8NJRsz0sPod6p00Wxy6cbiU6rTWsZmI=@vger.kernel.org, AJvYcCXrRANGKz0TcdS98UmmmCRhG19lI/qCJo1h0tHxNSyGdGV8EkTTg7LjxBS3OVo/mjnqC3QGdEyRA2rW@vger.kernel.org, AJvYcCXv20CnwJhWNEP57PkwrPSiahDb27OjyIdLwkXyGdjIgU1pPa0NMCEIvgewUmPyqUl11505snMXvqRo5pZs@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz/k4yCvpvSktpaDUoLSEbJIyO3Eot/RiLQ3GchpW+LQwOhK/Mv
-	XKhfQewOxu7SAKMLGhA4jZjh8ismNzfNp41G7aLDzF0uDznAz0/P7kjAurTQbVpc
-X-Gm-Gg: ASbGncsRQqxUGNkpcp9T+uFB2V85kJHQY8Ps45/kn5OABq/4nWaxrlpvfhoAOv0zQ6R
-	Fy/ERpBOyF8/xmi7R3duisPceJXlssSSUsSehAjwTtjzL437tPEMRzjZIjrm+j/oj4saz8V42oM
-	W6VF/g4aXNL0dAnZfBQxfEMWC5d9wpDtlAm0e3ZFShaxL4XOAh31Cl/h5sxL9CKFihp5F/mHEy9
-	z23J5AK0iMG/d8AxY4gcC5j0D1qoEI/LfRA+6aTOfF7suz7hRkO/tuJkt2tICXeAz6Nfa340UnF
-	y9TIZiZZh3eTv0DaxfEbCFEtkV96OZVcBK96niNOcKX+fWSimbURaZlTBVFaUJctL70FW0OitBr
-	JsS1kiqkWXMsGQrNmihMglHxili4lR7OgUycxYm0=
-X-Google-Smtp-Source: AGHT+IGVatC1Iqvgzujcx8ydhnlS44fmHGXRdNf6IfeUytgJaXe51vk+62XXPQOgM31wQ1tWrce6dg==
-X-Received: by 2002:a05:6102:688d:b0:4df:93e0:fb3 with SMTP id ada2fe7eead31-4e746e0cc4cmr850976137.20.1749026438519;
-        Wed, 04 Jun 2025 01:40:38 -0700 (PDT)
-Received: from mail-vk1-f180.google.com (mail-vk1-f180.google.com. [209.85.221.180])
-        by smtp.gmail.com with ESMTPSA id a1e0cc1a2514c-87ea70e5ac1sm395553241.17.2025.06.04.01.40.37
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 04 Jun 2025 01:40:38 -0700 (PDT)
-Received: by mail-vk1-f180.google.com with SMTP id 71dfb90a1353d-530bdd90964so562558e0c.1;
-        Wed, 04 Jun 2025 01:40:37 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUsyRvfIQoNHnioKyws3oevNL+oQf++MCMCjpZExAD/iVRz5QCtd9Wi6x6nYXkJzXJUAuTxXAQD8E3t@vger.kernel.org, AJvYcCVV+nZSFXbICl73UlKRQ80QsNcEqF26H7QEIkrCQtlaFhve4MS/Q3JmOisn48Cjk8fiyV/mmdRfh75Z2/x5@vger.kernel.org, AJvYcCWGb5wvH5MjqOKoh+Zn7E8qDSf5k1UTKV90Pg0mKPC2K7befzd8nn0ZiXTkiR1jOJFfPSOdMKbefsO5oFNhZzAC3x8=@vger.kernel.org, AJvYcCWOdu06J/WdKCE1In4JIX9iKe5h14yhbu/lUfCyxuUThnCeLIOfMwicrzROgsXlCYkT8z3lfqbb2whi@vger.kernel.org
-X-Received: by 2002:a05:6102:26ca:b0:4e4:5e11:6832 with SMTP id
- ada2fe7eead31-4e746d02e4bmr961072137.7.1749026437616; Wed, 04 Jun 2025
- 01:40:37 -0700 (PDT)
+	s=arc-20240116; t=1749027586; c=relaxed/simple;
+	bh=Gv/8dSQ35RXpPTBT+MBnEM0acL6Cg6eS+qdQegxOfLQ=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=GuCAQTiQ7Q8wlqDL9bEehGfI/ZaVU5XUERuAJp61x8YJc63SHZSDbJ6ULb1fiPbcD1SLG5gtMsfGVydTyQBss03Nm0qucEWK+B0F7EY5ic04//UJCHsuMunTWquVnxSuPFVm3I2/VnXkUm3Faq/09PRPtnObAGkK/BNGN+OGr8w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XG8Lpspg; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XG8Lpspg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 70A62C4CEE7;
+	Wed,  4 Jun 2025 08:59:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749027584;
+	bh=Gv/8dSQ35RXpPTBT+MBnEM0acL6Cg6eS+qdQegxOfLQ=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:From;
+	b=XG8LpspgQhEOozu2MyvW7S127w1bVqmyeNdTsZ2RM3Df9LJ8TUIT/F67GMO8KFSq3
+	 ngO22sPZKSE4PvSuc+Vjnoy3kGI4mvd1uYp7OXoRwMGsncOp5ThdnCbBK/nIaQJA6x
+	 YfjeM3RPQxCMa9vMohlDOOsf/cZj/CDypjZF9kW4LrKjErd3AIRLVI5/zzlGv6dMQJ
+	 KtPTzA1fW5CRQ//ICfPzL9suDum53JrZwn/HOqvtEqFeh/cxWvxWd1gutog99q1D9k
+	 n3A8Y/HoW1K0JOqlsoPgOV/EsQj3b30mOchfNn6lwt4Pv/Fb+zTsWTw7v9wZC2X9xX
+	 anohPmBaCiiXA==
+X-Mailer: emacs 30.1 (via feedmail 11-beta-1 Q)
+From: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+To: Dan Williams <dan.j.williams@intel.com>,
+	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
+	linux-pci@vger.kernel.org
+Cc: gregkh@linuxfoundation.org, lukas@wunner.de, suzuki.poulose@arm.com,
+	sameo@rivosinc.com, aik@amd.com, jgg@nvidia.com, zhiw@nvidia.com,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>
+Subject: Re: [PATCH v3 03/13] PCI/TSM: Authenticate devices via platform TSM
+In-Reply-To: <683f52b1aa2be_1626e100b1@dwillia2-xfh.jf.intel.com.notmuch>
+References: <20250516054732.2055093-1-dan.j.williams@intel.com>
+ <20250516054732.2055093-4-dan.j.williams@intel.com>
+ <yq5ajz6a3rp4.fsf@kernel.org>
+ <683f52b1aa2be_1626e100b1@dwillia2-xfh.jf.intel.com.notmuch>
+Date: Wed, 04 Jun 2025 13:34:32 +0530
+Message-ID: <yq5asekg7x0v.fsf@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250530225504.55042-1-marek.vasut+renesas@mailbox.org>
-In-Reply-To: <20250530225504.55042-1-marek.vasut+renesas@mailbox.org>
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Date: Wed, 4 Jun 2025 10:40:25 +0200
-X-Gmail-Original-Message-ID: <CAMuHMdUFHKHKfymqa6jwfNnxZTAuH3kbj5WL+-zN=TR6XGd0eA@mail.gmail.com>
-X-Gm-Features: AX0GCFt2fyoFoIK_LxeiOZfQp_iroUz4k9ILNbeuJExEwejZlhTah3i6hKjIVnU
-Message-ID: <CAMuHMdUFHKHKfymqa6jwfNnxZTAuH3kbj5WL+-zN=TR6XGd0eA@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] PCI/pwrctrl: Add optional slot clock to pwrctrl
- driver for PCI slots
-To: Marek Vasut <marek.vasut+renesas@mailbox.org>
-Cc: linux-arm-kernel@lists.infradead.org, Anand Moon <linux.amoon@gmail.com>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
-	Bjorn Helgaas <bhelgaas@google.com>, Conor Dooley <conor+dt@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Magnus Damm <magnus.damm@gmail.com>, 
-	Rob Herring <robh@kernel.org>, Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org, linux-renesas-soc@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 
-Hi Marek,
+Dan Williams <dan.j.williams@intel.com> writes:
 
-Thanks for your patch!
-
-On Sat, 31 May 2025 at 00:55, Marek Vasut
-<marek.vasut+renesas@mailbox.org> wrote:
-> Add the ability to enable optional slot clock into the pwrctrl driver.
-> This is used to enable slot clock in split-clock topologies, where the
-> PCIe host/controller supply and PCIe slot supply are not provided by
-> the same clock. The PCIe host/controller clock should be described in
-> the controller node as the controller clock, while the slot clock should
-> be described in controller bridge/slot subnode.
+> Aneesh Kumar K.V wrote:
+>> Dan Williams <dan.j.williams@intel.com> writes:
+>> 
+>> ....
+>> 
+>> > +static void pci_tsm_pf0_init(struct pci_dev *pdev)
+>> > +{
+>> > +	bool tee_cap;
+>> > +
+>> > +	tee_cap = pdev->devcap & PCI_EXP_DEVCAP_TEE;
+>> > +
+>> > +	if (!(pdev->ide_cap || tee_cap))
+>> > +		return;
+>> >
+>> 
+>> If we expect to use pci_tsm_pf0_init and is_pci_tsm_pf0() from the
+>> guest, can we have the ide_cap and tee_cap check here? Will that be true
+>> for all devices assigned to the guest?
 >
-> Example DT snippet:
-> &pcicontroller {
->     clocks = <&clk_dif 0>;             /* PCIe controller clock */
->
->     pci@0,0 {
->         #address-cells = <3>;
->         #size-cells = <2>;
->         reg = <0x0 0x0 0x0 0x0 0x0>;
->         compatible = "pciclass,0604";
->         device_type = "pci";
->         clocks = <&clk_dif 1>;         /* PCIe slot clock */
+> I do not expect this path to be taken for a guest device. IDE is not
+> relevant for TDIs in the guest and function0 is not a requirement guest
+> BDFs. I still need to add this to samples/devsec/, but the expectation
+> is that in "TVM mode" the presence of PCI_EXP_DEVCAP_TEE is sufficient
+> to route any PCI function to tsm_ops->probe().
 
-I assume this should be documented in
-dtschema/schemas/pci/pci-bus-common.yaml, too?
+We do that because we expose /sys/bus/pci/devices/<x>/tsm/connect to
+guest and we have
 
->         vpcie3v3-supply = <&reg_3p3v>;
->         ranges;
->     };
-> };
->
-> Example clock topology:
->  ____________                    ____________
-> |  PCIe host |                  | PCIe slot  |
-> |            |                  |            |
-> |    PCIe RX<|==================|>PCIe TX    |
-> |    PCIe TX<|==================|>PCIe RX    |
-> |            |                  |            |
-> |   PCIe CLK<|======..  ..======|>PCIe CLK   |
-> '------------'      ||  ||      '------------'
->                     ||  ||
->  ____________       ||  ||
-> |  9FGV0441  |      ||  ||
-> |            |      ||  ||
-> |   CLK DIF0<|======''  ||
-> |   CLK DIF1<|==========''
-> |   CLK DIF2<|
-> |   CLK DIF3<|
-> '------------'
->
-> Reviewed-by: Anand Moon <linux.amoon@gmail.com>
-> Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
+static int pci_tsm_connect(struct pci_dev *pdev)
+{
+	struct pci_tsm_pf0 *tsm = to_pci_tsm_pf0(pdev->tsm);
+	int rc;
 
-> --- a/drivers/pci/pwrctrl/slot.c
-> +++ b/drivers/pci/pwrctrl/slot.c
+        ....
 
-> @@ -30,6 +31,7 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
->  {
->         struct pci_pwrctrl_slot_data *slot;
->         struct device *dev = &pdev->dev;
-> +       struct clk *clk;
->         int ret;
->
->         slot = devm_kzalloc(dev, sizeof(*slot), GFP_KERNEL);
-> @@ -50,6 +52,13 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
->                 goto err_regulator_free;
->         }
->
-> +       clk = devm_clk_get_optional_enabled(dev, NULL);
-> +       if (IS_ERR(clk)) {
-> +               ret = dev_err_probe(dev, PTR_ERR(clk),
-> +                                   "Failed to enable slot clock\n");
-> +               goto err_regulator_disable;
-> +       }
-
-You are adding this block in the middle of the regulator handling.
-Please move it below, under the devm_add_action_or_reset() call
-(which is handled wrong, I have sent a patch[1]).
-
-> +
->         ret = devm_add_action_or_reset(dev, devm_pci_pwrctrl_slot_power_off,
->                                        slot);
->         if (ret)
-
-[1] https://lore.kernel.org/f60c445e965ba309f08c33de78bd62f358e68cd0.1749025687.git.geert+renesas@glider.be
-
-Gr{oetje,eeting}s,
-
-                        Geert
+      	if (tvm_mode())
+		rc = __driver_idle_connect(pdev);
+	else
+		rc = tsm_ops->connect(pdev);
 
 
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
 
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+-aneesh
