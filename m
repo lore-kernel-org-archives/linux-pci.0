@@ -1,127 +1,108 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f173.google.com (mail-pf1-f173.google.com [209.85.210.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51EF028D841;
-	Wed,  4 Jun 2025 09:20:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5349819F101;
+	Wed,  4 Jun 2025 09:21:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749028810; cv=none; b=aIxzgDRI4FAy0Zn4TM/J0c9osnrQbud7Hr+Rj0Y95532WsqhCJ8FxkFZFQI/lJaxFJ+MFIe++I/Fk3lPIqHh+i0M1aQ4FYGPWOGeDlwJRUj8PvnuhCWkN3xhq11ON9V4YaR78teEaqohCudizXX/k0dW83qGdu5If9dEqjXf3XI=
+	t=1749028920; cv=none; b=Clyty9lN6dPbS5RV/MEQOhZhPjK4KKSZKUhZChDq2CKa7T031SpQoq2CMzZMClInBbmfDJ9dwKMGpEbT/xBH3ebUyJxuQ+/g0XtxH4hltxZSisa6E9YFJq6+c7Mp1joogUJNSHaAESIXZ0N7qOVEtWGTe8qUEnwH76+fk+RGvBM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749028810; c=relaxed/simple;
-	bh=cNaCil0gJZpgGRs7Ox2udGrktOvU6cHcizpq93pLZXk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=S3vShb6ISpd5YNq2/wjTBoOv1KFRKII9XGmFtkoJShgXZOfAMrp9YGlQf+aqqoBNQ26QgAqP4SYORlra0AfIeX69nUrhFOb5uwbmVlDWN0raeO79Eqifjkepm9wZPTJGnWAvxwKMOcdPTCEZN8OwdF3zyWJxOtWemZYbTqgZcN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=h8y441Po; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1749028920; c=relaxed/simple;
+	bh=AIZnosm+FLDSBVgzOE5rLeYDMXQml3oDZavBSAeAVkU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=gZMbB8JGIFMwO2DDEt/lok8E/k9w9yuBCwVKLCgZXFb49jk4FDIK4VCKTNlLm5BqfXkgOsUj9t2Cw/QwraSdkvB37OXH+gZ6dW66vZZNV3WQI3T+DzT9PcIF+9TBJ060VzFsF0GEV1Liz7gXDJm1cdO/BLoBf4OA9uk9OtUptho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J3XQlZ5v; arc=none smtp.client-ip=209.85.210.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="h8y441Po"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 554810od004261;
-	Wed, 4 Jun 2025 09:20:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=W8N7i2L/i6AYCDylNiiZl/m365luZzBqXlm
-	L45hJbV0=; b=h8y441PoMGqvhHZCHCm/3d/QINHQYDT1YGlPBZNmNTN1yW7vATQ
-	oXyWx043SIOYwPYZMaO5Hbe6S3+e+VIlVdN89GJjEEEQbqyNcCXDC4hYDkmzuWWD
-	Kjyq2a/EgeOzBBZuviyNqLRvHaPqf3CkCoy9R1Nyq+W/dwNdZgRjEsfGAZPI/wQH
-	BNjgw+zwAjc4FcvOJGWsyR+reGDTZC5JE8VElWS690qGOsVAbyFgTapok4KM8MSI
-	ZXsF8m2rroozVOcPP2VGND20PVniSHaDe54gPvgbhmbVBLe5eNkckzPxceA14U2a
-	IKwvBu3mwz71i4faEVRdTmuDxev0RtuGXKw==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 471g8rwjhf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 04 Jun 2025 09:20:01 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5549JwhB004853;
-	Wed, 4 Jun 2025 09:19:58 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 46ytum70ee-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 04 Jun 2025 09:19:58 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5549JwEH004839;
-	Wed, 4 Jun 2025 09:19:58 GMT
-Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 5549JvTL004834
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 04 Jun 2025 09:19:58 +0000
-Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id DC6E635E1; Wed,  4 Jun 2025 17:19:51 +0800 (CST)
-From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-To: lpieralisi@kernel.org, kwilczynski@kernel.org,
-        manivannan.sadhasivam@linaro.org, robh@kernel.org, bhelgaas@google.com,
-        krzk+dt@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com, conor+dt@kernel.org, vkoul@kernel.org, kishon@kernel.org,
-        andersson@kernel.org, konradybcio@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, quic_qianyu@quicinc.com,
-        Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-Subject: [PATCH v1 0/2] Add Equalization Settings for 8.0 GT/s and Add PCIe Lane Equalization Preset Properties for 8.0 GT/s and 16.0 GT/s
-Date: Wed,  4 Jun 2025 17:19:44 +0800
-Message-Id: <20250604091946.1890602-1-quic_ziyuzhan@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J3XQlZ5v"
+Received: by mail-pf1-f173.google.com with SMTP id d2e1a72fcca58-747fba9f962so663382b3a.0;
+        Wed, 04 Jun 2025 02:21:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749028918; x=1749633718; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=7VDgfijz38wfqRmFtK4m0Gqr6eDYnbyCuwTRs5UPI5E=;
+        b=J3XQlZ5vHM3kv9oLw4EH+bV08j6jwKmYJ+MPQXUZ45BRYG7YppejOoXBjjm+NdIvFb
+         K4ij3/CM2n7dvdI8OSy9DwOMdCGHssjUlyaezPjjsxKAjl5oMQH/cZgLd/x7uvJCrf+C
+         Wu32EpBPylRNXHEbSyQLpFBK7gzFALeaRDJDVJkJS/CEG8XouzmDQi47ICc/Ljrn8vVD
+         QOA/XyCmm8Vvcb3VblnDJNmJVlI44NT5XSNSj5SGcHx4tCntiaxjfQP99NQ2yX225vQZ
+         h00HBlQE61duG+rXgyuKUIqXr3PPIysqxNUvtUXsdpsIN2vJWU/DLnjpiMy75fVQJ6qZ
+         IIUQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749028918; x=1749633718;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=7VDgfijz38wfqRmFtK4m0Gqr6eDYnbyCuwTRs5UPI5E=;
+        b=A+gaxpXmrrqTyI62C7LsA+AjlkI8MZDrVSNDA2nZmRJ4M4setieVOZfdstAzkyaWCW
+         lRuDSN9kieFjgM1M2vQYvYwagP+Q8eLreUb7uUleaRdmQCZ3f8oAL4hAbasXz/TbOLeq
+         op5uhZFbZ9jgMLJ7DbNOv5sQVAP7U+AU84DDven6ZGG9uQaOeTNu9wMn5j77WDK/cyZe
+         Fn3E1lYsiQihrduNDbisOKyhBSGfRU9vi8F6n5OuKsYeMeHSHy1cjD05sHbsQORzL3M6
+         MtPrmvSFvD6t/4ld4xcvnmJkcDspUYeM7TJS1aQs0UfHU7nm2+bOyAZfOBVlWajKG/NN
+         +ExQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV9J8COsRs5flYY6BWrsfzda33uK4gbhyvr86OQx0NFnxOV0AbvqB3/xms6ab/dpKxdQcPLtN0bNNqafvg=@vger.kernel.org, AJvYcCVkZ7gFcqaw9jNMEgvhuSIwk4DtcFH082Ji1aBL6XbEIbXrQ9GG9DXUbCEZ7uNJhHLxaQTEz5xoxGrF@vger.kernel.org
+X-Gm-Message-State: AOJu0YwwL43sqCeVphyMoeZa2EElMlWh49WomfILf/KoDiyl4WsV1RsG
+	5ZzhArf8szUV8YoyXWvddqszJDmtPL92unPN/qhc2MNwYG3ULu8HwaCX
+X-Gm-Gg: ASbGncuWO/vgonfT5IBUY9QoGdzTySJTJsVWJqxGCXmwcUGw7SvRRiu2DvsOjGaKh3O
+	SzRLNXKJbZajjZf4v0Z2eM2Rx3yn7xkHe1ri/FYwPBjoban67Z7sQiebYL1o0K4ZAzImY91K/jz
+	sG/Y8acrH29/JLP76L0ct9MCaZG926aEcx6o9MOyF0EzDjDApWJNupwU+BOijSmhjlbfYC5xGgn
+	P9MwL7joxcA7dhf9ya7DvFrCQ81AOC1aEbNz7ElScVSmGhH0uCeUFcaR4xUwDoe8Y8Qjoq6YJZK
+	Q48UYhOzV5hj4LqtMJ6BuNxRxi4N4+IRvcmhqg==
+X-Google-Smtp-Source: AGHT+IE9lIxZe52g46OWQp8Lw4qB+x9M66i/HCShonwVogndogjTY9y2HrMxF8CUQxE3BdFwz/9X5w==
+X-Received: by 2002:a05:6a00:318e:b0:746:1c67:f6cb with SMTP id d2e1a72fcca58-747fdfc9152mr6296211b3a.5.1749028918431;
+        Wed, 04 Jun 2025 02:21:58 -0700 (PDT)
+Received: from geday ([2804:7f2:800b:6be::dead:c001])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-747afed34fdsm10722510b3a.75.2025.06.04.02.21.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Jun 2025 02:21:57 -0700 (PDT)
+Date: Wed, 4 Jun 2025 06:21:52 -0300
+From: Geraldo Nascimento <geraldogabriel@gmail.com>
+To: linux-rockchip@lists.infradead.org
+Cc: Hugh Cole-Baker <sigmaris@gmail.com>,
+	Christian Hewitt <christianshewitt@gmail.com>,
+	Shawn Lin <shawn.lin@rock-chips.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>, linux-pci@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+Subject: [RFC PATCH 2/2] arm64: dts: rockchip: drop PCIe 3v3 always-on and
+ boot-on
+Message-ID: <aEAQMHAQU3VgTghK@geday>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: Dd3bulXl8YwclfFWjSNQTsmumIW-juD5
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA0MDA2OSBTYWx0ZWRfX3koqlSDJioCY
- 2duGTTBrTkhqBetfYF6zR0KFLj3/qgYhpPHx8TWWd/xZ97CxEoISk6xPKQss5dlqeTlI5oOdMnY
- vWQNAjMXRyuYQ7Alrvg2xPTXBsNutYFeosWPxDOTKsA8/FbdrnMyDNCXNo9ZRiIGnW2ZGtlLShc
- ogOfJLFHsKpainqdEH4RglzdD4KB5ztzIPuxsBPTn+aS4d2aH4MeJ/CvFWt8gJKrsa+k5Kgst/u
- P58K4k0szUwa5D8+hGU2omps58eC2DaLWfkfGeqCfqfUguL6L+byJM2alPSd2GjRJdCPqyiO3sx
- iZxMha9ppQMab7X9vltEzvXGh+XoBOT0EPnfiX8/9gTYXHFhUTW28g1gu5mMaeY7jHPIKlhsWrI
- DrEW6iuoVI9JonzSRTY4Q+CpBflGtkYZB2i6cpl5rqb7FF6ch4hiU07ZExHsCeb51QFt927i
-X-Authority-Analysis: v=2.4 cv=RdWQC0tv c=1 sm=1 tr=0 ts=68400fc1 cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=6IFa9wvqVegA:10 a=COk6AnOGAAAA:8 a=pGW_TeUqoRlRwQqC-JsA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: Dd3bulXl8YwclfFWjSNQTsmumIW-juD5
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-04_02,2025-06-03_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- bulkscore=0 adultscore=0 mlxscore=0 priorityscore=1501 phishscore=0
- clxscore=1015 lowpriorityscore=0 malwarescore=0 suspectscore=0
- impostorscore=0 spamscore=0 mlxlogscore=707 classifier=spam authscore=0
- authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2506040069
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-This series adds add equalization settings for 8.0 GT/s, and add PCIe lane equalization
-preset properties for 8.0 GT/s and 16.0 GT/s for sa8775p ride platform, which fix AER
-errors.
+Example commit of needed dropping of regulator always-on/boot-on
+declarations to make sure quirky devices known to not be working
+on RK3399 are able to enumerate on second try without
+assertion/deassertion of PERST# in-band PCIe reset signal.
 
-While equalization settings for 16 GT/s have already been set, this update adds the
-required equalization settings for PCIe operating at 8.0 GT/s, including the
-configuration of shadow registers, ensuring optimal performance and stability.
+One example only, to avoid patch-bomb.
 
-The DT change for sa8775p add PCIe lane equalization preset properties for 8 GT/s
-and 16 GT/s data rates used in lane equalization procedure.
+---
+ arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi | 2 --
+ 1 file changed, 2 deletions(-)
 
-Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-
-Ziyue Zhang (2):
-  PCI: qcom: Add equalization settings for 8.0 GT/s
-  arm64: dts: qcom: sa8775p: Add PCIe lane equalization preset
-    properties
-
- arch/arm64/boot/dts/qcom/sa8775p.dtsi         |  8 +++
- drivers/pci/controller/dwc/pcie-designware.h  |  1 -
- drivers/pci/controller/dwc/pcie-qcom-common.c | 55 ++++++++++---------
- drivers/pci/controller/dwc/pcie-qcom-common.h |  2 +-
- drivers/pci/controller/dwc/pcie-qcom.c        |  3 +-
- 5 files changed, 40 insertions(+), 29 deletions(-)
-
-
-base-commit: 911483b25612c8bc32a706ba940738cc43299496
+diff --git a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+index 8ce7cee92af0..d31fd3d34cda 100644
+--- a/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
++++ b/arch/arm64/boot/dts/rockchip/rk3399pro-vmarc-som.dtsi
+@@ -25,8 +25,6 @@ vcc3v3_pcie: regulator-vcc-pcie {
+ 		pinctrl-names = "default";
+ 		pinctrl-0 = <&pcie_pwr>;
+ 		regulator-name = "vcc3v3_pcie";
+-		regulator-always-on;
+-		regulator-boot-on;
+ 		vin-supply = <&vcc5v0_sys>;
+ 	};
+ 
 -- 
-2.34.1
+2.49.0
 
