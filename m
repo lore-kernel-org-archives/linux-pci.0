@@ -1,45 +1,67 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 41BF01990A7;
-	Sat,  7 Jun 2025 16:14:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+Received: from mout-p-101.mailbox.org (mout-p-101.mailbox.org [80.241.56.151])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1EA01990A7;
+	Sat,  7 Jun 2025 19:44:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749312879; cv=none; b=m+rq81b+Njpkm1J17IWEXwvRD75lz4xeqfMLiMJzTLdpxWvBIPve5z0035YM6+FpPiMGE9j3a/2/8ao34m5UFpxk74fnnVhn0P/DxyED8aUyLGpP9MXS+U5YuvfRRrEXQSNXmaKEQyd+fVOnlt40RByrVWE4qNLXwITha5EiY/s=
+	t=1749325457; cv=none; b=rPW+QB4x3zwxvPDfD389CrkH9SSGLTsl3JPMxRBGJVVpD3FO8N/X7QoziWmjQ2hASR8t3T8Mfhr/peCr+qZ72LjXhstcuLIcBUl8NE8tt2rLIHTfpEbWPERBkwEE+d6f/sHWCESV7IXzwLzUOQUfbGkZ57OhKKkLjmudG05GyrY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749312879; c=relaxed/simple;
-	bh=m5LVRSiV4O+mgO9aljggdoVFKYIXnhDMrYz6/KNbiDg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=YfMtMdBsM1Mv0o3pI0cM0nrkF0gDelp4fUX3TxFsUFUeWFhjtaSYibAbGtggDgg8bL4xlTRPoYznzM111qjQVz3bWMN+yTv2SuvMwx5hkALXCzGt8s/Pawr1t9nF8GXsR7SXFDMuSaX27PWllbkclQGP9VNEPfj0rUaRFHDehPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=dhAPJ0wE; arc=none smtp.client-ip=117.135.210.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1749325457; c=relaxed/simple;
+	bh=HeQuThy1N1IZeImMdHxkz5s60e2a1U6OFxeJ6qxbARE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=G8lJR/mv2sHrTu2c0+sN/61gBA+3tVEB6fPeBOB9gEPIDBZX+0SDxRuSkp1REU72hAnbyPetcazDuYAewPgPb7ZKlKrafXZBX1kitqasLucfKFEA6J+ufEnV/LhGGyJFhBkUx96GbwC78IlF8dxZlv2jqm60kAU5A4QELaEY3vU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=B8wmFcSh; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=rZjZLHUy; arc=none smtp.client-ip=80.241.56.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="dhAPJ0wE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=FO
-	SHr1PcbnEECb/jKlEUKH21O31HhmWFUyfLGKeAUfU=; b=dhAPJ0wEznyAVsfxXS
-	aH1RwqBgiO7Vl8mH2qpHhj7uvJbG9TkXw3PHFSxrd0Vv7b8bGu/jLOs4DlkL3j9k
-	snV/vOfMEn35jd0cjidraP1pylzLKC3Qg/9XICYko+ncEp+JWTUgNqESbcD1g9o3
-	VGEA31v4vIp9Wya2+c2RpUaDY=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wBHuXJPZURoL9paGw--.4161S7;
-	Sun, 08 Jun 2025 00:14:13 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	bhelgaas@google.com,
-	mani@kernel.org,
-	ilpo.jarvinen@linux.intel.com,
-	kwilczynski@kernel.org
-Cc: robh@kernel.org,
-	jingoohan1@gmail.com,
-	linux-pci@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="B8wmFcSh";
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="rZjZLHUy"
+Received: from smtp202.mailbox.org (smtp202.mailbox.org [10.196.197.202])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mout-p-101.mailbox.org (Postfix) with ESMTPS id 4bF7t564njz9sR8;
+	Sat,  7 Jun 2025 21:44:13 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1749325453;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=hLbKLNDjtxbVMF5ETdYa9428/m9uNBsQgiB8dN56zpo=;
+	b=B8wmFcShtOKUvAYME98xFT62ZRqGHHCQhe9a7/++NtHLbFoEOo7JTVdHKLhahTkc6BpjIp
+	2mKo2TGY7um2NBcMYS7jxeEJUaDTd+T0lTXxbJSn6fRbM3pWv4PZ9vQBXNPupsDxs9Hv2U
+	h/ePBfngwnKKrdaaikl6glfwSEWHfxP1EeSOFflnP0pqLjEbR0sx3wWMUCZK9FD6GpTfJa
+	HlByS53U4IaG13CS2Gdv5d1QggAaJHGeQuRjZTx+Z/H5glrEVpBuz/Ue5qLUo7JZsK6QuM
+	xsHc9rd6bBt++h4f9/ySj0rZRbjJJqpIVPRq/yZdP/oO5wWFmDDdxq/+edSBAg==
+From: Marek Vasut <marek.vasut+renesas@mailbox.org>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
+	t=1749325451;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=hLbKLNDjtxbVMF5ETdYa9428/m9uNBsQgiB8dN56zpo=;
+	b=rZjZLHUyn/+RaDF4E7gXke0p3zZhHbLcqwf/fgkMFm5VRfhqe4V2OP01L7XzCn3NDTE1qQ
+	AoLhXc3LuLJX+3H0Lr/D/dDYUOf2WVFS2DHKuZQeOsSUVZED/oMO+eQ3yDGWfjyjUlhpQ0
+	JpyqWhv18dfAspag1cPNdBy0JL6NiljpY2tgA+hs7t8mjX3Jfw9Y6R7p4c6fuu9Qbgjfm6
+	ZJojBBy4eBXYgE/HF/G/Drn5qiivXtdTlC6BHWDcUYgck3pbif6eXRPVJvNQDV4SMr6iUc
+	hIZ/gDJvmegjDjN9wxBaBtqJ4dp34nHeNxjc1/hSZAJzXsMaXT6lfJoFXpFYQg==
+To: devicetree@vger.kernel.org
+Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Geert Uytterhoeven <geert+renesas@glider.be>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Magnus Damm <magnus.damm@gmail.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
 	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v13 5/6] PCI: cadence: Use common PCI host bridge APIs for finding the capabilities
-Date: Sun,  8 Jun 2025 00:14:04 +0800
-Message-Id: <20250607161405.808585-6-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250607161405.808585-1-18255117159@163.com>
-References: <20250607161405.808585-1-18255117159@163.com>
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org
+Subject: [PATCH] schemas: pci: bridge: Document clocks
+Date: Sat,  7 Jun 2025 21:43:24 +0200
+Message-ID: <20250607194353.79124-1-marek.vasut+renesas@mailbox.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -47,117 +69,46 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBHuXJPZURoL9paGw--.4161S7
-X-Coremail-Antispam: 1Uf129KBjvJXoWxury7Ww48Ar17Cw4Duw13CFg_yoW5tF4DpF
-	WDCFyfCF1rJFW3uFn3A3W5Xr13tFn3C347ta92kw1xZF17Cr1UGFnFgFy3Kr9xKrs7Wr17
-	X3yDJF4kGrn0yFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pN0PTQUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhZlo2hEXNrG1wABsQ
+X-MBO-RS-ID: 5a62b158240baca3793
+X-MBO-RS-META: tm7tb873p8z3pq1mfj7hhqdxiq4rxajn
 
-Use the PCI core is now exposing generic macros for the host bridges to
-search for the PCIe capabilities, make use of them in the CDNS driver.
+The PCIe slot may have clocks which are explicitly controlled
+by the OS, describe the clocks property.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
+Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
 ---
-Changes since v12:
-- Modify the function's return value.
-
-Changes since v11:
-- Modify the return value of cdns_pcie_readw from u32 to u16. 
-- Modify the return value of cdns_pcie_readb from u32 to u8. 
-
-Changes since v8 ~ v10:
-- None
-
-Changes since v7:
-- Resolve compilation errors.
-
-Changes since v6:
-https://lore.kernel.org/linux-pci/20250323164852.430546-4-18255117159@163.com/
-
-- The patch commit message were modified.
-
-Changes since v5:
-https://lore.kernel.org/linux-pci/20250321163803.391056-4-18255117159@163.com
-
-- Kconfig add "select PCI_HOST_HELPERS"
+Related to https://lore.kernel.org/all/CAMuHMdUFHKHKfymqa6jwfNnxZTAuH3kbj5WL+-zN=TR6XGd0eA@mail.gmail.com/
 ---
- drivers/pci/controller/cadence/pcie-cadence.c | 30 +++++++++++++++++++
- drivers/pci/controller/cadence/pcie-cadence.h | 13 ++++++++
- 2 files changed, 43 insertions(+)
+Cc: Bartosz Golaszewski <brgl@bgdev.pl>
+Cc: Bjorn Helgaas <bhelgaas@google.com>
+Cc: Conor Dooley <conor+dt@kernel.org>
+Cc: Geert Uytterhoeven <geert+renesas@glider.be>
+Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>
+Cc: Magnus Damm <magnus.damm@gmail.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Cc: Rob Herring <robh@kernel.org>
+Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
+Cc: devicetree@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
+Cc: linux-pci@vger.kernel.org
+Cc: linux-renesas-soc@vger.kernel.org
+---
+ dtschema/schemas/pci/pci-bus-common.yaml | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 70a19573440e..c72bc886dbb4 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -8,6 +8,36 @@
- #include <linux/of.h>
+diff --git a/dtschema/schemas/pci/pci-bus-common.yaml b/dtschema/schemas/pci/pci-bus-common.yaml
+index ca97a00..3c512cf 100644
+--- a/dtschema/schemas/pci/pci-bus-common.yaml
++++ b/dtschema/schemas/pci/pci-bus-common.yaml
+@@ -82,6 +82,8 @@ properties:
+     items:
+       maximum: 255
  
- #include "pcie-cadence.h"
-+#include "../../pci.h"
++  clocks: true
 +
-+static int cdns_pcie_read_cfg(void *priv, int where, int size, u32 *val)
-+{
-+	struct cdns_pcie *pcie = priv;
-+
-+	if (size == 4)
-+		*val = cdns_pcie_readl(pcie, where);
-+	else if (size == 2)
-+		*val = cdns_pcie_readw(pcie, where);
-+	else if (size == 1)
-+		*val = cdns_pcie_readb(pcie, where);
-+	else
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap)
-+{
-+	return PCI_FIND_NEXT_CAP_TTL(cdns_pcie_read_cfg, PCI_CAPABILITY_LIST,
-+				     cap, pcie);
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_find_capability);
-+
-+u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap)
-+{
-+	return PCI_FIND_NEXT_EXT_CAPABILITY(cdns_pcie_read_cfg, 0, cap, pcie);
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_find_ext_capability);
- 
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie)
- {
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index a149845d341a..38f7a8cdf7f1 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -387,6 +387,16 @@ static inline u32 cdns_pcie_readl(struct cdns_pcie *pcie, u32 reg)
- 	return readl(pcie->reg_base + reg);
- }
- 
-+static inline u16 cdns_pcie_readw(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readw(pcie->reg_base + reg);
-+}
-+
-+static inline u8 cdns_pcie_readb(struct cdns_pcie *pcie, u32 reg)
-+{
-+	return readb(pcie->reg_base + reg);
-+}
-+
- static inline u32 cdns_pcie_read_sz(void __iomem *addr, int size)
- {
- 	void __iomem *aligned_addr = PTR_ALIGN_DOWN(addr, 0x4);
-@@ -556,6 +566,9 @@ static inline void cdns_pcie_ep_disable(struct cdns_pcie_ep *ep)
- }
- #endif
- 
-+u8 cdns_pcie_find_capability(struct cdns_pcie *pcie, u8 cap);
-+u16 cdns_pcie_find_ext_capability(struct cdns_pcie *pcie, u8 cap);
-+
- void cdns_pcie_detect_quiet_min_delay_set(struct cdns_pcie *pcie);
- 
- void cdns_pcie_set_outbound_region(struct cdns_pcie *pcie, u8 busnr, u8 fn,
+   external-facing:
+     description:
+       When present, the port is externally facing. All bridges and endpoints
 -- 
-2.25.1
+2.47.2
 
