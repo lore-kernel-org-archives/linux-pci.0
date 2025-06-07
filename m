@@ -1,142 +1,84 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5BDBF3594C;
-	Sat,  7 Jun 2025 15:59:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6982DA95E;
+	Sat,  7 Jun 2025 16:02:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749312001; cv=none; b=CoH/igl2REXeNXqu7MuqZAKE7sWpVndom2pqoYiD1T/aTqlLGhznJqsW12Xl1mOC5o+pcv85qCSVJrp1JahhrmX3Z+ftg9IQDE7ZSFxjQPUywe7fxgn6IA9jY/opWXwVCsctvuHl8iX2YPKmPs3SyvGGaWQNvhnxUHEowwjiEVY=
+	t=1749312160; cv=none; b=ilihcx1U5IGOn7P5zUeQgyWXkDw1JmaOOfz1sAG6+PywK6uyzoRfNhERR6LdMThqqXLU6xMN12qsBuPE7/GEvzOgatnJSpwSescoDzhPH2PriesJkRciroeYvO6X33VfNACvi1ghnSWowhhpAOCwQ70S0xSC6yXjiKMSZNtPr8c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749312001; c=relaxed/simple;
-	bh=dB8BFMQaVi6LuvJFzp48EvNFV+o/fdmEM0ODMkSZNL0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=W1KdxaVSl+XQD6QnJpad/Q2MCo8hw2sUpLBo47Ap+Kj/EoZrkl2twn4QWbaBVxi2FevB+WNdiVJ8yQX6YAu2BeRs4q6aewuMhKBOHFx3dZnTfsOaGp9dHyi7FT7vmoLJrDuGZ53AFFK8+qXgWXxksUVyqmk36Ff1Ypt185Ac0Js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PAreezaA; arc=none smtp.client-ip=117.135.210.2
+	s=arc-20240116; t=1749312160; c=relaxed/simple;
+	bh=TboKj+n+JMofyR3StoxBtmki4DwVKXfKbO8hJ/yAM1I=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=uC2cJ8riPiM3NZcKTfkQNOGXqKDkNj3UoJYg5EZjotbX5WaDV+QGR4SWxMVEugOaF3RzsIlH6uHRh0DDKE1hF74k1199ef+FlD0sIG4ihfArIfCRGteezUnjQzu/NmZVjmfV0n1Exo3Wec8LQFSk7v0j9iuRfNcpc7Qs1k04Hr4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hf6nk5Ci; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PAreezaA"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hf6nk5Ci"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=WqPXzQfOBkSg6Wxyj4Ie76iGWRDRnm01njaAWfiUy1s=;
-	b=PAreezaAcUZNwAn/lFfbdBkcDVhCD6jqD1LO+N7g/y7lvtN/OCnoG/3B6jJCOW
-	ErhnhFrUCHGJG9h9AI2NFjr6kWwYinn6toHcULvCiUwUm898ucdmAA8T0OFYv5e9
-	0beL1IbezcPdwWrbHiN15X+nGrAA14cDK/rAIazOFJv3w=
-Received: from [192.168.71.94] (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wAHzn3cYURotOR+Gw--.10086S2;
-	Sat, 07 Jun 2025 23:59:24 +0800 (CST)
-Message-ID: <f2e49d66-ac97-4502-abe7-c02f560637e6@163.com>
-Date: Sat, 7 Jun 2025 23:59:24 +0800
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=KB
+	u/QHNze4ZdkHD8l42VpSgTfDV6Fy1D7Y0zPXIgzpI=; b=hf6nk5CihF7kMjhqyg
+	5Akw1mKIgJWxGICf//qXGlEXCV4C+Kziahc/Ydw8E/MFhfUyDZ5hiaXozTKzpvlP
+	NUxtLwhSCgUZoIdSqfAal0KVcZZhMJH65VWRvjldGRZ/eRvWPh2XFEWg5V433N6T
+	k0AnXYhWN3NnVLs7DVk0W/Lgg=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wBnk_V6YkRoJ9qHGg--.28203S3;
+	Sun, 08 Jun 2025 00:02:04 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: shawn.lin@rock-chips.com,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	bhelgaas@google.com,
+	heiko@sntech.de,
+	mani@kernel.org
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v3 1/3] PCI: rockchip-host: Fix "Unexpected Completion" log message
+Date: Sun,  8 Jun 2025 00:01:59 +0800
+Message-Id: <20250607160201.807043-2-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250607160201.807043-1-18255117159@163.com>
+References: <20250607160201.807043-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] PCI/AER: Use pci_clear_and_set_config_dword() to
- simplify mask updates
-To: mahesh@linux.ibm.com, bhelgaas@google.com
-Cc: oohall@gmail.com, linuxppc-dev@lists.ozlabs.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- Manivannan Sadhasivam <mani@kernel.org>
-References: <20250607155159.805679-1-18255117159@163.com>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <20250607155159.805679-1-18255117159@163.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wAHzn3cYURotOR+Gw--.10086S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGry3ury3CF1kWw1Dtw1fJFb_yoW5Zw43pr
-	ZxAFyrArWUJF1Y9rWUWaykAr1rZas7tay0gr93Gwn5XF4xZFZrJr9avw17J345KFZ7Xw4f
-	Jws5Ka1ruF4UtaUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UmZXrUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDx1lo2hEWUbMvgAAsV
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wBnk_V6YkRoJ9qHGg--.28203S3
+X-Coremail-Antispam: 1Uf129KBjvdXoW7XrWrWF4xXF15urWfJw1xAFb_yoWkZrbE9r
+	n8u3W7Zw45KrW3A3Wvy3yIvryrAas09a1IkayftF1ayas2vr10q34v93y8J3Z8ur1DXF9r
+	tw1qyF4xW3srZjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRNhL05UUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwBlo2hEWUbcBwABsg
 
-Add Mani's new email address.
+Fix the debug message for the PCIE_CORE_INT_UCR interrupt to clearly
+indicate "Unexpected Completion" instead of a duplicate "malformed TLP"
+message. This improves error log accuracy.
 
-On 2025/6/7 23:51, Hans Zhang wrote:
-> Replace manual read-modify-write sequences in multiple functions with
-> pci_clear_and_set_config_dword() to ensure atomic operations and reduce
-> code duplication.
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
-> Changes for v2:
-> - The patch commit message were modified.
-> - New optimizations for the functions disable_ecrc_checking, aer_enable_irq, and aer_disable_irq have been added.
-> ---
->   drivers/pci/pcie/aer.c | 30 +++++++++++-------------------
->   1 file changed, 11 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-> index 70ac66188367..86cbd204a73f 100644
-> --- a/drivers/pci/pcie/aer.c
-> +++ b/drivers/pci/pcie/aer.c
-> @@ -176,14 +176,13 @@ static int enable_ecrc_checking(struct pci_dev *dev)
->   static int disable_ecrc_checking(struct pci_dev *dev)
->   {
->   	int aer = dev->aer_cap;
-> -	u32 reg32;
->   
->   	if (!aer)
->   		return -ENODEV;
->   
-> -	pci_read_config_dword(dev, aer + PCI_ERR_CAP, &reg32);
-> -	reg32 &= ~(PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
-> -	pci_write_config_dword(dev, aer + PCI_ERR_CAP, reg32);
-> +	pci_clear_and_set_config_dword(dev, aer + PCI_ERR_CAP,
-> +				       PCI_ERR_CAP_ECRC_GENE |
-> +				       PCI_ERR_CAP_ECRC_CHKE, 0);
->   
->   	return 0;
->   }
-> @@ -1101,15 +1100,12 @@ static bool find_source_device(struct pci_dev *parent,
->   static void pci_aer_unmask_internal_errors(struct pci_dev *dev)
->   {
->   	int aer = dev->aer_cap;
-> -	u32 mask;
->   
-> -	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, &mask);
-> -	mask &= ~PCI_ERR_UNC_INTN;
-> -	pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, mask);
-> +	pci_clear_and_set_config_dword(dev, aer + PCI_ERR_UNCOR_MASK,
-> +				       PCI_ERR_UNC_INTN, 0);
->   
-> -	pci_read_config_dword(dev, aer + PCI_ERR_COR_MASK, &mask);
-> -	mask &= ~PCI_ERR_COR_INTERNAL;
-> -	pci_write_config_dword(dev, aer + PCI_ERR_COR_MASK, mask);
-> +	pci_clear_and_set_config_dword(dev, aer + PCI_ERR_COR_MASK,
-> +				       PCI_ERR_COR_INTERNAL, 0);
->   }
->   
->   static bool is_cxl_mem_dev(struct pci_dev *dev)
-> @@ -1555,23 +1551,19 @@ static irqreturn_t aer_irq(int irq, void *context)
->   static void aer_enable_irq(struct pci_dev *pdev)
->   {
->   	int aer = pdev->aer_cap;
-> -	u32 reg32;
->   
->   	/* Enable Root Port's interrupt in response to error messages */
-> -	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
-> -	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
-> -	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-> +	pci_clear_and_set_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND,
-> +				       0, ROOT_PORT_INTR_ON_MESG_MASK);
->   }
->   
->   static void aer_disable_irq(struct pci_dev *pdev)
->   {
->   	int aer = pdev->aer_cap;
-> -	u32 reg32;
->   
->   	/* Disable Root Port's interrupt in response to error messages */
-> -	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
-> -	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
-> -	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-> +	pci_clear_and_set_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND,
-> +				       ROOT_PORT_INTR_ON_MESG_MASK, 0);
->   }
->   
->   /**
-> 
-> base-commit: ec7714e4947909190ffb3041a03311a975350fe0
+Signed-off-by: Hans Zhang <18255117159@163.com>
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+---
+ drivers/pci/controller/pcie-rockchip-host.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/pci/controller/pcie-rockchip-host.c b/drivers/pci/controller/pcie-rockchip-host.c
+index 6a46be17aa91..2804980bab86 100644
+--- a/drivers/pci/controller/pcie-rockchip-host.c
++++ b/drivers/pci/controller/pcie-rockchip-host.c
+@@ -439,7 +439,7 @@ static irqreturn_t rockchip_pcie_subsys_irq_handler(int irq, void *arg)
+ 			dev_dbg(dev, "malformed TLP received from the link\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_UCR)
+-			dev_dbg(dev, "malformed TLP received from the link\n");
++			dev_dbg(dev, "Unexpected Completion received from the link\n");
+ 
+ 		if (sub_reg & PCIE_CORE_INT_FCE)
+ 			dev_dbg(dev, "an error was observed in the flow control advertisements from the other side\n");
+-- 
+2.25.1
 
