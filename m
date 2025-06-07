@@ -1,40 +1,46 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 07AAA13AD05;
-	Sat,  7 Jun 2025 15:52:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 656A6184F;
+	Sat,  7 Jun 2025 15:56:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749311562; cv=none; b=Wa57WqhXgB/aDlXM3zGWhZCEcxiODfQ8Hl0ojSEBJHUuMiwYW9NyWeja5zTaqdtRzdkkuPi19/Rqlwyd46Zgbj4zIIGP3aLniNWvBDEAiydBh1ohhsk08wSHDphINDrjfrBzCF2f6bors6ioEQJPHl8Ggya6UizaRzwM+30qx6I=
+	t=1749311785; cv=none; b=UfUQuFuAA3iTAIHr7rY1pfDj/Zy8GZHOmty4tQWggPnjKCubRR+P8q5fHKiRRCprDQovIx+Es6NEGaoHcmwM98hvo2RBPm96Es9D02EAHiQoGfUAhNMKVmDlqqalpfIlklbFmrdv8mdfWtn1Vq6EuxUsY3EtBzuu1amiDn7xMSM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749311562; c=relaxed/simple;
-	bh=TXILFu9/mk5P8ay7BUtsp1FAJk1pZTISkb8vZbLV3Ts=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=sXuAwgyBV13+Yse4B4lXEEmhO5c0izG+fB1kaU9tGA6/qYfR/VdUMId0jbDexQSflU3uXmpxP0nfpOiGj52vh8rBX6xrIGJxMv21EpTj+380bAqt2XFh8qXxwoM81TOdGYjWe3DQAah/tILY7y4bXfzn7L4AWIDAKT3g9QcUXHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GhXVN+L7; arc=none smtp.client-ip=220.197.31.4
+	s=arc-20240116; t=1749311785; c=relaxed/simple;
+	bh=WsNR2SmiSh7BZPADmuWTrFANirlmqcGhSK4rh60bu+s=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=bOSym98w78a67q5xwuoH+MZ9lDmEiEWQPqfW/PV9D5nQ95hdhdKdyw7TDM7oF7e1GxZmfpkVT4zikE3aqnrFJB4qqrJyB9zM5aacGOte+zz6zXNg0sxDB4c6GOkuJFhgxiXV+hUQfAge4yy2DDhyfUzJmDLNhSkicnDoknN3o50=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fFsnUK2y; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GhXVN+L7"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fFsnUK2y"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=UK
-	Da40I0u1fLgDBEqwi9HdVUgYBePD5D6X2Frp4VUjc=; b=GhXVN+L7/RTx1R9Z60
-	yyriw21vGGe4kF9td2SU3KTuR3r97iwbUVXHCmeBzpam9B5ChUnHk3rKdMMBjrF0
-	eyKxfDATDtbC30bVWLWKDwZTt96TQ0756D+Er37SOIPllQqfB9xJ5kzgcAFuYF4H
-	XNswf7L/m8R3RB5N5HVUz0brQ=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=X/
+	WBIqYRbYLnjTD8APSSM3WfSwD1nNWWxZufGQx512k=; b=fFsnUK2yIOgJZkorYl
+	GCPjegiph6oCPmTU5UMWVlXANrgBU1TaHN34xz3qqDtKJEj3NssPYqiCkDSzyBs8
+	LICfhZInKRqFAZn2pct5FsUgNYSbWj+2CkRKpgktEpCQlPaagrGIyTk8nYHk/axM
+	r2d7rzrFZwLsvueMcaNGdx4c0=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-0 (Coremail) with SMTP id _____wBXM_kjYERoFeepHA--.4808S2;
-	Sat, 07 Jun 2025 23:52:03 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wC3dpsKYURonH09Gw--.59622S3;
+	Sat, 07 Jun 2025 23:55:55 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
-To: mahesh@linux.ibm.com,
-	bhelgaas@google.com
-Cc: oohall@gmail.com,
-	manivannan.sadhasivam@linaro.org,
-	linuxppc-dev@lists.ozlabs.org,
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kw@linux.com,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	ilpo.jarvinen@linux.intel.com,
+	jingoohan1@gmail.com
+Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2] PCI/AER: Use pci_clear_and_set_config_dword() to simplify mask updates
-Date: Sat,  7 Jun 2025 23:51:59 +0800
-Message-Id: <20250607155159.805679-1-18255117159@163.com>
+Subject: [PATCH v2 1/3] PCI: Add PCIE_SPEED2LNKCTL2_TLS conversion macro
+Date: Sat,  7 Jun 2025 23:55:43 +0800
+Message-Id: <20250607155545.806496-2-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250607155545.806496-1-18255117159@163.com>
+References: <20250607155545.806496-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -42,98 +48,43 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXM_kjYERoFeepHA--.4808S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxWr4fXF1Uuw13Cr1rZr4DCFg_yoW5CFyrpr
-	W3AFWfArWUJF15urWDWaykJr1rAas7t3ySgryfKwn5XF4UuFZrJr9avw1UJ345KFZ3Xw4f
-	Jws5Ka1ruF4UJ3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pKYLkZUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhVlo2hEXNpMQQAAsO
+X-CM-TRANSID:_____wC3dpsKYURonH09Gw--.59622S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7Cry8uFy3Cr43CFyfZFWfAFb_yoW8JFWxpa
+	47AF1UArW8Ww1UAr98Was2qa4rXFZ3GF4UuF47W39xXFySya4kCr12yFW3tr9rZr4jkry8
+	Z3ZrKrWUCFyI9F7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piF_MsUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/xtbBDwBlo2hEWUa55AABsm
 
-Replace manual read-modify-write sequences in multiple functions with
-pci_clear_and_set_config_dword() to ensure atomic operations and reduce
-code duplication. 
+Introduce PCIE_SPEED2LNKCTL2_TLS() macro to standardize the conversion
+between PCIe speed enumerations and LNKCTL2_TLS register values. This
+centralizes speed-to-register mapping logic, eliminating duplicated
+conversion code across multiple drivers.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Changes for v2:
-- The patch commit message were modified.
-- New optimizations for the functions disable_ecrc_checking, aer_enable_irq, and aer_disable_irq have been added.
----
- drivers/pci/pcie/aer.c | 30 +++++++++++-------------------
- 1 file changed, 11 insertions(+), 19 deletions(-)
+ drivers/pci/pci.h | 9 +++++++++
+ 1 file changed, 9 insertions(+)
 
-diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
-index 70ac66188367..86cbd204a73f 100644
---- a/drivers/pci/pcie/aer.c
-+++ b/drivers/pci/pcie/aer.c
-@@ -176,14 +176,13 @@ static int enable_ecrc_checking(struct pci_dev *dev)
- static int disable_ecrc_checking(struct pci_dev *dev)
- {
- 	int aer = dev->aer_cap;
--	u32 reg32;
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 12215ee72afb..b5a3ce6c239b 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -419,6 +419,15 @@ void pci_bus_put(struct pci_bus *bus);
+ 	 (lnkctl2) == PCI_EXP_LNKCTL2_TLS_2_5GT ? PCIE_SPEED_2_5GT : \
+ 	 PCI_SPEED_UNKNOWN)
  
- 	if (!aer)
- 		return -ENODEV;
- 
--	pci_read_config_dword(dev, aer + PCI_ERR_CAP, &reg32);
--	reg32 &= ~(PCI_ERR_CAP_ECRC_GENE | PCI_ERR_CAP_ECRC_CHKE);
--	pci_write_config_dword(dev, aer + PCI_ERR_CAP, reg32);
-+	pci_clear_and_set_config_dword(dev, aer + PCI_ERR_CAP,
-+				       PCI_ERR_CAP_ECRC_GENE |
-+				       PCI_ERR_CAP_ECRC_CHKE, 0);
- 
- 	return 0;
- }
-@@ -1101,15 +1100,12 @@ static bool find_source_device(struct pci_dev *parent,
- static void pci_aer_unmask_internal_errors(struct pci_dev *dev)
- {
- 	int aer = dev->aer_cap;
--	u32 mask;
- 
--	pci_read_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, &mask);
--	mask &= ~PCI_ERR_UNC_INTN;
--	pci_write_config_dword(dev, aer + PCI_ERR_UNCOR_MASK, mask);
-+	pci_clear_and_set_config_dword(dev, aer + PCI_ERR_UNCOR_MASK,
-+				       PCI_ERR_UNC_INTN, 0);
- 
--	pci_read_config_dword(dev, aer + PCI_ERR_COR_MASK, &mask);
--	mask &= ~PCI_ERR_COR_INTERNAL;
--	pci_write_config_dword(dev, aer + PCI_ERR_COR_MASK, mask);
-+	pci_clear_and_set_config_dword(dev, aer + PCI_ERR_COR_MASK,
-+				       PCI_ERR_COR_INTERNAL, 0);
- }
- 
- static bool is_cxl_mem_dev(struct pci_dev *dev)
-@@ -1555,23 +1551,19 @@ static irqreturn_t aer_irq(int irq, void *context)
- static void aer_enable_irq(struct pci_dev *pdev)
- {
- 	int aer = pdev->aer_cap;
--	u32 reg32;
- 
- 	/* Enable Root Port's interrupt in response to error messages */
--	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--	reg32 |= ROOT_PORT_INTR_ON_MESG_MASK;
--	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+	pci_clear_and_set_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND,
-+				       0, ROOT_PORT_INTR_ON_MESG_MASK);
- }
- 
- static void aer_disable_irq(struct pci_dev *pdev)
- {
- 	int aer = pdev->aer_cap;
--	u32 reg32;
- 
- 	/* Disable Root Port's interrupt in response to error messages */
--	pci_read_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, &reg32);
--	reg32 &= ~ROOT_PORT_INTR_ON_MESG_MASK;
--	pci_write_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND, reg32);
-+	pci_clear_and_set_config_dword(pdev, aer + PCI_ERR_ROOT_COMMAND,
-+				       ROOT_PORT_INTR_ON_MESG_MASK, 0);
- }
- 
- /**
-
-base-commit: ec7714e4947909190ffb3041a03311a975350fe0
++#define PCIE_SPEED2LNKCTL2_TLS(speed) \
++	((speed) == PCIE_SPEED_2_5GT ? PCI_EXP_LNKCTL2_TLS_2_5GT : \
++	 (speed) == PCIE_SPEED_5_0GT ? PCI_EXP_LNKCTL2_TLS_5_0GT : \
++	 (speed) == PCIE_SPEED_8_0GT ? PCI_EXP_LNKCTL2_TLS_8_0GT : \
++	 (speed) == PCIE_SPEED_16_0GT ? PCI_EXP_LNKCTL2_TLS_16_0GT : \
++	 (speed) == PCIE_SPEED_32_0GT ? PCI_EXP_LNKCTL2_TLS_32_0GT : \
++	 (speed) == PCIE_SPEED_64_0GT ? PCI_EXP_LNKCTL2_TLS_64_0GT : \
++	 0)
++
+ /* PCIe speed to Mb/s reduced by encoding overhead */
+ #define PCIE_SPEED2MBS_ENC(speed) \
+ 	((speed) == PCIE_SPEED_64_0GT ? 64000*1/1 : \
 -- 
 2.25.1
 
