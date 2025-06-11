@@ -1,27 +1,27 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2E41A190497;
-	Wed, 11 Jun 2025 16:31:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 80D7D1DF75C;
+	Wed, 11 Jun 2025 16:32:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749659501; cv=none; b=tp+nG8u1+TI+DiguFt5D+Y028ZcRcj7nCE5FISK8ne9bUDngdPeWcTua0GBFTC4hGxVrbih94H5euHAimWgFcXcONBML4QYhRzcsDMNA/ERUeGq6+Lq65FIsMkYbtD5UOuT276N5XTKgUDZbkWSmLzwVisfiitKlh/It9IqyM8s=
+	t=1749659523; cv=none; b=WpBzS84/q3At7MPbSweDsqdk9ByH6IibDdhhEea3hmdRO/y2IJ6fkBRGCn6q8+F5dOTf71XrbpXQL8BT84ecKOwLNk7kl6iWt27cc/WeI2I6FoCbANoEW79N32iPA7b0liFCbcELvclHT89191S7MgrIRb2XoJW/8ykr3c/7tU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749659501; c=relaxed/simple;
-	bh=tysG8iwd7qZ4YYQkrZIN3MNUI4edLL8gKQKkLZIIrGQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=f9t/nWVWh0gruUB+iokbVWCNrNgjDH9HC73K7B6DduSb4b8b49etLaSOAgBMUUzI7C7kgR+yCgsa7Bo2FbY1MbrRCeIPkE500T7gbGWQWcgY8uVm7iB8I7VLw1ivMQ9j5sRBSlbbSfewro1XzAjiUeVR+nj7KNKaRtwJ5ZCcmRM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=DtRcu+oZ; arc=none smtp.client-ip=117.135.210.4
+	s=arc-20240116; t=1749659523; c=relaxed/simple;
+	bh=AyIyci4j3t9tsor39WcVZgT1McAoZZhyUuqVb5im41U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=JqiijiqmXbnccJxSkmnoGoXKnRGkp6xYJvWiRcgj8eE4rPNgsJ4oQR5eDbgLmxCWVcNrgQNtz7xb/kf6n/fGixniccyjetckZ6vmfHalHDh11RWWcRM+hjV3Zt323qgVcXIyBfijimZbqoFqop759bC9Fcw9cgYfySSC06f/uPY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=l/RIkwz/; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="DtRcu+oZ"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="l/RIkwz/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=pG
-	Xl6ZA2fauaG3VmBXdXno16mCafxAtxH8MrV4p4XwQ=; b=DtRcu+oZoBUXwjJR4L
-	gM7sqAc3jWKZjGJ8L2HBzYRd4kEZXhtnhTlD6SeAsPTAtZSoYhW4NsnqZOUGytFC
-	ZMqykkUaU3Ji/S7eb4nulbGJ1StheU/GYVMYNIic0cvHK6SAjcOhu3VqaXDtLyPg
-	ftaTuOUaEHMX9OP568nJ3LpKY=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Mf
+	cah2+ycb2ydogLnZ0AlJX/f7/lygCdHxTFUi3RV7I=; b=l/RIkwz/6P1fGmg/Mm
+	xGm3UhypBLEhP6n+0ahl13qqj8CXAu+5Qxn0WC1mP9JBYhM/P5X6nyJo+4WnRoKr
+	s3eMr0pmaemEUSZBnr63rnouQaRH04+Oqt1/2dOMHEzQHI2TuJLKBAw87LstShBh
+	igrJnGogFXZCIsVj7Y4EiI59Y=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-3 (Coremail) with SMTP id _____wCnojpMr0looD79HQ--.15218S2;
-	Thu, 12 Jun 2025 00:31:09 +0800 (CST)
+	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wDn0p1vr0lox1zhHg--.46953S2;
+	Thu, 12 Jun 2025 00:31:44 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -32,9 +32,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 02/13] PCI: dwc: Refactor dwc to use dw_pcie_clear_and_set_dword()
-Date: Thu, 12 Jun 2025 00:31:06 +0800
-Message-Id: <20250611163106.860438-1-18255117159@163.com>
+Subject: [PATCH 06/13] PCI: dwc: Refactor armada8k to use dw_pcie_clear_and_set_dword()
+Date: Thu, 12 Jun 2025 00:31:37 +0800
+Message-Id: <20250611163137.860795-1-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -43,421 +43,128 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wCnojpMr0looD79HQ--.15218S2
-X-Coremail-Antispam: 1Uf129KBjvAXoWfJrW8GFy8Ww4DZw47JF4kCrg_yoW8Ww43Go
-	Z3XF1UZa17tF10qFyUtas3KryUZrnFvFyFvFs2kr4j9ay3A3W5A393KFnxZw1Y9w4fC34r
-	Xa1kG3Z8ArW7Xr1Un29KB7ZKAUJUUUU8529EdanIXcx71UUUUU7v73VFW2AGmfu7bjvjm3
-	AaLaJ3UbIYCTnIWIevJa73UjIFyTuYvjTRqfO7UUUUU
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWx1po2hJpj-cMgABsb
+X-CM-TRANSID:_____wDn0p1vr0lox1zhHg--.46953S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZFyrKFykJF1xKF1kCw48JFb_yoW7Jw1Dp3
+	45AFyYyF1UJw40v3ykCa97XF13AFZxZFnxCan3Wrs2q3ZrCrZrW3yFvFySgr1SgFZFqrWa
+	9w4rtrW7Cr1rG3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEf-BiUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhBpo2hJr1ADTAAAsx
 
-DesignWare core modules contain multiple instances of manual
-read-modify-write operations for register bit manipulation.
-These patterns duplicate functionality now provided by
-dw_pcie_clear_and_set_dword(), particularly in debugfs, endpoint,
-host, and core initialization paths.
+Armada8k PCIe driver uses explicit bitwise operations for global control
+register configuration. The driver manually handles bit masking and
+shifting for multiple fields including device type, domain attributes,
+and interrupt masking. This approach requires repetitive read-modify-write
+sequences and temporary variables.
 
-Replace open-coded bit manipulation sequences with calls to
-dw_pcie_clear_and_set_dword(). Affected areas include debugfs register
-control, endpoint capability configuration, host setup routines, and
-core link initialization logic. The changes simplify power management
-handling, capability masking, and feature configuration.
+Refactor global control setup, domain attribute configuration, and
+interrupt masking using dw_pcie_clear_and_set_dword(). The helper replaces
+manual bit manipulation with declarative bit masks, directly specifying
+which bits to clear and set. This eliminates intermediate variables and
+reduces code complexity.
 
-Standardizing on the helper function reduces code duplication by ~140
-lines across core modules while improving readability. The refactoring
-also ensures consistent error handling for register operations and
-provides a single point of control for future bit manipulation logi
-updates.
+Standardizing on the helper improves code clarity in initialization paths
+and ensures consistent handling of control register bits. The change also
+centralizes bit manipulation logic, reducing the risk of errors in future
+modifications to device configuration.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- .../controller/dwc/pcie-designware-debugfs.c  | 67 +++++++----------
- .../pci/controller/dwc/pcie-designware-ep.c   | 20 +++--
- .../pci/controller/dwc/pcie-designware-host.c | 27 +++----
- drivers/pci/controller/dwc/pcie-designware.c  | 74 +++++++------------
- drivers/pci/controller/dwc/pcie-designware.h  | 18 +----
- 5 files changed, 76 insertions(+), 130 deletions(-)
+ drivers/pci/controller/dwc/pcie-armada8k.c | 48 ++++++++--------------
+ 1 file changed, 18 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-index c67601096c48..7e01d4575d0b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
-@@ -213,10 +213,8 @@ static ssize_t lane_detect_write(struct file *file, const char __user *buf,
- 	if (val)
- 		return val;
+diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
+index c2650fd0d458..67348307aa28 100644
+--- a/drivers/pci/controller/dwc/pcie-armada8k.c
++++ b/drivers/pci/controller/dwc/pcie-armada8k.c
+@@ -155,54 +155,44 @@ static bool armada8k_pcie_link_up(struct dw_pcie *pci)
  
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + SD_STATUS_L1LANE_REG);
--	val &= ~(LANE_SELECT);
--	val |= FIELD_PREP(LANE_SELECT, lane);
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + SD_STATUS_L1LANE_REG, val);
-+	dw_pcie_clear_and_set_dword(pci, rinfo->ras_cap_offset + SD_STATUS_L1LANE_REG,
-+				    LANE_SELECT, FIELD_PREP(LANE_SELECT, lane));
- 
- 	return count;
- }
-@@ -307,14 +305,13 @@ static ssize_t err_inj_write(struct file *file, const char __user *buf,
- static void set_event_number(struct dwc_pcie_rasdes_priv *pdata,
- 			     struct dw_pcie *pci, struct dwc_pcie_rasdes_info *rinfo)
+ static int armada8k_pcie_start_link(struct dw_pcie *pci)
  {
--	u32 val;
-+	u32 val = 0;
- 
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
--	val &= ~EVENT_COUNTER_ENABLE;
--	val &= ~(EVENT_COUNTER_GROUP_SELECT | EVENT_COUNTER_EVENT_SELECT);
- 	val |= FIELD_PREP(EVENT_COUNTER_GROUP_SELECT, event_list[pdata->idx].group_no);
- 	val |= FIELD_PREP(EVENT_COUNTER_EVENT_SELECT, event_list[pdata->idx].event_no);
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG, val);
-+	dw_pcie_clear_and_set_dword(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG,
-+				    EVENT_COUNTER_ENABLE | EVENT_COUNTER_GROUP_SELECT |
-+				    EVENT_COUNTER_EVENT_SELECT, val);
- }
- 
- static ssize_t counter_enable_read(struct file *file, char __user *buf,
-@@ -354,13 +351,9 @@ static ssize_t counter_enable_write(struct file *file, const char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
--	if (enable)
--		val |= FIELD_PREP(EVENT_COUNTER_ENABLE, PER_EVENT_ON);
--	else
--		val |= FIELD_PREP(EVENT_COUNTER_ENABLE, PER_EVENT_OFF);
+-	u32 reg;
 -
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG, val);
-+	val |= FIELD_PREP(EVENT_COUNTER_ENABLE, enable ? PER_EVENT_ON : PER_EVENT_OFF);
-+	dw_pcie_clear_and_set_dword(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG,
-+				    0, val);
- 
- 	/*
- 	 * While enabling the counter, always read the status back to check if
-@@ -415,10 +408,9 @@ static ssize_t counter_lane_write(struct file *file, const char __user *buf,
- 
- 	mutex_lock(&rinfo->reg_event_lock);
- 	set_event_number(pdata, pci, rinfo);
--	val = dw_pcie_readl_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG);
--	val &= ~(EVENT_COUNTER_LANE_SELECT);
--	val |= FIELD_PREP(EVENT_COUNTER_LANE_SELECT, lane);
--	dw_pcie_writel_dbi(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG, val);
-+	dw_pcie_clear_and_set_dword(pci, rinfo->ras_cap_offset + RAS_DES_EVENT_COUNTER_CTRL_REG,
-+				    EVENT_COUNTER_LANE_SELECT,
-+				    FIELD_PREP(EVENT_COUNTER_LANE_SELECT, lane));
- 	mutex_unlock(&rinfo->reg_event_lock);
- 
- 	return count;
-@@ -654,20 +646,15 @@ static int dw_pcie_ptm_check_capability(void *drvdata)
- static int dw_pcie_ptm_context_update_write(void *drvdata, u8 mode)
- {
- 	struct dw_pcie *pci = drvdata;
--	u32 val;
- 
--	if (mode == PCIE_PTM_CONTEXT_UPDATE_AUTO) {
--		val = dw_pcie_readl_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL);
--		val |= PTM_REQ_AUTO_UPDATE_ENABLED;
--		dw_pcie_writel_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL, val);
--	} else if (mode == PCIE_PTM_CONTEXT_UPDATE_MANUAL) {
--		val = dw_pcie_readl_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL);
--		val &= ~PTM_REQ_AUTO_UPDATE_ENABLED;
--		val |= PTM_REQ_START_UPDATE;
--		dw_pcie_writel_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL, val);
--	} else {
-+	if (mode == PCIE_PTM_CONTEXT_UPDATE_AUTO)
-+		dw_pcie_clear_and_set_dword(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL,
-+					    0, PTM_REQ_AUTO_UPDATE_ENABLED);
-+	else if (mode == PCIE_PTM_CONTEXT_UPDATE_MANUAL)
-+		dw_pcie_clear_and_set_dword(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL,
-+					    PTM_REQ_AUTO_UPDATE_ENABLED, PTM_REQ_START_UPDATE);
-+	else
- 		return -EINVAL;
--	}
+ 	/* Start LTSSM */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+-	reg |= PCIE_APP_LTSSM_EN;
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
++				    0, PCIE_APP_LTSSM_EN);
  
  	return 0;
  }
-@@ -694,17 +681,13 @@ static int dw_pcie_ptm_context_update_read(void *drvdata, u8 *mode)
- static int dw_pcie_ptm_context_valid_write(void *drvdata, bool valid)
+ 
+ static int armada8k_pcie_host_init(struct dw_pcie_rp *pp)
  {
- 	struct dw_pcie *pci = drvdata;
--	u32 val;
- 
--	if (valid) {
--		val = dw_pcie_readl_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL);
--		val |= PTM_RES_CCONTEXT_VALID;
--		dw_pcie_writel_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL, val);
--	} else {
--		val = dw_pcie_readl_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL);
--		val &= ~PTM_RES_CCONTEXT_VALID;
--		dw_pcie_writel_dbi(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL, val);
--	}
-+	if (valid)
-+		dw_pcie_clear_and_set_dword(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL,
-+					    0, PTM_RES_CCONTEXT_VALID);
-+	else
-+		dw_pcie_clear_and_set_dword(pci, pci->ptm_vsec_offset + PTM_RES_REQ_CTRL,
-+					    PTM_RES_CCONTEXT_VALID, 0);
- 
- 	return 0;
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware-ep.c b/drivers/pci/controller/dwc/pcie-designware-ep.c
-index 0ae54a94809b..7e52892f632b 100644
---- a/drivers/pci/controller/dwc/pcie-designware-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-ep.c
-@@ -277,7 +277,7 @@ static int dw_pcie_ep_set_bar_resizable(struct dw_pcie_ep *ep, u8 func_no,
- 	int flags = epf_bar->flags;
- 	u32 reg = PCI_BASE_ADDRESS_0 + (4 * bar);
- 	unsigned int rebar_offset;
--	u32 rebar_cap, rebar_ctrl;
-+	u32 rebar_cap;
- 	int ret;
- 
- 	rebar_offset = dw_pcie_ep_get_rebar_offset(pci, bar);
-@@ -310,9 +310,8 @@ static int dw_pcie_ep_set_bar_resizable(struct dw_pcie_ep *ep, u8 func_no,
- 	 * 1 MB to 128 TB. Bits 31:16 in PCI_REBAR_CTRL define "supported sizes"
- 	 * bits for sizes 256 TB to 8 EB. Disallow sizes 256 TB to 8 EB.
- 	 */
--	rebar_ctrl = dw_pcie_readl_dbi(pci, rebar_offset + PCI_REBAR_CTRL);
--	rebar_ctrl &= ~GENMASK(31, 16);
--	dw_pcie_writel_dbi(pci, rebar_offset + PCI_REBAR_CTRL, rebar_ctrl);
-+	dw_pcie_clear_and_set_dword(pci, rebar_offset + PCI_REBAR_CTRL,
-+				    GENMASK(31, 16), 0);
- 
- 	/*
- 	 * The "selected size" (bits 13:8) in PCI_REBAR_CTRL are automatically
-@@ -925,7 +924,7 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
- 	struct dw_pcie_ep_func *ep_func;
- 	struct device *dev = pci->dev;
- 	struct pci_epc *epc = ep->epc;
--	u32 ptm_cap_base, reg;
-+	u32 ptm_cap_base;
- 	u8 hdr_type;
- 	u8 func_no;
- 	void *addr;
-@@ -1001,13 +1000,12 @@ int dw_pcie_ep_init_registers(struct dw_pcie_ep *ep)
- 	 */
- 	if (ptm_cap_base) {
- 		dw_pcie_dbi_ro_wr_en(pci);
--		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
--		reg &= ~PCI_PTM_CAP_ROOT;
--		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
-+		dw_pcie_clear_and_set_dword(pci, ptm_cap_base + PCI_PTM_CAP,
-+					    PCI_PTM_CAP_ROOT, 0);
- 
--		reg = dw_pcie_readl_dbi(pci, ptm_cap_base + PCI_PTM_CAP);
--		reg &= ~(PCI_PTM_CAP_RES | PCI_PTM_GRANULARITY_MASK);
--		dw_pcie_writel_dbi(pci, ptm_cap_base + PCI_PTM_CAP, reg);
-+		dw_pcie_clear_and_set_dword(pci, ptm_cap_base + PCI_PTM_CAP,
-+					    PCI_PTM_CAP_RES |
-+					    PCI_PTM_GRANULARITY_MASK, 0);
- 		dw_pcie_dbi_ro_wr_dis(pci);
- 	}
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 906277f9ffaf..e96a5f5d5d6d 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -909,7 +909,7 @@ static void dw_pcie_config_presets(struct dw_pcie_rp *pp)
- int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- {
+-	u32 reg;
  	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	u32 val, ctrl, num_ctrls;
-+	u32 ctrl, num_ctrls;
- 	int ret;
+ 
+-	if (!dw_pcie_link_up(pci)) {
++	if (!dw_pcie_link_up(pci))
+ 		/* Disable LTSSM state machine to enable configuration */
+-		reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+-		reg &= ~(PCIE_APP_LTSSM_EN);
+-		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
+-	}
++		dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
++					    PCIE_APP_LTSSM_EN, 0);
+ 
+ 	/* Set the device to root complex mode */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+-	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
+-	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
++				    PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT,
++				    PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT);
+ 
+ 	/* Set the PCIe master AxCache attributes */
+ 	dw_pcie_writel_dbi(pci, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
+ 	dw_pcie_writel_dbi(pci, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
+ 
+ 	/* Set the PCIe master AxDomain attributes */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_ARUSER_REG);
+-	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
+-	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
+-	dw_pcie_writel_dbi(pci, PCIE_ARUSER_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_ARUSER_REG,
++				    AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT,
++				    DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT);
+ 
+-	reg = dw_pcie_readl_dbi(pci, PCIE_AWUSER_REG);
+-	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
+-	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
+-	dw_pcie_writel_dbi(pci, PCIE_AWUSER_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_AWUSER_REG,
++				    AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT,
++				    DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT);
+ 
+ 	/* Enable INT A-D interrupts */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG);
+-	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
+-	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_INT_MASK1_REG, 0,
++				    PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
++				    PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK);
+ 
+ 	return 0;
+ }
+@@ -211,15 +201,13 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ {
+ 	struct armada8k_pcie *pcie = arg;
+ 	struct dw_pcie *pci = pcie->pci;
+-	u32 val;
  
  	/*
-@@ -941,23 +941,17 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- 	dw_pcie_writel_dbi(pci, PCI_BASE_ADDRESS_1, 0x00000000);
+ 	 * Interrupts are directly handled by the device driver of the
+ 	 * PCI device. However, they are also latched into the PCIe
+ 	 * controller, so we simply discard them.
+ 	 */
+-	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG);
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG, val);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_INT_CAUSE1_REG, 0, 0);
  
- 	/* Setup interrupt pins */
--	val = dw_pcie_readl_dbi(pci, PCI_INTERRUPT_LINE);
--	val &= 0xffff00ff;
--	val |= 0x00000100;
--	dw_pcie_writel_dbi(pci, PCI_INTERRUPT_LINE, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_INTERRUPT_LINE,
-+				    0xffff00ff, 0x00000100);
- 
- 	/* Setup bus numbers */
--	val = dw_pcie_readl_dbi(pci, PCI_PRIMARY_BUS);
--	val &= 0xff000000;
--	val |= 0x00ff0100;
--	dw_pcie_writel_dbi(pci, PCI_PRIMARY_BUS, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_PRIMARY_BUS,
-+				    0xff000000, 0x00ff0100);
- 
- 	/* Setup command register */
--	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
--	val &= 0xffff0000;
--	val |= PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
--		PCI_COMMAND_MASTER | PCI_COMMAND_SERR;
--	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, 0xffff0000,
-+				    PCI_COMMAND_IO | PCI_COMMAND_MEMORY |
-+				    PCI_COMMAND_MASTER | PCI_COMMAND_SERR);
- 
- 	dw_pcie_config_presets(pp);
- 	/*
-@@ -976,9 +970,8 @@ int dw_pcie_setup_rc(struct dw_pcie_rp *pp)
- 	/* Program correct class for RC */
- 	dw_pcie_writew_dbi(pci, PCI_CLASS_DEVICE, PCI_CLASS_BRIDGE_PCI);
- 
--	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	val |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
-+				    0, PORT_LOGIC_SPEED_CHANGE);
- 
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 4d794964fa0f..d424e5e55c9f 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -740,11 +740,8 @@ EXPORT_SYMBOL_GPL(dw_pcie_link_up);
- 
- void dw_pcie_upconfig_setup(struct dw_pcie *pci)
- {
--	u32 val;
--
--	val = dw_pcie_readl_dbi(pci, PCIE_PORT_MULTI_LANE_CTRL);
--	val |= PORT_MLTI_UPCFG_SUPPORT;
--	dw_pcie_writel_dbi(pci, PCIE_PORT_MULTI_LANE_CTRL, val);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_PORT_MULTI_LANE_CTRL,
-+				    0, PORT_MLTI_UPCFG_SUPPORT);
+ 	return IRQ_HANDLED;
  }
- EXPORT_SYMBOL_GPL(dw_pcie_upconfig_setup);
- 
-@@ -805,21 +802,12 @@ int dw_pcie_link_get_max_link_width(struct dw_pcie *pci)
- 
- static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- {
--	u32 lnkcap, lwsc, plc;
-+	u32 plc = 0;
- 	u8 cap;
- 
- 	if (!num_lanes)
- 		return;
- 
--	/* Set the number of lanes */
--	plc = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
--	plc &= ~PORT_LINK_FAST_LINK_MODE;
--	plc &= ~PORT_LINK_MODE_MASK;
--
--	/* Set link width speed control register */
--	lwsc = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	lwsc &= ~PORT_LOGIC_LINK_WIDTH_MASK;
--	lwsc |= PORT_LOGIC_LINK_WIDTH_1_LANES;
- 	switch (num_lanes) {
- 	case 1:
- 		plc |= PORT_LINK_MODE_1_LANES;
-@@ -837,14 +825,19 @@ static void dw_pcie_link_set_max_link_width(struct dw_pcie *pci, u32 num_lanes)
- 		dev_err(pci->dev, "num-lanes %u: invalid value\n", num_lanes);
- 		return;
- 	}
--	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, plc);
--	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, lwsc);
-+	/* Set the number of lanes */
-+	dw_pcie_clear_and_set_dword(pci, PCIE_PORT_LINK_CONTROL,
-+				    PORT_LINK_FAST_LINK_MODE | PORT_LINK_MODE_MASK,
-+				    plc);
-+	/* Set link width speed control register */
-+	dw_pcie_clear_and_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
-+				    PORT_LOGIC_LINK_WIDTH_MASK,
-+				    PORT_LOGIC_LINK_WIDTH_1_LANES);
- 
- 	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
--	lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
--	lnkcap &= ~PCI_EXP_LNKCAP_MLW;
--	lnkcap |= FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes);
--	dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
-+	dw_pcie_clear_and_set_dword(pci, cap + PCI_EXP_LNKCAP,
-+				    PCI_EXP_LNKCAP_MLW,
-+				    FIELD_PREP(PCI_EXP_LNKCAP_MLW, num_lanes));
- }
- 
- void dw_pcie_iatu_detect(struct dw_pcie *pci)
-@@ -1133,38 +1126,27 @@ void dw_pcie_edma_remove(struct dw_pcie *pci)
- 
- void dw_pcie_setup(struct dw_pcie *pci)
- {
--	u32 val;
--
- 	dw_pcie_link_set_max_speed(pci);
- 
- 	/* Configure Gen1 N_FTS */
--	if (pci->n_fts[0]) {
--		val = dw_pcie_readl_dbi(pci, PCIE_PORT_AFR);
--		val &= ~(PORT_AFR_N_FTS_MASK | PORT_AFR_CC_N_FTS_MASK);
--		val |= PORT_AFR_N_FTS(pci->n_fts[0]);
--		val |= PORT_AFR_CC_N_FTS(pci->n_fts[0]);
--		dw_pcie_writel_dbi(pci, PCIE_PORT_AFR, val);
--	}
-+	if (pci->n_fts[0])
-+		dw_pcie_clear_and_set_dword(pci, PCIE_PORT_AFR,
-+					    PORT_AFR_N_FTS_MASK | PORT_AFR_CC_N_FTS_MASK,
-+					    PORT_AFR_N_FTS(pci->n_fts[0]) |
-+					    PORT_AFR_CC_N_FTS(pci->n_fts[0]));
- 
- 	/* Configure Gen2+ N_FTS */
--	if (pci->n_fts[1]) {
--		val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--		val &= ~PORT_LOGIC_N_FTS_MASK;
--		val |= pci->n_fts[1];
--		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
--	}
-+	if (pci->n_fts[1])
-+		dw_pcie_clear_and_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
-+					    PORT_LOGIC_N_FTS_MASK, pci->n_fts[1]);
- 
--	if (dw_pcie_cap_is(pci, CDM_CHECK)) {
--		val = dw_pcie_readl_dbi(pci, PCIE_PL_CHK_REG_CONTROL_STATUS);
--		val |= PCIE_PL_CHK_REG_CHK_REG_CONTINUOUS |
--		       PCIE_PL_CHK_REG_CHK_REG_START;
--		dw_pcie_writel_dbi(pci, PCIE_PL_CHK_REG_CONTROL_STATUS, val);
--	}
-+	if (dw_pcie_cap_is(pci, CDM_CHECK))
-+		dw_pcie_clear_and_set_dword(pci, PCIE_PL_CHK_REG_CONTROL_STATUS, 0,
-+					    PCIE_PL_CHK_REG_CHK_REG_CONTINUOUS |
-+					    PCIE_PL_CHK_REG_CHK_REG_START);
- 
--	val = dw_pcie_readl_dbi(pci, PCIE_PORT_LINK_CONTROL);
--	val &= ~PORT_LINK_FAST_LINK_MODE;
--	val |= PORT_LINK_DLL_LINK_EN;
--	dw_pcie_writel_dbi(pci, PCIE_PORT_LINK_CONTROL, val);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_PORT_LINK_CONTROL,
-+				    PORT_LINK_FAST_LINK_MODE, PORT_LINK_DLL_LINK_EN);
- 
- 	dw_pcie_link_set_max_link_width(pci, pci->num_lanes);
- }
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index f401c144df0f..5a0aa154eb2a 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -720,24 +720,14 @@ static inline void dw_pcie_clear_and_set_dword(struct dw_pcie *pci, int pos,
- 
- static inline void dw_pcie_dbi_ro_wr_en(struct dw_pcie *pci)
- {
--	u32 reg;
--	u32 val;
--
--	reg = PCIE_MISC_CONTROL_1_OFF;
--	val = dw_pcie_readl_dbi(pci, reg);
--	val |= PCIE_DBI_RO_WR_EN;
--	dw_pcie_writel_dbi(pci, reg, val);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_MISC_CONTROL_1_OFF,
-+				    0, PCIE_DBI_RO_WR_EN);
- }
- 
- static inline void dw_pcie_dbi_ro_wr_dis(struct dw_pcie *pci)
- {
--	u32 reg;
--	u32 val;
--
--	reg = PCIE_MISC_CONTROL_1_OFF;
--	val = dw_pcie_readl_dbi(pci, reg);
--	val &= ~PCIE_DBI_RO_WR_EN;
--	dw_pcie_writel_dbi(pci, reg, val);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_MISC_CONTROL_1_OFF,
-+				    PCIE_DBI_RO_WR_EN, 0);
- }
- 
- static inline int dw_pcie_start_link(struct dw_pcie *pci)
 -- 
 2.25.1
 
