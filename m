@@ -1,27 +1,27 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 834B017E473;
-	Wed, 11 Jun 2025 16:32:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 8F1F71E0083;
+	Wed, 11 Jun 2025 16:32:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749659545; cv=none; b=G6smCmIQa0XxFELlHvyPWv/+ztCCqwx8J4S4QEE1RtPq4bt5nJBPBXbHwTkjW1yd5+XUXkX56M7YOSXiuCeQgxoLcmfuLP4o13e9nvHdnH5GV8n2Y8yWKXDti4fOiBH1rIZvNMcJmOANnsDIlF+nyHIfHl5gzpklcHfAr2/J25Y=
+	t=1749659556; cv=none; b=KX9p/3DxJj5a++HW1c38SaZZn0in2mKGVeY911/Rh/If9JkwhPoma7PD70CLqAEvRGrtWEBC6Q35UEAiT+9F/+qtx01B+SML1SlD1hIA22md2XS1tlTp5nXl6+dOIeg48yTVsjfsRdIc+mKidfrTBmkuK3LdvfhaUq2DGOIsU5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749659545; c=relaxed/simple;
-	bh=oFApSBDY+OxxnOA0P3lT0lMEWBUJm37uUIdc7A3fBPk=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uaoZdqJJ1wK2vqbbLy+KAJ/RK4/dw+geVkgqiYA7lElnDCfxT8qNezIKPVO/1l4BFFbcIPoNRciKyD+DBmXRm1csL8ZAqeKOkNFFW7NelAoXPcL//i8R5J9KnxCiekgGyp42lMKQ8EbgNhSgaJc5JDxqFTcV4jc/TyEJFUJ4rUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=KBZQCw+w; arc=none smtp.client-ip=117.135.210.3
+	s=arc-20240116; t=1749659556; c=relaxed/simple;
+	bh=nE6bKO5dP5cXC6LWtFFk7yFnzldnKqo5QJozk1Lv45Y=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AtAtcxMtt8LgK+kqW2IcxFZd/rg/why6klM00WpFNK8rRv1+ugIsG+ydWXvPIlxfF5GYeufNIRzY3xt4C/VC2KJb9YbKLZPJHIIU3KuGd1+yGBzh+emqCoyL4DptXSVbLG1LKMiCSlz5bRiy/nzlpqJtqykEWOADso3bFCsPSig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=A3Pq4gZy; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="KBZQCw+w"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="A3Pq4gZy"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=lN
-	RcWaeVw9b8wcrD5zFUisNHEU5ftFol/Wu2HmY6NWU=; b=KBZQCw+wMnG28aOIwi
-	LvPWtLsVsZH6oXvRK7Uqj+UDLfrr+b+ADTjIPQ0p7dRECSU+kCG/pgzME/eTz3cD
-	TFxjLQPiU8VQZiNShy3eT66wOSlMjOWb+5C9UGSQvvn/ksos4M37eXBc3cYSnPO3
-	ctsdrQ1pOgj3W7y3bnSAiQahQ=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Ae
+	9kCteaIREimUk/syr6kEJ201xf2z63OTJWk7zi+T4=; b=A3Pq4gZyJW76CKCCo4
+	7hnN3FPvqFDotrBnyqlcFF5U7H2WYuYlWpcZcNYPANcMgMuur78wICIIcPTRjLi9
+	Lejn5MIghb2TejJqA9DroW9FbZR9jc/91PtghFSKc4v9VyTY8GrFHzEoIO7Q2S9x
+	v0DYQSsfy6N9JcLwLc/PudiV4=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-1 (Coremail) with SMTP id _____wD3jyCKr0lo4m_hHg--.55293S2;
-	Thu, 12 Jun 2025 00:32:11 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wD398eXr0logPMqHw--.18396S2;
+	Thu, 12 Jun 2025 00:32:23 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -32,9 +32,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH 10/13] PCI: dwc: Refactor qcom common to use dw_pcie_clear_and_set_dword()
-Date: Thu, 12 Jun 2025 00:32:09 +0800
-Message-Id: <20250611163209.861171-1-18255117159@163.com>
+Subject: [PATCH 12/13] PCI: dwc: Refactor rcar-gen4 to use dw_pcie_clear_and_set_dword()
+Date: Thu, 12 Jun 2025 00:32:21 +0800
+Message-Id: <20250611163221.861314-1-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -43,136 +43,82 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wD3jyCKr0lo4m_hHg--.55293S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxKF4rAryxWr1DAw1xWr4kZwb_yoW7Ww48pw
-	10k3Z7JFn7AF40939Iyan7Xr1FkFZxur42k3W3tanFv3Z7AFZFgay5tasrKr1xGFW7KFy2
-	k34UAFW7Gr1SkrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEnYFAUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWw1po2hJpj-hUQAEsQ
+X-CM-TRANSID:_____wD398eXr0logPMqHw--.18396S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxWFy3GF4Dtw48tF4DXr17GFg_yoW5Cry5pa
+	y7CFySkF1jyws09F4UXaykur15uan3Ca1jg3Z7Gw1I9ay7ArZxWay0y3y7tFWxGFZ2qr45
+	Cw1UtFWUWF15ZFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pRaiifUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhNpo2hJr1AHEAAAsq
 
-Qcom PCIe common code contains complex bit manipulation for 16GT/s
-equalization and lane margining configuration. These functions use
-multiple read-modify-write sequences with manual bit masking and
-field preparation, leading to verbose and error-prone code.
+R-Car Gen4 PCIe driver contains multiple read-modify-write sequences for
+speed change control and lane configuration. The driver manually handles
+speed change initiation through bit set/clear operations and configures
+lane skew with explicit bit masking.
 
-Refactor equalization and lane margining setup using
-dw_pcie_clear_and_set_dword(). The helper simplifies multi-field
-configuration by combining clear and set operations in a single call.
-Initialize local variables to zero before field insertion to ensure
-unused bits are cleared appropriately.
+Refactor speed change handling and lane skew configuration using
+dw_pcie_clear_and_set_dword(). For speed change operations, replace
+manual bit toggling with clear-and-set sequences. For lane skew, use
+the helper to conditionally set bits based on lane count.
 
-This change reduces code complexity by ~40% in affected functions
-while improving readability. Centralizing bit manipulation ensures
-consistent handling of register fields across Qcom PCIe implementations
-and provides a solid foundation for future 16GT/s enhancements.
+Adopting the standard interface simplifies link training logic and
+reduces code complexity. The change also ensures consistent handling
+of control register bits and provides better documentation of intent
+through declarative bit masks.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom-common.c | 59 +++++++++----------
- 1 file changed, 29 insertions(+), 30 deletions(-)
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c | 23 ++++++++-------------
+ 1 file changed, 9 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
-index 3aad19b56da8..8ea521147b7e 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-common.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
-@@ -10,7 +10,7 @@
+diff --git a/drivers/pci/controller/dwc/pcie-rcar-gen4.c b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+index 18055807a4f5..20a6c88252d6 100644
+--- a/drivers/pci/controller/dwc/pcie-rcar-gen4.c
++++ b/drivers/pci/controller/dwc/pcie-rcar-gen4.c
+@@ -107,13 +107,11 @@ static int rcar_gen4_pcie_speed_change(struct dw_pcie *dw)
+ 	u32 val;
+ 	int i;
  
- void qcom_pcie_common_set_16gt_equalization(struct dw_pcie *pci)
- {
--	u32 reg;
-+	u32 reg = 0;
+-	val = dw_pcie_readl_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	val &= ~PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_writel_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++	dw_pcie_clear_and_set_dword(dw, PCIE_LINK_WIDTH_SPEED_CONTROL,
++				    PORT_LOGIC_SPEED_CHANGE, 0);
  
- 	/*
- 	 * GEN3_RELATED_OFF register is repurposed to apply equalization
-@@ -19,60 +19,59 @@ void qcom_pcie_common_set_16gt_equalization(struct dw_pcie *pci)
- 	 * determines the data rate for which these equalization settings are
- 	 * applied.
- 	 */
--	reg = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
--	reg &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
--	reg &= ~GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK;
- 	reg |= FIELD_PREP(GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
- 			  GEN3_RELATED_OFF_RATE_SHADOW_SEL_16_0GT);
--	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, reg);
-+	dw_pcie_clear_and_set_dword(pci, GEN3_RELATED_OFF,
-+				    GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL |
-+				    GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
-+				    reg);
+-	val = dw_pcie_readl_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-	val |= PORT_LOGIC_SPEED_CHANGE;
+-	dw_pcie_writel_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
++	dw_pcie_clear_and_set_dword(dw, PCIE_LINK_WIDTH_SPEED_CONTROL,
++				    0, PORT_LOGIC_SPEED_CHANGE);
  
--	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF);
--	reg &= ~(GEN3_EQ_FMDC_T_MIN_PHASE23 |
--		GEN3_EQ_FMDC_N_EVALS |
--		GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
--		GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA);
-+	reg = 0;
- 	reg |= FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
- 		FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
- 		FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
- 		FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
--	dw_pcie_writel_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF, reg);
-+	dw_pcie_clear_and_set_dword(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF,
-+				    GEN3_EQ_FMDC_T_MIN_PHASE23 |
-+				    GEN3_EQ_FMDC_N_EVALS |
-+				    GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
-+				    GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA,
-+				    reg);
+ 	for (i = 0; i < RCAR_NUM_SPEED_CHANGE_RETRIES; i++) {
+ 		val = dw_pcie_readl_dbi(dw, PCIE_LINK_WIDTH_SPEED_CONTROL);
+@@ -565,11 +563,9 @@ static void rcar_gen4_pcie_additional_common_init(struct rcar_gen4_pcie *rcar)
+ 	struct dw_pcie *dw = &rcar->dw;
+ 	u32 val;
  
--	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
--	reg &= ~(GEN3_EQ_CONTROL_OFF_FB_MODE |
--		GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
--		GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
--		GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
--	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, reg);
-+	dw_pcie_clear_and_set_dword(pci, GEN3_EQ_CONTROL_OFF,
-+				    GEN3_EQ_CONTROL_OFF_FB_MODE |
-+				    GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
-+				    GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
-+				    GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC, 0);
- }
- EXPORT_SYMBOL_GPL(qcom_pcie_common_set_16gt_equalization);
+-	val = dw_pcie_readl_dbi(dw, PCIE_PORT_LANE_SKEW);
+-	val &= ~PORT_LANE_SKEW_INSERT_MASK;
+-	if (dw->num_lanes < 4)
+-		val |= BIT(6);
+-	dw_pcie_writel_dbi(dw, PCIE_PORT_LANE_SKEW, val);
++	dw_pcie_clear_and_set_dword(dw, PCIE_PORT_LANE_SKEW,
++				    PORT_LANE_SKEW_INSERT_MASK,
++				    (dw->num_lanes < 4) ? BIT(6) : 0);
  
- void qcom_pcie_common_set_16gt_lane_margining(struct dw_pcie *pci)
- {
--	u32 reg;
-+	u32 reg = 0;
+ 	val = readl(rcar->base + PCIEPWRMNGCTRL);
+ 	val |= APP_CLK_REQ_N | APP_CLK_PM_EN;
+@@ -680,9 +676,8 @@ static int rcar_gen4_pcie_ltssm_control(struct rcar_gen4_pcie *rcar, bool enable
+ 		return 0;
+ 	}
  
--	reg = dw_pcie_readl_dbi(pci, GEN4_LANE_MARGINING_1_OFF);
--	reg &= ~(MARGINING_MAX_VOLTAGE_OFFSET |
--		MARGINING_NUM_VOLTAGE_STEPS |
--		MARGINING_MAX_TIMING_OFFSET |
--		MARGINING_NUM_TIMING_STEPS);
- 	reg |= FIELD_PREP(MARGINING_MAX_VOLTAGE_OFFSET, 0x24) |
- 		FIELD_PREP(MARGINING_NUM_VOLTAGE_STEPS, 0x78) |
- 		FIELD_PREP(MARGINING_MAX_TIMING_OFFSET, 0x32) |
- 		FIELD_PREP(MARGINING_NUM_TIMING_STEPS, 0x10);
--	dw_pcie_writel_dbi(pci, GEN4_LANE_MARGINING_1_OFF, reg);
-+	dw_pcie_clear_and_set_dword(pci, GEN4_LANE_MARGINING_1_OFF,
-+				    MARGINING_MAX_VOLTAGE_OFFSET |
-+				    MARGINING_NUM_VOLTAGE_STEPS |
-+				    MARGINING_MAX_TIMING_OFFSET |
-+				    MARGINING_NUM_TIMING_STEPS, reg);
+-	val = dw_pcie_readl_dbi(dw, PCIE_PORT_FORCE);
+-	val |= PORT_FORCE_DO_DESKEW_FOR_SRIS;
+-	dw_pcie_writel_dbi(dw, PCIE_PORT_FORCE, val);
++	dw_pcie_clear_and_set_dword(dw, PCIE_PORT_FORCE,
++				    0, PORT_FORCE_DO_DESKEW_FOR_SRIS);
  
--	reg = dw_pcie_readl_dbi(pci, GEN4_LANE_MARGINING_2_OFF);
-+	reg = 0;
- 	reg |= MARGINING_IND_ERROR_SAMPLER |
- 		MARGINING_SAMPLE_REPORTING_METHOD |
- 		MARGINING_IND_LEFT_RIGHT_TIMING |
- 		MARGINING_VOLTAGE_SUPPORTED;
--	reg &= ~(MARGINING_IND_UP_DOWN_VOLTAGE |
--		MARGINING_MAXLANES |
--		MARGINING_SAMPLE_RATE_TIMING |
--		MARGINING_SAMPLE_RATE_VOLTAGE);
- 	reg |= FIELD_PREP(MARGINING_MAXLANES, pci->num_lanes) |
- 		FIELD_PREP(MARGINING_SAMPLE_RATE_TIMING, 0x3f) |
- 		FIELD_PREP(MARGINING_SAMPLE_RATE_VOLTAGE, 0x3f);
--	dw_pcie_writel_dbi(pci, GEN4_LANE_MARGINING_2_OFF, reg);
-+	dw_pcie_clear_and_set_dword(pci, GEN4_LANE_MARGINING_2_OFF,
-+				    MARGINING_IND_UP_DOWN_VOLTAGE |
-+				    MARGINING_MAXLANES |
-+				    MARGINING_SAMPLE_RATE_TIMING |
-+				    MARGINING_SAMPLE_RATE_VOLTAGE, reg);
- }
- EXPORT_SYMBOL_GPL(qcom_pcie_common_set_16gt_lane_margining);
+ 	val = readl(rcar->base + PCIEMSR0);
+ 	val |= APP_SRIS_MODE;
 -- 
 2.25.1
 
