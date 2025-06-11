@@ -1,77 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7230DDF49
-	for <linux-pci@vger.kernel.org>; Wed, 11 Jun 2025 16:29:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5B0BE2E610A;
+	Wed, 11 Jun 2025 16:31:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749659348; cv=none; b=IyUJpcBrJimQH31e2tvJj1l/eBZ9ooJ/MCGeiES8+BLzZM7kGjASRvwZ1l26mUoY9oatEzKrUa2P41lQ+EZVWd9sE+G3AL0Zg+CYxSFktyjHEuEIdGXrLXUpJ3itc+BWIA32q9DsE0WCQXxjRMoIBRC5YFQVodmtbMbCcTjBqSc=
+	t=1749659498; cv=none; b=pJnSkZbSvOodOv0eYUsAb78Ej0JkltnOj3MvBLr3+Ag+Kvlc95N8djWpkM1jV8wg2QRPkBqyQIoJoyf0Fqnzkcmjg2uIJiBqI35C9phHuEHrX6Gl22N9ZE4or0UE+Am91ql370ttNb86fwqlVBHsd9UlQTBRJCUoqDUgH43IdQo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749659348; c=relaxed/simple;
-	bh=ckRdOM7OKrbOFNiboHlXTgskhStWd1gn0sUvPv3sOAc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A7JAD/avpnMv8N8dXyhGuvlaUvk4arsbUIUkmybGj/l4PVZQo1JffObesbdJU2LLj0JJwaw5iVYzBBeV00FpuqD7JEzxuvUSEWla/A3gStpu3Ep7fmBtkoEUDsE+ioXc7RLv7TUmkdPqro7SB/oEpp9F4yeXFPs+Q7vsrvciAHM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=omrS4B5j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749659498; c=relaxed/simple;
+	bh=Aval5zk1VgFJgPoCb1Z+VYhn5vHXyVwG2wThqQn9Cg0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mwZ/Jpz5AJnZmebmpNfqn8M+aT7SQ9Wg11pOW+jPqmoqZkDyaF+GUqRkCb0poOtwFR6wpoaeM845l4seYVAt764GNjjvNXCU4cf/jpP/MaRgL4R9BjuzOXBLrWb16OAMjG8ltYgn3GY/6hSqmyNICKYbfGJeDlqmWUkdw8d2gjM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=GR2/k51G; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="omrS4B5j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 929F1C4CEEA;
-	Wed, 11 Jun 2025 16:29:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749659348;
-	bh=ckRdOM7OKrbOFNiboHlXTgskhStWd1gn0sUvPv3sOAc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=omrS4B5jzkrO1RWyNLscgOmTfQwAC6a9jto/WTZR2zZ5CKe4BwBCzJwxirvvs11dg
-	 AuqdalAfnc+u/S/ZziMQcdSJnnE88qtSIkwvHRQV0o6fZfJOuyUfMX6aVr2Pmd7LgG
-	 HKH35HABH2ENvvvvHIsV9AN02qJtyWzlqt7ZgVJCvuEnPovn8bFrm9tpXK34ddy1BV
-	 IWd/xUOS6A9mMTfH2W45z2x8bfosLVAGwCjeG4HnBYRZGSlf+gfavgAINeCU8SMTrN
-	 //4Y3QAgnU31Ker9y21g+umMsXZtNX9X4U+9IdckpuDxgcqKaPHwjWuW3puzhqc7xy
-	 OmUiMHntHKOIw==
-Date: Wed, 11 Jun 2025 21:58:59 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Keith Busch <kbusch@kernel.org>
-Cc: Keith Busch <kbusch@meta.com>, bhelgaas@google.com, 
-	linux-pci@vger.kernel.org, ilpo.jarvinen@linux.intel.com, lukas@wunner.de
-Subject: Re: [PATCHv2] pci: allow user specifiy a reset poll timeout
-Message-ID: <zqtfb77zu3x4w5ilbmaqsnvocisfknkptj4yuz64lu3rza5vub@fmalvswla7c5>
-References: <20250218165444.2406119-1-kbusch@meta.com>
- <Z_2kQMjR1uoKnMMo@kbusch-mbp.dhcp.thefacebook.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="GR2/k51G"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=6W
+	NamUFnScGmcGW4V2poSQwnw1TE8eT2FVftvMi/L8E=; b=GR2/k51GgUtZ1XE3Yh
+	nuXvWl5U1+TMURsM0pfgVOTANtkHLlIHdv++AJRwx4QbY4hZZHQqQgXMv4PB/wuI
+	BSGaOvMcuWanygDB/j4tBlFQLHl11s0pLWTsx8WvFYxkrUIglspX2uCi5qwOAyas
+	WH0Eig8UjIx5OvCCmAmOGA+xQ=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp3 (Coremail) with SMTP id PigvCgAHugBUr0loWN_WAQ--.64347S2;
+	Thu, 12 Jun 2025 00:31:17 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	bhelgaas@google.com,
+	mani@kernel.org,
+	kwilczynski@kernel.org
+Cc: robh@kernel.org,
+	jingoohan1@gmail.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH 03/13] PCI: dwc: Refactor dra7xx to use dw_pcie_clear_and_set_dword()
+Date: Thu, 12 Jun 2025 00:31:13 +0800
+Message-Id: <20250611163113.860528-1-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <Z_2kQMjR1uoKnMMo@kbusch-mbp.dhcp.thefacebook.com>
+X-CM-TRANSID:PigvCgAHugBUr0loWN_WAQ--.64347S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KrWkGrWkKr1xuFyrXF13Jwb_yoW8uw4xp3
+	y3CFZIk3W7Jan5X3Wqv3Wku3WSvasavr4Utan7Kw1fZF9Fyr9rtrWFyry8tF4fuFWj9r12
+	ka15t347Xw4YyFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pE3xhJUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhVpo2hJr1AAlQAAsu
 
-On Mon, Apr 14, 2025 at 06:11:44PM -0600, Keith Busch wrote:
-> On Tue, Feb 18, 2025 at 08:54:44AM -0800, Keith Busch wrote:
-> > From: Keith Busch <kbusch@kernel.org>
-> > 
-> > The spec does not provide any upper limit to how long a device may
-> > return Request Retry Status. It just says "Some devices require a
-> > lengthy self-initialization sequence to complete". The kernel
-> > arbitrarily chose 60 seconds since that really ought to be enough. But
-> > there are devices where this turns out not to be enough.
-> > 
-> > Since any timeout choice would be arbitrary, and 60 seconds is generally
-> > more than enough for the majority of hardware, let's make this a
-> > parameter so an admin can adjust it specifically to their needs if the
-> > default timeout isn't appropriate.
-> 
-> This patch is trying to address timings that have no spec defined
-> behavior, so making it user tunable sounds just more reasonable than a
-> kernel define. If we're not considering upstream options to make this
-> tunable, I think we have no choice but to continue with bespoke
-> out-of-tree solutions.
+The dra7xx PCIe driver implements suspend/resume handling through
+direct register manipulation. The current approach uses explicit
+read-modify-write sequences to control the MEMORY enable bit in the
+PCI_COMMAND register, declaring local variables for temporary storage.
 
-Do we know the list of devices exhibiting this pattern? And does the time limit
-is deterministic? I'm just trying to see if it is possible to add quirks for
-those devices.
+Replace manual bit manipulation with dw_pcie_clear_and_set_dword()
+during suspend and resume operations. This eliminates redundant variable
+declarations and simplifies the power management flow by handling bit
+operations within a single function call.
 
-- Mani
+Using the centralized helper improves code readability and aligns the
+driver with standard DesignWare register access patterns. The change also
+reduces the risk of bit manipulation errors in future modifications to the
+power management logic.
 
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/dwc/pci-dra7xx.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index f97f5266d196..9cbba1b28882 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -867,15 +867,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+ 	struct dw_pcie *pci = dra7xx->pci;
+-	u32 val;
+ 
+ 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
+ 		return 0;
+ 
+ 	/* clear MSE */
+-	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+-	val &= ~PCI_COMMAND_MEMORY;
+-	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
++	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
+ 
+ 	return 0;
+ }
+@@ -884,15 +881,12 @@ static int dra7xx_pcie_resume(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+ 	struct dw_pcie *pci = dra7xx->pci;
+-	u32 val;
+ 
+ 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
+ 		return 0;
+ 
+ 	/* set MSE */
+-	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+-	val |= PCI_COMMAND_MEMORY;
+-	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
++	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, 0, PCI_COMMAND_MEMORY);
+ 
+ 	return 0;
+ }
 -- 
-மணிவண்ணன் சதாசிவம்
+2.25.1
+
