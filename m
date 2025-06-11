@@ -1,29 +1,30 @@
 Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 5C8D818D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 743B8191;
 	Wed, 11 Jun 2025 00:05:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749600355; cv=none; b=D/opyKCWiBDjkBa+3vBQq3Nl2NDS1YssNzyXMQ+XqaPa1+JRePiNgjmCwuDtez6sddclDvl6H33OmGMicW+LE4Kaxdardf3bGppaO2XUhood//Oa3lOkV5RBZdDMxGWgvIPPrQybGGuB6FuNF4Zd+wcvN2F/Icamfyl7PgsM1jY=
+	t=1749600355; cv=none; b=qiSiMydSP26O5tqoftRezgQieTamk5SXeLcj2nsGp7NMj831kNPLZtvgOiqcDGPBC3MgEt2LAv65Ckiu89Lj2nS6ByUjQ4dFAwXfhcDBSJP6p033c8TGqdJXQgtDqJA3Yd2b+RQwlZo+ju8wgbVwLIVXzchgoeXxyMmGK3NPRgo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1749600355; c=relaxed/simple;
-	bh=xrMPuWiNi/gejtKkOmDTuFDh4hly1QjLzqZNLt+Jw/Y=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=KCxvqelE+gkGBvAOfWCdeCYJ5cDRxaTmpb5kEQhfZ5i2v7Lo5yU4tCQmEYKJcfWtYQYF2zogT6deaec689KdLFQhkW8tApnWr+n6w3EHoZJFrofE0DcWBPfqY0ppA4HRiXNr1QfPTWtQWR99RUGq/doW8ojWIxWW3XWiKQNSpao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=R/EKBSn+; arc=none smtp.client-ip=13.77.154.182
+	bh=h23fSn7G/BlccmRhZs8w6qcvCx8fyjkrcpSIpTFLPpo=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=WGE8p5bA52Q8H6hNB+OXBI5wDwcCkzJb6nXQHJoYDNLqnz14rd7vrjYCVwXa3maW55JuZjCRBvJ215lNc4/eik2vYA/xtJ+snOMuibs0hNgDjqBxrKlqqt36irNBLTBtt8EQjXHpAzGSaCRUrb3Ppt123OM+ft/CjqSNuqdv8Lc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=AWF4qIYT; arc=none smtp.client-ip=13.77.154.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="R/EKBSn+"
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="AWF4qIYT"
 Received: from CPC-grwhy-1BDK8.redmond.corp.microsoft.com (unknown [70.37.26.40])
-	by linux.microsoft.com (Postfix) with ESMTPSA id E98882115183;
-	Tue, 10 Jun 2025 17:05:53 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com E98882115183
+	by linux.microsoft.com (Postfix) with ESMTPSA id 291F92115187;
+	Tue, 10 Jun 2025 17:05:54 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 291F92115187
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
 	s=default; t=1749600354;
-	bh=5VoXRwFp1c8WtDCCDppOEkR6jDKDxpkeb7vMY/1s3Lk=;
-	h=From:To:Cc:Subject:Date:From;
-	b=R/EKBSn+CF/W79rKED7Rk9jrfi4mwt9ltEy7hctDyQ46M658jhwdMYhEnM81E1TG2
-	 9siGPTASSuPxnJNYjO5sEeDa5LT/W3xTUI+1oP9Klb8pU3pdq/004Af4XlnTCosUL4
-	 4hIk01uIxyAfeRS+isKV2eQKKxpVhuzuBT/PQf10=
+	bh=ofdfrfPhwLhQaW6wA1DGE5ye5f3yAqrIG60EWUNb21A=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=AWF4qIYTv4kZaXQrRxWC+r3yBHVGlg2MrPNlTwYvbkv0yIIQqrzeK3CLDSs1YIduq
+	 X5iFxsOFeghsW7LEDAg+IV5z3CpVHIhqZyVz0Pde6bG+XCVrWKb0E4lWEmBxsR9kGV
+	 ugq0FryPI14C8B5XPhTEHlusz9Im04zvmqhztS44=
 From: grwhyte@linux.microsoft.com
 To: linux-pci@vger.kernel.org
 Cc: shyamsaini@linux.microsoft.com,
@@ -31,10 +32,12 @@ Cc: shyamsaini@linux.microsoft.com,
 	Okaya@kernel.org,
 	bhelgaas@google.com,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH v3 0/2] PCI: Reduce FLR delay to 10ms for MSFT devices
-Date: Wed, 11 Jun 2025 00:05:50 +0000
-Message-Id: <20250611000552.1989795-1-grwhyte@linux.microsoft.com>
+Subject: [PATCH v3 2/2] PCI: Reduce FLR delay to 10ms for MSFT devices
+Date: Wed, 11 Jun 2025 00:05:52 +0000
+Message-Id: <20250611000552.1989795-3-grwhyte@linux.microsoft.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250611000552.1989795-1-grwhyte@linux.microsoft.com>
+References: <20250611000552.1989795-1-grwhyte@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -45,37 +48,45 @@ Content-Transfer-Encoding: 8bit
 
 From: Graham Whyte <grwhyte@linux.microsoft.com>
 
-Add a new flr_delay member of the pci_dev struct to allow customization of
-the delay after FLR for devices that do not support immediate readiness
-or readiness time reporting. The main scenario this addresses is VF
-removal and rescan during runtime repairs and driver updates, which,
-if fixed to 100ms, introduces significant delays across multiple VFs.
-These delays are unnecessary for devices that complete the FLR well
-within this timeframe.
+Add a new quirk to reduce the delay after a FLR to 10ms
+for MSFT devices. These devices complete the FLR well within the default
+100ms timeframe and this path can be optimized for VF removal during
+runtime repairs and driver updates. These devices do not support immediate
+readiness or readiness time reporting
 
-Patch 1 adds the flr_delay member to the pci_dev struct
-Patch 2 adds the msft device specific quirk to utilize the flr_delay
-
+Signed-off-by: Graham Whyte <grwhyte@linux.microsoft.com>
 ---
-v2->v3:
-- Removed Microsoft specific pcie reset reset, replaced with customizable flr_delay parameter
-- Changed msleep in pcie_flr to usleep_range to support flr delays of under 20ms 
-v1->v2:
-- Removed unnecessary EXPORT_SYMBOL_GPL for function pci_dev_wait
-- Link to thread:https://lore.kernel.org/linux-pci/?q=f%3Agrwhyte&x=t#m7453647902a1b22840f5e39434a631fd7b2515ce'
-
-Link to V1: https://lore.kernel.org/linux-pci/20250522085253.GN7435@unreal/T/#m7453647902a1b22840f5e39434a631fd7b2515ce  
-
-Graham Whyte (2):
-  PCI: Add flr_delay parameter to pci_dev struct
-  PCI: Reduce FLR delay to 10ms for MSFT devices
-
- drivers/pci/pci.c    |  8 ++++++--
- drivers/pci/pci.h    |  2 ++
  drivers/pci/quirks.c | 20 ++++++++++++++++++++
- include/linux/pci.h  |  1 +
- 4 files changed, 29 insertions(+), 2 deletions(-)
+ 1 file changed, 20 insertions(+)
 
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d7f4ee634263..d704606330bd 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -6335,3 +6335,23 @@ static void pci_mask_replay_timer_timeout(struct pci_dev *pdev)
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9750, pci_mask_replay_timer_timeout);
+ DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_GLI, 0x9755, pci_mask_replay_timer_timeout);
+ #endif
++
++#define MICROSOFT_2051_SVC 0xb210
++#define MICROSOFT_2051_MANA_MGMT 0x00b8
++#define MICROSOFT_2051_MANA_MGMT_GFT 0xb290
++
++/*
++ * For devices that don't require the full 100ms sleep
++ * after FLR and do not support immediate readiness or readiness
++ * time reporting
++ */
++static void pci_fixup_pci_flr_10msec(struct pci_dev *pdev)
++{
++	pdev->flr_delay = 10000;
++}
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSOFT, MICROSOFT_2051_SVC,
++	pci_fixup_pci_flr_10msec);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSOFT, MICROSOFT_2051_MANA_MGMT,
++	pci_fixup_pci_flr_10msec);
++DECLARE_PCI_FIXUP_FINAL(PCI_VENDOR_ID_MICROSOFT, MICROSOFT_2051_MANA_MGMT_GFT,
++	pci_fixup_pci_flr_10msec);
 -- 
 2.25.1
 
