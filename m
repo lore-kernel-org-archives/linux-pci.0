@@ -1,35 +1,35 @@
 Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D4D18B47D;
-	Fri, 13 Jun 2025 13:48:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D6AE19CD0B;
+	Fri, 13 Jun 2025 13:48:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749822537; cv=none; b=b7ZWgO/VEKXZuL4tLvb3As9gfMHiTIYt6qSWtdRyUjF1m3K+PXUG2UzEAjjCBuW7K+LN97bNOCL1h3E9hUAw/Ww3DooPQymjmR2Uf08byKXi2JhgZr2erjNYECadgU1lund3/bMy6614eTcwPy/pR2aczA3S7RI+TiH4Ok2nlHo=
+	t=1749822539; cv=none; b=e0cc4jLs7s+pBw4s3p1eYxJ5StdYoBbRnzpWDDpYXIKuOIcuHBEiDhDRaFyIxI4ma32jGSijYWpdLULdGsLfBj737BnC3TBb/Peq8wUQLZcG1PFH27+sJ9swmZnEzxysK6GTzHPS7cqWT2j8e5JpEN2e8NJPfp40LIr28t/TmVw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749822537; c=relaxed/simple;
-	bh=acJK564jLlF8sNd6C4IwTynCFobIGFDgJpWMoDEiVMU=;
+	s=arc-20240116; t=1749822539; c=relaxed/simple;
+	bh=NVER4HtZBVq3g1XAxNFzIag3WdbXkOjNf2ubft0lD4w=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=XE77DBG3Dr5kGU83BvigoBAJMeAYgDV11Iyi5kU0nYdece2+SLjpiz1GCfK0Xm/Sy5DI4sss4GZ8V8RIDZCXq3XhYpKXOBc3zZB0daUwfS/uygjWCAgMgkGVdDTyx4JJA4NPLbolAcZZ2Nj6qOeyqN9W+eHs7r5bcweEr/2nslU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=fUen3tKh; arc=none smtp.client-ip=217.70.183.199
+	 MIME-Version; b=IkXKT97oXOjehwGTUwpmFf0HkwgxmglfDGNybNxt8BQuCCW6L+EOnZoxw0djV3iihSZXQL9ahjNHDSgxMuFhvRxxeFwOG1dQtqUlU6607obxR0L7o2PhE1a6TPrr1D8yRzoaN3oTE2VVuv+KwndvpgAcgWSqFxASjjv1e5Cidls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=WN7asIzB; arc=none smtp.client-ip=217.70.183.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="fUen3tKh"
-Received: by mail.gandi.net (Postfix) with ESMTPA id AD0DD443AA;
-	Fri, 13 Jun 2025 13:48:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="WN7asIzB"
+Received: by mail.gandi.net (Postfix) with ESMTPA id 30A0F42E77;
+	Fri, 13 Jun 2025 13:48:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1749822527;
+	t=1749822534;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=rojaM8IKxNE0HNc3bXYtiBaq+3WL5n4QlsN0h/h4+Ag=;
-	b=fUen3tKhvrygho9OJprDGDelKug3icGKV5d9fmt3aZ1J8M903biOwsUsVcDxxrQ8+H+++k
-	qL5JyDYFz74DID66KA/s/4xpLhcav5UtQRu2XQAwK6Org9hgIC9SNLK4Gv5MAW+lzZMdxI
-	os2Ga/rQTjLYroh2hX+ctsQUHeTtwEShSNw2tJhA85dXKP+tyOIVPjXs3Rp8C/Y/8JU+CJ
-	jHK2qrqG8Rsw5PBm2x117qRa0EEX8AD5I0cvzeiPiBFu2y/xEQv4CJgqkwAryOigskxcdB
-	mvPdKzQb2anqd/19f+DMqzTKDltdL5jPAkFG6qcfK9C0hPKZ+O61FpiU1s/UsQ==
+	bh=Zi73o7nhI1WC2DkCllvWg4ecgcB270UmBhN9Ujfl6x8=;
+	b=WN7asIzBvwg0yi+qMYSziSSRMBFol91HuEQgKmHClBGYRbmZNu5LptYE836x0JvUel36zT
+	H2trTJAiZELDnYlYEFsr7p/t04S1CpirT+hrJ9QWomYA9aFfWGw/nDbqfNjh1UutBJ4hbU
+	0VM/C1legKyKGRHoVtO4Nn39u1ejYK89t7/xBJPVKdcJiKanwRONKtZuTf/eaVAew3CIf6
+	dkGaAQqT12xJBbfZTCATjBVl2NpJcMdEJQYGQEkxb3QFEB40a+8xTJoj9f8FZxzPuILDBu
+	hqTMquh/zZfDRbhmetRNPmTuofHMCGHw9RzSl/mQbl4gfrm+Z6nsdx2TExE6QQ==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Andrew Lunn <andrew@lunn.ch>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -80,9 +80,9 @@ Cc: Wolfram Sang <wsa@kernel.org>,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v3 01/28] Revert "treewide: Fix probing of devices in DT overlays"
-Date: Fri, 13 Jun 2025 15:47:41 +0200
-Message-ID: <20250613134817.681832-2-herve.codina@bootlin.com>
+Subject: [PATCH v3 04/28] driver core: Avoid warning when removing a device while its supplier is unbinding
+Date: Fri, 13 Jun 2025 15:47:44 +0200
+Message-ID: <20250613134817.681832-5-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250613134817.681832-1-herve.codina@bootlin.com>
 References: <20250613134817.681832-1-herve.codina@bootlin.com>
@@ -95,112 +95,104 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-GND-State: clean
 X-GND-Score: -100
-X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddugddukeduudcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomhepjfgvrhhvvgcuvehoughinhgruceohhgvrhhvvgdrtghoughinhgrsegsohhothhlihhnrdgtohhmqeenucggtffrrghtthgvrhhnpeelffduleduffelvdeiffettdffffejhefhieffleetjedtuefggffgffduffehgeenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeeltddrkeelrdduieefrdduvdejnecuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehinhgvthepledtrdekledrudeifedruddvjedphhgvlhhopehlohgtrghlhhhoshhtrdhlohgtrghlughomhgrihhnpdhmrghilhhfrhhomhephhgvrhhvvgdrtghoughinhgrsegsohhothhlihhnrdgtohhmpdhnsggprhgtphhtthhopeegledprhgtphhtthhopegrnhgurhgvfieslhhunhhnrdgthhdprhgtphhtthhopehgrhgvghhkhheslhhinhhugihfohhunhgurghtihhonhdrohhrghdprhgtphhtthhopehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggrkhhrsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehshhgrfihnghhuoheskhgvr
- hhnvghlrdhorhhgpdhrtghpthhtohepshdrhhgruhgvrhesphgvnhhguhhtrhhonhhigidruggvpdhrtghpthhtohepkhgvrhhnvghlsehpvghnghhuthhrohhnihigrdguvgdprhgtphhtthhopehfvghsthgvvhgrmhesghhmrghilhdrtghomh
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddugddukeduudcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomhepjfgvrhhvvgcuvehoughinhgruceohhgvrhhvvgdrtghoughinhgrsegsohhothhlihhnrdgtohhmqeenucggtffrrghtthgvrhhnpeehffeigfejueelueeuffelueefgfelhfejhfehieegudekteeiledttdfhffekffenucfkphepledtrdekledrudeifedruddvjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeeltddrkeelrdduieefrdduvdejpdhhvghloheplhhotggrlhhhohhsthdrlhhotggrlhguohhmrghinhdpmhgrihhlfhhrohhmpehhvghrvhgvrdgtohguihhnrgessghoohhtlhhinhdrtghomhdpnhgspghrtghpthhtohepgeelpdhrtghpthhtoheprghnughrvgifsehluhhnnhdrtghhpdhrtghpthhtohepghhrvghgkhhhsehlihhnuhigfhhouhhnuggrthhiohhnrdhorhhgpdhrtghpthhtoheprhgrfhgrvghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopegurghkrheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepshhhrgifnhhguhhosehkvghrnhgvlhdrohhrghdprhgtphhtthhopehsrdhhr
+ ghuvghrsehpvghnghhuthhrohhnihigrdguvgdprhgtphhtthhopehkvghrnhgvlhesphgvnhhguhhtrhhonhhigidruggvpdhrtghpthhtohepfhgvshhtvghvrghmsehgmhgrihhlrdgtohhm
 X-GND-Sasl: herve.codina@bootlin.com
 
-From: Saravana Kannan <saravanak@google.com>
+During driver removal, the following warning can appear:
+   WARNING: CPU: 1 PID: 139 at drivers/base/core.c:1497 __device_links_no_driver+0xcc/0xfc
+   ...
+   Call trace:
+     __device_links_no_driver+0xcc/0xfc (P)
+     device_links_driver_cleanup+0xa8/0xf0
+     device_release_driver_internal+0x208/0x23c
+     device_links_unbind_consumers+0xe0/0x108
+     device_release_driver_internal+0xec/0x23c
+     device_links_unbind_consumers+0xe0/0x108
+     device_release_driver_internal+0xec/0x23c
+     device_links_unbind_consumers+0xe0/0x108
+     device_release_driver_internal+0xec/0x23c
+     driver_detach+0xa0/0x12c
+     bus_remove_driver+0x6c/0xbc
+     driver_unregister+0x30/0x60
+     pci_unregister_driver+0x20/0x9c
+     lan966x_pci_driver_exit+0x18/0xa90 [lan966x_pci]
 
-This reverts commit 1a50d9403fb90cbe4dea0ec9fd0351d2ecbd8924.
+This warning is triggered when a consumer is removed because the links
+status of its supplier is not DL_DEV_DRIVER_BOUND and the link flag
+DL_FLAG_SYNC_STATE_ONLY is not set.
 
-While the commit fixed fw_devlink overlay handling for one case, it
-broke it for another case. So revert it and redo the fix in a separate
-patch.
+The topology in terms of consumers/suppliers used was the following
+(consumer ---> supplier):
 
-Fixes: 1a50d9403fb9 ("treewide: Fix probing of devices in DT overlays")
-Reported-by: Herve Codina <herve.codina@bootlin.com>
-Closes: https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgyo8x6=9F9rZ+-KzjOg@mail.gmail.com/
-Closes: https://lore.kernel.org/all/20240221095137.616d2aaa@bootlin.com/
-Closes: https://lore.kernel.org/lkml/20240312151835.29ef62a0@bootlin.com/
-Signed-off-by: Saravana Kannan <saravanak@google.com>
-Link: https://lore.kernel.org/lkml/20240411235623.1260061-2-saravanak@google.com/
+      i2c -----------> OIC ----> PCI device
+       |                ^
+       |                |
+       +---> pinctrl ---+
+
+When the PCI device is removed, the OIC (interrupt controller) has to be
+removed. In order to remove the OIC, pinctrl and i2c need to be removed
+and to remove pinctrl, i2c need to be removed. The removal order is:
+  1) i2c
+  2) pinctrl
+  3) OIC
+  4) PCI device
+
+In details, the removal sequence is the following (with 0000:01:00.0 the
+PCI device):
+  driver_detach: call device_release_driver_internal(0000:01:00.0)...
+    device_links_busy(0000:01:00.0):
+      links->status = DL_DEV_UNBINDING
+    device_links_unbind_consumers(0000:01:00.0):
+      0000:01:00.0--oic link->status = DL_STATE_SUPPLIER_UNBIND
+      call device_release_driver_internal(oic)...
+        device_links_busy(oic):
+          links->status = DL_DEV_UNBINDING
+        device_links_unbind_consumers(oic):
+          oic--pinctrl link->status = DL_STATE_SUPPLIER_UNBIND
+          call device_release_driver_internal(pinctrl)...
+            device_links_busy(pinctrl):
+              links->status = DL_DEV_UNBINDING
+            device_links_unbind_consumers(pinctrl):
+              pinctrl--i2c link->status = DL_STATE_SUPPLIER_UNBIND
+              call device_release_driver_internal(i2c)...
+                device_links_busy(i2c): links->status = DL_DEV_UNBINDING
+                __device_links_no_driver(i2c)...
+                  pinctrl--i2c link->status is DL_STATE_SUPPLIER_UNBIND
+                  oic--i2c link->status is DL_STATE_ACTIVE
+                  oic--i2c link->supplier->links.status is DL_DEV_UNBINDING
+
+The warning is triggered by the i2c removal because the OIC (supplier)
+links status is not DL_DEV_DRIVER_BOUND. Its links status is indeed set
+to DL_DEV_UNBINDING.
+
+It is perfectly legit to have the links status set to DL_DEV_UNBINDING
+in that case. Indeed we had started to unbind the OIC which triggered
+the consumer unbinding and didn't finish yet when the i2c is unbound.
+
+Avoid the warning when the supplier links status is set to
+DL_DEV_UNBINDING and thus support this removal sequence without any
+warnings.
+
 Signed-off-by: Herve Codina <herve.codina@bootlin.com>
-Acked-by: Mark Brown <broonie@kernel.org>
 ---
- drivers/bus/imx-weim.c    | 6 ------
- drivers/i2c/i2c-core-of.c | 5 -----
- drivers/of/dynamic.c      | 1 -
- drivers/of/platform.c     | 5 -----
- drivers/spi/spi.c         | 5 -----
- 5 files changed, 22 deletions(-)
+ drivers/base/core.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/bus/imx-weim.c b/drivers/bus/imx-weim.c
-index 83d623d97f5f..87070155b057 100644
---- a/drivers/bus/imx-weim.c
-+++ b/drivers/bus/imx-weim.c
-@@ -327,12 +327,6 @@ static int of_weim_notify(struct notifier_block *nb, unsigned long action,
- 				 "Failed to setup timing for '%pOF'\n", rd->dn);
- 
- 		if (!of_node_check_flag(rd->dn, OF_POPULATED)) {
--			/*
--			 * Clear the flag before adding the device so that
--			 * fw_devlink doesn't skip adding consumers to this
--			 * device.
--			 */
--			rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
- 			if (!of_platform_device_create(rd->dn, NULL, &pdev->dev)) {
- 				dev_err(&pdev->dev,
- 					"Failed to create child device '%pOF'\n",
-diff --git a/drivers/i2c/i2c-core-of.c b/drivers/i2c/i2c-core-of.c
-index eb7fb202355f..30b48a428c0b 100644
---- a/drivers/i2c/i2c-core-of.c
-+++ b/drivers/i2c/i2c-core-of.c
-@@ -176,11 +176,6 @@ static int of_i2c_notify(struct notifier_block *nb, unsigned long action,
- 			return NOTIFY_OK;
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 8fead097c404..ce367c44f642 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -1494,7 +1494,8 @@ static void __device_links_no_driver(struct device *dev)
+ 		if (link->supplier->links.status == DL_DEV_DRIVER_BOUND) {
+ 			WRITE_ONCE(link->status, DL_STATE_AVAILABLE);
+ 		} else {
+-			WARN_ON(!(link->flags & DL_FLAG_SYNC_STATE_ONLY));
++			WARN_ON(link->supplier->links.status != DL_DEV_UNBINDING &&
++				!(link->flags & DL_FLAG_SYNC_STATE_ONLY));
+ 			WRITE_ONCE(link->status, DL_STATE_DORMANT);
  		}
- 
--		/*
--		 * Clear the flag before adding the device so that fw_devlink
--		 * doesn't skip adding consumers to this device.
--		 */
--		rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
- 		client = of_i2c_register_device(adap, rd->dn);
- 		if (IS_ERR(client)) {
- 			dev_err(&adap->dev, "failed to create client for '%pOF'\n",
-diff --git a/drivers/of/dynamic.c b/drivers/of/dynamic.c
-index 0aba760f7577..6a117e1b6798 100644
---- a/drivers/of/dynamic.c
-+++ b/drivers/of/dynamic.c
-@@ -225,7 +225,6 @@ static void __of_attach_node(struct device_node *np)
- 	np->sibling = np->parent->child;
- 	np->parent->child = np;
- 	of_node_clear_flag(np, OF_DETACHED);
--	np->fwnode.flags |= FWNODE_FLAG_NOT_DEVICE;
- 
- 	raw_spin_unlock_irqrestore(&devtree_lock, flags);
- 
-diff --git a/drivers/of/platform.c b/drivers/of/platform.c
-index f77cb19973a5..ef9445ba168b 100644
---- a/drivers/of/platform.c
-+++ b/drivers/of/platform.c
-@@ -739,11 +739,6 @@ static int of_platform_notify(struct notifier_block *nb,
- 		if (of_node_check_flag(rd->dn, OF_POPULATED))
- 			return NOTIFY_OK;
- 
--		/*
--		 * Clear the flag before adding the device so that fw_devlink
--		 * doesn't skip adding consumers to this device.
--		 */
--		rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
- 		/* pdev_parent may be NULL when no bus platform device */
- 		pdev_parent = of_find_device_by_node(parent);
- 		pdev = of_platform_device_create(rd->dn, NULL,
-diff --git a/drivers/spi/spi.c b/drivers/spi/spi.c
-index 1bc0fdbb1bd7..f76b9ad1c63b 100644
---- a/drivers/spi/spi.c
-+++ b/drivers/spi/spi.c
-@@ -4803,11 +4803,6 @@ static int of_spi_notify(struct notifier_block *nb, unsigned long action,
- 			return NOTIFY_OK;
- 		}
- 
--		/*
--		 * Clear the flag before adding the device so that fw_devlink
--		 * doesn't skip adding consumers to this device.
--		 */
--		rd->dn->fwnode.flags &= ~FWNODE_FLAG_NOT_DEVICE;
- 		spi = of_register_spi_device(ctlr, rd->dn);
- 		put_device(&ctlr->dev);
- 
+ 	}
 -- 
 2.49.0
 
