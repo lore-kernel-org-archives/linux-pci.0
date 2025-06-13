@@ -1,33 +1,35 @@
 Received: from relay9-d.mail.gandi.net (relay9-d.mail.gandi.net [217.70.183.199])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 451B2433D9;
-	Fri, 13 Jun 2025 13:48:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA5C517A316;
+	Fri, 13 Jun 2025 13:48:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.199
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749822534; cv=none; b=ncgapRVih/s9c+D7wEmrkFaH9Qu36i5GdWdC4D4Bkogs8aFiouuit3ep1nE1F+hSKjjVA6rDKQcn5Eh2XbFkcNnV/cvdoXFIY24NStj6efcZeZpUOkj+uKUIHrMWhzT8OOXMysHHHWsY25q/S8V3qnYv5l3oXGTtSJsC1eP/Dp8=
+	t=1749822536; cv=none; b=WQ1T0MHY3MEKRRieWtAZ3r07Nq+29bvWSi5ePHHSftW/h0X0Ff5FkNb0dFtfUFwdOGPJobP8tqMmai0uqmXyTuL66w9hdbT1AAq5okoAvHJyaIYnIgLCf9AdTSl4fg8D3Zq6SGikzVvhyWmBSD8829EWDYh7ckkOBcef13FMbrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749822534; c=relaxed/simple;
-	bh=cVPZ9MNSBcXy4jY2V/QoJxE5TLvnGpX6HKiwhk0oZV4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=BlTDfJUTAvPTSRzk7JUX5yAUE8eWicpQ6TXQE7aQT21F1vSLbf7D2C1Cza44g+hqpsci/zRPfrTK353oYx+pknWpqXedMcQtDOgesENfdH1+PG24qs2FVWPR8L3TsOovwm0aKvExM5Rk7BT+CMIxQ0/Dw6a5sGVXDg0RH3kw0NE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=obRNE9xQ; arc=none smtp.client-ip=217.70.183.199
+	s=arc-20240116; t=1749822536; c=relaxed/simple;
+	bh=WFIQoIaBRMwwFscnm5nj6xKUyWj4M3lKPOqj2bpc9QA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=gsZS71YTxafS2bxzJusSpmRIzcjvh9kFSyb1+Zm/OnHW8H56XhFMycKZrBv9zfQcR4A5J/HlPhSdwHdP0hWXyD2Lcas4RdCW64LXPpMyN2FcS8ZPruNM/jMV9B0CuW/NBmfXjpDOz/QhmkVMtRCAw30Eb5NqrbSko8SUMvO8zvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=R6LtMfhu; arc=none smtp.client-ip=217.70.183.199
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="obRNE9xQ"
-Received: by mail.gandi.net (Postfix) with ESMTPA id 512A0442CB;
-	Fri, 13 Jun 2025 13:48:39 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="R6LtMfhu"
+Received: by mail.gandi.net (Postfix) with ESMTPA id ABF2A4429B;
+	Fri, 13 Jun 2025 13:48:49 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1749822524;
+	t=1749822532;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=33yjs+dpfUk1ix0GN1DhjOYzUP8SmbBqY7hoYQTXKkk=;
-	b=obRNE9xQdUOZJq0zBiVXDCjW6wNkOFyI8/Y/g0ox7Ng3c9P3FgfTsSA12K8SXy/Zc2LBE0
-	jbYJQrBVHb1a6IEtyUIiwKNH7dw2Ef1cljLBcZGkYIYJRSCV9px0NqMlWuk8x1318CO62L
-	SrhGQulxq7u+LlZPTAYFcZDj8pRISo2U5N4/fBrBCSesV57seIoaag87blM2D6z/9Dy7NE
-	TXOE6a8KB/AlH6NPL42YRAN8Zs4wh7dPxPjpydUb/jpm6hi9avedRky8Y+eJbPQRS9geKO
-	hSMHUTx3ghOzfmfM+N3RdxEf+CvRgj5cwIlF86x5zWwT0eaZ1TL8jJru2sI/Ig==
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GFTMXDUn21y3vxsHtiBx6w5cJwUbhZFNtQ07Lgh8WDo=;
+	b=R6LtMfhupaXgq/rbmA7cv4QFgjxryZkl4KljwGI+fgZMYsV8Naubke69GuTpOguA2gTfK3
+	NT7coZxHvqxv9mk++vgOLTd74uRsEZdUfOzVH3PJtVW470ebksHOqf6+xSyOzmed56ViKo
+	go38Wam7MZ4mFFpNAvv4qrQpRlkFfeULyvbz5ATTvS0DgHlOfYlKKQKK5QFolVag++c2Jg
+	AhlxfkHQhzkGAj9Gk7/GXWQQBIXzCSQ1Nc5/qiBggGii3zlZWp8PConqW51EFvKjmtFNEi
+	jOsB4UZE2AHiCi9u+DedMfy/uuIZbTtjBrybyv7sUoBGkw2pUZTsj7uLkoyotw==
 From: Herve Codina <herve.codina@bootlin.com>
 To: Andrew Lunn <andrew@lunn.ch>,
 	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
@@ -78,303 +80,204 @@ Cc: Wolfram Sang <wsa@kernel.org>,
 	Steen Hegelund <steen.hegelund@microchip.com>,
 	Luca Ceresoli <luca.ceresoli@bootlin.com>,
 	Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: [PATCH v3 00/28] lan966x pci device: Add support for SFPs
-Date: Fri, 13 Jun 2025 15:47:40 +0200
-Message-ID: <20250613134817.681832-1-herve.codina@bootlin.com>
+Subject: [PATCH v3 03/28] of: dynamic: Fix overlayed devices not probing because of fw_devlink
+Date: Fri, 13 Jun 2025 15:47:43 +0200
+Message-ID: <20250613134817.681832-4-herve.codina@bootlin.com>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250613134817.681832-1-herve.codina@bootlin.com>
+References: <20250613134817.681832-1-herve.codina@bootlin.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 X-GND-State: clean
 X-GND-Score: -100
-X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddugddukeduudcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofggtgfgsehtkeertdertdejnecuhfhrohhmpefjvghrvhgvucevohguihhnrgcuoehhvghrvhgvrdgtohguihhnrgessghoohhtlhhinhdrtghomheqnecuggftrfgrthhtvghrnhepleetudffledtvddtffegudfgjeffgeegkeehjeeigffgieevhfekffehheehieeunecuffhomhgrihhnpehkvghrnhgvlhdrohhrghenucfkphepledtrdekledrudeifedruddvjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeeltddrkeelrdduieefrdduvdejpdhhvghloheplhhotggrlhhhohhsthdrlhhotggrlhguohhmrghinhdpmhgrihhlfhhrohhmpehhvghrvhgvrdgtohguihhnrgessghoohhtlhhinhdrtghomhdpnhgspghrtghpthhtohepgeelpdhrtghpthhtoheprghnughrvgifsehluhhnnhdrtghhpdhrtghpthhtohepghhrvghgkhhhsehlihhnuhigfhhouhhnuggrthhiohhnrdhorhhgpdhrtghpthhtoheprhgrfhgrvghlsehkvghrnhgvlhdrohhrghdprhgtphhtthhopegurghkrheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepshhhrgifnhhguhhosehkvghrn
- hgvlhdrohhrghdprhgtphhtthhopehsrdhhrghuvghrsehpvghnghhuthhrohhnihigrdguvgdprhgtphhtthhopehkvghrnhgvlhesphgvnhhguhhtrhhonhhigidruggvpdhrtghpthhtohepfhgvshhtvghvrghmsehgmhgrihhlrdgtohhm
+X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddugddukeduudcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomhepjfgvrhhvvgcuvehoughinhgruceohhgvrhhvvgdrtghoughinhgrsegsohhothhlihhnrdgtohhmqeenucggtffrrghtthgvrhhnpeelffduleduffelvdeiffettdffffejhefhieffleetjedtuefggffgffduffehgeenucffohhmrghinhepkhgvrhhnvghlrdhorhhgnecukfhppeeltddrkeelrdduieefrdduvdejnecuvehluhhsthgvrhfuihiivgepvdenucfrrghrrghmpehinhgvthepledtrdekledrudeifedruddvjedphhgvlhhopehlohgtrghlhhhoshhtrdhlohgtrghlughomhgrihhnpdhmrghilhhfrhhomhephhgvrhhvvgdrtghoughinhgrsegsohhothhlihhnrdgtohhmpdhnsggprhgtphhtthhopeegledprhgtphhtthhopegrnhgurhgvfieslhhunhhnrdgthhdprhgtphhtthhopehgrhgvghhkhheslhhinhhugihfohhunhgurghtihhonhdrohhrghdprhgtphhtthhopehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggrkhhrsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehshhgrfihnghhuoheskhgvr
+ hhnvghlrdhorhhgpdhrtghpthhtohepshdrhhgruhgvrhesphgvnhhguhhtrhhonhhigidruggvpdhrtghpthhtohepkhgvrhhnvghlsehpvghnghhuthhrohhnihigrdguvgdprhgtphhtthhopehfvghsthgvvhgrmhesghhmrghilhdrtghomh
 X-GND-Sasl: herve.codina@bootlin.com
 
-Hi,
+From: Saravana Kannan <saravanak@google.com>
 
-This series add support for SFPs ports available on the LAN966x PCI
-device. In order to have the SFPs supported, additional devices are
-needed such as clock controller and I2C.
+When an overlay is applied, if the target device has already probed
+successfully and bound to a device, then some of the fw_devlink logic
+that ran when the device was probed needs to be rerun. This allows newly
+created dangling consumers of the overlayed device tree nodes to be
+moved to become consumers of the target device.
 
-As a reminder, the LAN966x PCI device driver use a device-tree overlay
-to describe devices available on the PCI board. Adding support for SFPs
-ports consists in adding more devices in the already existing
-device-tree overlay.
+Fixes: 1a50d9403fb9 ("treewide: Fix probing of devices in DT overlays")
+Reported-by: Herve Codina <herve.codina@bootlin.com>
+Closes: https://lore.kernel.org/lkml/CAMuHMdXEnSD4rRJ-o90x4OprUacN_rJgyo8x6=9F9rZ+-KzjOg@mail.gmail.com/
+Closes: https://lore.kernel.org/all/20240221095137.616d2aaa@bootlin.com/
+Closes: https://lore.kernel.org/lkml/20240312151835.29ef62a0@bootlin.com/
+Signed-off-by: Saravana Kannan <saravanak@google.com>
+Link: https://lore.kernel.org/lkml/20240411235623.1260061-3-saravanak@google.com/
+[Herve: Rebase on top of recent kernel and use get_device_from_fwnode()]
+Signed-off-by: Herve Codina <herve.codina@bootlin.com>
+---
+ drivers/base/core.c    | 78 ++++++++++++++++++++++++++++++++++++------
+ drivers/of/overlay.c   | 15 ++++++++
+ include/linux/fwnode.h |  1 +
+ 3 files changed, 83 insertions(+), 11 deletions(-)
 
-With those devices added, the device-tree overlay is more complex and
-some consumer/supplier relationship are needed in order to remove
-devices in correct order when the LAN966x PCI driver is removed.
-
-Those links are typically provided by fw_devlink and we faced some
-issues with fw_devlink and overlays.
-
-This series gives the big picture related to the SFPs support from
-fixing issues to adding new devices. Of course, it can be split if
-needed.
-
-The first part of the series (patch 1, 2 and 3) fixes fw_devlink when it
-is used with overlay. Patches 1 and 3 were previously sent by Saravana
-[0]. I just rebased them on top of v6.15-rc1 and added patch 2 in order
-to take into account feedback received on the series sent by Saravana.
-
-Those modification were not sufficient in our case and so, on top of
-that, patch 4 and 5 fix some more issues related to fw_devlink.
-
-Patches 6 to 12 introduce and use fw_devlink_set_device() in already
-existing code.
-
-Patches 13 and 14 are related also to fw_devlink but specific to PCI and
-the device-tree nodes created during enumeration.
-
-Patches 15, 15 and 17 are related fw_devlink too but specific to I2C
-muxes. Patches purpose is to correctly set a link between an adapter
-supplier and its consumer. Indeed, an i2c mux adapter's parent is not
-the i2c mux supplier but the adapter the i2c mux is connected to. Adding
-a new link between the adapter supplier involved when i2c muxes are used
-avoid a freeze observed during device removal.
-
-Patch 18 adds support for fw_delink on x86. fw_devlink is needed to have
-the consumer/supplier relationship between devices in order to ensure a
-correct device removal order. Adding fw_devlink support for x86 has been
-tried in the past but was reverted [1] because it broke some systems.
-Instead of enabling fw_devlink on *all* x86 system or on *all* x86
-system except on those where it leads to issue, enable it only on system
-where it is needed.
-
-Patches 19 and 20 allow to build clock and i2c controller used by the
-LAN966x PCI device when the LAN966x PCI device is enabled.
-
-Patches 21 to 25 are specific to the LAN966x. They touch the current
-dtso, split it in dtsi/dtso files, rename the dtso and improve the
-driver to allow easier support for other boards.
-
-The next patch (patch 26) update the LAN966x device-tree overlay itself
-to have the SPF ports and devices they depends on described.
-
-The last two patches (patches 27 and 28) sort the existing drivers in
-the needed driver list available in the Kconfig help and add new drivers
-in this list keep the list up to date with the devices described in the
-device-tree overlay.
-
-Once again, this series gives the big picture and can be split if
-needed. Let me know.
-
-[0] https://lore.kernel.org/lkml/20240411235623.1260061-1-saravanak@google.com/
-[1] https://lore.kernel.org/lkml/3c1f2473-92ad-bfc4-258e-a5a08ad73dd0@web.de/
-
-Compare to previous iteration, this v3 series mainly:
- - Rebase of top of v6.16-rc1
- - Fix typos
- - Improve code and add a missing check
- - Add 'Acked-by' and 'Reviewed-by' tags
-
-Best regards,
-Hervé
-
-Changes:
-
-v2 -> v3
-  v2: https://lore.kernel.org/all/20250507071315.394857-1-herve.codina@bootlin.com/
-
-  - Patch 1:
-    Add 'Acked-by: Mark Brown'
-
-  - Patch 2 and 3:
-    No changes
-
-  - Patch 4:
-    Rewrite the WARN_ON() condition to avoid an additional 'if'
-
-  - Patch 5:
-    Fix typos in commit log
-    Update a comment
-    Remove the unneeded check before calling of_platform_depopulate()
-
-  - Patches 6 to 11:
-    No changes
-
-  - Patch 12 (new in v3)
-    Tag the fwnode dev member as private
-
-  - Patch 13 (12 in v2)
-    Fix a typo in the commit log
-
-  - Patches 14 to 16 (13 to 15 in v2)
-    No changes
-
-  - Patch 17 (16 in v2)
-    Check parent_physdev for NULL
-
-  - Patch 18 (17 in v2)
-    Capitalize "Link:"
-    Add 'Reviewed-by: Andy Shevchenko'
-
-  - Patch 19 (18 in v2)
-    No changes
-
-  - Patch 20 (19 in v2)
-    Add 'Acked-by: Andi Shyti'
-
-  - Patch 21 (20 in v2)
-    No changes
-
-  - Patch 22 (21 in v2)
-    Add 'Reviewed-by: Andrew Lunn'
-
-  - Patch 23 (22 in v2)
-    Add 'Reviewed-by: Andrew Lunn'
-
-  - Patch 24 (new in v3)
-    Introduce PCI_DEVICE_ID_EFAR_LAN9662, the LAN966x PCI device ID
-
-  - Patch 25 (23 in v2)
-    Add 'Reviewed-by: Andrew Lunn'
-    Use PCI_DEVICE_DATA() with PCI_DEVICE_ID_EFAR_LAN9662 instead of
-    PCI_VDEVICE()
-
-  - Patch 26 to 28 (24 to 26 in v2)
-    No changes
-
-v1 -> v2
-  v1: https://lore.kernel.org/lkml/20250407145546.270683-1-herve.codina@bootlin.com/
-
-  - Patch 1 and 3
-    Remove 'From' tag from the commit log
-
-  - Patch 2
-    Add 'Reviewed-by: Andy Shevchenko'
-    Add 'Reviewed-by: Saravana Kannan'
-    Add 'Reviewed-by: Luca Ceresoli'
-
-  - Patch 4 and 5
-    No changes
-
-  - Patch 6 (new in v2)
-    Introduce fw_devlink_set_device()
-
-  - Patch 7 (new in v2)
-    Use existing device_set_node() helper.
-
-  - Patch 8 to 11 (new in v2)
-    Use fw_devlink_set_device() in existing code.
-
-  - Patch 12 (6 in v1)
-    Use fw_devlink_add_device()
-
-  - Patch 13 (7 in v1)
-    No changes
-
-  - Patch 14 (8 in v1)
-    Update commit log
-    Use 'physdev' instead of 'supplier'
-    Minor fixes in i2c_get_adapter_physdev() kdoc
-
-  - Patch 15 and 16 (9 and 10 in v1)
-    Use 'physdev' instead of 'supplier' (commit log, title and code)
-
-  - Patch 17 (11 in v2)
-    Enable fw_devlink on x86 only if PCI_DYNAMIC_OF_NODES is enabled.
-    Rework commit log.
-
-  - Patch 18, 19 and 20 (12, 13 and 14 in v1)
-    No changes
-
-  - Patch 21 (new in v2)
-    Split dtso in dtsi/dtso
-
-  - Patch 22 (new in v2)
-    Rename lan966x_pci.dtso using the specific board name
-
-  - Patch 23 (new in v2)
-    Improve the driver introducing board specific data to ease support
-    for other boards (avoid the direct dtbo reference in the function
-    loading the dtbo).
-
-  - Patch 24 (15 in v1)
-    Refactor due to dtso split in dtsi/dtso
-
-  - Patch 25 (new in v2)
-    Sort exist driver list in Kconfig help
-
-  - Patch 26 (16 in v1)
-    Keep alphanumeric order for new drivers added in Kconfig help
-
-Herve Codina (26):
-  driver core: Rename get_dev_from_fwnode() wrapper to
-    get_device_from_fwnode()
-  driver core: Avoid warning when removing a device while its supplier
-    is unbinding
-  bus: simple-pm-bus: Populate child nodes at probe
-  driver core: fw_devlink: Introduce fw_devlink_set_device()
-  drivers: core: Use fw_devlink_set_device()
-  pinctrl: cs42l43: Use fw_devlink_set_device()
-  cxl/test: Use device_set_node()
-  cxl/test: Use fw_devlink_set_device()
-  PCI: of: Use fw_devlink_set_device()
-  driver core: fw_devlink: Tag the fwnode dev member as private
-  PCI: of: Set fwnode device of newly created PCI device nodes
-  PCI: of: Remove fwnode_dev_initialized() call for a PCI root bridge
-    node
-  i2c: core: Introduce i2c_get_adapter_physdev()
-  i2c: mux: Set adapter physical device
-  i2c: mux: Create missing devlink between mux and adapter physical
-    device
-  of: property: Allow fw_devlink device-tree on x86 when PCI device-tree
-    node creation is enabled
-  clk: lan966x: Add MCHP_LAN966X_PCI dependency
-  i2c: busses: at91: Add MCHP_LAN966X_PCI dependency
-  misc: lan966x_pci: Fix dtso nodes ordering
-  misc: lan966x_pci: Split dtso in dtsi/dtso
-  misc: lan966x_pci: Rename lan966x_pci.dtso to
-    lan966x_evb_lan9662_nic.dtso
-  PCI: Add Microchip LAN9662 PCI Device ID
-  misc: lan966x_pci: Introduce board specific data
-  misc: lan966x_pci: Add dtsi/dtso nodes in order to support SFPs
-  misc: lan966x_pci: Sort the drivers list in Kconfig help
-  misc: lan966x_pci: Add drivers needed to support SFPs in Kconfig help
-
-Saravana Kannan (2):
-  Revert "treewide: Fix probing of devices in DT overlays"
-  of: dynamic: Fix overlayed devices not probing because of fw_devlink
-
- MAINTAINERS                               |   3 +-
- drivers/base/core.c                       |  97 +++++++++---
- drivers/bus/imx-weim.c                    |   6 -
- drivers/bus/simple-pm-bus.c               |  23 +--
- drivers/clk/Kconfig                       |   2 +-
- drivers/i2c/busses/Kconfig                |   2 +-
- drivers/i2c/i2c-core-base.c               |  16 ++
- drivers/i2c/i2c-core-of.c                 |   5 -
- drivers/i2c/i2c-mux.c                     |  26 ++++
- drivers/misc/Kconfig                      |  11 +-
- drivers/misc/Makefile                     |   2 +-
- drivers/misc/lan966x_evb_lan9662_nic.dtso | 167 ++++++++++++++++++++
- drivers/misc/lan966x_pci.c                |  30 +++-
- drivers/misc/lan966x_pci.dtsi             | 172 +++++++++++++++++++++
- drivers/misc/lan966x_pci.dtso             | 177 ----------------------
- drivers/of/dynamic.c                      |   1 -
- drivers/of/overlay.c                      |  15 ++
- drivers/of/platform.c                     |   5 -
- drivers/of/property.c                     |   2 +-
- drivers/pci/of.c                          |  10 +-
- drivers/pci/quirks.c                      |   2 +-
- drivers/pinctrl/cirrus/pinctrl-cs42l43.c  |   2 +-
- drivers/spi/spi.c                         |   5 -
- include/linux/fwnode.h                    |   9 +-
- include/linux/i2c.h                       |   3 +
- include/linux/pci_ids.h                   |   1 +
- tools/testing/cxl/test/cxl.c              |   4 +-
- 27 files changed, 547 insertions(+), 251 deletions(-)
- create mode 100644 drivers/misc/lan966x_evb_lan9662_nic.dtso
- create mode 100644 drivers/misc/lan966x_pci.dtsi
- delete mode 100644 drivers/misc/lan966x_pci.dtso
-
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 36ccee91ba9a..8fead097c404 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -47,6 +47,8 @@ static bool fw_devlink_drv_reg_done;
+ static bool fw_devlink_best_effort;
+ static struct workqueue_struct *device_link_wq;
+ 
++#define get_device_from_fwnode(fwnode)	get_device((fwnode)->dev)
++
+ /**
+  * __fwnode_link_add - Create a link between two fwnode_handles.
+  * @con: Consumer end of the link.
+@@ -235,6 +237,70 @@ static void __fw_devlink_pickup_dangling_consumers(struct fwnode_handle *fwnode,
+ 		__fw_devlink_pickup_dangling_consumers(child, new_sup);
+ }
+ 
++static void fw_devlink_pickup_dangling_consumers(struct device *dev)
++{
++	struct fwnode_handle *child;
++
++	guard(mutex)(&fwnode_link_lock);
++
++	fwnode_for_each_available_child_node(dev->fwnode, child)
++		__fw_devlink_pickup_dangling_consumers(child, dev->fwnode);
++	__fw_devlink_link_to_consumers(dev);
++}
++
++/**
++ * fw_devlink_refresh_fwnode - Recheck the tree under this firmware node
++ * @fwnode: The fwnode under which the fwnode tree has changed
++ *
++ * This function is mainly meant to adjust the supplier/consumer dependencies
++ * after a fwnode tree overlay has occurred.
++ */
++void fw_devlink_refresh_fwnode(struct fwnode_handle *fwnode)
++{
++	struct device *dev;
++
++	/*
++	 * Find the closest ancestor fwnode that has been converted to a device
++	 * that can bind to a driver (bus device).
++	 */
++	fwnode_handle_get(fwnode);
++	do {
++		if (fwnode->flags & FWNODE_FLAG_NOT_DEVICE)
++			continue;
++
++		dev = get_device_from_fwnode(fwnode);
++		if (!dev)
++			continue;
++
++		if (dev->bus)
++			break;
++
++		put_device(dev);
++	} while ((fwnode = fwnode_get_next_parent(fwnode)));
++
++	/*
++	 * If none of the ancestor fwnodes have (yet) been converted to a device
++	 * that can bind to a driver, there's nothing to fix up.
++	 */
++	if (!fwnode)
++		return;
++
++	WARN(device_is_bound(dev) && dev->links.status != DL_DEV_DRIVER_BOUND,
++	     "Don't multithread overlaying and probing the same device!\n");
++
++	/*
++	 * If the device has already bound to a driver, then we need to redo
++	 * some of the work that was done after the device was bound to a
++	 * driver. If the device hasn't bound to a driver, running thing too
++	 * soon would incorrectly pick up consumers that it shouldn't.
++	 */
++	if (dev->links.status == DL_DEV_DRIVER_BOUND)
++		fw_devlink_pickup_dangling_consumers(dev);
++
++	put_device(dev);
++	fwnode_handle_put(fwnode);
++}
++
+ static DEFINE_MUTEX(device_links_lock);
+ DEFINE_STATIC_SRCU(device_links_srcu);
+ 
+@@ -1313,16 +1379,8 @@ void device_links_driver_bound(struct device *dev)
+ 	 * child firmware node.
+ 	 */
+ 	if (dev->fwnode && dev->fwnode->dev == dev) {
+-		struct fwnode_handle *child;
+-
+ 		fwnode_links_purge_suppliers(dev->fwnode);
+-
+-		guard(mutex)(&fwnode_link_lock);
+-
+-		fwnode_for_each_available_child_node(dev->fwnode, child)
+-			__fw_devlink_pickup_dangling_consumers(child,
+-							       dev->fwnode);
+-		__fw_devlink_link_to_consumers(dev);
++		fw_devlink_pickup_dangling_consumers(dev);
+ 	}
+ 	device_remove_file(dev, &dev_attr_waiting_for_supplier);
+ 
+@@ -1881,8 +1939,6 @@ static void fw_devlink_unblock_consumers(struct device *dev)
+ 	device_links_write_unlock();
+ }
+ 
+-#define get_device_from_fwnode(fwnode)	get_device((fwnode)->dev)
+-
+ static bool fwnode_init_without_drv(struct fwnode_handle *fwnode)
+ {
+ 	struct device *dev;
+diff --git a/drivers/of/overlay.c b/drivers/of/overlay.c
+index 1af6f52d0708..6bd93153d695 100644
+--- a/drivers/of/overlay.c
++++ b/drivers/of/overlay.c
+@@ -185,6 +185,15 @@ static int overlay_notify(struct overlay_changeset *ovcs,
+ 	return 0;
+ }
+ 
++static void overlay_fw_devlink_refresh(struct overlay_changeset *ovcs)
++{
++	for (int i = 0; i < ovcs->count; i++) {
++		struct device_node *np = ovcs->fragments[i].target;
++
++		fw_devlink_refresh_fwnode(of_fwnode_handle(np));
++	}
++}
++
+ /*
+  * The values of properties in the "/__symbols__" node are paths in
+  * the ovcs->overlay_root.  When duplicating the properties, the paths
+@@ -951,6 +960,12 @@ static int of_overlay_apply(struct overlay_changeset *ovcs,
+ 		pr_err("overlay apply changeset entry notify error %d\n", ret);
+ 	/* notify failure is not fatal, continue */
+ 
++	/*
++	 * Needs to happen after changeset notify to give the listeners a chance
++	 * to finish creating all the devices they need to create.
++	 */
++	overlay_fw_devlink_refresh(ovcs);
++
+ 	ret_tmp = overlay_notify(ovcs, OF_OVERLAY_POST_APPLY);
+ 	if (ret_tmp)
+ 		if (!ret)
+diff --git a/include/linux/fwnode.h b/include/linux/fwnode.h
+index 097be89487bf..a921ca2fe940 100644
+--- a/include/linux/fwnode.h
++++ b/include/linux/fwnode.h
+@@ -228,6 +228,7 @@ int fwnode_link_add(struct fwnode_handle *con, struct fwnode_handle *sup,
+ 		    u8 flags);
+ void fwnode_links_purge(struct fwnode_handle *fwnode);
+ void fw_devlink_purge_absent_suppliers(struct fwnode_handle *fwnode);
++void fw_devlink_refresh_fwnode(struct fwnode_handle *fwnode);
+ bool fw_devlink_is_strict(void);
+ 
+ #endif
 -- 
 2.49.0
 
