@@ -1,113 +1,149 @@
 Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 83B0B2EE99E;
-	Wed, 18 Jun 2025 15:20:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 97F732EF2A8;
+	Wed, 18 Jun 2025 15:21:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750260032; cv=none; b=iXg9vGBqM1u5d4U7JY3kfikOFrGfVLBdcZBWCWg7TJJiHI0fqM7EILOOZQ+81ST/VOdppnxTOXoLKR6CEP1Q3/+q5X55z6xD6QKE3KBOgRNDkBJRxvv5HfIt+eedIWZ1zcqD6UI3T4dBU/L67PNEOZnrzBL0duPJmLhjuu0PITE=
+	t=1750260090; cv=none; b=O0ohUezQ11UhtMMM7+PUy+9R0prQ63Lakp/p7pVYmL2A9bCv0XpemhTMnEI/pIAIIl7IxoAuy6ICrrqRyyzRq3R5wWksdNS++XG8hOSoqT3Y2dpCu+XnXKRJaFpfxkxUgzuzyj72n3UxRJMwyx1elKybzG4ZZpZwrfaDJIqHsjY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750260032; c=relaxed/simple;
-	bh=dBMetiDqRwuA7EYSG1BxFLtDf2bO5RsAThvIYbtXxoU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=kQPSK16OkKgY2aj72H/EiZ77kUXn1cM+LBl3XLuhlY5fQEbOdDOu5OT22AvhSlX6vHSlh19E+3VifgSCgzKAqvaxOvCtZmca8TKJirXcHz4yZy/YXhJK6AiHIid8bdtFewhFnGeviCiVdyZV+zb2CQhsqX4Er2e3jXQeKeT7Kyg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=qJOXrnFW; arc=none smtp.client-ip=117.135.210.3
+	s=arc-20240116; t=1750260090; c=relaxed/simple;
+	bh=pI0l0YSyaG+iu/wKlfA/GQax2jc8og3id13WIdSvnbE=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=nAoBO81gLLenz42m5asHrsGgGA+WA/3vsbeKIoZymNimesXZNtqUJo+Lyk6hYjb6gRcQH2hQ+wkcvA0UoFEn/LL1iaN8Uth4ZoY+MLMZlJiKtV3DSCg7bYUbf982cow+szhY7U/ebPQmt4JYZTY2kSLBSWOyZByPcsUugs9Z/co=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=dyU2Y7LB; arc=none smtp.client-ip=117.135.210.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="qJOXrnFW"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="dyU2Y7LB"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=eZXPwb9W2kal/+I9MYTP/YSPhsVDBv6emckwljPlJ/g=;
-	b=qJOXrnFW88lIR1+4/5aE//cQL5bJBvIeY0OkeSwSsC/soyYMWhZdNXghqZnTPv
-	ipJFgM13II3OATtyQxGgHvT+rdM/EdmJCIvrYuRw/uzXsAQYSGOwiDvewqgAvga6
-	hlFwHrYIC7TfAvEwx9QGfNmGoGvRZuyg13dvKQnnZcsZM=
-Received: from [IPV6:240e:b8f:919b:3100:8440:da7c:be7e:927f] (unknown [])
-	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDnT_IR2VJooCEIAQ--.14627S2;
-	Wed, 18 Jun 2025 23:19:46 +0800 (CST)
-Message-ID: <927e3030-756c-4b1b-a797-5f556ba2b101@163.com>
-Date: Wed, 18 Jun 2025 23:19:45 +0800
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=7u
+	2cvwu+TRfW10klrZP0lybKTwAtimvuf2CQdNrVCxs=; b=dyU2Y7LBrkjatMe1yO
+	+t+RC+U551wyuXp2uUgZJjiR/ZJiwxbSK5+P/FrnjivduHypRF4YEyerWvABHNbC
+	Jo+skDeK+Fopf72tgPpKWZAS/o2jWPjb4jocKi9HVc2PvQB1WNA/Cl/YUu3hmGR5
+	m5WKPSylYf0LEXofQGNJZ2ROk=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wDHoedq2VJo3qQFAQ--.15407S6;
+	Wed, 18 Jun 2025 23:21:17 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	bhelgaas@google.com,
+	mani@kernel.org,
+	kwilczynski@kernel.org
+Cc: robh@kernel.org,
+	jingoohan1@gmail.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v2 04/13] PCI: imx6: Refactor code by using dw_pcie_clear_and_set_dword()
+Date: Wed, 18 Jun 2025 23:21:03 +0800
+Message-Id: <20250618152112.1010147-5-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250618152112.1010147-1-18255117159@163.com>
+References: <20250618152112.1010147-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/13] PCI: dwc: Refactor register access with
- dw_pcie_clear_and_set_dword helper
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, lpieralisi@kernel.org,
- bhelgaas@google.com, mani@kernel.org, kwilczynski@kernel.org,
- robh@kernel.org, jingoohan1@gmail.com, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250611204011.GA868320@bhelgaas>
- <c31c3834-247d-4a28-bd2c-4a39ea719625@163.com> <aFLTwWG5lOTunEq3@ryzen>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <aFLTwWG5lOTunEq3@ryzen>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_____wDnT_IR2VJooCEIAQ--.14627S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WFy7Ar1rKw4xXrWrJw1DJrb_yoW8Zry5pa
-	yYqa1Yka1DJFWUKF4Iyw15ZFyjq3s3t3sIqrn8J34Utrn8ZrWYgr9ayF4jkr97GrnI9w4a
-	v3yYqas5Ca4YyaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07UrnYwUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwlwo2hS1QJYCQAFs4
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDHoedq2VJo3qQFAQ--.15407S6
+X-Coremail-Antispam: 1Uf129KBjvJXoWxJw4UCFyxtw18XF48Xr1fZwb_yoWrGFykpa
+	y2vrnakF48JF4F9w4vya95XF13t3Z3CF4UGanrKwnaqFy2kr9rtayjy34ftFs7GFWjvryj
+	9w18tw47J3WYyF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pEfM3_UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxdwo2hS1CaCDAABsA
 
+i.MX6 PCIe driver contains multiple read-modify-write sequences for
+link training and speed configuration. These operations manually handle
+bit masking and shifting to update specific fields in control registers,
+particularly for link capabilities and speed change initiation.
 
+Refactor link capability configuration and speed change handling using
+dw_pcie_clear_and_set_dword(). The helper simplifies LNKCAP modification
+by encapsulating bit clear/set operations and eliminates intermediate
+variables. For speed change control, replace explicit bit manipulation
+with direct register updates through the helper.
 
-On 2025/6/18 22:57, Niklas Cassel wrote:
-> Hello Hans,
-> 
-> On Thu, Jun 12, 2025 at 09:07:40AM +0800, Hans Zhang wrote:
->>
->>
->> On 2025/6/12 04:40, Bjorn Helgaas wrote:
->>> On Thu, Jun 12, 2025 at 12:30:47AM +0800, Hans Zhang wrote:
->>>> Register bit manipulation in DesignWare PCIe controllers currently
->>>> uses repetitive read-modify-write sequences across multiple drivers.
->>>> This pattern leads to code duplication and increases maintenance
->>>> complexity as each driver implements similar logic with minor variations.
->>>
->>> When you repost this, can you fix whatever is keeping this series from
->>> being threaded?  All the patches should be responses to the 00/13
->>> cover letter.  Don't repost until at least a couple of days have
->>> elapsed and you make non-trivial changes.
->>>
->>
->> Dear Bjorn,
->>
->> Every time I send an email to the PCI main list, I will send it to myself
->> first, but I have encountered the following problems:
->> Whether I send my personal 163 email, Outlook email, or my company's cixtech
->> email, only 10 patches can be sent. So in the end, I sent each patch
->> separately.
->>
->> This is the first time I have sent an email with a series of more than 10
->> patches. My configuration is as follows:
->> smtpserver = smtp.163.com
->> smtpserverport = 25
->> smtpenablestarttlsauto = true
->> smtpuser = 18255117159@163.com
->> smtppass = xxx
->>
->> I suspect it's a problem with China's 163 email. Next, I will try to send it
->> using the company's environment. Or when I send this series of patches next
->> time, I will paste the web link address of each patch in by replying
->> 0000-cover-letter.patch.
-> 
-> Perhaps the git-send-email options --batch-size and --relogin-delay can be
-> of help to you:
-> https://git-scm.com/docs/git-send-email#Documentation/git-send-email.txt---batch-sizenum
-> 
-> 
+Adopting the standard interface reduces code complexity in link training
+paths and ensures consistent handling of speed-related bits. The change
+also prepares the driver for future enhancements to Gen3 link training
+by centralizing bit manipulation logic.
 
-Dear Niklas,
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 26 ++++++++++----------------
+ 1 file changed, 10 insertions(+), 16 deletions(-)
 
-Wow! Thank you very much for your help. My local test is normal.
-
-Best regards,
-Hans
-
-> Kind regards,
-> Niklas
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 5a38cfaf989b..3004e432f013 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -941,7 +941,6 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
+ 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
+ 	struct device *dev = pci->dev;
+ 	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+-	u32 tmp;
+ 	int ret;
+ 
+ 	if (!(imx_pcie->drvdata->flags &
+@@ -956,10 +955,9 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
+ 	 * bus will not be detected at all.  This happens with PCIe switches.
+ 	 */
+ 	dw_pcie_dbi_ro_wr_en(pci);
+-	tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+-	tmp &= ~PCI_EXP_LNKCAP_SLS;
+-	tmp |= PCI_EXP_LNKCAP_SLS_2_5GB;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, tmp);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_LNKCAP,
++				    PCI_EXP_LNKCAP_SLS,
++				    PCI_EXP_LNKCAP_SLS_2_5GB);
+ 	dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 	/* Start LTSSM. */
+@@ -972,18 +970,16 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
+ 
+ 		/* Allow faster modes after the link is up */
+ 		dw_pcie_dbi_ro_wr_en(pci);
+-		tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
+-		tmp &= ~PCI_EXP_LNKCAP_SLS;
+-		tmp |= pci->max_link_speed;
+-		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, tmp);
++		dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_LNKCAP,
++					    PCI_EXP_LNKCAP_SLS,
++					    pci->max_link_speed);
+ 
+ 		/*
+ 		 * Start Directed Speed Change so the best possible
+ 		 * speed both link partners support can be negotiated.
+ 		 */
+-		tmp = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
+-		tmp |= PORT_LOGIC_SPEED_CHANGE;
+-		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
++		dw_pcie_clear_and_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
++					    0, PORT_LOGIC_SPEED_CHANGE);
+ 		dw_pcie_dbi_ro_wr_dis(pci);
+ 
+ 		ret = imx_pcie_wait_for_speed_change(imx_pcie);
+@@ -1295,7 +1291,6 @@ static void imx_pcie_host_post_init(struct dw_pcie_rp *pp)
+ {
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
+-	u32 val;
+ 
+ 	if (imx_pcie->drvdata->flags & IMX_PCIE_FLAG_8GT_ECN_ERR051586) {
+ 		/*
+@@ -1310,9 +1305,8 @@ static void imx_pcie_host_post_init(struct dw_pcie_rp *pp)
+ 		 * to 0.
+ 		 */
+ 		dw_pcie_dbi_ro_wr_en(pci);
+-		val = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
+-		val &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
+-		dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, val);
++		dw_pcie_clear_and_set_dword(pci, GEN3_RELATED_OFF,
++					    GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL, 0);
+ 		dw_pcie_dbi_ro_wr_dis(pci);
+ 	}
+ }
+-- 
+2.25.1
 
