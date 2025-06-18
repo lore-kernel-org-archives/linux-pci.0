@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id AB8AE2EFDA8;
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 295622EFDB7;
 	Wed, 18 Jun 2025 15:21:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750260105; cv=none; b=hvAnf9CwvSNYPD6ObwirapklMLZbV+gL4p6h4AugeVaC53AfR/0lraKo3qoDagz9vdehnyHlCdZTV4xTihGMIjiSWnFs7ZPxNAP9uhJ0sMJMF8LYwY5JRnb74U+JGo4Y8pInXlgb7hGo1uSQal+ePJdtzsODVXpTChqY7M5SO5U=
+	t=1750260105; cv=none; b=ClW7oLQyDwaDWUZwKfcbNoIZloH5ey/+7+UVd1WWU3uyPg2RuJP7l7qKUtiFZSEJvCRBY8+UMTX4pSWpj/e2a3SwK7yrJjqF0UzOve5dvaOZ49aGDZDCGeKnNKgoG3d0Gw/7gK6i6cm6bjfjTGqfav/+Drv2ekwUnFVdoilQmBw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1750260105; c=relaxed/simple;
-	bh=ADdaQPFkRSO+VSTMlCDm3GecCwInkppbcV9rC+ipPes=;
+	bh=uHw15SEfgJhjk0plrbNOxwEmIEjDnYKRuTeithPcYq8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FsJFBZTKZhj0oY23TmYF/Lrd4jHcbrnngGz60LKlHFUiDIqfn1zdmz+w0ZGBmpsVYoaTEc1xvQArc8jZdojCX9z4Q1h+/HMsI42HAa2P8qpRAMcE+NgywklRWp19nuCYtE1fw+PAozvbwmNB0SgqwWzWXeLB92YDUzUzUsRNE/Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Ceipa55a; arc=none smtp.client-ip=117.135.210.2
+	 MIME-Version; b=cEAzuqUfUPZDVpIMWLZfcF27TB4nmbS+sYu6kc0wdnWcC5/QHj2Wl3gTMvUdlhjp9T47+TSrhEQwF5o97RF6agr+2xEmLzMbs7eqbCwqEXPsgWTeL+HxUW857F8enRhMxOf5Qs24NW1tiZT29DevXzLAWw7CiBcMGY51vMQLO3k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Uhmj0vaq; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Ceipa55a"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Uhmj0vaq"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=KS
-	hWwqB6/OjriKH/vh/97toS6aO3gRr/LJ9FfGdZTCo=; b=Ceipa55aiTqlOlDnTa
-	b3rv1qG+5RmvXX0DrsSSzWMF7EqvaYe68o+8stlW6+8lDWGyv5eNfQNiEZTY3Cr+
-	Vu7XMbTntmpJyva7BkgUP5AR0hLo873uIIEQggQziKuMEd5dfcmvn7VcKwoi0TrX
-	IEUSbIYFbRBzFadlZ0GVdF4TQ=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=lz
+	037P2kaVzqsQ34A3LWfibKKWlS33MGjH64LQLCkDA=; b=Uhmj0vaq/FSWYCyHKK
+	SXCv5pl1QkZldRIcz/5204acUf9cunLphDScBHvQiCD4ArzM3PAS/Ok5ztXD8LlX
+	d/P9ZbyAXxdOwZm7MaydmZjjZgr/si62tHhjVCbp5ngzqg5UhY0E9vtc1sdu29dJ
+	k7GAcTfEcuSFQdQCVwCV/iQ5A=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wBXvXd32VJoWFISAQ--.22704S6;
-	Wed, 18 Jun 2025 23:21:30 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wBXvXd32VJoWFISAQ--.22704S5;
+	Wed, 18 Jun 2025 23:21:29 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -33,9 +33,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 09/13] PCI: fu740: Refactor code by using dw_pcie_clear_and_set_dword()
-Date: Wed, 18 Jun 2025 23:21:08 +0800
-Message-Id: <20250618152112.1010147-10-18255117159@163.com>
+Subject: [PATCH v2 08/13] PCI: dw-rockchip: Refactor code by using dw_pcie_clear_and_set_dword()
+Date: Wed, 18 Jun 2025 23:21:07 +0800
+Message-Id: <20250618152112.1010147-9-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250618152112.1010147-1-18255117159@163.com>
 References: <20250618152112.1010147-1-18255117159@163.com>
@@ -46,47 +46,56 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXvXd32VJoWFISAQ--.22704S6
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tF1DGrWDuryrAw1rWryUWrg_yoW8WrWxpa
-	y2yrWrCF1UJa1ru3WUJa4kZF1agas3CFWUWFs7Wwn29F9FyrWDWFWrta43tFyxGF4Iqr1a
-	kw1Utay7WF1ayFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pE66wLUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhFwo2hS1URmFgABsi
+X-CM-TRANSID:_____wBXvXd32VJoWFISAQ--.22704S5
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tw1rGr4Dtr1DJF1ruw18Grg_yoW8CrW5p3
+	y3Aa4akF4rJw4rua1kAa97ZF13ta9xAFW7JFZ3Gw1SqFy2k34DKF1YkFyaqF1xGr42vF1a
+	93yUt3yUZa13AFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR2jg3UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOhFwo2hS1URmFgAAsj
 
-SiFive FU740 PCIe driver uses direct register write to initiate link speed
-change after setting target link capabilities. The current implementation
-sets PORT_LOGIC_SPEED_CHANGE bit via explicit read-modify-write sequence.
+Rockchip PCIe driver implements L0s capability enablement through
+explicit register read-modify-write. The current approach reads the
+LNKCAP register, modifies the ASPM_L0S bit, then writes back the
+value with DBI write protection handling.
 
-Replace manual bit manipulation with dw_pcie_clear_and_set_dword() for
-speed change initiation. The helper encapsulates read-modify-write
-operations while providing clear intent through "clear 0, set BIT" usage.
+Refactor ASPM capability configuration using
+dw_pcie_clear_and_set_dword(). The helper combines bit manipulation with
+DBI protection in a single call, replacing three-step manual operations.
+This simplifies the capability setup flow and reduces code complexity.
 
-This refactoring aligns the driver with standard DesignWare programming
-patterns and reduces code complexity. The change also ensures consistent
-handling of speed change initiation across all DesignWare base
-controllers.
+Adopting the standard helper improves maintainability by eliminating
+local variables and explicit bitwise operations. The change also ensures
+consistent handling of DBI write protection across capability modification
+functions.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-fu740.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-fu740.c b/drivers/pci/controller/dwc/pcie-fu740.c
-index 66367252032b..8210ff1fd91e 100644
---- a/drivers/pci/controller/dwc/pcie-fu740.c
-+++ b/drivers/pci/controller/dwc/pcie-fu740.c
-@@ -216,9 +216,8 @@ static int fu740_pcie_start_link(struct dw_pcie *pci)
- 		tmp |= orig;
- 		dw_pcie_writel_dbi(pci, cap_exp + PCI_EXP_LNKCAP, tmp);
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index 93171a392879..e6bd9c54b164 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -194,15 +194,14 @@ static bool rockchip_pcie_link_up(struct dw_pcie *pci)
  
--		tmp = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--		tmp |= PORT_LOGIC_SPEED_CHANGE;
--		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
-+		dw_pcie_clear_and_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
-+					    0, PORT_LOGIC_SPEED_CHANGE);
+ static void rockchip_pcie_enable_l0s(struct dw_pcie *pci)
+ {
+-	u32 cap, lnkcap;
++	u32 cap;
  
- 		ret = dw_pcie_wait_for_link(pci);
- 		if (ret) {
+ 	/* Enable L0S capability for all SoCs */
+ 	cap = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	if (cap) {
+-		lnkcap = dw_pcie_readl_dbi(pci, cap + PCI_EXP_LNKCAP);
+-		lnkcap |= PCI_EXP_LNKCAP_ASPM_L0S;
+ 		dw_pcie_dbi_ro_wr_en(pci);
+-		dw_pcie_writel_dbi(pci, cap + PCI_EXP_LNKCAP, lnkcap);
++		dw_pcie_clear_and_set_dword(pci, cap + PCI_EXP_LNKCAP,
++					    0, PCI_EXP_LNKCAP_ASPM_L0S);
+ 		dw_pcie_dbi_ro_wr_dis(pci);
+ 	}
+ }
 -- 
 2.25.1
 
