@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B293B2EF9DB;
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 35C932EF9C0;
 	Wed, 18 Jun 2025 15:21:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750260101; cv=none; b=CoGFXMBcCKFxDWFeF3RmXnH8LERO2DVMjK9PpHNEgJoDINRI+UZMRcdJ0KzkDBIbjdBev+CGNrSaL75EYH5Dufl4JZnAPzLgRe9/4i0cracdSRctYVZFiM3cqjcb44N0EyN66P3cK8pZCsp1hyA/D5ZtlR+WOILFxv5GvfntKvY=
+	t=1750260103; cv=none; b=Gb4t3fC8dRGfKIvvDR21UZCCv+VtwukWooVhKSJRH16RsWFT9G/kKQRRMAoeoiWeE9KPfDFKaw67xcdt67u2E6J/5cqsR0fLAk0zJNuc1vI2sWML76hrCz8otMvQg++nZGLXoVw47pLBsmsNllxd3gZxB+iIBZkD2WSAhO6ez8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750260101; c=relaxed/simple;
-	bh=Aval5zk1VgFJgPoCb1Z+VYhn5vHXyVwG2wThqQn9Cg0=;
+	s=arc-20240116; t=1750260103; c=relaxed/simple;
+	bh=AyIyci4j3t9tsor39WcVZgT1McAoZZhyUuqVb5im41U=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=ddAz50O3ZQzfJPg0rx6LVGr6p+kmaVUeif6HzqVObLfBiR5ANYmfXTxVi7MzHe9DNi9I3TRdcPZSG5FYzObX8hY+7a5aoXduoEWiu/3mhY0lWuUSgiaiwuAspZYM0D9hpYF6bTvh9bSrzHw/Ccmxiol3WS22dWYKJMqJM9K4MH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=I+HIC5oP; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=Rr0PNx06UY8fP5hyxGcVYHdxCMNCZMjZr+YEggf9GMz4c+s1HtI4OOpEt1T2lB2oHwCAmtdANGbXki6iF5jAZ2A6Y7ZprWvi9gMskdLx661kjL7GaorD38/fCVSB2J0oqpOcNCO66umJKrfnxV5blmT0covFSJpSybgkmIfq8Us=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=EHvAb3ko; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="I+HIC5oP"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="EHvAb3ko"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=6W
-	NamUFnScGmcGW4V2poSQwnw1TE8eT2FVftvMi/L8E=; b=I+HIC5oP1Px6bfE+S7
-	WHNZZVDbNDqNFgufwydaOr31k1ODwwm3hTtGJwPGf7pNq1/2VBehEfZCdZFfj4yd
-	N8ofrT7ABz8ghyKZwmiRnABkru7kOPAtqXrQ2XLZlrcsaNHm5hDilUhxvsS0PDK3
-	d7cXoRxKx7gOPSmv5KWGGcdBs=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Mf
+	cah2+ycb2ydogLnZ0AlJX/f7/lygCdHxTFUi3RV7I=; b=EHvAb3kovfJ/q7Qa+a
+	wNRVwgnDQQx3h+S7nq67aJXIBWSdLg+YhMbtHFehXgzZJGD+kZDzWLPP+YSkVKol
+	lHqmLITKbGSk/LJ1NrCczljpFya7g00sBlDH+usDNrLg1+svb83zJc1ja4ocahft
+	78Cp/t6ZV4ErAqbpnjulfBL8c=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-3 (Coremail) with SMTP id _____wDHoedq2VJo3qQFAQ--.15407S5;
-	Wed, 18 Jun 2025 23:21:17 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wBXvXd32VJoWFISAQ--.22704S3;
+	Wed, 18 Jun 2025 23:21:28 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -33,9 +33,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 03/13] PCI: dra7xx: Refactor code by using dw_pcie_clear_and_set_dword()
-Date: Wed, 18 Jun 2025 23:21:02 +0800
-Message-Id: <20250618152112.1010147-4-18255117159@163.com>
+Subject: [PATCH v2 06/13] PCI: armada8k: Refactor code by using dw_pcie_clear_and_set_dword()
+Date: Wed, 18 Jun 2025 23:21:05 +0800
+Message-Id: <20250618152112.1010147-7-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250618152112.1010147-1-18255117159@163.com>
 References: <20250618152112.1010147-1-18255117159@163.com>
@@ -46,70 +46,127 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHoedq2VJo3qQFAQ--.15407S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7KrWkGrWkKr1xuFyrXF13Jwb_yoW8uw4xp3
-	y3CFZIk3W7Jan5X3Wqv3Wku3WSvasavr4Utan7Kw1fZF9Fyr9rtrWFyry8tF4fuFWj9r12
-	ka15t347Xw4YyFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRhSdkUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxBwo2hS1CaCCAABsD
+X-CM-TRANSID:_____wBXvXd32VJoWFISAQ--.22704S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWxZFyrKFykJF1xKF1kCw48JFb_yoW7Jw1Dp3
+	45AFyYyF1UJw40v3ykCa97XF13AFZxZFnxCan3Wrs2q3ZrCrZrW3yFvFySgr1SgFZFqrWa
+	9w4rtrW7Cr1rG3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zESoGAUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgNwo2hS1URl9wABsS
 
-The dra7xx PCIe driver implements suspend/resume handling through
-direct register manipulation. The current approach uses explicit
-read-modify-write sequences to control the MEMORY enable bit in the
-PCI_COMMAND register, declaring local variables for temporary storage.
+Armada8k PCIe driver uses explicit bitwise operations for global control
+register configuration. The driver manually handles bit masking and
+shifting for multiple fields including device type, domain attributes,
+and interrupt masking. This approach requires repetitive read-modify-write
+sequences and temporary variables.
 
-Replace manual bit manipulation with dw_pcie_clear_and_set_dword()
-during suspend and resume operations. This eliminates redundant variable
-declarations and simplifies the power management flow by handling bit
-operations within a single function call.
+Refactor global control setup, domain attribute configuration, and
+interrupt masking using dw_pcie_clear_and_set_dword(). The helper replaces
+manual bit manipulation with declarative bit masks, directly specifying
+which bits to clear and set. This eliminates intermediate variables and
+reduces code complexity.
 
-Using the centralized helper improves code readability and aligns the
-driver with standard DesignWare register access patterns. The change also
-reduces the risk of bit manipulation errors in future modifications to the
-power management logic.
+Standardizing on the helper improves code clarity in initialization paths
+and ensures consistent handling of control register bits. The change also
+centralizes bit manipulation logic, reducing the risk of errors in future
+modifications to device configuration.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pci-dra7xx.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/pci/controller/dwc/pcie-armada8k.c | 48 ++++++++--------------
+ 1 file changed, 18 insertions(+), 30 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index f97f5266d196..9cbba1b28882 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -867,15 +867,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
+diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
+index c2650fd0d458..67348307aa28 100644
+--- a/drivers/pci/controller/dwc/pcie-armada8k.c
++++ b/drivers/pci/controller/dwc/pcie-armada8k.c
+@@ -155,54 +155,44 @@ static bool armada8k_pcie_link_up(struct dw_pcie *pci)
+ 
+ static int armada8k_pcie_start_link(struct dw_pcie *pci)
  {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct dw_pcie *pci = dra7xx->pci;
--	u32 val;
- 
- 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
- 		return 0;
- 
- 	/* clear MSE */
--	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
--	val &= ~PCI_COMMAND_MEMORY;
--	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
+-	u32 reg;
+-
+ 	/* Start LTSSM */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+-	reg |= PCIE_APP_LTSSM_EN;
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
++				    0, PCIE_APP_LTSSM_EN);
  
  	return 0;
  }
-@@ -884,15 +881,12 @@ static int dra7xx_pcie_resume(struct device *dev)
+ 
+ static int armada8k_pcie_host_init(struct dw_pcie_rp *pp)
  {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct dw_pcie *pci = dra7xx->pci;
--	u32 val;
+-	u32 reg;
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
  
- 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
- 		return 0;
+-	if (!dw_pcie_link_up(pci)) {
++	if (!dw_pcie_link_up(pci))
+ 		/* Disable LTSSM state machine to enable configuration */
+-		reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+-		reg &= ~(PCIE_APP_LTSSM_EN);
+-		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
+-	}
++		dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
++					    PCIE_APP_LTSSM_EN, 0);
  
- 	/* set MSE */
--	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
--	val |= PCI_COMMAND_MEMORY;
--	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, 0, PCI_COMMAND_MEMORY);
+ 	/* Set the device to root complex mode */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
+-	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
+-	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
++				    PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT,
++				    PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT);
+ 
+ 	/* Set the PCIe master AxCache attributes */
+ 	dw_pcie_writel_dbi(pci, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
+ 	dw_pcie_writel_dbi(pci, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
+ 
+ 	/* Set the PCIe master AxDomain attributes */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_ARUSER_REG);
+-	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
+-	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
+-	dw_pcie_writel_dbi(pci, PCIE_ARUSER_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_ARUSER_REG,
++				    AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT,
++				    DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT);
+ 
+-	reg = dw_pcie_readl_dbi(pci, PCIE_AWUSER_REG);
+-	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
+-	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
+-	dw_pcie_writel_dbi(pci, PCIE_AWUSER_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_AWUSER_REG,
++				    AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT,
++				    DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT);
+ 
+ 	/* Enable INT A-D interrupts */
+-	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG);
+-	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
+-	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG, reg);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_INT_MASK1_REG, 0,
++				    PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
++				    PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK);
  
  	return 0;
+ }
+@@ -211,15 +201,13 @@ static irqreturn_t armada8k_pcie_irq_handler(int irq, void *arg)
+ {
+ 	struct armada8k_pcie *pcie = arg;
+ 	struct dw_pcie *pci = pcie->pci;
+-	u32 val;
+ 
+ 	/*
+ 	 * Interrupts are directly handled by the device driver of the
+ 	 * PCI device. However, they are also latched into the PCIe
+ 	 * controller, so we simply discard them.
+ 	 */
+-	val = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG);
+-	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_CAUSE1_REG, val);
++	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_INT_CAUSE1_REG, 0, 0);
+ 
+ 	return IRQ_HANDLED;
  }
 -- 
 2.25.1
