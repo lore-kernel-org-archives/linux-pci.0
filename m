@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 4EB3E2EFD94;
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3BA522EFD8F;
 	Wed, 18 Jun 2025 15:21:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750260103; cv=none; b=tjm+NDFVClindGPJ4VXN7dox/k/HUK9s5aAyEMO4Bn5Ie2EX41iNZ66KgviNO9oFqacyIGZCSd17iB5RPvQ/NOAlnLZkIoxXMAwbr7XrX3uVzpdrp7f2bfIBLCknD4BH9t6YF+MRICzeBbUGQK9GcNVzf9Ng0mWwPmWSBBATV/Y=
+	t=1750260104; cv=none; b=lw7O+CSn/ypLhhpyC+1z36tW9uM+oZiFEYO/i4suYRhWDjzKxr6QpPcCxmW/Lv43aQkXIt12VEs9hAmPDowetTjQel4qWil0CkSlI7oYikbddrgDjZuppQtwVhl3QCSGKx+1UMc2NgeygfMVBM46FqIPJDgpsr3oMcglUwcjZSs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750260103; c=relaxed/simple;
-	bh=QsvVTVjEukMOXgp7vsAJHkEP4QuiyFrtI+Q8YTeyeFg=;
+	s=arc-20240116; t=1750260104; c=relaxed/simple;
+	bh=05XlbY/UQu42xpAJ30ZAd5vgZ/sIRKkwHCnOZ7Imj1U=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PZOkxojhIGMbDDdc1qmnU8h3k3hpMrDzSuvr0+OSYKYlD7Q0Yqp6+ugzj/+RbZujHMMBBqdXVAuontMqzr6e+aCtwSCBqHOfQzsTf7EVfAdM2thoXvbgdWpcaB0iftryEyDZyYzfju04UpaNQAU2hsZw5dp7Hgl6soGojsYiFqc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PlpPLCAk; arc=none smtp.client-ip=220.197.31.3
+	 MIME-Version; b=qCoskcMNNeNfiBWaGG3qjYJb6Yt82q8beBJ3u3xPFFgJtRHNEZl7TJ+j537rkCxh5MJka28I5WMccJ2tsdXTsVoHdP2JL01XXfa0AWAjbgfPcU6EuU//DgFzupNHHGQIFrQc9zWzqY1cpGPVGy7u7yfCjkpqJeA1VHE+vPFIcfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=CxjYLbSm; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PlpPLCAk"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="CxjYLbSm"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=04
-	fcvJHUcanUs3BderAdxY1w8bpBTNk29ppsje+kwjk=; b=PlpPLCAksLt/HRoZ5Y
-	/EiJR5EueBtclAWbEVdnZ+JPd42M5xU/kPeH5+a32wYp0pCpZe6hz260npjMh8uO
-	hYUkCh8pV8+VvsdA2cR322IMJrtBxDW4A43NOs3r44k/3yTTXtbCaBgoeaxz02nA
-	SuZvH3iEELBErWrKZ+OrdHoKc=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=hb
+	y962xhyP4Qgrj7aPF+nhZQMZCQ5u6zcns9wRaSiWI=; b=CxjYLbSmpjtu1dc5vM
+	aMieCCjyVYXgvJ9VMWNlsQbptNmSQ2jGEBQ/R9HPNn+QBt7tesYFff5vlLQJs3vd
+	S+6pxaCP5LXJt2cQby1geDwDQXSb+WXz2TMpRNjB9or5XbzXzcFzeb6ID1Gv/UrE
+	gPs7urQaz6Bmcqzax45ww3a/c=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wBXvXd32VJoWFISAQ--.22704S4;
-	Wed, 18 Jun 2025 23:21:29 +0800 (CST)
+	by gzga-smtp-mtada-g0-4 (Coremail) with SMTP id _____wBXvXd32VJoWFISAQ--.22704S2;
+	Wed, 18 Jun 2025 23:21:28 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -33,9 +33,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v2 07/13] PCI: bt1: Refactor code by using dw_pcie_clear_and_set_dword()
-Date: Wed, 18 Jun 2025 23:21:06 +0800
-Message-Id: <20250618152112.1010147-8-18255117159@163.com>
+Subject: [PATCH v2 05/13] PCI: meson: Refactor code by using dw_pcie_clear_and_set_dword()
+Date: Wed, 18 Jun 2025 23:21:04 +0800
+Message-Id: <20250618152112.1010147-6-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250618152112.1010147-1-18255117159@163.com>
 References: <20250618152112.1010147-1-18255117159@163.com>
@@ -46,48 +46,80 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wBXvXd32VJoWFISAQ--.22704S4
-X-Coremail-Antispam: 1Uf129KBjvJXoW7Zry8Xw4xCw48Gr45uF4xXrb_yoW8ArW7pa
-	9IkF92kF12ya1Y9a1Ut3Z7ZFyYgan5CayjgFn7Kw1IgF9Iyr9rWFyrKFy3trZxJr4Iqr1a
-	9w1UtFW7uan8ArUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0z_GYLPUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgBwo2hS1URmDAAAso
+X-CM-TRANSID:_____wBXvXd32VJoWFISAQ--.22704S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxXFyDXFW7tr48XFyxJw1xAFb_yoW5CFWkpr
+	ZxuF4FyF47Jr45uw4qva95uay3Jas3Cw17JFnxG34S9Fy2yr9rta4aya45uayxGrW0g34j
+	9r98trW8Z3W5tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piq2NLUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgNwo2hS1URl9wAAsT
 
-Baikal-T1 PCIe driver contains a direct register write to initiate
-speed change during link training. The current implementation sets
-the PORT_LOGIC_SPEED_CHANGE bit via read-modify-write without using
-the standard bit manipulation helper.
+Meson PCIe driver implements payload size configuration through manual
+register manipulation. The current code reads device control registers,
+modifies specific bitfields for maximum payload and read request sizes,
+then writes back the updated values. This pattern repeats twice with
+similar logic but different bit masks.
 
-Replace manual bit set operation with dw_pcie_clear_and_set_dword() to
-enable speed change. The helper clearly expresses the intent to modify
-a specific bit while preserving others, eliminating the need for explicit
-read-before-write.
+Replace explicit bit manipulation with dw_pcie_clear_and_set_dword() for
+payload and read request size configuration. The helper consolidates
+read-clear-set-write operations into a single call, eliminating redundant
+register read operations and local variable usage.
 
-Using the standardized interface improves consistency with other
-DesignWare drivers and reduces the risk of unintended bit modifications.
-The change also simplifies future updates to link training logic.
+This refactoring reduces code duplication in size configuration logic
+and improves maintainability. By using the DesignWare helper, the driver
+aligns with standard PCIe controller programming patterns and simplifies
+future updates to device capability settings.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-bt1.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c | 22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-bt1.c b/drivers/pci/controller/dwc/pcie-bt1.c
-index 1340edc18d12..7cbaeeed033d 100644
---- a/drivers/pci/controller/dwc/pcie-bt1.c
-+++ b/drivers/pci/controller/dwc/pcie-bt1.c
-@@ -289,9 +289,8 @@ static int bt1_pcie_start_link(struct dw_pcie *pci)
- 	 * attempt to reach a higher bus performance (up to Gen.3 - 8.0 GT/s).
- 	 * This is required at least to get 8.0 GT/s speed.
- 	 */
--	val = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--	val |= PORT_LOGIC_SPEED_CHANGE;
--	dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, val);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
-+				    0, PORT_LOGIC_SPEED_CHANGE);
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index 787469d1b396..cd6280a8e619 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -264,33 +264,27 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+ static void meson_set_max_payload(struct meson_pcie *mp, int size)
+ {
+ 	struct dw_pcie *pci = &mp->pci;
+-	u32 val;
+ 	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int max_payload_size = meson_size_to_payload(mp, size);
  
- 	ret = regmap_read_poll_timeout(btpci->sys_regs, BT1_CCU_PCIE_PMSC, val,
- 				       BT1_CCU_PCIE_LTSSM_LINKUP(val),
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL,
++				    PCI_EXP_DEVCTL_PAYLOAD, 0);
+ 
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL, 0,
++				    PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size));
+ }
+ 
+ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
+ {
+ 	struct dw_pcie *pci = &mp->pci;
+-	u32 val;
+ 	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int max_rd_req_size = meson_size_to_payload(mp, size);
+ 
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL,
++				    PCI_EXP_DEVCTL_READRQ, 0);
+ 
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val |= PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size);
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL, 0,
++				    PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size));
+ }
+ 
+ static int meson_pcie_start_link(struct dw_pcie *pci)
 -- 
 2.25.1
 
