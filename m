@@ -1,114 +1,109 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6DC3B2E8E00;
-	Wed, 18 Jun 2025 14:23:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A46C22EBB96
+	for <linux-pci@vger.kernel.org>; Wed, 18 Jun 2025 14:23:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750256597; cv=none; b=j1poCJ1KWLK9Bm6MI6ciIpwsbmnHcj2Y0DApRne/yIlTxWxLx4DHZj3TX8DElN5b78UZnqYoOo5RF15EH089zljBp1dXADj+cxYJdbOTdjZedQ46j++MUVNRd9107WKdq7Cn2dXKzc13FnkWOHnKp3o7FLlA+PgrYhfc07l0DME=
+	t=1750256599; cv=none; b=VHeiyDDGCEHzM074gydDQaxF4iDvsOPEQ0Cjw0tJu1cyuduNbT7N3nvzWLirJFJuQ6J2w9fUtWqEHiw6fxiziHGe1OqWUToCCW0NqIuttKIPZwDZICyQFYUfmP9jo3resuRTDGIxEoSTRkQOKUaB4EfJejjY1tcbkDMrQsoSO+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750256597; c=relaxed/simple;
-	bh=/kCZED307PxRlzLUByha5TboyLgGFMQyb8rQaxCxbi8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fANY8Tw80BdPuVH6/nPgYiw+YsdyHShQ3y4GSA8/f9Ej+6J2Idpy1lD0Hc4L4t6IbqinTIHQNj4aHS+jA/tWFQvq6gYS/Sm0A8qe5Bj2djB6R+csWvOiKYvBtmyeWWnBITmVsSO4fqhbD+1PW/rCS/msDXyDIUz7s5HestC0+qM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=czIhzIDv; arc=none smtp.client-ip=220.197.31.2
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1750256599; c=relaxed/simple;
+	bh=Tw82APBfnc8betE49fdk4f7dJxLN1BXDSLLXI9UwX7M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=oZryt01zoEiARafhdC9fl7ZbwAFObLHRM12RSPDhPU7DBTX4XkBHdQXYVFAypa5vz4xqtLtjJaMhYEst0DfYQ1SaE2USYnnmgWv0xPewCbYQ61xjbVd0wFQzmhkhAE+rOts+EPTio14MdhWERMHeEmG7QAkFgnzDhkGIid0daEo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QdAUprYK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="czIhzIDv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=Message-ID:Date:MIME-Version:Subject:To:From:
-	Content-Type; bh=aKN5Xb4pqwecPj9X55VM7S0C9aEQ1Y9s1xKnCpxeegI=;
-	b=czIhzIDv0vExDetuwquUJKrYUO53fjMO4UCjAlc9rWtkNKUKWDmbGcZxmkhrGh
-	pnVWLb7puWTNmuknm9dqGRZtgrsybZ+88DaATFV0/JRgcx8iCPy7iUUimCAGkcHN
-	lGHrmbBJ2B4ybopt7h8vv/1qloEhAX9KLlMwIyFMJb5T8=
-Received: from [IPV6:240e:b8f:919b:3100:8440:da7c:be7e:927f] (unknown [])
-	by gzsmtp4 (Coremail) with SMTP id PygvCgAn_qq1y1JonKCoAA--.5729S2;
-	Wed, 18 Jun 2025 22:22:46 +0800 (CST)
-Message-ID: <9203cf6e-ca59-416a-9c98-a2d6a5c6ce6f@163.com>
-Date: Wed, 18 Jun 2025 22:22:45 +0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QdAUprYK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF084C4CEEE;
+	Wed, 18 Jun 2025 14:23:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750256599;
+	bh=Tw82APBfnc8betE49fdk4f7dJxLN1BXDSLLXI9UwX7M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=QdAUprYKJiSnsrJGpXN4Wmdq8DXkBhrJMF/FEGPXR2QnvW9p3H5kK1elO6+oQ5zP1
+	 XWfCiGXzCXewJYibrQhrnn9YbF4K8CXWAjkxTaK94+H+HqVsWFvD32lh1WptSPnOXp
+	 yLUkrvU/uomcQPTVq2Y1HpLub6VBB64WZILuuqiHz2dOxVw+MpxQEKcdKorBw1VXLz
+	 gx7FoLEG/ELzuaYl5dzpzz8k/8C0WuLqq56KxebvN8Nov7JpBZL2qnZqq9waTzqBCs
+	 61XHUF4Y/CmTLy+LXFmqFy2rPVd0ExD28khi6AoUdXa4nPx9R2gvLrqPYk2J4fkUws
+	 hJDkGdgT+BDxQ==
+Date: Wed, 18 Jun 2025 16:23:14 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Heiko Stuebner <heiko@sntech.de>,
+	Wilfred Mallawa <wilfred.mallawa@wdc.com>,
+	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-rockchip@lists.infradead.org
+Subject: Re: [PATCH v2] PCI: dw-rockchip: Delay link training after hot reset
+ in EP mode
+Message-ID: <aFLL0vPFzxdVOR9a@ryzen>
+References: <20250617220114.GA1156610@bhelgaas>
+ <20250617220523.GA1157905@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] dt-bindings: PCI: Extend max-link-speed to support
- PCIe Gen5/Gen6
-To: Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kw@linux.com,
- krzk+dt@kernel.org, manivannan.sadhasivam@linaro.org, conor+dt@kernel.org,
- linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org
-References: <20250529021026.475861-1-18255117159@163.com>
- <20250529021026.475861-2-18255117159@163.com>
- <q5ltnilbdhfxwh6ucjnm3wichrmu5wyjsx6eheiazqypveu3sm@euuvpjwu77h4>
-Content-Language: en-US
-From: Hans Zhang <18255117159@163.com>
-In-Reply-To: <q5ltnilbdhfxwh6ucjnm3wichrmu5wyjsx6eheiazqypveu3sm@euuvpjwu77h4>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:PygvCgAn_qq1y1JonKCoAA--.5729S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJF1rJFW5ur48Zr4fuF4rZrb_yoW8CFWDpa
-	y5Ja1xKFyrZFySqrZ7Wr1F9r45AanrJ3y0yr45Gry7A3sxXF1rJFZaga1rWr17trZ5AFyx
-	uF1UZwnxGa15AFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRepBDUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWx9wo2hSygcmiQAAsP
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250617220523.GA1157905@bhelgaas>
 
-
-
-On 2025/6/18 00:45, Manivannan Sadhasivam wrote:
-> On Thu, May 29, 2025 at 10:10:24AM +0800, Hans Zhang wrote:
->> Update the device tree binding documentation for PCI to include
->> PCIe Gen5 and Gen6 support in the `max-link-speed` property.
->> The original documentation limited the value to 1~4 (Gen1~Gen4),
->> but the kernel now supports up to Gen6. This change ensures the
->> documentation aligns with the actual code implementation.
->>
->> Signed-off-by: Hans Zhang <18255117159@163.com>
->> ---
->>   dtschema/schemas/pci/pci-bus-common.yaml | 2 +-
+On Tue, Jun 17, 2025 at 05:05:23PM -0500, Bjorn Helgaas wrote:
+> On Tue, Jun 17, 2025 at 05:01:16PM -0500, Bjorn Helgaas wrote:
+> > On Fri, Jun 13, 2025 at 12:19:09PM +0200, Niklas Cassel wrote:
 > 
-> As Rob commented in v1, this file lives in dtschema project. So update it there:
-> https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml
+> Oh, and this sets PCIE_LTSSM_ENABLE_ENHANCE | PCIE_LTSSM_APP_DLY2_EN
+> once at probe-time, but what about after a link-down/link-up cycle?
 > 
+> Don't we need to set PCIE_LTSSM_ENABLE_ENHANCE |
+> PCIE_LTSSM_APP_DLY2_EN again when the link comes up so we don't have
+> the same race when the link goes down again?
 
-Dear Mani,
+Nope, we don't.
 
-I made the patch based on the latest dtschema code pulled from github.
+To verify I used this patch:
 
-Also, I saw similar submissions as follows:
-https://lore.kernel.org/linux-pci/advhonmqnxm4s6r3cl7ll5y3jfc566fcjvetvlzvy7bztzetev@t75xmo5fktde/
+diff --git a/drivers/pci/controller/dwc/pcie-dw-rockchip.c b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+index be239254aacd..e79add5412b8 100644
+--- a/drivers/pci/controller/dwc/pcie-dw-rockchip.c
++++ b/drivers/pci/controller/dwc/pcie-dw-rockchip.c
+@@ -506,6 +506,8 @@ static irqreturn_t rockchip_pcie_ep_sys_irq_thread(int irq, void *arg)
+        if (reg & PCIE_LINK_REQ_RST_NOT_INT) {
+                dev_dbg(dev, "hot reset or link-down reset\n");
+                dw_pcie_ep_linkdown(&pci->ep);
++               pr_info("PCIE_CLIENT_HOT_RESET_CTRL after reset: %#x\n",
++                       rockchip_pcie_readl_apb(rockchip, PCIE_CLIENT_HOT_RESET_CTRL));
+                /* Stop delaying link training. */
+                val = HIWORD_UPDATE_BIT(PCIE_LTSSM_APP_DLY2_DONE);
+                rockchip_pcie_writel_apb(rockchip, val,
 
-I don't know if Rob obtained this patch from here and then applied it to 
-the dtschema project? Is there still a special process to submit this patch?
 
 
-Dear Rob,
 
-Can you apply this patch directly to the dtschema project?
+[   85.979567] rockchip-dw-pcie a40000000.pcie-ep: hot reset or link-down reset
+[   85.980210] PCIE_CLIENT_HOT_RESET_CTRL after reset: 0x12
+[   93.720413] rockchip-dw-pcie a40000000.pcie-ep: hot reset or link-down reset
+[   93.721074] PCIE_CLIENT_HOT_RESET_CTRL after reset: 0x12
 
-Best regards,
-Hans
+0x12 == bit 1 and bit 4 are set.
 
-> - Mani
-> 
->>   1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/dtschema/schemas/pci/pci-bus-common.yaml b/dtschema/schemas/pci/pci-bus-common.yaml
->> index ca97a00..413ef05 100644
->> --- a/dtschema/schemas/pci/pci-bus-common.yaml
->> +++ b/dtschema/schemas/pci/pci-bus-common.yaml
->> @@ -121,7 +121,7 @@ properties:
->>         unnecessary operation for unsupported link speed, for instance, trying to
->>         do training for unsupported link speed, etc.
->>       $ref: /schemas/types.yaml#/definitions/uint32
->> -    enum: [ 1, 2, 3, 4 ]
->> +    enum: [ 1, 2, 3, 4, 5, 6 ]
->>   
->>     num-lanes:
->>       description: The number of PCIe lanes
->> -- 
->> 2.25.1
->>
-> 
+bit 1: app_dly2_en
+bit 4: app_ltssm_enable_enhance
 
+
+
+I also looked at the downstream driver and they also only set it once
+during probe().
+
+
+When running the controller EP mode, we (the Linux driver) currently never
+reset the whole core after probe(), and as we can see above, the hardware
+itself also does not reset the app_dly2_en bit during a hot reset signal.
+
+
+Kind regards,
+Niklas
