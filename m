@@ -1,96 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C9F11FBEB9;
-	Fri, 20 Jun 2025 15:42:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 157CD2D4B42;
+	Fri, 20 Jun 2025 15:56:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750434124; cv=none; b=HGtP+J5u9GkM6RUnmJzTEHWAKQkbmGNYjdXvGAY3lOzE9VyZmaPtrqHZVvxfWj4fqdtwGWoVvL/vkMFx99ZPUNq80E80sXhGWWW9vLRh3qOQgcy6EoBHXVRmTe2FE4z85GlbHUs67RMNxx7imjgmQzszlq4gBSrkKvMJBlkfqi4=
+	t=1750434965; cv=none; b=EvUvIPXt5q/WYD0CwXfrootBYO/51/AXkMEq1IMv5nsSSnIlo+fBUMGmzO25Zqc+DbYgzR+x17ihinWX0IzntV/Ai8TUfaKFP0Yfpuntjf/La+/SUVoP+H3uJqXn9x1Kn61hwZuKwjQe0DnNok4D6TxdR2DIQFyQ4Pbrwy5aguw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750434124; c=relaxed/simple;
-	bh=SHPTxnd4pbMYQOtiIQLzx9eD7HZDUt3+mEFmqV4gGBg=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=QUfZJvtj+a3zj8dlzRmmNKe9p5hsFIBLtV0GuiALq5EScoWKvOl3oBpEL+zwiaQRVBj/PSGMiIJFyWmjB4aKEE+n7koUZjNavbKSAogoLOl0ZaqkeZYiBvNTP+x25s/dAQm27NWyV8sv56w59OiQxXfuL1nIveC/VGM5mtZW4a8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g5okcp6J; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750434965; c=relaxed/simple;
+	bh=ty515ubSKgSJNqoxUVlAvMYB52snnsnwNSDiZDCJWgQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=jUTRM+PU4IoQEHf8k6q2Tyj7t390yN3qyykRRm/6Cr9mgk/hAIdMxiGEkDhdyvlLfUF37aQ3P9jeTmKGtgixqlmTWraFrm6NtyEgqUxpMAW5s8x+S2JNdzX7AlFASA16gzWD2ofMiaYofqU1OoEOdrcdBXwQKSBqloiTshcbmmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=RYMbneu9; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g5okcp6J"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2BC2C4CEE3;
-	Fri, 20 Jun 2025 15:42:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750434124;
-	bh=SHPTxnd4pbMYQOtiIQLzx9eD7HZDUt3+mEFmqV4gGBg=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=g5okcp6JBl2EOByxwdGhanD/oHlYvrWI0Ju/YEgHG3PVZv122YXGG65QLIySgjCma
-	 EvWhT3unRjT77HoYGSlzUPV2HwmghNbhw7zb3sVVWlaXsf4xguDKGYXMERIg2YM9pX
-	 gXDqosrULppL3gOfoy8ENwCQQq1pLft2MI/KDPXuKmovWBi50brnztquvRguMV/Kf/
-	 Kw4lvcJCWsZB9ch0PkRu3OxocrNdJc6cypNlM7NJoZRv/PxZRISSIqPDff2kM0uGmK
-	 dqHzCD9MspAjRyfIlWI3SkIGkwfQj+F+zUfHIg8ucU5RnCXhFOQJ2ysIWuRpDdKTof
-	 Uu7jXcW0sVKdQ==
-Date: Fri, 20 Jun 2025 10:42:02 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Hans Zhang <18255117159@163.com>
-Cc: lpieralisi@kernel.org, bhelgaas@google.com, kwilczynski@kernel.org,
-	shawn.lin@rock-chips.com, heiko@sntech.de, robh@kernel.org,
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="RYMbneu9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=i8
+	TapiMRiV+/DhKkWGWqqhK/Kqxyy8HtlXWR339Cxls=; b=RYMbneu9ctyb7xsH69
+	wODmw1d5sYKMXuugkeZtFbY20GNjqE0jBAHZ7P46kpjvsUHNEev+VJqPvrsqOGvn
+	Ehd/XYdEqJW17yxh86TQEPhH1mZuJSzCflXZIlBHj3hca/KBs1FntbKaKSNXlYjS
+	dwd3h12MskT3faw5Plb/4leS8=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDHyCldhFVo3bDnAg--.55764S3;
+	Fri, 20 Jun 2025 23:55:11 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com,
+	heiko@sntech.de,
+	mani@kernel.org,
+	yue.wang@Amlogic.com
+Cc: pali@kernel.org,
+	neil.armstrong@linaro.org,
+	robh@kernel.org,
+	jingoohan1@gmail.com,
+	khilman@baylibre.com,
+	jbrunet@baylibre.com,
+	martin.blumenstingl@googlemail.com,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-amlogic@lists.infradead.org,
 	linux-rockchip@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 2/2] PCI: rockchip: Remove redundant PCIe message routing
- definitions
-Message-ID: <20250620154202.GA1292011@bhelgaas>
+	Hans Zhang <18255117159@163.com>,
+	Niklas Cassel <cassel@kernel.org>
+Subject: [PATCH v5 1/2] PCI: Configure root port MPS during host probing
+Date: Fri, 20 Jun 2025 23:55:06 +0800
+Message-Id: <20250620155507.1022099-2-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250620155507.1022099-1-18255117159@163.com>
+References: <20250620155507.1022099-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250607154913.805027-3-18255117159@163.com>
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDHyCldhFVo3bDnAg--.55764S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWxCw17Gw1DuryUZFyrZF17GFg_yoW5Xryxpa
+	yUJws3AFZ7GFyfWa1kX3W09ryYv3Z7Cry7JrZ8Cr9093Z8AF1DJrWaya1rA3s7Gr9av34Y
+	vr4qqryUu3Z5uFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pivJP_UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgRyo2hVfXVwHQACs1
 
-On Sat, Jun 07, 2025 at 11:49:13PM +0800, Hans Zhang wrote:
-> The Rockchip driver contained duplicated message routing and INTx code
-> definitions (e.g., ROCKCHIP_PCIE_MSG_ROUTING_TO_RC,
-> ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTA). These are already provided by the
-> PCI core in drivers/pci/pci.h as PCIE_MSG_TYPE_R_RC and
-> PCIE_MSG_CODE_ASSERT_INTA, respectively.
-> 
-> Remove the driver-specific definitions and use the common PCIe macros
-> instead. This aligns the driver with the PCIe specification and reduces
-> maintenance overhead.
-> 
-> Signed-off-by: Hans Zhang <18255117159@163.com>
-> ---
->  drivers/pci/controller/pcie-rockchip.h | 14 --------------
->  1 file changed, 14 deletions(-)
-> 
-> diff --git a/drivers/pci/controller/pcie-rockchip.h b/drivers/pci/controller/pcie-rockchip.h
-> index 5864a20323f2..12bc8da59d73 100644
-> --- a/drivers/pci/controller/pcie-rockchip.h
-> +++ b/drivers/pci/controller/pcie-rockchip.h
-> @@ -215,20 +215,6 @@
->  #define RC_REGION_0_TYPE_MASK			GENMASK(3, 0)
->  #define MAX_AXI_WRAPPER_REGION_NUM		33
->  
-> -#define ROCKCHIP_PCIE_MSG_ROUTING_TO_RC		0x0
-> -#define ROCKCHIP_PCIE_MSG_ROUTING_VIA_ADDR		0x1
-> -#define ROCKCHIP_PCIE_MSG_ROUTING_VIA_ID		0x2
-> -#define ROCKCHIP_PCIE_MSG_ROUTING_BROADCAST		0x3
-> -#define ROCKCHIP_PCIE_MSG_ROUTING_LOCAL_INTX		0x4
-> -#define ROCKCHIP_PCIE_MSG_ROUTING_PME_ACK		0x5
-> -#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTA		0x20
-> -#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTB		0x21
-> -#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTC		0x22
-> -#define ROCKCHIP_PCIE_MSG_CODE_ASSERT_INTD		0x23
-> -#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTA		0x24
-> -#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTB		0x25
-> -#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTC		0x26
-> -#define ROCKCHIP_PCIE_MSG_CODE_DEASSERT_INTD		0x27
+Current PCIe initialization logic may leave root ports operating with
+non-optimal Maximum Payload Size (MPS) settings. While downstream device
+configuration is handled during bus enumeration, root port MPS values
+inherited from firmware or hardware defaults might not utilize the full
+capabilities supported by the controller hardware. This can result in
+suboptimal data transfer efficiency across the PCIe hierarchy.
 
-Thanks for doing this!  In fact, these definitions are not only
-redundant, they're not even used at all.
+During host controller probing phase, when PCIe bus tuning is enabled,
+the implementation now configures root port MPS settings to their
+hardware-supported maximum values. Specifically, when configuring the MPS
+for a PCIe device, if the device is a root port and the bus tuning is not
+disabled (PCIE_BUS_TUNE_OFF), the MPS is set to 128 << dev->pcie_mpss to
+match the Root Port's maximum supported payload size. The Max Read Request
+Size (MRRS) is subsequently adjusted through existing companion logic to
+maintain compatibility with PCIe specifications.
 
->  #define ROCKCHIP_PCIE_MSG_ROUTING_MASK			GENMASK(7, 5)
->  #define ROCKCHIP_PCIE_MSG_ROUTING(route) \
->  	(((route) << 5) & ROCKCHIP_PCIE_MSG_ROUTING_MASK)
+Note that this initial setting of the root port MPS to the maximum might
+be reduced later during the enumeration of downstream devices if any of
+those devices do not support the maximum MPS of the root port.
 
-And neither are these ROUTING and CODE definitions.
+Explicit initialization at host probing stage ensures consistent PCIe
+topology configuration before downstream devices perform their own MPS
+negotiations. This proactive approach addresses platform-specific
+requirements where controller drivers depend on properly initialized
+root port settings, while maintaining backward compatibility through
+PCIE_BUS_TUNE_OFF conditional checks. Hardware capabilities are fully
+utilized without altering existing device negotiation behaviors.
+
+Suggested-by: Niklas Cassel <cassel@kernel.org>
+Suggested-by: Manivannan Sadhasivam <mani@kernel.org>
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ drivers/pci/probe.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index 4b8693ec9e4c..9f8803da914c 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2178,6 +2178,16 @@ static void pci_configure_mps(struct pci_dev *dev)
+ 		return;
+ 	}
+ 
++	/*
++	 * Unless MPS strategy is PCIE_BUS_TUNE_OFF (don't touch MPS at all),
++	 * start off by setting root ports' MPS to MPSS. Depending on the MPS
++	 * strategy, and the MPSS of the devices below the root port, the MPS
++	 * of the root port might get overridden later.
++	 */
++	if (pci_pcie_type(dev) == PCI_EXP_TYPE_ROOT_PORT &&
++	    pcie_bus_config != PCIE_BUS_TUNE_OFF)
++		pcie_set_mps(dev, 128 << dev->pcie_mpss);
++
+ 	if (!bridge || !pci_is_pcie(bridge))
+ 		return;
+ 
+-- 
+2.25.1
+
