@@ -1,119 +1,180 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C3AA62DCBFC;
-	Fri, 20 Jun 2025 15:56:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A28952DA74B;
+	Fri, 20 Jun 2025 15:56:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750434989; cv=none; b=fsDRwx5wEParCJku0HAAKsBwFZJDEKCFVYUwUuOCc5zN7dS0OTPicCymWKdUyRaEOaDUxm3QW2mslgCmtmbCLa5DMCYpOmPpDXI5hRAvehvar81IPuN/qSMXUpFRp64vhA5BpidnK3srbpB4Ff79nIhJoIgN4vMMAArt6tZk9QE=
+	t=1750435016; cv=none; b=qZ5QJritlJMBkVd60c+Ja387NGt7/PcHRLid7pLMwfyhiryJr3exjOnNQCJGce0MyAq1wTaC3MF079NfA17vgd+AicsFAsUkgS0HbW5bYDPlXPfMxqF0F7W/ugDL499AwlHeRoFzcqoZO5GrgtX3bhA6wHhdAK9xQVWl4adzb7A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750434989; c=relaxed/simple;
-	bh=fMYwjyhYFYuRlUv8Qls31E3jPvYALaOapzxxnPqAbe0=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=m80wow1HtIzDEspLWPOyjvy1dVug1MZ+L2tCdImIKbviFBk/mUJmA/D+RotRNvPl/STK3qfvd4YQGoAYYtA3oFmYUJm/J46KG0lgjboig1tyN7iYE9SoVHngyhobKfj8YUEJDWXTV0cloqdxJHr3aBREBRaZn0gmXHm1cctl6qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=VBrUoXzc; arc=none smtp.client-ip=220.197.31.3
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+	s=arc-20240116; t=1750435016; c=relaxed/simple;
+	bh=0/Yq00Po9hqFh21kg/bqFD/QAGJ5CVo5hl9dHMq0V5o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=aTxu2mhVP/FtnbE8PM0ldkBPXTi0basPeGUYcvL3N6XYLvfYc8cDpOI+CGYMAWiQG9xmygM/arUMWH1g7ePHOXLpmNQH8WxTBqR3Fq7NpgGKuFgSKqev4Bz7poTJ7JlsS7SCcXkUx6eQ4iNEJypP5SknjjSiZEW6b0e/bJn8M/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dMluZ3go; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="VBrUoXzc"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=oQ
-	ZPCQlL01STFivOq4uM2KDIfp6YbbOsKwLoJEg45CM=; b=VBrUoXzc2gSTvyzwq7
-	EBr6Og07qOm0qv+6T/jbcGNm/XzOXwvQ9UnJ0ZzTWttid231GQ8m5WFiry61vyyd
-	BcoXHnJnN2lFjDon8RCz4/HPHeVaTtdR5PQlEGYSZU4Z6B97+aS6QFiQelc+E02t
-	vTX7rYeRG9LUWLC8sGSJX9alE=
-Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g0-2 (Coremail) with SMTP id _____wDHyCldhFVo3bDnAg--.55764S2;
-	Fri, 20 Jun 2025 23:55:10 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com,
-	heiko@sntech.de,
-	mani@kernel.org,
-	yue.wang@Amlogic.com
-Cc: pali@kernel.org,
-	neil.armstrong@linaro.org,
-	robh@kernel.org,
-	jingoohan1@gmail.com,
-	khilman@baylibre.com,
-	jbrunet@baylibre.com,
-	martin.blumenstingl@googlemail.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-amlogic@lists.infradead.org,
-	linux-rockchip@lists.infradead.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v5 0/2] Configure root port MPS during host probing
-Date: Fri, 20 Jun 2025 23:55:05 +0800
-Message-Id: <20250620155507.1022099-1-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dMluZ3go"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7DFB9C4CEEF;
+	Fri, 20 Jun 2025 15:56:54 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750435016;
+	bh=0/Yq00Po9hqFh21kg/bqFD/QAGJ5CVo5hl9dHMq0V5o=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=dMluZ3goj5wb11sMDmc3+xCKL1yqf1bsRZI3DxM7uG1KXtXt6C7MAqktYANFHHSuf
+	 Frgwrq+4RZBVltnb5P6MkMmrn1V8fD0OxVdrVTSfZT+rQG2Imxj5XevWyFkdZCmiY+
+	 ch/RwVduOAGedgkwB7gIRW0jutMz12GvWKhtnHqQF7Q273p3a1Mxw09XmodM6IdZWf
+	 mBLzMLbaMt7KS9Qt1zJoyPXRZH7OYcp3YYF2sL4h+l/1t5V4l2yjFI0QsyU9eIPJGS
+	 URhtkW63RC9+TxOytsaLyDgSj5zAc1DJw6+22JfmondzKh0LMan4WBUMSolFC4+7NY
+	 9S8CfRC6cet/w==
+Message-ID: <b3462e88-e24a-43d9-8437-b6d378a3b5d3@kernel.org>
+Date: Fri, 20 Jun 2025 10:56:53 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 7/7] fbcon: Make a symlink to the device selected as
+ primary
+To: Thomas Zimmermann <tzimmermann@suse.de>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: Alex Deucher <alexander.deucher@amd.com>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+ Lukas Wunner <lukas@wunner.de>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, David Woodhouse <dwmw2@infradead.org>,
+ Lu Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>,
+ Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
+ "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+ open list <linux-kernel@vger.kernel.org>,
+ "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux.dev>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+ "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
+ "open list:SOUND" <linux-sound@vger.kernel.org>,
+ Daniel Dadap <ddadap@nvidia.com>,
+ Mario Limonciello <mario.limonciello@amd.com>
+References: <20250620024943.3415685-1-superm1@kernel.org>
+ <20250620024943.3415685-8-superm1@kernel.org>
+ <a22ecd33-460d-41bf-920c-529645d173e3@suse.de>
+Content-Language: en-US
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <a22ecd33-460d-41bf-920c-529645d173e3@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wDHyCldhFVo3bDnAg--.55764S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7CrW8AFWrWF4fWrWfuryDJrb_yoW8uw4DpF
-	WfGan3trs7GF13GF9rWa1kCFy5Xa4xGFWUGr9rJwnxZanxAFyUXry8Kw4rA3srXrWfZ3W2
-	9F1jqFy8u3WDZaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pina9fUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQwdyo2hVgfhDOQAAsr
 
-Current PCIe initialization exhibits a key optimization gap: Root Ports
-may operate with non-optimal Maximum Payload Size (MPS) settings. While
-downstream device configuration is handled during bus enumeration, Root
-Port MPS values inherited from firmware or hardware defaults often fail
-to utilize the full capabilities supported by controller hardware. This
-results in suboptimal data transfer efficiency throughout the PCIe
-hierarchy.
+On 6/20/25 3:47 AM, Thomas Zimmermann wrote:
+> Hi
+> 
+> Am 20.06.25 um 04:49 schrieb Mario Limonciello:
+>> From: Mario Limonciello <mario.limonciello@amd.com>
+>>
+>> Knowing which device is the primary device can be useful for userspace
+>> to make decisions on which device to start a display server.
+>>
+>> Create a link to that device called 'primary_device'.
+>>
+>> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+>> ---
+>>   drivers/video/fbdev/core/fbcon.c | 10 +++++++++-
+>>   1 file changed, 9 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/video/fbdev/core/fbcon.c b/drivers/video/fbdev/ 
+>> core/fbcon.c
+>> index 2df48037688d1..46f21570723e5 100644
+>> --- a/drivers/video/fbdev/core/fbcon.c
+>> +++ b/drivers/video/fbdev/core/fbcon.c
+> 
+> You cannot rely on this, as fbcon might be disabled entirely.
 
-This patch series addresses this by:
+So the other idea I had was to have a new file boot_console.
 
-1.  Core PCI enhancement (Patch 1):
-- Proactively configures Root Port MPS during host controller probing
-- Sets initial MPS to hardware maximum (128 << dev->pcie_mpss)
-- Conditional on PCIe bus tuning being enabled (PCIE_BUS_TUNE_OFF unset)
-- Maintains backward compatibility via PCIE_BUS_TUNE_OFF check
-- Preserves standard MPS negotiation during downstream enumeration
+How would you feel about this instead (or even in addition to the symlink)?
 
-2.  Driver cleanup (Patch 2):
-- Removes redundant MPS configuration from Meson PCIe controller driver
-- Functionality is now centralized in PCI core
-- Simplifies driver maintenance long-term
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 268c69daa4d5..8535950b4c0f 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -30,6 +30,7 @@
+  #include <linux/msi.h>
+  #include <linux/of.h>
+  #include <linux/aperture.h>
++#include <asm/video.h>
+  #include "pci.h"
 
----
-Changes for v5:
-- Use pcie_set_mps directly instead of pcie_write_mps.
-- The patch 1 commit message were modified.
+  #ifndef ARCH_PCI_DEV_GROUPS
+@@ -679,6 +680,13 @@ const struct attribute_group *pcibus_groups[] = {
+         NULL,
+  };
 
-Changes for v4:
-- The patch [v4 1/2] add a comment to explain why it was done this way.
-- The patch [v4 2/2] have not been modified.
-- Drop patch [v3 3/3]. The Maintainer of the pci-aardvark.c file suggests
-  that this patch cannot be submitted. In addition, Mani also suggests
-  dropping this patch until this series of issues is resolved.
++static ssize_t boot_console_show(struct device *dev, struct 
+device_attribute *attr,
++                                char *buf)
++{
++       return sysfs_emit(buf, "%u\n", video_is_primary_device(dev));
++}
++static DEVICE_ATTR_RO(boot_console);
++
+  static ssize_t boot_vga_show(struct device *dev, struct 
+device_attribute *attr,
+                              char *buf)
+  {
+@@ -1698,6 +1706,7 @@ late_initcall(pci_sysfs_init);
 
-Changes for v3:
-- The new split is patch 2/3 and 3/3.
-- Modify the patch 1/3 according to Niklas' suggestion.
+  static struct attribute *pci_dev_dev_attrs[] = {
+         &dev_attr_boot_vga.attr,
++       &dev_attr_boot_console.attr,
+         NULL,
+  };
 
-Changes for v2:
-- According to the Maintainer's suggestion, limit the setting of MPS
-  changes to platforms with controller drivers.
-- Delete the MPS code set by the SOC manufacturer.
----
+@@ -1710,6 +1719,9 @@ static umode_t pci_dev_attrs_are_visible(struct 
+kobject *kobj,
+         if (a == &dev_attr_boot_vga.attr && pci_is_vga(pdev))
+                 return a->mode;
 
-Hans Zhang (2):
-  PCI: Configure root port MPS during host probing
-  PCI: dwc: Remove redundant MPS configuration
-
- drivers/pci/controller/dwc/pci-meson.c | 17 -----------------
- drivers/pci/probe.c                    | 10 ++++++++++
- 2 files changed, 10 insertions(+), 17 deletions(-)
++       if (a == &dev_attr_boot_console.attr && pci_is_display(pdev))
++               return a->mode;
++
+         return 0;
+  }
 
 
-base-commit: 19272b37aa4f83ca52bdf9c16d5d81bdd1354494
--- 
-2.25.1
+> 
+> Best regards
+> Thomas
+> 
+>> @@ -2934,7 +2934,7 @@ static void fbcon_select_primary(struct fb_info 
+>> *info)
+>>   {
+>>       if (!map_override && primary_device == -1 &&
+>>           video_is_primary_device(info->device)) {
+>> -        int i;
+>> +        int i, r;
+>>           printk(KERN_INFO "fbcon: %s (fb%i) is primary device\n",
+>>                  info->fix.id, info->node);
+>> @@ -2949,6 +2949,10 @@ static void fbcon_select_primary(struct fb_info 
+>> *info)
+>>                      first_fb_vc + 1, last_fb_vc + 1);
+>>               info_idx = primary_device;
+>>           }
+>> +        r = sysfs_create_link(&fbcon_device->kobj, &info->device->kobj,
+>> +                      "primary_device");
+>> +        if (r)
+>> +            pr_err("fbcon: Failed to link to primary device: %d\n", r);
+>>       }
+>>   }
+>> @@ -3376,6 +3380,10 @@ void __init fb_console_init(void)
+>>   void __exit fb_console_exit(void)
+>>   {
+>> +#ifdef CONFIG_FRAMEBUFFER_CONSOLE_DETECT_PRIMARY
+>> +    if (primary_device != -1)
+>> +        sysfs_remove_link(&fbcon_device->kobj, "primary_device");
+>> +#endif
+>>   #ifdef CONFIG_FRAMEBUFFER_CONSOLE_DEFERRED_TAKEOVER
+>>       console_lock();
+>>       if (deferred_takeover)
+> 
 
