@@ -1,194 +1,107 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E433E25B30D;
-	Tue, 24 Jun 2025 21:56:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 540C5248880;
+	Tue, 24 Jun 2025 22:01:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750802186; cv=none; b=bEb55GM+Um+jDTP2vBBQv1SVpD9V9xsy+gbd1Kkx9XuERCOk8fZzWdxVKwxD1iEsH1/haZHmQ4WrEQTX1dZoLUkoOAwSZDxfRb1n1UP7CZ6CeI+BGiEDEqmJ6MRR0ek9Ow/QXzASKHaSHLiBYEsPwHMOEmITCMon/2WYApZIvts=
+	t=1750802463; cv=none; b=rFmLLShxuPkVS/Xx4hDtTowtXkgDaNw5TI7l5FUeTrTmMKu9CE6QNpcX+UZUXcRXtGlxzQavbIxZIjwAXfp7w04mGbFKb0dhiISkkJw79GTpnMWc3/66/VCm/kIabgJOTvFNT3AEWiIcSzNg7xNL+g6m55sDIo0h4MarLYTAaCw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750802186; c=relaxed/simple;
-	bh=YW/ds6pprKKQoy3LKVLjqadOwFxWlgr4J1KG6YTdzrQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Fv2iNRZce9ZI7HyCXkCP9BLVdw/TF+t+PD9G1jZUGll9gU0kPDvGr5Qa9kY61TTxiVQjVvqFe99xgOXyZ0o1YwFm6Umy65miM05kKDDYVUXuwLcqJWjKLBbKyo8ihm8un8OQIzadEu2TmQY953dhUI55HHHN6DqFkAm791MzRTs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UKcdUGuS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750802463; c=relaxed/simple;
+	bh=oMqP58jBtpzhindTCdhlaRR+YnhL9McdIKzis2Sd23c=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=l9xVfj8KlM8me7y5cLJTi6KkdbDX2aE6IrrIkAYHaVqtpCOYPc41p7pvviSlDo0uuGdC4KGGATfkGoqt2RFVg2tEeRqJE+68IXS39BDBejuov4fMnoOuS+nTEgaNYDWsnaqUUVsrTCtm0RoVriRP7Riqt6rpyyylIrgY/MwcTqA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TzwY3hrJ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UKcdUGuS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91EEEC4CEE3;
-	Tue, 24 Jun 2025 21:56:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TzwY3hrJ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A55A9C4CEE3;
+	Tue, 24 Jun 2025 22:01:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750802185;
-	bh=YW/ds6pprKKQoy3LKVLjqadOwFxWlgr4J1KG6YTdzrQ=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=UKcdUGuSMF5k9b0dDwYIXsT6x4C30Gad32hUYQh9PartgGZtbWG6Id2KBkxQxieDB
-	 ZYW5xVr51JWs3xs1bnkik5K56+IGVmDXOluAUbJNg32XoLUbufCVojGxe2eCZQV0ZB
-	 VX2HAfRPSfKmCVqtga4JrcZ4dTArSnRdQTDNBGQoFTGNI9p6/+g8AceQ0wF6DopVyQ
-	 QZzxBiYXWWU+pkUVOp5dcnUXJ+NTd4iAKElMSoWjZSaPjILJ+MIFA3ZwmSvOfxFm00
-	 9dCuCAQzDA3Ec4VSeBuKVhuPDm+3OsShpFl7GNjXVI8jVpP+2nOh3/5dadH92aTztG
-	 Nq1oUy+gKlWOA==
-From: Danilo Krummrich <dakr@kernel.org>
-To: gregkh@linuxfoundation.org,
-	rafael@kernel.org,
-	ojeda@kernel.org,
-	alex.gaynor@gmail.com,
-	boqun.feng@gmail.com,
-	gary@garyguo.net,
-	bjorn3_gh@protonmail.com,
-	lossin@kernel.org,
-	a.hindborg@kernel.org,
-	aliceryhl@google.com,
-	tmgross@umich.edu,
-	david.m.ertman@intel.com,
-	ira.weiny@intel.com,
-	leon@kernel.org,
-	kwilczynski@kernel.org,
-	bhelgaas@google.com
-Cc: rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	Danilo Krummrich <dakr@kernel.org>
-Subject: [PATCH v3 4/4] rust: devres: implement register_release()
-Date: Tue, 24 Jun 2025 23:54:02 +0200
-Message-ID: <20250624215600.221167-5-dakr@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250624215600.221167-1-dakr@kernel.org>
-References: <20250624215600.221167-1-dakr@kernel.org>
+	s=k20201202; t=1750802462;
+	bh=oMqP58jBtpzhindTCdhlaRR+YnhL9McdIKzis2Sd23c=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=TzwY3hrJPk/8OWo+Z8/JCb/1jDkOJ6zOkhc4v9XufSwZJXJ+mru7NigLoLTQCZ9ol
+	 Q8fbHYMyoFNK0ERXV+UYR/HjxPwGIhP7Q/9vsNy54QqCwxSHlfOqehw6UJRbGH3K5q
+	 TV0xMxCQqLZf+6YMELdPSY1GYXwXqJjHBjxq5V20kqr0MYxoPA1cvlNC/6J8ZAc72K
+	 QBYaYdJmonZJ0zTXZKv+Xk/DbC7U7sVMBqSKqxQCXDGMqmLc3enONWkYAMIKgZARAJ
+	 I3g6WQ9hvVLxhLubYe2rTPHHZm5iyblrlQEBuUMDkSdBStTj7XNFlAf9RYLEZVUNEZ
+	 TF+yL44fTk0xw==
+Date: Tue, 24 Jun 2025 17:01:01 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Jim Quinlan <james.quinlan@broadcom.com>
+Cc: linux-pci@vger.kernel.org, Nicolas Saenz Julienne <nsaenz@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Lorenzo Pieralisi <lorenzo.pieralisi@arm.com>,
+	bcm-kernel-feedback-list@broadcom.com, jim2101024@gmail.com,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	Rob Herring <robh@kernel.org>,
+	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-rpi-kernel@lists.infradead.org>,
+	"moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE" <linux-arm-kernel@lists.infradead.org>,
+	open list <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/2] PCI: brcmstb: Use "num-lanes" DT property if present
+Message-ID: <20250624220101.GA1532842@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250530224035.41886-3-james.quinlan@broadcom.com>
 
-register_release() is useful when a device resource has associated data,
-but does not require the capability of accessing it or manually releasing
-it.
+On Fri, May 30, 2025 at 06:40:33PM -0400, Jim Quinlan wrote:
+> By default, we use automatic HW negotiation to ascertain the number of
+> lanes of the PCIe connection.  If the "num-lanes" DT property is present,
+> assume that the chip's built-in capability information is incorrect or
+> undesired, and use the specified value instead.
+> 
+> Signed-off-by: Jim Quinlan <james.quinlan@broadcom.com>
+> ---
+>  drivers/pci/controller/pcie-brcmstb.c | 26 +++++++++++++++++++++++++-
+>  1 file changed, 25 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/pcie-brcmstb.c b/drivers/pci/controller/pcie-brcmstb.c
+> index e19628e13898..79fc6d00b7bc 100644
+> --- a/drivers/pci/controller/pcie-brcmstb.c
+> +++ b/drivers/pci/controller/pcie-brcmstb.c
+> @@ -46,6 +46,7 @@
+>  #define  PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK	0xffffff
+>  
+>  #define PCIE_RC_CFG_PRIV1_LINK_CAPABILITY			0x04dc
+> +#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_MAX_LINK_WIDTH_MASK	0x1f0
+>  #define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK	0xc00
+>  
+>  #define PCIE_RC_CFG_PRIV1_ROOT_CAP			0x4f8
+   #define  PCIE_RC_CFG_PRIV1_ROOT_CAP_L1SS_MODE_MASK      0xf8
 
-If we would want to be able to access the device resource and release the
-device resource manually before the device is unbound, but still keep
-access to the associated data, we could implement it as follows.
+If you squint, PCIE_RC_CFG_PRIV1_LINK_CAPABILITY looks a little like
+these standard PCIe things:
 
-	struct Registration<T> {
-	   inner: Devres<RegistrationInner>,
-	   data: T,
-	}
+  #define PCI_EXP_LNKCAP          0x0c    /* Link Capabilities */
+  #define  PCI_EXP_LNKCAP_MLW     0x000003f0 /* Maximum Link Width */
+  #define  PCI_EXP_LNKCAP_ASPMS   0x00000c00 /* ASPM Support */
 
-However, if we never need to access the resource or release it manually,
-register_release() is great optimization for the above, since it does not
-require the synchronization of the Devres type.
+  #define PCI_EXP_DEVCTL2         0x28    /* Device Control 2 */
 
-Suggested-by: Alice Ryhl <aliceryhl@google.com>
-Signed-off-by: Danilo Krummrich <dakr@kernel.org>
----
- rust/kernel/devres.rs | 90 +++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 90 insertions(+)
+So I was hoping we had an opportunity to use PCI_EXP_LNKCAP_MLW and
+PCI_EXP_LNKCAP_ASPMS instead of
+PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_MAX_LINK_WIDTH_MASK and
+PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK.
 
-diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
-index eeffdc8115aa..ff33e835c44f 100644
---- a/rust/kernel/devres.rs
-+++ b/rust/kernel/devres.rs
-@@ -16,6 +16,7 @@
-     sync::{rcu, Completion},
-     types::{ARef, ForeignOwnable, ScopeGuard, Opaque},
- };
-+use core::ops::Deref;
- 
- use pin_init::Wrapper;
- 
-@@ -347,3 +348,92 @@ pub fn register<T, E>(dev: &Device<Bound>, data: impl PinInit<T, E>, flags: Flag
- 
-     register_foreign(dev, data)
- }
-+
-+/// [`Devres`]-releaseable resource.
-+///
-+/// Register an object implementing this trait with [`register_release`]. Its `release`
-+/// function will be called once the device is being unbound.
-+pub trait Release {
-+    /// Called once the [`Device`] given to [`register_release`] is unbound.
-+    fn release(&self);
-+}
-+
-+impl<T: Release> Release for crate::sync::ArcBorrow<'_, T> {
-+    fn release(&self) {
-+        self.deref().release();
-+    }
-+}
-+
-+impl<T: Release> Release for Pin<&'_ T> {
-+    fn release(&self) {
-+        self.deref().release();
-+    }
-+}
-+
-+impl<T: Release> Release for &'_ T {
-+    fn release(&self) {
-+        (*self).release();
-+    }
-+}
-+
-+/// Consume the `data`, [`Release::release`] and [`Drop::drop`] `data` once `dev` is unbound.
-+///
-+/// # Examples
-+///
-+/// ```no_run
-+/// use kernel::{device::{Bound, Device}, devres, devres::Release, sync::Arc};
-+///
-+/// /// Registration of e.g. a class device, IRQ, etc.
-+/// struct Registration<T> {
-+///     data: T,
-+/// }
-+///
-+/// impl<T> Registration<T> {
-+///     fn new(data: T) -> Result<Arc<Self>> {
-+///         // register
-+///
-+///         Ok(Arc::new(Self { data }, GFP_KERNEL)?)
-+///     }
-+/// }
-+///
-+/// impl<T> Release for Registration<T> {
-+///     fn release(&self) {
-+///        // unregister
-+///     }
-+/// }
-+///
-+/// fn from_bound_context(dev: &Device<Bound>) -> Result {
-+///     let reg = Registration::new(0x42)?;
-+///
-+///     devres::register_release(dev, reg.clone())
-+/// }
-+/// ```
-+pub fn register_release<P>(dev: &Device<Bound>, data: P) -> Result
-+where
-+    P: ForeignOwnable + 'static,
-+    for<'a> P::Borrowed<'a>: Release,
-+{
-+    let ptr = data.into_foreign();
-+
-+    #[allow(clippy::missing_safety_doc)]
-+    unsafe extern "C" fn callback<P>(ptr: *mut kernel::ffi::c_void)
-+    where
-+        P: ForeignOwnable,
-+        for<'a> P::Borrowed<'a>: Release,
-+    {
-+        // SAFETY: `ptr` is the pointer to the `ForeignOwnable` leaked above and hence valid.
-+        unsafe { P::borrow(ptr.cast()) }.release();
-+
-+        // SAFETY: `ptr` is the pointer to the `ForeignOwnable` leaked above and hence valid.
-+        drop(unsafe { P::from_foreign(ptr.cast()) });
-+    }
-+
-+    // SAFETY:
-+    // - `dev.as_raw()` is a pointer to a valid and bound device.
-+    // - `ptr` is a valid pointer the `ForeignOwnable` devres takes ownership of.
-+    to_result(unsafe {
-+        // `devm_add_action_or_reset()` also calls `callback` on failure, such that the
-+        // `ForeignOwnable` is released eventually.
-+        bindings::devm_add_action_or_reset(dev.as_raw(), Some(callback::<P>), ptr.cast())
-+    })
-+}
--- 
-2.49.0
+But I guess PCIE_RC_CFG_PRIV1_LINK_CAPABILITY is probably not actually
+PCI_EXP_LNKCAP, because PCI_EXP_LNKCAP being 0x0c into a PCIe
+Capability would mean the cap started at 0x04d0, and
+PCIE_RC_CFG_PRIV1_ROOT_CAP would be at offset 0x28
+(0x04d0 + 0x28 == 0x04f8).
 
+But offset 0x28 in a PCIe Capability would be PCI_EXP_DEVCTL2, not 
+PCIE_RC_CFG_PRIV1_ROOT_CAP, and I can't squint hard enough to see
+anything related to L1SS anywhere in the PCIe Capability.
+
+So never mind ;)
+
+Bjorn
