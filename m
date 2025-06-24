@@ -1,203 +1,173 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99112E610B;
-	Tue, 24 Jun 2025 16:48:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D76E31DEFE6
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2025 17:16:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750783729; cv=none; b=KuoIaMrPDy0+lPWIdvUEYgAv0AIV5DZxukEF665FaKJul3pDgSfpofTEwjXZ6z840+eO5XIyJeVpaBGI6Mb6b5xhw7ASuZxRSIitPLxfI6zltUtswqMCVtF1eMbWpS7yly2yMz3p/bVJK7tLFwo1EbMbKIwRRaPlF/HJMRGuAMA=
+	t=1750785407; cv=none; b=AwS0A007kv1Z+b/zlB47r/eQCFvIR8AyFVOIQ1WjFZwqWkIoB42DmD8o64iQqrlBZgt/CWws3lEkvPJpYFoifQMrFAiif1Pdy5jgKdFKlaU9hlav8Pxtrx5tSyddKtzi3dLzlJnTd5sADd8g/Og8DYPHX0r5NflZ1INjbrjIAZg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750783729; c=relaxed/simple;
-	bh=oQ1jbpZY26uLhcovpi99AHhjhynbQIDhCOwniw/kLP0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iuhwGsEa8SrOAad6pSsBt5GkRTE6DBpbP9hsK6wIgl9zrU1HAweTqPK9X4ZZCFXfuEfBEVUH4kNFL7uGZZJgzmVNAKoumsVnTmiQjkgXrKSRpROYoeFHR+9ZMv/38uffRszrj+IcntkHq8N9/OXSrL5/dU/nsO29iBHjfWVPH8o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TfvzZR/f; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750785407; c=relaxed/simple;
+	bh=UzeZm2Dy/mhkv8CVcruISnEH4zMnwLd2oQpCKisf3RM=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=glZMDPmYkPi6tJnzIh2wSVplO5/ZFvyA/hQR0FS3bHxO55aufF8KgcUsIyBURWSBygz1k13N7QpMGE7s/kBqUMVMLW0TeN8UoKoUYWF6Gu0aGZRvYsSuRs42OOeTGDNkM3RWNLhzEUTwawYNuoCj59ggu00NVIUPZNTxXvmgQfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=B7mdwUhf; arc=none smtp.client-ip=209.85.216.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--seanjc.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TfvzZR/f"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A303AC4CEE3;
-	Tue, 24 Jun 2025 16:48:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750783728;
-	bh=oQ1jbpZY26uLhcovpi99AHhjhynbQIDhCOwniw/kLP0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=TfvzZR/fYpui/a9fNXGb7tsI/EUZhlLeCnYb27CR99Srqf6zNPIOsJlmfeTuFanQd
-	 +U8LSrvF2KJfjmg9Dj8afnFHGuJNPLwcACdFl9oekBU5rVtPUCXwyKp49bEiA6va0G
-	 D822dRBTWbaEg42k/S41DXH5Fm+CLGFZTkyzOG7ykSr4sOkWqV+nX+CXeB3OUOogMJ
-	 +hsktnQLM+lh57CpY8wjn/nzK9UO55m2DoY0PiaAF+ylQ4aV6DjBd16hW7pTGD+Piy
-	 9tWuJ4Lfcrmp1JfhNZoShtc5/hVK1DzqJLhRd0eqhUmr1upBlQhxNkTsFcvNdSBGMt
-	 ys6f6Kg5zVTRA==
-Message-ID: <939129a9-0a93-4539-b651-b08fcddf57b5@kernel.org>
-Date: Tue, 24 Jun 2025 11:48:45 -0500
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="B7mdwUhf"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-3132e7266d3so5472656a91.2
+        for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2025 10:16:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1750785405; x=1751390205; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:reply-to:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=lPtppNiFBf/kpQxTJ/QVNZEJkcz7SYItGSNnHN7Dvg4=;
+        b=B7mdwUhfmyh890YqVNJFPe5Nezb256WFO9AQlg3FrSZmbJmJttNJ3EtaK4VyjygNVg
+         nwAf1HeXXjxY1pqHQXAsEx0hXC6IRXKoxHmfxKF0h6sBCUgYkmemaO/hi+czmkw1MZCo
+         9L5RBiNPnRre8UigRtSSCiB0Kbf5mcgkTAldgPKD4FUB19Yc0SLPZUC/6JTP7VGaG5NA
+         ihwcgxprUSTsb6PUj23AxkHAOTLnNN2uG3zIK7Q0Tr8pS4Yk0IpSo4Kx3CBq9nBPhGyA
+         6d+wXI+rfOOtLvhlG5wlr+5oBeZCHvw+1yed8LJ9/IsMMfCybvLsKyMxQh/PeYrPF2sX
+         gOPA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750785405; x=1751390205;
+        h=cc:to:from:subject:message-id:mime-version:date:reply-to
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=lPtppNiFBf/kpQxTJ/QVNZEJkcz7SYItGSNnHN7Dvg4=;
+        b=c2I/g5rMB+eQpufGTRtjgvMb0Hrr3O1d5z40JVDz6f4/JjA5dc6BSM1SxeAD/5hA7b
+         hj7PZWHLh3DWJ/eFll0gLTN8mDWEWFzJiMS+g4z90Uby9dkfjFf1nuSab7f1UaW/YTcL
+         LSTy1m8zPZEBOAx1jDWpHdrT8/oCWwaB7lWdLAaPkn/0TJhO1coXp6AxZXI/i9PRtSA2
+         pIVdBl3JzxzJmsL6DWighEiUptmVRsrZ12qjunQs9fsuaC9xzCBzavZLkpYf69u7BRwJ
+         PQb70ynS520dvCNp6h/ajJ9on5oxKZBtxf0d0ihUt5H5KqxhBq5Mwxhs3JD6rU1PNorb
+         NuHA==
+X-Gm-Message-State: AOJu0Yz+RolJL7yWq2+UQS5iRdWR1hLGgQajSFajbqfuehJdBW4MfRJV
+	3+edOReds/I5VujdDYYKTgi40xYphwbmhNmqY8tqZOxHbQ1iPoMHTv0vcXLZE0+uSQq8uROjxiq
+	H0qCIaA==
+X-Google-Smtp-Source: AGHT+IFQh6rUf6fsoF1t2iLUmyALBoHLClEocHM1YgkuSdWwDe4MSrhtzjYWYkrbMppOXI0EHromoCwUqBk=
+X-Received: from pjbqo12.prod.google.com ([2002:a17:90b:3dcc:b0:311:f699:df0a])
+ (user=seanjc job=prod-delivery.src-stubby-dispatcher) by 2002:a17:90b:2650:b0:313:dcf4:37bc
+ with SMTP id 98e67ed59e1d1-3159d8fee49mr23229037a91.34.1750785405290; Tue, 24
+ Jun 2025 10:16:45 -0700 (PDT)
+Reply-To: Sean Christopherson <seanjc@google.com>
+Date: Tue, 24 Jun 2025 10:16:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 7/8] PCI/VGA: Move check for firmware default out of
- VGA arbiter
-To: Thomas Zimmermann <tzimmermann@suse.de>,
- Bjorn Helgaas <bhelgaas@google.com>
-Cc: Alex Deucher <alexander.deucher@amd.com>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
- Lukas Wunner <lukas@wunner.de>,
- Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
- Maxime Ripard <mripard@kernel.org>, David Woodhouse <dwmw2@infradead.org>,
- Lu Baolu <baolu.lu@linux.intel.com>, Joerg Roedel <joro@8bytes.org>,
- Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
- Alex Williamson <alex.williamson@redhat.com>,
- Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>,
- "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
- open list <linux-kernel@vger.kernel.org>,
- "open list:INTEL IOMMU (VT-d)" <iommu@lists.linux.dev>,
- "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- "open list:VFIO DRIVER" <kvm@vger.kernel.org>,
- "open list:SOUND" <linux-sound@vger.kernel.org>,
- Daniel Dadap <ddadap@nvidia.com>,
- Mario Limonciello <mario.limonciello@amd.com>
-References: <20250623184757.3774786-1-superm1@kernel.org>
- <20250623184757.3774786-8-superm1@kernel.org>
- <f0e70269-b55e-4ac8-b052-da092a177eda@suse.de>
-Content-Language: en-US
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <f0e70269-b55e-4ac8-b052-da092a177eda@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.50.0.714.g196bf9f422-goog
+Message-ID: <20250624171637.485616-1-seanjc@google.com>
+Subject: [RFC PATCH] PCI: Support Immediate Readiness on devices without PM capabilities
+From: Sean Christopherson <seanjc@google.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	David Matlack <dmatlack@google.com>, Vipin Sharma <vipinsh@google.com>, 
+	Aaron Lewis <aaronlewis@google.com>, Sean Christopherson <seanjc@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 6/24/25 4:21 AM, Thomas Zimmermann wrote:
-> 
-> 
-> Am 23.06.25 um 20:47 schrieb Mario Limonciello:
->> From: Mario Limonciello <mario.limonciello@amd.com>
->>
->> The x86 specific check for whether a framebuffer belongs to a device
->> works for display devices as well as VGA devices.  Callers to
->> video_is_primary_device() can benefit from checking non-VGA display
->> devices.
->>
->> Move the x86 specific check into x86 specific code, and adjust VGA
->> arbiter to call that code as well. This allows fbcon to find the
->> right PCI device on systems that don't have VGA devices.
->>
->> Suggested-by: Thomas Zimmermann <tzimmermann@suse.de>
->> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
->> ---
->> v4:
->>   * use helper
->> ---
->>   arch/x86/video/video-common.c | 13 ++++++++++++-
->>   drivers/pci/vgaarb.c          | 36 ++---------------------------------
->>   2 files changed, 14 insertions(+), 35 deletions(-)
->>
->> diff --git a/arch/x86/video/video-common.c b/arch/x86/video/video- 
->> common.c
->> index 81fc97a2a837a..917568e4d7fb1 100644
->> --- a/arch/x86/video/video-common.c
->> +++ b/arch/x86/video/video-common.c
->> @@ -9,6 +9,7 @@
->>   #include <linux/module.h>
->>   #include <linux/pci.h>
->> +#include <linux/screen_info.h>
->>   #include <linux/vgaarb.h>
->>   #include <asm/video.h>
->> @@ -27,6 +28,7 @@ EXPORT_SYMBOL(pgprot_framebuffer);
->>   bool video_is_primary_device(struct device *dev)
->>   {
->> +    struct screen_info *si = &screen_info;
->>       struct pci_dev *pdev;
->>       if (!dev_is_pci(dev))
->> @@ -34,7 +36,16 @@ bool video_is_primary_device(struct device *dev)
->>       pdev = to_pci_dev(dev);
->> -    return (pdev == vga_default_device());
->> +    if (!pci_is_display(pdev))
->> +        return false;
->> +
->> +    if (pdev == vga_default_device())
->> +        return true;
->> +
->> +    if (pdev == screen_info_pci_dev(si))
->> +        return true;
->> +
->> +    return false;
->>   }
->>   EXPORT_SYMBOL(video_is_primary_device);
->> diff --git a/drivers/pci/vgaarb.c b/drivers/pci/vgaarb.c
->> index 78748e8d2dbae..15ab58c70b016 100644
->> --- a/drivers/pci/vgaarb.c
->> +++ b/drivers/pci/vgaarb.c
->> @@ -26,12 +26,12 @@
->>   #include <linux/poll.h>
->>   #include <linux/miscdevice.h>
->>   #include <linux/slab.h>
->> -#include <linux/screen_info.h>
->>   #include <linux/vt.h>
->>   #include <linux/console.h>
->>   #include <linux/acpi.h>
->>   #include <linux/uaccess.h>
->>   #include <linux/vgaarb.h>
->> +#include <asm/video.h>
->>   static void vga_arbiter_notify_clients(void);
->> @@ -554,38 +554,6 @@ void vga_put(struct pci_dev *pdev, unsigned int 
->> rsrc)
->>   }
->>   EXPORT_SYMBOL(vga_put);
->> -static bool vga_is_firmware_default(struct pci_dev *pdev)
->> -{
->> -#if defined(CONFIG_X86)
->> -    u64 base = screen_info.lfb_base;
->> -    u64 size = screen_info.lfb_size;
->> -    struct resource *r;
->> -    u64 limit;
->> -
->> -    /* Select the device owning the boot framebuffer if there is one */
->> -
->> -    if (screen_info.capabilities & VIDEO_CAPABILITY_64BIT_BASE)
->> -        base |= (u64)screen_info.ext_lfb_base << 32;
->> -
->> -    limit = base + size;
->> -
->> -    /* Does firmware framebuffer belong to us? */
->> -    pci_dev_for_each_resource(pdev, r) {
->> -        if (resource_type(r) != IORESOURCE_MEM)
->> -            continue;
->> -
->> -        if (!r->start || !r->end)
->> -            continue;
->> -
->> -        if (base < r->start || limit >= r->end)
->> -            continue;
->> -
->> -        return true;
->> -    }
->> -#endif
->> -    return false;
->> -}
->> -
->>   static bool vga_arb_integrated_gpu(struct device *dev)
->>   {
->>   #if defined(CONFIG_ACPI)
->> @@ -623,7 +591,7 @@ static bool vga_is_boot_device(struct vga_device 
->> *vgadev)
->>       if (boot_vga && boot_vga->is_firmware_default)
->>           return false;
->> -    if (vga_is_firmware_default(pdev)) {
->> +    if (video_is_primary_device(&pdev->dev)) {
-> 
-> Doesn't this generate a cyclic dependency between vgaarb and video? I 
-> find this call cycle hard to reason about because 
-> vgaarb_default_device() depends on the results of these boot-device 
-> tests. Maybe keep vga_is_firmware_default() and just replace its content 
-> with a call to screen_info_pci_dev().
-> Best regards
-> Thomas
+Query support for Immediate Readiness irrespective of whether or not the
+device supports PM capabilities, as nothing in the PCIe spec suggests that
+Immediate Readiness is in any way dependent on PM functionality.
 
-OK, I'll do that, thanks.
+Opportunistically add a comment to explain why "errors" during PM setup
+are effectively ignored.
 
-> 
->>           vgadev->is_firmware_default = true;
->>           return true;
->>       }
-> 
+Fixes: d6112f8def51 ("PCI: Add support for Immediate Readiness")
+Cc: David Matlack <dmatlack@google.com>
+Cc: Vipin Sharma <vipinsh@google.com>
+Cc: Aaron Lewis <aaronlewis@google.com>
+Signed-off-by: Sean Christopherson <seanjc@google.com>
+---
+
+RFC as I'm not entirely sure this is useful/correct.
+
+Found by inspection when debugging a VFIO VF passthrough issue that turned out
+to be 907a7a2e5bf4 ("PCI/PM: Set up runtime PM even for devices without PCI PM").
+
+The folks on the Cc list are looking at parallelizing VF assignment to avoid
+serializing the 100ms wait on FLR.  I'm hoping we'll get lucky and the VFs in
+question do (or can) support PCI_STATUS_IMM_READY.
+
+ drivers/pci/pci.c | 40 +++++++++++++++++++++++++---------------
+ 1 file changed, 25 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 9e42090fb108..cd91adbf0269 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3198,33 +3198,22 @@ void pci_pm_power_up_and_verify_state(struct pci_dev *pci_dev)
+ 	pci_update_current_state(pci_dev, PCI_D0);
+ }
+ 
+-/**
+- * pci_pm_init - Initialize PM functions of given PCI device
+- * @dev: PCI device to handle.
+- */
+-void pci_pm_init(struct pci_dev *dev)
++static void __pci_pm_init(struct pci_dev *dev)
+ {
+ 	int pm;
+-	u16 status;
+ 	u16 pmc;
+ 
+-	device_enable_async_suspend(&dev->dev);
+-	dev->wakeup_prepared = false;
+-
+-	dev->pm_cap = 0;
+-	dev->pme_support = 0;
+-
+ 	/* find PCI PM capability in list */
+ 	pm = pci_find_capability(dev, PCI_CAP_ID_PM);
+ 	if (!pm)
+-		goto poweron;
++		return;
+ 	/* Check device's ability to generate PME# */
+ 	pci_read_config_word(dev, pm + PCI_PM_PMC, &pmc);
+ 
+ 	if ((pmc & PCI_PM_CAP_VER_MASK) > 3) {
+ 		pci_err(dev, "unsupported PM cap regs version (%u)\n",
+ 			pmc & PCI_PM_CAP_VER_MASK);
+-		goto poweron;
++		return;
+ 	}
+ 
+ 	dev->pm_cap = pm;
+@@ -3265,11 +3254,32 @@ void pci_pm_init(struct pci_dev *dev)
+ 		/* Disable the PME# generation functionality */
+ 		pci_pme_active(dev, false);
+ 	}
++}
++
++/**
++ * pci_pm_init - Initialize PM functions of given PCI device
++ * @dev: PCI device to handle.
++ */
++void pci_pm_init(struct pci_dev *dev)
++{
++	u16 status;
++
++	device_enable_async_suspend(&dev->dev);
++	dev->wakeup_prepared = false;
++
++	dev->pm_cap = 0;
++	dev->pme_support = 0;
++
++	/*
++	 * Note, support for the PCI PM spec is optional for legacy PCI devices
++	 * and for VFs.  Continue on even if no PM capabilities are supported.
++	 */
++	__pci_pm_init(dev);
+ 
+ 	pci_read_config_word(dev, PCI_STATUS, &status);
+ 	if (status & PCI_STATUS_IMM_READY)
+ 		dev->imm_ready = 1;
+-poweron:
++
+ 	pci_pm_power_up_and_verify_state(dev);
+ 	pm_runtime_forbid(&dev->dev);
+ 	pm_runtime_set_active(&dev->dev);
+
+base-commit: 86731a2a651e58953fc949573895f2fa6d456841
+-- 
+2.50.0.714.g196bf9f422-goog
 
