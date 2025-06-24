@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CB5226CF3;
-	Tue, 24 Jun 2025 20:30:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04D602EE271;
+	Tue, 24 Jun 2025 20:30:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750797051; cv=none; b=rmEDOjFfEa/rO0ZWWYndW0kYWnpWDnmz68BwXoBT+syu/yr6Z/5WrQtZQPRL5C2x32biR4q8OS7pdmZ1Xn+MSwPXE997a3twD9moyexVekTl14lk6nhW9EgzOdObn+0Qyez15FeBYqe/GlJMYRVbofq5IXcxEbiMix5nzb/3TyU=
+	t=1750797054; cv=none; b=WW0V0eoOBx9VmTuDvgYclacncCbrrhNWgkHYkynWBqXiCF266kcaYnQAacZCwU0zKajNj2gmpz6PZyLeyk//0VSeH28HJZKVS+6R6oGBCqC0e8fjKkWranQAR9osMw5WDqSoejBJ2dTVyEbi2ge5XHYL0YbB2PnRhurY0jyVV3Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750797051; c=relaxed/simple;
-	bh=dwUS0NNQBo6ioFvBv9MvL8ShjmESObZeByXZvWYMJKk=;
+	s=arc-20240116; t=1750797054; c=relaxed/simple;
+	bh=ZUEaBNdA8Lm5/HmaCro4bOIyTqXr2dVXogleY25ibLU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lfc0tFh6BJE4mlJm0yawN2Nh0gU3NcarspOdjjCMeWOzSolCcmaIzcUjmMXGMZWctGPBObXW4lCaQBd2NNGv9Okfah82Nv6lMlYqv5vx5kQd88F7s4le/DUrFsn/JhiAVL8FQcpE6PRg+hH14Rf35yGOUxYxIpyjASCeHq7YrxQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B0qF+VrE; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=NJSYkobQacIIsqdf6PCOVm+wszvQTNDq3K13Mcv2o74fBayUDMJebnlVCqAkuEKyudlCM/HoCT9/92E3Rj4168lC2L6Ci5nFjrx0Y3whlGKiMycHsXxJoxNMKD4xGW4e9sJTpjnYGpCqyCejbFnLDulOVluBrPOSfOi7Wvu1PxA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=e3hpFGob; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B0qF+VrE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C63C1C4CEF0;
-	Tue, 24 Jun 2025 20:30:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="e3hpFGob"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 40E65C4CEE3;
+	Tue, 24 Jun 2025 20:30:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750797051;
-	bh=dwUS0NNQBo6ioFvBv9MvL8ShjmESObZeByXZvWYMJKk=;
+	s=k20201202; t=1750797053;
+	bh=ZUEaBNdA8Lm5/HmaCro4bOIyTqXr2dVXogleY25ibLU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=B0qF+VrEpm9PcHkfA+Nr09IQ9DvuNyNUtKOhoAQbDQqjjE1ofB+JzuQpU3BCW4xJ7
-	 hGfy9RqOJtCwXX8UlpxxResPC8Jsk/+JIwnoBCnL1KXc8gmR6ABti7ZJq6zWJM1R0V
-	 cIZGceXaypx3YkPJ/m3ZzN9q6c5obCYNV30Qe/Ut29p5sWv9rhZHUkLEl/8BfyOIf5
-	 Yi+iUngbNtWhN++rX8XXemp4WvmP/S45lbcDvnjCAqa5gyaixX5HUFjDmsYH0Lt5T4
-	 nq1FE5r0WVSMeYeqiejWZwpPwEnAbD0flIRL0S0KHKfc28zJw1l5VOf6kEd6DTE+3Y
-	 tUSwq6UQaDvuw==
+	b=e3hpFGobv4QkWBmpS31l8K6Jt47ji95lqwQUQdP2JySMGVQ/9pZ3Zn4AYCbl8K6Dt
+	 uUXKVnnb7oyXZiiql1LJEp59TNfF0BE8tVs8HPJ0aNuR8fLixKZPCqC32N/Ru/Uoy8
+	 qjy6Zrh20+kHAoEYD6fgSWkX5VGU+Fh1ocuhoPV89JiUxNebcZo+TWz6U3HmzLC2ZU
+	 P/5A5DcXENcpPvitZyoSIyi0bygFqnbkYOSRT0MwlvrRM6IlVVnLQJTHchrT0CFLIf
+	 PmTH0I+GsOp+POkvv/2tgxWyNtal76I4LiWp1TZ4mYXii6eHDjhOAzal3QlNIqTOI+
+	 dVy70n3EYNpdw==
 From: Mario Limonciello <superm1@kernel.org>
 To: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Alex Deucher <alexander.deucher@amd.com>,
@@ -52,10 +52,11 @@ Cc: Alex Deucher <alexander.deucher@amd.com>,
 	linux-sound@vger.kernel.org (open list:SOUND),
 	Daniel Dadap <ddadap@nvidia.com>,
 	Mario Limonciello <mario.limonciello@amd.com>,
-	Simona Vetter <simona.vetter@ffwll.ch>
-Subject: [PATCH v5 1/9] PCI: Add helper for checking if a PCI device is a display controller
-Date: Tue, 24 Jun 2025 15:30:34 -0500
-Message-ID: <20250624203042.1102346-2-superm1@kernel.org>
+	Simona Vetter <simona.vetter@ffwll.ch>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v5 2/9] vfio/pci: Use pci_is_display()
+Date: Tue, 24 Jun 2025 15:30:35 -0500
+Message-ID: <20250624203042.1102346-3-superm1@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250624203042.1102346-1-superm1@kernel.org>
 References: <20250624203042.1102346-1-superm1@kernel.org>
@@ -69,43 +70,31 @@ Content-Transfer-Encoding: 8bit
 
 From: Mario Limonciello <mario.limonciello@amd.com>
 
-Several places in the kernel do class shifting to match whether a
-PCI device is display class.  Introduce a helper for those places to
-use.
+The inline pci_is_display() helper does the same thing.  Use it.
 
+Acked-by: Alex Williamson <alex.williamson@redhat.com>
 Reviewed-by: Daniel Dadap <ddadap@nvidia.com>
 Reviewed-by: Simona Vetter <simona.vetter@ffwll.ch>
+Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
 Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
 ---
- include/linux/pci.h | 15 +++++++++++++++
- 1 file changed, 15 insertions(+)
+ drivers/vfio/pci/vfio_pci_igd.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 05e68f35f3923..e77754e43c629 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -744,6 +744,21 @@ static inline bool pci_is_vga(struct pci_dev *pdev)
- 	return false;
+diff --git a/drivers/vfio/pci/vfio_pci_igd.c b/drivers/vfio/pci/vfio_pci_igd.c
+index ef490a4545f48..988b6919c2c31 100644
+--- a/drivers/vfio/pci/vfio_pci_igd.c
++++ b/drivers/vfio/pci/vfio_pci_igd.c
+@@ -437,8 +437,7 @@ static int vfio_pci_igd_cfg_init(struct vfio_pci_core_device *vdev)
+ 
+ bool vfio_pci_is_intel_display(struct pci_dev *pdev)
+ {
+-	return (pdev->vendor == PCI_VENDOR_ID_INTEL) &&
+-	       ((pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY);
++	return (pdev->vendor == PCI_VENDOR_ID_INTEL) && pci_is_display(pdev);
  }
  
-+/**
-+ * pci_is_display - Check if a PCI device is a display controller
-+ * @pdev: Pointer to the PCI device structure
-+ *
-+ * This function determines whether the given PCI device corresponds
-+ * to a display controller. Display controllers are typically used
-+ * for graphical output and are identified based on their class code.
-+ *
-+ * Return: true if the PCI device is a display controller, false otherwise.
-+ */
-+static inline bool pci_is_display(struct pci_dev *pdev)
-+{
-+	return (pdev->class >> 16) == PCI_BASE_CLASS_DISPLAY;
-+}
-+
- #define for_each_pci_bridge(dev, bus)				\
- 	list_for_each_entry(dev, &bus->devices, bus_list)	\
- 		if (!pci_is_bridge(dev)) {} else
+ int vfio_pci_igd_init(struct vfio_pci_core_device *vdev)
 -- 
 2.43.0
 
