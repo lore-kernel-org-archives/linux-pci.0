@@ -1,116 +1,43 @@
-Received: from mail-qt1-f171.google.com (mail-qt1-f171.google.com [209.85.160.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3FD62E2EEC;
-	Tue, 24 Jun 2025 16:37:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A24D626CE3A
+	for <linux-pci@vger.kernel.org>; Tue, 24 Jun 2025 16:48:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750783027; cv=none; b=S498TXFi6atG5iJdx17GufCIF0EOa9tzs8BiNtoeABbebk/hXljEPalXhEExPcQK9Bgf1ql79naqzI9PXg9ZodVKdGGU4VTNhR6Xc5lBMNpn/MH0ARiRrfO1gPQcDWjoSytpFy7CAFgn5srDNhgTbKrMWXlF7/soCcm2OYwHOSY=
+	t=1750783728; cv=none; b=eItTrj2NeiYfX69hmjzux3pBBkqzmIFfkOHUfb/fnfTnX9j+W9gaxmqH2K24+5WPqsylj3u04u6uNY0gid7xoij0pkNz46e31Vu3Zvbhez7sV0TsN21Xb9PILxISjvpHubuPjFN7MoAbN1ZW36IeXt/ABDAGrbtoOVALTpQJv1Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750783027; c=relaxed/simple;
-	bh=NRoFurR9kV6zGdDDahTSMnjYU9FuSfQZM8nZr6O3528=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dEciC46jzOtHLwnPnE084VKJJYjsD6Di1VVKqzu/SvMoD0ahuZWrzFwvysGmJPajMXRBCM53+TOt17y+bzd286nsAjR7FMNBgYkBBOUxJmB8R4cD+j3LnKC9MOdGldSx/HdWJzYSsEUmSw/zZIl/YpJg/fXernP1WBJIG0ieL2w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UtDIKqzz; arc=none smtp.client-ip=209.85.160.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1750783728; c=relaxed/simple;
+	bh=u0OwnLAZra1aE2r2jUIv0th0g7mdcSaXHIYp16N1RkU=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=Jmsnlu/SRPol9l4njgKL8Fz81I86uOi/ptEnxaIRm6ezhJutVAkBhsLONQBOuOUrSq74doggkdneLKZpXxCljPE+C3uCCkz4sFjoe0NjFxPvF8QsSVcx2on7SYL0uV03i3dLrg4v3bzxGOFL+67cZMquIz8ypLgw9e06aVC8qis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hJyrdiQC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UtDIKqzz"
-Received: by mail-qt1-f171.google.com with SMTP id d75a77b69052e-4a58d95ea53so642431cf.0;
-        Tue, 24 Jun 2025 09:37:05 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750783024; x=1751387824; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:feedback-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wrHUOA5cM5tPGA5+OiPMKQrqna+9NnupLRwgpEP5io4=;
-        b=UtDIKqzzlOoSZGn9c/IEJ5/1/XBbBf62GxGgBe12CCdzYShI63mByAHFzlHZe3lgby
-         sKh9bxqNgob8TixJFJcB/8ZQ3XIKVn8GZciMHQHVVzoNdpMOp6PzPzDeCuq+Ci1dcdlQ
-         KTcpPnXHxSG/SHXwTT9J10F7y2PCNxL/6XAdcOHJQNl2fDoK9GnFBn+FygFXvH9r80mQ
-         09Kf8VOQSSJHZUMwXO+ZtkFWoKd18wrfHb4nkYJeIb+WmHdSt1Z609m/NjdUdzGpXpnQ
-         I8l841G0KTmorX8NVIekI9WRuHjCkfrgXwOn2FA8WOMh0qVxobcAYk1dpsGLZ7ylXMjG
-         Fsiw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750783024; x=1751387824;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:feedback-id:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wrHUOA5cM5tPGA5+OiPMKQrqna+9NnupLRwgpEP5io4=;
-        b=q5f2GftJI68F8SuwlsJ38albUQTVnUid4SH5h0TowypL66+D98xcv++RYISRp5s+cs
-         9l+io+EFImXRD5d0FdcpefqoTz6bGfMRQYL3X93rUOKbiSGy3qTzoh5AICqU4OwuysZj
-         9kHUggzeZg+dyJ47ij8VLy+tw7cEXmxVlDZMzLX3Uqon8TD+W3ciOfzQUdTRBoo7hNHu
-         2J9b7xjgSWDmWp7ej+fUJjPFETPgNTEpHwyoBvxOdy/Z1Ikh5XTfIjPaZglhe5lRZoAx
-         p+4GpCBGU2hD0VtxjBBgF8BRUbZCUZjXvFDpU3abYy3tumDtaGDXwWazwqjTbEBON2+p
-         ILCQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUgEC1Cvc87d9+O6cubSlrcZwSobinYO3T2tO6e+r0DVKLpFIpDE35/+QZQA2S0tJGf5Af4f4f9F5sp@vger.kernel.org, AJvYcCUknNOVMKDv5IAiJFcCNl4XtYkhx/jnqzsLY64fcMc0/O7Re5tqKMMnSC7cC3eGaLK19e1i73pApNoDDzwB/k4=@vger.kernel.org, AJvYcCVZJDh4eqgYywK8ggMNRFRsAmPFDmqKzv3SjWxFr4makYCxu1Z6mRc6ik2KgNvw4wO2JgdaWFlH9FEljHw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxiqZVobr2D8xJFe+uYv4TApQleJYKtAXpBzYF7dRRY4vobTyyV
-	Wyj5/uUJp/OPXqZWQ29G+Z6TI2Q4M8TLuOAERSNqAVvk9xMGiiE80wu6
-X-Gm-Gg: ASbGncuAYvfbK5H4LExETmcoZOETT3A2otvIKuxPt67e+Yjt/9phyNRoXmpGPRA4XYX
-	Y44UauVfA0LNfnU8b6UdzjaepV3YcmGqyNkDg1KI9Je4ymgJTi29B5v37N+g31+hHRW/bhz+lE0
-	sDqoJ/OdXWZaCn3L902E8+8BDjfN1KgyQyftLucy5PvvBYtxavLGy/nNPOqXB9khvMjUW/zUSRP
-	XwobGNiIFPPTRA7EU3gONDWQAmHLf0sGm3HXc5tcT35nAu2TaRUnxGpKdj+FnxeIKk3Nk7Rljex
-	kSJnJUCPDaxel+UvafbAUXjor88lW93zLWrWW1Gc3HBaSdnTYZ4Plv5v5mRyLfI3zdapOp8/KfV
-	1cy83eODr1t4purTmOn5spidNsuUC79nUvw0s8d8U+d/7GVazcgMK
-X-Google-Smtp-Source: AGHT+IGzyxTxtdQQikYdjRdTiJkeiOX/DC0V3FgB4xWNuRSQcxY5k8TFZ3R2gStJML4PDC8rme24/Q==
-X-Received: by 2002:a05:622a:580e:b0:4a7:8439:796e with SMTP id d75a77b69052e-4a7ae950d6fmr69027831cf.13.1750783024476;
-        Tue, 24 Jun 2025 09:37:04 -0700 (PDT)
-Received: from fauth-a2-smtp.messagingengine.com (fauth-a2-smtp.messagingengine.com. [103.168.172.201])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4a779d4e62csm51251191cf.15.2025.06.24.09.37.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Jun 2025 09:37:04 -0700 (PDT)
-Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 59E111200068;
-	Tue, 24 Jun 2025 12:37:03 -0400 (EDT)
-Received: from phl-mailfrontend-01 ([10.202.2.162])
-  by phl-compute-05.internal (MEProxy); Tue, 24 Jun 2025 12:37:03 -0400
-X-ME-Sender: <xms:L9RaaCu7D0gu6NNov063q707sxCCZpWBy6TGMkYMxSZ0JvOkpaVNcg>
-    <xme:L9RaaHdvde5gaVkFBbR1fLDowr_g9pmr1Lrbess0nBH2ZJEQhYmwcxz9LlO3aWxga
-    GphpHe52ztmXhwNiA>
-X-ME-Received: <xmr:L9RaaNy3OfUrArk_eeFmpR98dSxtwFt_2GnuQyCGE8FJCETcP0MfKxuDKg>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddvgddvtdefkecutefuodetggdotefrod
-    ftvfcurfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegr
-    ihhlohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjug
-    hrpeffhffvvefukfhfgggtuggjsehttdertddttddvnecuhfhrohhmpeeuohhquhhnucfh
-    vghnghcuoegsohhquhhnrdhfvghnghesghhmrghilhdrtghomheqnecuggftrfgrthhtvg
-    hrnhephedugfduffffteeutddvheeuveelvdfhleelieevtdeguefhgeeuveeiudffiedv
-    necuvehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomhepsghoqh
-    hunhdomhgvshhmthhprghuthhhphgvrhhsohhnrghlihhthidqieelvdeghedtieegqddu
-    jeejkeehheehvddqsghoqhhunhdrfhgvnhhgpeepghhmrghilhdrtghomhesfhhigihmvg
-    drnhgrmhgvpdhnsggprhgtphhtthhopedvtddpmhhouggvpehsmhhtphhouhhtpdhrtghp
-    thhtohepuggrkhhrsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehgrhgvghhkhheslh
-    hinhhugihfohhunhgurghtihhonhdrohhrghdprhgtphhtthhopehrrghfrggvlheskhgv
-    rhhnvghlrdhorhhgpdhrtghpthhtohepohhjvggurgeskhgvrhhnvghlrdhorhhgpdhrtg
-    hpthhtoheprghlvgigrdhgrgihnhhorhesghhmrghilhdrtghomhdprhgtphhtthhopehg
-    rghrhiesghgrrhihghhuohdrnhgvthdprhgtphhtthhopegsjhhorhhnfegpghhhsehprh
-    hothhonhhmrghilhdrtghomhdprhgtphhtthhopehlohhsshhinheskhgvrhhnvghlrdho
-    rhhgpdhrtghpthhtoheprgdrhhhinhgusghorhhgsehkvghrnhgvlhdrohhrgh
-X-ME-Proxy: <xmx:L9RaaNNcdtCb_3PLYIsoPdQHmRYvB5FatNOG3HTZxwf5xQfxZvPXTQ>
-    <xmx:L9RaaC_ckuLCdFXMLQROceAHa6eSPRiWkhj_KyLN2DxXb3RgCno6ug>
-    <xmx:L9RaaFWWlKhhnI6lOp1F62KD1iUI-5Rux6EmSnXR1FF4XYptiam_vQ>
-    <xmx:L9RaaLfxTQV0fh6pfcOpnx2SAb45UkMETxHF_RTCL5SHCCluL7Gqaw>
-    <xmx:L9RaaMchv9hLOQxIsijJrRBQaD99ZAclIWg6FZ1vlxCRBCP3khTY1j1d>
-Feedback-ID: iad51458e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 24 Jun 2025 12:37:02 -0400 (EDT)
-Date: Tue, 24 Jun 2025 09:37:02 -0700
-From: Boqun Feng <boqun.feng@gmail.com>
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: gregkh@linuxfoundation.org, rafael@kernel.org, ojeda@kernel.org,
-	alex.gaynor@gmail.com, gary@garyguo.net, bjorn3_gh@protonmail.com,
-	lossin@kernel.org, a.hindborg@kernel.org, aliceryhl@google.com,
-	tmgross@umich.edu, david.m.ertman@intel.com, ira.weiny@intel.com,
-	leon@kernel.org, kwilczynski@kernel.org, bhelgaas@google.com,
-	rust-for-linux@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v2 3/4] rust: devres: get rid of Devres' inner Arc
-Message-ID: <aFrULqf7gQgI4T9p@Mac.home>
-References: <20250622164050.20358-1-dakr@kernel.org>
- <20250622164050.20358-4-dakr@kernel.org>
- <aFizv7suXTADJU3f@Mac.home>
- <aFrBvwFrUGD45TeF@cassiopeiae>
- <aFrIbRA9b9LOxFQ3@Mac.home>
- <aFrPKAxHfAetcQzz@cassiopeiae>
- <aFrQWQp94ZvFQ3SV@cassiopeiae>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hJyrdiQC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17AD8C4CEEF;
+	Tue, 24 Jun 2025 16:48:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750783728;
+	bh=u0OwnLAZra1aE2r2jUIv0th0g7mdcSaXHIYp16N1RkU=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=hJyrdiQCkPQbXVvaJjvRYhXnaOjQk0Pn7vr/8JfSyet9tV2l5Q/XR3YCZkXhbPL5B
+	 hu3XzYYdCwG6QoRti8/AuscCrUr5gPokjbx0AYkQq3fFGX9ZHQh8YfT+DLVqVVMdRP
+	 OO+TbuHLlAK9zleIL/HQm709RKmlpapd/rUhz61eL+RliFu8qnGqxH6VP/tDkvj6de
+	 YNnCv1HKraKpe/DYBKjng6HxcWsWVICU32Wp8jEHNEvpQOgoysqwgZHqpqiek0V2WL
+	 S86n4uzwtlzNAsmVRg8/6OUl36T00+nzGx6Vfjywyd453tbYhJsRiqd9pTDOcri/U+
+	 6J8dB3Kul3QBw==
+Date: Tue, 24 Jun 2025 11:48:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Andrew <andreasx0@protonmail.com>,
+	Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>,
+	"Maciej W. Rozycki" <macro@orcam.me.uk>,
+	Matthew W Carlis <mattc@purestorage.com>, linux-pci@vger.kernel.org,
+	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	Jiwei Sun <sunjw10@lenovo.com>,
+	Adrian Huang12 <ahuang12@lenovo.com>
+Subject: Re: [PATCH] PCI: Fix link speed calculation on retrain failure
+Message-ID: <20250624164846.GA1482201@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -119,49 +46,90 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <aFrQWQp94ZvFQ3SV@cassiopeiae>
+In-Reply-To: <1c92ef6bcb314ee6977839b46b393282e4f52e74.1750684771.git.lukas@wunner.de>
 
-On Tue, Jun 24, 2025 at 06:20:41PM +0200, Danilo Krummrich wrote:
-> On Tue, Jun 24, 2025 at 06:15:43PM +0200, Danilo Krummrich wrote:
-> > Oh, so you meant adding this to the safety comment. Yes, that makes sense. Maybe
-> > ScopeGuard works too, as you say.
-> 
-> diff --git a/rust/kernel/devres.rs b/rust/kernel/devres.rs
-> index 2591cacecb7b..afd73a8c6012 100644
-> --- a/rust/kernel/devres.rs
-> +++ b/rust/kernel/devres.rs
-> @@ -14,7 +14,7 @@
->      prelude::*,
->      revocable::{Revocable, RevocableGuard},
->      sync::{rcu, Completion},
-> -    types::{ARef, ForeignOwnable, Opaque},
-> +    types::{ARef, ForeignOwnable, ScopeGuard, Opaque},
->  };
->  use core::ops::Deref;
-> 
-> @@ -177,15 +177,15 @@ fn data(&self) -> &Revocable<T> {
->          // hence `ptr` must be a valid pointer to `Inner`.
->          let inner = unsafe { &*ptr.cast::<Inner<T>>() };
-> 
-> +        // Ensure that `inner` can't be used anymore after we signal completion of this callback.
-> +        let inner = ScopeGuard::new_with_data(inner, |inner| inner.devm.complete_all());
-> +
->          if !inner.data.revoke() {
->              // If `revoke()` returns false, it means that `Devres::drop` already started revoking
->              // `data` for us. Hence we have to wait until `Devres::drop` signals that it
->              // completed revoking `data`.
->              inner.revoke.wait_for_completion();
->          }
-> -
-> -        // Signal that we're done using `inner`.
-> -        inner.devm.complete_all();
->      }
-> 
->      fn remove_action(&self) -> bool {
-> 
-> Is this what you thought of?
+[+cc Sathy, Jiwei, Adrian]
 
-Yep, looks good to me. Thanks!
+On Mon, Jun 23, 2025 at 03:22:14PM +0200, Lukas Wunner wrote:
+> When pcie_failed_link_retrain() fails to retrain, it tries to revert to
+> the previous link speed.  However it calculates that speed from the Link
+> Control 2 register without masking out non-speed bits first.
+> 
+> PCIE_LNKCTL2_TLS2SPEED() converts such incorrect values to
+> PCI_SPEED_UNKNOWN, which in turn causes a WARN splat in
+> pcie_set_target_speed():
+> 
+>   pci 0000:00:01.1: [1022:14ed] type 01 class 0x060400 PCIe Root Port
+>   pci 0000:00:01.1: broken device, retraining non-functional downstream link at 2.5GT/s
+>   pci 0000:00:01.1: retraining failed
+>   WARNING: CPU: 1 PID: 1 at drivers/pci/pcie/bwctrl.c:168 pcie_set_target_speed
+>   RDX: 0000000000000001 RSI: 00000000000000ff RDI: ffff9acd82efa000
+>   pcie_failed_link_retrain
+>   pci_device_add
+>   pci_scan_single_device
+>   pci_scan_slot
+>   pci_scan_child_bus_extend
+>   acpi_pci_root_create
+>   pci_acpi_scan_root
+>   acpi_pci_root_add
+>   acpi_bus_attach
+>   device_for_each_child
+>   acpi_dev_for_each_child
+>   acpi_bus_attach
+>   device_for_each_child
+>   acpi_dev_for_each_child
+>   acpi_bus_attach
+>   acpi_bus_scan
+>   acpi_scan_init
+>   acpi_init
+> 
+> Per the calling convention of the System V AMD64 ABI, the arguments to
+> pcie_set_target_speed(struct pci_dev *, enum pci_bus_speed, bool) are
+> stored in RDI, RSI, RDX.  As visible above, RSI contains 0xff, i.e.
+> PCI_SPEED_UNKNOWN.
+> 
+> Fixes: f68dea13405c ("PCI: Revert to the original speed after PCIe failed link retraining")
+> Reported-by: Andrew <andreasx0@protonmail.com>
+> Closes: https://lore.kernel.org/r/7iNzXbCGpf8yUMJZBQjLdbjPcXrEJqBxy5-bHfppz0ek-h4_-G93b1KUrm106r2VNF2FV_sSq0nENv4RsRIUGnlYZMlQr2ZD2NyB5sdj5aU=@protonmail.com/
+> Signed-off-by: Lukas Wunner <lukas@wunner.de>
+> Cc: stable@vger.kernel.org # v6.12+
 
-Regards,
-Boqun
+I like the brevity of this patch, but I do worry that if we ever have
+other users of PCIE_LNKCTL2_TLS2SPEED(), we might have the same
+problem again.
+
+Also, it looks like PCIE_LNKCAP_SLS2SPEED() has the same problem.
+
+f68dea13405c predates PCIE_LNKCTL2_TLS2SPEED(), and I don't think this
+problem existed as of f68dea13405c.  I think the Fixes: tag should be
+for de9a6c8d5dbf ("PCI/bwctrl: Add pcie_set_target_speed() to set PCIe
+Link Speed"), which added PCIE_LNKCTL2_TLS2SPEED() and
+PCIE_LNKCAP_SLS2SPEED() without masking out the other bits.
+
+I think I'll take Jiwei's patch [1], which fixes
+PCIE_LNKCTL2_TLS2SPEED() and PCIE_LNKCAP_SLS2SPEED() without requiring
+changes in the users.  I'll add the details of Andrew's report to the
+commit log.
+
+[1] https://lore.kernel.org/all/20250123055155.22648-2-sjiwei@163.com/
+
+> ---
+>  drivers/pci/quirks.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+> index d7f4ee6..deaaf4f 100644
+> --- a/drivers/pci/quirks.c
+> +++ b/drivers/pci/quirks.c
+> @@ -108,7 +108,7 @@ int pcie_failed_link_retrain(struct pci_dev *dev)
+>  	pcie_capability_read_word(dev, PCI_EXP_LNKCTL2, &lnkctl2);
+>  	pcie_capability_read_word(dev, PCI_EXP_LNKSTA, &lnksta);
+>  	if (!(lnksta & PCI_EXP_LNKSTA_DLLLA) && pcie_lbms_seen(dev, lnksta)) {
+> -		u16 oldlnkctl2 = lnkctl2;
+> +		u16 oldlnkctl2 = lnkctl2 & PCI_EXP_LNKCTL2_TLS;
+>  
+>  		pci_info(dev, "broken device, retraining non-functional downstream link at 2.5GT/s\n");
+>  
+> -- 
+> 2.47.2
+> 
