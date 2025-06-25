@@ -1,53 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12EEA29B232;
-	Wed, 25 Jun 2025 09:26:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14402284671;
+	Wed, 25 Jun 2025 09:26:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750843562; cv=none; b=seikPwRFIank/JqfSvgvyJDEzHJFesqRClfy0umwqCq6FxeG3dp7y6+iUzu3NCUPqS85XHnLH8gr+BnCMIDGXUWOr+cosC9gd20xcfN4sEdpYk+T7P/VMlTx/GD8o2fpn1wk6SBopa2mlZvVcwx1ZATTa478bz2aZYbxmCxyiUQ=
+	t=1750843563; cv=none; b=L5voLqIkgxjA5pz6e8PwJGsl63R4PKv7QfFdaSvhUsz3NvAV7LIBpjqCyh/CSO5FZ7cNUoIelHxten6x9CDD+C1Tv5V+gU/zuThELsPjQYEQ2CO3waIyDsJIZ4x5QsH3O6AQPwxaKTC0X2JCNoZl7BJMW4nxHdh/f1nFHh3nsQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750843562; c=relaxed/simple;
-	bh=DMxABzn9Q/LNeWIKjL84Poq2r4gHFJAc56xCHlCoZZM=;
+	s=arc-20240116; t=1750843563; c=relaxed/simple;
+	bh=KIKZ3nNJ8nhMBWWeVO42SOiweFVmp+brIHJ+fOtZLs8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=h9addAA7MumYXbeZILnPDA68Cuj4j0Vdbcfni9siB3DhFbZa5Xe4nBE69McX9DaheqcbYs0n0G7Mgy2HXgF5qzBQ/kBd+lw2dywrF2eladwLuPADsa5vyPMeXW78JAhe2dqzDcc9nsKWvNBrKb1zZmRHs4U9OnCOWMXhBAPUr20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=QG3FDG6/; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=kbBbOcOgEsArQzX16qarCoRLKviprjSq8oVIgEJIw4hPCbQSWuE2wjUkmUeFa72rtCNH7sWkiFm9T2sPvQKEjDkcX/R9Yt02pPqiJrFGIDj7MSn1tFYE+X18l85m+UThn+4VquSokh9lgatYX1wC5l3uzIC5dVhW6bGg6d47nOE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=oawJQbr9; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="QG3FDG6/"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55P20Som032291;
-	Wed, 25 Jun 2025 09:25:49 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="oawJQbr9"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55P3w36k014571;
+	Wed, 25 Jun 2025 09:25:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=tcdcCjhN1kQ
-	qkrSRaE028Kk2TL8h/mHB4la3MB9/22o=; b=QG3FDG6/CFSon8Vvx4UzaQWqmzS
-	/wtWeMDYgnMl+NfsvjhaDjzaGUR5C62QT2Zspy8pEqUu5gXH+R/nxYP5ZFDO9fmb
-	st2qZFZHiUamifmZs+5aiedZBxlldkI1AQQohnEbl2wPOoEFjobmwHJuqYgD4Mjr
-	IP5reR19w6b5QrRMbco0Wo0t5W9Bo+2SKeFFRGI5zShmoT6RukhZC/6V5m2qf0K8
-	nHP2z+VWZpuwrit8s02LySiu3xWbxFeg6kHURBl/AOysq74EIlUURytBFuWbyQVQ
-	ZNjDNO+M0z6aeVuR4rc94QpS6cmVgaxxE60xtBXYuthQ8LlZmwZjNqF4fbQ==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47fbm1ww5k-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=HT+W3hHXggq
+	Msxj4FRlNxiV9sn9N6L38pEYArve70j0=; b=oawJQbr9hgvkCr1q8+pn+zvejBy
+	JmGKXCy8czCwpA5Nho1xISvVCXShwSbd0T9ouR8MjA1esoz0QYAWtCsaLwAvybCg
+	Is6LCi2tW1l3D7EqMN4Dqz2YKi8QzxJSNNkGXw8kte3UFdlGdcrHLFmdLsl/LaMx
+	6kh0yZbtE2bNGYTlO4kQ8Ub1jxGCOEtfwj6PdgWHozqgNgJmTtWor/hugB5k5Zpa
+	i+8+NNtyyucZQSWPs4X2inEWCy7+bQ0TubIEgee66tdHhHszNa/PralFhWnyeHCK
+	7ggXasSNEFSEQRDCH0S3t0Sp8/3IidMrwq6Svq3cFHtyzJsCY33l0ZsNyHg==
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47f2rpyjfb-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Jun 2025 09:25:49 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 55P9PkK4024667;
-	Wed, 25 Jun 2025 09:25:46 GMT
+	Wed, 25 Jun 2025 09:25:47 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 55P9Pi9f012470;
+	Wed, 25 Jun 2025 09:25:44 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 47dntmauy9-1
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 47dntmavvt-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Jun 2025 09:25:46 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 55P9PkjD024662;
-	Wed, 25 Jun 2025 09:25:46 GMT
+	Wed, 25 Jun 2025 09:25:44 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 55P9PiGZ012461;
+	Wed, 25 Jun 2025 09:25:44 GMT
 Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 55P9PjBN024659
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 55P9PhHu012457
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 25 Jun 2025 09:25:46 +0000
+	Wed, 25 Jun 2025 09:25:44 +0000
 Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id D5D2F3866; Wed, 25 Jun 2025 17:25:42 +0800 (CST)
+	id BCF7F3832; Wed, 25 Jun 2025 17:25:42 +0800 (CST)
 From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
 To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
         krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
@@ -59,11 +59,10 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
         quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <quic_ziyuzhan@quicinc.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: [PATCH v7 5/5] arm64: dts: qcom: qcs8300-ride: enable pcie1 interface
-Date: Wed, 25 Jun 2025 17:25:39 +0800
-Message-Id: <20250625092539.762075-6-quic_ziyuzhan@quicinc.com>
+        Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Subject: [PATCH v7 1/5] dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Update pcie phy bindings for qcs8300
+Date: Wed, 25 Jun 2025 17:25:35 +0800
+Message-Id: <20250625092539.762075-2-quic_ziyuzhan@quicinc.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250625092539.762075-1-quic_ziyuzhan@quicinc.com>
 References: <20250625092539.762075-1-quic_ziyuzhan@quicinc.com>
@@ -78,96 +77,73 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=YYu95xRf c=1 sm=1 tr=0 ts=685bc09d cx=c_pps
+X-Authority-Analysis: v=2.4 cv=NdDm13D4 c=1 sm=1 tr=0 ts=685bc09c cx=c_pps
  a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=6IFa9wvqVegA:10 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8 a=0LYZJ8Fh9g_wO_RM1qMA:9
+ a=6IFa9wvqVegA:10 a=COk6AnOGAAAA:8 a=VwQbUJbxAAAA:8 a=pixhw7HmqKTquG-jXeMA:9
  a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: R6irlamBveMzrA2DZ2ui-7HJ_0Pxoalx
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjI1MDA3MCBTYWx0ZWRfX1u02zJ8MPPFc
- si/KOM+3CdnnDHBLmY8r4MUwsrKLz0JK9zy6o+OWRZFGCO5jvE2X4WEgZu/OFCWWST9oaW720Dk
- V7ffkOIEYnijLcTqTBgHZySflvyu1qOT3DUuqqk0PJKtIE93xcy9pyxrsjDlIxxglHTN/jBaiTL
- 5qWcOgepIp4QEM5S7HJkbGixm5GeiBEqh4wCeW0Lt3yQSHSHTIZQgvx0lFLP8va93CDabUy9xB1
- /+BgJPCyfNCT9o2SKMjxQF3KNTcjPg/oxQxRRVsr0Bqa5G/BdOoQeDBtyXZTMYEECusSSOKncBp
- xbrAr4W9mANPd4+DuH6KJe0U6+PCNDGjYeH4dtXivByRSrIspe9j+bmC2qhnuiGJ+Ynzo7HSTm/
- jDaLlFgzOZeR6VjGGOqqFeJzvQZ82kIy6a3RzrZBahVraC0HRDSc2KwiOq7yOE64dbJ/a1Y2
-X-Proofpoint-ORIG-GUID: R6irlamBveMzrA2DZ2ui-7HJ_0Pxoalx
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjI1MDA3MCBTYWx0ZWRfXw7FEjFEM5S/x
+ Kvty3DCcUTq2Z0cbdD7Pzt/b5rCJNv3tXJwTTRIES/yTRR5jS3cC3WJHb0ufXb4g+e5Yba2MV4x
+ QaQMI7fp5DrvSqLYpObBpRFcYhLbE+3/JCYB5PCnM5em9aOczR618JOzysbayldTuSbVFlLtZEU
+ oJvLnKd93THVbANTZEDrO3QsPvj37Q7KNhQzK4V9uPRwcAQgyLAtogM8X81wFYNdqmxtKBlD4Zu
+ J80QTZ3Wv1x2Ocq2V2y4HfBtnfm4VqEKy2LXZYDgavTfV3jlC8ME9pkmV7Aavg3HWCL0qMruBn/
+ +kgIWqEiokUwu9+XfUOWdO7vTsFjCrnkz5Oiye1s7sDB+v4eC0hh9CV6mdQxr2+r/82ujzCCrsg
+ 1Tbr/Y8vlpSHImO32+HyXrdxcWCJQkWgeStG088gRa6EcIv+jrYu/qciFdtWYuDRX+1GJt94
+X-Proofpoint-ORIG-GUID: vkPkjJkKW-u3VEJwY4CN_ad0Kaq1riws
+X-Proofpoint-GUID: vkPkjJkKW-u3VEJwY4CN_ad0Kaq1riws
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
  definitions=2025-06-25_02,2025-06-23_07,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 adultscore=0 spamscore=0 impostorscore=0 suspectscore=0
- lowpriorityscore=0 priorityscore=1501 phishscore=0 mlxlogscore=999
- clxscore=1015 mlxscore=0 bulkscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2506250070
+ bulkscore=0 mlxscore=0 spamscore=0 malwarescore=0 lowpriorityscore=0
+ phishscore=0 priorityscore=1501 suspectscore=0 mlxlogscore=999 adultscore=0
+ clxscore=1015 impostorscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2506250070
 
-Add configurations in devicetree for PCIe1, board related gpios,
-PMIC regulators, etc for qcs8300-ride platform.
+The gcc_aux_clk is not required by the PCIe PHY on qcs8300 and is not
+specified in the device tree node. Hence, move the qcs8300 phy
+compatibility entry into the list of PHYs that require six clocks.
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+As no compatible need the entry which require seven clocks, delete it.
+
 Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Acked-by: Rob Herring (Arm) <robh@kernel.org>
 ---
- arch/arm64/boot/dts/qcom/qcs8300-ride.dts | 40 +++++++++++++++++++++++
- 1 file changed, 40 insertions(+)
+ .../bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   | 14 +-------------
+ 1 file changed, 1 insertion(+), 13 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
-index e8e382db2b99..bec2905c5d8f 100644
---- a/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
-+++ b/arch/arm64/boot/dts/qcom/qcs8300-ride.dts
-@@ -325,6 +325,23 @@ &pcie0_phy {
- 	status = "okay";
- };
+diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
+index 57b16444eb0e..10c03831f9e7 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
+@@ -175,6 +175,7 @@ allOf:
+           contains:
+             enum:
+               - qcom,qcs615-qmp-gen3x1-pcie-phy
++              - qcom,qcs8300-qmp-gen4x2-pcie-phy
+               - qcom,sa8775p-qmp-gen4x2-pcie-phy
+               - qcom,sa8775p-qmp-gen4x4-pcie-phy
+               - qcom,sc8280xp-qmp-gen3x1-pcie-phy
+@@ -192,19 +193,6 @@ allOf:
+         clock-names:
+           minItems: 6
  
-+&pcie1 {
-+	perst-gpios = <&tlmm 23 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 21 GPIO_ACTIVE_HIGH>;
-+
-+	pinctrl-0 = <&pcie1_default_state>;
-+	pinctrl-names = "default";
-+
-+	status = "okay";
-+};
-+
-+&pcie1_phy {
-+	vdda-phy-supply = <&vreg_l6a>;
-+	vdda-pll-supply = <&vreg_l5a>;
-+
-+	status = "okay";
-+};
-+
- &qupv3_id_0 {
- 	status = "okay";
- };
-@@ -388,6 +405,29 @@ perst-pins {
- 			bias-pull-down;
- 		};
- 	};
-+
-+   pcie1_default_state: pcie1-default-state {
-+		wake-pins {
-+			pins = "gpio21";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+
-+		clkreq-pins {
-+			pins = "gpio22";
-+			function = "pcie1_clkreq";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+
-+		perst-pins {
-+			pins = "gpio23";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-down;
-+		};
-+	};
- };
- 
- &uart7 {
+-  - if:
+-      properties:
+-        compatible:
+-          contains:
+-            enum:
+-              - qcom,qcs8300-qmp-gen4x2-pcie-phy
+-    then:
+-      properties:
+-        clocks:
+-          minItems: 7
+-        clock-names:
+-          minItems: 7
+-
+   - if:
+       properties:
+         compatible:
 -- 
 2.34.1
 
