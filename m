@@ -1,74 +1,70 @@
-Received: from relay.smtp-ext.broadcom.com (relay.smtp-ext.broadcom.com [192.19.144.205])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A343E26AAB7;
-	Tue, 24 Jun 2025 23:26:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.19.144.205
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 598AF8F58
+	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2025 00:18:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750807610; cv=none; b=cCXYmEa9e+CwoyrMs6LBc94pFAd2v1Qwqho7S41a6AAdsxALguBf9ZHck9b9ccMDlLVZ5xnv7MvtSdMTbW9ch02XlwTwkcNh+mMYiZyT9/DtAM7EEPWjThqe9g5o/7cMfyTXpe3dSaEpK3AwmpO4i2Cklhc22Rh+ItqCUnx9x+0=
+	t=1750810733; cv=none; b=YeQzetX8Uloe/iTQcbJ79wcURZqiMNIh+lITdKlmuZdD8bP1G1Rdg07HGQ3M2cF+EqW5/utDhhyRNsclTg31L4Ev0ZugpDaWzNCMVi7+zbtnXwGZPSEvEtZ3r1wpkMRBWBl0y+rie3ZRFS1F8M+J6/r0tohRe5qjQvi5J5IRVtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750807610; c=relaxed/simple;
-	bh=MryCwuQ5UgpRpkPiut10MXF4O6MqDCKghsmv+2OB+JY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Nwfpxu/A9u0zr3oQfuAQT6L5T5vr+RwspfHXVXqCeqh7HqfaFkL4CLJ9hMRaHGLU3r26Hz97gyeTqelfojRbSpMotg/w/qu3xlBR3l/9rBc0hzAq/Eh0nGPmsht2SBApn7NVmqSl2cIh1jTS+CXxePrXLBfREq+lDVneJ7A99cY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=GJcmcRUk; arc=none smtp.client-ip=192.19.144.205
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1750810733; c=relaxed/simple;
+	bh=f9zjunBR2QqdzYrAT7RDhHzIvTEu0ORPbackFjI2R/A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=K3n1FDT8PJSNWAmlFqAV6JjdChnXJ3PvA1wh8iobq+/ucEqLwchkvI0enJuYlEDr15a0urvpZBrbxefmU2l/J/jdpnbaYur7sNg9+2EAmA2nRtntZnElcgo2hIVx44WYZDCzA4UTm6puO24+8+H/Jm+qUPhmgy6xOKDToaxQoL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=QhB/ttrR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="GJcmcRUk"
-Received: from mail-lvn-it-01.broadcom.com (mail-lvn-it-01.lvn.broadcom.net [10.36.132.253])
-	by relay.smtp-ext.broadcom.com (Postfix) with ESMTP id 85629C000C95;
-	Tue, 24 Jun 2025 16:26:47 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 relay.smtp-ext.broadcom.com 85629C000C95
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=broadcom.com;
-	s=dkimrelay; t=1750807607;
-	bh=MryCwuQ5UgpRpkPiut10MXF4O6MqDCKghsmv+2OB+JY=;
-	h=From:To:Cc:Subject:Date:From;
-	b=GJcmcRUkZuoz94XL5ZAK8UH7RAU6imQOlEXiY88VUZLxxNAXEyUIfUcMoAC7UyOo+
-	 CfVAJOkPj7fwVIOMrow9i0FaSzCubIlKRqasyysHuZfJXJBe9Ispa0Csey1LlmEbX4
-	 KhbeAAJM1Mx8PJO7lt6AVKfPp7GQeBHIte6NeG88=
-Received: from fainelli-desktop.igp.broadcom.net (fainelli-desktop.dhcp.broadcom.net [10.67.48.245])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail-lvn-it-01.broadcom.com (Postfix) with ESMTPSA id 12FEE18000530;
-	Tue, 24 Jun 2025 16:26:17 -0700 (PDT)
-From: Florian Fainelli <florian.fainelli@broadcom.com>
-To: linux-kernel@vger.kernel.org
-Cc: Florian Fainelli <florian.fainelli@broadcom.com>,
-	Broadcom internal kernel review list <bcm-kernel-feedback-list@broadcom.com>,
-	Jim Quinlan <jim2101024@gmail.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-rpi-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
-	linux-arm-kernel@lists.infradead.org (moderated list:BROADCOM BCM2711/BCM2835 ARM ARCHITECTURE),
-	linux-pci@vger.kernel.org (open list:BROADCOM STB PCIE DRIVER)
-Subject: [PATCH 0/2] PCI: brcmstb: Trivial changes
-Date: Tue, 24 Jun 2025 16:19:21 -0700
-Message-ID: <20250624231923.990361-1-florian.fainelli@broadcom.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="QhB/ttrR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7375CC4CEF0;
+	Wed, 25 Jun 2025 00:18:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750810732;
+	bh=f9zjunBR2QqdzYrAT7RDhHzIvTEu0ORPbackFjI2R/A=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=QhB/ttrR9ubXuES0ivUfn2hJfEy8lHn+k3N2gM+c5lHAJxLCncET8wLOM9frXR7KU
+	 1NE45y2NQbsmZ9Iozpnnw1RjL8bW96eTjja1ah50XBwUiBaAw5/nheOmJFer2pXmfc
+	 KnhPDj4OCvyXKmGI0XBsh7jCVUYrUlQXNXrQhfVNBtsFEYtOAsdJwABdHgmjY0IgFE
+	 g2hBbwLaQOblBM/KmOL0TxTIoa2D66UMxAnadOw2uPcgBR+fThZcR20oRQydMmSRU+
+	 AWjNE9JkrBxXN6rd1XChNi6OOkO5AXm6PyCit4MfrnNovHK7d28wTDMCNze7BgpaSq
+	 DfoFTTEVHLxpg==
+Message-ID: <1f35a1b2-4d98-4e4b-93c0-8712d9a89b3f@kernel.org>
+Date: Wed, 25 Jun 2025 09:16:47 +0900
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/2] PCI: endpoint: Fix configfs group removal on
+ driver teardown
+To: Frank Li <Frank.li@nxp.com>
+Cc: linux-pci@vger.kernel.org, Manivannan Sadhasivam <mani@kernel.org>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Niklas Cassel <cassel@kernel.org>
+References: <20250624081949.289664-1-dlemoal@kernel.org>
+ <20250624081949.289664-3-dlemoal@kernel.org>
+ <aFrrFwcS/KflScJ9@lizhi-Precision-Tower-5810>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <aFrrFwcS/KflScJ9@lizhi-Precision-Tower-5810>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-The first patch removes Nicolas from the maintainers list since he has
-not been active and the second patch uses an existing constant rather
-than open code the value.
+On 6/25/25 3:14 AM, Frank Li wrote:
+> On Tue, Jun 24, 2025 at 05:19:49PM +0900, Damien Le Moal wrote:
+>> An endpoint driver configfs attributes group is added to the
+>> epf_group list of struct pci_epf_driver by pci_epf_add_cfs() but an
+>> added group is not removed from this list when the attribute group is
+>> unregistered with pci_ep_cfs_remove_epf_group().
+>>
+>> Add the missing list_del_init() call in fpci_ep_cfs_remove_epf_group()
+> 
+> reduntant "f" before pci_ep_cfs_remove_epf_group()
 
-Florian Fainelli (2):
-  MAINTAINERS: Drop Nicolas from maintaining pcie-brcmstb
-  PCI: brcmstb: Replace open coded value with PCIE_T_RRS_READY_MS
-
- MAINTAINERS                           | 1 -
- drivers/pci/controller/pcie-brcmstb.c | 2 +-
- 2 files changed, 1 insertion(+), 2 deletions(-)
+That is fixed in v3.
 
 -- 
-2.43.0
-
+Damien Le Moal
+Western Digital Research
