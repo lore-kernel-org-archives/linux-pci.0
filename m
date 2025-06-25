@@ -1,123 +1,151 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B46A51FBE9B
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2025 08:56:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D8527991E;
+	Wed, 25 Jun 2025 08:58:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750841807; cv=none; b=QAqleHrYdQN2eMghOObL9EPbolAlhVXfiVIudmeag1ONPpdr9HRd1DZnrcOYnwj9Y9O92OZY0WoYU7HOhFVsDyq4LhcSCbWa/o7n4QjG3WbqCXNBtweYF2AM/UUCDp/xHKETO69R0nkS0abFChz+Ud8Uim0aQK4PixomI6dqk7c=
+	t=1750841898; cv=none; b=VbaYF6nmuiCYxrZWKyarJiCktIiwGT01Wxk936E6ed2vC5C1WU2WHAL/UI0GhM4b0Nu00HyRT9P7taR/GnmUWRmuogkajy1YFi7/BSfhMfLeLUgP3rKV45wB8ueOM69beyCyPZc8aoILB0Yz2sICSjstluUo3mhsMKqinP9Z95U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750841807; c=relaxed/simple;
-	bh=zO69UkzGKJha8QhPvZueZjURt8TlwyYoRghEMovlwSg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pN0w2yggvouQQrYSgVicK+n7NuoIpzzKlZQ941yUu3iDnZmK3+x9zuuj2FPyy6/oRyHW7jDNjTYfbHdl17QdKLL2GTnAFHj5K5OjHc0d3HkicA1mGsKrrvISJFVH/K3mUgTVD1vcHP1gDbdU3zKOn4gr3fWIpTJoF9qBaqYhSmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Wy7n3BJN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750841898; c=relaxed/simple;
+	bh=9E8dZ2XhVSOUnzuSWos6Vw8+2xKd23JsxUsojcAZsvM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Nkpxc6saWTzEjYZHiIDzyVzaZTztHbj2cjki+j3bDpV96mv7vYcRkbWxWl5jtwj7i/Vgn56lubL4otFrb+mQdAqoB8akSvpaqHQjGYmgdbUumjzeyn/esvG8236PHgCPNUjnkmuiHOfUsv5+TDoUwduJO+cQdP1lyf2LjI5N27Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=APlbAUrV; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Wy7n3BJN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2874DC4CEF3
-	for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2025 08:56:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750841807;
-	bh=zO69UkzGKJha8QhPvZueZjURt8TlwyYoRghEMovlwSg=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=Wy7n3BJN+HfNkaCf+YohTC/mZCjpCxhk91VckhiNJkqAcjFqT6Zkji9rsjtcvSpmI
-	 B/W5NUZT2uTRkCXzb86UZGlmLh497xrh9svDGYhqAwqtkuwIFksZ9R2tmDmz3+NL0S
-	 AfFdMPqdgXLQDEqfqEkJ17thCIq5ZIWT5hWvU8uidXdcv3XHfiNl4zeFt9zHdPm99H
-	 GXm7QL9gtMQ10kko7Xls+nl/yXSnT6ssVRtBb5gT5yWh/HjsRxuDWUvyGds0kqXb+k
-	 O+zQaQo3f8RoujfvRb75PqUCMWwSCdfa/7GuaPevtgCn0jN0D7ZHJUrnLXVkuoNKSC
-	 DPfq4bceKiNgA==
-Received: by mail-oa1-f44.google.com with SMTP id 586e51a60fabf-2ef891cd058so1593816fac.1
-        for <linux-pci@vger.kernel.org>; Wed, 25 Jun 2025 01:56:47 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCU5ZSBkAXOjDfZ9JqUmpC5BLukdLrTf/ii5pX8f6jPggG4b1abDtZewOP7+dkYZ9HvCX7MonYJwl+M=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxuHKXlCI5ufcavel0RYwPco27X3uF6QYKeoQp1A34/+sPsDcxL
-	8DgVNncDILuF8729GXlAGehrWnWjWmpM1JxlXIPUTh4qYDOK/+CVttU3AmtX57kZ0JAOkf9ZFll
-	QPsXY+mC6+resw1rhCGBb8GNAn0/Y1qs=
-X-Google-Smtp-Source: AGHT+IHpITz6giHTujR2exkzneh08LzqNgKmhnz00FEhIXReP0m1FK3vl+C+3jWsQ0gB1HHz5JAYRBsAO4hdKV4OMyo=
-X-Received: by 2002:a05:6870:819d:b0:2e8:ed1c:ae61 with SMTP id
- 586e51a60fabf-2efb2436e08mr1440352fac.37.1750841806355; Wed, 25 Jun 2025
- 01:56:46 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="APlbAUrV"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55OMaosk001992;
+	Wed, 25 Jun 2025 08:58:08 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=ACLcf/y0+ET
+	DyqcTSQT5zp0eSvdxWWbD7AwNu/+16gI=; b=APlbAUrVvsczEIG2q/sv/9pjPS9
+	hrXtAIybkhYpLE9DQ1RXYVfv6dfd2QR1pIQjCywn6qPJW+Va2JiREaNIZESlqjtU
+	wA1lMkNG7eNBEgPe6f3C+0n8XLQmrHqDs3i0NNiiiDL1G48vmvRqKfl8rLDVlouF
+	p1ASX3HvbCTnF6E5IkFVSc2Oe5c/2h9DZEafc5kTA3LDbufUV44rGF0lQXJlj4Q0
+	YVxJKdNsbJ6oH3d1dQXgIL6Qz+jPGzRH1Jlzlk6wey4uF4kHb5vgUU2Zrr+Z7PV1
+	ylnY7yEqEYiMH9pNbc2Kia8W/vFoScAl9RtDCbJZfyf23OL8YUUjCFsRtnQ==
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47evc5r93j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 25 Jun 2025 08:58:07 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 55P8w5Tb016621;
+	Wed, 25 Jun 2025 08:58:05 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 47dntmarvf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 25 Jun 2025 08:58:05 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 55P8w511016610;
+	Wed, 25 Jun 2025 08:58:05 GMT
+Received: from cse-cd02-lnx.ap.qualcomm.com (cse-cd02-lnx.qualcomm.com [10.64.75.246])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 55P8w3oM016595
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 25 Jun 2025 08:58:05 +0000
+Received: by cse-cd02-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
+	id DE6823832; Wed, 25 Jun 2025 16:58:02 +0800 (CST)
+From: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
+        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
+        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
+        kw@linux.com
+Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
+        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
+        Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+Subject: [PATCH v3 2/3] PCI: qcom: fix macro typo for CURSOR
+Date: Wed, 25 Jun 2025 16:58:00 +0800
+Message-Id: <20250625085801.526669-3-quic_ziyuzhan@quicinc.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250625085801.526669-1-quic_ziyuzhan@quicinc.com>
+References: <20250625085801.526669-1-quic_ziyuzhan@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <86c3bd52bda4552d63ffb48f8a30343167e85271.1750698221.git.lukas@wunner.de>
- <20250624142407.GA1473261@bhelgaas> <aFunQlDHNyQV4S_W@wunner.de>
-In-Reply-To: <aFunQlDHNyQV4S_W@wunner.de>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 25 Jun 2025 10:56:33 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0hbNsErz-VMt2a3-VeWEdgpJbrjf0S+xpsb113At=y3bA@mail.gmail.com>
-X-Gm-Features: Ac12FXyBPsn8w1qHXDeSzlPPGNzDKHrTZlxtemLd4mwr4XnWXEdIn_6Zk7OVqtc
-Message-ID: <CAJZ5v0hbNsErz-VMt2a3-VeWEdgpJbrjf0S+xpsb113At=y3bA@mail.gmail.com>
-Subject: Re: [PATCH] PCI/ACPI: Fix runtime PM ref imbalance on hot-plug
- capable ports
-To: Lukas Wunner <lukas@wunner.de>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Laurent Bigonville <bigon@bigon.be>, 
-	Mario Limonciello <mario.limonciello@amd.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
-	Mika Westerberg <westeri@kernel.org>, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: HxYKdiPbDXQxbeAyny8s_WQWMbx61R_o
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjI1MDA2NSBTYWx0ZWRfX/DgreZ0KCqjG
+ H9voMUpVoF24dxd0ZN70yPGAJ0XewqVPgIOHEkz0t604hS5Krei0KSIAa2JR/c/vA9nzOR5/T6w
+ 7aXOjpNZZRI3coOm1t5+fN+YrkLZVfgFCSoOkFObAUvx1jstS+BT27ZC+P8Q7uP2itqcWIOFbXr
+ Nb/AriuFKytawh0NhB/oo1OP6xL6yxea0Pq08HTua1fI7xkvYyekShujeapJh4HBtkCBVHjFp7I
+ ILHKbGcHtygo4GrHay3nip/j7s6phq5s4kg3zdHOgdW3O8vV+OGHbldIEbVFuNNpt0wVZgJ21zm
+ ZwfOqCoL0oaVVNFUg1YPDFXONFc+e+NX1kCHApnKwq4JystUaIgiInXgMJ+37PPQVzJ0C1Kx0XV
+ RyZtEfKiDxQ6btapmpYgPSkaAYC75ssYy+E+EjzyZqdQ9R/kpWiuNJ8v/eIIP3A5sDoNnsUs
+X-Authority-Analysis: v=2.4 cv=caHSrmDM c=1 sm=1 tr=0 ts=685bba1f cx=c_pps
+ a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=6IFa9wvqVegA:10 a=COk6AnOGAAAA:8 a=yZn9HN9ZKZZuwR4VxpAA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: HxYKdiPbDXQxbeAyny8s_WQWMbx61R_o
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
+ definitions=2025-06-25_02,2025-06-23_07,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 mlxlogscore=889 suspectscore=0 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 adultscore=0 mlxscore=0 spamscore=0
+ malwarescore=0 phishscore=0 clxscore=1015 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2506250065
 
-On Wed, Jun 25, 2025 at 9:37=E2=80=AFAM Lukas Wunner <lukas@wunner.de> wrot=
-e:
->
-> On Tue, Jun 24, 2025 at 09:24:07AM -0500, Bjorn Helgaas wrote:
-> > On Mon, Jun 23, 2025 at 07:08:20PM +0200, Lukas Wunner wrote:
-> > > pcie_portdrv_probe() and pcie_portdrv_remove() both call
-> > > pci_bridge_d3_possible() to determine whether to use runtime power
-> > > management.  The underlying assumption is that pci_bridge_d3_possible=
-()
-> > > always returns the same value because otherwise a runtime PM referenc=
-e
-> > > imbalance occurs.
-> > >
-> > > That assumption falls apart if the device is inaccessible on ->remove=
-()
-> > > due to hot-unplug:  pci_bridge_d3_possible() calls pciehp_is_native()=
-,
-> > > which accesses Config Space to determine whether the device is Hot-Pl=
-ug
-> > > Capable.   An inaccessible device returns "all ones", which is conver=
-ted
-> > > to "all zeroes" by pcie_capability_read_dword().  Hence the device no
-> > > longer seems Hot-Plug Capable on ->remove() even though it was on
-> > > ->probe().
-> >
-> > This is pretty subtle; thanks for chasing it down.
-> >
-> > It doesn't look like anything in pci_bridge_d3_possible() should
-> > change over the life of the device, although acpi_pci_bridge_d3() is
-> > non-trivial.
-> >
-> > Should we consider calling pci_bridge_d3_possible() only once and
-> > caching the result?  We already call it in pci_pm_init() and save the
-> > result in dev->bridge_d3.  That member can be changed by
-> > pci_bridge_d3_update(), but we could add another copy that we never
-> > update after pci_pm_init().
->
-> If we did that, I think we'd still want to have a WARN_ON() like this in
-> pcie_portdrv_remove():
->
-> +       WARN_ON(dev->bridge_d3_orig !=3D pci_bridge_d3_possible(dev));
-> +
-> +       if (dev->bridge_d3_orig) {
-> -       if (pci_bridge_d3_possible(dev)) {
->
-> Because without the WARN_ON(), such bugs would fly under the radar.
->
-> However currently we get the WARN_ON() for free because of the runtime PM
-> refcount underflow.
->
-> So caching the original return value of pci_bridge_d3_possible(dev)
-> wouldn't be a net positive.
->
-> Also note that the bug isn't catastrophic:  The struct device is about
-> to be free()'d anyway because it's been hot-removed.  It's just the
-> annoying warning message that we want to get rid of.
->
-> But maybe we should amend the kernel-doc of pci_bridge_d3_possible()
-> to clearly state that the return value must be constant across the
-> entire lifetime of the device.
+Corrected a typo in the macro name GEN3_EQ_FMDC_MAX_PRE_CURSOR_DELTA and
+GEN3_EQ_FMDC_MAX_POST_CURSOR_DELTA to ensure consistency and avoid
+potential issues.
 
-Yes, please!
+Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
+---
+ drivers/pci/controller/dwc/pcie-designware.h  | 4 ++--
+ drivers/pci/controller/dwc/pcie-qcom-common.c | 8 ++++----
+ 2 files changed, 6 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 388306991467..80831f99d72d 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -137,8 +137,8 @@
+ #define GEN3_EQ_FB_MODE_DIR_CHANGE_OFF		0x8AC
+ #define GEN3_EQ_FMDC_T_MIN_PHASE23		GENMASK(4, 0)
+ #define GEN3_EQ_FMDC_N_EVALS			GENMASK(9, 5)
+-#define GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA	GENMASK(13, 10)
+-#define GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA	GENMASK(17, 14)
++#define GEN3_EQ_FMDC_MAX_PRE_CURSOR_DELTA	GENMASK(13, 10)
++#define GEN3_EQ_FMDC_MAX_POST_CURSOR_DELTA	GENMASK(17, 14)
+ 
+ #define PCIE_PORT_MULTI_LANE_CTRL	0x8C0
+ #define PORT_MLTI_UPCFG_SUPPORT		BIT(7)
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
+index ed466496f077..86ed86b72d5a 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-common.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
+@@ -35,12 +35,12 @@ void qcom_pcie_common_set_equalization(struct dw_pcie *pci)
+ 		reg = dw_pcie_readl_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF);
+ 		reg &= ~(GEN3_EQ_FMDC_T_MIN_PHASE23 |
+ 			GEN3_EQ_FMDC_N_EVALS |
+-			GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
+-			GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA);
++			GEN3_EQ_FMDC_MAX_PRE_CURSOR_DELTA |
++			GEN3_EQ_FMDC_MAX_POST_CURSOR_DELTA);
+ 		reg |= FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
+ 			FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
+-			FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
+-			FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
++			FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CURSOR_DELTA, 0x5) |
++			FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CURSOR_DELTA, 0x5);
+ 		dw_pcie_writel_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF, reg);
+ 
+ 		reg = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
+-- 
+2.34.1
+
