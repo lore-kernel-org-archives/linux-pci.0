@@ -1,89 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40B9D2580CA;
-	Thu, 26 Jun 2025 10:27:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE89325CC7C;
+	Thu, 26 Jun 2025 10:27:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750933640; cv=none; b=egltPejL+cCX2gOJDV/AuLqJwqb7Z7YMidHoXbMKtj210LUt/XpnOPtDXbLjW72p0m+BmGKTVCa0yDsDyKNqwVmzpv5+0bQ6Tb3WjUJ1YK2dUWvlH6qpCSRf2QM2qS2BN9HrRsgjMVodro6+1V9Nvnre7CJJjdFl/cCf5Hno+f8=
+	t=1750933644; cv=none; b=fa4QLAr1nAUvyTzrrgob+VvlboSnpHkscnk3Fwy3D7Zs7iCkQhr1ZbR29oSu7q4h9vKrfGbC07dDi1ndpaCB3DjroeUsCLHCY899L7tTHu0ZmUIZ7So7lWZThvMaD5xQ8y0I4K8G4QXFow57Le5QG39T9U1vjktZA6OWI6KeP6E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750933640; c=relaxed/simple;
-	bh=GGu0BlNfPd3BbcRNatWFSy8vlHfdSkuub7faaglQhI4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=N9mkYM4nxKrKbjTCbRmrNvGmuFFyYHUyjuD4oTvzxffwR+v8KnTgdaTsxRYrbx9ckmCkaMcyX7fPX+tsyQxETzFhfNlfIBwsV1bwQki/mRs0gvdRFSs2sINE3/cGpeVK6TE8KrH3ZA2LtZyd/QALQGSETMF78nzSGQlS4n10S/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HAOzJllV; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750933644; c=relaxed/simple;
+	bh=p8rBo1Y5Lr+NfYKS+dwWCGs6na8FSui3ve5k7KPDi08=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=Mwi+semrzjtQVgQzI0Rscl0b25Aj+zPoXolDMkAnXBKq9905g7MqCqqvnDMzAQsRP58NAP7vUUZlidg+LL80jFA0Wp+yVrq0Zl/RPnjtOARxFSke4hTsaSwY/NSliTGJN4lSzQtrrn4VMhvO4/Lk4JaJmU0y2DYoBIZaSfAk1s8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pmOV8x9j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HAOzJllV"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17C79C4CEEB;
-	Thu, 26 Jun 2025 10:27:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pmOV8x9j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1B035C4CEF4;
+	Thu, 26 Jun 2025 10:27:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750933639;
-	bh=GGu0BlNfPd3BbcRNatWFSy8vlHfdSkuub7faaglQhI4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=HAOzJllViCYWot+JHa3B0k0EHoJXl9Z+gzgwCMcC3s2jUjuNk+4aAr1W/t4ip1piw
-	 lyzvUY2N8SKbGwURb92uyQX9r7TD9NVO7w6mG7lUCJfSbap7yCx7tSYlqxWBdM7gQw
-	 aC1i5P7UJhN6Jh4+y0BPBp3CB3UNPWuIurfb0kT+0Fs3ognzQhKvlqRO1imv6dpFJw
-	 HccfWH9de83UllAE6xu/rIHSFNlSwGG8cHlu83xbemVHl18Sibesio0J8d/neiDy6h
-	 UspheVl98rbG/WS4eEMF+/LBth56e6oibgNrI+fjGKd0ehjDZOfxSjigeSPib5zeFV
-	 /MR8bOt2xb1tQ==
-From: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Date: Thu, 26 Jun 2025 12:26:01 +0200
-Subject: [PATCH v6 10/31] arm64/sysreg: Add ICC_PCR_EL1
+	s=k20201202; t=1750933643;
+	bh=p8rBo1Y5Lr+NfYKS+dwWCGs6na8FSui3ve5k7KPDi08=;
+	h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+	b=pmOV8x9jxpQmesCFhUrzfIZ9xHdzYhnUDhm1qETxFu4Zq2qvZtqrpt4z6KlyJsldZ
+	 JGUBnmF4bBGXN0zXTz67Jwb/T/qV9D7w7hfzaohTms6x5GgNqXQhHeHt1fU9FuwZtO
+	 xEB6JB8JBIeb/F/D0BDP6nEVKpBpeg2BVWXVP8C1Z5nURvkeqtguzLBLrJlGLW77s2
+	 T9W/nxOx1cpYbxI1TTL2wWYid9DFC+JTsqGtBibu887+o0Tp3GX/gIhPtRFJmQY8g2
+	 dR8uBamPizT/ZgCcAZsRDoMedJ6wajSCwFiXDMqVK3OTXINRXEK4iyEzaBq2lpYI6U
+	 P5YAsSDdOH1tg==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250626-gicv5-host-v6-10-48e046af4642@kernel.org>
-References: <20250626-gicv5-host-v6-0-48e046af4642@kernel.org>
-In-Reply-To: <20250626-gicv5-host-v6-0-48e046af4642@kernel.org>
-To: Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, 
- Sascha Bischoff <sascha.bischoff@arm.com>, 
- Jonathan Cameron <Jonathan.Cameron@huawei.com>, 
- Timothy Hayes <timothy.hayes@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, 
- "Liam R. Howlett" <Liam.Howlett@oracle.com>, 
- Peter Maydell <peter.maydell@linaro.org>, 
- Mark Rutland <mark.rutland@arm.com>, Jiri Slaby <jirislaby@kernel.org>, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>
-X-Mailer: b4 0.15-dev-6f78e
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 26 Jun 2025 12:27:18 +0200
+Message-Id: <DAWE690DWP9A.10I5FIJSZDSR6@kernel.org>
+Cc: <gregkh@linuxfoundation.org>, <rafael@kernel.org>, <ojeda@kernel.org>,
+ <alex.gaynor@gmail.com>, <gary@garyguo.net>, <bjorn3_gh@protonmail.com>,
+ <a.hindborg@kernel.org>, <aliceryhl@google.com>, <tmgross@umich.edu>,
+ <david.m.ertman@intel.com>, <ira.weiny@intel.com>, <leon@kernel.org>,
+ <kwilczynski@kernel.org>, <bhelgaas@google.com>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v3 3/4] rust: devres: get rid of Devres' inner Arc
+From: "Benno Lossin" <lossin@kernel.org>
+To: "Danilo Krummrich" <dakr@kernel.org>, "Boqun Feng"
+ <boqun.feng@gmail.com>
+X-Mailer: aerc 0.20.1
+References: <20250624215600.221167-1-dakr@kernel.org>
+ <20250624215600.221167-4-dakr@kernel.org> <aFzI5L__OcB9hqdG@Mac.home>
+ <aF0aiHhCuHjLFIij@pollux>
+In-Reply-To: <aF0aiHhCuHjLFIij@pollux>
 
-Add ICC_PCR_EL1 register description.
+On Thu Jun 26, 2025 at 12:01 PM CEST, Danilo Krummrich wrote:
+> On Wed, Jun 25, 2025 at 09:13:24PM -0700, Boqun Feng wrote:
+>> On Tue, Jun 24, 2025 at 11:54:01PM +0200, Danilo Krummrich wrote:
+>> [...]
+>> > +#[pin_data(PinnedDrop)]
+>> > +pub struct Devres<T> {
+>>=20
+>> It makes me realize: I think we need to make `T` being `Send`? Because
+>> the devm callback can happen on a different thread other than
+>> `Devres::new()` and the callback may drop `T` because of revoke(), so we
+>> are essientially sending `T`. Alternatively we can make `Devres::new()`
+>> and its friend require `T` being `Send`.
+>>=20
+>> If it's true, we need a separate patch that "Fixes" this.
+>
+> Indeed, that needs a fix.
 
-Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-Cc: Will Deacon <will@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Marc Zyngier <maz@kernel.org>
+Oh and we have no `'static` bound on `T` either... We should require
+that as well.
+
 ---
- arch/arm64/tools/sysreg | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/arch/arm64/tools/sysreg b/arch/arm64/tools/sysreg
-index ebbb22ed2301..5e15d69093d1 100644
---- a/arch/arm64/tools/sysreg
-+++ b/arch/arm64/tools/sysreg
-@@ -3527,6 +3527,11 @@ Res0	31:1
- Field	0	EN
- EndSysreg
- 
-+Sysreg	ICC_PCR_EL1	3	1	12	0	2
-+Res0	63:5
-+Field	4:0	PRIORITY
-+EndSysreg
-+
- Sysreg	CSSELR_EL1	3	2	0	0	0
- Res0	63:5
- Field	4	TnD
-
--- 
-2.48.0
-
+Cheers,
+Benno
