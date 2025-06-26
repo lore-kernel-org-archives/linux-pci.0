@@ -1,84 +1,125 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f177.google.com (mail-yb1-f177.google.com [209.85.219.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1C5B26C3A8;
-	Thu, 26 Jun 2025 10:29:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 123F2222590
+	for <linux-pci@vger.kernel.org>; Thu, 26 Jun 2025 10:31:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750933751; cv=none; b=jLL+Y79SBkOJw9p3X+5DcCCucDFIPVicx/7CrUXuZHhpRDOLOkdRjMTlH5tudc7uNReAC9lqy2B9DslsW1GsbTj8EBHRekKT9AcB9BiXmj4w8Uti+YD71sImJytygiAPN0rrEpBwyr6xGgrm3Hi5yidlS5+VAbcvIRKTDWxsc6U=
+	t=1750933883; cv=none; b=bMp9bDHgJfz069iezmX3iWyd8GlTrYOy/yOC+vHyylNdetRWRK9wAyXllbIYl5jN2arJSFuikXDno+TRI16MCKKOylubU42IHV6MOcHrGS55A0wMAJcDV6B0ZiIGeScYRtnt/bkJJ/QW0RlugbPck6XChgEL4YnlngQIbAFTc8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750933751; c=relaxed/simple;
-	bh=AE5qEvFqtJU+4ZCRYFV782k0O7SoTYBIs/KLVihEjS4=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=tyunYLMwcmKsPiRvrHM3C3ivnH4zVhzP+8FgsP5g35W1BekibwtLFXk/qF6O/JYVIik1kh+m03DOdiCUqsjb4oeigJ/b7onqWKbrFycbXjsilQZJ/BGqHMGEl3teqae0wxNukRyBXMl65X9dCAhge9dmEdgRpPMetzUgN8rTsQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lGo+BQhg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750933883; c=relaxed/simple;
+	bh=Z+HMGmRN117Ts5fbev7DVAdsIy/tyxpazqxI06YJMls=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=PTagVI82qD57qqdgjDG3uA+3vM1dsVElwfMuE1watbZgKtZORl8/kvump2lhHX2kyab9FBXeY1juB9o3yzC+mN/i2Y+o5SG9Sy1HX3zib5pQjZ/hQWOxoj+rBPIFrirw+odRh2gt1j/p/5Pzc7szsyH7sVk54oaQSMBb1CtXXb8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=W1hIo8mD; arc=none smtp.client-ip=209.85.219.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lGo+BQhg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D839C4CEEB;
-	Thu, 26 Jun 2025 10:29:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750933751;
-	bh=AE5qEvFqtJU+4ZCRYFV782k0O7SoTYBIs/KLVihEjS4=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=lGo+BQhgUeV3xAtymSOxC5JoyS10rPV4fQYncFC4h4/BRH6euJn9DM3HQnJZchT+8
-	 QeG/pr23cxeTSfquau6eUSQu8TlvKdyxFkNMWMEXwsQ2KM2ibFKXv/DP0slYrI9RnR
-	 mIPd3gQhc27jHEn4sINdn/F4d/zaefKjuTlJuNIGFPJ6Qj7ahZRFqzRf8xaVgkONLK
-	 ZQs0DHTCo1G06rOrw1na1uq77vS5sfWz3R4DQHKtqxvu/fGOOHOS0Fx4feJFtdUFu2
-	 RKT3tIgJyIue5CJ61B0LDmvuFCdsNC68mq0/RaQq7hQmEBZaRWJ48W7lEllO+gdsia
-	 Mh7SI2fxpcTuA==
-From: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Date: Thu, 26 Jun 2025 12:26:22 +0200
-Subject: [PATCH v6 31/31] arm64: Kconfig: Enable GICv5
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="W1hIo8mD"
+Received: by mail-yb1-f177.google.com with SMTP id 3f1490d57ef6-e819aa98e7aso687129276.2
+        for <linux-pci@vger.kernel.org>; Thu, 26 Jun 2025 03:31:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1750933881; x=1751538681; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=otDF7N1FhmMaIK9N2KC0Z8gh+57rBjHJAOPDBBdmpSg=;
+        b=W1hIo8mDxjc4XL8RaKGRZkJ6cuFSVemaDKyeCUxqjY1uLH40BkyXLAcrJqwlFTi7oL
+         YM4jeQHzHxzITESFipykSOhGAb2GgA6EE8vBxD6I3b5x29ipTqEj4cSVGJ1cukPLFGws
+         8qN9qrvP/Xp4z9ncEHpmaytdBZjdNCNkYwLfjeDPUdiFzVwpzkXp4RTPE35m0CLh72pY
+         AYg75X4vWKqLV+DjPb8pDonHhpHR2elnZjL/UqOcIOwldU4D+JH8nGjnsEKUVp4MZ1LV
+         rz3l9XjBcJ7tKtAUwn9ToIL2qfNMtQjHkKPbNLO8+RANBy0gGvkSLQpP96PvfSS+WXMW
+         5uZA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750933881; x=1751538681;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=otDF7N1FhmMaIK9N2KC0Z8gh+57rBjHJAOPDBBdmpSg=;
+        b=P7CNI0Pu60NhIqmWEmwIs4S6R0jla+rKF7NZbDExxCb7bxs9Kw463q+SYj/M7uUNhg
+         UlS0JnfcU8Asa/c2YJApw5HhU6NTN2vu2swxCw/j51YOaPxY7LAIroWVWOzhjPZvs/jH
+         H5CGvhQk+UR+mDs0tAEZINZBRyaCuX4qw509QgKkgZ5iDPMUt+vobjBKstsqy4kNbGIw
+         ijQVXiS9EHE9NCuSNoDqecbFeGPXdGcoTw7p8YMQtkqUh6jr+xHQ2juIWVPtfVtjCR1b
+         Lp9C5UbpkrizxjfFyGoxhrawZZKJaLNneFT29d/UGzkYlL0xqh7CYOpGCADA3F3AWIkQ
+         cjZw==
+X-Forwarded-Encrypted: i=1; AJvYcCVjqT5IUtcmBpBuHyu7ZCAS/uKsbuvC8xBfuomYCDdSPZGuk0AH4waHV+644dg9FP6LbFOfulPOv8s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyABF0l8I9sWZRZxTDKolqsfgcu97hJkZJ9dS3qslrFwNaNIbVZ
+	2NP1XrQUCe+fn1PQBIAtsa+eDEWNDm2fE2rSu9c/jCGAHILKfPAhz9j6fAfXu0zvN3KsIK5ecia
+	JFyWGGVn0wi96ry9Sy+UMDqju9AE+IJMg3lRknNE4SmWSDrnRKn0O
+X-Gm-Gg: ASbGncteDbIRWeAHheDYtLbAIPS6QnytM8RT9f44Xe8Dhs8u8EDv44mxQPKAvdAC5fo
+	3mE/B22nCoS8Dkdb9UTWtek6DlF110Bc6SYOiey3ugyRFQZ4XkMpsVlpfECedeB/YAe1U+LC/e+
+	Z+TVfih+DojjSY2PisM3dPPv47SBNXh8hUcnfkxg0bId20
+X-Google-Smtp-Source: AGHT+IEJFJjQjgoF4JDK6/h8YGM8Hnkr8ICuxu9rc5onoooA/kJOCVLg4G5+xe4NPd23fJBgWQaeIr163WvTav7Ioko=
+X-Received: by 2002:a05:6902:138c:b0:e84:2160:8d71 with SMTP id
+ 3f1490d57ef6-e86017c4ad4mr8521092276.40.1750933881094; Thu, 26 Jun 2025
+ 03:31:21 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250626-gicv5-host-v6-31-48e046af4642@kernel.org>
-References: <20250626-gicv5-host-v6-0-48e046af4642@kernel.org>
-In-Reply-To: <20250626-gicv5-host-v6-0-48e046af4642@kernel.org>
-To: Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, 
- Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, 
- Sascha Bischoff <sascha.bischoff@arm.com>, 
- Jonathan Cameron <Jonathan.Cameron@huawei.com>, 
- Timothy Hayes <timothy.hayes@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, 
- "Liam R. Howlett" <Liam.Howlett@oracle.com>, 
- Peter Maydell <peter.maydell@linaro.org>, 
- Mark Rutland <mark.rutland@arm.com>, Jiri Slaby <jirislaby@kernel.org>, 
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-pci@vger.kernel.org, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>
-X-Mailer: b4 0.15-dev-6f78e
+References: <22759968.EfDdHjke4D@rjwysocki.net>
+In-Reply-To: <22759968.EfDdHjke4D@rjwysocki.net>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Thu, 26 Jun 2025 12:30:45 +0200
+X-Gm-Features: Ac12FXyTZUBODRjJn3UboKy92_g08xem5gzj1b0KboifHaz0N5A-9Sd_QQGZ6zw
+Message-ID: <CAPDyKFpZVdf2EnZE_u1xDKB7=Nd98a_ajYimQhLBu6jYwJhJFA@mail.gmail.com>
+Subject: Re: [PATCH v1 0/9] PM: Reconcile different driver options for runtime
+ PM integration with system sleep
+To: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+Cc: Linux PM <linux-pm@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, 
+	Linux ACPI <linux-acpi@vger.kernel.org>, Linux PCI <linux-pci@vger.kernel.org>, 
+	Mika Westerberg <mika.westerberg@linux.intel.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Enable GICv5 driver code for the ARM64 architecture.
+On Wed, 25 Jun 2025 at 21:25, Rafael J. Wysocki <rjw@rjwysocki.net> wrote:
+>
+> Hi Everyone,
+>
+> This series addresses a couple of issues related to the integration of runtime
+> PM with system sleep I was talking about at the OSMP-summit 2025:
+>
+> https://lwn.net/Articles/1021332/
+>
+> Most importantly, DPM_FLAG_SMART_SUSPEND cannot be used along with
+> pm_runtime_force_suspend/resume() due to some conflicting expectations
+> about the handling of device runtime PM status between these functions
+> and the PM core.
+>
+> Also pm_runtime_force_suspend/resume() currently cannot be used in PCI
+> drivers and in drivers that collaborate with the general ACPI PM domain
+> because they both don't expect their mid-layer runtime PM callbacks to
+> be invoked during system-wide suspend and resume.
+>
+> Patch [1/9] is a preparatory cleanup changing the code to use 'true' and
+> 'false' as needs_force_resume flag values for consistency.
+>
+> Patch [2/9] makes pm_runtime_force_suspend() check needs_force_resume along
+> with the device's runtime PM status upfront, and bail out if it is set,
+> which allows runtime PM status updates to be eliminated from both that function
+> and pm_runtime_force_resume().
+>
+> Patch [3/9] causes the smart_suspend flag to be taken into account by
+> pm_runtime_force_resume() which allows it to resume devices with smart_suspend
+> set whose runtime PM status has been changed to RPM_ACTIVE by the PM core at
+> the beginning of system resume.  After this patch, drivers that use
+> pm_runtime_force_suspend/resume() can also set DPM_FLAG_SMART_SUSPEND which
+> may be useful, for example, if devices handled by them are involved in
+> dependency chains with other devices setting DPM_FLAG_SMART_SUSPEND.
+>
+> The next two patches, [4-5/9], put pm_runtime_force_suspend/resume()
+> and needs_force_resume under CONFIG_PM_SLEEP for consistency and also
+> because using them outside system-wide PM transitions really doesn't make
+> sense.
+>
+> Patch [6/9] makes the code for getting a runtime PM callback for a device
+> a bit more straightforward in preparation for the subsequent changes.
 
-Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Will Deacon <will@kernel.org>
-Cc: Catalin Marinas <catalin.marinas@arm.com>
-Cc: Marc Zyngier <maz@kernel.org>
----
- arch/arm64/Kconfig | 1 +
- 1 file changed, 1 insertion(+)
+I can't find this one. Seems like you did not submit it.
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index 55fc331af337..5ff757cb7cd2 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -129,6 +129,7 @@ config ARM64
- 	select ARM_GIC_V2M if PCI
- 	select ARM_GIC_V3
- 	select ARM_GIC_V3_ITS if PCI
-+	select ARM_GIC_V5
- 	select ARM_PSCI_FW
- 	select BUILDTIME_TABLE_SORT
- 	select CLONE_BACKWARDS
+Perhaps make a resend and fixup the patch-numbering too?
 
--- 
-2.48.0
+[...]
 
+Kind regards
+Uffe
