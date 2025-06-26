@@ -1,148 +1,103 @@
-Received: from mail-pl1-f194.google.com (mail-pl1-f194.google.com [209.85.214.194])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3C052ECD3E;
-	Thu, 26 Jun 2025 17:53:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.194
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B51C194AD5;
+	Thu, 26 Jun 2025 18:15:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750960413; cv=none; b=GUkTktJmkRgbPHQWRUoJLICq6m/01ojn4/d3AgJ70pannOOLyHlp6VpdAcNbkap577ius01oY45WvDdResI41f3wSeCcZl/zEQPQpsQRiIoAi/EGXI8wpg9vb3zyVz2oJsp2sNGEJWv8scdVLpiIF4outIKCZ93sVSdLseIAI3Q=
+	t=1750961747; cv=none; b=nFBhysiYFVQhOaOXBBdQb7VPAg1hL/CB5n83VsP4WkgiRE7qJWmRWCpBnVtVrygPUesmdb75yetF8vpvdAqoKCVXAoF2/3KCE8AwE3gS1aZt/X7WGjAu9p4idE9lMuCUtTXbPZctpW8CtYWvYIAatancY0IUgcz3ZN8hSB2VJIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750960413; c=relaxed/simple;
-	bh=3DW+isIgbcOam9K3su8rrNYApBVcaHJL5UXxTcvoqeA=;
-	h=Date:From:To:CC:Subject:In-Reply-To:References:Message-ID:
-	 MIME-Version:Content-Type; b=FvdJ/9K+wV32NlfGd0KWpY4l27zWL3/uY7LWBpWC2/bm/rFZvL4fpl1J2bfO8YvBlN4HfTVQjfAPCOZpRUNaVZDnCPGexLjTO5ss+WRTGACu0lVaSpPneISkEuRMWzEl9jULsv/L3ApbOwRsuEUjk5xR/DHneHWpCI0dUVeCi78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KN5mwU0K; arc=none smtp.client-ip=209.85.214.194
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1750961747; c=relaxed/simple;
+	bh=r3WpNTdcTTb9WS1CkoWJWXyTbx4bCpMGmoYafXc0yDw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=APPJAie98fi2/0f4uEKjp19ZbYCA3rRBycnJwAR9U34RSPI9bBU7Qf6ix9o2+WN4y5rP27mhb8Nxj0X2UwZNORQ3+/xSo0eRmYKil4X12aVDMrBwezKGxwU0gHWyur22L87i9uIdwSomWFOYZTEFcR0XZIOECtP5NPsOc1v/FYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=hpor0GUh; arc=none smtp.client-ip=79.96.170.134
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KN5mwU0K"
-Received: by mail-pl1-f194.google.com with SMTP id d9443c01a7336-236377f00easo16668745ad.1;
-        Thu, 26 Jun 2025 10:53:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750960411; x=1751565211; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=3DW+isIgbcOam9K3su8rrNYApBVcaHJL5UXxTcvoqeA=;
-        b=KN5mwU0KK7pXmP/CH45uebT/jMPCaGZnKvGm20uu8lP2kLrANHK+9MY1DHUVoviPnd
-         NoQ2ahO4jkWZG69Wpz3Rvvyo7aociNoyrh71Qp2Zv7rtYNHYvcptMKKreFBdIC7rfjm8
-         1tb1K+jbTDcsYLSQtR4yCrCb/qH+0jtkDqevLvutgzLrpCGs9ZlKCndjW0QcUitSqwAG
-         o3Snn+fiFw3fVr3jd1x8zzhhqOWmIcWRvPyVTgKwO1qSnrI/acHUTNfY34N+ArT9lrzY
-         1F2jgmKxv0plqzQKAuK6cd8hJ+wg7s/GTmXtNJO2yUD2/uwo9mgHDIuQ5MJiwXViCibf
-         pzEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750960411; x=1751565211;
-        h=content-transfer-encoding:mime-version:message-id:references
-         :in-reply-to:user-agent:subject:cc:to:from:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=3DW+isIgbcOam9K3su8rrNYApBVcaHJL5UXxTcvoqeA=;
-        b=unPdtOc9NE/dtwJqG4bKt749VrX0X/ZFvgLP4L+SPIUWfIKvKhmOYgIMJF/WRjE2xm
-         IfC7zvC9+CcRr5el2Dy0HsUqeAw7nSr37lNlo9tyVzSMqYzBAgfEG3Dh/kXWPbotYQXq
-         lNbH1ULWuzBvmDndK3K5fpwg49QooeFkHPyYvroP4CqPf498Yb73ngL8TqKB/OgFieyd
-         igQhcXNXfmZ+loXhS52yx3kZ8SfFuqkMMdYXraW/aZik/PRRdyu7G/u+SWpt0xljgeRh
-         KD+89t3udqWTIEBaZ6oyi7aDj4HhvUeqUptPexn/CyQN5GDvirY1Z4h3Mf4BucrEBTRk
-         tuog==
-X-Forwarded-Encrypted: i=1; AJvYcCUhzCZyZ6NWSCn2YFD//lKhOIKmm12EjwT+LQR4ylWNlXviaAFFLQ6C0+8brUDsoY8wGwOoyDvx@vger.kernel.org, AJvYcCWm21K1DGcQcvSv7pkMPRTCPUQImhLXw4SJwnpTZUXbqkF6WHhH7OKhRLDn4r+ND7gIo/61jIn2nLae6OgKpgo=@vger.kernel.org, AJvYcCWxqO4z8K+DJAn3U5TdqCGAriX2H0vKpNFv/4YjXvXG5J6TF0R9OlyLFiyh5nQgzPeLIq2aWV2XbADn@vger.kernel.org, AJvYcCXN59WdDr8IBXnOkHX5cE7+mSqlZXh6LaXBoiVm/DlTmQpB5a2UXBKMRp00bEJIl9YecqrkgVpKhS1P@vger.kernel.org
-X-Gm-Message-State: AOJu0YyYqieERovBdSbAmzWK54ziQyyaq51Z6XHS7m6Ii8zXubIN6oE3
-	OZyNvrf6+3HzFbNlcX/orx0MPclbUKP0/MYMOvrbouB9TmAhCOCS24mcx8qnPykwSCs=
-X-Gm-Gg: ASbGncsv6sDHFjzWkwXWmV86Sm1RNh+8LSgutvo+1uMplZqbvFd8RZj2Lo52iszbgl8
-	eSLxp+Z10p/xLR8od16Mku7B1l6DCYdEDEVE/6SyFuJLP5zqsTa8VpA9BoQTLKADKFsjcd2/Msg
-	oiJVeJHXYs2zEerarnSmxiyqTd0FcP8Qpls7q6wmR40l9x+1ZaZ6abnjCqntX/hTxwvt9ptoz6O
-	9w6eIDZ56pPltSF80yf1dk1DGuyMJLo5aA6PMDY5mULpXfYgfsi9T5aGX4a0BYx3K2n7x8Wpeqz
-	KWwKsGd1LNeVZjGHlbRh7HUg/Wn3mXnxsdAb7P8ngCs0ITSEfvmL4++cTKUOX9H2iiemTp52uJj
-	eugE=
-X-Google-Smtp-Source: AGHT+IGMAGEXF0yV0ZZzuhQSFlpR4GVzlRjXoSxE+CF+J+ar1VbxUo+RYXwsDYzu1MLVP4aLNgLoyA==
-X-Received: by 2002:a17:902:c950:b0:235:799:eca5 with SMTP id d9443c01a7336-23ac463e850mr3573485ad.44.1750960410691;
-        Thu, 26 Jun 2025 10:53:30 -0700 (PDT)
-Received: from [127.0.0.1] ([116.206.223.154])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23abe312819sm3768515ad.34.2025.06.26.10.53.29
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 26 Jun 2025 10:53:30 -0700 (PDT)
-Date: Thu, 26 Jun 2025 23:23:14 +0530
-From: Bandhan Pramanik <bandhanpramanik06.foss@gmail.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org,
- linux-acpi@vger.kernel.org, ath10k@lists.infradead.org,
- linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Subject: =?US-ASCII?Q?Re=3A_Instability_in_ALL_stable_an?=
- =?US-ASCII?Q?d_LTS_distro_kernels_=28IRQ_=2316_be?=
- =?US-ASCII?Q?ing_disabled=2C_PCIe_bus_errors=2C_a?=
- =?US-ASCII?Q?th10k=5Fpci=29_in_Dell_Inspiron_5567?=
-User-Agent: Thunderbird for Android
-In-Reply-To: <CAEmM+Qg+xxMfXb=704OfwYLou7Mh_BNaTevLaGfiG2peZotJoA@mail.gmail.com>
-References: <CAEmM+Qi-Waxk5qcR+nfip-QGXaKk0-Kq7QSq890e9oYOPjW+bA@mail.gmail.com> <20250625202014.GA1585022@bhelgaas> <CAEmM+Qg+xxMfXb=704OfwYLou7Mh_BNaTevLaGfiG2peZotJoA@mail.gmail.com>
-Message-ID: <E8A26FD9-13E3-474A-87FF-ED8D27A1F27B@gmail.com>
+	dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="hpor0GUh"
+Received: from kreacher.localnet (unknown [5.63.189.50])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id C6FE866E981;
+	Thu, 26 Jun 2025 20:15:41 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
+	s=dkim; t=1750961742;
+	bh=r3WpNTdcTTb9WS1CkoWJWXyTbx4bCpMGmoYafXc0yDw=;
+	h=From:Subject:Date;
+	b=hpor0GUhJU2UpT+mWXAZ1iWAve1fG94EubYMxOT46UKLSs8yOOAQE+vzOoNXHv9Ki
+	 /Djl4XicABpoRuIosEIM35P7DGWPNbLL0BXPw37w+GoKUmGQwf7FVbZKRg96bLOner
+	 9pRIXiwFKZBBENi7ijqeWE986edmvmkavYqdPNkDDp6737RoBMnkvPubOyUOPvwbgG
+	 PMJUq+aSNWYAqJrSjMF1wB4Ns8Inb8p0rn0+vlq9dz1YXINaw+RQXrU3GHGK7H4aZ6
+	 EBm7j8roAulQoxNlXxKExOP9pAW0whovm62YAjtjGId1v2UXnB7+QJoCMjHDjyCw0k
+	 ktrza3gphBuoA==
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Linux ACPI <linux-acpi@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>
+Subject: [PATCH v2 9/9] PCI: PM: Set power.strict_midlayer in pci_pm_init()
+Date: Thu, 26 Jun 2025 20:15:05 +0200
+Message-ID: <1952931.CQOukoFCf9@rjwysocki.net>
+In-Reply-To: <5015172.GXAFRqVoOG@rjwysocki.net>
+References: <5015172.GXAFRqVoOG@rjwysocki.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
- charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 5.63.189.50
+X-CLIENT-HOSTNAME: 5.63.189.50
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: dmFkZTF716g97GLxl5r0PfOIWPAhDchnkSWDAqwBHc32sD+HpU8yKJB8xV8olL9lC0SzkWwWofqH3VgYdVRji5cIw9ZbUY7WKZiWjf3xKrF5n/kFXPdAEOzPBCDRv7/dwAHJIQ0XttMc6iSOqO8REJ6/sQbblDgpzZ3yfiPesShmkNx66bo1AYj8VcmdJw/BBHB050Zj303Yb/wm5mvAwXKjtlQwzCdkCdX+5402uydNZLICOp4E4D8MElAkMJkSAvvY8Q7l6VyWrFK73NizhJc5WdxP07GoEdKSjFDXh87nwem3gX8mTgRruroBzE94AJIHpV56uBgDMbkYtmhRhrGWknT+ZVaBlvUkIf98kXjOh7zf/rwGM6n5dCbEfhHGQsWrA3HHQ1Ms69CW6/9hCbQ4LW2sBpvzkT+ob09vZAir5OzBRnrYQvtEu6tWtZPptSh/D2v+ZmI4P9wfInsWJnlKaQO0HUEI0SdovPPVucY/QICxEMoh5P4LDjntqEKznBeXXVNU1cu0zOf8wFMoDcEy2PuFDCAn/NTalwQ426kcLJTYUZ8njOm8r/OoiFgnbiL+DlhmVUKLnpHEZvkLpyGdCqZW8JN/XGKgzIPTrDUGWeYja9pPzJBn53SlI7X1T4+Dmv5hGO+u1/B3JPLn/ScRy5A5hAd17B8W4SM3SBLM+9EJsw
+X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
 
-Hello everyone,
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-I think I found it=2E I used irqpoll and I didn't experience any hiccups w=
-ith my mouse performance=2E But the Wi-Fi was still malfunctioning=2E
+The PCI bus type does not expect its runtime PM callbacks,
+pci_pm_runtime_suspend() and pci_pm_runtime_resume(), to be invoked at
+any point during system-wide suspend and resume, so make it express
+that expectation by setting power.strict_midlayer for all PCI devices
+in pci_pm_prepare() and clear it in pci_pm_complete().
 
-To linux-pci and linux-acpi:
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+---
 
-It's an ath10k problem, sure, but there's something definitely problematic=
- happening if, in the normal state, these Wi-Fi bugs hamper the touchpad mo=
-vement=2E
+v1 -> v2:
+   * Set and clear the new flag in "prepare" and "complete" to allow
+     pm_runtime_force_suspend() invoked from driver remove callbacks to
+     work.
+   * Update subject and changelog.
 
-To ath10k and linux-wireless:
+---
+ drivers/pci/pci-driver.c |    4 ++++
+ 1 file changed, 4 insertions(+)
 
-I tried out "options ath10k_core rawmode =3D 0" along with "skip_otp=3Dy' =
-and the Wi-Fi seems to work perfectly as of now=2E It might be the fix, it =
-might not be either=2E But I think there's something more important to ask:=
- Are there any good resources/documentation on referring to what the differ=
-ent key-value pairs mean? Like, what's the exact documentation through whic=
-h people arrive at "rawmode=3D0" or "skip_otp=3Dy"?
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -708,6 +708,8 @@
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
++	dev_pm_set_strict_midlayer(dev, true);
++
+ 	if (pm && pm->prepare) {
+ 		int error = pm->prepare(dev);
+ 		if (error < 0)
+@@ -749,6 +751,8 @@
+ 		if (pci_dev->current_state < pre_sleep_state)
+ 			pm_request_resume(dev);
+ 	}
++
++	dev_pm_set_strict_midlayer(dev, false);
+ }
+ 
+ #else /* !CONFIG_PM_SLEEP */
 
 
 
-Bandhan
-
-
-On 26 June 2025 4:20:13=E2=80=AFam IST, Bandhan Pramanik <bandhanpramanik0=
-6=2Efoss@gmail=2Ecom> wrote:
-> Please ignore the last email (I haven't replied to everyone)=2E Also,
-> here's the actual updated dmesg (the previous one was the old one):
-> https://gist=2Egithub=2Ecom/BandhanPramanik/ddb0cb23eca03ca2ea43a1d832a1=
-6180/raw/78460e6931a055b6776afe756a95d467913d5ebd/updated-dmesg
->=20
-> On Thu, Jun 26, 2025 at 4:16=E2=80=AFAM Bandhan Pramanik
-> <bandhanpramanik06=2Efoss@gmail=2Ecom> wrote:
-> >
-> > Hello Bjorn,
-> >
-> > First of all, thanks a LOT for replying=2E
-> >
-> > I have included the files in my previous GitHub Gist=2E Sharing the ra=
-w
-> > files for easier analysis=2E
-> >
-> > lspci -vv: https://gist=2Egithub=2Ecom/BandhanPramanik/ddb0cb23eca03ca=
-2ea43a1d832a16180/raw/78460e6931a055b6776afe756a95d467913d5ebd/detailed-lsp=
-ci=2Etxt
-> > dmesg: https://gist=2Egithub=2Ecom/BandhanPramanik/ddb0cb23eca03ca2ea4=
-3a1d832a16180/raw/78460e6931a055b6776afe756a95d467913d5ebd/dmesg=2Elog
-> >
-> > On a different note, I had to use pci=3Dnoaer, so that the ring buffer
-> > wouldn't get cleared that fast=2E
-> >
-> > Regarding the ath10k thing, none of the fixes worked this time=2E Only
-> > irqpoll worked=2E I don't know if it's because of a disparity b/w GNOM=
-E
-> > and KDE (because my daily driver is Fedora 42), but I'm 300% sure that
-> > it's not just the Wi-Fi that's the issue here=2E It's most probably a
-> > lot of issues here, and the harder issues to fix are usually the ones
-> > closer to the hardware=2E
-> >
-> > Anyway, if you get something, please let me know=2E
-> >
-> > Bandhan
-> >
