@@ -1,142 +1,176 @@
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+Received: from AM0PR83CU005.outbound.protection.outlook.com (mail-westeuropeazon11010011.outbound.protection.outlook.com [52.101.69.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 400A92F0C47;
-	Thu, 26 Jun 2025 18:15:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750961754; cv=none; b=YLpjBMj3eVznpnKLyOoIB0yqh//9BiRSjGinPKSytp7qk3vP5gncA7RF+FhRf2m9Ujsie01pG+BfrdPXvWN/svHfVmZCfYyTs/KJ6tOXsqrAVGf9NDpKQzabfSPBQKfVz1I01djf65JPbHd+yAsiExz6nTLYrNTRjyaQ0K6s+uk=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750961754; c=relaxed/simple;
-	bh=wINTbjSgE4hGTShU/WIi/YnLh3esbBO5/BZuSV/Ss6M=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=QUzSbuMImzY9aJIwa1baPvyuD2W2g61u7GTVpCk7cqDyRcoyg9GIFtsu0ZahkIspxXf/AgPgLiMEd5TMqs2iSq6fVVLh0id06X4ikkwzO1jsEx4z4snZhyEDQ6Yq/q2NciEdlsOXMT98nNBynKdUPI2LybJ1M8NgD3T/S8U9Exg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=T0n6IXdY; arc=none smtp.client-ip=79.96.170.134
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 384222EAD15
+	for <linux-pci@vger.kernel.org>; Thu, 26 Jun 2025 18:16:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.69.11
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750961796; cv=fail; b=lCLxmue3akuz/i+/1V8aE8/+THf/AtsuMP42/YO1eMHUOUDlg+V9AeGZiO0TsXWlOC8BmU5x8MarcrUWgVVhn2gvereSUF4oF1uwkCONprtT2KJ9VtkO65wn+ocRBU1QCYaEvKIT7xwyLiDda/6dfcJYeawFwZntdl/gQI26GcY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750961796; c=relaxed/simple;
+	bh=KyGWs18ZG3H1RlptsLMWE/7sFodmOQPPlUz7yO3nhNA=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=DByJK5s07UZdVPHcxYjZ7tS+iTqxclxf9a+wqqkTgHuPVV2z9baLydpsqezL4vJbhxIdSERXOPCKtApUtCQ0wK+T+m3oL5uRqF1uOhv45TPtmM5Wf+LPpTpyYrEcMM519pyeS+QCmiI46VgIZaZinvgj+6M2cLmj3mhork6vl3U=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nokia.com; spf=fail smtp.mailfrom=nokia.com; dkim=pass (2048-bit key) header.d=nokia.com header.i=@nokia.com header.b=qXfF0l8g; arc=fail smtp.client-ip=52.101.69.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nokia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nokia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="T0n6IXdY"
-Received: from kreacher.localnet (unknown [5.63.189.50])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 0363066E9B3;
-	Thu, 26 Jun 2025 20:15:51 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
-	s=dkim; t=1750961751;
-	bh=wINTbjSgE4hGTShU/WIi/YnLh3esbBO5/BZuSV/Ss6M=;
-	h=From:Subject:Date;
-	b=T0n6IXdYhMe/hcTSZCIsnX40sD0W5OiXNCgZZ3WP7anD3JaJnT7P8A7fg3t8zHNlL
-	 zzsXVKEEPTNdsLeqAKOBVY+0EN05ZNFevW4aSSBFsqMq0FdW4ieCobGpJWrlnfVtW0
-	 aac/f8la00px9KphVgclu3zU6DbOctwb6nTA0uDcYHF6F8RlVqJlKif5UR8xpjH26i
-	 R5ic7GUgFAi2xNoZBqMcYcYvRu8gkkZRzKULalW4oCioRDZ1RWf5yeJZxqoU47tJNu
-	 4aBGpxz1d2J+m8WFfu6yfl444zmDzjWp69NjGlPqt+tNh+iJBK9n/2b+s9KI284ElG
-	 9pzG2ePCwDRRA==
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
- Linux ACPI <linux-acpi@vger.kernel.org>,
- Linux PCI <linux-pci@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject:
- [PATCH v2 0/9] PM: Reconcile different driver options for runtime PM
- integration with system sleep
-Date: Thu, 26 Jun 2025 19:56:15 +0200
-Message-ID: <5015172.GXAFRqVoOG@rjwysocki.net>
+	dkim=pass (2048-bit key) header.d=nokia.com header.i=@nokia.com header.b="qXfF0l8g"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=cOLj/xR41sE5Xzj/khk/yUG/jZDo9cFS1C96TGmjSTsgdhBWUuZoV32bFvHSc8OSSnF3pCGCvO7yHd+dbSvKo4yVG4pqrBQE9a3UIH0ra45XE9eGiKuiHzhR8eSFmyxgzuO+BMBFrA+ToQkb+/o7dCMHc6y9SP8xYWTi9tAQY5kS5Uj9kdja6liAcLBBEZlM83xxJRTZ/oRV7sjvoKdpN4KdRcKFjCjwBS8KNepzFxt8uoixrLq+jdG9nY2I1MDi4uau8UqjxUmaPla9f4bCzd5Ysye/uxFilYhm4n2rqpXFPd8RBVkp6uEXHq30mOPWCPQpFxKD6ae8D2HsgJ2NZQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KyGWs18ZG3H1RlptsLMWE/7sFodmOQPPlUz7yO3nhNA=;
+ b=gNmkKgbgvtERzFNSsp+AGbTfGdN/UvlLl3FyjKbsTb3lhKHS6Z+RS1ZvUU1SRMRkitAO40Fm1cz3P8KnnRYGJjf29uAHbWAoUaqtWFSjbBg2zwWZeDsr8CBd2NWiF9b/oqqfc2RQvvexCr5qKSsUXY4caV9WQWD5uwDCGbBFfch4Fl3xhCVsRd7o7WKIUdxGW2CmBYjw5twNOerp2n6DX9OFAw7robXhY46usfOv8rkmRG56fUwYt0+GXDynCdzslmfzeDFAvv9ljvajPPBx0P8bZ/eIA0GK6k7YzlDWXf+oA1e0LiBr5xzSLpLvBArUNzBBnhkl0QKhjdRiXBZ4+g==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nokia.com; dmarc=pass action=none header.from=nokia.com;
+ dkim=pass header.d=nokia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nokia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=KyGWs18ZG3H1RlptsLMWE/7sFodmOQPPlUz7yO3nhNA=;
+ b=qXfF0l8g/lLkbSnrKKoMKFZ/pZRuP0Yoc0Stwpewb12rCpNntP6EieHT+Fx6qLGTPtGQPPAqG5BflrxGMMZW5muwfXLAh9rb3OTw+TfJ+gnJcy9bQHjDK1TBEsPdR9vLSTxVSWvEU1QgxSQfZB6BMOJsDbex9I53r2rMr80p6r9KUnQXYF/FLxE/97a9pmK6KIj3iSswrdTRenmwiWPFUz/dpB65wYsFfY96rQoKw0Mq2ZfcPDGZP7Nez+reFXRtmFeduCQTJTZ6whAGj+muJsir1wPnOUOrgmdF/fLFlu/S5yIjTXYIPFeofSYwKgwBPNpUgFRtzNwLuJvyDRcZHQ==
+Received: from AS4PR07MB8508.eurprd07.prod.outlook.com (2603:10a6:20b:4e8::10)
+ by PA4PR07MB7597.eurprd07.prod.outlook.com (2603:10a6:102:ca::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8880.21; Thu, 26 Jun
+ 2025 18:16:31 +0000
+Received: from AS4PR07MB8508.eurprd07.prod.outlook.com
+ ([fe80::ac1a:46d3:bbd7:ab11]) by AS4PR07MB8508.eurprd07.prod.outlook.com
+ ([fe80::ac1a:46d3:bbd7:ab11%5]) with mapi id 15.20.8857.026; Thu, 26 Jun 2025
+ 18:16:31 +0000
+From: "Jozef Matejcik (Nokia)" <jozef.matejcik@nokia.com>
+To: Keith Busch <kbusch@kernel.org>, Lukas Wunner <lukas@wunner.de>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>
+Subject: RE: pci_probe called concurrently in machine with 2 identical PCI
+ devices causing race condition
+Thread-Topic: pci_probe called concurrently in machine with 2 identical PCI
+ devices causing race condition
+Thread-Index: Advmgv6S7GDW7X3MS1+pFxVcKASISgAEAmmAAAAW13AAAI3RAAAGz7wAAAUhm1A=
+Date: Thu, 26 Jun 2025 18:16:31 +0000
+Message-ID:
+ <AS4PR07MB85088754E7FC20E462E4A071937AA@AS4PR07MB8508.eurprd07.prod.outlook.com>
+References:
+ <AS4PR07MB85085806C2BF5CC518D52808937AA@AS4PR07MB8508.eurprd07.prod.outlook.com>
+ <aF04PxJ5WqIA7Je0@wunner.de>
+ <AS4PR07MB8508CA1516E932B243AC5139937AA@AS4PR07MB8508.eurprd07.prod.outlook.com>
+ <aF08kFNy8qrI8LvD@wunner.de> <aF1qRv0XlT4EDN-Y@kbusch-mbp>
+In-Reply-To: <aF1qRv0XlT4EDN-Y@kbusch-mbp>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nokia.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: AS4PR07MB8508:EE_|PA4PR07MB7597:EE_
+x-ms-office365-filtering-correlation-id: a741b27b-d3f9-4cae-85b4-08ddb4dd93c9
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|376014|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?Wuu3IGEzYVSEyAVPp2BhV8enKlO6x2pLrA/KjcmGs4gYUTpSODQoj914ZvKr?=
+ =?us-ascii?Q?8GGbLbbP/S7u6T/8bKnKJbwdzISFjWnPXrwJPN1ZIZzxZ7UbxtIGS5WD5eFk?=
+ =?us-ascii?Q?0mZUwkub7lP/ALWj3/6DgD5zMiIPJUsqDlk1RbQ7EsJLB8xsxGD2Wp6jwdmM?=
+ =?us-ascii?Q?gF+wvMM4nF8Zv3+kibGkfQPif/EGd1kSULhZRoYMX5B91W1TP3lapzmENjvG?=
+ =?us-ascii?Q?lcVDm9MmqF16Aov8Yju0eebWmPmYW8hGYrNVsAu9m3jk7eL7xjK3Rk32yZft?=
+ =?us-ascii?Q?Hun1UmOfVdlGUJnbAMIK4+AJSasDaLCz0tie8xjJXB9X48HQCFk8iZzPlf3d?=
+ =?us-ascii?Q?otau17uXTSBXCtfF7wUBxoa7x9clte8hb0op4/ieTf7r0cVcpFHOuM5xVibc?=
+ =?us-ascii?Q?IFa1EWP7Q7OwTkq6APWWv7/sNhFRk6iBeJn3caU5hunJThCgb9ndhOhJKmY7?=
+ =?us-ascii?Q?ib8zC0lWNvvseneUW+PDm43fRAzCn/WA1h208aLAZzIpm04hGkn7vnu//+xL?=
+ =?us-ascii?Q?/Dt3qGjQhR+WeyzZl/zug/c7yJ9YsC5b6xB2AcLvsCUWHc1w5qVho4NTyFqR?=
+ =?us-ascii?Q?rSnuoG0L14VSa11uv/Q1fBU3JfMgp8xuXxpVpe0xzwmHmEQ1QrDoP2HpU0H8?=
+ =?us-ascii?Q?g5ct0ADNBZ1lpnXZzRXL7uJramd2fAsr0/GcjfArCGp9tYjmUHZoZEzqz8xm?=
+ =?us-ascii?Q?ROFKvBlN2jFWdLrjoVNtF/SJbFZaq+hBKprM0o9MWV1Rj6vmquk029rgt3Tb?=
+ =?us-ascii?Q?DzI6hB84A+U63/i84j0yb1NEaBnReJcrRpSrkWdUC79dmonMmHyu8GJ28Y4X?=
+ =?us-ascii?Q?q8BNOhGB9H26lyCQGXNKWisdBQnKBKNDKa3fEvFN7Q5ahmEs/YpZ0jlqWUt+?=
+ =?us-ascii?Q?tsKbg5zYHRTJz9XsF6p/Teb/Un38orzUAIMf0REnQwsm6x+9WijyE7LexSF3?=
+ =?us-ascii?Q?6+nOcsp0RlmLLc6jQuERL+cZgW3pGE/ka4rE2vMOcg1Vme72azBInxU/aCap?=
+ =?us-ascii?Q?MMYqZzohDCiCMhSmgkP/8PWFt/lCzXx0gZjaOEuEvDYPkFHUEivhRIc9hO+N?=
+ =?us-ascii?Q?TX+DMTPOoKKlrdJDxby9kjcoNaD5UcXLk8QQeksQ7TDkSs/oJIVDR/JnsBLc?=
+ =?us-ascii?Q?zqiyIqMXa1PEvKUsIk/aaUgvzC7AFf+ATvRBJNgT87uH8gobUtZegZbFewi/?=
+ =?us-ascii?Q?MtgenKgDuYHZqbW+pd38HOdNcilLt1Ob9zxQC3jr3P3kjsr0gogaTLbPIkjc?=
+ =?us-ascii?Q?S+kwwKCdjkvJLoE4dOcDL5o9br8yYfoQ1sL7ToCKcY8BF8+XCJN2iMBMbM/d?=
+ =?us-ascii?Q?VmvrD6qIFNzEzJa6gFEPr2abTr02LV5PhAqZBjXr06l+86ZwLBWzK1r/+1pj?=
+ =?us-ascii?Q?9FWKl+at7nr/uP45MdmdmwoXr4h+H/rZ9b8U/gzg5K1IZ3N/4PnTPR2ZIasR?=
+ =?us-ascii?Q?DrJDsFjQ7rVI/BzIksuSnxn6HYmz4nmbc+AZOQJViAtkLLKCNfQvEw=3D=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:AS4PR07MB8508.eurprd07.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?RNm8scSCsWZVkmiLRH4bmEFj8UeKgmgQC2ES8Ts383bI3GKD556bvz1OoREw?=
+ =?us-ascii?Q?2zYStaxp+JBv6KWFl2DjNdmIX12mpTSC9bN0EZ42CbvdX4HO9ajZow6id69R?=
+ =?us-ascii?Q?rKX4u5amKnbx55yQLptJdfc8Q6m1/O4XJcHrLz+6XdDLNIyqKrgdFJs8sTwa?=
+ =?us-ascii?Q?jEm1SEUfDSmjFoWot8818HZiXtBE39Bnm2gLgBgnQpo0erhixHRyoWuGf3pW?=
+ =?us-ascii?Q?uyNg3WwyyxM13d4gVSsT5Ko9f2zlQCoEjwB4ujhp6Z4cHNOjJyJxfdwAaT3r?=
+ =?us-ascii?Q?MUZoTmH9pXrjbJ+kE5JLyD5nwkM/tC5SZ79iOmhr1qyruwy7i3IaB5rTZVhB?=
+ =?us-ascii?Q?1ywyVhEHVqYxcv/hFSVQYMF1fIwz0JBPgEvvTAznP+6aGO6r/g4B8XAxIkMu?=
+ =?us-ascii?Q?qCu4DFXbbZ6ctr+8TnqKzr5U+xYoIJUjjBsnhUuA4xVRGXzVe1bvX8cZhGRa?=
+ =?us-ascii?Q?489biiGNk+ULAC2c4nBCygyUpILk5MLE3FviE4R6NOtI63mk1gwkdAmQjheW?=
+ =?us-ascii?Q?DIla9JCC4/J6SK0v0bAVYCs3kBOu4kZnBFffcer0ZW6nXtE6BIziH3c2uDaS?=
+ =?us-ascii?Q?KPIMjW1dI6+uj5D+sH9X0GGguPwZHexEBRGaV0360vxm3sXkmkB/kWjQoZGW?=
+ =?us-ascii?Q?rcjvYF7SYNOQPyqIsDfhVjIZwZLnOEslIqrYB+d8SDdh2UxCJGrM9W5eDJ5V?=
+ =?us-ascii?Q?vP1nJwDblFY3N0xw9/zu21YfkjIbNWspiUzQkXu6f4c+4hAqjKhjVlRiXTi9?=
+ =?us-ascii?Q?nfBsNPsQK2dNZFOYwdRtqjs+JAk77jWabG4LXfnbgo9a11eoMtfuHIki9sGB?=
+ =?us-ascii?Q?uEheoogKVDXMorYRLHAmUTe9tkNZmuu1d2U7tk/r83RsoK08P1QoubPIZHxs?=
+ =?us-ascii?Q?aMOodUzsR9VLB76EHiKGdaKuBIHAyMWNn3pOHbAB4KBhfaPUJXUBs9TqvjST?=
+ =?us-ascii?Q?BtxTyMgX4dQaObI/cibs2Ckd85aV3OlXtt7jbN0wEqGABFk30rbV1NTBAV2e?=
+ =?us-ascii?Q?r3U4PXkg6WqljDvxoDJX+n//xw98aBH6ihB/vJv+EFyT3Dl+0tB7TFoCVnPz?=
+ =?us-ascii?Q?CdKpRz5hKA3DX5SF6XraLxO/BTAbwx7KJtYN0zJIYM9EfQ+6CWEbR6JAhYwt?=
+ =?us-ascii?Q?w2XPShvAiE8zqKpSfisvohvh8NyVMcuZJe3zv3EEji65+jpLfE9DyFBlw790?=
+ =?us-ascii?Q?L2rMsKdmQnKBGpyjXDgAHj1HNxUfRmpApUHXoVjs3ElMzk+Taqi27Na+o5yy?=
+ =?us-ascii?Q?IdbISVOb+v54CpJd6hKAtZOzVxG9JoEz9UUsrfqMB8hx2e9bOHuJsPyHtZHt?=
+ =?us-ascii?Q?AcF4+7q+0e4QhYkp86t9nsEBUC5pI7ZuaHTPZ3/bI13J52OrXHx4cqkGwWvd?=
+ =?us-ascii?Q?p063IlLOIYOTDAoJwjWwqMPMz4T2oJlcfpGfSfwZ9ljHi+N9ODBxALHz6Z7g?=
+ =?us-ascii?Q?HvBsj3G2SNZAvoG1pWrrpxfZFHCFQaVbOKjiPGxdkiUHCCWqEV8CTGVbcMiI?=
+ =?us-ascii?Q?xVst6Zk648Uoip176llWtcAgDpeTs4MBuJjM9vjk2QBsW552cfDUblYTFagv?=
+ =?us-ascii?Q?q1c7tVxNcjh9WwRtH9rX3xoCznig9u6c7nNP8nYV?=
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 5.63.189.50
-X-CLIENT-HOSTNAME: 5.63.189.50
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: dmFkZTERS9BO6oFQrrKZvnjMLMhdxIjD6XTwY2np/2vb7rNOSSHXNNt9K8uhYOcu0GDQLMt+XBrMOqWs4K95ZBhlK8LjOX4FCYPC9tKINH38R6K+WTYb2AiWSb5pM4nk++djRgOCEoUDu5vU2Nt+trUEnM0akRY0i33LV3dxLykM/H0odvvgRjjlgeNZPkA1LEPZexEERpLMGCoqxV/VJx4JxSR7Vg80JzNeL2yXO0Mmf0et8u9bNy55ikrF8ic0eAo2pKFhaxz3IWgZYTdsTxlR3iEnQk4YYNSBE+MHpyS/+ATIWG1EqnktUYq0D3wtjTcsLEQCgMyhr/gN0TdAb/7/JLuTYTZULX/yzzRqEGd4iAn1bkDUw7W4Q/vy4BBLKp4rMPIxo+QqNnAsrLAgytIhhLs92YCVsx/aU8EpVN0sY4cTBeFJRRMUxK1F1a+gxCpkMrq+OqnD2YiR0oZEozpP4c1FFtxpR9aelDojZIsJ0uy+1l3sjqLgQS2doExld/C1Dp0ulMbAK9qw7QfOoNkVeVrjSUFiNtPjg8ZUoqIaOyEoRVkUCq3LdwaHbvizvqsoSuJ5oHOxnVemfWVibLeqL9HfUp3jpe3acOz+rpimarciXk5IozFrh+JTvXypls7ks5WdOJ5tGJYUhS/xib1wVgS2CCzDZqeCBavwsiUphwiNsQ
-X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
+X-OriginatorOrg: nokia.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: AS4PR07MB8508.eurprd07.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a741b27b-d3f9-4cae-85b4-08ddb4dd93c9
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Jun 2025 18:16:31.6313
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 5d471751-9675-428d-917b-70f44f9630b0
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: sVSUmpmi2dpZ9B/J9+/f/VpSuH2vBB61yK6uOuTHCoQTyeLCdyrbK48EJiseIwDcwTRqDcvNhf9P8q9tG9B10FWaGF7W+YqSYWPB2SKs0p0=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PA4PR07MB7597
 
-Hi Everyone,
+On Thu, Jun 26, 2025 at 02:26:56PM +0200, Lukas Wunner wrote:
+> > > On Thu, Jun 26, 2025 at 12:20:48PM +0000, Jozef Matejcik (Nokia) wrot=
+e:
+> > > However, I think this can happen in any machine with 2 identical PCI=
+=20
+> > > devices, because as far as I know, existing PCI drivers usually do=20
+> > > not assume that probe function can be called from multiple threads.
+> >
+> > That can happen all the time and it would be a bug in the driver if it=
+=20
+> > caused issues.
 
-This is an update of the series posted yesterday:
+> Wait, is that true? I thought that would only happen if the driver indica=
+ted probe_type PROBE_PREFER_ASYNCHRONOUS. The default > > appears to still =
+be the same as PROBE_FORCE_SYNCHRONOUS.
 
-https://lore.kernel.org/linux-pm/22759968.EfDdHjke4D@rjwysocki.net/
+Hi Keith, thanks for stepping in. The implementation in drivers/pci/*.c see=
+ms to be pretty agnostic to probe_type. I did not find any place where this=
+ enum is accessed and some decisions are made based on its value.
 
-which first of all fixes the patch numbering and makes some changes
-resulting from the following discussion.
+If the probe_type field of struct driver is relevant for PCI subsystem, I t=
+hink it should be documented in Documentation/PCI/pci.rst.
 
-This part of the cover letter still applies:
+In any case, we will push the vendor to fix their driver, but if there is a=
+nything that should be improved in the kernel, I can assist.
 
-"This series addresses a couple of issues related to the integration of runtime
-PM with system sleep I was talking about at the OSMP-summit 2025:
-
-https://lwn.net/Articles/1021332/
-
-Most importantly, DPM_FLAG_SMART_SUSPEND cannot be used along with
-pm_runtime_force_suspend/resume() due to some conflicting expectations
-about the handling of device runtime PM status between these functions
-and the PM core.
-
-Also pm_runtime_force_suspend/resume() currently cannot be used in PCI
-drivers and in drivers that collaborate with the general ACPI PM domain
-because they both don't expect their mid-layer runtime PM callbacks to
-be invoked during system-wide suspend and resume.
-
-Patch [1/9] is a preparatory cleanup changing the code to use 'true' and
-'false' as needs_force_resume flag values for consistency."
-
-Patch [2/9], new in this version, makes pm_runtime_reinit() clear
-needs_force_resume in case it was set during driver remove.
-
-Patch [3/9] (which was [4/9] in v1) puts pm_runtime_force_resume() and one
-other function that is only used during system sleep transitions under
-CONFIG_PM_SLEEP.
-
-Patch [4/9] (which was [2/9] in v1) makes pm_runtime_force_suspend() check
-needs_force_resume along with the device's runtime PM status upfront, and bail
-out if it is set, which allows runtime PM status updates to be eliminated from
-both that function and pm_runtime_force_resume().
-
-Patch [5/9] (which was [3/9] in v1) causes the smart_suspend flag to be taken
-into account by pm_runtime_force_resume() which allows it to resume devices
-with smart_suspend set whose runtime PM status has been changed to RPM_ACTIVE
-by the PM core at the beginning of system resume.  After this patch, drivers
-that use pm_runtime_force_suspend/resume() can also set DPM_FLAG_SMART_SUSPEND
-which may be useful, for example, if devices handled by them are involved in
-dependency chains with other devices setting DPM_FLAG_SMART_SUSPEND.
-
-Patch [6/9] (which effectively is new in v2 because it was not submitted
-previously by mistake) makes the code for getting a runtime PM callback for a
-device a bit more straightforward in preparation for the subsequent changes.
-
-Patch [7/9] introduces a new device PM flag called strict_midlayer that
-can be set by middle layer code which doesn't want its runtime PM
-callbacks to be used during system-wide PM transitions, like the PCI bus
-type and the ACPI PM domain, and updates pm_runtime_force_suspend/resume()
-to take that flag into account.
-
-Patch [8/9] modifies the ACPI PM "prepare" and "complete" callback functions,
-used by the general ACPI PM domain and by the ACPI LPSS PM domain, to set and
-clear strict_midlayer, respectively, which allows drivers collaborating with it
-to use pm_runtime_force_suspend/resume().
-
-That may be useful if such a driver wants to be able to work with different
-PM domains on different systems.  It may want to work with the general ACPI PM
-domain on systems using ACPI, or with another PM domain (or even multiple PM
-domains at the same time) on systems without ACPI, and it may want to use
-pm_runtime_force_suspend/resume() as its system-wide PM callbacks.
-
-Patch [9/9] updates the PCI bus type to set and clear, respectively, strict_midlayer
-for all PCI devices in its "prepare" and "complete" PM callbacks, in case some
-PCI drivers want to use pm_runtime_force_suspend/resume() in the future.  They
-will still need to set DPM_FLAG_SMART_SUSPEND to avoid resuming their devices during
-system suspend, but now they may also use pm_runtime_force_suspend/resume() as
-suspend callbacks for the "regular suspend" phase of device suspend (or invoke
-these functions from their suspend callbacks).
-
-As usual, please refer to individual patch changelogs for more details.
-
-Thanks!
-
-
-
+Regards,
+Jozef
