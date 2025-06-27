@@ -1,45 +1,44 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EB042EAB89;
-	Fri, 27 Jun 2025 16:22:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 135692EB5B0;
+	Fri, 27 Jun 2025 16:22:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751041337; cv=pass; b=EMKuQ3+PJ3A7cOnDvK8qpx5fJU6fNh5W//8KZGkDnT2caxAWHuLy9CLVLY5oWBNrlR12FE5S5dbAoxt6jwEElU0mCJVZGNAV2YORf5k7JN4V2fjUSlg1jiYdgTZ5nwKnzwi/EklAZK/ePJgO+aKl+TaxDTKB50nBIJu6TZtze0Q=
+	t=1751041339; cv=pass; b=aZ1sp/d0g5tRHBbk6tyrJjm0cHYg3r7E3dRJXVaIREZP8u8hNKfP/GRjDN2BmEX0UAMqXwruhx8NKFpGJVwTWH+/CkQJV7ys9xqi4bMH+Av/Scrp7lX0XQ8k4/56TFPI6GElWQd9Rtr3QN4GHqS881dcE7qBgs7pWbkrJnVxZS0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751041337; c=relaxed/simple;
-	bh=XT90ZCY0cK5tLKrcs0GiMqpMHSQGHn1rqMeStYSPh6g=;
+	s=arc-20240116; t=1751041339; c=relaxed/simple;
+	bh=FN+vUZHISonksf0avqO410vexj0U6dH3mX8aymZfaNY=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=k/Hnm6bT9CvIsHJemzYrrQyPsX2wxdH1Ub7Pyjbz0Oa/sF4/VUI29nZdPEOHtucaQlR1j0f4KsvGpFQ4FEdwvaBWcG9x+Zg+veIG+rH+cJp/HFE7owad/j0wzn9fcjAhV5WxwlnAoPa0xzvVdhujB4dUcq7D78MapXEWQ8mu5Us=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=c287lIHo; arc=pass smtp.client-ip=136.143.188.112
+	 In-Reply-To:To:Cc; b=J5Kx8hWIA5SH6vwKI/2pFxKePTZQOEVEti8Et2/Vc4IROHn23FF9eFYT8Jv4+f3imqAZbZ7PpACrJRQPnKUojY1SJS9/X8FY/OUTjVxtipJ8KeC/BSMbE3Ni3iVmbYfFh2cf9/KTI1TjsJGPagMFhCKwtq13c1G0iXDSrE5FTdE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=LO4Pf+Mj; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="c287lIHo"
-ARC-Seal: i=1; a=rsa-sha256; t=1751041310; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="LO4Pf+Mj"
+ARC-Seal: i=1; a=rsa-sha256; t=1751041301; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=Z9Wv5zMPDNo6zREsYBq4Sf2bercy2eU7yB5E6WKq74Eff+87ISfCMMltpOdkhe5Gcbxc0hxzo/aa+oEXU9SqIvUeWwsjKnFjUGXd1cWoCHQ3dYFt/g6Zs1euILdI9W93vXUIzgcbPwdwf1J3+8pmJH72o71+ZNRAD8ZAd41UQN8=
+	b=RxYnhlBODXP9kQVzTV9DtlMLQ3wk4VvlZsk77xeQ1PSqPro8ZN9Hr2l+uaqXqfoycIKNj3053wi5dIeIvmqJjRskx/qKNmmfw9X7dnleCbH3wvM9zldCiEFLBd932jfA8jvm8KMxTbV2G8+/N+vmUXA0ndUnBOdA3v4kz+BKA7k=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1751041310; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=SHEK1SG4xOfkLhryYT/WkgHuKX/Wf2xzFHRxYOq/ics=; 
-	b=XI12ERhW0FFKLLk1plY0PZF2n0KPMcAmneJnczCTzfv/4ToG9c+b27LImMDBQ8Zt5ajqR4bdztfwFKq5R7mtVkt8Ppm1N5KUhWuY6JPcmcfoPMOr5ib7tvOaAWGyqZNopXJOFRi1lXjtVPT8EM+jr1mLCPxVAOE7zRVSu6v3TM8=
+	t=1751041301; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=alrRo8Nvsmb0Eo4JXfNn9cIOlYnb8zdQKewhwjmgfsI=; 
+	b=FxgpqTeeAqoRXdJXoaWPSxuKxU/P8OXScnmKY92dyHn5mn6XJ4LrA68bAtCG+II3NLcAL3/yHH26HYoG29zlnzni0J87gar1EGoLley+a+NSKDD+Dw4M02kPKKBzg1SR3ofIyQrQyfDCjZQ0K7fipIdqkULucmfUcsofPJ/pfaw=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
 	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1751041309;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1751041300;
 	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=SHEK1SG4xOfkLhryYT/WkgHuKX/Wf2xzFHRxYOq/ics=;
-	b=c287lIHogLCeQojPJ7JN+BJyIUCSyz2hlwwTEYH6w72FdfqpYaBD3p55t+8vvYZR
-	fOypzL/pYOhbklf9UXtV9/OfFDHNccuAi+3a5HlKjyb+cwLhB3eCEaCb+v4bS/0aJDW
-	HJ0SflMT1zlipWj3mx/xHpOzr5eFWPi2aZsA+WEM=
-Received: by mx.zohomail.com with SMTPS id 1751041306382261.8961078567744;
-	Fri, 27 Jun 2025 09:21:46 -0700 (PDT)
+	bh=alrRo8Nvsmb0Eo4JXfNn9cIOlYnb8zdQKewhwjmgfsI=;
+	b=LO4Pf+Mjm1lG0Zt22yYhs4d77NY7wFAieT5GBPs8C4n9w7PgX2sdcFNhrAkKIR0q
+	lh1lhCFzFUaQmGyrZqkh4/cwzPZotoyfTaMD/xUdr1eBVz4Tifsm7uyrhAREzZqOIhG
+	yy0X5NQSDXK9Z2li2BsGLmYfi28HUNks0HTDRYJA=
+Received: by mx.zohomail.com with SMTPS id 175104129788879.48504996482723;
+	Fri, 27 Jun 2025 09:21:37 -0700 (PDT)
 From: Daniel Almeida <daniel.almeida@collabora.com>
-Date: Fri, 27 Jun 2025 13:21:06 -0300
-Subject: [PATCH v5 4/6] rust: irq: add support for threaded IRQs and
- handlers
+Date: Fri, 27 Jun 2025 13:21:04 -0300
+Subject: [PATCH v5 2/6] rust: irq: add flags module
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,7 +47,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250627-topics-tyr-request_irq-v5-4-0545ee4dadf6@collabora.com>
+Message-Id: <20250627-topics-tyr-request_irq-v5-2-0545ee4dadf6@collabora.com>
 References: <20250627-topics-tyr-request_irq-v5-0-0545ee4dadf6@collabora.com>
 In-Reply-To: <20250627-topics-tyr-request_irq-v5-0-0545ee4dadf6@collabora.com>
 To: Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
@@ -67,285 +66,136 @@ Cc: linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
 X-Mailer: b4 0.14.2
 X-ZohoMailClient: External
 
-This patch adds support for threaded IRQs and handlers through
-irq::ThreadedRegistration and the irq::ThreadedHandler trait.
+Manipulating IRQ flags (i.e.: IRQF_*) will soon be necessary, specially to
+register IRQ handlers through bindings::request_irq().
 
-Threaded interrupts are more permissive in the sense that further
-processing is possible in a kthread. This means that said execution takes
-place outside of interrupt context, which is rather restrictive in many
-ways.
-
-Registering a threaded irq is dependent upon having an IrqRequest that
-was previously allocated by a given device. This will be introduced in
-subsequent patches.
+Add a kernel::irq::Flags for that purpose.
 
 Signed-off-by: Daniel Almeida <daniel.almeida@collabora.com>
 ---
- rust/kernel/irq.rs         |   5 +-
- rust/kernel/irq/request.rs | 233 ++++++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 235 insertions(+), 3 deletions(-)
+ rust/kernel/irq.rs       |   3 ++
+ rust/kernel/irq/flags.rs | 102 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 105 insertions(+)
 
 diff --git a/rust/kernel/irq.rs b/rust/kernel/irq.rs
-index 01bd08884b72c2a3a9460897bce751c732a19794..aaa40001bafca617c588c799bb41144921595cae 100644
+index fae7b15effc80c936d6bffbd5b4150000d6c2898..9abd9a6dc36f3e3ecc1f92ad7b0040176b56a079 100644
 --- a/rust/kernel/irq.rs
 +++ b/rust/kernel/irq.rs
-@@ -16,4 +16,7 @@
- /// IRQ allocation and handling.
- pub mod request;
- 
--pub use request::{Handler, IrqRequest, IrqReturn, Registration};
-+pub use request::{
-+    Handler, IrqRequest, IrqReturn, Registration, ThreadedHandler, ThreadedIrqReturn,
-+    ThreadedRegistration,
-+};
-diff --git a/rust/kernel/irq/request.rs b/rust/kernel/irq/request.rs
-index 980803b54fcc482b7a42dfa30cde23ed57a0bbec..7a6e3e7ac2045d6a33f81472c02ee2c81372dec8 100644
---- a/rust/kernel/irq/request.rs
-+++ b/rust/kernel/irq/request.rs
-@@ -1,8 +1,9 @@
- // SPDX-License-Identifier: GPL-2.0
- // SPDX-FileCopyrightText: Copyright 2025 Collabora ltd.
- 
--//! This module provides types like [`Registration`] which allow users to
--//! register handlers for a given IRQ line.
-+//! This module provides types like [`Registration`] and
-+//! [`ThreadedRegistration`], which allow users to register handlers for a given
-+//! IRQ line.
- 
- use core::marker::PhantomPinned;
- 
-@@ -265,3 +266,231 @@ pub fn synchronize(&self, dev: &Device<Bound>) -> Result {
-     let handler = unsafe { &*(ptr as *const T) };
-     T::handle(handler).into_inner()
- }
+@@ -9,3 +9,6 @@
+ //! drivers to register a handler for a given IRQ line.
+ //!
+ //! C header: [`include/linux/device.h`](srctree/include/linux/interrupt.h)
 +
-+/// The value that can be returned from `ThreadedHandler::handle_irq`.
-+pub enum ThreadedIrqReturn {
-+    /// The interrupt was not from this device or was not handled.
-+    None,
++/// Flags to be used when registering IRQ handlers.
++pub mod flags;
+diff --git a/rust/kernel/irq/flags.rs b/rust/kernel/irq/flags.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..3cfaef65ae14f6c02f55ebcf4d52450c0052df30
+--- /dev/null
++++ b/rust/kernel/irq/flags.rs
+@@ -0,0 +1,102 @@
++// SPDX-License-Identifier: GPL-2.0
++// SPDX-FileCopyrightText: Copyright 2025 Collabora ltd.
 +
-+    /// The interrupt was handled by this device.
-+    Handled,
++use crate::bindings;
 +
-+    /// The handler wants the handler thread to wake up.
-+    WakeThread,
-+}
++/// Flags to be used when registering IRQ handlers.
++///
++/// They can be combined with the operators `|`, `&`, and `!`.
++#[derive(Clone, Copy, PartialEq, Eq)]
++pub struct Flags(u64);
 +
-+impl ThreadedIrqReturn {
-+    fn into_inner(self) -> u32 {
-+        match self {
-+            ThreadedIrqReturn::None => bindings::irqreturn_IRQ_NONE,
-+            ThreadedIrqReturn::Handled => bindings::irqreturn_IRQ_HANDLED,
-+            ThreadedIrqReturn::WakeThread => bindings::irqreturn_IRQ_WAKE_THREAD,
-+        }
++impl Flags {
++    pub(crate) fn into_inner(self) -> u64 {
++        self.0
 +    }
 +}
 +
-+/// Callbacks for a threaded IRQ handler.
-+pub trait ThreadedHandler: Sync {
-+    /// The actual handler function. As usual, sleeps are not allowed in IRQ
-+    /// context.
-+    fn handle(&self) -> ThreadedIrqReturn;
-+
-+    /// The threaded handler function. This function is called from the irq
-+    /// handler thread, which is automatically created by the system.
-+    fn handle_on_thread(&self) -> IrqReturn;
-+}
-+
-+impl<T: ?Sized + ThreadedHandler + Send> ThreadedHandler for Arc<T> {
-+    fn handle(&self) -> ThreadedIrqReturn {
-+        T::handle(self)
-+    }
-+
-+    fn handle_on_thread(&self) -> IrqReturn {
-+        T::handle_on_thread(self)
++impl core::ops::BitOr for Flags {
++    type Output = Self;
++    fn bitor(self, rhs: Self) -> Self::Output {
++        Self(self.0 | rhs.0)
 +    }
 +}
 +
-+impl<T: ?Sized + ThreadedHandler, A: Allocator> ThreadedHandler for Box<T, A> {
-+    fn handle(&self) -> ThreadedIrqReturn {
-+        T::handle(self)
-+    }
-+
-+    fn handle_on_thread(&self) -> IrqReturn {
-+        T::handle_on_thread(self)
++impl core::ops::BitAnd for Flags {
++    type Output = Self;
++    fn bitand(self, rhs: Self) -> Self::Output {
++        Self(self.0 & rhs.0)
 +    }
 +}
 +
-+/// A registration of a threaded IRQ handler for a given IRQ line.
-+///
-+/// Two callbacks are required: one to handle the IRQ, and one to handle any
-+/// other work in a separate thread.
-+///
-+/// The thread handler is only called if the IRQ handler returns `WakeThread`.
-+///
-+/// # Examples
-+///
-+/// The following is an example of using `ThreadedRegistration`. It uses a
-+/// [`AtomicU32`](core::sync::AtomicU32) to provide the interior mutability.
-+///
-+/// ```
-+/// use core::sync::atomic::AtomicU32;
-+/// use core::sync::atomic::Ordering;
-+///
-+/// use kernel::prelude::*;
-+/// use kernel::device::Bound;
-+/// use kernel::irq::flags;
-+/// use kernel::irq::ThreadedIrqReturn;
-+/// use kernel::irq::ThreadedRegistration;
-+/// use kernel::irq::IrqRequest;
-+/// use kernel::irq::IrqReturn;
-+/// use kernel::sync::Arc;
-+/// use kernel::c_str;
-+/// use kernel::alloc::flags::GFP_KERNEL;
-+///
-+/// // Declare a struct that will be passed in when the interrupt fires. The u32
-+/// // merely serves as an example of some internal data.
-+/// struct Data(AtomicU32);
-+///
-+/// // [`kernel::irq::request::ThreadedHandler::handle`] takes `&self`. This example
-+/// // illustrates how interior mutability can be used when sharing the data
-+/// // between process context and IRQ context.
-+/// type Handler = Data;
-+///
-+/// impl kernel::irq::request::ThreadedHandler for Handler {
-+///     // This is executing in IRQ context in some CPU. Other CPUs can still
-+///     // try to access the data.
-+///     fn handle(&self) -> ThreadedIrqReturn {
-+///         self.0.fetch_add(1, Ordering::Relaxed);
-+///         // By returning `WakeThread`, we indicate to the system that the
-+///         // thread function should be called. Otherwise, return
-+///         // ThreadedIrqReturn::Handled.
-+///         ThreadedIrqReturn::WakeThread
-+///     }
-+///
-+///     // This will run (in a separate kthread) if and only if `handle`
-+///     // returns `WakeThread`.
-+///     fn handle_on_thread(&self) -> IrqReturn {
-+///         self.0.fetch_add(1, Ordering::Relaxed);
-+///         IrqReturn::Handled
-+///     }
-+/// }
-+///
-+/// // Registers a threaded IRQ handler for the given IrqRequest.
-+/// //
-+/// // This is executing in process context and assumes that `request` was
-+/// // previously acquired from a device.
-+/// fn register_threaded_irq(handler: Handler, request: IrqRequest<'_>) -> Result<Arc<ThreadedRegistration<Handler>>> {
-+///     let registration = ThreadedRegistration::new(request, flags::SHARED, c_str!("my_device"), handler);
-+///
-+///     let registration = Arc::pin_init(registration, GFP_KERNEL)?;
-+///
-+///     // The data can be accessed from process context too.
-+///     registration.handler().0.fetch_add(1, Ordering::Relaxed);
-+///
-+///     Ok(registration)
-+/// }
-+/// # Ok::<(), Error>(())
-+/// ```
-+///
-+/// # Invariants
-+///
-+/// * We own an irq handler using `&T` as its private data.
-+///
-+#[pin_data]
-+pub struct ThreadedRegistration<T: ThreadedHandler + 'static> {
-+    #[pin]
-+    inner: Devres<RegistrationInner>,
-+
-+    #[pin]
-+    handler: T,
-+
-+    /// Pinned because we need address stability so that we can pass a pointer
-+    /// to the callback.
-+    #[pin]
-+    _pin: PhantomPinned,
-+}
-+
-+impl<T: ThreadedHandler + 'static> ThreadedRegistration<T> {
-+    /// Registers the IRQ handler with the system for the given IRQ number.
-+    pub fn new<'a>(
-+        request: IrqRequest<'a>,
-+        flags: Flags,
-+        name: &'static CStr,
-+        handler: T,
-+    ) -> impl PinInit<Self, Error> + 'a {
-+        try_pin_init!(&this in Self {
-+            handler,
-+            inner <- Devres::new(
-+                request.dev,
-+                try_pin_init!(RegistrationInner {
-+                    // SAFETY: `this` is a valid pointer to the `ThreadedRegistration` instance.
-+                    cookie: unsafe { &raw mut (*this.as_ptr()).handler }.cast(),
-+                    irq: {
-+                        // SAFETY:
-+                        // - The callbacks are valid for use with request_threaded_irq.
-+                        // - If this succeeds, the slot is guaranteed to be valid until the
-+                        // destructor of Self runs, which will deregister the callbacks
-+                        // before the memory location becomes invalid.
-+                        to_result(unsafe {
-+                            bindings::request_threaded_irq(
-+                                request.irq,
-+                                Some(handle_threaded_irq_callback::<T>),
-+                                Some(thread_fn_callback::<T>),
-+                                flags.into_inner() as usize,
-+                                name.as_char_ptr(),
-+                                (&raw mut (*this.as_ptr()).handler).cast(),
-+                            )
-+                        })?;
-+                        request.irq
-+                    }
-+                })
-+            ),
-+            _pin: PhantomPinned,
-+        })
-+    }
-+
-+    /// Returns a reference to the handler that was registered with the system.
-+    pub fn handler(&self) -> &T {
-+        &self.handler
-+    }
-+
-+    /// Wait for pending IRQ handlers on other CPUs.
-+    ///
-+    /// This will attempt to access the inner [`Devres`] container.
-+    pub fn try_synchronize(&self) -> Result {
-+        let inner = self.inner.try_access().ok_or(ENODEV)?;
-+        inner.synchronize();
-+        Ok(())
-+    }
-+
-+    /// Wait for pending IRQ handlers on other CPUs.
-+    pub fn synchronize(&self, dev: &Device<Bound>) -> Result {
-+        let inner = self.inner.access(dev)?;
-+        inner.synchronize();
-+        Ok(())
++impl core::ops::Not for Flags {
++    type Output = Self;
++    fn not(self) -> Self::Output {
++        Self(!self.0)
 +    }
 +}
 +
-+/// # Safety
-+///
-+/// This function should be only used as the callback in `request_threaded_irq`.
-+unsafe extern "C" fn handle_threaded_irq_callback<T: ThreadedHandler>(
-+    _irq: i32,
-+    ptr: *mut core::ffi::c_void,
-+) -> core::ffi::c_uint {
-+    // SAFETY: `ptr` is a pointer to T set in `ThreadedRegistration::new`
-+    let handler = unsafe { &*(ptr as *const T) };
-+    T::handle(handler).into_inner()
-+}
++/// Use the interrupt line as already configured.
++pub const TRIGGER_NONE: Flags = Flags(bindings::IRQF_TRIGGER_NONE as u64);
 +
-+/// # Safety
-+///
-+/// This function should be only used as the callback in `request_threaded_irq`.
-+unsafe extern "C" fn thread_fn_callback<T: ThreadedHandler>(
-+    _irq: i32,
-+    ptr: *mut core::ffi::c_void,
-+) -> core::ffi::c_uint {
-+    // SAFETY: `ptr` is a pointer to T set in `ThreadedRegistration::new`
-+    let handler = unsafe { &*(ptr as *const T) };
-+    T::handle_on_thread(handler).into_inner()
-+}
++/// The interrupt is triggered when the signal goes from low to high.
++pub const TRIGGER_RISING: Flags = Flags(bindings::IRQF_TRIGGER_RISING as u64);
++
++/// The interrupt is triggered when the signal goes from high to low.
++pub const TRIGGER_FALLING: Flags = Flags(bindings::IRQF_TRIGGER_FALLING as u64);
++
++/// The interrupt is triggered while the signal is held high.
++pub const TRIGGER_HIGH: Flags = Flags(bindings::IRQF_TRIGGER_HIGH as u64);
++
++/// The interrupt is triggered while the signal is held low.
++pub const TRIGGER_LOW: Flags = Flags(bindings::IRQF_TRIGGER_LOW as u64);
++
++/// Allow sharing the irq among several devices.
++pub const SHARED: Flags = Flags(bindings::IRQF_SHARED as u64);
++
++/// Set by callers when they expect sharing mismatches to occur.
++pub const PROBE_SHARED: Flags = Flags(bindings::IRQF_PROBE_SHARED as u64);
++
++/// Flag to mark this interrupt as timer interrupt.
++pub const TIMER: Flags = Flags(bindings::IRQF_TIMER as u64);
++
++/// Interrupt is per cpu.
++pub const PERCPU: Flags = Flags(bindings::IRQF_PERCPU as u64);
++
++/// Flag to exclude this interrupt from irq balancing.
++pub const NOBALANCING: Flags = Flags(bindings::IRQF_NOBALANCING as u64);
++
++/// Interrupt is used for polling (only the interrupt that is registered
++/// first in a shared interrupt is considered for performance reasons).
++pub const IRQPOLL: Flags = Flags(bindings::IRQF_IRQPOLL as u64);
++
++/// Interrupt is not reenabled after the hardirq handler finished. Used by
++/// threaded interrupts which need to keep the irq line disabled until the
++/// threaded handler has been run.
++pub const ONESHOT: Flags = Flags(bindings::IRQF_ONESHOT as u64);
++
++/// Do not disable this IRQ during suspend. Does not guarantee that this
++/// interrupt will wake the system from a suspended state.
++pub const NO_SUSPEND: Flags = Flags(bindings::IRQF_NO_SUSPEND as u64);
++
++/// Force enable it on resume even if [`NO_SUSPEND`] is set.
++pub const FORCE_RESUME: Flags = Flags(bindings::IRQF_FORCE_RESUME as u64);
++
++/// Interrupt cannot be threaded.
++pub const NO_THREAD: Flags = Flags(bindings::IRQF_NO_THREAD as u64);
++
++/// Resume IRQ early during syscore instead of at device resume time.
++pub const EARLY_RESUME: Flags = Flags(bindings::IRQF_EARLY_RESUME as u64);
++
++/// If the IRQ is shared with a [`NO_SUSPEND`] user, execute this interrupt
++/// handler after suspending interrupts. For system wakeup devices users
++/// need to implement wakeup detection in their interrupt handlers.
++pub const COND_SUSPEND: Flags = Flags(bindings::IRQF_COND_SUSPEND as u64);
++
++/// Don't enable IRQ or NMI automatically when users request it. Users will
++/// enable it explicitly by `enable_irq` or `enable_nmi` later.
++pub const NO_AUTOEN: Flags = Flags(bindings::IRQF_NO_AUTOEN as u64);
++
++/// Exclude from runnaway detection for IPI and similar handlers, depends on
++/// `PERCPU`.
++pub const NO_DEBUG: Flags = Flags(bindings::IRQF_NO_DEBUG as u64);
 
 -- 
 2.50.0
