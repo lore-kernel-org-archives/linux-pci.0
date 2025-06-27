@@ -1,46 +1,48 @@
 Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56A272EA755;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 507612EA73B;
 	Fri, 27 Jun 2025 19:29:46 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751052588; cv=none; b=rOISrm1APMPJ/Qx54SNoOlT9CW6ELxvzIlBIDLVIC0lxERYUEgZF24hn1HC4UM0Hv0i9mQoY4e5m8X3JvYVNVfIAw6hcYvdJLOMhBAKVrv643ndl5cKvk/7h1Pjj9TOsZ+2KptmHm0SCWfhyBUax49DhQn1eQd7re3bodibqpEk=
+	t=1751052588; cv=none; b=mXMODHhXfYCBz9JtOQYMKeaMdJcOqEjWQBo6/y4NCi2nG1NEMemDRuk5mmueFXg36NImp/TatKWTaoysAYNA7rzEBhNbbwzJrC4bWHJp+dFGtKmwNcHtvT0uFXziMmsopEuAwiPns1pzmahnhlSPd4IJ+yGZQTOYXYIXxKI9uNY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751052588; c=relaxed/simple;
-	bh=YybUBfc+8sGiw13jasECKaaQ7wukGf1o6DQrxm6RhKo=;
+	bh=MgvBlsJ/DMHt8Kgss7r5bAK9n/TKokfeGfDfe9EF2Cs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NUHztMuImpqlVKitfJsamwynLg3LkrVhj451e9FpHOljEhWgXeWrs/cfGqFdyGLIdGA9rsvdTzPDAKEVwp/9ci6/vtXkKFsPu6dpVWsRqeEepYL080xEc+1+iMAUnyG+8Pa9YxfIReAYBmyCxGEVW6Nwt27Mh4AYXs263kARqJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=lUEw4HA5; arc=none smtp.client-ip=79.96.170.134
+	 MIME-Version:Content-Type; b=l3Vr7BjjMcqxGdAJF9Sl+bfysHI9r9FmzNo//Ec5RNIQ6GNWjPqrE5l9hi5MS+dtYoxnzD+tdegWkINjWbdsYbC8/pEpU/n3+vtP3k3AVC7RMUVmrtn4oQrMAjLdYXV33H1KbMITBUvQRf8qvdky6zdAg5zDobJ42nWWhDb4IJo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=ScfXtIgc; arc=none smtp.client-ip=79.96.170.134
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="lUEw4HA5"
+	dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="ScfXtIgc"
 Received: from kreacher.localnet (unknown [5.63.189.50])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id E953E66DF53;
-	Fri, 27 Jun 2025 21:29:42 +0200 (CEST)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 3C64D66DE73;
+	Fri, 27 Jun 2025 21:29:38 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
-	s=dkim; t=1751052583;
-	bh=YybUBfc+8sGiw13jasECKaaQ7wukGf1o6DQrxm6RhKo=;
+	s=dkim; t=1751052579;
+	bh=MgvBlsJ/DMHt8Kgss7r5bAK9n/TKokfeGfDfe9EF2Cs=;
 	h=From:Subject:Date;
-	b=lUEw4HA5ctBvx+h0g5AVwYzv2QxoHiRdZq3xDW6UHHiJCTWZtK7/UvrrWg5yHgRlF
-	 F4fGLWE34TDOaVKRp+rzqXazpQ/U2uRo+4nQBFHY1vz4PTX7p/xDRWkxBE5LM2xiD8
-	 svKjunh4XnGAV0cwd5p//3sUy74nhv2oTjVPcMl/V3i8UcYLrdAiedBseOPWCfpFVe
-	 oCJ+MYQyBMo5UcBBQQLi2Ww1yH6WOZjlaJwB7cKevRxwGTIOa1cNFL1UoyxAqjfgbj
-	 OQGr5cWn5qUIDqVquwp4lLRXKzI68AWyVxBIf/omZW193qPeQ95KDXIocFqnOZO36q
-	 Rr+hxINK0hCDA==
+	b=ScfXtIgcniBKJCRD6/jR6NPHvN3ymKFg3nXCoH9oeiqRFFu2mysOlTbzNv3TC2e5H
+	 ECNr/4t1w7k7Hb/kqyleHGHV8nvkZRCYzrgZieldudZyoyE1xNwKRPMFDitC82vpYu
+	 4sd1Y2ug6wwlDWMWmmoIMvL7ynE0yywu6+vaoGHsne9kx8Qic5k+i6RUT/E5TfNW4M
+	 xCqL1b3HeLrmGapamReavUgrLYDE2NdwmBNKeewJA1jhAvggNQiPNa/7jLimKdgD6t
+	 KSKwn7KJIzINCTtVhKezJkyb4O0NvmEWdzoeVmx1gAwgY8vCNfyC2OV1dlDvkutanF
+	 KUDAq2o/WJTIQ==
 From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
 To: Linux PM <linux-pm@vger.kernel.org>
 Cc: LKML <linux-kernel@vger.kernel.org>,
  Linux ACPI <linux-acpi@vger.kernel.org>,
  Linux PCI <linux-pci@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
  Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject: [PATCH v3 1/9] PM: Use true/false as power.needs_force_resume values
-Date: Fri, 27 Jun 2025 21:06:34 +0200
-Message-ID: <2254988.irdbgypaU6@rjwysocki.net>
+Subject:
+ [PATCH v3 5/9] PM: Check power.needs_force_resume in
+ pm_runtime_force_suspend()
+Date: Fri, 27 Jun 2025 21:19:31 +0200
+Message-ID: <1855933.VLH7GnMWUR@rjwysocki.net>
 In-Reply-To: <5018768.GXAFRqVoOG@rjwysocki.net>
 References: <5018768.GXAFRqVoOG@rjwysocki.net>
 Precedence: bulk
@@ -54,55 +56,109 @@ Content-Type: text/plain; charset="UTF-8"
 X-CLIENT-IP: 5.63.189.50
 X-CLIENT-HOSTNAME: 5.63.189.50
 X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: dmFkZTGMUf5ozIUuZ+G+BIWXYkha/UUSG8iYef/kxm9xm6hkRjUOHyA7ODhlX0LkM82tu3/gioP+8IFCKojgM359bQwDK8+Et/4ARqFdHmhplrJHKZ0VtgjrlwYyXmvvdpYVUdf1JyOURJCuMzkqRuTZm2czVaP8HE9H1PaJhRlPZ9EfUAL6faVPh1pEPEDNrasKKnajaDt80jgAqena6b+Ga/fMHBqMgpc5wijOOSzvEIz1Kj+OPpXlzwu28DiYKvDviRLz+AP/+/l1tdwY7Pi+LY85uwwDV2GMwgdvA0e6car0+27HK80G+F56t9nhg4+NCbRhYfIzb72Zr1sNRfIlILnzTh8y9Aowew0zACS1YMkc4FS5X05cXiP1oI4uFWVokdy/hstHyZLyPhQg4MOHg1dzkdLPSQWTJQiEJ9mef+gIKm+fpaqH/3A4wWDCitN8IGuym6nDOVHCNbca6nQK8WCmzRfJFs9+zYJJIHZqZoE3SbxRidEJGUbKHU8DcsIVDHJRTAHPoSBvyaP/nWArnO6cMVtJ2wpSwXLzcvrsv4XNBf0FYoILpYFboLC0SoOomNfMkQ4PqKylB83/YbnIlh6NT9U4p8dvcZ3u8slAeH+HCAnT90FGEZxB6XlRUryCq6Ro0Lu2L6kij6YbqFLDzbWMwQzHg7Vvg+eFpCwMf1rHOA
+X-VADE-SPAMCAUSE: dmFkZTGrSjjgwBeoPV1BTemn5ImVCZpPTZb07vPRCPpCLNITJNQNwAJrBW+NvQ9gHfopUGw7eKCZUx2JvTkH7ndztXO95C/5NZYx0U0uzSGwSElzY3a0yFW5y/ST6sLyUL+pkZNb6zBf5QQDeWSHMTwFL5SzhnW4lYOV2aXUoJnPKm0KcXRLQpgIKgvtcuh9kc8szEcWaDKkWT6ZvZMLezK4NKUrQ0LRPHVUG/J8XldG2aWmsAAgiz8DIA4tSCjGi3syq1aAO8pJ5+EOuYaRvLcxgtvWWEpF/MWy84RxjOnkuHVdyEMV6Ug0G9LNrdrQ+TwE0ATvvO2S6WiA1+7Yw5g2H305qA3a5DTQAvMd3eX+r2ot7uQ3ewr5YpzXFKNcEw6iJmgF/z80Tl0DJuIvKrx/skYubFlkRkxVgInSftqTC9/smZ8b/Zc87Etbyx6N4IpG54GWJiQHYtbFBn5XlMlJyzSMmMHzVrVNGybamftIk6F6UReKpk5MQ5tpnv1/cBDfJjs/mGWUvwOKYxKTl1d/VBP8j1AhrJDSY0fhxhH9k70EyNQkgYXdqtH1XlEEx3xHz0iHo2upVSoUaQrw8eMN5K6fUBQAwrZjytd7U0lXqnv8gT3taluTb9ituKSzpUrqMK1uEBIvHKLK9J/eUb6skljGXkpIxi3eN2utClqwFhVk7Q
 X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
 
 From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Since power.needs_force_resume is a bool field, use true/false
-as its values instead of 1/0, respectively.
+Add a power.needs_force_resume check to pm_runtime_force_suspend() so
+it need not rely on the runtime PM status of the device when deciding
+whether or not to return early.
+
+With the new check in place, pm_runtime_force_suspend() will also skip
+devices with the runtime PM status equal to RPM_ACTIVE if they have
+power.needs_force_resume set, so it won't need to change the RPM
+status of the device to RPM_SUSPENDED in addition to setting
+power.needs_force_resume in the case when pm_runtime_need_not_resume()
+return false.
+
+That allows the runtime PM status update to be removed from
+pm_runtime_force_resume(), so the runtime PM status remains unchanged
+between the pm_runtime_force_suspend() and pm_runtime_force_resume()
+calls.
+
+This change potentially unbreaks drivers that call pm_runtime_force_suspend()
+from their ->remove() callbacks because currently, if the device being
+unbound from its driver has a parent with enabled runtime PM and/or
+(possibly) device links respecting runtime PM to suppliers, and it is
+RPM_ACTIVE when the remove takes place, pm_runtime_force_suspend() will
+not drop the parent's child count and the suppliers' runtime PM usage
+counters after force-suspending the device unless pm_runtime_need_not_resume()
+returns 'true' for it.  Moreover, because pm_runtime_force_suspend()
+changes the device's runtime PM status to RPM_SUSPENDED, in the above
+case pm_runtime_reinit() will not cause those counters to drop, so they
+will remain nonzero forever effectively preventing the devices in
+question from runtime-suspending going forward.
+
+This change is also needed for pm_runtime_force_suspend() to work
+with PCI PM and ACPI PM after subsequent changes.  Namely, say
+DPM_FLAG_SMART_SUSPEND is set for a PCI device and its driver uses
+pm_runtime_force_suspend() as its ->suspend() callback.  If
+pm_runtime_force_suspend() changed the runtime PM status of the
+device to RPM_SUSPENDED, pci_pm_suspend_noirq() would skip the
+device due to the dev_pm_skip_suspend() check.
 
 Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Reviewed-by: Ulf Hansson <ulf.hansson@linaro.org>
 ---
 
-v2 -> v3: No changes.
+v2 -> v3:
+   * Update changelog (explanation why it potentially unbreaks some drivers and
+     why the subsequent changes depend on it).
+   * Reorder (it was [4/9] previously).
 
-v1 -> v2: Added R-by from Ulf.
+v1 -> v2: Corresponds to patch [2/9] (that was posted as [0/9] by mistake) in v1.
 
 ---
- drivers/base/power/runtime.c |    6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/base/power/runtime.c |   21 ++++++++-------------
+ 1 file changed, 8 insertions(+), 13 deletions(-)
 
 --- a/drivers/base/power/runtime.c
 +++ b/drivers/base/power/runtime.c
-@@ -1827,7 +1827,7 @@
- 	dev->power.request_pending = false;
- 	dev->power.request = RPM_REQ_NONE;
- 	dev->power.deferred_resume = false;
--	dev->power.needs_force_resume = 0;
-+	dev->power.needs_force_resume = false;
- 	INIT_WORK(&dev->power.work, pm_runtime_work);
+@@ -1969,7 +1969,7 @@
+ 	int ret;
  
- 	dev->power.timer_expires = 0;
-@@ -1997,7 +1997,7 @@
+ 	pm_runtime_disable(dev);
+-	if (pm_runtime_status_suspended(dev))
++	if (pm_runtime_status_suspended(dev) || dev->power.needs_force_resume)
+ 		return 0;
+ 
+ 	callback = RPM_GET_CALLBACK(dev, runtime_suspend);
+@@ -1984,15 +1984,16 @@
+ 	/*
+ 	 * If the device can stay in suspend after the system-wide transition
+ 	 * to the working state that will follow, drop the children counter of
+-	 * its parent, but set its status to RPM_SUSPENDED anyway in case this
+-	 * function will be called again for it in the meantime.
++	 * its parent and the usage counters of its suppliers.  Otherwise, set
++	 * power.needs_force_resume to let pm_runtime_force_resume() know that
++	 * the device needs to be taken care of and to prevent this function
++	 * from handling the device again in case the device is passed to it
++	 * once more subsequently.
+ 	 */
+-	if (pm_runtime_need_not_resume(dev)) {
++	if (pm_runtime_need_not_resume(dev))
  		pm_runtime_set_suspended(dev);
- 	} else {
- 		__update_runtime_status(dev, RPM_SUSPENDED);
--		dev->power.needs_force_resume = 1;
-+		dev->power.needs_force_resume = true;
- 	}
+-	} else {
+-		__update_runtime_status(dev, RPM_SUSPENDED);
++	else
+ 		dev->power.needs_force_resume = true;
+-	}
  
  	return 0;
-@@ -2047,7 +2047,7 @@
  
- 	pm_runtime_mark_last_busy(dev);
- out:
--	dev->power.needs_force_resume = 0;
-+	dev->power.needs_force_resume = false;
- 	pm_runtime_enable(dev);
- 	return ret;
- }
+@@ -2033,12 +2034,6 @@
+ 	    pm_runtime_status_suspended(dev)))
+ 		goto out;
+ 
+-	/*
+-	 * The value of the parent's children counter is correct already, so
+-	 * just update the status of the device.
+-	 */
+-	__update_runtime_status(dev, RPM_ACTIVE);
+-
+ 	callback = RPM_GET_CALLBACK(dev, runtime_resume);
+ 
+ 	dev_pm_disable_wake_irq_check(dev, false);
 
 
 
