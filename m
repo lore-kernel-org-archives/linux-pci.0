@@ -1,159 +1,208 @@
-Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CDF952EE5E5;
-	Fri, 27 Jun 2025 19:29:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38D85190477;
+	Fri, 27 Jun 2025 19:30:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751052590; cv=none; b=hSdH5v7yy6j09Z0QiAg4Gb7iwHRTHKMACh83vQt993Qkbgm2ioipbxSexSUi+6rj+wJ2sLsjwFhABFuqGuFGaQQ80wHfssoQo9Vwsp3s9s4ai3fzdVwAqYsiutsbePi4dILpxCmyFphdVyQiY8QDupW/Sr08Hkb/5NZODzBk4IQ=
+	t=1751052648; cv=none; b=Tvx8k/FAejSwBLWx1W9DHKBudFZunNk7fkLH33cPqwfD7CJUdWzq8IQ/2RDbWqpvOMVUGLI4XfQx8DOJKrn70K7LGE2mffhgCz8dlWZ8GPtKgjCP1B6+CCNEZZ5OVvRNeBRkbROhB91OAqThoDm7qLIdt1kEaF0loKGgVMDFENI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751052590; c=relaxed/simple;
-	bh=QfilRFKxPkwDTkuD2yLSb1hp0x9K9JFAolcqxDlnkaw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=S/wJU5Usa0CN/lHgc1FXCemyUFyNb6QPM5zoDndCFRodnsXye4X275Q6bnKROEiaGy1IigGV1KqtKQh+C+EnD/vV9ctOm5z1m8wGnTN+v+ss00HzGR1pW7EgJVm6Qib+hZcCBVWf+CQbqZxV5WJw/ClNfT7fYOTEhMtcUKJC9zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=p6nHofRL; arc=none smtp.client-ip=79.96.170.134
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
+	s=arc-20240116; t=1751052648; c=relaxed/simple;
+	bh=Ewt6x+TyLrnKWB9bcFNXn39ClBlBLwSs9oVDUkhN+5s=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=dEekOgAIrpjqnCL1+bbHybWARL7xqIXSaE1TR1XRBy8IGcF9o5fdKd5kXGnZhf1uPjxuwR2URAMxXWmNK/EjJstYerNd6q8Zakw9sYMT8Wu1Vj4zU8igcOh8Mzp0puCT3KRu2+qXjjm1eioRg6Ui/uzu/7fc0MlvcDk4f3ixPqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RPazJm95; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="p6nHofRL"
-Received: from kreacher.localnet (unknown [5.63.189.50])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by cloudserver094114.home.pl (Postfix) with ESMTPSA id DA3E066DF60;
-	Fri, 27 Jun 2025 21:29:43 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
-	s=dkim; t=1751052584;
-	bh=QfilRFKxPkwDTkuD2yLSb1hp0x9K9JFAolcqxDlnkaw=;
-	h=From:Subject:Date;
-	b=p6nHofRLHkYyuGJ7js9/O6SMgc4xfvTvDD57ORQzCOwIwiCdg/bpvffOmp4Y8ktwm
-	 Kbe2hZZFGX5wYL181az8epNsMgm8h++mEcoukFBzjQTudbTH9YMLLdIh0e1cg4cDsD
-	 DcVAxI9uHclz+SfvAyuPrhgVvYGgHZ5hFH+5gd1cfyoCuW9JvwXCaFzX48t6ueXWuG
-	 ZfE62N9OS2ToraZ0Sq75D2uRxsN9Um3m3a9b47m0REdD21xniGNDdn0J62ywGvh87h
-	 L3zZUeMpK7bMBpkp+ee+w1iL8YM36hklXrp+5JvDCgM61AMsqukr78IIWF26EmNlF/
-	 mYiQY7iOCl3jg==
-From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
-To: Linux PM <linux-pm@vger.kernel.org>
-Cc: LKML <linux-kernel@vger.kernel.org>,
- Linux ACPI <linux-acpi@vger.kernel.org>,
- Linux PCI <linux-pci@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
- Mika Westerberg <mika.westerberg@linux.intel.com>
-Subject:
- [PATCH v3 0/9] PM: Reconcile different driver options for runtime PM
- integration with system sleep
-Date: Fri, 27 Jun 2025 21:05:05 +0200
-Message-ID: <5018768.GXAFRqVoOG@rjwysocki.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RPazJm95"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A284EC4CEE3;
+	Fri, 27 Jun 2025 19:30:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751052647;
+	bh=Ewt6x+TyLrnKWB9bcFNXn39ClBlBLwSs9oVDUkhN+5s=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=RPazJm95MCXTQsAh4h8EI9hYme1woTQj/7GHQ1aNwZf1LH+YtE91kNPlux6ZUBXs3
+	 tmn7wLtMkotusbLg+Ipj1PXvDzK+Ih5zJaBq89DdFZX2y+yNquxaS3TzCfVg+rKSE3
+	 cMh1XG5uXx3I+902Br+hvx+hOoBs5W1oSuav0bvOYvWquAGXVszjNqV0DMxIEZ9lXi
+	 SQQ7PRmO6QpvO9Ghk+62IjRV130WaRg+4TzLphnxY5Me5G6m0eD5LpBqLnRjcjUarm
+	 7YwJrjnxNeExgej4gvKNBhNgFbCi1cSRqguatqAJKpKOcGCFTA+mrrk3dp/kpQtqS6
+	 i5SNPirztErfA==
+Date: Fri, 27 Jun 2025 14:30:46 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shradha Todi <shradha.t@samsung.com>
+Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-phy@lists.infradead.org, linux-fsd@tesla.com,
+	manivannan.sadhasivam@linaro.org, lpieralisi@kernel.org,
+	kw@linux.com, robh@kernel.org, bhelgaas@google.com,
+	jingoohan1@gmail.com, krzk+dt@kernel.org, conor+dt@kernel.org,
+	alim.akhtar@samsung.com, vkoul@kernel.org, kishon@kernel.org,
+	arnd@arndb.de, m.szyprowski@samsung.com, jh80.chung@samsung.com,
+	pankaj.dubey@samsung.com
+Subject: Re: [PATCH v2 09/10] PCI: exynos: Add support for Tesla FSD SoC
+Message-ID: <20250627193046.GA1673824@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="UTF-8"
-X-CLIENT-IP: 5.63.189.50
-X-CLIENT-HOSTNAME: 5.63.189.50
-X-VADE-SPAMSTATE: clean
-X-VADE-SPAMCAUSE: dmFkZTErU7IP/L2efhEPSxvFHGkD9H9880XNxizk/z/A8YVVMbbIx0WG/w6MjmzKZxgcpK9Lgs33vwksAjNGtA3gD2ptkGJNKkRFvzx7qiz6rLp9KHp4OeAgwk3cC3ARW/d4ZOJ811QaNuBI6uJRGkMMOn8IajDBvVPlN9ndBOsScnvwrVRmHEpqU+jYPrMCL/vHsusZWXogLlvKzLWF8M2E+x0QnkSFzjZ0/mTcG3gRbH8bfAr5T9DgEM1AhTL144KZkKWOsiBuhxyt4dB0sNbm3+L1Pjfrq42aP9Jk8sDe3dlf20hto8JCZ8XS0oeIQXnq1V4+ZcCuStFp9Alhu3stSMchVCENycDm/x87k7kz0M1Vf/3glcn2yvUq282T7uf0GkbaQq1BOq2JdKyhQM66vmreTKJJ3pMqqqC/iTH5u8nD5Y86z60ud4q432ahcpBu/7sSOkimxZJRHB+7S8JYzqPikzTABa1N8PelnrT4MKdx2iPy53Grqy+itZ1E9DqLRB67fC2gb4fA18Zg6jz0/2RhXgABGfPX4ZVQbjiPeFsyNw53ijN836E1QYNwDLsRoaGEjzJE9lPik6Kg0+o1ATnV9OrpUJ5RVguIvnIlnuWb+lBHGoVDAaxNXp5VD8xsFh0Id25efm67YC8VWUdfOZo79JJKomc/Jr6mIMt+J0ORVw
-X-DCC--Metrics: v370.home.net.pl 1024; Body=6 Fuz1=6 Fuz2=6
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250625165229.3458-10-shradha.t@samsung.com>
 
-Hi Everyone,
+On Wed, Jun 25, 2025 at 10:22:28PM +0530, Shradha Todi wrote:
+> Add host and endpoint controller driver support for FSD SoC.
 
-This is an update of the series the v2 of which was posted yesterday:
+> +++ b/drivers/pci/controller/dwc/pci-exynos.c
+> @@ -20,6 +20,8 @@
+>  #include <linux/regulator/consumer.h>
+>  #include <linux/mod_devicetable.h>
+>  #include <linux/module.h>
+> +#include <linux/regmap.h>
+> +#include <linux/mfd/syscon.h>
 
-https://lore.kernel.org/linux-pm/5015172.GXAFRqVoOG@rjwysocki.net/
+The trend is to sort these alphabetically.  The last couple additions
+didn't observe this, but maybe these new ones could go a little
+farther up and make it more sorted rather than less?
 
-and the v1 is here:
+> +#define FSD_PCIE_CXPL_DEBUG_00_31		0x2C8
 
-https://lore.kernel.org/linux-pm/22759968.EfDdHjke4D@rjwysocki.net/
+Existing #defines use lower-case hex; please follow suit.
 
-This update reorders the patches (again), updates the changelogs of some of
-them and changes the subject of one patch slightly.  It also adds a kerneldoc
-comment to a new function in patch [5/9].
+> +/* to store different SoC variants of Samsung */
+> +enum samsung_pcie_variants {
+> +	FSD,
+> +	EXYNOS_5433,
+> +};
 
-This part of the cover letter still applies:
+>  struct samsung_pcie_pdata {
+>  	struct pci_ops				*pci_ops;
+>  	const struct dw_pcie_ops		*dwc_ops;
+>  	const struct dw_pcie_host_ops		*host_ops;
+> +	const struct dw_pcie_ep_ops		*ep_ops;
+>  	const struct samsung_res_ops		*res_ops;
+> +	unsigned int				soc_variant;
+> +	enum dw_pcie_device_mode		device_mode;
+>  };
 
-"This series addresses a couple of issues related to the integration of runtime
-PM with system sleep I was talking about at the OSMP-summit 2025:
+> +static u32 fsd_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				u32 reg, size_t size)
+> +{
+> +	void __iomem *addr;
+> +	u32 val;
+> +
+> +	addr = fsd_atu_setting(pci, base);
+> +
+> +	dw_pcie_read(addr + reg, size, &val);
+> +
+> +	return val;
 
-https://lwn.net/Articles/1021332/
+Remove blank lines to match style of fsd_pcie_write_dbi2().
 
-Most importantly, DPM_FLAG_SMART_SUSPEND cannot be used along with
-pm_runtime_force_suspend/resume() due to some conflicting expectations
-about the handling of device runtime PM status between these functions
-and the PM core.
+> +}
+> +
+> +static void fsd_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+> +				u32 reg, size_t size, u32 val)
+> +{
+> +	void __iomem *addr;
+> +
+> +	addr = fsd_atu_setting(pci, base);
+> +
+> +	dw_pcie_write(addr + reg, size, val);
 
-Also pm_runtime_force_suspend/resume() currently cannot be used in PCI
-drivers and in drivers that collaborate with the general ACPI PM domain
-because they both don't expect their mid-layer runtime PM callbacks to
-be invoked during system-wide suspend and resume.
+Ditto.
 
-Patch [1/9] is a preparatory cleanup changing the code to use 'true' and
-'false' as needs_force_resume flag values for consistency."
+> +}
+> +
+> +static void fsd_pcie_write_dbi2(struct dw_pcie *pci, void __iomem *base,
+> +				u32 reg, size_t size, u32 val)
+> +{
+> +	struct exynos_pcie *ep = to_exynos_pcie(pci);
+> +
+> +	fsd_atu_setting(pci, base);
+> +	dw_pcie_write(pci->dbi_base + reg, size, val);
+> +	regmap_write(ep->sysreg, ep->sysreg_offset, ADDR_TYPE_DBI);
+> +}
 
-Patch [2/9] (which was [3/9] in v2) puts pm_runtime_force_resume() and one
-other function that is only used during system sleep transitions under
-CONFIG_PM_SLEEP.
+> +static int fsd_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> +				 unsigned int type, u16 interrupt_num)
+> +{
+> +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> +
+> +	switch (type) {
+> +	case PCI_IRQ_INTX:
+> +		return dw_pcie_ep_raise_intx_irq(ep, func_no);
+> +	case PCI_IRQ_MSIX:
+> +		dev_err(pci->dev, "EP does not support MSIX\n");
 
-Patch [3/9] (which was [5/9] in v2) causes the smart_suspend flag to be taken
-into account by pm_runtime_force_resume() which allows it to resume devices
-with smart_suspend set whose runtime PM status has been changed to RPM_ACTIVE
-by the PM core at the beginning of system resume.  After this patch, drivers
-that use pm_runtime_force_suspend/resume() can also set DPM_FLAG_SMART_SUSPEND
-which may be useful, for example, if devices handled by them are involved in
-dependency chains with other devices setting DPM_FLAG_SMART_SUSPEND.
+s/MSIX/MSI-X/ to match spec usage.
 
-Since patches [1,3/9] have been reviewed already and patch [2/9] should not
-be particularly controversial, I think that patches [1-3/9] are good to go.
+> @@ -373,13 +617,43 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+>  		return ret;
+>  
+>  	platform_set_drvdata(pdev, ep);
+> -	ret = samsung_irq_init(ep, pdev);
+> -	if (ret)
+> -		goto fail_regulator;
+> -	ep->pci.pp.ops = pdata->host_ops;
+> -	ret = dw_pcie_host_init(&ep->pci.pp);
+> -	if (ret < 0)
+> +
+> +	if (pdata->res_ops->set_device_mode)
+> +		pdata->res_ops->set_device_mode(ep);
+> +
+> +	switch (ep->pdata->device_mode) {
+> +	case DW_PCIE_RC_TYPE:
+> +		ret = samsung_irq_init(ep, pdev);
+> +		if (ret)
+> +			goto fail_regulator;
+> +
+> +		ep->pci.pp.ops = pdata->host_ops;
+> +
+> +		ret = dw_pcie_host_init(&ep->pci.pp);
+> +		if (ret < 0)
+> +			goto fail_phy_init;
+> +
+> +		break;
+> +	case DW_PCIE_EP_TYPE:
+> +		phy_init(ep->phy);
+> +
+> +		ep->pci.ep.ops = pdata->ep_ops;
+> +
+> +		ret = dw_pcie_ep_init(&ep->pci.ep);
+> +		if (ret < 0)
+> +			goto fail_phy_init;
+> +
+> +		ret = dw_pcie_ep_init_registers(&ep->pci.ep);
+> +		if (ret)
+> +			goto fail_phy_init;
+> +
+> +		pci_epc_init_notify(ep->pci.ep.epc);
+> +
+> +		break;
+> +	default:
+> +		dev_err(dev, "invalid device type\n");
+>  		goto fail_phy_init;
+> +	}
 
-Patch [4/9] (which was [2/9] in v2), makes pm_runtime_reinit() clear
-needs_force_resume in case it was set during driver remove.
+This would be a little nicer if you added soc_variant and device_mode
+and the code that sets and tests them for exynos_5433 first in a
+separate patch.  Then it would be more obvious that the new FSD parts
+don't affect exynos_5433 since this patch would only be *adding*
+FSD-specific things.
 
-Patch [5/9] (which was [4/9] in v2) makes pm_runtime_force_suspend() check
-needs_force_resume along with the device's runtime PM status upfront, and bail
-out if it is set, which allows runtime PM status updates to be eliminated from
-both that function and pm_runtime_force_resume().  I recalled too late that
-it was actually necessary for the PCI PM and ACPI PM to work with
-pm_runtime_force_suspend() correctly after the subsequent changes and that
-patch [3/9] did not depend on it.  I have also realized that patch [5/9]
-potentially unbreaks drivers that call pm_runtime_force_suspend() from their
-"remove" callbacks (see the patch changelog for a bit of an explanation).
+>  static const struct samsung_pcie_pdata exynos_5433_pcie_rc_pdata = {
+>  	.dwc_ops		= &exynos_dw_pcie_ops,
+>  	.pci_ops		= &exynos_pci_ops,
+>  	.host_ops		= &exynos_pcie_host_ops,
+>  	.res_ops		= &exynos_res_ops_data,
+> +	.soc_variant		= EXYNOS_5433,
+> +	.device_mode		= DW_PCIE_RC_TYPE,
+>  };
 
-Patch [6/9] (which has not been changed since v2) makes the code for getting a
-runtime PM callback for a device a bit more straightforward, in preparation for
-the subsequent changes.
-
-Patch [7/9] introduces a new device PM flag called strict_midlayer that
-can be set by middle layer code which doesn't want its runtime PM
-callbacks to be used during system-wide PM transitions, like the PCI bus
-type and the ACPI PM domain, and updates pm_runtime_force_suspend/resume()
-to take that flag into account.  Its changelog has been updated since v2 and
-there is a new kerneldoc comment for dev_pm_set_strict_midlayer().
-
-Patch [8/9] modifies the ACPI PM "prepare" and "complete" callback functions,
-used by the general ACPI PM domain and by the ACPI LPSS PM domain, to set and
-clear strict_midlayer, respectively, which allows drivers collaborating with it
-to use pm_runtime_force_suspend/resume().  The changelog of this patch has been
-made a bit more precise since v2.
-
-That may be useful if such a driver wants to be able to work with different
-PM domains on different systems.  It may want to work with the general ACPI PM
-domain on systems using ACPI, or with another PM domain (or even multiple PM
-domains at the same time) on systems without ACPI, and it may want to use
-pm_runtime_force_suspend/resume() as its system-wide PM callbacks.
-
-Patch [9/9] updates the PCI bus type to set and clear, respectively, strict_midlayer
-for all PCI devices in its "prepare" and "complete" PM callbacks, in case some
-PCI drivers want to use pm_runtime_force_suspend/resume() in the future.  They
-will still need to set DPM_FLAG_SMART_SUSPEND to avoid resuming their devices during
-system suspend, but now they may also use pm_runtime_force_suspend/resume() as
-suspend callbacks for the "regular suspend" phase of device suspend (or invoke
-these functions from their suspend callbacks).  The changelog of this patch has
-been made a bit more precise since v2, like the changelog of patch [8/9].
-
-As usual, please refer to individual patch changelogs for more details.
-
-Thanks!
-
-
-
-
+>  static const struct of_device_id exynos_pcie_of_match[] = {
+> @@ -449,6 +756,14 @@ static const struct of_device_id exynos_pcie_of_match[] = {
+>  		.compatible = "samsung,exynos5433-pcie",
+>  		.data = (void *) &exynos_5433_pcie_rc_pdata,
+>  	},
