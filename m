@@ -1,108 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from cloudserver094114.home.pl (cloudserver094114.home.pl [79.96.170.134])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACB2D20A5C4;
-	Fri, 27 Jun 2025 19:14:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4F220C03E;
+	Fri, 27 Jun 2025 19:29:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.96.170.134
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751051673; cv=none; b=kBRXZRnj3VqN0yxG32+4IF6G6LXFivHar9p7T2QrG4wv4sKgSROVhsjhTcbTJp69s6W4+SKRXfNkAYrDn+b/YgGavlVjna1lCWwW3FjQQCt6Zk7HZNI7RZe2I78xdZVBMcJps1mPeBTfy0xYYNZ4rX6Yse3GVUVDCKRXnQ2w7TE=
+	t=1751052583; cv=none; b=bh5FCqSww+sihfc+gUQgAUpGpwLHjSL/9YQ3thPBQK0ogylUcVBgkWWPumDZs/v64vV+11M2NM8nMQg3WExIyPGmI5qp571LsWMncXk/wQteqa/Dm5ZqbMBWCP1RTBHeX04oAg2KRpURCowA85LvmHpkfbp6jGlXHuW3f5TQy8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751051673; c=relaxed/simple;
-	bh=7y1ZsRmXi5fixd3yGounAXlhvtOObOS1/eW6qryxfFc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CBxL5EDd7yIhtDhzq57cX7EiE0PI1x8+O40wTVc3Y1UC0HQI/LlBxwUUfCWPlCZBe+cRV+jwrBrmqdQOuXRAo0y8lCNNlAYZN0Bl9Q6rwWtxCo+8eCkwBYjkVzoJlWI8VzliqCuwG2+DtaHir1kCurnzrTvdDLRahP5FNc7aPxI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BTrBi/jm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751052583; c=relaxed/simple;
+	bh=kY9pRbBGXyFt52NNCZFJytbQXz3mokYgEYHz3UNvujM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=mAcq8KCUHi/Yft9qqpdu41sy/F/KI/DgVGvcARwjI1rCLmhJDdk0xtndOr69Vp2OAZq1oFBKPX4f7JJmvSa6wilq3A8j8iPNiLWdhAjrlfRgx+IfeEIZoYC51SlMCnz5NWvOLTkt77LahrrNbHE2HTzZlxVcNq/q0JL1QrSEi/c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net; spf=pass smtp.mailfrom=rjwysocki.net; dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b=chxIXNcN; arc=none smtp.client-ip=79.96.170.134
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=rjwysocki.net
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=rjwysocki.net
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BTrBi/jm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 490B6C4CEEB;
-	Fri, 27 Jun 2025 19:14:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751051673;
-	bh=7y1ZsRmXi5fixd3yGounAXlhvtOObOS1/eW6qryxfFc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=BTrBi/jmYNPasQFvmjw61npscaZxr3dckWRLmO9NM8hhIEwWDKBhUKXsi13Xs9yvx
-	 SgwEazEzPozrouuUP0TCbZSTJJWqNQ6kAHqX8XmYlu5F0yPlxf0dhwDTZdIOM6AHTk
-	 IpJuAgefP5L8EyZAP7bamFTWc5A81hKKO5NDPxk0Ka4+pucTdGHp++XVNUU+ljQUai
-	 YZgnKyGyEw6BVX2TWT+XutWKV7hVd4YxtH67AZPGW9oJ+qVaBnT3X+TJQM7ibBm5MO
-	 Yb+EKF7cT0nAN7XVs1kUqJEgpSuoZZdkbZTxhKMrZyetgKdnpIuT2kH9IiDGYM/aVR
-	 TwID+nxa+rmLQ==
-Date: Fri, 27 Jun 2025 21:14:26 +0200
-From: Danilo Krummrich <dakr@kernel.org>
-To: Daniel Almeida <daniel.almeida@collabora.com>
-Cc: Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>,
-	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
-	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Benno Lossin <lossin@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v5 5/6] rust: platform: add irq accessors
-Message-ID: <aF7tknVzLbdN71kw@pollux>
-References: <20250627-topics-tyr-request_irq-v5-0-0545ee4dadf6@collabora.com>
- <20250627-topics-tyr-request_irq-v5-5-0545ee4dadf6@collabora.com>
- <aF7slhheVOXaGB9T@pollux>
+	dkim=pass (2048-bit key) header.d=rjwysocki.net header.i=@rjwysocki.net header.b="chxIXNcN"
+Received: from kreacher.localnet (unknown [5.63.189.50])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by cloudserver094114.home.pl (Postfix) with ESMTPSA id 2E32866DE29;
+	Fri, 27 Jun 2025 21:29:33 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=rjwysocki.net;
+	s=dkim; t=1751052573;
+	bh=kY9pRbBGXyFt52NNCZFJytbQXz3mokYgEYHz3UNvujM=;
+	h=From:Subject:Date;
+	b=chxIXNcNZweVjZDYMbATeSQQTOp1C6QSshPZptPOHzlZGHjAzY1XSkiQEBFM4jBos
+	 WMIB42fmWiYWKEdiUnqjTlFp6vWCN6/PGWkER0kxElUSF6IvDXxVdCTh0dqTyksPel
+	 9f7JGBZgy8xSCLFnKyGZRqIk6U8A28K7y0+I0rDih0q7ZYZxYPR9MJJObxJUh+sD7U
+	 oEUWk7YgzjkfHQCwkUVcwdsdSzOQUos5dzPDtXbZBpP6VGSMUqwHiVVF85yDpXT775
+	 59U2Es4hoaVyAupPRyHLOAe6bz3fEa1L4rvhTTueBYOI8QDl8NA8FCu/ooi/08scp9
+	 Jf1LLtdYYJyFw==
+From: "Rafael J. Wysocki" <rjw@rjwysocki.net>
+To: Linux PM <linux-pm@vger.kernel.org>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Linux ACPI <linux-acpi@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>, Ulf Hansson <ulf.hansson@linaro.org>,
+ Mika Westerberg <mika.westerberg@linux.intel.com>,
+ Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH v3 9/9] PCI/PM: Set power.strict_midlayer in pci_pm_init()
+Date: Fri, 27 Jun 2025 21:29:16 +0200
+Message-ID: <1925097.atdPhlSkOF@rjwysocki.net>
+In-Reply-To: <5018768.GXAFRqVoOG@rjwysocki.net>
+References: <5018768.GXAFRqVoOG@rjwysocki.net>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aF7slhheVOXaGB9T@pollux>
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
+X-CLIENT-IP: 5.63.189.50
+X-CLIENT-HOSTNAME: 5.63.189.50
+X-VADE-SPAMSTATE: clean
+X-VADE-SPAMCAUSE: dmFkZTGRmHXmKxezHgHnenmfNBRxuxS5icg2UpqKuDHPuOJctsue4XUZZKRq+I3k43I7hGGWSVpCO2RMCqeSIExCba3+jEV4RHupFvblFZsJZEOU7KXO+apCLF7BrBbkfQgmVa3qfzu3l1CWWL3sTxIklFfy+SfQ3LU6S7g6b40rVIMKuT9PeVQ7vN73+o7FRm9i7DCswR8ZH2qLd5FKGiCRHAdTIZCJcdKbCzlNjgCJP7j9sC140zaF4s84pWcODIanBShuw8pSTZor6gJPE1mce69YOKvKUPMQL94xAmz+P6IQ2jB2WOr72U/SFpTenbJ1S72cePd03wWASkAhj+PgKNE/kKaG855T+EyLZWoLbf4OYEM2kSOJ7GiNom/yotNU5itFRBu9ztylBE6t5JhKLjiXKijes9NEspnrfifqNeEp1Iti6cizTPhSednvuVLBvTgy22/fO5Hdwix0ZC67F4Is0PRCrSBuuF7KbGU4LIhBJv8/XKtYrzsYSiRbLVUBf0HTlsKeaxYAbcVoxU997JTOkabLjeefj/4PDUXPX7gfPxWiQoKCdoQ2q3YeD5r9SIpwTX4Q1yW1rAk3Ubk30v+V+PvNb2Z1gR5NzsHGaG4RHE0g6QLLpAkF++EbO6hrRRakssNrfSdFb0IgXU7vRUp7COxhzJFOT/Q8mdjKYmP8ow
+X-DCC--Metrics: v370.home.net.pl 1024; Body=7 Fuz1=7 Fuz2=7
 
-On Fri, Jun 27, 2025 at 09:10:22PM +0200, Danilo Krummrich wrote:
-> On Fri, Jun 27, 2025 at 01:21:07PM -0300, Daniel Almeida wrote:
-> > +macro_rules! define_irq_accessor_by_index {
-> > +    ($(#[$meta:meta])* $fn_name:ident, $request_fn:ident, $reg_type:ident, $handler_trait:ident) => {
-> > +        $(#[$meta])*
-> > +        pub fn $fn_name<T: irq::$handler_trait + 'static>(
-> > +            &self,
-> > +            index: u32,
-> > +            flags: irq::flags::Flags,
-> > +            name: &'static CStr,
-> > +            handler: T,
-> > +        ) -> Result<impl PinInit<irq::$reg_type<T>, Error> + '_> {
-> > +            let request = self.$request_fn(index)?;
-> > +
-> > +            Ok(irq::$reg_type::<T>::new(
-> > +                request,
-> > +                flags,
-> > +                name,
-> > +                handler,
-> > +            ))
-> > +        }
-> > +    };
-> > +}
-> > +
-> > +macro_rules! define_irq_accessor_by_name {
-> > +    ($(#[$meta:meta])* $fn_name:ident, $request_fn:ident, $reg_type:ident, $handler_trait:ident) => {
-> > +        $(#[$meta])*
-> > +        pub fn $fn_name<T: irq::$handler_trait + 'static>(
-> > +            &self,
-> > +            irq_name: &'static CStr,
-> > +            name: &'static CStr,
-> > +            flags: irq::flags::Flags,
-> > +            handler: T,
-> > +        ) -> Result<impl PinInit<irq::$reg_type<T>, Error> + '_> {
-> > +            let request = self.$request_fn(irq_name)?;
-> > +
-> > +            Ok(irq::$reg_type::<T>::new(
-> > +                request,
-> > +                flags,
-> > +                name,
-> > +                handler,
-> > +            ))
-> > +        }
-> > +    };
-> > +}
-> 
-> NIT: Please make the order of name and flags the same for both macros.
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-Ideally, first flags, then name, since this is the order used everywhere else.
+The PCI bus type does not expect its runtime PM suspend callback
+function, pci_pm_runtime_suspend(), to be invoked at all during system-
+wide suspend and resume, and it does not expect its runtime resume
+callback function, pci_pm_runtime_resume(), to be invoked at any point
+when runtime PM is disabled for the given device during system-wide
+suspend and resume, so make it express that expectation by setting
+power.strict_midlayer for all PCI devices in pci_pm_prepare() and
+clear it in pci_pm_complete().
+
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+---
+
+v2 -> v3:
+   * Update subject prefix (Bjorn).
+   * Update the changelog to be more precise.
+   * Add Acked-by from Bjorn.
+
+v1 -> v2:
+   * Set and clear the new flag in "prepare" and "complete" to allow
+     pm_runtime_force_suspend() invoked from driver remove callbacks to
+     work.
+   * Update subject and changelog.
+
+---
+ drivers/pci/pci-driver.c |    4 ++++
+ 1 file changed, 4 insertions(+)
+
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -708,6 +708,8 @@
+ 	struct pci_dev *pci_dev = to_pci_dev(dev);
+ 	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
+ 
++	dev_pm_set_strict_midlayer(dev, true);
++
+ 	if (pm && pm->prepare) {
+ 		int error = pm->prepare(dev);
+ 		if (error < 0)
+@@ -749,6 +751,8 @@
+ 		if (pci_dev->current_state < pre_sleep_state)
+ 			pm_request_resume(dev);
+ 	}
++
++	dev_pm_set_strict_midlayer(dev, false);
+ }
+ 
+ #else /* !CONFIG_PM_SLEEP */
+
+
+
