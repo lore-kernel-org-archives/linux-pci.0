@@ -1,36 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE58201004;
-	Sat, 28 Jun 2025 17:30:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB6CF2BCFB;
+	Sat, 28 Jun 2025 17:30:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751131828; cv=none; b=PAPS4XvFrWj7pMEgdKwd+hXXZJWaooL+gekjjt40KXqkCzMB+Od+7VV6WC2Yr1wmkMVahvGALjMhWWufeXfyloXurIx8DhNrtVsGj2QajGoF8QOY0sLLh5j7bnO5727K7l0IuVxTufeIYAitAuBCR5rTXknj6vkcjbZDPMrUk2c=
+	t=1751131828; cv=none; b=SAkhAyRYSBPcvbGKysXKP/acQIsD3g1cfGLRTscnCLsU9xqVJS+kvqahsacYL+yoj1z2lR7y1FvMybB90RoihW2c3tf2R17abwOiFM9B3dqAMMHdm0TPVYFYD5goqUIuYZkzmUHT9ZUQSiV1c0MFwrmx5Qs6GWCc04tY1gtBmks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751131828; c=relaxed/simple;
-	bh=7Tfu+k4kIYM3+mGdV3aDYku43jcInJ/3Gr78P/OtksU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QFjasE3q2chchwgidftFfbZ6XdjzqD3KjBM2WBfHnDF77SxPtTvTHqGU3lWkj0qZ0TjM1PK+l9sL4q2d25eAjdeLjTrD91szM+uxeAOgX015bE/+AxQw5mvXfGjW1WpBeNX8Bq6AeYFZ5nZtHPkmXEa8dXacFZ7H9fnd+yKhmgY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GQVeRKAn; arc=none smtp.client-ip=10.30.226.201
+	bh=zWAmwKnV6f1cwbtaUPgrJ1lIE+Rc2XJQ33KR+f1+GBg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=GaGXza3prxWZk7EdYm9ynyo5M9BvXE6YoZ4bQ4JViGB0MnVDVxXpziJPWRX5DVRLas2QEBtX68KYZPvi+0VfdzBHKW2staG7MU6B+6UoUv/Zlvn2cKAH6AnHx/YMltMiCRP9XfkUT7q6K3nrMiJ36/C1ibPUfpcH1z1yMTGCaeA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l/5rNor2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GQVeRKAn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCD10C4CEEF;
-	Sat, 28 Jun 2025 17:30:27 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l/5rNor2"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA90C4CEEA;
+	Sat, 28 Jun 2025 17:30:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751131827;
-	bh=7Tfu+k4kIYM3+mGdV3aDYku43jcInJ/3Gr78P/OtksU=;
-	h=From:To:Cc:Subject:Date:From;
-	b=GQVeRKAngXUahmHWE9Xnnvma9G05vv5+5TTjXXAHH62wBldayNswjO3l7MxkXUzqD
-	 5rMkcnV2sPgyDNHZmRBGeSkZMDRT4smYyqAwzM4Sz1JtldMQCqF1jhi+QZcAPvzDF4
-	 dAV19Cr9LUj1Rs3iOrP6GFf4X5hUes3jggleQ4H26iFMNMIRxsnqsx1ql+zBHrW+Q+
-	 ynTlqQG0SN1NK1u9tfSGJv2GrI0kILeSAkiS3NGB0sjTfB8+H4eAqrugKRZitmTjTT
-	 kyKonglJ0n0Mvk7Nf8H9lqHdSdwAFr3pJXOhRTOX7khAGJVLQqHOXRKiPmqpqJYu7+
-	 MN9dW0YwLC7iw==
+	s=k20201202; t=1751131828;
+	bh=zWAmwKnV6f1cwbtaUPgrJ1lIE+Rc2XJQ33KR+f1+GBg=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=l/5rNor2Px+Cl03/jN1HOWynCV9eo9DeSLJ6bO8UiztHyxYNqMuyqqhnzMpSnt9TH
+	 3kRNDIs83QmyR1QPNeG7WCWI59VZYaYbtT3Z4uHHSfsVP357KbSIMqAzl2Q/nRTYEx
+	 oL63w2UYzn9/d/mr3Ns+0EL9e7sCXCVWM6oQj0pJKOGAuPh/9Gu2jB2bVawB7D5qxe
+	 2pwPMr0neIm6Fv06BYVWNU26Frt54kD1MzdyyUugfZvBPxEkIGqf5NkJL9DUg0P1rS
+	 ZZIFOxvccdpe4/0TJL6k94CwGN+DGQFO6jwdMb1sn6kDdRXlaVjJusfA+20YePCd3L
+	 BJM2bK8IJ+3/w==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1uVZNh-00AqZC-En;
-	Sat, 28 Jun 2025 18:30:25 +0100
+	id 1uVZNi-00AqZC-Fv;
+	Sat, 28 Jun 2025 18:30:26 +0100
 From: Marc Zyngier <maz@kernel.org>
 To: linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
@@ -42,10 +43,12 @@ Cc: Toan Le <toan@os.amperecomputing.com>,
 	Rob Herring <robh@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 00/12] PCI: xgene: Fix and simplify the MSI driver
-Date: Sat, 28 Jun 2025 18:29:53 +0100
-Message-Id: <20250628173005.445013-1-maz@kernel.org>
+Subject: [PATCH 04/12] PCI: xgene: Drop XGENE_PCIE_IP_VER_UNKN
+Date: Sat, 28 Jun 2025 18:29:57 +0100
+Message-Id: <20250628173005.445013-5-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
+In-Reply-To: <20250628173005.445013-1-maz@kernel.org>
+References: <20250628173005.445013-1-maz@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -58,43 +61,45 @@ X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.o
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-Having recently dipped into the xgene-msi driver to bring it to use
-the MSI-parent concept, I have realised that some of it was slightly
-sub-par (read: downright broken).
+XGENE_PCIE_IP_VER_UNKN is only refered to when probing for the
+original XGene PCIe implementation, and get immediately overridden
+if the device has the "apm,xgene-pcie" compatible string.
 
-The driver is playing horrible tricks behind the core code, missing
-proper affinity management, is terribly over-designed for no good
-reason, and despite what MAINTAINERS says, completely unmaintained.
+Given that the only way to get there is by finding this very string in
+the DT, it is obvious that we will always ovwrite the version with
+XGENE_PCIE_IP_VER_1.
 
-This series is an attempt to fix most of the issues, and effectively
-results more or less in a full rewrite of the driver, removing a lot
-of cruft and fixing the interactions with the PCI host driver in the
-process (there really isn't any reason to rely on initcall ordering
-anymore).
+Drop the whole thing.
 
-I've stopped short of repainting the MAINTAINERS file, but given how
-reactive Toan Le has been, maybe that's on the cards. Patches on top
-of -rc3, tested on a Mustang board.
+Signed-off-by: Marc Zyngier <maz@kernel.org>
+---
+ drivers/pci/controller/pci-xgene.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Marc Zyngier (12):
-  genirq: Teach handle_simple_irq() to resend an in-progress interrupt
-  PCI: xgene: Defer probing if the MSI widget driver hasn't probed yet
-  PCI: xgene: Drop useless conditional compilation
-  PCI: xgene: Drop XGENE_PCIE_IP_VER_UNKN
-  PCI: xgene-msi: Make per-CPU interrupt setup robust
-  PCI: xgene-msi: Drop superfluous fields from xgene_msi structure
-  PCI: xgene-msi: Use device-managed memory allocations
-  PCI: xgene-msi: Get rid of intermediate tracking structure
-  PCI: xgene-msi: Sanitise MSI allocation and affinity setting
-  PCI: xgene-msi: Resend an MSI racing with itself on a different CPU
-  PCI: xgene-msi: Probe as a standard platform driver
-  PCI: xgene-msi: Restructure handler setup/teardown
-
- drivers/pci/controller/pci-xgene-msi.c | 418 +++++++++----------------
- drivers/pci/controller/pci-xgene.c     |  33 +-
- kernel/irq/chip.c                      |   8 +-
- 3 files changed, 176 insertions(+), 283 deletions(-)
-
+diff --git a/drivers/pci/controller/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
+index a848f98203ae4..b95afa35201d0 100644
+--- a/drivers/pci/controller/pci-xgene.c
++++ b/drivers/pci/controller/pci-xgene.c
+@@ -54,7 +54,6 @@
+ #define XGENE_V1_PCI_EXP_CAP		0x40
+ 
+ /* PCIe IP version */
+-#define XGENE_PCIE_IP_VER_UNKN		0
+ #define XGENE_PCIE_IP_VER_1		1
+ #define XGENE_PCIE_IP_VER_2		2
+ 
+@@ -630,10 +629,7 @@ static int xgene_pcie_probe(struct platform_device *pdev)
+ 
+ 	port->node = of_node_get(dn);
+ 	port->dev = dev;
+-
+-	port->version = XGENE_PCIE_IP_VER_UNKN;
+-	if (of_device_is_compatible(port->node, "apm,xgene-pcie"))
+-		port->version = XGENE_PCIE_IP_VER_1;
++	port->version = XGENE_PCIE_IP_VER_1;
+ 
+ 	ret = xgene_pcie_map_reg(port, pdev);
+ 	if (ret)
 -- 
 2.39.2
 
