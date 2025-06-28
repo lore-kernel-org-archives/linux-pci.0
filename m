@@ -1,36 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 333661EB36;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE58201004;
 	Sat, 28 Jun 2025 17:30:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751131828; cv=none; b=ARaytfP8aWwDa4OMaYADnwvbTFTLge7py34bhLEWzM2OjFlqgzinkw+r9WRQOeUAkkIL+ax2TqJH9yL0o0P9W3QMWVuhg/l9C8U21nxWhBhdLrSHNCHjeQOa4un7wGVON4P7wEkBCPAF5EOm21iY9IE5uiN1u1xadQG7HSlRYQw=
+	t=1751131828; cv=none; b=PAPS4XvFrWj7pMEgdKwd+hXXZJWaooL+gekjjt40KXqkCzMB+Od+7VV6WC2Yr1wmkMVahvGALjMhWWufeXfyloXurIx8DhNrtVsGj2QajGoF8QOY0sLLh5j7bnO5727K7l0IuVxTufeIYAitAuBCR5rTXknj6vkcjbZDPMrUk2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751131828; c=relaxed/simple;
-	bh=LTJgQeXifMFvhewXq1QziXQmUhfSC8Gh4RQFCzcAmcc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=F5h6b0zFAjO0w1OGu5xPnUdFF+MsFLiGyOIcqOyUFsYGbbbcErtPpCLKYlyCr9ok2NZvi0Arsw0IS5sINcnV68kKppXNl2EnAx02LNx1HMKb4vYk8PwrTgSoFZmHdnsZjrIJL7TKE2FW4wD7Llj2fXf/AEy+uPRgeLy1NwimOCs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pyAcDTzC; arc=none smtp.client-ip=10.30.226.201
+	bh=7Tfu+k4kIYM3+mGdV3aDYku43jcInJ/3Gr78P/OtksU=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=QFjasE3q2chchwgidftFfbZ6XdjzqD3KjBM2WBfHnDF77SxPtTvTHqGU3lWkj0qZ0TjM1PK+l9sL4q2d25eAjdeLjTrD91szM+uxeAOgX015bE/+AxQw5mvXfGjW1WpBeNX8Bq6AeYFZ5nZtHPkmXEa8dXacFZ7H9fnd+yKhmgY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GQVeRKAn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pyAcDTzC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3888C4CEEA;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GQVeRKAn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCD10C4CEEF;
 	Sat, 28 Jun 2025 17:30:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1751131827;
-	bh=LTJgQeXifMFvhewXq1QziXQmUhfSC8Gh4RQFCzcAmcc=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=pyAcDTzCLnxhbBnq6ie4dvRqywD9yApCSndQJcRyr2M7f7vU64foxquEIZGNmvRFY
-	 1iM8GgjF9k14Vf5nl6LvqUU2/LrjArPqX9l+9lB8f82/jtZSHno//oO6dbeE0hBPzZ
-	 euMhMhzxyJXndom80z1ca+tr8u0yAjbfVb4aoS/9nJVKhKT0ekyH79ByX12SujhmE1
-	 3akMbafBNQesEg4lSiEvdbPneLk3PlckhCyj5zItEKSnxh+O7uB7FHrL9kdh88fFH1
-	 +Qf5rUnathXrF6IBi4+0oywzE1ecG59FMv9UASYUipWSE9wMZv6MqxNmssN6Vcqocn
-	 cwK8FaMbbLtMw==
+	bh=7Tfu+k4kIYM3+mGdV3aDYku43jcInJ/3Gr78P/OtksU=;
+	h=From:To:Cc:Subject:Date:From;
+	b=GQVeRKAngXUahmHWE9Xnnvma9G05vv5+5TTjXXAHH62wBldayNswjO3l7MxkXUzqD
+	 5rMkcnV2sPgyDNHZmRBGeSkZMDRT4smYyqAwzM4Sz1JtldMQCqF1jhi+QZcAPvzDF4
+	 dAV19Cr9LUj1Rs3iOrP6GFf4X5hUes3jggleQ4H26iFMNMIRxsnqsx1ql+zBHrW+Q+
+	 ynTlqQG0SN1NK1u9tfSGJv2GrI0kILeSAkiS3NGB0sjTfB8+H4eAqrugKRZitmTjTT
+	 kyKonglJ0n0Mvk7Nf8H9lqHdSdwAFr3pJXOhRTOX7khAGJVLQqHOXRKiPmqpqJYu7+
+	 MN9dW0YwLC7iw==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1uVZNh-00AqZC-Pf;
+	id 1uVZNh-00AqZC-En;
 	Sat, 28 Jun 2025 18:30:25 +0100
 From: Marc Zyngier <maz@kernel.org>
 To: linux-pci@vger.kernel.org,
@@ -43,12 +42,10 @@ Cc: Toan Le <toan@os.amperecomputing.com>,
 	Rob Herring <robh@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 01/12] genirq: Teach handle_simple_irq() to resend an in-progress interrupt
-Date: Sat, 28 Jun 2025 18:29:54 +0100
-Message-Id: <20250628173005.445013-2-maz@kernel.org>
+Subject: [PATCH 00/12] PCI: xgene: Fix and simplify the MSI driver
+Date: Sat, 28 Jun 2025 18:29:53 +0100
+Message-Id: <20250628173005.445013-1-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
-In-Reply-To: <20250628173005.445013-1-maz@kernel.org>
-References: <20250628173005.445013-1-maz@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,38 +58,43 @@ X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.o
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-It appears that the defect outlined in 9c15eeb5362c4 ("genirq: Allow
-fasteoi handler to resend interrupts on concurrent handling") also
-affects some other less stellar MSI controllers, this time using
-the handle_simple_irq() flow.
+Having recently dipped into the xgene-msi driver to bring it to use
+the MSI-parent concept, I have realised that some of it was slightly
+sub-par (read: downright broken).
 
-Teach this flow about irqd_needs_resend_when_in_progress(). Given
-the invasive nature of this workaround, only this flow is updated.
+The driver is playing horrible tricks behind the core code, missing
+proper affinity management, is terribly over-designed for no good
+reason, and despite what MAINTAINERS says, completely unmaintained.
 
-Signed-off-by: Marc Zyngier <maz@kernel.org>
----
- kernel/irq/chip.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+This series is an attempt to fix most of the issues, and effectively
+results more or less in a full rewrite of the driver, removing a lot
+of cruft and fixing the interactions with the PCI host driver in the
+process (there really isn't any reason to rely on initcall ordering
+anymore).
 
-diff --git a/kernel/irq/chip.c b/kernel/irq/chip.c
-index 2b274007e8bab..6e789035919f7 100644
---- a/kernel/irq/chip.c
-+++ b/kernel/irq/chip.c
-@@ -559,7 +559,13 @@ void handle_simple_irq(struct irq_desc *desc)
- {
- 	guard(raw_spinlock)(&desc->lock);
- 
--	if (!irq_can_handle(desc))
-+	if (!irq_can_handle_pm(desc)) {
-+		if (irqd_needs_resend_when_in_progress(&desc->irq_data))
-+			desc->istate |= IRQS_PENDING;
-+		return;
-+	}
-+
-+	if (!irq_can_handle_actions(desc))
- 		return;
- 
- 	kstat_incr_irqs_this_cpu(desc);
+I've stopped short of repainting the MAINTAINERS file, but given how
+reactive Toan Le has been, maybe that's on the cards. Patches on top
+of -rc3, tested on a Mustang board.
+
+Marc Zyngier (12):
+  genirq: Teach handle_simple_irq() to resend an in-progress interrupt
+  PCI: xgene: Defer probing if the MSI widget driver hasn't probed yet
+  PCI: xgene: Drop useless conditional compilation
+  PCI: xgene: Drop XGENE_PCIE_IP_VER_UNKN
+  PCI: xgene-msi: Make per-CPU interrupt setup robust
+  PCI: xgene-msi: Drop superfluous fields from xgene_msi structure
+  PCI: xgene-msi: Use device-managed memory allocations
+  PCI: xgene-msi: Get rid of intermediate tracking structure
+  PCI: xgene-msi: Sanitise MSI allocation and affinity setting
+  PCI: xgene-msi: Resend an MSI racing with itself on a different CPU
+  PCI: xgene-msi: Probe as a standard platform driver
+  PCI: xgene-msi: Restructure handler setup/teardown
+
+ drivers/pci/controller/pci-xgene-msi.c | 418 +++++++++----------------
+ drivers/pci/controller/pci-xgene.c     |  33 +-
+ kernel/irq/chip.c                      |   8 +-
+ 3 files changed, 176 insertions(+), 283 deletions(-)
+
 -- 
 2.39.2
 
