@@ -1,227 +1,202 @@
-Received: from mail-qk1-f181.google.com (mail-qk1-f181.google.com [209.85.222.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2072.outbound.protection.outlook.com [40.107.236.72])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D36D23CB;
-	Sat, 28 Jun 2025 06:38:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.181
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751092735; cv=none; b=AcsLh5AovXZ/NoWymiV+37nS9S0kyjWEjbdOb0Lmm/9MnDFdS9MuKKgxY2SLzLlU0rFWoh8S5KFYkUOG5MmkGK4FU+Okg2xJPkfoVt1Jl7wL7F2Z+0VYtP0z9BRr11JuOt1fDHY561i16QLX7hN9g7bB5JMDoN/ypYM76RmaUDM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751092735; c=relaxed/simple;
-	bh=oP7t6HvsgP8qgMA7aRmI/wAjO9SSAlA+570vBivG8lI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cvIxpZxfvfxPt/WtyrBhE/o+zPzMbvyejdYvZ+FYmPXKnzXxO1hwA7R51KrCyhvQ7ERO4E7cHpNOM4z1wzpX3YKYXWPSsP3Q17deYLjFGkNYeDL/wp9OyJ2FgNTJ6R89TeIkX45t4RU1w3aY0/+qHFnPWcYZJWb5idpYxkG+QWo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J3+PMlon; arc=none smtp.client-ip=209.85.222.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A94FD15A856;
+	Sat, 28 Jun 2025 07:43:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.236.72
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1751096587; cv=fail; b=sTL1LwY6wDIic0ST376zIC+QSfkzO6/4tFXB/wqKrDCLpsGeE2VDCrZak0gcOvzQ88qdqFp9/IDeAqZmPhz1BHWQCwtBl85j5114HOZxQDIMb9KxR8QWNCtvOz49OusC/qiRRnyYv/D4/uL+7NwV8fkSpxnD56FuUCNX27uq0YE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1751096587; c=relaxed/simple;
+	bh=/xTnbqaUw46VygF4vXMLrYkMZzqEISELVVriNCwKgug=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=YJrnMwkf1fvDRZJHc+vu+AYzmvyRhrYB3fLTf/MwLfG2aNW7CQbd+iY5qwJsTkLECVpFMrQAFXGzZNMNdeV6rrPjs3X34uYT5oe9+l0VR2tQ2/Z1wnX7fn/wEz8zHrm+1F27+f7N9wvb9Zn8AYZsRcmAiw5ZjoyoUZlR+Cp2oGU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=UhDZefan; arc=fail smtp.client-ip=40.107.236.72
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J3+PMlon"
-Received: by mail-qk1-f181.google.com with SMTP id af79cd13be357-7d44e4d248dso28837185a.2;
-        Fri, 27 Jun 2025 23:38:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751092733; x=1751697533; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:feedback-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=tOUJ6GG0uLmctREkF28ijNPjBM4EJ3ix2IGOKO6Y/9g=;
-        b=J3+PMlonaEHLmV7F0MAnXR4fqAC0+5lkmQBgNKUt6CCYbnxTTuVxrG9ANJnSCEisFL
-         QKROvUpiKr0v7+n5BRQzAX78CeEtWc8h20/G4RWyccDOYb41Bz+OXouzDmTQdfCSHJNs
-         8Jgs2vAh2HMGGyIXC/5fe5hRt1gU8ej5nLe8pg+bQte+lMoIqJ+PW0dxA7ERsWmmC8cv
-         g75Gx58590lSf8LSx8kqGyZyr9saxzZ2FGV0GWxFZT51COzlY8meGHB4P0bJdIO+9hD4
-         M1hiD3owF77JLw+/02qPQxkxoSxLJVBj9zGwoIAZCgCbCBm6kNH06IvRXTuRj8LCEszU
-         f1hQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751092733; x=1751697533;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:feedback-id:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=tOUJ6GG0uLmctREkF28ijNPjBM4EJ3ix2IGOKO6Y/9g=;
-        b=tOqTrANKm9O2M46PsdR+kT0VOXdySmmPYfrg6pTGy6VEx2yNHQQBIT8OC5U+Jqg7rw
-         HXdOr/alr1Kgcl8Kcb6sKQ/flO7yNFFbSLpDOQgeyIRtincEfsM0sg1tWzjlncv5PgYB
-         lWuu0X7XsKjfaMDwAir5xVZgHy8xLs/33ZNebR7udUjaUmK0sMYLI77AXUAa0kCGoaip
-         zQst/j09WksQPCMHXieN0ATy8wAEeApr8xNKwj/URDSZ2eMhkT/KaJu0HTvxnLcpTKkJ
-         L0WyoNOk4jbrH77culM4VOmSGgXfMA4b/bzEF8H5U0NVuOGXb6PQeqd95MOEyLhD4kIr
-         KF5A==
-X-Forwarded-Encrypted: i=1; AJvYcCUj2CKYRJl1PqGRCfcFFKDS1udIHF3rlXFpUhPIoEzBTG1j6iSOvI5toPk1b7nnu1xi6CGuJli2zXcm/MU=@vger.kernel.org, AJvYcCWUK6GdOF+VLLi+BgeDpbCCSvxX0DD8QBiaYt+6FGsHKe5G+jCG2UKqxVXN1pETMfHY+s+72GrtGSU2oLBtC5k=@vger.kernel.org, AJvYcCXmg8ZAse2jzbudDJiiGYPubJZE2YxQP59hfcN7CYea9JjXYrFrGGSPjQRMdUI+bx/f0EbM0mByvtC5@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxp0miAnso7ik6GDQqHYpsWyvu72kFQP328g4Uj5ZwqJB/mt/3R
-	ZqF5THYIpv0yp07mWy98Xg/9GOT+bEvOd0825M1gPKYfiveZjYSI/BuH
-X-Gm-Gg: ASbGnctiEAI/xU8fhyprlzbcJe3EOXlnqpzp3HznTHoyyDFwchkZnydxmkPrBWYzsD5
-	PpqZGgag9B6sM1plgye4mQ7yfAA3FS1ZUeZMcXGJMfqT+wqtjtgQcwvHmIwgvqDZ57O6ipx+itV
-	09Ubenrc9Gf3bGSgObTOTLgqZlDJQmiDxpywqP6WT86fiA1VXKmOxghDPa0ti3wqzKiEXLKEHZU
-	Nz2/o4DOfIvaH5LsK3EHwqKNLcAXLw7Gh9hZQoR0WAN/o++arxQl1Qg8O939H+HcfEAM30Kx0wE
-	gxpHoPKB8Fm4MTHNnL+UQf8s5gXct03/3ShbB47m3vZZPpUf3oZNd/7NIAKgV5ILlWRTgLtTV0Y
-	Wth1Q4/8btPnvtmUZzWENZudOOsxAIZxjkZfNlGGOZBdDJ8g+BeZR
-X-Google-Smtp-Source: AGHT+IF1l4FCRN2WC8+UznV02+AE7WkwSTpaR1igKVCjG0nL2GptpUjVG/DtOcLWj3kdaWRr1N4AKg==
-X-Received: by 2002:a05:620a:3728:b0:7d0:9ffd:422f with SMTP id af79cd13be357-7d44398fde2mr1172154385a.54.1751092732776;
-        Fri, 27 Jun 2025 23:38:52 -0700 (PDT)
-Received: from fauth-a1-smtp.messagingengine.com (fauth-a1-smtp.messagingengine.com. [103.168.172.200])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-6fd7730acf9sm32823886d6.108.2025.06.27.23.38.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Jun 2025 23:38:52 -0700 (PDT)
-Received: from phl-compute-02.internal (phl-compute-02.phl.internal [10.202.2.42])
-	by mailfauth.phl.internal (Postfix) with ESMTP id 8F04DF40066;
-	Sat, 28 Jun 2025 02:38:51 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-02.internal (MEProxy); Sat, 28 Jun 2025 02:38:51 -0400
-X-ME-Sender: <xms:-41faG0-kWIJzm5yT21BmJs4d3U1CqEAgeS1P6e-Pe94G0PiRUp49Q>
-    <xme:-41faJGeX9DQfK7tNTUlYrmE_Arz_Rn4VyEXJf6AqtnttmXu-4UI8Ey0IOHP7w27f
-    lsxuQ5-Y0Zbr9aJVA>
-X-ME-Received: <xmr:-41faO4hOYTRCmaVsbe1Wjiux84pMpHbxVu4N-3Akf2oy4gTiCmklrqfaQ>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgdehvdegucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceurghi
-    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
-    epfffhvfevuffkfhggtggujgesthdtredttddtvdenucfhrhhomhepuehoqhhunhcuhfgv
-    nhhguceosghoqhhunhdrfhgvnhhgsehgmhgrihhlrdgtohhmqeenucggtffrrghtthgvrh
-    hnpeehudfgudffffetuedtvdehueevledvhfelleeivedtgeeuhfegueevieduffeivden
-    ucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepmhgrihhlfhhrohhmpegsohhquh
-    hnodhmvghsmhhtphgruhhthhhpvghrshhonhgrlhhithihqdeiledvgeehtdeigedqudej
-    jeekheehhedvqdgsohhquhhnrdhfvghngheppehgmhgrihhlrdgtohhmsehfihigmhgvrd
-    hnrghmvgdpnhgspghrtghpthhtohepvddtpdhmohguvgepshhmthhpohhuthdprhgtphht
-    thhopehlohhsshhinheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggrkhhrsehkvg
-    hrnhgvlhdrohhrghdprhgtphhtthhopehgrhgvghhkhheslhhinhhugihfohhunhgurght
-    ihhonhdrohhrghdprhgtphhtthhopehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtg
-    hpthhtohepohhjvggurgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheprghlvgigrdhg
-    rgihnhhorhesghhmrghilhdrtghomhdprhgtphhtthhopehgrghrhiesghgrrhihghhuoh
-    drnhgvthdprhgtphhtthhopegsjhhorhhnfegpghhhsehprhhothhonhhmrghilhdrtgho
-    mhdprhgtphhtthhopegrrdhhihhnuggsohhrgheskhgvrhhnvghlrdhorhhg
-X-ME-Proxy: <xmx:-41faH2yGpGQN7L07QCk5ppI52ZB9eHWCexYbh0k4zDA1x37RPQ2sA>
-    <xmx:-41faJEROvLyfcQ00eX_msvJvnkOkQr6ZsgF1HTZq1uJGEMGy5QllQ>
-    <xmx:-41faA9dFL_EmRz4K7lMzknzspf1yHAtIAfLAyAGsJ5vwnvuOIf1ug>
-    <xmx:-41faOmquOV7ekifBdniIscEd5YA_-g4JlFGURvmvVymqrATmgy_Dw>
-    <xmx:-41faBHoql482q28AqBkAs8TQO91XF1OClzS2THeugUwXK-z_RpiLKTT>
-Feedback-ID: iad51458e:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Sat,
- 28 Jun 2025 02:38:51 -0400 (EDT)
-Date: Fri, 27 Jun 2025 23:38:50 -0700
-From: Boqun Feng <boqun.feng@gmail.com>
-To: Benno Lossin <lossin@kernel.org>
-Cc: Danilo Krummrich <dakr@kernel.org>, gregkh@linuxfoundation.org,
-	rafael@kernel.org, ojeda@kernel.org, alex.gaynor@gmail.com,
-	gary@garyguo.net, bjorn3_gh@protonmail.com, a.hindborg@kernel.org,
-	aliceryhl@google.com, tmgross@umich.edu, david.m.ertman@intel.com,
-	ira.weiny@intel.com, leon@kernel.org, kwilczynski@kernel.org,
-	bhelgaas@google.com, rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 5/5] rust: devres: implement register_release()
-Message-ID: <aF-N-luMxFTurl91@Mac.home>
-References: <20250626200054.243480-1-dakr@kernel.org>
- <20250626200054.243480-6-dakr@kernel.org>
- <aF2vgthQlNA3BsCD@tardis.local>
- <aF2yA9TbeIrTg-XG@cassiopeiae>
- <DAWULS8SIOXS.1O4PLL2WCLX74@kernel.org>
- <aF8V8hqUzjdZMZNe@tardis.local>
- <DAXXVXNTRLYH.1B8O2LKBF4EW1@kernel.org>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="UhDZefan"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=T2Ezvu1uHaBJewAClZikSBFjiU55YHSrdqBthTZJkB02Q4DLdQsjaOZIFbHekpzzy9YDZB8xC1l6QjVUHK33mNmleY/EiM4pJT/ecYiR254zaXRzgpIGBcdcfrWbfjeUEP/pRB3L+ZkylslTHEd59k8TvcPMAFqRS1/YVqPvgKRApg20b8jcDjzl46yEnJeR8o+G8iOztu+XsGljLlT1aJ6Lc1SIMXuE2b31ETX0ElP//r3qQH6V2NR1XGXKSs67WDq0OdiAPTm+aMab/z8ump823mJQjXhYBiUaOV+3AuI1tYGugncwSx+r8Zxj8SCLNdAyAOX1Q0Ii0ZRce8ShtA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=DvttU3IH2zMTh/oVRO9vhdifVWmqUaPXXbK/9IZtB6c=;
+ b=E5ArKMrRJAHLAW1XxGZsovz/PO1iLDpoK9k33UWgYwIc4wQtID2tMuIl52+ac9F2wC66cKrjalN/MWPT2L23f6CrJAsKBH5Y8Ud+YcPoEqyAZmvoIY2n+tdmgxf474/lkAP68dDebcAMr8ug0Ux+xSSO5r54o/2cLgzDatI+J4PrglB187RpxIlgezGG1xjAWijeOPWHgvUHRKGRcbB+ZBcspywPXQ20LxGpN0wj3o87naxU46Jj2VzV6jZ+yGyXdGsIIAP3WfDR7biwBbjC3e0PlB56t2auWLA/1WfYTTHsiF6IDEuZ3AeX7Sx25LLg2pI6TBgln0WjN/rxodZTPw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.117.161) smtp.rcpttodomain=8bytes.org smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=DvttU3IH2zMTh/oVRO9vhdifVWmqUaPXXbK/9IZtB6c=;
+ b=UhDZefanmC658f7T1qcdO7sAiHuRwBIqxXJqKruKW3sMdRExzwhLCkvSJRB0TC61b1r+BPtnVYY/pQcGBa3Q2kLQWJhgGtwQ28Mtx1WtcXpMz7aHUg+Kk1JU09aGhImvRuMAYpxzCbt55GJFrcsmyiBfrbt5TRfvH8FfLPuTcQYpBEkNIeQWJ9cQgON34MaaSZi4LK+Z4Zg9sc+GF8Qr/AkoQbmyJOVBFMjyA/lcRCHmabFX6gKC4KBx2hVDtvx6ETkDJ9VJX0Waef8uWjid4sFMgtsI8lWIURj+A5f/HzvQA9aJ6rSbSJcJba5BfWphhwJEnJJPqwIxnHzjiNXEhg==
+Received: from DS7PR06CA0032.namprd06.prod.outlook.com (2603:10b6:8:54::17) by
+ DM4PR12MB6399.namprd12.prod.outlook.com (2603:10b6:8:b7::15) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.8835.28; Sat, 28 Jun 2025 07:43:01 +0000
+Received: from DS3PEPF000099D5.namprd04.prod.outlook.com
+ (2603:10b6:8:54:cafe::5) by DS7PR06CA0032.outlook.office365.com
+ (2603:10b6:8:54::17) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.8880.21 via Frontend Transport; Sat,
+ 28 Jun 2025 07:43:01 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.117.161)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.117.161 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.117.161; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.117.161) by
+ DS3PEPF000099D5.mail.protection.outlook.com (10.167.17.6) with Microsoft SMTP
+ Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.8880.14 via Frontend Transport; Sat, 28 Jun 2025 07:43:01 +0000
+Received: from rnnvmail201.nvidia.com (10.129.68.8) by mail.nvidia.com
+ (10.129.200.67) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.4; Sat, 28 Jun
+ 2025 00:42:50 -0700
+Received: from rnnvmail205.nvidia.com (10.129.68.10) by rnnvmail201.nvidia.com
+ (10.129.68.8) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Sat, 28 Jun
+ 2025 00:42:49 -0700
+Received: from Asurada-Nvidia.nvidia.com (10.127.8.13) by mail.nvidia.com
+ (10.129.68.10) with Microsoft SMTP Server id 15.2.1544.14 via Frontend
+ Transport; Sat, 28 Jun 2025 00:42:48 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: <jgg@nvidia.com>, <joro@8bytes.org>, <will@kernel.org>,
+	<robin.murphy@arm.com>, <rafael@kernel.org>, <lenb@kernel.org>,
+	<bhelgaas@google.com>
+CC: <iommu@lists.linux.dev>, <linux-kernel@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<patches@lists.linux.dev>, <pjaroszynski@nvidia.com>, <vsethi@nvidia.com>,
+	<helgaas@kernel.org>, <baolu.lu@linux.intel.com>
+Subject: [PATCH RFC v2 2/4] iommu: Pass in gdev to __iommu_device_set_domain
+Date: Sat, 28 Jun 2025 00:42:40 -0700
+Message-ID: <46a1c0e7d07722c542084be9611f2fdf770c3a1d.1751096303.git.nicolinc@nvidia.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <cover.1751096303.git.nicolinc@nvidia.com>
+References: <cover.1751096303.git.nicolinc@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <DAXXVXNTRLYH.1B8O2LKBF4EW1@kernel.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-NV-OnPremToCloud: AnonymousSubmission
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: DS3PEPF000099D5:EE_|DM4PR12MB6399:EE_
+X-MS-Office365-Filtering-Correlation-Id: 111e2dc0-5c3c-4115-07c2-08ddb61768ef
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|376014|1800799024|82310400026|7416014|36860700013;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?DH/aq1Ag14s7rRoos+kjWRQWPtxd0DoQ46J92Ot+vQUlUW8qCJ/oIl3cFUYP?=
+ =?us-ascii?Q?1RJdVg9zrBadpQVj3GNHVKwbMreIpZ4kFRRhESk8zfejgjcGnJtQFAQyUlmo?=
+ =?us-ascii?Q?ZlzTlsESQF0MJNEbIl40bbg0BrVRHxyrODeVo/qJUyH34hEiAuM1Uzt7R4ot?=
+ =?us-ascii?Q?AV8FtR4QmfX5F1ts3jUB90FzExFDNUnbAGpbCBRyrgBjZ5T7Ug6u5wsY5RlD?=
+ =?us-ascii?Q?2fbP3twzA7VJjnHEH5HoakRNGcTxh3K7QqE6BC8N3Xww7SjME1lhrTYlwbd6?=
+ =?us-ascii?Q?jcK6G29XfT0j43rfXwSf5lCk2OSXL6q+OSgAxNOjOjsvgOWvdFZUh6Y3QdvE?=
+ =?us-ascii?Q?u7R93HjnBRK8O0aiJBdGCtRGgUuQl9YIbmZH+d/OSzxx0TsOSrzrLNwS9GwR?=
+ =?us-ascii?Q?Z7alvQGVP0yVofNdScGrs4xQN8f/HTjVNNNUDs3FelMv0YxgrFOPuDu2KkNK?=
+ =?us-ascii?Q?MlUOjN8wnlPdV+GSqf0lJdnjUIGf0MKX6CGTYsGAPdU/kPwE5f0lcg0MaKIk?=
+ =?us-ascii?Q?nQDT+KytM93/qZ985rhZ54c159Zadg5yYjneW2y5pwodN73+zthyS0C7PRQK?=
+ =?us-ascii?Q?UUTfgBrDVW9fupuxc8BCjRE10ZQYdL0rjvStm+i27OY5cfxZdZp2yGE6jUpR?=
+ =?us-ascii?Q?V8dAMjy4eTzYhoW0g7d5Gbv7Ghms0wIPtXD/XZFpsVU8smQWpDt/jjn/rYSx?=
+ =?us-ascii?Q?89Avuw17qAvoeV5nUNkjcrHoHuvtTiIjOPiMmJYPOcBS7EMXsAmVZU+fwDMZ?=
+ =?us-ascii?Q?/yoRnCrsJ2tdXoCL7tKNDO+o8qLsq6eR9ZgxNL3kJBWZ2nGBI2XQ+oRMo18f?=
+ =?us-ascii?Q?XRKgXa9hiQqkPbO9BAPWzIp1L+7SX3ek6aHOYbWRGXROuakTgyEDDYjgmy//?=
+ =?us-ascii?Q?2hQX3YkM5GYED8pMfb9N5PY1UV6s50IsxZyoTcs5DfV5/0Ksy44qqfiWsrJa?=
+ =?us-ascii?Q?iDttFtQXJ4nz/ClZgHfBA3SoARPPvC6eXCAN4gCMGpku+AUukSEfmQQFAKQq?=
+ =?us-ascii?Q?kOGqKJ7qa44kU/pNR2O1z+7EUJeaRql1vRy+tlxq4E+DWjCvCSL1NN8Qjhqt?=
+ =?us-ascii?Q?LzjOxq9v5KCxJDkUAWZaFd+aAbWUXJ8Vj8gitBR/nw1RE9Oo4f7s5K2pbLqa?=
+ =?us-ascii?Q?XKA6s6Y43yHMilOUqGgu20+FGX4XJHkPla1bkTEl4BT2U54LpGrOki0HgoLe?=
+ =?us-ascii?Q?U0CA4ZhuSQVMc8HGWZAut9AgehT8I7pEeicMzgFp656V9KeRT8NkaIyP2gta?=
+ =?us-ascii?Q?hUbBdBIikXyjclXg70stZdaMU7LA49Zt9DUGcue4k/gx4/GeiFULXQDAwgIR?=
+ =?us-ascii?Q?G9fRMoHVnVtj7Rd5GuxAx2ADll+KhVn+9abQLagdssVYdt4gdJ8JhOPOjVBH?=
+ =?us-ascii?Q?yV1vGc5zAn+Xj9Jyxw//lqsoJNQwFMeeSzLLdmZz5e/iQ4jpOFG6spax+VO3?=
+ =?us-ascii?Q?+0/qaeusaL9cFlLhKsFlgKot4Ktb9imnE6zH0v1BoOViEF2KnZizXmnX5YZE?=
+ =?us-ascii?Q?lUKSsruTKSuxEwraEHOFa0MqUfy6IUDtf9QW?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.117.161;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc6edge2.nvidia.com;CAT:NONE;SFS:(13230040)(376014)(1800799024)(82310400026)(7416014)(36860700013);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Jun 2025 07:43:01.6031
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 111e2dc0-5c3c-4115-07c2-08ddb61768ef
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.117.161];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	DS3PEPF000099D5.namprd04.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6399
 
-On Sat, Jun 28, 2025 at 08:06:52AM +0200, Benno Lossin wrote:
-> On Sat Jun 28, 2025 at 12:06 AM CEST, Boqun Feng wrote:
-> > On Fri, Jun 27, 2025 at 01:19:53AM +0200, Benno Lossin wrote:
-> >> On Thu Jun 26, 2025 at 10:48 PM CEST, Danilo Krummrich wrote:
-> >> > On Thu, Jun 26, 2025 at 01:37:22PM -0700, Boqun Feng wrote:
-> >> >> On Thu, Jun 26, 2025 at 10:00:43PM +0200, Danilo Krummrich wrote:
-> >> >> > +/// [`Devres`]-releaseable resource.
-> >> >> > +///
-> >> >> > +/// Register an object implementing this trait with [`register_release`]. Its `release`
-> >> >> > +/// function will be called once the device is being unbound.
-> >> >> > +pub trait Release {
-> >> >> > +    /// The [`ForeignOwnable`] pointer type consumed by [`register_release`].
-> >> >> > +    type Ptr: ForeignOwnable;
-> >> >> > +
-> >> >> > +    /// Called once the [`Device`] given to [`register_release`] is unbound.
-> >> >> > +    fn release(this: Self::Ptr);
-> >> >> > +}
-> >> >> > +
-> >> >> 
-> >> >> I would like to point out the limitation of this design, say you have a
-> >> >> `Foo` that can ipml `Release`, with this, I think you could only support
-> >> >> either `Arc<Foo>` or `KBox<Foo>`. You cannot support both as the input
-> >> >> for `register_release()`. Maybe we want:
-> >> >> 
-> >> >>     pub trait Release<Ptr: ForeignOwnable> {
-> >> >>         fn release(this: Ptr);
-> >> >>     }
-> >> >
-> >> > Good catch! I think this wasn't possible without ForeignOwnable::Target.
-> >> 
-> >> Hmm do we really need that? Normally you either store a type in a shared
-> >
-> > I think it might be quite common, for example, `Foo` may be a general
-> > watchdog for a subsystem, for one driver, there might be multiple
-> > devices that could feed the dog, for another driver, there might be only
-> > one. For the first case we need Arc<Watchdog> or the second we can do
-> > Box<Watchdog>.
-> 
-> I guess then the original `&self` design is better? Not sure...
-> 
+This will need to check a per gdev property, since the dev pointer cannot
+store any private iommu flag for the iommu code to use. Thus, pass in the
+gdev pointer instead.
 
-This is what you said in v3:
+Signed-off-by: Nicolin Chen <nicolinc@nvidia.com>
+---
+ drivers/iommu/iommu.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
-"""
-and then `register_release` is:
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 08ff7efa8925..bd3deedcd2de 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -112,7 +112,7 @@ enum {
+ };
+ 
+ static int __iommu_device_set_domain(struct iommu_group *group,
+-				     struct device *dev,
++				     struct group_device *gdev,
+ 				     struct iommu_domain *new_domain,
+ 				     unsigned int flags);
+ static int __iommu_group_set_domain_internal(struct iommu_group *group,
+@@ -602,7 +602,7 @@ static int __iommu_probe_device(struct device *dev, struct list_head *group_list
+ 	if (group->default_domain)
+ 		iommu_create_device_direct_mappings(group->default_domain, dev);
+ 	if (group->domain) {
+-		ret = __iommu_device_set_domain(group, dev, group->domain, 0);
++		ret = __iommu_device_set_domain(group, gdev, group->domain, 0);
+ 		if (ret)
+ 			goto err_remove_gdev;
+ 	} else if (!group->default_domain && !group_list) {
+@@ -2267,10 +2267,11 @@ int iommu_attach_group(struct iommu_domain *domain, struct iommu_group *group)
+ EXPORT_SYMBOL_GPL(iommu_attach_group);
+ 
+ static int __iommu_device_set_domain(struct iommu_group *group,
+-				     struct device *dev,
++				     struct group_device *gdev,
+ 				     struct iommu_domain *new_domain,
+ 				     unsigned int flags)
+ {
++	struct device *dev = gdev->dev;
+ 	int ret;
+ 
+ 	/*
+@@ -2350,8 +2351,7 @@ static int __iommu_group_set_domain_internal(struct iommu_group *group,
+ 	 */
+ 	result = 0;
+ 	for_each_group_device(group, gdev) {
+-		ret = __iommu_device_set_domain(group, gdev->dev, new_domain,
+-						flags);
++		ret = __iommu_device_set_domain(group, gdev, new_domain, flags);
+ 		if (ret) {
+ 			result = ret;
+ 			/*
+@@ -2383,7 +2383,7 @@ static int __iommu_group_set_domain_internal(struct iommu_group *group,
+ 		 */
+ 		if (group->domain)
+ 			WARN_ON(__iommu_device_set_domain(
+-				group, gdev->dev, group->domain,
++				group, gdev, group->domain,
+ 				IOMMU_SET_DOMAIN_MUST_SUCCEED));
+ 		if (gdev == last_gdev)
+ 			break;
+-- 
+2.43.0
 
-    pub fn register_release<T: Release>(dev: &Device<Bound>, data: T::Ptr) -> Result
-
-This way, one can store a `Box<T>` and get access to the `T` at the end.
-Or if they store the value in an `Arc<T>`, they have the option to clone
-it and give it to somewhere else.
-"""
-
-I think that's the reason why we think the current version (the
-associate type design) is better than `&self`?
-
-The generic type design (i.e. Release<P: ForeignOwnable>) just further
-allows this "different behaviors between Box and Arc" for the same type
-T. I think it's a natural extension of the current design and provides
-some better flexibility.
-
-> > What's the downside?
-> 
-> You'll need to implement `Release` twice:
-> 
-
-Only if you need to support both for `Foo`, right? You can impl only one
-if you only need one.
-
-Also you can do:
-
-    impl<P: ForeignOwnable<Target=Foo> + Deref<Target=Foo>> Release<P> for Foo {
-        fn release(this: P) {
-	    this.deref().do_sth();
-	}
-    }
-
-if you want Box and Arc case share the similar behavior, right?
-
->     impl Release<Box<Self>> for Foo {
->         fn release(this: Box<Self>) {
->             /* ... */
->         }
->     }
-> 
->     impl Release<Arc<Self>> for Foo {
->         fn release(this: Arc<Self>) {
->             /* ... */
->         }
->     }
-> 
-> This also means that you can have different behavior for `Box` and
-> `Arc`...
-
-That's the point, as one of the benefits you mentioned above for the
-associate type design, just extending it to the same type.
-
-Regards,
-Boqun
-
-> 
-> ---
-> Cheers,
-> Benno
