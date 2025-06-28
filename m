@@ -1,36 +1,36 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB6CF2BCFB;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0910264FB1;
 	Sat, 28 Jun 2025 17:30:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751131828; cv=none; b=SAkhAyRYSBPcvbGKysXKP/acQIsD3g1cfGLRTscnCLsU9xqVJS+kvqahsacYL+yoj1z2lR7y1FvMybB90RoihW2c3tf2R17abwOiFM9B3dqAMMHdm0TPVYFYD5goqUIuYZkzmUHT9ZUQSiV1c0MFwrmx5Qs6GWCc04tY1gtBmks=
+	t=1751131828; cv=none; b=LE3ra0rh6ox6IjdzEjDC8XEdYZAW2PooCiTeLLCFmQ64r0IRPc+P5No9k9KmycI0W4n3xn/H418ZJtAqv5GU+V4u/zV9/gOjeSgyuNDOo4dTLk+hebDMhH+2H3r4OoD1v5k/Izb9Xlfm6cGsDbMIwEwpU4l2qfboGUYdQhgvlZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751131828; c=relaxed/simple;
-	bh=zWAmwKnV6f1cwbtaUPgrJ1lIE+Rc2XJQ33KR+f1+GBg=;
+	bh=9TTQFkyY0M8aTj6Iv8cpYI5ilm3sw2M2ZI3G1K0Exkc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=GaGXza3prxWZk7EdYm9ynyo5M9BvXE6YoZ4bQ4JViGB0MnVDVxXpziJPWRX5DVRLas2QEBtX68KYZPvi+0VfdzBHKW2staG7MU6B+6UoUv/Zlvn2cKAH6AnHx/YMltMiCRP9XfkUT7q6K3nrMiJ36/C1ibPUfpcH1z1yMTGCaeA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=l/5rNor2; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=rkJvulbNAnLbSxQLf7RBLEhvmtxiO9w9cMXeqJFlQCpX8Xt4xKe/eTKZ56/dE6NE5uYVgYSRPYcMoYVRexjntvnROW1wg/QrY9R70ILI5scdT6Cj7QiPeKj9dCTXD957xW1RA2klhlclgWfgdzcmzcT1Gw6K218Ys2MARbs1DWs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cFR9aOOr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="l/5rNor2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7CA90C4CEEA;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cFR9aOOr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45383C4CEED;
 	Sat, 28 Jun 2025 17:30:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1751131828;
-	bh=zWAmwKnV6f1cwbtaUPgrJ1lIE+Rc2XJQ33KR+f1+GBg=;
+	bh=9TTQFkyY0M8aTj6Iv8cpYI5ilm3sw2M2ZI3G1K0Exkc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=l/5rNor2Px+Cl03/jN1HOWynCV9eo9DeSLJ6bO8UiztHyxYNqMuyqqhnzMpSnt9TH
-	 3kRNDIs83QmyR1QPNeG7WCWI59VZYaYbtT3Z4uHHSfsVP357KbSIMqAzl2Q/nRTYEx
-	 oL63w2UYzn9/d/mr3Ns+0EL9e7sCXCVWM6oQj0pJKOGAuPh/9Gu2jB2bVawB7D5qxe
-	 2pwPMr0neIm6Fv06BYVWNU26Frt54kD1MzdyyUugfZvBPxEkIGqf5NkJL9DUg0P1rS
-	 ZZIFOxvccdpe4/0TJL6k94CwGN+DGQFO6jwdMb1sn6kDdRXlaVjJusfA+20YePCd3L
-	 BJM2bK8IJ+3/w==
+	b=cFR9aOOrkWMwCpnFCv0RgIjSMofAj1v6SNEV0R8UXHUPufnSFsyiPoF2aI5AIJIgL
+	 +vEFn4DUaHD/d87N8hzkxecozlxl2UnWDlpjiJL4jYnSYw1Kq8v7Eyb4h100jEYXdC
+	 +53idaD1n9dxEMF8VDTLKUcxccEqE3fccC7oPSadlMFDZtmr3yGp3fHZ0xGSrCxFFR
+	 CYweTG4X3QncSk/0PUXtC6kT9FjslaQbIODfMtPVd+fYoNgFclyIBeJzJvnTEAY+7L
+	 zikQTLcoQdMhzzqbiJwSdXpAtzRUUDM7AQNg1NW09i3pLMv3ipWUr4Cr1vjzYK4Rxx
+	 XQIpwzuJJDhkg==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1uVZNi-00AqZC-Fv;
+	id 1uVZNi-00AqZC-13;
 	Sat, 28 Jun 2025 18:30:26 +0100
 From: Marc Zyngier <maz@kernel.org>
 To: linux-pci@vger.kernel.org,
@@ -43,9 +43,9 @@ Cc: Toan Le <toan@os.amperecomputing.com>,
 	Rob Herring <robh@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH 04/12] PCI: xgene: Drop XGENE_PCIE_IP_VER_UNKN
-Date: Sat, 28 Jun 2025 18:29:57 +0100
-Message-Id: <20250628173005.445013-5-maz@kernel.org>
+Subject: [PATCH 02/12] PCI: xgene: Defer probing if the MSI widget driver hasn't probed yet
+Date: Sat, 28 Jun 2025 18:29:55 +0100
+Message-Id: <20250628173005.445013-3-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250628173005.445013-1-maz@kernel.org>
 References: <20250628173005.445013-1-maz@kernel.org>
@@ -61,45 +61,63 @@ X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.o
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-XGENE_PCIE_IP_VER_UNKN is only refered to when probing for the
-original XGene PCIe implementation, and get immediately overridden
-if the device has the "apm,xgene-pcie" compatible string.
-
-Given that the only way to get there is by finding this very string in
-the DT, it is obvious that we will always ovwrite the version with
-XGENE_PCIE_IP_VER_1.
-
-Drop the whole thing.
+As a preparatory work to make the XGene MSI driver probe less of
+a sorry hack, make the PCI driver check for the availability of
+the MSI parent domain, and defer the probing otherwise.
 
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/controller/pci-xgene.c | 6 +-----
- 1 file changed, 1 insertion(+), 5 deletions(-)
+ drivers/pci/controller/pci-xgene.c | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
 
 diff --git a/drivers/pci/controller/pci-xgene.c b/drivers/pci/controller/pci-xgene.c
-index a848f98203ae4..b95afa35201d0 100644
+index 1e2ebbfa36d19..f26cb58f814ec 100644
 --- a/drivers/pci/controller/pci-xgene.c
 +++ b/drivers/pci/controller/pci-xgene.c
-@@ -54,7 +54,6 @@
- #define XGENE_V1_PCI_EXP_CAP		0x40
+@@ -12,6 +12,7 @@
+ #include <linux/jiffies.h>
+ #include <linux/memblock.h>
+ #include <linux/init.h>
++#include <linux/irqdomain.h>
+ #include <linux/of.h>
+ #include <linux/of_address.h>
+ #include <linux/of_pci.h>
+@@ -594,6 +595,24 @@ static struct pci_ops xgene_pcie_ops = {
+ 	.write = pci_generic_config_write32,
+ };
  
- /* PCIe IP version */
--#define XGENE_PCIE_IP_VER_UNKN		0
- #define XGENE_PCIE_IP_VER_1		1
- #define XGENE_PCIE_IP_VER_2		2
++static bool xgene_check_pcie_msi_ready(void)
++{
++	struct device_node *np;
++	struct irq_domain *d;
++
++	if (!IS_ENABLED(CONFIG_PCI_XGENE_MSI))
++		return true;
++
++	np = of_find_compatible_node(NULL, NULL, "apm,xgene1-msi");
++	if (!np)
++		return true;
++
++	d = irq_find_matching_host(np, DOMAIN_BUS_PCI_MSI);
++	of_node_put(np);
++
++	return d && irq_domain_is_msi_parent(d);
++}
++
+ static int xgene_pcie_probe(struct platform_device *pdev)
+ {
+ 	struct device *dev = &pdev->dev;
+@@ -602,6 +621,10 @@ static int xgene_pcie_probe(struct platform_device *pdev)
+ 	struct pci_host_bridge *bridge;
+ 	int ret;
  
-@@ -630,10 +629,7 @@ static int xgene_pcie_probe(struct platform_device *pdev)
- 
- 	port->node = of_node_get(dn);
- 	port->dev = dev;
--
--	port->version = XGENE_PCIE_IP_VER_UNKN;
--	if (of_device_is_compatible(port->node, "apm,xgene-pcie"))
--		port->version = XGENE_PCIE_IP_VER_1;
-+	port->version = XGENE_PCIE_IP_VER_1;
- 
- 	ret = xgene_pcie_map_reg(port, pdev);
- 	if (ret)
++	if (!xgene_check_pcie_msi_ready())
++		return dev_err_probe(&pdev->dev, -EPROBE_DEFER,
++				     "MSI driver not ready\n");
++
+ 	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*port));
+ 	if (!bridge)
+ 		return -ENOMEM;
 -- 
 2.39.2
 
