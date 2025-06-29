@@ -1,181 +1,106 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFF791A23B5;
-	Sat, 28 Jun 2025 07:53:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555D51922DE;
+	Sat, 28 Jun 2025 09:52:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751097192; cv=none; b=YMRaksN+dgA4Z5ZlddQlL5BKMybA0iw1cw7mIWELDWdMh/zETjgPq+B9U68MYwvIGuGeAnbSVO6G1zfLpGDz/p0bdPVjxQq87JvCtRsXUcEQQUFEtiNHEmMRsaYsSV07eBLEPhYIlKcVpA7xkkCxf4KrxAg+IBFQS3fhJfMjbVc=
+	t=1751104342; cv=none; b=N69f/2b5lsSoUYLy7l/hvo6E8zBU5Q9Sj8tKgZGbOiVrxhcNHDbi4PoEiuYJRcbV/VpRp4/VczqIO9UPJ6aGWJn0Iqyclp3JKc/N/QXBtZtP0C1aJKgwstp/+8gLm2Em9sAsDda29g2AMgxsRpzEQ3++MOga7HQf83BjfduLaX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751097192; c=relaxed/simple;
-	bh=Wt7l/DfLPgfPEwp0qS2mUttKAMudGoB0UoZ0ax3W/fM=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=S9Xm6HDwvRz2rgm3/fFGQH6YkpGIpvfNvaZt2kkGt6iOwDflaeQ85g0uP8JM6BOZvTrsjmCOdrqcWaEeiuwt+3MIQT1OZgWgTg8G7AJNAzn5CSBlVJ+JE5IUNmIidMvaiyFo4kgjTRVVugvpSts/Lwc1jcQugm655uVT1kaV220=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GiAykm51; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GiAykm51"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F2C83C4CEEA;
-	Sat, 28 Jun 2025 07:53:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751097191;
-	bh=Wt7l/DfLPgfPEwp0qS2mUttKAMudGoB0UoZ0ax3W/fM=;
-	h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
-	b=GiAykm51isvLyV2Pccs7N91t+eHej+hLyUkmjx1mzDbd+/VrpHVR17B8q2eRFUsmC
-	 7/MWgqTEstp2zDWVPX9bVT+an4M7Sg6UUkVY9mlHwpPNpV4DSHG2VWC20zGFrsuu/Q
-	 F8gv2rvAXh8lBpp+gDP6HGp2FoUq2J5thqdOYhiQZ+wC+9LM+9IypUX5125/zN4Qeu
-	 ++FJ5QWjir6vvO1MitZnhhmdkOP2geUCf6hr1K8G2BZRb+7h02MByRPARzbnxKdOuj
-	 E51SDl4+k9NkRrVrY/Ovn4yVzwIvHKqQHJgzUrnv2oHlCJ95KDmwvAa3jMHXStZA40
-	 zRPuetMhdJAHw==
+	s=arc-20240116; t=1751104342; c=relaxed/simple;
+	bh=8N1MHhtt2T7DcOn+RZNnPkLDBgNMQLf1rSn5tWEJ00s=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZapjEO6GMStL0k36izbVzEBBEqPFlvzfx6JwFH7WSrS/BAVopcJDp86RnehFkMrLRPF+yOZNzkOWhAJ0YZOxSQ6zwmvQI9fxgzbgK9NivWjTwlf3fS1RLgxZGEeOxDUqIqtYA0nxPcTjMnSFoFx7RSZbtoe0HTPx4855q2nq2Js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4bTnfp5fgWz2CfCJ;
+	Sat, 28 Jun 2025 17:48:18 +0800 (CST)
+Received: from kwepemp200004.china.huawei.com (unknown [7.202.195.99])
+	by mail.maildlp.com (Postfix) with ESMTPS id AA0B5140294;
+	Sat, 28 Jun 2025 17:52:17 +0800 (CST)
+Received: from huawei.com (10.175.124.27) by kwepemp200004.china.huawei.com
+ (7.202.195.99) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Sat, 28 Jun
+ 2025 17:52:17 +0800
+From: zhangjian <zhangjian496@huawei.com>
+To: <lossin@kernel.org>, <aliceryhl@google.com>, <dakr@kernel.org>,
+	<simona.vetter@ffwll.ch>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+Subject: [PATCH] pci: fix uaf for resource file
+Date: Sun, 29 Jun 2025 11:05:47 +0800
+Message-ID: <20250629030547.1073425-1-zhangjian496@huawei.com>
+X-Mailer: git-send-email 2.33.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Sat, 28 Jun 2025 09:53:06 +0200
-Message-Id: <DAY059Y669BX.2GVKH6RBG80B6@kernel.org>
-Cc: "Danilo Krummrich" <dakr@kernel.org>, <gregkh@linuxfoundation.org>,
- <rafael@kernel.org>, <ojeda@kernel.org>, <alex.gaynor@gmail.com>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <a.hindborg@kernel.org>,
- <aliceryhl@google.com>, <tmgross@umich.edu>, <david.m.ertman@intel.com>,
- <ira.weiny@intel.com>, <leon@kernel.org>, <kwilczynski@kernel.org>,
- <bhelgaas@google.com>, <rust-for-linux@vger.kernel.org>,
- <linux-kernel@vger.kernel.org>, <linux-pci@vger.kernel.org>
-Subject: Re: [PATCH v4 5/5] rust: devres: implement register_release()
-From: "Benno Lossin" <lossin@kernel.org>
-To: "Boqun Feng" <boqun.feng@gmail.com>
-X-Mailer: aerc 0.20.1
-References: <20250626200054.243480-1-dakr@kernel.org>
- <20250626200054.243480-6-dakr@kernel.org> <aF2vgthQlNA3BsCD@tardis.local>
- <aF2yA9TbeIrTg-XG@cassiopeiae> <DAWULS8SIOXS.1O4PLL2WCLX74@kernel.org>
- <aF8V8hqUzjdZMZNe@tardis.local> <DAXXVXNTRLYH.1B8O2LKBF4EW1@kernel.org>
- <aF-N-luMxFTurl91@Mac.home>
-In-Reply-To: <aF-N-luMxFTurl91@Mac.home>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemp200004.china.huawei.com (7.202.195.99)
 
-On Sat Jun 28, 2025 at 8:38 AM CEST, Boqun Feng wrote:
-> On Sat, Jun 28, 2025 at 08:06:52AM +0200, Benno Lossin wrote:
->> On Sat Jun 28, 2025 at 12:06 AM CEST, Boqun Feng wrote:
->> > On Fri, Jun 27, 2025 at 01:19:53AM +0200, Benno Lossin wrote:
->> >> On Thu Jun 26, 2025 at 10:48 PM CEST, Danilo Krummrich wrote:
->> >> > On Thu, Jun 26, 2025 at 01:37:22PM -0700, Boqun Feng wrote:
->> >> >> On Thu, Jun 26, 2025 at 10:00:43PM +0200, Danilo Krummrich wrote:
->> >> >> > +/// [`Devres`]-releaseable resource.
->> >> >> > +///
->> >> >> > +/// Register an object implementing this trait with [`register_=
-release`]. Its `release`
->> >> >> > +/// function will be called once the device is being unbound.
->> >> >> > +pub trait Release {
->> >> >> > +    /// The [`ForeignOwnable`] pointer type consumed by [`regis=
-ter_release`].
->> >> >> > +    type Ptr: ForeignOwnable;
->> >> >> > +
->> >> >> > +    /// Called once the [`Device`] given to [`register_release`=
-] is unbound.
->> >> >> > +    fn release(this: Self::Ptr);
->> >> >> > +}
->> >> >> > +
->> >> >>=20
->> >> >> I would like to point out the limitation of this design, say you h=
-ave a
->> >> >> `Foo` that can ipml `Release`, with this, I think you could only s=
-upport
->> >> >> either `Arc<Foo>` or `KBox<Foo>`. You cannot support both as the i=
-nput
->> >> >> for `register_release()`. Maybe we want:
->> >> >>=20
->> >> >>     pub trait Release<Ptr: ForeignOwnable> {
->> >> >>         fn release(this: Ptr);
->> >> >>     }
->> >> >
->> >> > Good catch! I think this wasn't possible without ForeignOwnable::Ta=
-rget.
->> >>=20
->> >> Hmm do we really need that? Normally you either store a type in a sha=
-red
->> >
->> > I think it might be quite common, for example, `Foo` may be a general
->> > watchdog for a subsystem, for one driver, there might be multiple
->> > devices that could feed the dog, for another driver, there might be on=
-ly
->> > one. For the first case we need Arc<Watchdog> or the second we can do
->> > Box<Watchdog>.
->>=20
->> I guess then the original `&self` design is better? Not sure...
->>=20
->
-> This is what you said in v3:
->
-> """
-> and then `register_release` is:
->
->     pub fn register_release<T: Release>(dev: &Device<Bound>, data: T::Ptr=
-) -> Result
->
-> This way, one can store a `Box<T>` and get access to the `T` at the end.
-> Or if they store the value in an `Arc<T>`, they have the option to clone
-> it and give it to somewhere else.
-> """
->
-> I think that's the reason why we think the current version (the
-> associate type design) is better than `&self`?
+concurrently creating attr files may cause uaf. We meet this in concurrently
+plug and unplug network card. For example:
 
-Yeah and I'd still say that that statement is true.
+echo 20 > /sys/class/net/eth3/device/sriov_numvfs &
+echo 1 > /sys/bus/pci/rescan
 
-> The generic type design (i.e. Release<P: ForeignOwnable>) just further
-> allows this "different behaviors between Box and Arc" for the same type
-> T. I think it's a natural extension of the current design and provides
-> some better flexibility.
+crash log snips as following:
 
-I think that extension is going to end up being too verbose.
+Call Trace:
+ <TASK>
+ ? _die_body+0x1a/0xe0
+ ? page_fault_oops+0x81/0x150
+ ? _wake_up_sync_key+0x37/0x50
+ ? exc_page_fault+0x525/0x730
+ ? asm_exc_page_fault+0x22/0x30
+ ? pci_create_attr+0x160/0x180
+ ? pfx_strlen+0x10/0x10
+ kernfs_name_hash+0x12/0x80
+ kernfs_find_ns+0x35/0xc0
+ kernfs_remove_by_name_ns+0x46/0xc0
+ pci_stop_bus_device+0x7c/0x90
+ pci_stop_and_remole_bus_device+0xe/0x20
+ pci_iov_remove_virtfn+0xbd/0x120
+ sriov_disable+0x34/0xe0
+ hinic_pci_sriov_diisable+0x35/0xa0 [hinic]
+ hinic_remove+0x22e/0x2a0 [hinic]
+ pci_device_remove+0x3b/0xb0
+ device_release_driver_internal+0x19b/0x200
+ pci_stop_bus_device+0x6c/0x90
+ pci_stop_and_remolre_bus_device_locked+0x16/0x30
+ remove_store+0xfc/0x130
+ kernfs_fop_write_iter+0x11b/0x200
 
->> > What's the downside?
->>=20
->> You'll need to implement `Release` twice:
->>=20
->
-> Only if you need to support both for `Foo`, right? You can impl only one
-> if you only need one.
->
-> Also you can do:
->
->     impl<P: ForeignOwnable<Target=3DFoo> + Deref<Target=3DFoo>> Release<P=
-> for Foo {
->         fn release(this: P) {
-> 	    this.deref().do_sth();
-> 	}
->     }
+set resource pointer to zero to fix this problem.
 
-Please no. If this is a regular pattern, then let's go back to `&self`.
-You lose all benefits of the generic design if you do it like this,
-because you don't know the concrete type of the foreign ownable.
-
-> if you want Box and Arc case share the similar behavior, right?
->
->>     impl Release<Box<Self>> for Foo {
->>         fn release(this: Box<Self>) {
->>             /* ... */
->>         }
->>     }
->>=20
->>     impl Release<Arc<Self>> for Foo {
->>         fn release(this: Arc<Self>) {
->>             /* ... */
->>         }
->>     }
->>=20
->> This also means that you can have different behavior for `Box` and
->> `Arc`...
->
-> That's the point, as one of the benefits you mentioned above for the
-> associate type design, just extending it to the same type.
-
-I'd say that's too verbose for something that's rather supposed to be
-simple.
-
-Hmm @Danilo, do you have any use-cases in mind or already done?
-
+Signed-off-by: zhangjian <zhangjian496@huawei.com>
 ---
-Cheers,
-Benno
+ drivers/pci/pci-sysfs.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 268c69daa..12dba9228 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1180,12 +1180,14 @@ static void pci_remove_resource_files(struct pci_dev *pdev)
+ 		if (res_attr) {
+ 			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+ 			kfree(res_attr);
++			pdev->res_attr[i] = NULL;
+ 		}
+ 
+ 		res_attr = pdev->res_attr_wc[i];
+ 		if (res_attr) {
+ 			sysfs_remove_bin_file(&pdev->dev.kobj, res_attr);
+ 			kfree(res_attr);
++			pdev->res_attr_wc[i] = NULL;
+ 		}
+ 	}
+ }
+-- 
+2.33.0
+
