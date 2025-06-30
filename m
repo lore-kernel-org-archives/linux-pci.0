@@ -1,205 +1,131 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from gloria.sntech.de (gloria.sntech.de [185.11.138.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4313721FF54;
-	Mon, 30 Jun 2025 20:59:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 43EDF1D7E41;
+	Mon, 30 Jun 2025 21:33:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.11.138.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751317188; cv=none; b=lZ4W85osCM3hjHeHBpiF90noJjJWuwTgcp+HeOsg1mWymT3YFVjJfpjr8l84Vt8/wsZzC+TBjMzstn5mYJPTdIYli5wwgPRn/y4NAKiqLAg9qYApc/YrUlDYmGb3NfZznU9vjqQ2PydmG3te85inaheHt7AnMv7YySzEItu76r8=
+	t=1751319214; cv=none; b=o5J3kasucIZFhZJ79XBqQTED83rMy9LW2gzKcwJi55LGQN/mRPoXRvjcy02vjAZL30xdQ8WbzC95nqfFboxwCrdW4Q97/wMKlqPptabNdrGR6Vw7+MFnD93BtHW6jegUcKg74F9bZfofj4D1rRx8WLFAvRKLTNULrERN6DRJW9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751317188; c=relaxed/simple;
-	bh=ketVR18fpnW4xkFERzMsiFpAF9jtuIK0RiDKnTgJDp8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=L94ru+I5lN8AS6YAZU7mLv2E2sTNMBZ7MC5dMnz3EYghOwuDyTN2hDczIlfhIXHFEXe1oRfnYkdPyWIsUlj1SOivadcdS5CAuG8s5+Dw+EW3bShNSE78LzRLkNo2/s3r4T2nBpYnTzAJbClHMf1X5Wv4rvpGeK6hRZScZePXvN8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qsrT9QP4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751319214; c=relaxed/simple;
+	bh=203ZgCZh+qPPesbZd4Z294GUTkzv22U70O3LqGCjSCA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Y+Dd2BeR3lBxynOsVXqM9WmknT/yFukaizchrl1OKz86BKB8ofGrF4ZT2Y1baqiyqodmwUU+OeOQ2rgKgw9AfFVfBaZbxm0+9gOF2XG9S/FCRZNei112YlCH+anSCiHGNV5/DFj+xuPAKXggqTPcAEPgSi6rzS4XGxwAAILQVPQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sntech.de; spf=pass smtp.mailfrom=sntech.de; dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b=kXPOClJk; arc=none smtp.client-ip=185.11.138.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sntech.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sntech.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qsrT9QP4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58A8EC4CEE3;
-	Mon, 30 Jun 2025 20:59:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751317187;
-	bh=ketVR18fpnW4xkFERzMsiFpAF9jtuIK0RiDKnTgJDp8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qsrT9QP4hpSZ7+iQwvQyzaAvp1GqENjmzjxVMW5CHElpIZsdveY7ZfISw4/MalZ9A
-	 PqUoJ8gH9qZzLjLKSyPVA3YqogUJo6yhFJgU59TEfxOPN+5lcvAVvfwux14jbKFKkg
-	 /ucNlT5O1LOvmNEdkYTk9kzUoVjE5F3Gp9Bl/uDHNe3Rq34ceTbi81B3gLyJ1wI+Yo
-	 lx0mpYFm+frK9fu90qugSwLtCducq1khGFWxcgWKLVNdsPA0Jn7iUiNM13c4CZkl4E
-	 SlRsJiKJwbqX+cPyapCm+Du8rVMHHzC2RU7AJ/i5h/ATOzS0p0G2F/pma5pdXdgwjX
-	 WUmgCGNEWVDeA==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Zhe Qiao <qiaozhe@iscas.ac.cn>,
-	Dan Carpenter <dan.carpenter@linaro.org>,
-	"Rafael J . Wysocki" <rafael.j.wysocki@intel.com>,
-	Sasha Levin <sashal@kernel.org>,
-	rafael@kernel.org,
-	bhelgaas@google.com,
-	linux-acpi@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 05/21] Revert "PCI/ACPI: Fix allocated memory release on error in pci_acpi_scan_root()"
-Date: Mon, 30 Jun 2025 16:45:20 -0400
-Message-Id: <20250630204536.1358327-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250630204536.1358327-1-sashal@kernel.org>
-References: <20250630204536.1358327-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=sntech.de header.i=@sntech.de header.b="kXPOClJk"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=sntech.de;
+	s=gloria202408; h=Content-Type:Content-Transfer-Encoding:MIME-Version:
+	References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Reply-To;
+	bh=BTJWDoX6+dZpqVbCI05HYOZjmWwxTYx7suIMcGN7BKI=; b=kXPOClJk1Kmb/DiiyBtViPQ7s4
+	BtvZG0K9yDMyQ4fGAOW0in3ubCmp2jBQZQuvmSkNvuRkZoBH5+Cd9uXGWaJLcrZnzwTlI6ctkPg0E
+	MPCtQMCm0MxNBF+z6YN3VNCvT0Y5AP4nvgRmrHCPBIAzCPyr/yGFufXgaB7zRpS5fSshucWqrdNkz
+	cTRAN+LkSxuoc10IY9ad5dILrvGnMUn61DobyKVq28TF0PSvch2asNQdHHgXEZLWQArucI5zeklKY
+	dl7HGTSabPyPOfaLNFCCXbNHXk2/MWobnlFcqn2HpHbxaBkwOcjzD90tFzh6Nld+AGVo80RkSVSmM
+	XfhReTgw==;
+Received: from i53875bfd.versanet.de ([83.135.91.253] helo=diego.localnet)
+	by gloria.sntech.de with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.94.2)
+	(envelope-from <heiko@sntech.de>)
+	id 1uWM7s-00084a-BS; Mon, 30 Jun 2025 23:33:20 +0200
+From: Heiko =?UTF-8?B?U3TDvGJuZXI=?= <heiko@sntech.de>
+To: linux-rockchip@lists.infradead.org,
+ Geraldo Nascimento <geraldogabriel@gmail.com>
+Cc: Shawn Lin <shawn.lin@rock-chips.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Krzysztof =?UTF-8?B?V2lsY3p5xYRza2k=?= <kw@linux.com>,
+ Manivannan Sadhasivam <mani@kernel.org>, Rob Herring <robh@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Rick wertenbroek <rick.wertenbroek@gmail.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Valmantas Paliksa <walmis@gmail.com>, linux-phy@lists.infradead.org,
+ linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-kernel@vger.kernel.org
+Subject:
+ Re: [PATCH v8 3/4] phy: rockchip-pcie: Enable all four lanes if required
+Date: Mon, 30 Jun 2025 23:33:19 +0200
+Message-ID: <4006908.X513TT2pbd@diego>
+In-Reply-To:
+ <d3e7dc38bd287aa93a5d6bba87bf3c428ae92ca4.1751307390.git.geraldogabriel@gmail.com>
+References:
+ <cover.1751307390.git.geraldogabriel@gmail.com>
+ <d3e7dc38bd287aa93a5d6bba87bf3c428ae92ca4.1751307390.git.geraldogabriel@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.12.35
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
 
-From: Zhe Qiao <qiaozhe@iscas.ac.cn>
+Am Montag, 30. Juni 2025, 20:22:01 Mitteleurop=C3=A4ische Sommerzeit schrie=
+b Geraldo Nascimento:
+> Current code enables only Lane 0 because pwr_cnt will be incremented on
+> first call to the function. Let's reorder the enablement code to enable
+> all 4 lanes through GRF.
+>=20
+> Reviewed-by: Neil Armstrong <neil.armstrong@linaro.org>
+> Reviewed-by: Robin Murphy <robin.murphy@arm.com>
+>=20
+> Signed-off-by: Valmantas Paliksa <walmis@gmail.com>
+> Signed-off-by: Geraldo Nascimento <geraldogabriel@gmail.com>
 
-[ Upstream commit 2b8be57fa0c88ac824a906f29c04d728f9f6047a ]
+hmm, if Valmantas is the original author you should probably keep that auth=
+orship
+  git commit --amend --author=3D"Valmantas Paliksa <walmis@gmail.com>"
+should do the trick.
 
-This reverts commit 631b2af2f357 ("PCI/ACPI: Fix allocated memory release
-on error in pci_acpi_scan_root()").
+The first signed-off should be from the patch author, then your signed-off
+indicates you handling the patch later as part of this series.
 
-The reverted patch causes the 'ri->cfg' and 'root_ops' resources to be
-released multiple times.
+[or, if you modified the code of the patch heavily, Co-developed-by could
+ also be appropriate]
 
-When acpi_pci_root_create() fails, these resources have already been
-released internally by the __acpi_pci_root_release_info() function.
+Heiko
 
-Releasing them again in pci_acpi_scan_root() leads to incorrect behavior
-and potential memory issues.
+> ---
+>  drivers/phy/rockchip/phy-rockchip-pcie.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+>=20
+> diff --git a/drivers/phy/rockchip/phy-rockchip-pcie.c b/drivers/phy/rockc=
+hip/phy-rockchip-pcie.c
+> index bd44af36c67a..f22ffb41cdc2 100644
+> --- a/drivers/phy/rockchip/phy-rockchip-pcie.c
+> +++ b/drivers/phy/rockchip/phy-rockchip-pcie.c
+> @@ -160,6 +160,12 @@ static int rockchip_pcie_phy_power_on(struct phy *ph=
+y)
+> =20
+>  	guard(mutex)(&rk_phy->pcie_mutex);
+> =20
+> +	regmap_write(rk_phy->reg_base,
+> +		     rk_phy->phy_data->pcie_laneoff,
+> +		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
+> +				   PHY_LANE_IDLE_MASK,
+> +				   PHY_LANE_IDLE_A_SHIFT + inst->index));
+> +
+>  	if (rk_phy->pwr_cnt++) {
+>  		return 0;
+>  	}
+> @@ -176,12 +182,6 @@ static int rockchip_pcie_phy_power_on(struct phy *ph=
+y)
+>  				   PHY_CFG_ADDR_MASK,
+>  				   PHY_CFG_ADDR_SHIFT));
+> =20
+> -	regmap_write(rk_phy->reg_base,
+> -		     rk_phy->phy_data->pcie_laneoff,
+> -		     HIWORD_UPDATE(!PHY_LANE_IDLE_OFF,
+> -				   PHY_LANE_IDLE_MASK,
+> -				   PHY_LANE_IDLE_A_SHIFT + inst->index));
+> -
+>  	/*
+>  	 * No documented timeout value for phy operation below,
+>  	 * so we make it large enough here. And we use loop-break
+>=20
 
-We plan to resolve the issue using a more appropriate fix.
 
-Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-Closes: https://lore.kernel.org/all/aEmdnuw715btq7Q5@stanley.mountain/
-Signed-off-by: Zhe Qiao <qiaozhe@iscas.ac.cn>
-Acked-by: Dan Carpenter <dan.carpenter@linaro.org>
-Link: https://patch.msgid.link/20250619072608.2075475-1-qiaozhe@iscas.ac.cn
-Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
 
-Based on my analysis of the commit and examination of the kernel code, I
-need to determine if this revert should be backported.
-
-**YES**, this commit should be backported to stable kernel trees.
-
-## Extensive Explanation:
-
-### 1. **Critical Double-Free Bug Fix**
-This revert fixes a serious double-free bug introduced by commit
-631b2af2f357. The code analysis reveals that when
-`acpi_pci_root_create()` fails, it internally calls
-`__acpi_pci_root_release_info()`, which then invokes the `release_info`
-callback (`pci_acpi_generic_release_info()`). This callback already
-frees:
-- `ri->cfg` via `pci_ecam_free(ri->cfg)`
-- `ci->ops` (which is `root_ops`) via `kfree(ci->ops)`
-- `ri` via `kfree(ri)`
-
-The explicit cleanup added by the reverted commit causes these resources
-to be freed a second time, leading to memory corruption.
-
-### 2. **Error Path Issue - High Impact**
-The double-free occurs in the error handling path when
-`acpi_pci_root_create()` fails. While this is not the common case,
-PCI/ACPI initialization failures can occur due to:
-- Hardware issues
-- Firmware bugs
-- Resource allocation failures
-- Configuration problems
-
-When such failures occur, the double-free can cause kernel crashes, data
-corruption, or security vulnerabilities.
-
-### 3. **Simple and Safe Fix**
-The revert is straightforward - it removes the problematic error
-handling code that was incorrectly added. The code changes show:
-```diff
-- if (!root_ops)
-- goto free_ri;
-+       if (!root_ops) {
-+               kfree(ri);
-+               return NULL;
-+       }
-```
-This returns to the original, simpler error handling that only frees
-what hasn't been passed to `acpi_pci_root_create()` yet.
-
-### 4. **Matches Stable Backport Criteria**
-This fix meets the stable kernel criteria:
-- **Fixes a real bug**: Double-free causing potential crashes/corruption
-- **Small and contained**: Only modifies error paths in one function
-- **Already in Linus' tree**: This is a merged commit
-- **No new features**: Pure bug fix
-- **Low risk**: Reverts to previously known-working code
-
-### 5. **Similar to Successful Backports**
-Looking at the reference commits, this is similar to:
-- "ARM64: PCI: Fix struct acpi_pci_root_ops allocation failure path"
-  (Backported: YES) - Also fixed memory management in error paths
-- "Revert 'PCI: acpiphp: Reassign resources on bridge if necessary'"
-  (Backported: YES) - Also a revert fixing problematic behavior
-
-The commit message explicitly states "We plan to resolve the issue using
-a more appropriate fix," indicating the maintainers recognize there may
-be an underlying issue to address, but the immediate concern is fixing
-the double-free bug, making this suitable for stable backporting.
-
- drivers/pci/pci-acpi.c | 23 ++++++++++-------------
- 1 file changed, 10 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/pci/pci-acpi.c b/drivers/pci/pci-acpi.c
-index b78e0e4173244..af370628e5839 100644
---- a/drivers/pci/pci-acpi.c
-+++ b/drivers/pci/pci-acpi.c
-@@ -1676,19 +1676,24 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		return NULL;
- 
- 	root_ops = kzalloc(sizeof(*root_ops), GFP_KERNEL);
--	if (!root_ops)
--		goto free_ri;
-+	if (!root_ops) {
-+		kfree(ri);
-+		return NULL;
-+	}
- 
- 	ri->cfg = pci_acpi_setup_ecam_mapping(root);
--	if (!ri->cfg)
--		goto free_root_ops;
-+	if (!ri->cfg) {
-+		kfree(ri);
-+		kfree(root_ops);
-+		return NULL;
-+	}
- 
- 	root_ops->release_info = pci_acpi_generic_release_info;
- 	root_ops->prepare_resources = pci_acpi_root_prepare_resources;
- 	root_ops->pci_ops = (struct pci_ops *)&ri->cfg->ops->pci_ops;
- 	bus = acpi_pci_root_create(root, root_ops, &ri->common, ri->cfg);
- 	if (!bus)
--		goto free_cfg;
-+		return NULL;
- 
- 	/* If we must preserve the resource configuration, claim now */
- 	host = pci_find_host_bridge(bus);
-@@ -1705,14 +1710,6 @@ struct pci_bus *pci_acpi_scan_root(struct acpi_pci_root *root)
- 		pcie_bus_configure_settings(child);
- 
- 	return bus;
--
--free_cfg:
--	pci_ecam_free(ri->cfg);
--free_root_ops:
--	kfree(root_ops);
--free_ri:
--	kfree(ri);
--	return NULL;
- }
- 
- void pcibios_add_bus(struct pci_bus *bus)
--- 
-2.39.5
 
