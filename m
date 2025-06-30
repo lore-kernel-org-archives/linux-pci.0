@@ -1,39 +1,40 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022138.outbound.protection.outlook.com [52.101.126.138])
+Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazon11023138.outbound.protection.outlook.com [40.107.44.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E53AE19CC29;
-	Mon, 30 Jun 2025 04:16:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE5B92AF1B;
+	Mon, 30 Jun 2025 04:16:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.138
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751256976; cv=fail; b=TxzgGPBXOl4SX1fTSTt3S4knRDkxGLq3Td6hFz3YwgPlHQQs7JHSt+BGkOjT8kDbiiy5doV1dNle5WUQ+m5e8sejMLG9qNSd/ioC6+/2ke0H55uBlEPigmjL7Y1eMmmSM0wL3jzp79HxBjRMAQRcLCXH8dQZT9jEdNNAYJaQHJc=
+	t=1751256977; cv=fail; b=Y/RuIy8SV7d/3Ym39KzYXptl7J3pgLPbJfLjalgBRgTHgjlbreJ6Cla0eK+55e9b6Jp3WmIe7qAwgndx2PbxKvvCPTMKOEZ2hbX4gTn7TNYMkRQ3hJJHo1ZFLLTlR0paoERQh2wjwboqeCZ0eNgFaXlAoYp8Y9aXMoQd+9v1fnM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751256976; c=relaxed/simple;
-	bh=rgrXjeZBySBDvWbcMnAZyly0qlkF+jFU1U/cNbFBQes=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=KGZSVIP3W/RAuGG1sFExxNEwd3SrGVASVbxcMkzLNyffPetP0nrM/WieUl/JzqojodqhDilEgFcGwommlYma6A47vWmvEOhWs4o0/wPAqnWCmXGlMGgGQgsN1gj2+S8MnjejnbAf3x8tkVtxR6Va6t5KpxbQ6GNWdWKUESFxmeE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.126.138
+	s=arc-20240116; t=1751256977; c=relaxed/simple;
+	bh=wvKgjxJMiwaXB2xp2qBiu6KT7pP9aTp3EyjWrq16n64=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=UGkwQJJeeUSzdSnA1Khh32B9JAt82jKkR1RHjZxmVCQtYUc9Bl+JWMV10ou8fvXgmj5Z37M9SA9qjSg0IqyNgRwjxWM6Dbz+JdImXuSFtZLjUreFZoSurrlCSofr7/RNEsXNj0YuAanKpDf52/EWGibPMbGsySKT81/uTbYNYX0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.44.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OfwuNgjayI6sMwZtW6naPTCZS5JKujKj96hTYwktQLailVGMx+qg3agXpwmyobxcvfO/liw7BJRR4Nznjd9JQaFTxDfw+fXZSaVgbx2q0Zwa+ecCo94BnggyPD4RFrWgEoaztNmZAvPFjNIS4Fsu+xvVMpCI6rKhGzKj+gcp3NhEohCqchsATRq8ToCX0blYG7n1Pt7PB1LjIUli4Fc0IgVD1ZzIDvXwXqsFxywTm6rnh/yKV1E09GbMO4yPz9QfJarHW0Xs2TAjaiJolNVztr0Nipb9nkAkN4p6D1ZqdUswwciPN1sh7es3fdgr/XBznBT/5ikqZarIZgSFrm6iHw==
+ b=ElU86kWQHxeB++kAiELx00eO7k0SX5Vj8WYZc+cMIUXCfu616meHjCtkiS1+f9+h8BDuN77LSNogqhTxHG0T8u4UMvHzbKzNSbRH1CuvWkrDEgDwbpGObZIQoZ5bMf6g/hq6d/UN1fYWIhuksMDMeoE60ODkCRhZD/d5DXD7M8TyKazjGsjoPVp1dQctGo0uVUa8sMhs297IOi5AZDjG2a9e/B4wFUvpkkdimXDO1HxTPMfcoIz8i3TciPYf0D/4uONk5ZFrqFBnCiHurZqJK5kq5dVFBMB0enECGIw8r+jh6Rm14fs9y08kYwb57dkryJdSVITx3q7G4aEH1QP7DQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=YhLHdan/jCGLJQtm/Sp5km8sIgO8H7ViFS49X2PSs4M=;
- b=vNPgipBsY4C2bJJSh//D8iogF9ucNMoVPzkORYNsYtDhPfL7BmzZdUMk1Wgt9Txm3qxGV8RkMAKZZYpkqaj8ivX20OV2AGwwoct/E6bpTdF/mY3luiil5rIOJvjLhgqIEYeZFxO4xlx07L/WtdkjbM8AJOPBxua8htg4MzbxsK7gb54e2lIiZ/cUOGiJI06Y1YUMZR6vsImKLP31FQcerlWu4JbsYfCEWbjKGMJUSyNIC2KQXJ7NIGNiDGD/cxNgC+KLoUxIgAsjFVjfGn1Kti8w6pz0A11fe45UH0r1clHMEw+IFd3UrnWa37F5E97CZBMMJFrGrSkdn2X49sbXpg==
+ bh=vClJE8dOysat8bDscG0Y+y/5aZLN//ro9gd/ABk8WXM=;
+ b=CePFkww5CBF3k3STylmn7WoSDc0dfTTCZzRGnbGMyMeQ6X9M5yL+7/IYaToA6clu123RpDq0/6iytkGQrcbmFEJTCxcxeBMd+cnLG/BIiRv934ZajPiOC9jhcph9cRpulh0YbIEU4OHZoSZt9pVcvxaGTCgpPlSSGvUhhKZZUBHauXXCLKA6Fpiy4x+WRJP9+tePm6z5hI5AHUGWkLeiVzAP/1PipK4lBKcNf+mLP89EWlAUv6W5EjkVUhwCCTccbaaJQW8hPGwqTlFPa6et+QwBdBcRqd4j9J38NxfBYTQBPUu7CYSYUK5GKmajPrO302SZR585aGiX05QMiERpHw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
  dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
  not signed); arc=none (0)
-Received: from TYCPR01CA0127.jpnprd01.prod.outlook.com (2603:1096:400:26d::12)
- by JH0PR06MB6939.apcprd06.prod.outlook.com (2603:1096:990:66::14) with
+Received: from SE2P216CA0160.KORP216.PROD.OUTLOOK.COM (2603:1096:101:2cb::12)
+ by PUZPR06MB5604.apcprd06.prod.outlook.com (2603:1096:301:dd::11) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8880.30; Mon, 30 Jun
- 2025 04:16:09 +0000
-Received: from TY2PEPF0000AB8A.apcprd03.prod.outlook.com
- (2603:1096:400:26d:cafe::ac) by TYCPR01CA0127.outlook.office365.com
- (2603:1096:400:26d::12) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.8880.30 via Frontend Transport; Mon,
- 30 Jun 2025 04:16:08 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8880.27; Mon, 30 Jun
+ 2025 04:16:11 +0000
+Received: from OSA0EPF000000CA.apcprd02.prod.outlook.com
+ (2603:1096:101:2cb:cafe::da) by SE2P216CA0160.outlook.office365.com
+ (2603:1096:101:2cb::12) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.8880.31 via Frontend Transport; Mon,
+ 30 Jun 2025 04:16:11 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
  smtp.mailfrom=cixtech.com; dkim=none (message not signed)
  header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
@@ -41,12 +42,12 @@ Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
  222.71.101.198 as permitted sender) receiver=protection.outlook.com;
  client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
 Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- TY2PEPF0000AB8A.mail.protection.outlook.com (10.167.253.8) with Microsoft
+ OSA0EPF000000CA.mail.protection.outlook.com (10.167.240.56) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8901.15 via Frontend Transport; Mon, 30 Jun 2025 04:16:07 +0000
+ 15.20.8901.15 via Frontend Transport; Mon, 30 Jun 2025 04:16:10 +0000
 Received: from hans.. (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 61AC440A5A31;
-	Mon, 30 Jun 2025 12:16:06 +0800 (CST)
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 04B194160504;
+	Mon, 30 Jun 2025 12:16:07 +0800 (CST)
 From: hans.zhang@cixtech.com
 To: bhelgaas@google.com,
 	lpieralisi@kernel.org,
@@ -65,10 +66,12 @@ Cc: mpillai@cadence.com,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v5 00/14] Enhance the PCIe controller driver
-Date: Mon, 30 Jun 2025 12:15:47 +0800
-Message-ID: <20250630041601.399921-1-hans.zhang@cixtech.com>
+Subject: [PATCH v5 13/14] arm64: dts: cix: Add PCIe Root Complex on sky1
+Date: Mon, 30 Jun 2025 12:16:00 +0800
+Message-ID: <20250630041601.399921-14-hans.zhang@cixtech.com>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250630041601.399921-1-hans.zhang@cixtech.com>
+References: <20250630041601.399921-1-hans.zhang@cixtech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,206 +81,230 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY2PEPF0000AB8A:EE_|JH0PR06MB6939:EE_
+X-MS-TrafficTypeDiagnostic: OSA0EPF000000CA:EE_|PUZPR06MB5604:EE_
 Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: b0a6879b-4897-4737-91c5-08ddb78cd633
+X-MS-Office365-Filtering-Correlation-Id: 17a1cb8c-1f71-4136-24f9-08ddb78cd848
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|376014|7416014|82310400026|36860700013|1800799024;
+	BCL:0;ARA:13230040|82310400026|36860700013|1800799024|376014|7416014|7053199007;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?X10xtcO7nkpjBHy9yK07f6ltu9pYZG6Lmly7IQfLDeBWBdhSqbkYZypsdTOT?=
- =?us-ascii?Q?V1nFAirp2wiNeFBnMI/W+np5wnWDe0IjwX4Y5fPEv2OVM7cFr0sKrZq022vz?=
- =?us-ascii?Q?VBxxp4jA7MDjnvpXTPpkMh2iu8c2+E7gz7f2fCp7nLpLJx05+EuCn+gmryIq?=
- =?us-ascii?Q?UWI6G4QYczcOG3ri4Vs1GJCycHTF8LQ2TkZneF3NbANUFcAi8v6Q5PxYCVxy?=
- =?us-ascii?Q?Rmws+u+jD6leWSFs+3Nw3442maYgPQtnSvq8qgItTTw9X2GSYgb3sasBFPRR?=
- =?us-ascii?Q?3PK72YuGwHm6nApxRqR3aopC4R9PUkXDHa3xRWM1yzd0Df50Oo01fEF5MB2q?=
- =?us-ascii?Q?GdOyG7AGo8kiq2f3BrmVNmG/yiF5d4loFKqG3tlGlMfI6GYJKNA2741zfztq?=
- =?us-ascii?Q?r3Zw6m49rxUaTmku0WSQ9jNtCZ/UQS65Gx+l7TlfK74SN9Y76ikPhk1DIrPd?=
- =?us-ascii?Q?56W+ErLpv6LxJytqCoWT3/dajdxrvmw96eNHt+SuoAt8dUPiMpoP/8ls6I9Q?=
- =?us-ascii?Q?RP6J3Qtrz/qHo4G4Qgdnc8pC/PTwwFCYTHl/I37/QAjAovVJLf20ju8Bwg1x?=
- =?us-ascii?Q?oVXwsLIs8/usdHrLvUC1jhWvlirBcD/9kCi//Ts1qRr54Vcj2Bim/uv3tnaa?=
- =?us-ascii?Q?mcDkHkgZwW914na9FDB1bBn5D45R1fc0Mbm4x9fefyo+l84cqqcvz5iIPOE+?=
- =?us-ascii?Q?4tgufK/9Cw2Gd/kP/HTTCVJhpfn+PlK1/y/mA7Ogq88VRxHYwefxldaK5ZGi?=
- =?us-ascii?Q?5wuqsM11J8zP8XxNs/7mkrreRVjic4OYkBLP//lgDa0l/KfNJNAu7hlvGb9W?=
- =?us-ascii?Q?8NYjnoycpVjx8GDgDvGQuYE6Dcd7v+Wb2kOrbrx8v7ALKuJsmJMHFZLJd5/6?=
- =?us-ascii?Q?KSTZEa8cVTAQD5gWQHzmnm5ZDr6O3xS/e29HLrE6cXJwJUYBuUQb4/CZiwZJ?=
- =?us-ascii?Q?HcW7Cer6Kf7ePzdrRsIbSrMetHda7GQeLufgvHQCx1iOlqxK34cdjB1Lesm7?=
- =?us-ascii?Q?Zua1o5LSa6ggkd2/D/OyNo9Yu7m3BbASBORnAkpj8CcIy9C+vQfCPMNwoeG0?=
- =?us-ascii?Q?WTNoBsLW/ceLCu3NYDuMGMX4BMD9Bvq76tIH37GDyMgr9YzlOdqiDNoFQ3FJ?=
- =?us-ascii?Q?RAbe60sFLX5Yj9hgsS9OBdvNIYw2twdV0TnIidpTPiy2tHEkTRwQVE2sTkDz?=
- =?us-ascii?Q?q9YnXWykdM/mJOG6ee01kR1VE2L7qj8iS6XtCxjGdC0vQRb6k7xrf0tzFyfx?=
- =?us-ascii?Q?kHCSshNhvzXUZ3SLZcYbh0G9MyxsnGoNHWr3vSSzksx/oWSPwW/T8/oZmxxp?=
- =?us-ascii?Q?n5jyCG+GMvCiOeGGAYNS9G6mFwBfiroTaO0limtSRrsjgTBxCVCjeHzoPuLI?=
- =?us-ascii?Q?IS/hx36yg7Ao0CVlf4gfrICahdEwHjehzBd9fjt+vWKAJ3+Z2rAxh+YRJjvf?=
- =?us-ascii?Q?Ak28XebKzZmFlv5FIRtxANparVSi++MI/nHfncQKa++0/cZG1UsHjm7bpM+q?=
- =?us-ascii?Q?eaE51qsJI7t1yF0KXzmcWiwsulqu4K31aKhvGZw/kt9iuF7rj5z/bmJhBA?=
- =?us-ascii?Q?=3D=3D?=
+	=?us-ascii?Q?HtnqClRmrUmxbcx45BCTgBDK6k8/37zx8VDOzTUO3dx8PllR2x4+/BGHHKl0?=
+ =?us-ascii?Q?3FsYYY5GVoZq6FgpecqbhfqBmFKNCaWmr1hBHJb+8mL4Q3y/nn1sP5LQltah?=
+ =?us-ascii?Q?pa68qHH1kQzgr43VPex0g1uW57vovOTsWACxNTrimUfLe/TzsToPMFxOZ+TS?=
+ =?us-ascii?Q?g7chaNKX4MJMTVpb6gd36MczsTnp47Yhelz5bYOK6TcLjllzalHd/+7VqAF5?=
+ =?us-ascii?Q?eOkjOCK8jwCxdM0nJGwBW28Znf4ak1i0lqo2/YVnC4bAr6lj2c6VXPKSdN5b?=
+ =?us-ascii?Q?Mnvp2w7igSHq6qpCfVQeT1r6/XA1yjz7Hzc7e5tQP3bROiMWyo0kQfqXIT8b?=
+ =?us-ascii?Q?fLC70ujtOeCBwawHtlateizaQBMJbfnuWbAK/wUj4UpfF3pDsS4l1BZS6Eal?=
+ =?us-ascii?Q?351VRjtDpAXTKeu67x6+xvLlz+cPoXBCeZBuqZNWvfiaJwaxOzWhw63X211C?=
+ =?us-ascii?Q?5LGwxAmoxZCuIdo5lGZCAtPHD2XmnDa1UP/3JZXQTwe+/x4Un1MlpFBwS9p9?=
+ =?us-ascii?Q?m4KFVz3+kkekaFCDYhXrrCCBn0szUp5Xse7eT1cwKSJDpNYOLpvcWBqKD8+w?=
+ =?us-ascii?Q?TqDYuU4SytbFAtN/Q/LMFPanpffAB/Y31TgUlGSKRBKd6+bymv6etX/bsX34?=
+ =?us-ascii?Q?IQ1+VKHuWJXwAyb1pZkUb4s5IVlszQXmymU17cKQzqhARuhnQIxCdq6Bo5ns?=
+ =?us-ascii?Q?BLwlCrAMsBLhAXh7vBBAil4p09GCGzrhBUZX2XQ+Ox7OKzAVC3/TQA8FLlyn?=
+ =?us-ascii?Q?aTqIP312zhWae6hjUuirTO3/5QuletMXYgEc0mGRvKoUyAkR66TzUX6aqARs?=
+ =?us-ascii?Q?+QAzEDmMEuYOdEA03ThDwQ2gkq8bK2ysp1cTueTNK4ZHs//sBxFeenYB0JFU?=
+ =?us-ascii?Q?P/3Y5888IBEv9eUFOHQi7nEMsv9zCLqifliX/XK2O8Om+vgnoGk9E8g0fKaV?=
+ =?us-ascii?Q?/3L/L3iVXTt58TTWHCuYANXgjm4ObD3RT9Dh61Qex+vYQrumtvVRg7lhdbDX?=
+ =?us-ascii?Q?UL4GAoAtvjHAQ+MuzVeeTK4Gd3ElpxhPPmMKMZHB0x580PLkNKUYSMlatx17?=
+ =?us-ascii?Q?Cn5922P+DE1lTTlXz1AiH4yVvSBoC9TZmaZPQxUNqzN+xCYMR6zOcZF6ML40?=
+ =?us-ascii?Q?5krYtbp0xdi7LI2JxYBebK9bk7zYlf2FVBNHdhQh2q6hkf2AVx/Sfk6Za/Wc?=
+ =?us-ascii?Q?hQXT15HusCTNJqQDyY5s2vnvf9RieZhtuKJSxjZrGIX45TzSi83z5rME+Bjt?=
+ =?us-ascii?Q?u1C/QmObS+eQEBuYBxXvHuNba6Xp2pLocfPWDSsJsarUHMJMBn6UJSuziaQN?=
+ =?us-ascii?Q?IOHGVWAiMPUl78DnfoSDoUQDZovpCDcvCZElsqRV2FepCFikCb456cOpg8O3?=
+ =?us-ascii?Q?DoEkuBBturNIg32rZgNuRcIlwNA47k9msKGqtn2iLn+87R0CSWhMXTXZcX0B?=
+ =?us-ascii?Q?4s03HZG9AV5Un6PzTv/HiHsYBZh92EaGlHSIFZ+7M68I330eIiozPzPLGx78?=
+ =?us-ascii?Q?SFLIH+u9q6CQzNaTgCKD7yzeVs8N9PM6D2gd?=
 X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(376014)(7416014)(82310400026)(36860700013)(1800799024);DIR:OUT;SFP:1102;
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(36860700013)(1800799024)(376014)(7416014)(7053199007);DIR:OUT;SFP:1102;
 X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2025 04:16:07.1470
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 30 Jun 2025 04:16:10.6284
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: b0a6879b-4897-4737-91c5-08ddb78cd633
+X-MS-Exchange-CrossTenant-Network-Message-Id: 17a1cb8c-1f71-4136-24f9-08ddb78cd848
 X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	TY2PEPF0000AB8A.apcprd03.prod.outlook.com
+	OSA0EPF000000CA.apcprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: JH0PR06MB6939
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PUZPR06MB5604
 
 From: Hans Zhang <hans.zhang@cixtech.com>
 
+Add pcie_x*_rc node to support Sky1 PCIe driver based on the
+Cadence PCIe core.
+
+Supports Gen1/Gen2/Gen3/Gen4, 1/2/4/8 lane, MSI/MSI-x interrupts
+using the ARM GICv3.
+
+Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
+Reviewed-by: Peter Chen <peter.chen@cixtech.com>
+Reviewed-by: Manikandan K Pillai <mpillai@cadence.com>
 ---
-Dear Maintainers,
+ arch/arm64/boot/dts/cix/sky1.dtsi | 150 ++++++++++++++++++++++++++++++
+ 1 file changed, 150 insertions(+)
 
-This series is Cadence's HPA PCIe IP and the Root Port driver of our
-CIX sky1. Please help review. Thank you very much.
----
-
-Enhances the exiting Cadence PCIe controller drivers to support
-HPA (High Performance Architecture) Cadence PCIe controllers.
-
-The patch set enhances the Cadence PCIe driver for HPA support.
-The header files are separated out for legacy and high performance
-register maps, register address and bit definitions. The driver
-read register and write register functions for HPA take the
-updated offset stored from the platform driver to access the registers.
-As part of refactoring of the code, few new files are added to the
-driver by splitting the existing files.
-This helps SoC vendor who change the address map within PCIe controller
-in their designs. Setting the menuconfig appropriately will allow
-selection between RP and/or EP PCIe controller support. The support
-will include Legacy and HPA for the selected configuration.
-
-The TI SoC continues to be supported with the changes incorporated.
-
-The changes address the review comments in the previous patches where
-the need to move away from "ops" pointers used in current implementation
-and separate out the Legacy and HPA driver implementation was stressed.
-
-The scripts/checkpatch.pl has been run on the patches with and without
---strict. With the --strict option, 4 checks are generated on 2 patch
-(PATCH v5 2/6 and PATCH v5 3/6 of the series), which can be ignored.
-There are no code fixes required for these checks. All other checks
-generated by ./scripts/checkpatch.pl --strict can also be ignored.
-
-The ./scripts/kernel-doc --none have been run on the changed files.
-
-The changes are tested on TI platforms. The legacy controller changes are
-tested on an TI J7200 EVM. HPA changes are planned to be tested on an FPGA
-platform available within Cadence.
-
----
-Changes for v5
-        - Header and code files separated for library functions(common
-          functions used by both architectures) and Legacy and HPA.
-        - Few new files added as part of refactoring
-        - No checks for "is_hpa" as the functions have been separated
-          out
-        - Review comments from previous patches have been addressed
-        - Add region 0 for ECAM and region 1 for message.
-        - Add CIX sky1 PCIe drivers. Submissions based on the following v9 patches:
-        https://patchwork.kernel.org/project/linux-arm-kernel/cover/20250609031627.1605851-1-peter.chen@cixtech.com/
-
-        Cix Sky1 base dts review link to show its review status:
-        https://lore.kernel.org/all/20250609031627.1605851-9-peter.chen@cixtech.com/
-
-        The test log on the Orion O6 board is as follows:
-        root@cix-localhost:~# lspci
-        0000:c0:00.0 PCI bridge: Device 1f6c:0001
-        0000:c1:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8126 (rev 01)
-        0001:90:00.0 PCI bridge: Device 1f6c:0001
-        0001:91:00.0 Non-Volatile memory controller: Samsung Electronics Co Ltd NVMe SSD Controller PM9A1/PM9A3/980PRO
-        0002:60:00.0 PCI bridge: Device 1f6c:0001
-        0002:61:00.0 Network controller: Realtek Semiconductor Co., Ltd. RTL8852BE PCIe 802.11ax Wireless Network Controller
-        0003:00:00.0 PCI bridge: Device 1f6c:0001
-        0003:01:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8126 (rev 01)
-        0004:30:00.0 PCI bridge: Device 1f6c:0001
-        0004:31:00.0 Ethernet controller: Realtek Semiconductor Co., Ltd. Device 8126 (rev 01)
-        root@cix-localhost:~# uname -a
-        Linux cix-localhost 6.16.0-rc1-00023-gbaa962a95a28 #138 SMP PREEMPT Fri Jun 27 16:43:41 CST 2025 aarch64 GNU/Linux
-        root@cix-localhost:~# cat /etc/issue
-        Debian GNU/Linux 12 \n \l
+diff --git a/arch/arm64/boot/dts/cix/sky1.dtsi b/arch/arm64/boot/dts/cix/sky1.dtsi
+index 9c723917d8ca..1dac0e8d5fc1 100644
+--- a/arch/arm64/boot/dts/cix/sky1.dtsi
++++ b/arch/arm64/boot/dts/cix/sky1.dtsi
+@@ -289,6 +289,156 @@ mbox_ap2sfh: mailbox@80a0000 {
+ 			cix,mbox-dir = "tx";
+ 		};
  
-Changes for v4
-        - Add header file bitfield.h to pcie-cadence.h
-        - Addressed the following review comments
-                Merged the TI patch as it
-                Removed initialization of struct variables to '0'
-
-Changes for v3
-        - Patch version v3 added to the subject
-        - Use HPA tag for architecture descriptions
-        - Remove bug related changes to be submitted later as a separate
-          patch
-        - Two patches merged from the last series to ensure readability to
-          address the review comments
-        - Fix several description related issues, coding style issues and
-          some misleading comments
-        - Remove cpu_addr_fixup() functions
-
-Hans Zhang (5):
-  dt-bindings: PCI: Add CIX Sky1 PCIe Root Complex bindings
-  PCI: sky1: Add PCIe host support for CIX Sky1
-  MAINTAINERS: add entry for CIX Sky1 PCIe driver
-  arm64: dts: cix: Add PCIe Root Complex on sky1
-  arm64: dts: cix: Enable PCIe on the Orion O6 board
-
-Manikandan K Pillai (9):
-  dt-bindings: pci: cadence: Extend compatible for new RP configuration
-  dt-bindings: pci: cadence: Extend compatible for new EP configuration
-  PCI: cadence: Split PCIe controller header file
-  PCI: cadence: Add register definitions for HPA(High Perf Architecture)
-  PCI: cadence: Split PCIe EP support into common and specific functions
-  PCI: cadence: Split PCIe RP support into common and specific functions
-  PCI: cadence: Split the common functions for PCIE controller support
-  PCI: cadence: Add support for High Performance Arch(HPA) controller
-  PCI: cadence: Add support for PCIe HPA controller platform
-
- .../bindings/pci/cdns,cdns-pcie-ep.yaml       |   6 +-
- .../bindings/pci/cdns,cdns-pcie-host.yaml     |   6 +-
- .../bindings/pci/cix,sky1-pcie-host.yaml      | 133 ++++
- MAINTAINERS                                   |   7 +
- arch/arm64/boot/dts/cix/sky1-orion-o6.dts     |  20 +
- arch/arm64/boot/dts/cix/sky1.dtsi             | 150 +++++
- drivers/pci/controller/cadence/Kconfig        |  29 +
- drivers/pci/controller/cadence/Makefile       |  10 +-
- drivers/pci/controller/cadence/pci-sky1.c     | 435 +++++++++++++
- .../controller/cadence/pcie-cadence-common.c  | 134 ++++
- .../cadence/pcie-cadence-ep-common.c          | 240 +++++++
- .../cadence/pcie-cadence-ep-common.h          |  36 ++
- .../controller/cadence/pcie-cadence-ep-hpa.c  | 523 ++++++++++++++++
- .../pci/controller/cadence/pcie-cadence-ep.c  | 243 +-------
- .../cadence/pcie-cadence-host-common.c        | 169 +++++
- .../cadence/pcie-cadence-host-common.h        |  25 +
- .../cadence/pcie-cadence-host-hpa.c           | 584 ++++++++++++++++++
- .../controller/cadence/pcie-cadence-host.c    | 156 +----
- .../cadence/pcie-cadence-hpa-regs.h           | 212 +++++++
- .../pci/controller/cadence/pcie-cadence-hpa.c | 199 ++++++
- .../cadence/pcie-cadence-lga-regs.h           | 228 +++++++
- .../cadence/pcie-cadence-plat-hpa.c           | 183 ++++++
- .../controller/cadence/pcie-cadence-plat.c    |  23 +-
- drivers/pci/controller/cadence/pcie-cadence.c | 138 +----
- drivers/pci/controller/cadence/pcie-cadence.h | 416 ++++++-------
- 25 files changed, 3524 insertions(+), 781 deletions(-)
- create mode 100644 Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
- create mode 100644 drivers/pci/controller/cadence/pci-sky1.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-common.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-ep-common.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-ep-common.h
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-ep-hpa.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-host-common.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-host-common.h
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-host-hpa.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-hpa-regs.h
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-hpa.c
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-plat-hpa.c
-
-
-base-commit: 5da173292645ab241a9ccc95044a0b56c2efc214
++		pcie_x8_rc: pcie@a010000 { /* X8 */
++			compatible = "cix,sky1-pcie-host";
++			reg = <0x00 0x0a010000 0x00 0x10000>,
++			      <0x00 0x0a000000 0x00 0x10000>,
++			      <0x00 0x2c000000 0x00 0x4000000>,
++			      <0x00 0x60000000 0x00 0x00100000>;
++			reg-names = "reg", "rcsu", "cfg", "msg";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 407 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 408 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 409 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 410 IRQ_TYPE_LEVEL_HIGH 0>;
++			max-link-speed = <4>;
++			num-lanes = <8>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0xc0 0xff>;
++			device_type = "pci";
++			ranges = <0x01000000 0x0 0x60100000 0x0 0x60100000 0x0 0x00100000>,
++				 <0x02000000 0x0 0x60200000 0x0 0x60200000 0x0 0x1fe00000>,
++				 <0x43000000 0x18 0x00000000 0x18 0x00000000 0x04 0x00000000>;
++			msi-map = <0xc000 &gic_its 0xc000 0x4000>;
++			vendor-id = <0x1f6c>;
++			device-id = <0x0001>;
++			cdns,no-inbound-bar;
++			sky1,pcie-ctrl-id = <0x0>;
++			status = "disabled";
++		};
++
++		pcie_x4_rc: pcie@a070000 { /* X4 */
++			compatible = "cix,sky1-pcie-host";
++			reg = <0x00 0x0a070000 0x00 0x10000>,
++			      <0x00 0x0a060000 0x00 0x10000>,
++			      <0x00 0x29000000 0x00 0x3000000>,
++			      <0x00 0x50000000 0x00 0x00100000>;
++			reg-names = "reg", "rcsu", "cfg", "msg";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 419 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 420 IRQ_TYPE_LEVEL_HIGH 0>;
++			max-link-speed = <4>;
++			num-lanes = <4>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0x90 0xbf>;
++			device_type = "pci";
++			ranges = <0x01000000 0x00 0x50100000 0x00 0x50100000 0x00 0x00100000>,
++				 <0x02000000 0x00 0x50200000 0x00 0x50200000 0x00 0x0fe00000>,
++				 <0x43000000 0x14 0x00000000 0x14 0x00000000 0x04 0x00000000>;
++			msi-map = <0x9000 &gic_its 0x9000 0x3000>;
++			vendor-id = <0x1f6c>;
++			device-id = <0x0001>;
++			cdns,no-inbound-bar;
++			sky1,pcie-ctrl-id = <0x1>;
++			status = "disabled";
++		};
++
++		pcie_x2_rc: pcie@a0c0000 { /* X2 */
++			compatible = "cix,sky1-pcie-host";
++			reg = <0x00 0x0a0c0000 0x00 0x10000>,
++				  <0x00 0x0a060000 0x00 0x10000>,
++				  <0x00 0x26000000 0x00 0x3000000>,
++				  <0x00 0x40000000 0x00 0x00100000>;
++			reg-names = "reg", "rcsu", "cfg", "msg";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 427 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 428 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 429 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 430 IRQ_TYPE_LEVEL_HIGH 0>;
++			max-link-speed = <4>;
++			num-lanes = <2>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0x60 0x8f>;
++			device_type = "pci";
++			ranges = <0x01000000 0x0 0x40100000 0x0 0x40100000 0x0 0x00100000>,
++				 <0x02000000 0x0 0x40200000 0x0 0x40200000 0x0 0x0fe00000>,
++				 <0x43000000 0x10 0x00000000 0x10 0x00000000 0x04 0x00000000>;
++			msi-map = <0x6000 &gic_its 0x6000 0x3000>;
++			vendor-id = <0x1f6c>;
++			device-id = <0x0001>;
++			cdns,no-inbound-bar;
++			sky1,pcie-ctrl-id = <0x2>;
++			status = "disabled";
++		};
++
++		pcie_x1_0_rc: pcie@a0d0000 { /* X1_0 */
++			compatible = "cix,sky1-pcie-host";
++			reg = <0x00 0x0a0d0000 0x00 0x10000>,
++			      <0x00 0x0a060000 0x00 0x10000>,
++			      <0x00 0x20000000 0x00 0x3000000>,
++			      <0x00 0x30000000 0x00 0x00100000>;
++			reg-names = "reg", "rcsu", "cfg", "msg";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 436 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 437 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 438 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 439 IRQ_TYPE_LEVEL_HIGH 0>;
++			max-link-speed = <4>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0x00 0x2f>;
++			device_type = "pci";
++			ranges = <0x01000000 0x0 0x30100000 0x0 0x30100000 0x0 0x00100000>,
++				 <0x02000000 0x0 0x30200000 0x0 0x30200000 0x0 0x07e00000>,
++				 <0x43000000 0x08 0x00000000 0x08 0x00000000 0x04 0x00000000>;
++			msi-map = <0x0000 &gic_its 0x0000 0x3000>;
++			vendor-id = <0x1f6c>;
++			device-id = <0x0001>;
++			cdns,no-inbound-bar;
++			sky1,pcie-ctrl-id = <0x4>;
++			status = "disabled";
++		};
++
++		pcie_x1_1_rc: pcie@a0e0000 { /* X1_1 */
++			compatible = "cix,sky1-pcie-host";
++			reg = <0x00 0x0a0e0000 0x00 0x10000>,
++			      <0x00 0x0a060000 0x00 0x10000>,
++			      <0x00 0x23000000 0x00 0x3000000>,
++			      <0x00 0x38000000 0x00 0x00100000>;
++			reg-names = "reg", "rcsu", "cfg", "msg";
++			#interrupt-cells = <1>;
++			interrupt-map-mask = <0 0 0 0x7>;
++			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 445 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 2 &gic 0 0 GIC_SPI 446 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 3 &gic 0 0 GIC_SPI 447 IRQ_TYPE_LEVEL_HIGH 0>,
++					<0 0 0 4 &gic 0 0 GIC_SPI 448 IRQ_TYPE_LEVEL_HIGH 0>;
++			max-link-speed = <4>;
++			num-lanes = <1>;
++			#address-cells = <3>;
++			#size-cells = <2>;
++			bus-range = <0x30 0x5f>;
++			device_type = "pci";
++			ranges = <0x01000000 0x0 0x38100000 0x0 0x38100000 0x0 0x00100000>,
++				 <0x02000000 0x0 0x38200000 0x0 0x38200000 0x0 0x07e00000>,
++				 <0x43000000 0x0C 0x00000000 0x0C 0x00000000 0x04 0x00000000>;
++			msi-map = <0x3000 &gic_its 0x3000 0x3000>;
++			vendor-id = <0x1f6c>;
++			device-id = <0x0001>;
++			sky1,pcie-ctrl-id = <0x3>;
++			cdns,no-inbound-bar;
++			status = "disabled";
++		};
++
+ 		gic: interrupt-controller@e010000 {
+ 			compatible = "arm,gic-v3";
+ 			reg = <0x0 0x0e010000 0 0x10000>,	/* GICD */
 -- 
 2.49.0
 
