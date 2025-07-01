@@ -1,128 +1,78 @@
-Received: from mail-qk1-f174.google.com (mail-qk1-f174.google.com [209.85.222.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B061B21770D;
-	Tue,  1 Jul 2025 12:03:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F92B26C3A3;
+	Tue,  1 Jul 2025 12:09:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751371421; cv=none; b=rSUsy+qkbxvhx79NRu6hf1wuUr6ukka/d8zunrRkdb76TKYAIcQ05KRKcdlWdpm93R7Mir9UoCfmzNn0XP7tOG3yFH65NAoWzM8dyl8bo6uhLHNZAR1iKQMK8u8IkdNSwVGZPOt97VZwRFHHHuhtxqsAjuWeY9ytsbfxN+SkZV8=
+	t=1751371752; cv=none; b=UfpxY0vpUJfAn8dk8+u1NI5sgOHgk1xjLfjli7Fl7TCWliN0Sph4mWLlA9/gzqBdSeXEZHeurcLK9OY389tO4AfPD12cQdeKLKvM/rQLRA5Zq1Ph1x7myAR818rle+qREi41DG0grWGwaH4Artdzfy1UuMahBewERdfPVu4NBLQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751371421; c=relaxed/simple;
-	bh=hmffTQkJsIUbZsQe9etVLoih9MD4juYOhq9sVIY1uaM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=JQlkkoplBF83RjOT2fgNPM/8SQeG2ZvBkkzZpVL9FOI9GP85BrEmwIgR0Pc+MV+cUxbZVvS1IQZvdQt7p9NaO47KBGNMZ04lkoPq406IGmEDiCqNfdRFhUavgGcLRpQuSs1MR12sS7ykjW+2/vvP+mdpOVjSYkFHj0tNu3W21Dw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IHXypc1S; arc=none smtp.client-ip=209.85.222.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1751371752; c=relaxed/simple;
+	bh=d/8YSWqDAttPxhALnCv0hSHOr6sy2qbciex+/jHshJQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q4AwEq3TQNljOxf6eC/t2JmLcIo+4R/ngT1UtsndfrkOH3rxkbeTv+mrcpXGgaiO9LJacccZgQTxWxESATvBcK1zSUkB4lkVOSFmZAd7tqtfRx6QxzglxAVmHex6rPb+tyiQgHfhfUCw/5tPjdyyVGs+ljzd0z+LpHo/DTXG7K4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RAihkcUB; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IHXypc1S"
-Received: by mail-qk1-f174.google.com with SMTP id af79cd13be357-7d219896edeso585522185a.1;
-        Tue, 01 Jul 2025 05:03:39 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751371418; x=1751976218; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=u96x1JfBwvgLGiFlKKRmBEu1YqkfwBmaBuctHI0YH60=;
-        b=IHXypc1SKmTx4uJsEdXxXWipj6O7IGi92mScLiLsdS82qAXLFByvPcC6Cli08qkYOg
-         +yp2KO3PkWheeBIN7QJ3ZSh82PRAPLQ0SjPRGMGyj05uMA/5p2+3u5SP4VJEwN9gnuga
-         Au3swx9LiX7CfNkSzGaO+vjLzsYl1wKPdVfSuifpAA6ysarjHKZ0+qR/snxTfII633ep
-         gNMkcRP0FJgVFcyWDFzooobo0hOuSJ8LJ7nEmR/nyrZYkpRKFGoHrAKc7R+U051OETEE
-         PQbOopLDhY28+Cm923UUYaDSS4f1TwtBTJ1Dw08G9j8f0c5sT3o9GZU/vLWN8BI4MVHH
-         +IDg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751371418; x=1751976218;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=u96x1JfBwvgLGiFlKKRmBEu1YqkfwBmaBuctHI0YH60=;
-        b=bGsGlqwRqdmpxpsw5SzjVwieIoYotzH7Qa1t7hPFgiq3hmS5EtfuhA1E4mHMjkFGZk
-         rVO0sDOd1wTJLbOZZvfz4rvXm2ByR1Bd9IsbfOreq/FEHINDn71+WkAWR3we2h1f/Xua
-         sXx5bD/oBF7kjOWNJBij1a8n06eVZYCYd8QQ5RZKgvPtcaQBkYqHSqzwsmMuS7SBfxA4
-         Agjs5lAsmd1Z6GzUpMrYFGzhu4fsKI0OvFjHvShW4eV/rLy8xNOy1tB+cH1hRWo4Y37B
-         p0vu+Bcg7xj3O5aaH9wMAT7eZhqkf2AiuAf0ciLUGjUpvR8JMLkNDNedAvgpQMDmVEtN
-         +EmA==
-X-Forwarded-Encrypted: i=1; AJvYcCX2cx1Rt1f7caIM4QzJBF9X8y/Oi4P/p7p8Q14eU6iu779mOWnwe8nl1BFZ6mws6bBd6xzNm+xV3EDhJhA=@vger.kernel.org, AJvYcCX9NkjaCZ5sG05Llcpl0B5IsWMtY9YKAuxfvsTkl3SMWBi3C4bDoFohokTOEvUptkvhmhbFdQiTHCRJ@vger.kernel.org
-X-Gm-Message-State: AOJu0YwkOeZj6F0T95cLlmChUxJTfmfTcQYyf7IvNDMv/+4udJ5TTOZ0
-	N8poiM/KuslFNqUjeHQy/EIBN/7N5YybD+PBBBS6e3NwvKHLoT0ICSCA
-X-Gm-Gg: ASbGncuLk8Vq2XIYuj9hvz5UFr/tBT5gpnVKaXt6/oSZoqwjW2UVJ3KY55fijCOvqkF
-	FrdkHm0PYFjxRMK8KIE37ZN5WR+aLFe3Hq50Zl+nrhkJuaU8ft8Nh2BcaRWwQNHx19Yw7TeV9wX
-	pjSGnWMq0KTE81hTod80jTZzmTPdho/i1xkNgpDYuB0ZC7Nn3zR5C7t1JPqgWm44bGPUinozltH
-	uTcj8Y4gQ9ACkKl76D6y7Zcd9t1OTha+FrV/zMbXVsy8KxjFtBjPo16fkhicEaPD0yiIl9X3gfu
-	GAw4giHtTs+Wl0PerZuX9X4e2c/uDDJplegd4y8dhWT1pPzX+Q==
-X-Google-Smtp-Source: AGHT+IEqGZkaKeymTeUbc3R0Jer5+f67MSqiVnEtF+k9RaGWT4yLl2LhTIn7tVAVFgdHVrYUcmDoQw==
-X-Received: by 2002:a05:620a:4623:b0:7d1:fc53:c6b2 with SMTP id af79cd13be357-7d443974577mr2475688285a.41.1751371418232;
-        Tue, 01 Jul 2025 05:03:38 -0700 (PDT)
-Received: from geday ([2804:7f2:800b:4f51::dead:c001])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7d44321a706sm753060185a.81.2025.07.01.05.03.33
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Jul 2025 05:03:37 -0700 (PDT)
-Date: Tue, 1 Jul 2025 09:03:31 -0300
-From: Geraldo Nascimento <geraldogabriel@gmail.com>
-To: Philipp Stanner <pstanner@redhat.com>
-Cc: linux-rockchip@lists.infradead.org,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kw@linux.com>,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RAihkcUB"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 38580C4CEEB;
+	Tue,  1 Jul 2025 12:09:08 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751371752;
+	bh=d/8YSWqDAttPxhALnCv0hSHOr6sy2qbciex+/jHshJQ=;
+	h=From:To:Cc:Subject:Date:From;
+	b=RAihkcUBay3YfiWN9az3Psg1wmuIjASF610l1PU0n+fIZbjf17Q4wzpak7x60G3n0
+	 lv3A9ASXDsHGVUjX9EvoJjRkNOCkLLmNXvtMuvvgttcbHJ4DUvoD/JT//JdPaRakAB
+	 H1aflA4XO0DPw9u7gexiri4YkzjKStTZoWvGTv/opG1fc22aH4rTo09qvCKTl4/efh
+	 UEfaXU1sOdN3o1609GZwWdKwTlJ7rx48l/Ms3mbIMmozJNI4WAWH4seTgxa/Lw86TZ
+	 I+hONd3c+vv4y9psG9mQCVfTWy3wxCCHTsCcrILaU/IlcWVMNqlqWNYcWb4lMXYdYB
+	 h0HQEGMVpWGKA==
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: lpieralisi@kernel.org,
+	jingoohan1@gmail.com,
+	kwilczynski@kernel.org,
+	bhelgaas@google.com
+Cc: robh@kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Heiko Stuebner <heiko@sntech.de>, Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Rick wertenbroek <rick.wertenbroek@gmail.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Valmantas Paliksa <walmis@gmail.com>, linux-phy@lists.infradead.org,
-	linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [RESEND PATCH v9 1/4] PCI: rockchip: Use standard PCIe defines
-Message-ID: <aGPOkw2G2IeNhDRy@geday>
-References: <cover.1751322015.git.geraldogabriel@gmail.com>
- <e81700ef4b49f584bc8834bfb07b6d8995fc1f42.1751322015.git.geraldogabriel@gmail.com>
- <ce0fdbf2753075056c227ce7567a69386a5aa0a3.camel@redhat.com>
+	Bjorn Helgaas <helgaas@kernel.org>
+Subject: [PATCH] PCI: dwc: Make dw_pcie_ptm_ops static
+Date: Tue,  1 Jul 2025 17:38:56 +0530
+Message-ID: <20250701120856.15839-1-mani@kernel.org>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ce0fdbf2753075056c227ce7567a69386a5aa0a3.camel@redhat.com>
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jul 01, 2025 at 09:54:51AM +0200, Philipp Stanner wrote:
-> On Mon, 2025-06-30 at 19:24 -0300, Geraldo Nascimento wrote:
-> > Current code uses custom-defined register offsets and bitfields for
-> > standard PCIe registers. Change to using standard PCIe defines. Since
-> > we are now using standard PCIe defines, drop unused custom-defined
-> > ones,
-> > which are now referenced from offset at added Capabilities Register.
-> 
-> This could be phrased a bit more cleanly. At least I don't get exactly
-> what "from offset" means. You mean you replace the unused custom ones?
-> But if they're unused, why are they even being replaced?
+dw_pcie_ptm_ops is not used outside of this file, so make it static. This
+also fixes the sparse warning:
 
-Hi Philipp!
+  drivers/pci/controller/dwc/pcie-designware-debugfs.c:868:27: warning: symbol 'dw_pcie_ptm_ops' was not declared. Should it be static?
 
-"from offset" means we use standard PCIe defines for registers that are
-adjacent to Capabilities Register, and we reference them from the offset
-at Capabilities Register.
+Fixes: 852a1fdd34a8 ("PCI: dwc: Add debugfs support for PTM context")
+Reported-by: Bjorn Helgaas <helgaas@kernel.org>
+Closes: https://lore.kernel.org/linux-pci/20250617231210.GA1172093@bhelgaas
+Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+---
+ drivers/pci/controller/dwc/pcie-designware-debugfs.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-No, all registers replaced are in use, unused in that context means they
-(the custom-defined registers which can be referenced starting from
-Capabilities Register address) become unused after the change, only.
+diff --git a/drivers/pci/controller/dwc/pcie-designware-debugfs.c b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+index c67601096c48..7356b0f6a2ad 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-debugfs.c
++++ b/drivers/pci/controller/dwc/pcie-designware-debugfs.c
+@@ -865,7 +865,7 @@ static bool dw_pcie_ptm_t4_visible(void *drvdata)
+ 	return (pci->mode == DW_PCIE_EP_TYPE) ? true : false;
+ }
+ 
+-const struct pcie_ptm_ops dw_pcie_ptm_ops = {
++static const struct pcie_ptm_ops dw_pcie_ptm_ops = {
+ 	.check_capability = dw_pcie_ptm_check_capability,
+ 	.context_update_write = dw_pcie_ptm_context_update_write,
+ 	.context_update_read = dw_pcie_ptm_context_update_read,
+-- 
+2.45.2
 
-> 
-> 
-> > 
-> > Suggested-By: Bjorn Helgaas <bhelgaas@google.com>
-> 
-> s/By/by
-
-Thanks for the capitalization catch. Unfortunately there's little I can do
-now that Mani went ahead and applied the first two patches (directly
-related to PCI subsystem).
-
-Thanks,
-Geraldo Nascimento
-
-> 
-> 
-> P.
