@@ -1,215 +1,261 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D88612727F7;
-	Tue,  1 Jul 2025 11:25:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D91BB2737F2
+	for <linux-pci@vger.kernel.org>; Tue,  1 Jul 2025 11:40:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751369140; cv=none; b=I4GDaTMbkHHv2EsRrNgG82Ry6qgkDM2l4lis8WWYXDxHQbaK4QUOPLiT9YZVk3vIEqJz1hY+u6N0b7c0rWaf49qALGIhyAN3tu50eL8Jalf3sZJMObCD6i8MO8OlWlHDM64uFvogcOcdAT+puwbz0tBldk/sIR1ciWBCiojwV3E=
+	t=1751370024; cv=none; b=ZAxKgxvV/5ixoZ/Xp00WH0AuxALWrShyZR995SHC0FZMVunyv/ELQ56Q4vp3lTl9sMNEeikjst8Hrd40HwJyVoHJTf85tkqAWTEtYEy5Fb9Pha/XSOCIKvzkkoewzFD2/pnu+ojFHHC9CO8NTzK5SRmzBFSgNHqyWY+UMGYzI58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751369140; c=relaxed/simple;
-	bh=sovRK5k6yrNB91o3/eBq3umT71d/FWg4mdRWQDzlGIw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lu8fnNAT/HG8DjY1c59/vyG2+dgirX71pXtXpV9VAnzOhYbYJHPK56Tj4afogpYiuCBlCq3OcnogK3tGXhD9d1rf/xMQ1YTfh0n8k9qwfpRw//DTkLF9ca0c2eifh73lBgZFEBk1d+wa9cXVG0pHWrNIL6oobypZZHsOKc8vkfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=styklcjF; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751370024; c=relaxed/simple;
+	bh=bmyf4y1leYdUxCjaeGu9XhIqWb7rxoQsjyZU977/cbQ=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=imsBsb0i+90yGtF5R3AnHIH8neBca7d+0aWcExXgUU8D1ikm26lGBz3cPEE4bbBvcTknQqiIZ6ow3jyC3+n0qy/js+O3hkkJ07glLACLS2hHlU/ZKDVb/BKNt7VD6bG93fS/gKlzoKuh0bTjyfpbc48yrVCfOKEl0Pu6Nwm39Nc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=I7kS7w0g; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="styklcjF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4A53FC4CEEB;
-	Tue,  1 Jul 2025 11:25:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751369136;
-	bh=sovRK5k6yrNB91o3/eBq3umT71d/FWg4mdRWQDzlGIw=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=styklcjFdeCJ4cEf3lkqdklnTvXtjNNTjot7MDbObFP8sNyNa0qJL7LuUWpk7y1ox
-	 1UbWpnex5HX3cxe/iYSghFdohWRl+jaFdML1GLNSysNCil0oealErPlXH0mkJm1Z2K
-	 fRkbz5HNmJh9XQGzGUN3BhFOPSRPPinexUMkWocsGo3nw9VN0HpCv1qvqHripjliQ1
-	 HnZQf77naJCwGFTtuAcwycKlliBrYw6tRIg2IafYaK8pp8eGRhPAYX9pzf4knEeacf
-	 6cqN8vKGQiUgiOaa/o0qHi4Xxt1qCSg8K0Doelyc2ll3TP1BGrS4FUOwhaTN0ywKvD
-	 NShq04PXss2Lg==
-Message-ID: <f877b3d7-d770-4424-9813-da748775f456@kernel.org>
-Date: Tue, 1 Jul 2025 13:25:27 +0200
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="I7kS7w0g"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250701114018epoutp03fe656dcbb2457f9de0642e1b520cbd26~OHcDI2zGl0277602776epoutp03g
+	for <linux-pci@vger.kernel.org>; Tue,  1 Jul 2025 11:40:18 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250701114018epoutp03fe656dcbb2457f9de0642e1b520cbd26~OHcDI2zGl0277602776epoutp03g
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1751370018;
+	bh=Y44ZngC9p0NB3MezaOSDWgPGnmy1iJ9G/uwh0PVGesk=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=I7kS7w0grMn5BAv46zf20bUn4NnfACk2WhCR/jx2e72sS0SwyTHMXx86hVBBbYp/H
+	 l0NTvmOnEYjhAtmsDNLHWDpObx7gZY0qLp0DY01Ile98SxPYePSo1468WdCgC5UmYA
+	 Kr08AfPXd8ybJLREfw6Dym14N5osZoGoPuU8EH7c=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
+	20250701114018epcas5p3da61799c0a1f1b9952e9ee147a22346d~OHcCiPWjL2271522715epcas5p3i;
+	Tue,  1 Jul 2025 11:40:18 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.179]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4bWh0c3prVz6B9m5; Tue,  1 Jul
+	2025 11:40:16 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20250701111817epcas5p1aa3bcea4074a614451ae5e586fe81ff6~OHI0Oe2Uy0185401854epcas5p1z;
+	Tue,  1 Jul 2025 11:18:17 +0000 (GMT)
+Received: from FDSFTE462 (unknown [107.122.81.248]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250701111814epsmtip20da990c40862028a8a169bea64463967~OHIxcFNzu2999529995epsmtip2C;
+	Tue,  1 Jul 2025 11:18:14 +0000 (GMT)
+From: "Shradha Todi" <shradha.t@samsung.com>
+To: "'Bjorn Helgaas'" <helgaas@kernel.org>
+Cc: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-samsung-soc@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+	<linux-fsd@tesla.com>, <mani@kernel.org>, <lpieralisi@kernel.org>,
+	<kw@linux.com>, <robh@kernel.org>, <bhelgaas@google.com>,
+	<jingoohan1@gmail.com>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+	<alim.akhtar@samsung.com>, <vkoul@kernel.org>, <kishon@kernel.org>,
+	<arnd@arndb.de>, <m.szyprowski@samsung.com>, <jh80.chung@samsung.com>,
+	<pankaj.dubey@samsung.com>
+In-Reply-To: <20250627193046.GA1673824@bhelgaas>
+Subject: RE: [PATCH v2 09/10] PCI: exynos: Add support for Tesla FSD SoC
+Date: Tue, 1 Jul 2025 16:48:13 +0530
+Message-ID: <02b101dbea79$d7e086c0$87a19440$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 07/10] dt-bindings: phy: Add PHY bindings support for
- FSD SoC
-To: Shradha Todi <shradha.t@samsung.com>, 'Rob Herring' <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org,
- linux-fsd@tesla.com, mani@kernel.org, lpieralisi@kernel.org, kw@linux.com,
- bhelgaas@google.com, jingoohan1@gmail.com, krzk+dt@kernel.org,
- conor+dt@kernel.org, alim.akhtar@samsung.com, vkoul@kernel.org,
- kishon@kernel.org, arnd@arndb.de, m.szyprowski@samsung.com,
- jh80.chung@samsung.com, pankaj.dubey@samsung.com
-References: <20250625165229.3458-1-shradha.t@samsung.com>
- <CGME20250625165319epcas5p3721c19f6e6b482438c62dd1ef784de03@epcas5p3.samsung.com>
- <20250625165229.3458-8-shradha.t@samsung.com>
- <20250627211721.GA153863-robh@kernel.org>
- <02af01dbea78$24f01310$6ed03930$@samsung.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <02af01dbea78$24f01310$6ed03930$@samsung.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQGhrL3pBtmKB+eUT+UdId2XMSsQswHJrC1DtINLLcA=
+Content-Language: en-in
+X-CMS-MailID: 20250701111817epcas5p1aa3bcea4074a614451ae5e586fe81ff6
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-541,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250627193052epcas5p1cf3fc43c6a3c2e5ed9ad68ceac9c34bd
+References: <CGME20250627193052epcas5p1cf3fc43c6a3c2e5ed9ad68ceac9c34bd@epcas5p1.samsung.com>
+	<20250627193046.GA1673824@bhelgaas>
 
-On 01/07/2025 13:06, Shradha Todi wrote:
+
+
+> -----Original Message-----
+> From: Bjorn Helgaas <helgaas@kernel.org>
+> Sent: 28 June 2025 01:01
+> To: Shradha Todi <shradha.t@samsung.com>
+> Cc: linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
+linux-
+> samsung-soc@vger.kernel.org; linux-kernel@vger.kernel.org; linux-phy@lists.infradead.org; linux-
+> fsd@tesla.com; manivannan.sadhasivam@linaro.org; lpieralisi@kernel.org; kw@linux.com;
+> robh@kernel.org; bhelgaas@google.com; jingoohan1@gmail.com; krzk+dt@kernel.org;
+> conor+dt@kernel.org; alim.akhtar@samsung.com; vkoul@kernel.org; kishon@kernel.org;
+> arnd@arndb.de; m.szyprowski@samsung.com; jh80.chung@samsung.com; pankaj.dubey@samsung.com
+> Subject: Re: [PATCH v2 09/10] PCI: exynos: Add support for Tesla FSD SoC
 > 
+> On Wed, Jun 25, 2025 at 10:22:28PM +0530, Shradha Todi wrote:
+> > Add host and endpoint controller driver support for FSD SoC.
 > 
->> -----Original Message-----
->> From: Rob Herring <robh@kernel.org>
->> Sent: 28 June 2025 02:47
->> To: Shradha Todi <shradha.t@samsung.com>
->> Cc: linux-pci@vger.kernel.org; devicetree@vger.kernel.org; linux-arm-kernel@lists.infradead.org;
-> linux-
->> samsung-soc@vger.kernel.org; linux-kernel@vger.kernel.org; linux-phy@lists.infradead.org; linux-
->> fsd@tesla.com; manivannan.sadhasivam@linaro.org; lpieralisi@kernel.org; kw@linux.com;
->> bhelgaas@google.com; jingoohan1@gmail.com; krzk+dt@kernel.org; conor+dt@kernel.org;
->> alim.akhtar@samsung.com; vkoul@kernel.org; kishon@kernel.org; arnd@arndb.de;
->> m.szyprowski@samsung.com; jh80.chung@samsung.com; pankaj.dubey@samsung.com
->> Subject: Re: [PATCH v2 07/10] dt-bindings: phy: Add PHY bindings support for FSD SoC
->>
->> On Wed, Jun 25, 2025 at 10:22:26PM +0530, Shradha Todi wrote:
->>> Document PHY device tree bindings for Tesla FSD SoCs.
->>>
->>> Signed-off-by: Shradha Todi <shradha.t@samsung.com>
->>> ---
->>>  .../bindings/phy/samsung,exynos-pcie-phy.yaml | 25 +++++++++++++++++--
->>>  1 file changed, 23 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
->> b/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
->>> index 41df8bb08ff7..4dc20156cdde 100644
->>> --- a/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
->>> +++ b/Documentation/devicetree/bindings/phy/samsung,exynos-pcie-phy.yaml
->>> @@ -15,10 +15,13 @@ properties:
->>>      const: 0
->>>
->>>    compatible:
->>> -    const: samsung,exynos5433-pcie-phy
->>> +    enum:
->>> +      - samsung,exynos5433-pcie-phy
->>> +      - tesla,fsd-pcie-phy
->>>
->>>    reg:
->>> -    maxItems: 1
->>> +    minItems: 1
->>> +    maxItems: 2
->>>
->>>    samsung,pmu-syscon:
->>>      $ref: /schemas/types.yaml#/definitions/phandle
->>> @@ -30,6 +33,24 @@ properties:
->>>      description: phandle for FSYS sysreg interface, used to control
->>>                   sysreg registers bits for PCIe PHY
->>>
->>> +allOf:
->>> +  - if:
->>> +      properties:
->>> +        compatible:
->>> +          contains:
->>> +            enum:
->>> +              - tesla,fsd-pcie-phy
->>> +    then:
->>> +      description:
->>> +        The PHY controller nodes are represented in the aliases node
->>> +        using the following format 'pciephy{n}'. Depending on whether
->>> +        n is 0 or 1, the phy init sequence is chosen.
->>
->> What? Don't make up your own aliases.
->>
->> If the PHY instances are different, then maybe you need a different
->> compatible. If this is just selecting the PHY mode, you can do that in
->> PHY cells as the mode depends on the consumer.
->>
+> > +++ b/drivers/pci/controller/dwc/pci-exynos.c
+> > @@ -20,6 +20,8 @@
+> >  #include <linux/regulator/consumer.h>
+> >  #include <linux/mod_devicetable.h>
+> >  #include <linux/module.h>
+> > +#include <linux/regmap.h>
+> > +#include <linux/mfd/syscon.h>
 > 
-> FSD PCIe has 2 instances of PHY. Both are the same HW Samsung
-> PHYs (Therefore share the same register offsets). But the PHY used here
+> The trend is to sort these alphabetically.  The last couple additions
+> didn't observe this, but maybe these new ones could go a little
+> farther up and make it more sorted rather than less?
+> 
+> > +#define FSD_PCIE_CXPL_DEBUG_00_31		0x2C8
+> 
+> Existing #defines use lower-case hex; please follow suit.
+> 
+> > +/* to store different SoC variants of Samsung */
+> > +enum samsung_pcie_variants {
+> > +	FSD,
+> > +	EXYNOS_5433,
+> > +};
+> 
+> >  struct samsung_pcie_pdata {
+> >  	struct pci_ops				*pci_ops;
+> >  	const struct dw_pcie_ops		*dwc_ops;
+> >  	const struct dw_pcie_host_ops		*host_ops;
+> > +	const struct dw_pcie_ep_ops		*ep_ops;
+> >  	const struct samsung_res_ops		*res_ops;
+> > +	unsigned int				soc_variant;
+> > +	enum dw_pcie_device_mode		device_mode;
+> >  };
+> 
+> > +static u32 fsd_pcie_read_dbi(struct dw_pcie *pci, void __iomem *base,
+> > +				u32 reg, size_t size)
+> > +{
+> > +	void __iomem *addr;
+> > +	u32 val;
+> > +
+> > +	addr = fsd_atu_setting(pci, base);
+> > +
+> > +	dw_pcie_read(addr + reg, size, &val);
+> > +
+> > +	return val;
+> 
+> Remove blank lines to match style of fsd_pcie_write_dbi2().
+> 
+> > +}
+> > +
+> > +static void fsd_pcie_write_dbi(struct dw_pcie *pci, void __iomem *base,
+> > +				u32 reg, size_t size, u32 val)
+> > +{
+> > +	void __iomem *addr;
+> > +
+> > +	addr = fsd_atu_setting(pci, base);
+> > +
+> > +	dw_pcie_write(addr + reg, size, val);
+> 
+> Ditto.
+> 
+> > +}
+> > +
+> > +static void fsd_pcie_write_dbi2(struct dw_pcie *pci, void __iomem *base,
+> > +				u32 reg, size_t size, u32 val)
+> > +{
+> > +	struct exynos_pcie *ep = to_exynos_pcie(pci);
+> > +
+> > +	fsd_atu_setting(pci, base);
+> > +	dw_pcie_write(pci->dbi_base + reg, size, val);
+> > +	regmap_write(ep->sysreg, ep->sysreg_offset, ADDR_TYPE_DBI);
+> > +}
+> 
+> > +static int fsd_pcie_raise_irq(struct dw_pcie_ep *ep, u8 func_no,
+> > +				 unsigned int type, u16 interrupt_num)
+> > +{
+> > +	struct dw_pcie *pci = to_dw_pcie_from_ep(ep);
+> > +
+> > +	switch (type) {
+> > +	case PCI_IRQ_INTX:
+> > +		return dw_pcie_ep_raise_intx_irq(ep, func_no);
+> > +	case PCI_IRQ_MSIX:
+> > +		dev_err(pci->dev, "EP does not support MSIX\n");
+> 
+> s/MSIX/MSI-X/ to match spec usage.
+> 
 
-So same?
+Thanks for the review! Will take care of all mentioned changes in next version
 
-> does not support auto adaptation so we need to tune the PHYs
-> according to the use case (considering channel loss, etc). This is why we
+> > @@ -373,13 +617,43 @@ static int exynos_pcie_probe(struct platform_device *pdev)
+> >  		return ret;
+> >
+> >  	platform_set_drvdata(pdev, ep);
+> > -	ret = samsung_irq_init(ep, pdev);
+> > -	if (ret)
+> > -		goto fail_regulator;
+> > -	ep->pci.pp.ops = pdata->host_ops;
+> > -	ret = dw_pcie_host_init(&ep->pci.pp);
+> > -	if (ret < 0)
+> > +
+> > +	if (pdata->res_ops->set_device_mode)
+> > +		pdata->res_ops->set_device_mode(ep);
+> > +
+> > +	switch (ep->pdata->device_mode) {
+> > +	case DW_PCIE_RC_TYPE:
+> > +		ret = samsung_irq_init(ep, pdev);
+> > +		if (ret)
+> > +			goto fail_regulator;
+> > +
+> > +		ep->pci.pp.ops = pdata->host_ops;
+> > +
+> > +		ret = dw_pcie_host_init(&ep->pci.pp);
+> > +		if (ret < 0)
+> > +			goto fail_phy_init;
+> > +
+> > +		break;
+> > +	case DW_PCIE_EP_TYPE:
+> > +		phy_init(ep->phy);
+> > +
+> > +		ep->pci.ep.ops = pdata->ep_ops;
+> > +
+> > +		ret = dw_pcie_ep_init(&ep->pci.ep);
+> > +		if (ret < 0)
+> > +			goto fail_phy_init;
+> > +
+> > +		ret = dw_pcie_ep_init_registers(&ep->pci.ep);
+> > +		if (ret)
+> > +			goto fail_phy_init;
+> > +
+> > +		pci_epc_init_notify(ep->pci.ep.epc);
+> > +
+> > +		break;
+> > +	default:
+> > +		dev_err(dev, "invalid device type\n");
+> >  		goto fail_phy_init;
+> > +	}
+> 
+> This would be a little nicer if you added soc_variant and device_mode
+> and the code that sets and tests them for exynos_5433 first in a
+> separate patch.  Then it would be more obvious that the new FSD parts
+> don't affect exynos_5433 since this patch would only be *adding*
+> FSD-specific things.
+> 
 
-So not same? Decide. Either it is same or not, cannot be both.
+Sure,  I have no issues in splitting the patches further. Though unfortunately,
+I or anyone I know does not possess a board which has Exynos 5433 chipset.
+Therefore, I'm unable to verify these changes for Exynos chipset. I took care
+to not disturb the exynos flow functionally but would be great if someone
+could test this and confirm that it works well on Exynos 5433 after the changes.
 
-If you mean that some wiring is different on the board, then how does it
-differ in soc thus how it is per-soc property? If these are use-cases,
-then how is even suitable for DT?
+> >  static const struct samsung_pcie_pdata exynos_5433_pcie_rc_pdata = {
+> >  	.dwc_ops		= &exynos_dw_pcie_ops,
+> >  	.pci_ops		= &exynos_pci_ops,
+> >  	.host_ops		= &exynos_pcie_host_ops,
+> >  	.res_ops		= &exynos_res_ops_data,
+> > +	.soc_variant		= EXYNOS_5433,
+> > +	.device_mode		= DW_PCIE_RC_TYPE,
+> >  };
+> 
+> >  static const struct of_device_id exynos_pcie_of_match[] = {
+> > @@ -449,6 +756,14 @@ static const struct of_device_id exynos_pcie_of_match[] = {
+> >  		.compatible = "samsung,exynos5433-pcie",
+> >  		.data = (void *) &exynos_5433_pcie_rc_pdata,
+> >  	},
 
-I use your Tesla FSD differently and then I exchange DTSI and compatibles?
-
-You are no describing real problem and both binding and your
-explanations are vague and imprecise. Binding tells nothing about it, so
-it is example of skipping important decisions.
-
-> have 2 different SW PHY initialization sequence depending on the instance
-> number. Do you think having different compatible (something like
-> tesla,fsd-pcie-phy0 and tesla,fsd-pcie-phy1) and having phy ID as platform data
-> is okay in this case? I actually took reference from files like:
-
-And in different use case on same soc you are going to reverse
-compatibles or instance IDs?
-
-> drivers/usb/phy/phy-am335x-control.c
-
-So you took 15 years old hardware, code and binding as an example.
-
-No, don't do that ever.
-
-Anyway, poor choices even in newer code should not drive your design.
-Design it properly, describe the hardware.
-
-> drivers/phy/freescale/phy-fsl-imx8-mipi-dphy.c
-> who use alias to differentiate between register offsets for instances.
-
-
-
-Best regards,
-Krzysztof
