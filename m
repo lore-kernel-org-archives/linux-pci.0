@@ -1,151 +1,91 @@
-Received: from mailout3.hostsharing.net (mailout3.hostsharing.net [176.9.242.54])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6D9752D94B7
-	for <linux-pci@vger.kernel.org>; Wed,  2 Jul 2025 15:25:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=176.9.242.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B972D0C9E;
+	Wed,  2 Jul 2025 15:33:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751469911; cv=none; b=Zbf18K1Wk0iLANPNOnLnrCvRY0oT/i+F8bcXpWg2PIAbzHUaa/ambmAEa0gqe/vQZq6g3IS/NAOqKHpJdvyifX74nUGDqiSuEtXhKgtpstLIAIp2sZn2KuKtsXPvUZebrjTsEqsOHtlScLa8QgHlDJwWHq+tGXcEn396rZg0nc4=
+	t=1751470419; cv=none; b=fV1ihhJetIMif23aFqEQScJimd1Ve47+4Ml+LCCkMYZeZrYG+DjLTomuOdHcl3Y97GXuDQeLkPEP/rcPE5fc53LhoG98szXRwB8KssFm2crR69y7xytw9XcCDHsfvXR9MNTIpKXhr63JVFol80+FnDy/D81v7zxuU/FF8HO++Q0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751469911; c=relaxed/simple;
-	bh=h2ukEMsYMEfcOGW8DvmR58gHGk8vdeaTlECjogs0Hag=;
-	h=Message-ID:From:Date:Subject:To:Cc; b=uZLwuP+1wBdiFSXCS/TADcoZpW5vrTacuZJgJptC3zUu/MoXd8m6h5COpW/cSPY7ZpDRM6yBnxO60QexWEW/xPbU5vKstc7lq0QJrsGtfbKd4rUxTqubjKnao4W1n3xd4ENsyYb6+bLRGhh0mX8Wz6hMui5DpKXjpQ55s+/k5ek=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=176.9.242.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by mailout3.hostsharing.net (Postfix) with UTF8SMTPS id 62BAE3006AD5;
-	Wed,  2 Jul 2025 17:15:09 +0200 (CEST)
-Received: from localhost (unknown [89.246.108.87])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id 15F9C619FB4D;
-	Wed,  2 Jul 2025 17:15:09 +0200 (CEST)
-X-Mailbox-Line: From b29e7fbfc6d146f947603d0ebaef44cbd2f0d754 Mon Sep 17 00:00:00 2001
-Message-ID: <b29e7fbfc6d146f947603d0ebaef44cbd2f0d754.1751468802.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 2 Jul 2025 17:15:15 +0200
-Subject: [PATCH v2] agp/amd64: Check AGP Capability before binding to
- unsupported devices
-To: David Airlie <airlied@redhat.com>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Ben Hutchings <ben@decadent.org.uk>, Joerg Roedel <joro@8bytes.org>, Suravee Suthikulpanit <suravee.suthikulpanit@amd.com>, Andi Kleen <ak@linux.intel.com>, Ahmed Salem <x0rw3ll@gmail.com>, Borislav Petkov <bp@alien8.de>, Hans de Goede <hdegoede@redhat.com>, Thomas Gleixner <tglx@linutronix.de>, dri-devel@lists.freedesktop.org, iommu@lists.linux.dev, linux-pci@vger.kernel.org
+	s=arc-20240116; t=1751470419; c=relaxed/simple;
+	bh=m4jNXgT+w4Hs09jExxagGWXs5YRAnZ/7SVfxbiR92Co=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o0jm/UZ2T7m1rShcOdLMkhczFoXvB6gGASUcZ28ncNBqnQ9eS+NOUJ9EzXeTrqyU3aCusaqUtNYrh0DFkRY/GjbMNiEkfY+5ZjQBo4CrPZwey3WlrSY3At0bFNO+Eo2uxD0S4jBBnKGXtLPeIlTv4JOVj1Yizs2J+hFZG3iKmUc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCGgA+c9; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCGgA+c9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 77315C4CEE7;
+	Wed,  2 Jul 2025 15:33:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751470418;
+	bh=m4jNXgT+w4Hs09jExxagGWXs5YRAnZ/7SVfxbiR92Co=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LCGgA+c9TFzb/8uksnZ2Tj1ghRaQm6VM0g/MJYbMQ1521YHgfeqEZR7CQJrApug9P
+	 0+Pcpa11cSgNytCUmkvrP7LZzgluUoktRaxJR9yAWJZMlGaWaVhj6fMzpXtx6kUHJy
+	 9jsSwjGpDw2+ryhZoogfhphKmZOiofVVfH5WPa7TgOlkTOCY7pbey7nOH1FvmYPB2R
+	 K3FnnKfK08IF8KdiLIltGVesNdNtPWJreWfJD0QDrXq7/wg/3RPHfJ9vwb9cqOJuJZ
+	 schKz4Wufn+rbeAtuTZnq8+IjUpyqMVVceL85N8aAP1koCkDUawU4C7oGxY39NFkTC
+	 HR4cYpJRstw6g==
+Date: Wed, 2 Jul 2025 21:03:24 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, cros-qcom-dts-watchers@chromium.org, 
+	linux-arm-msm@vger.kernel.org, linux-pci@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, quic_vbadigan@quicinc.com, quic_mrana@quicinc.com
+Subject: Re: [PATCH v5 2/2] PCI: qcom: Add support for multi-root port
+Message-ID: <ws2kdznvbrvuvb6k4jov5cd4qzvadeaffjqgeso7u72stormlg@2ffiexejkrk6>
+References: <20250702-perst-v5-0-920b3d1f6ee1@qti.qualcomm.com>
+ <20250702-perst-v5-2-920b3d1f6ee1@qti.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250702-perst-v5-2-920b3d1f6ee1@qti.qualcomm.com>
 
-Since commit 172efbb40333 ("AGP: Try unsupported AGP chipsets on x86-64
-by default"), the AGP driver for AMD Opteron/Athlon64 CPUs has attempted
-to bind to any PCI device possessing an AGP Capability.
+On Wed, Jul 02, 2025 at 04:50:42PM GMT, Krishna Chaitanya Chundru wrote:
 
-Commit 6fd024893911 ("amd64-agp: Probe unknown AGP devices the right
-way") subsequently reworked the driver to perform a bind attempt to
-any PCI device (regardless of AGP Capability) and reject a device in
-the driver's ->probe() hook if it lacks the AGP Capability.
+[...]
 
-On modern CPUs exposing an AMD IOMMU, this subtle change results in an
-annoying message with KERN_CRIT severity:
+> -	ret = phy_init(pcie->phy);
+> -	if (ret)
+> -		goto err_pm_runtime_put;
+> +	for_each_available_child_of_node(dev->of_node, of_port) {
+> +		ret = qcom_pcie_parse_port(pcie, of_port);
+> +		of_node_put(of_port);
+> +		if (ret) {
+> +			if (ret != -ENOENT) {
+> +				dev_err_probe(pci->dev, ret,
+> +					      "Failed to parse port nodes %d\n",
+> +					      ret);
+> +				goto err_port_del;
+> +			}
+> +			break;
+> +		}
+> +	}
+> +
+> +	/*
+> +	 * In the case of properties not populated in root port, fallback to the
+> +	 * legacy method of parsing the host bridge node. This is to maintain DT
+> +	 * backwards compatibility.
+> +	 */
+> +	if (ret) {
+> +		pcie->phy = devm_phy_optional_get(dev, "pciephy");
+> +		if (IS_ERR(pcie->phy)) {
+> +			ret = PTR_ERR(pcie->phy);
+> +			goto err_pm_runtime_put;
 
-  pci 0000:00:00.2: Resources present before probing
+Shouldn't this and below be err_port_del?
 
-The message is emitted by the driver core prior to invoking a driver's
-->probe() hook.  The check for an AGP Capability in the ->probe() hook
-happens too late to prevent the message.
+- Mani
 
-The message has appeared only recently with commit 3be5fa236649 (Revert
-"iommu/amd: Prevent binding other PCI drivers to IOMMU PCI devices").
-Prior to the commit, no driver could bind to AMD IOMMUs.
-
-The reason for the message is that an MSI is requested early on for the
-AMD IOMMU, which results in a call from msi_sysfs_create_group() to
-devm_device_add_group().  A devres resource is thus attached to the
-driver-less AMD IOMMU, which is normally not allowed, but presumably
-cannot be avoided because requesting the MSI from a regular PCI driver
-might be too late.
-
-Avoid the message by once again checking for an AGP Capability *before*
-binding to an unsupported device.  Achieve that by way of the PCI core's
-dynid functionality.
-
-pci_add_dynid() can fail only with -ENOMEM (on allocation failure) or
--EINVAL (on bus_to_subsys() failure).  It doesn't seem worth the extra
-code to propagate those error codes out of the for_each_pci_dev() loop,
-so simply error out with -ENODEV if there was no successful bind attempt.
-In the -ENOMEM case, a splat is emitted anyway, and the -EINVAL case can
-never happen because it requires failure of bus_register(&pci_bus_type),
-in which case there's no driver probing of PCI devices.
-
-Hans has voiced a preference to no longer probe unsupported devices by
-default (i.e. set agp_try_unsupported = 0).  In fact, the help text for
-CONFIG_AGP_AMD64 pretends this to be the default.  Alternatively, he
-proposes probing only devices with PCI_CLASS_BRIDGE_HOST.  However these
-approaches risk regressing users who depend on the existing behavior.
-
-Fixes: 3be5fa236649 (Revert "iommu/amd: Prevent binding other PCI drivers to IOMMU PCI devices")
-Reported-by: Fedor Pchelkin <pchelkin@ispras.ru>
-Closes: https://lore.kernel.org/r/wpoivftgshz5b5aovxbkxl6ivvquinukqfvb5z6yi4mv7d25ew@edtzr2p74ckg/
-Reported-by: Hans de Goede <hansg@kernel.org>
-Closes: https://lore.kernel.org/r/20250625112411.4123-1-hansg@kernel.org/
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
-Changes v1 -> v2:
- * Use pci_add_dynid() to bind only to devices with AGP Capability
-   (based on a suggestion from Ben).
- * Rephrase commit message to hopefully explain the history more accurately.
-   Explain why resources are attached to the driver-less AMD IOMMU
-   (requested by Ben).
- * Acknowledge Hans as reporter.
-
- drivers/char/agp/amd64-agp.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/char/agp/amd64-agp.c b/drivers/char/agp/amd64-agp.c
-index bf490967241a..2505df1f4e69 100644
---- a/drivers/char/agp/amd64-agp.c
-+++ b/drivers/char/agp/amd64-agp.c
-@@ -720,11 +720,6 @@ static const struct pci_device_id agp_amd64_pci_table[] = {
- 
- MODULE_DEVICE_TABLE(pci, agp_amd64_pci_table);
- 
--static const struct pci_device_id agp_amd64_pci_promisc_table[] = {
--	{ PCI_DEVICE_CLASS(0, 0) },
--	{ }
--};
--
- static DEFINE_SIMPLE_DEV_PM_OPS(agp_amd64_pm_ops, NULL, agp_amd64_resume);
- 
- static struct pci_driver agp_amd64_pci_driver = {
-@@ -739,6 +734,7 @@ static struct pci_driver agp_amd64_pci_driver = {
- /* Not static due to IOMMU code calling it early. */
- int __init agp_amd64_init(void)
- {
-+	struct pci_dev *pdev = NULL;
- 	int err = 0;
- 
- 	if (agp_off)
-@@ -767,9 +763,13 @@ int __init agp_amd64_init(void)
- 		}
- 
- 		/* Look for any AGP bridge */
--		agp_amd64_pci_driver.id_table = agp_amd64_pci_promisc_table;
--		err = driver_attach(&agp_amd64_pci_driver.driver);
--		if (err == 0 && agp_bridges_found == 0) {
-+		for_each_pci_dev(pdev)
-+			if (pci_find_capability(pdev, PCI_CAP_ID_AGP))
-+				pci_add_dynid(&agp_amd64_pci_driver,
-+					      pdev->vendor, pdev->device,
-+					      pdev->subsystem_vendor,
-+					      pdev->subsystem_device, 0, 0, 0);
-+		if (agp_bridges_found == 0) {
- 			pci_unregister_driver(&agp_amd64_pci_driver);
- 			err = -ENODEV;
- 		}
 -- 
-2.47.2
-
+மணிவண்ணன் சதாசிவம்
