@@ -1,20 +1,20 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC802D6605;
-	Thu,  3 Jul 2025 15:59:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC092F0035;
+	Thu,  3 Jul 2025 15:59:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751558373; cv=none; b=U+8mpRWwp28D09hrYWV7k4AYi7k2Km/B9r5ozukhQEsTAHN6JTnA5EAsVd+v6V9YT4drCU8un/w3h4JEVSe1/e5ECrVDve53aCT8naSP2s2+Djlh1OkXU7wavnrncNazubNDS3Olcl36LMjja2vyUVlW27rm4wzot56/IiyRntg=
+	t=1751558388; cv=none; b=Y6B/tNbIkuUtp4VVRlm9jVwS19zumf3sxYiTft0hW85J5gxRDms80ozFzRCJZQCas5lOwhEenO7nJ6hK66bzwkNGVJohJ5gzoK2KKUiuyyCLXoHLtA21GLh1JIByvoBuHS8hIQiQIRX3tzjPIboRn9dJp5v4nvnwIGIsJPntP9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751558373; c=relaxed/simple;
-	bh=sP+aCMfJYBWcHDTGbWKnzb4XnysjxjNCne3/Bno/+EY=;
+	s=arc-20240116; t=1751558388; c=relaxed/simple;
+	bh=MwIcVeJuV9/wgIYS9RL1D1uLyXta5FsCYrKlXtGye5M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=afubVHVkHs3UguN6DBJhT/Q7ibjozaoSmiHYtdZy/RSI9bLIv/QHWOwh/EdR7reCcp7XYBTXoHIrUC2A943KHh58+LoXPiGbm4zq2YnM08UxKHgKXGzwKFOzipco9nIxKF9Zcc38oyvt74GvMu+GJ0vp0UrMy1qfboHmh9mtJOg=
+	 Content-Type:Content-Disposition:In-Reply-To; b=m4a++fbjlTPh27NZl+kpGavQpvMlqKInb/dy2w1WikOtEq3x52sItAtUyNHKZAIHMZIf+JGIX+pwbYFb5qBanykI6a5d5vzMXqANEuJ1NtXLxmA0skmr/Bi8sM30h30ZRlOAZScA1qljSZEYHzMppflQfFEocLoY8fTlzJp5/vo=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5EA0AC4CEE3;
-	Thu,  3 Jul 2025 15:59:29 +0000 (UTC)
-Date: Thu, 3 Jul 2025 16:59:27 +0100
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 536E6C4CEED;
+	Thu,  3 Jul 2025 15:59:44 +0000 (UTC)
+Date: Thu, 3 Jul 2025 16:59:42 +0100
 From: Catalin Marinas <catalin.marinas@arm.com>
 To: Lorenzo Pieralisi <lpieralisi@kernel.org>
 Cc: Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
@@ -32,10 +32,10 @@ Cc: Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@linutronix.de>,
 	Jiri Slaby <jirislaby@kernel.org>,
 	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
 	devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH v7 08/31] arm64/sysreg: Add ICC_PPI_{C/S}PENDR<n>_EL1
-Message-ID: <aGao3w0fXrdx-cyQ@arm.com>
+Subject: Re: [PATCH v7 09/31] arm64/sysreg: Add ICC_CR0_EL1
+Message-ID: <aGao7h-WfHU-nQ6u@arm.com>
 References: <20250703-gicv5-host-v7-0-12e71f1b3528@kernel.org>
- <20250703-gicv5-host-v7-8-12e71f1b3528@kernel.org>
+ <20250703-gicv5-host-v7-9-12e71f1b3528@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -44,10 +44,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250703-gicv5-host-v7-8-12e71f1b3528@kernel.org>
+In-Reply-To: <20250703-gicv5-host-v7-9-12e71f1b3528@kernel.org>
 
-On Thu, Jul 03, 2025 at 12:24:58PM +0200, Lorenzo Pieralisi wrote:
-> Add ICC_PPI_{C/S}PENDR<n>_EL1 registers description.
+On Thu, Jul 03, 2025 at 12:24:59PM +0200, Lorenzo Pieralisi wrote:
+> Add ICC_CR0_EL1 register description.
 > 
 > Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
 > Reviewed-by: Jonathan Cameron <Jonathan.Cameron@huawei.com>
