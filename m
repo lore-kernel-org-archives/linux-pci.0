@@ -1,270 +1,132 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 526722E03FF;
-	Thu,  3 Jul 2025 09:56:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 13EFC2E1C69;
+	Thu,  3 Jul 2025 10:06:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751536616; cv=none; b=aIZE685zAKbneJqzerAIXvmoZn3bptGndpYiRbx0euWPV+5J0n/yfEUr/D7kSvzWHv5XqZhPpD/rwfMu9iMBbGKgTcvPhVXLoyoXkCUBkLv4P+QyvTmC3K/b4k1DKhQDagJThFjJ1sk8uJck3BDKIjBBeVo0SWxihz2OAzGcPeA=
+	t=1751537171; cv=none; b=n32VckriyCl4czQMQxJbiGmHifAhd3B22oTMh56VAcHZZSaz6XvRVCohKAizyurEXQBl2NSt0VD7mhzWR0wZxcs9oMoD1GguKcZWlgGTAr3Zg3IiMHqYt+8cv01qOrKY6ophSrVwayKIFqQCCbx5JanfdjqtMU8CRQ/lnYmeAm4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751536616; c=relaxed/simple;
-	bh=2D04ihMMnPbEEYqtJZX9IeIE/oUIxCvYm6Hc6D0nJBI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=TOXoxr03Pk+DOWU9Eg0SP+TdVP2WTRdJa6Ej3O+t+cLOTEiunXSLl/Yg2SQNQfoQxvhVtxXKeRPtGWrU0cbJLW/Jq5gxzG+AlN4l3HX6/HAswDKOPyGeBmT+gUzOf/SjHsEiOPYRPGNdhBVVMxja0t32vbS/bwQFJCWIqG34U7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=U4ekdxRE; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="U4ekdxRE"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5632FSZK032762;
-	Thu, 3 Jul 2025 09:56:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=JqIX9rFpG6n
-	eNeKrc6CB7qwOOUGY5Qw523TOvTTnG0E=; b=U4ekdxRERw1sDzQQOse9bWkbT2E
-	hpSDGzDGZZkArE8pUshcxRkzzBzmQfMX07kVyCG7nOYOcv91Fldl6wMDhr0YYu9T
-	d5srqigafQfIUQ0RXHlrpZWokbz5MEYDSLoJASv2+n0XnQFuQz0H2+3CUoGVjHUJ
-	rrZNyBHAys6EhqqjHnlMNdQUsA4Ygz3fMyuzIzwq7pX/eIArDJFBoj20zxQBwDHh
-	VRreVqc1kH01kkKZLYSpMrahu2SSSXtVc/NQOe6Ez/xg3a/48DhCWEzaRbpbQ+hG
-	XV69CK8IHM0ilNamXbseIQ7IcI0tyhxCytP++UasVaiEsQRpUG3URdTh09w==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47j7qmftf9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Jul 2025 09:56:36 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA05.qualcomm.com [127.0.0.1])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5639uZDe019865;
-	Thu, 3 Jul 2025 09:56:35 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 47npknrphy-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Jul 2025 09:56:35 +0000
-Received: from NALASPPMTA05.qualcomm.com (NALASPPMTA05.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5639uZKB019859;
-	Thu, 3 Jul 2025 09:56:35 GMT
-Received: from hu-devc-lv-u22-a.qualcomm.com (hu-ziyuzhan-lv.qualcomm.com [10.81.25.41])
-	by NALASPPMTA05.qualcomm.com (PPS) with ESMTPS id 5639uZAH019855
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 03 Jul 2025 09:56:35 +0000
-Received: by hu-devc-lv-u22-a.qualcomm.com (Postfix, from userid 4438065)
-	id 890545A9; Thu,  3 Jul 2025 02:56:35 -0700 (PDT)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Subject: [PATCH v8 2/3] arm64: dts: qcom: qcs615: enable pcie
-Date: Thu,  3 Jul 2025 02:56:29 -0700
-Message-Id: <20250703095630.669044-3-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250703095630.669044-1-ziyue.zhang@oss.qualcomm.com>
-References: <20250703095630.669044-1-ziyue.zhang@oss.qualcomm.com>
+	s=arc-20240116; t=1751537171; c=relaxed/simple;
+	bh=Fpj1uwcH2xla2wofNQJx+8YAitM91souW9TIhCmfFPk=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=GOY9cQOmAOdXVbba8fjHMxDH9sr+05AUWZD+fTjHovP5RmCR1uhUGU7oJ7pinEP8Efe/YZCItoYRnsmNm+allIwYhnyX5uYLCngLH64VeJiDh4Z8jh0MaaGqhfJGldtdnj/WnhY72ErAzaaJJXWkTKtAJkbUd2O2aRA9uK9KDBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.216])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4bXspS1C2Xz67Q1Y;
+	Thu,  3 Jul 2025 18:05:36 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id D6BAD1402F5;
+	Thu,  3 Jul 2025 18:06:04 +0800 (CST)
+Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Thu, 3 Jul
+ 2025 12:06:04 +0200
+Date: Thu, 3 Jul 2025 11:06:02 +0100
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: "Bowman, Terry" <terry.bowman@amd.com>
+CC: <dave@stgolabs.net>, <dave.jiang@intel.com>, <alison.schofield@intel.com>,
+	<dan.j.williams@intel.com>, <bhelgaas@google.com>, <shiju.jose@huawei.com>,
+	<ming.li@zohomail.com>, <Smita.KoralahalliChannabasappa@amd.com>,
+	<rrichter@amd.com>, <dan.carpenter@linaro.org>,
+	<PradeepVineshReddy.Kodamati@amd.com>, <lukas@wunner.de>,
+	<Benjamin.Cheatham@amd.com>, <sathyanarayanan.kuppuswamy@linux.intel.com>,
+	<linux-cxl@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-pci@vger.kernel.org>
+Subject: Re: [PATCH v10 05/17] CXL/AER: Introduce kfifo for forwarding CXL
+ errors
+Message-ID: <20250703110602.0000699c@huawei.com>
+In-Reply-To: <a76be312-9f27-491a-99d2-79815ed98d3e@amd.com>
+References: <20250626224252.1415009-1-terry.bowman@amd.com>
+	<20250626224252.1415009-6-terry.bowman@amd.com>
+	<20250627112429.00007155@huawei.com>
+	<a76be312-9f27-491a-99d2-79815ed98d3e@amd.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=C4TpyRP+ c=1 sm=1 tr=0 ts=686653d5 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8
- a=njE0_qILy6epUr2_7ooA:9 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: v0Q5lgTzXkb1a7tv0-wT-2Pd4LmKQSrN
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAzMDA4MSBTYWx0ZWRfX13YDAFMYWmh5
- SnGCFe6k/CsT8Dvouy2QuqacRH/dRREWQeYXPc/YVFFGP3P+Huo1rw3O6iaG8eewKvrLc7DlPoR
- 63NVzcVGxiVehmCulkIHu1A0meimgRwPt4YucsAFBQlarfmw5N8DYIMCHc7nilUCgTDJZ0tlyin
- fT+rGX2DbVIk68FDtHPhta6bEPUwgNYCyBz7Pk2losOgMaFgBw4hhidvlHyqa2By1zCuv5LA/Ei
- puBtgKdjmLrH9GeijdYAK5BWEeFMeFUhNS7wve+EeH53kX+I+wzVDs7W90F8s9beKuDOj7jbl30
- eC6QoNw9IDrk9Cew3aW01QUkpmHqn4i9rfimS65BlzV6dKISYZ+qoKEVOlaJ11MJJ+jiIdG2fm6
- 1ersMhTVwXCfe/D2Aeq+OH5HovXW74vMXMUPyKOGRh62qyPOO8jZJo45TeNDt/EKsDAgDVJ7
-X-Proofpoint-GUID: v0Q5lgTzXkb1a7tv0-wT-2Pd4LmKQSrN
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-03_03,2025-07-02_04,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 phishscore=0 suspectscore=0 bulkscore=0 lowpriorityscore=0
- clxscore=1015 priorityscore=1501 spamscore=0 mlxscore=0 mlxlogscore=999
- adultscore=0 malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507030081
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: quoted-printable
+X-ClientProxiedBy: lhrpeml100005.china.huawei.com (7.191.160.25) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+On Wed, 2 Jul 2025 11:21:20 -0500
+"Bowman, Terry" <terry.bowman@amd.com> wrote:
 
-Add configurations in devicetree for PCIe0, including registers, clocks,
-interrupts and phy setting sequence.
+> On 6/27/2025 5:24 AM, Jonathan Cameron wrote:
+> > On Thu, 26 Jun 2025 17:42:40 -0500
+> > Terry Bowman <terry.bowman@amd.com> wrote:
+> > =20
+> >> CXL error handling will soon be moved from the AER driver into the CXL
+> >> driver. This requires a notification mechanism for the AER driver to s=
+hare
+> >> the AER interrupt with the CXL driver. The notification will be used
+> >> as an indication for the CXL drivers to handle and log the CXL RAS err=
+ors.
+> >>
+> >> First, introduce cxl/core/native_ras.c to contain changes for the CXL
+> >> driver's RAS native handling. This as an alternative to dropping the
+> >> changes into existing cxl/core/ras.c file with purpose to avoid #ifdef=
+s.
+> >> Introduce CXL Kconfig CXL_NATIVE_RAS, dependent on PCIEAER_CXL, to
+> >> conditionally compile the new file.
+> >>
+> >> Add a kfifo work queue to be used by the AER driver and CXL driver. Th=
+e AER
+> >> driver will be the sole kfifo producer adding work and the cxl_core wi=
+ll be
+> >> the sole kfifo consumer removing work. Add the boilerplate kfifo suppo=
+rt.
+> >>
+> >> Add CXL work queue handler registration functions in the AER driver. E=
+xport
+> >> the functions allowing CXL driver to access. Implement registration
+> >> functions for the CXL driver to assign or clear the work handler funct=
+ion.
+> >>
+> >> Introduce 'struct cxl_proto_err_info' to serve as the kfifo work data.=
+ This
+> >> will contain the erring device's PCI SBDF details used to rediscover t=
+he
+> >> device after the CXL driver dequeues the kfifo work. The device redisc=
+overy
+> >> will be introduced along with the CXL handling in future patches.
+> >>
+> >> Signed-off-by: Terry Bowman <terry.bowman@amd.com> =20
+> > Hi Terry,
+> >
+> > Whilst it obviously makes patch preparation a bit more time consuming
+> > for series like this with many patches it can be useful to add a brief
+> > change log to the individual patches as well as the cover letter.
+> > That helps reviewers figure out where they need to look again.
+> >
+> > A few trivial things inline.
+> >
+> > With those fixed up
+> > Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+> >
+> > Jonathan =20
+>=20
+> Hi Jonathan,
+>=20
+> Do you have an example you can point me to with a change log in the
+> individual patch? I want to make certain I change correctly.
+>=20
+> =A0
+> > =20
+> >> ---
 
-Add PCIe lane equalization preset properties for 8 GT/s.
+You just put it here.  No particular formatting standard for it other than =
+making
+sure its after the --- so it doesn't end up in the git log.
+https://lore.kernel.org/all/2025070138-vigorous-negative-eae7@gregkh/
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
----
- arch/arm64/boot/dts/qcom/qcs615.dtsi | 138 +++++++++++++++++++++++++++
- 1 file changed, 138 insertions(+)
+Is first example I scrolled down to.  This is a single patch series but
+the principle is the same.
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs615.dtsi b/arch/arm64/boot/dts/qcom/qcs615.dtsi
-index bfbb21035492..f4b51cca17de 100644
---- a/arch/arm64/boot/dts/qcom/qcs615.dtsi
-+++ b/arch/arm64/boot/dts/qcom/qcs615.dtsi
-@@ -1066,6 +1066,144 @@ mmss_noc: interconnect@1740000 {
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
- 
-+		pcie: pcie@1c08000 {
-+			device_type = "pci";
-+			compatible = "qcom,pcie-qcs615", "qcom,pcie-sm8150";
-+			reg = <0x0 0x01c08000 0x0 0x3000>,
-+			      <0x0 0x40000000 0x0 0xf1d>,
-+			      <0x0 0x40000f20 0x0 0xa8>,
-+			      <0x0 0x40001000 0x0 0x1000>,
-+			      <0x0 0x40100000 0x0 0x100000>,
-+			      <0x0 0x01c0b000 0x0 0x1000>;
-+			reg-names = "parf",
-+				    "dbi",
-+				    "elbi",
-+				    "atu",
-+				    "config",
-+				    "mhi";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
-+				 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x1fd00000>;
-+			bus-range = <0x00 0xff>;
-+
-+			dma-coherent;
-+
-+			linux,pci-domain = <0>;
-+			num-lanes = <1>;
-+
-+			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi0",
-+					  "msi1",
-+					  "msi2",
-+					  "msi3",
-+					  "msi4",
-+					  "msi5",
-+					  "msi6",
-+					  "msi7",
-+					  "global";
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &intc GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &intc GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &intc GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
-+				 <&gcc GCC_PCIE_0_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>;
-+			clock-names = "pipe",
-+				      "aux",
-+				      "cfg",
-+				      "bus_master",
-+				      "bus_slave",
-+				      "slave_q2a";
-+			assigned-clocks = <&gcc GCC_PCIE_0_AUX_CLK>;
-+			assigned-clock-rates = <19200000>;
-+
-+			interconnects = <&aggre1_noc MASTER_PCIE QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
-+					 &config_noc SLAVE_PCIE_0 QCOM_ICC_TAG_ACTIVE_ONLY>;
-+			interconnect-names = "pcie-mem", "cpu-pcie";
-+
-+			iommu-map = <0x0 &apps_smmu 0x400 0x1>,
-+				    <0x100 &apps_smmu 0x401 0x1>;
-+
-+			resets = <&gcc GCC_PCIE_0_BCR>;
-+			reset-names = "pci";
-+
-+			power-domains = <&gcc PCIE_0_GDSC>;
-+
-+			phys = <&pcie_phy>;
-+			phy-names = "pciephy";
-+
-+			max-link-speed = <2>;
-+
-+			operating-points-v2 = <&pcie_opp_table>;
-+
-+			status = "disabled";
-+
-+			pcie_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				/* GEN 1 x1 */
-+				opp-2500000 {
-+					opp-hz = /bits/ 64 <2500000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+					opp-peak-kBps = <250000 1>;
-+				};
-+
-+				/* GEN 2 x1 */
-+				opp-5000000 {
-+					opp-hz = /bits/ 64 <5000000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+					opp-peak-kBps = <500000 1>;
-+				};
-+			};
-+		};
-+
-+		pcie_phy: phy@1c0e000 {
-+			compatible = "qcom,qcs615-qmp-gen3x1-pcie-phy";
-+			reg = <0x0 0x01c0e000 0x0 0x1000>;
-+
-+			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_0_CLKREF_CLK>,
-+				 <&gcc GCC_PCIE0_PHY_REFGEN_CLK>,
-+				 <&gcc GCC_PCIE_0_PIPE_CLK>;
-+			clock-names = "aux",
-+				      "cfg_ahb",
-+				      "ref",
-+				      "refgen",
-+				      "pipe";
-+
-+			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
-+			reset-names = "phy";
-+
-+			assigned-clocks = <&gcc GCC_PCIE0_PHY_REFGEN_CLK>;
-+			assigned-clock-rates = <100000000>;
-+
-+			#clock-cells = <0>;
-+			clock-output-names = "pcie_0_pipe_clk";
-+
-+			#phy-cells = <0>;
-+
-+			status = "disabled";
-+		};
-+
- 		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,qcs615-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0x0 0x01d84000 0x0 0x3000>,
--- 
-2.34.1
 
