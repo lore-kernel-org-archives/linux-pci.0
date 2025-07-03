@@ -1,85 +1,262 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BF312F0034;
-	Thu,  3 Jul 2025 14:53:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1439915442C;
+	Thu,  3 Jul 2025 15:08:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751554393; cv=none; b=FbraUHKhtScz5AYiyaIHzBdzkfRTF+VBCjSebZ2CAOaKHVuuFtiurL1K/B4vEFKDRZ77jN7XYfs4ERwBcyX//u5A3u5L4FbLl/6CsgE/3MbZLpi0W/jOiBH0m7eg/0QhgpXLZK0wwqmUVMxq1GWzOcePwPEVp+51MCnT1LKXvZU=
+	t=1751555316; cv=none; b=XzJnIY2NPr2wHXqiVaAsV4Fk8JURykD9k9T/GKZydB/5g5yMpuKpZH8VJQnOdl8uQXSfdxpTBV4KNstEAICXvcD1qyHiccZPTL9JZoBmbSvjx0juVL9vk8s0XMJe11s9q13hattYb+0mAf5It4tdRSSInsjqDTv0gYhuRLlhMk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751554393; c=relaxed/simple;
-	bh=DYtPFjKsBRMKz/l5D/t4ZCOdW4ZlU0pbxZxDlephea8=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R86Ib6jacqHGZXRRvjM91OqEm8MjbYa69BPC+dPHhnyQLCQIG/IbNF8y6ACWkoKUxKZoOfaot0vF9QzwhqmDCaZeDbTMmjfm4pDqCCspro24kSI0ihNJ5ldzuKlmH7m+YKkxhOYSuDfv1LdFrBeKnt19uBLdIadDi5XN3KqoiC4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p1w5cXib; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751555316; c=relaxed/simple;
+	bh=8GljKLrHpe9kEXKa3hqzrNoCIsl56DSFqDvkVIih/VM=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=Sc6/BQoNQNdwu8w7Zaiq/Wgo6+QgxsmVrSHskkbAz8z/XeRykUsLOjFL/eCeLlCNyfUsnGlFS/lXU/E3dm5ZQ8qNJyI/7MhxATTCWnBpfsQQFcbNnRh5QJ6ZXJp9lArg5E5Uwk/jKxYHEHw/ryPDgcv/c1oA1ERgLMM+lS5aRDI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sqiylDDl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p1w5cXib"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 547FFC4CEF6;
-	Thu,  3 Jul 2025 14:53:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sqiylDDl"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D734DC4CEED;
+	Thu,  3 Jul 2025 15:08:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751554393;
-	bh=DYtPFjKsBRMKz/l5D/t4ZCOdW4ZlU0pbxZxDlephea8=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=p1w5cXibIDAhNVjtLQmdEwa2Ytv9ciyjyG1naJxm3QJ9haNeaXPF7TgVrOk9MK8PZ
-	 q8NABLCgkGxo/K+NlGfxmpv+PAF8mh6VlgHOSY6brq4yfZieF3zhxW6GTZY0nKboHq
-	 3Z9CBTYcStEFUTnvgyOEBxfisunhbBwfqSYo5golA9ibkFTyyd5K4ka0kgK9AeN73J
-	 eb4TRQ+dyo57/jRPhs9GTDJucL67RmINNHy3O+xptglXyNF7JGHkOFX+t5rxidYFCh
-	 kgAz3h7AjtPqsriWHCsFnFdnOE7X5i7NvuYnxupi701uvWOeYgmLhuNCJaSmxW5vPC
-	 edAgFNQhHGBnA==
-Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-6070293103cso9747175a12.0;
-        Thu, 03 Jul 2025 07:53:13 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCV/FQVEYwM9J7RfS3PoPeD7k0dyjqhwWI+P5DVEM30cV4Xc4aFmqnLWsz1GreDzWJRtqIQ4pyVnBt76@vger.kernel.org, AJvYcCW0sTV2I63IO8SVWox0VV8nX3eUJ5cIcs3kTLLJ3IobUj5U6U+sBBTo/pLN0Oe5jGDoZ40f2gus/U+Z@vger.kernel.org, AJvYcCWUb7SomjKhWVAh7UjlaeZ9Z4/sF5n+sRKXtBJD1kx2G+QBDAW/mkz44TRz+oWT6ogE/HHUICyRJ7Uskd60@vger.kernel.org
-X-Gm-Message-State: AOJu0YzBm+C/VdExb1eQaT6SVHJCkt2IYsRX56J6/OMHtWtAeyHVWrmm
-	G4oudOrkS7DRhgawryL09c1XxYG66uVScfOMiQUOUQkJuBMhNjEI9sgD6IS2Ma8cyxk5keJl/Gr
-	i78g8gyqstumKgfdhckv2M8IrRutEow==
-X-Google-Smtp-Source: AGHT+IF6/W7R/MdVdKSm57lSvwfhmuwesnrXaz+1Ouf3Kgia+HRQDsPWXxDpsPtXTQ0Z1Gxc9bSEIcQnIrE3MFEps0E=
-X-Received: by 2002:a17:907:3e24:b0:ae3:aa8c:e8f with SMTP id
- a640c23a62f3a-ae3d8337789mr318025466b.2.1751554391802; Thu, 03 Jul 2025
- 07:53:11 -0700 (PDT)
+	s=k20201202; t=1751555315;
+	bh=8GljKLrHpe9kEXKa3hqzrNoCIsl56DSFqDvkVIih/VM=;
+	h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
+	b=sqiylDDl2AA2H7oObOdp9HnXMvLCM5hmnb6+/+MaxrqmX3gDy8ZShwCyGlfIyap/G
+	 +7azaRN8FrYZT4oKRXiUCRfO+CqSSXm5T9GXI84E6Pa2TuJkvuZQwAROBV5FE5VJ8h
+	 g9dT/h6I7czTQp/Rlz02Tp07mpnCYSt4Eoe/Po/8s6XjPEA6/2nULo6w+IShgITWpv
+	 9t/P2XvQXr9RVsxQdIg4h7R0n2vQk0Uai3C/J2zSGKxlJvqemQBwkQmFj6KwoFCxVz
+	 CBILc4T0vMxDj5eEIfvb3CzXrE1KOadGjHOtdX4cfhY9147utvIV7umZv8Jf5AgeeF
+	 vnxs7Lkq8KyeQ==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20250703-gicv5-host-v7-0-12e71f1b3528@kernel.org> <20250703-gicv5-host-v7-24-12e71f1b3528@kernel.org>
-In-Reply-To: <20250703-gicv5-host-v7-24-12e71f1b3528@kernel.org>
-From: Rob Herring <robh@kernel.org>
-Date: Thu, 3 Jul 2025 09:52:59 -0500
-X-Gmail-Original-Message-ID: <CAL_JsqKejEoHhFNfybJVpimXwCGyc4_hqM4w8F54fFnEdMFb0Q@mail.gmail.com>
-X-Gm-Features: Ac12FXxFUu74snwLufqalaVhV3WIbBJAXXqbS-UUZMip9gA7bEBFm5gd5gAC7P8
-Message-ID: <CAL_JsqKejEoHhFNfybJVpimXwCGyc4_hqM4w8F54fFnEdMFb0Q@mail.gmail.com>
-Subject: Re: [PATCH v7 24/31] of/irq: Add of_msi_xlate() helper function
-To: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Marc Zyngier <maz@kernel.org>, Thomas Gleixner <tglx@linutronix.de>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Catalin Marinas <catalin.marinas@arm.com>, Will Deacon <will@kernel.org>, Arnd Bergmann <arnd@arndb.de>, 
-	Sascha Bischoff <sascha.bischoff@arm.com>, Jonathan Cameron <Jonathan.Cameron@huawei.com>, 
-	Timothy Hayes <timothy.hayes@arm.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	"Liam R. Howlett" <Liam.Howlett@oracle.com>, Peter Maydell <peter.maydell@linaro.org>, 
-	Mark Rutland <mark.rutland@arm.com>, Jiri Slaby <jirislaby@kernel.org>, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Thu, 03 Jul 2025 17:08:22 +0200
+Message-Id: <DB2IJ9HBIM0W.3N0JVGKX558QI@kernel.org>
+Cc: "Michal Rostecki" <vadorovsky@protonmail.com>, "Miguel Ojeda"
+ <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Boqun Feng"
+ <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
+ "Trevor Gross" <tmgross@umich.edu>, "Brendan Higgins"
+ <brendan.higgins@linux.dev>, "David Gow" <davidgow@google.com>, "Rae Moar"
+ <rmoar@google.com>, "Danilo Krummrich" <dakr@kernel.org>, "Maarten
+ Lankhorst" <maarten.lankhorst@linux.intel.com>, "Maxime Ripard"
+ <mripard@kernel.org>, "Thomas Zimmermann" <tzimmermann@suse.de>, "David
+ Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Luis Chamberlain" <mcgrof@kernel.org>, "Russ Weight"
+ <russ.weight@linux.dev>, "FUJITA Tomonori" <fujita.tomonori@gmail.com>,
+ "Rob Herring" <robh@kernel.org>, "Saravana Kannan" <saravanak@google.com>,
+ "Peter Zijlstra" <peterz@infradead.org>, "Ingo Molnar" <mingo@redhat.com>,
+ "Will Deacon" <will@kernel.org>, "Waiman Long" <longman@redhat.com>,
+ "Nathan Chancellor" <nathan@kernel.org>, "Nick Desaulniers"
+ <nick.desaulniers+lkml@gmail.com>, "Bill Wendling" <morbo@google.com>,
+ "Justin Stitt" <justinstitt@google.com>, "Andrew Lunn" <andrew@lunn.ch>,
+ "Heiner Kallweit" <hkallweit1@gmail.com>, "Russell King"
+ <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>, "Eric
+ Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
+ Abeni" <pabeni@redhat.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Arnd
+ Bergmann" <arnd@arndb.de>, "Jens Axboe" <axboe@kernel.dk>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Dave
+ Ertman" <david.m.ertman@intel.com>, "Ira Weiny" <ira.weiny@intel.com>,
+ "Leon Romanovsky" <leon@kernel.org>, "Breno Leitao" <leitao@debian.org>,
+ "Viresh Kumar" <viresh.kumar@linaro.org>, "Michael Turquette"
+ <mturquette@baylibre.com>, "Stephen Boyd" <sboyd@kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-kselftest@vger.kernel.org>, <kunit-dev@googlegroups.com>,
+ <dri-devel@lists.freedesktop.org>, <netdev@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <llvm@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <nouveau@lists.freedesktop.org>,
+ <linux-block@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+ <linux-clk@vger.kernel.org>
+Subject: Re: [PATCH v13 2/5] rust: support formatting of foreign types
+From: "Benno Lossin" <lossin@kernel.org>
+To: "Tamir Duberstein" <tamird@gmail.com>
+X-Mailer: aerc 0.20.1
+References: <20250701-cstr-core-v13-0-29f7d3eb97a6@gmail.com>
+ <20250701-cstr-core-v13-2-29f7d3eb97a6@gmail.com>
+ <DB2BDSN1JH51.14ZZPETJORBC6@kernel.org>
+ <CAJ-ks9nC=AyBPXRY3nJ0NuZvjFskzMcOkVNrBEfXD2hZ5uRntQ@mail.gmail.com>
+In-Reply-To: <CAJ-ks9nC=AyBPXRY3nJ0NuZvjFskzMcOkVNrBEfXD2hZ5uRntQ@mail.gmail.com>
 
-On Thu, Jul 3, 2025 at 5:27=E2=80=AFAM Lorenzo Pieralisi <lpieralisi@kernel=
-.org> wrote:
+On Thu Jul 3, 2025 at 3:55 PM CEST, Tamir Duberstein wrote:
+> On Thu, Jul 3, 2025 at 5:32=E2=80=AFAM Benno Lossin <lossin@kernel.org> w=
+rote:
+>> On Tue Jul 1, 2025 at 6:49 PM CEST, Tamir Duberstein wrote:
+>> > Introduce a `fmt!` macro which wraps all arguments in
+>> > `kernel::fmt::Adapter` and a `kernel::fmt::Display` trait. This enable=
+s
+>> > formatting of foreign types (like `core::ffi::CStr`) that do not
+>> > implement `core::fmt::Display` due to concerns around lossy conversion=
+s which
+>> > do not apply in the kernel.
+>> >
+>> > Replace all direct calls to `format_args!` with `fmt!`.
+>> >
+>> > Replace all implementations of `core::fmt::Display` with implementatio=
+ns
+>> > of `kernel::fmt::Display`.
+>> >
+>> > Suggested-by: Alice Ryhl <aliceryhl@google.com>
+>> > Link: https://rust-for-linux.zulipchat.com/#narrow/channel/288089-Gene=
+ral/topic/Custom.20formatting/with/516476467
+>> > Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+>> > Reviewed-by: Alice Ryhl <aliceryhl@google.com>
+>> > Signed-off-by: Tamir Duberstein <tamird@gmail.com>
+>> > ---
+>> >  drivers/block/rnull.rs       |  2 +-
+>> >  drivers/gpu/nova-core/gpu.rs |  4 +-
+>> >  rust/kernel/block/mq.rs      |  2 +-
+>> >  rust/kernel/device.rs        |  2 +-
+>> >  rust/kernel/fmt.rs           | 89 +++++++++++++++++++++++++++++++++++=
+++++
+>> >  rust/kernel/kunit.rs         |  6 +--
+>> >  rust/kernel/lib.rs           |  1 +
+>> >  rust/kernel/prelude.rs       |  3 +-
+>> >  rust/kernel/print.rs         |  4 +-
+>> >  rust/kernel/seq_file.rs      |  2 +-
+>> >  rust/kernel/str.rs           | 22 ++++------
+>> >  rust/macros/fmt.rs           | 99 +++++++++++++++++++++++++++++++++++=
++++++++++
+>> >  rust/macros/lib.rs           | 19 +++++++++
+>> >  rust/macros/quote.rs         |  7 ++++
+>> >  scripts/rustdoc_test_gen.rs  |  2 +-
+>> >  15 files changed, 236 insertions(+), 28 deletions(-)
+>>
+>> This would be a lot easier to review if he proc-macro and the call
+>> replacement were different patches.
+>>
+>> Also the `kernel/fmt.rs` file should be a different commit.
 >
-> Add an of_msi_xlate() helper that maps a device ID and returns
-> the device node of the MSI controller the device ID is mapped to.
->
-> Required by core functions that need an MSI controller device node
-> pointer at the same time as a mapped device ID, of_msi_map_id() is not
-> sufficient for that purpose.
->
-> Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-> Reviewed-by: Marc Zyngier <maz@kernel.org>
-> Cc: Rob Herring <robh@kernel.org>
-> Cc: Marc Zyngier <maz@kernel.org>
-> ---
->  drivers/of/irq.c       | 22 +++++++++++++++++-----
->  include/linux/of_irq.h |  5 +++++
->  2 files changed, 22 insertions(+), 5 deletions(-)
+> Can you help me understand why? The changes you ask to be separated
+> would all be in different files, so why would separate commits make it
+> easier to review?
 
-Reviewed-by: Rob Herring (Arm) <robh@kernel.org>
+It takes less time to go through the entire patch and give a RB. I can
+take smaller time chunks and don't have to get back into the entire
+context of the patch when I don't have 30-60min available.
+
+In this patch the biggest problem is the rename & addition of new
+things, maybe just adding 200 lines in those files could be okay to go
+together, see below for more.
+
+> I prefer to keep things in one commit because the changes are highly
+> interdependent. The proc macro doesn't make sense without
+> kernel/fmt.rs and kernel/fmt.rs is useless without the proc macro.
+
+I think that `Adapter`, the custom `Display` and their impl blocks
+don't need to be in the same commit as the proc-macro. They are related,
+but maybe someone is not well-versed in proc-macros and thus doesn't
+want to review that part.
+
+>> > diff --git a/rust/kernel/fmt.rs b/rust/kernel/fmt.rs
+>> > new file mode 100644
+>> > index 000000000000..348d16987de6
+>> > --- /dev/null
+>> > +++ b/rust/kernel/fmt.rs
+>> > @@ -0,0 +1,89 @@
+>> > +// SPDX-License-Identifier: GPL-2.0
+>> > +
+>> > +//! Formatting utilities.
+>> > +
+>> > +use core::fmt;
+>>
+>> I think we should pub export all types that we are still using from
+>> `core::fmt`. For example `Result`, `Formatter`, `Debug` etc.
+>>
+>> That way I can still use the same pattern of importing `fmt` and then
+>> writing
+>>
+>>     impl fmt::Display for MyType {
+>>         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {}
+>>     }
+>
+> Great idea, done for the next spin. It would be nice to be able to
+> lint against references to `core::fmt` outside of kernel/fmt.rs.
+
+I think there was something in clippy that can do that globally and we
+could allow that in this file?
+
+>> > +
+>> > +/// Internal adapter used to route allow implementations of formattin=
+g traits for foreign types.
+>> > +///
+>> > +/// It is inserted automatically by the [`fmt!`] macro and is not mea=
+nt to be used directly.
+>> > +///
+>> > +/// [`fmt!`]: crate::prelude::fmt!
+>> > +#[doc(hidden)]
+>> > +pub struct Adapter<T>(pub T);
+>> > +
+>> > +macro_rules! impl_fmt_adapter_forward {
+>> > +    ($($trait:ident),* $(,)?) =3D> {
+>> > +        $(
+>> > +            impl<T: fmt::$trait> fmt::$trait for Adapter<T> {
+>> > +                fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Res=
+ult {
+>> > +                    let Self(t) =3D self;
+>> > +                    fmt::$trait::fmt(t, f)
+>> > +                }
+>> > +            }
+>> > +        )*
+>> > +    };
+>> > +}
+>> > +
+>> > +impl_fmt_adapter_forward!(Debug, LowerHex, UpperHex, Octal, Binary, P=
+ointer, LowerExp, UpperExp);
+>> > +
+>> > +/// A copy of [`fmt::Display`] that allows us to implement it for for=
+eign types.
+>> > +///
+>> > +/// Types should implement this trait rather than [`fmt::Display`]. T=
+ogether with the [`Adapter`]
+>> > +/// type and [`fmt!`] macro, it allows for formatting foreign types (=
+e.g. types from core) which do
+>> > +/// not implement [`fmt::Display`] directly.
+>> > +///
+>> > +/// [`fmt!`]: crate::prelude::fmt!
+>> > +pub trait Display {
+>> > +    /// Same as [`fmt::Display::fmt`].
+>> > +    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result;
+>> > +}
+>> > +
+>> > +impl<T: ?Sized + Display> Display for &T {
+>> > +    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+>> > +        Display::fmt(*self, f)
+>> > +    }
+>> > +}
+>> > +
+>> > +impl<T: ?Sized + Display> fmt::Display for Adapter<&T> {
+>> > +    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+>> > +        let Self(t) =3D self;
+>> > +        Display::fmt(t, f)
+>>
+>> Why not `Display::fmt(&self.0, f)`?
+>
+> I like destructuring because it shows me that there's only one field.
+> With `self.0` I don't see that.
+
+And what is the benefit here?
+
+>> > +
+>> > +    let mut args =3D TokenStream::from_iter(first_opt);
+>> > +    {
+>> > +        let mut flush =3D |args: &mut TokenStream, current: &mut Toke=
+nStream| {
+>>
+>> You don't need to pass `args` as a closure argument, since you always
+>> call it with `&mut args`.
+>
+> This doesn't work because of the borrow checker. If I wrote what you
+> suggest, then `args` is mutably borrowed by the closure, which
+> prohibits the mutable borrow needed for the .extend() call here:
+
+Ahh right... Well then it's fine.
+
+---
+Cheers,
+Benno
