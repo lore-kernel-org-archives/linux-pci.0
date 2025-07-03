@@ -1,53 +1,52 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7B752E03E5;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7BF12E03ED;
 	Thu,  3 Jul 2025 09:56:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751536609; cv=none; b=p5gCAI2EXAkLsoFffb7fGipKdXyEThJEgm+hQjfYsVAbVGrML5UCMFL9ojnNo9UYKE4XhSFxwmh5PfZZwbMUa98zY1FzJEJbQiI38Zkd4b+CSOVTLf7FF3O37RLEtc4rhJCRbbmC2AgF2iWiY/s4wpCOFrOuk7QaNTavN3e7Wqo=
+	t=1751536609; cv=none; b=YYFp+mJ5yJjUl0HHhBQDe+VvOWJMIJ1sacInPh252TuCUzUs+6A0wc3ct+L4QdFr+tSSVeHK8vNwr7G7WkkVuwj/Ba18fEfGPO7ssysQc0na+sehbFH3vvBr1Vprp1+4pmXeoIBjyJ/yFiwPKR+ILL+SzhrT6+sQ6g2JX2UUF9Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751536609; c=relaxed/simple;
-	bh=XK9k3Mh6uQMbWe9PXpjQuuqE3KxexxUEdn6IH4a+Wug=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=JHK4BOjPnw0oqMpyBvy/lTj+49WnPVglNIcTtc6shQSheT6Hhk+cDAU7ZXRqIuAHd63Qxiq6G4i4dGLJG4viZ5f5QF38+LIP81uytyQfKLiE9Yia/ko6Efy15377hfia/FfuCCkrpSLD19mPNw2/EIWilYdfbLXVzZTgefFilE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=m6uaYoDE; arc=none smtp.client-ip=205.220.180.131
+	bh=w/ikIeFxFOIHROQSqgns6nEE2LTEdrGIk2gfmgiQ2hI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=h6zfywIpMLaRrTRB07ELF4xYQEwSOfK/iP9qJeYyowGMl1I4cZr87VdlXZEyfqFMhYxiXwqWD6zni0fZjAmoO1oBiBb8TnAeekTCs+/NM/Pa7ttcYzKCC++Lq2Uqm8nE1RsIQdo5FHpOMcHhpdrYfRCNwWzClbTKXfijFx0EjUM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=kFbrHp5+; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="m6uaYoDE"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5636XxaE022911;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="kFbrHp5+"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5637Ucpe018581;
 	Thu, 3 Jul 2025 09:56:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=sq85Q/vJxoA
-	eidtGD92wyNYWRLccThyg6rGim2z8SQw=; b=m6uaYoDElUbSkLwgqCDbOQ4uH+n
-	qyuDKN/mMwOJfFMaHdnyM/z+MnEx+g+AsHVYvtiqT33vsT2FSqYSVkkA93qNNYx9
-	ckafopZCtxVXqG7qW8LhAC55kyAocRCrcCTcm9FR1FHvTYAyRkDAs3Z0tOv6qjOc
-	YSOgwwYNL7LWyxyjYRpclQ3CiuGjhYO43ERmo8j5lVlRYG3Mc6zCrrGGnYoxx8qp
-	T7UD3Ko1naW/hz/aeJ5YmDE8NgeTIRYz7sRKxbS5GputD+pl7hVeZuRdC+ac3TRs
-	8aR+WpZ9j+Q2RWDPYE208430I0ThYeq6PhG/yND9JM2DC/PBtjSF4cAP/dw==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47mhxn6kak-1
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=X8Vt27x0gtqA1Cj8+Uws/7nYRByc/B+Js1z
+	U07dKno4=; b=kFbrHp5+J3eNef1DvVEVmK6AQbzFyuixlFfxldX2xasAIV0iviQ
+	neUGer4mGAhqeyCBOIq5HRfA1dDKgtPstao+VgJfPNdGxd2HCGXOWEFXJdBc6SGf
+	HzDCPxuu7lsO6GMjIdh0Vh/q6ZBES3T62QbkIVkFqVqJBuSg131eFjDDaJ5D5PCv
+	NJDVurMbrLbBO63+6O2tvfyGFHAnMHFVlxnCUhYarB/U7BpPms4r5ETRpaNCVm7M
+	WK4WNJdWG2Vupg0xPhXXY45zdhIK2BaNcWXfvrjWS5BuV7T4taq6gVyJPTCSyt6G
+	OMq/mKQT5IGlSSZ3vQA1efDZESOAsYqnamg==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47j8fxr0fr-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Thu, 03 Jul 2025 09:56:37 +0000 (GMT)
-Received: from pps.filterd (NALASPPMTA02.qualcomm.com [127.0.0.1])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5639tBho016579;
+Received: from pps.filterd (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5639uaFw003423;
 	Thu, 3 Jul 2025 09:56:36 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 47nesbvtkn-1
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 47nm8wt4ye-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Thu, 03 Jul 2025 09:56:36 +0000
-Received: from NALASPPMTA02.qualcomm.com (NALASPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5639r4Ht013611;
+Received: from NALASPPMTA03.qualcomm.com (NALASPPMTA03.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5639uZ4Y003416;
 	Thu, 3 Jul 2025 09:56:35 GMT
 Received: from hu-devc-lv-u22-a.qualcomm.com (hu-ziyuzhan-lv.qualcomm.com [10.81.25.41])
-	by NALASPPMTA02.qualcomm.com (PPS) with ESMTPS id 5639uZQ1018799
+	by NALASPPMTA03.qualcomm.com (PPS) with ESMTPS id 5639uZLx003414
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Thu, 03 Jul 2025 09:56:35 +0000
 Received: by hu-devc-lv-u22-a.qualcomm.com (Postfix, from userid 4438065)
-	id 8D43C5AA; Thu,  3 Jul 2025 02:56:35 -0700 (PDT)
+	id 824D95A4; Thu,  3 Jul 2025 02:56:35 -0700 (PDT)
 From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
 To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
         krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
@@ -59,14 +58,11 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
         quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
         Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v8 3/3] arm64: dts: qcom: qcs615-ride: Enable PCIe interface
-Date: Thu,  3 Jul 2025 02:56:30 -0700
-Message-Id: <20250703095630.669044-4-ziyue.zhang@oss.qualcomm.com>
+Subject: [PATCH v8 0/3] pci: qcom: Add QCS615 PCIe support
+Date: Thu,  3 Jul 2025 02:56:27 -0700
+Message-Id: <20250703095630.669044-1-ziyue.zhang@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250703095630.669044-1-ziyue.zhang@oss.qualcomm.com>
-References: <20250703095630.669044-1-ziyue.zhang@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -78,101 +74,101 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAzMDA4MSBTYWx0ZWRfX9a9IBzlRrgY0
- sFHNek2HyHhivGDERDdrMwO79nwjcmmEevPPSmyxZ6DOc7/pRZZLS+GgBX3xHcRLZPQ4TdayqNn
- vi7IqoBtKkFAIjvL6YaFjJR7SohAnz1q4ac7y/sNUBP53aNuBEPFlLCOY2M1mlb1NRHQN/Mtk85
- rHYIAlfRuI5sQS/ypZhWEHtdrrTC+7Dcd+EaQnvfrY2TLsE/c9g3MeS+0oTna6GyDKhAuXv45hI
- d464RsMsEJEyVTxXkbEamlwkYlkFje/q10g0QKAyOgcPQkW7YIeamE6B5j4vJATl8LvKASpJrzy
- eFObVCr/dyfUc3m4fbcWnqkNDEcCwQelGbyYExIo5etNqdJ5V4Cg3W7THDuAgpvXKb+tXR1kDvC
- ksi8hvMoJCV3YoveFDXbiXU2dM1+kn80KM3ZrKlTQwEI229nYmS0usaiomLisz+qKbGxUkxP
-X-Authority-Analysis: v=2.4 cv=EbvIQOmC c=1 sm=1 tr=0 ts=686653d5 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAzMDA4MSBTYWx0ZWRfX2xYCGSnQthxH
+ MZmh3oAy5KN4yjHlaLat+tUKYVyZ0qk6ZV1MXKf0Qcy28KH3iQmqoF2sMkewYTXarr0qjCzRXWP
+ McZMtxLVIs1RZk8rjQgIZxah4ogFRZW+/ntNcEyciEuZxq662lo7iz3VVdpchgI7kZspF7WzT2/
+ MiEddL0KS34bLmUZK7DJi+yKQbkrFRk4VnAcZWL57r4pYjiKo0l3RrbfD3KbAuk8agKz0s61ODH
+ EH4jkPjFJlVBu0SfQ7tAOW7MjT2HOEQqGToHL6xSfoJCvmrnKZGj+AyQe/4O57hcUiWryo84Q8+
+ yJtIZy/2GT4yNvdG144Wy8FbfWEelXF1dH9zH+HBxBHxwdWpoLJq+L8RYjkGxAUARrkEhpPsCXt
+ phtICIG61hP5mCcMlWcrrOoQHrAhR0re3UiCyhyRZRpdooYbv2lR16ayu6OIdSmP6PtOsaYl
+X-Proofpoint-GUID: ZSDTG8BOgoZz-27eAEPXXQ1GTzSQQLCV
+X-Proofpoint-ORIG-GUID: ZSDTG8BOgoZz-27eAEPXXQ1GTzSQQLCV
+X-Authority-Analysis: v=2.4 cv=TqPmhCXh c=1 sm=1 tr=0 ts=686653d5 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=3zbVK_edIv7hY8gRkFcA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: EA_R8Qrk8PB_dNvKX-a0pOaE6HKl8kP2
-X-Proofpoint-GUID: EA_R8Qrk8PB_dNvKX-a0pOaE6HKl8kP2
+ a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8
+ a=nFUSFbzN6SMpi5LfgmsA:9 a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
  definitions=2025-07-03_03,2025-07-02_04,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 mlxscore=0 priorityscore=1501 mlxlogscore=999 lowpriorityscore=0
- malwarescore=0 adultscore=0 clxscore=1015 bulkscore=0 impostorscore=0
- spamscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ priorityscore=1501 bulkscore=0 mlxlogscore=876 suspectscore=0 adultscore=0
+ phishscore=0 malwarescore=0 clxscore=1015 lowpriorityscore=0 mlxscore=0
+ impostorscore=0 spamscore=0 classifier=spam authscore=0 authtc=n/a authcc=
  route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
  definitions=main-2507030081
 
-From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+This series adds document, phy, configs support for PCIe in QCS615.
 
-Add platform configurations in devicetree for PCIe, board related
-gpios, PMIC regulators, etc.
+This series depend on the dt-bindings change
+https://lore.kernel.org/all/20250521-topic-8150_pcie_drop_clocks-v1-0-3d42e84f6453@oss.qualcomm.com/
 
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
 Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
 ---
- arch/arm64/boot/dts/qcom/qcs615-ride.dts | 42 ++++++++++++++++++++++++
- 1 file changed, 42 insertions(+)
+Have following changes:
+	- Add a new Document the QCS615 PCIe Controller
+	- Add configurations in devicetree for PCIe, including registers, clocks, interrupts and phy setting sequence.
+	- Add configurations in devicetree for PCIe, platform related gpios, PMIC regulators, etc.
 
-diff --git a/arch/arm64/boot/dts/qcom/qcs615-ride.dts b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
-index a6652e4817d1..011f8ae077c2 100644
---- a/arch/arm64/boot/dts/qcom/qcs615-ride.dts
-+++ b/arch/arm64/boot/dts/qcom/qcs615-ride.dts
-@@ -217,6 +217,23 @@ &gcc {
- 		 <&sleep_clk>;
- };
- 
-+&pcie {
-+	perst-gpios = <&tlmm 101 GPIO_ACTIVE_LOW>;
-+	wake-gpios = <&tlmm 100 GPIO_ACTIVE_HIGH>;
-+
-+	pinctrl-0 = <&pcie_default_state>;
-+	pinctrl-names = "default";
-+
-+	status = "okay";
-+};
-+
-+&pcie_phy {
-+	vdda-phy-supply = <&vreg_l5a>;
-+	vdda-pll-supply = <&vreg_l12a>;
-+
-+	status = "okay";
-+};
-+
- &pm8150_gpios {
- 	usb2_en: usb2-en-state {
- 		pins = "gpio10";
-@@ -256,6 +273,31 @@ &rpmhcc {
- 	clocks = <&xo_board_clk>;
- };
- 
-+&tlmm {
-+	pcie_default_state: pcie-default-state {
-+		clkreq-pins {
-+			pins = "gpio90";
-+			function = "pcie_clk_req";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+
-+		perst-pins {
-+			pins = "gpio101";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-down;
-+		};
-+
-+		wake-pins {
-+			pins = "gpio100";
-+			function = "gpio";
-+			drive-strength = <2>;
-+			bias-pull-up;
-+		};
-+	};
-+};
-+
- &sdhc_1 {
- 	pinctrl-0 = <&sdc1_state_on>;
- 	pinctrl-1 = <&sdc1_state_off>;
+Changes in v8:
+- Fix scripts/checkpatch.pl error (Krzystof)
+- Link to v7: https://lore.kernel.org/all/20250702103549.712039-1-ziyue.zhang@oss.qualcomm.com/
+
+Changes in v7:
+- Add Fixes tag to phy bindings patch (Johan)
+- QCS615 is Gen3 controller but Gen2 phy, so limited max link speed to Gen2.
+- Remove eq-presets-8gts and oppopp-8000000 for only support Gen2.
+- Link to v6: https://lore.kernel.org/all/t6bwkld55a2dcozxz7rxnvdgpjis6oveqzkh4s7nvxgikws4rl@fn2sd7zlabhe/
+
+Changes in v6:
+- Change PCIe equalization setting to one lane
+- Add reviewed by tags
+- Link to v5: https://lore.kernel.org/all/t6bwkld55a2dcozxz7rxnvdgpjis6oveqzkh4s7nvxgikws4rl@fn2sd7zlabhe/
+
+Changes in v5:
+- Drop qcs615-pcie.yaml and use sm8150, as qcs615 is the downgraded
+  version of sm8150, which can share the same yaml.
+- Drop compatible enrty in driver and use sm8150's enrty (Krzysztof)
+- Fix the DT format problem (Konrad)
+- Link to v4: https://lore.kernel.org/all/20250507031559.4085159-1-quic_ziyuzhan@quicinc.com/
+
+Changes in v4:
+- Fixed compile error found by kernel test robot(Krzysztof)
+- Update DT format (Konrad & Krzysztof)
+- Remove QCS8550 compatible use QCS615 compatible only (Konrad)
+- Update phy dt bindings to fix the dtb check errors.
+- Link to v3: https://lore.kernel.org/all/20250310065613.151598-1-quic_ziyuzhan@quicinc.com/
+
+Changes in v3:
+- Update qcs615 dt-bindings to fit the qcom-soc.yaml (Krzysztof & Dmitry)
+- Removed the driver patch and using fallback method (Mani)
+- Update DT format, keep it same with the x1e801000.dtsi (Konrad)
+- Update DT commit message (Bojor)
+- Link to v2: https://lore.kernel.org/all/20241122023314.1616353-1-quic_ziyuzhan@quicinc.com/
+
+Changes in v2:
+- Update commit message for qcs615 phy
+- Update qcs615 phy, using lowercase hex
+- Removed redundant function
+- split the soc dtsi and the platform dts into two changes
+- Link to v1: https://lore.kernel.org/all/20241118082619.177201-1-quic_ziyuzhan@quicinc.com/
+
+
+Krishna chaitanya chundru (2):
+  arm64: dts: qcom: qcs615: enable pcie
+  arm64: dts: qcom: qcs615-ride: Enable PCIe interface
+
+Ziyue Zhang (1):
+  dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Update pcie phy bindings
+    for QCS615
+
+ .../phy/qcom,sc8280xp-qmp-pcie-phy.yaml       |   2 +-
+ arch/arm64/boot/dts/qcom/qcs615-ride.dts      |  42 ++++++
+ arch/arm64/boot/dts/qcom/qcs615.dtsi          | 138 ++++++++++++++++++
+ 3 files changed, 181 insertions(+), 1 deletion(-)
+
+
+base-commit: 3f804361f3b9af33e00b90ec9cb5afcc96831e60
 -- 
 2.34.1
 
