@@ -1,329 +1,143 @@
-Received: from 12.mo534.mail-out.ovh.net (12.mo534.mail-out.ovh.net [46.105.38.145])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 11D282BEC20
-	for <linux-pci@vger.kernel.org>; Fri,  4 Jul 2025 10:09:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.105.38.145
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC4B1293B61;
+	Fri,  4 Jul 2025 10:09:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751623777; cv=none; b=F3NmzPudctvAZQRRMqzF1xiXowrtbrGBe4RoR3WbeZmXdaAgEqeuvwvjAWOT2afp66S6z7yXzU8hC4v5+lK9BPyuAwkHAXEVgGkFaJEdJ2Onnbcmiaw/2j6dwb0n0ifR5h+qtDDb/qOhD33WTKtYS2IGhmi/9k0Wk9nosxfV9L4=
+	t=1751623798; cv=none; b=XBdrhpDa/+z3W56N2gbnzZhJllid9a+HCRKtMsdD97Hugb2PDGjMAcrMRwiVUpKrhwiQfJcQvjpMb5TgGYpm1cVwOzpq87bbbdwCpObo1UDUPL0ljJHkmmAK39tHHHEj/gt+jIhU0+sTZTLwNSIA0/c6avMPOPr9/GzAW8BR4eU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751623777; c=relaxed/simple;
-	bh=HPKYWTiVYesJXR39s7M1azWUtubAecQ9gg6i9VpyD7g=;
-	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type; b=K3NcEUAXDRMLEsXRS0escdFMteSgep0GZ/utawrY69yoLltAi6crYBh0hQItXHiotPpYsHX2WTR7nToNHiFa0lsdmc6SbTzihtt09sVWgObjSVrg4XUC0YfRhpdukAsinzkM/0P8uSICpCmzeudQ4DdAlR3uJyNW9ryHac+oQGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orca.pet; spf=pass smtp.mailfrom=orca.pet; arc=none smtp.client-ip=46.105.38.145
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orca.pet
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=orca.pet
-Received: from director3.derp.mail-out.ovh.net (director3.derp.mail-out.ovh.net [152.228.215.222])
-	by mo534.mail-out.ovh.net (Postfix) with ESMTPS id 4bYT0W07Ssz6JRW
-	for <linux-pci@vger.kernel.org>; Fri,  4 Jul 2025 09:31:22 +0000 (UTC)
-Received: from director3.derp.mail-out.ovh.net (director3.derp.mail-out.ovh.net. [127.0.0.1])
-        by director3.derp.mail-out.ovh.net (inspect_sender_mail_agent) with SMTP
-        for <linux-pci@vger.kernel.org>; Fri,  4 Jul 2025 09:31:22 +0000 (UTC)
-Received: from mta2.priv.ovhmail-u1.ea.mail.ovh.net (unknown [10.110.113.158])
-	by director3.derp.mail-out.ovh.net (Postfix) with ESMTPS id 4bYT0V3GQSz5wF5
-	for <linux-pci@vger.kernel.org>; Fri,  4 Jul 2025 09:31:22 +0000 (UTC)
-Received: from mailstore2.priv.ovhmail-u1.ea.mail.ovh.net (unknown [10.2.8.2])
-	by mta2.priv.ovhmail-u1.ea.mail.ovh.net (Postfix) with ESMTP id 42B7FBA4275
-	for <linux-pci@vger.kernel.org>; Fri,  4 Jul 2025 09:31:22 +0000 (UTC)
-Date: Fri, 4 Jul 2025 09:31:22 +0000 (UTC)
-From: Marcos Del Sol <marcos@orca.pet>
-To: linux-pci <linux-pci@vger.kernel.org>
-Message-ID: <472002156.44518617.1751621482142.JavaMail.zimbra@orca.pet>
-Subject: Broken PCI MSI on Vortex86DX3 and Vortex86EX2
+	s=arc-20240116; t=1751623798; c=relaxed/simple;
+	bh=sErifeomiBisSrJ5F/Z1EiOE+yjyaoOoLVJmALiwIss=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
+	 References:In-Reply-To; b=QBSQrQtDxl3khpvRlIPU5qS8NjGQcj8bGfiG/4VLzik4oLgXwc2074TM6uBfJ6SgTIqix4uNEDSeMVkZzCLHc0Rh6MdthBE2RcCXqdqwRLBxsoLarlHh4+ZwhuqZwHzHjigPU/LkbovziNf9+Nbw1oaGQuvoXCNP18CP7DrmY1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bjHFAeZa; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bjHFAeZa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9EB26C4CEE3;
+	Fri,  4 Jul 2025 10:09:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751623797;
+	bh=sErifeomiBisSrJ5F/Z1EiOE+yjyaoOoLVJmALiwIss=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+	b=bjHFAeZaJFAnmlfy0BXQom4D2g8nROdZRV9VSgmHVyp34hx86laW5qYZ9hJt1xRQW
+	 0K0KO2yByzLe4dQZLFhD35Ow6d8OFCvrtXqBJsfVoIIfyv2UGdJYm4h3q0G5Jkpw5z
+	 wGhbmAF7CZg/+Usn4oPgUWLuVpcLqO00+9bczIkO/xSH+5IJAtnA1+gQ91n+wiBcP6
+	 B7oDcHjP2qL77G1iVen1zde1nv2qXrbY4ckstCIFg4BI/BrUjKystwvqi6oNlmq8/O
+	 6gVbjWvcNhrRjps2Q90t25m0FTomyUvTA0EnLcqcQEkGdXcBV9HXEB+8pGkJCpLBEg
+	 +vGw4nMjPXgxg==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Thread-Index: GGvBptz8aTb9UnYXoW7UmpCXcAbfvw==
-Thread-Topic: Broken PCI MSI on Vortex86DX3 and Vortex86EX2
-X-Ovh-Tracer-Id: 11486993799683790438
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: 0
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgddvvdektdcutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfqggfjpdevjffgvefmvefgnecuuegrihhlohhuthemucehtddtnecunecujfgurhepfffhvffkufggtgfgihhtsehtjegttddttdejnecuhfhrohhmpeforghrtghoshcuffgvlhcuufholhcuoehmrghrtghoshesohhrtggrrdhpvghtqeenucggtffrrghtthgvrhhnpeduudfglefftefhkedvfeekledtieeghfdtleehkeelheevueffveehtdevjeelieenucfkphepuddvjedrtddrtddruddpjeelrdduudeirdegjedrudelheenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduvdejrddtrddtrddupdhmrghilhhfrhhomhepmhgrrhgtohhssehorhgtrgdrphgvthdpnhgspghrtghpthhtohepuddprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhgpdfovfetjfhoshhtpehmohehfeegmgdpmhhouggvpehsmhhtphhouhht
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Fri, 04 Jul 2025 12:09:43 +0200
+Message-Id: <DB36T5JWBL10.2F56EDJ1XKAD0@kernel.org>
+Subject: Re: [PATCH v13 2/5] rust: support formatting of foreign types
+From: "Benno Lossin" <lossin@kernel.org>
+To: "Tamir Duberstein" <tamird@gmail.com>
+Cc: "Michal Rostecki" <vadorovsky@protonmail.com>, "Miguel Ojeda"
+ <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Boqun Feng"
+ <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Andreas
+ Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
+ "Trevor Gross" <tmgross@umich.edu>, "Brendan Higgins"
+ <brendan.higgins@linux.dev>, "David Gow" <davidgow@google.com>, "Rae Moar"
+ <rmoar@google.com>, "Danilo Krummrich" <dakr@kernel.org>, "Maarten
+ Lankhorst" <maarten.lankhorst@linux.intel.com>, "Maxime Ripard"
+ <mripard@kernel.org>, "Thomas Zimmermann" <tzimmermann@suse.de>, "David
+ Airlie" <airlied@gmail.com>, "Simona Vetter" <simona@ffwll.ch>, "Greg
+ Kroah-Hartman" <gregkh@linuxfoundation.org>, "Rafael J. Wysocki"
+ <rafael@kernel.org>, "Luis Chamberlain" <mcgrof@kernel.org>, "Russ Weight"
+ <russ.weight@linux.dev>, "FUJITA Tomonori" <fujita.tomonori@gmail.com>,
+ "Rob Herring" <robh@kernel.org>, "Saravana Kannan" <saravanak@google.com>,
+ "Peter Zijlstra" <peterz@infradead.org>, "Ingo Molnar" <mingo@redhat.com>,
+ "Will Deacon" <will@kernel.org>, "Waiman Long" <longman@redhat.com>,
+ "Nathan Chancellor" <nathan@kernel.org>, "Nick Desaulniers"
+ <nick.desaulniers+lkml@gmail.com>, "Bill Wendling" <morbo@google.com>,
+ "Justin Stitt" <justinstitt@google.com>, "Andrew Lunn" <andrew@lunn.ch>,
+ "Heiner Kallweit" <hkallweit1@gmail.com>, "Russell King"
+ <linux@armlinux.org.uk>, "David S. Miller" <davem@davemloft.net>, "Eric
+ Dumazet" <edumazet@google.com>, "Jakub Kicinski" <kuba@kernel.org>, "Paolo
+ Abeni" <pabeni@redhat.com>, "Bjorn Helgaas" <bhelgaas@google.com>, "Arnd
+ Bergmann" <arnd@arndb.de>, "Jens Axboe" <axboe@kernel.dk>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Dave
+ Ertman" <david.m.ertman@intel.com>, "Ira Weiny" <ira.weiny@intel.com>,
+ "Leon Romanovsky" <leon@kernel.org>, "Breno Leitao" <leitao@debian.org>,
+ "Viresh Kumar" <viresh.kumar@linaro.org>, "Michael Turquette"
+ <mturquette@baylibre.com>, "Stephen Boyd" <sboyd@kernel.org>,
+ <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+ <linux-kselftest@vger.kernel.org>, <kunit-dev@googlegroups.com>,
+ <dri-devel@lists.freedesktop.org>, <netdev@vger.kernel.org>,
+ <devicetree@vger.kernel.org>, <llvm@lists.linux.dev>,
+ <linux-pci@vger.kernel.org>, <nouveau@lists.freedesktop.org>,
+ <linux-block@vger.kernel.org>, <linux-pm@vger.kernel.org>,
+ <linux-clk@vger.kernel.org>
+X-Mailer: aerc 0.20.1
+References: <20250701-cstr-core-v13-0-29f7d3eb97a6@gmail.com>
+ <20250701-cstr-core-v13-2-29f7d3eb97a6@gmail.com>
+ <DB2BDSN1JH51.14ZZPETJORBC6@kernel.org>
+ <CAJ-ks9nC=AyBPXRY3nJ0NuZvjFskzMcOkVNrBEfXD2hZ5uRntQ@mail.gmail.com>
+ <DB2IJ9HBIM0W.3N0JVGKX558QI@kernel.org>
+ <CAJ-ks9nF5+m+_bn0Pzi9yU0pw0TyN7Fs4x--mQ4ygyHz4A6hzg@mail.gmail.com>
+ <DB2PIGAQHCJR.3BF8ZHECYH3KB@kernel.org>
+ <CAJ-ks9=WmuXLJ6KkMEOP2jTvM_YBJO10SNsq0DU2J+_d4jp7qw@mail.gmail.com>
+ <CAJ-ks9kNiOgPO7FF3cAbaSNtTWs0_PzQ4k4W0AxjHNFuMJnDcQ@mail.gmail.com>
+In-Reply-To: <CAJ-ks9kNiOgPO7FF3cAbaSNtTWs0_PzQ4k4W0AxjHNFuMJnDcQ@mail.gmail.com>
 
-Hello everyone.
+On Fri Jul 4, 2025 at 1:23 AM CEST, Tamir Duberstein wrote:
+> On Thu, Jul 3, 2025 at 6:41=E2=80=AFPM Tamir Duberstein <tamird@gmail.com=
+> wrote:
+>> On Thu, Jul 3, 2025 at 4:36=E2=80=AFPM Benno Lossin <lossin@kernel.org> =
+wrote:
+>> >
+>> > I don't understand, can't you just do:
+>> >
+>> > * add `rust/kernel/fmt.rs`,
+>> > * add `rust/macros/fmt.rs`,
+>> > * change all occurrences of `core::fmt` to `kernel::fmt` and
+>> >   `format_args!` to `fmt!`.
+>>
+>> Yes, such a split could be done - I will do so in the next spin
+>>
+>>
+>> > The last one could be split by subsystem, no? Some subsystems might
+>> > interact and thus need simultaneous splitting, but there should be som=
+e
+>> > independent ones.
+>>
+>> Yes, it probably can. As you say, some subsystems might interact - the
+>> claimed benefit of doing this subsystem-by-subsystem split is that it
+>> avoids conflicts with ongoing work that will conflict with a large
+>> patch, but this is also the downside; if ongoing work changes the set
+>> of interactions between subsystems then a maintainer may find
+>> themselves unable to emit the log message they want (because one
+>> subsystem is using kernel::fmt while another is still on core::fmt).
+>
+> I gave this a try. I ran into the problem that `format_args!` (and,
+> after this patch, `fmt!`) is at the center of `print_macro!`, which
+> itself underpins various other formatting macros. This means we'd have
+> to bifurcate the formatting infrastructure to support an incremental
+> migration. That's quite a bit of code, and likely quite a mess in the
+> resulting git history -- and that's setting aside the toil required to
+> figure out the correct combinations of subsystems that must migrate
+> together.
 
-I recently acquired a Vortex86DX3-based mini PC from ICOP, a eBox-3352DX3-GL
-which has a Realtek RTL8168E-VL Gigabit Ethernet card connected via PCI-E.
+So here is what we can do without duplicating the logic, though it
+requires multiple cycles:
 
-I have discovered that, while it works okay under Windows 7 (the latest
-supported version for this machine), it will not under Linux. After some
-research I found out the reason is that it attempts to use MSI for
-interrupts, but they do not work properly. Thus interrupts will not fire and
-packets cannot be received, even though they can be sent via the interface.
-On Windows, it uses regular PCI interrupts.
+1. We merge the two `fmt.rs` files & each subsystem merges an
+   implementation of `kernel::fmt::Display` for their types, but keeps
+   the `core::fmt::Display` impl around.
+2. After all subsystems have merged the previous step, we change the
+   implementations of `print_macro!` to use `fmt!` instead of
+   `format_args!`.
+3. We remove all occurrences of `core::fmt` (& replace them with
+   `kernel::fmt`), removing the `core::fmt::Display` impls.
 
-I have contacted DM&P (the company behind the Vortex processors) and they
-confirmed that it is a known issue on all machines using the PCI/PCI-X to
-PCI-E Bridge [17f3:1031] bridge, such as this one and others using the
-Vortex86EX2.
-
-This is the output of lspci -nnvv (without pci=nomsi):
-
-00:00.0 Host bridge [0600]: RDC Semiconductor, Inc. R6023 Host Bridge [17f3:6023] (rev 02)
-        Control: I/O- Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort+ >SERR- <PERR- INTx-
-        Latency: 0
-
-00:01.0 PCI bridge [0604]: RDC Semiconductor, Inc. PCI/PCI-X to PCI-E Bridge [17f3:1031] (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Bus: primary=00, secondary=01, subordinate=01, sec-latency=64
-        I/O behind bridge: d000-dfff [size=4K] [16-bit]
-        Memory behind bridge: 7c000000-7c1fffff [size=2M] [32-bit]
-        Prefetchable memory behind bridge: f6900000-f69fffff [size=1M] [32-bit]
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort+ <SERR- <PERR-
-        BridgeCtl: Parity+ SERR+ NoISA+ VGA- VGA16- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v1) PCI/PCI-X to PCI-Express Bridge (Slot+), MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0
-                        ExtTag- RBE-
-                DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <2us, L1 <32us
-                        ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; Disabled- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1
-                        TrErr- Train- SlotClk+ DLActive+ BWMgmt- ABWMgmt-
-                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
-                        Slot #0, PowerLimit 10W; Interlock- NoCompl-
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet+ Interlock-
-                        Changed: MRL- PresDet+ LinkState+
-        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
-                Address: 00000000  Data: 0000
-        Capabilities: [90] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-
-00:02.0 PCI bridge [0604]: RDC Semiconductor, Inc. PCI/PCI-X to PCI-E Bridge [17f3:1031] (rev 01) (prog-if 00 [Normal decode])
-        Control: I/O- Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 11
-        Bus: primary=00, secondary=02, subordinate=02, sec-latency=64
-        I/O behind bridge: 1000-1fff [size=4K] [16-bit]
-        Memory behind bridge: 7c200000-7c3fffff [size=2M] [32-bit]
-        Prefetchable memory behind bridge: 7c400000-7c5fffff [size=2M] [32-bit]
-        Secondary status: 66MHz- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- <SERR- <PERR-
-        BridgeCtl: Parity+ SERR+ NoISA+ VGA- VGA16- MAbort- >Reset- FastB2B-
-                PriDiscTmr- SecDiscTmr- DiscTmrStat- DiscTmrSERREn-
-        Capabilities: [40] Express (v1) PCI/PCI-X to PCI-Express Bridge (Slot+), MSI 00
-                DevCap: MaxPayload 128 bytes, PhantFunc 0
-                        ExtTag- RBE-
-                DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-                        RlxdOrd- ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 128 bytes
-                DevSta: CorrErr- NonFatalErr- FatalErr- UnsupReq- AuxPwr+ TransPend-
-                LnkCap: Port #1, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s <2us, L1 <32us
-                        ClockPM- Surprise- LLActRep+ BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1
-                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                SltCap: AttnBtn- PwrCtrl- MRL- AttnInd- PwrInd- HotPlug+ Surprise+
-                        Slot #0, PowerLimit 10W; Interlock- NoCompl-
-                SltCtl: Enable: AttnBtn- PwrFlt- MRL- PresDet- CmdCplt- HPIrq- LinkChg-
-                        Control: AttnInd Unknown, PwrInd Unknown, Power- Interlock-
-                SltSta: Status: AttnBtn- PowerFlt- MRL- CmdCplt- PresDet- Interlock-
-                        Changed: MRL- PresDet- LinkState-
-        Capabilities: [80] MSI: Enable- Count=1/1 Maskable- 64bit-
-                Address: 00000000  Data: 0000
-        Capabilities: [90] Power Management version 2
-                Flags: PMEClk- DSI- D1- D2- AuxCurrent=0mA PME(D0+,D1-,D2-,D3hot+,D3cold+)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-
-00:07.0 ISA bridge [0601]: RDC Semiconductor, Inc. R6035 ISA Bridge [17f3:6035] (rev 01)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=?? >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-
-00:07.1 ISA bridge [0601]: RDC Semiconductor, Inc. R6035 ISA Bridge [17f3:6035] (rev 01)
-        Control: I/O+ Mem+ BusMaster+ SpecCycle+ MemWINV- VGASnoop- ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=?? >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-
-00:0a.0 USB controller [0c03]: RDC Semiconductor, Inc. R6060 USB 1.1 Controller [17f3:6060] (rev 14) (prog-if 10 [OHCI])        Subsystem: RDC Semiconductor, Inc. R6060 USB 1.1 Controller [17f3:6060]
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 18
-        Region 0: Memory at febdf000 (32-bit, non-prefetchable) [size=4K]
-        Kernel driver in use: ohci-pci
-        Kernel modules: ohci_pci
-
-00:0a.1 USB controller [0c03]: RDC Semiconductor, Inc. R6061 USB 2.0 Controller [17f3:6061] (rev 08) (prog-if 20 [EHCI])        Subsystem: RDC Semiconductor, Inc. R6061 USB 2.0 Controller [17f3:6061]
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 32 bytes
-        Interrupt: pin B routed to IRQ 21
-        Region 0: Memory at febdec00 (32-bit, non-prefetchable) [size=256]
-        Kernel driver in use: ehci-pci
-        Kernel modules: ehci_pci
-
-00:0c.0 IDE interface [0101]: RDC Semiconductor, Inc. R1012 IDE Controller [17f3:1012] (rev 02) (prog-if 8f [PCI native mode controller, supports both channels switched to ISA compatibility mode, supports bus mastering])
-        Subsystem: RDC Semiconductor, Inc. R1012 IDE Controller [17f3:1012]
-        Control: I/O+ Mem- BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 23
-        Region 0: I/O ports at e880 [size=8]
-        Region 1: I/O ports at e800 [size=4]
-        Region 2: I/O ports at e480 [size=8]
-        Region 3: I/O ports at e400 [size=4]
-        Region 4: I/O ports at e080 [size=16]
-        Kernel driver in use: pata_rdc
-        Kernel modules: pata_rdc, ata_generic
-
-00:0d.0 VGA compatible controller [0300]: RDC Semiconductor, Inc. RDC M2015 VGA-compatible graphics adapter [17f3:2015] (prog-if 00 [VGA controller])
-        Subsystem: RDC Semiconductor, Inc. RDC M2015 VGA-compatible graphics adapter [17f3:2015]
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap+ 66MHz+ UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0
-        Interrupt: pin A routed to IRQ 5
-        Region 0: Memory at f8000000 (32-bit, non-prefetchable) [size=64M]
-        Region 1: Memory at febe0000 (32-bit, non-prefetchable) [size=128K]
-        Region 2: I/O ports at ec00 [size=128]
-        Expansion ROM at 000c0000 [virtual] [disabled] [size=128K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst- PME-Enable- DSel=0 DScale=0 PME-
-
-00:0e.0 Audio device [0403]: RDC Semiconductor, Inc. R3010 HD Audio Controller [17f3:3010] (rev 01)
-        Subsystem: RDC Semiconductor, Inc. R3010 HD Audio Controller [17f3:3010]
-        Control: I/O- Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx-
-        Status: Cap- 66MHz- UDF- FastB2B- ParErr- DEVSEL=medium >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 64, Cache Line Size: 32 bytes
-        Interrupt: pin A routed to IRQ 18
-        Region 0: Memory at febd8000 (32-bit, non-prefetchable) [size=16K]
-        Kernel driver in use: snd_hda_intel
-        Kernel modules: snd_hda_intel
-
-01:00.0 Ethernet controller [0200]: Realtek Semiconductor Co., Ltd. RTL8111/8168/8411 PCI Express Gigabit Ethernet Controller [10ec:8168] (rev 07)
-        Subsystem: Realtek Semiconductor Co., Ltd. RTL8111/8168/8211/8411 PCI Express Gigabit Ethernet Controller [10ec:0123]
-        Control: I/O+ Mem+ BusMaster+ SpecCycle- MemWINV- VGASnoop- ParErr- Stepping- SERR+ FastB2B- DisINTx+
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort- <TAbort- <MAbort- >SERR- <PERR- INTx-
-        Latency: 0, Cache Line Size: 64 bytes
-        Interrupt: pin A routed to IRQ 16
-        Region 0: I/O ports at d800 [size=256]
-        Region 2: Memory at f69ff000 (64-bit, prefetchable) [size=4K]
-        Region 4: Memory at f69f8000 (64-bit, prefetchable) [size=16K]
-        Capabilities: [40] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=375mA PME(D0+,D1+,D2+,D3hot+,D3cold+)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [50] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [70] Express (v2) Endpoint, MSI 01
-                DevCap: MaxPayload 128 bytes, PhantFunc 0, Latency L0s <512ns, L1 <64us
-                        ExtTag- AttnBtn- AttnInd- PwrInd- RBE+ FLReset- SlotPowerLimit 10W
-                DevCtl: CorrErr- NonFatalErr- FatalErr- UnsupReq-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop-
-                        MaxPayload 128 bytes, MaxReadReq 4096 bytes
-                DevSta: CorrErr+ NonFatalErr- FatalErr- UnsupReq+ AuxPwr+ TransPend-
-                LnkCap: Port #0, Speed 2.5GT/s, Width x1, ASPM L0s L1, Exit Latency L0s unlimited, L1 <64us
-                        ClockPM+ Surprise- LLActRep- BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 64 bytes, Disabled- CommClk+
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x1
-                        TrErr- Train- SlotClk+ DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range ABCD, TimeoutDis+ NROPrPrP- LTR-
-                         10BitTagComp- 10BitTagReq- OBFF Not Supported, ExtFmt- EETLPPrefix-
-                         EmergencyPowerReduction Not Supported, EmergencyPowerReductionInit-
-                         FRS- TPHComp- ExtTPHComp-
-                         AtomicOpsCap: 32bit- 64bit- 128bitCAS-
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis- LTR- 10BitTagReq- OBFF Disabled,
-                         AtomicOpsCtl: ReqEn-
-                LnkCtl2: Target Link Speed: 2.5GT/s, EnterCompliance- SpeedDis-
-                         Transmit Margin: Normal Operating Range, EnterModifiedCompliance- ComplianceSOS-
-                         Compliance Preset/De-emphasis: -6dB de-emphasis, 0dB preshoot
-                LnkSta2: Current De-emphasis Level: -6dB, EqualizationComplete- EqualizationPhase1-
-                         EqualizationPhase2- EqualizationPhase3- LinkEqualizationRequest-
-                         Retimer- 2Retimers- CrosslinkRes: unsupported
-        Capabilities: [b0] MSI-X: Enable+ Count=4 Masked-
-                Vector table: BAR=4 offset=00000000
-                PBA: BAR=4 offset=00000800
-        Capabilities: [d0] Vital Product Data
-                Unknown small resource type 05, will not decode more.
-        Kernel driver in use: r8169
-        Kernel modules: r8169
-
-This is /proc/interrupts without pci=nomsi:
-           CPU0       CPU1
-  0:         35          0   IO-APIC   2-edge      timer
-  1:          0          4   IO-APIC   1-edge      i8042
-  8:          0          0   IO-APIC   8-edge      rtc0
-  9:          0          0   IO-APIC   9-fasteoi   acpi
- 12:          6          0   IO-APIC  12-edge      i8042
- 18:        667          0   IO-APIC  18-fasteoi   ohci_hcd:usb2, snd_hda_intel:card0
- 21:          0        330   IO-APIC  21-fasteoi   ehci_hcd:usb1
- 23:          0       2248   IO-APIC  23-fasteoi   pata_rdc
- 24:          0          0   PCI-MSI 524288-edge      enp1s0
-NMI:          0          0   Non-maskable interrupts
-LOC:      16110      15274   Local timer interrupts
-SPU:          0          0   Spurious interrupts
-PMI:          0          0   Performance monitoring interrupts
-IWI:          0          0   IRQ work interrupts
-RTR:          0          0   APIC ICR read retries
-RES:        119         58   Rescheduling interrupts
-CAL:       3032       2562   Function call interrupts
-TLB:          0          2   TLB shootdowns
-TRM:          0          0   Thermal event interrupts
-THR:          0          0   Threshold APIC interrupts
-DFR:          0          0   Deferred Error APIC interrupts
-MCE:          0          0   Machine check exceptions
-MCP:          0          0   Machine check polls
-ERR:          1
-MIS:          0
-PIN:          0          0   Posted-interrupt notification event
-NPI:          0          0   Nested posted-interrupt event
-PIW:          0          0   Posted-interrupt wakeup event
-
-This is /proc/interrupts with pci=nomsi:
-           CPU0       CPU1
-  0:         34          0   IO-APIC   2-edge      timer
-  1:          0          4   IO-APIC   1-edge      i8042
-  8:          0          0   IO-APIC   8-edge      rtc0
-  9:          0          0   IO-APIC   9-fasteoi   acpi
- 12:          6          0   IO-APIC  12-edge      i8042
- 16:        996          0   IO-APIC  16-fasteoi   enp1s0
- 18:          0        667   IO-APIC  18-fasteoi   ohci_hcd:usb2, snd_hda_intel:card0
- 21:         28          0   IO-APIC  21-fasteoi   ehci_hcd:usb1
- 23:          0       2572   IO-APIC  23-fasteoi   pata_rdc
-NMI:          0          0   Non-maskable interrupts
-LOC:      62636      61759   Local timer interrupts
-SPU:          0          0   Spurious interrupts
-PMI:          0          0   Performance monitoring interrupts
-IWI:          0          0   IRQ work interrupts
-RTR:          0          0   APIC ICR read retries
-RES:        119         60   Rescheduling interrupts
-CAL:       3572       2267   Function call interrupts
-TLB:          1          2   TLB shootdowns
-TRM:          0          0   Thermal event interrupts
-THR:          0          0   Threshold APIC interrupts
-DFR:          0          0   Deferred Error APIC interrupts
-MCE:          0          0   Machine check exceptions
-MCP:          0          0   Machine check polls
-ERR:          1
-MIS:          0
-PIN:          0          0   Posted-interrupt notification event
-NPI:          0          0   Nested posted-interrupt event
-PIW:          0          0   Posted-interrupt wakeup event
-
-Note how there are no fired interrupts when PCI MSI is enabled for enp1s0,
-despite being on a home network with plenty of broadcast and multicast
-traffic.
-
-If you need any more information, please let me know.
-
-Thanks,
-Marcos
+---
+Cheers,
+Benno
