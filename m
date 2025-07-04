@@ -1,186 +1,102 @@
-Received: from relay8-d.mail.gandi.net (relay8-d.mail.gandi.net [217.70.183.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D7BC2F50B2;
-	Fri,  4 Jul 2025 08:57:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.70.183.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49E42328AE4;
+	Fri,  4 Jul 2025 09:31:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751619464; cv=none; b=f6movLKyJRvpjRiGsMj4mDQi0IS9UatXPem/F8Stpdrrfgu7C6Kxw/CgIkRPHG1vmfgm7w902VTlrELKkks9MfxAFvJIyizu7PcMET/BgSF6I6GLr6MqbGQV9E2HVZmoMTb7vrOkniJncMwMwoGCZMuTZo27rhmJcyUoShCnq2M=
+	t=1751621510; cv=none; b=ec7cDSLoTFgYej7fsgM7zAlk+2XcQY6QdVnPMS5m36hMZvIjXjq0G1yRiGGwIEXCTxg/vwcVJ+iPi9IiFv7PVn4HYglSmuEiQBxOhZGvmr0XzOqUS27RaMbC8VwFx3McruLm2MMbYIqpcWG/d5hA+DzJ5GKjPDK58BbMlHwhCr0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751619464; c=relaxed/simple;
-	bh=Hq3evHZffKrfDtkoD9VkUHgds86PykelMMQhzlru9Hs=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=X/nxzsRwd1Tup1uKouZYYhidsPZFBNiij+ludw6SL+J2MW3YOEMJBtDI57LOteWkvJC+5CxVBHT6kU1k+EbltUZNIZhqAiHXNouGFHcjWdrW2GP/oN1SptdFmQDnY2lKPyi9jjfbigMWDmPihBfB6AfigX+wJw7aQ1mPzV47Jg4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=IsFNgvOI; arc=none smtp.client-ip=217.70.183.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1751621510; c=relaxed/simple;
+	bh=d/MO04WOV1NKnJM6X29x0Vs3JojE3h50l+YSvo1LTLc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=hJNkAuSAgCemLXFtPfIS66SCSxrXOeW4/2yLQpENPCitgia/dc30+b0uLv+PIDSbBA7cS+q6Qyk8FKKJOcN79lAwuMXMcN000ZLGxx7XON43zZmn1PWGhUNZSjs7aC3gOYYrQAJVlsfY3VIF0dungsf73X7LisleYvnbu+j+ITg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BQHbbdf2; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="IsFNgvOI"
-Received: by mail.gandi.net (Postfix) with ESMTPSA id 8E24143AEE;
-	Fri,  4 Jul 2025 08:57:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=gm1;
-	t=1751619453;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z/ao/2kml8jJZFHPFKKmBePrXHDwomfciEfTApf1ng0=;
-	b=IsFNgvOIXVOwfZalpbJl3HeOSXGJ/b0Br9jNwmVj8c8XWQeGRJ8yNf3TykuiXP9YVWVNg9
-	WswEtsNyDmTb6lPYtNo8jxAwOyYHr7+xBhPVcBIgta1Gmw8VnOWUw/IIgLl0UbPh+PxatT
-	QEnGVRZSbWRjlpWe41sTUlxkGP/Yq4rgQ07Ce2ffpGvDVrPXEuUvzR/vQ7m9UpYt7tin2Y
-	sLZZm9ZYReoWxyEcrLAoB6ePBBOxMVsZYJxN9iYmAivhvHar9hS8v4H3i9GFkWozo5fSTm
-	tDdAojqJukJpigemHSwc8gA9r4PchXfJlcnlZExGtC/OGPUfoanwJMSTvEwmSg==
-Date: Fri, 4 Jul 2025 10:57:25 +0200
-From: Herve Codina <herve.codina@bootlin.com>
-To: Rob Herring <robh@kernel.org>
-Cc: Andrew Lunn <andrew@lunn.ch>, Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- Danilo Krummrich <dakr@kernel.org>, Shawn Guo <shawnguo@kernel.org>, Sascha
- Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team
- <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, Michael
- Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, Andi
- Shyti <andi.shyti@kernel.org>, Wolfram Sang
- <wsa+renesas@sang-engineering.com>, Peter Rosin <peda@axentia.se>, Derek
- Kiernan <derek.kiernan@amd.com>, Dragan Cvetic <dragan.cvetic@amd.com>,
- Arnd Bergmann <arnd@arndb.de>, Saravana Kannan <saravanak@google.com>,
- Bjorn Helgaas <bhelgaas@google.com>, Mark Brown <broonie@kernel.org>, Len
- Brown <lenb@kernel.org>, Andy Shevchenko
- <andriy.shevchenko@linux.intel.com>, Daniel Scally <djrscally@gmail.com>,
- Heikki Krogerus <heikki.krogerus@linux.intel.com>, Sakari Ailus
- <sakari.ailus@linux.intel.com>, Wolfram Sang <wsa@kernel.org>, Geert
- Uytterhoeven <geert+renesas@glider.be>, Davidlohr Bueso
- <dave@stgolabs.net>, Dave Jiang <dave.jiang@intel.com>, Alison Schofield
- <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, Ira
- Weiny <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>,
- linux-kernel@vger.kernel.org, imx@lists.linux.dev,
- linux-arm-kernel@lists.infradead.org, linux-clk@vger.kernel.org,
- linux-i2c@vger.kernel.org, devicetree@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-spi@vger.kernel.org,
- linux-acpi@vger.kernel.org, linux-cxl@vger.kernel.org, Allan Nielsen
- <allan.nielsen@microchip.com>, Horatiu Vultur
- <horatiu.vultur@microchip.com>, Steen Hegelund
- <steen.hegelund@microchip.com>, Luca Ceresoli <luca.ceresoli@bootlin.com>,
- Thomas Petazzoni <thomas.petazzoni@bootlin.com>
-Subject: Re: [PATCH v3 05/28] bus: simple-pm-bus: Populate child nodes at
- probe
-Message-ID: <20250704105725.50cb72b9@bootlin.com>
-In-Reply-To: <20250703093302.4f7743ea@bootlin.com>
-References: <20250613134817.681832-1-herve.codina@bootlin.com>
-	<20250613134817.681832-6-herve.codina@bootlin.com>
-	<20250627155200.GB3234475-robh@kernel.org>
-	<20250703093302.4f7743ea@bootlin.com>
-Organization: Bootlin
-X-Mailer: Claws Mail 4.3.1 (GTK 3.24.43; x86_64-redhat-linux-gnu)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BQHbbdf2"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-23c71b21f72so1274315ad.2;
+        Fri, 04 Jul 2025 02:31:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751621508; x=1752226308; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=d/MO04WOV1NKnJM6X29x0Vs3JojE3h50l+YSvo1LTLc=;
+        b=BQHbbdf21W5hD4xFpH1NDVkR3OyReLHUNB37l07qwYd++s3lMVfWMlH1cxW9Tkh8Ok
+         PEq/AEY8Q+ULQTAE/Kk5A1mQ+6RiQ3nq0nqGfaCPl7ZqBuap+8MOaD4C6f/x8irn7b89
+         j6gi2YvCANj5n/x3CZEp9rA3nY//cKsFcYnpAfQA5XN6hMWRWitHREqoSsYKXv4gE76r
+         6ZNAOshiYsnxCC4qyvwsmF6xEEC4IdEb/IqYEsse4Uqy/u6Pf5OUhEsUWnKpnW5NBtfa
+         2rsyTDSlfUAoQJ/+0KH4v8oHNwYKnTr2bFx2/5fR45ih9b5aEjrcTZJHj0UkGEdclbn0
+         BmPQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751621508; x=1752226308;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=d/MO04WOV1NKnJM6X29x0Vs3JojE3h50l+YSvo1LTLc=;
+        b=qvnbtYe+yfs/43nlqzHmkKk9/kP5rqCFZ7BztrJFzbYXxZ4qNlamdfQb/SbtEbxRZ7
+         OF16rnEC0M9EutZCEErg935r59d3vLMIFtHm8auy6uWdeOGzpdjD2tsHTIobjhdEKdrh
+         IJIx8houWIPm/rnWijOZFQQbalJFwWMndI29P2ut9PIVjYrtfcl+NR1+24juVap/xTgY
+         tneLcryPe2rl28U+mHA8VxPIPctTAAtpcgm5vKoGKY4q5FblBLZugJXJklIeuKWyypMH
+         De2r1n4DcuKJ30HAUHRc7EV1oFOHMP8JdpxQeWe1PzAJwfF+ht6ByxsikKEA4SDBB/Ps
+         QSjQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV7w7nEvWpPc19Sdk2s1wqCg5YUjwQYN2XYFSPwwyzkF1+rHXK+ce5uDyVfVV4MmihgY04NTVo4X7pq@vger.kernel.org, AJvYcCXnJwydPZq2LgrZvbpybcqAVslYAukPiRLfibxBg3YtTT8anTv2hlVhSi2x7o21a+AcnfCQM/DwU4S/4dK2xAM=@vger.kernel.org, AJvYcCXsOHVna8mFyW3NGULxKI3KgYgVbM00sNa0VipoLzECE2mkhIuY/DlZuhJc27QXmhfVagZdWTf4UF6w7n8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxxNWyHg8rNk8VRlg8NIRRzLnn+9IjsQa3vHX5/xcAV+5u1nqAo
+	i0FfoVM+5L3HvQMlbgJKWDi2Qh+jQ0SnKT5M6keW+Ba2JuCA2Tedl3Ct6kIeKldLpnMcdG+rxR8
+	JEYBoM23uM1VuFZv3Drrv+2FkaqDDaE0=
+X-Gm-Gg: ASbGncuHE3cRh4PqUq6mWNpjj7nICINoFfVMzv7fZ2sU0SCjZxuXGqgtHRbSEuq7kA/
+	cNCKPXLSahaxi4w/cdi5fO6ZuQ4uzslMmqtqAo/bcTycx3KIe0xB4zskDGOp79ASxq4PRSj4YbX
+	Q0kRzWiVA/2i1YVQjpTBiQBn8JkRUdg8Gm0i/4n6ibvdU=
+X-Google-Smtp-Source: AGHT+IGZgZIOOC5V45OzgF9nVnkAkyYapdLuVvpdWtNopyjN8VdZsEMtsXDqfVWiZu81PQxveBrb5ac1J46HVQwP484=
+X-Received: by 2002:a17:90b:17d0:b0:312:e9d:3fff with SMTP id
+ 98e67ed59e1d1-31aacb4118emr974079a91.1.1751621508473; Fri, 04 Jul 2025
+ 02:31:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-GND-State: clean
-X-GND-Score: -100
-X-GND-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgddvvdejfecutefuodetggdotefrodftvfcurfhrohhfihhlvgemucfitefpfffkpdcuggftfghnshhusghstghrihgsvgenuceurghilhhouhhtmecufedtudenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhepfffhvfevuffkjghfohfogggtgfesthekredtredtjeenucfhrhhomhepjfgvrhhvvgcuvehoughinhgruceohhgvrhhvvgdrtghoughinhgrsegsohhothhlihhnrdgtohhmqeenucggtffrrghtthgvrhhnpeeviefffeegiedtleelieeghfejleeuueevkeevteegffehledtkeegudeigffgvdenucfkphepledtrdekledrudeifedruddvjeenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeeltddrkeelrdduieefrdduvdejpdhhvghloheplhhotggrlhhhohhsthdpmhgrihhlfhhrohhmpehhvghrvhgvrdgtohguihhnrgessghoohhtlhhinhdrtghomhdpnhgspghrtghpthhtohepgeekpdhrtghpthhtoheprhhosghhsehkvghrnhgvlhdrohhrghdprhgtphhtthhopegrnhgurhgvfieslhhunhhnrdgthhdprhgtphhtthhopehgrhgvghhkhheslhhinhhugihfohhunhgurghtihhonhdrohhrghdprhgtphhtthhopehrrghfrggvlheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepuggrkhhrsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehshhgrfihnghhuoheskhgvrhhnvghlrdhor
- hhgpdhrtghpthhtohepshdrhhgruhgvrhesphgvnhhguhhtrhhonhhigidruggvpdhrtghpthhtohepkhgvrhhnvghlsehpvghnghhuthhrohhnihigrdguvg
-X-GND-Sasl: herve.codina@bootlin.com
+References: <20250703-topics-tyr-request_irq-v6-0-74103bdc7c52@collabora.com>
+ <20250703-topics-tyr-request_irq-v6-2-74103bdc7c52@collabora.com> <fcdae3ca-104d-4e8b-8588-2452783ed09a@sedlak.dev>
+In-Reply-To: <fcdae3ca-104d-4e8b-8588-2452783ed09a@sedlak.dev>
+From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
+Date: Fri, 4 Jul 2025 11:31:34 +0200
+X-Gm-Features: Ac12FXxOPwNdMLG_SDYv3paQWeciOf5zRBzImQn-zzRgaYYgawpcpeWIjIF2lJE
+Message-ID: <CANiq72mA3c-gs5CZ5F2U6zkWU=X7kHcgWVsvXkHpvv9mXeoY2Q@mail.gmail.com>
+Subject: Re: [PATCH v6 2/6] rust: irq: add flags module
+To: Daniel Sedlak <daniel@sedlak.dev>
+Cc: Daniel Almeida <daniel.almeida@collabora.com>, Miguel Ojeda <ojeda@kernel.org>, 
+	Alex Gaynor <alex.gaynor@gmail.com>, Boqun Feng <boqun.feng@gmail.com>, 
+	Gary Guo <gary@garyguo.net>, =?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
+	Andreas Hindborg <a.hindborg@kernel.org>, Alice Ryhl <aliceryhl@google.com>, 
+	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	Thomas Gleixner <tglx@linutronix.de>, Benno Lossin <lossin@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	linux-kernel@vger.kernel.org, rust-for-linux@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi Rob,
+On Fri, Jul 4, 2025 at 8:14=E2=80=AFAM Daniel Sedlak <daniel@sedlak.dev> wr=
+ote:
+>
+> Why not Flags(u32)? You may get rid of all unnecessary casts later, plus
+> save some extra bytes.
 
-On Thu, 3 Jul 2025 09:33:02 +0200
-Herve Codina <herve.codina@bootlin.com> wrote:
+Yeah, avoiding the casts would be nice -- however it is done.
 
-> Hi Rob,
-> 
-> On Fri, 27 Jun 2025 10:52:00 -0500
-> Rob Herring <robh@kernel.org> wrote:
-> 
-> > On Fri, Jun 13, 2025 at 03:47:45PM +0200, Herve Codina wrote:  
-> > > The simple-pm-bus driver handles several simple busses. When it is used
-> > > with busses other than a compatible "simple-pm-bus", it doesn't populate
-> > > its child devices during its probe.
-> > > 
-> > > This confuses fw_devlink and results in wrong or missing devlinks.
-> > > 
-> > > Once a driver is bound to a device and the probe() has been called,
-> > > device_links_driver_bound() is called.
-> > > 
-> > > This function performs operation based on the following assumption:
-> > >     If a child firmware node of the bound device is not added as a
-> > >     device, it will never be added.
-> > > 
-> > > Among operations done on fw_devlinks of those "never be added" devices,
-> > > device_links_driver_bound() changes their supplier.
-> > > 
-> > > With devices attached to a simple-bus compatible device, this change
-> > > leads to wrong devlinks where supplier of devices points to the device
-> > > parent (i.e. simple-bus compatible device) instead of the device itself
-> > > (i.e. simple-bus child).
-> > > 
-> > > When the device attached to the simple-bus is removed, because devlinks
-> > > are not correct, its consumers are not removed first.
-> > > 
-> > > In order to have correct devlinks created, make the simple-pm-bus driver
-> > > compliant with the devlink assumption and create its child devices
-> > > during its probe.    
-> > 
-> > IIRC, skipping child nodes was because there were problems with 
-> > letting the driver handle 'simple-bus'. How does this avoid that now?  
-> 
-> I don't know about the specific issues related to those problems. Do you
-> have some pointers about them?
-> 
-> > 
-> > The root of_platform_populate() that created the simple-bus device that 
-> > gets us to the probe here will continue descending into child nodes. 
-> > Meanwhile, the probe here is also descending into those same child 
-> > nodes. Best case, that's just redundant. Worst case, won't you still 
-> > have the same problem if the first of_platform_populate() creates the 
-> > devices first?
-> >   
-> 
-> Maybe we could simply avoid of_platform_populate() to be recursive when a
-> device populate by of_platform_populate() is one of devices handled by
-> the simple-bus driver and let the simple-bus driver do the job.
-> 
-> of_platform_populate will handle the first level. It will populate children
-> of the node given to of_platform_populate() and the children of those
-> children will be populate by the simple-bus driver.
-> 
-> I could try a modification in that way. Do you think it could be a correct
-> solution?
-> 
+On the patch: it wouldn't hurt to add an example for each of the
+operators too. Even better if it is a common use case of each (say,
+for `|`, a common combination of these flags).
 
-I have started to look at this solution and it's going to be more complex
-than than I thought.
+(By the way, the use of the `into_inner()` name here is another one we
+will want to discuss for the new naming guidelines table.)
 
-Many MFD drivers uses a compatible of this kind (the same exist for bus
-driver with "simple-bus"):
-  compatible = "foo,bar", "simple-mfd";
+Thanks!
 
-Usually the last compatible string ("simple-mfd" here) is a last fallback
-and the first string is the more specific one.
-
-In the problematic case, "foo,bar" has a specific driver and the driver
-performs some operations at probe() but doesn't call of_platform_populate()
-and relies on the core to do the device creations (recursively) based on
-the "simple,mfd" string present in the compatible property.
-
-Some other calls of_platform_populate() in they probe (which I think is
-correct) and in that case, the child device creation can be done at two
-location: specific driver probe() and core.
-
-You pointed out that the core could create devices before the specific
-driver is probed. In that case, some of existing drivers calling
-of_platform_populate() are going to have issues.
-
-I can try to modify existing MFD and bus drivers (compatible fallback to
-simple-mfd, simple-bus, ...) in order to have them call of_platform_populate()
-in they probe() and after all problematic drivers are converted, the
-recursive creation of devices done in the core could be removed.
-
-Before starting in that way, can you confirm that this is the right
-direction?
-
-Best regards,
-Hervé
+Cheers,
+Miguel
