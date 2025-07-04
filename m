@@ -1,119 +1,117 @@
-Received: from vps0.lunn.ch (vps0.lunn.ch [156.67.10.101])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB8F62857FA;
-	Fri,  4 Jul 2025 07:47:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=156.67.10.101
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AE65284B33
+	for <linux-pci@vger.kernel.org>; Fri,  4 Jul 2025 07:49:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751615236; cv=none; b=urDJincCOqg36IldaJIJHfOI7099astX/6wi49t+5ES69vtnuqrjg9r2vcK0u/w5/g0D9Hlr+rknQAZTYEnXhT2HexlypjduVUT27RO+usfYOCgk8H2cn6Lm2+8wLAeYWjF6l0HKF6tC2Wc0ohvwP7rLgvMRWnuHdrYXHhEY240=
+	t=1751615346; cv=none; b=Bk8KhAan8OOcC+Az/oh6uyaWiJ4f9KP1Grj+THhLzqPDomcl/lR3ilCmCWanKs7ZDOeQZX47q8UoRPLIG0txYVk3tsp6B863G9ZXrXx4y7fxtuWWUhd5cAMIqSaW/md89RR4fs7KrEqPQV/aCwxDrr2iZHhlJoYpFZeC3rCsKks=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751615236; c=relaxed/simple;
-	bh=8gB+AO68oAYcL/RcwfcXX8F3VEcyUkNlDhqHsTYg8h4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DcNPGJhB8nWy0p/8vuHuFAx9f/OaNeC5w16RBEBXto/KVM4cjFDsA/MM2Lt+ET+4sNXToLytGJ8BrrmKVCQLVtZLIcrSDn4A/xKzS5FO7AlYsLuQlYzfgF1tvxXm73q3WAvfbu3KSjNNqWkN4pw90DKuBS6b+Llwh2kXit9gHH0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch; spf=pass smtp.mailfrom=lunn.ch; dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b=s7b8gHjl; arc=none smtp.client-ip=156.67.10.101
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lunn.ch
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=lunn.ch header.i=@lunn.ch header.b="s7b8gHjl"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=lunn.ch;
-	s=20171124; h=In-Reply-To:Content-Disposition:Content-Type:MIME-Version:
-	References:Message-ID:Subject:Cc:To:From:Date:From:Sender:Reply-To:Subject:
-	Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:
-	Content-ID:Content-Description:Content-Disposition:In-Reply-To:References;
-	bh=lLeBr9v7iWnmJB5WR8E+Qdx4chL/QEo8kPrObOm2XBg=; b=s7b8gHjlLshr/s6aHjDwESkoZv
-	9xldLQc20XR4fF5OqxXWznCzk91go6X0+1hokaiCtTzgcvzRs3qRiKtfsqTUJE7KKzeAgCKHREsra
-	kvnr9afUyBdWT23H0Pp+eDaPiqOZEqx4FXHdDlmRumtj22gq0Q3GoFqjbkWKDBxQn6m8=;
-Received: from andrew by vps0.lunn.ch with local (Exim 4.94.2)
-	(envelope-from <andrew@lunn.ch>)
-	id 1uXb7w-000B5q-N9; Fri, 04 Jul 2025 09:46:32 +0200
-Date: Fri, 4 Jul 2025 09:46:32 +0200
-From: Andrew Lunn <andrew@lunn.ch>
-To: Tamir Duberstein <tamird@gmail.com>
-Cc: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>,
-	Benno Lossin <lossin@kernel.org>,
-	Michal Rostecki <vadorovsky@protonmail.com>,
-	Miguel Ojeda <ojeda@kernel.org>,
-	Alex Gaynor <alex.gaynor@gmail.com>,
-	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>,
-	=?iso-8859-1?Q?Bj=F6rn?= Roy Baron <bjorn3_gh@protonmail.com>,
-	Andreas Hindborg <a.hindborg@kernel.org>,
-	Alice Ryhl <aliceryhl@google.com>, Trevor Gross <tmgross@umich.edu>,
-	Brendan Higgins <brendan.higgins@linux.dev>,
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Russ Weight <russ.weight@linux.dev>,
-	FUJITA Tomonori <fujita.tomonori@gmail.com>,
-	Rob Herring <robh@kernel.org>,
-	Saravana Kannan <saravanak@google.com>,
-	Peter Zijlstra <peterz@infradead.org>,
-	Ingo Molnar <mingo@redhat.com>, Will Deacon <will@kernel.org>,
-	Waiman Long <longman@redhat.com>,
-	Nathan Chancellor <nathan@kernel.org>,
-	Nick Desaulniers <nick.desaulniers+lkml@gmail.com>,
-	Bill Wendling <morbo@google.com>,
-	Justin Stitt <justinstitt@google.com>,
-	Heiner Kallweit <hkallweit1@gmail.com>,
-	Russell King <linux@armlinux.org.uk>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>,
-	Jens Axboe <axboe@kernel.dk>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Dave Ertman <david.m.ertman@intel.com>,
-	Ira Weiny <ira.weiny@intel.com>, Leon Romanovsky <leon@kernel.org>,
-	Breno Leitao <leitao@debian.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>, rust-for-linux@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-kselftest@vger.kernel.org,
-	kunit-dev@googlegroups.com, dri-devel@lists.freedesktop.org,
-	netdev@vger.kernel.org, devicetree@vger.kernel.org,
-	llvm@lists.linux.dev, linux-pci@vger.kernel.org,
-	nouveau@lists.freedesktop.org, linux-block@vger.kernel.org,
-	linux-pm@vger.kernel.org, linux-clk@vger.kernel.org
-Subject: Re: [PATCH v13 2/5] rust: support formatting of foreign types
-Message-ID: <307d7547-b8da-4a82-9ae6-c95f66a283d2@lunn.ch>
-References: <20250701-cstr-core-v13-0-29f7d3eb97a6@gmail.com>
- <20250701-cstr-core-v13-2-29f7d3eb97a6@gmail.com>
- <DB2BDSN1JH51.14ZZPETJORBC6@kernel.org>
- <CAJ-ks9nC=AyBPXRY3nJ0NuZvjFskzMcOkVNrBEfXD2hZ5uRntQ@mail.gmail.com>
- <DB2IJ9HBIM0W.3N0JVGKX558QI@kernel.org>
- <CAJ-ks9nF5+m+_bn0Pzi9yU0pw0TyN7Fs4x--mQ4ygyHz4A6hzg@mail.gmail.com>
- <34c00dfa-8302-45ee-8d80-58b97a08e52e@lunn.ch>
- <CANiq72ksOG10vc36UDdBytsM-LT7PdgjcZ9B0dkqSETH6a0ezA@mail.gmail.com>
- <CAJ-ks9mkC3ncTeTiJo54p2nAgoBgTKdRsAwEEwZE2CtwbAS7BA@mail.gmail.com>
+	s=arc-20240116; t=1751615346; c=relaxed/simple;
+	bh=d+xlcVC8qM2JhvOfg7gIEkYGcdbcCX/dUslbPbSSM04=;
+	h=Message-ID:From:Date:Subject:To:Cc; b=Dvf8vFdCS0LH24U90kGSEvQr2/F8xxYpgj07IjM2jNtU7j8PxopAUDXj2h2gph1USzVP8T+yqbcEBeBy2UedKCAg9FRN5NP/fVAzxr3H9g9tbEtdFG0h6ArZtqt4rVgxVCkmHR2hJAjhXqxV2ILp4xf8ZwtZDQAsCyQQOZSgZIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with UTF8SMTPS id 0AA322C1E4C8;
+	Fri,  4 Jul 2025 09:38:50 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id C81BD61AD92E;
+	Fri,  4 Jul 2025 09:38:49 +0200 (CEST)
+X-Mailbox-Line: From 53abe6f5ac7c631f95f5d061aa748b192eda0379 Mon Sep 17 00:00:00 2001
+Message-ID: <53abe6f5ac7c631f95f5d061aa748b192eda0379.1751614426.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Fri, 4 Jul 2025 09:38:33 +0200
+Subject: [PATCH] PCI: Allow drivers to opt in to async probing
+To: Bjorn Helgaas <helgaas@kernel.org>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, linux-pci@vger.kernel.org
+Cc: Yaron Avizrat <yaron.avizrat@intel.com>, Koby Elbaz <koby.elbaz@intel.com>, Konstantin Sinyuk <konstantin.sinyuk@intel.com>, Davidlohr Bueso <dave@stgolabs.net>, Jonathan Cameron <jonathan.cameron@huawei.com>, Dave Jiang <dave.jiang@intel.com>, Alison Schofield <alison.schofield@intel.com>, Vishal Verma <vishal.l.verma@intel.com>, Ira Weiny <ira.weiny@intel.com>, Dan Williams <dan.j.williams@intel.com>, Even Xu <even.xu@intel.com>, Xinpeng Sun <xinpeng.sun@intel.com>, Jean Delvare <jdelvare@suse.com>, Alexander Usyskin <alexander.usyskin@intel.com>, Adrian Hunter <adrian.hunter@intel.com>, Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Alan Stern <stern@rowland.harvard.edu>, "K. Y. Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, Stuart Hayes <stuart.w.hayes@gmail.com>, David Jeffery <djeffery@redhat.com>, Jeremy
+  Allison <jallison@ciq.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <CAJ-ks9mkC3ncTeTiJo54p2nAgoBgTKdRsAwEEwZE2CtwbAS7BA@mail.gmail.com>
 
-> There's also a tactical question about splitting by subsystem: are
-> there any tools that would assist in doing this, or is it a matter of
-> manually consulting MAINTAINERS to figure out file groupings?
+The PCI core has historically not allowed drivers to opt in to async
+probing:  Even though drivers may set "PROBE_PREFER_ASYNCHRONOUS", initial
+probing always happens synchronously.  That's because the PCI core uses
+device_attach() instead of device_initial_probe().
 
-You can run ./scripts/get_maintainer -f path/to/file.c
+Should a driver return -EPROBE_DEFER on initial probe, reprobing later on
+does honor the PROBE_PREFER_ASYNCHRONOUS setting, which is inconsistent.
 
-and it will give you the Maintainers for that file. From that you can
-imply the subsystem.
+The choice of device_attach() is likely not deliberate:  It was introduced
+in 2013 with commit 58d9a38f6fac ("PCI: Skip attaching driver in
+device_add()"), but asynchronous probing was added two years later with
+commit 765230b5f084 ("driver-core: add asynchronous probing support for
+drivers").
 
-It might be possible to do one tree wide patchset, since Rust is still
-small at the moment. But you will need to get Reviewed-by: or
-Acked-by: from each subsystem Maintainer for the patches. That is not
-always easy, since some subsystems have CI systems, and will want the
-patch to pass their CI tests before giving an Reviewed-by.
+According to the kernel-doc of "enum probe_type", "the end goal is to
+switch the kernel to use asynchronous probing by default".  To this end,
+use device_initial_probe() to allow asynchronous probing.  The function
+returns void, making the return value check unnecessary.
 
-	Andrew
+Initial PCI probing often takes on the order of seconds even on laptops,
+so this may speed up booting significantly.
+
+Curiously, a small number of PCI drivers already opt in to asynchronous
+probing.  Their maintainters (who are all cc'ed) should watch out for
+issues, now that asynchronous probing is not just allowed for deferred
+probing, but also initial probing:
+
+hl_pci_driver        drivers/accel/habanalabs/common/habanalabs_drv.c
+cxl_pci_driver       drivers/cxl/pci.c
+quicki2c_driver      drivers/hid/intel-thc-hid/intel-quicki2c/pci-quicki2c.c
+quickspi_driver      drivers/hid/intel-thc-hid/intel-quickspi/pci-quickspi.c
+i801_driver          drivers/i2c/busses/i2c-i801.c
+mei_me_driver        drivers/misc/mei/pci-me.c
+mei_vsc_drv          drivers/misc/mei/platform-vsc.c
+sdhci_driver         drivers/mmc/host/sdhci-pci-core.c
+nvme_driver          drivers/nvme/host/pci.c
+ehci_pci_driver      drivers/usb/host/ehci-pci.c
+hvfb_pci_stub_driver drivers/video/fbdev/hyperv_fb.c
+
+All other driver maintainers may test asynchronous probing by specifying
+the command line parameter "driver_async_probe=drv_name1,drv_name2,...",
+and on success setting "probe_type = PROBE_PREFER_ASYNCHRONOUS" in the
+pci_driver struct.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+---
+ drivers/pci/bus.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
+
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index 69048869ef1c..b77fd30bbfd9 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -341,7 +341,6 @@ void pci_bus_add_device(struct pci_dev *dev)
+ {
+ 	struct device_node *dn = dev->dev.of_node;
+ 	struct platform_device *pdev;
+-	int retval;
+ 
+ 	/*
+ 	 * Can not put in pci_device_add yet because resources
+@@ -372,9 +371,7 @@ void pci_bus_add_device(struct pci_dev *dev)
+ 	if (!dn || of_device_is_available(dn))
+ 		pci_dev_allow_binding(dev);
+ 
+-	retval = device_attach(&dev->dev);
+-	if (retval < 0 && retval != -EPROBE_DEFER)
+-		pci_warn(dev, "device attach failed (%d)\n", retval);
++	device_initial_probe(&dev->dev);
+ 
+ 	pci_dev_assign_added(dev);
+ }
+-- 
+2.47.2
+
