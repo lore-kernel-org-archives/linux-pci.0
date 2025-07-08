@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F23342E7BBC;
-	Tue,  8 Jul 2025 17:34:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28AB02E7F07;
+	Tue,  8 Jul 2025 17:34:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751996053; cv=none; b=oUNEvQNXGdYDKxmgmbTsz+eY10uPbm0DKyLYNCzDffNeMp5R6oC7u8N9WpllNt1BolQQ8+AmCJBu38xhzDdzC+ashg0W1rKdnsykNyAYHex+Ain4zuoLC7awLmTnH61K3KxPObYi5YKz7eA6itEco9R4yYdHN7ttnL1L/AE4HDs=
+	t=1751996053; cv=none; b=DRxJ0+7xmUejBe6CXJcwCadYkqSHjZhoBzxilnL/gaB6Ee8etxTw/2f8anQXQKbRkS5TUa1ot/4r2T7fBLVtja9PQxu8UiR7nlTxkxNjp6jNLi5d64F5rS9pqtFNopseXpac9XmmAKeaFY4IgU6UpQ/OnkGPqVGH5n5z2P6C8UM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1751996053; c=relaxed/simple;
-	bh=R1XE97PXvA2ANKeTAsd6SDjyoafLP7919cZJ82aU2GU=;
+	bh=k98cYHJAeNwc/m55APAuSnpJZEiaO0Z2w/xQyAaUaQw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=aFmXKZ+v5ncR9Qp06nmAjospIih4sKNG0w8suBEJ6Ri9YWaebZuQiaTeGj4iMtKI3f/18zf+vn3YFbE3oVOYKBjmoynwPEnlicMcmpPfpDAQTYYgUwv/girLRfISE6ip8WnwXPJOXA4EcCz5mE/rp3dC6LxGCreFoHYhrQHOrxA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RbM5gYfp; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Oc7DQpcIWPBH/qbIWR0n/iBqrbPCnMeRNJfALBP9HmsTOv6gc63HwXtQthuGhF7AoXx7rratdZeL3eiApmROa1VaAIavrmDjg+OvD3BCEHHRS4FsXLjO9HjV2SMhnWA2mru/l8QXf7Eya74zw7sG3PwKfmNoAnPFRcIN6HpJqXU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IV4bEwXA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RbM5gYfp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 96CB0C4CEF8;
-	Tue,  8 Jul 2025 17:34:12 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IV4bEwXA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 07334C4CEF9;
+	Tue,  8 Jul 2025 17:34:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751996052;
-	bh=R1XE97PXvA2ANKeTAsd6SDjyoafLP7919cZJ82aU2GU=;
+	s=k20201202; t=1751996053;
+	bh=k98cYHJAeNwc/m55APAuSnpJZEiaO0Z2w/xQyAaUaQw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RbM5gYfp7zNIfYsBNm9Yil6S+w3K1LUNu7NHSjNpD6v2mDyXpjJX8BX4SeC8THFze
-	 3FJpGCOWwpcWKnMyjLVVI3brVfYF25HO7lRLxbCAH41IXFM2d0iO2wlKcbQZMllSmM
-	 byytUP52pOLhqk/aQrTnLgJY0r4fW+OveghnhitKPz2gRD1Bw0rC+IgQutehm0RrV9
-	 PP7/GMGRG6fcGgkxnomWPZJdtT2ob4zKwluEPhguctvBwoRPOrO3/9TBcOsFtZV0zK
-	 q/ROl8pl00R3OzWZ/Nx3cg/h5ZwBD4phK/SjleA5dp0sF+Kov4D9/v6HhOqNK5gAkJ
-	 ivpmOv2YxbQGg==
+	b=IV4bEwXAd6QJ9CTtBJgb/ii1pxuW6HZTrwYYMCijBt7Ysj8qoqFDRF7YUlNqZdeqb
+	 S392K0a3iUUf0fjSdZ4eZJQxRgbHt86LJLl8rKCBDKRXkD5osgbROfDZRT+BCjBC6M
+	 iBlOzcV9lZ8WwcRZyAfmagRmaN1Z/VkIt02dIHdEvZSREfD5tCIvCokY1nOtbD5gVI
+	 jFGuFL6NRzHtu8wXDlAPfowCBGj7TB1ph5mq0DYeMeQtVVHvg4CZmD5bxK5pInLC7h
+	 U3v0uIC0JfRoQReLHaoUA4ktriybfCEv3ZXOYYfQ9jsfVZzzt4lurEizyt26Aeotz9
+	 QzxyLMZxNLSdw==
 Received: from sofa.misterjones.org ([185.219.108.64] helo=valley-girl.lan)
 	by disco-boy.misterjones.org with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
 	(Exim 4.95)
 	(envelope-from <maz@kernel.org>)
-	id 1uZCCo-00Dqhw-PD;
-	Tue, 08 Jul 2025 18:34:10 +0100
+	id 1uZCCp-00Dqhw-6n;
+	Tue, 08 Jul 2025 18:34:11 +0100
 From: Marc Zyngier <maz@kernel.org>
 To: linux-pci@vger.kernel.org,
 	linux-arm-kernel@lists.infradead.org,
@@ -43,9 +43,9 @@ Cc: Toan Le <toan@os.amperecomputing.com>,
 	Rob Herring <robh@kernel.org>,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	Thomas Gleixner <tglx@linutronix.de>
-Subject: [PATCH v2 11/13] PCI: xgene-msi: Probe as a standard platform driver
-Date: Tue,  8 Jul 2025 18:34:02 +0100
-Message-Id: <20250708173404.1278635-12-maz@kernel.org>
+Subject: [PATCH v2 13/13] cpu/hotplug: Remove unused cpuhp_state CPUHP_PCI_XGENE_DEAD
+Date: Tue,  8 Jul 2025 18:34:04 +0100
+Message-Id: <20250708173404.1278635-14-maz@kernel.org>
 X-Mailer: git-send-email 2.39.2
 In-Reply-To: <20250708173404.1278635-1-maz@kernel.org>
 References: <20250708173404.1278635-1-maz@kernel.org>
@@ -61,31 +61,28 @@ X-SA-Exim-Rcpt-To: linux-pci@vger.kernel.org, linux-arm-kernel@lists.infradead.o
 X-SA-Exim-Mail-From: maz@kernel.org
 X-SA-Exim-Scanned: No (on disco-boy.misterjones.org); SAEximRunCond expanded to false
 
-Now that we have made the dependedncy between the PCI driver and
-the MSI driver explicit, there is no need to use subsys_initcall()
-as a probing hook, and we can rely on builtin_platform_driver()
-instead.
+Now that the XGene MSI driver has been mostly rewritten and doesn't
+use the CPU hotplug infrastructure, CPUHP_PCI_XGENE_DEAD is unused.
+
+Remove it to reduce the size of cpuhp_hp_states[].
 
 Signed-off-by: Marc Zyngier <maz@kernel.org>
 ---
- drivers/pci/controller/pci-xgene-msi.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ include/linux/cpuhotplug.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pci-xgene-msi.c b/drivers/pci/controller/pci-xgene-msi.c
-index a190c25c8df52..243c7721c8799 100644
---- a/drivers/pci/controller/pci-xgene-msi.c
-+++ b/drivers/pci/controller/pci-xgene-msi.c
-@@ -429,9 +429,4 @@ static struct platform_driver xgene_msi_driver = {
- 	.probe = xgene_msi_probe,
- 	.remove = xgene_msi_remove,
- };
--
--static int __init xgene_pcie_msi_init(void)
--{
--	return platform_driver_register(&xgene_msi_driver);
--}
--subsys_initcall(xgene_pcie_msi_init);
-+builtin_platform_driver(xgene_msi_driver);
+diff --git a/include/linux/cpuhotplug.h b/include/linux/cpuhotplug.h
+index df366ee15456b..eaca70eb6136b 100644
+--- a/include/linux/cpuhotplug.h
++++ b/include/linux/cpuhotplug.h
+@@ -90,7 +90,6 @@ enum cpuhp_state {
+ 	CPUHP_RADIX_DEAD,
+ 	CPUHP_PAGE_ALLOC,
+ 	CPUHP_NET_DEV_DEAD,
+-	CPUHP_PCI_XGENE_DEAD,
+ 	CPUHP_IOMMU_IOVA_DEAD,
+ 	CPUHP_AP_ARM_CACHE_B15_RAC_DEAD,
+ 	CPUHP_PADATA_DEAD,
 -- 
 2.39.2
 
