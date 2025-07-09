@@ -1,47 +1,47 @@
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2083.outbound.protection.outlook.com [40.107.96.83])
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2052.outbound.protection.outlook.com [40.107.102.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA512E9ECC;
-	Wed,  9 Jul 2025 14:52:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.96.83
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6150A2EA14B;
+	Wed,  9 Jul 2025 14:52:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.102.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752072762; cv=fail; b=mbNuwY4JlPpgR30LfNUljz0zfnDrMEndNzQZxeBaL4pwz99hjHJduv4KAqbG6rC/PSgw38ON0Fz9XreFLhPe8YrA985oUGE/0dnd0M/UuxQ4xBc1YpnkNxY7M73+5p0eBlVx6IB39hx/AMeYLYaxucNcQQ5BhgeImPhdrzlciSE=
+	t=1752072763; cv=fail; b=eZHbtg4TFm/nduaEPVpO3ajp+0vr0xjyUp92WQExZCCm1aZjYQIt69IsGIJxEM5HF65CMdjiPfE6U2Mgq0YiEkBvjfRNAL1l7XC9H17gRFC4wqsScNdLY3kSdIyLpNWSLsAqVlhQy2MWKRjz2uCY3vOcNv7tmcw10NQXPMcAL8o=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752072762; c=relaxed/simple;
-	bh=DuSTBViRYI+r+QrrclSqdVAEsfryHFwMKoA2KUKhTpM=;
+	s=arc-20240116; t=1752072763; c=relaxed/simple;
+	bh=IUJwbSljjGPprPPrrxk07tF7P+cYDvOKWUv0tEf2Ktk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=ODLlQzTVW1U0Fc6kP9NVX2ct2iEFvfiHqmFENjG5+IGfOmKMuHCA944R3eQEFEfyO5t3OBNZ+4Vu6fk7s6gc/a6705v7CrqicHy7eNsiEo5irUjOn2dKJv7D6Zlwow5ZhOe/i0wsAp6e0x0XFdWtyHvh7/5v62yJmq/5QCmdUTk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=D9aH8DRY; arc=fail smtp.client-ip=40.107.96.83
+	 Content-Type:MIME-Version; b=tfno9lKdMmPYBEoHvScNYiZ31epiYiweDaPRImJwT39Odgxnvr4IKKqbIPIT+zjmwnfWJRwfNFD2AJKF50YQi8sDasm3cjcv+Ui74EfJ08rc31GvcjS7rgeCYgWMW7qvwm0ektu8M3Zy9ujS7rbmyd4ViHrWukg88hOQ4I50m6g=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=qu1N/xqV; arc=fail smtp.client-ip=40.107.102.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="D9aH8DRY"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="qu1N/xqV"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MC0rFyYd+77RP33Kf2hQiivIaiq4RczOQIzWb0K4R0EJnXb6CZPhz750z60Wy508koudO1eIEpQcCBBzt/jFqYqIrd7wo495sGwN0Dt1W2SY2iS9m6oEm81PaFkJf23LlcyFhdeGDm3tjgVgTSkQY0fm59NAyO2vBYxK6NO2BSD3lb5nR0G3MSOfDGA8TZ+8fLPRKwcegUHm+fm29H89KjKB4y6mWorxAVypCGA6Ke50VOI7lOwdi3tnrbRriU27/B+9CblEpJCTVQqOuX2239qtCejGfFLQabyxX/QR0w2htQOCaqfP9t4pWEwRp1H/ZV0w0MpNf4+YGc5YzX+aQQ==
+ b=ezQPvGvRffhDF4XTVRUMiNHdNjscQlr+uvhS793Sqz8zCZbymmO+H2Psz7mds8tGQ8BkuR5cEn23dyiQr1xVpXb45ln84dKaWTTMxUwrF/uzFTtLZgZEMGRBovf0IldTyP3nd7LSCo8dPPwND7upI04IyfJ+dQ/AVnt+R2dVWIom+oJBy7jSVurKYDFp/+k7Y/VasklSd5hD/JumiTbepPiUTAq2mphg8v0RC/5pAaOlUECa4VtW7CbFURSCDH6Q5WTgqZWHZ+ITD9HsjC7LIO0J1gujgNzZX7rI16TOK05rKKv2q96LEMj9au0z4KQK9CPPER8upnVrZJ7GhVR05Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=urUKKavlJ9CE6XWecKbCsHYsIjCEjk67Q46MOfLczOM=;
- b=YYIN8CM5F7mOZr15PKWNEsNF7NgWDD3dpHabBuexgfNinLMLvZniI20NQxeOiUhsfTElmM3zQOH5K1O+gOQvW1TdpewftHaMimfXU9hl/TbyZ+Vp+hPssM0/Gf1trhzJ123HOuPwi2RQrmMIfcKO5sfei9Fjoj/OX5JMEOKFsgLgtyGTC7dnXUa0ws4ki8J9JuEYJt0EL3/WSUOU7mBN8EUVq0vIjZ6jn8lUuAsGdaH0uaqu9e2Ce5YsfgcN8r8rU7oogYkDai0PZUYVhjK1AX0T7KYHrmqEBLsTyl/Acu2PJHOjuWpJxDQ2pQU7/NN1HEk504RpZDMgO5v04oCl/Q==
+ bh=7Kg82F7YuBWWH5s2f182ITetGjYNikELvPCgChldAIE=;
+ b=lkKThrrLy5+IW+sxTX/+ctfsMUX/6sUTx7kb3DtJpHJ3uy/IpTgLo11lQPVckiQjd0MYT7/yD48ZOMcacHwMrnGwLUXtQCe9OUSQ04jixGprylSEVNkyIywWa90k2TlaCkk4Xo/bTX5/AMblLct6Ah2tG5L+E1oi6nCsSX6P+PfGIHsUmq+Pasl4WUkgAPF0y95IcqYUplUU2FPPNFilQ03Hz3qECxWtF+cI9L4DxW9iYCnZV7agl73RGLL/96IdlRsZL8yxtiOmTh7cr+ptXDMAtaIzAnXGew7iNPWYJl9QW2mGbhgnCDFUoUcSCAfedc/kFIBgHVpx2gDXaCpNRQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=urUKKavlJ9CE6XWecKbCsHYsIjCEjk67Q46MOfLczOM=;
- b=D9aH8DRYImV6wFTxdrVOiw9YaGD0/EuVcSHjIles931K9dyDoakxmM/2V4sBHt8t8I7lgZcjbr+ahPtmkU5F8CpQJMDn/JDFBUOEBvAWGU8jZborYjN1u9oYl3pWmggzf9QauADkk237pC8r0QDgJksdRzAIwghquG19+Uly6ZJHjfpDEICOj59+p6PfnQK/WZF7xtpcLHedTrktQ2UIbcaB9X/jp2UhQk7ghwVDaURPhUct5BJpQWHdUsI7Ls9oNxX7KRekb2MI5rRNNn7CWhwQm2hwt1cE8KfHt3XFvm6AIgLObA3Ef7xP97tKC8fYqo+yfp4W0qZYgDWshmDomQ==
+ bh=7Kg82F7YuBWWH5s2f182ITetGjYNikELvPCgChldAIE=;
+ b=qu1N/xqVGbcjHyZc1gTGZyrJJOFMpYcXyYnk2kk/lt7gQQZOzAU11eUa5OoCNGoYmpVpjjgBJumUKz/skI/ABAhlyxcqTuuaxH+sMu4calPCFJWLqXAKReVjBAs16VghXGC689d2igunUOgYtywP561NmraJt+ieUtzLkAPGLA8kzWZaJxvpTSCw7gCz7qB3JeL3Ia25v0hHpTd7SyJkKQJ05GYNCsInMqh6T3FaTEmf+RTYQ1U4a13k9rhYs5PFIteowN2i01Ccpn8CZzhPJWTd3sy0W2/eFZuBRnl/mekQlethHbC1jspqmdWmbzb97spUpaEItY6iPTO9RxNeBA==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CH3PR12MB8659.namprd12.prod.outlook.com (2603:10b6:610:17c::13)
- by MN0PR12MB6125.namprd12.prod.outlook.com (2603:10b6:208:3c7::15) with
+ by IA1PR12MB6356.namprd12.prod.outlook.com (2603:10b6:208:3e0::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.23; Wed, 9 Jul
- 2025 14:52:29 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.26; Wed, 9 Jul
+ 2025 14:52:30 +0000
 Received: from CH3PR12MB8659.namprd12.prod.outlook.com
  ([fe80::6eb6:7d37:7b4b:1732]) by CH3PR12MB8659.namprd12.prod.outlook.com
  ([fe80::6eb6:7d37:7b4b:1732%7]) with mapi id 15.20.8901.024; Wed, 9 Jul 2025
- 14:52:29 +0000
+ 14:52:30 +0000
 From: Jason Gunthorpe <jgg@nvidia.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	iommu@lists.linux.dev,
@@ -59,15 +59,15 @@ Cc: Alex Williamson <alex.williamson@redhat.com>,
 	patches@lists.linux.dev,
 	tdave@nvidia.com,
 	Tony Zhu <tony.zhu@intel.com>
-Subject: [PATCH v2 02/16] PCI: Add pci_bus_isolation()
-Date: Wed,  9 Jul 2025 11:52:05 -0300
-Message-ID: <2-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
+Subject: [PATCH v2 11/16] iommu: Compute iommu_groups properly for PCIe MFDs
+Date: Wed,  9 Jul 2025 11:52:14 -0300
+Message-ID: <11-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
 In-Reply-To: <0-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
 References:
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SN1PR12CA0099.namprd12.prod.outlook.com
- (2603:10b6:802:21::34) To CH3PR12MB8659.namprd12.prod.outlook.com
+X-ClientProxiedBy: SA9PR13CA0118.namprd13.prod.outlook.com
+ (2603:10b6:806:24::33) To CH3PR12MB8659.namprd12.prod.outlook.com
  (2603:10b6:610:17c::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -76,384 +76,340 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB8659:EE_|MN0PR12MB6125:EE_
-X-MS-Office365-Filtering-Correlation-Id: 5ba1a9a6-0438-42c1-f2cd-08ddbef83806
+X-MS-TrafficTypeDiagnostic: CH3PR12MB8659:EE_|IA1PR12MB6356:EE_
+X-MS-Office365-Filtering-Correlation-Id: e0fec9c7-35ab-4035-40a7-08ddbef83935
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024|7416014;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?LFciMVWdAHt9PGL73z0oaAzCaQepEPD7OAZMB3Dh8Nxg8qbEJq1+tliu2GJF?=
- =?us-ascii?Q?SA2HYMEOVo6Y8Ohym8xabRDq7nfgS7LdmxHecFUnEutCi9UT5K/BLBiHstXs?=
- =?us-ascii?Q?boDlHnPrrPpyRSO2TIzeLVD3XgDBOKhKkddr5SXcqPi1+1EO8Z5ci06XyWnL?=
- =?us-ascii?Q?fWj2cHnUxiAF2uLDfzQVgynnFak37h6clhIMbRFfDXRqloFyUuc/nkLiHjP7?=
- =?us-ascii?Q?nPPy7MrytG2nOhOLyDwjxB1P1hWcAt+hN+upasLxEByUfBn5BIk5Qbxt0niv?=
- =?us-ascii?Q?uG107POp8wPxh+I1X9EHxjC/eiVpkuX42ePdKXh5b+ouD+QIXQaHX4M8+4aF?=
- =?us-ascii?Q?LRllvpysyQculK5q0EWDx5E+sI+NM5RlaLqwpcPhseTpmIaLsKSI6e+sWtF5?=
- =?us-ascii?Q?2ZJPc6c/LweRFgSgHo1hIn04l2ZrEiEneh21wzfiVwz0Nzsb9On9F45FbS1a?=
- =?us-ascii?Q?MHpVdkBXUDvjA/ymHtP+ahSVD1Zq+HclJ4ChEbApePPS7RR0tlQT0zmucabF?=
- =?us-ascii?Q?hUocVzzHPkYom4wBibSeiU6+LpTKe72sZ8UAsCjlFGnxty191Nxzo9nIqjij?=
- =?us-ascii?Q?CZwwbFn342y9s7mO4m49RRm6u/vgmw3IyWGlU3NhDI1qzVaiZLsNa5OGAGBs?=
- =?us-ascii?Q?FTY1Cz5I0Z1hYgKkGCQof4lkJ+OfmV6gu7bWmJg28L+2g2GGRoeb8Hm2pPSh?=
- =?us-ascii?Q?zIraGKSRsuB4Rz+WHupj9g9Fr0lw2CDXGJYW8JHd3drv5RPBePaiYTCTyQHT?=
- =?us-ascii?Q?xH4sr0SvqVzCo0zVWS8n94OcWfrJzH9yfWa8lLSJp1JgdKniC2++Zhrv+ya7?=
- =?us-ascii?Q?sp88PlCIx33Auy5BRUIL9G2hlNukO34pmRLa9sXMoiVRGjh0MlFqgHvUkRX8?=
- =?us-ascii?Q?X7fKs77Bp8eV/59JaF3FRKn9/4h6CuZQVQ58X8TOFCr6X+qS6ACLRZQwJj49?=
- =?us-ascii?Q?aCX93vRjAC8I3gGFwc7+F3cZPMd/xUlw0VmsO0o4tCrm0XWVmKQTlNOAJRHe?=
- =?us-ascii?Q?oP/ADm/Ae0iTtPkgO7Rb4DAU/NT72L3qRpfMHosiZLjwDz91/kKLRoJF1KRF?=
- =?us-ascii?Q?heLn4wJKov8XAzC7NNuznnXPiw9ja1m9rXEGGiw5Zyqr7ICLiWEmYTXvwMt/?=
- =?us-ascii?Q?/zrxaA+kwKhh39kz5QMVBktYQADIuA0rQ6fccu2mGXtIiDRqpnpeGu0eqrEF?=
- =?us-ascii?Q?tsjVDcUy35qKDAOTZl5/u5eUQgQjJX0Rdq0/2+aPnYnNA7e/WauXk3uBmqw1?=
- =?us-ascii?Q?161MaksGcuu5F1daKlWda8xsu3rAyipWzWsBuRzGXm3cc/ZN6DJgLaA2tVew?=
- =?us-ascii?Q?cObXqCkRJLVpR2b6zTuW6Y+Eisrr71pjjwyKch8+bV7l7DzuTtpPJyIbLqqj?=
- =?us-ascii?Q?/tcNC2IZ/umAhpHASReJ568e05zEZjWEJodN05LuPXgXHVza9sZKsa3PH/V6?=
- =?us-ascii?Q?Ml/TDAoOvsU=3D?=
+	=?us-ascii?Q?VFjNZsrVik4NAV+OT19euwjdw3vRh+uosDEimbCLQjwvkuTKZ19sMESEqo88?=
+ =?us-ascii?Q?tqE8uuFSlvGLJofBpBeXE8KPoe5i1Hof6132auKb4Y+U/6sTJQ5NX+jgyQ5y?=
+ =?us-ascii?Q?+8RZtFS+P6YxAe9kZfjg2H2JUoHeuGWGLQYhEgSMJV/X9sjbPSi6G0utTKtD?=
+ =?us-ascii?Q?os1uYYvk0L55zQUyan5GrNEqleeFNW3gskXa7wiUH9GJVUDVVnV41+7EC7RU?=
+ =?us-ascii?Q?XwF/HPKfNDepe4v3J4c8g9ti49UZbvkPzTV+dScmIN2C4i5+BWACPrOCxXtZ?=
+ =?us-ascii?Q?FrStQZUmDdsPqywODPqEbq7EWNWbGaxBqweg6Dqa9qVyZ8ZdulP8zxtSBU+b?=
+ =?us-ascii?Q?rn5nylt+L4JAjdh/s3oCyDiHUFtI4StPplYc38p3lXs67GEM39h/GAZ+RvuN?=
+ =?us-ascii?Q?oCahRILBi0sUrx8bjDzSiLhQscNeIFuBZSmmQQZn5cpBPBatS1y4PKpHUm38?=
+ =?us-ascii?Q?RYrDL464FmMBrLd0hZ6bGKIuLvDUgbffPcqpv/V/4eewIcUhuj8KTNWYuZug?=
+ =?us-ascii?Q?pDRFlDs/78JzSHDR/jCdcqkNCfJzLeXr5M/AcRd1XkqI8iHJrFlhlsGDME5M?=
+ =?us-ascii?Q?sPcjtxVSk8jLUnPqyePnLCjTdDg8bIX/Eoibcg9C/BpHdMpa6RbmBeHQdSOF?=
+ =?us-ascii?Q?FDR93/aJCIV5YaPGUnwqP8c5+Rsf7Kd7eY/aadg45SOMZiLGVyMSKpO8iClq?=
+ =?us-ascii?Q?pLO0A9fBTtdSJVcbbW0IQ/RHA0APE8pcel9dz1+6PG56DpGEXyP7LxfyvZcd?=
+ =?us-ascii?Q?0N/XiIm/+X/VOuRd9qaut0qWFjP1Z2DT4INPOp98DjE2ETMdjiU9VN2KCqSw?=
+ =?us-ascii?Q?swyBpbRENsGLeeZ1hHiu6PfEnUf4b4fzDHCrJnjbdESxOeAXGcTPLhx76fEj?=
+ =?us-ascii?Q?mJ3YDyCoyQrqbal5JOJoeZlPuZ9hsZy6+f3mz3HYtC0bK3F0e0jTGsudf07l?=
+ =?us-ascii?Q?tEmLbLpdMFyzLqqfw7NIfcDkvnatS7F74WDVpIabknkXhgodPr9J8CUlmVRQ?=
+ =?us-ascii?Q?wqM/Jq+7Klr4nu4cXO8IU3bxlioTVCKA0ZZ1tL8MQ9pGvOhM1dAXd7uJq4bV?=
+ =?us-ascii?Q?dC6qyTGEwYXANryP163noNyJkCFKuUFuVSOMe8mnSRPCWQeLJGoHyJ3TKAxM?=
+ =?us-ascii?Q?MpOYYjCdazmBenYmbwqR7OhfNP19RH/gyVmNtfXq6dlMdG9fZZuAPTDgTl7o?=
+ =?us-ascii?Q?HPi476irNHWawU4zlEvx1IYFWwQI7XAqYRvrbwiN8FrdGrT8KN/uKwVfx/el?=
+ =?us-ascii?Q?1QKfT4kqro2dOwFFRjNUJ5nIG9J/+v1M8poLQ3DNKM/spv2IXXTicoEblcQK?=
+ =?us-ascii?Q?/dz6pbcB1c8S8CT53OTO/vWS9Ga0ooVmBAz8NNz24jd7/cOOkBEJkDuqrIzp?=
+ =?us-ascii?Q?cCs1uf80aRXiGR1k34nSqqqnhHuh1UDFxCDxfhybdI3TeJ/u8gnEr7M3zBPF?=
+ =?us-ascii?Q?kjTh5uagf3M=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB8659.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(7416014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB8659.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?JZkqmgE6dYNeqWjrjiAljIkBg3LcWYCiZnynxBYCsdV8M7LOga89IMx26pdP?=
- =?us-ascii?Q?5dzaorqFNyAw1yWlw0XvbVvv1Z3XJ4cW2Zq5V3QpcZe/YvOzb+s1mMuXjreI?=
- =?us-ascii?Q?QSLCYNxHJg+3i3kmt8wc+wQt+mIuuRD5Uh8DHOzXJYBtGdF9kYlOEe/Sgsqx?=
- =?us-ascii?Q?GHDimNTEVRofUdfiGK0QIqw+IeQYyycAutymshAK3M4YM3ZT1Jv+w4RgcoDN?=
- =?us-ascii?Q?/eC2yXY0fuPne/HeB9jb0eKEgC76JMoSZT9n+O0z5St/9VylnwEr7RmyceFU?=
- =?us-ascii?Q?wCMJFQCsnqgIrFmwBlkJvEyTe00AgZAukbebidhwFn+hpYyMePgsEThG04y5?=
- =?us-ascii?Q?1Fs/9/a2fi8wLlDDkWphuIUeJ7GGjzhdwOdvArRezN+C91Qeg4PmOA3u8VV4?=
- =?us-ascii?Q?e7e2OmTsglgy1hsE9GKsotgqE9NgM9xQAsCjfY3Xq7WbY/BEaDQb4OlsYoiU?=
- =?us-ascii?Q?7HeuAsWHZdBdTLwJcTK2w2xJe9h2Ztlw31Ido/BEbrdLSQEHT0KgQc778jw7?=
- =?us-ascii?Q?uKoynHz1oOPNRo29F/WDIYHA5YZ8Gpb2rZy1U4F4Xrx4/Q8ObMOaiQ5jHeij?=
- =?us-ascii?Q?8qUxyUqVPBOtkx6Vgv99Wz62PAIGQEwDmekmDL4ZDpFS1RCd3aurtexHk2BT?=
- =?us-ascii?Q?EhWZxp97hR0G78OANgsY8r7lZ37qKtkRb6JKiOMp6O8Aq5+ZsDsS+Y9Bxjki?=
- =?us-ascii?Q?C5u+d1cXf84R/YTZfB2Qq76pU0RZ47jDBq9I3vgmaClRK8W85GHL67HmInKD?=
- =?us-ascii?Q?WR5ty8X/WA0YVSocOKf75kIsHIzvHbX4WXjZlF4f1+fmy/pSx3K2Hm1nrPOB?=
- =?us-ascii?Q?IFwmhY3Z5lGgeuYplzVFqD+Rcg01XHrYFOgKhOxhp1pspKPYxnpuQhuMqDMI?=
- =?us-ascii?Q?vkxdU/ocpDp8qhUDLIvU+Y58GUEj3FOm705/CymflZwS2RJMUcZOEoGrZdx/?=
- =?us-ascii?Q?nonHhRGYB1nqT4kdsLtvr0X54FqFWrpXsKT/ug2YNx8wjzvLRiM+cFTA3XVU?=
- =?us-ascii?Q?cd/I0sO1Uv87e36pt6soYdTGW5FVZNuvq/rQFlddDx8SO/PsKomLXRe4GVlX?=
- =?us-ascii?Q?WzKW7QpCFYn03O3oQMHRSOFJMskgU8Ta/JogYriniwms6/8x7h3TAsKf9UkI?=
- =?us-ascii?Q?wd0+DJzjLLmnEPdQnsp46Bhx22eFJ0QO6iun8Rrc10sIsN2nNjZEMepH/g+0?=
- =?us-ascii?Q?brOp+WM5p0Buf4J9F2Q6Y7ivckxnmErnOKnIo+Km/Rw4E1P2CLBG0SGPMP6g?=
- =?us-ascii?Q?qmZRuUICAaUAf5uRHptTiz8V6pht1VLumyYd47LtTyrE5bRJaht7FcdqoflL?=
- =?us-ascii?Q?ODOoerKXG6L2y8QFNZNdq9viK6VlkutEkyGVNh3RBqFs0CHCRC+oYtKyq1jN?=
- =?us-ascii?Q?ZFad5t7SHPper7PMBC8ZisM4msBsaFwsVK0F5oAxQVetyo5q2AlsWtnEfyo3?=
- =?us-ascii?Q?XZ4WXqU/g7kMuPQjU0xOXWs1tUmtadssuL3ttSnX5Rw91Rnv/kuMrRW28t2w?=
- =?us-ascii?Q?w8VRlq73+55xICb3B8u/4E2Mu2JhhJdMkVyuelmUVv9O2TaUO25G4TKCc6iP?=
- =?us-ascii?Q?Yb7Yh6411+YOgaC0wYlEP3PAgq+2CrIY/CAdSjBx?=
+	=?us-ascii?Q?ae5Lf1HEqz161OJ8vataamTl6DjmTcGwrTdR4i3xcow5gRCSAHHm3WYXKAXe?=
+ =?us-ascii?Q?Nilj41HRxiHv2/BwMnJo0yEHHZXwR8l+C1LweQoQaEVT+AotX5IJTOIDwUO0?=
+ =?us-ascii?Q?wngLe+/6N0haXfMuN2qe1eUi2mIRr3KFSMymR+4cx5eqbVWwfOvs/0O4grMw?=
+ =?us-ascii?Q?Mj0qIfZzwIQzhKVj8I/u/0IfKUKwPMPuBH/8DX4PMQSknAGJ5GRsSEv7Q2FO?=
+ =?us-ascii?Q?PGPf+gQsE2sVVyIsiNPtE+a5WWP849Ayw5Q2EknTiTLAMVj8TARFHNiCstig?=
+ =?us-ascii?Q?L8fEIUP1cAKVGwOQS+xm9HAJCywyTpJVNjV+QYXs2K+c6qpPTZ+piGnCUJ2k?=
+ =?us-ascii?Q?FNE1gtfr/3pVJuy9PfVWFW+f7fBTKN60FCXLpatLZ1loLRfZhn2q4dRWLqnw?=
+ =?us-ascii?Q?jf20OhvS+I1zgDGUCoP2A7lBvoob/zyY8oEyrlsml68s4cCjO2q3MdWSysa3?=
+ =?us-ascii?Q?+zf/Z4aV+O2bWWNuaxUKT59hD/Zz5SjTaEiTb12ST3r9JoK0tPxnUTAy1kQS?=
+ =?us-ascii?Q?RP52x4m4yCue4Mjxy37LOIpcYlZa7BYZRbhb37w0PHE4u7r8ZHs3LOqi3LCU?=
+ =?us-ascii?Q?cJLyIOXrKGMVamjsD70HD/WFo0n0LharhH4FRv02RRdvsPIsKqoHm8mIepW1?=
+ =?us-ascii?Q?VoXQFnEjIV+DS4oWoUOdxMjsKOGuTvILNtiinkVFAyx04sX0HEkf4AZAuXWz?=
+ =?us-ascii?Q?MXO3vrJaKrOGl6V95e/JpPzxlIczPbwn4PuJNYAKK+ar9jimvonHxDrxHget?=
+ =?us-ascii?Q?2FfdHsfRpS7dRtxPVyntHNLa7aXm6phbQOsE7LCsCOh85X3CBDvgnL/rYQHs?=
+ =?us-ascii?Q?OtO5F6r0d1SoW99y0laKpHf1B7gz2NQ4n3QL+Y0EPFvyWefI2rcFCkKiF+oo?=
+ =?us-ascii?Q?ZKBPO7FxMpSGaMDiI+wkCgtGx4MBnnnN83noHFJ4agRYwdUaamamclYjS7bY?=
+ =?us-ascii?Q?vihe6Mdzi1cASeqM6zSSc4awr9YtnPU1UNWY6s6iTb8bwUPBs+9Aw/GQkxyS?=
+ =?us-ascii?Q?Q5JII2C46tuegHZGjiVBplKO+9pGhdbZIbGM+e4jttjg5LqnvWjujEqias/f?=
+ =?us-ascii?Q?a1Ses+rtHsBh5S35r44kFPnHEW0tFwqUGkrNDYM9Pn72P6uSElZxGRQX+1vE?=
+ =?us-ascii?Q?a5lF7CO6XcbWVYMdnmC5AcfTdyM3EgSn+6kpBWCRza5kBXZnnUH7XT3SOdDG?=
+ =?us-ascii?Q?6m5SMkS3lxBqrtjjDpG1PYmyznvniJXUN8fDPohL9PDfFP8aFLtdInWQSPsZ?=
+ =?us-ascii?Q?8uF1q3mBqB22qzW8WyNljXXWZZGfAkcWlRicbp1vvvusGEXDwkr09pEHhnz3?=
+ =?us-ascii?Q?AcCFh1krqTxq9QEmBWdm3f7DiA40q7lRCl/pDJ5rm6dtEUdzQjcS8dRX2mTC?=
+ =?us-ascii?Q?s8fsG2d5rJXdZwCw9pyz/R3kBS2MrmEq0G7S/pCyAY8newZ0z5bXFI8mY02V?=
+ =?us-ascii?Q?RPAlivQoF8CgVlwu05BTC+pKQURsCmLpBKn8LG+HJAd646s+sUax4mqK0SSI?=
+ =?us-ascii?Q?X3Kuo8XW/sAZRTY/w3rODzGZ2Jfct73R3vYYh7SAHYJwvHbYK5ayTjpO1GMl?=
+ =?us-ascii?Q?eMUEDak4T/d7Ezj1AVGZNT3ZV3TP2Ls20txl0Ygd?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 5ba1a9a6-0438-42c1-f2cd-08ddbef83806
+X-MS-Exchange-CrossTenant-Network-Message-Id: e0fec9c7-35ab-4035-40a7-08ddbef83935
 X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB8659.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2025 14:52:26.1221
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2025 14:52:28.0997
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: oZnJgpxmV10fLQCbVMafOMxv88gQtUnt32de/HcFdU17Uv59wIIPyQ3d99lw08bm
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6125
+X-MS-Exchange-CrossTenant-UserPrincipalName: bDowoTeMiPvm6pNm8TCiKuwMi+fyC6mlmRxJZSYReKNeLN55dAC3yuLCkvQH2yuF
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6356
 
-Prepare to move the calculation of the bus P2P isolation out of the iommu
-code and into the PCI core. This allows using the faster list iteration
-under the pci_bus_sem, and the code has a kinship with the logic in
-pci_for_each_dma_alias().
+The current algorithm does not work if the ACS is not uniform across the
+entire MFD. This seems to mostly happen in the real world because of
+Linux's quirk systems that sometimes quirks only one function in a MFD,
+creating an asymmetric situation.
 
-Bus isolation is the concept that drives the iommu_groups for the purposes
-of VFIO. Stated simply, if device A can send traffic to device B then they
-must be in the same group.
+For discussion let's consider a simple MFD topology like the below:
 
-Only PCIe provides isolation. The multi-drop electrical topology in
-classical PCI allows any bus member to claim the transaction.
+                      -- MFD 00:1f.0 ACS != REQ_ACS_FLAGS
+      Root 00:00.00 --|- MFD 00:1f.2 ACS != REQ_ACS_FLAGS
+                      |- MFD 00:1f.6 ACS = REQ_ACS_FLAGS
 
-In PCIe isolation comes out of ACS. If a PCIe Switch and Root Complex has
-ACS flags that prevent peer to peer traffic and funnel all operations to
-the IOMMU then devices can be isolated.
+This asymmetric ACS could be created using the config_acs kernel command
+line parameter, from quirks, or from a poorly thought out device that has
+ACS flags only on some functions.
 
-If a multi-function devices has ACS flags preventing self loop back then
-that device is isolated, though pci_bus_isolation() does not deal with
-devices.
+Since ACS is an egress property the asymmetric flags allow for 00:1f.0 to
+do memory acesses into 00:1f.6's BARs, but 00:1f.6 cannot reach any other
+function. Thus we expect an iommu_group to contain all three
+devices. Instead the current algorithm gives a group of [1f.0, 1f.2] and a
+single device group of 1f.6.
 
-As a property of a bus, there are several positive cases:
+The current algorithm sees the good ACS flags on 00:1f.6 and does not
+consider ACS on any other MFD functions.
 
- - The point to point "bus" on a physical PCIe link is isolated if the
-   bridge/root device has something preventing self-access to its own
-   MMIO.
+For path properties the ACS flags say that 00:1f.6 is safe to use with
+PASID and supports SVA as it will not have any portions of its address
+space routed away from the IOMMU, this part of the ACS system is working
+correctly.
 
- - A Root Port is usually isolated
+This is a problematic fix because this historical mistake has created an
+ecosystem around it. We now have quirks that assume single function is
+enough to quirk and it seems there are PCI root complexes that make the
+same non-compliant assumption.
 
- - A PCIe switch can be isolated if all it's Down Stream Ports have good
-   ACS flags
+The new helper pci_mfd_isolation() retains the existing quirks and we
+will probably need to add additional HW quirks for PCI root complexes that
+have not followed the spec but have been silently working today.
 
-pci_bus_isolation() implements these rules and returns an enum indicating
-the level of isolation the bus has, with five possibilies:
+Use pci_reachable_set() in pci_device_group() to make the resulting
+algorithm faster and easier to understand.
 
- PCIE_ISOLATED: Traffic on this PCIE bus can not do any P2P.
+Add pci_mfds_are_same_group() which specifically looks pair-wise at all
+functions in the MFDs. Any function without ACS isolation will become
+reachable to all other functions.
 
- PCIE_SWITCH_DSP_NON_ISOLATED: The bus is the internal bus of a PCIE
-     switch and the USP is isolated but the DSPs are not.
+pci_reachable_set() does the calculations for figuring out the set of
+devices under the pci_bus_sem, which is better than repeatedly searching
+across all PCI devices.
 
- PCIE_NON_ISOLATED: The PCIe bus has no isolation between the bridge or
-     any downstream devices.
+Once the set of devices is determined and the set has more than one device
+use pci_get_slot() to search for any existing groups in the reachable set.
 
- PCI_BUS_NON_ISOLATED: It is a PCI/PCI-X but the bridge is PCIe, has no
-     aliases and is isolated.
-
- PCI_BRIDGE_NON_ISOLATED: It is a PCI/PCI-X bus and has no isolation, the
-     bridge is part of the group.
-
-The calculation is done per-bus, so it is possible for a transactions from
-a PCI device to travel through different bus isolation types on its way
-upstream. PCIE_SWITCH_DSP_NON_ISOLATED/PCI_BUS_NON_ISOLATED and
-PCIE_NON_ISOLATED/PCI_BRIDGE_NON_ISOLATED are the same for the purposes of
-creating iommu groups. The distinction between PCIe and PCI allows for
-easier understanding and debugging as to why the groups are chosen.
-
-For the iommu groups if all busses on the upstream path are PCIE_ISOLATED
-then the end device has a chance to have a single-device iommu_group. Once
-any non-isolated bus segment is found that bus segment will have an
-iommu_group that captures all downstream devices, and sometimes the
-upstream bridge.
-
-pci_bus_isolation() is principally about isolation, but there is an
-overlap with grouping requirements for legacy PCI aliasing. For purely
-legacy PCI environments pci_bus_isolation() returns
-PCI_BRIDGE_NON_ISOLATED for everything and all devices within a hierarchy
-are in one group. No need to worry about bridge aliasing.
-
+Fixes: 104a1c13ac66 ("iommu/core: Create central IOMMU group lookup/creation interface")
 Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- drivers/pci/search.c | 164 +++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  |  31 ++++++++
- 2 files changed, 195 insertions(+)
+ drivers/iommu/iommu.c | 173 +++++++++++++++++-------------------------
+ 1 file changed, 71 insertions(+), 102 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index 53840634fbfc2b..a13fad53e44df9 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -113,6 +113,170 @@ int pci_for_each_dma_alias(struct pci_dev *pdev,
- 	return ret;
+diff --git a/drivers/iommu/iommu.c b/drivers/iommu/iommu.c
+index 7b407065488296..cd26b43916e8be 100644
+--- a/drivers/iommu/iommu.c
++++ b/drivers/iommu/iommu.c
+@@ -1413,85 +1413,6 @@ int iommu_group_id(struct iommu_group *group)
+ }
+ EXPORT_SYMBOL_GPL(iommu_group_id);
+ 
+-static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+-					       unsigned long *devfns);
+-
+-/*
+- * For multifunction devices which are not isolated from each other, find
+- * all the other non-isolated functions and look for existing groups.  For
+- * each function, we also need to look for aliases to or from other devices
+- * that may already have a group.
+- */
+-static struct iommu_group *get_pci_function_alias_group(struct pci_dev *pdev,
+-							unsigned long *devfns)
+-{
+-	struct pci_dev *tmp = NULL;
+-	struct iommu_group *group;
+-
+-	if (!pdev->multifunction || pci_acs_enabled(pdev, PCI_ACS_ISOLATED))
+-		return NULL;
+-
+-	for_each_pci_dev(tmp) {
+-		if (tmp == pdev || tmp->bus != pdev->bus ||
+-		    PCI_SLOT(tmp->devfn) != PCI_SLOT(pdev->devfn) ||
+-		    pci_acs_enabled(tmp, PCI_ACS_ISOLATED))
+-			continue;
+-
+-		group = get_pci_alias_group(tmp, devfns);
+-		if (group) {
+-			pci_dev_put(tmp);
+-			return group;
+-		}
+-	}
+-
+-	return NULL;
+-}
+-
+-/*
+- * Look for aliases to or from the given device for existing groups. DMA
+- * aliases are only supported on the same bus, therefore the search
+- * space is quite small (especially since we're really only looking at pcie
+- * device, and therefore only expect multiple slots on the root complex or
+- * downstream switch ports).  It's conceivable though that a pair of
+- * multifunction devices could have aliases between them that would cause a
+- * loop.  To prevent this, we use a bitmap to track where we've been.
+- */
+-static struct iommu_group *get_pci_alias_group(struct pci_dev *pdev,
+-					       unsigned long *devfns)
+-{
+-	struct pci_dev *tmp = NULL;
+-	struct iommu_group *group;
+-
+-	if (test_and_set_bit(pdev->devfn & 0xff, devfns))
+-		return NULL;
+-
+-	group = iommu_group_get(&pdev->dev);
+-	if (group)
+-		return group;
+-
+-	for_each_pci_dev(tmp) {
+-		if (tmp == pdev || tmp->bus != pdev->bus)
+-			continue;
+-
+-		/* We alias them or they alias us */
+-		if (pci_devs_are_dma_aliases(pdev, tmp)) {
+-			group = get_pci_alias_group(tmp, devfns);
+-			if (group) {
+-				pci_dev_put(tmp);
+-				return group;
+-			}
+-
+-			group = get_pci_function_alias_group(tmp, devfns);
+-			if (group) {
+-				pci_dev_put(tmp);
+-				return group;
+-			}
+-		}
+-	}
+-
+-	return NULL;
+-}
+-
+ /*
+  * Generic device_group call-back function. It just allocates one
+  * iommu-group per device.
+@@ -1534,40 +1455,88 @@ static struct iommu_group *pci_group_alloc_non_isolated(void)
+ 	return group;
  }
  
-+static enum pci_bus_isolation pcie_switch_isolated(struct pci_bus *bus)
-+{
-+	struct pci_dev *pdev;
-+
-+	/*
-+	 * Within a PCIe switch we have an interior bus that has the Upstream
-+	 * port as the bridge and a set of Downstream port bridging to the
-+	 * egress ports.
-+	 *
-+	 * Each DSP has an ACS setting which controls where its traffic is
-+	 * permitted to go. Any DSP with a permissive ACS setting can send
-+	 * traffic flowing upstream back downstream through another DSP.
-+	 *
-+	 * Thus any non-permissive DSP spoils the whole bus.
-+	 */
-+	guard(rwsem_read)(&pci_bus_sem);
-+	list_for_each_entry(pdev, &bus->devices, bus_list) {
-+		/* Don't understand what this is, be conservative */
-+		if (!pci_is_pcie(pdev) ||
-+		    pci_pcie_type(pdev) != PCI_EXP_TYPE_DOWNSTREAM ||
-+		    pdev->dma_alias_mask)
-+			return PCIE_NON_ISOLATED;
-+
-+		if (!pci_acs_enabled(pdev, PCI_ACS_ISOLATED))
-+			return PCIE_SWITCH_DSP_NON_ISOLATED;
-+	}
-+	return PCIE_ISOLATED;
-+}
-+
-+static bool pci_has_mmio(struct pci_dev *pdev)
-+{
-+	unsigned int i;
-+
-+	for (i = 0; i <= PCI_ROM_RESOURCE; i++) {
-+		struct resource *res = pci_resource_n(pdev, i);
-+
-+		if (resource_size(res) && resource_type(res) == IORESOURCE_MEM)
-+			return true;
-+	}
-+	return false;
-+}
-+
-+/**
-+ * pci_bus_isolated - Determine how isolated connected devices are
-+ * @bus: The bus to check
-+ *
-+ * Isolation is the ability of devices to talk to each other. Full isolation
-+ * means that a device can only communicate with the IOMMU and can not do peer
-+ * to peer within the fabric.
-+ *
-+ * We consider isolation on a bus by bus basis. If the bus will permit a
-+ * transaction originated downstream to complete on anything other than the
-+ * IOMMU then the bus is not isolated.
-+ *
-+ * Non-isolation includes all the downstream devices on this bus, and it may
-+ * include the upstream bridge or port that is creating this bus.
-+ *
-+ * The various cases are returned in an enum.
-+ *
-+ * Broadly speaking this function evaluates the ACS settings in a PCI switch to
-+ * determine if a PCI switch is configured to have full isolation.
-+ *
-+ * Old PCI/PCI-X busses cannot have isolation due to their physical properties,
-+ * but they do have some aliasing properties that effect group creation.
-+ *
-+ * pci_bus_isolated() does not consider loopback internal to devices, like
-+ * multi-function devices performing a self-loopback. The caller must check
-+ * this separately. It does not considering alasing within the bus.
-+ *
-+ * It does not currently support the ACS P2P Egress Control Vector, Linux does
-+ * not yet have any way to enable this feature. EC will create subsets of the
-+ * bus that are isolated from other subsets.
++/*
++ * Ignoring quirks, all functions in the MFD need to be isolated from each other
++ * and get their own groups, otherwise the whole MFD will share a group. Any
++ * function that lacks explicit ACS isolation is assumed to be able to P2P
++ * access any other function in the MFD.
 + */
-+enum pci_bus_isolation pci_bus_isolated(struct pci_bus *bus)
++static bool pci_mfds_are_same_group(struct pci_dev *deva, struct pci_dev *devb)
 +{
-+	struct pci_dev *bridge = bus->self;
-+	int type;
++	/* Are deva/devb functions in the same MFD? */
++	if (PCI_SLOT(deva->devfn) != PCI_SLOT(devb->devfn))
++		return false;
++	/* Don't understand what is happening, be conservative */
++	if (deva->multifunction != devb->multifunction)
++		return true;
++	if (!deva->multifunction)
++		return false;
 +
-+	/*
-+	 * This bus was created by pci_register_host_bridge(). The spec provides
-+	 * no way to tell what kind of bus this is, for PCIe we expect this to
-+	 * be internal to the root complex and not covered by any spec behavior.
-+	 * Linux has historically been optimistic about this bus and treated it
-+	 * as isolating. Given that the behavior of the root complex and the ACS
-+	 * behavior of RCiEP's is explicitly not specified we hope that the
-+	 * implementation is directing everything that reaches the root bus to
-+	 * the IOMMU.
-+	 */
-+	if (pci_is_root_bus(bus))
-+		return PCIE_ISOLATED;
++	/* Quirks can inhibit single MFD functions from combining into groups */
++	if (pci_mfd_isolated(deva) || pci_mfd_isolated(devb))
++		return false;
 +
-+	/*
-+	 * bus->self is only NULL for SRIOV VFs, it represents a "virtual" bus
-+	 * within Linux to hold any bus numbers consumed by VF RIDs. Caller must
-+	 * use pci_physfn() to get the bus for calling this function.
-+	 */
-+	if (WARN_ON(!bridge))
-+		return PCI_BRIDGE_NON_ISOLATED;
-+
-+	/*
-+	 * The bridge is not a PCIe bridge therefore this bus is PCI/PCI-X.
-+	 *
-+	 * PCI does not have anything like ACS. Any down stream device can bus
-+	 * master an address that any other downstream device can claim. No
-+	 * isolation is possible.
-+	 */
-+	if (!pci_is_pcie(bridge)) {
-+		if (bridge->dev_flags & PCI_DEV_FLAG_PCIE_BRIDGE_ALIAS)
-+			type = PCI_EXP_TYPE_PCI_BRIDGE;
-+		else
-+			return PCI_BRIDGE_NON_ISOLATED;
-+	} else {
-+		type = pci_pcie_type(bridge);
-+	}
-+
-+	switch (type) {
-+	/*
-+	 * Since PCIe links are point to point root and downstream ports are
-+	 * isolated if their own MMIO cannot be reached.
-+	 */
-+	case PCI_EXP_TYPE_ROOT_PORT:
-+	case PCI_EXP_TYPE_DOWNSTREAM:
-+		if (!pci_acs_enabled(bridge, PCI_ACS_ISOLATED))
-+			return PCIE_NON_ISOLATED;
-+		return PCIE_ISOLATED;
-+
-+	/*
-+	 * bus is the interior bus of a PCI-E switch where ACS rules apply.
-+	 */
-+	case PCI_EXP_TYPE_UPSTREAM:
-+		return pcie_switch_isolated(bus);
-+
-+	/*
-+	 * PCIe to PCI/PCI-X - this bus is PCI.
-+	 */
-+	case PCI_EXP_TYPE_PCI_BRIDGE:
-+		/*
-+		 * A PCIe express bridge will use the subordinate bus number
-+		 * with a 0 devfn as the RID in some cases. This causes all
-+		 * subordinate devfns to alias with 0, which is the same
-+		 * grouping as PCI_BUS_NON_ISOLATED. The RID of the bridge
-+		 * itself is only used by the bridge.
-+		 *
-+		 * However, if the bridge has MMIO then we will assume the MMIO
-+		 * is not isolated due to no ACS controls on this bridge type.
-+		 */
-+		if (pci_has_mmio(bridge))
-+			return PCI_BRIDGE_NON_ISOLATED;
-+		return PCI_BUS_NON_ISOLATED;
-+
-+	/*
-+	 * PCI/PCI-X to PCIe - this bus is PCIe. We already know there must be a
-+	 * PCI bus upstream of this bus, so just return non-isolated. If
-+	 * upstream is PCI-X the PCIe RID should be preserved, but for PCI the
-+	 * RID will be lost.
-+	 */
-+	case PCI_EXP_TYPE_PCIE_BRIDGE:
-+		return PCI_BRIDGE_NON_ISOLATED;
-+
-+	default:
-+		return PCI_BRIDGE_NON_ISOLATED;
-+	}
++	/* Can they reach each other's MMIO through P2P? */
++	return !pci_acs_enabled(deva, PCI_ACS_ISOLATED) ||
++	       !pci_acs_enabled(devb, PCI_ACS_ISOLATED);
 +}
 +
- static struct pci_bus *pci_do_find_bus(struct pci_bus *bus, unsigned char busnr)
++static bool pci_devs_are_same_group(struct pci_dev *deva, struct pci_dev *devb)
++{
++	/*
++	 * This is allowed to return cycles: a,b -> b,c -> c,a can be aliases.
++	 */
++	if (pci_devs_are_dma_aliases(deva, devb))
++		return true;
++
++	return pci_mfds_are_same_group(deva, devb);
++}
++
+ static struct iommu_group *pci_get_alias_group(struct pci_dev *pdev)
  {
- 	struct pci_bus *child;
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 05e68f35f39238..0b1e28dcf9187d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -834,6 +834,32 @@ struct pci_dynids {
- 	struct list_head	list;	/* For IDs added at runtime */
- };
+-	struct iommu_group *group;
+-	DECLARE_BITMAP(devfns, 256) = {};
++	struct pci_reachable_set devfns;
++	const unsigned int NR_DEVFNS = sizeof(devfns.devfns) * BITS_PER_BYTE;
++	unsigned int devfn;
  
-+enum pci_bus_isolation {
-+	/*
-+	 * The bus is off a root port and the root port has isolated ACS flags
-+	 * or the bus is part of a PCIe switch and the switch has isolated ACS
-+	 * flags.
-+	 */
-+	PCIE_ISOLATED,
-+	/*
-+	 * The switch's DSP's are not isolated from each other but are isolated
-+	 * from the USP.
-+	 */
-+	PCIE_SWITCH_DSP_NON_ISOLATED,
-+	/* The above and the USP's MMIO is not isolated. */
-+	PCIE_NON_ISOLATED,
-+	/*
-+	 * A PCI/PCI-X bus, no isolation. This is like
-+	 * PCIE_SWITCH_DSP_NON_ISOLATED in that the upstream bridge is isolated
-+	 * from the bus. The bus itself may also have a shared alias of devfn=0.
-+	 */
-+	PCI_BUS_NON_ISOLATED,
-+	/*
-+	 * The above and the bridge's MMIO is not isolated and the bridge's RID
-+	 * may be an alias.
-+	 */
-+	PCI_BRIDGE_NON_ISOLATED,
-+};
+ 	/*
+-	 * Look for existing groups on device aliases.  If we alias another
+-	 * device or another device aliases us, use the same group.
++	 * Look for existing groups on device aliases and multi-function ACS. If
++	 * we alias another device or another device aliases us, use the same
++	 * group.
++	 *
++	 * pci_reachable_set() should return the same bitmap if called for any
++	 * device in the set and we want all devices in the set to have the same
++	 * group.
+ 	 */
+-	group = get_pci_alias_group(pdev, devfns);
+-	if (group)
+-		return group;
++	pci_reachable_set(pdev, &devfns, pci_devs_are_same_group);
++	/* start is known to have iommu_group_get() == NULL */
++	__clear_bit(pdev->devfn, devfns.devfns);
  
- /*
-  * PCI Error Recovery System (PCI-ERS).  If a PCI device driver provides
-@@ -1222,6 +1248,8 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
- struct pci_dev *pci_get_base_class(unsigned int class, struct pci_dev *from);
- 
-+enum pci_bus_isolation pci_bus_isolated(struct pci_bus *bus);
+ 	/*
+-	 * Look for existing groups on non-isolated functions on the same
+-	 * slot and aliases of those funcions, if any.  No need to clear
+-	 * the search bitmap, the tested devfns are still valid.
+-	 */
+-	group = get_pci_function_alias_group(pdev, devfns);
+-	if (group)
+-		return group;
+-
+-	/*
+-	 * When MFD's are included in the set due to ACS we assume that if ACS
+-	 * permits an internal loopback between functions it also permits the
+-	 * loopback to go downstream if a function is a bridge.
++	 * When MFD functions are included in the set due to ACS we assume that
++	 * if ACS permits an internal loopback between functions it also permits
++	 * the loopback to go downstream if any function is a bridge.
+ 	 *
+ 	 * It is less clear what aliases mean when applied to a bridge. For now
+ 	 * be conservative and also propagate the group downstream.
+ 	 */
+-	__clear_bit(pdev->devfn & 0xFF, devfns);
+-	if (!bitmap_empty(devfns, sizeof(devfns) * BITS_PER_BYTE))
+-		return pci_group_alloc_non_isolated();
+-	return NULL;
++	if (bitmap_empty(devfns.devfns, NR_DEVFNS))
++		return NULL;
 +
- int pci_dev_present(const struct pci_device_id *ids);
- 
- int pci_bus_read_config_byte(struct pci_bus *bus, unsigned int devfn,
-@@ -2035,6 +2063,9 @@ static inline struct pci_dev *pci_get_base_class(unsigned int class,
- 						 struct pci_dev *from)
- { return NULL; }
- 
-+static inline enum pci_bus_isolation pci_bus_isolated(struct pci_bus *bus)
-+{ return PCIE_NON_ISOLATED; }
++	for_each_set_bit(devfn, devfns.devfns, NR_DEVFNS) {
++		struct iommu_group *group;
++		struct pci_dev *pdev_slot;
 +
- static inline int pci_dev_present(const struct pci_device_id *ids)
- { return 0; }
++		pdev_slot = pci_get_slot(pdev->bus, devfn);
++		group = iommu_group_get(&pdev_slot->dev);
++		pci_dev_put(pdev_slot);
++		if (group) {
++			if (WARN_ON(!(group->bus_data &
++				      BUS_DATA_PCI_NON_ISOLATED)))
++				group->bus_data |= BUS_DATA_PCI_NON_ISOLATED;
++			return group;
++		}
++	}
++	return pci_group_alloc_non_isolated();
+ }
  
+ static struct iommu_group *pci_hierarchy_group(struct pci_dev *pdev)
 -- 
 2.43.0
 
