@@ -1,47 +1,47 @@
-Received: from NAM02-SN1-obe.outbound.protection.outlook.com (mail-sn1nam02on2083.outbound.protection.outlook.com [40.107.96.83])
+Received: from NAM04-DM6-obe.outbound.protection.outlook.com (mail-dm6nam04on2052.outbound.protection.outlook.com [40.107.102.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 664472E6D03;
-	Wed,  9 Jul 2025 14:52:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.96.83
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D1292E92CA;
+	Wed,  9 Jul 2025 14:52:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.102.52
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752072759; cv=fail; b=CWm+10X68qQ09jzqvf7n9oH75HKfVjiyajpNByxKTFLcCCl8GKwisQugUxDPqR7T3ogI2jtyUY+htN+c+K8rG+94LKZ9KsYGS6aPqPZEgZ0aw4rNVcGhqHd3QmNP8NEX07MQ8+JI43jUZzhA5PRbmzGGAq4tYA11C2KZ7KHfHos=
+	t=1752072761; cv=fail; b=LejzJmGGZxZr4sN3i6ssxw02UL2PgGEjbNwkYiRHsbqJBATrrnpVcmSjzOy+jJwKo3lE3wcElc+Eq6nxOBofAWldwT+9Kg6dWM3eUhgIHztp6j3vLsT1/Piot4rwsZFZh/b6azv2XJHpyV6aKchYVOcQLHYm2RJttHQjUyHeKoM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752072759; c=relaxed/simple;
-	bh=9t2oOSnuV6a4X4ASEtsXZwK1yLRY95wyvZeOEy3StQQ=;
+	s=arc-20240116; t=1752072761; c=relaxed/simple;
+	bh=KzAofz6nT7avbkujNOY3Uq8cD2I5jZQpzdDOVju7f+M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=VCJCcFoJwcStQ8ok4Je++B4OAVyatbJq6z67eiwLR0cw1gLUKBaYPSBCIYwSvQUL1rlm/VLy+tKtbkM2yKKjm7rte7ljspB3BJwRCX+xtRFe65C/IBNStbjNrkE6S62rXfBqs0BQvYgchAQJf2K10w5uKQGzy9QeV22JeelsvZ0=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=FTx79wTV; arc=fail smtp.client-ip=40.107.96.83
+	 Content-Type:MIME-Version; b=KE8/7WVFqgEPiSJ11nyy8eaEjpcWeKuDHRR5FU8imG4vsO4m7aRV77P89IxqpjHfVJ2Ty+Ov95RHO7vvtKPqMSQB0OG8SkTfbn5t+UnM98gWMScdryCGKBtrtylKM8qUwB6+uawBDkMKm2zPFK3INgc5pA6rw4d5MmS1UC/FBxg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=nV5qY9M2; arc=fail smtp.client-ip=40.107.102.52
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="FTx79wTV"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="nV5qY9M2"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=KKqiI7oBiZyWxiVQKdZI/xCZ7czJF2pq6ggx7J9IKO/Vy9KDlnLN3i4ihnAXI9hzcpGx98ZFAqBnKwpgRjFpVLyP5wefpm6TaEZVe4j4WMHaATGXfu2KwJGJWFW8jGPxeIUuPO0nIU/MH0F4t+ppl7vlNeMoFfq+R1TNyrqfOppjGWiIf0MxP1tqGJ+SWseniABSu6qfT1zEFG5byVv/DwmzWqUi8hu0gp31qbkOjm50935fzEPPL3ZRaw3ycNuTmDM8rWwZVx/oWcUdmW5PC5YXN/6BR8ftxUxQQRn9nIoZuG7nt44p+VPwGgLsF8khVm/nit3jr0dyeNNcAd6XnQ==
+ b=hBN9zvPRgldlGfC+scGVEECuav27LUc7sx4L0IuS6XxdxQrO+izlaAWabGySeRCkYGUl9An7BnnlOg6ZwIl7u7+QZkwMfXaIH6Tb7tTniepfiy/fTy87mSBlIioaQzbL5mQOaHEwBkxbdZsKT/2Hv8ON7NrMXYWEIeDu8jO2aLfQntRQ2It6Z1YGZLd76I3HoQ1rQ9CtN5Qvs/hLAd9P0Xn8CgUHvPRyqVw9aEwTPu3lO9Av6QPfTYdHCivXTGwvqPM32/LoUB95wMoovWA4/ld+qbAeT+3UmhRhYqVqqyr7AulOwkHHztesgGd+XLWS339feN8GGt6uJLbZTyJJ0Q==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=GrPIQjskBK9bk+GAipPeiDUaWMs09cPMKX01pa0UbHs=;
- b=iDEcGAEJu1VGmSstr8Y0lTj0z33Bqdyk0/ClEZcW9LIxKdTlXswOTyXxJbN/oz+pbtWP933YpoJZC/8UFdDElpsKPZ+dgUcWw4eNvPH6eZ05kQ/+dy2gkJ1Xjr9RDbGcZmZ8TC7b0b2PgrtvlRNUE86Lacfn6jMSX6DPPE5nsIUxAMz33ZO6nnlxMYZt8D/nTDpPDMs1iPlBLX6aI27FM4nGAloQGSzkKBzhd3S0k7QYJQonkvXv/XW+F42SpwTKQf2egUw7/7VfdCa+JBslGnYJLAMxKlMXa5I2mQoDklB/25+5do1yLV4eGJI+yueg6lN1nbufhjR8k2yXpqJUJg==
+ bh=he2BcykNv/ad4Gy+54keikxM08BahmZeO+GAbqxN/Ig=;
+ b=KfXi+H6oFK1q2m8iHzXkM800mT9rHuGPq3Nr4a0lrWMPFL6Cau8JekadyrmveAy8nZbEP8B7sH9kRFWCFURt8kL7vVU2eid9044aT9XO3lPaNL1GFth73eDU3J+yZMibDniRTE9exq57a3T84aCMr3Pwul4GSjCwIGr5LF83XeY/xKa8cLL+CkLkTbTY0vjo7MQsjnqeLhj9dDt1WsQDcb4GS+iOHo/0JFGvGT40X84Xq0jNyhMUYyPXPoC0REaZjF9AhVrGfAS3CeQqenVXT/X/rHrOETFmHanwbpMWkngqSENvcHTX/mU6jGFBr9UOzmAsQwwvkLM92bSuV/iZLQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=GrPIQjskBK9bk+GAipPeiDUaWMs09cPMKX01pa0UbHs=;
- b=FTx79wTVCPd7o2jwnNdknwKfEv+5xt2acLafwy6do6+csvtbB/aFlL8UQrg8ylWB5lWJ/ZOonKBPfxw1/PZ7oTkTvhOgi0lS7V8Ikxu9b3NzXP82mXHI2Fz2bL02/3EmV4704n3/jn+KIozVANPsRlbnauT3NA5Zc+fjFKifZ+AWp2FBvz1NmJ9M1F7M6UB41TAFFhnIJ/pCujcxVDa5BcVI348nHvkcRdvYobp2TvxTsYfdGvaule3KQZz0dtlg71T/1xY/FBQxnNeB81KcYiev740CeSDO/UG3uzDGcpAn5fBZ4lt054FqVjF94mf6roRLcVgLijZ2CC7ktcwxyQ==
+ bh=he2BcykNv/ad4Gy+54keikxM08BahmZeO+GAbqxN/Ig=;
+ b=nV5qY9M21I/Gg4B70PY0vcAJHjm9IR8NR34ctk1LX3b1U2ksQQtI/zcH2iEl+yFCrUdGgaK7jWCT01FNHTvlVlZ1oUOOP7+gNHLkI2kMBsuHJH8g38kOsw6xgCQmWxtm8orvcECUb50Hov2MiiJKaEcijLXCWz/JB3ySzBWJP7x6PXf/nelPzLzYmC0wAcu2dX5F4zG0OXpT15n0i9XLQtkCHbMKEve3T71qZoCrSgA95HAVqmEUBOA8Oum4/I648SU+sZ2KjzsCi/nQf93c2yZfCxWiISo1Ueab/BJaYROhBZBoN/NCYyj0LJ5nFWM/8iJIp0VwlL56G4/teMmWag==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from CH3PR12MB8659.namprd12.prod.outlook.com (2603:10b6:610:17c::13)
- by MN0PR12MB6125.namprd12.prod.outlook.com (2603:10b6:208:3c7::15) with
+ by IA1PR12MB6356.namprd12.prod.outlook.com (2603:10b6:208:3e0::5) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.23; Wed, 9 Jul
- 2025 14:52:24 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.26; Wed, 9 Jul
+ 2025 14:52:28 +0000
 Received: from CH3PR12MB8659.namprd12.prod.outlook.com
  ([fe80::6eb6:7d37:7b4b:1732]) by CH3PR12MB8659.namprd12.prod.outlook.com
  ([fe80::6eb6:7d37:7b4b:1732%7]) with mapi id 15.20.8901.024; Wed, 9 Jul 2025
- 14:52:24 +0000
+ 14:52:28 +0000
 From: Jason Gunthorpe <jgg@nvidia.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	iommu@lists.linux.dev,
@@ -59,15 +59,15 @@ Cc: Alex Williamson <alex.williamson@redhat.com>,
 	patches@lists.linux.dev,
 	tdave@nvidia.com,
 	Tony Zhu <tony.zhu@intel.com>
-Subject: [PATCH v2 13/16] PCI: Add the ACS Enhanced Capability definitions
-Date: Wed,  9 Jul 2025 11:52:16 -0300
-Message-ID: <13-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
+Subject: [PATCH v2 09/16] PCI: Widen the acs_flags to u32 within the quirk callback
+Date: Wed,  9 Jul 2025 11:52:12 -0300
+Message-ID: <9-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
 In-Reply-To: <0-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
 References:
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: SN7PR04CA0219.namprd04.prod.outlook.com
- (2603:10b6:806:127::14) To CH3PR12MB8659.namprd12.prod.outlook.com
+X-ClientProxiedBy: SN1PR12CA0094.namprd12.prod.outlook.com
+ (2603:10b6:802:21::29) To CH3PR12MB8659.namprd12.prod.outlook.com
  (2603:10b6:610:17c::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -76,116 +76,247 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH3PR12MB8659:EE_|MN0PR12MB6125:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4f62da59-ce1b-4b8e-65b2-08ddbef836af
+X-MS-TrafficTypeDiagnostic: CH3PR12MB8659:EE_|IA1PR12MB6356:EE_
+X-MS-Office365-Filtering-Correlation-Id: f204fb77-cee5-4ced-1a9f-08ddbef83811
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024|7416014;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|7416014|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?ro7vYMCebmvNCkw8myP4M6mZ70+2hESreaeV0ImZWGFrPRpPtdkQkaw0BiLK?=
- =?us-ascii?Q?K0mmySle2Fq3tZb3nAHIrtfn1fvGiKegyLDoJGYugkO6ZF9l56OZ5DJXrRbz?=
- =?us-ascii?Q?jWcCvTq56pBk2BaWAMlAnN1gh325YrOvlFDyvabXRYRSjsHyYG+zg8kJf8YY?=
- =?us-ascii?Q?TjZZ9AO8P4ZKKnuQfgCJoUnMKnUphKPCbfrTF6wMYZ1F5p0Ufg2CBD/uywNq?=
- =?us-ascii?Q?G/Yxw+fcxwhLWUobp2sWIbAMkzN35SgHTPsHBRu4p8fu8dUsQ87CNcE3kgWo?=
- =?us-ascii?Q?FaIU3z54jJkl/A2Xqq9iIi+2RImXK2PUshYq719X0lq9hpeCOr5Qp7wgqkb/?=
- =?us-ascii?Q?nnIVl8gQ0O6w2/S1dz8aHoI8za3FoxJEapoU0q6gFyQT2Qs8ESksPeGB26dY?=
- =?us-ascii?Q?4U7aCYInI4aYfckDqL1gaiEao0RW6jD7r5/TiK10sx3MQWE7QfMtXtUPtD4n?=
- =?us-ascii?Q?ST9+U00DxYZli39MF7ddQSmHUjkJNkw6qDJNuENHuu1xkhR/7dWy4QU907z2?=
- =?us-ascii?Q?q/YI1IpGBtKUR5hHtQGyOJL2qyIfBewqwBXS9/z/EMzdlANjjpbjy7wVwPN5?=
- =?us-ascii?Q?69jMF9J8mh3GxcjBgbV2N4fgiaQd1eS2oSLTVnpKMRdDa8Es241yYYIE6+L6?=
- =?us-ascii?Q?u6HvDegkBbcxEFTjO22xan1qYMjXIhhEXhw9X7OvC1aytfQYCNpNkt2M1eTX?=
- =?us-ascii?Q?ocgl+7+mqmHOidXJOz47Rcbn6CRfw4x79e53FN+1EZ7pCZ+O/yxp6J9gN+fG?=
- =?us-ascii?Q?ZbyYdJ/fMSUj71L40oS2qkycc+yrp1vI/xykYNuZXOsaTS152ZzuIeM4Epqp?=
- =?us-ascii?Q?vNzn3UGOyBvcRXuqnOqCq+YmT4YX18Od5WigAvtNeTP5XBdEd8pICl+3ugbS?=
- =?us-ascii?Q?vJUoJS+1721yCEIny/LLoRyjhe4FgMO/njEc5Tr+uFNHQViR8wCVgkatLgVu?=
- =?us-ascii?Q?/+VqBxunQlTn9MOpzLUrYFea+M2Ow4ZxpQ8h9AyZgMqj7jrlEgqYNisrN6Bx?=
- =?us-ascii?Q?yXfrfMEjthy8PKdXJC6eUDU2ATnEwWX56wPLCqj+BDB1Cwm1c3vvG43LQl8K?=
- =?us-ascii?Q?bAw1VhHGlffUcYdA3Np7L/9+6/vbWpmamOjdG0mAk4gwTKVLfmkxb/KOM6P4?=
- =?us-ascii?Q?U/H+bVbVtvChv/Qj3YA9xF310PI6Us6uAmfD7K6Q5f0pxlZUhPl21WA6m3Up?=
- =?us-ascii?Q?gX5+IacmOBlTbKcXr3zV/1znfTrqgNUeHFiML+gVzEJa6QD5RdaLH/EES+na?=
- =?us-ascii?Q?A4Clvp1ZK0xz4NzTXtZXPIuPCaj0/FzgZ62WCgM2bRW0mIeCKwr/uWfrB2++?=
- =?us-ascii?Q?3+e3PG3pvrMNQ1Nw9aIeirz6DVEyphErWFvCMOj61Dmu666yyAnr46d1CpCn?=
- =?us-ascii?Q?Tn3gDQxvCcGSVNW0FwktT9pvHh8be5ZWCg2n9FP4jHBu/XOXeJ7iI4kaiHGS?=
- =?us-ascii?Q?41DBjqAIx1Q=3D?=
+	=?us-ascii?Q?it3rMy0kqsM3TrXYCmv94aLZY9sL4jQjaU0FHVDFnchf/kVjsA/sk0XhSMer?=
+ =?us-ascii?Q?iZkoaxtIcbt2pcV9dq9qOLGDlxmDPf6ub5ffACges4Bli8LedtwgcDbsJR/q?=
+ =?us-ascii?Q?uIhd8Q1G1ZUuC5EjRbcoXMOgggtkBWUU8wivyiFXMB8Bf12zx7TPIXIHJOWB?=
+ =?us-ascii?Q?K3mWDwJGyni7flIcVqoFah/SBYhZ2LuAudhlUz3RNjSPOINe5hDsCCPddU/A?=
+ =?us-ascii?Q?PgpFPQLQsV45wl9T3Fy07xa1bsJSybypplcSdYJsu5Fnx8vn176a9kDsws3Z?=
+ =?us-ascii?Q?tM1XAPLa0d5x4kTZeqEsno4INXwL1HEIuFNJuPwAbU6iaNeqluxzs6alwK/c?=
+ =?us-ascii?Q?zrfswA++rN9geAa96Psviira7cZ2wpUcfmSSzxcvmmz+60Vp24nCZHP0Bkd7?=
+ =?us-ascii?Q?JgQaTj/IIOhlB1gEpF1fZFnsFRCgFrQAZWGNPzTyNmkwwNsOnP6sziLGm3Eh?=
+ =?us-ascii?Q?s7In/3gNfU3posU3AHri9Gr9YWSSrHt2QznKlqzdr3DYKnRB2IZCPGdNu0M/?=
+ =?us-ascii?Q?W6IZBFIbfVPlfeiYoWjKsJ4roizLOXO7hAFf8xV52nUDrP0sTEjVjfSFDP6O?=
+ =?us-ascii?Q?E6wH7nAPXg6M/XRjcTQ1P+o+m1m7pgyIDsdb4g5nF7QyjUKkz+VrmA9bHJkD?=
+ =?us-ascii?Q?cGuh+Jr2ntGh6CKDQFhEpnwyPmTa+qAgw9CJEZLh0OxOUOt42JgnD5y/mRKY?=
+ =?us-ascii?Q?1RXB2Z4T2v2HbN73Ds2MwcL/r+YyUBSyNZScLj9MmAwHT/P016b5KKIn5is1?=
+ =?us-ascii?Q?ycbxjRGD1vueLb6jg05KXLwz6S6ChSzXTuUtHkbhd4JqRBlcKW8eqFGGLM/5?=
+ =?us-ascii?Q?ShStMpuRDe25RZbPFFcRD0UIuSuJONLJD6kr0wcoCvN3jrMsAbKIThdjTyqh?=
+ =?us-ascii?Q?gX7RV5s6CogT/KUi9KD+/1JMCN+/QO9+NxbviPyVEuRfsAd26zXeJH2fBY6I?=
+ =?us-ascii?Q?YVsU4+O73FWmlrSaoykcWD5SFxSPlTuxdfwNFmysBctC200Z2eNptyIepUdy?=
+ =?us-ascii?Q?cFzUqf8MAUwCLGR/Wv0xePyBrQil2iRhjsgaWTAVejMq4vrDsAF8kVBUzQ/8?=
+ =?us-ascii?Q?0V2/DYaz8VVMYjt8LBiYZFI3dm5fRp+q2FuKbMBUivLQj5SaGaiXjCbyinVN?=
+ =?us-ascii?Q?lyi0KJ0MRUtpES7Kr2h0Jd26kcnRiNlDpgJ9pFjjQng3VLqhNLYcC2Q4WJ1i?=
+ =?us-ascii?Q?3M3fIXJHMFxLpl5M3fT1vDwPFZ3WOhnmb2r5aR5E7Ds/rci22CZpTDUonkLY?=
+ =?us-ascii?Q?2XpGaK6vAO7SvyjZ3CATiDUtnMQx0xKsm1+oTFofZeqKlDmvhD+zq/5EnEzJ?=
+ =?us-ascii?Q?QeoAFqYkCxsrURo7N07w8mZYPvF3+U3yyPUpN5RRjlY2SZfICC4rdXQMUB3G?=
+ =?us-ascii?Q?2dOKQx3FrQJpzu6krH5/bgvjlXq8EccugJZBpz5fDLW6Awk9Eg=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB8659.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(7416014);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB8659.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(7416014)(376014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?MedODEzt/JXwHxODfY+KNXmGpRAykkUXfVJvWDgda82SeCQniSz2dOpXDYnR?=
- =?us-ascii?Q?4VTebzmD7E/W/4HsPOs61F4kPqiJKlNk8pPNtBJrOmFOQrLkT8buKKypXw8D?=
- =?us-ascii?Q?sMBDBDgd9fVKLmIp5uA01W9sw7TqUCNzkwqQcRh0lvpQLgn0fPBfz4RTmkKg?=
- =?us-ascii?Q?ToIlg37GeprIqSrRKFpyNx4va7rne4jBX+LV1mcDjbW9302bxAbn4nKh1jDd?=
- =?us-ascii?Q?/cq95NPgx8TOeZvY5rIO+xeDVeC1MuF3PC3MmcRdZPNecF8XHTcpRgR7dioi?=
- =?us-ascii?Q?I+lDkrukWwHZqTV1ZpMfp5q1deR7nXVeRrRzliI0pXl1IGTdZcctXllGvtt2?=
- =?us-ascii?Q?K4You27H67SCDSp2rssqBw68sUXJt7Mw1B5sXlFEMO+mBDF4YtufydsdjAZq?=
- =?us-ascii?Q?IeUU6VYVrt4Gy3XDpkQbuO0+zaRhsjg66w7GhRANidfzhjH2kzptr1M1V/uB?=
- =?us-ascii?Q?Iiu3abHoeMfPYndhQe29Pq5rFEEggkFbHXRgU0PA0D0hfl7WlVIZ95JivQ4q?=
- =?us-ascii?Q?PHEUHSBWXS3ltVdk+Xa7TuF0QLFs+TGGvx3i0yH5s7yEZ+os9RqjNUUzZVFJ?=
- =?us-ascii?Q?8wt+0PTOPOoW5G8nRgQ3Qn7oy8DzzVYDvdbnbgQNPhgYgfvvBd33XWr6T71O?=
- =?us-ascii?Q?118IHLvkoyCAoDEd+y4/8qGiafZa4Uqs4SaLULJjeHDuuKWVZvflrqolLlL3?=
- =?us-ascii?Q?t7i29/cjp8E0irAgSlF/z899S8Ek7NcPxPsWJPiQrjI6ElZ591bgcMWyAYR7?=
- =?us-ascii?Q?1p84PtEt+osRaxpoucTjS5z382y32kHJ8tOPXXB0IxQtVwLbheMhMjW9Nt7N?=
- =?us-ascii?Q?Wn7qSogPoRRNIpD5VCuIw5DQGe07ipuPCZ53QMsxDUQM6kS5PuP/evIp9pWf?=
- =?us-ascii?Q?k9BAtoyT02y6a5IT0+0IeyOEdobSczSfYIKnQ9MbTWhjncA0Fk20GHqFSq1P?=
- =?us-ascii?Q?2Jou2G0AhSzGnyDihLNgGmUN/HP4toYeCXjyW4DBTbT75FCQKJtRxIUIY7Wl?=
- =?us-ascii?Q?GbEUdrvXLideblZYFnNGjTu8l6Nq6+cNukW+muhch2+Pd8XGvjWoDCTO01Wl?=
- =?us-ascii?Q?Jq5sCQnhQ+aogbAlzCVO+uouzwsSCFbh6Ips5cKG4AowvbGZ8+uzvW9/Ab6P?=
- =?us-ascii?Q?B6cqq6oLKIXZmsLENyF5v1EVOPaKQVGiPwV2SD0D1kRWuqAOT3mV8HUQUDxy?=
- =?us-ascii?Q?4NHUYnAO6D58UVhBa46xuzlDs03HQUjz/DsYWgVQdEKAHEBYH4OepHxwuquy?=
- =?us-ascii?Q?wB5U8yXjHRp5fc+XXN8Ng0pkAFT5RWqeR2HYkGm9JMVXJKwOdehEEOjSWees?=
- =?us-ascii?Q?46mRwspZsSXk0mAKXhu5xjhLSTVz1pnd+GooD8zcebv/fcrB6uOo2/VkDX6T?=
- =?us-ascii?Q?JabCpX/vzQ01QOmIqQcgM0+OBAZFkesC3Z60EQHS49jJjClMTvQu8m0Bai9d?=
- =?us-ascii?Q?nrU1ce1Y0Jzaj80lpnFyrJi1bLZpP7jrpDDjn+cijg9dxKXhXoPa0XemI71+?=
- =?us-ascii?Q?ywpY/BZl/LrYwAK2uUgJJHaI2dH3jcWX5k6x35mwxw4VW07v1PSAuaKEjzf9?=
- =?us-ascii?Q?DCQLEgRak3h8q4ugS8hWgNavogxViZU3DTEfFJ0D?=
+	=?us-ascii?Q?tckwQc4CFZgvxs4ejvX1EHgOJxmSzhFQFNQSrs6NDLwa97M7N/xyh6Y8Ul9w?=
+ =?us-ascii?Q?LOAoe4FfANg0n0Q+CWADoAhho0wF1+Ymp5Us9z9cONAcCJlo/7yG5Q6Phb+G?=
+ =?us-ascii?Q?C4d9UkDIIMBGEO/FZcikYTQTFIGbDaU0K1zuTaL4NteA1EyeeRfPoQBYHzQ1?=
+ =?us-ascii?Q?anpHw2VzYRk1tve4owRiVpMrWlDVySkxB8khaU6u2ogkj3IsisaZDfSUm9Zm?=
+ =?us-ascii?Q?38N9y028ppbkdip5cQiH+yb+uvWn2gpOHdKPdWsIktz7Taleukko3S0iyKU+?=
+ =?us-ascii?Q?kV9txEEeMGaU53efm7EUC1xBf/LuNHSQP1npSniNrK2jl94od9uQI6zzUpNE?=
+ =?us-ascii?Q?bDluHjlvQ/3rMSjROUxA22wjFt+an43jrrLZgKo1qUP+Y/Ji+fyfXlCNALv5?=
+ =?us-ascii?Q?EPAoe9l8mK9e9GA23N7ghpHhVOeiekpjua6mdEuDqr0c3E3mAetqZS5tSaix?=
+ =?us-ascii?Q?vXLxyErnwiR4JC/992G4xt2IbQx5LreWbLCV3+Xa0OwEdK4d4mm66QQMTFem?=
+ =?us-ascii?Q?arOSxGxPCYaNk/4rGQRNvKAMIVoxwZu+B130fjcJhHm91tJ9+hPyyJ0Z/MH+?=
+ =?us-ascii?Q?5yECtd0lrDwMr2QV4h4lCMOQdxMNhUVorQdVp/6WcfsMfT5J8e4ekZL63c2E?=
+ =?us-ascii?Q?CPjN1N5zr5gZR2pvtormHbVAOdzWpEuBrBZ5ZN1DFmD7iPZEBXu7plWreYgh?=
+ =?us-ascii?Q?Ro/fiOUSAulDlfcwakHoDeCkBIIMHj6q66SunIzYomgmRTc6Q6mfTLR0Hw7Z?=
+ =?us-ascii?Q?cuqJiCBGVaHAMlvhxnCle2X4uj9QufXF9O2nQBp/ncC+EAXRS/4lWtDLkTo+?=
+ =?us-ascii?Q?hmHcwGJWLnMGqUize050ynCteiNOacTM+qHHb170zxA8EtEoxXstJG2cvcPJ?=
+ =?us-ascii?Q?CrvRUTBF7Lb4whNT6xK+e7PjSgvqdhjvO2x2Ju3HlDGPi67jJLAoUEBHLnh9?=
+ =?us-ascii?Q?fDfbyfK0tvvddTborqsHlXGthOBSS5SqASpVQZfTvG5WSPfRr+vh6boQfhM7?=
+ =?us-ascii?Q?Eis9yBQRs+CprF58gvS/gNZEh91wkI96yyQU/mH+po2IExzTxZHWsiQCR4bw?=
+ =?us-ascii?Q?hCxrYkALpYJE1+0OD6w31h4hY4i6ET8X9C6NZOf3vTw6iQWozvecL2ulh5I1?=
+ =?us-ascii?Q?4Wey7qHohVhiy18DdjbWt8AlnxHMol3MUEXVzYKTKwUBS4LPUnhyQ0NnnXak?=
+ =?us-ascii?Q?Sytfhpwz1aYS/L2EtTygRIMWy0w03/kFIITaiDl4oqYpkbupwYnF6IaJv3Bg?=
+ =?us-ascii?Q?7mlu9AeqsClX2DWFCOdWSC0NMnxMv8/78N1WHAfTnFaB8GPpvsWbhXcmaPlW?=
+ =?us-ascii?Q?sQJBft08X1O9BQ00I4Ytj3Jl89U79u5+Y08wtuoQ7ydPUTmHQV2n9776vYB3?=
+ =?us-ascii?Q?4UoDUxO6EYgtsfoDdEJiMxT7oltu1JIaG49+dMNQXT27qOhPXSfugjer8dm8?=
+ =?us-ascii?Q?qOE8lXJcsrTGBjaJejNnsOk5yFn2OOrkWaisa6NNobKInTbGUhQHmUXLZDPg?=
+ =?us-ascii?Q?lvwk3FIdjBLZ0fy93Lk1BlWZtR0YB+jZePqL66eEe3nwSG6XmW9ZsW4da67G?=
+ =?us-ascii?Q?XjL3eVCsS2Z7FI0Jt6K+PoZXZlB0U3wdcC+kZcSw?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4f62da59-ce1b-4b8e-65b2-08ddbef836af
+X-MS-Exchange-CrossTenant-Network-Message-Id: f204fb77-cee5-4ced-1a9f-08ddbef83811
 X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB8659.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2025 14:52:23.7799
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 09 Jul 2025 14:52:26.0090
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: CvXfqzQxgzrn0LUiFD96o2pqEfa2/5W4R6HM0LlOmfQyaiieHqf0yiZAemOxHpUM
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN0PR12MB6125
+X-MS-Exchange-CrossTenant-UserPrincipalName: dN/wV1arNJBLHv/wp4aHQVosWptD/AkyKmAYytglLaUgy1iNJz6M9x7zdG5qcxOO
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA1PR12MB6356
 
-This brings the definitions up to PCI Express revision 5.0:
-
- * ACS I/O Request Blocking Enable
- * ACS DSP Memory Target Access Control
- * ACS USP Memory Target Access Control
- * ACS Unclaimed Request Redirect
-
-Support for this entire grouping is advertised by the ACS Enhanced
-Capability bit.
+This will allow passing some software flags in the upper 16 bits in the
+next patch.
 
 Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- include/uapi/linux/pci_regs.h | 8 ++++++++
- 1 file changed, 8 insertions(+)
+ drivers/pci/quirks.c | 36 ++++++++++++++++++------------------
+ 1 file changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index 6edffd31cd8e2c..79d8d317b3c17e 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -1004,8 +1004,16 @@
- #define  PCI_ACS_UF		0x0010	/* Upstream Forwarding */
- #define  PCI_ACS_EC		0x0020	/* P2P Egress Control */
- #define  PCI_ACS_DT		0x0040	/* Direct Translated P2P */
-+#define  PCI_ACS_ENHANCED	0x0080  /* IORB, DSP_MT_xx, USP_MT_XX. Capability only */
-+#define  PCI_ACS_EGRESS_CTL_SZ	GENMASK(15, 8) /* Egress Control Vector Size */
- #define PCI_ACS_EGRESS_BITS	0x05	/* ACS Egress Control Vector Size */
- #define PCI_ACS_CTRL		0x06	/* ACS Control Register */
-+#define  PCI_ACS_IORB		0x0080  /* I/O Request Blocking */
-+#define  PCI_ACS_DSP_MT_RB	0x0100  /* DSP Memory Target Access Control Request Blocking */
-+#define  PCI_ACS_DSP_MT_RR	0x0200  /* DSP Memory Target Access Control Request Redirect */
-+#define  PCI_ACS_USP_MT_RB	0x0400  /* USP Memory Target Access Control Request Blocking */
-+#define  PCI_ACS_USP_MT_RR	0x0800  /* USP Memory Target Access Control Request Redirect */
-+#define  PCI_ACS_UNCLAIMED_RR	0x1000  /* Unclaimed Request Redirect Control */
- #define PCI_ACS_EGRESS_CTL_V	0x08	/* ACS Egress Control Vector */
+diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+index d78876b4a2b106..71b9550e46eb06 100644
+--- a/drivers/pci/quirks.c
++++ b/drivers/pci/quirks.c
+@@ -4627,20 +4627,20 @@ DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_CHELSIO, PCI_ANY_ID,
+  * in @acs_ctrl_ena, i.e., the device provides all the access controls the
+  * caller desires.  Return 0 otherwise.
+  */
+-static int pci_acs_ctrl_enabled(u16 acs_ctrl_req, u16 acs_ctrl_ena)
++static int pci_acs_ctrl_enabled(u32 acs_ctrl_req, u32 acs_ctrl_ena)
+ {
+ 	if ((acs_ctrl_req & acs_ctrl_ena) == acs_ctrl_req)
+ 		return 1;
+ 	return 0;
+ }
+ 
+-static int pci_acs_ctrl_isolated(u16 acs_flags)
++static int pci_acs_ctrl_isolated(u32 acs_flags)
+ {
+ 	return pci_acs_ctrl_enabled(acs_flags,
+ 		PCI_ACS_SV | PCI_ACS_RR | PCI_ACS_CR | PCI_ACS_UF);
+ }
+ 
+-static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags);
++static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u32 acs_flags);
  
  /*
+  * AMD has indicated that the devices below do not support peer-to-peer
+@@ -4667,7 +4667,7 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags);
+  * 1022:780f [AMD] FCH PCI Bridge
+  * 1022:7809 [AMD] FCH USB OHCI Controller
+  */
+-static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_amd_sb_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ #ifdef CONFIG_ACPI
+ 	struct acpi_table_header *header = NULL;
+@@ -4709,7 +4709,7 @@ static bool pci_quirk_cavium_acs_match(struct pci_dev *dev)
+ 	}
+ }
+ 
+-static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_cavium_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	if (!pci_quirk_cavium_acs_match(dev))
+ 		return -ENOTTY;
+@@ -4725,7 +4725,7 @@ static int pci_quirk_cavium_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return pci_acs_ctrl_isolated(acs_flags);
+ }
+ 
+-static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_xgene_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	/*
+ 	 * X-Gene Root Ports matching this quirk do not allow peer-to-peer
+@@ -4740,7 +4740,7 @@ static int pci_quirk_xgene_acs(struct pci_dev *dev, u16 acs_flags)
+  * But the implementation could block peer-to-peer transactions between them
+  * and provide ACS-like functionality.
+  */
+-static int pci_quirk_zhaoxin_pcie_ports_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_zhaoxin_pcie_ports_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	if (!pci_is_pcie(dev) ||
+ 	    ((pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT) &&
+@@ -4810,7 +4810,7 @@ static bool pci_quirk_intel_pch_acs_match(struct pci_dev *dev)
+ 	return false;
+ }
+ 
+-static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	if (!pci_quirk_intel_pch_acs_match(dev))
+ 		return -ENOTTY;
+@@ -4831,7 +4831,7 @@ static int pci_quirk_intel_pch_acs(struct pci_dev *dev, u16 acs_flags)
+  * Port to pass traffic to another Root Port.  All PCIe transactions are
+  * terminated inside the Root Port.
+  */
+-static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	return pci_acs_ctrl_isolated(acs_flags);
+ }
+@@ -4842,12 +4842,12 @@ static int pci_quirk_qcom_rp_acs(struct pci_dev *dev, u16 acs_flags)
+  * and validate bus numbers in requests, but does not provide an ACS
+  * capability.
+  */
+-static int pci_quirk_nxp_rp_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_nxp_rp_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	return pci_acs_ctrl_isolated(acs_flags);
+ }
+ 
+-static int pci_quirk_al_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_al_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	if (pci_pcie_type(dev) != PCI_EXP_TYPE_ROOT_PORT)
+ 		return -ENOTTY;
+@@ -4925,7 +4925,7 @@ static bool pci_quirk_intel_spt_pch_acs_match(struct pci_dev *dev)
+ 
+ #define INTEL_SPT_ACS_CTRL (PCI_ACS_CAP + 4)
+ 
+-static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	int pos;
+ 	u32 cap, ctrl;
+@@ -4946,7 +4946,7 @@ static int pci_quirk_intel_spt_pch_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return pci_acs_ctrl_enabled(acs_flags, ctrl);
+ }
+ 
+-static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	/*
+ 	 * SV, TB, and UF are not relevant to multifunction endpoints.
+@@ -4962,7 +4962,7 @@ static int pci_quirk_mf_endpoint_acs(struct pci_dev *dev, u16 acs_flags)
+ 		PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
+ }
+ 
+-static int pci_quirk_rciep_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_rciep_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	/*
+ 	 * Intel RCiEP's are required to allow p2p only on translated
+@@ -4975,7 +4975,7 @@ static int pci_quirk_rciep_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return pci_acs_ctrl_isolated(acs_flags);
+ }
+ 
+-static int pci_quirk_brcm_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_brcm_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	/*
+ 	 * iProc PAXB Root Ports don't advertise an ACS capability, but
+@@ -4986,7 +4986,7 @@ static int pci_quirk_brcm_acs(struct pci_dev *dev, u16 acs_flags)
+ 	return pci_acs_ctrl_isolated(acs_flags);
+ }
+ 
+-static int pci_quirk_loongson_acs(struct pci_dev *dev, u16 acs_flags)
++static int pci_quirk_loongson_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	/*
+ 	 * Loongson PCIe Root Ports don't advertise an ACS capability, but
+@@ -5006,7 +5006,7 @@ static int pci_quirk_loongson_acs(struct pci_dev *dev, u16 acs_flags)
+  * RP1000/RP2000 10G NICs(sp).
+  * FF5xxx 40G/25G/10G NICs(aml).
+  */
+-static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u16 acs_flags)
++static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u32 acs_flags)
+ {
+ 	switch (dev->device) {
+ 	case 0x0100 ... 0x010F: /* EM */
+@@ -5022,7 +5022,7 @@ static int  pci_quirk_wangxun_nic_acs(struct pci_dev *dev, u16 acs_flags)
+ static const struct pci_dev_acs_enabled {
+ 	u16 vendor;
+ 	u16 device;
+-	int (*acs_enabled)(struct pci_dev *dev, u16 acs_flags);
++	int (*acs_enabled)(struct pci_dev *dev, u32 acs_flags);
+ } pci_dev_acs_enabled[] = {
+ 	{ PCI_VENDOR_ID_ATI, 0x4385, pci_quirk_amd_sb_acs },
+ 	{ PCI_VENDOR_ID_ATI, 0x439c, pci_quirk_amd_sb_acs },
 -- 
 2.43.0
 
