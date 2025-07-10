@@ -1,108 +1,145 @@
-Received: from mail-yb1-f196.google.com (mail-yb1-f196.google.com [209.85.219.196])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555E825760;
-	Thu, 10 Jul 2025 19:06:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.196
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59F352FD5B3;
+	Thu, 10 Jul 2025 19:13:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752174386; cv=none; b=OtlT8FZU0j/oaHMqcDo2AhwNeAWH+h9gw50aqBdDZkTX8pIVR31LJ2APfW7FyDt24r+YU4kueEj2Uk+J8C9ZPGr9MxHhspQMRHtakDSsMir2EkYOkBIUrtljujFuFfZzwudgJwa15RYSsIA/OX1AE0havERPQJhdAuyUMrVO6+Q=
+	t=1752174838; cv=none; b=KBn3kIM35d1mHGUZ/vuxRLl+OL75jI4UQBKZkER8B7+Y4kmE5iQWZhVFGnUP14xYQdgHsZsevHE8l/l7oCVWrd5s21p7iaObOfMPHDStMkLgdEFgpehor4hWydr+sVwVbczsj8PeFFL+5/ARuEO0km6jQSdLVPfR6AzEyxweSlE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752174386; c=relaxed/simple;
-	bh=N/CJm8Q37Va3Ls9gDwlRWmfbEFB9jggb2Srg/9czkzM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ltQQxTeaPUbT0senE+bhsGcQjqRty4xCOH7WRCKOUvzVp2jWZp7H3J6fFX6g2MPA2pfazPI5E4KG1UJNj/oXalCYadPHIGEVtqvFfA+m/k1FeT2DMVfryE7b1tdqQk+D2jEB55EMh6S5iIcya9meXenxslFgNIJxPcPm/FC5V50=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UpRhusBm; arc=none smtp.client-ip=209.85.219.196
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752174838; c=relaxed/simple;
+	bh=yfPKmVMhY+gbXvaT/+cR0sE6ZwAyCoBhja/l0byv5u0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=VCG7chmMHJu2ynd7qRsNIJFiY2XwZRDCvrz/U4AjT0riW0faVCuM27kLhnw3DWWO/FHRYA5uumNtphSrc7PJ9iql91dFRFtADh9PwbW7b7CxgoLJrVc3quIMZhWHWFg73j+sABRiIJ25gifckNmiPGjivNwGkN/1RK+BDbpQMxg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T251JgUf; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UpRhusBm"
-Received: by mail-yb1-f196.google.com with SMTP id 3f1490d57ef6-e740a09eb00so1118468276.0;
-        Thu, 10 Jul 2025 12:06:25 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752174384; x=1752779184; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=N/CJm8Q37Va3Ls9gDwlRWmfbEFB9jggb2Srg/9czkzM=;
-        b=UpRhusBmbRMkNWCdz3woBPXAs74oY5IzhGZX9TuU7pf8mFPbdgxQKpMhYA0mmyESLb
-         1d87f/56msl6YeDbn81vX1+SCskbrjAl5ovDKCWkpZNZajSWulgN/at4BfsxYt80jBsb
-         X1Q8ySgxMoKHnT9/asDNgMDq91yWP41Mj+2xTMUcBOom0IO9cq0fTFJH7W2/zJsoy/QB
-         pdqqlgRt/u4OPYyVTkNduC4u2Tci0soMrxE5D9mpPu/35QdjEt4kNJNEWxyatUT5f0GL
-         SqFSyLtmcR3hKaYXZV4gh+Iifg1qOocXDgZjTy2qmSny9JTAL/HffffI0K42SjdJ0MfA
-         W9Kw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752174384; x=1752779184;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=N/CJm8Q37Va3Ls9gDwlRWmfbEFB9jggb2Srg/9czkzM=;
-        b=bbintGz1+IctgzZZ/8EgokB5jI/XYzjW3Nk2F9QUvJpFAE8bZM18wg7Tshz7PZ5WqQ
-         YDmmH6/g9at0PGVkN0UK/g/TUXT4nMjk29RHFS0hAz3czhLVSbEp4yXlZ0v5SFVQfhjo
-         LocVJ5mFGbWvQ2BECF0j1gDIqain/VeCYDImUyZ5GSKjl2Uykr3NSL9wji+BA2TAPVOu
-         XTI44X75kD2i14nAXZcA9J1dxXkVQBpcWo+6bTDvnaHUpybvJy34B8bYLkHi7Z5sMnTg
-         xON69JfHVOp3Am4szJ/A+41Nr2GZYz3xOM+ui8LdvWxnMjj/qW9aqyMo4cyt6kawVy7F
-         8LOA==
-X-Forwarded-Encrypted: i=1; AJvYcCWmIze9SwF7lFMK9CyVRKNwGcJBNNI9Q9Jp4nQNrHrsX3nDnq2l38CjwJtCcxkQXFrhLPoFhQMn@vger.kernel.org, AJvYcCWsqa1usEKhwpQNnQ010ivoMTlh02Qo+RBxxMPKrVby8F7RKR5ZcAzeL5z9X+2RB/jlVtUT8kBdYaV8@vger.kernel.org, AJvYcCX4/gTRcndxQqBpp1b/wMzq3h7gB73qc/Ku75lhZd3vMa+6jTRWfo/MxS/Op0QVi8HUr3Wlfq1AmY9vPRibWX8=@vger.kernel.org, AJvYcCXATu3aphJ4KoK4JVOqAdBLY0KN5fcfp196N+OgaB0/nL15NfDHRS/kC99ezcc+WPwYTerfYZkZUKnf@vger.kernel.org
-X-Gm-Message-State: AOJu0YylktxNmSuL5JMTka/uTbrl0mwPCIkeWnaHTgePz2lvhscwK1mh
-	mnNljbThNofTyi1fVsAvlb/euuKd+kZObsxUEnab3j4q6WB9p0i6Asy1+Rya1eF83mhh4HIi7s7
-	TlD6aTxWNG1fH2UoBh2wvGHzDci/Q1lzW5YGJswltBg==
-X-Gm-Gg: ASbGnct0ajdDqemJpyfWx/EX2hcURBDIYui2xpLz4pd2pNLL7eFtPHt5kwcHP9OjGjI
-	KcG4iysQcUPo3GFGkxI/o0fETBwtsQZFplSfr57Q4AUchaNYs4zAvTbqOrGdubU8hBNjAvjJTA4
-	EhpKoKUcs4PEgY38IHOKV3tBumkjWjOaQCHTQLb52xoxbQlA==
-X-Google-Smtp-Source: AGHT+IH/La36AZil68VOGEY6oXvInjSrZkyqxX4Csk+T+jPPRq31W1rogvQyxXSOBTCvOC1EsXl5hSyqgohVEvW5L04=
-X-Received: by 2002:a05:690c:38b:b0:710:f39f:4d66 with SMTP id
- 00721157ae682-717d78b6564mr4126457b3.13.1752174384216; Thu, 10 Jul 2025
- 12:06:24 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T251JgUf"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id BF7F4C4CEF1;
+	Thu, 10 Jul 2025 19:13:57 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752174837;
+	bh=yfPKmVMhY+gbXvaT/+cR0sE6ZwAyCoBhja/l0byv5u0=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=T251JgUfQqkL9mMN9Vezo2QxC8kuwV4QxdRvfzReb0/q7e4Bz5uTLHwMOvYCpYgE1
+	 /INpBVCidZVrZmLgjhKrDteYqlc5/oKI/SMVY2dFGSihqzHHfknmra/mUTLCKVeVt8
+	 38ho9A34bxzZgHDhn9jPJa1219xCojGm3c5XZpYkPIMrxPfxhwri+2vrjFnqZjPdRR
+	 GSUJEiQLDYoI8Rn2DhxRsCScv/+9+v4p2p6q4AdycIpbG3ZBayUSBCN8AHm3G5G5JB
+	 DQdABgF780tR0MQjDZfiAmTkLlnlADip2uaDBIiMMjCuuNIXZ8HL1f0szYyjMxSeUg
+	 O+ex5doYHvrbQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id ACDD8C83F1B;
+	Thu, 10 Jul 2025 19:13:57 +0000 (UTC)
+From: Frank Li via B4 Relay <devnull+Frank.Li.nxp.com@kernel.org>
+Date: Thu, 10 Jul 2025 15:13:47 -0400
+Subject: [PATCH v21 1/9] PCI: imx6: Add helper function
+ imx_pcie_add_lut_by_rid()
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250705195846.GA2011829@bhelgaas> <9D9D9375-1BD0-46EA-9E85-47A2D8325F98@gmail.com>
- <2cq6jeywii5fscozazz2epugh6zflcpfbo4ffhjt2lyk76cq4m@vg2jcsmlhtho> <FB89ECA8-93E2-4015-8DCF-6D362A53D825@gmail.com>
-In-Reply-To: <FB89ECA8-93E2-4015-8DCF-6D362A53D825@gmail.com>
-From: Bandhan Pramanik <bandhanpramanik06.foss@gmail.com>
-Date: Fri, 11 Jul 2025 00:36:12 +0530
-X-Gm-Features: Ac12FXyPTlLwATY_CErqME9P_iG-GcCgUwb6H3kdzCI5TuYyYXv0SfmzVne8uYY
-Message-ID: <CAEmM+Qj=TA=WtQAXQZx6wCUpdsOQ4j66Kpyze3KNZHC79KfyRA@mail.gmail.com>
-Subject: Re: Instability in ALL stable and LTS distro kernels (IRQ #16 being
- disabled, PCIe bus errors, ath10k_pci) in Dell Inspiron 5567
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Jeff Johnson <jjohnson@kernel.org>, linux-pci@vger.kernel.org, 
-	linux-acpi@vger.kernel.org, ath10k@lists.infradead.org, 
-	linux-wireless@vger.kernel.org, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250710-ep-msi-v21-1-57683fc7fb25@nxp.com>
+References: <20250710-ep-msi-v21-0-57683fc7fb25@nxp.com>
+In-Reply-To: <20250710-ep-msi-v21-0-57683fc7fb25@nxp.com>
+To: Kishon Vijay Abraham I <kishon@kernel.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Thomas Gleixner <tglx@linutronix.de>, Anup Patel <apatel@ventanamicro.com>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, Marc Zyngier <maz@kernel.org>, 
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, Danilo Krummrich <dakr@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Arnd Bergmann <arnd@arndb.de>, 
+ Shuah Khan <shuah@kernel.org>, Richard Zhu <hongxing.zhu@nxp.com>, 
+ Lucas Stach <l.stach@pengutronix.de>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, 
+ Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
+ Pengutronix Kernel Team <kernel@pengutronix.de>, 
+ Fabio Estevam <festevam@gmail.com>, 
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>, dlemoal@kernel.org, jdmason@kudzu.us, 
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+ linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+ imx@lists.linux.dev, devicetree@vger.kernel.org, 
+ Niklas Cassel <cassel@kernel.org>, Frank Li <Frank.Li@nxp.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1752174836; l=1939;
+ i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
+ bh=FTsRKbmGJkqXdF0l3uL9gIhRFF4JXE9vNw1HW1VASns=;
+ b=pl4q2ntiFNC+d0WkC3fXBmdd1gqe/CxBTx1BZqQJEmeumRTScrSLvt3T8awwwY9n6HD/z7skj
+ 3YNPpGXey6rAS+uVXG9/oWf2slSD0psgmFdz42M2s6eWD2I+0J7wxqM
+X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
+ pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
+X-Endpoint-Received: by B4 Relay for Frank.Li@nxp.com/20240130 with
+ auth_id=121
+X-Original-From: Frank Li <Frank.Li@nxp.com>
+Reply-To: Frank.Li@nxp.com
 
-Ok, we did it. Could reproduce the errors properly.
+From: Frank Li <Frank.Li@nxp.com>
 
-Here are the journalctl logs:
+Add helper function imx_pcie_add_lut_by_rid(), which will be used for MSI
+doorbell support in endpoint mode in the future. No functional change.
 
-Kernel level: https://gist.githubusercontent.com/BandhanPramanik/ddb0cb23ec=
-a03ca2ea43a1d832a16180/raw/a9e93c4ba41fb0b3d7602e6bfddce9aa5f3a19b2/KERNEL%=
-2520journalctl%2520v6.16-rc4
-User level: https://gist.githubusercontent.com/BandhanPramanik/ddb0cb23eca0=
-3ca2ea43a1d832a16180/raw/a9e93c4ba41fb0b3d7602e6bfddce9aa5f3a19b2/NON-KERNE=
-L%2520journalctl%2520v6.16-rc4
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+---
+- change in v20
+- update commit message.
 
-Just so you know, I have used v6.16-rc4.
+change from v14 to v16
+- none
 
-Bandhan.
+change from v13 to v14
+- new patch
+---
+ drivers/pci/controller/dwc/pci-imx6.c | 17 ++++++++++-------
+ 1 file changed, 10 insertions(+), 7 deletions(-)
 
-On Wed, Jul 9, 2025 at 11:00=E2=80=AFPM Bandhan Pramanik
-<bandhanpramanik06.foss@gmail.com> wrote:
->
-> Hello,
->
-> I was actually a bit distracted by the things caused by the Automatic Par=
-titioning of Fedora. I'll inform that in Fedora Bugzilla... anyway.
->
-> I realised that making the modules will take 8-9 hours, I didn't even hav=
-e much of a success (because all the modules didn't properly load, particul=
-arly the firmware-N.bin files couldn't be found).
->
-> But I'll try to recompile the kernel, I'll just have to give it overnight=
- time.
->
-> Bandhan
+diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
+index 5a38cfaf989b1c9606660f2e0bcd10d88fa2d6b1..032b906c44dfaa374a32f511098402a494ef5677 100644
+--- a/drivers/pci/controller/dwc/pci-imx6.c
++++ b/drivers/pci/controller/dwc/pci-imx6.c
+@@ -1096,18 +1096,14 @@ static void imx_pcie_remove_lut(struct imx_pcie *imx_pcie, u16 rid)
+ 	}
+ }
+ 
+-static int imx_pcie_enable_device(struct pci_host_bridge *bridge,
+-				  struct pci_dev *pdev)
++static int imx_pcie_add_lut_by_rid(struct imx_pcie *imx_pcie, u32 rid)
+ {
+-	struct imx_pcie *imx_pcie = to_imx_pcie(to_dw_pcie_from_pp(bridge->sysdata));
+-	u32 sid_i, sid_m, rid = pci_dev_id(pdev);
++	struct device *dev = imx_pcie->pci->dev;
+ 	struct device_node *target;
+-	struct device *dev;
++	u32 sid_i, sid_m;
+ 	int err_i, err_m;
+ 	u32 sid = 0;
+ 
+-	dev = imx_pcie->pci->dev;
+-
+ 	target = NULL;
+ 	err_i = of_map_id(dev->of_node, rid, "iommu-map", "iommu-map-mask",
+ 			  &target, &sid_i);
+@@ -1182,6 +1178,13 @@ static int imx_pcie_enable_device(struct pci_host_bridge *bridge,
+ 	return imx_pcie_add_lut(imx_pcie, rid, sid);
+ }
+ 
++static int imx_pcie_enable_device(struct pci_host_bridge *bridge, struct pci_dev *pdev)
++{
++	struct imx_pcie *imx_pcie = to_imx_pcie(to_dw_pcie_from_pp(bridge->sysdata));
++
++	return imx_pcie_add_lut_by_rid(imx_pcie, pci_dev_id(pdev));
++}
++
+ static void imx_pcie_disable_device(struct pci_host_bridge *bridge,
+ 				    struct pci_dev *pdev)
+ {
+
+-- 
+2.34.1
+
+
