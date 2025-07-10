@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578DE2FD5B0;
-	Thu, 10 Jul 2025 19:13:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 578062FD5A9;
+	Thu, 10 Jul 2025 19:13:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752174838; cv=none; b=FGl/dFRPVNbF22NAGmflF6FBMpemz9bj7nZLi/q+Zu/ZdWOk2KszA6dWFPysVQnNaZJvKD9wnxCYURUuaKOYjjFmiyJzpm4UvmucLOLSa7lIDHtJhjxCskQERISPeVrJkaLpW20fLTh5pud9Z8M+xhjTVd8DvULmdkHkEsGxUAE=
+	t=1752174838; cv=none; b=g6xyF06hAyUICGLXM6OnBIvRFJ4jmxkRuwzdw4IywAqWDMbcgYD7wzT2rk94AlEZWd4mveG9Vw88KF21ZoTV1rgDOztQ/wmlZYiMYWyXShDUar8PArf9W4xURyoWNKCkYF5oMNcX8NjRqgErxJ6Hu3JF9aM3+q1IsgAmLpGkXfA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1752174838; c=relaxed/simple;
-	bh=FbFfJ0O8Cxn9ky/KBPJJ3vCgtFRuln3RMTTcy+zzSU8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Pc+E6Q9eOlk857DXjXDTGRohDTmGpho7HLngjJFY1bFEjoJmtamesvTZLgWg2yAEVuT983RY+DEog7qxnV9Ebu2MdubHfY/uWkAM+NoTTS5rkcKcVvm3hmkT+AhKnOr0ABRbe+FdMfqzGbqYn3/oNL2WlUnHi2MsQ2FwVwuHRTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TPqItiAw; arc=none smtp.client-ip=10.30.226.201
+	bh=RHPw+mzqn4fNV+JTiLhAhP+hp+hIHxxWVGkrR9ghdzQ=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=IpAlGRV4AXE8iARqai+V6+xaMubvLCjM/YsQmZVWZ0arE5yMxztr/toiLiY/CRujm8dyfRkIFM67kiHnPptZ8NauNFvSWMmTf3nrl53+GpejLVNnbwFfSdTQK2Wa3wIWpVl4/u0qGMFNueA5k74CJmwosEAhPar2asjm5WgE4G4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TaM5tpeD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TPqItiAw"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id F3D90C116D0;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TaM5tpeD"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AC120C4CEE3;
 	Thu, 10 Jul 2025 19:13:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752174838;
-	bh=FbFfJ0O8Cxn9ky/KBPJJ3vCgtFRuln3RMTTcy+zzSU8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=TPqItiAwnC6GIDTSE9E+qpLjD3ClT/p0c8RKavoRF+T6OLGB7LviYRDWxYQMvHXjh
-	 ZoGhyNNOAiUYBFH+XiIdnmzZsgRmxd1ESQHCx4G8f194YnCwyK5Z0FtNTFGIXgEXOQ
-	 qdQy/qAZHA1nZoQJtB6VirBLuQ3Z80ukdXNKnaSmRZF4cDTntiIv50AFhPJecf3Ar4
-	 00HVEavFF7DU8ZCB6wCE0kWAnijknAvGEzjW0O/YrlAKQ1CPqdHO9WTlqUVkFx2YoY
-	 letcxwFtlWluRSYeJIXHOVLci7pc5tL/dDXmQcVb34ciKLkiG7Dy+HYQj0V6XGIdZp
-	 BYc7mtDiU0lbg==
+	s=k20201202; t=1752174837;
+	bh=RHPw+mzqn4fNV+JTiLhAhP+hp+hIHxxWVGkrR9ghdzQ=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=TaM5tpeDU/eY3s1qxu9K4BCzucm4uVT4xebskwP+dzS1AqlJ3nPy2cxrDIsCu4XKk
+	 DbyvytB6tIZ2orL+YV2RZaSBEwMai8rco0itLXtBGPWWabHNzQvNEm+T1CWXZ+Q0JF
+	 RPwCFvWq8oGNffBdNIhIZDTjoRdIqB4NvsM7f4EBfnDTclE+HOm6110Mf5vJousws/
+	 atU2ZJ/a10UEMM3Togr9r7OW10a4KeJGItfXCKHBDRrgvCSOfMOCQZFJ8MqBKt/bu7
+	 LlG0apouAkn2z18vOtCPjWixLJJhviRKURv1IkefIOfjHG6ZERK6HLMZal3PClZd91
+	 W5RQkkWY7S3oQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id E7D6AC83F17;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 95CEEC83F1A;
 	Thu, 10 Jul 2025 19:13:57 +0000 (UTC)
 From: Frank Li via B4 Relay <devnull+Frank.Li.nxp.com@kernel.org>
-Date: Thu, 10 Jul 2025 15:13:49 -0400
-Subject: [PATCH v21 3/9] PCI: endpoint: Add RC-to-EP doorbell support using
- platform MSI controller
+Subject: [PATCH v21 0/9] PCI: EP: Add RC-to-EP doorbell with platform MSI
+ controller
+Date: Thu, 10 Jul 2025 15:13:46 -0400
+Message-Id: <20250710-ep-msi-v21-0-57683fc7fb25@nxp.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,10 +40,16 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250710-ep-msi-v21-3-57683fc7fb25@nxp.com>
-References: <20250710-ep-msi-v21-0-57683fc7fb25@nxp.com>
-In-Reply-To: <20250710-ep-msi-v21-0-57683fc7fb25@nxp.com>
+Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAOoQcGgC/2XSS44bIRAG4KuMep2OqAcFzCr3iLLgmenF2JY7s
+ iYa+e4BS9NgsgTxlYqq/3PZ83XL+/L68rlc823bt/OpHhC+vSzxzZ9+53VL9WJBhQwK1Jov6/u
+ +rTZw9IEoQMhLfXy55rJ9PCr9/FXPb9v+53z9+yh8o3b7VUJ/lbjRqtaYU7TOg0TwP04fl+/x/
+ L60AjceEMGBuCIDJnlMzgW0z0h3BMoeSFfkgZ2GqJJS5hnJgAAPJBWxLs4gZoo4tWdGxAcyFSX
+ 20XhfQsL4jOyI5EC2IilQxJaSIIRn5DpCRQdy7U+iUohUQKf0jECNqvdXN6hWayIZW2WSmcHIX
+ GfQxs7ExVtyJswMBwZ9WXWaaiVKrAmL16gmRiPr64KWDGHJCA5TRJ7YEQ2tUJnOWjacGAhAUjB
+ M2QA9sLHJlo4QfYxQEXg3MemMx0nKY9UOXBLbYjUxM7KhyZYQIfKBtSf4j9mBDbmClpEiLrBzY
+ FjmkbjOZNxbS4kxJJi9Z1umEKPqzAwMW0qYkpbiQtI8sPv9/g9K6275NgQAAA==
+X-Change-ID: 20241010-ep-msi-8b4cab33b1be
 To: Kishon Vijay Abraham I <kishon@kernel.org>, 
  "Rafael J. Wysocki" <rafael@kernel.org>, 
  Thomas Gleixner <tglx@linutronix.de>, Anup Patel <apatel@ventanamicro.com>, 
@@ -65,13 +71,14 @@ Cc: Niklas Cassel <cassel@kernel.org>, dlemoal@kernel.org, jdmason@kudzu.us,
  linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
  linux-pci@vger.kernel.org, linux-kselftest@vger.kernel.org, 
  imx@lists.linux.dev, devicetree@vger.kernel.org, 
- Niklas Cassel <cassel@kernel.org>, Frank Li <Frank.Li@nxp.com>
+ Niklas Cassel <cassel@kernel.org>, Frank Li <Frank.Li@nxp.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1752174836; l=9861;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1752174836; l=12498;
  i=Frank.Li@nxp.com; s=20240130; h=from:subject:message-id;
- bh=DjOBYFEm2LaVAMsRUL0bGftXbmddhhW5FmKcXkwYvPg=;
- b=5epIOygrfiLqtiT+xKA9OCWQIwi/Gw3faEVxEZYYmU+JCj0Z5pJGvoKgKuPaC+IKLmPHDQycs
- +e0MoFJ+0zzDowavu4eq/Df4xIeh9MHl7gG1t0zQRHt3wdJVRDRivp8
+ bh=RHPw+mzqn4fNV+JTiLhAhP+hp+hIHxxWVGkrR9ghdzQ=;
+ b=SFLRFUj2d9FSwrYDdWvRPnrM42iYakQN5tsh+soiw5WD5hi/PvnstmtLm2RR79S0BKxv3Ogx/
+ ZRWPtN9Tg2gDkAAGtH/c1pUSQahcT4cf2t74+Tb5D/E97Lq7ezOIs8Q
 X-Developer-Key: i=Frank.Li@nxp.com; a=ed25519;
  pk=I0L1sDUfPxpAkRvPKy7MdauTuSENRq+DnA+G4qcS94Q=
 X-Endpoint-Received: by B4 Relay for Frank.Li@nxp.com/20240130 with
@@ -79,306 +86,269 @@ X-Endpoint-Received: by B4 Relay for Frank.Li@nxp.com/20240130 with
 X-Original-From: Frank Li <Frank.Li@nxp.com>
 Reply-To: Frank.Li@nxp.com
 
-From: Frank Li <Frank.Li@nxp.com>
+┌────────────┐   ┌───────────────────────────────────┐   ┌────────────────┐
+│            │   │                                   │   │                │
+│            │   │ PCI Endpoint                      │   │ PCI Host       │
+│            │   │                                   │   │                │
+│            │◄──┤ 1.platform_msi_domain_alloc_irqs()│   │                │
+│            │   │                                   │   │                │
+│ MSI        ├──►│ 2.write_msi_msg()                 ├──►├─BAR<n>         │
+│ Controller │   │   update doorbell register address│   │                │
+│            │   │   for BAR                         │   │                │
+│            │   │                                   │   │ 3. Write BAR<n>│
+│            │◄──┼───────────────────────────────────┼───┤                │
+│            │   │                                   │   │                │
+│            ├──►│ 4.Irq Handle                      │   │                │
+│            │   │                                   │   │                │
+│            │   │                                   │   │                │
+└────────────┘   └───────────────────────────────────┘   └────────────────┘
 
-Doorbell feature is implemented by mapping the EP's MSI interrupt
-controller message address to a dedicated BAR in the EPC core. It is the
-responsibility of the EPF driver to pass the actual message data to be
-written by the host to the doorbell BAR region through its own logic.
+This patches based on old https://lore.kernel.org/imx/20221124055036.1630573-1-Frank.Li@nxp.com/
+
+Original patch only target to vntb driver. But actually it is common
+method.
+
+This patches add new API to pci-epf-core, so any EP driver can use it.
+
+Previous v2 discussion here.
+https://lore.kernel.org/imx/20230911220920.1817033-1-Frank.Li@nxp.com/
+
+Changes in v21:
+- Align to bar size, try to fix Niklas reported problem.
+- Rebase to v6.16-rc5
+- Link to v20: https://lore.kernel.org/r/20250709-ep-msi-v20-0-43d56f9bd54a@nxp.com
+
+Changes in v20:
+- remove set epf of_node's patch and only support one epf now.
+- move imx6's patch to first
+- detail change see each patches' change log
+- Link to v19: https://lore.kernel.org/r/20250609-ep-msi-v19-0-77362eaa48fa@nxp.com
+
+Changes in v19:
+- irq part already in v6.16-rc1, only missed pcie/dts part
+- rebase to v6.16-rc1
+- update commit message for patch IMMUTABLE check.
+- Link to v18: https://lore.kernel.org/r/20250414-ep-msi-v18-0-f69b49917464@nxp.com
+
+Changes in v18:
+- pci-ep.yaml: sort property order, fix maxvalue to 0x7ffff for msi-map-mask and
+iommu-map-mask
+- Link to v17: https://lore.kernel.org/r/20250407-ep-msi-v17-0-633ab45a31d0@nxp.com
+
+Changes in v17:
+- move document part to pci-ep.yaml
+- Link to v16: https://lore.kernel.org/r/20250404-ep-msi-v16-0-d4919d68c0d0@nxp.com
+
+Changes in v16:
+- remove arm64: dts: imx95-19x19-evk: Add PCIe1 endpoint function overlay file
+because there are better patches, which under review.
+- Add document for pcie-ep msi-map usage
+- other change to see each patch's change log
+About IMMUTABLE (No change for this part, tglx provide feedback)
+> - This IMMUTABLE thing serves no purpose, because you don't randomly
+>   plug this end-point block on any MSI controller. They come as part
+>   of an SoC.
+
+"Yes and no. The problem is that the EP implementation is meant to be a
+generic library and while GIC-ITS guarantees immutability of the
+address/data pair after setup, there are architectures (x86, loongson,
+riscv) where the base MSI controller does not and immutability is only
+achieved when interrupt remapping is enabled. The latter can be disabled
+at boot-time and then the EP implementation becomes a lottery across
+affinity changes.
+
+That was my concern about this library implementation and that's why I
+asked for a mechanism to ensure that the underlying irqdomain provides a
+immutable address/data pair.
+
+So it does not matter for GIC-ITS, but in the larger picture it matters.
+
+Thanks,
+
+        tglx
+"
+
+So it does not matter for GIC-ITS, but in the larger picture it matters.
+
+- Link to v15: https://lore.kernel.org/r/20250211-ep-msi-v15-0-bcacc1f2b1a9@nxp.com
+
+Changes in v15:
+- rebase to v6.14-rc1
+- fix build issue find by kernel test robot
+- Link to v14: https://lore.kernel.org/r/20250207-ep-msi-v14-0-9671b136f2b8@nxp.com
+
+Changes in v14:
+Marc Zyngier raised concerns about adding DOMAIN_BUS_DEVICE_PCI_EP_MSI. As
+a result, the approach has been reverted to the v9 method. However, there
+are several improvements:
+
+MSI now supports msi-map in addition to msi-parent.
+  - The struct device: id is used as the endpoint function (EPF) device
+identity to map to the stream ID (sideband information).
+  - The EPC device tree source (DTS) utilizes msi-map to provide such
+information.
+  - The EPF device's of_node is set to the EPC controller’s node. This
+approach is commonly used for multi-function device (MFD) platform child
+devices, allowing them to inherit properties from the MFD device’s DTS,
+such as reset-cells and gpio-cells. This method is well-suited for the
+current case, as the EPF is inherently created/binded to the EPC and
+should inherit the EPC’s DTS node properties.
+
+Additionally:
+
+Since the basic IMX95 LUT support has already been merged into the
+mainline, a DTS and driver increment patch is added to complete the
+solution. The patch is rebased onto the latest linux-next tree and
+aligned with the new pcitest framework.
+
+- Link to v13: https://lore.kernel.org/r/20241218-ep-msi-v13-0-646e2192dc24@nxp.com
+
+Changes in v13:
+- Change to use DOMAIN_BUS_PCI_DEVICE_EP_MSI
+- Change request id as  func | vfunc << 3
+- Remove IRQ_DOMAIN_MSI_IMMUTABLE
+
+Thomas Gleixner:
+
+I hope capture all your points in review comments. If missed, let me know.
+
+- Link to v12: https://lore.kernel.org/r/20241211-ep-msi-v12-0-33d4532fa520@nxp.com
+
+Changes in v12:
+- Change to use IRQ_DOMAIN_MSI_IMMUTABLE and add help function
+irq_domain_msi_is_immuatble().
+- split PCI: endpoint: pci-ep-msi: Add MSI address/data pair mutable check to 3 patches
+- Link to v11: https://lore.kernel.org/r/20241209-ep-msi-v11-0-7434fa8397bd@nxp.com
+
+Changes in v11:
+- Change to use MSI_FLAG_MSG_IMMUTABLE
+- Link to v10: https://lore.kernel.org/r/20241204-ep-msi-v10-0-87c378dbcd6d@nxp.com
+
+Changes in v10:
+
+Thomas Gleixner:
+	There are big change in pci-ep-msi.c. I am sure if go on the
+corrent path. The key improvement is remove only 1 function devices's
+limitation.
+
+	I use new patch for imutable check, which relative additional
+feature compared to base enablement patch.
+
+- Remove patch Add msi_remove_device_irq_domain() in platform_device_msi_free_irqs_all()
+- Add new patch irqchip/gic-v3-its: Avoid overwriting msi_prepare callback if provided by msi_domain_info
+- Remove only support 1 endpoint function limiation.
+- Create one MSI domain for each endpoint function devices.
+- Use "msi-map" in pci ep controler node, instead of of msi-parent. first
+argument is
+	(func_no << 8 | vfunc_no)
+
+- Link to v9: https://lore.kernel.org/r/20241203-ep-msi-v9-0-a60dbc3f15dd@nxp.com
+
+Changes in v9
+- Add patch platform-msi: Add msi_remove_device_irq_domain() in platform_device_msi_free_irqs_all()
+- Remove patch PCI: endpoint: Add pci_epc_get_fn() API for customizable filtering
+- Remove API pci_epf_align_inbound_addr_lo_hi
+- Move doorbell_alloc in to doorbell_enable function.
+- Link to v8: https://lore.kernel.org/r/20241116-ep-msi-v8-0-6f1f68ffd1bb@nxp.com
+
+Changes in v8:
+- update helper function name to pci_epf_align_inbound_addr()
+- Link to v7: https://lore.kernel.org/r/20241114-ep-msi-v7-0-d4ac7aafbd2c@nxp.com
+
+Changes in v7:
+- Add helper function pci_epf_align_addr();
+- Link to v6: https://lore.kernel.org/r/20241112-ep-msi-v6-0-45f9722e3c2a@nxp.com
+
+Changes in v6:
+- change doorbell_addr to doorbell_offset
+- use round_down()
+- add Niklas's test by tag
+- rebase to pci/endpoint
+- Link to v5: https://lore.kernel.org/r/20241108-ep-msi-v5-0-a14951c0d007@nxp.com
+
+Changes in v5:
+- Move request_irq to epf test function driver for more flexiable user case
+- Add fixed size bar handler
+- Some minor improvememtn to see each patches's changelog.
+- Link to v4: https://lore.kernel.org/r/20241031-ep-msi-v4-0-717da2d99b28@nxp.com
+
+Changes in v4:
+- Remove patch genirq/msi: Add cleanup guard define for msi_lock_descs()/msi_unlock_descs()
+- Use new method to avoid compatible problem.
+  Add new command DOORBELL_ENABLE and DOORBELL_DISABLE.
+  pcitest -B send DOORBELL_ENABLE first, EP test function driver try to
+remap one of BAR_N (except test register bar) to ITS MSI MMIO space. Old
+driver don't support new command, so failure return, not side effect.
+  After test, DOORBELL_DISABLE command send out to recover original map, so
+pcitest bar test can pass as normal.
+- Other detail change see each patches's change log
+- Link to v3: https://lore.kernel.org/r/20241015-ep-msi-v3-0-cedc89a16c1a@nxp.com
+
+Change from v2 to v3
+- Fixed manivannan's comments
+- Move common part to pci-ep-msi.c and pci-ep-msi.h
+- rebase to 6.12-rc1
+- use RevID to distingiush old version
+
+mkdir /sys/kernel/config/pci_ep/functions/pci_epf_test/func1
+echo 16 > /sys/kernel/config/pci_ep/functions/pci_epf_test/func1/msi_interrupts
+echo 0x080c > /sys/kernel/config/pci_ep/functions/pci_epf_test/func1/deviceid
+echo 0x1957 > /sys/kernel/config/pci_ep/functions/pci_epf_test/func1/vendorid
+echo 1 > /sys/kernel/config/pci_ep/functions/pci_epf_test/func1/revid
+^^^^^^ to enable platform msi support.
+ln -s /sys/kernel/config/pci_ep/functions/pci_epf_test/func1 /sys/kernel/config/pci_ep/controllers/4c380000.pcie-ep
+
+- use new device ID, which identify support doorbell to avoid broken
+compatility.
+
+    Enable doorbell support only for PCI_DEVICE_ID_IMX8_DB, while other devices
+    keep the same behavior as before.
+
+           EP side             RC with old driver      RC with new driver
+    PCI_DEVICE_ID_IMX8_DB          no probe              doorbell enabled
+    Other device ID             doorbell disabled*       doorbell disabled*
+
+    * Behavior remains unchanged.
+
+Change from v1 to v2
+- Add missed patch for endpont/pci-epf-test.c
+- Move alloc and free to epc driver from epf.
+- Provide general help function for EPC driver to alloc platform msi irq.
+- Fixed manivannan's comments.
 
 Signed-off-by: Frank Li <Frank.Li@nxp.com>
 ---
-change in v20
-- remove Niklas Cassel test-by tag
-- rollback to use epc and only support one epf to void touch epf's of_node
-- add new config PCI_ENDPOINT_MSI_DOORBELL
-- error code change to ENODATA
-- don't overwrite return value of platform_device_msi_init_and_alloc_irqs()
-- remove comment @name in struct pci_epf_doorbell_msg
-- Add #include <linux/export.h> to fix kbuild warning
+Frank Li (9):
+      PCI: imx6: Add helper function imx_pcie_add_lut_by_rid()
+      PCI: imx6: Add LUT configuration for MSI/IOMMU in Endpoint mode
+      PCI: endpoint: Add RC-to-EP doorbell support using platform MSI controller
+      PCI: endpoint: pci-ep-msi: Add MSI address/data pair mutable check
+      PCI: endpoint: Add pci_epf_align_inbound_addr() helper for address alignment
+      PCI: endpoint: pci-epf-test: Add doorbell test support
+      misc: pci_endpoint_test: Add doorbell test case
+      selftests: pci_endpoint: Add doorbell test case
+      arm64: dts: imx95: Add msi-map for pci-ep device
 
-Change from v15 to v16
-- fix rebase conflict
-
-Change from v14 to v15
-- check CONFIG_GENERIC_MSI
-
-Fix below build error
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202502082204.6PRR3cfG-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/pci/endpoint/pci-ep-msi.c: In function 'pci_epf_alloc_doorbell':
->> drivers/pci/endpoint/pci-ep-msi.c:53:15: error: implicit declaration of function 'platform_device_msi_init_and_alloc_irqs' [-Werror=implicit-function-declaration]
-      53 |         ret = platform_device_msi_init_and_alloc_irqs(&epf->dev, num_db, pci_epf_write_msi_msg);
-
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202502082242.pOq1hB1d-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   drivers/pci/endpoint/pci-ep-msi.c: In function 'pci_epf_alloc_doorbell':
->> drivers/pci/endpoint/pci-ep-msi.c:49:14: error: implicit declaration of function 'irq_domain_is_msi_immutable'; did you mean 'irq_domain_is_msi_device'? [-Werror=implicit-function-declaration]
-      49 |         if (!irq_domain_is_msi_immutable(dom)) {
-
-Change from v13 to v14
-- basic roll back to v9
-- use device:id as msi-map input, its will handle it
-- use existed platform_device_msi_init_and_alloc_irqs()
-- pass down epf->dev point, because epf->dev of-node will be the same as
-epc's parent.
-
-Change from v12 to v13
-- Use DOMAIN_BUS_DEVICE_PCI_EP_MSI
-
-Change from v10 to v12
-- none
-
-Change from v9 to v10
-- Create msi domain for each function device.
-- Remove only function support limiation. My hardware only support one
-function, so not test more than one case.
-- use "msi-map" descript msi information
-
-  msi-map = <func_no << 8  | vfunc_no, &its, start_stream_id,  size>;
-
-Chagne from v8 to v9
-- sort header file
-- use pci_epc_get(dev_name(msi_desc_to_dev(desc)));
-- check epf number at pci_epf_alloc_doorbell
-- Add comments for miss msi-parent case
-
-change from v5 to v8
--none
-
-Change from v4 to v5
-- Remove request_irq() in pci_epc_alloc_doorbell() and leave to EP function
-driver, so ep function driver can register differece call back function for
-difference doorbell events and set irq affinity to differece CPU core.
-- Improve error message when MSI allocate failure.
-
-Change from v3 to v4
-- msi change to use msi_get_virq() avoid use msi_for_each_desc().
-- add new struct for pci_epf_doorbell_msg to msi msg,virq and irq name.
-- move mutex lock to epc function
-- initialize variable at declear place.
-- passdown epf to epc*() function to simplify code.
+ Documentation/PCI/endpoint/pci-test-howto.rst      |  14 +++
+ arch/arm64/boot/dts/freescale/imx95.dtsi           |   1 +
+ drivers/misc/pci_endpoint_test.c                   |  85 ++++++++++++-
+ drivers/pci/controller/dwc/pci-imx6.c              |  25 ++--
+ drivers/pci/endpoint/Kconfig                       |   8 ++
+ drivers/pci/endpoint/Makefile                      |   1 +
+ drivers/pci/endpoint/functions/pci-epf-test.c      | 136 +++++++++++++++++++++
+ drivers/pci/endpoint/pci-ep-msi.c                  |  98 +++++++++++++++
+ drivers/pci/endpoint/pci-epf-core.c                |  36 ++++++
+ include/linux/pci-ep-msi.h                         |  28 +++++
+ include/linux/pci-epf.h                            |  18 +++
+ include/uapi/linux/pcitest.h                       |   1 +
+ .../selftests/pci_endpoint/pci_endpoint_test.c     |  28 +++++
+ 13 files changed, 470 insertions(+), 9 deletions(-)
 ---
- drivers/pci/endpoint/Kconfig      |  8 ++++
- drivers/pci/endpoint/Makefile     |  1 +
- drivers/pci/endpoint/pci-ep-msi.c | 90 +++++++++++++++++++++++++++++++++++++++
- include/linux/pci-ep-msi.h        | 28 ++++++++++++
- include/linux/pci-epf.h           | 15 +++++++
- 5 files changed, 142 insertions(+)
+base-commit: d7b8f8e20813f0179d8ef519541a3527e7661d3a
+change-id: 20241010-ep-msi-8b4cab33b1be
 
-diff --git a/drivers/pci/endpoint/Kconfig b/drivers/pci/endpoint/Kconfig
-index 1c5d82eb57d440fb18c788921fc27096b75b061e..72f82ae98f94556ec5cd734e4525b363879aa340 100644
---- a/drivers/pci/endpoint/Kconfig
-+++ b/drivers/pci/endpoint/Kconfig
-@@ -28,6 +28,14 @@ config PCI_ENDPOINT_CONFIGFS
- 	   configure the endpoint function and used to bind the
- 	   function with an endpoint controller.
- 
-+config PCI_ENDPOINT_MSI_DOORBELL
-+	bool "PCI Endpoint MSI Doorbell Support"
-+	depends on PCI_ENDPOINT && GENERIC_MSI_IRQ
-+	help
-+	  This enables the EP's MSI interrupt controller to function as a
-+	  doorbell. The RC can then notify the EP by writing data to dedicated
-+	  BAR, which the EP maps to the controller's message address.
-+
- source "drivers/pci/endpoint/functions/Kconfig"
- 
- endmenu
-diff --git a/drivers/pci/endpoint/Makefile b/drivers/pci/endpoint/Makefile
-index 95b2fe47e3b06be6ecd210e8d834610021a22470..b4869d52053aade87298289b29b3beb547001bfa 100644
---- a/drivers/pci/endpoint/Makefile
-+++ b/drivers/pci/endpoint/Makefile
-@@ -6,3 +6,4 @@
- obj-$(CONFIG_PCI_ENDPOINT_CONFIGFS)	+= pci-ep-cfs.o
- obj-$(CONFIG_PCI_ENDPOINT)		+= pci-epc-core.o pci-epf-core.o\
- 					   pci-epc-mem.o functions/
-+obj-$(CONFIG_PCI_ENDPOINT_MSI_DOORBELL)	+= pci-ep-msi.o
-diff --git a/drivers/pci/endpoint/pci-ep-msi.c b/drivers/pci/endpoint/pci-ep-msi.c
-new file mode 100644
-index 0000000000000000000000000000000000000000..de610c16f68986eb0a5f4a0f23bd0136aa169f97
---- /dev/null
-+++ b/drivers/pci/endpoint/pci-ep-msi.c
-@@ -0,0 +1,90 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * PCI Endpoint *Controller* (EPC) MSI library
-+ *
-+ * Copyright (C) 2025 NXP
-+ * Author: Frank Li <Frank.Li@nxp.com>
-+ */
-+
-+#include <linux/device.h>
-+#include <linux/export.h>
-+#include <linux/irqdomain.h>
-+#include <linux/module.h>
-+#include <linux/msi.h>
-+#include <linux/of_irq.h>
-+#include <linux/pci-epc.h>
-+#include <linux/pci-epf.h>
-+#include <linux/pci-ep-cfs.h>
-+#include <linux/pci-ep-msi.h>
-+#include <linux/slab.h>
-+
-+static void pci_epf_write_msi_msg(struct msi_desc *desc, struct msi_msg *msg)
-+{
-+	struct pci_epc *epc;
-+	struct pci_epf *epf;
-+
-+	epc = pci_epc_get(dev_name(msi_desc_to_dev(desc)));
-+	if (!epc)
-+		return;
-+
-+	epf = list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list);
-+
-+	if (epf && epf->db_msg && desc->msi_index < epf->num_db)
-+		memcpy(&epf->db_msg[desc->msi_index].msg, msg, sizeof(*msg));
-+
-+	pci_epc_put(epc);
-+}
-+
-+int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 num_db)
-+{
-+	struct pci_epc *epc = epf->epc;
-+	struct device *dev = &epf->dev;
-+	struct irq_domain *dom;
-+	void *msg;
-+	int ret;
-+	int i;
-+
-+	if (list_first_entry_or_null(&epc->pci_epf, struct pci_epf, list) != epf) {
-+		dev_err(dev, "MSI doorbell only support one endpoint function\n");
-+		return -EINVAL;
-+	}
-+
-+	dom = of_msi_map_get_device_domain(epc->dev.parent, 0, DOMAIN_BUS_PLATFORM_MSI);
-+	if (!dom) {
-+		dev_err(dev, "Can't find MSI domain for parent device\n");
-+		return -ENODEV;
-+	}
-+
-+	dev_set_msi_domain(epc->dev.parent, dom);
-+
-+	msg = kcalloc(num_db, sizeof(struct pci_epf_doorbell_msg), GFP_KERNEL);
-+	if (!msg)
-+		return -ENOMEM;
-+
-+	epf->num_db = num_db;
-+	epf->db_msg = msg;
-+
-+	ret = platform_device_msi_init_and_alloc_irqs(epc->dev.parent, num_db,
-+						      pci_epf_write_msi_msg);
-+	if (ret) {
-+		dev_err(dev, "Failed to allocate MSI\n");
-+		kfree(msg);
-+		return ret;
-+	}
-+
-+	for (i = 0; i < num_db; i++)
-+		epf->db_msg[i].virq = msi_get_virq(epc->dev.parent, i);
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_alloc_doorbell);
-+
-+void pci_epf_free_doorbell(struct pci_epf *epf)
-+{
-+	platform_device_msi_free_irqs_all(epf->epc->dev.parent);
-+
-+	kfree(epf->db_msg);
-+	epf->db_msg = NULL;
-+	epf->num_db = 0;
-+}
-+EXPORT_SYMBOL_GPL(pci_epf_free_doorbell);
-diff --git a/include/linux/pci-ep-msi.h b/include/linux/pci-ep-msi.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..7c5db90f96204559b4be0c8805565f210461ac75
---- /dev/null
-+++ b/include/linux/pci-ep-msi.h
-@@ -0,0 +1,28 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * PCI Endpoint *Function* side MSI header file
-+ *
-+ * Copyright (C) 2024 NXP
-+ * Author: Frank Li <Frank.Li@nxp.com>
-+ */
-+
-+#ifndef __PCI_EP_MSI__
-+#define __PCI_EP_MSI__
-+
-+struct pci_epf;
-+
-+#ifdef CONFIG_PCI_ENDPOINT_MSI_DOORBELL
-+int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 nums);
-+void pci_epf_free_doorbell(struct pci_epf *epf);
-+#else
-+static inline int pci_epf_alloc_doorbell(struct pci_epf *epf, u16 nums)
-+{
-+	return -ENODATA;
-+}
-+
-+static inline void pci_epf_free_doorbell(struct pci_epf *epf)
-+{
-+}
-+#endif /* CONFIG_GENERIC_MSI_IRQ */
-+
-+#endif /* __PCI_EP_MSI__ */
-diff --git a/include/linux/pci-epf.h b/include/linux/pci-epf.h
-index 749cee0bcf2cc0600ad3be1582b0c497c5a21bed..a3b1a1d90d18356e8cda966c7004c3be93962a0d 100644
---- a/include/linux/pci-epf.h
-+++ b/include/linux/pci-epf.h
-@@ -12,6 +12,7 @@
- #include <linux/configfs.h>
- #include <linux/device.h>
- #include <linux/mod_devicetable.h>
-+#include <linux/msi.h>
- #include <linux/pci.h>
- 
- struct pci_epf;
-@@ -128,6 +129,16 @@ struct pci_epf_bar {
- 	int		flags;
- };
- 
-+/**
-+ * struct pci_epf_doorbell_msg - represents doorbell message
-+ * @msi_msg: MSI message
-+ * @virq: irq number of this doorbell MSI message
-+ */
-+struct pci_epf_doorbell_msg {
-+	struct msi_msg msg;
-+	int virq;
-+};
-+
- /**
-  * struct pci_epf - represents the PCI EPF device
-  * @dev: the PCI EPF device
-@@ -155,6 +166,8 @@ struct pci_epf_bar {
-  * @vfunction_num_map: bitmap to manage virtual function number
-  * @pci_vepf: list of virtual endpoint functions associated with this function
-  * @event_ops: callbacks for capturing the EPC events
-+ * @db_msg: data for MSI from RC side
-+ * @num_db: number of doorbells
-  */
- struct pci_epf {
- 	struct device		dev;
-@@ -185,6 +198,8 @@ struct pci_epf {
- 	unsigned long		vfunction_num_map;
- 	struct list_head	pci_vepf;
- 	const struct pci_epc_event_ops *event_ops;
-+	struct pci_epf_doorbell_msg *db_msg;
-+	u16 num_db;
- };
- 
- /**
-
--- 
-2.34.1
+Best regards,
+--
+Frank Li <Frank.Li@nxp.com>
 
 
