@@ -1,57 +1,92 @@
-Received: from phubs.tethera.net (phubs.tethera.net [192.99.9.157])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 836B16BFCE;
-	Fri, 11 Jul 2025 22:54:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.99.9.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC6BE1F63C1;
+	Fri, 11 Jul 2025 23:00:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752274468; cv=none; b=K92Piz2JJscy/c2OLjFPVqYJuK3CRF39qd5b8x1Gn1HAe50rGiiuvDBtoLuCs4PawV1toaJR6GV7w9fN8UktaaHFeaGFK1QHTjZ1wWe50jvtVCHSksvLY3g83VqxMSebIMn1CON+nKFuXoxUCOn6nIpDTeAsuIJDKpZHleHNPqU=
+	t=1752274815; cv=none; b=HlaaCa1pAM77PHBtbNZnQXgYejQwxfPW9Cvb9+LubPRZE+FXpngB/vRRVyP9rYe4REr3N2H0JbQ+YZMuy9ankM8WgElJTYfRhBuh0Ms57TVz3N70HETAtO/egIpINtpAz4L12wZ3Sqe8xzGgjC7lXRBg30S+hxk1zz87wiDrhi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752274468; c=relaxed/simple;
-	bh=zEL+d6XlXqEpa9OVBskMukB3A3gQTghEOyqrGTQsvC8=;
-	h=From:To:Cc:Subject:In-Reply-To:Date:Message-ID:MIME-Version:
-	 Content-Type; b=fRXY5sNpusYBa43/mHbLGJjbJjJhA3v/zW8MsSA67SOsaEd7dJMKO2nEZjErZCGJmGIJHlQd3t4bxQrpEqZSCPL/YNf2qi2KZCcTlOY5VN7goZXvjH3EyjhNxxET3+Kx/1Aug1N75oLsoHpxYFclpFiDJvfR4D3jgyRGLv6juss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tethera.net; spf=pass smtp.mailfrom=tethera.net; dkim=pass (2048-bit key) header.d=tethera.net header.i=@tethera.net header.b=FDH6Y9Oh; arc=none smtp.client-ip=192.99.9.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tethera.net
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tethera.net
+	s=arc-20240116; t=1752274815; c=relaxed/simple;
+	bh=I/WYWVtYM4EC/upgYCe6fwOOyi0ZjnLy4T8UxOcBMNg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=EYN4KNKkYrNq91Wo/uw8tM6LY2n0EcEvV9hh/22K+baMOnTpycj9n9pUTX0Xr8l/iRQ7+k9XerJYebmyz0MlzNoskowJNN1HPcxhLwth+pwthPnBF6Wy3VaELkE4T2ERqU3jIGr+u8k2nH+JY31q3fH3kdTko11CZS7EPxsER2U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=B1910RDg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tethera.net header.i=@tethera.net header.b="FDH6Y9Oh"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=tethera.net;
- i=@tethera.net; q=dns/txt; s=2024; t=1752274112; h=from : to : cc :
- subject : in-reply-to : date : message-id : mime-version :
- content-type : from; bh=zEL+d6XlXqEpa9OVBskMukB3A3gQTghEOyqrGTQsvC8=;
- b=FDH6Y9OhJ/oMZ74hq3OD/Q2WnQ6E+FFQrNVmbRncYQtSVN08ThXiP4TnGgfLl8YlWCqAI
- csO+/ITQ7aaRoYFlwx++63/H5SnVVglEh4t2im+WxDyWbvX3VOTApD2lEVyt344JlL5I11P
- SlwDrTsFMZaqY8c8IpBS8i8Idi8/eLOWM5WpTC+FMfU+gkkA3zAMXxINgfKR2xGEGNZUCzR
- TQZ5Mq71NXKwNy4wFXIx8I2dbedeRv2/N3UFoapIh3WZ9KdmALfKvZDHw1ZjVj+/Arc/39D
- FTt1Lt4LKDItiUoGAKYSIHM/W94u+S41PugrZgis8+kUuL+4ArmqgyHbS4jQ==
-Received: from tethera.net (fctnnbsc51w-159-2-211-58.dhcp-dynamic.fibreop.nb.bellaliant.net [159.2.211.58])
-	by phubs.tethera.net (Postfix) with ESMTPS id 820DD18006D;
-	Fri, 11 Jul 2025 19:48:32 -0300 (ADT)
-Received: (nullmailer pid 155084 invoked by uid 1000);
-	Fri, 11 Jul 2025 22:48:32 -0000
-From: David Bremner <david@tethera.net>
-To: wilfred.opensource@gmail.com
-Cc: alistair@alistair23.me, bhelgaas@google.com, cassel@kernel.org, dlemoal@kernel.org, heiko@sntech.de, kw@linux.com, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, linux-rockchip@lists.infradead.org, lpieralisi@kernel.org, manivannan.sadhasivam@linaro.org, p.zabel@pengutronix.de, robh@kernel.org, wilfred.mallawa@wdc.com
-Subject: Re: [PATCH v3] PCI: dw-rockchip: Add support for slot reset on link
- down event
-In-Reply-To: <20250509-b4-pci_dwc_reset_support-v3-1-37e96b4692e7@wdc.com>
-Date: Fri, 11 Jul 2025 19:48:31 -0300
-Message-ID: <87cya6wdhc.fsf@tethera.net>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="B1910RDg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2460DC4CEED;
+	Fri, 11 Jul 2025 23:00:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752274815;
+	bh=I/WYWVtYM4EC/upgYCe6fwOOyi0ZjnLy4T8UxOcBMNg=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=B1910RDgevOjKAnH5ke4u1MUJuUNgfkaBqgr/BQLtOBt1fxIS7pqRbFSRnLY0Yqvp
+	 y8jmPFHe9c3Y8XsL6JI7P2hlZ5h6hkXysZYTD2vm3nzfz8vAVRxdw6bjawGH7f7v9x
+	 FoGqGXteH3zJkoa8KUS4yNoYKCxHfIbXmL7nCMymcl7QyA2baqALxdShLSjdYgFrbF
+	 vJMOZg/kpgPGDmWCJuDPwcf0yc0WaFZZxM0bkceOGYGl5MUeXw88aHd5R3iWyaBrRT
+	 tnrC34A+VtQHKtiaQr1MI9g4L525RZg/ImWIFuZp7vxygrY2Zb6BLUJsFwzzhVzCZ4
+	 cNobNaAiQE+3A==
+Date: Fri, 11 Jul 2025 18:00:13 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>
+Cc: Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Rob Herring <robh@kernel.org>, Jeff Johnson <jjohnson@kernel.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	linux-pci@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>,
+	linux-arm-msm@vger.kernel.org, mhi@lists.linux.dev,
+	linux-wireless@vger.kernel.org, ath11k@lists.infradead.org,
+	qiang.yu@oss.qualcomm.com, quic_vbadigan@quicinc.com,
+	quic_vpernami@quicinc.com, quic_mrana@quicinc.com,
+	Jeff Johnson <jeff.johnson@oss.qualcomm.com>
+Subject: Re: [PATCH v4 06/11] PCI/ASPM: Clear aspm_disable as part of
+ __pci_enable_link_state()
+Message-ID: <20250711230013.GA2309106@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <604ffae3-1bfc-0922-b001-f3338880eb21@linux.intel.com>
 
+On Fri, Jul 11, 2025 at 04:38:48PM +0300, Ilpo Järvinen wrote:
 
-What is the current status of this patch (and the pre-requisites) with
-respect to mainline linux?
+> +++ b/include/linux/pci.h
+> @@ -1826,8 +1826,8 @@ static inline int pcie_set_target_speed(struct pci_dev *port,
+>  #ifdef CONFIG_PCIEASPM
+>  int pci_disable_link_state(struct pci_dev *pdev, int state);
+>  int pci_disable_link_state_locked(struct pci_dev *pdev, int state);
+> -int pci_enable_link_state(struct pci_dev *pdev, int state);
 
-I'm wondering if it might be relevent to the problems [1] I've been
-having with rk3588 resume, but it isn't clear to me what I need to apply
-to e.g. v6.16~rc1 to test it.
+AFAICT there's no caller of this at all.  Why do we keep it?
 
-[1]: https://www.cs.unb.ca/~bremner/blog/posts/hibernate-pocket-4/
+> -int pci_enable_link_state_locked(struct pci_dev *pdev, int state);
+
+We only have two callers of this (pcie-qcom.c and vmd.c, both in
+drivers/pci/), so it's not clear to me that it needs to be in
+include/linux/pci.h.
+
+I'm a little dubious about it in the first place since I don't think
+drivers should be enabling ASPM states on their own, but pcie-qcom.c
+and vmd.c are PCIe controller drivers, not PCI device drivers, so I
+guess we can live with them for now.
+
+IMO the "someday" goal should be that we get rid of aspm_policy and
+enable all the available power saving states by default.  We have
+sysfs knobs that administrators can use if necessary, and drivers or
+quirks can disable states if they need to work around hardware
+defects.
+
+I think the compiled-in aspm_policy default and the module parameters
+are basically chicken switches that only exist because aspm.c and some
+devices aren't robust enough.
+
+Bjorn
