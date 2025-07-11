@@ -1,188 +1,208 @@
-Received: from NAM11-DM6-obe.outbound.protection.outlook.com (mail-dm6nam11on2075.outbound.protection.outlook.com [40.107.223.75])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646BA19D07A;
-	Fri, 11 Jul 2025 23:40:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.223.75
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752277209; cv=fail; b=ROGgFy21HPLWMiqsKqS3NFT7HW5ZtWCyt+Y33af8ZJ0gfgz0E4+yanecrVHseT33Szsj99HasTo39DgRPK0nr2tpTBVlMG4qwhXJ2c6aYz2XONlF+6asdu69DKrvHrVClIC/SCI3ANmNShWB4VkYgTC9h+2fjYjEHDhAzPcVGAA=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752277209; c=relaxed/simple;
-	bh=RnAFNrDRynnPZ0L5Y3gVR+j0HeOUkWnSCK+QCxPBIjo=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=GeHljKFtsOjbZ/8bkoXz2gGIVq1IyHm+RGx5vOXp/DQXL2g57sPuGEt6BJB23XCqBoKGTf+FFiFs2kAYnNrotfna5tUhEeE/VeWWIt8zQydyHp83X/AMxrZrCm8pphuxACxZm25917/sz+Z0V+HfkfHro4mbtDhEJ2xEkfHhg9M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=WKw2pUMr; arc=fail smtp.client-ip=40.107.223.75
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F6D1223714
+	for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2025 23:42:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1752277372; cv=none; b=nAgdcw70AM34z6Cutc13nq06Xt8VBr3b2yP1mI1SX1wOqpSzXwFkWc8YHtv54WcZQkArUaCRXip75PHX+t08x6Q/X1XSoP3ENwg/BmowZTvm04ID8R7gd88o7+N/xkzHKDP9+drXJU1SvAkCZd9usS2SbnDE+G3dTp+qGWuu0bI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1752277372; c=relaxed/simple;
+	bh=fIaYo9IvNAFNRjsyINEvrozrSFyQvajczRG4Vn4Qhps=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rIDEmGg2pWcy5PWNm3jdTbQZJ2lFALI3r9UNPoMMg+NerIsgyJm7bE29jRfVBNO6Adp6lhzDHruYL27Y9D0BApIxXE3lyepzOzqjHIWtMg4XZDjNSNi20tKHS9ZiGgp+fevwa1+nGaUgjrA+kkP+hTfZpmzpudrRBoPxr7Vb3xk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=cdPgfZBN; arc=none smtp.client-ip=209.85.210.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="WKw2pUMr"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=BOBi0oJNhx90174/C9oPkAvmME7XPLDJzKEtcUJoU5mJ5FGyVdkXy62jzgOkc/ayOqRHRMqruac3i0jC8auBYfodkjEmNvc1wqugZV1lPy+flxAFm5zwoDcgWJ+2Rudyq7dniAWf0C7NGPuBgeu2g4AtvZQRMcn2lNf+983R7Li/IORibm7jrSoHFBpJnosibJhRiM6nCxGFiY8Xo3MCIyKcRBSnc1L8mEpYa8J8MxnXVDUqDZS1xZkXvWxtzEcSLRoJuYfwXxNXdloXFLmg9e9H/nOU90DOCQQ4tVLaWKQ4j3iok0ao0uHwJzxwXt4oevxN+Hfnk8WSo3MYcWWZyw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=IBI6TVXXPN/QfijTFIF7DrWTbgW7ZML807tHzYZLSaY=;
- b=r0IFf//qrjAXkH2TkDv2cDC7MuaGXXGMGdnliqlYIbEpktHzvOphVGLqQgEr5Smc+7MErLD4wHZkLEGWAJeBC5bb+0xO5fBDPDbAtbFUMi+RKVQ4pR3aTWVOv3e3Mk4AntMt+zHPP7OWxxwB6OZEwp81duQJp9YL439sslj5kHb1tr8GMRuX8xkM45b1FOHEaRqNuzRs73IoUWGMVi0bHGUZ44/foKVNTha0JjkUbw+QX7BcMPcIMgfG2ErQM9yR0/d8ulA87J7qXxCR7a90a+kNg0eix2j56HfsZrafamfqw9HlUHIJ3dsnP6eCB0i0fdqtsLViBZ9rq1oPyYwOPQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=IBI6TVXXPN/QfijTFIF7DrWTbgW7ZML807tHzYZLSaY=;
- b=WKw2pUMrTb2V7gGV+HBIirO/sbpFccRKN/rpcEBnEXWZieD+2Tmg+NTtfYxkRVhYmD0WeKA9qlaTk1CHCGQAy5nyBLWCttFloromJCC0iZmcw5/fpEK3PNfWQLHNcD8SGAC+nbcug6i+kPitiqmA/HQ25Ff4oueKqwTEk05i+9LA5Nh5Rne+4lqVEuZQ3bChRKRMIJDhuj0mAjHlMxQVCd7Ict3kiuw1zr7gDAY49AKx9/7pMQtZ9+JJDiLxy+DFQwMgo/cZBRKrD1SF/awvkats+INX5p1CSbIaqMr+TiTuP6tbE2Cua1ahL6OJnA5OpzKH3JWHGSWgrFELnJvGyA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from SN7PR12MB8059.namprd12.prod.outlook.com (2603:10b6:806:32b::7)
- by CY8PR12MB7414.namprd12.prod.outlook.com (2603:10b6:930:5e::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.19; Fri, 11 Jul
- 2025 23:40:04 +0000
-Received: from SN7PR12MB8059.namprd12.prod.outlook.com
- ([fe80::4ee2:654e:1fe8:4b91]) by SN7PR12MB8059.namprd12.prod.outlook.com
- ([fe80::4ee2:654e:1fe8:4b91%7]) with mapi id 15.20.8901.018; Fri, 11 Jul 2025
- 23:40:03 +0000
-Message-ID: <9a71bf2e-0818-4567-81fa-95b1a4173939@nvidia.com>
-Date: Fri, 11 Jul 2025 19:40:00 -0400
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/5] rust: dma: add DMA addressing capabilities
-To: Danilo Krummrich <dakr@kernel.org>
-Cc: abdiel.janulgue@gmail.com, daniel.almeida@collabora.com,
- robin.murphy@arm.com, a.hindborg@kernel.org, ojeda@kernel.org,
- alex.gaynor@gmail.com, boqun.feng@gmail.com, gary@garyguo.net,
- bjorn3_gh@protonmail.com, lossin@kernel.org, aliceryhl@google.com,
- tmgross@umich.edu, bhelgaas@google.com, kwilczynski@kernel.org,
- gregkh@linuxfoundation.org, rafael@kernel.org,
- rust-for-linux@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250710194556.62605-1-dakr@kernel.org>
- <20250710194556.62605-3-dakr@kernel.org> <20250711193537.GA935333@joelbox2>
- <DB9HMM5M24FE.1VR5ZE5YJ66CK@kernel.org>
-Content-Language: en-US
-From: Joel Fernandes <joelagnelf@nvidia.com>
-In-Reply-To: <DB9HMM5M24FE.1VR5ZE5YJ66CK@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: BL6PEPF00013E0D.NAMP222.PROD.OUTLOOK.COM
- (2603:10b6:22e:400:0:1001:0:11) To SN7PR12MB8059.namprd12.prod.outlook.com
- (2603:10b6:806:32b::7)
+	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="cdPgfZBN"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-74924255af4so2282669b3a.1
+        for <linux-pci@vger.kernel.org>; Fri, 11 Jul 2025 16:42:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=chromium.org; s=google; t=1752277370; x=1752882170; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=iW/OsUEq9HXGDSnTvferTBRrSzVm5S3zYb68w57Tadw=;
+        b=cdPgfZBNRrlsp2x/1lvC9QlP/HjGfWX/UvwAce1AfuPYFZTJs5jEV0Q0U31YZdN9DJ
+         7A5hlqiTyHz508VCAphEOmb263D4ApP5oOaMgzYnDtPTK/XB2JJmhs7IvP3XhYAAuM6D
+         Jv8SKc1f3xDs1u9r4X8p/PSHcr6rctnGMevC8=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752277370; x=1752882170;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=iW/OsUEq9HXGDSnTvferTBRrSzVm5S3zYb68w57Tadw=;
+        b=xMpkkqAoJT6sPMv+lZrj2IjiTB2jMt/yOB/D+qGWGlWvdBrEC18TQrL8IoSvgcxpN8
+         7ZaJZTIVzEV2PE3w8wu5LlumjqUWUCdAz13meykacZpyKxRmCTWRfpHXQ6GFZPwPK6c2
+         oZn9YxvFFIwPs2qMiMJW6GfUVLu1M4mc4NGfd5UI65mIpaWQZWrHK/lOuuyNITdK0Csx
+         M1cusQCRoRl8vcupQqaettE/kB7Libjlrynow1KrRh0j4+1XJLm4BkF7GOQ6BfpfWp+D
+         Nw3mH4gN/dKGYGFFIsGrJE5Q2g5h3U1gU2c5dRb3QMCa2nlE4218v9i2Xq88KXXhs/s3
+         sUfA==
+X-Forwarded-Encrypted: i=1; AJvYcCUp0kp6myOJekMGwnM9juQkQvBCNiuMaQOiJXbOQwcbCDng82Wg4agDLaIyH5EUjHVqhBx/HAZT00c=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxbwb91Fv4IJw8zijUB8iX2Su1GFWCeXHOP9nWaWq6d11DeqfSC
+	qeYVE0ug7nXW433peN98BfTOae+dC3H9aieM0IawoqlE8U7ZJr0Uqc1r7FDb6Y8SuA==
+X-Gm-Gg: ASbGnctolJ1m6Roc0Jg47ukvbsWXXXdwBUAmB2MQWzLV2kU1YeQx/lCtoqMVXPwQgMV
+	Y9ABQkuQsZEZy1lLeOnnsvzRD14rSokdQtSdxvqymfKzYEKFFKlPzNJAHXGTpdpeX34dU/rB3p9
+	XZr6SSQp7JcmFPCL0xoV9Du/DwShmoLFayeD/s9+8YblIVMEBpfUZgtHUlOtdjI0EbclhpD/PDR
+	X2vKa7WQ6PeM2cjmg7F6BqM4Sc7QZKgM+hlNe83vjFYCtPPFGohxaCdNWvja2/qGw51b/L2EaT7
+	v/OxUvGEgoSy/PRt2Yt3q+GZNwzXmX3B6Yk8pvLmDHXxSsNAn8ZFbgkLJRKE/+UmKuaprOX3Tho
+	vWc7VCJCxC93bkQ+UJgAWvlRuZRm6YPa9R8zs+XCJTx+vTlBEibsSBsQnpQ7t556M2n9M+ow=
+X-Google-Smtp-Source: AGHT+IFKsEBGAQn8CiUIUFDCBebFRGxcJfzw5dSTFVBl66LbmlgoNt4Lubbnq2etcBTJ+ravhAgV3w==
+X-Received: by 2002:a05:6a00:1743:b0:74a:e29c:287d with SMTP id d2e1a72fcca58-74ee244a366mr6972742b3a.11.1752277370191;
+        Fri, 11 Jul 2025 16:42:50 -0700 (PDT)
+Received: from localhost ([2a00:79e0:2e14:7:2386:8bd3:333b:b774])
+        by smtp.gmail.com with UTF8SMTPSA id d2e1a72fcca58-74eb9f9c0b2sm6371693b3a.179.2025.07.11.16.42.48
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 11 Jul 2025 16:42:49 -0700 (PDT)
+Date: Fri, 11 Jul 2025 16:42:47 -0700
+From: Brian Norris <briannorris@chromium.org>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Bartosz Golaszewski <brgl@bgdev.pl>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Jingoo Han <jingoohan1@gmail.com>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>
+Subject: Re: [PATCH RFC 3/3] PCI: qcom: Allow pwrctrl framework to control
+ PERST#
+Message-ID: <aHGhd3LLg8Dwk1qn@google.com>
+References: <20250707-pci-pwrctrl-perst-v1-0-c3c7e513e312@kernel.org>
+ <20250707-pci-pwrctrl-perst-v1-3-c3c7e513e312@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN7PR12MB8059:EE_|CY8PR12MB7414:EE_
-X-MS-Office365-Filtering-Correlation-Id: 807968db-820d-4706-5de8-08ddc0d4426f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|7416014|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?MGtnalVmcmFvZmNjM3I5ZnIzMXp0QnI4VnVDS29BdkFrK3dWRmNTdVl3Q2JF?=
- =?utf-8?B?WGlRb0o4L09kS29RNjM1aWdSVzllREpZVFI1c1VCdWRXQU80clVGWVZLb2dI?=
- =?utf-8?B?ZU5DY2ZWNzZMSHh2aUlXaUhmc1BnSDdVTnViTzhlS3lycmptQUpaeENkNEhs?=
- =?utf-8?B?c3llSjlRTFpnTFlsbjVRdE9sUFQ2Z2I3NlFTUlFJMFhNYjNTb0x4WjYyUjBq?=
- =?utf-8?B?SHVwaSsrMEZHYTl1aWg2NnZvL3U2d3R4Z0xxOEhmQXBwMkwzNWRQRmdwS2Zm?=
- =?utf-8?B?VENrdEFrbnUvQ3MrOXVJRHRYNGZ4L0Ftb1JNMCtiUWdjbmlaa0RRRjZzQzVk?=
- =?utf-8?B?czVXODdFL3E3eFBrYUFWK2wwSkJwd0MzVndHOHh0V096RUZaOGxpeWtlZDNM?=
- =?utf-8?B?QlFYZUY4Nm04QzVlS0FZUG9CZDJYNkVKTWlSU1l3NWZuTHBMWVVmWGhPUzR1?=
- =?utf-8?B?cGNkbHFIWjU3UjRMQlptV3ZsSWJCSUdrRHluT2RyVm16ZmdHclZIczJ1bXZK?=
- =?utf-8?B?T04rUWhrY0dNdXFtYzlBdElEK0ZubGJMZVAzZFFENjZRcUt5RWErZWhQcjhN?=
- =?utf-8?B?RUg2dGZTckxlL01hcllFcVhIREFpampjbk0zYUZ6aHRnL1FZakhsUWhDRHEw?=
- =?utf-8?B?RzRITzRGMW9wZFhFU2lYZHdkd2JKVkR3U0RyRkxDbWw0d0FzTEVnYTFidGVP?=
- =?utf-8?B?TUV6dHZFY08rd3dESmR2Z2UybHNEc09TZ1NGQVpJY3J3d1F4QVQxNktrNllk?=
- =?utf-8?B?UjRKMEMwdHFJRVJicStieU9rMEkxandkQUV0OW8rNFVCRUI0Ym5BeDVWUUdV?=
- =?utf-8?B?U3pad3VsY1YrbDJzdlBFY3NucFh6WFJmcGp5cTAyNHZnMUlOYnR5L3oxdmNI?=
- =?utf-8?B?YTEybGRwQnRCMmpXWTQrWTN0N3NuViswZ1NQdG8wU0xOUXIxM29qajMxZEN0?=
- =?utf-8?B?RC95eUpTeW5KaDRnb1A1N0pvQ2ZRU3FWTVZVQ0ZyK1JQNGJzcG1LYkcxUFZj?=
- =?utf-8?B?TnFZampockxtSUc1TmRQU1pSOTVVUjNDNzMvY0VkLzBnRHpvdWUrUTczaWNI?=
- =?utf-8?B?M2hieU5OSlJJWXFTdnRJK2tVSHh5aHBKOWREZEJsak9tSUpsOVlHdlp6d1RC?=
- =?utf-8?B?Q2pYajZDZlF4dXVvMCtFekM4ZloxY21wZm94RitYeU1OWXcxaWl6MmU4Qkdy?=
- =?utf-8?B?eUNpNUdzR1N5TENhWEhrdVdRU3ZjbllZRDVzbnE3bU1saTlGNlNQb1pqRUQr?=
- =?utf-8?B?VHpSMTlQem9PT290ZzB1Q3F3Q2Z4MzdVemEwMmo2ano0Ymp4VGNUb2xhWFN4?=
- =?utf-8?B?SzhRT3dwdGhNdGNLeUdkczhETVdaMmxKM1Jzb0kxWE1BUStvSE5UWVU3SXJh?=
- =?utf-8?B?VVhHd25PWVFGcmJrNkNzVEF0QzhmQStGWnFub2V5YlEwdXZZRmNVeVNkTTBy?=
- =?utf-8?B?c3F5ZUZoR3l2cHZJZEtqQUZGSkMveVE4c2xPQUxOQ1p2a0hEbG1yN29YT28x?=
- =?utf-8?B?ZzFnQkZwMDg1bUw1cCtheU5aanhBUUFKcEo4NFB1L25oSFpKZkNpU1NRaWxI?=
- =?utf-8?B?Wlo4VEZVSGhaSmc4ZElKM3h0RzQ4cnh2YTM0My9kUjNwSWhUdXRzalNYaTlt?=
- =?utf-8?B?S1h0eVB0MnVxSUZSL1lsUmNsTk1ZQlBJWnREWHhwdm5MK2Nob3hxVzZxNkg3?=
- =?utf-8?B?Wlk2dFBrQWRWLzV0NmIzODVld1JlQjArSnhjYXFwRWRvMWgzZHlTMVRTcFJq?=
- =?utf-8?B?THRZbis2S0dISTFMZk50UWRmZXNYb054NktCV1BKZXRmQ2NHVW83VVZPZHps?=
- =?utf-8?B?ZzNkSExMUmp2WmVxbWxTbGpGWnpXL2NCazFpK2NHUUNMNndlMVpTMmp3ay8w?=
- =?utf-8?B?YTd5a2plZXZiaGJaTlJQdjBCcFdqaGp0WDRxUnhjaVhtYmxWZldaU1Y0VllW?=
- =?utf-8?Q?BZdLZVsUJK0=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR12MB8059.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?cXdxbUdDZXZyclJhd09qOUpSRGdUdFdKS204ZUhnV25kNDVlM2VqVmdHYTFm?=
- =?utf-8?B?R3RoR0FBVW9RRU9NV2Y4cm93dnZzdHpZdlgzQW1xUUYzMlZtZER3YkFoM1JC?=
- =?utf-8?B?eWdHWlRCc0VUUWJreHZOckdtNDBuVWxRY2ltSXpkcGxuN1krN1lWaVlkUnht?=
- =?utf-8?B?YVhGS3VNenNpMTRiTEFPOUZrUUdjUkpYZjZXYWNvaWdLN3FPVjYra0s0WDVw?=
- =?utf-8?B?V1NrbHc0bUtBQmpSSEI5WWNTWlRCcytnUUNQdGdCVXVwSUVia0pLN2tENy9W?=
- =?utf-8?B?eDc0TXF6aTA5UTVyVnZuUkIveWlDend5V0JEczhKaVFkZE9IRjBESTd5VDJH?=
- =?utf-8?B?bU0ySTVCVHVuWFZOVnJOaEYvM2lZVjlwVG9TRVF3QjRTR0tUNHpUTU5oN1NN?=
- =?utf-8?B?Njg3dkx6anZndFNRMDNJL0N5QjZtWk1RZisrQUZQdlIzT1h6NUpqUFZ5SCs0?=
- =?utf-8?B?RVJnai9JVEljd0pRQWNMOHhRK09ZTkFsSGYvejJQR2tyRmc0Ylk4eUFNZmZH?=
- =?utf-8?B?UDRqNjFtS28zaTFlNnkzT3RFdFB2cm1jMU8xRVJmNGxGV3l0dDVaVjlmM1VB?=
- =?utf-8?B?aFdTY3NLaHNsclp4dm5IdlM5N3c4ZEtjOGdJVlIwM0dSay9EMUxYanUwdWtj?=
- =?utf-8?B?SE9jUDFsbGtmelRhT012SUZJaW16MTdqamR1bWFEdGZOb0t2ck1PeERBN1VF?=
- =?utf-8?B?bnpRMkEyZGhpYmlxT2pSUVp4a3JEVzZLbVRGSjJ0TFpqeHIycGUvbzZEdTdL?=
- =?utf-8?B?TW1qQ2xpSGt4cGF5RWpJNUdWYTNRQzZaeUhrUzhnUkY3TWdoZmI0VXV3U2FO?=
- =?utf-8?B?YmdaV1pMU2oyUW01dWU3dVNOaTUwdHRCOGhMSEZUR1l5cnBESW10TUh6Szlx?=
- =?utf-8?B?MjlUWDhmN2l6RXZ0Q0FrQndpcW1IYVdhdjBmUmFwdkFxOTRUalhqSnYvS25h?=
- =?utf-8?B?bnVTMmgvRzE0V1E2dk94TFlwcXREeWgweU03aitqZTdxckxaMGZacHhuVmJ3?=
- =?utf-8?B?MFA1UmtVNU9aYzRtUzFOSytnTjBYajBwVEZHdUlWNzFOUTVjclE3d1YvVWxU?=
- =?utf-8?B?WWVZSDgvbGVnQW5EVTltZXdHZVhpRElGTHpiYWxDb0ZTRWU4eTJZTWJRZ21r?=
- =?utf-8?B?c2RlbTdWeVBxb1lBRm9WSnhSYkZTZkVwTmRVTlZ0OTUxU0ltMUtjYnozL1Zh?=
- =?utf-8?B?SS9DM1hCRWNpbzEyN0ltV242Q3BPbC9Gd05jZEdvTnF3Q1VKdFhFSUhTM1k4?=
- =?utf-8?B?N3YxSTRIeGRERjdnSjAwQ1l0UE5hK0laQ05haGFiUGdld2I4eVJNTEdaVlJi?=
- =?utf-8?B?b3d3RmpPSzNDUE41ZDBLd2JvSmZUUUpvZExRSFVPQlZOTnpncnVmb3dRb2Q3?=
- =?utf-8?B?VkFxWDFJQ0xyYWQvLzJZamVMT21lWDBtRGQ5SEtPUnlRakZDVDFJY2xPS2Rr?=
- =?utf-8?B?MHRJbWVQekNEZzB1eTNWT25pNVNObjMzK0JFWUtmR0xGcU1mQ2FxSkNSSnZa?=
- =?utf-8?B?WVM5K1lNQm5SK1NvY1dPc2M3eHhqS3pSNERkM3l2ZUFHVjY2eXQwS0R5dEVB?=
- =?utf-8?B?d3BiMk5HcWt4eE1RM1Q2UWI3Rmt5M1dvMkhDNkVTN2o4NUU4R1Z2ZmpFSDlP?=
- =?utf-8?B?WHdhSHJscnlqa2szWVlmalNENTdNbHp0aTZ2NWN6S25zQzlJT21BWEIrU3BJ?=
- =?utf-8?B?VWJrcnB1MzFEOFV6UkdhNTdiTWc1SkpUaDkwRGxlZEN0aE41SktKYWt6SDFw?=
- =?utf-8?B?czZtdm1Mdjg4RThYSVNsb1hDZnJEZGozbE00STVKRWxKMWRDSXhTbWNBOUlY?=
- =?utf-8?B?TjdOSzhwNE1PemNuUFo3cHF6QnREd2FWS2xyV0t2ZkU5eU9qWUxOeFE1M0xU?=
- =?utf-8?B?bEoyb1hHbk9kK0o0VmxJeTRYUldUUXNZSFZIL0pZYWFIYUJMN3JMQ1lBZFUy?=
- =?utf-8?B?TWpCZ1dSU1orTjRCSlE0TG9xYThtMXkwUkNyd2pMWDBnbTFrNkhCT09KTXlG?=
- =?utf-8?B?RWhzZG16L0NBVWZMeGdHWFM0MWFQMHdqd1c0OU0vUTZvcHowR1F1ZnNqTmhV?=
- =?utf-8?B?UWR4QldXK0NTQ0ViV3FyR2ZvL1MzUisrZ1RoT0g2aGVCaE8zYWpIaC9FV0R2?=
- =?utf-8?B?eEp4TjFEUzg1ejd5aXV5amw5MW91MlpEaHRURVV6WjdFQ3VaSXQvOXA2YVk1?=
- =?utf-8?B?OVE9PQ==?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 807968db-820d-4706-5de8-08ddc0d4426f
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR12MB8059.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Jul 2025 23:40:03.7994
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: KLYVKffjXvTDSTWUdcvI33DHzRCanzLjkSz9GY5HkLCmbR118xqFxqd2+xKUUTvlJJeLvv05QRysIjUt5d9QSA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CY8PR12MB7414
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250707-pci-pwrctrl-perst-v1-3-c3c7e513e312@kernel.org>
 
+Hi,
 
-
-On 7/11/2025 3:54 PM, Danilo Krummrich wrote:
-> On Fri Jul 11, 2025 at 9:35 PM CEST, Joel Fernandes wrote:
->> It looks good to me. A few high-level comments:
->>
->> 1. If we don't expect the concurrency issue for this in C code, why do we
->> expect it to happen in rust? 
+On Mon, Jul 07, 2025 at 11:48:40PM +0530, Manivannan Sadhasivam wrote:
+> Since the Qcom platforms rely on pwrctrl framework to control the power
+> supplies, allow it to control PERST# also. PERST# should be toggled during
+> the power-on and power-off scenarios.
 > 
-> The race can happen in C as well, but people would probably argue that no one
-> ever calls the mask setter function concurrently to DMA allocation and mapping
-> primitives.
+> But the controller driver still need to assert PERST# during the controller
+> initialization. So only skip the deassert if pwrctrl usage is detected. The
+> pwrctrl framework will deassert PERST# after turning on the supplies.
 > 
-After going through the DMA code some more, I am convinced the concurrency is an
-issue so marking the higher-level rust wrapper as unsafe { } makes sense.
+> The usage of pwrctrl framework is detected based on the new DT binding
+> i.e., with the presence of PERST# and PHY properties in the Root Port node
+> instead of the host bridge node.
 
-Thanks Danilo for the discussion and Miguel also for the clarifications on the
-other thread.
+I just noticed what this paragraph means. IIUC, this implies that in
+your new binding, one *must* describe one or more *-supply in the port
+or endpoint device(s). Otherwise, no pwrctrl devices will be created,
+and no one will deassert PERST# for you. My understanding is that
+*-supply is optional, and so this is a poor requirement.
 
- - Joel
+And even if all QCOM device trees manage to have external regulators
+described in their device trees, there are certainly other systems where
+the driver might (optionally) use pwrctrl for some devices, but others
+will establish power on their own (e.g., PCIe tied to some other system
+power rail).
 
+I think you either need the PCI core to tell you whether pwrctrl is in
+use, or else you need to disconnect this PERST# support from pwrctrl.
+
+> When the legacy binding is used, PERST# is only controlled by the
+> controller driver since it is not reliable to detect whether pwrctrl is
+> used or not. So the legacy platforms are untouched by this commit.
+> 
+> Signed-off-by: Manivannan Sadhasivam <mani@kernel.org>
+> ---
+>  drivers/pci/controller/dwc/pcie-designware-host.c |  1 +
+>  drivers/pci/controller/dwc/pcie-designware.h      |  1 +
+>  drivers/pci/controller/dwc/pcie-qcom.c            | 26 ++++++++++++++++++++++-
+>  3 files changed, 27 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+> index af6c91ec7312bab6c6e5ad35b051d0f452fe7b8d..e45f53bb135a75963318666a479eb6d9582f30eb 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware-host.c
+> +++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+> @@ -492,6 +492,7 @@ int dw_pcie_host_init(struct dw_pcie_rp *pp)
+>  		return -ENOMEM;
+>  
+>  	pp->bridge = bridge;
+> +	bridge->perst = pp->perst;
+>  
+>  	ret = dw_pcie_host_get_resources(pp);
+>  	if (ret)
+> diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+> index 4165c49a0a5059cab92dee3c47f8024af9d840bd..7b28f76ebf6a2de8781746eba43a8e3ad9a5cbb2 100644
+> --- a/drivers/pci/controller/dwc/pcie-designware.h
+> +++ b/drivers/pci/controller/dwc/pcie-designware.h
+> @@ -430,6 +430,7 @@ struct dw_pcie_rp {
+>  	struct resource		*msg_res;
+>  	bool			use_linkup_irq;
+>  	struct pci_eq_presets	presets;
+> +	struct gpio_desc	**perst;
+>  };
+>  
+>  struct dw_pcie_ep_ops {
+> diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+> index 620ac7cf09472b84c37e83ee3ce40e94a1d9d878..61e1d0d6469030c549328ab4d8c65d5377d525e3 100644
+> --- a/drivers/pci/controller/dwc/pcie-qcom.c
+> +++ b/drivers/pci/controller/dwc/pcie-qcom.c
+> @@ -313,6 +313,11 @@ static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
+>  
+>  static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+>  {
+> +	struct dw_pcie_rp *pp = &pcie->pci->pp;
+> +
+> +	if (pp->perst)
+
+You're doing a non-NULL check here, but you forgot to reinitialize it to
+NULL in some cases below (qcom_pcie_parse_ports()).
+
+This is also apparently where you assume |perst| implies pwrctrl. Per
+above, I don't think that's a good assumption.
+
+> +		return;
+> +
+>  	/* Ensure that PERST has been asserted for at least 100 ms */
+>  	msleep(PCIE_T_PVPERL_MS);
+>  	qcom_perst_assert(pcie, false);
+...
+>  static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
+>  {
+> +	struct dw_pcie_rp *pp = &pcie->pci->pp;
+>  	struct device *dev = pcie->pci->dev;
+>  	struct qcom_pcie_port *port, *tmp;
+> +	int child_cnt;
+>  	int ret = -ENOENT;
+>  
+> +	child_cnt = of_get_available_child_count(dev->of_node);
+> +	if (!child_cnt)
+> +		return ret;
+> +
+> +	pp->perst = kcalloc(child_cnt, sizeof(struct gpio_desc *), GFP_KERNEL);
+> +	if (!pp->perst)
+> +		return -ENOMEM;
+> +
+>  	for_each_available_child_of_node_scoped(dev->of_node, of_port) {
+>  		ret = qcom_pcie_parse_port(pcie, of_port);
+>  		if (ret)
+> @@ -1747,6 +1769,7 @@ static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
+>  	return ret;
+>  
+>  err_port_del:
+> +	kfree(pp->perst);
+
+You need this too:
+
+	pp->perst = NULL;
+
+Otherwise, you leave a non-NULL (invalid) pointer for cases that
+qcom_pcie_parse_legacy_binding() might handle.
+
+Brian
+
+>  	list_for_each_entry_safe(port, tmp, &pcie->ports, list)
+>  		list_del(&port->list);
+>  
