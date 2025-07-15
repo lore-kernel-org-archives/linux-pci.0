@@ -1,112 +1,96 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vk1-f182.google.com (mail-vk1-f182.google.com [209.85.221.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D747231A55
-	for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2025 10:38:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA3262D781A
+	for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2025 10:43:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752575897; cv=none; b=tQg8HyINKsw330r3bckvL2c6Jim6kOOWsc7gZvZ96AH57vvDEQ1/qMhSZYbDv847tloMjMqwkeW/5mUgVmskMAfxkZqFVVQ8DCeE2le1QmnWJn39Ch+pO6OPWG+NyvWU0ET4JCLFlG7a4dLek7rAGFynfWy43WpsiVkBJ0dt8js=
+	t=1752576210; cv=none; b=U0rntcJpWY6a8UyEv3f0FNXBa3aTaaiC9wYEYMqaigqJ/whJkZlD8Ejtu8f6O9FNte0ZO3T5719Ew75AfOhQew6h7lfmmiXDhbwqdQmFsv6F8Het8yuFdN3M5DbC4aeIqqGgcvh38cdXI/cUpmpDGFSAkS+Km4oM1ruNS4CPyRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752575897; c=relaxed/simple;
-	bh=GuOQRpiFUwJLFuIAuZc3FqEERf+Z15BAE2nEQU3m7wg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hJXoC4//6VCFYnkaumsWcD4rlK+SjXC9pY7aSjZXYOa3tdCuSqKuXUq7qvBqhyf21WDsdr6k82wL+T1q1UAEjuHXPzEEtYtTxM+wMGmSgFo1H/C99iZNSIRga/B10jVt9MAAEix5dTGoXyvlB7v8Thn8ZhdWsYWzLXw9XyiCXLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=TyI91Rqt; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1752576210; c=relaxed/simple;
+	bh=56NSMvnKKJQ7lDFzQs7vNIBcLPhb5FHqygnjryoFTQg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lGPLETVctZPqOgRDRkrxUCyLy4/dz98lSCyjsm2k9os279GVzKauvUG56B0+l3WfbEqBdFSBeZrNz32qZRHfWcbW0+D9YrBXlD2viMjn5H987v+BUrGMv1SImW7TqorVCo+9ZFvxm34nayyK7gZ2PGs+VaMCX/eP6hPa2VtfqGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=qtec.com; spf=pass smtp.mailfrom=qtec.com; dkim=pass (2048-bit key) header.d=qtec.com header.i=@qtec.com header.b=FNbo36DP; arc=none smtp.client-ip=209.85.221.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=qtec.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qtec.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="TyI91Rqt"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1752575894; x=1784111894;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=GuOQRpiFUwJLFuIAuZc3FqEERf+Z15BAE2nEQU3m7wg=;
-  b=TyI91RqtJbhNFo6xfSgdWMKc8I2Sq1It9rBmeMjqw+hcSdqgtaPtX170
-   AXiSqqDfGt2fp2oPLBxb6Qy391fcPZYIfxJdPA8kpvj04N7c6Ziog4OVM
-   S1sOMAQSzMETvLwSQm2rEcjEGQ2uxy2a7LOCS01ZR6sWt448S0wgAHNQs
-   lwtDMHLozWVwcnHQiTGacaE4vmhG+ZE3QOiHtNDnkuWHne7HbJwD/brlY
-   TpBzx0U5fifUAiCCcbvWnTQP2mUfuJC8tkfkeTZ/q+/l77Gt5cmB3q7ff
-   AeXjH/BkaLeEx7f6Ucl/CrAOAK2WtZgK3UX7O6vfv0ElXwGCXpnJb9N/z
-   A==;
-X-CSE-ConnectionGUID: K0d2Pp1GQnScOYmrCn+Rmw==
-X-CSE-MsgGUID: x8zx2rtpTvq4BMpCiOp1BQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11491"; a="65050878"
-X-IronPort-AV: E=Sophos;i="6.16,313,1744095600"; 
-   d="scan'208";a="65050878"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 15 Jul 2025 03:38:14 -0700
-X-CSE-ConnectionGUID: sJ3tL2NDR76DI4DvhDehsg==
-X-CSE-MsgGUID: bI7I/AH7Q2Swr4OirwzRpg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,313,1744095600"; 
-   d="scan'208";a="156597919"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by orviesa006.jf.intel.com with ESMTP; 15 Jul 2025 03:38:11 -0700
-Date: Tue, 15 Jul 2025 18:29:35 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-Cc: Alexey Kardashevskiy <aik@amd.com>,
-	Dan Williams <dan.j.williams@intel.com>, linux-coco@lists.linux.dev,
-	linux-pci@vger.kernel.org, gregkh@linuxfoundation.org,
-	lukas@wunner.de, suzuki.poulose@arm.com, sameo@rivosinc.com,
-	jgg@nvidia.com, zhiw@nvidia.com
-Subject: Re: [RFC PATCH 3/3] iommufd/tsm: Add tsm_bind/unbind iommufd ioctls
-Message-ID: <aHYtj/jyfXD4XhZy@yilunxu-OptiPlex-7050>
-References: <yq5a5xhj5yng.fsf@kernel.org>
- <20250529133757.462088-1-aneesh.kumar@kernel.org>
- <20250529133757.462088-3-aneesh.kumar@kernel.org>
+	dkim=pass (2048-bit key) header.d=qtec.com header.i=@qtec.com header.b="FNbo36DP"
+Received: by mail-vk1-f182.google.com with SMTP id 71dfb90a1353d-528ce9731dbso2098525e0c.0
+        for <linux-pci@vger.kernel.org>; Tue, 15 Jul 2025 03:43:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=qtec.com; s=google; t=1752576207; x=1753181007; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=jinrh9lrUEI9oP/K9YZbjkzFAwQHaDK22aiCMwvNLvE=;
+        b=FNbo36DPIPSTLYjtSyITZiPX2ux3q35r34wKKMgtMu3t0XP4HRb7M1RyXPW385iUM8
+         VqtRJpab8DNwDFHoEs/WUa6F2k9Wj6WwlUra9JzCR20RNnv2B2ACfLizfvpRqTgWJ/kW
+         PTyRLbDOGBsebBVryQBk8oTYlvIRhq1eM8fXi7cF115/b7eHhZNZ2mEfz81VgGK3XaJ3
+         qFDFVNj64SudvRfsQvSeKx563hdUV0THwSTEj9hgPvtGNKlH1SzvA8EJO9eK9tDUutlc
+         v0Jm7pw82ecU7t4LsOpIiX/nYIdMIAL1oYqIuRhxJGRwyLsUwqfaIPSQc2pgxeTmdmDO
+         gSLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752576207; x=1753181007;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=jinrh9lrUEI9oP/K9YZbjkzFAwQHaDK22aiCMwvNLvE=;
+        b=uPsH8nz3kuksPEy8pJBzGHZZSqsApru/XfdVECxfa58J/MvjzL+yZ6adWPE/aXrWvO
+         On8PQYaTtPJ2SxB00thCnCwZNxtcVSrzJYYCw2wJ7MuJoPSQb9wnZEXuaKQbJLe4XIns
+         CfzIr3F+HBy/3BhmAJW+dZtOWjGkEVjhSpJDNTaG745NH7K25GSP8oW17gG83M3E4BBV
+         s4fF26FScu2w5HNBEAsKrv3bhbcG3L9QVJNV85l4TjGjMjS4PA69tK/zTKPZbSsvjn/u
+         QiPXWZssYpZHMuXZakx5soMUiymUlXD9lIYOrS/aEvNLSk8GPYeNmm5nY5GGa60M2ZFL
+         gb4Q==
+X-Forwarded-Encrypted: i=1; AJvYcCXu/W01fqMAcqjWa9N3HH9V0SEw920eMBBeqqeOgIc7GN8dMTD5n+jDZI7W69eWD56z7UtPVNTeM/E=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwVb7TUfaP4iBq+gSJ6WY3FNBBuJE5iGwsuCkClvfMMMD/YrW9D
+	j7C5Wt36OYvWeKh1SupIygN8YK5Cc9z8+3PUxLI+InZbwr6A8bkh2K3w+z3pQzgDAaYEEGB5bRU
+	CRahovGv3dUGV5f0JHv+MPn5XGZ/ywOF0R/fPRzNkQw==
+X-Gm-Gg: ASbGncuRno3ovmQhqXQTUXQvCVXlvihqQmLjgMcfmSu9j9gZekFmnftJk4veUcKch4c
+	IhE2RBZIGgyHaxvnwbWnyFaP4Qt0EKNP37aMm3EVFEQ9uDMIrICLfqDbM50yUjASe+SeVrFfQDW
+	e9HeL3mZl+4/4bHHNCH9tuS7BMdWdV4iLr4lBBo8OVdFpXb9Aq8uC7nsdvKIuE59Qf69jRcmGYG
+	UHLsw==
+X-Google-Smtp-Source: AGHT+IE6wEwLG2iscN6gkx0xYTHNGr2J35y1IB016poByLQ/6Zb4m/3NuN1Xs87IAIZLj0V1lGTl6eKOu6hJK98nmUw=
+X-Received: by 2002:a05:6122:468c:b0:518:6286:87a4 with SMTP id
+ 71dfb90a1353d-535f470d42fmr10371788e0c.4.1752576207474; Tue, 15 Jul 2025
+ 03:43:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250529133757.462088-3-aneesh.kumar@kernel.org>
+References: <CAJDH93s25fD+iaPJ1By=HFOs_M4Hc8LawPDy3n_-VFy04X4N5w@mail.gmail.com>
+ <20241219112125.GAZ2QBteug3I1Sb46q@fat_crate.local> <20241219164408.GA1454146@yaz-khff2.amd.com>
+ <CAJDH93vm0buJn5vZEz9k9GRC3Kr6H7=0MSJpFtdpy_dSsUMDCQ@mail.gmail.com>
+ <Z78uOaPESGXWN46M@gmail.com> <CAJDH93uE+foFfRAXVJ48-PYvEUsbpEu_-BVoG-5HsDG66yY7AQ@mail.gmail.com>
+ <20250621145015.v7vrlckn6jqtfnb3@pali>
+In-Reply-To: <20250621145015.v7vrlckn6jqtfnb3@pali>
+From: Rostyslav Khudolii <ros@qtec.com>
+Date: Tue, 15 Jul 2025 12:43:16 +0200
+X-Gm-Features: Ac12FXwrM0hudYT1gpsjlNr37WqavqVM6O9H4kuS5lrXXokjtyQkni4XfPlvseQ
+Message-ID: <CAJDH93vTBkk7a5D0nOgNfBEjGfMhKbFnUWaQ1r6NDLqm0j3kOA@mail.gmail.com>
+Subject: Re: PCI IO ECS access is no longer possible for AMD family 17h
+To: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali@kernel.org>
+Cc: Ingo Molnar <mingo@kernel.org>, Yazen Ghannam <yazen.ghannam@amd.com>, 
+	Borislav Petkov <bp@alien8.de>, =?UTF-8?B?RmlsaXAgxaB0xJtkcm9uc2vDvQ==?= <p@regnarg.cz>, 
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, x86@kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, May 29, 2025 at 07:07:56PM +0530, Aneesh Kumar K.V (Arm) wrote:
-> Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-> ---
->  drivers/iommu/iommufd/iommufd_private.h |  3 +
->  drivers/iommu/iommufd/main.c            |  5 ++
->  drivers/iommu/iommufd/viommu.c          | 78 +++++++++++++++++++++++++
->  include/uapi/linux/iommufd.h            | 15 +++++
->  4 files changed, 101 insertions(+)
-> 
-> diff --git a/drivers/iommu/iommufd/iommufd_private.h b/drivers/iommu/iommufd/iommufd_private.h
-> index 80e8c76d25f2..a323e8b18125 100644
-> --- a/drivers/iommu/iommufd/iommufd_private.h
-> +++ b/drivers/iommu/iommufd/iommufd_private.h
-> @@ -606,6 +606,8 @@ int iommufd_viommu_alloc_ioctl(struct iommufd_ucmd *ucmd);
->  void iommufd_viommu_destroy(struct iommufd_object *obj);
->  int iommufd_vdevice_alloc_ioctl(struct iommufd_ucmd *ucmd);
->  void iommufd_vdevice_destroy(struct iommufd_object *obj);
-> +int iommufd_vdevice_tsm_bind_ioctl(struct iommufd_ucmd *ucmd);
-> +int iommufd_vdevice_tsm_unbind_ioctl(struct iommufd_ucmd *ucmd);
+>
+> Yes, I would like to get access to ECS via CF8/CFC direct IO for
+> debugging purposes, even though MMCFG is enabled and used.
+>
+> If you can send me a simple patch or any sample / idea how to do it,
+> I would be very happy. I was not able to figure out how to enable ECS
+> over CF8/CFC.
+>
 
-Hello:
+Hi Pali,
+I'm sorry for the late reply.
 
-I recently have another concern about the vdevice tsm bind/unbind API.
-And need your inputs.
+If I understand your request correctly, all you need to do  is patch
+the pci_enable_pci_io_ecs() function to use
+the different register to set EnableCF8ExtCfg: D18F4x044.
 
-According to this:
-https://lore.kernel.org/all/aC9QPoEUw_nLHhV4@google.com/
-
-Sean illustrates the memory in-place conversion, that the memory
-owner - gmemfd should own & control the memory shareability) and
-the conversion. I.e. For in-place conversion,
-KVM_SET_MEMORY_ATTRIBUTES should be disabled.
-
-Private/shared MMIO must be of in-place conversion, similarly it's
-the MMIO owner should be responsible for MMIO shareability, maybe adding
-some new ioctls like MMIO_CONVERT_SHARED/PRIVATE.
-
-From previous discussion, VFIO is the MMIO owner (implement as dmabuf
-exporter), so manages MMIO shareability. And IOMMUFD vdevice is the TDI
-state owner for TSM bind/unbind. But MMIO shareability & TDI state are
-actually correlated, do we really want to manage them in 2 components?
-
-Thanks,
-Yilun
+Regards,
+Ros
