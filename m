@@ -1,66 +1,67 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBFE41F0992;
-	Thu, 17 Jul 2025 18:34:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45D3020ED;
+	Thu, 17 Jul 2025 18:34:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.19
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752777254; cv=fail; b=ooICEuoq1HsOYRG7gpq2vtrvk19JDbaQ+qep5YsWahezpvd1LKKE9r/pfy6+yEUiZUSHSo/R+Sw0KojpOM/eQnXghwKFDlP6zZhZv8ZDm8Q/wxtfZEvCV+r1b8nIvPFEgrVIVjSPB6zXiUed0cVqO4VDzWNDPq4t3NQOTrNFqmk=
+	t=1752777256; cv=fail; b=kR7PWolLMEFEFBaHV5gcQHsZWCREvkFEFpEIRp/JLMcp/GxuQerGQ+I0iCukNCJYv8D6fdOsDW/MSGkVyofWOL8RDRu6Oh6I4+go8lXn+YbjSWpAfM9Kd2ycctQmfVAm/p5NTq2jPlbyDHB1Kzy9yyjwLWHj+YlAboebQdyBDII=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752777254; c=relaxed/simple;
-	bh=hFfdt0obhROOKqI9i6ZQYwzVbCGEFeLY9WWd4U86zyQ=;
-	h=From:To:CC:Subject:Date:Message-ID:Content-Type:MIME-Version; b=o0l6D2NRh4BfR/1YWitPxWomRcWn8bbb6Q/uAsT+SjYLAUb/peBmWXrX9loIcmoqnRz86BoiSXGSNfrSw75lm8OB5ahXgryCQ0Jrr9lWcr4JsuGlngIafobkLVrsud6asZXiPcwGr2WvHb4WIOj2MtO89v30QY0HJUQ1+OmEYTA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BNabQrlY; arc=fail smtp.client-ip=198.175.65.21
+	s=arc-20240116; t=1752777256; c=relaxed/simple;
+	bh=z3HqKNswQOXo/dVVRa+09npNML6gvL6sJRDbj9Jf9Bo=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=t03Cqa6RTn5mCI86Pc+AsKjUa8rcRCTBk3ooAL7QcdphMuPsZX2NCZA2dRw9QbSeu8Xv7yDubcD+cPSDdlTgxWL4ekon9V0QMEyldYEQ8WWB7z+ydEx6gm/NSNyt6qhxrGZWRJYyjvs9eSR0wqnH+4OwaeJcR2tXOqT5hQ/YFjk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=lPOfPwK9; arc=fail smtp.client-ip=198.175.65.19
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BNabQrlY"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="lPOfPwK9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1752777252; x=1784313252;
-  h=from:to:cc:subject:date:message-id:
-   content-transfer-encoding:mime-version;
-  bh=hFfdt0obhROOKqI9i6ZQYwzVbCGEFeLY9WWd4U86zyQ=;
-  b=BNabQrlY0SGQ5xM3MtFke93uaS4su9PQk5C7/9hEnoh08FrUhiVgeu/V
-   eLYvvULEBs4+10uApaEInksgw72YC/iL+tRTvFAfufV89R3OxB3uJI/j8
-   2LKa37mr4Qj1+JRfbPtCLqDyuMTLhRPhRsPk9qpd6HqO4zWNd8I1F4/uI
-   s975sZ6OnVdiz4T0uMgFpCuITzFOnl8zQKX3NqmwTwZcoIKGjUFqResGt
-   7a4WSs0Ds8vPto3hNg49LA0GDwiwIIdwv4bO66JJBCtIEZjbzwm7Nprmj
-   Sm0VxNxEFj1MwisC3RUaq4t1mIoHGtJCWyA4A4mmvVj1ebtrZWRyqXzRv
-   w==;
-X-CSE-ConnectionGUID: BDzSFhpeSquME7APAE+uwA==
-X-CSE-MsgGUID: 0qy7A/V8TLKKTgD7JZYGEA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11495"; a="54945670"
+  t=1752777255; x=1784313255;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:content-transfer-encoding:mime-version;
+  bh=z3HqKNswQOXo/dVVRa+09npNML6gvL6sJRDbj9Jf9Bo=;
+  b=lPOfPwK9Tgy2IWY2eSz5yGfASvJwGOleLH5VbyTpeknpS104izzCL9wR
+   c0FWzoTLBtbYvvhNWzjiglfWX3yHj9iu0AoKFxAr3Q3fOQVDMYS2j6reK
+   hbMpzHnLZPoWFWyUMkDk4CuW6jYEtaZDHG0SmMp95B4CyGpt0Nw/1VxkL
+   N+1iUUgQ8mvh9IYvRywfKPprt/C7/rNbDQ78PC7T2lyVMYMkY7KjaHar0
+   FKaYPGV4ajWsK9ylPWpkaFpxU5WamJhMPjaEJQYkZEgWjU+1D6Vo8U3nA
+   /NF0vufii+xPlHaaRg0g+xaflzEsxgR3B7lOEpI24dMBxt2s6mrhat9iR
+   g==;
+X-CSE-ConnectionGUID: LncdcJMpTkeuC2Iu4E96+g==
+X-CSE-MsgGUID: uJd0Yux/RzWocV6RuGmYmQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11495"; a="54924062"
 X-IronPort-AV: E=Sophos;i="6.16,319,1744095600"; 
-   d="scan'208";a="54945670"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2025 11:34:12 -0700
-X-CSE-ConnectionGUID: 4M7ywLwoRjKnmhObPBv4nA==
-X-CSE-MsgGUID: QIe1viDrQESVBH8ttqbirg==
+   d="scan'208";a="54924062"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2025 11:34:13 -0700
+X-CSE-ConnectionGUID: pvM29X/TTl2f7HmoLZXGPg==
+X-CSE-MsgGUID: YpkYFz4nTKSW6s9FfWOOXA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.16,319,1744095600"; 
-   d="scan'208";a="158222610"
-Received: from orsmsx903.amr.corp.intel.com ([10.22.229.25])
-  by fmviesa009.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2025 11:34:10 -0700
+   d="scan'208";a="157254613"
+Received: from orsmsx902.amr.corp.intel.com ([10.22.229.24])
+  by orviesa006.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 17 Jul 2025 11:34:13 -0700
 Received: from ORSMSX901.amr.corp.intel.com (10.22.229.23) by
- ORSMSX903.amr.corp.intel.com (10.22.229.25) with Microsoft SMTP Server
+ ORSMSX902.amr.corp.intel.com (10.22.229.24) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Thu, 17 Jul 2025 11:34:09 -0700
+ 15.2.1748.26; Thu, 17 Jul 2025 11:34:12 -0700
 Received: from ORSEDG901.ED.cps.intel.com (10.7.248.11) by
  ORSMSX901.amr.corp.intel.com (10.22.229.23) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26 via Frontend Transport; Thu, 17 Jul 2025 11:34:09 -0700
+ 15.2.1748.26 via Frontend Transport; Thu, 17 Jul 2025 11:34:12 -0700
 Received: from NAM12-DM6-obe.outbound.protection.outlook.com (40.107.243.52)
  by edgegateway.intel.com (134.134.137.111) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Thu, 17 Jul 2025 11:34:09 -0700
+ 15.2.1748.26; Thu, 17 Jul 2025 11:34:11 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yQI2HKFjxgi4bjj/gTkTKvHpx+DGjaZ949ChF6+2shX1GeExMDhtBf5A38tSjrJJ2RVLCi2qiZP9mYr7gUmycQAuwaWPQUN7xzh2kgWFmBJvsiz4V/9SktYtuFnlj0MK5y0U6kyanhQsjIN2HDoHmocq6BDxSuI6XtpWLLRh39oSaYZD9zaOCOhl89T+HpOsXrjrxdWSsijVHQAQ4L8gFkzBbXYKpZm8yYigNl1H2FmS6N05Jl7pXLbwpFob/h1Ih2upHWEcENitZ9+GiSmRwDTHCCUg8GEuc1ZG0zti/TiQprXTFRt/Fjy+wU5uFVaFGjhg0Wz/syjO/lVgJ0PvKQ==
+ b=lcpyf0kh6kqhC5pjsaq6bLUfGeIzGI4xSreE6BBIM8VEOqTWUCynXPzppalpx4vQP9CDlgnCaWdKAkqX41Sg4KH8+3fMUZ1NyJgIeSj5NfZGnve4VdDAQHuud+I/tOF+5D7stKmIZlbaAYWAchB917eRXaQ9tvf+YGC4Ji0bBCgOtfOdM1QplBCW9mPoBPQ/aiZ2w2iXn6cggoAFUofNHSeMl/ktimAKTC2TmjSx7d3ALwbegblBs1UCTur1f1Q4Z3jFTysX0Vp+UBF/gFXq+V5FaFxrEtiG4g7sCEbryeCpuWe2tYhrp1DnJvEHh1u5GotUNZM0PjcjdR+9quUTkw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=vblZYofOPE+KnTIQwpqMbvB8U/IE8WZxJhlvzMubuww=;
- b=YsKlHwRDlVYqcx78WvQHSnoPOaqO//gg1Y7Dku6Fihrj1QTAdduB24FF0wPf18yKki86yiDoLjgVs0SrPnEKQSuDSSHTlLKt4r8G0qJAGirI8vZYJ9T8C+UCYU2f3uiTCCz5ZUaDvKw+e5rnL7U0TEhr56gSM29mipLW0EMvo9CNb9ZZH9AZh6vdg1Jkgq0yN5a5obO5spKgP4EyJRs50ilZg0WyRH0k/4DD2NrzzyF5JVG6fHPB07ZSw7tnVttyYl2gZqRhrzMn7gfnoDHPmO/HKYkfwXednVvr0LrA+ftGOWl2uLauDjiD2xBtf9aVQ6cWk3csfE3e5W6k3ipJlw==
+ bh=wbWEZQTmr3QiLm/0ySTcCEK/GVJAIf1o58ex6NKvEME=;
+ b=fCNdCn8UQZxJRuX7tv4++XRXrylsL1/xuL/l4EcEVY3QZ8dpeGUhF+LWFGbz/egBxRXsSNm/ochmDQNTE84nAKizHclc8g3tf+qxy7Q33WlyrAGvaMUqNI3V0/i2YTGnMztnvh9nGEXlYouc3rrR3wFXvYs96gf26DltkOyu5Xm5CghEDzwEA1hRhYidP2gr/IBv6bmRkidgKCUGtux+9fsG+r/KloqcS4yiuPvE4B/XbiFAj8/DLT0VO1yLvfkPbFGyG53yuAUASZqaNlO0PgQ1FbLbqOX2KIjYG4lMFLCsnocjyMyD1WcdCY12TQqxr0VXKi2v2GZv1Cuc1gp7Pw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
  dkim=pass header.d=intel.com; arc=none
@@ -70,27 +71,24 @@ Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
  by SN7PR11MB7066.namprd11.prod.outlook.com (2603:10b6:806:299::15) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.35; Thu, 17 Jul
- 2025 18:34:02 +0000
+ 2025 18:34:04 +0000
 Received: from PH8PR11MB8107.namprd11.prod.outlook.com
  ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
  ([fe80::6b05:74cf:a304:ecd8%6]) with mapi id 15.20.8922.028; Thu, 17 Jul 2025
- 18:34:02 +0000
+ 18:34:04 +0000
 From: Dan Williams <dan.j.williams@intel.com>
 To: <linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>
 CC: <linux-kernel@vger.kernel.org>, <bhelgaas@google.com>, <aik@amd.com>,
-	<lukas@wunner.de>, Aneesh Kumar K.V <aneesh.kumar@kernel.org>,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>, "Isaku
- Yamahata" <isaku.yamahata@intel.com>, John Allen <john.allen@amd.com>,
-	Jonathan Cameron <Jonathan.Cameron@huawei.com>, Samuel Ortiz
-	<sameo@rivosinc.com>, Suzuki K Poulose <suzuki.poulose@arm.com>, Tom Lendacky
-	<thomas.lendacky@amd.com>, Xiaoyao Li <xiaoyao.li@intel.com>, Xu Yi lun
-	<yilun.xu@linux.intel.com>, Yilun Xu <yilun.xu@intel.com>
-Subject: [PATCH v4 00/10] PCI/TSM: Core infrastructure for PCI device security (TDISP)
-Date: Thu, 17 Jul 2025 11:33:48 -0700
-Message-ID: <20250717183358.1332417-1-dan.j.williams@intel.com>
+	<lukas@wunner.de>, Yilun Xu <yilun.xu@intel.com>, Jonathan Cameron
+	<Jonathan.Cameron@huawei.com>, Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+Subject: [PATCH v4 02/10] PCI/IDE: Enumerate Selective Stream IDE capabilities
+Date: Thu, 17 Jul 2025 11:33:50 -0700
+Message-ID: <20250717183358.1332417-3-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.50.1
-Content-Type: text/plain; charset="UTF-8"
+In-Reply-To: <20250717183358.1332417-1-dan.j.williams@intel.com>
+References: <20250717183358.1332417-1-dan.j.williams@intel.com>
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 X-ClientProxiedBy: BYAPR21CA0030.namprd21.prod.outlook.com
  (2603:10b6:a03:114::40) To PH8PR11MB8107.namprd11.prod.outlook.com
  (2603:10b6:510:256::6)
@@ -102,261 +100,397 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|SN7PR11MB7066:EE_
-X-MS-Office365-Filtering-Correlation-Id: 8f051278-7f3c-460f-5f25-08ddc560806b
+X-MS-Office365-Filtering-Correlation-Id: 114ef056-c5df-4188-ba13-08ddc56081bf
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|7416014|1800799024;
-X-Microsoft-Antispam-Message-Info: =?utf-8?B?UXUxeUJlSzBkVStNUHkwMUpHRjgzamZQWndvaGt3MHRGOHQvN1FhWTE3VXk2?=
- =?utf-8?B?TWpHWWJRem5UOGFIczNOTEdCTnkrMU9ucUdXUHppQXBBdUc4NEQ3Rm5SSVJk?=
- =?utf-8?B?R3dyWmV1aGhucks1WXp4M05wZ1BRdWRYRjZaRkJ3NHFibXVCMWFrUkNJRHFY?=
- =?utf-8?B?R0FSaE5EdHptL3hlU3RZbXFVdzk2Z0pwaXBJb1gybS8vZU82OHN4RVFZWTB6?=
- =?utf-8?B?anJRbTNiZE41MFhHaDUyV0t3ZEpjUTdMaXJGZ3JMNVhqWEIyMFdPL1BtNk1r?=
- =?utf-8?B?WUF2T1h3S2R0eW5ZUEdmK1pyY0dCTEVUM1N4UkFRQ0dGZk9yd3N0em1rUy9L?=
- =?utf-8?B?R1lWTGJjN2Nrc0FqQ3g0RTRndlNkNkg1ME12cnp0WW81bWUzWWl3akZ6SHZ0?=
- =?utf-8?B?S21WbWR5UTZoV1pQa2FJL2NNR3R6TURPbE5uUjhpeW52bFRibllDQTZjZlcx?=
- =?utf-8?B?R1BCc1ZvakttWWd4OTJaTnh4dU1jUU0vc2tzeTVuRkZqSjZjR3p2Z0ozSUlI?=
- =?utf-8?B?dkZCZzBEVGVnSUFqU1Z5enJ0bk9YZCs2V1kxbFRhVDVGT3lBc1NkUjZNWlQ0?=
- =?utf-8?B?NStCdzl2SWtSR2NZQWpjSXBxZHZ2TVFvMTdNZUxObFNiUEJPaTdqczlhV0Q4?=
- =?utf-8?B?Tzg3UTZWaGN6VnBQUG5WTk1PRGkvVkc5OWVMVVh4bEJucW5iRWxudFlFZWZh?=
- =?utf-8?B?Zmd4WWRsdWI2VS9PdjcycTRjSkJFTE5EZW94THZ4czFCNVJxNVNWTEcyU3dD?=
- =?utf-8?B?WEhTN3Z3b01yZW5LcHMrZE5Mb3M2c215dVRoQTZ2WktjMEFNQjJBU0J1VW42?=
- =?utf-8?B?dVJYMXhrUDJhaFUrUHBTcEl6SlRsUjFlRlRTbFFnVWo1SlhIZnYwa3hyUEFS?=
- =?utf-8?B?YjE0MHZpQ0k4UGRhNkNvT3pYYkREaXE3RVVyc09NUkdodXFrVytEMEVGU09w?=
- =?utf-8?B?TVlLdU1zSVYxdC9YQ3pCM0RCYlNQVitOOTJHa2JieXdRNFBVdG9Mam5hK2tr?=
- =?utf-8?B?NGNtT295c0NScHB3OVBVZjRLaUQrN0xKMHA1ajFHQzkweTNKdmR6aXo4Yyto?=
- =?utf-8?B?VWxGT3p5UHZCeWtjUEZoV2JBNiswY2dXTVltL3o3b2JCRUpVMGl5a3hNU2g0?=
- =?utf-8?B?cHZpazRZNnhreFJGdkw4V3BLd1I4MzI4eXFXWFYyaHNpZTA5WFVUQ2E2Z0lH?=
- =?utf-8?B?VFM1YitncVNPeGdxdU0ySG8rSGRmeS9rRDE5dEVIQ0dGSEg3eXBXQmNrbHdD?=
- =?utf-8?B?alY1QlhKMmxsSWR3MVU0MUVNcVNTQXl3cnF3ZXgyN1dVaVFsdHl0UkVqVVc2?=
- =?utf-8?B?K0E0YnNPcWJLNzdYWkZIU2hadVExSWJLd2JFSGp0ZlJGelJub3JZSm1DN3lw?=
- =?utf-8?B?bkIxSCt3MEdrY1EveTVDck4rZ2l1QkRiSXVKU05raFNJbTRJMEJraDloSWJO?=
- =?utf-8?B?R2hyNFJHOHlmRmF1bk9ISWdsUDk4bytPbXYrU1JIN2ZCOHpuT3ZoTUdsc2U5?=
- =?utf-8?B?ZzBneXVJbVA4Y1ZIbzdrVG10MzN3dVh0RzA2NTJwdjZQNjZvZnNQdTQ2RHh4?=
- =?utf-8?B?T3dmYk14dlE1QVRxTkJOdVdBUTJrTW9xNjRDTDVlMWJhR1AxR1hocEpQMDRR?=
- =?utf-8?B?SHUxSXhON1hGZFZJODJRL05yZUpQc0Q0MHdrYVdvNEhkeTVlaXhJRmhFcjlN?=
- =?utf-8?B?S0VEdElQN29uWXFTaEFFZFZ2NjRycm5NZEZCWlkvYWZOMnVFd0RHQ0U2SUdI?=
- =?utf-8?B?K1RqcnRobjRmZk5mK1Y1d2trenJiaGJYNWtGdENEUU9KMDRFUTJIVkVja3Z4?=
- =?utf-8?B?aElkYVJWcEFmeWh3ZDN3c09JamxheUU3a0lBTy9oKytwTnNGejltQ3l5ajV5?=
- =?utf-8?B?bG5Mek1BR1QwMVllRFFFcGFmbVlQV3F0b2d1eWo0Sk1VbG9ZY0t6b3NtTk1s?=
- =?utf-8?Q?uS7vLLRuAnQ=3D?=
-X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(7416014)(1800799024);DIR:OUT;SFP:1101;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?XdyAGlCHRetNOzdIP13i4lyO/zNhjWFcB5ApDFKeBFpoD/4N+T35AoU0/y9u?=
+ =?us-ascii?Q?5WEm0FKZf9OjQipg0RDRWZFCJSbgR7b+5x7X2cUBc30oJIPotx+RWtn8rfry?=
+ =?us-ascii?Q?qosleMtcrieyzGoXCEAezJV3W6B7JQcQ2KZeBDd1nnm80f6Ad7GJsx5ZwQyr?=
+ =?us-ascii?Q?NugfgInPCNaliO/SRwwzAOZlPZKbUVpMR9lX10l60QyZVLPgFcgyhOr4P12G?=
+ =?us-ascii?Q?IeWxm6n/Ux9boX1LKTMPTGCavwCrwC+2sFJfJ9mKBqQu1hh0oja5Owegew7M?=
+ =?us-ascii?Q?JLDhq/1eRO3M3ozrfodwObm6hHC9M8ClwEfTX+Hpbg4+AXWk+dwbzqsTBNyp?=
+ =?us-ascii?Q?R10TZkych7myCccXDZbt8JIN7acymaXHW0v+XaENIjpGtlN0K8iO4CmgIexX?=
+ =?us-ascii?Q?xELUEtFuiQBy0PBOmh49OgJg/SiIt6fLBcGnMJlPU6pv0wovrdnhmRaAsGJF?=
+ =?us-ascii?Q?kJQoBP7ayac7d9AnHSJl5CiQJ2PMgqIqT3rRtlDuMDoXq6TD7Ih4iLws0i7B?=
+ =?us-ascii?Q?G824RbLsY39SpH1QvygetpdObzwoYKy/XSkQ4B5cCbTwwLzJZ8IF5r9SG8Qb?=
+ =?us-ascii?Q?5QbR9sP5lm/yD1OQbo2jpIreFQOHyB3cgG7a+p+0TDBhKRmwOQ5roU/W0/Py?=
+ =?us-ascii?Q?/bDqQDmXyxAUBNwQY+6o7R4RtmshHL6qm7fNb8k1ULEbmq9vIgPd2JJvS8VK?=
+ =?us-ascii?Q?jx25HXbdGNZA7pTEYs2SLSTJRkAemAXmB7dDhhlVcaRLPT3uLj9MudEeP61B?=
+ =?us-ascii?Q?oUBHmIap/Wzcik3i4H6AtCUMA0eTN1Yr/ttu0cL343ysFlaTU2JPOpoToo5z?=
+ =?us-ascii?Q?HNRV2mQTHnMg/5l8BuUgxD8T2NE3/0Gt/tMuqFl8w6Pd/2cV/xvh8C0ipIpM?=
+ =?us-ascii?Q?COJAnrbR0Rk9P9fGfIFGhnq5jVhwJQPEdqR+dQGe5m7608Dh4lfl6UJjwwPs?=
+ =?us-ascii?Q?To8gXvdq7J5+Jn0COhExz8Bc+A89CIU5tj0yA65E9KeRbLhjODq+aDH6P9cc?=
+ =?us-ascii?Q?YV9TvfcqV2lcS66cjey21aNSgcGqFQzcgQGbIpVZECxR3Zy2suxEqFmKDe5Z?=
+ =?us-ascii?Q?9P3ayVEJoxpN77J0FCDCbM5NNnbvostBpFV+bnrYWspGMQmdAB2qhafCo1S+?=
+ =?us-ascii?Q?P8YaHP/uGJgIZeq/WmQjQGlmZJHwm7h6juBafQAVHQwQCy+2e/njs/hFholp?=
+ =?us-ascii?Q?gpSGcrLBo2a3zGNfJZhvlB5TFbKDpUYjKOao3MNzk+Ms0CtgENGw/HPp+X3D?=
+ =?us-ascii?Q?xftOP6Xlrn+mpvpGKpd1fXRx+ObPIT2RgZex9EQinhME2w4nyo602Pnos4WH?=
+ =?us-ascii?Q?RpIK6LGVous1V4FzB79ZRkpHgJoG+hrL0CPGr73MmbZ9HgeWNjg5vQzJ/F9m?=
+ =?us-ascii?Q?WgV12fq0CoqbUSpmrodY+94PLgnk7zpwLMKUh82ecE549MjIXKCZ7iN9Wsku?=
+ =?us-ascii?Q?LhbxB2H7sWU=3D?=
+X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?utf-8?B?OXczYnBrNGRyeCszTTJBYUFWakQ2ZWNmSnF3R3ZLTWRmRkNIK2R6N3JXNHR6?=
- =?utf-8?B?azhLVFJTWjNXclo4R1lrTmpGWStlNEQ3dHJ0VUM0L21mMUY3cEtWbFZkSTQ1?=
- =?utf-8?B?Y0dqV0dyWmg4ZFFmU2tyM3NpOUQ2OW5ZU1RXeGl1ZDlrSkF0emhXeUZRbmtm?=
- =?utf-8?B?QkV3N1RvQUVlVlkwa1lPcXkraVBTZkFlZExJR00xN2dMUGdkOGpaWnJuNnFF?=
- =?utf-8?B?cCtSVjdmaGpsRWhNMEJXSkswdUFQWG5Hb1NwSStaalNMNTUvTlVFMS9nc3du?=
- =?utf-8?B?anZsOVZteHd2ejdyZFZsOE9DNUJCK0VITDhveHJNSTI0Yk9NWUVZVFJFVHlF?=
- =?utf-8?B?WW16bzJ2VHpybVRTRDZwV2h0ZThHOEk3UThweTNvSUxBRzZsdUxMT3JBbGZt?=
- =?utf-8?B?dDcvZ2FFZ0J3Q2dPTExTMnJzZXZYVlYrb3MxNWxDRGRpQ3pPc29BbWQreGVx?=
- =?utf-8?B?R0w1ZWtTZS9DYU1EMDJFMlExZE0rMFkxampIdzEzcG52ekRSMUErVXV4WENr?=
- =?utf-8?B?QXFlYncxcmJoOGZ0aExlMWdUM1RUNjNWS3lVOWp0YmFVMW9sVURMR2FqZmZ6?=
- =?utf-8?B?dFhHSXhLcXBTTHZjUTdQL1lvY21uSU9RUmdxREtGNDRSK05yaDB3RHVTVWJR?=
- =?utf-8?B?NkRNZXRRQ3VwVklubm55MHd0dGhibGd6MHFRaTFWM2NVMjFYUUlzWE5CWWRu?=
- =?utf-8?B?aGNiVXVWU2dXVEI5alhqdGcycGR6b29OWjhPa2RLeS92MlAyZW5BUy9oSUE3?=
- =?utf-8?B?bVFFSllJWVN4Sm1ZQlg0Nk81QmJXdFhwRGZoOFNzTnV5Y2wzRmxycjNiOE56?=
- =?utf-8?B?eUxDTEVDNmJOTkJsT1lWZVRiODBWV2NpMU44R29MendJVGpaa0xhVXRjdUJE?=
- =?utf-8?B?V0kwQ1loRzFhS0VZQjV6NGYvK3QyUGV5S0NkWG9xdy9ZdlhEcW0yWHZCVHlZ?=
- =?utf-8?B?R2d1dFhkV0xHZE9CQW1TenYrdldGVm1tVGpTTUJFaFV2R2pFaUZhQithSXJT?=
- =?utf-8?B?QURvYVJrVEg2RzVMS1VhbnFUNnBFQWpydEFHUG13Ny8xT3Izb0NlSjZDVGlo?=
- =?utf-8?B?emFtdUIvOWtTbmZVZGlxTVJXYzUxbDlqUEgyTDF4MzFaSmZPK29TSXdJNnpk?=
- =?utf-8?B?VUovOWlzMm9UNG5BWFlVbUY1K0R1NFpIcWdkWlQ1SzdicGhVTWU2VVlUcEY2?=
- =?utf-8?B?T0tuTFhmMXgwSnoyS3hua2NIOGNnVmRHKzRDSkZ0eUp0UVMrVjl0WHJnTmJa?=
- =?utf-8?B?TWxtQTlaOTYvZC85MzRBdDJDNzZXMitrdnJZeDQwVlZ0U0VqRUh4c3p3YUt6?=
- =?utf-8?B?TU5IT2JwUXNvUkdSVUlNZWRNYW81Ky82SXdZZm9JVUdyUjB3MHNQd1lXT2xx?=
- =?utf-8?B?WmVKOVBrL3B3NjN3QmRsYThEWkh5emtkcEJrd1Z1NW9XY2g0enE5QjZXYkEy?=
- =?utf-8?B?dkcrWDBLa3A3aGIvVWJnSWF0OGpWNVpPN0VxTTJER3l3d3RubnhreHB2ZWk1?=
- =?utf-8?B?cm85SjZwbU1jaFd2NEc4U21XWS83ZGFBeWNRR3Z0eXJCLzFzTDlMbzlQc0xE?=
- =?utf-8?B?VCtXWUJIdFJIcmlvSTI3NSs5bEZBanJGeWJjei96dUpjbTJBV2dhcXVnRHNv?=
- =?utf-8?B?WGRvQVdPMDdITTlKaDVySDRUUnRZM1NFYnRCazFUc0ZlMTdLRGFmZDZ0cGh6?=
- =?utf-8?B?V3pZVEpSMzJCT3FRRjhpemdhdjRlZktvc0IvMkl1WUkzZitVcnFjTUg0WXBv?=
- =?utf-8?B?V3hMR0RkbUl2b05PSkR5L1J6OHZrMm4wNW5UbEpTcFFCdjFSRDRvNEx1OFVu?=
- =?utf-8?B?WWJ4UUJDakNsY2ZtazBsZzhxNThGYUVPSElBQzdjUllkajNqdldjN2pxRkE0?=
- =?utf-8?B?U1BoVVF4Q0ZTR0RLZnNVWkhNbkx1RkZvbVJUWThZcFpWZkFIZmozYllNay93?=
- =?utf-8?B?RmtEdUo1dTczc0ZEcTVtLzdVa3dobTh3VGFsUHY0MDlwTVdaTGM5NitRY3ZX?=
- =?utf-8?B?K2hycmdEZVNaR2RmU2NLMGJuRjlpZnZTUnBKVW13NlFWS1pCemFPVlVaYXBj?=
- =?utf-8?B?aG91QkZQNmJsL3RXUlptOW1MdFBWTGNhVW5tUE9wbWxCYjVlb1BvTFBUWGh6?=
- =?utf-8?B?cTQra2xadmpUbFB6SUlzaXdUZ3R0ay9jd0xTL2pXMzUrdVhsUHZURW84NVRK?=
- =?utf-8?B?Wnc9PQ==?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8f051278-7f3c-460f-5f25-08ddc560806b
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?Aoga1Tl7DERMwEKUkp20R8q6PPhjx3ffM75Gph+HdIdShipF6s7C35k8OD5v?=
+ =?us-ascii?Q?KDspj+mB1YI23ffpsTiz62uSmoL/ZR2LwGXK0t+1gPvM+C7HfievqKH18eDp?=
+ =?us-ascii?Q?+xok+Qsjtz9kO2JJpF8a3HQ4EXbAQKrclfOi70ChxCJfYoyBB9vq02fCLcDO?=
+ =?us-ascii?Q?7GBXJc96oGFZQcdlDkfXyY1Uk9aBcl+hSSQ9nwK5bm4uALqn8whUblRVZB6l?=
+ =?us-ascii?Q?y4ms8d6hunyw+Tndy3wkvs6qrPZ4kekAFt+ZrDnDM6cQy5h7psdfjDeht3Aj?=
+ =?us-ascii?Q?2F5c8qMq/fsjhLEAPYyiquYf+XJNY+nCszriU1t/VRmjSXu04HHA+IFLEtiM?=
+ =?us-ascii?Q?oNOZAMo38i/lgG7pZVRV+tX3sLbxq0l+YvI4E1ygi7jBiw6yX7ngxc4ieaKT?=
+ =?us-ascii?Q?jmOBJl682ay3b9BmFU8i2CVveqIbXJb9tbeIRiwG0iN3crSi0Y4pF8ev+5uK?=
+ =?us-ascii?Q?rSpM3xMPcRhcU6BcbD+wnzb3VLJOW5JEnU6uVYE3ARXXb77HQKMfM1ve6iXV?=
+ =?us-ascii?Q?2VBGaviN3zFhOsRJInK68j0K89cu8JE9dFP0UqXD5V7aCfE5ieEl643+Ucky?=
+ =?us-ascii?Q?0bQtdfCzozWaxt5+IfeSsEJdR27OhWkrEPwe2jNtsu/wRrwIIIJaw2qic66I?=
+ =?us-ascii?Q?xtCrAFNxGujXhYhG/yEopgq2/7fW29O6dh9ZCOa8eqA3b1zO1Lblmu8TnP6M?=
+ =?us-ascii?Q?scusHKFcn4hSqrCE7Up2huloHXX2/zGKTvhSQalNumeD+lFlo9hv6iXXFoUw?=
+ =?us-ascii?Q?X+fUwV/FIY3+dOhYKQ2SkHnPqYhhE8yHtBPDNdsW+Rl2EGzZWJGP9Q5QOCn5?=
+ =?us-ascii?Q?OFt1rkrS+xuKuYnDKVkXied5XpdAWtKPov5HdrZZxh3XXXoG6idipThDeofM?=
+ =?us-ascii?Q?mGthG1hKsUF82KqBglHIGt8PRKzjnpg8JXByU1uJ6aLrjiG3P7E//Emro4nH?=
+ =?us-ascii?Q?sVTp/+yXI69fwo/p5zQ/v8ekilfYUe8qYVtQLW79HNl+8eCjWL8wrXnELWUZ?=
+ =?us-ascii?Q?sW2G6NoHGKJNP0Vci24KS343valHb/vke34bNdDoa2GFwanE7Z4TZTyxE8r1?=
+ =?us-ascii?Q?srKligmFVLZhhye9ZXxKfK3WpPVeiqiLC7HEi5rmlw77uru5TuH4qiAM5YH2?=
+ =?us-ascii?Q?2pPcSIG3tSqHYqGuqEVoi37GIl44t3tlx7ZX4krkVEko26V8ueT3qrIp967C?=
+ =?us-ascii?Q?6Onc8MYmq/p8WGZrH85iwPhz/QDi5gOgfy2bw/18ox5qaoGLxMP2xT1PitkW?=
+ =?us-ascii?Q?IXlOheyj6nY5f3I1pB3plWZi2ZikS3If1eFJuEWcULdAKYZ0RzN5fdfmOsvp?=
+ =?us-ascii?Q?1eZTplBEuK04qBoJ3fi1O3zKnT0cZl98of6GDyy72kg1G40+erbWlHebOHSR?=
+ =?us-ascii?Q?SkYa9+Ie5cw+bLC8W4dah+xdDPuDJkTvd2OYUjpHS2uskdAEIezJH8ltaEAM?=
+ =?us-ascii?Q?RGONqJW3dMUUoD/fLQdFDcIBkAT22wy+tUPR3UEYQDdQkRuBH6FDLn/jXt9n?=
+ =?us-ascii?Q?wPLN1uyDW8YCjNN7WMGHb/YpaLI5roJSjBOGDXVGIHt1QmcvrzJUni/WV20s?=
+ =?us-ascii?Q?z11JQE3LtNUbRR5sKnt43xtG/0xdyplkrawZUo/WAdCC54cXga34Ri0vdzDt?=
+ =?us-ascii?Q?/w=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 114ef056-c5df-4188-ba13-08ddc56081bf
 X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jul 2025 18:34:02.0822
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jul 2025 18:34:04.2271
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: MFJ6DbvkDNGXcEoBiX4wahr0jm2whC6i/DAfZjD1nmF+NL9TJCF7qC3y/5ioGJUol2KvRQWivCOIjgXgKGFRTKKyv9VM5SmjS3s8Sane/3s=
+X-MS-Exchange-CrossTenant-UserPrincipalName: UzxrEsKutAMORzQmTjHwu9VPVyrEljG65c+pw5TCgwmSViJSAe/p6GQ1a8iMM+viqWkR0mdlUOBqbxH7zuL0GMftqYP4JK+zosx/7mnTwms=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR11MB7066
 X-OriginatorOrg: intel.com
 
-Changes since v3 [1]:
-- Move the TSM core out of the host/ subdirectory since it is shared
-  with the guest (Aneesh)
-- Support multiple simultaneous TSM providers (Jason, Alexey)
-- Do not reuse the "connect" operation for both Link and Security state
-  management (Aneesh, Alexey)
-- Derive the pci_tsm instance type from details in the @pdev or @dsm
-  properties (Aneesh)
-- Delay TSM association until ->connect(), results in removing the need
-  for the @state attribute
-- Introduce reverse iterators for all PCI bus and function walking.
-- Move all per-device context setup/teardown to
-  pci_tsm_(constructor,destructor)
-- Add pci_ide_stream_release() for scope-based cleanup of IDE setup
-- Shorten the name of the "stream" sysfs link (Jonathan)
-- misc fixups (Jonathan)
-- Note creation of pci_host_bridge_type in changelog (Jonathan)
-- Drop now unused PREP_PCI_IDE_SEL_ADDR1() and related macros (Jonathan)
-- Open code PREP_PCI_IDE_SEL_RID_2 in its only caller (Jonathan)
-- Clarify the specification Stream term from a Linux "stream" object
-  (Jonathan)
-- Convert samples/devsec/ to faux device (Jonathan)
-- Drop Date: from ABI entries
-- Add basic driver-api documentation to build kdoc
-- Switch to ACQUIRE()
-- Add an explicit 'disconnect' attribute
-- Clarify the PCI_IDE_STREAM_MAX Kconfig help (Jonathan)
-- Use unsigned variables from sel_ide_offset (Jonathan)
+Link encryption is a new PCIe feature enumerated by "PCIe 6.2 section
+7.9.26 IDE Extended Capability".
 
-[1]: http://lore.kernel.org/20250516054732.2055093-1-dan.j.williams@intel.com
+It is both a standalone port + endpoint capability, and a building block
+for the security protocol defined by "PCIe 6.2 section 11 TEE Device
+Interface Security Protocol (TDISP)". That protocol coordinates device
+security setup between a platform TSM (TEE Security Manager) and a
+device DSM (Device Security Manager). While the platform TSM can
+allocate resources like Stream ID and manage keys, it still requires
+system software to manage the IDE capability register block.
 
-This set is available at tsm.git#staging (rebasing branch) or
-tsm.git#devsec-20250717 (immutable tag). It passes a basic that
-exercises load/unload of the samples/devsec/ modules and
-connect/disconnect of the emulated device.
+Add register definitions and basic enumeration in preparation for
+Selective IDE Stream establishment. A follow on change selects the new
+CONFIG_PCI_IDE symbol. Note that while the IDE specification defines
+both a point-to-point "Link Stream" and a Root Port to endpoint
+"Selective Stream", only "Selective Stream" is considered for Linux as
+that is the predominant mode expected by Trusted Execution Environment
+Security Managers (TSMs), and it is the security model that limits the
+number of PCI components within the TCB in a PCIe topology with
+switches.
 
-Status (complexity reductions):
--------------------------------
-
-Between the support for multiple TSMs, the split of "Link" and
-"Security" operations and inferring the type of 'struct pci_tsm' context
-from its properties, the implementation shed complexity.
-
-Now, ->probe() is only called in the sysfs::connect_store() path which
-means that there is no need to track the PCI_TSM_INIT and
-PCI_TSM_CONNECT states. Simply, when a Device Security Manager (DSM) is
-connected, at that point all potential TDIs (assignable functions where
-the DSM can manage its security state) are probed.
-
-Now, initial determination of when the "tsm/" sysfs group appears
-follows typical expectations. If at least one TSM device has been
-registered prior to a DSM device being scanned, its "tsm/" attribute
-group will appear. No more need for a pci_tsm_init() call via
-pci_init_capabilities().
-
-The pci_tsm_destroy() path is now simply arranging for
-pci_tsm_disconnect() of all DSMs after all TDIs have gone through
-->remove() callback. This is accomplished with new "reverse" iterators
-for all PCI bus walks.
-
-Next steps:
------------
-The campaign to graduate this out of tsm.git#staging and into mainline
-starts in earnest when samples/devsec/ + 1 vendor implementation, or 2
-vendor implementations can demonstrate the end-to-end flow (minus
-attestation). That is the "consensus" event horizon where prior to that
-it seems reasonable for impacted subsystem maintainers to opt-out of
-reviewing all the fine details under debate. Suffice to say there are a
-lot of fine details flying around.
-
-To that end I expect it would help to have a tracking document in
-tsm.git#staging that catalogs the open debates and the current leanings
-of the staging tree. That is next in the hopper.
-
-Original Cover letter:
-----------------------
-
-Trusted execution environment (TEE) Device Interface Security Protocol
-(TDISP) is a chapter name in the PCI specification. It describes an
-alphabet soup of mechanisms, SPDM, CMA, IDE, TSM/DSM, that system
-software uses to establish trust in a device and assign it to a
-confidential virtual machine (CVM). It is protocol for dynamically
-extending the trusted computing boundary (TCB) of a CVM with a PCI
-device interface that can issue DMA to CVM private memory.
-
-The acronym soup problem is enhanced by every major platform vendor
-having distinct TEE Security Manager (TSM) API implementations /
-capabilities, and to a lesser extent, every potential endpoint Device
-Security Manager (DSM) having its own idiosyncratic behaviors around
-TDISP state transitions.
-
-Despite all that opportunity for differentiation, there is a significant
-portion of the implementation that is cross-vendor common. However, it
-is difficult to develop, debate, test and settle all those pieces absent
-a low level TSM driver implementation to pull it all together.
-
-The proposal, of which this set is the first phase, is incrementally
-develop the shared infrastructure on top of a sample TSM driver
-implementation to enable clean vendor agnostic discussions about the
-commons. "samples/devsec/" is meant to be: just enough emulation to
-exercise all the core infrastructure, a reference implementation, and a
-simple unit test. The sample also enables coordination with the native
-PCI device security effort [2].
-
-[2]: http://lore.kernel.org/cover.1719771133.git.lukas@wunner.de
-
-Dan Williams (10):
-  coco/tsm: Introduce a core device for TEE Security Managers
-  PCI/IDE: Enumerate Selective Stream IDE capabilities
-  PCI: Introduce pci_walk_bus_reverse(), for_each_pci_dev_reverse()
-  PCI/TSM: Authenticate devices via platform TSM
-  samples/devsec: Introduce a PCI device-security bus + endpoint sample
-  PCI: Add PCIe Device 3 Extended Capability enumeration
-  PCI/IDE: Add IDE establishment helpers
-  PCI/IDE: Report available IDE streams
-  PCI/TSM: Report active IDE streams
-  samples/devsec: Add sample IDE establishment
-
- Documentation/ABI/testing/sysfs-bus-pci       |  51 ++
- Documentation/ABI/testing/sysfs-class-tsm     |  19 +
- .../ABI/testing/sysfs-devices-pci-host-bridge |  29 +
- Documentation/driver-api/pci/index.rst        |   1 +
- Documentation/driver-api/pci/tsm.rst          |  12 +
- MAINTAINERS                                   |   7 +-
- drivers/base/bus.c                            |  38 +
- drivers/pci/Kconfig                           |  28 +
- drivers/pci/Makefile                          |   2 +
- drivers/pci/bus.c                             |  37 +
- drivers/pci/ide.c                             | 578 ++++++++++++++
- drivers/pci/pci-sysfs.c                       |   4 +
- drivers/pci/pci.h                             |  17 +
- drivers/pci/probe.c                           |  25 +-
- drivers/pci/remove.c                          |   3 +
- drivers/pci/search.c                          |  63 +-
- drivers/pci/tsm.c                             | 554 ++++++++++++++
- drivers/virt/coco/Kconfig                     |   3 +
- drivers/virt/coco/Makefile                    |   2 +
- drivers/virt/coco/tsm-core.c                  | 198 +++++
- include/linux/device/bus.h                    |   3 +
- include/linux/pci-ide.h                       |  72 ++
- include/linux/pci-tsm.h                       | 158 ++++
- include/linux/pci.h                           |  36 +
- include/linux/tsm.h                           |  15 +
- include/uapi/linux/pci_regs.h                 |  89 +++
- samples/Kconfig                               |  16 +
- samples/Makefile                              |   1 +
- samples/devsec/Makefile                       |  10 +
- samples/devsec/bus.c                          | 711 ++++++++++++++++++
- samples/devsec/common.c                       |  26 +
- samples/devsec/devsec.h                       |  40 +
- samples/devsec/tsm.c                          | 241 ++++++
- 33 files changed, 3078 insertions(+), 11 deletions(-)
- create mode 100644 Documentation/ABI/testing/sysfs-class-tsm
- create mode 100644 Documentation/driver-api/pci/tsm.rst
+Cc: Yilun Xu <yilun.xu@intel.com>
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+Cc: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+Co-developed-by: Alexey Kardashevskiy <aik@amd.com>
+Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
+Co-developed-by: Yilun Xu <yilun.xu@intel.com>
+Signed-off-by: Yilun Xu <yilun.xu@intel.com>
+Signed-off-by: Dan Williams <dan.j.williams@intel.com>
+---
+ drivers/pci/Kconfig           | 14 ++++++
+ drivers/pci/Makefile          |  1 +
+ drivers/pci/ide.c             | 93 +++++++++++++++++++++++++++++++++++
+ drivers/pci/pci.h             |  6 +++
+ drivers/pci/probe.c           |  1 +
+ include/linux/pci.h           |  7 +++
+ include/uapi/linux/pci_regs.h | 81 ++++++++++++++++++++++++++++++
+ 7 files changed, 203 insertions(+)
  create mode 100644 drivers/pci/ide.c
- create mode 100644 drivers/pci/tsm.c
- create mode 100644 drivers/virt/coco/tsm-core.c
- create mode 100644 include/linux/pci-ide.h
- create mode 100644 include/linux/pci-tsm.h
- create mode 100644 samples/devsec/Makefile
- create mode 100644 samples/devsec/bus.c
- create mode 100644 samples/devsec/common.c
- create mode 100644 samples/devsec/devsec.h
- create mode 100644 samples/devsec/tsm.c
 
-
-base-commit: df877487cac3509cbae2625181e7ad6748afed24
+diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
+index 9c0e4aaf4e8c..4bd75d8b9b86 100644
+--- a/drivers/pci/Kconfig
++++ b/drivers/pci/Kconfig
+@@ -122,6 +122,20 @@ config XEN_PCIDEV_FRONTEND
+ config PCI_ATS
+ 	bool
+ 
++config PCI_IDE
++	bool
++
++config PCI_IDE_STREAM_MAX
++	int "Maximum number of Selective IDE Streams supported per host bridge" if EXPERT
++	depends on PCI_IDE
++	range 1 256
++	default 64
++	help
++	  Set a kernel max for the number of IDE streams the PCI core supports
++	  per device. While the PCI specification max is 256, the hardware
++	  platform capability for the foreseeable future is 4 to 8 streams. Bump
++	  this value up if you have an expert testing need.
++
+ config PCI_DOE
+ 	bool "Enable PCI Data Object Exchange (DOE) support"
+ 	help
+diff --git a/drivers/pci/Makefile b/drivers/pci/Makefile
+index 67647f1880fb..6612256fd37d 100644
+--- a/drivers/pci/Makefile
++++ b/drivers/pci/Makefile
+@@ -34,6 +34,7 @@ obj-$(CONFIG_PCI_P2PDMA)	+= p2pdma.o
+ obj-$(CONFIG_XEN_PCIDEV_FRONTEND) += xen-pcifront.o
+ obj-$(CONFIG_VGA_ARB)		+= vgaarb.o
+ obj-$(CONFIG_PCI_DOE)		+= doe.o
++obj-$(CONFIG_PCI_IDE)		+= ide.o
+ obj-$(CONFIG_PCI_DYNAMIC_OF_NODES) += of_property.o
+ obj-$(CONFIG_PCI_NPEM)		+= npem.o
+ obj-$(CONFIG_PCIE_TPH)		+= tph.o
+diff --git a/drivers/pci/ide.c b/drivers/pci/ide.c
+new file mode 100644
+index 000000000000..e15937cdb2a4
+--- /dev/null
++++ b/drivers/pci/ide.c
+@@ -0,0 +1,93 @@
++// SPDX-License-Identifier: GPL-2.0
++/* Copyright(c) 2024 Intel Corporation. All rights reserved. */
++
++/* PCIe 6.2 section 6.33 Integrity & Data Encryption (IDE) */
++
++#define dev_fmt(fmt) "PCI/IDE: " fmt
++#include <linux/pci.h>
++#include <linux/bitfield.h>
++#include "pci.h"
++
++static int __sel_ide_offset(u16 ide_cap, u8 nr_link_ide, u8 stream_index,
++			    u8 nr_ide_mem)
++{
++	u32 offset;
++
++	offset = ide_cap + PCI_IDE_LINK_STREAM_0 +
++		 nr_link_ide * PCI_IDE_LINK_BLOCK_SIZE;
++
++	/*
++	 * Assume a constant number of address association resources per
++	 * stream index
++	 */
++	offset += stream_index * PCI_IDE_SEL_BLOCK_SIZE(nr_ide_mem);
++	return offset;
++}
++
++void pci_ide_init(struct pci_dev *pdev)
++{
++	u8 nr_link_ide, nr_ide_mem, nr_streams;
++	u16 ide_cap;
++	u32 val;
++
++	if (!pci_is_pcie(pdev))
++		return;
++
++	ide_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_IDE);
++	if (!ide_cap)
++		return;
++
++	pci_read_config_dword(pdev, ide_cap + PCI_IDE_CAP, &val);
++	if ((val & PCI_IDE_CAP_SELECTIVE) == 0)
++		return;
++
++	/*
++	 * Require endpoint IDE capability to be paired with IDE Root
++	 * Port IDE capability.
++	 */
++	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ENDPOINT) {
++		struct pci_dev *rp = pcie_find_root_port(pdev);
++
++		if (!rp->ide_cap)
++			return;
++	}
++
++	if (val & PCI_IDE_CAP_SEL_CFG)
++		pdev->ide_cfg = 1;
++
++	if (val & PCI_IDE_CAP_TEE_LIMITED)
++		pdev->ide_tee_limit = 1;
++
++	if (val & PCI_IDE_CAP_LINK)
++		nr_link_ide = 1 + FIELD_GET(PCI_IDE_CAP_LINK_TC_NUM_MASK, val);
++	else
++		nr_link_ide = 0;
++
++	nr_ide_mem = 0;
++	nr_streams = min(1 + FIELD_GET(PCI_IDE_CAP_SEL_NUM_MASK, val),
++			 CONFIG_PCI_IDE_STREAM_MAX);
++	for (u8 i = 0; i < nr_streams; i++) {
++		int pos = __sel_ide_offset(ide_cap, nr_link_ide, i, nr_ide_mem);
++		int nr_assoc;
++		u32 val;
++
++		pci_read_config_dword(pdev, pos, &val);
++
++		/*
++		 * Let's not entertain streams that do not have a
++		 * constant number of address association blocks
++		 */
++		nr_assoc = FIELD_GET(PCI_IDE_SEL_CAP_ASSOC_NUM_MASK, val);
++		if (i && (nr_assoc != nr_ide_mem)) {
++			pci_info(pdev, "Unsupported Selective Stream %d capability, SKIP the rest\n", i);
++			nr_streams = i;
++			break;
++		}
++
++		nr_ide_mem = nr_assoc;
++	}
++
++	pdev->ide_cap = ide_cap;
++	pdev->nr_link_ide = nr_link_ide;
++	pdev->nr_ide_mem = nr_ide_mem;
++}
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 12215ee72afb..1c223c79634f 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -515,6 +515,12 @@ static inline void pci_doe_sysfs_init(struct pci_dev *pdev) { }
+ static inline void pci_doe_sysfs_teardown(struct pci_dev *pdev) { }
+ #endif
+ 
++#ifdef CONFIG_PCI_IDE
++void pci_ide_init(struct pci_dev *dev);
++#else
++static inline void pci_ide_init(struct pci_dev *dev) { }
++#endif
++
+ /**
+  * pci_dev_set_io_state - Set the new error state if possible.
+  *
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index e94978c3be3d..e19e7a926423 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -2625,6 +2625,7 @@ static void pci_init_capabilities(struct pci_dev *dev)
+ 	pci_doe_init(dev);		/* Data Object Exchange */
+ 	pci_tph_init(dev);		/* TLP Processing Hints */
+ 	pci_rebar_init(dev);		/* Resizable BAR */
++	pci_ide_init(dev);		/* Link Integrity and Data Encryption */
+ 
+ 	pcie_report_downtraining(dev);
+ 	pci_init_reset_methods(dev);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index f6a713da5c49..3fac811376b5 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -532,6 +532,13 @@ struct pci_dev {
+ #endif
+ #ifdef CONFIG_PCI_NPEM
+ 	struct npem	*npem;		/* Native PCIe Enclosure Management */
++#endif
++#ifdef CONFIG_PCI_IDE
++	u16		ide_cap;	/* Link Integrity & Data Encryption */
++	u8		nr_ide_mem;	/* Address association resources for streams */
++	u8		nr_link_ide;	/* Link Stream count (Selective Stream offset) */
++	unsigned int	ide_cfg:1;	/* Config cycles over IDE */
++	unsigned int	ide_tee_limit:1; /* Disallow T=0 traffic over IDE */
+ #endif
+ 	u16		acs_cap;	/* ACS Capability offset */
+ 	u8		supported_speeds; /* Supported Link Speeds Vector */
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index a3a3e942dedf..ab4ebf0f8a46 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -750,6 +750,7 @@
+ #define PCI_EXT_CAP_ID_NPEM	0x29	/* Native PCIe Enclosure Management */
+ #define PCI_EXT_CAP_ID_PL_32GT  0x2A    /* Physical Layer 32.0 GT/s */
+ #define PCI_EXT_CAP_ID_DOE	0x2E	/* Data Object Exchange */
++#define PCI_EXT_CAP_ID_IDE	0x30    /* Integrity and Data Encryption */
+ #define PCI_EXT_CAP_ID_PL_64GT	0x31	/* Physical Layer 64.0 GT/s */
+ #define PCI_EXT_CAP_ID_MAX	PCI_EXT_CAP_ID_PL_64GT
+ 
+@@ -1230,4 +1231,84 @@
+ #define PCI_DVSEC_CXL_PORT_CTL				0x0c
+ #define PCI_DVSEC_CXL_PORT_CTL_UNMASK_SBR		0x00000001
+ 
++/* Integrity and Data Encryption Extended Capability */
++#define PCI_IDE_CAP			0x4
++#define  PCI_IDE_CAP_LINK		0x1  /* Link IDE Stream Supported */
++#define  PCI_IDE_CAP_SELECTIVE		0x2  /* Selective IDE Streams Supported */
++#define  PCI_IDE_CAP_FLOWTHROUGH	0x4  /* Flow-Through IDE Stream Supported */
++#define  PCI_IDE_CAP_PARTIAL_HEADER_ENC 0x8  /* Partial Header Encryption Supported */
++#define  PCI_IDE_CAP_AGGREGATION	0x10 /* Aggregation Supported */
++#define  PCI_IDE_CAP_PCRC		0x20 /* PCRC Supported */
++#define  PCI_IDE_CAP_IDE_KM		0x40 /* IDE_KM Protocol Supported */
++#define  PCI_IDE_CAP_SEL_CFG		0x80 /* Selective IDE for Config Request Support */
++#define  PCI_IDE_CAP_ALG_MASK		__GENMASK(12, 8) /* Supported Algorithms */
++#define  PCI_IDE_CAP_ALG_AES_GCM_256	0    /* AES-GCM 256 key size, 96b MAC */
++#define  PCI_IDE_CAP_LINK_TC_NUM_MASK	__GENMASK(15, 13) /* Link IDE TCs */
++#define  PCI_IDE_CAP_SEL_NUM_MASK	__GENMASK(23, 16)/* Supported Selective IDE Streams */
++#define  PCI_IDE_CAP_TEE_LIMITED	0x1000000 /* TEE-Limited Stream Supported */
++#define PCI_IDE_CTL			0x8
++#define  PCI_IDE_CTL_FLOWTHROUGH_IDE	0x4  /* Flow-Through IDE Stream Enabled */
++
++#define PCI_IDE_LINK_STREAM_0		0xc  /* First Link Stream Register Block */
++#define  PCI_IDE_LINK_BLOCK_SIZE	8
++/* Link IDE Stream block, up to PCI_IDE_CAP_LINK_TC_NUM */
++#define PCI_IDE_LINK_CTL_0		   0x0               /* First Link Control Register Offset in block */
++#define  PCI_IDE_LINK_CTL_EN		   0x1               /* Link IDE Stream Enable */
++#define  PCI_IDE_LINK_CTL_TX_AGGR_NPR_MASK __GENMASK(3, 2)   /* Tx Aggregation Mode NPR */
++#define  PCI_IDE_LINK_CTL_TX_AGGR_PR_MASK  __GENMASK(5, 4)   /* Tx Aggregation Mode PR */
++#define  PCI_IDE_LINK_CTL_TX_AGGR_CPL_MASK __GENMASK(7, 6)   /* Tx Aggregation Mode CPL */
++#define  PCI_IDE_LINK_CTL_PCRC_EN	   0x100	     /* PCRC Enable */
++#define  PCI_IDE_LINK_CTL_PART_ENC_MASK	   __GENMASK(13, 10) /* Partial Header Encryption Mode */
++#define  PCI_IDE_LINK_CTL_ALG_MASK	   __GENMASK(18, 14) /* Selection from PCI_IDE_CAP_ALG */
++#define  PCI_IDE_LINK_CTL_TC_MASK	   __GENMASK(21, 19) /* Traffic Class */
++#define  PCI_IDE_LINK_CTL_ID_MASK	   __GENMASK(31, 24) /* Stream ID */
++#define PCI_IDE_LINK_STS_0		   0x4               /* First Link Status Register Offset in block */
++#define  PCI_IDE_LINK_STS_STATE		   __GENMASK(3, 0)   /* Link IDE Stream State */
++#define  PCI_IDE_LINK_STS_RECVD_INTEGRITY_CHECK	0x80000000   /* Received Integrity Check Fail Msg */
++
++/* Selective IDE Stream block, up to PCI_IDE_CAP_SELECTIVE_STREAMS_NUM */
++/* Selective IDE Stream Capability Register */
++#define  PCI_IDE_SEL_CAP		 0
++#define  PCI_IDE_SEL_CAP_ASSOC_NUM_MASK	 __GENMASK(3, 0)
++/* Selective IDE Stream Control Register */
++#define  PCI_IDE_SEL_CTL		 4
++#define   PCI_IDE_SEL_CTL_EN		 0x1	/* Selective IDE Stream Enable */
++#define   PCI_IDE_SEL_CTL_TX_AGGR_NPR_MASK __GENMASK(3, 2) /* Tx Aggregation Mode NPR */
++#define   PCI_IDE_SEL_CTL_TX_AGGR_PR_MASK  __GENMASK(5, 4) /* Tx Aggregation Mode PR */
++#define   PCI_IDE_SEL_CTL_TX_AGGR_CPL_MASK __GENMASK(7, 6) /* Tx Aggregation Mode CPL */
++#define   PCI_IDE_SEL_CTL_PCRC_EN	 0x100	/* PCRC Enable */
++#define   PCI_IDE_SEL_CTL_CFG_EN	 0x200	/* Selective IDE for Configuration Requests */
++#define   PCI_IDE_SEL_CTL_PART_ENC_MASK	 __GENMASK(13, 10) /* Partial Header Encryption Mode */
++#define   PCI_IDE_SEL_CTL_ALG_MASK	 __GENMASK(18, 14) /* Selection from PCI_IDE_CAP_ALG */
++#define   PCI_IDE_SEL_CTL_TC_MASK	 __GENMASK(21, 19) /* Traffic Class */
++#define   PCI_IDE_SEL_CTL_DEFAULT	 0x400000 /* Default Stream */
++#define   PCI_IDE_SEL_CTL_TEE_LIMITED	 0x800000 /* TEE-Limited Stream */
++#define   PCI_IDE_SEL_CTL_ID_MASK	 __GENMASK(31, 24) /* Stream ID */
++#define   PCI_IDE_SEL_CTL_ID_MAX	 255
++/* Selective IDE Stream Status Register */
++#define  PCI_IDE_SEL_STS		 8
++#define   PCI_IDE_SEL_STS_STATE_MASK	 __GENMASK(3, 0) /* Selective IDE Stream State */
++#define   PCI_IDE_SEL_STS_STATE_INSECURE 0
++#define   PCI_IDE_SEL_STS_STATE_SECURE   2
++#define   PCI_IDE_SEL_STS_RECVD_INTEGRITY_CHECK	0x80000000 /* Received Integrity Check Fail Msg */
++/* IDE RID Association Register 1 */
++#define  PCI_IDE_SEL_RID_1		 0xc
++#define   PCI_IDE_SEL_RID_1_LIMIT_MASK	 __GENMASK(23, 8)
++/* IDE RID Association Register 2 */
++#define  PCI_IDE_SEL_RID_2		 0x10
++#define   PCI_IDE_SEL_RID_2_VALID	 0x1
++#define   PCI_IDE_SEL_RID_2_BASE_MASK	 __GENMASK(23, 8)
++#define   PCI_IDE_SEL_RID_2_SEG_MASK	 __GENMASK(31, 24)
++/* Selective IDE Address Association Register Block, up to PCI_IDE_SEL_CAP_ASSOC_NUM */
++#define PCI_IDE_SEL_ADDR_BLOCK_SIZE	    12
++#define  PCI_IDE_SEL_ADDR_1(x)		    (20 + (x) * PCI_IDE_SEL_ADDR_BLOCK_SIZE)
++#define   PCI_IDE_SEL_ADDR_1_VALID	    0x1
++#define   PCI_IDE_SEL_ADDR_1_BASE_LOW_MASK  __GENMASK(19, 8)
++#define   PCI_IDE_SEL_ADDR_1_LIMIT_LOW_MASK __GENMASK(31, 20)
++/* IDE Address Association Register 2 is "Memory Limit Upper" */
++#define  PCI_IDE_SEL_ADDR_2(x)		    (24 + (x) * PCI_IDE_SEL_ADDR_BLOCK_SIZE)
++/* IDE Address Association Register 3 is "Memory Base Upper" */
++#define  PCI_IDE_SEL_ADDR_3(x)		    (28 + (x) * PCI_IDE_SEL_ADDR_BLOCK_SIZE)
++#define PCI_IDE_SEL_BLOCK_SIZE(nr_assoc)  (20 + PCI_IDE_SEL_ADDR_BLOCK_SIZE * (nr_assoc))
++
+ #endif /* LINUX_PCI_REGS_H */
 -- 
 2.50.1
 
