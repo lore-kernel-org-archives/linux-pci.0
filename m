@@ -1,139 +1,110 @@
-Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA80F1DED53;
-	Fri, 18 Jul 2025 16:35:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD5192E6D3F;
+	Fri, 18 Jul 2025 16:35:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752856531; cv=none; b=i9bnUxyo9GF5folLFEiCgd84Y0YAZJHTgggp/R13J29QrsSjSY+Gg3GVVhSMSb3+zbGtycp3ZTl1ci9ZrHzJXUmHCaAfI1BwlCIwTbGX7IkDTEEXJ0jKWfBf79M7ucWLSwR7PMsXymKt4XO9bSfggeXb70BGZuZVu9HJH30hxsA=
+	t=1752856535; cv=none; b=GIdD7KOWWcTHTz44KJYhzqcupVhDN5uJDnEb0BhQXPs4Wq9hYhTpIHjDELW7DCvWvSjI+fLMq2ZQMK/IdlykXCK5fCnLdI8Qpr2PJOzS8v8JB8t8gdbvxu9Zjvp8esvL3nGfZ2AL2FrnCGIWCqcEbCknMsZBfBE+Xm5zKJXOsTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752856531; c=relaxed/simple;
-	bh=UDmAfnjy8pkg9BvFAmQ9gslBsr+Ob5O2A4EwZnWz7Bg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=XQKrDbA0V4OixlCmjlLCDodrkC68yes4a8mESkz6JaYyfoeXkf3KGPm5uBK3sS8EGmG1ok6OMfhry45G1Ba0c6lvED4Kfk51kD1LPfht3m5spcJDAz6NZJg1UUMTMFNJMb/fXrvhO2pdWGRbt7ObLHuR3tI804oo41JlYH9io8A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K3D9Ba47; arc=none smtp.client-ip=209.85.160.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752856535; c=relaxed/simple;
+	bh=11X9Sef1jq1w/S7oQRlR3n+bOEuUkdDS7reE/5JQmv8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=b59ae1v8nynItRizvbLM7ateLPrSda7Bic3yeS+Jx5tWZb7VVMMl2GxCpRkm7eHNfmfN7RzgI8rRuhhH0UOAiV9XgruxcgttrAAuJwURVRn45xDHPjonwjIZg0G0JrsQnS/PhR0TFeyAgw+9t9kJ1bNa6Qk8t79i8kp5DBTMgCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M292Sus/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K3D9Ba47"
-Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-2e9a38d2a3aso2125862fac.3;
-        Fri, 18 Jul 2025 09:35:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752856529; x=1753461329; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=S5fMBTsrhrDDK6xtK7LtgX4Zw2zx9+Mn87A7RF2ITBk=;
-        b=K3D9Ba47ZcRHqFv5hoBf/PZyk2IqUflpJIzmbJtLXy7V86gDdLIigOoXdLcUL+S2kT
-         Sz0B7NEezbaMf9/+ax4rikbIAdyJagRutel0FSmH8g6hCA2lBDfjQlnjMMyyBB+ra2L4
-         2B8J5KOGz3QeYo29QxrBcZbTtAGDst9zT/gZ9XAwq/nYLUYzvIKYeqAFl1m4k1jp40V/
-         NRh78rxqo5hiZ7pHLjfors9yhUpf96qHuiwc8J00Iu70Ul4j+SXpMSo2pXuOJka259ZF
-         KNrEewVOXXBDCIiAJj0ibrczdIo1KajANAav6L5JEjtOS9gx6LJVqGxwkL9swRV9xXyk
-         vsCQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752856529; x=1753461329;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=S5fMBTsrhrDDK6xtK7LtgX4Zw2zx9+Mn87A7RF2ITBk=;
-        b=up4HuyILC9rmLB38TdVgmcZLs8xZ2OQbifCSxnmZlC6lLpGYTqEB7OmHmRU1+YYxwT
-         bva3jcgSXuHCS9b21Htu0XqPKaE4RAISnSPE12P+YHWSkZ2uWAszxUL6+EWtI6Xuhp5n
-         jXfEseS/V79eFQ28KuASuYkQyBkc1/84WwHEMO+jlWforcX+CKIOp+DUvfH+Im67QJfN
-         gDpFIKroRRNLEQylearjK5V5NpO2T59cqOdE8vr+/Pu0p4AE4kbnGjD8/Uv8sCJDTmKr
-         qmkkLDmUHLP6KToL4/HO1hkVXf1wn6tBe77PYFm12M36mF+xkosZRyOL7z0JIeiFD0z+
-         GZsA==
-X-Forwarded-Encrypted: i=1; AJvYcCUvKxHpA4/DEVkKkNb/thg5+B3UhpKx/p00OoZ7yr5kylldgrbDwd5v/QQkrbWvUawfOb653PGWXLx+@vger.kernel.org, AJvYcCWglKENiuUXuB/ziEcbhbPLKfxzNZ5SByaK7sIN/NwOXHzUZe20LEE1E92uY/71O+fJ2xll7T+HKCjXJwI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzHXb1/X28fxaO+u/NxonvGBnKD4hQGW3rWaF0zaw6DCtldp828
-	9lHeM3xMyjmsb44EV14jhu0YhAd7k+VqHe2V6MR2BmVCNJyS26bbrYAA44a9c5sy4HdPXDYVx8S
-	ptemQUIy+Q1kKMPY1NXvlqDkSUwR9GZeP2w==
-X-Gm-Gg: ASbGnctBL1o2Han0w6gchtwbvoL+t8t7mZbdJCoL+Ij0AJdt7TJk3wau+g9uTxPo8sj
-	wBQgq3bdxQNb3dLvB5PO3Piw4CcbICBd2SVcyoLSrwwvvetSWj6Y8XPfzmn3eYSapocrtEShH6E
-	zIi+Qu7WlHyypt6IIfrB35laYPKdgRx3yq3YzEJtSAAA/PmJ3+V8Dr/FBS61sG4IZEODOWtfzIi
-	fxSobqLC5UaA1+x/Ie9KaA=
-X-Google-Smtp-Source: AGHT+IELLiAsxvKTUzSoPTZZRRusNn9I6JdMO0/hSrsDIrFm2f2dPHV082nEnE44/odp5xiA8nVTltUi6hVD+2JPvo8=
-X-Received: by 2002:ac8:5a91:0:b0:4ab:9551:476 with SMTP id
- d75a77b69052e-4abbf5574d4mr7492541cf.53.1752856040946; Fri, 18 Jul 2025
- 09:27:20 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M292Sus/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C048AC4CEED;
+	Fri, 18 Jul 2025 16:35:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752856535;
+	bh=11X9Sef1jq1w/S7oQRlR3n+bOEuUkdDS7reE/5JQmv8=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=M292Sus/VG02eGqA4KLBWSOMFPlC+C1kaajwzs311j55gIiMMIfr+1ahlMd2QFimz
+	 41uZzOvhSzU2mQXBDxwlvJIPmKPx5cKYaVfZtbpiFJ4ud6YVFiiQzjgU19cx6Io699
+	 5i1FTWcc74I/x6DBCOjl/80yhKwE/CQqoQiIrHZsr6M0wtDva0TH0x7jPyUQqFR22d
+	 mUjDVm9C03HqNDVrYHSlb6OiDnb3FuNJGVy8Ub3AJwqLo1/uf/U5BDYp69Ifu6I0wg
+	 BnWXS9h2FIJDYGsFAvy5fIB0zqLAFAQtWdbNaV7ZcQGBnd4+ZntxsH5nW2bfAlQniN
+	 vu5aue6rWXutA==
+Date: Fri, 18 Jul 2025 11:35:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Shuai Xue <xueshuai@linux.alibaba.com>
+Cc: Matthew W Carlis <mattc@purestorage.com>, lukas@wunner.de,
+	Ilpo =?utf-8?B?SsOkcnZpbmVu?= <ilpo.jarvinen@linux.intel.com>,
+	anil.s.keshavamurthy@intel.com, bhelgaas@google.com, bp@alien8.de,
+	davem@davemloft.net, linux-edac@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org, mark.rutland@arm.com,
+	mathieu.desnoyers@efficios.com, mhiramat@kernel.org,
+	naveen@kernel.org, oleg@redhat.com, peterz@infradead.org,
+	rostedt@goodmis.org, tianruidong@linux.alibaba.com,
+	tony.luck@intel.com
+Subject: Re: [PATCH v8] PCI: hotplug: Add a generic RAS tracepoint for
+ hotplug event
+Message-ID: <20250718163532.GA2700834@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250717165056.562728-1-thepacketgeek@gmail.com>
- <20250717165056.562728-2-thepacketgeek@gmail.com> <20250718113611.00003c78@huawei.com>
- <20250718125935-75fa0343-af78-42be-bc3f-e8f806a4aee5@linutronix.de>
-In-Reply-To: <20250718125935-75fa0343-af78-42be-bc3f-e8f806a4aee5@linutronix.de>
-From: Matthew Wood <thepacketgeek@gmail.com>
-Date: Fri, 18 Jul 2025 09:27:10 -0700
-X-Gm-Features: Ac12FXzeo9T-VEnjAi37swPr2fGHGP7zpQWlL-WrRlJfLia2ykFnSljiRcOLxgI
-Message-ID: <CADvopvapHnuxztum4fPsZU5h3=977Y=h6xOVhyWfKU8tQ0wxeQ@mail.gmail.com>
-Subject: Re: [PATCH v5 1/1] PCI/sysfs: Expose PCIe device serial number
-To: =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
-Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Mario Limonciello <superm1@kernel.org>, linux-kernel@vger.kernel.org, 
-	linux-pci@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <e92f8d1f-457c-4248-8397-81b0e20ff4af@linux.alibaba.com>
 
-On Fri, Jul 18, 2025 at 4:02=E2=80=AFAM Thomas Wei=C3=9Fschuh
-<thomas.weissschuh@linutronix.de> wrote:
->
-> On Fri, Jul 18, 2025 at 11:36:11AM +0100, Jonathan Cameron wrote:
-> > On Thu, 17 Jul 2025 09:50:54 -0700
-> > Matthew Wood <thepacketgeek@gmail.com> wrote:
->
-> (...)
->
-> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-> > > index 268c69daa4d5..bc0e0add15d1 100644
-> > > --- a/drivers/pci/pci-sysfs.c
-> > > +++ b/drivers/pci/pci-sysfs.c
-> > > @@ -239,6 +239,22 @@ static ssize_t current_link_width_show(struct de=
-vice *dev,
-> > >  }
-> > >  static DEVICE_ATTR_RO(current_link_width);
-> > >
-> > > +static ssize_t serial_number_show(struct device *dev,
-> > > +                                  struct device_attribute *attr, cha=
-r *buf)
-> > > +{
-> > > +   struct pci_dev *pci_dev =3D to_pci_dev(dev);
-> > > +   u64 dsn;
-> > > +
-> > > +   dsn =3D pci_get_dsn(pci_dev);
-> > > +   if (!dsn)
-> > > +           return -EIO;
-> > > +
-> > > +   return sysfs_emit(buf, "%02llx-%02llx-%02llx-%02llx-%02llx-%02llx=
--%02llx-%02llx\n",
-> > > +           dsn >> 56, (dsn >> 48) & 0xff, (dsn >> 40) & 0xff, (dsn >=
-> 32) & 0xff,
-> > > +           (dsn >> 24) & 0xff, (dsn >> 16) & 0xff, (dsn >> 8) & 0xff=
-, dsn & 0xff);
-> >
-> > I wonder if doing the following i too esoteric. Eyeballing those shifts=
- is painful.
-> >
-> >       u8 bytewise[8]; /* naming hard... */
-> >
-> >       put_unaligned_u64(dsn, bytewise);
-> >
-> >       return sysfs_emit(buf, "%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x\n=
-",
-> >               bytewise[0], bytewise[1], bytewise[2], bytewise[3],
-> >               bytewise[4], bytewise[5], bytewise[6], bytewise[7]);
->
-> This looks endianess-unsafe.
->
-> Maybe just do what some drivers are doing:
->
->         u8 bytes[8];
->
->         put_unaligned_be64(dsn, bytes);
->
->         return sysfs_emit(buf, "%8phD");
+On Fri, Jul 18, 2025 at 01:29:18PM +0800, Shuai Xue wrote:
+> 在 2025/7/18 11:46, Matthew W Carlis 写道:
+> > On Thu, Jul 17, 2025 Bjorn Helgaas wrote
+> > > So I think your idea of adding current link speed/width to the "Link
+> > > Up" event is still on the table, and that does sound useful to me.
+> > 
+> > We're already reading the link status register here to check DLLA so
+> > it would be nice. I guess if everything is healthy we're probably already
+> > at the maximum speed by this point.
+> > 
+> > > In the future we might add another tracepoint when we enumerate the
+> > > device and know the Vendor/Device ID.
+> > 
+> > I think we might have someone who would be interested in doing it.
+> 
+> IIUC, the current hotplug event (or presence event) is enough for Matthew.
+> and we would like a new tracepoing for link speed change which reports
+> speeds.
+> 
+> For hotplug event, I plan to send a new version to
+> 
+> 1. address Bjorn' concerns about event strings by removing its spaces.
+> 
+> #define PCI_HOTPLUG_EVENT							\
+> 	EM(PCI_HOTPLUG_LINK_UP,			"PCI_HOTPLUG_LINK_UP")		\
+> 	EM(PCI_HOTPLUG_LINK_DOWN,		"PCI_HOTPLUG_LINK_DOWN")	\
+> 	EM(PCI_HOTPLUG_CARD_PRESENT,		"PCI_HOTPLUG_CARD_PRESENT")	\
+> 	EMe(PCI_HOTPLUG_CARD_NOT_PRESENT,	"PCI_HOTPLUG_CARD_NOT_PRESENT")
+> 
+> 2. address Ilpo comments by moving pci_hp_event to a common place
+> (include/trace/events/pci.h) so that the new comming can also use it.
+> 
+> For link speed change event (perhaps named as pci_link_event),
+> I plan to send a seperate patch, which provides:
+> 
+> 	TP_STRUCT__entry(
+> 		__string(	port_name,	port_name	)
+> 		__field(	unsigned char,	cur_bus_speed	)
+> 		__field(	unsigned char,	max_bus_speed	)
+>  		__field(	unsigned char,	width		)
+>  		__field(	unsigned int,	flit_mode	)
+> 		__field(	unsigned char,	reason		)
+> 		),
+> 
+> The reason field is from Lukas ideas which indicates why the link speed
+> changed, e.g. "hotplug", "autonomous", "thermal", "retrain", etc.
+> 
+> Are you happy with above changes?
 
-Thank you both for your continued review! That reads much nicer, I
-should've known to look at how others were doing this formatting. I'll
-have a new patch later today.
+Seems good to me.
+
+What do you plan for PCI_HOTPLUG_LINK_UP?  It would be nice to have
+the link info there since that's sort of a link speed change itself.
+
+Bjorn
