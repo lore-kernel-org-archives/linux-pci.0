@@ -1,140 +1,168 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A337D19E975;
-	Fri, 18 Jul 2025 08:17:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 811881CA84;
+	Fri, 18 Jul 2025 08:22:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752826659; cv=none; b=kQCuWnYaI8i9uoSLKa3mG+VhbrtWqlHI1GDlp1hxRD3Dr6drtPKVPWKfM2Xl9hRdt7gk+mdMsrmTSJif25p/Gl+7cGEqP/XSQ8D4AQnjfdAh4Cc4vJgKHYBMFuwkjkeURSlEFH3XKywIdBA43pFKgsHOMvhtaK7Ldjzdn6IWDwk=
+	t=1752826970; cv=none; b=gsU5NnAOxkvmU6DhW41Oq9zxuZEEIKw6SeF5PJwmThcUu1q+L6mw1z07BGg65+/7F1/XNJT6xJdY68CwS7iN2ZFj27Dn2X7oJVhSia41PcqbOa7TbHeBgr3KzBl5wO41JzIQrbg1bRld3ux5qJU3KSPsdcy2JBu/Ux3GuuVQ5pY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752826659; c=relaxed/simple;
-	bh=q0m9LyUvCZqTvAKcAq1mI97XE4TXkFU8c8LgQ78PPkY=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=btdPzZtnEYBSZrYng4RDN0n4FMMfmU9Ahmx40PmzYh1kKI8+rTltPsW3CuIFW8jvl4/dYHs9gJzA1zM5B64nhOvxNb95FEIlR97O35AZqJd8aZi0X1vUdUtqB0ztZ1vKUi9KJpZgAKWUvF7v17M80kRiP2VPL8wPS/CVPnJegYU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Yt31NDXp; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1752826970; c=relaxed/simple;
+	bh=z5KNAGaRerNRfrRdPCcQhDWkKsZXPm2DXDaxH9H3vvQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eZEe8vUHY9UIPqi6KAfUqVX5wLADKh4JpqwCCDz3HjLVn9mAoHux6/hMPhTe4Jwr1DY6BYNKcBvW3qy8hW10xdi5SpXMHoDd5lK8KgHyF74C+jq0J4yML9XPdQVibC6vq41Qdh5ThJa9Et8jTOyEiI4WLoj0YV7fL75CY2++U84=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V1LiG4Et; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Yt31NDXp"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56HN4O4M021705;
-	Fri, 18 Jul 2025 08:17:25 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=ajwnk/jiqqe
-	0d2HgETAKxMHqULPXzx1StKsHyqZZyJE=; b=Yt31NDXpkFKFOb2pbQKENZrKuAF
-	tmS/FfVFKByGjXIn7LaBl0YHEprC21wy4bYdfL/cPdnkD3UDYfOMpWzEpougSFlq
-	iy3odjVlf/+rSBmGqQbiVMp0t/mimkRdBMOLTN4jii4XFz459iIrepG86wMwdSt0
-	hTDKMVeOsrLNfnMAYov20NUzQTcygbqbs/+6u7Kn8YxyrcUotiMjUabMyRdDIIsQ
-	BIfQ8Zn+cMejtLVuaHrmrW0kfB/gsjWyRlhmzMsdI4Mugla81GY74ZmLwiRlxCsB
-	2/93HAXvaXS/NvFZzmdoORWt4NQwpyxcI8+g0iVOkb0QQ7MWBof0FgDO6+A==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47ufu8jhv1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Jul 2025 08:17:25 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 56I8HMdI009041;
-	Fri, 18 Jul 2025 08:17:22 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 47ugsn1e3k-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Jul 2025 08:17:22 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56I8HL8g009024;
-	Fri, 18 Jul 2025 08:17:21 GMT
-Received: from cse-cd01-lnx.ap.qualcomm.com (cse-cd01-lnx.qualcomm.com [10.64.75.209])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 56I8HLsD009018
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Jul 2025 08:17:21 +0000
-Received: by cse-cd01-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id C5A2620C43; Fri, 18 Jul 2025 16:17:19 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v5 1/4] dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Update pcie phy bindings
-Date: Fri, 18 Jul 2025 16:17:15 +0800
-Message-Id: <20250718081718.390790-2-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250718081718.390790-1-ziyue.zhang@oss.qualcomm.com>
-References: <20250718081718.390790-1-ziyue.zhang@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V1LiG4Et"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 932EDC4CEEB;
+	Fri, 18 Jul 2025 08:22:43 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752826970;
+	bh=z5KNAGaRerNRfrRdPCcQhDWkKsZXPm2DXDaxH9H3vvQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=V1LiG4EtgUquwegtaP21V96JiM91EimYonVpNyZ68vf61y50YazEGAe0Uk6MLz2jv
+	 rNb3dk0D9LdJvlJkU1Tdz98CprGT8Lhp5CLdiGhGIp4/YjqIIpUJOnlfoSqmjEh38b
+	 /feyqSI9foeASF24oeyqSWcW6SCPzlE/UVzx9vZQURHRgKPbGKjHfHJ805uVmQsc/J
+	 w9om6bk8ZPfmx6DSOhtYPeIo0BwBUCII9TM80Et2dwB3232G5vSlPbGrskRqoRIZNO
+	 xGWt9xlVtNvx8nLn8aRjngVk4i4828tYfnJBPMb2nmmb3O7kzoc58bOV2I4Uig89LI
+	 PunDn+ZGp24ZA==
+Date: Fri, 18 Jul 2025 13:52:38 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: kernel test robot <lkp@intel.com>
+Cc: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>, 
+	Jeff Johnson <jjohnson@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <helgaas@kernel.org>, Nirmal Patel <nirmal.patel@linux.intel.com>, 
+	Jonathan Derrick <jonathan.derrick@linux.dev>, oe-kbuild-all@lists.linux.dev, linux-wireless@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, ath12k@lists.infradead.org, ath11k@lists.infradead.org, 
+	ath10k@lists.infradead.org, ilpo.jarvinen@linux.intel.com, linux-arm-msm@vger.kernel.org, 
+	linux-pci@vger.kernel.org, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+	Qiang Yu <qiang.yu@oss.qualcomm.com>
+Subject: Re: [PATCH 4/6] wifi: ath12k: Use pci_{enable/disable}_link_state()
+ APIs to enable/disable ASPM states
+Message-ID: <2jf772wl5qz65verutcpogvs6a7jmxbuvrhgdbpfestf5qxqqt@z223vpbn262p>
+References: <20250716-ath-aspm-fix-v1-4-dd3e62c1b692@oss.qualcomm.com>
+ <202507171411.xOxUslAs-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzE4MDA2NCBTYWx0ZWRfX91U38oRrz12g
- dk8yZ8rwxV4J12hFQeux0iVOfQ9dTW6dw8OiWGOL93c6NAuoPqF3+ZMLKhXGy9dbXu29EeZYzLW
- hi9j4CilqiZ4U/AIJOWrRZhdkWIQ9i3SQ3SijLMCBNb23veR2e9+8QfBwxTByG2hspL5ujNo/rS
- zlVVA+tlS4FDgbRPXOrwGxWus/K9BknZpXPlu1qIufALF0XCwMOCB/2cWa0RlB6fS4dQQMxFBjQ
- f8e/ln6ZlJnebWoyhf55qXWNR1Va/UjWwgVEfCJIxtlkgFwVSBgsbH0gEiQ/fFUZlQOA1tOmrRF
- cviP+sTtlOO2vt5KHxG9x6B6VDCKQheJsYMe8TLC18b3K5pk7/1NHn6dfWnPSlvYOBzfCY8kRYj
- Zmay/LNTaKAW/of/K/U90Y3gAA1JXbABFEKONpUoIVRIgzdRH7nbGr7kZVZ0KfGUaaP2s9R5
-X-Proofpoint-ORIG-GUID: CjqxTTwPgpL03U75Ef2-ys0Ftsh_WU5g
-X-Proofpoint-GUID: CjqxTTwPgpL03U75Ef2-ys0Ftsh_WU5g
-X-Authority-Analysis: v=2.4 cv=f59IBPyM c=1 sm=1 tr=0 ts=687a0315 cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=Wb1JkmetP80A:10 a=EUspDBNiAAAA:8 a=tAWiX01tdBucjzfsbJgA:9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-18_01,2025-07-17_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 lowpriorityscore=0 malwarescore=0 spamscore=0 mlxscore=0
- bulkscore=0 suspectscore=0 impostorscore=0 adultscore=0 priorityscore=1501
- mlxlogscore=981 phishscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507180064
+In-Reply-To: <202507171411.xOxUslAs-lkp@intel.com>
 
-The gcc_aux_clk is required by the PCIe controller but not by the PCIe
-PHY. In PCIe PHY, the source of aux_clk used in low-power mode should
-be gcc_phy_aux_clk. Hence, remove gcc_aux_clk and replace it with
-gcc_phy_aux_clk.
+On Thu, Jul 17, 2025 at 02:59:26PM GMT, kernel test robot wrote:
+> Hi Manivannan,
+> 
+> kernel test robot noticed the following build errors:
+> 
+> [auto build test ERROR on 19272b37aa4f83ca52bdf9c16d5d81bdd1354494]
+> 
+> url:    https://github.com/intel-lab-lkp/linux/commits/Manivannan-Sadhasivam-via-B4-Relay/PCI-ASPM-Fix-the-behavior-of-pci_enable_link_state-APIs/20250716-205857
+> base:   19272b37aa4f83ca52bdf9c16d5d81bdd1354494
+> patch link:    https://lore.kernel.org/r/20250716-ath-aspm-fix-v1-4-dd3e62c1b692%40oss.qualcomm.com
+> patch subject: [PATCH 4/6] wifi: ath12k: Use pci_{enable/disable}_link_state() APIs to enable/disable ASPM states
+> config: m68k-allmodconfig (https://download.01.org/0day-ci/archive/20250717/202507171411.xOxUslAs-lkp@intel.com/config)
+> compiler: m68k-linux-gcc (GCC) 15.1.0
+> reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250717/202507171411.xOxUslAs-lkp@intel.com/reproduce)
+> 
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Closes: https://lore.kernel.org/oe-kbuild-all/202507171411.xOxUslAs-lkp@intel.com/
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    In file included from drivers/net/wireless/ath/main.c:22:
+>    drivers/net/wireless/ath/ath.h: In function 'ath_pci_aspm_state':
+> >> drivers/net/wireless/ath/ath.h:346:26: error: 'PCIE_LINK_STATE_L0S' undeclared (first use in this function)
+>      346 |                 state |= PCIE_LINK_STATE_L0S;
+>          |                          ^~~~~~~~~~~~~~~~~~~
 
-Removed the phy_aux clock from the PCIe PHY binding as it is no longer
-used by any instance.
+Ok, this is an issue in the PCI header. The CONFIG_PCI symbol wraps the ASPM
+definitions also. In this config, CONFIG_PCI is unset, so it triggered the
+undeclared definition error.
 
-Fixes: fd2d4e4c1986 ("dt-bindings: phy: qcom,qmp: Add sa8775p QMP PCIe PHY")
-Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
----
- .../devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+I will add a patch to move all definitions out of the CONFIG_PCI guard. It is
+supposed to wrap only the function definitions/declarations.
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
-index 2c6c9296e4c0..17fd6547d3b4 100644
---- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
-@@ -176,6 +176,8 @@ allOf:
-           contains:
-             enum:
-               - qcom,qcs615-qmp-gen3x1-pcie-phy
-+              - qcom,sa8775p-qmp-gen4x2-pcie-phy
-+              - qcom,sa8775p-qmp-gen4x4-pcie-phy
-               - qcom,sc8280xp-qmp-gen3x1-pcie-phy
-               - qcom,sc8280xp-qmp-gen3x2-pcie-phy
-               - qcom,sc8280xp-qmp-gen3x4-pcie-phy
-@@ -197,8 +199,6 @@ allOf:
-           contains:
-             enum:
-               - qcom,qcs8300-qmp-gen4x2-pcie-phy
--              - qcom,sa8775p-qmp-gen4x2-pcie-phy
--              - qcom,sa8775p-qmp-gen4x4-pcie-phy
-     then:
-       properties:
-         clocks:
+- Mani
+
+>    drivers/net/wireless/ath/ath.h:346:26: note: each undeclared identifier is reported only once for each function it appears in
+> >> drivers/net/wireless/ath/ath.h:348:26: error: 'PCIE_LINK_STATE_L1' undeclared (first use in this function)
+>      348 |                 state |= PCIE_LINK_STATE_L1;
+>          |                          ^~~~~~~~~~~~~~~~~~
+> --
+>    In file included from drivers/net/wireless/ath/ath9k/common.h:19,
+>                     from drivers/net/wireless/ath/ath9k/ath9k.h:29,
+>                     from drivers/net/wireless/ath/ath9k/beacon.c:18:
+>    drivers/net/wireless/ath/ath9k/../ath.h: In function 'ath_pci_aspm_state':
+> >> drivers/net/wireless/ath/ath9k/../ath.h:346:26: error: 'PCIE_LINK_STATE_L0S' undeclared (first use in this function)
+>      346 |                 state |= PCIE_LINK_STATE_L0S;
+>          |                          ^~~~~~~~~~~~~~~~~~~
+>    drivers/net/wireless/ath/ath9k/../ath.h:346:26: note: each undeclared identifier is reported only once for each function it appears in
+> >> drivers/net/wireless/ath/ath9k/../ath.h:348:26: error: 'PCIE_LINK_STATE_L1' undeclared (first use in this function)
+>      348 |                 state |= PCIE_LINK_STATE_L1;
+>          |                          ^~~~~~~~~~~~~~~~~~
+> --
+>    In file included from drivers/net/wireless/ath/carl9170/../regd.h:23,
+>                     from drivers/net/wireless/ath/carl9170/carl9170.h:61,
+>                     from drivers/net/wireless/ath/carl9170/main.c:47:
+>    drivers/net/wireless/ath/carl9170/../ath.h: In function 'ath_pci_aspm_state':
+> >> drivers/net/wireless/ath/carl9170/../ath.h:346:26: error: 'PCIE_LINK_STATE_L0S' undeclared (first use in this function)
+>      346 |                 state |= PCIE_LINK_STATE_L0S;
+>          |                          ^~~~~~~~~~~~~~~~~~~
+>    drivers/net/wireless/ath/carl9170/../ath.h:346:26: note: each undeclared identifier is reported only once for each function it appears in
+> >> drivers/net/wireless/ath/carl9170/../ath.h:348:26: error: 'PCIE_LINK_STATE_L1' undeclared (first use in this function)
+>      348 |                 state |= PCIE_LINK_STATE_L1;
+>          |                          ^~~~~~~~~~~~~~~~~~
+> --
+>    In file included from drivers/net/wireless/ath/ath6kl/../regd.h:23,
+>                     from drivers/net/wireless/ath/ath6kl/wmi.c:24:
+>    drivers/net/wireless/ath/ath6kl/../ath.h: In function 'ath_pci_aspm_state':
+> >> drivers/net/wireless/ath/ath6kl/../ath.h:346:26: error: 'PCIE_LINK_STATE_L0S' undeclared (first use in this function)
+>      346 |                 state |= PCIE_LINK_STATE_L0S;
+>          |                          ^~~~~~~~~~~~~~~~~~~
+>    drivers/net/wireless/ath/ath6kl/../ath.h:346:26: note: each undeclared identifier is reported only once for each function it appears in
+> >> drivers/net/wireless/ath/ath6kl/../ath.h:348:26: error: 'PCIE_LINK_STATE_L1' undeclared (first use in this function)
+>      348 |                 state |= PCIE_LINK_STATE_L1;
+>          |                          ^~~~~~~~~~~~~~~~~~
+> --
+>    In file included from drivers/net/wireless/ath/ath10k/core.h:25,
+>                     from drivers/net/wireless/ath/ath10k/mac.h:11,
+>                     from drivers/net/wireless/ath/ath10k/mac.c:9:
+>    drivers/net/wireless/ath/ath10k/../ath.h: In function 'ath_pci_aspm_state':
+> >> drivers/net/wireless/ath/ath10k/../ath.h:346:26: error: 'PCIE_LINK_STATE_L0S' undeclared (first use in this function)
+>      346 |                 state |= PCIE_LINK_STATE_L0S;
+>          |                          ^~~~~~~~~~~~~~~~~~~
+>    drivers/net/wireless/ath/ath10k/../ath.h:346:26: note: each undeclared identifier is reported only once for each function it appears in
+> >> drivers/net/wireless/ath/ath10k/../ath.h:348:26: error: 'PCIE_LINK_STATE_L1' undeclared (first use in this function)
+>      348 |                 state |= PCIE_LINK_STATE_L1;
+>          |                          ^~~~~~~~~~~~~~~~~~
+> 
+> 
+> vim +/PCIE_LINK_STATE_L0S +346 drivers/net/wireless/ath/ath.h
+> 
+>    340	
+>    341	static inline int ath_pci_aspm_state(u16 lnkctl)
+>    342	{
+>    343		int state = 0;
+>    344	
+>    345		if (lnkctl & PCI_EXP_LNKCTL_ASPM_L0S)
+>  > 346			state |= PCIE_LINK_STATE_L0S;
+>    347		if (lnkctl & PCI_EXP_LNKCTL_ASPM_L1)
+>  > 348			state |= PCIE_LINK_STATE_L1;
+>    349	
+>    350		return state;
+>    351	}
+>    352	
+> 
+> -- 
+> 0-DAY CI Kernel Test Service
+> https://github.com/intel/lkp-tests/wiki
+
 -- 
-2.34.1
-
+மணிவண்ணன் சதாசிவம்
