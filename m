@@ -1,199 +1,139 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 978481B394F;
-	Fri, 18 Jul 2025 16:33:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail-oa1-f46.google.com (mail-oa1-f46.google.com [209.85.160.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA80F1DED53;
+	Fri, 18 Jul 2025 16:35:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752856397; cv=none; b=HvtZZ5kSDGELKbT3r9Rnj3i2DqjburF5j1JtLyOAUHZkUZh9wLgB88gyfq5kh585iHDXP/+AStwlQyEM0/7hQ/9X+SDTw0mu3InJcqXK20O6U0zXvabRresPGdfmxpdPlSIz7wC50dd8al6siRQ8Sqt9Q7rz6nyZsz7MMSTd7mU=
+	t=1752856531; cv=none; b=i9bnUxyo9GF5folLFEiCgd84Y0YAZJHTgggp/R13J29QrsSjSY+Gg3GVVhSMSb3+zbGtycp3ZTl1ci9ZrHzJXUmHCaAfI1BwlCIwTbGX7IkDTEEXJ0jKWfBf79M7ucWLSwR7PMsXymKt4XO9bSfggeXb70BGZuZVu9HJH30hxsA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752856397; c=relaxed/simple;
-	bh=ZyiRT+V1xGV01F5avzlPphqc5scHqC2mrWtuVzXIVlo=;
-	h=Message-ID:Date:MIME-Version:Cc:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=VdVkQp/13n3AUQwmrCWj5i/qeDbOqUGH1iNWvc2IzwiQ9uqX9Dn/ka57QMG942v1LPzUwB+fTxgpYUs6UrnXac6CZrxXd3DRYaazzLUyYnnHQaXe27Q1Hb2H2Tci0mK8OVD3QBTjmY9ldvgK2XCpgHbPV4AWAYeCYF1iDsec3fE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=NN66k+ty; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1752856531; c=relaxed/simple;
+	bh=UDmAfnjy8pkg9BvFAmQ9gslBsr+Ob5O2A4EwZnWz7Bg=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XQKrDbA0V4OixlCmjlLCDodrkC68yes4a8mESkz6JaYyfoeXkf3KGPm5uBK3sS8EGmG1ok6OMfhry45G1Ba0c6lvED4Kfk51kD1LPfht3m5spcJDAz6NZJg1UUMTMFNJMb/fXrvhO2pdWGRbt7ObLHuR3tI804oo41JlYH9io8A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K3D9Ba47; arc=none smtp.client-ip=209.85.160.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="NN66k+ty"
-Received: from [100.64.208.217] (unknown [52.148.140.42])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 86249211FEBB;
-	Fri, 18 Jul 2025 09:33:13 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 86249211FEBB
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1752856394;
-	bh=TiEF0LaKowK7uu0xI1NxJySmU208WrTIU/Xx6Uf3/cg=;
-	h=Date:Cc:Subject:To:References:From:In-Reply-To:From;
-	b=NN66k+tyqDjV/QBasSawR7rgDngqoNm2LIjbxw0Wx1pKhXMPpkhYp7Y9+vmdDy5IV
-	 77MfxQr558cfCG/GCoxaWHDNIcDqVgc19R2PvBddxfl/Y0KIPPQe5LE5BGI+7xlKnh
-	 DLp9qgiYr1TZHGPhKM8wf3rzdlWQX0linlkffHwA=
-Message-ID: <c5d4d351-a7ff-4762-8bb3-61554d4f9731@linux.microsoft.com>
-Date: Fri, 18 Jul 2025 09:33:13 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K3D9Ba47"
+Received: by mail-oa1-f46.google.com with SMTP id 586e51a60fabf-2e9a38d2a3aso2125862fac.3;
+        Fri, 18 Jul 2025 09:35:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752856529; x=1753461329; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=S5fMBTsrhrDDK6xtK7LtgX4Zw2zx9+Mn87A7RF2ITBk=;
+        b=K3D9Ba47ZcRHqFv5hoBf/PZyk2IqUflpJIzmbJtLXy7V86gDdLIigOoXdLcUL+S2kT
+         Sz0B7NEezbaMf9/+ax4rikbIAdyJagRutel0FSmH8g6hCA2lBDfjQlnjMMyyBB+ra2L4
+         2B8J5KOGz3QeYo29QxrBcZbTtAGDst9zT/gZ9XAwq/nYLUYzvIKYeqAFl1m4k1jp40V/
+         NRh78rxqo5hiZ7pHLjfors9yhUpf96qHuiwc8J00Iu70Ul4j+SXpMSo2pXuOJka259ZF
+         KNrEewVOXXBDCIiAJj0ibrczdIo1KajANAav6L5JEjtOS9gx6LJVqGxwkL9swRV9xXyk
+         vsCQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752856529; x=1753461329;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=S5fMBTsrhrDDK6xtK7LtgX4Zw2zx9+Mn87A7RF2ITBk=;
+        b=up4HuyILC9rmLB38TdVgmcZLs8xZ2OQbifCSxnmZlC6lLpGYTqEB7OmHmRU1+YYxwT
+         bva3jcgSXuHCS9b21Htu0XqPKaE4RAISnSPE12P+YHWSkZ2uWAszxUL6+EWtI6Xuhp5n
+         jXfEseS/V79eFQ28KuASuYkQyBkc1/84WwHEMO+jlWforcX+CKIOp+DUvfH+Im67QJfN
+         gDpFIKroRRNLEQylearjK5V5NpO2T59cqOdE8vr+/Pu0p4AE4kbnGjD8/Uv8sCJDTmKr
+         qmkkLDmUHLP6KToL4/HO1hkVXf1wn6tBe77PYFm12M36mF+xkosZRyOL7z0JIeiFD0z+
+         GZsA==
+X-Forwarded-Encrypted: i=1; AJvYcCUvKxHpA4/DEVkKkNb/thg5+B3UhpKx/p00OoZ7yr5kylldgrbDwd5v/QQkrbWvUawfOb653PGWXLx+@vger.kernel.org, AJvYcCWglKENiuUXuB/ziEcbhbPLKfxzNZ5SByaK7sIN/NwOXHzUZe20LEE1E92uY/71O+fJ2xll7T+HKCjXJwI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzHXb1/X28fxaO+u/NxonvGBnKD4hQGW3rWaF0zaw6DCtldp828
+	9lHeM3xMyjmsb44EV14jhu0YhAd7k+VqHe2V6MR2BmVCNJyS26bbrYAA44a9c5sy4HdPXDYVx8S
+	ptemQUIy+Q1kKMPY1NXvlqDkSUwR9GZeP2w==
+X-Gm-Gg: ASbGnctBL1o2Han0w6gchtwbvoL+t8t7mZbdJCoL+Ij0AJdt7TJk3wau+g9uTxPo8sj
+	wBQgq3bdxQNb3dLvB5PO3Piw4CcbICBd2SVcyoLSrwwvvetSWj6Y8XPfzmn3eYSapocrtEShH6E
+	zIi+Qu7WlHyypt6IIfrB35laYPKdgRx3yq3YzEJtSAAA/PmJ3+V8Dr/FBS61sG4IZEODOWtfzIi
+	fxSobqLC5UaA1+x/Ie9KaA=
+X-Google-Smtp-Source: AGHT+IELLiAsxvKTUzSoPTZZRRusNn9I6JdMO0/hSrsDIrFm2f2dPHV082nEnE44/odp5xiA8nVTltUi6hVD+2JPvo8=
+X-Received: by 2002:ac8:5a91:0:b0:4ab:9551:476 with SMTP id
+ d75a77b69052e-4abbf5574d4mr7492541cf.53.1752856040946; Fri, 18 Jul 2025
+ 09:27:20 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
- decui@microsoft.com, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
- dave.hansen@linux.intel.com, hpa@zytor.com, lpieralisi@kernel.org,
- kw@linux.com, mani@kernel.org, robh@kernel.org, bhelgaas@google.com,
- arnd@arndb.de, eahariha@linux.microsoft.com, x86@kernel.org,
- linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-pci@vger.kernel.org, linux-arch@vger.kernel.org
-Subject: Re: [PATCH v4 0/7] hyperv: Introduce new way to manage hypercall args
-To: mhklinux@outlook.com
-References: <20250718045545.517620-1-mhklinux@outlook.com>
-From: Easwar Hariharan <eahariha@linux.microsoft.com>
-Content-Language: en-US
-In-Reply-To: <20250718045545.517620-1-mhklinux@outlook.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+References: <20250717165056.562728-1-thepacketgeek@gmail.com>
+ <20250717165056.562728-2-thepacketgeek@gmail.com> <20250718113611.00003c78@huawei.com>
+ <20250718125935-75fa0343-af78-42be-bc3f-e8f806a4aee5@linutronix.de>
+In-Reply-To: <20250718125935-75fa0343-af78-42be-bc3f-e8f806a4aee5@linutronix.de>
+From: Matthew Wood <thepacketgeek@gmail.com>
+Date: Fri, 18 Jul 2025 09:27:10 -0700
+X-Gm-Features: Ac12FXzeo9T-VEnjAi37swPr2fGHGP7zpQWlL-WrRlJfLia2ykFnSljiRcOLxgI
+Message-ID: <CADvopvapHnuxztum4fPsZU5h3=977Y=h6xOVhyWfKU8tQ0wxeQ@mail.gmail.com>
+Subject: Re: [PATCH v5 1/1] PCI/sysfs: Expose PCIe device serial number
+To: =?UTF-8?Q?Thomas_Wei=C3=9Fschuh?= <thomas.weissschuh@linutronix.de>
+Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>, Bjorn Helgaas <bhelgaas@google.com>, 
+	Mario Limonciello <superm1@kernel.org>, linux-kernel@vger.kernel.org, 
+	linux-pci@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 7/17/2025 9:55 PM, mhkelley58@gmail.com wrote:
-> From: Michael Kelley <mhklinux@outlook.com>
-> 
-> This patch set introduces a new way to manage the use of the per-vCPU
-> memory that is usually the input and output arguments to Hyper-V
-> hypercalls. Current code allocates the "hyperv_pcpu_input_arg", and in
-> some configurations, the "hyperv_pcpu_output_arg". Each is a 4 KiB
-> page of memory allocated per-vCPU. A hypercall call site disables
-> interrupts, then uses this memory to set up the input parameters for
-> the hypercall, read the output results after hypercall execution, and
-> re-enable interrupts. The open coding of these steps has led to
-> inconsistencies, and in some cases, violation of the generic
-> requirements for the hypercall input and output as described in the
-> Hyper-V Top Level Functional Spec (TLFS)[1]. This patch set introduces
-> a new family of inline functions to replace the open coding. The new
-> functions encapsulate key aspects of the use of per-vCPU memory for
-> hypercall input and output, and ensure that the TLFS requirements are
-> met (max size of 1 page each for input and output, no overlap of input
-> and output, aligned to 8 bytes, etc.).
-> 
-> With this change, hypercall call sites no longer directly access
-> "hyperv_pcpu_input_arg" and "hyperv_pcpu_output_arg". Instead, one of
-> a family of new functions provides the per-vCPU memory that a hypercall
-> call site uses to set up hypercall input and output areas.
-> Conceptually, there is no longer a difference between the "per-vCPU
-> input page" and "per-vCPU output page". Only a single per-vCPU page is
-> allocated, and it is used to provide both hypercall input and output.
-> All current hypercalls can fit their input and output within that single
-> page, though the new code allows easy changing to two pages should a
-> future hypercall require a full page for each of the input and output.
-> 
-> The new functions always zero the fixed-size portion of the hypercall
-> input area (but not any array portion -- see below) so that
-> uninitialized memory isn't inadvertently passed to the hypercall.
-> Current open-coded hypercall call sites are inconsistent on this point,
-> and use of the new functions addresses that inconsistency. The output
-> area is not zero'ed by the new code as it is Hyper-V's responsibility
-> to provide legal output.
-> 
-> When the input or output (or both) contain an array, the new code
-> calculates and returns how many array entries fit within the per-vCPU
-> memory page, which is effectively the "batch size" for the hypercall
-> processing multiple entries. This batch size can then be used in the
-> hypercall control word to specify the repetition count. This
-> calculation of the batch size replaces current open coding of the
-> batch size, which is prone to errors. Note that the array portion of
-> the input area is *not* zero'ed. The arrays are almost always 64-bit
-> GPAs or something similar, and zero'ing that much memory seems
-> wasteful at runtime when it will all be overwritten. The hypercall
-> call site is responsible for ensuring that no part of the array is
-> left uninitialized (just as with current code).
-> 
-> The new family of functions is realized as a single inline function
-> that handles the most complex case, which is a hypercall with input
-> and output, both of which contain arrays. Simpler cases are mapped to
-> this most complex case with #define wrappers that provide zero or NULL
-> for some arguments. Several of the arguments to this new function
-> must be compile-time constants generated by "sizeof()" expressions.
-> As such, most of the code in the new function is evaluated by the
-> compiler, with the result that the runtime code paths are no longer
-> than with the current open coding. An exception is the new code
-> generated to zero the fixed-size portion of the input area in cases
-> where it was not previously done.
-> 
-> Use of the new function typically (but not always) saves a few lines
-> of code at each hypercall call site. This is traded off against the
-> lines of code added for the new functions. With code currently
-> upstream, the net is an add of about 20 lines of code and comments.
-> 
-> A couple hypercall call sites have requirements that are not 100%
-> handled by the new function. These still require some manual open-
-> coded adjustment or open-coded batch size calculations -- see the
-> individual patches in this series. Suggestions on how to do better
-> are welcome.
-> 
-> The patches in the series do the following:
-> 
-> Patch 1: Introduce the new family of functions for assigning hypercall
->          input and output arguments.
-> 
-> Patch 2 to 6: Change existing hypercall call sites to use one of the new
->          functions. In some cases, tweaks to the hypercall argument data
->          structures are necessary, but these tweaks are making the data
->          structures more consistent with the overall pattern. These
->          5 patches are independent of each other, and can go in any
->          order. The breakup into 5 patches is for ease of review.
-> 
-> Patch 7: Update the name of the variable used to hold the per-vCPU memory
->          used for hypercall arguments. Remove code for managing the
->          per-vCPU output page.
-> 
-> The new code compiles and runs successfully on x86 and arm64. However,
-> basic smoke tests cover only a limited number of hypercall call sites
-> that have been modified. I don't have the hardware or Hyper-V
-> configurations needed to test running in the Hyper-V root partition
-> or running in a VTL other than VTL 0. The related hypercall call sites
-> still need to be tested to make sure I didn't break anything. Hopefully
-> someone with the necessary configurations and Hyper-V versions can
-> help with that testing.
-> 
-> For gcc 9.4.0, I've looked at the generated code for a couple of
-> hypercall call sites on both x86 and arm64 to ensure that it boils
-> down to the equivalent of the current open coding. I have not looked
-> at the generated code for later gcc versions or for Clang/LLVM, but
-> there's no reason to expect something worse as the code isn't doing
-> anything tricky.
-> 
-> This patch set is built against linux-next20250716.
-> 
-> [1] https://learn.microsoft.com/en-us/virtualization/hyper-v-on-windows/tlfs/tlfs
-> 
-> Michael Kelley (7):
->   Drivers: hv: Introduce hv_setup_*() functions for hypercall arguments
->   x86/hyperv: Use hv_setup_*() to set up hypercall arguments -- part 1
->   x86/hyperv: Use hv_setup_*() to set up hypercall arguments -- part 2
->   Drivers: hv: Use hv_setup_*() to set up hypercall arguments
->   PCI: hv: Use hv_setup_*() to set up hypercall arguments
->   Drivers: hv: Use hv_setup_*() to set up hypercall arguments for mshv
->     code
->   Drivers: hv: Replace hyperv_pcpu_input/output_arg with hyperv_pcpu_arg
-> 
->  arch/x86/hyperv/hv_apic.c           |  10 +--
->  arch/x86/hyperv/hv_init.c           |  12 ++-
->  arch/x86/hyperv/hv_vtl.c            |   3 +-
->  arch/x86/hyperv/irqdomain.c         |  17 ++--
->  arch/x86/hyperv/ivm.c               |  18 ++---
->  arch/x86/hyperv/mmu.c               |  19 ++---
->  arch/x86/hyperv/nested.c            |  14 ++--
->  drivers/hv/hv.c                     |   6 +-
->  drivers/hv/hv_balloon.c             |   8 +-
->  drivers/hv/hv_common.c              |  64 +++++----------
->  drivers/hv/hv_proc.c                |  23 +++---
->  drivers/hv/hyperv_vmbus.h           |   2 +-
->  drivers/hv/mshv_common.c            |  31 +++----
->  drivers/hv/mshv_root_hv_call.c      | 121 +++++++++++-----------------
->  drivers/hv/mshv_root_main.c         |   5 +-
->  drivers/pci/controller/pci-hyperv.c |  18 ++---
->  include/asm-generic/mshyperv.h      | 106 +++++++++++++++++++++++-
->  include/hyperv/hvgdk_mini.h         |   4 +-
->  18 files changed, 251 insertions(+), 230 deletions(-)
-> 
+On Fri, Jul 18, 2025 at 4:02=E2=80=AFAM Thomas Wei=C3=9Fschuh
+<thomas.weissschuh@linutronix.de> wrote:
+>
+> On Fri, Jul 18, 2025 at 11:36:11AM +0100, Jonathan Cameron wrote:
+> > On Thu, 17 Jul 2025 09:50:54 -0700
+> > Matthew Wood <thepacketgeek@gmail.com> wrote:
+>
+> (...)
+>
+> > > diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+> > > index 268c69daa4d5..bc0e0add15d1 100644
+> > > --- a/drivers/pci/pci-sysfs.c
+> > > +++ b/drivers/pci/pci-sysfs.c
+> > > @@ -239,6 +239,22 @@ static ssize_t current_link_width_show(struct de=
+vice *dev,
+> > >  }
+> > >  static DEVICE_ATTR_RO(current_link_width);
+> > >
+> > > +static ssize_t serial_number_show(struct device *dev,
+> > > +                                  struct device_attribute *attr, cha=
+r *buf)
+> > > +{
+> > > +   struct pci_dev *pci_dev =3D to_pci_dev(dev);
+> > > +   u64 dsn;
+> > > +
+> > > +   dsn =3D pci_get_dsn(pci_dev);
+> > > +   if (!dsn)
+> > > +           return -EIO;
+> > > +
+> > > +   return sysfs_emit(buf, "%02llx-%02llx-%02llx-%02llx-%02llx-%02llx=
+-%02llx-%02llx\n",
+> > > +           dsn >> 56, (dsn >> 48) & 0xff, (dsn >> 40) & 0xff, (dsn >=
+> 32) & 0xff,
+> > > +           (dsn >> 24) & 0xff, (dsn >> 16) & 0xff, (dsn >> 8) & 0xff=
+, dsn & 0xff);
+> >
+> > I wonder if doing the following i too esoteric. Eyeballing those shifts=
+ is painful.
+> >
+> >       u8 bytewise[8]; /* naming hard... */
+> >
+> >       put_unaligned_u64(dsn, bytewise);
+> >
+> >       return sysfs_emit(buf, "%02x-%02x-%02x-%02x-%02x-%02x-%02x-%02x\n=
+",
+> >               bytewise[0], bytewise[1], bytewise[2], bytewise[3],
+> >               bytewise[4], bytewise[5], bytewise[6], bytewise[7]);
+>
+> This looks endianess-unsafe.
+>
+> Maybe just do what some drivers are doing:
+>
+>         u8 bytes[8];
+>
+>         put_unaligned_be64(dsn, bytes);
+>
+>         return sysfs_emit(buf, "%8phD");
 
-Thank you for spinning this version!
-
-For the series,
-
-Reviewed-by: Easwar Hariharan <eahariha@linux.microsoft.com>
+Thank you both for your continued review! That reads much nicer, I
+should've known to look at how others were doing this formatting. I'll
+have a new patch later today.
