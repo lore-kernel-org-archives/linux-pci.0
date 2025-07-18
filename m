@@ -1,143 +1,166 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B986D218821;
-	Fri, 18 Jul 2025 07:12:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FC871E521B;
+	Fri, 18 Jul 2025 07:21:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752822748; cv=none; b=JhK8y8cU4hN7F9rj2f3XZL9NlIDp6eU9weQZyv16uHGq+wwwbznTHi/d6x2ogIzW7HFZb1GYOGbfGa3kye086D6uo4iOduGom1Yaf7aMXa6pqGrHjNmhqAQs/X0WhNptilj9ELhBK4zjo+yM+NGJe+f0puei88LYhCBohs3WVag=
+	t=1752823303; cv=none; b=sxrEobLJs7c2CmBZMgtdy+N00syqknJUQ6exzO9e80XLA77VMM0Q+0nhEdaq9XWGsZ+Onl26a13tav5uEdF1whwjfr7Bh+dYfDItgc9G1LOnkbd5oJr48CorlpqKmjDJ7EHkbsixIVKmp4JJFBz0Oe0M9Ywu+D5SuHG/Q2hlVbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752822748; c=relaxed/simple;
-	bh=J9TTthri3P5Pz7rfBBtf0OP6gtbV/9IVRyhGQaWg3Xs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=YrqyFKlewUuLoF1T2jxUmuAtWBB9OVmd6Su5k3CBIMaY0Ap2CgU0mrBlbRz3OoFmSh+WQcZg5Jw8t/8XQ39OKcrjMcFY1yjVvnTExHwKdEPryfKqPR02Y92VmZ+P4OYz/BjgR//Ijk/ZmerDO/cPYvoDd2xjDl1zQtkfw35TCqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=eXN34sMF; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="eXN34sMF"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56HLuJkE020761;
-	Fri, 18 Jul 2025 07:12:15 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=uAaPth0hkPo6/ZzqXgJcYrwqJuiYcbVXjFG
-	EZRTPClo=; b=eXN34sMFBGX/ilvQjTWWk6RuhVtZ7gSOr6ZID3tylIEO7QsMAkg
-	p/SiY3Z9RYnMfB1nSAqX2x3ZW6vsCxXhnAQDjaCJcatcY44gM/9mWhWpbUBtJWVp
-	SHxSKrdLFFshiyh/76/kbKUgW4RIaMwwXJPz2zRVKy9Hq2RmY19OzUnF6ENph5rG
-	K1ELBMq7q204/xXbqmnPIgfZclVVTFOZhL18WzimDQOa7mkMZQT+2KLIYUcmQ+Me
-	sxl1SoUYBC48LuqIk4rTY5ACjvUr72pIHoDkwcf6Qj04MzyLuK6zpHfee6RvAj2k
-	qn5g2VF4gjC2+nhWwIsqDIywDqKWVyf9HfA==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47w5dpnjyu-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Jul 2025 07:12:15 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 56I7CCZn006329;
-	Fri, 18 Jul 2025 07:12:12 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 47ugsn143w-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Jul 2025 07:12:12 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56I7CC9a006313;
-	Fri, 18 Jul 2025 07:12:12 GMT
-Received: from cse-cd01-lnx.ap.qualcomm.com (cse-cd01-lnx.qualcomm.com [10.64.75.209])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 56I7CB4r006305
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 18 Jul 2025 07:12:12 +0000
-Received: by cse-cd01-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id EEC9220EEE; Fri, 18 Jul 2025 15:12:09 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>,
-        Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-Subject: [PATCH v4 0/4] pci: qcom: drop unrelated clock and add link_down reset for sa8775p
-Date: Fri, 18 Jul 2025 15:12:03 +0800
-Message-Id: <20250718071207.160988-1-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
+	s=arc-20240116; t=1752823303; c=relaxed/simple;
+	bh=os2mYW4ZPebelMq9D5WoXK1DBewyC+h8nr44Az7zjRY=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=umsgyVZpCyRgEwUw23J30FLC78H9frolcqXDgFoQm7yhFhNnoRJvncXFQQ9GsO7h+NC59BaLVpKDHTRFojcG3vOf6pbo0XVCdEpDs9vQLqYEwzrNTThlqibzcJwKCIvat1OQmrTsVgTZ3o5BTQn7pBBjFTqf6f5D9qslgtXVDDY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4bk1P21S2gzvZ7F;
+	Fri, 18 Jul 2025 15:18:46 +0800 (CST)
+Received: from kwepemk500010.china.huawei.com (unknown [7.202.194.95])
+	by mail.maildlp.com (Postfix) with ESMTPS id 8DA37147B5E;
+	Fri, 18 Jul 2025 15:21:36 +0800 (CST)
+Received: from [10.67.120.153] (10.67.120.153) by
+ kwepemk500010.china.huawei.com (7.202.194.95) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Fri, 18 Jul 2025 15:21:36 +0800
+Subject: Re: [PATCH] PCI: Add device-specific reset for Kunpeng virtual
+ functions
+To: Bjorn Helgaas <helgaas@kernel.org>
+References: <20250714191903.GA2414617@bhelgaas>
+CC: <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <liulongfang@huawei.com>, Hui Wang
+	<hui.wang@canonical.com>
+From: Weili Qian <qianweili@huawei.com>
+Message-ID: <5ed27a49-a437-66b1-8835-c3335edde07c@huawei.com>
+Date: Fri, 18 Jul 2025 15:21:30 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzE4MDA1NSBTYWx0ZWRfX+shTJ+F296sO
- bMEqUUxzbseWnGE050Zq15kIrk4/LmziW+FmrneC8/U7Yri5E2zVk1JP2AabF4yZ1yEm9FX7QwF
- OIfTR2r/OCCMuxotCbjXA62aWEY09HtQ5NZEOYCLBHI5mgKPXcui1bXVuZCEV8VB9ArW/ObL86s
- XRq43kPdZRhoSy+Rb5jTVWSE9w4Y3sPUa2XxdkhVFFIIZXgSRqdmqMeLeyzUaWZWLUfOA1ckZUs
- L++Qrj1wIgdmcBQP0wOEr+FhbsGn6PaZKjkUgvp4pQHrwI1wybFgVn54Wvg8sgxpEW8LbnDJhXq
- Y3OWSuv28gTHD++hMz19wipkMyDlAWoCj4cwIhgK9nHdSYs/LQjqk5ytxhE13itcNrHCbsLkwpz
- jVwCESj4hk8m7r9BtEgBS66VnTryguSznP60tSMfQLDCi/6TJqcJGlGj8fxjeU8xENeDLDmQ
-X-Proofpoint-GUID: U2UcHfxo6cv8KRxzo4n0HBW0JlWbMhU4
-X-Proofpoint-ORIG-GUID: U2UcHfxo6cv8KRxzo4n0HBW0JlWbMhU4
-X-Authority-Analysis: v=2.4 cv=Y+r4sgeN c=1 sm=1 tr=0 ts=6879f3cf cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=COk6AnOGAAAA:8 a=5rr6ixAOVb5IYiBHoQ4A:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-18_01,2025-07-17_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 mlxlogscore=999 phishscore=0 malwarescore=0 priorityscore=1501
- adultscore=0 impostorscore=0 mlxscore=0 suspectscore=0 lowpriorityscore=0
- bulkscore=0 spamscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507180055
-
-This series drop gcc_aux_clock in pcie phy, the pcie aux clock should 
-be gcc_phy_aux_clock. And sa8775p platform support link_down reset in
-hardware, so add it for both pcie0 and pcie1 to provide a better user
-experience.
-
-Have follwing changes:
-  - Update pcie phy bindings for sa8775p.
-  - Document link_down reset.
-  - Remove aux clock from pcie phy.
-  - Add link_down reset for pcie.
-
-Signed-off-by: Ziyue Zhang <quic_ziyuzhan@quicinc.com>
-
-Changes in v4:
-- Update phy bindings, and commit msg(Johan)
-- Add ABI break commit msg
-- Link to v3: https://lore.kernel.org/linux-arm-msm/20250625090048.624399-1-quic_ziyuzhan@quicinc.com/
-
-Changes in v3:
-- Update phy bindings, remove phy_aux clock (Johan)
-- Update DT binding's description (Johan)
-- Link to v2: https://lore.kernel.org/all/20250617021617.2793902-1-quic_ziyuzhan@quicinc.com/
-
-Changes in v2:
-- Change link_down reset from optional to mandatory(Konrad)
-- Link to v1: https://lore.kernel.org/all/20250529035416.4159963-1-quic_ziyuzhan@quicinc.com/
-
-Ziyue Zhang (4):
-  dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Update pcie phy bindings
-  dt-bindings: PCI: qcom,pcie-sa8775p: document link_down reset
-  arm64: dts: qcom: sa8775p: remove aux clock from pcie phy
-  arm64: dts: qcom: sa8775p: add link_down reset for pcie
-
- .../bindings/pci/qcom,pcie-sa8775p.yaml       | 11 +++--
- .../phy/qcom,sc8280xp-qmp-pcie-phy.yaml       |  5 +--
- arch/arm64/boot/dts/qcom/sa8775p.dtsi         | 42 ++++++++++++-------
- 3 files changed, 36 insertions(+), 22 deletions(-)
+In-Reply-To: <20250714191903.GA2414617@bhelgaas>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemk500010.china.huawei.com (7.202.194.95)
 
 
-base-commit: b551c4e2a98a177a06148cf16505643cd2108386
--- 
-2.34.1
 
+On 2025/7/15 3:19, Bjorn Helgaas wrote:
+> [+cc Hui]
+> 
+> On Sat, Jul 12, 2025 at 07:30:28PM +0800, Weili Qian wrote:
+>> Prior to commit d591f6804e7e ("PCI: Wait for device readiness with
+>> Configuration RRS"), pci_dev_wait() polls PCI_COMMAND register until
+>> its value is not ~0(i.e., PCI_ERROR_RESPONSE). After d591f6804e7e,
+>> if the Configuration Request Retry Status Software Visibility (RRS SV)
+>> is enabled, pci_dev_wait() polls PCI_VENDOR_ID register until its value
+>> is not the reserved Vendor ID value 0x0001.
+>>
+>> On Kunpeng accelerator devices, RRS SV is enabled. However,
+>> when the virtual function's FLR (Function Level Reset) is not
+>> ready, the pci_dev_wait() reads the PCI_VENDOR_ID register and gets
+>> the value 0xffff instead of 0x0001. It then incorrectly assumes this
+>> is a valid Vendor ID and concludes the device is ready, returning
+>> successfully. In reality, the function may not be fully ready, leading
+>> to the device becoming unavailable.
+>>
+>> A 100ms wait period is already implemented before calling pci_dev_wait().
+>> In most cases, FLR completes within 100ms. However, to eliminate the
+>> risk of function being unavailable due to an incomplete FLR, a
+>> device-specific reset is added. After pcie_flr(), the function continues
+>> to poll PCI_COMMAND register until its value is no longer ~0.
+> 
+> As far as I can tell, there's nothing specific to Kungpeng devices
+> here.  We've seen a similar issue with Intel NVMe devices [1], and I
+> don't want a whole mess of quirks and device-specific reset methods.
+> 
+> We need some sort of generic solution for this.  My understanding was
+> that if devices are not ready 100ms after a reset, they are required
+> to respond with RRS.  Maybe these devices are defective.  Or maybe my
+> understanding is incorrect.  Either way, I think we should at least
+> check for a PCIe error before assuming that 0xffff is a valid
+> response.
+
+A generic solution for this would be even better.
+
+I tested the patch in [1], but it did not resolve the issue. According to the PCIe specification(e.g.,
+Section 7.5.1 PCI-Compatible Configuration Registers), the Vendor ID and Device ID for VFs are 0xffff.
+However, if VFs cannot respond using the RRS mechanism, the pci_dev_wait() function reads the PCI_VENDOR_ID
+register and gets the value 0xffffffff. This value is considered an error on PCIe, causing pci_dev_wait()
+to continuously poll the register until a timeout occurs.
+
+Thanks,
+Weili
+> 
+> [1] https://lore.kernel.org/linux-pci/20250611101442.387378-1-hui.wang@canonical.com/
+> 
+>> Fixes: d591f6804e7e ("PCI: Wait for device readiness with Configuration RRS")
+>> Signed-off-by: Weili Qian <qianweili@huawei.com>
+>> ---
+>>  drivers/pci/quirks.c | 36 ++++++++++++++++++++++++++++++++++++
+>>  1 file changed, 36 insertions(+)
+>>
+>> diff --git a/drivers/pci/quirks.c b/drivers/pci/quirks.c
+>> index d7f4ee634263..1df1756257d2 100644
+>> --- a/drivers/pci/quirks.c
+>> +++ b/drivers/pci/quirks.c
+>> @@ -4205,6 +4205,36 @@ static int reset_hinic_vf_dev(struct pci_dev *pdev, bool probe)
+>>  	return 0;
+>>  }
+>>  
+>> +#define KUNPENG_OPERATION_WAIT_CNT	3000
+>> +#define KUNPENG_RESET_WAIT_TIME		20
+>> +
+>> +/* Device-specific reset method for Kunpeng accelerator virtual functions */
+>> +static int reset_kunpeng_acc_vf_dev(struct pci_dev *pdev, bool probe)
+>> +{
+>> +	u32 wait_cnt = 0;
+>> +	u32 cmd;
+>> +
+>> +	if (probe)
+>> +		return 0;
+>> +
+>> +	pcie_flr(pdev);
+>> +
+>> +	do {
+>> +		pci_read_config_dword(pdev, PCI_COMMAND, &cmd);
+>> +		if (!PCI_POSSIBLE_ERROR(cmd))
+>> +			break;
+>> +
+>> +		if (++wait_cnt > KUNPENG_OPERATION_WAIT_CNT) {
+>> +			pci_warn(pdev, "wait for FLR ready timeout; giving up\n");
+>> +			return -ENOTTY;
+>> +		}
+>> +
+>> +		msleep(KUNPENG_RESET_WAIT_TIME);
+>> +	} while (true);
+>> +
+>> +	return 0;
+>> +}
+>> +
+>>  static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>>  	{ PCI_VENDOR_ID_INTEL, PCI_DEVICE_ID_INTEL_82599_SFP_VF,
+>>  		 reset_intel_82599_sfp_virtfn },
+>> @@ -4220,6 +4250,12 @@ static const struct pci_dev_reset_methods pci_dev_reset_methods[] = {
+>>  		reset_chelsio_generic_dev },
+>>  	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HINIC_VF,
+>>  		reset_hinic_vf_dev },
+>> +	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HUAWEI_ZIP_VF,
+>> +		reset_kunpeng_acc_vf_dev },
+>> +	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HUAWEI_SEC_VF,
+>> +		reset_kunpeng_acc_vf_dev },
+>> +	{ PCI_VENDOR_ID_HUAWEI, PCI_DEVICE_ID_HUAWEI_HPRE_VF,
+>> +		reset_kunpeng_acc_vf_dev },
+>>  	{ 0 }
+>>  };
+>>  
+>> -- 
+>> 2.33.0
+>>
+> .
+> 
