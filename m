@@ -1,65 +1,76 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E841F28DB3;
-	Wed, 23 Jul 2025 16:11:52 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CBE02E36EB;
+	Wed, 23 Jul 2025 16:18:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753287113; cv=none; b=W0TyaubvVtvRQZ0wazoCFknVxe0D+M3Z1++gIZ967QTiV8tUU8Zjprn5a+thICRgEYd6yj7H8gOhkgc5yzyWCbPyJG474O1mWukxuTpk+4cj+x8DYSdzk2Ti2I6jPf5XzNfvIzR1Nh0L0wkghpO59lHZ6C4pC9iFUqusSMhqGrY=
+	t=1753287529; cv=none; b=lY7+Rh8pcgHmhNUWOPc6BpcR6s7GjoKMM9yn/Rdi12+6NehWIqfvBICY71gWtL3HqSvDqbkTDh5QMS0Lis7KCkHVHs0ZcvJBXAuq8kwyMr2gU9aVptoEl4nJoWAyE2XnH45+iXPXXHmrMM89zJkNCmdyN6FPQroP9010zyemJkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753287113; c=relaxed/simple;
-	bh=LFpj4X2dKTpXjHbRdCpLUblx099sg56vVdV/ouh0JkY=;
-	h=Mime-Version:Content-Type:Date:Message-Id:To:From:Subject:Cc:
-	 References:In-Reply-To; b=H+dUPYi48+j3clJLiM/7Njh+pgBgKQswy+plPoeKXwLpSU/doxoQLwNQoiJQbchwfRVfHc9GUB8eeQcEDxq5N59ftIui+vw+kRtFHFl2pDNrUPjFBPSrgk9QHrkll0YmeaJFvy3gg5rqpFohs+5aOahhFgeMM0MBiWxkw7vbTz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FWN9n8dz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753287529; c=relaxed/simple;
+	bh=dhauIp1Xnth81IxqG0+WMwrHEpOwE2yWzY95avKoTso=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=CIpwkNEr1JUFrmTEfQflCWx/Jv3FezrxMdCYjEZkIulTD854ZI7FH228Z4iaHKtLAFI2kd6MkcDarEATf/T8no/xtc0gX0zpdrCtWoAchw5pg5yA3YDupqu2wd902c7LSUmH1dIDvtFy5+tr6IQduf3WjZfepKcxeQAuGPRWfG4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mSworno+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FWN9n8dz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CD02C4CEE7;
-	Wed, 23 Jul 2025 16:11:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mSworno+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C57F7C4CEE7;
+	Wed, 23 Jul 2025 16:18:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753287112;
-	bh=LFpj4X2dKTpXjHbRdCpLUblx099sg56vVdV/ouh0JkY=;
-	h=Date:To:From:Subject:Cc:References:In-Reply-To:From;
-	b=FWN9n8dzHxX1MoFTg8JFrSOsvN/BF4fY52YQPFwdR0AYaX0K/9pTBySIuFlprJAJv
-	 7RpG2XTKz4uE7AmZ9k+A2hw1krN4Pcv37vfNoAZ3nDUg188jEeXOk8KvRLQVs4RR+e
-	 qzuM+OhSDK99T/3Px9zZ9bp3Ok55cTWm9TbEq+qrQOvvkeyPR69bGJm6yTV2OT8QPK
-	 hOR1CPwMlKSFFZ45i1cz4F5swaroTnbGSg4JeLIkZbdr5dDHNHQdcx95QB8fYCf2N5
-	 1AB8HRuAQV4LqPM01h8RROI+Ry+WyRBmHsT82J94FTaMQ8JerRBRs2+wp339Y9bzAE
-	 FzkjJlr+leqMg==
+	s=k20201202; t=1753287528;
+	bh=dhauIp1Xnth81IxqG0+WMwrHEpOwE2yWzY95avKoTso=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mSworno+GrOn6eWwE0lERNiLWOgPZ+OQFIRBOmpz/IyA/MxR9sUl/G7APhxRMn0Te
+	 ojqbzLAycq1Sj1Mgme575N5SDl8p8uVuIVMXmtR32Yqo+uwoeTufTD+YRiZlBjr/J9
+	 Kegu5UUDMP/6MMW9oYtv6c/Q5U5w0eL5PqG+hsHlY7xKO+kjYJdE+Op36xfUjPVF/a
+	 D+ehngdOu/EIdhnNX1mwyQbheQm54+ZVlHV12tpe7xKfMR8jHg9K7o3SHxI6BQGpOU
+	 Ydk6ag0LcGDg3zQ3L/SnNZ4HoR3DJgEvZ8+c0AjRn2hWzr+Xi0PeK5sKKGs8+eIaPy
+	 YuCLU5Z1S9pNw==
+Date: Wed, 23 Jul 2025 21:48:41 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Johan Hovold <johan+linaro@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH 0/3] PCI/pwrctrl: Fix device and OF node leaks
+Message-ID: <zzxc6b3prqg3uf6mkax7spqxmotnbsu7f6wyyqrnnt57wh7gma@zeaf4zufqdff>
+References: <20250721153609.8611-1-johan+linaro@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 23 Jul 2025 18:11:47 +0200
-Message-Id: <DBJKEPR28MY1.1ISG6JYV3ZJK7@kernel.org>
-To: "Daniel Almeida" <daniel.almeida@collabora.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-Subject: Re: [PATCH v7 3/6] rust: irq: add support for non-threaded IRQs and
- handlers
-Cc: "Boqun Feng" <boqun.feng@gmail.com>, "Miguel Ojeda" <ojeda@kernel.org>,
- "Alex Gaynor" <alex.gaynor@gmail.com>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Andreas
- Hindborg" <a.hindborg@kernel.org>, "Alice Ryhl" <aliceryhl@google.com>,
- "Trevor Gross" <tmgross@umich.edu>, "Greg Kroah-Hartman"
- <gregkh@linuxfoundation.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
- "Thomas Gleixner" <tglx@linutronix.de>, "Bjorn Helgaas"
- <bhelgaas@google.com>, =?utf-8?q?Krzysztof_Wilczy=C2=B4nski?=
- <kwilczynski@kernel.org>, "Benno Lossin" <lossin@kernel.org>,
- <linux-kernel@vger.kernel.org>, <rust-for-linux@vger.kernel.org>,
- <linux-pci@vger.kernel.org>
-References: <20250715-topics-tyr-request_irq2-v7-0-d469c0f37c07@collabora.com> <20250715-topics-tyr-request_irq2-v7-3-d469c0f37c07@collabora.com> <aIBl6JPh4MQq-0gu@tardis-2.local> <ED19060D-265A-4DEF-A12B-3F5901BBF4F3@collabora.com> <aIDxFoQV_fRLjt3h@tardis-2.local> <95A7ACD9-8D0D-41FB-A0C0-691B699CBA17@collabora.com> <aIEE4Tt7xtaX-9V9@tardis-2.local> <CF821F27-7F78-4B3E-AF62-887341EAA7BE@collabora.com>
-In-Reply-To: <CF821F27-7F78-4B3E-AF62-887341EAA7BE@collabora.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250721153609.8611-1-johan+linaro@kernel.org>
 
-On Wed Jul 23, 2025 at 6:07 PM CEST, Daniel Almeida wrote:
-> On top of that, we can use the
-> words "interior mutability" somewhere in the example as well to make it e=
-ven
-> clearer.
+On Mon, Jul 21, 2025 at 05:36:06PM GMT, Johan Hovold wrote:
+> This series fixes some pwrctrl device and OF node leaks spotted while
+> discussing the recent pwrctrl-related (ASPM and probe) regressions on
+> Qualcomm platforms.
+> 
 
-You *can* have this example and I encourage it, I think it is valuable. You=
- can
-have spinlock or mutex for this purpose in threaded handler, no?
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
+
+- Mani
+
+> Johan
+> 
+> 
+> Johan Hovold (3):
+>   PCI/pwrctrl: Fix device leak at registration
+>   PCI/pwrctrl: Fix device and OF node leak at bus scan
+>   PCI/pwrctrl: Fix device leak at device stop
+> 
+>  drivers/pci/bus.c    | 14 +++++++++-----
+>  drivers/pci/probe.c  | 19 ++++++++++++++++---
+>  drivers/pci/remove.c |  2 ++
+>  3 files changed, 27 insertions(+), 8 deletions(-)
+> 
+> -- 
+> 2.49.1
+> 
+
+-- 
+மணிவண்ணன் சதாசிவம்
