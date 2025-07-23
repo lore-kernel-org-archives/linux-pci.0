@@ -1,122 +1,79 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from relay.hostedemail.com (smtprelay0015.hostedemail.com [216.40.44.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 325B91E1DFC;
-	Wed, 23 Jul 2025 13:56:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753278976; cv=pass; b=jg9iLohtpcOSgqp/5yKWEa/43CUyRjNZIYdy1x1K7ebCDTxOPVTPd+e+2dMJKKoTlRU7y8dg/pGBORU/Yv6nkMJG7tV9zNWiguB8ZyJi/AsjOafr2dpDcJEeBBm5aWuc2tyhdzuFlYEcZW3AFa4Z7MWfxSbj1IMbk/ahYQSAgG4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753278976; c=relaxed/simple;
-	bh=WCPfY/H6sVXmQLD73jk8jLMrVqtURXHo0WINkodokrs=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=o05DhvCmFx708nfpluZXJAhDqSF7sxp1rn6cegZkM1VyhKRuP3Wj6+ohjSqfAb/Ll8YJKfco0rWnpFR4UCWmAp52gvoNGbXpNR9HxP1CKtQBoFAce1mg3NuvD0I2hXeg1+F+fvTBtyw3mi2ogRUBzgoO/NLkglsIDBxEt7Jyj2g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b=IZ2wD8Ps; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=daniel.almeida@collabora.com header.b="IZ2wD8Ps"
-ARC-Seal: i=1; a=rsa-sha256; t=1753278938; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=F8gs2g7hKwFc7BwN6rxu4M6pFEKQacTgEAn3SmaiE9w9rOJWn+GKB3D5uoiSE50c+79GSMYqrnqxwj98dxaRZ21S5H22W/vyvIB/Ho9w2INSxxphb2zbrKKqvyBx93L/jGIxeucCwGUj2z5QmoiKsez/PlOeruDbrHI2K7jsFoo=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1753278938; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=rODhMVdHO/UJ1Fnh2P4yz+pCaAyafvDrmoklW4PJVeU=; 
-	b=Fw4qPuZTBGeJ6IbIayxmjjEomdfuIaZtsc35zxbKD1gY2/GtTDdutjLrB2pi3lmw69qh6DyqCgRDYf+KE0MQQ4lhXzmw295bH4rJhpB/3SBKf4roG9Fdi9wk5BhAgYFv670dK7/O4uacZiO6t0QVnN3HV52aE9r7+ffYRgpcwoc=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=daniel.almeida@collabora.com;
-	dmarc=pass header.from=<daniel.almeida@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1753278938;
-	s=zohomail; d=collabora.com; i=daniel.almeida@collabora.com;
-	h=Content-Type:Mime-Version:Subject:Subject:From:From:In-Reply-To:Date:Date:Cc:Cc:Content-Transfer-Encoding:Message-Id:Message-Id:References:To:To:Reply-To;
-	bh=rODhMVdHO/UJ1Fnh2P4yz+pCaAyafvDrmoklW4PJVeU=;
-	b=IZ2wD8Ps8PbvuuLCak8rMXitUs5osuaR+XfGSyv66EmFBWzrbP3nCm25BA1ri8/d
-	Bc6Hn8VZG3Ve1p+v8L+wcRfW85NvAMMY9vsDgst1AXGOrbQKyqXa4qoa5Rq3+yqfibR
-	oaC2g+wOdLinc60rkbLes9eCuVVx+NzerlMa8HAw=
-Received: by mx.zohomail.com with SMTPS id 1753278936364407.2406058677078;
-	Wed, 23 Jul 2025 06:55:36 -0700 (PDT)
-Content-Type: text/plain;
-	charset=utf-8
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0ACF78F3E;
+	Wed, 23 Jul 2025 14:06:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=216.40.44.15
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753279574; cv=none; b=rm5wO1BqgqDVYzwYLpm9LK8qVM14OVILDwH1oO5rEDIAnA5ymG8JVLscpD+QeyoNvtTBkpFahnLSJhIAyTqF24OZ0uO5X9qYFusA8EIGMCAEVafkEcxlbCyaoFvXuO9lB72tp7hIWV8ySlhl1VkSwCR2oHvWAjIvERrH1alo6PQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753279574; c=relaxed/simple;
+	bh=lMxJ452v0orPlmOr+epyAVHrDfvjemEaQSUKSAWFW5A=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=KL7SGWoyPD/Px5crPXlR4z2falztOU35ksK15DYHkkRIfUo8BwiSInQXccVk8HKudp7eT7GYMiFUt87mKyf+X7v8G/NQE3sc7l0jQa3hc+hO9mul7YykU/TE33ZbOYy/bRE+1BZ68hD50dyjrC+Ftj571MrUd1cmKtEbVxs43zQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org; spf=pass smtp.mailfrom=goodmis.org; arc=none smtp.client-ip=216.40.44.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=goodmis.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=goodmis.org
+Received: from omf14.hostedemail.com (a10.router.float.18 [10.200.18.1])
+	by unirelay07.hostedemail.com (Postfix) with ESMTP id 7C56F1606A4;
+	Wed, 23 Jul 2025 14:06:03 +0000 (UTC)
+Received: from [HIDDEN] (Authenticated sender: rostedt@goodmis.org) by omf14.hostedemail.com (Postfix) with ESMTPA id BCD5E2D;
+	Wed, 23 Jul 2025 14:05:58 +0000 (UTC)
+Date: Wed, 23 Jul 2025 10:05:59 -0400
+From: Steven Rostedt <rostedt@goodmis.org>
+To: Shuai Xue <xueshuai@linux.alibaba.com>
+Cc: lukas@wunner.de, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-edac@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, helgaas@kernel.org,
+ ilpo.jarvinen@linux.intel.com, mattc@purestorage.com,
+ Jonathan.Cameron@huawei.com, bhelgaas@google.com, tony.luck@intel.com,
+ bp@alien8.de, mhiramat@kernel.org, mathieu.desnoyers@efficios.com,
+ oleg@redhat.com, naveen@kernel.org, davem@davemloft.net,
+ anil.s.keshavamurthy@intel.com, mark.rutland@arm.com, peterz@infradead.org,
+ tianruidong@linux.alibaba.com
+Subject: Re: [PATCH v9 2/2] PCI: trace: Add a RAS tracepoint to monitor link
+ speed changes
+Message-ID: <20250723100559.7f0adb3c@batman.local.home>
+In-Reply-To: <20250723033108.61587-3-xueshuai@linux.alibaba.com>
+References: <20250723033108.61587-1-xueshuai@linux.alibaba.com>
+	<20250723033108.61587-3-xueshuai@linux.alibaba.com>
+X-Mailer: Claws Mail 3.17.8 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.600.51.1.1\))
-Subject: Re: [PATCH v7 3/6] rust: irq: add support for non-threaded IRQs and
- handlers
-From: Daniel Almeida <daniel.almeida@collabora.com>
-In-Reply-To: <aIBl6JPh4MQq-0gu@tardis-2.local>
-Date: Wed, 23 Jul 2025 10:55:20 -0300
-Cc: Miguel Ojeda <ojeda@kernel.org>,
- Alex Gaynor <alex.gaynor@gmail.com>,
- Gary Guo <gary@garyguo.net>,
- =?utf-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>,
- Andreas Hindborg <a.hindborg@kernel.org>,
- Alice Ryhl <aliceryhl@google.com>,
- Trevor Gross <tmgross@umich.edu>,
- Danilo Krummrich <dakr@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J. Wysocki" <rafael@kernel.org>,
- Thomas Gleixner <tglx@linutronix.de>,
- Bjorn Helgaas <bhelgaas@google.com>,
- =?utf-8?Q?Krzysztof_Wilczy=C2=B4nski?= <kwilczynski@kernel.org>,
- Benno Lossin <lossin@kernel.org>,
- linux-kernel@vger.kernel.org,
- rust-for-linux@vger.kernel.org,
- linux-pci@vger.kernel.org
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <ED19060D-265A-4DEF-A12B-3F5901BBF4F3@collabora.com>
-References: <20250715-topics-tyr-request_irq2-v7-0-d469c0f37c07@collabora.com>
- <20250715-topics-tyr-request_irq2-v7-3-d469c0f37c07@collabora.com>
- <aIBl6JPh4MQq-0gu@tardis-2.local>
-To: Boqun Feng <boqun.feng@gmail.com>
-X-Mailer: Apple Mail (2.3826.600.51.1.1)
-X-ZohoMailClient: External
+MIME-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+X-Stat-Signature: kfh95roe4azn51jwbc9w8snmy97e6oiu
+X-Rspamd-Server: rspamout07
+X-Rspamd-Queue-Id: BCD5E2D
+X-Session-Marker: 726F737465647440676F6F646D69732E6F7267
+X-Session-ID: U2FsdGVkX19uu5kwrnovz3Zkv5N+cwHtWAyPjoGFzaM=
+X-HE-Tag: 1753279558-65806
+X-HE-Meta: U2FsdGVkX18EcBzxU5d2jMMvSMTDBFTAbWnieQrV6k8YfBJ6MEAHk+B+CAbikFXBJnqLIQgSVt445rKrwaBBa6Auvns6OK++ZmErCE8sU0Ez50ansF+A7gQWzAunWcOuyXUpE0S5IXv00CqWQvSwxPxwA1YuvU3QmvEzJd+FTgggGliPepeJs5OylpcMMbnJjaIdkdc1rHmyv7I0NFYDYCLcMJjJwWO1xF3gXEeUqxO35xy5UuQL06DMgxSusYQOx7opywjLHRjhmiCQlmu9xF8Vp4xoroRkSJ6ZtHFCGISfrPnqpLcwGY9Hs1QHCVopk5puHRuaJqXpEi2u8yVgmiBaXTZAx/Ed
 
-Hi Boqun,
+On Wed, 23 Jul 2025 11:31:08 +0800
+Shuai Xue <xueshuai@linux.alibaba.com> wrote:
 
-[=E2=80=A6]
+> +	TP_printk("%s type:%d, reason:%d, cur_bus_speed:%s, max_bus_speed:%s, width:%u, flit_mode:%u, status:%s\n",
+> +		__get_str(port_name),
+> +		__entry->type,
+> +		__entry->reason,
+> +		pci_speed_string(__entry->cur_bus_speed),
+> +		pci_speed_string(__entry->max_bus_speed),
 
->> +        IrqRequest { dev, irq }
->> +    }
->> +
->> +    /// Returns the IRQ number of an [`IrqRequest`].
->> +    pub fn irq(&self) -> u32 {
->> +        self.irq
->> +    }
->> +}
->> +
->> +/// A registration of an IRQ handler for a given IRQ line.
->> +///
->> +/// # Examples
->> +///
->> +/// The following is an example of using `Registration`. It uses a
->> +/// [`AtomicU32`](core::sync::AtomicU32) to provide the interior =
-mutability.
->=20
-> We are going to remove all usage of core::sync::Atomic* when the LKMM
-> atomics [1] land. You can probably use `Completion` here (handler does
-> complete_all(), and registration uses wait_for_completion()) because
-> `Completion` is irq-safe. And this brings my next comment..
+Hmm, I guess pci_speed_string() should be added to libtraceveent so
+that perf and trace-cmd parses it correctly. I guess rasdaemon would
+want that too (which also uses libtraceevent).
 
-How are completions equivalent to atomics? I am trying to highlight =
-interior
-mutability in this example.
-
-Is the LKMM atomic series getting merged during the upcoming merge =
-window? Because my
-understanding was that the IRQ series was ready to go in 6.17, pending a =
-reply
-from Thomas and some minor comments that have been mentioned in v7.
-
-If the LKMM series is not ready yet, my proposal is to leave the
-Atomics->Completion change for a future patch (or really, to just use =
-the new
-Atomic types introduced by your series, because again, I don't think =
-Completion
-is the right thing to have there).
+-- Steve
 
 
-=E2=80=94 Daniel=
+> +		__entry->width,
+> +		__entry->flit_mode,
+> +		__print_flags((unsigned long)__entry->link_status, "|",
+> +				LNKSTA_FLAGS)
+> +	)
+> +);
