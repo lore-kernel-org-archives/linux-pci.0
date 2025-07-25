@@ -1,53 +1,53 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A02382D3EE3;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E2E62D46BB;
 	Fri, 25 Jul 2025 09:53:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753437215; cv=none; b=Bcdae0pyZ99V8BfR0A2HvMNdGBta4FAwWG/QxzjJxzSlEliyLbVY6ahHRkIrr0rP3dERDTm92w4zvOJr6Tiw4YUd8z4zebJ6YlGHdblf9t7UKgtrtRrykUSlx/utEMcRezCng7xaKsCdWW7yDMNqPPPRDEY6/yHFooYT4niqlgg=
+	t=1753437215; cv=none; b=ZbxQyi2vo0BTQe25ZVIZ+Xyuhem1mdnUfNiL/FAxK97QUf2wIoeWFgGsMByWR5PsIWLgl+d2BmIX1mTogcXWtEDKaIGWGRs8PhPFzBpZX4LayuQsISAO7hZLM8xXZ9TymnJp/BwCqLMc8fGUKOdUucC+xW+U1ByPdi6EpqU8OOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1753437215; c=relaxed/simple;
-	bh=uPBJghxRU0Wv1O+7yqQ/54Ed16pb/yZIPGe1UuQSiO0=;
+	bh=yYKz3D7ymOacwbp9D4nGg/5wP2lvzHAjvPOQUFc8AvU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=MDCs6Ww1jB4BcpUFOPUbjkbnPiaw12U+qWRnNCDjqdyIqIY8Lm5C6twayQeaCPJ4vjdP069kjXZvyXcqlRfjqPNmlzT3WbXdR04j3UwCdPdf9VAPi7N+B6a1Q8S0fITE9EPVxZCrx7UcOYDRsI8ZjtkAmp3NGlQvoqwF0++wMQA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JXE8KA9l; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=rqQ9IM1Kp7CUUfujIzZ/+OBZg4cp8otp+5bN5m5O1cHzO3YZJsZt3kRb9FdYyhzYB6WdoEWom9iDS+qxgWoV6NK/D1iCkiFeqxbaxpNI9MD71XCT2qsUG6U1ktqSFUzeosBRkcwZAx3SAuoKgf5XoJbRcNzGbb3QB/zuPQcNt/w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=NHU4h2Dk; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JXE8KA9l"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56P9AgwE001508;
-	Fri, 25 Jul 2025 09:53:21 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="NHU4h2Dk"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56P8xFKX018079;
+	Fri, 25 Jul 2025 09:53:24 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=dKjsU96SS6F
-	u9wKhYzW5G0bDHXmS27AuhxG4zxKYKtQ=; b=JXE8KA9lWqgHAI2zL/EMNZLNVem
-	mFL8bYW+BmMqyEn4W9jr30ndsFs5F9bJowNYjDy6UsaWLyoT8J/UXHwdn8fGKUA6
-	2+iJzAiJRdEbaEW9dLBeaOZNBHDl6t15rQiZWAgIohsxS8y0dDdfwUOdqyE0Nt46
-	oomkCG5OC45OvuIx9PLBpqnkjz5xnQosHw1AN10e8sbeAY9hjZBU/xnJLdIsnb1p
-	5qs/MGIPduNArZ2cTjxB42OlK56IXpzs8jDgfetPo7heqOhG+qcDzWEsC9oVO2+q
-	WzkFqHEolLCUEuaMhiFfoiVOV/pK1OrIJczOMAJVW/21nQMIMDW/20awCZQ==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 483w2xhk2n-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=e2pMOb44GjZ
+	xUmO0PQqWhI/o5itASW+/ugix0zxB83A=; b=NHU4h2DkS4k5pWnMEAVb0Ofcz8e
+	+j1137Oe0cX2OG+Wo2EOAEVOlvDgupHR2JebZU+BNMCjVFJPiZBpmPmCbMhuqR8o
+	G++VmsWJ5Dqlx5oXbp8Y+xpt+AjvLZcdXbQZd8/0JZdTulacgx9fPf+2zZO2uTvo
+	TDr6KMS2n1qi6aLOxe4XSOjx0lvF0RoLiwkEJ2cdBJVOKN7NXYzm5u4QUr/Qq5ed
+	k/v3xRFGHK1a2ASvK7WpfmS+qWAWDCWOHrGW+EQT8yqUV3EgKdb0c95YcXgvMXGB
+	/vx5Ht0G7Lpw6GxvVimXHVuHyB2gkuTXTvbiI+eFisDQsWjN4PeL64RhD2w==
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 483w2s1m8w-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 09:53:21 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 56P9rIEg030888;
-	Fri, 25 Jul 2025 09:53:18 GMT
+	Fri, 25 Jul 2025 09:53:24 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 56P9rLl2001606;
+	Fri, 25 Jul 2025 09:53:21 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4804emsuvk-1
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 4804emta1x-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 09:53:18 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56P9rIp6030883;
-	Fri, 25 Jul 2025 09:53:18 GMT
+	Fri, 25 Jul 2025 09:53:21 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56P9rLZ5001595;
+	Fri, 25 Jul 2025 09:53:21 GMT
 Received: from cse-cd01-lnx.ap.qualcomm.com (cse-cd01-lnx.qualcomm.com [10.64.75.209])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 56P9rHh0030853
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 56P9rKXx001592
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 09:53:18 +0000
+	Fri, 25 Jul 2025 09:53:21 +0000
 Received: by cse-cd01-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id E2EC120D5E; Fri, 25 Jul 2025 17:53:15 +0800 (CST)
+	id 9CD3E20D5E; Fri, 25 Jul 2025 17:53:19 +0800 (CST)
 From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
 To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
         krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
@@ -59,10 +59,11 @@ Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
         linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
         quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v6 1/3] dt-bindings: phy: qcom,sc8280xp-qmp-pcie-phy: Update pcie phy bindings
-Date: Fri, 25 Jul 2025 17:53:00 +0800
-Message-Id: <20250725095302.3408875-2-ziyue.zhang@oss.qualcomm.com>
+        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>,
+        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: [PATCH v6 3/3] arm64: dts: qcom: sa8775p: add link_down reset for pcie
+Date: Fri, 25 Jul 2025 17:53:02 +0800
+Message-Id: <20250725095302.3408875-4-ziyue.zhang@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250725095302.3408875-1-ziyue.zhang@oss.qualcomm.com>
 References: <20250725095302.3408875-1-ziyue.zhang@oss.qualcomm.com>
@@ -77,62 +78,70 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: fr5IOlE5GKX0RTF9vHXoYhFb0rTNaw5w
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzI1MDA4NCBTYWx0ZWRfX+7p8qfApvV7x
- +VSvl3SDdgw1Kuv5sSXmnPtHSxl9BhUB4X1UI/QXehfreSOyHTtlEiaby+aNwsN8nd2017lnyZM
- 6PhpBJ15L0X7/WmkdCEFxf+7VY+fZ5kCeNKJCWUITMatVDGnIQShgseElnOvExPg+ihUFHVmOuH
- I4psNiO7NnLP9SkPJM96nq9kHxnWUQ+mBsxjk7GEL94Co6zzYnnIRu+V1TrMP8IAOVONBpxhxy4
- WWWAWwJEEQ6XXdGnQQX+LgNFyqx6E/srrksfdJeHeHgpwvABFCl7YEib09qRH68GEvHlFg1gBTc
- tWCjxrvua7Dk23e/WOC6kmmB2oeccVtTaKZ+bHwHONTNbwQqAuaFnGa5HUOilok+T6WFaPhx6HG
- UKrvr5hlDO25kKleI05jYL4qByjUM4Kk6TeFTcfkItph+5amQH7SMjfD2bnG4VDajBk5FkLu
-X-Proofpoint-GUID: fr5IOlE5GKX0RTF9vHXoYhFb0rTNaw5w
-X-Authority-Analysis: v=2.4 cv=S8bZwJsP c=1 sm=1 tr=0 ts=68835411 cx=c_pps
+X-Proofpoint-ORIG-GUID: 168nhMsRxGLNM_7OomxIDf-R_-CVggXh
+X-Authority-Analysis: v=2.4 cv=IZyHWXqa c=1 sm=1 tr=0 ts=68835414 cx=c_pps
  a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=Wb1JkmetP80A:10 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8 a=tAWiX01tdBucjzfsbJgA:9
+ a=Wb1JkmetP80A:10 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8 a=UMluCPnEzjiUAf4N7sYA:9
+X-Proofpoint-GUID: 168nhMsRxGLNM_7OomxIDf-R_-CVggXh
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzI1MDA4NCBTYWx0ZWRfX3vhAIRsI5Fpk
+ mhRKDrqgw+ZpyHPq0Kx1IKZGQwLplPNFs9s9JPaWH4XrUCyZ/W19wp104NQ7pNvTAUWZ8QHaAQD
+ 3l1SbozbAbQ0qrFQU78OWyh9fUHl8PixldYcFqBgIvME83vVJuR/UALuMma9gKsXuIUO+sVBG1h
+ WVIfON3Si4zVnvbbOhDewenG+ZxwdV6t8r77sIT5ShieoILVEu8KoT6xwgX3qq3GARcaF2swjWg
+ e8WrBCOgPI1LqDmRPZoIKyihIdngo2qFXAMn6CketfAqeCRSP0z4d7nOwwroPyJLvRUtu1hX2Vr
+ q7zn1EM+Q6kcfM/Ta5I6H+kdCcwsgq4Xoa1xLJ/OzSb6DR07Wu7kbaTYA6SCbXY+509hutUr378
+ s2idt0EzzQhnAfRR4q4ZQGP6PAcSbW/6EdiF8pwp1CslAllJKaOYBhEEI8nQ8Mccqur4Cz9c
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-07-25_02,2025-07-24_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 lowpriorityscore=0 mlxlogscore=999 bulkscore=0 impostorscore=0
- spamscore=0 malwarescore=0 adultscore=0 suspectscore=0 phishscore=0
- priorityscore=1501 mlxscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507250084
+ suspectscore=0 bulkscore=0 mlxlogscore=999 mlxscore=0 adultscore=0
+ phishscore=0 spamscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
+ clxscore=1015 priorityscore=1501 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2507250084
 
-The gcc_aux_clk is required by the PCIe controller but not by the PCIe
-PHY. In PCIe PHY, the source of aux_clk used in low-power mode should
-be gcc_phy_aux_clk. Hence, remove gcc_aux_clk and replace it with
-gcc_phy_aux_clk.
+SA8775p supports 'link_down' reset on hardware, so add it for both pcie0
+and pcie1, which can provide a better user experience.
 
-Fixes: fd2d4e4c1986 ("dt-bindings: phy: qcom,qmp: Add sa8775p QMP PCIe PHY")
+Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Reviewed-by: Johan Hovold <johan+linaro@kernel.org>
 Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Acked-by: Rob Herring (Arm) <robh@kernel.org>
 ---
- .../devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml   | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ arch/arm64/boot/dts/qcom/sa8775p.dtsi | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
-index a1ae8c7988c8..9ad54fe268ab 100644
---- a/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/qcom,sc8280xp-qmp-pcie-phy.yaml
-@@ -146,6 +146,8 @@ allOf:
-           contains:
-             enum:
-               - qcom,qcs615-qmp-gen3x1-pcie-phy
-+              - qcom,sa8775p-qmp-gen4x2-pcie-phy
-+              - qcom,sa8775p-qmp-gen4x4-pcie-phy
-               - qcom,sar2130p-qmp-gen3x2-pcie-phy
-               - qcom,sc8180x-qmp-pcie-phy
-               - qcom,sdm845-qhp-pcie-phy
-@@ -197,8 +199,6 @@ allOf:
-           contains:
-             enum:
-               - qcom,qcs8300-qmp-gen4x2-pcie-phy
--              - qcom,sa8775p-qmp-gen4x2-pcie-phy
--              - qcom,sa8775p-qmp-gen4x4-pcie-phy
-     then:
-       properties:
-         clocks:
+diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+index 39a4f59d8925..76bced68a2d2 100644
+--- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
++++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
+@@ -7635,8 +7635,11 @@ pcie0: pcie@1c00000 {
+ 		iommu-map = <0x0 &pcie_smmu 0x0000 0x1>,
+ 			    <0x100 &pcie_smmu 0x0001 0x1>;
+ 
+-		resets = <&gcc GCC_PCIE_0_BCR>;
+-		reset-names = "pci";
++		resets = <&gcc GCC_PCIE_0_BCR>,
++			 <&gcc GCC_PCIE_0_LINK_DOWN_BCR>;
++		reset-names = "pci",
++			      "link_down";
++
+ 		power-domains = <&gcc PCIE_0_GDSC>;
+ 
+ 		phys = <&pcie0_phy>;
+@@ -7803,8 +7806,11 @@ pcie1: pcie@1c10000 {
+ 		iommu-map = <0x0 &pcie_smmu 0x0080 0x1>,
+ 			    <0x100 &pcie_smmu 0x0081 0x1>;
+ 
+-		resets = <&gcc GCC_PCIE_1_BCR>;
+-		reset-names = "pci";
++		resets = <&gcc GCC_PCIE_1_BCR>,
++			 <&gcc GCC_PCIE_1_LINK_DOWN_BCR>;
++		reset-names = "pci",
++			      "link_down";
++
+ 		power-domains = <&gcc PCIE_1_GDSC>;
+ 
+ 		phys = <&pcie1_phy>;
 -- 
 2.34.1
 
