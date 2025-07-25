@@ -1,270 +1,302 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B64E2E5B05;
-	Fri, 25 Jul 2025 11:24:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7EA141E51EF;
+	Fri, 25 Jul 2025 13:53:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753442654; cv=none; b=jzUbJjoJDV1DRw+QzVyGuEIcgTvz62wBiVRNm72d5A63IgLcL4RppFSIZjIMd8Qc2BsCbtqI41MBsKqlLmJZzlj+/B7TT3gXD4q/bM1azI9b9aVuMZmGBjYNDuzej+wxLVsRapYLinVIVScy0jBX4kTun0wID/DdImqNQ9zjbXE=
+	t=1753451632; cv=none; b=Dq2oQgteboTZo7PTnSlEPFhEVtncIsDcOEtNUxASQj7IUtq34hlTEsejDLxsP1lCbHGFtdTFiO19wHXzqLJBA6x6qcsDJqWhBgW55O/a209qRXj+sM7H32Zitkc38covpuF5s27Ur9jnkPKCNrdqbAHugIJ80DNqL7cweIu25eU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753442654; c=relaxed/simple;
-	bh=8yo6O2v8ugQSeTkvGqU2hHmeyCGMPuzd24dQrbq46hU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=PJkDdu+PMRTaw2yalDYMhhBKxBvwPJxLQpdLFmhUE9Xz1FLXHJv6XaYRZqTdGTjTPVIqfJ3IUeHXTBpVASPiDLrs1lETBEma1nxt+H6Q38Xv9+CIG71PN+qkjoLtXXYs+4mys9aPJzhCYi1bgBPO2+NUyageqjs06nEflHx/PVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gp3TIVPN; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1753451632; c=relaxed/simple;
+	bh=eOB7yXo2LoXF2GIMVzJWuRIXM7ag/qKFdH7POf8TuI4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=iowBoBCgPDUYaZS9RJx7tc9VsKEDPRYTOmn79NeeF0IBhy4P1LYou2saiskEYmzHggln3REJyVhyJ13o6F5Z8gu2pqlWK0nNoWzS2Ev/tJTT809x7IlXwPV0FYOCnMtg7djkViXDTcOjT8BuvdVpLvl6B2FnvSr2+Nf6dm0yOUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R+ZPx3xL; arc=none smtp.client-ip=209.85.208.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gp3TIVPN"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56P88cYF007981;
-	Fri, 25 Jul 2025 11:23:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=Qk0Z0uGYRJe
-	PKyISqvrdse8/tIbSQ3DKJrTuDGi9XgE=; b=gp3TIVPNUJOjoaLq8mR1UF6meTP
-	DStf6aEUHPoaVNeToc6rJ7hxPmtG70EtZuUqrt5R7OtoRGWkrg9fy4dT+uHHkKky
-	Gp7esaM5Hg/XTb1ptmUwBfqeQAox5XVKE6x3Xc8kXAUR2jmLPjFV7+FXLrcv+nlu
-	zPOJr2hbBBM5TP4gpfTM2zDzcwAtjA0ZOzwUj+hw3EL4ddJF+HoreRLpiPO0EBiM
-	CPQQWcplZq356rzki9U3e4IqxM/CozQRBoJVfwuLj1UAE+VFpd8jPaGxbVv5X0jz
-	7ZiPykhObRA4XwKBxUsJr8HLxmmSMHFodb+/rJt5WV/kkHgNUCB10CEFioQ==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4846590haf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 11:23:58 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 56PBNupd028295;
-	Fri, 25 Jul 2025 11:23:56 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 4804emtq3q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 11:23:56 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56PBNubR028286;
-	Fri, 25 Jul 2025 11:23:56 GMT
-Received: from cse-cd01-lnx.ap.qualcomm.com (cse-cd01-lnx.qualcomm.com [10.64.75.209])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 56PBNtCw028278
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 11:23:56 +0000
-Received: by cse-cd01-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 27E9620CA2; Fri, 25 Jul 2025 19:23:54 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v9 1/2] arm64: dts: qcom: qcs615: enable pcie
-Date: Fri, 25 Jul 2025 19:23:45 +0800
-Message-Id: <20250725112346.614316-2-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250725112346.614316-1-ziyue.zhang@oss.qualcomm.com>
-References: <20250725112346.614316-1-ziyue.zhang@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R+ZPx3xL"
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-32ce1b2188dso18355531fa.3;
+        Fri, 25 Jul 2025 06:53:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753451629; x=1754056429; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2fWdhR0VBfiS/L09WfJDV+7CjbZeT3b1nXdFbi2Z3Bg=;
+        b=R+ZPx3xLuL2KTOFzYE00WN5jdNiOkKyApSRjJFeCl24wqqNUGCXE4e/PomWf4rmGPH
+         QSGl59NRu9xM1pKnIAkBltxjGDMh/K7tWWRDHFfd5PSbcnFbxycbitWWSf7wf9r7RGJW
+         UHBZKmOT09qgrGoQAXpnigV5+yGEd+ZOgBcbUCuyCTb5Aw1RdX/8dQgxMQOlurXh57tH
+         9n5wYo5z5HnTaKGBQ416SRJO8lqD8Vy+QdNDSBmaNYHrCvJKpSMiC92GE8xzzjN+pIAG
+         0TLtLmgPKJlbLa0W5HR3+fWBnj9/8zr6oPmORCeiTTLqQivJQ1Y2e3Cw3+MIFyNzyzkQ
+         UOYA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753451629; x=1754056429;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=2fWdhR0VBfiS/L09WfJDV+7CjbZeT3b1nXdFbi2Z3Bg=;
+        b=Dz3NpBzK3Txnj1NtZoRK056/p4thZ6uUCTQxA2JUyOdlgzGfbHnXBTpnNk6WHFmd3P
+         u9Yb5eBPAkka8UstyfbSjOQXok5++UwpY1HPMbGO7qGpIUUNK78/Gd3VTXPeJb+0Vk6K
+         n9TJ4cf+/0IlV3DTn3U9aKuEKLoDxTyAR/UrFIVM3aOPw3cAOmflnkSfBTR4n6f5AkoE
+         dgx0RNODWlcY2A+69XEkUMkn7Vn2Hzrn+w2LcMK1pO3H1YSCx2QKAMBJEcq3R6Ec1eoR
+         gxm3gztm6FUFWjqnhb3H7Q564Aus6zjz6rmMjS0SPVZj/LmJOyE3zrnz7nGZbrqLzZiG
+         ZOgw==
+X-Forwarded-Encrypted: i=1; AJvYcCU+tZ5a2Ka2Q++2K+8IoTuGxOrOAhCbF96AT2dVhpwMP4NB/IUFLutmg4pjrHt8oRpNLk/5RwPF2lk=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9QbzgtV5b5PqY7NAyuV0VdKSMyU8xA2ePzlzQiPgOTmc0FCrW
+	hFLP8fzJlp1urL7W7GKaMLzD6ZbbfB8+Bb7zb5OaJhMNbmjS4JJIrX9WSIHb8+5HGomhCcMOzub
+	iG/Pb8kSktofJlveZ+YVtoio01fzzmpI=
+X-Gm-Gg: ASbGnct96S0L9t1bDjdFIscRJPu3ykgfZ3f/F28QIXd0BjQKj8T3S40WPLSZKvNU/Ml
+	zpertaYoYzgNvJO4U+oATI3isPyCKFda1rit3XCpP4A79qpPkkr6aUlQRqbWGfh7Pu5vw56ljgb
+	/i3a+DUgajPtT4x5/xNymBeC5wKo0T8ZerEMQMKHLYLA8K0xUUC4j6XJhaKZyEPO8QdrW/shj0b
+	s2zxg==
+X-Google-Smtp-Source: AGHT+IGSjJBjVeIF1UiOOZx7zrUyhUUvmR7dt5xoYizfxKDueOSb41cniJIQvhqsIC4AGtjyNkKon8kDnFPOf5OSx+M=
+X-Received: by 2002:a05:651c:1585:b0:32a:869e:4c13 with SMTP id
+ 38308e7fff4ca-331ee6bde7bmr4926761fa.14.1753451628096; Fri, 25 Jul 2025
+ 06:53:48 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: UCbe2yT8yNHzWvIXEgTUdvocodKYfxD2
-X-Proofpoint-GUID: UCbe2yT8yNHzWvIXEgTUdvocodKYfxD2
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzI1MDA5NyBTYWx0ZWRfX6bBVyc7yRO6S
- vSNzoP7dK4A3jIk2UtxRWWJL1X2Wxp6KrFjeCRki7uMwRoQN3FHPWkhQC/QP7CEzZezjw8oOvqb
- TK52ZIaY4vPT3WXvON+SjKZnsTPPH6o1rXtQtMAyNT7+m74u6p6THF4EEqd/rgxRAIpnYs5LF9F
- nKdkvj3EjS8MwO4giw0/GWQU+a31llzMmD9T0fmeOYGxTQtJlEQ1W6nHjd27+KOpoY6vKrgwhmS
- EdW5JOOkeOrZK/jEfnKLqu7EFnmsrAFyX1j2iw8txCQJugH8iwE/hJ7wG2L8UnYpnI4bU0iZs9P
- PIyJqEqWSCV1gps/bBd6dW7CBZbr4BMAnLFYhROfhQQoBzOPxcsaOZjCmV/OFBA4TMw68txRJpa
- pJPQ3TNwfMUdovaaoglfSdD+sQ8j5IeuXeCYALewkuXRGyqzN1ORmTfX3AIOv1GWd0KxY+0H
-X-Authority-Analysis: v=2.4 cv=Vo8jA/2n c=1 sm=1 tr=0 ts=6883694e cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=VwQbUJbxAAAA:8
- a=njE0_qILy6epUr2_7ooA:9 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-25_03,2025-07-24_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- mlxscore=0 mlxlogscore=999 adultscore=0 impostorscore=0 suspectscore=0
- phishscore=0 spamscore=0 clxscore=1015 bulkscore=0 priorityscore=1501
- lowpriorityscore=0 malwarescore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507250097
+References: <20250725090133.1358775-1-kiran.k@intel.com>
+In-Reply-To: <20250725090133.1358775-1-kiran.k@intel.com>
+From: Luiz Augusto von Dentz <luiz.dentz@gmail.com>
+Date: Fri, 25 Jul 2025 09:53:35 -0400
+X-Gm-Features: Ac12FXwyzqNHfLPdHqEA0hYTNkMUgglGxxQQ1Y7JFYBSg_MQ752ng7-zdHJ5DaY
+Message-ID: <CABBYNZLJyT=z5gLCArU6pMo1sVq-0PSPpvV5yYXHCaxCp2GOZg@mail.gmail.com>
+Subject: Re: [PATCH v6] Bluetooth: btintel_pcie: Add support for _suspend() / _resume()
+To: Kiran K <kiran.k@intel.com>
+Cc: linux-bluetooth@vger.kernel.org, ravishankar.srivatsa@intel.com, 
+	chethan.tumkur.narayan@intel.com, bhelgaas@google.com, 
+	linux-pci@vger.kernel.org, 
+	Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Krishna chaitanya chundru <quic_krichai@quicinc.com>
+Hi Kiran,
 
-Add configurations in devicetree for PCIe0, including registers, clocks,
-interrupts and phy setting sequence.
+On Fri, Jul 25, 2025 at 4:45=E2=80=AFAM Kiran K <kiran.k@intel.com> wrote:
+>
+> From: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com>
+>
+> This patch implements _suspend() and _resume() functions for the
+> Bluetooth controller. When the system enters a suspended state, the
+> driver notifies the controller to perform necessary housekeeping tasks
+> by writing to the sleep control register and waits for an alive
+> interrupt. The firmware raises the alive interrupt when it has
+> transitioned to the D3 state. The same flow occurs when the system
+> resumes.
+>
+> Command to test host initiated wakeup after 60 seconds
+> sudo rtcwake -m mem -s 60
+>
+> dmesg log (tested on Whale Peak2 on Panther Lake platform)
+> On system suspend:
+> [Fri Jul 25 11:05:37 2025] Bluetooth: hci0: device entered into d3 state =
+from d0 in 80 us
+>
+> On system resume:
+> [Fri Jul 25 11:06:36 2025] Bluetooth: hci0: device entered into d0 state =
+from d3 in 7117 us
+>
+> Signed-off-by: Chandrashekar Devegowda <chandrashekar.devegowda@intel.com=
+>
+> Signed-off-by: Kiran K <kiran.k@intel.com>
+> ---
+> changes in v6:
+>      - s/delta/delta_us/g
+>      - s/CONFIG_PM/CONFIG_PM_SLEEP/g
+>      - use pm_sleep_pr()/pm_str() to avoid #ifdefs
+>      - remove the code to set persistance mode as its not relevant to thi=
+s patch
+>
+> changes in v5:
+>      - refactor _suspend() / _resume() to set the D3HOT/D3COLD based on p=
+ower
+>        event
+>      - remove SIMPLE_DEV_PM_OPS and define the required pm_ops callback
+>        functions
+>
+> changes in v4:
+>      - Moved document and section details from the commit message as comm=
+ent in code.
+>
+> changes in v3:
+>      - Corrected the typo's
+>      - Updated the CC list as suggested.
+>      - Corrected the format specifiers in the logs.
+>
+> changes in v2:
+>      - Updated the commit message with test steps and logs.
+>      - Added logs to include the timeout message.
+>      - Fixed a potential race condition during suspend and resume.
+>
+>  drivers/bluetooth/btintel_pcie.c | 90 ++++++++++++++++++++++++++++++++
+>  1 file changed, 90 insertions(+)
+>
+> diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel=
+_pcie.c
+> index 6e7bbbd35279..c419521493fe 100644
+> --- a/drivers/bluetooth/btintel_pcie.c
+> +++ b/drivers/bluetooth/btintel_pcie.c
+> @@ -2573,11 +2573,101 @@ static void btintel_pcie_coredump(struct device =
+*dev)
+>  }
+>  #endif
+>
+> +#ifdef CONFIG_PM_SLEEP
+> +static int btintel_pcie_suspend_late(struct device *dev, pm_message_t me=
+sg)
+> +{
+> +       struct pci_dev *pdev =3D to_pci_dev(dev);
+> +       struct btintel_pcie_data *data;
+> +       ktime_t start;
+> +       u32 dxstate;
+> +       s64 delta_us;
+> +       int err;
+> +
+> +       data =3D pci_get_drvdata(pdev);
+> +
+> +       dxstate =3D (mesg.event =3D=3D PM_EVENT_SUSPEND ?
+> +                  BTINTEL_PCIE_STATE_D3_HOT : BTINTEL_PCIE_STATE_D3_COLD=
+);
+> +
+> +       data->gp0_received =3D false;
+> +
+> +       start =3D ktime_get();
+> +
+> +       /* Refer: 6.4.11.7 -> Platform power management */
+> +       btintel_pcie_wr_sleep_cntrl(data, dxstate);
+> +       err =3D wait_event_timeout(data->gp0_wait_q, data->gp0_received,
+> +                                msecs_to_jiffies(BTINTEL_DEFAULT_INTR_TI=
+MEOUT_MS));
+> +       if (err =3D=3D 0) {
+> +               bt_dev_err(data->hdev, "Timeout (%u ms) on alive interrup=
+t for D3 entry",
+> +                               BTINTEL_DEFAULT_INTR_TIMEOUT_MS);
+> +               return -EBUSY;
+> +       }
+> +
+> +       delta_us =3D ktime_to_ns(ktime_get() - start) / 1000;
+> +       bt_dev_info(data->hdev, "device entered into d3 state from d0 in =
+%lld us",
+> +                   delta_us);
+> +       return 0;
+> +}
+> +
+> +static int btintel_pcie_suspend(struct device *dev)
+> +{
+> +       return btintel_pcie_suspend_late(dev, PMSG_SUSPEND);
+> +}
+> +
+> +static int btintel_pcie_hibernate(struct device *dev)
+> +{
+> +       return btintel_pcie_suspend_late(dev, PMSG_HIBERNATE);
+> +}
+> +
+> +static int btintel_pcie_freeze(struct device *dev)
+> +{
+> +       return btintel_pcie_suspend_late(dev, PMSG_FREEZE);
+> +}
+> +
+> +static int btintel_pcie_resume(struct device *dev)
+> +{
+> +       struct pci_dev *pdev =3D to_pci_dev(dev);
+> +       struct btintel_pcie_data *data;
+> +       ktime_t start;
+> +       int err;
+> +       s64 delta_us;
+> +
+> +       data =3D pci_get_drvdata(pdev);
+> +       data->gp0_received =3D false;
+> +
+> +       start =3D ktime_get();
+> +
+> +       /* Refer: 6.4.11.7 -> Platform power management */
+> +       btintel_pcie_wr_sleep_cntrl(data, BTINTEL_PCIE_STATE_D0);
+> +       err =3D wait_event_timeout(data->gp0_wait_q, data->gp0_received,
+> +                                msecs_to_jiffies(BTINTEL_DEFAULT_INTR_TI=
+MEOUT_MS));
+> +       if (err =3D=3D 0) {
+> +               bt_dev_err(data->hdev, "Timeout (%u ms) on alive interrup=
+t for D0 entry",
+> +                               BTINTEL_DEFAULT_INTR_TIMEOUT_MS);
+> +               return -EBUSY;
+> +       }
+> +
+> +       delta_us =3D ktime_to_ns(ktime_get() - start) / 1000;
+> +       bt_dev_info(data->hdev, "device entered into d0 state from d3 in =
+%lld us",
+> +                   delta_us);
+> +       return 0;
+> +}
+> +
+> +const struct dev_pm_ops btintel_pcie_pm_ops =3D {
+> +       .suspend =3D pm_sleep_ptr(btintel_pcie_suspend),
+> +       .resume =3D pm_sleep_ptr(btintel_pcie_resume),
+> +       .freeze =3D pm_sleep_ptr(btintel_pcie_freeze),
+> +       .thaw =3D pm_sleep_ptr(btintel_pcie_resume),
+> +       .poweroff =3D pm_sleep_ptr(btintel_pcie_hibernate),
+> +       .restore =3D pm_sleep_ptr(btintel_pcie_resume),
+> +};
+> +#endif
+> +
+>  static struct pci_driver btintel_pcie_driver =3D {
+>         .name =3D KBUILD_MODNAME,
+>         .id_table =3D btintel_pcie_table,
+>         .probe =3D btintel_pcie_probe,
+>         .remove =3D btintel_pcie_remove,
+> +       .driver.pm =3D pm_ptr(&btintel_pcie_pm_ops),
 
-Add PCIe lane equalization preset properties for 8 GT/s.
+This doesn't seem quite right, btintel_pcie_pm_ops is behind
+CONFIG_PM_SLEEP not just CONFIG_PM, so it would be undefined if just
+CONFIG_PM is set, so we might as well do:
 
-Signed-off-by: Krishna chaitanya chundru <quic_krichai@quicinc.com>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
----
- arch/arm64/boot/dts/qcom/sm6150.dtsi | 138 +++++++++++++++++++++++++++
- 1 file changed, 138 insertions(+)
+diff --git a/drivers/bluetooth/btintel_pcie.c b/drivers/bluetooth/btintel_p=
+cie.c
+index 5b32f5a6b0b0..2f1b1be94080 100644
+--- a/drivers/bluetooth/btintel_pcie.c
++++ b/drivers/bluetooth/btintel_pcie.c
+@@ -2654,12 +2654,12 @@ static int btintel_pcie_resume(struct device *dev)
+ }
 
-diff --git a/arch/arm64/boot/dts/qcom/sm6150.dtsi b/arch/arm64/boot/dts/qcom/sm6150.dtsi
-index e033b53f0f0f..6fa4614c13ae 100644
---- a/arch/arm64/boot/dts/qcom/sm6150.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sm6150.dtsi
-@@ -1072,6 +1072,144 @@ mmss_noc: interconnect@1740000 {
- 			qcom,bcm-voters = <&apps_bcm_voter>;
- 		};
- 
-+		pcie: pcie@1c08000 {
-+			device_type = "pci";
-+			compatible = "qcom,pcie-qcs615", "qcom,pcie-sm8150";
-+			reg = <0x0 0x01c08000 0x0 0x3000>,
-+			      <0x0 0x40000000 0x0 0xf1d>,
-+			      <0x0 0x40000f20 0x0 0xa8>,
-+			      <0x0 0x40001000 0x0 0x1000>,
-+			      <0x0 0x40100000 0x0 0x100000>,
-+			      <0x0 0x01c0b000 0x0 0x1000>;
-+			reg-names = "parf",
-+				    "dbi",
-+				    "elbi",
-+				    "atu",
-+				    "config",
-+				    "mhi";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			ranges = <0x01000000 0x0 0x00000000 0x0 0x40200000 0x0 0x100000>,
-+				 <0x02000000 0x0 0x40300000 0x0 0x40300000 0x0 0x1fd00000>;
-+			bus-range = <0x00 0xff>;
-+
-+			dma-coherent;
-+
-+			linux,pci-domain = <0>;
-+			num-lanes = <1>;
-+
-+			interrupts = <GIC_SPI 141 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 142 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 143 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 144 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 145 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 146 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 147 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 148 IRQ_TYPE_LEVEL_HIGH>,
-+				     <GIC_SPI 140 IRQ_TYPE_LEVEL_HIGH>;
-+			interrupt-names = "msi0",
-+					  "msi1",
-+					  "msi2",
-+					  "msi3",
-+					  "msi4",
-+					  "msi5",
-+					  "msi6",
-+					  "msi7",
-+					  "global";
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &intc GIC_SPI 149 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 2 &intc GIC_SPI 150 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 3 &intc GIC_SPI 151 IRQ_TYPE_LEVEL_HIGH>,
-+					<0 0 0 4 &intc GIC_SPI 152 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			clocks = <&gcc GCC_PCIE_0_PIPE_CLK>,
-+				 <&gcc GCC_PCIE_0_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_0_MSTR_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_AXI_CLK>,
-+				 <&gcc GCC_PCIE_0_SLV_Q2A_AXI_CLK>;
-+			clock-names = "pipe",
-+				      "aux",
-+				      "cfg",
-+				      "bus_master",
-+				      "bus_slave",
-+				      "slave_q2a";
-+			assigned-clocks = <&gcc GCC_PCIE_0_AUX_CLK>;
-+			assigned-clock-rates = <19200000>;
-+
-+			interconnects = <&aggre1_noc MASTER_PCIE QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
-+					 &config_noc SLAVE_PCIE_0 QCOM_ICC_TAG_ACTIVE_ONLY>;
-+			interconnect-names = "pcie-mem", "cpu-pcie";
-+
-+			iommu-map = <0x0 &apps_smmu 0x400 0x1>,
-+				    <0x100 &apps_smmu 0x401 0x1>;
-+
-+			resets = <&gcc GCC_PCIE_0_BCR>;
-+			reset-names = "pci";
-+
-+			power-domains = <&gcc PCIE_0_GDSC>;
-+
-+			phys = <&pcie_phy>;
-+			phy-names = "pciephy";
-+
-+			max-link-speed = <2>;
-+
-+			operating-points-v2 = <&pcie_opp_table>;
-+
-+			status = "disabled";
-+
-+			pcie_opp_table: opp-table {
-+				compatible = "operating-points-v2";
-+
-+				/* GEN 1 x1 */
-+				opp-2500000 {
-+					opp-hz = /bits/ 64 <2500000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+					opp-peak-kBps = <250000 1>;
-+				};
-+
-+				/* GEN 2 x1 */
-+				opp-5000000 {
-+					opp-hz = /bits/ 64 <5000000>;
-+					required-opps = <&rpmhpd_opp_low_svs>;
-+					opp-peak-kBps = <500000 1>;
-+				};
-+			};
-+		};
-+
-+		pcie_phy: phy@1c0e000 {
-+			compatible = "qcom,qcs615-qmp-gen3x1-pcie-phy";
-+			reg = <0x0 0x01c0e000 0x0 0x1000>;
-+
-+			clocks = <&gcc GCC_PCIE_PHY_AUX_CLK>,
-+				 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
-+				 <&gcc GCC_PCIE_0_CLKREF_CLK>,
-+				 <&gcc GCC_PCIE0_PHY_REFGEN_CLK>,
-+				 <&gcc GCC_PCIE_0_PIPE_CLK>;
-+			clock-names = "aux",
-+				      "cfg_ahb",
-+				      "ref",
-+				      "refgen",
-+				      "pipe";
-+
-+			resets = <&gcc GCC_PCIE_0_PHY_BCR>;
-+			reset-names = "phy";
-+
-+			assigned-clocks = <&gcc GCC_PCIE0_PHY_REFGEN_CLK>;
-+			assigned-clock-rates = <100000000>;
-+
-+			#clock-cells = <0>;
-+			clock-output-names = "pcie_0_pipe_clk";
-+
-+			#phy-cells = <0>;
-+
-+			status = "disabled";
-+		};
-+
- 		ufs_mem_hc: ufshc@1d84000 {
- 			compatible = "qcom,qcs615-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
- 			reg = <0x0 0x01d84000 0x0 0x3000>,
--- 
-2.34.1
+ const struct dev_pm_ops btintel_pcie_pm_ops =3D {
+-       .suspend =3D pm_sleep_ptr(btintel_pcie_suspend),
+-       .resume =3D pm_sleep_ptr(btintel_pcie_resume),
+-       .freeze =3D pm_sleep_ptr(btintel_pcie_freeze),
+-       .thaw =3D pm_sleep_ptr(btintel_pcie_resume),
+-       .poweroff =3D pm_sleep_ptr(btintel_pcie_hibernate),
+-       .restore =3D pm_sleep_ptr(btintel_pcie_resume),
++       .suspend =3D btintel_pcie_suspend,
++       .resume =3D btintel_pcie_resume,
++       .freeze =3D btintel_pcie_freeze,
++       .thaw =3D btintel_pcie_resume,
++       .poweroff =3D btintel_pcie_hibernate,
++       .restore =3D btintel_pcie_resume,
+ };
+ #endif
 
+@@ -2668,7 +2668,7 @@ static struct pci_driver btintel_pcie_driver =3D {
+        .id_table =3D btintel_pcie_table,
+        .probe =3D btintel_pcie_probe,
+        .remove =3D btintel_pcie_remove,
+-       .driver.pm =3D pm_ptr(&btintel_pcie_pm_ops),
++       .driver.pm =3D pm_sleep_ptr(&btintel_pcie_pm_ops),
+ #ifdef CONFIG_DEV_COREDUMP
+        .driver.coredump =3D btintel_pcie_coredump
+ #endif
+
+
+>  #ifdef CONFIG_DEV_COREDUMP
+>         .driver.coredump =3D btintel_pcie_coredump
+>  #endif
+> --
+> 2.43.0
+>
+>
+
+
+--=20
+Luiz Augusto von Dentz
