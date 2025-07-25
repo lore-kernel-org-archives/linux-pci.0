@@ -1,188 +1,107 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.13])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CF8187332
-	for <linux-pci@vger.kernel.org>; Fri, 25 Jul 2025 18:21:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA73F2550AF;
+	Fri, 25 Jul 2025 18:54:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753467718; cv=none; b=cFm7hP6kbpVdlB1vjCLyC6gQ8lJpHd7x/MMigP2dhaSEOd6ZdBvkSSghH81IrlzB8X7feOVk1g1DspEPA3UYT1uQpX3B/9DZ9RZbvyXsovX0wAR/CnxUEEKoJUdmcCR46cI5jIEoTK6WdhosLInnTONf8AWfplww8ZxT9PGJEFA=
+	t=1753469648; cv=none; b=aWMEdVB7xvBsKU0Sf0x7ZtrD9KqcQYK7eAYnOoL2QDlnsUKWI9Rhewu/9zSWldm2dTgEs6zl/zL3/ucq4wk2iDlvp9kO+sdOTZHxuL5GKfPbkgppfiEvL3bDaN1eGol9uyvKVoqVEG+isXt3a9zXjRW1+LGnF05nt4jKuXdebk4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753467718; c=relaxed/simple;
-	bh=QIZD9IDVZDErUirj87Twztcof7T/CQ+v/B/0xNwK09c=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=g3dcG4hX4D9pDWMSrx7xYh0NlzqCo2PDAOXDzp5Zxii7qrDAs6QGJQ8+HJBZD/DoS0LDfmmboFlhBocYa2RQj/3plYa2px9RtQ0oxGzR3Sqf4DIqbSh+8GdtXkKex54Yo60+WIyqYRWepZatlWDPHXZOGmfEt62Xm5kIUD0JCyk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eCmW3q2C; arc=none smtp.client-ip=192.198.163.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1753469648; c=relaxed/simple;
+	bh=igch2/Ss/D54GGpcC/mqrvyLfhLMkygOnI5MXjmAMDQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=EXL79sr4c02E1t7CO4V2wPKHays0PShUBR8dLahdwTSYs1uW0URsUW6NaWEsn7e813sDUNUJOGJSQU0K9jFo2NNQb8lL2ic+UyNIW7vjjbpN9ZVt08ukVNUbmeASZGOeUDYlYeAJIi7xSGgdPozZBs5KwqoibKp0EQklS+jJ1DU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=D2ubIJ87; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eCmW3q2C"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753467717; x=1785003717;
-  h=date:from:to:cc:subject:message-id;
-  bh=QIZD9IDVZDErUirj87Twztcof7T/CQ+v/B/0xNwK09c=;
-  b=eCmW3q2ClNGZyYWvI2/29BPfuDVkMCX13Fb7UPTbmHubp4akk2/M906B
-   nXdEUtkk42GxvCJphifNI/Da++yo0tTPbIGAcA6owpEkr7InBnmQopxUP
-   G5Zz1fTVBVWAxhSnu/XTT23JBqMgHzNyISvGRPjeB3hW/XbaOphZGoF3q
-   UrrJA8LIWhMs5v8bAkXfp0l650jURAlP/dDQgSkMHhELmVq/JBzitLvVp
-   A61YQt/DISQWgelHWS42wPjZgndFAE0PmDF5lZygppR+hF1OgfuczyIQV
-   Lz0o/NJyDHH4xwi7uh53a9P4kT8DrPn/M2cyb6C5D1B/lByAC7WHz8NE4
-   g==;
-X-CSE-ConnectionGUID: mEnd+ewOQCexX7pyMvXtGg==
-X-CSE-MsgGUID: XKpkl7AJRsq52Ss25azk+w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11503"; a="58429374"
-X-IronPort-AV: E=Sophos;i="6.16,339,1744095600"; 
-   d="scan'208";a="58429374"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by fmvoesa107.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 25 Jul 2025 11:21:54 -0700
-X-CSE-ConnectionGUID: Ao3r38T6Q8CvTeDrCCb8Kg==
-X-CSE-MsgGUID: MFC5zFotTqe9v7XvICtaeQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,339,1744095600"; 
-   d="scan'208";a="198238646"
-Received: from lkp-server01.sh.intel.com (HELO 9ee84586c615) ([10.239.97.150])
-  by orviesa001.jf.intel.com with ESMTP; 25 Jul 2025 11:21:53 -0700
-Received: from kbuild by 9ee84586c615 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1ufN3G-000LV3-1l;
-	Fri, 25 Jul 2025 18:21:50 +0000
-Date: Sat, 26 Jul 2025 02:21:34 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:controller/imx6] BUILD SUCCESS
- 2e6ea70690ddd1ffa422423fd0d4523e4dfe4b62
-Message-ID: <202507260222.xFiOQY13-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="D2ubIJ87"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8DD2C4CEE7;
+	Fri, 25 Jul 2025 18:54:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753469646;
+	bh=igch2/Ss/D54GGpcC/mqrvyLfhLMkygOnI5MXjmAMDQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=D2ubIJ87qi+xxbcVIPpnJmq41dKhjQJt63te5mxsuN+D+u3uTt6SDzjPKEApLaF0m
+	 M+4ss02eJ1sKTm+IM2wtDSadbEpdxJWPu3JT5UWSN1SsfnLBwiz5/0SysDkUehZ9Oe
+	 ZyYDXvuCB4uN9ueMrFqDj6Efdvfcu2tt1/iKKIFs9MPGEofYVOtBWne7JY9eYjl+yk
+	 kD3GlC1WRNwoIP394nuY7rGTter8zQVf4ItGOtklcJiCzD7GvWswGgmUIQ+47m2dfP
+	 h6z/KX9nBHx/erCsMoi3GS1JfKYY2Yp2uZC3rkuLFmN/1ml0hRbHiwRp9P95+2n831
+	 jW81KBhbVrGuw==
+Date: Fri, 25 Jul 2025 21:54:02 +0300
+From: Leon Romanovsky <leon@kernel.org>
+To: Logan Gunthorpe <logang@deltatee.com>
+Cc: Christoph Hellwig <hch@lst.de>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Jason Gunthorpe <jgg@nvidia.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	dri-devel@lists.freedesktop.org, iommu@lists.linux.dev,
+	Jens Axboe <axboe@kernel.dk>,
+	=?iso-8859-1?B?Suly9G1l?= Glisse <jglisse@redhat.com>,
+	Joerg Roedel <joro@8bytes.org>, kvm@vger.kernel.org,
+	linaro-mm-sig@lists.linaro.org, linux-block@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-media@vger.kernel.org,
+	linux-mm@kvack.org, linux-pci@vger.kernel.org,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Vivek Kasireddy <vivek.kasireddy@intel.com>,
+	Will Deacon <will@kernel.org>
+Subject: Re: [PATCH 05/10] PCI/P2PDMA: Export pci_p2pdma_map_type() function
+Message-ID: <20250725185402.GU402218@unreal>
+References: <cover.1753274085.git.leonro@nvidia.com>
+ <82e62eb59afcd39b68ae143573d5ed113a92344e.1753274085.git.leonro@nvidia.com>
+ <20250724080313.GA31887@lst.de>
+ <20250724081321.GT402218@unreal>
+ <b32ae619-6c4a-46fc-a368-6ad4e245d581@deltatee.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <b32ae619-6c4a-46fc-a368-6ad4e245d581@deltatee.com>
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git controller/imx6
-branch HEAD: 2e6ea70690ddd1ffa422423fd0d4523e4dfe4b62  PCI: imx6: Delay link start until configfs 'start' written
+On Fri, Jul 25, 2025 at 10:30:46AM -0600, Logan Gunthorpe wrote:
+> 
+> 
+> On 2025-07-24 02:13, Leon Romanovsky wrote:
+> > On Thu, Jul 24, 2025 at 10:03:13AM +0200, Christoph Hellwig wrote:
+> >> On Wed, Jul 23, 2025 at 04:00:06PM +0300, Leon Romanovsky wrote:
+> >>> From: Leon Romanovsky <leonro@nvidia.com>
+> >>>
+> >>> Export the pci_p2pdma_map_type() function to allow external modules
+> >>> and subsystems to determine the appropriate mapping type for P2PDMA
+> >>> transfers between a provider and target device.
+> >>
+> >> External modules have no business doing this.
+> > 
+> > VFIO PCI code is built as module. There is no way to access PCI p2p code
+> > without exporting functions in it.
+> 
+> The solution that would make more sense to me would be for either
+> dma_iova_try_alloc() or another helper in dma-iommu.c to handle the
+> P2PDMA case. dma-iommu.c already uses those same interfaces and thus
+> there would be no need to export the low level helpers from the p2pdma code.
 
-elapsed time: 1448m
+I had same idea in early versions of DMA phys API discussion and it was
+pointed (absolutely right) that this is layering violation.
 
-configs tested: 111
-configs skipped: 3
+At that time, that remark wasn't such clear to me because HMM code
+performs check for p2p on every page and has call to dma_iova_try_alloc()
+before that check. But this VFIO DMABUF code shows it much more clearer.
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
+The p2p check is performed before any DMA calls and in case of PCI_P2PDMA_MAP_BUS_ADDR
+p2p type between DMABUF exporter device and DMABUF importer device, we
+don't call dma_iova_try_alloc() or any DMA API at all.
 
-tested configs:
-alpha                             allnoconfig    gcc-15.1.0
-alpha                            allyesconfig    gcc-15.1.0
-arc                              allmodconfig    gcc-15.1.0
-arc                               allnoconfig    gcc-15.1.0
-arc                              allyesconfig    gcc-15.1.0
-arc                   randconfig-001-20250725    gcc-13.4.0
-arc                   randconfig-002-20250725    gcc-11.5.0
-arm                              allmodconfig    gcc-15.1.0
-arm                               allnoconfig    clang-22
-arm                              allyesconfig    gcc-15.1.0
-arm                   randconfig-001-20250725    gcc-15.1.0
-arm                   randconfig-002-20250725    clang-22
-arm                   randconfig-003-20250725    clang-20
-arm                   randconfig-004-20250725    clang-22
-arm64                            allmodconfig    clang-19
-arm64                             allnoconfig    gcc-15.1.0
-arm64                 randconfig-001-20250725    clang-22
-arm64                 randconfig-002-20250725    gcc-12.5.0
-arm64                 randconfig-003-20250725    gcc-14.3.0
-arm64                 randconfig-004-20250725    clang-22
-csky                              allnoconfig    gcc-15.1.0
-csky                  randconfig-001-20250725    gcc-11.5.0
-csky                  randconfig-002-20250725    gcc-10.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-22
-hexagon                          allyesconfig    clang-22
-hexagon               randconfig-001-20250725    clang-22
-hexagon               randconfig-002-20250725    clang-22
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    gcc-12
-i386        buildonly-randconfig-001-20250725    gcc-12
-i386        buildonly-randconfig-002-20250725    clang-20
-i386        buildonly-randconfig-003-20250725    clang-20
-i386        buildonly-randconfig-004-20250725    clang-20
-i386        buildonly-randconfig-005-20250725    clang-20
-i386        buildonly-randconfig-006-20250725    clang-20
-i386                                defconfig    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-22
-loongarch             randconfig-001-20250725    gcc-15.1.0
-loongarch             randconfig-002-20250725    gcc-15.1.0
-m68k                             allmodconfig    gcc-15.1.0
-m68k                              allnoconfig    gcc-15.1.0
-m68k                             allyesconfig    gcc-15.1.0
-microblaze                       allmodconfig    gcc-15.1.0
-microblaze                        allnoconfig    gcc-15.1.0
-microblaze                       allyesconfig    gcc-15.1.0
-microblaze                          defconfig    gcc-15.1.0
-mips                              allnoconfig    gcc-15.1.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    gcc-11.5.0
-nios2                 randconfig-001-20250725    gcc-9.5.0
-nios2                 randconfig-002-20250725    gcc-8.5.0
-openrisc                          allnoconfig    gcc-15.1.0
-openrisc                         allyesconfig    gcc-15.1.0
-parisc                           allmodconfig    gcc-15.1.0
-parisc                            allnoconfig    gcc-15.1.0
-parisc                           allyesconfig    gcc-15.1.0
-parisc                              defconfig    gcc-15.1.0
-parisc                randconfig-001-20250725    gcc-15.1.0
-parisc                randconfig-002-20250725    gcc-8.5.0
-parisc64                            defconfig    gcc-15.1.0
-powerpc                          allmodconfig    gcc-15.1.0
-powerpc                           allnoconfig    gcc-15.1.0
-powerpc                          allyesconfig    clang-22
-powerpc               randconfig-001-20250725    gcc-8.5.0
-powerpc               randconfig-002-20250725    clang-22
-powerpc               randconfig-003-20250725    gcc-8.5.0
-powerpc64             randconfig-001-20250725    clang-22
-powerpc64             randconfig-002-20250725    gcc-8.5.0
-powerpc64             randconfig-003-20250725    gcc-10.5.0
-riscv                            allmodconfig    clang-22
-riscv                             allnoconfig    gcc-15.1.0
-riscv                            allyesconfig    clang-16
-riscv                 randconfig-001-20250725    gcc-10.5.0
-riscv                 randconfig-002-20250725    clang-22
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-22
-s390                             allyesconfig    gcc-15.1.0
-s390                  randconfig-001-20250725    gcc-8.5.0
-s390                  randconfig-002-20250725    clang-17
-sh                               allmodconfig    gcc-15.1.0
-sh                                allnoconfig    gcc-15.1.0
-sh                               allyesconfig    gcc-15.1.0
-sh                    randconfig-001-20250725    gcc-15.1.0
-sh                    randconfig-002-20250725    gcc-15.1.0
-sparc                            allmodconfig    gcc-15.1.0
-sparc                             allnoconfig    gcc-15.1.0
-sparc                               defconfig    gcc-15.1.0
-sparc                 randconfig-001-20250725    gcc-8.5.0
-sparc                 randconfig-002-20250725    gcc-11.5.0
-sparc64               randconfig-001-20250725    gcc-8.5.0
-sparc64               randconfig-002-20250725    gcc-8.5.0
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-22
-um                               allyesconfig    gcc-12
-um                    randconfig-001-20250725    clang-22
-um                    randconfig-002-20250725    clang-22
-x86_64                            allnoconfig    clang-20
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20250725    clang-20
-x86_64      buildonly-randconfig-002-20250725    clang-20
-x86_64      buildonly-randconfig-003-20250725    clang-20
-x86_64      buildonly-randconfig-004-20250725    clang-20
-x86_64      buildonly-randconfig-005-20250725    gcc-12
-x86_64      buildonly-randconfig-006-20250725    clang-20
-x86_64                              defconfig    gcc-11
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    gcc-15.1.0
-xtensa                randconfig-001-20250725    gcc-13.4.0
-xtensa                randconfig-002-20250725    gcc-8.5.0
+So unfortunately, I think that dma*.c|h is not right place for p2p
+type check.
 
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Thanks
+
+> 
+> Logan
+> 
