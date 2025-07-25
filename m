@@ -1,179 +1,76 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6ED862D46C4;
-	Fri, 25 Jul 2025 09:53:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0E32E88AB;
+	Fri, 25 Jul 2025 10:13:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753437216; cv=none; b=p9EeKPFtc/GwrVTL0scfExVxm1dCt8V5bXz4P6e/taqIKEZrk9a4oghb7GncMMDIA+IqHlgteahR+33ECJlUMrzReK+ia3VLxVZP3kGosKyHttE3VFS23TQVp+qd+txdFxRrxVYEslrmzY6IUHMrkazKcOfJ9mmrKO5dV6YR7Ek=
+	t=1753438420; cv=none; b=k0ZMxnI/zwlVWtCV3L7LKA6RUTAfS3woyASzRKlhu1vzin+fIrsaYHacWL/tu9fYnLwefaYAXIPt/HSgxFR6Ow/hHIpOIlmYRTXFxfD51pwcIVDDfmhbf5+GFooM+TMVhKBsX54A14mcoufcYJdp7iOeA3crx/txUhptATl9NuI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753437216; c=relaxed/simple;
-	bh=sQ7uzt9SXfJr5GeXHepdE4WwwB4TM8p65bnfn7hxErA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RbUV7RH1JldcfIm+Nuzn/Azs8bqzhhql/SbCHeVmvv9Sn8EkbfQi4fp1q4GYoyTvCvztLhoNY4OqqdmGfZQjOn0h4V0WW6lI3AF7KqeUe3TrOGbvTY+zOMh2PorOxV0OZaiAmEFZS/t6VUktl2KHya6GxpuJBeH49S6BNISsDXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=JptcL0p9; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="JptcL0p9"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56P8ZEQv015331;
-	Fri, 25 Jul 2025 09:53:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	YJ9QlUzgzZXAp2fSa1A+U0eHeKeBWWmFU68JYNEh+X8=; b=JptcL0p9KkuWy4Gv
-	1bjiV/k8u/X7k0Q7HjGaTsYvsHh4qaax+PPWwqVZVjGAmJxOKTdeaOJfRc3ixneA
-	5L38QZ2MIr8Q+5Jv1ZbEr+XEziJ9R/K3cML9KZNP+SRmqN2SvuaP6V0ZmY3NlLu2
-	asjGts5zBRqNh11c23xIh88hkzOmEpsPvAmJbv7piDTM+mjCJVvibudKhNM7AYMO
-	Cwas24zi333dtLDxCx/HZ+XOrWOpgn0vS9f7I59rmLEctKktz87vkO29zZpomOax
-	ucfmYMuUJtveeMOfV5R5bkH1glg5bni9eiVtqIldCggs+p+zHW3n5u9b9eFcZs6v
-	5WMH6A==
-Received: from aptaippmta01.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 483w2qhmyb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 09:53:21 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 56P9rJYt030905;
-	Fri, 25 Jul 2025 09:53:19 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 4804emsuvt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 09:53:19 +0000
-Received: from APTAIPPMTA01.qualcomm.com (APTAIPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56P9rJwl030897;
-	Fri, 25 Jul 2025 09:53:19 GMT
-Received: from cse-cd01-lnx.ap.qualcomm.com (cse-cd01-lnx.qualcomm.com [10.64.75.209])
-	by APTAIPPMTA01.qualcomm.com (PPS) with ESMTPS id 56P9rIu7030894
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 25 Jul 2025 09:53:19 +0000
-Received: by cse-cd01-lnx.ap.qualcomm.com (Postfix, from userid 4438065)
-	id 090B3210DE; Fri, 25 Jul 2025 17:53:18 +0800 (CST)
-From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
-        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
-        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
-        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
-        kw@linux.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
-        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
-        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
-Subject: [PATCH v6 2/3] arm64: dts: qcom: sa8775p: remove aux clock from pcie phy
-Date: Fri, 25 Jul 2025 17:53:01 +0800
-Message-Id: <20250725095302.3408875-3-ziyue.zhang@oss.qualcomm.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250725095302.3408875-1-ziyue.zhang@oss.qualcomm.com>
-References: <20250725095302.3408875-1-ziyue.zhang@oss.qualcomm.com>
+	s=arc-20240116; t=1753438420; c=relaxed/simple;
+	bh=RAnkZnhZCXuW/VC8m+XbUyNTZpL7NiZbvl4UuVb0rbI=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=l8hAhqx30000kfr5Q9ul0/7UWCd6fj0Sf6JMiURN8o9wPy3TIpy6VzorqrnjdQNZSAJCVRIergb5bHjX4TU0a2KbacJDiVhJewYTk3kC+/Fz4lxWiIR/5LckjaLN725tWgVX2jZfiMUIpqO9pdgluE798QmHknf0PNzGjxr0yBg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.31])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4bpNrq2wNvz6D8Ww;
+	Fri, 25 Jul 2025 18:09:31 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id C1C5C1400DC;
+	Fri, 25 Jul 2025 18:13:29 +0800 (CST)
+Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Fri, 25 Jul
+ 2025 12:13:29 +0200
+Date: Fri, 25 Jul 2025 11:13:27 +0100
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Salah Triki <salah.triki@gmail.com>
+CC: Bjorn Helgaas <helgaas@kernel.org>, Thomas Petazzoni
+	<thomas.petazzoni@bootlin.com>, Pali =?UTF-8?Q?Roh=C3=A1r?=
+	<pali@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof
+ =?UTF-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, Manivannan Sadhasivam
+	<mani@kernel.org>, Rob Herring <robh@kernel.org>, Bjorn Helgaas
+	<bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] PCI: mvebu: Use devm_add_action_or_reset()
+Message-ID: <20250725111327.0000346f@huawei.com>
+In-Reply-To: <aIMAkbdOyHsiPeph@pc>
+References: <aHsgYALHfQbrgq0t@pc>
+	<20250724164217.GA2942464@bhelgaas>
+	<aIMAkbdOyHsiPeph@pc>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=RbqQC0tv c=1 sm=1 tr=0 ts=68835411 cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=EUspDBNiAAAA:8 a=EluF0xcg-2KMSqT-UJQA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzI1MDA4NCBTYWx0ZWRfXxCw+gnq0iYet
- Gs4OSmsRdoWzyeOTE0oirtUVdwoPKvKygQIeFr/iX0l1Uww5ABbYpiiFHeDLi0YFCbvjWf00FX9
- T1rChNad340HS40wJzVM/PIZbSJaE3GbureesUcb0vRqIXs8Dt1OoKWFIc797+tko8tRTcr4dWa
- dvSosZKcsGOwFduIJgxqDuzOp6bwVIoJuR9066ZrhGkwokUj1+L/9icLDAvCmI0ep8nP9XpTv13
- sGXGR1TrO2oOsrrS2ipWhJ2xl7BRLCTzokbkRkgNnJQt7Ln+RreofRQZ+ZR76lAwrl+xW4sWpVc
- SaAc17S91sTzmUaM7S8tKCuEUOOZcBRb/frd6fkZ1ZAsVSWBQ+S+Y9H4Wdk1atRIUEYz/y5h7Tu
- QPlDQ+V8VF8KzLkn8pUXy1BruLSDfbVUIQmaB+/Raird+3cimZC9FCDvlYJ5EwMichgutGpO
-X-Proofpoint-GUID: -8JBj7VUZaZQrzYXFYKttEr1qrIkx3iP
-X-Proofpoint-ORIG-GUID: -8JBj7VUZaZQrzYXFYKttEr1qrIkx3iP
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-25_02,2025-07-24_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 lowpriorityscore=0 spamscore=0 mlxlogscore=999
- priorityscore=1501 malwarescore=0 impostorscore=0 mlxscore=0 adultscore=0
- phishscore=0 bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507250084
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500001.china.huawei.com (7.191.163.213) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-The gcc_aux_clk is used by the PCIe Root Complex (RC) and is not required
-by the PHY. The correct clock for the PHY is gcc_phy_aux_clk, which this
-patch uses to replace the incorrect reference.
+On Fri, 25 Jul 2025 04:57:05 +0100
+Salah Triki <salah.triki@gmail.com> wrote:
 
-The distinction between AUX_CLK and PHY_AUX_CLK is important: AUX_CLK is
-typically used by the controller, while PHY_AUX_CLK is required by certain
-PHYs—particularly Gen4 QMP PHYs—for internal operations such as clock
-gating and power management. Some non-Gen4 Qualcomm PHYs also use
-PHY_AUX_CLK, but they do not require AUX_CLK.
+> On Thu, Jul 24, 2025 at 11:42:17AM -0500, Bjorn Helgaas wrote:
+> > On Sat, Jul 19, 2025 at 05:34:40AM +0100, Salah Triki wrote:
+> > 
+> >   ret = devm_add_action_or_reset(dev, clk_put, port->clk)
+> >   
+> The second argument of devm_add_action_or_reset() is of type void (*)(void *)
+> and the argument of clk_put() is of type struct clk *, so I think a cast is
+> needed:
+> 
+> ret = devm_add_action_or_reset(dev, (void (*)(void *)) clk_put, port->clk)
 
-This change ensures proper clock configuration and avoids unnecessary
-dependencies.
+Can you use devm_get_clk_from_child() here?  If not add a similar variant.
 
-Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
----
- arch/arm64/boot/dts/qcom/sa8775p.dtsi | 28 +++++++++++++++------------
- 1 file changed, 16 insertions(+), 12 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sa8775p.dtsi b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-index 9997a29901f5..39a4f59d8925 100644
---- a/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sa8775p.dtsi
-@@ -7707,16 +7707,18 @@ pcie0_phy: phy@1c04000 {
- 		compatible = "qcom,sa8775p-qmp-gen4x2-pcie-phy";
- 		reg = <0x0 0x1c04000 0x0 0x2000>;
- 
--		clocks = <&gcc GCC_PCIE_0_AUX_CLK>,
-+		clocks = <&gcc GCC_PCIE_0_PHY_AUX_CLK>,
- 			 <&gcc GCC_PCIE_0_CFG_AHB_CLK>,
- 			 <&gcc GCC_PCIE_CLKREF_EN>,
- 			 <&gcc GCC_PCIE_0_PHY_RCHNG_CLK>,
- 			 <&gcc GCC_PCIE_0_PIPE_CLK>,
--			 <&gcc GCC_PCIE_0_PIPEDIV2_CLK>,
--			 <&gcc GCC_PCIE_0_PHY_AUX_CLK>;
--
--		clock-names = "aux", "cfg_ahb", "ref", "rchng", "pipe",
--			      "pipediv2", "phy_aux";
-+			 <&gcc GCC_PCIE_0_PIPEDIV2_CLK>;
-+		clock-names = "aux",
-+			      "cfg_ahb",
-+			      "ref",
-+			      "rchng",
-+			      "pipe",
-+			      "pipediv2";
- 
- 		assigned-clocks = <&gcc GCC_PCIE_0_PHY_RCHNG_CLK>;
- 		assigned-clock-rates = <100000000>;
-@@ -7873,16 +7875,18 @@ pcie1_phy: phy@1c14000 {
- 		compatible = "qcom,sa8775p-qmp-gen4x4-pcie-phy";
- 		reg = <0x0 0x1c14000 0x0 0x4000>;
- 
--		clocks = <&gcc GCC_PCIE_1_AUX_CLK>,
-+		clocks = <&gcc GCC_PCIE_1_PHY_AUX_CLK>,
- 			 <&gcc GCC_PCIE_1_CFG_AHB_CLK>,
- 			 <&gcc GCC_PCIE_CLKREF_EN>,
- 			 <&gcc GCC_PCIE_1_PHY_RCHNG_CLK>,
- 			 <&gcc GCC_PCIE_1_PIPE_CLK>,
--			 <&gcc GCC_PCIE_1_PIPEDIV2_CLK>,
--			 <&gcc GCC_PCIE_1_PHY_AUX_CLK>;
--
--		clock-names = "aux", "cfg_ahb", "ref", "rchng", "pipe",
--			      "pipediv2", "phy_aux";
-+			 <&gcc GCC_PCIE_1_PIPEDIV2_CLK>;
-+		clock-names = "aux",
-+			      "cfg_ahb",
-+			      "ref",
-+			      "rchng",
-+			      "pipe",
-+			      "pipediv2";
- 
- 		assigned-clocks = <&gcc GCC_PCIE_1_PHY_RCHNG_CLK>;
- 		assigned-clock-rates = <100000000>;
--- 
-2.34.1
+> 
+> Best regards,
+> Salah Triki
+> 
 
