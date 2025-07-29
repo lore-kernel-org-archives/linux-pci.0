@@ -1,70 +1,135 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fllvem-ot03.ext.ti.com (fllvem-ot03.ext.ti.com [198.47.19.245])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 489F621767A;
-	Tue, 29 Jul 2025 16:36:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E272264D3;
+	Tue, 29 Jul 2025 16:37:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753806962; cv=none; b=dx8Qf3Jy9UEmQ9H6372wFndQWKbFmaArWfINVk6/YlAZ6Q5FCT1jhP+MASl/wTHq/OiM2xEPjf13jCgv4n7DiRNv99zXNettekIADgsSuFXYfZfDP2eRlafysTXoVt83pds8AAI8LAaXxK15mQM8hO5ERXF1DmpFhVWcdVSazjo=
+	t=1753807047; cv=none; b=QgBYUFbXnNcXqwKhfGV71IqkfCU1Gpr/irolFjxCnr05le7j9PILFIvvAPvp7JF+sIOT7KZV8orPMEf6P0TTcN+w4IbDtp9ecCaN3d7bJ1YuYAcLIGrHVmgc9Sn+g303Kyj8m5NXSY1R7ampBzki4YAfROYFHWy/s44slRmNPRY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753806962; c=relaxed/simple;
-	bh=O+r4SjkFSBxoj37YP4ikCrlULrTJ/NWAQrOlcqCn/js=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=OD6DSjVVH9eBEG/z8uuQSbuGDzbsi1j+lby9m8Iacy1GxpkE/8KhSxQaQ7x72uB7H+LRMQOUQKW4BEnOeHVR9vRardEGjtD9rZZiDo0tAnc+JYL+Ys7GoqSRWm6PYWwO0HuK577JQSN1xhyyJA5AVru3ZNpfk7NDYFhUutItrzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Jg3qzVaC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753807047; c=relaxed/simple;
+	bh=hYy6sxijyS2b/WJms3vVbD+SH5wQt5JHpfZtAvgSiwA=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=e0eXEdzOLYjiEB/ZVQmJDOB/4knYrTAzYrndJEukxHlC3acl6AjGg/NIGKuhwHBXnBgQGOAJMB1shqYRXLaWXSKashr71OcmAbjUrzGorIKU3azrahreFUBfNq4Rjr9OgQCygjKFBbAalVTzvsEriaAps3Zynb8gkG/gCQg2Qvk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=ra0usx3K; arc=none smtp.client-ip=198.47.19.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Jg3qzVaC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8EFBBC4CEF4;
-	Tue, 29 Jul 2025 16:35:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753806961;
-	bh=O+r4SjkFSBxoj37YP4ikCrlULrTJ/NWAQrOlcqCn/js=;
-	h=Date:Cc:Subject:From:To:References:In-Reply-To:From;
-	b=Jg3qzVaCPZV7/wy/lndN1g8gcj4o0GVY3IBFUi1rBEIrcFpFteY4Cj/PYD5FToege
-	 dP3CyHreo/bv2M+JIpc7yPW5ZqSVJlcro5IP77PFcP+ZvglRlmbuABljukBwBE3Pks
-	 vAf+mz0ZNUBmpqdqGT9zxninxpeNA6nAn+XDGZQXIlickluz85OlvuIf7xZdT18hsD
-	 tPyhA1w9lbfx3iSTZuw+bDcbY33J5Enss9mRkaCFGk6u4jQXSUvS2YEQPhsrmKwCpC
-	 IhooDzuN86bJ5gMNHPCSgoGTY4wNy2lfwXjVeCGAxbJcLIVDaVUUu74SbRDjBUcq+u
-	 cninRYZemMl/A==
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="ra0usx3K"
+Received: from lelvem-sh01.itg.ti.com ([10.180.77.71])
+	by fllvem-ot03.ext.ti.com (8.15.2/8.15.2) with ESMTP id 56TGNdFC2561302;
+	Tue, 29 Jul 2025 11:23:39 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1753806219;
+	bh=P3a8N7GGRYeSHSllhgnuhQKsscziar9Xg6190x1fyKo=;
+	h=Date:From:To:CC:Subject:References:In-Reply-To;
+	b=ra0usx3KRW+fLu8oZYORUDkvuKkHaa+Sdu14m3BzyQM67DiV4QMTAW7AO6DHTdBYW
+	 ayR5EffXTF+qK1vl1Pf0L94NCHnIuVbsylUdhSbh1ALBfJ82HauMnp+LLODItFacqu
+	 Khta69na9dF2jI2AEaLASntQ3HH9UId24X3vcv04=
+Received: from DFLE112.ent.ti.com (dfle112.ent.ti.com [10.64.6.33])
+	by lelvem-sh01.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 56TGNdTX1239402
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA256 bits=128 verify=FAIL);
+	Tue, 29 Jul 2025 11:23:39 -0500
+Received: from DFLE114.ent.ti.com (10.64.6.35) by DFLE112.ent.ti.com
+ (10.64.6.33) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55; Tue, 29
+ Jul 2025 11:23:38 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55 via
+ Frontend Transport; Tue, 29 Jul 2025 11:23:38 -0500
+Received: from localhost (uda0133052.dhcp.ti.com [128.247.81.232])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 56TGNc6U3708765;
+	Tue, 29 Jul 2025 11:23:38 -0500
+Date: Tue, 29 Jul 2025 11:23:38 -0500
+From: Nishanth Menon <nm@ti.com>
+To: Jan Kiszka <jan.kiszka@siemens.com>
+CC: <huaqian.li@siemens.com>, <lkp@intel.com>, <baocheng.su@siemens.com>,
+        <bhelgaas@google.com>, <christophe.jaillet@wanadoo.fr>,
+        <conor+dt@kernel.org>, <devicetree@vger.kernel.org>,
+        <diogo.ivo@siemens.com>, <helgaas@kernel.org>, <kristo@kernel.org>,
+        <krzk+dt@kernel.org>, <kw@linux.com>,
+        <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+        <linux-pci@vger.kernel.org>, <lpieralisi@kernel.org>,
+        <oe-kbuild-all@lists.linux.dev>, <robh@kernel.org>,
+        <s-vadapalli@ti.com>, <ssantosh@kernel.org>, <vigneshr@ti.com>
+Subject: Re: [PATCH v12 3/7] soc: ti: Add IOMMU-like PVU driver
+Message-ID: <20250729162338.so7evngndnysg4ui@cinnamon>
+References: <20250728023701.116963-1-huaqian.li@siemens.com>
+ <20250728023701.116963-4-huaqian.li@siemens.com>
+ <20250729122246.o7upnxvqnp7nltdo@harmonize>
+ <bdb5a5e2-3a7e-4050-bf25-c95dfa05138a@siemens.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Tue, 29 Jul 2025 18:35:54 +0200
-Message-Id: <DBOOOGFNK5YV.1B67YLP2GBD2A@kernel.org>
-Cc: <rust-for-linux@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
- <dakr@kernel.org>, <bhelgaas@google.com>, <kwilczynski@kernel.org>,
- <ojeda@kernel.org>, <alex.gaynor@gmail.com>, <boqun.feng@gmail.com>,
- <gary@garyguo.net>, <bjorn3_gh@protonmail.com>, <a.hindborg@kernel.org>,
- <aliceryhl@google.com>, <tmgross@umich.edu>
-Subject: Re: [PATCH v2] rust: pci: Use explicit types in FFI callbacks
-From: "Benno Lossin" <lossin@kernel.org>
-To: "herculoxz" <abhinav.ogl@gmail.com>, <linux-pci@vger.kernel.org>
-X-Mailer: aerc 0.20.1
-References: <20250729102953.141412-1-abhinav.ogl@gmail.com>
-In-Reply-To: <20250729102953.141412-1-abhinav.ogl@gmail.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <bdb5a5e2-3a7e-4050-bf25-c95dfa05138a@siemens.com>
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-On Tue Jul 29, 2025 at 12:29 PM CEST, herculoxz wrote:
-> From: Abhinav Ananthu <abhinav.ogl@gmail.com>
->
-> Update PCI FFI callback signatures to use `c_int` from the prelude,
-> instead of accessing it via `kernel::ffi::c_int`.
->
-> This follows Rust-for-Linux coding guidelines and improves ABI
-> correctness when interfacing with C code.
->
-> Signed-off-by: Abhinav Ananthu <abhinav.ogl@gmail.com>
+On 18:11-20250729, Jan Kiszka wrote:
+> On 29.07.25 14:22, Nishanth Menon wrote:
+> > On 10:36-20250728, huaqian.li@siemens.com wrote:
+> >> From: Jan Kiszka <jan.kiszka@siemens.com>
+> >>
+> >> The TI Peripheral Virtualization Unit (PVU) permits to define a limited
+> >> set of mappings for DMA requests on the system memory. Unlike with an
+> >> IOMMU, there is no fallback to a memory-backed page table, only a fixed
+> >> set of register-backed TLBs. Emulating an IOMMU behavior appears to be
+> >> the more fragile the more fragmentation of pending requests occur.
+> >>
+> >> Therefore, this driver does not expose the PVU as an IOMMU. It rather
+> >> introduces a simple, static interface to devices that are under
+> >> restricted-dma-pool constraints. They can register their pools with the
+> >> PVUs, enabling only those pools to work for DMA. As also MSI is issued
+> >> as DMA, the PVU already register the related translator region of the
+> >> AM654 as valid DMA target.
+> >>
+> >> This driver is the essential building block for limiting DMA from
+> >> untrusted devices to clearly defined memory regions in the absence of a
+> >> real IOMMU (SMMU).
+> >>
+> >> Co-developed-by: Diogo Ivo <diogo.ivo@siemens.com>
+> >> Signed-off-by: Diogo Ivo <diogo.ivo@siemens.com>
+> >> Signed-off-by: Jan Kiszka <jan.kiszka@siemens.com>
+> >> Signed-off-by: Li Hua Qian <huaqian.li@siemens.com>
+> >> ---
+> >>  drivers/soc/ti/Kconfig  |   4 +
+> >>  drivers/soc/ti/Makefile |   1 +
+> >>  drivers/soc/ti/ti-pvu.c | 500 ++++++++++++++++++++++++++++++++++++++++
+> >>  include/linux/ti-pvu.h  |  32 +++
+> >>  4 files changed, 537 insertions(+)
+> >>  create mode 100644 drivers/soc/ti/ti-pvu.c
+> >>  create mode 100644 include/linux/ti-pvu.h
+> >>
+> >> diff --git a/drivers/soc/ti/Kconfig b/drivers/soc/ti/Kconfig
+> >> index 1a93001c9e36..af7173ad84de 100644
+> >> --- a/drivers/soc/ti/Kconfig
+> >> +++ b/drivers/soc/ti/Kconfig
+> >> @@ -82,6 +82,10 @@ config TI_PRUSS
+> >>  	  processors on various TI SoCs. It's safe to say N here if you're
+> >>  	  not interested in the PRU or if you are unsure.
+> >>  
+> >> +config TI_PVU
+> >> +	bool "TI Peripheral Virtualization Unit driver"
+> > 
+> > tristate please? Prefer to make this as a module.
+> > 
+> > 
+> 
+> PCI_KEYSTONE is bool and needs this (if enabled). So this won't be a
+> module in practice.
+> 
 
-Reviewed-by: Benno Lossin <lossin@kernel.org>
+Something of the form of
+https://lore.kernel.org/all/20250307103128.3287497-1-s-vadapalli@ti.com/
+will need to be done then.
 
----
-Cheers,
-Benno
-
-> ---
->  rust/kernel/pci.rs | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+-- 
+Regards,
+Nishanth Menon
+Key (0xDDB5849D1736249D) / Fingerprint: F8A2 8693 54EB 8232 17A3  1A34 DDB5 849D 1736 249D
+https://ti.com/opensource
