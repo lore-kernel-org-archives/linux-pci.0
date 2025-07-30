@@ -1,193 +1,134 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from sinmsgout02.his.huawei.com (sinmsgout02.his.huawei.com [119.8.177.37])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A760A4C62
-	for <linux-pci@vger.kernel.org>; Wed, 30 Jul 2025 12:41:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112A4239E70;
+	Wed, 30 Jul 2025 12:41:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.8.177.37
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753879281; cv=none; b=WdLNlRETdp7psf/BvB+M5i50yoSUxjcDV3nVI1sRwc6HislIuTDRTO2Ox5R/Yh3Euzkz82ZLoNshxVZdJr7Zlwd7e+hHHBq//wXnSsxjbQZ6Qmuo4VLIGl88olimx1TCawJLF9EUT4cu+fFCuMukoGwiMyYDoJ0URWVoo4l2hs4=
+	t=1753879291; cv=none; b=Zkt8QpUlK1sFw9LHLdWWZh90/sZ5QBxJZwnuqpbX2lFyD3wpC7VEY9pMP3GEmho3sq1hj5TMu2NeVbyT2xSLSXEqMRb4mIgINfFkssK4Y+YW8jHpEpf68vayGcH/WVRK2PxdxqX5WTo9vQgonSDEj2XnDFwzeZA//Q9K5jqjwY0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753879281; c=relaxed/simple;
-	bh=P7gBh8Tnwya4Hn72eHJJDWRMhrONmqCorzrWKl4pHMM=;
-	h=Date:From:To:Cc:Subject:Message-ID; b=WEafEjGA92gaJMZSmbyHz0/Br6TcRFaU+LCOYlxnLKEj9l1L1Nuf4LN5rxv3t3Fdrl+J/oBCxalmv9kL9rGFZH8UMxrGEOfztYcXGggTTZL1LVdJAPQGgExwJViYflD9qce6iUREUKUPzh4Y2dkAXOd7QzZSu9Ed7tj7Ro2UELY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MAGT+eKk; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1753879291; c=relaxed/simple;
+	bh=hSKWeK4jIQ3ltENJO1Y4xgSkz64IbO0gBUihPvo7dgA=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Vm/Cdb59N1nFzaPjkGJbSUARPhbJBbUWKIc5EIjIQb248+++7k2TKfsUj9iTN/icLNXrViqFwl3RP6XGl0ieRm5Mw2vi42crfle8nnCjQIlGVxbFTIGK7zW+xi2wqeXQUVhFA0ICDpi/EwR9bwzP03nOM2I2TEwqSpV9gBMnNhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=K2QgADKq; arc=none smtp.client-ip=119.8.177.37
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MAGT+eKk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753879279; x=1785415279;
-  h=date:from:to:cc:subject:message-id;
-  bh=P7gBh8Tnwya4Hn72eHJJDWRMhrONmqCorzrWKl4pHMM=;
-  b=MAGT+eKkAXfC4AauP2cLmZmm+eWCVTdrKNepd1XXzmJGyrsPxIFPHtSa
-   CvL0l18mFBS07q9IBshi3YyfRoiu2bXCMB7huMrj1D9FcJoN9EugJQ3ft
-   z5VH6zZKRJfQlpwoe3lmpLLevGGjGjWbxENyjj8+G+GybL463V2iioiu8
-   r2tkGbYex/FugJvn97oqxZ1qjdlcMho8S6aaIqTmibJHSn+FpN1kG6fge
-   xzppmj56bzvgJmGUw7uqj8PWWApcnHrvAN++J42FSlJ/kmZKZLBQFYoGo
-   2tZBaO56m8c1kcUt9aNwSI3dJXTjmU4M7gwpuBpX3FIxAhQjJ4J5ncCl9
-   A==;
-X-CSE-ConnectionGUID: AhrWJgDkQk6pOGfc3x6hlQ==
-X-CSE-MsgGUID: wMZ3y8rgREGrhdPpuJsA+w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11507"; a="67256650"
-X-IronPort-AV: E=Sophos;i="6.16,350,1744095600"; 
-   d="scan'208";a="67256650"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Jul 2025 05:41:18 -0700
-X-CSE-ConnectionGUID: 2RZsfPVIQAGjwryE6XOZiA==
-X-CSE-MsgGUID: oCJtGYPqS8aqfXUWFFmAZQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,350,1744095600"; 
-   d="scan'208";a="163323690"
-Received: from lkp-server01.sh.intel.com (HELO 160750d4a34c) ([10.239.97.150])
-  by fmviesa009.fm.intel.com with ESMTP; 30 Jul 2025 05:41:17 -0700
-Received: from kbuild by 160750d4a34c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uh67P-0002jW-2I;
-	Wed, 30 Jul 2025 12:41:15 +0000
-Date: Wed, 30 Jul 2025 20:40:33 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: linux-pci@vger.kernel.org
-Subject: [pci:next] BUILD SUCCESS
- e046b1731006b4c6c94bcb4ef1c6692a30014c43
-Message-ID: <202507302026.qZqJycs5-lkp@intel.com>
-User-Agent: s-nail v14.9.24
+	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="K2QgADKq"
+dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=CjzPqR7WdKZ/KoF+pD8LVi/4ga/Gs/KbgPgLLPosQEs=;
+	b=K2QgADKq9tMmsmbfL4rl638FrPpN4nk5oYriQPy859Lg55Xy9BhLrO0d+wSVdUfNgEIXOYzWB
+	0hEqfMggEl7S+FOdkgzd1fS3H25j/wl4lKPlTH2doy5B52ArJKCOcNdcQU7HjaretVdz/i9Z+7p
+	SukiSAmVspurrK57xq/tuaI=
+Received: from frasgout.his.huawei.com (unknown [172.18.146.37])
+	by sinmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4bsWYR5Npdz1vp4j;
+	Wed, 30 Jul 2025 20:22:03 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.18.186.31])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4bsWVL6psBz6L4xm;
+	Wed, 30 Jul 2025 20:19:22 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id C96351402F3;
+	Wed, 30 Jul 2025 20:23:35 +0800 (CST)
+Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 30 Jul
+ 2025 14:23:34 +0200
+Date: Wed, 30 Jul 2025 13:23:33 +0100
+From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+To: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+CC: Jason Gunthorpe <jgg@ziepe.ca>, Dan Williams <dan.j.williams@intel.com>,
+	<linux-coco@lists.linux.dev>, <kvmarm@lists.linux.dev>,
+	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, <aik@amd.com>,
+	<lukas@wunner.de>, Samuel Ortiz <sameo@rivosinc.com>, Xu Yilun
+	<yilun.xu@linux.intel.com>, Suzuki K Poulose <Suzuki.Poulose@arm.com>, Steven
+ Price <steven.price@arm.com>, Catalin Marinas <catalin.marinas@arm.com>, Marc
+ Zyngier <maz@kernel.org>, Will Deacon <will@kernel.org>, Oliver Upton
+	<oliver.upton@linux.dev>, <gregkh@linuxfoundation.org>
+Subject: Re: [RFC PATCH v1 11/38] KVM: arm64: CCA: register host tsm
+ platform device
+Message-ID: <20250730132333.00006fbf@huawei.com>
+In-Reply-To: <20250730113827.000032b8@huawei.com>
+References: <20250728135216.48084-1-aneesh.kumar@kernel.org>
+	<20250728135216.48084-12-aneesh.kumar@kernel.org>
+	<20250729181045.0000100b@huawei.com>
+	<20250729231948.GJ26511@ziepe.ca>
+	<yq5aqzxy9ij1.fsf@kernel.org>
+	<20250730113827.000032b8@huawei.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: lhrpeml500011.china.huawei.com (7.191.174.215) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
-tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git next
-branch HEAD: e046b1731006b4c6c94bcb4ef1c6692a30014c43  Merge branch 'pci/misc'
+On Wed, 30 Jul 2025 11:38:27 +0100
+Jonathan Cameron <Jonathan.Cameron@huawei.com> wrote:
 
-elapsed time: 1060m
+> On Wed, 30 Jul 2025 14:12:26 +0530
+> "Aneesh Kumar K.V" <aneesh.kumar@kernel.org> wrote:
+> 
+> > Jason Gunthorpe <jgg@ziepe.ca> writes:
+> >   
+> > > On Tue, Jul 29, 2025 at 06:10:45PM +0100, Jonathan Cameron wrote:
+> > >    
+> > >> > +static struct platform_device cca_host_dev = {    
+> > >> Hmm. Greg is getting increasingly (and correctly in my view) grumpy with
+> > >> platform devices being registered with no underlying resources etc as glue
+> > >> layers.  Maybe some of that will come later.    
+> > >
+> > > Is faux_device a better choice? I admit to not knowing entirely what
+> > > it is for..  
+> 
+> I'll go with a cautious yes to faux_device. This case of a glue device
+> with no resources and no reason to be on a particular bus was definitely
+> the intent but I'm not 100% sure without trying it that we don't run
+> into any problems.
+> 
+> Not that many examples yet, but cpuidle-psci.c looks like a vaguely similar
+> case to this one.  
+> 
+> All it really does is move the location of the device and
+> smash together the device registration with probe/remove.
+> That means the device disappears if probe() fails, which is cleaner
+> in many ways than leaving a pointless stub behind.
+> 
+> Maybe it isn't appropriate it if is actually useful to rmmod/modprobe the
+> driver. 
+> 
+> +CC Greg on basis I may have wrong end of the stick ;)
+This time with at least one less typo in Greg's email address.
 
-configs tested: 116
-configs skipped: 12
+> 
+> > >
+> > > But alternatively, why do we need a dummy "hw" struct device at all?
+> > > Typically a subsystem like TSM should be structured to create its own
+> > > struct devices..
+> > >
+> > > I would expect this to just call 'register tsm' ?
+> > >    
+> > 
+> > The goal is to have tsm class device to be parented by the platform
+> > device.  
+> 
+> > 
+> > # ls -al
+> > total 0
+> > drwxr-xr-x    2 root     root             0 Jan 13 06:07 .
+> > drwxr-xr-x   23 root     root             0 Jan  1 00:00 ..
+> > lrwxrwxrwx    1 root     root             0 Jan 13 06:07 tsm0 -> ../../devices/platform/arm-rmi-dev/tsm/tsm0
+> > # pwd
+> > /sys/class/tsm
+> > 
+> > -aneesh
+> >   
+> 
+> 
 
-The following configs have been built successfully.
-More configs may be tested in the coming days.
-
-tested configs:
-alpha                             allnoconfig    gcc-15.1.0
-alpha                            allyesconfig    gcc-15.1.0
-arc                              allmodconfig    gcc-15.1.0
-arc                               allnoconfig    gcc-15.1.0
-arc                              allyesconfig    gcc-15.1.0
-arc                   randconfig-001-20250730    gcc-8.5.0
-arc                   randconfig-002-20250730    gcc-14.3.0
-arm                              allmodconfig    gcc-15.1.0
-arm                               allnoconfig    clang-22
-arm                          ep93xx_defconfig    clang-22
-arm                         lpc18xx_defconfig    clang-22
-arm                   randconfig-001-20250730    clang-22
-arm                   randconfig-002-20250730    clang-20
-arm                   randconfig-003-20250730    gcc-8.5.0
-arm                   randconfig-004-20250730    gcc-14.3.0
-arm                         s3c6400_defconfig    gcc-15.1.0
-arm64                            allmodconfig    clang-19
-arm64                             allnoconfig    gcc-15.1.0
-arm64                 randconfig-001-20250730    clang-22
-arm64                 randconfig-002-20250730    clang-20
-arm64                 randconfig-003-20250730    clang-17
-arm64                 randconfig-004-20250730    clang-22
-csky                              allnoconfig    gcc-15.1.0
-csky                  randconfig-001-20250730    gcc-14.3.0
-csky                  randconfig-002-20250730    gcc-12.5.0
-hexagon                          allmodconfig    clang-17
-hexagon                           allnoconfig    clang-22
-hexagon                          allyesconfig    clang-22
-hexagon               randconfig-001-20250730    clang-20
-hexagon               randconfig-002-20250730    clang-22
-i386                             allmodconfig    gcc-12
-i386                              allnoconfig    gcc-12
-i386                             allyesconfig    gcc-12
-i386        buildonly-randconfig-001-20250730    clang-20
-i386        buildonly-randconfig-002-20250730    clang-20
-i386        buildonly-randconfig-003-20250730    gcc-12
-i386        buildonly-randconfig-004-20250730    gcc-12
-i386        buildonly-randconfig-005-20250730    clang-20
-i386        buildonly-randconfig-006-20250730    gcc-12
-i386                                defconfig    clang-20
-loongarch                        allmodconfig    clang-19
-loongarch                         allnoconfig    clang-22
-loongarch             randconfig-001-20250730    clang-22
-loongarch             randconfig-002-20250730    clang-20
-m68k                             allmodconfig    gcc-15.1.0
-m68k                              allnoconfig    gcc-15.1.0
-m68k                             allyesconfig    gcc-15.1.0
-microblaze                       allmodconfig    gcc-15.1.0
-microblaze                        allnoconfig    gcc-15.1.0
-microblaze                       allyesconfig    gcc-15.1.0
-microblaze                          defconfig    gcc-15.1.0
-mips                              allnoconfig    gcc-15.1.0
-nios2                             allnoconfig    gcc-11.5.0
-nios2                               defconfig    gcc-11.5.0
-nios2                 randconfig-001-20250730    gcc-11.5.0
-nios2                 randconfig-002-20250730    gcc-9.5.0
-openrisc                          allnoconfig    gcc-15.1.0
-openrisc                         allyesconfig    gcc-15.1.0
-parisc                           allmodconfig    gcc-15.1.0
-parisc                            allnoconfig    gcc-15.1.0
-parisc                           allyesconfig    gcc-15.1.0
-parisc                              defconfig    gcc-15.1.0
-parisc                randconfig-001-20250730    gcc-14.3.0
-parisc                randconfig-002-20250730    gcc-8.5.0
-parisc64                            defconfig    gcc-15.1.0
-powerpc                          allmodconfig    gcc-15.1.0
-powerpc                           allnoconfig    gcc-15.1.0
-powerpc                          allyesconfig    clang-22
-powerpc                     ep8248e_defconfig    gcc-15.1.0
-powerpc                          g5_defconfig    gcc-15.1.0
-powerpc               randconfig-001-20250730    gcc-8.5.0
-powerpc               randconfig-002-20250730    gcc-8.5.0
-powerpc               randconfig-003-20250730    clang-22
-powerpc64             randconfig-001-20250730    clang-22
-powerpc64             randconfig-002-20250730    clang-22
-powerpc64             randconfig-003-20250730    gcc-10.5.0
-riscv                            allmodconfig    clang-22
-riscv                             allnoconfig    gcc-15.1.0
-riscv                            allyesconfig    clang-16
-riscv                 randconfig-001-20250730    gcc-10.5.0
-riscv                 randconfig-002-20250730    gcc-8.5.0
-s390                             allmodconfig    clang-18
-s390                              allnoconfig    clang-22
-s390                             allyesconfig    gcc-15.1.0
-s390                  randconfig-001-20250730    clang-20
-s390                  randconfig-002-20250730    gcc-15.1.0
-sh                               allmodconfig    gcc-15.1.0
-sh                                allnoconfig    gcc-15.1.0
-sh                               allyesconfig    gcc-15.1.0
-sh                    randconfig-001-20250730    gcc-12.5.0
-sh                    randconfig-002-20250730    gcc-15.1.0
-sparc                            allmodconfig    gcc-15.1.0
-sparc                             allnoconfig    gcc-15.1.0
-sparc                               defconfig    gcc-15.1.0
-sparc                 randconfig-001-20250730    gcc-14.3.0
-sparc                 randconfig-002-20250730    gcc-14.3.0
-sparc64               randconfig-001-20250730    clang-22
-sparc64               randconfig-002-20250730    clang-20
-um                               allmodconfig    clang-19
-um                                allnoconfig    clang-22
-um                               allyesconfig    gcc-12
-um                    randconfig-001-20250730    gcc-11
-um                    randconfig-002-20250730    clang-22
-x86_64                            allnoconfig    clang-20
-x86_64                           allyesconfig    clang-20
-x86_64      buildonly-randconfig-001-20250730    gcc-12
-x86_64      buildonly-randconfig-002-20250730    clang-20
-x86_64      buildonly-randconfig-003-20250730    clang-20
-x86_64      buildonly-randconfig-004-20250730    clang-20
-x86_64      buildonly-randconfig-005-20250730    clang-20
-x86_64      buildonly-randconfig-006-20250730    clang-20
-x86_64                              defconfig    gcc-11
-x86_64                          rhel-9.4-rust    clang-20
-xtensa                            allnoconfig    gcc-15.1.0
-xtensa                randconfig-001-20250730    gcc-11.5.0
-xtensa                randconfig-002-20250730    gcc-12.5.0
-
---
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
