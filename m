@@ -1,60 +1,69 @@
-Received: from sinmsgout03.his.huawei.com (sinmsgout03.his.huawei.com [119.8.177.38])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FF8E26CE1D;
-	Wed, 30 Jul 2025 10:41:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=119.8.177.38
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0361F293C6C;
+	Wed, 30 Jul 2025 11:21:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753872087; cv=none; b=Rl1zU4z3UhN7N5T/MxrSt6IK6fli9c//AVQrs6EJbDUFJFX8Zg4EWNk+LSBaHEfhqnSPnoWp8Y4sAjXgwUcuJwscI+WgIm76wFXAkm9RqFnIGIEfewWzdLH+f4H/7ZdonG+yxvcCypxIIJjOctRpa1XR0qw5ZSNPy/7M6YQJWvg=
+	t=1753874487; cv=none; b=o+oehWilKb+a12Jh/A3XQs/zJyg42zwksKo2WF0cywjPFJFNPO/rpuT0X/uqIy27rCNSNfBXr2YorYo8HoVEoXByTPyViyRocSfEYJw5fbiTtU0hR7ZCvspWTL6uY7K44UNKQQaQaKOjYcWhq8Pga0sey+3kpUrXlHM2AlFagcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753872087; c=relaxed/simple;
-	bh=udELr8i7MKBg+40QMi0znw8LgSQipPGw8KbLrBcK2oA=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=kWhfgsL/JApxSM8exXmVXi0F+3CNRO1XvC45jOgaI9Olv2UXpYb6h1ZOXNx4MmGAwGrlMRJY02Gzyyp6pP803vc6KdHLp5Jc+qK0IbQEL32KItOj+PBzUkZnjps+nJh4EW9LuXJC6unyEMQlQu08UX22DL0PpTEJG7JGqrzSECc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b=evOs+sUA; arc=none smtp.client-ip=119.8.177.38
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+	s=arc-20240116; t=1753874487; c=relaxed/simple;
+	bh=lFOsaGCqPFeMuSYl12T0qvZETcU/iSpEinVY4COc/Iw=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=SpIvyrDpzzifWEkc9Xa9SNRZfKgmZiIuanwrBNxGQAXIJfsIukFFMlhqrd29qGGEpeYCROQInU7yvW1DILeVoxMw2JKbTFu2QFOxBF5xwapHK+vID5KmwYBW7xot94t49QE7mny7G25q3sPsOTRoWKrZujNYbs0uVBJX1isAztM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=YeINPCD5; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=huawei.com header.i=@huawei.com header.b="evOs+sUA"
-dkim-signature: v=1; a=rsa-sha256; d=huawei.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=7Vxid69zRfL2ebFFVMcUyZ2ZAjzALw8kkMHPdwmzWMc=;
-	b=evOs+sUAw6peOsbDefxFubI0yUyAT+MLdvPSgjTQ5rjBizTE2SYw+PMVHk2j/P5MmGeoqUzI+
-	WkYWolLFf/JT5uytenE1/nop0XHYpEs6m/56t7Ogq5/96i+TFjsXSbkWkgvHSweI+kduLylYUQ/
-	+4FyS5drV648YRaxKeFN+m0=
-Received: from frasgout.his.huawei.com (unknown [172.18.146.36])
-	by sinmsgout03.his.huawei.com (SkyGuard) with ESMTPS id 4bsSxg12tSzN0MS;
-	Wed, 30 Jul 2025 18:24:22 +0800 (CST)
-Received: from mail.maildlp.com (unknown [172.18.186.231])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4bsSx90Vb6z6L50d;
-	Wed, 30 Jul 2025 18:23:57 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id 7A2921402F4;
-	Wed, 30 Jul 2025 18:25:52 +0800 (CST)
-Received: from localhost (10.203.177.66) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Wed, 30 Jul
- 2025 12:25:51 +0200
-Date: Wed, 30 Jul 2025 11:25:49 +0100
-From: Jonathan Cameron <Jonathan.Cameron@huawei.com>
-To: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
-CC: <linux-coco@lists.linux.dev>, <kvmarm@lists.linux.dev>,
-	<linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>, <aik@amd.com>,
-	<lukas@wunner.de>, Samuel Ortiz <sameo@rivosinc.com>, Xu Yilun
-	<yilun.xu@linux.intel.com>, Jason Gunthorpe <jgg@ziepe.ca>, "Suzuki K
- Poulose" <Suzuki.Poulose@arm.com>, Steven Price <steven.price@arm.com>,
-	Catalin Marinas <catalin.marinas@arm.com>, Marc Zyngier <maz@kernel.org>,
-	Will Deacon <will@kernel.org>, Oliver Upton <oliver.upton@linux.dev>
-Subject: Re: [RFC PATCH v1 12/38] coco: host: arm64: CCA host platform
- device driver
-Message-ID: <20250730112549.00003e7d@huawei.com>
-In-Reply-To: <yq5ao6t29hrk.fsf@kernel.org>
-References: <20250728135216.48084-1-aneesh.kumar@kernel.org>
-	<20250728135216.48084-13-aneesh.kumar@kernel.org>
-	<20250729182244.00002f4f@huawei.com>
-	<yq5ao6t29hrk.fsf@kernel.org>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="YeINPCD5"
+Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56U1vf7v017098;
+	Wed, 30 Jul 2025 11:21:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=5obXgh
+	oBDb03rk0VDSAZ7lFDc9v2p/DdlGM67CP3lvw=; b=YeINPCD5Zn7mxdOAOZz4X3
+	sOWifwBVDfptouS6zG/lGjDm5xLelNZqh4y9K/Tn0RWntrLpAqERT1Smu96XsXm6
+	dk+aR739qUAOajVEIawcQS23fSzKxrHisVha9fMbRPjVGPIvuZYDErjMr/3jEyuJ
+	bx2yTdyXPACSNryIZGQe6RtyGV8EkOXMm/g0mj3HRlY0/51sMWiPbQ/XbCQt6gzT
+	qTvme6SPrPXhnx8QQKL+Rfa9Cj1eafCdToWtmI8itdU2721wP7VWtE4/TIYMLT3K
+	/rnmaUwYfWQXCZTdn/w08TNUdN9tLavitHldKx10oEc4KnGgRX8uWR4FoCGc946Q
+	==
+Received: from pps.reinject (localhost [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4864k7vt1j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 30 Jul 2025 11:21:17 +0000 (GMT)
+Received: from m0360072.ppops.net (m0360072.ppops.net [127.0.0.1])
+	by pps.reinject (8.18.1.12/8.18.0.8) with ESMTP id 56UBJHiF000365;
+	Wed, 30 Jul 2025 11:21:16 GMT
+Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4864k7vt1h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 30 Jul 2025 11:21:16 +0000 (GMT)
+Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 56U6tlaO006252;
+	Wed, 30 Jul 2025 11:21:15 GMT
+Received: from smtprelay03.wdc07v.mail.ibm.com ([172.16.1.70])
+	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 485bjm6xuy-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 30 Jul 2025 11:21:15 +0000
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay03.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 56UBL6dM6357748
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 30 Jul 2025 11:21:06 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 9412D58051;
+	Wed, 30 Jul 2025 11:21:13 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id BBA815805C;
+	Wed, 30 Jul 2025 11:21:10 +0000 (GMT)
+Received: from tuxmaker.boeblingen.de.ibm.com (unknown [9.152.85.9])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 30 Jul 2025 11:21:10 +0000 (GMT)
+From: Niklas Schnelle <schnelle@linux.ibm.com>
+Date: Wed, 30 Jul 2025 13:20:57 +0200
+Subject: [PATCH v3 1/2] PCI/AER: Fix missing uevent on recovery when a
+ reset is requested
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -62,66 +71,88 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-X-ClientProxiedBy: lhrpeml500009.china.huawei.com (7.191.174.84) To
- frapeml500008.china.huawei.com (7.182.85.71)
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250730-add_err_uevents-v3-1-540b158c070f@linux.ibm.com>
+References: <20250730-add_err_uevents-v3-0-540b158c070f@linux.ibm.com>
+In-Reply-To: <20250730-add_err_uevents-v3-0-540b158c070f@linux.ibm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, Lukas Wunner <lukas@wunner.de>,
+        Mahesh J Salgaonkar <mahesh@linux.ibm.com>
+Cc: Linas Vepstas <linasvepstas@gmail.com>,
+        =?utf-8?q?Ilpo_J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Gerald Schaefer <gerald.schaefer@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Peter Oberparleiter <oberpar@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        "Oliver O'Halloran" <oohall@gmail.com>, Sinan Kaya <okaya@kernel.org>,
+        linuxppc-dev@lists.ozlabs.org, linux-s390@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        Niklas Schnelle <schnelle@linux.ibm.com>,
+        Keith Busch <kbusch@kernel.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1194;
+ i=schnelle@linux.ibm.com; h=from:subject:message-id;
+ bh=lFOsaGCqPFeMuSYl12T0qvZETcU/iSpEinVY4COc/Iw=;
+ b=owGbwMvMwCX2Wz534YHOJ2GMp9WSGDK6GJSk4jaJNjX7s/FWTOpfuz64bd+0bWGFfELFOh8vr
+ ty2ZsvejlIWBjEuBlkxRZZFXc5+6wqmmO4J6u+AmcPKBDKEgYtTACbitpqR4cW8zzoSlcG3t01a
+ zZu9jZHx0yydLpOP1U239ddzPLeadIuRoeV8y1E/tSDDPmY1aQ+Vdd4mzCv+FofNbp/Wd/8m35G
+ nnAA=
+X-Developer-Key: i=schnelle@linux.ibm.com; a=openpgp;
+ fpr=9DB000B2D2752030A5F72DDCAFE43F15E8C26090
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: 6MJwY2lVKJ9sB9BqXhPQys5sLr_GtI_0
+X-Proofpoint-GUID: n-WJ77-aeipZPH3QSgiqjW3G6l4Vdl5y
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzMwMDA4MCBTYWx0ZWRfX6L0NDNj6R8IM
+ ltSnttOoAB+UftZvh3fv7wlkUsputRSD8wGW1PUMVzPFBX7rbGs6Aj4rHSBOWzuA+SfZ0mO+S8w
+ i+pQdfJLDFLKPCPidg8rnBbsfmy1rbiwlfgNZiV9x+qFzFLkKOsnluhAWbyn3UT/q37rh9YfKlW
+ sfub98Zj5X9jmiQCRR9AtQItY0XzqDXR96btjFXXpmzB/utpdjT2v1YeCgpoGiyzt8LIm3Iw/jb
+ 5Bc7cTr9jAaWqhgUFJSqBQovftUm1pRHObCDNT/y1u3IakcXIOEFT+bFoVs6Y5eYu4wb7GnBvO3
+ MhJhc+zg1GIpVSDdZPeqvXcEpcYtVAVqf+I7w882yzdbm9w2eHY6ucnQZglvZPU8YbvHFZI2TcZ
+ fL6+PkPoKc0v3Okj69DdJxkV3ZPC7quQuIymcf8Hd6oPpjdykCG+K+xaNafj6XTUHFLK/O6q
+X-Authority-Analysis: v=2.4 cv=ZoDtK87G c=1 sm=1 tr=0 ts=688a002d cx=c_pps
+ a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=Tbr2KL6GNvhcKcAIiBYA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-07-30_04,2025-07-30_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 priorityscore=1501 lowpriorityscore=0 mlxscore=0 clxscore=1011
+ adultscore=0 impostorscore=0 mlxlogscore=999 bulkscore=0 phishscore=0
+ suspectscore=0 malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507300080
 
-On Wed, 30 Jul 2025 14:28:55 +0530
-Aneesh Kumar K.V <aneesh.kumar@kernel.org> wrote:
+Since commit 7b42d97e99d3 ("PCI/ERR: Always report current recovery
+status for udev") AER uses the result of error_detected() as parameter
+to pci_uevent_ers(). As pci_uevent_ers() however does not handle
+PCI_ERS_RESULT_NEED_RESET this results in a missing uevent for the
+beginning of recovery if drivers request a reset. Fix this by treating
+PCI_ERS_RESULT_NEED_RESET as beginning recovery.
 
-> Jonathan Cameron <Jonathan.Cameron@huawei.com> writes:
->=20
-> > On Mon, 28 Jul 2025 19:21:49 +0530
-> > "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org> wrote:
-> > =20
->=20
-> ...
->=20
-> >> +
-> >> +#include "rmm-da.h"
-> >> +
-> >> +/* Number of streams that we can support at the hostbridge level */
-> >> +#define CCA_HB_PLATFORM_STREAMS 4
-> >> +
-> >> +/* Total number of stream id supported at root port level */
-> >> +#define MAX_STREAM_ID	256
-> >> +
-> >> +DEFINE_FREE(vfree, void *, if (!IS_ERR_OR_NULL(_T)) vfree(_T))
-> >> +static struct pci_tsm *cca_tsm_pci_probe(struct pci_dev *pdev)
-> >> +{
-> >> +	int rc;
-> >> +	struct pci_host_bridge *hb;
-> >> +	struct cca_host_dsc_pf0 *dsc_pf0 __free(vfree) =3D NULL; =20
-> >
-> > Read the stuff in cleanup.h and work out why this needs
-> > changing to be inline below and not use this NULL pattern here
-> > (unless you like grumpy Linus ;)
-> >
-> > Note that with the err_out, even if you do that you'll still be
-> > breaking with the guidance doc (and actually causing undefined
-> > behavior :)  Get rid of those gotos if you want to use __free()
-> >
-> > =20
->=20
-> I=E2=80=99ve already fixed up similar cases by removing the goto based on=
- cleanup.h
-> docs in other functions.I must have missed this one.
->=20
-> By the way, isn't using the `NULL` pattern acceptable when there are
-> no additional lock variables involved (ie, unwind order doesn't matter)?
-> Or should we always follow the pattern below regardless?
->=20
-> 	struct cca_host_dsc_pf0 *dsc_pf0 __free(vfree) =3D
-> 		vcalloc(sizeof(*dsc_pf0), GFP_KERNEL);
+Cc: stable@vger.kernel.org
+Fixes: 7b42d97e99d3 ("PCI/ERR: Always report current recovery status for udev")
+Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+---
+ drivers/pci/pci-driver.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Always do this.  It's not really about what happens today but
-more what we might break by failing to notice a future patch causes
-problems.  Keeping the unwind ordering tightly couple with setup
-means we basically can't get it wrong (famous last words ;)
+diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
+index 67db34fd10ee7101baeeaae1bb9bec3b13e2fdeb..94ba6938b7c6271b557cc7f17ffb89631d83827e 100644
+--- a/drivers/pci/pci-driver.c
++++ b/drivers/pci/pci-driver.c
+@@ -1592,6 +1592,7 @@ void pci_uevent_ers(struct pci_dev *pdev, enum pci_ers_result err_type)
+ 	switch (err_type) {
+ 	case PCI_ERS_RESULT_NONE:
+ 	case PCI_ERS_RESULT_CAN_RECOVER:
++	case PCI_ERS_RESULT_NEED_RESET:
+ 		envp[idx++] = "ERROR_EVENT=BEGIN_RECOVERY";
+ 		envp[idx++] = "DEVICE_ONLINE=0";
+ 		break;
 
-Jonathan
-
-
->=20
-> -aneesh
+-- 
+2.48.1
 
