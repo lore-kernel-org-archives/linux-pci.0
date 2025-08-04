@@ -1,115 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20E412749E2;
-	Mon,  4 Aug 2025 13:01:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C3C926CE10;
+	Mon,  4 Aug 2025 13:51:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754312502; cv=none; b=rYAled3tgRcrSwssIq/qAStoFIaUj+H6k7qrBfKxI4Zz312RouGOlYvAf/PyMclHpQxIQG6JA0d65ppYGtRCdMRGOjD1lc4FzNiGP2s1QA2GEHuMFjXFJA/nTUhgLppqVR//yRcoZZ+UaZ4HJ335uv13EKXutwrk3EekBCf5agI=
+	t=1754315509; cv=none; b=aIUAnZEMfgz2EkxDtPIwwAD91TN7oLYtsa5OrpaT5wllWHjCxSJbgwOARH6EmWlwnusRyx6I9WnK3WqxtWBLXWM75ysw86OGuLj/bq8CIQx2i8wxiP1yYaiv5A+VKYxlFVcrcdOPW3+mEle2K1xzi0j9BnvgYdw3H4GKIAx3ov4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754312502; c=relaxed/simple;
-	bh=MSxBGzEUPE37zYCyYE4jEXpC4IceAGVrySCuVXBUCzI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=U3bptb72X7thf0KRRkJiqrqDwfNv6uHnTDKAolYMLfCmr6wWP0gkOH/LaWgrQSHe2+tiuMyB9ROg7dYsx33d2s2rbRfKok8YE4wgtpUsn4cmGKnDNKhe3G/non6B1NXg1bFTUh+HMvKW6gi4mNvt5VangUrmUOhSIjhjHqzB26g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oV6re8fi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754315509; c=relaxed/simple;
+	bh=wAwo3NXJtK1iLZDeAPP1KYlXNSvm8s8ML4jwwp6cXKs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I2ZtPBTLU4lbH0mlVA8eGPuehU8qGWswa35UiO8xMLQQO4AetKSLHVp4OZCwqCJzQrD5dXDz9jkyoVqxBZgPx1WBLSnz9cGNCTMBoAfg/P2pJEFsuS3Hvuzw8rjGumWjzvwP9CMuT7r13tjGmjS2YoqQ3D8FAwr8wrYHeF+U5Wc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=b+xRMoLx; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oV6re8fi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 796FFC4CEF8;
-	Mon,  4 Aug 2025 13:01:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754312501;
-	bh=MSxBGzEUPE37zYCyYE4jEXpC4IceAGVrySCuVXBUCzI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=oV6re8fiGNwYDZzCzdRzp9XpjScFB7jHhr0bUqrsSd/RU8VD1+cDyB4db1ivcuz67
-	 ZbqOoy4QDgWahTEBLZIkeuGoLDtCxufGY1mXb4uUNEIIogWWDZKxvNPNgmGAOQfthR
-	 M88oaFlWV16G0mYbetwlnMeQOqlSTPkZtmJgNfx1DBxt8qHsi8vzBGtgUSwzfG/EF/
-	 +feKrcxhDRe2w3XUDGmoRDhE/Z6LPttQLNSWEXlBJ9NMAhEVqOVOLoQfSfWwEFlJa9
-	 t+8VS5mhktJavv7v+cSijhYGtO53nybwj4RxWUn/B2l2HWenabrQ2aR3U+cNT0+v2t
-	 iMQ+fAg6U3ZtQ==
-From: Leon Romanovsky <leon@kernel.org>
-To: Alex Williamson <alex.williamson@redhat.com>
-Cc: Leon Romanovsky <leonro@nvidia.com>,
-	Jason Gunthorpe <jgg@nvidia.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	Christoph Hellwig <hch@lst.de>,
-	dri-devel@lists.freedesktop.org,
-	iommu@lists.linux.dev,
-	Jens Axboe <axboe@kernel.dk>,
-	Joerg Roedel <joro@8bytes.org>,
-	kvm@vger.kernel.org,
-	linaro-mm-sig@lists.linaro.org,
-	linux-block@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-media@vger.kernel.org,
-	linux-mm@kvack.org,
-	linux-pci@vger.kernel.org,
-	Logan Gunthorpe <logang@deltatee.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Vivek Kasireddy <vivek.kasireddy@intel.com>,
-	Will Deacon <will@kernel.org>
-Subject: [PATCH v1 08/10] vfio/pci: Enable peer-to-peer DMA transactions by default
-Date: Mon,  4 Aug 2025 16:00:43 +0300
-Message-ID: <edb2ec654fc27ba8f73695382ab0a029f18422b5.1754311439.git.leon@kernel.org>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <cover.1754311439.git.leon@kernel.org>
-References: <cover.1754311439.git.leon@kernel.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="b+xRMoLx"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1754315508; x=1785851508;
+  h=message-id:date:mime-version:subject:to:cc:references:
+   from:in-reply-to:content-transfer-encoding;
+  bh=wAwo3NXJtK1iLZDeAPP1KYlXNSvm8s8ML4jwwp6cXKs=;
+  b=b+xRMoLxAaTr6iCY/T+4PNxwtEO1rbrwRhPY6Yf+PueavWZHtCcXBrui
+   z46dSKj/Q0c5w6g9ozLCFgC2h10tOaDg4KxZUzDh20qyBTjcGZIpJzGjg
+   f1FighVKjTMd5fp2kW5QhtEGnHrhhl9A2kY5u1GTE/sQvx4JBFvFjkO65
+   V1wfl+1M0bKCzg1VdgD/ml9j/6NZzdAyO8xjhCoAyM3UATnTSQDZ9hei7
+   +rbfLGzeNbJEyBW2gJlmzSB58k7TY9Kn76bxveflqjmKkN22iC1efrl/q
+   w7P6j7378l2HSlpmXCjZTQV9+Ii5tcf7sbNnNxNe/FBq2QEiEokHz44Vq
+   w==;
+X-CSE-ConnectionGUID: p7ztlKNJTTK2aD9UmE3y3g==
+X-CSE-MsgGUID: 8iDxkyQSRxixRPHq6zPqXw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11512"; a="56448966"
+X-IronPort-AV: E=Sophos;i="6.17,258,1747724400"; 
+   d="scan'208";a="56448966"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2025 06:50:50 -0700
+X-CSE-ConnectionGUID: DcabsRD4Tm63MNlw66PDaQ==
+X-CSE-MsgGUID: rjakUT2wQfqFDVRFT7qd+Q==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.17,258,1747724400"; 
+   d="scan'208";a="164494502"
+Received: from linux.intel.com ([10.54.29.200])
+  by orviesa008.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Aug 2025 06:50:48 -0700
+Received: from [10.124.223.90] (unknown [10.124.223.90])
+	by linux.intel.com (Postfix) with ESMTP id 02EB520B571C;
+	Mon,  4 Aug 2025 06:50:30 -0700 (PDT)
+Message-ID: <9cd9f4cf-72ab-40f1-9ead-3e6807b4d474@linux.intel.com>
+Date: Mon, 4 Aug 2025 06:50:30 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] PCI/AER: Check for NULL aer_info before ratelimiting in
+ pci_print_aer()
+To: Breno Leitao <leitao@debian.org>,
+ Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
+ Oliver O'Halloran <oohall@gmail.com>, Bjorn Helgaas <bhelgaas@google.com>,
+ Jon Pan-Doh <pandoh@google.com>
+Cc: linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
+ linux-kernel@vger.kernel.org, kernel-team@meta.com
+References: <20250804-aer_crash_2-v1-1-fd06562c18a4@debian.org>
+Content-Language: en-US
+From: Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>
+In-Reply-To: <20250804-aer_crash_2-v1-1-fd06562c18a4@debian.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Leon Romanovsky <leonro@nvidia.com>
 
-Make sure that all VFIO PCI devices have peer-to-peer capabilities
-enables, so we would be able to export their MMIO memory through DMABUF,
+On 8/4/25 2:17 AM, Breno Leitao wrote:
+> Similarly to pci_dev_aer_stats_incr(), pci_print_aer() may be called
+> when dev->aer_info is NULL. Add a NULL check before proceeding to avoid
+> calling aer_ratelimit() with a NULL aer_info pointer, returning 1, which
+> does not rate limit, given this is fatal.
 
-Signed-off-by: Leon Romanovsky <leonro@nvidia.com>
----
- drivers/vfio/pci/vfio_pci_core.c | 4 ++++
- include/linux/vfio_pci_core.h    | 1 +
- 2 files changed, 5 insertions(+)
+Why not add it to pci_print_aer() ?
 
-diff --git a/drivers/vfio/pci/vfio_pci_core.c b/drivers/vfio/pci/vfio_pci_core.c
-index 31bdb9110cc0f..df9a32d3deac9 100644
---- a/drivers/vfio/pci/vfio_pci_core.c
-+++ b/drivers/vfio/pci/vfio_pci_core.c
-@@ -28,6 +28,7 @@
- #include <linux/nospec.h>
- #include <linux/sched/mm.h>
- #include <linux/iommufd.h>
-+#include <linux/pci-p2pdma.h>
- #if IS_ENABLED(CONFIG_EEH)
- #include <asm/eeh.h>
- #endif
-@@ -2088,6 +2089,9 @@ int vfio_pci_core_init_dev(struct vfio_device *core_vdev)
- 	INIT_LIST_HEAD(&vdev->dummy_resources_list);
- 	INIT_LIST_HEAD(&vdev->ioeventfds_list);
- 	INIT_LIST_HEAD(&vdev->sriov_pfs_item);
-+	vdev->provider = pci_p2pdma_enable(vdev->pdev);
-+	if (IS_ERR(vdev->provider))
-+		return PTR_ERR(vdev->provider);
- 	init_rwsem(&vdev->memory_lock);
- 	xa_init(&vdev->ctx);
- 
-diff --git a/include/linux/vfio_pci_core.h b/include/linux/vfio_pci_core.h
-index fbb472dd99b36..b017fae251811 100644
---- a/include/linux/vfio_pci_core.h
-+++ b/include/linux/vfio_pci_core.h
-@@ -94,6 +94,7 @@ struct vfio_pci_core_device {
- 	struct vfio_pci_core_device	*sriov_pf_core_dev;
- 	struct notifier_block	nb;
- 	struct rw_semaphore	memory_lock;
-+	struct p2pdma_provider  *provider;
- };
- 
- /* Will be exported for vfio pci drivers usage */
+>
+> This prevents a kernel crash triggered by dereferencing a NULL pointer
+> in aer_ratelimit(), ensuring safer handling of PCI devices that lack
+> AER info. This change aligns pci_print_aer() with pci_dev_aer_stats_incr()
+> which already performs this NULL check.
+
+Is this happening during the kernel boot ? What is the frequency and steps
+to reproduce? I am curious about why pci_print_aer() is called for a PCI device
+without aer_info. Not aer_info means, that particular device is already released
+or in the process of release (pci_release_dev()). Is this triggered by using a stale
+pci_dev pointer?
+
+>
+> Signed-off-by: Breno Leitao <leitao@debian.org>
+> Fixes: a57f2bfb4a5863 ("PCI/AER: Ratelimit correctable and non-fatal error logging")
+> ---
+>   drivers/pci/pcie/aer.c | 3 +++
+>   1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/pci/pcie/aer.c b/drivers/pci/pcie/aer.c
+> index 70ac661883672..b5f96fde4dcda 100644
+> --- a/drivers/pci/pcie/aer.c
+> +++ b/drivers/pci/pcie/aer.c
+> @@ -786,6 +786,9 @@ static void pci_rootport_aer_stats_incr(struct pci_dev *pdev,
+>   
+>   static int aer_ratelimit(struct pci_dev *dev, unsigned int severity)
+>   {
+> +	if (!dev->aer_info)
+> +		return 1;
+> +
+>   	switch (severity) {
+>   	case AER_NONFATAL:
+>   		return __ratelimit(&dev->aer_info->nonfatal_ratelimit);
+>
+> ---
+> base-commit: 89748acdf226fd1a8775ff6fa2703f8412b286c8
+> change-id: 20250801-aer_crash_2-b21cc2ef0d00
+>
+> Best regards,
+> --
+> Breno Leitao <leitao@debian.org>
+>
 -- 
-2.50.1
+Sathyanarayanan Kuppuswamy
+Linux Kernel Developer
 
