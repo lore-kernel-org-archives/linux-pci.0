@@ -1,58 +1,86 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21AA62918DE;
-	Tue,  5 Aug 2025 16:02:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A20B3291C0E
+	for <linux-pci@vger.kernel.org>; Tue,  5 Aug 2025 16:08:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754409770; cv=none; b=HjJrhh+kWwh1H97ROggSWBLLpS0+u19QYtnnpFxNRtTfVaWsftB/40C2aK4wwudb2Ml0oRWDCMO2EcYzCvplNOcauM2g0aqXIXv10fOJhOY4A7D6CKH9ZsRYkVcMXKjFBE8/D18KMhs8Elw77dNH/rvYyvu7ALafMwTg6UTBpm4=
+	t=1754410137; cv=none; b=V1tmqjjR7/7wcdvkIy7CgJp0q1721Id60+XyK7uK/7WUIVr5tviwXdKB3c1tCPMeGcY8VkOqZV8HBfHL5n0//hp7syjpdH2TTJwrseqXmYbTECTdp61K7K/bf2aXyyH7HKpeUJBnHyZJ6C3IiOMyG3Sroio6YF5XF4OTVMVnuDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754409770; c=relaxed/simple;
-	bh=sv3yh6Iwpl8+KKjCi7nnREhKvliMWk7bW6hMNubo6UA=;
+	s=arc-20240116; t=1754410137; c=relaxed/simple;
+	bh=kTcaW0q5ivmzGd4QOSXd/nHt7wH8yPYPEOgv2LKOSjU=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=i/m4mrb7ma95jLFVgSuwg0RI3uOtrMAoWtj3Hn5ILhgVJFUNOIyCqmwngVH1hpwWdmhDNctCPwvFe8En/mHGnHcYTocpL1jD+O5zR17eEPLgq0KZLqckyrhHMkPpVJ8ZrVYdlbfG8WeCSEQ/SNeFsRYMyTybraEhPPNiWu0bF7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kWHNC+yk; arc=none smtp.client-ip=198.175.65.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=HZASaPhS3oRmEW4/vFvNN7JgcNtnkRcSpWQnb0fWdbSiDW1MbTGRImDUk1tcA+FtLaMLJhwAR9Io+Ou4AmH9Uw6LwvkMRhl841E5Nfcaw29DK/r168QBrx19C7q6m2XtJBCBs6gKc7iavs1m1zmogj9KPo6PadUvcQ5Y8SbiLzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=jlZcSp/0; arc=none smtp.client-ip=209.85.219.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kWHNC+yk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1754409769; x=1785945769;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=sv3yh6Iwpl8+KKjCi7nnREhKvliMWk7bW6hMNubo6UA=;
-  b=kWHNC+yktJC8BWnmjWF+6vHhhaMlHjTAxZ1C9P7vPt+jAKlt7bi7jZYo
-   0gbwYi9Ns5u1/7qIzoThhVKBXZzkZHj6GZxB1PhHxh/dNzltMxs96hS9j
-   NRmIW07cKVDr6y0EEe9mieJdu29+QFDA++Pyat8vDVqH26DIQn6w3LFoZ
-   73vbwqsykFJwDGDwicIuVwPV8Rt+srt9y/bHdypGmJnsSGK8JQq2eJV3A
-   7iZxx5glInz+6+SsGO9Psoofn9+24rKq9m3gGnqKdq02OCh3d1WG7gMH7
-   Wjlt38yUJnmufO6wF/sA+nyQIBiFwHtGKyTLqF5OtZLy4M6tCsbo7yweR
-   w==;
-X-CSE-ConnectionGUID: QhifR3jfT0mVusLd9J/52g==
-X-CSE-MsgGUID: uv0EzsD+QLCHoYgmzB3mKQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11513"; a="60541192"
-X-IronPort-AV: E=Sophos;i="6.17,268,1747724400"; 
-   d="scan'208";a="60541192"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 05 Aug 2025 09:02:49 -0700
-X-CSE-ConnectionGUID: xUuND5ZFSGiypQD7RM9Brg==
-X-CSE-MsgGUID: dV5Tgr9QRGqZkfVby4YXYw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.17,268,1747724400"; 
-   d="scan'208";a="188211575"
-Received: from yilunxu-optiplex-7050.sh.intel.com (HELO localhost) ([10.239.159.165])
-  by fmviesa002.fm.intel.com with ESMTP; 05 Aug 2025 09:02:43 -0700
-Date: Tue, 5 Aug 2025 23:53:06 +0800
-From: Xu Yilun <yilun.xu@linux.intel.com>
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: linux-coco@lists.linux.dev, linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org, bhelgaas@google.com, aik@amd.com,
-	lukas@wunner.de, Samuel Ortiz <sameo@rivosinc.com>
-Subject: Re: [PATCH v4 04/10] PCI/TSM: Authenticate devices via platform TSM
-Message-ID: <aJIo4riWyW7fRtal@yilunxu-OptiPlex-7050>
-References: <20250717183358.1332417-1-dan.j.williams@intel.com>
- <20250717183358.1332417-5-dan.j.williams@intel.com>
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="jlZcSp/0"
+Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-7072ed7094aso41554696d6.1
+        for <linux-pci@vger.kernel.org>; Tue, 05 Aug 2025 09:08:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1754410134; x=1755014934; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=3h4Juy631wFFbv9pOrZ90ugfOmUc0F+qy1FlObvh3I4=;
+        b=jlZcSp/0DB0BLBDSof6DaXxjFAzb/iwwHDvApe8DXducC+eFBhToPGHfd7IKlYhJdh
+         kEXnDKr/uuXO6nqTe92BkjqZAguYGvSCMd+XgvBl3eUo0xWdHXIwumrCVITG2pM+qU0v
+         ttpPLJZACl6xvwvcJKvSCsPLLTEuNisFksLBGbONMttsJzWxBVqYslzOIW0YJCUIxvDG
+         2+BOnqqlFdNLN1lQVNySU2vY3uD7qNgzbY17RVTwt+IFN+B/7duojNEjzuwTr5fRbMzA
+         1CqfQwNACas3JeTuRB4zZ0vwxQhAferusCHh0p0vGbK21hrgqNiNz7DXIxDgTdzGVqoT
+         pOFg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754410134; x=1755014934;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=3h4Juy631wFFbv9pOrZ90ugfOmUc0F+qy1FlObvh3I4=;
+        b=O/f9JtoljKAFrQzS/QCVUnUQoYw+iCtelJI6H1jZH1gU7LYSowhZnX5wHVcwqbkmsM
+         5ENHKVA9g/tc3GvlcIY41A4OdeL7YrkybHr8kkyC1SQhrjbjCaVApE5oMazYIHfO6ojz
+         ZuYpZ48v26hvWBKHZpMQ8W7ZbOAxzSyrNsaKpkQl73FMp1DsJddYgXkUOG2KTev+n1z4
+         YEBVkVEQaHGjSYIrF58CBQ2GU+WxgQVstJVoAssxsGXOIfPEbrE1F/wEIfetsh15GbLQ
+         eaPZDAzUF/dg0DGTRKqgb0hDESMHsoAEygU8cndMLC7sw3dLmrMqSc67naBf4FD3zgcY
+         LX1A==
+X-Forwarded-Encrypted: i=1; AJvYcCVyF15KGGEXrw8Sk0vbkdr7tN16hDhILMVv1htJRrLXkiWS9HzSa/8f+bjzHnndh3Zrve5zbxOrKpY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwIKvxaHVG8Rr1UsysO6tXVCtmB5GZSMyD+6gmpw6+nKMnViIEf
+	XwWotEwDs2ImPY92wbJ/4WxHBlb0X3NyNbZ2bG2gTO2iEVAuwdwk7epWoh6s1x9wMkQ=
+X-Gm-Gg: ASbGncsr/8rgLK6ybbInHk7fZwH/oq386SjRW4dq52JaFolUR5bGrxHS4k9UBoW69t0
+	IUYXP8Iz3ecQrzJIuFuUNxC39CrjqomrttWZKK/8pAEsd84uOCm3f1HDkcm02qJ8T2SIj4AH/se
+	JxNLcz+DO/cwo0LTflqcLn7b+u99ogn/Ki+yNSLJsAY979T+kjV/9mmAYoZnqTKiIz8VshKkUI/
+	1ADRNzepaDn7XOBM1cFgcCJd6ihFCF/+rQhA6OubKjFPvc3ZuFQztEPhSxyKDHKznTI3LVXF8Tk
+	/ezyKhk9DpYDvpprfWMP0W8cGTE7wiQ9SHaLY+KG+cMziHdQY48+AX44B8TG45OhWFb7yzS9KTA
+	BefkdFPjevpgmktpY8JTeqvPkirghh0ix780k0bvJgZ1eaG40xiOhbO1uK1cPeAE3Z8B8
+X-Google-Smtp-Source: AGHT+IHZ3PopPeTcQC5Nnc3xOLSRL4WyZRPVraWd7MpQSpA1ulubjE2uvQ7HveFIT+qKiSlQ1vJvtQ==
+X-Received: by 2002:ad4:5fc5:0:b0:707:228e:40b9 with SMTP id 6a1803df08f44-70936287ad8mr236610866d6.23.1754410134379;
+        Tue, 05 Aug 2025 09:08:54 -0700 (PDT)
+Received: from ziepe.ca (hlfxns017vw-47-55-120-4.dhcp-dynamic.fibreop.ns.bellaliant.net. [47.55.120.4])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-7077cde8d56sm73667086d6.73.2025.08.05.09.08.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 05 Aug 2025 09:08:53 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1ujKDd-00000001YvV-1cIz;
+	Tue, 05 Aug 2025 13:08:53 -0300
+Date: Tue, 5 Aug 2025 13:08:53 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Alexey Kardashevskiy <aik@amd.com>
+Cc: "Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>,
+	linux-coco@lists.linux.dev, kvmarm@lists.linux.dev,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	lukas@wunner.de, Samuel Ortiz <sameo@rivosinc.com>,
+	Xu Yilun <yilun.xu@linux.intel.com>,
+	Suzuki K Poulose <Suzuki.Poulose@arm.com>,
+	Steven Price <steven.price@arm.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Marc Zyngier <maz@kernel.org>, Will Deacon <will@kernel.org>,
+	Oliver Upton <oliver.upton@linux.dev>
+Subject: Re: [RFC PATCH v1 04/38] tsm: Support DMA Allocation from private
+ memory
+Message-ID: <20250805160853.GV26511@ziepe.ca>
+References: <20250728135216.48084-1-aneesh.kumar@kernel.org>
+ <20250728135216.48084-5-aneesh.kumar@kernel.org>
+ <20250728143318.GD26511@ziepe.ca>
+ <a22a1ab7-95c1-41be-b33b-a4009b55631c@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -61,101 +89,55 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250717183358.1332417-5-dan.j.williams@intel.com>
+In-Reply-To: <a22a1ab7-95c1-41be-b33b-a4009b55631c@amd.com>
 
-> +static int pci_tsm_connect(struct pci_dev *pdev, struct tsm_dev *tsm_dev)
-> +{
-> +	int rc;
-> +	struct pci_tsm_pf0 *tsm_pf0;
-> +	const struct pci_tsm_ops *ops = tsm_pci_ops(tsm_dev);
-> +	struct pci_tsm *pci_tsm __free(tsm_remove) = ops->probe(pdev);
-> +
-> +	if (!pci_tsm)
-> +		return -ENXIO;
-> +
-> +	pdev->tsm = pci_tsm;
-> +	tsm_pf0 = to_pci_tsm_pf0(pdev->tsm);
-> +
-> +	ACQUIRE(mutex_intr, lock)(&tsm_pf0->lock);
-> +	if ((rc = ACQUIRE_ERR(mutex_intr, &lock)))
-> +		return rc;
-> +
-> +	rc = ops->connect(pdev);
-> +	if (rc)
-> +		return rc;
-> +
-> +	pdev->tsm = no_free_ptr(pci_tsm);
-> +
-> +	/*
-> +	 * Now that the DSM is established, probe() all the potential
-> +	 * dependent functions. Failure to probe a function is not fatal
-> +	 * to connect(), it just disables subsequent security operations
-> +	 * for that function.
-> +	 */
-> +	pci_tsm_probe_fns(pdev);
-> +	return 0;
-> +}
-> +}
-> +
+On Tue, Aug 05, 2025 at 08:22:10PM +1000, Alexey Kardashevskiy wrote:
 
-[...]
+>> static inline dma_addr_t phys_to_dma_direct(struct device *dev,
+>>               phys_addr_t phys)
+>> {
+>>       if (force_dma_unencrypted(dev))
+>>               return phys_to_dma_unencrypted(dev, phys);
+>>       return phys_to_dma(dev, phys);
 
-> +static void pf0_sysfs_enable(struct pci_dev *pdev)
-> +{
-> +	pci_dbg(pdev, "Device Security Manager detected (%s%s )\n",
-> +		pdev->ide_cap ? " ide" : "",
-> +		pdev->devcap & PCI_EXP_DEVCAP_TEE ? " tee" : "");
-> +
-> +	sysfs_update_group(&pdev->dev.kobj, &pci_tsm_auth_attr_group);
-> +	sysfs_update_group(&pdev->dev.kobj, &pci_tsm_pf0_attr_group);
-> +}
-> +
-> +int pci_tsm_register(struct tsm_dev *tsm_dev)
-> +{
+On AMD what is the force_dma_unencrypted() for?
 
-[...]
+I thought AMD had only one IOMMU and effectively one S2 mapping. Why
+does it need to change the phys depending on it being shared or private?
 
-> +	for_each_pci_dev(pdev)
-> +		if (is_pci_tsm_pf0(pdev))
-> +			pf0_sysfs_enable(pdev);
+> On AMD, T=1 only encrypts the PCIe trafic, when a DMA request hits
+> the IOMMU, the IOMMU decrypts it and then decides whether to encrypt
+> it with a memory key: if there is secure vIOMMU - it will do what
+> Cbit says in the guest IOMMU table (this is in the works) oooor just
+> always set Cbit without guest vIOMMU (which is a big knob per a
+> device and this is what my patches do now).
 
-Now the tsm attributes are exposed to user before ops->probe(), from
-user's POV, tsm link operation for this device is already ready ...
+AMD doesn't have the split IOMMU design that something like ARM has,
+so it is bit different..
 
-> +	return 0;
-> +}
-> +EXPORT_SYMBOL_GPL(pci_tsm_register);
+On ARM the T=1 IOMMU should map the entire CPU address space, so any
+IOVA with any address should just work. So I'd expect AMD and ARM to
+be the same here.
 
-[...]
+For the T=0 iommu ARM (I think) will only map the shared pages to the
+shared IPA alias, so the guest VM has to ensure the shared physical
+alias is used. Then it sounds like the CPU will sometimes accept the
+private physical alias, and linus will sometimes prefer the physical
+alias, for the shared memory too so Linux gets things muddled.
 
-> +struct pci_tsm_ops {
-> +	/*
-> +	 * struct pci_tsm_link_ops - Manage physical link and the TSM/DSM session
-> +	 * @probe: probe device for tsm link operation readiness, setup
+IMHO ARM probably should fix this much higher up the stack when it has
+more information to tell if the phys_addr is actualy the private alias
+a shared page.
 
-So I think the probe callback is losing the meaning of readiness check.
-Users see the 'connect/disconnect', they write 'connect' and found
-errors no matter ->probe() fails or ->connect() fails.
+> > > +	bool			tdi_enabled:1;
+> > >   };
+> > 
+> > I would give the dev->tdi_enabled a clearer name, maybe
+> > dev->encrypted_dma_supported ?
+> 
+> 
+> May be but "_enabled", not "_supported". And, ideally, with vIOMMU, at least AMD won't be needing it.
 
-Maybe just remove the responsibility of readiness check from ->probe(),
-I found it simplifies code when implementing tdx-tsm driver.
+Yes
 
-Thanks,
-Yilun
-
-> +	 *	   DSM context
-> +	 * @remove: destroy DSM context
-> +	 * @connect: establish / validate a secure connection (e.g. IDE)
-> +	 *	     with the device
-> +	 * @disconnect: teardown the secure link
-> +	 *
-> +	 * @probe and @remove run in pci_tsm_rwsem held for write context. All
-> +	 * other ops run under the @pdev->tsm->lock mutex and pci_tsm_rwsem held
-> +	 * for read.
-> +	 */
-> +	struct_group_tagged(pci_tsm_link_ops, link_ops,
-> +		struct pci_tsm *(*probe)(struct pci_dev *pdev);
-> +		void (*remove)(struct pci_tsm *tsm);
-> +		int (*connect)(struct pci_dev *pdev);
-> +		void (*disconnect)(struct pci_dev *pdev);
-> +	);
+Jason
