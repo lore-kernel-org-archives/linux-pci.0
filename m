@@ -1,186 +1,73 @@
-Received: from mo-csw-fb.securemx.jp (mo-csw-fb1120.securemx.jp [210.130.202.128])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from sender4-pp-o95.zoho.com (sender4-pp-o95.zoho.com [136.143.188.95])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF73118035;
-	Tue,  5 Aug 2025 04:34:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.128
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754368488; cv=none; b=JAFzYOWzgmm+bGWcCI5WTR5KXn6dC0T6kPOXZBzviOe7phSOL62AW4a/qYlG6hP/xdJmHpFmDDqhJCINox3Hk2+mh/ax5e4HSGg0YdSr6p15z4EZegq3MtZcjgpQaWghGl15VDVNIx2ORsuptjYqp15ZH0RLWHWUk19QmD0nEZc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754368488; c=relaxed/simple;
-	bh=neqNdmldpuryoEt/oE6B8kqds2SPXVzEpnErBn3Sfl8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UPGC/DRlidfV88Xg8WAJjLiraMcaeHp2aYQlhvqS4kZMed1gE/2POPe+29lxrBezhSlK2CWWwzAmFAyiw6ZfWRKAI4qMjX6SbKwuAJ7oPbgPjldoQVo7+wAh1EACX/QBqOz8GetXdY09QIDLezT2MQ56q3EwEGNoGcb58g3rPZI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toshiba.co.jp; spf=pass smtp.mailfrom=toshiba.co.jp; dkim=pass (2048-bit key) header.d=toshiba.co.jp header.i=nobuhiro1.iwamatsu@toshiba.co.jp header.b=hkcqAktr; arc=none smtp.client-ip=210.130.202.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toshiba.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toshiba.co.jp
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 79D30A927;
+	Tue,  5 Aug 2025 04:40:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.95
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1754368823; cv=pass; b=sJ+Qp3mnJ19Fq3xpFO8Zw1G6fbEkm8i6YRTDFMYLiwt1hqMcN3pds7EwZxWkchm75fKzIsfVL9DNbCgbvVPkJYPffmrQmG6/I2f4b6fmiHKdJreSk3iw/leKZWxI5zblJ1p8HMl+WZbKYNbF6BfE1qyc/VXNYqp7CYJGD5+9t3o=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1754368823; c=relaxed/simple;
+	bh=vx4DftUwwXSdyzbwHUzTA5ckOdfuuDc8ELVLhPGqGxg=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=lmo9FJS6hTJqRD7HilrEXgiBNLoBKJlSI4QKXjBpUB6E61H7I+t7+t8XQlMnTFWO/tLU5MrZPFWISaWo1PgSdrSIbwdfjcPI0vlTszDEqBEDnU7cSfQ2S1zu1/tWm20Cz22F3PtRPCUh+QBCVtZ4RGtiYFXIl9zIBf3iVm4VVCU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com; spf=pass smtp.mailfrom=zohomail.com; dkim=pass (1024-bit key) header.d=zohomail.com header.i=safinaskar@zohomail.com header.b=aaKWUQIS; arc=pass smtp.client-ip=136.143.188.95
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=zohomail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zohomail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toshiba.co.jp header.i=nobuhiro1.iwamatsu@toshiba.co.jp header.b="hkcqAktr"
-Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1120) id 5751ljch1323522; Tue, 5 Aug 2025 10:47:46 +0900
-DKIM-Signature: v=1;a=rsa-sha256;c=relaxed/simple;d=toshiba.co.jp;h=From:To:Cc
-	:Subject:Date:Message-Id:In-Reply-To:References:MIME-Version:Content-Type:
-	Content-Transfer-Encoding;i=nobuhiro1.iwamatsu@toshiba.co.jp;s=key1.smx;t=
-	1754358429;x=1755568029;bh=neqNdmldpuryoEt/oE6B8kqds2SPXVzEpnErBn3Sfl8=;b=hkc
-	qAktrHSKIeHwLotuGz+96E0/DN4RHBPlo15vuTkxvTWLd3nsYBfRtuKsIrUnyzPl3N51TUKNiS9O8
-	HugPBk5MSKNJK/yRCR1/+sz94qdmthneJiN3W7x8B7PJwggTXjHLNK9xDbxz5XihLR/tJxecaQ5pw
-	Vi2HEZJ9uqk1TiGGjKifRBnK6mlSYoVVqZUJt04X9PQi+0o5IR9+V3ocBeNmxgaHVuIG5TnXloCPh
-	uSc1J4WFJosSa73NCQa7j7u5BmVyrOBAYQL/2s0+FwQ4vIUXKGuYTWOqJEdSC7exAjsRaZeMoEVvF
-	15rSc9EZGBYwUnfILyTggWHXvaXo4vQ==;
-Received: by mo-csw.securemx.jp (mx-mo-csw1122) id 5751l9in3375490; Tue, 5 Aug 2025 10:47:09 +0900
-X-Iguazu-Qid: 2rWhiV7hVXNSACf7DB
-X-Iguazu-QSIG: v=2; s=0; t=1754358428; q=2rWhiV7hVXNSACf7DB; m=ZCdzXZWspI31Vh8pxQP/gZUZi5imt8ps7npCWydkgF8=
-Received: from imx2-a.toshiba.co.jp (imx2-a.toshiba.co.jp [106.186.93.35])
-	by relay.securemx.jp (mx-mr1121) id 5751l7Jc3436609
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 5 Aug 2025 10:47:07 +0900
-From: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-To: Frank.Li@nxp.com, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-        lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-        bhelgaas@google.com
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        yuji2.ishikawa@toshiba.co.jp,
-        Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-Subject: [PATCH v2 1/2] arm64: dts: toshiba: Update SoC and PCIe ranges to reflect hardware behavior
-Date: Tue,  5 Aug 2025 10:47:00 +0900
-X-TSB-HOP2: ON
-Message-Id: <1754358421-12578-2-git-send-email-nobuhiro1.iwamatsu@toshiba.co.jp>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1754358421-12578-1-git-send-email-nobuhiro1.iwamatsu@toshiba.co.jp>
-References: <1754358421-12578-1-git-send-email-nobuhiro1.iwamatsu@toshiba.co.jp>
+	dkim=pass (1024-bit key) header.d=zohomail.com header.i=safinaskar@zohomail.com header.b="aaKWUQIS"
+ARC-Seal: i=1; a=rsa-sha256; t=1754368802; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=hLL0XtTgNsR8WSE4fXNd1z2CdzJur7opUEr/SkPBUDDjlSulSvT94VODsNgGwIr2vUkgbfytas4n4P6BWlxZrKIN1TyYe/FZ5I/nfO1wvhXOL7bI4nTFQpOFY2GNwjQW+YMx2aaOqT8GweRrYdb3qVtBN4zJfYvb4SFz1C4IPC8=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1754368802; h=Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=vx4DftUwwXSdyzbwHUzTA5ckOdfuuDc8ELVLhPGqGxg=; 
+	b=UpvdkMFGqv+nhsXyiFujsJoqZCSbBgiheBx8kZTsfhLF6atD18y9Ml+LhjjwFk0VoiQl2y6Qes0sSVRnK1eRKp1GqQ13soGeDnzyQ22HjQ8u+A/Q5hth/ly4LAExzwQAfoLKokpt/x921EnVP24nyK9iRkKTNtxahDoHyemy6DQ=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=zohomail.com;
+	spf=pass  smtp.mailfrom=safinaskar@zohomail.com;
+	dmarc=pass header.from=<safinaskar@zohomail.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1754368802;
+	s=zm2022; d=zohomail.com; i=safinaskar@zohomail.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Feedback-ID:Message-Id:Reply-To;
+	bh=vx4DftUwwXSdyzbwHUzTA5ckOdfuuDc8ELVLhPGqGxg=;
+	b=aaKWUQISpExcEcVMiW+kAhc7F6a1dWnwPT9BUxCJLsNRimeGL2AE1BNh2uO+Zgra
+	alSRc7jHjW1rAWNOoiQMSg9J7i0rhAgkY9V1YwCAX26KkNCFRNZhhX70QORFZ8OeSzM
+	j3dDY7xpi/35SQxegkFNWmmQskXGJcMYlr+FoAfc=
+Received: by mx.zohomail.com with SMTPS id 1754368798702522.0385252595497;
+	Mon, 4 Aug 2025 21:39:58 -0700 (PDT)
+From: Askar Safin <safinaskar@zohomail.com>
+To: jgg@nvidia.com
+Cc: alex.williamson@redhat.com,
+	baolu.lu@linux.intel.com,
+	bhelgaas@google.com,
+	galshalom@nvidia.com,
+	iommu@lists.linux.dev,
+	joro@8bytes.org,
+	jroedel@suse.de,
+	kevin.tian@intel.com,
+	kvm@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	maorg@nvidia.com,
+	patches@lists.linux.dev,
+	robin.murphy@arm.com,
+	tdave@nvidia.com,
+	tony.zhu@intel.com,
+	will@kernel.org
+Subject: Re: [PATCH v2 15/16] PCI: Check ACS DSP/USP redirect bits in pci_enable_pasid()
+Date: Tue,  5 Aug 2025 07:39:48 +0300
+Message-ID: <20250805043948.97938-1-safinaskar@zohomail.com>
+X-Mailer: git-send-email 2.47.2
+In-Reply-To: <15-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
+References: <15-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Feedback-ID: rr08011227836b5a84cbec9309bce67830000009930723b1a51d76665429b8f21e634aea6d8b917e42cdb7ee:zu080112276350d1e42093adc1218a592a000051016fedef33d9f8d9d25fa5d589293ff61c022154552f52f8:rf0801122cabce9c8de7e03eff3770245c0000d597922cdc6364a109d4e084b3f192b48cf8a9a71bfb944dc2bee1c2cc69:ZohoMail
+X-ZohoMailClient: External
 
-From: Frank Li <Frank.Li@nxp.com>
-
-tmpv7708 trim address bit[31:30] in tmpv7708 before passing to the PCIe
-controller. Since only PCIe controller needs to convert the address range
-0x40000000 - 0x80000000, add a bus definition, describe the ranges in it,
-and move the PCIe definition.
-
-Prepare for the removal of the driver’s cpu_addr_fixup().
-
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
-Suggested-by: Yuji Ishikawa <yuji2.ishikawa@toshiba.co.jp>
-Signed-off-by: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
----
-v2:
-  Update commit message.
-  Fix range.
-  Set true to use_parent_dt_ranges in pcie-visconti.c.
-  move pcie under the dedicated sub-bus.
-
- arch/arm64/boot/dts/toshiba/tmpv7708.dtsi  | 75 +++++++++++++---------
- drivers/pci/controller/dwc/pcie-visconti.c |  2 +
- 2 files changed, 47 insertions(+), 30 deletions(-)
-
-diff --git a/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi b/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi
-index 39806f0ae5133..b754965a76ca6 100644
---- a/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi
-+++ b/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi
-@@ -478,37 +478,52 @@ pwm: pwm@241c0000 {
- 			status = "disabled";
- 		};
- 
--		pcie: pcie@28400000 {
--			compatible = "toshiba,visconti-pcie";
--			reg = <0x0 0x28400000 0x0 0x00400000>,
--			      <0x0 0x70000000 0x0 0x10000000>,
--			      <0x0 0x28050000 0x0 0x00010000>,
--			      <0x0 0x24200000 0x0 0x00002000>,
--			      <0x0 0x24162000 0x0 0x00001000>;
--			reg-names = "dbi", "config", "ulreg", "smu", "mpu";
--			device_type = "pci";
--			bus-range = <0x00 0xff>;
--			num-lanes = <2>;
--			num-viewport = <8>;
--
--			#address-cells = <3>;
-+		pcie_bus: bus@24000000 {
-+			compatible = "simple-bus";
-+			#address-cells = <2>;
- 			#size-cells = <2>;
--			#interrupt-cells = <1>;
--			ranges = <0x81000000 0 0x40000000 0 0x40000000 0 0x00010000
--				  0x82000000 0 0x50000000 0 0x50000000 0 0x20000000>;
--			interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
--				     <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
--			interrupt-names = "msi", "intr";
--			interrupt-map-mask = <0 0 0 7>;
--			interrupt-map =
--				<0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
--				 0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
--				 0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
--				 0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
--			max-link-speed = <2>;
--			clocks = <&extclk100mhz>, <&pismu TMPV770X_CLK_PCIE_MSTR>, <&pismu TMPV770X_CLK_PCIE_AUX>;
--			clock-names = "ref", "core", "aux";
--			status = "disabled";
-+			ranges = /* register 1:1 map */
-+				 <0x0 0x24000000 0x0 0x24000000 0x0 0x0C000000>,
-+				 /*
-+				  * bus fabric mask address bit 30 and 31 to 0
-+				  * before send to PCIe controller.
-+				  *
-+				  * PCIe map address 0 to cpu's 0x40000000
-+				  */
-+				 <0x0 0x00000000 0x0 0x40000000 0x0 0x40000000>;
-+
-+			pcie: pcie@28400000 {
-+				compatible = "toshiba,visconti-pcie";
-+				reg = <0x0 0x28400000 0x0 0x00400000>,
-+				      <0x0 0x30000000 0x0 0x10000000>,
-+				      <0x0 0x28050000 0x0 0x00010000>,
-+				      <0x0 0x24200000 0x0 0x00002000>,
-+				      <0x0 0x24162000 0x0 0x00001000>;
-+				reg-names = "dbi", "config", "ulreg", "smu", "mpu";
-+				device_type = "pci";
-+				bus-range = <0x00 0xff>;
-+				num-lanes = <2>;
-+				num-viewport = <8>;
-+
-+				#address-cells = <3>;
-+				#size-cells = <2>;
-+				#interrupt-cells = <1>;
-+				ranges = <0x81000000 0 0x00000000 0 0x00000000 0 0x00010000
-+					  0x82000000 0 0x10000000 0 0x10000000 0 0x20000000>;
-+				interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
-+					     <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-+				interrupt-names = "msi", "intr";
-+				interrupt-map-mask = <0 0 0 7>;
-+				interrupt-map =
-+					<0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-+					 0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-+					 0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
-+					 0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
-+				max-link-speed = <2>;
-+				clocks = <&extclk100mhz>, <&pismu TMPV770X_CLK_PCIE_MSTR>, <&pismu TMPV770X_CLK_PCIE_AUX>;
-+				clock-names = "ref", "core", "aux";
-+				status = "disabled";
-+			};
- 		};
- 	};
- };
-diff --git a/drivers/pci/controller/dwc/pcie-visconti.c b/drivers/pci/controller/dwc/pcie-visconti.c
-index cdeac6177143c..2a724ab587f78 100644
---- a/drivers/pci/controller/dwc/pcie-visconti.c
-+++ b/drivers/pci/controller/dwc/pcie-visconti.c
-@@ -310,6 +310,8 @@ static int visconti_pcie_probe(struct platform_device *pdev)
- 
- 	platform_set_drvdata(pdev, pcie);
- 
-+	pci->use_parent_dt_ranges = true;
-+
- 	return visconti_add_pcie_port(pcie, pdev);
- }
- 
--- 
-2.49.0
-
-
+"interpretation" should be, not "interpritation"
