@@ -1,97 +1,119 @@
-Received: from mo-csw-fb.securemx.jp (mo-csw-fb1120.securemx.jp [210.130.202.128])
+Received: from mail-ej1-f67.google.com (mail-ej1-f67.google.com [209.85.218.67])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D86B51607A4;
-	Tue,  5 Aug 2025 02:53:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.128
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 483481DD525;
+	Tue,  5 Aug 2025 03:43:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.67
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754362409; cv=none; b=ULp9atgKhq1VfRMHl7Sx/pF+eCYnULNt2lr0jovmg9o6gs2XTdrmDPCV3Cq6Bl07NAZydJNkNr784E9awhn8WCH/PRP2NKQFF00jLYM1hfRnWfeuYt0KhZQiCrcVbmWKoCAzUOnjYZ/TN5c4piaV1xTQFtBtHXUvrol9qbZZDxw=
+	t=1754365418; cv=none; b=Mj8bIDqsGsXynxklj/QrPsFN7117mAe92/B3SPTqWlKBeXoxxA3Zy0/cLWAvS1p/YX8/CSv9T20mhU4azVy4cy5SAfJ7FOM//9FyRFQ1vDxZFK2vspw1EdozubMQSd4gMUs46fE4IlR7RYnVXcgYokSaRCPrKZV+clKTNMCJ4xo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754362409; c=relaxed/simple;
-	bh=pGq8OghSRkoVpKXdQVPo3XwOy10QtKXSakuHLC/l4X0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=P1jQ7zKINieV8oFrVQRzOJrN95jmmm/jOxhDPoKrZw9bLYMIEsKvVps8XG1rI5/w7lx1de/Ejz/JFzAN1rQ1O2jCVswgvJqBc9UeM1pIPaPPnnt5LkjF3bhiHbr1f23GszDnp4vVmNHc4my+nIAwU3FCnP2xWqfvTODF5qP1kCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toshiba.co.jp; spf=pass smtp.mailfrom=toshiba.co.jp; dkim=pass (2048-bit key) header.d=toshiba.co.jp header.i=nobuhiro1.iwamatsu@toshiba.co.jp header.b=jRm2RC6H; arc=none smtp.client-ip=210.130.202.128
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=toshiba.co.jp
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=toshiba.co.jp
+	s=arc-20240116; t=1754365418; c=relaxed/simple;
+	bh=ZniYHKY8QuSd7kXt4f9NMukHnaBfrOkk5MNpA7EfaWg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kSCmo8qd5G9VKfHgr+bwHTR9Ayvha7g+SkjZzqhEkO5otn/64WSXVvBVkpCYSRP751JdqqseE8weTL6YRAGh+3u3q+tN8aMEszaav4TQQHrj2851aNACkdOuuwEElPko1as6uaq2FrgzfaDIURmOnXNKAbe2jyvKbrWuvi7x/Pc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fhFoVy1Q; arc=none smtp.client-ip=209.85.218.67
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=toshiba.co.jp header.i=nobuhiro1.iwamatsu@toshiba.co.jp header.b="jRm2RC6H"
-Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1120) id 5751lilm1323521; Tue, 5 Aug 2025 10:47:44 +0900
-DKIM-Signature: v=1;a=rsa-sha256;c=relaxed/simple;d=toshiba.co.jp;h=From:To:Cc
-	:Subject:Date:Message-Id:In-Reply-To:References;i=
-	nobuhiro1.iwamatsu@toshiba.co.jp;s=key1.smx;t=1754358432;x=1755568032;bh=pGq8
-	OghSRkoVpKXdQVPo3XwOy10QtKXSakuHLC/l4X0=;b=jRm2RC6HD8TzM4etmwwj+8IvAJHHnMB+Dg
-	ZmDQbcWi9cZzvvDvoUvWDKyx2FSC/ICUTRY7Oe/x61ogo/+o5HwQi9AJUwlX7H6f4asPgz3y69R4z
-	p0+iL72HsjfUC4SP+k6KsY4lc9FewdGM0pV6py8LrwQGS3u0Cue82omNZKzKnbdBWEtDITwT2kRZu
-	tiwEBPALmGTOhpCHzFYnceXk8T2g9ceJCRMlkwSmsO0WbEaYpCVr8RezDGd3YZAxNLZ1e2CLjC3nF
-	V3/zHl+vKorLuUbFMwxFDH81sHczixY9zRPjM1lRUtqpFRZa1Nb5ED0BlHc7w4tpqSFFz1VFmyMhQ
-	==;
-Received: by mo-csw.securemx.jp (mx-mo-csw1122) id 5751lAjP3375559; Tue, 5 Aug 2025 10:47:10 +0900
-X-Iguazu-Qid: 2rWhSHZE8neFYwT8dx
-X-Iguazu-QSIG: v=2; s=0; t=1754358429; q=2rWhSHZE8neFYwT8dx; m=Vy0RmsCaLnFpSTmT4FGM0wu37Shjywsl5PqDNukgIcc=
-Received: from imx12-a.toshiba.co.jp ([38.106.60.135])
-	by relay.securemx.jp (mx-mr1122) id 5751l7gS037751
-	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
-	Tue, 5 Aug 2025 10:47:08 +0900
-From: Nobuhiro Iwamatsu <nobuhiro1.iwamatsu@toshiba.co.jp>
-To: Frank.Li@nxp.com, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-        lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
-        bhelgaas@google.com
-Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        yuji2.ishikawa@toshiba.co.jp
-Subject: [PATCH v2 2/2] PCI: dwc: visconti: Remove cpu_addr_fix() after DTS fix ranges
-Date: Tue,  5 Aug 2025 10:47:01 +0900
-X-TSB-HOP2: ON
-Message-Id: <1754358421-12578-3-git-send-email-nobuhiro1.iwamatsu@toshiba.co.jp>
-X-Mailer: git-send-email 2.7.4
-In-Reply-To: <1754358421-12578-1-git-send-email-nobuhiro1.iwamatsu@toshiba.co.jp>
-References: <1754358421-12578-1-git-send-email-nobuhiro1.iwamatsu@toshiba.co.jp>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fhFoVy1Q"
+Received: by mail-ej1-f67.google.com with SMTP id a640c23a62f3a-af967835d0aso278938766b.0;
+        Mon, 04 Aug 2025 20:43:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1754365416; x=1754970216; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=8WbAm5nExTQIfe1sqlUAgj5NdK4GQb4TTe8phjhgS70=;
+        b=fhFoVy1QCqYbF30A0gmnkPPxzB/F/lQCOjIy91Dv+QhZAtnVsHMR2WETvdDRBFooVm
+         GRa/jfexETV2wqh1cuOAhKdHe/CauSi308778Y6TBtu3mraVzdZtux6yRjXv6IVBAruZ
+         NOez25bUSw5p+NhuoetTV+J+MRxaPf8bgUGYLKy19LJycRDH8Q0MevPxvCjxRUmOJizB
+         ygwI2WmLrnIVsHy+JVZbueR+mhKAQiVPwNGBhM5CsFuOXpdwWAvNGJJPrJoO+eVzssmK
+         9IpihGQ+r1uL6KsIhOJAigIvZs+To2wWcOsO6ZquGYGLNiYyWVnWUBFfNmTFl1j9tHXG
+         9/kA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754365416; x=1754970216;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=8WbAm5nExTQIfe1sqlUAgj5NdK4GQb4TTe8phjhgS70=;
+        b=hDgp0f1D4nHYapAEBpcTqvYHMJ8HlQgUSfXmFfJyyr7cDpT/IdzSuteLxVl8cTu2UW
+         wes3nilh8i5YiyXxQ/MIJe24n5HtbgeHVcEii52x/guUGR/AXebNWqvT4w+va8XpzxRD
+         QTAp3k9uQfAXwBblP/LXUT7hzuVNiqUnCQVS0kosJdnF86/+YUNoORffb5oQq59jVaez
+         3EC9qKw/NCzcEMSFZmI3wsf00ICGFzanQfbjgsRTSftIYdn6TooIUQlItQZHqYQD3OyZ
+         cBMKJbvkSMnnSXyKTpjobW9HWP+E/hRSnKbmpV9yw9eCAAM4k3HEm/vA5eu1tRtawUd+
+         mKKg==
+X-Forwarded-Encrypted: i=1; AJvYcCU6ep5lN6y9eTNTPo8P9z+ZzCNYSvFv1z65coFkxR0Aanfr1otwe/W/AVj81yYA2Kd3cAk=@vger.kernel.org, AJvYcCXEQ4eEmAS5FT371QWYeuLpeo2UzxM7QkSYDvn3AFnvlc8fe2u/O/Eq6pEswFHAV0nIPMWS7E3Pj9x2@vger.kernel.org
+X-Gm-Message-State: AOJu0YzeHbecpwKl1og/GAImilECmq6h3HheY5k1RGSwoF9ukOcagPJt
+	RUVPnz9SDi2UV8ZVG7+KylUDrrwBSPz7HIi0Yyh5KYNcfYIDMi6260IB
+X-Gm-Gg: ASbGncuAq9y1yUtj2VT9za4l9bxu0NWzRviDTPiOp9s8FIGVmgcl8jdTpwoCx3010oI
+	H7qa0+Wi6JVSLD1uA82R7LoZ1alZ19zqCLTWOdTpyZZpeG/hijMdn13PVWD9dkfusYGHEg88u5a
+	18EOOCiQKvv4Ik/Lc8jUu4ncJQ6T3KoLKu7vop1skcu09xDRT3aU3/SywkeqJ8K5F1my9lPWAVf
+	3duk9U7RoDI+W22DpkheUuwJ/3oRlNmbiYICl4S79KMr1+hE1GNecel44fL/oA46XMkaXYQQRE1
+	qGl1xyzHuDfXrLLorNBB5Qdl4EtlK/ljPhAvUuF2l1WuasEa0aM5qNxAtGFfZMyOOzCPJ57dQmc
+	dUAs45+iomHacAPLQEBt4LD74TntVDiggo3zskhA5obLRHVU6Jz+wriQFJhbZ5Qkzz54iLKxYFh
+	/jLjs7UlgepzuGbxwXEub1C8FXgLRbe02oaRg=
+X-Google-Smtp-Source: AGHT+IEjmKLsdjb2ZjdT33M1Kp092lXe481aQZe89Govc26G8aNvSHe8HQJ6UUJmTxXI+6BFVbhvGw==
+X-Received: by 2002:a17:907:6d04:b0:ae0:d804:236a with SMTP id a640c23a62f3a-af93ffcaddemr1330563966b.3.1754365415456;
+        Mon, 04 Aug 2025 20:43:35 -0700 (PDT)
+Received: from [26.26.26.1] (ec2-3-126-215-244.eu-central-1.compute.amazonaws.com. [3.126.215.244])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-af91ee3c1f7sm772698966b.68.2025.08.04.20.43.31
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 04 Aug 2025 20:43:34 -0700 (PDT)
+Message-ID: <1684792a-97d6-4383-a0d2-f342e69c91ff@gmail.com>
+Date: Tue, 5 Aug 2025 11:43:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/16] Fix incorrect iommu_groups with PCIe ACS
+To: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, iommu@lists.linux.dev,
+ Joerg Roedel <joro@8bytes.org>, linux-pci@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, Will Deacon <will@kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Lu Baolu <baolu.lu@linux.intel.com>, galshalom@nvidia.com,
+ Joerg Roedel <jroedel@suse.de>, Kevin Tian <kevin.tian@intel.com>,
+ kvm@vger.kernel.org, maorg@nvidia.com, patches@lists.linux.dev,
+ tdave@nvidia.com, Tony Zhu <tony.zhu@intel.com>
+References: <0-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
+ <a692448d-48b8-4af3-bf88-2cc913a145ca@gmail.com>
+ <20250802151816.GC184255@nvidia.com>
+Content-Language: en-US
+From: Ethan Zhao <etzhao1900@gmail.com>
+In-Reply-To: <20250802151816.GC184255@nvidia.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Frank Li <Frank.Li@nxp.com>
 
-Remove cpu_addr_fix() since it is no longer needed. The PCIe ranges
-property has been corrected in the DTS, and the DesignWare common code now
-handles address translation properly without requiring this workaround.
 
-Signed-off-by: Frank Li <Frank.Li@nxp.com>
----
-v2:
-  No Update.
+On 8/2/2025 11:18 PM, Jason Gunthorpe wrote:
+> On Sat, Aug 02, 2025 at 09:45:08AM +0800, Ethan Zhao wrote:
+>>
+>>
+>> On 7/9/2025 10:52 PM, Jason Gunthorpe wrote:
+>>> The series patches have extensive descriptions as to the problem and
+>>> solution, but in short the ACS flags are not analyzed according to the
+>>> spec to form the iommu_groups that VFIO is expecting for security.
+>>>
+>>> ACS is an egress control only. For a path the ACS flags on each hop only
+>>> effect what other devices the TLP is allowed to reach. It does not prevent
+>>> other devices from reaching into this path.
+> 
+>> Perhaps I was a little confused here, the egress control vector on the
+> 
+> Linux does not support egress control vector. Enabling that is a
+> different project and we would indeed need to introduce different
+> logic.
+My understanding, iommu has no logic yet to handle the egress control
+vector configuration case, the static groups were created according to
+FW DRDB tables, also not the case handled by notifiers for Hot-plug
+events (BUS_NOTIFY_ADD_DEVICE etc). iommu groups need some kind of {
+add, remove etc } per egress control vector configuration operation.
 
- drivers/pci/controller/dwc/pcie-visconti.c | 13 -------------
- 1 file changed, 13 deletions(-)
-
-diff --git a/drivers/pci/controller/dwc/pcie-visconti.c b/drivers/pci/controller/dwc/pcie-visconti.c
-index 2a724ab587f78..d8765e57147af 100644
---- a/drivers/pci/controller/dwc/pcie-visconti.c
-+++ b/drivers/pci/controller/dwc/pcie-visconti.c
-@@ -171,20 +171,7 @@ static void visconti_pcie_stop_link(struct dw_pcie *pci)
- 	visconti_mpu_writel(pcie, val | MPU_MP_EN_DISABLE, PCIE_MPU_REG_MP_EN);
- }
- 
--/*
-- * In this SoC specification, the CPU bus outputs the offset value from
-- * 0x40000000 to the PCIe bus, so 0x40000000 is subtracted from the CPU
-- * bus address. This 0x40000000 is also based on io_base from DT.
-- */
--static u64 visconti_pcie_cpu_addr_fixup(struct dw_pcie *pci, u64 cpu_addr)
--{
--	struct dw_pcie_rp *pp = &pci->pp;
--
--	return cpu_addr & ~pp->io_base;
--}
--
- static const struct dw_pcie_ops dw_pcie_ops = {
--	.cpu_addr_fixup = visconti_pcie_cpu_addr_fixup,
- 	.link_up = visconti_pcie_link_up,
- 	.start_link = visconti_pcie_start_link,
- 	.stop_link = visconti_pcie_stop_link,
--- 
-2.49.0
-
+Thanks,
+Ethan>
+> Jason
 
