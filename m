@@ -1,279 +1,168 @@
-Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022121.outbound.protection.outlook.com [52.101.126.121])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f66.google.com (mail-wm1-f66.google.com [209.85.128.66])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91E54276020;
-	Fri,  8 Aug 2025 07:29:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.121
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754638194; cv=fail; b=Es9VMfgvKHqM+wJkVd5GTgCQ+kivrkE7dMjCNDRVF5uJOVTFHSTFILEMWqzL6YIWDe5JoY/dQkC+8q5WkzkvUUi4z+dpUBtw6x/snypM8rkV9T6/eGEjt3a3T4dlAmsEJqmip8eqSnYLm6nG/mL6LOb7ZM6uGLvkI4J9Z6ruX4Q=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754638194; c=relaxed/simple;
-	bh=5r2bP7wVnpDA+nj2eWxEMkp7ZJM3qp0xftH6fsdbeKU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=M9QnEYeVTyHNY9KvJpOvwFYoDsj5d2/NlaGSCdKB77wGtTRyh/YmBk59k1PTQr2e2D06LxNIm/Dr3vkJiikMlkQwzeRyHnU17xr3EOcwOp04h8SI5ooAHZEzOwwuCzTICmeRpGbLPDFkNXjp+Vl90mxs5Oa4x517yiZQ9OOqY6Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.126.121
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CXbsSen6CQXPQ2NcZjhvelqobT+DlEubAg34XWM9RK3owgjR97IdVMYrtXy/Ckajk3pV+cGYS5d+oUU1biKri72FJRBXs0dQ9gdYHEtGd54O2yNVdrEx9a3vF1DVNie7OIIvXDHrv8U6KIUidGabje80huKlAHvBP+6/v+Axz78YtA2MO/+uImK4bSwGrqionpcOpT3Fx7jVzPhdxYZqdQexQ275D1V9k2aNZz4PAS85v05JYUC2C8C8GdnS/IuIFxmWqJB4phmfX/D0IhwOR9OW7dVk+Esx/UaGvwrm4aR+BJO8HgEkNZ9oLQVFPy/yRz54x5G+qPVBTxilrOX0Qw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iodmOlYm0/HiWFPiDth8gwAbe72TTsTeVjkZRlbI26I=;
- b=imPKikdkgEgYgn8fXaNQdbm+D3gNpyU/h6ahRouWl6ackszpZgsDT62KLjiccFcdmN8SVfMWqrmXwp/6tH8xFgTDK3yPVR6fBbnwKkQrUmOKVYG63iUjWPD6m+TpULk7jNYJvVgMpA8VVJb9cW5nIQYaLdo+swb0lxvsnad9NUkYjUOx4hH+/Pvcn/SC4vCPhFcLE1OLmhAZCc+FP/9lnzA4r6h4tQkaD2Te3GyCnbyCQayVn51iBLq2Doj0j6xuagX3saTWdM8W0tDXq5N5bb5gbjlV5AkZisUevi+C6CdrC290lq1X6Ipyk5jGxsoyxD8wyis39RzXvTBjXyZh6w==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
- dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
- not signed); arc=none (0)
-Received: from TYCP286CA0027.JPNP286.PROD.OUTLOOK.COM (2603:1096:400:263::18)
- by KU2PPF1A2CB34C0.apcprd06.prod.outlook.com (2603:1096:d18::48b) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9009.18; Fri, 8 Aug
- 2025 07:29:46 +0000
-Received: from TY2PEPF0000AB86.apcprd03.prod.outlook.com
- (2603:1096:400:263:cafe::c7) by TYCP286CA0027.outlook.office365.com
- (2603:1096:400:263::18) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9009.14 via Frontend Transport; Fri,
- 8 Aug 2025 07:29:38 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
- smtp.mailfrom=cixtech.com; dkim=none (message not signed)
- header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
-Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
- 222.71.101.198 as permitted sender) receiver=protection.outlook.com;
- client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
-Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- TY2PEPF0000AB86.mail.protection.outlook.com (10.167.253.10) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9009.8 via Frontend Transport; Fri, 8 Aug 2025 07:29:36 +0000
-Received: from hans.. (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 9B9D7416050B;
-	Fri,  8 Aug 2025 15:29:31 +0800 (CST)
-From: hans.zhang@cixtech.com
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kw@linux.com,
-	mani@kernel.org,
-	robh@kernel.org,
-	kwilczynski@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org
-Cc: mpillai@cadence.com,
-	fugang.duan@cixtech.com,
-	guoyin.chen@cixtech.com,
-	peter.chen@cixtech.com,
-	cix-kernel-upstream@cixtech.com,
-	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v6 11/12] arm64: dts: cix: Add PCIe Root Complex on sky1
-Date: Fri,  8 Aug 2025 15:29:28 +0800
-Message-ID: <20250808072929.4090694-12-hans.zhang@cixtech.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250808072929.4090694-1-hans.zhang@cixtech.com>
-References: <20250808072929.4090694-1-hans.zhang@cixtech.com>
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 079CD23B62C;
+	Fri,  8 Aug 2025 07:56:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.66
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1754639784; cv=none; b=iSSY1D27U4P5RnUsEzzvroS7btdO4VfEZihK6VWOK+w6Meyk80DoJtS41f/U4BHp5l62+ihND2PXccBmm2R08HE4au9DHlC+fWnxC2Oxuw4QTZF9l9fQ2nVTTVa64rwKqrYLgMatBBJRsnfHEBqGoslT6MhYLXRy1GWRjwgow6s=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1754639784; c=relaxed/simple;
+	bh=eH0NyDPZql4wCTz3i6PHT+N8D4o8WobMpqdwAmhOD8o=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Rw+dSYtK0OEs71GShE757r3v2yZ44kzMC6+Uj+ErpphlA2BXNwOsxGx2wjpkLIpc2L4mBAsWf+XAOECp0c3JS4EQDJTzvp7vQO3oyXaXwS+Y25dRxe42hV5XeCbWYhK4W/3skSmyKJZBmH9dNgt8Abfr8Ohs9cuBLcMSe/MeVyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k0v2z2qK; arc=none smtp.client-ip=209.85.128.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k0v2z2qK"
+Received: by mail-wm1-f66.google.com with SMTP id 5b1f17b1804b1-459e20ec1d9so17561155e9.3;
+        Fri, 08 Aug 2025 00:56:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1754639781; x=1755244581; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=g47/JQMYnoJFt8X2Gyr00t3GiLF5ts7OyvZLVgHeWbk=;
+        b=k0v2z2qKxJa82vs3scsaXhdrU5tkWHRqHcBAT6dsQirZC+5a4Ufugqc0TIAkt6wgIh
+         Jo/5MUj4zgMYcQRqJXwZFT3a2HLBhcXx4Pkojiv5Pvlwv5WEMPwePI+WhfkZB+FyLH6e
+         jFCCy6oHh3gTozlZFhlBwR1/0RsKkbk/7qujOqIL91o1ACgdkbikuozZkWz1qSDwUm9v
+         1vUcohrhM58k0bfSFF9YLv6xohfU5RFBRG6daGPg09iYcvKY/0Pq9J/1q/8Gdo5UyNX6
+         EM6lN84L1wueJWsjorDO1rjNbVtUnT8OIo8Jby29gSk7ROHjxsi42FqRhTPsGayxvLpA
+         //0A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754639781; x=1755244581;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=g47/JQMYnoJFt8X2Gyr00t3GiLF5ts7OyvZLVgHeWbk=;
+        b=H6LTqelYESNNNXJqNCpoUv5td39S6ebuCLfEyeF8tkHhqDl2c0VMem7j84regP0JgM
+         q4OOdS50tXNQTtuEvArjVrC0OkfK7nlvQs8Gca6f3+1cWFD0tMKXiqW/wysHEZNp7cy5
+         o3R6uSbHVlXciSMNY2aOXUnj75DKS3NLwcJOxg483X6MIbViib0uFM+5Ma+MSZHXNkIb
+         w6STTeNdiKlVkSXx1TYCFTrkU3tBGhFAywdjRHaLbQxcJQBtcEuV+JqHXacI1lXP6e5o
+         1O/clMejcsWdFZU+SIpNAD1SX39fGErrYS8BWoNKWqeZUrBN2TMfCsk3OuKRiYq6TUyx
+         dUOA==
+X-Forwarded-Encrypted: i=1; AJvYcCVnxh2Hs1IXUplOUBQAOruSULNiKTYp6sgFDtqmYA232qKuZtI9b3/JYSPrWCf0D057Khg=@vger.kernel.org, AJvYcCXQ0zs7rEgeDrEeocFt37+MVLVaSqdcefOOnK8DhBnzA9/PX9DDz6UzWa4P7yez7++sOdUjRR+9RWb2@vger.kernel.org
+X-Gm-Message-State: AOJu0YzY6JFE1fFHP6krCN2EMj5lwFLqAzIT/SKokknben1DrA61+xum
+	OVGga8R13NVTGElGt+XO+uJdT9sTbM3tKzBJCezcjUNppl4PTXE0mC/6
+X-Gm-Gg: ASbGncvl4rLeabpIScizFRvEHwHXlpAuk0e4OOQ5vxfwBV8dVulutyEuzzHIwzzTnYB
+	GURUYM9kGAT7ZZnjZX4dMseJw7HMfrSZjuqAtbgbT3naCNby4KZ85piRcMbQ2wBEAT3ysy2q75s
+	33mDFI59A5IrED4TArtW5RSDSvbP/wOym/7DtvACZf68Xnt/8prxp5U7/J+tn/4/EPPB88oVTG1
+	gMViXKGKwKt59P6k98uwiPubhrvx39qOI/z29NusKNRFCpgOcMMq12OsTFFLEP7C9jSN9PNskMv
+	mQTF4rL8/9Nwi7bAHyTSkN2IwPg2XGyRorkM0J1e9NnC7qeZokHTdXVuaC5WZiBci2TsYVeX02H
+	z6bYBJK9Wg1Pvd5VBd/bPgvKd13qpNB0hP/Yd8rYmOAt8dt0Y6Y8Ss+k0C30ZkWv7zBgHhpB+6G
+	rAmT384mUv+rc2QhePN9nULM496jZL7owIpw==
+X-Google-Smtp-Source: AGHT+IEBs27Uy9PNJpjOLnJbY5yuC13GxO0mFq67O2Xv2B5Lc++fQpKDmSg1kZHFuBQVQnQHeW4qhw==
+X-Received: by 2002:a05:600c:524a:b0:456:1204:e7e6 with SMTP id 5b1f17b1804b1-459f4f517dbmr14242675e9.11.1754639781007;
+        Fri, 08 Aug 2025 00:56:21 -0700 (PDT)
+Received: from [26.26.26.1] (ec2-3-72-134-22.eu-central-1.compute.amazonaws.com. [3.72.134.22])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3b79c3bf956sm30081041f8f.24.2025.08.08.00.56.16
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 08 Aug 2025 00:56:20 -0700 (PDT)
+Message-ID: <c6b5067e-8ae4-44f6-83de-f098761608ba@gmail.com>
+Date: Fri, 8 Aug 2025 15:56:13 +0800
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY2PEPF0000AB86:EE_|KU2PPF1A2CB34C0:EE_
-Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 2d392f48-e042-48a0-8938-08ddd64d5415
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700013|82310400026|7416014|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?aWtA30K0zA4f3lve4U99k1FaysfMZYYocY+XQa5UWNL2ELcw6Ps0U+FTgTTz?=
- =?us-ascii?Q?dsQYrUgr9F1ohzjC5hWL27+doz4umxdjWTHgZuX2Wv3yeKNtDrrDdkAMdYc/?=
- =?us-ascii?Q?Z2iSuCMohNiJGS34YqnCTRudATFuUlF520DsRkQ+Z5YXkJ0fxnlNx2VMrEzk?=
- =?us-ascii?Q?foMBoZ1z9Nzi2j7Sz0qoOfaVw49XZngSZIEgEBSdEHgvbdf2tI/YWmnMkhpr?=
- =?us-ascii?Q?1L5S3O8u9XYTTexJS9xuU7QdCIlRp32FlSB1fh8N1Ki20RpwYy6jHiOOJqdH?=
- =?us-ascii?Q?O9hqkYfvaIoiwHX/DL3RXJv3ADmrb+Fa6KoWqOgBjxJFzjlrN7C5Kj4GqaVN?=
- =?us-ascii?Q?Ceh7jq7+JbR6SqsIHfBc19oHzEaaKWU4k0huHLpRuQhgGzFIvVqqRKQxp5c0?=
- =?us-ascii?Q?/mOQnl0LS3AdNNMgfU89zIyjCuFeFqIvv82m7/bzLBQglh83M6UnNE+TZtjQ?=
- =?us-ascii?Q?5Aq39Q4wc3g11tmcGF8RtBImIadGChfWMTi+ns4LSvI8KFZT368vpIzSyzEc?=
- =?us-ascii?Q?kl3RZjvfepSV7vLeD03ymRoMDxbAQLj26doHXABFehgrjH+PtQM2muD4cj44?=
- =?us-ascii?Q?83bbZvbEh1rr+8Zy01K/zzMqQvCRakOqIT8ZJAaW3Ty2LAwIw5AGfmDHcjg/?=
- =?us-ascii?Q?oCGPKuI+/Oi8PM2eRaIKZ5rlqCNh8bwqpFm5UIGFoON6jnWxdTfXRPul55Hz?=
- =?us-ascii?Q?37hGHFuHroU+WPjqJj8TWtIpjMWwzIEks8h9A67iewVzfCMirAW1TDGt/YL0?=
- =?us-ascii?Q?cJIlVpGKATlJKBHGGhEwfl9hoPqN1cAu8k4/5wHIlwkg8LvQH2IRpWbID3tf?=
- =?us-ascii?Q?PsnmhIePx2qha6RcLsrHaSwYkxmAEdEHoFxaq3l95ZBZ8a5GoIjcDz+JpOEk?=
- =?us-ascii?Q?DDeNtz/WIFW/0vpJVwWx4q0F1W7CSWZAafRCtaAWPe9+la0N/3RorvClKWfv?=
- =?us-ascii?Q?wDjwWBXK9mlKkHySZuY3P48bBC37bbZitp6LnJjPYAys7fEHA2KLHoNg0liB?=
- =?us-ascii?Q?WJAPwPhfZV2vX+E1217PGvQPO9uEqQTKHVl6ynd7dANX66FpzzTDZQfV2OFT?=
- =?us-ascii?Q?omcXvoWuDPVXxdVTzImk6I1QZ0RBiTvu6F7g8rnljRPLW1DfnYdDEuFKVT+H?=
- =?us-ascii?Q?+Ueopq2aI7GrwbtGy48mX+/V65iegorDVnMgZ5LPW+0OQnW25GMGxqvl9dlS?=
- =?us-ascii?Q?ld0HpWDtjBW8m1Fdr3nPNoNaoV7hA0UZmuFrwl0gZHWmDiN2Z/RPQuUUx42Z?=
- =?us-ascii?Q?09aJYNOdighGeRD6SyFwYzrW4uvuJ/PtQc92XrhCWdCv+gQwXMR4qcoHsZU3?=
- =?us-ascii?Q?JIpo+e4wo0zCbjC9DoF2ds9navrluB98YrAP7LN+ttcneHm7tqReeM2jEz8f?=
- =?us-ascii?Q?Cj7M4M7rBeUt5RWkIZceNQTHsixMRTWPXapmLLfXTxVkV7uThTASgVIyWoj3?=
- =?us-ascii?Q?3Ul5FxP9TbzKiFp6XYDJOpOfPGmJ2l5FcoLD09Ef5dWhR4mGwOQiX+JdOgSY?=
- =?us-ascii?Q?EOF0klQKQ7ptYMa/BW2DH5BNgruKkATtY7qh?=
-X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(36860700013)(82310400026)(7416014)(376014);DIR:OUT;SFP:1102;
-X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2025 07:29:36.5729
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2d392f48-e042-48a0-8938-08ddd64d5415
-X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	TY2PEPF0000AB86.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KU2PPF1A2CB34C0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/16] Fix incorrect iommu_groups with PCIe ACS
+To: Baolu Lu <baolu.lu@linux.intel.com>, Jason Gunthorpe <jgg@nvidia.com>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, iommu@lists.linux.dev,
+ Joerg Roedel <joro@8bytes.org>, linux-pci@vger.kernel.org,
+ Robin Murphy <robin.murphy@arm.com>, Will Deacon <will@kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>, galshalom@nvidia.com,
+ Joerg Roedel <jroedel@suse.de>, Kevin Tian <kevin.tian@intel.com>,
+ kvm@vger.kernel.org, maorg@nvidia.com, patches@lists.linux.dev,
+ tdave@nvidia.com, Tony Zhu <tony.zhu@intel.com>
+References: <0-v2-4a9b9c983431+10e2-pcie_switch_groups_jgg@nvidia.com>
+ <a692448d-48b8-4af3-bf88-2cc913a145ca@gmail.com>
+ <20250802151816.GC184255@nvidia.com>
+ <1684792a-97d6-4383-a0d2-f342e69c91ff@gmail.com>
+ <20250805123555.GI184255@nvidia.com>
+ <964c8225-d3fc-4b60-9ee5-999e08837988@gmail.com>
+ <20250805144301.GO184255@nvidia.com>
+ <6ca56de5-01df-4636-9c6a-666ccc10b7ff@gmail.com>
+ <3abaf43b-0b81-46e9-a313-0120d30541cc@linux.intel.com>
+Content-Language: en-US
+From: Ethan Zhao <etzhao1900@gmail.com>
+In-Reply-To: <3abaf43b-0b81-46e9-a313-0120d30541cc@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Hans Zhang <hans.zhang@cixtech.com>
 
-Add pcie_x*_rc node to support Sky1 PCIe driver based on the
-Cadence PCIe core.
 
-Supports Gen1/Gen2/Gen3/Gen4, 1/2/4/8 lane, MSI/MSI-x interrupts
-using the ARM GICv3.
+On 8/6/2025 10:41 AM, Baolu Lu wrote:
+> On 8/6/25 10:22, Ethan Zhao wrote:
+>> On 8/5/2025 10:43 PM, Jason Gunthorpe wrote:
+>>> On Tue, Aug 05, 2025 at 10:41:03PM +0800, Ethan Zhao wrote:
+>>>
+>>>>>> My understanding, iommu has no logic yet to handle the egress control
+>>>>>> vector configuration case,
+>>>>>
+>>>>> We don't support it at all. If some FW leaves it configured then it
+>>>>> will work at the PCI level but Linux has no awarness of what it is
+>>>>> doing.
+>>>>>
+>>>>> Arguably Linux should disable it on boot, but we don't..
+>>>> linux tool like setpci could access PCIe configuration raw data, so
+>>>> does to the ACS control bits. that is boring.
+>>>
+>>> Any change to ACS after boot is "not supported" - iommu groups are one
+>>> time only using boot config only. If someone wants to customize ACS
+>>> they need to use the new config_acs kernel parameter.
+>> That would leave ACS to boot time configuration only. Linux never
+>> limits tools to access(write) hardware directly even it could do that.
+>> Would it be better to have interception/configure-able policy for such
+>> hardware access behavior in kernel like what hypervisor does to MSR etc ?
+> 
+> A root user could even clear the BME or MSE bits of a device's PCIe
+> configuration space, even if the device is already bound to a driver and
+> operating normally. I don't think there's a mechanism to prevent that
+> from happening, besides permission enforcement. I believe that the same
+> applies to the ACS control.
+> 
+>>>
+>>>>>> The static groups were created according to
+>>>>>> FW DRDB tables,
+>>>>>
+>>>>> ?? iommu_groups have nothing to do with FW tables.
+>>>> Sorry, typo, ACPI drhd table.
+>>>
+>>> Same answer, AFAIK FW tables have no effect on iommu_groups 
+>> My understanding, FW tables are part of the description about device 
+>> topology and iommu-device relationship. did I really misunderstand
+>> something ?
+> 
+> The ACPI/DMAR table describes the platform's IOMMU topology, not the
+> device topology, which is described by the PCI bus. So, the firmware
+> table doesn't impact the iommu_group.
+There is kernel lockdown lsm works via kernel parameter lockdown=
+{integrity | confidentiality},
 
-Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
----
- arch/arm64/boot/dts/cix/sky1.dtsi | 121 ++++++++++++++++++++++++++++++
- 1 file changed, 121 insertions(+)
+"If set to integrity, kernel features that allow userland to modify the 
+running kernel are disabled. If set to confidentiality, kernel features 
+that allow userland to extract confidential information from the kernel
+are also disabled. "
 
-diff --git a/arch/arm64/boot/dts/cix/sky1.dtsi b/arch/arm64/boot/dts/cix/sky1.dtsi
-index 7dfe7677e649..04ba80d4fc06 100644
---- a/arch/arm64/boot/dts/cix/sky1.dtsi
-+++ b/arch/arm64/boot/dts/cix/sky1.dtsi
-@@ -288,6 +288,127 @@ mbox_ap2sfh: mailbox@80a0000 {
- 			cix,mbox-dir = "tx";
- 		};
- 
-+		pcie_x8_rc: pcie@a010000 {
-+			compatible = "cix,sky1-pcie-host";
-+			reg = <0x00 0x0a010000 0x00 0x10000>,
-+			      <0x00 0x2c000000 0x00 0x4000000>,
-+			      <0x00 0x0a000000 0x00 0x10000>,
-+			      <0x00 0x60000000 0x00 0x00100000>;
-+			reg-names = "reg", "cfg", "rcsu", "msg";
-+			ranges = <0x01000000 0x0 0x60100000 0x0 0x60100000 0x0 0x00100000>,
-+				 <0x02000000 0x0 0x60200000 0x0 0x60200000 0x0 0x1fe00000>,
-+				 <0x43000000 0x18 0x00000000 0x18 0x00000000 0x04 0x00000000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0xc0 0xff>;
-+			device_type = "pci";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 407 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 408 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 409 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 410 IRQ_TYPE_LEVEL_HIGH 0>;
-+			msi-map = <0xc000 &gic_its 0xc000 0x4000>;
-+			status = "disabled";
-+		};
-+
-+		pcie_x4_rc: pcie@a070000 {
-+			compatible = "cix,sky1-pcie-host";
-+			reg = <0x00 0x0a070000 0x00 0x10000>,
-+			      <0x00 0x29000000 0x00 0x3000000>,
-+			      <0x00 0x0a060000 0x00 0x10000>,
-+			      <0x00 0x50000000 0x00 0x00100000>;
-+			reg-names = "reg", "cfg", "rcsu", "msg";
-+			ranges = <0x01000000 0x00 0x50100000 0x00 0x50100000 0x00 0x00100000>,
-+				 <0x02000000 0x00 0x50200000 0x00 0x50200000 0x00 0x0fe00000>,
-+				 <0x43000000 0x14 0x00000000 0x14 0x00000000 0x04 0x00000000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0x90 0xbf>;
-+			device_type = "pci";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 417 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 418 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 419 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 420 IRQ_TYPE_LEVEL_HIGH 0>;
-+			msi-map = <0x9000 &gic_its 0x9000 0x3000>;
-+			status = "disabled";
-+		};
-+
-+		pcie_x2_rc: pcie@a0c0000 {
-+			compatible = "cix,sky1-pcie-host";
-+			reg = <0x00 0x0a0c0000 0x00 0x10000>,
-+			      <0x00 0x26000000 0x00 0x3000000>,
-+			      <0x00 0x0a060040 0x00 0x10000>,
-+			      <0x00 0x40000000 0x00 0x00100000>;
-+			reg-names = "reg", "cfg", "rcsu", "msg";
-+			ranges = <0x01000000 0x0 0x40100000 0x0 0x40100000 0x0 0x00100000>,
-+				 <0x02000000 0x0 0x40200000 0x0 0x40200000 0x0 0x0fe00000>,
-+				 <0x43000000 0x10 0x00000000 0x10 0x00000000 0x04 0x00000000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0x60 0x8f>;
-+			device_type = "pci";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 427 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 428 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 429 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 430 IRQ_TYPE_LEVEL_HIGH 0>;
-+			msi-map = <0x6000 &gic_its 0x6000 0x3000>;
-+			status = "disabled";
-+		};
-+
-+		pcie_x1_0_rc: pcie@a0d0000 {
-+			compatible = "cix,sky1-pcie-host";
-+			reg = <0x00 0x0a0d0000 0x00 0x10000>,
-+			      <0x00 0x20000000 0x00 0x3000000>,
-+			      <0x00 0x0a060060 0x00 0x10000>,
-+			      <0x00 0x30000000 0x00 0x00100000>;
-+			reg-names = "reg", "cfg", "rcsu", "msg";
-+			ranges = <0x01000000 0x0 0x30100000 0x0 0x30100000 0x0 0x00100000>,
-+				 <0x02000000 0x0 0x30200000 0x0 0x30200000 0x0 0x07e00000>,
-+				 <0x43000000 0x08 0x00000000 0x08 0x00000000 0x04 0x00000000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0x00 0x2f>;
-+			device_type = "pci";
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 436 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 437 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 438 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 439 IRQ_TYPE_LEVEL_HIGH 0>;
-+			msi-map = <0x0000 &gic_its 0x0000 0x3000>;
-+			status = "disabled";
-+		};
-+
-+		pcie_x1_1_rc: pcie@a0e0000 {
-+			compatible = "cix,sky1-pcie-host";
-+			reg = <0x00 0x0a0e0000 0x00 0x10000>,
-+			      <0x00 0x23000000 0x00 0x3000000>,
-+			      <0x00 0x0a060080 0x00 0x10000>,
-+			      <0x00 0x38000000 0x00 0x00100000>;
-+			reg-names = "reg", "cfg", "rcsu", "msg";
-+			ranges = <0x01000000 0x0 0x38100000 0x0 0x38100000 0x0 0x00100000>,
-+				 <0x02000000 0x0 0x38200000 0x0 0x38200000 0x0 0x07e00000>,
-+				 <0x43000000 0x0C 0x00000000 0x0C 0x00000000 0x04 0x00000000>;
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			bus-range = <0x30 0x5f>;
-+			device_type = "pci";
-+
-+			#interrupt-cells = <1>;
-+			interrupt-map-mask = <0 0 0 0x7>;
-+			interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 445 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 2 &gic 0 0 GIC_SPI 446 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 3 &gic 0 0 GIC_SPI 447 IRQ_TYPE_LEVEL_HIGH 0>,
-+					<0 0 0 4 &gic 0 0 GIC_SPI 448 IRQ_TYPE_LEVEL_HIGH 0>;
-+			msi-map = <0x3000 &gic_its 0x3000 0x3000>;
-+			status = "disabled";
-+		};
-+
- 		gic: interrupt-controller@e010000 {
- 			compatible = "arm,gic-v3";
- 			reg = <0x0 0x0e010000 0 0x10000>,	/* GICD */
--- 
-2.49.0
+It also works for PCIe configuration space directly access from 
+userland, but the levels of configuration granularity is coarse, can't 
+configure kernel to only prevent PCI device from accessing from userland.
+
+The design and implementation is structured and the granularity is fine-
+grained, it is easy to extended and add new kernel parameter to only
+lockdown PCI device configuration space access.
+
+[LOCKDOWN_PCI_ACCESS] = "direct PCI access"
+
+Thanks,
+Ethan
+
+
+
+> 
+> Thanks,
+> baolu
 
