@@ -1,40 +1,40 @@
-Received: from TYDPR03CU002.outbound.protection.outlook.com (mail-japaneastazon11023106.outbound.protection.outlook.com [52.101.127.106])
+Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazon11023118.outbound.protection.outlook.com [40.107.44.118])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A918D25229D;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46B5C274B36;
 	Fri,  8 Aug 2025 07:29:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.127.106
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.118
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754638186; cv=fail; b=LUmxtxvut4aSIMl+nkJ8kB3Q1vNASxLIyVPxyHCjcIypesu0YKzAWV1ct0zsFsYHp+a2bcl4mvPUdesX2i2Pyom0UcfgyjqYLlWwcUlux8YoiW0PHY93nudyTzNBzk0Mlwsj1rcXxseify7JkXO6t4v8/mZ3NvVTUNnU/w5urlc=
+	t=1754638187; cv=fail; b=pHcHkzcplrt5NU2StmdDrr/4g9ocZjVe7e9OtS04pBZdJHnjZsUvfyZnwN5EBK8af2YXahsCSL/k3XSefNhrYWuiYaD+dV4llyF7+jVLx/1CiywwBHe/fXeGkKas2E4aoWLy0mRn+hSXkFJ/40uhW/OmLwV/YxTC9qok/OKJtjg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754638186; c=relaxed/simple;
-	bh=7BELHzqkhXvAQNh69pfQa8evyvK+gemxPF41GgRNJ+Y=;
+	s=arc-20240116; t=1754638187; c=relaxed/simple;
+	bh=3Dpjhv0CDATpofkzuwFYLCPacvPU+iTj+31f2ewK8r0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a5O90m23GCcJtQEGIM3rmhSLzrFjKDhnEKU4UpPaLkDZW95pdwHlk1e5YGOHpTHib+4cFd/bKD5r6ShGc9Gw2Dxn56ryjjgHft2nnMUz8oXgc7cgPnBqttQP0BEHj+5qn2A/+c9xz/TGZrvwm6Wh5KisAOaNb9d/ALujwgA3Z5g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.127.106
+	 MIME-Version:Content-Type; b=pKkZ+taZn2z/5SMJQtoCs4A769cmZ9NjjVwjNYo00BMRZtmGsHd5QZAzbsdxDSTC9D7XlUePHrrN8cOamFdNI0i5uPZL41tlY2vxYoqwDy9Gy64IRvEFah1Hph/ELK4cEomaQr7eIr8JeZWsD5uzRVAOGx2fY6TPb5aa9CHS71E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.44.118
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=OHYvNdpBJZmUEiUZgwBvjH/n+jx90O5WGvxkvSx4r5O1uQRQFRrMnJcGR+MJtZV6ajxSIvMvff+wIRdT6GCrcsbMzqhTu1xwACwt7c8eQib/PijgVgfZM8qb08jxLL3fEH2Beay2vs9pmJQwQJ2Q1Gjp1AGGemmm8FDXrK7eUUJO5o17HrrajvlUfjmQwNFxD8W87Mc+pPIsU5zwuvtVR6YjEj/oGsCGtUjQ0qUjgd5215Oz7PkRggH6Wg5+vu0E+A5VWTkUpwYugcBqHMTpdJkc+jHJFMPvpKbl8VLqu+qcy9jxxz6vlLRJfb3vi1x8Rg++5nP4tjADUH1mx290Yg==
+ b=j7zdZWwNEZadJaMR132P7/mhHa2iZc8BGAGb84cp1/zUz+uXzfD+zD6gh5ShqO9lLF5HseL6AGtGReqfDohrzmSxQRTl9trnBc2JkHyKlR2FnJ8e/JCCWw8y87HDwFIAqihN0th0KwhdRqXhEYEB/4ntKPYg7kCkF0eM1SbiS60ZLLM4VZ0T+CNzZKk8g1UNcxV8dgLFPdr/71MySMwCQECPqzWvaRO6VaGE961VivZbRktspNhxb7TR5igtP2SNyMEOi4TrTjOtOnTjhWM8qoGlYUKZWiEm7oAXqE0lg3vmKl5rwQbvJULtNnOAfnycuYMikPE41k5I+v1mKRhYnw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=2qN+Up9kIATMmuh6cmk47JBfVdWrE5lK20Tk1ip3bYo=;
- b=AjTsAYguKR++JOG9cv8FKJBtOwOzGiwBVVaPL9MCM+WOGlWAfbLo90UeKMuo8jUKb+sHp0kV8fYldEeH7AOYjW4rKMj0an0x7EtLkvJB4jeBYmLbOO0suby1wh5X0F8rcgm/MmgmQUSseLbLvfxLYK2sKTQvjQNNZna53POrrpaiLQ8pzVtxrR92Gm59hcyEoSLYBNVSH2i5E5ZS4uq8cLysapeFrHw1CZ2k96qpp26xaAv9okAjLisL57dtVzOsjIHJbTQPMHyeyMrcvwoNRss4pxsJvSO1minNWHI3/PYlnNBhpbXPpQcZP33d25zu3WWs+G/9rmoMNzeJcTJ5/A==
+ bh=7oWY1ZeY8wffb3fZMVrjm0d+W4QBizzKrdcwJMlq2do=;
+ b=LZp9bEz5fYbzUcTs8xCx74P83PNMywsH2wRyL6joM7/mGtbQV10z9dkrJiI5iA+vr9/79m9b98ULIO6boNUuBtBvkUlxVUYzgCBWsB9gDJ6j8mdp9rlnnJBbtExuFulgxOTpcUlwrR4iofIlFqxi9rE4IQqOZdFqMT7GFtVukkGBKnBnSAdc25hsYTTFKzP0P0FRjUkOUg4WzL4FPtnetX6XhSUn84jofJcqQ9j3Bjf7YDdcf9CfHVbHhrxhAsoGTJm1uP90+pYUPNnrBOFlYKcyAXPveE4cYrot52afRcXUw7q/QRzQEyYBW/1J8Z6uf0ZGbT+ttp57VZP+9fHX8A==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
  dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
  not signed); arc=none (0)
-Received: from TYCP286CA0363.JPNP286.PROD.OUTLOOK.COM (2603:1096:405:79::10)
- by SI2PR06MB5386.apcprd06.prod.outlook.com (2603:1096:4:1ed::8) with
+Received: from TYAPR01CA0132.jpnprd01.prod.outlook.com (2603:1096:404:2d::24)
+ by OS8PR06MB7323.apcprd06.prod.outlook.com (2603:1096:604:28a::9) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9009.16; Fri, 8 Aug
- 2025 07:29:36 +0000
-Received: from TY2PEPF0000AB8A.apcprd03.prod.outlook.com
- (2603:1096:405:79:cafe::32) by TYCP286CA0363.outlook.office365.com
- (2603:1096:405:79::10) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9009.15; Fri, 8 Aug
+ 2025 07:29:37 +0000
+Received: from OSA0EPF000000C8.apcprd02.prod.outlook.com
+ (2603:1096:404:2d:cafe::13) by TYAPR01CA0132.outlook.office365.com
+ (2603:1096:404:2d::24) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9009.16 via Frontend Transport; Fri,
- 8 Aug 2025 07:29:36 +0000
+ 8 Aug 2025 07:29:37 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
  smtp.mailfrom=cixtech.com; dkim=none (message not signed)
  header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
@@ -42,11 +42,11 @@ Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
  222.71.101.198 as permitted sender) receiver=protection.outlook.com;
  client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
 Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- TY2PEPF0000AB8A.mail.protection.outlook.com (10.167.253.8) with Microsoft
+ OSA0EPF000000C8.mail.protection.outlook.com (10.167.240.54) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9009.8 via Frontend Transport; Fri, 8 Aug 2025 07:29:35 +0000
+ 15.20.9009.8 via Frontend Transport; Fri, 8 Aug 2025 07:29:36 +0000
 Received: from hans.. (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 4B61541604E0;
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 70B4841604E7;
 	Fri,  8 Aug 2025 15:29:31 +0800 (CST)
 From: hans.zhang@cixtech.com
 To: bhelgaas@google.com,
@@ -66,9 +66,9 @@ Cc: mpillai@cadence.com,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v6 05/12] PCI: cadence: Split the common functions for PCIe controller support
-Date: Fri,  8 Aug 2025 15:29:22 +0800
-Message-ID: <20250808072929.4090694-6-hans.zhang@cixtech.com>
+Subject: [PATCH v6 07/12] dt-bindings: PCI: Add CIX Sky1 PCIe Root Complex bindings
+Date: Fri,  8 Aug 2025 15:29:24 +0800
+Message-ID: <20250808072929.4090694-8-hans.zhang@cixtech.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250808072929.4090694-1-hans.zhang@cixtech.com>
 References: <20250808072929.4090694-1-hans.zhang@cixtech.com>
@@ -81,363 +81,145 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: TY2PEPF0000AB8A:EE_|SI2PR06MB5386:EE_
+X-MS-TrafficTypeDiagnostic: OSA0EPF000000C8:EE_|OS8PR06MB7323:EE_
 Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 95a17d84-f384-48af-b7e7-08ddd64d53e2
+X-MS-Office365-Filtering-Correlation-Id: 6a76413e-2c56-44ad-9e69-08ddd64d5405
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|7416014|376014|36860700013|1800799024|82310400026|7053199007;
+	BCL:0;ARA:13230040|7416014|376014|1800799024|36860700013|82310400026;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?8Tvp8HxG0nXTaqCcnjxJYzwulPSWAmYWpW3gYwpXXBhY3XLiSqC6iQhr6Bi3?=
- =?us-ascii?Q?0xKWd98eEw0xTnao9wUk8re711EF8/DZceLHLLD009n6qMsM2/Vmgkcn61+8?=
- =?us-ascii?Q?HV2jhGTOOcXRzw87/zyl75NaOSBKJnZekVMcfd36BEVqsPTd6EHhjdUQjWVL?=
- =?us-ascii?Q?X4MYSlCP8NUFuTqxcRAmMKkqosPyXSOFlswsCuHx5ZzkuwQBCTDotg5AwkE+?=
- =?us-ascii?Q?jtFeSNOAuhJss7iwnIh1FU9tRMwASW+fYpnHtakUubf+UzZaKdOPxJtfG4Ho?=
- =?us-ascii?Q?6d3VClDcYViN1IDIXIl9h1QeyHZu1Md1y/2foLbEGsOuBR0UIyH7FROruVsE?=
- =?us-ascii?Q?WAR5S3ihdGSljsYYnr4CNC1HEx2as/LQz+ZFbjIwUHkmY48yPBBrr9XoCjtC?=
- =?us-ascii?Q?hE/GqdEN4w2sOJQNTLHvBwiuS/91zjt2Aip5Tej4mDbkV/H98XUwmlmpkHg7?=
- =?us-ascii?Q?djvHlNLtEQ1fYbCdYZsmAxRGXjbAdBMSNO6q/DAwBOkuIiCHHLVYXlvEONfV?=
- =?us-ascii?Q?RI8aPPpwfY0kasDufjEKAXFTZHG/1Vlrm2FfpBZmoSG7+nMocJdJ1s5j4adU?=
- =?us-ascii?Q?y3d9TImAvcYeyJXZntN8vXPH2dwBL3aScibQ8PxuLVqZnv5aJ+JOPCgGVx5W?=
- =?us-ascii?Q?mxQbrFZWHJmUGA34wkfEllSxRk/tUz4TblnuI021z71sNoF8D54LmPJOXNHH?=
- =?us-ascii?Q?FijD7WY4ugjnC7IvCBgRqOzqaKwCWNt7ThKtipDKcJL4qb4ewjHYtXlxdKcu?=
- =?us-ascii?Q?Ub1kdlKWN9H5aRgv+HGJZILDe2+5cPotXBOfAa9WvRBYgPl8cOoF9yR94pl5?=
- =?us-ascii?Q?NEzXjF0XgY8b2/HIyvQPd9ZkVxt7+y7rd4rIpSXMU59gZXrjYT7jGpDJC++8?=
- =?us-ascii?Q?yNTs08joKr/6row7WGTclVuPh3rZDON5UBkqgSCW3FoP/e0fLZmcu1R5wWrZ?=
- =?us-ascii?Q?PABUkmlHjjlI5k/LBOm91CaEg3WMMQFpaOD64xbjq21CasGc0M1ZQhoefidL?=
- =?us-ascii?Q?AroQE/GFCCv9rrjflyxAABikiWF2sQmjPm7qdR4TGxy5L6O8ZWtcRXjXlOjA?=
- =?us-ascii?Q?SC/A8/IgGqlStvZF/brCVcmLn/CVUnIvxbAvX103Wwa+6fbEfKXQV+8FEK6X?=
- =?us-ascii?Q?4S/2jeXPuzeXb8FDG0GzM1lbXoIvHkvBPVK/ydCuxF8XQUpTnWuJoUVIWfp3?=
- =?us-ascii?Q?hMlyGti90cCatW7Z6eO4Z+C1jRJIlSMguUqNm338ihzDhNIaMBzDQYZJGa9A?=
- =?us-ascii?Q?NyRabyc9l5+pOAhqDeY4vNsePVh9LmND/b41G9PdZDR8/mH1QTnyjzA8mtPw?=
- =?us-ascii?Q?SaYmFPtg7BJKGWWhO0OW+T8/1+xe1nTLRI+JfjiNVa5Kmp0tVNw3L02evtV8?=
- =?us-ascii?Q?qu/mAOkWAEH2r6GUvCBPBEDDReKmIF4NM4LnIchfgnJ2NnG9qxhYU22scq+i?=
- =?us-ascii?Q?rsl+QnhJLasFe5XZq9zd2szzNnqUTBf8wTubfpim7eAeec9JURiJVA8Tiu2y?=
- =?us-ascii?Q?F65fYDnT9gQBvUc16r0Q2+KsYcTNuiH+hgHf?=
+	=?us-ascii?Q?OrvNv55IGZHjNFKqLtSJGEZfHmdxYI/z/ivsIy9104LSeSoS9lPZI3LuImGq?=
+ =?us-ascii?Q?vw8rZ1mLN3ZB6NHKZW+LPHCaK66IRTo8f0OElO6svEonlRAGO9PA2wit1FWw?=
+ =?us-ascii?Q?7HreA05j+cp8e5BLFWwRL758mmYdzMeRkqRN9mIGaGRmu1xIESUilvjc5jXf?=
+ =?us-ascii?Q?GBOdfhIVXCMEpdXg0K5Ds5uXOrWQ3egN3B8EqMBuaqfszVWPLfGsSWoE+cR+?=
+ =?us-ascii?Q?eoo1kZPIrVVQKKjRidpaW8AnFD+miq8UuUoQ3+YpPNxabsOOrSHlX8pyriST?=
+ =?us-ascii?Q?1VUM9q9amZle4X49OIFf6yuXA8APtCIerBNpVJJIahWFYZQG4fsoXzDvzcGI?=
+ =?us-ascii?Q?uPy7eaR6s3vuShG7YkQaIHUW+XvWHg5jYW5b0nhdinV+x3S30k/ug1Pxph2+?=
+ =?us-ascii?Q?BkRZ2yNhipEastrUnKdkiODSoLVDTnzicnvwgpG5cJBMobGiJaUwFovvcwcj?=
+ =?us-ascii?Q?u1wLn6rUVrXIBWFgM+OmdsvpGbKVCpfZyfdu+Edy8kiqXSl8mAQAMfWy5k5c?=
+ =?us-ascii?Q?hVFbefe04OdZpMWuhu3rzMHjJIEg45GXaKt0m985dD1YDc7VVlvL/8quCRSt?=
+ =?us-ascii?Q?CoaABh7IQdvFm36CROukxwHTN+B41Wj0oymZhOLxHOSE1a/46/79rKZz6gSq?=
+ =?us-ascii?Q?gedTXPO6YLBSfvFqGlu9PlPFwjJPRjU4RAkvSEj69BGkG+frqrr/tYnmIy0B?=
+ =?us-ascii?Q?xbl2gbpkKhHMBRj20KjCi3KmM+g8U3hMcA/2/Qjz4uK5st2dXhxV0UqOM+QC?=
+ =?us-ascii?Q?9m4XU3TMZ2Jxm/imy1U7yN27umJx1TAAny4+Vurj9PXgbIlCGi3gCRDzfoh6?=
+ =?us-ascii?Q?wRzxKiQNJ4ikCpuxnMqKdeN97wy4cndHZ7tU5S06a8gVdc0fsRZleq55Ywc2?=
+ =?us-ascii?Q?J+K/1vtLpBxXBvQ74Nv2mgNCKa5xIck95advC12pZnaKnpDB7r9v8hzdPpt8?=
+ =?us-ascii?Q?DRSTt1uANxpMGX4kdXjBNDkXX0JHSvd6YNarhFKNrsr/9iFIFyyO74AFR3cs?=
+ =?us-ascii?Q?UAURzLVNRlGJdltSzG801bUCWmtZ78ZbrfLWcbM1MjC5ZAXDAMm2NFqSl3Z2?=
+ =?us-ascii?Q?OCPaup94UzLnZEgQ18cK+VMpv9iMyyvYTfwuubO1qShl8tapjxfGLbS09b9R?=
+ =?us-ascii?Q?V0EV8g/TOa3Z90LZQUHNDctuofKPar8F9O8B2aEdVihaouyk/Z4cS2/vruds?=
+ =?us-ascii?Q?HVQ1Q/n1RYzV7zV2rH7y+ZDtA/TM5so2s5VSuThGQ2jjTKwRPNAwBpF+FQbb?=
+ =?us-ascii?Q?aelSXzVAgei7bnpMsAlK+IrfecIZgU/G/HA4+Nc5T8w8A3sapy4SG31h+y1P?=
+ =?us-ascii?Q?q+R9jb7YuYMrzh7JrK5yosiyVu3JTvYijXKXDCV0mWHaTRQbfBRa++zZX1Z/?=
+ =?us-ascii?Q?XZjyJoZ78yLJpjjiyPat3Ul1AvB5Whn31iY0DA/6CEXWO+j2eAw8J3ra7tlE?=
+ =?us-ascii?Q?nt56M1cgqB20SXWRyEq5QfyXt1PSxrrJ8dZT/y0BvrEsdEHsQfPQmg=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(376014)(36860700013)(1800799024)(82310400026)(7053199007);DIR:OUT;SFP:1102;
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(376014)(1800799024)(36860700013)(82310400026);DIR:OUT;SFP:1102;
 X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2025 07:29:35.9120
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2025 07:29:36.4848
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 95a17d84-f384-48af-b7e7-08ddd64d53e2
+X-MS-Exchange-CrossTenant-Network-Message-Id: 6a76413e-2c56-44ad-9e69-08ddd64d5405
 X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	TY2PEPF0000AB8A.apcprd03.prod.outlook.com
+	OSA0EPF000000C8.apcprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SI2PR06MB5386
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: OS8PR06MB7323
 
-From: Manikandan K Pillai <mpillai@cadence.com>
+From: Hans Zhang <hans.zhang@cixtech.com>
 
-Separate the functions for platform specific tasks and common
-library tasks into different files.
+Document the bindings for CIX Sky1 PCIe Controller configured in
+root complex mode with five root port.
 
-Signed-off-by: Manikandan K Pillai <mpillai@cadence.com>
-Co-developed-by: Hans Zhang <hans.zhang@cixtech.com>
+Supports 4 INTx, MSI and MSI-x interrupts from the ARM GICv3 controller.
+
 Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
 ---
- drivers/pci/controller/cadence/Makefile       |   2 +-
- .../controller/cadence/pcie-cadence-common.c  | 138 ++++++++++++++++++
- drivers/pci/controller/cadence/pcie-cadence.c | 128 ----------------
- 3 files changed, 139 insertions(+), 129 deletions(-)
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-common.c
+ .../bindings/pci/cix,sky1-pcie-host.yaml      | 73 +++++++++++++++++++
+ 1 file changed, 73 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
 
-diff --git a/drivers/pci/controller/cadence/Makefile b/drivers/pci/controller/cadence/Makefile
-index 0440ac6aba5d..3fe5dd2bbd5b 100644
---- a/drivers/pci/controller/cadence/Makefile
-+++ b/drivers/pci/controller/cadence/Makefile
-@@ -1,5 +1,5 @@
- # SPDX-License-Identifier: GPL-2.0
--obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence.o
-+obj-$(CONFIG_PCIE_CADENCE) += pcie-cadence-common.o pcie-cadence.o
- obj-$(CONFIG_PCIE_CADENCE_EP_COMMON) += pcie-cadence-ep-common.o
- obj-$(CONFIG_PCIE_CADENCE_HOST_COMMON) += pcie-cadence-host-common.o
- obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-common.c b/drivers/pci/controller/cadence/pcie-cadence-common.c
+diff --git a/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml b/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
 new file mode 100644
-index 000000000000..90e2b008774f
+index 000000000000..5aef69ac14b0
 --- /dev/null
-+++ b/drivers/pci/controller/cadence/pcie-cadence-common.c
-@@ -0,0 +1,138 @@
-+// SPDX-License-Identifier: GPL-2.0
-+// Copyright (c) 2017 Cadence
-+// Cadence PCIe controller driver.
-+// Author: Manikandan K Pillai <mpillai@cadence.com>
++++ b/Documentation/devicetree/bindings/pci/cix,sky1-pcie-host.yaml
+@@ -0,0 +1,73 @@
++# SPDX-License-Identifier: (GPL-2.0 OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/pci/cix,sky1-pcie-host.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
 +
-+#include <linux/kernel.h>
-+#include <linux/of.h>
++title: CIX Sky1 PCIe Root Complex
 +
-+#include "pcie-cadence.h"
++maintainers:
++  - Hans Zhang <hans.zhang@cixtech.com>
 +
-+void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
-+{
-+	int i = pcie->phy_count;
++description:
++  PCIe root complex controller based on the Cadence PCIe core.
 +
-+	while (i--) {
-+		phy_power_off(pcie->phy[i]);
-+		phy_exit(pcie->phy[i]);
-+	}
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_disable_phy);
++allOf:
++  - $ref: /schemas/pci/pci-host-bridge.yaml#
 +
-+int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
-+{
-+	int ret;
-+	int i;
++properties:
++  compatible:
++    oneOf:
++      - const: cix,sky1-pcie-host
 +
-+	for (i = 0; i < pcie->phy_count; i++) {
-+		ret = phy_init(pcie->phy[i]);
-+		if (ret < 0)
-+			goto err_phy;
++  reg:
++    items:
++      - description: PCIe controller registers.
++      - description: ECAM registers.
++      - description: Remote CIX System Unit registers.
++      - description: Region for sending messages registers.
 +
-+		ret = phy_power_on(pcie->phy[i]);
-+		if (ret < 0) {
-+			phy_exit(pcie->phy[i]);
-+			goto err_phy;
-+		}
-+	}
++  reg-names:
++    items:
++      - const: reg
++      - const: cfg
++      - const: rcsu
++      - const: msg
 +
-+	return 0;
++required:
++  - compatible
++  - ranges
++  - bus-range
++  - device_type
++  - interrupt-map
++  - interrupt-map-mask
++  - msi-map
 +
-+err_phy:
-+	while (--i >= 0) {
-+		phy_power_off(pcie->phy[i]);
-+		phy_exit(pcie->phy[i]);
-+	}
++unevaluatedProperties: false
 +
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_enable_phy);
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
 +
-+int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
-+{
-+	struct device_node *np = dev->of_node;
-+	int phy_count;
-+	struct phy **phy;
-+	struct device_link **link;
-+	int i;
-+	int ret;
-+	const char *name;
-+
-+	phy_count = of_property_count_strings(np, "phy-names");
-+	if (phy_count < 1) {
-+		dev_info(dev, "no \"phy-names\" property found; PHY will not be initialized\n");
-+		pcie->phy_count = 0;
-+		return 0;
-+	}
-+
-+	phy = devm_kcalloc(dev, phy_count, sizeof(*phy), GFP_KERNEL);
-+	if (!phy)
-+		return -ENOMEM;
-+
-+	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
-+	if (!link)
-+		return -ENOMEM;
-+
-+	for (i = 0; i < phy_count; i++) {
-+		of_property_read_string_index(np, "phy-names", i, &name);
-+		phy[i] = devm_phy_get(dev, name);
-+		if (IS_ERR(phy[i])) {
-+			ret = PTR_ERR(phy[i]);
-+			goto err_phy;
-+		}
-+		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
-+		if (!link[i]) {
-+			devm_phy_put(dev, phy[i]);
-+			ret = -EINVAL;
-+			goto err_phy;
-+		}
-+	}
-+
-+	pcie->phy_count = phy_count;
-+	pcie->phy = phy;
-+	pcie->link = link;
-+
-+	ret =  cdns_pcie_enable_phy(pcie);
-+	if (ret)
-+		goto err_phy;
-+
-+	return 0;
-+
-+err_phy:
-+	while (--i >= 0) {
-+		device_link_del(link[i]);
-+		devm_phy_put(dev, phy[i]);
-+	}
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(cdns_pcie_init_phy);
-+
-+static int cdns_pcie_suspend_noirq(struct device *dev)
-+{
-+	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-+
-+	cdns_pcie_disable_phy(pcie);
-+
-+	return 0;
-+}
-+
-+static int cdns_pcie_resume_noirq(struct device *dev)
-+{
-+	struct cdns_pcie *pcie = dev_get_drvdata(dev);
-+	int ret;
-+
-+	ret = cdns_pcie_enable_phy(pcie);
-+	if (ret) {
-+		dev_err(dev, "failed to enable PHY\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+const struct dev_pm_ops cdns_pcie_pm_ops = {
-+	NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
-+				  cdns_pcie_resume_noirq)
-+};
-+EXPORT_SYMBOL_GPL(cdns_pcie_pm_ops);
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.c b/drivers/pci/controller/cadence/pcie-cadence.c
-index 70a19573440e..51c9bc4eb174 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence.c
-@@ -152,134 +152,6 @@ void cdns_pcie_reset_outbound_region(struct cdns_pcie *pcie, u32 r)
- }
- EXPORT_SYMBOL_GPL(cdns_pcie_reset_outbound_region);
- 
--void cdns_pcie_disable_phy(struct cdns_pcie *pcie)
--{
--	int i = pcie->phy_count;
--
--	while (i--) {
--		phy_power_off(pcie->phy[i]);
--		phy_exit(pcie->phy[i]);
--	}
--}
--EXPORT_SYMBOL_GPL(cdns_pcie_disable_phy);
--
--int cdns_pcie_enable_phy(struct cdns_pcie *pcie)
--{
--	int ret;
--	int i;
--
--	for (i = 0; i < pcie->phy_count; i++) {
--		ret = phy_init(pcie->phy[i]);
--		if (ret < 0)
--			goto err_phy;
--
--		ret = phy_power_on(pcie->phy[i]);
--		if (ret < 0) {
--			phy_exit(pcie->phy[i]);
--			goto err_phy;
--		}
--	}
--
--	return 0;
--
--err_phy:
--	while (--i >= 0) {
--		phy_power_off(pcie->phy[i]);
--		phy_exit(pcie->phy[i]);
--	}
--
--	return ret;
--}
--EXPORT_SYMBOL_GPL(cdns_pcie_enable_phy);
--
--int cdns_pcie_init_phy(struct device *dev, struct cdns_pcie *pcie)
--{
--	struct device_node *np = dev->of_node;
--	int phy_count;
--	struct phy **phy;
--	struct device_link **link;
--	int i;
--	int ret;
--	const char *name;
--
--	phy_count = of_property_count_strings(np, "phy-names");
--	if (phy_count < 1) {
--		dev_info(dev, "no \"phy-names\" property found; PHY will not be initialized\n");
--		pcie->phy_count = 0;
--		return 0;
--	}
--
--	phy = devm_kcalloc(dev, phy_count, sizeof(*phy), GFP_KERNEL);
--	if (!phy)
--		return -ENOMEM;
--
--	link = devm_kcalloc(dev, phy_count, sizeof(*link), GFP_KERNEL);
--	if (!link)
--		return -ENOMEM;
--
--	for (i = 0; i < phy_count; i++) {
--		of_property_read_string_index(np, "phy-names", i, &name);
--		phy[i] = devm_phy_get(dev, name);
--		if (IS_ERR(phy[i])) {
--			ret = PTR_ERR(phy[i]);
--			goto err_phy;
--		}
--		link[i] = device_link_add(dev, &phy[i]->dev, DL_FLAG_STATELESS);
--		if (!link[i]) {
--			devm_phy_put(dev, phy[i]);
--			ret = -EINVAL;
--			goto err_phy;
--		}
--	}
--
--	pcie->phy_count = phy_count;
--	pcie->phy = phy;
--	pcie->link = link;
--
--	ret =  cdns_pcie_enable_phy(pcie);
--	if (ret)
--		goto err_phy;
--
--	return 0;
--
--err_phy:
--	while (--i >= 0) {
--		device_link_del(link[i]);
--		devm_phy_put(dev, phy[i]);
--	}
--
--	return ret;
--}
--EXPORT_SYMBOL_GPL(cdns_pcie_init_phy);
--
--static int cdns_pcie_suspend_noirq(struct device *dev)
--{
--	struct cdns_pcie *pcie = dev_get_drvdata(dev);
--
--	cdns_pcie_disable_phy(pcie);
--
--	return 0;
--}
--
--static int cdns_pcie_resume_noirq(struct device *dev)
--{
--	struct cdns_pcie *pcie = dev_get_drvdata(dev);
--	int ret;
--
--	ret = cdns_pcie_enable_phy(pcie);
--	if (ret) {
--		dev_err(dev, "failed to enable PHY\n");
--		return ret;
--	}
--
--	return 0;
--}
--
--const struct dev_pm_ops cdns_pcie_pm_ops = {
--	NOIRQ_SYSTEM_SLEEP_PM_OPS(cdns_pcie_suspend_noirq,
--				  cdns_pcie_resume_noirq)
--};
--
- MODULE_LICENSE("GPL");
- MODULE_DESCRIPTION("Cadence PCIe controller driver");
- MODULE_AUTHOR("Cyrille Pitchen <cyrille.pitchen@free-electrons.com>");
++    pcie@a010000 {
++        compatible = "cix,sky1-pcie-host";
++        reg = <0x00 0x0a010000 0x00 0x10000>,
++              <0x00 0x2c000000 0x00 0x4000000>,
++              <0x00 0x0a000000 0x00 0x10000>,
++              <0x00 0x60000000 0x00 0x00100000>;
++        reg-names = "reg", "cfg", "rcsu", "msg";
++        ranges = <0x01000000 0x00 0x60100000 0x00 0x60100000 0x00 0x00100000>,
++                 <0x02000000 0x00 0x60200000 0x00 0x60200000 0x00 0x1fe00000>,
++                 <0x43000000 0x18 0x00000000 0x18 0x00000000 0x04 0x00000000>;
++        #address-cells = <3>;
++        #size-cells = <2>;
++        bus-range = <0xc0 0xff>;
++        device_type = "pci";
++        #interrupt-cells = <1>;
++        interrupt-map-mask = <0 0 0 0x7>;
++        interrupt-map = <0 0 0 1 &gic 0 0 GIC_SPI 407 IRQ_TYPE_LEVEL_HIGH 0>,
++                        <0 0 0 2 &gic 0 0 GIC_SPI 408 IRQ_TYPE_LEVEL_HIGH 0>,
++                        <0 0 0 3 &gic 0 0 GIC_SPI 409 IRQ_TYPE_LEVEL_HIGH 0>,
++                        <0 0 0 4 &gic 0 0 GIC_SPI 410 IRQ_TYPE_LEVEL_HIGH 0>;
++        msi-map = <0xc000 &gic_its 0xc000 0x4000>;
++    };
 -- 
 2.49.0
 
