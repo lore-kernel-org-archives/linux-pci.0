@@ -1,40 +1,39 @@
-Received: from SEYPR02CU001.outbound.protection.outlook.com (mail-koreacentralazon11023077.outbound.protection.outlook.com [40.107.44.77])
+Received: from TYPPR03CU001.outbound.protection.outlook.com (mail-japaneastazon11022133.outbound.protection.outlook.com [52.101.126.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458F323AE79;
-	Fri,  8 Aug 2025 07:29:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.44.77
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F12A23BCF3;
+	Fri,  8 Aug 2025 07:29:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.126.133
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754638183; cv=fail; b=G/SmERK9y07NjtKbsUbP/cen79fvhNWQTvY2nMBm2+u1ionOVfLGFXVyrTMEgHF5uufNzBd+sblvD2e0aXZTeIw0x2Q1cjvJj22IXqQvnUTlvsKefwN3sbrcj6IhZeYDS8WEXDUc0C6Ott0aLFP+Ui5XMRtFY8ps65eAeWkPtzQ=
+	t=1754638183; cv=fail; b=RqAJG2QdIIWqhHPWh5O9y4YvzNRSl8Dv47YQ4OtKHid/5JY3zX5U6sppA65EjaLwTSRPGl9jJj3D6kRYuI2NmbWFvDnljQyAB4TPWGToS0TqDMymuuoR2gZtppaqUEdVKlnHmJ1byMWOjJwUrzMC6Renokw1VtSo8CHW6qwjS+o=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1754638183; c=relaxed/simple;
-	bh=xVUlZ6Vi0AYHbrHYLt9vTfCi7MWlwWWwm6X2v2pecAI=;
+	bh=n+p5K9xZBkIg0LprP+KO3+LWcRCWNTVMpKGnakFLFa0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=tT3AWrJ5rTmXWSRPG8c789IyPGKawFYH2wpf0FRwb68mpQiDX4bzys84HJS6P53eRLzVOx3QL/+bKXTw/l9zr4EtifQ+gJuws8n1p3poNia01FSy1kO3iD8z05ur3gj92w0doBHDMYQhUsvTFlEVpl8C1l9z7gkDPXClchEf9pQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=40.107.44.77
+	 MIME-Version:Content-Type; b=T5uGxViO4WvpF3QJwOjWCPLGpDcJiFYBkNGrHIODWeQd/vN1XHZnn43dUdJNmc0B7EESjxLzH4O114xplFrhwDOCZNKdEc4Azes57bdaztx8SaB3QATU7xzORqJul2xx1PdbI99xA/meK9JSKtNS6VWEQrk8nMYZNIYcGYQV/v4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com; spf=pass smtp.mailfrom=cixtech.com; arc=fail smtp.client-ip=52.101.126.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=cixtech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cixtech.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xVZpSPxx8zWDDLdBqxZ/MaGYOQXBfocjANCcUcQReHa/G6AH6R1QsqVoQ/kUbtjOQ3qIgthTrKde/EUrJ81c4ASwpiwMMNi7QwP4mWAIkNugFkVShpKtgtngbD3i/misXcYdp079XSh7OjsZmYqxqM/pQAESUCCuYgNk1XafC4RtEH+VmSP1mII7eba8yxpRHHGDA7oBDJv2rM4DTgVXOp+2thCS+0+jpF3lI2R1UzgRIdLLcZenu3X7l3OASiW7SkISQM4VbNYk5E2vHcWOzPTb9y5zuSQ6vRiNmbmUtRuDNaV8klB3wzwB6Gm51g57xRRJGmcWAsaRs6O+jcPwOQ==
+ b=KnppBnlTPvmblon4Su8oRp+gJzVN/JL3KaXLggjXg0pTRbK3966LZBHftaDn2vvsDJqNP6XBHh/sBXyfjOJUCmNVOoWPEoK32nIlpTSSzKhMRnQm8OzyA4cj8uSEnaRWkNeRjrSNc1ZMw0rMv9O7MHOw+2p9vrShy5NW6sUALNTrthHSnOQ8N4vhifyhO7oj11/PMzKUyIYUfIk28LMXkTaXCXs0y4bGgnboHKh5eEQPu/XU0AIeUemzBZsiXn7lntPZbPtFP1SfiFDMUmbkMo7mFKN2aAIzNbw9knWckzhg5X4wIrqsNGAfQgnGb2JlrrMerh6X+1bCuB23VYdGYA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PI/gcpSQKtFzdzPCfIIeov4K0rz1nrHrEJI2eQIYTi8=;
- b=GzJvuq0Ng4I9iYvF6M9kTLBHCT4dBkwdhdG7t4CJfnSZBpCZVhoefWUs/cNpjFgXy1dHUL38OHSuzW6ngEqKmw6UBt4r5NJDL86dd3SmT/0GIGWI2Jgj7MJ9iSzJ79sTfLCYSSZB0dSq/gRWP8rEKR0EVqVZ4mY8WjYvXf1vgrUK/RqPG31KUGYga1O0kGSRIXrc9VrMj8ea6D/MapiObWeUMGGvRMN82iQHgJPi65HM7EyoIAf/PAyGKH9H8yhFoSUZOCFJ8AUkgYm4Lv9PEFambGKL2gkQIjw7SnDuIwQgHAdFWxP1g7ipVn4J63hJsa/F47a78MRWzydC8vL0Rg==
+ bh=JOYyEUsbYuZACLAgTS1s/upq1lcvPWv9zXckizdwNwY=;
+ b=BJGozPwKwZEmxKtzfj37KNozNt5afzCUHQmkAq2zlcMaaPnzJ8a8+GZbPA8t030AH+37nDBlRVh7ErqZTMnM+W5j3io7OYiCD1Id3ZrHjY9wbdOuIs14Jl8EUs+5TOTcNIhGmqoOq2NOdrVi9SX/SXxITW9KVqQh/SSNugG8RVsSblrzVvx7/Uuo8zz9gHhUL96gLdDlIG+SM4YZi7IQECKdiQvRF7vOUkl4NDYPBM4+Ax301emZ1h3X27UXKOczCyUGIPiUem9HP/jxWszy7YKUX5dlZUqA3pwCVd0MJRwTZ0WPERNCTIzaiQ5Z5o+3Th3gWLDc1DTArNeLhmcSew==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  222.71.101.198) smtp.rcpttodomain=cadence.com smtp.mailfrom=cixtech.com;
  dmarc=bestguesspass action=none header.from=cixtech.com; dkim=none (message
  not signed); arc=none (0)
-Received: from OS7PR01CA0137.jpnprd01.prod.outlook.com (2603:1096:604:25c::6)
- by SG2PR06MB5261.apcprd06.prod.outlook.com (2603:1096:4:1d8::13) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9009.18; Fri, 8 Aug
- 2025 07:29:34 +0000
-Received: from OSA0EPF000000CC.apcprd02.prod.outlook.com
- (2603:1096:604:25c:cafe::a9) by OS7PR01CA0137.outlook.office365.com
- (2603:1096:604:25c::6) with Microsoft SMTP Server (version=TLS1_3,
+Received: from SGXP274CA0015.SGPP274.PROD.OUTLOOK.COM (2603:1096:4:b8::27) by
+ PS1PPF3AA5DA295.apcprd06.prod.outlook.com (2603:1096:308::24b) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9009.14; Fri, 8 Aug 2025 07:29:37 +0000
+Received: from SG2PEPF000B66D0.apcprd03.prod.outlook.com
+ (2603:1096:4:b8:cafe::ea) by SGXP274CA0015.outlook.office365.com
+ (2603:1096:4:b8::27) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9009.16 via Frontend Transport; Fri,
- 8 Aug 2025 07:29:34 +0000
+ 8 Aug 2025 07:29:36 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 222.71.101.198)
  smtp.mailfrom=cixtech.com; dkim=none (message not signed)
  header.d=none;dmarc=bestguesspass action=none header.from=cixtech.com;
@@ -42,11 +41,11 @@ Received-SPF: Pass (protection.outlook.com: domain of cixtech.com designates
  222.71.101.198 as permitted sender) receiver=protection.outlook.com;
  client-ip=222.71.101.198; helo=smtprelay.cixcomputing.com; pr=C
 Received: from smtprelay.cixcomputing.com (222.71.101.198) by
- OSA0EPF000000CC.mail.protection.outlook.com (10.167.240.58) with Microsoft
+ SG2PEPF000B66D0.mail.protection.outlook.com (10.167.240.26) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9009.8 via Frontend Transport; Fri, 8 Aug 2025 07:29:33 +0000
+ 15.20.9009.8 via Frontend Transport; Fri, 8 Aug 2025 07:29:36 +0000
 Received: from hans.. (unknown [172.16.64.208])
-	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 115B04115DE3;
+	by smtprelay.cixcomputing.com (Postfix) with ESMTPSA id 912714160508;
 	Fri,  8 Aug 2025 15:29:31 +0800 (CST)
 From: hans.zhang@cixtech.com
 To: bhelgaas@google.com,
@@ -66,9 +65,9 @@ Cc: mpillai@cadence.com,
 	devicetree@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <hans.zhang@cixtech.com>
-Subject: [PATCH v6 01/12] PCI: cadence: Split PCIe controller header file
-Date: Fri,  8 Aug 2025 15:29:18 +0800
-Message-ID: <20250808072929.4090694-2-hans.zhang@cixtech.com>
+Subject: [PATCH v6 09/12] PCI: sky1: Add PCIe host support for CIX Sky1
+Date: Fri,  8 Aug 2025 15:29:26 +0800
+Message-ID: <20250808072929.4090694-10-hans.zhang@cixtech.com>
 X-Mailer: git-send-email 2.49.0
 In-Reply-To: <20250808072929.4090694-1-hans.zhang@cixtech.com>
 References: <20250808072929.4090694-1-hans.zhang@cixtech.com>
@@ -81,552 +80,397 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: OSA0EPF000000CC:EE_|SG2PR06MB5261:EE_
+X-MS-TrafficTypeDiagnostic: SG2PEPF000B66D0:EE_|PS1PPF3AA5DA295:EE_
 Content-Type: text/plain
-X-MS-Office365-Filtering-Correlation-Id: 1f8c2cdd-8aa8-4856-d4c7-08ddd64d5226
+X-MS-Office365-Filtering-Correlation-Id: 7f6dab27-c15a-45a2-35e2-08ddd64d53c6
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|7416014|376014|7053199007;
+	BCL:0;ARA:13230040|7416014|376014|36860700013|82310400026|1800799024;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?PCbngRztRRBhhkdJbGgpv5NnCKVUif7LJVW4rqkU1nofh6P/zb6GLhFpGggX?=
- =?us-ascii?Q?fcBWFVCWydYcqiFHGH8AtFv9eM+vLyOVm34yA4H9xx74SHKFkO6r22I/kij0?=
- =?us-ascii?Q?sbXlWn68Usc2HX0hEepDH1OXbGDn/bEvAja4VSmWjv0tsQzdsp4gcXX0qJJj?=
- =?us-ascii?Q?O+AzdaJ4S/a9nUm+B1OhGjCF2NvaPDKjt+wq6tgDMJh3kDYbhJP31GdPhs7C?=
- =?us-ascii?Q?4iMYbEMtxJPt2IvHz6oJeFe0DYbfnvOb4Sm+yuaJM4/alwhiTnQU4Bh6jAYV?=
- =?us-ascii?Q?6NdSoLHToHpJAUpqu31/u22kAz48jataTrUDv3m+C7Bx5a52fX+r1/yxtJ/m?=
- =?us-ascii?Q?CalvXHQBQLvfbqfQA7ZFTn6dK38nioidRHWIveJB8zQwrNGsvmBmRt59QAJT?=
- =?us-ascii?Q?to9TqCEExhdvXcbAusxI15nhnslofqtZ6nDoT/iBG3d5q62+Rd2sTqV5WlTO?=
- =?us-ascii?Q?CJROOuv//RuGupkegOvCz0Kaqq/Rdb/qTa8vrkbhKWS/+EFlNqLXg4OPSN7R?=
- =?us-ascii?Q?be4OErFfxFii9foIbPdR5c5+p5hocRI5Xkx/qK5WAyb3KsvVduwjgasswN+P?=
- =?us-ascii?Q?pts/5kjiqaIXcKc8nSQqtGkSxjpTu9F1Wkgxup6lK8EH5oeLBMFaEzB4aCQA?=
- =?us-ascii?Q?uQ7vgqpSEZ7C5zhujY4TI98DVcMMVn1FazpPmwucR+vC49p6UcmCrI2uyXia?=
- =?us-ascii?Q?ARQQmb1mdE2JThrmz9kPokYGrTChmDxuOC1GPs2E5CPLVOxTqkUFISF6TqTe?=
- =?us-ascii?Q?K9jcvNlG3k4AfcYH+YUdfzB8aSC8bvddN5It8TYP84bZCJuuyLxt0MdFMqkH?=
- =?us-ascii?Q?1QFe6NLg0uHzQ5B256r2G516rYh4gSEcD9DkIaikC/ubmgLAlc3XDAHt1E/u?=
- =?us-ascii?Q?zCVe4d/MCg7eAiPs7z4TpAze5uNgNZK1qO1ChIdWcnRI7M87JWKkT3qj7XQd?=
- =?us-ascii?Q?m5QKOd1SxfV/lbcCFog2Orpo6+JQt5rL1/Ene+vvxSJH1pqu3acFX2tO2WOT?=
- =?us-ascii?Q?7bun1sjXJz+keMhbQfNz3T/73viW+IvXVMk8xYbWdOqyiZAF7lp9GTzXhSZA?=
- =?us-ascii?Q?n0+ASs47wJkqUvDg4u36AYkcfUV6xQcKAqZV/eSra0GMSnl+5dxlPL9IDBai?=
- =?us-ascii?Q?cCCIBOBBzQHrqGO0phO2dS0jk9TZ/Bl4xqIeDH+ugnCuOMiSQxvJxFV0KFNQ?=
- =?us-ascii?Q?A0df/KPgJd8MfbLU76y9EapNMazbeOWkym6fPo653rdVeBbXNu9LXT50EmBe?=
- =?us-ascii?Q?ilmU0R7qAFYXiejp8mGn45XPzYDGLaCZ3fMzhEAKNGDFdUJIflO2eEf9fscu?=
- =?us-ascii?Q?g0c7C/SuvAmdLUvHIrjSG0Wpo8eDli8m4UiI0uqoHxu+vLrggYUIkh0HdAFP?=
- =?us-ascii?Q?nHSlj94ypp/Lek8o7Btru5vBJKt06cwyxj3p52RNuHs08eAXMY5eX3rKsftQ?=
- =?us-ascii?Q?uCxUqaMqDST+evoiJ2yqCa/mcg+iqtQW8Wc/DtqiCZywnZGWtBR5Dh8LmhmO?=
- =?us-ascii?Q?DaoABr4txz5WPqJRITeVEmbTSsCdUB0klZ5w?=
+	=?us-ascii?Q?XrAP3hfsRjeLLWDxOQwo74dPKFLEO/czC8ZHuu36NLO7Sr1GezmgneBNdA8n?=
+ =?us-ascii?Q?9owNG0bJyRRV4HaZFxdu7CKhgymxSCFbCu6ElxcWKFH6FOLbFmfbx9OWmlRf?=
+ =?us-ascii?Q?ziG1JpxEJFG5o6PXS9Ed4Aol81IHi/ZZ9S563Ve6dIFTBI76x+VE1iOr+rgG?=
+ =?us-ascii?Q?2XoJlgSzR7SAqf6GpFcGht/1DWNtJ0+UgaYy9yup2jicesazHuqon4V9uppE?=
+ =?us-ascii?Q?JzKDHtVQtIOL485V/FgfKornCyxz+OuvdnaFD1onSMjeQCeiGGNL0nV6nxYv?=
+ =?us-ascii?Q?Lq0Sni4vXj67FpuDqlS8BMf5QBP3pTHIvJjjsxF/yDPg7FS65UfYqUPiBh5t?=
+ =?us-ascii?Q?T7sjdSmdDIbW5OVEl6YhNctJh7lFFwcTAd2ucPlD3nOfs3aqdpKp4jt0X6w7?=
+ =?us-ascii?Q?8tgfHmPQsK05s80p0BaibuoKakRuLYOTzGqAn/y4FPkYdi7jieANrgeNCHq2?=
+ =?us-ascii?Q?MV15mUDZoryjZqpJKZ9jj37O8m2bLCAFN7Eu54ADYFrYXgPKXNttJsRQWdqh?=
+ =?us-ascii?Q?2Da3p2IgM+KJO0O0bhxE3X6uvelIDODT50qCd34l4ZQR7A2fYA9LQMVAYbbI?=
+ =?us-ascii?Q?8fZ8gEd0OUg8vuuxLT2W1EvKW+Mw9TeFz+hJpTaymoPkN4rnfohB6qa1vR0b?=
+ =?us-ascii?Q?s4PbcFLD+BUnlhmRgZCg7+KztsN6BKYESpko56YGhmrRbqM++UnZumj4VvFq?=
+ =?us-ascii?Q?niXST8hEy2FC/RsV96AHwaG6OynQKkLmpdTSdkpTXwDP7lzrY3Wvpg0kFbbv?=
+ =?us-ascii?Q?CleC5vcCvBLsRxC9bV6UKw2hlNgayl3BPAiF2kmkdT6HUmkSRAA8h8WVqW0n?=
+ =?us-ascii?Q?xBtE2QUiOxFZgKyh2UZaWC5WkvTXtXhH3lufiNsza9I+vkBjUHgeTrOAQ7d4?=
+ =?us-ascii?Q?l1O+QJ5/6sm5/qbqCpBG7aePWIJ6WdGaa1tjHtTJryxKnHx/sc+wVa8h4C0v?=
+ =?us-ascii?Q?eJdn++Ubiao24mGoMetRYFjBhqgtVrLW5Zhh4MZRTs3Vz2Rvoj62dnyLetvS?=
+ =?us-ascii?Q?FoZkFxmhCJGzD5GH9+FcLKah88ShAvLxBT53oTld9UdPPAzKI+7oI+uetr93?=
+ =?us-ascii?Q?rjvDf7MqIPcFsdKR+M2YdEfV4+2EVgzal0YpWGjSlhlcQf+6VE5pQnPj1mXP?=
+ =?us-ascii?Q?HH3IkQV0tZD2yKeV16jKC5YjIT0YQB/pgbr8kOKuHM9Pt2nfzkp8T8FTP816?=
+ =?us-ascii?Q?JUu4FBjb9/p5gbDQRiRsIp0h8SiC3OashQUXJ+1Kew9mKoWwFMqP3fBMQP1h?=
+ =?us-ascii?Q?BRGvjJh6FZ5mqgfD3CYN565f6cPoqW6GmWJv4moTc8pd4RaKT/92kM2695ar?=
+ =?us-ascii?Q?7GO87mz5WiOusSwugykNooJhLI5ezphYRXrOmnpb81KI7CzfFyYQr4BHdykJ?=
+ =?us-ascii?Q?mfXpCP700pmcOYvmOcdNV14x3XpDdNQDTijz+S4blxWkQRnTPjjGTd+8kdfy?=
+ =?us-ascii?Q?4B/VDMWPfOrx+TvoA6/dPZK0du58T+gj7IGkhxbCIu1Ca7Qtn814MtdZrkR5?=
+ =?us-ascii?Q?AOdifRpabpf8qR2WSKBjJkQTGL+0r7yfkjp/?=
 X-Forefront-Antispam-Report:
-	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(7416014)(376014)(7053199007);DIR:OUT;SFP:1102;
+	CIP:222.71.101.198;CTRY:CN;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:smtprelay.cixcomputing.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(7416014)(376014)(36860700013)(82310400026)(1800799024);DIR:OUT;SFP:1102;
 X-OriginatorOrg: cixtech.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2025 07:29:33.3118
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Aug 2025 07:29:36.0933
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 1f8c2cdd-8aa8-4856-d4c7-08ddd64d5226
+X-MS-Exchange-CrossTenant-Network-Message-Id: 7f6dab27-c15a-45a2-35e2-08ddd64d53c6
 X-MS-Exchange-CrossTenant-Id: 0409f77a-e53d-4d23-943e-ccade7cb4811
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=0409f77a-e53d-4d23-943e-ccade7cb4811;Ip=[222.71.101.198];Helo=[smtprelay.cixcomputing.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	OSA0EPF000000CC.apcprd02.prod.outlook.com
+	SG2PEPF000B66D0.apcprd03.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SG2PR06MB5261
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PS1PPF3AA5DA295
 
-From: Manikandan K Pillai <mpillai@cadence.com>
+From: Hans Zhang <hans.zhang@cixtech.com>
 
-Split the Cadence PCIe header file by moving the Legacy(LGA)
-controller register definitions to a separate header file for
-support of next generation PCIe controller architecture.
+Add driver for the CIX Sky1 SoC PCIe Gen4 16 GT/s controller based
+on the Cadence PCIe core.
 
-Signed-off-by: Manikandan K Pillai <mpillai@cadence.com>
-Co-developed-by: Hans Zhang <hans.zhang@cixtech.com>
+Supports MSI/MSI-x via GICv3, Single Virtual Channel, Single Function.
+
 Signed-off-by: Hans Zhang <hans.zhang@cixtech.com>
 ---
- .../cadence/pcie-cadence-lga-regs.h           | 228 ++++++++++++++++++
- drivers/pci/controller/cadence/pcie-cadence.h | 226 +----------------
- 2 files changed, 229 insertions(+), 225 deletions(-)
- create mode 100644 drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
+ drivers/pci/controller/cadence/Kconfig    |  12 +
+ drivers/pci/controller/cadence/Makefile   |   1 +
+ drivers/pci/controller/cadence/pci-sky1.c | 292 ++++++++++++++++++++++
+ 3 files changed, 305 insertions(+)
+ create mode 100644 drivers/pci/controller/cadence/pci-sky1.c
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h b/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
+diff --git a/drivers/pci/controller/cadence/Kconfig b/drivers/pci/controller/cadence/Kconfig
+index a1caf154888d..be52f31c5371 100644
+--- a/drivers/pci/controller/cadence/Kconfig
++++ b/drivers/pci/controller/cadence/Kconfig
+@@ -75,4 +75,16 @@ config PCI_J721E_EP
+ 	  Say Y here if you want to support the TI J721E PCIe platform
+ 	  controller in endpoint mode. TI J721E PCIe controller uses Cadence PCIe
+ 	  core.
++
++config PCI_SKY1_HOST
++	tristate "CIX SKY1 PCIe controller (host mode)"
++	depends on OF
++	select PCIE_CADENCE_HOST
++	help
++	  Say Y here if you want to support the CIX SKY1 PCIe platform
++	  controller in host mode. CIX SKY1 PCIe controller uses Cadence HPA(High
++	  Performance Architecture IP[Second generation of cadence PCIe IP])
++
++	  This driver requires Cadence PCIe core infrastructure (PCIE_CADENCE_HOST)
++	  and hardware platform adaptation layer to function.
+ endmenu
+diff --git a/drivers/pci/controller/cadence/Makefile b/drivers/pci/controller/cadence/Makefile
+index e2df24ff4c33..c8af7486036b 100644
+--- a/drivers/pci/controller/cadence/Makefile
++++ b/drivers/pci/controller/cadence/Makefile
+@@ -6,3 +6,4 @@ obj-$(CONFIG_PCIE_CADENCE_HOST) += pcie-cadence-host.o pcie-cadence-host-hpa.o
+ obj-$(CONFIG_PCIE_CADENCE_EP) += pcie-cadence-ep.o pcie-cadence-ep-hpa.o
+ obj-$(CONFIG_PCIE_CADENCE_PLAT) += pcie-cadence-plat.o
+ obj-$(CONFIG_PCI_J721E) += pci-j721e.o
++obj-$(CONFIG_PCI_SKY1_HOST) += pci-sky1.o
+diff --git a/drivers/pci/controller/cadence/pci-sky1.c b/drivers/pci/controller/cadence/pci-sky1.c
 new file mode 100644
-index 000000000000..0e88beb77292
+index 000000000000..290bff8bf151
 --- /dev/null
-+++ b/drivers/pci/controller/cadence/pcie-cadence-lga-regs.h
-@@ -0,0 +1,228 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+// Copyright (c) 2017 Cadence
-+// Cadence PCIe controller driver.
-+// Author: Manikandan K Pillai <mpillai@cadence.com>
-+
-+#ifndef _PCIE_CADENCE_LGA_REGS_H
-+#define _PCIE_CADENCE_LGA_REGS_H
-+
-+#include <linux/bitfield.h>
-+
-+/* Parameters for the waiting for link up routine */
-+#define LINK_WAIT_MAX_RETRIES	10
-+#define LINK_WAIT_USLEEP_MIN	90000
-+#define LINK_WAIT_USLEEP_MAX	100000
-+
-+/* Local Management Registers */
-+#define CDNS_PCIE_LM_BASE	0x00100000
-+
-+/* Vendor ID Register */
-+#define CDNS_PCIE_LM_ID		(CDNS_PCIE_LM_BASE + 0x0044)
-+#define  CDNS_PCIE_LM_ID_VENDOR_MASK	GENMASK(15, 0)
-+#define  CDNS_PCIE_LM_ID_VENDOR_SHIFT	0
-+#define  CDNS_PCIE_LM_ID_VENDOR(vid) \
-+	(((vid) << CDNS_PCIE_LM_ID_VENDOR_SHIFT) & CDNS_PCIE_LM_ID_VENDOR_MASK)
-+#define  CDNS_PCIE_LM_ID_SUBSYS_MASK	GENMASK(31, 16)
-+#define  CDNS_PCIE_LM_ID_SUBSYS_SHIFT	16
-+#define  CDNS_PCIE_LM_ID_SUBSYS(sub) \
-+	(((sub) << CDNS_PCIE_LM_ID_SUBSYS_SHIFT) & CDNS_PCIE_LM_ID_SUBSYS_MASK)
-+
-+/* Root Port Requester ID Register */
-+#define  CDNS_PCIE_LM_RP_RID		(CDNS_PCIE_LM_BASE + 0x0228)
-+#define  CDNS_PCIE_LM_RP_RID_MASK	GENMASK(15, 0)
-+#define  CDNS_PCIE_LM_RP_RID_SHIFT	0
-+#define  CDNS_PCIE_LM_RP_RID_(rid) \
-+	(((rid) << CDNS_PCIE_LM_RP_RID_SHIFT) & CDNS_PCIE_LM_RP_RID_MASK)
-+
-+/* Endpoint Bus and Device Number Register */
-+#define  CDNS_PCIE_LM_EP_ID		(CDNS_PCIE_LM_BASE + 0x022C)
-+#define  CDNS_PCIE_LM_EP_ID_DEV_MASK	GENMASK(4, 0)
-+#define  CDNS_PCIE_LM_EP_ID_DEV_SHIFT	0
-+#define  CDNS_PCIE_LM_EP_ID_BUS_MASK	GENMASK(15, 8)
-+#define  CDNS_PCIE_LM_EP_ID_BUS_SHIFT	8
-+
-+/* Endpoint Function f BAR b Configuration Registers */
-+#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG(bar, fn) \
-+	(((bar) < BAR_4) ? CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn) : CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn))
-+#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn) \
-+	(CDNS_PCIE_LM_BASE + 0x0240 + (fn) * 0x0008)
-+#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn) \
-+	(CDNS_PCIE_LM_BASE + 0x0244 + (fn) * 0x0008)
-+#define CDNS_PCIE_LM_EP_VFUNC_BAR_CFG(bar, fn) \
-+	(((bar) < BAR_4) ? CDNS_PCIE_LM_EP_VFUNC_BAR_CFG0(fn) : CDNS_PCIE_LM_EP_VFUNC_BAR_CFG1(fn))
-+#define CDNS_PCIE_LM_EP_VFUNC_BAR_CFG0(fn) \
-+	(CDNS_PCIE_LM_BASE + 0x0280 + (fn) * 0x0008)
-+#define CDNS_PCIE_LM_EP_VFUNC_BAR_CFG1(fn) \
-+	(CDNS_PCIE_LM_BASE + 0x0284 + (fn) * 0x0008)
-+#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b) \
-+	(GENMASK(4, 0) << ((b) * 8))
-+#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE(b, a) \
-+	(((a) << ((b) * 8)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b))
-+#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b) \
-+	(GENMASK(7, 5) << ((b) * 8))
-+#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, c) \
-+	(((c) << ((b) * 8 + 5)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b))
-+
-+/* Endpoint Function Configuration Register */
-+#define CDNS_PCIE_LM_EP_FUNC_CFG	(CDNS_PCIE_LM_BASE + 0x02C0)
-+
-+/* Root Complex BAR Configuration Register */
-+#define CDNS_PCIE_LM_RC_BAR_CFG	(CDNS_PCIE_LM_BASE + 0x0300)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE(a) \
-+	(((a) << 0) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK		GENMASK(8, 6)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(c) \
-+	(((c) << 6) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK	GENMASK(13, 9)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE(a) \
-+	(((a) << 9) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK		GENMASK(16, 14)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(c) \
-+	(((c) << 14) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE	BIT(17)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_32BITS	0
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS	BIT(18)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE		BIT(19)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_16BITS		0
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS		BIT(20)
-+#define  CDNS_PCIE_LM_RC_BAR_CFG_CHECK_ENABLE		BIT(31)
-+
-+/* BAR control values applicable to both Endpoint Function and Root Complex */
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED		0x0
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_IO_32BITS		0x1
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS		0x4
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_32BITS	0x5
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_64BITS		0x6
-+#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS	0x7
-+
-+#define LM_RC_BAR_CFG_CTRL_DISABLED(bar)		\
-+		(CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED << (((bar) * 8) + 6))
-+#define LM_RC_BAR_CFG_CTRL_IO_32BITS(bar)		\
-+		(CDNS_PCIE_LM_BAR_CFG_CTRL_IO_32BITS << (((bar) * 8) + 6))
-+#define LM_RC_BAR_CFG_CTRL_MEM_32BITS(bar)		\
-+		(CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS << (((bar) * 8) + 6))
-+#define LM_RC_BAR_CFG_CTRL_PREF_MEM_32BITS(bar)	\
-+	(CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_32BITS << (((bar) * 8) + 6))
-+#define LM_RC_BAR_CFG_CTRL_MEM_64BITS(bar)		\
-+		(CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_64BITS << (((bar) * 8) + 6))
-+#define LM_RC_BAR_CFG_CTRL_PREF_MEM_64BITS(bar)	\
-+	(CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS << (((bar) * 8) + 6))
-+#define LM_RC_BAR_CFG_APERTURE(bar, aperture)		\
-+					(((aperture) - 2) << ((bar) * 8))
-+
-+/* PTM Control Register */
-+#define CDNS_PCIE_LM_PTM_CTRL		(CDNS_PCIE_LM_BASE + 0x0DA8)
-+#define CDNS_PCIE_LM_TPM_CTRL_PTMRSEN	BIT(17)
-+
++++ b/drivers/pci/controller/cadence/pci-sky1.c
+@@ -0,0 +1,292 @@
++// SPDX-License-Identifier: GPL-2.0
 +/*
-+ * Endpoint Function Registers (PCI configuration space for endpoint functions)
++ * PCIe controller driver for CIX's sky1 SoCs
++ *
++ * Author: Hans Zhang <hans.zhang@cixtech.com>
 + */
-+#define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
 +
-+#define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
-+#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xB0
-+#define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xC0
-+#define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
++#include <linux/of.h>
++#include <linux/of_device.h>
++#include <linux/pci.h>
++#include <linux/pci-ecam.h>
++#include <linux/pci_ids.h>
 +
-+/* Endpoint PF Registers */
-+#define CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(fn)	(0x144 + (fn) * 0x1000)
-+#define CDNS_PCIE_ARI_CAP_NFN_MASK			GENMASK(15, 8)
++#include "pcie-cadence.h"
++#include "pcie-cadence-host-common.h"
 +
-+/* Root Port Registers (PCI configuration space for the root port function) */
-+#define CDNS_PCIE_RP_BASE	0x00200000
-+#define CDNS_PCIE_RP_CAP_OFFSET 0xC0
++#define STRAP_REG(n) ((n) * 0x04)
++#define STATUS_REG(n) ((n) * 0x04)
 +
-+/* Address Translation Registers */
-+#define CDNS_PCIE_AT_BASE	0x00400000
++#define RCSU_STRAP_REG 0x300
++#define RCSU_STATUS_REG 0x400
 +
-+/* Region r Outbound AXI to PCIe Address Translation Register 0 */
-+#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0000 + ((r) & 0x1F) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(nbits) \
-+	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK	GENMASK(19, 12)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) \
-+	(((devfn) << 12) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK	GENMASK(27, 20)
-+#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(bus) \
-+	(((bus) << 20) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK)
++#define SKY1_IP_REG_BANK_OFFSET 0x1000
++#define SKY1_IP_CFG_CTRL_REG_BANK_OFFSET 0x4c00
++#define SKY1_IP_AXI_MASTER_COMMON_OFFSET 0xf000
++#define SKY1_AXI_SLAVE_OFFSET 0x9000
++#define SKY1_AXI_MASTER_OFFSET 0xb000
++#define SKY1_AXI_HLS_REGISTERS_OFFSET 0xc000
++#define SKY1_AXI_RAS_REGISTERS_OFFSET 0xe000
++#define SKY1_DTI_REGISTERS_OFFSET 0xd000
 +
-+/* Region r Outbound AXI to PCIe Address Translation Register 1 */
-+#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0004 + ((r) & 0x1F) * 0x0020)
++#define IP_REG_I_DBG_STS_0 0x420
 +
-+/* Region r Outbound PCIe Descriptor Register 0 */
-+#define CDNS_PCIE_AT_OB_REGION_DESC0(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0008 + ((r) & 0x1F) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MASK		GENMASK(3, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MEM		0x2
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_IO		0x6
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0	0xA
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1	0xB
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_NORMAL_MSG	0xC
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_VENDOR_MSG	0xD
-+/* Bit 23 MUST be set in RC mode. */
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID	BIT(23)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK	GENMASK(31, 24)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(devfn) \
-+	(((devfn) << 24) & CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK)
++#define LINK_TRAINING_ENABLE BIT(0)
++#define LINK_COMPLETE BIT(0)
 +
-+/* Region r Outbound PCIe Descriptor Register 1 */
-+#define CDNS_PCIE_AT_OB_REGION_DESC1(r)	\
-+	(CDNS_PCIE_AT_BASE + 0x000C + ((r) & 0x1F) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK	GENMASK(7, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS(bus) \
-+	((bus) & CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK)
++enum cix_soc_type {
++	CIX_SKY1,
++};
 +
-+/* Region r AXI Region Base Address Register 0 */
-+#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r) \
-+	(CDNS_PCIE_AT_BASE + 0x0018 + ((r) & 0x1F) * 0x0020)
-+#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) \
-+	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK)
++struct sky1_pcie_data {
++	struct cdns_plat_pcie_of_data reg_off;
++	enum cix_soc_type soc_type;
++};
 +
-+/* Region r AXI Region Base Address Register 1 */
-+#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r) \
-+	(CDNS_PCIE_AT_BASE + 0x001C + ((r) & 0x1F) * 0x0020)
++struct sky1_pcie {
++	struct device *dev;
++	const struct sky1_pcie_data *data;
++	struct cdns_pcie *cdns_pcie;
++	struct cdns_pcie_rc *cdns_pcie_rc;
 +
-+/* Root Port BAR Inbound PCIe to AXI Address Translation Register */
-+#define CDNS_PCIE_AT_IB_RP_BAR_ADDR0(bar) \
-+	(CDNS_PCIE_AT_BASE + 0x0800 + (bar) * 0x0008)
-+#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK	GENMASK(5, 0)
-+#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS(nbits) \
-+	(((nbits) - 1) & CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK)
-+#define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
-+	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
++	struct resource *cfg_res;
++	struct resource *msg_res;
++	struct pci_config_window *cfg;
++	void __iomem *rcsu_base;
++	void __iomem *strap_base;
++	void __iomem *status_base;
++	void __iomem *reg_base;
++	void __iomem *cfg_base;
++	void __iomem *msg_base;
++};
 +
-+/* AXI link down register */
-+#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
++static void sky1_pcie_clear_and_set_dword(void __iomem *addr, u32 clear,
++					  u32 set)
++{
++	u32 val;
 +
-+/* LTSSM Capabilities register */
-+#define CDNS_PCIE_LTSSM_CONTROL_CAP		(CDNS_PCIE_LM_BASE + 0x0054)
-+#define  CDNS_PCIE_DETECT_QUIET_MIN_DELAY_MASK	GENMASK(2, 1)
-+#define  CDNS_PCIE_DETECT_QUIET_MIN_DELAY_SHIFT 1
-+#define  CDNS_PCIE_DETECT_QUIET_MIN_DELAY(delay) \
-+	 (((delay) << CDNS_PCIE_DETECT_QUIET_MIN_DELAY_SHIFT) & \
-+	 CDNS_PCIE_DETECT_QUIET_MIN_DELAY_MASK)
++	val = readl(addr);
++	val &= ~clear;
++	val |= set;
++	writel(val, addr);
++}
 +
-+#define CDNS_PCIE_RP_MAX_IB	0x3
-+#define CDNS_PCIE_MAX_OB	32
++static void sky1_pcie_init_bases(struct sky1_pcie *pcie)
++{
++	pcie->strap_base = pcie->rcsu_base + RCSU_STRAP_REG;
++	pcie->status_base = pcie->rcsu_base + RCSU_STATUS_REG;
++}
 +
-+/* Endpoint Function BAR Inbound PCIe to AXI Address Translation Register */
-+#define CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, bar) \
-+	(CDNS_PCIE_AT_BASE + 0x0840 + (fn) * 0x0040 + (bar) * 0x0008)
-+#define CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, bar) \
-+	(CDNS_PCIE_AT_BASE + 0x0844 + (fn) * 0x0040 + (bar) * 0x0008)
++static int sky1_pcie_parse_mem(struct sky1_pcie *pcie)
++{
++	struct device *dev = pcie->dev;
++	struct platform_device *pdev = to_platform_device(dev);
++	struct resource *res;
++	void __iomem *base;
++	int ret = 0;
 +
-+/* Normal/Vendor specific message access: offset inside some outbound region */
-+#define CDNS_PCIE_NORMAL_MSG_ROUTING_MASK	GENMASK(7, 5)
-+#define CDNS_PCIE_NORMAL_MSG_ROUTING(route) \
-+	(((route) << 5) & CDNS_PCIE_NORMAL_MSG_ROUTING_MASK)
-+#define CDNS_PCIE_NORMAL_MSG_CODE_MASK		GENMASK(15, 8)
-+#define CDNS_PCIE_NORMAL_MSG_CODE(code) \
-+	(((code) << 8) & CDNS_PCIE_NORMAL_MSG_CODE_MASK)
-+#define CDNS_PCIE_MSG_NO_DATA                   BIT(16)
++	base = devm_platform_ioremap_resource_byname(pdev, "reg");
++	if (IS_ERR(base)) {
++		dev_err(dev, "Parse \"reg\" resource err\n");
++		return PTR_ERR(base);
++	}
++	pcie->reg_base = base;
 +
-+#endif /* _PCIE_CADENCE_LGA_REGS_H */
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 1d81c4bf6c6d..79df86117fde 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -10,213 +10,7 @@
- #include <linux/pci.h>
- #include <linux/pci-epf.h>
- #include <linux/phy/phy.h>
--
--/* Parameters for the waiting for link up routine */
--#define LINK_WAIT_MAX_RETRIES	10
--#define LINK_WAIT_USLEEP_MIN	90000
--#define LINK_WAIT_USLEEP_MAX	100000
--
--/*
-- * Local Management Registers
-- */
--#define CDNS_PCIE_LM_BASE	0x00100000
--
--/* Vendor ID Register */
--#define CDNS_PCIE_LM_ID		(CDNS_PCIE_LM_BASE + 0x0044)
--#define  CDNS_PCIE_LM_ID_VENDOR_MASK	GENMASK(15, 0)
--#define  CDNS_PCIE_LM_ID_VENDOR_SHIFT	0
--#define  CDNS_PCIE_LM_ID_VENDOR(vid) \
--	(((vid) << CDNS_PCIE_LM_ID_VENDOR_SHIFT) & CDNS_PCIE_LM_ID_VENDOR_MASK)
--#define  CDNS_PCIE_LM_ID_SUBSYS_MASK	GENMASK(31, 16)
--#define  CDNS_PCIE_LM_ID_SUBSYS_SHIFT	16
--#define  CDNS_PCIE_LM_ID_SUBSYS(sub) \
--	(((sub) << CDNS_PCIE_LM_ID_SUBSYS_SHIFT) & CDNS_PCIE_LM_ID_SUBSYS_MASK)
--
--/* Root Port Requester ID Register */
--#define CDNS_PCIE_LM_RP_RID	(CDNS_PCIE_LM_BASE + 0x0228)
--#define  CDNS_PCIE_LM_RP_RID_MASK	GENMASK(15, 0)
--#define  CDNS_PCIE_LM_RP_RID_SHIFT	0
--#define  CDNS_PCIE_LM_RP_RID_(rid) \
--	(((rid) << CDNS_PCIE_LM_RP_RID_SHIFT) & CDNS_PCIE_LM_RP_RID_MASK)
--
--/* Endpoint Bus and Device Number Register */
--#define CDNS_PCIE_LM_EP_ID	(CDNS_PCIE_LM_BASE + 0x022c)
--#define  CDNS_PCIE_LM_EP_ID_DEV_MASK	GENMASK(4, 0)
--#define  CDNS_PCIE_LM_EP_ID_DEV_SHIFT	0
--#define  CDNS_PCIE_LM_EP_ID_BUS_MASK	GENMASK(15, 8)
--#define  CDNS_PCIE_LM_EP_ID_BUS_SHIFT	8
--
--/* Endpoint Function f BAR b Configuration Registers */
--#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG(bar, fn) \
--	(((bar) < BAR_4) ? CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn) : CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn))
--#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG0(fn) \
--	(CDNS_PCIE_LM_BASE + 0x0240 + (fn) * 0x0008)
--#define CDNS_PCIE_LM_EP_FUNC_BAR_CFG1(fn) \
--	(CDNS_PCIE_LM_BASE + 0x0244 + (fn) * 0x0008)
--#define CDNS_PCIE_LM_EP_VFUNC_BAR_CFG(bar, fn) \
--	(((bar) < BAR_4) ? CDNS_PCIE_LM_EP_VFUNC_BAR_CFG0(fn) : CDNS_PCIE_LM_EP_VFUNC_BAR_CFG1(fn))
--#define CDNS_PCIE_LM_EP_VFUNC_BAR_CFG0(fn) \
--	(CDNS_PCIE_LM_BASE + 0x0280 + (fn) * 0x0008)
--#define CDNS_PCIE_LM_EP_VFUNC_BAR_CFG1(fn) \
--	(CDNS_PCIE_LM_BASE + 0x0284 + (fn) * 0x0008)
--#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b) \
--	(GENMASK(4, 0) << ((b) * 8))
--#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE(b, a) \
--	(((a) << ((b) * 8)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_APERTURE_MASK(b))
--#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b) \
--	(GENMASK(7, 5) << ((b) * 8))
--#define  CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL(b, c) \
--	(((c) << ((b) * 8 + 5)) & CDNS_PCIE_LM_EP_FUNC_BAR_CFG_BAR_CTRL_MASK(b))
--
--/* Endpoint Function Configuration Register */
--#define CDNS_PCIE_LM_EP_FUNC_CFG	(CDNS_PCIE_LM_BASE + 0x02c0)
--
--/* Root Complex BAR Configuration Register */
--#define CDNS_PCIE_LM_RC_BAR_CFG	(CDNS_PCIE_LM_BASE + 0x0300)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK	GENMASK(5, 0)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE(a) \
--	(((a) << 0) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_APERTURE_MASK)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK		GENMASK(8, 6)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL(c) \
--	(((c) << 6) & CDNS_PCIE_LM_RC_BAR_CFG_BAR0_CTRL_MASK)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK	GENMASK(13, 9)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE(a) \
--	(((a) << 9) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_APERTURE_MASK)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK		GENMASK(16, 14)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL(c) \
--	(((c) << 14) & CDNS_PCIE_LM_RC_BAR_CFG_BAR1_CTRL_MASK)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_ENABLE	BIT(17)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_32BITS	0
--#define  CDNS_PCIE_LM_RC_BAR_CFG_PREFETCH_MEM_64BITS	BIT(18)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_ENABLE		BIT(19)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_16BITS		0
--#define  CDNS_PCIE_LM_RC_BAR_CFG_IO_32BITS		BIT(20)
--#define  CDNS_PCIE_LM_RC_BAR_CFG_CHECK_ENABLE		BIT(31)
--
--/* BAR control values applicable to both Endpoint Function and Root Complex */
--#define  CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED		0x0
--#define  CDNS_PCIE_LM_BAR_CFG_CTRL_IO_32BITS		0x1
--#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS		0x4
--#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_32BITS	0x5
--#define  CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_64BITS		0x6
--#define  CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS	0x7
--
--#define LM_RC_BAR_CFG_CTRL_DISABLED(bar)		\
--		(CDNS_PCIE_LM_BAR_CFG_CTRL_DISABLED << (((bar) * 8) + 6))
--#define LM_RC_BAR_CFG_CTRL_IO_32BITS(bar)		\
--		(CDNS_PCIE_LM_BAR_CFG_CTRL_IO_32BITS << (((bar) * 8) + 6))
--#define LM_RC_BAR_CFG_CTRL_MEM_32BITS(bar)		\
--		(CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_32BITS << (((bar) * 8) + 6))
--#define LM_RC_BAR_CFG_CTRL_PREF_MEM_32BITS(bar)	\
--	(CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_32BITS << (((bar) * 8) + 6))
--#define LM_RC_BAR_CFG_CTRL_MEM_64BITS(bar)		\
--		(CDNS_PCIE_LM_BAR_CFG_CTRL_MEM_64BITS << (((bar) * 8) + 6))
--#define LM_RC_BAR_CFG_CTRL_PREF_MEM_64BITS(bar)	\
--	(CDNS_PCIE_LM_BAR_CFG_CTRL_PREFETCH_MEM_64BITS << (((bar) * 8) + 6))
--#define LM_RC_BAR_CFG_APERTURE(bar, aperture)		\
--					(((aperture) - 2) << ((bar) * 8))
--
--/* PTM Control Register */
--#define CDNS_PCIE_LM_PTM_CTRL 	(CDNS_PCIE_LM_BASE + 0x0da8)
--#define CDNS_PCIE_LM_TPM_CTRL_PTMRSEN 	BIT(17)
--
--/*
-- * Endpoint Function Registers (PCI configuration space for endpoint functions)
-- */
--#define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
--
--#define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
--#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
--#define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
--#define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
--
--/*
-- * Endpoint PF Registers
-- */
--#define CDNS_PCIE_CORE_PF_I_ARI_CAP_AND_CTRL(fn)	(0x144 + (fn) * 0x1000)
--#define CDNS_PCIE_ARI_CAP_NFN_MASK			GENMASK(15, 8)
--
--/*
-- * Root Port Registers (PCI configuration space for the root port function)
-- */
--#define CDNS_PCIE_RP_BASE	0x00200000
--#define CDNS_PCIE_RP_CAP_OFFSET 0xc0
--
--/*
-- * Address Translation Registers
-- */
--#define CDNS_PCIE_AT_BASE	0x00400000
--
--/* Region r Outbound AXI to PCIe Address Translation Register 0 */
--#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR0(r) \
--	(CDNS_PCIE_AT_BASE + 0x0000 + ((r) & 0x1f) * 0x0020)
--#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK	GENMASK(5, 0)
--#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(nbits) \
--	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_NBITS_MASK)
--#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK	GENMASK(19, 12)
--#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(devfn) \
--	(((devfn) << 12) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN_MASK)
--#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK	GENMASK(27, 20)
--#define  CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS(bus) \
--	(((bus) << 20) & CDNS_PCIE_AT_OB_REGION_PCI_ADDR0_BUS_MASK)
--
--/* Region r Outbound AXI to PCIe Address Translation Register 1 */
--#define CDNS_PCIE_AT_OB_REGION_PCI_ADDR1(r) \
--	(CDNS_PCIE_AT_BASE + 0x0004 + ((r) & 0x1f) * 0x0020)
--
--/* Region r Outbound PCIe Descriptor Register 0 */
--#define CDNS_PCIE_AT_OB_REGION_DESC0(r) \
--	(CDNS_PCIE_AT_BASE + 0x0008 + ((r) & 0x1f) * 0x0020)
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MASK		GENMASK(3, 0)
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_MEM		0x2
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_IO		0x6
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE0	0xa
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1	0xb
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_NORMAL_MSG	0xc
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_TYPE_VENDOR_MSG	0xd
--/* Bit 23 MUST be set in RC mode. */
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_HARDCODED_RID	BIT(23)
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK	GENMASK(31, 24)
--#define  CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN(devfn) \
--	(((devfn) << 24) & CDNS_PCIE_AT_OB_REGION_DESC0_DEVFN_MASK)
--
--/* Region r Outbound PCIe Descriptor Register 1 */
--#define CDNS_PCIE_AT_OB_REGION_DESC1(r)	\
--	(CDNS_PCIE_AT_BASE + 0x000c + ((r) & 0x1f) * 0x0020)
--#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK	GENMASK(7, 0)
--#define  CDNS_PCIE_AT_OB_REGION_DESC1_BUS(bus) \
--	((bus) & CDNS_PCIE_AT_OB_REGION_DESC1_BUS_MASK)
--
--/* Region r AXI Region Base Address Register 0 */
--#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR0(r) \
--	(CDNS_PCIE_AT_BASE + 0x0018 + ((r) & 0x1f) * 0x0020)
--#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK	GENMASK(5, 0)
--#define  CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS(nbits) \
--	(((nbits) - 1) & CDNS_PCIE_AT_OB_REGION_CPU_ADDR0_NBITS_MASK)
--
--/* Region r AXI Region Base Address Register 1 */
--#define CDNS_PCIE_AT_OB_REGION_CPU_ADDR1(r) \
--	(CDNS_PCIE_AT_BASE + 0x001c + ((r) & 0x1f) * 0x0020)
--
--/* Root Port BAR Inbound PCIe to AXI Address Translation Register */
--#define CDNS_PCIE_AT_IB_RP_BAR_ADDR0(bar) \
--	(CDNS_PCIE_AT_BASE + 0x0800 + (bar) * 0x0008)
--#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK	GENMASK(5, 0)
--#define  CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS(nbits) \
--	(((nbits) - 1) & CDNS_PCIE_AT_IB_RP_BAR_ADDR0_NBITS_MASK)
--#define CDNS_PCIE_AT_IB_RP_BAR_ADDR1(bar) \
--	(CDNS_PCIE_AT_BASE + 0x0804 + (bar) * 0x0008)
--
--/* AXI link down register */
--#define CDNS_PCIE_AT_LINKDOWN (CDNS_PCIE_AT_BASE + 0x0824)
--
--/* LTSSM Capabilities register */
--#define CDNS_PCIE_LTSSM_CONTROL_CAP             (CDNS_PCIE_LM_BASE + 0x0054)
--#define  CDNS_PCIE_DETECT_QUIET_MIN_DELAY_MASK  GENMASK(2, 1)
--#define  CDNS_PCIE_DETECT_QUIET_MIN_DELAY_SHIFT 1
--#define  CDNS_PCIE_DETECT_QUIET_MIN_DELAY(delay) \
--	 (((delay) << CDNS_PCIE_DETECT_QUIET_MIN_DELAY_SHIFT) & \
--	 CDNS_PCIE_DETECT_QUIET_MIN_DELAY_MASK)
-+#include "pcie-cadence-lga-regs.h"
- 
- enum cdns_pcie_rp_bar {
- 	RP_BAR_UNDEFINED = -1,
-@@ -225,29 +19,11 @@ enum cdns_pcie_rp_bar {
- 	RP_NO_BAR
- };
- 
--#define CDNS_PCIE_RP_MAX_IB	0x3
--#define CDNS_PCIE_MAX_OB	32
--
- struct cdns_pcie_rp_ib_bar {
- 	u64 size;
- 	bool free;
- };
- 
--/* Endpoint Function BAR Inbound PCIe to AXI Address Translation Register */
--#define CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR0(fn, bar) \
--	(CDNS_PCIE_AT_BASE + 0x0840 + (fn) * 0x0040 + (bar) * 0x0008)
--#define CDNS_PCIE_AT_IB_EP_FUNC_BAR_ADDR1(fn, bar) \
--	(CDNS_PCIE_AT_BASE + 0x0844 + (fn) * 0x0040 + (bar) * 0x0008)
--
--/* Normal/Vendor specific message access: offset inside some outbound region */
--#define CDNS_PCIE_NORMAL_MSG_ROUTING_MASK	GENMASK(7, 5)
--#define CDNS_PCIE_NORMAL_MSG_ROUTING(route) \
--	(((route) << 5) & CDNS_PCIE_NORMAL_MSG_ROUTING_MASK)
--#define CDNS_PCIE_NORMAL_MSG_CODE_MASK		GENMASK(15, 8)
--#define CDNS_PCIE_NORMAL_MSG_CODE(code) \
--	(((code) << 8) & CDNS_PCIE_NORMAL_MSG_CODE_MASK)
--#define CDNS_PCIE_MSG_DATA			BIT(16)
--
- struct cdns_pcie;
- 
- struct cdns_pcie_ops {
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "cfg");
++	if (!res) {
++		dev_err(dev, "Parse \"cfg\" resource err\n");
++		return -ENXIO;
++	}
++	pcie->cfg_res = res;
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "rcsu");
++	if (!res) {
++		dev_err(dev, "Parse \"rcsu\" resource err\n");
++		return -ENXIO;
++	}
++	pcie->rcsu_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pcie->rcsu_base) {
++		dev_err(dev, "ioremap failed for resource %pR\n", res);
++		return -ENOMEM;
++	}
++
++	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "msg");
++	if (!res) {
++		dev_err(dev, "Parse \"msg\" resource err\n");
++		return -ENXIO;
++	}
++	pcie->msg_res = res;
++	pcie->msg_base = devm_ioremap(dev, res->start, resource_size(res));
++	if (!pcie->msg_base) {
++		dev_err(dev, "ioremap failed for resource %pR\n", res);
++		return -ENOMEM;
++	}
++
++	return ret;
++}
++
++static int sky1_pcie_parse_property(struct platform_device *pdev,
++				    struct sky1_pcie *pcie)
++{
++	int ret = 0;
++
++	ret = sky1_pcie_parse_mem(pcie);
++	if (ret < 0)
++		return ret;
++
++	sky1_pcie_init_bases(pcie);
++
++	return ret;
++}
++
++static int sky1_pcie_start_link(struct cdns_pcie *cdns_pcie)
++{
++	struct sky1_pcie *pcie = dev_get_drvdata(cdns_pcie->dev);
++
++	sky1_pcie_clear_and_set_dword(pcie->strap_base + STRAP_REG(1),
++				      0, LINK_TRAINING_ENABLE);
++
++	return 0;
++}
++
++static void sky1_pcie_stop_link(struct cdns_pcie *cdns_pcie)
++{
++	struct sky1_pcie *pcie = dev_get_drvdata(cdns_pcie->dev);
++
++	sky1_pcie_clear_and_set_dword(pcie->strap_base + STRAP_REG(1),
++				      LINK_TRAINING_ENABLE, 0);
++}
++
++
++static bool sky1_pcie_link_up(struct cdns_pcie *cdns_pcie)
++{
++	u32 val;
++
++	val = cdns_pcie_hpa_readl(cdns_pcie, REG_BANK_IP_REG,
++				  IP_REG_I_DBG_STS_0);
++	return val & LINK_COMPLETE;
++}
++
++static const struct cdns_pcie_ops sky1_pcie_ops = {
++	.start_link = sky1_pcie_start_link,
++	.stop_link = sky1_pcie_stop_link,
++	.link_up = sky1_pcie_link_up,
++};
++
++static int sky1_pcie_probe(struct platform_device *pdev)
++{
++	const struct sky1_pcie_data *data;
++	struct device *dev = &pdev->dev;
++	struct pci_host_bridge *bridge;
++	struct cdns_pcie *cdns_pcie;
++	struct resource_entry *bus;
++	struct cdns_pcie_rc *rc;
++	struct sky1_pcie *pcie;
++	int ret;
++
++	pcie = devm_kzalloc(dev, sizeof(*pcie), GFP_KERNEL);
++	if (!pcie)
++		return -ENOMEM;
++
++	data = of_device_get_match_data(dev);
++	if (!data)
++		return -EINVAL;
++
++	pcie->data = data;
++	pcie->dev = dev;
++	dev_set_drvdata(dev, pcie);
++
++	bridge = devm_pci_alloc_host_bridge(dev, sizeof(*rc));
++	if (!bridge)
++		return -ENOMEM;
++
++	bus = resource_list_first_type(&bridge->windows, IORESOURCE_BUS);
++	if (!bus)
++		return -ENODEV;
++
++	ret = sky1_pcie_parse_property(pdev, pcie);
++	if (ret < 0)
++		return -ENXIO;
++
++	pcie->cfg = pci_ecam_create(dev, pcie->cfg_res, bus->res,
++				    &pci_generic_ecam_ops);
++	if (IS_ERR(pcie->cfg))
++		return PTR_ERR(pcie->cfg);
++
++	bridge->ops = (struct pci_ops *)&pci_generic_ecam_ops.pci_ops;
++	rc = pci_host_bridge_priv(bridge);
++	rc->ecam_support_flag = 1;
++	rc->cfg_base = pcie->cfg->win;
++	rc->cfg_res = &pcie->cfg->res;
++
++	cdns_pcie = &rc->pcie;
++	cdns_pcie->dev = dev;
++	cdns_pcie->ops = &sky1_pcie_ops;
++	cdns_pcie->reg_base = pcie->reg_base;
++	cdns_pcie->msg_res = pcie->msg_res;
++	cdns_pcie->cdns_pcie_reg_offsets = &data->reg_off;
++	cdns_pcie->is_rc = data->reg_off.is_rc;
++
++	pcie->cdns_pcie = cdns_pcie;
++	pcie->cdns_pcie_rc = rc;
++	pcie->cfg_base = rc->cfg_base;
++	bridge->sysdata = pcie->cfg;
++
++	if (data->soc_type == CIX_SKY1) {
++		rc->vendor_id = PCI_VENDOR_ID_CIX;
++		rc->device_id = PCI_DEVICE_ID_CIX_SKY1;
++		rc->no_inbound_flag = 1;
++	}
++
++	ret = cdns_pcie_hpa_host_setup(rc);
++	if (ret < 0) {
++		pci_ecam_free(pcie->cfg);
++		return ret;
++	}
++
++	return 0;
++}
++
++static const struct sky1_pcie_data sky1_pcie_rc_data = {
++	.reg_off = {
++		.is_rc = true,
++		.ip_reg_bank_offset = SKY1_IP_REG_BANK_OFFSET,
++		.ip_cfg_ctrl_reg_offset = SKY1_IP_CFG_CTRL_REG_BANK_OFFSET,
++		.axi_mstr_common_offset = SKY1_IP_AXI_MASTER_COMMON_OFFSET,
++		.axi_slave_offset = SKY1_AXI_SLAVE_OFFSET,
++		.axi_master_offset = SKY1_AXI_MASTER_OFFSET,
++		.axi_hls_offset = SKY1_AXI_HLS_REGISTERS_OFFSET,
++		.axi_ras_offset = SKY1_AXI_RAS_REGISTERS_OFFSET,
++		.axi_dti_offset = SKY1_DTI_REGISTERS_OFFSET,
++	},
++	.soc_type = CIX_SKY1,
++};
++
++static const struct of_device_id of_sky1_pcie_match[] = {
++	{
++		.compatible = "cix,sky1-pcie-host",
++		.data = &sky1_pcie_rc_data,
++	},
++	{},
++};
++
++static void sky1_pcie_remove(struct platform_device *pdev)
++{
++	struct sky1_pcie *pcie = platform_get_drvdata(pdev);
++
++	pci_ecam_free(pcie->cfg);
++}
++
++static struct platform_driver sky1_pcie_driver = {
++	.probe  = sky1_pcie_probe,
++	.remove = sky1_pcie_remove,
++	.driver = {
++		.name = "sky1-pcie",
++		.of_match_table = of_sky1_pcie_match,
++	},
++};
++module_platform_driver(sky1_pcie_driver);
++
++MODULE_LICENSE("GPL");
++MODULE_DESCRIPTION("PCIe controller driver for CIX's sky1 SoCs");
++MODULE_AUTHOR("Hans Zhang <hans.zhang@cixtech.com>");
 -- 
 2.49.0
 
