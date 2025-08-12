@@ -1,382 +1,319 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 149E32E62CF
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2025 05:02:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AE3B145A05
+	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2025 05:24:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754974964; cv=none; b=E4XqNYA5FoQrj5w6Ux3teqZCBcanUGAiZB+L/q21Z4PKWwWszWGQuUipIosYMwwijUiisw0gONI+uUGW1xEyARV2eusUdAEzrP9pz2CejvN+FIb8ITPSpFxxBJxxGUjEv8GrUjP1GXE+pPFkeTsP99/kQ8atv/cGI0xAgMc7b3c=
+	t=1754976289; cv=none; b=JloDJvEdw9Gq4iL8OHeg3qzFSKRNZyExOnOJyouAJHGbb0yVTitQYIv9lPzN+mG2+vL+kzR8P4IGMheOQkmyx2zl2SR5ftopLXJ81xRZmnH5TtZ1LBdFXGlD2HX2fGGskCTdgxnwd8+9a/+SQEFpeTCZoGlcN/uJZ3adTQWF9rY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754974964; c=relaxed/simple;
-	bh=L7C0xr/WBrl/p6MxwQRpjLnBG9fB3gAS6iEdt3Ry9Kc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=ovktCwUFfWRsxQpAUwlg7H2u7XSbzzfBUIL8f5cTiqTzGcwBmbRdledTuQDvF7x1FoZyEXvElfr5rn7G4U5h0iGeErQkj3IPTXD+/f5RgQ3UCLkwrcltSNE6VNqnYmZKnxGFEzzvI3O1sAXHW5eMANmchLH9ikfGSIcfbADMWMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=RdyvJPvv; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1754976289; c=relaxed/simple;
+	bh=Ci+rBnrVUnlt6XLcjC+eInQ0vDlesiNKwnv7/kH5bc4=;
+	h=Date:From:To:Cc:Subject:Message-ID; b=UxtEutd7026dy/J1urvTwzXWGRbvVZUSYisy9Gphf7p8nNWH2y/gp4+9E/AsjClwDpqM263u8BzzHGhl8f/LG6PaAzky3uNdJWis0kacBFF+kP/0jIvsDBxosTa/UOeu4R4Kax7DsbHO/P5O+bHYlMeODmW1E6Za5AuJwO1SGIU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Oka7R82l; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RdyvJPvv"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250812050240epoutp0162d06e20090035fc3c561b0ad40367fc~a7G2jBP031032510325epoutp018
-	for <linux-pci@vger.kernel.org>; Tue, 12 Aug 2025 05:02:40 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250812050240epoutp0162d06e20090035fc3c561b0ad40367fc~a7G2jBP031032510325epoutp018
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1754974960;
-	bh=GbttRDwtQL6F01nXCzc3MsPtDdrZZyXIeBWI7o9ayMM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RdyvJPvvGWYDdNmZJxikTLkYHJk7q0pMFc7VAr6fhRVzlBpA0QJ0dAlc3twsm0L3o
-	 tFGJg8U/4Z5FsdNvhwKCe2ZcUcVaOEW4oPMycdqYd9mI0LCHDNZBx8prDAg33d4ogz
-	 Jc0llaqcuvFHMR3hSJwiucvJlTn9sN1s4LuymCi4=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20250812050239epcas5p2665d847e9747feb3822dd9ef7bf52bc8~a7G155p7l1168411684epcas5p20;
-	Tue, 12 Aug 2025 05:02:39 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.93]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4c1KBQ4T9Cz2SSKy; Tue, 12 Aug
-	2025 05:02:38 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250811154746epcas5p261ba0c811f9dd8748f8f241b76be6525~awQz1S7tk3176231762epcas5p2X;
-	Mon, 11 Aug 2025 15:47:46 +0000 (GMT)
-Received: from cheetah.samsungds.net (unknown [107.109.115.53]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250811154743epsmtip137f9e1f9210743d87301c6ac42b9438d~awQxMaCYf2596225962epsmtip1K;
-	Mon, 11 Aug 2025 15:47:43 +0000 (GMT)
-From: Shradha Todi <shradha.t@samsung.com>
-To: linux-pci@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-phy@lists.infradead.org
-Cc: mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	robh@kernel.org, bhelgaas@google.com, jingoohan1@gmail.com,
-	krzk+dt@kernel.org, conor+dt@kernel.org, alim.akhtar@samsung.com,
-	vkoul@kernel.org, kishon@kernel.org, arnd@arndb.de,
-	m.szyprowski@samsung.com, jh80.chung@samsung.com, pankaj.dubey@samsung.com,
-	Shradha Todi <shradha.t@samsung.com>
-Subject: [PATCH v3 12/12] arm64: dts: fsd: Add PCIe support for Tesla FSD
- SoC
-Date: Mon, 11 Aug 2025 21:16:38 +0530
-Message-ID: <20250811154638.95732-13-shradha.t@samsung.com>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250811154638.95732-1-shradha.t@samsung.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Oka7R82l"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1754976287; x=1786512287;
+  h=date:from:to:cc:subject:message-id;
+  bh=Ci+rBnrVUnlt6XLcjC+eInQ0vDlesiNKwnv7/kH5bc4=;
+  b=Oka7R82lt85K7dq4Wn72wbDjtblqPkr3gdyosprNZw5K8arOm0pm3Ug4
+   Rh37QkoioT1Tgd0Ooo89LodTIT8Jim7qg3zOGyAVHuo0AXqN9Nhd+/NQi
+   +oHi2tQPLYPh4R/pX2l8tXhGtTi8O4SFrAmS2VrHmlAIJfOCKmI1Qw+ef
+   iblIA0HkYI1SzuiNqm1pIXFSwrAsmE5G6QYQxHDTfB7dNwMCqMdWmTSh5
+   xq6/3rAUS1zZWUizAXQ8afRytSaQsePkj47OTv2691EQT9lqOOXipP5Mq
+   x+bV72risOgTAOUeFvLTg6VrwTmK/9PWYs4T8NrVKH471NSTWdfh48BBP
+   g==;
+X-CSE-ConnectionGUID: kmbc46HgQeuhiFCZOrK4UQ==
+X-CSE-MsgGUID: pwl/0uvBQy6QyA8dN6wo7g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11518"; a="61039822"
+X-IronPort-AV: E=Sophos;i="6.17,284,1747724400"; 
+   d="scan'208";a="61039822"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Aug 2025 22:24:46 -0700
+X-CSE-ConnectionGUID: 1MWEYEKqQ8WM4pXr/ZXEzA==
+X-CSE-MsgGUID: Benkg4nkTIize4wXlBlMmg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.17,284,1747724400"; 
+   d="scan'208";a="165601880"
+Received: from lkp-server02.sh.intel.com (HELO 4ea60e6ab079) ([10.239.97.151])
+  by fmviesa007.fm.intel.com with ESMTP; 11 Aug 2025 22:24:46 -0700
+Received: from kbuild by 4ea60e6ab079 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1ulhV5-0006R2-12;
+	Tue, 12 Aug 2025 05:24:43 +0000
+Date: Tue, 12 Aug 2025 13:24:33 +0800
+From: kernel test robot <lkp@intel.com>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: linux-pci@vger.kernel.org
+Subject: [pci:misc-endpoint] BUILD SUCCESS
+ 799639e03fcfd943c7d1cc7330f248c2d017686e
+Message-ID: <202508121327.4MdI5wsz-lkp@intel.com>
+User-Agent: s-nail v14.9.24
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20250811154746epcas5p261ba0c811f9dd8748f8f241b76be6525
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-541,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250811154746epcas5p261ba0c811f9dd8748f8f241b76be6525
-References: <20250811154638.95732-1-shradha.t@samsung.com>
-	<CGME20250811154746epcas5p261ba0c811f9dd8748f8f241b76be6525@epcas5p2.samsung.com>
 
-Add the support for PCIe controller driver and phy driver for Tesla FSD.
-It includes support for both RC and EP.
+tree/branch: https://git.kernel.org/pub/scm/linux/kernel/git/pci/pci.git misc-endpoint
+branch HEAD: 799639e03fcfd943c7d1cc7330f248c2d017686e  misc: pci_endpoint_test: Fix array underflow in pci_endpoint_test_ioctl()
 
-Signed-off-by: Pankaj Dubey <pankaj.dubey@samsung.com>
-Signed-off-by: Shradha Todi <shradha.t@samsung.com>
----
- arch/arm64/boot/dts/tesla/fsd-evb.dts      |  34 +++++
- arch/arm64/boot/dts/tesla/fsd-pinctrl.dtsi |  65 +++++++++
- arch/arm64/boot/dts/tesla/fsd.dtsi         | 147 +++++++++++++++++++++
- 3 files changed, 246 insertions(+)
+elapsed time: 1077m
 
-diff --git a/arch/arm64/boot/dts/tesla/fsd-evb.dts b/arch/arm64/boot/dts/tesla/fsd-evb.dts
-index 9ff22e1c8723..1b63c5d72d19 100644
---- a/arch/arm64/boot/dts/tesla/fsd-evb.dts
-+++ b/arch/arm64/boot/dts/tesla/fsd-evb.dts
-@@ -130,3 +130,37 @@ &serial_0 {
- &ufs {
- 	status = "okay";
- };
-+
-+&pcierc2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie1_clkreq>, <&pcie1_wake>, <&pcie1_preset>,
-+			<&pcie0_slot1>;
-+};
-+
-+&pcieep2 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie1_clkreq>, <&pcie1_wake>, <&pcie1_preset>,
-+			<&pcie0_slot1>;
-+};
-+
-+&pcierc0 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie0_clkreq>, <&pcie0_wake0>, <&pcie0_preset0>,
-+			 <&pcie0_slot0>;
-+};
-+
-+&pcieep0 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie0_clkreq>, <&pcie0_wake0>, <&pcie0_preset0>,
-+			 <&pcie0_slot0>;
-+};
-+
-+&pcierc1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie0_clkreq>, <&pcie0_wake1>, <&pcie0_preset0>;
-+};
-+
-+&pcieep1 {
-+	pinctrl-names = "default";
-+	pinctrl-0 = <&pcie0_clkreq>, <&pcie0_wake1>, <&pcie0_preset0>;
-+};
-diff --git a/arch/arm64/boot/dts/tesla/fsd-pinctrl.dtsi b/arch/arm64/boot/dts/tesla/fsd-pinctrl.dtsi
-index 6f4658f57453..fa99aa4b9906 100644
---- a/arch/arm64/boot/dts/tesla/fsd-pinctrl.dtsi
-+++ b/arch/arm64/boot/dts/tesla/fsd-pinctrl.dtsi
-@@ -120,6 +120,27 @@ eth0_mdio: eth0-mdio-pins {
- 		samsung,pin-pud = <FSD_PIN_PULL_NONE>;
- 		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
- 	};
-+
-+	pcie1_clkreq: pcie1-clkreq-pins {
-+		samsung,pins = "gpf6-0";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
-+
-+	pcie1_wake: pcie1-wake-pins {
-+		samsung,pins = "gpf6-1";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
-+
-+	pcie1_preset: pcie1-preset-pins {
-+		samsung,pins = "gpf6-2";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
- };
- 
- &pinctrl_peric {
-@@ -493,6 +514,50 @@ eth1_mdio: eth1-mdio-pins {
- 		samsung,pin-pud = <FSD_PIN_PULL_UP>;
- 		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
- 	};
-+
-+	pcie0_clkreq: pcie0-clkreq-pins {
-+		samsung,pins = "gpc8-0";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
-+
-+	pcie0_wake0: pcie0-wake0-pins {
-+		samsung,pins = "gpc8-1";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
-+
-+	pcie0_preset0: pcie0-preset0-pins {
-+		samsung,pins = "gpc8-2";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
-+
-+	pcie0_wake1: pcie0-wake1-pins {
-+		samsung,pins = "gpc8-3";
-+		samsung,pin-function = <FSD_PIN_FUNC_2>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+	};
-+
-+	pcie0_slot0: pcie0-gpio22-pins {
-+		samsung,pins = "gpg2-6";
-+		samsung,pin-function = <FSD_PIN_FUNC_OUTPUT>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+		samsung,pin-val = <1>;
-+	};
-+
-+	pcie0_slot1: pcie0-gpio23-pins {
-+		samsung,pins = "gpg2-7";
-+		samsung,pin-function = <FSD_PIN_FUNC_OUTPUT>;
-+		samsung,pin-pud = <FSD_PIN_PULL_UP>;
-+		samsung,pin-drv = <FSD_PIN_DRV_LV4>;
-+		samsung,pin-val = <1>;
-+	};
- };
- 
- &pinctrl_pmu {
-diff --git a/arch/arm64/boot/dts/tesla/fsd.dtsi b/arch/arm64/boot/dts/tesla/fsd.dtsi
-index a5ebb3f9b18f..8ed8d2131855 100644
---- a/arch/arm64/boot/dts/tesla/fsd.dtsi
-+++ b/arch/arm64/boot/dts/tesla/fsd.dtsi
-@@ -1009,6 +1009,16 @@ ethernet1: ethernet@14300000 {
- 			status = "disabled";
- 		};
- 
-+		pciephy0: pcie-phy@15080000 {
-+			compatible = "tesla,fsd-pcie-phy0";
-+			reg = <0x0 0x15080000 0x0 0x2000>,
-+			      <0x0 0x150a0000 0x0 0x1000>;
-+			#phy-cells = <0>;
-+			samsung,pmu-syscon = <&pmu_system_controller>;
-+			samsung,fsys-sysreg = <&sysreg_fsys0>;
-+			status = "disabled";
-+		};
-+
- 		ufs: ufs@15120000 {
- 			compatible = "tesla,fsd-ufs";
- 			reg = <0x0 0x15120000 0x0 0x200>,  /* 0: HCI standard */
-@@ -1057,6 +1067,143 @@ ethernet0: ethernet@15300000 {
- 			iommus = <&smmu_fsys0 0x0 0x1>;
- 			status = "disabled";
- 		};
-+
-+		pcierc2: pcie@15400000 {
-+			compatible = "tesla,fsd-pcie";
-+			reg = <0x0 0x15400000 0x0 0x2000>,
-+			      <0x0 0x15090000 0x0 0x1000>,
-+			      <0x0 0x15800000 0x0 0x1000>;
-+			reg-names = "dbi", "elbi", "config";
-+			ranges =  <0x82000000 0 0x15801000 0 0x15801000 0 0xffefff>;
-+			clocks = <&clock_fsys0 PCIE_SUBCTRL_INST0_AUX_CLK_SOC>,
-+				 <&clock_fsys0 PCIE_SUBCTRL_INST0_DBI_ACLK_SOC>,
-+				 <&clock_fsys0 PCIE_SUBCTRL_INST0_MSTR_ACLK_SOC>,
-+				 <&clock_fsys0 PCIE_SUBCTRL_INST0_SLV_ACLK_SOC>;
-+			clock-names = "aux", "dbi", "mstr", "slv";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			dma-coherent;
-+			device_type = "pci";
-+			interrupts = <GIC_SPI 93 IRQ_TYPE_EDGE_RISING>;
-+			num-lanes = <4>;
-+			phys = <&pciephy0>;
-+			iommu-map = <0x0 &smmu_fsys0 0x4 0x10000>;
-+			iommu-map-mask = <0x0>;
-+			samsung,syscon-pcie = <&sysreg_fsys0 0x434>;
-+			status = "disabled";
-+		};
-+
-+		pcieep2: pcie-ep@15400000 {
-+			compatible = "tesla,fsd-pcie-ep";
-+			reg = <0x0 0x15090000 0x0 0x1000>,
-+			      <0x0 0x15400000 0x0 0x2000>,
-+			      <0x0 0x15402000 0x0 0x80>,
-+			      <0x0 0x15800000 0x0 0xff0000>;
-+			reg-names = "elbi", "dbi", "dbi2", "addr_space";
-+			clocks = <&clock_fsys0 PCIE_SUBCTRL_INST0_AUX_CLK_SOC>,
-+				 <&clock_fsys0 PCIE_SUBCTRL_INST0_DBI_ACLK_SOC>,
-+				 <&clock_fsys0 PCIE_SUBCTRL_INST0_MSTR_ACLK_SOC>,
-+				 <&clock_fsys0 PCIE_SUBCTRL_INST0_SLV_ACLK_SOC>;
-+			clock-names = "aux", "dbi", "mstr", "slv";
-+			num-lanes = <4>;
-+			phys = <&pciephy0>;
-+			samsung,syscon-pcie = <&sysreg_fsys0 0x434>;
-+			status = "disabled";
-+		};
-+
-+		pciephy1: pcie-phy@16880000 {
-+			compatible = "tesla,fsd-pcie-phy1";
-+			reg = <0x0 0x16880000 0x0 0x2000>,
-+			      <0x0 0x16860000 0x0 0x1000>;
-+			#phy-cells = <0>;
-+			samsung,pmu-syscon = <&pmu_system_controller>;
-+			samsung,fsys-sysreg = <&sysreg_fsys1>;
-+			status = "disabled";
-+		};
-+
-+		pcierc0: pcie@16a00000 {
-+			compatible = "tesla,fsd-pcie";
-+			reg = <0x0 0x16a00000 0x0 0x2000>,
-+			      <0x0 0x168b0000 0x0 0x1000>,
-+			      <0x0 0x17000000 0x0 0x1000>;
-+			reg-names = "dbi", "elbi", "config";
-+			ranges =  <0x82000000 0 0x17001000 0 0x17001000 0 0xffefff>;
-+			clocks = <&clock_fsys1 PCIE_LINK0_IPCLKPORT_AUX_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK0_IPCLKPORT_DBI_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK0_IPCLKPORT_MSTR_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK0_IPCLKPORT_SLV_ACLK>;
-+			clock-names = "aux", "dbi", "mstr", "slv";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			dma-coherent;
-+			device_type = "pci";
-+			interrupts = <GIC_SPI 115 IRQ_TYPE_EDGE_RISING>;
-+			num-lanes = <4>;
-+			phys = <&pciephy1>;
-+			iommu-map = <0x0 &smmu_imem 0x0 0x10000>;
-+			iommu-map-mask = <0x0>;
-+			samsung,syscon-pcie = <&sysreg_fsys1 0x50c>;
-+			status = "disabled";
-+		};
-+
-+		pcieep0: pcie-ep@16a00000 {
-+			compatible = "tesla,fsd-pcie-ep";
-+			reg = <0x0 0x168b0000 0x0 0x1000>,
-+			      <0x0 0x16a00000 0x0 0x2000>,
-+			      <0x0 0x16a02000 0x0 0x80>,
-+			      <0x0 0x17000000 0x0 0xff0000>;
-+			reg-names = "elbi", "dbi", "dbi2", "addr_space";
-+			clocks = <&clock_fsys1 PCIE_LINK0_IPCLKPORT_AUX_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK0_IPCLKPORT_DBI_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK0_IPCLKPORT_MSTR_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK0_IPCLKPORT_SLV_ACLK>;
-+			clock-names = "aux", "dbi", "mstr", "slv";
-+			num-lanes = <4>;
-+			phys = <&pciephy1>;
-+			samsung,syscon-pcie = <&sysreg_fsys1 0x50c>;
-+			status = "disabled";
-+		};
-+
-+		pcierc1: pcie@16b00000 {
-+			compatible = "tesla,fsd-pcie";
-+			reg = <0x0 0x16b00000 0x0 0x2000>,
-+			      <0x0 0x168c0000 0x0 0x1000>,
-+			      <0x0 0x18000000 0x0 0x1000>;
-+			reg-names = "dbi", "elbi", "config";
-+			ranges =  <0x82000000 0 0x18001000 0 0x18001000 0 0xffefff>;
-+			clocks = <&clock_fsys1 PCIE_LINK1_IPCLKPORT_AUX_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK1_IPCLKPORT_DBI_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK1_IPCLKPORT_MSTR_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK1_IPCLKPORT_SLV_ACLK>;
-+			clock-names = "aux", "dbi", "mstr", "slv";
-+			#address-cells = <3>;
-+			#size-cells = <2>;
-+			dma-coherent;
-+			device_type = "pci";
-+			interrupts = <GIC_SPI 117 IRQ_TYPE_EDGE_RISING>;
-+			num-lanes = <4>;
-+			phys = <&pciephy1>;
-+			samsung,syscon-pcie = <&sysreg_fsys1 0x510>;
-+			status = "disabled";
-+		};
-+
-+		pcieep1: pcie-ep@16b00000 {
-+			compatible = "tesla,fsd-pcie-ep";
-+			reg = <0x0 0x168c0000 0x0 0x1000>,
-+			      <0x0 0x16b00000 0x0 0x2000>,
-+			      <0x0 0x16b02000 0x0 0x80>,
-+			      <0x0 0x18000000 0x0 0xff0000>;
-+			reg-names = "elbi", "dbi", "dbi2", "addr_space";
-+			clocks = <&clock_fsys1 PCIE_LINK1_IPCLKPORT_AUX_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK1_IPCLKPORT_DBI_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK1_IPCLKPORT_MSTR_ACLK>,
-+				 <&clock_fsys1 PCIE_LINK1_IPCLKPORT_SLV_ACLK>;
-+			clock-names = "aux", "dbi", "mstr", "slv";
-+			num-lanes = <4>;
-+			phys = <&pciephy1>;
-+			samsung,syscon-pcie = <&sysreg_fsys1 0x510>;
-+			status = "disabled";
-+		};
- 	};
- };
- 
--- 
-2.49.0
+configs tested: 242
+configs skipped: 6
 
+The following configs have been built successfully.
+More configs may be tested in the coming days.
+
+tested configs:
+alpha                             allnoconfig    clang-22
+alpha                             allnoconfig    gcc-15.1.0
+alpha                            allyesconfig    clang-19
+alpha                            allyesconfig    gcc-15.1.0
+alpha                               defconfig    clang-19
+arc                              allmodconfig    gcc-15.1.0
+arc                               allnoconfig    clang-22
+arc                               allnoconfig    gcc-15.1.0
+arc                              allyesconfig    gcc-15.1.0
+arc                                 defconfig    clang-19
+arc                   randconfig-001-20250811    gcc-8.5.0
+arc                   randconfig-001-20250812    gcc-14.3.0
+arc                   randconfig-002-20250811    gcc-10.5.0
+arc                   randconfig-002-20250812    gcc-14.3.0
+arm                              allmodconfig    gcc-15.1.0
+arm                               allnoconfig    clang-22
+arm                              allyesconfig    gcc-15.1.0
+arm                                 defconfig    clang-19
+arm                           omap1_defconfig    clang-22
+arm                   randconfig-001-20250811    gcc-10.5.0
+arm                   randconfig-001-20250812    gcc-14.3.0
+arm                   randconfig-002-20250811    gcc-13.4.0
+arm                   randconfig-002-20250812    gcc-14.3.0
+arm                   randconfig-003-20250811    clang-22
+arm                   randconfig-003-20250812    gcc-14.3.0
+arm                   randconfig-004-20250811    gcc-10.5.0
+arm                   randconfig-004-20250812    gcc-14.3.0
+arm64                            allmodconfig    clang-19
+arm64                             allnoconfig    clang-22
+arm64                             allnoconfig    gcc-15.1.0
+arm64                               defconfig    clang-19
+arm64                               defconfig    clang-22
+arm64                 randconfig-001-20250811    clang-22
+arm64                 randconfig-001-20250812    gcc-14.3.0
+arm64                 randconfig-002-20250811    clang-19
+arm64                 randconfig-002-20250812    gcc-14.3.0
+arm64                 randconfig-003-20250811    clang-20
+arm64                 randconfig-003-20250812    gcc-14.3.0
+arm64                 randconfig-004-20250811    clang-22
+arm64                 randconfig-004-20250812    gcc-14.3.0
+csky                              allnoconfig    clang-22
+csky                              allnoconfig    gcc-15.1.0
+csky                                defconfig    clang-19
+csky                  randconfig-001-20250811    gcc-15.1.0
+csky                  randconfig-001-20250812    gcc-12.5.0
+csky                  randconfig-002-20250811    gcc-15.1.0
+csky                  randconfig-002-20250812    gcc-12.5.0
+hexagon                          allmodconfig    clang-17
+hexagon                          allmodconfig    clang-19
+hexagon                           allnoconfig    clang-22
+hexagon                          allyesconfig    clang-19
+hexagon                          allyesconfig    clang-22
+hexagon                             defconfig    clang-19
+hexagon               randconfig-001-20250811    clang-17
+hexagon               randconfig-001-20250812    gcc-12.5.0
+hexagon               randconfig-002-20250811    clang-16
+hexagon               randconfig-002-20250812    gcc-12.5.0
+i386                             allmodconfig    clang-20
+i386                             allmodconfig    gcc-12
+i386                              allnoconfig    clang-20
+i386                              allnoconfig    gcc-12
+i386                             allyesconfig    clang-20
+i386                             allyesconfig    gcc-12
+i386        buildonly-randconfig-001-20250811    clang-20
+i386        buildonly-randconfig-001-20250812    gcc-12
+i386        buildonly-randconfig-002-20250811    clang-20
+i386        buildonly-randconfig-002-20250812    gcc-12
+i386        buildonly-randconfig-003-20250811    gcc-12
+i386        buildonly-randconfig-003-20250812    gcc-12
+i386        buildonly-randconfig-004-20250811    gcc-12
+i386        buildonly-randconfig-004-20250812    gcc-12
+i386        buildonly-randconfig-005-20250811    gcc-12
+i386        buildonly-randconfig-005-20250812    gcc-12
+i386        buildonly-randconfig-006-20250811    gcc-12
+i386        buildonly-randconfig-006-20250812    gcc-12
+i386                                defconfig    clang-20
+i386                  randconfig-001-20250812    clang-20
+i386                  randconfig-002-20250812    clang-20
+i386                  randconfig-003-20250812    clang-20
+i386                  randconfig-004-20250812    clang-20
+i386                  randconfig-005-20250812    clang-20
+i386                  randconfig-006-20250812    clang-20
+i386                  randconfig-007-20250812    clang-20
+i386                  randconfig-011-20250812    gcc-12
+i386                  randconfig-012-20250812    gcc-12
+i386                  randconfig-013-20250812    gcc-12
+i386                  randconfig-014-20250812    gcc-12
+i386                  randconfig-015-20250812    gcc-12
+i386                  randconfig-016-20250812    gcc-12
+i386                  randconfig-017-20250812    gcc-12
+loongarch                        allmodconfig    clang-19
+loongarch                         allnoconfig    clang-22
+loongarch                           defconfig    clang-19
+loongarch             randconfig-001-20250811    gcc-15.1.0
+loongarch             randconfig-001-20250812    gcc-12.5.0
+loongarch             randconfig-002-20250811    gcc-12.5.0
+loongarch             randconfig-002-20250812    gcc-12.5.0
+m68k                             allmodconfig    clang-19
+m68k                             allmodconfig    gcc-15.1.0
+m68k                              allnoconfig    gcc-15.1.0
+m68k                             allyesconfig    clang-19
+m68k                             allyesconfig    gcc-15.1.0
+m68k                                defconfig    clang-19
+microblaze                       allmodconfig    clang-19
+microblaze                        allnoconfig    gcc-15.1.0
+microblaze                       allyesconfig    clang-19
+microblaze                       allyesconfig    gcc-15.1.0
+microblaze                          defconfig    gcc-15.1.0
+mips                              allnoconfig    gcc-15.1.0
+mips                      maltaaprp_defconfig    clang-22
+nios2                             allnoconfig    gcc-11.5.0
+nios2                               defconfig    gcc-11.5.0
+nios2                               defconfig    gcc-15.1.0
+nios2                 randconfig-001-20250811    gcc-10.5.0
+nios2                 randconfig-001-20250812    gcc-12.5.0
+nios2                 randconfig-002-20250811    gcc-11.5.0
+nios2                 randconfig-002-20250812    gcc-12.5.0
+openrisc                          allnoconfig    clang-22
+openrisc                          allnoconfig    gcc-15.1.0
+openrisc                         allyesconfig    gcc-15.1.0
+openrisc                            defconfig    gcc-12
+parisc                           allmodconfig    gcc-15.1.0
+parisc                            allnoconfig    clang-22
+parisc                            allnoconfig    gcc-15.1.0
+parisc                           allyesconfig    gcc-15.1.0
+parisc                              defconfig    gcc-15.1.0
+parisc                randconfig-001-20250811    gcc-9.5.0
+parisc                randconfig-001-20250812    gcc-12.5.0
+parisc                randconfig-002-20250811    gcc-14.3.0
+parisc                randconfig-002-20250812    gcc-12.5.0
+parisc64                            defconfig    gcc-15.1.0
+powerpc                          allmodconfig    gcc-15.1.0
+powerpc                           allnoconfig    clang-22
+powerpc                           allnoconfig    gcc-15.1.0
+powerpc                          allyesconfig    clang-22
+powerpc                      katmai_defconfig    clang-22
+powerpc               randconfig-001-20250811    gcc-13.4.0
+powerpc               randconfig-001-20250812    gcc-12.5.0
+powerpc               randconfig-002-20250811    clang-22
+powerpc               randconfig-002-20250812    gcc-12.5.0
+powerpc               randconfig-003-20250811    gcc-13.4.0
+powerpc               randconfig-003-20250812    gcc-12.5.0
+powerpc64             randconfig-001-20250811    clang-22
+powerpc64             randconfig-001-20250812    gcc-12.5.0
+powerpc64             randconfig-002-20250811    clang-22
+powerpc64             randconfig-002-20250812    gcc-12.5.0
+powerpc64             randconfig-003-20250811    gcc-14.3.0
+powerpc64             randconfig-003-20250812    gcc-12.5.0
+riscv                            allmodconfig    clang-22
+riscv                             allnoconfig    clang-22
+riscv                             allnoconfig    gcc-15.1.0
+riscv                            allyesconfig    clang-16
+riscv                               defconfig    gcc-12
+riscv                 randconfig-001-20250811    gcc-8.5.0
+riscv                 randconfig-001-20250812    clang-18
+riscv                 randconfig-002-20250811    clang-22
+riscv                 randconfig-002-20250812    clang-18
+s390                             allmodconfig    clang-18
+s390                             allmodconfig    gcc-15.1.0
+s390                              allnoconfig    clang-22
+s390                             allyesconfig    gcc-15.1.0
+s390                                defconfig    gcc-12
+s390                  randconfig-001-20250811    gcc-8.5.0
+s390                  randconfig-001-20250812    clang-18
+s390                  randconfig-002-20250811    clang-17
+s390                  randconfig-002-20250812    clang-18
+sh                               allmodconfig    gcc-15.1.0
+sh                                allnoconfig    gcc-15.1.0
+sh                               allyesconfig    gcc-15.1.0
+sh                                  defconfig    gcc-12
+sh                          r7780mp_defconfig    clang-22
+sh                    randconfig-001-20250811    gcc-15.1.0
+sh                    randconfig-001-20250812    clang-18
+sh                    randconfig-002-20250811    gcc-15.1.0
+sh                    randconfig-002-20250812    clang-18
+sh                             sh03_defconfig    clang-22
+sh                     sh7710voipgw_defconfig    clang-22
+sparc                            allmodconfig    gcc-15.1.0
+sparc                             allnoconfig    gcc-15.1.0
+sparc                               defconfig    gcc-15.1.0
+sparc                 randconfig-001-20250811    gcc-8.5.0
+sparc                 randconfig-001-20250812    clang-18
+sparc                 randconfig-002-20250811    gcc-8.5.0
+sparc                 randconfig-002-20250812    clang-18
+sparc64                             defconfig    gcc-12
+sparc64               randconfig-001-20250811    clang-22
+sparc64               randconfig-001-20250812    clang-18
+sparc64               randconfig-002-20250811    gcc-14.3.0
+sparc64               randconfig-002-20250812    clang-18
+um                               allmodconfig    clang-19
+um                                allnoconfig    clang-22
+um                               allyesconfig    clang-19
+um                               allyesconfig    gcc-12
+um                                  defconfig    gcc-12
+um                             i386_defconfig    gcc-12
+um                    randconfig-001-20250811    clang-18
+um                    randconfig-001-20250812    clang-18
+um                    randconfig-002-20250811    clang-22
+um                    randconfig-002-20250812    clang-18
+um                           x86_64_defconfig    gcc-12
+x86_64                            allnoconfig    clang-20
+x86_64                           allyesconfig    clang-20
+x86_64      buildonly-randconfig-001-20250811    gcc-12
+x86_64      buildonly-randconfig-001-20250812    gcc-12
+x86_64      buildonly-randconfig-002-20250811    clang-20
+x86_64      buildonly-randconfig-002-20250812    gcc-12
+x86_64      buildonly-randconfig-003-20250811    clang-20
+x86_64      buildonly-randconfig-003-20250812    gcc-12
+x86_64      buildonly-randconfig-004-20250811    clang-20
+x86_64      buildonly-randconfig-004-20250812    gcc-12
+x86_64      buildonly-randconfig-005-20250811    clang-20
+x86_64      buildonly-randconfig-005-20250812    gcc-12
+x86_64      buildonly-randconfig-006-20250811    clang-20
+x86_64      buildonly-randconfig-006-20250812    gcc-12
+x86_64                              defconfig    clang-20
+x86_64                              defconfig    gcc-11
+x86_64                                  kexec    clang-20
+x86_64                randconfig-001-20250812    gcc-11
+x86_64                randconfig-002-20250812    gcc-11
+x86_64                randconfig-003-20250812    gcc-11
+x86_64                randconfig-004-20250812    gcc-11
+x86_64                randconfig-005-20250812    gcc-11
+x86_64                randconfig-006-20250812    gcc-11
+x86_64                randconfig-007-20250812    gcc-11
+x86_64                randconfig-008-20250812    gcc-11
+x86_64                randconfig-071-20250812    clang-20
+x86_64                randconfig-072-20250812    clang-20
+x86_64                randconfig-073-20250812    clang-20
+x86_64                randconfig-074-20250812    clang-20
+x86_64                randconfig-075-20250812    clang-20
+x86_64                randconfig-076-20250812    clang-20
+x86_64                randconfig-077-20250812    clang-20
+x86_64                randconfig-078-20250812    clang-20
+x86_64                               rhel-9.4    clang-20
+x86_64                          rhel-9.4-func    clang-20
+x86_64                    rhel-9.4-kselftests    clang-20
+x86_64                          rhel-9.4-rust    clang-20
+xtensa                            allnoconfig    gcc-15.1.0
+xtensa                randconfig-001-20250811    gcc-9.5.0
+xtensa                randconfig-001-20250812    clang-18
+xtensa                randconfig-002-20250811    gcc-9.5.0
+xtensa                randconfig-002-20250812    clang-18
+
+--
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
