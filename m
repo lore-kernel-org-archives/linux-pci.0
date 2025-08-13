@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id A7C8B23D7E4;
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DBD7623D7FF;
 	Wed, 13 Aug 2025 04:45:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755060352; cv=none; b=DvZIa5WJPLCJL5RMu/S2yK/9yBeq0BAXYPHjAI1kdDXBnxPa/0PbkfEGn9JmywIaNIgiXjK4vjez4BTaM+fBsa03xFpeV89s0igxpKwW6DBNjaF2coMu5SRf3whL92LifU/YZwTTec6Dx1Rzsst1hpK0hNjqgeIXYXRCMeyXtQg=
+	t=1755060352; cv=none; b=SGg6aaHpQYWq7AXMsWpbCNztVKJSiAYZ4MzJ4hLPFul5t5pQNL9FE/3P5hAJPq0KMXT5F1v/0k3JRE5ghqkwQaZhDQ6sXXCQ2ktqKh0qiBE8Fz7ICUHDhQLvdg1Ev8zVUIGw4a5vkxHJb2WWfmjH8/iFiDFm3mNhVEp/5Xj4HWo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755060352; c=relaxed/simple;
-	bh=Aval5zk1VgFJgPoCb1Z+VYhn5vHXyVwG2wThqQn9Cg0=;
+	bh=05XlbY/UQu42xpAJ30ZAd5vgZ/sIRKkwHCnOZ7Imj1U=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=lOW2Q7/64I7bW/mecvUyUgA/JYJwip3+2P5AFkG8Ehu3mjHEQ/gz/XeJSOWfFIg1DxShMxSLSErXvrS1hxDBlqKRZpXrNjlwO1mde1OfoHsii5vBRNrL51awNDaILFw9CIGSNuTDwlX5NDbO2C3tGQaiMCXnuLzpyBtXP0/3DKw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=mPRd4J/O; arc=none smtp.client-ip=117.135.210.2
+	 MIME-Version; b=SjKdr6L0owHgChneedjgHM+zS1joG+m4RqJuLM/yyeC98HeX8dEczyREHC95DRd7A9fMwx9w4kBI/k9YNIl5ArQpbzVqqNXB/26yq0PFuKTuhi3N9obqmiNkCFusd36/Pop+JMYcHWo87S3DXn7Xovv5ad+Vsq/axaKOJ93JntY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=XQa6zLXh; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="mPRd4J/O"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="XQa6zLXh"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=6W
-	NamUFnScGmcGW4V2poSQwnw1TE8eT2FVftvMi/L8E=; b=mPRd4J/OvYr5NQf9M+
-	Qekf5Ymtc2hLwQCH2pHiPTHYTPRJgg5LQYyFRxscBfik8nZzsFb/bRImJAUQUg9C
-	fte+8fjKZwgAFEJY4ng9wQOvAGLEMnDqwrfwBlwGb3KDY7pq+sDAwGCbln4ErzwY
-	U0dpZqS9kX0h6Z8kNSOQ/6Aa4=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=hb
+	y962xhyP4Qgrj7aPF+nhZQMZCQ5u6zcns9wRaSiWI=; b=XQa6zLXhl6RZ4KuYwD
+	vfGQczDlnPp2X+ZerRzK46vtSVsLHhL6xrwpsyQOro+W1aRYd6RJVcaoUsoUd/1A
+	BCY6CShVkim5MrMvqYAZ2R3aKQcb58ceN3v077mMuqm+qSB6PHXCp76h0/AYDS9u
+	twXLiytG7uMzRcO4oJuB1G5S4=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgA3ErhtGJxo3nYVAA--.2375S5;
-	Wed, 13 Aug 2025 12:45:36 +0800 (CST)
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgA3ErhtGJxo3nYVAA--.2375S7;
+	Wed, 13 Aug 2025 12:45:38 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -33,9 +33,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v4 03/13] PCI: dra7xx: Refactor code by using dw_pcie_clear_and_set_dword()
-Date: Wed, 13 Aug 2025 12:45:21 +0800
-Message-Id: <20250813044531.180411-4-18255117159@163.com>
+Subject: [PATCH v4 05/13] PCI: meson: Refactor code by using dw_pcie_clear_and_set_dword()
+Date: Wed, 13 Aug 2025 12:45:23 +0800
+Message-Id: <20250813044531.180411-6-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250813044531.180411-1-18255117159@163.com>
 References: <20250813044531.180411-1-18255117159@163.com>
@@ -46,71 +46,80 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgA3ErhtGJxo3nYVAA--.2375S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7KrWkGrWkKr1xuFyrXF13Jwb_yoW8uw4xp3
-	y3CFZIk3W7Jan5X3Wqv3Wku3WSvasavr4Utan7Kw1fZF9Fyr9rtrWFyry8tF4fuFWj9r12
-	ka15t347Xw4YyFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRczV5UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQwyoo2icD7TgrAAAsH
+X-CM-TRANSID:QCgvCgA3ErhtGJxo3nYVAA--.2375S7
+X-Coremail-Antispam: 1Uf129KBjvJXoWxXFyDXFW7tr48XFyxJw1xAFb_yoW5CFWkpr
+	ZxuF4FyF47Jr45uw4qva95uay3Jas3Cw17JFnxG34S9Fy2yr9rta4aya45uayxGrW0g34j
+	9r98trW8Z3W5tF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pinNV9UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWweoo2icD9vaDAAAsh
 
-The dra7xx PCIe driver implements suspend/resume handling through
-direct register manipulation. The current approach uses explicit
-read-modify-write sequences to control the MEMORY enable bit in the
-PCI_COMMAND register, declaring local variables for temporary storage.
+Meson PCIe driver implements payload size configuration through manual
+register manipulation. The current code reads device control registers,
+modifies specific bitfields for maximum payload and read request sizes,
+then writes back the updated values. This pattern repeats twice with
+similar logic but different bit masks.
 
-Replace manual bit manipulation with dw_pcie_clear_and_set_dword()
-during suspend and resume operations. This eliminates redundant variable
-declarations and simplifies the power management flow by handling bit
-operations within a single function call.
+Replace explicit bit manipulation with dw_pcie_clear_and_set_dword() for
+payload and read request size configuration. The helper consolidates
+read-clear-set-write operations into a single call, eliminating redundant
+register read operations and local variable usage.
 
-Using the centralized helper improves code readability and aligns the
-driver with standard DesignWare register access patterns. The change also
-reduces the risk of bit manipulation errors in future modifications to the
-power management logic.
+This refactoring reduces code duplication in size configuration logic
+and improves maintainability. By using the DesignWare helper, the driver
+aligns with standard PCIe controller programming patterns and simplifies
+future updates to device capability settings.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pci-dra7xx.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+ drivers/pci/controller/dwc/pci-meson.c | 22 ++++++++--------------
+ 1 file changed, 8 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
-index f97f5266d196..9cbba1b28882 100644
---- a/drivers/pci/controller/dwc/pci-dra7xx.c
-+++ b/drivers/pci/controller/dwc/pci-dra7xx.c
-@@ -867,15 +867,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
+diff --git a/drivers/pci/controller/dwc/pci-meson.c b/drivers/pci/controller/dwc/pci-meson.c
+index 787469d1b396..cd6280a8e619 100644
+--- a/drivers/pci/controller/dwc/pci-meson.c
++++ b/drivers/pci/controller/dwc/pci-meson.c
+@@ -264,33 +264,27 @@ static int meson_size_to_payload(struct meson_pcie *mp, int size)
+ static void meson_set_max_payload(struct meson_pcie *mp, int size)
  {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct dw_pcie *pci = dra7xx->pci;
+ 	struct dw_pcie *pci = &mp->pci;
 -	u32 val;
+ 	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int max_payload_size = meson_size_to_payload(mp, size);
  
- 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
- 		return 0;
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val &= ~PCI_EXP_DEVCTL_PAYLOAD;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL,
++				    PCI_EXP_DEVCTL_PAYLOAD, 0);
  
- 	/* clear MSE */
--	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
--	val &= ~PCI_COMMAND_MEMORY;
--	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
- 
- 	return 0;
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val |= PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size);
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL, 0,
++				    PCIE_CAP_MAX_PAYLOAD_SIZE(max_payload_size));
  }
-@@ -884,15 +881,12 @@ static int dra7xx_pcie_resume(struct device *dev)
+ 
+ static void meson_set_max_rd_req_size(struct meson_pcie *mp, int size)
  {
- 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
- 	struct dw_pcie *pci = dra7xx->pci;
+ 	struct dw_pcie *pci = &mp->pci;
 -	u32 val;
+ 	u16 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
+ 	int max_rd_req_size = meson_size_to_payload(mp, size);
  
- 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
- 		return 0;
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val &= ~PCI_EXP_DEVCTL_READRQ;
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL,
++				    PCI_EXP_DEVCTL_READRQ, 0);
  
- 	/* set MSE */
--	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
--	val |= PCI_COMMAND_MEMORY;
--	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
-+	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, 0, PCI_COMMAND_MEMORY);
- 
- 	return 0;
+-	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_DEVCTL);
+-	val |= PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size);
+-	dw_pcie_writel_dbi(pci, offset + PCI_EXP_DEVCTL, val);
++	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_DEVCTL, 0,
++				    PCIE_CAP_MAX_READ_REQ_SIZE(max_rd_req_size));
  }
+ 
+ static int meson_pcie_start_link(struct dw_pcie *pci)
 -- 
 2.25.1
 
