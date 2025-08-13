@@ -1,28 +1,27 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D4169194C96;
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DB5952ED869;
 	Wed, 13 Aug 2025 14:46:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755096371; cv=none; b=Ns4oMa3D3gxVgOjtDE5pZdqVIMpEetSKnoiY/6DMrKlKVmkqCrQCEWBw7znMxK97b3L93VAuH7KCbuVIRpaIDy6J+wxLYHImZYATPBpQ8rFm1duxTaqdJvr1Hm0/ugTIOnVNZy8vEEMSm90U1lHPXBJIQCgVcEGAV9yDMBclaj4=
+	t=1755096371; cv=none; b=WU6ujbSy1/I3qwSQ1amj4sATS25jqh4twejNHzwb715blwpDRdrBaaqbbjrb06EJUvTz/JL7pYqbdfR6vrPNYVRLclhD+NaGWN5m/ql9y8Qf/7PSGN2tqoStkCcK7D/uJdGN+KX+mUm/lVlOYcuDLMqYbK/wKb4SFwZscLf0fWQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755096371; c=relaxed/simple;
-	bh=Zuk70YaR6eO6mQ4DX+4R2evtpSrgg5AHtJF3k7jF6+8=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=X6cHPwPFlwsGRvZoZqibQL2B+icxuF35IdMTGApthauJZNVe/S9WP4ndWXGevXy1zMX/pbXrhPxK+9OyXRoFPKKrgEFbwd6/QeeDxri+dwlQ7m0yzIoZSpsAYJZKUVCHcJGzDaSikiCH+p7Gp9/z6Nx/bHB7B1+ubgSBDYkXqTo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fvUVJlQS; arc=none smtp.client-ip=117.135.210.5
+	bh=preLNkAdXEBs8bedSRyMQzGMOEOyagy6wT8/dWlJDSA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=YMXQ+QVWxDoK8p2HKV3aNq0rgMqzYpDoZeQ+NrQ+MkyrM2SVd9oRBoxTlC0eMxSBZi3lbpmK5PFWhRbRlCOvoCk77TFR4R9hQOIEDs7eY4p13VfepdouhtwwCnzuofz0eRjFO1Mcbk2M3pniU1cUn75Xa+sKHpa881G08qznkvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=T3x5NyNt; arc=none smtp.client-ip=220.197.31.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fvUVJlQS"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="T3x5NyNt"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ez
-	w+x6CPBZoj0Ns1BR+CJgZEtXO9GLRlu49I9UBWAjo=; b=fvUVJlQSa0Xz/B41nu
-	peYEg5upAy/RF/pG9jgReYRCiZQwxHHACqGqBlWvvwesBjt6RQ0mXhSBXscpMxML
-	VpGxcs036P6n6u4rUwt6bq5kcYNYG66Hg8QrrKFmz/HUK7q2mhCINNYSSSuG7oG3
-	KLYdKJbUKY+S+0ThQeLig5GKM=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Nm
+	fXUFTfRJLMIdTmLpwDCei8wSWCsYaJYrt8l8FlfpA=; b=T3x5NyNtp4zShc0Frb
+	AezGSm0fcbicdDJKLmb2TGjMnn5QlTTWBUPW+einjf1jQt816HjbCHEMSUxPXpa/
+	ZL4aHTrcoPrKLdpNG5wBesWvljSTppQjnfPNrQs8aarbZ0fB2bO2ISHPtY59jg0+
+	DVyPxjeZwM+vsqSWcQfdvGJ30=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYosMpZxo4mzXAw--.28032S6;
-	Wed, 13 Aug 2025 22:45:36 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYosMpZxo4mzXAw--.28032S2;
+	Wed, 13 Aug 2025 22:45:33 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -40,12 +39,10 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v15 4/6] PCI: dwc: Use PCI core APIs to find capabilities
-Date: Wed, 13 Aug 2025 22:45:27 +0800
-Message-Id: <20250813144529.303548-5-18255117159@163.com>
+Subject: [PATCH v15 0/6] Refactor capability search into common macros
+Date: Wed, 13 Aug 2025 22:45:23 +0800
+Message-Id: <20250813144529.303548-1-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250813144529.303548-1-18255117159@163.com>
-References: <20250813144529.303548-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -53,157 +50,144 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgDHYosMpZxo4mzXAw--.28032S6
-X-Coremail-Antispam: 1Uf129KBjvJXoWxXFyUtF4xur13ZF4fKF1rJFb_yoWrCFyfpa
-	y5JFyFyFWrAr4Yq3ZFv3Z8ZF13AF9xZFy7Ca97G3ZavFy2krWjg340krW3tr1xKrW2gry3
-	Kr4xtFyrCFnxJFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pil4EiUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgmoo2icmifhagAAs6
+X-CM-TRANSID:PigvCgDHYosMpZxo4mzXAw--.28032S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW3GFy5AFyktF15Zr1kWr4rXwb_yoW7Xw1UpF
+	Z3C3ZxGw4DArZFk3Z7Ja1I9a43Xas7ArW3J3y3Kw1fXFy7uFy8tr4xKF4rCF9rKrZ2q3W7
+	ZF4aq34kCFn8Aa7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pR78nnUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxCoo2icmQXo8AABsp
 
-The PCI core now provides generic PCI_FIND_NEXT_CAP() and
-PCI_FIND_NEXT_EXT_CAP() macros to search for PCI capabilities, using a
-config accessor we supply; use them in the DWC driver.
+Dear Maintainers,
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
+This patch series addresses long-standing code duplication in PCI
+capability discovery logic across the PCI core and controller drivers.
+The existing implementation ties capability search to fully initialized
+PCI device structures, limiting its usability during early controller
+initialization phases where device/bus structures may not yet be
+available.
+
+The primary goal is to decouple capability discovery from PCI device
+dependencies by introducing a unified framework using config space
+accessor-based macros. This enables:
+
+1. Early Capability Discovery: Host controllers (e.g., Cadence, DWC)
+can now perform capability searches during pre-initialization stages
+using their native config accessors.
+
+2. Code Consolidation: Common logic for standard and extended capability
+searches is refactored into shared macros (`PCI_FIND_NEXT_CAP` and
+`PCI_FIND_NEXT_EXT_CAP`), eliminating redundant implementations.
+
+3. Safety and Maintainability: TTL checks are centralized within the
+macros to prevent infinite loops, while hardcoded offsets in drivers
+are replaced with dynamic discovery, reducing fragility.
+
+Key improvements include:  
+- Driver Conversions: DesignWare and Cadence drivers are migrated to
+  use the new macros, removing device-specific assumptions and ensuring
+  consistent error handling.
+
+- Enhanced Readability: Magic numbers are replaced with symbolic
+  constants, and config space accessors are standardized for clarity.
+
+- Backward Compatibility: Existing PCI core behavior remains unchanged.
+
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 77 ++------------------
- drivers/pci/controller/dwc/pcie-designware.h | 21 ++++++
- 2 files changed, 26 insertions(+), 72 deletions(-)
+Dear Niklas and Gerd,
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 89aad5a08928..5fe0744d4235 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -213,83 +213,16 @@ void dw_pcie_version_detect(struct dw_pcie *pci)
- 		pci->type = ver;
- }
- 
--/*
-- * These interfaces resemble the pci_find_*capability() interfaces, but these
-- * are for configuring host controllers, which are bridges *to* PCI devices but
-- * are not PCI devices themselves.
-- */
--static u8 __dw_pcie_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
--				  u8 cap)
--{
--	u8 cap_id, next_cap_ptr;
--	u16 reg;
--
--	if (!cap_ptr)
--		return 0;
--
--	reg = dw_pcie_readw_dbi(pci, cap_ptr);
--	cap_id = (reg & 0x00ff);
--
--	if (cap_id > PCI_CAP_ID_MAX)
--		return 0;
--
--	if (cap_id == cap)
--		return cap_ptr;
--
--	next_cap_ptr = (reg & 0xff00) >> 8;
--	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
--}
--
- u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
- {
--	u8 next_cap_ptr;
--	u16 reg;
--
--	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
--	next_cap_ptr = (reg & 0x00ff);
--
--	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
-+	return PCI_FIND_NEXT_CAP(dw_pcie_read_cfg, PCI_CAPABILITY_LIST, cap,
-+				 pci);
- }
- EXPORT_SYMBOL_GPL(dw_pcie_find_capability);
- 
--static u16 dw_pcie_find_next_ext_capability(struct dw_pcie *pci, u16 start,
--					    u8 cap)
--{
--	u32 header;
--	int ttl;
--	int pos = PCI_CFG_SPACE_SIZE;
--
--	/* minimum 8 bytes per capability */
--	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
--
--	if (start)
--		pos = start;
--
--	header = dw_pcie_readl_dbi(pci, pos);
--	/*
--	 * If we have no capabilities, this is indicated by cap ID,
--	 * cap version and next pointer all being 0.
--	 */
--	if (header == 0)
--		return 0;
--
--	while (ttl-- > 0) {
--		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
--			return pos;
--
--		pos = PCI_EXT_CAP_NEXT(header);
--		if (pos < PCI_CFG_SPACE_SIZE)
--			break;
--
--		header = dw_pcie_readl_dbi(pci, pos);
--	}
--
--	return 0;
--}
--
- u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap)
- {
--	return dw_pcie_find_next_ext_capability(pci, 0, cap);
-+	return PCI_FIND_NEXT_EXT_CAP(dw_pcie_read_cfg, 0, cap, pci);
- }
- EXPORT_SYMBOL_GPL(dw_pcie_find_ext_capability);
- 
-@@ -302,8 +235,8 @@ static u16 __dw_pcie_find_vsec_capability(struct dw_pcie *pci, u16 vendor_id,
- 	if (vendor_id != dw_pcie_readw_dbi(pci, PCI_VENDOR_ID))
- 		return 0;
- 
--	while ((vsec = dw_pcie_find_next_ext_capability(pci, vsec,
--						       PCI_EXT_CAP_ID_VNDR))) {
-+	while ((vsec = PCI_FIND_NEXT_EXT_CAP(dw_pcie_read_cfg, vsec,
-+					     PCI_EXT_CAP_ID_VNDR, pci))) {
- 		header = dw_pcie_readl_dbi(pci, vsec + PCI_VNDR_HEADER);
- 		if (PCI_VNDR_HEADER_ID(header) == vsec_id)
- 			return vsec;
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 00f52d472dcd..b5e7e18138a6 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -609,6 +609,27 @@ static inline void dw_pcie_writel_dbi2(struct dw_pcie *pci, u32 reg, u32 val)
- 	dw_pcie_write_dbi2(pci, reg, 0x4, val);
- }
- 
-+static inline int dw_pcie_read_cfg_byte(struct dw_pcie *pci, int where,
-+					u8 *val)
-+{
-+	*val = dw_pcie_readb_dbi(pci, where);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static inline int dw_pcie_read_cfg_word(struct dw_pcie *pci, int where,
-+					u16 *val)
-+{
-+	*val = dw_pcie_readw_dbi(pci, where);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static inline int dw_pcie_read_cfg_dword(struct dw_pcie *pci, int where,
-+					 u32 *val)
-+{
-+	*val = dw_pcie_readl_dbi(pci, where);
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
- static inline unsigned int dw_pcie_ep_get_dbi_offset(struct dw_pcie_ep *ep,
- 						     u8 func_no)
- {
+Can you test this series of patches on the s390?
+
+Thank you very much.
+---
+
+---
+Changes since v14:
+- Delete the first patch in the v14 series.
+- The functions that can obtain the values of the registers u8/u16/u32 are
+  directly called in PCI_FIND_NEXT_CAP() and PCI_FIND_NEXT_EXT_CAP().
+  Use the pci_bus_read_config_byte/word/dword function directly.
+- Delete dw_pcie_read_cfg and redefine three functions: dw_pcie_read_cfg_byte/word/dword.
+- Delete cdns_pcie_read_cfg and redefine three functions: cdns_pcie_read_cfg_byte/word/dword.
+
+Changes since v13:
+- Split patch 3/6 into two patches for searching standard and extended capability. (Bjorn)
+- Optimize the code based on the review comments from Bjorn.
+- Patch 5/7 and 6/7 use simplified macro definitions: PCI_FIND_NEXT_CAP(), PCI_FIND_NEXT_EXT_CAP().
+- The other patches have not been modified.
+
+Changes since v12:
+- Modify some commit messages, code format issues, and optimize the function return values.
+
+Changes since v11:
+- Resolved some compilation warning.
+- Add some include.
+- Add the *** BLURB HERE *** description(Corrected by Mani and Krzysztof).
+
+Changes since v10:
+- The patch [v10 2/6] remove #include <uapi/linux/pci_regs.h> and add macro definition comments.
+- The patch [v10 3/6] remove #include <uapi/linux/pci_regs.h> and commit message were modified.
+- The other patches have not been modified.
+
+Changes since v9:
+- Resolved [v9 4/6] compilation error.
+  The latest 6.15 rc1 merge __dw_pcie_find_vsec_capability, which uses 
+  dw_pcie_find_next_ext_capability.
+- The other patches have not been modified.
+
+Changes since v8:
+- Split patch.
+- The patch commit message were modified.
+- Other patches(4/6, 5/6, 6/6) are unchanged.
+
+Changes since v7:
+- Patch 2/5 and 3/5 compilation error resolved.
+- Other patches are unchanged.
+
+Changes since v6:
+- Refactor capability search into common macros.
+- Delete pci-host-helpers.c and MAINTAINERS.
+
+Changes since v5:
+- If you put the helpers in drivers/pci/pci.c, they unnecessarily enlarge
+  the kernel's .text section even if it's known already at compile time
+  that they're never going to be used (e.g. on x86).
+- Move the API for find capabilitys to a new file called
+  pci-host-helpers.c.
+- Add new patch for MAINTAINERS.
+
+Changes since v4:
+- Resolved [v4 1/4] compilation warning.
+- The patch subject and commit message were modified.
+
+Changes since v3:
+- Resolved [v3 1/4] compilation error.
+- Other patches are not modified.
+
+Changes since v2:
+- Add and split into a series of patches.
+---
+
+Hans Zhang (6):
+  PCI: Clean up __pci_find_next_cap_ttl() readability
+  PCI: Refactor capability search into PCI_FIND_NEXT_CAP()
+  PCI: Refactor extended capability search into PCI_FIND_NEXT_EXT_CAP()
+  PCI: dwc: Use PCI core APIs to find capabilities
+  PCI: cadence: Use PCI core APIs to find capabilities
+  PCI: cadence: Use cdns_pcie_find_*capability() to avoid hardcoding
+    offsets
+
+ .../pci/controller/cadence/pcie-cadence-ep.c  | 38 +++++----
+ drivers/pci/controller/cadence/pcie-cadence.c | 14 +++
+ drivers/pci/controller/cadence/pcie-cadence.h | 39 +++++++--
+ drivers/pci/controller/dwc/pcie-designware.c  | 77 ++---------------
+ drivers/pci/controller/dwc/pcie-designware.h  | 21 +++++
+ drivers/pci/pci.c                             | 76 +++--------------
+ drivers/pci/pci.h                             | 85 +++++++++++++++++++
+ include/uapi/linux/pci_regs.h                 |  3 +
+ 8 files changed, 194 insertions(+), 159 deletions(-)
+
+
+base-commit: 8742b2d8935f476449ef37e263bc4da3295c7b58
 -- 
 2.25.1
 
