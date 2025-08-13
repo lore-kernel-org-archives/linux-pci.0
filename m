@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D75A02ED159;
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D4169194C96;
 	Wed, 13 Aug 2025 14:46:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755096371; cv=none; b=BObjIKrm0rg8B5J1hbSMCm121799tKOL0LqwE4DX04C5KXpXz9RpUDy4spVcBI/pY5iVZVJqvtU08FAHm9Yd9KfOsH+NrZt35G25X63L7YUmYab23ivE9kZrNcuVsJh8pC8p00RSNxlZv1lV754p+5N0YE3Xmmb5fVi+jVDC8OY=
+	t=1755096371; cv=none; b=Ns4oMa3D3gxVgOjtDE5pZdqVIMpEetSKnoiY/6DMrKlKVmkqCrQCEWBw7znMxK97b3L93VAuH7KCbuVIRpaIDy6J+wxLYHImZYATPBpQ8rFm1duxTaqdJvr1Hm0/ugTIOnVNZy8vEEMSm90U1lHPXBJIQCgVcEGAV9yDMBclaj4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1755096371; c=relaxed/simple;
-	bh=Bx5xy4rdha8UlSfBmLumG1DN9a5yTYhdvdocUGB6vMo=;
+	bh=Zuk70YaR6eO6mQ4DX+4R2evtpSrgg5AHtJF3k7jF6+8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=cTu2qAaoWQGyyoqte2/+BqSAMIhSzNWHKWV+PCnT04Jvq80jZQF6hHH2dnrtGhLkSbHo7mhCfrJ8t5RrhlTAoQwexXsg2Kpjtf56mppI5Ckh3Ma0EuYhz1ylme938IVt9aCltWuh1ndZWOrbRjrCDtx1niYJGEDWGC5cK0lUi78=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=exswT6AS; arc=none smtp.client-ip=117.135.210.2
+	 MIME-Version; b=X6cHPwPFlwsGRvZoZqibQL2B+icxuF35IdMTGApthauJZNVe/S9WP4ndWXGevXy1zMX/pbXrhPxK+9OyXRoFPKKrgEFbwd6/QeeDxri+dwlQ7m0yzIoZSpsAYJZKUVCHcJGzDaSikiCH+p7Gp9/z6Nx/bHB7B1+ubgSBDYkXqTo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=fvUVJlQS; arc=none smtp.client-ip=117.135.210.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="exswT6AS"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="fvUVJlQS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=1K
-	2a590HEkP5ndEewvEUaYjFyB72wbqA06B8THOwEGM=; b=exswT6AStcYfHwliEv
-	kBeG4cqDfFpwqhN0jk26teMz3KsSE5+ShXcs3fFpJfIxStY3EADE/pKAV+Zk7oAA
-	XGKPZPrPnXcPUZp7EdE6g19n1AgIDfzx1IXuyru7zxGyO4iL3r+e5M+NL5oAHGEN
-	+6fhXT6VK/0+VNbyBB+0MBPrI=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ez
+	w+x6CPBZoj0Ns1BR+CJgZEtXO9GLRlu49I9UBWAjo=; b=fvUVJlQSa0Xz/B41nu
+	peYEg5upAy/RF/pG9jgReYRCiZQwxHHACqGqBlWvvwesBjt6RQ0mXhSBXscpMxML
+	VpGxcs036P6n6u4rUwt6bq5kcYNYG66Hg8QrrKFmz/HUK7q2mhCINNYSSSuG7oG3
+	KLYdKJbUKY+S+0ThQeLig5GKM=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYosMpZxo4mzXAw--.28032S3;
-	Wed, 13 Aug 2025 22:45:34 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYosMpZxo4mzXAw--.28032S6;
+	Wed, 13 Aug 2025 22:45:36 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -40,9 +40,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v15 1/6] PCI: Clean up __pci_find_next_cap_ttl() readability
-Date: Wed, 13 Aug 2025 22:45:24 +0800
-Message-Id: <20250813144529.303548-2-18255117159@163.com>
+Subject: [PATCH v15 4/6] PCI: dwc: Use PCI core APIs to find capabilities
+Date: Wed, 13 Aug 2025 22:45:27 +0800
+Message-Id: <20250813144529.303548-5-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250813144529.303548-1-18255117159@163.com>
 References: <20250813144529.303548-1-18255117159@163.com>
@@ -53,76 +53,157 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgDHYosMpZxo4mzXAw--.28032S3
-X-Coremail-Antispam: 1Uf129KBjvJXoW7tFyUuF4UZw1fZr48tF1fZwb_yoW8ZrWkpF
-	98CFyxArW8JF47Cw4v93WUAF13Xa4qy3y8GrW2gwn8uFy2yw18XwsI9Fy3tF12qrZ29F13
-	X3sIvryFgas0vaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pR_Ma5UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxaoo2icmQX5igAAsF
+X-CM-TRANSID:PigvCgDHYosMpZxo4mzXAw--.28032S6
+X-Coremail-Antispam: 1Uf129KBjvJXoWxXFyUtF4xur13ZF4fKF1rJFb_yoWrCFyfpa
+	y5JFyFyFWrAr4Yq3ZFv3Z8ZF13AF9xZFy7Ca97G3ZavFy2krWjg340krW3tr1xKrW2gry3
+	Kr4xtFyrCFnxJFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pil4EiUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgmoo2icmifhagAAs6
 
-Refactor the __pci_find_next_cap_ttl() to improve code clarity:
-- Replace magic number 0x40 with PCI_STD_HEADER_SIZEOF.
-- Use ALIGN_DOWN() for position alignment instead of manual bitmask.
-- Extract PCI capability fields via FIELD_GET() with standardized masks.
-- Add necessary headers (linux/align.h).
-
-No functional changes intended.
+The PCI core now provides generic PCI_FIND_NEXT_CAP() and
+PCI_FIND_NEXT_EXT_CAP() macros to search for PCI capabilities, using a
+config accessor we supply; use them in the DWC driver.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 ---
- drivers/pci/pci.c             | 9 +++++----
- include/uapi/linux/pci_regs.h | 3 +++
- 2 files changed, 8 insertions(+), 4 deletions(-)
+ drivers/pci/controller/dwc/pcie-designware.c | 77 ++------------------
+ drivers/pci/controller/dwc/pcie-designware.h | 21 ++++++
+ 2 files changed, 26 insertions(+), 72 deletions(-)
 
-diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index b0f4d98036cd..40a5c87d9a6b 100644
---- a/drivers/pci/pci.c
-+++ b/drivers/pci/pci.c
-@@ -9,6 +9,7 @@
-  */
- 
- #include <linux/acpi.h>
-+#include <linux/align.h>
- #include <linux/kernel.h>
- #include <linux/delay.h>
- #include <linux/dmi.h>
-@@ -432,17 +433,17 @@ static u8 __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
- 	pci_bus_read_config_byte(bus, devfn, pos, &pos);
- 
- 	while ((*ttl)--) {
--		if (pos < 0x40)
-+		if (pos < PCI_STD_HEADER_SIZEOF)
- 			break;
--		pos &= ~3;
-+		pos = ALIGN_DOWN(pos, 4);
- 		pci_bus_read_config_word(bus, devfn, pos, &ent);
- 
--		id = ent & 0xff;
-+		id = FIELD_GET(PCI_CAP_ID_MASK, ent);
- 		if (id == 0xff)
- 			break;
- 		if (id == cap)
- 			return pos;
--		pos = (ent >> 8);
-+		pos = FIELD_GET(PCI_CAP_LIST_NEXT_MASK, ent);
- 	}
- 	return 0;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
+index 89aad5a08928..5fe0744d4235 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.c
++++ b/drivers/pci/controller/dwc/pcie-designware.c
+@@ -213,83 +213,16 @@ void dw_pcie_version_detect(struct dw_pcie *pci)
+ 		pci->type = ver;
  }
-diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
-index f5b17745de60..1bba99b46227 100644
---- a/include/uapi/linux/pci_regs.h
-+++ b/include/uapi/linux/pci_regs.h
-@@ -207,6 +207,9 @@
  
- /* Capability lists */
+-/*
+- * These interfaces resemble the pci_find_*capability() interfaces, but these
+- * are for configuring host controllers, which are bridges *to* PCI devices but
+- * are not PCI devices themselves.
+- */
+-static u8 __dw_pcie_find_next_cap(struct dw_pcie *pci, u8 cap_ptr,
+-				  u8 cap)
+-{
+-	u8 cap_id, next_cap_ptr;
+-	u16 reg;
+-
+-	if (!cap_ptr)
+-		return 0;
+-
+-	reg = dw_pcie_readw_dbi(pci, cap_ptr);
+-	cap_id = (reg & 0x00ff);
+-
+-	if (cap_id > PCI_CAP_ID_MAX)
+-		return 0;
+-
+-	if (cap_id == cap)
+-		return cap_ptr;
+-
+-	next_cap_ptr = (reg & 0xff00) >> 8;
+-	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
+-}
+-
+ u8 dw_pcie_find_capability(struct dw_pcie *pci, u8 cap)
+ {
+-	u8 next_cap_ptr;
+-	u16 reg;
+-
+-	reg = dw_pcie_readw_dbi(pci, PCI_CAPABILITY_LIST);
+-	next_cap_ptr = (reg & 0x00ff);
+-
+-	return __dw_pcie_find_next_cap(pci, next_cap_ptr, cap);
++	return PCI_FIND_NEXT_CAP(dw_pcie_read_cfg, PCI_CAPABILITY_LIST, cap,
++				 pci);
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_find_capability);
  
-+#define PCI_CAP_ID_MASK		0x00ff	/* Capability ID mask */
-+#define PCI_CAP_LIST_NEXT_MASK	0xff00	/* Next Capability Pointer mask */
+-static u16 dw_pcie_find_next_ext_capability(struct dw_pcie *pci, u16 start,
+-					    u8 cap)
+-{
+-	u32 header;
+-	int ttl;
+-	int pos = PCI_CFG_SPACE_SIZE;
+-
+-	/* minimum 8 bytes per capability */
+-	ttl = (PCI_CFG_SPACE_EXP_SIZE - PCI_CFG_SPACE_SIZE) / 8;
+-
+-	if (start)
+-		pos = start;
+-
+-	header = dw_pcie_readl_dbi(pci, pos);
+-	/*
+-	 * If we have no capabilities, this is indicated by cap ID,
+-	 * cap version and next pointer all being 0.
+-	 */
+-	if (header == 0)
+-		return 0;
+-
+-	while (ttl-- > 0) {
+-		if (PCI_EXT_CAP_ID(header) == cap && pos != start)
+-			return pos;
+-
+-		pos = PCI_EXT_CAP_NEXT(header);
+-		if (pos < PCI_CFG_SPACE_SIZE)
+-			break;
+-
+-		header = dw_pcie_readl_dbi(pci, pos);
+-	}
+-
+-	return 0;
+-}
+-
+ u16 dw_pcie_find_ext_capability(struct dw_pcie *pci, u8 cap)
+ {
+-	return dw_pcie_find_next_ext_capability(pci, 0, cap);
++	return PCI_FIND_NEXT_EXT_CAP(dw_pcie_read_cfg, 0, cap, pci);
+ }
+ EXPORT_SYMBOL_GPL(dw_pcie_find_ext_capability);
+ 
+@@ -302,8 +235,8 @@ static u16 __dw_pcie_find_vsec_capability(struct dw_pcie *pci, u16 vendor_id,
+ 	if (vendor_id != dw_pcie_readw_dbi(pci, PCI_VENDOR_ID))
+ 		return 0;
+ 
+-	while ((vsec = dw_pcie_find_next_ext_capability(pci, vsec,
+-						       PCI_EXT_CAP_ID_VNDR))) {
++	while ((vsec = PCI_FIND_NEXT_EXT_CAP(dw_pcie_read_cfg, vsec,
++					     PCI_EXT_CAP_ID_VNDR, pci))) {
+ 		header = dw_pcie_readl_dbi(pci, vsec + PCI_VNDR_HEADER);
+ 		if (PCI_VNDR_HEADER_ID(header) == vsec_id)
+ 			return vsec;
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index 00f52d472dcd..b5e7e18138a6 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -609,6 +609,27 @@ static inline void dw_pcie_writel_dbi2(struct dw_pcie *pci, u32 reg, u32 val)
+ 	dw_pcie_write_dbi2(pci, reg, 0x4, val);
+ }
+ 
++static inline int dw_pcie_read_cfg_byte(struct dw_pcie *pci, int where,
++					u8 *val)
++{
++	*val = dw_pcie_readb_dbi(pci, where);
++	return PCIBIOS_SUCCESSFUL;
++}
 +
- #define PCI_CAP_LIST_ID		0	/* Capability ID */
- #define  PCI_CAP_ID_PM		0x01	/* Power Management */
- #define  PCI_CAP_ID_AGP		0x02	/* Accelerated Graphics Port */
++static inline int dw_pcie_read_cfg_word(struct dw_pcie *pci, int where,
++					u16 *val)
++{
++	*val = dw_pcie_readw_dbi(pci, where);
++	return PCIBIOS_SUCCESSFUL;
++}
++
++static inline int dw_pcie_read_cfg_dword(struct dw_pcie *pci, int where,
++					 u32 *val)
++{
++	*val = dw_pcie_readl_dbi(pci, where);
++	return PCIBIOS_SUCCESSFUL;
++}
++
+ static inline unsigned int dw_pcie_ep_get_dbi_offset(struct dw_pcie_ep *ep,
+ 						     u8 func_no)
+ {
 -- 
 2.25.1
 
