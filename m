@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 1FF282EA74B;
-	Wed, 13 Aug 2025 14:46:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id D75A02ED159;
+	Wed, 13 Aug 2025 14:46:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755096369; cv=none; b=K7wTJIAamoY1rz8PgqBlR9VWszcO/6JNLvkQUoOxRogoBT5R2gwQRiEPBVjw5teD7PsjyS7X99lW2SHix4oivn1lswixVYrTFO4jD3m/P9sw0Y4BUa9fIElxC+L3DnL2H5462TVdfrfQTm/BVCr33o+qLnWEETEdrG1nmDKzcc0=
+	t=1755096371; cv=none; b=BObjIKrm0rg8B5J1hbSMCm121799tKOL0LqwE4DX04C5KXpXz9RpUDy4spVcBI/pY5iVZVJqvtU08FAHm9Yd9KfOsH+NrZt35G25X63L7YUmYab23ivE9kZrNcuVsJh8pC8p00RSNxlZv1lV754p+5N0YE3Xmmb5fVi+jVDC8OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755096369; c=relaxed/simple;
-	bh=z1gMN83XUx2q/rf3o0vsCJQwV0hlWidLGYI4Dqa3yxo=;
+	s=arc-20240116; t=1755096371; c=relaxed/simple;
+	bh=Bx5xy4rdha8UlSfBmLumG1DN9a5yTYhdvdocUGB6vMo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NLYwgAoRezgUL8uh21elSRZLtNT6jyKLlhQfGMcUbRN/aCowhfyPbzg21K5WdWeoRD+Bnd+h7b2HavBP11PiHRjLeYyhL9Ovur8rPGa9K7X6kb/2hsPFAw766tw/eZxZJ8+GSij0a9eUKBjh7zI2I3GNOeHqf7XcHO1WfPhduZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=Ol3/Iq+T; arc=none smtp.client-ip=220.197.31.4
+	 MIME-Version; b=cTu2qAaoWQGyyoqte2/+BqSAMIhSzNWHKWV+PCnT04Jvq80jZQF6hHH2dnrtGhLkSbHo7mhCfrJ8t5RrhlTAoQwexXsg2Kpjtf56mppI5Ckh3Ma0EuYhz1ylme938IVt9aCltWuh1ndZWOrbRjrCDtx1niYJGEDWGC5cK0lUi78=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=exswT6AS; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="Ol3/Iq+T"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="exswT6AS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version:
-	Content-Type; bh=meLp9879fxsSVUEQF+OMq+cc4Jc5FDK7Ugq4zaQm5xo=;
-	b=Ol3/Iq+TSZRROy65b3wxwoEU9gJipmOBJYQQ89UWpEpWwV1+GyV6YtmUcn0Iv5
-	mOIOc9yE4JayGmAzlhBCjFscqabQZ/1hPvB3+H84feDD+6y0HvnK1VHFyBsFKXMK
-	KH96ivoUF8fQ4Jk8DABt7DLPtPb502/T3CBIOFYq5q/M0=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=1K
+	2a590HEkP5ndEewvEUaYjFyB72wbqA06B8THOwEGM=; b=exswT6AStcYfHwliEv
+	kBeG4cqDfFpwqhN0jk26teMz3KsSE5+ShXcs3fFpJfIxStY3EADE/pKAV+Zk7oAA
+	XGKPZPrPnXcPUZp7EdE6g19n1AgIDfzx1IXuyru7zxGyO4iL3r+e5M+NL5oAHGEN
+	+6fhXT6VK/0+VNbyBB+0MBPrI=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYosMpZxo4mzXAw--.28032S8;
-	Wed, 13 Aug 2025 22:45:38 +0800 (CST)
+	by gzsmtp3 (Coremail) with SMTP id PigvCgDHYosMpZxo4mzXAw--.28032S3;
+	Wed, 13 Aug 2025 22:45:34 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	kwilczynski@kernel.org,
@@ -40,9 +40,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v15 6/6] PCI: cadence: Use cdns_pcie_find_*capability() to avoid hardcoding offsets
-Date: Wed, 13 Aug 2025 22:45:29 +0800
-Message-Id: <20250813144529.303548-7-18255117159@163.com>
+Subject: [PATCH v15 1/6] PCI: Clean up __pci_find_next_cap_ttl() readability
+Date: Wed, 13 Aug 2025 22:45:24 +0800
+Message-Id: <20250813144529.303548-2-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250813144529.303548-1-18255117159@163.com>
 References: <20250813144529.303548-1-18255117159@163.com>
@@ -52,200 +52,77 @@ List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgDHYosMpZxo4mzXAw--.28032S8
-X-Coremail-Antispam: 1Uf129KBjvJXoW3JF1rCrWfWF15ArWUXF18Xwb_yoWxAF45pF
-	W5ua4SkF40qrW7uFsrA3W5ZrnxtFnIv347Aa92kw15uF129ryUGFyIva43KF1akrs7uF17
-	XrWDtrsa9a13trUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pidHUhUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWwyoo2icmrDSKwAAs7
+X-CM-TRANSID:PigvCgDHYosMpZxo4mzXAw--.28032S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7tFyUuF4UZw1fZr48tF1fZwb_yoW8ZrWkpF
+	98CFyxArW8JF47Cw4v93WUAF13Xa4qy3y8GrW2gwn8uFy2yw18XwsI9Fy3tF12qrZ29F13
+	X3sIvryFgas0vaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pR_Ma5UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxaoo2icmQX5igAAsF
 
-The PCI capability/extended capability offsets are not guaranteed to be the
-same across all SoCs integrating the Cadence PCIe IP. Hence, use the
-cdns_pcie_find_{ext}_capability() APIs for finding them.
+Refactor the __pci_find_next_cap_ttl() to improve code clarity:
+- Replace magic number 0x40 with PCI_STD_HEADER_SIZEOF.
+- Use ALIGN_DOWN() for position alignment instead of manual bitmask.
+- Extract PCI capability fields via FIELD_GET() with standardized masks.
+- Add necessary headers (linux/align.h).
 
-This avoids hardcoding the offsets in the driver.
+No functional changes intended.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 Acked-by: Manivannan Sadhasivam <mani@kernel.org>
-Reviewed-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- .../pci/controller/cadence/pcie-cadence-ep.c  | 38 +++++++++++--------
- drivers/pci/controller/cadence/pcie-cadence.h |  5 ---
- 2 files changed, 22 insertions(+), 21 deletions(-)
+ drivers/pci/pci.c             | 9 +++++----
+ include/uapi/linux/pci_regs.h | 3 +++
+ 2 files changed, 8 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/pci/controller/cadence/pcie-cadence-ep.c b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-index 77c5a19b2ab1..5529ed84649f 100644
---- a/drivers/pci/controller/cadence/pcie-cadence-ep.c
-+++ b/drivers/pci/controller/cadence/pcie-cadence-ep.c
-@@ -21,12 +21,13 @@
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index b0f4d98036cd..40a5c87d9a6b 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -9,6 +9,7 @@
+  */
  
- static u8 cdns_pcie_get_fn_from_vfn(struct cdns_pcie *pcie, u8 fn, u8 vfn)
- {
--	u32 cap = CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET;
- 	u32 first_vf_offset, stride;
-+	u16 cap;
+ #include <linux/acpi.h>
++#include <linux/align.h>
+ #include <linux/kernel.h>
+ #include <linux/delay.h>
+ #include <linux/dmi.h>
+@@ -432,17 +433,17 @@ static u8 __pci_find_next_cap_ttl(struct pci_bus *bus, unsigned int devfn,
+ 	pci_bus_read_config_byte(bus, devfn, pos, &pos);
  
- 	if (vfn == 0)
- 		return fn;
+ 	while ((*ttl)--) {
+-		if (pos < 0x40)
++		if (pos < PCI_STD_HEADER_SIZEOF)
+ 			break;
+-		pos &= ~3;
++		pos = ALIGN_DOWN(pos, 4);
+ 		pci_bus_read_config_word(bus, devfn, pos, &ent);
  
-+	cap = cdns_pcie_find_ext_capability(pcie, PCI_EXT_CAP_ID_SRIOV);
- 	first_vf_offset = cdns_pcie_ep_fn_readw(pcie, fn, cap + PCI_SRIOV_VF_OFFSET);
- 	stride = cdns_pcie_ep_fn_readw(pcie, fn, cap +  PCI_SRIOV_VF_STRIDE);
- 	fn = fn + first_vf_offset + ((vfn - 1) * stride);
-@@ -38,10 +39,11 @@ static int cdns_pcie_ep_write_header(struct pci_epc *epc, u8 fn, u8 vfn,
- 				     struct pci_epf_header *hdr)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
--	u32 cap = CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET;
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	u32 reg;
-+	u16 cap;
- 
-+	cap = cdns_pcie_find_ext_capability(pcie, PCI_EXT_CAP_ID_SRIOV);
- 	if (vfn > 1) {
- 		dev_err(&epc->dev, "Only Virtual Function #1 has deviceID\n");
- 		return -EINVAL;
-@@ -227,9 +229,10 @@ static int cdns_pcie_ep_set_msi(struct pci_epc *epc, u8 fn, u8 vfn, u8 nr_irqs)
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	u8 mmc = order_base_2(nr_irqs);
--	u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
- 	u16 flags;
-+	u8 cap;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSI);
- 	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
- 
- 	/*
-@@ -249,9 +252,10 @@ static int cdns_pcie_ep_get_msi(struct pci_epc *epc, u8 fn, u8 vfn)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct cdns_pcie *pcie = &ep->pcie;
--	u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
- 	u16 flags, mme;
-+	u8 cap;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSIX);
- 	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
- 
- 	/* Validate that the MSI feature is actually enabled. */
-@@ -272,9 +276,10 @@ static int cdns_pcie_ep_get_msix(struct pci_epc *epc, u8 func_no, u8 vfunc_no)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct cdns_pcie *pcie = &ep->pcie;
--	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
- 	u32 val, reg;
-+	u8 cap;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSIX);
- 	func_no = cdns_pcie_get_fn_from_vfn(pcie, func_no, vfunc_no);
- 
- 	reg = cap + PCI_MSIX_FLAGS;
-@@ -292,9 +297,10 @@ static int cdns_pcie_ep_set_msix(struct pci_epc *epc, u8 fn, u8 vfn,
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
- 	struct cdns_pcie *pcie = &ep->pcie;
--	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
- 	u32 val, reg;
-+	u8 cap;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSIX);
- 	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
- 
- 	reg = cap + PCI_MSIX_FLAGS;
-@@ -380,11 +386,11 @@ static int cdns_pcie_ep_send_msi_irq(struct cdns_pcie_ep *ep, u8 fn, u8 vfn,
- 				     u8 interrupt_num)
- {
- 	struct cdns_pcie *pcie = &ep->pcie;
--	u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
- 	u16 flags, mme, data, data_mask;
--	u8 msi_count;
- 	u64 pci_addr, pci_addr_mask = 0xff;
-+	u8 msi_count, cap;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSI);
- 	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
- 
- 	/* Check whether the MSI feature has been enabled by the PCI host. */
-@@ -432,14 +438,14 @@ static int cdns_pcie_ep_map_msi_irq(struct pci_epc *epc, u8 fn, u8 vfn,
- 				    u32 *msi_addr_offset)
- {
- 	struct cdns_pcie_ep *ep = epc_get_drvdata(epc);
--	u32 cap = CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET;
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	u64 pci_addr, pci_addr_mask = 0xff;
- 	u16 flags, mme, data, data_mask;
--	u8 msi_count;
-+	u8 msi_count, cap;
- 	int ret;
- 	int i;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSI);
- 	fn = cdns_pcie_get_fn_from_vfn(pcie, fn, vfn);
- 
- 	/* Check whether the MSI feature has been enabled by the PCI host. */
-@@ -482,16 +488,16 @@ static int cdns_pcie_ep_map_msi_irq(struct pci_epc *epc, u8 fn, u8 vfn,
- static int cdns_pcie_ep_send_msix_irq(struct cdns_pcie_ep *ep, u8 fn, u8 vfn,
- 				      u16 interrupt_num)
- {
--	u32 cap = CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET;
- 	u32 tbl_offset, msg_data, reg;
- 	struct cdns_pcie *pcie = &ep->pcie;
- 	struct pci_epf_msix_tbl *msix_tbl;
- 	struct cdns_pcie_epf *epf;
- 	u64 pci_addr_mask = 0xff;
- 	u64 msg_addr;
-+	u8 bir, cap;
- 	u16 flags;
--	u8 bir;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_MSIX);
- 	epf = &ep->epf[fn];
- 	if (vfn > 0)
- 		epf = &epf->epf[vfn - 1];
-@@ -565,7 +571,9 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- 	int max_epfs = sizeof(epc->function_num_map) * 8;
- 	int ret, epf, last_fn;
- 	u32 reg, value;
-+	u8 cap;
- 
-+	cap = cdns_pcie_find_capability(pcie, PCI_CAP_ID_EXP);
- 	/*
- 	 * BIT(0) is hardwired to 1, hence function 0 is always enabled
- 	 * and can't be disabled anyway.
-@@ -589,12 +597,10 @@ static int cdns_pcie_ep_start(struct pci_epc *epc)
- 				continue;
- 
- 			value = cdns_pcie_ep_fn_readl(pcie, epf,
--					CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET +
--					PCI_EXP_DEVCAP);
-+						      cap + PCI_EXP_DEVCAP);
- 			value &= ~PCI_EXP_DEVCAP_FLR;
- 			cdns_pcie_ep_fn_writel(pcie, epf,
--					CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET +
--					PCI_EXP_DEVCAP, value);
-+					       cap + PCI_EXP_DEVCAP, value);
- 		}
+-		id = ent & 0xff;
++		id = FIELD_GET(PCI_CAP_ID_MASK, ent);
+ 		if (id == 0xff)
+ 			break;
+ 		if (id == cap)
+ 			return pos;
+-		pos = (ent >> 8);
++		pos = FIELD_GET(PCI_CAP_LIST_NEXT_MASK, ent);
  	}
+ 	return 0;
+ }
+diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+index f5b17745de60..1bba99b46227 100644
+--- a/include/uapi/linux/pci_regs.h
++++ b/include/uapi/linux/pci_regs.h
+@@ -207,6 +207,9 @@
  
-diff --git a/drivers/pci/controller/cadence/pcie-cadence.h b/drivers/pci/controller/cadence/pcie-cadence.h
-index 71e203de1087..84686b1493f2 100644
---- a/drivers/pci/controller/cadence/pcie-cadence.h
-+++ b/drivers/pci/controller/cadence/pcie-cadence.h
-@@ -125,11 +125,6 @@
-  */
- #define CDNS_PCIE_EP_FUNC_BASE(fn)	(((fn) << 12) & GENMASK(19, 12))
+ /* Capability lists */
  
--#define CDNS_PCIE_EP_FUNC_MSI_CAP_OFFSET	0x90
--#define CDNS_PCIE_EP_FUNC_MSIX_CAP_OFFSET	0xb0
--#define CDNS_PCIE_EP_FUNC_DEV_CAP_OFFSET	0xc0
--#define CDNS_PCIE_EP_FUNC_SRIOV_CAP_OFFSET	0x200
--
- /*
-  * Endpoint PF Registers
-  */
++#define PCI_CAP_ID_MASK		0x00ff	/* Capability ID mask */
++#define PCI_CAP_LIST_NEXT_MASK	0xff00	/* Next Capability Pointer mask */
++
+ #define PCI_CAP_LIST_ID		0	/* Capability ID */
+ #define  PCI_CAP_ID_PM		0x01	/* Power Management */
+ #define  PCI_CAP_ID_AGP		0x02	/* Accelerated Graphics Port */
 -- 
 2.25.1
 
