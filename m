@@ -1,27 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id C6CBA1922FB;
-	Wed, 13 Aug 2025 04:45:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A7C8B23D7E4;
+	Wed, 13 Aug 2025 04:45:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755060351; cv=none; b=rj4ouCtg7jyUcUSNeFaO7f7vMr74oVf9qtxf3DJ4b0OByMvjKjwhDdk32ZpuFJSHI7VzOafTigzj4o8FEqEpVYjT62P1CRfKn7RZzJr6InyBcFvMNZceDg2kSe4zIDMKg8xV7kWAcenXzNb3f6lbm4tKVCaH4o8EImxTCLYYPUQ=
+	t=1755060352; cv=none; b=DvZIa5WJPLCJL5RMu/S2yK/9yBeq0BAXYPHjAI1kdDXBnxPa/0PbkfEGn9JmywIaNIgiXjK4vjez4BTaM+fBsa03xFpeV89s0igxpKwW6DBNjaF2coMu5SRf3whL92LifU/YZwTTec6Dx1Rzsst1hpK0hNjqgeIXYXRCMeyXtQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755060351; c=relaxed/simple;
-	bh=4D16ckHsCI6f9VJDGaCX5efX+aFNJp2qg7K9dcx9Aho=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=cjnKgHtjO9uZGiBHEthLyXKa+BSig/QSIkzsJcRtCNU4NZWiSBoRpP6sDUCkmIl3HFbwYB5DKBpeVh5d9xJlFht7K/v0pGWw9kGitdntpM7A2rPfv2TahEydYGmLtGfG1aBYQ9OptbBVe8qti9bnZPC75qOHgSQos4bpT7FijhU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=ExX1Pt2z; arc=none smtp.client-ip=220.197.31.3
+	s=arc-20240116; t=1755060352; c=relaxed/simple;
+	bh=Aval5zk1VgFJgPoCb1Z+VYhn5vHXyVwG2wThqQn9Cg0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=lOW2Q7/64I7bW/mecvUyUgA/JYJwip3+2P5AFkG8Ehu3mjHEQ/gz/XeJSOWfFIg1DxShMxSLSErXvrS1hxDBlqKRZpXrNjlwO1mde1OfoHsii5vBRNrL51awNDaILFw9CIGSNuTDwlX5NDbO2C3tGQaiMCXnuLzpyBtXP0/3DKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=mPRd4J/O; arc=none smtp.client-ip=117.135.210.2
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="ExX1Pt2z"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="mPRd4J/O"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=cC
-	x19TelBHXMpEu0YblsMsh+7ZnKxfp6szt8ia2Ykj0=; b=ExX1Pt2zy3CRdW49QW
-	Dt6FlVKMVV+gJwYPFPRWktd7FZtC9utjbFXj/aVhpcK4RfjsfzZqg+iEBrBmcGKT
-	eHhL/paO93IZM5VE4z+UFuBbd8rJ8GYp7MtHAVKypu+ScqziILSTvEUFAp3Jyj6g
-	BP8huNU8+oMA8/cwqBSKI1znk=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=6W
+	NamUFnScGmcGW4V2poSQwnw1TE8eT2FVftvMi/L8E=; b=mPRd4J/OvYr5NQf9M+
+	Qekf5Ymtc2hLwQCH2pHiPTHYTPRJgg5LQYyFRxscBfik8nZzsFb/bRImJAUQUg9C
+	fte+8fjKZwgAFEJY4ng9wQOvAGLEMnDqwrfwBlwGb3KDY7pq+sDAwGCbln4ErzwY
+	U0dpZqS9kX0h6Z8kNSOQ/6Aa4=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgA3ErhtGJxo3nYVAA--.2375S2;
-	Wed, 13 Aug 2025 12:45:34 +0800 (CST)
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgA3ErhtGJxo3nYVAA--.2375S5;
+	Wed, 13 Aug 2025 12:45:36 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -32,10 +33,12 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v4 00/13] PCI: dwc: Refactor register access with dw_pcie_clear_and_set_dword helper
-Date: Wed, 13 Aug 2025 12:45:18 +0800
-Message-Id: <20250813044531.180411-1-18255117159@163.com>
+Subject: [PATCH v4 03/13] PCI: dra7xx: Refactor code by using dw_pcie_clear_and_set_dword()
+Date: Wed, 13 Aug 2025 12:45:21 +0800
+Message-Id: <20250813044531.180411-4-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250813044531.180411-1-18255117159@163.com>
+References: <20250813044531.180411-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -43,86 +46,71 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgA3ErhtGJxo3nYVAA--.2375S2
-X-Coremail-Antispam: 1Uf129KBjvJXoWxGr1kJFW8ZF47Zr1rAw13urg_yoW5KF43pa
-	y5tFW2kF1xJrs093ZrXa929r1Yy3Z3AFZrGrs7K34IqFy3CFyqqryrtryrt347GrWjqF12
-	kr1Utayxuwn3JFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0piKLvZUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxyoo2icD7TgfwAAsE
+X-CM-TRANSID:QCgvCgA3ErhtGJxo3nYVAA--.2375S5
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KrWkGrWkKr1xuFyrXF13Jwb_yoW8uw4xp3
+	y3CFZIk3W7Jan5X3Wqv3Wku3WSvasavr4Utan7Kw1fZF9Fyr9rtrWFyry8tF4fuFWj9r12
+	ka15t347Xw4YyFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zRczV5UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQwyoo2icD7TgrAAAsH
 
-Register bit manipulation in DesignWare PCIe controllers currently
-uses repetitive read-modify-write sequences across multiple drivers.
-This pattern leads to code duplication and increases maintenance
-complexity as each driver implements similar logic with minor variations.
+The dra7xx PCIe driver implements suspend/resume handling through
+direct register manipulation. The current approach uses explicit
+read-modify-write sequences to control the MEMORY enable bit in the
+PCI_COMMAND register, declaring local variables for temporary storage.
 
-This series introduces dw_pcie_clear_and_set_dword() to centralize atomic
-register modification. The helper performs read-clear-set-write operations
-in a single function, replacing open-coded implementations. Subsequent
-patches refactor individual drivers to use this helper, eliminating
-redundant code and ensuring consistent bit handling.
+Replace manual bit manipulation with dw_pcie_clear_and_set_dword()
+during suspend and resume operations. This eliminates redundant variable
+declarations and simplifies the power management flow by handling bit
+operations within a single function call.
 
-The change reduces overall code size by ~350 lines while improving
-maintainability. Each controller driver is updated in a separate
-patch to preserve bisectability and simplify review.
+Using the centralized helper improves code readability and aligns the
+driver with standard DesignWare register access patterns. The change also
+reduces the risk of bit manipulation errors in future modifications to the
+power management logic.
 
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Hi all,
+ drivers/pci/controller/dwc/pci-dra7xx.c | 10 ++--------
+ 1 file changed, 2 insertions(+), 8 deletions(-)
 
-At the beginning, two patches were made, 0001*.patch, and the others were
-one patch. After consideration, I still split the patches. If splitting
-is not necessary, I will recombine them into two patches in future
-versions.
-
-
-Changes for v4:
-- Rebase to v6.17-rc1
-
-Changes for v3:
-- patch 0002: s/u32 val = 0;/u32 val; (pcie-designware-debugfs.c -> set_event_number())
-- patch 0013: Remove several val = 0. (Mani)
-- patch 0013: s/PCIE_PL_CHK_REG_CONTROL_STATUS/0. (Error in copying the code.) (Mani)
-
-Changes for v2:
-- Re-send it in the company environment so that the entire patch series is in the 00/13 cover letter. (Bjorn)
-- Modify the subject. (Bjorn and Frank)
----
-
-Hans Zhang (13):
-  PCI: dwc: Add dw_pcie_clear_and_set_dword() for register bit
-    manipulation
-  PCI: dwc: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: dra7xx: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: imx6: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: meson: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: armada8k: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: bt1: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: dw-rockchip: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: fu740: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: qcom: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: qcom-ep: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: rcar-gen4: Refactor code by using dw_pcie_clear_and_set_dword()
-  PCI: tegra194: Refactor code by using dw_pcie_clear_and_set_dword()
-
- drivers/pci/controller/dwc/pci-dra7xx.c       |  10 +-
- drivers/pci/controller/dwc/pci-imx6.c         |  26 ++-
- drivers/pci/controller/dwc/pci-meson.c        |  22 +--
- drivers/pci/controller/dwc/pcie-armada8k.c    |  48 ++----
- drivers/pci/controller/dwc/pcie-bt1.c         |   5 +-
- .../controller/dwc/pcie-designware-debugfs.c  |  66 +++-----
- .../pci/controller/dwc/pcie-designware-ep.c   |  20 +--
- .../pci/controller/dwc/pcie-designware-host.c |  26 +--
- drivers/pci/controller/dwc/pcie-designware.c  |  75 ++++-----
- drivers/pci/controller/dwc/pcie-designware.h  |  27 +--
- drivers/pci/controller/dwc/pcie-dw-rockchip.c |   7 +-
- drivers/pci/controller/dwc/pcie-fu740.c       |   5 +-
- drivers/pci/controller/dwc/pcie-qcom-common.c |  59 ++++---
- drivers/pci/controller/dwc/pcie-qcom-ep.c     |  14 +-
- drivers/pci/controller/dwc/pcie-rcar-gen4.c   |  23 +--
- drivers/pci/controller/dwc/pcie-tegra194.c    | 158 +++++++-----------
- 16 files changed, 239 insertions(+), 352 deletions(-)
-
-
-base-commit: 53e760d8949895390e256e723e7ee46618310361
+diff --git a/drivers/pci/controller/dwc/pci-dra7xx.c b/drivers/pci/controller/dwc/pci-dra7xx.c
+index f97f5266d196..9cbba1b28882 100644
+--- a/drivers/pci/controller/dwc/pci-dra7xx.c
++++ b/drivers/pci/controller/dwc/pci-dra7xx.c
+@@ -867,15 +867,12 @@ static int dra7xx_pcie_suspend(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+ 	struct dw_pcie *pci = dra7xx->pci;
+-	u32 val;
+ 
+ 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
+ 		return 0;
+ 
+ 	/* clear MSE */
+-	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+-	val &= ~PCI_COMMAND_MEMORY;
+-	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
++	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, PCI_COMMAND_MEMORY, 0);
+ 
+ 	return 0;
+ }
+@@ -884,15 +881,12 @@ static int dra7xx_pcie_resume(struct device *dev)
+ {
+ 	struct dra7xx_pcie *dra7xx = dev_get_drvdata(dev);
+ 	struct dw_pcie *pci = dra7xx->pci;
+-	u32 val;
+ 
+ 	if (dra7xx->mode != DW_PCIE_RC_TYPE)
+ 		return 0;
+ 
+ 	/* set MSE */
+-	val = dw_pcie_readl_dbi(pci, PCI_COMMAND);
+-	val |= PCI_COMMAND_MEMORY;
+-	dw_pcie_writel_dbi(pci, PCI_COMMAND, val);
++	dw_pcie_clear_and_set_dword(pci, PCI_COMMAND, 0, PCI_COMMAND_MEMORY);
+ 
+ 	return 0;
+ }
 -- 
 2.25.1
 
