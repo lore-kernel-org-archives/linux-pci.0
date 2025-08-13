@@ -1,106 +1,84 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9DB4029A9CB;
-	Wed, 13 Aug 2025 04:46:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81CAB2110E;
+	Wed, 13 Aug 2025 05:21:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755060365; cv=none; b=sX7t/a5SbfjqDRmkEfVyJlpamWCxyYpQI8k2L0W0yjtvut2u/VhavshW6CiXMYjfLfP5wNPQFXJEak5UpspWfd/jn5CCqk1aVPUb3pk5oZrplwbXBOUnB/pG1xGFPSEH/4PYFVQACYJUWxnnX/td4pop3h+HlWVBWzO57piWz/U=
+	t=1755062510; cv=none; b=tEL+1LO3tqSioQW5EMeCEok6W80hKuoY3+RuYp5OpXiSQQq307bIBXlkkA9x9wvhg6Xwp+SssXn39P4lwB86RsI7BM6idIsf1zYMEv0aSuR+9lE/5lb/Vt6qsd/6UYAfoV2pYlCaLy5eYxlOxC2BE9Ik0Dd8hOAvXAS/BJDIJXI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755060365; c=relaxed/simple;
-	bh=X2ULA3wtv07dwjO/8i4ptLUuuyTx6rDSdQW4HnYB9Zo=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=AU/7RVj11svOdxSlTppiSeljnkDDpxgL11agmHa1cmj544GvliO5lh7JykGrZ4LSuN9/WW10K76hsWKrSi3pJezfKemiVT0O8tJi0dtz86aRxINyZv3J04VBOjRr6yd+8O+Jhi2FXMK5r9G6eSFgS03iL05sZ3LaiZuyMmP1tMc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=oZIvmgky; arc=none smtp.client-ip=117.135.210.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="oZIvmgky"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=+B
-	Bjrc0EVkwRmuejXLpU8+j4fD1/hPN0cQ6RirtS1XI=; b=oZIvmgkyi2n1c3gxam
-	x8iTBYVz44vhGnlDdZGHpBSr/JQ6CqanXVLvf9HUcTQ6xcTwb8VqRMv4fBWN0zIY
-	YhyrvSuR55afBg39MKzwegrdQiBsaa0RjHWbzNQIxhkih7i6QrN81KJnPWimtitl
-	YarlnFPnlJxHZM8Kr8DApOOxs=
-Received: from localhost.localdomain (unknown [])
-	by gzsmtp3 (Coremail) with SMTP id PigvCgDnCKx4GJxoOGujAw--.23777S5;
-	Wed, 13 Aug 2025 12:45:47 +0800 (CST)
-From: Hans Zhang <18255117159@163.com>
-To: lpieralisi@kernel.org,
-	bhelgaas@google.com,
-	mani@kernel.org,
-	kwilczynski@kernel.org
-Cc: robh@kernel.org,
-	jingoohan1@gmail.com,
-	linux-pci@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v4 11/13] PCI: qcom-ep: Refactor code by using dw_pcie_clear_and_set_dword()
-Date: Wed, 13 Aug 2025 12:45:29 +0800
-Message-Id: <20250813044531.180411-12-18255117159@163.com>
-X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250813044531.180411-1-18255117159@163.com>
-References: <20250813044531.180411-1-18255117159@163.com>
+	s=arc-20240116; t=1755062510; c=relaxed/simple;
+	bh=0iLRSWUDLSAFS6EfD++lBN82EDa3SnSb6SS0qXb+udM=;
+	h=Message-ID:From:Date:Subject:To:Cc; b=m2MV+OaXAVsL4ERgcutB6tcDI9NjX9oeFnaOxNJQikjZPP0Yuy6nd1IIaQ9/53kVr990p8ReNS68NEwchX9HAcQqdH92gOTvAPP0FqaaRSsw4d234GAAHhxeEyX583zeIAxSb4HYOgshkkUCSpUN9WhjSzapatODncVRiTjLLhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with UTF8SMTPS id 726BB18C48;
+	Wed, 13 Aug 2025 07:11:36 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id 3B6E06000EA5;
+	Wed, 13 Aug 2025 07:11:36 +0200 (CEST)
+X-Mailbox-Line: From 1d72a891a7f57115e78a73046e776f7e0c8cd68f Mon Sep 17 00:00:00 2001
+Message-ID: <cover.1755008151.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Wed, 13 Aug 2025 07:11:00 +0200
+Subject: [PATCH 0/5] PCI: Reduce AER / EEH deviations
+To: Bjorn Helgaas <helgaas@kernel.org>
+Cc: Riana Tauro <riana.tauro@intel.com>, Aravind Iddamsetty <aravind.iddamsetty@linux.intel.com>, "Sean C. Dardis" <sean.c.dardis@intel.com>, Terry Bowman <terry.bowman@amd.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Niklas Schnelle <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>, "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, "Oliver OHalloran" <oohall@gmail.com>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, Shahed Shaikh <shshaikh@marvell.com>, Manish Chopra <manishc@marvell.com>, GR-Linux-NIC-Dev@marvell.com, Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, Edward Cree <ecree.xilinx@gmail.com>, linux-net-drivers@amd.com, James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vg
+ er.kernel.org, Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:PigvCgDnCKx4GJxoOGujAw--.23777S5
-X-Coremail-Antispam: 1Uf129KBjvJXoW7WF17Kr17ZF1UGr4rtrWUArb_yoW8Kr4Upr
-	9xXrn0kF1xJr4rur4qka1kZF15JFnxAFy3JFWDKw1avFy7CF9rtas0ya4aqFn7GrW2qryj
-	934YqayrW3WYyFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zR0fOcUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgmoo2icEADWQAAAsK
 
-Qcom PCIe endpoint driver implements L0s/L1 latency configuration through
-manual register manipulation. The current approach reads LNKCAP register,
-modifies specific latency fields, then writes back the value. This pattern
-repeats twice with similar logic but different bit masks.
+The kernel supports three different PCI error recovery mechanisms:
 
-Replace explicit latency configuration with dw_pcie_clear_and_set_dword().
-The helper combines field clearing and setting in a single operation,
-replacing three-step manual sequences. Initialize the set value with
-FIELD_PREP() to clearly express the intended bitfield value.
+* AER per PCIe r7.0 sec 6.2 (drivers/pci/pcie/aer.c + err.c)
+* EEH on PowerPC (arch/powerpc/kernel/eeh_driver.c)
+* zPCI on s390 (arch/s390/pci/pci_event.c)
 
-This refactoring reduces code duplication in latency configuration paths
-and improves maintainability. Using the standard helper ensures consistent
-handling of capability registers and simplifies future updates to ASPM
-settings.
+In theory, they should all follow Documentation/PCI/pci-error-recovery.rst
+to afford uniform behavior to drivers across platforms.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
----
- drivers/pci/controller/dwc/pcie-qcom-ep.c | 14 ++++++--------
- 1 file changed, 6 insertions(+), 8 deletions(-)
+In practice, there are deviations which this series seeks to reduce.
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-index bf7c6ac0f3e3..c2b4f172385d 100644
---- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
-@@ -475,17 +475,15 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
- 
- 	/* Set the L0s Exit Latency to 2us-4us = 0x6 */
- 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
--	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
--	val &= ~PCI_EXP_LNKCAP_L0SEL;
--	val |= FIELD_PREP(PCI_EXP_LNKCAP_L0SEL, 0x6);
--	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, val);
-+	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_LNKCAP,
-+				    PCI_EXP_LNKCAP_L0SEL,
-+				    FIELD_PREP(PCI_EXP_LNKCAP_L0SEL, 0x6));
- 
- 	/* Set the L1 Exit Latency to be 32us-64 us = 0x6 */
- 	offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
--	val = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
--	val &= ~PCI_EXP_LNKCAP_L1EL;
--	val |= FIELD_PREP(PCI_EXP_LNKCAP_L1EL, 0x6);
--	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, val);
-+	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_LNKCAP,
-+				    PCI_EXP_LNKCAP_L1EL,
-+				    FIELD_PREP(PCI_EXP_LNKCAP_L1EL, 0x6));
- 
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
+One particular pain point is AER not allowing drivers to opt in to a
+Bus Reset on Non-Fatal Errors (patch [1/5]).  EEH allows this and the
+"xe" graphics driver would like to take advantage of it on AER-capable
+platforms.  Patches [2/5] to [4/5] address various other deviations,
+while patch [5/5] cleans up old gunk in code comments.
+
+I've gone through all drivers implementing pci_error_handlers to ascertain
+that no regressions are introduced by these changes.  Nevertheless further
+reviewing and testing would be appreciated to raise the confidence.
+Thanks!
+
+Lukas Wunner (5):
+  PCI/AER: Allow drivers to opt in to Bus Reset on Non-Fatal Errors
+  PCI/ERR: Fix uevent on failure to recover
+  PCI/ERR: Notify drivers on failure to recover
+  PCI/ERR: Update device error_state already after reset
+  PCI/ERR: Remove remnants of .link_reset() callback
+
+ .../ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c   |  1 -
+ .../net/ethernet/qlogic/qlcnic/qlcnic_main.c  |  2 -
+ drivers/net/ethernet/sfc/efx_common.c         |  3 --
+ drivers/net/ethernet/sfc/falcon/efx.c         |  3 --
+ drivers/net/ethernet/sfc/siena/efx_common.c   |  3 --
+ drivers/pci/pcie/err.c                        | 40 ++++++++++++++-----
+ drivers/scsi/lpfc/lpfc_init.c                 |  2 +-
+ drivers/scsi/qla2xxx/qla_os.c                 |  5 ---
+ 8 files changed, 32 insertions(+), 27 deletions(-)
+
 -- 
-2.25.1
+2.47.2
 
