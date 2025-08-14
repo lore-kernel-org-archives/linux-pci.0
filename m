@@ -1,199 +1,116 @@
-Received: from bmailout2.hostsharing.net (bmailout2.hostsharing.net [83.223.78.240])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BBB72E92DD
-	for <linux-pci@vger.kernel.org>; Thu, 14 Aug 2025 09:44:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.240
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 985982FB97E
+	for <linux-pci@vger.kernel.org>; Thu, 14 Aug 2025 11:59:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755164675; cv=none; b=t3nsDaNeTOBpAjqHE9CtHw/soxSxdCrMky13/92qhQjlHiq1pzBwy8OGUwUcje8Orp6KcA4DpRvkQmKjofXZMKDQCR3wdpeLYl+7HULQIlb2uXy5EKpJoQ7mSf7bpG+jFgfE1hdpZaQuNbUYqpG2on5PJmI/gqbpGRS3TvjAVCk=
+	t=1755172798; cv=none; b=tG+Cv8k5DLtk68x87mk34ZyCOdgNdJvyYSIwavUf4FKU3Rih+ai6RyELAkCyRTD+Cs5gQk9vrWJzKcdEzzzNRomeFE+JCQWKwPCYdNsKsqxrvrIJn0V6GZe9n3imEwQNZavoXM/hCpIpdKOB5jfMs3KR7vcv2zEsaYoVgAU5DNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755164675; c=relaxed/simple;
-	bh=q5wigNdlKWpshxODenayDU6LV5AhFkwU+dBvzf+2Z6M=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RV/oT6YbJcJeI6ohuqf6HqE8fWfb4FV+1kN3Jb95N5Wk8fR8hPCXJkLGPjzBT2FDNtURvWgydTTFMtP1utw90QyIRGStAkIT0dQm/IE30Hg6dj58WmULS+rljGMoroVFzdQUgdSyJPgA0gL3aTONqsYOUaqFIA4Wb7w2BayhSbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.78.240
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout2.hostsharing.net (Postfix) with ESMTPS id 194C620091AD;
-	Thu, 14 Aug 2025 11:36:20 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 0702EB1D0F; Thu, 14 Aug 2025 11:36:20 +0200 (CEST)
-Date: Thu, 14 Aug 2025 11:36:19 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: Niklas Schnelle <schnelle@linux.ibm.com>
-Cc: Bjorn Helgaas <helgaas@kernel.org>, Riana Tauro <riana.tauro@intel.com>,
-	Aravind Iddamsetty <aravind.iddamsetty@linux.intel.com>,
-	"Sean C. Dardis" <sean.c.dardis@intel.com>,
-	Terry Bowman <terry.bowman@amd.com>,
-	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>,
-	Linas Vepstas <linasvepstas@gmail.com>,
-	Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
-	Oliver OHalloran <oohall@gmail.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
-	linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org
-Subject: Re: [PATCH 1/5] PCI/AER: Allow drivers to opt in to Bus Reset on
- Non-Fatal Errors
-Message-ID: <aJ2uE6v46Zib30Jh@wunner.de>
-References: <cover.1755008151.git.lukas@wunner.de>
- <28fd805043bb57af390168d05abb30898cf4fc58.1755008151.git.lukas@wunner.de>
- <7c545fff40629b612267501c0c74bc40c3df29e2.camel@linux.ibm.com>
+	s=arc-20240116; t=1755172798; c=relaxed/simple;
+	bh=HFX/Qwld+Sh0z4QKTMLIPR1Ye4VR7lyGLk0gc7fQ85w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KnrHOLtD9txW4/E7DVS7+7TZDyKUc79ag13TVokuO8L56LgNyOJ3ESdsb9i46MKQQipa4uXSFDZNFZdv3BajtbBULcJ4cJ4l2DvJ1rj1Hx+wDSOT7sqnlDd76q58JuhJxPIfw+HN4Th7SPH37xS1G1szI18j9NP2AvP1uMB3pA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com; spf=pass smtp.mailfrom=riscstar.com; dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b=roAPRZVu; arc=none smtp.client-ip=209.85.166.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=riscstar.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=riscstar-com.20230601.gappssmtp.com header.i=@riscstar-com.20230601.gappssmtp.com header.b="roAPRZVu"
+Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-88432cbf3fbso64255139f.0
+        for <linux-pci@vger.kernel.org>; Thu, 14 Aug 2025 04:59:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=riscstar-com.20230601.gappssmtp.com; s=20230601; t=1755172796; x=1755777596; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VkZ6MdXAK8oUuFYjzHuswEeWUTNOi4hs6qI/H9CSMKA=;
+        b=roAPRZVumjhXSJMNbOOKCt7VTy16wBXw0WVHlLt6mdtIXZk83X5YibLjoUe14l+prN
+         fW7d/bas93KoNHsatXcMhgWsAmvc2gQi5fOyxQEkfxfbXovmCDkk/YtBEcrkWhV0bkCM
+         qY3abYbLqOZduAZGRLzhY7TDIdI2Bg+suk2QK5iQ0bHOF/DTSwTBEef4pDTXc3TsrVL1
+         Cpt+bwgopxNd5MFDyjknyD7TfduO5QpRTVQlyIbTi5mHq2gIjp9BTNf9kbs7Gu0gLgom
+         wv+NR7SEMY/a4IaEOILN9/Zvg/spwkdsSNDSCGdpMoCJkjfsHJP3f+JNpmYBOxM8lEgt
+         S7HQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755172796; x=1755777596;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=VkZ6MdXAK8oUuFYjzHuswEeWUTNOi4hs6qI/H9CSMKA=;
+        b=TrLJJi10hExiBkkihKyZVaMYeOrI6OloU7xadBchGbVVGLJcyHXRDxEmDw07ffaUFW
+         2YEBsidiMoPj60x9pVOABGlcO+6//FamsB52fKgDFFjAkx7oYu3vdeUw0Lbb97gbFIQE
+         /fQIp69svs7a37TOdjC99YXZeaA1v2uwTSozNcpOYiPJwkb8oe95ELXoL5KdV4ASXe/R
+         0REggv9aAotBCsGXZE3t6TPzEG4EGitqROnLV6hjiW9E4w1J15r3syPzcffdNQiBhqzZ
+         dmxsFlkhOuCiY+w9/tK+hec01cMto6LLtmHICU/ogFQJ2tWwLOtELbf0crPgc2Wfe2zC
+         mUVg==
+X-Forwarded-Encrypted: i=1; AJvYcCXP81yiNkSCrKRDKtqvJURVn/zTdtEW8qba2Fn4yyj1Mwm8InqQbLn3hgWorotCr801tjGgVE7/G38=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzBf6KaNzqTpndyAk4lVz9Air0evxLM+189qBcxTJxKnJta/2KL
+	HuLxGuu9l35TkDU7Wz8xYSKFhoYAMdMn6CDIt4wbw1ChbcJ9ar/3UK0HD2ZZYDEA3W8=
+X-Gm-Gg: ASbGncsk/sG3rIIjzk25ns8WCT2GT0OTqDcP+zhKtPbxO1lLhY2NcDpFHcvkHBEkpce
+	xEY3/8qpzDEjRMSW2eYmdpg/DMP1WMgh8ZWL9+elju4jW5fbV3VOY6a0v3y27bfZi1CkvWHL9/x
+	Oy/vzAqcpoFPyNeYOnYaHz5T2jhnGz9rBSX5KUokqVT+cW3g8yLtT4xqisS3+BPvj2vCkybF5Ot
+	lRBWPZ8qzJbteWSX1IuPukx2gZO+GYAqSlYfQ7pebByzoSCrzIq4dDlO7KN/zMpVZRbPDwuA/8k
+	VRGlEYq0aCzArQV3J5cuzsKV86+pMDoQauOoUznEe4Tw4B0W5tA0/fQRdPVegNm4jkFZ/H54jX8
+	wq0mosjrhC0XJxcBy0j5MuCZUJk0LUVi2T+34SxGXFGcABAd6t7a7QIRRCkqD4Q==
+X-Google-Smtp-Source: AGHT+IE3y11zxXdSZ7xsXLUpghewNnJCpWK8G2mFkAzcKjVS5vSn5G3dmjKvLqQoKez3LPNe1hHEcQ==
+X-Received: by 2002:a05:6e02:184c:b0:3e5:6daf:ddfe with SMTP id e9e14a558f8ab-3e57084ff05mr51337105ab.10.1755172795698;
+        Thu, 14 Aug 2025 04:59:55 -0700 (PDT)
+Received: from [172.22.22.28] (c-75-72-117-212.hsd1.mn.comcast.net. [75.72.117.212])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-50ae9cbb659sm4480210173.93.2025.08.14.04.59.53
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 14 Aug 2025 04:59:55 -0700 (PDT)
+Message-ID: <86174012-fd87-41d7-9568-f9c0b544c1c4@riscstar.com>
+Date: Thu, 14 Aug 2025 06:59:53 -0500
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7c545fff40629b612267501c0c74bc40c3df29e2.camel@linux.ibm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/6] dt-bindings: phy: spacemit: add SpacemiT PCIe/combo
+ PHY
+To: Krzysztof Kozlowski <krzk@kernel.org>, robh@kernel.org,
+ krzk+dt@kernel.org, conor+dt@kernel.org, lpieralisi@kernel.org,
+ kwilczynski@kernel.org, mani@kernel.org, bhelgaas@google.com,
+ vkoul@kernel.org, kishon@kernel.org
+Cc: dlan@gentoo.org, paul.walmsley@sifive.com, palmer@dabbelt.com,
+ aou@eecs.berkeley.edu, alex@ghiti.fr, p.zabel@pengutronix.de,
+ tglx@linutronix.de, johan+linaro@kernel.org, thippeswamy.havalige@amd.com,
+ namcao@linutronix.de, mayank.rana@oss.qualcomm.com, shradha.t@samsung.com,
+ inochiama@gmail.com, quic_schintav@quicinc.com, fan.ni@samsung.com,
+ devicetree@vger.kernel.org, linux-phy@lists.infradead.org,
+ linux-pci@vger.kernel.org, spacemit@lists.linux.dev,
+ linux-riscv@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20250813184701.2444372-1-elder@riscstar.com>
+ <20250813184701.2444372-2-elder@riscstar.com>
+ <22bd5b5b-ca06-4499-b21f-22c2ff202167@kernel.org>
+Content-Language: en-US
+From: Alex Elder <elder@riscstar.com>
+In-Reply-To: <22bd5b5b-ca06-4499-b21f-22c2ff202167@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Aug 14, 2025 at 09:56:09AM +0200, Niklas Schnelle wrote:
-> On Wed, 2025-08-13 at 07:11 +0200, Lukas Wunner wrote:
-> > +++ b/drivers/pci/pcie/err.c
-> > @@ -217,15 +217,10 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
-> >  	pci_walk_bridge(bridge, pci_pm_runtime_get_sync, NULL);
-> >  
-> >  	pci_dbg(bridge, "broadcast error_detected message\n");
-> > -	if (state == pci_channel_io_frozen) {
-> > +	if (state == pci_channel_io_frozen)
-> >  		pci_walk_bridge(bridge, report_frozen_detected, &status);
-> > -		if (reset_subordinates(bridge) != PCI_ERS_RESULT_RECOVERED) {
-> > -			pci_warn(bridge, "subordinate device reset failed\n");
-> > -			goto failed;
-> > -		}
-> > -	} else {
-> > +	else
-> >  		pci_walk_bridge(bridge, report_normal_detected, &status);
-> > -	}
-> >  
-> >  	if (status == PCI_ERS_RESULT_CAN_RECOVER) {
-> >  		status = PCI_ERS_RESULT_RECOVERED;
+On 8/14/25 1:11 AM, Krzysztof Kozlowski wrote:
+> On 13/08/2025 20:46, Alex Elder wrote:
+>> +                      "mstr",
+>> +                      "slv",
+>> +                      "global";
+>> +        spacemit,syscon-pmu = <&syscon_apmu>;
+>> +        #phy-cells = <1>;
+>> +        status = "disabled";
 > 
-> On s390 PCI errors leave the device with MMIO blocked until either the
-> error state is cleared or we reset via the firmware interface. With
-> this change and the pci_channel_io_frozen case AER would now do the
-> report_mmio_enabled() before the reset with nothing happening between
-> report_frozen_detected() and report_mmio_enabled() is MMIO enabled at
-> this point?
-
-Yes, MMIO access is controlled through the Memory Space Enable and
-Bus Master Enable bits in the Command Register (PCIe r7.0 sec 7.5.1.1.3).
-Drivers generally set those bits on probe and they're not automatically
-cleared by hardware upon an Uncorrectable Error.
-
-EEH and s390 blocking MMIO access likely serves the purpose of preventing
-corrupted data being propagated upstream.  AER doesn't support that
-(or at least doesn't mandate that -- certain implementations might
-be capable of blocking poisoned data).
-
-Thus with AER, MMIO access is usually possible already in ->error_detected().
-The only reason why drivers shouldn't be doing that and instead defer
-MMIO access to ->mmio_enabled() is to be compatible with EEH and s390.
-
-There are exceptions to this rule:  E.g. if the Uncorrectable Error
-was "Surprise Down", the link to the device is down and MMIO access
-isn't possible, neither in ->error_detected() nor ->mmio_enabled().
-Drivers should check whether an MMIO read results in an "all ones"
-response (PCI_POSSIBLE_ERROR()), which is usually what the host bridge
-fabricates upon a Completion Timeout caused by the link being down
-and the Endpoint being inaccessible.
-
-(There's a list of all the errors with default severity etc in PCIe r7.0
-sec 6.2.7.)
-
-I believe DPC was added to the PCIe Base Specification to prevent
-propagating corrupted data upstream, similarly to EEH and s390.
-DPC brings down the link immediately upon an Uncorrectable Error
-(the Linux driver confines this to Fatal Errors), but as a side
-effect this results in a Hot Reset being propagated down the
-hierarchy, making it impossible to access the device in the
-faulting state to retrieve debug information etc.  After the link
-has been brought up again, the device is in post-reset state.
-So DPC doesn't allow for reset-less recovery.
-
-With the ordering change introduced by this commit, ->mmio_enabled()
-will no longer be able to access MMIO space in the DPC case because
-the link hasn't been brought back up until ->slot_reset().  But as
-explained in the commit message, I only found two drivers affected
-by this.  One seems to be EEH-specific (drivers/scsi/ipr.c).
-And the other one (drivers/scsi/sym53c8xx_2/sym_glue.c) dumps debug
-registers in ->mmio_enabled() and I'm arguing that with this commit
-it's dumping "all ones", but right now it's dumping the post-reset
-state of the device, which isn't any more useful.
-
-> I think this callback really only makes sense if you have
-> an equivalent to s390's clearing of the error state that enables MMIO
-> but doesn't otherwise reset. Similarly EEH has eeh_pci_enable(pe,
-> EEH_OPT_THAW_MMIO).
-
-Right.
-
-> > @@ -233,6 +228,14 @@ pci_ers_result_t pcie_do_recovery(struct pci_dev *dev,
-> >  		pci_walk_bridge(bridge, report_mmio_enabled, &status);
-> >  	}
-> >  
-> > +	if (status == PCI_ERS_RESULT_NEED_RESET ||
-> > +	    state == pci_channel_io_frozen) {
-> > +		if (reset_subordinates(bridge) != PCI_ERS_RESULT_RECOVERED) {
-> > +			pci_warn(bridge, "subordinate device reset failed\n");
-> > +			goto failed;
-> > +		}
-> > +	}
-> > +
-> >  	if (status == PCI_ERS_RESULT_NEED_RESET) {
-> >  		/*
-> >  		 * TODO: Should call platform-specific
+> You cannot have disabled examples. This also means it could not be
+> checked/tested.
 > 
-> I wonder if it might make sense to merge the reset into the above
-> existing if.
+>> +    };
+> 
+> 
+> Best regards,
+> Krzysztof
 
-There are drivers such as drivers/bus/mhi/host/pci_generic.c which
-return PCI_ERS_RESULT_RECOVERED from ->error_detected().  So they
-fall through directly to the ->resume() stage.  They're doing this
-even in the pci_channel_io_frozen case (i.e. for Fatal Errors).
+OK I'll fix that in both places.  I think I just copied in the
+actual DTS content, but I now understand the problem.
 
-But for DPC we must call reset_subordinates() to bring the link back up.
-And for Fatal Errors, Documentation/PCI/pcieaer-howto.rst suggests that
-we must likewise call it because the link may be unreliable.
+Thanks.
 
-Hence the if-condition must use a boolean OR, i.e.:
-
-	if (status == PCI_ERS_RESULT_NEED_RESET ||
-	    state == pci_channel_io_frozen) {
-
-... whereas if I would move the invocation of reset_subordinates() inside
-the existing "if (status == PCI_ERS_RESULT_NEED_RESET)", it would be
-equivalent to a boolean AND.
-
-I would have to amend drivers such as drivers/bus/mhi/host/pci_generic.c
-to work with the changed logic and I figured that it's simpler to only
-change pcie_do_recovery() rather than touching all affected drivers.
-I don't have any of that hardware and so it seems risky touching all
-those drivers.
-
-> I'm a bit confused by that TODO comment and
-> anyway, it asks for a platform-specific reset to be added bu
-> reset_subordinate() already seems to allow platform specific behavior,
-> so maybe the moved reset should replace the TODO?
-
-Manivannan has a patch pending which removes the TODO:
-
-https://lore.kernel.org/all/20250715-pci-port-reset-v6-1-6f9cce94e7bb@oss.qualcomm.com/
-
-> Also I think for the
-> kind of broken case where the state is pci_channel_io_frozen but the
-> drivers just reports PCI_ERS_RESULT_CAN_RECOVER it looks like there
-> would be a reset but no calls to ->slot_reset().
-
-Right, but that's what AER is currently doing and drivers such as
-drivers/bus/mhi/host/pci_generic.c are written to work with the
-existing flow.
-
-Thanks,
-
-Lukas
+					-Alex
