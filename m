@@ -1,116 +1,105 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0064b401.pphosted.com (mx0a-0064b401.pphosted.com [205.220.166.238])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D0AC2EAD0D;
-	Thu, 14 Aug 2025 09:07:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 690BF2EACE7;
+	Thu, 14 Aug 2025 09:39:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.166.238
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755162458; cv=none; b=tas6mO3ZA3tLpnYP10BhaedqODzEiQejs49esWTvt7yrRcfYcYkeshENuljoHUfBqJ+KIg3ymyyE92+kHXH3/M5tn/18Axu3Rx6zJVQqL9nHPYmrNC/SrQe6ud143fKSLAtzMv0LImSFpJvwVjkPSbzawVGk9mFtPfTtA8qweeg=
+	t=1755164385; cv=none; b=VEA6OtG9dyywdR4IVDsniD3p8dpcnmGf8pv+HCDuOuDOTPdVCfSi5istG0TIqkexL/T3PPHlAztoX+8XiEgr5neZPXPSp7su8dBrmyfxAakqS34lWQ3BRi+t5a9VfubFCg7PVlqTIqJ9mBHxGMncqapztmrnuFoWyWsIrhAR1sE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755162458; c=relaxed/simple;
-	bh=w8hCbPXfmihu7zR72JNGg3vbfSeuvBM7obhn0s4J7IU=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KsgTihtT+eq8SXnymtHhw9hHT8Zg25T9G7R97Isd5tUEygr5UF7zHki3daTGozDYLPyVZrhAwrkyU1jWPOO9hxC0SkLfzprSqpfhT+T8BOMPsYQ9JifkTOxS+79ez3JzQXqEL+BmKbm+9nakEtxGv/DCChmiOkUlxNxLazKw3hQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Xf8P/+q7; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Xf8P/+q7"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-b4717006ea9so75049a12.0;
-        Thu, 14 Aug 2025 02:07:35 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755162455; x=1755767255; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=L58BGBn53CdEaQI/pHX66dG5GkpXtAAIQcYXknidNg4=;
-        b=Xf8P/+q7FP7Sj6wUfRijJLt6MHzwIgFGKK3Hy+/iaRBWNmJuKnEgp6Q4heqzKmy/ns
-         CbI6us6t0QerSP9xU4HCyBAnFO47uXNHXmDTEWFDE4aFl3F5tw1EMXrHhwaSP+Q94Yle
-         hUbYVGt33Rl4FUjof+vKYA3XEAGntJgIiKneoa6py0QbM1xesztFcO0PJlfLO/KPayfk
-         KbzFIZVWKytOYTo70RHDQFLmhTYeuaKaxxOkBZxC70kMplRE79PdCvYuqPa8Hq/oyrDP
-         ieTWI3j8jVmZRD9aRu9AZuZL+UhL997ePMlnNvAUIbatTYk+36efO+YO7O0aq6Vs8DaZ
-         7qxg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755162455; x=1755767255;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=L58BGBn53CdEaQI/pHX66dG5GkpXtAAIQcYXknidNg4=;
-        b=S1DHe7qi75DsfyW67moRz6bTP62osfv4ZupVGK66+/6oRl/PSBBrpxouOA3s0CK+/J
-         eVeuQ1mNW+ATUkgbrOub/RJu5cMNsZuFZI2O2s01GlVIudT15VlPvi31NoSysrV0I/os
-         aVYTDNLR8S3lb7pSeDeQD1Y4n5d82Sb6ASiJ8HH9C+AgCUMz/yZuOQyTSR2XsVIWAvkT
-         1tfHA2IIUyf7STmWmv5VCsH0unkXUZrLNgzaVI/RBKtSQ2XqptqYMHuv1EtcxLTj0nXV
-         Nr3ERjmLyxOCGWQ2sOEZaekqoFppCx2c1336nLoWSXz6WSP4N+InZTmzBoBl5l4qO17R
-         La1w==
-X-Forwarded-Encrypted: i=1; AJvYcCU2AkLqzX62Vycq+X6usAtf/cvgf3AuXGjPMkTI5weB5qRSez+BRbQPp0VwlXAi8l6t6j5XcN6i@vger.kernel.org, AJvYcCUwuph8ybeUT2N+0zvQDwO/H6dav7+g/3s7KdJDGD4tHT73X+tE+FVegC8zuKNl182WSqoaLbPtQjI=@vger.kernel.org, AJvYcCV10rheNuYpNIv9Osg6EBPwerim/bHVHpgLsdwESRLoMhXEXTYw3Io03QZozPaa+nRh+WYL+3hoX80D@vger.kernel.org, AJvYcCVwLNHl+ID6/Mk6+JKZ3yCFOn5nOsH7AfmBmJybSY1PXDzdUTPH/dVuvZ036iQnRjUFqnHiwu3BFaPpDFL6@vger.kernel.org, AJvYcCWU64E2Bp0aS+//LKch0vW1UXHMSEz6PgT8bo77hg7nGHusEgUdCYOp4WqjVpmDmrVSGSl9wQN6LXE8PTZzXhG+@vger.kernel.org, AJvYcCWdbDoZ13ifKjijbNra1QB+3WrB9S7KIM3u7yTRScbvEWDRq5R5A/ySrT9+wgKeLQMo1WtBVxdQAJJwyw==@vger.kernel.org, AJvYcCX445xNq7eU4zuJA/nSWvEm96C59lCZYfvEIUslFz8g4O8hivF2aQ0VWYkKENKl2/90MdduNfdC33C5@vger.kernel.org, AJvYcCXDrwJ8uyybzhIeAp2qlzh0mixgbHHjA9WAqkaFZmBkGgDrf0QyPf6JONV3+Y/HKmq4mupee4IslTmAYfGCXto=@vger.kernel.org, AJvYcCXfV82ubBzNsUdCdy60J2WTzXOtVfNtxdObhOckteiU0awOI7UNKhP/w/7Ds2KXNuiCEi5+9Jtya9bnx1W67A==@vger.kernel.org
-X-Gm-Message-State: AOJu0YypINaXScbYWu7AGqasYGV8fdyR3+x9hPlk+3U2Vr5IEgIvclm8
-	TFzwmHPLFMzEx3AggrVZ99bzcKxt2fjFBRfTRbQewEezlSqj6NnVPkWqnjD/lUMDNgUmSe3GZSF
-	lykirKCdz7P7+z8jZZE+LKaVYuYSSCMf78Th3BwE=
-X-Gm-Gg: ASbGncvc/qynT4YZKqaP9Sy1oQaLptA0kKszFqn87yqjhQVN1bnzA5BpLAQtpKgyJxv
-	DNf6bsK2GhoDrE2MqVcHfNhoyX9mM9xiDFQLIJN6MYP4WIWtzgsaihTxUhWYtMpqW++OdzckXGL
-	arntGWRa5tL8xRO6g7m32YglmVjV7rPn7awFAh53Z28pQXssmWj0nmaGr8wApLqHwNurFUA/gkV
-	f6a
-X-Google-Smtp-Source: AGHT+IGz6bvQQDm0FDjw3b6Z4zK6LWUctdhJrkeBml6MEiQLxKVKVm/2E3KeNDssnbiZd1rTjK+/reiEgrFQf4jGtow=
-X-Received: by 2002:a17:902:ec8d:b0:240:5c13:979a with SMTP id
- d9443c01a7336-2430d22a83dmr44771485ad.9.1755162454741; Thu, 14 Aug 2025
- 02:07:34 -0700 (PDT)
+	s=arc-20240116; t=1755164385; c=relaxed/simple;
+	bh=PphOKgCVg1ij/u5zEePdGoeIcFXzNrvWI/xh76qw4Ec=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=C0lpd5M2j/MHsjH4dAjL1zd6wLG8h/dlLmwWGt7N4W1/pKyF+++pjRf5bzEYIWNqoNHPiDpW4a/UtNceVtRAn7xu9qfxAK0RcAfsDh/ELXaa53oLqkkUTvvUvtBiaYZXk42aV98JrYJ4bkncO6dsKnq2un0AZ0It6E9EEnAghME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com; spf=pass smtp.mailfrom=windriver.com; arc=none smtp.client-ip=205.220.166.238
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=windriver.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=windriver.com
+Received: from pps.filterd (m0250810.ppops.net [127.0.0.1])
+	by mx0a-0064b401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 57E5bOD21474607;
+	Thu, 14 Aug 2025 02:39:41 -0700
+Received: from ala-exchng02.corp.ad.wrs.com ([128.224.246.37])
+	by mx0a-0064b401.pphosted.com (PPS) with ESMTPS id 48fvk22wrk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT);
+	Thu, 14 Aug 2025 02:39:41 -0700 (PDT)
+Received: from ala-exchng01.corp.ad.wrs.com (10.11.224.121) by
+ ALA-EXCHNG02.corp.ad.wrs.com (10.11.224.122) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
+ 15.1.2507.57; Thu, 14 Aug 2025 02:39:35 -0700
+Received: from pek-lpd-ccm6.wrs.com (10.11.232.110) by
+ ala-exchng01.corp.ad.wrs.com (10.11.224.121) with Microsoft SMTP Server id
+ 15.1.2507.57 via Frontend Transport; Thu, 14 Aug 2025 02:39:33 -0700
+From: Rui He <rui.he@windriver.com>
+To: Bjorn Helgaas <bhelgaas@google.com>
+CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <Prashant.Chikhalkar@windriver.com>, <Jiguang.Xiao@windriver.com>,
+        <Rui.He@windriver.com>
+Subject: [PATCH 1/1] pci: Add subordinate check before pci_add_new_bus()
+Date: Thu, 14 Aug 2025 17:39:37 +0800
+Message-ID: <20250814093937.2372441-1-rui.he@windriver.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250813-core-cstr-cstrings-v2-0-00be80fc541b@gmail.com>
- <34d384af-6123-4602-bde0-85ca3d14fe09@sirena.org.uk> <aJ2dST9C8QLUcftA@google.com>
-In-Reply-To: <aJ2dST9C8QLUcftA@google.com>
-From: Miguel Ojeda <miguel.ojeda.sandonis@gmail.com>
-Date: Thu, 14 Aug 2025 11:07:23 +0200
-X-Gm-Features: Ac12FXw9McZU8Dlo3fmof7Lor15J3uB_TM7gEYyMiiYtjURPvTaxggH_LYJAg0o
-Message-ID: <CANiq72nnXG8mzGD5ydu1pMpaBAHTWvfQWSo0w38xefu=1JSURA@mail.gmail.com>
-Subject: Re: [PATCH v2 00/19] rust: replace `kernel::c_str!` with C-Strings
-To: Alice Ryhl <aliceryhl@google.com>
-Cc: Mark Brown <broonie@debian.org>, Tamir Duberstein <tamird@gmail.com>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>, 
-	Miguel Ojeda <ojeda@kernel.org>, Alex Gaynor <alex.gaynor@gmail.com>, 
-	Boqun Feng <boqun.feng@gmail.com>, Gary Guo <gary@garyguo.net>, 
-	=?UTF-8?Q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, 
-	Benno Lossin <lossin@kernel.org>, Andreas Hindborg <a.hindborg@kernel.org>, 
-	Trevor Gross <tmgross@umich.edu>, Danilo Krummrich <dakr@kernel.org>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	FUJITA Tomonori <fujita.tomonori@gmail.com>, Andrew Lunn <andrew@lunn.ch>, 
-	Heiner Kallweit <hkallweit1@gmail.com>, Russell King <linux@armlinux.org.uk>, 
-	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Breno Leitao <leitao@debian.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Luis Chamberlain <mcgrof@kernel.org>, Russ Weight <russ.weight@linux.dev>, 
-	Dave Ertman <david.m.ertman@intel.com>, Ira Weiny <ira.weiny@intel.com>, 
-	Leon Romanovsky <leon@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Arnd Bergmann <arnd@arndb.de>, Brendan Higgins <brendan.higgins@linux.dev>, 
-	David Gow <davidgow@google.com>, Rae Moar <rmoar@google.com>, Jens Axboe <axboe@kernel.dk>, 
-	Alexandre Courbot <acourbot@nvidia.com>, Alexander Viro <viro@zeniv.linux.org.uk>, 
-	Christian Brauner <brauner@kernel.org>, Jan Kara <jack@suse.cz>, Liam Girdwood <lgirdwood@gmail.com>, 
-	linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	rust-for-linux@vger.kernel.org, nouveau@lists.freedesktop.org, 
-	dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, 
-	linux-clk@vger.kernel.org, linux-pci@vger.kernel.org, 
-	linux-kselftest@vger.kernel.org, kunit-dev@googlegroups.com, 
-	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODE0MDA3OSBTYWx0ZWRfXz245HfK7SlOY
+ DDeqLuZe8aAzP2/LDucucVEYobtdYhMd3ZdYyz7oCjkruHC/3PtZDm1XRjMlWbVxldIT8uxyy4R
+ 6eSIZp92YhXiK6VR4/3YTa2ITbplLyoRWudHi6RqRu6sEaWyi16V6y8VlKHCOP9bftyMBzyNBYC
+ eju1Cd+4PaZ6OC0SU1LqPdvVMh5/YBH0NsyDQkuiZDxPzMfSCJ0ENUD5xYxB4pCdvubnlGIXa9q
+ HbwIBT48wGCRqlbTy6UiDzONwOVrQSp9f4hDcpzA6YKt08DhQTbT9nCeDFv6+juZAp7jf0RRQW1
+ YccoViS/EB3nkO1CnYkV/Ye+4ntLR5aEweR+Zk637X48cHAGVd00fw6YWIBuHs=
+X-Proofpoint-ORIG-GUID: opu1I4NEu_CSml5-GNIvxABnQ7SlxkyM
+X-Proofpoint-GUID: opu1I4NEu_CSml5-GNIvxABnQ7SlxkyM
+X-Authority-Analysis: v=2.4 cv=PsOTbxM3 c=1 sm=1 tr=0 ts=689daedd cx=c_pps
+ a=Lg6ja3A245NiLSnFpY5YKQ==:117 a=Lg6ja3A245NiLSnFpY5YKQ==:17
+ a=2OwXVqhp2XgA:10 a=t7CeM3EgAAAA:8 a=KwTOwRFcXMM_fQDvAMoA:9
+ a=FdTzh2GWekK77mhwV6Dw:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-13_02,2025-08-11_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 clxscore=1011 spamscore=0 bulkscore=0 adultscore=0
+ impostorscore=0 malwarescore=0 priorityscore=1501 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2507300000 definitions=firstrun
 
-On Thu, Aug 14, 2025 at 10:24=E2=80=AFAM Alice Ryhl <aliceryhl@google.com> =
-wrote:
->
-> Tamir mentioned to me that he ran into a daily limit on the number of
-> emails he could send.
+For preconfigured PCI bridge, child bus created on the first scan.
+While for some reasons(e.g register mutation), the secondary, and subordiante
+register reset to 0 on the second scan, which caused to create
+PCI bus twice for the same PCI device.
 
-He is posting the updates around the migration in Zulip:
+Following is the related log:
+[Wed May 28 20:38:36 CST 2025] pci 0000:0b:01.0: PCI bridge to [bus 0d]
+[Wed May 28 20:38:36 CST 2025] pci 0000:0b:05.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+[Wed May 28 20:38:36 CST 2025] pci 0000:0b:01.0: PCI bridge to [bus 0e-10]
+[Wed May 28 20:38:36 CST 2025] pci 0000:0b:05.0: PCI bridge to [bus 0f-10]
 
-    https://rust-for-linux.zulipchat.com/#narrow/channel/288089-General/top=
-ic/CStr.20migration/near/527957336
+Here PCI device 000:0b:01.0 assigend to bus 0d and 0e.
 
-Cheers,
-Miguel
+This patch checks if child PCI bus has been created on the second scan
+of bridge. If yes, return directly instead of create a new one.
+
+Signed-off-by: Rui He <rui.he@windriver.com>
+---
+ drivers/pci/probe.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/pci/probe.c b/drivers/pci/probe.c
+index f41128f91ca76..ec67adbf31738 100644
+--- a/drivers/pci/probe.c
++++ b/drivers/pci/probe.c
+@@ -1444,6 +1444,9 @@ static int pci_scan_bridge_extend(struct pci_bus *bus, struct pci_dev *dev,
+ 			goto out;
+ 		}
+ 
++		if(pci_has_subordinate(dev))
++			goto out;
++
+ 		/* Clear errors */
+ 		pci_write_config_word(dev, PCI_STATUS, 0xffff);
+ 
+-- 
+2.43.0
+
