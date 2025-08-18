@@ -1,221 +1,194 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from NAM12-MW2-obe.outbound.protection.outlook.com (mail-mw2nam12on2054.outbound.protection.outlook.com [40.107.244.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0C725FA05
-	for <linux-pci@vger.kernel.org>; Mon, 18 Aug 2025 17:19:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755537560; cv=none; b=HpkLRCVL+pHzr0LgXUTAtWGpdzrOZAmcTrGXiPTwWcGV80hiRVscKid6m2mJZ1IVEQetSCpcX0yW1lTJmmeQEpPJCDUc2yS4ll+zHetrklJ5Gz7+CFuXAbhGEljJkcwbPnV//ALbkYvyexlGGcVbvjyE184OMVSg+ybYGsKcvZc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755537560; c=relaxed/simple;
-	bh=auDcc8POxGdUglYbsUf2KJAYFFjvbXura9oOyvF+Jo8=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=k43fNvUHsJGWdBI8pBKrJsvBDxfSjn+eFBCV9hP6sUdkRvFeYCfJyMw9H1nRb5HwNoVTPl3JM7Iut4uJooZsdA1icXwtHy0Cao8c1/9nmtQjFSQtTvnWYKwmmNkwN5X7yJJu3f+b7/IRImKb+fbiEd6Cf4RHrAnKnlQ/1ST4NhY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=TGnmXPWw; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7072271453;
+	Mon, 18 Aug 2025 17:23:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.244.54
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1755537795; cv=fail; b=u4YuI4z9hOvG8erpLQHi5xt0fsVGr4CoO+8P5ezQbnrirRHRUSmKr+852adO1+vH7jRan0R86SFtmkcgn0vcXI70qObLrTEGYLiDUAP1JLDqggdGsl7M+dgBDpPOoLlRfW71yuKcdqpLHZYbkoqEwFSPBqS5vpfq1Ir6du6xFSo=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1755537795; c=relaxed/simple;
+	bh=BvlHZemIF1A0y8+7UM4zrKDdLwycZ6JaDO2nAoMY+WQ=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=vE8JudefC96TiVXkLYOotjO+pftlK1cI/KTo8IrKC0+7IcvtFyJuz3JWfWbhZuPkkGS3xusRVLogsLk/jHkgA9ElkXcEaUBRJrI2H02GWauYGmHOg9+Tv1BEDzm4MauwSmdGND4DX1zwQl/aYKT/0ak78m7siJxWuwZX5Xo3my8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=RWv1V1YX; arc=fail smtp.client-ip=40.107.244.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="TGnmXPWw"
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250818171916epoutp03df3dc46789c619faaf8589aef1152c3a~c7BtFWr4o2183621836epoutp03K
-	for <linux-pci@vger.kernel.org>; Mon, 18 Aug 2025 17:19:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250818171916epoutp03df3dc46789c619faaf8589aef1152c3a~c7BtFWr4o2183621836epoutp03K
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1755537556;
-	bh=RP2yA5MEhaqxhoH+gVDmsv00FKB2mOwlfQHcTXbYEOE=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=TGnmXPWwB5xXV9w1wRLWryg35S4Xw2TeqlANsWJUrT6M/NLqnOEFlb2BCMSPIKQSs
-	 gWUHGswOGwzpX81YAyrEcQXOtfd4zr+asG7jDVuIhR2qdajhH2EtW4cW31D5oP0IXt
-	 KaKuOYCtEoS1sOhVKN4ihMhNAeiJks79pdclQrrg=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20250818171915epcas5p3fda06f50b251c0e3ea18d58c37f0d1af~c7BsVktPW0774307743epcas5p3t;
-	Mon, 18 Aug 2025 17:19:15 +0000 (GMT)
-Received: from epcas5p1.samsung.com (unknown [182.195.38.92]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4c5KFZ6Nmgz3hhT3; Mon, 18 Aug
-	2025 17:19:14 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
-	20250818093004epcas5p4c46fe2d6fc7c91374cf77db02bf234cb~c0oCDGq7H2540125401epcas5p49;
-	Mon, 18 Aug 2025 09:30:04 +0000 (GMT)
-Received: from FDSFTE462 (unknown [107.122.81.248]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250818093001epsmtip194aa4c1a2b5b3c72a857795443a3da04~c0n-VJYuJ2375823758epsmtip1C;
-	Mon, 18 Aug 2025 09:30:01 +0000 (GMT)
-From: "Shradha Todi" <shradha.t@samsung.com>
-To: "'Bjorn Helgaas'" <helgaas@kernel.org>
-Cc: <linux-pci@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-samsung-soc@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-	<mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-	<robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-	<krzk+dt@kernel.org>, <conor+dt@kernel.org>, <alim.akhtar@samsung.com>,
-	<vkoul@kernel.org>, <kishon@kernel.org>, <arnd@arndb.de>,
-	<m.szyprowski@samsung.com>, <jh80.chung@samsung.com>,
-	<pankaj.dubey@samsung.com>
-In-Reply-To: <20250813230744.GA299971@bhelgaas>
-Subject: RE: [PATCH v3 11/12] PCI: exynos: Add support for Tesla FSD SoC
-Date: Mon, 18 Aug 2025 15:00:00 +0530
-Message-ID: <000d01dc1022$ad8c0740$08a415c0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="RWv1V1YX"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=O2xU2lQMenqoRmpLpUNH84N8SfiZJtlYKF81kId7+Hlfj/qJkN/7WX1YX3q99ItamCbcPD0Qg9OrBOh1PzikZfT9YNIHE5scfFPZKuC0mE8dgxymAftQUqUqLlZet0+3z3hrLedPQXD+obcMDvYE48UD3/l2NIZm+79SB4L5bjmj86SHvDRJiFkkScoHVSkqWvB9MHKl0OSeBUPU+yZEk2/qy5KG4D6yjf+bFxzLXwituj9xIY4xlZXqZeefQ5Xdp3zCDJt5c4yp487XemKUDcr1E/2ZqcS81HE4vfplfufuunfBsyPmkyPxLCZvHs7xHkrgZfoLh/oGAdle5P1uPg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=hQ/1GKX7I9jcaqtpEj47wb1wdwU57Htk1dbDHuUN1RM=;
+ b=wJjKqxcPJipfsDm4BLUL6DqD9FDHRq8X8enb6sTgpgpI+2E7607LwKi0KMTjDJbX2zNRvU92QQkN9iasacUWmeHJ1a5jENtP3/jIUzW/NpjWGAT+Bi3Seg7/TYDAL/YolPClnB4fgQyRbVsBTKVJn/K1rRunWNkHiGXTiGx70qqlDgZ4m1/Ns9+HdZt5WlNHAGx3XnPJrgl5XvftxRG/bpRlLCxYwuxNe21GsFKvmPk7Rp3IRosrbjTK3eP0xvWu4Eta1yyH74ASG5aAjhf4Dp+/uvE6uWd/XUPA0GpSiLme5Lu6NSNnOJSEw0ccDyhprgdl+x2vIf9FMPI4+UxNew==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
+ 216.228.118.233) smtp.rcpttodomain=lists.linux.dev smtp.mailfrom=nvidia.com;
+ dmarc=pass (p=reject sp=reject pct=100) action=none header.from=nvidia.com;
+ dkim=none (message not signed); arc=none (0)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=hQ/1GKX7I9jcaqtpEj47wb1wdwU57Htk1dbDHuUN1RM=;
+ b=RWv1V1YXdlePE1FFsxbPsY9pMzbVpGBU5n/1NCj6IjITe1dzPVvOk+rB1jkgRfjbtuQn9rf++dNAYtyttph6iV0gExTa3qF85s5hv8ZYH0kOK0tUfQOy///0KGhSENjVC4NbxZDA95q83rLhpAMB6HfOnF0sfn767y/EohLPtvft6XFVsdsxKx5VXy7aVz2uNxNvDjqkNPfMTEw0Mv2GZumfXTXrjPm7eoVli3TZWWsFe8qlO+HhjMrYf0j7GSpkMenhHcRdk5+u5lsOTQHmhegxNiMkIi7Y/x1cZxb4sHGx+mMPOwSQcSrCANVtlpLUD4eaaVYJ8FM1E/Iy1gIqvg==
+Received: from BL1P223CA0014.NAMP223.PROD.OUTLOOK.COM (2603:10b6:208:2c4::19)
+ by BL1PR12MB5996.namprd12.prod.outlook.com (2603:10b6:208:39c::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.23; Mon, 18 Aug
+ 2025 17:23:09 +0000
+Received: from MN1PEPF0000ECD5.namprd02.prod.outlook.com
+ (2603:10b6:208:2c4:cafe::52) by BL1P223CA0014.outlook.office365.com
+ (2603:10b6:208:2c4::19) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9031.20 via Frontend Transport; Mon,
+ 18 Aug 2025 17:23:09 +0000
+X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 216.228.118.233)
+ smtp.mailfrom=nvidia.com; dkim=none (message not signed)
+ header.d=none;dmarc=pass action=none header.from=nvidia.com;
+Received-SPF: Pass (protection.outlook.com: domain of nvidia.com designates
+ 216.228.118.233 as permitted sender) receiver=protection.outlook.com;
+ client-ip=216.228.118.233; helo=mail.nvidia.com; pr=C
+Received: from mail.nvidia.com (216.228.118.233) by
+ MN1PEPF0000ECD5.mail.protection.outlook.com (10.167.242.133) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9052.8 via Frontend Transport; Mon, 18 Aug 2025 17:23:09 +0000
+Received: from drhqmail203.nvidia.com (10.126.190.182) by mail.nvidia.com
+ (10.127.129.6) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14; Mon, 18 Aug
+ 2025 10:22:55 -0700
+Received: from drhqmail201.nvidia.com (10.126.190.180) by
+ drhqmail203.nvidia.com (10.126.190.182) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.14; Mon, 18 Aug 2025 10:22:55 -0700
+Received: from Asurada-Nvidia (10.127.8.12) by mail.nvidia.com
+ (10.126.190.180) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.14 via Frontend
+ Transport; Mon, 18 Aug 2025 10:22:53 -0700
+Date: Mon, 18 Aug 2025 10:22:52 -0700
+From: Nicolin Chen <nicolinc@nvidia.com>
+To: Jason Gunthorpe <jgg@nvidia.com>
+CC: <robin.murphy@arm.com>, <joro@8bytes.org>, <bhelgaas@google.com>,
+	<will@kernel.org>, <robin.clark@oss.qualcomm.com>, <yong.wu@mediatek.com>,
+	<matthias.bgg@gmail.com>, <angelogioacchino.delregno@collabora.com>,
+	<thierry.reding@gmail.com>, <vdumpa@nvidia.com>, <jonathanh@nvidia.com>,
+	<rafael@kernel.org>, <lenb@kernel.org>, <kevin.tian@intel.com>,
+	<yi.l.liu@intel.com>, <baolu.lu@linux.intel.com>,
+	<linux-arm-kernel@lists.infradead.org>, <iommu@lists.linux.dev>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>,
+	<linux-mediatek@lists.infradead.org>, <linux-tegra@vger.kernel.org>,
+	<linux-acpi@vger.kernel.org>, <linux-pci@vger.kernel.org>,
+	<patches@lists.linux.dev>, <pjaroszynski@nvidia.com>, <vsethi@nvidia.com>,
+	<helgaas@kernel.org>, <etzhao1900@gmail.com>
+Subject: Re: [PATCH v3 3/5] iommu: Add iommu_get_domain_for_dev_locked()
+ helper
+Message-ID: <aKNhIr08fK+xIYcg@Asurada-Nvidia>
+References: <cover.1754952762.git.nicolinc@nvidia.com>
+ <a69557026b7e2353bae67104bbe6a88f0682305e.1754952762.git.nicolinc@nvidia.com>
+ <20250818143949.GO802098@nvidia.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQHOko1UmKBgSR8l8U+0sy0UMlp1MAHKE5YvtHTNStA=
-Content-Language: en-in
-X-CMS-MailID: 20250818093004epcas5p4c46fe2d6fc7c91374cf77db02bf234cb
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-541,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250813230750epcas5p2101d8bb07332cde1beabe70ca6227aca
-References: <CGME20250813230750epcas5p2101d8bb07332cde1beabe70ca6227aca@epcas5p2.samsung.com>
-	<20250813230744.GA299971@bhelgaas>
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20250818143949.GO802098@nvidia.com>
+X-NV-OnPremToCloud: ExternallySecured
+X-EOPAttributedMessage: 0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN1PEPF0000ECD5:EE_|BL1PR12MB5996:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2cad0fd6-25d6-42ef-cca1-08ddde7be731
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|7416014|376014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?tDalc923Lh4Zk2pnvFZNIhqkaLGYpx+VeftIXcKV/HUvqh7Z6fXpGFy0E4GX?=
+ =?us-ascii?Q?6FvQ4N+ysC02DzkMKu9ZM6WprVtdx6dJCniTUSg1fiw16QSeGv259m+cwzY3?=
+ =?us-ascii?Q?eFf7cuZPj5WUmy+9SPEcn9WyPwE8CM7bPRrfG9n9Bxsf8LikbZScGdtBBHJX?=
+ =?us-ascii?Q?Chk2zHK8Tf9ZrkOcWV62ciur8P/3vRwC+5/l38g4TUC5AyANi9gV0ye+Wz0s?=
+ =?us-ascii?Q?yoeumB4irDWj7OZSn9o3zaVhdrlf8d78PLTRGLkrKmIAXQJTkj1JhB9qzNuj?=
+ =?us-ascii?Q?7UM8/lSLxD9sXOR9Yaoags2lFwFpGbgjPTp+8FNjzECPEeslRsdwjel7NkI8?=
+ =?us-ascii?Q?qqN2VaFRLbqsaHe1iLszPlRLQzJ5pxbUdCqXeS2TVzk0O87WiWYiGikaG9lW?=
+ =?us-ascii?Q?G7G5tyhm6gHAIG62erqOYlv1Xwy2KFe3w3NXMBmlsbF3Txj4MlsQSjf4qilD?=
+ =?us-ascii?Q?ajxyBf6xdncrX9h9EbBGt+LjYgRiE3nmlheR/XvAXv06PspQZyXY9di1q/nM?=
+ =?us-ascii?Q?bD0VsbQvbLhBimNIrEX1WKmTaakYeKsLBR7hJQTKbG1bdkBuy4h8NuZMfbXq?=
+ =?us-ascii?Q?mhL/3VnzIv3cYeqiXBBCBmKkJSGuipgluCf8r6OhcvB2lmjSFYe6bzpkvwX6?=
+ =?us-ascii?Q?HLdMAiFEbrMEqfVA33iPcOtMQkuoc9Ny09M/fOfRjpiUPhSRDXCfFFnZC7O5?=
+ =?us-ascii?Q?5YOhdOqQptuuoqW7O3iyCooPdzj8yRSWvlGoC4OvGkxejDdI4hwq37g3uCgX?=
+ =?us-ascii?Q?C73iWyi16e+k729JGjlxX6Rpiu0E1wkcrO9VwVdFmCjMvKxtDt/P3CmpHqO/?=
+ =?us-ascii?Q?i95AU1UbRwR4hOs8gGEgZMlfeIWviOrqqXqaCTwUr/8fFn4EODTitTNkAmmF?=
+ =?us-ascii?Q?tyFhvNdPJ16Lv9AuRRyF0j9bVORVO6ioH/qLTt+wVeuHCNt2NNjE8x4zp6/s?=
+ =?us-ascii?Q?qi1wNyf9f9Qe25f3iCQ2RvUyuViZuSqqYurAjGpKxrwiLsctuTPLur5GOfHh?=
+ =?us-ascii?Q?R96jjF6gTYRReY5QiFYIlMURlBRt+odsnKhhgb//uHszmtiWNyQF/6RdhMee?=
+ =?us-ascii?Q?k0sgfpp0IGK7IznYhjVrfe5ExBYu/Jh+7dbg4ZCrS71K/MEBaGCypWgAqbLV?=
+ =?us-ascii?Q?yTrLS2hgCEL03fJ8a3jESHp4Vi+mJ3oF6JPffw2nkvz0NxSsYOKmgR2YULPi?=
+ =?us-ascii?Q?crcqSRFFmFxPkDtlt7mE5VvKB8EkDw/A/g6RT4MUGNKM5Ku+MV0oWfVD8+1O?=
+ =?us-ascii?Q?5HzanDpKAJL1mCyg9ROsODR8KVS6iFvMFK6jop5iHgNtj0Vrv3kiYQUROpvw?=
+ =?us-ascii?Q?epN+TnDsh1nsfRqSqq47zKfTOnHsifAcFCiIWY1yn777uYLV5VEn2qpGdcuE?=
+ =?us-ascii?Q?K9XpiN9VNNl5FX+XS8ziFlCCRQre4FkKSIavbck5GkgvNzhmskvr/AbU18br?=
+ =?us-ascii?Q?rGx7k8gT2TQPptw7uBztkoerKcd/S0o5NgzziDV1x0oCqICBUygzGpqU9FwD?=
+ =?us-ascii?Q?zEWJ6OjEJ7zLl1UkxTse/IoGfC2tlftPCCvi?=
+X-Forefront-Antispam-Report:
+	CIP:216.228.118.233;CTRY:US;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:mail.nvidia.com;PTR:dc7edge2.nvidia.com;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(7416014)(376014);DIR:OUT;SFP:1101;
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 18 Aug 2025 17:23:09.5831
+ (UTC)
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2cad0fd6-25d6-42ef-cca1-08ddde7be731
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=43083d15-7273-40c1-b7db-39efd9ccc17a;Ip=[216.228.118.233];Helo=[mail.nvidia.com]
+X-MS-Exchange-CrossTenant-AuthSource:
+	MN1PEPF0000ECD5.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Anonymous
+X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5996
 
-> On Mon, Aug 11, 2025 at 09:16:37PM +0530, Shradha Todi wrote:
-> > Add host and endpoint controller driver support for FSD SoC.
+On Mon, Aug 18, 2025 at 11:39:49AM -0300, Jason Gunthorpe wrote:
+> On Mon, Aug 11, 2025 at 03:59:10PM -0700, Nicolin Chen wrote:
 > 
-> I think this might be easier if you added host mode first, then added
-> endpoint mode with a separate patch.
+> > Introduce a new iommu_get_domain_for_dev_locked() helper to be used by
+> > those drivers in a context that is already under the protection of the
+> > group->mutex, e.g. those attach_dev callback functions. And roll out the
+> > new helper to all the existing IOMMU drivers.
 > 
+> I still don't much care for this, I think it would be better to
+> approach this problem by passing the old domain to the driver callback:
 
-Will do.
+Hmm, that was my first attempt before making this patch until...
 
-> It's kind of unfortunate that the driver uses "ep" everywhere for
-> struct exynos_pcie pointers.  It's going to be confusing because "ep"
-> is also commonly used for endpoint-related things, e.g., struct
-> dw_pcie_ep pointers.  Maybe it's not worth changing; I dunno.
+> > @@ -390,7 +390,7 @@ static int qcom_iommu_attach_dev(struct iommu_domain *domain, struct device *dev
+> >  static int qcom_iommu_identity_attach(struct iommu_domain *identity_domain,
+> >  				      struct device *dev)
+> >  {
+> > -	struct iommu_domain *domain = iommu_get_domain_for_dev(dev);
+> > +	struct iommu_domain *domain = iommu_get_domain_for_dev_locked(dev);
 > 
+> Because this is a very common pattern in drivers.
+> 
+> Once that is done we can see what calls to iommu_get_domain_for_dev()
+> are even left,
 
-I did try to rename the structure and the pointers 
-(https://lore.kernel.org/all/20230214121333.1837-9-shradha.t@samsung.com/)
-But the intention was different back then and so the idea was rejected.
-I could add a patch to only rename the pointers to something less
-confusing like "exy_pci"
+... I found that in SMMUv3 driver, iommu_get_domain_for_dev() is
+used to get the RID domain for an SVA domain:
+    arm_smmu_set_pasid()
+    arm_smmu_blocking_set_dev_pasid()
 
-> > +static irqreturn_t fsd_pcie_irq_handler(int irq, void *arg)
-> > +{
-> > +	u32 val;
-> > +	struct exynos_pcie *ep = arg;
-> > +	struct dw_pcie *pci = &ep->pci;
-> > +	struct dw_pcie_rp *pp = &pci->pp;
-> > +
-> > +	val = readl(ep->elbi_base + FSD_IRQ2_STS);
-> > +	if ((val & FSD_IRQ_MSI_ENABLE) == FSD_IRQ_MSI_ENABLE) {
-> > +		val &= FSD_IRQ_MSI_ENABLE;
-> > +		writel(val, ep->elbi_base + FSD_IRQ2_STS);
-> 
-> This looks weird because FSD_IRQ_MSI_ENABLE sounds like an *enable*
-> bit, but here you're treating it as a *status* bit.
-> 
-> As far as I can tell, you set FSD_IRQ_MSI_ENABLE once at probe-time in
-> fsd_pcie_msi_init(), then you clear it here in an IRQ handler, and it
-> will never be set again.  That seems wrong; am I missing something?
-> 
+These two are already given an "old" (SVA) domain pointer, FWIW.
 
-Actually the status IRQ and enable IRQ registers are different offsets
-but the bit position for MSI remains same in both cases so I just reused
-the macro. But I understand that it's confusing so I will add another
-macro for FSD_IRQ_MSI_STATUS or just rename the macro to
-FSD_IRQ_MSI to re-use.
+So, we may change to passing in the old domain as you suggested,
+yet we still have to fix the iommu_get_domain_for_dev() in order
+to reflect the RID domain correctly for the driver that calls it
+(or even potentially) in some group->mutex locked context where
+the RID domain might not be naturally passed in.
 
-> > +		dw_handle_msi_irq(pp);
-> > +	}
-> > +
-> > +	return IRQ_HANDLED;
-> > +}
-> > +
-> > +static void fsd_pcie_msi_init(struct exynos_pcie *ep)
-> > +{
-> > +	int val;
-> > +
-> > +	val = readl(ep->elbi_base + FSD_IRQ2_EN);
-> > +	val |= FSD_IRQ_MSI_ENABLE;
-> > +	writel(val, ep->elbi_base + FSD_IRQ2_EN);
-> > +}
-> > +
-> > +static void __iomem *fsd_atu_setting(struct dw_pcie *pci, void __iomem *base)
-> 
-> The "setting" name suggests that this merely returns an address
-> without side effects, but in fact it actively *sets* the view.
-> 
-> In this case there's no locking around:
-> 
->   addr = fsd_atu_setting(pci, base);
->   dw_pcie_read(addr + reg, size, &val);
-> 
-> even though concurrent calls would cause issues, but I think that's OK
-> because we only get there via the driver, and I assume multiple DBI or
-> DBI2 accesses never happen because they're not used in asynchronous
-> paths like interrupt handlers.
-> 
+> arguably we should be trying to eliminate this badly
+> locked thing...
 
-Yes, there is no concurrent access to this function and hence I have
-not added locking mechanism.
+Any suggestion?
 
-> But I think a name that hints at the fact that this does have side
-> effects would be helpful as a reminder in the callers that they must
-> not be used concurrently.
-> 
+I see it inevitable that such an iommu specific flag per-device
+would have to take the lock..
 
-Sure, I will change the name and also add comment as a reminder.
-
-> > +static const struct pci_epc_features fsd_pcie_epc_features = {
-> > +	.linkup_notifier = false,
-> > +	.msi_capable = true,
-> > +	.msix_capable = false,
-> 
-> I think we should omit features we do *not* support instead of calling
-> them out explicitly, e.g., we don't need .linkup_notifier or
-> .msix_capable.
-> 
-> We've added them in the past, but they're unnecessary and they lead to
-> either pervasive changes (adding ".new_feature = false" to all
-> existing drivers when adding the feature) or inconsistency (new
-> drivers include ".new_feature = false" but existing drivers do not).
-> 
-
-Will remove
-
-> > +	if (ep->pdata->soc_variant == FSD) {
-> > +		ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(36));
-> > +		if (ret)
-> > +			return ret;
-> > +
-> > +		ep->sysreg = syscon_regmap_lookup_by_phandle(dev->of_node,
-> > +				"samsung,syscon-pcie");
-> > +		if (IS_ERR(ep->sysreg)) {
-> > +			dev_err(dev, "sysreg regmap lookup failed.\n");
-> > +			return PTR_ERR(ep->sysreg);
-> > +		}
-> > +
-> > +		ret = of_property_read_u32_index(dev->of_node, "samsung,syscon-pcie", 1,
-> > +						 &ep->sysreg_offset);
-> > +		if (ret) {
-> > +			dev_err(dev, "couldn't get the register offset for syscon!\n");
-> > +			return ret;
-> > +		}
-> > +	}
-> 
-> This is a good example of a complicated set of things where I think
-> you should either add a SoC-specific function pointer to do this or
-> test a property, e.g., "DMA width", instead of testing for a specific
-> SoC.
-> 
-
-Got your point and it makes sense. In future, other drivers could also
-want to set DMA width, etc. Will make properties to replace soc_variant:
- - DMA_width
- - has_syscon
- - function pointer to assert_core_reset and deassert_core_reset
-
-Any suggestions or is this approach okay?
-
--Shradha
-
+Thanks
+Nicolin
