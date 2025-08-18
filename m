@@ -1,111 +1,90 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EE3F322C93;
-	Mon, 18 Aug 2025 16:06:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 0CC74322546;
+	Mon, 18 Aug 2025 16:15:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755533208; cv=none; b=niozqpDCejFzGV7iFhgkshWe1SDqCJtSEot8Ca2vq3FkKE9PVt2uX+7bhJHc2sPiUyulhXGLeMQD5SP0vq4kce5X8vjCFRfNJwS09zBOdSkzYPr8864X26GvlIxeDVY7WjdtJfuXvQmOIthK5RTjbMBx4uR7RFzwtvXt+Rmm/rk=
+	t=1755533722; cv=none; b=kQiIZQk8wwr0FrHEjd6ASrBEz8O6t5W+vrSBEpFb2y+blug1MkEpImkCjMiq+8L2sAqk4cnbp3QRFlbwLVQOACUE6MNGzG4syO+QPCIcC8b1k0Qo2ZcmJWLc/qlHciDkKaOAqKLl7h8XFKzrNwkxkny0oj3S7n7RhLHPo8qPS9U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755533208; c=relaxed/simple;
-	bh=8v0DGj5nN7LXQV4s3kH37ZEpxqadMxuWtRA9XKaDv9Y=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=mKbauO4SyZTHlp4sCByrIhm+FUZV2ttSWKNFYiJ28SnvKii5fEYgetITU+5Svzh2KcBH51T958RPJNhJRNO3bopG8Z5Hv1j6VL5Wdmv0XkQdaHNScSYWDLi8VhQY7DcvNxrTrHFjumjPgPUH/tt1mAIEeQHbLc+QwGiYnlwmsqE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nLhkO/I5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755533722; c=relaxed/simple;
+	bh=9Ud/LeNIcKwL0efzQzPowgMKrjbEYWLDeh1PO30vwtM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=UL2IyCm5OmKuP6oOu7NpOoGeQXHU+U1c+8XW0q7trnNfct2iDNNKaM1dXus12uoulGbCQLLcuuve/hbOQKtOL9bJ/Mts0ns5I5oBIgfpCCfeCNxIMo/2SMkr7wWWhap1N5t9gYP38oI2DovWuvTtW5VxKdZ6e4W4Z1NNWEs12cE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=nyVfvql5; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nLhkO/I5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06318C4CEEB;
-	Mon, 18 Aug 2025 16:06:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755533208;
-	bh=8v0DGj5nN7LXQV4s3kH37ZEpxqadMxuWtRA9XKaDv9Y=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=nLhkO/I5LOKz8LcXkJw6s406OXNSXyb2a8ICLRCrn0YxIbTmVUchl9L0VOnJ1hNzm
-	 h+UKxqH0PksQediircWskG1IV4nc3tC4Tiq4BRaP9Tvjg0OeTS0o4M4zg5HcNNp5el
-	 chwhjTzmvI//dfy5Y1A+B41xCDfte+A6e+4ZXH8JzMTLmI4PeWMWms3UvQsSrt+y36
-	 33dFrnFPfHFZiAHxD5NVSVt+sQCfUjJNcLOo1ChgIuHgJdaqVXo2oXSe3VmZKgbVEw
-	 SGqBH9NzwKYyGE/DWsLuRBEqnkmKRvE5bBj4HNMszv9S/0UdGUGbU8TZi/rQQGYQQk
-	 DMdojNV4K+e2w==
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="nyVfvql5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=3V
+	QIEWJRrZqUWBIlYJxpy6ioV+MlB2SKV2d469TV62M=; b=nyVfvql5VzH3VYcRvZ
+	HkByrzNJt+wvtJLajSfmebqiaWrMCh+O1OhoMshxkui7bwmRW8C37rdAdQLG3CHc
+	ErE9jMHHVtQZRysrgFi4w0XpKv4u7/H7j/zL1I9HXRHnrkW6V/t4B+axJGkompxS
+	bdlMw+1Tx6z08riI6+hCCouAg=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wD3b8FtUaNopYAWCw--.8667S3;
+	Tue, 19 Aug 2025 00:14:41 +0800 (CST)
+From: Hans Zhang <18255117159@163.com>
+To: mahesh@linux.ibm.com,
+	bhelgaas@google.com
+Cc: oohall@gmail.com,
+	mani@kernel.org,
+	lukas@wunner.de,
+	linuxppc-dev@lists.ozlabs.org,
+	linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Hans Zhang <18255117159@163.com>
+Subject: [PATCH v4 1/2] PCI: Introduce pci_clear/set_config_dword()
+Date: Tue, 19 Aug 2025 00:14:30 +0800
+Message-Id: <20250818161431.372590-2-18255117159@163.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250818161431.372590-1-18255117159@163.com>
+References: <20250818161431.372590-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Mon, 18 Aug 2025 18:06:42 +0200
-Message-Id: <DC5OKZHPTDWC.L6YD327Z0WJN@kernel.org>
-Subject: Re: [PATCH v2 3/3] rust: pci: provide access to PCI Vendor values
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, "Joel Fernandes"
- <joelagnelf@nvidia.com>, "Timur Tabi" <ttabi@nvidia.com>, "Alistair Popple"
- <apopple@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Boqun
- Feng" <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>,
- <nouveau@lists.freedesktop.org>, <linux-pci@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, "LKML" <linux-kernel@vger.kernel.org>
-To: "John Hubbard" <jhubbard@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20250818013305.1089446-1-jhubbard@nvidia.com>
- <20250818013305.1089446-4-jhubbard@nvidia.com>
-In-Reply-To: <20250818013305.1089446-4-jhubbard@nvidia.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wD3b8FtUaNopYAWCw--.8667S3
+X-Coremail-Antispam: 1Uf129KBjvJXoWrKw4rWrWxKrWxAFykCry7Awb_yoW8Jr15pF
+	Z8CFyfGFyxGFnIk3WDXay8Aw18WrWkXFWIgrW3K3s8ZFW2ya4vvF909r17Jwn3GrWvvr45
+	A393KFZY9r4qya7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pR5rcfUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWw6to2ijSyq4ngAAsX
 
-On Mon Aug 18, 2025 at 3:33 AM CEST, John Hubbard wrote:
-> +            /// Create a `Vendor` from the raw vendor ID value, or `None=
-` if the value doesn't
-> +            /// match any known vendor.
-> +            pub fn from_u32(value: u32) -> Option<Self> {
-> +                match value {
-> +                    $(x if x =3D=3D Self::$variant.0 =3D> Some(Self::$va=
-riant),)+
-> +                    _ =3D> None,
-> +                }
-> +            }
+Add helper functions to clear or set bits in PCI config space.
+These helpers reduce code duplication and improve readability for config
+space modifications by encapsulating common read-modify-write patterns.
 
-Same here, I think this should be `impl TryFrom<u32> for Vendor`.
+Signed-off-by: Hans Zhang <18255117159@163.com>
+---
+ include/linux/pci.h | 12 ++++++++++++
+ 1 file changed, 12 insertions(+)
 
-> +
-> +            /// Get the raw 16-bit vendor ID value.
-> +            pub const fn as_u32(self) -> u32 {
-> +                self.0
-> +            }
-> +        }
-> +    };
-> +}
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 59876de13860..bb0dba2b7aee 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1341,6 +1341,18 @@ static inline int pcie_capability_clear_dword(struct pci_dev *dev, int pos,
+ 	return pcie_capability_clear_and_set_dword(dev, pos, clear, 0);
+ }
+ 
++static inline void pci_clear_config_dword(const struct pci_dev *dev, int pos,
++					  u32 clear)
++{
++	pci_clear_and_set_config_dword(dev, pos, clear, 0);
++}
++
++static inline void pci_set_config_dword(const struct pci_dev *dev, int pos,
++					u32 set)
++{
++	pci_clear_and_set_config_dword(dev, pos, 0, set);
++}
++
+ /* User-space driven config access */
+ int pci_user_read_config_byte(struct pci_dev *dev, int where, u8 *val);
+ int pci_user_read_config_word(struct pci_dev *dev, int where, u16 *val);
+-- 
+2.25.1
 
->  /// An adapter for the registration of PCI drivers.
->  pub struct Adapter<T: Driver>(T);
-> =20
-> @@ -335,9 +656,9 @@ pub const fn from_class(class: u32, class_mask: u32) =
--> Self {
->      ///
->      /// This is more targeted than [`DeviceId::from_class`]: in addition=
- to matching by Vendor, it
->      /// also matches the PCI Class (up to the entire 24 bits, depending =
-on the mask).
-> -    pub const fn from_class_and_vendor(class: Class, class_mask: u32, ve=
-ndor: u32) -> Self {
-> +    pub const fn from_class_and_vendor(class: Class, class_mask: u32, ve=
-ndor: Vendor) -> Self {
->          Self(bindings::pci_device_id {
-> -            vendor,
-> +            vendor: vendor.as_u32(),
->              device: DeviceId::PCI_ANY_ID,
->              subvendor: DeviceId::PCI_ANY_ID,
->              subdevice: DeviceId::PCI_ANY_ID,
-> @@ -396,7 +717,7 @@ macro_rules! pci_device_table {
->  ///     <MyDriver as pci::Driver>::IdInfo,
->  ///     [
->  ///         (
-> -///             pci::DeviceId::from_id(bindings::PCI_VENDOR_ID_REDHAT, b=
-indings::PCI_ANY_ID as u32),
-> +///             pci::DeviceId::from_id(pci::Vendor::REDHAT.as_u32(), bin=
-dings::PCI_ANY_ID as u32),
-
-We should change DeviceId::from_id() to consume a pci::Vendor value directl=
-y.
