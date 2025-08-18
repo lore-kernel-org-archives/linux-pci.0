@@ -1,118 +1,113 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f44.google.com (mail-wr1-f44.google.com [209.85.221.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6335E212575;
-	Mon, 18 Aug 2025 09:35:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D2BF258EFD
+	for <linux-pci@vger.kernel.org>; Mon, 18 Aug 2025 10:50:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755509710; cv=none; b=E8lLtfkuAw2N2JfCDt+ivJ7QXga+9H7U6mcGi4vRcs2HeT9HY3yPYTYomOIrEzu1SMC2qBcI4xg94Iv+V+stUon/DHaSp732N6FAxctKGRZlNOiFyEKmrhOEzD8EwjIglPtwjtU7qxxa7RGqcdSm8xCxT5gOgL9z3V/9lNkRI0I=
+	t=1755514260; cv=none; b=gNeBuRcqfXkiSLubDK4fk7PPG0G7k5nf8RZPGH4aJl5KlHt9L0WLeYbZF/bcj8CDNWrnUnTyGjkGNg/ARTvJoB8zl7REqfWajZ62UNjrj9N+GoU62/5pXSHqgpqrsRR4af11A8aA0v1Mt7+nTXQHXP5ez0Hp28D6ROsBejfX8mo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755509710; c=relaxed/simple;
-	bh=rNwl2lgK/CJRrcZxa4Dc+9tNcynpL7lokinB7iQZH/k=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fdAUO4t4C5QlrBcNbuC20IE+pM25odpgwWAIVBmieSqybMtFHxvp4eGbTKDQNHgSF6US6E1PT3zNSFNe4teEcnU7cvp/3KrjefRMc/S0BHWUijSX8c2B66dPd8malFuya2+K4rEqdWqy0iyfPtY2OTFnepYr1fS5L6QFtKHXe3Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EUSdn8u/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755514260; c=relaxed/simple;
+	bh=pZ28X6C6V+lht1om+EThDAP4EVsl4TPoXoYx+3BdCx4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=NmvPWdEW/tG2fsavRj6QCjMJgseszdj77brKxdhBhrbEKQI1Ldz4+BJ/GriZ9m0TJlFDEN7BQBiWYzJas+dPm0ce2hFDBuJN2xYkXp8Jm1jt7d8MdEJA/EyxzjRSRxRocFy0VShRPrYHfZwpQGW59AHOkWpoo6nVVYvGJQy1tzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=EwIW1kBT; arc=none smtp.client-ip=209.85.221.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EUSdn8u/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18C72C4CEED;
-	Mon, 18 Aug 2025 09:35:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755509708;
-	bh=rNwl2lgK/CJRrcZxa4Dc+9tNcynpL7lokinB7iQZH/k=;
-	h=From:To:Cc:Subject:Date:From;
-	b=EUSdn8u/CKDv5sEvNbKKfsSPPyNCNZXgK1/tMS4lVGj3TNP2Hyf5wH6wMb1fNzqZU
-	 Mr50wKLqNY+GFITkdAcv28XOZ/+Jd+a8GbFo2uZjmOoTfEww6aWT0OLC9ehdu8Izig
-	 uZUslazQneIgjD4PYlarMWMzyyWdwQkmGmaz6ksLA+Pn6rR2wiL8eZUEDukKliDBcE
-	 +aWKBf+O5UwatQ7uAAP/djOWL8AwssmSFwRhjqB1R+YtrlEr/QNP86VCR3FxkP2q2X
-	 Wy+J/sMmltb0+pPNFibvQfeaaiROGbvWWQw49IInO4rb7Cw2/K1VLjcl2fWCUbRbMK
-	 kg5iratASL3Hw==
-From: Lorenzo Pieralisi <lpieralisi@kernel.org>
-To: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rob Herring <robh@kernel.org>,
-	Lizhi Hou <lizhi.hou@amd.com>
-Subject: [PATCH] PCI: of: Update parent unit address generation in of_pci_prop_intr_map()
-Date: Mon, 18 Aug 2025 11:35:04 +0200
-Message-ID: <20250818093504.80651-1-lpieralisi@kernel.org>
-X-Mailer: git-send-email 2.48.0
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="EwIW1kBT"
+Received: by mail-wr1-f44.google.com with SMTP id ffacd0b85a97d-3b9dc5c6521so2863966f8f.1
+        for <linux-pci@vger.kernel.org>; Mon, 18 Aug 2025 03:50:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1755514257; x=1756119057; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=OZHyg61EBWZaARHc87dfxpWntWm0nMzTS3sgcvk3T3M=;
+        b=EwIW1kBTgag/lEv67UZSyFSE4hfrKqNCrDD5WDwgejKDJwbDaezHDvk7oo1PWAxsiz
+         UUGQb3rVYbEsYNIXxOdoasaBjzLKNVZAOlG4CsiYX2jeBaHhnrAgMr4F9KXmJ6cSzSMd
+         NTc0eC9azuQ78FE/3/hl8zc34YjJ3QI9BY8uGFIhenMZ78fbuf4O4bkG0UVT/RAqHaSL
+         FTMLFdoObpmwAqhV7DTJzI1xIOFmFwKtEqRGy70SsAPutmQvljcBN8IXYreqAMWarj07
+         QA4JICXqLYKt1ar64zaJ1APpaeI/39kh1C64dcG0Z9zZZ96hg57XjIhdNryYPWMzV/3H
+         opZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755514257; x=1756119057;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=OZHyg61EBWZaARHc87dfxpWntWm0nMzTS3sgcvk3T3M=;
+        b=C3U9duMJV9FGFXajJS42SPFbbxLt1nz2E7Apka+WrDp5T1epVmgj13KIv+ijiKeE5p
+         4qYVdNnURToeiKzMawwOZbYXP2X8SPzLvHfN4mQv9qSNVXYzXLwpcomumJPhwMAVfDRh
+         eoCKudHKyY2pnDthh1HsSgFV9mqvtAKtFqC8MA8HmP3ImO/TW9g4jSwWWXGqGETJwjhV
+         e6T0jLp6Ea/H3ZCMWs2o9oK+voeIEWDfa9ZxkUNqmEJMOg8KubN4ufNTvLZ9LxLDvls4
+         ihviWPk+QcU5nXvf+OjYri6dqopQt59bO6pv6eG6qg9IRr3qA0UcGiqGqLWSpS6GeXK9
+         8SwQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUDKojDUrV34aIdHe7Bt2xifu81XJ97Scec3Zc9oLZBqyhFXyLqBxlObuvFff3eRsql5kRUmV8ta/o=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJ/BA+gQ/16Az89p/6bdG1AP3YvXoBFA7DHVJieSpr9tL8sFvV
+	rspxTe81BhU+9IaDgRZgwP76UH6z5olmHhuCzNt90+tC4gA4cZ3Dm6DHwm0S8cH8noM=
+X-Gm-Gg: ASbGncttIW6pOk9MLLQBL8HfFalOHPnd0vsksrcxrzl2h3Qcv5UIPG7g5spH/I385xv
+	m2PRLN4zNzN8f9CGAjNVhZI3N0g+T4mrZPGaNwyQUYMCQ7h4L+s88S4JpYhxo3cgs78NCL0CU6M
+	Dn5LHzVbqsTbuA3eeA958exy8FH8h7qrIiEIK5o8RJRAk+Zg6pUNzdU4i0IhBxCVIUVMDb71Ao6
+	YwvK6BOCsiIjmfxJubld8mvKtBzGTuU415fZzDEO3EAy0ZrO3rdtlS0SQiRui11EMCX1Y3K+O4y
+	+LCYnJUVVcJ7rlbrA5pXJWy7pU9zvYhEkQkHHsrZIiaDAe1X/qBGkQwhllYltIaDBpUF/CnortT
+	FIpkiLOrABaD3hWUfYctzQw/au+BW5zxWhtGzscBt8bemdEFTh0kTSTlBE8ts5DI=
+X-Google-Smtp-Source: AGHT+IFtjih4o8NS4VHkcYD2Txcwmf+pFe1QNvS0DpqHsE8KLRkcgWRFJ+48VhP74+JNXQyo/iL/1w==
+X-Received: by 2002:a5d:5f49:0:b0:3a4:ee40:715c with SMTP id ffacd0b85a97d-3bb66a3baa4mr9592468f8f.14.1755514257365;
+        Mon, 18 Aug 2025 03:50:57 -0700 (PDT)
+Received: from ?IPV6:2001:a61:134f:2b01:faa4:fc57:140d:45b? ([2001:a61:134f:2b01:faa4:fc57:140d:45b])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3bb6816ef48sm12090391f8f.58.2025.08.18.03.50.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 18 Aug 2025 03:50:56 -0700 (PDT)
+Message-ID: <a1cf393a-9901-469b-90f4-81211f2e1b9b@suse.com>
+Date: Mon, 18 Aug 2025 12:50:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 04/11] USB: Pass PMSG_POWEROFF event to
+ suspend_common() for poweroff with S4 flow
+To: "Mario Limonciello (AMD)" <superm1@kernel.org>,
+ "Rafael J . Wysocki" <rafael@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Steven Rostedt <rostedt@goodmis.org>,
+ "open list:HIBERNATION (aka Software Suspend, aka swsusp)"
+ <linux-pm@vger.kernel.org>,
+ "open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>,
+ "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+ "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+ "open list:TRACING" <linux-trace-kernel@vger.kernel.org>,
+ AceLan Kao <acelan.kao@canonical.com>, Kai-Heng Feng <kaihengf@nvidia.com>,
+ Mark Pearson <mpearson-lenovo@squebb.ca>,
+ =?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>,
+ Eric Naim <dnaim@cachyos.org>
+References: <20250818020101.3619237-1-superm1@kernel.org>
+ <20250818020101.3619237-5-superm1@kernel.org>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <20250818020101.3619237-5-superm1@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Some interrupt controllers require an #address-cells property in their
-bindings without requiring a "reg" property to be present.
+On 8/18/25 04:00, Mario Limonciello (AMD) wrote:
+> If powering off the system with the S4 flow USB wakeup sources should
+> be ignored. Add a new callback hcd_pci_poweroff() which will differentiate
+> whether target state is S5 and pass PMSG_POWEROFF as the message so that
+> suspend_common() will avoid doing wakeups.
 
-The current logic used to craft an interrupt-map property in
-of_pci_prop_intr_map() is based on reading the #address-cells
-property in the interrupt-parent and, if != 0, read the interrupt
-parent "reg" property to determine the parent unit address to be
-used to create the parent unit interrupt specifier.
+Hi,
 
-First of all, it is not correct to read the "reg" property of
-the interrupt-parent with an #address-cells value taken from the
-interrupt-parent node, because the #address-cells value define the
-number of address cells required by child nodes.
+how will Wake-On-LAN work with this change?
 
-More importantly, for all modern interrupt controllers, the parent
-unit address is irrelevant in HW in relation to the
-device<->interrupt-controller connection and the kernel actually
-ignores the parent unit address value when hierarchically parsing
-the interrupt-map property (ie of_irq_parse_raw()).
-
-For the reasons above, remove the code parsing the interrupt
-parent "reg" property in of_pci_prop_intr_map() - it is not
-needed and as it is it is detrimental in that it prevents
-interrupt-map property generation on systems with an
-interrupt-controller that has no "reg" property in its
-interrupt-controller node - and leave the parent unit address
-always initialized to 0 since it is simply ignored by the kernel.
-
-Signed-off-by: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Lizhi Hou <lizhi.hou@amd.com>
-Link: https://lore.kernel.org/lkml/aJms+YT8TnpzpCY8@lpieralisi/
----
- drivers/pci/of_property.c | 21 ++++++++++++++-------
- 1 file changed, 14 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/pci/of_property.c b/drivers/pci/of_property.c
-index 506fcd507113..09b7bc335ec5 100644
---- a/drivers/pci/of_property.c
-+++ b/drivers/pci/of_property.c
-@@ -279,13 +279,20 @@ static int of_pci_prop_intr_map(struct pci_dev *pdev, struct of_changeset *ocs,
- 			mapp++;
- 			*mapp = out_irq[i].np->phandle;
- 			mapp++;
--			if (addr_sz[i]) {
--				ret = of_property_read_u32_array(out_irq[i].np,
--								 "reg", mapp,
--								 addr_sz[i]);
--				if (ret)
--					goto failed;
--			}
-+
-+			/*
-+			 * A device address does not affect the
-+			 * device<->interrupt-controller HW connection for all
-+			 * modern interrupt controllers; moreover, the kernel
-+			 * (ie of_irq_parse_raw()) ignores the values in the
-+			 * parent unit address cells while parsing the interrupt-map
-+			 * property because they are irrelevant for interrupts mapping
-+			 * in modern system.
-+			 *
-+			 * Leave the parent unit address initialized to 0 - just
-+			 * take into account the #address-cells size to build
-+			 * the property properly.
-+			 */
- 			mapp += addr_sz[i];
- 			memcpy(mapp, out_irq[i].args,
- 			       out_irq[i].args_count * sizeof(u32));
--- 
-2.48.0
+	Regards
+		Oliver
 
