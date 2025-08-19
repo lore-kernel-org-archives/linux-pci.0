@@ -1,92 +1,130 @@
-Received: from out30-124.freemail.mail.aliyun.com (out30-124.freemail.mail.aliyun.com [115.124.30.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACF5E3451A7
-	for <linux-pci@vger.kernel.org>; Tue, 19 Aug 2025 07:09:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=115.124.30.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2582A156678;
+	Tue, 19 Aug 2025 07:14:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755587360; cv=none; b=Y9YRt+ZJB3KzGFop1ZHZDKa3t3wAC25yW839t4OJYRm8r7D/UzuiZSWnxSc5O5cRcic3loO1CPnNjhC4+dMyy+/WQJ/Lpn//sRP9z89kYdYUMuUOuvQ44VBc77lcAgCUlPmk0xEaRgfUm1ouMBLQGRX/V5JNFUpx7dHPNOQY/iA=
+	t=1755587700; cv=none; b=dSIYPr7EVZGrfRPsO39jDeKVonLZBtTA7Y+4hygAR89Lp+1TwGJFhY9PA0YtSjUJhR1RlqwOGZDbR7aCdmF7M/RWVL0VsXi60A4kd16HdACLjVdU4w7Er110cBzm6Yzjg7Q0NIcrqg5BYm9XNcZxHn+274bBLXJhTJhR1L+pfBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755587360; c=relaxed/simple;
-	bh=5D/nmJnJ1XA+AVF8bguPS+P5S2/TNu9to75f9J8fewI=;
-	h=Date:From:To:Cc:Message-ID:Subject:MIME-Version:References:
-	 In-Reply-To:Content-Type; b=V+Uun1tAVZTtpgQ9PQc6epw+jNi2MZkmI3vWC33/rAlyhsyi6P94zk1zhWhDVzabL5o5ESTv00uCYU5tlYZcFTx19gGuuY7j+QS7nwi6reFLdpmTf491qpYbam/bcCg3zKL6Wh6tA7y7iApgX1TlqovMW9uIK6Jjiw41lWb34mg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com; spf=pass smtp.mailfrom=linux.alibaba.com; dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b=w0nr3Qld; arc=none smtp.client-ip=115.124.30.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.alibaba.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.alibaba.com
+	s=arc-20240116; t=1755587700; c=relaxed/simple;
+	bh=4ynEP/LZdmDMVF5wOF01p56ypGM5aDpiB2c+7/2LclI=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=GhLHzqRjc6lr+8ROZaQIlE0Gz8OU/cYBAgUvv92+ZpL32N36+udxCpragOE8GCea/3hxP/cg7wPpADetaoB+QSrw5fp2PmXPkinN6hx45fLKYhw53P5VSVL35Rqc/I8qZljErua4zYdzj6dbB1RbXvdxnigcfiTCTHFciyfvjlQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f0ZvuWHD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.alibaba.com header.i=@linux.alibaba.com header.b="w0nr3Qld"
-DKIM-Signature:v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=linux.alibaba.com; s=default;
-	t=1755587347; h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type;
-	bh=5D/nmJnJ1XA+AVF8bguPS+P5S2/TNu9to75f9J8fewI=;
-	b=w0nr3QldGvBESBm1jeL/yScCSmMpIlNO5f0aUDdj2hiOyxHV9WJgjR+/woxqCTg5faMe/HBONpvptyjZ09Tk102LQRoH5/SSTMbMx275Q8hKLspCgelT1f49Dg8YqnbF01NPjZHuFEatN290AHpCPXKjL3kEUBdKndHc6qSdzDg=
-X-Alimail-AntiSpam:AC=PASS;BC=-1|-1;BR=01201311R311e4;CH=green;DM=||false|;DS=||;FP=0|-1|-1|-1|0|-1|-1|-1;HT=maildocker-contentspam033037014023;MF=guanghuifeng@linux.alibaba.com;NM=1;PH=DW;RN=4;SR=0;TI=W4_0.2.3_v5ForWebDing_212537CB_1755587347343_o7001c1091;
-Received: from WS-web (guanghuifeng@linux.alibaba.com[W4_0.2.3_v5ForWebDing_212537CB_1755587347343_o7001c1091] cluster:ay36) at Tue, 19 Aug 2025 15:09:07 +0800
-Date: Tue, 19 Aug 2025 15:09:07 +0800
-From: "guanghui.fgh" <guanghuifeng@linux.alibaba.com>
-To: "Lukas Wunner" <lukas@wunner.de>
-Cc: "bhelgaas" <bhelgaas@google.com>,
-  "alikernel-developer" <alikernel-developer@linux.alibaba.com>,
-  "linux-pci" <linux-pci@vger.kernel.org>
-Reply-To: "guanghui.fgh" <guanghuifeng@linux.alibaba.com>
-Message-ID: <60d7bd98-8644-4bd0-ae73-d56f537914ec.guanghuifeng@linux.alibaba.com>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSF0gW1JGQ10gUENJOiBmaXggcGNpZSBzZWNvbmRhcnkgYnVzIHJlc2V0IHJl?=
-  =?UTF-8?B?YWRpbmVzcyBjaGVjaw==?=
-X-Mailer: [Alimail-Mailagent][W4_0.2.3][v5ForWebDing][Firefox]
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f0ZvuWHD"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C44DAC116B1;
+	Tue, 19 Aug 2025 07:14:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755587699;
+	bh=4ynEP/LZdmDMVF5wOF01p56ypGM5aDpiB2c+7/2LclI=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=f0ZvuWHDF8KN89qEVd0d0pCjLnTqYcyrDAJPrBuG6N8SyaBlMHQrLWqDAQEohy90q
+	 5lMFEX3VxaySwHms/K38AuUGjbucnGTtn59EyAZ41Yngk6dR42Ss1M/U0C8a0u4r+p
+	 IU3Ax276LZrJGTjwj0wM+J4A5lYlhgIpTyw6SDj8jD4au9Ge9zPXWOv1ri4YaOat4s
+	 xwUWLLj0nE7LH3MAV/uRqS7FScTJuj1THolArtMZBKuOSkhwQMwFwhiRgbn/jbHJm9
+	 sovwksgP6hH7+yUQrIj35enU66Bk8QXtJw2dQfsSs5Vv1JptEDOEacQOWjO2/M6790
+	 VXLKtfXP7MMuA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id B5768CA0EE6;
+	Tue, 19 Aug 2025 07:14:59 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Tue, 19 Aug 2025 12:44:50 +0530
+Subject: [PATCH 1/6] PCI: qcom: Wait for PCIE_RESET_CONFIG_WAIT_MS after
+ PERST# deassert
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-x-aliyun-im-through: {"version":"v1.0"}
-References: <20250818040641.3848174-1-guanghuifeng@linux.alibaba.com>,<aKLI-qrOpvkbJTwx@wunner.de>
-x-aliyun-mail-creator: W4_0.2.3_v5ForWebDing_sgcTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NDsgcnY6MTQxLjApIEdlY2tvLzIwMTAwMTAxIEZpcmVmb3gvMTQxLjA=2N
-In-Reply-To: <aKLI-qrOpvkbJTwx@wunner.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250819-pci-pwrctrl-perst-v1-1-4b74978d2007@oss.qualcomm.com>
+References: <20250819-pci-pwrctrl-perst-v1-0-4b74978d2007@oss.qualcomm.com>
+In-Reply-To: <20250819-pci-pwrctrl-perst-v1-0-4b74978d2007@oss.qualcomm.com>
+To: Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
+ Bartosz Golaszewski <brgl@bgdev.pl>, Saravana Kannan <saravanak@google.com>
+Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
+ linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
+ Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
+ Brian Norris <briannorris@chromium.org>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2012;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=nLv3p5NCWxDbWHE2Z9fkpVFUk3/5sd3FgmEvC3XmSR8=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBopCRwHaNQlIGTz2WlNHiLQk/TU/lg6dlcKu/OW
+ 2+SQDBN8C2JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaKQkcAAKCRBVnxHm/pHO
+ 9RC3B/9InRKjynqx2jgZo/S6kWGMeiLWVsr5SMXAngTM1r+pslxKagLJ3vLPV74z4Q9fP0cOi/7
+ 8lSM5rQJe0z0UprD2GqemPsIHmN80aXWjyKwX0ZW5CZcadJWzx8idNe46VfjJ55oP7dPM46YLhI
+ MHOu2mjeiId5VtRwKGZKzuy/b+Qn6mDWl5fepDjolPffoeGbqwvhg4qk+c95ZxM0l5kcw7Cf5Xg
+ PFGM/Y9Z9VoFVN6sRitO3h+5gZZ7WAKOPlMYH23Ihfr9WEKx7kErnWt/rAIyGCQWpy9ylazRZbC
+ HmkLHmVAfJu/+r/ZfgC+Ojn1qg1QlAI4klip3lNgIhGW4WVm
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-V2hlbiBwYXNzaW5nIHRocm91Z2ggbXVsdGlwbGUgZGV2aWNlcyBhdHRhY2hlZCB0byBQQ0llIHN3
-aXRjaCBkb3duc3RyZWFtIHBvcnQgdGhyb3VnaCB0aGUgdmZpbyBtb2R1bGUsCndlIGNhbiBpbml0
-aWF0ZSBhIHNlY29uZGFyeSBidXMgcmVzZXQgKF9fcGNpX3Jlc2V0X2J1cyAtLS0gcGNpX2JyaWRn
-ZV9zZWNvbmRhcnlfYnVzX3Jlc2V0KQp1c2luZyB0aGUgdmZpbyBWRklPX0RFVklDRV9QQ0lfSE9U
-X1JFU0VUIGNhbGwuIEhvd2V2ZXIsIGl0J3MgY3J1Y2lhbCB0byBlbnN1cmUgdGhhdCBhbGwgZGV2
-aWNlcwpoYXZlIGNvbXBsZXRlZCByZXNldCBhbmQgaW5pdGlhbGl6YXRpb24gYmVmb3JlIHBjaV9i
-cmlkZ2Vfc2Vjb25kYXJ5X2J1c19yZXNldCByZXR1cm5zLiBPdGhlcndpc2UsCmRpcmVjdGx5IGFj
-Y2Vzc2luZyBhbiB1bnJlc2V0IGRldmljZSBjYW4gdHJpZ2dlciBhIGRldmljZSBlcnJvciBvciBl
-dmVuIGNhdXNlIGl0IHRvIGdvIG9mZmxpbmUuCgpUaGVyZWZvcmUsIGl0J3MgbmVjZXNzYXJ5IHRv
-IHdhaXQgZm9yIGFsbCBkZXZpY2VzIHRvIGNvbXBsZXRlIHJlc2V0IGluIHBjaV9icmlkZ2Vfc2Vj
-b25kYXJ5X2J1c19yZXNldC4gCihUaGUgYWJvdmUgW1JGQ10gcGF0Y2ggYWxzbyByZXF1aXJlcyBh
-ZGp1c3RtZW50cyB0byBoYW5kbGUgc2l0dWF0aW9ucyBsaWtlIGxvbmctaGVsZCBsb2NrcyBhbmQg
-dW5leHBlY3RlZCBkZXZpY2Ugb2ZmbGluZXMuKQoKVGhhbmtzCgoKLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tCkZyb206THVr
-YXMgV3VubmVyIDxsdWthc0B3dW5uZXIuZGU+ClNlbmQgVGltZToyMDI1IEF1Zy4gMTggKE1vbi4p
-IDE0OjMyClRvOkd1YW5naHVpIEZlbmc8Z3VhbmdodWlmZW5nQGxpbnV4LmFsaWJhYmEuY29tPgpD
-QzpiaGVsZ2FhczxiaGVsZ2Fhc0Bnb29nbGUuY29tPjsgImFsaWtlcm5lbC1kZXZlbG9wZXIiPGFs
-aWtlcm5lbC1kZXZlbG9wZXJAbGludXguYWxpYmFiYS5jb20+OyAibGludXgtcGNpIjxsaW51eC1w
-Y2lAdmdlci5rZXJuZWwub3JnPgpTdWJqZWN0OlJlOiBbUEFUQ0hdIFtSRkNdIFBDSTogZml4IHBj
-aWUgc2Vjb25kYXJ5IGJ1cyByZXNldCByZWFkaW5lc3MgY2hlY2sKCgpPbiBNb24sIEF1ZyAxOCwg
-MjAyNSBhdCAxMjowNjo0MFBNICswODAwLCBHdWFuZ2h1aSBGZW5nIHdyb3RlOgo+IFdoZW4gZXhl
-Y3V0aW5nIGEgc2Vjb25kYXJ5IGJ1cyByZXNldCBvbiBhIGJyaWRnZSBkb3duc3RyZWFtIHBvcnQs
-IGFsbAo+IGRvd25zdHJlYW0gZGV2aWNlcyBhbmQgc3dpdGNoZXMgd2lsbCBiZSByZXNldGVkLiBC
-ZWZvcmUKPiBwY2lfYnJpZGdlX3NlY29uZGFyeV9idXNfcmVzZXQgcmV0dXJucywgZW5zdXJlIHRo
-YXQgYWxsIGF2YWlsYWJsZQo+IGRldmljZXMgaGF2ZSBjb21wbGV0ZWQgcmVzZXQgYW5kIGluaXRp
-YWxpemF0aW9uLiBPdGhlcndpc2UsIHVzaW5nIGEKPiBkZXZpY2UgYmVmb3JlIGluaXRpYWxpemF0
-aW9uIGNvbXBsZXRlZCB3aWxsIHJlc3VsdCBpbiBlcnJvcnMgb3IgZXZlbgo+IGRldmljZSBvZmZs
-aW5lLgoKSSByZWNlbnRseSByZWNlaXZlZCBhIHJlcG9ydCBvZmYtbGlzdCBmb3Igd2hhdCBsb29r
-cyBsaWtlIHRoZSBzYW1lIGlzc3VlCmFuZCBjYW1lIHVwIHdpdGggdGhlIHBhdGNoIGJlbG93LgoK
-V291bGQgaXQgZml4IHRoZSBpc3N1ZSBmb3IgeW91PwoKSXQncyBub3QgeWV0IGEgcHJvcGVybHkg
-Zmxlc2hlZC1vdXQgcGF0Y2gsIGp1c3QgYSBwcm9vZiBvZiBjb25jZXB0LgpCdXQgaXQncyBzbWFs
-bGVyIGFuZCBzaW1wbGVyIHRoYW4gdGhlIGFwcHJvYWNoIHlvdSd2ZSB0YWtlbi4KClRoaXMgcGF0
-Y2ggaXMgZm9yIGEgU2Vjb25kYXJ5IEJ1cyBSZXNldCBpc3N1ZWQgYnkgQUVSLsKgIElzIHRoZSBi
-dXMgcmVzZXQKbGlrZXdpc2UgaGFwcGVuaW5nIHRocm91Z2ggQUVSIGluIHlvdXIgY2FzZSBvciB3
-aGF0J3MgdGhlIGNvZGUgcGF0aApsZWFkaW5nIHRvIHRoZSBidXMgcmVzZXQ/CgotLSA+OCAtLQoK
-ZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL3BjaWUvcG9ydGRydi5jIGIvZHJpdmVycy9wY2kvcGNp
-ZS9wb3J0ZHJ2LmMKaW5kZXggZmE4M2ViZC4uOGI0MjdhOSAxMDA2NDQKLS0tIGEvZHJpdmVycy9w
-Y2kvcGNpZS9wb3J0ZHJ2LmMKKysrIGIvZHJpdmVycy9wY2kvcGNpZS9wb3J0ZHJ2LmMKQEAgLTc2
-MSw2ICs3NjEsMTAgQEAgc3RhdGljIHBjaV9lcnNfcmVzdWx0X3QgcGNpZV9wb3J0ZHJ2X3Nsb3Rf
-cmVzZXQoc3RydWN0IHBjaV9kZXYgKmRldikKIArCoCBwY2lfcmVzdG9yZV9zdGF0ZShkZXYpOwrC
-oCBwY2lfc2F2ZV9zdGF0ZShkZXYpOworCisgaWYgKHBjaV9icmlkZ2Vfd2FpdF9mb3Jfc2Vjb25k
-YXJ5X2J1cyhkZXYsICJob3QgcmVzZXQiKSkKK8KgIHJldHVybiBQQ0lfRVJTX1JFU1VMVF9ESVND
-T05ORUNUOworCsKgIHJldHVybiBQQ0lfRVJTX1JFU1VMVF9SRUNPVkVSRUQ7CiB9CiAKCgo=
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+
+PCIe spec r6.0, sec 6.6.1 mandates waiting for 100ms before deasserting
+PERST# if the downstream port does not support Link speeds greater than
+5.0 GT/s. But in practice, this delay seem to be required irrespective of
+the supported link speed as it gives the endpoints enough time to
+initialize.
+
+Hence, add the delay by reusing the PCIE_RESET_CONFIG_WAIT_MS definition if
+the linkup_irq is not supported. If the linkup_irq is supported, the driver
+already waits for 100ms in the IRQ handler post link up.
+
+Also, remove the redundant comment for PCIE_T_PVPERL_MS. Finally, the
+PERST_DELAY_US sleep can be moved to PERST# assert where it should be.
+
+Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 294babe1816e4d0c2b2343fe22d89af72afcd6cd..bcd080315d70e64eafdefd852740fe07df3dbe75 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -302,20 +302,22 @@ static void qcom_perst_assert(struct qcom_pcie *pcie, bool assert)
+ 	else
+ 		list_for_each_entry(port, &pcie->ports, list)
+ 			gpiod_set_value_cansleep(port->reset, val);
+-
+-	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
+ 
+ static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
+ {
+ 	qcom_perst_assert(pcie, true);
++	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
+ 
+ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ {
+-	/* Ensure that PERST has been asserted for at least 100 ms */
++	struct dw_pcie_rp *pp = &pcie->pci->pp;
++
+ 	msleep(PCIE_T_PVPERL_MS);
+ 	qcom_perst_assert(pcie, false);
++	if (!pp->use_linkup_irq)
++		msleep(PCIE_RESET_CONFIG_WAIT_MS);
+ }
+ 
+ static int qcom_pcie_start_link(struct dw_pcie *pci)
+
+-- 
+2.45.2
+
+
