@@ -1,48 +1,48 @@
-Received: from mx07-00178001.pphosted.com (mx07-00178001.pphosted.com [185.132.182.106])
+Received: from mx07-00178001.pphosted.com (mx08-00178001.pphosted.com [91.207.212.93])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 108352D979D;
-	Wed, 20 Aug 2025 07:59:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.132.182.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F9172AE84;
+	Wed, 20 Aug 2025 08:00:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.207.212.93
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755676796; cv=none; b=O5DGsuOZSA23WsA0wkscVeIMGD0ArYIN+MAeMKLgxyYr0dboPsbVkffkB2MmNL6bhDVz6fqhIUVorBbYdilZXns/p7wXHdEp1lihHvnJCDJwe7OGFDXn1OA1Jg5V48P9Z4i5rkUXt2X6i2gzRVRRKJL5/CPmLiQ4jxwRenR6NmQ=
+	t=1755676836; cv=none; b=dsuPssbDNBR2DRcf/5Y/5/4JuZbYjWni9vnzAJy8IqJq9POZrtix83pF788REdeEXozeCJxNFZOjNYwIvU3yvEY6QwqE5JknkOyRB6WSp7urZ3Q+4re+vXvPHqA7NTffXJcZ8lPz4hqz8Aplk1BMtPRHRrr5IEz48Y7C8sv9C1E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755676796; c=relaxed/simple;
-	bh=Y5Zbrx1QLyiOIY6bGp+Y+Vakuku4iJv9cc2f1WNBdJw=;
+	s=arc-20240116; t=1755676836; c=relaxed/simple;
+	bh=y2yhNn63zhjFl6eEfpN98Ri3q1hNqRdwMaX3DtDntfo=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=jWCCqCxJCVGMegsme+fsCRfdH0rwKfxBBCcAkaksOOTzeT4+Y4ydUZA37bv2sdDG7E9EMloqWvxMpkkqiANSxCg60LN8Rveg6AK0rO6JqLL0f7De6lNeBaep4lFn7XQ7sku/b4u4LnD7WpBm+2dq3KVknKNoQvMlI+oLfazQ8Vc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=IfoiP8lz; arc=none smtp.client-ip=185.132.182.106
+	 MIME-Version:Content-Type; b=ALK5pAFA0awYWTnOkZPWiYmb0Dzl/DGHPcZOpCBhwRfovvvo1ggacJRcuW6YqoNMwvoesd/89xnddNoeiFi/y0JFa7AEp/W5+MERBvcZrFyO/khKOyLJ4mW728ti7xLfK4DoxY0+f0yUM87zghGzzHIi16qd/UA0wOIw1yeNuc4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com; spf=pass smtp.mailfrom=foss.st.com; dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b=VXyXTxlC; arc=none smtp.client-ip=91.207.212.93
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=foss.st.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="IfoiP8lz"
-Received: from pps.filterd (m0369458.ppops.net [127.0.0.1])
-	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57K7i0pJ011121;
-	Wed, 20 Aug 2025 09:59:27 +0200
+	dkim=pass (2048-bit key) header.d=foss.st.com header.i=@foss.st.com header.b="VXyXTxlC"
+Received: from pps.filterd (m0046660.ppops.net [127.0.0.1])
+	by mx07-00178001.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57K7LAVd023327;
+	Wed, 20 Aug 2025 10:00:09 +0200
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=foss.st.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=selector1; bh=
-	2aCnbaJkf95wFTf1Eb2cQ4V/qecIbdzw00dRoxQPp0U=; b=IfoiP8lzbpba+cyB
-	0icqfIQNjWIkTKuHd7dXDVd+LHNV5FKXCkb3LiAME/rvD5MXYR7mqNvm250GDPLZ
-	EE9EuUaxq1z72oMzWjnMFJocAblhr/fYnWTlFLT+3VfNvJ9tnGdq0SIBbzAfPYzU
-	q+p2oKV4tUFS6tQok/xvNfuLytU44tqGQD/v7ypw2M21VOKTMbg1JnInBcuwEh+y
-	y2uGYCXwQyaLWQnhugluaupKIEjatNEZU1xv2/8GY9b7PqLZfwgrtzphij6p3nI2
-	x5Lit0N6l6+lPsuoqF/v2OzaeSvlaPEye6ODlu/M8iSClWKT6mxGiRMKbUEaT7mW
-	KJ31Ug==
+	uZHIUrwkTLMT4dP43C45QjC6tGfszmVu9NMO92SKdMg=; b=VXyXTxlC/c7XHuyl
+	mefPZOdVIpG9ana6cCaDUBADy0IeiOmNPfMf+o85ehqUooMHdvfTt2jqEUKprJS/
+	JYQI0N6sB5YKZeQmDVSxPd9v4NMPPa0i0M8r5pi32oLtN7Jb/XMbQKkPi5eF/Dki
+	x+UAW3b/7ZrgSPcWPdbAHM6kYlaAr7GC1uI5CE9JG6vakKHar8ahNMVL2nYxH0VA
+	P5j4B8ErZwhLMGCsrNZMdaF5sfW3OrobhC1EGk9787WMIzgGdgx52Q9KN8d5oWg7
+	V2BHHuoXGIhdE/vtUvELfAs06l634SASc5dfeImQZ+qLuwgZVicj+pcxm5ZlRhh5
+	DI2+gw==
 Received: from beta.dmz-ap.st.com (beta.dmz-ap.st.com [138.198.100.35])
-	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 48n7w5rsp0-1
+	by mx07-00178001.pphosted.com (PPS) with ESMTPS id 48n7kn8uda-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 20 Aug 2025 09:59:27 +0200 (MEST)
+	Wed, 20 Aug 2025 10:00:09 +0200 (MEST)
 Received: from euls16034.sgp.st.com (euls16034.sgp.st.com [10.75.44.20])
-	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id A242E40049;
-	Wed, 20 Aug 2025 09:57:39 +0200 (CEST)
+	by beta.dmz-ap.st.com (STMicroelectronics) with ESMTP id 13C384004D;
+	Wed, 20 Aug 2025 09:58:30 +0200 (CEST)
 Received: from Webmail-eu.st.com (shfdag1node3.st.com [10.75.129.71])
-	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id 54B825E8119;
-	Wed, 20 Aug 2025 09:56:17 +0200 (CEST)
+	by euls16034.sgp.st.com (STMicroelectronics) with ESMTP id A8EBE475830;
+	Wed, 20 Aug 2025 09:57:26 +0200 (CEST)
 Received: from localhost (10.130.77.120) by SHFDAG1NODE3.st.com (10.75.129.71)
  with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Wed, 20 Aug
- 2025 09:56:17 +0200
+ 2025 09:57:26 +0200
 From: Christian Bruel <christian.bruel@foss.st.com>
 To: <christian.bruel@foss.st.com>, <lpieralisi@kernel.org>,
         <kwilczynski@kernel.org>, <mani@kernel.org>, <robh@kernel.org>,
@@ -58,9 +58,9 @@ CC: <johan+linaro@kernel.org>, <linux-pci@vger.kernel.org>,
         <linux-stm32@st-md-mailman.stormreply.com>,
         <linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
         <linux-gpio@vger.kernel.org>, <linux-doc@vger.kernel.org>
-Subject: [PATCH v13 08/11] arm64: dts: st: add PCIe pinctrl entries in stm32mp25-pinctrl.dtsi
-Date: Wed, 20 Aug 2025 09:54:08 +0200
-Message-ID: <20250820075411.1178729-9-christian.bruel@foss.st.com>
+Subject: [PATCH v13 10/11] arm64: dts: st: Add PCIe Endpoint mode on stm32mp251
+Date: Wed, 20 Aug 2025 09:54:10 +0200
+Message-ID: <20250820075411.1178729-11-christian.bruel@foss.st.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250820075411.1178729-1-christian.bruel@foss.st.com>
 References: <20250820075411.1178729-1-christian.bruel@foss.st.com>
@@ -78,49 +78,41 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-08-20_03,2025-08-20_01,2025-03-28_01
 
-Add PCIe pinctrl entries in stm32mp25-pinctrl.dtsi
-init: forces GPIO to low while probing so CLKREQ is low for
-phy_init
-default: restore the AFMUX after controller probe
+Add pcie_ep node to support STM32 MP25 PCIe driver based on the
+DesignWare PCIe core configured as Endpoint mode
 
-Add Analog pins of PCIe to perform power cycle
-
+Acked-by: Manivannan Sadhasivam <mani@kernel.org>
 Signed-off-by: Christian Bruel <christian.bruel@foss.st.com>
 ---
- arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi | 20 +++++++++++++++++++
- 1 file changed, 20 insertions(+)
+ arch/arm64/boot/dts/st/stm32mp251.dtsi | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi b/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi
-index 5ac9e72478dd..04e1606df126 100644
---- a/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi
-+++ b/arch/arm64/boot/dts/st/stm32mp25-pinctrl.dtsi
-@@ -133,6 +133,26 @@ pins {
- 		};
- 	};
+diff --git a/arch/arm64/boot/dts/st/stm32mp251.dtsi b/arch/arm64/boot/dts/st/stm32mp251.dtsi
+index a3ed617a43d3..764b6a1623db 100644
+--- a/arch/arm64/boot/dts/st/stm32mp251.dtsi
++++ b/arch/arm64/boot/dts/st/stm32mp251.dtsi
+@@ -1664,6 +1664,21 @@ stmmac_axi_config_1: stmmac-axi-config {
+ 				};
+ 			};
  
-+	pcie_pins_a: pcie-0 {
-+		pins {
-+			pinmux = <STM32_PINMUX('J', 0, AF4)>;
-+			bias-disable;
-+		};
-+	};
++			pcie_ep: pcie-ep@48400000 {
++				compatible = "st,stm32mp25-pcie-ep";
++				reg = <0x48400000 0x100000>,
++				      <0x48500000 0x100000>,
++				      <0x48700000 0x80000>,
++				      <0x10000000 0x10000000>;
++				reg-names = "dbi", "dbi2", "atu", "addr_space";
++				clocks = <&rcc CK_BUS_PCIE>;
++				resets = <&rcc PCIE_R>;
++				phys = <&combophy PHY_TYPE_PCIE>;
++				access-controllers = <&rifsc 68>;
++				power-domains = <&CLUSTER_PD>;
++				status = "disabled";
++			};
 +
-+	pcie_init_pins_a: pcie-init-0 {
-+		pins {
-+			pinmux = <STM32_PINMUX('J', 0, GPIO)>;
-+			output-low;
-+		};
-+	};
-+
-+	pcie_sleep_pins_a: pcie-sleep-0 {
-+		pins {
-+			pinmux = <STM32_PINMUX('J', 0, ANALOG)>;
-+		};
-+	};
-+
- 	pwm3_pins_a: pwm3-0 {
- 		pins {
- 			pinmux = <STM32_PINMUX('B', 15, AF7)>; /* TIM3_CH2 */
+ 			pcie_rc: pcie@48400000 {
+ 				compatible = "st,stm32mp25-pcie-rc";
+ 				device_type = "pci";
 -- 
 2.34.1
 
