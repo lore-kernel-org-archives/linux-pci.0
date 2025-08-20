@@ -1,84 +1,98 @@
-Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED9BD2E5434
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2025 11:48:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DB7A2E5B2E;
+	Wed, 20 Aug 2025 11:51:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755690506; cv=none; b=inT+QqLy3BNhFHXAogKnvnLRE+DVGPlv369n2B7WtwrwV/qpPkD7cFjzo2ZQmGUlJOdlX8CAOoQ8x5l3p+TydC1qhnWcFDVmYmMOm+uyZo9itwlRrhKYJAf31dczJCPYD08Hbwr0IBGMVZbkw2zA34Yb7QgaPams6loTPlCSbCM=
+	t=1755690694; cv=none; b=W8AnvO/ndxCd8ivuqaWUGEzUI96Odj54SwRExRdGc9VKqffIu6tgIBLtSQd7yEyjqRYMnrdHvf8eoewfzCdkUhthJcuVvLWuXDwI0G1kGRi+0rb4ovwlBW+O5ueGnrHNt8H51oTHsP3EV0+pnevBoWDlWRjuJGr/bxIz+vXM3/s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755690506; c=relaxed/simple;
-	bh=9MPhuKbP6izLj9aOsqnAzd97m3P9x+1TVI9BSxplPkI=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=cJqj4ri6OqAnCX/4+Q+anepFF9Tszf6puvfyOx7V2cZBZkoBNUguir1fmMBs5SHyYiGp6DdGmbNqNdauoyCwc/4u97eoDlfcdTgaReyP20w5B5nH2jxUboQTU8XPupHv82C5cdGbA1uA9Lsry27ffoveppcbDeKyDPcUhlNo2cI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
-Received: from Atcsqr.andestech.com (localhost [127.0.0.2] (may be forged))
-	by Atcsqr.andestech.com with ESMTP id 57KBJXYg019296
-	for <linux-pci@vger.kernel.org>; Wed, 20 Aug 2025 19:19:33 +0800 (+08)
-	(envelope-from randolph@andestech.com)
-Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
-	by Atcsqr.andestech.com with ESMTPS id 57KBIsc3018823
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 20 Aug 2025 19:18:54 +0800 (+08)
-	(envelope-from randolph@andestech.com)
-Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
- (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Wed, 20 Aug 2025
- 19:18:54 +0800
-From: Randolph Lin <randolph@andestech.com>
-To: <linux-pci@vger.kernel.org>
-CC: <ben717@andestech.com>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-        <conor+dt@kernel.org>, <paul.walmsley@sifive.com>,
-        <palmer@dabbelt.com>, <aou@eecs.berkeley.edu>, <alex@ghiti.fr>,
-        <jingoohan1@gmail.com>, <mani@kernel.org>, <lpieralisi@kernel.org>,
-        <kwilczynski@kernel.org>, <bhelgaas@google.com>,
-        <randolph.sklin@gmail.com>, <tim609@andestech.com>,
-        Randolph Lin <randolph@andestech.com>
-Subject: [PATCH 6/6] MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
-Date: Wed, 20 Aug 2025 19:18:43 +0800
-Message-ID: <20250820111843.811481-7-randolph@andestech.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250820111843.811481-1-randolph@andestech.com>
-References: <20250820111843.811481-1-randolph@andestech.com>
+	s=arc-20240116; t=1755690694; c=relaxed/simple;
+	bh=BCf4oy3QiJQA2+jBC9hoGaSkFNSQT5YL981+qIDojUw=;
+	h=Mime-Version:Content-Type:Date:Message-Id:From:Subject:Cc:To:
+	 References:In-Reply-To; b=Rw30W/rDmB1JaDziCkkV/MHVuVV/8Be9mjA0KIj/5OtXtnbC8d4e/PQ1CXZlUTbneQRQHxQuuQ4h8aPnUaHYXnxRuwX761PohMfkfi62MRixZUFJ3osuXzSq3qJ84sA2tdFVH1Or7JELAcb+SD5iYihD6l+i7thd/5wD/OiTGVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LvF3LCgn; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LvF3LCgn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CCE17C116C6;
+	Wed, 20 Aug 2025 11:51:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755690693;
+	bh=BCf4oy3QiJQA2+jBC9hoGaSkFNSQT5YL981+qIDojUw=;
+	h=Date:From:Subject:Cc:To:References:In-Reply-To:From;
+	b=LvF3LCgnY/GRzggNVn5MVRpF1l34cVed2W+D2xfBDGpoIIexSuXLQevyOV7UgyVTI
+	 SSY6cRe0xJB9Ervp6COFmHDzciYoopkjK8pMYIeSo9EpH1t+/mayrtByB0a44selC9
+	 m2ukkfuvJHwj/C2d7hykXlCBl8gH6YPRt1nyv4XDU0ACgqkdkVwz7kmPdQl2kvphvg
+	 jKDwz0dpEIYqBajdusZCBBDY93HkU5XWg0dK7aXd1FGaf7177lzRi/9RTmgz18Wwxq
+	 bJTB0aKFDe7rTll7wUDQ08DEPSxJylSUdriCHKm1wIQ0X4A5Fs3NgMTQ1G6xDpp7V1
+	 tktYKZr0xTy/w==
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 57KBJXYg019296
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 20 Aug 2025 13:51:28 +0200
+Message-Id: <DC78ENI8QVIO.1AU7LK858YKTM@kernel.org>
+From: "Danilo Krummrich" <dakr@kernel.org>
+Subject: Re: [PATCH v4 1/3] rust: pci: provide access to PCI Class and
+ Class-related items
+Cc: "Alexandre Courbot" <acourbot@nvidia.com>, "Joel Fernandes"
+ <joelagnelf@nvidia.com>, "Timur Tabi" <ttabi@nvidia.com>, "Alistair Popple"
+ <apopple@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
+ <simona@ffwll.ch>, "Bjorn Helgaas" <bhelgaas@google.com>,
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
+ Ojeda" <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Boqun
+ Feng" <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
+ =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
+ <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
+ Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>,
+ <nouveau@lists.freedesktop.org>, <linux-pci@vger.kernel.org>,
+ <rust-for-linux@vger.kernel.org>, "LKML" <linux-kernel@vger.kernel.org>
+To: "John Hubbard" <jhubbard@nvidia.com>
+References: <20250820030859.6446-1-jhubbard@nvidia.com>
+ <20250820030859.6446-2-jhubbard@nvidia.com>
+In-Reply-To: <20250820030859.6446-2-jhubbard@nvidia.com>
 
-Here add maintainer information for Andes QiLai PCIe driver.
+On Wed Aug 20, 2025 at 5:08 AM CEST, John Hubbard wrote:
+> Allow callers to write Class::STORAGE_SCSI instead of
+> bindings::PCI_CLASS_STORAGE_SCSI, for example.
+>
+> New APIs:
+>     Class::STORAGE_SCSI, Class::NETWORK_ETHERNET, etc.
+>     Class::as_raw()
+>     Class: TryFrom<u32> for Class
+>     ClassMask: Full, ClassSubclass
+>     DeviceId::from_class_and_vendor()
+>     Device::pci_class()
+>
+> Cc: Danilo Krummrich <dakr@kernel.org>
+> Cc: Alexandre Courbot <acourbot@nvidia.com>
+> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
+> +    /// Returns the PCI class as a `Class` struct.
+> +    /// Returns an error if the class code is not recognized.
+> +    pub fn pci_class(&self) -> Result<Class> {
+> +        // SAFETY: `self.as_raw` is a valid pointer to a `struct pci_dev=
+`.
+> +        Class::new(unsafe { (*self.as_raw()).class })
+> +    }
 
-Signed-off-by: Randolph Lin <randolph@andestech.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+I think all this turned out very nice!
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index daf520a13bdf..7caede190f73 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -19221,6 +19221,13 @@ S:	Supported
- F:	Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
- F:	drivers/pci/controller/pcie-altera.c
- 
-+PCI DRIVER FOR ANDES QILAI PCIE
-+M:	Randolph Lin <randolph@andestech.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
-+F:	drivers/pci/controller/dwc/pcie-andes-qilai.c
-+
- PCI DRIVER FOR APPLIEDMICRO XGENE
- M:	Toan Le <toan@os.amperecomputing.com>
- L:	linux-pci@vger.kernel.org
--- 
-2.34.1
+One thing to reconsider would be whether we really want this to be fallible=
+.
 
+It's probably better to define a pci::Class::UNKNOWN and implement
+
+	impl From<u32> for Class {
+	    fn from(value: u32) -> Self {
+	        match value {
+	            $(x if x =3D=3D Self::$variant.0 =3D> Self::$variant,)+
+	            _ =3D> Self::UNKNOWN,
+	        }
+	    }
+	}
+
+instead.
