@@ -1,86 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 11.mo534.mail-out.ovh.net (11.mo534.mail-out.ovh.net [46.105.33.174])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E22E13090CC;
-	Thu, 21 Aug 2025 10:52:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B9B69308F18
+	for <linux-pci@vger.kernel.org>; Thu, 21 Aug 2025 10:57:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.105.33.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755773565; cv=none; b=XGHc9z04xxhsDYuxMbQ044f8uVh3i/oam+oAAscEAUUamPEg7h8YPjPhUZR+OUE09yC9xYSBff5z5DoAz9WCb5GT+PbcrMkFdRCwNRCrAvHRBU9ngfPzFqYb7n04rNrykFV8w4VAKBZf1oO3rPYFsYBxgCj+ZKe6n5PaQ0z5Ar4=
+	t=1755773878; cv=none; b=sO6Ze4OuL6UH0F1zYHO3ziJVQu7MzOUuLEHvrWCahMfsgPKUO2iheM4YI7oiVAyHicvKokipJOX9ukrVAp7QQqzevw+uWxYhbTM2/BMcun8JZA+2lmt8AQag9c+2BBqopkLBnlzWoVTQgLGrqMqUA0qCQtF2nyDqoDufyGSWofA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755773565; c=relaxed/simple;
-	bh=R1V1AwRna/S8N/EhSnIaw17FsINeg5f7DVVQw8h2ON4=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Subject:Cc:To:From:
-	 References:In-Reply-To; b=kipHYkNHldB3l7r/BHWLIRKJ9/XKEbL/O8pnXOS5Z92Os7tgJlhUoyYgHu1U9XUijaPKE+OPmVGP+Z953LfIoJlWYd+cAgYJSoAqJRv2lziwcn/7xYmPWsPvRDovX5DDASYrDVm5TaRd0TLQM+2LquD1FfXEcJRWbNQnwFPQwrU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cZiMedDg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755773878; c=relaxed/simple;
+	bh=eref6ByY572qjZCGOScxzbw7tucOi1s0NHnKAHD1+cQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=mDHamHVHrk24PmIgrZ8905UdPAvh+2smo7NrRgw/kw8tpQj3dM0a9Nkt8r2m8pIKjys6iKXN+aUIJ/LhO3J4tgKYbWdW7KUqXaJni35k9W3OtYUBLv/NzTxmNhvf6fpVL+w7O3oL/+MtNNU00Xr5QxHdwHgaJaVgX300zcU9rpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orca.pet; spf=pass smtp.mailfrom=orca.pet; dkim=pass (2048-bit key) header.d=orca.pet header.i=@orca.pet header.b=AxvdEdXq; arc=none smtp.client-ip=46.105.33.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orca.pet
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=orca.pet
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cZiMedDg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42508C4CEED;
-	Thu, 21 Aug 2025 10:52:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755773564;
-	bh=R1V1AwRna/S8N/EhSnIaw17FsINeg5f7DVVQw8h2ON4=;
-	h=Date:Subject:Cc:To:From:References:In-Reply-To:From;
-	b=cZiMedDgUMqwW3c+r9YzeXcJDpQqFJYlJ78w2zvhV9OUFIDzp56Gb1oMLnNNJYyz/
-	 AhsjENOCWk4xjaeuNqrxJdVNOmuOwmbygmsyKgM1eV3nLDHQg902o4M+KWuLNekYGi
-	 K6Avk/aw0OdBeQIGOqjAuqbS0OXHXsCiEWCXsx9l4Dv+IOsKkJW8duuI0PSYdGK2nw
-	 E9AFbwyanXElhVNV34z2bpjdcJCh3vcDVfJEcCPCYkh3LgLnDSVb4fxgojqTGrD73v
-	 BZ86KcW+d1VwgjHPXCDOGXdvQuK3hwdxrDobRO877jYn9kAe338WWnL1ZoiENoegu2
-	 OmJb8j7tECFrg==
+	dkim=pass (2048-bit key) header.d=orca.pet header.i=@orca.pet header.b="AxvdEdXq"
+Received: from director3.derp.mail-out.ovh.net (director3.derp.mail-out.ovh.net [152.228.215.222])
+	by mo534.mail-out.ovh.net (Postfix) with ESMTPS id 4c6zns5kwmz68YG;
+	Thu, 21 Aug 2025 10:19:29 +0000 (UTC)
+Received: from director3.derp.mail-out.ovh.net (director3.derp.mail-out.ovh.net. [127.0.0.1])
+        by director3.derp.mail-out.ovh.net (inspect_sender_mail_agent) with SMTP
+        for <brgl@bgdev.pl>; Thu, 21 Aug 2025 10:19:29 +0000 (UTC)
+Received: from mta7.priv.ovhmail-u1.ea.mail.ovh.net (unknown [10.109.249.147])
+	by director3.derp.mail-out.ovh.net (Postfix) with ESMTPS id 4c6zns4FxHz5wDg;
+	Thu, 21 Aug 2025 10:19:29 +0000 (UTC)
+Received: from orca.pet (unknown [10.1.6.9])
+	by mta7.priv.ovhmail-u1.ea.mail.ovh.net (Postfix) with ESMTPSA id 353BDB832CD;
+	Thu, 21 Aug 2025 10:19:28 +0000 (UTC)
+Authentication-Results:garm.ovh; auth=pass (GARM-97G002d21e2e92-e478-449c-be15-b81d5d0ce33e,
+                    684E78C7C579463DAB27E2CA1F9C4E28A39E1181) smtp.auth=marcos@orca.pet
+X-OVh-ClientIp:147.156.42.5
+From: Marcos Del Sol Vives <marcos@orca.pet>
+To: linux-kernel@vger.kernel.org
+Cc: Marcos Del Sol Vives <marcos@orca.pet>,
+	Linus Walleij <linus.walleij@linaro.org>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Michael Walle <mwalle@kernel.org>,
+	Lee Jones <lee@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	linux-gpio@vger.kernel.org,
+	linux-pci@vger.kernel.org
+Subject: [PATCH v3 0/3] Introduce support for Vortex GPIO pins
+Date: Thu, 21 Aug 2025 12:18:56 +0200
+Message-Id: <20250821101902.626329-1-marcos@orca.pet>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Thu, 21 Aug 2025 12:52:38 +0200
-Message-Id: <DC81S5SN8N76.YH4323TLNHJK@kernel.org>
-Subject: Re: [PATCH v5 3/4] gpu: nova-core: avoid probing
- non-display/compute PCI functions
-Cc: "Alexandre Courbot" <acourbot@nvidia.com>, "Joel Fernandes"
- <joelagnelf@nvidia.com>, "Timur Tabi" <ttabi@nvidia.com>, "Alistair Popple"
- <apopple@nvidia.com>, "David Airlie" <airlied@gmail.com>, "Simona Vetter"
- <simona@ffwll.ch>, "Bjorn Helgaas" <bhelgaas@google.com>,
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, "Miguel
- Ojeda" <ojeda@kernel.org>, "Alex Gaynor" <alex.gaynor@gmail.com>, "Boqun
- Feng" <boqun.feng@gmail.com>, "Gary Guo" <gary@garyguo.net>,
- =?utf-8?q?Bj=C3=B6rn_Roy_Baron?= <bjorn3_gh@protonmail.com>, "Benno Lossin"
- <lossin@kernel.org>, "Andreas Hindborg" <a.hindborg@kernel.org>, "Alice
- Ryhl" <aliceryhl@google.com>, "Trevor Gross" <tmgross@umich.edu>,
- <nouveau@lists.freedesktop.org>, <linux-pci@vger.kernel.org>,
- <rust-for-linux@vger.kernel.org>, "LKML" <linux-kernel@vger.kernel.org>,
- "Elle Rhumsaa" <elle@weathered-steel.dev>
-To: "John Hubbard" <jhubbard@nvidia.com>
-From: "Danilo Krummrich" <dakr@kernel.org>
-References: <20250821044207.3732-1-jhubbard@nvidia.com>
- <20250821044207.3732-4-jhubbard@nvidia.com>
-In-Reply-To: <20250821044207.3732-4-jhubbard@nvidia.com>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Ovh-Tracer-Id: 17487758829186930278
+X-VR-SPAMSTATE: OK
+X-VR-SPAMSCORE: -100
+X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgdduiedtleekucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgggfestdekredtredttdenucfhrhhomhepofgrrhgtohhsucffvghlucfuohhlucggihhvvghsuceomhgrrhgtohhssehorhgtrgdrphgvtheqnecuggftrfgrthhtvghrnhepgffhgfefvefghfetveevgffhleffjedvjeekieejgeeiuddvffetieejjeejgfegnecukfhppeduvdejrddtrddtrddupddugeejrdduheeirdegvddrheenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduvdejrddtrddtrddupdhmrghilhhfrhhomhepmhgrrhgtohhssehorhgtrgdrphgvthdpnhgspghrtghpthhtohepledprhgtphhtthhopegsrhhglhessghguggvvhdrphhlpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhopehlvggvsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmfigrlhhlvgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhushdrfigrlhhlvghijheslhhinhgrrhhordhorhhgpdhrtghpthhtohepmhgrrhgtohhssehorhgtrgdrphgvthdprhgtphhtthhopehlihhnuhigqdhgphhiohesvhhgvghrrdhkvghrnhgvlhdrohhrgh
+ dprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhg
+DKIM-Signature: a=rsa-sha256; bh=+QxckdVwic+8yzAxhOHqkLVteyChvAdbEUUs0+d9kek=;
+ c=relaxed/relaxed; d=orca.pet; h=From; s=ovhmo-selector-1; t=1755771569;
+ v=1;
+ b=AxvdEdXqMVwLtMJhi6jOy7ehSdcR3/yQ7W7ccatuoMg4CF34HeBuJV79X0cgHWsYFTndlQpR
+ haXSzYTpUjqLuzKbVVW44tfNiKa+ti80Bz0LLTcc/U/e/Byq4gAznVxRfGs1siYgTtkcGPcbB9Z
+ kwy1N1UKsYaA36rg6nU7g86MkdTmIxpjTFwqZrCMH1ReMka3GgrRbz4djKu9E4meY8H3348RuzN
+ KjdWPHQ7FdkRDrrktyj3xB3NKraZMKrD0/ydoqzRdmZzUhEQ5PFrme7fSWhdm8L8JeOgXq6EbgP
+ iCHToPl+w/3hJTM7IOdGIGW2L/yTaR/MPcn5F2wcC5TCw==
 
-On Thu Aug 21, 2025 at 6:42 AM CEST, John Hubbard wrote:
-> NovaCore has so far been too imprecise about figuring out if .probe()
-> has found a supported PCI PF (Physical Function). By that I mean:
-> .probe() sets up BAR0 (which involves a lot of very careful devres and
-> Device<Bound> details behind the scenes). And then if it is dealing with
-> a non-supported device such as the .1 audio PF on many GPUs, it fails
-> out due to an unexpected BAR0 size. We have been fortunate that the BAR0
-> sizes are different.
->
-> Really, we should be filtering on PCI class ID instead. These days I
-> think we can confidently pick out Nova's supported PF's via PCI class
-> ID. And if not, then we'll revisit.
->
-> The approach here is to filter on "Display VGA" or "Display 3D", which
-> is how PCI class IDs express "this is a modern GPU's PF".
->
-> Cc: Danilo Krummrich <dakr@kernel.org>
-> Cc: Alexandre Courbot <acourbot@nvidia.com>
-> Cc: Elle Rhumsaa <elle@weathered-steel.dev>
-> Signed-off-by: John Hubbard <jhubbard@nvidia.com>
-> ---
->  drivers/gpu/nova-core/driver.rs | 33 ++++++++++++++++++++++++++++-----
->  rust/kernel/pci.rs              | 21 +++++++++++++++++++++
+This series of patches add support for the GPIO pins exposed on the
+southbridge of DM&P's Vortex86 line of SoCs, using a new GPIO driver
+plus a MFD driver to automatically load the driver in supported platforms.
 
-Can you please split this one up in two patches?
+Marcos Del Sol Vives (3):
+  gpio: gpio-regmap: add flags to control some behaviour
+  gpio: vortex: add new GPIO device driver
+  mfd: vortex: implement new driver for Vortex southbridges
 
->  2 files changed, 49 insertions(+), 5 deletions(-)
+ MAINTAINERS                 |   6 ++
+ drivers/gpio/Kconfig        |  11 ++++
+ drivers/gpio/Makefile       |   1 +
+ drivers/gpio/gpio-regmap.c  |  17 +++++-
+ drivers/gpio/gpio-vortex.c  | 110 ++++++++++++++++++++++++++++++++++++
+ drivers/mfd/Kconfig         |   9 +++
+ drivers/mfd/Makefile        |   1 +
+ drivers/mfd/vortex-sb.c     |  81 ++++++++++++++++++++++++++
+ include/linux/gpio/regmap.h |  17 ++++++
+ include/linux/pci_ids.h     |   1 +
+ 10 files changed, 253 insertions(+), 1 deletion(-)
+ create mode 100644 drivers/gpio/gpio-vortex.c
+ create mode 100644 drivers/mfd/vortex-sb.c
+
+-- 
+2.34.1
+
