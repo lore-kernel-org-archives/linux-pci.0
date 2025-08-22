@@ -1,182 +1,193 @@
-Received: from 8.mo533.mail-out.ovh.net (8.mo533.mail-out.ovh.net [54.36.140.183])
+Received: from NAM11-BN8-obe.outbound.protection.outlook.com (mail-bn8nam11on2043.outbound.protection.outlook.com [40.107.236.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B66F3054E5
-	for <linux-pci@vger.kernel.org>; Fri, 22 Aug 2025 14:06:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=54.36.140.183
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755871599; cv=none; b=qusBvUk3x6dMD3LDJRMiqb1XEd1nRNC6d+NII1ObSQuN15IASMVIZg3ujhvllSR4ERDyMlOpRPYjuGK+6FNxWrcGxNYj3iUqzLvSsy6ue0vPlXj+4iFqFyhrktKw+AIEU9H6iSWuJC3jurLXRiWk9BKimBIf0pOt9boQLZdeTNc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755871599; c=relaxed/simple;
-	bh=mobexwaFEPKvRq4c5TjJBbvqTGgsSTcXHU8meTu5HVE=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=OHp3CcfyTUI57u4GDn96dsA8u15ql1zeQMUdGgrLLZXYDgmnAgGYSlvNMsZN7fsBrBbWVfYRk/P+AH/tjfV1wjOO5cwPn8hqmva3h7DDwrAHpxwSuopT1Vwsw+PQg7dWuHl+y7D++pKK6f7+PrLbjS8k3NOqUch9YjkRuHZqNTU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orca.pet; spf=pass smtp.mailfrom=orca.pet; dkim=pass (2048-bit key) header.d=orca.pet header.i=@orca.pet header.b=DDJTRhKr; arc=none smtp.client-ip=54.36.140.183
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=orca.pet
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=orca.pet
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D580B2857D2;
+	Fri, 22 Aug 2025 14:08:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.236.43
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1755871708; cv=fail; b=OA69id3QU0RvAPv+VlhzjjAxqAnfsHmSic3g5EAWGySW44s1totUDQHfrRrMlQQgzQIwQ61pRJVkWF+V6lksl5xV4n5G5/O5Zx8i4sZQnMibeR5y1/Cz7dinXXQ2WxRUlRmRuO60htcop4EK/WLMSZ8cMtWNOFdrzjqF5yKmthg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1755871708; c=relaxed/simple;
+	bh=DwCItR5Zf8P4ffJFJlhHm0OnoOIbjwQGOjHuYMr7lvY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=luTuA/Jh5e//1BcdtukVVibjQFsF9f3RxkFWz6Om0XePrE2xMqTN3T2Husr/3PxsiWpSlUYOSdXsrA1L5wrLk4/pWeYmUozGeE5ThYVAmoqZ9w4T98QsVUF4kEX7/hfr1RnKTIHFOrvH/6oNL1bQEBXSWxXoWdMt6G92zeIEBI0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=fP5neuLr; arc=fail smtp.client-ip=40.107.236.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=orca.pet header.i=@orca.pet header.b="DDJTRhKr"
-Received: from director1.derp.mail-out.ovh.net (director1.derp.mail-out.ovh.net [51.68.80.175])
-	by mo533.mail-out.ovh.net (Postfix) with ESMTPS id 4c7hcD03b7z5wtK;
-	Fri, 22 Aug 2025 13:58:35 +0000 (UTC)
-Received: from director1.derp.mail-out.ovh.net (director1.derp.mail-out.ovh.net. [127.0.0.1])
-        by director1.derp.mail-out.ovh.net (inspect_sender_mail_agent) with SMTP
-        for <brgl@bgdev.pl>; Fri, 22 Aug 2025 13:58:35 +0000 (UTC)
-Received: from mta2.priv.ovhmail-u1.ea.mail.ovh.net (unknown [10.110.96.172])
-	by director1.derp.mail-out.ovh.net (Postfix) with ESMTPS id 4c7hcC4Vprz5wH3;
-	Fri, 22 Aug 2025 13:58:35 +0000 (UTC)
-Received: from orca.pet (unknown [10.1.6.4])
-	by mta2.priv.ovhmail-u1.ea.mail.ovh.net (Postfix) with ESMTPSA id 9340A3E32CF;
-	Fri, 22 Aug 2025 13:58:34 +0000 (UTC)
-Authentication-Results:garm.ovh; auth=pass (GARM-95G001eea4ffed-c7f3-48b3-b59a-bca0aebd966c,
-                    ADC0680FE15BB91110492B9A34CE42AA242C155A) smtp.auth=marcos@orca.pet
-X-OVh-ClientIp:147.156.42.5
-From: Marcos Del Sol Vives <marcos@orca.pet>
-To: linux-kernel@vger.kernel.org
-Cc: Marcos Del Sol Vives <marcos@orca.pet>,
-	Linus Walleij <linus.walleij@linaro.org>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Michael Walle <mwalle@kernel.org>,
-	Lee Jones <lee@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	linux-gpio@vger.kernel.org,
-	linux-pci@vger.kernel.org
-Subject: [PATCH v4 1/3] gpio: gpio-regmap: add flag to set direction before value
-Date: Fri, 22 Aug 2025 15:58:11 +0200
-Message-Id: <20250822135816.739582-2-marcos@orca.pet>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250822135816.739582-1-marcos@orca.pet>
-References: <20250822135816.739582-1-marcos@orca.pet>
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="fP5neuLr"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=W0pJhcMCBIfbt6bMPQ2aUFE+TQ1bHw5aVHPx7meq0UYvcmjOIoADhFDOgKd5d+sLxBhqmL64czCGgnN9j1dQAxTqwNBz7GpyuErIyosbbbeNYr3L+hvl9gPvysBZnPd6eR34Q1B3bWDzOMFJQO1+pnNvgAMAmB66vqpvwyLuAGdv4Y0ljkjpxxt1umodWOk3LOymEOdF6443Jo01MPAan4fEUS99o8FTZ63lC72gg5OC953aHl8k5SbQHhHTpkscZ3enR18UOBuARwZaNTvTAoVrsAS/APg7x+QUl0hz3ae7GdVQE5kGReEvnoOvoSlwRH+QVKg3+gYJOi9HwxExuQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=9v2lsHeDrelTrJ0icGcPS1c8mav+ES3EK0mqQdgOerY=;
+ b=sDnK7ZMhoDealTc4CnaSUjNeaahZG4voivHrxQ91GVWezA+S68LNm/TigyzI6ZjC+gRadhVmROzWI0zaSnizMZ8wdjGXNyqW59UIgR2GSN+R6ZpnbP3DeRz6O6euYFqQUkUhB7P3iZ0CvuWSmo2haSe06o/EIyDxWNlCyTJyd1X+eDZX1nrRCQo0dsHDSpG91EoLiOdCGONKJwmHvfIWy6eW/rl2MqWv3kw/abRuIxaNbJyXZRqpRqZlvMoAJA/sVxagw9Kswn5QgxU0nTCMVVmAugjvneIrbqLpfZUjd63K/iY6sHxil8snO4WzLN0nWZgPbRryTZiFTlKpFnS28A==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
+ dkim=pass header.d=nvidia.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
+ s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=9v2lsHeDrelTrJ0icGcPS1c8mav+ES3EK0mqQdgOerY=;
+ b=fP5neuLrR7t+UOtzKi7DYtpiI3pkGF5DoXOY34nw5pW2SY4PBwZmBd7ptu0Q1PpoTtHqeRhgPAn4pg1pOhAk4S19BMCrULGsW2HYt+Aguuip1EeXAW9jMcas4LztFrr0jv3IDYyJ+B5lciGTF0OSjaBnnZS0WImYdYWEPW4WY+/EJ+yadOYf2ZJE7vtGO/qVKAH9Smxq86HcDuts6a3uZMcOgesklpDJff6JmFplS2Kcw5u3MfzaYnhhWJcHxuGQ7/FzTxZFQ2UjWVFivuQM9KOt8KCNLXL8Dll5Zu1aYClgV+u86AtWDTF3gxC/u60IbzVmmi0qH1Mws6VmZ1vweQ==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=nvidia.com;
+Received: from CH3PR12MB8659.namprd12.prod.outlook.com (2603:10b6:610:17c::13)
+ by SJ0PR12MB6941.namprd12.prod.outlook.com (2603:10b6:a03:448::10) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.23; Fri, 22 Aug
+ 2025 14:08:23 +0000
+Received: from CH3PR12MB8659.namprd12.prod.outlook.com
+ ([fe80::6eb6:7d37:7b4b:1732]) by CH3PR12MB8659.namprd12.prod.outlook.com
+ ([fe80::6eb6:7d37:7b4b:1732%4]) with mapi id 15.20.9052.014; Fri, 22 Aug 2025
+ 14:08:23 +0000
+Date: Fri, 22 Aug 2025 11:08:21 -0300
+From: Jason Gunthorpe <jgg@nvidia.com>
+To: Nicolin Chen <nicolinc@nvidia.com>
+Cc: Ethan Zhao <etzhao1900@gmail.com>, robin.murphy@arm.com,
+	joro@8bytes.org, bhelgaas@google.com, will@kernel.org,
+	robin.clark@oss.qualcomm.com, yong.wu@mediatek.com,
+	matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
+	thierry.reding@gmail.com, vdumpa@nvidia.com, jonathanh@nvidia.com,
+	rafael@kernel.org, lenb@kernel.org, kevin.tian@intel.com,
+	yi.l.liu@intel.com, baolu.lu@linux.intel.com,
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev,
+	linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org,
+	linux-mediatek@lists.infradead.org, linux-tegra@vger.kernel.org,
+	linux-acpi@vger.kernel.org, linux-pci@vger.kernel.org,
+	patches@lists.linux.dev, pjaroszynski@nvidia.com, vsethi@nvidia.com,
+	helgaas@kernel.org
+Subject: Re: [PATCH v3 5/5] pci: Suspend iommu function prior to resetting a
+ device
+Message-ID: <20250822140821.GE1311579@nvidia.com>
+References: <cover.1754952762.git.nicolinc@nvidia.com>
+ <3749cd6a1430ac36d1af1fadaa4d90ceffef9c62.1754952762.git.nicolinc@nvidia.com>
+ <550635db-00ce-410e-add0-77c1a75adb11@gmail.com>
+ <aKTzq6SLGB22Xq5b@Asurada-Nvidia>
+ <20250821130741.GL802098@nvidia.com>
+ <aKgPr3mUcIsd1iuT@Asurada-Nvidia>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aKgPr3mUcIsd1iuT@Asurada-Nvidia>
+X-ClientProxiedBy: YT4PR01CA0492.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:10c::16) To CH3PR12MB8659.namprd12.prod.outlook.com
+ (2603:10b6:610:17c::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Ovh-Tracer-Id: 8613978715448366694
-X-VR-SPAMSTATE: OK
-X-VR-SPAMSCORE: -100
-X-VR-SPAMCAUSE: gggruggvucftvghtrhhoucdtuddrgeeffedrtdefgdduieefleegucetufdoteggodetrfdotffvucfrrhhofhhilhgvmecuqfggjfdpvefjgfevmfevgfenuceurghilhhouhhtmecuhedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurhephffvvefufffkofgjfhgggfestdekredtredttdenucfhrhhomhepofgrrhgtohhsucffvghlucfuohhlucggihhvvghsuceomhgrrhgtohhssehorhgtrgdrphgvtheqnecuggftrfgrthhtvghrnhepudffudeutdejudeffeeugeehveevgfefiefgueejueejheevtefgtdffvddukeelnecukfhppeduvdejrddtrddtrddupddugeejrdduheeirdegvddrheenucevlhhushhtvghrufhiiigvpedtnecurfgrrhgrmhepihhnvghtpeduvdejrddtrddtrddupdhmrghilhhfrhhomhepmhgrrhgtohhssehorhgtrgdrphgvthdpnhgspghrtghpthhtohepledprhgtphhtthhopegsrhhglhessghguggvvhdrphhlpdhrtghpthhtohepsghhvghlghgrrghssehgohhoghhlvgdrtghomhdprhgtphhtthhopehlvggvsehkvghrnhgvlhdrohhrghdprhgtphhtthhopehmfigrlhhlvgeskhgvrhhnvghlrdhorhhgpdhrtghpthhtoheplhhinhhushdrfigrlhhlvghijheslhhinhgrrhhordhorhhgpdhrtghpthhtohepmhgrrhgtohhssehorhgtrgdrphgvthdprhgtphhtthhopehlihhnuhigqdhgphhiohesvhhgvghrrdhkvghrnhgvlhdroh
- hrghdprhgtphhtthhopehlihhnuhigqdhkvghrnhgvlhesvhhgvghrrdhkvghrnhgvlhdrohhrghdprhgtphhtthhopehlihhnuhigqdhptghisehvghgvrhdrkhgvrhhnvghlrdhorhhg
-DKIM-Signature: a=rsa-sha256; bh=WB97LK5wYLYtJExCAYyxWF9h54DDMHBADVZKaBy4Blo=;
- c=relaxed/relaxed; d=orca.pet; h=From; s=ovhmo-selector-1; t=1755871116;
- v=1;
- b=DDJTRhKrm5FrqTz0tw0XqnuRdt10sI6bgEEagIH3DovTIhju9RaMVSt69Hn/QKpcJjJ5evIf
- r1chFJNf7OlCcCuHyQi3QZ2vvysQ7EelDLZqqaaDS7H4UGWX8mtGEoCxm3RSmAK9Js7oLf6nbkG
- 4hH5+mn2MpvOy5RcZsoh+vX6dlM3l6AL603oQ62dXqZdnWXwl48xGxh6X6oDaRxN5E6CPGDyw1A
- ESjrgMEAWtWTs/LJMqIveAo5haoKddS4UjRrRSe0OcthvX1KP1jh81G7IxsFDdsDsZ/ZjaPpoTS
- IBRimZx0jnmJrgGGMH0OWNLw/E89MFYYEGxoYwzxhaCiQ==
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH3PR12MB8659:EE_|SJ0PR12MB6941:EE_
+X-MS-Office365-Filtering-Correlation-Id: f6b08c05-5412-4b83-6de3-08dde1855acf
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016|7416014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?K4Sn4efH8CrFP1YLLxqgcvSFhUcF3jLxenK/y3a5ISCbzjDwa3/2Jogf5bXN?=
+ =?us-ascii?Q?RmW7QnZfNGvtZAlaNJntEYS/3EIHyUN6rjceGBuDcvXtTu9upE4oqVnEFOZC?=
+ =?us-ascii?Q?c9Yg5AEL2hMOFlQJd1Kda/SqVfNZUhKcbs+sFUvDLzIFTd9bYAb0f7YJykI9?=
+ =?us-ascii?Q?BLpg8DrIcZfTidnH6CoB17j46PaZpYOY/ppYhS6SRHLV1PxsJs/Z7falrlnk?=
+ =?us-ascii?Q?SrAKThOmGVlMPbkwlUwRGDs8++JeOYq4DzL1EeEVOS9DbUyik6tzqwEmME+x?=
+ =?us-ascii?Q?pM/hovFM5dsx0FsIJF9Q1pe6RAKQqr10PK86HjrknUJOdFFl2OhywJ2cPmtT?=
+ =?us-ascii?Q?d05B2N/2EbIVtiRQG0c+exzurzShSuESrurwRFwVMeAHuyROHr2buObQZQ5S?=
+ =?us-ascii?Q?sC/lbs+M6kD8JXwLfPAOZTSypuVSUllvKJy+zKAFoFaDcAwMEJ2EZl2mFcSh?=
+ =?us-ascii?Q?o2e+RlantQseJaSCz7cdQ6CHzr7KZIUpdPEy1qMYFI+MzNMwuRByDRsDmEmo?=
+ =?us-ascii?Q?XGokJTRx+/6pdDE3DN/H9sX34QuQmzy35MeBxr0dJAqC+FaXNWbFQS91Jx4O?=
+ =?us-ascii?Q?8w6SKg73X7dcU/8fuqUmncUyx9JJojxkPEch32S6r8Ht+2lnsZN6PqM2YEQ7?=
+ =?us-ascii?Q?6AaG3mHFaKdVfg9ciNkK9eICN9YMq6t7/ZFjORY4sDO2WDspy4LJzjyyT0dx?=
+ =?us-ascii?Q?KjgzB5yRr5jCZtpbQb+RhK3d8fiy+pboxGi4jtEG9dNSA3UtWERGhQL5917N?=
+ =?us-ascii?Q?519/HuIjsqeE1fzHHqZsG546RX8AXS92e2OG6HzXjfUnQv8bg5EvvRwbUz+c?=
+ =?us-ascii?Q?NbtGWC5C8OVCb5xoupvRPEUwBs+UkBAJCnC/0O+3ni+n4RDDxBOPMkU4Scth?=
+ =?us-ascii?Q?HWERVwXAQkvPHAfWol64jhhuWveXscpme1WB1uZZ5eai1IbLXhNxCv3bXIF6?=
+ =?us-ascii?Q?XQ/lULqiGMXPgSiBGx3eVWA+T6XRxsNdZBsKgC9pbQPOyKx/L1EenDPTTW47?=
+ =?us-ascii?Q?IWMjF6DPRzCv1YXU6eHsqgiDVbmPqWvNAgFbVnEo59jzOzWOud3JN6jY1gbP?=
+ =?us-ascii?Q?A/h4aUYgmmRFhjRDEu9Jgz34pxfX29pu5v0oND7DBCMHhKIJWvj2LrJfzzuZ?=
+ =?us-ascii?Q?XtXu/vJDwGXYpaREQyYZccmFwny8qaYqsicJT31XwFX3rDXkWaW2tS7IbW0O?=
+ =?us-ascii?Q?zysO6OXV5+tsCEda+LlZd75sNUNB3Y7i1E9sCeElrQ6zTo2gRy1iBmC32Wt/?=
+ =?us-ascii?Q?mvu8pCcC5rvcAyS/r2tN+QLfpIE6y82vUVlRJRbsYnttT0OIDL776MqK+qM2?=
+ =?us-ascii?Q?U4aiXfCuVrJ+Cj0TC7DwJvS7diacxJpwKY1cNAc2/vGFpO0QiU8OTG3UlHjG?=
+ =?us-ascii?Q?uKeRrSiVUDIpSITUyzZz+G21JPJBbURmJSW/drrnLRJDWfgUzg=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH3PR12MB8659.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7416014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?gzPzT+Hx26THA35AgBMGV2VRCoR0cHSIVBT0XWhue/3FzR2oGaaYtLa7a4LI?=
+ =?us-ascii?Q?UK4cJz3KztObVqpXl8nEemnFQvPXf6ZuvHdxsH+u++wml80RS2Proin3krL2?=
+ =?us-ascii?Q?l0PmJqX+c6GDDt6tIk0FujVgXkia5aPP/kBI5VwEi+lXSoaZcw9EcGDWKWL1?=
+ =?us-ascii?Q?UBDWAW4Gl2z65ljp8+zag+r6SXKgCXs7duiaRSpt/B0DcJ5+1iL3bAXvmCsM?=
+ =?us-ascii?Q?NNbyyUcQ07AwCBkN87d94uo54SaMizhWAG+PnamhXl4EU4KjmSshdLvqKSY9?=
+ =?us-ascii?Q?PfLpOMMq0O/RGSg36+VDWk2c3EZROBAZcfAmaxWUNkhlT+Os6DiwmyN108hT?=
+ =?us-ascii?Q?+7zEJHSO0fcdH6pKd45gizQozW6lqhwmW44VGubClsBO5tGwBkSJCpnXVwqX?=
+ =?us-ascii?Q?tHvS7tPv+kdxUsigj3f/X+9FmRyvZoQ3rG9BhAfS0QMnk0l3N+FNCaYuGoJZ?=
+ =?us-ascii?Q?Iw4uZMlBICZEzxuR3AR57WDst+QY3R73qonXW/NGsydNH9Tz6KLJaukkIM8Q?=
+ =?us-ascii?Q?iTU5AE2Dx9NBZ2+81bAdZyh+kWEhuJcQUUy2FT2VXpm3sQ+o/8V2uW51zDVZ?=
+ =?us-ascii?Q?T2NuiuWvzK2j9W4EHZUiKAsKdXftDAmTrN2tCvIuY7AgPL8JgjywwwGmmnsJ?=
+ =?us-ascii?Q?wtU3av3rFQh9M5vv3Syua7OwSFBINbfJd5GO0TG1cRyfSUhhEX4ahPEkcDCj?=
+ =?us-ascii?Q?XwkayYS5ZQ+YItn7fNTpnox5U+7o+5+LcypVEScfPyr/1PxVZVxYwmBuFkWG?=
+ =?us-ascii?Q?mqX+2aVn7lZ8FUiOzir819HAf77p/fJLdHgmdWqk6B6A7tcPZ/5/YrCNRuHK?=
+ =?us-ascii?Q?i+ONT46QBocVaml8SVOhHC4/qtBikzdV93dmDDyTgyU87f9CKVtfMIaZrmin?=
+ =?us-ascii?Q?XEjpygaROZn+fncsV6NU1TpMQZFxXiyTos1HjRtAHNNkBn5PKrM2aLwCql4v?=
+ =?us-ascii?Q?UgDlE0UFWJLb3EJ/y6LLKuUphBV5aGOvqy5CjXhLqyHjQZMWTb4Us5VBgtos?=
+ =?us-ascii?Q?4Yv5l6CWnU+HyYD0FXBMGyL23+0sn57DMbnDr9PaZgrtxVLHGSk6qDJVkDlw?=
+ =?us-ascii?Q?W+alqPLMXHhMTWLcvtVNUzwf7L6/cPKA48kqwGru3RH6lonwzH9apdVeBrm0?=
+ =?us-ascii?Q?rksLP3g2vIbrGeRdefxvZS0Pb4fX3z3PCOQt+0brrzo4bGehe4BEpPrVmDiq?=
+ =?us-ascii?Q?mWh+uJiDzRQMUKkxq2YgHga5s4G4Zouw8sWk/01jv6EA21GQXPz/JkFZZURe?=
+ =?us-ascii?Q?2oOneUhFikKtl4RKeewFTjV7FukF+CKTrntO2saQ73xEfg/Kz4g9SFkounbX?=
+ =?us-ascii?Q?S9krzrG267vZGJ6OSkgFQUI/r0R7BHWAokPmGVKYfQUiR0DZ5GT3UPbbDvsX?=
+ =?us-ascii?Q?1+yvGW/sZFzop7jXXytHLGcKuRsxOo+AGvaKlAY0pNGO/ShDpT+JTN27JYjl?=
+ =?us-ascii?Q?t2hvGr4RQgTuss6f8ey9Nn8mBavg2GfMPVUtpwncXS58YhggVRnKiXEhO982?=
+ =?us-ascii?Q?ns7w3cUUS7NJh5svBSor/TZkdpAHzojQORL2C32bn5krqrYXy4Z+vmrvgEwQ?=
+ =?us-ascii?Q?jM6/pAqymMQY1NKbz78=3D?=
+X-OriginatorOrg: Nvidia.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: f6b08c05-5412-4b83-6de3-08dde1855acf
+X-MS-Exchange-CrossTenant-AuthSource: CH3PR12MB8659.namprd12.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 22 Aug 2025 14:08:22.9726
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 6KcFEunT9jrEzU5kzEC7ZmhYvx4+aLmtEQbuv0fHS/GMemJsWBvgZzXnLOGAS+T3
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR12MB6941
 
-When configuring a pin as an output, by default the gpio-regmap driver
-writes first the value and then configures the direction.
+On Thu, Aug 21, 2025 at 11:35:27PM -0700, Nicolin Chen wrote:
+> On Thu, Aug 21, 2025 at 10:07:41AM -0300, Jason Gunthorpe wrote:
+> > On Tue, Aug 19, 2025 at 02:59:07PM -0700, Nicolin Chen wrote:
+> > >  c) multiple pci_devs with their own RIDs
+> > > 
+> > >     In this case, either FLR or IOMMU only resets the PF. That
+> > >     being said, VFs might be affected since PF is resetting?
+> > >     If there is an issue, I don't see it coming from the IOMMU-
+> > >     level reset..
+> > 
+> > It would still allow the ATS issue from the VF side. The VF could be
+> > pushing an invalidation during the PF reset that will get clobbered.
+> > 
+> > I haven't fully checked but I think Linux doesn't really (easially?)
+> > allow resetting a PF while a VF is present...
+> 
+> Hmm, what if the PF encountered some fault? Does Linux have a choice
+> not to reset PF?
 
-The Vortex86 family of SoCs, however, need the direction set before the
-value, else writes to the data ports are ignored.
+Upon more reflect I guess outside VFIO I seem to remember the SRIOV
+reset to the PFs will clobber the VFs too and then restore the SRIOV
+configuration in config space to bring them back.
 
-This commit adds a new "flags" field plus a flag to reverse that order,
-allowing the direction to be set before the value.
+> > Arguably if the PF is reset the VFs should have their translations
+> > blocked too.
+> 
+> Yea, that sounds plausible to me. But, prior to that (an IOMMU-level
+> reset), should VFs be first reset at the PCI level?
 
-Also, added a missing error check in gpio_regmap_direction_output().
+PF reset of a SRIOV PF disables the VFs and effectively resets them
+already.
 
-Signed-off-by: Marcos Del Sol Vives <marcos@orca.pet>
----
- drivers/gpio/gpio-regmap.c  | 17 ++++++++++++++++-
- include/linux/gpio/regmap.h | 18 ++++++++++++++++++
- 2 files changed, 34 insertions(+), 1 deletion(-)
+But reaching out to mangle the translation of the VFs means you do
+have to take care not to disrupt anything else the VF owning driver is
+doing since it is fully unaware of this. Ie it could be reattaching to
+something else concurrently.
 
-diff --git a/drivers/gpio/gpio-regmap.c b/drivers/gpio/gpio-regmap.c
-index e8a32dfebdcb..24cefbd57637 100644
---- a/drivers/gpio/gpio-regmap.c
-+++ b/drivers/gpio/gpio-regmap.c
-@@ -31,6 +31,7 @@ struct gpio_regmap {
- 	unsigned int reg_clr_base;
- 	unsigned int reg_dir_in_base;
- 	unsigned int reg_dir_out_base;
-+	unsigned int flags;
- 
- 	int (*reg_mask_xlate)(struct gpio_regmap *gpio, unsigned int base,
- 			      unsigned int offset, unsigned int *reg,
-@@ -196,7 +197,20 @@ static int gpio_regmap_direction_input(struct gpio_chip *chip,
- static int gpio_regmap_direction_output(struct gpio_chip *chip,
- 					unsigned int offset, int value)
- {
--	gpio_regmap_set(chip, offset, value);
-+	struct gpio_regmap *gpio = gpiochip_get_data(chip);
-+	int ret;
-+
-+	if (gpio->flags & GPIO_REGMAP_DIR_BEFORE_SET) {
-+		ret = gpio_regmap_set_direction(chip, offset, true);
-+		if (ret)
-+			return ret;
-+
-+		return gpio_regmap_set(chip, offset, value);
-+	}
-+
-+	ret = gpio_regmap_set(chip, offset, value);
-+	if (ret)
-+		return ret;
- 
- 	return gpio_regmap_set_direction(chip, offset, true);
- }
-@@ -247,6 +261,7 @@ struct gpio_regmap *gpio_regmap_register(const struct gpio_regmap_config *config
- 	gpio->reg_clr_base = config->reg_clr_base;
- 	gpio->reg_dir_in_base = config->reg_dir_in_base;
- 	gpio->reg_dir_out_base = config->reg_dir_out_base;
-+	gpio->flags = config->flags;
- 
- 	chip = &gpio->gpio_chip;
- 	chip->parent = config->parent;
-diff --git a/include/linux/gpio/regmap.h b/include/linux/gpio/regmap.h
-index c722c67668c6..a2257a1288a8 100644
---- a/include/linux/gpio/regmap.h
-+++ b/include/linux/gpio/regmap.h
-@@ -3,6 +3,8 @@
- #ifndef _LINUX_GPIO_REGMAP_H
- #define _LINUX_GPIO_REGMAP_H
- 
-+#include <linux/bits.h>
-+
- struct device;
- struct fwnode_handle;
- struct gpio_regmap;
-@@ -12,6 +14,19 @@ struct regmap;
- #define GPIO_REGMAP_ADDR_ZERO ((unsigned int)(-1))
- #define GPIO_REGMAP_ADDR(addr) ((addr) ? : GPIO_REGMAP_ADDR_ZERO)
- 
-+/**
-+ * enum gpio_regmap_flags - flags to control GPIO operation
-+ */
-+enum gpio_regmap_flags {
-+	/**
-+	 * @GPIO_REGMAP_DIR_BEFORE_SET: when setting a pin as an output, set
-+	 * its direction before the value. The output value will be undefined
-+	 * for a short time which may have unwanted side effects, but some
-+	 * hardware requires this.
-+	 */
-+	GPIO_REGMAP_DIR_BEFORE_SET	= BIT(0),
-+};
-+
- /**
-  * struct gpio_regmap_config - Description of a generic regmap gpio_chip.
-  * @parent:		The parent device
-@@ -23,6 +38,8 @@ struct regmap;
-  *			If not given, the name of the device is used.
-  * @ngpio:		(Optional) Number of GPIOs
-  * @names:		(Optional) Array of names for gpios
-+ * @flags:		(Optional) A bitmask of flags from
-+ *			&enum gpio_regmap_flags
-  * @reg_dat_base:	(Optional) (in) register base address
-  * @reg_set_base:	(Optional) set register base address
-  * @reg_clr_base:	(Optional) clear register base address
-@@ -68,6 +85,7 @@ struct gpio_regmap_config {
- 	const char *label;
- 	int ngpio;
- 	const char *const *names;
-+	unsigned int flags;
- 
- 	unsigned int reg_dat_base;
- 	unsigned int reg_set_base;
--- 
-2.34.1
-
+Jason
