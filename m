@@ -1,37 +1,37 @@
 Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 537A33164DA;
-	Tue, 26 Aug 2025 17:04:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id E5CBC2E1C6B;
+	Tue, 26 Aug 2025 17:04:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756227844; cv=none; b=o34oD6wDsgVLPi2tESNSS+ZyerAHwzuE81lxzUVEZmsm0hNRUUCZekkfEcePv/jbEGZ3cugsClAv5BCSQUmfDQPDkRxN6iUBfr29NgJt5D5X+WBpG6iwhFeRlt8dqDfq0acMRpyD/Oli3dVIlRY1qzJzmfkSoSg27DfUVoC3DGk=
+	t=1756227846; cv=none; b=scfXp8gJuYUHtgkb4CPoEOMHY8nv31/z4T9c8GkNWdVLc/NS3FzH5Jn10He3NOx/pCmaRLSZIjA3hBpwnkxfat2yxgsD5sWkv2reLx7cYIOmh/hkEB3T4g+FulKNM6LE8Ca70hZu4yJIAY6pgnj4/uUnIma0GucGiVfIHwc0EwI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756227844; c=relaxed/simple;
-	bh=5NR28lI11iFijrgUk/8tzY1zztMvrg2JzA0KBOA00Yc=;
+	s=arc-20240116; t=1756227846; c=relaxed/simple;
+	bh=RxbC6PRS5UWfVRhBWgHNMi2OVDBcE6RBrjCc4GiojgM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=T9Zg8pMzC0OwvGACDSC0C6B3K+L8/jtwKHYjILzJTTQ/1IaWQf9ftjlqubo0CunJ9IvvydSVwRC62LYncCB8xPtM9d6k6gVhKFLmymcMEsMi777IaIdwUf2Mfq8Wa/B9Loa3fEsv867WDH8C3P/UaKRe1N71oOWaL0SH8Ov5zPA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=gf00mUz2; arc=none smtp.client-ip=220.197.31.5
+	 MIME-Version; b=LbuL0z01oZrTeBr+OYWO7rwxqp1evxfubyQsgbyNfb2l6f5hnYIONGjgTwacX2t0PcvfQtJPpMJrSFollLSB/+uhB0BdDmlO7rg5zqHgFC6qtlyZRqjuWx2v+wcLwqpv7mK1L8U1AkVMeI5g0316jLLSRRZzwh6Ot5mXX/1dopk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=hu/amXSM; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="gf00mUz2"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="hu/amXSM"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=ow
-	MJQKXmGYRfKLERYLkLgzgQGOHR8lVXvt5FN5sY0r4=; b=gf00mUz23/HIqu4vYg
-	lcQjrlFhgpQSnvkh0fLXz2prZUmbmOshgDClIlYKHqW/nroTC4IcV52NDqvLCez6
-	uXJOzgxWlegbfT4HRjQZLgZsL52/V8xGNniHXHtkaUPL/WjzSGHLLVGk0uRWxrT6
-	M539tFBNknxP4uNeR11+d5qs0=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Uo
+	wts4zfhr1/6N6PWGm/8Hg/npgCEGN+e6f6uoDvA5c=; b=hu/amXSM7XLdQPpe7l
+	i+P+6dog+H2WCavBl60be1kawaf193WAkTdk28pVOiztE7/0kUCk3jXfUuvubFvc
+	YVDBf+FsgvoX8CToIx9YVTnJChoWRdr/MrmiXDKKWOWrvtMEYaMxGlcQHbrZ1Kt1
+	5rIPolhigc+gGNdkRRtwdX8uE=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAH5Svt6K1o9DIiEg--.25085S8;
-	Wed, 27 Aug 2025 01:03:44 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAH5Svt6K1o9DIiEg--.25085S10;
+	Wed, 27 Aug 2025 01:03:45 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	helgaas@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 6/8] PCI: rcar: Add macro for PHY ready check delay
-Date: Wed, 27 Aug 2025 01:03:13 +0800
-Message-Id: <20250826170315.721551-7-18255117159@163.com>
+Subject: [PATCH v3 8/8] PCI/DPC: Add macro for RP busy check delay
+Date: Wed, 27 Aug 2025 01:03:15 +0800
+Message-Id: <20250826170315.721551-9-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250826170315.721551-1-18255117159@163.com>
 References: <20250826170315.721551-1-18255117159@163.com>
@@ -42,42 +42,42 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAH5Svt6K1o9DIiEg--.25085S8
-X-Coremail-Antispam: 1Uf129KBjvdXoW7Gry7Zw1fZr13uw4kAw4UCFg_yoWfWrb_u3
-	yY9a17CrWqkFyakF12yw4IvF95A3WSq3WDXa4rtFyfAa13X348J3s2vrWDXrZ5Gws3Jr17
-	tr1qyr48JrW7GjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sR_F4EJUUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgu1o2it5y8lQgAAsN
+X-CM-TRANSID:_____wAH5Svt6K1o9DIiEg--.25085S10
+X-Coremail-Antispam: 1Uf129KBjvdXoWrKrykKrW8CF4UZF18Kw17Jrb_yoWkAwb_uF
+	yFvryIyrW5CF97C3yYv3ySy34UA3Z7Zr1xWa1FyFWfZr17trnrJrZ2vw15trZ8W3y5XFy5
+	Aw4DJ34Yyr9rGjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sR_wvtJUUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiOgC1o2it5y8lTQABsI
 
-Add RCAR_PCIE_PHYRDY_CHECK_MS macro for PHY ready check delay.
+Add PCIE_EXP_DPC_BUSY_CHECK_MS macro for RP busy check delay.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/pcie-rcar.c | 4 +++-
+ drivers/pci/pcie/dpc.c | 4 +++-
  1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/controller/pcie-rcar.c b/drivers/pci/controller/pcie-rcar.c
-index 7583699ef7b6..653f13d82934 100644
---- a/drivers/pci/controller/pcie-rcar.c
-+++ b/drivers/pci/controller/pcie-rcar.c
-@@ -11,6 +11,8 @@
+diff --git a/drivers/pci/pcie/dpc.c b/drivers/pci/pcie/dpc.c
+index fc18349614d7..bd5e8cd9e43e 100644
+--- a/drivers/pci/pcie/dpc.c
++++ b/drivers/pci/pcie/dpc.c
+@@ -21,6 +21,8 @@
+ #define PCI_EXP_DPC_CTL_EN_MASK	(PCI_EXP_DPC_CTL_EN_FATAL | \
+ 				 PCI_EXP_DPC_CTL_EN_NONFATAL)
  
- #include "pcie-rcar.h"
- 
-+#define RCAR_PCIE_PHYRDY_CHECK_MS	5
++#define PCIE_EXP_DPC_BUSY_CHECK_MS	10
 +
- void rcar_pci_write_reg(struct rcar_pcie *pcie, u32 val, unsigned int reg)
- {
- 	writel(val, pcie->base + reg);
-@@ -39,7 +41,7 @@ int rcar_pcie_wait_for_phyrdy(struct rcar_pcie *pcie)
- 		if (rcar_pci_read_reg(pcie, PCIEPHYSR) & PHYRDY)
- 			return 0;
- 
--		msleep(5);
-+		msleep(RCAR_PCIE_PHYRDY_CHECK_MS);
+ static const char * const rp_pio_error_string[] = {
+ 	"Configuration Request received UR Completion",	 /* Bit Position 0  */
+ 	"Configuration Request received CA Completion",	 /* Bit Position 1  */
+@@ -135,7 +137,7 @@ static int dpc_wait_rp_inactive(struct pci_dev *pdev)
+ 	pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
+ 	while (status & PCI_EXP_DPC_RP_BUSY &&
+ 					!time_after(jiffies, timeout)) {
+-		msleep(10);
++		msleep(PCIE_EXP_DPC_BUSY_CHECK_MS);
+ 		pci_read_config_word(pdev, cap + PCI_EXP_DPC_STATUS, &status);
  	}
- 
- 	return -ETIMEDOUT;
+ 	if (status & PCI_EXP_DPC_RP_BUSY) {
 -- 
 2.25.1
 
