@@ -1,37 +1,40 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id CD5392E1EFF;
-	Tue, 26 Aug 2025 17:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id F1C9A2E285B;
+	Tue, 26 Aug 2025 17:03:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756227837; cv=none; b=Mfjf/qMHsW0g/yDfn9Evwhyy4tj07coUIxX+5jRh9fxsObXZIZKMTf1TpyD2yDVcf5emBRlZ1eObxkRT6qnfn2Jol1fTiZ4jDRKFnHHTSAddTX0vOvhCFuA8g6kd8EY+l/I2aWoZIm3ffXz/dk9Gdsr9H/lOh6h7EwfGFrV11To=
+	t=1756227838; cv=none; b=H2pwXsxW5ArKOyq4E5QZSj3z3VKPbYKxEIpouSF42W/6+0ShP9I1kbrsDISIwvH+QFxu4FN+8ag2pP1BtxGvPh+rbpCr+yc2QADDV4t1pn0NzIcWE+wiEw0UYXSW8aLc24LF27oubj0aYF1lbxlL/PGBl83OCZCVZpwISih/TXs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756227837; c=relaxed/simple;
-	bh=C7vIGge6pWneUbN6NxFvop7zonf4Uq/iHHHVE4CMRP4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=tNzLD0NQ0bgbZiRzUWdbxm6ddPIeAmk7v3VN7ZxBo9jPrCpa+drJpq90wDXXKShWRWk5vLGueoS94OfjYk8LDPOGh6hpeJVLXgDKefm/T/fBZ/RlxAbSfv2Hz2M53Soc9Fl8EjmyJAohmjcM/uY4H+/GLASWKyNKSOAscEsdi5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=cgz855Pn; arc=none smtp.client-ip=220.197.31.4
+	s=arc-20240116; t=1756227838; c=relaxed/simple;
+	bh=/WFpPBskMWBkdGVSacMhxhni4z2VHYUPoxSJMhvCRps=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=RApVZNHukpF78U9VqbAjawTp0jJWbJ/jGz+cdaBs6CRgbIhd2EL0Wz/Z5TAIjdQWqFAjiEVhMSJ1UlM+PEZvjmpM78tjtE9hruKu1vJn009VNklcZ1OBon4gqsUH2vxax9ZYkJy0lyPtbSlC5OkyZfi2uMupvmjnYQeTx9zgdyU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MuECljJ9; arc=none smtp.client-ip=220.197.31.3
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="cgz855Pn"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MuECljJ9"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=GY
-	0fQwBZFV53gDtniXYPAseyh8Wgc5jwrqG1OowGqM8=; b=cgz855PnX4zFzSKpZY
-	cLRY+LCLHyiubjWz32jViB0fL7xI1l1tQaMisC/abaVGHXn8L/KCAao4rYr184T9
-	VYPpCgiNeiuX46V1FDE7J3tIYLBp4+XR/swKT3Jphk5+2OSwkaYcBcRSuhK1f7XO
-	JAH0br5u4QrEBJ7WgvxAdv+nY=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=k9
+	vi2+U0ISlZpQf9ZsfxllqYwUzu1si7Y3nLS7lJb8g=; b=MuECljJ9l463ApcpWq
+	oh1Ut2twyhVL3ktcTc5N4XUFpxCeea8KJ5bYwn0cbtSGniMlUizohCBB1xICvls2
+	JbngcfFBE0Vui8vk81vmaGRWOqfSnvErvqqBGIcthb72k17ExCeO6UbqidcKGAnF
+	S9VDFT1zpL9r2eI1tckc3RDQU=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAH5Svt6K1o9DIiEg--.25085S2;
-	Wed, 27 Aug 2025 01:03:41 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAH5Svt6K1o9DIiEg--.25085S5;
+	Wed, 27 Aug 2025 01:03:43 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	helgaas@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 0/8] PCI: Replace short msleep() calls with more precise delay functions
-Date: Wed, 27 Aug 2025 01:03:07 +0800
-Message-Id: <20250826170315.721551-1-18255117159@163.com>
+Subject: [PATCH v3 3/8] PCI: Add macro for link status check delay
+Date: Wed, 27 Aug 2025 01:03:10 +0800
+Message-Id: <20250826170315.721551-4-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250826170315.721551-1-18255117159@163.com>
+References: <20250826170315.721551-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -39,59 +42,42 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAH5Svt6K1o9DIiEg--.25085S2
-X-Coremail-Antispam: 1Uf129KBjvJXoW7AFykZw1UXF4xJw4DCw4rXwb_yoW8Cw4DpF
-	W5Gan0yF4xJFW3Ca1xuayxuFy5ZFs3AFWjgrZ3G34a9anxZ3WYqF4fKr1rAFyjgrW0q3Zr
-	ur1ak3WxAayjyFJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pic_-kUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxO1o2it3wnvHQABs+
+X-CM-TRANSID:_____wAH5Svt6K1o9DIiEg--.25085S5
+X-Coremail-Antispam: 1Uf129KBjvdXoW7GF1UKw1xur1fCF13trW8WFg_yoWDJrX_u3
+	sFvF4xWrW0kF9xK3y29r1fZrya93Z3WF4xuF97tFyfAFy7GryY9Fyjvr1DJa13WayrAF12
+	v3srtF1rCrn2kjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUUxR67UUUUU==
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxi1o2it56YcgAAAsV
 
-This series improves code readability and maintainability in the PCI
-subsystem by replacing hard-coded delay values with descriptive macros.
+Add PCIE_LINK_STATUS_CHECK_MS macro for link status check delay.
 
-The changes include:
-- Adding macros for various delay values used in PCI operations
-- Replacing msleep(2) with fsleep(2000) for precise secondary bus reset
-- Keeping the same delay values but using macros for better documentation
-
-These changes make the code easier to understand and maintain, while
-ensuring that the timing requirements specified in the PCIe r7.0
-specification are met.
-
+Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
-Changes for v3:
-https://patchwork.kernel.org/project/linux-pci/cover/20250822155908.625553-1-18255117159@163.com/
+ drivers/pci/pci.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-- According to Bjorn's suggestion, split the first patch of v2 and add
-  macro definitions to the remaining patches.
-
-Changes for v2:
-https://patchwork.kernel.org/project/linux-pci/patch/20250820160944.489061-1-18255117159@163.com/
-
-- According to the Maintainer's suggestion, it was modified to fsleep,
-  usleep_range, and macro definitions were used instead of hard code. (Bjorn)
----
-Hans Zhang (8):
-  PCI: Add macro for secondary bus reset delay
-  PCI: Replace msleep with fsleep for precise secondary bus reset
-  PCI: Add macro for link status check delay
-  PCI: rcar-host: Add macro for speed change monitoring delay
-  PCI: brcmstb: Add macro for link up check delay
-  PCI: rcar: Add macro for PHY ready check delay
-  PCI: pciehp: Add macros for hotplug operation delays
-  PCI/DPC: Add macro for RP busy check delay
-
- drivers/pci/controller/pcie-brcmstb.c   |  4 +++-
- drivers/pci/controller/pcie-rcar-host.c |  4 +++-
- drivers/pci/controller/pcie-rcar.c      |  4 +++-
- drivers/pci/hotplug/pciehp_hpc.c        |  7 +++++--
- drivers/pci/pci.c                       | 11 +++++------
- drivers/pci/pci.h                       |  3 +++
- drivers/pci/pcie/dpc.c                  |  4 +++-
- 7 files changed, 25 insertions(+), 12 deletions(-)
-
-
-base-commit: fab1beda7597fac1cecc01707d55eadb6bbe773c
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 81105dfc2f62..f5f5474d9aba 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -77,6 +77,8 @@ struct pci_pme_device {
+  */
+ #define PCIE_RESET_READY_POLL_MS 60000 /* msec */
+ 
++#define PCIE_LINK_STATUS_CHECK_MS 1
++
+ static void pci_dev_d3_sleep(struct pci_dev *dev)
+ {
+ 	unsigned int delay_ms = max(dev->d3hot_delay, pci_pm_d3hot_delay);
+@@ -4683,7 +4685,7 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
+ 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
+ 		if ((lnksta & lnksta_mask) == lnksta_match)
+ 			return 0;
+-		msleep(1);
++		msleep(PCIE_LINK_STATUS_CHECK_MS);
+ 	} while (time_before(jiffies, end_jiffies));
+ 
+ 	return -ETIMEDOUT;
 -- 
 2.25.1
 
