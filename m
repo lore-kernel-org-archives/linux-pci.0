@@ -1,37 +1,37 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F1C9A2E285B;
-	Tue, 26 Aug 2025 17:03:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9872E2E2DCF;
+	Tue, 26 Aug 2025 17:03:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756227838; cv=none; b=H2pwXsxW5ArKOyq4E5QZSj3z3VKPbYKxEIpouSF42W/6+0ShP9I1kbrsDISIwvH+QFxu4FN+8ag2pP1BtxGvPh+rbpCr+yc2QADDV4t1pn0NzIcWE+wiEw0UYXSW8aLc24LF27oubj0aYF1lbxlL/PGBl83OCZCVZpwISih/TXs=
+	t=1756227838; cv=none; b=sy/2rrweLnHC+1RaphjQsJOYAEgyhy9wMQ7HRQPY3IcQ63MXLbb5ZGPEVyLwjAzSUJgkI5gqErQwlJDp89ky0qYGmXxENo/rnKQ0RLy715F156FTe1nUh8U/tugFxBlff0mK/sa1U6ffya/La6+Ieqh5nLV7JUx17edOs1slgr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756227838; c=relaxed/simple;
-	bh=/WFpPBskMWBkdGVSacMhxhni4z2VHYUPoxSJMhvCRps=;
+	bh=O7cKFTO7QqpMBpb90+ZeyEjE5vWm5wRDSmrWherjG/I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RApVZNHukpF78U9VqbAjawTp0jJWbJ/jGz+cdaBs6CRgbIhd2EL0Wz/Z5TAIjdQWqFAjiEVhMSJ1UlM+PEZvjmpM78tjtE9hruKu1vJn009VNklcZ1OBon4gqsUH2vxax9ZYkJy0lyPtbSlC5OkyZfi2uMupvmjnYQeTx9zgdyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=MuECljJ9; arc=none smtp.client-ip=220.197.31.3
+	 MIME-Version; b=Ea+65ui9GLoYdFRIFTHE4qsrpguCWjC7/LnLtB6geLe+HeYEiVHRVTJO/pK8R7YbJINsFjt6GyIgfJAf3MBnVptkJHVC61IZDbmXDuWFXBTsdovEj5/yq3HTqKUdh54NHKRx9kBOh63ohvY6uDg/CPiQvBhSMEtHD4fGPkwTBXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=jsYbY/1S; arc=none smtp.client-ip=220.197.31.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="MuECljJ9"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="jsYbY/1S"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=k9
-	vi2+U0ISlZpQf9ZsfxllqYwUzu1si7Y3nLS7lJb8g=; b=MuECljJ9l463ApcpWq
-	oh1Ut2twyhVL3ktcTc5N4XUFpxCeea8KJ5bYwn0cbtSGniMlUizohCBB1xICvls2
-	JbngcfFBE0Vui8vk81vmaGRWOqfSnvErvqqBGIcthb72k17ExCeO6UbqidcKGAnF
-	S9VDFT1zpL9r2eI1tckc3RDQU=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=IH
+	Yy5mF+8CJT7S/nW24UwyCSGso7dtsA3nfIjCqd0D4=; b=jsYbY/1SjK+snDp4kM
+	rD8IgDs2iCU8umBlPqnwS4FG7J6MiQkzWLdc39aIqMPvGzMowrCoujpBIsuT+8rx
+	+J8YwCcGplyntYQSLlLr8ZyO439RK9kojvrH2kZ/b63s+fUANR4Vwn5oz3kSDeov
+	WrmLgZEm4PGPtgBCe8mZDo0Lc=
 Received: from localhost.localdomain (unknown [])
-	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAH5Svt6K1o9DIiEg--.25085S5;
-	Wed, 27 Aug 2025 01:03:43 +0800 (CST)
+	by gzga-smtp-mtada-g1-2 (Coremail) with SMTP id _____wAH5Svt6K1o9DIiEg--.25085S3;
+	Wed, 27 Aug 2025 01:03:42 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: bhelgaas@google.com,
 	helgaas@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Hans Zhang <18255117159@163.com>
-Subject: [PATCH v3 3/8] PCI: Add macro for link status check delay
-Date: Wed, 27 Aug 2025 01:03:10 +0800
-Message-Id: <20250826170315.721551-4-18255117159@163.com>
+Subject: [PATCH v3 1/8] PCI: Add macro for secondary bus reset delay
+Date: Wed, 27 Aug 2025 01:03:08 +0800
+Message-Id: <20250826170315.721551-2-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250826170315.721551-1-18255117159@163.com>
 References: <20250826170315.721551-1-18255117159@163.com>
@@ -42,42 +42,54 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:_____wAH5Svt6K1o9DIiEg--.25085S5
-X-Coremail-Antispam: 1Uf129KBjvdXoW7GF1UKw1xur1fCF13trW8WFg_yoWDJrX_u3
-	sFvF4xWrW0kF9xK3y29r1fZrya93Z3WF4xuF97tFyfAFy7GryY9Fyjvr1DJa13WayrAF12
-	v3srtF1rCrn2kjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7IUUxR67UUUUU==
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxi1o2it56YcgAAAsV
+X-CM-TRANSID:_____wAH5Svt6K1o9DIiEg--.25085S3
+X-Coremail-Antispam: 1Uf129KBjvJXoW7KrWxCr4rCF45KryfWF17ZFb_yoW8XF15pF
+	Z8CFy8AF1rJa15Xrs5Aa18u34rG3ZI9FWjkF48K3sa93W3Aa4Du3y3KFW5WrnFqrWxXr13
+	Aas8C34UJFW5trDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pNJP__UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiWxO1o2it3wnvHQACs9
 
-Add PCIE_LINK_STATUS_CHECK_MS macro for link status check delay.
+Add PCI_T_RST_SEC_BUS_DELAY_MS macro for the secondary bus reset
+delay value according to PCIe r7.0 spec, section 7.5.1.3.13.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/pci.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/pci/pci.c | 7 ++-----
+ drivers/pci/pci.h | 3 +++
+ 2 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
-index 81105dfc2f62..f5f5474d9aba 100644
+index b0f4d98036cd..c05a4c2fa643 100644
 --- a/drivers/pci/pci.c
 +++ b/drivers/pci/pci.c
-@@ -77,6 +77,8 @@ struct pci_pme_device {
-  */
- #define PCIE_RESET_READY_POLL_MS 60000 /* msec */
+@@ -4963,11 +4963,8 @@ void pci_reset_secondary_bus(struct pci_dev *dev)
+ 	ctrl |= PCI_BRIDGE_CTL_BUS_RESET;
+ 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
  
-+#define PCIE_LINK_STATUS_CHECK_MS 1
+-	/*
+-	 * PCI spec v3.0 7.6.4.2 requires minimum Trst of 1ms.  Double
+-	 * this to 2ms to ensure that we meet the minimum requirement.
+-	 */
+-	msleep(2);
++	/* Double this to 2ms to ensure that we meet the minimum requirement */
++	msleep(2 * PCI_T_RST_SEC_BUS_DELAY_MS);
+ 
+ 	ctrl &= ~PCI_BRIDGE_CTL_BUS_RESET;
+ 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL, ctrl);
+diff --git a/drivers/pci/pci.h b/drivers/pci/pci.h
+index 34f65d69662e..4d7e9c3f3453 100644
+--- a/drivers/pci/pci.h
++++ b/drivers/pci/pci.h
+@@ -60,6 +60,9 @@ struct pcie_tlp_log;
+ #define PCIE_LINK_WAIT_MAX_RETRIES	10
+ #define PCIE_LINK_WAIT_SLEEP_MS		90
+ 
++/* PCIe r7.0, sec 7.5.1.3.13, requires minimum Trst of 1ms */
++#define PCI_T_RST_SEC_BUS_DELAY_MS	1
 +
- static void pci_dev_d3_sleep(struct pci_dev *dev)
- {
- 	unsigned int delay_ms = max(dev->d3hot_delay, pci_pm_d3hot_delay);
-@@ -4683,7 +4685,7 @@ static int pcie_wait_for_link_status(struct pci_dev *pdev,
- 		pcie_capability_read_word(pdev, PCI_EXP_LNKSTA, &lnksta);
- 		if ((lnksta & lnksta_mask) == lnksta_match)
- 			return 0;
--		msleep(1);
-+		msleep(PCIE_LINK_STATUS_CHECK_MS);
- 	} while (time_before(jiffies, end_jiffies));
- 
- 	return -ETIMEDOUT;
+ /* Message Routing (r[2:0]); PCIe r6.0, sec 2.2.8 */
+ #define PCIE_MSG_TYPE_R_RC	0
+ #define PCIE_MSG_TYPE_R_ADDR	1
 -- 
 2.25.1
 
