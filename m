@@ -1,67 +1,67 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB1B230DD38
-	for <linux-pci@vger.kernel.org>; Wed, 27 Aug 2025 03:51:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742E430DEBF
+	for <linux-pci@vger.kernel.org>; Wed, 27 Aug 2025 03:51:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=198.175.65.15
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756266700; cv=fail; b=MvRhowNqsdho7IOdN2W9fCXhT0D5JSO8irmAZUcEhah2DfgT5CKr/y6POe+A+duljRTKDEjYaj6gLyGmDj/PV9uNNl1VKlLSE5ucLCT+hCthlVX9XbBDx7N9Y+dAkID4UEAbSbGhxKuS/ssnhMxJFGKSJhYDyLHqPJSjxPLrGs0=
+	t=1756266702; cv=fail; b=B0eeBfStWcFdxNpIOyhK8iDKwvBvZUNs4e9ZL+1Ok3WDwTYn2oVDcFRzhh+tJiYnX6uprzu6A2q6uLfVtbBKWDKfqpOzjpE2omGYBbVYEVcm2B70nvPZPLCw4uvtMlr1eNI8yukCWg9VIa2/s0o0IbIyWX2dSX/ueh/5EIX22ZM=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756266700; c=relaxed/simple;
-	bh=AfhT00JRQy2igOCnRLSpd71PMZDuqmN9fg5zgyz/6Ko=;
+	s=arc-20240116; t=1756266702; c=relaxed/simple;
+	bh=AeePjGMWr9bhtCkTSkds1K1LnBYti2vDkKUVQGxK8Ss=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=AASJh845/zYs1kI3jRvU+DoDokYapZdqSdwq/Ia940akENs0z/FONZm15rLZ+ihqlq3EdqTX7Bff0D9xOg1LekmHBW/i/o9VK217pW9HXcZy3sJ/qgX8vweyxQtPiHvA8VONlng5Kcz3IINoTYbRs/dvRxtiQDpBY07cVVpDfVM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=YehzCQ8C; arc=fail smtp.client-ip=198.175.65.15
+	 Content-Type:MIME-Version; b=rrXe8zph1L/ZfK/qXHb/vk0nSrvhOXzESK6DrzIVerw72jpElQTTwqSF9Dra0fb27JrQ65V2nP3qMdz+jFc8VGBU7acaemY7CsOudNjViSuW/IezRziOQYFD+/aHk4mkPs0oe2pD2bycFLdhMXYxLO7p4XGalK0U9FQ65TQniDg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Q+UJYF7E; arc=fail smtp.client-ip=198.175.65.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="YehzCQ8C"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Q+UJYF7E"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1756266698; x=1787802698;
+  t=1756266700; x=1787802700;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:content-transfer-encoding:mime-version;
-  bh=AfhT00JRQy2igOCnRLSpd71PMZDuqmN9fg5zgyz/6Ko=;
-  b=YehzCQ8CTd1VrIE9fcdc7l+L/t/t+gPMmNfKwkMgtW5yHEjjazUjLoyj
-   TwscbIVJD8nSviCKgx3pZVFG/wlMmurb/Dcm17ocT1dsC1AEOprCUKjkP
-   YbGQ9siIreudkvHTsh7Avim1kQ5JbeIw46Py+FTuE43JkMJISbUc8RneG
-   uEJnlv6SI3qRbYpYqHnimqC4PMnP2r7efG29qIkJXrUZeUXNb4KVVL275
-   WQu7r+KldFnAPc6wpEMwk1j7k1HuFCYRb3chAIdqzaNYzaVyDe/7YhmxL
-   Q9n7xJxFDtLu3Y5igCOJvjZ6E7xggjJmzWlHAsjD+b0a10Yoqqg0TYKFl
-   g==;
-X-CSE-ConnectionGUID: e6ZBIr1yTyazSGQBMb9jQA==
-X-CSE-MsgGUID: I9ruVvg3R/GbyMJS/lKPGA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11534"; a="62159128"
+  bh=AeePjGMWr9bhtCkTSkds1K1LnBYti2vDkKUVQGxK8Ss=;
+  b=Q+UJYF7ESIl5IovWKqfE3UzjWsZXHVAPjmJiL6S0J/yr5Ysn5gMeWIvK
+   K5JdaTr4xEpdjNuJ0o9gLLVjpSp2kuFcrmvXpfN9eQ6ZoE+5+uBdhWZyk
+   icM7QvLPfJlQ4mgvZ0OlDbJ3kU4N4QYo0Trl+IbHv0BCXwVA2dk61eGH7
+   MYkWY9uqiA3zXzLCvzPrezSEli0ZJ02BocepYiI9V+YayvUdZeTfR0u9Z
+   SvmtorfSiOkBaSd5mIV54QkMZCpfDmouwzSAb/6X77KG9Gn62ULcG5uL1
+   30LAqrMF8wS9i8rsV3bqB5+tiz5+y2jTPj83kLVipmcQRmUEAe6qZmqw3
+   A==;
+X-CSE-ConnectionGUID: 4NzTcd5BQGiAmVU+12qGPQ==
+X-CSE-MsgGUID: 0ZFDV24NStOivZ4s+/1c4Q==
+X-IronPort-AV: E=McAfee;i="6800,10657,11534"; a="62159156"
 X-IronPort-AV: E=Sophos;i="6.18,214,1751266800"; 
-   d="scan'208";a="62159128"
+   d="scan'208";a="62159156"
 Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2025 20:51:36 -0700
-X-CSE-ConnectionGUID: Wi1EGsoaSwCIRSvoouYE+Q==
-X-CSE-MsgGUID: Tq30eTvXRBCKHE1DhdungA==
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2025 20:51:40 -0700
+X-CSE-ConnectionGUID: o9ZdRHhSRJKa9EtwbZ0Sdg==
+X-CSE-MsgGUID: CqqWsjwATS+9jW4YJek3iQ==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.18,214,1751266800"; 
-   d="scan'208";a="169685108"
+   d="scan'208";a="169685138"
 Received: from fmsmsx902.amr.corp.intel.com ([10.18.126.91])
-  by fmviesa006.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2025 20:51:36 -0700
-Received: from FMSMSX902.amr.corp.intel.com (10.18.126.91) by
+  by fmviesa006.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Aug 2025 20:51:39 -0700
+Received: from FMSMSX903.amr.corp.intel.com (10.18.126.92) by
  fmsmsx902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 26 Aug 2025 20:51:35 -0700
+ 15.2.2562.17; Tue, 26 Aug 2025 20:51:39 -0700
 Received: from fmsedg901.ED.cps.intel.com (10.1.192.143) by
- FMSMSX902.amr.corp.intel.com (10.18.126.91) with Microsoft SMTP Server
+ FMSMSX903.amr.corp.intel.com (10.18.126.92) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17 via Frontend Transport; Tue, 26 Aug 2025 20:51:35 -0700
-Received: from NAM04-BN8-obe.outbound.protection.outlook.com (40.107.100.72)
+ 15.2.2562.17 via Frontend Transport; Tue, 26 Aug 2025 20:51:39 -0700
+Received: from NAM04-BN8-obe.outbound.protection.outlook.com (40.107.100.46)
  by edgegateway.intel.com (192.55.55.81) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.2562.17; Tue, 26 Aug 2025 20:51:35 -0700
+ 15.2.2562.17; Tue, 26 Aug 2025 20:51:38 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=wSE5oRCLJuaZ/UB97suLMLlWdUSlgIqdE0P4FOwy7ikWiaodjELE9sfna4ZSO36dv5qEbAxzTkcB+U+aIzT4cl7xDIua4be66CXjnEN9Y+0YF83swhUv4JaOI/ZSnym1cH7lV+B+hhUeZRwShEOU2UMVnBRu7XB2JFbBBcyl3JsMXDZHd2TvlY5wGbNhs6v/MYS35p5N7SfVxqqE3UG7HMgQvggeZZl/kgybgQgEzOX+m/BEY4+qSt3hShntiDBEU8plTMFY/cVCemRJlQwDdwHa62SHQ2piPKJR998NyY2xOJAI5xKS+FGos3M9r72KVgTPr+ASS4gc0ethPnlrhQ==
+ b=BYtMX0Yfi+wzxYjhjhjvMAYYiT40Q6p4ckrLcb8oZ/7fmmkQx1MOXFnVAe8PUTpoXKPbkfOe/bHewDXUWnd5CSAPgX5eDl5soS13MqNDhVRdRQFwutowU8PRS/jak4Sr/zuwQ6TSAg4Eo5m2thxtI3dPMWmNzNmdB1Y9vYZ8y6F2CzUOd85g2/Z/FogYnMIMwFfIBRCYeNUa1fWg1w5fxS7tt66uwsdf+s8wwunSluImbqQJgiGbBJvPvuYMbsxKQyS1gZFeYIOdIeuiy8k8ZgnOVutSdRhHBcRKCixLbaYawn/ZMz+i27cQARBAMSPwEFpNu7dDoXCFNShGriGT/w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qGoCq2maex9C6/MVwmmVRUH1YzHipu4VX4dwblnR/0c=;
- b=U6Cu88557YhZJsXhzAD1yxBsDWeQJco6vZ4sVM3+Ns7o2nEIJ+VMaEwtBTrP5qVUrRy02pfsXW6JUQ5ufvY3lzhmbn7CVW8CkYsOWvD1QF4YQbc2vJQSlYHJYhH87h0u4AuQqV3Nwk3IVaYUGfQtR/Ao/qGfOqQlhEy4sOf9LmQRKLhnDrOu0ub+tYEH91e5WS+SO5IdLs2h22rnTph223VPydBO65xwXSgJDYRMKxR6mfUSYYAIReOgfZW1jB5gZogaepIdWSCrKcZsFaMkJ1CkZHSoBsIWroQHZaJB5xr1v6MHaLfk2TXZU9q6Us4a7d3ZpE93cLYhqfqxFp/ccw==
+ bh=HopN5lN2iHSEUClHRmRpZvZqSVdYlivMSCP2drq9njY=;
+ b=U0fwHg6wWLpmEGfJ0wtxIIY2Svj3QLF5deJAcqF7GKdg95VpXVPxE85c7cuc06WX0y5YAlMEqwjOBG2A5BKspDiLvWYdg3SEuLCZxoifMJC4NVSkjnWA3N4Bvd0j/PqImR48lj6rKJNoORsJUyQK25cja8jVCRpx9X4mea5HaPIlweQ8+4+ldVIp2q7COe7OfDpC//RztJbmYASH1LyoGgii84acrejT/Dt+3I+xOTf2s21e4vMbGzRz6urUVNR46F7YapUmTNnXTSvlmOKRw1gI11hS632TRRLBTOXLcpkq7eGJCcM0kVwMO1wo+vNHCFutTalJ3BmeN8jHjh4Tmw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=intel.com; dmarc=pass action=none header.from=intel.com;
  dkim=pass header.d=intel.com; arc=none
@@ -71,19 +71,19 @@ Received: from PH8PR11MB8107.namprd11.prod.outlook.com (2603:10b6:510:256::6)
  by IA0PR11MB8335.namprd11.prod.outlook.com (2603:10b6:208:493::6) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9052.20; Wed, 27 Aug
- 2025 03:51:33 +0000
+ 2025 03:51:35 +0000
 Received: from PH8PR11MB8107.namprd11.prod.outlook.com
  ([fe80::6b05:74cf:a304:ecd8]) by PH8PR11MB8107.namprd11.prod.outlook.com
  ([fe80::6b05:74cf:a304:ecd8%2]) with mapi id 15.20.9052.019; Wed, 27 Aug 2025
- 03:51:33 +0000
+ 03:51:35 +0000
 From: Dan Williams <dan.j.williams@intel.com>
 To: <linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>
 CC: <yilun.xu@linux.intel.com>, <aneesh.kumar@kernel.org>, <aik@amd.com>,
 	<gregkh@linuxfoundation.org>, Bjorn Helgaas <bhelgaas@google.com>, "Lukas
  Wunner" <lukas@wunner.de>, Samuel Ortiz <sameo@rivosinc.com>
-Subject: [PATCH v5 05/10] samples/devsec: Introduce a PCI device-security bus + endpoint sample
-Date: Tue, 26 Aug 2025 20:51:21 -0700
-Message-ID: <20250827035126.1356683-6-dan.j.williams@intel.com>
+Subject: [PATCH v5 07/10] PCI/IDE: Add IDE establishment helpers
+Date: Tue, 26 Aug 2025 20:51:23 -0700
+Message-ID: <20250827035126.1356683-8-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250827035126.1356683-1-dan.j.williams@intel.com>
 References: <20250827035126.1356683-1-dan.j.williams@intel.com>
@@ -100,1210 +100,716 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: PH8PR11MB8107:EE_|IA0PR11MB8335:EE_
-X-MS-Office365-Filtering-Correlation-Id: 96a11b94-4322-4a35-0725-08dde51d037f
+X-MS-Office365-Filtering-Correlation-Id: 9630e4b2-7e72-4527-d2d6-08dde51d0497
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
-X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?96UFzTnpYJeePqLwyDJVQY66RCsBn+00M+0VOxsGpopm1PC7nnwP+WC+kldw?=
- =?us-ascii?Q?M/4Ry78E4zTFF2QZyED33tLoI44Lm6MFWMhRglf8sC29WcGD+L8zfbAzz1U/?=
- =?us-ascii?Q?K0ZHO1hWYBd0IJfEQp+aiFZ4aGJHadxjHyxl8bRD9sA7DJ8MQhbnwvUjnjBZ?=
- =?us-ascii?Q?4aMdkJUItdLBFvMxVQ0DgCs1Fyx0G1liGxbDiOMF2M/1wvvhPk9UwzlU2w5w?=
- =?us-ascii?Q?O/ctaP3wACEwIHQRSx7MvS0SmWrjjvxf9dwsW/7KyW9vD/Ug5wa5ZeDNAaXu?=
- =?us-ascii?Q?dzONly9MLgL25L/5+XYX7JzdkhhPAPIYFB3+bN9LE7WP9qZYc4xwITVIvJXy?=
- =?us-ascii?Q?K0y+n9s8+HlXPe+XF6PdrfR52np7+8RCRxxgMdJrYC/t1GEV+lDrdHvXDfoR?=
- =?us-ascii?Q?WUweGB+XTPwOux4OKKN5hGGvZmjgc9HKt1lXoAYcrmJmVAYvSc+oC/BKuH4E?=
- =?us-ascii?Q?lVS/r3KzLMnhDFqJya8Tgd2sirGLXvTK47LmXJhrnmXQ1t9lzHrQOAPVcDZk?=
- =?us-ascii?Q?Ud+NSnQbZJqT8yrOnF0rwxS+DPkVoQ5Fzgsv4EUbzPj5yrxS0rYOx1Csl0P0?=
- =?us-ascii?Q?BBdpXPxC8l0PeFV4lVI5fLnc5+3Pk6kIH3jiu0uosVnMqdfzI7V6CH5sb4m9?=
- =?us-ascii?Q?Stz4Iuv34oTN8ThQlYTOpB7iuk36gCZoVV8x/snVItyFf/BRe4Pm5QoCORjy?=
- =?us-ascii?Q?Axh9iJjC3vsJ1LFsf5yQIhlIOCUEJ5giDpK/2Jr3Z3KCXWlG3MCzxQ5cbgIs?=
- =?us-ascii?Q?vP+MFTiK+oLwEsPoyKwsZB5iLfz3W4bar5/EHwTUVQ+0tjvGNTzBIAWHry3F?=
- =?us-ascii?Q?O4JsxbBkryIZr6JeZVD+vvD0wbfDopH9X4g1BVQjkfRfTYRUqBsSUIRfATG6?=
- =?us-ascii?Q?dv0Vu2ae7fGnFWlGVCaxc2OQ35lEuiRnz9rK/xqkQxQKck8XEbqDpfV0T204?=
- =?us-ascii?Q?zlkdFLuGM0dTYU3WFDB7+me6BRAQDfCTAnbQKlnbjdB9t3iijXs5vUh7rYm9?=
- =?us-ascii?Q?EWU5V8QjM3Vb+NeUEMtj2a5Alh+ormwxmpMKYfWF2wrS1vT4Myg2CE/oRWql?=
- =?us-ascii?Q?IvrPGPE5XPFbWUNVeSjQHxK52y6N1KHGreCCH0dKoTu3SA1vNNRW8LqUbLYj?=
- =?us-ascii?Q?j+xw2RGLBgUNxXsk3CF/2R3hk2IB1lhoi0kKQF/ZsQ5UkX6I9NLyivrP3rk+?=
- =?us-ascii?Q?4sgcuzZwfSJdvBMyXAfB7B3X9JUbEKKIHOHhOt/hnPg8+6LfnPHIqklBFwob?=
- =?us-ascii?Q?XaGm/J+bajg3AHSOh5fu0z8R1dyym14OiX5MtJIjzSFbXZkynM5mmbWYzTzM?=
- =?us-ascii?Q?aFpfl/ak7kn8zdPwOgAjW4ELyYgwAWu5GRFB7qSR2M+VIbi1D6Hb3RibExsw?=
- =?us-ascii?Q?W+1UDryGA0NurxugwFi/pZYViv/TEixQ9ABqgXJFOLneDg8JQiOii89Kskaw?=
- =?us-ascii?Q?3m8dxeCmf1I=3D?=
+X-Microsoft-Antispam-Message-Info: =?us-ascii?Q?4oJU1hHZSwzL7HrlIeHLaEMsKm6bSJqHB3MSPb52p5MxVIvYrO9GJ74zpLpH?=
+ =?us-ascii?Q?2xIGmE4IUTRvQyOe6GYO5GWAEbKtz+fkg+JYMNmaVVKFJ5rQRnBitdijCPGN?=
+ =?us-ascii?Q?7B2o6w9UMwfJt1yQ6c3PzjpiLYq7LsS3d1QOzEe7MFQmWmWTJo01YyF2eTAw?=
+ =?us-ascii?Q?fWnfMMBrFj/LUe+Y4RGls2GYzHTv6KwefgUXkfK1ao7imFHhwtyS7i6Ug3W5?=
+ =?us-ascii?Q?oEDwbzrD2QNGNXF4Iy0i2WRW/6EXkeyQs/LMC7v/GNTcxPiMtnRWbXiWcHUt?=
+ =?us-ascii?Q?zz4f4t8lpfBTrcuho3WnWXrTnL2qPM24clJLFg6ToCjTBDeq1Fe2z/1lTE2c?=
+ =?us-ascii?Q?+jDs+RODUpzYPZyxWkMYdPeE/XhoA+ovcoHc59B9HxdmyFG9JVvwaTsiJdxV?=
+ =?us-ascii?Q?CF0eZ3kJTnf9FtIIdpp44VOcivkBk9JnMbRl0/I/Lv+CqP++nEa2Q4Tgy6Cj?=
+ =?us-ascii?Q?E0mCNRkf9+IX0UMSFVNOPRnUnPNRaG1LIjxW+GWkx3AYUm0dlD2WUd7QmNm3?=
+ =?us-ascii?Q?hRNsYWjkB+tsk81xCUbnqkPM2RpZtWdaQQWQfJ8u/I5cxxcwiPeP/Iiua5Kg?=
+ =?us-ascii?Q?qjetx1FxKQV2XA73zb/nVxMV3cZTapw/ZpBUw28OzJpuC55mU+vlTUjw278i?=
+ =?us-ascii?Q?oenimRKFx9l8EnLZkkgSAuqNVQYw4QfmoU+mWaIkTR4C1S/xMcaSacmVNBMp?=
+ =?us-ascii?Q?VsvjHEbfgXD5HgoCmf23Ay/oB9K6XJ6GdXvZjxL72j4hBJNFAGCPNjQV4LQ8?=
+ =?us-ascii?Q?DV59xD2jffaHrqFOtbCw3/CwNuyZ2ZUQBsoGuGirqFpLX8lgOt2lV7kP7oo7?=
+ =?us-ascii?Q?ByrIG6uOluc6ItagGCHS6D2pZFsRbZISrEAFec8aEN1fk+bfkH+t/MroU8RB?=
+ =?us-ascii?Q?7ttWwSNO/O2EZ0rPxAq7ox0Y5Ppv5js8hZ5fvqG8rlse7MZeUwXBoS17Fx7e?=
+ =?us-ascii?Q?BeTBvw2mGAB3DKaT2CGzV3HymUzOJ94IHsHlDMcF64jDOFO9Aq+/hTrLzL7I?=
+ =?us-ascii?Q?AaZdKzUmNoMxK4gBMB4s8v/cnKOi/92pt9EZ4t7a9sVi97rDf5dZutKGGV6O?=
+ =?us-ascii?Q?ctCHdLfv1kpygBg5DTLv1lMBbkzu3NzhzhuVxvYlx282VDX2lR0ftVCETu16?=
+ =?us-ascii?Q?YcTJr9WqvqX8UtiplxtmYf034IC7SYbcTcTyAcc9gJOAUFxApXFYaHCe0OaT?=
+ =?us-ascii?Q?1iFsA79pEoUFqphpl8e3IBacnerQBslcRM3F033H0g+CPX/wZYAzFqH/gZlM?=
+ =?us-ascii?Q?iZ9BsoS6jnsgBJbPDFWQV6m3285f+4/f2/QWeVtKj6Gxykq9MG7iSpspODTs?=
+ =?us-ascii?Q?+LDP4jSeZIOpzfxalpzNkaxwPoRR1Ljxuxu1NqCwV3PsR/GqlP31bkYbZKnX?=
+ =?us-ascii?Q?rsFhmYZGwcPvzBjkDkDsBt9LZ/Fxmgm0yKYEJ68FtvpUVjA3wpi2Qohv+OqB?=
+ =?us-ascii?Q?5o22NKnpSXQ=3D?=
 X-Forefront-Antispam-Report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH8PR11MB8107.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?BN1XMeFAKLriwxeYfeN3KVkCHwOXi8BhJPtYVErhMt/f+dfTFQ+VY6I0yRyP?=
- =?us-ascii?Q?WXm7mZxUBaGQabdlXSoy6LuJ0WdsSfiNTjJS8PKzIXqN0QLOyGgMKET6sD/o?=
- =?us-ascii?Q?ybn9S4SEqY2eI4vYpW1zxla3nC/s1WtLnZXNdOr6h3RJaXbs2f/gs4TehIo7?=
- =?us-ascii?Q?l4fJoke8xRARUii7rGu0xUXpcjcP275CZ5vhdwCHcY1DXOFwjeC/DA/u/Ffe?=
- =?us-ascii?Q?fMMPmO09qFITXt0Sqgw5yYGg0Hj6l/oIyaxmHMx7uvId69ucUBVCoJe6BgAZ?=
- =?us-ascii?Q?IB1xs1vJtAMv5If/7U4pGMxAXoaLm+shF7i9fHDZAbxr/bzDa4UUgBe8PJJM?=
- =?us-ascii?Q?rXlvRQERUx4mrbJEZVyo0YyUb8eb7Rykf7sdSBsKLMEuE9VMAiKn84YOMTDH?=
- =?us-ascii?Q?SlkXIqXsB6EHwBs50pcKEigTQg8NM0sMx8HGVgRmBKO14THlZqSmT4vLQkw7?=
- =?us-ascii?Q?zfrk316jJ65DfYL+FRm8T0jEESXldSy8Z7GgJ80CvZLI8Ycta7BS48xtNVHh?=
- =?us-ascii?Q?H3k5tjdjSgvLHCew+b+kyXUv2c8srirs5hpQjCVXGASBt/Tgir4NCmkAGHgw?=
- =?us-ascii?Q?ZBeWfP59VX/jAnk6ApagUeIJ5mhx1D9rqOcORbIIq0bAHID0G5bYFbeDNHGq?=
- =?us-ascii?Q?DcuY7wpq6capBmOXDJ5fgce3r8p8Eo2Q0Gt7JQ6mvcbYfzEumzO2Ri98kw4y?=
- =?us-ascii?Q?tcv+AxObtenyusHQBcXEa72l+svDrTzoDb1nGpnny7kCzpAvf6+2Z00zK/t3?=
- =?us-ascii?Q?8oOmyjTK3ujnNXLezFRWGx6MyPdLfxbWGEGUoOCqc4VvGL8FjrSvaZXaPfAd?=
- =?us-ascii?Q?SX7TFuLKXuNkGxckc26PhCeW3+rcGA+mQeorMKG1EHUsZkiSxrXXLN/k9lgt?=
- =?us-ascii?Q?3QboWZaj/Fm6nZzUmVB3OLv4QR4CsKirPocLp2rORR9uCXjuT0t+iDQhz8BT?=
- =?us-ascii?Q?DzvX8OmZr9Sl2aU01TBfDzsW9mJPErCWEHnH6C9nXXWxdfISJF64VDB//E+j?=
- =?us-ascii?Q?DaA6wKr/OvSImzMWKelqo7rPx2COYEiRMykQFLn0Oza7KpBn7taJpRIUnfAO?=
- =?us-ascii?Q?KgiH4MSHXwq0mY/ImYAgsRRDs4KN49tE+wDcqNXwgwC5bmTpjTt2dBwKM/Nl?=
- =?us-ascii?Q?u3eIvDGzF/DURAF7P2LF4y7o5L1r/0umHDbjQB7y1RzqmBvewG+wlIHhvs+b?=
- =?us-ascii?Q?yzjLFj4LGlM37qAc4kpKlGnr+vHFylqIVJkjZq2osC8Sg4rYN3hcCrmKxmWq?=
- =?us-ascii?Q?QKeD8jMjPeQGkaMyIUxB2a9GnOrLNCVW8ov05UAUMjyL2E/hX5kg1ZDMTS9t?=
- =?us-ascii?Q?R3XlpRbNT8V/CTQpsPn+jYOJrDTSrUeio2FZqHx+bfqb1ZNd4m6Hax1kDzaM?=
- =?us-ascii?Q?V23N7ejB+TwkJZaCCNoA7FOX6jPtDTUg0Y6qWe6h3xfEX0nOWT7jA7ImWnse?=
- =?us-ascii?Q?7n9zDJ/OOEOeM4UM2+0jSV5LQarsCu3xueNGUJEGhlqhL62F7U6VVaBA6GCe?=
- =?us-ascii?Q?xXZS37p+yaVWCVbV36d1g/7jQrzJwzSnpF/SeiXeyDgKxvmZ9moVhnz+8rlv?=
- =?us-ascii?Q?ye17wRmmbcyPO3xk4YSuV/ex2TDRh+4MRLIEHjSMI0VaprNa9QEsknyRYpgo?=
- =?us-ascii?Q?JQ=3D=3D?=
-X-MS-Exchange-CrossTenant-Network-Message-Id: 96a11b94-4322-4a35-0725-08dde51d037f
+X-MS-Exchange-AntiSpam-MessageData-0: =?us-ascii?Q?kNa/LqdGVveyGFVk2MTyv/fQPOL0S1s/hMMFUSN0CBb1VEsDi7vG4vZgOOLm?=
+ =?us-ascii?Q?yp06rEOCt832/06NyVZOINnppGorIVEQMAtXH3bsgdBKu9RHRAsQBXlvaK59?=
+ =?us-ascii?Q?zOo7J0Y742l8qzcUsTUd3Uo9I5B3tI4zUzmdg2+Xk00Ymy5BANyRBs2uCe67?=
+ =?us-ascii?Q?1We0BgoPlWDSf/wD2R7XXM4bw535YKDg3DC1WuIszkfwueSwLFN/0GNtEKb3?=
+ =?us-ascii?Q?h+kiYU/MFS5qYmEBp8Rt+0bL88rnfXuM/w/6bNn/bbe8cmcqScUyRa/5bEgp?=
+ =?us-ascii?Q?I1wJm3E3SlZoGWzL4/3xsBFQ/pSzLwF2ekg9MN/XHzJnpZFqnZooLSDmjoDy?=
+ =?us-ascii?Q?+yDOjBNxZqgMJLCWhWox8AKZX2nC1MMQJg5IaBh1nYdvvsUQhEZmaxoliuka?=
+ =?us-ascii?Q?eNFA6Z3d8B2HtsXENXMfH3garNfyaZngVnt1NiMqYrubIYdhGBrqr6hqjLmG?=
+ =?us-ascii?Q?Vmdn4s++reGAqJIxWByYRvLR3/M5E2Cygtke0eNETDEHXDxQCUGLObDcLB3z?=
+ =?us-ascii?Q?vh96uNsmFQqOmAVQZPe8g7XsjxA30I/NHu+uxwbhRRmQ1mRfEwI7pJpIm6C1?=
+ =?us-ascii?Q?Q6CDsdVxqrHVwJnX/N7eyQj4Hl5uKaZN03hZqbcKMRuMtclGGHo8pJVnK3YR?=
+ =?us-ascii?Q?QAlCuL2GPn7MArqLzI0y9uQk3rMPq/3sTGe1L1j1CVmZB3Pd0ZgVK3L0Jmqw?=
+ =?us-ascii?Q?ejYdWkk5/1XKtfPaS9YW5I/MhTd1GwYLS67NjsuleNNQ1idkyqCXqAnA6HQL?=
+ =?us-ascii?Q?r39YDnsB7y+3u1XF3281qbpcSDAFC1MZE0G5tBlFzqY8+uDJXLxHSCrxFw6l?=
+ =?us-ascii?Q?S/V2FIOZynoBlBQQmhFtrrK3pN80SnqPDLXi8KhT97u1URJrZLhwjuF4hDaS?=
+ =?us-ascii?Q?qu7ueqDYoIeTwFDuXpzNagYWzuVbheR+zVjICUepdBDxCf0n72VlY52gfksD?=
+ =?us-ascii?Q?Oe33R0Iy6woA9t+GRjyCj/PTb1RSDXMCZ4i++us5SPAxlABd0cMZXLYekcwJ?=
+ =?us-ascii?Q?5zJlJgp4auiYhH2a3hA6SSM3roLBT3NmKxqCceXEs/PhQ497YgI2wjFZPbL1?=
+ =?us-ascii?Q?ZkCGv4FNsXGlsVau+3wclLiqsvMzmSc/K0lUR8it/oigmaXT0qbcgI/PiKno?=
+ =?us-ascii?Q?1IvX56PWFJ9Z75otVMzvKXsdgArGbSDP+2T7DESoFDpBP5JIS4PbIU9HvGm1?=
+ =?us-ascii?Q?Bfa6ALbQ8WJGxTK/nHozyUKrLjgF/+zlcqNst8E4nfsVo5dqq61JR9vZEqfY?=
+ =?us-ascii?Q?AefB4+lSrsZlyB3ssQkeYjOxbN5hsIWXtk+aZWq0eTc2DSyVxOPaY2kySx6e?=
+ =?us-ascii?Q?MVFdGh+8+5LLo/0ot/dk028rlB7A0+msrzW9wXhv6lxZknEHDbQGcyNtNJq4?=
+ =?us-ascii?Q?brtVLsCtFk3WQc+w1YM6eIQ4zlybRJ5RsnqeYsBYDthosXflWI+YoOC2kZG8?=
+ =?us-ascii?Q?8Ux4Ytyfh4KgCDjjDmj6JJqSNOV3Hbld8ESVlRDd7nOa9CwFlLwzv83L8tNu?=
+ =?us-ascii?Q?frzacv6ErJIQGuHAK876rXYOCkjtXY/xqCm3isf9FWjE2InZJVbY3ZmBINSz?=
+ =?us-ascii?Q?CEmigSxZ0s9iNke46eQu5Z28BuD3Mxkpp8lWuZkg8BSAOkEaTx86J+7jV3HD?=
+ =?us-ascii?Q?1Q=3D=3D?=
+X-MS-Exchange-CrossTenant-Network-Message-Id: 9630e4b2-7e72-4527-d2d6-08dde51d0497
 X-MS-Exchange-CrossTenant-AuthSource: PH8PR11MB8107.namprd11.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Aug 2025 03:51:33.3785
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 27 Aug 2025 03:51:35.2157
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 46c98d88-e344-4ed4-8496-4ed7712e255d
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: cLks5ABNYQWxsDLECD97Lgmon3ihg3V0VeaW3Nsln44nknH9NVihmeGC+6lq7ZYn4th9zH0FY3OQkSxQGMkEze4fUjuU1pzKXyUBs48AP6Q=
+X-MS-Exchange-CrossTenant-UserPrincipalName: EBO/9zESaaRkT0zQrH/ZRrrnWrgwmDFS6IS2bOGuhekCVSIf4RGNunszwGY2Ii1g/OzytIKbv0N6mLvhlRj8XFmA0CR0hXIjWNSbnAX7yZ8=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR11MB8335
 X-OriginatorOrg: intel.com
 
-Establish just enough emulated PCI infrastructure to register a sample
-TSM (platform security manager) driver and have it discover an IDE + TEE
-(link encryption + device-interface security protocol (TDISP)) capable
-device.
+There are two components to establishing an encrypted link, provisioning
+the stream in Partner Port config-space, and programming the keys into
+the link layer via IDE_KM (IDE Key Management). This new library,
+drivers/pci/ide.c, enables the former. IDE_KM, via a TSM low-level
+driver, is saved for later.
 
-Use the existing CONFIG_PCI_BRIDGE_EMUL to emulate an IDE capable root
-port, and open code the emulation of an endpoint device via simulated
-configuration cycle responses.
+With the platform TSM implementations of SEV-TIO and TDX Connect in mind
+this library abstracts small differences in those implementations. For
+example, TDX Connect handles Root Port register setup while SEV-TIO
+expects System Software to update the Root Port registers. This is the
+rationale for fine-grained 'setup' + 'enable' verbs.
 
-The devsec_tsm driver responds to the PCI core TSM operations as if it
-successfully exercised the given interface security protocol message.
+The other design detail for TSM-coordinated IDE establishment is that
+the TSM may manage allocation of Stream IDs, this is why the Stream ID
+value is passed in to pci_ide_stream_setup().
 
-The devsec_bus and devsec_tsm drivers can be loaded in either order to
-reflect cases like SEV-TIO where the TSM is PCI-device firmware, and
-cases like TDX Connect where the TSM is a software agent running on the
-host CPU.
+The flow is:
 
-Follow-on patches add common code for TSM managed IDE establishment. For
-now, just successfully complete setup and teardown of the DSM (device
-security manager) context as a building block for management of TDI
-(trusted device interface) instances.
+pci_ide_stream_alloc():
+    Allocate a Selective IDE Stream Register Block in each Partner Port
+    (Endpoint + Root Port), and reserve a host bridge / platform stream
+    slot. Gather Partner Port specific stream settings like Requester ID.
 
- # modprobe devsec_bus
-    devsec_bus devsec_bus: PCI host bridge to bus 10000:00
-    pci_bus 10000:00: root bus resource [bus 00-01]
-    pci_bus 10000:00: root bus resource [mem 0xf000000000-0xffffffffff 64bit]
-    pci 10000:00:00.0: [8086:7075] type 01 class 0x060400 PCIe Root Port
-    pci 10000:00:00.0: PCI bridge to [bus 00]
-    pci 10000:00:00.0:   bridge window [io  0x0000-0x0fff]
-    pci 10000:00:00.0:   bridge window [mem 0x00000000-0x000fffff]
-    pci 10000:00:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
-    pci 10000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
-    pci 10000:01:00.0: [8086:ffff] type 00 class 0x000000 PCIe Endpoint
-    pci 10000:01:00.0: BAR 0 [mem 0xf000000000-0xf0001fffff 64bit pref]
-    pci_doe_abort: pci 10000:01:00.0: DOE: [100] Issuing Abort
-    pci_doe_cache_protocols: pci 10000:01:00.0: DOE: [100] Found protocol 0 vid: 1 prot: 1
-    pci 10000:01:00.0: disabling ASPM on pre-1.1 PCIe device.  You can enable it with 'pcie_aspm=force'
-    pci 10000:00:00.0: PCI bridge to [bus 01]
-    pci_bus 10000:01: busn_res: [bus 01] end is updated to 01
+pci_ide_stream_register():
+    Publish the stream in sysfs after allocating a Stream ID. In the TSM
+    case the TSM allocates the Stream ID for the Partner Port pair.
 
- # modprobe devsec_link_tsm
-    pf0_sysfs_enable: pci 10000:01:00.0: PCI/TSM: Device Security Manager detected (IDE TEE)
+pci_ide_stream_setup():
+    Program the stream settings to a Partner Port. Caller is responsible
+    for optionally calling this for the Root Port as well if the TSM
+    implementation requires it.
 
- # echo tsm0 > /sys/bus/pci/devices/10000:01:00.0/tsm/connect
-    devsec_tsm_pf0_probe: pci 10000:01:00.0: devsec: TSM enabled
+pci_ide_stream_enable():
+    Try to run the stream after IDE_KM.
+
+In support of system administrators auditing where platform, Root Port,
+and Endpoint IDE stream resources are being spent, the allocated stream
+is reflected as a symlink from the host bridge to the endpoint with the
+name:
+
+    stream%d.%d.%d
+
+Where the tuple of integers reflects the allocated platform, Root Port,
+and Endpoint stream index (Selective IDE Stream Register Block) values.
+
+Thanks to Wu Hao for a draft implementation of this infrastructure.
 
 Cc: Bjorn Helgaas <bhelgaas@google.com>
 Cc: Lukas Wunner <lukas@wunner.de>
 Cc: Samuel Ortiz <sameo@rivosinc.com>
-Cc: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
+Co-developed-by: Alexey Kardashevskiy <aik@amd.com>
+Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
+Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- MAINTAINERS               |   1 +
- samples/Kconfig           |  19 +
- samples/Makefile          |   1 +
- samples/devsec/Makefile   |  10 +
- samples/devsec/bus.c      | 734 ++++++++++++++++++++++++++++++++++++++
- samples/devsec/common.c   |  26 ++
- samples/devsec/devsec.h   |  40 +++
- samples/devsec/link_tsm.c | 174 +++++++++
- 8 files changed, 1005 insertions(+)
- create mode 100644 samples/devsec/Makefile
- create mode 100644 samples/devsec/bus.c
- create mode 100644 samples/devsec/common.c
- create mode 100644 samples/devsec/devsec.h
- create mode 100644 samples/devsec/link_tsm.c
+ .../ABI/testing/sysfs-devices-pci-host-bridge |  14 +
+ drivers/pci/ide.c                             | 427 ++++++++++++++++++
+ include/linux/pci-ide.h                       |  70 +++
+ include/linux/pci.h                           |   6 +
+ 4 files changed, 517 insertions(+)
+ create mode 100644 include/linux/pci-ide.h
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index f1aabab88c79..c1ad1294560c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -25623,6 +25623,7 @@ F:	Documentation/driver-api/pci/tsm.rst
- F:	drivers/pci/tsm.c
- F:	drivers/virt/coco/guest/
- F:	include/linux/*tsm*.h
-+F:	samples/devsec/
- F:	samples/tsm-mr/
+diff --git a/Documentation/ABI/testing/sysfs-devices-pci-host-bridge b/Documentation/ABI/testing/sysfs-devices-pci-host-bridge
+index 8c3a652799f1..2c66e5bb2bf8 100644
+--- a/Documentation/ABI/testing/sysfs-devices-pci-host-bridge
++++ b/Documentation/ABI/testing/sysfs-devices-pci-host-bridge
+@@ -17,3 +17,17 @@ Description:
+ 		PNP0A08 (/sys/devices/LNXSYSTM:00/LNXSYBUS:00/PNP0A08:00). See
+ 		/sys/devices/pciDDDD:BB entry for details about the DDDD:BB
+ 		format.
++
++What:		pciDDDD:BB/streamH.R.E
++Contact:	linux-pci@vger.kernel.org
++Description:
++		(RO) When a platform has established a secure connection, PCIe
++		IDE, between two Partner Ports, this symlink appears. A stream
++		consumes a Stream ID slot in each of the Host bridge (H), Root
++		Port (R) and Endpoint (E).  The link points to the Endpoint PCI
++		device in the Selective IDE Stream pairing. Specifically, "R"
++		and "E" represent the assigned Selective IDE Stream Register
++		Block in the Root Port and Endpoint, and "H" represents a
++		platform specific pool of stream resources shared by the Root
++		Ports in a host bridge. See /sys/devices/pciDDDD:BB entry for
++		details about the DDDD:BB format.
+diff --git a/drivers/pci/ide.c b/drivers/pci/ide.c
+index 05ab8c18b768..4f5aa42e05ef 100644
+--- a/drivers/pci/ide.c
++++ b/drivers/pci/ide.c
+@@ -5,8 +5,12 @@
  
- TRUSTED SERVICES TEE DRIVER
-diff --git a/samples/Kconfig b/samples/Kconfig
-index 6e072a5f1ed8..8a52fd08031a 100644
---- a/samples/Kconfig
-+++ b/samples/Kconfig
-@@ -324,6 +324,25 @@ source "samples/rust/Kconfig"
+ #define dev_fmt(fmt) "PCI/IDE: " fmt
+ #include <linux/bitfield.h>
++#include <linux/bitops.h>
+ #include <linux/pci.h>
++#include <linux/pci-ide.h>
+ #include <linux/pci_regs.h>
++#include <linux/slab.h>
++#include <linux/sysfs.h>
  
- source "samples/damon/Kconfig"
+ #include "pci.h"
  
-+config SAMPLE_DEVSEC
-+	tristate "Build a sample TEE Security Manager with an emulated PCI endpoint"
-+	depends on m
-+	depends on PCI
-+	depends on VIRT_DRIVERS
-+	depends on PCI_DOMAINS_GENERIC || X86
-+	select PCI_BRIDGE_EMUL
-+	select PCI_TSM
-+	select TSM
-+	help
-+	  Build a sample platform TEE Security Manager (TSM) driver with a
-+	  corresponding emulated PCIe topology. The resulting sample modules,
-+	  devsec_bus and devsec_tsm, exercise device-security enumeration, PCI
-+	  subsystem use ABIs, device security flows. For example, exercise IDE
-+	  (link encryption) establishment and TDISP state transitions via a
-+	  Device Security Manager (DSM).
-+
-+	  If unsure, say N
-+
- endif # SAMPLES
+@@ -23,6 +27,13 @@ static int __sel_ide_offset(u16 ide_cap, u8 nr_link_ide, u8 stream_index,
+ 	return offset + stream_index * PCI_IDE_SEL_BLOCK_SIZE(nr_ide_mem);
+ }
  
- config HAVE_SAMPLE_FTRACE_DIRECT
-diff --git a/samples/Makefile b/samples/Makefile
-index 07641e177bd8..59b510ace9b2 100644
---- a/samples/Makefile
-+++ b/samples/Makefile
-@@ -45,3 +45,4 @@ obj-$(CONFIG_SAMPLE_DAMON_PRCL)		+= damon/
- obj-$(CONFIG_SAMPLE_DAMON_MTIER)	+= damon/
- obj-$(CONFIG_SAMPLE_HUNG_TASK)		+= hung_task/
- obj-$(CONFIG_SAMPLE_TSM_MR)		+= tsm-mr/
-+obj-y					+= devsec/
-diff --git a/samples/devsec/Makefile b/samples/devsec/Makefile
-new file mode 100644
-index 000000000000..da122eb8d23d
---- /dev/null
-+++ b/samples/devsec/Makefile
-@@ -0,0 +1,10 @@
-+# SPDX-License-Identifier: GPL-2.0
++static int sel_ide_offset(struct pci_dev *pdev,
++			  struct pci_ide_partner *settings)
++{
++	return __sel_ide_offset(pdev->ide_cap, pdev->nr_link_ide,
++				settings->stream_index, pdev->nr_ide_mem);
++}
 +
-+obj-$(CONFIG_SAMPLE_DEVSEC) += devsec_common.o
-+devsec_common-y := common.o
+ void pci_ide_init(struct pci_dev *pdev)
+ {
+ 	u8 nr_link_ide, nr_ide_mem, nr_streams;
+@@ -88,5 +99,421 @@ void pci_ide_init(struct pci_dev *pdev)
+ 
+ 	pdev->ide_cap = ide_cap;
+ 	pdev->nr_link_ide = nr_link_ide;
++	pdev->nr_sel_ide = nr_streams;
+ 	pdev->nr_ide_mem = nr_ide_mem;
+ }
 +
-+obj-$(CONFIG_SAMPLE_DEVSEC) += devsec_bus.o
-+devsec_bus-y := bus.o
-+
-+obj-$(CONFIG_SAMPLE_DEVSEC) += devsec_link_tsm.o
-+devsec_link_tsm-y := link_tsm.o
-diff --git a/samples/devsec/bus.c b/samples/devsec/bus.c
-new file mode 100644
-index 000000000000..07cf4ce82ceb
---- /dev/null
-+++ b/samples/devsec/bus.c
-@@ -0,0 +1,734 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+// Copyright(c) 2024 - 2025 Intel Corporation. All rights reserved.
-+
-+#include <linux/bitfield.h>
-+#include <linux/cleanup.h>
-+#include <linux/device/faux.h>
-+#include <linux/module.h>
-+#include <linux/range.h>
-+#include <uapi/linux/pci_regs.h>
-+#include <linux/pci.h>
-+
-+#include "../../drivers/pci/pci-bridge-emul.h"
-+#include "devsec.h"
-+
-+#define NR_DEVSEC_BUSES 1
-+#define NR_PORT_STREAMS 1
-+#define NR_ADDR_ASSOC 1
-+
-+struct devsec {
-+	struct pci_host_bridge hb;
-+	struct devsec_sysdata sysdata;
-+	struct resource busnr_res;
-+	struct resource mmio_res;
-+	struct resource prefetch_res;
-+	struct pci_bus *bus;
-+	struct device *dev;
-+	struct devsec_port {
-+		union {
-+			struct devsec_ide {
-+				u32 cap;
-+				u32 ctl;
-+				struct devsec_stream {
-+					u32 cap;
-+					u32 ctl;
-+					u32 status;
-+					u32 rid1;
-+					u32 rid2;
-+					struct devsec_addr_assoc {
-+						u32 assoc1;
-+						u32 assoc2;
-+						u32 assoc3;
-+					} assoc[NR_ADDR_ASSOC];
-+				} stream[NR_PORT_STREAMS];
-+			} ide __packed;
-+			char ide_regs[sizeof(struct devsec_ide)];
-+		};
-+		struct pci_bridge_emul bridge;
-+	} *devsec_ports[NR_DEVSEC_BUSES];
-+	struct devsec_dev {
-+		struct devsec *devsec;
-+		struct range mmio_range;
-+		u8 __cfg[SZ_4K];
-+		struct devsec_dev_doe {
-+			int cap;
-+			u32 req[SZ_4K / sizeof(u32)];
-+			u32 rsp[SZ_4K / sizeof(u32)];
-+			int write, read, read_ttl;
-+		} doe;
-+		u16 ide_pos;
-+		union {
-+			struct devsec_ide ide __packed;
-+			char ide_regs[sizeof(struct devsec_ide)];
-+		};
-+	} *devsec_devs[NR_DEVSEC_BUSES];
++struct stream_index {
++	unsigned long *map;
++	u8 max, stream_index;
 +};
 +
-+#define devsec_base(x) ((void __force __iomem *) &(x)->__cfg[0])
-+
-+static struct devsec *bus_to_devsec(struct pci_bus *bus)
++static void free_stream_index(struct stream_index *stream)
 +{
-+	return container_of(bus->sysdata, struct devsec, sysdata);
++	clear_bit_unlock(stream->stream_index, stream->map);
 +}
 +
-+static int devsec_dev_config_read(struct devsec *devsec, struct pci_bus *bus,
-+				  unsigned int devfn, int pos, int size,
-+				  u32 *val)
++DEFINE_FREE(free_stream, struct stream_index *, if (_T) free_stream_index(_T))
++static struct stream_index *alloc_stream_index(unsigned long *map, u8 max,
++					       struct stream_index *stream)
 +{
-+	struct devsec_dev *devsec_dev;
-+	struct devsec_dev_doe *doe;
-+	void __iomem *base;
++	if (!max)
++		return NULL;
 +
-+	if (PCI_FUNC(devfn) != 0 ||
-+	    PCI_SLOT(devfn) >= ARRAY_SIZE(devsec->devsec_devs))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
++	do {
++		u8 stream_index = find_first_zero_bit(map, max);
 +
-+	devsec_dev = devsec->devsec_devs[PCI_SLOT(devfn)];
-+	base = devsec_base(devsec_dev);
-+	doe = &devsec_dev->doe;
-+
-+	if (pos == doe->cap + PCI_DOE_READ) {
-+		if (doe->read_ttl > 0) {
-+			*val = doe->rsp[doe->read];
-+			dev_dbg(&bus->dev, "devfn: %#x doe read[%d]\n", devfn,
-+				doe->read);
-+		} else {
-+			*val = 0;
-+			dev_dbg(&bus->dev, "devfn: %#x doe no data\n", devfn);
++		if (stream_index == max)
++			return NULL;
++		if (!test_and_set_bit_lock(stream_index, map)) {
++			*stream = (struct stream_index) {
++				.map = map,
++				.max = max,
++				.stream_index = stream_index,
++			};
++			return stream;
 +		}
-+		return PCIBIOS_SUCCESSFUL;
-+	} else if (pos == doe->cap + PCI_DOE_STATUS) {
-+		if (doe->read_ttl > 0) {
-+			*val = PCI_DOE_STATUS_DATA_OBJECT_READY;
-+			dev_dbg(&bus->dev, "devfn: %#x object ready\n", devfn);
-+		} else if (doe->read_ttl < 0) {
-+			*val = PCI_DOE_STATUS_ERROR;
-+			dev_dbg(&bus->dev, "devfn: %#x error\n", devfn);
-+		} else {
-+			*val = 0;
-+			dev_dbg(&bus->dev, "devfn: %#x idle\n", devfn);
-+		}
-+		return PCIBIOS_SUCCESSFUL;
-+	} else if (pos >= devsec_dev->ide_pos &&
-+		   pos < devsec_dev->ide_pos + sizeof(struct devsec_ide)) {
-+		*val = *(u32 *) &devsec_dev->ide_regs[pos - devsec_dev->ide_pos];
-+		return PCIBIOS_SUCCESSFUL;
-+	}
-+
-+	switch (size) {
-+	case 1:
-+		*val = readb(base + pos);
-+		break;
-+	case 2:
-+		*val = readw(base + pos);
-+		break;
-+	case 4:
-+		*val = readl(base + pos);
-+		break;
-+	default:
-+		PCI_SET_ERROR_RESPONSE(val);
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+	return PCIBIOS_SUCCESSFUL;
++		/* collided with another stream acquisition */
++	} while (1);
 +}
 +
-+static int devsec_port_config_read(struct devsec *devsec, unsigned int devfn,
-+				   int pos, int size, u32 *val)
++/**
++ * pci_ide_stream_alloc() - Reserve stream indices and probe for settings
++ * @pdev: IDE capable PCIe Endpoint Physical Function
++ *
++ * Retrieve the Requester ID range of @pdev for programming its Root
++ * Port IDE RID Association registers, and conversely retrieve the
++ * Requester ID of the Root Port for programming @pdev's IDE RID
++ * Association registers.
++ *
++ * Allocate a Selective IDE Stream Register Block instance per port.
++ *
++ * Allocate a platform stream resource from the associated host bridge.
++ * Retrieve stream association parameters for Requester ID range and
++ * address range restrictions for the stream.
++ */
++struct pci_ide *pci_ide_stream_alloc(struct pci_dev *pdev)
 +{
-+	struct devsec_port *devsec_port;
-+
-+	if (PCI_FUNC(devfn) != 0 ||
-+	    PCI_SLOT(devfn) >= ARRAY_SIZE(devsec->devsec_ports))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	devsec_port = devsec->devsec_ports[PCI_SLOT(devfn)];
-+	return pci_bridge_emul_conf_read(&devsec_port->bridge, pos, size, val);
-+}
-+
-+static int devsec_pci_read(struct pci_bus *bus, unsigned int devfn, int pos,
-+			   int size, u32 *val)
-+{
-+	struct devsec *devsec = bus_to_devsec(bus);
-+
-+	dev_vdbg(&bus->dev, "devfn: %#x pos: %#x size: %d\n", devfn, pos, size);
-+
-+	if (bus == devsec->hb.bus)
-+		return devsec_port_config_read(devsec, devfn, pos, size, val);
-+	else if (bus->parent == devsec->hb.bus)
-+		return devsec_dev_config_read(devsec, bus, devfn, pos, size,
-+					      val);
-+
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+#ifndef PCI_DOE_PROTOCOL_DISCOVERY
-+#define PCI_DOE_PROTOCOL_DISCOVERY 0
-+#define PCI_DOE_FEATURE_CMA 1
-+#endif
-+
-+/* just indicate support for CMA */
-+static void doe_process(struct devsec_dev_doe *doe)
-+{
-+	u8 type;
-+	u16 vid;
-+
-+	vid = FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_1_VID, doe->req[0]);
-+	type = FIELD_GET(PCI_DOE_DATA_OBJECT_HEADER_1_TYPE, doe->req[0]);
-+
-+	if (vid != PCI_VENDOR_ID_PCI_SIG) {
-+		doe->read_ttl = -1;
-+		return;
-+	}
-+
-+	if (type != PCI_DOE_PROTOCOL_DISCOVERY) {
-+		doe->read_ttl = -1;
-+		return;
-+	}
-+
-+	doe->rsp[0] = doe->req[0];
-+	doe->rsp[1] = FIELD_PREP(PCI_DOE_DATA_OBJECT_HEADER_2_LENGTH, 3);
-+	doe->read_ttl = 3;
-+	doe->rsp[2] = FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_RSP_3_VID,
-+				 PCI_VENDOR_ID_PCI_SIG) |
-+		      FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_RSP_3_PROTOCOL,
-+				 PCI_DOE_FEATURE_CMA) |
-+		      FIELD_PREP(PCI_DOE_DATA_OBJECT_DISC_RSP_3_NEXT_INDEX, 0);
-+}
-+
-+static int devsec_dev_config_write(struct devsec *devsec, struct pci_bus *bus,
-+				   unsigned int devfn, int pos, int size,
-+				   u32 val)
-+{
-+	struct devsec_dev *devsec_dev;
-+	struct devsec_dev_doe *doe;
-+	struct devsec_ide *ide;
-+	void __iomem *base;
-+
-+	dev_vdbg(&bus->dev, "devfn: %#x pos: %#x size: %d\n", devfn, pos, size);
-+
-+	if (PCI_FUNC(devfn) != 0 ||
-+	    PCI_SLOT(devfn) >= ARRAY_SIZE(devsec->devsec_devs))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	devsec_dev = devsec->devsec_devs[PCI_SLOT(devfn)];
-+	base = devsec_base(devsec_dev);
-+	doe = &devsec_dev->doe;
-+	ide = &devsec_dev->ide;
-+
-+	if (pos >= PCI_BASE_ADDRESS_0 && pos <= PCI_BASE_ADDRESS_5) {
-+		if (size != 4)
-+			return PCIBIOS_BAD_REGISTER_NUMBER;
-+		/* only one 64-bit mmio bar emulated for now */
-+		if (pos == PCI_BASE_ADDRESS_0)
-+			val &= ~lower_32_bits(range_len(&devsec_dev->mmio_range) - 1);
-+		else if (pos == PCI_BASE_ADDRESS_1)
-+			val &= ~upper_32_bits(range_len(&devsec_dev->mmio_range) - 1);
-+		else
-+			val = 0;
-+	} else if (pos == PCI_ROM_ADDRESS) {
-+		val = 0;
-+	} else if (pos == doe->cap + PCI_DOE_CTRL) {
-+		if (val & PCI_DOE_CTRL_GO) {
-+			dev_dbg(&bus->dev, "devfn: %#x doe go\n", devfn);
-+			doe_process(doe);
-+		}
-+		if (val & PCI_DOE_CTRL_ABORT) {
-+			dev_dbg(&bus->dev, "devfn: %#x doe abort\n", devfn);
-+			doe->write = 0;
-+			doe->read = 0;
-+			doe->read_ttl = 0;
-+		}
-+		return PCIBIOS_SUCCESSFUL;
-+	} else if (pos == doe->cap + PCI_DOE_WRITE) {
-+		if (doe->write < ARRAY_SIZE(doe->req))
-+			doe->req[doe->write++] = val;
-+		dev_dbg(&bus->dev, "devfn: %#x doe write[%d]\n", devfn,
-+			doe->write - 1);
-+		return PCIBIOS_SUCCESSFUL;
-+	} else if (pos == doe->cap + PCI_DOE_READ) {
-+		if (doe->read_ttl > 0) {
-+			doe->read_ttl--;
-+			doe->read++;
-+			dev_dbg(&bus->dev, "devfn: %#x doe ack[%d]\n", devfn,
-+				doe->read - 1);
-+		}
-+		return PCIBIOS_SUCCESSFUL;
-+	} else if (pos >= devsec_dev->ide_pos &&
-+		   pos < devsec_dev->ide_pos + sizeof(struct devsec_ide)) {
-+		u16 ide_off = pos - devsec_dev->ide_pos;
-+
-+		for (int i = 0; i < NR_PORT_STREAMS; i++) {
-+			struct devsec_stream *stream = &ide->stream[i];
-+
-+			if (ide_off != offsetof(typeof(*ide), stream[i].ctl))
-+				continue;
-+
-+			stream->ctl = val;
-+			stream->status &= ~PCI_IDE_SEL_STS_STATE;
-+			if (val & PCI_IDE_SEL_CTL_EN)
-+				stream->status |= FIELD_PREP(
-+					PCI_IDE_SEL_STS_STATE,
-+					PCI_IDE_SEL_STS_STATE_SECURE);
-+			else
-+				stream->status |= FIELD_PREP(
-+					PCI_IDE_SEL_STS_STATE,
-+					PCI_IDE_SEL_STS_STATE_INSECURE);
-+			return PCIBIOS_SUCCESSFUL;
-+		}
-+	}
-+
-+	switch (size) {
-+	case 1:
-+		writeb(val, base + pos);
-+		break;
-+	case 2:
-+		writew(val, base + pos);
-+		break;
-+	case 4:
-+		writel(val, base + pos);
-+		break;
-+	default:
-+		return PCIBIOS_BAD_REGISTER_NUMBER;
-+	}
-+	return PCIBIOS_SUCCESSFUL;
-+}
-+
-+static int devsec_port_config_write(struct devsec *devsec, struct pci_bus *bus,
-+				    unsigned int devfn, int pos, int size,
-+				    u32 val)
-+{
-+	struct devsec_port *devsec_port;
-+
-+	dev_vdbg(&bus->dev, "devfn: %#x pos: %#x size: %d\n", devfn, pos, size);
-+
-+	if (PCI_FUNC(devfn) != 0 ||
-+	    PCI_SLOT(devfn) >= ARRAY_SIZE(devsec->devsec_ports))
-+		return PCIBIOS_DEVICE_NOT_FOUND;
-+
-+	devsec_port = devsec->devsec_ports[PCI_SLOT(devfn)];
-+	return pci_bridge_emul_conf_write(&devsec_port->bridge, pos, size, val);
-+}
-+
-+static int devsec_pci_write(struct pci_bus *bus, unsigned int devfn, int pos,
-+			    int size, u32 val)
-+{
-+	struct devsec *devsec = bus_to_devsec(bus);
-+
-+	dev_vdbg(&bus->dev, "devfn: %#x pos: %#x size: %d\n", devfn, pos, size);
-+
-+	if (bus == devsec->hb.bus)
-+		return devsec_port_config_write(devsec, bus, devfn, pos, size,
-+						val);
-+	else if (bus->parent == devsec->hb.bus)
-+		return devsec_dev_config_write(devsec, bus, devfn, pos, size,
-+					       val);
-+	return PCIBIOS_DEVICE_NOT_FOUND;
-+}
-+
-+static struct pci_ops devsec_ops = {
-+	.read = devsec_pci_read,
-+	.write = devsec_pci_write,
-+};
-+
-+static void destroy_bus(void *data)
-+{
-+	struct pci_host_bridge *hb = data;
-+
-+	pci_stop_root_bus(hb->bus);
-+	pci_remove_root_bus(hb->bus);
-+}
-+
-+static u32 build_ext_cap_header(u32 id, u32 ver, u32 next)
-+{
-+	return FIELD_PREP(GENMASK(15, 0), id) |
-+	       FIELD_PREP(GENMASK(19, 16), ver) |
-+	       FIELD_PREP(GENMASK(31, 20), next);
-+}
-+
-+static void init_ide(struct devsec_ide *ide)
-+{
-+	ide->cap = PCI_IDE_CAP_SELECTIVE | PCI_IDE_CAP_IDE_KM |
-+		   PCI_IDE_CAP_TEE_LIMITED |
-+		   FIELD_PREP(PCI_IDE_CAP_SEL_NUM, NR_PORT_STREAMS - 1);
-+
-+	for (int i = 0; i < NR_PORT_STREAMS; i++)
-+		ide->stream[i].cap =
-+			FIELD_PREP(PCI_IDE_SEL_CAP_ASSOC_NUM, NR_ADDR_ASSOC);
-+}
-+
-+static void init_dev_cfg(struct devsec_dev *devsec_dev)
-+{
-+	void __iomem *base = devsec_base(devsec_dev), *cap_base;
-+	int pos, next;
-+
-+	/* BAR space */
-+	writew(0x8086, base + PCI_VENDOR_ID);
-+	writew(0xffff, base + PCI_DEVICE_ID);
-+	writew(PCI_CLASS_ACCELERATOR_PROCESSING, base + PCI_CLASS_DEVICE);
-+	writel(lower_32_bits(devsec_dev->mmio_range.start) |
-+		       PCI_BASE_ADDRESS_MEM_TYPE_64 |
-+		       PCI_BASE_ADDRESS_MEM_PREFETCH,
-+	       base + PCI_BASE_ADDRESS_0);
-+	writel(upper_32_bits(devsec_dev->mmio_range.start),
-+	       base + PCI_BASE_ADDRESS_1);
-+
-+	/* Capability init */
-+	writeb(PCI_HEADER_TYPE_NORMAL, base + PCI_HEADER_TYPE);
-+	writew(PCI_STATUS_CAP_LIST, base + PCI_STATUS);
-+	pos = 0x40;
-+	writew(pos, base + PCI_CAPABILITY_LIST);
-+
-+	/* PCI-E Capability */
-+	cap_base = base + pos;
-+	writeb(PCI_CAP_ID_EXP, cap_base);
-+	writew(PCI_EXP_TYPE_ENDPOINT, cap_base + PCI_EXP_FLAGS);
-+	writew(PCI_EXP_LNKSTA_CLS_2_5GB | PCI_EXP_LNKSTA_NLW_X1, cap_base + PCI_EXP_LNKSTA);
-+	writel(PCI_EXP_DEVCAP_FLR | PCI_EXP_DEVCAP_TEE, cap_base + PCI_EXP_DEVCAP);
-+
-+	/* DOE Extended Capability */
-+	pos = PCI_CFG_SPACE_SIZE;
-+	next = pos + PCI_DOE_CAP_SIZEOF;
-+	cap_base = base + pos;
-+	devsec_dev->doe.cap = pos;
-+	writel(build_ext_cap_header(PCI_EXT_CAP_ID_DOE, 2, next), cap_base);
-+
-+	/* IDE Extended Capability */
-+	pos = next;
-+	cap_base = base + pos;
-+	writel(build_ext_cap_header(PCI_EXT_CAP_ID_IDE, 1, 0), cap_base);
-+	devsec_dev->ide_pos = pos + 4;
-+	init_ide(&devsec_dev->ide);
-+}
-+
-+#define MMIO_SIZE SZ_2M
-+#define PREFETCH_SIZE SZ_2M
-+
-+static void destroy_devsec_dev(void *devsec_dev)
-+{
-+	kfree(devsec_dev);
-+}
-+
-+static struct devsec_dev *devsec_dev_alloc(struct devsec *devsec, int hb)
-+{
-+	struct devsec_dev *devsec_dev __free(kfree) =
-+		kzalloc(sizeof(*devsec_dev), GFP_KERNEL);
-+	u64 start = devsec->prefetch_res.start + hb * PREFETCH_SIZE;
-+
-+	if (!devsec_dev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	*devsec_dev = (struct devsec_dev) {
-+		.mmio_range = {
-+			.start = start,
-+			.end = start + PREFETCH_SIZE - 1,
-+		},
-+		.devsec = devsec,
-+	};
-+	init_dev_cfg(devsec_dev);
-+
-+	return_ptr(devsec_dev);
-+}
-+
-+static int alloc_dev(struct devsec *devsec, int hb)
-+{
-+	struct devsec_dev *devsec_dev = devsec_dev_alloc(devsec, hb);
-+	int rc;
-+
-+	if (IS_ERR(devsec_dev))
-+		return PTR_ERR(devsec_dev);
-+	rc = devm_add_action_or_reset(devsec->dev, destroy_devsec_dev,
-+				      devsec_dev);
-+	if (rc)
-+		return rc;
-+	devsec->devsec_devs[hb] = devsec_dev;
-+
-+	return 0;
-+}
-+
-+static pci_bridge_emul_read_status_t
-+devsec_bridge_read_base(struct pci_bridge_emul *bridge, int pos, u32 *val)
-+{
-+	return PCI_BRIDGE_EMUL_NOT_HANDLED;
-+}
-+
-+static pci_bridge_emul_read_status_t
-+devsec_bridge_read_pcie(struct pci_bridge_emul *bridge, int pos, u32 *val)
-+{
-+	return PCI_BRIDGE_EMUL_NOT_HANDLED;
-+}
-+
-+static pci_bridge_emul_read_status_t
-+devsec_bridge_read_ext(struct pci_bridge_emul *bridge, int pos, u32 *val)
-+{
-+	struct devsec_port *devsec_port = bridge->data;
-+
-+	/* only one extended capability, IDE... */
-+	if (pos == 0) {
-+		*val = build_ext_cap_header(PCI_EXT_CAP_ID_IDE, 1, 0);
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+	}
-+
-+	if (pos < 4)
-+		return PCI_BRIDGE_EMUL_NOT_HANDLED;
-+
-+	pos -= 4;
-+	if (pos < sizeof(struct devsec_ide)) {
-+		*val = *(u32 *)(&devsec_port->ide_regs[pos]);
-+		return PCI_BRIDGE_EMUL_HANDLED;
-+	}
-+
-+	return PCI_BRIDGE_EMUL_NOT_HANDLED;
-+}
-+
-+static void devsec_bridge_write_base(struct pci_bridge_emul *bridge, int pos,
-+				     u32 old, u32 new, u32 mask)
-+{
-+}
-+
-+static void devsec_bridge_write_pcie(struct pci_bridge_emul *bridge, int pos,
-+				     u32 old, u32 new, u32 mask)
-+{
-+}
-+
-+static void devsec_bridge_write_ext(struct pci_bridge_emul *bridge, int pos,
-+				    u32 old, u32 new, u32 mask)
-+{
-+	struct devsec_port *devsec_port = bridge->data;
-+
-+	if (pos < sizeof(struct devsec_ide))
-+		*(u32 *)(&devsec_port->ide_regs[pos]) = new;
-+}
-+
-+static const struct pci_bridge_emul_ops devsec_bridge_ops = {
-+	.read_base = devsec_bridge_read_base,
-+	.write_base = devsec_bridge_write_base,
-+	.read_pcie = devsec_bridge_read_pcie,
-+	.write_pcie = devsec_bridge_write_pcie,
-+	.read_ext = devsec_bridge_read_ext,
-+	.write_ext = devsec_bridge_write_ext,
-+};
-+
-+static int init_port(struct devsec *devsec, struct devsec_port *devsec_port,
-+		     int hb)
-+{
-+	const struct resource *mres = &devsec->mmio_res;
-+	const struct resource *pres = &devsec->prefetch_res;
-+	struct pci_bridge_emul *bridge = &devsec_port->bridge;
-+	u16 membase = cpu_to_le16(upper_16_bits(mres->start + MMIO_SIZE * hb) &
-+				  0xfff0);
-+	u16 memlimit =
-+		cpu_to_le16(upper_16_bits(mres->end + MMIO_SIZE * hb) & 0xfff0);
-+	u16 pref_mem_base =
-+		cpu_to_le16((upper_16_bits(lower_32_bits(pres->start +
-+							 PREFETCH_SIZE * hb)) &
-+			     0xfff0) |
-+			    PCI_PREF_RANGE_TYPE_64);
-+	u16 pref_mem_limit = cpu_to_le16(
-+		(upper_16_bits(lower_32_bits(pres->end + PREFETCH_SIZE * hb)) &
-+		 0xfff0) |
-+		PCI_PREF_RANGE_TYPE_64);
-+	u32 prefbaseupper =
-+		cpu_to_le32(upper_32_bits(pres->start + PREFETCH_SIZE * hb));
-+	u32 preflimitupper =
-+		cpu_to_le32(upper_32_bits(pres->end + PREFETCH_SIZE * hb));
-+
-+	*bridge = (struct pci_bridge_emul) {
-+		.conf = {
-+			.vendor = cpu_to_le16(0x8086),
-+			.device = cpu_to_le16(0xffff),
-+			.class_revision = cpu_to_le32(0x1),
-+			.primary_bus = 0,
-+			.secondary_bus = hb + 1,
-+			.subordinate_bus = hb + 1,
-+			.membase = membase,
-+			.memlimit = memlimit,
-+			.pref_mem_base = pref_mem_base,
-+			.pref_mem_limit = pref_mem_limit,
-+			.prefbaseupper = prefbaseupper,
-+			.preflimitupper = preflimitupper,
-+		},
-+		.pcie_conf = {
-+			.devcap = cpu_to_le16(PCI_EXP_DEVCAP_FLR),
-+			.lnksta = cpu_to_le16(PCI_EXP_LNKSTA_CLS_2_5GB),
-+		},
-+		.subsystem_vendor_id = cpu_to_le16(0x8086),
-+		.has_pcie = true,
-+		.data = devsec_port,
-+		.ops = &devsec_bridge_ops,
-+	};
-+
-+	init_ide(&devsec_port->ide);
-+
-+	return pci_bridge_emul_init(bridge, PCI_BRIDGE_EMUL_NO_IO_FORWARD);
-+}
-+
-+static void destroy_port(void *data)
-+{
-+	struct devsec_port *devsec_port = data;
-+
-+	pci_bridge_emul_cleanup(&devsec_port->bridge);
-+	kfree(devsec_port);
-+}
-+
-+static struct devsec_port *devsec_port_alloc(struct devsec *devsec, int hb)
-+{
-+	int rc;
-+
-+	struct devsec_port *devsec_port __free(kfree) =
-+		kzalloc(sizeof(*devsec_port), GFP_KERNEL);
-+
-+	if (!devsec_port)
-+		return ERR_PTR(-ENOMEM);
-+
-+	rc = init_port(devsec, devsec_port, hb);
-+	if (rc)
-+		return ERR_PTR(rc);
-+
-+	return_ptr(devsec_port);
-+}
-+
-+static int alloc_port(struct devsec *devsec, int hb)
-+{
-+	struct devsec_port *devsec_port = devsec_port_alloc(devsec, hb);
-+	int rc;
-+
-+	if (IS_ERR(devsec_port))
-+		return PTR_ERR(devsec_port);
-+	rc = devm_add_action_or_reset(devsec->dev, destroy_port, devsec_port);
-+	if (rc)
-+		return rc;
-+	devsec->devsec_ports[hb] = devsec_port;
-+
-+	return 0;
-+}
-+
-+static void release_mmio_region(void *res)
-+{
-+	remove_resource(res);
-+}
-+
-+static void release_prefetch_region(void *res)
-+{
-+	remove_resource(res);
-+}
-+
-+static int __init devsec_bus_probe(struct faux_device *fdev)
-+{
-+	int rc;
-+	struct pci_bus *bus;
-+	struct devsec *devsec;
-+	struct devsec_sysdata *sd;
++	/* EP, RP, + HB Stream allocation */
++	struct stream_index __stream[PCI_IDE_HB + 1];
 +	struct pci_host_bridge *hb;
-+	struct device *dev = &fdev->dev;
++	struct pci_dev *rp;
++	int num_vf, rid_end;
 +
-+	hb = devm_pci_alloc_host_bridge(
-+		dev, sizeof(*devsec) - sizeof(struct pci_host_bridge));
-+	if (!hb)
-+		return -ENOMEM;
++	if (!pci_is_pcie(pdev))
++		return NULL;
 +
-+	devsec = container_of(hb, struct devsec, hb);
-+	devsec->dev = dev;
++	if (pci_pcie_type(pdev) != PCI_EXP_TYPE_ENDPOINT)
++		return NULL;
 +
-+	devsec->mmio_res.name = "DEVSEC MMIO";
-+	devsec->mmio_res.flags = IORESOURCE_MEM;
-+	rc = allocate_resource(&iomem_resource, &devsec->mmio_res,
-+			       MMIO_SIZE * NR_DEVSEC_BUSES, 0, SZ_4G, MMIO_SIZE,
-+			       NULL, NULL);
-+	if (rc)
-+		return rc;
++	if (!pdev->ide_cap)
++		return NULL;
 +
-+	rc = devm_add_action_or_reset(dev, release_mmio_region,
-+				      &devsec->mmio_res);
-+	if (rc)
-+		return rc;
++	/*
++	 * Catch buggy PCI platform initialization (missing
++	 * pci_ide_init_nr_streams())
++	 */
++	hb = pci_find_host_bridge(pdev->bus);
++	if (WARN_ON_ONCE(!hb->nr_ide_streams))
++		return NULL;
 +
-+	devsec->prefetch_res.name = "DEVSEC PREFETCH";
-+	devsec->prefetch_res.flags = IORESOURCE_MEM | IORESOURCE_MEM_64 |
-+				     IORESOURCE_PREFETCH;
-+	rc = allocate_resource(&iomem_resource, &devsec->prefetch_res,
-+			       PREFETCH_SIZE * NR_DEVSEC_BUSES, SZ_4G, U64_MAX,
-+			       PREFETCH_SIZE, NULL, NULL);
-+	if (rc)
-+		return rc;
++	struct pci_ide *ide __free(kfree) = kzalloc(sizeof(*ide), GFP_KERNEL);
++	if (!ide)
++		return NULL;
 +
-+	rc = devm_add_action_or_reset(dev, release_prefetch_region,
-+				      &devsec->prefetch_res);
-+	if (rc)
-+		return rc;
++	struct stream_index *hb_stream __free(free_stream) = alloc_stream_index(
++		hb->ide_stream_map, hb->nr_ide_streams, &__stream[PCI_IDE_HB]);
++	if (!hb_stream)
++		return NULL;
 +
-+	for (int i = 0; i < NR_DEVSEC_BUSES; i++) {
-+		rc = alloc_port(devsec, i);
-+		if (rc)
-+			return rc;
++	rp = pcie_find_root_port(pdev);
++	struct stream_index *rp_stream __free(free_stream) = alloc_stream_index(
++		rp->ide_stream_map, rp->nr_sel_ide, &__stream[PCI_IDE_RP]);
++	if (!rp_stream)
++		return NULL;
 +
-+		rc = alloc_dev(devsec, i);
-+		if (rc)
-+			return rc;
-+	}
++	struct stream_index *ep_stream __free(free_stream) = alloc_stream_index(
++		pdev->ide_stream_map, pdev->nr_sel_ide, &__stream[PCI_IDE_EP]);
++	if (!ep_stream)
++		return NULL;
 +
-+	devsec->busnr_res = (struct resource) {
-+		.name = "DEVSEC BUSES",
-+		.start = 0,
-+		.end = NR_DEVSEC_BUSES + 1 - 1, /* 1 RP per HB */
-+		.flags = IORESOURCE_BUS | IORESOURCE_PCI_FIXED,
++	/* for SR-IOV case, cover all VFs */
++	num_vf = pci_num_vf(pdev);
++	if (num_vf)
++		rid_end = PCI_DEVID(pci_iov_virtfn_bus(pdev, num_vf),
++				    pci_iov_virtfn_devfn(pdev, num_vf));
++	else
++		rid_end = pci_dev_id(pdev);
++
++	*ide = (struct pci_ide) {
++		.pdev = pdev,
++		.partner = {
++			[PCI_IDE_EP] = {
++				.rid_start = pci_dev_id(rp),
++				.rid_end = pci_dev_id(rp),
++				.stream_index = no_free_ptr(ep_stream)->stream_index,
++			},
++			[PCI_IDE_RP] = {
++				.rid_start = pci_dev_id(pdev),
++				.rid_end = rid_end,
++				.stream_index = no_free_ptr(rp_stream)->stream_index,
++			},
++		},
++		.host_bridge_stream = no_free_ptr(hb_stream)->stream_index,
++		.stream_id = -1,
 +	};
-+	pci_add_resource(&hb->windows, &devsec->busnr_res);
-+	pci_add_resource(&hb->windows, &devsec->mmio_res);
-+	pci_add_resource(&hb->windows, &devsec->prefetch_res);
 +
-+	sd = &devsec->sysdata;
-+	devsec_sysdata = sd;
-+
-+	/* Start devsec_bus emulation above the last ACPI segment */
-+	hb->domain_nr = pci_bus_find_emul_domain_nr(0, 0x10000, INT_MAX);
-+	if (hb->domain_nr < 0)
-+		return hb->domain_nr;
-+
-+	/*
-+	 * Note, domain_nr is set in devsec_sysdata for
-+	 * !CONFIG_PCI_DOMAINS_GENERIC platforms
-+	 */
-+	devsec_set_domain_nr(sd, hb->domain_nr);
-+
-+	hb->dev.parent = dev;
-+	hb->sysdata = sd;
-+	hb->ops = &devsec_ops;
-+
-+	rc = pci_scan_root_bus_bridge(hb);
-+	if (rc)
-+		return rc;
-+
-+	bus = hb->bus;
-+	rc = devm_add_action_or_reset(dev, destroy_bus, no_free_ptr(hb));
-+	if (rc)
-+		return rc;
-+
-+	pci_assign_unassigned_bus_resources(bus);
-+	pci_bus_add_devices(bus);
-+
-+	return 0;
++	return_ptr(ide);
 +}
++EXPORT_SYMBOL_GPL(pci_ide_stream_alloc);
 +
-+static struct faux_device *devsec_bus;
-+
-+static struct faux_device_ops devsec_bus_ops = {
-+	.probe = devsec_bus_probe,
-+};
-+
-+static int __init devsec_bus_init(void)
-+{
-+	devsec_bus = faux_device_create("devsec_bus", NULL, &devsec_bus_ops);
-+	if (!devsec_bus)
-+		return -ENODEV;
-+	return 0;
-+}
-+module_init(devsec_bus_init);
-+
-+static void __exit devsec_bus_exit(void)
-+{
-+	faux_device_destroy(devsec_bus);
-+}
-+module_exit(devsec_bus_exit);
-+
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Device Security Sample Infrastructure: TDISP Device Emulation");
-diff --git a/samples/devsec/common.c b/samples/devsec/common.c
-new file mode 100644
-index 000000000000..de0078e4d614
---- /dev/null
-+++ b/samples/devsec/common.c
-@@ -0,0 +1,26 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+// Copyright(c) 2024 - 2025 Intel Corporation. All rights reserved.
-+
-+#include <linux/pci.h>
-+#include <linux/export.h>
-+
-+/*
-+ * devsec_bus and devsec_tsm need a common location for this data to
-+ * avoid depending on each other. Enables load order testing
++/**
++ * pci_ide_stream_free() - unwind pci_ide_stream_alloc()
++ * @ide: idle IDE settings descriptor
++ *
++ * Free all of the stream index (register block) allocations acquired by
++ * pci_ide_stream_alloc(). The stream represented by @ide is assumed to
++ * be unregistered and not instantiated in any device.
 + */
-+struct pci_sysdata *devsec_sysdata;
-+EXPORT_SYMBOL_GPL(devsec_sysdata);
-+
-+static int __init common_init(void)
++void pci_ide_stream_free(struct pci_ide *ide)
 +{
++	struct pci_dev *pdev = ide->pdev;
++	struct pci_dev *rp = pcie_find_root_port(pdev);
++	struct pci_host_bridge *hb = pci_find_host_bridge(pdev->bus);
++
++	clear_bit_unlock(ide->partner[PCI_IDE_EP].stream_index,
++			 pdev->ide_stream_map);
++	clear_bit_unlock(ide->partner[PCI_IDE_RP].stream_index,
++			 rp->ide_stream_map);
++	clear_bit_unlock(ide->host_bridge_stream, hb->ide_stream_map);
++	kfree(ide);
++}
++EXPORT_SYMBOL_GPL(pci_ide_stream_free);
++
++/**
++ * pci_ide_stream_release() - unwind and release an @ide context
++ * @ide: partially or fully registered IDE settings descriptor
++ *
++ * In support of automatic cleanup of IDE setup routines perform IDE
++ * teardown in expected reverse order of setup and with respect to which
++ * aspects of IDE setup have successfully completed.
++ *
++ * Be careful that setup order mirrors this shutdown order. Otherwise,
++ * open code releasing the IDE context.
++ */
++void pci_ide_stream_release(struct pci_ide *ide)
++{
++	struct pci_dev *pdev = ide->pdev;
++	struct pci_dev *rp = pcie_find_root_port(pdev);
++
++	if (ide->partner[PCI_IDE_RP].enable)
++		pci_ide_stream_disable(rp, ide);
++
++	if (ide->partner[PCI_IDE_EP].enable)
++		pci_ide_stream_disable(pdev, ide);
++
++	if (ide->partner[PCI_IDE_RP].setup)
++		pci_ide_stream_teardown(rp, ide);
++
++	if (ide->partner[PCI_IDE_EP].setup)
++		pci_ide_stream_teardown(pdev, ide);
++
++	if (ide->name)
++		pci_ide_stream_unregister(ide);
++
++	pci_ide_stream_free(ide);
++}
++EXPORT_SYMBOL_GPL(pci_ide_stream_release);
++
++/**
++ * pci_ide_stream_register() - Prepare to activate an IDE Stream
++ * @ide: IDE settings descriptor
++ *
++ * After a Stream ID has been acquired for @ide, record the presence of
++ * the stream in sysfs. The expectation is that @ide is immutable while
++ * registered.
++ */
++int pci_ide_stream_register(struct pci_ide *ide)
++{
++	struct pci_dev *pdev = ide->pdev;
++	struct pci_host_bridge *hb = pci_find_host_bridge(pdev->bus);
++	u8 ep_stream, rp_stream;
++	int rc;
++
++	if (ide->stream_id < 0 || ide->stream_id > U8_MAX) {
++		pci_err(pdev, "Setup fail: Invalid Stream ID: %d\n", ide->stream_id);
++		return -ENXIO;
++	}
++
++	ep_stream = ide->partner[PCI_IDE_EP].stream_index;
++	rp_stream = ide->partner[PCI_IDE_RP].stream_index;
++	const char *name __free(kfree) = kasprintf(GFP_KERNEL, "stream%d.%d.%d",
++						   ide->host_bridge_stream,
++						   rp_stream, ep_stream);
++	if (!name)
++		return -ENOMEM;
++
++	rc = sysfs_create_link(&hb->dev.kobj, &pdev->dev.kobj, name);
++	if (rc)
++		return rc;
++
++	ide->name = no_free_ptr(name);
++
 +	return 0;
 +}
-+module_init(common_init);
++EXPORT_SYMBOL_GPL(pci_ide_stream_register);
 +
-+static void __exit common_exit(void)
++/**
++ * pci_ide_stream_unregister() - unwind pci_ide_stream_register()
++ * @ide: idle IDE settings descriptor
++ *
++ * In preparation for freeing @ide, remove sysfs enumeration for the
++ * stream.
++ */
++void pci_ide_stream_unregister(struct pci_ide *ide)
 +{
++	struct pci_dev *pdev = ide->pdev;
++	struct pci_host_bridge *hb = pci_find_host_bridge(pdev->bus);
++
++	sysfs_remove_link(&hb->dev.kobj, ide->name);
++	kfree(ide->name);
++	ide->name = NULL;
 +}
-+module_exit(common_exit);
++EXPORT_SYMBOL_GPL(pci_ide_stream_unregister);
 +
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Device Security Sample Infrastructure: Shared data");
-diff --git a/samples/devsec/devsec.h b/samples/devsec/devsec.h
-new file mode 100644
-index 000000000000..ae4274c86244
---- /dev/null
-+++ b/samples/devsec/devsec.h
-@@ -0,0 +1,40 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+// Copyright(c) 2024 - 2025 Intel Corporation. All rights reserved.
-+
-+#ifndef __DEVSEC_H__
-+#define __DEVSEC_H__
-+struct devsec_sysdata {
-+#ifdef CONFIG_X86
-+	/*
-+	 * Must be first member to that x86::pci_domain_nr() can type
-+	 * pun devsec_sysdata and pci_sysdata.
-+	 */
-+	struct pci_sysdata sd;
-+#else
-+	int domain_nr;
-+#endif
-+};
-+
-+#ifdef CONFIG_X86
-+static inline void devsec_set_domain_nr(struct devsec_sysdata *sd,
-+					int domain_nr)
++static int pci_ide_domain(struct pci_dev *pdev)
 +{
-+	sd->sd.domain = domain_nr;
-+}
-+static inline int devsec_get_domain_nr(struct devsec_sysdata *sd)
-+{
-+	return sd->sd.domain;
-+}
-+#else
-+static inline void devsec_set_domain_nr(struct devsec_sysdata *sd,
-+					int domain_nr)
-+{
-+	sd->domain_nr = domain_nr;
-+}
-+static inline int devsec_get_domain_nr(struct devsec_sysdata *sd)
-+{
-+	return sd->domain_nr;
-+}
-+#endif
-+extern struct devsec_sysdata *devsec_sysdata;
-+#endif /* __DEVSEC_H__ */
-diff --git a/samples/devsec/link_tsm.c b/samples/devsec/link_tsm.c
-new file mode 100644
-index 000000000000..46c9343815e3
---- /dev/null
-+++ b/samples/devsec/link_tsm.c
-@@ -0,0 +1,174 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright(c) 2024 - 2025 Intel Corporation. All rights reserved. */
-+
-+#define dev_fmt(fmt) "devsec: " fmt
-+#include <linux/device/faux.h>
-+#include <linux/pci-tsm.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/tsm.h>
-+#include "devsec.h"
-+
-+struct devsec_tsm_pf0 {
-+	struct pci_tsm_pf0 pci;
-+#define NR_TSM_STREAMS 4
-+};
-+
-+struct devsec_tsm_fn {
-+	struct pci_tsm pci;
-+};
-+
-+static struct devsec_tsm_pf0 *to_devsec_tsm_pf0(struct pci_tsm *tsm)
-+{
-+	return container_of(tsm, struct devsec_tsm_pf0, pci.base);
++	if (pdev->fm_enabled)
++		return pci_domain_nr(pdev->bus);
++	return 0;
 +}
 +
-+static struct devsec_tsm_fn *to_devsec_tsm_fn(struct pci_tsm *tsm)
++struct pci_ide_partner *pci_ide_to_settings(struct pci_dev *pdev, struct pci_ide *ide)
 +{
-+	return container_of(tsm, struct devsec_tsm_fn, pci);
-+}
-+
-+static const struct pci_tsm_ops *__devsec_pci_ops;
-+
-+static struct pci_tsm *devsec_tsm_pf0_probe(struct pci_dev *pdev)
-+{
-+	int rc;
-+
-+	struct devsec_tsm_pf0 *devsec_tsm __free(kfree) =
-+		kzalloc(sizeof(*devsec_tsm), GFP_KERNEL);
-+	if (!devsec_tsm)
++	if (!pci_is_pcie(pdev)) {
++		pci_warn_once(pdev, "not a PCIe device\n");
 +		return NULL;
++	}
 +
-+	rc = pci_tsm_pf0_constructor(pdev, &devsec_tsm->pci, __devsec_pci_ops);
-+	if (rc)
++	switch (pci_pcie_type(pdev)) {
++	case PCI_EXP_TYPE_ENDPOINT:
++		if (pdev != ide->pdev) {
++			pci_warn_once(pdev, "setup expected Endpoint: %s\n", pci_name(ide->pdev));
++			return NULL;
++		}
++		return &ide->partner[PCI_IDE_EP];
++	case PCI_EXP_TYPE_ROOT_PORT: {
++		struct pci_dev *rp = pcie_find_root_port(ide->pdev);
++
++		if (pdev != rp) {
++			pci_warn_once(pdev, "setup expected Root Port: %s\n",
++				      pci_name(rp));
++			return NULL;
++		}
++		return &ide->partner[PCI_IDE_RP];
++	}
++	default:
++		pci_warn_once(pdev, "invalid device type\n");
 +		return NULL;
-+
-+	pci_dbg(pdev, "TSM enabled\n");
-+	return &no_free_ptr(devsec_tsm)->pci.base;
-+}
-+
-+static struct pci_tsm *devsec_link_tsm_fn_probe(struct pci_dev *pdev)
-+{
-+	int rc;
-+
-+	struct devsec_tsm_fn *devsec_tsm __free(kfree) =
-+		kzalloc(sizeof(*devsec_tsm), GFP_KERNEL);
-+	if (!devsec_tsm)
-+		return NULL;
-+
-+	rc = pci_tsm_link_constructor(pdev, &devsec_tsm->pci, __devsec_pci_ops);
-+	if (rc)
-+		return NULL;
-+
-+	pci_dbg(pdev, "TSM (sub-function) enabled\n");
-+	return &no_free_ptr(devsec_tsm)->pci;
-+}
-+
-+static struct pci_tsm *devsec_link_tsm_pci_probe(struct pci_dev *pdev)
-+{
-+	if (pdev->sysdata != devsec_sysdata)
-+		return NULL;
-+
-+	if (is_pci_tsm_pf0(pdev))
-+		return devsec_tsm_pf0_probe(pdev);
-+	return devsec_link_tsm_fn_probe(pdev);
-+}
-+
-+static void devsec_link_tsm_pci_remove(struct pci_tsm *tsm)
-+{
-+	struct pci_dev *pdev = tsm->pdev;
-+
-+	pci_dbg(pdev, "TSM disabled\n");
-+
-+	if (is_pci_tsm_pf0(pdev)) {
-+		struct devsec_tsm_pf0 *devsec_tsm = to_devsec_tsm_pf0(tsm);
-+
-+		pci_tsm_pf0_destructor(&devsec_tsm->pci);
-+		kfree(devsec_tsm);
-+	} else {
-+		struct devsec_tsm_fn *devsec_tsm = to_devsec_tsm_fn(tsm);
-+
-+		kfree(devsec_tsm);
 +	}
 +}
++EXPORT_SYMBOL_GPL(pci_ide_to_settings);
 +
-+/*
-+ * Reference consumer for a TSM driver "connect" operation callback. The
-+ * low-level TSM driver understands details about the platform the PCI
-+ * core does not, like number of available streams that can be
-+ * established per host bridge. The expected flow is:
++static void set_ide_sel_ctl(struct pci_dev *pdev, struct pci_ide *ide, int pos,
++			    bool enable)
++{
++	u32 val = FIELD_PREP(PCI_IDE_SEL_CTL_ID, ide->stream_id) |
++		  FIELD_PREP(PCI_IDE_SEL_CTL_CFG_EN, pdev->ide_cfg) |
++		  FIELD_PREP(PCI_IDE_SEL_CTL_TEE_LIMITED, pdev->ide_tee_limit) |
++		  FIELD_PREP(PCI_IDE_SEL_CTL_EN, enable);
++
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_CTL, val);
++}
++
++/**
++ * pci_ide_stream_setup() - program settings to Selective IDE Stream registers
++ * @pdev: PCIe device object for either a Root Port or Endpoint Partner Port
++ * @ide: registered IDE settings descriptor
 + *
-+ * 1/ Allocate platform specific Stream resource (TSM specific)
-+ * 2/ Allocate Stream Ids in the endpoint and Root Port (PCI TSM helper)
-+ * 3/ Register Stream Ids for the consumed resources from the last 2
-+ *    steps to be accountable (via sysfs) to the admin (PCI TSM helper)
-+ * 4/ Register the Stream with the TSM core so that either PCI sysfs or
-+ *    TSM core sysfs can list the in-use resources (TSM core helper)
-+ * 5/ Configure IDE settings in the endpoint and Root Port (PCI TSM helper)
-+ * 6/ RPC call to TSM to perform IDE_KM and optionally enable the stream
-+ * (TSM Specific)
-+ * 7/ Enable the stream in the endpoint, and root port if TSM call did
-+ *    not already handle that (PCI TSM helper)
-+ *
-+ * The expectation is the helpers referenceed are convenience "library"
-+ * APIs for common operations, not a "midlayer" that enforces a specific
-+ * or use model sequencing.
++ * When @pdev is a PCI_EXP_TYPE_ENDPOINT then the PCI_IDE_EP partner
++ * settings are written to @pdev's Selective IDE Stream register block,
++ * and when @pdev is a PCI_EXP_TYPE_ROOT_PORT, the PCI_IDE_RP settings
++ * are selected.
 + */
-+static int devsec_link_tsm_connect(struct pci_dev *pdev)
++void pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide)
 +{
-+	return -ENXIO;
++	struct pci_ide_partner *settings = pci_ide_to_settings(pdev, ide);
++	int pos;
++	u32 val;
++
++	if (!settings)
++		return;
++
++	pos = sel_ide_offset(pdev, settings);
++
++	val = FIELD_PREP(PCI_IDE_SEL_RID_1_LIMIT, settings->rid_end);
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_1, val);
++
++	val = FIELD_PREP(PCI_IDE_SEL_RID_2_VALID, 1) |
++	      FIELD_PREP(PCI_IDE_SEL_RID_2_BASE, settings->rid_start) |
++	      FIELD_PREP(PCI_IDE_SEL_RID_2_SEG, pci_ide_domain(pdev));
++
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_2, val);
++
++	/*
++	 * Setup control register early for devices that expect
++	 * stream_id is set during key programming.
++	 */
++	set_ide_sel_ctl(pdev, ide, pos, false);
++	settings->setup = 1;
 +}
++EXPORT_SYMBOL_GPL(pci_ide_stream_setup);
 +
-+static void devsec_link_tsm_disconnect(struct pci_dev *pdev)
++/**
++ * pci_ide_stream_teardown() - disable the stream and clear all settings
++ * @pdev: PCIe device object for either a Root Port or Endpoint Partner Port
++ * @ide: registered IDE settings descriptor
++ *
++ * For stream destruction, zero all registers that may have been written
++ * by pci_ide_stream_setup(). Consider pci_ide_stream_disable() to leave
++ * settings in place while temporarily disabling the stream.
++ */
++void pci_ide_stream_teardown(struct pci_dev *pdev, struct pci_ide *ide)
 +{
++	struct pci_ide_partner *settings = pci_ide_to_settings(pdev, ide);
++	int pos;
++
++	if (!settings)
++		return;
++
++	pos = sel_ide_offset(pdev, settings);
++
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_CTL, 0);
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_2, 0);
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_RID_1, 0);
++	settings->setup = 0;
 +}
++EXPORT_SYMBOL_GPL(pci_ide_stream_teardown);
 +
-+static struct pci_tsm_ops devsec_link_pci_ops = {
-+	.probe = devsec_link_tsm_pci_probe,
-+	.remove = devsec_link_tsm_pci_remove,
-+	.connect = devsec_link_tsm_connect,
-+	.disconnect = devsec_link_tsm_disconnect,
-+};
-+
-+static void devsec_link_tsm_remove(void *tsm_dev)
++/**
++ * pci_ide_stream_enable() - enable a Selective IDE Stream
++ * @pdev: PCIe device object for either a Root Port or Endpoint Partner Port
++ * @ide: registered and setup IDE settings descriptor
++ *
++ * Activate the stream by writing to the Selective IDE Stream Control
++ * Register.
++ *
++ * Return: 0 if the stream successfully entered the "secure" state, and -ENXIO
++ * otherwise.
++ *
++ * Note that the state may go "insecure" at any point after returning 0, but
++ * those events are equivalent to a "link down" event and handled via
++ * asynchronous error reporting.
++ */
++int pci_ide_stream_enable(struct pci_dev *pdev, struct pci_ide *ide)
 +{
-+	tsm_unregister(tsm_dev);
-+}
++	struct pci_ide_partner *settings = pci_ide_to_settings(pdev, ide);
++	int pos;
++	u32 val;
 +
-+static int devsec_link_tsm_probe(struct faux_device *fdev)
-+{
-+	struct tsm_dev *tsm_dev;
++	if (!settings)
++		return -ENXIO;
 +
-+	tsm_dev = tsm_register(&fdev->dev, &devsec_link_pci_ops);
-+	if (IS_ERR(tsm_dev))
-+		return PTR_ERR(tsm_dev);
++	pos = sel_ide_offset(pdev, settings);
 +
-+	return devm_add_action_or_reset(&fdev->dev, devsec_link_tsm_remove,
-+					tsm_dev);
-+}
++	set_ide_sel_ctl(pdev, ide, pos, true);
 +
-+static struct faux_device *devsec_link_tsm;
++	pci_read_config_dword(pdev, pos + PCI_IDE_SEL_STS, &val);
++	if (FIELD_GET(PCI_IDE_SEL_STS_STATE, val) !=
++	    PCI_IDE_SEL_STS_STATE_SECURE) {
++		set_ide_sel_ctl(pdev, ide, pos, false);
++		return -ENXIO;
++	}
 +
-+static const struct faux_device_ops devsec_link_device_ops = {
-+	.probe = devsec_link_tsm_probe,
-+};
-+
-+static int __init devsec_link_tsm_init(void)
-+{
-+	__devsec_pci_ops = &devsec_link_pci_ops;
-+	devsec_link_tsm = faux_device_create("devsec_link_tsm", NULL,
-+					     &devsec_link_device_ops);
-+	if (!devsec_link_tsm)
-+		return -ENOMEM;
++	settings->enable = 1;
 +	return 0;
 +}
-+module_init(devsec_link_tsm_init);
++EXPORT_SYMBOL_GPL(pci_ide_stream_enable);
 +
-+static void __exit devsec_link_tsm_exit(void)
++/**
++ * pci_ide_stream_disable() - disable a Selective IDE Stream
++ * @pdev: PCIe device object for either a Root Port or Endpoint Partner Port
++ * @ide: registered and setup IDE settings descriptor
++ *
++ * Clear the Selective IDE Stream Control Register, but leave all other
++ * registers untouched.
++ */
++void pci_ide_stream_disable(struct pci_dev *pdev, struct pci_ide *ide)
 +{
-+	faux_device_destroy(devsec_link_tsm);
-+}
-+module_exit(devsec_link_tsm_exit);
++	struct pci_ide_partner *settings = pci_ide_to_settings(pdev, ide);
++	int pos;
 +
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("Device Security Sample Infrastructure: Platform Link-TSM Driver");
++	if (!settings)
++		return;
++
++	pos = sel_ide_offset(pdev, settings);
++
++	pci_write_config_dword(pdev, pos + PCI_IDE_SEL_CTL, 0);
++	settings->enable = 0;
++}
++EXPORT_SYMBOL_GPL(pci_ide_stream_disable);
+diff --git a/include/linux/pci-ide.h b/include/linux/pci-ide.h
+new file mode 100644
+index 000000000000..cf1f7a10e8e0
+--- /dev/null
++++ b/include/linux/pci-ide.h
+@@ -0,0 +1,70 @@
++/* SPDX-License-Identifier: GPL-2.0 */
++/* Copyright(c) 2024 Intel Corporation. All rights reserved. */
++
++/* PCIe 6.2 section 6.33 Integrity & Data Encryption (IDE) */
++
++#ifndef __PCI_IDE_H__
++#define __PCI_IDE_H__
++
++enum pci_ide_partner_select {
++	PCI_IDE_EP,
++	PCI_IDE_RP,
++	PCI_IDE_PARTNER_MAX,
++	/*
++	 * In addition to the resources in each partner port the
++	 * platform / host-bridge additionally has a Stream ID pool that
++	 * it shares across root ports. Let pci_ide_stream_alloc() use
++	 * the alloc_stream_index() helper as endpoints and root ports.
++	 */
++	PCI_IDE_HB = PCI_IDE_PARTNER_MAX,
++};
++
++/**
++ * struct pci_ide_partner - Per port pair Selective IDE Stream settings
++ * @rid_start: Partner Port Requester ID range start
++ * @rid_start: Partner Port Requester ID range end
++ * @stream_index: Selective IDE Stream Register Block selection
++ * @setup: flag to track whether to run pci_ide_stream_teardown() for this
++ *	   partner slot
++ * @enable: flag whether to run pci_ide_stream_disable() for this partner slot
++ */
++struct pci_ide_partner {
++	u16 rid_start;
++	u16 rid_end;
++	u8 stream_index;
++	unsigned int setup:1;
++	unsigned int enable:1;
++};
++
++/**
++ * struct pci_ide - PCIe Selective IDE Stream descriptor
++ * @pdev: PCIe Endpoint in the pci_ide_partner pair
++ * @partner: per-partner settings
++ * @host_bridge_stream: track platform Stream ID
++ * @stream_id: unique Stream ID (within Partner Port pairing)
++ * @name: name of the established Selective IDE Stream in sysfs
++ *
++ * Negative @stream_id values indicate "uninitialized" on the
++ * expectation that with TSM established IDE the TSM owns the stream_id
++ * allocation.
++ */
++struct pci_ide {
++	struct pci_dev *pdev;
++	struct pci_ide_partner partner[PCI_IDE_PARTNER_MAX];
++	u8 host_bridge_stream;
++	int stream_id;
++	const char *name;
++};
++
++struct pci_ide_partner *pci_ide_to_settings(struct pci_dev *pdev, struct pci_ide *ide);
++struct pci_ide *pci_ide_stream_alloc(struct pci_dev *pdev);
++void pci_ide_stream_free(struct pci_ide *ide);
++int  pci_ide_stream_register(struct pci_ide *ide);
++void pci_ide_stream_unregister(struct pci_ide *ide);
++void pci_ide_stream_setup(struct pci_dev *pdev, struct pci_ide *ide);
++void pci_ide_stream_teardown(struct pci_dev *pdev, struct pci_ide *ide);
++int pci_ide_stream_enable(struct pci_dev *pdev, struct pci_ide *ide);
++void pci_ide_stream_disable(struct pci_dev *pdev, struct pci_ide *ide);
++void pci_ide_stream_release(struct pci_ide *ide);
++DEFINE_FREE(pci_ide_stream_release, struct pci_ide *, if (_T) pci_ide_stream_release(_T))
++#endif /* __PCI_IDE_H__ */
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index d3880a4f175e..45360ba87538 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -544,6 +544,8 @@ struct pci_dev {
+ 	u16		ide_cap;	/* Link Integrity & Data Encryption */
+ 	u8		nr_ide_mem;	/* Address association resources for streams */
+ 	u8		nr_link_ide;	/* Link Stream count (Selective Stream offset) */
++	u8		nr_sel_ide;	/* Selective Stream count (register block allocator) */
++	DECLARE_BITMAP(ide_stream_map, CONFIG_PCI_IDE_STREAM_MAX);
+ 	unsigned int	ide_cfg:1;	/* Config cycles over IDE */
+ 	unsigned int	ide_tee_limit:1; /* Disallow T=0 traffic over IDE */
+ #endif
+@@ -613,6 +615,10 @@ struct pci_host_bridge {
+ 	int		domain_nr;
+ 	struct list_head windows;	/* resource_entry */
+ 	struct list_head dma_ranges;	/* dma ranges resource list */
++#ifdef CONFIG_PCI_IDE
++	u8 nr_ide_streams; /* Max streams possibly active in @ide_stream_map */
++	DECLARE_BITMAP(ide_stream_map, CONFIG_PCI_IDE_STREAM_MAX);
++#endif
+ 	u8 (*swizzle_irq)(struct pci_dev *, u8 *); /* Platform IRQ swizzler */
+ 	int (*map_irq)(const struct pci_dev *, u8, u8);
+ 	void (*release_fn)(struct pci_host_bridge *);
 -- 
 2.50.1
 
