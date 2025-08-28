@@ -1,28 +1,27 @@
-Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D21192264A0;
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.4])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 38F742288EE;
 	Thu, 28 Aug 2025 14:00:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.3
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756389659; cv=none; b=ZxoHCcGDORLAvEmpghwSS+ixUCLJhVDzDcXMiqZU0cU9KflN5hT/IPIO0W5WkRmfoJs5czJTzc09rkMegYWAue5DkKSCRoObnWTU4OOxLBed6kaXl98CoWcUZJGQqSJL8Wk0p9SV3xBOiqQa4Pcp9RGN54ZH5rSI62CKJfurBbo=
+	t=1756389659; cv=none; b=kbejw6OAG1YtDdYv1bbteFfyVFWO43w7MSs0FUMKqhyajjZbM177Aa4RtYjvHiNCfDfZqz+xvH5Zq8LQXmoH2prpeEPCbfKeuaSI9frZeUwlq5yWgIuos3TwGqsDgVvro5QvTpP6trGGRa2NC+vGcYdvyrUStqho702a8jRv7YI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756389659; c=relaxed/simple;
-	bh=NzORvNhArs52OIES8vr4Q74uil4ev0AQJ1LMAaOqlCA=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BkKIaO4o1wz1Bx2cLYPD/ZIoWJgCZUdxlxrma0LYjgWEe2gyfu3FYOhmFWfAzPYLlqYEmVjuP8k4YS+aPCzuJIzRJUfvRzCUU9n8PyvkZc2fdrd9dnUx4DVB9rG1iF81iV3LUkLj3SHVJrHdQy30pYVW02gcYKkltDewu4yBrdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=PrYm4eZB; arc=none smtp.client-ip=117.135.210.3
+	bh=kdIAGJr5Wd7M1RAwUlRIedLCZo414UAkfIqizROIako=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=bMW7SUM1aws55R2/WtZtX1pxzxGJWKxMN2rW4AmDIwbAY44Z6HC5u9JboD+UCcS56qU6EN1iGaT3ZfeMxx1q8VqXbfjgjc4RTgRSSvSvyBQQSMZOx7tHJICPQpiJ1ahlK9HGBK2Z/uSTq0dlsRvg/b2CqoxoFJfZrNdM/2eHUBo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=A2IDiQXS; arc=none smtp.client-ip=117.135.210.4
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="PrYm4eZB"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="A2IDiQXS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Vx
-	oG6OIzDAF+arc2fFT/fW9m8cN4HqpezvjjmB/kNYY=; b=PrYm4eZBq6l6x2wp0J
-	6LAtHF1+Sl+vJvy89+PdwCFH2xYrJ0EDJnwZ3vrKSVNiTlV5hk7RBWTZFyKfM0UF
-	tmFEHFBuGcsiTH1CYCno/Ut+eWDocUk+TOHdGHuANlguChPg3weNlVGVuIXd1q2p
-	lziCIg5t2NaV/2j9uKzurikAA=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Kr
+	hMgVKCw4qM6/B3CaW3n3M+BwEyI+IA1IgGyxnNRUc=; b=A2IDiQXS+kHLxhixi0
+	9tpPKGyuaTPfRsoVADien5jIhMGpXjmf3rF0oGxX4i68ENeVkrrc88aSXpb0o9Y0
+	bXp+NENODuLv4fZXBXCGmzODci2j4/AN6uwf5ZZGYEr4PKj3Wrg9lG5aczO0zC2G
+	8TEBXDJjxfCR8C12C2BQW8/LY=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgAXBtYDYbBoN0ahAw--.5480S6;
-	Thu, 28 Aug 2025 22:00:39 +0800 (CST)
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgAXBtYDYbBoN0ahAw--.5480S2;
+	Thu, 28 Aug 2025 22:00:36 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -33,14 +32,11 @@ Cc: robh@kernel.org,
 	cassel@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Hans Zhang <18255117159@163.com>,
-	Frank Li <Frank.Li@nxp.com>
-Subject: [PATCH v5 04/13] PCI: imx6: Refactor code by using dw_pcie_*_dword()
-Date: Thu, 28 Aug 2025 21:59:42 +0800
-Message-Id: <20250828135951.758100-5-18255117159@163.com>
+	Hans Zhang <hans.zhang@cixtech.com>
+Subject: [PATCH v5 00/13] PCI: dwc: Refactor register access with dw_pcie_*_dword helper
+Date: Thu, 28 Aug 2025 21:59:38 +0800
+Message-Id: <20250828135951.758100-1-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
-In-Reply-To: <20250828135951.758100-1-18255117159@163.com>
-References: <20250828135951.758100-1-18255117159@163.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -48,105 +44,97 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgAXBtYDYbBoN0ahAw--.5480S6
-X-Coremail-Antispam: 1Uf129KBjvJXoWxJw4UCFyxtw18XF48Xr1fZwb_yoWrGFW5pa
-	y2vrnayF4xJF4ruw4vyas5XF13t3Z3CF1DGanrKwnaqFy2yry7tayjy343tF4xGF4jyryj
-	9w1UJr43J3WYyF7anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pinmR8UUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQwS3o2iwWuaXpgAAsG
+X-CM-TRANSID:QCgvCgAXBtYDYbBoN0ahAw--.5480S2
+X-Coremail-Antispam: 1Uf129KBjvJXoWxGr1kJFW8ZFWftF1UuFWUCFg_yoWrXw48pa
+	y5tFWSvF1xJFWY9F4xX3W7ur1Yy3Z3AayDK393Kw1IqFy3ZFyjqr1rtFyFka47Gr4jqF12
+	yr17tFZ7CanrAFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jUKsbUUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQwG3o2iwWuZ9YAABsu
 
-i.MX6 PCIe driver contains multiple read-modify-write sequences for
-link training and speed configuration. These operations manually handle
-bit masking and shifting to update specific fields in control registers,
-particularly for link capabilities and speed change initiation.
+From: Hans Zhang <hans.zhang@cixtech.com>
 
-Refactor link capability configuration and speed change handling using
-dw_pcie_*_dword(). The helper simplifies LNKCAP modification
-by encapsulating bit clear/set operations and eliminates intermediate
-variables. For speed change control, replace explicit bit manipulation
-with direct register updates through the helper.
+Register bit manipulation in DesignWare PCIe controllers currently
+uses repetitive read-modify-write sequences across multiple drivers.
+This pattern leads to code duplication and increases maintenance
+complexity as each driver implements similar logic with minor variations.
 
-Adopting the standard interface reduces code complexity in link training
-paths and ensures consistent handling of speed-related bits. The change
-also prepares the driver for future enhancements to Gen3 link training
-by centralizing bit manipulation logic.
+This series introduces dw_pcie_*_dword() to centralize atomic
+register modification. The helper performs read-clear-set-write operations
+in a single function, replacing open-coded implementations. Subsequent
+patches refactor individual drivers to use this helper, eliminating
+redundant code and ensuring consistent bit handling.
 
-Signed-off-by: Hans Zhang <18255117159@163.com>
-Reviewed-by: Frank Li <Frank.Li@nxp.com>
+The change reduces overall code size by ~350 lines while improving
+maintainability. Each controller driver is updated in a separate
+patch to preserve bisectability and simplify review.
+
 ---
- drivers/pci/controller/dwc/pci-imx6.c | 26 ++++++++++----------------
- 1 file changed, 10 insertions(+), 16 deletions(-)
+Hi all,
 
-diff --git a/drivers/pci/controller/dwc/pci-imx6.c b/drivers/pci/controller/dwc/pci-imx6.c
-index 80e48746bbaf..acd8e1b927c5 100644
---- a/drivers/pci/controller/dwc/pci-imx6.c
-+++ b/drivers/pci/controller/dwc/pci-imx6.c
-@@ -939,7 +939,6 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
- 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
- 	struct device *dev = pci->dev;
- 	u8 offset = dw_pcie_find_capability(pci, PCI_CAP_ID_EXP);
--	u32 tmp;
- 	int ret;
- 
- 	if (!(imx_pcie->drvdata->flags &
-@@ -954,10 +953,9 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
- 	 * bus will not be detected at all.  This happens with PCIe switches.
- 	 */
- 	dw_pcie_dbi_ro_wr_en(pci);
--	tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
--	tmp &= ~PCI_EXP_LNKCAP_SLS;
--	tmp |= PCI_EXP_LNKCAP_SLS_2_5GB;
--	dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, tmp);
-+	dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_LNKCAP,
-+				    PCI_EXP_LNKCAP_SLS,
-+				    PCI_EXP_LNKCAP_SLS_2_5GB);
- 	dw_pcie_dbi_ro_wr_dis(pci);
- 
- 	/* Start LTSSM. */
-@@ -970,18 +968,16 @@ static int imx_pcie_start_link(struct dw_pcie *pci)
- 
- 		/* Allow faster modes after the link is up */
- 		dw_pcie_dbi_ro_wr_en(pci);
--		tmp = dw_pcie_readl_dbi(pci, offset + PCI_EXP_LNKCAP);
--		tmp &= ~PCI_EXP_LNKCAP_SLS;
--		tmp |= pci->max_link_speed;
--		dw_pcie_writel_dbi(pci, offset + PCI_EXP_LNKCAP, tmp);
-+		dw_pcie_clear_and_set_dword(pci, offset + PCI_EXP_LNKCAP,
-+					    PCI_EXP_LNKCAP_SLS,
-+					    pci->max_link_speed);
- 
- 		/*
- 		 * Start Directed Speed Change so the best possible
- 		 * speed both link partners support can be negotiated.
- 		 */
--		tmp = dw_pcie_readl_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL);
--		tmp |= PORT_LOGIC_SPEED_CHANGE;
--		dw_pcie_writel_dbi(pci, PCIE_LINK_WIDTH_SPEED_CONTROL, tmp);
-+		dw_pcie_set_dword(pci, PCIE_LINK_WIDTH_SPEED_CONTROL,
-+				  PORT_LOGIC_SPEED_CHANGE);
- 		dw_pcie_dbi_ro_wr_dis(pci);
- 
- 		ret = imx_pcie_wait_for_speed_change(imx_pcie);
-@@ -1302,7 +1298,6 @@ static void imx_pcie_host_post_init(struct dw_pcie_rp *pp)
- {
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
- 	struct imx_pcie *imx_pcie = to_imx_pcie(pci);
--	u32 val;
- 
- 	if (imx_pcie->drvdata->flags & IMX_PCIE_FLAG_8GT_ECN_ERR051586) {
- 		/*
-@@ -1317,9 +1312,8 @@ static void imx_pcie_host_post_init(struct dw_pcie_rp *pp)
- 		 * to 0.
- 		 */
- 		dw_pcie_dbi_ro_wr_en(pci);
--		val = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
--		val &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
--		dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, val);
-+		dw_pcie_clear_dword(pci, GEN3_RELATED_OFF,
-+				    GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL);
- 		dw_pcie_dbi_ro_wr_dis(pci);
- 	}
- }
+At the beginning, two patches were made, 0001*.patch, and the others were
+one patch. After consideration, I still split the patches. If splitting
+is not necessary, I will recombine them into two patches in future
+versions.
+
+
+Changes for v5:
+https://patchwork.kernel.org/project/linux-pci/patch/20250813044531.180411-1-18255117159@163.com/
+
+- According to Mani's reminder, following Lukas' previous suggestion for
+  another patch, add the dw_pcie_clear/set_dword API.
+- Fix the error pointed out by Mani.
+- Use the dw_pcie_clear/set_dword API for some of the calls in other patches.
+
+Changes for v4:
+https://patchwork.kernel.org/project/linux-pci/cover/20250626145040.14180-1-18255117159@163.com/
+
+- Rebase to v6.17-rc1
+
+Changes for v3:
+https://patchwork.kernel.org/project/linux-pci/patch/20250618152112.1010147-1-18255117159@163.com/
+
+- patch 0002: s/u32 val = 0;/u32 val; (pcie-designware-debugfs.c -> set_event_number())
+- patch 0013: Remove several val = 0. (Mani)
+- patch 0013: s/PCIE_PL_CHK_REG_CONTROL_STATUS/0. (Error in copying the code.) (Mani)
+
+Changes for v2:
+- Re-send it in the company environment so that the entire patch series is in the 00/13 cover letter. (Bjorn)
+- Modify the subject. (Bjorn and Frank)
+---
+
+Hans Zhang (13):
+  PCI: dwc: Add dw_pcie_*_dword() for register bit manipulation
+  PCI: dwc: Refactor code by using dw_pcie_*_dword()
+  PCI: dra7xx: Refactor code by using dw_pcie_*_dword()
+  PCI: imx6: Refactor code by using dw_pcie_*_dword()
+  PCI: meson: Refactor code by using dw_pcie_*_dword()
+  PCI: armada8k: Refactor code by using dw_pcie_*_dword()
+  PCI: bt1: Refactor code by using dw_pcie_*_dword()
+  PCI: dw-rockchip: Refactor code by using dw_pcie_*_dword()
+  PCI: fu740: Refactor code by using dw_pcie_*_dword()
+  PCI: qcom: Refactor code by using dw_pcie_*_dword()
+  PCI: qcom-ep: Refactor code by using dw_pcie_*_dword()
+  PCI: rcar-gen4: Refactor code by using dw_pcie_*_dword()
+  PCI: tegra194: Refactor code by using dw_pcie_*_dword()
+
+ drivers/pci/controller/dwc/pci-dra7xx.c       |  10 +-
+ drivers/pci/controller/dwc/pci-imx6.c         |  26 ++--
+ drivers/pci/controller/dwc/pci-meson.c        |  22 ++--
+ drivers/pci/controller/dwc/pcie-armada8k.c    |  43 +++---
+ drivers/pci/controller/dwc/pcie-bt1.c         |   5 +-
+ .../controller/dwc/pcie-designware-debugfs.c  |  48 +++----
+ .../pci/controller/dwc/pcie-designware-ep.c   |  19 ++-
+ .../pci/controller/dwc/pcie-designware-host.c |  26 ++--
+ drivers/pci/controller/dwc/pcie-designware.c  |  75 +++++------
+ drivers/pci/controller/dwc/pcie-designware.h  |  37 ++++--
+ drivers/pci/controller/dwc/pcie-dw-rockchip.c |   7 +-
+ drivers/pci/controller/dwc/pcie-fu740.c       |   5 +-
+ drivers/pci/controller/dwc/pcie-qcom-common.c |  62 +++++----
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |  14 +-
+ drivers/pci/controller/dwc/pcie-rcar-gen4.c   |  23 ++--
+ drivers/pci/controller/dwc/pcie-tegra194.c    | 122 +++++++-----------
+ 16 files changed, 223 insertions(+), 321 deletions(-)
+
 -- 
 2.49.0
 
