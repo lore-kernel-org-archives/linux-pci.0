@@ -1,28 +1,28 @@
-Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.3])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id B7C8223D298;
-	Thu, 28 Aug 2025 14:01:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.3
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.5])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id DBF49314A8B;
+	Thu, 28 Aug 2025 14:01:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.5
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756389665; cv=none; b=eUUSK16FwSEacC43H2meoKcOyABrItpp5nYVQ6DHwGkO1TeBG7KsyD7JVvhadlJP9xoBVaW1sZklr1TAgL3M6Myh34gtjBsoWKNkT7vBpH7DPTSmSLY8tduJjksSM8DcVeCLj9zfW1cVBQLDItj2DVEVUGaHi7TXIjlnmDTbXkY=
+	t=1756389668; cv=none; b=hS5xz+LY+T8hYdtMtD8qAju/AzDKAjGFJVUw6cOQN7Iwct0HX8MCdZGxdZ6flLBOuk/2Bwkv9oOZzizQE8W++Eiju0TlrRqBBsQ6XVaGkcEKMKEtnpX7EV/O7zXSno3d2ihCsSbZe90hIglOD7cHsr2/G8BxQJjocLpvT2wHcyY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756389665; c=relaxed/simple;
-	bh=IlENoHFxr7WOhjsE5a54eDOP6was89Ngzuhf4EVvmhs=;
+	s=arc-20240116; t=1756389668; c=relaxed/simple;
+	bh=uN0drnFLGHFFBfcUuEdBDC/ZBct1KNpo6/5Kpg9dR1s=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nbSYTyvuW97xZ+BI93XfHVKs5qSKJQ1HTHsVAC/YdF1Du+K4jS2zincnf50PlPrOZSbnfbI7Y+4rC6QrPna27zAAaW+cZy6vd84VxYl1zK1tWAcJyYozh1164BZvF9MDCPrd9jW4ej6HCeNaKb3MGiA1AcjIuY4pM9Cy62Mo3MA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=TrgOd+he; arc=none smtp.client-ip=220.197.31.3
+	 MIME-Version; b=Wd9X0t4d8+Vq8nHMUD89om4FNXYUYO55Kn7DUvEch9XC/jT9jc/mNpb8ehDJyQ29LgixRCFbfYedpgTKtNOk01vgF8lVHiD6EI4UxobmnZL1lrI2RKvlvv+RLtaVpydcSli9WqO7Ltyj46hYxyO5REXFv1CmXsoQd5oop/lYsyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=j+rmkRlA; arc=none smtp.client-ip=220.197.31.5
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="TrgOd+he"
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="j+rmkRlA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
-	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=Zy
-	0wvfRRI0LApPMuYe3zBdc3lkExdk1jM0KvRsbczRc=; b=TrgOd+hesp03+lMqYf
-	lNgMRGE4PIW8ZG9UAcCiCMFnbtc4ooK9iVlmuSFK66NcgTVyXTX1r6nIO2xpykOi
-	dtKHz0gd66pT+n9cjsim9vuVZUhN6Zw3biEssDyqMYBmDnXXthmC6yoccpewGnU+
-	dL39q/Z/XWWfOYaurQAvaV924=
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=rK
+	I7JtXjLg6JBO5xGv23pxIRhfzGIHc5RWwBJJ2bE6I=; b=j+rmkRlAe1vnPkEZ2F
+	xgv0sNczJSpd/rmBpSAv/8JJ7fTKYPETyMmPKo+WgSbvlsVYkbuMCwiUbFFn1bc6
+	yfztIOXmaedic5fu3RUsKJgyKi/o2h4P/qXnG86EwDTrceAVvj87oYnIQXgNB5wH
+	k33K3id1vzNu0wXorA7gcWSaU=
 Received: from localhost.localdomain (unknown [])
-	by gzsmtp5 (Coremail) with SMTP id QCgvCgAXBtYDYbBoN0ahAw--.5480S8;
-	Thu, 28 Aug 2025 22:00:41 +0800 (CST)
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wAXJYwNYbBoRejWEw--.829S4;
+	Thu, 28 Aug 2025 22:00:47 +0800 (CST)
 From: Hans Zhang <18255117159@163.com>
 To: lpieralisi@kernel.org,
 	bhelgaas@google.com,
@@ -34,9 +34,9 @@ Cc: robh@kernel.org,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Hans Zhang <18255117159@163.com>
-Subject: [PATCH v5 06/13] PCI: armada8k: Refactor code by using dw_pcie_*_dword()
-Date: Thu, 28 Aug 2025 21:59:44 +0800
-Message-Id: <20250828135951.758100-7-18255117159@163.com>
+Subject: [PATCH v5 10/13] PCI: qcom: Refactor code by using dw_pcie_*_dword()
+Date: Thu, 28 Aug 2025 21:59:48 +0800
+Message-Id: <20250828135951.758100-11-18255117159@163.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250828135951.758100-1-18255117159@163.com>
 References: <20250828135951.758100-1-18255117159@163.com>
@@ -47,110 +47,116 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:QCgvCgAXBtYDYbBoN0ahAw--.5480S8
-X-Coremail-Antispam: 1Uf129KBjvJXoWxZFyrKFykJF1xKF1kCw48JFb_yoWrCFy3p3
-	s8AFyYyF1UJw48Z3ykCas7XFy3AFZxZFnxCan3Wr1vv3ZrCrZrW3yFvFySgr1SgFsFqrWY
-	vw4rtry7Cr1rG3JanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0pE-eOtUUUUU=
-X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQxe3o2iwWuaXtAABsG
+X-CM-TRANSID:_____wAXJYwNYbBoRejWEw--.829S4
+X-Coremail-Antispam: 1Uf129KBjvJXoWxAryrXFyxtFWfKF1fJrW8JFb_yoW7JF1Upw
+	1Ikwn7JFn7AF409r98Aa1DWr1FkFWkur42k3W3tanF93Z7AF9Fga98t3ZxKF1xJFWIqFy5
+	G3yUAFW7GF1akrUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x0zNjg48UUUUU=
+X-CM-SenderInfo: rpryjkyvrrlimvzbiqqrwthudrp/1tbiQwy3o2iwWuaYfQAAsa
 
-Armada8k PCIe driver uses explicit bitwise operations for global control
-register configuration. The driver manually handles bit masking and
-shifting for multiple fields including device type, domain attributes,
-and interrupt masking. This approach requires repetitive read-modify-write
-sequences and temporary variables.
+Qcom PCIe common code contains complex bit manipulation for 16GT/s
+equalization and lane margining configuration. These functions use
+multiple read-modify-write sequences with manual bit masking and
+field preparation, leading to verbose and error-prone code.
 
-Refactor global control setup, domain attribute configuration, and
-interrupt masking using dw_pcie_*_dword(). The helper replaces
-manual bit manipulation with declarative bit masks, directly specifying
-which bits to clear and set. This eliminates intermediate variables and
-reduces code complexity.
+Refactor equalization and lane margining setup using
+dw_pcie_*_dword(). The helper simplifies multi-field
+configuration by combining clear and set operations in a single call.
+Initialize local variables to zero before field insertion to ensure
+unused bits are cleared appropriately.
 
-Standardizing on the helper improves code clarity in initialization paths
-and ensures consistent handling of control register bits. The change also
-centralizes bit manipulation logic, reducing the risk of errors in future
-modifications to device configuration.
+This change reduces code complexity by ~40% in affected functions
+while improving readability. Centralizing bit manipulation ensures
+consistent handling of register fields across Qcom PCIe implementations
+and provides a solid foundation for future 16GT/s enhancements.
 
 Signed-off-by: Hans Zhang <18255117159@163.com>
 ---
- drivers/pci/controller/dwc/pcie-armada8k.c | 43 ++++++++--------------
- 1 file changed, 16 insertions(+), 27 deletions(-)
+ drivers/pci/controller/dwc/pcie-qcom-common.c | 62 +++++++++----------
+ 1 file changed, 30 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/pci/controller/dwc/pcie-armada8k.c b/drivers/pci/controller/dwc/pcie-armada8k.c
-index c2650fd0d458..1b2879f89c61 100644
---- a/drivers/pci/controller/dwc/pcie-armada8k.c
-+++ b/drivers/pci/controller/dwc/pcie-armada8k.c
-@@ -155,54 +155,43 @@ static bool armada8k_pcie_link_up(struct dw_pcie *pci)
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
+index 3aad19b56da8..f3a365daac8a 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-common.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
+@@ -19,30 +19,29 @@ void qcom_pcie_common_set_16gt_equalization(struct dw_pcie *pci)
+ 	 * determines the data rate for which these equalization settings are
+ 	 * applied.
+ 	 */
+-	reg = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
+-	reg &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
+-	reg &= ~GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK;
+-	reg |= FIELD_PREP(GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
+-			  GEN3_RELATED_OFF_RATE_SHADOW_SEL_16_0GT);
+-	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, reg);
++	reg = FIELD_PREP(GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
++			 GEN3_RELATED_OFF_RATE_SHADOW_SEL_16_0GT);
++	dw_pcie_clear_and_set_dword(pci, GEN3_RELATED_OFF,
++				    GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL |
++				    GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
++				    reg);
  
- static int armada8k_pcie_start_link(struct dw_pcie *pci)
- {
--	u32 reg;
--
- 	/* Start LTSSM */
--	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
--	reg |= PCIE_APP_LTSSM_EN;
--	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
-+	dw_pcie_set_dword(pci, PCIE_GLOBAL_CONTROL_REG, PCIE_APP_LTSSM_EN);
+-	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF);
+-	reg &= ~(GEN3_EQ_FMDC_T_MIN_PHASE23 |
+-		GEN3_EQ_FMDC_N_EVALS |
+-		GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
+-		GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA);
+-	reg |= FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
+-		FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
+-		FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
+-		FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
+-	dw_pcie_writel_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF, reg);
++	reg = FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
++	      FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
++	      FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
++	      FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
++	dw_pcie_clear_and_set_dword(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF,
++				    GEN3_EQ_FMDC_T_MIN_PHASE23 |
++				    GEN3_EQ_FMDC_N_EVALS |
++				    GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
++				    GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA,
++				    reg);
  
- 	return 0;
+-	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
+-	reg &= ~(GEN3_EQ_CONTROL_OFF_FB_MODE |
+-		GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
+-		GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
+-		GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
+-	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, reg);
++	dw_pcie_clear_dword(pci, GEN3_EQ_CONTROL_OFF,
++			    GEN3_EQ_CONTROL_OFF_FB_MODE |
++			    GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
++			    GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
++			    GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
  }
+ EXPORT_SYMBOL_GPL(qcom_pcie_common_set_16gt_equalization);
  
- static int armada8k_pcie_host_init(struct dw_pcie_rp *pp)
+@@ -50,16 +49,15 @@ void qcom_pcie_common_set_16gt_lane_margining(struct dw_pcie *pci)
  {
--	u32 reg;
- 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	u32 reg;
  
--	if (!dw_pcie_link_up(pci)) {
-+	if (!dw_pcie_link_up(pci))
- 		/* Disable LTSSM state machine to enable configuration */
--		reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
--		reg &= ~(PCIE_APP_LTSSM_EN);
--		dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
--	}
-+		dw_pcie_clear_dword(pci, PCIE_GLOBAL_CONTROL_REG,
-+				    PCIE_APP_LTSSM_EN);
+-	reg = dw_pcie_readl_dbi(pci, GEN4_LANE_MARGINING_1_OFF);
+-	reg &= ~(MARGINING_MAX_VOLTAGE_OFFSET |
+-		MARGINING_NUM_VOLTAGE_STEPS |
+-		MARGINING_MAX_TIMING_OFFSET |
+-		MARGINING_NUM_TIMING_STEPS);
+-	reg |= FIELD_PREP(MARGINING_MAX_VOLTAGE_OFFSET, 0x24) |
+-		FIELD_PREP(MARGINING_NUM_VOLTAGE_STEPS, 0x78) |
+-		FIELD_PREP(MARGINING_MAX_TIMING_OFFSET, 0x32) |
+-		FIELD_PREP(MARGINING_NUM_TIMING_STEPS, 0x10);
+-	dw_pcie_writel_dbi(pci, GEN4_LANE_MARGINING_1_OFF, reg);
++	reg = FIELD_PREP(MARGINING_MAX_VOLTAGE_OFFSET, 0x24) |
++	      FIELD_PREP(MARGINING_NUM_VOLTAGE_STEPS, 0x78) |
++	      FIELD_PREP(MARGINING_MAX_TIMING_OFFSET, 0x32) |
++	      FIELD_PREP(MARGINING_NUM_TIMING_STEPS, 0x10);
++	dw_pcie_clear_and_set_dword(pci, GEN4_LANE_MARGINING_1_OFF,
++				    MARGINING_MAX_VOLTAGE_OFFSET |
++				    MARGINING_NUM_VOLTAGE_STEPS |
++				    MARGINING_MAX_TIMING_OFFSET |
++				    MARGINING_NUM_TIMING_STEPS, reg);
  
- 	/* Set the device to root complex mode */
--	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_CONTROL_REG);
--	reg &= ~(PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT);
--	reg |= PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT;
--	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_CONTROL_REG, reg);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_GLOBAL_CONTROL_REG,
-+				    PCIE_DEVICE_TYPE_MASK << PCIE_DEVICE_TYPE_SHIFT,
-+				    PCIE_DEVICE_TYPE_RC << PCIE_DEVICE_TYPE_SHIFT);
- 
- 	/* Set the PCIe master AxCache attributes */
- 	dw_pcie_writel_dbi(pci, PCIE_ARCACHE_TRC_REG, ARCACHE_DEFAULT_VALUE);
- 	dw_pcie_writel_dbi(pci, PCIE_AWCACHE_TRC_REG, AWCACHE_DEFAULT_VALUE);
- 
- 	/* Set the PCIe master AxDomain attributes */
--	reg = dw_pcie_readl_dbi(pci, PCIE_ARUSER_REG);
--	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
--	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	dw_pcie_writel_dbi(pci, PCIE_ARUSER_REG, reg);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_ARUSER_REG,
-+				    AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT,
-+				    DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT);
- 
--	reg = dw_pcie_readl_dbi(pci, PCIE_AWUSER_REG);
--	reg &= ~(AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT);
--	reg |= DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT;
--	dw_pcie_writel_dbi(pci, PCIE_AWUSER_REG, reg);
-+	dw_pcie_clear_and_set_dword(pci, PCIE_AWUSER_REG,
-+				    AX_USER_DOMAIN_MASK << AX_USER_DOMAIN_SHIFT,
-+				    DOMAIN_OUTER_SHAREABLE << AX_USER_DOMAIN_SHIFT);
- 
- 	/* Enable INT A-D interrupts */
--	reg = dw_pcie_readl_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG);
--	reg |= PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
--	       PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK;
--	dw_pcie_writel_dbi(pci, PCIE_GLOBAL_INT_MASK1_REG, reg);
-+	dw_pcie_set_dword(pci, PCIE_GLOBAL_INT_MASK1_REG,
-+			  PCIE_INT_A_ASSERT_MASK | PCIE_INT_B_ASSERT_MASK |
-+			  PCIE_INT_C_ASSERT_MASK | PCIE_INT_D_ASSERT_MASK);
- 
- 	return 0;
- }
+ 	reg = dw_pcie_readl_dbi(pci, GEN4_LANE_MARGINING_2_OFF);
+ 	reg |= MARGINING_IND_ERROR_SAMPLER |
 -- 
 2.49.0
 
