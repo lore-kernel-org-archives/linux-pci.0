@@ -1,122 +1,114 @@
-Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B56EF10F2;
-	Fri, 29 Aug 2025 07:51:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [13.75.44.102])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C62BF1E8324;
+	Fri, 29 Aug 2025 08:20:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.75.44.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756453863; cv=none; b=bF5TIxBF8ZYUFEtjfchkNPRtLC6sjhGkXdf6wySlAWcrrjlZOLC/EQxYWkwJiDT99eJp7G7Awurplih6X0wR79R5/XU5m7yFCK8/K3BPho6gPLn5W+s+YnGBEgbAkWoCjTwGyHWi5SsMekGVxw1c0bkfMoIT6bARUvcOf5QYKPw=
+	t=1756455658; cv=none; b=bFGcj7oj13x6MnJd0vOmriiNuff8ay8ajdbUKQjVSniIh5qGGVqLwZDCeBkL/r7bI8sjg+V4gAs8HU4reeC6OnD5vgYHhKtkvoUHPT0n6FLOx8cq6Zua4JubATxBKeMybuF4h2EiJXoUH3pCYrLOak2yaZSnc8ovSwvl5R/Sllk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756453863; c=relaxed/simple;
-	bh=MadAWZ3EmTpt4X17hWUBy43zI9NrdvHbyfp/Xrizb/o=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=Mmhlx9GCvzgxV2U+WlnwWL9XiD3PziPmaLIh7c9MKcMZPk49Cy5FE5v0jlVerHc8mfjdcHiekmHsUXnAM0BRrTmU68yp93AD2hSoYPJu5IwcMtnZQk/70AwV3xepamVhJqFyjqZ42LBq6Y0DaT5cIT8xmq7rYAVudSGGQOLKFbo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by mailout2.hostsharing.net (Postfix) with UTF8SMTPS id E76592C1E673;
-	Fri, 29 Aug 2025 09:50:59 +0200 (CEST)
-Received: from localhost (unknown [89.246.108.87])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id BB388600AD9B;
-	Fri, 29 Aug 2025 09:50:59 +0200 (CEST)
-X-Mailbox-Line: From 3d6f5aa8634bd4d13f28b7ec6b1b8d8d474e3c69 Mon Sep 17 00:00:00 2001
-Message-ID: <3d6f5aa8634bd4d13f28b7ec6b1b8d8d474e3c69.1756451884.git.lukas@wunner.de>
-In-Reply-To: <cover.1756451884.git.lukas@wunner.de>
-References: <cover.1756451884.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Fri, 29 Aug 2025 09:25:04 +0200
-Subject: [PATCH 4/4] PCI/ERR: Tidy documentation's PCIe nomenclature
-To: Bjorn Helgaas <helgaas@kernel.org>, Jonathan Corbet <corbet@lwn.net>
-Cc: Terry Bowman <terry.bowman@amd.com>, Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Niklas Schnelle <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>, "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, "Oliver OHalloran" <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, Brian Norris <briannorris@chromium.org>
+	s=arc-20240116; t=1756455658; c=relaxed/simple;
+	bh=xGsG7p9LCdPXrjEdh5XO/vK4HrJFG0WsCRHaptfIK30=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MXQN8nkE/L/ofksXI+7zIsqtmfHvJ7jE/dReV4A2LaRnBHUj8Ydxx2GBsF2z0lyxxs1OZUtvjNVaSGkRvSJzI07qsZw4MJ4BSp1q84JSBaeOITwsgvX6WtUTZ5ltdofIslKsLV/Y1bpifuUudeMtnx8ZTqqLb4NTI9aTnHZt734=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=13.75.44.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from E0004758DT.eswin.cn (unknown [10.12.96.83])
+	by app2 (Coremail) with SMTP id TQJkCgAHppTOYrFoZgfFAA--.58076S2;
+	Fri, 29 Aug 2025 16:20:34 +0800 (CST)
+From: zhangsenchuan@eswincomputing.com
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	p.zabel@pengutronix.de,
+	johan+linaro@kernel.org,
+	quic_schintav@quicinc.com,
+	shradha.t@samsung.com,
+	cassel@kernel.org,
+	thippeswamy.havalige@amd.com,
+	mayank.rana@oss.qualcomm.com,
+	inochiama@gmail.com
+Cc: ningyu@eswincomputing.com,
+	linmin@eswincomputing.com,
+	pinkesh.vaghela@einfochips.com,
+	Senchuan Zhang <zhangsenchuan@eswincomputing.com>
+Subject: [PATCH v2 0/2] Add driver support for Eswin EIC7700 SoC PCIe controller
+Date: Fri, 29 Aug 2025 16:20:21 +0800
+Message-ID: <20250829082021.49-1-zhangsenchuan@eswincomputing.com>
+X-Mailer: git-send-email 2.49.0.windows.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:TQJkCgAHppTOYrFoZgfFAA--.58076S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7AFWkAFy7KF1rCrykKF1xZrb_yoW8uFyDpa
+	yDKr1YkF18Jr47XwsxJa10kr43XFsxJFy3Gw1Igw17Xay3uas2q3sagFyYvFy7ArsrXw4Y
+	qF1YqF4rKFy3AFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBv14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lw4CEc2x0rVAKj4xxMxkF7I0En4kS14v26r4a6rW5MxkIecxEwVCm-wCF04
+	k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18
+	MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr4
+	1lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1l
+	IxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4
+	A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0pRuHqcUUUUU=
+X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/
 
-Commit 11502feab423 ("Documentation: PCI: Tidy AER documentation")
-replaced the terms "PCI-E", "PCI-Express" and "PCI Express" with "PCIe"
-in the AER documentation.
+From: Senchuan Zhang <zhangsenchuan@eswincomputing.com>
 
-Do the same in the documentation on PCI error recovery.  While at it,
-add a missing period and a missing blank.
+This series depends on the vendor prefix [1] and config option patch [2].
 
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
----
- Documentation/PCI/pci-error-recovery.rst | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+[1] https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git/commit/?h=next-20250825&id=ac29e4487aa20a21b7c3facbd1f14f5093835dc9
+[2] https://lore.kernel.org/all/20250825132427.1618089-3-pinkesh.vaghela@einfochips.com/
 
-diff --git a/Documentation/PCI/pci-error-recovery.rst b/Documentation/PCI/pci-error-recovery.rst
-index c88c304b2103..500d4e9b2143 100644
---- a/Documentation/PCI/pci-error-recovery.rst
-+++ b/Documentation/PCI/pci-error-recovery.rst
-@@ -13,7 +13,7 @@ PCI Error Recovery
- Many PCI bus controllers are able to detect a variety of hardware
- PCI errors on the bus, such as parity errors on the data and address
- buses, as well as SERR and PERR errors.  Some of the more advanced
--chipsets are able to deal with these errors; these include PCI-E chipsets,
-+chipsets are able to deal with these errors; these include PCIe chipsets,
- and the PCI-host bridges found on IBM Power4, Power5 and Power6-based
- pSeries boxes. A typical action taken is to disconnect the affected device,
- halting all I/O to it.  The goal of a disconnection is to avoid system
-@@ -206,7 +206,7 @@ reset or some such, but not restart operations. This callback is made if
- all drivers on a segment agree that they can try to recover and if no automatic
- link reset was performed by the HW. If the platform can't just re-enable IOs
- without a slot reset or a link reset, it will not call this callback, and
--instead will have gone directly to STEP 3 (Link Reset) or STEP 4 (Slot Reset)
-+instead will have gone directly to STEP 3 (Link Reset) or STEP 4 (Slot Reset).
- 
- .. note::
- 
-@@ -258,14 +258,14 @@ The driver should return one of the following result codes:
- 
- The next step taken depends on the results returned by the drivers.
- If all drivers returned PCI_ERS_RESULT_RECOVERED, then the platform
--proceeds to either STEP3 (Link Reset) or to STEP 5 (Resume Operations).
-+proceeds to either STEP 3 (Link Reset) or to STEP 5 (Resume Operations).
- 
- If any driver returned PCI_ERS_RESULT_NEED_RESET, then the platform
- proceeds to STEP 4 (Slot Reset)
- 
- STEP 3: Link Reset
- ------------------
--The platform resets the link.  This is a PCI-Express specific step
-+The platform resets the link.  This is a PCIe specific step
- and is done whenever a fatal error has been detected that can be
- "solved" by resetting the link.
- 
-@@ -287,13 +287,13 @@ that is equivalent to what it would be after a fresh system
- power-on followed by power-on BIOS/system firmware initialization.
- Soft reset is also known as hot-reset.
- 
--Powerpc fundamental reset is supported by PCI Express cards only
-+Powerpc fundamental reset is supported by PCIe cards only
- and results in device's state machines, hardware logic, port states and
- configuration registers to initialize to their default conditions.
- 
- For most PCI devices, a soft reset will be sufficient for recovery.
- Optional fundamental reset is provided to support a limited number
--of PCI Express devices for which a soft reset is not sufficient
-+of PCIe devices for which a soft reset is not sufficient
- for recovery.
- 
- If the platform supports PCI hotplug, then the reset might be
-@@ -337,7 +337,7 @@ Result codes:
- 	- PCI_ERS_RESULT_DISCONNECT
- 	  Same as above.
- 
--Drivers for PCI Express cards that require a fundamental reset must
-+Drivers for PCIe cards that require a fundamental reset must
- set the needs_freset bit in the pci_dev structure in their probe function.
- For example, the QLogic qla2xxx driver sets the needs_freset bit for certain
- PCI card types::
--- 
-2.47.2
+Changes in v2:
+- Updates: eswin,eic7700-pcie.yaml
+  - Optimize the naming of "clock-names" and "reset-names".
+  - Add a reference to "$ref: /schemas/pci/pci-host-bridge.yaml#".
+    (The name of the reset attribute in the "snps,dw-pcie-common.yaml"
+    file is different from our reset attribute and "snps,dw-pcie.yaml"
+    file cannot be directly referenced)
+  - Follow DTS coding style to optimize yaml attributes.
+  - Remove status = "disabled" from yaml.
+
+- Updates: pcie-eic7700.c
+  - Remove unnecessary imported header files.
+  - Use dev_err instead of pr_err and remove the WARN_ON function.
+  - The eswin_evb_socket_power_on function is removed and not supported.
+  - The eswin_pcie_remove function is placed after the probe function.
+  - Optimize function alignment.
+  - Manage the clock using the devm_clk_bulk_get_all_enabled function.
+  - Handle the release of resources after the dw_pcie_host_init function
+    call fails.
+  - Remove the dev_dbg function and remove __exit_p.
+  - Add support for the system pm function.
+- Link to V1: https://lore.kernel.org/all/20250516094057.1300-1-zhangsenchuan@eswincomputing.com/
+
+Senchuan Zhang (2):
+  dt-bindings: PCI: eic7700: Add Eswin eic7700 PCIe host controller
+  PCI: eic7700: Add Eswin eic7700 PCIe host controller driver
+
+ .../bindings/pci/eswin,eic7700-pcie.yaml      | 142 +++++++
+ drivers/pci/controller/dwc/Kconfig            |  12 +
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-eic7700.c     | 350 ++++++++++++++++++
+ 4 files changed, 505 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/eswin,eic7700-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-eic7700.c
+
+--
+2.25.1
 
