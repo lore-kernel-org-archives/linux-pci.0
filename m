@@ -1,242 +1,235 @@
-Received: from mx0a-0014ca01.pphosted.com (mx0b-0014ca01.pphosted.com [208.86.201.193])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF4D51BBBE5;
-	Mon,  1 Sep 2025 05:36:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=208.86.201.193
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756705011; cv=fail; b=lQALfH83KqND+8I1ziFHRmkb5144KmTNh+/ypt9ndDR82N+cNGZrUlxBNkkqVxmeCg90H/s3KTUb/WpLlhzCPQlyJyVdWNpHe0hq2Fg69MZi/jIfcNCFdazHaS9UrEBzCCeiPNjy2+Tthwy1nx+V3z217hlDLVpn53Ig4+Tpmzo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756705011; c=relaxed/simple;
-	bh=7cbFVJPVkf1AZ3iUgFncEg9+TCpu4JtoDhQ4sXZqsI4=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=jGCSZbopae1XWd80ZVdo0fZjFN8KEJAQPQsKqLactUjkUSVPsb04an3C61spqZY88k6LTM69Ls5L5DOVhaqCtNwPjAG6io7An/2cIeUIfi8wIB6OBtGZnQpIG9EqL8z7lKhyiWzX4s8sfBM6QKWp9SDooTsJpNA1PFpSfCGXMUg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cadence.com; spf=pass smtp.mailfrom=cadence.com; dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b=RzU1/bZ8; dkim=pass (1024-bit key) header.d=cadence.com header.i=@cadence.com header.b=byaHC9Ji; arc=fail smtp.client-ip=208.86.201.193
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cadence.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cadence.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AF7B23F40D;
+	Mon,  1 Sep 2025 05:48:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756705712; cv=none; b=cblJpRIZF5v14PgYhyYZczRWJFQIz2BgyxR/O4jRS+xEoREAJbgYJ7/7J3mR23jsbozS2LbPxVfavoRn9mc582o8zIFjiyZPMk398bHwhm6+xD/xaZRCyrldHFXXuvPYd6ynafLOqS/kJ/eUNCX49NFu/2hFsDY4jCaQvflkppI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756705712; c=relaxed/simple;
+	bh=KGRAIByVMvQoYHbe0Wfm9mSqDggNUsNczmX3xKAry2Q=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gexkr3jMP0g0Oa56Q6H2HTOW/1yMatfb1uJVDHti+d+sgzC/EaRqwzV4JF6ZXapzOxXYT83gNsMyisOE6ls5C3mJXXH0wCUVQs2CThnoEe219e9E2N4wPAal+zH5xBPWsigsmuaxX7GEVWVdih58jNrBzZEhm1kOE5oWH4c+Hnk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ix0Z3xcy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cadence.com header.i=@cadence.com header.b="RzU1/bZ8";
-	dkim=pass (1024-bit key) header.d=cadence.com header.i=@cadence.com header.b="byaHC9Ji"
-Received: from pps.filterd (m0042333.ppops.net [127.0.0.1])
-	by mx0b-0014ca01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57VLLNG9017325;
-	Sun, 31 Aug 2025 21:30:08 -0700
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=proofpoint;
-	 bh=7cbFVJPVkf1AZ3iUgFncEg9+TCpu4JtoDhQ4sXZqsI4=; b=RzU1/bZ8Rw90
-	PiyLWYToJ0dZxgCKvgL78sbgYEHOt7Bhx7QKo3H4/xwRxDYOWlp2u/yyZW1c/KDu
-	XK5ZmVYlFhUT8F/aaoUX65XYKZPhaddO/IfU0iVdKZlc39Ud7WqdkN2h+AKDBU63
-	sh3dcppQUUEPLRqvhGyha31iSQa4/KIRjeU7/Wcx9xkwAdR/DqlksDiKJRSTSrzO
-	7UEQhzI1LruQaqUryFyNyo2qXWZfvFUNiGRY//Ql5FiHCh7whY2cWr3g+EoqbYfl
-	ZPUnImjMX6NNNwetAjQc5qZux7CYwL+W84x9EZjJauFtA+CoibzEMsZlWnIO1j0A
-	RBpVs9UVaw==
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02on2055.outbound.protection.outlook.com [40.107.96.55])
-	by mx0b-0014ca01.pphosted.com (PPS) with ESMTPS id 48uvvx4bca-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 31 Aug 2025 21:30:08 -0700 (PDT)
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=SJesHc2EYCvEFRXuNfbEVALAiUbj1n8m7j846KFup+EvoxSA/F1xylMPtkMVgy45MVqfzFUiGIi/wtshjxSkRP1w3yIytHCvEJngPBZ237t7YAqBt6oFuZuEC3yp0VjfkORYDWScBElC1hXxzP9YAcimu8YJ7AkkJeaCk9iT7OvYPFJUiHue/AX9SZlawUe457NwFsKVbil8pUaFEvEEYkEwrpXhQEStp+xkHQ//SBrSuaG5/OEO06f67XQe7/W4bZG8Jskp9TZFjl6KBHJP/kI/iUzpw3KTBp8Nr/WQAZptmKyTQ7W0sW44RXVSFOQAloKYsQWPNwOOQMwvsyJ+Qg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=7cbFVJPVkf1AZ3iUgFncEg9+TCpu4JtoDhQ4sXZqsI4=;
- b=RuFmz2i5/GRPOP9KvDyUmt243lGv/bcvo1MSNZTjz3yU7yPrqJpRIJLRHFAbnc4XTBX9LiNJFxSO3JvmaJqmXsUSkbGOaQ6NczVEM2as8G6MtkjXWdx33USfQ4mNhZhdYSU4l+YJprXXI1kDMy4sHrC3bJz08O4iPboPaBH0SWPQ0toHX17f9FzzLfl4HqeIMxGqiywwdID460frNHjHx7oeJl+nkhZuBoLZ7qYp0GvzAeqiiskjym0qYVFz29VWgObUK4XrZstqImycUp9TH6yQjvS/eCP2qsoa2hqzLQG5pcJ5Gni8IQbyqN32sUYLq5dSXk5v+txsFnVEq5fNhg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=cadence.com; dmarc=pass action=none header.from=cadence.com;
- dkim=pass header.d=cadence.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cadence.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=7cbFVJPVkf1AZ3iUgFncEg9+TCpu4JtoDhQ4sXZqsI4=;
- b=byaHC9JisLnfFy5LtnEet62MJ1uTglqyD/E5QgyjYZNOmuM4UGZnpElwhZIbPSj7MB2hru1zwZZxO68TCI4+FP6F+EnGzkTvCHmNrzQS7JZStg1LQtQficnFnY9VqkyQg6gIPv9FrC3JtBUY1Z+xYL0RFlh/HaJiD7WKq+ClCQw=
-Received: from CH2PPF4D26F8E1C.namprd07.prod.outlook.com
- (2603:10b6:61f:fc00::278) by CH2PPF57569E98B.namprd07.prod.outlook.com
- (2603:10b6:61f:fc00::265) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9094.12; Mon, 1 Sep
- 2025 04:30:06 +0000
-Received: from CH2PPF4D26F8E1C.namprd07.prod.outlook.com
- ([fe80::7cef:10c6:11b0:cb05]) by CH2PPF4D26F8E1C.namprd07.prod.outlook.com
- ([fe80::7cef:10c6:11b0:cb05%8]) with mapi id 15.20.9073.010; Mon, 1 Sep 2025
- 04:30:06 +0000
-From: Manikandan Karunakaran Pillai <mpillai@cadence.com>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        "hans.zhang@cixtech.com"
-	<hans.zhang@cixtech.com>
-CC: "bhelgaas@google.com" <bhelgaas@google.com>,
-        "lpieralisi@kernel.org"
-	<lpieralisi@kernel.org>,
-        "kw@linux.com" <kw@linux.com>, "robh@kernel.org"
-	<robh@kernel.org>,
-        "kwilczynski@kernel.org" <kwilczynski@kernel.org>,
-        "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
-        "conor+dt@kernel.org"
-	<conor+dt@kernel.org>,
-        "fugang.duan@cixtech.com" <fugang.duan@cixtech.com>,
-        "guoyin.chen@cixtech.com" <guoyin.chen@cixtech.com>,
-        "peter.chen@cixtech.com"
-	<peter.chen@cixtech.com>,
-        "cix-kernel-upstream@cixtech.com"
-	<cix-kernel-upstream@cixtech.com>,
-        "linux-pci@vger.kernel.org"
-	<linux-pci@vger.kernel.org>,
-        "devicetree@vger.kernel.org"
-	<devicetree@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH v8 06/15] PCI: cadence: Move PCIe RP common functions to a
- separate file
-Thread-Topic: [PATCH v8 06/15] PCI: cadence: Move PCIe RP common functions to
- a separate file
-Thread-Index: AQHcEQAlb5yJEoyUFkamcH8xJYiARLR7EfQAgAK98RA=
-Date: Mon, 1 Sep 2025 04:30:06 +0000
-Message-ID:
- <CH2PPF4D26F8E1CADA09A5DDC4B04C4BC68A207A@CH2PPF4D26F8E1C.namprd07.prod.outlook.com>
-References: <20250819115239.4170604-1-hans.zhang@cixtech.com>
- <20250819115239.4170604-7-hans.zhang@cixtech.com>
- <phxvk3wsr75btvhljdgakkoqz7lyza7x7sjut3kswwhutyhb7n@pihtlzszfb46>
-In-Reply-To: <phxvk3wsr75btvhljdgakkoqz7lyza7x7sjut3kswwhutyhb7n@pihtlzszfb46>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: CH2PPF4D26F8E1C:EE_|CH2PPF57569E98B:EE_
-x-ms-office365-filtering-correlation-id: ea7184d3-e99a-4b26-5789-08dde9103a70
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|7416014|38070700018;
-x-microsoft-antispam-message-info:
- =?utf-8?B?RFo0NWpweG1od1k4RTJlWkdOekw5SnpraTBhNkQyVE9qOFp5K2UyMlFDYjI2?=
- =?utf-8?B?UzI3bENrYkVhN21pZjZpWld6a3pIUjVJQWtSUkJTM1BrSEYrQThEdEJaUHIr?=
- =?utf-8?B?ZVVjOFhsL1FyTWxOTHJtQ0hFWkFiQS9nZGN4cFRvb3dHbTYyTDl4cXRCS3k4?=
- =?utf-8?B?MU43L3ZKWUdZMEIzcmxrMllLbHFnODVkajhmSEFSTVJPc084ZkFnNjJzbTVs?=
- =?utf-8?B?TDJrQW9UUjRqWVZJOFBQZlEyUDVmc2VqVUhJeUgyUGZmQ2hhVkJOS2c3R0Zq?=
- =?utf-8?B?TjRZZzJoVTZjV1c1UC82cHJ2ZlRGSTMxeHBKQ3ZuZmNqWVAwN1c3OWJqcjJo?=
- =?utf-8?B?c3lLZGs1WS9QRG9FbGFrT3NPM2x3OWptWHNuUWVDSzJFTTNHSzFaN2hqQysw?=
- =?utf-8?B?ZGZYaFhZbmRnVUl1OVNzZ1I3cDA0RlJ2aUpXRWdlZ3BZM25GNnQ3eFdVM2Fl?=
- =?utf-8?B?aHFTZGNYOWt4NE9ZcFBqM0dNc3ZIaFY0Q2R6dHlrR2JRODZyd0pvSi9sSkNN?=
- =?utf-8?B?aEM0VG5WVm5TU0w1VU5id0tQM0F4SUlFVFIyd1dya1AwRzJjRExKQ2tiNWtk?=
- =?utf-8?B?Zll6WUgzZnh6NkhlM09TbkYxMldwZkQxd2FEeDdDWE9TS1RMYTZ3VUpmS0xz?=
- =?utf-8?B?TWRLa3RsWXNJK1hTdmpXeGhzS3NmTnZ2dnZGVUNXaXRPWkg5bFcySHBvaEUz?=
- =?utf-8?B?TDRvRUtWOGNhbHVWMVgrNUxBeTRrVXN5d1pCbnJZUHJCdUFyOTM3M0JWK2hP?=
- =?utf-8?B?OWFXZ0xtYVY4YmlMdHFvQ1BPdERIZU1lcXF5TTVUaGUzU2VObVFVKzljRWQ0?=
- =?utf-8?B?a2Z3WTRndDlwZC9XdUMvUVVqWEIxRFExQ01IU3NsUUs3NWp4S2tHT0g0cTV4?=
- =?utf-8?B?Y1hmRklqYzkxRy80L3RNbjVDcGM5aEhtYldRUVltdHF2bTlxbU9hWWd2c2Nr?=
- =?utf-8?B?MnJhcWc3RWNWRjN3ZXIzQmFKWUFrME93MHNya29FcG83bU9pNWx0bUJadk1v?=
- =?utf-8?B?SVVmZE5QaWRnTm8yYktHbC90M3J1QWlmbk5oV2k4L0laUFB6dGl3cllheHRL?=
- =?utf-8?B?VTJkTFlkK2hjMzJ0Zzh4Z2xJT0ZMMGJTaWZBZ1ppbWxoTWNtaUVldmlCSncy?=
- =?utf-8?B?S2FzSmVrK091U213RDJkYVdTZEJrS0I5ZnNqSng1REpZZ0RXOW15T3BjMzJT?=
- =?utf-8?B?eGhvYlhSS1h4akNCSVVNd2NMYUlLQ1dDTW5wRVVjbWwyeFN1VWlRWDB2bDE1?=
- =?utf-8?B?TWdQNk5tZ0prcUQyUkw2MXFWenZzdFJ4YmlRTlRXRytYeXkydWhUQ0RZb2Zn?=
- =?utf-8?B?OEliNGpzamVVeVhvL1doSWtTRnBqMVkvcW12YVU3Tmt2UHRQTlIrbHZaVWlz?=
- =?utf-8?B?ZnViNnRqb0xuYVozLzk1eFh6TmdDb2dKdGZ0cWdTN3pXQW9yWWlCOFNCcnpp?=
- =?utf-8?B?aHpJaTlQZlJ4bUNlaUZCT1lKTUV2MW9jR2g3dzN6Um5Qc0o1dmNpbTVyd1RX?=
- =?utf-8?B?MTZkM1NxWTZOVTQ3UTBKTDEyVWRseWsxOElvM3BmeENPSzQwaHJJNDRqcm9a?=
- =?utf-8?B?KzdxSUN1ZXRIekw1YVRUR3hCMFdQWjV2ZUdMaHFpOTMwcEd6VHFDTktuYnlV?=
- =?utf-8?B?QUVUMGRKUWwvQm1tWE84bjNab0NYcHhBbUNlZHBONjlhS0hncFZvL2I4Ty9R?=
- =?utf-8?B?ZGdQN0ZCbFdQbElFaVNIdTh0TytsazEvK2lFYXZvSHFTdGhWZjJzTk5wUUNj?=
- =?utf-8?B?U3lFL0Nqb24xN3FOQmpRTWRodjltNEJWcDBaME5iRkFqeU1kQ1JvdnFsRkVj?=
- =?utf-8?B?ZUVvSW5rUWRLK2ZQRyt1ZGNQOGRLYTk0bVkvT1JLa0xLS3pZbFA4NVBZak5m?=
- =?utf-8?B?RytCNWpMejZ2MDJOanFvaElVTXRXYk5tazFMT1pneGc2RlR3SDUxKzR3dXdm?=
- =?utf-8?B?WE8zLzlWMGFac2dVUVl0NlJkNEFmSTgvOUNwZWs0SlJxN3JGVEp2SldRZXFQ?=
- =?utf-8?B?Ui9US1ZWa2V3PT0=?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH2PPF4D26F8E1C.namprd07.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7416014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?utf-8?B?UlRtOVB6RW55V2traGc3RWlxYjZjaENrUE05dmpOdURWdGFOVk9CNkdDL3VU?=
- =?utf-8?B?UjJlZHN3ejIvRmF1UlRzZVVCNlpNT3BEbE44ekVNZFZSbmorWHJObTczS1ZV?=
- =?utf-8?B?N0RwVW5yR2E3VUFTYTRDeStPQ20rdHRicnA3MXhiVFQyWnNtU1ZqWFZZUkpy?=
- =?utf-8?B?UTNxSlVzbWVrdnIzdDA1ekV1UWpRNkFIY29qYzdOM0tWY0hGbXVhQURaZW0y?=
- =?utf-8?B?aGE3Z1FFZGFWUGVYb041Q0pIc0hlWE1yYXBOeE1KNVRIRlRxRkFmWGRRaDY5?=
- =?utf-8?B?by9sRFdGR3daaEFyRnNoVW1BVFlXZXlLUjJ0bmRWS292OUFXeXpUY3MyTnZU?=
- =?utf-8?B?b1hiTEpiWnU5UVhmVXVyRCtlOGhVdnBURm5kZU1wdk4rbEsyU21SakxzU3hr?=
- =?utf-8?B?Tm50Mm5vZTVBTlh2Z2JPSzlyd2tYeWZpQ1QxYWVOZlVTRlVkMUNxb2d0SnBj?=
- =?utf-8?B?dFZtMlB1eEFCR1lja0xyZ29aR1U0b1lQWHRkb0ZFOGpTT3JPY1o4bTIveHVy?=
- =?utf-8?B?T0lkdWlxSk1sTEsrcGt2WkVCS2h5Nklxdnc0RlRnWlZBU2pldzV1WHdoQjk3?=
- =?utf-8?B?d2oyb0dqQUV1TC9hVHRhRUdyek9OZzZnWDZ4T1VwRlRWUUt1VWZrZ3ZZQVRn?=
- =?utf-8?B?U0xJdCt4QWtOSlR0QzlWRW56TjRqVFMyVzJ6dVBFWHlOUFRyY3prcGp3MHMy?=
- =?utf-8?B?Y2hYZitqSHdQWU9nWWxtLzVGS2lMTVY2R2lkM3lRQnhBZ21SdldHOVBtL2pD?=
- =?utf-8?B?VDZ3VlorTjU4VWtpYzRweS85YTgwaDU3YVZwMTRvKzZBbTVxNDhZNXRCTjJ2?=
- =?utf-8?B?SzJTSVBaWVRFbW9XWkJOYXprcGxaUEtudnovNTl3eEVyMmF1YWdrbVZLVW94?=
- =?utf-8?B?U0pKOUJ6Qi9qK2Q0aXA4KzZKVnYxWC9wdlJJZ2dYeVg3dkdmUi80UWdsWi85?=
- =?utf-8?B?WXl3c0pjbGcxQ2JaZVVLcEEvc1ZMWCt0VmNuQWRybDhOUkg3aTRUa1NPR2tv?=
- =?utf-8?B?OFVxSXNzOXMwNXYzaE1tWGg5MDBMcXVhWlZtc3A1cGpTY0J5ek9FTE5qYkNE?=
- =?utf-8?B?WmFxOG1qeEFFc2luWmpJdWtrdDF2bVQrd050dHlHeGN0N1MyeW1oeERuZ3A3?=
- =?utf-8?B?OGkzSkwwais4WmtQNWRNaVR3ekhhLzNDZHNPU0FqYUFSaVJvdmxkVWUyYTdx?=
- =?utf-8?B?Y0x0MVc2bHlBSlJDN0tQZjY4akhlcXBKazlNQ3pGMk1GOXJLZmhrdms3ZTNi?=
- =?utf-8?B?RWxCTTNWRTFPM1laWnM4Wkl0Y1ZtM0tTMDNyV2tXMmZ4ck9VT2YySEdSNUN1?=
- =?utf-8?B?cGJ2MUVteFVlZUlWSUhySjJvcStqYkNQNi9yYmZUcWVnd2dTRFpFUnhCTlQ0?=
- =?utf-8?B?clBCUDAwMDRRcHpsTkxMUi9xNjRycVRlRVlLQmtyME1KclhIMitVSlYyT2dq?=
- =?utf-8?B?Qk9rUXR4OThad0toY2Qzd0c3K29CcWZGaWxqTThYeC9tcVFzRkFNV3AzNElt?=
- =?utf-8?B?Ty9ZeGk0Sy9oRUZuQlJMQnNxbzA1TmV5MUJNQ056VWhHUE1HQVRjOUhBMHVB?=
- =?utf-8?B?RHdlVlowT2wySGZ6VWVqYXY3aVRoTXZ1ZzNESzhHcVh1VGNHbWtzL0tZZm5a?=
- =?utf-8?B?VVBaeDFWY1FoeW9Rc0lCY2hWNko5RDRoRGdRMjNUWERZam1NblNOdlNWQ2Jr?=
- =?utf-8?B?VmowckhSY2FsSUVvYzNKY1NMVDRVU1lNUmpTOFc3ZUptSTZiNHorOXd4WGxk?=
- =?utf-8?B?aTVUelh4d2x6MEdvSFRrbmJncS9GTVlCZkVuODhlRjhydHZvV1ZIdHE3L0Na?=
- =?utf-8?B?YmhVRnNsM1FhVm83NGc1dytlRVgyYWRkcVdibldqWm1YbkwxQXY2SWJ5eURw?=
- =?utf-8?B?ZHdMRGxtZzhad3RyUXhkRTdrNVl4YW1UUE9PQWdaTy9NTlMrcFVIVmhOYktB?=
- =?utf-8?B?V0FQRk1uTTV0amtQMzFGdGpvbE9aR3B2ZEJZMEIzMWV6cUhHandsSWJJYUtJ?=
- =?utf-8?B?bmtkUFhJbmdZN0FxdjBNalk3SDJ2dXhBMVVZRGpzSGhGVEd0NGZBelBqNmdl?=
- =?utf-8?B?QnU3akw1NjRXSlZEVTUycU02NUNqcC9OMGlwb1lobnprYy94S0lCa3pScVpq?=
- =?utf-8?Q?ZEjvE9RKUir7tyKzHdkw9tNLv?=
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ix0Z3xcy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BE55EC4CEF7;
+	Mon,  1 Sep 2025 05:48:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756705711;
+	bh=KGRAIByVMvQoYHbe0Wfm9mSqDggNUsNczmX3xKAry2Q=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ix0Z3xcyMCEAazztA5hZ9vWWKOjO/h142DnZcxy1OJz2F3EsKcUmrWzq2jnQUfxMC
+	 T/keb07pZDG1d5Q7AzxV1wf/O7HE/sIZjeEn/oDD+dOsWrWH6VyBaJPZtoJ89AUozt
+	 UKLybJCgA/OcNU3Qm2Y63b9MrEjywTMYQGYsCEKPnEYY9GzB67TGkyueluP8NymzcO
+	 ZssXbq6Ij5VzNc9807QtKoy98H9/drV+xwmxI7BU/0WINWUzR67p10ieg13ldid5nD
+	 spCbdp3sC1D0uWh4SKo926pHk5IZul1bEnUcyQXIF/3a1nPvROIgFcL0hPO4WGmIOn
+	 /wiUFYn3JzwzA==
+Date: Mon, 1 Sep 2025 11:18:23 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Siddharth Vadapalli <s-vadapalli@ti.com>
+Cc: lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
+	bhelgaas@google.com, helgaas@kernel.org, kishon@kernel.org, vigneshr@ti.com, 
+	stable@vger.kernel.org, linux-pci@vger.kernel.org, linux-omap@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, srk@ti.com
+Subject: Re: [PATCH v3] PCI: j721e: Fix programming sequence of "strap"
+ settings
+Message-ID: <z3ubracmtlq23yicbrhqjgnzrfoqheffm6cvhfnawlvbu4cmmp@ddu2o7xhw5tz>
+References: <20250829091707.2990211-1-s-vadapalli@ti.com>
+ <oztilfun77apxtjxumx4tydkcd2gsalsak4m2rvsry2oooqjna@2yvcx6cnuemm>
+ <b2fb9252-6bfc-45da-973a-31cdfcc86b3d@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: cadence.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: CH2PPF4D26F8E1C.namprd07.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: ea7184d3-e99a-4b26-5789-08dde9103a70
-X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Sep 2025 04:30:06.5642
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: d36035c5-6ce6-4662-a3dc-e762e61ae4c9
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: V+c3IuapoihpY21XBy0pY/tiygchTrXxUxMORpXo8nE5gSjBNPIwPbEte8Gi0Y0ikiGRILkkODZIImoFt1A7bNJ8AKFBzADpRwitkNUAxyI=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PPF57569E98B
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDA2OSBTYWx0ZWRfX84u5FFdv97nk MGtGGA8oxFJsLNPRIV9GWE7Mp/6EhLNsrHYioS86YWBjXAguegvXl11R6R8CzBA0rQDypbYyjd3 /d9tSbwg8libjhT2d426e9QPU6fLaJGjFQs4Ix9Mkpbq7BSjwXkxbOLLJCOqggKdLBX0+SSdXNv
- 5m4q4MaWZyBlq9nD34ozheTR6yD90REUg1Qm4/UECh6GpAwADFYY8/SlsBLTW6hHlZRajVEEo9v lIKE1NMMVhh1UiUfKDhsGtd8GnQDE3+xOqbgYYye6q/MAEH2ZaWN8hvwpTmEmbUWv3/Jwrzndzd aYySM2lf1mjnFKx5GXE+vmwhpx8q/z10oDuI9Lxk0QEjshCON6v0TEvmpkQRjMmFR9l2sLqBgtB HTgT8Nzv
-X-Authority-Analysis: v=2.4 cv=W6w4VQWk c=1 sm=1 tr=0 ts=68b52150 cx=c_pps a=jwBwXe7jPVY/Pk8tSagW2Q==:117 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19 a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19
- a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=Zpq2whiEiuAA:10 a=ZpDfllaKoKi9YKmXq7UA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: WhbX5A4oYntX7RGQaHP-V71O107b2DRW
-X-Proofpoint-ORIG-GUID: WhbX5A4oYntX7RGQaHP-V71O107b2DRW
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-01_02,2025-08-28_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_check_notspam policy=outbound_check score=0 adultscore=0
- clxscore=1015 bulkscore=0 malwarescore=0 priorityscore=1501 spamscore=0
- phishscore=0 impostorscore=0 suspectscore=0 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508300069
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <b2fb9252-6bfc-45da-973a-31cdfcc86b3d@ti.com>
 
-Pj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvcGNpL2NvbnRyb2xsZXIvY2FkZW5jZS9NYWtlZmlsZQ0K
-PmIvZHJpdmVycy9wY2kvY29udHJvbGxlci9jYWRlbmNlL01ha2VmaWxlDQo+PiBpbmRleCA4MGMx
-YzRiZTdlODAuLmU0NWY3MjM4OGJiYiAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvcGNpL2NvbnRy
-b2xsZXIvY2FkZW5jZS9NYWtlZmlsZQ0KPj4gKysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9j
-YWRlbmNlL01ha2VmaWxlDQo+PiBAQCAtMSw2ICsxLDYgQEANCj4+ICAjIFNQRFgtTGljZW5zZS1J
-ZGVudGlmaWVyOiBHUEwtMi4wDQo+PiAgb2JqLSQoQ09ORklHX1BDSUVfQ0FERU5DRSkgKz0gcGNp
-ZS1jYWRlbmNlLm8NCj4+IC1vYmotJChDT05GSUdfUENJRV9DQURFTkNFX0hPU1QpICs9IHBjaWUt
-Y2FkZW5jZS1ob3N0Lm8NCj4+ICtvYmotJChDT05GSUdfUENJRV9DQURFTkNFX0hPU1QpICs9IHBj
-aWUtY2FkZW5jZS1ob3N0LWNvbW1vbi5vDQo+cGNpZS1jYWRlbmNlLWhvc3Qubw0KPj4gIG9iai0k
-KENPTkZJR19QQ0lFX0NBREVOQ0VfRVApICs9IHBjaWUtY2FkZW5jZS1lcC1jb21tb24ubyBwY2ll
-LQ0KPmNhZGVuY2UtZXAubw0KPj4gIG9iai0kKENPTkZJR19QQ0lFX0NBREVOQ0VfUExBVCkgKz0g
-cGNpZS1jYWRlbmNlLXBsYXQubw0KPj4gIG9iai0kKENPTkZJR19QQ0lfSjcyMUUpICs9IHBjaS1q
-NzIxZS5vDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9wY2kvY29udHJvbGxlci9jYWRlbmNlL3Bj
-aWUtY2FkZW5jZS1ob3N0LWNvbW1vbi5jDQo+Yi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2NhZGVu
-Y2UvcGNpZS1jYWRlbmNlLWhvc3QtY29tbW9uLmMNCj4+IG5ldyBmaWxlIG1vZGUgMTAwNjQ0DQo+
-PiBpbmRleCAwMDAwMDAwMDAwMDAuLmQzNGY4YzdjNDlmMA0KPj4gLS0tIC9kZXYvbnVsbA0KPj4g
-KysrIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9jYWRlbmNlL3BjaWUtY2FkZW5jZS1ob3N0LWNv
-bW1vbi5jDQo+PiBAQCAtMCwwICsxLDE3OSBAQA0KPj4gKy8vIFNQRFgtTGljZW5zZS1JZGVudGlm
-aWVyOiBHUEwtMi4wDQo+PiArLy8gQ29weXJpZ2h0IChjKSAyMDE3IENhZGVuY2UNCj4+ICsvLyBD
-YWRlbmNlIFBDSWUgaG9zdCBjb250cm9sbGVyIGRyaXZlci4NCj4NCj5UaGlzIHNob3VsZCBiZSBj
-aGFuZ2VkIHRvICdDYWRlbmNlIFBDSWUgaG9zdCBjb250cm9sbGVyIGxpYnJhcnknLiBGb3INCj5j
-b21wbGV0ZW5lc3MsIHlvdSBzaG91bGQgYWRkIHRoZSAnQXV0aG9yJyB0YWcgYWxzby4NCj4NCj4t
-IE1hbmkNCj4NCj4tLQ0KSGkgTWFuaSwNCldpbGwgY2hhbmdlIHRoZSBmaWxlIGNvbW1lbnRzIGFu
-ZCBBdXRob3IgdGFnIGFzIHBlciB5b3VyIHJlY29tbWVuZGF0aW9uDQoNCi1NYW5pa2FuZGFuDQoN
-Cj7grq7grqPgrr/grrXgrqPgr43grqPgrqngr40g4K6a4K6k4K6+4K6a4K6/4K614K6u4K+NDQo=
+On Mon, Sep 01, 2025 at 10:27:51AM GMT, Siddharth Vadapalli wrote:
+> On Sun, Aug 31, 2025 at 06:15:13PM +0530, Manivannan Sadhasivam wrote:
+> 
+> Hello Mani,
+> 
+> > On Fri, Aug 29, 2025 at 02:46:28PM GMT, Siddharth Vadapalli wrote:
+> > > The Cadence PCIe Controller integrated in the TI K3 SoCs supports both
+> > > Root-Complex and Endpoint modes of operation. The Glue Layer allows
+> > > "strapping" the Mode of operation of the Controller, the Link Speed
+> > > and the Link Width. This is enabled by programming the "PCIEn_CTRL"
+> > > register (n corresponds to the PCIe instance) within the CTRL_MMR
+> > > memory-mapped register space. The "reset-values" of the registers are
+> > > also different depending on the mode of operation.
+> > > 
+> > > Since the PCIe Controller latches onto the "reset-values" immediately
+> > > after being powered on, if the Glue Layer configuration is not done while
+> > > the PCIe Controller is off, it will result in the PCIe Controller latching
+> > > onto the wrong "reset-values". In practice, this will show up as a wrong
+> > > representation of the PCIe Controller's capability structures in the PCIe
+> > > Configuration Space. Some such capabilities which are supported by the PCIe
+> > > Controller in the Root-Complex mode but are incorrectly latched onto as
+> > > being unsupported are:
+> > > - Link Bandwidth Notification
+> > > - Alternate Routing ID (ARI) Forwarding Support
+> > > - Next capability offset within Advanced Error Reporting (AER) capability
+> > > 
+> > > Fix this by powering off the PCIe Controller before programming the "strap"
+> > > settings and powering it on after that.
+> > > 
+> > > Fixes: f3e25911a430 ("PCI: j721e: Add TI J721E PCIe driver")
+> > > Cc: <stable@vger.kernel.org>
+> > > Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+> > > ---
+> > > 
+> > > Hello,
+> > > 
+> > > This patch is based on commit
+> > > 07d9df80082b Merge tag 'perf-tools-fixes-for-v6.17-2025-08-27' of git://git.kernel.org/pub/scm/linux/kernel/git/perf/perf-tools
+> > > of Mainline Linux.
+> > > 
+> > > v2 of this patch is at:
+> > > https://lore.kernel.org/r/20250819101336.292013-1-s-vadapalli@ti.com/
+> > > Changes since v2:
+> > > - Based on Bjorn's feedback at:
+> > >   https://lore.kernel.org/r/20250819221748.GA598958@bhelgaas/
+> > >   1) Commit message has been rephrased to summarize the issue and the
+> > >   fix without elaborating too much on the details.
+> > >   2) Description of the issue's symptoms noticeable by a user has been
+> > >   added to the commit message.
+> > >   3) Comment has been wrapped to fit within 80 columns.
+> > >   4) The implementation has been simplified by moving the Controller
+> > >   Power OFF and Power ON sequence into j721e_pcie_ctrl_init() as a
+> > >   result of which the code reordering as well as function parameter
+> > >   changes are no longer required.
+> > > - Based on offline feedback from Vignesh, Runtime PM APIs are used
+> > >   instead of PM DOMAIN APIs to power off and power on the PCIe
+> > >   Controller.
+> > > - Rebased patch on latest Mainline Linux.
+> > > 
+> > > Test Logs on J7200 EVM without the current patch applied show that the
+> > > ARI Forwarding Capability incorrectly shows up as not being supported:
+> > > https://gist.github.com/Siddharth-Vadapalli-at-TI/768bca36025ed630c4e69bcc3d94501a
+> > > 
+> > > Test Logs on J7200 EVM with the current patch applied show that the
+> > > ARI Forwarding Capability correctly shows up as being supported:
+> > > https://gist.github.com/Siddharth-Vadapalli-at-TI/fc1752d17140646c8fa57209eccd86ce
+> > > 
+> > > As explained in the commit message, this discrepancy is solely due to
+> > > the PCIe Controller latching onto the incorrect reset-values which
+> > > occurs when the strap settings are programmed after the PCIe Controller
+> > > is powered on, at which point, the reset-values don't toggle anymore.
+> > > 
+> > > Regards,
+> > > Siddharth.
+> > > 
+> > >  drivers/pci/controller/cadence/pci-j721e.c | 22 ++++++++++++++++++++++
+> > >  1 file changed, 22 insertions(+)
+> > > 
+> > > diff --git a/drivers/pci/controller/cadence/pci-j721e.c b/drivers/pci/controller/cadence/pci-j721e.c
+> > > index 6c93f39d0288..c178b117215a 100644
+> > > --- a/drivers/pci/controller/cadence/pci-j721e.c
+> > > +++ b/drivers/pci/controller/cadence/pci-j721e.c
+> > > @@ -284,6 +284,22 @@ static int j721e_pcie_ctrl_init(struct j721e_pcie *pcie)
+> > >  	if (!ret)
+> > >  		offset = args.args[0];
+> > >  
+> > > +	/*
+> > > +	 * The PCIe Controller's registers have different "reset-values"
+> > > +	 * depending on the "strap" settings programmed into the PCIEn_CTRL
+> > > +	 * register within the CTRL_MMR memory-mapped register space.
+> > > +	 * The registers latch onto a "reset-value" based on the "strap"
+> > > +	 * settings sampled after the PCIe Controller is powered on.
+> > > +	 * To ensure that the "reset-values" are sampled accurately, power
+> > > +	 * off the PCIe Controller before programming the "strap" settings
+> > > +	 * and power it on after that.
+> > > +	 */
+> > > +	ret = pm_runtime_put_sync(dev);
+> > > +	if (ret < 0) {
+> > > +		dev_err(dev, "Failed to power off PCIe Controller\n");
+> > > +		return ret;
+> > > +	}
+> > 
+> > How does the controller gets powered off after pm_runtime_put_sync() since you
+> > do not have runtime PM callbacks? I believe the parent is turning off the power
+> > domain?
+> 
+> By invoking 'pm_runtime_put_sync(dev)', the ref-count is being
+> decremented and it results in the device being powered off. I have
+> verified it by printing the power domain index within the functions for
+> powering off and powering on devices on the J7200 SoC. Logs:
+> 
+> 	root@j7200-evm:~# modprobe pci_j721e
+> 	[   25.231675] [Powering On]: 240
+> 	[   25.234848] j721e-pcie 2910000.pcie: host bridge /bus@100000/pcie@2910000 ranges:
+> 	[   25.242378] j721e-pcie 2910000.pcie:       IO 0x4100001000..0x4100100fff -> 0x0000001000
+> 	[   25.250496] j721e-pcie 2910000.pcie:      MEM 0x4100101000..0x41ffffffff -> 0x0000101000
+> 	[   25.258588] j721e-pcie 2910000.pcie:   IB MEM 0x0000000000..0xffffffffffff -> 0x0000000000
+> 	[   25.267098] [Powering Off]: 240
+> 	[   25.270318] [Powering On]: 240
+> 	[   25.273511] [Powering On]: 187
+> 	[   26.372361] j721e-pcie 2910000.pcie: PCI host bridge to bus 0000:00
+> 	[   26.378666] pci_bus 0000:00: root bus resource [bus 00-ff]
+> 	[   26.384156] pci_bus 0000:00: root bus resource [io  0x0000-0xfffff] (bus address [0x1000-0x100fff])
+> 	[   26.393197] pci_bus 0000:00: root bus resource [mem 0x4100101000-0x41ffffffff] (bus address [0x00101000-0xffffffff])
+> 	[   26.403728] pci 0000:00:00.0: [104c:b00f] type 01 class 0x060400 PCIe Root Port
+> 	[   26.411044] pci 0000:00:00.0: PCI bridge to [bus 00]
+> 	[   26.416009] pci 0000:00:00.0:   bridge window [io  0x0000-0x0fff]
+> 	[   26.422091] pci 0000:00:00.0:   bridge window [mem 0x00000000-0x000fffff]
+> 	[   26.428874] pci 0000:00:00.0:   bridge window [mem 0x00000000-0x000fffff 64bit pref]
+> 	[   26.436676] pci 0000:00:00.0: supports D1
+> 	[   26.440699] pci 0000:00:00.0: PME# supported from D0 D1 D3hot
+> 	[   26.448064] pci 0000:00:00.0: bridge configuration invalid ([bus 00-00]), reconfiguring
+> 	[   26.456274] pci_bus 0000:01: busn_res: [bus 01-ff] end is updated to 01
+> 	[   26.462923] pci 0000:00:00.0: PCI bridge to [bus 01]
+> 	[   26.467933] pci_bus 0000:00: resource 4 [io  0x0000-0xfffff]
+> 	[   26.473595] pci_bus 0000:00: resource 5 [mem 0x4100101000-0x41ffffffff]
+> 	[   26.480337] pcieport 0000:00:00.0: of_irq_parse_pci: failed with rc=-22
+> 	[   26.487479] pcieport 0000:00:00.0: PME: Signaling with IRQ 701
+> 	[   26.493909] pcieport 0000:00:00.0: AER: enabled with IRQ 701
+> 
+> In the above logs, '240' is the Power Domain Index for the PCIe
+> Controller on J7200 SoC. It is powered on initially before the driver is
+> probed.
+
+In that case, the driver should not call pm_runtime_get_sync() in its probe.
+What it should do is:
+
+	pm_runtime_set_active()
+	pm_runtime_enable()
+
+But the driver is supporting several SoC variants. Does the bootloader enable
+PCIe controller for all of them?
+
+> During driver probe, we see the logs corresponding to
+> "devm_pci_alloc_host_bridge()" from the timestamp of '25.234848' which
+> is prior to the invocation of 'j721e_pcie_ctrl_init()'. Some time around
+> the '25.267098' timestamp, the 'j721e_pcie_ctrl_init()' function is
+> invoked which then decrements the ref-count via 'pm_runtime_put_sync(dev)'
+> leading to the PCIe Controller being powered off. This seems to be
+> consistent across boot unlike the usage of 'dev_pm_domain_detach' which
+> handles the device power off via a workqueue as a result of which it may
+> not be powered off yet when 'j721e_pcie_ctrl_init()' is programming the
+> strap settings. Hence, I switched from 'dev_pm_domain_detach()' to
+> 'pm_runtime_put_sync()' in the v3 patch.
+> 
+
+No using dev_pm_domain_detach() is a wrong approach.
+
+> Please let me know if you have any suggestions for alternative means to
+> power off the device in a reliable manner without deferring it to a
+> workqueue as done by the 'dev_pm_domain_detach()' API.
+> 
+
+Using pm_runtime_put_sync() is the correct way, but the comment and patch
+description needs to be improved. In the comment, you are claiming that
+pm_runtime_put_sync() will power off the controller, even though it is true, it
+is not clear who is responsible for doing that. So reword it to reflect the fact
+that the power domain (genpd?) will turn off the controller.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
