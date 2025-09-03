@@ -1,45 +1,46 @@
-Received: from lelvem-ot02.ext.ti.com (lelvem-ot02.ext.ti.com [198.47.23.235])
+Received: from lelvem-ot01.ext.ti.com (lelvem-ot01.ext.ti.com [198.47.23.234])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 797003002C3;
-	Wed,  3 Sep 2025 12:45:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA4C12FF17B;
+	Wed,  3 Sep 2025 12:45:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.234
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756903539; cv=none; b=Mgju12GTvZS6UUyoxjDh5FPl92cPGRModKhfqVlMvDioscDqtdBG1V8iC2Fc7hLNp+9+qAtDbaFchdSnF5BygRxjKZj+JDwhCx+ceEghKmi1XjB9eYrzwATuW/2o1RMJlcrQtVeQLpaa9mcW4CI86DBJYPiQbIv0YnkeGSKejoU=
+	t=1756903546; cv=none; b=RazXFAcu5iJC98IIPIsNVCWiwFM7VghPlqFVVVAKNYOeXq4lvkKmIBXZ/uKQlhNqq7kpTyC0mhmF4Abv9lXaP1+/iPVx4E+NJ2PKo9TiO5qgfLqe9wHRVM8VZvS+hEz5bgHSudC65uMODzNP52nL38r99jqBAgRmfFZsclSED6s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756903539; c=relaxed/simple;
-	bh=vUt4teJ3M7wKwNW+Hcva03Ui4u8mgaTh7fKCrdfZ0QQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=URkd/4I2Cu2UTkzk1Cfc/yq6EpAZmq4PnDYrq5SHRsVZmLcr12pLZY7YmQJxISkQnFEGpr5Vhk5j2GlMIEYli62UVqC2rgTuWqysyrFafzskZW6N9UF+Vz+0U39oGO2FVUkcXEXq+ETlDSNi2gzifNAvOCte7tOCucotF7IiuaY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=jb/WkbG6; arc=none smtp.client-ip=198.47.23.235
+	s=arc-20240116; t=1756903546; c=relaxed/simple;
+	bh=TrpD7d+wgl+RfE1iZBW309Mn4A8/OzhBrMrOg0V6DY4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=fstONyEjoTE2tR6DtLo8Htoo2yN0njf8dzBYQf60HLuuNzWPQOl5BEiUCkmvfqHP+oiL1R92cgdTFCSt2NbAQp5KXhrWnDOP9WnWn+Rd+4q5NGI93DD2rG5cAN5ZxVuYV2BqFniJDYZVPfuB2aLKqUoFwag8tFSqC6r27egw2hQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=phcOzWfZ; arc=none smtp.client-ip=198.47.23.234
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="jb/WkbG6"
-Received: from fllvem-sh04.itg.ti.com ([10.64.41.54])
-	by lelvem-ot02.ext.ti.com (8.15.2/8.15.2) with ESMTP id 583CjD443263768;
-	Wed, 3 Sep 2025 07:45:13 -0500
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="phcOzWfZ"
+Received: from lelvem-sh01.itg.ti.com ([10.180.77.71])
+	by lelvem-ot01.ext.ti.com (8.15.2/8.15.2) with ESMTP id 583CjQxa2831256;
+	Wed, 3 Sep 2025 07:45:26 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1756903513;
-	bh=MJIJ1bbVcymHncqSqQqeKOAPaRiZ1naG0SLE1m9EcvA=;
-	h=From:To:CC:Subject:Date;
-	b=jb/WkbG6Mb1Ar4jRlYTnjlScvg05D/pBMUBeehItPGtLKkCm3u+LDYn/i+0GMK9RV
-	 3zgTyzdzR5hhey9ySVUXvbpM5N97AZNQqNUYSkfXO3Fr/rrJVX9k9qTZZhelcK7sHn
-	 k9Va0J/2BAZYnNDtKk8rOwcN0PRcWT44e3JnVnb4=
-Received: from DLEE109.ent.ti.com (dlee109.ent.ti.com [157.170.170.41])
-	by fllvem-sh04.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 583CjDr2083850
+	s=ti-com-17Q1; t=1756903526;
+	bh=CKO8MzldBexrXr7kewzqwdKjuMhvxB9kVL4I0IFKJYo=;
+	h=From:To:CC:Subject:Date:In-Reply-To:References;
+	b=phcOzWfZaowJgVm92lbNrSgcQ85gj6mmpdDlxdM+SpxQzgDXxs1PID4pnUdlu2/Ip
+	 aEf08G7t4Iy1UdviKxIifxG6cDxCd0UcHiUhxsbKS3j7G08pVxkwvE5TqoFfM4NZDA
+	 DB1Hd8BeIbd4k5tMwAvzdUOSeM4SH6oRhRv/O5zo=
+Received: from DFLE111.ent.ti.com (dfle111.ent.ti.com [10.64.6.32])
+	by lelvem-sh01.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 583CjQl43043970
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA256 bits=128 verify=FAIL);
-	Wed, 3 Sep 2025 07:45:13 -0500
-Received: from DLEE102.ent.ti.com (157.170.170.32) by DLEE109.ent.ti.com
- (157.170.170.41) with Microsoft SMTP Server (version=TLS1_2,
+	Wed, 3 Sep 2025 07:45:26 -0500
+Received: from DFLE103.ent.ti.com (10.64.6.24) by DFLE111.ent.ti.com
+ (10.64.6.32) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55; Wed, 3
- Sep 2025 07:45:12 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE102.ent.ti.com
- (157.170.170.32) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2025 07:45:26 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE103.ent.ti.com
+ (10.64.6.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55 via
- Frontend Transport; Wed, 3 Sep 2025 07:45:12 -0500
+ Frontend Transport; Wed, 3 Sep 2025 07:45:26 -0500
 Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [172.24.231.84])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 583Cj5wR1576150;
-	Wed, 3 Sep 2025 07:45:06 -0500
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 583Cj5wT1576150;
+	Wed, 3 Sep 2025 07:45:19 -0500
 From: Siddharth Vadapalli <s-vadapalli@ti.com>
 To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
         <robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
@@ -52,10 +53,12 @@ To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <srk@ti.com>,
         <s-vadapalli@ti.com>
-Subject: [PATCH 00/11] PCI: Keystone: Enable loadable module support
-Date: Wed, 3 Sep 2025 18:14:41 +0530
-Message-ID: <20250903124505.365913-1-s-vadapalli@ti.com>
+Subject: [PATCH 02/11] PCI: dwc: Export dw_pcie_allocate_domains() for pci-keystone
+Date: Wed, 3 Sep 2025 18:14:43 +0530
+Message-ID: <20250903124505.365913-3-s-vadapalli@ti.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250903124505.365913-1-s-vadapalli@ti.com>
+References: <20250903124505.365913-1-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,46 +69,27 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-Hello,
+The pci-keystone.c driver uses the 'dw_pcie_allocate_domains()' helper.
+In preparation for enabling the pci-keystone.c driver to be built as a
+loadable module, export 'dw_pcie_allocate_domains()'.
 
-This series enables support for the 'pci-keystone.c' driver to be built
-as a loadable module. The motivation for the series is that PCIe is not
-a necessity for booting Linux due to which the 'pci-keystone.c' driver
-does not need to be built-in.
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+---
+ drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-Series is based on linux-next tagged next-20250903.
-
-Series has been tested on the AM654-IDK-EVM by validating module removal
-and reprobe while connected to an Intel PCIe-Ethernet Adapter. Test Logs:
-https://gist.github.com/Siddharth-Vadapalli-at-TI/dfd7821c187241d63098117eb7431a1b
-
-Regards,
-Siddharth.
-
-Siddharth Vadapalli (11):
-  PCI: Export pci_get_host_bridge_device() for use by pci-keystone
-  PCI: dwc: Export dw_pcie_allocate_domains() for pci-keystone
-  PCI: dwc: Add dw_pcie_free_domains() helper for cleanup
-  PCI: dwc: ep: Export dw_pcie_ep_raise_msix_irq() for pci-keystone
-  PCI: keystone: Add ks_pcie_free_msi_irq() helper for cleanup
-  PCI: keystone: Add ks_pcie_free_intx_irq() helper for cleanup
-  PCI: keystone: Add ks_pcie_host_deinit() helper for cleanup
-  PCI: keystone: Add ks_pcie_disable_error_irq() helper for cleanup
-  PCI: keystone: Switch to devm_request_irq() for "ks-pcie-error-irq"
-    IRQ
-  PCI: keystone: Exit ks_pcie_probe() for the default switch-case of
-    "mode"
-  PCI: keystone: Add support to build as a loadable module
-
- drivers/pci/controller/dwc/Kconfig            |   6 +-
- drivers/pci/controller/dwc/pci-keystone.c     | 111 +++++++++++++++++-
- .../pci/controller/dwc/pcie-designware-ep.c   |   1 +
- .../pci/controller/dwc/pcie-designware-host.c |  10 ++
- drivers/pci/controller/dwc/pcie-designware.h  |   5 +
- drivers/pci/host-bridge.c                     |   1 +
- include/linux/pci.h                           |   1 +
- 7 files changed, 127 insertions(+), 8 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
+index 952f8594b501..3cc83d921376 100644
+--- a/drivers/pci/controller/dwc/pcie-designware-host.c
++++ b/drivers/pci/controller/dwc/pcie-designware-host.c
+@@ -229,6 +229,7 @@ int dw_pcie_allocate_domains(struct dw_pcie_rp *pp)
+ 
+ 	return 0;
+ }
++EXPORT_SYMBOL_GPL(dw_pcie_allocate_domains);
+ 
+ void dw_pcie_free_msi(struct dw_pcie_rp *pp)
+ {
 -- 
 2.43.0
 
