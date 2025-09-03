@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E7802D94A8;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E88B2D94BB;
 	Wed,  3 Sep 2025 07:13:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756883614; cv=none; b=XBSPPqFWJIHGrj3nz0aV5HQ0hHTDwurK3HF879MLhoYRGzcOljLcaXIJdfhvmrcRwJJPGzRwSwQ/Dioi5WF1/uGahjdvHpR2OuZmyh/Tm0tl69ma8zHwp3AdmejlvEgVwmiIj+gnXeKg+7mIUNzoey89/kXbXZDELRmKS0WBXlM=
+	t=1756883614; cv=none; b=HKiGbDSoYgtWaztfU7TpNU1YFwd2Ie1krGsWvDky5nats5uW4TjeXUQtjYmI5GLZQnKcJ/IP56kRNBOXb2SfKvXsHTBtC+O48EVX6m4+uKHJHVqoXbBnugJNtdiemhqMdlqzB78CO8lrcIIBAe4BGM6bYzTtFyXTFb1rOThEnms=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1756883614; c=relaxed/simple;
-	bh=W3hNvH5sZO6OphkLzRUvLtfBzQHcHDZJGE1fudwcs98=;
+	bh=maiVLm37ymmwT1M55VwLwvJeZ1s/3l1kJVolnRGJHx0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pmNH4ggGazd0+Qm3k3zp6plqbM5zhbJmgTxZ470TVKIrzzpZD29Sc6/scuIQIz/SvoqSwz3Cmyv/qTcHA6Y1n5vuSw8mVEIhir17lYdThghUz2auQ83wqKz7AxScLq6p9zQ/5FIfskYVHUcfILPKDsXPrmh6u7zFUurXJq/LfXg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lamvf7aQ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=An77HWcG1FDlZ2NNW/UwteggggfM3nSCI7UIucX6epfAz+/msbmavgjCCRQAn6YoTUej9f80jFM+u6lFaaojO9MaKKp2kL4JIbxkYdLf0GW4Llx/IjtXiuHw7Ow7uI4xif2m3FieXxlVEmtZZMQa6tEN8gM8FvymF9irFgqKipQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J2lUtnxl; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lamvf7aQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id AF8D6C4CEFB;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J2lUtnxl"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 94BBEC4CEF1;
 	Wed,  3 Sep 2025 07:13:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1756883613;
-	bh=W3hNvH5sZO6OphkLzRUvLtfBzQHcHDZJGE1fudwcs98=;
+	bh=maiVLm37ymmwT1M55VwLwvJeZ1s/3l1kJVolnRGJHx0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=lamvf7aQlZoLv+L1+Mq3e9Ng7cS6T+KRGH4T7zeI0l4bTTkvjTkTdtw861vywrOSx
-	 k4IQsXdmc5rPllQrp8Qpk3CAtPjNwPN4eEhxeEvzoFlCMtMW41VtqshBp5YGO5pede
-	 L71f0Dyk/HznJBaxIUySWaufcbI80QAWZA5N9awl1r+r6/sHneLSydnMDzryLHbgAN
-	 4M6JXGQ+xlIHBBSLiL32XJpZoAn3f1m63TGrvYD8JCOgiQiPUHXCFDnFRrraAj6RGj
-	 YuPv83PIFeb259oksFhiJqMaiLTt4y93VBRIf5TUMwpa4/cJhJ1TDSd+2iYb1pch4B
-	 CbWCmIqL5/lnA==
+	b=J2lUtnxlaynleS+f7Jjjduz8/w0gBNwHVk9Os6v6f0wqh6OJjJdjq9A+8W6Ux65Tu
+	 L7RF1emAXwdQGaCF03m3QYpjhhvCEbQXYZOxSHrT59J/q6c9jc4vZ7Hf8BTzisy+OV
+	 JoORkT5uHxDFrvTePmll3igCR7B+qtMlmG+IovDNrBVWxG3gujC8WrrPPWc0QIpc/C
+	 rEGKaOtGSJmy5ytwp+Ph/1J4+CULRQall7Gwv3djmRcNXpraoQ7uXZTZKo80LhtXXn
+	 7Hn5Kq8L2iW07XqXmzqb8Umg9BJZW+SCcZumU/4FPAm1u6nLiAEesAtdk8pbUMymqH
+	 rrQe9x8Ks5aRg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id A65A9CA1013;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 81749CA100C;
 	Wed,  3 Sep 2025 07:13:33 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Wed, 03 Sep 2025 12:43:25 +0530
-Subject: [PATCH v2 3/5] PCI/pwrctrl: Add support for toggling PERST#
+Date: Wed, 03 Sep 2025 12:43:23 +0530
+Subject: [PATCH v2 1/5] PCI: qcom: Wait for PCIE_RESET_CONFIG_WAIT_MS after
+ PERST# deassert
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250903-pci-pwrctrl-perst-v2-3-2d461ed0e061@oss.qualcomm.com>
+Message-Id: <20250903-pci-pwrctrl-perst-v2-1-2d461ed0e061@oss.qualcomm.com>
 References: <20250903-pci-pwrctrl-perst-v2-0-2d461ed0e061@oss.qualcomm.com>
 In-Reply-To: <20250903-pci-pwrctrl-perst-v2-0-2d461ed0e061@oss.qualcomm.com>
 To: Manivannan Sadhasivam <mani@kernel.org>, 
@@ -52,18 +53,19 @@ Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
  Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
  Brian Norris <briannorris@chromium.org>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ stable+noautosel@kernel.org
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4210;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2070;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=3zHm5Gzo/IIXZ/G1nj/XT1Pq21XYLHP2BySYxIC/Q3Y=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBot+qbY5glF0uYf7AkMGjvaky6e5NrTN2X7/z1o
- OlGmSNmfN6JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaLfqmwAKCRBVnxHm/pHO
- 9bW5B/wNxh5qomqfQn0L2CarY6dq1Ht16cfCGZdHQ6mNZZOABgKfJh9R4qkoFDOyowWxYNKkkL3
- p4hU/l51P8qQdshkv4vorXgOFH6NWPbo1Ro0yP3B9LiJYH3ViH5OtFt+s8Gx0tKmKOyOyYhWQ4L
- 50BThbQuyf8NRZNQmUiSuRfI24WHUAb6CDvcPIb0J7Uraios9c2VfvtGbc9P4BHOVkZ326rMrcL
- BEZu2MLmb7PuDvl/66TZ/7Zu+f4cD+OM6q8rMYiSUY0P0l1segBjMyBrDXaG9GRzaCroyNnnnpU
- oWr4Zuo6UVHaszOi/nxt3bhnA1xzcMlY26krJWH6dp3qvYlq
+ bh=9ldRJtoT9M8aIUvYrNpDc1xJbqnMXRAhHx884nJXoBk=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBot+qbui6myA5xhx7BATXkqArIl0o8QxQQnuK7Z
+ cRMxOQwU8aJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaLfqmwAKCRBVnxHm/pHO
+ 9VegB/9Zeph4VheLjB+IkKOTL0NC98YO8yp/4Y7o5Br7lKcS1HBWFZym4tMuSvJ+3R5h1WjAqSx
+ sUnTb43WgIAKjNjUcnp6KwHC05keIiJ47/d/aPLZAZi4QU8X6fKCvzmWYzWrO4eRBGYRUz7dynP
+ Q3QzgU/dB9UiFCHmY3bEDAesLv5BcgHaU7fegwZepA2r1DVv7/mc2J61H4BVy/iv6qGMYuteHFN
+ 0z8ouEe4TqxQl+3EnK8aDerbeZ25hfem1mM177TgX1DPqVHru29t7i/uN9YLaqmhKaQWM7ggepi
+ 8SErUATmakiKAp26iHqDdepifCgMxOf0ns1bplB2vn3rrdHK
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -73,107 +75,56 @@ Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
 From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-As per PCIe spec r6.0, sec 6.6.1, PERST# is an auxiliary signal provided by
-the system to a component as a Fundamental Reset. This signal if available,
-should conform to the rules defined by the electromechanical form factor
-specifications like PCIe CEM spec r4.0, sec 2.2.
+PCIe spec r6.0, sec 6.6.1 mandates waiting for 100ms before deasserting
+PERST# if the downstream port does not support Link speeds greater than
+5.0 GT/s. But in practice, this delay seem to be required irrespective of
+the supported link speed as it gives the endpoints enough time to
+initialize.
 
-Since pwrctrl driver is meant to control the power supplies, it should also
-control the PERST# signal if available. But traditionally, the host bridge
-(controller) drivers are the ones parsing and controlling the PERST#
-signal. They also sometimes need to assert PERST# during their own hardware
-initialization. So it is not possible to move the PERST# control away from
-the controller drivers and it must be shared logically.
+Hence, add the delay by reusing the PCIE_RESET_CONFIG_WAIT_MS definition if
+the linkup_irq is not supported. If the linkup_irq is supported, the driver
+already waits for 100ms in the IRQ handler post link up.
 
-Hence, add a new callback 'pci_host_bridge::toggle_perst', that allows the
-pwrctrl core to toggle PERST# with the help of the controller drivers. But
-care must be taken care by the controller drivers to not deassert the
-PERST# signal if this callback is populated.
+Also, remove the redundant comment for PCIE_T_PVPERL_MS. Finally, the
+PERST_DELAY_US sleep can be moved to PERST# assert where it should be.
 
-This callback if available, will be called by the pwrctrl core during the
-device power up and power down scenarios. Controller drivers should
-identify the device using the 'struct device_node' passed during the
-callback and toggle PERST# accordingly.
-
+Cc: stable+noautosel@kernel.org # non-trivial dependency
+Fixes: 82a823833f4e ("PCI: qcom: Add Qualcomm PCIe controller driver")
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/pci/pwrctrl/core.c | 27 +++++++++++++++++++++++++++
- include/linux/pci.h        |  3 +++
- 2 files changed, 30 insertions(+)
+ drivers/pci/controller/dwc/pcie-qcom.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/pci/pwrctrl/core.c b/drivers/pci/pwrctrl/core.c
-index 6bdbfed584d6d79ce28ba9e384a596b065ca69a4..8a26f432436d064acb7ebbbc9ce8fc339909fbe9 100644
---- a/drivers/pci/pwrctrl/core.c
-+++ b/drivers/pci/pwrctrl/core.c
-@@ -6,6 +6,7 @@
- #include <linux/device.h>
- #include <linux/export.h>
- #include <linux/kernel.h>
-+#include <linux/of.h>
- #include <linux/pci.h>
- #include <linux/pci-pwrctrl.h>
- #include <linux/property.h>
-@@ -61,6 +62,28 @@ void pci_pwrctrl_init(struct pci_pwrctrl *pwrctrl, struct device *dev)
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 294babe1816e4d0c2b2343fe22d89af72afcd6cd..bcd080315d70e64eafdefd852740fe07df3dbe75 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -302,20 +302,22 @@ static void qcom_perst_assert(struct qcom_pcie *pcie, bool assert)
+ 	else
+ 		list_for_each_entry(port, &pcie->ports, list)
+ 			gpiod_set_value_cansleep(port->reset, val);
+-
+-	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
  }
- EXPORT_SYMBOL_GPL(pci_pwrctrl_init);
  
-+static void pci_pwrctrl_perst_deassert(struct pci_pwrctrl *pwrctrl)
-+{
-+	struct pci_host_bridge *host_bridge = to_pci_host_bridge(pwrctrl->dev->parent);
-+	struct device_node *np = dev_of_node(pwrctrl->dev);
-+
-+	if (!host_bridge->toggle_perst)
-+		return;
-+
-+	host_bridge->toggle_perst(host_bridge, np, false);
-+}
-+
-+static void pci_pwrctrl_perst_assert(struct pci_pwrctrl *pwrctrl)
-+{
-+	struct pci_host_bridge *host_bridge = to_pci_host_bridge(pwrctrl->dev->parent);
-+	struct device_node *np = dev_of_node(pwrctrl->dev);
-+
-+	if (!host_bridge->toggle_perst)
-+		return;
-+
-+	host_bridge->toggle_perst(host_bridge, np, true);
-+}
-+
- /**
-  * pci_pwrctrl_device_set_ready() - Notify the pwrctrl subsystem that the PCI
-  * device is powered-up and ready to be detected.
-@@ -82,6 +105,8 @@ int pci_pwrctrl_device_set_ready(struct pci_pwrctrl *pwrctrl)
- 	if (!pwrctrl->dev)
- 		return -ENODEV;
- 
-+	pci_pwrctrl_perst_deassert(pwrctrl);
-+
- 	pwrctrl->nb.notifier_call = pci_pwrctrl_notify;
- 	ret = bus_register_notifier(&pci_bus_type, &pwrctrl->nb);
- 	if (ret)
-@@ -103,6 +128,8 @@ void pci_pwrctrl_device_unset_ready(struct pci_pwrctrl *pwrctrl)
+ static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
  {
- 	cancel_work_sync(&pwrctrl->work);
+ 	qcom_perst_assert(pcie, true);
++	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
  
-+	pci_pwrctrl_perst_assert(pwrctrl);
+ static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
+ {
+-	/* Ensure that PERST has been asserted for at least 100 ms */
++	struct dw_pcie_rp *pp = &pcie->pci->pp;
 +
- 	/*
- 	 * We don't have to delete the link here. Typically, this function
- 	 * is only called when the power control device is being detached. If
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index 59876de13860dbe50ee6c207cd57e54f51a11079..3da62e37dba5993b52413f16ec401ba3fb970a55 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -605,6 +605,9 @@ struct pci_host_bridge {
- 	void (*release_fn)(struct pci_host_bridge *);
- 	int (*enable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
- 	void (*disable_device)(struct pci_host_bridge *bridge, struct pci_dev *dev);
-+#if IS_ENABLED(CONFIG_PCI_PWRCTRL)
-+	void (*toggle_perst)(struct pci_host_bridge *bridge, struct device_node *np, bool assert);
-+#endif
- 	void		*release_data;
- 	unsigned int	ignore_reset_delay:1;	/* For entire hierarchy */
- 	unsigned int	no_ext_tags:1;		/* No Extended Tags */
+ 	msleep(PCIE_T_PVPERL_MS);
+ 	qcom_perst_assert(pcie, false);
++	if (!pp->use_linkup_irq)
++		msleep(PCIE_RESET_CONFIG_WAIT_MS);
+ }
+ 
+ static int qcom_pcie_start_link(struct dw_pcie *pci)
 
 -- 
 2.45.2
