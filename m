@@ -1,216 +1,271 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D77A2641C6
-	for <linux-pci@vger.kernel.org>; Thu,  4 Sep 2025 06:23:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E433F28541F;
+	Thu,  4 Sep 2025 06:52:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756967004; cv=none; b=numE5p3ndshHjH/OoqCpcCJbfObGDARszIM8eyd1E7QmQrvUzb1909X5yRg+PPwRCd3Su0xSlHP5r0PkeUY2L5fKr86cl3Nzmb2v85trYypad3fNSPb1BFdC8sP8rZcKiG5uVuS994bFfspHE/gSpWZxlMc3F53qn6JLmlm0MJY=
+	t=1756968769; cv=none; b=tg5DXKceAvbrBNGyL9dQMf8vcGCi78KoNJbOgJh8hMMZ7GZkUDuQ9FgHqU/b8W1hL6kBVYryyatJcNjZXhurlAxTMGB4Yhu8XUTzuqWG8FCgOQG8P6/SdOGkgazhU6DWtETbUgqQMO1HYA8dydGNqd7js/yKG3lwhwC2SDgxNmk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756967004; c=relaxed/simple;
-	bh=gf0nDTfu/A6wTAQjMH+keGPa2RXck8NCBn62CulO27A=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Ld9uDLfu1tDwSjSXAv2KO5o/u7nr1yN6ASd+9jXabUunaqX0ChK6TqiPxUbqV1zmcWZF8dyiKXtzfr5eee5QlPxSMxJys0AcVgmLKKlQx6ptYqzdl7ssPJGeEAx7TxrBUuys/jNeNF/QDmejSDToO4uKwILrKztWFOidLzAOaFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UvCwlHKr; arc=none smtp.client-ip=205.220.168.131
+	s=arc-20240116; t=1756968769; c=relaxed/simple;
+	bh=x0hu2L0Qi9TrNVLcYRlI9FsYb6KltlOR/p2KZG/erQo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=P3fIi4cgauLGu9QU4IqpqtVF3gdL0/1K254C0pbM1SXn0L+6pMCGaN9TXyxw3+JnrnkfNcqrKlzpXAFrOR7L5GgzZ8hXjrFMfAENfuVl+94OJSHVbIZVd/B9Ilu8w4GbrnDbIPSPcSj+1mKS+U4SLJ0xMV8cGry8+hhtj4z4dlc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=UM9FbG8d; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UvCwlHKr"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5840b5gE019247
-	for <linux-pci@vger.kernel.org>; Thu, 4 Sep 2025 06:23:22 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="UM9FbG8d"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58413nMT021016;
+	Thu, 4 Sep 2025 06:52:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	FH2W+hNthlwsjcU6LhQutSm9G0ruDj/xBkaCmXCbKhQ=; b=UvCwlHKrrv74UuvK
-	sc7yG6NP9KiKG4SjoeMT+PPHbKwK0bs7K8T/gyogI1836D12a40VHNkNJl/yOK9o
-	MMUUVlyvfmvgET0J5FLPc9nHOhrvjYPPy/UeKHgcdpjPgzRmQwqCulW5Di+Isf4H
-	GTXgUWgwGLrIxAMgoniYxUoxijVhK2w5xo1+bhvZamlYO90EXA1vRRY+rx7f60qG
-	XjF1qHxFsBiOvGiBPwSnQ4EzuIt4ffniyo5UhReJcTClwbhpf/GaK1DwHdomobOo
-	2KBFpZCp/We9ktiw6ASZFhzagSRyLX8BzpZaxio04JxH0XGoB/ModrenhA0JRO2J
-	CwE8Rw==
-Received: from mail-pj1-f69.google.com (mail-pj1-f69.google.com [209.85.216.69])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48utk968js-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-pci@vger.kernel.org>; Thu, 04 Sep 2025 06:23:22 +0000 (GMT)
-Received: by mail-pj1-f69.google.com with SMTP id 98e67ed59e1d1-329cb4c3f78so626889a91.2
-        for <linux-pci@vger.kernel.org>; Wed, 03 Sep 2025 23:23:22 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756967001; x=1757571801;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FH2W+hNthlwsjcU6LhQutSm9G0ruDj/xBkaCmXCbKhQ=;
-        b=HpA817tC/YEedztmqMj1lJb/IyIcuD8M/g7WP1+HHANHBfJvQ0vNq5Zd2KDzGGsDPa
-         eSnlvkEq0irwtaVSpUCsjUwG1+12AzijyOlaHhOYvs4Wb3WucZ/5Qe0hhDB5Rn4DCnwU
-         TK9hA/igPg73m/6OayI5Yd0u1iyZgiJcSEjIA8ydLoqa4wmpPeDq/H3mmunW66lgrn7c
-         PrDpNm6If8UjV/cQ8hSp82msSry7z1MUv6IpDCPVL/QdehaDSXspPuknbZLbZxtD59Uh
-         MT0VV+6Dr1ZPr2jJzTHlsZVBJpgygKcTNAKYBY9QhA+QhKBlGTsEr4cWfKdr7d5j1D5d
-         3eOw==
-X-Forwarded-Encrypted: i=1; AJvYcCXSqnUh3/EgWiyTPsvDVz8qkSLfR+8pn4PNFc7d2WRen2OCOYYZLda/4h6YFafQFEbzXtn0CfR/S94=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1E7l9l4Dbvmv6dTCyu4xRPlIwidc2Uu9kiqxot8ArTSkn9/Nb
-	Xjlbc8iIVxEl14oFnev0Rl3AUWIYEZRhjsyaaDk/J4dkZW4L6zkFWaJ3X5JyQ0Tbnzpm8Cqgc7u
-	UBY70WntppPh6zN8M9EymanI7c+mS+D/AL5QirJLO+m84XB/vlqppzaC2mRyfD7w=
-X-Gm-Gg: ASbGnctouGiCxuSj48VgetfJyNENhYRz0YA7wjSBintSaU4DY6MSs10ygohaelQx/dC
-	RitZ8aOmUmrIRi7P/+LRmOqmqxosYk3jpvhqfCp/+vwalq0l8ckNVJk/tx3CkZKUI0SJQj2oUTz
-	k9GSCTTofjfinmju4ov86tWX2db/uGJVX/WBqXaaYqZ2FKFFvr1jgEdArs3kKYgkVBzjwGJu3Gi
-	1qblbFk3KcX03/C5q49CHMW/urUnHTHEtEXk5996Q3eaOB86AqSRU9/B3Crt4Dz69JtKJd9R7qT
-	ZT3WC/VHbvHuFzzzhwKKrRRWQv6/yDClX4lJySw5soYO+ilw+gBJzPBb4wNQjsPFljbIsgMuzHv
-	pVG2rfhMn0UOZrQY=
-X-Received: by 2002:a17:90b:5190:b0:31e:d4e3:4002 with SMTP id 98e67ed59e1d1-32815411d3emr21146305a91.2.1756967001296;
-        Wed, 03 Sep 2025 23:23:21 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEwUeM+ClagutolDofBUjVohRmTJoK3OIjZuYPW7td4JSGTMamC9aTtqyQQ14+pL8kEkZeDvg==
-X-Received: by 2002:a17:90b:5190:b0:31e:d4e3:4002 with SMTP id 98e67ed59e1d1-32815411d3emr21146296a91.2.1756967000826;
-        Wed, 03 Sep 2025 23:23:20 -0700 (PDT)
-Received: from hu-wenbyao-lv.qualcomm.com (Global_NAT1.qualcomm.com. [129.46.96.20])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7723427c127sm17120911b3a.62.2025.09.03.23.23.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 03 Sep 2025 23:23:20 -0700 (PDT)
-From: Wenbin Yao <wenbin.yao@oss.qualcomm.com>
-Date: Wed, 03 Sep 2025 23:22:05 -0700
-Subject: [PATCH v4 4/4] phy: qcom: qmp-pcie: Add support for Glymur PCIe
- Gen5x4 PHY
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=9fX5ktVpkri
+	karCWdPhk94vvmU7VBzDeouy5P+Ug+Bo=; b=UM9FbG8dDIQSAuuk511obKMhL1v
+	nocpsQnc9k7/pg4Px76uwtLuqjLN6/5PxNAhzAUEjyPnHuwwzMLai5xjVkVCTpy3
+	4pyGnKqK/qGoqcC+6p7gJKXn57NICprNZBdaLZgLYUGsNNSV3b/+EZ1XlXZ3xRCy
+	CZsZkNmjg0GfUpmGNjjnPKAaYTaSsIqG2ff7K4GBhIu3MuOLQyG9632kZaBw+h8p
+	LMvAoOvMHoSwLxCF2Bw29AuVQLUTGqlGvDta1LtAoLuf4Uat8I3qNxYt6Wzw8Z7W
+	DdmOD/rt1MNVx/qSeODoBHA7knxjYjjYqGji29nusToGVi0Nb53jX6vGydw==
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48ut2fpcbq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Sep 2025 06:52:37 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5846qZtb016338;
+	Thu, 4 Sep 2025 06:52:35 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 48utcmhjcu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Sep 2025 06:52:35 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5846qYx4016327;
+	Thu, 4 Sep 2025 06:52:35 GMT
+Received: from ziyuzhan-gv.ap.qualcomm.com (ziyuzhan-gv.qualcomm.com [10.64.66.102])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5846qYs6016324
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 04 Sep 2025 06:52:34 +0000
+Received: by ziyuzhan-gv.ap.qualcomm.com (Postfix, from userid 4438065)
+	id 1BCF14A9; Thu,  4 Sep 2025 14:52:33 +0800 (CST)
+From: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
+To: andersson@kernel.org, konradybcio@kernel.org, robh@kernel.org,
+        krzk+dt@kernel.org, conor+dt@kernel.org, jingoohan1@gmail.com,
+        mani@kernel.org, lpieralisi@kernel.org, kwilczynski@kernel.org,
+        bhelgaas@google.com, johan+linaro@kernel.org, vkoul@kernel.org,
+        kishon@kernel.org, neil.armstrong@linaro.org, abel.vesa@linaro.org,
+        kw@linux.com
+Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        linux-phy@lists.infradead.org, qiang.yu@oss.qualcomm.com,
+        quic_krichai@quicinc.com, quic_vbadigan@quicinc.com,
+        Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
+Subject: [PATCH v6 1/3] PCI: qcom: Add equalization settings for 8.0 GT/s and 32.0 GT/s
+Date: Thu,  4 Sep 2025 14:52:23 +0800
+Message-ID: <20250904065225.1762793-2-ziyue.zhang@oss.qualcomm.com>
+X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250904065225.1762793-1-ziyue.zhang@oss.qualcomm.com>
+References: <20250904065225.1762793-1-ziyue.zhang@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250903-glymur_pcie5-v4-4-c187c2d9d3bd@oss.qualcomm.com>
-References: <20250903-glymur_pcie5-v4-0-c187c2d9d3bd@oss.qualcomm.com>
-In-Reply-To: <20250903-glymur_pcie5-v4-0-c187c2d9d3bd@oss.qualcomm.com>
-To: Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>,
-        Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley <conor+dt@kernel.org>,
-        Lorenzo Pieralisi <lpieralisi@kernel.org>,
-        =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Bjorn Andersson <andersson@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-pci@vger.kernel.org, Wenbin Yao <wenbin.yao@oss.qualcomm.com>,
-        konrad.dybcio@oss.qualcomm.com, qiang.yu@oss.qualcomm.com,
-        Prudhvi Yarlagadda <quic_pyarlaga@quicinc.com>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1756966993; l=2876;
- i=wenbin.yao@oss.qualcomm.com; s=20250806; h=from:subject:message-id;
- bh=Ruwm7lGDShLRO8c1+C0WfHCrP5dAWvWnDGg5quqL960=;
- b=2lXngGqEWRqYeQyiji0BInBdRc6hNVgLNCDjYXB1c6Be4DQSZfE/62DPSDg+OUwWE15axu8Ac
- p5ibZeXiY5ZBhJz4vFvXf8AymX4ADH/zZZ2wdDz3AJKl9bPmMenfHF+
-X-Developer-Key: i=wenbin.yao@oss.qualcomm.com; a=ed25519;
- pk=nBPq+51QejLSupTaJoOMvgFbXSyRVCJexMZ+bUTG5KU=
-X-Proofpoint-GUID: eKhDytPFq4jqTdn8takALDejRQw_a1oK
-X-Proofpoint-ORIG-GUID: eKhDytPFq4jqTdn8takALDejRQw_a1oK
-X-Authority-Analysis: v=2.4 cv=ccnSrmDM c=1 sm=1 tr=0 ts=68b9305a cx=c_pps
- a=vVfyC5vLCtgYJKYeQD43oA==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8
- a=VwQbUJbxAAAA:8 a=KvwrgBbZ-pJFRlqJlL4A:9 a=QEXdDO2ut3YA:10
- a=rl5im9kqc5Lf4LNbBjHf:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDA0MiBTYWx0ZWRfXxMNWzzpnHlJ/
- fXQ0iNqNRbl7JKsXGnus3Shr3JY8D359anOf6V6kTlUldkDpy3hr8IybiYXRsA1Bvxh/khFGNCT
- arjX3gOmApodo2omITKj+I+GRqwl2NpLrudfgAbm25fAnJdUBR1tM+SIfpef1Zw/nXvLdAtzRaG
- cn2r59SJrjuIRQN06sLxj1f+UfxZc9cRO+V9PmuBB4SgxkE2aq5Uf/rJQeqdOp23W+zz3K+LU7/
- QoIkj+wdgC+nF3TSw/U9ZZOyglYNHsSDmrIg5imKgb1afc1w3rdiNb8uHHrpUGSdv7GApPt9oEX
- auWHEAZdALEPNUaG/qjdNWIM/gxJHEEbxFXD8zurge6DcUa34auHnKpp3aEOkvH33UIoCW2gWT1
- njhVg1wX
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDAzOCBTYWx0ZWRfX3Gm/fZaY9AKy
+ Zo3vCsEPnOQckU8ZlktkqMDD35GjfDUkofnDpxZ2OFRhIERxpUMrNHn/NMjbjwyp5NH7+2a/t81
+ sj5iQVurzCP3TFk9LveMA+kA7kMGzOJKp6Oh77GDl1TMTbYcHTBYXTB0ooAdD8AvYM79TDLW14e
+ 3PuNV6pD/SvkQEVV7XQZUtKzF42Y6eagvgBbhV0g82RrD6JXLkzjiPnVfD/cR54ezA90jo13w8D
+ EkX6oKXybx7C1dvMlmavKSymye1QAncHKioxpzbgaFbvKRuo0FILdlKyKJB0KLQ/nh/gMmXc97f
+ wGGQFswIyCnFNsOmGpJlqycI52kcS0WZjYyOmgcpdjihFg+RwQQ57yMTmzbNKVRmoWckUsfF3ig
+ j7AXtSlK
+X-Proofpoint-ORIG-GUID: Fw5zn4HQXoCn882FFBMnMbvnCHC10RjZ
+X-Proofpoint-GUID: Fw5zn4HQXoCn882FFBMnMbvnCHC10RjZ
+X-Authority-Analysis: v=2.4 cv=U7iSDfru c=1 sm=1 tr=0 ts=68b93735 cx=c_pps
+ a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=yJojWOMRYYMA:10 a=EUspDBNiAAAA:8 a=kqkkFEbYj6cKICComXkA:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-04_01,2025-08-28_01,2025-03-28_01
+ definitions=2025-09-04_02,2025-08-28_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 phishscore=0 priorityscore=1501 impostorscore=0 malwarescore=0
- clxscore=1015 suspectscore=0 spamscore=0 bulkscore=0 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508300042
+ spamscore=0 phishscore=0 clxscore=1015 impostorscore=0 suspectscore=0
+ malwarescore=0 priorityscore=1501 adultscore=0 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508300038
 
-From: Prudhvi Yarlagadda <quic_pyarlaga@quicinc.com>
+Add lane equalization setting for 8.0 GT/s and 32.0 GT/s to enhance link
+stability and avoid AER Correctable Errors reported on some platforms
+(eg. SA8775P).
 
-Add support for Gen5 x4 PCIe QMP PHY found on Glymur platform.
+8.0 GT/s, 16.0 GT/s and 32.0 GT/s require the same equalization setting.
+This setting is programmed into a group of shadow registers, which can be
+switched to configure equalization for different speeds by writing 00b,
+01b and 10b to `RATE_SHADOW_SEL`.
 
-Signed-off-by: Prudhvi Yarlagadda <quic_pyarlaga@quicinc.com>
-Signed-off-by: Wenbin Yao <wenbin.yao@oss.qualcomm.com>
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+Hence program equalization registers in a loop using link speed as index,
+so that equalization setting can be programmed for 8.0 GT/s, 16.0 GT/s
+and 32.0 GT/s.
+
+Fixes: 489f14be0e0a ("arm64: dts: qcom: sa8775p: Add pcie0 and pcie1 nodes")
+
+Co-developed-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Signed-off-by: Qiang Yu <qiang.yu@oss.qualcomm.com>
+Signed-off-by: Ziyue Zhang <ziyue.zhang@oss.qualcomm.com>
 ---
- drivers/phy/qualcomm/phy-qcom-qmp-pcie.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+ drivers/pci/controller/dwc/pcie-designware.h  |  1 -
+ drivers/pci/controller/dwc/pcie-qcom-common.c | 58 +++++++++++--------
+ drivers/pci/controller/dwc/pcie-qcom-common.h |  2 +-
+ drivers/pci/controller/dwc/pcie-qcom-ep.c     |  6 +-
+ drivers/pci/controller/dwc/pcie-qcom.c        |  6 +-
+ 5 files changed, 41 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-index 8fdc146ef73221392371c00afb21d673dbf46d49..dc741fa8900a3a89c88fa51aea13fb912347915b 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-pcie.c
-@@ -100,6 +100,12 @@ static const unsigned int pciephy_v7_regs_layout[QPHY_LAYOUT_SIZE] = {
- 	[QPHY_PCS_POWER_DOWN_CONTROL]	= QPHY_V7_PCS_POWER_DOWN_CONTROL,
- };
+diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
+index b5e7e18138a6..11de844428e5 100644
+--- a/drivers/pci/controller/dwc/pcie-designware.h
++++ b/drivers/pci/controller/dwc/pcie-designware.h
+@@ -123,7 +123,6 @@
+ #define GEN3_RELATED_OFF_GEN3_EQ_DISABLE	BIT(16)
+ #define GEN3_RELATED_OFF_RATE_SHADOW_SEL_SHIFT	24
+ #define GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK	GENMASK(25, 24)
+-#define GEN3_RELATED_OFF_RATE_SHADOW_SEL_16_0GT	0x1
  
-+static const unsigned int pciephy_v8_50_regs_layout[QPHY_LAYOUT_SIZE] = {
-+	[QPHY_START_CTRL]		= QPHY_V8_50_PCS_START_CONTROL,
-+	[QPHY_PCS_STATUS]		= QPHY_V8_50_PCS_STATUS1,
-+	[QPHY_PCS_POWER_DOWN_CONTROL]	= QPHY_V8_50_PCS_POWER_DOWN_CONTROL,
-+};
-+
- static const struct qmp_phy_init_tbl msm8998_pcie_serdes_tbl[] = {
- 	QMP_PHY_INIT_CFG(QSERDES_V3_COM_BIAS_EN_CLKBUFLR_EN, 0x14),
- 	QMP_PHY_INIT_CFG(QSERDES_V3_COM_CLK_SELECT, 0x30),
-@@ -3072,6 +3078,7 @@ struct qmp_pcie_offsets {
- 	u16 rx2;
- 	u16 txz;
- 	u16 rxz;
-+	u16 txrxz;
- 	u16 ln_shrd;
- };
+ #define GEN3_EQ_CONTROL_OFF			0x8A8
+ #define GEN3_EQ_CONTROL_OFF_FB_MODE		GENMASK(3, 0)
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.c b/drivers/pci/controller/dwc/pcie-qcom-common.c
+index 3aad19b56da8..969c34f738a9 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-common.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-common.c
+@@ -8,9 +8,11 @@
+ #include "pcie-designware.h"
+ #include "pcie-qcom-common.h"
  
-@@ -3348,6 +3355,12 @@ static const struct qmp_pcie_offsets qmp_pcie_offsets_v6_30 = {
- 	.ln_shrd	= 0x8000,
- };
- 
-+static const struct qmp_pcie_offsets qmp_pcie_offsets_v8_50 = {
-+	.serdes     = 0x8000,
-+	.pcs        = 0x9000,
-+	.txrxz      = 0xd000,
-+};
-+
- static const struct qmp_phy_cfg ipq8074_pciephy_cfg = {
- 	.lanes			= 1,
- 
-@@ -4404,6 +4417,22 @@ static const struct qmp_phy_cfg qmp_v6_gen4x4_pciephy_cfg = {
- 	.phy_status             = PHYSTATUS_4_20,
- };
- 
-+static const struct qmp_phy_cfg glymur_qmp_gen5x4_pciephy_cfg = {
-+	.lanes = 4,
-+
-+	.offsets		= &qmp_pcie_offsets_v8_50,
-+
-+	.reset_list		= sdm845_pciephy_reset_l,
-+	.num_resets		= ARRAY_SIZE(sdm845_pciephy_reset_l),
-+	.vreg_list		= qmp_phy_vreg_l,
-+	.num_vregs		= ARRAY_SIZE(qmp_phy_vreg_l),
-+
-+	.regs			= pciephy_v8_50_regs_layout,
-+
-+	.pwrdn_ctrl		= SW_PWRDN | REFCLK_DRV_DSBL,
-+	.phy_status		= PHYSTATUS_4_20,
-+};
-+
- static void qmp_pcie_init_port_b(struct qmp_pcie *qmp, const struct qmp_phy_cfg_tbls *tbls)
+-void qcom_pcie_common_set_16gt_equalization(struct dw_pcie *pci)
++void qcom_pcie_common_set_equalization(struct dw_pcie *pci)
  {
- 	const struct qmp_phy_cfg *cfg = qmp->cfg;
-@@ -5150,6 +5179,9 @@ static int qmp_pcie_probe(struct platform_device *pdev)
++	struct device *dev = pci->dev;
+ 	u32 reg;
++	u16 speed;
  
- static const struct of_device_id qmp_pcie_of_match_table[] = {
- 	{
-+		.compatible = "qcom,glymur-qmp-gen5x4-pcie-phy",
-+		.data = &glymur_qmp_gen5x4_pciephy_cfg,
-+	}, {
- 		.compatible = "qcom,ipq6018-qmp-pcie-phy",
- 		.data = &ipq6018_pciephy_cfg,
- 	}, {
-
+ 	/*
+ 	 * GEN3_RELATED_OFF register is repurposed to apply equalization
+@@ -19,32 +21,40 @@ void qcom_pcie_common_set_16gt_equalization(struct dw_pcie *pci)
+ 	 * determines the data rate for which these equalization settings are
+ 	 * applied.
+ 	 */
+-	reg = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
+-	reg &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
+-	reg &= ~GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK;
+-	reg |= FIELD_PREP(GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
+-			  GEN3_RELATED_OFF_RATE_SHADOW_SEL_16_0GT);
+-	dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, reg);
+ 
+-	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF);
+-	reg &= ~(GEN3_EQ_FMDC_T_MIN_PHASE23 |
+-		GEN3_EQ_FMDC_N_EVALS |
+-		GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
+-		GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA);
+-	reg |= FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
+-		FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
+-		FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
+-		FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
+-	dw_pcie_writel_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF, reg);
++	for (speed = PCIE_SPEED_8_0GT; speed <= pcie_link_speed[pci->max_link_speed]; ++speed) {
++		if (speed > PCIE_SPEED_32_0GT) {
++			dev_warn(dev, "Skipped equalization settings for speeds higher than 32.0 GT/s\n");
++			break;
++		}
+ 
+-	reg = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
+-	reg &= ~(GEN3_EQ_CONTROL_OFF_FB_MODE |
+-		GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
+-		GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
+-		GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
+-	dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, reg);
++		reg = dw_pcie_readl_dbi(pci, GEN3_RELATED_OFF);
++		reg &= ~GEN3_RELATED_OFF_GEN3_ZRXDC_NONCOMPL;
++		reg &= ~GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK;
++		reg |= FIELD_PREP(GEN3_RELATED_OFF_RATE_SHADOW_SEL_MASK,
++			  speed - PCIE_SPEED_8_0GT);
++		dw_pcie_writel_dbi(pci, GEN3_RELATED_OFF, reg);
++
++		reg = dw_pcie_readl_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF);
++		reg &= ~(GEN3_EQ_FMDC_T_MIN_PHASE23 |
++			GEN3_EQ_FMDC_N_EVALS |
++			GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA |
++			GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA);
++		reg |= FIELD_PREP(GEN3_EQ_FMDC_T_MIN_PHASE23, 0x1) |
++			FIELD_PREP(GEN3_EQ_FMDC_N_EVALS, 0xd) |
++			FIELD_PREP(GEN3_EQ_FMDC_MAX_PRE_CUSROR_DELTA, 0x5) |
++			FIELD_PREP(GEN3_EQ_FMDC_MAX_POST_CUSROR_DELTA, 0x5);
++		dw_pcie_writel_dbi(pci, GEN3_EQ_FB_MODE_DIR_CHANGE_OFF, reg);
++
++		reg = dw_pcie_readl_dbi(pci, GEN3_EQ_CONTROL_OFF);
++		reg &= ~(GEN3_EQ_CONTROL_OFF_FB_MODE |
++			GEN3_EQ_CONTROL_OFF_PHASE23_EXIT_MODE |
++			GEN3_EQ_CONTROL_OFF_FOM_INC_INITIAL_EVAL |
++			GEN3_EQ_CONTROL_OFF_PSET_REQ_VEC);
++		dw_pcie_writel_dbi(pci, GEN3_EQ_CONTROL_OFF, reg);
++	}
+ }
+-EXPORT_SYMBOL_GPL(qcom_pcie_common_set_16gt_equalization);
++EXPORT_SYMBOL_GPL(qcom_pcie_common_set_equalization);
+ 
+ void qcom_pcie_common_set_16gt_lane_margining(struct dw_pcie *pci)
+ {
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-common.h b/drivers/pci/controller/dwc/pcie-qcom-common.h
+index 7d88d29e4766..7f5ca2fd9a72 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-common.h
++++ b/drivers/pci/controller/dwc/pcie-qcom-common.h
+@@ -8,7 +8,7 @@
+ 
+ struct dw_pcie;
+ 
+-void qcom_pcie_common_set_16gt_equalization(struct dw_pcie *pci);
++void qcom_pcie_common_set_equalization(struct dw_pcie *pci);
+ void qcom_pcie_common_set_16gt_lane_margining(struct dw_pcie *pci);
+ 
+ #endif
+diff --git a/drivers/pci/controller/dwc/pcie-qcom-ep.c b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+index 60afb4d0134c..aeb166f68d55 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom-ep.c
++++ b/drivers/pci/controller/dwc/pcie-qcom-ep.c
+@@ -511,10 +511,10 @@ static int qcom_pcie_perst_deassert(struct dw_pcie *pci)
+ 		goto err_disable_resources;
+ 	}
+ 
+-	if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT) {
+-		qcom_pcie_common_set_16gt_equalization(pci);
++	qcom_pcie_common_set_equalization(pci);
++
++	if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT)
+ 		qcom_pcie_common_set_16gt_lane_margining(pci);
+-	}
+ 
+ 	/*
+ 	 * The physical address of the MMIO region which is exposed as the BAR
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 294babe1816e..31841ab9498b 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -322,10 +322,10 @@ static int qcom_pcie_start_link(struct dw_pcie *pci)
+ {
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+ 
+-	if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT) {
+-		qcom_pcie_common_set_16gt_equalization(pci);
++	qcom_pcie_common_set_equalization(pci);
++
++	if (pcie_link_speed[pci->max_link_speed] == PCIE_SPEED_16_0GT)
+ 		qcom_pcie_common_set_16gt_lane_margining(pci);
+-	}
+ 
+ 	/* Enable Link Training state machine */
+ 	if (pcie->cfg->ops->ltssm_enable)
 -- 
-2.34.1
+2.43.0
 
