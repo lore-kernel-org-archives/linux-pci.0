@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49DDE27F182;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0980127A46F;
 	Fri,  5 Sep 2025 18:48:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757098131; cv=none; b=EAbN62+1L79o858KKlb2Tzbve1P5llzZ6lNPLZIwR9jExddHWmlBIOlmJFKuh538jNmup9GwXsbpz/qEbh9LLmNh5RB1C1jm8nn3Ra15C0CIzYmLV034pxfXG99VpM25kZxMuGXhV91JTMHh7nQPmdik0J8iMFnzDmwOsjwYLws=
+	t=1757098131; cv=none; b=an+JLMFz/R79cwcz3n3RXS0DjSZf0UyYFeP7/uf/KWVwkl28Iklao7lqdOg0VKh2j92j/N44/HAEWGlJiuMAJip2HJvgz1PJTDq4hc1gEvwfCWAR/vYmdb98RrM1Jaa/2Z97h97+tJFputD+ajZOsSLGW/ybzG8XzYD2WztZFrk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757098131; c=relaxed/simple;
-	bh=VuqyHd/j7amx7qZTFAuuOIay+gRe3rBdR2mbbyet7+M=;
+	bh=wiKtrMUTBnbglWQdf3kSumEayhCZBoUGyUsbB4zNui0=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=HRIQR9KgTG/DhE4G1zQpdTZVxyCWv59NMhkc04Ti2hwqEDKTJUjMq2YjE7yOPD7AqKajUma4KQMp46AZk8dOZ+sZk+gnKVi9vCc1lTbcUFDq/uVY7XvCAk/xOErFZp0RYUNoQ6nm/E5G3fV575jH+zDxZXo5yMC0c2S9impSZZw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vQk52Nn0; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=ckGkdUg48tWjtLPZvbeUYY1jeat55KYrRf1LXBBnM5VYnBVPG7+etsl8rgC5H22PnwwPUQU9kRMKfeL+bkJ4sldAFfiUYcnxmlDk9sOYczg/fB9Uft3BcsRafLFQRkGRH5uciRazWcZvy7ph0Z3ro5wL8HogY9RbDictezt0otk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jejWE39U; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vQk52Nn0"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id DD72AC4CEFF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jejWE39U"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id B9927C116B1;
 	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1757098130;
-	bh=VuqyHd/j7amx7qZTFAuuOIay+gRe3rBdR2mbbyet7+M=;
+	bh=wiKtrMUTBnbglWQdf3kSumEayhCZBoUGyUsbB4zNui0=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=vQk52Nn0DaUm3t4oc5jh0zcN9gJIjgHVkIHx6SqJriA2fVIkD0ClOrj1EP2W25uIB
-	 9bMrMfkVhJTJeriHCkD/ptuYY7WWUhwPcvifwLJVxpe3XYg2qvOxL+e0Ugp7hrRYxN
-	 jsyNxnhQg+w3ef91Y5jZDjX4h8YKys70+v5Gktm5m+OxhgsbVfmhz26AH9G+d3wol3
-	 944DfqBdz61DRIRiaYF+XFawBK1Yq11qu3DI3xWEo7aCgarycBB/PbxPcvcHLVjwb+
-	 9ZxAEoTcQjznO7dsozi6KWppwHvnY3iZ9EZ27I4aMpIUvFC2rSDmjifd2+dm8hJzC5
-	 WbYwpP6wf9zJw==
+	b=jejWE39UFeayJLgnCIT97DVFruUITO5IRxYVJWdCwrX6AWJsC9MEaocKO0kn1RxBz
+	 9gHr5IjTSzOjrK9WL1TwUzsXDSTs8lF6U4aQz3ucO0pzmXZhsCcqRR0aw77nR2LQYf
+	 nHbvCN1+G+ueYKe2fYnsasFZ/vduP08owZOs6AmQrciThCRuMHzbuHo8tdu1xt+gDE
+	 wwptPt0BlDwUMI0D7UoXOlQqbo5gLWhA4x4k70QcfgYqR2RjkmU6oh8wVd2pNTpAtD
+	 5NXYOzDGZ8ORwecqB7J2DxaW/z/N1vDkjN2DV6GVcP4G+z6CNl1n1BqzcgVcBjUzTE
+	 qUjwji3P897xg==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DA9CAC580;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id AE75DCA1016;
 	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 05 Sep 2025 13:48:33 -0500
-Subject: [PATCH RFC 10/13] dmaengine: sdxi: Add PCI driver support
+Date: Fri, 05 Sep 2025 13:48:30 -0500
+Subject: [PATCH RFC 07/13] dmaengine: sdxi: Import descriptor enqueue code
+ from spec
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +41,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250905-sdxi-base-v1-10-d0341a1292ba@amd.com>
+Message-Id: <20250905-sdxi-base-v1-7-d0341a1292ba@amd.com>
 References: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
 In-Reply-To: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
 To: Vinod Koul <vkoul@kernel.org>
@@ -49,11 +50,11 @@ Cc: Wei Huang <wei.huang2@amd.com>,
  Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
  linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098128; l=5608;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098128; l=7380;
  i=nathan.lynch@amd.com; s=20241010; h=from:subject:message-id;
- bh=m3XoOo9ffzkPrZw4+4jLMw0l82s7JUrIjtnNqA36HbE=;
- b=b+YDt/h2Pw7KLvvDg6sXddSGdT5SqziimKeIAWWCz82Uv+SYamNChMpSav8KAeB4FK8f2DKQK
- XU+8ajrDePhDt5ubwyQbiOmkDvA6NDKTflP4KbsWHewEgo3gvX2eM5L
+ bh=V/0nM3VPtzsbRtFsPQeZdWfXoMPAZ0o1AE15Y38dm0o=;
+ b=1pvAl0avFaxDykwFGf9Ax+fGUUnqKK5QmQiIabsFmkUCiMOieAGEKZrrlTAtQhwDGj6gJOF/m
+ VRgUqSw0VKPD6Vi/5/uCIEluW3p6j2ogo8khUvU8QLWP2RXRroaEazw
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=ZR637UTGg5YLDj56cxFeHdYoUjPMMFbcijfOkAmAnbc=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20241010 with
@@ -63,239 +64,188 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Add support for binding to PCIe-hosted SDXI devices. SDXI requires
-MSI(-X) for PCI implementations, so this code will be gated by
-CONFIG_PCI_MSI in the Makefile.
+Import the example code from the "SDXI Descriptor Ring Operation"
+chapter of the SDXI 1.0 spec[1], which demonstrates lockless
+descriptor submission to the ring. Lightly alter the code
+to (somewhat) comply with Linux coding style, and use byte order-aware
+types as well as kernel atomic and barrier APIs.
 
-Co-developed-by: Wei Huang <wei.huang2@amd.com>
-Signed-off-by: Wei Huang <wei.huang2@amd.com>
+Ultimately we may not really need a lockless submission path, and it
+would be better for it to more closely integrate with the rest of the
+driver.
+
+[1] https://www.snia.org/sites/default/files/technical-work/sdxi/release/SNIA-SDXI-Specification-v1.0a.pdf
+
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/sdxi/pci.c | 216 +++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 216 insertions(+)
+ drivers/dma/sdxi/enqueue.c | 136 +++++++++++++++++++++++++++++++++++++++++++++
+ drivers/dma/sdxi/enqueue.h |  16 ++++++
+ 2 files changed, 152 insertions(+)
 
-diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
+diff --git a/drivers/dma/sdxi/enqueue.c b/drivers/dma/sdxi/enqueue.c
 new file mode 100644
-index 0000000000000000000000000000000000000000..b7f74555395c605c4affffb198ee359accac8521
+index 0000000000000000000000000000000000000000..822d9b890fa3538dcc09e99ef562a6d8419290f0
 --- /dev/null
-+++ b/drivers/dma/sdxi/pci.c
-@@ -0,0 +1,216 @@
-+// SPDX-License-Identifier: GPL-2.0-only
++++ b/drivers/dma/sdxi/enqueue.c
+@@ -0,0 +1,136 @@
++// SPDX-License-Identifier: BSD-3-Clause
 +/*
-+ * SDXI PCI device code
 + *
-+ * Copyright (C) 2025 Advanced Micro Devices, Inc.
++ * Copyright (c) 2024, The Storage Networking Industry Association.
++ *
++ * Redistribution and use in source and binary forms, with or without
++ * modification, are permitted provided that the following conditions
++ * are met:
++ *
++ * * Redistributions of source code must retain the above copyright
++ * notice, this list of conditions and the following disclaimer.
++ *
++ * * Redistributions in binary form must reproduce the above copyright
++ * notice, this list of conditions and the following disclaimer in the
++ * documentation and/or other materials provided with the
++ * distribution.
++ *
++ * * Neither the name of The Storage Networking Industry Association
++ * (SNIA) nor the names of its contributors may be used to endorse or
++ * promote products derived from this software without specific prior
++ * written permission.
++ *
++ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
++ * "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
++ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
++ * FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
++ * COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
++ * INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
++ * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
++ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
++ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
++ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
++ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED
++ * OF THE POSSIBILITY OF SUCH DAMAGE.
 + */
 +
-+#include <linux/bitfield.h>
-+#include <linux/bits.h>
-+#include <linux/delay.h>
-+#include <linux/device.h>
-+#include <linux/dev_printk.h>
-+#include <linux/dma-direction.h>
-+#include <linux/dma-mapping.h>
++#include <asm/barrier.h>
++#include <asm/byteorder.h>
++#include <asm/rwonce.h>
++#include <linux/atomic.h>
 +#include <linux/errno.h>
-+#include <linux/io.h>
-+#include <linux/iomap.h>
-+#include <linux/math64.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/pci-ats.h>
-+#include <linux/pci.h>
++#include <linux/io-64-nonatomic-lo-hi.h>
++#include <linux/processor.h>
++#include <linux/types.h>
 +
-+#include "mmio.h"
-+#include "sdxi.h"
++#include "enqueue.h"
 +
 +/*
-+ * SDXI devices signal message 0 on error conditions, see "Error
-+ * Logging Control and Status Registers".
++ * Code adapted from the "SDXI Descriptor Ring Operation" chapter of
++ * the SDXI spec, specifically the example code in "Enqueuing one or
++ * more Descriptors."
 + */
-+#define ERROR_IRQ_MSG 0
 +
-+/* MMIO BARs */
-+#define MMIO_CTL_REGS_BAR		0x0
-+#define MMIO_DOORBELL_BAR		0x2
++#define SDXI_DESCR_SIZE 64
++#define SDXI_DS_NUM_QW (SDXI_DESCR_SIZE / sizeof(__le64))
++#define SDXI_MULTI_PRODUCER 1  /* Define to 0 if single-producer. */
 +
-+static struct pci_dev *sdxi_to_pci_dev(const struct sdxi_dev *sdxi)
++static int update_ring(const __le64 *enq_entries,   /* Ptr to entries to enqueue */
++		       u64 enq_num,                 /* Number of entries to enqueue */
++		       __le64 *ring_base,           /* Ptr to ring location */
++		       u64 ring_size,               /* (Ring Size in bytes)/64 */
++		       u64 index)                   /* Starting ring index to update */
 +{
-+	return to_pci_dev(sdxi_to_dev(sdxi));
-+}
++	for (u64 i = 0; i < enq_num; i++) {
++		__le64 *ringp = ring_base + ((index + i) % ring_size) * SDXI_DS_NUM_QW;
++		const __le64 *entryp = enq_entries + (i * SDXI_DS_NUM_QW);
 +
-+static int sdxi_pci_irq_init(struct sdxi_dev *sdxi)
-+{
-+	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
-+	int msi_count;
-+	int ret;
-+
-+	/* 1st irq for error + 1 for each context */
-+	msi_count = sdxi->max_cxts + 1;
-+
-+	ret = pci_alloc_irq_vectors(pdev, 1, msi_count,
-+				    PCI_IRQ_MSI | PCI_IRQ_MSIX);
-+	if (ret < 0) {
-+		sdxi_err(sdxi, "alloc MSI/MSI-X vectors failed\n");
-+		return ret;
++		for (u64 j = 1; j < SDXI_DS_NUM_QW; j++)
++			*(ringp + j) = *(entryp + j);
 +	}
 +
-+	sdxi->error_irq = pci_irq_vector(pdev, ERROR_IRQ_MSG);
++	/* Now write the first QW of the new entries to the ring. */
++	dma_wmb();
++	for (u64 i = 0; i < enq_num; i++) {
++		__le64 *ringp = ring_base + ((index + i) % ring_size) * SDXI_DS_NUM_QW;
++		const __le64 *entryp = enq_entries + (i * SDXI_DS_NUM_QW);
 +
-+	sdxi_dbg(sdxi, "allocated %d irq vectors", ret);
-+
-+	return 0;
-+}
-+
-+static void sdxi_pci_irq_exit(struct sdxi_dev *sdxi)
-+{
-+	pci_free_irq_vectors(sdxi_to_pci_dev(sdxi));
-+}
-+
-+static int sdxi_pci_map(struct sdxi_dev *sdxi)
-+{
-+	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
-+	int bars, ret;
-+
-+	bars = 1 << MMIO_CTL_REGS_BAR | 1 << MMIO_DOORBELL_BAR;
-+	ret = pcim_iomap_regions(pdev, bars, SDXI_DRV_NAME);
-+	if (ret) {
-+		sdxi_err(sdxi, "pcim_iomap_regions failed (%d)\n", ret);
-+		return ret;
-+	}
-+
-+	sdxi->dbs_bar = pci_resource_start(pdev, MMIO_DOORBELL_BAR);
-+
-+	/* FIXME: pcim_iomap_table may return NULL, and it's deprecated. */
-+	sdxi->ctrl_regs = pcim_iomap_table(pdev)[MMIO_CTL_REGS_BAR];
-+	sdxi->dbs = pcim_iomap_table(pdev)[MMIO_DOORBELL_BAR];
-+	if (!sdxi->ctrl_regs || !sdxi->dbs) {
-+		sdxi_err(sdxi, "pcim_iomap_table failed\n");
-+		return -EINVAL;
++		*ringp = *entryp;
 +	}
 +
 +	return 0;
 +}
 +
-+static void sdxi_pci_unmap(struct sdxi_dev *sdxi)
++int sdxi_enqueue(const __le64 *enq_entries,                 /* Ptr to entries to enqueue */
++		 u64 enq_num,                               /* Number of entries to enqueue */
++		 __le64 *ring_base,                         /* Ptr to ring location */
++		 u64 ring_size,                             /* (Ring Size in bytes)/64 */
++		 __le64 const volatile * const Read_Index,  /* Ptr to Read_Index location */
++		 __le64 volatile * const Write_Index,       /* Ptr to Write_Index location */
++		 __le64 __iomem *Door_Bell)                 /* Ptr to Ring Doorbell location */
 +{
-+	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
++	u64 old_write_idx;
++	u64 new_idx;
 +
-+	pcim_iounmap(pdev, sdxi->ctrl_regs);
-+	pcim_iounmap(pdev, sdxi->dbs);
-+}
++	while (true) {
++		u64 read_idx;
 +
-+static int sdxi_pci_init(struct sdxi_dev *sdxi)
-+{
-+	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
-+	struct device *dev = &pdev->dev;
-+	int dma_bits = 64;
-+	int ret;
++		read_idx = le64_to_cpu(READ_ONCE(*Read_Index));
++		dma_rmb();  /* Get Read_Index before Write_Index to always get consistent values */
++		old_write_idx = le64_to_cpu(READ_ONCE(*Write_Index));
 +
-+	ret = pcim_enable_device(pdev);
-+	if (ret) {
-+		sdxi_err(sdxi, "pcim_enbale_device failed\n");
-+		return ret;
++		if (read_idx > old_write_idx) {
++			/* Only happens if Write_Index wraps or ring has bad setup */
++			return -EIO;
++		}
++
++		new_idx = old_write_idx + enq_num;
++		if (new_idx - read_idx > ring_size) {
++			cpu_relax();
++			continue;  /* Not enough free entries, try again */
++		}
++
++		if (SDXI_MULTI_PRODUCER) {
++			/* Try to atomically update Write_Index. */
++			bool success = cmpxchg(Write_Index,
++					       cpu_to_le64(old_write_idx),
++					       cpu_to_le64(new_idx)) == cpu_to_le64(old_write_idx);
++			if (success)
++				break;  /* Updated Write_Index, no need to try again. */
++		} else {
++			/* Single-Producer case */
++			WRITE_ONCE(*Write_Index, cpu_to_le64(new_idx));
++			dma_wmb();  /* Make the Write_Index update visible before the Door_Bell update. */
++			break;  /* Always successful for single-producer */
++		}
++		/* Couldn"t update Write_Index, try again. */
 +	}
 +
-+	pci_set_master(pdev);
-+	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(dma_bits));
-+	if (ret) {
-+		sdxi_err(sdxi, "failed to set DMA mask & coherent bits\n");
-+		return ret;
-+	}
++	/* Write_Index is now advanced. Let's write out entries to the ring. */
++	update_ring(enq_entries, enq_num, ring_base, ring_size, old_write_idx);
 +
-+	ret = sdxi_pci_map(sdxi);
-+	if (ret) {
-+		sdxi_err(sdxi, "failed to map device IO resources\n");
-+		return ret;
-+	}
++	/* Door_Bell write required; only needs ordering wrt update of Write_Index. */
++	iowrite64(new_idx, Door_Bell);
 +
 +	return 0;
 +}
+diff --git a/drivers/dma/sdxi/enqueue.h b/drivers/dma/sdxi/enqueue.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..28c1493779db1119ff0d682fa6623b016998042a
+--- /dev/null
++++ b/drivers/dma/sdxi/enqueue.h
+@@ -0,0 +1,16 @@
++/* SPDX-License-Identifier: BSD-3-Clause */
++/* Copyright (c) 2024, The Storage Networking Industry Association. */
++#ifndef DMA_SDXI_ENQUEUE_H
++#define DMA_SDXI_ENQUEUE_H
 +
-+static void sdxi_pci_exit(struct sdxi_dev *sdxi)
-+{
-+	sdxi_pci_unmap(sdxi);
-+}
++#include <linux/types.h>
 +
-+static struct sdxi_dev *sdxi_device_alloc(struct device *dev)
-+{
-+	struct sdxi_dev *sdxi;
++int sdxi_enqueue(const __le64 *enq_entries,  /* Ptr to entries to enqueue */
++		 u64 enq_num,  /* Number of entries to enqueue */
++		 __le64 *ring_base,  /* Ptr to ring location */
++		 u64 ring_size,  /* (Ring Size in bytes)/64 */
++		 __le64 const volatile * const Read_Index,  /* Ptr to Read_Index location */
++		 __le64 volatile * const Write_Index,  /* Ptr to Write_Index location */
++		 __le64 __iomem *Door_Bell);  /* Ptr to Ring Doorbell location */
 +
-+	sdxi = kzalloc(sizeof(*sdxi), GFP_KERNEL);
-+	if (!sdxi)
-+		return NULL;
-+
-+	sdxi->dev = dev;
-+
-+	mutex_init(&sdxi->cxt_lock);
-+
-+	return sdxi;
-+}
-+
-+static void sdxi_device_free(struct sdxi_dev *sdxi)
-+{
-+	kfree(sdxi);
-+}
-+
-+static const struct sdxi_dev_ops sdxi_pci_dev_ops = {
-+	.irq_init = sdxi_pci_irq_init,
-+	.irq_exit = sdxi_pci_irq_exit,
-+};
-+
-+static int sdxi_pci_probe(struct pci_dev *pdev,
-+			  const struct pci_device_id *id)
-+{
-+	struct device *dev = &pdev->dev;
-+	struct sdxi_dev *sdxi;
-+	int err;
-+
-+	sdxi = sdxi_device_alloc(dev);
-+	if (!sdxi)
-+		return -ENOMEM;
-+
-+	pci_set_drvdata(pdev, sdxi);
-+
-+	err = sdxi_pci_init(sdxi);
-+	if (err)
-+		goto free_sdxi;
-+
-+	err = sdxi_device_init(sdxi, &sdxi_pci_dev_ops);
-+	if (err)
-+		goto pci_exit;
-+
-+	return 0;
-+
-+pci_exit:
-+	sdxi_pci_exit(sdxi);
-+free_sdxi:
-+	sdxi_device_free(sdxi);
-+
-+	return err;
-+}
-+
-+static void sdxi_pci_remove(struct pci_dev *pdev)
-+{
-+	struct sdxi_dev *sdxi = pci_get_drvdata(pdev);
-+
-+	sdxi_device_exit(sdxi);
-+	sdxi_pci_exit(sdxi);
-+	sdxi_device_free(sdxi);
-+}
-+
-+static const struct pci_device_id sdxi_id_table[] = {
-+	{ PCI_DEVICE_CLASS(PCI_CLASS_ACCELERATOR_SDXI, 0xffffff) },
-+	{0, }
-+};
-+MODULE_DEVICE_TABLE(pci, sdxi_id_table);
-+
-+static struct pci_driver sdxi_driver = {
-+	.name = "sdxi",
-+	.id_table = sdxi_id_table,
-+	.probe = sdxi_pci_probe,
-+	.remove = sdxi_pci_remove,
-+	.sriov_configure = pci_sriov_configure_simple,
-+};
-+
-+module_pci_driver(sdxi_driver);
++#endif /* DMA_SDXI_ENQUEUE_H */
 
 -- 
 2.39.5
