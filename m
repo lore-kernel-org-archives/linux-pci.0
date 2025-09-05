@@ -1,47 +1,47 @@
-Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2044.outbound.protection.outlook.com [40.107.92.44])
+Received: from NAM10-MW2-obe.outbound.protection.outlook.com (mail-mw2nam10on2077.outbound.protection.outlook.com [40.107.94.77])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A18337C10F;
-	Fri,  5 Sep 2025 18:06:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.92.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 082EB393DE8;
+	Fri,  5 Sep 2025 18:06:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.94.77
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757095601; cv=fail; b=hO8l/SzyWhJeqy+8u/R+oBYfcDOe3s9Jw+h0So84yKy7ooN70AkAW1mUynf/Mpoj/Q11D3DiwFaHiTuMke75bBrtaS5qbnYvwFDAvMRnNgmlTGjnFtN86hM/0WNjIw/GWAClB2j+VAtqvSB6oLyAqhj1Pnkm95fI3dd7CLQ/qKY=
+	t=1757095601; cv=fail; b=tObZ2/MxWDYqOrANKdBcmRt08QilM4jFunZl/WVUEraNHe5cQ9cXP928K8Fo+Tr87Pd8HDrwUUDohubTNYPRsb8Ukp5OcyOupHld1vfDY1OfPTKGGK/G/JLafFXma0WKexlNcNphJU12kuJwD9+SdTUwEKH7rv3KMSlE98tolh0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757095601; c=relaxed/simple;
-	bh=GTdRKVOgR2YZMqy9qYfZ7gnaIZmWdLJbM3WQzQwpcbY=;
+	bh=K8DoRAWqeVS50slX3aV13j6pQTBlasmpSer75l6pzZk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=HZ7H45q5OyCysEo+l5P/l25R2ffbDCuRc7IADtekEQMDgB06auG7ZNkM1A+SXHUnuvTCM469U3NKxdwrzIRnvaeqYHmvplQ1G60DR/JX5Uio51SRBOFV1thV1ud9QqpK6bpOvGhv9ZL64Oofe4YcWwZgYqlptfmpqk4oOAx5Vqs=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=MGgbp5Jm; arc=fail smtp.client-ip=40.107.92.44
+	 Content-Type:MIME-Version; b=gnxR+3WwnVnVb/ko1VsELfPHtjru80CmFkQOMqaUwshmQM0K/48yx9n/7Jth8J8pRi+GxWAxtUZ+LvDLlesjB8/8VLwhG8MbvdgLH3E32FAbDtxISFbLG8MXXOnrLebFCJyG6b9+VbglUKdxF/qghnHymA0ft8nuxu9kzuZ+6W8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=hKAoer2C; arc=fail smtp.client-ip=40.107.94.77
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="MGgbp5Jm"
+	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="hKAoer2C"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Odd3GquwlSuRlJ3scwwOidsFFZU80KgTgkj2U/VXKeNQSI3nnLP3Gqs7b5LJPIovB2uBJZ4BTRPpZvWOWRUMbY26HYog9mV76ipEmpbgI93/FyMSOhIqLZIk1r1YN+gJdGYKySHFdNU4ktA4vBn+vvNe4uaxlB1uhJNkd8KUD4x7y/gNOftNP72A3p/9Dpj0q809Uafs5yiOAfEQfXbd5jQzckUNtxItMX4m3/7qb42r3/9tXFyV3Vy8n1rsvhj+SjMl6kDTPGzhyOOfZy4t3ewSWfOUyybNCMAuYIM8eAhkrvdv5ZFM/kB6BWx4t04NbhpZ+bkjoMMuJaMhrhSM8w==
+ b=s9lIwW6IlklYcI66oDvEjk14ZdjIqC6gQzeSqa/xxuDuPR+jCZOSAM+I6e9pKhOSTJhE5vyvBWX8T/yiG7EwKAqfw7jyiUaa5xlYmRYxkt0xBLKpydbBCzOkuynOjTTP0jOWfaKneRSZJlq1CrGTQXqAVM4MHiJmpcA9fl4yPgVkP26GG8YZctC+nF8WKPjQz+86kuk7SMURUmzOdeEav2Noj2rA5emPcCLeXbjM2GkQgSNGgIiVVKCWnGvh4EJhG5zwUODBc/8tU1sLiHUlLiRPZ74YIOd74oJzT0A0s9lTYcXwwEf7kBp7z9lwkLsW860sMIXKg/FNhcLIN0GUCQ==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=lnAUJhY8961VZXNWNHiJ9OvjJ9dnT1jZxU+gPAenOnk=;
- b=N7TUUhRZSbO58af2HfTtM3uztg17kKA85DEaQvi5mR91/Ffnwc6frhYF7nkGcQNrr9tvVqJzcVxH1h6WLlDYGgdTVFA0T44jnubHpYpL8QJ17tcs8Jpnn8/wT7OO651+ouSkaVdc+PrfLyPH7MUyYxoDQNCRmNVTIrNFfF+dRn/9mAYl5Rw+g83rDBUoVXLJZyZPl+w+kv08EIM8Pw+Z0Th+dnnPqfPZW9MR90a7ywqRl7htx4Pb5dPn2qUvLFtvEC1Li+XCSRgfrjtHryYV47ZG3TJw1DsSxmYg/leumcDD6aN8WjWKwpUQUreBaBa9GJ0oW1q5jMa3dMlk3V9WoQ==
+ bh=jM3mXvK0a8A9R8zAXjY8xVPFryQ5lS98EBTqz9gf9SA=;
+ b=DDeuvXjC1zKzRK7h53/iriOhcBs0J1oXHnl815Gz/L0BZIqMq3AeW3EX0QczRUcj6fbZ7QabIPyOGm1Ns1yDn5g5IVWk+T+3GNNo70H1RTSsBsgoS8IE0QzevNyOTyfcBoBgZwxzlrfgF2NhV4kiT59ok+BnODB0wxQagSvY060158z0R7SvAJ/rg/nT0pD3/taQtRWJdSUehCf3GwIq+3K9afF7eqlE32J31a3RKYapavL5Tsngp2hFdrMd3tS6f047+b++DtsOrN0HuJlU2zfu3MWfOWg2r6xrRmKJ4Eu/M5j6+jj0rLBWIFjlEtVF3Q3prh+3Uypz0f0GwKv5xQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
  dkim=pass header.d=nvidia.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
  s=selector2;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=lnAUJhY8961VZXNWNHiJ9OvjJ9dnT1jZxU+gPAenOnk=;
- b=MGgbp5Jmr6XczWPDWnhoDMR+JJuaJfqpVD/Hsxv8sY6zooBSXKDBMQRwMRdSJ24MqiFW4R9GOTutkXGf1bmPyZDRCJKn/u3Vgi2yMUNelHNEfY70mUt61TDinJguI4FwTs9AYaIlw027pOEhL3gH0c5Dp71q4r1EyUE6v42vzDzDBL/Io68gV0MlN2mZdsbkdL+JdWSCkZEDuzptVN7KyYagxE4G3q9aOEtR9CSBjKISMhWW/Nn/aB4L5+XyV67Hhb/EaHJI44cRLBkqapBJ7ijoKg/BoBuwtmdWJSlmHD4XlGcdoCOFK5SBzl5OK6ey4DwGwsXOYFP5inKypqCIUg==
+ bh=jM3mXvK0a8A9R8zAXjY8xVPFryQ5lS98EBTqz9gf9SA=;
+ b=hKAoer2C20FNnnAhqAXUa1o3zk3+Oy6dZpNUwbEB8kKC4HnSalF012p/tCh1+4iR5x9ZCnYaORbKm4H8IvB6nKms+S2EUuWOEXBh9rrmKQcQ+J+wLZ+EZGb2AoWVIfN+G4+LnqBYlnkDIBKND+Kl6gshUhLShLzTYeZhXbgb7xOnHQ/NQ5Xdu143+VZ8hndyqFg8avAbSJCr/SbbRzI8rfeUIiz5k/7rf1HTy5EF4W9cW4eubi7zgi+sOwi5qv3pkw5tzCMv85HoFgYY5P8msixbyNz7EWyryyVwhr1vNS4V3zcHY/RKViucweRnzMpRJmmMRjcKphbIPzpyeC4qIg==
 Authentication-Results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=nvidia.com;
 Received: from PH7PR12MB5757.namprd12.prod.outlook.com (2603:10b6:510:1d0::13)
- by DM4PR12MB7696.namprd12.prod.outlook.com (2603:10b6:8:100::10) with
+ by SA1PR12MB6776.namprd12.prod.outlook.com (2603:10b6:806:25b::14) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9094.17; Fri, 5 Sep
- 2025 18:06:31 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9094.19; Fri, 5 Sep
+ 2025 18:06:35 +0000
 Received: from PH7PR12MB5757.namprd12.prod.outlook.com
  ([fe80::f012:300c:6bf4:7632]) by PH7PR12MB5757.namprd12.prod.outlook.com
  ([fe80::f012:300c:6bf4:7632%2]) with mapi id 15.20.9094.017; Fri, 5 Sep 2025
- 18:06:31 +0000
+ 18:06:35 +0000
 From: Jason Gunthorpe <jgg@nvidia.com>
 To: Bjorn Helgaas <bhelgaas@google.com>,
 	iommu@lists.linux.dev,
@@ -60,15 +60,15 @@ Cc: Alex Williamson <alex.williamson@redhat.com>,
 	patches@lists.linux.dev,
 	tdave@nvidia.com,
 	Tony Zhu <tony.zhu@intel.com>
-Subject: [PATCH v3 05/11] PCI: Add pci_reachable_set()
-Date: Fri,  5 Sep 2025 15:06:20 -0300
-Message-ID: <5-v3-8827cc7fc4e0+23f-pcie_switch_groups_jgg@nvidia.com>
+Subject: [PATCH v3 10/11] PCI: Check ACS DSP/USP redirect bits in pci_enable_pasid()
+Date: Fri,  5 Sep 2025 15:06:25 -0300
+Message-ID: <10-v3-8827cc7fc4e0+23f-pcie_switch_groups_jgg@nvidia.com>
 In-Reply-To: <0-v3-8827cc7fc4e0+23f-pcie_switch_groups_jgg@nvidia.com>
 References:
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: YT4PR01CA0005.CANPRD01.PROD.OUTLOOK.COM
- (2603:10b6:b01:d1::18) To PH7PR12MB5757.namprd12.prod.outlook.com
+X-ClientProxiedBy: YT4PR01CA0145.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:b01:ac::26) To PH7PR12MB5757.namprd12.prod.outlook.com
  (2603:10b6:510:1d0::13)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
@@ -77,239 +77,208 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR12MB5757:EE_|DM4PR12MB7696:EE_
-X-MS-Office365-Filtering-Correlation-Id: 4fd9b33b-20ac-4cf4-a0b7-08ddeca6f0b6
+X-MS-TrafficTypeDiagnostic: PH7PR12MB5757:EE_|SA1PR12MB6776:EE_
+X-MS-Office365-Filtering-Correlation-Id: ea1dab57-80f5-4c9b-a11d-08ddeca6f1a2
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|366016|1800799024;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|7416014|366016;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?Z5SO2TIsrphZWTJQXsyQRdVxqjRhWOriBPYP7ZZNtD2ZVfLRf6dqCHV3M3Pv?=
- =?us-ascii?Q?eUqY5LGpwXefregQi8OdsXrhC8qvoGDbra7LD1OF5Q5w9yyURC/Q2aJOy7DV?=
- =?us-ascii?Q?hzVz6Y0ha81A1EQ+AKy3xqaoGHgn8/JeEPhpHhvew6a1MT/B1Px/oPH/HXuA?=
- =?us-ascii?Q?zTZ3Uqrd2+KFRQr+y21tSIOvySUiSeN799n3a7xijMeC58rNWAOX/SvjY/yx?=
- =?us-ascii?Q?+clMoiNqrStTrO3HqfOvKVCXyOkR8XuKC9NIkCuaCQW3hFzj8B2xfNDFFS35?=
- =?us-ascii?Q?A1XRjXiCisZJjfhOG2/nfpf3iZBd3aNQM8LyTdNSC9aMUrYWgLkHyZfbf+b4?=
- =?us-ascii?Q?oGTRRGcmrlsPjZHMuX/T/cwmLaIlRdvczRXae80pZv4aIsrpBAcc5GEqmbfj?=
- =?us-ascii?Q?5R3b6qzOAAS76QrmFe4eiEw494VgnCB7QvcaC2rkJS7ZK+vDoy1ih+gLyW5e?=
- =?us-ascii?Q?DdIW9nKTnXPKKdZsuHksFiiLkTf6r7ejHLTiNqJFShT8lEcpnWp4uKtEBJN2?=
- =?us-ascii?Q?grxSx4ibzttj46frG7i32dKn2WBIDcmmjAhvm60VEXFmJ9PKjxCHDYP1C9ZO?=
- =?us-ascii?Q?/iKVtRpjMSy73KcwxAytZzWwxepVU7X4xpecmKgnmiWzpX+PqIX5MpaZH/s8?=
- =?us-ascii?Q?a086vCZgavAH8YaxfGI+Ja6ZBf4YX3J1drxQfVJV3k2VCFDWoEWfY1g2TZIr?=
- =?us-ascii?Q?MpeGmxyDFqLZ8pd04seN89oNJ9JA/bk/ayZmNYLyARFrIGOLx3CoWc4Hky+7?=
- =?us-ascii?Q?0uMh3/wdZlayT2kjFUZHL5eAEpdbpzqdBFP/4hUL0EU5Ek/lIQMhymyFTlfs?=
- =?us-ascii?Q?GrMdT/8GY+QmyJaUx8jGXgiM5gGFCLj10SNIIdyfZA2lYF7BU/s0SG61pJkv?=
- =?us-ascii?Q?Wb+dlXRN51zGHPRsjjO2ECm7OswWjGbLPYIz659UehLh1/yE/kYdU42CpCP1?=
- =?us-ascii?Q?92iR1g82EadSlIG2p2yJZn3FNNGaoQUZXZWllbuYx2xMXFOWBWKavNlHN4lM?=
- =?us-ascii?Q?rtCzmfaTeUSfD+SR2oxG3dm6blcaEiNIr4/BKzEAt21HF1GtTgmf22/KS+Wa?=
- =?us-ascii?Q?19G22HUOm1Q7XzTf7/Dx7RbjA8w75xaTCvz85YbkrRVdfBKH7+M6sZcLkeMA?=
- =?us-ascii?Q?dY8M7OT8kmZjYUXCfBnJwJuJTB6jcEiIEBoi4iNFUAzzFZtqSVFwCMvkKNR4?=
- =?us-ascii?Q?c3AAaH0CrPftKa3jdYEQZGGRzEdmXVHUkB2RL0EsIt+oi4eUhu+1wbJvcEck?=
- =?us-ascii?Q?EbZmWbfre4JgJ3Q5dBxRDUR8ouigISEXoy6tcH3fdcFASuNptTD8LRYmsdOO?=
- =?us-ascii?Q?4DOexf68Yy0KYxw4q4gHOvjnUBQkdAr9jJIoMkumr4kwfMGxuKW8kpNrZKTJ?=
- =?us-ascii?Q?7wwTqvPInWtnPo98brvokdfKbtISfSSWE5PF91o3pfuWanRWTpr/FOfpNMO4?=
- =?us-ascii?Q?l3pkTtQJ54E=3D?=
+	=?us-ascii?Q?rnjXv9f9+5qC2lBISmbKPhWSwiDtBIeSh1hBI/e2ebY/7KXSK23b+mz+3Tn+?=
+ =?us-ascii?Q?x9u5quc83OJqVn7BK09Y7SB87SF57K7CIKP6xSSNbvyVj8KLwTBb1TL2MDK3?=
+ =?us-ascii?Q?xlBZ/M3d+B1ujDEi6hD7O+NEfp8Pu5vFKFsw0dGH/b+XslpxfbCyH1hGLHun?=
+ =?us-ascii?Q?kOOhUWlt3wbNHtbjeb318dHAgbQNb5+R4hFcQOcEpDI8m04nnRuYbq1fp+WT?=
+ =?us-ascii?Q?601ZkTRkQXQklubuoWU6nqNwgYeGeT6N7UKtEyEWQuO3JuvyaS3sdMSCNO8V?=
+ =?us-ascii?Q?M73Wn8GhQVQQrzlute8sATItsB5oJUzE5vwXJVt5BmGKlVFth9DHX15mkI3k?=
+ =?us-ascii?Q?12IFsKzXxZp1C6wCB//ZJiMLyFbl8O0nF+NVz88UOjNem5+Ux5uMWpZKDzB4?=
+ =?us-ascii?Q?fQvCwfLPqXvTV9Avdn3/xCv68yq5ogfu+kmwckx6iFBvX4YJw+FLA+W2gzNm?=
+ =?us-ascii?Q?0sUUdZQmKpjiskA0CSpDr0vLbtFGcIpX9xVZ4IP3RMTrbKx6S/lKMjKj5b17?=
+ =?us-ascii?Q?l+5L2DR2LLGv7bs0qsyOHtyYcdYAsyPFh4ZvvlFFqxCml4Sh3iwlMXT297AU?=
+ =?us-ascii?Q?wt25SvVmWJ7vbtgxA9QxCMaJSWG9LToQuT9WIAQ/sBAuwa3Cucs6/BICxFDb?=
+ =?us-ascii?Q?teoE2M5qHlkviumfGolmTW4dBk3t+PfizO75d2oEsZeZgqEpcvojvQDNdbMY?=
+ =?us-ascii?Q?9M+dPEgQDKXV3zj8lBTUS18TlPuys+4f6S68y7Hx78a7gKhZuLC++8Lw0SlB?=
+ =?us-ascii?Q?H6cRIUkpYhKRfKbGkN1gSWkBy6nRzr60HVNbOh5ELdlCB5nUVOWO9djruEIW?=
+ =?us-ascii?Q?jd3yTnNIujD+P6EcwrLwHVshp+MpxyPA9YdYoP4XgE2wGN6+JyLr4DPOBWdX?=
+ =?us-ascii?Q?agTEZtqFj1Fu5E+hJH6UVedQZrgwQKAIDbQKvDtKuZPqglKl9n2z+fuMmnt8?=
+ =?us-ascii?Q?DgtINMC49GLgRSHoQofSlsd/GWuVw6j2EBbQT/0stjxjFiE6I0Z7SDC35tEl?=
+ =?us-ascii?Q?CkJzgftLzsYk+HiJeVAj8dJ4EvnX+VV6WPwZ5bhmNe3Pu4Sz+QNX+1JFMp9u?=
+ =?us-ascii?Q?2xzwtrjSiRgNNxBCoAxDVUdF5kGCFJmOxnDP3xXnXZARCbkxKqSoDgERld2j?=
+ =?us-ascii?Q?rQ9sW2yH75se8uCzxlLDLqNxcrlmZlSGC++m99vCq+FD8TlMOZapb6p2EwKq?=
+ =?us-ascii?Q?XyRT67GT3YzBK98zJAyUAXcJJKq4LApLQQDY+F4dNV1aXbkD+aK8Wf7sa77W?=
+ =?us-ascii?Q?XQzcO8HfqiKYWr1q0KPw/2DadV6j6tpXv4osEu7iyeP003WUr1vMklsc5pDY?=
+ =?us-ascii?Q?D59vdcdtcjy0GTXPI9dyIxCkHXsDapEuUI7MKyKrynlKdNz+vVduWE76cdhf?=
+ =?us-ascii?Q?wXm71M+Lk0W+otpZh+VxM4roFr5XUnJ4XZNAZWObkM83zIoHO8SC2i0afo3K?=
+ =?us-ascii?Q?splgMMcA9H4=3D?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5757.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(366016)(1800799024);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5757.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(7416014)(366016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?kLFGw0FfSzukY+l0KFpwa1j3CaOZV8ZTm+ZpQmtAyVYI25+9943p6SHjHuNd?=
- =?us-ascii?Q?P89rybPZ8HSWrASyrhNW4ATzP39hHQOJyVABGvSyOBwHikil6SKrp0DI716O?=
- =?us-ascii?Q?2B9FJEs2W9fWk/rhyzhM67/6XM/L/v11scgroVZ2bF9QNmuR74+ef24taL/H?=
- =?us-ascii?Q?fgMzVV1Ys/hDDZ+zdcd/N9p/gvwccjaudB8S0RgayFeX50C6qYqWBz2LtZo9?=
- =?us-ascii?Q?h7C5mWM89JyJD8wHqUe8RNHlaLdzn0cpH7vDUJM60+J1b9jZwv8ghPiarrZ2?=
- =?us-ascii?Q?U1Z1zCCB6WNZDm2EtDNiTc9pPIju47nxe37BkzWLgPrBvo4aTNjYKN1yhWjl?=
- =?us-ascii?Q?nJSxQRMuI6/p1OLCHiz5l0ahy2HUH59JB3XuuQyUqVYTDlPBN1/omOL4cvJA?=
- =?us-ascii?Q?9fOzihPaMuTO/RjiZxqh5dygB43DvLOxMwTjVv9OxPS/kZOQm6L0ji62NU2C?=
- =?us-ascii?Q?GULcl4t1eBNQ13rP1FF1ttZunu1lDdC0jvSgcUfB7mF8ozHtCqKXl+ogghOs?=
- =?us-ascii?Q?XslLmbhVssuV5BgLRHvFusLtgtkt67CVSlb084U9UKxdI5wx2OpSGqEJOMI+?=
- =?us-ascii?Q?OsxnhuCOuhHWFuwUHughAbu2XxrORoZmmWYnusn0EpNbq2fYe8MdSFIf91mD?=
- =?us-ascii?Q?myVyxr562AQX350sSItDfTabA/LSI+i8iUHXvrDqlFi5tDntwpTbMYemcKRm?=
- =?us-ascii?Q?9BJTNdfmjNoqkuoKmvX66zh7jgO1aQgGci1loaV5nGYzux7C69rne4cBtALl?=
- =?us-ascii?Q?pPHyYP5W3dE1oOmr0jI9PKl8nASJmWNrkroBMIyWMIj7YSCTkZ81P30htLdT?=
- =?us-ascii?Q?48z7shl3ni3YdTJfFGP+cxPWUn10Eyd6i46fXKtJjenqRcNKSNPFC5WevmTj?=
- =?us-ascii?Q?Yxy7XS9c5DEHLkHr6hI1yRTw8MQxzQ8CwxGbAA0RKRB0h/4bWUSBtdcgc5Z6?=
- =?us-ascii?Q?CZ/NRpvoy5Ybn8hyYPICQHyZ9f/7TYp3zC1anvaPNETHvFqUt1Jifsuai9RN?=
- =?us-ascii?Q?a6thlHOx6PDHUA1iXW+b0hlV4gPmcY7h6ZuG2pxETPAIwiEFw9AiSqCjIee5?=
- =?us-ascii?Q?n8m8Xi6IYTR4t+7lV8M8FQ27+kd+9r1a5PHUqwsEe6SL9p/1fMS0psfeNXyx?=
- =?us-ascii?Q?FZZXuD77ZUmAm7MlR1uQAFBb/ERtF+y+Y7MqZoEvq7Y0wONBMtZz4/lCyyQr?=
- =?us-ascii?Q?Zf7MJkMDrfe3/lsmBG0B0XQvYl+TAk7bmKkTDnjowtPwlyLukYs8l7qH4tpG?=
- =?us-ascii?Q?LQdU/0PU5BdPOoyx6nof2XImcHAtfBAmwITugapMNZZaDWLsm4UBX+6gVxha?=
- =?us-ascii?Q?gLhTe67p8slUYVXkl/V+LplAfE9isvMytX5Ez02+Z+UtlvtvVIECC88ASx3M?=
- =?us-ascii?Q?xCGmAsk5MKuPfaO1bBXK6BKT0yhPrTQIPZvuTIq3hnclNrC3qM3oKqGkXVei?=
- =?us-ascii?Q?Vs8oAMQesQiFkNRTZ8SSkBBaCM2iisw3fU+NT2pU5nX9miMxbD5us88ok+m5?=
- =?us-ascii?Q?NVOCIg4nX+7KUVtZyeA5mKqGAy8ObeQqt4DOTtfeAYyJrwfc06OWx8QR49vV?=
- =?us-ascii?Q?NbApTh0GHeUQFljGwdE=3D?=
+	=?us-ascii?Q?FJL0xS7QOT/bh9W6MXgbqi7GE/MfSiYKOtWnRJuDrtm1DUv/bxyLc6CyN9Zv?=
+ =?us-ascii?Q?pXRTrNDD9PHwSZnE8SVjzePJFW+z8CLWMQeSr+qGYw1ey9AIfdvj6OIi+yfJ?=
+ =?us-ascii?Q?NsEdk/Gl6eu4idoWzZ4Njy42vQS05SBOx7q8mvj5q70GapC4BKIuL3ihL0xG?=
+ =?us-ascii?Q?rUjWV0LhL19jMs4QlnsAXXXk+n0V0kTutf9oCI0/iUEg43f3eMuevZCr5gIy?=
+ =?us-ascii?Q?bx/tCAk1Qfecmu0vdwhiWQl1X8lh/nhhbCIuckDeUKK4pTc3dpOhkOPMh3Vs?=
+ =?us-ascii?Q?i54O6EM/DSVnCjoN+lz9cVAUndgwKiij0akDIWF5m7SZdUVTUrum6nFb/POJ?=
+ =?us-ascii?Q?BFW+5QkdCRlcnCvjB/STru6sAisWmn+k0/u/5/qvnSrtEURq4I90TUi6dJv+?=
+ =?us-ascii?Q?hHDYXeeKuZ4WW6Y7Y1EXbGAB+0hs9bPlrA2VcoS7mBId6C5ZZtOq98NcqKh9?=
+ =?us-ascii?Q?RDGXxQ5mhp18vuzmrVXmnoZtIUQh5cPezaMcPaaVlHZ2xMfzOBBaNBwrot6V?=
+ =?us-ascii?Q?mWp8MTxtAnnu55pDjjVWKPKwszMqNxBtVbH8eXAMY+GxCBaUkIzA0v0b8SMP?=
+ =?us-ascii?Q?IFtGQDK7O/jUSKTYVLlsBXlbQres9+ZmJ4NxS6RFwwUTvWgyJV0Ya685gGHV?=
+ =?us-ascii?Q?+9YYLLolj53w538c9OKygq+/hO9Dc6kPXpZlz+xDR1ohj+/0/9if+96AvbyA?=
+ =?us-ascii?Q?RGjvXKVDK2dqf08k5TeJMH1d61bdgx3eMvIUXzIVWUaVv2l9p3mPhrpb4KMf?=
+ =?us-ascii?Q?KY3us7kGpy/WJiiSj1iF3j5grbhGQd49rKtzp+ga9cmNkPPMDdT1K/Jgca4O?=
+ =?us-ascii?Q?0RwjYDXb13JzyGAv88fGyYS8m+/MwMi321DceR2B83mqCrzRzdlk/Ne8Z6Vy?=
+ =?us-ascii?Q?S8WmlWcuR3zHWhfP9ymJuECgnm1i3b7hZKrInTdy4l22xG5psR4Os8c4pABl?=
+ =?us-ascii?Q?RHdX/0ioToomdHXR5Rf3vmGQXKIUEYhZTc0cWTjucB181IaErMCWTPNGZv93?=
+ =?us-ascii?Q?OcdCOG+P/zqozHjh8Ev4Gnahzntmu/jxuaJ3CgyYH9WHfl2qhsYw6/pPFwuI?=
+ =?us-ascii?Q?hpTNojVvkykoZO4xHT3NwcBlfFNkjHW3nPoKIni1YlcTYFJjZxkRAHC8msKh?=
+ =?us-ascii?Q?gkUrHZTUAp5IjRwsoyW5mpgsX5yC9MCuVhOJ6OYpY2t5m3c0gRlRpe6iSEtt?=
+ =?us-ascii?Q?xANHQe7RkWrNY+otfoL237bGYihAEoQ57vRFYjMM+z/tEmel8z+MpqxksEUY?=
+ =?us-ascii?Q?VDYLBPstZ8g/pRaCVTdxj/2RqpG6b9BSEBfR9L0DM68csYinWAQRxEMFP+T7?=
+ =?us-ascii?Q?XYvfEMhpodBG1wb0cyG+3+Co6DF1os1uLmaeXpRr2awCntYVcRQnuhrHL8de?=
+ =?us-ascii?Q?r7835vPYaH3P6+tkdY9+zKPRNOhZJFiuWGWMk11N/0SZgSsehViXskBtQMBC?=
+ =?us-ascii?Q?UZ1DgyGh63reCG870uu42LgfA//LJLlg9uqQ2OtUddVngoa6gTW/XtzhBjDn?=
+ =?us-ascii?Q?GPN8SQgeAJViuNR/0ih1uTXqcctxoPgDga+OjILLaOjp1n4YVJX8YDRwnTfe?=
+ =?us-ascii?Q?y1cbxdR0IBaT/wLk4mE=3D?=
 X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 4fd9b33b-20ac-4cf4-a0b7-08ddeca6f0b6
+X-MS-Exchange-CrossTenant-Network-Message-Id: ea1dab57-80f5-4c9b-a11d-08ddeca6f1a2
 X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5757.namprd12.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Sep 2025 18:06:30.5215
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Sep 2025 18:06:32.0513
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 2XMXtUhfqlg175hB6VL9emioPiQluJpWbG9cNYRmDoHrXXOrcPmTsX5r10qD46TJ
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB7696
+X-MS-Exchange-CrossTenant-UserPrincipalName: arI+IgyEi0GAjaXQckaBpt39VJGBisqeknmOl++QbOwJXPZZsLa01J5odfJMh1GW
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR12MB6776
 
-Implement pci_reachable_set() to efficiently compute a set of devices on
-the same bus that are "reachable" from a starting device. The meaning of
-reachability is defined by the caller through a callback function.
+Switches ignore the PASID when routing TLPs. This means the path from the
+PASID issuing end point to the IOMMU must be direct with no possibility
+for another device to claim the addresses.
 
-This is a faster implementation of the same logic in
-pci_device_group(). Being inside the PCI core allows use of pci_bus_sem so
-it can use list_for_each_entry() on a small list of devices instead of the
-expensive for_each_pci_dev(). Server systems can now have hundreds of PCI
-devices, but typically only a very small number of devices per bus.
+This is done using ACS flags and pci_enable_pasid() checks for this.
 
-An example of a reachability function would be pci_devs_are_dma_aliases()
-which would compute a set of devices on the same bus that are
-aliases. This would also be useful in future support for the ACS P2P
-Egress Vector which has a similar reachability problem.
+The new ACS Enhanced bits clarify some undefined behaviors in the spec
+around what P2P Request Redirect means.
 
-This is effectively a graph algorithm where the set of devices on the bus
-are vertexes and the reachable() function defines the edges. It returns a
-set of vertexes that form a connected graph.
+Linux has long assumed that PCI_ACS_RR implies PCI_ACS_DSP_MT_RR |
+PCI_ACS_USP_MT_RR | PCI_ACS_UNCLAIMED_RR.
 
+If the device supports ACS Enhanced then use the information it reports to
+determine if PASID SVA is supported or not.
+
+ PCI_ACS_DSP_MT_RR: Prevents Downstream Port BAR's from claiming upstream
+                    flowing transactions
+
+ PCI_ACS_USP_MT_RR: Prevents Upstream Port BAR's from claiming upstream
+                    flowing transactions
+
+ PCI_ACS_UNCLAIMED_RR: Prevents a hole in the USP bridge window compared
+                       to all the DSP bridge windows from generating a
+                       error.
+
+Each of these cases would poke a hole in the PASID address space which is
+not permitted.
+
+Enhance the comments around pci_acs_flags_enabled() to better explain the
+reasoning for its logic. Continue to take the approach of assuming the
+device is doing the "right ACS" if it does not explicitly declare
+otherwise.
+
+Fixes: 201007ef707a ("PCI: Enable PASID only when ACS RR & UF enabled on upstream path")
 Signed-off-by: Jason Gunthorpe <jgg@nvidia.com>
 ---
- drivers/pci/search.c | 90 ++++++++++++++++++++++++++++++++++++++++++++
- include/linux/pci.h  | 12 ++++++
- 2 files changed, 102 insertions(+)
+ drivers/pci/ats.c |  4 +++-
+ drivers/pci/pci.c | 54 +++++++++++++++++++++++++++++++++++++++++------
+ 2 files changed, 50 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/pci/search.c b/drivers/pci/search.c
-index fe6c07e67cb8ce..dac6b042fd5f5d 100644
---- a/drivers/pci/search.c
-+++ b/drivers/pci/search.c
-@@ -595,3 +595,93 @@ int pci_dev_present(const struct pci_device_id *ids)
- 	return 0;
+diff --git a/drivers/pci/ats.c b/drivers/pci/ats.c
+index ec6c8dbdc5e9c9..00603c2c4ff0ea 100644
+--- a/drivers/pci/ats.c
++++ b/drivers/pci/ats.c
+@@ -416,7 +416,9 @@ int pci_enable_pasid(struct pci_dev *pdev, int features)
+ 	if (!pasid)
+ 		return -EINVAL;
+ 
+-	if (!pci_acs_path_enabled(pdev, NULL, PCI_ACS_RR | PCI_ACS_UF))
++	if (!pci_acs_path_enabled(pdev, NULL,
++				  PCI_ACS_RR | PCI_ACS_UF | PCI_ACS_USP_MT_RR |
++				  PCI_ACS_DSP_MT_RR | PCI_ACS_UNCLAIMED_RR))
+ 		return -EINVAL;
+ 
+ 	pci_read_config_word(pdev, pasid + PCI_PASID_CAP, &supported);
+diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+index 983f71211f0055..620b7f79093854 100644
+--- a/drivers/pci/pci.c
++++ b/drivers/pci/pci.c
+@@ -3606,6 +3606,52 @@ void pci_configure_ari(struct pci_dev *dev)
+ 	}
  }
- EXPORT_SYMBOL(pci_dev_present);
+ 
 +
-+/**
-+ * pci_reachable_set - Generate a bitmap of devices within a reachability set
-+ * @start: First device in the set
-+ * @devfns: The set of devices on the bus
-+ * @reachable: Callback to tell if two devices can reach each other
++/*
++ * The spec is not clear what it means if the capability bit is 0. One view is
++ * that the device acts as though the ctrl bit is zero, another view is the
++ * device behavior is undefined.
 + *
-+ * Compute a bitmap where every set bit is a device on the bus that is reachable
-+ * from the start device, including the start device. Reachability between two
-+ * devices is determined by a callback function.
++ * Historically Linux has taken the position that the capability bit as 0 means
++ * the device supports the most favorable interpretation of the spec - ie that
++ * things like P2P RR are always on. As this is security sensitive we expect
++ * devices that do not follow this rule to be quirked.
 + *
-+ * This is a non-recursive implementation that invokes the callback once per
-+ * pair. The callback must be commutative:
-+ *    reachable(a, b) == reachable(b, a)
-+ * reachable() can form a cyclic graph:
-+ *    reachable(a,b) == reachable(b,c) == reachable(c,a) == true
++ * ACS Enhanced eliminated undefined areas of the spec around MMIO in root ports
++ * and switch ports. If those ports have no MMIO then it is not relavent.
++ * PCI_ACS_UNCLAIMED_RR eliminates the undefined area around an upstream switch
++ * window that is not fully decoded by the downstream windows.
 + *
-+ * Since this function is limited to a single bus the largest set can be 256
-+ * devices large.
++ * This takes the same approach with ACS Enhanced, if the device does not
++ * support it then we assume the ACS P2P RR has all the enhanced behaviors too.
++ *
++ * Due to ACS Enhanced bits being force set to 0 by older Linux kernels, and
++ * those values would break old kernels on the edge cases they cover, the only
++ * compatible thing for a new device to implement is ACS Enhanced supported with
++ * the control bits (except PCI_ACS_IORB) wired to follow ACS_RR.
 + */
-+void pci_reachable_set(struct pci_dev *start, struct pci_reachable_set *devfns,
-+		       bool (*reachable)(struct pci_dev *deva,
-+					 struct pci_dev *devb))
++static u16 pci_acs_ctrl_mask(struct pci_dev *pdev, u16 hw_cap)
 +{
-+	struct pci_reachable_set todo_devfns = {};
-+	struct pci_reachable_set next_devfns = {};
-+	struct pci_bus *bus = start->bus;
-+	bool again;
++	/*
++	 * Egress Control enables use of the Egress Control Vector which is not
++	 * present without the cap.
++	 */
++	u16 mask = PCI_ACS_EC;
 +
-+	/* Assume devfn of all PCI devices is bounded by MAX_NR_DEVFNS */
-+	static_assert(sizeof(next_devfns.devfns) * BITS_PER_BYTE >=
-+		      MAX_NR_DEVFNS);
++	mask = hw_cap & (PCI_ACS_SV | PCI_ACS_TB | PCI_ACS_RR |
++				      PCI_ACS_CR | PCI_ACS_UF | PCI_ACS_DT);
 +
-+	memset(devfns, 0, sizeof(devfns->devfns));
-+	__set_bit(start->devfn, devfns->devfns);
-+	__set_bit(start->devfn, next_devfns.devfns);
-+
-+	down_read(&pci_bus_sem);
-+	while (true) {
-+		unsigned int devfna;
-+		unsigned int i;
-+
-+		/*
-+		 * For each device that hasn't been checked compare every
-+		 * device on the bus against it.
-+		 */
-+		again = false;
-+		for_each_set_bit(devfna, next_devfns.devfns, MAX_NR_DEVFNS) {
-+			struct pci_dev *deva = NULL;
-+			struct pci_dev *devb;
-+
-+			list_for_each_entry(devb, &bus->devices, bus_list) {
-+				if (devb->devfn == devfna)
-+					deva = devb;
-+
-+				if (test_bit(devb->devfn, devfns->devfns))
-+					continue;
-+
-+				if (!deva) {
-+					deva = devb;
-+					list_for_each_entry_continue(
-+						deva, &bus->devices, bus_list)
-+						if (deva->devfn == devfna)
-+							break;
-+				}
-+
-+				if (!reachable(deva, devb))
-+					continue;
-+
-+				__set_bit(devb->devfn, todo_devfns.devfns);
-+				again = true;
-+			}
-+		}
-+
-+		if (!again)
-+			break;
-+
-+		/*
-+		 * Every new bit adds a new deva to check, reloop the whole
-+		 * thing. Expect this to be rare.
-+		 */
-+		for (i = 0; i != ARRAY_SIZE(devfns->devfns); i++) {
-+			devfns->devfns[i] |= todo_devfns.devfns[i];
-+			next_devfns.devfns[i] = todo_devfns.devfns[i];
-+			todo_devfns.devfns[i] = 0;
-+		}
-+	}
-+	up_read(&pci_bus_sem);
++	/*
++	 * If ACS Enhanced is supported the device reports what it is doing
++	 * through these bits which may not be settable.
++	 */
++	if (hw_cap & PCI_ACS_ENHANCED)
++		mask |= PCI_ACS_IORB | PCI_ACS_DSP_MT_RB | PCI_ACS_DSP_MT_RR |
++			PCI_ACS_USP_MT_RB | PCI_ACS_USP_MT_RR |
++			PCI_ACS_UNCLAIMED_RR;
++	return mask;
 +}
-+EXPORT_SYMBOL_GPL(pci_reachable_set);
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index fb9adf0562f8ef..21f6b20b487f8d 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -855,6 +855,10 @@ struct pci_dynids {
- 	struct list_head	list;	/* For IDs added at runtime */
- };
- 
-+struct pci_reachable_set {
-+	DECLARE_BITMAP(devfns, 256);
-+};
 +
- enum pci_bus_isolation {
- 	/*
- 	 * The bus is off a root port and the root port has isolated ACS flags
-@@ -1269,6 +1273,9 @@ struct pci_dev *pci_get_domain_bus_and_slot(int domain, unsigned int bus,
- struct pci_dev *pci_get_class(unsigned int class, struct pci_dev *from);
- struct pci_dev *pci_get_base_class(unsigned int class, struct pci_dev *from);
+ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+ {
+ 	int pos;
+@@ -3615,15 +3661,9 @@ static bool pci_acs_flags_enabled(struct pci_dev *pdev, u16 acs_flags)
+ 	if (!pos)
+ 		return false;
  
-+void pci_reachable_set(struct pci_dev *start, struct pci_reachable_set *devfns,
-+		       bool (*reachable)(struct pci_dev *deva,
-+					 struct pci_dev *devb));
- enum pci_bus_isolation pci_bus_isolated(struct pci_bus *bus);
- 
- int pci_dev_present(const struct pci_device_id *ids);
-@@ -2084,6 +2091,11 @@ static inline struct pci_dev *pci_get_base_class(unsigned int class,
- 						 struct pci_dev *from)
- { return NULL; }
- 
-+static inline void
-+pci_reachable_set(struct pci_dev *start, struct pci_reachable_set *devfns,
-+		  bool (*reachable)(struct pci_dev *deva, struct pci_dev *devb))
-+{ }
-+
- static inline enum pci_bus_isolation pci_bus_isolated(struct pci_bus *bus)
- { return PCIE_NON_ISOLATED; }
+-	/*
+-	 * Except for egress control, capabilities are either required
+-	 * or only required if controllable.  Features missing from the
+-	 * capability field can therefore be assumed as hard-wired enabled.
+-	 */
+ 	pci_read_config_word(pdev, pos + PCI_ACS_CAP, &cap);
+-	acs_flags &= (cap | PCI_ACS_EC);
+-
+ 	pci_read_config_word(pdev, pos + PCI_ACS_CTRL, &ctrl);
++	acs_flags &= pci_acs_ctrl_mask(pdev, cap);
+ 	return (ctrl & acs_flags) == acs_flags;
+ }
  
 -- 
 2.43.0
