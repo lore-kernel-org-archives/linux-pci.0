@@ -1,37 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53582280017;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 49DDE27F182;
 	Fri,  5 Sep 2025 18:48:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757098131; cv=none; b=f4k/Mb32+r+vqcMOE+ZA6AEw/UEH2HL5LujXkruaty9R//erFd7ADLKtXqTHQKzsj6AGWK7jJi4Fe2cHP5RTzNX50/lIVINqmcvoOgu7TQTT5mORM2sgRfZha+ZTUtOhrpLqHnlpx2r1jpNav2FK8Qi2blQl3uiTY/h8XN4qyJk=
+	t=1757098131; cv=none; b=EAbN62+1L79o858KKlb2Tzbve1P5llzZ6lNPLZIwR9jExddHWmlBIOlmJFKuh538jNmup9GwXsbpz/qEbh9LLmNh5RB1C1jm8nn3Ra15C0CIzYmLV034pxfXG99VpM25kZxMuGXhV91JTMHh7nQPmdik0J8iMFnzDmwOsjwYLws=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757098131; c=relaxed/simple;
-	bh=q/cnJYwiQrYCXLKiAQYrAuGmRzLn79YGRxuj3an5Vmw=;
+	bh=VuqyHd/j7amx7qZTFAuuOIay+gRe3rBdR2mbbyet7+M=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=WDZmSFw7zqZTvIbPP75X38znvDQbtGQO0b0/dn++AAojzqqx0uad6ZsR7XStS5N/qxaNkGKBXmZ7ya3T8ZVtZZqraQhEXv+iI42XPq//HBz2PYQSjerqLEknY/AvTFjEK4J2G3wRVahSMWte7kSAN0a7LG9lvEeMnBTNHrS6dw0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uns1K3EQ; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=HRIQR9KgTG/DhE4G1zQpdTZVxyCWv59NMhkc04Ti2hwqEDKTJUjMq2YjE7yOPD7AqKajUma4KQMp46AZk8dOZ+sZk+gnKVi9vCc1lTbcUFDq/uVY7XvCAk/xOErFZp0RYUNoQ6nm/E5G3fV575jH+zDxZXo5yMC0c2S9impSZZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vQk52Nn0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uns1K3EQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 06067C4CEFB;
-	Fri,  5 Sep 2025 18:48:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vQk52Nn0"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id DD72AC4CEFF;
+	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757098131;
-	bh=q/cnJYwiQrYCXLKiAQYrAuGmRzLn79YGRxuj3an5Vmw=;
+	s=k20201202; t=1757098130;
+	bh=VuqyHd/j7amx7qZTFAuuOIay+gRe3rBdR2mbbyet7+M=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=uns1K3EQQuQU1283oQwUuOGEFpHFwTkZFZ5mLzp2+VjFCNEATIeenO8yLWbXi5DH/
-	 0CdDQaxHILYc9D+J/cIAzjflTnkSI8z0aMhVar4o1Qr+hLC4OqnbWHqufXn4rOe8+a
-	 XSeOFk6E+9pL0CsZr4BQruljJ2UomxoV7yh8xutR8nNZKJ440Bqw3h+M9Vf4D6vi2u
-	 IbGm1HeHh33Tak8oOoRU+oxAWwZSDJWp5sm7Rm+UaF2L52pkkEbQL0eO9pZQn6Pxti
-	 kohaeYpJCy4dqW9P3J7VngFoM9+4RpkgXddqY/9EQvibEkzSF97zv1NANLnswAoy8c
-	 FC0kxNdr5BgoA==
+	b=vQk52Nn0DaUm3t4oc5jh0zcN9gJIjgHVkIHx6SqJriA2fVIkD0ClOrj1EP2W25uIB
+	 9bMrMfkVhJTJeriHCkD/ptuYY7WWUhwPcvifwLJVxpe3XYg2qvOxL+e0Ugp7hrRYxN
+	 jsyNxnhQg+w3ef91Y5jZDjX4h8YKys70+v5Gktm5m+OxhgsbVfmhz26AH9G+d3wol3
+	 944DfqBdz61DRIRiaYF+XFawBK1Yq11qu3DI3xWEo7aCgarycBB/PbxPcvcHLVjwb+
+	 9ZxAEoTcQjznO7dsozi6KWppwHvnY3iZ9EZ27I4aMpIUvFC2rSDmjifd2+dm8hJzC5
+	 WbYwpP6wf9zJw==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id F33BCCA1017;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id D6DA9CAC580;
 	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 05 Sep 2025 13:48:35 -0500
-Subject: [PATCH RFC 12/13] dmaengine: sdxi: Add Kconfig and Makefile
+Date: Fri, 05 Sep 2025 13:48:33 -0500
+Subject: [PATCH RFC 10/13] dmaengine: sdxi: Add PCI driver support
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,7 +40,7 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250905-sdxi-base-v1-12-d0341a1292ba@amd.com>
+Message-Id: <20250905-sdxi-base-v1-10-d0341a1292ba@amd.com>
 References: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
 In-Reply-To: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
 To: Vinod Koul <vkoul@kernel.org>
@@ -49,11 +49,11 @@ Cc: Wei Huang <wei.huang2@amd.com>,
  Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
  linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098129; l=3113;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098128; l=5608;
  i=nathan.lynch@amd.com; s=20241010; h=from:subject:message-id;
- bh=ouNlAF3ey9kkPHIHkTAL8nkSqeI8aY290db9HnPAHSw=;
- b=9QEgbeZtoY02av3vXIAReneK8LIym6iDIavrtDdkJoaGAe+hK8loAznGg4DdNdfkul4tka+N0
- gEXJrStJhE2APqhhM6Crk3tgkYiLF4lmaIzYy1L6gpxa4Mx6/56hMGo
+ bh=m3XoOo9ffzkPrZw4+4jLMw0l82s7JUrIjtnNqA36HbE=;
+ b=b+YDt/h2Pw7KLvvDg6sXddSGdT5SqziimKeIAWWCz82Uv+SYamNChMpSav8KAeB4FK8f2DKQK
+ XU+8ajrDePhDt5ubwyQbiOmkDvA6NDKTflP4KbsWHewEgo3gvX2eM5L
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=ZR637UTGg5YLDj56cxFeHdYoUjPMMFbcijfOkAmAnbc=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20241010 with
@@ -63,101 +63,239 @@ Reply-To: nathan.lynch@amd.com
 
 From: Nathan Lynch <nathan.lynch@amd.com>
 
-Add SDXI Kconfig that includes debug and unit test options in addition
-to the usual tristate. SDXI_DEBUG seems necessary because
-DMADEVICES_DEBUG makes dmatest too verbose.
-
-One goal is to keep the bus-agnostic portions of the driver buildable
-without PCI(_MSI), in case non-PCI SDXI implementations come along
-later.
+Add support for binding to PCIe-hosted SDXI devices. SDXI requires
+MSI(-X) for PCI implementations, so this code will be gated by
+CONFIG_PCI_MSI in the Makefile.
 
 Co-developed-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Wei Huang <wei.huang2@amd.com>
 Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
- drivers/dma/Kconfig       |  2 ++
- drivers/dma/Makefile      |  1 +
- drivers/dma/sdxi/Kconfig  | 23 +++++++++++++++++++++++
- drivers/dma/sdxi/Makefile | 17 +++++++++++++++++
- 4 files changed, 43 insertions(+)
+ drivers/dma/sdxi/pci.c | 216 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 216 insertions(+)
 
-diff --git a/drivers/dma/Kconfig b/drivers/dma/Kconfig
-index 05c7c7d9e5a4e52a8ad7ada8c8b9b1a6f9d875f6..cccf00b73e025944681b03cffe441c372526d3f3 100644
---- a/drivers/dma/Kconfig
-+++ b/drivers/dma/Kconfig
-@@ -774,6 +774,8 @@ source "drivers/dma/fsl-dpaa2-qdma/Kconfig"
- 
- source "drivers/dma/lgm/Kconfig"
- 
-+source "drivers/dma/sdxi/Kconfig"
-+
- source "drivers/dma/stm32/Kconfig"
- 
- # clients
-diff --git a/drivers/dma/Makefile b/drivers/dma/Makefile
-index a54d7688392b1a0e956fa5d23633507f52f017d9..ae4154595e1a6250b441a90078e9df3607d3d1dd 100644
---- a/drivers/dma/Makefile
-+++ b/drivers/dma/Makefile
-@@ -85,6 +85,7 @@ obj-$(CONFIG_XGENE_DMA) += xgene-dma.o
- obj-$(CONFIG_ST_FDMA) += st_fdma.o
- obj-$(CONFIG_FSL_DPAA2_QDMA) += fsl-dpaa2-qdma/
- obj-$(CONFIG_INTEL_LDMA) += lgm/
-+obj-$(CONFIG_SDXI) += sdxi/
- 
- obj-y += amd/
- obj-y += mediatek/
-diff --git a/drivers/dma/sdxi/Kconfig b/drivers/dma/sdxi/Kconfig
+diff --git a/drivers/dma/sdxi/pci.c b/drivers/dma/sdxi/pci.c
 new file mode 100644
-index 0000000000000000000000000000000000000000..c9757cffb5f64fbc175ded8d0c9d751f0a22b6df
+index 0000000000000000000000000000000000000000..b7f74555395c605c4affffb198ee359accac8521
 --- /dev/null
-+++ b/drivers/dma/sdxi/Kconfig
-@@ -0,0 +1,23 @@
-+config SDXI
-+	tristate "SDXI support"
-+	select DMA_ENGINE
-+	select DMA_VIRTUAL_CHANNELS
-+	select PACKING
-+	help
-+	  Enable support for Smart Data Accelerator Interface (SDXI)
-+	  Platform Data Mover devices. SDXI is a vendor-neutral
-+	  standard for a memory-to-memory data mover and acceleration
-+	  interface.
++++ b/drivers/dma/sdxi/pci.c
+@@ -0,0 +1,216 @@
++// SPDX-License-Identifier: GPL-2.0-only
++/*
++ * SDXI PCI device code
++ *
++ * Copyright (C) 2025 Advanced Micro Devices, Inc.
++ */
 +
-+config SDXI_DEBUG
-+	bool "SDXI driver debug"
-+	default DMADEVICES_DEBUG
-+	depends on SDXI != n
-+	help
-+	  Enable debug output from the SDXI driver. This is an option
-+	  for use by developers and most users should say N here.
++#include <linux/bitfield.h>
++#include <linux/bits.h>
++#include <linux/delay.h>
++#include <linux/device.h>
++#include <linux/dev_printk.h>
++#include <linux/dma-direction.h>
++#include <linux/dma-mapping.h>
++#include <linux/errno.h>
++#include <linux/io.h>
++#include <linux/iomap.h>
++#include <linux/math64.h>
++#include <linux/module.h>
++#include <linux/mutex.h>
++#include <linux/pci-ats.h>
++#include <linux/pci.h>
 +
-+config SDXI_KUNIT_TEST
-+       tristate "SDXI unit tests" if !KUNIT_ALL_TESTS
-+       depends on SDXI && KUNIT
-+       default KUNIT_ALL_TESTS
-diff --git a/drivers/dma/sdxi/Makefile b/drivers/dma/sdxi/Makefile
-new file mode 100644
-index 0000000000000000000000000000000000000000..c67e475689b45d6260fe970fb4afcc25f8f9ebc1
---- /dev/null
-+++ b/drivers/dma/sdxi/Makefile
-@@ -0,0 +1,17 @@
-+# SPDX-License-Identifier: GPL-2.0
++#include "mmio.h"
++#include "sdxi.h"
 +
-+ccflags-$(CONFIG_SDXI_DEBUG) += -DDEBUG
++/*
++ * SDXI devices signal message 0 on error conditions, see "Error
++ * Logging Control and Status Registers".
++ */
++#define ERROR_IRQ_MSG 0
 +
-+obj-$(CONFIG_SDXI) += sdxi.o
++/* MMIO BARs */
++#define MMIO_CTL_REGS_BAR		0x0
++#define MMIO_DOORBELL_BAR		0x2
 +
-+sdxi-objs += \
-+	context.o     \
-+	descriptor.o  \
-+	device.o      \
-+	dma.o         \
-+	enqueue.o     \
-+	error.o
++static struct pci_dev *sdxi_to_pci_dev(const struct sdxi_dev *sdxi)
++{
++	return to_pci_dev(sdxi_to_dev(sdxi));
++}
 +
-+sdxi-$(CONFIG_PCI_MSI) += pci.o
++static int sdxi_pci_irq_init(struct sdxi_dev *sdxi)
++{
++	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
++	int msi_count;
++	int ret;
 +
-+obj-$(CONFIG_SDXI_KUNIT_TEST) += descriptor_kunit.o
++	/* 1st irq for error + 1 for each context */
++	msi_count = sdxi->max_cxts + 1;
++
++	ret = pci_alloc_irq_vectors(pdev, 1, msi_count,
++				    PCI_IRQ_MSI | PCI_IRQ_MSIX);
++	if (ret < 0) {
++		sdxi_err(sdxi, "alloc MSI/MSI-X vectors failed\n");
++		return ret;
++	}
++
++	sdxi->error_irq = pci_irq_vector(pdev, ERROR_IRQ_MSG);
++
++	sdxi_dbg(sdxi, "allocated %d irq vectors", ret);
++
++	return 0;
++}
++
++static void sdxi_pci_irq_exit(struct sdxi_dev *sdxi)
++{
++	pci_free_irq_vectors(sdxi_to_pci_dev(sdxi));
++}
++
++static int sdxi_pci_map(struct sdxi_dev *sdxi)
++{
++	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
++	int bars, ret;
++
++	bars = 1 << MMIO_CTL_REGS_BAR | 1 << MMIO_DOORBELL_BAR;
++	ret = pcim_iomap_regions(pdev, bars, SDXI_DRV_NAME);
++	if (ret) {
++		sdxi_err(sdxi, "pcim_iomap_regions failed (%d)\n", ret);
++		return ret;
++	}
++
++	sdxi->dbs_bar = pci_resource_start(pdev, MMIO_DOORBELL_BAR);
++
++	/* FIXME: pcim_iomap_table may return NULL, and it's deprecated. */
++	sdxi->ctrl_regs = pcim_iomap_table(pdev)[MMIO_CTL_REGS_BAR];
++	sdxi->dbs = pcim_iomap_table(pdev)[MMIO_DOORBELL_BAR];
++	if (!sdxi->ctrl_regs || !sdxi->dbs) {
++		sdxi_err(sdxi, "pcim_iomap_table failed\n");
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
++static void sdxi_pci_unmap(struct sdxi_dev *sdxi)
++{
++	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
++
++	pcim_iounmap(pdev, sdxi->ctrl_regs);
++	pcim_iounmap(pdev, sdxi->dbs);
++}
++
++static int sdxi_pci_init(struct sdxi_dev *sdxi)
++{
++	struct pci_dev *pdev = sdxi_to_pci_dev(sdxi);
++	struct device *dev = &pdev->dev;
++	int dma_bits = 64;
++	int ret;
++
++	ret = pcim_enable_device(pdev);
++	if (ret) {
++		sdxi_err(sdxi, "pcim_enbale_device failed\n");
++		return ret;
++	}
++
++	pci_set_master(pdev);
++	ret = dma_set_mask_and_coherent(dev, DMA_BIT_MASK(dma_bits));
++	if (ret) {
++		sdxi_err(sdxi, "failed to set DMA mask & coherent bits\n");
++		return ret;
++	}
++
++	ret = sdxi_pci_map(sdxi);
++	if (ret) {
++		sdxi_err(sdxi, "failed to map device IO resources\n");
++		return ret;
++	}
++
++	return 0;
++}
++
++static void sdxi_pci_exit(struct sdxi_dev *sdxi)
++{
++	sdxi_pci_unmap(sdxi);
++}
++
++static struct sdxi_dev *sdxi_device_alloc(struct device *dev)
++{
++	struct sdxi_dev *sdxi;
++
++	sdxi = kzalloc(sizeof(*sdxi), GFP_KERNEL);
++	if (!sdxi)
++		return NULL;
++
++	sdxi->dev = dev;
++
++	mutex_init(&sdxi->cxt_lock);
++
++	return sdxi;
++}
++
++static void sdxi_device_free(struct sdxi_dev *sdxi)
++{
++	kfree(sdxi);
++}
++
++static const struct sdxi_dev_ops sdxi_pci_dev_ops = {
++	.irq_init = sdxi_pci_irq_init,
++	.irq_exit = sdxi_pci_irq_exit,
++};
++
++static int sdxi_pci_probe(struct pci_dev *pdev,
++			  const struct pci_device_id *id)
++{
++	struct device *dev = &pdev->dev;
++	struct sdxi_dev *sdxi;
++	int err;
++
++	sdxi = sdxi_device_alloc(dev);
++	if (!sdxi)
++		return -ENOMEM;
++
++	pci_set_drvdata(pdev, sdxi);
++
++	err = sdxi_pci_init(sdxi);
++	if (err)
++		goto free_sdxi;
++
++	err = sdxi_device_init(sdxi, &sdxi_pci_dev_ops);
++	if (err)
++		goto pci_exit;
++
++	return 0;
++
++pci_exit:
++	sdxi_pci_exit(sdxi);
++free_sdxi:
++	sdxi_device_free(sdxi);
++
++	return err;
++}
++
++static void sdxi_pci_remove(struct pci_dev *pdev)
++{
++	struct sdxi_dev *sdxi = pci_get_drvdata(pdev);
++
++	sdxi_device_exit(sdxi);
++	sdxi_pci_exit(sdxi);
++	sdxi_device_free(sdxi);
++}
++
++static const struct pci_device_id sdxi_id_table[] = {
++	{ PCI_DEVICE_CLASS(PCI_CLASS_ACCELERATOR_SDXI, 0xffffff) },
++	{0, }
++};
++MODULE_DEVICE_TABLE(pci, sdxi_id_table);
++
++static struct pci_driver sdxi_driver = {
++	.name = "sdxi",
++	.id_table = sdxi_id_table,
++	.probe = sdxi_pci_probe,
++	.remove = sdxi_pci_remove,
++	.sriov_configure = pci_sriov_configure_simple,
++};
++
++module_pci_driver(sdxi_driver);
 
 -- 
 2.39.5
