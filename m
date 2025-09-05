@@ -1,38 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA0BA266591;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEF632701B8;
 	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757098130; cv=none; b=CpPYenHHGddDbv2MhPzkz4Gqqw1Gu6pEqFc4u5UrA/v6BLuGyLWSdN46fFVqIqMaSjyE9qGeB4Vah2DW7pyqfJhUgs9tWOQtx7MOwwe4TzULCySKH5Wex4cb8sDPGAPqsgEEQl4+u8RaOBoYvvRtkTdNWA9wEj2AFY7c+qXnObY=
+	t=1757098131; cv=none; b=ZDErWw5ISxHq2II9Ozik++JxBx1MqH5usEjgt9GmIjoVhEbGgh4P0wz8agNOMBja/VbMsYrQlqndVhT/o1HMAtkATM2yiGgE/lZZ9Jt4t59eBmyfYsO8v1okc1ULPNmtKjvhYC8wpVKh0ge4eLgy5yAT5frc0dCMXmFRupriqcQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757098130; c=relaxed/simple;
-	bh=EtS18cPQp642F259+o2Fz/jfh1Vgpj1ASix6SL/Hf28=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=CqdOQTnUN2zdSwDW3g4nxwSviKRJTAWixDGBcJ9af04BUuZmX1pBbLaaHez9H6OnvydrmCMxpPv2Zl1atL9UxZ+YER8fX9JffgrA4MQy2n4NV+09+fkSdpQ5H4e7u67qhVh+AMjvCwzE2n6f35kUjRRLFSOAApHrhFx+CJhXgi4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aXwKfgA/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757098131; c=relaxed/simple;
+	bh=qnf1b2zKcFkUTQHKXISqjdW6MILR4BxPUkttA+Smuto=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=uXOSA2RCdV8Gl62FKF9kXVn0onjXjvD0vyjf8ulGpF3bXSMgsEQHdspnvkPO/KdxBS1bIHXvTYrafeaTT0smxNHwwS5SrneWKJa/+23f5I+yEHAgUmWo+wy88ZrvjfjYqDa6M2T6qBLP5LO5eDzjxfvq1vvd57J7zKqvQ5XJ4hU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YPCL8cjh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aXwKfgA/"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 605D9C4CEF1;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YPCL8cjh"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 8F428C4CEFA;
 	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1757098130;
-	bh=EtS18cPQp642F259+o2Fz/jfh1Vgpj1ASix6SL/Hf28=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=aXwKfgA/p0TtSF4n77I4NILylEp16UkFqn2dcqy/20A8CQP5FEzVhxFQd1XdOHHUG
-	 rTK9IggWfLA8sW44H8gVZk9HWPSp/o5F0g6ueNvI+adG9filDYXH8e0W3ZstYWN8mo
-	 r9yktzpviMRU5XbqGhX1fRbYhL33zmCWRfr1dQSG3f3wPCiL9ygCCjbUOjMthMU51J
-	 ql/HagW33oO+pBvge1ir1FI8ROi+NOd2uBr2Txtd8HgkGCOw2SrJEnP+53twaweQEU
-	 OxXyz7QCf9wyusVS1et0YJwxltyeehSII5PA5CGMQvk6Fe9ek2MsFAiG0oSLB8REEJ
-	 gOwjT7FQkr6cg==
+	bh=qnf1b2zKcFkUTQHKXISqjdW6MILR4BxPUkttA+Smuto=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=YPCL8cjhV2u0KXG1MfOuW+Vd1s1HqK1GdZh6sC+Z+dlmb/+CK9a0bl7uyrvDLWXqm
+	 mBOj0+9FyCyN27Nd1tPtgcyauGim5yNhv0VzbqxVdILkxNV2cEfYrds4bDORVcysRG
+	 vN8/gKOU1yUknk1gSQJJEAl6yZ2AmrRnhgHzjx+oUYIY+5R0TjCgcuM8Vcr1tptYpD
+	 4xUG5sar0GfUXgb7gSrOjuU+XdF7RsAlzmoMUOWOGd36Ip7rOw7cRNkDTcbVG0QcSA
+	 1xzKvo0+BbT/265pShS1UWcVL7U0gGX2WxyvmdjxdwWrew8FNFksSMdSNr1/ls2SU4
+	 jn2Y/F9hl1xLQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 4E6A5CA1010;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 86A13CA1017;
 	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
 From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Subject: [PATCH RFC 00/13] dmaengine: Smart Data Accelerator Interface
- (SDXI) basic support
-Date: Fri, 05 Sep 2025 13:48:23 -0500
-Message-Id: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
+Date: Fri, 05 Sep 2025 13:48:27 -0500
+Subject: [PATCH RFC 04/13] dmaengine: sdxi: Add MMIO register definitions
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,21 +40,20 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIAHcwu2gC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDI1MDC0Nj3eKUikzdpMTiVF1z4xTzZMu0lORUU3MloPqCotS0zAqwWdFKQW7
- OSrG1tQB2/4WQYAAAAA==
-X-Change-ID: 20250813-sdxi-base-73d7c9fdce57
+Message-Id: <20250905-sdxi-base-v1-4-d0341a1292ba@amd.com>
+References: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
+In-Reply-To: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
 To: Vinod Koul <vkoul@kernel.org>
 Cc: Wei Huang <wei.huang2@amd.com>, 
  Mario Limonciello <mario.limonciello@amd.com>, 
  Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
  linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098128; l=3884;
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098128; l=4036;
  i=nathan.lynch@amd.com; s=20241010; h=from:subject:message-id;
- bh=EtS18cPQp642F259+o2Fz/jfh1Vgpj1ASix6SL/Hf28=;
- b=iVkDOOyZdiEyU2gtuQtkxNnaJPuHOvBGX1zqikp6ZyoWp8HWIlxFBzj0d+MNk9wJO0e8rHN7r
- b80J+I2ExHOC0FbEjtzsezbZLs2MRqVZlpdAAD24jqUeCYTnvNHjvGE
+ bh=AGyFf5vWBLGgXMTQeKDi2itH4wGLo9U+txLID+JDYc8=;
+ b=ckXC4832wmhdl4X+GtoJDyWK0pWs8vPBZBZHOHorNo+MFrwg6bZ22a0Ak7sqn1klOyKsStt2B
+ li2rBwFyrwtCp8P9srcd/tkiA9PC/r4rA82+S0RqE0uln/bfHYYtEKj
 X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
  pk=ZR637UTGg5YLDj56cxFeHdYoUjPMMFbcijfOkAmAnbc=
 X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20241010 with
@@ -63,94 +61,128 @@ X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20241010 with
 X-Original-From: Nathan Lynch <nathan.lynch@amd.com>
 Reply-To: nathan.lynch@amd.com
 
-The Smart Data Accelerator Interface (SDXI) is a vendor-neutral
-architecture for memory-to-memory data movement offload designed for
-kernel bypass and virtualization.
+From: Nathan Lynch <nathan.lynch@amd.com>
 
-General information on SDXI may be found at:
-https://www.snia.org/sdxi
+Add offsets and bitmasks for:
 
-This submission adds a driver with basic support for PCIe-hosted SDXI 1.0
-implementations and includes a DMA engine provider.
+* General control and status registers (MMIO_CTL0, MMIO_CTL2,
+  MMIO_STS0)
+* Capability registers (MMIO_CAP0, MMIO_CAP1)
+* Context table pointer register (MMIO_CXT_L2)
+* Error logging control and status registers (MMIO_ERR_CTL,
+  MMIO_ERR_STS, MMIO_ERR_CFG, MMIO_ERR_WRT, MMIO_ERR_RD)
 
-It is very much a work in progress. Among other issues, the DMA
-provider code only supports single-threaded polled mode, and context
-management should use better data structures.
+This is a useful subset of the MMIO registers and fields defined in
+the spec. The driver currently does not use MMIO_VERSION,
+MMIO_GRP_ENUM, or the mailbox registers.
 
-While we're addressing those shortcomings, we'd appreciate any
-feedback on:
-
-* Where the code should live. SDXI entails a fair amount of code for
-  context and descriptor management, and we expect to eventually add a
-  character device ABI for user space access. Should all of this go in
-  drivers/dma/sdxi?
-
-* Whether the DMA engine provider should use virt-dma/vchan. SDXI
-  submission queues can be almost arbitrarily large, and I'm not sure
-  putting a software queue in front of that makes sense.
-
-Planned future SDXI work (out of scope for this series):
-
-* Character device for user space access. We are evaluating the uacce
-  framework for this.
-
-* Support for operation types to be added in future SDXI revisions.
-
-* Greater configurability for control structures, e.g. descriptor ring
-  size.
-
-The latest released version of the SDXI specification is 1.0:
-https://www.snia.org/sites/default/files/technical-work/sdxi/release/SNIA-SDXI-Specification-v1.0a.pdf
-
-Draft versions of future SDXI specifications in development may be found at:
-https://www.snia.org/tech_activities/publicreview#sdxi
-
+Co-developed-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Wei Huang <wei.huang2@amd.com>
+Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
 ---
-Nathan Lynch (13):
-      PCI: Add SNIA SDXI accelerator sub-class
-      dmaengine: sdxi: Add control structure definitions
-      dmaengine: sdxi: Add descriptor encoding and unit tests
-      dmaengine: sdxi: Add MMIO register definitions
-      dmaengine: sdxi: Add software data structures
-      dmaengine: sdxi: Add error reporting support
-      dmaengine: sdxi: Import descriptor enqueue code from spec
-      dmaengine: sdxi: Context creation/removal, descriptor submission
-      dmaengine: sdxi: Add core device management code
-      dmaengine: sdxi: Add PCI driver support
-      dmaengine: sdxi: Add DMA engine provider
-      dmaengine: sdxi: Add Kconfig and Makefile
-      MAINTAINERS: Add entry for SDXI driver
+ drivers/dma/sdxi/mmio.h | 92 +++++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 92 insertions(+)
 
- MAINTAINERS                         |   7 +
- drivers/dma/Kconfig                 |   2 +
- drivers/dma/Makefile                |   1 +
- drivers/dma/sdxi/.kunitconfig       |   4 +
- drivers/dma/sdxi/Kconfig            |  23 ++
- drivers/dma/sdxi/Makefile           |  17 ++
- drivers/dma/sdxi/context.c          | 547 ++++++++++++++++++++++++++++++++++++
- drivers/dma/sdxi/context.h          |  28 ++
- drivers/dma/sdxi/descriptor.c       | 197 +++++++++++++
- drivers/dma/sdxi/descriptor.h       | 107 +++++++
- drivers/dma/sdxi/descriptor_kunit.c | 181 ++++++++++++
- drivers/dma/sdxi/device.c           | 401 ++++++++++++++++++++++++++
- drivers/dma/sdxi/dma.c              | 409 +++++++++++++++++++++++++++
- drivers/dma/sdxi/dma.h              |  12 +
- drivers/dma/sdxi/enqueue.c          | 136 +++++++++
- drivers/dma/sdxi/enqueue.h          |  16 ++
- drivers/dma/sdxi/error.c            | 340 ++++++++++++++++++++++
- drivers/dma/sdxi/error.h            |  16 ++
- drivers/dma/sdxi/hw.h               | 249 ++++++++++++++++
- drivers/dma/sdxi/mmio.h             |  92 ++++++
- drivers/dma/sdxi/pci.c              | 216 ++++++++++++++
- drivers/dma/sdxi/sdxi.h             | 206 ++++++++++++++
- include/linux/pci_ids.h             |   1 +
- 23 files changed, 3208 insertions(+)
----
-base-commit: c17b750b3ad9f45f2b6f7e6f7f4679844244f0b9
-change-id: 20250813-sdxi-base-73d7c9fdce57
+diff --git a/drivers/dma/sdxi/mmio.h b/drivers/dma/sdxi/mmio.h
+new file mode 100644
+index 0000000000000000000000000000000000000000..36d174a1f8859055f7808d520de1ff193c49ae26
+--- /dev/null
++++ b/drivers/dma/sdxi/mmio.h
+@@ -0,0 +1,92 @@
++/* SPDX-License-Identifier: GPL-2.0-only */
++
++/*
++ * SDXI MMIO register offsets and layouts.
++ *
++ * Copyright (C) 2025 Advanced Micro Devices, Inc.
++ */
++
++#ifndef DMA_SDXI_MMIO_H
++#define DMA_SDXI_MMIO_H
++
++#include <linux/bits.h>
++#include <linux/compiler_attributes.h>
++#include <linux/compiler_types.h>
++#include <linux/types.h>
++
++/* Refer to "MMIO Control Registers". */
++enum sdxi_reg {
++	SDXI_MMIO_CTL0       = 0x00000,
++	SDXI_MMIO_CTL2       = 0x00010,
++	SDXI_MMIO_STS0       = 0x00100,
++	SDXI_MMIO_CAP0       = 0x00200,
++	SDXI_MMIO_CAP1       = 0x00208,
++	SDXI_MMIO_VERSION    = 0x00210,
++	SDXI_MMIO_CXT_L2     = 0x10000,
++	SDXI_MMIO_RKEY       = 0x10100,
++	SDXI_MMIO_ERR_CTL    = 0x20000,
++	SDXI_MMIO_ERR_STS    = 0x20008,
++	SDXI_MMIO_ERR_CFG    = 0x20010,
++	SDXI_MMIO_ERR_WRT    = 0x20020,
++	SDXI_MMIO_ERR_RD     = 0x20028,
++};
++
++enum {
++	/* SDXI_MMIO_CTL0 fields */
++	SDXI_MMIO_CTL0_FN_GSR         = GENMASK_ULL(1, 0),
++	SDXI_MMIO_CTL0_FN_PASID_VL    = BIT_ULL(2),
++	SDXI_MMIO_CTL0_FN_ERR_INTR_EN = BIT_ULL(4),
++	SDXI_MMIO_CTL0_FN_PASID       = GENMASK_ULL(27, 8),
++	SDXI_MMIO_CTL0_FN_GRP_ID      = GENMASK_ULL(63, 32),
++
++	/* SDXI_MMIO_CTL2 fields */
++	SDXI_MMIO_CTL2_MAX_BUFFER  = GENMASK_ULL(3, 0),
++	SDXI_MMIO_CTL2_MAX_AKEY_SZ = GENMASK_ULL(15, 12),
++	SDXI_MMIO_CTL2_MAX_CXT     = GENMASK_ULL(31, 16),
++	SDXI_MMIO_CTL2_OPB_000_AVL = GENMASK_ULL(63, 32),
++
++	/* SDXI_MMIO_STS0 bit definitions */
++	SDXI_MMIO_STS0_FN_GSV = GENMASK_ULL(2, 0),
++
++	/* SDXI_MMIO_CAP0 bit definitions */
++	SDXI_MMIO_CAP0_SFUNC = GENMASK_ULL(15, 0),
++	SDXI_MMIO_CAP0_DB_STRIDE = GENMASK_ULL(22, 20),
++	SDXI_MMIO_CAP0_MAX_DS_RING_SZ = GENMASK_ULL(28, 24),
++
++	/* SDXI_MMIO_CAP1 fields */
++	SDXI_MMIO_CAP1_MAX_BUFFER    = GENMASK_ULL(3, 0),
++	SDXI_MMIO_CAP1_RKEY_CAP      = BIT_ULL(4),
++	SDXI_MMIO_CAP1_RM            = BIT_ULL(5),
++	SDXI_MMIO_CAP1_MMIO64        = BIT_ULL(6),
++	SDXI_MMIO_CAP1_MAX_ERRLOG_SZ = GENMASK_ULL(11, 8),
++	SDXI_MMIO_CAP1_MAX_AKEY_SZ   = GENMASK_ULL(15, 12),
++	SDXI_MMIO_CAP1_MAX_CXT       = GENMASK_ULL(31, 16),
++	SDXI_MMIO_CAP1_OPB_000_CAP   = GENMASK_ULL(63, 32),
++
++	/* SDXI_MMIO_VERSION fields */
++	SDXI_MMIO_VERSION_MINOR = GENMASK_ULL(7, 0),
++	SDXI_MMIO_VERSION_MAJOR = GENMASK_ULL(23, 16),
++
++	/* SDXI_MMIO_CXT_L2 fields */
++	SDXI_MMIO_CXT_L2_PTR = GENMASK_ULL(63, 12),
++
++	/* SDXI_MMIO_ERR_CFG bit definitions */
++	SDXI_MMIO_ERR_CFG_PTR = GENMASK_ULL(63, 12),
++	SDXI_MMIO_ERR_CFG_SZ  = GENMASK_ULL(5, 1),
++	SDXI_MMIO_ERR_CFG_EN  = BIT_ULL(0),
++
++	/* SDXI_MMIO_RKEY bit definitions */
++	SDXI_MMIO_RKEY_PTR = GENMASK_ULL(63, 12),
++	SDXI_MMIO_RKEY_SZ = GENMASK_ULL(4, 1),
++	SDXI_MMIO_RKEY_EN = BIT_ULL(0),
++
++	/* SDXI_MMIO_ERR_CTL bit definitions */
++	SDXI_MMIO_ERR_CTL_EN = BIT_ULL(0),
++
++	/* SDXI_MMIO_ERR_STS bit definitions. */
++	SDXI_MMIO_ERR_STS_STS_BIT = BIT_ULL(0),
++	SDXI_MMIO_ERR_STS_OVF_BIT = BIT_ULL(1),
++	SDXI_MMIO_ERR_STS_ERR_BIT = BIT_ULL(3),
++};
++
++#endif  /* DMA_SDXI_MMIO_H */
 
-Best regards,
 -- 
-Nathan Lynch <nathan.lynch@amd.com>
+2.39.5
 
 
