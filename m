@@ -1,293 +1,111 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CF6527A92D;
-	Fri,  5 Sep 2025 18:48:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28BA5315D22;
+	Fri,  5 Sep 2025 19:06:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757098131; cv=none; b=dl8TcMgFJ3dyy1567bxOJsfOgGrDW5Vu0sq5W9jlPmYX1LIpEOis9YsjtJYcqMS7xzTLyfmGPRK93PzKDB6MrV59ltkpwiftBWJmtpdzgk9Fm5ehgwMEeN96HFtNC4ZSWHAgcwxoDxPItxYsH73HzUsjmyU5+wbJDNbDFxNkOMY=
+	t=1757099183; cv=none; b=omXfxwQtH6Wi8gitf2Wh0mTS2HACygx4GDowD2Uro+K1IxNGeWe47C94w2Td/Qztjb+OG4USmnJf+pJ/ZmAWp+pNheM4fceHY6IGXaSZ8UJYYYYOJ/W3BxXoY5oHEnhJpmC2gFJC1WPiZS/bnArUCRPo46qMefvjRmfkRk6S+qw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757098131; c=relaxed/simple;
-	bh=oY7DZ4hu+GU2kn9kp52VDZlC4m4nEfN7jMAWydDl790=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=aFW6qMviFB0CvUQyHzs2RXJ7GaqMMLroCFMCv3sHzYNpz39uZ2920OWZ+NBOHGM3i8MJvhebjHBWYugiwe5vqi/oWiYD9qSVQVPBB3qonag08aXS1vKeXbxxp0MisOb0GZlzx6TEBm4MmECtNjOK6BkVgUACiigX1qr5uoyFkiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FglUFUls; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757099183; c=relaxed/simple;
+	bh=dWbtCTPv7/HyKpTriCzGQwV15g/46tnLdeWiSBuQqmE=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=fVq2jwYfUba9DXvMH9c62lJz+pNAp3JCEu+h3VbF16GA4zTBXXo5ZG19we4LM7nNUEFcvCnAdae1/ygwy9QLR/TJyV4UBCIsa3f8NU7iuyJmKvyjYoAFss7TQdNAoHr0iJJ9EMqeLDat7GssFPpcX4d7sN0A4EGCtrizXLFDfNI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rpaJIlUN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FglUFUls"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 9AEC5C4CEF9;
-	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rpaJIlUN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80EA1C4CEF1;
+	Fri,  5 Sep 2025 19:06:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757098130;
-	bh=oY7DZ4hu+GU2kn9kp52VDZlC4m4nEfN7jMAWydDl790=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=FglUFUlseaITtECkehYpxpd9i2FQiH1tvTo0q74DfX3/H2ChAScDInehOwTsWKQuu
-	 JkvN9icN9jYxsalV9iVnHFxPMzOIMcRL9EoBI0N5zOKyoIrVX77nGX183V9nGvdNIm
-	 +E6rZFp/TRIlYRQ2Gk4rRuaWFYOWZIgDXLwUSd5xKorZO8EG+NAUFKKhsAs3PrS6rK
-	 9G0RptGZ59F1T9Ad5JaojN1/L4squk8MDgTgDJCuCaZS1IATSegnJBHYrvQAwcs6o7
-	 I9rbMI68QYSxZEJs2TiC3+bpgoIB8eyPAuxSwYbBRqQFd+P1YIDVOcKVvZcqJncY5C
-	 x5PZF6HYnWoyQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 94130CAC581;
-	Fri,  5 Sep 2025 18:48:50 +0000 (UTC)
-From: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-Date: Fri, 05 Sep 2025 13:48:28 -0500
-Subject: [PATCH RFC 05/13] dmaengine: sdxi: Add software data structures
+	s=k20201202; t=1757099182;
+	bh=dWbtCTPv7/HyKpTriCzGQwV15g/46tnLdeWiSBuQqmE=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=rpaJIlUNlgXmx63FhVxMTcxEC5aBPzMRmGNXexM6772Z5oIfb6zjQTyaD5+jrmecd
+	 xBveoTr4plZF9+uYP/FWkNJg7tQo1uIgJqYkUY/+y11Wqh+1c14Ncrsn8bvkySQod/
+	 NVo0pvIIYGDqV5zjSEy6KeKnckQ1EtJfN7OsR6+IPsSgH+5f13PbUx4nGhoTVhFjgg
+	 WPrby0+mjKxFc8EA/2O0BWqL3IAi1an8jg0k0RNzZMC4cCpFlxG6CqOniAc2o0PNxm
+	 DbleahZMfUkj8cx3g9XOzQz0MgTGAP0QWZIFMz8bBle0ErLgWoB+DKakQh/Qgd0eLM
+	 rioQEcZGCOEww==
+Date: Fri, 5 Sep 2025 14:06:21 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Devendra K Verma <devendra.verma@amd.com>
+Cc: bhelgaas@google.com, mani@kernel.org, vkoul@kernel.org,
+	dmaengine@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-kernel@vger.kernel.org, michal.simek@amd.com
+Subject: Re: [PATCH 2/2] dmaengine: dw-edma: Add non-LL mode
+Message-ID: <20250905190621.GA1306997@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250905-sdxi-base-v1-5-d0341a1292ba@amd.com>
-References: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
-In-Reply-To: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
-To: Vinod Koul <vkoul@kernel.org>
-Cc: Wei Huang <wei.huang2@amd.com>, 
- Mario Limonciello <mario.limonciello@amd.com>, 
- Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org, 
- linux-kernel@vger.kernel.org, dmaengine@vger.kernel.org
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1757098128; l=6245;
- i=nathan.lynch@amd.com; s=20241010; h=from:subject:message-id;
- bh=6veT8qjJZW/zhzeosOQPDAoX6bJfuMluVBRqdMpn4R0=;
- b=2xrS4Vw5j64mX6zutDqCi9KaHmiUMwtNrlbgWk/6ag/G5hWq881JNMASZ1qj0YOsCmh2inFvJ
- OirL2NdFFWCA/VrewmfKGIgPTO2wwHG/oPShdgR3wL+5Hd22Xae3v8m
-X-Developer-Key: i=nathan.lynch@amd.com; a=ed25519;
- pk=ZR637UTGg5YLDj56cxFeHdYoUjPMMFbcijfOkAmAnbc=
-X-Endpoint-Received: by B4 Relay for nathan.lynch@amd.com/20241010 with
- auth_id=241
-X-Original-From: Nathan Lynch <nathan.lynch@amd.com>
-Reply-To: nathan.lynch@amd.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250905101659.95700-3-devendra.verma@amd.com>
 
-From: Nathan Lynch <nathan.lynch@amd.com>
+On Fri, Sep 05, 2025 at 03:46:59PM +0530, Devendra K Verma wrote:
+> AMD MDB IP supports Linked List (LL) mode as well as non-LL mode.
+> The current code does not have the mechanisms to enable the
+> DMA transactions using the non-LL mode. The following two cases
+> are added with this patch:
+> - When a valid physical base address is not configured via the
+>   Xilinx VSEC capability then the IP can still be used in non-LL
+>   mode. The default mode for all the DMA transactions and for all
+>   the DMA channels then is non-LL mode.
+> - When a valid physical base address is configured but the client
+>   wants to use the non-LL mode for DMA transactions then also the
+>   flexibility is provided via the peripheral_config struct member of
+>   dma_slave_config. In this case the channels can be individually
+>   configured in non-LL mode. This use case is desirable for single
+>   DMA transfer of a chunk, this saves the effort of preparing the
+>   Link List.
 
-Add the driver's central header sdxi.h, which brings in the major
-software abstractions used throughout the driver -- mainly the SDXI
-device or function (sdxi_dev) and context (sdxi_cxt).
+> +++ b/drivers/dma/dw-edma/dw-edma-core.c
+> @@ -223,8 +223,28 @@ static int dw_edma_device_config(struct dma_chan *dchan,
+>  				 struct dma_slave_config *config)
+>  {
+>  	struct dw_edma_chan *chan = dchan2dw_edma_chan(dchan);
+> +	int nollp = 0;
+> +
+> +	if (WARN_ON(config->peripheral_config &&
+> +		    config->peripheral_size != sizeof(int)))
+> +		return -EINVAL;
+>  
+>  	memcpy(&chan->config, config, sizeof(*config));
+> +
+> +	/*
+> +	 * When there is no valid LLP base address available
+> +	 * then the default DMA ops will use the non-LL mode.
+> +	 * Cases where LL mode is enabled and client wants
+> +	 * to use the non-LL mode then also client can do
+> +	 * so via the providing the peripheral_config param.
 
-Co-developed-by: Wei Huang <wei.huang2@amd.com>
-Signed-off-by: Wei Huang <wei.huang2@amd.com>
-Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
----
- drivers/dma/sdxi/sdxi.h | 206 ++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 206 insertions(+)
+s/via the/via/
 
-diff --git a/drivers/dma/sdxi/sdxi.h b/drivers/dma/sdxi/sdxi.h
-new file mode 100644
-index 0000000000000000000000000000000000000000..13e02f0541e0d60412c99b0b75bd37155a531e1d
---- /dev/null
-+++ b/drivers/dma/sdxi/sdxi.h
-@@ -0,0 +1,206 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+/*
-+ * SDXI device driver header
-+ *
-+ * Copyright (C) 2025 Advanced Micro Devices, Inc.
-+ */
-+
-+#ifndef __SDXI_H
-+#define __SDXI_H
-+
-+#include <linux/dev_printk.h>
-+#include <linux/device.h>
-+#include <linux/dma-mapping.h>
-+#include <linux/dmapool.h>
-+#include <linux/dmaengine.h>
-+#include <linux/io-64-nonatomic-lo-hi.h>
-+#include <linux/module.h>
-+#include <linux/mutex.h>
-+#include <linux/types.h>
-+
-+#include "../virt-dma.h"
-+#include "hw.h"
-+#include "mmio.h"
-+
-+#define SDXI_DRV_NAME		"sdxi"
-+
-+#define ID_TO_L2_INDEX(id)	(((id) >> 9) & 0x1FF)
-+#define ID_TO_L1_INDEX(id)	((id) & 0x7F)
-+#define IS_VF_DEVICE(sdxi)	((sdxi)->is_vf)
-+
-+#define L2_TABLE_ENTRIES	(1 << 9)
-+#define L1_TABLE_ENTRIES	(1 << 7)
-+#define L2_TABLE_SIZE		4096
-+#define L1_TABLE_SIZE		4096
-+
-+#define OP_TYPE_ERRLOG          0x7f7
-+
-+#define DESC_RING_BASE_PTR_SHIFT	6
-+#define CXT_STATUS_PTR_SHIFT		4
-+#define WRT_INDEX_PTR_SHIFT		3
-+
-+#define L1_CXT_CTRL_PTR_SHIFT		6
-+#define L1_CXT_AKEY_PTR_SHIFT		12
-+
-+#define MAX_DMA_COPY_BYTES		(1ULL << 32)
-+
-+/* Submission Queue */
-+struct sdxi_sq {
-+	struct sdxi_cxt *cxt;		/* owner */
-+
-+	u32 ring_entries;
-+	u32 ring_size;
-+	struct sdxi_desc *desc_ring;
-+	dma_addr_t ring_dma;
-+
-+	__le64 *write_index;
-+	dma_addr_t write_index_dma;
-+
-+	struct sdxi_cxt_sts *cxt_sts;
-+	dma_addr_t cxt_sts_dma;
-+
-+	/* NB: define doorbell here */
-+};
-+
-+struct sdxi_tasklet_data {
-+	struct sdxi_cmd *cmd;
-+};
-+
-+struct sdxi_cmd {
-+	struct work_struct work;
-+	struct sdxi_cxt *cxt;
-+	struct sdxi_cst_blk *cst_blk;
-+	dma_addr_t cst_blk_dma;
-+	int ret;
-+	size_t len;
-+	u64 src_addr;
-+	u64 dst_addr;
-+	/* completion callback support */
-+	void (*sdxi_cmd_callback)(void *data, int err);
-+	void *data;
-+};
-+
-+struct sdxi_dma_chan {
-+	struct virt_dma_chan vc;
-+	struct sdxi_cxt *cxt;
-+};
-+
-+/*
-+ * The size of the AKey table is flexible, from 4KB to 1MB. Always use
-+ * the minimum size for now.
-+ */
-+struct sdxi_akey_table {
-+	struct sdxi_akey_ent entry[SZ_4K / sizeof(struct sdxi_akey_ent)];
-+};
-+
-+/* For encoding the akey table size in CXT_L1_ENT's akey_sz. */
-+static inline u8 akey_table_order(const struct sdxi_akey_table *tbl)
-+{
-+	static_assert(sizeof(struct sdxi_akey_table) == SZ_4K);
-+	return 0;
-+}
-+
-+/* Context */
-+struct sdxi_cxt {
-+	struct sdxi_dev *sdxi;	/* owner */
-+	unsigned int id;
-+
-+	resource_size_t db_base;	/* doorbell MMIO base addr */
-+	__le64 __iomem *db;		/* doorbell virt addr */
-+
-+	struct sdxi_cxt_ctl *cxt_ctl;
-+	dma_addr_t cxt_ctl_dma;
-+
-+	struct sdxi_akey_table *akey_table;
-+	dma_addr_t akey_table_dma;
-+
-+	struct sdxi_sq *sq;
-+
-+	/* NB: might need to move to sdxi_device? */
-+	struct sdxi_dma_chan sdxi_dma_chan;
-+
-+	struct sdxi_process *process;	/* process reprsentation */
-+};
-+
-+/**
-+ * struct sdxi_dev_ops - Bus-specific methods for SDXI devices.
-+ *
-+ * @irq_init: Allocate MSIs.
-+ * @irq_exit: Release MSIs.
-+ */
-+struct sdxi_dev_ops {
-+	int (*irq_init)(struct sdxi_dev *sdxi);
-+	void (*irq_exit)(struct sdxi_dev *sdxi);
-+};
-+
-+struct sdxi_dev {
-+	struct device *dev;
-+	resource_size_t ctrl_regs_bar;	/* ctrl registers base (BAR0) */
-+	resource_size_t dbs_bar;	/* doorbells base (BAR2) */
-+	void __iomem *ctrl_regs;	/* virt addr of ctrl registers */
-+	void __iomem *dbs;		/* virt addr of doorbells */
-+
-+	/* hardware capabilities (from cap0 & cap1) */
-+	u16 sfunc;			/* function's requester id */
-+	u32 db_stride;			/* doorbell stride in bytes */
-+	u64 max_ring_entries;		/* max # of ring entries supported */
-+
-+	u32 max_akeys;			/* max akey # supported */
-+	u32 max_cxts;			/* max contexts # supported */
-+	u32 op_grp_cap;			/* supported operatation group cap */
-+
-+	/* context management */
-+	struct mutex cxt_lock;		/* context protection */
-+	int cxt_count;
-+	struct sdxi_cxt_l2_table *l2_table;
-+	dma_addr_t l2_dma;
-+	/* list of context l1 tables, on-demand, access with [l2_idx] */
-+	struct sdxi_cxt_l1_table *l1_table_array[L2_TABLE_ENTRIES];
-+	/* all contexts, on-demand, access with [l2_idx][l1_idx] */
-+	struct sdxi_cxt **cxt_array[L2_TABLE_ENTRIES];
-+
-+	struct dma_pool *write_index_pool;
-+	struct dma_pool *cxt_sts_pool;
-+	struct dma_pool *cxt_ctl_pool;
-+
-+	/* error log */
-+	int error_irq;
-+	struct sdxi_errlog_hd_ent *err_log;
-+	dma_addr_t err_log_dma;
-+
-+	/* DMA engine */
-+	struct dma_device dma_dev;
-+	struct sdxi_dma_chan *sdxi_dma_chan;
-+	struct sdxi_tasklet_data tdata;
-+
-+	/* special contexts */
-+	struct sdxi_cxt *admin_cxt;	/* admin context */
-+	struct sdxi_cxt *dma_cxt;	/* DMA engine context */
-+
-+	const struct sdxi_dev_ops *dev_ops;
-+};
-+
-+static inline struct device *sdxi_to_dev(const struct sdxi_dev *sdxi)
-+{
-+	return sdxi->dev;
-+}
-+
-+#define sdxi_dbg(s, fmt, ...) dev_dbg(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
-+#define sdxi_info(s, fmt, ...) dev_info(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
-+#define sdxi_err(s, fmt, ...) dev_err(sdxi_to_dev(s), fmt, ## __VA_ARGS__)
-+
-+/* Device Control */
-+int sdxi_device_init(struct sdxi_dev *sdxi, const struct sdxi_dev_ops *ops);
-+void sdxi_device_exit(struct sdxi_dev *sdxi);
-+
-+static inline u64 sdxi_read64(const struct sdxi_dev *sdxi, enum sdxi_reg reg)
-+{
-+	return ioread64(sdxi->ctrl_regs + reg);
-+}
-+
-+static inline void sdxi_write64(struct sdxi_dev *sdxi, enum sdxi_reg reg, u64 val)
-+{
-+	iowrite64(val, sdxi->ctrl_regs + reg);
-+}
-+
-+#endif /* __SDXI_H */
+> +++ b/drivers/dma/dw-edma/dw-edma-pcie.c
+> @@ -224,6 +224,15 @@ static void dw_edma_pcie_get_vsec_dma_data(struct pci_dev *pdev,
+>  	pdata->phys_addr = off;
+>  }
+>  
+> +static u64 dw_edma_get_phys_addr(struct pci_dev *pdev,
+> +				 struct dw_edma_pcie_data *pdata,
+> +				 enum pci_barno bar)
+> +{
+> +	if (pdev->vendor == PCI_VENDOR_ID_XILINX)
+> +		return pdata->phys_addr;
+> +	return pci_bus_address(pdev, bar);
 
--- 
-2.39.5
+This doesn't seem right.  pci_bus_address() returns pci_bus_addr_t, so
+pdata->phys_addr should also be a pci_bus_addr_t, and the function
+should return pci_bus_addr_t.
 
+A pci_bus_addr_t is not a "phys_addr"; it is an address that is valid
+on the PCI side of a PCI host bridge, which may be different than the
+CPU physical address on the CPU side of the bridge because of things
+like IOMMUs.
 
+Seems like the struct dw_edma_region.paddr should be renamed to
+something like "bus_addr" and made into a pci_bus_addr_t.
+
+Bjorn
