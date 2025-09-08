@@ -1,121 +1,126 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 315F42FE598;
-	Mon,  8 Sep 2025 12:39:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9914F301000;
+	Mon,  8 Sep 2025 12:46:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757335150; cv=none; b=EeIMP0RHw7FjrwCyR1JjzJNSR2VLM5XSJuaYm1cNT+Nz2ZBGpuWix0p7GYY5iu8nUL7JE1xcEXCoOR3qn0oekG9/FfBBJ0Cy+DW8wOQXQNs4y0DLoA9yqobQp2crb4BEtXci9tCThmYFkyELZ86y0lk393RJpbb8IZYb14XsOnA=
+	t=1757335585; cv=none; b=VIXo0EVrJEg1arCEYjUtz+Uu1yUnk2QHz6AE1oZoaPgfbeaVrsFaQrupko5oX3OGpmzX/jydvAsaTxwuJVYxtRhKNLrqNZM256/WXZcTtCK5xjquJkrQn/aDk7IjN9dkzL2gHwCLpBjBDRjEsnUQFmhax3I/vaZn5myTpjotk3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757335150; c=relaxed/simple;
-	bh=Kmgj7JQ2MfTOSMke4wzOHnSg8Sksyl64nAuAQ+DhI4A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=txoUPBc6zRjvFy/iM6Eum2PuclmrTR+x0oYJjk4+drzC6p7wmPIdyRwrT/GNSXLpwi22Lcp45nZqGL7cuMLWNZt921a6y6vwT/tUzNmeobHVWAFut0iuKYPKqdBZVQxHxeDKotN+skwaJmzPJrmqBYaH94e6LUHFzx21U6yvbK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ufv6Hcx6; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ufv6Hcx6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D710C4CEF1;
-	Mon,  8 Sep 2025 12:39:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757335150;
-	bh=Kmgj7JQ2MfTOSMke4wzOHnSg8Sksyl64nAuAQ+DhI4A=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=Ufv6Hcx6jWD5AxW92cK+ljuNUfSXKHnQZv3kXveaEsZj/qc477qtV8lnGeC+yl2LV
-	 RS+Xs28IVJiEsEENic3DIoEPQdZSHhAU4cy+TktV0KVy4p51YIFXAv1grFur5A4cuH
-	 6bQZcKwbFMBzc6sdl3QoFscqqxGb0GSshxGjTLYgZ5ZSGs+wSs4Anmp+mAqfz/3G43
-	 d2i25P5YPiPUgIUQnhTbmOJCWuiJLaNYNMsOWex5ofVrrPe+JZ78aYrYUP0jSNG4sY
-	 WuOYdOOajtBz008C++gHVHO1nJV3AOOUYzXAxps+DjP5BGGjNMGuX5Ral+AlLsdZhH
-	 w1T2hkMKtFUDQ==
-Message-ID: <af78dfb4-de61-4b8c-a131-cf39a4c3c4b0@kernel.org>
-Date: Mon, 8 Sep 2025 07:39:07 -0500
+	s=arc-20240116; t=1757335585; c=relaxed/simple;
+	bh=afOs1M4GZPYUCn+Vya0bO80XIj0JApTsibTr78PESvs=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=rhSVIWEGke+Ml71hwgpgOPkKeW5Y3w4PBTJGn41zZw6KvPFUqcnw67nIe/5hzFp1/LgKlJhe93biyoY4uYR7YA2QrALZ8jEUPYTyiGrz8diN+q/H5gkJLyJUOohaKL7nUl3ZNTjTrMAp5y+JJ03J5v6FyFJu+ORoGVoHRgjN7G8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.234])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4cL5hc06nVz2TT8P;
+	Mon,  8 Sep 2025 20:23:28 +0800 (CST)
+Received: from kwepemf100016.china.huawei.com (unknown [7.202.181.15])
+	by mail.maildlp.com (Postfix) with ESMTPS id 84058140144;
+	Mon,  8 Sep 2025 20:26:41 +0800 (CST)
+Received: from kwepemh100012.china.huawei.com (7.202.181.97) by
+ kwepemf100016.china.huawei.com (7.202.181.15) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 8 Sep 2025 20:26:41 +0800
+Received: from kwepemh100012.china.huawei.com ([7.202.181.97]) by
+ kwepemh100012.china.huawei.com ([7.202.181.97]) with mapi id 15.02.1544.011;
+ Mon, 8 Sep 2025 20:26:41 +0800
+From: "Wangshaobo (bobo)" <bobo.shaobowang@huawei.com>
+To: Bjorn Helgaas <helgaas@kernel.org>
+CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"bhelgaas@google.com" <bhelgaas@google.com>, leijitang
+	<leijitang@huawei.com>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org"
+	<akpm@linux-foundation.org>, "christian.brauner@ubuntu.com"
+	<christian.brauner@ubuntu.com>, "linux-hardening@vger.kernel.org"
+	<linux-hardening@vger.kernel.org>
+Subject: =?gb2312?B?tPC4tDogW1BBVENIXSBQQ0k6IEZpeCB0aGUgaW50IG92ZXJmbG93IGluIHBy?=
+ =?gb2312?B?b2NfYnVzX3BjaV93cml0ZSgp?=
+Thread-Topic: [PATCH] PCI: Fix the int overflow in proc_bus_pci_write()
+Thread-Index: AQHcHlLCxNjG0vq+ekSoebDAQnqcsLSEijIAgASwClA=
+Date: Mon, 8 Sep 2025 12:26:41 +0000
+Message-ID: <d156ebaee8ac4491876cdf75d8847fe1@huawei.com>
+References: <20250905104730.2833673-1-bobo.shaobowang@huawei.com>
+ <20250905204848.GA1322742@bhelgaas>
+In-Reply-To: <20250905204848.GA1322742@bhelgaas>
+Accept-Language: en-US
+Content-Language: zh-CN
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 RESEND 00/11] Improvements to S5 power consumption
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- "Rafael J . Wysocki" <rafael@kernel.org>
-Cc: Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Steven Rostedt <rostedt@goodmis.org>,
- "open list:HIBERNATION (aka Software Suspend, aka swsusp)"
- <linux-pm@vger.kernel.org>,
- "open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>,
- "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
- "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
- "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
- "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
- "open list:TRACING" <linux-trace-kernel@vger.kernel.org>,
- AceLan Kao <acelan.kao@canonical.com>, Kai-Heng Feng <kaihengf@nvidia.com>,
- Mark Pearson <mpearson-lenovo@squebb.ca>,
- =?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>,
- Eric Naim <dnaim@cachyos.org>
-References: <20250906143642.2590808-1-superm1@kernel.org>
- <2025090852-coma-tycoon-9f37@gregkh>
-Content-Language: en-US
-From: Mario Limonciello <superm1@kernel.org>
-In-Reply-To: <2025090852-coma-tycoon-9f37@gregkh>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-
-
-On 9/8/25 4:19 AM, Greg Kroah-Hartman wrote:
-> On Sat, Sep 06, 2025 at 09:36:31AM -0500, Mario Limonciello (AMD) wrote:
->> A variety of issues both in function and in power consumption have been
->> raised as a result of devices not being put into a low power state when
->> the system is powered off.
->>
->> There have been some localized changes[1] to PCI core to help these issues,
->> but they have had various downsides.
->>
->> This series instead tries to use the S4 flow when the system is being
->> powered off.  This lines up the behavior with what other operating systems
->> do as well.  If for some reason that fails or is not supported, run their
->> shutdown() callbacks.
->>
->> Cc: AceLan Kao <acelan.kao@canonical.com>
->> Cc: Kai-Heng Feng <kaihengf@nvidia.com>
->> Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
->> Cc: Merthan Karakaş <m3rthn.k@gmail.com>
->> Cc: Eric Naim <dnaim@cachyos.org>
->> ---
->> v6 RESEND:
->>   * Resent because Greg said he was ignoring it and would like the whole
->>     series to be able to review.
-> 
-> Messy, but wow, I'll trust you all that this actually works properly.
-
-Yes; I double checked from a UART log all devices (now) went to correct 
-state and from power measurement hardware the respective drop in power.
-
-I will note I have a sampling bias of hardware being x86 AMD hardware.
-Some of the testers of the series also tested Intel hardware which had 
-similar power consumption problem, and I know there were improvements 
-there too.
-
-We probably will have to wait for linux-next for non-x86 hardware coverage.
-> No objections from me, but I don't want my ack on this as I don't know
-> how to maintain it :)
-> 
-
-I mean - if all goes well even a failed S4 flow should fall back to old 
-path shutdown.  I *did contrive some failures* in an earlier version of 
-the series and confirmed in the UART log it emitted the printk that it 
-was falling back to shutdown.
-
-I had two ideas that maybe could help for regression risk though:
-1) I could add a shutdown= kernel parameter.  I'm not sure what words to 
-use for the two paths but the idea would be if someone had a shutdown 
-failure they could isolate if it's due to this by adding the parameter.
-
-2) I could make a Documentation/ file explaining some examples how to 
-get the shutdown log saved to pstore in case they don't have a UART 
-available.
-
+DQoNCj4gLS0tLS3Tyrz+1K28/i0tLS0tDQo+ILeivP7IyzogQmpvcm4gSGVsZ2FhcyBbbWFpbHRv
+OmhlbGdhYXNAa2VybmVsLm9yZ10NCj4gt6LLzcqxvOQ6IDIwMjXE6jnUwjbI1SA0OjQ5DQo+IMrV
+vP7IyzogV2FuZ3NoYW9ibyAoYm9ibykgPGJvYm8uc2hhb2Jvd2FuZ0BodWF3ZWkuY29tPg0KPiCz
+rcvNOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsZWlq
+aXRhbmcNCj4gPGxlaWppdGFuZ0BodWF3ZWkuY29tPjsgbGludXgta2VybmVsQHZnZXIua2VybmVs
+Lm9yZzsNCj4gYWtwbUBsaW51eC1mb3VuZGF0aW9uLm9yZzsgY2hyaXN0aWFuLmJyYXVuZXJAdWJ1
+bnR1LmNvbTsNCj4gbGludXgtaGFyZGVuaW5nQHZnZXIua2VybmVsLm9yZw0KPiDW98ziOiBSZTog
+W1BBVENIXSBQQ0k6IEZpeCB0aGUgaW50IG92ZXJmbG93IGluIHByb2NfYnVzX3BjaV93cml0ZSgp
+DQo+IA0KPiBbK2NjIGxpbnV4LWhhcmRlbmluZ10NCj4gDQo+IE9uIEZyaSwgU2VwIDA1LCAyMDI1
+IGF0IDA2OjQ3OjMwUE0gKzA4MDAsIFdhbmcgU2hhb0JvIHdyb3RlOg0KPiA+IEZvbGxvd2luZyB0
+ZXN0Y2FzZSBjYW4gdHJpZ2dlciBhIHNvZnRsb2NrdXAgQlVHLg0KPiA+IHN5c2NhbGwoX19OUl9w
+d3JpdGV2LCAvKmZkPSovLi4uLCAvKnZlYz0qLy4uLiwgLyp2bGVuPSovLi4uLA0KPiA+ICAgICAg
+ICAgLypwb3NfbD0qLzB4ODAwMTAwMDAsIC8qcG9zX2g9Ki8weDEwMCk7DQo+ID4NCj4gPiB3YXRj
+aGRvZzogQlVHOiBzb2Z0IGxvY2t1cCAtIENQVSMxMSBzdHVjayBmb3IgMjJzISBbdGVzdDo1Mzdd
+IE1vZHVsZXMNCj4gPiBsaW5rZWQgaW46DQo+ID4gQ1BVOiAxMSBQSUQ6IDUzNyBDb21tOiB0ZXN0
+IE5vdCB0YWludGVkIDUuMTAuMCsgIzY3IEhhcmR3YXJlIG5hbWU6DQo+ID4gUUVNVSBTdGFuZGFy
+ZCBQQyAoaTQ0MEZYICsgUElJWCwgMTk5NiksIEJJT1MgMS4xMy4wLTF1YnVudHUxLjENCj4gPiAw
+NC8wMS8yMDE0DQo+ID4gUklQOiAwMDEwOnBjaV91c2VyX3dyaXRlX2NvbmZpZ19kd29yZCsweDY3
+LzB4YzANCj4gPiBDb2RlOiAwMCAwMCA0NCA4OSBlMiA0OCA4YiA4NyBlMCAwMCAwMCAwMCA0OCA4
+YiA0MCAyMCBlOCA5ZSA1NCA3ZSAwMA0KPiA+IDQ4IGM3IGM3IDIwIDQ4IGEyIDgzIDQxIDg5IGMw
+IGM2IDA3IDAwIDBmIDFmIDQwIDAwIGZiIDQ1IDg1IGMwIDw3ZT4gMTINCj4gPiA0MSA4ZCA4MCA3
+ZiBmZiBmZiBmZiA0MSBiOCBkZSBmZiBmZiBmZiA4MyBmOCAwOCA3NiAwYyA1YiA0NA0KPiA+IFJT
+UDogMDAxODpmZmZmYzkwMDAxNmMzZDMwIEVGTEFHUzogMDAwMDAyNDYNCj4gPiBSQVg6IDAwMDAw
+MDAwMDAwMDAwMDAgUkJYOiBmZmZmODg4MDQyMDU4MDAwIFJDWDoNCj4gMDAwMDAwMDAwMDAwMDAw
+NQ0KPiA+IFJEWDogZmZmZjg4ODAwNDA1OGEwMCBSU0k6IDAwMDAwMDAwMDAwMDAwNDYgUkRJOiBm
+ZmZmZmZmZjgzYTI0ODIwDQo+ID4gUkJQOiAwMDAwMDAwMDAwMDAwMDAwIFIwODogMDAwMDAwMDAw
+MDAwMDAwMCBSMDk6DQo+IDAwMDAwMDAwMDAwMDAwMDENCj4gPiBSMTA6IGZmZmY4ODgwMDVjMjU5
+MDAgUjExOiAwMDAwMDAwMDAwMDAwMDAwIFIxMjoNCj4gMDAwMDAwMDA4MGM0ODY4MA0KPiA+IFIx
+MzogMDAwMDAwMDAyMGMzODY4NCBSMTQ6IDAwMDAwMDAwODAwMTAwMDAgUjE1Og0KPiBmZmZmODg4
+MDA0NzAyNDA4DQo+ID4gRlM6ICAwMDAwMDAwMDNhZTkxODgwKDAwMDApIEdTOmZmZmY4ODgwMWYz
+ODAwMDAoMDAwMCkNCj4gPiBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQo+ID4gQ1M6ICAwMDEwIERT
+OiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KPiA+IENSMjogMDAwMDAwMDAy
+MGMwMDAwMCBDUjM6IDAwMDAwMDAwMDZmMmMwMDAgQ1I0Og0KPiAwMDAwMDAwMDAwMDAwNmUwDQo+
+ID4gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6DQo+IDAw
+MDAwMDAwMDAwMDAwMDANCj4gPiBEUjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZm
+ZmUwZmYwIERSNzoNCj4gMDAwMDAwMDAwMDAwMDQwMCBDYWxsDQo+ID4gVHJhY2U6DQo+ID4gIHBy
+b2NfYnVzX3BjaV93cml0ZSsweDIyYy8weDI2MA0KPiA+ICBwcm9jX3JlZ193cml0ZSsweDQwLzB4
+OTANCj4gPiAgZG9fbG9vcF9yZWFkdl93cml0ZXYucGFydC4wKzB4OTcvMHhjMA0KPiA+ICBkb19p
+dGVyX3dyaXRlKzB4ZjYvMHgxNTANCj4gPiAgdmZzX3dyaXRldisweDk3LzB4MTMwDQo+ID4gID8g
+ZmlsZXNfY2dyb3VwX2FsbG9jX2ZkKzB4NWMvMHg3MA0KPiA+ICA/IGRvX3N5c19vcGVuYXQyKzB4
+MWM5LzB4MzIwDQo+ID4gIF9feDY0X3N5c19wd3JpdGV2KzB4YjEvMHgxMDANCj4gPiAgZG9fc3lz
+Y2FsbF82NCsweDJiLzB4NDANCj4gPiAgZW50cnlfU1lTQ0FMTF82NF9hZnRlcl9od2ZyYW1lKzB4
+NmMvMHhkNg0KPiA+DQo+ID4gVGhlIHBvc19sIHBhcmFtZXRlciBmb3IgcHdyaXRldiBzeXNjYWxs
+IG1heSBiZSBhbiBpbnRlZ2VyIG5lZ2F0aXZlDQo+ID4gdmFsdWUsIHdoaWNoIHdpbGwgbWFrZSB0
+aGUgdmFyaWFibGUgcG9zIGluIHByb2NfYnVzX3BjaV93cml0ZSgpDQo+ID4gbmVnYXRpdmUgYW5k
+IHZhcmlhYmxlIGNudCBhIHZlcnkgbGFyZ2UgbnVtYmVyLg0KPiANCj4gU291bmRzIGxpa2UgYSBw
+cm9ibGVtOyBoYXZlIHlvdSBsb29rZWQgZm9yIHNpbWlsYXIgcHJvYmxlbXMgaW4gb3RoZXINCj4g
+LnByb2Nfd3JpdGUoKSBhbmQgLnByb2NfcmVhZCgpIGZ1bmN0aW9ucz8gIHZhbGlkYXRlX2ZsYXNo
+X3dyaXRlKCkgaXMgb25lDQo+IHRoYXQgYWxzbyBsb29rcyBzdXNwaWNpb3VzIHRvIG1lLg0KPiAN
+Cj4gSSB0aGluayB5b3UncmUgZGVzY3JpYmluZyB0aGlzIGNvZGU6DQo+IA0KPiAgIHN0YXRpYyBz
+c2l6ZV90IHByb2NfYnVzX3BjaV93cml0ZShzdHJ1Y3QgZmlsZSAqZmlsZSwgY29uc3QgY2hhciBf
+X3VzZXINCj4gKmJ1ZiwNCj4gCQkJCSAgICBzaXplX3QgbmJ5dGVzLCBsb2ZmX3QgKnBwb3MpDQo+
+ICAgew0KPiAgICAgICAgIGludCBwb3MgPSAqcHBvczsNCj4gICAgICAgICBpbnQgc2l6ZSA9IGRl
+di0+Y2ZnX3NpemU7DQo+ICAgICAgICAgaW50IGNudCwgcmV0Ow0KPiANCj4gICAgICAgICBpZiAo
+cG9zICsgbmJ5dGVzID4gc2l6ZSkNCj4gICAgICAgICAgICAgICAgIG5ieXRlcyA9IHNpemUgLSBw
+b3M7DQo+ICAgICAgICAgY250ID0gbmJ5dGVzOw0KPiAJLi4uDQo+IAl3aGlsZSAoY250ID49IDQp
+IHsNCj4gCQkuLi4NCj4gICAgICAgICAgICAgICAgIHBvcyArPSA0Ow0KPiAgICAgICAgICAgICAg
+ICAgY250IC09IDQ7DQo+IAl9DQo+IA0KPiBwcm9jX2J1c19wY2lfcmVhZCgpIGlzIHF1aXRlIHNp
+bWlsYXIgYnV0ICJwb3MiLCAiY250IiwgYW5kICJzaXplIiBhcmUNCj4gdW5zaWduZWQ6DQo+IA0K
+PiAgIHN0YXRpYyBzc2l6ZV90IHByb2NfYnVzX3BjaV9yZWFkKHN0cnVjdCBmaWxlICpmaWxlLCBj
+aGFyIF9fdXNlciAqYnVmLA0KPiAJCQkJICAgc2l6ZV90IG5ieXRlcywgbG9mZl90ICpwcG9zKQ0K
+PiAgIHsNCj4gICAgICAgICB1bnNpZ25lZCBpbnQgcG9zID0gKnBwb3M7DQo+ICAgICAgICAgdW5z
+aWduZWQgaW50IGNudCwgc2l6ZTsNCj4gDQo+IEl0IHNlZW1zIGxpa2UgdGhleSBzaG91bGQgdXNl
+IHRoZSBzYW1lIHN0cmF0ZWd5IHRvIGF2b2lkIHRoaXMgcHJvYmxlbS4NCj4gDQoNClRoYW5rcywg
+aXQncyBiZXR0ZXIgdG8gdXNlIHVuc2lnbmVkIGludCB0byB0byBhdm9pZCB0aGlzIHByb2JsZW0u
+DQoNCi0gV2FuZyBTaGFvQm8NCg==
