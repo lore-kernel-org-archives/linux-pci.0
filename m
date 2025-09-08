@@ -1,126 +1,328 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9914F301000;
-	Mon,  8 Sep 2025 12:46:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F48C30BF68
+	for <linux-pci@vger.kernel.org>; Mon,  8 Sep 2025 13:04:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757335585; cv=none; b=VIXo0EVrJEg1arCEYjUtz+Uu1yUnk2QHz6AE1oZoaPgfbeaVrsFaQrupko5oX3OGpmzX/jydvAsaTxwuJVYxtRhKNLrqNZM256/WXZcTtCK5xjquJkrQn/aDk7IjN9dkzL2gHwCLpBjBDRjEsnUQFmhax3I/vaZn5myTpjotk3I=
+	t=1757336676; cv=none; b=VtjXiPRydwHxEKCbd1XW0effv88JuUWHTTRYb3do7Z1Vdem840DUdlSi+GWBLQlR/oRwDTT24H4J7hDxVcTMBke6yDq5MGA5g5of1lbqUoS9Jt37effi5mMWGTUZ9aKUf3FU79dPRfbeN09xiB4EaSrTVlWQW3xr+9OcbzFQE5E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757335585; c=relaxed/simple;
-	bh=afOs1M4GZPYUCn+Vya0bO80XIj0JApTsibTr78PESvs=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=rhSVIWEGke+Ml71hwgpgOPkKeW5Y3w4PBTJGn41zZw6KvPFUqcnw67nIe/5hzFp1/LgKlJhe93biyoY4uYR7YA2QrALZ8jEUPYTyiGrz8diN+q/H5gkJLyJUOohaKL7nUl3ZNTjTrMAp5y+JJ03J5v6FyFJu+ORoGVoHRgjN7G8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.234])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4cL5hc06nVz2TT8P;
-	Mon,  8 Sep 2025 20:23:28 +0800 (CST)
-Received: from kwepemf100016.china.huawei.com (unknown [7.202.181.15])
-	by mail.maildlp.com (Postfix) with ESMTPS id 84058140144;
-	Mon,  8 Sep 2025 20:26:41 +0800 (CST)
-Received: from kwepemh100012.china.huawei.com (7.202.181.97) by
- kwepemf100016.china.huawei.com (7.202.181.15) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Mon, 8 Sep 2025 20:26:41 +0800
-Received: from kwepemh100012.china.huawei.com ([7.202.181.97]) by
- kwepemh100012.china.huawei.com ([7.202.181.97]) with mapi id 15.02.1544.011;
- Mon, 8 Sep 2025 20:26:41 +0800
-From: "Wangshaobo (bobo)" <bobo.shaobowang@huawei.com>
-To: Bjorn Helgaas <helgaas@kernel.org>
-CC: "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
-	"bhelgaas@google.com" <bhelgaas@google.com>, leijitang
-	<leijitang@huawei.com>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "akpm@linux-foundation.org"
-	<akpm@linux-foundation.org>, "christian.brauner@ubuntu.com"
-	<christian.brauner@ubuntu.com>, "linux-hardening@vger.kernel.org"
-	<linux-hardening@vger.kernel.org>
-Subject: =?gb2312?B?tPC4tDogW1BBVENIXSBQQ0k6IEZpeCB0aGUgaW50IG92ZXJmbG93IGluIHBy?=
- =?gb2312?B?b2NfYnVzX3BjaV93cml0ZSgp?=
-Thread-Topic: [PATCH] PCI: Fix the int overflow in proc_bus_pci_write()
-Thread-Index: AQHcHlLCxNjG0vq+ekSoebDAQnqcsLSEijIAgASwClA=
-Date: Mon, 8 Sep 2025 12:26:41 +0000
-Message-ID: <d156ebaee8ac4491876cdf75d8847fe1@huawei.com>
-References: <20250905104730.2833673-1-bobo.shaobowang@huawei.com>
- <20250905204848.GA1322742@bhelgaas>
-In-Reply-To: <20250905204848.GA1322742@bhelgaas>
-Accept-Language: en-US
-Content-Language: zh-CN
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="gb2312"
-Content-Transfer-Encoding: base64
+	s=arc-20240116; t=1757336676; c=relaxed/simple;
+	bh=9eSNNMYWl6Ezk00Y7GbdoLIlm1gW9gBEiyXh++DBIfc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QJqnriFDSmd1T7culZOjs21SYrt1VR0oJvyho9/N3MhXJt3HarqhAuafrwzeBMzxzqdoD5O6jFWAiJ2SQ/qH56I26gKd8DSvWVx3RzxZe6dlWk+BWb19TRhMita9idna+PPY2kZ3e5OV1UdolVRL5O1lHIcaSwiLJXYzxQPdG48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=CARTHGcf; arc=none smtp.client-ip=209.85.208.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="CARTHGcf"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-61cb4374d2fso6690359a12.2
+        for <linux-pci@vger.kernel.org>; Mon, 08 Sep 2025 06:04:32 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=tuxon.dev; s=google; t=1757336671; x=1757941471; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Yd7mLJQDkHllxwujkPQ/7Z9ByYCiL7cm7yP3I7t4tTI=;
+        b=CARTHGcfpuGQRiCFTvZM4NXt95YK/DQTgVoX3DMJTajOq6Oj7RTiw5vh7z503RGPgF
+         TaV7XiFZ834FIBdWLYDSF8+AFd3EvqsSnkmfz17PXDBSvAk0T75ghFtq1xTiDuOpG9+q
+         WX0IbyGkLYJYqrrbg7Fox8TcKqbwOA1cmR7Tbem/HCm7vi8fHp7DP/LdD6JgI7NSAMoR
+         HQSgGPPOb6VOtCwoS5VCXDbB7ypfBS1zn+9I1S2pKDWLdDZYfOzsmW+KN0mqsxJuGeL5
+         BhsJ+Igv4tLs1XqCgjVxIXffGsBAVGpMBGYUpeY+w6Yv4L5/IDDRvB2+lrKA0pvMsFpw
+         RLYw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757336671; x=1757941471;
+        h=content-transfer-encoding:in-reply-to:content-language:from
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=Yd7mLJQDkHllxwujkPQ/7Z9ByYCiL7cm7yP3I7t4tTI=;
+        b=GA3CtrX1m/2bWhsLaSWccXmoL5UKFK+2GIbpEDFkGnLYvSU/TCCyTmiGfnfQn8aebr
+         LsCCL5BGGAaVoPGMV+wFEipvLSAFq0qG/4gaoKFWuza5slXWc2m1rpP6++LAyOIgbFuQ
+         OmmBtVboQaHyjvDB7y72jJUW4Wm84+RNo1nXCbC/Bx3xlr7jC2i1qaddr+H2XzjdhvDo
+         zJz7uJAuvFyAXZSrof+DjpQMZ6MkAT1BuQlR44SFjUGB+do0urJN5ncxypak2Z5ORpwz
+         Qem+smmV8oulvlI6kmzYOoewtnDnQci+yF8+yr+Vek8Nu9opcXKeYI7SKT07E7kL8Bs8
+         53dg==
+X-Forwarded-Encrypted: i=1; AJvYcCUZaryHjfrB3sNEGI8gTP8eYRiTwGrz8iNA2fRol7igThMWHf7+WAnKenR5BLOiuvEBK0D11fAyK3g=@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw16TTZq2rGve/mS8UofGxF7lixKvBPK5tujuevqINBjXDoWeNA
+	qLfoldmuB9oKX3LqWQptwcwPdNAnYqG53HwkUROIMjMbqLWlKEk5+U7xcCeYMHKV5ms=
+X-Gm-Gg: ASbGnctOpR4KmYDcXbE4NwKEMPx0AsJtcKcA7SdU744s6yCRdcb7/rm+SxlFieZgKnp
+	p9c3RgNQTFO9Vm2cKHdd3ai7i+V0Q8rU1memVSZ5fz3fzfHjIWci4NLWc01NZVYGbfDSpBDfnrz
+	P/2jCMh9d1nmtTF4kKMO4tYYWgdCRVCHBWUtyidtQ+rrd2FwWTUQSBvPt4yHOSbUPGOLapXfoJi
+	Qfb+sxi0Dg6jLqzfk7ZXKRHOjv9yuBVK177RS2/TaaPb3cT2cPIYNaFg/GOnnvgsZV63HisM1fb
+	Muiiihh+jbKTjnHDqmWJO5xxI+lfbdEAE+RmkmGsHtceWanR9Fw1uqEQtcJpGo0/eg9XW6KzrPh
+	nLwjk67q+lgWxrJS6vggWJU2LRo3VabI=
+X-Google-Smtp-Source: AGHT+IEmhgCH3sUPlRQKMy5XutR0hjOQQ3uuBSZbxPWNovm+H+RQwCI0Zz7MCSmSQKcPnEjwUEs0SA==
+X-Received: by 2002:a05:6402:2348:b0:61c:8fe9:9423 with SMTP id 4fb4d7f45d1cf-6237edb2f15mr8247367a12.17.1757336670479;
+        Mon, 08 Sep 2025 06:04:30 -0700 (PDT)
+Received: from [192.168.50.4] ([82.78.167.139])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-61cfc575b94sm21301716a12.53.2025.09.08.06.04.28
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 08 Sep 2025 06:04:29 -0700 (PDT)
+Message-ID: <83301c1e-9e6d-4bbe-ac76-db6ce7ec670e@tuxon.dev>
+Date: Mon, 8 Sep 2025 16:04:28 +0300
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 5/9] PCI: rzg3s-host: Add Initial PCIe Host Driver for
+ Renesas RZ/G3S SoC
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ geert+renesas@glider.be, magnus.damm@gmail.com, catalin.marinas@arm.com,
+ will@kernel.org, mturquette@baylibre.com, sboyd@kernel.org,
+ p.zabel@pengutronix.de, lizhi.hou@amd.com, linux-pci@vger.kernel.org,
+ linux-renesas-soc@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-clk@vger.kernel.org, Claudiu Beznea
+ <claudiu.beznea.uj@bp.renesas.com>,
+ Wolfram Sang <wsa+renesas@sang-engineering.com>
+References: <20250704161410.3931884-1-claudiu.beznea.uj@bp.renesas.com>
+ <20250704161410.3931884-6-claudiu.beznea.uj@bp.renesas.com>
+ <ddxayjj5wcuuish4kvyluzrujkes5seo7zlusmomyjfjcgzcyj@xe3zzzmy2zaj>
+ <8ef466aa-b470-4dcb-9024-0a9c36eb9a6a@tuxon.dev>
+ <zsgncwvhykw4ja3bbqaxwupppjsqq4pcrdgrsduahokmt72xsm@twekpse6uzzh>
+From: Claudiu Beznea <claudiu.beznea@tuxon.dev>
+Content-Language: en-US
+In-Reply-To: <zsgncwvhykw4ja3bbqaxwupppjsqq4pcrdgrsduahokmt72xsm@twekpse6uzzh>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-DQoNCj4gLS0tLS3Tyrz+1K28/i0tLS0tDQo+ILeivP7IyzogQmpvcm4gSGVsZ2FhcyBbbWFpbHRv
-OmhlbGdhYXNAa2VybmVsLm9yZ10NCj4gt6LLzcqxvOQ6IDIwMjXE6jnUwjbI1SA0OjQ5DQo+IMrV
-vP7IyzogV2FuZ3NoYW9ibyAoYm9ibykgPGJvYm8uc2hhb2Jvd2FuZ0BodWF3ZWkuY29tPg0KPiCz
-rcvNOiBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnOyBiaGVsZ2Fhc0Bnb29nbGUuY29tOyBsZWlq
-aXRhbmcNCj4gPGxlaWppdGFuZ0BodWF3ZWkuY29tPjsgbGludXgta2VybmVsQHZnZXIua2VybmVs
-Lm9yZzsNCj4gYWtwbUBsaW51eC1mb3VuZGF0aW9uLm9yZzsgY2hyaXN0aWFuLmJyYXVuZXJAdWJ1
-bnR1LmNvbTsNCj4gbGludXgtaGFyZGVuaW5nQHZnZXIua2VybmVsLm9yZw0KPiDW98ziOiBSZTog
-W1BBVENIXSBQQ0k6IEZpeCB0aGUgaW50IG92ZXJmbG93IGluIHByb2NfYnVzX3BjaV93cml0ZSgp
-DQo+IA0KPiBbK2NjIGxpbnV4LWhhcmRlbmluZ10NCj4gDQo+IE9uIEZyaSwgU2VwIDA1LCAyMDI1
-IGF0IDA2OjQ3OjMwUE0gKzA4MDAsIFdhbmcgU2hhb0JvIHdyb3RlOg0KPiA+IEZvbGxvd2luZyB0
-ZXN0Y2FzZSBjYW4gdHJpZ2dlciBhIHNvZnRsb2NrdXAgQlVHLg0KPiA+IHN5c2NhbGwoX19OUl9w
-d3JpdGV2LCAvKmZkPSovLi4uLCAvKnZlYz0qLy4uLiwgLyp2bGVuPSovLi4uLA0KPiA+ICAgICAg
-ICAgLypwb3NfbD0qLzB4ODAwMTAwMDAsIC8qcG9zX2g9Ki8weDEwMCk7DQo+ID4NCj4gPiB3YXRj
-aGRvZzogQlVHOiBzb2Z0IGxvY2t1cCAtIENQVSMxMSBzdHVjayBmb3IgMjJzISBbdGVzdDo1Mzdd
-IE1vZHVsZXMNCj4gPiBsaW5rZWQgaW46DQo+ID4gQ1BVOiAxMSBQSUQ6IDUzNyBDb21tOiB0ZXN0
-IE5vdCB0YWludGVkIDUuMTAuMCsgIzY3IEhhcmR3YXJlIG5hbWU6DQo+ID4gUUVNVSBTdGFuZGFy
-ZCBQQyAoaTQ0MEZYICsgUElJWCwgMTk5NiksIEJJT1MgMS4xMy4wLTF1YnVudHUxLjENCj4gPiAw
-NC8wMS8yMDE0DQo+ID4gUklQOiAwMDEwOnBjaV91c2VyX3dyaXRlX2NvbmZpZ19kd29yZCsweDY3
-LzB4YzANCj4gPiBDb2RlOiAwMCAwMCA0NCA4OSBlMiA0OCA4YiA4NyBlMCAwMCAwMCAwMCA0OCA4
-YiA0MCAyMCBlOCA5ZSA1NCA3ZSAwMA0KPiA+IDQ4IGM3IGM3IDIwIDQ4IGEyIDgzIDQxIDg5IGMw
-IGM2IDA3IDAwIDBmIDFmIDQwIDAwIGZiIDQ1IDg1IGMwIDw3ZT4gMTINCj4gPiA0MSA4ZCA4MCA3
-ZiBmZiBmZiBmZiA0MSBiOCBkZSBmZiBmZiBmZiA4MyBmOCAwOCA3NiAwYyA1YiA0NA0KPiA+IFJT
-UDogMDAxODpmZmZmYzkwMDAxNmMzZDMwIEVGTEFHUzogMDAwMDAyNDYNCj4gPiBSQVg6IDAwMDAw
-MDAwMDAwMDAwMDAgUkJYOiBmZmZmODg4MDQyMDU4MDAwIFJDWDoNCj4gMDAwMDAwMDAwMDAwMDAw
-NQ0KPiA+IFJEWDogZmZmZjg4ODAwNDA1OGEwMCBSU0k6IDAwMDAwMDAwMDAwMDAwNDYgUkRJOiBm
-ZmZmZmZmZjgzYTI0ODIwDQo+ID4gUkJQOiAwMDAwMDAwMDAwMDAwMDAwIFIwODogMDAwMDAwMDAw
-MDAwMDAwMCBSMDk6DQo+IDAwMDAwMDAwMDAwMDAwMDENCj4gPiBSMTA6IGZmZmY4ODgwMDVjMjU5
-MDAgUjExOiAwMDAwMDAwMDAwMDAwMDAwIFIxMjoNCj4gMDAwMDAwMDA4MGM0ODY4MA0KPiA+IFIx
-MzogMDAwMDAwMDAyMGMzODY4NCBSMTQ6IDAwMDAwMDAwODAwMTAwMDAgUjE1Og0KPiBmZmZmODg4
-MDA0NzAyNDA4DQo+ID4gRlM6ICAwMDAwMDAwMDNhZTkxODgwKDAwMDApIEdTOmZmZmY4ODgwMWYz
-ODAwMDAoMDAwMCkNCj4gPiBrbmxHUzowMDAwMDAwMDAwMDAwMDAwDQo+ID4gQ1M6ICAwMDEwIERT
-OiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KPiA+IENSMjogMDAwMDAwMDAy
-MGMwMDAwMCBDUjM6IDAwMDAwMDAwMDZmMmMwMDAgQ1I0Og0KPiAwMDAwMDAwMDAwMDAwNmUwDQo+
-ID4gRFIwOiAwMDAwMDAwMDAwMDAwMDAwIERSMTogMDAwMDAwMDAwMDAwMDAwMCBEUjI6DQo+IDAw
-MDAwMDAwMDAwMDAwMDANCj4gPiBEUjM6IDAwMDAwMDAwMDAwMDAwMDAgRFI2OiAwMDAwMDAwMGZm
-ZmUwZmYwIERSNzoNCj4gMDAwMDAwMDAwMDAwMDQwMCBDYWxsDQo+ID4gVHJhY2U6DQo+ID4gIHBy
-b2NfYnVzX3BjaV93cml0ZSsweDIyYy8weDI2MA0KPiA+ICBwcm9jX3JlZ193cml0ZSsweDQwLzB4
-OTANCj4gPiAgZG9fbG9vcF9yZWFkdl93cml0ZXYucGFydC4wKzB4OTcvMHhjMA0KPiA+ICBkb19p
-dGVyX3dyaXRlKzB4ZjYvMHgxNTANCj4gPiAgdmZzX3dyaXRldisweDk3LzB4MTMwDQo+ID4gID8g
-ZmlsZXNfY2dyb3VwX2FsbG9jX2ZkKzB4NWMvMHg3MA0KPiA+ICA/IGRvX3N5c19vcGVuYXQyKzB4
-MWM5LzB4MzIwDQo+ID4gIF9feDY0X3N5c19wd3JpdGV2KzB4YjEvMHgxMDANCj4gPiAgZG9fc3lz
-Y2FsbF82NCsweDJiLzB4NDANCj4gPiAgZW50cnlfU1lTQ0FMTF82NF9hZnRlcl9od2ZyYW1lKzB4
-NmMvMHhkNg0KPiA+DQo+ID4gVGhlIHBvc19sIHBhcmFtZXRlciBmb3IgcHdyaXRldiBzeXNjYWxs
-IG1heSBiZSBhbiBpbnRlZ2VyIG5lZ2F0aXZlDQo+ID4gdmFsdWUsIHdoaWNoIHdpbGwgbWFrZSB0
-aGUgdmFyaWFibGUgcG9zIGluIHByb2NfYnVzX3BjaV93cml0ZSgpDQo+ID4gbmVnYXRpdmUgYW5k
-IHZhcmlhYmxlIGNudCBhIHZlcnkgbGFyZ2UgbnVtYmVyLg0KPiANCj4gU291bmRzIGxpa2UgYSBw
-cm9ibGVtOyBoYXZlIHlvdSBsb29rZWQgZm9yIHNpbWlsYXIgcHJvYmxlbXMgaW4gb3RoZXINCj4g
-LnByb2Nfd3JpdGUoKSBhbmQgLnByb2NfcmVhZCgpIGZ1bmN0aW9ucz8gIHZhbGlkYXRlX2ZsYXNo
-X3dyaXRlKCkgaXMgb25lDQo+IHRoYXQgYWxzbyBsb29rcyBzdXNwaWNpb3VzIHRvIG1lLg0KPiAN
-Cj4gSSB0aGluayB5b3UncmUgZGVzY3JpYmluZyB0aGlzIGNvZGU6DQo+IA0KPiAgIHN0YXRpYyBz
-c2l6ZV90IHByb2NfYnVzX3BjaV93cml0ZShzdHJ1Y3QgZmlsZSAqZmlsZSwgY29uc3QgY2hhciBf
-X3VzZXINCj4gKmJ1ZiwNCj4gCQkJCSAgICBzaXplX3QgbmJ5dGVzLCBsb2ZmX3QgKnBwb3MpDQo+
-ICAgew0KPiAgICAgICAgIGludCBwb3MgPSAqcHBvczsNCj4gICAgICAgICBpbnQgc2l6ZSA9IGRl
-di0+Y2ZnX3NpemU7DQo+ICAgICAgICAgaW50IGNudCwgcmV0Ow0KPiANCj4gICAgICAgICBpZiAo
-cG9zICsgbmJ5dGVzID4gc2l6ZSkNCj4gICAgICAgICAgICAgICAgIG5ieXRlcyA9IHNpemUgLSBw
-b3M7DQo+ICAgICAgICAgY250ID0gbmJ5dGVzOw0KPiAJLi4uDQo+IAl3aGlsZSAoY250ID49IDQp
-IHsNCj4gCQkuLi4NCj4gICAgICAgICAgICAgICAgIHBvcyArPSA0Ow0KPiAgICAgICAgICAgICAg
-ICAgY250IC09IDQ7DQo+IAl9DQo+IA0KPiBwcm9jX2J1c19wY2lfcmVhZCgpIGlzIHF1aXRlIHNp
-bWlsYXIgYnV0ICJwb3MiLCAiY250IiwgYW5kICJzaXplIiBhcmUNCj4gdW5zaWduZWQ6DQo+IA0K
-PiAgIHN0YXRpYyBzc2l6ZV90IHByb2NfYnVzX3BjaV9yZWFkKHN0cnVjdCBmaWxlICpmaWxlLCBj
-aGFyIF9fdXNlciAqYnVmLA0KPiAJCQkJICAgc2l6ZV90IG5ieXRlcywgbG9mZl90ICpwcG9zKQ0K
-PiAgIHsNCj4gICAgICAgICB1bnNpZ25lZCBpbnQgcG9zID0gKnBwb3M7DQo+ICAgICAgICAgdW5z
-aWduZWQgaW50IGNudCwgc2l6ZTsNCj4gDQo+IEl0IHNlZW1zIGxpa2UgdGhleSBzaG91bGQgdXNl
-IHRoZSBzYW1lIHN0cmF0ZWd5IHRvIGF2b2lkIHRoaXMgcHJvYmxlbS4NCj4gDQoNClRoYW5rcywg
-aXQncyBiZXR0ZXIgdG8gdXNlIHVuc2lnbmVkIGludCB0byB0byBhdm9pZCB0aGlzIHByb2JsZW0u
-DQoNCi0gV2FuZyBTaGFvQm8NCg==
+Hi, Manivannan,
+
+Apologies for the late reply, I've been off for a while.
+
+On 8/31/25 07:07, Manivannan Sadhasivam wrote:
+> On Sat, Aug 30, 2025 at 02:22:45PM GMT, Claudiu Beznea wrote:
+>>
+>>
+>> On 30.08.2025 09:59, Manivannan Sadhasivam wrote:
+>>> On Fri, Jul 04, 2025 at 07:14:05PM GMT, Claudiu wrote:
+>>>> From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+>>>>
+>>>> The Renesas RZ/G3S features a PCIe IP that complies with the PCI Express
+>>>> Base Specification 4.0 and supports speeds of up to 5 GT/s. It functions
+>>>> only as a root complex, with a single-lane (x1) configuration. The
+>>>> controller includes Type 1 configuration registers, as well as IP
+>>>> specific registers (called AXI registers) required for various adjustments.
+>>>>
+>>>> Hardware manual can be downloaded from the address in the "Link" section.
+>>>> The following steps should be followed to access the manual:
+>>>> 1/ Click the "User Manual" button
+>>>> 2/ Click "Confirm"; this will start downloading an archive
+>>>> 3/ Open the downloaded archive
+>>>> 4/ Navigate to r01uh1014ej*-rzg3s-users-manual-hardware -> Deliverables
+>>>> 5/ Open the file r01uh1014ej*-rzg3s.pdf
+>>>>
+>>>> Link: https://www.renesas.com/en/products/rz-g3s?queryID=695cc067c2d89e3f271d43656ede4d12
+>>>> Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
+>>>> Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+>>>> ---
+>>>>
+>>>
+>>> [...]
+>>>
+>>>> +static bool rzg3s_pcie_child_issue_request(struct rzg3s_pcie_host *host)
+>>>> +{
+>>>> +	u32 val;
+>>>> +	int ret;
+>>>> +
+>>>> +	rzg3s_pcie_update_bits(host->axi, RZG3S_PCI_REQISS,
+>>>> +			       RZG3S_PCI_REQISS_REQ_ISSUE,
+>>>> +			       RZG3S_PCI_REQISS_REQ_ISSUE);
+>>>> +	ret = readl_poll_timeout_atomic(host->axi + RZG3S_PCI_REQISS, val,
+>>>> +					!(val & RZG3S_PCI_REQISS_REQ_ISSUE),
+>>>> +					5, RZG3S_REQ_ISSUE_TIMEOUT_US);
+>>>> +
+>>>> +	return !!ret || (val & RZG3S_PCI_REQISS_MOR_STATUS);
+>>>
+>>> You don't need to do !!ret as the C11 standard guarantees that any scalar type
+>>> stored as bool will have the value of 0 or 1.
+>>
+>> OK, will drop it anyway as suggested in another thread.
+>>
+>>>
+>>>> +}
+>>>> +
+>>>
+>>> [...]
+>>>
+>>>> +static void __iomem *rzg3s_pcie_root_map_bus(struct pci_bus *bus,
+>>>> +					     unsigned int devfn,
+>>>> +					     int where)
+>>>> +{
+>>>> +	struct rzg3s_pcie_host *host = bus->sysdata;
+>>>> +
+>>>> +	if (devfn)
+>>>> +		return NULL;
+>>>
+>>> Is it really possible to have devfn as non-zero for a root bus?
+>>
+>> I will drop it.
+>>
+>>>
+>>>> +
+>>>> +	return host->pcie + where;
+>>>> +}
+>>>> +
+>>>
+>>> [...]
+>>>
+>>>> +static int rzg3s_pcie_msi_setup(struct rzg3s_pcie_host *host)
+>>>> +{
+>>>> +	size_t size = RZG3S_PCI_MSI_INT_NR * sizeof(u32);
+>>>> +	struct rzg3s_pcie_msi *msi = &host->msi;
+>>>> +	struct device *dev = host->dev;
+>>>> +	int id, ret;
+>>>> +
+>>>> +	msi->pages = __get_free_pages(GFP_KERNEL | GFP_DMA, 0);
+>>>> +	if (!msi->pages)
+>>>> +		return -ENOMEM;
+>>>> +
+>>>> +	msi->dma_addr = dma_map_single(dev, (void *)msi->pages, size * 2,
+>>>> +				       DMA_BIDIRECTIONAL);
+>>>> +	if (dma_mapping_error(dev, msi->dma_addr)) {
+>>>> +		ret = -ENOMEM;
+>>>> +		goto free_pages;
+>>>> +	}
+>>>> +
+>>>> +	/*
+>>>> +	 * According to the RZ/G3S HW manual (Rev.1.10, section 34.4.5.2 Setting
+>>>> +	 * the MSI Window) the MSI window need to be within any AXI window. Find
+>>>> +	 * an AXI window to setup the MSI window.
+>>>
+>>> Are you really finding the AXI window or just making sure that the MSI window
+>>> falls into one of the AXI window?
+>>
+>> I'm making sure the MSI windows falls into one of the enabled AXI windows.
+>>
+> 
+> Then you need to reword the comment as such. Currently, it is not clear.
+
+OK
+
+> 
+>>>
+>>> And I believe it is OK to have more than one MSI window within an AXI window.
+>>
+>> This IP supports a single MSI window that need to fit into one of the
+>> enabled AXI windows.
+>>
+> 
+> [...]
+> 
+>>>> +
+>>>> +	/* Update vendor ID and device ID */
+>>>
+>>> Are you really updating it or setting it? If you are updating it, are the
+>>> default IDs invalid?
+>>
+>> Default IDs are valid (at least on RZ/G3S) but Renesas specific. Renesas
+>> wants to let individual users to set their own IDs.
+>>
+> 
+> So they are optional then? But the binding treats them as required, which should
+> be changed if the default IDs are valid.
+
+On RZ/G3S the default IDs are valid. On other SoCs that will be using this
+driver (e.g. RZ/G3E) the default IDs are not valid.
+
+These were marked as required as Renesas wants them to be set by the
+company that manufactures the end product itself.
+
+
+> 
+>>>
+>>>> +	writew(host->vendor_id, host->pcie + PCI_VENDOR_ID);
+>>>> +	writew(host->device_id, host->pcie + PCI_DEVICE_ID);
+>>>> +
+>>>> +	/* HW manual recommends to write 0xffffffff on initialization */
+>>>> +	writel(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00L);
+>>>> +	writel(0xffffffff, host->pcie + RZG3S_PCI_CFG_BARMSK00U);
+>>>> +
+>>>> +	/* Update bus info. */
+>>>> +	writeb(primary_bus, host->pcie + PCI_PRIMARY_BUS);
+>>>> +	writeb(secondary_bus, host->pcie + PCI_SECONDARY_BUS);
+>>>> +	writeb(subordinate_bus, host->pcie + PCI_SUBORDINATE_BUS);
+>>>> +
+>>>> +	/* Disable access control to the CFGU */
+>>>> +	writel(0, host->axi + RZG3S_PCI_PERM);
+>>>> +
+>>>> +	return 0;
+>>>> +}
+>>>> +
+>>>
+>>> [...]
+>>>
+>>>> +static int rzg3s_pcie_host_init(struct rzg3s_pcie_host *host, bool probe)
+>>>> +{
+>>>> +	u32 val;
+>>>> +	int ret;
+>>>> +
+>>>> +	/* Initialize the PCIe related registers */
+>>>> +	ret = rzg3s_pcie_config_init(host);
+>>>> +	if (ret)
+>>>> +		return ret;
+>>>> +
+>>>> +	/* Initialize the interrupts */
+>>>> +	rzg3s_pcie_irq_init(host);
+>>>> +
+>>>> +	ret = reset_control_bulk_deassert(host->data->num_cfg_resets,
+>>>> +					  host->cfg_resets);
+>>>> +	if (ret)
+>>>> +		return ret;
+>>>> +
+>>>> +	/* Wait for link up */
+>>>> +	ret = readl_poll_timeout(host->axi + RZG3S_PCI_PCSTAT1, val,
+>>>> +				 !(val & RZG3S_PCI_PCSTAT1_DL_DOWN_STS),
+>>>> +				 PCIE_LINK_WAIT_SLEEP_MS,
+>>>> +				 PCIE_LINK_WAIT_SLEEP_MS *
+>>>> +				 PCIE_LINK_WAIT_MAX_RETRIES * MILLI);
+>>>> +	if (ret) {
+>>>> +		reset_control_bulk_assert(host->data->num_cfg_resets,
+>>>> +					  host->cfg_resets);
+>>>> +		return ret;
+>>>> +	}
+>>>> +
+>>>> +	val = readl(host->axi + RZG3S_PCI_PCSTAT2);
+>>>> +	dev_info(host->dev, "PCIe link status [0x%x]\n", val);
+>>>> +
+>>>> +	val = FIELD_GET(RZG3S_PCI_PCSTAT2_STATE_RX_DETECT, val);
+>>>> +	dev_info(host->dev, "PCIe x%d: link up\n", hweight32(val));
+>>>> +
+>>>> +	if (probe) {
+>>>> +		ret = devm_add_action_or_reset(host->dev,
+>>>> +					       rzg3s_pcie_cfg_resets_action,
+>>>> +					       host);
+>>>
+>>> Oh well, this gets ugly. Now the devm_add_action_or_reset() is sprinkled
+>>> throughout the driver :/
+>>>
+>>> As I said earlier, there are concerns in unloading the driver if it implements
+>>> an irqchip. So if you change the module_platform_driver() to
+>>> builtin_platform_driver() for this driver, these devm_add_action_or_reset()
+>>> calls become unused.
+>>
+>> They can still be useful in case the probe fails. As the initialization
+>> path is complicated, having actions or resets looks to me that makes the
+>> code cleaner as the rest of devm_* helpers.
+>>
+>> I can drop it and replace with gotos and dedicated functions but this will
+>> complicate the code, AFAICT.
+>>
+>> Please let me know how would you like me to proceed.
+>>
+> 
+> It is generally preferred to cleanup the resources in err path using goto
+> labels.
+
+Just to be sure I'll prepare the next version with something that was
+requested: would you like to have goto lables on this driver?
+
+I kept it like this as I considered the code is simpler.
+
+Thank you,
+Claudiu
