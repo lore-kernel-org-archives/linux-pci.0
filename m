@@ -1,44 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 957AF221DB5;
-	Mon,  8 Sep 2025 12:23:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 668594690;
+	Mon,  8 Sep 2025 12:31:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757334206; cv=none; b=lPtI2YAx0i3dBfdPaAdz9arGHTw/OcOyOkWygvDuxlF9wY6KTBJBFMOYQ690UevqlE3doAMfe5ibFJoUCiV/QgyfvlnfDFnLDZLHuwpJgrgGZmlA0GZPtZ96cFAftydGQPX4em4FF9G87LVZM0CNugk1S/tei+lHO7Fyb8/F404=
+	t=1757334674; cv=none; b=PdFD18k38jYcTaAXM5LGFuQFZxTr+M83AO51Cghz1HDRshL8PSq3wyyvAYm0/vx/11rmU/SsFaq516d9BF0ha+hRAQuh0/W1mKyrAb3OUA2e+MY5n7EOWv6r8KPTjfUbizqTYVkpHNR60E/dR7ujocXhUrCBON6X3mRYNJrcLbU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757334206; c=relaxed/simple;
-	bh=D6cneQQmhd1FoJDTC/XACRkYANyh+3X4gy7qW3UFAos=;
+	s=arc-20240116; t=1757334674; c=relaxed/simple;
+	bh=4BlAT6O6nDuMl7JxdSAqapZvimpnAM67d5Wt4tnaQFM=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=KJMUD99ICYuHP5sRHgR3vLoj8OH8nPZ5eP9TjFAKrxHmkHrOYG2axg8SP91a0yAJ8ev6kX0+sYGR52yeQ9os3jXmCG4FKvxJGq0xZbEUme6tywgWPyDp7fOeOALIAvunDxZDlpFMZBn681cYMeQx9C5EnTt6f1NCzM5Bw+7/nNg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hjqlUQvu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MVYL/VYWBHswKoBrHoA38ED8KnPjPNUziz4gs5m9UTy1I8II/mPTYbKjyzVXrALwx47khhTCT75kWf8lnonoH72J0V4A8H8kYtomwFLwaElE4Ozwfy3+4C+CBvjadmWmnC6FhYyLnUaDBOnkYvtRlO3uSDzqNzW6l0qqA8TPhYs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MXMyaFuQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hjqlUQvu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17027C4CEF1;
-	Mon,  8 Sep 2025 12:23:21 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MXMyaFuQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4554C4CEF8;
+	Mon,  8 Sep 2025 12:31:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757334206;
-	bh=D6cneQQmhd1FoJDTC/XACRkYANyh+3X4gy7qW3UFAos=;
+	s=k20201202; t=1757334674;
+	bh=4BlAT6O6nDuMl7JxdSAqapZvimpnAM67d5Wt4tnaQFM=;
 	h=From:To:Cc:In-Reply-To:References:Subject:Date:From;
-	b=hjqlUQvugGe99TOgR4h6szERkWrZoLhqLcNOL2cwplnO85sQCIL7+gkzaRfwiWlki
-	 znXTi8CZIMYaAXqlqDpEH4BQa9yZJ5RVTgohMcvFedOVclposdrlC5O78FBNhHy6/5
-	 SIviNze3FKbLtE2sitMdF7EjogdVAdynt7uQcf1cWw2lJ6Lmgd0UhHI/l1+TGuolks
-	 aKsU1IFupqE7V3+tq3NiT0naS+YoQCRzfb7Mk3O4kP+1QT432XpD7BAqK3uWuyFEJR
-	 a0qtK+bevHkpLv9xFgTzJ/Cic5/X81ZpdCbHsVp+96ScxC+e4SA+80np7vUjRyKPgS
-	 4NmbxQ3U52xxA==
+	b=MXMyaFuQzRtryqYbXQmWsvDdbaCY/JaBYISHCzavD8CfWjVIaHcRMuk8vKvxKgkyh
+	 0e77+QczsByDdgTQu4nwfV3plxC1DxMC71xNmYUEmjc7OmrCRkiTl6RyRdsf9eVsUh
+	 QqkFC0AAYF2U4OOuJP23VsOTUwinxumA4/TN4kqlSNtqxrA9j49nLMQh1aqXkRcaYM
+	 qq9GUinHHoRn5N6meCYRG9bXo5UsMVWSUb3BJBNRT1EP6kRcKvvNCSKYHQTu4xFoPC
+	 /k6KoJc8+IWh8VN864MxOSDzWMN/GmyloMXQuvWSC3ufOBHc8VDypqwWH6txGRfjn1
+	 IX6esRTiKENfQ==
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, 
- bhelgaas@google.com, helgaas@kernel.org, kishon@kernel.org, vigneshr@ti.com, 
- Siddharth Vadapalli <s-vadapalli@ti.com>
-Cc: stable@vger.kernel.org, linux-pci@vger.kernel.org, 
- linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-kernel@lists.infradead.org, srk@ti.com
-In-Reply-To: <20250908120828.1471776-1-s-vadapalli@ti.com>
-References: <20250908120828.1471776-1-s-vadapalli@ti.com>
-Subject: Re: [PATCH v4] PCI: j721e: Fix programming sequence of "strap"
- settings
-Message-Id: <175733420164.9759.8251040864412190074.b4-ty@kernel.org>
-Date: Mon, 08 Sep 2025 17:53:21 +0530
+To: linux-pci@vger.kernel.org, 
+ Marek Vasut <marek.vasut+renesas@mailbox.org>
+Cc: Niklas Cassel <cassel@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Bjorn Helgaas <bhelgaas@google.com>, Damien Le Moal <dlemoal@kernel.org>, 
+ Frank Li <Frank.Li@nxp.com>, Jerome Brunet <jbrunet@baylibre.com>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Wang Jiang <jiangwang@kylinos.cn>, linux-kernel@vger.kernel.org, 
+ linux-renesas-soc@vger.kernel.org
+In-Reply-To: <20250905184240.144431-1-marek.vasut+renesas@mailbox.org>
+References: <20250905184240.144431-1-marek.vasut+renesas@mailbox.org>
+Subject: Re: [PATCH v3] PCI: endpoint: pci-epf-test: Limit PCIe BAR size
+ for fixed BARs
+Message-Id: <175733467033.10254.12972405823164212308.b4-ty@kernel.org>
+Date: Mon, 08 Sep 2025 18:01:10 +0530
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -50,21 +53,24 @@ Content-Transfer-Encoding: 7bit
 X-Mailer: b4 0.14.2
 
 
-On Mon, 08 Sep 2025 17:38:27 +0530, Siddharth Vadapalli wrote:
-> The Cadence PCIe Controller integrated in the TI K3 SoCs supports both
-> Root-Complex and Endpoint modes of operation. The Glue Layer allows
-> "strapping" the Mode of operation of the Controller, the Link Speed
-> and the Link Width. This is enabled by programming the "PCIEn_CTRL"
-> register (n corresponds to the PCIe instance) within the CTRL_MMR
-> memory-mapped register space. The "reset-values" of the registers are
-> also different depending on the mode of operation.
+On Fri, 05 Sep 2025 20:42:10 +0200, Marek Vasut wrote:
+> Currently, the test allocates BAR sizes according to fixed table
+> bar_size[] = { 512, 512, 1024, 16384, 131072, 1048576 } . This
+> does not work with controllers which have fixed size BARs that
+> is smaller than the requested BAR size. One such controller is
+> Renesas R-Car V4H PCIe controller, which has BAR4 size limited
+> to 256 Bytes, which is much less than 131072 currently requested
+> by this test. a lot of controllers drivers in-tree have fixed
+> size BARs, and they do work perfectly fine, but it is only
+> because their fixed size is larger than the size requested
+> by pci-epf-test.c
 > 
 > [...]
 
 Applied, thanks!
 
-[1/1] PCI: j721e: Fix programming sequence of "strap" settings
-      commit: f842d3313ba179d4005096357289c7ad09cec575
+[1/1] PCI: endpoint: pci-epf-test: Limit PCIe BAR size for fixed BARs
+      commit: db4291ba733d857f2326db88c5c41ad6072350e5
 
 Best regards,
 -- 
