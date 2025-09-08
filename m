@@ -1,136 +1,178 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mo-csw-fb.securemx.jp (mo-csw-fb1802.securemx.jp [210.130.202.161])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5AF253A7;
-	Mon,  8 Sep 2025 03:48:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA33421CC63;
+	Mon,  8 Sep 2025 04:02:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.130.202.161
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757303303; cv=none; b=DAwAo+vUh/QmcpL7Tb1f0jzVAlkoWB4XuOXKhHmMfkICqF1zn69tpDjBYr+ahHrwXx3fwwMfijHlFhutid3B1sFu3MXkla0FGOW01tBuWXdqw+jIkTjy4MjlrRNzeU8NHUPKA+l1BW8Xn6wHxgC7DBcB1hn8K/0qLH726lA3/Ts=
+	t=1757304183; cv=none; b=Kmx091f74cQgyvrfYUHch5AuKjB1LS33zIOBofly3Bd9Jy5mGCohy6NQ8OUkcPJaWQIJa2lNDbJBSbDds7IdSbA5JN2iailqvTt1tGifmYA4aicjskXIV7kzlz0efeqr9Eg7Ae+2t9zQLm31e/zaCDQCeLnGgyU1hOy8WrT3q5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757303303; c=relaxed/simple;
-	bh=/bvacUJmYdkFKY7yQmb93B50LcYoGC9OGq8X6zGppu8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GKRwN+zWdCD3zna2eAqzxZeuYgmwHfXSXtTk4oGF080P+xOI2oIbivxwRr8hr8ln8A3IjvWhpnHfw7MSFJOiACzS2+OOvrUbF1rUqr7MGruBCXpu8nZqGlse1Ok7+7iy8MS9b7Be1c0DmQEK/p6gCtZi5HCnSdNAEWkG8My/DlE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P1+HGzm+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757304183; c=relaxed/simple;
+	bh=kpMca/5dNix8RowhERmzPIAooipbVYa60Q5uc1/4vjA=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AN9dsN+2TXN8EMMcIeg1PlZXIXqgMG//N0mevu8K34I9XMDBnkyb/h20V+CClsF5RkEqe9fGS48rauTrOqSOh7PEsvIZD0AJM+jMQnnZyeiOjb4Ts3YnjXstFuUUUpTdrAlCytPllGz5FZcNtwyUegfppyaNaVBjRaGEJQX5f90=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mail.toshiba; spf=pass smtp.mailfrom=mail.toshiba; dkim=pass (2048-bit key) header.d=mail.toshiba header.i=nobuhiro.iwamatsu.x90@mail.toshiba header.b=O5UCuK6c; arc=none smtp.client-ip=210.130.202.161
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mail.toshiba
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mail.toshiba
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P1+HGzm+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13397C4CEF5;
-	Mon,  8 Sep 2025 03:48:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757303303;
-	bh=/bvacUJmYdkFKY7yQmb93B50LcYoGC9OGq8X6zGppu8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=P1+HGzm+6FBuuHKFwXA2r/dAOfshb4T4epFazWasn8UzvrOmv8DTR4eVO8rHRqv/J
-	 40R/S4yyYLU2GG4pXqUTTaZ+/m5ICTzIAa3pZZSdMBrTnJb20lkSUC9j6EY5HUst1m
-	 8xBL0M5Ayk+3Lrkj0roIemcPSwVJzRiFaqIeTV8qIJ/Re6gc6jQoeEjTyTMjoNqsOH
-	 awn/ZjCBkKavNvo0EevmR9z9StqweRN9sZxfqUfzFBbr17+OzafOeVQmrRB/U19PJ9
-	 pIGk3DsienHhrY85UhC3Amf8++fWFZfA/m4Wi41EqHrLCRmkObJr85fHpqnvmyebS5
-	 T8x4bPQ3CAB3Q==
-Date: Mon, 8 Sep 2025 09:18:15 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, 
-	Bartosz Golaszewski <brgl@bgdev.pl>, Saravana Kannan <saravanak@google.com>, 
-	linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	devicetree@vger.kernel.org, Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
-	Brian Norris <briannorris@chromium.org>, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-Subject: Re: [PATCH v2 2/5] PCI/pwrctrl: Move pci_pwrctrl_init() before
- turning ON the supplies
-Message-ID: <tv7pahvoblw77jziivp7ulassnfdlpsg2z4xvisumbrueapfgu@iyfzlnjjubkv>
-References: <20250903-pci-pwrctrl-perst-v2-2-2d461ed0e061@oss.qualcomm.com>
- <20250907212242.GA1398560@bhelgaas>
+	dkim=pass (2048-bit key) header.d=mail.toshiba header.i=nobuhiro.iwamatsu.x90@mail.toshiba header.b="O5UCuK6c"
+Received: by mo-csw-fb.securemx.jp (mx-mo-csw-fb1802) id 5882YmTn2496278; Mon, 8 Sep 2025 11:34:48 +0900
+DKIM-Signature: v=1;a=rsa-sha256;c=relaxed/simple;d=mail.toshiba;h=From:To:Cc:
+	Subject:Date:Message-Id:In-Reply-To:References:MIME-Version:Content-Type:
+	Content-Transfer-Encoding;i=nobuhiro.iwamatsu.x90@mail.toshiba;s=key1.smx;t=
+	1757298855;x=1758508455;bh=kpMca/5dNix8RowhERmzPIAooipbVYa60Q5uc1/4vjA=;b=O5U
+	CuK6cOg7aMbJJ1RTc82mt1mISFZT0UVhkgGTwQYRrjBNR8EAfxvWT05kK4WQMEw5NWdApLO5p6/qw
+	pRGnkGiPb8HDXI8kMtWVay4VYhUridv6q/qzL09JgNYRZpL4oCpKrzZRv6eMvtjDtfMEr2gjWUfuc
+	2v6Xpev1lPTQGf38jebaTUL1wQNz4iiDSQZ/Uksydf0Q5IjeixVH/N83/jLxxkIwE82OgompvzWdV
+	w73wO9FbOCUUHudpxHZAoiatOeSaEBGJEw/J6WjS/ngb9JkTcIW2hReuIolDOC1FNJDvuGDcGjpY4
+	WcSzATh0L4JIn9hzqryi2+n8PeWg14w==;
+Received: by mo-csw.securemx.jp (mx-mo-csw1801) id 5882YF273421850; Mon, 8 Sep 2025 11:34:15 +0900
+X-Iguazu-Qid: 2yAanLGiwHAfmuanNB
+X-Iguazu-QSIG: v=2; s=0; t=1757298855; q=2yAanLGiwHAfmuanNB; m=4x74FXYoyvvLCiG4tTIIRDtA5zJVdJzywQYyEanetjs=
+Received: from imx2-a.toshiba.co.jp (imx2-a.toshiba.co.jp [106.186.93.35])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (P-256) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	 id 4cKrch5GKRz1xnZ; Mon,  8 Sep 2025 11:34:12 +0900 (JST)
+From: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+To: Frank.Li@nxp.com, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+        lpieralisi@kernel.org, kwilczynski@kernel.org, mani@kernel.org,
+        bhelgaas@google.com
+Cc: linux-arm-kernel@lists.infradead.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+        yuji2.ishikawa@toshiba.co.jp,
+        Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
+Subject: [PATCH v3 1/2] arm64: dts: toshiba: Update SoC and PCIe ranges to reflect hardware behavior
+Date: Mon,  8 Sep 2025 11:34:07 +0900
+X-TSB-HOP2: ON
+Message-Id: <1757298848-15154-2-git-send-email-nobuhiro.iwamatsu.x90@mail.toshiba>
+X-Mailer: git-send-email 2.7.4
+In-Reply-To: <1757298848-15154-1-git-send-email-nobuhiro.iwamatsu.x90@mail.toshiba>
+References: <1757298848-15154-1-git-send-email-nobuhiro.iwamatsu.x90@mail.toshiba>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250907212242.GA1398560@bhelgaas>
 
-On Sun, Sep 07, 2025 at 04:22:42PM GMT, Bjorn Helgaas wrote:
-> On Wed, Sep 03, 2025 at 12:43:24PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > 
-> > To allow pwrctrl core to parse the generic resources such as PERST# GPIO
-> > before turning on the supplies.
-> 
-> Can we expand this a little bit?  Which function does that parsing,
-> for example?  pci_pwrctrl_init() itself doesn't do any of that, so the
-> connection isn't obious.
-> 
+From: Frank Li <Frank.Li@nxp.com>
 
-Sure.
+tmpv7708 trim address bit[31:30] in tmpv7708 before passing to the PCIe
+controller. Since only PCIe controller needs to convert the address range
+0x40000000 - 0x80000000, add a bus definition, describe the ranges in it,
+and move the PCIe definition.
 
-Pwrctrl core function pci_pwrctrl_device_set_ready() deasserts PERST# if the
-callback is available. Since that requires accessing 'pwrctrl->dev',
-pci_pwrctrl_init() that is setting 'pwrctrl->dev' needs to be called earlier.
+Prepare for the removal of the driver’s cpu_addr_fixup().
 
-I will change the description to be more elaborative. It also requires rewording
-since the pwrctrl core is not parsing PERST# on its own now.
+Signed-off-by: Frank Li <Frank.Li@nxp.com>
+Suggested-by: Yuji Ishikawa <yuji2.ishikawa@toshiba.co.jp>
+Signed-off-by: Nobuhiro Iwamatsu <nobuhiro.iwamatsu.x90@mail.toshiba>
 
-- Mani
+---
+v3:
+ Move update in drivers/pci/controller/dwc/pcie-visconti.c to patch 2.
+ Update Signed-off-by address, because my company email address has changed.
 
-> > Reviewed-by: Bartosz Golaszewski <bartosz.golaszewski@linaro.org>
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >  drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c | 4 ++--
-> >  drivers/pci/pwrctrl/slot.c               | 4 ++--
-> >  2 files changed, 4 insertions(+), 4 deletions(-)
-> > 
-> > diff --git a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> > index 4e664e7b8dd23f592c0392efbf6728fc5bf9093f..b65955adc7bd44030593e8c49d60db0f39b03d03 100644
-> > --- a/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> > +++ b/drivers/pci/pwrctrl/pci-pwrctrl-pwrseq.c
-> > @@ -80,6 +80,8 @@ static int pci_pwrctrl_pwrseq_probe(struct platform_device *pdev)
-> >  	if (!data)
-> >  		return -ENOMEM;
-> >  
-> > +	pci_pwrctrl_init(&data->ctx, dev);
-> > +
-> >  	data->pwrseq = devm_pwrseq_get(dev, pdata->target);
-> >  	if (IS_ERR(data->pwrseq))
-> >  		return dev_err_probe(dev, PTR_ERR(data->pwrseq),
-> > @@ -95,8 +97,6 @@ static int pci_pwrctrl_pwrseq_probe(struct platform_device *pdev)
-> >  	if (ret)
-> >  		return ret;
-> >  
-> > -	pci_pwrctrl_init(&data->ctx, dev);
-> > -
-> >  	ret = devm_pci_pwrctrl_device_set_ready(dev, &data->ctx);
-> >  	if (ret)
-> >  		return dev_err_probe(dev, ret,
-> > diff --git a/drivers/pci/pwrctrl/slot.c b/drivers/pci/pwrctrl/slot.c
-> > index 6e138310b45b9f7e930b6814e0a24f7111d25fee..b68406a6b027e4d9f853e86d4340e0ab267b6126 100644
-> > --- a/drivers/pci/pwrctrl/slot.c
-> > +++ b/drivers/pci/pwrctrl/slot.c
-> > @@ -38,6 +38,8 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
-> >  	if (!slot)
-> >  		return -ENOMEM;
-> >  
-> > +	pci_pwrctrl_init(&slot->ctx, dev);
-> > +
-> >  	ret = of_regulator_bulk_get_all(dev, dev_of_node(dev),
-> >  					&slot->supplies);
-> >  	if (ret < 0) {
-> > @@ -63,8 +65,6 @@ static int pci_pwrctrl_slot_probe(struct platform_device *pdev)
-> >  				     "Failed to enable slot clock\n");
-> >  	}
-> >  
-> > -	pci_pwrctrl_init(&slot->ctx, dev);
-> > -
-> >  	ret = devm_pci_pwrctrl_device_set_ready(dev, &slot->ctx);
-> >  	if (ret)
-> >  		return dev_err_probe(dev, ret, "Failed to register pwrctrl driver\n");
-> > 
-> > -- 
-> > 2.45.2
-> > 
-> > 
+v2:
+  Update commit message.
+  Fix range.
+  Set true to use_parent_dt_ranges.
+  move pcie under the dedicated sub-bus.
+---
+ arch/arm64/boot/dts/toshiba/tmpv7708.dtsi | 75 ++++++++++++++---------
+ 1 file changed, 45 insertions(+), 30 deletions(-)
 
+diff --git a/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi b/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi
+index 39806f0ae5133..b754965a76ca6 100644
+--- a/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi
++++ b/arch/arm64/boot/dts/toshiba/tmpv7708.dtsi
+@@ -478,37 +478,52 @@ pwm: pwm@241c0000 {
+ 			status = "disabled";
+ 		};
+ 
+-		pcie: pcie@28400000 {
+-			compatible = "toshiba,visconti-pcie";
+-			reg = <0x0 0x28400000 0x0 0x00400000>,
+-			      <0x0 0x70000000 0x0 0x10000000>,
+-			      <0x0 0x28050000 0x0 0x00010000>,
+-			      <0x0 0x24200000 0x0 0x00002000>,
+-			      <0x0 0x24162000 0x0 0x00001000>;
+-			reg-names = "dbi", "config", "ulreg", "smu", "mpu";
+-			device_type = "pci";
+-			bus-range = <0x00 0xff>;
+-			num-lanes = <2>;
+-			num-viewport = <8>;
+-
+-			#address-cells = <3>;
++		pcie_bus: bus@24000000 {
++			compatible = "simple-bus";
++			#address-cells = <2>;
+ 			#size-cells = <2>;
+-			#interrupt-cells = <1>;
+-			ranges = <0x81000000 0 0x40000000 0 0x40000000 0 0x00010000
+-				  0x82000000 0 0x50000000 0 0x50000000 0 0x20000000>;
+-			interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
+-				     <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
+-			interrupt-names = "msi", "intr";
+-			interrupt-map-mask = <0 0 0 7>;
+-			interrupt-map =
+-				<0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
+-				 0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
+-				 0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
+-				 0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
+-			max-link-speed = <2>;
+-			clocks = <&extclk100mhz>, <&pismu TMPV770X_CLK_PCIE_MSTR>, <&pismu TMPV770X_CLK_PCIE_AUX>;
+-			clock-names = "ref", "core", "aux";
+-			status = "disabled";
++			ranges = /* register 1:1 map */
++				 <0x0 0x24000000 0x0 0x24000000 0x0 0x0C000000>,
++				 /*
++				  * bus fabric mask address bit 30 and 31 to 0
++				  * before send to PCIe controller.
++				  *
++				  * PCIe map address 0 to cpu's 0x40000000
++				  */
++				 <0x0 0x00000000 0x0 0x40000000 0x0 0x40000000>;
++
++			pcie: pcie@28400000 {
++				compatible = "toshiba,visconti-pcie";
++				reg = <0x0 0x28400000 0x0 0x00400000>,
++				      <0x0 0x30000000 0x0 0x10000000>,
++				      <0x0 0x28050000 0x0 0x00010000>,
++				      <0x0 0x24200000 0x0 0x00002000>,
++				      <0x0 0x24162000 0x0 0x00001000>;
++				reg-names = "dbi", "config", "ulreg", "smu", "mpu";
++				device_type = "pci";
++				bus-range = <0x00 0xff>;
++				num-lanes = <2>;
++				num-viewport = <8>;
++
++				#address-cells = <3>;
++				#size-cells = <2>;
++				#interrupt-cells = <1>;
++				ranges = <0x81000000 0 0x00000000 0 0x00000000 0 0x00010000
++					  0x82000000 0 0x10000000 0 0x10000000 0 0x20000000>;
++				interrupts = <GIC_SPI 211 IRQ_TYPE_LEVEL_HIGH>,
++					     <GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
++				interrupt-names = "msi", "intr";
++				interrupt-map-mask = <0 0 0 7>;
++				interrupt-map =
++					<0 0 0 1 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
++					 0 0 0 2 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
++					 0 0 0 3 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH
++					 0 0 0 4 &gic GIC_SPI 215 IRQ_TYPE_LEVEL_HIGH>;
++				max-link-speed = <2>;
++				clocks = <&extclk100mhz>, <&pismu TMPV770X_CLK_PCIE_MSTR>, <&pismu TMPV770X_CLK_PCIE_AUX>;
++				clock-names = "ref", "core", "aux";
++				status = "disabled";
++			};
+ 		};
+ 	};
+ };
 -- 
-மணிவண்ணன் சதாசிவம்
+2.51.0
+
+
