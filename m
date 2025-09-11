@@ -1,48 +1,48 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB16B2D3723;
-	Thu, 11 Sep 2025 07:58:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62AAA2D5940;
+	Thu, 11 Sep 2025 07:58:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757577495; cv=none; b=cyTYAnTfvW5paLP6QCEsc6Obi9c/9G7v60AyPc0KyXqn09Ok7y8jVEx/XS8kmdTXx8UUhJHFOfFAlyXIzMVcK44dL2KmB+um1RhKH5lSCD+Ax1vsOb4GC5QQcgmuiT52Rno/odeb/C1kP+EXdR91M5AB8pIvp9SLJw7Xwpor4BY=
+	t=1757577499; cv=none; b=rwG28CJK7z0AnRNDM9wbxd9u4Dwknr/0TnzfN0a8Ngoa256tvkQ8Ff0gieT/DAhUWuJwwcp7yP2sDw8lscK4rmvgrtFHVGwub0ZIvLzTDVejUBYfH1OSfWyFkZXPAGAXMz/hYLbXpHPrZHHA7zKTieGoyRROKxDt4Te+NisMr8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757577495; c=relaxed/simple;
-	bh=6RYIEQkuOzl3A3InWzcMug/hfkfoXrpzul9p5LmOsSg=;
+	s=arc-20240116; t=1757577499; c=relaxed/simple;
+	bh=oXbmaS48fO9o/2YikXjGdRRz6a3wwA1geRn/x6qZ98k=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pCaDTHMqmhc3QITwnrXlFuk/L/AUjMsTP5HXnQTg8QksjR1YmOaI5PYXCsMMOszc4zeRXCOZTHOIQ9syKWeX9KBv8xb8jED8pZRf6mH9fMijwM/v5qThQrqje6msdHw0eoX26i5S0R+xjbT6Hcm6x/f9Eh/K7wIzrWuIDyrIQ+4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MWG+HmLl; arc=none smtp.client-ip=198.175.65.13
+	 MIME-Version:Content-Type; b=IlrTYZgmDmp7uKhhDORQsMg31Ug2BblTTVH4EEHkmoE1XOYXDyZYI6dFpXQIP6IYGFhQzI3DOp5JOjfIHRnAf15v4NmOn3xEiJr6mZQA4RZx8GF0fuImV4oyXoElNTcnPu+V5oHOZJOxiWbeqDHjAWCpnaqcO4e/su0Zq7oefGY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=D3p3iFdV; arc=none smtp.client-ip=198.175.65.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MWG+HmLl"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="D3p3iFdV"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1757577494; x=1789113494;
+  t=1757577498; x=1789113498;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=6RYIEQkuOzl3A3InWzcMug/hfkfoXrpzul9p5LmOsSg=;
-  b=MWG+HmLl4A83guvrsntVPttJJo1FuJkfdAO9TLDAL2bskUBqGQ+aQhSP
-   +9CG7QsV6ZDN40K9ul8Vk8+RtoZZA2xbAofO++flHP4tXXtZfkckY/Gac
-   qWjL/rKy/D0Z4qK8dgvdzg8dxPxfGzuaGsAbFLySQI74A6BcxYFvbf2E5
-   ZwyF/mPHwbwWTin5lv5MRmFl9pltvLQLYgfFN9V4QVMeNHImK2gyy5bd9
-   GbJEpz8R3axmOBCo4SDoipdL40b9/pZYrWVj9QDGm3FuzFT6h3cHSegSK
-   3Qi1W8KLzYKFjQqKXvqrKVcObKyg01imMDl0Damp6A2OpzIcczi/M2qPM
-   g==;
-X-CSE-ConnectionGUID: 84K2LCWiT+yFt7lExg/Qpg==
-X-CSE-MsgGUID: 82fUquxBRGG1uAZpybE9Jw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11549"; a="70999386"
-X-IronPort-AV: E=Sophos;i="6.18,256,1751266800"; 
-   d="scan'208";a="70999386"
-Received: from orviesa009.jf.intel.com ([10.64.159.149])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:57:51 -0700
-X-CSE-ConnectionGUID: gRaHmoh2RmK5x3zOFXvN2w==
-X-CSE-MsgGUID: f+tPr7AfRD+jyMtnjayPKw==
+  bh=oXbmaS48fO9o/2YikXjGdRRz6a3wwA1geRn/x6qZ98k=;
+  b=D3p3iFdV/WISyYJgLF24AFkJf/qJZ2uCxKtYtsBRCeG50dXK4jT2QcaU
+   otTAawoocknnQAqosLH9O3LqKchMDzemNLckUDIz4rjfhlOO8x6IK0nNi
+   95shxPkxJCY565cak5u0Gp2yzsElQdbllKScgQp0KkKkGZAa7Bwqvl6oy
+   fAuyUyaYwmC10ERSAQxyZttBuMGa4OPeFHzAOyZzzVaTejSbjawDGsQd5
+   zutpbxz+PmqIJkurG4OyOP49sYpP/vhSUUZF++ghV2Ch7HydSOZWKMfgX
+   qgQVDfuNWldB5rGl340MIVBQEr3C2VRecwAJxxOBKrC4/hMHXLjhHwefH
+   w==;
+X-CSE-ConnectionGUID: H08rSi9STOW/yUNNRHdn8g==
+X-CSE-MsgGUID: id7e2qgNQUCRt/xRffwEdQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="63728910"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="63728910"
+Received: from fmviesa010.fm.intel.com ([10.60.135.150])
+  by orvoesa106.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:58:17 -0700
+X-CSE-ConnectionGUID: O3u/AQjKQdy10kNOvrGpzQ==
+X-CSE-MsgGUID: nDzn6KzfTp+gnd+hYQglJg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.18,256,1751266800"; 
-   d="scan'208";a="173186319"
+   d="scan'208";a="174422511"
 Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.187])
-  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:57:44 -0700
+  by fmviesa010-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:58:09 -0700
 From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
 To: linux-pci@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
@@ -65,9 +65,9 @@ To: linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: linux-doc@vger.kernel.org,
 	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 07/11] drm/xe/vram: Use PCI rebar helpers in resize_vram_bar()
-Date: Thu, 11 Sep 2025 10:56:01 +0300
-Message-Id: <20250911075605.5277-8-ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 09/11] drm/xe/vram: Use pci_rebar_get_max_size()
+Date: Thu, 11 Sep 2025 10:56:03 +0300
+Message-Id: <20250911075605.5277-10-ilpo.jarvinen@linux.intel.com>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250911075605.5277-1-ilpo.jarvinen@linux.intel.com>
 References: <20250911075605.5277-1-ilpo.jarvinen@linux.intel.com>
@@ -80,57 +80,55 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-PCI core provides pci_rebar_size_supported(), use it in
-resize_vram_bar() to simplify code.
+Use pci_rebar_get_max_size() from PCI core in resize_vram_bar() to
+simplify code.
 
 Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
 ---
- drivers/gpu/drm/xe/xe_vram.c | 19 +++++++------------
- 1 file changed, 7 insertions(+), 12 deletions(-)
+ drivers/gpu/drm/xe/xe_vram.c | 15 +++++++--------
+ 1 file changed, 7 insertions(+), 8 deletions(-)
 
 diff --git a/drivers/gpu/drm/xe/xe_vram.c b/drivers/gpu/drm/xe/xe_vram.c
-index e421a74fb87c..08a9abebfee7 100644
+index 08a9abebfee7..b063c072df1e 100644
 --- a/drivers/gpu/drm/xe/xe_vram.c
 +++ b/drivers/gpu/drm/xe/xe_vram.c
-@@ -21,8 +21,6 @@
- #include "xe_sriov.h"
- #include "xe_vram.h"
+@@ -53,16 +53,11 @@ static void resize_vram_bar(struct xe_device *xe)
+ 	resource_size_t current_size;
+ 	resource_size_t rebar_size;
+ 	struct resource *root_res;
+-	u32 bar_size_mask;
++	int max_size, i;
+ 	u32 pci_cmd;
+-	int i;
  
--#define BAR_SIZE_SHIFT 20
+ 	/* gather some relevant info */
+ 	current_size = pci_resource_len(pdev, LMEM_BAR);
+-	bar_size_mask = pci_rebar_get_possible_sizes(pdev, LMEM_BAR);
 -
- static void
- _resize_bar(struct xe_device *xe, int resno, resource_size_t size)
- {
-@@ -71,25 +69,22 @@ static void resize_vram_bar(struct xe_device *xe)
+-	if (!bar_size_mask)
+-		return;
  
- 	/* set to a specific size? */
- 	if (force_vram_bar_size) {
--		u32 bar_size_bit;
--
--		rebar_size = force_vram_bar_size * (resource_size_t)SZ_1M;
-+		rebar_size = pci_rebar_bytes_to_size(force_vram_bar_size *
-+						     (resource_size_t)SZ_1M);
- 
--		bar_size_bit = bar_size_mask & BIT(pci_rebar_bytes_to_size(rebar_size));
--
--		if (!bar_size_bit) {
-+		if (!pci_rebar_size_supported(pdev, LMEM_BAR, rebar_size)) {
+ 	if (force_vram_bar_size < 0)
+ 		return;
+@@ -76,7 +71,8 @@ static void resize_vram_bar(struct xe_device *xe)
  			drm_info(&xe->drm,
  				 "Requested size: %lluMiB is not supported by rebar sizes: 0x%x. Leaving default: %lluMiB\n",
--				 (u64)rebar_size >> 20, bar_size_mask, (u64)current_size >> 20);
-+				 (u64)pci_rebar_size_to_bytes(rebar_size) >> 20,
-+				 bar_size_mask, (u64)current_size >> 20);
+ 				 (u64)pci_rebar_size_to_bytes(rebar_size) >> 20,
+-				 bar_size_mask, (u64)current_size >> 20);
++				 pci_rebar_get_possible_sizes(pdev, LMEM_BAR),
++				 (u64)current_size >> 20);
  			return;
  		}
  
--		rebar_size = 1ULL << (__fls(bar_size_bit) + BAR_SIZE_SHIFT);
--
-+		rebar_size = pci_rebar_size_to_bytes(rebar_size);
+@@ -84,7 +80,10 @@ static void resize_vram_bar(struct xe_device *xe)
  		if (rebar_size == current_size)
  			return;
  	} else {
--		rebar_size = 1ULL << (__fls(bar_size_mask) + BAR_SIZE_SHIFT);
-+		rebar_size = pci_rebar_size_to_bytes(__fls(bar_size_mask));
+-		rebar_size = pci_rebar_size_to_bytes(__fls(bar_size_mask));
++		max_size = pci_rebar_get_max_size(pdev, LMEM_BAR);
++		if (max_size < 0)
++			return;
++		rebar_size = pci_rebar_size_to_bytes(max_size);
  
  		/* only resize if larger than current */
  		if (rebar_size <= current_size)
