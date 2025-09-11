@@ -1,160 +1,200 @@
-Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24F372C11FC;
-	Thu, 11 Sep 2025 07:57:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.21.23.139
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 460062C327D;
+	Thu, 11 Sep 2025 07:57:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757577451; cv=none; b=UzOgDo1xmZdfju0JSn7B78I5VML7Olm5STGHXYcfHthp+XiIDOrgNDi0BGWgxwdwRC5uk64nigCZBuOYJtcnNY6jf2jjobXQcFukSHBsv18AxmM7p0eIqKsQrdtzWntGMG3G64vMcg/howubbCbPh2fAy5S5bv5Ptqt8TCd6t8Q=
+	t=1757577470; cv=none; b=tEMSN45Jip+kJsjYlipRJ+e3Kx+VLhpQLDYPfbmx7nECkoejihoAn4qrr3R02UpSGgSDXzwuD7qUg+8Ey9vwe/M1CBpNECUs0wSJzy6VsBBSAz7BbHx6oAsqIEmT/yPLmYrCTElMafvdHcKIWcqvlvuuCzinZGHYWmjR/gpNFgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757577451; c=relaxed/simple;
-	bh=1zFS0OoHO7VitnBfjBYIM4BjL3McKXL3jTy4inK1e7c=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LXWutFEOIJjy2qc784ZyeIk9MFOUpnlS+kaLlPiI/Jo6ppgzEveNiSUjN3bsO9ECQgGPmTjfGEhQoxnZ7ScBvP6nba/a7LeEdnear3Yz8kMisiXdGaGnumM9VEr+DPdOj1EgeV8syqK7bNdqs3KLANwm8xUTsDX3JwWu59cqqyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org; spf=pass smtp.mailfrom=disroot.org; dkim=pass (2048-bit key) header.d=disroot.org header.i=@disroot.org header.b=kV3alzNE; arc=none smtp.client-ip=178.21.23.139
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
+	s=arc-20240116; t=1757577470; c=relaxed/simple;
+	bh=IAxgNbJGd3/oP9q1FLQX9YXGLqA1E1HjfwvAaKjpyHI=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=HyCXmD/yU5q2rmACYsc4BNNWWd4ezEcfUIFO+Dw+NvIt5FvGnj0kTFxAEW2xU77B4bT3prZPMqJJJvihS+yHHsMjmsQ0kJYfc6CDkaB0x4aap1uPCo8dA6QBlrrolkgKDBBanEXi4BcCbbcnW0y54gu9l1iFrHYqxxvOHSyv64E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=m9xynmmo; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=disroot.org header.i=@disroot.org header.b="kV3alzNE"
-Received: from mail01.disroot.lan (localhost [127.0.0.1])
-	by disroot.org (Postfix) with ESMTP id 2CADB25E06;
-	Thu, 11 Sep 2025 09:57:21 +0200 (CEST)
-X-Virus-Scanned: SPAM Filter at disroot.org
-Received: from layka.disroot.org ([127.0.0.1])
- by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
- id jSO4ka3eDsHC; Thu, 11 Sep 2025 09:57:20 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
-	t=1757577440; bh=1zFS0OoHO7VitnBfjBYIM4BjL3McKXL3jTy4inK1e7c=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To;
-	b=kV3alzNExe3pSnJskdNpJknNrA8TOAKDFoUaHQOuhhjqFbKz8B7243V4JJSFCj40A
-	 scBWoagrfkx3ZkVn30FsSQuwDHkplcmu8+JzH1ZAGztanNI63le+YCKYzqFE0oBJyd
-	 OWgajMh7rCBnvXo7i4LAtFpUrMwUaXs7x7ChH0+1qm7X9+oWvVn6YUNzkkNbNV8baR
-	 gHgbBCkbxKqw1AmwTPW6IB6H5K95MX+uNAo+xRtHEkmo/VcRXuyuzKUgvkPqFfosPd
-	 c0h3TgG7EXtPjM9C0gzOJTm40wZu+cP/4hJExVQLbmnHN+ZI0S3AfpSTdjwbtex67p
-	 kcg1rohn2BV6Q==
-Date: Thu, 11 Sep 2025 07:56:44 +0000
-From: Yao Zi <ziyao@disroot.org>
-To: Jonas Karlman <jonas@kwiboo.se>
-Cc: Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Heiko Stuebner <heiko@sntech.de>,
-	Shawn Lin <shawn.lin@rock-chips.com>,
-	Simon Xue <xxm@rock-chips.com>, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-rockchip@lists.infradead.org, linux-kernel@vger.kernel.org,
-	Chukun Pan <amadeus@jmu.edu.cn>
-Subject: Re: [PATCH 2/3] arm64: dts: rockchip: Add PCIe Gen2x1 controller for
- RK3528
-Message-ID: <aMKAvCglcaC6-00k@pie>
-References: <20250906135246.19398-1-ziyao@disroot.org>
- <20250906135246.19398-3-ziyao@disroot.org>
- <38e80b6d-1dc9-47a8-8b23-e875c2848e6e@kwiboo.se>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="m9xynmmo"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1757577469; x=1789113469;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=IAxgNbJGd3/oP9q1FLQX9YXGLqA1E1HjfwvAaKjpyHI=;
+  b=m9xynmmo2eVQwaZ0VCOr89ZE4IWh6BwNwWvc6zXk3EfRp6ACnFqCf0WZ
+   I2tOYYvfcjk3XrIsFqfvA3M2i1GU84RjJxu/61IPmxGENT+cp7/seNupG
+   T7KslAdoryN5L/+O5NEjCgeQ6uOXjjqSGFYj87V1YJuR2XJzzMKfVqN+L
+   hu1Bu0XotZj4epG3yP4H+OsmDGBvh7Fdt99wnh7Ev+ka1bT7pDMvRcf2G
+   OiMsgKXOoWQ4xZjb8HE7gNmt3pvWL1FdsbQlgQpVrQ+cu3YUQIyM1X0S7
+   SaBSxvu1wKHOeT0eNUmWyk7WW+NOSFQZTAZkY7N72DmMxT+pniNokRPRh
+   Q==;
+X-CSE-ConnectionGUID: Xmk+WQxbS5yK/puVGEgc6Q==
+X-CSE-MsgGUID: 3mO7qcr8TC+4yjyXatrrog==
+X-IronPort-AV: E=McAfee;i="6800,10657,11549"; a="70999287"
+X-IronPort-AV: E=Sophos;i="6.18,256,1751266800"; 
+   d="scan'208";a="70999287"
+Received: from orviesa009.jf.intel.com ([10.64.159.149])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:57:28 -0700
+X-CSE-ConnectionGUID: gmapQe/zSUKriqtkGuXbwg==
+X-CSE-MsgGUID: W5vBlPAvSlSbgBpu2YqvCQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,256,1751266800"; 
+   d="scan'208";a="173186230"
+Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.187])
+  by orviesa009-auth.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:57:19 -0700
+From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+To: linux-pci@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	=?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	amd-gfx@lists.freedesktop.org,
+	David Airlie <airlied@gmail.com>,
+	dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Lucas De Marchi <lucas.demarchi@intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	linux-kernel@vger.kernel.org
+Cc: linux-doc@vger.kernel.org,
+	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
+Subject: [PATCH 05/11] PCI: Add pci_rebar_size_supported() helper
+Date: Thu, 11 Sep 2025 10:55:59 +0300
+Message-Id: <20250911075605.5277-6-ilpo.jarvinen@linux.intel.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250911075605.5277-1-ilpo.jarvinen@linux.intel.com>
+References: <20250911075605.5277-1-ilpo.jarvinen@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <38e80b6d-1dc9-47a8-8b23-e875c2848e6e@kwiboo.se>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, Sep 10, 2025 at 11:29:00PM +0200, Jonas Karlman wrote:
-> Hi Yao Zi,
-> 
-> On 9/6/2025 3:52 PM, Yao Zi wrote:
-> > Describes the PCIe Gen2x1 controller integrated in RK3528 SoC. The SoC
-> > doesn't provide a separate MSI controller, thus the one integrated in
-> > designware PCIe IP must be used.
-> > 
-> > Signed-off-by: Yao Zi <ziyao@disroot.org>
-> > ---
-> >  arch/arm64/boot/dts/rockchip/rk3528.dtsi | 56 +++++++++++++++++++++++-
-> >  1 file changed, 55 insertions(+), 1 deletion(-)
-> > 
-> > diff --git a/arch/arm64/boot/dts/rockchip/rk3528.dtsi b/arch/arm64/boot/dts/rockchip/rk3528.dtsi
-> > index db5dbcac7756..2d2af467e5ab 100644
-> > --- a/arch/arm64/boot/dts/rockchip/rk3528.dtsi
-> > +++ b/arch/arm64/boot/dts/rockchip/rk3528.dtsi
-> > @@ -7,6 +7,7 @@
-> >  #include <dt-bindings/gpio/gpio.h>
-> >  #include <dt-bindings/interrupt-controller/arm-gic.h>
-> >  #include <dt-bindings/interrupt-controller/irq.h>
-> > +#include <dt-bindings/phy/phy.h>
-> >  #include <dt-bindings/pinctrl/rockchip.h>
-> >  #include <dt-bindings/clock/rockchip,rk3528-cru.h>
-> >  #include <dt-bindings/power/rockchip,rk3528-power.h>
-> > @@ -239,7 +240,7 @@ gmac0_clk: clock-gmac50m {
-> >  
-> >  	soc {
-> >  		compatible = "simple-bus";
-> > -		ranges = <0x0 0xfe000000 0x0 0xfe000000 0x0 0x2000000>;
-> > +		ranges = <0x0 0xfc000000 0x0 0xfc000000 0x0 0x44400000>;
-> 
-> We should use the dbi reg area in the 32-bit address space, please use:
-> 
->   ranges = <0x0 0xfc000000 0x0 0xfc000000 0x0 0x4000000>;
+Many callers of pci_rebar_get_possible_sizes() are interested in
+finding out if a particular BAR Size (PCIe r6.2 sec. 7.8.6.3) is
+supported by the particular BAR.
 
-This seems strange to me. I read through TRMs for RK3562 and RK3576, and
-found it's common for Rockchip SoCs to map DBI regions of PCIe
-controllers to two separate MMIO regions, but am still not sure why it's
-necessary to use the mapping in the 32-bit address space.
+Add pci_rebar_size_supported() into PCI core to make it easy for the
+drivers to determine if the BAR Size is supported or not.
 
-However, I'm willing to follow the vendor's decision here in order to
-avoid unexpected problems. Will adapt this in v2.
+Use the new function in pci_resize_resource() and in
+pci_iov_vf_bar_set_size().
 
-> >  		#address-cells = <2>;
-> >  		#size-cells = <2>;
-> >  
-> > @@ -1133,6 +1134,59 @@ combphy: phy@ffdc0000 {
-> >  			rockchip,pipe-phy-grf = <&pipe_phy_grf>;
-> >  			status = "disabled";
-> >  		};
-> > +
-> > +		pcie: pcie@fe4f0000 {
-> 
-> With the dbi reg area changed below, please update the node name and
-> move this node to top of the soc node.
-> 
->   pcie@fe000000
-> 
-> > +			compatible = "rockchip,rk3528-pcie",
-> > +				     "rockchip,rk3568-pcie";
-> > +			reg = <0x1 0x40000000 0x0 0x400000>,
-> 
-> We should use the dbi reg area in the 32-bit address space, please use:
-> 
->   reg = <0x0 0xfe000000 0x0 0x400000>,
-> 
-> > +			      <0x0 0xfe4f0000 0x0 0x10000>,
-> > +			      <0x0 0xfc000000 0x0 0x100000>;
-> > +			reg-names = "dbi", "apb", "config";
-> > +			bus-range = <0x0 0xff>;
-> > +			clocks = <&cru ACLK_PCIE>, <&cru HCLK_PCIE_SLV>,
-> > +				 <&cru HCLK_PCIE_DBI>, <&cru PCLK_PCIE>,
-> > +				 <&cru CLK_PCIE_AUX>, <&cru PCLK_PCIE_PHY>;
-> > +			clock-names = "aclk_mst", "aclk_slv",
-> > +				      "aclk_dbi", "pclk",
-> > +				      "aux", "pipe";
-> 
-> In my U-Boot test I did not have the pipe/phy clock here, do we need it?
+Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
+---
+ drivers/pci/iov.c   |  7 +------
+ drivers/pci/rebar.c | 29 +++++++++++++++++++++++------
+ include/linux/pci.h |  1 +
+ 3 files changed, 25 insertions(+), 12 deletions(-)
 
-Just as mentioned by Chukun, the clock should indeed be managed by phy
-instead of the PCIe controller. Will fix it as well.
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ac4375954c94..51844a9176a0 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -1334,7 +1334,6 @@ EXPORT_SYMBOL_GPL(pci_sriov_configure_simple);
+  */
+ int pci_iov_vf_bar_set_size(struct pci_dev *dev, int resno, int size)
+ {
+-	u32 sizes;
+ 	int ret;
+ 
+ 	if (!pci_resource_is_iov(resno))
+@@ -1343,11 +1342,7 @@ int pci_iov_vf_bar_set_size(struct pci_dev *dev, int resno, int size)
+ 	if (pci_iov_is_memory_decoding_enabled(dev))
+ 		return -EBUSY;
+ 
+-	sizes = pci_rebar_get_possible_sizes(dev, resno);
+-	if (!sizes)
+-		return -ENOTSUPP;
+-
+-	if (!(sizes & BIT(size)))
++	if (!pci_rebar_size_supported(dev, resno, size))
+ 		return -EINVAL;
+ 
+ 	ret = pci_rebar_set_size(dev, resno, size);
+diff --git a/drivers/pci/rebar.c b/drivers/pci/rebar.c
+index 64315dd8b6bb..735d9afd6ab1 100644
+--- a/drivers/pci/rebar.c
++++ b/drivers/pci/rebar.c
+@@ -3,6 +3,7 @@
+  * PCI Resizable BAR Extended Capability handling.
+  */
+ 
++#include <linux/bits.h>
+ #include <linux/bitfield.h>
+ #include <linux/errno.h>
+ #include <linux/export.h>
+@@ -124,6 +125,27 @@ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
+ }
+ EXPORT_SYMBOL(pci_rebar_get_possible_sizes);
+ 
++/**
++ * pci_rebar_size_supported - check if size is supported for BAR
++ * @pdev: PCI device
++ * @bar: BAR to check
++ * @size: size as defined in the PCIe spec (0=1MB, 31=128TB)
++ *
++ * Return: %true if @bar is resizable and @size is a supported, otherwise
++ *	   %false.
++ */
++bool pci_rebar_size_supported(struct pci_dev *pdev, int bar, int size)
++{
++	u64 sizes;
++
++	sizes = pci_rebar_get_possible_sizes(pdev, bar);
++	if (!sizes)
++		return false;
++
++	return BIT(size) & sizes;
++}
++EXPORT_SYMBOL_GPL(pci_rebar_size_supported);
++
+ /**
+  * pci_rebar_get_current_size - get the current size of a Resizable BAR
+  * @pdev: PCI device
+@@ -231,7 +253,6 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+ 	struct resource *res = pci_resource_n(dev, resno);
+ 	struct pci_host_bridge *host;
+ 	int old, ret;
+-	u32 sizes;
+ 
+ 	/* Check if we must preserve the firmware's resource assignment */
+ 	host = pci_find_host_bridge(dev->bus);
+@@ -245,11 +266,7 @@ int pci_resize_resource(struct pci_dev *dev, int resno, int size)
+ 	if (pci_resize_is_memory_decoding_enabled(dev, resno))
+ 		return -EBUSY;
+ 
+-	sizes = pci_rebar_get_possible_sizes(dev, resno);
+-	if (!sizes)
+-		return -ENOTSUPP;
+-
+-	if (!(sizes & BIT(size)))
++	if (!pci_rebar_size_supported(dev, resno, size))
+ 		return -EINVAL;
+ 
+ 	old = pci_rebar_get_current_size(dev, resno);
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 6f0c31290675..917c3b897739 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -1423,6 +1423,7 @@ void pci_release_resource(struct pci_dev *dev, int resno);
+ int pci_rebar_bytes_to_size(u64 bytes);
+ resource_size_t pci_rebar_size_to_bytes(int size);
+ u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
++bool pci_rebar_size_supported(struct pci_dev *pdev, int bar, int size);
+ int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
+ 
+ int pci_select_bars(struct pci_dev *dev, unsigned long flags);
+-- 
+2.39.5
 
-> With above fixed this more or less matches my U-Boot testing, and is:
-> 
-> Reviewed-by: Jonas Karlman <jonas@kwiboo.se>
-
-Much thanks.
-
-> Regards,
-> Jonas
-
-Best regards,
-Yao Zi
