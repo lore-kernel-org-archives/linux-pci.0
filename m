@@ -1,61 +1,58 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783DC26A0A7
-	for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2025 23:56:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9913F270545
+	for <linux-pci@vger.kernel.org>; Thu, 11 Sep 2025 23:56:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757635013; cv=none; b=iqGm5HbHFRnb02u3ExxGb/xKBNwm6b2pzOW56LYfUaBJ1mHE+yIQuDFU1ae0BCQbqTRNg0AwouQuPRz8o5PiFMCqjI32D0g+FdfGa+eNzk+XgpJRZkBpPh2I3IjXSqytnT0BJL3CzD/P2kXTRfLSyirwiFXDpaOe+sO4i0dNJG4=
+	t=1757635014; cv=none; b=Ry/kJobBJxt63AUIPMqqD+2jPT11NeBdgB3TZWumJ7igmWgtKaRSXdP5yI4fYzl/kFeFJSfR4GmAqtFyKHPJ0VJ9aAHaM1AXNIDC/dlwViI9JwOsGCwwwSkYLiPfmzN/PPnswIkpJoSOose9ME4psd0JtcFEAJcBENqCobjaKdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757635013; c=relaxed/simple;
-	bh=N/cFrk4c2sRma612iaMy42U0yqKHMn9Cti9Q6QoH0Nk=;
+	s=arc-20240116; t=1757635014; c=relaxed/simple;
+	bh=p6OTPWhTrh6KC/IvXMAHoMRzbObWoiKU69eQRmYKpVE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oi4U5noNnvxUCOKwKgvY0m5/oWlwp0LzkEsA8ROTOTme/K01VySMS2UK8FHGPzuGwEgQ5/f85hh+dHTlShviP1Jd/tIqBJQLugNWyU9bBnpnSEJvzZZY2Kha+VdMrE/wPDDB9oZxO0QUNWa0oluI6WpsNT1RqS/22oFYZZs9O0Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Yace2q5j; arc=none smtp.client-ip=192.198.163.11
+	 MIME-Version; b=mj1Uw3RMWbZr41S/r/nrjKfszR1FYuyCKtC6AQWXz54QB6orjkYAag1jo7AUIp9gI6ErjUZV7RIFdWS9Sn2vdppRiTVD6oqypIBkdWhGsWf/iQvBMvLmDSN/JavZJE9E8Y7UDb0+/A/r2ovekN1+UD1xAQARjvEqkXvfCWGGeBU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kYRKwZxx; arc=none smtp.client-ip=192.198.163.11
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Yace2q5j"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kYRKwZxx"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1757635011; x=1789171011;
+  t=1757635013; x=1789171013;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=N/cFrk4c2sRma612iaMy42U0yqKHMn9Cti9Q6QoH0Nk=;
-  b=Yace2q5jv2gAA5vkuVhBmTe0TF9RnkLK9pCAV35eJHPp2xi/BQjI1ctp
-   YFX7Yfg9foSumzvAY9iKLIu00vR7+HsMOqC19TxpWUCyTwbUYJsxZ58Uc
-   FYTCaLredvudpGcM4M/gLwd2Ag7jpuXzeKEojxOrwUbWSx63EBgfpViD0
-   wcvPrgNBfPFI+IVRiHOxBNYU4ABrFU/5E1gzYS0Pvwo0IgSdy3o7lJSBl
-   oux5Ut50vYyZw80iYiSi0NkjTwK1HODf5gTzbGMeFB5FJ82XiTOwKT1Nk
-   YwDTngHyIOihTjQvh5leQUwbSq+md3DYtCP9hXOJbUnN8rF5yoP+6MPu6
-   A==;
-X-CSE-ConnectionGUID: 5odgz3yRSiuJrq8HgcjXjg==
-X-CSE-MsgGUID: RRq0+rQMTrW9HguwmRgSyQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11550"; a="70598701"
+  bh=p6OTPWhTrh6KC/IvXMAHoMRzbObWoiKU69eQRmYKpVE=;
+  b=kYRKwZxxPTAnNPMhidXg7ZAGUc7ZQaJ4uCCvy8m7KSgt8CO8HVbobM8u
+   vJyjwErZkT8AraNLslF6tq10K2RZo/s4thNvaYIPoO+IpJ44WX2AIcVn9
+   3fq4NTaSs5lTZrunzzO1sCsssIMmdK3mtW5aSevLNJF8/5GyVvxdQFMmv
+   TclKzkB/K4JzHtDMQVpxoW69ZNvg4/tSxBlQECrPtre6MFGEhvSspwWLG
+   1vE3SH4JtxepUroXAlU31OXwt5kLdOEz/PazS+360F3jiJW8UNkepHlIW
+   rru4PEtjGG7si6Xrku1sZrMR1KIWTIvfBZdjH/3bmXvh2fy13BS0wy0A2
+   w==;
+X-CSE-ConnectionGUID: VRsyBlOmSqGwisyIL6QX/g==
+X-CSE-MsgGUID: isgjYzpCRYuaKes+h+J8nQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11550"; a="70598717"
 X-IronPort-AV: E=Sophos;i="6.18,258,1751266800"; 
-   d="scan'208";a="70598701"
+   d="scan'208";a="70598717"
 Received: from fmviesa007.fm.intel.com ([10.60.135.147])
   by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 16:56:48 -0700
-X-CSE-ConnectionGUID: QnFkePEHTza1i3ossQJWsw==
-X-CSE-MsgGUID: IkQaw24IQImEMBk6ppFSYg==
+X-CSE-ConnectionGUID: qwneWTLaQme/k0plu9vxgA==
+X-CSE-MsgGUID: 8sxr93BaS4qItlwU38Fe3Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.18,258,1751266800"; 
-   d="scan'208";a="173393514"
+   d="scan'208";a="173393521"
 Received: from dwillia2-desk.jf.intel.com ([10.88.27.145])
-  by fmviesa007.fm.intel.com with ESMTP; 11 Sep 2025 16:56:47 -0700
+  by fmviesa007.fm.intel.com with ESMTP; 11 Sep 2025 16:56:48 -0700
 From: Dan Williams <dan.j.williams@intel.com>
 To: linux-pci@vger.kernel.org,
 	linux-coco@lists.linux.dev
 Cc: gregkh@linuxfoundation.org,
 	bhelgaas@google.com,
 	lukas@wunner.de,
-	Alexey Kardashevskiy <aik@amd.com>,
-	Xu Yilun <yilun.xu@linux.intel.com>,
-	Jonathan Cameron <jonathan.cameron@huawei.com>,
-	"Aneesh Kumar K.V (Arm)" <aneesh.kumar@kernel.org>
-Subject: [PATCH resend v6 01/10] coco/tsm: Introduce a core device for TEE Security Managers
-Date: Thu, 11 Sep 2025 16:56:38 -0700
-Message-ID: <20250911235647.3248419-2-dan.j.williams@intel.com>
+	Jonathan Cameron <jonathan.cameron@huawei.com>
+Subject: [PATCH resend v6 03/10] PCI: Introduce pci_walk_bus_reverse(), for_each_pci_dev_reverse()
+Date: Thu, 11 Sep 2025 16:56:40 -0700
+Message-ID: <20250911235647.3248419-4-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250911235647.3248419-1-dan.j.williams@intel.com>
 References: <20250911235647.3248419-1-dan.j.williams@intel.com>
@@ -67,229 +64,292 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A "TSM" is a platform component that provides an API for securely
-provisioning resources for a confidential guest (TVM) to consume. The
-name originates from the PCI specification for platform agent that
-carries out operations for PCIe TDISP (TEE Device Interface Security
-Protocol).
+PCI/TSM, the PCI core functionality for the PCIe TEE Device Interface
+Security Protocol (TDISP), has a need to walk all subordinate functions of
+a Device Security Manager (DSM) to setup a device security context. A DSM
+is physical function 0 of multi-function or SR-IOV device endpoint, or it
+is an upstream switch port.
 
-Instances of this core device are parented by a device representing the
-platform security function like CONFIG_CRYPTO_DEV_CCP or
-CONFIG_INTEL_TDX_HOST.
+In error scenarios or when a TEE Security Manager (TSM) device is removed
+it needs to unwind all established DSM contexts.
 
-This device interface is a frontend to the aspects of a TSM and TEE I/O
-that are cross-architecture common. This includes mechanisms like
-enumerating available platform TEE I/O capabilities and provisioning
-connections between the platform TSM and device DSMs (Device Security
-Manager (TDISP)).
+Introduce reverse versions of PCI device iteration helpers to mirror the
+setup path and ensure that dependent children are handled before parents.
 
-For now this is just the scaffolding for registering a TSM device sysfs
-interface.
-
-Cc: Alexey Kardashevskiy <aik@amd.com>
-Cc: Xu Yilun <yilun.xu@linux.intel.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
-Co-developed-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-Signed-off-by: Aneesh Kumar K.V (Arm) <aneesh.kumar@kernel.org>
-Acked-by: Bjorn Helgaas <bhelgaas@google.com>
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- Documentation/ABI/testing/sysfs-class-tsm |   9 ++
- MAINTAINERS                               |   2 +-
- drivers/virt/coco/Kconfig                 |   3 +
- drivers/virt/coco/Makefile                |   1 +
- drivers/virt/coco/tsm-core.c              | 109 ++++++++++++++++++++++
- include/linux/tsm.h                       |   4 +
- 6 files changed, 127 insertions(+), 1 deletion(-)
- create mode 100644 Documentation/ABI/testing/sysfs-class-tsm
- create mode 100644 drivers/virt/coco/tsm-core.c
+ drivers/base/bus.c         | 38 +++++++++++++++++++++++
+ drivers/pci/bus.c          | 38 +++++++++++++++++++++++
+ drivers/pci/search.c       | 62 +++++++++++++++++++++++++++++++++-----
+ include/linux/device/bus.h |  3 ++
+ include/linux/pci.h        | 11 +++++++
+ 5 files changed, 144 insertions(+), 8 deletions(-)
 
-diff --git a/Documentation/ABI/testing/sysfs-class-tsm b/Documentation/ABI/testing/sysfs-class-tsm
-new file mode 100644
-index 000000000000..2949468deaf7
---- /dev/null
-+++ b/Documentation/ABI/testing/sysfs-class-tsm
-@@ -0,0 +1,9 @@
-+What:		/sys/class/tsm/tsmN
-+Contact:	linux-coco@lists.linux.dev
-+Description:
-+		"tsmN" is a device that represents the generic attributes of a
-+		platform TEE Security Manager.  It is typically a child of a
-+		platform enumerated TSM device. /sys/class/tsm/tsmN/uevent
-+		signals when the PCI layer is able to support establishment of
-+		link encryption and other device-security features coordinated
-+		through a platform tsm.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index b65289db4822..024b18244c65 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -25613,7 +25613,7 @@ S:	Maintained
- F:	Documentation/devicetree/bindings/trigger-source/gpio-trigger.yaml
- F:	Documentation/devicetree/bindings/trigger-source/pwm-trigger.yaml
+diff --git a/drivers/base/bus.c b/drivers/base/bus.c
+index 5e75e1bce551..d19dae8f9d1b 100644
+--- a/drivers/base/bus.c
++++ b/drivers/base/bus.c
+@@ -334,6 +334,19 @@ static struct device *next_device(struct klist_iter *i)
+ 	return dev;
+ }
  
--TRUSTED SECURITY MODULE (TSM) INFRASTRUCTURE
-+TRUSTED EXECUTION ENVIRONMENT SECURITY MANAGER (TSM)
- M:	Dan Williams <dan.j.williams@intel.com>
- L:	linux-coco@lists.linux.dev
- S:	Maintained
-diff --git a/drivers/virt/coco/Kconfig b/drivers/virt/coco/Kconfig
-index 819a97e8ba99..bb0c6d6ddcc8 100644
---- a/drivers/virt/coco/Kconfig
-+++ b/drivers/virt/coco/Kconfig
-@@ -14,3 +14,6 @@ source "drivers/virt/coco/tdx-guest/Kconfig"
- source "drivers/virt/coco/arm-cca-guest/Kconfig"
++static struct device *prev_device(struct klist_iter *i)
++{
++	struct klist_node *n = klist_prev(i);
++	struct device *dev = NULL;
++	struct device_private *dev_prv;
++
++	if (n) {
++		dev_prv = to_device_private_bus(n);
++		dev = dev_prv->device;
++	}
++	return dev;
++}
++
+ /**
+  * bus_for_each_dev - device iterator.
+  * @bus: bus type.
+@@ -414,6 +427,31 @@ struct device *bus_find_device(const struct bus_type *bus,
+ }
+ EXPORT_SYMBOL_GPL(bus_find_device);
  
- source "drivers/virt/coco/guest/Kconfig"
++struct device *bus_find_device_reverse(const struct bus_type *bus,
++				       struct device *start, const void *data,
++				       device_match_t match)
++{
++	struct subsys_private *sp = bus_to_subsys(bus);
++	struct klist_iter i;
++	struct device *dev;
 +
-+config TSM
-+	bool
-diff --git a/drivers/virt/coco/Makefile b/drivers/virt/coco/Makefile
-index f918bbb61737..cb52021912b3 100644
---- a/drivers/virt/coco/Makefile
-+++ b/drivers/virt/coco/Makefile
-@@ -7,4 +7,5 @@ obj-$(CONFIG_ARM_PKVM_GUEST)	+= pkvm-guest/
- obj-$(CONFIG_SEV_GUEST)		+= sev-guest/
- obj-$(CONFIG_INTEL_TDX_GUEST)	+= tdx-guest/
- obj-$(CONFIG_ARM_CCA_GUEST)	+= arm-cca-guest/
-+obj-$(CONFIG_TSM) 		+= tsm-core.o
- obj-$(CONFIG_TSM_GUEST)		+= guest/
-diff --git a/drivers/virt/coco/tsm-core.c b/drivers/virt/coco/tsm-core.c
-new file mode 100644
-index 000000000000..a64b776642cf
---- /dev/null
-+++ b/drivers/virt/coco/tsm-core.c
-@@ -0,0 +1,109 @@
-+// SPDX-License-Identifier: GPL-2.0-only
-+/* Copyright(c) 2024 Intel Corporation. All rights reserved. */
++	if (!sp)
++		return NULL;
 +
-+#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
++	klist_iter_init_node(&sp->klist_devices, &i,
++			     (start ? &start->p->knode_bus : NULL));
++	while ((dev = prev_device(&i))) {
++		if (match(dev, data)) {
++			get_device(dev);
++			break;
++		}
++	}
++	klist_iter_exit(&i);
++	subsys_put(sp);
++	return dev;
++}
++EXPORT_SYMBOL_GPL(bus_find_device_reverse);
 +
-+#include <linux/tsm.h>
-+#include <linux/idr.h>
-+#include <linux/rwsem.h>
-+#include <linux/device.h>
-+#include <linux/module.h>
+ static struct device_driver *next_driver(struct klist_iter *i)
+ {
+ 	struct klist_node *n = klist_next(i);
+diff --git a/drivers/pci/bus.c b/drivers/pci/bus.c
+index b77fd30bbfd9..1a090da18e59 100644
+--- a/drivers/pci/bus.c
++++ b/drivers/pci/bus.c
+@@ -8,6 +8,7 @@
+  */
+ #include <linux/module.h>
+ #include <linux/kernel.h>
 +#include <linux/cleanup.h>
+ #include <linux/pci.h>
+ #include <linux/errno.h>
+ #include <linux/ioport.h>
+@@ -425,6 +426,27 @@ static int __pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void
+ 	return ret;
+ }
+ 
++static int __pci_walk_bus_reverse(struct pci_bus *top,
++				  int (*cb)(struct pci_dev *, void *),
++				  void *userdata)
++{
++	struct pci_dev *dev;
++	int ret = 0;
 +
-+static struct class *tsm_class;
-+static DECLARE_RWSEM(tsm_rwsem);
-+static DEFINE_IDR(tsm_idr);
++	list_for_each_entry_reverse(dev, &top->devices, bus_list) {
++		if (dev->subordinate) {
++			ret = __pci_walk_bus_reverse(dev->subordinate, cb,
++						     userdata);
++			if (ret)
++				break;
++		}
++		ret = cb(dev, userdata);
++		if (ret)
++			break;
++	}
++	return ret;
++}
 +
-+struct tsm_dev {
-+	struct device dev;
-+	int id;
+ /**
+  *  pci_walk_bus - walk devices on/under bus, calling callback.
+  *  @top: bus whose devices should be walked
+@@ -446,6 +468,22 @@ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *), void
+ }
+ EXPORT_SYMBOL_GPL(pci_walk_bus);
+ 
++/**
++ * pci_walk_bus_reverse - walk devices on/under bus, calling callback.
++ * @top: bus whose devices should be walked
++ * @cb: callback to be called for each device found
++ * @userdata: arbitrary pointer to be passed to callback
++ *
++ * Same semantics as pci_walk_bus(), but walks the bus in reverse order.
++ */
++void pci_walk_bus_reverse(struct pci_bus *top,
++			  int (*cb)(struct pci_dev *, void *), void *userdata)
++{
++	guard(rwsem_read)(&pci_bus_sem);
++	__pci_walk_bus_reverse(top, cb, userdata);
++}
++EXPORT_SYMBOL_GPL(pci_walk_bus_reverse);
++
+ void pci_walk_bus_locked(struct pci_bus *top, int (*cb)(struct pci_dev *, void *), void *userdata)
+ {
+ 	lockdep_assert_held(&pci_bus_sem);
+diff --git a/drivers/pci/search.c b/drivers/pci/search.c
+index 53840634fbfc..e6e84dc62e82 100644
+--- a/drivers/pci/search.c
++++ b/drivers/pci/search.c
+@@ -282,6 +282,45 @@ static struct pci_dev *pci_get_dev_by_id(const struct pci_device_id *id,
+ 	return pdev;
+ }
+ 
++static struct pci_dev *pci_get_dev_by_id_reverse(const struct pci_device_id *id,
++						 struct pci_dev *from)
++{
++	struct device *dev;
++	struct device *dev_start = NULL;
++	struct pci_dev *pdev = NULL;
++
++	if (from)
++		dev_start = &from->dev;
++	dev = bus_find_device_reverse(&pci_bus_type, dev_start, (void *)id,
++				      match_pci_dev_by_id);
++	if (dev)
++		pdev = to_pci_dev(dev);
++	pci_dev_put(from);
++	return pdev;
++}
++
++enum pci_search_direction {
++	PCI_SEARCH_FORWARD,
++	PCI_SEARCH_REVERSE,
 +};
 +
-+static struct tsm_dev *alloc_tsm_dev(struct device *parent)
++static struct pci_dev *__pci_get_subsys(unsigned int vendor, unsigned int device,
++				 unsigned int ss_vendor, unsigned int ss_device,
++				 struct pci_dev *from, enum pci_search_direction dir)
 +{
-+	struct tsm_dev *tsm_dev __free(kfree) =
-+		kzalloc(sizeof(*tsm_dev), GFP_KERNEL);
-+	struct device *dev;
-+	int id;
++	struct pci_device_id id = {
++		.vendor = vendor,
++		.device = device,
++		.subvendor = ss_vendor,
++		.subdevice = ss_device,
++	};
 +
-+	if (!tsm_dev)
-+		return ERR_PTR(-ENOMEM);
-+
-+	guard(rwsem_write)(&tsm_rwsem);
-+	id = idr_alloc(&tsm_idr, tsm_dev, 0, INT_MAX, GFP_KERNEL);
-+	if (id < 0)
-+		return ERR_PTR(id);
-+
-+	tsm_dev->id = id;
-+	dev = &tsm_dev->dev;
-+	dev->parent = parent;
-+	dev->class = tsm_class;
-+	device_initialize(dev);
-+	return no_free_ptr(tsm_dev);
++	if (dir == PCI_SEARCH_FORWARD)
++		return pci_get_dev_by_id(&id, from);
++	else
++		return pci_get_dev_by_id_reverse(&id, from);
 +}
 +
-+static void put_tsm_dev(struct tsm_dev *tsm_dev)
-+{
-+	if (!IS_ERR_OR_NULL(tsm_dev))
-+		put_device(&tsm_dev->dev);
-+}
-+
-+DEFINE_FREE(put_tsm_dev, struct tsm_dev *,
-+	    if (!IS_ERR_OR_NULL(_T)) put_tsm_dev(_T))
-+
-+struct tsm_dev *tsm_register(struct device *parent)
-+{
-+	struct tsm_dev *tsm_dev __free(put_tsm_dev) = alloc_tsm_dev(parent);
-+	struct device *dev;
-+	int rc;
-+
-+	if (IS_ERR(tsm_dev))
-+		return tsm_dev;
-+
-+	dev = &tsm_dev->dev;
-+	rc = dev_set_name(dev, "tsm%d", tsm_dev->id);
-+	if (rc)
-+		return ERR_PTR(rc);
-+
-+	rc = device_add(dev);
-+	if (rc)
-+		return ERR_PTR(rc);
-+
-+	return no_free_ptr(tsm_dev);
-+}
-+EXPORT_SYMBOL_GPL(tsm_register);
-+
-+void tsm_unregister(struct tsm_dev *tsm_dev)
-+{
-+	device_unregister(&tsm_dev->dev);
-+}
-+EXPORT_SYMBOL_GPL(tsm_unregister);
-+
-+static void tsm_release(struct device *dev)
-+{
-+	struct tsm_dev *tsm_dev = container_of(dev, typeof(*tsm_dev), dev);
-+
-+	guard(rwsem_write)(&tsm_rwsem);
-+	idr_remove(&tsm_idr, tsm_dev->id);
-+	kfree(tsm_dev);
-+}
-+
-+static int __init tsm_init(void)
-+{
-+	tsm_class = class_create("tsm");
-+	if (IS_ERR(tsm_class))
-+		return PTR_ERR(tsm_class);
-+
-+	tsm_class->dev_release = tsm_release;
-+	return 0;
-+}
-+module_init(tsm_init)
-+
-+static void __exit tsm_exit(void)
-+{
-+	class_destroy(tsm_class);
-+}
-+module_exit(tsm_exit)
-+
-+MODULE_LICENSE("GPL");
-+MODULE_DESCRIPTION("TEE Security Manager Class Device");
-diff --git a/include/linux/tsm.h b/include/linux/tsm.h
-index 431054810dca..aa906eb67360 100644
---- a/include/linux/tsm.h
-+++ b/include/linux/tsm.h
-@@ -5,6 +5,7 @@
- #include <linux/sizes.h>
- #include <linux/types.h>
- #include <linux/uuid.h>
-+#include <linux/device.h>
+ /**
+  * pci_get_subsys - begin or continue searching for a PCI device by vendor/subvendor/device/subdevice id
+  * @vendor: PCI vendor id to match, or %PCI_ANY_ID to match all vendor ids
+@@ -302,14 +341,8 @@ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 			       unsigned int ss_vendor, unsigned int ss_device,
+ 			       struct pci_dev *from)
+ {
+-	struct pci_device_id id = {
+-		.vendor = vendor,
+-		.device = device,
+-		.subvendor = ss_vendor,
+-		.subdevice = ss_device,
+-	};
+-
+-	return pci_get_dev_by_id(&id, from);
++	return __pci_get_subsys(vendor, device, ss_vendor, ss_device, from,
++				PCI_SEARCH_FORWARD);
+ }
+ EXPORT_SYMBOL(pci_get_subsys);
  
- #define TSM_REPORT_INBLOB_MAX 64
- #define TSM_REPORT_OUTBLOB_MAX SZ_32K
-@@ -109,4 +110,7 @@ struct tsm_report_ops {
+@@ -334,6 +367,19 @@ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+ }
+ EXPORT_SYMBOL(pci_get_device);
  
- int tsm_report_register(const struct tsm_report_ops *ops, void *priv);
- int tsm_report_unregister(const struct tsm_report_ops *ops);
-+struct tsm_dev;
-+struct tsm_dev *tsm_register(struct device *parent);
-+void tsm_unregister(struct tsm_dev *tsm_dev);
- #endif /* __TSM_H */
-
-base-commit: 650d64cdd69122cc60d309f2f5fd72bbc080dbd7
++/*
++ * Same semantics as pci_get_device(), except walks the PCI device list
++ * in reverse discovery order.
++ */
++struct pci_dev *pci_get_device_reverse(unsigned int vendor,
++				       unsigned int device,
++				       struct pci_dev *from)
++{
++	return __pci_get_subsys(vendor, device, PCI_ANY_ID, PCI_ANY_ID, from,
++				PCI_SEARCH_REVERSE);
++}
++EXPORT_SYMBOL(pci_get_device_reverse);
++
+ /**
+  * pci_get_class - begin or continue searching for a PCI device by class
+  * @class: search for a PCI device with this class designation
+diff --git a/include/linux/device/bus.h b/include/linux/device/bus.h
+index f5a56efd2bd6..99b1002b3e31 100644
+--- a/include/linux/device/bus.h
++++ b/include/linux/device/bus.h
+@@ -150,6 +150,9 @@ int bus_for_each_dev(const struct bus_type *bus, struct device *start,
+ 		     void *data, device_iter_t fn);
+ struct device *bus_find_device(const struct bus_type *bus, struct device *start,
+ 			       const void *data, device_match_t match);
++struct device *bus_find_device_reverse(const struct bus_type *bus,
++				       struct device *start, const void *data,
++				       device_match_t match);
+ /**
+  * bus_find_device_by_name - device iterator for locating a particular device
+  * of a specific name.
+diff --git a/include/linux/pci.h b/include/linux/pci.h
+index 7b9c11a582e9..6fb0e8a95078 100644
+--- a/include/linux/pci.h
++++ b/include/linux/pci.h
+@@ -581,6 +581,8 @@ struct pci_dev *pci_alloc_dev(struct pci_bus *bus);
+ 
+ #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
+ #define for_each_pci_dev(d) while ((d = pci_get_device(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
++#define for_each_pci_dev_reverse(d) \
++	while ((d = pci_get_device_reverse(PCI_ANY_ID, PCI_ANY_ID, d)) != NULL)
+ 
+ static inline int pci_channel_offline(struct pci_dev *pdev)
+ {
+@@ -1241,6 +1243,8 @@ u64 pci_get_dsn(struct pci_dev *dev);
+ 
+ struct pci_dev *pci_get_device(unsigned int vendor, unsigned int device,
+ 			       struct pci_dev *from);
++struct pci_dev *pci_get_device_reverse(unsigned int vendor, unsigned int device,
++				       struct pci_dev *from);
+ struct pci_dev *pci_get_subsys(unsigned int vendor, unsigned int device,
+ 			       unsigned int ss_vendor, unsigned int ss_device,
+ 			       struct pci_dev *from);
+@@ -1660,6 +1664,8 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max,
+ 
+ void pci_walk_bus(struct pci_bus *top, int (*cb)(struct pci_dev *, void *),
+ 		  void *userdata);
++void pci_walk_bus_reverse(struct pci_bus *top,
++			  int (*cb)(struct pci_dev *, void *), void *userdata);
+ int pci_cfg_space_size(struct pci_dev *dev);
+ unsigned char pci_bus_max_busnr(struct pci_bus *bus);
+ resource_size_t pcibios_window_alignment(struct pci_bus *bus,
+@@ -2055,6 +2061,11 @@ static inline struct pci_dev *pci_get_device(unsigned int vendor,
+ 					     struct pci_dev *from)
+ { return NULL; }
+ 
++static inline struct pci_dev *pci_get_device_reverse(unsigned int vendor,
++						     unsigned int device,
++						     struct pci_dev *from)
++{ return NULL; }
++
+ static inline struct pci_dev *pci_get_subsys(unsigned int vendor,
+ 					     unsigned int device,
+ 					     unsigned int ss_vendor,
 -- 
 2.51.0
 
