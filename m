@@ -1,178 +1,94 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from layka.disroot.org (layka.disroot.org [178.21.23.139])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27FB82C3245;
-	Thu, 11 Sep 2025 07:58:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 998B82D5952;
+	Thu, 11 Sep 2025 08:09:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.21.23.139
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757577524; cv=none; b=kqhizWalXMp2bmH/Q+wv5iEcrGpR+C4TIHd0jAaihGGGyWCqHb5bjgPJ6XwHTY+EDNS8X86g00aUhQkTzB4hMhMDJmb+mWc5C70gHE1Ut7i/4ns4cWjD8hFAMCv8+lYlJ+IDcWCCE750ZqLoUKFmyf35P8SB3n3CuR4ie2rEAvI=
+	t=1757578197; cv=none; b=iev93yJxQKzqWWJ/SdZke6NMNIU69yNM5l3JEaK10eorGeyCKvXjbkERNGSRFblLu56KNguipb8aLhGZu2j7msYe1LzE8KUffwB/Mr0ur03EVO+J0vBNDytXvwB0WB51JIf+oz6RngVKbUherO4oOV9d0VgXYK18A618n0wvg7Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757577524; c=relaxed/simple;
-	bh=rAy08QpthvSkpS1ppl0IfhtNiRuBtun4D/nv2lrxkHc=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EZGnFH8V4JbBS6stakPIWWG+R0Dtv3MJbw6/hrkij4uMg5WqPcQp0/il4JyzQPEE6ux405Hn4IdqVe+l2h5Hta26CeG7VmQkIruorRwIUfW74YorPGssakpo+xtUCMFg2ZXM2vbmZLVfxLu1GXiSocEIlchyFkSa0I64Q3sI3qQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LdKVcOfv; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1757578197; c=relaxed/simple;
+	bh=x352PQuhLLNf6YiSW+jdH4w7Z+cRMhcTOsK7TWAibzU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=qDDRHuTdUBdJ6djLsL9O9tk+H2aRT8XsDlCeyVMRwvNNK5p+7mrGif0rqtKVmYV/Lhd21+7y48oZSPFQBNoKlFEnx9/DN+afns6xk6VgNOZncHgvfVfM7Uuj6OiZCkRtdfTj7IldqG9etlqlhelcdCtm9HsoLoaeIaX45upn98A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org; spf=pass smtp.mailfrom=disroot.org; dkim=pass (2048-bit key) header.d=disroot.org header.i=@disroot.org header.b=fuDdhKdr; arc=none smtp.client-ip=178.21.23.139
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=disroot.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=disroot.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LdKVcOfv"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1757577523; x=1789113523;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=rAy08QpthvSkpS1ppl0IfhtNiRuBtun4D/nv2lrxkHc=;
-  b=LdKVcOfvbc6pn/vaOEYdMbVuJCGvBESbY5QaIjqiSokb4/UliUAKSh32
-   XlyYy1DxIbakY3h/JdijwbYQZ+TonHXM1RQwqXUDQ8EPiyFOF0GRNXGbx
-   Jx/gZBjdlfMIExbjh15s7aWZOPoOW27J9EvFiGEhgs0zGC8KGNKkQeWzD
-   HwZ3tZc3dSoukOgkdKfOTMfLYDy/B4qTDQG46KCQQdoFK59zTrKvRTkRD
-   kXOuRdjrg3WS6fquLAyd7u7rY8a9cm1/K+TbLJisyWUy4Z2RWIuqQJGiN
-   hgTUVZ2oM927FKlETvbetb7rNcU/d1bXiQAKMtwIcbKc17R8pKp6sRpzy
-   w==;
-X-CSE-ConnectionGUID: y7DX0Q/aTuupL/3t1GZFNA==
-X-CSE-MsgGUID: KIkHC5ssSCa7Or1c+XBxRQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11549"; a="58942337"
-X-IronPort-AV: E=Sophos;i="6.18,256,1751266800"; 
-   d="scan'208";a="58942337"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:58:42 -0700
-X-CSE-ConnectionGUID: wLBYdtbZQC6iNpEiXCMEzg==
-X-CSE-MsgGUID: VSM31pSsR/qw3YTjabELPg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.18,256,1751266800"; 
-   d="scan'208";a="178823677"
-Received: from ijarvine-mobl1.ger.corp.intel.com (HELO localhost) ([10.245.245.187])
-  by fmviesa004-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Sep 2025 00:58:35 -0700
-From: =?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-To: linux-pci@vger.kernel.org,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kw@linux.com>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	=?UTF-8?q?Micha=C5=82=20Winiarski?= <michal.winiarski@intel.com>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	amd-gfx@lists.freedesktop.org,
-	David Airlie <airlied@gmail.com>,
-	dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org,
-	Jani Nikula <jani.nikula@linux.intel.com>,
-	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Tvrtko Ursulin <tursulin@ursulin.net>,
-	?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	linux-kernel@vger.kernel.org
-Cc: linux-doc@vger.kernel.org,
-	=?UTF-8?q?Ilpo=20J=C3=A4rvinen?= <ilpo.jarvinen@linux.intel.com>
-Subject: [PATCH 11/11] PCI: Convert BAR sizes bitmasks to u64
-Date: Thu, 11 Sep 2025 10:56:05 +0300
-Message-Id: <20250911075605.5277-12-ilpo.jarvinen@linux.intel.com>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250911075605.5277-1-ilpo.jarvinen@linux.intel.com>
-References: <20250911075605.5277-1-ilpo.jarvinen@linux.intel.com>
+	dkim=pass (2048-bit key) header.d=disroot.org header.i=@disroot.org header.b="fuDdhKdr"
+Received: from mail01.disroot.lan (localhost [127.0.0.1])
+	by disroot.org (Postfix) with ESMTP id D2F3E21AC3;
+	Thu, 11 Sep 2025 10:09:53 +0200 (CEST)
+X-Virus-Scanned: SPAM Filter at disroot.org
+Received: from layka.disroot.org ([127.0.0.1])
+ by localhost (disroot.org [127.0.0.1]) (amavis, port 10024) with ESMTP
+ id YH6VOlBShjIH; Thu, 11 Sep 2025 10:09:53 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=disroot.org; s=mail;
+	t=1757578193; bh=x352PQuhLLNf6YiSW+jdH4w7Z+cRMhcTOsK7TWAibzU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To;
+	b=fuDdhKdrSXxaYAPHhpfiXcmtnT926GU+qcEojSTORsEPqoel76uoRXDdpxMUdccPM
+	 3UmdTwgzFvn60ZXhAX5BywthCQXxvmGImelUv6ZaGfp4nuXYtsNUqNo8xTm5IOaW/G
+	 EcbiT9DdgSXEVhIS9WGpf98wG64U67QT8B7VVxMN8DE6pWrDJ9/5Xy7s1dW47IlxVB
+	 L3LFYl+YqsPlv92PV+veJTj17TIsNZNfjgnGlwxZJFlvduseMiq29W9PL005kAdSFG
+	 iubM+kckz5QPAUknYQYpa4MG861jZsjXrJw9pRC441mIjRsyqXy+o0QVVZCfuTq9ci
+	 JuUyGgUggRtSw==
+Date: Thu, 11 Sep 2025 08:09:33 +0000
+From: Yao Zi <ziyao@disroot.org>
+To: Chukun Pan <amadeus@jmu.edu.cn>
+Cc: bhelgaas@google.com, conor+dt@kernel.org, devicetree@vger.kernel.org,
+	heiko@sntech.de, jonas@kwiboo.se, krzk+dt@kernel.org,
+	kwilczynski@kernel.org, linux-arm-kernel@lists.infradead.org,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-rockchip@lists.infradead.org, lpieralisi@kernel.org,
+	mani@kernel.org, robh@kernel.org
+Subject: Re: [PATCH 2/3] arm64: dts: rockchip: Add PCIe Gen2x1 controller for
+ RK3528
+Message-ID: <aMKDvcbJ2T-QNYxw@pie>
+References: <20250906135246.19398-3-ziyao@disroot.org>
+ <20250909125029.2553286-1-amadeus@jmu.edu.cn>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250909125029.2553286-1-amadeus@jmu.edu.cn>
 
-PCIe r6.2 section 7.8.6 defines resizable BAR sizes beyond the
-currently supported maximum of 128TB which will require more than u32
-to store the entire bitmask.
+On Tue, Sep 09, 2025 at 08:50:29PM +0800, Chukun Pan wrote:
+> Hi,
+> 
+> > +			reg = <0x1 0x40000000 0x0 0x400000>,
+> > +			      <0x0 0xfe4f0000 0x0 0x10000>,
+> > +			      <0x0 0xfc000000 0x0 0x100000>;
+> 
+> Aligning the address for reg and ranges will look better:
+> 
+> 		reg = <0x1 0x40000000 0x0 0x400000>,
+> 		      <0x0 0xfe4f0000 0x0 0x010000>,
+> 		      <0x0 0xfc000000 0x0 0x100000>;
 
-Convert Resizable BAR related functions to use u64 bitmask for BAR
-sizes to make the typing more future-proof.
+Thanks, this makes sense.
 
-The support for the larger BAR sizes themselves is not added at this
-point.
+> BTW do we possibly need this?
+> https://github.com/rockchip-linux/kernel/commit/e9397245c4b1bd62ef929d221e20225d58467dc7
 
-Signed-off-by: Ilpo Järvinen <ilpo.jarvinen@linux.intel.com>
----
- drivers/gpu/drm/xe/xe_vram.c | 2 +-
- drivers/pci/iov.c            | 2 +-
- drivers/pci/pci-sysfs.c      | 2 +-
- drivers/pci/rebar.c          | 4 ++--
- include/linux/pci.h          | 2 +-
- 5 files changed, 6 insertions(+), 6 deletions(-)
+I'm still unsure its purpose, but am willing to adapt this change. See
+my reply to Jonas' comment.
 
-diff --git a/drivers/gpu/drm/xe/xe_vram.c b/drivers/gpu/drm/xe/xe_vram.c
-index b063c072df1e..196b75fa0c57 100644
---- a/drivers/gpu/drm/xe/xe_vram.c
-+++ b/drivers/gpu/drm/xe/xe_vram.c
-@@ -69,7 +69,7 @@ static void resize_vram_bar(struct xe_device *xe)
- 
- 		if (!pci_rebar_size_supported(pdev, LMEM_BAR, rebar_size)) {
- 			drm_info(&xe->drm,
--				 "Requested size: %lluMiB is not supported by rebar sizes: 0x%x. Leaving default: %lluMiB\n",
-+				 "Requested size: %lluMiB is not supported by rebar sizes: 0x%llx. Leaving default: %lluMiB\n",
- 				 (u64)pci_rebar_size_to_bytes(rebar_size) >> 20,
- 				 pci_rebar_get_possible_sizes(pdev, LMEM_BAR),
- 				 (u64)current_size >> 20);
-diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
-index 51844a9176a0..d2741c4f3315 100644
---- a/drivers/pci/iov.c
-+++ b/drivers/pci/iov.c
-@@ -1370,7 +1370,7 @@ EXPORT_SYMBOL_GPL(pci_iov_vf_bar_set_size);
- u32 pci_iov_vf_bar_get_sizes(struct pci_dev *dev, int resno, int num_vfs)
- {
- 	u64 vf_len = pci_resource_len(dev, resno);
--	u32 sizes;
-+	u64 sizes;
- 
- 	if (!num_vfs)
- 		return 0;
-diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
-index 5eea14c1f7f5..b6920114d538 100644
---- a/drivers/pci/pci-sysfs.c
-+++ b/drivers/pci/pci-sysfs.c
-@@ -1544,7 +1544,7 @@ static ssize_t __resource_resize_show(struct device *dev, int n, char *buf)
- 	pci_config_pm_runtime_get(pdev);
- 
- 	ret = sysfs_emit(buf, "%016llx\n",
--			 (u64)pci_rebar_get_possible_sizes(pdev, n));
-+			 pci_rebar_get_possible_sizes(pdev, n));
- 
- 	pci_config_pm_runtime_put(pdev);
- 
-diff --git a/drivers/pci/rebar.c b/drivers/pci/rebar.c
-index 76572c7a6e6e..b42bda80fabf 100644
---- a/drivers/pci/rebar.c
-+++ b/drivers/pci/rebar.c
-@@ -105,7 +105,7 @@ static int pci_rebar_find_pos(struct pci_dev *pdev, int bar)
-  * Return: A bitmask of possible sizes (0=1MB, 31=128TB), or %0 if BAR isn't
-  *	   resizable.
-  */
--u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
-+u64 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar)
- {
- 	int pos;
- 	u32 cap;
-@@ -159,7 +159,7 @@ EXPORT_SYMBOL_GPL(pci_rebar_size_supported);
-  */
- int pci_rebar_get_max_size(struct pci_dev *pdev, int bar)
- {
--	u32 sizes;
-+	u64 sizes;
- 
- 	sizes = pci_rebar_get_possible_sizes(pdev, bar);
- 	if (!sizes)
-diff --git a/include/linux/pci.h b/include/linux/pci.h
-index a4236aafad24..bb10c7eb49e2 100644
---- a/include/linux/pci.h
-+++ b/include/linux/pci.h
-@@ -1422,7 +1422,7 @@ void pci_release_resource(struct pci_dev *dev, int resno);
- /* Resizable BAR related routines */
- int pci_rebar_bytes_to_size(u64 bytes);
- resource_size_t pci_rebar_size_to_bytes(int size);
--u32 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
-+u64 pci_rebar_get_possible_sizes(struct pci_dev *pdev, int bar);
- bool pci_rebar_size_supported(struct pci_dev *pdev, int bar, int size);
- int pci_rebar_get_max_size(struct pci_dev *pdev, int bar);
- int __must_check pci_resize_resource(struct pci_dev *dev, int i, int size);
--- 
-2.39.5
+> > +			clocks = <&cru ACLK_PCIE>, <&cru HCLK_PCIE_SLV>,
+> > +				 <&cru HCLK_PCIE_DBI>, <&cru PCLK_PCIE>,
+> > +				 <&cru CLK_PCIE_AUX>, <&cru PCLK_PCIE_PHY>;
+> 
+> <&cru PCLK_PCIE_PHY> has already been defined in the combphy node,
+> is it repeated here?
 
+Yes, it should be managed by PHY instead of the controller. I'll fix it
+in v2.
+
+> Thanks,
+> Chukun
+
+Best regards,
+Yao Zi
