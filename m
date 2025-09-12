@@ -1,126 +1,144 @@
-Received: from mail-pj1-f41.google.com (mail-pj1-f41.google.com [209.85.216.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F7D32877E8
-	for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2025 23:09:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A3822D5A14;
+	Fri, 12 Sep 2025 23:23:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757718601; cv=none; b=W48PSZeyHeyzvdaQ93dhFt0WvKIaxqtaPUJUBtMcGPidI90BgnzmWpUp7HxH6AWNIwojOIHgLY7dmlE5+kuGvjLteWjgoI6mdlcuRuq+JNADQoLVZzqWvGL6M9X8mFA3MnHsBDONPaFi1Rn6AioOw8/YhUcRWImiXidFq9pwwD0=
+	t=1757719430; cv=none; b=rbZHlvlVWqNplLYKiJT1Zb9LNEjlDndXiHlEZ3UW3ttWLkBxjSom6qCqu4d03h8l8DLPuAo7FV0nNMUpXCOHtr5IZRYrkZJaE7qgkLfcVXIrJlcyhSmEapot0jMSXyIEfsfARk4pMW8DHL3EzTwbzUeaFfQKIdTsU4eiZ2rJIjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757718601; c=relaxed/simple;
-	bh=YEh//s+EtsJjGeLO13TxNSxxYq8mSsN2ket2o0T8fSo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ZFNHfEcMAdzEb8SR0i9XzqTEwG/ZZRxwDMyfSZsQaPxBJusF4FeagvtxzjRse4PUgyMRhVZZkGjtXv5huGiGrOlfGOXYokXjlu21UuKihFVY3Prw71+nVIFQB0VQSFu58Iymjn4Dkblus1tGfJwpQReX7tOhivm8JXWy6lvNm5I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org; spf=pass smtp.mailfrom=chromium.org; dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b=KQRUMNRz; arc=none smtp.client-ip=209.85.216.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=chromium.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=chromium.org
+	s=arc-20240116; t=1757719430; c=relaxed/simple;
+	bh=HhlQH87muZ5l8bahZ1JQh/wQL2+NmIcRaW7diyeKJdo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=ancc0xPcmvZC2XIr88OnXySGvPASXnNaX+ROrKmBb5LvwLVUYNQay90Mse3NP6xPbR02Jxu20VcvKulW7YrqMK4IZBgSwMq4lumb7nJpntcX+/4s4X4HqhGLTyF+4pSQ9IR+QEq+/agfjtQY3McgXdiobJNXzaqn510Vxp/A+6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=S2AEkExt; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=chromium.org header.i=@chromium.org header.b="KQRUMNRz"
-Received: by mail-pj1-f41.google.com with SMTP id 98e67ed59e1d1-32df682cba2so545152a91.0
-        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2025 16:09:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=chromium.org; s=google; t=1757718599; x=1758323399; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=1aqQsfYpqczFMN6xd995B9cIuPxzc6IeMNO1DIuGzJc=;
-        b=KQRUMNRzLQIwOB9SGgCZ1b7r6/r4gdYltSkJpKKYpVE0gy/yOkd/lgR2sxXv0RsNZs
-         bb1tIWazv+Bj/yXnD8NLciEBJU/5oUttJVhftH88p4beIUfOkrE+fCxcM1ez6l63Qa0y
-         NgQA7SH+iE4cEOkAMfz/iB2jsQ9aTcB8BQbYI=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757718599; x=1758323399;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=1aqQsfYpqczFMN6xd995B9cIuPxzc6IeMNO1DIuGzJc=;
-        b=lGK5PzSpzWCX8N99vwRSdNACGq6Z+2d/j71RoDxpREP5+MhgQmDUXl0WkNJcS9DwY0
-         71Pr8z6c3bC8wFHr8R/6sgbs1T6YrsB+TgT/GTqe7nqRkXo/IJXD6NyPdsCqYGKg/Iw9
-         d7d8TnfpIah00d8MrvnxFlwFOvmwvxz1H8zAMT5tq5Vp+3CJKUjUtLJBwBc8sxaCimm1
-         YycTP9rGePDyft4ioq6dFdb09Rb0/c8YsRSCZ33lpTZLSg70kjxDRw2pQr2FjOHi3T1e
-         aBx2vAo9fZWqORu88H0oD/FISafXYaK4ZKMYktUQyviCmPdhvLmEqzzTbUURGIYOwxMk
-         c35Q==
-X-Gm-Message-State: AOJu0YzbdsTTc0VcRkDMrtfaO3WlTW/O0EGRpyuGyzOICfaRUQ8vScVy
-	6OFAzLrGFk5oMuWkXTXpeFseWb6nwVfhwltePZukiUU/cwIiQsCnoe1JxJHXYjjrMQ==
-X-Gm-Gg: ASbGncv8z6NOhPznXn4S/6WQ3sEExACkN9OfvE0WI7UImpELBRI+mFPlHERB+uM/9pG
-	wnyM9rCMp6BNayaURLvsVSBiIsifsezuRIGqKrUy+9uVopm3aHae7vnRW/Cpa2elADbk9ROQtTV
-	6+oCiXy3vXq1l3Z8C7rntXUoIb/uMRAtPF1RagIzxGXp6O5qboT9AahUHSzJipkZOjFgJNPvGIV
-	EXp8EmA6q4Nfoq49opwX4nyTvVY9yl+vZ9nN0AY6g19rBnRu7POQE9ATRxKOH0MdLS1OiimmOEv
-	4hNJ4xxLT8OPf8MheMXXdU1fHy6k29ylJ3BWzH9/40vbi+1B64VRBi5Jrxof3oH3RenCSlq1MnS
-	muaQ4xo7dW+KSkQMiUtmEJynogvzQPju+chYgiEqI1PBEPLjxchzMGXgV3TM=
-X-Google-Smtp-Source: AGHT+IHahHShoB5Ii1WzvFIbd2LUrSYt+MXYAQPhHq31+WasztFuE5rlFSFzEb7dWV7UvuA2EIiQ1Q==
-X-Received: by 2002:a17:90b:4d0e:b0:327:53f0:6368 with SMTP id 98e67ed59e1d1-32de4b88595mr5567635a91.2.1757718599221;
-        Fri, 12 Sep 2025 16:09:59 -0700 (PDT)
-Received: from localhost ([2a00:79e0:2e14:7:e464:c3f:39d8:1bab])
-        by smtp.gmail.com with UTF8SMTPSA id 41be03b00d2f7-b54a35b7e31sm5643608a12.11.2025.09.12.16.09.58
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 12 Sep 2025 16:09:58 -0700 (PDT)
-From: Brian Norris <briannorris@chromium.org>
-To: Bjorn Helgaas <bhelgaas@google.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Daniel Gomez <da.gomez@kernel.org>
-Cc: linux-pci@vger.kernel.org,
-	David Gow <davidgow@google.com>,
-	Rae Moar <rmoar@google.com>,
-	linux-kselftest@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	Johannes Berg <johannes@sipsolutions.net>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Richard Weinberger <richard@nod.at>,
-	Wei Liu <wei.liu@kernel.org>,
-	Brendan Higgins <brendan.higgins@linux.dev>,
-	kunit-dev@googlegroups.com,
-	Anton Ivanov <anton.ivanov@cambridgegreys.com>,
-	linux-um@lists.infradead.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="S2AEkExt"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD9E4C4CEF1;
+	Fri, 12 Sep 2025 23:23:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757719429;
+	bh=HhlQH87muZ5l8bahZ1JQh/wQL2+NmIcRaW7diyeKJdo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=S2AEkExtho8QDGnTQat0wBZUTZuRwc+kdQEO7RVyWP7AHMuIrMKZkxwsqE7AtZvlN
+	 OS1RbVqgwdLIlVpWuWnYqNjbCr+jDLXUZt7+WStynlyJjkOWgY2CXMvJIyd12Pz8i6
+	 YUJCYncP6daouDdOhxljI2LbhYNjcyHlPYmW/NlpL2QhBB2AvDUCEkzUJuYfn9rP//
+	 go9wIC9pHQJrXK2RoUr8qXENrVRdvtZAOKSduX0L9Sv1yEQCDZgIuhZDw2lZQQCUa7
+	 Ngk2jqePqNtmMsB3383ZL8XOfb9B29um6lwXROv1OcgakHKPu3zo1MtwsC6fDl8Mxv
+	 BpNjRq9rIN26Q==
+Date: Fri, 12 Sep 2025 18:23:48 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: manivannan.sadhasivam@oss.qualcomm.com
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
+	Bartosz Golaszewski <brgl@bgdev.pl>,
+	Saravana Kannan <saravanak@google.com>, linux-pci@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
 	Brian Norris <briannorris@chromium.org>
-Subject: [PATCH 4/4] kunit: qemu_configs: Add PCI to arm, arm64
-Date: Fri, 12 Sep 2025 15:59:35 -0700
-Message-ID: <20250912230208.967129-5-briannorris@chromium.org>
-X-Mailer: git-send-email 2.51.0.384.g4c02a37b29-goog
-In-Reply-To: <20250912230208.967129-1-briannorris@chromium.org>
-References: <20250912230208.967129-1-briannorris@chromium.org>
+Subject: Re: [PATCH v3 2/4] PCI: qcom: Move host bridge 'phy' and 'reset'
+ pointers to struct qcom_pcie_port
+Message-ID: <20250912232348.GA1653056@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250912-pci-pwrctrl-perst-v3-2-3c0ac62b032c@oss.qualcomm.com>
 
-To get some more test coverage on PCI tests.
+On Fri, Sep 12, 2025 at 02:05:02PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
+> From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+> 
+> DT binding allows specifying 'phy' and 'reset' properties in both host
+> bridge and Root Port nodes, though specifying in the host bridge node is
+> marked as deprecated. Still, the pcie-qcom driver should support both
+> combinations for maintaining the DT backwards compatibility. For this
+> purpose, the driver is holding the relevant pointers of these properties in
+> two structs: struct qcom_pcie_port and struct qcom_pcie.
+> 
+> However, this causes confusion and increases the driver complexity. Hence,
+> move the pointers from struct qcom_pcie to struct qcom_pcie_port. As a
+> result, even if these properties are specified in the host bridge node,
+> the pointers will be stored in struct qcom_pcie_port as if the properties
+> are specified in a single Root Port node. This logic simplifies the driver
+> a lot.
 
-Signed-off-by: Brian Norris <briannorris@chromium.org>
----
+> @@ -297,11 +295,8 @@ static void qcom_perst_assert(struct qcom_pcie *pcie, bool assert)
+>  	struct qcom_pcie_port *port;
+>  	int val = assert ? 1 : 0;
+>  
+> -	if (list_empty(&pcie->ports))
+> -		gpiod_set_value_cansleep(pcie->reset, val);
+> -	else
+> -		list_for_each_entry(port, &pcie->ports, list)
+> -			gpiod_set_value_cansleep(port->reset, val);
+> +	list_for_each_entry(port, &pcie->ports, list)
+> +		gpiod_set_value_cansleep(port->reset, val);
 
- tools/testing/kunit/qemu_configs/arm.py   | 1 +
- tools/testing/kunit/qemu_configs/arm64.py | 1 +
- 2 files changed, 2 insertions(+)
+This is so much nicer, thanks for doing this!
 
-diff --git a/tools/testing/kunit/qemu_configs/arm.py b/tools/testing/kunit/qemu_configs/arm.py
-index db2160200566..101d67e5157c 100644
---- a/tools/testing/kunit/qemu_configs/arm.py
-+++ b/tools/testing/kunit/qemu_configs/arm.py
-@@ -3,6 +3,7 @@ from ..qemu_config import QemuArchParams
- QEMU_ARCH = QemuArchParams(linux_arch='arm',
- 			   kconfig='''
- CONFIG_ARCH_VIRT=y
-+CONFIG_PCI=y
- CONFIG_SERIAL_AMBA_PL010=y
- CONFIG_SERIAL_AMBA_PL010_CONSOLE=y
- CONFIG_SERIAL_AMBA_PL011=y
-diff --git a/tools/testing/kunit/qemu_configs/arm64.py b/tools/testing/kunit/qemu_configs/arm64.py
-index 5c44d3a87e6d..ba2b4e660ba7 100644
---- a/tools/testing/kunit/qemu_configs/arm64.py
-+++ b/tools/testing/kunit/qemu_configs/arm64.py
-@@ -2,6 +2,7 @@ from ..qemu_config import QemuArchParams
- 
- QEMU_ARCH = QemuArchParams(linux_arch='arm64',
- 			   kconfig='''
-+CONFIG_PCI=y
- CONFIG_SERIAL_AMBA_PL010=y
- CONFIG_SERIAL_AMBA_PL010_CONSOLE=y
- CONFIG_SERIAL_AMBA_PL011=y
--- 
-2.51.0.384.g4c02a37b29-goog
+>  static int qcom_pcie_parse_legacy_binding(struct qcom_pcie *pcie)
+>  {
+>  	struct device *dev = pcie->pci->dev;
+> +	struct qcom_pcie_port *port;
+> +	struct gpio_desc *reset;
+> +	struct phy *phy;
+>  	int ret;
+>  
+> -	pcie->phy = devm_phy_optional_get(dev, "pciephy");
+> -	if (IS_ERR(pcie->phy))
+> -		return PTR_ERR(pcie->phy);
+> +	phy = devm_phy_optional_get(dev, "pciephy");
+> +	if (IS_ERR(phy))
+> +		return PTR_ERR(phy);
 
+Seems like it would be easier to integrate this fallback into
+qcom_pcie_parse_port() instead if separating it into
+qcom_pcie_parse_legacy_binding().
+
+What if you did something like this in qcom_pcie_parse_port():
+
+  qcom_pcie_parse_port
+  {
+      reset = devm_fwnode_gpiod_get(dev, of_fwnode_handle(node),
+				    "reset",  GPIOD_OUT_HIGH, "PERST#");
+      if (IS_ERR(reset)) {
+	  reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
+	  if (IS_ERR(reset))
+	      return PTR_ERR(reset);
+      }
+      ...
+
+Then you could share all the port kzalloc and port list management.
+
+Could do the same with the PHY stuff.
+
+> -	pcie->reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
+> -	if (IS_ERR(pcie->reset))
+> -		return PTR_ERR(pcie->reset);
+> +	reset = devm_gpiod_get_optional(dev, "perst", GPIOD_OUT_HIGH);
+> +	if (IS_ERR(reset))
+> +		return PTR_ERR(reset);
+>  
+> -	ret = phy_init(pcie->phy);
+> +	ret = phy_init(phy);
+>  	if (ret)
+>  		return ret;
+>  
+> +	port = devm_kzalloc(dev, sizeof(*port), GFP_KERNEL);
+> +	if (!port)
+> +		return -ENOMEM;
+> +
+> +	port->reset = reset;
+> +	port->phy = phy;
+> +	INIT_LIST_HEAD(&port->list);
+> +	list_add_tail(&port->list, &pcie->ports);
+> +
+>  	return 0;
+>  }
