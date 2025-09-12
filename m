@@ -1,88 +1,64 @@
-Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lelvem-ot02.ext.ti.com (lelvem-ot02.ext.ti.com [198.47.23.235])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B18CF3093CE
-	for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2025 12:25:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C0A23019AC;
+	Fri, 12 Sep 2025 12:25:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.235
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757679903; cv=none; b=JOhadp6BH72lNyUfV8rwGy27iTAMgJNGgpodU3ps6LrwIRYjgY0Wm9JAHbQNDq1ze8v+IQ197ZLkqp4/3nIj9HeZSL/NIatQfmKqMjItDEW/4TCvfxpCjqybJmwhR3DBT8eOnH9kz8NwHnrbtyb84HjJZCqOtyJQ3hvdBkiLdFc=
+	t=1757679918; cv=none; b=LHP5vXgIwopyS+WUkWuHiG2Zt3zj7E6ig17QIMnArbqBA2/TI7I5M8k/eS27b7pdmU1+8KAdOSZ0iRUa4KBdTocDVLRBU452vHxCn34ozGfeVf4Q6tuvF1+D4cJjWMKvY8r8qXWJVm8Fcd6BUdJlE6XtBc9eIAAM00wiPe9bjRc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757679903; c=relaxed/simple;
-	bh=rlU12FG+4sUq0XnXmaxg6zY2V7ONJn4T+IfJgTnkVPc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=D/f4yF3vpTv1egT7JRt623r0y+0Qj2ePPgllWa2YBBuAFefiRKphGy/BOfFu2w9TtEtYf5zZ4hbFtL0MyLcNZ+GNUPdBvVtjmFsYOxqyYk7bPxYenjpRcdTbqX3V9saZulrJSGHdIfdFJh8RA2PYbTJ6lra428cv2J0GPTOHzkE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=UuT9PLWb; arc=none smtp.client-ip=209.85.221.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
+	s=arc-20240116; t=1757679918; c=relaxed/simple;
+	bh=lOl1bORjgtUVblIfSnhHhHV6S3RXTIIydyYBHH+vI90=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DzvkG6wGXm2jN1ozOUPQ5g16wctB3+PD6ULMoQshzhmA/+Tw63aFIkbPbomQCIdoOuEFKN+upb2b4VkLz5Z5M3aE3VJRYWJLLmVdlXPRByUzOZ5aFFYZv0dgM2nIcbq0ePoVD1ii9nsMxd7dbzjqApG6vU+FPzAzC3p6BC5I2FE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=SFDYyMZu; arc=none smtp.client-ip=198.47.23.235
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="UuT9PLWb"
-Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-3e2055ce973so1041853f8f.0
-        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2025 05:25:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=tuxon.dev; s=google; t=1757679900; x=1758284700; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=md5nkDmRRh2gMN/cfSkiCbamlknh5oiGopcdy0QJF8Y=;
-        b=UuT9PLWb2lfWbAIh0WkT7qwgzoW0KT8KC3XMLU9NE5FRaozLRPm4CS8L6q7a35uSL9
-         49+DAdxtYhNJIrCiw6sz3BYnCMkDSu0MIquWtcQAyeAOnLMJF+LNcb0dvIgsKZpYhXs9
-         5oq1c5B8AZL9zrdbYBR21Q/Bn9wbOSsKvzA1WbREOC5qmtIDZ3eHZslt/6rKxr9Htf4i
-         g7JJrb3SosqooP9y2AuPB+hZdsII1wlGE7kHcYf25imF9A1TmriSUzDLPyC6GDLCKGu6
-         8jQbaSkmnJCymmITs7rPIi9serU0ipAcFhuoSMuSm2EKES7uZKHNzpd2e+Y8WVA77jtZ
-         hAJA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757679900; x=1758284700;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=md5nkDmRRh2gMN/cfSkiCbamlknh5oiGopcdy0QJF8Y=;
-        b=MadZn4UAswO3JGcuNBbqxvDGnvX34sZnFRrloJt3uJ+QzTOCzaxtNtsKoJTaFnTafk
-         ITcqtk1cYIpf2rxb0blzdFGzRb7zeVZJtV8qHpV6xIPX4ChzMlSjEV0xQq0XTiXb/+Vb
-         Y/KGfe5qb4ECVs8AgdwYGxRaUM2B/gbbAjKmywi+R5WVsAukOO6o7Iz9e7nsBSviT8+x
-         oha0klRbL6zUtHdXRdrUG0Z24XDkB+nOUCVlpHzyd0JjBHRakvuKOmfVYY8n5Q2+eqHq
-         XDP4129m6XtEw/Gv0vv7ZS8S/yfTY/a8rEKJlSjScIFcaQA/p2TBm8lPC2qF2sGVG5+a
-         /R0Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWwdaH0gD4AZROZaN2vWwK5tHqZoHlt84ai2QyyDuoRUGJmQiyA55Wu9Q7u66OPdvLOenkARbX+TOw=@vger.kernel.org
-X-Gm-Message-State: AOJu0YwpLFbPzFKAlTcy204Lpa7uKaVtAYLeL0Pz0Vps7k5KpKmAR9xR
-	SpVUHVzWk9QvwS7kiZZ+htd+XijIRuwzLZrqAi+IYMuoyyLQco8XiUSoqXtCs03aA9w=
-X-Gm-Gg: ASbGncv+17PGbuoFuyFg5DfRyx3NDNp/g10uFDntNARs/RYs2/AEelxGUiVh8VKYyei
-	sDoLiuWTBJeIzXyuuW7HSK4CZUf8cNtjhBMreys1CiXqIEusmqOaMsE/a3f7Fd2pdci5jJNe8qV
-	NvjzEncUROupdCFnMHtMSd2Ze7P9Y3bTsZcEzoT9AOgIOr7DgftXQiBH+G64Q/KVJvyvsOSr0nZ
-	BnnQlskklvLBnResqi8Cm2rkHWMWU6GXQBZiyp6NzTV8fjJKSXWLuuJR5uYUDoskAhEE+qO4MFa
-	sNS+a56xblhNH9o909wL3Z1r6iUYExVLoMxBwBJiSmK5VTWzrm1F9bPd+Pw4wZ3ZqF2uurBXFdo
-	mHlo8iCOifryqSyta91qp+eMRbPSz0zTQzCcmRrXRXxdY1WdAV+DP
-X-Google-Smtp-Source: AGHT+IFeFgkWbvNLPP6zQb3x+mqbY/nkKchmA7T4My9baxdYYpQETFEEocYlizuFZpzNAgPRzsrfUw==
-X-Received: by 2002:a05:6000:240b:b0:3e7:6457:ca85 with SMTP id ffacd0b85a97d-3e765781280mr3017656f8f.5.1757679899686;
-        Fri, 12 Sep 2025 05:24:59 -0700 (PDT)
-Received: from claudiu-X670E-Pro-RS.. ([82.78.167.153])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3e7607770c2sm6320091f8f.8.2025.09.12.05.24.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 12 Sep 2025 05:24:59 -0700 (PDT)
-From: Claudiu <claudiu.beznea@tuxon.dev>
-X-Google-Original-From: Claudiu <claudiu.beznea.uj@bp.renesas.com>
-To: bhelgaas@google.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	geert+renesas@glider.be,
-	magnus.damm@gmail.com,
-	p.zabel@pengutronix.de
-Cc: claudiu.beznea@tuxon.dev,
-	linux-pci@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>,
-	Wolfram Sang <wsa+renesas@sang-engineering.com>
-Subject: [PATCH v4 6/6] arm64: defconfig: Enable PCIe for the Renesas RZ/G3S SoC
-Date: Fri, 12 Sep 2025 15:24:44 +0300
-Message-ID: <20250912122444.3870284-7-claudiu.beznea.uj@bp.renesas.com>
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="SFDYyMZu"
+Received: from lelvem-sh01.itg.ti.com ([10.180.77.71])
+	by lelvem-ot02.ext.ti.com (8.15.2/8.15.2) with ESMTP id 58CCOkQ11030270;
+	Fri, 12 Sep 2025 07:24:46 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1757679886;
+	bh=akHgpV0QofSJh7+9oJVQtZLcV4mul4y96HgMakofh04=;
+	h=From:To:CC:Subject:Date:In-Reply-To:References;
+	b=SFDYyMZuL/p17Zovwj5vhVROb6DWXPCjna7kNgtW0JhBYEpUY8imhcRAi4wjd3NQO
+	 BcOW0sKgZkiKeddP6JVN25nNmyR5UTtdR1QBOILm8zCpSi38Sh/iw8BnlUt8k0m1Q3
+	 J8LwDK1c/ZiK7MmPEMEihl/1SrhItHkqlrnBnzxM=
+Received: from DLEE112.ent.ti.com (dlee112.ent.ti.com [157.170.170.23])
+	by lelvem-sh01.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 58CCOk9a1291380
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA256 bits=128 verify=FAIL);
+	Fri, 12 Sep 2025 07:24:46 -0500
+Received: from DLEE210.ent.ti.com (157.170.170.112) by DLEE112.ent.ti.com
+ (157.170.170.23) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55; Fri, 12
+ Sep 2025 07:24:46 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DLEE210.ent.ti.com
+ (157.170.170.112) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Fri, 12 Sep 2025 07:24:46 -0500
+Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [172.24.231.84])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 58CCNuLY3589278;
+	Fri, 12 Sep 2025 07:24:39 -0500
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
+        <robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <christian.bruel@foss.st.com>, <qiang.yu@oss.qualcomm.com>,
+        <mayank.rana@oss.qualcomm.com>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <inochiama@gmail.com>, <cassel@kernel.org>, <kishon@kernel.org>,
+        <sergio.paracuellos@gmail.com>, <18255117159@163.com>,
+        <rongqianfeng@vivo.com>
+CC: <jirislaby@kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <srk@ti.com>, <s-vadapalli@ti.com>
+Subject: [PATCH v2 06/10] PCI: keystone: Add ks_pcie_free_intx_irq() helper for cleanup
+Date: Fri, 12 Sep 2025 17:46:17 +0530
+Message-ID: <20250912122356.3326888-7-s-vadapalli@ti.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250912122444.3870284-1-claudiu.beznea.uj@bp.renesas.com>
-References: <20250912122444.3870284-1-claudiu.beznea.uj@bp.renesas.com>
+In-Reply-To: <20250912122356.3326888-1-s-vadapalli@ti.com>
+References: <20250912122356.3326888-1-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -90,39 +66,63 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Introduce the helper function ks_pcie_free_intx_irq() which will undo the
+configuration performed by the ks_pcie_config_intx_irq() function. This
+will be required for implementing a future helper function to undo the
+configuration performed by the ks_pcie_host_init() function.
 
-Enable PCIe for the Renesas RZ/G3S SoC.
-
-Tested-by: Wolfram Sang <wsa+renesas@sang-engineering.com>
-Signed-off-by: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
 ---
 
-Changes in v4:
-- made it builtin
+v1: https://lore.kernel.org/r/20250903124505.365913-7-s-vadapalli@ti.com/
+No changes since v1.
 
-Changes in v3:
-- collected tags
+ drivers/pci/controller/dwc/pci-keystone.c | 29 +++++++++++++++++++++++
+ 1 file changed, 29 insertions(+)
 
-Changes in v2:
-- none
-
- arch/arm64/configs/defconfig | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/arch/arm64/configs/defconfig b/arch/arm64/configs/defconfig
-index 5dcf36e99cd2..ca731843a9ba 100644
---- a/arch/arm64/configs/defconfig
-+++ b/arch/arm64/configs/defconfig
-@@ -230,6 +230,7 @@ CONFIG_PCIE_MEDIATEK_GEN3=m
- CONFIG_PCI_TEGRA=y
- CONFIG_PCIE_RCAR_HOST=y
- CONFIG_PCIE_RCAR_EP=y
-+CONFIG_PCIE_RENESAS_RZG3S_HOST=y
- CONFIG_PCIE_ROCKCHIP_HOST=m
- CONFIG_PCI_XGENE=y
- CONFIG_PCI_IMX6_HOST=y
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index 81c3686688c0..074566fb1d74 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -745,6 +745,35 @@ static int ks_pcie_config_msi_irq(struct keystone_pcie *ks_pcie)
+ 	return ret;
+ }
+ 
++static void ks_pcie_free_intx_irq(struct keystone_pcie *ks_pcie)
++{
++	struct device_node *np = ks_pcie->np;
++	struct device_node *intc_np;
++	int irq_count, i;
++	u32 val;
++
++	/* Nothing to do if INTx Interrupt Controller does not exist */
++	intc_np = of_get_child_by_name(np, "legacy-interrupt-controller");
++	if (!intc_np)
++		return;
++
++	/* irq_count should be non-zero. Else, ks_pcie_host_init would have failed. */
++	irq_count = of_irq_count(intc_np);
++
++	/* Disable all legacy interrupts */
++	for (i = 0; i < PCI_NUM_INTX; i++) {
++		val = ks_pcie_app_readl(ks_pcie, IRQ_ENABLE_SET(i));
++		val &= ~INTx_EN;
++		ks_pcie_app_writel(ks_pcie, IRQ_ENABLE_SET(i), val);
++	}
++
++	irq_domain_remove(ks_pcie->intx_irq_domain);
++	for (i = 0; i < irq_count; i++)
++		irq_set_chained_handler(ks_pcie->intx_host_irqs[i], NULL);
++
++	of_node_put(intc_np);
++}
++
+ static int ks_pcie_config_intx_irq(struct keystone_pcie *ks_pcie)
+ {
+ 	struct device *dev = ks_pcie->pci->dev;
 -- 
 2.43.0
 
