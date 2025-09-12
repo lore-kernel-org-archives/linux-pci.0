@@ -1,64 +1,83 @@
-Received: from lelvem-ot02.ext.ti.com (lelvem-ot02.ext.ti.com [198.47.23.235])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E63AD302776;
-	Fri, 12 Sep 2025 12:24:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.23.235
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EF7C305046
+	for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2025 12:24:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757679890; cv=none; b=AsbPO5X5VwXdVO/ShulOOJGi2nr2YQ1cpjJZ/S+ytQFRjYZx3gc+8KOvMllqA2zYlf6qHZ/4ipMkR4zVJbmQTTp7YJ4UbF32cFHA8Tjm+NmYPQtKhKHC4Nl7xgOefDdVTrwWNZ/TgXDQ7MxEe4CUTT3s2EsrjqLBUSCmD6h2Bs4=
+	t=1757679893; cv=none; b=X7ICqe3yECWklfjwo2n7OmxbNcMhA/PZKE895LEN2kqCa3Sqy6/KGVrnZprU1wpuB38XTH7msm/V1eH7rndsPNeHg9e2gwc9u2JqrA32585uz/RcSatHDJCUD3+G32wIyq9DFEsMxWQVpn8qQaBBbrCSGPXngntMKjfPbQAFns4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757679890; c=relaxed/simple;
-	bh=Mo200s3LzQbOeWsB7kc0Fz+SgatB/bY24fqhUHSr690=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=KhuDuq3SaPi4uxfFjgXbd/pWwnWrSdbzQvNJHNKPy3ngrkOzkrl2oOyIbd+f1ZMWYgVmVzts/p+RHerxJeqPtgb1YKKJN2hggYbokUvW3w45QV+o/Yn7sB9SkF6MTnYC9wc3+KAvzmjKgP1jXVYMfaSe02RdFBMt7YvOh0O5hWM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=VZHEwhBe; arc=none smtp.client-ip=198.47.23.235
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
+	s=arc-20240116; t=1757679893; c=relaxed/simple;
+	bh=1X+it+zTAdvHtkVDC9ptPSL7qX6EXCsJqZ3em9dxcto=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ovkYlhs5pRdkRqpWhCzmxfNCLjnEPc9inxyNiqiUPcnwxcMivPOMcalgRvyBwqdyTXu6Awlmji/u63T+rOUQ7UuxNZDmAg1g3ecWngQxA2SBDrroa9x4Rpur5//TQUHAxbCLtfsO5RTchK2NiWW09LwMkhoNMfzlCShhknNiD5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev; spf=pass smtp.mailfrom=tuxon.dev; dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b=LYXxq3oC; arc=none smtp.client-ip=209.85.221.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=tuxon.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=tuxon.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="VZHEwhBe"
-Received: from lelvem-sh02.itg.ti.com ([10.180.78.226])
-	by lelvem-ot02.ext.ti.com (8.15.2/8.15.2) with ESMTP id 58CCOITY1030250;
-	Fri, 12 Sep 2025 07:24:18 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1757679858;
-	bh=nZ0KYYJJggJw3ZgxwcCzR34hYylb5HsvpXbpB8dbek8=;
-	h=From:To:CC:Subject:Date:In-Reply-To:References;
-	b=VZHEwhBeLkvzKmjpe1If3XIP+ebt+HOH+DkkxnkHHCh+KnFZsxySnBZntjzZk1Gbx
-	 ufdbUmbd+DD3mFYYuz4TYzvEV9p1AYBHtIGT1dBwfy+7hWJq1IOulwVQszGcKjBtdZ
-	 PUwgkMRYYwle4dhW3Nwc2ifZn1e7MMimEcFPvkJA=
-Received: from DFLE113.ent.ti.com (dfle113.ent.ti.com [10.64.6.34])
-	by lelvem-sh02.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 58CCOIvP1849531
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA256 bits=128 verify=FAIL);
-	Fri, 12 Sep 2025 07:24:18 -0500
-Received: from DFLE200.ent.ti.com (10.64.6.58) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55; Fri, 12
- Sep 2025 07:24:18 -0500
-Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE200.ent.ti.com
- (10.64.6.58) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Fri, 12 Sep 2025 07:24:17 -0500
-Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [172.24.231.84])
-	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 58CCNuLU3589278;
-	Fri, 12 Sep 2025 07:24:11 -0500
-From: Siddharth Vadapalli <s-vadapalli@ti.com>
-To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
-        <robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
-        <christian.bruel@foss.st.com>, <qiang.yu@oss.qualcomm.com>,
-        <mayank.rana@oss.qualcomm.com>, <thippeswamy.havalige@amd.com>,
-        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
-        <inochiama@gmail.com>, <cassel@kernel.org>, <kishon@kernel.org>,
-        <sergio.paracuellos@gmail.com>, <18255117159@163.com>,
-        <rongqianfeng@vivo.com>
-CC: <jirislaby@kernel.org>, <linux-pci@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-        <srk@ti.com>, <s-vadapalli@ti.com>
-Subject: [PATCH v2 02/10] PCI: dwc: Export dw_pcie_allocate_domains() for pci-keystone
-Date: Fri, 12 Sep 2025 17:46:13 +0530
-Message-ID: <20250912122356.3326888-3-s-vadapalli@ti.com>
+	dkim=pass (2048-bit key) header.d=tuxon.dev header.i=@tuxon.dev header.b="LYXxq3oC"
+Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-3d3ff4a4d6fso1457954f8f.0
+        for <linux-pci@vger.kernel.org>; Fri, 12 Sep 2025 05:24:50 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=tuxon.dev; s=google; t=1757679889; x=1758284689; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ljjbIvIvj2Q1tUtMUPNsqGBDwVAciETje0nuBmAVX84=;
+        b=LYXxq3oC0dEWpu9X74BmLte1MieUYonva1ud5qIXeCaQhUbbMMdy0y5Do5AxXSQfLR
+         i9fvviVaY225e5Q5DzhdIrdq57neIT45rAcATb/DxvPa3KETSmsbQ4ZSrgvmQYAoEDVV
+         fNeLLQ5c7C4MVcf4uxU6KvAuyTZOZvXJ3fwZDy8kaMXZNCEgjskZ+hAeRC47b43W7y3C
+         XBcwZ3NiKCO3VeMmIFAk8er1UiMKxXSVQs36rt4ls7tT7RvWq8eG1Lt5SLIp7/hIbcm+
+         rHDDvoO5SDezZS7OLAloLt3eaMwh/xOCTgqcyJMtvyyCx+UbL2gsELIo065We11pQQJL
+         uZ8A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757679889; x=1758284689;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ljjbIvIvj2Q1tUtMUPNsqGBDwVAciETje0nuBmAVX84=;
+        b=mCOwgps/z6U1/5qCpCUPVcw33W/f0n+/h48AcIbFjKd30Koxz1XQI7kdytuGX9VQd0
+         tA0wnHIDt+fzkZOL2Q1XonH+fb9uDJbElBaRfA5s0Tml9P+kzfMNV8CK5K995d0UBWgv
+         0t3NMp13Cuf9iqh7wfGBd2Gchln2xQhib0rQiLSkVegI0TjBU+SSMmkijMAMumNydp/C
+         d83Tx4MStwvdUdBWYuWgyMY1DnX6Upn2iyTJdpsE6vbXJ313KzckzCi/05qYpRiL1XiC
+         MMSC0El8aM/7palNrE/JYvCDT9d40h/pRMs+ElRkPzZxsu0yTG4rvJGcTflOoThiVL1B
+         N0LQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV+32MiDYtuwPumTafXpTsLE6CzfBhi4yHF0mfoYUETSmF18zs34gzA6lhJKHmFfqpx4DYFj2bkZ+Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxT5hcl+SGmNeHFIdtp91VHSdCWZeu47nAuO9mRQTwQSyHTYhN8
+	nWJ1ce7rFyoYgruoxA01nmQOYhdyC8MO/crJ6FPL4bED/NXi+HecttwZ2qY0YklKNrk=
+X-Gm-Gg: ASbGncvm+wVh3jo1VGF68wp9QqHqOkHWE94zpPgdcM3Ffre3dD3zbBo0vJEhkEz6Uhd
+	p4Bcd6AskkqZ0BJHiSnpnUk52Ddz2MWIBU1PBUrvsxlVA22c+3iv3NI3A8WuRHGvdOb3wfU/LnX
+	EE2uTT+d53okKFkXLnrRPGk3BkiMkFRdR8c+HmMcd9Vc7p5wH0wF/rLvvOWKkSkHKHyhCg4rkqA
+	e7K6nyOS5rm3hobuivsCYgT8Yb6AEFEfmXkQpjfOnqHezyUmqEs80Mn+W0krTbcItbbIXL0HKWa
+	v1aqH6oJMihadBmK5ca6EE1JM4FfwL9F74uxZVqj7zBeTLS0c9zUoBlYmANy2gXuQpxLocG4luz
+	OoBwB9naMcaOaBQKiMHO4a0F8nYdBEHdph0Opzo4SkIlpqla8Avg4
+X-Google-Smtp-Source: AGHT+IEYppUYO/8aAZsKn0b0DcJjcfxTnMO/idgXekJXbeD6ctIiByRvNUh0evCMuK6Sg67U0omW4A==
+X-Received: by 2002:a05:6000:2086:b0:3e0:152a:87a9 with SMTP id ffacd0b85a97d-3e7659e20bemr2983464f8f.28.1757679889474;
+        Fri, 12 Sep 2025 05:24:49 -0700 (PDT)
+Received: from claudiu-X670E-Pro-RS.. ([82.78.167.153])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3e7607770c2sm6320091f8f.8.2025.09.12.05.24.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 12 Sep 2025 05:24:49 -0700 (PDT)
+From: Claudiu <claudiu.beznea@tuxon.dev>
+X-Google-Original-From: Claudiu <claudiu.beznea.uj@bp.renesas.com>
+To: bhelgaas@google.com,
+	lpieralisi@kernel.org,
+	kwilczynski@kernel.org,
+	mani@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	geert+renesas@glider.be,
+	magnus.damm@gmail.com,
+	p.zabel@pengutronix.de
+Cc: claudiu.beznea@tuxon.dev,
+	linux-pci@vger.kernel.org,
+	linux-renesas-soc@vger.kernel.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
+Subject: [PATCH v4 0/6] PCI: rzg3s-host: Add PCIe driver for Renesas RZ/G3S SoC
+Date: Fri, 12 Sep 2025 15:24:38 +0300
+Message-ID: <20250912122444.3870284-1-claudiu.beznea.uj@bp.renesas.com>
 X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250912122356.3326888-1-s-vadapalli@ti.com>
-References: <20250912122356.3326888-1-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,34 +85,74 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-The pci-keystone.c driver uses the 'dw_pcie_allocate_domains()' helper.
-In preparation for enabling the pci-keystone.c driver to be built as a
-loadable module, export 'dw_pcie_allocate_domains()'.
+From: Claudiu Beznea <claudiu.beznea.uj@bp.renesas.com>
 
-Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
----
+Hi,
 
-v1: https://lore.kernel.org/r/20250903124505.365913-3-s-vadapalli@ti.com/
-No changes since v1.
+Series adds a PCIe driver for the Renesas RZ/G3S SoC.
+It is split as follows:
+- patches 1-2/6:	add PCIe support for the RZ/G3S SoC
+- patches 3-6/6:	add device tree support and defconfig flag
 
- drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
- 1 file changed, 1 insertion(+)
+Please provide your feedback.
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware-host.c b/drivers/pci/controller/dwc/pcie-designware-host.c
-index 952f8594b501..3cc83d921376 100644
---- a/drivers/pci/controller/dwc/pcie-designware-host.c
-+++ b/drivers/pci/controller/dwc/pcie-designware-host.c
-@@ -229,6 +229,7 @@ int dw_pcie_allocate_domains(struct dw_pcie_rp *pp)
- 
- 	return 0;
- }
-+EXPORT_SYMBOL_GPL(dw_pcie_allocate_domains);
- 
- void dw_pcie_free_msi(struct dw_pcie_rp *pp)
- {
+Merge strategy, if any:
+- patches 1-2/6 can go through the PCI tree
+- patches 3-6/6 can go through the Renesas tree
+
+Thank you,
+Claudiu Beznea
+
+Changes in v4:
+- dropped v3 patches:
+  - "clk: renesas: r9a08g045: Add clocks and resets support for PCIe"
+  - "soc: renesas: rz-sysc: Add syscon/regmap support"
+  as they are already integrated
+- dropped v3 patch "PCI: of_property: Restore the arguments of the
+  next level parent" as it is not needed anymore in this version due
+  port being added in device tree
+- addressed review comments
+- per-patch changes are described in each individual patch
+
+Changes in v3:
+- added patch "PCI: of_property: Restore the arguments of the next level parent"
+  to fix the legacy interrupt request
+- addressed review comments
+- per-patch changes are described in each individual patch
+
+Changes in v2:
+- dropped "of/irq: Export of_irq_count()" as it is not needed anymore
+  in this version
+- added "arm64: dts: renesas: rzg3s-smarc-som: Update dma-ranges for PCIe"
+  to reflect the board specific memory constraints
+- addressed review comments
+- updated patch "soc: renesas: rz-sysc: Add syscon/regmap support"
+- per-patch changes are described in each individual patch
+
+
+Claudiu Beznea (6):
+  dt-bindings: PCI: renesas,r9a08g045s33-pcie: Add documentation for the
+    PCIe IP on Renesas RZ/G3S
+  PCI: rzg3s-host: Add Renesas RZ/G3S SoC host driver
+  arm64: dts: renesas: r9a08g045: Add PCIe node
+  arm64: dts: renesas: rzg3s-smarc-som: Update dma-ranges for PCIe
+  arm64: dts: renesas: rzg3s-smarc: Enable PCIe
+  arm64: defconfig: Enable PCIe for the Renesas RZ/G3S SoC
+
+ .../bindings/pci/renesas,r9a08g045-pcie.yaml  |  240 +++
+ MAINTAINERS                                   |    8 +
+ arch/arm64/boot/dts/renesas/r9a08g045.dtsi    |   66 +
+ .../boot/dts/renesas/rzg3s-smarc-som.dtsi     |   10 +
+ arch/arm64/boot/dts/renesas/rzg3s-smarc.dtsi  |   11 +
+ arch/arm64/configs/defconfig                  |    1 +
+ drivers/pci/controller/Kconfig                |    8 +
+ drivers/pci/controller/Makefile               |    1 +
+ drivers/pci/controller/pcie-rzg3s-host.c      | 1792 +++++++++++++++++
+ 9 files changed, 2137 insertions(+)
+ create mode 100644 Documentation/devicetree/bindings/pci/renesas,r9a08g045-pcie.yaml
+ create mode 100644 drivers/pci/controller/pcie-rzg3s-host.c
+
 -- 
 2.43.0
 
