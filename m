@@ -1,38 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1425927057B;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142BE272E7C;
 	Fri, 12 Sep 2025 08:35:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757666122; cv=none; b=aZa9mpOHi8FjbMhUepgT/5JCTEF+FvccVomKF8xhfpMTDvZMzT0Ctlonwl9BKjYtYugyLiFWZXPiGhk94NrAU7wvsEppItyBIeZlcxHQ77++avDNxcwVL+kd9D2BrDbn1gd0vPEQ2WN4AeiCukZtjIz5hgkXUj6hmhSRcuEgC5Y=
+	t=1757666122; cv=none; b=lCbAUsWVEnJoNOxrCbxcosZlbaIGZhFarNYVjJHBNw2c+kz5v+JFPPpXAyT928SClNB2w+L701UwiNfXS/Tz+fsSSTiQTcRAnLyIH6EBjzUJmQ1f9rZwR+PGCach2pIiD6PuMP9ecv+VkcCzjf1FJdwXftrg9SWliyqVEXF5UQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757666122; c=relaxed/simple;
-	bh=qyyu6lVr8aS+pwNpu2pxm2nQHlu6k5+BhoJaWT8jQsw=;
-	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=h6iqRSz8cEic7orkTF+leGnrsO1zvKQWMfHLGRS/rMXnSeB6I8g3FYLAovAF/fd8FUYyKVbbXKN5m5YnZXZDDPZgkDCaCKS0qam4vjBf3CZH7juVyH0e0EjS2N1AbvOuCPSvRvskqF7+zAI/vi4mIRY9JapxM0OPrj7iTFBBnWc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jFC4YKLZ; arc=none smtp.client-ip=10.30.226.201
+	bh=1BTnQcS0PWwb4QjaWMF5p9KA1L76JzP/XpMvIv4ZNs8=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=VLJ7xumnAJ3TRgscCwcoEV6jyHwCL2TbQVkDaCJcStkbDaOGfiPpikWCmR5J+9HMY22YUp3bXAm34WNoZN8BGyyzwbRWtr90HNHoi3a9yl7eoN6hor/nWMR6qjo24qVBLHm/W5QYaelzQNfhuglzZ9DUol7DG8IBUsktWxraGZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=anhO7Tf2; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jFC4YKLZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 8EE7EC4CEF4;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="anhO7Tf2"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id C5AA3C4CEFE;
 	Fri, 12 Sep 2025 08:35:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1757666121;
-	bh=qyyu6lVr8aS+pwNpu2pxm2nQHlu6k5+BhoJaWT8jQsw=;
-	h=From:Subject:Date:To:Cc:Reply-To:From;
-	b=jFC4YKLZg4ZbsE9yxOXo4QhDWOqTv8tjEafMd+i7BqaLflOrs0ZXGxsYpGYHTtyWC
-	 mwMUQnyrKX7229cEkf8RUyTKdYzZIyxU/6PJ+tKrBGeBMNTVh5wKE3PDYI5Jx+ucyd
-	 HGrrG55jhnT7j44xjPy4VqnhLG54j6Z8YN4Imbqtr+Uh0bBjgPbPVRJxDYqDeebWqC
-	 wJt/yrnHmmilQIbwoMV5b0V0q9yAqBDkGozSwNSBqcC2qKUq65mS/sTC6Ks3mNtr7n
-	 0QSzgDDq7OKvVPaQm2Q0Df08yQkbuoWXezmczmnHzte787Yw82ebsipZu9jEeng7Sd
-	 hc/cof3RKZBAw==
+	bh=1BTnQcS0PWwb4QjaWMF5p9KA1L76JzP/XpMvIv4ZNs8=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=anhO7Tf2AI5DffcZZh61WH9p7WR5PI3qlnWguxE5N4D1q8GslYcYtUB1492oSDdeW
+	 UBdR85dmUMsxIWdJnHxHG4bmE2pLEu5AuOP95iNvI0G6E98Dbk6w1CImn7m6YyOZIB
+	 ja9xyaE+R++TIOH9gNbAB8bQTyTjGxhHM5QF8vayBYyO9UeU+nlPc15I55bB9V/6eR
+	 E/1E5nhUzqBAWJKB0YENWkbulILA9zcxYuWAlk0SPB3qwwkSGR1Nl6BLk8WT56kM0c
+	 KsrtkYvnlpoFsJPhZj2idfkdP2R3OGKsfKPdJ/lf+1SH0+RRAySIypHddwQJwFKrj1
+	 Gk9DBfeYzADDQ==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 7DC0ECAC593;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id BCAABCAC597;
 	Fri, 12 Sep 2025 08:35:21 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Subject: [PATCH v3 0/4] PCI/pwrctrl: Allow pwrctrl framework to control
- PERST# if available
-Date: Fri, 12 Sep 2025 14:05:00 +0530
-Message-Id: <20250912-pci-pwrctrl-perst-v3-0-3c0ac62b032c@oss.qualcomm.com>
+Date: Fri, 12 Sep 2025 14:05:04 +0530
+Subject: [PATCH v3 4/4] PCI: qcom: Allow pwrctrl core to control PERST# if
+ 'reset-gpios' property is available
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -41,11 +41,9 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-X-B4-Tracking: v=1; b=H4sIADTbw2gC/23NSw7CIBCA4as0rKUZKH258h7GRYHRkrSCUFHT9
- O7SJsZNN5P8k8w3MwnoDQZyzGbiMZpg7D1FcciI6rv7DanRqQkHXkLDGuqUoe7l1eQH6tCHiYK
- UtdYVl6XgJN05j1fz3szzJXVvwmT9Z3sR2br9ae2OFhkFKmQt2rrRHKA+2RDyx7MblB3HPA2yo
- pH/oRaKPYgniGtRMdSAULEdaFmWL++6HykCAQAA
-X-Change-ID: 20250818-pci-pwrctrl-perst-0bb7dd62b542
+Message-Id: <20250912-pci-pwrctrl-perst-v3-4-3c0ac62b032c@oss.qualcomm.com>
+References: <20250912-pci-pwrctrl-perst-v3-0-3c0ac62b032c@oss.qualcomm.com>
+In-Reply-To: <20250912-pci-pwrctrl-perst-v3-0-3c0ac62b032c@oss.qualcomm.com>
 To: Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
  =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
@@ -55,19 +53,18 @@ Cc: linux-pci@vger.kernel.org, linux-arm-msm@vger.kernel.org,
  linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, 
  Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>, 
  Brian Norris <briannorris@chromium.org>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Bjorn Helgaas <helgaas@kernel.org>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6268;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=8784;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=qyyu6lVr8aS+pwNpu2pxm2nQHlu6k5+BhoJaWT8jQsw=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBow9tH4sj+7abdCzaJm5sybCBQUIhypL2tNyEbN
- DOK7mxLyjWJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaMPbRwAKCRBVnxHm/pHO
- 9dCsCACOiqSBWO6U6Yc8SFQLOvnVQ+8M1S9l5b/fj1r/NKFeg1umUjpEaQW+4pxCu8xKBi2V15B
- LVgYRfhENYTRYnftMMHhvZvKSYMifbzpaMyNkbhBhsGbM6lH/9/suD9U7pnrWB3wz007VRPzp/A
- FO0+uc3TQbkFpyleK5h2AT5kghoW53an/ICC4v83CLIn+LZzOYxI5dmRzTpUNZL7XzUkOzTskcD
- kNqT+R4gWzqWVry9V+bM6bCdkXYyONUsbJ9k4itKkfPGMnzQNQ4vPjLsEWpMUVazWN7Y4w2VpaO
- RYIlt+lsmNhC3x44Z9VpxDuI6OWCoNEE2aGYJy6r5k/9Y6iD
+ bh=jUiH8ofsOtVd73Yic4FmsZWJD7S+z6vhnX9M4Wlf+90=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBow9tH+At81n57kx2aXYHxHecTmrVvgsmFAxEgl
+ cDyTBhZSX+JATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaMPbRwAKCRBVnxHm/pHO
+ 9eJdCACQwOjXFTNJB91mqFNksQ8I944ZGZa+nhHqJblWwtHJ/n9vzmk6yoyd7OPe0VDuI7VyVFH
+ OfLiHOHwL5HxRHZTYu3EVL8MhW11yxsmAGqH2PXgHCop1WRheY/nj/2IaC9SUyNyhfssZvhrjBx
+ YbWgDRo0pgsfQY0AZFTBK9wRt77xl5Q/c5aJA/XWcUSWhCbe8vAsQ/PmDXSONHtmw9yWoqL3eSI
+ /LTxiI1UcC/pogEE22NsDk8AD/WiLjafjpT/f4EYlzZj0WWrGXkfFz3JM5KfpbEnopmpPHvNxbt
+ Icd1trZ6WUgPlMJp8Ebe9yJ9MRz2Zf89VGyNsz6V6pBGAh6q
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -75,130 +72,251 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-Hi,
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-This series is the proper version for toggling PERST# from the pwrctrl
-framework after the initial RFC posted earlier [1].
+For historic reasons, the pcie-qcom driver was controlling the power supply
+and PERST# GPIO of the PCIe slot. This turned out to be an issue as the
+power supply requirements differ between components. For instance, some of
+the WLAN chipsets used in Qualcomm systems were connected to the Root Port
+in a non-standard way using their own connectors. This requires specific
+power sequencing mechanisms for controlling the WLAN chipsets. So the
+pwrctrl framework (CONFIG_PWRCTRL) was introduced to handle these custom
+and complex power supply requirements for components.
 
-Problem statement
-=================
+Sooner, we realized that it would be best to let the pwrctrl driver control
+the supplies to the PCIe slots also. As it will allow us to consolidate all
+the power supply handling in one place instead of doing it in two. So the
+CONFIG_PWRCTRL_SLOT driver was introduced, that just parses the Root Port
+nodes representing slots and controls the standard power supplies like
+3.3v, 3.3VAux etc...
 
-Pwrctrl framework is intented to control the supplies to the components on the
-PCI bus. However, if the platform supports the PERST# signal, it should be
-toggled as per the requirements in the electromechanical specifications like
-PCIe CEM, Mini, and M.2. Since the pwrctrl framework is controlling the power
-supplies, it should also toggle PERST# as per the requirements in the above
-mentioned specifications. Right now, it is just controlling the power to the
-components and rely on controller drivers to toggle PERST#, which goes against
-the specs. For instance, controller drivers will deassert PERST# even before the
-pwrctrl driver enables the supplies. This causes the device to see PERST#
-deassert immediately after power on, thereby violating the delay requirements in
-the PCI Electromechanical specs.
+However, the control of the PERST# GPIOs was still within the controller
+drivers like pcie-qcom. So the controller drivers continued to assert/
+deassert PERST# GPIOs independent of the power supplies to the components.
+This mostly went unnoticed as the components tolerated this non-standard
+PERST# assertion/deassertion. But this behavior completely goes against the
+PCIe Electromechanical specs like CEM, M.2, as these specs enforce strict
+control of PERST# signal together with the power supplies.
 
-Proposal
-========
+So conform to these specs, allow the pwrctrl core to control PERST# for the
+slots if the 'reset-gpios' property is specified in the DT bridge nodes.
+This is achieved by populating the 'pci_host_bridge::perst_assert' callback
+with qcom_pcie_perst_assert() function, so that the pwrctrl core can
+control PERST# through this callback.
 
-To fix this issue, the pwrctrl framework has to control the PERST# signal. But
-unfortunately, it is not straightforward. This is mostly due to controller
-drivers still need to assert PERST# as a part of their own initialization
-sequence. The controller drivers will parse PERST# from the devicetree nodes
-even before the pwrctrl drivers get probed. So the PERST# control needs to be
-shared between both drivers in a logical manner.
+qcom_pcie_perst_assert() will find the PERST# GPIO descriptor associated
+with the supplied 'device_node' of the component and asserts/deasserts
+PERST# as requested by the 'assert' parameter. If PERST# is not found in
+the supplied node of the component, the function will look for PERST# in
+the parent node as a fallback. This is needed since PERST# won't be
+available in the endpoint node as per the DT binding.
 
-This is achieved by adding a new callback, 'pci_host_bridge::perst_assert'. This
-callback if available, will be called by the pwrctrl framework during the power
-on and power off scenarios. The callback implementation in the controller driver
-has to take care of asserting/deasserting PERST# in an implementation specific
-way i.e., if the PERST# signal is a GPIO, then it should be toggled using gpiod
-APIs, or if the signal is implemented as a CSR, then the relevant registers
-should be written.
+Note that the driver still asserts PERST# during the controller
+initialization as it is needed as per the hardware documentation.
 
-Ideally, the PERST# delay requirements should be implemented in the pwrctrl
-framework (before/after calling the callback), but some controller drivers
-perform some post-link_up operations requiring them to control the delay within
-the driver. Those drivers may use this callback to assert/deassert PERST# and
-perform post-link_up operations.
-
-For reference, I've implemented the callback in the Qcom RC driver where it just
-asserts/deasserts PERST# and handles delay. Since the Qcom driver supports both
-legacy DT binding (all Root Port properties in host bridge node) and new binding
-(Root Port properies in Root Port node), I've moved the PERST# handling to
-pwrctrl driver only if the newly introduced 'qcom_pcie::legacy_binding' flag is
-not set. This flag if set, implies that the platform is using the legacy DT
-binding, so the controller driver has to control PERST#. 
-
-DT binding requirement
-======================
-
-This series has some assumptions on the DT binding. But some of them are not
-enforced right now:
-
-1. Pwrctrl driver requires the PCIe device node to have atleast one -supply
-property. Those supplies are already documented in the dtschema [2], but they
-are optional. So if those supplies are not present, pwrctrl driver will not get
-probed. For platforms having a fixed power supply to the components, they should
-describe those fixed supplies in DT. Otherwise, they cannot use pwrctrl drivers.
-(NOT ENFROCED)
-
-2. Optional PERST# GPIO (reset-gpios property) is only allowed in the bridge
-node in the DT binding [3]. So for looking up the PERST# for an endpoint node,
-the controller driver has to look up the parent node where PERST# would be
-available. (ENFORCED)
-
-3. If shared PERST# is implemented, all the bridge nodes (Root port and switch
-downstream) should have the same 'reset-gpios' property. This way, the
-controller drivers parsing PERST# could know if it is shared and invoke relevant
-gpiod APIs/flags. (NOT ENFORCED)
-
-I don't know how we can make sure DT binding enforces option 1 and 3.
-
-Testing
-=======
-
-This series is tested on Qcom X1E based T14s laptop, SM8250 based RB5 board, and
-QCS6490 based RB3Gen2 board with DTS specifying Root Port properties in host
-bridge node and in Root Port node.
-
-[1] https://lore.kernel.org/linux-pci/20250707-pci-pwrctrl-perst-v1-0-c3c7e513e312@kernel.org/
-[2] https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml#L173
-[3] https://github.com/devicetree-org/dt-schema/blob/main/dtschema/schemas/pci/pci-bus-common.yaml#L141
+For preserving the backward compatibility with older DTs that still
+specifies the Root Port resources in the host bridge DT node, the
+controller driver still controls power supplies and PERST# for them. For
+those cases, the 'qcom_pcie::legacy_binding' flag will be set and the
+driver will continue to control PERST# exclusively. If this flag is not
+set, then the pwrctrl driver will control PERST# through the callback.
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
-Changes in v3:
-- Dropped the pci_pwrctrl_init() move patch as it is no longer required
-- Added a patch to cleanup the usage of 'phy' and 'reset' pointers
-- Renamed the callback from 'toggle_perst' to 'perst_assert'
-- Reworded the patch descriptions
-- Link to v2: https://lore.kernel.org/r/20250903-pci-pwrctrl-perst-v2-0-2d461ed0e061@oss.qualcomm.com
+ drivers/pci/controller/dwc/pcie-qcom.c | 94 ++++++++++++++++++++++++++++++----
+ 1 file changed, 83 insertions(+), 11 deletions(-)
 
-Changes in v2:
-- Reworked the PERST# lookup logic to use the node pointer instead of BDF
-- Added PWRCTRL guard to the toggle_perst callback
-- Link to v1: https://lore.kernel.org/r/20250819-pci-pwrctrl-perst-v1-0-4b74978d2007@oss.qualcomm.com
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index ccff01c31898cdbc5634221e7f8ef7e86469f5fd..f9a8908d6e5dc3e8dd9ab1c210bfbc5cca1e5be9 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -270,6 +270,7 @@ struct qcom_pcie_cfg {
+ struct qcom_pcie_perst {
+ 	struct list_head list;
+ 	struct gpio_desc *desc;
++	struct device_node *np;
+ };
+ 
+ struct qcom_pcie_port {
+@@ -291,34 +292,90 @@ struct qcom_pcie {
+ 	struct list_head ports;
+ 	bool suspended;
+ 	bool use_pm_opp;
++	bool legacy_binding;
+ };
+ 
+ #define to_qcom_pcie(x)		dev_get_drvdata((x)->dev)
+ 
+-static void qcom_perst_assert(struct qcom_pcie *pcie, bool assert)
++static struct gpio_desc *qcom_find_perst(struct qcom_pcie *pcie, struct device_node *np)
++{
++	struct qcom_pcie_perst *perst;
++	struct qcom_pcie_port *port;
++
++	list_for_each_entry(port, &pcie->ports, list) {
++		list_for_each_entry(perst, &port->perst, list)
++			if (np == perst->np)
++				return perst->desc;
++	}
++
++	return NULL;
++}
++
++static void qcom_perst_reset_per_device(struct qcom_pcie *pcie,
++					 struct device_node *np, int val)
++{
++	struct gpio_desc *perst;
++
++	perst = qcom_find_perst(pcie, np);
++	if (perst)
++		goto perst_assert;
++
++	/*
++	 * If PERST# is not available in the current node, try the parent. This
++	 * fallback is needed if the current node belongs to an endpoint or
++	 * switch upstream port.
++	 */
++	if (np->parent)
++		perst = qcom_find_perst(pcie, np->parent);
++
++perst_assert:
++	/* gpiod* APIs handle NULL gpio_desc gracefully. So no need to check. */
++	gpiod_set_value_cansleep(perst, val);
++}
++
++static void qcom_perst_reset(struct qcom_pcie *pcie, struct device_node *np,
++			      bool assert)
+ {
+ 	struct qcom_pcie_perst *perst;
+ 	struct qcom_pcie_port *port;
+ 	int val = assert ? 1 : 0;
+ 
++	if (np) {
++		qcom_perst_reset_per_device(pcie, np, val);
++		goto perst_delay;
++	}
++
+ 	list_for_each_entry(port, &pcie->ports, list) {
+ 		list_for_each_entry(perst, &port->perst, list)
+ 			gpiod_set_value_cansleep(perst->desc, val);
+ 	}
+ 
++perst_delay:
+ 	usleep_range(PERST_DELAY_US, PERST_DELAY_US + 500);
+ }
+ 
+-static void qcom_ep_reset_assert(struct qcom_pcie *pcie)
++static void qcom_ep_reset_assert(struct qcom_pcie *pcie, struct device_node *np)
+ {
+-	qcom_perst_assert(pcie, true);
++	qcom_perst_reset(pcie, np, true);
+ }
+ 
+-static void qcom_ep_reset_deassert(struct qcom_pcie *pcie)
++static void qcom_ep_reset_deassert(struct qcom_pcie *pcie,
++				   struct device_node *np)
+ {
+ 	/* Ensure that PERST has been asserted for at least 100 ms */
+ 	msleep(PCIE_T_PVPERL_MS);
+-	qcom_perst_assert(pcie, false);
++	qcom_perst_reset(pcie, np, false);
++}
++
++static void qcom_pcie_perst_assert(struct pci_host_bridge *bridge,
++				    struct device_node *np, bool assert)
++{
++	struct qcom_pcie *pcie = dev_get_drvdata(bridge->dev.parent);
++
++	if (assert)
++		qcom_ep_reset_assert(pcie, np);
++	else
++		qcom_ep_reset_deassert(pcie, np);
+ }
+ 
+ static int qcom_pcie_start_link(struct dw_pcie *pci)
+@@ -1290,7 +1347,7 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+ 	int ret;
+ 
+-	qcom_ep_reset_assert(pcie);
++	qcom_ep_reset_assert(pcie, NULL);
+ 
+ 	ret = pcie->cfg->ops->init(pcie);
+ 	if (ret)
+@@ -1306,7 +1363,13 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 			goto err_disable_phy;
+ 	}
+ 
+-	qcom_ep_reset_deassert(pcie);
++	/*
++	 * Only deassert PERST# for all devices here if legacy binding is used.
++	 * For the new binding, pwrctrl driver is expected to toggle PERST# for
++	 * individual devices.
++	 */
++	if (pcie->legacy_binding)
++		qcom_ep_reset_deassert(pcie, NULL);
+ 
+ 	if (pcie->cfg->ops->config_sid) {
+ 		ret = pcie->cfg->ops->config_sid(pcie);
+@@ -1314,10 +1377,12 @@ static int qcom_pcie_host_init(struct dw_pcie_rp *pp)
+ 			goto err_assert_reset;
+ 	}
+ 
++	pci->pp.bridge->perst_assert = qcom_pcie_perst_assert;
++
+ 	return 0;
+ 
+ err_assert_reset:
+-	qcom_ep_reset_assert(pcie);
++	qcom_ep_reset_assert(pcie, NULL);
+ err_disable_phy:
+ 	qcom_pcie_phy_power_off(pcie);
+ err_deinit:
+@@ -1331,7 +1396,7 @@ static void qcom_pcie_host_deinit(struct dw_pcie_rp *pp)
+ 	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+ 	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+ 
+-	qcom_ep_reset_assert(pcie);
++	qcom_ep_reset_assert(pcie, NULL);
+ 	qcom_pcie_phy_power_off(pcie);
+ 	pcie->cfg->ops->deinit(pcie);
+ }
+@@ -1712,6 +1777,9 @@ static int qcom_pcie_parse_perst(struct qcom_pcie *pcie,
+ 
+ 	INIT_LIST_HEAD(&perst->list);
+ 	perst->desc = reset;
++	/* Increase the refcount to make sure 'np' is valid till it is stored */
++	of_node_get(np);
++	perst->np = np;
+ 	list_add_tail(&perst->list, &port->perst);
+ 
+ parse_child_node:
+@@ -1773,8 +1841,10 @@ static int qcom_pcie_parse_ports(struct qcom_pcie *pcie)
+ 
+ err_port_del:
+ 	list_for_each_entry_safe(port, tmp_port, &pcie->ports, list) {
+-		list_for_each_entry_safe(perst, tmp_perst, &port->perst, list)
++		list_for_each_entry_safe(perst, tmp_perst, &port->perst, list) {
++			of_node_put(perst->np);
+ 			list_del(&perst->list);
++		}
+ 		phy_exit(port->phy);
+ 		list_del(&port->list);
+ 	}
+@@ -2035,8 +2105,10 @@ static int qcom_pcie_probe(struct platform_device *pdev)
+ 	dw_pcie_host_deinit(pp);
+ err_phy_exit:
+ 	list_for_each_entry_safe(port, tmp_port, &pcie->ports, list) {
+-		list_for_each_entry_safe(perst, tmp_perst, &port->perst, list)
++		list_for_each_entry_safe(perst, tmp_perst, &port->perst, list) {
++			of_node_put(perst->np);
+ 			list_del(&perst->list);
++		}
+ 		phy_exit(port->phy);
+ 		list_del(&port->list);
+ 	}
 
-Changes since RFC:
-* Implemented PERST# toggling using a callback since GPIO based PERST# is not
-  available on all platforms. This also moves all PERST# handling to the
-  controller drivers allowing them to add any additional post-link_up logic.
-
----
-Manivannan Sadhasivam (4):
-      PCI/pwrctrl: Add support for asserting/deasserting PERST#
-      PCI: qcom: Move host bridge 'phy' and 'reset' pointers to struct qcom_pcie_port
-      PCI: qcom: Parse PERST# from all PCIe bridge nodes
-      PCI: qcom: Allow pwrctrl core to control PERST# if 'reset-gpios' property is available
-
- drivers/pci/controller/dwc/pcie-qcom.c | 269 ++++++++++++++++++++++++---------
- drivers/pci/pwrctrl/core.c             |  27 ++++
- include/linux/pci.h                    |   3 +
- 3 files changed, 227 insertions(+), 72 deletions(-)
----
-base-commit: 8f5ae30d69d7543eee0d70083daf4de8fe15d585
-change-id: 20250818-pci-pwrctrl-perst-0bb7dd62b542
-
-Best regards,
 -- 
-Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+2.45.2
 
 
