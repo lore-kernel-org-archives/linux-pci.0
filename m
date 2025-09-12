@@ -1,137 +1,148 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from fllvem-ot04.ext.ti.com (fllvem-ot04.ext.ti.com [198.47.19.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D452427B4F5;
-	Fri, 12 Sep 2025 12:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA50030146B;
+	Fri, 12 Sep 2025 12:24:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.246
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757679794; cv=none; b=jsHc5PL7aVw6pEMAMZ9dLFnzCDakUYDwQMN+t+7O63HVghf46gpon+4nsgGBMpbacuzMHhYKNLn7Iiht3guKVa0287x8OdUTA3MfNlHqToFqAd2e/ILYn/OirXmdE5HsnGBGAK7J/hEBxfHx1litQm8kXjz4tZwLVL+4io613jo=
+	t=1757679872; cv=none; b=DeSNoco3NqrlReaLpjyV4EP/RcvukOsc5wqKKiIq1EjrfmO6+Rg1YR/XvxaXRb+9mh6ybZxnLksuGLafuVFgX+NGgiTDJa6cjgJlCCTWq/8IA4nvGlSRdAkrT4BHHYZtyzdLFnrLYFhEwvvojTRQLW02VXsljfHEI92YtAOZH9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757679794; c=relaxed/simple;
-	bh=bH4NRMgWnPXPHJ94kL2TjjMeV3PNPXB41VeHrC20Y5g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=bV6ytQlmH9ygZFj6WdGwt+u6z8CcWQjmpMMpPxpmdph0MmXXkR1+IQHdC/nDUCLpYi49O3Pmj/02JTWpeumYsUqRpZRUo0/usBnFhbX6m+CqBsBTqPmij7HrRC8TvuibicxuxLGp1ihii0+kqahQcgkwEtnZItvzgxKERRegaPc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=aFsXhQzJ; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1757679872; c=relaxed/simple;
+	bh=cH2/kj0mvWarunBy3cwZ0FaYOYmx5tevzhN8dH9BfIs=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fQwlYFSordlTq6d2dYAsZHsFNs6ruLjZznJ2PScJWZztgamoY9db6u2RewmADCei35Jyi4CHrEgNZZDCDI5Szk1QTzWfCTzucnzKBk2tnp6kSCjZX4aGhP8VXwCgRdzeVf7YJiqRTUa8EeTT5OvqV9ZjQm2qZAyMsjHRzu9ZKys=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=jH82VOsf; arc=none smtp.client-ip=198.47.19.246
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="aFsXhQzJ"
-Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58C6F43A027074;
-	Fri, 12 Sep 2025 12:23:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:sender:subject:to; s=pp1;
-	 bh=9ux8ILTUeDcvga5jYs95DD4PIL2aOHphcYBxHMQbne0=; b=aFsXhQzJduxW
-	OVtpT7SZwurzdlwzOIRkUaz9Mf744udZxtuT6WajNpQVfJyZjIDfDqKdCb3UGyMR
-	Sp8fNnsCP+Uo/LG+yF4TUw7ggFYrndS4TYv6sFaq0WJkJYhKH2rzdmqh4PzNbqeE
-	G7Kp48I4uxsJPbbaPFbfCKoGCLP7EEyOewYFLsW4mwxkjz6Rov4ErmFrx74u31Uq
-	0oMHaN8P8aCFiPGjzmMN1vY67bKmhyuHUoWvuo5W5Q7s0VmjGkcbPbbk1MQtcDVt
-	6rjIdlLmXROnBeJO9jRh03F4mGv0rkhF76iEVpTJkZlR7fNgYH3o06dzEhJnKZwW
-	I1VGalTh1A==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 490bcta2gr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Sep 2025 12:23:08 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58CB0oSV017163;
-	Fri, 12 Sep 2025 12:23:07 GMT
-Received: from smtprelay02.fra02v.mail.ibm.com ([9.218.2.226])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4911gmtq2w-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 12 Sep 2025 12:23:07 +0000
-Received: from smtpav03.fra02v.mail.ibm.com (smtpav03.fra02v.mail.ibm.com [10.20.54.102])
-	by smtprelay02.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58CCN0fb52363584
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 12 Sep 2025 12:23:01 GMT
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DE6E42004D;
-	Fri, 12 Sep 2025 12:23:00 +0000 (GMT)
-Received: from smtpav03.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id CDAF32004B;
-	Fri, 12 Sep 2025 12:23:00 +0000 (GMT)
-Received: from p1gen4-pw042f0m (unknown [9.152.212.78])
-	by smtpav03.fra02v.mail.ibm.com (Postfix) with ESMTPS;
-	Fri, 12 Sep 2025 12:23:00 +0000 (GMT)
-Received: from bblock by p1gen4-pw042f0m with local (Exim 4.98.2)
-	(envelope-from <bblock@linux.ibm.com>)
-	id 1ux2ns-00000002uha-2OLi;
-	Fri, 12 Sep 2025 14:23:00 +0200
-Date: Fri, 12 Sep 2025 14:23:00 +0200
-From: Benjamin Block <bblock@linux.ibm.com>
-To: Farhan Ali <alifm@linux.ibm.com>
-Cc: linux-s390@vger.kernel.org, kvm@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
-        alex.williamson@redhat.com, helgaas@kernel.org, schnelle@linux.ibm.com,
-        mjrosato@linux.ibm.com
-Subject: Re: [PATCH v3 03/10] PCI: Allow per function PCI slots
-Message-ID: <20250912122300.GA15517@p1gen4-pw042f0m.boeblingen.de.ibm.com>
-References: <20250911183307.1910-1-alifm@linux.ibm.com>
- <20250911183307.1910-4-alifm@linux.ibm.com>
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="jH82VOsf"
+Received: from fllvem-sh04.itg.ti.com ([10.64.41.54])
+	by fllvem-ot04.ext.ti.com (8.15.2/8.15.2) with ESMTP id 58CCO4hS967935;
+	Fri, 12 Sep 2025 07:24:04 -0500
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
+	s=ti-com-17Q1; t=1757679844;
+	bh=41ADgNrKihGdh6ABSZq8itBkuFhnZ+8ndSF55rURelI=;
+	h=From:To:CC:Subject:Date;
+	b=jH82VOsf6aACJOZ1aGamQtJYN4wRtOdhrrZF4qB713aRU35oAVF2V0rFt8pt8fdyc
+	 mrmH9SbF4gZFMbzPzfoGRF66lh9fIaTn0ahb0yu5ZYQn0xyl5wtexPTMpTXoEh/hpb
+	 otq3k24f2EJsZvECr5K/MhhljqlZHjAolaz0sfMo=
+Received: from DFLE114.ent.ti.com (dfle114.ent.ti.com [10.64.6.35])
+	by fllvem-sh04.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 58CCO42Y2760210
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA256 bits=128 verify=FAIL);
+	Fri, 12 Sep 2025 07:24:04 -0500
+Received: from DFLE201.ent.ti.com (10.64.6.59) by DFLE114.ent.ti.com
+ (10.64.6.35) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55; Fri, 12
+ Sep 2025 07:24:03 -0500
+Received: from lelvem-mr06.itg.ti.com (10.180.75.8) by DFLE201.ent.ti.com
+ (10.64.6.59) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
+ Transport; Fri, 12 Sep 2025 07:24:03 -0500
+Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [172.24.231.84])
+	by lelvem-mr06.itg.ti.com (8.18.1/8.18.1) with ESMTP id 58CCNuLS3589278;
+	Fri, 12 Sep 2025 07:23:57 -0500
+From: Siddharth Vadapalli <s-vadapalli@ti.com>
+To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
+        <robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
+        <christian.bruel@foss.st.com>, <qiang.yu@oss.qualcomm.com>,
+        <mayank.rana@oss.qualcomm.com>, <thippeswamy.havalige@amd.com>,
+        <shradha.t@samsung.com>, <quic_schintav@quicinc.com>,
+        <inochiama@gmail.com>, <cassel@kernel.org>, <kishon@kernel.org>,
+        <sergio.paracuellos@gmail.com>, <18255117159@163.com>,
+        <rongqianfeng@vivo.com>
+CC: <jirislaby@kernel.org>, <linux-pci@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+        <srk@ti.com>, <s-vadapalli@ti.com>
+Subject: [PATCH v2 00/10] PCI: Keystone: Enable loadable module support
+Date: Fri, 12 Sep 2025 17:46:11 +0530
+Message-ID: <20250912122356.3326888-1-s-vadapalli@ti.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250911183307.1910-4-alifm@linux.ibm.com>
-Sender: Benjamin Block <bblock@linux.ibm.com>
-X-TM-AS-GCONF: 00
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA2MDAxMCBTYWx0ZWRfX3TNJOphnH2il
- jrBpLiBmr1DdZdMx+mcIweDwmZ+wZdH6httyq+5D/gQ0h+M4iYAllWqZ0VskJIBZ1dRB4vPei5u
- 8wFkfpqRKy6YbwxQ+mt4mMGfAaTTT2fmFmN1MtJy+Af2GwwVdJSqb5C2mZ0LDJSaffXSlYyJTHV
- md6zyVH0ByfJBeeHJ/idmWgRjeoz7EWm7ym+2znVp4zKbXqNIZFapj4Ot9eAWeppAoqwjMjyFFy
- bQ+oXp5sbVtXB29EKHV/X7pZqnQcTkFkuZb+BWSa9qgy/F2dHzvbrOsJvRt6tSTXQMaMLylRBC5
- fLOW5J8MBSum64BqZa6k4TcDd+p8cdPi4Y9ImSNZZ8KM8srvKNjrTJ8vDnDt6PiHvg3vV3XFCkx
- l4mn4fhW
-X-Authority-Analysis: v=2.4 cv=SKNCVPvH c=1 sm=1 tr=0 ts=68c410ac cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=8nJEP1OIZ-IA:10 a=yJojWOMRYYMA:10 a=VnNF1IyMAAAA:8 a=TjuGVM56yl0YPUG8lfgA:9
- a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10
-X-Proofpoint-GUID: AUWlo5yUzZA2zKTw0JinpgK5xuJm9dp7
-X-Proofpoint-ORIG-GUID: AUWlo5yUzZA2zKTw0JinpgK5xuJm9dp7
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-12_04,2025-09-11_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 spamscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
- adultscore=0 suspectscore=0 impostorscore=0 phishscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509060010
+Content-Type: text/plain
+X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-On Thu, Sep 11, 2025 at 11:33:00AM -0700, Farhan Ali wrote:
-> On s390 systems, which use a machine level hypervisor, PCI devices are
-> always accessed through a form of PCI pass-through which fundamentally
-> operates on a per PCI function granularity. This is also reflected in the
-> s390 PCI hotplug driver which creates hotplug slots for individual PCI
-> functions. Its reset_slot() function, which is a wrapper for
-> zpci_hot_reset_device(), thus also resets individual functions.
-> 
-> Currently, the kernel's PCI_SLOT() macro assigns the same pci_slot object
-> to multifunction devices. This approach worked fine on s390 systems that
-> only exposed virtual functions as individual PCI domains to the operating
-> system.  Since commit 44510d6fa0c0 ("s390/pci: Handling multifunctions")
-> s390 supports exposing the topology of multifunction PCI devices by
-> grouping them in a shared PCI domain. When attempting to reset a function
-> through the hotplug driver, the shared slot assignment causes the wrong
-> function to be reset instead of the intended one. It also leaks memory as
-> we do create a pci_slot object for the function, but don't correctly free
-> it in pci_slot_release().
-> 
-> Add a flag for struct pci_slot to allow per function PCI slots for
-> functions managed through a hypervisor, which exposes individual PCI
-> functions while retaining the topology.
-> 
-> Fixes: 44510d6fa0c0 ("s390/pci: Handling multifunctions")
+Hello,
 
-Stable tag?
-Reseting the wrong PCI function sounds bad enough.
+This series enables support for the 'pci-keystone.c' driver to be built
+as a loadable module. The motivation for the series is that PCIe is not
+a necessity for booting Linux due to which the 'pci-keystone.c' driver
+does not need to be built-in.
+
+Series is based on commit
+bfd2c81b061c Merge branch 'pci/misc'
+of pci/next.
+
+NOTE for MAINTAINERS: This series has the following dependencies:
+1. The following commit in Linux-Next is a build-dependency for the
+series:
+https://github.com/ColinIanKing/linux-next/commit/8de1de5a3a8d42975953382068fb5195e9d6e6c6
+Since the v1 series was based on linux-next, there were no build errors.
+However, since this series is based on pci/next based on the feedback from
+Manivannan Sadhasivam <mani@kernel.org> at:
+https://lore.kernel.org/r/2gzqupa7i7qhiscwm4uin2jmdb6qowp55mzk7w4o3f73ob64e7@taf5vjd7lhc5/
+without the aforementioned commit, build will fail.
+2. The following patch series include fixes for the driver which are
+required to verify the driver functionality:
+https://lore.kernel.org/r/20250912100802.3136121-1-s-vadapalli@ti.com/
+
+v1 of this series is at:
+https://lore.kernel.org/r/20250903124505.365913-1-s-vadapalli@ti.com/
+Changes since v1:
+- Based on the feedback provided by Jiri Slaby <jirislaby@kernel.org> at:
+  https://lore.kernel.org/r/3d3a4b52-e343-42f3-9d69-94c259812143@kernel.org/
+  patch 09/11 of the v1 series has been posted as a FIX at:
+  https://lore.kernel.org/r/20250912100802.3136121-2-s-vadapalli@ti.com/
+  and is therefore no longer a part of the current series.
+- Based on the feedback provided by Manivannan Sadhasivam <mani@kernel.org> at:
+  https://lore.kernel.org/r/2gzqupa7i7qhiscwm4uin2jmdb6qowp55mzk7w4o3f73ob64e7@taf5vjd7lhc5/
+  patch 11/11 of the v1 series which is patch 10/10 of this series has
+  been modified by retaining 'builtin_platform_driver()' instead of
+  changing it to 'module_platform_driver()'.
+- Series has been based on pci/next instead of linux-next.
+
+For testing the series, Linux has been built in the following manner:
+1. Check out at commit bfd2c81b061c Merge branch 'pci/misc' of pci/next
+2. Apply commit and patch series mentioned as dependencies above.
+3. Apply current series.
+4. Build Linux with CONFIG_PCI_KEYSTONE, CONFIG_PCI_KEYSTONE_HOST and
+   CONFIG_PCI_KEYSTONE_EP set to 'm'.
+
+Series has been tested on AM654-EVM with an NVMe SSD connected to the
+PCIe connector on the board and verifying that the NVMe SSD enumerates
+successfully. Additionally, the 'hdparm' utility has been used to read
+the NVMe SSD for verifying functionality. Test Logs:
+https://gist.github.com/Siddharth-Vadapalli-at-TI/54848d3414dc965bec3c29253a1b2764
+
+Regards,
+Siddharth.
+
+Siddharth Vadapalli (10):
+  PCI: Export pci_get_host_bridge_device() for use by pci-keystone
+  PCI: dwc: Export dw_pcie_allocate_domains() for pci-keystone
+  PCI: dwc: Add dw_pcie_free_domains() helper for cleanup
+  PCI: dwc: ep: Export dw_pcie_ep_raise_msix_irq() for pci-keystone
+  PCI: keystone: Add ks_pcie_free_msi_irq() helper for cleanup
+  PCI: keystone: Add ks_pcie_free_intx_irq() helper for cleanup
+  PCI: keystone: Add ks_pcie_host_deinit() helper for cleanup
+  PCI: keystone: Add ks_pcie_disable_error_irq() helper for cleanup
+  PCI: keystone: Exit ks_pcie_probe() for the default switch-case of
+    "mode"
+  PCI: keystone: Add support to build as a loadable module
+
+ drivers/pci/controller/dwc/Kconfig            |   6 +-
+ drivers/pci/controller/dwc/pci-keystone.c     | 101 ++++++++++++++++++
+ .../pci/controller/dwc/pcie-designware-ep.c   |   1 +
+ .../pci/controller/dwc/pcie-designware-host.c |  10 ++
+ drivers/pci/controller/dwc/pcie-designware.h  |   5 +
+ drivers/pci/host-bridge.c                     |   1 +
+ include/linux/pci.h                           |   1 +
+ 7 files changed, 122 insertions(+), 3 deletions(-)
 
 -- 
-Best Regards, Benjamin Block        /        Linux on IBM Z Kernel Development
-IBM Deutschland Research & Development GmbH    /   https://www.ibm.com/privacy
-Vors. Aufs.-R.: Wolfgang Wendt         /        Geschäftsführung: David Faller
-Sitz der Ges.: Böblingen     /    Registergericht: AmtsG Stuttgart, HRB 243294
+2.43.0
+
