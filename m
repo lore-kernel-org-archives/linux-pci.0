@@ -1,84 +1,108 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4CFC221726;
-	Mon, 15 Sep 2025 14:07:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00A211EFFB2;
+	Mon, 15 Sep 2025 14:12:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757945275; cv=none; b=a69REpmnzz2eab0oVOn+6rSNBdJyjfgxlb/qIg5UCOc2mLf7fwykQsf1Bw6BkzCePWUsPXQDOV+RCqReoUArR1m3S6C+v3H4BR4h+l6KQ6A7nVY+2ZCIznX7O2aX7v8BP2ZVB3IRtzyUg+mDA+4WSuguSxNz4wdPVOWcP8UwOzI=
+	t=1757945562; cv=none; b=j3PjgsbRkD+2F8WdAPWoVuwHsLREIVQdxS7LY5J3tcx3ACZNMV3f78PmFpahYCISQ27uQtr/Q6kQJm40S01C8vvyA9bPYa7QYnraAbmNTX2lsRFY4euj98QB/JbI0/InBoQVkLKF9hrqxgbr0zp0t31Dij5mTVdpG5JWxR4NnTg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757945275; c=relaxed/simple;
-	bh=VrFwXhOHdy+zl9ovJ+7hv5z6W0WKS/altUCPkdutIak=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=O0pmLAS3sV+DVAckJiGLk1npr/bjm0egN9ihZMci38xjvuxIijwjL1aiXr94nb5cv0ACOVx6b8zzwL2N+/cDrlx/qVEdW/m6V22BoM5RJNUCxvURMZLRG+NgCFWt2NsgrIwSG1pFd/HNQl2ngLD/W7a2eRr3gTGh+wIONN5ZoII=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dONxxnm5; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dONxxnm5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92BE5C4CEF1;
-	Mon, 15 Sep 2025 14:07:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757945275;
-	bh=VrFwXhOHdy+zl9ovJ+7hv5z6W0WKS/altUCPkdutIak=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=dONxxnm5mwP1eiMfYo4uecgpV50A89DnH1OvLhBQ5OrOgW2mTKhi2pYbGlr3WJj+U
-	 BLjiPaaLhCTjx/0rQIYZluP4A3OjFPWzeHwWPLB0f/kRnBTLEXl1YcXYqDWgTcU2xy
-	 Jywh/klogP5pZD0b0pjcxIpTFsi793ZLfwE99Hn4nti99NQDy+Hw/H1RHBcPX5Ko2V
-	 dz07xAROKT0KEE5Ja60xCoeaDbn/RI7MmOhlGXju4zcpEc+5Cq1dw5FxOz5+DzOGCS
-	 pPxKez9K+3wuEpUs04qp+b8utjhZ+PdHH46mh36jANhhNgk1gIWMdlMNsHi1rBOrtn
-	 I7asbRyNsTS4w==
-Date: Mon, 15 Sep 2025 19:37:48 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: ALOK TIWARI <alok.a.tiwari@oracle.com>
-Cc: daire.mcnamara@microchip.com, lpieralisi@kernel.org, 
-	kwilczynski@kernel.org, bhelgaas@google.com, robh@kernel.org, linux-pci@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, Xichao Zhao <zhao.xichao@vivo.com>
-Subject: Re: [External] : Re: [PATCH] PCI: plda: Remove the use of
- dev_err_probe()
-Message-ID: <7vtlzppunpkrzwpdfplyzcm53fpxik335wtng7ethfjyvu4tph@df5xusqn25it>
-References: <20250820085200.395578-1-zhao.xichao@vivo.com>
- <cl52jts26ulfcanbzz42w35g3bcjlwfhteph2oze4drveajzg3@a4kq3cxfzn2l>
- <cf18193a-5a49-4e0c-b07a-a4f705fc5c8c@oracle.com>
+	s=arc-20240116; t=1757945562; c=relaxed/simple;
+	bh=pely3GkUQwXOKKBzwSg+6fn1D+r0VoUlId07Lgyo29I=;
+	h=Message-ID:In-Reply-To:References:From:Date:Subject:MIME-Version:
+	 Content-Type:To:Cc; b=B5a5gNYVwKOS4XgDI8/RVgMytbFlz1VgalSpwio3m8uJRYqy0r2Z13AgtG/cJET6q7WmyvPFy3mq/Cr8ZR2bGgA+Hk16UxKP6G4NwZMZw2MM9x2FiWx9fmN258GKJlCl1b5Y4nnomoMA8Mfu4k0Eyzx1yrGmEjV17zhqf2vpfB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [83.223.95.28])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout1.hostsharing.net (Postfix) with UTF8SMTPS id 6B5D518C4D;
+	Mon, 15 Sep 2025 16:06:15 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id 4060F6034321;
+	Mon, 15 Sep 2025 16:06:15 +0200 (CEST)
+X-Mailbox-Line: From ed3c3385499775fcc25f1ee66f395e212919f94a Mon Sep 17 00:00:00 2001
+Message-ID: <ed3c3385499775fcc25f1ee66f395e212919f94a.1757942121.git.lukas@wunner.de>
+In-Reply-To: <cover.1757942121.git.lukas@wunner.de>
+References: <cover.1757942121.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Mon, 15 Sep 2025 15:50:02 +0200
+Subject: [PATCH v2 2/4] Documentation: PCI: Sync error recovery doc with code
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <cf18193a-5a49-4e0c-b07a-a4f705fc5c8c@oracle.com>
+To: Bjorn Helgaas <helgaas@kernel.org>, Jonathan Corbet <corbet@lwn.net>
+Cc: Terry Bowman <terry.bowman@amd.com>, Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Niklas Schnelle <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>, "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, "Oliver OHalloran" <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, Brian Norris <briannorris@chromium.org>
 
-On Mon, Sep 15, 2025 at 06:55:29PM GMT, ALOK TIWARI wrote:
-> Hi Mani,
-> 
-> On 9/8/2025 3:43 PM, Manivannan Sadhasivam wrote:
-> > On Wed, Aug 20, 2025 at 04:52:00PM GMT, Xichao Zhao wrote:
-> > > The dev_err_probe() doesn't do anything when error is '-ENOMEM'.
-> > > Therefore, remove the useless call to dev_err_probe(), and just
-> > > return the value instead.
-> > > 
-> > 
-> > Change is fine as it is. But I think devm_pci_alloc_host_bridge() should return
-> > the actual error pointer instead of NULL and let the callers guess the errno.
-> > 
-> > Callers are using both -ENOMEM and -ENODEV, both of then will mask the actual
-> > errno that caused the failure.
-> > 
-> > Cleanup task for someone interested :)
-> > 
-> > - Mani
-> 
-> Did you really intend to do that,
+Amend the documentation on PCI error recovery to fix minor inaccuracies
+vis-à-vis the actual code:
 
-No, I don't have bandwidth right now.
+* The documentation claims that a missing ->resume() or ->mmio_enabled()
+  callback always leads to recovery through reset.  But none of the
+  implementations do this (pcie_do_recovery(), eeh_handle_normal_event(),
+  zpci_event_do_error_state_clear()).
 
-> Should that be an RFC (for cleanup task) patch ?
-> 
+  Drop the claim to align the documentation with the code.
 
-No need of RFC.
+* The documentation does not list PCI_ERS_RESULT_RECOVERED as a valid
+  return value from ->error_detected().  But none of the implementations
+  forbid this and some drivers are returning it, e.g.:
+  drivers/bus/mhi/host/pci_generic.c
+  drivers/infiniband/hw/hfi1/pcie.c
 
-- Mani
+  Further down in the documentation it is implied that the return value is
+  in fact allowed:
+  "The platform will call the resume() callback on all affected device
+  drivers if all drivers on the segment have returned
+  PCI_ERS_RESULT_RECOVERED from one of the 3 previous callbacks."
 
+  The "3 previous callbacks" being ->error_detected(), ->mmio_enabled()
+  and ->slot_reset().
+
+  Add it to the valid return values for consistency.
+
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
+ Documentation/PCI/pci-error-recovery.rst | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/Documentation/PCI/pci-error-recovery.rst b/Documentation/PCI/pci-error-recovery.rst
+index 42e1e78353f3..d5c661baa87f 100644
+--- a/Documentation/PCI/pci-error-recovery.rst
++++ b/Documentation/PCI/pci-error-recovery.rst
+@@ -108,8 +108,8 @@ A driver does not have to implement all of these callbacks; however,
+ if it implements any, it must implement error_detected(). If a callback
+ is not implemented, the corresponding feature is considered unsupported.
+ For example, if mmio_enabled() and resume() aren't there, then it
+-is assumed that the driver is not doing any direct recovery and requires
+-a slot reset.  Typically a driver will want to know about
++is assumed that the driver does not need these callbacks
++for recovery.  Typically a driver will want to know about
+ a slot_reset().
+ 
+ The actual steps taken by a platform to recover from a PCI error
+@@ -141,6 +141,9 @@ shouldn't do any new IOs. Called in task context. This is sort of a
+ All drivers participating in this system must implement this call.
+ The driver must return one of the following result codes:
+ 
++  - PCI_ERS_RESULT_RECOVERED
++      Driver returns this if it thinks the device is usable despite
++      the error and does not need further intervention.
+   - PCI_ERS_RESULT_CAN_RECOVER
+       Driver returns this if it thinks it might be able to recover
+       the HW by just banging IOs or if it wants to be given
 -- 
-மணிவண்ணன் சதாசிவம்
+2.51.0
+
