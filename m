@@ -1,348 +1,105 @@
-Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
+Received: from mailout2.hostsharing.net (mailout2.hostsharing.net [83.223.78.233])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E88031B80F;
-	Mon, 15 Sep 2025 14:13:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FD3231E0FD;
+	Mon, 15 Sep 2025 14:15:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.78.233
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757945585; cv=none; b=ZCbULJT7hEU3Cr70qDqUTq8SnvnEzr2JS8Z2Jwm+U3sotSQZn/V1mHhMshydyQLxJJtf1pYI5X5HhV4X/Yu8EVdISH7jpKd/w7wayOLm34HUfwbdqgYu51vvzp7zNbGVOWYyxrCanbAPqWC/gntWmHgDFjjwwmphqygF20y44Ew=
+	t=1757945706; cv=none; b=Wttm8MNb4khAmiYzG/pPOnO62lQAQZ/u+QZ6AxFrdi3Nhbz3wI5670sVsvelDqgSsUdpGghUh9OyOZt7dNK7BHudDeW/8VO/XL4vR730g5UAhpYFCA+tw/lM2/I672AlXas1DjXpA3pblR5xE6CbXBX6z2VYuNQD/gct2tHjYYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757945585; c=relaxed/simple;
-	bh=AwTu8u9YiJquU5bgb96v3Ixdf9OaqS4HYjtVwL6W5NQ=;
-	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=N24VzdqJATKZLSnvYIV5WWHlpIJVu+DNJ4m0yA25zAciNncR3tYQ9AHtkb22JssQCoVlC+FtHpxBrc2zH/qVpGdqzg1yq3rcnh+tZtcx6Dk0UOZBD2VO17+iUAj8JQKLVPZJKqoRhxSx3TxZgvyKdx09pTp1ENB/HJ7SDLrlEko=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.18.186.31])
-	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4cQRhc713mz6L6kL;
-	Mon, 15 Sep 2025 22:08:32 +0800 (CST)
-Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
-	by mail.maildlp.com (Postfix) with ESMTPS id 1C50C1402F7;
-	Mon, 15 Sep 2025 22:12:59 +0800 (CST)
-Received: from localhost (10.203.177.15) by frapeml500008.china.huawei.com
- (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Mon, 15 Sep
- 2025 16:12:58 +0200
-Date: Mon, 15 Sep 2025 15:12:57 +0100
-From: Jonathan Cameron <jonathan.cameron@huawei.com>
-To: Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org>
-CC: <nathan.lynch@amd.com>, Vinod Koul <vkoul@kernel.org>, Wei Huang
-	<wei.huang2@amd.com>, Mario Limonciello <mario.limonciello@amd.com>, "Bjorn
- Helgaas" <bhelgaas@google.com>, <linux-pci@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <dmaengine@vger.kernel.org>
-Subject: Re: [PATCH RFC 08/13] dmaengine: sdxi: Context creation/removal,
- descriptor submission
-Message-ID: <20250915151257.0000253b@huawei.com>
-In-Reply-To: <20250905-sdxi-base-v1-8-d0341a1292ba@amd.com>
-References: <20250905-sdxi-base-v1-0-d0341a1292ba@amd.com>
-	<20250905-sdxi-base-v1-8-d0341a1292ba@amd.com>
-X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
+	s=arc-20240116; t=1757945706; c=relaxed/simple;
+	bh=sPlgb5C0dRuGY2lOrGS8QC8NM42rTxF7AHxr9i8RJIo=;
+	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=KVUSPPx+7ahFsmsZgwIRR0oVLXoPIVwHm55+f0mpAp0A/O5M6sAY8b19+1h9aziNKRbL7awgZM4NOZd18g6R/BSbf+MI0PBwbbowNNRfnFW+X4vlE2dWXSW+Qak0D3sooXZpOoOZQ0lE07+iXVVbL38E9cPOaB5zNP/QCkK44/I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.78.233
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
+Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
+	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
+	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
+	by mailout2.hostsharing.net (Postfix) with UTF8SMTPS id 314CF2C1E4C1;
+	Mon, 15 Sep 2025 16:15:02 +0200 (CEST)
+Received: from localhost (unknown [89.246.108.87])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id 12834600B5BC;
+	Mon, 15 Sep 2025 16:15:02 +0200 (CEST)
+X-Mailbox-Line: From 61d8eeadb20ee71c3a852f44c863bfe0209c454d Mon Sep 17 00:00:00 2001
+Message-ID: <61d8eeadb20ee71c3a852f44c863bfe0209c454d.1757942121.git.lukas@wunner.de>
+In-Reply-To: <cover.1757942121.git.lukas@wunner.de>
+References: <cover.1757942121.git.lukas@wunner.de>
+From: Lukas Wunner <lukas@wunner.de>
+Date: Mon, 15 Sep 2025 15:50:03 +0200
+Subject: [PATCH v2 3/4] Documentation: PCI: Amend error recovery doc with
+ DPC/AER specifics
+To: Bjorn Helgaas <helgaas@kernel.org>, Jonathan Corbet <corbet@lwn.net>
+Cc: Terry Bowman <terry.bowman@amd.com>, Ilpo Jarvinen <ilpo.jarvinen@linux.intel.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Niklas Schnelle <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>, "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, "Oliver OHalloran" <oohall@gmail.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, linux-doc@vger.kernel.org, Brian Norris <briannorris@chromium.org>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: lhrpeml100011.china.huawei.com (7.191.174.247) To
- frapeml500008.china.huawei.com (7.182.85.71)
 
-On Fri, 05 Sep 2025 13:48:31 -0500
-Nathan Lynch via B4 Relay <devnull+nathan.lynch.amd.com@kernel.org> wrote:
+Amend the documentation on PCI error recovery with specifics about
+Downstream Port Containment and Advanced Error Reporting:
 
-> From: Nathan Lynch <nathan.lynch@amd.com>
-> 
-> Add functions for creating and removing SDXI contexts and submitting
-> descriptors against them.
-> 
-> An SDXI function supports one or more contexts, each of which has its
-> own descriptor ring and associated state. Each context has a 16-bit
-> index. A special context is installed at index 0 and is used for
-> configuring other contexts and performing administrative actions.
-> 
-> The creation of each context entails the allocation of the following
-> control structure hierarchy:
-> 
-> * Context L1 Table slot
->   * Access key (AKey) table
->   * Context control block
->     * Descriptor ring
->     * Write index
->     * Context status block
-> 
-> Co-developed-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Wei Huang <wei.huang2@amd.com>
-> Signed-off-by: Nathan Lynch <nathan.lynch@amd.com>
-Some superficial stuff inline.
+* Explain that with DPC, devices are inaccessible upon an error (similar
+  to EEH on powerpc) and do not become accessible until the link is
+  re-enabled.
 
-I haven't yet reread the spec against this (and it's been a while
-since I looked at sdxi!) but overall seems reasonable.
-> ---
->  drivers/dma/sdxi/context.c | 547 +++++++++++++++++++++++++++++++++++++++++++++
->  drivers/dma/sdxi/context.h |  28 +++
->  2 files changed, 575 insertions(+)
-> 
-> diff --git a/drivers/dma/sdxi/context.c b/drivers/dma/sdxi/context.c
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..50eae5b3b303d67891113377e2df209d199aa533
-> --- /dev/null
-> +++ b/drivers/dma/sdxi/context.c
-> @@ -0,0 +1,547 @@
+* Explain that with AER, although devices may already be accessible in the
+  ->error_detected() callback, accesses should be deferred to the
+  ->mmio_enabled() callback for compatibility with EEH on powerpc and with
+  s390.
 
+Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Reviewed-by: Brian Norris <briannorris@chromium.org>
+---
+ Documentation/PCI/pci-error-recovery.rst | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
 
-> +
-> +static struct sdxi_cxt *alloc_cxt(struct sdxi_dev *sdxi)
-> +{
-> +	struct sdxi_cxt *cxt;
-> +	u16 id, l2_idx, l1_idx;
-> +
-> +	if (sdxi->cxt_count >= sdxi->max_cxts)
-> +		return NULL;
-> +
-> +	/* search for an empty context slot */
-> +	for (id = 0; id < sdxi->max_cxts; id++) {
-> +		l2_idx = ID_TO_L2_INDEX(id);
-> +		l1_idx = ID_TO_L1_INDEX(id);
-> +
-> +		if (sdxi->cxt_array[l2_idx] == NULL) {
-> +			int sz = sizeof(struct sdxi_cxt *) * L1_TABLE_ENTRIES;
-> +			struct sdxi_cxt **ptr = kzalloc(sz, GFP_KERNEL);
-> +
-> +			sdxi->cxt_array[l2_idx] = ptr;
-> +			if (!(sdxi->cxt_array[l2_idx]))
-> +				return NULL;
-> +		}
-> +
-> +		cxt = (sdxi->cxt_array)[l2_idx][l1_idx];
-> +		/* found one empty slot */
-> +		if (!cxt)
-> +			break;
-> +	}
-> +
-> +	/* nothing found, bail... */
-> +	if (id == sdxi->max_cxts)
-> +		return NULL;
-> +
-> +	/* alloc context and initialize it */
-> +	cxt = kzalloc(sizeof(struct sdxi_cxt), GFP_KERNEL);
-
-sizeof(*ctx) usually preferred as it saves anyone checking types match.
-
-> +	if (!cxt)
-> +		return NULL;
-> +
-> +	cxt->akey_table = dma_alloc_coherent(sdxi_to_dev(sdxi),
-> +					     sizeof(*cxt->akey_table),
-> +					     &cxt->akey_table_dma, GFP_KERNEL);
-> +	if (!cxt->akey_table) {
-> +		kfree(cxt);
-
-Similar to below. You could use a DEFINE_FREE() to auto cleanup up ctx
-on error.
-
-> +		return NULL;
-> +	}
-> +
-> +	cxt->sdxi = sdxi;
-> +	cxt->id = id;
-> +	cxt->db_base = sdxi->dbs_bar + id * sdxi->db_stride;
-> +	cxt->db = sdxi->dbs + id * sdxi->db_stride;
-> +
-> +	sdxi->cxt_array[l2_idx][l1_idx] = cxt;
-> +	sdxi->cxt_count++;
-> +
-> +	return cxt;
-> +}
-
-> +struct sdxi_cxt *sdxi_working_cxt_init(struct sdxi_dev *sdxi,
-> +				       enum sdxi_cxt_id id)
-> +{
-> +	struct sdxi_cxt *cxt;
-> +	struct sdxi_sq *sq;
-> +
-> +	cxt = sdxi_cxt_alloc(sdxi);
-> +	if (!cxt) {
-> +		sdxi_err(sdxi, "failed to alloc a new context\n");
-> +		return NULL;
-> +	}
-> +
-> +	/* check if context ID matches */
-> +	if (id < SDXI_ANY_CXT_ID && cxt->id != id) {
-> +		sdxi_err(sdxi, "failed to alloc a context with id=%d\n", id);
-> +		goto err_cxt_id;
-> +	}
-> +
-> +	sq = sdxi_sq_alloc_default(cxt);
-> +	if (!sq) {
-> +		sdxi_err(sdxi, "failed to alloc a submission queue (sq)\n");
-> +		goto err_sq_alloc;
-> +	}
-> +
-> +	return cxt;
-> +
-> +err_sq_alloc:
-> +err_cxt_id:
-> +	sdxi_cxt_free(cxt);
-
-Might be worth doing a DEFINE_FREE() then you can use return_ptr(ctx); instead
-of return ctx.  Will allow you to simply return on any errors.
-
-> +
-> +	return NULL;
-> +}
-> +
-> +static const char *cxt_sts_state_str(enum cxt_sts_state state)
-> +{
-> +	static const char *const context_states[] = {
-> +		[CXTV_STOP_SW]  = "stopped (software)",
-> +		[CXTV_RUN]      = "running",
-> +		[CXTV_STOPG_SW] = "stopping (software)",
-> +		[CXTV_STOP_FN]  = "stopped (function)",
-> +		[CXTV_STOPG_FN] = "stopping (function)",
-> +		[CXTV_ERR_FN]   = "error",
-> +	};
-> +	const char *str = "unknown";
-> +
-> +	switch (state) {
-> +	case CXTV_STOP_SW:
-> +	case CXTV_RUN:
-> +	case CXTV_STOPG_SW:
-> +	case CXTV_STOP_FN:
-> +	case CXTV_STOPG_FN:
-> +	case CXTV_ERR_FN:
-> +		str = context_states[state];
-
-I'd do a default to make it explicit that there are other states.  If there
-aren't then just return here and skip the return below.  A compiler should
-be able to see if you handled them all and complain loudly if a new one is
-added that you haven't handled.
-
-> +	}
-> +
-> +	return str;
-> +}
-> +
-> +int sdxi_submit_desc(struct sdxi_cxt *cxt, const struct sdxi_desc *desc)
-> +{
-> +	struct sdxi_sq *sq;
-> +	__le64 __iomem *db;
-> +	__le64 *ring_base;
-> +	u64 ring_entries;
-> +	__le64 *rd_idx;
-> +	__le64 *wr_idx;
-> +
-> +	sq = cxt->sq;
-> +	ring_entries = sq->ring_entries;
-> +	ring_base = sq->desc_ring[0].qw;
-> +	rd_idx = &sq->cxt_sts->read_index;
-> +	wr_idx = sq->write_index;
-> +	db = cxt->db;
-I'm not sure the local variables add anything, but if you really want
-to keep them, then at least combine with declaration.
-
-	struct sdxi_sq *sq = ctx->sq;
-	__le64 __iomem *db = ctx->db;
-
-
-just to keep thing code more compact.
-
-Personally I'd just have a local sq and do the rest in the call
-
-	return sdxi_enqueue(desc->qw, 1, sq->desc_ring[0].wq,
-etc
-
-
-> +
-> +	return sdxi_enqueue(desc->qw, 1, ring_base, ring_entries,
-> +			    rd_idx, wr_idx, db);
-				
-> +}
-> +
-> +static void sdxi_cxt_shutdown(struct sdxi_cxt *target_cxt)
-> +{
-> +	unsigned long deadline = jiffies + msecs_to_jiffies(1000);
-> +	struct sdxi_cxt *admin_cxt = target_cxt->sdxi->admin_cxt;
-> +	struct sdxi_dev *sdxi = target_cxt->sdxi;
-> +	struct sdxi_cxt_sts *sts = target_cxt->sq->cxt_sts;
-> +	struct sdxi_desc desc;
-> +	u16 cxtid = target_cxt->id;
-> +	struct sdxi_cxt_stop params = {
-> +		.range = sdxi_cxt_range(cxtid),
-> +	};
-> +	enum cxt_sts_state state = sdxi_cxt_sts_state(sts);
-> +	int err;
-> +
-> +	sdxi_dbg(sdxi, "%s entry: context state: %s",
-> +		 __func__, cxt_sts_state_str(state));
-> +
-> +	err = sdxi_encode_cxt_stop(&desc, &params);
-> +	if (err)
-> +		return;
-> +
-> +	err = sdxi_submit_desc(admin_cxt, &desc);
-> +	if (err)
-> +		return;
-> +
-> +	sdxi_dbg(sdxi, "shutting down context %u\n", cxtid);
-> +
-> +	do {
-> +		enum cxt_sts_state state = sdxi_cxt_sts_state(sts);
-> +
-> +		sdxi_dbg(sdxi, "context %u state: %s", cxtid,
-> +			 cxt_sts_state_str(state));
-> +
-> +		switch (state) {
-> +		case CXTV_ERR_FN:
-> +			sdxi_err(sdxi, "context %u went into error state while stopping\n",
-> +				cxtid);
-> +			fallthrough;
-
-I'd just return unless a later patch adds something more interesting to the next
-cases.
-
-> +		case CXTV_STOP_SW:
-> +		case CXTV_STOP_FN:
-> +			return;
-> +		case CXTV_RUN:
-> +		case CXTV_STOPG_SW:
-> +		case CXTV_STOPG_FN:
-> +			/* transitional states */
-> +			fsleep(1000);
-> +			break;
-> +		default:
-> +			sdxi_err(sdxi, "context %u in unknown state %u\n",
-> +				 cxtid, state);
-> +			return;
-> +		}
-> +	} while (time_before(jiffies, deadline));
-> +
-> +	sdxi_err(sdxi, "stopping context %u timed out (state = %u)\n",
-> +		cxtid, sdxi_cxt_sts_state(sts));
-> +}
-> +
-> +void sdxi_working_cxt_exit(struct sdxi_cxt *cxt)
-> +{
-> +	struct sdxi_sq *sq;
-> +
-> +	if (!cxt)
-Superficially this looks like defensive programming that we don't need
-as it makes not sense to call this if ctx is NULL.  Add a comment if
-there is a path where this actually happens.
-> +		return;
-> +
-> +	sq = cxt->sq;
-> +	if (!sq)
-Add a comment on why this might happen, or drop teh cehck.
-
-> +		return;
-> +
-> +	sdxi_cxt_shutdown(cxt);
-> +
-> +	sdxi_sq_free(sq);
-> +
-> +	sdxi_cxt_free(cxt);
-> +}
-
+diff --git a/Documentation/PCI/pci-error-recovery.rst b/Documentation/PCI/pci-error-recovery.rst
+index d5c661baa87f..9e1e2f2a13fa 100644
+--- a/Documentation/PCI/pci-error-recovery.rst
++++ b/Documentation/PCI/pci-error-recovery.rst
+@@ -122,6 +122,10 @@ A PCI bus error is detected by the PCI hardware.  On powerpc, the slot
+ is isolated, in that all I/O is blocked: all reads return 0xffffffff,
+ all writes are ignored.
+ 
++Similarly, on platforms supporting Downstream Port Containment
++(PCIe r7.0 sec 6.2.11), the link to the sub-hierarchy with the
++faulting device is disabled. Any device in the sub-hierarchy
++becomes inaccessible.
+ 
+ STEP 1: Notification
+ --------------------
+@@ -204,6 +208,24 @@ link reset was performed by the HW. If the platform can't just re-enable IOs
+ without a slot reset or a link reset, it will not call this callback, and
+ instead will have gone directly to STEP 3 (Link Reset) or STEP 4 (Slot Reset)
+ 
++.. note::
++
++   On platforms supporting Advanced Error Reporting (PCIe r7.0 sec 6.2),
++   the faulting device may already be accessible in STEP 1 (Notification).
++   Drivers should nevertheless defer accesses to STEP 2 (MMIO Enabled)
++   to be compatible with EEH on powerpc and with s390 (where devices are
++   inaccessible until STEP 2).
++
++   On platforms supporting Downstream Port Containment, the link to the
++   sub-hierarchy with the faulting device is re-enabled in STEP 3 (Link
++   Reset). Hence devices in the sub-hierarchy are inaccessible until
++   STEP 4 (Slot Reset).
++
++   For errors such as Surprise Down (PCIe r7.0 sec 6.2.7), the device
++   may not even be accessible in STEP 4 (Slot Reset). Drivers can detect
++   accessibility by checking whether reads from the device return all 1's
++   (PCI_POSSIBLE_ERROR()).
++
+ .. note::
+ 
+    The following is proposed; no platform implements this yet:
+-- 
+2.51.0
 
