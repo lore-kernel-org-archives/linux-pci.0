@@ -1,92 +1,181 @@
-Received: from ale.deltatee.com (ale.deltatee.com [204.191.154.188])
+Received: from frasgout.his.huawei.com (frasgout.his.huawei.com [185.176.79.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 158B824E01D
-	for <linux-pci@vger.kernel.org>; Mon, 15 Sep 2025 16:04:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=204.191.154.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E39B2A1BA
+	for <linux-pci@vger.kernel.org>; Mon, 15 Sep 2025 16:18:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.176.79.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757952291; cv=none; b=JkKjDtDFbqh1tsu5xIaIjgqxZRIo6jiG1Z/Kqsj5Tj4Nx+F1ZYhQ8ukm0QgG6b62MFxKHxnFuqSTLRT4Yr5EIYBRX2hvoqZxFvruyAukx58w7t8KTjhhZG2fO99uWTTK5bYA7Nv0BZtJFGpoYaQONMx+kKav9UzVqR76Wmn9ZN8=
+	t=1757953097; cv=none; b=MmhNW4kNOhuwhtrUCkHYfF0GnJGeGNgW+wJGRZqB4OZD35RYRW7DB/MR4M3i3cGpha8aMJydRRKrTeJt13RykXD7+fiWxEYgl1B24T+s1yqOyira4z/xpK/Q5SF6sctgmy+nKAuxrpvN0UjMjCAl09cIbIPl8eyEesMGSxrJJL0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757952291; c=relaxed/simple;
-	bh=qZak0IWjTFvTEZDlBi5GLG7k8WDKzZb2UcXYudM6lak=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:From:In-Reply-To:
-	 Content-Type:Subject; b=UjSD4IYuVgnyywsY8GbfOluVK2tRu1S5AjBK4kZLNe71irAqQ5q4ceDzPe9BrJpl/SCes4nBkTYLY52e0tXlXu64FjQ1RfNlqfqUc90km23lCWKHxSqVo723AklDbEYyjRnxOtMtfGccz9WrKwvKHQ7Ccm945/kcIRKtnjOpnUA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com; spf=pass smtp.mailfrom=deltatee.com; dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b=WwuuRcgj; arc=none smtp.client-ip=204.191.154.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=deltatee.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=deltatee.com header.i=@deltatee.com header.b="WwuuRcgj"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=deltatee.com; s=20200525; h=Subject:In-Reply-To:From:References:Cc:To:
-	MIME-Version:Date:Message-ID:content-disposition;
-	bh=ct6Q6jd9bg2f3Yaega2w/3bt4lVQ8RUfwQj2iLKeA0k=; b=WwuuRcgjKBfqMAdgftjSrkdCkd
-	E98/p++osXW2XuK5DOyzTWeE+Id+csr7dnCOVTrW+zFjN0Zu0iPuuMWA8/wXxnNULDNJMe0oFmllW
-	cHxMDutsK1cIl9fCp8UU4DvJhE9X93FfzSZn8bqda2lzpUH2EEfzCjiL5YLIpCbpR0yxtXJN+B1kO
-	npoljLq5CyW84ZgE25L6yyivVlJ6qyPj7JiE0B8pl/gkXm5W7DMETtZp7AduSvCFm5rXQ2YmZwQaS
-	LqGLFU4FB55rvQgSQWnc/umArpQUfxB4PI5PQGtACojtsQiUffX7029YRu6kf9RiXlmmDZPlGqjen
-	L2YESB+A==;
-Received: from guinness.priv.deltatee.com ([172.16.1.162])
-	by ale.deltatee.com with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.96)
-	(envelope-from <logang@deltatee.com>)
-	id 1uyBCk-005CIr-1L;
-	Mon, 15 Sep 2025 09:33:22 -0600
-Message-ID: <7cb11157-4b77-407d-ac48-7e75dc01a7a3@deltatee.com>
-Date: Mon, 15 Sep 2025 09:33:19 -0600
+	s=arc-20240116; t=1757953097; c=relaxed/simple;
+	bh=wCz/AenI5uA2gCey+sA7IT9jqagqqj1cCp9mevvbQfI=;
+	h=Date:From:To:CC:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=sRB5UT6UmtKGT9NfoYPUa40yUsC11Pxgeik+4BIoB84cIo+6bM84+3F3A7Rc874ktK0LRB9tdJPsYpgZqO1AbItweThCVOP3nGMzyIV/535IRPHEhJCiLlTTuDBl9+Cam9TjKbr8x6oaMCNbrNoogc/Xkzm3C898dLdUCJSS8Ew=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=185.176.79.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.18.186.216])
+	by frasgout.his.huawei.com (SkyGuard) with ESMTP id 4cQVXY1wcNz6GD9V;
+	Tue, 16 Sep 2025 00:16:45 +0800 (CST)
+Received: from frapeml500008.china.huawei.com (unknown [7.182.85.71])
+	by mail.maildlp.com (Postfix) with ESMTPS id DCA78140137;
+	Tue, 16 Sep 2025 00:18:12 +0800 (CST)
+Received: from localhost (10.203.177.15) by frapeml500008.china.huawei.com
+ (7.182.85.71) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.1.2507.39; Mon, 15 Sep
+ 2025 18:18:12 +0200
+Date: Mon, 15 Sep 2025 17:18:10 +0100
+From: Jonathan Cameron <jonathan.cameron@huawei.com>
+To: Dan Williams <dan.j.williams@intel.com>
+CC: <linux-coco@lists.linux.dev>, <linux-pci@vger.kernel.org>,
+	<yilun.xu@linux.intel.com>, <aneesh.kumar@kernel.org>, <aik@amd.com>,
+	<gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v5 02/10] PCI/IDE: Enumerate Selective Stream IDE
+ capabilities
+Message-ID: <20250915171810.00003212@huawei.com>
+In-Reply-To: <20250827035126.1356683-3-dan.j.williams@intel.com>
+References: <20250827035126.1356683-1-dan.j.williams@intel.com>
+	<20250827035126.1356683-3-dan.j.williams@intel.com>
+X-Mailer: Claws Mail 4.3.0 (GTK 3.24.42; x86_64-w64-mingw32)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Vivek Kasireddy <vivek.kasireddy@intel.com>,
- dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org
-Cc: Bjorn Helgaas <bhelgaas@google.com>, linux-pci@vger.kernel.org
-References: <20250915072428.1712837-1-vivek.kasireddy@intel.com>
- <20250915072428.1712837-2-vivek.kasireddy@intel.com>
-Content-Language: en-CA
-From: Logan Gunthorpe <logang@deltatee.com>
-In-Reply-To: <20250915072428.1712837-2-vivek.kasireddy@intel.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Content-Transfer-Encoding: 7bit
-X-SA-Exim-Connect-IP: 172.16.1.162
-X-SA-Exim-Rcpt-To: vivek.kasireddy@intel.com, dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org, bhelgaas@google.com, linux-pci@vger.kernel.org
-X-SA-Exim-Mail-From: logang@deltatee.com
-X-Spam-Level: 
-Subject: Re: [PATCH v4 1/5] PCI/P2PDMA: Don't enforce ACS check for device
- functions of Intel GPUs
-X-SA-Exim-Version: 4.2.1 (built Wed, 06 Jul 2022 17:57:39 +0000)
-X-SA-Exim-Scanned: Yes (on ale.deltatee.com)
+X-ClientProxiedBy: lhrpeml100009.china.huawei.com (7.191.174.83) To
+ frapeml500008.china.huawei.com (7.182.85.71)
 
+On Tue, 26 Aug 2025 20:51:18 -0700
+Dan Williams <dan.j.williams@intel.com> wrote:
 
-
-On 2025-09-15 01:21, Vivek Kasireddy wrote:
-> Typically, functions of the same PCI device (such as a PF and a VF)
-> share the same bus and have a common root port and the PF provisions
-> resources for the VF. Given this model, they can be considered
-> compatible as far as P2PDMA access is considered.
+> Link encryption is a new PCIe feature enumerated by "PCIe r7.0 section
+> 7.9.26 IDE Extended Capability".
 > 
-> Currently, although the distance (2) is correctly calculated for
-> functions of the same device, an ACS check failure prevents P2P DMA
-> access between them. Therefore, introduce a small function named
-> pci_devfns_support_p2pdma() to determine if the provider and client
-> belong to the same device and facilitate P2PDMA between them by
-> not enforcing the ACS check.
+> It is both a standalone port + endpoint capability, and a building block
+> for the security protocol defined by "PCIe r7.0 section 11 TEE Device
+> Interface Security Protocol (TDISP)". That protocol coordinates device
+> security setup between a platform TSM (TEE Security Manager) and a
+> device DSM (Device Security Manager). While the platform TSM can
+> allocate resources like Stream ID and manage keys, it still requires
+> system software to manage the IDE capability register block.
 > 
-> However, since it is hard to determine if the device functions of
-> any given PCI device are P2PDMA compatible, we only relax the ACS
-> check enforcement for device functions of Intel GPUs. This is
-> because the P2PDMA communication between the PF and VF of Intel
-> GPUs is handled internally and does not typically involve the PCIe
-> fabric.
+> Add register definitions and basic enumeration in preparation for
+> Selective IDE Stream establishment. A follow on change selects the new
+> CONFIG_PCI_IDE symbol. Note that while the IDE specification defines
+> both a point-to-point "Link Stream" and a Root Port to endpoint
+> "Selective Stream", only "Selective Stream" is considered for Linux as
+> that is the predominant mode expected by Trusted Execution Environment
+> Security Managers (TSMs), and it is the security model that limits the
+> number of PCI components within the TCB in a PCIe topology with
+> switches.
 > 
-> Cc: Bjorn Helgaas <bhelgaas@google.com>
-> Cc: Logan Gunthorpe <logang@deltatee.com>
-> Cc: <linux-pci@vger.kernel.org>
-> Signed-off-by: Vivek Kasireddy <vivek.kasireddy@intel.com>
+> Cc: Jonathan Cameron <Jonathan.Cameron@huawei.com>
+> Cc: Aneesh Kumar K.V <aneesh.kumar@kernel.org>
+> Co-developed-by: Alexey Kardashevskiy <aik@amd.com>
+> Signed-off-by: Alexey Kardashevskiy <aik@amd.com>
+> Co-developed-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+> Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 
-This looks good to me, thanks.
+Some very very trivial things inline.
 
-Reviewed-by: Logan Gunthorpe <logang@deltatee.com>
+Reviewed-by: Jonathan Cameron <jonathan.cameron@huawei.com>
+
+
+
+> diff --git a/drivers/pci/ide.c b/drivers/pci/ide.c
+> new file mode 100644
+> index 000000000000..05ab8c18b768
+> --- /dev/null
+> +++ b/drivers/pci/ide.c
+> @@ -0,0 +1,92 @@
+
+> +void pci_ide_init(struct pci_dev *pdev)
+> +{
+> +	u8 nr_link_ide, nr_ide_mem, nr_streams;
+> +	u16 ide_cap;
+> +	u32 val;
+> +
+> +	if (!pci_is_pcie(pdev))
+> +		return;
+> +
+> +	ide_cap = pci_find_ext_capability(pdev, PCI_EXT_CAP_ID_IDE);
+> +	if (!ide_cap)
+> +		return;
+> +
+> +	pci_read_config_dword(pdev, ide_cap + PCI_IDE_CAP, &val);
+> +	if ((val & PCI_IDE_CAP_SELECTIVE) == 0)
+> +		return;
+> +
+> +	/*
+> +	 * Require endpoint IDE capability to be paired with IDE Root
+> +	 * Port IDE capability.
+> +	 */
+> +	if (pci_pcie_type(pdev) == PCI_EXP_TYPE_ENDPOINT) {
+> +		struct pci_dev *rp = pcie_find_root_port(pdev);
+> +
+> +		if (!rp->ide_cap)
+> +			return;
+> +	}
+> +
+> +	if (val & PCI_IDE_CAP_SEL_CFG)
+> +		pdev->ide_cfg = 1;
+> +
+> +	if (val & PCI_IDE_CAP_TEE_LIMITED)
+> +		pdev->ide_tee_limit = 1;
+> +
+> +	if (val & PCI_IDE_CAP_LINK)
+> +		nr_link_ide = 1 + FIELD_GET(PCI_IDE_CAP_LINK_TC_NUM, val);
+> +	else
+> +		nr_link_ide = 0;
+> +
+> +	nr_ide_mem = 0;
+> +	nr_streams = min(1 + FIELD_GET(PCI_IDE_CAP_SEL_NUM, val),
+> +			 CONFIG_PCI_IDE_STREAM_MAX);
+> +	for (u8 i = 0; i < nr_streams; i++) {
+> +		int pos = __sel_ide_offset(ide_cap, nr_link_ide, i, nr_ide_mem);
+> +		int nr_assoc;
+> +		u32 val;
+> +
+> +		pci_read_config_dword(pdev, pos, &val);
+> +
+> +		/*
+> +		 * Let's not entertain streams that do not have a
+> +		 * constant number of address association blocks
+constant fits on the line above and I can't immediately see a reason to wrap early.
+
+> +		 */
+> +		nr_assoc = FIELD_GET(PCI_IDE_SEL_CAP_ASSOC_NUM, val);
+> +		if (i && (nr_assoc != nr_ide_mem)) {
+> +			pci_info(pdev, "Unsupported Selective Stream %d capability, SKIP the rest\n", i);
+> +			nr_streams = i;
+> +			break;
+> +		}
+> +
+> +		nr_ide_mem = nr_assoc;
+> +	}
+> +
+> +	pdev->ide_cap = ide_cap;
+> +	pdev->nr_link_ide = nr_link_ide;
+> +	pdev->nr_ide_mem = nr_ide_mem;
+> +}
+
+> diff --git a/include/uapi/linux/pci_regs.h b/include/uapi/linux/pci_regs.h
+> index f5b17745de60..911d6db5c224 100644
+> --- a/include/uapi/linux/pci_regs.h
+> +++ b/include/uapi/linux/pci_regs.h
+
+
+> +
+> +/* Selective IDE Stream block, up to PCI_IDE_CAP_SELECTIVE_STREAMS_NUM */
+> +/* Selective IDE Stream Capability Register */
+> +#define  PCI_IDE_SEL_CAP		0x00
+> +#define  PCI_IDE_SEL_CAP_ASSOC_NUM	__GENMASK(3, 0)
+
+This one is a field so one more space needed
+
+
 
