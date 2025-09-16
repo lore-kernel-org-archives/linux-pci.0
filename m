@@ -1,37 +1,38 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D5FC2BCF4C;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C44283142;
 	Tue, 16 Sep 2025 16:13:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758039190; cv=none; b=dO62JK3yDG7Nl6SM3pkuTuPH8Dd6LXMro/rorKyWWZAtwvzwLclfsannq4VabIHIDOQGMDuU2HIs0jkkjcjQYcrDzuUwpEBYecgJqOnmP1TJp5Cl0Tr5WxOGoyHGDVaYSoi4P7ySz0/wPGUiUTiBls3XrLByXRgstUm+X2eygeU=
+	t=1758039190; cv=none; b=VFwnCNMvI3NYhNUMBdgjnxCAMBiDVO2w9IaGG6tzyLJqAbHY+DztyKvRvhVQ6mFNmBqdyT04/Olw7NW0dxPc+kuSAG/s3q0gAfqzvA0woF2qUsEA1zfZW72dxVurBfq0K9yLPE5hxUmtrUjuq3ygUDJGpBXPqwASqENfqXBrtU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758039190; c=relaxed/simple;
-	bh=nhZwLjBbK2lxiUbM3t8zFDAtYxpphbtAjNYYlri3ZUM=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=lKGgCVXcjynAj4Vv/kHvodjn5ActwpeDXZ8n8iVASkvP8mrZd93IJFJJ2mRE9gBZ4nwM6h2Fw6mPaUyaHiznuK1AKUx0Qg9vY6lW5f65R/hwsxj6cSozVYT6JsU9vvdHWWw3DjshCAnS6pedwxgR4pIdV2uIFPN44uSpkCYe3NQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vRe0Sw8m; arc=none smtp.client-ip=10.30.226.201
+	bh=L2+ZDh3UGreX3UT53788BxJ/PaPdkpBoEUyyO5eDBek=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=p25x/dSyX9gvFWHd1zezfA/A53zuigZVfgWvWtf3Rj0mpUCJIohRfn9Zu/VItdcaDIidOFspP6P0r364tGc80TVsmi2x/fBT0SL2SagUx4lH0/NdEkHapuJMlLkPz1S9pYqsAf4pgxZZi3t0rMbR3pAGpMx140jTTl4ayEE/QpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=em9iyQsb; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vRe0Sw8m"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 4C86EC4CEF7;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="em9iyQsb"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 29DDFC4CEF0;
 	Tue, 16 Sep 2025 16:13:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1758039190;
-	bh=nhZwLjBbK2lxiUbM3t8zFDAtYxpphbtAjNYYlri3ZUM=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=vRe0Sw8mFbPALFrvpvM93JgBBTb8vNVpSo17ARfesbjLoNPviK3zMrBvPmJpLttbs
-	 oQ+iAk9HHoVGxD7k+6rH/LeZsegj1u9FttFjhGLOAfzQ1Lj5a0+Lyuo2TogmMbupbC
-	 ti5B3I4YDY6iLLpY9mfXp9frsxuDmg6JCX0X5+FVSupavXczac98jpM8OY1pCpjGEz
-	 AY28jiR2ZbeT2fsCZb6XtdVONLP3XFQYPo/N6AJDntfq/0wOVjIdftOvYMM2d6gZdt
-	 9W8J5IFMHd7tmk/upHc0LI5lOJYWlOneO5twMxTf/RMX46u8w7uDaAaK1wrPJq7puN
-	 uWYnEy80nvzIg==
+	bh=L2+ZDh3UGreX3UT53788BxJ/PaPdkpBoEUyyO5eDBek=;
+	h=From:Subject:Date:To:Cc:Reply-To:From;
+	b=em9iyQsb3XIEqV3s9LQpZxpUX01BNd3cbIwxrA2If9oozzA8ZzN4U6XFpbnEHLbLf
+	 0fStgU3ERKJDBWRFS5/SJP+Kz3Om4QYeANv0zAtp+Plei5wc2JXy7t64CNvcc2MKno
+	 UVuqUjFdbIjLDnWo3gXIKlZLriGlsp2C2gZr4NTcgAxeRNbOO6hAvQMOuGE3S7flER
+	 gmNm1rV/h6aui47bet8+7LYR4Tk0Xh8b/6WunkQd8AFjIptw4ain4B6aD1NLe3f6ZQ
+	 jJaHurm+Lg0JOUW+ddbJ1Wp+H9mfSBepcdkdCALVBEvp9K3toBHH1pPza44lLXoW8b
+	 N3eMh7dfq7o9w==
 Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 39D9ECAC592;
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 18919CAC598;
 	Tue, 16 Sep 2025 16:13:10 +0000 (UTC)
 From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Tue, 16 Sep 2025 21:42:53 +0530
-Subject: [PATCH 2/2] PCI: qcom: Remove the custom ASPM enablement code
+Subject: [PATCH 0/2] PCI/ASPM: Enable ASPM and Clock PM by default on
+ devicetree platforms
+Date: Tue, 16 Sep 2025 21:42:51 +0530
+Message-Id: <20250916-pci-dt-aspm-v1-0-778fe907c9ad@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -40,9 +41,10 @@ List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250916-pci-dt-aspm-v1-2-778fe907c9ad@oss.qualcomm.com>
-References: <20250916-pci-dt-aspm-v1-0-778fe907c9ad@oss.qualcomm.com>
-In-Reply-To: <20250916-pci-dt-aspm-v1-0-778fe907c9ad@oss.qualcomm.com>
+X-B4-Tracking: v=1; b=H4sIAIOMyWgC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
+ vPSU3UzU4B8JSMDI1MDS0Mz3YLkTN2UEt3E4oJcXYsk40TzVIsUo+Q0QyWgjoKi1LTMCrBp0bG
+ 1tQAOseteXQAAAA==
+X-Change-ID: 20250916-pci-dt-aspm-8b3a7e8d2cf1
 To: Bjorn Helgaas <bhelgaas@google.com>, 
  Manivannan Sadhasivam <mani@kernel.org>, 
  Lorenzo Pieralisi <lpieralisi@kernel.org>, 
@@ -50,18 +52,19 @@ To: Bjorn Helgaas <bhelgaas@google.com>,
  Rob Herring <robh@kernel.org>
 Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
  linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
+ Bjorn Helgaas <helgaas@kernel.org>
 X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=3086;
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2777;
  i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=v+JInE9O8Tswt5Gb7HgmBeTnkIFZVhVGNtOszvn/Reo=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBoyYyUK92Y9Hk/YDUED8Qnpzv5tspszujaDTdSe
- cIRz9x6xTuJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaMmMlAAKCRBVnxHm/pHO
- 9WVcB/9K6OcVd3VxKpE3xwCCevGn8evTpp/gGbH9Ca/IxDN7167JcoAou+d0EQI+VP50snw8Yrz
- 0r4s5nbsp1sK4yJnpUuWsAmNtYzg/v1baXQTBPvwXjJ6u21I11J5xj5mZUsTah3/sRW2sn5zq3W
- +9EzK0gP+6/LzlX28jIjIlCYEUyM+nDcUsAGeBCXyd1Qc32hG5P1JEiIyzrIfflI+JPSps7EloY
- RpMU7ruPWY8AHFYO+4XBezZAGuaVoS50TAo/eNmk39lHvmYW9yaSxaLXBb4mvL6vvycO1XKaK3A
- cQUDUeuBWZOlfitJSgadqLgAL5kbMCH/58+mA1Isju67HQsI
+ bh=L2+ZDh3UGreX3UT53788BxJ/PaPdkpBoEUyyO5eDBek=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBoyYyPvSVBLAP3nba8usDeBa0NE5WcMNjGOq/ub
+ Mjyq9RkIRWJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaMmMjwAKCRBVnxHm/pHO
+ 9Uv7B/47zt08wW4RzxQU+B4SGa3xwsCAdTj+VZfow21WgNXFQlT3NJ+iKL0WmbJswMJqFO4JWm7
+ QD0G9WlwjPaKC72uV/iAhROjUDsDW8BCHF+9y6/KUdyRLGOIe0vbj0P4Hd+Lao2FY1lKo1EhrRk
+ QUVvbz63nUDLC6r44EvxHsflVFhDknIS0voUmMyh6SOEdMX4d11tdq4CDxLIoALHXzRPuE6jR/R
+ 8eYnuhCv26L8VcIRLQ5CdUzs2u+OEI1eLxXouBXCyLdxSbSbjr1Y21oBbRJYhNCWHTqkq3PMObE
+ MK1sudLBIUcSxsxStNXlR2tyvDzRMDhJMyjXXFFVkILdMIIc
 X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
  fpr=C668AEC3C3188E4C611465E7488550E901166008
 X-Endpoint-Received: by B4 Relay for
@@ -69,93 +72,65 @@ X-Endpoint-Received: by B4 Relay for
 X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Hi,
 
-Since the PCI subsystem has started enabling all ASPM states for all
-devicetree based platforms, the ASPM enablement code from this driver can
-now be dropped.
+This series is one of the 'let's bite the bullet' kind, where we have decided to
+enable all ASPM and Clock PM states by default on devicetree platforms [1]. The
+reason why devicetree platforms were chosen because, it will be of minimal
+impact compared to the ACPI platforms. So seemed ideal to test the waters.
+
+Problem Statement
+=================
+
+Historically, PCI subsystem relied on the BIOS to enable ASPM and Clock PM
+states for PCI devices before the kernel boot. This was done to avoid enabling
+ASPM for the buggy devices that are known to create issues with ASPM (even
+though they advertise the ASPM capability). But BIOS is not at all a thing on
+most of the non-x86 platforms. For instance, the majority of the Embedded and
+Compute ARM based platforms using devicetree have something called bootloader,
+which is not anyway near the standard BIOS used in x86 based platforms. And
+these bootloaders wouldn't touch PCIe at all, unless they boot using PCIe
+storage, even then there would be no guarantee that the ASPM states will get
+enabled. Another example is the Intel's VMD domain that is not at all configured
+by the BIOS. But, this series is not enabling ASPM/Clock PM for VMD domain. I
+hope it will be done similarly in the future patches.
+
+Solution
+========
+
+So to avoid relying on BIOS, it was agreed [2] that the PCI subsystem has to
+enable ASPM and Clock PM states based on the device capability. If any devices
+misbehave, then they should be quirked accordingly.
+
+First patch of this series introduces two helper functions to enable all ASPM
+and Clock PM states if CONFIG_OF is enabled. Second patch drops the custom ASPM
+enablement code from the pcie-qcom driver as it is no longer needed.
+
+Testing
+=======
+
+This series is tested on Lenovo Thinkpad T14s based on Snapdragon X1 SoC. All
+supported ASPM states are getting enabled for both the NVMe and WLAN devices by
+default.
+
+[1] https://lore.kernel.org/linux-pci/a47sg5ahflhvzyzqnfxvpk3dw4clkhqlhznjxzwqpf4nyjx5dk@bcghz5o6zolk
+[2] https://lore.kernel.org/linux-pci/20250828204345.GA958461@bhelgaas
 
 Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 ---
- drivers/pci/controller/dwc/pcie-qcom.c | 32 --------------------------------
- 1 file changed, 32 deletions(-)
+Manivannan Sadhasivam (2):
+      PCI/ASPM: Override the ASPM and Clock PM states set by BIOS for devicetree platforms
+      PCI: qcom: Remove the custom ASPM enablement code
 
-diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
-index 294babe1816e4d0c2b2343fe22d89af72afcd6cd..a1c4a9c31f9241e9ca679533323e33c0b972e678 100644
---- a/drivers/pci/controller/dwc/pcie-qcom.c
-+++ b/drivers/pci/controller/dwc/pcie-qcom.c
-@@ -247,7 +247,6 @@ struct qcom_pcie_ops {
- 	int (*get_resources)(struct qcom_pcie *pcie);
- 	int (*init)(struct qcom_pcie *pcie);
- 	int (*post_init)(struct qcom_pcie *pcie);
--	void (*host_post_init)(struct qcom_pcie *pcie);
- 	void (*deinit)(struct qcom_pcie *pcie);
- 	void (*ltssm_enable)(struct qcom_pcie *pcie);
- 	int (*config_sid)(struct qcom_pcie *pcie);
-@@ -1040,25 +1039,6 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
- 	return 0;
- }
- 
--static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
--{
--	/*
--	 * Downstream devices need to be in D0 state before enabling PCI PM
--	 * substates.
--	 */
--	pci_set_power_state_locked(pdev, PCI_D0);
--	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
--
--	return 0;
--}
--
--static void qcom_pcie_host_post_init_2_7_0(struct qcom_pcie *pcie)
--{
--	struct dw_pcie_rp *pp = &pcie->pci->pp;
--
--	pci_walk_bus(pp->bridge->bus, qcom_pcie_enable_aspm, NULL);
--}
--
- static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
- {
- 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
-@@ -1358,19 +1338,9 @@ static void qcom_pcie_host_deinit(struct dw_pcie_rp *pp)
- 	pcie->cfg->ops->deinit(pcie);
- }
- 
--static void qcom_pcie_host_post_init(struct dw_pcie_rp *pp)
--{
--	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
--	struct qcom_pcie *pcie = to_qcom_pcie(pci);
--
--	if (pcie->cfg->ops->host_post_init)
--		pcie->cfg->ops->host_post_init(pcie);
--}
--
- static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
- 	.init		= qcom_pcie_host_init,
- 	.deinit		= qcom_pcie_host_deinit,
--	.post_init	= qcom_pcie_host_post_init,
- };
- 
- /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
-@@ -1432,7 +1402,6 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
- 	.get_resources = qcom_pcie_get_resources_2_7_0,
- 	.init = qcom_pcie_init_2_7_0,
- 	.post_init = qcom_pcie_post_init_2_7_0,
--	.host_post_init = qcom_pcie_host_post_init_2_7_0,
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- 	.config_sid = qcom_pcie_config_sid_1_9_0,
-@@ -1443,7 +1412,6 @@ static const struct qcom_pcie_ops ops_1_21_0 = {
- 	.get_resources = qcom_pcie_get_resources_2_7_0,
- 	.init = qcom_pcie_init_2_7_0,
- 	.post_init = qcom_pcie_post_init_2_7_0,
--	.host_post_init = qcom_pcie_host_post_init_2_7_0,
- 	.deinit = qcom_pcie_deinit_2_7_0,
- 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
- };
+ drivers/pci/controller/dwc/pcie-qcom.c | 32 -----------------------
+ drivers/pci/pcie/aspm.c                | 48 ++++++++++++++++++++++++++++++----
+ 2 files changed, 43 insertions(+), 37 deletions(-)
+---
+base-commit: 8f5ae30d69d7543eee0d70083daf4de8fe15d585
+change-id: 20250916-pci-dt-aspm-8b3a7e8d2cf1
 
+Best regards,
 -- 
-2.45.2
+Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
 
