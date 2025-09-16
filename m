@@ -1,27 +1,27 @@
 Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28D582F619F;
-	Tue, 16 Sep 2025 10:07:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01F252F618E;
+	Tue, 16 Sep 2025 10:08:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758017270; cv=none; b=jgY3gXe1OwzeXPO/WmmYILrsuKC2Ktru2HOiJURmqr6w+edk5JTOLYSlrj4ehjf1mTcCUchcbA/K1T1s6iLL3iuBvyFq9opeoyjSojM2CZSqbbepEznivmJQnYVkQSsPYQ8sNintc02OmvNLuJZn3tdDj9w3BBOIMML4O5lz8Vk=
+	t=1758017331; cv=none; b=eMWwBHB4uuOETWRvP6C3uShtVGp3M/DFZAFpKBm4Q3gImSaNY09RvFYD9gcHQfJ/HvqNc34Vh61RcVDefttBPqRe6IqxlhYpFPLGz+TzF5eRQvQmU35b733R9zTPyG7Mg6sz4aaJopDS0wb+WplZv+m+XTVNdhohx9DhGoqDbCA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758017270; c=relaxed/simple;
-	bh=xR9zyNh0/DFcmmP7cs/1muupiwP2IACH/7FctIVi4zY=;
+	s=arc-20240116; t=1758017331; c=relaxed/simple;
+	bh=5b4qRo0dPkp4NLHemiLT6cf5xcdm+OtsNLS9Wwf0q4s=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=R9R3OmDsqgp+j8NH0537KAedF53/4mIOd0+H/R6VFUXFdWmcm+WzhGhoVnAjIDbyHhzrtaHm0Gy77RyxjRaZPNpBzbjrWBe7sKosBhWlEYYC8Z6gLl1R82HLVI83E5VY+hjmoQ37GRLD5xXAATcrSLOBeAkkjc/NVdcAhnaDIhs=
+	 MIME-Version:Content-Type; b=G5APaLbGzBaVwk0116bXaJ2zMLPvhTMIjmfg2LFHNIofTUb3aQ0vomqrjSsNSCKu7T+rv6ESspHbNW1HuiX+vghpD2DkuoFaI/2YGm5GcIU4r4xzncGg1+eTn7brvJOe9x0XolYFxPrHYX2bt/Hc799aOTsK6teehvyw36/hsag=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
 Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
 Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
-	by Atcsqr.andestech.com with ESMTPS id 58GA4PEC067798
+	by Atcsqr.andestech.com with ESMTPS id 58GA4SR4067802
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 16 Sep 2025 18:04:25 +0800 (+08)
+	Tue, 16 Sep 2025 18:04:28 +0800 (+08)
 	(envelope-from randolph@andestech.com)
 Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
  (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Tue, 16 Sep 2025
- 18:04:25 +0800
+ 18:04:28 +0800
 From: Randolph Lin <randolph@andestech.com>
 To: <linux-kernel@vger.kernel.org>
 CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
@@ -34,9 +34,9 @@ CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
         <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
         <shradha.t@samsung.com>, <randolph.sklin@gmail.com>,
         <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
-Subject: [PATCH v2 1/5] PCI: dwc: Add outbound ATU address range validation callback
-Date: Tue, 16 Sep 2025 18:04:13 +0800
-Message-ID: <20250916100417.3036847-2-randolph@andestech.com>
+Subject: [PATCH v2 5/5] MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
+Date: Tue, 16 Sep 2025 18:04:17 +0800
+Message-ID: <20250916100417.3036847-6-randolph@andestech.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250916100417.3036847-1-randolph@andestech.com>
 References: <20250916100417.3036847-1-randolph@andestech.com>
@@ -51,79 +51,33 @@ Content-Type: text/plain
 X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
 X-DNSRBL: 
 X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 58GA4PEC067798
+X-MAIL:Atcsqr.andestech.com 58GA4SR4067802
 
-Introduce an optional callback for outbound ATU address range
-validation to handle cases that deviate from the generic check.
+Here add maintainer information for Andes QiLai PCIe driver.
 
 Signed-off-by: Randolph Lin <randolph@andestech.com>
 ---
- drivers/pci/controller/dwc/pcie-designware.c | 29 ++++++++++++++++----
- drivers/pci/controller/dwc/pcie-designware.h |  3 ++
- 2 files changed, 26 insertions(+), 6 deletions(-)
+ MAINTAINERS | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/pci/controller/dwc/pcie-designware.c b/drivers/pci/controller/dwc/pcie-designware.c
-index 89aad5a08928..087f9077cf21 100644
---- a/drivers/pci/controller/dwc/pcie-designware.c
-+++ b/drivers/pci/controller/dwc/pcie-designware.c
-@@ -528,6 +528,28 @@ static inline u32 dw_pcie_enable_ecrc(u32 val)
- 	return val | PCIE_ATU_TD;
- }
+diff --git a/MAINTAINERS b/MAINTAINERS
+index f6206963efbf..056fecb50c5c 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -19254,6 +19254,13 @@ S:	Supported
+ F:	Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
+ F:	drivers/pci/controller/pcie-altera.c
  
-+static
-+bool dw_pcie_outbound_atu_addr_valid(struct dw_pcie *pci,
-+				     const struct dw_pcie_ob_atu_cfg *atu,
-+				     u64 *limit_addr)
-+{
-+	u64 parent_bus_addr = atu->parent_bus_addr;
++PCI DRIVER FOR ANDES QILAI PCIE
++M:	Randolph Lin <randolph@andestech.com>
++L:	linux-pci@vger.kernel.org
++S:	Maintained
++F:	Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
++F:	drivers/pci/controller/dwc/pcie-andes-qilai.c
 +
-+	if (pci->ops && pci->ops->outbound_atu_addr_valid)
-+		return pci->ops->outbound_atu_addr_valid(pci, atu, limit_addr);
-+
-+	*limit_addr = parent_bus_addr + atu->size - 1;
-+
-+	if ((*limit_addr & ~pci->region_limit) !=
-+	    (parent_bus_addr & ~pci->region_limit) ||
-+	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
-+	    !IS_ALIGNED(atu->pci_addr, pci->region_align) ||
-+	    !atu->size)
-+		return false;
-+
-+	return true;
-+}
-+
- int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 			      const struct dw_pcie_ob_atu_cfg *atu)
- {
-@@ -535,13 +557,8 @@ int dw_pcie_prog_outbound_atu(struct dw_pcie *pci,
- 	u32 retries, val;
- 	u64 limit_addr;
- 
--	limit_addr = parent_bus_addr + atu->size - 1;
--
--	if ((limit_addr & ~pci->region_limit) != (parent_bus_addr & ~pci->region_limit) ||
--	    !IS_ALIGNED(parent_bus_addr, pci->region_align) ||
--	    !IS_ALIGNED(atu->pci_addr, pci->region_align) || !atu->size) {
-+	if (!dw_pcie_outbound_atu_addr_valid(pci, atu, &limit_addr))
- 		return -EINVAL;
--	}
- 
- 	dw_pcie_writel_atu_ob(pci, atu->index, PCIE_ATU_LOWER_BASE,
- 			      lower_32_bits(parent_bus_addr));
-diff --git a/drivers/pci/controller/dwc/pcie-designware.h b/drivers/pci/controller/dwc/pcie-designware.h
-index 00f52d472dcd..6d4805048048 100644
---- a/drivers/pci/controller/dwc/pcie-designware.h
-+++ b/drivers/pci/controller/dwc/pcie-designware.h
-@@ -469,6 +469,9 @@ struct dw_pcie_ep {
- 
- struct dw_pcie_ops {
- 	u64	(*cpu_addr_fixup)(struct dw_pcie *pcie, u64 cpu_addr);
-+	bool	(*outbound_atu_addr_valid)(struct dw_pcie *pcie,
-+					   const struct dw_pcie_ob_atu_cfg *atu,
-+					   u64 *limit_addr);
- 	u32	(*read_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
- 			    size_t size);
- 	void	(*write_dbi)(struct dw_pcie *pcie, void __iomem *base, u32 reg,
+ PCI DRIVER FOR APPLIEDMICRO XGENE
+ M:	Toan Le <toan@os.amperecomputing.com>
+ L:	linux-pci@vger.kernel.org
 -- 
 2.34.1
 
