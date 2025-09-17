@@ -1,61 +1,60 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010007.outbound.protection.outlook.com [52.101.56.7])
+Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05FDE1EBFE0;
-	Wed, 17 Sep 2025 17:28:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.7
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758130107; cv=fail; b=JNjQQTDieK6PhDQ5vH26c0Pn0XLb9JqBr6IudV1btn3HNKDbLAGNiXpwlu7tmQNQeeIrlU3xMc2Un3GKE4irB/rojPgEPOz1Y3JHxQ4xyEDJ6+vno7TjLMDO2kZOL8ED4bCKl4hbTODymjnbuInKMJJkMVxLyCKeVO1B+o//8Ok=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758130107; c=relaxed/simple;
-	bh=YHFO9/zxiJ9ct4opqlUFszVQ00QNHOqGKA90c6GcTYQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=bWA+sEKiniZCQ2Q2wRz08fEpAWLur5ppo3jAkQZOszkIAx8V6geWWJal/ksVKR13VVzLJlEHjhUlnPYw6theN2pEQ7WmWhAv5XtvPI4NqVd2JkGxSvWDNvpWvAhLUrfvj93z+UA3eqkyKm1eswiNW25zOxUr+vCI4wAfmF+i6ak=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=iTEeHA8w; arc=fail smtp.client-ip=52.101.56.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9E02FE56B;
+	Wed, 17 Sep 2025 17:51:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758131469; cv=none; b=M95HAL1e5+1xjbVIsRiTZwCaOWvryW3notThhbIKfqFwiuo/D3hpcG3yEBgT5T/yf6VeoxW9i5dVLpX+FWs5NWNv1dXvs1UpBNzJt3lBhmlIRKXdWYSABEH4TlWmUU71zKAvJbftyuKyA8p5hZrhRI7naFej8nM0uAQMZRs0jWw=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758131469; c=relaxed/simple;
+	bh=brl3rUJ7PHhbScsa8OjzCWBMtqQju8gphFm/i7O0YIs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GAKuhOHC3pZCaNHGwiydf+M0lqtbDGKjPtT7HLUoogSjiPmVEiNvVO3tCSqHUzu4ye6KLqRd8+IRC9oUXY9CLH7KFPNY282ftjzGH8Lm+Qq7fpy7XHj26okJyjRIrZGvK/4cRjOIVuMMGD6rL/GoymGtrUD3i7KFrto6e6yh6yc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=iZgOCoNi; arc=none smtp.client-ip=148.163.156.1
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="iTEeHA8w"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xfuXzwJgsngfZz5bpp1gj5ZmUZMKIHs39sjzChWpFdhCUkEhKGP2MRhCCcuBeVp7f5N7d6OZbfXBnBfkFAPQt0ahK84Cxyg137+HO3uJ48q//bCR53h+e7MIBrgQn/zRjVA/o+8C7GE3uZdedeV7ghaVv77QawD0SIlfTDHoJjxlwOeVouLy6jqtx8UoZdYjeDUdeP85GURZmYslvVzmmdiUsPQms/D6emEB4RHA2lzvtvewKIs8beKb1R+URM6zzam+2puX/szKW3E5dSZFMiFBbCUZuAuhTKut9knKPh2o8YkppPI299WzxI4FYb8oRNNdz5no9A2OhgZ2X865DQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=iakf4izHM76/2wqGG/hLxtQyAIrporw8OzsWWmZXLO4=;
- b=S6IojkCJ+LPCClfWHYPPymYG950oFd4OMebYj+3fwe4C9GZ677dCEcbEV5d1z2WgVtfZA7jR73gUQKVA8oMJdOvHrcphmYM2Pb5TdIAg2B6UseoJjGQY2iSYxqjCNCzQNe6JGOfHEiJn1vMJamIkph+N13JC4i6xZd1mqADbj8qYrI/JX9cztGsCgarFbfYlhobgpGSXSNhHrIMv+lQW8g2E3B8HeIJwuPeKLT9LLoRn3LqbSnu1dQducAohI0ZIJI68b2J68GrFKIYUtC/VhC8vcsJs8Y57AJrHigvWQJBINrjCzT2trgZTwAbR3VdyYAw399Y3MN92JIFdX+Vdww==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
- 165.204.84.17) smtp.rcpttodomain=huawei.com smtp.mailfrom=amd.com; dmarc=pass
- (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
- dkim=none (message not signed); arc=none (0)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=iakf4izHM76/2wqGG/hLxtQyAIrporw8OzsWWmZXLO4=;
- b=iTEeHA8wfzbWUi2AS3X+lfQKbZeWACUInC6VuHMz/FckHcMu12v6RdXKkUZgGBoMh98j5V49ZSTVV1Ncwp3yLDU78UhcShJJ0r6NxzlMA5ZzDcEQs64FxsGvnTteZYfXNzwrhLs9p0CGg5uWzN/3yU/HuerXs2dJdLIs0yDK40M=
-Received: from DM6PR01CA0023.prod.exchangelabs.com (2603:10b6:5:296::28) by
- DM4PR12MB6158.namprd12.prod.outlook.com (2603:10b6:8:a9::20) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9137.13; Wed, 17 Sep 2025 17:26:59 +0000
-Received: from DS1PEPF00017095.namprd03.prod.outlook.com
- (2603:10b6:5:296:cafe::cc) by DM6PR01CA0023.outlook.office365.com
- (2603:10b6:5:296::28) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9137.14 via Frontend Transport; Wed,
- 17 Sep 2025 17:27:52 +0000
-X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
- smtp.mailfrom=amd.com; dkim=none (message not signed)
- header.d=none;dmarc=pass action=none header.from=amd.com;
-Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
- 165.204.84.17 as permitted sender) receiver=protection.outlook.com;
- client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
-Received: from satlexmb07.amd.com (165.204.84.17) by
- DS1PEPF00017095.mail.protection.outlook.com (10.167.17.138) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9137.12 via Frontend Transport; Wed, 17 Sep 2025 17:26:59 +0000
-Received: from [10.236.181.100] (10.180.168.240) by satlexmb07.amd.com
- (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Wed, 17 Sep
- 2025 10:26:58 -0700
-Message-ID: <d41ce9c7-94b2-47c0-8861-811b2c11d557@amd.com>
-Date: Wed, 17 Sep 2025 12:26:57 -0500
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="iZgOCoNi"
+Received: from pps.filterd (m0353729.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58HB47Op031401;
+	Wed, 17 Sep 2025 17:51:01 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=VSb8bE
+	4XA/Ua9GKH9sL1VLxuwv8W4LaMgmb1OJHJR6w=; b=iZgOCoNiSdWEsGhANdLOOg
+	/5Az7NYqZoSEkMvNVukXsxy8MiHEftUehCzoIoo0yovfQx/vcnlW54+WZU90IDmY
+	lDwZnzhFMQeFcqDvvCofSZql2zPleME3E2qU7urZ9eCOTRCF/gh/IMeXQTIIQqdf
+	qhOJpQjqQu4rtyUwLiTuYkn8YjzjgqAgfr5GVdQBiO3cPxBC6+GKVWf77NPKVAq/
+	0ar9pyQ6RJWsok9SPwS04SVJPGEeVCXF79IJbN1RhrebKZFjlTao0OuYl9mOGDcq
+	ouFKWhDtobft57qcYO6QgUlbNydGBWRDuoS7/aoUprawKBh5B6Pw4oAPLveu0pcQ
+	==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 497g4hndde-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 17 Sep 2025 17:51:00 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58HHR1db022297;
+	Wed, 17 Sep 2025 17:50:59 GMT
+Received: from smtprelay04.wdc07v.mail.ibm.com ([172.16.1.71])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 495kxptj9q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 17 Sep 2025 17:50:59 +0000
+Received: from smtpav02.dal12v.mail.ibm.com (smtpav02.dal12v.mail.ibm.com [10.241.53.101])
+	by smtprelay04.wdc07v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58HHowjB63176996
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Sep 2025 17:50:58 GMT
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 5C5B75805C;
+	Wed, 17 Sep 2025 17:50:58 +0000 (GMT)
+Received: from smtpav02.dal12v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id CC28058051;
+	Wed, 17 Sep 2025 17:50:56 +0000 (GMT)
+Received: from [9.61.250.96] (unknown [9.61.250.96])
+	by smtpav02.dal12v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 17 Sep 2025 17:50:56 +0000 (GMT)
+Message-ID: <28a56c75-9e45-4855-b555-49237cacba3a@linux.ibm.com>
+Date: Wed, 17 Sep 2025 10:50:51 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -63,110 +62,94 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 06/16] cxl/core: Enable CXL.mem isolation
-To: Jonathan Cameron <jonathan.cameron@huawei.com>
-CC: <linux-cxl@vger.kernel.org>, <linux-pci@vger.kernel.org>,
-	<linux-acpi@vger.kernel.org>
-References: <20250730214718.10679-1-Benjamin.Cheatham@amd.com>
- <20250730214718.10679-7-Benjamin.Cheatham@amd.com>
- <20250912162121.0000484c@huawei.com>
+Subject: Re: [PATCH v3 03/10] PCI: Allow per function PCI slots
+To: =?UTF-8?Q?C=C3=A9dric_Le_Goater?= <clg@redhat.com>,
+        linux-s390@vger.kernel.org, kvm@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org
+Cc: alex.williamson@redhat.com, helgaas@kernel.org, schnelle@linux.ibm.com,
+        mjrosato@linux.ibm.com
+References: <20250911183307.1910-1-alifm@linux.ibm.com>
+ <20250911183307.1910-4-alifm@linux.ibm.com>
+ <07205677-09f0-464b-b31c-0fb5493a1d81@redhat.com>
+ <e86caff6-8af0-48c9-9058-c1991e23160f@linux.ibm.com>
+ <f6f59318-c462-404b-bf4f-ae121950be8c@redhat.com>
 Content-Language: en-US
-From: "Cheatham, Benjamin" <benjamin.cheatham@amd.com>
-In-Reply-To: <20250912162121.0000484c@huawei.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: satlexmb07.amd.com (10.181.42.216) To satlexmb07.amd.com
- (10.181.42.216)
-X-EOPAttributedMessage: 0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS1PEPF00017095:EE_|DM4PR12MB6158:EE_
-X-MS-Office365-Filtering-Correlation-Id: 7b1b0d32-ac70-484f-1979-08ddf60f684f
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|36860700013|82310400026|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?VnBtODBMMjhhdmdjbWpXY3p6bmpDQTRpcjgramVWMUhwaGtiM28wYUFqY3Ji?=
- =?utf-8?B?eEIrMytkbGVNWmdNeUJmMVU5UEVXa1RVM0l1SmR6UlFpc0RjeGNLNno0K2U1?=
- =?utf-8?B?ejFFZGI0ZGdhV09xTzBaRFVtZHozVXNqdmhYSVo4WFlYRzZ1Q2FBSUJtQS9x?=
- =?utf-8?B?eFlndVJYcU1ISTZ2RDMzNmVxbEVaMWJjUlQwRzJlY0FRYmIwNFEzUnRlRTdI?=
- =?utf-8?B?dTdYbVQ5Y0t2VXVIQ2RhaVV4bWhwWXA2VVAzWURJVTE0ZUlsdVA5WWF4eHNO?=
- =?utf-8?B?YzRhYzFUa3ZIYnZ3dHZXdStoRVpKS0E2KzNwVDNhcTM5R0NmMG9HVysvdkVp?=
- =?utf-8?B?SzVZTXprZkhQaFgyTWtvc0NOcFp3Qkd1MmNEby9QOVNqdktvc212RTlSNnp1?=
- =?utf-8?B?ZXhDR0I4N1pZQjVnSG5TVDRSNEludDYyZjIxSnNJWmE5TU1VMlNFbHorSXRj?=
- =?utf-8?B?SHQwZjA5dGtVcE5KcUEyM3ZRYS9OY3djV2hMcjkvZHhLYmc0SEdYcG1Dd28w?=
- =?utf-8?B?eVk1Q1ppTlczTklydmp5SjdQRjg1clFQOEFsc3ZRQ2V0OG16Y2oveWIra3RI?=
- =?utf-8?B?ZmVJdTljbDFibFV4M25xWFdVTzFuK29zb1VlOXhTOThyaUNGZk1QQTdHUHhz?=
- =?utf-8?B?eWtKQk1Ga0hZRUROelIzWjErUHNIejMxTVJiRmRZM2EydSt0TUdjdUhBUmdD?=
- =?utf-8?B?eGh1VFY5aHJISGwzT1dJbThTOTFFckE0czZiMHBnU3V1WkR5NHJyNFBWaXdD?=
- =?utf-8?B?ZzBmcFZLV3pmVGlpZzJpQ3lIZEwyZHhVaXZnNm5WeUU2MW5LdFg0T1ZUS29B?=
- =?utf-8?B?bUpvRVc2VnRaRStLMWZuRm5uSTdSRGtPcHlTT2dla0JMTkdzMDh3akhPQ2tW?=
- =?utf-8?B?MGF3OUlnR29KM1VoQVJHOVBzZnYyM2ZZeWN2ZmxSNGoySHcwMHFaMDlrRnlU?=
- =?utf-8?B?WGZhTWQyTUxYdnplcVJJc2VzUCtZTThCM1dnM0loS09ZWVFIRHVsLzVsS2Vs?=
- =?utf-8?B?MWFsSUZybTFpNGYrVTJ6ZjFBN0tHeHljNEtSd3B3UUlEMFFRYVlZa2YvWUFS?=
- =?utf-8?B?SzloYWdFdFg1OHhLTGdKT09yVmxmYlQyNFI2RXRzQ25mM1FDUjZKWG0wZW1q?=
- =?utf-8?B?Z1F6NlNCWG4zTDZPT0lJN25rVG9HYk1FeDdOemUwWXVYcHV3ZXZQUFVBZG8r?=
- =?utf-8?B?a3JvVW4vU1ErUjdERkFJaFY5YmJ0cmd6L0E2UXlHNlNHMllyaXlMMzlUMnk3?=
- =?utf-8?B?ZUM1Y056UUYvam5vQnd5R1lNUmNtSlZ2dFMyWXBZSEgyM1d1QzBBdWxOOWh3?=
- =?utf-8?B?SU0zRDFFRDJZT0VGbHpYWDdKbVRkSlhuVWFZVWtkd2w0RjhzV0FpcWJGbUFE?=
- =?utf-8?B?QnBvRkh0NWUxcEhWRXpqOUI2a0NKQXZVNEV0ell0Z05XUmdyeGhpdlJ0enNx?=
- =?utf-8?B?WVErTVRYK3FYc0dLVElpRHY1c0RBdGg1N3A4VWNoZW5kaElDWGxyVVdySlBk?=
- =?utf-8?B?M3F3TmRKdmdlOEo1a2RBVGR5M09vUG12a0FyUy9DTkxSbUtzUlAyYkJJVTQy?=
- =?utf-8?B?TkZmS01yWWxuU1Zob2R6T1FuZ0p1enFPZFk2N0VyUFUxZGUwSWVwVldPL2Ji?=
- =?utf-8?B?VWNXSlYxbEpFcDBkMmtISE15OVhlWFNLSW10RlMxZ0FiazczN1EvZWJKYmMy?=
- =?utf-8?B?UXZlQ2tYb2lqa1hsdWkyY3UvNTZMcldobll2V3oxUVA2akhPUWJ6eDQ4TjBK?=
- =?utf-8?B?ZG9hWCsxTmFYWUkwQkpzQXpTUGpqZEdqWmRKMi9qZ3VVblVZMnJNZWZSY1Zt?=
- =?utf-8?B?ZmpGbFRCVWlVTHY2ZEhhTDNuVThKVStGQWF5eCtwQWlPRGJuZ2x0NWdOblZP?=
- =?utf-8?B?MGc4bUFtR3dOOUx1VnNqR0Y1NEQvekZpYTdsVDhWMVEyYUpMNldSd0FJRkJB?=
- =?utf-8?B?UUZ1eEttMzk1ZEVMWlBpUEhFdm9YdmdmZzkxWUZ1eUw2djlLQUlZMithb28w?=
- =?utf-8?B?dE56WWlDM3JQRDFyMzlCaXRrRXlFNHhxVi9IZ1RNaGlWV0VvT1hJWHNjZkhW?=
- =?utf-8?Q?RBXR3j?=
-X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(36860700013)(82310400026)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2025 17:26:59.0631
- (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 7b1b0d32-ac70-484f-1979-08ddf60f684f
-X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
-X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
-X-MS-Exchange-CrossTenant-AuthSource:
-	DS1PEPF00017095.namprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Anonymous
-X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM4PR12MB6158
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <f6f59318-c462-404b-bf4f-ae121950be8c@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-TM-AS-GCONF: 00
+X-Proofpoint-ORIG-GUID: nkD6okS8y5FMS1TA12UjqrsOPnxcqlL6
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwNCBTYWx0ZWRfXyrUpHLqs3GpL
+ xCHsiRpSr6M/vGiYHrUDiU/3T8aVW3wZJXoxPP39XRhF16wr21ZVeNCcTU8ZDE3NQtoNz1wAIec
+ gWscSNOojQzJ1Q8pBvn5k6um6MyEJf95ktFQVBs/+qjUfMq6I29xW3yFz6iOipFywHbaeZx/6tZ
+ aAzf5miXquFt8x8YSB8MWmdT1Y1vKpVI6g1QO9YGPM6/9FnLzUbCF7NHzpzoV6nTDV+PHwe8BIo
+ QOJeZdqPB5Xbu861mqiJbMb6UIXqmg9/+dxw0sy7ZVwav1D0PBe9+2TGjDjZtNCmGuk1tT3PgxV
+ sgWt3ozaq3FFXycfW5SE0Z3TsIpdC+ID46Sr5+TM9tKSr9IoyfhYeKZ9jKXV7PtMCBuJfA8iNYW
+ EaMqw7FT
+X-Proofpoint-GUID: nkD6okS8y5FMS1TA12UjqrsOPnxcqlL6
+X-Authority-Analysis: v=2.4 cv=co2bk04i c=1 sm=1 tr=0 ts=68caf505 cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=NEAV23lmAAAA:8 a=3iO8Xu5d0OMkKlL8vZAA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-17_01,2025-09-17_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 impostorscore=0 priorityscore=1501 suspectscore=0 adultscore=0
+ phishscore=0 malwarescore=0 spamscore=0 bulkscore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2509160204
 
 
-
-On 9/12/2025 10:21 AM, Jonathan Cameron wrote:
-> On Wed, 30 Jul 2025 16:47:08 -0500
-> Ben Cheatham <Benjamin.Cheatham@amd.com> wrote:
-> 
->> Enable CXL.mem isolation during set up of CXL-capable PCIe Root Ports
->> that have the capability. This capability is optional, so failure to
->> enable isolation is not an error that should fail probe.
+On 9/16/2025 11:21 PM, Cédric Le Goater wrote:
+> Hi Farhan,
+>
+>> Hi Cedric,
 >>
->> Signed-off-by: Ben Cheatham <Benjamin.Cheatham@amd.com>
-> 
->> +static int cxl_dport_wait_for_rp_busy(void __iomem *reg)
->> +{
->> +	u32 status;
->> +	int i = 4;
->> +
->> +	do {
-> 
-> readl_poll_timeout() in iopoll.h should work here.
-> 
+>> Thanks for pointing this out. I missed that dev->slot could be NULL 
+>> and so the per_func_slot check should be done after the check for 
+>> !dev->slot. I tried this change on top of the patch in an x86_64 VM 
+>> and was able to boot the VM without the oops.
+>>
+>> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+>> index 70296d3b1cfc..3631f7faa0cf 100644
+>> --- a/drivers/pci/pci.c
+>> +++ b/drivers/pci/pci.c
+>> @@ -5061,10 +5061,9 @@ static int pci_reset_hotplug_slot(struct 
+>> hotplug_slot *hotplug, bool probe)
+>>
+>>   static int pci_dev_reset_slot_function(struct pci_dev *dev, bool 
+>> probe)
+>>   {
+>> -       if (dev->multifunction && !dev->slot->per_func_slot)
+>> -               return -ENOTTY;
+>>          if (dev->subordinate || !dev->slot ||
+>> -           dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET)
+>> +           dev->dev_flags & PCI_DEV_FLAGS_NO_BUS_RESET ||
+>> +           (dev->multifunction && !dev->slot->per_func_slot))
+>>                  return -ENOTTY;
+> All good.
+>
+> I have pushed the Linux branch I use for vfio :
+>
+>    https://github.com/legoater/linux/commits/vfio/
+>
+> These commits have small changes :
+>
+>     PCI: Allow per function PCI slots
+>     vfio-pci/zdev: Add a device feature for error information
+>
+> Thanks,
+>
+> C.
+>
+>
+Hi Cedric,
 
-I wasn't aware of that, I'll check it out.
+Thanks again for your help in reviewing the patches.
 
-> 
->> +		status = readl(reg + CXL_ISOLATION_STATUS_OFFSET);
->> +		if (!(status & CXL_ISOLATION_STAT_RP_BUSY))
->> +			return 0;
->> +
->> +		msleep(500);
->> +	} while (--i);
->> +
->> +	return -ETIMEDOUT;
->> +}
+Thanks
+Farhan
+
 
