@@ -1,94 +1,90 @@
-Received: from mail-wm1-f50.google.com (mail-wm1-f50.google.com [209.85.128.50])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B38A31E8B3
-	for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2025 15:58:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFAA423815B
+	for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2025 16:32:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758297513; cv=none; b=T12T5T/osVCGPgYgC63dFC/N6CIIo+ilEzgphufs42nBmIAiBqDvjhoNQKek45w03u7Gp0PPLmH/kzYxA9az/8sIM1BsFjE8dvGNcVnpzI5syVb4ZdmvfkLEUH471IWUanOVWG8OzwkQaFzxAacgHxoyug9PLpv624z99vUoyPE=
+	t=1758299526; cv=none; b=nRsWa2R57WBiHUnpsSWBDOC2m8L/dt34k6hLvgYNh9VMmNNNtwxAI0p+F5/sI2nCN0XpGh3sVnNX9GavOL8QFjxmR/mHj5a+PRmiRnvUQPKC3gs0mhBexROuy4UEv2uNV6FmnYaij+0GhR4yPB3xu5PW5WJovYXuc3eIk8MUZE4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758297513; c=relaxed/simple;
-	bh=NJnIJR+a01tiFVyycgg5z2jTHr11W/B75N+lse5oSTo=;
+	s=arc-20240116; t=1758299526; c=relaxed/simple;
+	bh=vw8OS8C1PnD7jjQp/x3X7l/ZLVMQnrHUTB1C7ieWDNM=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JhUXe49ab1PBcpwuFwmTyEYwogZEi/LpDRG36EnGtw1foCg2dxUCyNSkYV8MJSPecYNl4W3aIiIdsy2wgdhwdVGD/MW6WnxCFSfB5G/HjnkEr3OrnEzYFuJ3Dw5/8vHcl7MqdaUTv8LIfpF/8LBU8NLRjQQOsf675J0iodURocM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=dGFsG/JL; arc=none smtp.client-ip=209.85.128.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	 MIME-Version; b=i12XcQJVr+OZu8HBVCKE9x7o/6QhWAKQh81SC1Anc6qBM86i+rEKgFNSuB/FnUriepV+o5XERk5P4BpGl2sPQkeEgHRJy5CeVwoJMte89juSwB7CaPXfDImhvYg+dIZm6538JMwSrr5CiJolDf3GF7iPpXOotrmtxxAD7F/l2sg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j3R9Hs4Q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+uAzxoCJ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j3R9Hs4Q; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+uAzxoCJ; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dGFsG/JL"
-Received: by mail-wm1-f50.google.com with SMTP id 5b1f17b1804b1-45f29dd8490so21858795e9.1
-        for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2025 08:58:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1758297508; x=1758902308; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=UP5dGRqrdTptZhQQ4EtYFVr64j2KjS+2vfjCc+4QY94=;
-        b=dGFsG/JLRuC80ua5Ov2+qjxCJQ2rqdNb4upMGW7jGl3tXJ58Ncbx1XFGdvjDAs4VsH
-         f5lkZmNQFnS1c3pyJZj5F86fMiLpAxY3WUrRuLitYxipVTylCb4+VTOAWAT5Fum1vLR7
-         i2SGcAkv68Wc7ETpmEiQy3Z3xJaLnKC2dyUQCCQTNAFo/5QPTYfVEXrwnDUbetALTLDT
-         2eUdvQNISHzdWdEjmi3xhi84nfp3ij0p6dVHxnuWPx+p+4WHOL6d4pxW70gV6KQzRfnn
-         EBEFcz9DtLQWDaapPO8HEkte6ft3+wk7DCNnf1Rs3Yp8eWpXac/zFkcI0QTcyxyk9T8X
-         Zjtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758297508; x=1758902308;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=UP5dGRqrdTptZhQQ4EtYFVr64j2KjS+2vfjCc+4QY94=;
-        b=VwPDLI/gkjkdU9Bae4Y5itLmp/KmVPWqwcnc7eJE3R+7V8CD3A/KbvNXvoJRPleUA1
-         kUR8amoFcGy/+KUUI0p01F8E37zpgLjjNe+FwaRG4Ggk92+ZCpgqgVhpmwiu1K6g5wzs
-         GZtUdmJIL0v2x+OMKOBL+eVo8+jx4iy40PibZQjdvmBW/Ojy0kkRmuy8HK7UpuJc5rUL
-         E90slGyyr/uDam69/IkE1tlsZ4NMWLZeyp8XcCS3yPaBzD7owJQJg6Sv3Z7iK7rO/f0C
-         jOCZsxFfc71lp5VRhNo43rzNanHVp1dRj2I6Y57karlRFSBP+/R8CDQ6MtrnCpmUKKXF
-         d8vw==
-X-Forwarded-Encrypted: i=1; AJvYcCWvdDz5Stk7dnqUz0PEQIUuyqgXjtJbINcOPOWR9FL+FFOm6vdv2KD2WByUGElvN/YltK9eGsnSDcg=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyTOEY3QFu3GmcfKv13fg3XE0E+wczEUe6cvXyobp7FpVGTu3kA
-	+l7mjZjBGSlenZX7OWDUYL8VNE7mD9kOt3FM4WgSB6bxnKXox3x5OnJ4S4FU9ZaJxzE=
-X-Gm-Gg: ASbGncv/nhXGVnbtaTRE2RNGH0zk8YEgdXMYsbbOZEtCBXkOsIqkw0SF7EmZjVotdb6
-	GMS8Sb4MDXXT8/W2uc6fuoYe4Z0H+orEsrWqZrIVE6ivMw/iVjaYtS3AP94grxwTg+9WlnyqGy/
-	j771KG/Z8PCAujG9JEyK/7tsYhwIm5ZA/+A4sFrw3/KkyO6AHL2wdxyxHCe0o0ijMItMf0Mq/el
-	kJQanmsY54OzTFlkg7dvTbtUS5o/AQ0iejLXtIwxLjf0fG477bvg/JJoH1oqh85BIEB69kjFQi5
-	1hkJSFpTja2OP8QHP63XX3cnrnD70kMy2Tovwas4MeQbanW9/qVsBJqU6yIechxfn3ffucI+ZCI
-	mXJMGUen1dUhL1JVFM1WDkLJoNh0grBU=
-X-Google-Smtp-Source: AGHT+IETzqsiuBysZBMfPLsmfeqemqt5Mwb8f51wHMHjVVo0pcnRoASq/BUs1RN16Mcn5F21Vi0GdQ==
-X-Received: by 2002:a05:6000:144f:b0:3dc:ca9d:e3d7 with SMTP id ffacd0b85a97d-3ee7c92548amr2737996f8f.8.1758297508355;
-        Fri, 19 Sep 2025 08:58:28 -0700 (PDT)
-Received: from vingu-cube.. ([2a01:e0a:f:6020:9dd0:62bf:d369:14ce])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3ee07407fa3sm8367224f8f.21.2025.09.19.08.58.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 19 Sep 2025 08:58:27 -0700 (PDT)
-From: Vincent Guittot <vincent.guittot@linaro.org>
-To: chester62515@gmail.com,
-	mbrugger@suse.com,
-	ghennadi.procopciuc@oss.nxp.com,
-	s32@nxp.com,
-	bhelgaas@google.com,
-	jingoohan1@gmail.com,
-	lpieralisi@kernel.org,
-	kwilczynski@kernel.org,
-	mani@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	Ionut.Vicovan@nxp.com,
-	larisa.grigore@nxp.com,
-	Ghennadi.Procopciuc@nxp.com,
-	ciprianmarian.costea@nxp.com,
-	bogdan.hamciuc@nxp.com,
-	Frank.li@nxp.com,
-	linux-arm-kernel@lists.infradead.org,
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j3R9Hs4Q";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+uAzxoCJ";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j3R9Hs4Q";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+uAzxoCJ"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 465DC21254;
+	Fri, 19 Sep 2025 16:32:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1758299523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oeu8Ku2rvkIi8sWxYCKlM50eGDdg+VzqEacYc38VvmY=;
+	b=j3R9Hs4QV+ZqVlXQUUCiOAz6jSTXbiTUd+1CbFqLGEOu/IyBOaKIbHhHm/7OP68WoBr3fk
+	b/E92cu+EwhCVw1skt37xlj5+PVEVg5S8PfTCFjJ1EuYa/tSX9HP/sPR+ZSAmHbP+3mb0/
+	w7uqyDbOzEi9uPvjHfToqf72okzbR/o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1758299523;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oeu8Ku2rvkIi8sWxYCKlM50eGDdg+VzqEacYc38VvmY=;
+	b=+uAzxoCJ1OJ1peg8D4O6nCPD/hbwxU64GVQA3VdedlQbKuG3qKRSC3iuGfNuv8fmICwEtP
+	6Ev2XPnQRnBZfKBw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1758299523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oeu8Ku2rvkIi8sWxYCKlM50eGDdg+VzqEacYc38VvmY=;
+	b=j3R9Hs4QV+ZqVlXQUUCiOAz6jSTXbiTUd+1CbFqLGEOu/IyBOaKIbHhHm/7OP68WoBr3fk
+	b/E92cu+EwhCVw1skt37xlj5+PVEVg5S8PfTCFjJ1EuYa/tSX9HP/sPR+ZSAmHbP+3mb0/
+	w7uqyDbOzEi9uPvjHfToqf72okzbR/o=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1758299523;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=oeu8Ku2rvkIi8sWxYCKlM50eGDdg+VzqEacYc38VvmY=;
+	b=+uAzxoCJ1OJ1peg8D4O6nCPD/hbwxU64GVQA3VdedlQbKuG3qKRSC3iuGfNuv8fmICwEtP
+	6Ev2XPnQRnBZfKBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F29D513AB2;
+	Fri, 19 Sep 2025 16:32:02 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id MNb2OYKFzWg3UwAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Fri, 19 Sep 2025 16:32:02 +0000
+From: Takashi Iwai <tiwai@suse.de>
+To: "Rafael J . Wysocki" <rafael@kernel.org>
+Cc: linux-pm@vger.kernel.org,
+	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	imx@lists.linux.dev
-Cc: cassel@kernel.org
-Subject: [PATCH 3/3 v2] MAINTAINERS: Add MAINTAINER for NXP S32G PCIe driver
-Date: Fri, 19 Sep 2025 17:58:21 +0200
-Message-ID: <20250919155821.95334-4-vincent.guittot@linaro.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250919155821.95334-1-vincent.guittot@linaro.org>
-References: <20250919155821.95334-1-vincent.guittot@linaro.org>
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 2/3] PCI: Use PM runtime class macro for the auto cleanup
+Date: Fri, 19 Sep 2025 18:31:43 +0200
+Message-ID: <20250919163147.4743-3-tiwai@suse.de>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250919163147.4743-1-tiwai@suse.de>
+References: <20250919163147.4743-1-tiwai@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -96,35 +92,55 @@ List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-2.80 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	MID_CONTAINS_FROM(1.00)[];
+	R_MISSING_CHARSET(0.50)[];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RCPT_COUNT_FIVE(0.00)[5];
+	RCVD_TLS_ALL(0.00)[]
+X-Spam-Flag: NO
+X-Spam-Score: -2.80
 
-Add the s32g PCIe driver under the ARM/NXP S32G ARCHITECTURE entry.
+Use the newly introduced class macro to simplify the code.
+Also, add the proper error handling for the PM runtime get errors,
+too.
 
-Signed-off-by: Vincent Guittot <vincent.guittot@linaro.org>
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
 ---
- MAINTAINERS | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/pci/pci-sysfs.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index cd7ff55b5d32..fa45862cb1ea 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -3084,12 +3084,16 @@ R:	Chester Lin <chester62515@gmail.com>
- R:	Matthias Brugger <mbrugger@suse.com>
- R:	Ghennadi Procopciuc <ghennadi.procopciuc@oss.nxp.com>
- R:	NXP S32 Linux Team <s32@nxp.com>
-+L:	imx@lists.linux.dev
- L:	linux-arm-kernel@lists.infradead.org (moderated for non-subscribers)
- S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/nxp,s32-pcie.yaml
- F:	Documentation/devicetree/bindings/rtc/nxp,s32g-rtc.yaml
- F:	arch/arm64/boot/dts/freescale/s32g*.dts*
-+F:	drivers/pci/controller/dwc/pci-s32g*
- F:	drivers/pinctrl/nxp/
- F:	drivers/rtc/rtc-s32g.c
-+F:	include/linux/pcie/nxp-s32g-pcie-phy-submode.h
+diff --git a/drivers/pci/pci-sysfs.c b/drivers/pci/pci-sysfs.c
+index 5eea14c1f7f5..08e5cf2ba73e 100644
+--- a/drivers/pci/pci-sysfs.c
++++ b/drivers/pci/pci-sysfs.c
+@@ -1475,8 +1475,9 @@ static ssize_t reset_method_store(struct device *dev,
+ 		return count;
+ 	}
  
- ARM/NXP S32G/S32R DWMAC ETHERNET DRIVER
- M:	Jan Petrous <jan.petrous@oss.nxp.com>
+-	pm_runtime_get_sync(dev);
+-	struct device *pmdev __free(pm_runtime_put) = dev;
++	CLASS(pm_runtime_resume_and_get, pmdev)(dev);
++	if (IS_ERR(pmdev))
++		return -ENXIO;
+ 
+ 	if (sysfs_streq(buf, "default")) {
+ 		pci_init_reset_methods(pdev);
 -- 
-2.43.0
+2.50.1
 
