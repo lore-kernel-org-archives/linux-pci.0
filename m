@@ -1,57 +1,57 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7337A314B89
-	for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2025 14:22:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3148B314B81
+	for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2025 14:22:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758291771; cv=none; b=lFgSipGegBgFmJ+vXhwmLooUJ6955GSKrWDftGWG2oE5OJSuCICtnTeBALE05VHcIvx21fFlHs4S89oxv0XrQiI46r1zepXX/VHF8Th7Z+IbnF0z0GaQoh05tpjbrQVaJRigrYLPvSWPvNpWcZ/nf6Tb/xi99ckqmE398TM0LmM=
+	t=1758291772; cv=none; b=TWWpEX13eTK7NttDnwZUkEgvHNMH12zvl5X1QEJFpQVr+4uTDonGYnOwboR2Q7QGcp7qoo3EVdObML5R/YFwSgx9sVW6ZVGhFeAsTjhJjPNnyKA6RYqkluwZElJ4Nfm6fIs2eDWVL+eiZLoidulmzBVWpdLUMYOG2VCn9KuZvJ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758291771; c=relaxed/simple;
-	bh=CCNFXsE0RIVS86QkMcedA/aTg7vD86GJNyGOz/BbTws=;
+	s=arc-20240116; t=1758291772; c=relaxed/simple;
+	bh=t4xS4POzAfYHRG2QoOL9x3X0dblERfi5cM6g0JJy2iU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=TEyHeVpt3tGS1a9/r8dQHF5ULMiy5N41x3r07p2XPwnyLbT+yC3uWl0PucakX2HYqJdYn9uAJSCfxgaO3r+F3ICbYB+OyhO3UMPqC1/62j5AhE4fDxBT2JV4GqPxkaEjqw2NLbRCXXURQKnmzwMJBj/Rzn48XuM4s6N+Jd/iAeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZqxPQGZf; arc=none smtp.client-ip=192.198.163.15
+	 MIME-Version; b=bj3uPsoSsHQ0TFEgiWul6I+NJsutu2KPbqctdrhgnAv5Tcd5l2Xt3rTElCBJUyF+zaSUCbEFtBDEa8C1NXx+ouuTB71snRUx3nedtz/jZd87s9/1uUi4lQmThalA1Qgtwgq7RLqWFzlxNluDY8JTzKhpSvhve8vn/V2qMDIu1YE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Mq5XKyfg; arc=none smtp.client-ip=192.198.163.15
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZqxPQGZf"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Mq5XKyfg"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1758291769; x=1789827769;
+  t=1758291771; x=1789827771;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=CCNFXsE0RIVS86QkMcedA/aTg7vD86GJNyGOz/BbTws=;
-  b=ZqxPQGZf2MNVZLRGE6IGBMuAllEi4D+XCx04VmdnY3y9F7kD+rZDck4L
-   +BZbx7iZqkxEJhKA68NO2ja7TKkR96FBIYhSldZxKi3PJlDyloXG+yZJT
-   m/v7hs4cKWqMF2by3r9biahqCEArFTFIo9h7+DlNaysCJvLc0gRDK/bdH
-   mi2V50IBPdU2EEho8ym3nYYVb8oaj2nKoymfsPjvs+2poPFPH+P3KIBup
-   UQSLG8Tng5iCrBN1ZKaVn4suVI4VA7EYhT/pxiyBuimVMQ54XcJxpivdH
-   AF1CkAa5iXvRfrhJgNcbLInFZAZU0n4/bvfYLvzST0oEilZNaqHEfE/Ns
-   w==;
-X-CSE-ConnectionGUID: 4dJbALjERb6gq5TZ02kyvA==
-X-CSE-MsgGUID: BV9EKwDdQmaeS0abXVxwng==
-X-IronPort-AV: E=McAfee;i="6800,10657,11557"; a="60750566"
+  bh=t4xS4POzAfYHRG2QoOL9x3X0dblERfi5cM6g0JJy2iU=;
+  b=Mq5XKyfgpNfuqfRfN2DIJrEiXxOeOY2hwFIc3NMYNBL/cLqUgQ9Vn8kx
+   5i4ng43oL9we8B8RXNqScOAvwOJBCmioQUIteOAT1O6z3qrqJdle/mRem
+   c1bZuGOQjZx7D8Rb84U/TfxdbAU07+9DiDSAfpOnIsiJfX9DjrWHbJcth
+   pa+Bofi+ZG4Abdz+upMATdE7H0MqjNAW+AR77AYA82b+yYOhw/zlxvdX7
+   NQ9VhM0AIQJq+rfoCt53/AhfGrDCnF7bMJvK+1qjXJSMTVD38Mda4UV8r
+   +IOcFstJQPf+XjO8jzgMnzU242QibDMCkSH8f34fPD9MwOBqvwpBKQsXn
+   Q==;
+X-CSE-ConnectionGUID: qHOcEcQCQUKc3N+eEvs1mA==
+X-CSE-MsgGUID: yHykya+ERlSb6z7TgcU09w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11557"; a="60750575"
 X-IronPort-AV: E=Sophos;i="6.18,278,1751266800"; 
-   d="scan'208";a="60750566"
+   d="scan'208";a="60750575"
 Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2025 07:22:40 -0700
-X-CSE-ConnectionGUID: tJSaQHV1TXa2zWIAwX3+4w==
-X-CSE-MsgGUID: ouxQZ9iPTh+HE/G7GdIuBw==
+  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2025 07:22:41 -0700
+X-CSE-ConnectionGUID: McjDPyQ/Rhe+OK27oqfhwQ==
+X-CSE-MsgGUID: jjisDF6TQrKFCkLHVwbNyw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.18,278,1751266800"; 
-   d="scan'208";a="176655053"
+   d="scan'208";a="176655062"
 Received: from dwillia2-desk.jf.intel.com ([10.88.27.145])
-  by fmviesa010.fm.intel.com with ESMTP; 19 Sep 2025 07:22:40 -0700
+  by fmviesa010.fm.intel.com with ESMTP; 19 Sep 2025 07:22:41 -0700
 From: Dan Williams <dan.j.williams@intel.com>
 To: linux-coco@lists.linux.dev,
 	linux-pci@vger.kernel.org
 Cc: xin@zytor.com,
 	chao.gao@intel.com,
 	Xu Yilun <yilun.xu@linux.intel.com>
-Subject: [RFC PATCH 20/27] coco/tdx-host: Add connect()/disconnect() handlers prototype
-Date: Fri, 19 Sep 2025 07:22:29 -0700
-Message-ID: <20250919142237.418648-21-dan.j.williams@intel.com>
+Subject: [RFC PATCH 23/27] PCI: iov: Export pci_iov_virtfn_bus()
+Date: Fri, 19 Sep 2025 07:22:32 -0700
+Message-ID: <20250919142237.418648-24-dan.j.williams@intel.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20250919142237.418648-1-dan.j.williams@intel.com>
 References: <20250919142237.418648-1-dan.j.williams@intel.com>
@@ -65,83 +65,29 @@ Content-Transfer-Encoding: 8bit
 
 From: Xu Yilun <yilun.xu@linux.intel.com>
 
-Add basic skeleton for connect()/disconnect() handlers. The major steps
-are SPDM setup first and then IDE selective stream setup.
-
-No detailed TDX Connect implementation.
+Export pci_iov_virtfn_bus() for tdx-host module. Use it find all PCIe
+VF devices associate to a PF0, then calculate the address ranges for IDE
+Address Association Registers.
 
 Signed-off-by: Xu Yilun <yilun.xu@linux.intel.com>
+[djbw: todo: drop this export and teach drivers/pci/ide.c to do this]
 Signed-off-by: Dan Williams <dan.j.williams@intel.com>
 ---
- drivers/virt/coco/tdx-host/tdx-host.c | 49 ++++++++++++++++++++++++++-
- 1 file changed, 48 insertions(+), 1 deletion(-)
+ drivers/pci/iov.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/virt/coco/tdx-host/tdx-host.c b/drivers/virt/coco/tdx-host/tdx-host.c
-index f5a869443b15..0d052a1acf62 100644
---- a/drivers/virt/coco/tdx-host/tdx-host.c
-+++ b/drivers/virt/coco/tdx-host/tdx-host.c
-@@ -104,13 +104,60 @@ static int __maybe_unused tdx_spdm_msg_exchange(struct tdx_link *tlink,
- 	return ret;
+diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+index ac4375954c94..d1bd3419e606 100644
+--- a/drivers/pci/iov.c
++++ b/drivers/pci/iov.c
+@@ -28,6 +28,7 @@ int pci_iov_virtfn_bus(struct pci_dev *dev, int vf_id)
+ 	return dev->bus->number + ((dev->devfn + dev->sriov->offset +
+ 				    dev->sriov->stride * vf_id) >> 8);
  }
++EXPORT_SYMBOL_GPL(pci_iov_virtfn_bus);
  
-+static void tdx_spdm_session_teardown(struct tdx_link *tlink)
-+{
-+}
-+
-+static int tdx_spdm_session_setup(struct tdx_link *tlink)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static void tdx_ide_stream_teardown(struct tdx_link *tlink)
-+{
-+}
-+
-+static int tdx_ide_stream_setup(struct tdx_link *tlink)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static void __tdx_link_disconnect(struct tdx_link *tlink)
-+{
-+	tdx_ide_stream_teardown(tlink);
-+	tdx_spdm_session_teardown(tlink);
-+}
-+
-+DEFINE_FREE(__tdx_link_disconnect, struct tdx_link *, if (_T) __tdx_link_disconnect(_T))
-+
- static int tdx_link_connect(struct pci_dev *pdev)
+ int pci_iov_virtfn_devfn(struct pci_dev *dev, int vf_id)
  {
--	return -ENXIO;
-+	struct tdx_link *tlink = to_tdx_link(pdev->tsm);
-+	int ret;
-+
-+	struct tdx_link *__tlink __free(__tdx_link_disconnect) = tlink;
-+	ret = tdx_spdm_session_setup(tlink);
-+	if (ret) {
-+		pci_err(pdev, "fail to setup spdm session\n");
-+		return ret;
-+	}
-+
-+	ret = tdx_ide_stream_setup(tlink);
-+	if (ret) {
-+		pci_err(pdev, "fail to setup ide stream\n");
-+		return ret;
-+	}
-+
-+	tlink = no_free_ptr(__tlink);
-+
-+	return 0;
- }
- 
- static void tdx_link_disconnect(struct pci_dev *pdev)
- {
-+	struct tdx_link *tlink = to_tdx_link(pdev->tsm);
-+
-+	__tdx_link_disconnect(tlink);
- }
- 
- static struct pci_tsm_ops tdx_link_ops;
 -- 
 2.51.0
 
