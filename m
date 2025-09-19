@@ -1,79 +1,90 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD19321446
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1A632144F
 	for <linux-pci@vger.kernel.org>; Fri, 19 Sep 2025 16:32:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758299532; cv=none; b=pV8D2UWYXHr6hOuKNwEuYq48bS1I5P9+071UsuufqYomNAxtcdY8lYYsuttuJPiF0pOhapkHl4+1MMRxa6Wasokp1PvgljKQ7cUFVwxcJVvGLRAvfm3GtKtAQ9ibjblqXxf+W2XasD9xdFmApq86nRZipbRzqmX+17liZsbNANQ=
+	t=1758299532; cv=none; b=e+jHZsdt+0mxs3nZ2EBPdQaQsiuQkyY1AVLPytpXXPIKMjgOMtRC1Y2kOAAJUNZzrOTxBBBW9V2QYoJEz/2mK93FHH0JkW41SypdtL+vQ91ABUuQM+XNsMcMS4YWKlqKrg2+PITFMsy3Z4cG4DU7os107QEVa9xQL12TVdz7epQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1758299532; c=relaxed/simple;
-	bh=X4UMxA5PcHA5deWHb6V/zlMJzzYS71/Dlxr9mJ6VDG4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JZ5pwPTN4FHetyI2DlZVElKIr8EbkllMptGJOP62ZvE/L8udptV7/bf1KYP1mh3Ns/s1z8F0nSRqba68yNmTKdKZ+Xmh2aTytaqo8jOzp5X6NPyHR6jHnU2fNPcM06oIsEbM0UeB/pxUAmb6H45fIM6YK0K/ktrY6ObN+201cHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=C9f+WkJb; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Y90j7YCD; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=jqvXoi6f; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JcgiSYiq; arc=none smtp.client-ip=195.135.223.130
+	bh=6kjlxtAaKEKwqWPYADldDQV55pMUahCcj4KCt6px5ag=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=tIBVOosJMXFPMVXpj5VrPlyJKqVQu6jEqHt2EOacDf3eCZGUiKvfE7qteF/NRuIcKeP4lZNZp4Gl0+kwqYJY86/ao1T30KKlLsIFtisvnUZzXuavawCwnsunsWlK+fnqYfogz4IFU9e7gS0nPISsfsyIi/LrckVjizI6kLtz1JE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NJTT3WXf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+QCKOQv9; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NJTT3WXf; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=+QCKOQv9; arc=none smtp.client-ip=195.135.223.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="C9f+WkJb";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Y90j7YCD";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="jqvXoi6f";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JcgiSYiq"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NJTT3WXf";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+QCKOQv9";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NJTT3WXf";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="+QCKOQv9"
 Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id B3E1E2120F;
-	Fri, 19 Sep 2025 16:32:02 +0000 (UTC)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 867441F7E0;
+	Fri, 19 Sep 2025 16:32:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
 	t=1758299523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=DGJ7Uqfb/EM/zLCvs2Uxp04+tMxwcKGLIRpShwvq/Dg=;
-	b=C9f+WkJbkOTZfQR49xLwPbnQjPW5OphUtM+yiNhoTFXGDfP5pN+kNGVXAgwshWkiCn8D+2
-	nJErlmBwrMGC4MyGEaxnzpQJ2yRruwc+CAI1XyfUubs9RuLR85TLhGnR8cdEBTYce788ez
-	Og6g74Nsk2Va7cF8jfYUFI3vpRy7l8U=
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gTG2gaW2eoTvDCKZNxhXHU5hoiL6obDkARwhNAllDqQ=;
+	b=NJTT3WXfjUp8b4R7PSK5CcMsykG0mZM8/T7PZZxlfIvt76kWa1wJLJu0MtfETVkjsfK2kd
+	jfq1Um0P0+ahAr/VPf+ZTODnDfOZK8Apqr48z9+l3X+WgZm8HSfAoSSn0rHfNz6yHY/KWP
+	ihCKSmPm9GSOWFozx8GLW2Zwk06/zW0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
 	s=susede2_ed25519; t=1758299523;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=DGJ7Uqfb/EM/zLCvs2Uxp04+tMxwcKGLIRpShwvq/Dg=;
-	b=Y90j7YCDmMVcCNmXCi4GiE16t0ptzm8d6hrmMW6v5w3E46VWH/lbxN1Ff99N1dIhU4wATP
-	ELvAXIejpxbqJwCg==
-Authentication-Results: smtp-out1.suse.de;
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gTG2gaW2eoTvDCKZNxhXHU5hoiL6obDkARwhNAllDqQ=;
+	b=+QCKOQv9fgJ/ZMrNk1BVfeu3P+rLFGoP3pGRa5Q1mOM/b5hXudKNYKu9SkISdu7zhU0z9W
+	VLYUF30n8AUjzdBA==
+Authentication-Results: smtp-out2.suse.de;
 	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1758299522; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=DGJ7Uqfb/EM/zLCvs2Uxp04+tMxwcKGLIRpShwvq/Dg=;
-	b=jqvXoi6fIjIe8+pKHJHkfPUeNwazsSGJpMiYvsI7EhvStNAZZQhsc8p+lyYkDDQUCw9Gan
-	+rx0h27pHwfYykXaKATc7mUyguH/M8SMsl2AoDYDiF76LJvnUsa4g6xH8a8JzAGcE12fRR
-	gTWnaf3Xfj9u+8ngGznNnPNF7eTBeko=
+	t=1758299523; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gTG2gaW2eoTvDCKZNxhXHU5hoiL6obDkARwhNAllDqQ=;
+	b=NJTT3WXfjUp8b4R7PSK5CcMsykG0mZM8/T7PZZxlfIvt76kWa1wJLJu0MtfETVkjsfK2kd
+	jfq1Um0P0+ahAr/VPf+ZTODnDfOZK8Apqr48z9+l3X+WgZm8HSfAoSSn0rHfNz6yHY/KWP
+	ihCKSmPm9GSOWFozx8GLW2Zwk06/zW0=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1758299522;
+	s=susede2_ed25519; t=1758299523;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:  content-transfer-encoding:content-transfer-encoding;
-	bh=DGJ7Uqfb/EM/zLCvs2Uxp04+tMxwcKGLIRpShwvq/Dg=;
-	b=JcgiSYiq5fStJABFo8FPDFez/maRJpASKpk+oLlsRL2VgEspQWzIJK9e+xNPJHiqvONQlY
-	yKa42pWbgjswreDQ==
+	 mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=gTG2gaW2eoTvDCKZNxhXHU5hoiL6obDkARwhNAllDqQ=;
+	b=+QCKOQv9fgJ/ZMrNk1BVfeu3P+rLFGoP3pGRa5Q1mOM/b5hXudKNYKu9SkISdu7zhU0z9W
+	VLYUF30n8AUjzdBA==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7D49413A39;
-	Fri, 19 Sep 2025 16:32:02 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 44EE413AB1;
+	Fri, 19 Sep 2025 16:32:03 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id sLxFHYKFzWg3UwAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Fri, 19 Sep 2025 16:32:02 +0000
+	id 8JlrD4OFzWg3UwAAD6G6ig
+	(envelope-from <tiwai@suse.de>); Fri, 19 Sep 2025 16:32:03 +0000
 From: Takashi Iwai <tiwai@suse.de>
 To: "Rafael J . Wysocki" <rafael@kernel.org>
 Cc: linux-pm@vger.kernel.org,
 	Bjorn Helgaas <bhelgaas@google.com>,
 	linux-pci@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [PATCH 0/3] PM: runtime: New class macros for auto-cleanup
-Date: Fri, 19 Sep 2025 18:31:41 +0200
-Message-ID: <20250919163147.4743-1-tiwai@suse.de>
+Subject: [PATCH 3/3] PM: runtime: Drop unused pm_runtime_free __free() definition
+Date: Fri, 19 Sep 2025 18:31:44 +0200
+Message-ID: <20250919163147.4743-4-tiwai@suse.de>
 X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250919163147.4743-1-tiwai@suse.de>
+References: <20250919163147.4743-1-tiwai@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -83,7 +94,7 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Spam-Level: 
 X-Spamd-Result: default: False [-2.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
+	BAYES_HAM(-3.00)[99.99%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
 	MID_CONTAINS_FROM(1.00)[];
 	R_MISSING_CHARSET(0.50)[];
@@ -94,7 +105,7 @@ X-Spamd-Result: default: False [-2.80 / 50.00];
 	ARC_NA(0.00)[];
 	MIME_TRACE(0.00)[0:+];
 	TO_DN_SOME(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
 	FROM_EQ_ENVFROM(0.00)[];
 	RCVD_COUNT_TWO(0.00)[2];
@@ -105,38 +116,28 @@ X-Spamd-Result: default: False [-2.80 / 50.00];
 X-Spam-Flag: NO
 X-Spam-Score: -2.80
 
-Hi,
+Since the introduction of CLASS macros for pm_runtime_get/put and the
+conversion with it, there is no user of __free(pm_runtime_put) any
+longer.  Let's clean it up.
 
-this is a patch series to introduce the new class macros for easier
-usage of PM runtime auto-cleanup features.
+Signed-off-by: Takashi Iwai <tiwai@suse.de>
+---
+ include/linux/pm_runtime.h | 2 --
+ 1 file changed, 2 deletions(-)
 
-There is only one existing user of __free(pm_runtime_put) in PCI core,
-and this is converted with CLASS() macro, too.
-Then the pm_runtime_put __free definition is dropped.
-
-The first patch was from Rafael (as found in the thread below), and I
-left no sign-off as I expect he'll get and sign later again.
-
-
-Link: https://lore.kernel.org/878qimv24u.wl-tiwai@suse.de
-
-thanks,
-
-Takashi
-
-===
-
-Rafael J. Wysocki (1):
-  PM: runtime: Define class helpers for automatic PM runtime cleanup
-
-Takashi Iwai (2):
-  PCI: Use PM runtime class macro for the auto cleanup
-  PM: runtime: Drop unused pm_runtime_free __free() definition
-
- drivers/pci/pci-sysfs.c    |  5 +++--
- include/linux/pm_runtime.h | 45 ++++++++++++++++++++++++++++++++++++--
- 2 files changed, 46 insertions(+), 4 deletions(-)
-
+diff --git a/include/linux/pm_runtime.h b/include/linux/pm_runtime.h
+index 637bfda9c2cd..29d746f57f98 100644
+--- a/include/linux/pm_runtime.h
++++ b/include/linux/pm_runtime.h
+@@ -579,8 +579,6 @@ static inline int pm_runtime_put(struct device *dev)
+ 	return __pm_runtime_idle(dev, RPM_GET_PUT | RPM_ASYNC);
+ }
+ 
+-DEFINE_FREE(pm_runtime_put, struct device *, if (_T) pm_runtime_put(_T))
+-
+ /**
+  * __pm_runtime_put_autosuspend - Drop device usage counter and queue autosuspend if 0.
+  * @dev: Target device.
 -- 
 2.50.1
 
