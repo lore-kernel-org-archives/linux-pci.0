@@ -1,131 +1,79 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A84DD283128
-	for <linux-pci@vger.kernel.org>; Sat, 20 Sep 2025 09:26:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C555B34BA2A;
+	Sat, 20 Sep 2025 10:56:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758360389; cv=none; b=S0b8sqQLMgYJX/jhljaAQo7+euXv5qNZwvmdKT8cFdjpeVUmiV1VvGfiBD0u5iG2W3aZwjSvkq+dEoacdIZt1B5Xc724xoCV2Vool5j9Szksjmu+uIMG0Zph8h0qZxLZ0Nhazez4HzEl5khPuWKB++BNyjUEG5RcuGjyWZlMUkY=
+	t=1758365818; cv=none; b=IuIQp+bUALM8g1A667Bo1uKP/zzUaxCM/ubBM9iv5nZh0zK68var/o3RFIYqPo8MV60KPDUADqMZDZGs7D/jXgbd5bwyQsCBHmLl0/6DGyhBiG8S3NNt6QdCEavpfXeQYAUgjwdHqYlO8TPCzj49zH5+oIFpzJm6O0YrQsOUgdQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758360389; c=relaxed/simple;
-	bh=o5EN6c1YWCxp4RRj5b0KuE59KXin0qqHFu3hvf1nM5o=;
+	s=arc-20240116; t=1758365818; c=relaxed/simple;
+	bh=B/jdvogs/YBdZchcd4g5GXCV2jXYI1AZopvQxzMokk4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=beyWuXQxaWaMHhD9QKuu0l5J5dxspExAdHaGvqAyRBvuCNQ6PZXGcePA3Jx7qcyUAiusYXy0/y4wXrs+2D5TBTWMvWN+olaApiFBk0aFGViIRKIWADl48/Nv5YjjSX6n5/iXibdaxK1/WpNgx1Bww3uC4GaXg7+osVd3LA/9v5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hZioOIh4; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 MIME-Version:Content-Type; b=WZFNdzfA6Bwtg1dYqnLQRu65cn5TvGBS+7oYrLjS1ekmNOuhV1+vcFmpA4kXRbgpj7q9UQloXLGlhLBF+g/JiDYdBVrAEwMSSuHUdbwRuQTXFMhshzDp+u/RZuMYxckNsnWtws0s4tjx42xZbESGBAo7sxklkokxzsu1tiJKkho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Nxl6vrc4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hZioOIh4"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-45ed646b656so26380005e9.3
-        for <linux-pci@vger.kernel.org>; Sat, 20 Sep 2025 02:26:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758360386; x=1758965186; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Pb3oQ4OLLQ4LwjywIbmgSN/BEASRwYQS+6IVWtGhrH0=;
-        b=hZioOIh4XAxl6Cb/jPs7/sefRY1N0maSmi7161+3c/70JsFpuyRA2dHQ/bQLFLA8TO
-         I+1gS8U2WdC4HYuFQ/XrgxQuIXBRGoX64yyNZjqRaVxOAFVrvxjiVfCSPIEY+FIq26GV
-         rzFoSk8xFtinYzMTkPjz/ZKXmwsaEdFIURR3MVDnedpXnHo9JyhZQMZhYxJZY/HpQNK4
-         yeIG9zLWauOh5cy6tTZ3CmTFHzxBcZfn17BolZ1vyyVETM4Bm/C0nJ/9w6CSZODrw3tu
-         ZOHzam8D2CG6tAj4q4vN5Tafo3oWUouZ/6n27GpkACKsMcr3zQ1lK2m3mx4y1ufAKi82
-         oekw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758360386; x=1758965186;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=Pb3oQ4OLLQ4LwjywIbmgSN/BEASRwYQS+6IVWtGhrH0=;
-        b=gAb4yZ1pIgtMAfvYEh72jIGByloTGtcRjDpEvvIGT86UyIycRnJL/qhG3f/Cs8ik+b
-         X1+be/Q9KLb3bPyOsIEk8SuegmGirnhxVv9h/QFleD3mU3e/Y7wFfDltp4T6TImGiFbL
-         yhZ4+r6+iExGB14fL1OB6FZngVkZpjiOpa74qmAQFjldtBRTVykppRHNqOX5Rvf/sPid
-         e01Y1vloN1UnZ33lBlrLtaCLvgNu3Fp6PZnLM+8JzL4OYS6b4650ilTb4InyeuJRuNmb
-         63q3aISH+V7+gZezAkHf/hHkHqo991Eal1pOiRELUWptf4e0Z33MOqWCB41PF1NSbLBN
-         y8Fg==
-X-Forwarded-Encrypted: i=1; AJvYcCW9HGM2frXU6LDl4B827YXPW0JQwo9FJuojfVUqJrkL088wyg5tqWRHHEOtSfJKtgcF1pLyXuV/7zA=@vger.kernel.org
-X-Gm-Message-State: AOJu0YyxxyYfKt1PaDSXlRbAjZd3vffEfcON9qMjrxTeLJygpbpOi0A8
-	h5MeyEQQ4SrspSExVdG1DakjvQPQRgm1UaGy1f7NEApkXbFRNUNvL7AI
-X-Gm-Gg: ASbGnctje+J4+5i8wcv4Z5J2HcIXGBd7tU6OxIhdqbeLTs9zQ7wGguWq6lmCWrztCkG
-	TfRaE7OS9Y6FjuVE9Iw+LPbgIa957Tg+wHNv6pojNdbi2vf28kbGQjRy7zoTMv463baW2aqRaMk
-	NgddsImncczuUlIFx2Qrz0q5mwWBQ4zYfMOkjZ9pv1sBTGibmtux4TRsNwv/j+f/+6YIHlLRk8k
-	QGsYRmilim5a5e0HjTiDi3UODQMhzBfhUP4ZEQUOgNEwo8NpaGxjmh5CdxOFz0VGfnHMlmMJ75F
-	PjsRIpbXjMA8HCf/2Ofc7TNMMy375bCGMVHQaaMwMpxBISm2gEgLVUQaA4aVwBm8nytq8TrcdSr
-	Go/LnAyv2igj/+vra13u1QODYScIVYJVfQDJdhP7BSoUDKiL8RgxQnh4c7SaDJW6xs+JSmzg=
-X-Google-Smtp-Source: AGHT+IGt8P3rEmePLNMaAwjTE9SxZVmwgeAbuDHf0WXIvJ1mTKDwPrysE7A1gCCOMrssz2H1L7Vmmg==
-X-Received: by 2002:a05:600c:3555:b0:45f:2f0f:6649 with SMTP id 5b1f17b1804b1-467ec36a2camr71215025e9.8.1758360385528;
-        Sat, 20 Sep 2025 02:26:25 -0700 (PDT)
-Received: from Ansuel-XPS24 (host-95-249-236-54.retail.telecomitalia.it. [95.249.236.54])
-        by smtp.googlemail.com with ESMTPSA id 5b1f17b1804b1-467fc818e00sm73648535e9.0.2025.09.20.02.26.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 20 Sep 2025 02:26:25 -0700 (PDT)
-From: Christian Marangi <ansuelsmth@gmail.com>
-To: Ryder Lee <ryder.lee@mediatek.com>,
-	Jianjun Wang <jianjun.wang@mediatek.com>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	linux-pci@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	upstream@airoha.com
-Cc: Christian Marangi <ansuelsmth@gmail.com>
-Subject: [PATCH 2/2] PCI: mediatek-gen3: add support for Airoha AN7583 SoC
-Date: Sat, 20 Sep 2025 11:25:35 +0200
-Message-ID: <20250920092612.21464-2-ansuelsmth@gmail.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20250920092612.21464-1-ansuelsmth@gmail.com>
-References: <20250920092612.21464-1-ansuelsmth@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Nxl6vrc4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50DB3C4CEEB;
+	Sat, 20 Sep 2025 10:56:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758365818;
+	bh=B/jdvogs/YBdZchcd4g5GXCV2jXYI1AZopvQxzMokk4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Nxl6vrc4mTZtj2BTkgQFgBBw/525F/c3nyuca+ZwFiIHknVzwlfVYFshpMt8sNObb
+	 sPccnYG0Vn6Sf4UFIRg23xmdHXZgciBZ9p7kun7r+JngWSOTKePXS1HlKPtYjx/cJ/
+	 14YBtEkjaClcHOemF05uaRk7IaLAnkzve3Wmq2D5mUqJOs2lCuTBspWOuAOAUT7eOs
+	 +e12oG0tzwubzUzWtAuGBFKnGtICR0n2xDzwcj2iRlG7QdCHgHceFzyulf+QADDGXe
+	 uDw2CYwVuYiQpvyUROl73xQklteESNc7D4p9QISXNbIquPeF5TnmLX/pSLofrZcDjF
+	 iqAFH1Id/exaw==
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+To: Linux PM <linux-pm@vger.kernel.org>, Takashi Iwai <tiwai@suse.de>
+Cc: LKML <linux-kernel@vger.kernel.org>,
+ Linux PCI <linux-pci@vger.kernel.org>,
+ Alex Williamson <alex.williamson@redhat.com>,
+ Bjorn Helgaas <helgaas@kernel.org>, Zhang Qilong <zhangqilong3@huawei.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>
+Subject: [PATCH v2 3/3] PM: runtime: Drop DEFINE_FREE() for pm_runtime_put
+Date: Sat, 20 Sep 2025 12:56:41 +0200
+Message-ID: <22849216.EfDdHjke4D@rafael.j.wysocki>
+Organization: Linux Kernel Development
+In-Reply-To: <6204724.lOV4Wx5bFT@rafael.j.wysocki>
+References: <6204724.lOV4Wx5bFT@rafael.j.wysocki>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="UTF-8"
 
-Add support for Airoha AN7583 SoC that implement the same logic of
-Airoha EN7581 with the only difference that only 1 PCIe line is
-supported (for GEN3).
+From: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 
-A dedicated compatible is defined with the pdata struct with the 1 reset
-line.
+The DEFINE_FREE() for pm_runtime_put has been superseded by recently
+introduced runtime PM auto-cleanup macros and its only user has been
+converted to using one of the new macros, so drop it.
 
-Signed-off-by: Christian Marangi <ansuelsmth@gmail.com>
+Signed-off-by: Rafael J. Wysocki <rafael.j.wysocki@intel.com>
 ---
- drivers/pci/controller/pcie-mediatek-gen3.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/pci/controller/pcie-mediatek-gen3.c b/drivers/pci/controller/pcie-mediatek-gen3.c
-index 75ddb8bee168..db9985375be9 100644
---- a/drivers/pci/controller/pcie-mediatek-gen3.c
-+++ b/drivers/pci/controller/pcie-mediatek-gen3.c
-@@ -1360,8 +1360,18 @@ static const struct mtk_gen3_pcie_pdata mtk_pcie_soc_en7581 = {
- 	.flags = SKIP_PCIE_RSTB,
- };
+v1 -> v2: No changes.
+
+---
+ include/linux/pm_runtime.h |    2 --
+ 1 file changed, 2 deletions(-)
+
+--- a/include/linux/pm_runtime.h
++++ b/include/linux/pm_runtime.h
+@@ -582,8 +582,6 @@ static inline int pm_runtime_put(struct
+ 	return __pm_runtime_idle(dev, RPM_GET_PUT | RPM_ASYNC);
+ }
  
-+static const struct mtk_gen3_pcie_pdata mtk_pcie_soc_an7583 = {
-+	.power_up = mtk_pcie_en7581_power_up,
-+	.phy_resets = {
-+		.id[0] = "phy-lane0",
-+		.num_resets = 1,
-+	},
-+	.flags = SKIP_PCIE_RSTB,
-+};
-+
- static const struct of_device_id mtk_pcie_of_match[] = {
- 	{ .compatible = "airoha,en7581-pcie", .data = &mtk_pcie_soc_en7581 },
-+	{ .compatible = "airoha,an7583-pcie-gen3", .data = &mtk_pcie_soc_an7583 },
- 	{ .compatible = "mediatek,mt8192-pcie", .data = &mtk_pcie_soc_mt8192 },
- 	{ .compatible = "mediatek,mt8196-pcie", .data = &mtk_pcie_soc_mt8196 },
- 	{},
--- 
-2.51.0
+-DEFINE_FREE(pm_runtime_put, struct device *, if (_T) pm_runtime_put(_T))
+-
+ /**
+  * __pm_runtime_put_autosuspend - Drop device usage counter and queue autosuspend if 0.
+  * @dev: Target device.
+
+
 
