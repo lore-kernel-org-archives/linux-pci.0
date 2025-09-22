@@ -1,119 +1,95 @@
-Received: from mout-p-102.mailbox.org (mout-p-102.mailbox.org [80.241.56.152])
+Received: from mout-p-202.mailbox.org (mout-p-202.mailbox.org [80.241.56.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D96A2E8B63;
-	Mon, 22 Sep 2025 15:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C3CD2E8B74;
+	Mon, 22 Sep 2025 15:35:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.241.56.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758555260; cv=none; b=eVIAcUHUZ70cP5zVZjtpi3eHEPEOZuEgkIYOfzwBvR/4+qtiGwYQAcj3wJC8t/XxfBBHTuXWF7F5q/WdWdngSzkOql5YVr7J37qmXXUik5Ovt+8SJ+hIFGzPMDZ1/Da0zztV+so5O95Q9kSnMK3uT02lLwsE79Rs+dB/LmVJetU=
+	t=1758555311; cv=none; b=S7LtmA4Ov+0/FHGvTO8Mued7T2OUtE+DevLeDyPdbB4WaDXr928hz2tB3Q4pkZl+a/X4cnBhfU7S0pnVN/OzQzbH0eCfUGa7upd8a4rHu2aEcpLzYzTMsU8tPm7xDpUIHEhcK5OGSWcG5hQO9T3zHV8K3IGKTGrM+AGIagQ6nwM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758555260; c=relaxed/simple;
-	bh=4g8pdZiNUoEUbdC/+29dwwVutwbVoelgcoRU4UE69Bg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=T/L8WdOQFC6F8MUiA/BcsAew81y3JZ+VUDtbXhM5nLc/qCW0TY8QJ7EDyGlR2bGj7tv2OXl+9YLgOPl1qM89LePhONYL/nUwovg2ojNK0AEX+4lRefWiBp2sZYAmo8e2u6PUJJLMpEkXkL6g3VO8A4dXtbmB2Drbsk5QGwNL3AY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=fF4cPOY6; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=aTbC89OW; arc=none smtp.client-ip=80.241.56.152
+	s=arc-20240116; t=1758555311; c=relaxed/simple;
+	bh=wmmR/+z+QsQGMtHaPL0yg8jT+B/kfgHKxxpjI87hzZs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ANahMbpY34q8RuP2Zi78KrF/kFqyJBviG4ht4RLqOT5/kgIQ1B/pTLdDNBU0vTF7AUz6ykpqhQ+QDaaHFisGHAuYOCxPGzBx+o5xhMmKd71hK1Oems/KwFVVbJre2+qNdqPZtBqeJxGGuG0ldZbmhfOqhjHJxKAh0jVv+c8dr+U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org; spf=pass smtp.mailfrom=mailbox.org; dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b=T7d0QJbE; arc=none smtp.client-ip=80.241.56.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mailbox.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="fF4cPOY6";
-	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="aTbC89OW"
-Received: from smtp102.mailbox.org (smtp102.mailbox.org [10.196.197.102])
+	dkim=pass (2048-bit key) header.d=mailbox.org header.i=@mailbox.org header.b="T7d0QJbE"
+Received: from smtp2.mailbox.org (smtp2.mailbox.org [IPv6:2001:67c:2050:b231:465::2])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mout-p-102.mailbox.org (Postfix) with ESMTPS id 4cVnGC00nqz9tTb;
-	Mon, 22 Sep 2025 17:34:11 +0200 (CEST)
+	by mout-p-202.mailbox.org (Postfix) with ESMTPS id 4cVnH74Snyz9syv;
+	Mon, 22 Sep 2025 17:34:59 +0200 (CEST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1758555251;
+	t=1758555300;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=T/WfyxJwREoktiQFDoI3msz85U3rthfK4OgtAIm+ta4=;
-	b=fF4cPOY6kVDD+HqL2NKouMkZV7oNc6vNAcZ4Jo4e3HSYg9GbBcxOl6AOy/Ks/kqyGBbzsk
-	JU2/AI6n3PmJzNi3RGFbA2s19RkBuMk5jeBVPhX/6FEbRktCgh/wYj8jfU5S+oLmhesDnZ
-	XA143cJTJefkwoz+dIHju6lQxgKnTxgh784mqhJ5efqic0ZbeJI9aHYW5JNWCAxauJQ1Ro
-	6lMi7kEDaMG8c39YcMC/8DiTmBniRBP6JItbL56p22QAgwIN2lzHaGs+gUwbNE3AG/laav
-	DKBqulMbPbPzObi/Tg8QxNM13ElkF0wgy4oiAdezLqll4QXXUErMauOBFkSuQA==
-From: Marek Vasut <marek.vasut+renesas@mailbox.org>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=mailbox.org; s=mail20150812;
-	t=1758555249;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=T/WfyxJwREoktiQFDoI3msz85U3rthfK4OgtAIm+ta4=;
-	b=aTbC89OWGfBoI9HBTujrfBZGB6NCv+2Gq90taOAGwUB5cogLWb4kcTYNfbBDiknJtiSN+6
-	4Jk9uAehRpLyHFL+Y18H3Gq/bCClEVNPBE5ALCY2VRNUz1cQOERLSE/gzVnc2lcTkEXlln
-	C1aHNje0UiCNSPosaJoGsTCZkbDKK9dtEwxRpMLJQnvbywW/DLnVIuTFaBNP3L+gMDGygC
-	2v2Vg5s3Pa3bgOfL+BaubN1AWHV6CofdKTzgflTplp2SVhsq7sf6FunhtnjvqwvDI8sz+f
-	fRP4DJbfmUnNzUG9zwb4+J6HEwHNhaR1/dw5P6arntrDYR2WCHHr9ejpAmGqKw==
-To: linux-pci@vger.kernel.org
-Cc: Marek Vasut <marek.vasut+renesas@mailbox.org>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Geert Uytterhoeven <geert+renesas@glider.be>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Magnus Damm <magnus.damm@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Marek Vasut <marek.vasut+renesas@gmail.com>,
-	Rob Herring <robh@kernel.org>,
-	Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
-	linux-kernel@vger.kernel.org,
-	linux-renesas-soc@vger.kernel.org
-Subject: [PATCH] PCI: rcar-host: Add static assertion to check !PCI_LOCKLESS_CONFIG
-Date: Mon, 22 Sep 2025 17:33:23 +0200
-Message-ID: <20250922153352.99197-1-marek.vasut+renesas@mailbox.org>
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=JFDDMAR85SuJgvV8n5YjG/JVQ1JyR0LrG+f32oAtf30=;
+	b=T7d0QJbEOS09wtyCptmeP3a+4pgzxCQt+eLYJ/qSqMsAkHM2lI5osnhdGNkkk4DcwPyn4P
+	pHo5CxIaVsziZ3cwwbacseU+vA6CZxutS/8uDbm6nlBVLYlo9d8P1FDkyGIb8S4bErAVPc
+	fz1p0fdg+abXmB7tudc7fGIbHpQDyRfu/BaOnAXt9Hsi0fl5wSO9cNd7QfbS2QBs/ejTyV
+	ohx1HDN7Q8hVBtMFxtx1eOZXBDvPZ/x7p8HrPBOtEzWRJEReYEPdsNipySptyxtgfB7A5Q
+	Gc2QmhgJ3ARRBnmtIbysB3d6GsKGl/fmcbOPVj2Y2Kqcom6pBdLWmOLnlsRHGQ==
+Message-ID: <cff1aa88-d5d0-4b06-9a0b-c39d5b70d0ca@mailbox.org>
+Date: Mon, 22 Sep 2025 17:34:56 +0200
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-MBO-RS-ID: 78269535d8f6cd48f72
-X-MBO-RS-META: c7edgmgujodt3bt7ycs9yx6rdws6b8mf
+Subject: Re: [PATCH 1/2] PCI: rcar-host: Drop PMSR spinlock
+To: Geert Uytterhoeven <geert@linux-m68k.org>
+Cc: linux-pci@vger.kernel.org, Duy Nguyen <duy.nguyen.rh@renesas.com>,
+ Thuan Nguyen <thuan.nguyen-hong@banvien.com.vn>, stable@vger.kernel.org,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>,
+ Lorenzo Pieralisi <lpieralisi@kernel.org>,
+ Magnus Damm <magnus.damm@gmail.com>, Manivannan Sadhasivam
+ <mani@kernel.org>, Marc Zyngier <maz@kernel.org>,
+ Rob Herring <robh@kernel.org>,
+ Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>,
+ linux-renesas-soc@vger.kernel.org, Thomas Gleixner <tglx@linutronix.de>
+References: <20250909162707.13927-1-marek.vasut+renesas@mailbox.org>
+ <CAMuHMdXWWLGHJwxz6yYjhS2oQdmMO+Zfi4b3N3uTPN-NOeEpkA@mail.gmail.com>
+ <575ae1bc-0478-4f69-9002-4a48742e04e8@mailbox.org>
+ <CAMuHMdUP26CELeqro3sdgHT9DK7keWhcUqnkG2eXH2zBP8RqzA@mail.gmail.com>
+Content-Language: en-US
+From: Marek Vasut <marek.vasut@mailbox.org>
+In-Reply-To: <CAMuHMdUP26CELeqro3sdgHT9DK7keWhcUqnkG2eXH2zBP8RqzA@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-MBO-RS-META: i5mtncn76bsbi9f6igbnjnbypgcrozmc
+X-MBO-RS-ID: c731b648d64e4b13f54
 
-This driver can not function correctly without PCIe subsystem level
-config space access serialization. In case PCI_LOCKLESS_CONFIG is
-ever enabled on ARM, complain loudly so the driver can be updated
-accordingly.
+On 9/22/25 12:53 PM, Geert Uytterhoeven wrote:
 
-Signed-off-by: Marek Vasut <marek.vasut+renesas@mailbox.org>
----
-Cc: "Krzysztof Wilczyński" <kwilczynski@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>
-Cc: Geert Uytterhoeven <geert+renesas@glider.be>
-Cc: Lorenzo Pieralisi <lpieralisi@kernel.org>
-Cc: Magnus Damm <magnus.damm@gmail.com>
-Cc: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Marek Vasut <marek.vasut+renesas@gmail.com>
-Cc: Rob Herring <robh@kernel.org>
-Cc: Yoshihiro Shimoda <yoshihiro.shimoda.uh@renesas.com>
-Cc: linux-kernel@vger.kernel.org
-Cc: linux-pci@vger.kernel.org
-Cc: linux-renesas-soc@vger.kernel.org
----
- drivers/pci/controller/pcie-rcar-host.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Hello Geert,
 
-diff --git a/drivers/pci/controller/pcie-rcar-host.c b/drivers/pci/controller/pcie-rcar-host.c
-index 213028052aa58..29e13f7ff7ff1 100644
---- a/drivers/pci/controller/pcie-rcar-host.c
-+++ b/drivers/pci/controller/pcie-rcar-host.c
-@@ -35,6 +35,14 @@
- 
- #include "pcie-rcar.h"
- 
-+/*
-+ * This driver can not function correctly without PCIe subsystem level
-+ * config space access serialization. In case PCI_LOCKLESS_CONFIG is
-+ * ever enabled on ARM, complain loudly so the driver can be updated
-+ * accordingly.
-+ */
-+static_assert(!IS_ENABLED(CONFIG_PCI_LOCKLESS_CONFIG));
-+
- struct rcar_msi {
- 	DECLARE_BITMAP(used, INT_PCI_MSI_NR);
- 	struct irq_domain *domain;
--- 
-2.51.0
+>>> My only worry is that PCI_LOCKLESS_CONFIG may be selected on non-x86
+>>> one day, breaking your assumptions.  IMHO, the mechanism behind this
+>>> config option, introduced in commit 714fe383d6c9bd95 ("PCI: Provide
+>>> Kconfig option for lockless config space accessors") looks very fragile
+>>> to me: it is intended to be selected by an architecture, if "all" low
+>>> level PCI configuration space accessors use their own serialization or
+>>> can operate completely lockless.  Usually we use the safer, inverted
+>>> approach (PCI_NOLOCKLESS_CONFIG), to be selected by all drivers that
+>>> do not adhere to the assumption.
+>>> But perhaps I am missing something, and this does not depend on
+>>> individual PCIe host drivers?
+>>>
+>>> Regardless, improving that is clearly out-of-scope for this patch...
+>>
+>> I could send a follow up patch which would add build-time assertion that
+>> PCI_LOCKLESS_CONFIG must not be selected for this driver to work. Would
+>> that be an option ?
+> 
+> Or simply just "depends on !CONFIG_PCI_LOCKLESS_CONFIG"?
+> What do the PCIe maintainers think?
+I send a patch in the meantime:
 
+[PATCH] PCI: rcar-host: Add static assertion to check !PCI_LOCKLESS_CONFIG
