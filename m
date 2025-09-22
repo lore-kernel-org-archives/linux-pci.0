@@ -1,45 +1,46 @@
 Received: from fllvem-ot04.ext.ti.com (fllvem-ot04.ext.ti.com [198.47.19.246])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE6D2367B5;
-	Mon, 22 Sep 2025 07:13:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E4F92367B5;
+	Mon, 22 Sep 2025 07:13:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.47.19.246
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758525182; cv=none; b=shKs736MgywkTAAtiUPjvOJmVxqJYwng+KVngIwbz67UDluDbATjlMMQDJg+JrX7tUZnUMg5dSEzDFf61UlFw+CuEJc4oJLGx/wGWTjYM9GGCOTe6pHHSKOUpKLt+VZxk+H/mQe6ePrm3X+OlZYj/i+w6t65/Ml/91FnavYJpJw=
+	t=1758525188; cv=none; b=it8L14NyVVDFdzlMxn8gQtjWACa1NkqBcColyVaQbLEe1B5/9YbwaGCsTB1UOk/wjzrD0gsKAxomMLLEQorq4ifcjqdt4Geu/xmfYD4xw8sI0lA68HWjHTmwe69h58wmXJPJdD8Zs9xje26eNTVHGFEbxbW87GqYIH/CTb4q/CA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758525182; c=relaxed/simple;
-	bh=pc8fOIWyIeYU2I8WMVPLAOavlN5Cjc5WzDkmGR6HOiQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HlRo+xBt4MQTh/VKcdFZ1rKhEjIu/R03MH/nt6KsryFhiBcIbx7s6uL5/0ZiO2bMedTttWwcqgCdypLJrfaytr/7pdLOVqF49MdhAa0FdX+MkNizFpk0KE4cG9b2LSaeuqdSaFg5cVtPJrHGKWT1Zp4GgzSCTBoDp8c5Exy4D04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=BAoGWRwC; arc=none smtp.client-ip=198.47.19.246
+	s=arc-20240116; t=1758525188; c=relaxed/simple;
+	bh=uFc2miPfGpmCAPx9kuHAwYwqzPLQ8Z6Z9IujXoqNmL4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BpCG0xTAzd4WYTQCeduDQc9Ia61Dc6FwUBDFttmKWviFgErZb4TUvZzqwmh5adJ//GvSqxGEmuM37f6lcE/vEPYbzBoCjNt/zrSry9J3RpIfL8CUEbYlbPKhIPnoJn9K8lenOJppxb5XXujVZxj9fR6JCjZn6IUJbQhEx0vyzHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com; spf=pass smtp.mailfrom=ti.com; dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b=efGxgJBR; arc=none smtp.client-ip=198.47.19.246
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ti.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ti.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="BAoGWRwC"
+	dkim=pass (1024-bit key) header.d=ti.com header.i=@ti.com header.b="efGxgJBR"
 Received: from fllvem-sh04.itg.ti.com ([10.64.41.54])
-	by fllvem-ot04.ext.ti.com (8.15.2/8.15.2) with ESMTP id 58M7CUVE1183964;
-	Mon, 22 Sep 2025 02:12:30 -0500
+	by fllvem-ot04.ext.ti.com (8.15.2/8.15.2) with ESMTP id 58M7Cmxx1183988;
+	Mon, 22 Sep 2025 02:12:49 -0500
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ti.com;
-	s=ti-com-17Q1; t=1758525150;
-	bh=uTctHAVrrJJhz8+sjGmeprmgZ6Z8FF5nTjBctXETYv4=;
-	h=From:To:CC:Subject:Date;
-	b=BAoGWRwCnSwvL4b0XnSGtYbNbEKjRnVDuw7/S+M03ymgz+EEe09FXJF78GE8ohYch
-	 22Px5giTvLQek6ziat2OAnuNh2S/9uRk8anNPfw0QYdPKzlfsubfvDJswaDWtaV/dX
-	 V6YPEpdaCWguGMdvSCzIy5SSTujICRodxTO3UDwg=
-Received: from DFLE113.ent.ti.com (dfle113.ent.ti.com [10.64.6.34])
-	by fllvem-sh04.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 58M7CULP1800388
+	s=ti-com-17Q1; t=1758525169;
+	bh=VV49ihaF8LjwLtRf5svh2loSSu7iyybrckUp+jaDzz0=;
+	h=From:To:CC:Subject:Date:In-Reply-To:References;
+	b=efGxgJBRBSJBPSG+Qi585Dxn5RzhIEU3l+rTUBOyqDYAmd4MpOrOZDng5q3AQ5SEi
+	 oTzvkG+eo3q3XIzQG+RfAKsJSlzeoAYySUFIZ4aoxViUHvp2GsZt5PyFCjD/8Xe59h
+	 WqZM31SHCD3TKKDcK9O7rc/1ksRQ8690+aSadakU=
+Received: from DLEE113.ent.ti.com (dlee113.ent.ti.com [157.170.170.24])
+	by fllvem-sh04.itg.ti.com (8.18.1/8.18.1) with ESMTPS id 58M7CmIZ1800486
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-SHA256 bits=128 verify=FAIL);
-	Mon, 22 Sep 2025 02:12:30 -0500
-Received: from DFLE212.ent.ti.com (10.64.6.70) by DFLE113.ent.ti.com
- (10.64.6.34) with Microsoft SMTP Server (version=TLS1_2,
+	Mon, 22 Sep 2025 02:12:48 -0500
+Received: from DLEE215.ent.ti.com (157.170.170.118) by DLEE113.ent.ti.com
+ (157.170.170.24) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256_P256) id 15.1.2507.55; Mon, 22
- Sep 2025 02:12:29 -0500
-Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DFLE212.ent.ti.com
- (10.64.6.70) with Microsoft SMTP Server (version=TLS1_2,
+ Sep 2025 02:12:48 -0500
+Received: from lelvem-mr05.itg.ti.com (10.180.75.9) by DLEE215.ent.ti.com
+ (157.170.170.118) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.20 via Frontend
- Transport; Mon, 22 Sep 2025 02:12:29 -0500
+ Transport; Mon, 22 Sep 2025 02:12:48 -0500
 Received: from uda0492258.dhcp.ti.com (uda0492258.dhcp.ti.com [172.24.231.84])
-	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 58M7CN0R2369246;
-	Mon, 22 Sep 2025 02:12:23 -0500
+	by lelvem-mr05.itg.ti.com (8.18.1/8.18.1) with ESMTP id 58M7CN0U2369246;
+	Mon, 22 Sep 2025 02:12:42 -0500
 From: Siddharth Vadapalli <s-vadapalli@ti.com>
 To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
         <robh@kernel.org>, <bhelgaas@google.com>, <jingoohan1@gmail.com>,
@@ -52,10 +53,12 @@ To: <lpieralisi@kernel.org>, <kwilczynski@kernel.org>, <mani@kernel.org>,
 CC: <linux-pci@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
         <linux-arm-kernel@lists.infradead.org>, <srk@ti.com>,
         <s-vadapalli@ti.com>
-Subject: [PATCH v3 0/4] PCI: Keystone: Enable loadable module support
-Date: Mon, 22 Sep 2025 12:42:12 +0530
-Message-ID: <20250922071222.2814937-1-s-vadapalli@ti.com>
+Subject: [PATCH v3 3/4] PCI: keystone: Exit ks_pcie_probe() for invalid mode
+Date: Mon, 22 Sep 2025 12:42:15 +0530
+Message-ID: <20250922071222.2814937-4-s-vadapalli@ti.com>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20250922071222.2814937-1-s-vadapalli@ti.com>
+References: <20250922071222.2814937-1-s-vadapalli@ti.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
@@ -66,84 +69,46 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-C2ProcessedOrg: 333ef613-75bf-4e12-a4b1-8e3623f5dcea
 
-Hello,
+Commit under Fixes introduced support for PCIe EP mode on AM654x platforms.
+When the mode happens to be either "DW_PCIE_RC_TYPE" or "DW_PCIE_EP_TYPE",
+the PCIe Controller is configured accordingly. However, when the mode is
+neither of them, an error message is displayed but the driver probe
+succeeds. Since this "invalid" mode is not associated with a functional
+PCIe Controller, the probe should fail.
 
-This series enables support for the 'pci-keystone.c' driver to be built
-as a loadable module. The motivation for the series is that PCIe is not
-a necessity for booting Linux due to which the 'pci-keystone.c' driver
-does not need to be built-in.
+Fix the behavior by exiting "ks_pcie_probe()" with the return value of
+"-EINVAL" in addition to displaying the existing error message when the
+mode is invalid.
 
-Series is based on commit
-dc72930fe22e Merge branch 'pci/misc'
-of pci/next.
+Fixes: 23284ad677a9 ("PCI: keystone: Add support for PCIe EP in AM654x Platforms")
+Signed-off-by: Siddharth Vadapalli <s-vadapalli@ti.com>
+---
 
-NOTE for MAINTAINERS: This series has the following dependencies:
-1. The following commit in Linux-Next is a build-dependency for the
-series:
-https://github.com/ColinIanKing/linux-next/commit/8de1de5a3a8d42975953382068fb5195e9d6e6c6
-Since the v1 series was based on linux-next, there were no build errors.
-However, since this series is based on pci/next based on the feedback from
-Manivannan Sadhasivam <mani@kernel.org> at:
-https://lore.kernel.org/r/2gzqupa7i7qhiscwm4uin2jmdb6qowp55mzk7w4o3f73ob64e7@taf5vjd7lhc5/
-without the aforementioned commit, build will fail.
-2. The following patch series include fixes for the driver which are
-required to verify the driver functionality:
-https://lore.kernel.org/r/20250912100802.3136121-1-s-vadapalli@ti.com/
-
-v2 of this series is at:
-https://lore.kernel.org/r/20250912122356.3326888-1-s-vadapalli@ti.com/
+v2 of this patch is at:
+https://lore.kernel.org/r/20250912122356.3326888-10-s-vadapalli@ti.com/
 Changes since v2:
-- Patch 04/10 of the v2 series has been squashed into patch 02/10 of the
-  v2 series. In the v3 series, the squashed patch is 02/04.
-- Patches 03/10, 05/10, 06/10, 07/10 and 08/10 of the v2 series have been
-  dropped. The reason for dropping them is that all of the aforementioned
-  patches introduce helpers for cleanup on driver removal. Since Mani
-  pointed out that the driver cannot be removed until the IRQ issues are
-  fixed, the driver's remove function hasn't been updated and therefore
-  the helpers have been discarded.
-- The commit message of patch 09/10 of the v2 series has been updated,
-  keeping it concise and focusing on the issue and the fix. Moreover, a
-  'Fixes' tag has been included although a backport isn't necessary, in
-  order to address Mani's feedback.
-- All changes associated with driver removal in patch 10/10 of the v2
-  series have been discarded.
-- Patch relation between v2 and v3 series is as follows:
-  v3 01/04 => v2 01/10
-  v3 02/04 => v2 02/10 + 04/10
-  v3 03/04 => v2 09/10
-  v3 04/04 => v2 10/10
+- The commit subject and description has been updated to keep it concise
+  and highlight the issue and the fix.
+- A "Fixes" tag has been added but 'stable' hasn't been CCed on purpose
+  since backporting the patch isn't required - doesn't enable
+  functionality.
 
-For testing the series, Linux has been built in the following manner:
-1. Check out at commit dc72930fe22e Merge branch 'pci/misc' of pci/next
-2. Apply commit and patch series mentioned as dependencies above.
-3. Apply current series.
-4. Build Linux with CONFIG_PCI_KEYSTONE, CONFIG_PCI_KEYSTONE_HOST and
-   CONFIG_PCI_KEYSTONE_EP set to 'm'.
+ drivers/pci/controller/dwc/pci-keystone.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-Series has been tested on AM654-EVM with an NVMe SSD connected to the
-PCIe connector on the board and verifying that the NVMe SSD enumerates
-successfully. Additionally, the 'hdparm' utility has been used to read
-the NVMe SSD for verifying functionality. Test Logs:
-https://gist.github.com/Siddharth-Vadapalli-at-TI/182a80bb43e9c407982f7674034a7c9d
-
-Regards,
-Siddharth.
-
-Siddharth Vadapalli (4):
-  PCI: Export pci_get_host_bridge_device() for use by pci-keystone
-  PCI: dwc: Export dw_pcie_allocate_domains() and
-    dw_pcie_ep_raise_msix_irq()
-  PCI: keystone: Exit ks_pcie_probe() for invalid mode
-  PCI: keystone: Add support to build as a loadable module
-
- drivers/pci/controller/dwc/Kconfig                | 6 +++---
- drivers/pci/controller/dwc/pci-keystone.c         | 8 ++++++++
- drivers/pci/controller/dwc/pcie-designware-ep.c   | 1 +
- drivers/pci/controller/dwc/pcie-designware-host.c | 1 +
- drivers/pci/host-bridge.c                         | 1 +
- include/linux/pci.h                               | 1 +
- 6 files changed, 15 insertions(+), 3 deletions(-)
-
+diff --git a/drivers/pci/controller/dwc/pci-keystone.c b/drivers/pci/controller/dwc/pci-keystone.c
+index d03e95bf7d54..f9f8235ea3cd 100644
+--- a/drivers/pci/controller/dwc/pci-keystone.c
++++ b/drivers/pci/controller/dwc/pci-keystone.c
+@@ -1337,6 +1337,8 @@ static int ks_pcie_probe(struct platform_device *pdev)
+ 		break;
+ 	default:
+ 		dev_err(dev, "INVALID device type %d\n", mode);
++		ret = -EINVAL;
++		goto err_get_sync;
+ 	}
+ 
+ 	ks_pcie_enable_error_irq(ks_pcie);
 -- 
 2.43.0
 
