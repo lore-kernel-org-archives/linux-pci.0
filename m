@@ -1,228 +1,169 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E16233112AB;
-	Mon, 22 Sep 2025 16:16:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06C383112C6
+	for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2025 16:18:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758557815; cv=none; b=E3tcyw6VsIf+LlKJC0yH9jqif3qVeqYaFlh/iPt5CvJL1GW/DiE6DErhzp8aY36Z03UZzA89iT/3R8+Ia6qIi7thPaNI8bbLJCdQPTp+D7hPFlxaeB4xq2sXPc5sTpGgU8M0+S0V/zPvUtFBaJMUVvbv+hwf17PBD/s0JgQfCQU=
+	t=1758557916; cv=none; b=kvVkUuLC0kHVEJgcboImY2aAYO/TGMcISkb/hm0KXil0lJSqY0Qf4vPoA2OicId86O0v4Ew5WAeieJkEcLPb09aorvfwpp1dX3pvhDPt/8PivmfA2l/preW5PMwt6g8kj9N6K8WDAYHvyXwPqbp5wL5pZTxyWmxV/5cAWHzNvHo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758557815; c=relaxed/simple;
-	bh=3KRFRpeE1ryZFSV8O8dqF89VWCo4voMUOBeDYSG48hU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=jmPxoKAFQM7WilaE65Ckh72VobNkz7Pih6ZeabUfSR/j0/LcMQmtBzQ+yMB9mbTV5Jvzd/AQEeeWTFCqBNgl4a3S/tZWVA0inxQNzjbuDW+7UuqDrFiMxIt+3axDi6KGIV7FPyU4/WdmwWTCfiA6r1Y/mR0kzzG427wy5hbvpTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lIPck4hg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758557916; c=relaxed/simple;
+	bh=/6cwwyx95yFe2VTI7rjAQhARkqn7dtwQ1pD0HDEwEf8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=AIqsIkCzD7W//EFLxfvdHwo35mAxWBO7Uiw0VZj1iZTss6sdp7am6sBWcv1TTjbLt62PTmsSsJl3SGPw3cZCErbZxjxB2nIPwaDJNnjQ8zdmxEe0wV1gvLd79r7Z6+oojjfXRg8a3yRmDnvefyDoHysikiWZA4arGqmMCMgL/QQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=B+y0W5jr; arc=none smtp.client-ip=209.85.167.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lIPck4hg"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6DF65C113D0;
-	Mon, 22 Sep 2025 16:16:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758557814;
-	bh=3KRFRpeE1ryZFSV8O8dqF89VWCo4voMUOBeDYSG48hU=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
-	b=lIPck4hgOCkjWjHGAnibSFIJV8CvvuVCRKt8oNTOITkrGT6uMhPuKuK17IKiS7qeZ
-	 svuFnAFNcMJSmupVFxgd0u1vGyKe05HPxjkghIvoSfvmLWEGpcbgGrOy12Dd+HP7js
-	 81+3o1NGmgWPpvRfGe2YRqj9O+r6cfENjfhB9zTmdjPEXzGuSuqVCkyiC6IOd/WLEc
-	 t9yNOhAqLe88tDKecijZkjgN9UijWOsSS70qe/unO0EdpGpmhi8+RUnEXom3/WUiOR
-	 EgxsFud2/XHcoLJbqTO0BFYUSz1rYhK0MfCljOwCcJGt2QZ1WYVxTLi2O8LtgPo5hl
-	 pg3ugEENT3SqQ==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5C6C2CAC592;
-	Mon, 22 Sep 2025 16:16:54 +0000 (UTC)
-From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
-Date: Mon, 22 Sep 2025 21:46:44 +0530
-Subject: [PATCH v2 1/2] PCI/ASPM: Override the ASPM and Clock PM states set
- by BIOS for devicetree platforms
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="B+y0W5jr"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-57e03279bfeso1858303e87.0
+        for <linux-pci@vger.kernel.org>; Mon, 22 Sep 2025 09:18:34 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758557913; x=1759162713; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=QWRtWQb4tDxw+RDTltwl4oqgAah0j63IckQcO9ISpds=;
+        b=B+y0W5jrON3vUgE9gMEjzzqgeI4CAYy4nBbbY2kwy2f/A4ITKm4642WsSqHc1IOO7e
+         kCfaNepv0TA2wrq50eHN8JORs97F/CWkyN80iYj0zTvTtfFFw80J1JcpskcK9rjvLBnw
+         ZfnqfoBg1IOxhV+nznb386tOUfe0nDG4tTkxWU3Kq8rsEI4WvT6CVftMsqtvitG4CnM+
+         3u4mhK16x0Z4Ltlk8nRYp9OngR9AqX0OglLpLql1cGh+R2IhXef2PBUbBYB+1jLflowd
+         44wWRm9omEbwWDF08trX2f4sJnETtd7KirofR85e6rEMxxl0XCKJNbS+Qiavt+5hlYJa
+         rcNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758557913; x=1759162713;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=QWRtWQb4tDxw+RDTltwl4oqgAah0j63IckQcO9ISpds=;
+        b=QlW1GjFsCcq1T8fdmD/FWTgksOX22UVl5Lonw+5D6/8W9ICakuLJqSCmyz3298VJ1p
+         +wV7674PXBAvvRdove6mOdNS1bm6EwjnrgfjsyHXvmHiOLoRXQ5Qhv1UK5yM6XB5oFaG
+         fEXXLyo4RYVrR5uVntRg2KUHv8mICJFDkJ4Q2YViDZHii0PNSTYMCyb8Hzv9u+t7E739
+         BgPPiQnxvcY7f1tUYgubxZ42GSBF5xM0w2sXkvve4/ODrTmQcR+JGkp3/pXoSeh8HX7m
+         wSl1I3geexZgdIAB5sKd7wBPOI9AisZ63D6VUmki8MnAv4LAzHJwDr/BHRX27Zs6c2lw
+         gu6g==
+X-Forwarded-Encrypted: i=1; AJvYcCU78e1ECr0xHZLEvGeoX9od4UX4HVkEK0HkhpQurEoEe14pcOUeZo9dPJKD2C7gIM5bRypiueRv8hw=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwmNRZehBdQckoFltNGLjWKpmd3jemQzwHHU+2LFKR1Eucno1XR
+	/Vk+VmReLsVXxieCYhgwusFFw7YM9GaFz4ABrI1ZhzGltPDTVtyj4xo5nM6Z6lb1GpJXsKR5oMi
+	N/m4wCg421p77glQsU8xzGVGSP/D72jw=
+X-Gm-Gg: ASbGnctzqbxlXGQgHp3xm6vLdIB5dq6qyV6rAHIWROCgzu9J9pxwQGLbWqDzHVtW6IB
+	ytDnfgwUYDXKQEGrwEVJgjKAU7ZFSnLC4Zql9lZcYbdpVR1/9vt47NqmI1hOpRnvYoTnL+/7/uV
+	UaArxSe3nJ2c3SZj7RekuHHV3N9+cmIhe/+zUxVoPKWdqj/nnyIeN829JreLCpLGd/2hCORmg6j
+	5IJmHs=
+X-Google-Smtp-Source: AGHT+IHbkCgbJFbDcK840KctNsVPKayfAg5z4hva0W8zSa5d3VGIBMvbwMO4roIb9UisDL440+gagdm9md1t8goV1+E=
+X-Received: by 2002:a05:6512:4504:b0:57d:d62e:b1fe with SMTP id
+ 2adb3069b0e04-57dd62eb499mr1348510e87.10.1758557912953; Mon, 22 Sep 2025
+ 09:18:32 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250922-pci-dt-aspm-v2-1-2a65cf84e326@oss.qualcomm.com>
-References: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
-In-Reply-To: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
-To: Bjorn Helgaas <bhelgaas@google.com>, 
- Manivannan Sadhasivam <mani@kernel.org>, 
- Lorenzo Pieralisi <lpieralisi@kernel.org>, 
- =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
- Rob Herring <robh@kernel.org>
-Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
- linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>, 
- Kai-Heng Feng <kai.heng.feng@canonical.com>, 
- "Rafael J. Wysocki" <rafael@kernel.org>, 
- Heiner Kallweit <hkallweit1@gmail.com>, 
- Chia-Lin Kao <acelan.kao@canonical.com>, 
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, 
- Bjorn Helgaas <helgaas@kernel.org>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=6329;
- i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
- bh=zOY/YZNFZgYDJqgX5yqfztyJ+9R+sQwSgHsfQBHv6p0=;
- b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBo0XZ0SjjmwAGqE8BXfPlpBPUHmvkTYg+5DT2LD
- Xm4YdqjzEmJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaNF2dAAKCRBVnxHm/pHO
- 9Ym+B/wOCDXEuLOwpseiw93QczJKiKKJRiH5FfWdXZpkcC1w948wqyZGk43A1VVk+aE0Likim6v
- Fml+hnqtQo9B7tfCEvNYNshYNHCGsyssr0VYOYPkwPg7ju7Y8Lbg+fEhn/39I1oH7FpT/JyQv6C
- ctfPr4VIjzJRU2QIkGDB70jDvdqRlAkPqcb0XA3PSEER9kDcykJK5srYA+wL0tfqwh1Rp1lR3sD
- nbkkzmmaFvnxmZjc2QsBKO1tiKTn2NbgodSVFPlrtYewxNkd74sfK+gSE1uM9iEaKnN7yh8O/oZ
- g/RBZ3KufcKgh7N6piZVC0B6RF+3osPJlmGL9Ozu5Dn+yvM2
-X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
- fpr=C668AEC3C3188E4C611465E7488550E901166008
-X-Endpoint-Received: by B4 Relay for
- manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
-X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Reply-To: manivannan.sadhasivam@oss.qualcomm.com
+References: <20250731-pci-tegra-module-v7-0-cad4b088b8fb@gmail.com>
+ <CALHNRZ9tOJccZ5sQjvkoPe4-+VUtWRxAzAOUainGUCs4+_RBCw@mail.gmail.com>
+ <omchhpbmsydfcsm6mzmbdiupsrxmxxvkxqf33fgi563akn76vf@vkc7k2zhlvee> <CALHNRZ8PZzseaTSCvhM6o7jMVYtVdHTczurXh1q+DY5MG62+DA@mail.gmail.com>
+In-Reply-To: <CALHNRZ8PZzseaTSCvhM6o7jMVYtVdHTczurXh1q+DY5MG62+DA@mail.gmail.com>
+From: Aaron Kling <webgeek1234@gmail.com>
+Date: Mon, 22 Sep 2025 11:18:21 -0500
+X-Gm-Features: AS18NWCkrA0Swv5I_sKNAMQ_VfnE8PJr0_nR10ONiX1dW-00lBFelqUkDRsus4A
+Message-ID: <CALHNRZ8mKZRS=ddyuscoTqu4h8GDR3fM8k36gbjth-csd10GGg@mail.gmail.com>
+Subject: Re: [PATCH v7 0/3] PCI: tegra: Allow building as a module
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Daniel Lezcano <daniel.lezcano@linaro.org>, Thomas Gleixner <tglx@linutronix.de>, 
+	Lorenzo Pieralisi <lpieralisi@kernel.org>, Rob Herring <robh@kernel.org>, 
+	Bjorn Helgaas <bhelgaas@google.com>, Thierry Reding <thierry.reding@gmail.com>, 
+	Jonathan Hunter <jonathanh@nvidia.com>, "Rafael J. Wysocki" <rafael@kernel.org>, 
+	=?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org, 
+	linux-tegra@vger.kernel.org, linux-pm@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+On Mon, Aug 18, 2025 at 1:39=E2=80=AFPM Aaron Kling <webgeek1234@gmail.com>=
+ wrote:
+>
+> On Fri, Aug 1, 2025 at 1:01=E2=80=AFAM Manivannan Sadhasivam <mani@kernel=
+.org> wrote:
+> >
+> > On Thu, Jul 31, 2025 at 05:01:55PM GMT, Aaron Kling wrote:
+> > > On Thu, Jul 31, 2025 at 4:59=E2=80=AFPM Aaron Kling via B4 Relay
+> > > <devnull+webgeek1234.gmail.com@kernel.org> wrote:
+> > > >
+> > > > Signed-off-by: Aaron Kling <webgeek1234@gmail.com>
+> > > > ---
+> > > > Changes in v7:
+> > > > - Rebased on 6.16
+> > > > - Updated mailing address list
+> > > > - Link to v6: https://lore.kernel.org/r/20250507-pci-tegra-module-v=
+6-0-5fe363eaa302@gmail.com
+> > > >
+> > > > Changes in v6:
+> > > > - Remove unused debugfs cleanup function, as caught by kernel ci
+> > > > - Link to v5: https://lore.kernel.org/r/20250505-pci-tegra-module-v=
+5-0-827aaac998ba@gmail.com
+> > > >
+> > > > Changes in v5:
+> > > > - Copy commit message exactly word for word on patch 1, as required=
+ by reviewer
+> > > > - Delete remove callback in patch 3, per request
+> > > > - Don't clean up debugfs, per request, which drops patch 4 entirely
+> > > > - Link to v4: https://lore.kernel.org/r/20250505-pci-tegra-module-v=
+4-0-088b552c4b1a@gmail.com
+> > > >
+> > > > Changes in v4:
+> > > > - Updated commit messages for patches 1 and 2, per review
+> > > > - Link to v3: https://lore.kernel.org/r/20250502-pci-tegra-module-v=
+3-0-556a49732d70@gmail.com
+> > > >
+> > > > Changes in v3:
+> > > > - Add patch to drop remove callback, per request
+> > > > - Link to v2: https://lore.kernel.org/r/20250428-pci-tegra-module-v=
+2-0-c11a4b912446@gmail.com
+> > > >
+> > > > Changes in v2:
+> > > > - Add patch to export tegra_cpuidle_pcie_irqs_in_use as required wh=
+en
+> > > >   building pci-tegra as a module for arm
+> > > > - Drop module exit to prevent module unloading, as requested
+> > > > - Link to v1: https://lore.kernel.org/r/20250420-pci-tegra-module-v=
+1-0-c0a1f831354a@gmail.com
+> > > >
+> > > > ---
+> > > > Aaron Kling (3):
+> > > >       irqdomain: Export irq_domain_free_irqs
+> > > >       cpuidle: tegra: Export tegra_cpuidle_pcie_irqs_in_use
+> > > >       PCI: tegra: Allow building as a module
+> > > >
+> > > >  drivers/cpuidle/cpuidle-tegra.c    |  1 +
+> > > >  drivers/pci/controller/Kconfig     |  2 +-
+> > > >  drivers/pci/controller/pci-tegra.c | 35 ++++----------------------=
+---------
+> > > >  kernel/irq/irqdomain.c             |  1 +
+> > > >  4 files changed, 7 insertions(+), 32 deletions(-)
+> > > > ---
+> > > > base-commit: 038d61fd642278bab63ee8ef722c50d10ab01e8f
+> > > > change-id: 20250313-pci-tegra-module-7cbd1c5e70af
+> > > >
+> > > > Best regards,
+> > > > --
+> > > > Aaron Kling <webgeek1234@gmail.com>
+> > > >
+> > > >
+> > >
+> > > Continuing the conversation from the last revision [0]. Is there any
+> > > path forward for this series?
+> > >
+> >
+> > Daniel, could you please look into the cpufreq patch?
+>
+> Another two weeks with no response to a review request. And over two
+> months total since the cpuidle maintainers were initially asked to
+> look. Is there a policy for dealing with lack of responses?
 
-So far, the PCI subsystem has honored the ASPM and Clock PM states set by
-the BIOS (through LNKCTL) during device initialization, if it relies on the
-default state selected using:
+Another month with no response. Can something be done with this,
+please? If the subsystem maintainers don't respond, can they be
+overridden by anyone? Who would the next step up even be? Does it go
+directly from subsystem maintainers to Torvalds himself?
 
-* Kconfig: CONFIG_PCIEASPM_DEFAULT=y, or
-* cmdline: "pcie_aspm=off", or
-* FADT: ACPI_FADT_NO_ASPM
-
-This was done conservatively to avoid issues with the buggy devices that
-advertise ASPM capabilities, but behave erratically if the ASPM states are
-enabled. So the PCI subsystem ended up trusting the BIOS to enable only the
-ASPM states that were known to work for the devices.
-
-But this turned out to be a problem for devicetree platforms, especially
-the ARM based devicetree platforms powering Embedded and *some* Compute
-devices as they tend to run without any standard BIOS. So the ASPM states
-on these platforms were left disabled during boot and the PCI subsystem
-never bothered to enable them, unless the user has forcefully enabled the
-ASPM states through Kconfig, cmdline, and sysfs or the device drivers
-themselves, enabling the ASPM states through pci_enable_link_state() APIs.
-
-This caused runtime power issues on those platforms. So a couple of
-approaches were tried to mitigate this BIOS dependency without user
-intervention by enabling the ASPM states in the PCI controller drivers
-after device enumeration, and overriding the ASPM/Clock PM states
-by the PCI controller drivers through an API before enumeration.
-
-But it has been concluded that none of these mitigations should really be
-required and the PCI subsystem should enable the ASPM states advertised by
-the devices without relying on BIOS or the PCI controller drivers. If any
-device is found to be misbehaving after enabling ASPM states that they
-advertised, then those devices should be quirked to disable the problematic
-ASPM/Clock PM states.
-
-In an effort to do so, start by overriding the ASPM and Clock PM states set
-by the BIOS for devicetree platforms first. Separate helper functions are
-introduced to override the BIOS set states by enabling all of them if
-of_have_populated_dt() returns true. To aid debugging, print the overridden
-ASPM and Clock PM states as well.
-
-In the future, these helpers could be extended to allow other platforms
-like VMD, newer ACPI systems with a cutoff year etc... to follow the path.
-
-Link: https://lore.kernel.org/linux-pci/20250828204345.GA958461@bhelgaas
-Suggested-by: Bjorn Helgaas <helgaas@kernel.org>
-Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-Link: https://patch.msgid.link/20250916-pci-dt-aspm-v1-1-778fe907c9ad@oss.qualcomm.com
----
- drivers/pci/pcie/aspm.c | 42 ++++++++++++++++++++++++++++++++++++++++--
- 1 file changed, 40 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/pci/pcie/aspm.c b/drivers/pci/pcie/aspm.c
-index 919a05b9764791c3cc469c9ada62ba5b2c405118..cda31150aec1b67b6a48b60569222ea3d1c3d41f 100644
---- a/drivers/pci/pcie/aspm.c
-+++ b/drivers/pci/pcie/aspm.c
-@@ -15,6 +15,7 @@
- #include <linux/math.h>
- #include <linux/module.h>
- #include <linux/moduleparam.h>
-+#include <linux/of.h>
- #include <linux/pci.h>
- #include <linux/pci_regs.h>
- #include <linux/errno.h>
-@@ -235,13 +236,15 @@ struct pcie_link_state {
- 	u32 aspm_support:7;		/* Supported ASPM state */
- 	u32 aspm_enabled:7;		/* Enabled ASPM state */
- 	u32 aspm_capable:7;		/* Capable ASPM state with latency */
--	u32 aspm_default:7;		/* Default ASPM state by BIOS */
-+	u32 aspm_default:7;		/* Default ASPM state by BIOS or
-+					   override */
- 	u32 aspm_disable:7;		/* Disabled ASPM state */
- 
- 	/* Clock PM state */
- 	u32 clkpm_capable:1;		/* Clock PM capable? */
- 	u32 clkpm_enabled:1;		/* Current Clock PM state */
--	u32 clkpm_default:1;		/* Default Clock PM state by BIOS */
-+	u32 clkpm_default:1;		/* Default Clock PM state by BIOS or
-+					   override */
- 	u32 clkpm_disable:1;		/* Clock PM disabled */
- };
- 
-@@ -373,6 +376,18 @@ static void pcie_set_clkpm(struct pcie_link_state *link, int enable)
- 	pcie_set_clkpm_nocheck(link, enable);
- }
- 
-+static void pcie_clkpm_override_default_link_state(struct pcie_link_state *link,
-+						   int enabled)
-+{
-+	struct pci_dev *pdev = link->downstream;
-+
-+	/* Override the BIOS disabled Clock PM state for devicetree platforms */
-+	if (of_have_populated_dt() && !enabled) {
-+		link->clkpm_default = 1;
-+		pci_info(pdev, "Clock PM state overridden: ClockPM+\n");
-+	}
-+}
-+
- static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
- {
- 	int capable = 1, enabled = 1;
-@@ -395,6 +410,7 @@ static void pcie_clkpm_cap_init(struct pcie_link_state *link, int blacklist)
- 	}
- 	link->clkpm_enabled = enabled;
- 	link->clkpm_default = enabled;
-+	pcie_clkpm_override_default_link_state(link, enabled);
- 	link->clkpm_capable = capable;
- 	link->clkpm_disable = blacklist ? 1 : 0;
- }
-@@ -788,6 +804,26 @@ static void aspm_l1ss_init(struct pcie_link_state *link)
- 		aspm_calc_l12_info(link, parent_l1ss_cap, child_l1ss_cap);
- }
- 
-+static void pcie_aspm_override_default_link_state(struct pcie_link_state *link)
-+{
-+	struct pci_dev *pdev = link->downstream;
-+	u32 override;
-+
-+	/* Override the BIOS disabled ASPM states for devicetree platforms */
-+	if (of_have_populated_dt()) {
-+		link->aspm_default = PCIE_LINK_STATE_ASPM_ALL;
-+		override = link->aspm_default & ~link->aspm_enabled;
-+		if (override)
-+			pci_info(pdev, "ASPM states overridden: %s%s%s%s%s%s\n",
-+				 (override & PCIE_LINK_STATE_L0S) ? "L0s+, " : "",
-+				 (override & PCIE_LINK_STATE_L1) ? "L1+, " : "",
-+				 (override & PCIE_LINK_STATE_L1_1) ? "L1.1+, " : "",
-+				 (override & PCIE_LINK_STATE_L1_2) ? "L1.2+, " : "",
-+				 (override & PCIE_LINK_STATE_L1_1_PCIPM) ? "L1.1 PCI-PM+, " : "",
-+				 (override & PCIE_LINK_STATE_L1_2_PCIPM) ? "L1.2 PCI-PM+" : "");
-+	}
-+}
-+
- static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- {
- 	struct pci_dev *child = link->downstream, *parent = link->pdev;
-@@ -868,6 +904,8 @@ static void pcie_aspm_cap_init(struct pcie_link_state *link, int blacklist)
- 	/* Save default state */
- 	link->aspm_default = link->aspm_enabled;
- 
-+	pcie_aspm_override_default_link_state(link);
-+
- 	/* Setup initial capable state. Will be updated later */
- 	link->aspm_capable = link->aspm_support;
- 
-
--- 
-2.48.1
-
-
+Aaron
