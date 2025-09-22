@@ -1,148 +1,166 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3E41310631;
-	Mon, 22 Sep 2025 16:00:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADE041662E7;
+	Mon, 22 Sep 2025 16:16:54 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758556843; cv=none; b=UZnxD2VaTxKD1K0g/SY066LJ5wJoAqA5A/CpofZIbkEOq50wL6rTnapdh7DgChVk1kVJfCYyvg1z8hGllv7HRJOxben4pCMeiJxzRDu2Db1g21HLEwaNTXonc5aOZnXI8Nyc75ckdmGcWbHN7oTdO6FM4KsXmE9Mgzy150bPdfE=
+	t=1758557814; cv=none; b=qiuOqeUxvf3UvQPObnrGTCmpAL7+uIqKNki3RqT/V6lmfqsgKNxk/Ugd6oIdUXf7sqUAPEsm/pozsNMkpSNmEnfaY2D6peBTgDb1UpGidXAxALGQh9MwJVML7DZ00m6r2NfUsjKtQX6uWBSb1oNbJKIB6mg4Y6145vJ3Qsu/VX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758556843; c=relaxed/simple;
-	bh=tN3bD2H2hywgmXmr6c7wrc6sPu/laqqscRaX8xpDD5Y=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=j7lXhXUDbF1pobhCStFpYmqlueX1tP0u7DCYDGw1AX8AAt6tAscZ8OuetiFpj/+oQP6rGIuVHTu6zTPb3UqZj2jCDyrf4foexxI677o0sluMrHNeIJE4s9wB/C0M98v9+rk7qi+2j58LkPdnh1wARvqNN+/9pKQ0j67cwFnvzrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HiniiZue; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758557814; c=relaxed/simple;
+	bh=40eGwaZGt0426y8h5tNB3LgiDgmJeajd/RksG77m4nE=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
+	 In-Reply-To:To:Cc; b=tXPFZyEkHXkBo87MI3gzsBghWdlDKRu6fMmHJmCJJmbMC1mnuxt2FGsM+1iS2wF4+qT6ociJMFkudMGDnGXYKpfzZ6reJkKla1kT1QdRvmVF/SECntNiUKXcc5oF3q9p9COv8/ad2FaUere/IJj0BuRvTreANqpmTOEeysrN0Hw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rYSOnV80; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HiniiZue"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 211CEC4CEF0;
-	Mon, 22 Sep 2025 16:00:43 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rYSOnV80"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 79C88C4CEF7;
+	Mon, 22 Sep 2025 16:16:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758556843;
-	bh=tN3bD2H2hywgmXmr6c7wrc6sPu/laqqscRaX8xpDD5Y=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=HiniiZuejHBgGsVzECr4RamWlQq9ic4F1OWgS9gCp4uPk3TgXsgatnVfRp3ZPcSvq
-	 hNtksF2YTOpHb91I8DRmCDavdlsC4uc/AehVpD3a511EqRVfK+tBYBlB2IMz1hu4r7
-	 lyRFvRNprebE06GGlgmXzfVl5t8snzZHZFY2UB+4IadASJdpA4FNBytMWfii3OfbmM
-	 xloyHx1EoY5EfYvOIHCHfBeRKq21mPW6ZonSuTBcinkQEbQZ4QAlYvZlSm3wR5ooKI
-	 R9JQyn2nIiRhFm2esloeOHOosOQPSJ8CRmlZN0064fc5Kjw6J3YEloWq48SMxIXgIq
-	 q92a+pgtBeujg==
-Date: Mon, 22 Sep 2025 11:00:41 -0500
-From: Bjorn Helgaas <helgaas@kernel.org>
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Rob Herring <robh@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
-	Bartosz Golaszewski <brgl@bgdev.pl>,
-	Saravana Kannan <saravanak@google.com>, linux-pci@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	Krishna Chaitanya Chundru <krishna.chundru@oss.qualcomm.com>,
-	Brian Norris <briannorris@chromium.org>
-Subject: Re: [PATCH v3 4/4] PCI: qcom: Allow pwrctrl core to control PERST#
- if 'reset-gpios' property is available
-Message-ID: <20250922160041.GA1972113@bhelgaas>
+	s=k20201202; t=1758557814;
+	bh=40eGwaZGt0426y8h5tNB3LgiDgmJeajd/RksG77m4nE=;
+	h=From:Date:Subject:References:In-Reply-To:To:Cc:Reply-To:From;
+	b=rYSOnV80/tC/gg2PuDA/UErh9WG8OaOyBxFLDAEgpw+vaIaA0EMEQJtmokhIfNyQ1
+	 yWwIx3QWIxFBkYZjE/PTSwOkAqQ00kqQUkyPe0KEm4dcDSQTP5mgj0DopToHIthvcK
+	 FlZQ4x4m3BYbYJlUS16vxZGR9iIJWsfDtIGsujjw7BAZO6ytU8E6Zb69q6/vltHCrB
+	 jF/s+quYxO1oAF9B+QaWhY5nuoEA6yOhqC+H68WgcGSaofxRW9dsPwzUZJMLMn3U3u
+	 eNQ0a+75otjlcXUyMgzF6Chf15BWNVcLAJxXDfE+s5GUnTh7eAE5uGkP4mmsqiaKJc
+	 SIfXGGnxDK3bQ==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 6C1ABCA100F;
+	Mon, 22 Sep 2025 16:16:54 +0000 (UTC)
+From: Manivannan Sadhasivam via B4 Relay <devnull+manivannan.sadhasivam.oss.qualcomm.com@kernel.org>
+Date: Mon, 22 Sep 2025 21:46:45 +0530
+Subject: [PATCH v2 2/2] PCI: qcom: Remove the custom ASPM enablement code
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <nxcr6ymgspcdofoy7cv4lok34qqucwrm4cxn7a7spqrszgmvin@x3mhucqy2tb3>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20250922-pci-dt-aspm-v2-2-2a65cf84e326@oss.qualcomm.com>
+References: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
+In-Reply-To: <20250922-pci-dt-aspm-v2-0-2a65cf84e326@oss.qualcomm.com>
+To: Bjorn Helgaas <bhelgaas@google.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, 
+ Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+ =?utf-8?q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>, 
+ Rob Herring <robh@kernel.org>
+Cc: linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-msm@vger.kernel.org, "David E. Box" <david.e.box@linux.intel.com>, 
+ Kai-Heng Feng <kai.heng.feng@canonical.com>, 
+ "Rafael J. Wysocki" <rafael@kernel.org>, 
+ Heiner Kallweit <hkallweit1@gmail.com>, 
+ Chia-Lin Kao <acelan.kao@canonical.com>, 
+ Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3174;
+ i=manivannan.sadhasivam@oss.qualcomm.com; h=from:subject:message-id;
+ bh=tvss3MdfYHL+rXNvlS+8nnRAEkq4Tu6jTREwynbA5UI=;
+ b=owEBbQGS/pANAwAKAVWfEeb+kc71AcsmYgBo0XZ0zMPEa/DPJ+/ZwL1+RCq8cOUUe8oEBjqgD
+ MnAAtPBIMSJATMEAAEKAB0WIQRnpUMqgUjL2KRYJ5dVnxHm/pHO9QUCaNF2dAAKCRBVnxHm/pHO
+ 9RYKB/9IT1Etlbn5Ys0d/XY24CXy3zkX6IKyRfYR1n1iRay5ZzhNSw3l8xWyKGzikZhWbZKvqCN
+ YFb4fC/NV2gRjhsUUL78m0950MpeXr7LsIw//RAVZoHXCsbj6nVGq8A+uBSN4B9s9t2E8O6xTeu
+ zn+ufAd3a1LhgLxmzLrEVXe9Dp3DHdi9F5JxMC4jXhX1QJ4xiQI4iMkwEJAOoZQaPm21/XV6TTF
+ aRWtnJxR/DTo5hXi7swpOxEdC7ToW8sgb8z49qDWWk7BE2m5WOd3g/9FX7OAxGP/63Xzm4JYRg9
+ w2gqZY7EgfwuNYrphxzXvjgzEHnAToXve4Xsweck19w9g0iI
+X-Developer-Key: i=manivannan.sadhasivam@oss.qualcomm.com; a=openpgp;
+ fpr=C668AEC3C3188E4C611465E7488550E901166008
+X-Endpoint-Received: by B4 Relay for
+ manivannan.sadhasivam@oss.qualcomm.com/default with auth_id=461
+X-Original-From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Reply-To: manivannan.sadhasivam@oss.qualcomm.com
 
-On Fri, Sep 19, 2025 at 01:45:51PM +0530, Manivannan Sadhasivam wrote:
-> On Thu, Sep 18, 2025 at 01:53:56PM -0500, Bjorn Helgaas wrote:
-> > On Wed, Sep 17, 2025 at 03:53:25PM +0530, Manivannan Sadhasivam wrote:
-> > > On Tue, Sep 16, 2025 at 03:48:10PM GMT, Bjorn Helgaas wrote:
-> > > > On Fri, Sep 12, 2025 at 02:05:04PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > > > > From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > > > > 
-> > > > > For historic reasons, the pcie-qcom driver was controlling the
-> > > > > power supply and PERST# GPIO of the PCIe slot.
-> > > > 
-> > > > > This turned out to be an issue as the power supply requirements
-> > > > > differ between components. For instance, some of the WLAN
-> > > > > chipsets used in Qualcomm systems were connected to the Root
-> > > > > Port in a non-standard way using their own connectors.
-> > > > 
-> > > > This is kind of hand-wavy.  I don't know what a non-standard
-> > > > connector has to do with this.  I assume there's still a PCIe link
-> > > > from Root Port to WLAN, and there's still a PERST# signal to the
-> > > > WLAN device and a Root Port GPIO that asserts/deasserts it.
-> > > 
-> > > If we have a non-standard connector, then the power supply
-> > > requirements change.  There is no longer the standard 3.3v, 3.3Vaux,
-> > > 1.8v supplies, but plenty more.  For instance, take a look at the
-> > > WCN6855 WiFi/BT combo chip in the Lenovo X13s laptop:
-> > > 
-> > > https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/arch/arm64/boot/dts/qcom/sc8280xp-lenovo-thinkpad-x13s.dts#n414
-> > > 
-> > > These supplies directly go from the host PMIC to the WCN6855 chip
-> > > integrated in the PCB itself. And these supplies need to be turned
-> > > on/off in a sequence also, together with the EN/SWCTRL GPIOs, while
-> > > sharing with the Bluetooth driver.
-> > 
-> > It sounds like the WCN6855 power supplies have nothing to do with the
-> > qcom PCIe controller, the Root Port, or any switches leading to the
-> > WCN6855.  And I guess the same for the wlan-enable, bt-enable, and
-> > swctrl GPIOs?
-> > 
-> >   wcn6855-pmu {
-> >           compatible = "qcom,wcn6855-pmu";
-> >           wlan-enable-gpios = <&tlmm 134 GPIO_ACTIVE_HIGH>;
-> >           bt-enable-gpios = <&tlmm 133 GPIO_ACTIVE_HIGH>;
-> >           swctrl-gpios = <&tlmm 132 GPIO_ACTIVE_HIGH>;
-> >           regulators {
-> >                   vreg_pmu_rfa_cmn_0p8: ldo0 {
-> >                           regulator-name = "vreg_pmu_rfa_cmn_0p8";
-> >                   ...
-> > 
-> >   &pcie4_port0 {
-> >           wifi@0 {
-> >                   compatible = "pci17cb,1103";
-> >                   vddrfacmn-supply = <&vreg_pmu_rfa_cmn_0p8>;
-> >                   ...
-> > 
-> > But I guess PERST# isn't described in the same place (not in
-> > wcn6855-pmu)?  Looks like maybe it's this, which IIUC is part of the
-> > pcie4 host bridge?
-> > 
-> >   &pcie4 {
-> >           max-link-speed = <2>;
-> >           perst-gpios = <&tlmm 141 GPIO_ACTIVE_LOW>;
-> >           wake-gpios = <&tlmm 139 GPIO_ACTIVE_LOW>;
-> > 
-> > Does that mean this PERST# signal is driven by a GPIO and routed
-> > directly to the WCN6855?  Seems like there's some affinity between the
-> > WCN6855 power supplies and the WCN6855 PERST# signal, and maybe they
-> > would be better described together?
-> 
-> Yes, 'perst-gpios' is the PERST# signal that goes from the host
-> system to the WCN6855 chip. But we cannot define this signal in the
-> WCN6855 node as the DT binding only allows to define it in the PCI
-> bridge nodes. This is why it is currently defined in the host bridge
-> node. But when this platform switches to the per-Root Port binding,
-> this property will be moved to the Root Port node as 'reset-gpios'.
+From: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
 
-I'm questioning what the right place is to describe PERST#.  Neither
-the host bridge/Root Complex nor the Root Port has any architected
-support for asserting PERST#, so we can't write generic code to handle
-it.
+Since the PCI subsystem has started enabling all ASPM states for all
+devicetree based platforms, the ASPM enablement code from this driver can
+now be dropped.
 
-The PERST# signal is defined by the CEM specs, so can be physically
-included in a standard connector or cable that carries the Link.  The
-Link is originated by a Downstream Port, and the PCIe spec tells us
-how to operate the Link using the DP's Link Control, Link Status, etc.
+Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
+Link: https://patch.msgid.link/20250916-pci-dt-aspm-v1-2-778fe907c9ad@oss.qualcomm.com
+---
+ drivers/pci/controller/dwc/pcie-qcom.c | 32 --------------------------------
+ 1 file changed, 32 deletions(-)
 
-But PERST# might not originate in the Downstream Port, and the spec
-doesn't tell us how to assert/deassert it, so I'm not sure it really
-fits in the same class as things like 'max-link-speed' and
-'num-lanes'.  Maybe it doesn't need to be in either the host bridge or
-the Root Port?
+diff --git a/drivers/pci/controller/dwc/pcie-qcom.c b/drivers/pci/controller/dwc/pcie-qcom.c
+index 294babe1816e4d0c2b2343fe22d89af72afcd6cd..a1c4a9c31f9241e9ca679533323e33c0b972e678 100644
+--- a/drivers/pci/controller/dwc/pcie-qcom.c
++++ b/drivers/pci/controller/dwc/pcie-qcom.c
+@@ -247,7 +247,6 @@ struct qcom_pcie_ops {
+ 	int (*get_resources)(struct qcom_pcie *pcie);
+ 	int (*init)(struct qcom_pcie *pcie);
+ 	int (*post_init)(struct qcom_pcie *pcie);
+-	void (*host_post_init)(struct qcom_pcie *pcie);
+ 	void (*deinit)(struct qcom_pcie *pcie);
+ 	void (*ltssm_enable)(struct qcom_pcie *pcie);
+ 	int (*config_sid)(struct qcom_pcie *pcie);
+@@ -1040,25 +1039,6 @@ static int qcom_pcie_post_init_2_7_0(struct qcom_pcie *pcie)
+ 	return 0;
+ }
+ 
+-static int qcom_pcie_enable_aspm(struct pci_dev *pdev, void *userdata)
+-{
+-	/*
+-	 * Downstream devices need to be in D0 state before enabling PCI PM
+-	 * substates.
+-	 */
+-	pci_set_power_state_locked(pdev, PCI_D0);
+-	pci_enable_link_state_locked(pdev, PCIE_LINK_STATE_ALL);
+-
+-	return 0;
+-}
+-
+-static void qcom_pcie_host_post_init_2_7_0(struct qcom_pcie *pcie)
+-{
+-	struct dw_pcie_rp *pp = &pcie->pci->pp;
+-
+-	pci_walk_bus(pp->bridge->bus, qcom_pcie_enable_aspm, NULL);
+-}
+-
+ static void qcom_pcie_deinit_2_7_0(struct qcom_pcie *pcie)
+ {
+ 	struct qcom_pcie_resources_2_7_0 *res = &pcie->res.v2_7_0;
+@@ -1358,19 +1338,9 @@ static void qcom_pcie_host_deinit(struct dw_pcie_rp *pp)
+ 	pcie->cfg->ops->deinit(pcie);
+ }
+ 
+-static void qcom_pcie_host_post_init(struct dw_pcie_rp *pp)
+-{
+-	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
+-	struct qcom_pcie *pcie = to_qcom_pcie(pci);
+-
+-	if (pcie->cfg->ops->host_post_init)
+-		pcie->cfg->ops->host_post_init(pcie);
+-}
+-
+ static const struct dw_pcie_host_ops qcom_pcie_dw_ops = {
+ 	.init		= qcom_pcie_host_init,
+ 	.deinit		= qcom_pcie_host_deinit,
+-	.post_init	= qcom_pcie_host_post_init,
+ };
+ 
+ /* Qcom IP rev.: 2.1.0	Synopsys IP rev.: 4.01a */
+@@ -1432,7 +1402,6 @@ static const struct qcom_pcie_ops ops_1_9_0 = {
+ 	.get_resources = qcom_pcie_get_resources_2_7_0,
+ 	.init = qcom_pcie_init_2_7_0,
+ 	.post_init = qcom_pcie_post_init_2_7_0,
+-	.host_post_init = qcom_pcie_host_post_init_2_7_0,
+ 	.deinit = qcom_pcie_deinit_2_7_0,
+ 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ 	.config_sid = qcom_pcie_config_sid_1_9_0,
+@@ -1443,7 +1412,6 @@ static const struct qcom_pcie_ops ops_1_21_0 = {
+ 	.get_resources = qcom_pcie_get_resources_2_7_0,
+ 	.init = qcom_pcie_init_2_7_0,
+ 	.post_init = qcom_pcie_post_init_2_7_0,
+-	.host_post_init = qcom_pcie_host_post_init_2_7_0,
+ 	.deinit = qcom_pcie_deinit_2_7_0,
+ 	.ltssm_enable = qcom_pcie_2_3_2_ltssm_enable,
+ };
 
-> Because of this reason, the host controller driver has to parse
-> PERST# from all PCI bridge nodes (like if there is a switch
-> connected, there might be PERST# per downstream port) and share them
-> with the pwrctrl framework.
+-- 
+2.48.1
+
+
