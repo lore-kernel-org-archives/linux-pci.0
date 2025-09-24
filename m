@@ -1,181 +1,187 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E77092C325F;
-	Wed, 24 Sep 2025 08:51:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5FA31E1C02;
+	Wed, 24 Sep 2025 11:32:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758703862; cv=none; b=Z2lDu1ppCvavN19ysIIecYPTkk3Hj9cEQ8mCCf6eW+NlnnOYdtskKukGa94d44kzkLVYk463UhSjI/r3HI+dpACH8s+vgsYLmsdWKdFSsoTXmU9p2eIIrkoLLHC9Szye2CIh/469geuHHSOHYJo1C/Enw8tZHeKuheSVtgyo4yA=
+	t=1758713590; cv=none; b=CIe3h0woXuWYDQPihha7vwuaqa45Kes1vonudIFVDp+jkT6iJCiYsiJs8E8DFGvJnxuuXF94kMXPGAzwixKlXZHUGqECxB3IGOjSKmzZ1Yd+71q7pJAF59/i4lbBF+1wtngkUIv/T26seFps60/pZ5K3avXUHv3LhiYO4bi3aMw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758703862; c=relaxed/simple;
-	bh=PhUkbUI8KogzWtzU+Q9FLveQJuOuUgfGJLwlQrk0GY0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rWlpcxQ1iVVNxZjLAa6XdqtWXzdxj6EaoPPMiR41N6Unxr3otEx1RypSTec2XdgBrJWsxFoxaJxjYp6FV02+16E4UBJWmENrczu17Ung7gC8t7m2I2qxwpyLfaUPDhA+XkNoGuAK+Ucgtn467KcalMEdxZsiOK1PRQMjUSEG3dg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UzOmaFDo; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UzOmaFDo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B36FC4CEE7;
-	Wed, 24 Sep 2025 08:50:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758703861;
-	bh=PhUkbUI8KogzWtzU+Q9FLveQJuOuUgfGJLwlQrk0GY0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=UzOmaFDo+t3rdWk5mkSVOnaSKEq4kk3zzNLtDnufs3/UwDbMSUVwpStOBR9tjdsw/
-	 5r5jNuar+AzHnqvMqe/m6cS9V6QnvChSakUGkLC7lB7ulgNA2ifUFYdKy5UsOP1r2N
-	 FrAFYlteFOFMERs1cbWhYuI56KOSyx7EhAy25V0SMh2n9vTMU99xAb672wxXlzHvac
-	 NZSS9lccrxvAdSNX0AuCxKr1fODGczTsjW43e0xqBKrsWsL9BcrK/+1JoHbKERxf1d
-	 iEWF27wTF7ZqwO1VVVNf7Jzi+b4IQqkPF0HuxlnR36skEtyRjMbMvQ/dLifJT5u5La
-	 zkbToNWuYM3TQ==
-Date: Wed, 24 Sep 2025 14:20:52 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: manivannan.sadhasivam@oss.qualcomm.com, 
-	Bjorn Helgaas <bhelgaas@google.com>, Joerg Roedel <joro@8bytes.org>, Will Deacon <will@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org, Joerg Roedel <jroedel@suse.de>, 
-	iommu@lists.linux.dev, Anders Roxell <anders.roxell@linaro.org>, 
-	Naresh Kamboju <naresh.kamboju@linaro.org>, Pavankumar Kondeti <quic_pkondeti@quicinc.com>, 
-	Xingang Wang <wangxingang5@huawei.com>, Marek Szyprowski <m.szyprowski@samsung.com>, 
-	stable@vger.kernel.org
-Subject: Re: [PATCH 2/2] iommu/of: Call pci_request_acs() before enumerating
- the Root Port device
-Message-ID: <e4fjukl3xkfcxcm5p6jo4davplqlrx4xrpbjhdsduqjlv7oz7l@zilbaf3h6py2>
-References: <20250910-pci-acs-v1-2-fe9adb65ad7d@oss.qualcomm.com>
- <20250923202701.GA2055736@bhelgaas>
+	s=arc-20240116; t=1758713590; c=relaxed/simple;
+	bh=zXdkaMm5737zgERF24VLXd45g2arQuRVjH0AXNbu7xU=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DfTViFSCp/58JexhnF/KPEyusKEZlbL4Umvbr9ykL2mfaBphd6Puc2zsDIdnbZeUPxDzlrMgwdblEihCyX27+2/MUoyX8566LPwZw5h1CFMOc0LJTQrQATwd4Zw3STytkkM/nuJH/1gHfOeI/YsOMBF/kB/nN9zUe1gS9gaPMWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=unknown smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=tempfail smtp.mailfrom=andestech.com
+Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
+	by Atcsqr.andestech.com with ESMTPS id 58OBSUU6074425
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 24 Sep 2025 19:28:30 +0800 (+08)
+	(envelope-from randolph@andestech.com)
+Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
+ (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Wed, 24 Sep 2025
+ 19:28:30 +0800
+From: Randolph Lin <randolph@andestech.com>
+To: <linux-kernel@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <jingoohan1@gmail.com>,
+        <mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
+        <robh@kernel.org>, <bhelgaas@google.com>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <alex@ghiti.fr>, <aou@eecs.berkeley.edu>,
+        <palmer@dabbelt.com>, <paul.walmsley@sifive.com>,
+        <ben717@andestech.com>, <inochiama@gmail.com>,
+        <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
+        <shradha.t@samsung.com>, <randolph.sklin@gmail.com>,
+        <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
+Subject: [PATCH v4 3/5] riscv: dts: andes: Add PCIe node into the QiLai SoC
+Date: Wed, 24 Sep 2025 19:28:18 +0800
+Message-ID: <20250924112820.2003675-4-randolph@andestech.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250924112820.2003675-1-randolph@andestech.com>
+References: <20250924112820.2003675-1-randolph@andestech.com>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250923202701.GA2055736@bhelgaas>
+Content-Type: text/plain
+X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:Atcsqr.andestech.com 58OBSUU6074425
 
-On Tue, Sep 23, 2025 at 03:27:01PM -0500, Bjorn Helgaas wrote:
-> On Wed, Sep 10, 2025 at 11:09:21PM +0530, Manivannan Sadhasivam via B4 Relay wrote:
-> > From: Xingang Wang <wangxingang5@huawei.com>
-> > 
-> > When booting with devicetree, ACS is enabled for all ACS capable PCI
-> > devices except the first Root Port enumerated in the system. This is due to
-> > calling pci_request_acs() after the enumeration and initialization of the
-> > Root Port device. 
-> 
-> I suppose you're referring to a path like below, where we *check*
-> pci_acs_enable during PCI enumeration, but we don't *set* it until we
-> add the device and look for a driver for it?
-> 
->   pci_host_common_init
->     devm_pci_alloc_host_bridge
->       devm_of_pci_bridge_init
->         pci_request_acs
->           pci_acs_enable = 1                    # ++ new set here
->     pci_host_probe
->       pci_scan_root_bus_bridge
->         pci_scan_device
->           pci_init_capabilities
->             pci_enable_acs
->               if (pci_acs_enable)               # test here
->                 ...
->       pci_bus_add_devices
->         driver_probe_device
->           pci_dma_configure
->             of_dma_configure
->               of_dma_configure_id
->                 of_iommu_configure
->                   pci_request_acs
->                     pci_acs_enable = 1          # -- previously set here
-> 
+Add the Andes QiLai PCIe node, which includes 3 Root Complexes.
 
-Yes!
+Signed-off-by: Randolph Lin <randolph@andestech.com>
+---
+ arch/riscv/boot/dts/andes/qilai.dtsi | 112 +++++++++++++++++++++++++++
+ 1 file changed, 112 insertions(+)
 
-> > But afterwards, ACS is getting enabled for the rest of the PCI
-> > devices, since pci_request_acs() sets the 'pci_acs_enable' flag and
-> > the PCI core uses this flag to enable ACS for the rest of the ACS
-> > capable devices.
-> 
-> I don't quite understand why ACS would be enabled for *any* of the
-> devices because we generally enumerate all of them, which includes the
-> pci_init_capabilities() and pci_enable_acs(), before adding and
-> attaching drivers to them.
-> 
-> But it does seem kind of dumb that we set the system-wide "enable ACS"
-> property in a per-device place like an individual device probe.
-> 
-
-I had the same opinion when I saw the 'pci_acs_enable' flag. But I think the
-intention was to enable ACS only if the controller is capable of assigning
-different IOMMU groups per device. Otherwise, ACS is more or less of no use.
-
-> > Ideally, pci_request_acs() should only be called if the 'iommu-map' DT
-> > property is set for the host bridge device. Hence, call pci_request_acs()
-> > from devm_of_pci_bridge_init() if the 'iommu-map' property is present in
-> > the host bridge DT node. This aligns with the implementation of the ARM64
-> > ACPI driver (drivers/acpi/arm64/iort.c) as well.
-> > 
-> > With this change, ACS will be enabled for all the PCI devices including the
-> > first Root Port device of the DT platforms.
-> > 
-> > Cc: stable@vger.kernel.org # 5.6
-> > Fixes: 6bf6c24720d33 ("iommu/of: Request ACS from the PCI core when configuring IOMMU linkage")
-> > Signed-off-by: Xingang Wang <wangxingang5@huawei.com>
-> > Signed-off-by: Pavankumar Kondeti <quic_pkondeti@quicinc.com>
-> > [mani: reworded subject, description and comment]
-> > Signed-off-by: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>
-> > ---
-> >  drivers/iommu/of_iommu.c | 1 -
-> >  drivers/pci/of.c         | 8 +++++++-
-> >  2 files changed, 7 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/iommu/of_iommu.c b/drivers/iommu/of_iommu.c
-> > index 6b989a62def20ecafd833f00a3a92ce8dca192e0..c31369924944d36a3afd3d4ff08c86fc6daf55de 100644
-> > --- a/drivers/iommu/of_iommu.c
-> > +++ b/drivers/iommu/of_iommu.c
-> > @@ -141,7 +141,6 @@ int of_iommu_configure(struct device *dev, struct device_node *master_np,
-> >  			.np = master_np,
-> >  		};
-> >  
-> > -		pci_request_acs();
-> >  		err = pci_for_each_dma_alias(to_pci_dev(dev),
-> >  					     of_pci_iommu_init, &info);
-> >  		of_pci_check_device_ats(dev, master_np);
-> > diff --git a/drivers/pci/of.c b/drivers/pci/of.c
-> > index 3579265f119845637e163d9051437c89662762f8..98c2523f898667b1618c37451d1759959d523da1 100644
-> > --- a/drivers/pci/of.c
-> > +++ b/drivers/pci/of.c
-> > @@ -638,9 +638,15 @@ static int pci_parse_request_of_pci_ranges(struct device *dev,
-> >  
-> >  int devm_of_pci_bridge_init(struct device *dev, struct pci_host_bridge *bridge)
-> >  {
-> > -	if (!dev->of_node)
-> > +	struct device_node *node = dev->of_node;
-> > +
-> > +	if (!node)
-> >  		return 0;
-> >  
-> > +	/* Enable ACS if IOMMU mapping is detected for the host bridge */
-> > +	if (of_property_read_bool(node, "iommu-map"))
-> > +		pci_request_acs();
-> 
-> I'm not really convinced that the existence of 'iommu-map' in
-> devicetree is a clear signal that ACS should be enabled, so I'm a
-> little hesitant about this part.
-> 
-> Is it possible to boot using a devicetree with 'iommu-map', but with
-> the IOMMU disabled or the IOMMU driver not present?  Or other
-> situations where we don't need ACS?
-> 
-
-Certainly possible. But the issue is, we cannot reliably detect the presence of
-IOMMU until the first pci_dev is created, which will be too late as
-pci_acs_init() is called during pci_device_add().
-
-This seems to be the case for ACPI platforms also.
-
-Maybe IOMMU folks Robin/Joerg/Will could comment more.
-
-- Mani
-
+diff --git a/arch/riscv/boot/dts/andes/qilai.dtsi b/arch/riscv/boot/dts/andes/qilai.dtsi
+index de3de32f8c39..69669111d9fb 100644
+--- a/arch/riscv/boot/dts/andes/qilai.dtsi
++++ b/arch/riscv/boot/dts/andes/qilai.dtsi
+@@ -182,5 +182,117 @@ uart0: serial@30300000 {
+ 			reg-io-width = <4>;
+ 			no-loopback-test;
+ 		};
++
++		bus@80000000 {
++			compatible = "simple-bus";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			dma-ranges = <0x44 0x00000000 0x04 0x00000000 0x04 0x00000000>;
++			ranges = <0x00 0x80000000 0x00 0x80000000 0x00 0x20000000>,
++				 <0x00 0x04000000 0x00 0x04000000 0x00 0x00001000>,
++				 <0x00 0x00000000 0x20 0x00000000 0x20 0x00000000>;
++
++			pci@80000000 {
++				compatible = "andestech,qilai-pcie";
++				device_type = "pci";
++				reg = <0x00 0x80000000 0x00 0x20000000>, /* DBI registers */
++				      <0x00 0x04000000 0x00 0x00001000>, /* APB registers */
++				      <0x00 0x00000000 0x00 0x00010000>; /* Configuration registers */
++				reg-names = "dbi", "apb", "config";
++
++				linux,pci-domain = <0>;
++				bus-range = <0x0 0xff>;
++				num-viewport = <4>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x00 0xf0000000>,
++					 <0x43000000 0x01 0x00000000 0x01 0x00000000 0x1f 0x00000000>;
++
++				#interrupt-cells = <1>;
++				interrupts = <0xf 0x4>;
++				interrupt-names = "msi";
++				interrupt-parent = <&plic>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 1 &plic 0xf 0x4>,
++						<0 0 0 2 &plic 0xf 0x4>,
++						<0 0 0 3 &plic 0xf 0x4>,
++						<0 0 0 4 &plic 0xf 0x4>;
++			};
++		};
++
++		bus@a0000000 {
++			compatible = "simple-bus";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			dma-ranges = <0x44 0x00000000 0x04 0x00000000 0x04 0x00000000>;
++			ranges = <0x00 0xa0000000 0x00 0xa0000000 0x00 0x20000000>,
++				 <0x00 0x04001000 0x00 0x04001000 0x00 0x00001000>,
++				 <0x00 0x00000000 0x10 0x00000000 0x08 0x00000000>;
++
++			pci@a0000000 {
++				compatible = "andestech,qilai-pcie";
++				device_type = "pci";
++				reg = <0x00 0xa0000000 0x00 0x20000000>, /* DBI registers */
++				      <0x00 0x04001000 0x00 0x00001000>, /* APB registers */
++				      <0x00 0x00000000 0x00 0x00010000>; /* Configuration registers */
++				reg-names = "dbi", "apb", "config";
++
++				linux,pci-domain = <1>;
++				bus-range = <0x0 0xff>;
++				num-viewport = <4>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x0 0xf0000000>,
++					 <0x43000000 0x01 0x00000000 0x01 0x00000000 0x7 0x00000000>;
++
++				#interrupt-cells = <1>;
++				interrupts = <0xe 0x4>;
++				interrupt-names = "msi";
++				interrupt-parent = <&plic>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 1 &plic 0xe 0x4>,
++						<0 0 0 2 &plic 0xe 0x4>,
++						<0 0 0 3 &plic 0xe 0x4>,
++						<0 0 0 4 &plic 0xe 0x4>;
++			};
++		};
++
++		bus@c0000000 {
++			compatible = "simple-bus";
++			#address-cells = <2>;
++			#size-cells = <2>;
++			dma-ranges = <0x44 0x00000000 0x04 0x00000000 0x04 0x00000000>;
++			ranges = <0x00 0xc0000000 0x00 0xc0000000 0x00 0x20000000>,
++				 <0x00 0x04002000 0x00 0x04002000 0x00 0x00001000>,
++				 <0x00 0x00000000 0x18 0x00000000 0x08 0x00000000>;
++
++			pci@c0000000 {
++				compatible = "andestech,qilai-pcie";
++				device_type = "pci";
++				reg = <0x00 0xc0000000 0x00 0x20000000>, /* DBI registers */
++				      <0x00 0x04002000 0x00 0x00001000>, /* APB registers */
++				      <0x00 0x00000000 0x00 0x00010000>; /* Configuration registers */
++				reg-names = "dbi", "apb", "config";
++
++				linux,pci-domain = <2>;
++				bus-range = <0x0 0xff>;
++				num-viewport = <4>;
++				#address-cells = <3>;
++				#size-cells = <2>;
++				ranges = <0x02000000 0x00 0x10000000 0x00 0x10000000 0x0 0xf0000000>,
++					 <0x43000000 0x01 0x00000000 0x01 0x00000000 0x7 0x00000000>;
++
++				#interrupt-cells = <1>;
++				interrupts = <0xd 0x4>;
++				interrupt-names = "msi";
++				interrupt-parent = <&plic>;
++				interrupt-map-mask = <0 0 0 0>;
++				interrupt-map = <0 0 0 1 &plic 0xd 0x4>,
++						<0 0 0 2 &plic 0xd 0x4>,
++						<0 0 0 3 &plic 0xd 0x4>,
++						<0 0 0 4 &plic 0xd 0x4>;
++			};
++		};
++
+ 	};
+ };
 -- 
-மணிவண்ணன் சதாசிவம்
+2.34.1
+
