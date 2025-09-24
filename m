@@ -1,309 +1,209 @@
-Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6519D2FC874;
-	Wed, 24 Sep 2025 11:33:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
+Received: from zg8tmja2lje4os4yms4ymjma.icoremail.net (zg8tmja2lje4os4yms4ymjma.icoremail.net [206.189.21.223])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 02C722E0417;
+	Wed, 24 Sep 2025 12:10:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=206.189.21.223
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758713618; cv=none; b=c0ybminLEOZO99FXra1mdLQcBAOwUt3kuKzQHmj3HQvLBTvC8XkJS/3V7txSLFi8IIziJ8w07Z3VvOZHs+dKEZjf1Cp8coXG6gLxg3DQ2oqq3dqE2JsruY8z77/wHoBZm2txEnuotGA5eiNEhWFe0E7zUDuty0Hs9ibo+a6DDtY=
+	t=1758715814; cv=none; b=RhiBTJGGVssDbd1UtJ5wMdDNqBjOQylSPNErKHGjWmJuNy4W1+7+vLIGwrAxBKwNzypInjwxTIykoPr8C5RT8Xq3qnJXT+DlaQ2q1Frp29wrnskVWzTpItW3No5xiJOvqTelIBmV09GY99Gb2Ai4X2vxZLc8MOnhcIIW6LdMaHI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758713618; c=relaxed/simple;
-	bh=akZcHAYXhYwPUm65+q7S8pdGRtZAqnfkqf94IHOMMKU=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LFnRb3uFQoKPYKFkEFXBAwa3J84d5MJZmmCdvbkD2UWefMV/2zyHYKVd4Mt5ki+L6e/jJqo8matR3Qzjfuxz19oEuXkUi6VbH94+RT6cY7lkaoT9kOxgq4dDpyiLRdYpaw2rBrY1yWVD3MHQuuGB/DOkguAbmMdEeGHlVILUKE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=unknown smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=tempfail smtp.mailfrom=andestech.com
-Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
-	by Atcsqr.andestech.com with ESMTPS id 58OBSVRZ074426
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 24 Sep 2025 19:28:31 +0800 (+08)
-	(envelope-from randolph@andestech.com)
-Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
- (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Wed, 24 Sep 2025
- 19:28:31 +0800
-From: Randolph Lin <randolph@andestech.com>
-To: <linux-kernel@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <jingoohan1@gmail.com>,
-        <mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-        <robh@kernel.org>, <bhelgaas@google.com>, <krzk+dt@kernel.org>,
-        <conor+dt@kernel.org>, <alex@ghiti.fr>, <aou@eecs.berkeley.edu>,
-        <palmer@dabbelt.com>, <paul.walmsley@sifive.com>,
-        <ben717@andestech.com>, <inochiama@gmail.com>,
-        <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
-        <shradha.t@samsung.com>, <randolph.sklin@gmail.com>,
-        <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
-Subject: [PATCH v4 4/5] PCI: andes: Add Andes QiLai SoC PCIe host driver support
-Date: Wed, 24 Sep 2025 19:28:19 +0800
-Message-ID: <20250924112820.2003675-5-randolph@andestech.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250924112820.2003675-1-randolph@andestech.com>
-References: <20250924112820.2003675-1-randolph@andestech.com>
+	s=arc-20240116; t=1758715814; c=relaxed/simple;
+	bh=vVE+jv57dXSdLhoRP0gBf5UY1rj1p9Y4qrNqf9nrV3E=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=ntMBNys560PErToj8zDGaCJAvAQCN6bQ+OjIfC9efi2JRellRRlmD0p7o+4Hpzo5bvq0z2f9fS8a+nNVlkRXJ+e1FRtzDihB5CFGN2MHhmOKIeVukOOLggV7KVtSbAEbBwbuYKmNOgLVE0fPhKeU6oSy7e+n9MTK5ww/6tVYWNg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=206.189.21.223
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
+Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
+ ajax-webmail-app2 (Coremail) ; Wed, 24 Sep 2025 20:09:50 +0800 (GMT+08:00)
+Date: Wed, 24 Sep 2025 20:09:50 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
+To: "Frank Li" <Frank.li@nxp.com>
+Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
+	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
+	conor+dt@kernel.org, linux-pci@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	p.zabel@pengutronix.de, johan+linaro@kernel.org,
+	quic_schintav@quicinc.com, shradha.t@samsung.com, cassel@kernel.org,
+	thippeswamy.havalige@amd.com, mayank.rana@oss.qualcomm.com,
+	inochiama@gmail.com, ningyu@eswincomputing.com,
+	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com,
+	"Yanghui Ou" <ouyanghui@eswincomputing.com>
+Subject: Re: Re: [PATCH v3 2/2] PCI: EIC7700: Add Eswin PCIe host controller
+ driver
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
+ 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
+ mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
+In-Reply-To: <aNL5RO77A3PuJMYy@lizhi-Precision-Tower-5810>
+References: <20250923120946.1218-1-zhangsenchuan@eswincomputing.com>
+ <20250923121228.1255-1-zhangsenchuan@eswincomputing.com>
+ <aNL5RO77A3PuJMYy@lizhi-Precision-Tower-5810>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 58OBSVRZ074426
+Message-ID: <31b9a79e.17e8.1997ba143a1.Coremail.zhangsenchuan@eswincomputing.com>
+X-Coremail-Locale: en_US
+X-CM-TRANSID:TQJkCgDHZpWO39NoTmvbAA--.26252W
+X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQEPBmjSy
+	3occgAAss
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VWxJw
+	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
+	daVFxhVjvjDU=
 
-Add driver support for DesignWare based PCIe controller in Andes
-QiLai SoC. The driver only supports the Root Complex mode.
-
-Signed-off-by: Randolph Lin <randolph@andestech.com>
----
- drivers/pci/controller/dwc/Kconfig            |  13 ++
- drivers/pci/controller/dwc/Makefile           |   1 +
- drivers/pci/controller/dwc/pcie-andes-qilai.c | 198 ++++++++++++++++++
- 3 files changed, 212 insertions(+)
- create mode 100644 drivers/pci/controller/dwc/pcie-andes-qilai.c
-
-diff --git a/drivers/pci/controller/dwc/Kconfig b/drivers/pci/controller/dwc/Kconfig
-index ff6b6d9e18ec..15cf19c9449f 100644
---- a/drivers/pci/controller/dwc/Kconfig
-+++ b/drivers/pci/controller/dwc/Kconfig
-@@ -60,6 +60,19 @@ config PCI_MESON
- 	  and therefore the driver re-uses the DesignWare core functions to
- 	  implement the driver.
- 
-+config PCIE_ANDES_QILAI
-+	tristate "Andes QiLai PCIe controller"
-+	depends on ARCH_ANDES || COMPILE_TEST
-+	depends on PCI_MSI
-+	select PCIE_DW_HOST
-+	help
-+	  Say Y here to enable PCIe controller support on Andes QiLai SoCs,
-+	  which operate in Root Complex mode. The Andes QiLai SoC PCIe
-+	  controller is based on DesignWare IP (5.97a version) and therefore
-+	  the driver re-uses the DesignWare core functions to implement the
-+	  driver. The Andes QiLai SoC features three Root Complexes, each
-+	  operating on PCIe 4.0.
-+
- config PCIE_ARTPEC6
- 	bool
- 
-diff --git a/drivers/pci/controller/dwc/Makefile b/drivers/pci/controller/dwc/Makefile
-index 6919d27798d1..de9583cbd675 100644
---- a/drivers/pci/controller/dwc/Makefile
-+++ b/drivers/pci/controller/dwc/Makefile
-@@ -5,6 +5,7 @@ obj-$(CONFIG_PCIE_DW_HOST) += pcie-designware-host.o
- obj-$(CONFIG_PCIE_DW_EP) += pcie-designware-ep.o
- obj-$(CONFIG_PCIE_DW_PLAT) += pcie-designware-plat.o
- obj-$(CONFIG_PCIE_AMD_MDB) += pcie-amd-mdb.o
-+obj-$(CONFIG_PCIE_ANDES_QILAI) += pcie-andes-qilai.o
- obj-$(CONFIG_PCIE_BT1) += pcie-bt1.o
- obj-$(CONFIG_PCI_DRA7XX) += pci-dra7xx.o
- obj-$(CONFIG_PCI_EXYNOS) += pci-exynos.o
-diff --git a/drivers/pci/controller/dwc/pcie-andes-qilai.c b/drivers/pci/controller/dwc/pcie-andes-qilai.c
-new file mode 100644
-index 000000000000..e13ac01d0067
---- /dev/null
-+++ b/drivers/pci/controller/dwc/pcie-andes-qilai.c
-@@ -0,0 +1,198 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Driver for the PCIe Controller in QiLai from Andes
-+ *
-+ * Copyright (C) 2025 Andes Technology Corporation
-+ */
-+
-+#include <linux/bitfield.h>
-+#include <linux/bits.h>
-+#include <linux/kernel.h>
-+#include <linux/module.h>
-+#include <linux/pci.h>
-+#include <linux/platform_device.h>
-+#include <linux/types.h>
-+
-+#include "pcie-designware.h"
-+
-+#define PCIE_INTR_CONTROL1			0x15c
-+#define PCIE_MSI_CTRL_INT_EN			BIT(28)
-+
-+#define PCIE_LOGIC_COHERENCY_CONTROL3		0x8e8
-+
-+/*
-+ * Refer to Table A4-5 (Memory type encoding) in the
-+ * AMBA AXI and ACE Protocol Specification.
-+ *
-+ * The selected value corresponds to the Memory type field:
-+ * "Write-back, Read and Write-allocate".
-+ *
-+ * The last three rows in the table A4-5 in
-+ * AMBA AXI and ACE Protocol Specification:
-+ * ARCACHE        AWCACHE        Memory type
-+ * ------------------------------------------------------------------
-+ * 1111 (0111)    0111           Write-back Read-allocate
-+ * 1011           1111 (1011)    Write-back Write-allocate
-+ * 1111           1111           Write-back Read and Write-allocate (selected)
-+ */
-+#define IOCP_ARCACHE				0b1111
-+#define IOCP_AWCACHE				0b1111
-+
-+#define PCIE_CFG_MSTR_ARCACHE_MODE		GENMASK(6, 3)
-+#define PCIE_CFG_MSTR_AWCACHE_MODE		GENMASK(14, 11)
-+#define PCIE_CFG_MSTR_ARCACHE_VALUE		GENMASK(22, 19)
-+#define PCIE_CFG_MSTR_AWCACHE_VALUE		GENMASK(30, 27)
-+
-+#define PCIE_GEN_CONTROL2			0x54
-+#define PCIE_CFG_LTSSM_EN			BIT(0)
-+
-+#define PCIE_REGS_PCIE_SII_PM_STATE		0xc0
-+#define SMLH_LINK_UP				BIT(6)
-+#define RDLH_LINK_UP				BIT(7)
-+#define PCIE_REGS_PCIE_SII_LINK_UP		(SMLH_LINK_UP | RDLH_LINK_UP)
-+
-+struct qilai_pcie {
-+	struct dw_pcie pci;
-+	void __iomem *apb_base;
-+};
-+
-+#define to_qilai_pcie(_pci) container_of(_pci, struct qilai_pcie, pci)
-+
-+static bool qilai_pcie_link_up(struct dw_pcie *pci)
-+{
-+	struct qilai_pcie *pcie = to_qilai_pcie(pci);
-+	u32 val;
-+
-+	/* Read smlh & rdlh link up by checking debug port */
-+	val = readl(pcie->apb_base + PCIE_REGS_PCIE_SII_PM_STATE);
-+
-+	return (val & PCIE_REGS_PCIE_SII_LINK_UP) == PCIE_REGS_PCIE_SII_LINK_UP;
-+}
-+
-+static int qilai_pcie_start_link(struct dw_pcie *pci)
-+{
-+	struct qilai_pcie *pcie = to_qilai_pcie(pci);
-+	u32 val;
-+
-+	val = readl(pcie->apb_base + PCIE_GEN_CONTROL2);
-+	val |= PCIE_CFG_LTSSM_EN;
-+	writel(val, pcie->apb_base + PCIE_GEN_CONTROL2);
-+
-+	return 0;
-+}
-+
-+static const struct dw_pcie_ops qilai_pcie_ops = {
-+	.link_up = qilai_pcie_link_up,
-+	.start_link = qilai_pcie_start_link,
-+};
-+
-+/*
-+ * Setup the Qilai PCIe IOCP (IO Coherence Port) Read/Write Behaviors to the
-+ * Write-Back, Read and Write Allocate mode.
-+ *
-+ * The IOCP HW target is SoC last-level cache (L2 Cache), which serves as the
-+ * system cache. The IOCP HW helps maintain cache monitoring, ensuring that
-+ * the device can snoop data from/to the cache.
-+ */
-+static void qilai_pcie_iocp_cache_setup(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	u32 val;
-+
-+	dw_pcie_dbi_ro_wr_en(pci);
-+
-+	dw_pcie_read(pci->dbi_base + PCIE_LOGIC_COHERENCY_CONTROL3,
-+		     sizeof(val), &val);
-+	FIELD_MODIFY(PCIE_CFG_MSTR_ARCACHE_MODE, &val, IOCP_ARCACHE);
-+	FIELD_MODIFY(PCIE_CFG_MSTR_AWCACHE_MODE, &val, IOCP_AWCACHE);
-+	FIELD_MODIFY(PCIE_CFG_MSTR_ARCACHE_VALUE, &val, IOCP_ARCACHE);
-+	FIELD_MODIFY(PCIE_CFG_MSTR_AWCACHE_VALUE, &val, IOCP_AWCACHE);
-+	dw_pcie_write(pci->dbi_base + PCIE_LOGIC_COHERENCY_CONTROL3,
-+		      sizeof(val), val);
-+
-+	dw_pcie_dbi_ro_wr_dis(pci);
-+}
-+
-+static void qilai_pcie_enable_msi(struct qilai_pcie *pcie)
-+{
-+	u32 val;
-+
-+	val = readl(pcie->apb_base + PCIE_INTR_CONTROL1);
-+	val |= PCIE_MSI_CTRL_INT_EN;
-+	writel(val, pcie->apb_base + PCIE_INTR_CONTROL1);
-+}
-+
-+static int qilai_pcie_host_init(struct dw_pcie_rp *pp)
-+{
-+	struct dw_pcie *pci = to_dw_pcie_from_pp(pp);
-+	struct qilai_pcie *pcie = to_qilai_pcie(pci);
-+
-+	qilai_pcie_enable_msi(pcie);
-+
-+	return 0;
-+}
-+
-+static void qilai_pcie_host_post_init(struct dw_pcie_rp *pp)
-+{
-+	qilai_pcie_iocp_cache_setup(pp);
-+}
-+
-+static const struct dw_pcie_host_ops qilai_pcie_host_ops = {
-+	.init = qilai_pcie_host_init,
-+	.post_init = qilai_pcie_host_post_init,
-+};
-+
-+static int qilai_pcie_probe(struct platform_device *pdev)
-+{
-+	struct qilai_pcie *pcie;
-+	struct dw_pcie *pci;
-+	struct device *dev = &pdev->dev;
-+	int ret;
-+
-+	pcie = devm_kzalloc(&pdev->dev, sizeof(*pcie), GFP_KERNEL);
-+	if (!pcie)
-+		return -ENOMEM;
-+
-+	platform_set_drvdata(pdev, pcie);
-+
-+	pci = &pcie->pci;
-+	pcie->pci.dev = dev;
-+	pcie->pci.ops = &qilai_pcie_ops;
-+	pcie->pci.pp.ops = &qilai_pcie_host_ops;
-+	pci->use_parent_dt_ranges = true;
-+
-+	dw_pcie_cap_set(&pcie->pci, REQ_RES);
-+
-+	pcie->apb_base = devm_platform_ioremap_resource_byname(pdev, "apb");
-+	if (IS_ERR(pcie->apb_base))
-+		return PTR_ERR(pcie->apb_base);
-+
-+	ret = dw_pcie_host_init(&pcie->pci.pp);
-+	if (ret) {
-+		dev_err_probe(dev, ret, "Failed to initialize PCIe host\n");
-+		return ret;
-+	}
-+
-+	return 0;
-+}
-+
-+static const struct of_device_id qilai_pcie_of_match[] = {
-+	{ .compatible = "andestech,qilai-pcie" },
-+	{},
-+};
-+MODULE_DEVICE_TABLE(of, qilai_pcie_of_match);
-+
-+static struct platform_driver qilai_pcie_driver = {
-+	.probe = qilai_pcie_probe,
-+	.driver = {
-+		.name	= "qilai-pcie",
-+		.of_match_table = qilai_pcie_of_match,
-+		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
-+	},
-+};
-+
-+builtin_platform_driver(qilai_pcie_driver);
-+
-+MODULE_AUTHOR("Randolph Lin <randolph@andestech.com>");
-+MODULE_DESCRIPTION("Andes Qilai PCIe driver");
-+MODULE_LICENSE("GPL");
--- 
-2.34.1
-
+CgoKPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2VzLS0tLS0KPiBGcm9tOiAiRnJhbmsgTGkiIDxGcmFu
+ay5saUBueHAuY29tPgo+IFNlbmQgdGltZTpXZWRuZXNkYXksIDI0LzA5LzIwMjUgMDM6NDc6MTYK
+PiBUbzogemhhbmdzZW5jaHVhbkBlc3dpbmNvbXB1dGluZy5jb20KPiBDYzogYmhlbGdhYXNAZ29v
+Z2xlLmNvbSwgbHBpZXJhbGlzaUBrZXJuZWwub3JnLCBrd2lsY3p5bnNraUBrZXJuZWwub3JnLCBt
+YW5pQGtlcm5lbC5vcmcsIHJvYmhAa2VybmVsLm9yZywga3J6aytkdEBrZXJuZWwub3JnLCBjb25v
+citkdEBrZXJuZWwub3JnLCBsaW51eC1wY2lAdmdlci5rZXJuZWwub3JnLCBkZXZpY2V0cmVlQHZn
+ZXIua2VybmVsLm9yZywgbGludXgta2VybmVsQHZnZXIua2VybmVsLm9yZywgcC56YWJlbEBwZW5n
+dXRyb25peC5kZSwgam9oYW4rbGluYXJvQGtlcm5lbC5vcmcsIHF1aWNfc2NoaW50YXZAcXVpY2lu
+Yy5jb20sIHNocmFkaGEudEBzYW1zdW5nLmNvbSwgY2Fzc2VsQGtlcm5lbC5vcmcsIHRoaXBwZXN3
+YW15LmhhdmFsaWdlQGFtZC5jb20sIG1heWFuay5yYW5hQG9zcy5xdWFsY29tbS5jb20sIGlub2No
+aWFtYUBnbWFpbC5jb20sIG5pbmd5dUBlc3dpbmNvbXB1dGluZy5jb20sIGxpbm1pbkBlc3dpbmNv
+bXB1dGluZy5jb20sIHBpbmtlc2gudmFnaGVsYUBlaW5mb2NoaXBzLmNvbSwgIllhbmdodWkgT3Ui
+IDxvdXlhbmdodWlAZXN3aW5jb21wdXRpbmcuY29tPgo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggdjMg
+Mi8yXSBQQ0k6IEVJQzc3MDA6IEFkZCBFc3dpbiBQQ0llIGhvc3QgY29udHJvbGxlciBkcml2ZXIK
+PiAKPiBPbiBUdWUsIFNlcCAyMywgMjAyNSBhdCAwODoxMjoyN1BNICswODAwLCB6aGFuZ3NlbmNo
+dWFuQGVzd2luY29tcHV0aW5nLmNvbSB3cm90ZToKPiA+IEZyb206IFNlbmNodWFuIFpoYW5nIDx6
+aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbT4KPiA+Cj4gPiBBZGQgZHJpdmVyIGZvciB0
+aGUgRXN3aW4gRUlDNzcwMCBQQ0llIGhvc3QgY29udHJvbGxlcix0aGUgY29udHJvbGxlciBpcwo+
+ID4gYmFzZWQgb24gdGhlIERlc2lnbldhcmUgUENJZSBjb3JlLCBJUCByZXZpc2lvbiA2LjAwYSBU
+aGUgUENJZSBHZW4uMwo+ID4gY29udHJvbGxlciBzdXBwb3J0cyBhIGRhdGEgcmF0ZSBvZiA4IEdU
+L3MgYW5kIDQgY2hhbm5lbHMsIHN1cHBvcnQgSU5UWAo+ID4gYW5kIE1TSSBpbnRlcnJ1cHRzLgo+
+ID4KPiA+IFNpZ25lZC1vZmYtYnk6IFl1IE5pbmcgPG5pbmd5dUBlc3dpbmNvbXB1dGluZy5jb20+
+Cj4gPiBTaWduZWQtb2ZmLWJ5OiBZYW5naHVpIE91IDxvdXlhbmdodWlAZXN3aW5jb21wdXRpbmcu
+Y29tPgo+ID4gU2lnbmVkLW9mZi1ieTogU2VuY2h1YW4gWmhhbmcgPHpoYW5nc2VuY2h1YW5AZXN3
+aW5jb21wdXRpbmcuY29tPgo+ID4gLS0tCj4gPiAgZHJpdmVycy9wY2kvY29udHJvbGxlci9kd2Mv
+S2NvbmZpZyAgICAgICAgfCAgMTEgKwo+ID4gIGRyaXZlcnMvcGNpL2NvbnRyb2xsZXIvZHdjL01h
+a2VmaWxlICAgICAgIHwgICAxICsKPiA+ICBkcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9wY2ll
+LWVpYzc3MDAuYyB8IDQ0NiArKysrKysrKysrKysrKysrKysrKysrCj4gPiAgMyBmaWxlcyBjaGFu
+Z2VkLCA0NTggaW5zZXJ0aW9ucygrKQo+ID4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Bj
+aS9jb250cm9sbGVyL2R3Yy9wY2llLWVpYzc3MDAuYwo+ID4KPiA+IGRpZmYgLS1naXQgYS9kcml2
+ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9LY29uZmlnIGIvZHJpdmVycy9wY2kvY29udHJvbGxlci9k
+d2MvS2NvbmZpZwo+ID4gaW5kZXggZmY2YjZkOWUxOGVjLi44NDc0YmM2MzU2ZjcgMTAwNjQ0Cj4g
+PiAtLS0gYS9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9LY29uZmlnCj4gPiArKysgYi9kcml2
+ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9LY29uZmlnCj4gPiBAQCAtMzc1LDYgKzM3NSwxNyBAQCBj
+b25maWcgUENJX0VYWU5PUwo+ID4gIAkgIGhhcmR3YXJlIGFuZCB0aGVyZWZvcmUgdGhlIGRyaXZl
+ciByZS11c2VzIHRoZSBEZXNpZ25XYXJlIGNvcmUKPiA+ICAJICBmdW5jdGlvbnMgdG8gaW1wbGVt
+ZW50IHRoZSBkcml2ZXIuCj4gPgo+IC4uLgo+ID4gKwo+ID4gK3N0YXRpYyB2b2lkIGVzd2luX3Bj
+aWVfaGlkZV9icm9rZW5fbXNpeF9jYXAoc3RydWN0IGR3X3BjaWUgKnBjaSkKPiA+ICt7Cj4gPiAr
+CXUxNiBvZmZzZXQsIHZhbDsKPiA+ICsKPiA+ICsJLyoKPiA+ICsJICogSGFyZHdhcmUgZG9lc24n
+dCBzdXBwb3J0IE1TSS1YIGJ1dCBpdCBhZHZlcnRpc2VzIE1TSS1YIGNhcGFiaWxpdHksCj4gPiAr
+CSAqIHRvIGF2b2lkIHRoaXMgcHJvYmxlbSwgdGhlIE1TSS1YIGNhcGFiaWxpdHkgaW4gdGhlIFBD
+SWUgY2FwYWJpbGl0aWVzCj4gPiArCSAqIGxpbmtlZC1saXN0IG5lZWRzIHRvIGJlIGRpc2FibGVk
+LiBTaW5jZSB0aGUgUENJIEV4cHJlc3MgY2FwYWJpbGl0eQo+ID4gKwkgKiBzdHJ1Y3R1cmUncyBu
+ZXh0IHBvaW50ZXIgcG9pbnRzIHRvIHRoZSBNU0ktWCBjYXBhYmlsaXR5LCBhbmQgdGhlCj4gPiAr
+CSAqIE1TSS1YIGNhcGFiaWxpdHkncyBuZXh0IHBvaW50ZXIgaXMgbnVsbCAoMDBIKSwgc28gb25s
+eSB0aGUgUENJCj4gPiArCSAqIEV4cHJlc3MgY2FwYWJpbGl0eSBzdHJ1Y3R1cmUncyBuZXh0IHBv
+aW50ZXIgbmVlZHMgdG8gYmUgc2V0IDAwSC4KPiA+ICsJICovCj4gPiArCW9mZnNldCA9IGR3X3Bj
+aWVfZmluZF9jYXBhYmlsaXR5KHBjaSwgUENJX0NBUF9JRF9FWFApOwo+ID4gKwl2YWwgPSBkd19w
+Y2llX3JlYWRsX2RiaShwY2ksIG9mZnNldCk7Cj4gPiArCXZhbCAmPSB+UENJRV9NU0lYX0RJU0FC
+TEVfTUFTSzsKPiAKPiBzdXBwb3NlZCBQQ0lFX01TSVhfRElTQUJMRV9NQVNLIGlzIHN0YW5kYXJk
+IGRlZmluYXRpb24gZm9yIFBDSV9DQVBfSURfRVhQCj4gcmVnaXN0ZXIsIGl0IHNob3VsZCBiZSBp
+biBwY2kuaAo+IAo+ID4gKwlkd19wY2llX3dyaXRlbF9kYmkocGNpLCBvZmZzZXQsIHZhbCk7Cj4g
+PiArfQo+ID4gKwo+ID4gK3N0YXRpYyBpbnQgZXN3aW5fcGNpZV9ob3N0X2luaXQoc3RydWN0IGR3
+X3BjaWVfcnAgKnBwKQo+ID4gK3sKPiA+ICsJc3RydWN0IGR3X3BjaWUgKnBjaSA9IHRvX2R3X3Bj
+aWVfZnJvbV9wcChwcCk7Cj4gPiArCXN0cnVjdCBlc3dpbl9wY2llICpwY2llID0gdG9fZXN3aW5f
+cGNpZShwY2kpOwo+ID4gKwlzdHJ1Y3QgZXN3aW5fcGNpZV9wb3J0ICpwb3J0Owo+ID4gKwl1MzIg
+cmV0cmllczsKPiA+ICsJdTggbXNpX2NhcDsKPiA+ICsJdTMyIHZhbDsKPiA+ICsJaW50IHJldDsK
+PiA+ICsKPiA+ICsJcGNpZS0+bnVtX2Nsa3MgPSBkZXZtX2Nsa19idWxrX2dldF9hbGxfZW5hYmxl
+ZChwY2ktPmRldiwgJnBjaWUtPmNsa3MpOwo+ID4gKwlpZiAocGNpZS0+bnVtX2Nsa3MgPCAwKQo+
+ID4gKwkJcmV0dXJuIGRldl9lcnJfcHJvYmUocGNpLT5kZXYsIHBjaWUtPm51bV9jbGtzLAo+ID4g
+KwkJCQkgICAgICJGYWlsZWQgdG8gZ2V0IHBjaWUgY2xvY2tzXG4iKTsKPiA+ICsKPiA+ICsJcmV0
+ID0gZXN3aW5fcGNpZV9kZWFzc2VydChwY2llKTsKPiA+ICsJaWYgKHJldCkKPiA+ICsJCXJldHVy
+biByZXQ7Cj4gPiArCj4gPiArCS8qIENvbmZpZ3VyZSByb290IHBvcnQgdHlwZSAqLwo+ID4gKwl2
+YWwgPSByZWFkbF9yZWxheGVkKHBjaWUtPm1nbXRfYmFzZSArIFBDSUVNR01UX0NUUkwwX09GRlNF
+VCk7Cj4gPiArCXZhbCAmPSB+UENJRU1HTVRfQ1RSTDBfUk9PVF9QT1JUX01BU0s7Cj4gPiArCXdy
+aXRlbF9yZWxheGVkKHZhbCB8IFBDSV9FWFBfVFlQRV9ST09UX1BPUlQsCj4gPiArCQkgICAgICAg
+cGNpZS0+bWdtdF9iYXNlICsgUENJRU1HTVRfQ1RSTDBfT0ZGU0VUKTsKPiA+ICsKPiA+ICsJbGlz
+dF9mb3JfZWFjaF9lbnRyeShwb3J0LCAmcGNpZS0+cG9ydHMsIGxpc3QpIHsKPiA+ICsJCXJldCA9
+IGVzd2luX3BjaWVfcGVyc3RfZGVhc3NlcnQocG9ydCwgcGNpZSk7Cj4gPiArCQkJaWYgKHJldCkK
+PiA+ICsJCQkJZ290byBlcnJfcGVyc3Q7Cj4gPiArCX0KPiA+ICsKPiA+ICsJLyogQ29uZmlndXJl
+IGFwcF9ob2xkX3BoeV9yc3QgKi8KPiA+ICsJdmFsID0gcmVhZGxfcmVsYXhlZChwY2llLT5tZ210
+X2Jhc2UgKyBQQ0lFTUdNVF9DVFJMMF9PRkZTRVQpOwo+ID4gKwl2YWwgJj0gflBDSUVNR01UX0FQ
+UF9IT0xEX1BIWV9SU1Q7Cj4gPiArCXdyaXRlbF9yZWxheGVkKHZhbCwgcGNpZS0+bWdtdF9iYXNl
+ICsgUENJRU1HTVRfQ1RSTDBfT0ZGU0VUKTsKPiA+ICsKPiA+ICsJLyogVGhlIG1heGltdW0gd2Fp
+dGluZyB0aW1lIGZvciB0aGUgY2xvY2sgc3dpdGNoIGxvY2sgaXMgMjBtcyAqLwo+ID4gKwlyZXRy
+aWVzID0gMjA7Cj4gPiArCWRvIHsKPiA+ICsJCXZhbCA9IHJlYWRsX3JlbGF4ZWQocGNpZS0+bWdt
+dF9iYXNlICsgUENJRU1HTVRfU1RBVFVTMF9PRkZTRVQpOwo+ID4gKwkJaWYgKCEodmFsICYgUENJ
+RU1HTVRfUE1fU0VMX0FVWF9DTEspKQo+ID4gKwkJCWJyZWFrOwo+ID4gKwkJZnNsZWVwKDEwMDAp
+Owo+ID4gKwkJcmV0cmllcy0tOwo+ID4gKwl9IHdoaWxlIChyZXRyaWVzKTsKPiAKPiB1c2UgcmVh
+ZGxfcG9sbF90aW1lb3V0KCkKPiAKPiA+ICsKPiA+ICsJaWYgKCFyZXRyaWVzKSB7Cj4gPiArCQlk
+ZXZfZXJyKHBjaS0+ZGV2LCAiVGltZW91dCB3YWl0aW5nIGZvciBQTV9TRUxfQVVYX0NMSyByZWFk
+eVxuIik7Cj4gPiArCQlyZXQgPSAtRVRJTUVET1VUOwo+ID4gKwkJZ290byBlcnJfcGh5X2luaXQ7
+Cj4gPiArCX0KPiA+ICsKPiA+ICsJLyoKPiA+ICsJICogQ29uZmlndXJlIEVTV0lOIFZJRDpESUQg
+Zm9yIFJvb3QgUG9ydCBhcyB0aGUgZGVmYXVsdCB2YWx1ZXMgYXJlCj4gPiArCSAqIGludmFsaWQu
+Cj4gPiArCSAqLwo+ID4gKwlkd19wY2llX3dyaXRld19kYmkocGNpLCBQQ0lfVkVORE9SX0lELCBW
+RU5ET1JfSURfVkFMVUUpOwo+ID4gKwlkd19wY2llX3dyaXRld19kYmkocGNpLCBQQ0lfREVWSUNF
+X0lELCBERVZJQ0VfSURfVkFMVUUpOwo+ID4gKwo+ID4gKwkvKiBDb25maWd1cmUgc3VwcG9ydCAz
+MiBNU0kgdmVjdG9ycyAqLwo+ID4gKwltc2lfY2FwID0gZHdfcGNpZV9maW5kX2NhcGFiaWxpdHko
+cGNpLCBQQ0lfQ0FQX0lEX01TSSk7Cj4gPiArCXZhbCA9IGR3X3BjaWVfcmVhZHdfZGJpKHBjaSwg
+bXNpX2NhcCArIFBDSV9NU0lfRkxBR1MpOwo+ID4gKwl2YWwgJj0gflBDSV9NU0lfRkxBR1NfUU1B
+U0s7Cj4gPiArCXZhbCB8PSBGSUVMRF9QUkVQKFBDSV9NU0lfRkxBR1NfUU1BU0ssIDUpOwo+ID4g
+Kwlkd19wY2llX3dyaXRld19kYmkocGNpLCBtc2lfY2FwICsgUENJX01TSV9GTEFHUywgdmFsKTsK
+PiA+ICsKPiA+ICsJLyogQ29uZmlndXJlIGRpc2FibGUgTVNJLVggY2FwICovCj4gPiArCWlmICgh
+cGNpZS0+bXNpeF9jYXApCj4gPiArCQllc3dpbl9wY2llX2hpZGVfYnJva2VuX21zaXhfY2FwKHBj
+aSk7Cj4gPiArCj4gPiArCXJldHVybiAwOwo+ID4gKwo+ID4gK2Vycl9waHlfaW5pdDoKPiA+ICsJ
+bGlzdF9mb3JfZWFjaF9lbnRyeShwb3J0LCAmcGNpZS0+cG9ydHMsIGxpc3QpCj4gPiArCQlyZXNl
+dF9jb250cm9sX2Fzc2VydChwb3J0LT5wZXJzdCk7Cj4gPiArZXJyX3BlcnN0Ogo+ID4gKwllc3dp
+bl9wY2llX2Fzc2VydChwY2llKTsKPiA+ICsKPiA+ICsJcmV0dXJuIHJldDsKPiA+ICt9Cj4gPiAr
+Cj4gLi4uCj4gPiArCj4gPiArc3RhdGljIGludCBlc3dpbl9wY2llX3N1c3BlbmQoc3RydWN0IGRl
+dmljZSAqZGV2KQo+ID4gK3sKPiA+ICsJc3RydWN0IGVzd2luX3BjaWUgKnBjaWUgPSBkZXZfZ2V0
+X2RydmRhdGEoZGV2KTsKPiA+ICsJc3RydWN0IGVzd2luX3BjaWVfcG9ydCAqcG9ydDsKPiA+ICsK
+PiA+ICsJLyoKPiA+ICsJICogRm9yIGNvbnRyb2xsZXJzIHdpdGggYWN0aXZlIGRldmljZXMsIHJl
+c291cmNlcyBhcmUgcmV0YWluZWQgYW5kCj4gPiArCSAqIGNhbm5vdCBiZSB0dXJuZWQgb2ZmLgo+
+ID4gKwkgKi8KPiA+ICsJaWYgKCFkd19wY2llX2xpbmtfdXAoJnBjaWUtPnBjaSkpIHsKPiA+ICsJ
+CWxpc3RfZm9yX2VhY2hfZW50cnkocG9ydCwgJnBjaWUtPnBvcnRzLCBsaXN0KQo+ID4gKwkJCXJl
+c2V0X2NvbnRyb2xfYXNzZXJ0KHBvcnQtPnBlcnN0KTsKPiA+ICsJCWVzd2luX3BjaWVfYXNzZXJ0
+KHBjaWUpOwo+ID4gKwkJY2xrX2J1bGtfZGlzYWJsZV91bnByZXBhcmUocGNpZS0+bnVtX2Nsa3Ms
+IHBjaWUtPmNsa3MpOwo+ID4gKwkJcGNpZS0+c3VzcGVuZGVkID0gdHJ1ZTsKPiA+ICsJfQo+ID4g
+Kwo+ID4gKwlyZXR1cm4gMDsKPiA+ICt9Cj4gCj4gZG9lcyBkd19wY2llX3Jlc3VtZV9ub2lycSgp
+IHdvcmsgZm9yIHlvdT8gSWYgbm90LCBwbGVhc2UgdXBkYXRlIGNvbW1vbgo+IG9uZS4KCmRlYXIg
+RnJhbmsKClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHlvdXIgcmV2aWV3IGNvbW1lbnRzLgpDbGFy
+aWZpY2F0aW9u77yaClRoZSBkd19wY2llX3N1c3BlbmRfbm9pcnEgYW5kIGR3X3BjaWVfcmVzdW1l
+X25vaXJxIGNvZGUgaXMgYSBuaWNlIHdyYXBwZWQgCmNvbGxlY3Rpb24gZnVuY3Rpb24sIGJ1dCB0
+aGUgZHdfcGNpZV9zdXNwZW5kX25vaXJxIGZ1bmN0aW9uIGltcGxlbWVudHMgCnNlbmRpbmcgdGhl
+IFBNRV9UdXJuX09mZiBtZXNzYWdlLiBOb3RpZnkgdGhlIGRldmljZSB0byBlbnRlciBsb3cgcG93
+ZXIgCmNvbnN1bXB0aW9uIGFuZCB3YWl0IGZvciBpdCB0byBlbnRlciB0aGUgTFRTU01fTDIgc3Rh
+dGUuIE91ciBoYXJkd2FyZSBvbmx5CnN1cHBvcnRzIGVudGVyaW5nIHRoZSBMMC9MMSBzdGF0ZSBh
+bmQgZG9lcyBub3Qgc3VwcG9ydCBlbnRlcmluZyB0aGUgRDNjb2RlIAphbmQgTDIvTDMgc3RhdGVz
+LiBJdCB3aWxsIGNhdXNlIG1pc3Rha2VzIGFuZCBjYW4ndCByZXN1bWUuIFRoZXJlZm9yZSwgSSAK
+Y2Fubm90IGRpcmVjdGx5IGNhbGwgdGhlIGR3X3BjaWVfc3VzcGVuZF9ub2lycSBmdW5jdGlvbiBo
+ZXJlLgoKSSBzYXcgdGhhdCBvdGhlciB2ZW5kb3IgZGlkbid0IHVzZSBpdC4gRm9yIGV4YW1wbGU6
+CnBjaS1leHlub3MuYwpwY2llLWludGVsLWd3LmMKcGNpZS1xY29tLmMKCldoYXQncyB5b3VyIG9w
+aW5pb24/IERvIHlvdSBhbGxvdyBtZSB0byBpbXBsZW1lbnQgdGhlIGN1cnJlbnQgY29kZS4KTG9v
+a2luZyBmb3J3YXJkIHRvIHlvdXIgcmVwbHkuIFRoYW5rIHlvdSB2ZXJ5IG11Y2ghCgo+IAo+ID4g
+Kwo+ID4gK3N0YXRpYyBpbnQgZXN3aW5fcGNpZV9yZXN1bWUoc3RydWN0IGRldmljZSAqZGV2KQo+
+ID4gK3sKPiA+ICsJc3RydWN0IGVzd2luX3BjaWUgKnBjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2
+KTsKPiA+ICsJaW50IHJldDsKPiA+ICsKPiA+ICsJaWYgKCFwY2llLT5zdXNwZW5kZWQpCj4gPiAr
+CQlyZXR1cm4gMDsKPiA+ICsKPiA+ICsJcmV0ID0gZXN3aW5fcGNpZV9ob3N0X2luaXQoJnBjaWUt
+PnBjaS5wcCk7Cj4gPiArCWlmIChyZXQpIHsKPiA+ICsJCWRldl9lcnIoZGV2LCAiRmFpbGVkIHRv
+IGluaXQgaG9zdDogJWRcbiIsIHJldCk7Cj4gPiArCQlyZXR1cm4gcmV0Owo+ID4gKwl9Cj4gPiAr
+Cj4gPiArCWR3X3BjaWVfc2V0dXBfcmMoJnBjaWUtPnBjaS5wcCk7Cj4gPiArCWVzd2luX3BjaWVf
+c3RhcnRfbGluaygmcGNpZS0+cGNpKTsKPiA+ICsJZHdfcGNpZV93YWl0X2Zvcl9saW5rKCZwY2ll
+LT5wY2kpOwo+ID4gKwo+ID4gKwlwY2llLT5zdXNwZW5kZWQgPSBmYWxzZTsKPiA+ICsKPiA+ICsJ
+cmV0dXJuIDA7Cj4gPiArfQo+ID4gKwo+ID4gK3N0YXRpYyBjb25zdCBzdHJ1Y3QgZGV2X3BtX29w
+cyBlc3dpbl9wY2llX3BtX29wcyA9IHsKPiA+ICsJTk9JUlFfU1lTVEVNX1NMRUVQX1BNX09QUyhl
+c3dpbl9wY2llX3N1c3BlbmQsIGVzd2luX3BjaWVfcmVzdW1lKQo+ID4gK307Cj4gPiArCj4gPiAr
+c3RhdGljIGNvbnN0IHN0cnVjdCBlc3dpbl9wY2llX2RhdGEgZXN3aW5fNzcwMF9kYXRhID0gewo+
+ID4gKwkubXNpeF9jYXAgPSBmYWxzZSwKPiA+ICt9Owo+ID4gKwo+ID4gK3N0YXRpYyBjb25zdCBz
+dHJ1Y3Qgb2ZfZGV2aWNlX2lkIGVzd2luX3BjaWVfb2ZfbWF0Y2hbXSA9IHsKPiA+ICsJeyAuY29t
+cGF0aWJsZSA9ICJlc3dpbixlaWM3NzAwLXBjaWUiLCAuZGF0YSA9ICZlc3dpbl83NzAwX2RhdGEg
+fSwKPiA+ICsJe30sCj4gPiArfTsKPiA+ICsKPiA+ICtzdGF0aWMgc3RydWN0IHBsYXRmb3JtX2Ry
+aXZlciBlc3dpbl9wY2llX2RyaXZlciA9IHsKPiA+ICsJLnByb2JlID0gZXN3aW5fcGNpZV9wcm9i
+ZSwKPiA+ICsJLmRyaXZlciA9IHsKPiA+ICsJCS5uYW1lID0gImVpYzc3MDAtcGNpZSIsCj4gPiAr
+CQkub2ZfbWF0Y2hfdGFibGUgPSBlc3dpbl9wY2llX29mX21hdGNoLAo+ID4gKwkJLnN1cHByZXNz
+X2JpbmRfYXR0cnMgPSB0cnVlLAo+ID4gKwkJLnBtID0gJmVzd2luX3BjaWVfcG1fb3BzLAo+ID4g
+Kwl9LAo+ID4gK307Cj4gPiArYnVpbHRpbl9wbGF0Zm9ybV9kcml2ZXIoZXN3aW5fcGNpZV9kcml2
+ZXIpOwo+ID4gKwo+ID4gK01PRFVMRV9ERVNDUklQVElPTigiUENJZSBob3N0IGNvbnRyb2xsZXIg
+ZHJpdmVyIGZvciBFSUM3NzAwIFNvQ3MiKTsKPiA+ICtNT0RVTEVfQVVUSE9SKCJZdSBOaW5nIDxu
+aW5neXVAZXN3aW5jb21wdXRpbmcuY29tPiIpOwo+ID4gK01PRFVMRV9BVVRIT1IoIlNlbmNodWFu
+IFpoYW5nIDx6aGFuZ3NlbmNodWFuQGVzd2luY29tcHV0aW5nLmNvbT4iKTsKPiA+ICtNT0RVTEVf
+QVVUSE9SKCJZYW5naHVpIE91IDxvdXlhbmdodWlAZXN3aW5jb21wdXRpbmcuY29tPiIpOwo+ID4g
+K01PRFVMRV9MSUNFTlNFKCJHUEwiKTsKPiA+IC0tCj4gPiAyLjI1LjEKPiA+Cg==
