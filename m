@@ -1,139 +1,103 @@
-Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [4.193.249.245])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id D49DC304BC1;
-	Wed, 24 Sep 2025 12:29:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=4.193.249.245
+Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B0AA18E3F;
+	Wed, 24 Sep 2025 12:30:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758716957; cv=none; b=RXnxXl+4fB+ooxpxa7mJxSw6fumv7du+76KHj/qUxSr3TGs1Bs+8JkMctMN/61USPAgJhHT0K+Jfv2Y3y+pxez0AdBy9THQ4LP1+aB4NoyiVo2XOsGrWsOCViLzXrw3suKLg5NRxydWm7VD/D1DfjJNe3C/hn0HW00IjBFtoh2E=
+	t=1758717011; cv=none; b=sm2PoLRfNdd7JyVJ+pOX3m6SqoCDqJfzGSY70/9QshNvAAzbP4g9Yb7SRqzwwLngQOMQyahtuvyHmjYCHYRpgXvIohMQez3e37IMgaplzi6ophJPuAXvV6HSGBHfSIWu17ZJCInZSokgAqvms3Gn6fb9MSyON5cD2GhETTPdqUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758716957; c=relaxed/simple;
-	bh=gcQ96gS5Kp14tJCCU0W1j74E8vc+ydA8GDAsNUTESJw=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=WTmYflPvIVQQdsk+jbfV7oanccPlNaQTLYCIHb0DELsYb9S3lH05mVKTtKT2dWSkPFZ7bgBI7yr1/XyDgxeGDoJl2uUNizWrUAn2zYZ+JN4DCjj+efMniv6o9oGFw+CPYLrFqiXvjQU0dZUNLPpzAeZxOXmb1mlepQ33DfmeOV8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com; spf=pass smtp.mailfrom=eswincomputing.com; arc=none smtp.client-ip=4.193.249.245
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=eswincomputing.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=eswincomputing.com
-Received: from zhangsenchuan$eswincomputing.com ( [10.12.96.83] ) by
- ajax-webmail-app2 (Coremail) ; Wed, 24 Sep 2025 20:28:49 +0800 (GMT+08:00)
-Date: Wed, 24 Sep 2025 20:28:49 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhangsenchuan <zhangsenchuan@eswincomputing.com>
-To: "Bjorn Helgaas" <helgaas@kernel.org>
-Cc: bhelgaas@google.com, lpieralisi@kernel.org, kwilczynski@kernel.org,
-	mani@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
-	conor+dt@kernel.org, linux-pci@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	p.zabel@pengutronix.de, johan+linaro@kernel.org,
-	quic_schintav@quicinc.com, shradha.t@samsung.com, cassel@kernel.org,
-	thippeswamy.havalige@amd.com, mayank.rana@oss.qualcomm.com,
-	inochiama@gmail.com, ningyu@eswincomputing.com,
-	linmin@eswincomputing.com, pinkesh.vaghela@einfochips.com,
-	"Yanghui Ou" <ouyanghui@eswincomputing.com>
-Subject: Re: Re: [PATCH v3 2/2] PCI: EIC7700: Add Eswin PCIe host controller
- driver
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.2-cmXT6 build
- 20241203(6b039d88) Copyright (c) 2002-2025 www.mailtech.cn
- mispb-72143050-eaf5-4703-89e0-86624513b4ce-eswincomputing.com
-In-Reply-To: <20250923163254.GA2042659@bhelgaas>
-References: <20250923163254.GA2042659@bhelgaas>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1758717011; c=relaxed/simple;
+	bh=1/FUivANIkJMUDEE5QPqxlsnGmmnctoDup6MhovHyoQ=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=HinuTFFPRf1OSVGkMR9dtMxYfkFKmVZApLHVJTx7spQIkP/b8toR7Aaneo8R6MMCMnwt3tmmaMeriuL81BDp4UfjjHDIiZyG4V5ZAZ1zJKyYjBi2GCfh2z9E6DVzR3WxlHr8H563Eo5dm7jP8Dyl188I5jie9mgWRtx9UM1c4DI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
+Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
+Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
+	by Atcsqr.andestech.com with ESMTPS id 58OBST3P074422
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 24 Sep 2025 19:28:29 +0800 (+08)
+	(envelope-from randolph@andestech.com)
+Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
+ (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Wed, 24 Sep 2025
+ 19:28:29 +0800
+From: Randolph Lin <randolph@andestech.com>
+To: <linux-kernel@vger.kernel.org>
+CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
+        <devicetree@vger.kernel.org>, <jingoohan1@gmail.com>,
+        <mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
+        <robh@kernel.org>, <bhelgaas@google.com>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <alex@ghiti.fr>, <aou@eecs.berkeley.edu>,
+        <palmer@dabbelt.com>, <paul.walmsley@sifive.com>,
+        <ben717@andestech.com>, <inochiama@gmail.com>,
+        <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
+        <shradha.t@samsung.com>, <randolph.sklin@gmail.com>,
+        <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
+Subject: [PATCH v4 0/5] Add support for Andes Qilai SoC PCIe controller
+Date: Wed, 24 Sep 2025 19:28:15 +0800
+Message-ID: <20250924112820.2003675-1-randolph@andestech.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <27516921.17f2.1997bb2a498.Coremail.zhangsenchuan@eswincomputing.com>
-X-Coremail-Locale: en_US
-X-CM-TRANSID:TQJkCgAXt5UB5NNo_3TbAA--.26336W
-X-CM-SenderInfo: x2kd0wpvhquxxxdqqvxvzl0uprps33xlqjhudrp/1tbiAQEPBmjSy
-	3ocpgAAs4
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3iIAIbVAYjsxI4VW3Jw
-	CS07vEb4IE77IF4wCS07vE1I0E4x80FVAKz4kxMIAIbVAFxVCaYxvI4VCIwcAKzIAtYxBI
-	daVFxhVjvjDU=
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
+X-DNSRBL: 
+X-SPAM-SOURCE-CHECK: pass
+X-MAIL:Atcsqr.andestech.com 58OBST3P074422
 
-CgoKPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2VzLS0tLS0KPiBGcm9tOiAiQmpvcm4gSGVsZ2FhcyIg
-PGhlbGdhYXNAa2VybmVsLm9yZz4KPiBTZW5kIHRpbWU6V2VkbmVzZGF5LCAyNC8wOS8yMDI1IDAw
-OjMyOjU0Cj4gVG86IHpoYW5nc2VuY2h1YW5AZXN3aW5jb21wdXRpbmcuY29tCj4gQ2M6IGJoZWxn
-YWFzQGdvb2dsZS5jb20sIGxwaWVyYWxpc2lAa2VybmVsLm9yZywga3dpbGN6eW5za2lAa2VybmVs
-Lm9yZywgbWFuaUBrZXJuZWwub3JnLCByb2JoQGtlcm5lbC5vcmcsIGtyemsrZHRAa2VybmVsLm9y
-ZywgY29ub3IrZHRAa2VybmVsLm9yZywgbGludXgtcGNpQHZnZXIua2VybmVsLm9yZywgZGV2aWNl
-dHJlZUB2Z2VyLmtlcm5lbC5vcmcsIGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcsIHAuemFi
-ZWxAcGVuZ3V0cm9uaXguZGUsIGpvaGFuK2xpbmFyb0BrZXJuZWwub3JnLCBxdWljX3NjaGludGF2
-QHF1aWNpbmMuY29tLCBzaHJhZGhhLnRAc2Ftc3VuZy5jb20sIGNhc3NlbEBrZXJuZWwub3JnLCB0
-aGlwcGVzd2FteS5oYXZhbGlnZUBhbWQuY29tLCBtYXlhbmsucmFuYUBvc3MucXVhbGNvbW0uY29t
-LCBpbm9jaGlhbWFAZ21haWwuY29tLCBuaW5neXVAZXN3aW5jb21wdXRpbmcuY29tLCBsaW5taW5A
-ZXN3aW5jb21wdXRpbmcuY29tLCBwaW5rZXNoLnZhZ2hlbGFAZWluZm9jaGlwcy5jb20sICJZYW5n
-aHVpIE91IiA8b3V5YW5naHVpQGVzd2luY29tcHV0aW5nLmNvbT4KPiBTdWJqZWN0OiBSZTogW1BB
-VENIIHYzIDIvMl0gUENJOiBFSUM3NzAwOiBBZGQgRXN3aW4gUENJZSBob3N0IGNvbnRyb2xsZXIg
-ZHJpdmVyCj4gCj4gT24gVHVlLCBTZXAgMjMsIDIwMjUgYXQgMDg6MTI6MjdQTSArMDgwMCwgemhh
-bmdzZW5jaHVhbkBlc3dpbmNvbXB1dGluZy5jb20gd3JvdGU6Cj4gPiBBZGQgZHJpdmVyIGZvciB0
-aGUgRXN3aW4gRUlDNzcwMCBQQ0llIGhvc3QgY29udHJvbGxlcix0aGUgY29udHJvbGxlciBpcwo+
-ID4gYmFzZWQgb24gdGhlIERlc2lnbldhcmUgUENJZSBjb3JlLCBJUCByZXZpc2lvbiA2LjAwYSBU
-aGUgUENJZSBHZW4uMwo+ID4gY29udHJvbGxlciBzdXBwb3J0cyBhIGRhdGEgcmF0ZSBvZiA4IEdU
-L3MgYW5kIDQgY2hhbm5lbHMsIHN1cHBvcnQgSU5UWAo+ID4gYW5kIE1TSSBpbnRlcnJ1cHRzLgo+
-IAo+IHMvaG9zdCBjb250cm9sbGVyLHRoZSBjb250cm9sbGVyIGlzL2hvc3QgY29udHJvbGxlciwg
-d2hpY2ggaXMvCj4gCj4gQWRkIHBlcmlvZCBhdCBlbmQgb2YgZmlyc3Qgc2VudGVuY2UuCj4gCj4g
-PiArKysgYi9kcml2ZXJzL3BjaS9jb250cm9sbGVyL2R3Yy9LY29uZmlnCj4gPiBAQCAtMzc1LDYg
-KzM3NSwxNyBAQCBjb25maWcgUENJX0VYWU5PUwo+ID4gIAkgIGhhcmR3YXJlIGFuZCB0aGVyZWZv
-cmUgdGhlIGRyaXZlciByZS11c2VzIHRoZSBEZXNpZ25XYXJlIGNvcmUKPiA+ICAJICBmdW5jdGlv
-bnMgdG8gaW1wbGVtZW50IHRoZSBkcml2ZXIuCj4gPiAgCj4gPiAKPiA+ICtzdGF0aWMgaW50IGVz
-d2luX3BjaWVfc3VzcGVuZChzdHJ1Y3QgZGV2aWNlICpkZXYpCj4gPiArewo+ID4gKwlzdHJ1Y3Qg
-ZXN3aW5fcGNpZSAqcGNpZSA9IGRldl9nZXRfZHJ2ZGF0YShkZXYpOwo+ID4gKwlzdHJ1Y3QgZXN3
-aW5fcGNpZV9wb3J0ICpwb3J0Owo+ID4gKwo+ID4gKwkvKgo+ID4gKwkgKiBGb3IgY29udHJvbGxl
-cnMgd2l0aCBhY3RpdmUgZGV2aWNlcywgcmVzb3VyY2VzIGFyZSByZXRhaW5lZCBhbmQKPiA+ICsJ
-ICogY2Fubm90IGJlIHR1cm5lZCBvZmYuCj4gPiArCSAqLwo+ID4gKwlpZiAoIWR3X3BjaWVfbGlu
-a191cCgmcGNpZS0+cGNpKSkgewo+ID4gKwkJbGlzdF9mb3JfZWFjaF9lbnRyeShwb3J0LCAmcGNp
-ZS0+cG9ydHMsIGxpc3QpCj4gPiArCQkJcmVzZXRfY29udHJvbF9hc3NlcnQocG9ydC0+cGVyc3Qp
-Owo+ID4gKwkJZXN3aW5fcGNpZV9hc3NlcnQocGNpZSk7Cj4gPiArCQljbGtfYnVsa19kaXNhYmxl
-X3VucHJlcGFyZShwY2llLT5udW1fY2xrcywgcGNpZS0+Y2xrcyk7Cj4gPiArCQlwY2llLT5zdXNw
-ZW5kZWQgPSB0cnVlOwo+IAo+IEknbSBhIGxpdHRsZSBkdWJpb3VzIGFib3V0IHRoaXMgc2luY2Ug
-bm9uZSBvZiB0aGUgb3RoZXIgZHJpdmVycyBjaGVjawo+IGR3X3BjaWVfbGlua191cCgpLgoKZGVh
-ciBCam9ybgoKVGhhbmsgeW91IHZlcnkgbXVjaCBmb3IgeW91ciByZXZpZXcuCkNsYXJpZmljYXRp
-b27vvJoKVGhlIHByZXZpb3VzIHBhdGNoLCBNYW5pIGdhdmUgbWUgYWR2aWNlOiAiU28geW91IHdh
-bnQgdG8gcG93ZXIgb2ZmIHRoZSAKZGV2aWNlIGV2ZW4gaWYgaXQgaW50ZW5kcyB0byBiZSBpbiBE
-MD8iIExpa2UgTlZNZS4iCgpJIHJlZmVycmVkIHRvIHRoZSBpbXBsZW1lbnRhdGlvbiBvZiAicGNp
-ZS1xY29tLmMiIGFuZCBhZGRlZCB0aGUgCmp1ZGdtZW50IG9mIHRoZSBkd19wY2llX2xpbmtfdXAg
-ZnVuY3Rpb24uCgpUaGUgZm9sbG93aW5nIGFyZSBtYW5pJ3MgY29tbWVudHMgb24gZml4aW5nIHRo
-aXMgaXNzdWXvvJoKLyoKICogVHVybiBPRkYgdGhlIHJlc291cmNlcyBvbmx5IGZvciBjb250cm9s
-bGVycyB3aXRob3V0IGFjdGl2ZSBQQ0llCiAqIGRldmljZXMuIEZvciBjb250cm9sbGVycyB3aXRo
-IGFjdGl2ZSBkZXZpY2VzLCB0aGUgcmVzb3VyY2VzIGFyZSBrZXB0CiAqIE9OIGFuZCB0aGUgbGlu
-ayBpcyBleHBlY3RlZCB0byBiZSBpbiBMMC9MMSAoc3ViKXN0YXRlcy4KICoKICogVHVybmluZyBP
-RkYgdGhlIHJlc291cmNlcyBmb3IgY29udHJvbGxlcnMgd2l0aCBhY3RpdmUgUENJZSBkZXZpY2Vz
-CiAqIHdpbGwgdHJpZ2dlciBhY2Nlc3MgdmlvbGF0aW9uIGR1cmluZyB0aGUgZW5kIG9mIHRoZSBz
-dXNwZW5kIGN5Y2xlLAogKiBhcyBrZXJuZWwgdHJpZXMgdG8gYWNjZXNzIHRoZSBQQ0llIGRldmlj
-ZXMgY29uZmlnIHNwYWNlIGZvciBtYXNraW5nCiAqIE1TSXMuCiAqCiAqIEFsc28sIGl0IGlzIG5v
-dCBkZXNpcmFibGUgdG8gcHV0IHRoZSBsaW5rIGludG8gTDIvTDMgc3RhdGUgYXMgdGhhdAogKiBp
-bXBsaWVzIFZERCBzdXBwbHkgd2lsbCBiZSByZW1vdmVkIGFuZCB0aGUgZGV2aWNlcyBtYXkgZ28g
-aW50bwogKiBwb3dlcmRvd24gc3RhdGUuIFRoaXMgd2lsbCBhZmZlY3QgdGhlIGxpZmV0aW1lIG9m
-IHRoZSBzdG9yYWdlIGRldmljZXMKICogbGlrZSBOVk1lLgogKi8KCj4gCj4gSXQgYWxzbyBzZWVt
-cyBhIGxpdHRsZSBiaXQgcmFjeSBzaW5jZSBkd19wY2llX2xpbmtfdXAoKSBjYW4gYWx3YXlzCj4g
-Y2hhbmdlIGFmdGVyIGl0J3MgY2FsbGVkLgo+IAo+IEFuZCB0cmFja2luZyBwY2llLT5zdXNwZW5k
-ZWQgaXMgYWxzbyB1bnVzdWFsIGlmIG5vdCB1bmlxdWUuCj4gCj4gU2hvdWxkIGR3X3BjaWVfc3Vz
-cGVuZF9ub2lycSgpIGFuZCBkd19wY2llX3Jlc3VtZV9ub2lycSgpIGJlIHVzZWQKPiBoZXJlPwoK
-Q2xhcmlmaWNhdGlvbu+8mgpUaGUgZHdfcGNpZV9zdXNwZW5kX25vaXJxIGFuZCBkd19wY2llX3Jl
-c3VtZV9ub2lycSBjb2RlIGlzIGEgbmljZSB3cmFwcGVkIApjb2xsZWN0aW9uIGZ1bmN0aW9uLCBi
-dXQgdGhlIGR3X3BjaWVfc3VzcGVuZF9ub2lycSBmdW5jdGlvbiBpbXBsZW1lbnRzIApzZW5kaW5n
-IHRoZSBQTUVfVHVybl9PZmYgbWVzc2FnZS4gTm90aWZ5IHRoZSBkZXZpY2UgdG8gZW50ZXIgbG93
-IHBvd2VyIApjb25zdW1wdGlvbiBhbmQgd2FpdCBmb3IgaXQgdG8gZW50ZXIgdGhlIExUU1NNX0wy
-IHN0YXRlLiBPdXIgaGFyZHdhcmUgb25seQpzdXBwb3J0cyBlbnRlcmluZyB0aGUgTDAvTDEgc3Rh
-dGUgYW5kIGRvZXMgbm90IHN1cHBvcnQgZW50ZXJpbmcgdGhlIEQzY29kZSAKYW5kIEwyL0wzIHN0
-YXRlcy4gSXQgd2lsbCBjYXVzZSBtaXN0YWtlcyBhbmQgY2FuJ3QgcmVzdW1lLiBUaGVyZWZvcmUs
-IEkgCmNhbm5vdCBkaXJlY3RseSBjYWxsIHRoZSBkd19wY2llX3N1c3BlbmRfbm9pcnEgZnVuY3Rp
-b24gaGVyZS4KCj4gCj4gPiArCX0KPiA+ICsKPiA+ICsJcmV0dXJuIDA7Cj4gPiArfQo+ID4gKwo+
-ID4gK3N0YXRpYyBpbnQgZXN3aW5fcGNpZV9yZXN1bWUoc3RydWN0IGRldmljZSAqZGV2KQo+ID4g
-K3sKPiA+ICsJc3RydWN0IGVzd2luX3BjaWUgKnBjaWUgPSBkZXZfZ2V0X2RydmRhdGEoZGV2KTsK
-PiA+ICsJaW50IHJldDsKPiA+ICsKPiA+ICsJaWYgKCFwY2llLT5zdXNwZW5kZWQpCj4gPiArCQly
-ZXR1cm4gMDsKPiA+ICsKPiA+ICsJcmV0ID0gZXN3aW5fcGNpZV9ob3N0X2luaXQoJnBjaWUtPnBj
-aS5wcCk7Cj4gPiArCWlmIChyZXQpIHsKPiA+ICsJCWRldl9lcnIoZGV2LCAiRmFpbGVkIHRvIGlu
-aXQgaG9zdDogJWRcbiIsIHJldCk7Cj4gPiArCQlyZXR1cm4gcmV0Owo+ID4gKwl9Cj4gPiArCj4g
-PiArCWR3X3BjaWVfc2V0dXBfcmMoJnBjaWUtPnBjaS5wcCk7Cj4gPiArCWVzd2luX3BjaWVfc3Rh
-cnRfbGluaygmcGNpZS0+cGNpKTsKPiA+ICsJZHdfcGNpZV93YWl0X2Zvcl9saW5rKCZwY2llLT5w
-Y2kpOwo+ID4gKwo+ID4gKwlwY2llLT5zdXNwZW5kZWQgPSBmYWxzZTsKPiA+ICsKPiA+ICsJcmV0
-dXJuIDA7Cj4gPiArfQo+ID4gKwo+ID4gK3N0YXRpYyBjb25zdCBzdHJ1Y3QgZGV2X3BtX29wcyBl
-c3dpbl9wY2llX3BtX29wcyA9IHsKPiA+ICsJTk9JUlFfU1lTVEVNX1NMRUVQX1BNX09QUyhlc3dp
-bl9wY2llX3N1c3BlbmQsIGVzd2luX3BjaWVfcmVzdW1lKQo+IAo+IFN1Z2dlc3QgYWRkaW5nICJf
-bm9pcnEiIHRvIHRoZSBlbmQgb2YgdGhlc2UgZnVuY3Rpb24gbmFtZXMgc2luY2UgdGhpcwo+IHNl
-dHMgLnN1c3BlbmRfbm9pcnEsIC5yZXN1bWVfbm9pcnEsIGV0Yy4gIEFsc28gd2lsbCBtYXRjaCBv
-dGhlciBkcml2ZXJzLgo=
+Add support for Andes Qilai SoC PCIe controller
+
+These patches introduce driver support for the PCIe controller on the
+Andes Qilai SoC.
+
+Signed-off-by: Randolph Lin <randolph@andestech.com>
+
+---
+Changes in v4:
+- Add .post_init callback for enabling IOCP cache.  
+- Sort by vender name in Kconfig 
+- Using PROBE_PREFER_ASYNCHRONOUS as default probe type.
+- Made minor adjustments based on the reviewer's suggestions.
+
+---
+Changes in v3:
+- Remove outbound ATU address range validation callback and logic.
+- Add logic to skip failed outbound iATU configuration and continue.
+- Using PROBE_PREFER_ASYNCHRONOUS as default probe type.
+- Made minor adjustments based on the reviewer's suggestions.
+
+---
+Changes in v2:
+- Remove the patch that adds the dma-ranges property to the SoC node.
+- Add dma-ranges to the PCIe parent node bus node.
+- Refactor and rename outbound ATU address range validation callback and logic.
+- Use parent_bus_offset instead of cpu_addr_fixup().
+- Using PROBE_DEFAULT_STRATEGY as default probe type.
+- Made minor adjustments based on the reviewer's suggestions.
+
+Randolph Lin (5):
+  PCI: dwc: Skip failed outbound iATU and continue
+  dt-bindings: PCI: Add Andes QiLai PCIe support
+  riscv: dts: andes: Add PCIe node into the QiLai SoC
+  PCI: andes: Add Andes QiLai SoC PCIe host driver support
+  MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
+
+ .../bindings/pci/andestech,qilai-pcie.yaml    | 103 +++++++++
+ MAINTAINERS                                   |   7 +
+ arch/riscv/boot/dts/andes/qilai.dtsi          | 112 ++++++++++
+ drivers/pci/controller/dwc/Kconfig            |  13 ++
+ drivers/pci/controller/dwc/Makefile           |   1 +
+ drivers/pci/controller/dwc/pcie-andes-qilai.c | 198 ++++++++++++++++++
+ .../pci/controller/dwc/pcie-designware-host.c |   9 +-
+ 7 files changed, 439 insertions(+), 4 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
+ create mode 100644 drivers/pci/controller/dwc/pcie-andes-qilai.c
+
+-- 
+2.34.1
+
