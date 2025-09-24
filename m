@@ -1,83 +1,104 @@
-Received: from Atcsqr.andestech.com (60-248-80-70.hinet-ip.hinet.net [60.248.80.70])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f46.google.com (mail-ot1-f46.google.com [209.85.210.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C2FE302CC9;
-	Wed, 24 Sep 2025 12:30:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.248.80.70
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C27EB2FB98F
+	for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2025 12:55:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758717012; cv=none; b=EQKfS2n+WTp72GRxJFBz+QF1pD8MfDCShSxfQVXJ6C4b2CbHrt3mleF0qo+2oGl97HhlnOp6qfVSlUHs+641VCCc2ixFkx/LxoYbsgNFncAp6geaEI7j8XDdXxucW0L56qiVcWLlagf7EabUBQH/NpgRaNFSyd35dqCYjux9fWg=
+	t=1758718560; cv=none; b=myRsjaTLYEmGOM9429/HGnt9w95mjFsIh5JZNiCdY8VInxwxXx2LRbeE65Ku2O6G/SwvoGT5f5nldrcFMde3J0cfgpjjS/JDS7ygjG/WIfTD9eeiZmLAXJzGX995MFwjnh3+8UnL8lBoMuSutDWT4rdYMeo7ARvSsDoT0Ou/f5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758717012; c=relaxed/simple;
-	bh=G1k9MDT0gST3QLWEfN/BbsyqcKhFN4QowjGH+oRUzkA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=C8i+fMkHneIQj4c8OVTlMXtvAdeXzmr5ayvdwh3cP8+JbeVq8HIhIlwicsDdfB6W6NlSblKv7dVT8nH7V3OfLWiCQQwDv0gzOaBu9TpO8+MPyfyY0gLJJ/u81DRWx50svchMvsU+vAxTD8Rrm58SiSDOvKQtVrzMlofZiBbsb6w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com; spf=pass smtp.mailfrom=andestech.com; arc=none smtp.client-ip=60.248.80.70
-Authentication-Results: smtp.subspace.kernel.org; dmarc=permerror header.from=andestech.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=andestech.com
-Received: from mail.andestech.com (ATCPCS31.andestech.com [10.0.1.89])
-	by Atcsqr.andestech.com with ESMTPS id 58OBSVsY074427
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 24 Sep 2025 19:28:31 +0800 (+08)
-	(envelope-from randolph@andestech.com)
-Received: from atctrx.andestech.com (10.0.15.173) by ATCPCS31.andestech.com
- (10.0.1.89) with Microsoft SMTP Server id 14.3.498.0; Wed, 24 Sep 2025
- 19:28:31 +0800
-From: Randolph Lin <randolph@andestech.com>
-To: <linux-kernel@vger.kernel.org>
-CC: <linux-pci@vger.kernel.org>, <linux-riscv@lists.infradead.org>,
-        <devicetree@vger.kernel.org>, <jingoohan1@gmail.com>,
-        <mani@kernel.org>, <lpieralisi@kernel.org>, <kwilczynski@kernel.org>,
-        <robh@kernel.org>, <bhelgaas@google.com>, <krzk+dt@kernel.org>,
-        <conor+dt@kernel.org>, <alex@ghiti.fr>, <aou@eecs.berkeley.edu>,
-        <palmer@dabbelt.com>, <paul.walmsley@sifive.com>,
-        <ben717@andestech.com>, <inochiama@gmail.com>,
-        <thippeswamy.havalige@amd.com>, <namcao@linutronix.de>,
-        <shradha.t@samsung.com>, <randolph.sklin@gmail.com>,
-        <tim609@andestech.com>, Randolph Lin <randolph@andestech.com>
-Subject: [PATCH v4 5/5] MAINTAINERS: Add maintainers for Andes QiLai PCIe driver
-Date: Wed, 24 Sep 2025 19:28:20 +0800
-Message-ID: <20250924112820.2003675-6-randolph@andestech.com>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250924112820.2003675-1-randolph@andestech.com>
-References: <20250924112820.2003675-1-randolph@andestech.com>
+	s=arc-20240116; t=1758718560; c=relaxed/simple;
+	bh=8qhfbs5/dOfdODZ9W2ISGsgvtvUAf69XpGYPjAvdJ34=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Gfufm3Rbsq/kcf+snd4yFKBn9bmTPrRYmowaS3lxMf7hENxRvebTeB/4dFTiwudZxfMkwhOXfCNU71JwX8gkCV3KWgNB0XySON6bu/bVECPgMecP39aMnFLr1RA5R32Pw97EojnmZdRvTU8nUwOxgKypvM/QYJM7gqekiB9tKEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca; spf=pass smtp.mailfrom=ziepe.ca; dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b=Kkn6onVP; arc=none smtp.client-ip=209.85.210.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ziepe.ca
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=ziepe.ca header.i=@ziepe.ca header.b="Kkn6onVP"
+Received: by mail-ot1-f46.google.com with SMTP id 46e09a7af769-74382048b8cso5352908a34.3
+        for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2025 05:55:58 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ziepe.ca; s=google; t=1758718558; x=1759323358; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=8qhfbs5/dOfdODZ9W2ISGsgvtvUAf69XpGYPjAvdJ34=;
+        b=Kkn6onVPAMSNNklmFFZI3aNKbFGXU6nBTzblm3E/Pqfzu0p10WCUO6yPajm/5VwuAM
+         0R/CuTowYLBmljyJC/Kn5QN5Wdco/tdBRn5ekpqnGP38SrN+Ac0292QFuzXolu4Ur2ly
+         nMR4TkZHt1hXvq1/mclPrqQIzGGal2GIP/5UvgAk/Mdh0Y0kr2haii3hP91cObbCQxQO
+         TXW0yvCQfwfgC0aETgt+VkrOzjRw8DVOxHJKZ7J67EtCgL7I4b5l0Qgvqt8gtTaq90iZ
+         SZ+0Z7skuhxl+n3wGdTfN6yE1HSJh0h4Qq/SfGrjta4rO8mi9X8xjGNQPxika3XSUOJm
+         Ns3w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758718558; x=1759323358;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=8qhfbs5/dOfdODZ9W2ISGsgvtvUAf69XpGYPjAvdJ34=;
+        b=iIM4Plfw4nSigC02fs64fdf1RctV4IviBJvxSleFdU+Q00sK1L9kWPcvFFaxrk3gUr
+         rXTP/aKlkz4dL7bAiHYzl+UEf7J3Tq5Yf2OIyXOS9gjCfGn3mZlzB50AfIrxuL+WP9qV
+         echexdYUZ3CovVvGp0Vn90Zw06MgpY6wfhcr2t+9gk03pK0lMzQvC3iMz9gUuTHvZJf1
+         z/rhtwCsnCvd5bJyma6M4aOd/xs+Rv3tFiMgzPzqWd/k+FhoMLAGovJF3xjc2Cnr0L7F
+         mPX0UlTI6H6gzJYL19iS6O6sSa3c7F6sedLv2JWNmrZ71QLzVyc8ENSMhOLZ2cUN9xbS
+         KyPg==
+X-Forwarded-Encrypted: i=1; AJvYcCVjuOUmqzLlR5xnCNBj8eI/CSm5Jf/YPcqxPdirsHLUXjt85dAzokLniHOONCD97EgiSCCf8TlKT98=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxCy/9IPfqdBFCupogqaTuPUSyS7Xqll5dVGUjgaFxN7wQyevc5
+	ZG+83AvLoy+F944+9VOhJ40XfJ9FcILImp5chUVuPKofecMxVJ6GTLoWsFxc1Q4ZQ1s=
+X-Gm-Gg: ASbGncscW+O0PWk98v7/U6Lz0CyIKSZIcE9vFCvB3BqK82JGaogbByCC4GXWQLyn+64
+	RyK32WyE1tx80lPvS1JwZ1pkw4OC7/HO/PzXkZBAdgx84DJ+8Y9ZHCR4lx27uJ17vi4iC0/n76l
+	Xu/4B8XcsvVyckgMjL5w3hH0M9xGEl8E9RfZSYDRML89HNJqB49vNzJ6v6lwVlfh4LZAm84yAVy
+	KL/dJM4xOnPAXcOE5y5JKpjI3Do29IW+2gbLrA1A+qHA2fX5ah8znwJIb+lYE/Yrnua5Ms17dss
+	qh4ff9fp4CMRpSzSk+LazRZYtAlGMAGYI9lOlWyBK4Gelm2B2qUGSzMMg/Ul0i4yXhn+cfsk
+X-Google-Smtp-Source: AGHT+IHQ1WFwERflWPT6pleBXcoHSBQbFQS1yTbSrGY2yC7WZRjb2FbqLBgkt00nf34cnENXHwUiCg==
+X-Received: by 2002:a05:6830:65c3:10b0:746:dc05:8604 with SMTP id 46e09a7af769-79153cba081mr2694566a34.20.1758718557920;
+        Wed, 24 Sep 2025 05:55:57 -0700 (PDT)
+Received: from ziepe.ca ([130.41.10.202])
+        by smtp.gmail.com with ESMTPSA id 46e09a7af769-7692af2f9desm7576308a34.31.2025.09.24.05.55.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 24 Sep 2025 05:55:57 -0700 (PDT)
+Received: from jgg by wakko with local (Exim 4.97)
+	(envelope-from <jgg@ziepe.ca>)
+	id 1v1P2J-0000000B800-3i6s;
+	Wed, 24 Sep 2025 09:55:55 -0300
+Date: Wed, 24 Sep 2025 09:55:55 -0300
+From: Jason Gunthorpe <jgg@ziepe.ca>
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
+	Bjorn Helgaas <bhelgaas@google.com>, Joerg Roedel <joro@8bytes.org>,
+	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
+	Joerg Roedel <jroedel@suse.de>, iommu@lists.linux.dev,
+	Anders Roxell <anders.roxell@linaro.org>,
+	Naresh Kamboju <naresh.kamboju@linaro.org>,
+	Pavankumar Kondeti <quic_pkondeti@quicinc.com>,
+	Xingang Wang <wangxingang5@huawei.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>, stable@vger.kernel.org
+Subject: Re: [PATCH 0/2] PCI: Fix ACS enablement for Root Ports in DT
+ platforms
+Message-ID: <20250924125555.GJ2547959@ziepe.ca>
+References: <20250910-pci-acs-v1-0-fe9adb65ad7d@oss.qualcomm.com>
+ <20250918141102.GO1326709@ziepe.ca>
+ <tzlbsnsoymhjlri5rm7dw5btb2m2tpzemtyqhjpa2eu3josf5c@uivuvkpx3wep>
+ <20250923162139.GC2547959@ziepe.ca>
+ <oig5w7dnrdpgvzuqu4johs526qe57x7dkurd2abllqyvpavvti@s3pwtoduusfr>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-DKIM-Results: atcpcs31.andestech.com; dkim=none;
-X-DNSRBL: 
-X-SPAM-SOURCE-CHECK: pass
-X-MAIL:Atcsqr.andestech.com 58OBSVsY074427
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <oig5w7dnrdpgvzuqu4johs526qe57x7dkurd2abllqyvpavvti@s3pwtoduusfr>
 
-Here add maintainer information for Andes QiLai PCIe driver.
+On Wed, Sep 24, 2025 at 01:51:23PM +0530, Manivannan Sadhasivam wrote:
 
-Signed-off-by: Randolph Lin <randolph@andestech.com>
----
- MAINTAINERS | 7 +++++++
- 1 file changed, 7 insertions(+)
+> This device is not spec conformant in many areas tbh. But my
+> suggestion would be to follow the vendor suggested erratum until any
+> reported issues.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 520fb4e379a3..0fe27108e6b9 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -19256,6 +19256,13 @@ S:	Supported
- F:	Documentation/devicetree/bindings/pci/altr,pcie-root-port.yaml
- F:	drivers/pci/controller/pcie-altera.c
- 
-+PCI DRIVER FOR ANDES QILAI PCIE
-+M:	Randolph Lin <randolph@andestech.com>
-+L:	linux-pci@vger.kernel.org
-+S:	Maintained
-+F:	Documentation/devicetree/bindings/pci/andestech,qilai-pcie.yaml
-+F:	drivers/pci/controller/dwc/pcie-andes-qilai.c
-+
- PCI DRIVER FOR APPLIEDMICRO XGENE
- M:	Toan Le <toan@os.amperecomputing.com>
- L:	linux-pci@vger.kernel.org
--- 
-2.34.1
+I mean the ethernet chip retaining it's SBR after a FLR or link up/down
+is probably not a spec requirement..
 
+Jason
