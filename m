@@ -1,181 +1,212 @@
-Received: from SN4PR2101CU001.outbound.protection.outlook.com (mail-southcentralusazon11012040.outbound.protection.outlook.com [40.93.195.40])
+Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 894D88834
-	for <linux-pci@vger.kernel.org>; Wed, 24 Sep 2025 17:49:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.195.40
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758736142; cv=fail; b=ingqPt08nQSMmpIpbDb4m1vFfyV7u/xLzqelPBcliQqYW6g8MmoMwQmNkkYKllqjpVIokj8Mz49YuhKKJCSEfWKlnnjtaVpVe5wAAODHz3W+9tKezGvXhEH1ZtzJXuf5tFuIemLBtcZxjilCywb5yEJ7pHdG5Gvd/MkrVXRQ0OU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758736142; c=relaxed/simple;
-	bh=Nc4zENBvKwj22eFjWluXrtmxvSw0hASaZ5haf6vvm5I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
-	 Content-Disposition:In-Reply-To:MIME-Version; b=IobjveueuhOvoUGzFs2R2u89/DDjzPwsFBZe+NUBLNSFshNc1mp1CrwPq97VAfkTnhjKEx/nSGIvhSD2zcJnRjwTIXSS4Y0rP4W+Z2bxz9mqn/N6TR0V7HZqyyjvOBlEkjzYiRknwZDxbldSOs+2KhY409oHvnqct3I4sKUZq8Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com; spf=fail smtp.mailfrom=nvidia.com; dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b=bGeyoRDG; arc=fail smtp.client-ip=40.93.195.40
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=nvidia.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=nvidia.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E913314B90;
+	Wed, 24 Sep 2025 17:57:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758736678; cv=none; b=YqbTDgWd0gId5kKBRVCAygQcUI8M8i2OM/jjX1qLbN35GjBlcnl/jnDy0jE7pvbQaIaZgTxKxnzyQbGqILMDCZ1w6Pvhsd1klvglCSGSvMGi5CJE2srKY1Eq4/OrjYFOtT/ihwjTLITIKalbW+xr1FLRQ5+LkEurzqmiQNlxaZc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758736678; c=relaxed/simple;
+	bh=ibBLmnWGd5dwikKX/unt0rlK10hiVA3T+Fur+t+XOY4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QV3ir4PKx81Ve8HwtPiAT29UQtcA8B+ZiBot6vGPt0/7JpC1dbS483xFI4lS18NQ6ySjcZoH8Exx5vypTqqd5OZixdgncLFP5Rcn38pmNB4iKrz9Wm2BEjzbGIp+stPM0T7txuJ5rg0Y0eIbUoMvERn9mVg/g4rzGvkYbqUK2UU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=h1IrTg3g; arc=none smtp.client-ip=148.163.158.5
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=Nvidia.com header.i=@Nvidia.com header.b="bGeyoRDG"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=pxXwpD60hL7S9eN3BRRT8IulUg5kyjisH9tYvw3sd9G0pC3R7Y/+FFhMAd+zGG/go6ptQ4NxYB/PXatsIWBwEinDjzMX31uVmq9bpwOOd3PJfqZAia7ru3P7wKzperhGuXu4rnjjznPVHNsRk6YlcrNfpRKFqndtmbEIxmpffar843TBpSayRtzY8QBTC6Dl9OErxC9U0wNyB72cOLHHXKwuh3oIpl4h3oYKDau9tNcGw6J8DGOKbHGLs3xxxSOXKke7Njqm1UIIRv1HSXoxyIRPq0NjMR5/oyC/yB1XqBTLOplUw0JrMhDbslLXWzsBtcIlReH5bVQ46VqFHyLffA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=75VgPazCsRhrv/0RWmNjdJr8sqYrXbU49MhiGHIbeZA=;
- b=nDoR8hhu0tKfw/fCCCIHE8Iz0nQigEj6D6ApeV7xKBruHnuNnJQbdVmVTJ9+332cfQimW6vmWlmgL25gOetAzgEi+vR/s+qMNH3m+xmnvSwmTD9yiVlxNaTC/BYu/EEDo7xQq/S5jEEWSumcz/TF8GVpCWNgASkA806Hy/fCEHOuHBpbCDvaUW+Po9NBjdqcENnEBg+7WuxR6tX1hzMVV9wdCZAP+S/04uUX23trZCvimTFk5esAUVyxzUoQVPruGoOdcxj9AOQmeWd33SxLKNp1BJtatsuCseQn4gN3k2S79fglXacezWhnE6t35whfWfTvLd11Y6wAepYiqtP7jA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=nvidia.com; dmarc=pass action=none header.from=nvidia.com;
- dkim=pass header.d=nvidia.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=Nvidia.com;
- s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=75VgPazCsRhrv/0RWmNjdJr8sqYrXbU49MhiGHIbeZA=;
- b=bGeyoRDGeiUBny3tWsxUU2Y+DjRWrl6YMskvap/J2MAX6QCDWf/adRKh0flQyUWSa4uwWOTqBG8AjWLvO7S5ayz8kx0mGhTdR9RuKvOROcNphDTunLTG/vqkyND3zmRihBuFK4fkw7ALdafSdOZ470F6obPb8OKmc/OFHcKNMG6s/aZCMKeEn4+xhsmpu27GW45NmNV67KwTUnyUHg+9zzGcmlafN6LYKTu3jGkRbfI7RedK4aS4bTMWmJnYN+TcQXvX4bBeXyTvkJg3eBv3gsRPorBMQDkHTv2ykNBmzrrnpu7IvN71me3JZuY6eAQNdmCY0PXsCaUKUnUFGQfk/w==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=nvidia.com;
-Received: from PH7PR12MB5757.namprd12.prod.outlook.com (2603:10b6:510:1d0::13)
- by MN2PR12MB4456.namprd12.prod.outlook.com (2603:10b6:208:266::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9160.9; Wed, 24 Sep
- 2025 17:48:56 +0000
-Received: from PH7PR12MB5757.namprd12.prod.outlook.com
- ([fe80::f012:300c:6bf4:7632]) by PH7PR12MB5757.namprd12.prod.outlook.com
- ([fe80::f012:300c:6bf4:7632%2]) with mapi id 15.20.9137.021; Wed, 24 Sep 2025
- 17:48:56 +0000
-Date: Wed, 24 Sep 2025 14:12:50 -0300
-From: Jason Gunthorpe <jgg@nvidia.com>
-To: Simon Richter <Simon.Richter@hogyros.de>
-Cc: "Kasireddy, Vivek" <vivek.kasireddy@intel.com>,
-	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Christoph Hellwig <hch@infradead.org>,
-	dri-devel@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
-	linux-pci@vger.kernel.org
-Subject: Re: [PATCH v4 1/5] PCI/P2PDMA: Don't enforce ACS check for device
- functions of Intel GPUs
-Message-ID: <20250924171250.GH2617119@nvidia.com>
-References: <20250922132720.GY1391379@nvidia.com>
- <fbb6bbe7-8141-4532-812e-2b93cc2fcb1b@amd.com>
- <20250922122900.GV1391379@nvidia.com>
- <4e3919c3-3d1b-4f34-a1e4-5e9e7a5e6e14@amd.com>
- <20250922122018.GU1391379@nvidia.com>
- <045c6892-9b15-4f31-aa6a-1f45528500f1@amd.com>
- <IA0PR11MB718504F59BFA080EC0963E94F812A@IA0PR11MB7185.namprd11.prod.outlook.com>
- <20250919122931.GR1391379@nvidia.com>
- <IA0PR11MB7185C96268ADB5530B343ABBF811A@IA0PR11MB7185.namprd11.prod.outlook.com>
- <20250924161356.GA3273841@psionic12.psi5.com>
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250924161356.GA3273841@psionic12.psi5.com>
-X-ClientProxiedBy: BY3PR05CA0040.namprd05.prod.outlook.com
- (2603:10b6:a03:39b::15) To PH7PR12MB5757.namprd12.prod.outlook.com
- (2603:10b6:510:1d0::13)
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="h1IrTg3g"
+Received: from pps.filterd (m0353725.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58OFo5xN008363;
+	Wed, 24 Sep 2025 17:57:53 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=pp1; bh=c1ejUn
+	Xihd2+WKV0LQPEZ9PHhxyatEp9b3+NMwlNL/k=; b=h1IrTg3gT/aQvvxIHfE5Ru
+	LZbXB9xGPTOy9865Qa5nToradB1xluobUFmyllwbMXqaRJckk/jqjp4AaJaxSYDx
+	0lCPf4aZaqJdHRySpfKwBYaLX2M6mAJunHM9YQPdIpAKVu1Tnrp/0btxTnUBTNaX
+	v+gbuSox34luogs8XgkIA+4ChTG1hpIGBvW1amvdAtpAZ2KT33qDQ0zB0CgLP95f
+	n6izNJwkyMT9vWWJG4jlt9iHudO9fsstw7Ws0aUis2JDZLia/RnIMYIpX25zHFEv
+	42TNTW48v0TVInVu4HB9dWrJ+C8kdpIb9vrMJk9Esw/py6i6CST1ZR9MDIEu17ew
+	==
+Received: from ppma11.dal12v.mail.ibm.com (db.9e.1632.ip4.static.sl-reverse.com [50.22.158.219])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 499jpkgh3a-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 24 Sep 2025 17:57:53 +0000 (GMT)
+Received: from pps.filterd (ppma11.dal12v.mail.ibm.com [127.0.0.1])
+	by ppma11.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 58OEgOQJ030397;
+	Wed, 24 Sep 2025 17:57:52 GMT
+Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
+	by ppma11.dal12v.mail.ibm.com (PPS) with ESMTPS id 49a9a19mgg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 24 Sep 2025 17:57:52 +0000
+Received: from smtpav03.wdc07v.mail.ibm.com (smtpav03.wdc07v.mail.ibm.com [10.39.53.230])
+	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 58OHvpdu32965266
+	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 24 Sep 2025 17:57:51 GMT
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 6511B5805D;
+	Wed, 24 Sep 2025 17:57:51 +0000 (GMT)
+Received: from smtpav03.wdc07v.mail.ibm.com (unknown [127.0.0.1])
+	by IMSVA (Postfix) with ESMTP id 0DA985805A;
+	Wed, 24 Sep 2025 17:57:50 +0000 (GMT)
+Received: from [9.61.252.148] (unknown [9.61.252.148])
+	by smtpav03.wdc07v.mail.ibm.com (Postfix) with ESMTP;
+	Wed, 24 Sep 2025 17:57:49 +0000 (GMT)
+Message-ID: <d346c265-6b0e-42ce-8275-7969c8e549da@linux.ibm.com>
+Date: Wed, 24 Sep 2025 10:57:40 -0700
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: PH7PR12MB5757:EE_|MN2PR12MB4456:EE_
-X-MS-Office365-Filtering-Correlation-Id: 81b50fe8-d479-4704-9701-08ddfb92a246
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?YyuwUtssaS9AVhgy/dvbyZ6SFEDz/faZvlRmHdZyp4999PB9U7qr8heCAINT?=
- =?us-ascii?Q?fdd3oh+nJ/SgjtuC7Zc7HbrQTJT4TRwFONSVgSja1PHHSn3bVDty9VbP/xmD?=
- =?us-ascii?Q?7HB8kTJY+8e7mwyI69KxPwZml8nBflyASA70drApMEO7JXecVxGNO/mHObuY?=
- =?us-ascii?Q?YUJgEi3wB/zeGOKOfuqrdOcaBuKTlHxk0BcJ5vqA5Pn8XBgn3hmva0Zm4WHI?=
- =?us-ascii?Q?BdUx/y/OZuP3xIuLrQnMwUGJupv0gxzzDkyVfKEMUXh3ltTZKLtfyBjCs+YV?=
- =?us-ascii?Q?bYtS7/mJ+cDdlaEJc34bck+I9NUB60hAFGHU4Rfts3nMaETNnVAHR7PS2zrv?=
- =?us-ascii?Q?WzGyNPfNxS3oe/Pwaa403TfoHCf3rTX2goKk1LvP8xT43grTEHAcJwbgbpGv?=
- =?us-ascii?Q?RQKgmTM9dSQHK04SMTtnjzXNoLJMNALQnF0BeNVR945uAmQz2vz47N5UboL1?=
- =?us-ascii?Q?qukzFRiiC2MlGC1i+MlB5PksAVGF4cmsRRp/LNBEtkzUBqdGghS61h99OWYh?=
- =?us-ascii?Q?WepuiWQ0yL5KmlY8l+a7/9grUD1bljU4Y9/ULCWK2nHFC6yL2K32iOKroHDx?=
- =?us-ascii?Q?RsUN9ra9qzk8CyAbCqeDpkPYtIrSsPnKR1c3J1C7DinTlJue6Uf7VpRbMpJP?=
- =?us-ascii?Q?vcTC63UWnM+EV3S6Ezz9WJMykw0hFEaBblvDrExa3xgBJhJGfKW4kmFo6Gef?=
- =?us-ascii?Q?pP1o+OibGZR6uKPCCWoORlIjRWBPp+2JovkcIU+muGQQX0xRQ3Umu50ljF/n?=
- =?us-ascii?Q?sC/MyDwAFtzXunhZq5C2h1SMaZtr/kzzM+Dfc9aEwS5WjljafXBEXVqoXtu/?=
- =?us-ascii?Q?nR8Qom3YCqtsbZxJ7g3l/e4d4EPVUUJkylY6LDBk2Bqq9uVBw/S9PIDvfTj0?=
- =?us-ascii?Q?W0waOrWu5NXO+P2XNJjGOdStKEvk6hAQmXWlRQ0Dg9+qUMRW2lWcAUMrlLrs?=
- =?us-ascii?Q?aE9kXqUG0nf54dsUB134dRc4ywoXLybt9NsLDMSXZYR0aBpwWPWYS6+Tv4kA?=
- =?us-ascii?Q?Z6OIWjG2Tj6rEWIzjqjTTXOmhkAqnsQ8Ovp1R0Nvvpp5qLFD5JQj2pXSAF6g?=
- =?us-ascii?Q?so9Ks2nWECFtHe2lvcs0n6RygosC77sYHpUl/h6R0tA2INPeN/pqt7khQRrl?=
- =?us-ascii?Q?gBdKI9rPA64ERnTRNGf8HAuuZZppQZNHANqXvnvOUPWVSSW6D3SgydqgW528?=
- =?us-ascii?Q?kUZt3sXOgXmrSxa5Z/y3ce5sN7ahcJCZZIzB/JGBvStzF5L4eRL4rmh2ML4f?=
- =?us-ascii?Q?iPlIX7omSCFhcNyOAPUSDIDiDiknEBsJjCwWihJrYzsZjpRb1reNJBBIO1Uu?=
- =?us-ascii?Q?24v55MhCIKRwGT0XSguYGef/Z/JAj+ESOveMAzOS/S9IIs1yDG6PRDPs/274?=
- =?us-ascii?Q?rFfMNRPFNbmMr5AmhylA/1jhTkVC4g7i1YzhaU1a4jHfjJPCcw=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR12MB5757.namprd12.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?eoSbsxbo5RaQERmiHOWXcm77dOBIs5Y5D6daRNGUrkm5yekd6jEIMQxovfBS?=
- =?us-ascii?Q?YlfH/PXMP8cMt3htsMnycJsYypwxBQEQ3XwDV5bZsMFIWwqSTjjKbFy220dQ?=
- =?us-ascii?Q?R8NwzqZUz+79t3df9YQyugMrdqrdEtkIK3XUlBN6mTeszuDjLtf2dx4VRqG2?=
- =?us-ascii?Q?DtD39G5oODXZicBLl1+BZmpSoz6zngkc7x46UGibRFgdYdfGLVEYLp+wU62v?=
- =?us-ascii?Q?U3qJpE2xGaZ5eIAWOEdTP97lsGNVzPd8dG2HExvVkrzq2UCAGFnZ9Kwz3GjV?=
- =?us-ascii?Q?jgXL8IKPzD7moW1WpxdIgEkMEBdMyqbvGxFBCas9pm33xoBIUrs5nIqXemin?=
- =?us-ascii?Q?vuqiGO0txJZuBWGMaezKRbsaX6mh1er+y72LqJdXL966aSDUIWOiylTz2Fzf?=
- =?us-ascii?Q?eutxdnF38Q/RnKLdpFXZWHOFes9Q2Pbjla8yaeP1keW2DHBdprCqiluEcs2p?=
- =?us-ascii?Q?kMt43BZc8kuWhyA037upaUVzwM+EVp7lunt2zahqzBw6g/203drhP1p/6kPX?=
- =?us-ascii?Q?rMHMaaHvfgtoDAcfJB1LpgiDgRUVdKmIoxmRJAWdN1turbyVBw8czvXN3wnt?=
- =?us-ascii?Q?qhMN74ax+F2dBV2cqMBoZdr7MfuGbVjZeZfZ8CvGcfnjBGykhXyHEWvDYsqB?=
- =?us-ascii?Q?kXLHGX/ZCWvJDUSpWp5KrvwljEgUD9XQxrmROm5lqI2rPtr21ZLvp8iT98mv?=
- =?us-ascii?Q?zZpV1pn9chJ6K/avxNx1QYYRnoHfkqlD6OrTkxCuiSyPyTNuQW5hBIrr5HpV?=
- =?us-ascii?Q?aawmjE+U73vM9OprUfaveWRHLgllud9DtqKxvulz8NExV4Ek0EozamFqWjDL?=
- =?us-ascii?Q?XHaEEPKHCAE6CZTaXT/n4waPvwAw69jLWVc3KsE5hJiUUHVwzQ34mmOtWLvC?=
- =?us-ascii?Q?jdKvkRATZyDULDH1x8SNvxwZKdfXAX/MuQ8ooXuLwAzzTkkwMDaUvULrOgw4?=
- =?us-ascii?Q?QDNLb+Rr1+IV/A2TkEfoTYfjWMlNPwjsoQxrRGSr6WsorAVIAPw9keVMQ5S/?=
- =?us-ascii?Q?5ETdMehKWHDantKqh8bTIJeoq27O7/VSoKZOlf5FQ7ni84HvBnHeWDy4j16l?=
- =?us-ascii?Q?Ag8bv21bwEzsSJLIFb96JQ23fEhSXtDKgE6xPkkuuRJxTUlKoyiNML2JuooE?=
- =?us-ascii?Q?Ibkj4e2kh9rIrSWNeeOTXo1TF1Kb08tYUbLY7cvTTHZApqt15pKVzaSYSKPO?=
- =?us-ascii?Q?sNNWYdJqBpghC3fSPkDqmdNrcW2CHHlLaPtupaqlnGpKQMzmOGnmcPRkrryg?=
- =?us-ascii?Q?jIj4Q6JVMg1IGpjI53cNwfoGKMuZLBfNTvrMRUNH6sHcGibXaExgoqJUiI+k?=
- =?us-ascii?Q?mL2R2f/S9LXRKhOgEKGm8kq7DwzVlw9NUI+OFMtJdoWa3COR/AQxkdG4KE6F?=
- =?us-ascii?Q?uZf7Ig0eVmI2JPYkh+XsEoP+6vZ2eDD0FyiAuEtL/BrZLWsOG81/j1Hr2gjB?=
- =?us-ascii?Q?b12iPpJ7XtgI53oMEd/XArqH/tAZPnZURNLlrCirTNxZ97RNnuINuZukEKLZ?=
- =?us-ascii?Q?Isw/KGl/0EymJi/rBLy+6bBaP5jpvHw6IYdWr59pT1KfbOKw3lR+3SeLCjDk?=
- =?us-ascii?Q?uM3TJmlLSDfd29sF7A0GtcQ1KFHC7soLx5/TGVGh?=
-X-OriginatorOrg: Nvidia.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 81b50fe8-d479-4704-9701-08ddfb92a246
-X-MS-Exchange-CrossTenant-AuthSource: PH7PR12MB5757.namprd12.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 24 Sep 2025 17:48:56.5811
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 43083d15-7273-40c1-b7db-39efd9ccc17a
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: DNscCfeTTAwZaFSQ9jQQ/8oGiJtpwp2HFOYW6YIZCWECejI7WfqDflbIkMLHGEs4
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN2PR12MB4456
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] PCI/IOV: Add missing PCI rescan-remove locking when
+ enabling/disabling SR-IOV
+To: Niklas Schnelle <schnelle@linux.ibm.com>,
+        Bjorn Helgaas <helgaas@kernel.org>, Lukas Wunner <lukas@wunner.de>
+Cc: Keith Busch <kbusch@kernel.org>, Gerd Bayer <gbayer@linux.ibm.com>,
+        Matthew Rosato <mjrosato@linux.ibm.com>,
+        Benjamin Block <bblock@linux.ibm.com>,
+        Halil Pasic <pasic@linux.ibm.com>,
+        Julian Ruess <julianr@linux.ibm.com>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev
+ <agordeev@linux.ibm.com>, linux-pci@vger.kernel.org,
+        linux-kernel@vger.kernel.org
+References: <20250826-pci_fix_sriov_disable-v1-0-2d0bc938f2a3@linux.ibm.com>
+ <20250826-pci_fix_sriov_disable-v1-1-2d0bc938f2a3@linux.ibm.com>
+Content-Language: en-US
+From: Farhan Ali <alifm@linux.ibm.com>
+In-Reply-To: <20250826-pci_fix_sriov_disable-v1-1-2d0bc938f2a3@linux.ibm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-TM-AS-GCONF: 00
+X-Authority-Analysis: v=2.4 cv=L50dQ/T8 c=1 sm=1 tr=0 ts=68d43121 cx=c_pps
+ a=aDMHemPKRhS1OARIsFnwRA==:117 a=aDMHemPKRhS1OARIsFnwRA==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=VnNF1IyMAAAA:8
+ a=RiiMxNVSmK5LPl13xBwA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTIwMDAxMCBTYWx0ZWRfX3It9hmbLatt7
+ 6c5scWjsIfMyQKORsuDs9SYW8iK987TkAKhqlMF35evIOarwEGebuPJtvWviT3Qy1FI/xlXagsH
+ MLS0qm4PujeSnzzq4cE+wMYYusvUlxH//YcxkG39WrUikKA0+WQFFzDY4aIXSQaZR9y2D/yq2XI
+ 3FL7H1HB/4VW7XRnuD/zyB8wIuLgCrGQgw9JMZtCJatyXktwW4z9kUK4VHcSJVWkqb1EPBhBtb/
+ nZqvj0q60lfTnYVOHM3jrluuccqAiUURGkG6p2SfeVLSaTu/zSIcrGs8Yz1gfE9Oo7AJAj/yeQR
+ rT7mps3bANwCHUhenPmvcXTaPI5c6DxvM1ktMeeDKvetnVz4TqG+5HPn9FlbtUkUzDfeQBNpYpc
+ wGxgx5Of
+X-Proofpoint-ORIG-GUID: X_G0C1SIkYgD_PsD6IiUr_EpkKD1kVuy
+X-Proofpoint-GUID: X_G0C1SIkYgD_PsD6IiUr_EpkKD1kVuy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-24_04,2025-09-24_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 adultscore=0 phishscore=0 impostorscore=0 spamscore=0
+ priorityscore=1501 suspectscore=0 clxscore=1011 bulkscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509200010
 
-On Wed, Sep 24, 2025 at 06:13:56PM +0200, Simon Richter wrote:
-> > The problem here is that the CPU physical (aka BAR Address) is only
-> > usable by the CPU.
-> 
-> The address you receive from mapping a dma_buf for a particular device
-> is not a CPU physical address, even if it is identical on pretty much
-> all PC hardware because it is uncommon to configure the root bridge with
-> a translation there.
 
-I said already, you cannot convert from a dma_addr_t back to a
-phys_addr_t. There is just no universal API for this and your examples
-like PPC explain why it cannot work even if some hacks appear to be
-okay on one x86 system.
+On 8/26/2025 1:52 AM, Niklas Schnelle wrote:
+> Before disabling SR-IOV via config space accesses to the parent PF,
+> sriov_disable() first removes the PCI devices representing the VFs.
+>
+> Since commit 9d16947b7583 ("PCI: Add global pci_lock_rescan_remove()")
+> such removal operations are serialized against concurrent remove and
+> rescan using the pci_rescan_remove_lock. No such locking was ever added
+> in sriov_disable() however. In particular when commit 18f9e9d150fc
+> ("PCI/IOV: Factor out sriov_add_vfs()") factored out the PCI device
+> removal into sriov_del_vfs() there was still no locking around the
+> pci_iov_remove_virtfn() calls.
+>
+> On s390 the lack of serialization in sriov_disable() may cause double
+> remove and list corruption with the below (amended) trace being observed:
+>
+>   PSW:  0704c00180000000 0000000c914e4b38 (klist_put+56)
+>   GPRS: 000003800313fb48 0000000000000000 0000000100000001 0000000000000001
+>         00000000f9b520a8 0000000000000000 0000000000002fbd 00000000f4cc9480
+>         0000000000000001 0000000000000000 0000000000000000 0000000180692828
+>         00000000818e8000 000003800313fe2c 000003800313fb20 000003800313fad8
+>   #0 [3800313fb20] device_del at c9158ad5c
+>   #1 [3800313fb88] pci_remove_bus_device at c915105ba
+>   #2 [3800313fbd0] pci_iov_remove_virtfn at c9152f198
+>   #3 [3800313fc28] zpci_iov_remove_virtfn at c90fb67c0
+>   #4 [3800313fc60] zpci_bus_remove_device at c90fb6104
+>   #5 [3800313fca0] __zpci_event_availability at c90fb3dca
+>   #6 [3800313fd08] chsc_process_sei_nt0 at c918fe4a2
+>   #7 [3800313fd60] crw_collect_info at c91905822
+>   #8 [3800313fe10] kthread at c90feb390
+>   #9 [3800313fe68] __ret_from_fork at c90f6aa64
+>   #10 [3800313fe98] ret_from_fork at c9194f3f2.
+>
+> This is because in addition to sriov_disable() removing the VFs, the
+> platform also generates hot-unplug events for the VFs. This being
+> the reverse operation to the hotplug events generated by sriov_enable()
+> and handled via pdev->no_vf_scan. And while the event processing takes
+> pci_rescan_remove_lock and checks whether the struct pci_dev still
+> exists, the lack of synchronization makes this checking racy.
+>
+> Other races may also be possible of course though given that this lack
+> of locking persisted so long obversable races seem very rare. Even on
+> s390 the list corruption was only observed with certain devices since
+> the platform events are only triggered by the config accesses that come
+> after the removal, so as long as the removal finnished synchronously
+> they would not race. Either way the locking is missing so fix this by
+> adding it to the sriov_del_vfs() helper.
+>
+> Just lik PCI rescan-remove locking is also missing in sriov_add_vfs()
+> including for the error case where pci_stop_ad_remove_bus_device() is
+> called without the PCI rescan-remove lock being held. Even in the non
+> error case adding new PCI devices and busses should be serialized via
+> the PCI rescan-remove lock. Add the necessary locking.
+>
+> Cc: stable@vger.kernel.org
+> Fixes: 18f9e9d150fc ("PCI/IOV: Factor out sriov_add_vfs()")
+> Reviewed-by: Benjamin Block <bblock@linux.ibm.com>
+> Signed-off-by: Niklas Schnelle <schnelle@linux.ibm.com>
+> ---
+>   drivers/pci/iov.c | 5 +++++
+>   1 file changed, 5 insertions(+)
+>
+> diff --git a/drivers/pci/iov.c b/drivers/pci/iov.c
+> index ac4375954c9479b5f4a0e666b5215094fdaeefc2..77dee43b785838d215b58db2d22088e9346e0583 100644
+> --- a/drivers/pci/iov.c
+> +++ b/drivers/pci/iov.c
+> @@ -629,15 +629,18 @@ static int sriov_add_vfs(struct pci_dev *dev, u16 num_vfs)
+>   	if (dev->no_vf_scan)
+>   		return 0;
+>   
+> +	pci_lock_rescan_remove();
+>   	for (i = 0; i < num_vfs; i++) {
+>   		rc = pci_iov_add_virtfn(dev, i);
 
-I think Christian's suggestion is to pass a
-(struct pci_dev *, bar index, bar offset) between dmabuf
-exporter/importer
+Should we move the lock/unlock to pci_iov_add_virtfn? As that's where 
+the device is added to the bus? Similarly move the locking/unlocking to 
+pci_iov_remove_virtfn?
 
-That would work for alot of use case, we could make iommufd and kvm
-work with that.
+Thanks
+Farhan
 
-The Xe PF driver could detect the vram by checking if the pci_dev * is
-a VF of itself and then using its internal knowledge of the
-provisioned VF BAR to compute the VRAM location.
-
-If it is not this case then it would fall back to the normal 'exporter
-does dma map' fllow.
-
-Jason
+>   		if (rc)
+>   			goto failed;
+>   	}
+> +	pci_unlock_rescan_remove();
+>   	return 0;
+>   failed:
+>   	while (i--)
+>   		pci_iov_remove_virtfn(dev, i);
+> +	pci_unlock_rescan_remove();
+>   
+>   	return rc;
+>   }
+> @@ -762,8 +765,10 @@ static void sriov_del_vfs(struct pci_dev *dev)
+>   	struct pci_sriov *iov = dev->sriov;
+>   	int i;
+>   
+> +	pci_lock_rescan_remove();
+>   	for (i = 0; i < iov->num_VFs; i++)
+>   		pci_iov_remove_virtfn(dev, i);
+> +	pci_unlock_rescan_remove();
+>   }
+>   
+>   static void sriov_disable(struct pci_dev *dev)
+>
