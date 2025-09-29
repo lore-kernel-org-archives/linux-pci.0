@@ -1,120 +1,140 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8991919F13F;
-	Mon, 29 Sep 2025 16:32:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10A2EE555;
+	Mon, 29 Sep 2025 17:14:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759163566; cv=none; b=nbuSN2dBCNwVb4CBE2EaoHkGV/kcgztXZ2DdG9y3drLzNyRDL8Z9ZSzPeRZfh88mTZw+9acYE2tBF1uPCZFLq1gwi3eQU02aDEjuLk0mc7PzYb4falr2PxcEQZr0gC2hj1T943TZNwtB8C7mZU/IZHOqNoJDwtfZe7SAqmq9bSg=
+	t=1759166049; cv=none; b=Nlz4oYpmgMmwgx2Y3kEl49418BSk8XumrFZRA996KBjz5FF1d3XsPe+VU77Wsnafafda2us8KqvTiz7LUbtyDwXvmW4MmPk+ipDyQiHBZvbi4UTRrUQBKltOGGfJot3qjQ4Li6btUoHEH/twqW6MRmVpP0WXizZAIWfOY31kXUY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759163566; c=relaxed/simple;
-	bh=00sU9i2+IMQ2HaKjeSE/V2mVCUpqM5rcBpzmZjk3ga8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=cPuT6bmS0xf4wM8IFburizS0EaXZYanjTu9Wq0F/oJFzyL5LlIE8iwfTF9g7aYm2UCzO97qubwNeZtnvVD06qeQv2+yO5QlcqjqbW2EY6rhWKRSLe4jzji/I/t0AKdWpkOAtngyOVMwL+YDMLjKQ3yCOtdBR0k5FDkXITFRSC0U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HAdycMFq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759166049; c=relaxed/simple;
+	bh=/d3YDoclVIlotjgBNpaaRR/z5leUIlKIPL2Fbh02IS0=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=N9iAR6Yxk8z+qjD1Iwuo33CTslaQ6IQHeltMGYemjWMydppTBa6//yZaD3HywGbmkaoWIITBLxGHstdGx63lEzOqQoHrxIS+e/bl/if/mL3XGRffEQ8mE7Xjx2g6kx41REy1j3YnhaC0th4hv0w7Och9j4oDtFmQWAAM/LTnR5I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cIWQ5XK+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HAdycMFq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D8AFFC4CEF4;
-	Mon, 29 Sep 2025 16:32:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cIWQ5XK+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E5ABC4CEF4;
+	Mon, 29 Sep 2025 17:14:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759163566;
-	bh=00sU9i2+IMQ2HaKjeSE/V2mVCUpqM5rcBpzmZjk3ga8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HAdycMFqGnevhFuZjQV+y/lH0d8Khsf+9oRa+hz+ueJLA6nf0nm04lTsdktX8Tjr0
-	 kdKVtdRrPjPsHwV4CgknI6aHLPsifuoRBSBPtEyMRlBe2/2enF9t47MFWPIpxK8A8f
-	 empkHAWjQqVjjsyfv2EXwUjEAZ0bwSMWFg0xvzYjrWle7g0ZDVTBkjPvgQrE0eGAXv
-	 x6/QGri5YE9/CIFv+HAa6oQ59SvTueYS5KQ2wWtxprHHdSaAlzNKRkr9zWMJc0IEs5
-	 ysFRmWvJolOUvz7bjnMw3DZOztGtg90aKXAr4DwR7UybuAdJyDN3jYDS14B66oPJTb
-	 78hTI6C7GhUeA==
-Date: Mon, 29 Sep 2025 22:02:27 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Vincent Guittot <vincent.guittot@linaro.org>
-Cc: chester62515@gmail.com, mbrugger@suse.com, 
-	ghennadi.procopciuc@oss.nxp.com, s32@nxp.com, bhelgaas@google.com, jingoohan1@gmail.com, 
-	lpieralisi@kernel.org, kwilczynski@kernel.org, robh@kernel.org, krzk+dt@kernel.org, 
-	conor+dt@kernel.org, Ionut.Vicovan@nxp.com, larisa.grigore@nxp.com, 
-	Ghennadi.Procopciuc@nxp.com, ciprianmarian.costea@nxp.com, bogdan.hamciuc@nxp.com, 
-	Frank.li@nxp.com, linux-arm-kernel@lists.infradead.org, linux-pci@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, imx@lists.linux.dev, 
-	cassel@kernel.org
-Subject: Re: [PATCH 2/3 v2] PCI: s32g: Add initial PCIe support (RC)
-Message-ID: <xmjgs5ssolugcq2ogjc5j3ccwalcc4q3whl64fcra2aiebhtci@qwobbjtb2wcl>
-References: <20250919155821.95334-1-vincent.guittot@linaro.org>
- <20250919155821.95334-3-vincent.guittot@linaro.org>
- <4ee5tqdjv5ogcdtysiebtoxmrvrzhkar4bjcsqi47dxtgwac4c@rezn4waubroh>
- <CAKfTPtAEkegCV-9_x-dXSWQFOoG6kO5JbJq_LToY9YuuRusoVA@mail.gmail.com>
- <lmczw5agheqbcl6xcomlhf7yfbdvfx45pozmaxjmbkkqudsxlu@c7u6s5h4xm6j>
- <CAKfTPtCacFhJztYvWycSdoWMUStaf1WAcGJKHwk3y4n-uEELSw@mail.gmail.com>
+	s=k20201202; t=1759166048;
+	bh=/d3YDoclVIlotjgBNpaaRR/z5leUIlKIPL2Fbh02IS0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=cIWQ5XK+sJVQ4JPDDmMvNFShMRkkjBzGA+dZGLnibe9k69UGY5dB+dbuJppS9xMDV
+	 DKQKoCj8NfywFTn+1tu1Z1aYOFLqPLJ2lt6tzBq+A7/IifvxTWse4/+x5UQxemJnZW
+	 xi3c3pPcJX5j8zvVJlbuabWOKKN9QsSABeP672iD2FnA50rhfRZxDaxRm3Wzv/mgZ7
+	 qGdJKfqpj0CQorjULZk48n2GAUSGN/6jaYzOmzMMB8Q9yFqD/y+goyBvpWY77AY3cs
+	 PgNbGKFImlE2juCHY7HckaQZQfhODu/xWVgylrPj3HNLYCGBZgF8ghRALH7nqWkRji
+	 FxbwEM3gHJM0Q==
+Date: Mon, 29 Sep 2025 12:14:06 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Chris Li <chrisl@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Danilo Krummrich <dakr@kernel.org>, Len Brown <lenb@kernel.org>,
+	Pasha Tatashin <pasha.tatashin@soleen.com>,
+	linux-kernel@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-acpi@vger.kernel.org, David Matlack <dmatlack@google.com>,
+	Pasha Tatashin <tatashin@google.com>,
+	Jason Miu <jasonmiu@google.com>, Vipin Sharma <vipinsh@google.com>,
+	Saeed Mahameed <saeedm@nvidia.com>,
+	Adithya Jayachandran <ajayachandra@nvidia.com>,
+	Parav Pandit <parav@nvidia.com>, William Tu <witu@nvidia.com>,
+	Mike Rapoport <rppt@kernel.org>, Jason Gunthorpe <jgg@ziepe.ca>,
+	Leon Romanovsky <leon@kernel.org>
+Subject: Re: [PATCH v2 09/10] PCI/LUO: Avoid write to bus master at boot
+Message-ID: <20250929171406.GA116545@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-pci@vger.kernel.org
 List-Id: <linux-pci.vger.kernel.org>
 List-Subscribe: <mailto:linux-pci+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-pci+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <CAKfTPtCacFhJztYvWycSdoWMUStaf1WAcGJKHwk3y4n-uEELSw@mail.gmail.com>
+In-Reply-To: <20250916-luo-pci-v2-9-c494053c3c08@kernel.org>
 
-On Mon, Sep 29, 2025 at 06:23:05PM +0200, Vincent Guittot wrote:
-
-[...]
-
-> > > > > +static int s32g_pcie_resume(struct device *dev)
-> > > > > +{
-> > > > > +     struct s32g_pcie *s32g_pp = dev_get_drvdata(dev);
-> > > > > +     struct dw_pcie *pci = &s32g_pp->pci;
-> > > > > +     struct dw_pcie_rp *pp = &pci->pp;
-> > > > > +     int ret = 0;
-> > > > > +
-> > > > > +     ret = s32g_pcie_init(dev, s32g_pp);
-> > > > > +     if (ret < 0)
-> > > > > +             return ret;
-> > > > > +
-> > > > > +     ret = dw_pcie_setup_rc(pp);
-> > > > > +     if (ret) {
-> > > > > +             dev_err(dev, "Failed to resume DW RC: %d\n", ret);
-> > > > > +             goto fail_host_init;
-> > > > > +     }
-> > > > > +
-> > > > > +     ret = dw_pcie_start_link(pci);
-> > > > > +     if (ret) {
-> > > > > +             /*
-> > > > > +              * We do not exit with error if link up was unsuccessful
-> > > > > +              * Endpoint may not be connected.
-> > > > > +              */
-> > > > > +             if (dw_pcie_wait_for_link(pci))
-> > > > > +                     dev_warn(pci->dev,
-> > > > > +                              "Link Up failed, Endpoint may not be connected\n");
-> > > > > +
-> > > > > +             if (!phy_validate(s32g_pp->phy, PHY_MODE_PCIE, 0, NULL)) {
-> > > > > +                     dev_err(dev, "Failed to get link up with EP connected\n");
-> > > > > +                     goto fail_host_init;
-> > > > > +             }
-> > > > > +     }
-> > > > > +
-> > > > > +     ret = pci_host_probe(pp->bridge);
-> > > >
-> > > > Oh no... Do not call pci_host_probe() directly from glue drivers. Use
-> > > > dw_pcie_host_init() to do so. This should simplify suspend and resume functions.
-> > >
-> > > dw_pcie_host_init() is doing much more than just init the controller
-> > > as it gets resources which we haven't released during suspend.
-> > >
-> >
-> > Any specific reason to keep resources enabled, even though you were removing the
-> > Root bus? This doesn't make sense to me.
+On Tue, Sep 16, 2025 at 12:45:17AM -0700, Chris Li wrote:
+> If the liveupdate flag has LU_BUSMASTER or LU_BUSMASTER_BRIDGE, the
+> device is participating in the liveupdate preserving bus master bit in the
+> PCI config space command register.
 > 
-> By ressources I mean everything before  dw_pcie_setup_rc()  in
-> dw_pcie_host_init() which are still there after dw_pcie_host_deinit()
-> in addition to being a waste of time. Also we don't need to remove
-> edma and free msi
+> Avoid writing to the PCI command register for the bus master bit during
+> boot up.
 > 
+> Signed-off-by: Chris Li <chrisl@kernel.org>
+> ---
+>  drivers/pci/liveupdate.c | 6 ++++++
+>  drivers/pci/pci.c        | 7 +++++--
+>  2 files changed, 11 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/pci/liveupdate.c b/drivers/pci/liveupdate.c
+> index 1b12fc0649f479c6f45ffb26e6e3754f41054ea8..a09a166b6ee271b96bce763716c3b62b24f3edbb 100644
+> --- a/drivers/pci/liveupdate.c
+> +++ b/drivers/pci/liveupdate.c
+> @@ -377,6 +377,12 @@ static void pci_dev_do_restore(struct pci_dev *dev, struct pci_dev_ser *s)
+>  	pci_info(dev, "liveupdate restore flags %x driver: %s data: [%llx]\n",
+>  		 s->flags, s->driver_name, s->driver_data);
+>  	list_move_tail(&dev->dev.lu.lu_next, &probe_devices);
+> +	if (s->flags & (LU_BUSMASTER | LU_BUSMASTER_BRIDGE)) {
+> +		u16 pci_command;
+> +
+> +		pci_read_config_word(dev, PCI_COMMAND, &pci_command);
+> +		WARN_ON(!(pci_command & PCI_COMMAND_MASTER));
+> +	}
+>  }
+>  
+>  void pci_liveupdate_restore(struct pci_dev *dev)
+> diff --git a/drivers/pci/pci.c b/drivers/pci/pci.c
+> index 9e42090fb108920995ebe34bd2535a0e23fef7fd..2339ac1bd57616a78d2105ba3a4fc72bbf49973e 100644
+> --- a/drivers/pci/pci.c
+> +++ b/drivers/pci/pci.c
+> @@ -2248,7 +2248,8 @@ static void do_pci_disable_device(struct pci_dev *dev)
+>  	pci_read_config_word(dev, PCI_COMMAND, &pci_command);
+>  	if (pci_command & PCI_COMMAND_MASTER) {
+>  		pci_command &= ~PCI_COMMAND_MASTER;
+> -		pci_write_config_word(dev, PCI_COMMAND, pci_command);
+> +		if (!(dev->dev.lu.flags & (LU_BUSMASTER | LU_BUSMASTER_BRIDGE)))
+> +			pci_write_config_word(dev, PCI_COMMAND, pci_command);
 
-Let me take a step back and ask, why do you need to remove Root bus during
-suspend() and not just disable LTSSM with dw_pcie_stop_link()?
+I think changing the semantics of interfaces like this is a problem
+because callers rely on the existing semantics, and it's hard to
+reason about how this change would affect them.  How would you update
+the kernel-doc to reflect this change?
 
-- Mani
+do_pci_disable_device() is used in the PM suspend, freeze, and
+poweroff paths.  I suppose those paths are allowed even when devices
+have been marked with LU_BUSMASTER/LU_BUSMASTER_BRIDGE?  And I assume
+you probably would want the existing semantics there?
 
--- 
-மணிவண்ணன் சதாசிவம்
+I.e., if a device has been marked with LU_BUSMASTER, you want to keep
+its bus mastering enabled across a liveupdate kexec.  But if we
+suspend before doing the kexec, I assume we would still want to clear
+bus mastering on suspend and restore bus mastering on resume?
+
+The other path that uses do_pci_disable_device() is
+pci_disable_device(), which is primarily used in driver .remove()
+methods.  You have to modify drivers to support liveupdate anyway, so
+if we call driver .remove() methods during a liveupdate kexec, I think
+you should change the .remove() method so it only calls
+pci_disable_device() when you want bus mastering disabled.
+
+>  	}
+>  
+>  	pcibios_disable_device(dev);
+> @@ -4276,7 +4277,9 @@ static void __pci_set_master(struct pci_dev *dev, bool enable)
+>  	if (cmd != old_cmd) {
+>  		pci_dbg(dev, "%s bus mastering\n",
+>  			enable ? "enabling" : "disabling");
+> -		pci_write_config_word(dev, PCI_COMMAND, cmd);
+> +
+> +		if (!(dev->dev.lu.flags & (LU_BUSMASTER | LU_BUSMASTER_BRIDGE)))
+> +			pci_write_config_word(dev, PCI_COMMAND, cmd);
+>  	}
+>  	dev->is_busmaster = enable;
+>  }
+> 
+> -- 
+> 2.51.0.384.g4c02a37b29-goog
+> 
